@@ -139,6 +139,8 @@ const GUIDE = (() => {
       '<div class="ph-card"><h4>' + L('Hvor', 'Where') + '</h4><div class="ph-kv"><span>' + L('Dyp', 'Depth') + '</span><span>' + depthTxt(sp) + (s.area ? '' : ', ' + L('mest rundt', 'mostly around') + ' ' + nice(s.dep[0]) + ' m') + '</span></div>' +
         '<p>' + L(WHERE[sp][0], WHERE[sp][1]) + '</p>' + (exp ? '<p>' + exp + '</p>' : '') +
         (s.shell ? '' : '<p>' + L('Der bunnen faller bratt (kantene) er det mer fisk enn på flat bunn.', 'Where the bottom falls steeply (the edges) there is more fish than on flat ground.') + '</p>') +
+        // what the player found out herself on the search missions (core/09g-turer.js turLeteAnswer, S.lete; docs/planer/oppdrag-2.md L2): her own lines, newest first
+        (((S.lete || {})[sp] || []).length ? '<div class="gd-found"><b>' + L('Det du har funnet ut', 'What you have found out') + '</b>' + (S.lete[sp] || []).slice(0, 6).map(x => '<p class="ph-note">' + turEsc(L(x.no, x.en)) + ' <small>' + dayStr(x.t / 60).replace(/^\S+ /, '') + '</small></p>').join('') + '</div>' : '') +
         '<p class="ph-note">' + L('Fisken flytter seg i løpet av døgnet og uka. Ekkoloddet og varmekartet viser hvor den står akkurat nå.', 'The fish move over the day and the week. The echo sounder and the heat map show where it stands right now.') + '</p></div>' +
       '<div class="ph-card"><h4>' + L('Hvordan', 'How') + '</h4>' + gearTxt(sp) + (bt ? '<div class="ph-kv"><span>' + L('Agn', 'Bait') + '</span><span>' + bt + '</span></div>' : '') + '</div>' +
       '<div class="ph-card"><h4>' + L('Pris', 'Price') + '</h4><div class="ph-kv"><span>' + mname(m) + '</span><span>' + fmt(pm[m], 0) + ' kr/kg</span></div>' +

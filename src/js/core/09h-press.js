@@ -17,7 +17,7 @@
 // the game (no push: Kystposten sends none, 20261008000000_push_ops.sql). A record price (the highest in a
 // year) is reckoned in every game alike (pressRecords), and the year's first skrei comes from the shared landings (pressSkrei).
 const PRESS = {R:150, keep:40, remote:[], land:[], at:0, told:{}, toldAt:0, skrei:null};
-const PRESS_KINDS = ['boat', 'name', 'aground', 'rescue', 'salv', 'foto', 'fish', 'fs', 'ach', 'as', 'tur', 'kvote'];
+const PRESS_KINDS = ['boat', 'name', 'aground', 'rescue', 'salv', 'foto', 'fish', 'fs', 'ach', 'as', 'tur', 'kvote', 'lag', 'kv'];
 function pressState(){ const P = S.press || (S.press = {own:[], seen:0, n:0, q:[]}); P.q = P.q || []; return P; }
 const pressCompany = () => (typeof access === 'function' && access() === 'lukket') ? String(S.company || '').slice(0, 40) : '';
 // a story of the player's own; loc holds what stays on this device (a picture's id)
@@ -104,11 +104,23 @@ function pressStory(it){
     else if (d.k === 'best'){ if (!port || !sp) return null;
       s.h = P2(w[0] + ' kom med ' + sp.no.toLowerCase() + ' til ' + port, w[1] + ' brought ' + sp.en.toLowerCase() + ' to ' + port);
       s.ing = P2('Mottaket i ' + port + ' hadde bestilt ' + fmt(d.kg || 0, 0) + ' kg ' + sp.no.toLowerCase() + ', og ' + w[0] + ' leverte' + (d.nm > 0 ? ' etter ' + fmt(d.nm, 0) + ' nautiske mil' : '') + '.', 'The plant at ' + port + ' had ordered ' + fmt(d.kg || 0, 0) + ' kg of ' + sp.en.toLowerCase() + ', and ' + w[1] + ' delivered' + (d.nm > 0 ? ' after ' + fmt(d.nm, 0) + ' nautical miles' : '') + '.'); }
+    else if (d.k === 'kjede'){ if (!port) return null;   // three missions in a row for one plant (09g-turer.js turChainEnd)
+      s.h = P2(w[0] + ' er fast leverandør i ' + port, w[1] + ' is a regular supplier at ' + port);
+      s.ing = P2(w[0] + ' har gjort tre oppdrag på rad for mottaket i ' + port + (sp ? ', sist ' + fmt(d.kg || 0, 0) + ' kg ' + sp.no.toLowerCase() : '') + '. Bestyreren kaller båten fast leverandør.', w[1] + ' has done three missions in a row for the plant at ' + port + (sp ? ', last ' + fmt(d.kg || 0, 0) + ' kg of ' + sp.en.toLowerCase() : '') + '. The manager calls the boat a regular supplier.');
+      s.body.push(P2('Mottakene langs kysten holder seg med faste båter de kan ringe til først når det er noe å hente.', 'The plants along the coast keep regular boats they call first when there is something to fetch.')); s.big = true; }
     else if (d.k === 'frakt'){ if (!port) return null;
       s.h = P2(w[0] + ' fraktet varer til ' + port, w[1] + ' carried goods to ' + port);
       s.ing = P2(w[0] + ' kom til ' + port + ' med ' + fmt(d.kg || 0, 0) + ' kg last' + (pressPort(d.from) ? ' fra ' + pressPort(d.from) : '') + '.', w[1] + ' came to ' + port + ' with ' + fmt(d.kg || 0, 0) + ' kg of freight' + (pressPort(d.from) ? ' from ' + pressPort(d.from) : '') + '.'); }
     else return null;
-    s.body.push(P2('Turen var på rundt ' + fmt(d.nm || 0, 0) + ' nautiske mil.', 'The trip was about ' + fmt(d.nm || 0, 0) + ' nautical miles.')); }
+    if (d.k !== 'kjede') s.body.push(P2('Turen var på rundt ' + fmt(d.nm || 0, 0) + ' nautiske mil.', 'The trip was about ' + fmt(d.nm || 0, 0) + ' nautical miles.')); }
+  else if (it.kind === 'lag'){ const port = pressPort(d.port); if (!port || !(d.kg > 0)) return null;   // (written by the server, 20261030140000_lag_goal.sql: no names)
+    s.h = P2('Fiskarlaget i ' + port + ' nådde ukemålet', 'The fishing club of ' + port + ' reached its weekly goal');
+    s.ing = P2(fmt(d.kg, 0) + ' kg levert av ' + (d.n || 0) + ' båter denne uka. Laget setter målet etter hvor mange som har levert, så ingen trekker de andre ned.', fmt(d.kg, 0) + ' kg landed by ' + (d.n || 0) + ' boats this week. The club sets its goal by how many have landed, so nobody pulls the others down.');
+    s.body.push(P2('Fiskarlagene samler fiskerne som hører til i hver havn. Medlemskapet tegnes i puben.', 'The fishing clubs gather the fishers who belong in each harbour. Membership is taken in the pub.')); s.big = (d.kg || 0) >= 20000; }
+  else if (it.kind === 'kv'){ const port = pressPort(d.port), refs = [...new Set(String(d.k || '').split('-').map(c => (typeof KV_REF !== 'undefined' && KV_REF[c]) || null).filter(Boolean))]; if (!refs.length) return null;   // a remark from the coast guard (09j-kystvakt.js kvFinish): the codes, read as their sources
+    s.h = P2('Kystvakta kontrollerte ' + w[0] + (port ? ' ved ' + port : ''), 'The coast guard inspected ' + w[1] + (port ? ' off ' + port : ''));
+    s.ing = P2('Kontrollen ga ' + (refs.length === 1 ? 'én merknad' : refs.length + ' merknader') + ', etter ' + refs.join(' og ') + '. Fangst utover regelen inndras ved levering.', 'The inspection gave ' + (refs.length === 1 ? 'one remark' : refs.length + ' remarks') + ', under ' + refs.join(' and ') + '. Catch beyond the rule is confiscated at the landing.');
+    s.body.push(P2('Kystvakta kontrollerer fiskebåter langs hele kysten, ved kai og på feltet. Reglene for stedet står i Regler-appen.', 'The coast guard inspects fishing boats along the whole coast, at the quay and on the field. The rules of the place are in the Regler app.')); }
   else if (it.kind === 'kvote'){ if (!(d.kf > 0)) return null;
     s.h = P2(w[0] + ' kjøper strukturkvote', w[1] + ' buys a structure quota');
     s.ing = P2(w[0] + ' har kjøpt strukturkvote og får kvotefaktor ' + fmt(d.kf / 10000, 2) + ' mer i 20 år.', w[1] + ' has bought a structure quota and gets ' + fmt(d.kf / 10000, 2) + ' more in quota factor for 20 years.');

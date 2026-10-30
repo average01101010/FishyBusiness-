@@ -33,7 +33,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `redskap.md` | Redskap og utstyr: de andres redskap i havet, utstyrsstatus og service, dekksutstyret, redskapet om bord synlig, redskap i sjøen. | `core/10-gear.js`, `core/10b-gearcare.js`, `ui/09-hand-fishing.js` |
 | `fiskerimodellen.md` | Kart, fjordlinje og fangstfelt, fiskerimodellen, Fiskeguiden, juks i dødtiden. Spesifikasjonen står i `docs/spesifikasjon.md`. | `core/03-simulation.js`, `core/03c-*`, `ui/06f-fishguide.js` |
 | `priser-og-salg.md` | Priser, kvalitet og salg, bestillingene. | `core/03-simulation.js` (`grade`, `sell`), `core/08-*` |
-| `kvoter-og-regler.md` | Kvoter og regulering, reglenes kartdata, regelmotoren, Regler-appen, varsel før feil, regelverket og kildene. | `core/03d-quota.js`, `core/03e-rules.js`, `src/data/rules.json`, `tools/rules/` |
+| `kvoter-og-regler.md` | Kvoter og regulering, reglenes kartdata, regelmotoren, Regler-appen, varsel før feil, Kystvakta om bord, regelverket og kildene. | `core/03d-quota.js`, `core/03e-rules.js`, `core/09j-kystvakt.js`, `src/data/rules.json`, `tools/rules/` |
 | `folk-om-bord.md` | Mannskapet, kulde og klær, arbeid om bord, mat, hviletid og energien, mannskapets arbeid på sjøen, karakteren og garderoben. Planen står i `docs/mannskap-plan.md`. | `core/04-crew.js`, `core/14-crewlife.js`, `ui/05b-work.js`, `ui/13-work.js`, `tools/harbour/arbeider.py`, `tools/harbour/garderobe.py` |
 | `driftsplan.md` | Driftsplanen (`S.ops`), Driftsplan-appen, den gamle planleggeren. | `core/06d-drift.js`, `ui/05c-drift.js` |
 | `oppdrag-og-kystposten.md` | Turoppdrag fra der du er, Kystposten. | `core/09g-turer.js`, `ui/06b-book-tabs.js` |
@@ -65,6 +65,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `docs/plan-blakveite.md`, `docs/blakveite.md` | Blåkveita: planen og kunnskapen. |
 | `docs/lansering.md` | Det som gjenstår før lansering, og serveren. |
 | `docs/onboarding.md` | Onboardingen. |
+| `docs/planer/oppdrag-2.md` | Oppdrag 2 (30.10.2026): leteoppdrag (L1–L2), oppdragskjeder (K1), fiskarlaget (F1–F3) og Kystvakta (V1), med valgene og forklaringene Jonas ba om. Venter på valg og «kjør på». |
 | `docs/planer/onboarding-2.md` | Onboarding 2 (27.10.2026): kortere første tur for hele kysten, målingene som viser frafall under seilingen ut, fasene O0–O6, de ti prinsippene mot churn og valgene V1–V8. Venter på svar. |
 
 ## Regler og kilder
