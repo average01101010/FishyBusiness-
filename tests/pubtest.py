@@ -72,6 +72,17 @@ async def main():
         await pg.screenshot(path='pub_quiz.png')
         # the room from the stool, turned to the tables; then out again
         await pg.evaluate("PUB3.openSpot('board')"); await pg.wait_for_timeout(300); await pg.screenshot(path='pub_board.png')
+        # the fiskarlag's board (F2, ui/09c-pubsoc.js lagBoardHtml) with a mock for the database, in both formats
+        await pg.evaluate("""(() => { const q = portById(S.boat.port); const lag = {port:q.id, n:3, goal:4500, kg:5200, active:3, hit:true, hitAt:1, members:[{user:'Kari', kg:2600, me:false}, {user:'', kg:1800, me:true}, {user:'Per', kg:800, me:false}]};
+          const board = [{user:'Kari', boat:'Måken', k:2, sp:'sei', place:q.id, nm:0.8, age:600, me:false}, {user:'Per', boat:'Von', k:4, sp:null, place:null, nm:null, age:7200, me:false}, {user:'', boat:'Havbris', k:0, sp:null, place:null, nm:null, age:30, me:true}];
+          window.cloudRpc = async (fn, a) => fn === 'lag_get' ? lag : fn === 'lag_board' ? board : fn === 'lag_post' ? 'ok' : null; CLOUD.on = true; CLOUD.user = 'u1'; CLOUD.guest = false; S.pubSoc = {};
+          PUBSOC._lg.d = null; PUBSOC._lg.at = 0; PUBSOC._lb.at = 0; PUBSOC.lagFetch(); PUBSOC.lagBoardFetch(); })()"""); await pg.wait_for_timeout(300)
+        await pg.evaluate("PUB3.openSpot('lag')"); await pg.wait_for_timeout(500); await pg.evaluate("PUB3.openSpot('lag')"); await pg.wait_for_timeout(300)
+        lagP = await pg.evaluate("JSON.stringify({on:PUB3.panel === 'lag', t:/Tavla/.test(document.querySelector('#pub3 .pb-panel').textContent), sei:/Seien står ved/.test(document.querySelector('#pub3 .pb-panel').textContent), btn:!!document.querySelector('#pub3 .pb-panel [data-q=\"lp:0\"]')})")
+        lagP = json.loads(lagP); print(ok(lagP['on'] and lagP['t'] and lagP['sei'] and lagP['btn']), 'lagets tavle i puben: lappene med art og sted, og knappene', lagP)
+        await pg.screenshot(path='pub_lag_liggende.png')
+        await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(600); await pg.evaluate("PUB3.openSpot('lag')"); await pg.wait_for_timeout(400); await pg.screenshot(path='pub_lag_staaende.png')
+        await pg.set_viewport_size({'width': 1000, 'height': 640}); await pg.wait_for_timeout(600)
         await pg.evaluate("document.querySelector('#pub3 [data-q=x]').click(); PUB3.look(2.6, -0.12)"); await pg.wait_for_timeout(1500); await pg.screenshot(path='pub_room.png')
         await pg.evaluate("document.querySelector('#pub3 [data-q=out]').click()"); await pg.wait_for_timeout(400)
         out = json.loads(await pg.evaluate("JSON.stringify({on:PUB3.isOpen(), body:document.body.classList.contains('in-pub')})"))

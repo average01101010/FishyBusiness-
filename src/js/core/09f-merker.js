@@ -76,7 +76,8 @@ const ACHL = [
   {id:'peer', n:['Andre spillere møtt på sjøen', 'Other players met at sea'], tiers:[1, 10, 50], unit:'', v:() => Object.keys((S.ach && S.ach.peers) || {}).length},
   // the pub (ui/09c-pubsoc.js): the week's quiz with every answer right, and the weeks the fiskarlag reached its goal
   {id:'quiz', n:['Quizmester på puben', 'Pub quiz master'], tiers:[1, 5, 20], unit:'', v:() => achC('quiz')},
-  {id:'lag', n:['Fiskarlagets ukemål', 'The fishing club\'s weekly goals'], tiers:[1, 5, 20], unit:'', v:() => achC('lag')}
+  {id:'lag', n:['Fiskarlagets ukemål', 'The fishing club\'s weekly goals'], tiers:[1, 5, 20], unit:'', v:() => achC('lag')},
+  {id:'lagw', n:['Fiskarlaget: uker med levering', 'The fishing club: weeks with a landing'], tiers:[1, 4, 12, 26, 52], unit:'', v:() => Object.keys((S.pubSoc || {}).lagWk || {}).length}   // (ui/09c-pubsoc.js lagWeek, docs/planer/oppdrag-2.md F2)
 ];
 const achOf = id => ACH.find(a => a.id === id);
 function achState(){

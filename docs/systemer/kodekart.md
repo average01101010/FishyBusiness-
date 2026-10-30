@@ -1022,29 +1022,29 @@ Fartstid: years at sea, 0 to 40 (Jonas 07.10.2026; docs/engasjement.md, arbeidsl
   - 51 `fsLand(total)`
   - 53 `fsRested(realMs)`
 
-## `src/js/core/09f-merker.js` (209 linjer)
+## `src/js/core/09f-merker.js` (210 linjer)
 
 Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1.5 and 3)
 
 - **1** Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1.5 and 3)
   - 22 `achVisits()`
   - 23 `achVisitPort(pid)`
-  - 82 `achState()`
-  - 98 `achAdd(k, n)`
-  - 99 `achSale(total, sps)`
-  - 100 `achCatch(sp, cls)`
-  - 102 `achMinute()`
-  - 111 `achTripEnd(bad)`
-- **113** the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters
-  - 115 `achPool(scale)`
-  - 139 `achDraw(key, scale)`
-  - 147 `achGive(key, scale, title)`
-- **156** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
-  - 158 `achCheck(quiet)`
-  - 186 `achChapter(ch)`
-  - 196 `achSeed()`
-- **207** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
-  - 208 `freeFirst(k)`
+  - 83 `achState()`
+  - 99 `achAdd(k, n)`
+  - 100 `achSale(total, sps)`
+  - 101 `achCatch(sp, cls)`
+  - 103 `achMinute()`
+  - 112 `achTripEnd(bad)`
+- **114** the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters
+  - 116 `achPool(scale)`
+  - 140 `achDraw(key, scale)`
+  - 148 `achGive(key, scale, title)`
+- **157** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
+  - 159 `achCheck(quiet)`
+  - 187 `achChapter(ch)`
+  - 197 `achSeed()`
+- **208** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
+  - 209 `freeFirst(k)`
 
 ## `src/js/core/09g-turer.js` (984 linjer)
 
@@ -1902,12 +1902,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (791 linjer)
+## `src/js/ui/phone/07-patch.js` (792 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 784 `patch()`
+  - 785 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -2312,14 +2312,15 @@ actions
 - **198** the panels
 - **250** the top bar, open and close
 
-## `src/js/ui/09c-pubsoc.js` (189 linjer)
+## `src/js/ui/09c-pubsoc.js` (243 linjer)
 
 ---------- the pub's social side (ui/09b-pub.js; supabase/migrations/20261009120000_pub.sql) ----------
 
 - **1** the pub's social side (ui/09b-pub.js; supabase/migrations/20261009120000_pub.sql)
 - **11** who is here tonight: the players' boats lying in this harbour
 - **57** the harbour's fiskarlag
-- **104** the week's quiz: five questions from the bank, the same for everyone in a game week
+- **73** the club's notice board: fixed lines, never free text (F2, 20261030160000_lag_board.sql)
+- **155** the week's quiz: five questions from the bank, the same for everyone in a game week
 
 ## `src/js/ui/10-rod-acts.js` (88 linjer)
 
