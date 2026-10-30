@@ -42,8 +42,26 @@ function turCard(m, act, det){
       (m.k === 'prove' && m.stage === 'measure' ? '' : '<button class="ph-btn' + (m.k === 'foto' && dist(S.boat.pos, m.fyr) <= TUR.fotoR ? '' : ' p') + '" data-pa="turgo" data-id="' + m.id + '">' + L0('Kjør dit', 'Go there') + '</button>') + '<button class="ph-btn" data-pa="turdrop" data-id="' + m.id + '">' + L0('Gi fra deg', 'Give up') + '</button>'
       : '<button class="ph-btn p" data-pa="turtake" data-id="' + m.id + '">' + L0('Ta oppdraget', 'Take the mission') + '</button>') + '</div></div>';
 }
+// the asks for a tow from other players near (ui/10o-ptow.js, within 30 nm), on the board too (30.10.2026, gap-analysen 3.5: the missions were
+// all solo): the same ask as the chart's mark, with «Hjelp»; the tow one has taken stands first with the way there and «Gi fra deg»
+function turAskCards(){
+  if (typeof PTOW === 'undefined' || !PTOW._P) return '';
+  const L0 = (no, en) => S.lang === 'en' ? en : no, kv0 = (k, v) => '<div class="kv"><span>' + k + '</span><b>' + v + '</b></div>', H = S.ptowH, h = [];
+  const who = o => turEsc((o.user ? peerName(o.user) : L0('en spiller', 'a player')) + (o.boat ? ' «' + peerName(o.boat) + '»' : ''));
+  if (H && H.st === 'come') h.push('<div class="ph-card tur ptow"><div class="tur-h"><span class="tur-c">' + L0('Ditt slep', 'Your tow') + '</span><small>' + L0('Hjelp på sjøen', 'Help at sea') + '</small></div><h4>' + who(H) + '</h4>' +
+    '<p class="ph-note">' + L0('Gå dit, ligg stille nær båten og trykk «Ta slep». Kommer du ikke innen 20 minutter, tilkalles redningsskøyta.', 'Go there, lie still near the boat and tap «Take the tow». If you have not come within 20 minutes, the rescue boat is called.') + '</p>' +
+    kv0(L0('Avstand', 'Distance'), fmt(dist(S.boat.pos, {x:H.x, y:H.y}) / NM, 1) + ' nm') + kv0(L0('Belønning', 'Reward'), kr(PTOW_PAY)) +
+    '<div class="tur-b"><button class="ph-btn p" data-pa="ptgo">' + L0('Rute dit', 'Route there') + '</button><button class="ph-btn" data-pa="ptdrop">' + L0('Gi fra deg', 'Give up') + '</button></div></div>');
+  for (const o of PTOW._P.open || []){ if (H && H.id === o.id) continue;
+    h.push('<div class="ph-card tur ptow"><div class="tur-h"><span class="tur-c">' + L0('Nødanrop', 'Mayday') + '</span><small>' + L0('Hjelp på sjøen', 'Help at sea') + '</small></div><h4>' + L0('Trenger slep: ', 'Needs a tow: ') + who(o) + '</h4>' +
+      '<p class="ph-note">' + L0('En annen spiller ligger med motorstopp og spør om slep. Ta det, gå dit og ligg stille ved båten, så går tauet over. Belønningen betales når hun ligger ved kai. Tar ingen det innen 20 minutter, kommer redningsskøyta.', 'Another player lies with engine trouble and asks for a tow. Take it, go there and lie still by the boat, and the line goes over. The reward is paid when she lies at a quay. If nobody takes it within 20 minutes, the rescue boat comes.') + '</p>' +
+      kv0(L0('Avstand', 'Distance'), fmt(dist(S.boat.pos, o) / NM, 1) + ' nm') + kv0(L0('Belønning', 'Reward'), kr(PTOW_PAY)) +
+      '<div class="tur-b"><button class="ph-btn p" data-pa="pttake" data-id="' + o.id + '"' + (H ? ' disabled' : '') + '>' + L0('Hjelp', 'Help') + '</button></div></div>'); }
+  return h.length ? '<h4 class="tur-sec">' + L0('Nødanrop', 'Mayday') + '</h4>' + h.join('') : '';
+}
 function turPage(){
   const T = turEnsure(), L0 = (no, en) => S.lang === 'en' ? en : no, h = [];
+  h.push(turAskCards());
   if (T.act.length){ h.push('<h4 class="tur-sec">' + L0('Dine oppdrag', 'Your missions') + '</h4>'); for (const m of T.act) h.push(turCard(m, true)); }
   h.push('<h4 class="tur-sec">' + L0('Tavla', 'The board') + '</h4><p class="ph-note tur-n">' + L0('Laget fra der båten er nå. Nye oppdrag kommer etter hvert, høyst fire på tavla, og du kan ha to om gangen. Det som ligger på veien din, står først.', 'Made from where the boat is now. New missions come as time goes, at most four on the board, and you can have two at a time. What lies on your way comes first.') + '</p>');
   // the next one: when the next place on the board comes (core turEnsure)

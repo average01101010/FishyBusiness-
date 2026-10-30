@@ -379,6 +379,7 @@ Jonas valgte dem fra lista (nr. 5 og 7).
   - Når hjelperen fortøyer i en havn (`PTOW.docked` fra `dock`), er jobben gjort. Spillet betaler 25 000 kr når serveren tillater det: én gang i døgnet for samme spiller, og høyst tre betalte slep i døgnet, så to venner ikke kan tjene på å late som.
   - Merket «Slept andre spillere» har trinnene 1–20.
   - Hjelperen kan «Gi fra seg» slepet. Da åpnes det for andre igjen.
+  - **Fra 30.10.2026** står spørsmålene også som kort øverst på tavla i Oppdrag-appen («Nødanrop», `turAskCards` i `ui/05f-turer.js`), med «Hjelp», og det tatte slepet som «Ditt slep» med «Rute dit» og «Gi fra seg». Se `oppdrag-og-kystposten.md`.
 - **Skyen:** `supabase/migrations/20261009260000_tows.sql`.
   - Tabellen `tows`, som er stengt for spillerne.
   - Funksjonene `tow_ask`, `tow_open`, `tow_take`, `tow_hook`, `tow_done`, `tow_cancel` og `tow_mine`.
