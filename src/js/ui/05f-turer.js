@@ -8,6 +8,9 @@ function turCard(m, act, det){
   const L0 = (no, en) => S.lang === 'en' ? en : no, w = turWhat(m), kv0 = (k, v) => '<div class="kv"><span>' + k + '</span><b>' + v + '</b></div>';
   let extra = '';
   if (m.k === 'best' && act){ const o = ordState().active.find(x => x.tur === m.id); if (o) extra = kv0(L0('Levert', 'Delivered'), fmt(o.kg - o.left, 0) + ' / ' + fmt(o.kg, 0) + ' kg'); }
+  if (m.k === 'best' && act && m.extra) extra += kv0(L0('Ekstra', 'Extra'), '+' + fmt(m.extra.kg, 0) + ' kg · ' + Math.round(m.extra.prem * 100) + ' % ' + L0('over prisen', 'over the price'));
+  if (act && m.wx) extra += kv0(L0('Varselet', 'The forecast'), fmt(m.wx.hs, 1) + ' m ' + L0('kl. ', 'at ') + hm(m.wx.at) + ' · ' + L0('havnetid i kuling teller ikke', 'harbour time in a gale does not count'));
+  if (act && m.tip) extra += kv0(L0('Tips på VHF', 'Tip on the VHF'), coordStr(m.tip.p));
   if (m.k === 'best') extra += kv0(L0('Kvalitet', 'Quality'), QN[m.q][S.lang === 'en' ? 'en' : 'no']) + (turRepN(m.to) >= 3 ? kv0(L0('Kjenner deg', 'Knows you'), L0('ja, fra bestillinger før', 'yes, from orders before')) : '');
   if (m.k === 'sesong'){ const st = turStages(m), i = Math.min(st.n - 1, m.stage || 0);
     extra = kv0(L0('Levert der', 'Landed there'), fmt(m.got || 0, 0) + ' / ' + fmt(m.kg, 0) + ' kg') + kv0(act ? L0('Etappe', 'Stage') : L0('Etapper', 'Stages'), act ? Math.min(st.n, (m.stage || 0) + 1) + L0(' av ', ' of ') + st.n + ' · ' + L0('til ', 'to ') + fmt(st.at[i], 0) + ' kg · ' + kr(st.part[i]) : st.n + L0(' · ca. ', ' · about ') + fmt(st.at[0], 0) + L0(' kg og ', ' kg and ') + kr(st.part[0]) + L0(' hver', ' each')) +

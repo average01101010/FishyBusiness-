@@ -295,6 +295,32 @@ async def main():
                                   and 'Tredje gangen' in ' '.join(pp['said'][2]['landed']) and pp['rep'] == 3 and pp['card'] and pp['asksBefore'] == 0 and pp['ask'] and pp['ask']['prem'] == 0.2 and pp['askMsg'] and pp['name'] in pp['askMsg']
                                   and pp['took2'] and pp['took2']['slots'] == pp['slotsAfterLaid'] and pp['took2']['prem'] == 0.2 and pp['took2']['act'] and pp['again'] == 0)
         check(ok16, "the people: the order names the manager, she sends a word when it is taken, remembers the first, second and third landing, and from the third lays an order of her own (20 % over, no place used), not again within a week", pp)
+        # 17. something happens under way (30.10.2026): a long order gets one event when taken; fired, «more» has the plant ask for extra kilos
+        #     at a premium and pays them when the order lands with them; «tip» names where the species stands by the fish model (or stays
+        #     silent); «wx» speaks only when the forecast has worsened past the boat's limit, and then harbour time under a gale does not count
+        ev2 = await pg.evaluate("""(() => { const T = turState(), keep = {done:T.done, act:T.act, board:T.board, rep:T.rep, slots:T.slots}; T.done = []; T.act = []; T.board = []; T.rep = {};
+          const o = turHere(), me = turMe(), b = S.boat; let m = null;
+          for (const c of turPlants().filter(x => x.id !== b.port).sort((a, z) => turNm(o, a.p) - turNm(o, z.p))){ const h = turNm(o, c.p) / turV(); if (h < 3 || h >= 18) continue; m = turBestAt(o, c, h, h < 7.5 ? 'mid' : 'lang', me); if (m) break; }
+          if (!m) return {none:true};
+          let rolled = 0; for (let i = 0; i < 12; i++){ const t = Object.assign({}, m, {cls:'lang'}); turEventRoll(t); if (t.ev && ['more', 'tip', 'wx'].includes(t.ev.k) && t.ev.at > 0) rolled++; }
+          m.id = ++T.seq; m.until = S.t + 9999; m.cls = 'lang'; m.pay = turFinal(m); T.board.push(m); turTake(m.id); const act = T.act.find(x => x.id === m.id), had = !!act.ev;
+          const st0 = b.status; b.status = 'sailing'; const n0 = S.msgs.length;
+          act.ev = {k:'more', at:0, done:false}; turEventFire(act, b); const more = {extra:act.extra && act.extra.kg, prem:act.extra && act.extra.prem, said:S.msgs.length > n0 && S.msgs[S.msgs.length - 1].from};
+          act.ev = {k:'tip', at:0, done:false}; const n1 = S.msgs.length; turEventFire(act, b); const tip = {has:!!act.tip, said:S.msgs.length > n1 ? S.msgs[S.msgs.length - 1].from : null};
+          act.ev = {k:'wx', at:0, done:false}; const n2 = S.msgs.length; turEventFire(act, b); const wx = {has:!!act.wx, said:S.msgs.length > n2 ? S.msgs[S.msgs.length - 1].from : null};
+          b.status = st0;
+          // the extra kilos: landed with the order, they pay
+          const O = ordState(), a = O.active.find(x => x.tur === act.id), cash0 = S.cash; O.active = O.active.filter(x => x !== a); O.done.unshift({...a, ok:true});
+          turSale(act.to, {[act.sp]:act.kg + (act.extra ? act.extra.kg : 0)}); const paid = act.extraPaid || 0, gain = S.cash - cash0;
+          // in port under a gale, a mission whose forecast worsened does not lose deadline time
+          const w = {id:9, due:1000, wx:{hs:3, at:0}, t0:0, k:'frakt'}, w2 = {id:10, due:1000, t0:0, k:'frakt'}; T.act = [w, w2]; b.status = 'port'; let wind = 0; try { wind = windAt(S.t / 60, b.pos); } catch (e){} turStuck(T, b); b.status = st0;
+          const gale = {wind:+wind.toFixed(1), due:w.due, due2:w2.due};
+          Object.assign(T, {done:keep.done, act:keep.act, board:keep.board, rep:keep.rep, slots:keep.slots}); ordState().active = [];
+          return {rolled, had, more, tip, wx, paid, gain, gale, kg:act.kg, sp:act.sp}; })()""")
+        g = ev2.get('gale', {})
+        ok17 = ev2.get('none') or (ev2['rolled'] == 12 and ev2['had'] and ev2['more']['extra'] and ev2['more']['prem'] == 0.3 and ev2['more']['said'] and (not ev2['tip']['has'] or ev2['tip']['said']) and (not ev2['wx']['has'] or ev2['wx']['said'] == 'Kystradio')
+                                   and ev2['paid'] > 0 and ev2['gain'] >= ev2['paid'] and g['due2'] == 1000 and g['due'] == (1001 if g['wind'] >= 13.9 else 1000))
+        check(ok17, "something happens under way: a long mission rolls one event; the plant's call for extra kilos pays them when landed; the VHF tip and the worsened forecast speak only when the model bears them out; harbour time under a gale does not count against a mission the forecast turned on", ev2)
         check(errs == [], 'sidefeil', errs[:3])
         await br.close()
 
