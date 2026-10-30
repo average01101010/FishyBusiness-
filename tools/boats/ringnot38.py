@@ -688,7 +688,9 @@ def decks(fine=True):
     xw = sorted(set(round(v, 4) for v in xw))
     for x0, x1 in zip(xw, xw[1:]):
         yc0, yc1 = y_c(x0), y_c(min(x1, HX1 - 1e-6) if x0 < HX1 else x1)
-        A.poly([(x0, yc0, z_sh(x0)), (x1, yc1, z_sh(x1)), (x1, yc1, z_dk(x1) + camber(yc1, x1)), (x0, yc0, z_dk(x0) + camber(yc0, x0))], W, (0, -1, 0))
+        # (under the house the wall ends just below the house's own wall, so the two never lie in one plane)
+        t0 = z_dk(x0) - 0.11 if HX0 - 0.9 < x0 < HX1 else z_dk(x0) + camber(yc0, x0); t1 = z_dk(x1) - 0.11 if HX0 - 0.9 < x1 <= HX1 else z_dk(x1) + camber(yc1, x1)
+        A.poly([(x0, yc0, z_sh(x0)), (x1, yc1, z_sh(x1)), (x1, yc1, t1), (x0, yc0, t0)], W, (0, -1, 0))
         e0, e1 = hbz(x0, z_sh(x0) + 0.02) - 0.05, hbz(x1, z_sh(x1) + 0.02) - 0.05
         A.poly([(x0, -e0, z_sh(x0)), (x1, -e1, z_sh(x1)), (x1, yc1, z_sh(x1)), (x0, yc0, z_sh(x0))], C['deck'], (0, 0, 1))
     e = hbz(X_FC, z_dk(X_FC)) - 0.02
