@@ -20,6 +20,12 @@ async def main():
         async def leg(name, thr, rud, secs):
             await pg.evaluate("([t, r]) => { helmTake(); S.helm.thr = t; S.helm.rud = r; }", [thr, rud])
             await pg.wait_for_timeout(secs * 1000)
+            # SwiftShader draws few frames a second here (29.10.2026, with the trees and the life of G4-G9 a frame took seconds at high
+            # quality): the boat's model steps with the frames, so wait until she does what the leg asks, not only for the seconds
+            want = {'ahead': 'S.boat.dyn && S.boat.dyn.u > 1.0', 'astern': 'S.boat.dyn && S.boat.dyn.u < -0.3'}.get(name)
+            if want:
+                try: await pg.wait_for_function('() => ' + want, timeout=300000, polling=2000)
+                except Exception as e: print('   (' + name + ': not yet after 5 min)')
             await pg.evaluate("() => { const c = G3._debug.cam; c.helm = false; c.dist = 260; c.pitch = 1.15; }"); await pg.wait_for_timeout(2500)
             await pg.screenshot(path=os.path.join(OUT, f'wake_{name}.png'))
             return await pg.evaluate("() => { const D = G3._debug, F = D.foam; return {lvl: D.QUAL.lvl, kn: +(S.helm.v || 0).toFixed(1), u: S.boat.dyn ? +S.boat.dyn.u.toFixed(2) : null, foam: F ? {ok: F.ok, G: F.G ? F.G.map(v => +v.toFixed(1)) : null, cur: F.cur && [+(+F.cur.x).toFixed(2), +(+F.cur.y).toFixed(2)]} : null}; }")
