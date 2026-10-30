@@ -20,7 +20,9 @@
 //           Salvage (sjøloven ch. 16, Jonas 07.10.2026): no agreement beforehand, so the pay is a salvage reward set by the value saved,
 //           the danger and the time and costs, never above the boat's value (§ 446), and nothing if she drifts ashore first (no cure,
 //           no pay). The owner's insurer pays
-//   sesong  the season's move: land so many kilos of a species at the plants near a place before the week is out
+//   sesong  the season's move: land so many kilos of a species at the plants near a place before the week is out, in three stages
+//           (turStages, 30.10.2026): each stage is a third of the kilos and pays a third of the reward as it is landed, so a week's
+//           work is never lost whole when the week runs out (7 of 11 moves failed 5.–29.10.2026); what is paid is kept
 //   prove   survey fishing for Havforskningsinstituttet, after its coastal reference fleet (Kystreferanseflåten, since 2005: 20-25
 //           coastal boats along the whole coast, paid by the institute to log their catches and to take samples; the whole catch is
 //           measured for length, hi.no): fish a while at a station and measure ten fish on the board (a small game in the Oppdrag
@@ -333,7 +335,29 @@ function turSesong(o){
   kg = Math.round(kg / 100) * 100; if (kg < 300) return null;
   // the pay: a premium for the sailing there and back and for the hours of fishing the kilos take at the player's own pace
   const fishH = Math.min(hTot, kg / Math.max(own.kgPerH, hold / 20));
-  return {k:'sesong', cls:'sesong', to:best.q.id, p:best.q.p, nm:Math.round(best.nm), h, sp:best.sp, kg, got:0, base:turPay(2 * h + fishH, TUR.keepF), hTot};
+  return {k:'sesong', cls:'sesong', to:best.q.id, p:best.q.p, nm:Math.round(best.nm), h, sp:best.sp, kg, got:0, stage:0, paid:0, base:turPay(2 * h + fishH, TUR.keepF), hTot};
+}
+// the season's three stages (30.10.2026): the kilos each stage ends at (thirds, in hundreds, the last takes the rest) and the pay of each
+// (thirds of the reward, the last takes the rest). Missions from before get them from their kilos as they are met
+function turStages(m){
+  const n = 3, kg = Math.max(100, m.kg || 100), step = Math.max(100, Math.round(kg / n / 100) * 100), pay = m.pay || 0, pStep = Math.round(pay / n / 100) * 100;
+  const at = [], part = []; for (let i = 1; i <= n; i++){ at.push(i < n ? Math.min(kg, step * i) : kg); part.push(i < n ? pStep : pay - pStep * (n - 1)); }
+  if (m.stage == null) m.stage = 0; if (m.paid == null) m.paid = 0;
+  return {n, at, part};
+}
+// a landing near the season's place: the stages met are paid one by one, and the last one ends the mission
+function turSesongStage(m){
+  const st = turStages(m), name = portById(m.to).name, spn = [SPECIES[m.sp].no.toLowerCase(), SPECIES[m.sp].en.toLowerCase()];
+  while (m.stage < st.n && (m.got || 0) >= st.at[m.stage]){
+    const i = m.stage, part = st.part[i]; m.stage = i + 1;
+    if (typeof cloudEv === 'function') cloudEv('tur_stage', {id:m.id, k:m.k, stage:m.stage, got:Math.round(m.got || 0), kg:m.kg, pay:part});
+    if (m.stage < st.n){ m.paid = (m.paid || 0) + part; book('oppdrag', part, 'Sesongflytting, etappe ' + m.stage, 'Season\'s move, stage ' + m.stage); bankAfterIncome(part);
+      msg('Kystposten', 'Etappe ' + m.stage + ' av ' + st.n + ' i ' + name + ': ' + fmt(m.got, 0) + ' kg ' + spn[0] + ' levert. Du får ' + kr(part) + ' nå, resten når sesongen er fisket (' + fmt(m.kg, 0) + ' kg).',
+        'Stage ' + m.stage + ' of ' + st.n + ' at ' + name + ': ' + fmt(m.got, 0) + ' kg of ' + spn[1] + ' landed. You get ' + kr(part) + ' now, the rest when the season is fished (' + fmt(m.kg, 0) + ' kg).');
+      log('Sesongflytting, etappe ' + m.stage + ' av ' + st.n + ' ferdig: ' + kr(part) + '.', 'Season\'s move, stage ' + m.stage + ' of ' + st.n + ' done: ' + kr(part) + '.'); }
+    else { m.paid = (m.paid || 0) + part;
+      turPayOut(m, 'Kystposten', 'Sesongen i ' + name + ' er fisket: ' + fmt(m.got, 0) + ' kg ' + spn[0] + ' levert.', 'The season at ' + name + ' is fished: ' + fmt(m.got, 0) + ' kg of ' + spn[1] + ' landed.', part); }
+  }
 }
 // ---- survey fishing for Havforskningsinstituttet ----
 // the lengths the board sees (cm, total length) of each species, a catch's usual span
@@ -577,15 +601,17 @@ function turEnd(m, ok, why, how){
     if (m.k === 'garn') S.sets = (S.sets || []).filter(s => s.tur !== m.id);
     if (m.k === 'best'){ const O = ordState(); O.active = O.active.filter(o => o.tur !== m.id); }
   }
-  T.done.unshift({id:m.id, k:m.k, cls:m.cls, to:m.to || null, ok, pay:ok ? m.pay : 0, t:S.t, what:turWhat(m)}); T.done = T.done.slice(0, 20);
+  const paid = !ok && m.k === 'sesong' && how !== 'drop' ? m.paid || 0 : 0;   // (a season's stages already paid are kept, and the mission stands as partly done; given up, nothing more is said)
+  T.done.unshift({id:m.id, k:m.k, cls:m.cls, to:m.to || null, ok, pay:ok ? m.pay : paid, part:paid > 0, t:S.t, what:turWhat(m)}); T.done = T.done.slice(0, 20);
   if (why) log(why, why);
   const frac = m.due > m.t0 ? Math.round((S.t - m.t0) / (m.due - m.t0) * 100) / 100 : null;
-  if (typeof cloudEv === 'function') cloudEv(ok ? 'tur_done' : 'tur_fail', Object.assign({id:m.id, k:m.k, cls:m.cls, nm:m.nm, trim:!!trimOn(S.boat), min:Math.round((S.t - m.t0) / GAME_RATE), frac, pay:ok ? Math.round(m.pay || 0) : 0}, ok ? {} : {how:how || 'other'}));
+  if (typeof cloudEv === 'function') cloudEv(ok ? 'tur_done' : 'tur_fail', Object.assign({id:m.id, k:m.k, cls:m.cls, nm:m.nm, trim:!!trimOn(S.boat), min:Math.round((S.t - m.t0) / GAME_RATE), frac, pay:ok ? Math.round(m.pay || 0) : Math.round(m.paid || 0)}, ok ? {} : {how:how || 'other', stage:m.k === 'sesong' ? m.stage || 0 : undefined}));
 }
-function turPayOut(m, from, no, en){
-  if (m.k !== 'best'){ book('oppdrag', m.pay, 'Oppdrag fullført', 'Mission completed'); bankAfterIncome(m.pay); }
+function turPayOut(m, from, no, en, part){
+  const amt = part != null ? part : m.pay;
+  if (m.k !== 'best'){ book('oppdrag', amt, 'Oppdrag fullført', 'Mission completed'); bankAfterIncome(amt); }
   if ((m.cls === 'lang' || m.k === 'sesong') && ['sesong', 'best', 'frakt'].includes(m.k)) pressPut('tur', {k:m.k, to:m.to || '', from:m.from || undefined, sp:m.sp || undefined, kg:Math.round(m.k === 'sesong' ? m.got || m.kg : m.kg || 0), nm:m.nm || 0});   // Kystposten (09h-press.js)
-  msg(from, no + ' ' + turL('Du får ', 'You get ') + kr(m.pay) + '.', en + ' You get ' + kr(m.pay) + '.');
+  msg(from, no + ' ' + turL('Du får ', 'You get ') + kr(amt) + (part != null && amt < m.pay ? turL(', i alt ', ', in all ') + kr(m.pay) : '') + '.', en + ' You get ' + kr(amt) + (part != null && amt < m.pay ? ', in all ' + kr(m.pay) : '') + '.');
   turEnd(m, true, turL('Oppdrag fullført: ', 'Mission done: ') + turWhat(m)[S.lang === 'en' ? 1 : 0] + ', ' + kr(m.pay) + '.');
 }
 // at the quay: freight picked up or delivered
@@ -608,8 +634,7 @@ function turSale(pid, bySp){
   for (const m of T.act.slice()){
     if (m.k === 'best' && !O.active.some(o => o.tur === m.id)){ const d = O.done.find(o => o.tur === m.id);
       if (d && d.ok){ turEnd(m, true, turL('Oppdrag fullført: ', 'Mission done: ') + turWhat(m)[S.lang === 'en' ? 1 : 0] + '.'); } }
-    if (m.k === 'sesong' && q && dist(q.p, m.p) <= TUR.sesongR){ m.got = (m.got || 0) + (bySp[m.sp] || 0);
-      if (m.got >= m.kg) turPayOut(m, 'Kystposten', 'Sesongen i ' + portById(m.to).name + ' er fisket: ' + fmt(m.got, 0) + ' kg ' + SPECIES[m.sp].no.toLowerCase() + ' levert.', 'The season at ' + portById(m.to).name + ' is fished: ' + fmt(m.got, 0) + ' kg of ' + SPECIES[m.sp].en.toLowerCase() + ' landed.'); }
+    if (m.k === 'sesong' && q && dist(q.p, m.p) <= TUR.sesongR){ m.got = (m.got || 0) + (bySp[m.sp] || 0); turSesongStage(m); }
   }
 }
 // the found gear is hauled: the fish is aboard, the gear goes back to its owner, who pays the finder's fee
@@ -627,7 +652,8 @@ function turHour(){
     if (m.k === 'garn' && (S.sets || []).some(s => s.tur === m.id && s.hauling)) continue;   // the haul under way finishes
     if (m.k === 'slep' && m.stage === 'tow') continue;   // and the tow under way
     if (m.k === 'prove' && m.stage === 'measure') continue;   // the fish are caught; the board waits
-    msg(m.k === 'garn' ? m.owner : 'Oppdrag', 'Fristen gikk ut: ' + turWhat(m)[0] + '. Ta et nytt fra tavla når det passer.', 'The deadline passed: ' + turWhat(m)[1] + '. Take a new one from the board when it suits you.');
+    if (m.k === 'sesong' && (m.paid || 0) > 0) msg('Kystposten', 'Uka er ute i ' + portById(m.to).name + ': ' + fmt(m.got || 0, 0) + ' av ' + fmt(m.kg, 0) + ' kg ' + SPECIES[m.sp].no.toLowerCase() + ' levert, ' + (m.stage || 0) + ' av 3 etapper. Du beholder ' + kr(m.paid) + '.', 'The week is out at ' + portById(m.to).name + ': ' + fmt(m.got || 0, 0) + ' of ' + fmt(m.kg, 0) + ' kg of ' + SPECIES[m.sp].en.toLowerCase() + ' landed, ' + (m.stage || 0) + ' of 3 stages. You keep ' + kr(m.paid) + '.');
+    else msg(m.k === 'garn' ? m.owner : 'Oppdrag', 'Fristen gikk ut: ' + turWhat(m)[0] + '. Ta et nytt fra tavla når det passer.', 'The deadline passed: ' + turWhat(m)[1] + '. Take a new one from the board when it suits you.');
     turEnd(m, false, null, 'due');
   }
 }

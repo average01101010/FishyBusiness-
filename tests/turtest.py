@@ -126,11 +126,20 @@ async def main():
               and sl['done'] and sl['gain'] == sl['pay'] and sl['lo'] <= sl['pay'] <= sl['hi'] <= sl['value'] and sl['ins'] and sl['gone'] and sl.get('ashore', True)),
               'a boat with engine trouble drifts until you are beside her; then she follows astern on the line, at 5.5 knots at most and with more fuel burnt; brought in, the insurer pays a salvage reward by her value and the danger, never above her value; ashore first, nothing', sl)
         # 6. the season's move (a decked sjark; the open boat keeps to sheltered water): land enough near the place before the week is out
+        #    in three stages (30.10.2026): a third landed pays a third and the mission goes on; all of it pays the rest, the whole reward in all;
+        #    a week that runs out after one stage keeps what was paid and stands as partly done, not as failed
         se = await pg.evaluate("""(() => { const T = turState(), ty = S.boat.type; S.boat.type = 'sjark'; applyVessel(); const m = turSesong(turHere()); S.boat.type = ty; applyVessel(); if (!m) return {none:true};
-          m.id = ++T.seq; m.until = S.t + 1440; T.board.push(m); turTake(m.id); const cash0 = S.cash;
-          turSale(m.to, {[m.sp]:m.kg / 2}); const half = T.act.some(x => x.id === m.id); turSale(m.to, {[m.sp]:m.kg / 2});
-          const done = T.done.find(d => d.id === m.id); return {sp:m.sp, to:m.to, nm:m.nm, kg:m.kg, half, done:!!(done && done.ok), gain:S.cash - cash0, pay:m.pay}; })()""")
-        check(se.get('none') or (se['half'] and se['done'] and se['gain'] == se['pay']), "the season's move: half the kilos landed there is half, all of it pays", se)
+          m.id = ++T.seq; m.until = S.t + 1440; T.board.push(m); turTake(m.id); const cash0 = S.cash, st = turStages(m);
+          turSale(m.to, {[m.sp]:st.at[0]}); const one = {act:T.act.some(x => x.id === m.id), stage:m.stage, paid:m.paid, gain:S.cash - cash0};
+          turSale(m.to, {[m.sp]:m.kg - st.at[0]}); const done = T.done.find(d => d.id === m.id), all = {done:!!(done && done.ok), gain:S.cash - cash0, pay:m.pay, sum:st.part.reduce((a, b) => a + b, 0)};
+          // a second move: one stage, then the week runs out
+          S.boat.type = 'sjark'; applyVessel(); const m2 = turSesong(turHere()); S.boat.type = ty; applyVessel(); let out = null;
+          if (m2){ m2.id = ++T.seq; m2.until = S.t + 1440; T.board.push(m2); turTake(m2.id); const c1 = S.cash, s2 = turStages(m2); turSale(m2.to, {[m2.sp]:s2.at[0]}); m2.due = S.t - 1; turHour();
+            const d2 = T.done.find(d => d.id === m2.id); out = {ended:!!d2, ok:d2 && d2.ok, part:d2 && d2.part, pay:d2 && d2.pay, kept:S.cash - c1, first:s2.part[0]}; }
+          return {sp:m.sp, to:m.to, nm:m.nm, kg:m.kg, at:st.at, part:st.part, one, all, out}; })()""")
+        check(se.get('none') or (se['one']['act'] and se['one']['stage'] == 1 and se['one']['gain'] == se['part'][0] and se['all']['done'] and se['all']['gain'] == se['all']['pay'] and se['all']['sum'] == se['all']['pay'] and se['at'][2] == se['kg']
+                                 and (se['out'] is None or (se['out']['ended'] and not se['out']['ok'] and se['out']['part'] and se['out']['pay'] == se['out']['first'] and se['out']['kept'] == se['out']['first']))),
+              "the season's move in three stages: a third landed pays a third and goes on, all of it pays the whole reward in all; a week that runs out after one stage keeps that stage's pay and stands as partly done", se)
         # 7. a deadline passed ends the mission, and freight goes back
         dl = await pg.evaluate("""(() => { const T = turState(); S.boat.status = 'port'; S.boat.port = S.home || PORTS[0].id; S.boat.pos = {...portById(S.boat.port).p}; S.hold = [];
           let m = null; for (const c of ['kort', 'mid', 'lang']){ m = turFrakt(turHere(), c, new Set()); if (m) break; } if (!m) return {none:true};
