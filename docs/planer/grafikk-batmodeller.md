@@ -101,5 +101,11 @@ har samme oppløsning som bruker-styrte båter»). Pilotbåten er ringnotbåten,
 
 - **F0 bygd 30.10.2026:** `G3.bench(ks, ns)` (`view3d/25-controls.js`, `BENCH` i `00-head.js`), startet med `#bench` i adressen: egen båt
   tegnet k = 1, 2, 4, 8 ganger og 0, 5, 10, 20 andre båter på dagens nivå rundt henne, 2,5 s innsvinging og 4 s måling per oppsett,
-  tabell på skjermen (bildetid, bilder/s, andel bilder over 20 ms). Test: `benchshot`. **Venter på målingen fra Pad 3**, som krever
-  at koden er rullet ut.
+  tabell på skjermen (bildetid, bilder/s, andel bilder over 20 ms). Test: `benchshot`.
+- **Målingen fra Pad 3 (Jonas 30.10.2026 11:09, sjarkny, Adreno 830, nivå 2, 1292 × 778 @ 2,625, i havn om kvelden):** 20 ms
+  (50 bilder/s) i alle 16 oppsett, fra 8 009 til 224 252 båttrekanter (egen båt 1–8 ganger, 0–20 båter rundt), 34–48 % av bildene
+  over 20 ms uten mønster. Båtenes trekanter koster altså ikke målbart opp til minst 224 000; bildetida bestemmes av noe annet
+  (fyllraten med 2,6 i pikseltetthet, terrenget, skyggeren eller JS-tida), ikke av geometrien. **Følger for F1:** taket på egen båt
+  kan heves til rundt 300 000 trekanter nær (omtrent 8 ganger dagens), NPC-båtene blir på dagens nivå; indeksene er ikke lenger det
+  som må til for å få plass, og F1 kan legge vekten på WebGL 2, LOD og taket. Materialene i F2 koster per piksel og må måles på nytt.
+  Usikkert: målt med en lett båt (8 009 trekanter); ringnotbåten ganger 8 er rundt 310 000, utenfor det som er målt.
