@@ -1,0 +1,11 @@
+# Revisjonslogg E-after (open): tilstandsskifter minutt for minutt, spilt i testbygget 26.10.2026
+# hjem Finnsnes · mottak Botnhamn · felt [('f1', 2, 6), ('f2', 2, 6)] · juksplasser 1
+# slutt: on=False stop=Går ikke ut: lina er ikke egnet. wait=None
+# tid: dag klokke | tilstand (plan:status@havn/redskapsarbeid ?venter !stopp) | energi | høyeste slitenhet | last kg
+D3 09:00  -:port@finnsnes!stop:fail!off                  en=100 fat=  0 hold=    0
+# landinger (o.rep): [{"w": "D1 15:27", "port": "botnhamn", "kg": 230, "kr": 4075, "h": 10.5, "landed": true}]
+# salg: []
+# redskap i sjøen ved slutt: []
+# «Neste tur» slik siden viste den: []
+# slutt: {"en": 100, "fat": [0, 0], "cash": 1000840, "hold": 0, "status": "port", "port": "finnsnes", "pos": [867.75, 366.19], "revenue": 6543, "kg": 230, "costs": 5703}
+# meldinger: 

@@ -1,0 +1,34 @@
+# Revisjonslogg E-open (open): tilstandsskifter minutt for minutt, spilt i testbygget 26.10.2026
+# hjem Finnsnes · mottak Botnhamn · felt [('f1', 2, 6), ('f2', 2, 6)] · juksplasser 1
+# slutt: on=False stop=Går ikke ut: lina er ikke egnet. wait=None
+# tid: dag klokke | tilstand (plan:status@havn/redskapsarbeid ?venter !stopp) | energi | høyeste slitenhet | last kg
+D1 03:01  -:port@finnsnes?dep                            en=100 fat=  0 hold=    0
+D1 05:00  fish:unmooring@finnsnes                        en=100 fat=  0 hold=    0
+D1 05:01  fish:sailing                                   en=100 fat=  0 hold=    0
+D1 05:21  fish:fishing/set-line                          en= 99 fat=  0 hold=    0
+D1 05:32  fish:fishing                                   en= 98 fat=  0 hold=    0
+D1 05:33  fish:sailing                                   en= 98 fat=  0 hold=    0
+D1 05:43  fish:fishing/set-line                          en= 97 fat=  0 hold=    0
+D1 05:54  fish:fishing                                   en= 96 fat=  0 hold=    0
+D1 05:55  fish:sailing                                   en= 96 fat=  0 hold=    0
+D1 05:59  fish:fishing                                   en= 96 fat=  0 hold=    0
+D1 09:59  fish:sailing                                   en= 79 fat= 17 hold=  169
+D1 10:11  fish:fishing/haul-line                         en= 78 fat= 20 hold=  169
+D1 11:03  fish:fishing                                   en= 75 fat= 25 hold=  216
+D1 11:04  fish:sailing                                   en= 75 fat= 25 hold=  216
+D1 11:14  fish:fishing/haul-line                         en= 74 fat= 25 hold=  216
+D1 12:05  fish:fishing                                   en= 70 fat= 30 hold=  228
+D1 12:06  fish:sailing                                   en= 70 fat= 30 hold=  228
+D1 15:18  -:port@botnhamn/land                           en= 61 fat= 33 hold=  228
+D1 15:27  -:port@botnhamn                                en= 63 fat= 33 hold=    0
+D1 17:34  home:unmooring@botnhamn                        en= 89 fat=  0 hold=    0
+D1 17:35  home:sailing                                   en= 89 fat=  0 hold=    0
+D1 20:51  -:port@finnsnes                                en= 76 fat=  3 hold=    0
+D1 20:52  -:port@finnsnes?dep                            en= 76 fat=  3 hold=    0
+D2 07:00  -:port@finnsnes!stop:fail!off                  en=100 fat=  0 hold=    0
+# landinger (o.rep): [{"w": "D1 15:27", "port": "botnhamn", "kg": 228, "kr": 4086, "h": 10.5, "landed": true}]
+# salg: [{"w": "D1 15:27", "port": "botnhamn", "kg": 228, "total": 6560, "conf": 0}]
+# redskap i sjøen ved slutt: []
+# «Neste tur» slik siden viste den: [{"at": "D1 03:01", "sk": [["05:00", "Går fra Finnsnes"], ["05:17", "Setter 2 stamper på felt 2"], ["05:39", "Setter 2 stamper på felt 1"], ["06:05", "Jukser på plass 1 (høyst 4,0 t)"], ["10:16", "Trekker felt 2"], ["11:02", "Trekker felt 1"], ["14:46", "Leverer i Botnhamn"], ["18:59", "Hjem til Finnsnes og hvile"]]}, {"at": "D2 03:00", "sk": [["05:00", "Går fra Finnsnes"], ["05:17", "Setter 2 stamper på felt 2"], ["05:39", "Setter 2 stamper på felt 1"], ["06:05", "Jukser på plass 1 (høyst 4,0 t)"], ["10:16", "Trekker felt 2"], ["11:02", "Trekker felt 1"], ["14:46", "Leverer i Botnhamn"], ["18:59", "Hjem til Finnsnes og hvile"]]}]
+# slutt: {"en": 100, "fat": [0, 0], "cash": 1000854, "hold": 0, "status": "port", "port": "finnsnes", "pos": [867.75, 366.19], "revenue": 6560, "kg": 228, "costs": 5706}
+# meldinger: D1 15:27 Driftsplan: Driftsrapport: 228 kg levert i Botnhamn, 4 086 kr etter lott. || D1 15:34 Driftsplan: Går ikke ut: lina er ikke egnet. || D1 16:34 Driftsplan: Går ikke ut: lina er ikke egnet. || D2 05:00 Driftsplan: Går ikke ut: lina er ikke egnet. || D2 06:00 Driftsplan: Går ikke ut: lina er ikke egnet. || D2 07:00 Driftsplan: Går ikke ut: lina er ikke egnet. || D2 07:00 Driftsplan: Driftsplanen for «T-333-LK» har stoppet: Går ikke ut: lina er ikke egnet. || D2 08:00 Edvard: Jeg hørte om torska på 16 kilo. Far din hadde vært stolt. || D3 06:00 Vegard Mathisen: Jeg fyller 56 i dag. Kaka står i byssa. || D3 08:00 Edvard: Jeg hørte om torska på 16 kilo. Far din hadde vært stolt.

@@ -1,0 +1,10 @@
+*.json
+*.npy
+*.pkl
+*.png
+*.log
+tiles/
+probe/p/
+probe/game.html
+probe/fflate.js
+__pycache__/
