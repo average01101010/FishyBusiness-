@@ -563,6 +563,12 @@ leider byttet ut med de felles beslagene i `fittings.py` (`net_funnel`, `power_b
 `ladder`, `hose_reel`), så piloten og de andre båtene har samme beslag. Eksportert til `src/data/boat-ringnot38.b64` og
 `-side.b64`, inn i malen og som typen `ringnot38` i `VESSELS` (låst). `lodm` (Decimate til 40 000 trekanter) lages for første gang.
 
+I spillet (`vessel3d ringnot38`, 30.10.2026): 357 906 punkter nær (taket 900 000), 120 000 middels (`lodm`), bygget på 197 ms, alle
+plassene finnes; `brotest`: hodet under taket (2,97 m rom, øyet 1,65 m) og utsyn gjennom vinduene. Skroget måles til 36,67 m i
+testens bånd (vannlinja til 1,5 m over) mot 38,55 m over alt, fordi stevnen heller over bulben; testen tillater nå 6 % kortere.
+Fjernversjonen er 13 607 punkter (Jonas 30.10.2026: «Drit i den grensa»; taket for egen båt nær er 300 000 trekanter,
+middels og NPC 40 000).
+
 Igjen etter runde 22, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.

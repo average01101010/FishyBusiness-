@@ -104,7 +104,7 @@
   skala, klasjsjekk, punkttelling) kjøres etter hver endring, og de felles beslagene i `fittings.py` brukes der de finnes
   (propell, anoder, merker, nottrakt, kraftblokk, radomer, pisker, GPS, lyskastere, leider, slangetrommel). Regel: aldri to
   flater i samme plan. Eksporten gir `lod0` rundt 117 000 trekanter, `lodm` 40 000 (Decimate, første båt som får den) og
-  `lod1` under 12 000 punkter. Dataene ligger i `src/data/boat-ringnot38.b64` og `-side.b64`, i malen som `glb-ringnot38` og
+  `lod1` rundt 13 600 punkter (den gamle 12 000-linja gjelder ikke lenger, Jonas 30.10.2026). Dataene ligger i `src/data/boat-ringnot38.b64` og `-side.b64`, i malen som `glb-ringnot38` og
   `pic-ringnot38`. Typen `ringnot38` i `VESSELS` er låst (`lock`), plassen i stigen er ikke avgjort (B1 = C).
   Kjøring: `python3 tools/boats/ringnot38.py fast export` (med `dry` for bare `tools/boats/out`). Tester: `vessel3d`, `vesseltest`,
   `brotest`, `lanterntest`.
