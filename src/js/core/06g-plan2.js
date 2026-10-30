@@ -40,7 +40,7 @@ function plan2New(over){
   return Object.assign({v:DRV2, on:false, home:here, anchor:false, rig:RIGS[b.rig] ? b.rig : 'juksa', jig:true, places:[],
     wx:{wind:13, hs:2.5}, dep:5, rhythm:'day', days:3, land:{mode:'near', port:null, when:'full', days:2},
     legs:{}, M:null, homeA:null, restA:null, made:null, err:null, t0:null, run:null, held:null, stop:null, hold:0,
-    stats:{days:[], sum:{trips:0, kg:0, kr:0, lott:0, cost:{fuel:0, bait:0, egn:0}, conf:0, sp:{}, port:{}}}}, over || {});
+    stats:{days:[], sum:{trips:0, kg:0, kr:0, lott:0, cost:0, conf:0, sp:{}, port:{}}}}, over || {});
 }
 // the plan the new engine runs: with the switch off, none (today's plan is left alone); on, a v4, and an older plan is switched off with a word
 function plan2Ops(){
