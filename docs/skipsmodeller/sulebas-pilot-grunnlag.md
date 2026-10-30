@@ -555,7 +555,10 @@ lenger fram enn først målt), ankerkronens list under den på 30,65–32,75; et
 små åpninger i bakkens side: det slippbildet viste, var de store vinduene akter, og åpningen ved 25,9–27,2 m er et vindu i
 bakkens side (en person synes i det på slippbildet).
 
-Igjen etter runde 21, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 22 (baugoverlegget mot sidebildet, 25–39,5 m): ankerlomma, klyssene, bakkens vindu og rekka ligger på fotoet; de tre høye
+strekene lå 0,5 m for langt akter og er flyttet til 34,5–36,0 m.
+
+Igjen etter runde 22, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 

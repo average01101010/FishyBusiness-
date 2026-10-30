@@ -82,7 +82,7 @@ STRIPE = [(2.7, 5.57), (4.6, 5.47), (6.5, 5.36), (8.3, 5.25), (10.2, 5.13), (12.
 ST_W, ST_X = 0.33, (4.35, 27.35)
 ST_DASH = [(2.58, 3.11), (3.16, 3.68), (3.78, 4.26), (27.44, 28.11), (28.25, 28.88), (29.07, 29.64)]
 # three more slanted dashes high on the bow under the shelter deck's edge, beside the class ring (9d43d29b; the ring is not modelled)
-BOW_DASH = [(34.0, 34.4), (34.55, 34.95), (35.1, 35.5)]
+BOW_DASH = [(34.5, 34.9), (35.05, 35.45), (35.6, 36.0)]
 def st_top(x): return interp(STRIPE, x)
 def st_bot(x): return st_top(x) - ST_W
 
