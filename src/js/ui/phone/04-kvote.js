@@ -1,0 +1,63 @@
+  // the Kvote app: your quotas, the open group's season, the stocks, and the market for rights (core/03d-quota.js)
+  function kvote(){ const t = ['mine', 'open', 'stock', 'mkt'].includes(sub.kvote) ? sub.kvote : 'mine', H = S.t / 60;
+    const top = subs('kvote', [['mine', 'Mine kvoter', 'My quotas'], ['open', 'Åpen gruppe', 'Open group'], ['stock', 'Bestand', 'Stock'], ['mkt', 'Marked', 'Market']]);
+    if (t === 'mine') return top + '<div class="ph-c">' + '<h4 style="margin:4px 2px 6px">' + L('Papirer', 'Papers') + '</h4>' + papBladB() + papPermit() + (rederiOpen() ? '' : papBiz()) + '</div>' + salg('kvote');
+    return top + '<div class="ph-c">' + (t === 'open' ? kvOpen(H) : t === 'stock' ? kvStock(H) : kvMkt(H)) + '</div>'; }
+  const MNS = () => S.lang === 'no' ? ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'] : ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const doyStr = (y, d) => { const t = new Date(Date.UTC(y, 0, 1 + d)); return t.getUTCDate() + (S.lang === 'no' ? '. ' : ' ') + MNS()[t.getUTCMonth()]; };
+  function kvOpen(H){
+    const y = yearH(H), d = doyH(H), Y = qyAt(H), O = yearQuota(y).open, pl = wshOpen(y), got = Y.c + Y.me + pl, h = [], add = openMaxAdd(H);
+    const st = Y.stop != null && d >= Y.stop ? L('Stoppet ' + doyStr(y, Y.stop) + '. Bare de garanterte kvotene gjelder.', 'Stopped on ' + doyStr(y, Y.stop) + '. Only the guaranteed quotas apply.')
+      : Y.stop != null ? L('Stopp varslet til ' + doyStr(y, Y.stop) + '.', 'Stop announced for ' + doyStr(y, Y.stop) + '.')
+      : Y.free != null ? L('Fritt fiske siden ' + doyStr(y, Y.free) + '.', 'Free fishing since ' + doyStr(y, Y.free) + '.') : L('Fisket på maksimalkvotene er åpent.', 'Fishing on the maximum quotas is open.');
+    h.push('<div class="ph-card"><h4>' + L('Åpen gruppe ', 'Open group ') + y + '</h4>' + kv(L('Gruppekvote, torsk', 'Group quota, cod'), fmt(O.Q, 0) + ' t') + kv(L('Herav til ferskfiskordningen', 'Of which for the fresh-fish scheme'), fmt(O.ff, 0) + ' t') +
+      kv(L('Fisket så langt', 'Fished so far'), fmt(got, 0) + ' t · ' + Math.round(got / Math.max(1, O.Q - O.ff) * 100) + ' %') + '<div class="qbar"><i style="width:' + Math.min(100, got / Math.max(1, O.Q - O.ff) * 100).toFixed(1) + '%"></i></div>' +
+      kv(L('Båter som fisker', 'Boats fishing'), L('ca. ', 'about ') + fmt(Math.round(Y.n / 50) * 50, 0)) + kv(L('Du har landet', 'You have landed'), fmt(Y.me, 2) + ' t') + (WSH.y === y && WSH.boats ? kv(L('Andre spillere har landet', 'Other players have landed'), fmt(pl, 2) + ' t · ' + WSH.boats + L(' båter', ' boats')) : '') + '<p class="ph-note">' + st + '</p></div>');
+    h.push('<div class="ph-card"><h4>' + L('Kvoter per båt, torsk', 'Quotas a boat, cod') + '</h4><table class="ph-tbl"><tr><th>' + L('Lengde', 'Length') + '</th><th class="n">' + L('Maks', 'Max') + '</th><th class="n">' + L('Garantert', 'Guaranteed') + '</th></tr>' +
+      [L('under 8 m', 'under 8 m'), '8–9,99 m', L('10 m og over', '10 m and over')].map((n, i) => '<tr><td>' + n + '</td><td class="n">' + (isFinite(add) ? fmt(O.max[i] + add, 1) + ' t' : L('fritt', 'free')) + '</td><td class="n">' + fmt(O.guar[i], 1) + ' t</td></tr>').join('') + '</table>' +
+      (Y.log.filter(e => e[1] === 'raise').length ? '<p class="ph-note">' + Y.log.filter(e => e[1] === 'raise').map(e => L('Økt med ' + fmt(e[2], 1) + ' t ' + doyStr(y, e[0]) + '.', 'Raised by ' + fmt(e[2], 1) + ' t on ' + doyStr(y, e[0]) + '.')).join(' ') + '</p>' : '') + '</div>');
+    const ff = ffPlan(y).filter(e => e[0] <= d), pct = ffPct(H);
+    h.push('<div class="ph-card"><h4>' + L('Ferskfiskordningen ', 'Fresh-fish scheme ') + y + '</h4>' + kv(L('Tillegg nå', 'Allowance now'), pct ? Math.round(pct * 100) + ' %' : L('ikke i gang', 'not running')) +
+      ff.map(([d0, p]) => kv(doyStr(y, d0), p ? Math.round(p * 100) + ' %' : L('stoppet', 'stopped'))).join('') + '</div>');
+    h.push('<p class="ph-note">' + L('Rundt 2 100 båter deler gruppekvoten i åpen gruppe. Når den er beregnet oppfisket, stopper Fiskeridirektoratet fisket på maksimalkvotene med en ukes varsel i Kystposten. Blir mye stående igjen, økes maksimalkvotene, og om høsten kan det bli fritt fiske. Fangsten din teller med.', 'About 2,100 boats share the open group\'s quota. When it is estimated fished, the Directorate stops fishing on the maximum quotas with a week\'s notice in the Coast Post. If much is left, the maximum quotas are raised, and in the autumn fishing can be made free. Your catch counts.') + '</p>');
+    return h.join('');
+  }
+  function kvStock(H){
+    const y = yearH(H), d = doyH(H), h = [], NM = {torsk:L('Skrei (nordøstarktisk torsk)', 'Skrei (Northeast Arctic cod)'), hyse:L('Hyse', 'Haddock'), sei:L('Sei nord for 62° N', 'Saithe north of 62° N'), blakveite:L('Blåkveite (nordøstarktisk)', 'Greenland halibut (Northeast Arctic)')};
+    for (const sp of ['torsk', 'hyse', 'sei', 'blakveite']){ const P = STOCK[sp], yrs = []; for (let k = Math.max(2014, y - 12); k <= y; k++) if (k > 2026 || P.tac[k] != null) yrs.push(k);   // the years with a known total quota
+      const rows = yrs.map(k => ({y:k, ...stockYear(sp, k), ssb:k <= 2026 && !P.ssb[k] ? null : stockYear(sp, k).ssb}));
+      const nx = stockYear(sp, y + 1), advOut = d >= doyOf(y, 6, 26), tacOut = d >= doyOf(y, 10, 17);
+      const mx = Math.max(...rows.map(r => Math.max(r.ssb || 0, r.tac)), P.Bpa) * 1.1, W = 300, Hh = 110, bx = i => 20 + i * (W - 30) / rows.length, sy = v => Hh - 14 - v / mx * (Hh - 24);
+      let g = '<svg viewBox="0 0 ' + W + ' ' + Hh + '" width="100%" style="display:block">';
+      rows.forEach((r, i) => { g += '<rect x="' + (bx(i) + 2) + '" y="' + sy(r.tac) + '" width="' + ((W - 30) / rows.length - 4) + '" height="' + (Hh - 14 - sy(r.tac)) + '" fill="#9aa7b4" opacity="0.6"/>'; if (i % 2 === 0 || i === rows.length - 1) g += '<text x="' + (bx(i) + 2) + '" y="' + (Hh - 2) + '" font-size="8" fill="#789">' + String(r.y).slice(2) + '</text>'; });
+      const pts = rows.map((r, i) => r.ssb ? (bx(i) + (W - 30) / rows.length / 2) + ',' + sy(r.ssb) : null).filter(Boolean);
+      if (pts.length > 1) g += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#2f7fd0" stroke-width="2"/>';
+      g += '<line x1="20" x2="' + (W - 10) + '" y1="' + sy(P.Bpa) + '" y2="' + sy(P.Bpa) + '" stroke="#c9a227" stroke-dasharray="4 3"/><line x1="20" x2="' + (W - 10) + '" y1="' + sy(P.Blim) + '" y2="' + sy(P.Blim) + '" stroke="#b8402f" stroke-dasharray="4 3"/></svg>';
+      const last = rows[rows.length - 1];
+      h.push('<div class="ph-card"><h4>' + NM[sp] + '</h4>' + g + '<p class="ph-note">' + L('Blå linje: gytebestand. Grå søyler: totalkvote. Gul strek: B<sub>pa</sub>, rød strek: B<sub>lim</sub>.', 'Blue line: spawning stock. Grey bars: total quota. Yellow: B<sub>pa</sub>, red: B<sub>lim</sub>.') + '</p>' +
+        (last.ssb ? kv(L('Gytebestand ', 'Spawning stock ') + y, fmt(last.ssb, 0) + ' t') : '') + kv(L('Totalkvote ', 'Total quota ') + y, fmt(last.tac, 0) + ' t') +
+        (advOut ? kv(L('Kvoteråd ', 'Advice ') + (y + 1), fmt(nx.adv, 0) + ' t') : '') + (tacOut ? kv(L('Totalkvote ', 'Total quota ') + (y + 1), fmt(nx.tac, 0) + ' t') : '') + '</div>'); }
+    h.push('<p class="ph-note">' + L('Historikken er fra Havforskningsinstituttet (kvoteråd, juni 2026). Fra 2027 regner spillet med en enkel bestandsmodell: årsklassene varierer, og fiske over rådet holder bestanden nede. Kvoterådet kommer i juni, totalkvoten i oktober og reguleringen i desember. Kvotene i Norge følger totalkvoten.', 'The history is from the Institute of Marine Research (advice, June 2026). From 2027 the game uses a simple stock model: year classes vary, and fishing above the advice holds the stock back. The advice comes in June, the total quota in October and the regulation in December. Norway\'s quotas follow the total quota.') + '</p>');
+    return h.join('');
+  }
+  function kvMkt(H){
+    const y = yearH(H), R = npcReg(), h = [], lic = S.lic, NO = {u7:'under 7 m', h7:'7–7,9 m', h8:'8–8,9 m', h9:'9–9,9 m', h10:'10–10,9 m', h14:'14–14,9 m', h20:'20–20,9 m'};
+    h.push('<div class="ph-card"><h4>' + L('Deltakeradganger i lukket gruppe', 'Participation rights in the closed group') + '</h4><table class="ph-tbl"><tr><th>' + L('Hjemmel', 'Quota length') + '</th><th class="n">' + L('Eiere', 'Owners') + '</th><th class="n">' + L('Til salgs', 'For sale') + '</th></tr>' +
+      Object.keys(REGN).map(id => { const sl = regSeller(id, H); return '<tr><td>' + NO[id] + '</td><td class="n">' + fmt(R[id] || 0, 0) + '</td><td class="n">' + ((R[id] || 0) > 0 ? sl.name.split(' ')[0] + ', ' + sl.home : '–') + '</td></tr>'; }).join('') + '</table>' +
+      '<p class="ph-note">' + L('Antallet hjemler er fast. Du kommer inn ved å kjøpe av en som går ut, så for hver hjemmel du kjøper, er det én eier mindre. Kjøp under Båthandel → Med hjemmel.', 'The number of rights is fixed. You get in by buying from someone who leaves, so for every right you buy there is one owner fewer. Buy under Boat market → With a right.') + '</p></div>');
+    const A = lic && HJ[lic.id];
+    if (A && A.grp !== 'u11'){ const own = A.kf, tot = own + (lic.extra || 0), cap = STRUCT.cap[A.grp], same = Object.keys(HJ).filter(id => HJ[id].grp === A.grp && (R[id] || 0) > 0);
+      h.push('<div class="ph-card"><h4>' + L('Strukturkvote', 'Structure quota') + '</h4>' + kv(L('Kvotefaktor, egen', 'Quota factor, own'), fmt(own, 4)) + kv(L('Med struktur', 'With structure'), fmt(tot, 4) + ' · ' + L('tak ', 'cap ') + cap + '×') +
+        (lic.st || []).map(s => kv(L('Struktur fra ', 'Structured from ') + NO[s.id], fmt(s.kf, 4) + ' · ' + L('til ', 'until ') + s.until)).join('') +
+        same.map(id => { const ok = structRoom(lic, id), pr = structPrice(id, H); return '<button class="ph-btn" data-pa="struct" data-id="' + id + '"' + (ok ? '' : ' disabled') + '>' + L('Kjøp og strukturer hjemmel ', 'Buy and structure a right of ') + NO[id] + ' · ' + kr(pr) + '</button>'; }).join('') +
+        '<p class="ph-note">' + L('Du kjøper en båt i samme gruppe, hogger den og får kvotefaktoren minus 10 %. Strukturkvoten varer i 20 år. Kvotetaket er ' + cap + ' ganger egen kvote.', 'You buy a boat in the same group, scrap it and get its quota factor less 10 %. The structure quota lasts 20 years. The cap is ' + cap + ' times your own quota.') + '</p></div>'); }
+    const u11 = S.fleet.filter(v => { const l = vget(v, 'lic'); return l && HJ[l.id] && HJ[l.id].grp === 'u11'; });
+    if (u11.length >= 2){ const [a, b] = u11, la = vget(a, 'lic'), lb = vget(b, 'lic'), ok = twoOK(la, lb, y);
+      h.push('<div class="ph-card"><h4>' + L('Særlig kvoteordning (under 11 m)', 'Special scheme (under 11 m)') + '</h4><button class="ph-btn" data-pa="two" data-a="' + a.id + '" data-b="' + b.id + '"' + (ok ? '' : ' disabled') + '>' + L('Fisk kvoten til «' + vget(b, 'boatName') + '» med «' + vget(a, 'boatName') + '»', 'Fish the quota of «' + vget(b, 'boatName') + '» with «' + vget(a, 'boatName') + '»') + '</button>' +
+        '<p class="ph-note">' + L('Begge båtene må ha vært dine siden i fjor. Den ene hjemmelen oppgis, og båten selges. Den andre båten fisker begge kvotene.', 'Both boats must have been yours since last year. One right is given up and that boat is sold. The other boat fishes both quotas.') + '</p></div>'); }
+    if (A && A.grp === 'u11'){ const o = coopOffer(H), ok = coopOK(lic, y) && S.crew.length + 1 < BOAT.crewMax && atTrade(), c = lic.coop && lic.coop.y === y ? lic.coop : null;
+      h.push('<div class="ph-card"><h4>' + L('Kvotesamarbeid (§ 31)', 'Quota cooperation (§ 31)') + '</h4>' + (c ? kv(L('Samarbeid med', 'Cooperating with'), c.name + ' · ' + NO[c.id]) + kv(L('Hans andel', 'His share'), Math.round(COOP.share * 100) + ' %')
+        : kv(L('Tilbud', 'Offer'), o.name + ', ' + o.home + ' · ' + NO[o.id]) + '<button class="ph-btn" data-pa="coop"' + (ok ? '' : ' disabled') + '>' + L('Inngå kvotesamarbeid', 'Enter a quota cooperation') + '</button>') +
+        '<p class="ph-note">' + L('To båter under 11 m med ulike eiere. Begge eierne må være om bord, så han mønstrer på hos deg. Hans båt ligger til kai resten av året, og han får halvparten av verdien av det som landes på hans kvote. Du må ha hatt hjemmelen siden i fjor.', 'Two boats under 11 m with different owners. Both owners must be aboard, so he signs on with you. His boat lies still for the rest of the year, and he gets half the value of what is landed on his quota. You must have had the right since last year.') + '</p></div>'); }
+    return h.join('');
+  }

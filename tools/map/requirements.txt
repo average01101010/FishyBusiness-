@@ -1,0 +1,8 @@
+# the map pipeline (tools/map/), as the workflow .github/workflows/kart.yml installs it; Python 3.11
+numpy==1.26.4
+scipy==1.17.1
+shapely==2.1.2
+pyarrow==25.0.1
+requests==2.33.1
+pillow==12.3.0
+pyproj==3.7.2

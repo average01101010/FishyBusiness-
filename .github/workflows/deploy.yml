@@ -1,0 +1,56 @@
+# Det Store Blå on the Hetzner server (docs/lansering.md G): the app built as for Pages (pwa.yml) and uploaded with rsync over SSH
+# to the deploy user that tools/server/setup.sh made. Runs on a push to main or the working branch (as pwa.yml) that changes the game,
+# and by hand from the Actions tab once the file is on main; until then a run is started again with «Re-run all jobs».
+# Needs the secrets DEPLOY_HOST (the server's address), DEPLOY_KEY (the private deploy key) and DEPLOY_KNOWN_HOSTS (ssh-keyscan of
+# the server); without DEPLOY_HOST it builds and stops.
+name: Appen på Hetzner
+on:
+  push:
+    branches: [main, ccr-5e1ba2f4-pusvyd]
+    paths: ['src/**', 'build.mjs', 'tools/map/kart.json', 'tools/map/game.py', 'tools/server/**', '.github/workflows/deploy.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: hetzner
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      # the unit tests of the core (tests/unit/run.mjs, 29.10.2026): seconds, no browser; a red one stops the roll-out before the map is fetched
+      - name: Unit tests of the core
+        run: node tests/unit/run.mjs
+      - name: The whole coast's map packs (the newest kart- release, joined with Senja's)
+        run: |
+          pip install requests
+          python3 tools/map/game.py
+      - name: The app
+        run: KYST_PWA=1 node build.mjs
+      # the boot test on the build that goes out (tests/boottest.py, 29.10.2026): the game must start, read a save and step its clock
+      # with the whole coast's packs and no page error, or nothing is uploaded. KYST_SEED=1 is the tests' default; run.py judges the
+      # output as it does locally (FEIL lines, page errors, Python errors)
+      - name: Boot test of the app
+        run: |
+          pip install playwright==1.63.0
+          python -m playwright install --with-deps chromium
+          KYST_DIST=dist-pwa python3 tests/run.py smoke boottest
+      - name: Upload to the server
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          if [ -z "$DEPLOY_HOST" ]; then echo "No DEPLOY_HOST secret yet: built, not uploaded."; exit 0; fi
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          rsync -az --delete-after --delay-updates -e "ssh -i ~/.ssh/deploy" dist-pwa/ "deploy@$DEPLOY_HOST:current/"

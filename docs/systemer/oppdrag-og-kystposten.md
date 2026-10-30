@@ -1,0 +1,134 @@
+# Turoppdrag og Kystposten
+
+> Flyttet ordrett fra `docs/OVERLEVERING.md` 26.10.2026 (`docs/utviklingsplan.md`, fase A). Tallene i overskriftene er de gamle kapittelnumrene; `docs/systemer/gamle-numre.md` viser hvor hvert nummer havnet. Nytt skrives inn her, under det systemet det gjelder.
+
+## 4.26 Turoppdrag fra der du er (07.10.2026)
+
+Punkt 4 i `docs/engasjement.md`. Jonas: en blanding av korte og lange oppdrag ut fra der spilleren er. De lange skal friste til trim, gi god belønning og alltid kunne nås uten. Kjernen ligger i `core/09g-turer.js`, skjermen i `ui/05f-turer.js` og testen i `tests/turtest.py`.
+
+- **Tavla** (`turEnsure`, `turMake`) lages fra der båten er (`turHere`). En ny tavle kommer hver spillmorgen, når båten har flyttet seg mer enn 20 nm (`TUR.move`), og når tavla er tom.
+  - Den har to korte, ett middels og ett langt oppdrag. Klassen avgjøres av seilingstiden uten trim (`TUR.cls`, i spilltimer): kort 0,4–3 (opptil en halvtime i ekte tid), middels 3–7,5, lang 7,5–18 (opptil tre timer). `GAME_RATE` er 6.
+  - Fra tre års fartstid kommer også sesongflyttingen.
+- **Vektet etter spilleren** (`turMe`, Jonas 07.10.2026). Grunnlaget er spillerens egen lagring, som har det samme som skyen. Spillet leser aldri databasen per spiller.
+  - **Under ett år fartstid** (før første tur er ferdig): ingen lange oppdrag, bare et kort til.
+  - **Under ti år:** de lange går opp til 12 spilltimer (`turHi`). Fra ti år går de helt opp til 18, og bestillingene kan kreve ekstra kvalitet til 20 % tillegg.
+  - **Bestillinger:** arten er en spilleren lander, og mengden er omtrent en vanlig landing i denne båten. Omdømmet hos mottaket (`repOf`) gir 0,8–1,2 ganger bonusen.
+  - **Rekkefølgen** (`turOrder`): nye spillere får steder de kjenner først, erfarne (fra fem år) nye steder først.
+- **Kvotene** (`turRoom`, Jonas 07.10.2026): det som er igjen å lande av hver art.
+  - **Uten adgang:** ingen oppdrag ber om torsk, hyse eller sei, siden de bare kan være bifangst. Den tapte redskapen har da lange og brosme i stedet.
+  - **Torsk:** det som er igjen under maksimalkvoten mens åpen gruppe er åpen, og av garantert kvote etter stoppen. I lukket gruppe er det fartøykvoten (`codRoom`). Ferskfisktillegget kommer i tillegg, men regnes ikke med.
+  - **Hyse og sei i lukket gruppe:** maksimalkvotene (`licQ`).
+  - **Kongekrabbe** gis aldri som oppdrag.
+  - Et oppdrag ber aldri om mer enn 80 % av det som er igjen. Bestillinger trenger minst 150 kg igjen, og sesongflyttingen 1 000 kg. Mottakenes vanlige bestillinger (`ordersTick`) bruker den samme sjekken.
+- **Treffsikkert** (`turCan`): et oppdrag tilbys bare når båten klarer det.
+  - **Drivstoff:** turen må gå på 75 % av en full tank (tur-retur for tapt redskap). Mottakene selger diesel.
+  - **Åpne båter** holder seg innaskjærs: eksponeringen langs linja må være høyst 0,7, lest fra kjernekartet.
+  - **Været:** varselet (`hsAtFc`) skal ligge under båtens egen varselgrense i timene turen tar. Sesongflyttingen sjekker ikke varselet, siden spilleren selv velger dagene.
+  - **Avstanden** er den rette linja ganget med 1,25 (`TUR.detour`). «Kjør dit» (`turGo`) finner den virkelige veien med `leiaRoute` og drar, også fra kaia.
+- **Fristen** (alternativ A, Jonas 26.10.2026, etter tilbakemeldingene #92 og #93 23.10.2026: «for stor mengde fisk kontra tid på oppdragene», «tidene på oppdragene burde gå opp, slik at man kan dra på verftet, handle utstyr mens man er i ett oppdrag»; ikke mindre fisk). Fristen settes når oppdraget tas (`turTake`, `m.due`) og flyttes aldri; tida fast på grunn eller under slep teller ikke (`turStuck`).
+  - Rene turer (frakt, foto, ekkoloddlinje, slep, prøvestasjon): 2,5 × seilingstida uten trim + 12 spilltimer. Tapt redskap: + 24 (halingen ligger i tida). Sesongflyttingen: ut uka, med fiskedøgnene i.
+  - **Bestillinger** (`turBestH`, 26.10.2026): 2,5 × seilingstida + 30 spilltimer (`TUR.fish.slack`, som før) + fisketida for kiloene (`turFishH`). Fisketida er det raskeste redskapet spilleren eier klarer kiloene på, ganget med 1,5 for vær og hvile (`TUR.fish.marg`), høyst én spilluke (`max` 168 spilltimer, 28 ekte):
+    - juksa: 20 kg per time per hånd (`HEATG.fair.jig` i `12-heat.js`, den vanlige fangsten fangstmerkene måles mot), ganget med riggens innsats mot én hånd (`effortOf` i `03-simulation.js`: hånd 2, juksamaskin 4, høyst tre maskiner per person; hendene om bord etter `handsAboard`). Ikke for blåkveite (juksa tar nesten ingen).
+    - line (med linehaler): ⌈kg / (stamper × 70 kg)⌉ sett, hvert 12 t ståtid + 25 min per stamp. 70 kg per stamp er `HEATG.fair.line`; 12 t er ståtida i eksempelet i `redskap.md` (110 kg per stamp på et godt hysested); 25 min er setting og trekking av en 600-krokers stamp etter `GEAR.line` (5 og 25 min per 700 kroker). Stamper i sjøen telles med (`mySets`).
+    - garn (med garnhaler og to om bord): ⌈kg / (garn × 30 kg)⌉ sett, hvert 20 t ståtid + 5 min per garn. 30 kg per garn er `HEATG.fair.garn` (eksempelet i `redskap.md`: 30 kg per garn på 20 t); 5 min er `GEAR.garn` set 0,8 + haul 4.
+    - Teiner telles ikke (krabbe gis aldri som oppdrag). Uten noe som teller: én hånd med juksa.
+  - **Belønningen er uendret** av fristen (den er satt av seilingstida og `keepF`, som før). Frister som alt er satt, flyttes ikke.
+  - **Målt 26.10.2026** (trebåten, 350 kg lasterom, én hånd, juksa; ekte timer før → etter): Finnsnes 180 kg torsk til Brensholmen på 46 min seiling 6,9 → 9,2; 150 kg sei til Samuelsberg på 2 t 10,0 → 11,9; Bergen 220 kg sei til Sævareid-kanten (64 min) 7,7 → 10,4; Bodø 250 kg sei til Engan (62 min) 7,6 → 10,7; Hammerfest 260 kg torsk til Sørvær (71 min) 8,0 → 11,2. Fisketida alene, med marginen, i ekte timer: 1 000 kg på juksa alene 12,5, med tre juksamaskiner 2,1, med åtte stamper hyseline 7,7, med tjue garn og to om bord 6,3 (to hender på juksa slår garna); 2 000 kg med åtte stamper 15,3. Et fraktoppdrag med samme seiling har 2,5 × seilingstida + 12 som før.
+  - **Antakelse:** fisketida er modellens «vanlige fangst» for redskapet, ikke spillerens egen takt eller stedet. Den som fisker bedre, får romsligere frist; den som fisker dårligere, trangere. Hvor lang tid spillerne faktisk bruker mot fristen, leses av i `tur_done`/`tur_fail` i admin (10.5 i backloggen).
+  - **Der spilleren ser den:** kortet viser «Tid til rådighet» på tavla og «Frist» med dato, klokkeslett og ekte tid når oppdraget er tatt (som før), og dekksdagboka sier fristen når oppdraget tas («Tok oppdraget: … Frist man 2. nov kl. 14:30, om ca. 9 t 12 min.»). Formelen forklares ikke i spillet.
+- **Belønningen** (`turPay`): båttypens timesats ved vanlig fiske uten haill (`turRate` = `turCap`, 9 000 kr i timen for 23-foteren, etter lasterommet i potens 0,6) ganget med timene uten trim og faktoren for klassen. Satt da oppdraget ble laget, og aldri endret etterpå: prisen på tavla er prisen som betales (`turFinal` runder bare).
+- **Oppdragsøkonomien** (Jonas 19.10.2026, tilbakemelding #73, etter #72 17.10.2026): «Som fisker skal jo hovedprofitten være fiskeri, men spillere skal jo også kunne tjene ekstra penger på oppdrag», og testerne fisker mye med takk-haill, som blir mindre vanlig etter lanseringen.
+  - **Hvorfor det ble endret:** 17.10.2026 fulgte prisen spillerens egne landinger per time på sjøen (`turOwn`), med 0,6/0,75/0,9, `keepF` 0,35, rabatt når flere oppdrag gikk (1/0,6/0,4, og resten av tavla falt i pris når ett ble tatt) og en ukebrems på prisen. Med takk-haill tjente spilleren langt mer på fiske (én landing 325 000 kr på 78 min på havsjarken) enn taket på oppdragene, og prisene endret seg under hendene på dem: 16.10.2026 tok spilleren tre oppdrag og ga dem fra seg i samme minutt.
+  - **Faktorer** (`TUR.cls`): 1,0 / 1,1 / 1,25 for kort, middels og lang (rene oppdrag: frakt, foto, ekkoloddlinje, tidsdelen av slep). Der fangsten er spillerens (bestilling, sesong, tapt garn) `keepF` 0,5 i tillegg til fisken, prøvestasjon 0,75.
+  - **Tilbudet holder fisket som hovedinntekt, ikke prisen** (`turEnsure`): tavla har plass til `T.slots` oppdrag, høyst `boardMax` 4, og får én plass til hver `refillH` 18 spilltimer (tre ekte timer); har oppdragene denne spilluka (betalt og lovet) gitt mer enn `share` 30 % av fangst + oppdrag (minst `2 × turCap`, `turSlow`), kommer plassene `slowF` 3 ganger så sakte. Et tatt oppdrag bruker plassen sin; ett som går ut på tavla (`life` 48 spilltimer) gir plassen til et nytt. Høyst `maxAct` 2 tatt om gangen. Tom tavle sier når det neste kommer.
+  - **På veien din** (`turWay`, `turDetour`): veien er slutten av ruta båten seiler, ellers mottaket spilleren har levert mest ved de siste åtte landingene. Kortene viser omveien i ekte minutter («på veien din» under 5 min), og tavla sorteres med minst omvei først. Frakt til en havn innen 15 nm av veien foretrekkes når tavla lages.
+  - **Eksempel, havsjarken** (`turCap` ≈ 52 000 kr i timen): lang frakt på to timer ≈ 130 000 kr; en times frakt på veien ≈ 57 000 kr; fyrbilde på halvannen time ≈ 97 000 kr. En spiller som spiller to timer om dagen, rekker én eller to ved siden av fisket.
+  - Sesong (`turSesong`): art i sesong, med redskap (`turSpOk`: krabbe krever teiner, blåkveite garn eller line) og kvote; kilo = egne leveranser siste 7 dager / 7 × fiskedøgn etter reisen × 1,1–1,5 (fartstid) × `turForm` (siste ti oppdrag), mellom 0,5 og 2 lasterom og høyst 70 % av kvota som er igjen (`turOwn` brukes bare her nå). Belønningen = `keepF` × reise fram og tilbake + timene kiloene tar i egen fart.
+  - Tavla lages på nytt fra der båten er når den har flyttet seg langt, bare én gang per spilldøgn (`T.mvDay`), med like mange oppdrag som før.
+  - Lagringer fra før (`T.v < 3`) får en ny, full tavle; oppdrag som alt er tatt, beholder beløpet de ble lovet. `turRebase` (ved `T.v < 2`) gjelder bare de eldste.
+  - Hendelsen `tur_done` har `pay`. Serveren (`supabase/migrations/20261017120000_turokonomi.sql`): triggeren `saves_cash_check` flagger lagringer der kassa steg over 300 000 kr og mer enn dobbelt så mye som loggede salg og oppdrag (`cash_flags`, bare for spillere med samtykke); admin viser flaggene og oppdragsandelen per spiller under Økonomi i spillet (`admin_cash_flags`, `admin_tur_share`). Ingenting avvises.
+- **Typene:**
+  - **Bestilling** (`turBest`): en ordre i ordresystemet (`S.orders`, med `tur`). Turens betaling er bonusen, og `sell` betaler den sammen med fisken.
+  - **Frakt** (`turFrakt`, `TUR_GOODS`): varer i `S.cargo`, som er per fartøy (`VKEYS`). De tar plass fra `capHold` og teller i vekten (`boatTons`), men er ikke en del av fangsten (`holdTotal`) eller landingen. Varene hentes ved kai, og hvis båten ikke ligger der, går «Kjør dit» innom. De betales når de leveres (`turDock` i `dock`).
+  - **Tapt redskap** (`turGarn`, `turSpawn`): et sett med `tur` og fisk i, 0,9–6 km fra land med begge ender i åpent vann. Det er garn når to kan trekke dem og spilleren har garn, ellers en line som én kan trekke. Når det er trukket (`finishHaul` → `turHauled`), går redskapet til eieren og ikke til `pgear`, og eieren betaler finnerlønn (halvparten, siden fisken er spillerens). Fristen løper ikke ut mens redskapet hales.
+  - **Slep av båt med motorstopp** (`turSlep`, Jonas 07.10.2026: bergelønn etter sjøloven kap. 16). En NPC-båt (`turNpcs`, i `npcStates`, tegnet med byggesettet) ligger 1,5–14 nm unna, 0,5–8 km fra land, og er 0,75–0,95 ganger spillerens egen lengde. Hun skal til nærmeste havn med kai.
+    - **Drift** (`turMinute` i `step`): hun driver med vinden, 3 % av vindfarten (et anslag for en liten båt uten fart). Farten er begrenset, så hun tidligst når land etter tre ganger tiden det tar å komme dit uten trim. Når hun når land, er oppdraget tapt, og det blir ingen bergelønn.
+    - **Slepet** går over når spillerens båt ligger stille (under 1,5 kn) innen 150 m. Da gjelder høyst 5,5 kn (`TUR_TOWV`, `speedCap`), dieselforbruket ganges med 1,5 (`fuelLph`), og hun følger etter i tauet. I 3D tegner `drawTowLine` tauet fra hekken til baugen hennes med litt bukt.
+    - **Bergelønnen** (`turSalvage`) betales av eierens forsikring når hun er levert i havn (`turDock`). Den er tiden etter tavlas timepris (`turPay`) pluss 3–15 % av båtens verdi etter faren (`turDanger`: 1 innen et par hundre meter fra land, 0 fra rundt 2 km). Den er aldri høyere enn verdien.
+    - **Verdien** (`turValue`) er et anslag for en brukt båt: 60 % av nypris etter lengden (`TUR_VAL`). Kortet viser spennet før slepet og summen når faren er satt.
+    - **Etter loven:** § 445 sier at bergelønn bare gis ved et nyttig resultat, og at den aldri kan være høyere enn verdien av det som er berget. § 446 lister det bergelønnen måles etter: verdien, dyktighet og innsats, faren, tiden, kostnadene og risikoen. Etter § 450 gir arbeid etter en avtale inngått før faren oppsto, ingen bergelønn. Derfor er det ingen avtalt pris på kortet, og slepet er frivillig. I praksis gjøres oppgjøret med eierens forsikringsselskap.
+    - **Kilder:** [sjøloven kap. 16 på Lovdata](https://lovdata.no/dokument/NL/lov/1994-06-24-39/KAPITTEL_16), [SNL: bergelønn](https://snl.no/bergel%C3%B8nn), [SNL: no cure, no pay](https://snl.no/no_cure,_no_pay).
+    - **Antakelser:** driften, verdiene og fordelingen mellom tid og verdi er anslag til spilltesting.
+  - **Prøvefiske for Havforskningsinstituttet** (`turProve`), etter Kystreferanseflåten: HI har siden 2005 hatt 20–25 kystfartøy (mest garnbåter på 9–15 m) langs hele kysten. De er på kontrakt og får betalt for å føre fangstdagbok over hele fangsten (også bifangst og utkast), lengdemåle fangsten og ta øresteiner av kommersielle arter en gang i uka. Kilder: [hi.no Referanseflåten](https://www.hi.no/hi/tokt/referanseflaten-1) og [The Coastal Reference Fleet 2007–2019](https://www.hi.no/hi/nettrapporter/rapport-fra-havforskningen-en-2021-52). I spillet finnes to varianter:
+    - **Stasjon** (krever juksa): fisk innen 1 km fra stasjonen i en spilltime (to på middels). `turProveMinute` teller minuttene og det som kommer om bord fra da. Så kommer målebrettet (`turMeasure` i `ui/05f-turer.js`): ti fisk av artene som ble tatt, med lengder fra artens vanlige spenn (`TUR_LEN`). Spilleren trykker der halen slutter og leser av i hele cm. Instituttet betaler tida (`turPay`) og inntil 20 % til etter nøyaktigheten (alt innen 0,5 cm i snitt, ingenting fra 3 cm). Ga stasjonen ingen fisk, betales tida («en tom stasjon er også en prøve»). Fangsten er spillerens. Stasjonen tilbys bare der juksa er lov (`ruBlockMsg`).
+    - **Ekkoloddlinje:** tre punkter 0,8–1,6 km fra hverandre i åpent vann. De passeres i rekkefølge innen 200 m, høyst 8 knop. Båten slakker av til 7 knop når den nærmer seg linja. Instituttet svarer med det ekkoloddet så: arten som sto tettest og mellom hvilke punkter, etter fiskemodellen (`heatSample`).
+    - Fartsgrensen og målet om nøyaktighet er spillets egne. Hvordan HI faktisk betaler referanseflåten, har jeg ikke funnet tall på.
+  - **Bilde av et fyr for Kystposten** (`turFoto`): fyret fra registeret `src/data/fyr.json` (134 fyr på fastlandskysten, laget av `tools/map/fyr.py` fra lyktene i `sjomerker-2`: navngitte lykter som er store fyr, har rekkevidde på 10 nm eller mer, eller har «fyr» i navnet, uten molo-, havne-, led- og bifyr og uten Svalbard). Spilleren tar bildet fra åpent vann 0,5–1,2 km fra fyret.
+    - **Lyset:** noen ganger vil avisa ha bildet i lav sol (sola mellom −1° og 6°), mens fyret lyser (sola under −4°), under nordlyset (`auroraAt` ≥ 0,3) eller i uvær (vind fra 10,8 m/s, ikke for åpne båter og ikke mer sjø enn båten tåler). Et lys tilbys bare når det kommer i minst en time mellom framkomst og frist. Kortet og svaret sier når det kommer neste gang (`turLysNext`).
+    - **Bildet:** innen 3 km viser 3D-visningen en utløser (`#fotoBtn`, `turFotoUi`). `G3.seen` sjekker at fyret er foran kameraet innenfor bildets bredde og at ikke terrenget står i veien. Da tar `G3.snap` bildet (720 px). Uten 3D tas det fra kortet innen 1,5 km, uten bilde.
+    - **Avisa:** Kystposten trykker saken samme dag (`T.press`, `newsForDay`) med bildet. Bildene ligger bare på denne enheten (`kystfiske_v2_foto` i localStorage, de seks siste), ikke i lagringen.
+  - **Sesongflytting** (`turSesong`): mottaket 40–250 nm unna som lander mest av en art som er i sesong (`mk.sp[sp].months`). Spilleren skal levere tre lastrom (halvannen gang så mye fra ti år, torsk innenfor 80 % av kvoten) ved mottakene innen 30 km før uka er ute. `turSale` i `sell` teller det som leveres.
+- **Avgangen** (`turDepart` i `depart`): ved turer på 20 minutter eller mer skriver loggen når båten er fremme. Ved turer på en time eller mer sier noen noe om turen (Jonas: mange legger fra seg telefonen når båten går).
+  - Ved annenhver lange tur i dieselbåter uten trim kan motoren nevnes med ordene fra Trim-appen (`TUR_TUNE`: pumpe, ladeluftkjøling, turbo; semidiesel bare pumpe), høyst én gang per 20 ekte timer.
+  - Er spilleren alene om bord, er det minnet om far som snakker. Med trim på kan noen si «Hør hvor fint hun går nå».
+  - Aldri til gjester, aldri i veiledningen, aldri i hardt vær eller med lite diesel. Mekanikeren nevner pumpa etter service høyst hver tredje ekte dag (`turMechanic`).
+  - Ingenting av dette står i patchnotes.
+- **Måling:** `cloudEv` sender `tur_take`, `tur_done` og `tur_fail` (med type, klasse, nm og om trim var på) og `crew_tip` (hvilken kommentar).
+- **Skjermen:** fanen «Turer» i Oppdrag-appen viser «Dine oppdrag», tavla og tidligere oppdrag. Bestillingene har egen fane. Kartet viser en stiplet ring der hvert oppdrag går (`turSvg`).
+- **Tavla** trekker nå blant typene med vekter (`draw` i `turMake`): de korte mellom bestilling, frakt, prøvefiske og fyrbilde, middels også med slep, og lange mellom bestilling, frakt og fyrbilde. Høyst ett prøvefiske og ett fyrbilde om gangen.
+- **Neste:** se Kystposten (4.27).
+
+## 4.27 Kystposten: den felles avisa (07.10.2026)
+
+Jonas: «båtnavn eller rederiene til andre brukere må komme offentlig i avisen. Det må også være varselprikk på appen og varsel i spillet. Jeg ønsker at spillere skal kunne trykke på en nyhetssak å lese litt mer». Etter planen svarte han: uhell skal i avisa («Det er realistisk»), andres fyrbilder skal ikke, og det skal være en lokalfane. Kjernen ligger i `core/09h-press.js`, skjermen i `ui/05g-press.js`, skyen i `supabase/migrations/20261007170000_news.sql` (og `…171000_news_get_fix.sql`, `…180000_news_more.sql`, `…190000_news_skrei.sql`), og testen i `tests/posttest.py`.
+
+- **Saker** (`pressPut`) lages der det skjer:
+  - **boat:** kjøp av båt (`buy` i telefonen, og kjøp med kvote i lukket gruppe);
+  - **name:** båtdåp (`boatChristen`);
+  - **aground:** grunnstøting (`runAground`);
+  - **rescue:** slep fra Redningsselskapet (`rescue`);
+  - **salv:** bergelønn (`turDock`);
+  - **foto:** fyrbilde (`turFotoTake`);
+  - **fish:** storfisk (drømmefisken);
+  - **fs:** fartstid hvert tiende år (`fsYear`);
+  - **ach:** kapittel i Merker (`achChapter`);
+  - **as:** aksjeselskap;
+  - **tur:** lang tur eller sesongflytting fullført (`turPayOut`, klassen `lang` eller sesong; bestilling, frakt og sesong);
+  - **kvote:** strukturkvote kjøpt (`struct`, kvotefaktoren i titusendeler).
+  - Hver sak har type, sted (km), båtnavnet (og rederiet i lukket gruppe, som på topplista) og noen tall og koder (båttype, havne-id, art, indeks i `FYR` og `TUR_BOATS`).
+  - Ingen saker lages i «Første tur». Gjester sender ingen saker.
+- **Ordene** (`pressStory`) skrives i leserens spill, likt for egne og andres saker: overskrift, ingress og brødtekst på norsk og engelsk. Stedsnavnene kommer fra `nearestPlace` og havnenavnene fra `portById`. En sak med en type eller nøkkel spillet ikke kjenner, vises ikke. Båtkjøp viser sidebildet av båten (`vesselSVG`). Fyrbilder vises bare i egen avis.
+- **Skyen:**
+  - `news_put` tar bare typens egne nøkler: tall, og koder som matcher `^[A-Za-z0-9_-]{1,24}$`. Fritekst kommer aldri inn. Båtnavn og rederi renses som i `land_put`. Grensen er 12 saker i timen og to av samme type på ti minutter. Gjester får nei.
+  - `news_get` gir sakene fra den siste spilluka langs hele kysten (60) og innen 150 km (40), og dagens største landinger (30) fra `landings`, uten gjester, med båtnavn og rederi i lukket gruppe.
+  - `supabase/migrations/20261007180000_news_more.sql` legger til `tur` og `kvote` og `push_paper`.
+  - `admin_news`/`admin_news_remove` brukes av fanen «Kystposten» i admin. Den viser sakene med brukernavnet og har en knapp som tar en sak bort for alle.
+  - Røyktestet med MCP i en transaksjon som ble rullet tilbake: ukjente nøkler og fritekst forsvinner.
+- **Klienten** (`pressFlush`, `pressFetch`): egne saker ligger i en kø (`S.press.q`, de 20 siste) og sendes straks og hvert annet minutt. En sak som avvises (400), droppes. Andres saker hentes hvert tredje minutt og når avisa åpnes.
+- **Avisa:**
+  - **Forsiden** har hele kysten: spillernes saker, dagens største landing og de nasjonale sakene fra `newsForDay` (kvoter og regulering, `nat`), pluss de to første lokale sakene i dag.
+  - **Lokalt** har det som er innen 150 km fra hjemhavna, med distriktets største landing.
+  - Hver sak er en knapp. «Les mer» åpner artikkelen, som har tilbakeknapp (`sub.postArt`).
+- **Varsler:**
+  - Appen viser antall uleste saker (`pressUnread`: nyere enn sist avisa ble åpnet).
+  - En egen sak varsles i spillet med en toast etter fire sekunder.
+  - Når andres saker hentes, varsles én ny stor sak eller én ny sak nær hjemhavna, høyst hvert tredje minutt.
+  - **Push** (`push_paper`, pg_cron hver time, minutt 9): når et spilldøgn (fire ekte timer) er over, får den med dagens største landing langs kysten (minst 200 kg, ikke gjester) «Du står i avisa». Det går gjennom `push_srv`, så samme regler gjelder som for topplista: varslene for topplista må være på, ikke mens spilleren er i spillet, høyst fire i døgnet og ingenting 22–08. Bare det siste døgnet sendes.
+  - I spillet får den med dagens største landing beskjed én gang når avisa hentes (`pressFetch`).
+- **Ukas toppfisker** (`pressTop`) kommer fra den felles topplista (`worldTop`) for åpen og lukket gruppe forrige uke, med nr. 2 og 3. Den lokale «Ukas toppfisker» fra `newsForDay` vises bare når skyen ikke har tall.
+- **Personvern:** `src/legal/personvern.html` har fått avsnittet «Saker i Kystposten». Haill står aldri i sakene. Brukernavnet står ikke i avisa, bare i admin.
+- **Rekordpris** (`pressRecords`, `pressPrice`; Jonas: «Ta rekordpriser og sesongens første skrei. Det kommer ingen nye fiskemottak langs kysten»):
+  - Prisindeksen for en art en dag er `marketPrice × supplyFactor` kl. 08 (`pressIx`). Den er lik i alle spill på den felles klokka, så rekorden kommer samme dag for alle.
+  - Rekord betyr at dagen er høyere enn hver dag året før (365 dager, 0,2 % margin). Saken trykkes bare når arten ikke hadde rekord de seks dagene før, så en stigende uke gir én sak.
+  - Arter: torsk, hyse og sei. Saken står bare på forsiden (type `pris`, «Marked»), og torsk er en stor sak.
+  - Kronene i saken er leserens egne: snittet hos de ti mottakene nærmest hjemhavna, hvem som betaler best, endringen siden for en måned siden, og om været har holdt båtene i havn (`supplyFactor ≥ 1,02`).
+  - Dagens rekord varsles i spillet én gang (`pressDay`, hver spilltime fra `05-vessels.js`; `S.press.told`).
+  - Ordet «rekord» gjelder altså det høyeste på et år, og ingressen sier det.
+- **Årets første skrei** (`pressSkrei`, `pressSkreiFetch`):
+  - `news_first(since)` (`supabase/migrations/20261007190000_news_skrei.sql`) gir de ti første torskelandingene i 30 spilldøgn fra skreisesongens første dag (`SEASON_EV` skrei, `seasonDoy`). En landing er en spillers rader på samme tid og havn, minst 30 kg torsk, i åpen eller lukket gruppe, aldri en gjest, med båtnavnet og rederiet i lukket gruppe.
+  - Klienten tar den første ved en havn nord for 62° N (Stad, `natLL`). Havneregisteret er likt for alle, så det blir samme båt for alle.
+  - Den hentes med avisa i sesongens første 30 dager, til en første har stått i tre spilltimer, fordi landingene kan komme opp til ti minutter for sent til skyen.
+  - Saken (type `skrei`, «Fangst») står på forsiden og lokalt når havna er innen 150 km, i en uke. Den varsles én gang i året, med «Om deg» for den som landet.
+  - Uten sky finnes bare sesongsaken fra `newsForDay` («Skreien er her»).
+  - Røyktestet med MCP i en transaksjon som ble rullet tilbake: to rader på samme tid ble slått sammen til 45 kg, 10 kg og hyse kom ikke med.
+- **Ikke laget:** saker om nye mottak (Jonas: det kommer ingen nye fiskemottak langs kysten). Ingen push for første skrei ennå.
