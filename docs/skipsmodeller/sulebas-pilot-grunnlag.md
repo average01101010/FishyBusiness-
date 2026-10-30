@@ -459,7 +459,10 @@ trappene til bakken og kassedekket, ankervinsjen og varpehodene. Funnet og rette
 Runde 2 (baug og hekk): leideren sto på styrbord, skal på babord; dypgangsmerkene på baug og hekk, thrusterringene over begge
 tunnelene, de to V-ene og bulbmerket lagt inn; baugens skala flyttet opp over thrusterrista.
 
-Igjen etter runde 2, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 3 (mot 8cdb9214 og 82e91969): akterkranens søyle som avsmalnende kasse, ankervinsjens presenning lavere og lenger akter,
+skansekledningen 0,35 m langs arbeidsdekket under det blå rekkverket.
+
+Igjen etter runde 3, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 

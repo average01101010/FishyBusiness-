@@ -59,7 +59,7 @@ X_WD = (7.3, 25.8)             # the starboard working deck's ends at the side
 Y_C = -0.6                     # the casing's starboard wall: the upper deck to port of it, the working deck to starboard
 def z_bw(x, sg=1):
     if sg > 0 or x <= 5.0 or x >= 26.6: return interp(ZB, x)
-    lo = z_sh(x) + 0.05
+    lo = z_sh(x) + 0.35          # the low bulwark plate along the working deck, under the blue pipe rail
     if X_WD[0] <= x <= X_WD[1]: return lo
     if x < X_WD[0]:
         t = (x - 5.0) / (X_WD[0] - 5.0); return lo + (interp(ZB, x) - lo) * (1 - t ** 1.6) ** 1.4
@@ -988,7 +988,7 @@ def deck_gear(fine=True):
     aring_loft(A, [[(xs0, -hy, zd(xs0)), (xs1, -hy * 0.95, zd(xs1)), (xs1, hy * 0.95, zd(xs1)), (xs0, hy, zd(xs0))],
                    [(xs0 + 0.6, -hy, 10.1), (xs1, -hy * 0.95, 10.1), (xs1, hy * 0.95, 10.1), (xs0 + 0.6, hy, 10.1)]], W)
     if fine: rail(A, [(xs0 + 0.7, -hy + 0.1, 10.1), (xs0 + 0.7, hy - 0.1, 10.1)], h=0.9, every=0.8)
-    abox(A, 33.3, 35.0, -1.2, 1.2, zd(34), 10.55, C['tarp']); abox(A, 33.4, 34.9, -1.1, 1.1, 10.55, 10.8, C['tarp'])
+    abox(A, 32.4, 34.2, -1.1, 1.1, zd(33.3), zd(33.3) + 0.95, C['tarp']); abox(A, 32.6, 34.0, -0.9, 0.9, zd(33.3) + 0.95, zd(33.3) + 1.15, C['tarp'])
     abox(A, 31.45, 32.4, -0.9, 0.9, zd(32), 10.5, W); acyl(A, (31.9, -0.75, 9.9), (31.9, 0.75, 9.9), 0.45, lambda z: C['bin'], seg=14)
     # the fish pump's vacuum tank and its housing between the wheelhouse and the forecastle, the boxes on it, the yellow chest
     abox(A, 26.5, 28.8, -1.8, 1.8, 10.1, 10.8, C['dark'])
@@ -1006,8 +1006,9 @@ def deck_gear(fine=True):
     # -- the aft crane by the funnel: its column, the slewing head, the main boom forward over the deck, the link over it, the
     #    folded jib under it, the lift cylinder, the hanging arm with the yoke and the net hauler's wheel --
     xc, yc = 7.16, 3.2
-    acyl(A, (xc, yc, zd(xc)), (xc, yc, 16.7), 0.38, lambda z: W, seg=16)
-    aring_loft(A, [ell(xc, yc, zd(xc), 0.85, 0.8, 16), ell(xc, yc, 10.9, 0.45, 0.45, 16)], W)
+    # (the photographs 8cdb9214 and 82e91969: a tapered box pedestal, 1.3 x 1.1 m at the deck to 0.8 m square under the head)
+    R = lambda z, hx, hy: [(xc - hx, yc - hy, z), (xc + hx, yc - hy, z), (xc + hx, yc + hy, z), (xc - hx, yc + hy, z)]
+    aring_loft(A, [R(zd(xc), 0.65, 0.55), R(10.9, 0.5, 0.45), R(16.7, 0.4, 0.4)], W, cap1=True)
     abox(A, 6.04, 7.78, yc - 0.45, yc + 0.45, 16.64, 18.13, W)
     beam(A, (7.66, yc, 17.62), (12.07, yc, 17.17), 0.40, 0.36, W)
     beam(A, (7.70, yc, 17.98), (11.4, yc, 17.7), 0.12, 0.10, W)
