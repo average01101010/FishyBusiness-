@@ -112,6 +112,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 ## 10.7 Små ryddejobber
 
+- **`docktest` kan feile ved siden av en annen test** (30.10.2026, M2): én kjøring sammen med `nettest` fant ikke viftene (`#dockFan [data-dk=…]`) og ble rød på alle viftesjekkene; alene var den grønn med 96 OK, og i kjøringen før var viftene der. Trolig tid (vifta tegnes etter 150–200 ms ventetid i testen). Testen bør vente på vifta i stedet for en fast pause.
 - **`ordtest` er utdatert** (funnet 30.10.2026 i M1): den trykker på fanen «Bestillinger» i Salgslaget, som ikke finnes lenger (bestillingene er oppdrag), og stopper der. Klærne den prøver etterpå, ligger under `utstyrb` (rettet i testen). Testen må skrives om mot oppdragstavla eller tas ut.
 
 - `S.owned` skrives fortsatt (`03-simulation.js`, `05-phone.js`, `05-vessels.js`), men leses bare av en lagringsmigrering i `11-boot.js`.
