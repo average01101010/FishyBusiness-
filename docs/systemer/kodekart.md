@@ -536,7 +536,7 @@ crew: people with skills, habits and moods
   - 300 `crewTick(H)`
   - 366 `codRoom(H)`
 
-## `src/js/core/05-vessels.js` (970 linjer)
+## `src/js/core/05-vessels.js` (973 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -566,49 +566,49 @@ crew: people with skills, habits and moods
   - 303 `coastCast(b, gr, dI, i, kc, Hc, spot)`
   - 318 `coastNear(H, only)`
   - 339 `npcStates(H, only)`
-  - 385 `peerName(s)`
-  - 386 `peerStates()`
-  - 399 `newState()`
-  - 410 `log(no, en, k)`
-  - 412 `navHour()`
-  - 419 `nearestPort(p)`
-  - 421 `nearestYard(p)`
-  - 423 `step()`
-  - 440 `vesselStep(H)`
-  - 520 `sailV(H, hs)`
-  - 532 `sail(H, W, hs)`
-  - 558 `sailReplan(pl, b, gp)`
-  - 583 `sailStop(pl, b, why)`
-  - 591 `haltPlan(need)`
-  - 601 `arrive(w)`
-  - 619 `unstuckWhy()`
-  - 625 `unstuckSpot()`
-  - 632 `unstuck()`
-  - 646 `dock(pid, berth)`
-  - 671 `catchFactors(H, W, hs)`
-  - 681 `fish(H, W, hs)`
-  - 752 `endFishing(why)`
-  - 767 `addCatch(sp, kg, cls, hook, opt)`
-- **780** work on deck: gutting and icing take hands and time
-  - 793 `deckHands()`
-  - 796 `deckPending()`
-  - 797 `deckEta(hands)`
-  - 802 `moveKg(x, kg, patch)`
-  - 810 `iceMinute()`
-  - 812 `deckMinute()`
-  - 830 `risk(W, hs)`
-  - 857 `hullRepair()`
-  - 860 `svcOverdue()`
-- **861** the rescue boat (plan E3, 05.10.2026)
-  - 881 `rescueBases()`
-  - 890 `rescueBase(p)`
-  - 897 `rescueAis(H)`
-  - 901 `rescue(keepCatch)`
-  - 925 `towSea(p)`
-  - 930 `towRoutes(b)`
-  - 941 `towStep(H)`
-  - 953 `towDone(t)`
-  - 959 `towPose(frac)`
+  - 387 `peerName(s)`
+  - 388 `peerStates()`
+  - 401 `newState()`
+  - 412 `log(no, en, k)`
+  - 414 `navHour()`
+  - 421 `nearestPort(p)`
+  - 423 `nearestYard(p)`
+  - 425 `step()`
+  - 443 `vesselStep(H)`
+  - 523 `sailV(H, hs)`
+  - 535 `sail(H, W, hs)`
+  - 561 `sailReplan(pl, b, gp)`
+  - 586 `sailStop(pl, b, why)`
+  - 594 `haltPlan(need)`
+  - 604 `arrive(w)`
+  - 622 `unstuckWhy()`
+  - 628 `unstuckSpot()`
+  - 635 `unstuck()`
+  - 649 `dock(pid, berth)`
+  - 674 `catchFactors(H, W, hs)`
+  - 684 `fish(H, W, hs)`
+  - 755 `endFishing(why)`
+  - 770 `addCatch(sp, kg, cls, hook, opt)`
+- **783** work on deck: gutting and icing take hands and time
+  - 796 `deckHands()`
+  - 799 `deckPending()`
+  - 800 `deckEta(hands)`
+  - 805 `moveKg(x, kg, patch)`
+  - 813 `iceMinute()`
+  - 815 `deckMinute()`
+  - 833 `risk(W, hs)`
+  - 860 `hullRepair()`
+  - 863 `svcOverdue()`
+- **864** the rescue boat (plan E3, 05.10.2026)
+  - 884 `rescueBases()`
+  - 893 `rescueBase(p)`
+  - 900 `rescueAis(H)`
+  - 904 `rescue(keepCatch)`
+  - 928 `towSea(p)`
+  - 933 `towRoutes(b)`
+  - 944 `towStep(H)`
+  - 956 `towDone(t)`
+  - 962 `towPose(frac)`
 
 ## `src/js/core/05c-air.js` (64 linjer)
 
@@ -1022,29 +1022,29 @@ Fartstid: years at sea, 0 to 40 (Jonas 07.10.2026; docs/engasjement.md, arbeidsl
   - 51 `fsLand(total)`
   - 53 `fsRested(realMs)`
 
-## `src/js/core/09f-merker.js` (208 linjer)
+## `src/js/core/09f-merker.js` (209 linjer)
 
 Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1.5 and 3)
 
 - **1** Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1.5 and 3)
   - 22 `achVisits()`
   - 23 `achVisitPort(pid)`
-  - 81 `achState()`
-  - 97 `achAdd(k, n)`
-  - 98 `achSale(total, sps)`
-  - 99 `achCatch(sp, cls)`
-  - 101 `achMinute()`
-  - 110 `achTripEnd(bad)`
-- **112** the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters
-  - 114 `achPool(scale)`
-  - 138 `achDraw(key, scale)`
-  - 146 `achGive(key, scale, title)`
-- **155** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
-  - 157 `achCheck(quiet)`
-  - 185 `achChapter(ch)`
-  - 195 `achSeed()`
-- **206** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
-  - 207 `freeFirst(k)`
+  - 82 `achState()`
+  - 98 `achAdd(k, n)`
+  - 99 `achSale(total, sps)`
+  - 100 `achCatch(sp, cls)`
+  - 102 `achMinute()`
+  - 111 `achTripEnd(bad)`
+- **113** the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters
+  - 115 `achPool(scale)`
+  - 139 `achDraw(key, scale)`
+  - 147 `achGive(key, scale, title)`
+- **156** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
+  - 158 `achCheck(quiet)`
+  - 186 `achChapter(ch)`
+  - 196 `achSeed()`
+- **207** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
+  - 208 `freeFirst(k)`
 
 ## `src/js/core/09g-turer.js` (984 linjer)
 
@@ -1137,7 +1137,7 @@ Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md poi
   - 958 `turDepart()`
   - 978 `turMechanic()`
 
-## `src/js/core/09h-press.js` (210 linjer)
+## `src/js/core/09h-press.js` (214 linjer)
 
 Kystposten: the coast's paper (07.10.2026)
 
@@ -1147,20 +1147,20 @@ Kystposten: the coast's paper (07.10.2026)
 - **35** the words
   - 39 `pressWho(it)`
   - 45 `pressStory(it)`
-  - 128 `pressTop()`
-  - 140 `pressLand(local)`
-- **150** the market: a record price, the highest in a year (Jonas 07.10.2026: «Ta rekordpriser»)
-  - 155 `pressIx(sp, d)`
-  - 156 `pressHigh(sp, d)`
-  - 157 `pressRecords(d)`
-  - 158 `pressPrice(sp, d)`
-  - 173 `pressDay(H)`
-- **177** the year's first skrei: the first cod landing north of Stad (62° N) after the skrei season begins (09c-seasons.js), from the
-  - 179 `pressSkreiH(y)`
-  - 181 `pressSkrei()`
-  - 192 `pressList(local)`
-  - 208 `pressUnread()`
-  - 209 `pressSeen()`
+  - 132 `pressTop()`
+  - 144 `pressLand(local)`
+- **154** the market: a record price, the highest in a year (Jonas 07.10.2026: «Ta rekordpriser»)
+  - 159 `pressIx(sp, d)`
+  - 160 `pressHigh(sp, d)`
+  - 161 `pressRecords(d)`
+  - 162 `pressPrice(sp, d)`
+  - 177 `pressDay(H)`
+- **181** the year's first skrei: the first cod landing north of Stad (62° N) after the skrei season begins (09c-seasons.js), from the
+  - 183 `pressSkreiH(y)`
+  - 185 `pressSkrei()`
+  - 196 `pressList(local)`
+  - 212 `pressUnread()`
+  - 213 `pressSeen()`
 
 ## `src/js/core/09i-look.js` (111 linjer)
 
@@ -1179,6 +1179,24 @@ looks: how the people of the game look (Jonas 10.10.2026: character customisatio
   - 83 `lookOf(c)`
   - 99 `lookQuay(id, i)`
   - 106 `lookFromKey(s)`
+
+## `src/js/core/09j-kystvakt.js` (102 linjer)
+
+Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026; docs/planer/oppdrag-2.md, docs/systemer/kvoter-og-regler.md 5.30)
+
+- **1** Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026; docs/planer/oppdrag-2.md, docs/systemer/kvoter-og-regler.md 5.30)
+  - 10 `kvState()`
+  - 13 `kvReady()`
+  - 23 `kvHour()`
+  - 29 `kvArrive()`
+  - 36 `kvSide(b)`
+  - 37 `kvMinute()`
+  - 43 `kvNpcs()`
+  - 46 `kvSums(sets, inside)`
+  - 48 `kvMostSp(sets)`
+  - 53 `kvCheck(b)`
+  - 75 `kvWhat(r)`
+  - 85 `kvFinish()`
 
 ## `src/js/core/10-gear.js` (698 linjer)
 
@@ -1884,14 +1902,14 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (790 linjer)
+## `src/js/ui/phone/07-patch.js` (791 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 783 `patch()`
+  - 784 `patch()`
 
-## `src/js/ui/phone/08-home-papers-merker.js` (87 linjer)
+## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
   - 1 `home()`
   - 20 `nearHint(kind)`
@@ -1899,11 +1917,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 25 `tattoos()`
   - 43 `papBladB()`
   - 48 `papPermit()`
-  - 53 `papBiz()`
-  - 59 `fsChip()`
-  - 61 `fsCard()`
-  - 68 `merker()`
-  - 79 `lore()`
+  - 53 `papKv()`
+  - 59 `papBiz()`
+  - 65 `fsChip()`
+  - 67 `fsCard()`
+  - 74 `merker()`
+  - 85 `lore()`
 
 ## `src/js/ui/phone/09-vaer-post-salg-redning.js` (139 linjer)
 
@@ -2178,22 +2197,22 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 235 `tutUpdate()`
   - 258 `tipPlace(txt, T0, o)`
 
-## `src/js/ui/07c-handbook.js` (189 linjer)
+## `src/js/ui/07c-handbook.js` (191 linjer)
 
 Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
 
 - **1** Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
   - 10 `hbState()`
-  - 124 `hbPick()`
-  - 132 `hbEv(id, how)`
-  - 133 `hbDone(id)`
-  - 134 `hbSkip(ch, id)`
-  - 136 `hbReady()`
-- **138** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
-  - 144 `appShown(id)`
-  - 148 `appUnlock(id)`
-  - 150 `appSeen(id)`
-  - 151 `hbUpdate()`
+  - 126 `hbPick()`
+  - 134 `hbEv(id, how)`
+  - 135 `hbDone(id)`
+  - 136 `hbSkip(ch, id)`
+  - 138 `hbReady()`
+- **140** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
+  - 146 `appShown(id)`
+  - 150 `appUnlock(id)`
+  - 152 `appSeen(id)`
+  - 153 `hbUpdate()`
 
 ## `src/js/ui/10g-wardrobe.js` (125 linjer)
 

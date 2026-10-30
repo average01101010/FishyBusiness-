@@ -33,7 +33,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `redskap.md` | Redskap og utstyr: de andres redskap i havet, utstyrsstatus og service, dekksutstyret, redskapet om bord synlig, redskap i sjøen. | `core/10-gear.js`, `core/10b-gearcare.js`, `ui/09-hand-fishing.js` |
 | `fiskerimodellen.md` | Kart, fjordlinje og fangstfelt, fiskerimodellen, Fiskeguiden, juks i dødtiden. Spesifikasjonen står i `docs/spesifikasjon.md`. | `core/03-simulation.js`, `core/03c-*`, `ui/06f-fishguide.js` |
 | `priser-og-salg.md` | Priser, kvalitet og salg, bestillingene. | `core/03-simulation.js` (`grade`, `sell`), `core/08-*` |
-| `kvoter-og-regler.md` | Kvoter og regulering, reglenes kartdata, regelmotoren, Regler-appen, varsel før feil, regelverket og kildene. | `core/03d-quota.js`, `core/03e-rules.js`, `src/data/rules.json`, `tools/rules/` |
+| `kvoter-og-regler.md` | Kvoter og regulering, reglenes kartdata, regelmotoren, Regler-appen, varsel før feil, Kystvakta om bord, regelverket og kildene. | `core/03d-quota.js`, `core/03e-rules.js`, `core/09j-kystvakt.js`, `src/data/rules.json`, `tools/rules/` |
 | `folk-om-bord.md` | Mannskapet, kulde og klær, arbeid om bord, mat, hviletid og energien, mannskapets arbeid på sjøen, karakteren og garderoben. Planen står i `docs/mannskap-plan.md`. | `core/04-crew.js`, `core/14-crewlife.js`, `ui/05b-work.js`, `ui/13-work.js`, `tools/harbour/arbeider.py`, `tools/harbour/garderobe.py` |
 | `driftsplan.md` | Driftsplanen (`S.ops`), Driftsplan-appen, den gamle planleggeren. | `core/06d-drift.js`, `ui/05c-drift.js` |
 | `oppdrag-og-kystposten.md` | Turoppdrag fra der du er, Kystposten. | `core/09g-turer.js`, `ui/06b-book-tabs.js` |
