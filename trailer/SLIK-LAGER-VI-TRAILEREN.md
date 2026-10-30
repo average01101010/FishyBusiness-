@@ -36,13 +36,7 @@ Referansebilder ligger i `referanse/`.
 
 ### 1. Avklaringer først
 
-Før manus skrives, må disse være svart ut (se også del 10 i strategien):
-
-- Er spillet en Vite/three.js-webklient? Avgjør hvordan filmoppsettet bygges.
-- Er spillet gratis? Avgjør teksten på sluttkortet.
-- Hvilke animasjoner finnes for å sette og dra bruk, fisk om bord, levering?
-- Finnes motorlyden i spillet?
-- Hvilke steder og hvilket lys (mørketid, nordlys, vær) finnes i dag?
+Gjort 30.10.2026 (`PLAN.md` del 1 og `TRAILER-STRATEGI.md` del 10): spillet er ren WebGL med eget byggeskript og Playwright-tester, det er gratis, semidiesel-lyden finnes, hele kysten og alle årstider finnes. Arbeidsanimasjonene sjekkes i egen runde senere. Gjenstår: tegnehastigheten i skyen og henting av hele kysten der.
 
 ### 2. Manus og opptaksliste
 
@@ -68,7 +62,7 @@ Før manus skrives, må disse være svart ut (se også del 10 i strategien):
 
 ### 4. Lyd fra spillet og stemme
 
-- **Reallyd.** Motor, sjø, måker og vinsj tas fra spillet hvis det finnes. Hvis ikke, må lyd med kommersiell lisens brukes, og det noteres i `CREDITS.md`.
+- **Reallyd.** Spillets lyd er laget i Web Audio mens det går, ingenting er innspilt. Den tas opp fra spillet på iMacen (vei A i `PLAN.md` del 5), eller rendres bilde for bilde i oppsettet (vei B) når bildene er låst.
 - **Stemme.** Tre nivåer:
   1. Masteren har ingen stemme, bare tekst på skjermen.
   2. En versjon med ekte nordnorsk stemme, 3–4 korte linjer, lavmælt. Krever skriftlig samtykke.
@@ -78,9 +72,8 @@ Før manus skrives, må disse være svart ut (se også del 10 i strategien):
 
 ### 5. Filming i spillet («harness»)
 
-- **Egen kopi av spillkoden** på en egen gren som aldri pushes.
-- **Privat byggeflagg**, for eksempel `VITE_TRAILER`. Vi kontrollerer at en vanlig build ikke inneholder noe av filmkoden.
-- **Filmklokke.** 60 fps på kunstig klokke, fast utgangspunkt for alt tilfeldig, Playwright styrer Chromium og lagrer hvert bilde.
+- **Ingen filmkode i `src/`.** Filmoppsettet ligger i `trailer/tools/` og styrer det vanlige bygget (`dist/`) utenfra gjennom Playwright. Den eneste tilføyelsen i spillet er kameraoverstyringen `G3.film`, i egen PR, uten virkning når den ikke brukes.
+- **Filmklokke.** Et skript som legges inn før siden laster, bytter `performance.now`, `Date.now` og `requestAnimationFrame` med en kunstig klokke som oppsettet stepper 1/60 s om gangen. Fast frø med `#seed=1`. På localhost går spillet på egen klokke, så dato og klokkeslett settes fritt med `S.t`.
 - **Hvert klipp er en JSON-fil:** sted, dato og klokkeslett, lys, sjø, båtens bane og fart, kamera, hva som skjules, hvilken tekst som ligger over.
 - **Kontrollbilder** per klipp: 0, 25, 50, 75 og 100 %, kontaktark, og en kort forhåndsvisning med musikk i halv størrelse.
 - **Automatiske kontroller:**
@@ -95,7 +88,7 @@ Før manus skrives, må disse være svart ut (se også del 10 i strategien):
 ### 6. Grovklipp
 
 - `tools/assemble_rough.py` setter sammen klippene med ffmpeg: eksakt antall bilder per klipp, overtoninger der manuset sier det, toning fra svart i starten, logo på siste slag og adresse ett slag etter.
-- **Sluttkort:** spillets logo og «detstorebla.no» (med «Spill gratis på» hvis det stemmer). Skrift velges etter logoen. Liten kreditering av Kartverket, Mapzen og OpenStreetMap nederst.
+- **Sluttkort:** logoen fra `tools/brand/logo.py` (havsjarken i den blå timen med Senja-fjellene) og «Spill gratis på detstorebla.no» i Source Serif 4 Display Semibold, spillets egen skrift. Liten kreditering av Kartverket, Mapzen og OpenStreetMap nederst.
 
 ### 7. Lydmiks
 
@@ -128,9 +121,11 @@ De fem korte klippene publiseres først, med noen dagers mellomrom. Den kroken s
 
 ```
 trailer/
+  PLAN.md                   planen: det spillet gir oss, opptaksliste, harness, lyd, faser, valg
   TRAILER-STRATEGI.md       hvorfor: målgruppe, psykologi, struktur
   SLIK-LAGER-VI-TRAILEREN.md hvordan: dette dokumentet
   referanse/                skjermbilder av de to båtene
+  shots/                    ett JSON-dokument per klipp
   script.md                 tekst på skjermen og stemme, med tidsvinduer
   shotlist.md               opptaksliste med alle klipp og tider
   production.md             plan, leveranser og krav til lyd

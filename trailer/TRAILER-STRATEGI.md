@@ -9,7 +9,7 @@ Laksebaronen-dokumentet beskriver to ting: en **produksjonsmetode** (hvordan fil
 | Område | Laksebaronen | Det store blå | Vurdering |
 |---|---|---|---|
 | Alt er ekte spillgrafikk | Ja | Ja | Ta over uendret. Hele poenget med spillet er at det er ekte, så traileren må også være det. |
-| Privat filmversjon («harness») bak byggeflagg, fast klokke, Playwright | Ja | Mulig hvis spillet er en webklient (skjermbildet tyder på det: bilderate-teller, Kartverket/OSM-kreditering) | Ta over. Må bekreftes mot kodebasen, som ikke ligger i dette repoet. |
+| Privat filmversjon («harness») bak byggeflagg, fast klokke, Playwright | Ja | Ja, enklere: spillet er ren WebGL med eget byggeskript og Playwright-tester, og eksponerer kamera, tid, frø og dyr alt | Ta over uten byggeflagg: filmoppsettet styrer spillet utenfra. Se `PLAN.md` del 4. |
 | Musikken bestemmer rytmen | Ja | Delvis | Se punkt 4. Vi har et sterkere lydkort enn musikk: semidieselen. |
 | Stemme på engelsk (ElevenLabs «Magnus») | Ja | Nei | Målgruppen er norsk. Se punkt 5. |
 | Stående 9:16 først | Ja | Ja, men ikke bare | Den eldre kystpublikummet er på Facebook og YouTube, se punkt 7. |
@@ -117,7 +117,7 @@ Den kroken som gir best seertid de første tre sekundene, flyttes først i neste
 
 Arbeidsgangen fra Laksebaronen tas over i sin helhet: idé og opptaksliste, musikk og klippekart, stemme, filming i spillet, grovklipp i halv størrelse, notater med tidskode fra eier, nye runder, full størrelse til slutt. Det som er spesifikt for oss:
 
-- **Harness.** Eget byggeflagg, for eksempel `VITE_TRAILER`, egen gren som aldri pushes, kontroll av at vanlig build ikke inneholder filmkode. Krever at spillkoden er en Vite/three.js-klient. Dette må sjekkes før noe annet.
+- **Harness.** Spillet er ren WebGL i vanlig JavaScript med `node build.mjs`, Playwright-tester med fast frø (`#seed=1`), settbar tid (`S.t`) og et kinokamera. Filmoppsettet styrer spillet utenfra med Playwright, og den eneste tilføyelsen i spillet er en kameraoverstyring i egen PR. Se `PLAN.md` del 4.
 - **Egne automatiske kontroller** i tillegg til land-sjekken:
   - masten på den store båten må klare brua i hvert bilde når hun går under Gisundbrua;
   - fortøyde båter skal ligge i riktig høyde ved kai (ingenting henger i lufta);
@@ -133,22 +133,17 @@ Arbeidsgangen fra Laksebaronen tas over i sin helhet: idé og opptaksliste, musi
 - **Musikk og stemme.** Betalt Suno- og ElevenLabs-plan hvis de brukes. En ekte stemme trenger skriftlig samtykke til bruk i markedsføring.
 - **Motorlyd.** Hvis semidiesel-lyden hentes utenfor spillet, må den ha lisens for kommersiell bruk. Best er at lyden finnes i spillet, så holder «alt er ekte»-løftet også for lyd.
 
-## 10. Det jeg ikke har fått bekreftet
+## 10. Avklart 30.10.2026
 
-Nettstedet detstorebla.no var ikke tilgjengelig fra arbeidsmiljøet mitt, og spillkoden ligger ikke i dette repoet. Dette bør avklares før vi går videre:
+Spillkoden ligger på arbeidsgrenen `ccr-5e1ba2f4-pusvyd` og er flettet inn her. Jonas svarte samme dag:
 
-1. Er spillet en Vite/three.js-webklient slik at harness-metoden kan brukes direkte?
-2. Er spillet gratis? Det avgjør om sluttkortet sier «Spill gratis på …» eller bare adressen.
-3. Hvilke fiske- og arbeidsanimasjoner finnes i dag, og holder de for nærbilder?
-4. Finnes semidiesel-lyden i spillet?
-5. Hvilke steder er med i kartet i dag (Finnsnes, Senja, Tromsø?), så opptakslisten kan bruke dem?
-6. Er det vær, mørketid og nordlys i spillet, eller bare døgnsyklus?
-7. Finnes det tall vi kan bruke som sosialt bevis (antall spillere, båter solgt)?
+1. **Teknologi:** ren WebGL 1 i vanlig JavaScript, ett byggeskript uten npm, Playwright-tester i Python. Harness-metoden kan brukes, uten byggeflagg.
+2. **Gratis:** ja. Sluttkortet sier «Spill gratis på detstorebla.no».
+3. **Animasjoner:** vi viser båtene og naturen. Arbeidsanimasjonene sjekkes i en egen runde senere (`PLAN.md` F6).
+4. **Semidiesel-lyden finnes,** laget i Web Audio etter Jonas' video av en Sabb G, med røyk i takt. Den må tas opp eller rendres (`PLAN.md` del 5).
+5. **Hele kysten og alle årstider finnes,** med midnattssol, mørketid, nordlys, sesonghendelser og dyreliv.
+6. **Sosialt bevis:** ikke avklart. Tas opp når tallene i admin er store nok til å vises.
 
-## 11. Anbefalt neste steg
+## 11. Neste steg
 
-1. Avklare punktene i del 10.
-2. Skrive `script.md` og `shotlist.md` etter strukturen i del 6.
-3. Lage 2–3 Suno-versjoner i hver av to stilretninger (nordisk nedpå, moderne kyst), velge én.
-4. Sette opp harness bak flagg i spillkoden og filme de to viktigste klippene først: sjarken i grålysning og snurperen under brua. Hvis de to holder, holder resten.
-5. Første grovklipp i halv størrelse, notater med tidskode, ny runde.
+Står i `PLAN.md`, del 8 (fasene) og del 9 (valgene Jonas må ta).
