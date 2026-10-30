@@ -199,7 +199,7 @@ const PLAN2UI = (() => {
   function stats(o){
     const St = o.stats || {days:[], sum:{}}, today = gDate(S.t / 60).toISOString().slice(0, 10), days7 = []; for (let k = 6; k >= 0; k--) days7.push(gDate(S.t / 60 - k * 24).toISOString().slice(0, 10));
     const sum = list => { const r = {trips:0, kg:0, kr:0, lott:0, cost:0, conf:0, caught:0, out:0, sp:{}, port:{}}; for (const d of list){ r.trips += d.trips; r.caught += d.caught || 0; r.out += d.out || 0; r.kg += d.kg; r.kr += d.kr; r.lott += d.lott || 0; r.cost += d.cost || 0; r.conf += d.conf || 0; for (const k in d.sp) r.sp[k] = (r.sp[k] || 0) + d.sp[k]; for (const k in d.port) r.port[k] = (r.port[k] || 0) + d.port[k]; } return r; };
-    const D = sum(St.days.filter(d => d.d === today)), W = sum(St.days.filter(d => days7.includes(d.d))), A = St.sum && St.sum.kg != null ? St.sum : sum(St.days); const hold = Math.round(holdTotal()), cap = Math.round(capHold());
+    const D = sum(St.days.filter(d => d.d === today)), W = sum(St.days.filter(d => days7.includes(d.d))), A = St.sum && St.sum.kg != null ? Object.assign({}, St.sum, Number.isFinite(St.sum.cost) ? {} : {cost:sum(St.days).cost}) : sum(St.days); const hold = Math.round(holdTotal()), cap = Math.round(capHold());
     const top = r => { const tot = Object.values(r.sp).reduce((a, v) => a + v, 0); return tot ? Object.entries(r.sp).sort((a, c) => c[1] - a[1]).slice(0, 3).map(([k, v]) => (SPECIES[k] ? SPECIES[k][S.lang === 'no' ? 'no' : 'en'] : k) + ' ' + Math.round(100 * v / tot) + ' %').join(', ') : '–'; };
     const ports = r => Object.entries(r.port).map(([k, v]) => nm(k) + ' ' + fmt(v, 0) + ' kg').join(', ') || '–';
     const tr = (lbl, f) => '<tr><td>' + lbl + '</td><td>' + f(D) + '</td><td>' + f(W) + '</td><td>' + f(A) + '</td></tr>';

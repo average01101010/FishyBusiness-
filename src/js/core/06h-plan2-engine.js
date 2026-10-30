@@ -226,7 +226,7 @@ function plan2NewDay(o, H){
   o.hold = 0; plan2Decide(o, H);
 }
 // the day's costs (diesel, bait, baiting, the crew's shares are in the landing) go to its date
-function plan2CostDay(o, r){ const d = gDate(r.t0).toISOString().slice(0, 10), D = plan2StatDay(o, d), c = Math.max(0, Math.round(S.stats.costs - (r.cost0 || S.stats.costs))); D.cost += c; o.stats.sum.cost = (o.stats.sum.cost || 0) + c; }
+function plan2CostDay(o, r){ const d = gDate(r.t0).toISOString().slice(0, 10), D = plan2StatDay(o, d), c = Math.max(0, Math.round(S.stats.costs - (r.cost0 || S.stats.costs))); D.cost += c; const M = o.stats.sum; M.cost = (Number.isFinite(M.cost) ? M.cost : o.stats.days.reduce((a, x) => a + (x.cost || 0), 0) - c) + c; }   // (a sum started as {fuel, bait, egn} by plan2New: made again from the days kept)
 // what a trip caught, landed or kept aboard: the statistics count the catch on the day she comes in, not only the landings (a plan
 // that lands when the hold is full, shows the days fished before the first landing)
 function plan2Caught(o, tr){ if (!tr || tr.kg0 == null) return; const kg = Math.round(holdTotal() - tr.kg0); if (kg <= 0) return; const D = plan2StatDay(o, gDate(S.t / 60).toISOString().slice(0, 10)); for (const X of [D, o.stats.sum]){ X.caught = (X.caught || 0) + kg; X.out = (X.out || 0) + 1; } }
