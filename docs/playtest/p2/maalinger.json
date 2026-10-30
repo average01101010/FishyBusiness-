@@ -1,0 +1,257 @@
+{
+ "run": "p2",
+ "faser": {
+  "spill": {
+   "kommandoer": 522,
+   "handlinger": 384,
+   "ekte_tid": "4 t 25 min",
+   "menneskelig_tid": "13 t 54 min",
+   "borte_tid": "9 t 45 min",
+   "spilltid": "83 t 30 min",
+   "spilltid_fra_til": [
+    "man 1. mar 2027, 06:01",
+    "tor 4. mar 2027, 17:31"
+   ],
+   "kontanter_fra_til": [
+    15000,
+    6253
+   ],
+   "kontanter_min_max": [
+    487,
+    34556
+   ],
+   "turer_kg_omsetning": [
+    8,
+    791,
+    34975
+   ],
+   "båt_flåte_eide_lisens": [
+    "skiff",
+    1,
+    1,
+    null
+   ],
+   "mannskap_redskap_i_sjøen": [
+    1,
+    0
+   ],
+   "lån": 0,
+   "per_kommando": {
+    "trykk": 272,
+    "tekst": 111,
+    "vent": 56,
+    "rull": 42,
+    "dagbok": 23,
+    "borte": 5,
+    "bilde": 4,
+    "velg": 3,
+    "skriv": 2,
+    "knip": 2,
+    "dra": 2
+   },
+   "spillhandlinger_brukt": {
+    "fp": 23,
+    "leia": 21,
+    "start": 12,
+    "sell": 7,
+    "ice": 3,
+    "clear": 3,
+    "rod": 2,
+    "stopfish": 2,
+    "fuel": 2,
+    "rm": 2,
+    "cm": 1,
+    "pub": 1,
+    "opssave": 1
+   },
+   "apper_åpnet": {
+    "vaer": 3,
+    "utstyr": 3,
+    "salg": 2,
+    "post": 2,
+    "haill": 1,
+    "meld": 1,
+    "fartoy": 1,
+    "bank": 1,
+    "mannskap": 1,
+    "bors": 1
+   },
+   "telefonknapper": {
+    "close": 16,
+    "back": 15,
+    "shop": 5,
+    "sub": 3,
+    "cloth": 2,
+    "haillbuy": 1,
+    "equip": 1,
+    "bneg": 1,
+    "bhire": 1,
+    "ops_on": 1
+   },
+   "bomtrykk": 64,
+   "tekst_ikke_funnet": 19,
+   "ugyldige_kommandoer": 0,
+   "statuser": {
+    "port": 326,
+    "fishing": 92,
+    "sailing": 52,
+    "idle": 32,
+    "unmooring": 20
+   },
+   "tempo_brukt": [
+    1
+   ],
+   "omlastinger": 0,
+   "snudd": 0,
+   "lengste_gjentakelse": [
+    4,
+    "trykk 646 700"
+   ],
+   "kontanthopp": [
+    {
+     "n": 300,
+     "cmd": "trykk",
+     "args": [
+      "1057",
+      "619"
+     ],
+     "fra": 34556,
+     "til": 556
+    }
+   ]
+  }
+ },
+ "spillet": {
+  "grunnstøtinger": [],
+  "logg_grunn_slep_redning": [],
+  "motorstopp_tom": [],
+  "snudd_vær": [],
+  "inndragning_meldinger": [],
+  "kvote_full_logg": 0,
+  "kveite": [],
+  "fjordlinja": [],
+  "ferskfisk": [],
+  "hvile": [],
+  "tapt_redskap": [],
+  "landinger": 7,
+  "landet_kg_kr": [
+   791,
+   34975
+  ],
+  "kg_per_art": {
+   "torsk": 439,
+   "hyse": 152,
+   "sei": 150,
+   "brosme": 20,
+   "lyr": 14,
+   "lange": 14,
+   "uer": 1
+  },
+  "mottak": {
+   "senjahopen": 4,
+   "botnhamn": 3
+  },
+  "utstyr": null,
+  "eide_båter": [
+   "skiff"
+  ],
+  "lisens": null,
+  "mannskap": [
+   {
+    "navn": "Andreas Andreassen",
+    "lott": 0.15
+   }
+  ],
+  "redskap_i_sjøen": 0,
+  "pgear": null,
+  "stats": {
+   "revenue": 34975,
+   "costs": 43721.81147901564,
+   "trips": 8,
+   "kg": 790.9633333333334,
+   "released": 4
+  },
+  "meldinger_fra": {
+   "Husøy Fisk": 4,
+   "Verkstedet": 1,
+   "Kaia": 1
+  },
+  "tatoveringer": [],
+  "lore": [
+   "lykke"
+  ]
+ },
+ "milepæler": {
+  "første_tur_ferdig": {
+   "spilltid_min": 234,
+   "logg": "Første tur er fullført. Nå er du din egen skipper.",
+   "n": 93,
+   "handlinger": 67,
+   "menneskelig_tid": "0 t 39 min",
+   "ekte_tid": "0 t 45 min"
+  },
+  "første_salg": {
+   "spilltid_min": 234,
+   "logg": "Leverte 350 kg i Botnhamn for 18 306 kr.",
+   "n": 93,
+   "handlinger": 67,
+   "menneskelig_tid": "0 t 39 min",
+   "ekte_tid": "0 t 45 min"
+  },
+  "juksamaskin": {
+   "spilltid_min": 1958,
+   "logg": "Kjøpt Juksamaskin. Monteres i verkstedet.",
+   "n": 299,
+   "handlinger": 215,
+   "menneskelig_tid": "5 t 26 min",
+   "ekte_tid": "2 t 22 min"
+  },
+  "første_mannskap": {
+   "spilltid_min": 4832,
+   "logg": "Andreas Andreassen har mønstret på som erfaren med 15 % lott.",
+   "n": 462,
+   "handlinger": 340,
+   "menneskelig_tid": "13 t 25 min",
+   "ekte_tid": "3 t 54 min"
+  },
+  "driftsplan_på": {
+   "spilltid_min": 4839,
+   "logg": "Fast driftsplan slått på.",
+   "n": 497,
+   "handlinger": 368,
+   "menneskelig_tid": "13 t 26 min",
+   "ekte_tid": "3 t 56 min"
+  },
+  "snekke": null,
+  "sjark": null,
+  "lån": null,
+  "redskap_satt": null,
+  "innloggingsbonus": {
+   "last": "2026-10-01",
+   "pct": 2,
+   "days": 2,
+   "best": 2
+  },
+  "haill": {
+   "type": "luksus",
+   "t0": 6,
+   "how": "shop"
+  }
+ },
+ "snapshot": "/root/playtest-obs/p2/snap/auto_16032.json",
+ "sidefeil": [],
+ "konsollfeil": 1,
+ "tempo_hendelser": [
+  {
+   "w": 6622.9,
+   "n": 280,
+   "kind": "resume",
+   "snap": "auto_06678.json",
+   "gap_real": 3978,
+   "game_t": 1775,
+   "cash": 31953,
+   "orient": "liggende"
+  }
+ ],
+ "dagbok_notater": 23
+}

@@ -1,0 +1,4 @@
+{
+  "what": "the rules along the coast (tools/rules/fetch.py and regler.py), made by .github/workflows/regler.yml when this file changes, every Monday on the default branch, and kept as a release regler-<run number> (rules.json, which goes into src/data/rules.json)",
+  "run": 1
+}
