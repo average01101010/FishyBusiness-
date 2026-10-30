@@ -954,9 +954,12 @@ def masts(fine=True):
         for z in [15.6 + 0.3 * k for k in range(6)]: acyl(A, (30.05, -0.12, z), (30.05, 0.12, z), 0.012, lambda z_: C['steel'], seg=4)
     # -- the radar mast on the wheelhouse's roof: the tapered tower to the upper platform, its column to the dome's platform, the
     #    ladder mast with the top lights, the second dome on its pole aft --
-    aring_loft(A, [ell(12.7, 0, ZR, 1.0, 0.9, 16), ell(12.6, 0, 16.95, 0.5, 0.55, 16)], W)
+    # (95c900de: both towers are plate towers, flat-sided with chamfered corners, tapering up; a thin blue band under each platform)
+    oct_ = lambda cx, cy, z, hx, hy, c=0.12: [(cx - hx + c, cy - hy, z), (cx + hx - c, cy - hy, z), (cx + hx, cy - hy + c, z), (cx + hx, cy + hy - c, z),
+                                             (cx + hx - c, cy + hy, z), (cx - hx + c, cy + hy, z), (cx - hx, cy + hy - c, z), (cx - hx, cy - hy + c, z)]
+    aring_loft(A, [oct_(12.7, 0, ZR, 1.05, 0.95), oct_(12.6, 0, 16.95, 0.55, 0.6)], W)
     platform(A, 11.90, 15.85, 1.30, 17.20, T, fine=fine)
-    aring_loft(A, [ell(13.85, 0, 17.2, 0.48, 0.45, 16), ell(13.9, 0, 19.1, 0.30, 0.30, 16)], W)
+    aring_loft(A, [oct_(13.85, 0, 17.2, 0.52, 0.48, 0.08), oct_(13.9, 0, 19.1, 0.32, 0.32, 0.06)], W)
     abox(A, 12.88, 14.47, -0.75, 0.75, 19.10, 19.30, T)
     dome(A, (14.30, 0, 19.30), 0.66, 0.55, W)
     for x in (14.05, 12.33):

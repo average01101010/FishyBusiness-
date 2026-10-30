@@ -470,7 +470,9 @@ blå toppen) med **to** bare stålrør med svanehals. Trinnene ned sida på styr
 ikke ved 8 m. Lagt til: rørrekkverk langs bingeveggens topp, plattform med rekkverk på vakuumtankene, trapp fra arbeidsdekket opp
 på kassen ved hopperen, dør og to vinduer i bakkens akterskott på styrbord, den gule kisten på arbeidsdekket.
 
-Igjen etter runde 4, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 5 (mot 95c900de): radarmastas to tårn som platetårn med rette sider og avfasede hjørner, ikke runde.
+
+Igjen etter runde 5, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 
