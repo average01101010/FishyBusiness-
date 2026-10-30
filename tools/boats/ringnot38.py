@@ -485,9 +485,10 @@ def opening(A, x0, x1, z0, z1, sg, r, m_in, m_rim=None, rim=0.04):
 def holes():
     H = []
     for sg in (1, -1):
-        H.append((sg, 30.60, 32.20, 7.40, 7.94, 0.10, 'pocket', 0.55))
+        H.append((sg, 30.80, 32.35, 7.42, 7.98, 0.10, 'pocket', 0.55))
         for k in range(4): H.append((sg, 31.0 + 0.42 * k, 31.22 + 0.42 * k, 3.62, 3.84, 0.11, 'box', 0.1))   # the four round outlets over the bulb (9d43d29b)
         H.append((sg, 34.33, 34.67, 8.70, 8.90, 0.09, 'thru', 0.0)); H.append((sg, 37.90, 38.10, 8.62, 8.82, 0.09, 'thru', 0.0))
+        H.append((sg, 29.85, 30.15, 8.72, 8.90, 0.08, 'thru', 0.0))     # the third fairlead, aft of the mast (bowwin crop of 42432bd5)
         for k in range(5):
             xc = 4.15 - 0.45 * k; H.append((sg, xc - 0.07, xc + 0.07, 4.62, 5.18, 0.03, 'box', 0.12))
     # port: the closed side of the shelter deck
@@ -588,7 +589,7 @@ def hull_side(fine=True):
                 for x0, x1 in ((23.75, 25.2), (20.4, 22.2), (17.9, 19.6), (15.6, 17.3)):
                     o = rrect((x0 + x1) / 2, 7.87, x1 - x0, 0.85, 0.12, n=4); hull_frame(A, o, sg, W, w=0.035, h=0.012)
             # the anchor's crown bolster under the pocket (a raised blue lip)
-            o = rrect(31.5, 6.91, 2.29, 0.42, 0.21, n=5); hull_frame(A, o, sg, C['hull'], w=0.02, h=0.09)
+            o = rrect(31.7, 7.03, 2.1, 0.36, 0.18, n=5); hull_frame(A, o, sg, C['hull'], w=0.02, h=0.09)
     if not fine: return [A.done(30)]
     for h in holes():
         sg, x0, x1, z0, z1, r, kind, d = h; o = hole_outline(h); n = len(o)
@@ -1346,7 +1347,7 @@ def name_strips(G):
 def bower(G):
     """the anchor in its pocket on the starboard bow (the slip and the aerial photographs), its hawse pipe up to the windlass under
     the tarpaulin, the spare to port"""
-    hw = lambda sg: {'fair': G(31.5, sg * (hbz(31.5, 7.7) + 0.03), 7.7), 'pipe': G(33.0, sg * 1.3, z_dk(33.0) + 0.17)}
+    hw = lambda sg: {'fair': G(31.6, sg * (hbz(31.6, 7.7) + 0.03), 7.7), 'pipe': G(33.0, sg * 1.3, z_dk(33.0) + 0.17)}
     return dict(hw(-1), kind='hall', kg=900, gypsy=G(33.3, -1.6, z_dk(33.3) + 0.72), side=1, deck=False, spare=hw(1))
 
 def anchors():
