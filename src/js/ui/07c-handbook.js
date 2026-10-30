@@ -85,6 +85,8 @@ const HB = [
     no:'Oppdragstavla: turer med god betaling ut fra der du er. Det første ligger klart: litt post til nabohavna, uten hast. Lang tur, god lønn. Med trim går båten fortere, så turen tar kortere tid.', en:'The order board: well-paid trips from where you are. The first lies ready: a little mail for the next harbour, no hurry. Long trip, good pay. With tuning the boat goes faster, so the trip takes less time.'},
   {id:'butikk', ch:5, t:['Utstyrsbutikken', 'The tackle shop'], when:() => hbSvc('butikk'), show:() => hbDock(['butikk', 'fiskeutstyr']),
     no:'Utstyrsbutikken: line, garn og teiner trenger hver sin haler, og kroker, blåser og agn hører til redskapet. Det som ikke passer båten, kan du ikke kjøpe.', en:'The tackle shop: lines, nets and pots each need their hauler, and hooks, floats and bait belong to the gear. What does not fit the boat cannot be bought.'},
+  {id:'nett', ch:5, t:['Nettet', 'The Net'], when:() => hbLand() >= 2 && !hbSvc('butikk'), show:() => phoneApp('nett'),
+    no:'Nettet på telefonen har nettbutikken til utstyrsbutikkene langs kysten. Bestill det du trenger hvor du er, så ligger det klart i butikken du velger. Du betaler og får det montert når du henter.', en:'The Net on the phone has the web shop of the tackle shops along the coast. Order what you need wherever you are, and it is ready at the shop you choose. You pay and have it fitted when you fetch it.'},
   {id:'verft', ch:5, t:['Verftet', 'The yard'], when:() => hbSvc('verft'), show:() => hbDock(['vedlikehold', 'oppgr', 'batmarked']),
     no:'Verftet: vedlikehold, begroing på skroget, maling og større båter. Jobbene tar ekte tid, og båten ligger der imens.', en:'The yard: maintenance, fouling on the hull, paint and bigger boats. The jobs take real time, and the boat lies there meanwhile.'},
   {id:'neste', ch:5, t:['Neste båt', 'The next boat'], when:() => S.cash >= 150000, show:() => phoneApp('fartoy'),
@@ -184,7 +186,7 @@ function hbReady(){ const H = hbState(); return HB.filter(x => !H.seen[x.id] && 
 // from the third landing everything is out, so nobody is kept from anything for long. S.apps: {id:'ny' | 1}; a game from before has none
 // and sees everything as it did
 const APP_ALWAYS = ['vaer', 'meld', 'redning', 'handbok', 'tilbake', 'innst', 'admin'];
-const HB_APP = {guide:'guide', lykke:'kaiboden', regler:'regler', sesong:'sesong', post:'post', meld:'meld', drift:'drift', topp:'salg', merker:'merker', patch:'patch', oppdrag:'ordl', venner:'folk', rederi:'rederi', kvote:'kvote', vaer:'vaer', redning:'redning'};
+const HB_APP = {nett:'nett', guide:'guide', lykke:'kaiboden', regler:'regler', sesong:'sesong', post:'post', meld:'meld', drift:'drift', topp:'salg', merker:'merker', patch:'patch', oppdrag:'ordl', venner:'folk', rederi:'rederi', kvote:'kvote', vaer:'vaer', redning:'redning'};
 function appShown(id){
   if (!S.apps || APP_ALWAYS.includes(id) || S.apps[id]) return true;
   return !tutOn() && hbLand() >= 3;

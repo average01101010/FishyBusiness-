@@ -154,7 +154,7 @@ async def sonar(pg):
       b.status = 'port'; b.port = 'finnsnes'; b.pos = {...p.p}; S.cash = 1e6; S.jobs = []; S.equip.sonar = false; S.settings.sonar = true; S.settings.echo = true;
       for (const ty of ['skiff', 'snekke', 'sjark', 'sjarkny']){ b.type = ty; applyVessel(); PHONE.open('utstyrb'); const btn = document.querySelector('#drawerBody [data-pa=equip][data-k=sonar]'); R[ty] = btn ? btn.textContent : null; }
       // buy it on the sjark and let the fitting finish
-      b.type = 'sjark'; applyVessel(); PHONE.open('utstyrb'); const c0 = S.cash; document.querySelector('#drawerBody [data-pa=equip][data-k=sonar]').click();
+      b.type = 'sjark'; applyVessel(); PHONE.open('utstyrb'); const c0 = S.cash; document.querySelector('#drawerBody [data-pa=equip][data-k=sonar]').click(); document.querySelector('#drawerBody [data-pa=equip][data-k=sonar]').click();
       R.paid = c0 - S.cash; R.queued = (S.jobs || []).some(j => j.kind === 'fit' && j.k === 'sonar'); const j = S.jobs.find(j => j.k === 'sonar'); finishJob(j); S.jobs = S.jobs.filter(q => q !== j);
       R.fitted = !!S.equip.sonar; R.tier = heatTier(); R.r = HEAT.tiers[R.tier].r;
       DOCK.open('beholdning:boat'); R.listed = /Sonar/.test(document.getElementById('drawerBody').textContent);

@@ -13,7 +13,7 @@ async def main():
         # plotter gating: click Plotter without a plotter -> phone opens on Utstyr
         await pg.click('#modeBtn'); await pg.wait_for_timeout(600)
         print('phone app after plotter click:', await pg.evaluate("PHONE.isOpen() && PHONE.app"))
-        await pg.click('#phView [data-pa=equip][data-k=plotter]'); await pg.wait_for_timeout(300)
+        for _ in range(2): await pg.click('#phView [data-pa=equip][data-k=plotter]'); await pg.wait_for_timeout(300)
         await pg.evaluate("PHONE.show(false)"); await pg.wait_for_timeout(400)
         await pg.click('#modeBtn'); await pg.wait_for_timeout(1500)
         print('plotter on:', await pg.evaluate("S.settings.plotter"), 'cash', await pg.evaluate("Math.round(S.cash)"))

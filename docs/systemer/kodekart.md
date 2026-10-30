@@ -1290,6 +1290,17 @@ gear care: wear, mending, hooks, jig tackle, and the tackle shop's service and b
 - **229** what the crew says about the gear (Jonas 09.10.2026: «Tidvis kan mannskapet komme med kommentarer tilknyttet dette som feks å kommentere
   - 232 `gearTalk()`
 
+## `src/js/core/10c-pick.js` (61 linjer)
+
+Bestilt til henting (M2 in docs/planer/butikker-og-sponsorer.md, 10.2b, V12 A; Jonas 30.10.2026)
+
+- **1** Bestilt til henting (M2 in docs/planer/butikker-og-sponsorer.md, 10.2b, V12 A; Jonas 30.10.2026)
+  - 11 `pickState()`
+  - 13 `pickKr(o)`
+  - 28 `pickName(o)`
+  - 45 `pickAdd(port, w, k, s, n)`
+  - 58 `pickDrop(id)`
+
 ## `src/js/core/11-route.js` (496 linjer)
 
 ---------- Autonav (once «Følg leia»): a route along the fairway ----------
@@ -1795,7 +1806,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
 
 - **1** sailors' tattoos: the flash and the seated sailor they go on
 
-## `src/js/ui/05a-itemcard.js` (116 linjer)
+## `src/js/ui/05a-itemcard.js` (117 linjer)
 
 The item card (M1 in docs/planer/butikker-og-sponsorer.md, 30.10.2026)
 
@@ -1804,14 +1815,14 @@ The item card (M1 in docs/planer/butikker-og-sponsorer.md, 30.10.2026)
 - **63** what each thing does, in numbers from the code ([no, en]); the long story is in the Håndboka (ITEM_HB)
   - 105 `itemCard(o)`
 
-## `src/js/ui/phone/00-shell.js` (59 linjer)
+## `src/js/ui/phone/00-shell.js` (60 linjer)
 
 ---------- the phone ----------
 
 - **1** the phone
-  - 58 `setBadge()`
+  - 59 `setBadge()`
 
-## `src/js/ui/phone/01-haill-fiske-service.js` (111 linjer)
+## `src/js/ui/phone/01-haill-fiske-service.js` (112 linjer)
 
 --- workshop: service, fitting and getting the gear ready, one job after the other while the boat is in port
 
@@ -1819,9 +1830,9 @@ The item card (M1 in docs/planer/butikker-og-sponsorer.md, 30.10.2026)
   - 2 `haill()`
 - **23** the tackle shop on the quay: a purchase takes two taps, the second one confirms the price
   - 30 `fiske()`
-  - 42 `service()`
-  - 63 `iceCard()`
-  - 71 `verksted()`
+  - 43 `service()`
+  - 64 `iceCard()`
+  - 72 `verksted()`
 
 ## `src/js/ui/phone/02-havn-last-agn-ordre.js` (47 linjer)
 
@@ -1859,15 +1870,15 @@ the Kvote app: your quotas, the open group's season, the stocks, and the market 
   - 25 `kvStock(H)`
   - 43 `kvMkt(H)`
 
-## `src/js/ui/phone/05-rigg-innst-admin.js` (78 linjer)
+## `src/js/ui/phone/05-rigg-innst-admin.js` (80 linjer)
 
 the rig: one kind of fishing at a time, changed here aboard (under Beholdning) when none of the boat's gear is in the sea
 
   - 2 `rigg()`
   - 13 `beholdning()`
-  - 20 `logg()`
-  - 21 `innst()`
-  - 59 `admin()`
+  - 22 `logg()`
+  - 23 `innst()`
+  - 61 `admin()`
 
 ## `src/js/ui/phone/06-render.js` (65 linjer)
 
@@ -1883,12 +1894,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (789 linjer)
+## `src/js/ui/phone/07-patch.js` (794 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 782 `patch()`
+  - 787 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (87 linjer)
 
@@ -1938,18 +1949,18 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 32 `rederi()`
 - **69** equipment
 
-## `src/js/ui/phone/12-utstyr-redskap.js` (166 linjer)
+## `src/js/ui/phone/12-utstyr-redskap.js` (176 linjer)
 
 the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the shop's (electronics, haulers, the jigging machine and the clothes)
 
   - 2 `utstyr(mode)`
-- **35** gear: in the sea, aboard (baiting and mending), and the shop
-- **36** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
-- **41** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
-  - 45 `lineCard(lk, o)`
-  - 70 `egnChooser(lk, o)`
-  - 94 `careAboard(inPort, p)`
-  - 118 `redskap(tab0)`
+- **45** gear: in the sea, aboard (baiting and mending), and the shop
+- **46** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
+- **51** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
+  - 55 `lineCard(lk, o)`
+  - 80 `egnChooser(lk, o)`
+  - 104 `careAboard(inPort, p)`
+  - 128 `redskap(tab0)`
 
 ## `src/js/ui/phone/13-mannskap-bank-meld.js` (175 linjer)
 
@@ -1972,7 +1983,27 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
 - **162** actions
   - 165 `switchVessel(k)`
 
-## `src/js/ui/phone/14-act.js` (247 linjer)
+## `src/js/ui/phone/13b-nettet.js` (127 linjer)
+
+Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.md, Jonas 30.10.2026)
+
+- **1** Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.md, Jonas 30.10.2026)
+- **6** the keeper: a name per shop (Finnsnes keeps Solveig, who met you on the first trip), a line by what is going on, in the dialect
+  - 9 `shopMem(pt)`
+  - 11 `shopBought(no, en)`
+  - 12 `keeperLine(pt)`
+- **26** what the boat needs now, from her own state: each a chip that takes you to its card
+  - 27 `buyList()`
+  - 42 `shopTop(cur)`
+- **54** fetching a reservation: the same purchase as over the counter; null when it went, else why not (a string)
+  - 55 `equipBuy(k)`
+  - 67 `clothBuy(k)`
+  - 74 `pickTake(o)`
+- **86** the Net: the bookmarks, and the web shop
+  - 88 `nett()`
+  - 98 `netShop()`
+
+## `src/js/ui/phone/14-act.js` (263 linjer)
 
   - 2 `act(a, d)`
   - 8 `act0(a, d)`
@@ -2177,22 +2208,22 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 235 `tutUpdate()`
   - 258 `tipPlace(txt, T0, o)`
 
-## `src/js/ui/07c-handbook.js` (235 linjer)
+## `src/js/ui/07c-handbook.js` (237 linjer)
 
 Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
 
 - **1** Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
   - 10 `hbState()`
-  - 168 `hbPick()`
-  - 176 `hbEv(id, how)`
-  - 177 `hbDone(id)`
-  - 178 `hbSkip(ch, id)`
-  - 180 `hbReady()`
-- **182** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
-  - 188 `appShown(id)`
-  - 192 `appUnlock(id)`
-  - 194 `appSeen(id)`
-  - 195 `hbUpdate()`
+  - 170 `hbPick()`
+  - 178 `hbEv(id, how)`
+  - 179 `hbDone(id)`
+  - 180 `hbSkip(ch, id)`
+  - 182 `hbReady()`
+- **184** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
+  - 190 `appShown(id)`
+  - 194 `appUnlock(id)`
+  - 196 `appSeen(id)`
+  - 197 `hbUpdate()`
 
 ## `src/js/ui/10g-wardrobe.js` (125 linjer)
 
@@ -2336,13 +2367,13 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 192 `wpActCycle(w)`
   - 197 `gearDoAct(act, el)`
 
-## `src/js/ui/10c-dock.js` (333 linjer)
+## `src/js/ui/10c-dock.js` (334 linjer)
 
 ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 
 - **1** the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side
 - **281** the drawer
-  - 323 `renderActs()`
+  - 324 `renderActs()`
 
 ## `src/js/ui/10d-helm.js` (49 linjer)
 

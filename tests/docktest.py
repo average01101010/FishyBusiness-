@@ -52,7 +52,7 @@ async def run(p, w, h, tag):
     check(await pg.evaluate("document.getElementById('dockFan').hidden"), 'et nytt trykk lukker viften')
 
     # pages in the yard and the village
-    for m, it, title, sel in (('verft', 'oppgr', 'Oppgraderinger', '[data-pa=equip]'), ('butikk', 'fiskeutstyr', 'Fiskeutstyr', '[data-pa=grbuy]'), ('butikk', 'elektronikk', 'Elektronikk og haler', '[data-pa=equip]'), ('butikk', 'service', 'Service', '.ph-card'), ('verft', 'batmarked', 'Båthandel', '[data-pa=mksel]'),
+    for m, it, title, sel in (('verft', 'oppgr', 'Oppgraderinger', '[data-pa=equip]'), ('butikk', 'fiskeutstyr', 'Fiskeutstyr', '[data-pa=grbuy]'), ('butikk', 'elektronikk', 'Elektronikk og haler', '[data-pa=equip]'), ('verft', 'batmarked', 'Båthandel', '[data-pa=mksel]'),
                               ('verft', 'vedlikehold', 'Vedlikehold', '[data-pa=svc]'), ('bygd', 'bank', 'Kystbanken', '.ph-big'), ('bygd', 'oppdrag', 'Oppdrag', '.ph-card'), ('bygd', 'mannskap', 'Mannskap', '.ph-card')):
         await tap_el('#dock [data-dk=' + m + ']'); await pg.wait_for_timeout(200)
         await tap_el('#dockFan [data-dk=' + it + ']'); await pg.wait_for_timeout(300)

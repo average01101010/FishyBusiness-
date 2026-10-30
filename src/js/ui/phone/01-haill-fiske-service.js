@@ -29,12 +29,13 @@
         : '<button class="ph-btn p" data-pa="shop" data-k="' + k + '" data-kg="' + kg + '"' + fa + (dis ? ' disabled' : '') + '>' + label + ' · ' + pr + '</button>'; };
   function fiske(){
     const b = S.boat, pt = portById(b.port), here = atKind('butikk') && pt;
-    const h = ['<div class="ph-c"><div class="ph-card"><h4>' + (here ? (pt.id === 'finnsnes' ? L('Fiskeutstyr på kaia i Finnsnes', 'The tackle shop on the quay in Finnsnes') : L('Butikken i ', 'The shop in ') + pt.name) : L('Du er ikke ved en utstyrsbutikk', 'You are not at a tackle shop')) + '</h4><p class="ph-note">' +
-      (here ? L('Juksa, garn, line og teiner. Halere, juksamaskiner, elektronikk og klær står under Elektronikk og haler.', 'Jigs, nets, line and pots. Haulers, jigging machines, electronics and clothes are under Electronics and haulers.') : L('Du kan se hva som finnes, men utstyr kjøper du i utstyrsbutikken.', 'You can look, but gear is bought at the tackle shop.')) + '</p></div>'].concat(here ? [] : nearHint('butikk'));
-    const have = L('Om bord', 'Aboard');
-    h.push(itemCard({k:'jig', name:L('Håndjuksa', 'Hand jig'), price:PRICE.gear, have:b.gear ? have : '', btns:b.gear ? '' : shopBtn('jig', 0, PRICE.gear, L('Kjøp', 'Buy'))}));
-    if (!tutOn()) h.push(itemCard({k:'kgear', name:L('Kveiteutstyr', 'Halibut gear'), price:PRICE.kgear, have:b.kgear ? have : '', btns:b.kgear ? '' : shopBtn('kgear', 0, PRICE.kgear, L('Kjøp', 'Buy'))}));
+    const h = ['<div class="ph-c">' + (here ? shopTop('fiske') : '<div class="ph-card"><h4>' + L('Du er ikke ved en utstyrsbutikk', 'You are not at a tackle shop') + '</h4><p class="ph-note">' + L('Du kan se hva som finnes, men utstyr kjøper du i utstyrsbutikken, eller bestiller i Nettet-appen og henter der.', 'You can look, but gear is bought at the tackle shop, or ordered in the Net app and fetched there.') + '</p></div>' + nearHint('butikk'))];
+    // what the boat lacks first; what is aboard in one line at the bottom (M2)
+    const aboard = [];
+    if (!b.gear) h.push(itemCard({k:'jig', name:L('Håndjuksa', 'Hand jig'), price:PRICE.gear, btns:shopBtn('jig', 0, PRICE.gear, L('Kjøp', 'Buy'))})); else aboard.push(L('Håndjuksa', 'Hand jig'));
+    if (!tutOn()){ if (!b.kgear) h.push(itemCard({k:'kgear', name:L('Kveiteutstyr', 'Halibut gear'), price:PRICE.kgear, btns:shopBtn('kgear', 0, PRICE.kgear, L('Kjøp', 'Buy'))})); else aboard.push(L('Kveiteutstyr', 'Halibut gear')); }
     if (!tutOn()) h.push(redskap('kjop'));
+    if (aboard.length) h.push('<div class="ph-card ic-aboard"><h4>' + L('Om bord', 'Aboard') + '</h4><p>' + aboard.join(' · ') + '</p></div>');
     h.push('</div>');
     return h.join('');
   }

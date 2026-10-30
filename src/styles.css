@@ -1347,3 +1347,20 @@ body.pm #hud,body.pm #pinCard{visibility:hidden}
 .ic-rows{margin-top:4px}
 @media (max-width:420px){.ph-card.ic{grid-template-columns:1fr}.ic-pic{max-width:180px}}
 .ph-c > .ph-c{padding:0}  /* the shop's gear inside the tackle page (fiske() wraps redskap('kjop')) */
+/* the shop on the quay and the Net (M2, ui/phone/13b-nettet.js): the keeper, what is ordered here, what the boat needs, the web shop */
+.ph-card.shop-k{display:flex;gap:10px;align-items:flex-start}
+.shop-kp{flex:0 0 40px;height:40px;border-radius:50%;background:#2a5d8a;color:#fff;font:700 18px var(--sans);display:flex;align-items:center;justify-content:center}
+.ph-card .shop-say{margin:2px 0 0;font-size:13px;color:#22323c}
+.pick-r{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #e3eaee;font-size:13px}
+.pick-b{display:inline-flex;gap:4px;flex:0 0 auto}.pick-b .ph-btn{margin:0;min-height:36px}
+.ph-card.pick{border-left:4px solid #2a5d8a}
+.buyl-c,.net-shops{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip-b{border:1px solid #c9d6dd;background:#f4f8fa;color:#15252f;border-radius:18px;padding:6px 12px;min-height:36px;font:600 13px var(--sans);cursor:pointer}
+.chip-b.on{background:#15252f;color:#fff;border-color:#15252f}
+.ph-card.ic-aboard p,.ph-card.ic-nofit p{font-size:13px;color:#3d5260}
+.ph-card.ic-nofit summary{font:600 13px var(--sans);color:#5b6c76;cursor:pointer;min-height:30px;display:flex;align-items:center}
+.net-bar{background:#e3eaee;border-radius:18px;padding:8px 14px;font:600 13px var(--sans);color:#3d5260;margin:4px 0 12px}
+.net-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.net-tile{display:flex;flex-direction:column;gap:4px;text-align:left;background:#fff;border:0;border-radius:12px;padding:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);cursor:pointer;font:inherit;color:#15252f}
+.net-tile .net-ic{background:#eef3f6;border-radius:10px;aspect-ratio:8/5;display:flex;align-items:center;justify-content:center;padding:4px}.net-tile .net-ic svg{width:100%;height:100%}
+.net-tile small{color:#5b6c76;font-size:12px}

@@ -51,8 +51,8 @@ async def main():
         check('Bekreft' not in btn, 'bekreftelsen faller tilbake av seg selv etter noen sekunder', btn)
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=shop][data-k=jig]').click()"); await pg.wait_for_timeout(150)
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=shop][data-k=jig]').click()"); await pg.wait_for_timeout(200)
-        r = json.loads(await J("{gear:S.boat.gear, have:(document.querySelector('#drawerBody [data-ic=jig] .ic-have') || {}).textContent}"))
-        check(r['gear'] and r['have'] == 'Om bord', 'to trykk kjøper juksa, og kortet sier «Om bord»', r)
+        r = json.loads(await J("{gear:S.boat.gear, card:!!document.querySelector('#drawerBody [data-ic=jig]'), aboard:(document.querySelector('#drawerBody .ic-aboard') || {}).textContent || ''}"))
+        check(r['gear'] and not r['card'] and 'Håndjuksa' in r['aboard'], 'to trykk kjøper juksa, og den flytter til «Om bord» nederst', r)
         fit = json.loads(await J(FIT)); check(not fit['wide'] and not fit['small'] and fit['sw'] <= fit['cw'] + 1, 'liggende: ingenting stikker ut av skuffen, knappene er store nok', fit)
         await pg.screenshot(path='itemcard_fiske_liggende.png')
 

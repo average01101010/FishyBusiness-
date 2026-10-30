@@ -106,10 +106,11 @@ function itemCard(o){
   const k = o.k, fx = o.fx != null ? o.fx : icFx(k), an = o.anchor != null ? o.anchor : ICANCHOR[k] ? ICANCHOR[k]() : '', hb = ICMORE[k] && typeof hbById === 'function' ? hbById('lex_' + ICMORE[k]) : null;
   const pr = o.price == null ? '' : '<div class="ic-pr"><b>' + (typeof o.price === 'number' ? kr(o.price) : o.price) + '</b>' + (an ? '<span class="ic-an">' + an + '</span>' : '') + '</div>';
   const cond = o.cond == null ? '' : '<div class="ic-cond"><span>' + (o.condL || icL('Stand', 'Condition')) + '</span><span>' + Math.round(o.cond * 100) + ' %</span></div><div class="ph-bar"><i style="width:' + Math.round(Math.max(0, Math.min(1, o.cond)) * 100) + '%"></i></div>';
-  return '<div class="ph-card ic"' + (o.id ? ' id="' + o.id + '"' : '') + ' data-ic="' + k + '"><div class="ic-pic">' + icPic(o.pic || k) + '</div><div class="ic-b"><h4>' + o.name + (o.sub ? ' <small>' + o.sub + '</small>' : '') + '</h4>' +
+  return '<div class="ph-card ic" id="' + (o.id || 'ic-' + k) + '" data-ic="' + k + '"><div class="ic-pic">' + icPic(o.pic || k) + '</div><div class="ic-b"><h4>' + o.name + (o.sub ? ' <small>' + o.sub + '</small>' : '') + '</h4>' +
     (fx ? '<p class="ic-fx">' + fx + '</p>' : '') + pr + cond + (o.body || '') + (o.have ? '<p class="ic-have">' + o.have + '</p>' : '') + (o.note ? '<p class="ph-note">' + o.note + '</p>' : '') +
     (o.btns ? '<div class="ic-btns">' + o.btns + '</div>' : '') +
     (hb ? '<button type="button" class="ic-more" data-pa="open" data-a="handbok" data-hbid="' + hb.id + '">' + icL('Mer om ', 'More on ') + icL(hb.t[0], hb.t[1]).toLowerCase() + ' ›</button>' : '') + '</div></div>';
 }
 // a buy button that confirms in itself: the first tap turns it into «Bekreft · price» with a small ✕ beside it for four seconds
 const IC_CONFIRM_MS = 4000;
+const IC_CONFIRM_KR = 10000;   // equipment from this price confirms too (M2); the cheap and the counted (gear, clothes) go in one tap

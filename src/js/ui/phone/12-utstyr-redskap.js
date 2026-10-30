@@ -20,16 +20,26 @@
         h.push('<div class="ph-card"><h4>' + U[S.lang] + ' (' + lv + '/' + U.steps.filter(st => !st.minLen || V.len >= st.minLen).length + ')</h4><p>' + U.d[S.lang === 'no' ? 0 : 1] + '</p>' +
           (cur ? kv(L('Nå', 'Now'), cur[S.lang]) : '') + (nx ? kv(L('Neste trinn', 'Next step'), nx[S.lang] + ' · ' + kr(upPrice(nx.pc, nx.min)) + ' · ' + realDur(YARD_H * 60)) : '') +
           (!nx ? '<p><b>' + L('Fullt ombygd', 'Fully rebuilt') + '</b></p>' : queued ? '<p><b>' + L('På verftet', 'At the yard') + '</b></p>' : '<button class="ph-btn p" data-pa="upg" data-u="' + k + '"' + (!atKind('verft') || spendable() < upPrice(nx.pc, nx.min) ? ' disabled' : '') + '>' + L('Bygg om · ', 'Rebuild · ') + kr(upPrice(nx.pc, nx.min)) + '</button>') + '</div>'); } }
-    for (const [k, E] of Object.entries(EQUIP)){
-      if (!equipFits(k, S.boat.type) || yardEq(k) !== (mode === 'verft')) continue;
+    // in the shop: the top (the keeper, what is ordered here, what the boat needs), then what the boat lacks, what is aboard in one card,
+    // and what does not suit her folded away (M2). The hauler and the deck first, the electronics after
+    if (mode === 'butikk' && atKind('butikk')) h.splice(1, 0, shopTop('utstyrb'));
+    const ORDER = ['linehaler', 'garnhaler', 'teinehaler', 'jukse', 'krabbekar'], keys = Object.keys(EQUIP).filter(k => yardEq(k) === (mode === 'verft')).sort((a, c) => (ORDER.includes(a) ? ORDER.indexOf(a) : 99) - (ORDER.includes(c) ? ORDER.indexOf(c) : 99));
+    const aboard = [], nofit = [];
+    for (const k of keys){ const E = EQUIP[k];
+      if (!equipFits(k, S.boat.type)){ nofit.push(E.name[S.lang]); continue; }
       const have = E.multi ? S.equip[k] : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1, fitting = (S.jobs || []).some(j => j.kind === 'fit' && j.k === k);
-      h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? have + ' / ' + max : '', price:E.price, have:have >= max ? L('Montert', 'Fitted') : fitting ? L('Til montering', 'Being fitted') : '',
-        btns:have >= max || fitting ? '' : '<button class="ph-btn p" data-pa="equip" data-k="' + k + '"' + (atKind(EQ_YARD(k) ? 'verft' : 'butikk') && spendable() >= E.price ? '' : ' disabled') + '>' + L('Kjøp og monter', 'Buy and fit') + ' · ' + realDur(fitHours(k) * 60) + '</button>'}));
+      if (have >= max){ aboard.push(E.name[S.lang] + (E.multi ? ' × ' + have : '')); continue; }
+      const pend = shopPend && shopPend.k === 'equip:' + k && Date.now() - shopPend.t <= IC_CONFIRM_MS, dis = !(atKind(EQ_YARD(k) ? 'verft' : 'butikk') && spendable() >= E.price);
+      const btn = pend ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(E.price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
+        : '<button class="ph-btn p" data-pa="equip" data-k="' + k + '"' + (dis ? ' disabled' : '') + '>' + L('Kjøp og monter', 'Buy and fit') + ' · ' + realDur(fitHours(k) * 60) + '</button>';
+      h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? (have || 0) + ' / ' + max : '', price:E.price, have:fitting && !E.multi ? L('Til montering', 'Being fitted') : '', btns:fitting && !E.multi ? '' : btn}));
     }
     if (mode === 'butikk'){ const people = 1 + S.crew.length, c = S.clothes || {}, H = S.t / 60, cp = coldPen(H);
       h.push('<h4 style="margin:12px 2px 6px">' + L('Klær til mannskapet', 'Clothes for the crew') + '</h4><p class="ph-note">' + L('Nå: effektiv temperatur ' + Math.round(effTemp(H)) + ' °C, fisket går ' + Math.round(cp * 100) + ' % tregere. Alle om bord trenger sine egne.', 'Now: effective temperature ' + Math.round(effTemp(H)) + ' °C, fishing ' + Math.round(cp * 100) + '% slower. Everyone aboard needs their own.') + '</p>');
       for (const k of ['olje', 'varme']){ const C = CLOTHES[k], have = c[k] || 0;
         h.push(itemCard({k, name:C[S.lang], sub:Math.min(have, people) + ' / ' + people, price:C.price, have:have >= people ? L('Alle om bord har', 'Everyone aboard has one') : '', btns:have >= people ? '' : '<button class="ph-btn p" data-pa="cloth" data-k="' + k + '">' + L('Kjøp én', 'Buy one') + '</button>'})); } }
+    if (aboard.length) h.push('<div class="ph-card ic-aboard"><h4>' + L('Om bord', 'Aboard') + '</h4><p>' + aboard.join(' · ') + '</p></div>');
+    if (nofit.length) h.push('<details class="ph-card ic-nofit"><summary>' + L('Passer ikke «' + S.boatName + '»', 'Does not suit the «' + S.boatName + '»') + ' (' + nofit.length + ')</summary><p>' + nofit.join(' · ') + '</p></details>');
     h.push('</div>'); return h.join('');
   }
   // --- gear: in the sea, aboard (baiting and mending), and the shop
