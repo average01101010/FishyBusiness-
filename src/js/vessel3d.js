@@ -349,7 +349,14 @@ const SPEC3D = {
     parts:[['block', {zf:-34, za:-17, w:14, h:2.8, nwin:4, nside:6, col:VC.white, roof:VC.deck}], ['house', {zf:-32, za:-21, w:12, h:2.8, rake:-0.4, sill:1.15, nwin:7, nside:4, on:'block', col:VC.white, roof:VC.white, frame:VC.black, aftWin:true}],
       ['mast', {z:-22.5, h:6.5, radar:'open', radarL:4, r:0.15, span:2.2, on:'house'}], ['funnel', {z:-15.5, w:2.4, l:3.4, h:4.6, col:VC.green, on:'block'}], ['raft', {x:-5.6, z:-18, on:'block'}], ['raft', {x:5.6, z:-18, on:'block'}],
       ['pblock', {z:6, h:9, l:4}], ['netbin', {z:24, l:18, h:2.2}], ['drum', {z:12, r:1.3, wf:0.5}], ['gantry', {z:35, h:9, col:VC.yellow}], ['crane', {z:-6, x:5, h:3, reach:9}], ['rails', {s0:0.84, s1:0.97, h:1}]],
-    work:{z:12}, crew:[[4.5, 10, -1.6], [-4.5, 14, 1.6], [2, 18, 3.14]]}
+    work:{z:12}, crew:[[4.5, 10, -1.6], [-4.5, 14, 1.6], [2, 18, 3.14]]},
+  // the pilot boat (tools/boats/ringnot38.py): the detailed GLB is what the game draws; this is the parametric stand-in should the GLB be missing
+  ringnot38:{hull:{form:'round', F:3.9, fr:2.4, ar:0.5, rake:3.8, srake:0, tw:0.9, smax:0.45, entry:2.6, run:1.2, Tc:3.85, n:3.4, flare:0.05, flareFwd:0.06, bulb:1.9, bulH:1.0, trise:0.4, NS:52, railR:0.08,
+      col:{hull:VC.blue, stripe:VC.white, bottom:VC.afRed, boot:VC.white, deck:VC.deck, inner:VC.inner, rail:VC.white}, stripeW:0.33},
+    parts:[['block', {zf:-9, za:-0.5, w:8.4, h:2.0, nwin:4, nside:4, col:VC.white, roof:VC.deck}], ['house', {zf:-7.5, za:-1.5, w:7.8, h:2.1, rake:-0.3, sill:0.9, nwin:8, nside:4, on:'block', col:VC.white, roof:VC.white, frame:VC.black, aftWin:true}],
+      ['mast', {z:-5.5, h:5.5, radar:'open', radarL:4.4, r:0.12, span:1.8, on:'house'}], ['funnel', {z:14, w:1.5, l:2.9, h:2.3, col:VC.blue, on:'block'}], ['raft', {x:3.5, z:9.5, on:'block'}],
+      ['pblock', {z:9, h:8, l:3}], ['netbin', {z:16, l:6, h:2.9}], ['crane', {z:-7.5, x:-1.8, h:2, reach:7}], ['rails', {s0:0.84, s1:0.97, h:1}]],
+    work:{z:-4}, crew:[[-3.5, -4, 1.57], [-2, -2.5, 0], [-1.5, -5.5, 3.14], [0.2, 9.5, 3.14]], open:true}
 };
 // ---------- detailed models from GLB files (tools/boats, built in Blender from the yards' drawings) ----------
 // The GLB holds the near model (lod0), the glass and the simple model for the fleet at a distance (lod1), in the game's frame,
@@ -1228,7 +1235,7 @@ function lanterns(G, V, st){
   if (len >= 50) push(extra.length ? extra[0][0] : up(mt, 1.5), 'w', 'masthead2');
   return out;
 }
-const HELM_KIT = {autoliner:1, bunntral:1, pelagisk:1, snokrabbe:1};   // the coastal models from the Blender round (sjarkny, hurtigsjark, kyst15, kyst21) have their console, wheel and chair in the model (tools/boats)
+const HELM_KIT = {autoliner:1, bunntral:1, pelagisk:1, snokrabbe:1, ringnot38:1};   // the coastal models from the Blender round (sjarkny, hurtigsjark, kyst15, kyst21) have their console, wheel and chair in the model (tools/boats)
 const DECKPTS = {};
 function deckPoints(type){
   if (type in DECKPTS) return DECKPTS[type]; const M = deckMap(type), G = geoOf(type); if (!M || !G){ DECKPTS[type] = null; return null; }

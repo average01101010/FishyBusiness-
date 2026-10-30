@@ -558,6 +558,11 @@ bakkens side (en person synes i det på slippbildet).
 Runde 22 (baugoverlegget mot sidebildet, 25–39,5 m): ankerlomma, klyssene, bakkens vindu og rekka ligger på fotoet; de tre høye
 strekene lå 0,5 m for langt akter og er flyttet til 34,5–36,0 m.
 
+Ferdigstilling (30.10.2026, Jonas: «gjør den helt ferdig»): de egne hjelperne for nottrakt, kraftblokk, radom, pisk, lyskaster og
+leider byttet ut med de felles beslagene i `fittings.py` (`net_funnel`, `power_block`, `radome`, `whip`, `gps`, `searchlight`,
+`ladder`, `hose_reel`), så piloten og de andre båtene har samme beslag. Eksportert til `src/data/boat-ringnot38.b64` og
+`-side.b64`, inn i malen og som typen `ringnot38` i `VESSELS` (låst). `lodm` (Decimate til 40 000 trekanter) lages for første gang.
+
 Igjen etter runde 22, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.

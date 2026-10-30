@@ -94,6 +94,20 @@
     - **Opptak (50 s):** dørene kommer inn og opp i galgen. Så kommer trålen inn på trommelen, og posen, full, opp slippen.
     - Spillet tråler ikke ennå, fordi det hører til havsteget (Jonas' valg 06.10.2026: «Bare modeller og animasjoner»). Båthandelen viser ikke animasjonene (CLAUDE.md).
   - **Test:** `tral3d.py`. Kjøring: `python3 tools/boats/tral60.py` (med `fast` og `dry`). Dataene ligger i `src/data/boat-tral60.b64` og `boat-tral60-side.b64`, og i malen som `glb-bunntral` og `pic-bunntral`.
+- **Pilotbåten, kystnotbåten på 38,55 m (`ringnot38`, 30.10.2026):** `tools/boats/ringnot38.py` bygger en flerbruks ringnot- og
+  snurrevadbåt etter byggerapporten og fotografiene av en ekte båt (grunnlaget og alle målene står i
+  `docs/skipsmodeller/sulebas-pilot-grunnlag.md`, kap. 4.0 og 7.1). Det som skiller henne fra de andre skriptene, og som er malen
+  for båtene etter henne: skroget er én glatt flate der bulben er slått sammen med forskipet med en myk overgang (`smax`), siden
+  er usymmetrisk (åpent arbeidsdekk på styrbord med lav skansekledning, lukket kasse på babord), alle åpninger i skrog og rekke er
+  ekte hull skåret med boolsk utskjæring (`holes()`, `cutter()`, `apply_cut()`; lokket løseren legger over hullet, slettes) med
+  lysning og rom, lameller, glass eller anker bak, kritikksløyfen (rendring fra fotovinklene, overlegg mot sidebildet i målt
+  skala, klasjsjekk, punkttelling) kjøres etter hver endring, og de felles beslagene i `fittings.py` brukes der de finnes
+  (propell, anoder, merker, nottrakt, kraftblokk, radomer, pisker, GPS, lyskastere, leider, slangetrommel). Regel: aldri to
+  flater i samme plan. Eksporten gir `lod0` rundt 117 000 trekanter, `lodm` 40 000 (Decimate, første båt som får den) og
+  `lod1` under 12 000 punkter. Dataene ligger i `src/data/boat-ringnot38.b64` og `-side.b64`, i malen som `glb-ringnot38` og
+  `pic-ringnot38`. Typen `ringnot38` i `VESSELS` er låst (`lock`), plassen i stigen er ikke avgjort (B1 = C).
+  Kjøring: `python3 tools/boats/ringnot38.py fast export` (med `dry` for bare `tools/boats/out`). Tester: `vessel3d`, `vesseltest`,
+  `brotest`, `lanterntest`.
 - **Ringnot- og pelagisk tråleren (`pelagisk`, fra 06.10.2026):** `tools/boats/not75.py` bygger en snurper og pelagisk tråler på rundt 75 m, etter profiltegningene av en dansk snurper som Jonas viste («Denne kan både bruke ringnot og trål»). Tegningene er ikke i repoet.
   - **Målene:** tegningen har bare spantskala (0–120) og ingen tall. Med vanlig spantavstand på 0,60 m blir den 75,5 m over alt, som spillets 75 m, så spillets tall (75 × 15,5 × 7,5 m) står. Bredden står ikke på tegningen.
   - **Det som er målt** (19,17 px/m):
