@@ -770,8 +770,8 @@ def superstructure(fine=True):
     # ---- the house on the upper deck, its corners rounded, the blue line round it at 9.88-10.0 m ----
     hp = rrect((HX0 + HX1) / 2, 0.0, HX1 - HX0, 2 * HY, 0.85, n=6)
     prism(A, hp, zd - 0.1, ZB2 - 0.2, w, top=False)
-    # the casing box aft of the house on the starboard side, under the walkway: its wall at the house's side down to the working deck
-    A.poly([(X_BIN, -HY, z_sh(X_BIN)), (HX0 + 0.3, -HY, z_sh(HX0)), (HX0 + 0.3, -HY, zd - 0.1), (X_BIN, -HY, zd - 0.1)], w, (0, -1, 0))
+    # (the casing's wall aft of the house, at the house's side down to the working deck, is drawn by decks(); a second coplanar
+    # face here shadowed it black in the renders, 30.10.2026)
     hn = plan_normals(hp)
     for i in range(len(hp)):
         a, b = hp[i], hp[(i + 1) % len(hp)]; na, nb = hn[i], hn[(i + 1) % len(hp)]
