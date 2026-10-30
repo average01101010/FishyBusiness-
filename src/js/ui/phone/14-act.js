@@ -182,6 +182,9 @@
     else if (a === 'turdrop'){ turDrop(+d.id); }
     else if (a === 'turgo'){ turGo(+d.id); show(false); return false; }
     else if (a === 'turmeas'){ show(false); turMeasure(+d.id); return false; }
+    else if (a === 'pttake'){ const o = (PTOW._P.open || []).find(x => String(x.id) === String(d.id)); if (o) PTOW.take(o); show(false); return false; }
+    else if (a === 'ptgo'){ const H = S.ptowH; show(false); if (H && typeof leiaTo === 'function'){ if (typeof openPlotter === 'function') openPlotter(); leiaTo({x:H.x, y:H.y}); } return false; }
+    else if (a === 'ptdrop'){ PTOW.drop(); }
     else if (a === 'turfoto'){ turFotoShoot(+d.id); }
     else if (a === 'ordtake'){ const O = ordState(), o = O.offers.find(x => x.id === +d.id); if (!o || O.active.length >= 3) return; O.offers.splice(O.offers.indexOf(o), 1); o.due = S.t + o.days * 1440; O.active.push(o); log('Tok en bestilling fra ' + CUSTOMERS.find(c => c.id === o.cust).no + '.', 'Took an order from ' + CUSTOMERS.find(c => c.id === o.cust).no + '.'); }
     else if (a === 'cloth'){ const C = CLOTHES[d.k], people = 1 + S.crew.length, have = (S.clothes || {})[d.k] || 0; if (!C || have >= people) return; if (spendable() < C.price){ toast(t('no_cash')); return; } book('land', -C.price, C.no, C.en); S.clothes = S.clothes || {olje:0, varme:0}; S.clothes[d.k] = have + 1; log('Kjøpte ' + C.no.toLowerCase() + '.', 'Bought ' + C.en.toLowerCase() + '.'); }

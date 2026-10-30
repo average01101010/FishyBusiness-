@@ -8,9 +8,14 @@ function turCard(m, act, det){
   const L0 = (no, en) => S.lang === 'en' ? en : no, w = turWhat(m), kv0 = (k, v) => '<div class="kv"><span>' + k + '</span><b>' + v + '</b></div>';
   let extra = '';
   if (m.k === 'best' && act){ const o = ordState().active.find(x => x.tur === m.id); if (o) extra = kv0(L0('Levert', 'Delivered'), fmt(o.kg - o.left, 0) + ' / ' + fmt(o.kg, 0) + ' kg'); }
-  if (m.k === 'best') extra += kv0(L0('Kvalitet', 'Quality'), QN[m.q][S.lang === 'en' ? 'en' : 'no']);
-  if (m.k === 'sesong') extra = kv0(L0('Levert der', 'Landed there'), fmt(m.got || 0, 0) + ' / ' + fmt(m.kg, 0) + ' kg') + kv0(L0('Mottak innen', 'Plants within'), TUR.sesongR + ' km');
-  if (m.k === 'frakt') extra = kv0(L0('Hentes i', 'Picked up at'), portById(m.from).name + (act ? ' · ' + (m.stage === 'go' ? L0('om bord', 'aboard') : L0('venter på kaia', 'waits on the quay')) : ''));
+  if (m.k === 'best' && act && m.extra) extra += kv0(L0('Ekstra', 'Extra'), '+' + fmt(m.extra.kg, 0) + ' kg · ' + Math.round(m.extra.prem * 100) + ' % ' + L0('over prisen', 'over the price'));
+  if (act && m.wx) extra += kv0(L0('Varselet', 'The forecast'), fmt(m.wx.hs, 1) + ' m ' + L0('kl. ', 'at ') + hm(m.wx.at) + ' · ' + L0('havnetid i kuling teller ikke', 'harbour time in a gale does not count'));
+  if (act && m.tip) extra += kv0(L0('Tips på VHF', 'Tip on the VHF'), coordStr(m.tip.p));
+  if (m.k === 'best') extra += kv0(L0('Kvalitet', 'Quality'), QN[m.q][S.lang === 'en' ? 'en' : 'no']) + (turRepN(m.to) >= 3 ? kv0(L0('Kjenner deg', 'Knows you'), L0('ja, fra bestillinger før', 'yes, from orders before')) : '');
+  if (m.k === 'sesong'){ const st = turStages(m), i = Math.min(st.n - 1, m.stage || 0);
+    extra = kv0(L0('Levert der', 'Landed there'), fmt(m.got || 0, 0) + ' / ' + fmt(m.kg, 0) + ' kg') + kv0(act ? L0('Etappe', 'Stage') : L0('Etapper', 'Stages'), act ? Math.min(st.n, (m.stage || 0) + 1) + L0(' av ', ' of ') + st.n + ' · ' + L0('til ', 'to ') + fmt(st.at[i], 0) + ' kg · ' + kr(st.part[i]) : st.n + L0(' · ca. ', ' · about ') + fmt(st.at[0], 0) + L0(' kg og ', ' kg and ') + kr(st.part[0]) + L0(' hver', ' each')) +
+      (act && (m.paid || 0) > 0 ? kv0(L0('Betalt så langt', 'Paid so far'), kr(m.paid)) : '') + kv0(L0('Mottak innen', 'Plants within'), TUR.sesongR + ' km'); }
+  if (m.k === 'frakt') extra = kv0(L0('Hentes i', 'Picked up at'), portById(m.from).name + (act ? ' · ' + (m.stage === 'go' ? L0('om bord', 'aboard') : L0('venter på kaia', 'waits on the quay')) : '')) + (m.first ? kv0(L0('Om fristen går ut', 'If the deadline passes'), L0('ingenting skjer', 'nothing happens')) : '');
   if (m.k === 'slep'){ let cd = null; try { cd = coastDistFar(m.p); } catch (e){}
     extra = kv0(L0('Båten', 'The boat'), '«' + turEsc(m.boat) + '», ' + fmt(m.L, 1) + ' m · ' + kr(m.value)) + kv0(L0(m.stage === 'tow' ? 'På slep til' : 'Driver ved', m.stage === 'tow' ? 'In tow to' : 'Drifting at'), m.stage === 'tow' ? turEsc(portById(m.to).name) : coordStr(m.p)) +
       (m.stage !== 'tow' && cd != null ? kv0(L0('Til land', 'To land'), fmt(cd, 1) + ' km') : ''); }
@@ -19,15 +24,15 @@ function turCard(m, act, det){
   if (m.k === 'foto'){ const t = act && m.lys ? turLysNext(m, S.t / 60) : null;
     extra = kv0(L0('Fyret', 'The lighthouse'), turEsc(turFyrName(m)) + ' · ' + coordStr(m.fyr)) + kv0(L0('Lys', 'Light'), m.lys ? L0(TUR_LYS[m.lys].no, TUR_LYS[m.lys].en) + (t != null && t > S.t / 60 + 0.1 ? ' · ' + L0('ca. kl. ', 'about ') + hm(t) : '') : L0('når som helst', 'any time')); }
   if (m.k === 'garn') extra = kv0(L0('Sist sett', 'Last seen'), coordStr(m.p)) + kv0(L0('Om bord', 'Aboard'), m.kind === 'garn' ? L0('to til å trekke garn', 'two to haul nets') : L0('én kan trekke lina', 'one can haul the line'));
-  const desc = {best:['Mottaket betaler ' + kr(m.pay) + ' i bonus for turen, i tillegg til fisken.', 'The plant pays a bonus of ' + kr(m.pay) + ' for the trip, on top of the fish.'],
-    frakt:['Lasta tar plass i lasterommet til den er levert.', 'The freight takes room in the hold until it is delivered.'],
+  const desc = {best:m.ask ? [turEsc(folkPlantName(m.to)) + ' kjenner båten din og har lagt denne til deg: ' + Math.round((m.prem || 0.1) * 100) + ' % over markedsprisen, ' + kr(m.pay) + ' for turen, og god tid.', turEsc(folkPlantName(m.to)) + ' knows your boat and has laid this for you: ' + Math.round((m.prem || 0.1) * 100) + ' % over the market price, ' + kr(m.pay) + ' for the trip, and good time.'] : ['Mottaket betaler ' + kr(m.pay) + ' i bonus for turen, i tillegg til fisken.', 'The plant pays a bonus of ' + kr(m.pay) + ' for the trip, on top of the fish.'],
+    frakt:m.first ? ['Ditt første oppdrag, lagt klart for deg: litt post til nabohavna, på veien din. Hent den på kaia, lever den på kaia der, og pengene er dine. Ingen hast, og går uka ut, skjer ingenting.', 'Your first mission, laid ready for you: a little mail for the next harbour, on your way. Pick it up at the quay, land it at the quay there, and the money is yours. No hurry, and if the week runs out, nothing happens.'] : ['Lasta tar plass i lasterommet til den er levert.', 'The freight takes room in the hold until it is delivered.'],
     garn:['Fisken i redskapet er din. Eieren betaler finnerlønn når det er trukket.', 'The fish in the gear is yours. The owner pays a finder\'s fee when it is hauled.'],
-    sesong:['Fisken står der nå. Lever ved mottakene der innen fristen.', 'The fish is there now. Land at the plants there before the deadline.'],
+    sesong:['Fisken står der nå. Lever ved mottakene der innen fristen. Betales i tre etapper etter hvert som fisken leveres; går uka ut, beholder du det som er tjent.', 'The fish is there now. Land at the plants there before the deadline. Paid in three stages as the fish is landed; if the week runs out, you keep what is earned.'],
     prove:m.kind === 'ekko' ? ['Havforskningsinstituttet vil ha en ekkoloddlinje herfra. Kjør gjennom de tre punktene i rekkefølge, høyst 8 knop. Instituttet betaler for tida.', 'The Institute of Marine Research wants an echo line from here. Run through the three points in order, at 8 knots at most. The institute pays for the time.']
       : ['Havforskningsinstituttet vil ha prøver herfra, slik Kystreferanseflåten tar dem langs hele kysten. Fisk ved stasjonen en stund og mål ti fisk på målebrettet. Instituttet betaler for tida og litt til for nøyaktige mål, og fangsten er din.', 'The Institute of Marine Research wants samples from here, as the coastal reference fleet takes them along the whole coast. Fish at the station a while and measure ten fish on the board. The institute pays for the time and a little more for careful measuring, and the catch is yours.'],
     foto:['Kystposten vil ha et bilde av fyret til avisa. Gå innen 3 km, snu kameraet mot fyret og trykk på utløseren.', 'Kystposten wants a picture of the lighthouse for the paper. Go within 3 km, turn the camera to the lighthouse and press the shutter.'],
     slep:['Motorstopp, og hun driver mot land. Legg deg stille ved siden av henne, så går slepet over (høyst 5,5 knop). Ingen avtale på forhånd: berger du henne, har du krav på bergelønn etter sjøloven, etter båtens verdi, faren og tiden. Driver hun på land først, blir det ingen.', 'Engine trouble, and she is drifting toward land. Lie still beside her and the tow line goes over (5.5 knots at most). No agreement beforehand: if you save her, you are owed a salvage reward under the Maritime Code, by the boat\'s value, the danger and the time. If she drifts ashore first, there is none.']}[m.k];
-  return '<div class="ph-card tur ' + m.cls + '"><div class="tur-h"><span class="tur-c">' + L0(TUR_CLS[m.cls][0], TUR_CLS[m.cls][1]) + '</span><small>' + L0(TUR_KIND[m.k][0], TUR_KIND[m.k][1]) + '</small></div>' +
+  return '<div class="ph-card tur ' + m.cls + '"><div class="tur-h"><span class="tur-c">' + (m.first ? L0('Første oppdrag', 'First mission') : m.ask ? L0('Til deg', 'For you') : L0(TUR_CLS[m.cls][0], TUR_CLS[m.cls][1])) + '</span><small>' + (m.k === 'best' ? L0('Bestilling fra ', 'Order from ') + turEsc(typeof folkPlantName === 'function' ? folkPlantName(m.to) : 'mottaket') : L0(TUR_KIND[m.k][0], TUR_KIND[m.k][1])) + '</small></div>' +
     '<h4>' + turEsc(L0(w[0], w[1])) + '</h4><p class="ph-note">' + L0(desc[0], desc[1]) + '</p>' +
     kv0(L0('Avstand', 'Distance'), fmt(m.nm, 0) + ' nm') + kv0(L0('Seiling', 'Sailing'), L0('ca. ', 'about ') + turDur(m.h)) +
     (det != null ? kv0(L0('Omvei', 'Detour'), det <= 5 ? L0('på veien din', 'on your way') : '+' + turDur(det * GAME_RATE / 60)) : '') + extra +
@@ -37,8 +42,26 @@ function turCard(m, act, det){
       (m.k === 'prove' && m.stage === 'measure' ? '' : '<button class="ph-btn' + (m.k === 'foto' && dist(S.boat.pos, m.fyr) <= TUR.fotoR ? '' : ' p') + '" data-pa="turgo" data-id="' + m.id + '">' + L0('Kjør dit', 'Go there') + '</button>') + '<button class="ph-btn" data-pa="turdrop" data-id="' + m.id + '">' + L0('Gi fra deg', 'Give up') + '</button>'
       : '<button class="ph-btn p" data-pa="turtake" data-id="' + m.id + '">' + L0('Ta oppdraget', 'Take the mission') + '</button>') + '</div></div>';
 }
+// the asks for a tow from other players near (ui/10o-ptow.js, within 30 nm), on the board too (30.10.2026, gap-analysen 3.5: the missions were
+// all solo): the same ask as the chart's mark, with «Hjelp»; the tow one has taken stands first with the way there and «Gi fra deg»
+function turAskCards(){
+  if (typeof PTOW === 'undefined' || !PTOW._P) return '';
+  const L0 = (no, en) => S.lang === 'en' ? en : no, kv0 = (k, v) => '<div class="kv"><span>' + k + '</span><b>' + v + '</b></div>', H = S.ptowH, h = [];
+  const who = o => turEsc((o.user ? peerName(o.user) : L0('en spiller', 'a player')) + (o.boat ? ' «' + peerName(o.boat) + '»' : ''));
+  if (H && H.st === 'come') h.push('<div class="ph-card tur ptow"><div class="tur-h"><span class="tur-c">' + L0('Ditt slep', 'Your tow') + '</span><small>' + L0('Hjelp på sjøen', 'Help at sea') + '</small></div><h4>' + who(H) + '</h4>' +
+    '<p class="ph-note">' + L0('Gå dit, ligg stille nær båten og trykk «Ta slep». Kommer du ikke innen 20 minutter, tilkalles redningsskøyta.', 'Go there, lie still near the boat and tap «Take the tow». If you have not come within 20 minutes, the rescue boat is called.') + '</p>' +
+    kv0(L0('Avstand', 'Distance'), fmt(dist(S.boat.pos, {x:H.x, y:H.y}) / NM, 1) + ' nm') + kv0(L0('Belønning', 'Reward'), kr(PTOW_PAY)) +
+    '<div class="tur-b"><button class="ph-btn p" data-pa="ptgo">' + L0('Rute dit', 'Route there') + '</button><button class="ph-btn" data-pa="ptdrop">' + L0('Gi fra deg', 'Give up') + '</button></div></div>');
+  for (const o of PTOW._P.open || []){ if (H && H.id === o.id) continue;
+    h.push('<div class="ph-card tur ptow"><div class="tur-h"><span class="tur-c">' + L0('Nødanrop', 'Mayday') + '</span><small>' + L0('Hjelp på sjøen', 'Help at sea') + '</small></div><h4>' + L0('Trenger slep: ', 'Needs a tow: ') + who(o) + '</h4>' +
+      '<p class="ph-note">' + L0('En annen spiller ligger med motorstopp og spør om slep. Ta det, gå dit og ligg stille ved båten, så går tauet over. Belønningen betales når hun ligger ved kai. Tar ingen det innen 20 minutter, kommer redningsskøyta.', 'Another player lies with engine trouble and asks for a tow. Take it, go there and lie still by the boat, and the line goes over. The reward is paid when she lies at a quay. If nobody takes it within 20 minutes, the rescue boat comes.') + '</p>' +
+      kv0(L0('Avstand', 'Distance'), fmt(dist(S.boat.pos, o) / NM, 1) + ' nm') + kv0(L0('Belønning', 'Reward'), kr(PTOW_PAY)) +
+      '<div class="tur-b"><button class="ph-btn p" data-pa="pttake" data-id="' + o.id + '"' + (H ? ' disabled' : '') + '>' + L0('Hjelp', 'Help') + '</button></div></div>'); }
+  return h.length ? '<h4 class="tur-sec">' + L0('Nødanrop', 'Mayday') + '</h4>' + h.join('') : '';
+}
 function turPage(){
   const T = turEnsure(), L0 = (no, en) => S.lang === 'en' ? en : no, h = [];
+  h.push(turAskCards());
   if (T.act.length){ h.push('<h4 class="tur-sec">' + L0('Dine oppdrag', 'Your missions') + '</h4>'); for (const m of T.act) h.push(turCard(m, true)); }
   h.push('<h4 class="tur-sec">' + L0('Tavla', 'The board') + '</h4><p class="ph-note tur-n">' + L0('Laget fra der båten er nå. Nye oppdrag kommer etter hvert, høyst fire på tavla, og du kan ha to om gangen. Det som ligger på veien din, står først.', 'Made from where the boat is now. New missions come as time goes, at most four on the board, and you can have two at a time. What lies on your way comes first.') + '</p>');
   // the next one: when the next place on the board comes (core turEnsure)
@@ -48,10 +71,10 @@ function turPage(){
   for (const {m, d} of B) h.push(turCard(m, false, d));
   // the board seen (the measurement, 30.10.2026): once for each set of missions shown, so a board looked at and left alone can be counted
   const sig = T.board.map(m => m.id).join(',');
-  if (sig && T.shown !== sig){ T.shown = sig; if (typeof cloudEv === 'function') cloudEv('tur_show', {n:T.board.length, k:T.board.map(m => m.k), cls:T.board.map(m => m.cls), act:T.act.length}); }
+  if (sig && T.shown !== sig){ T.shown = sig; if (typeof cloudEv === 'function') cloudEv('tur_show', Object.assign({n:T.board.length, k:T.board.map(m => m.k), cls:T.board.map(m => m.cls), act:T.act.length}, T.board.some(m => m.first) ? {first:1} : {})); }
   if (T.board.length && next) h.push('<p class="ph-note tur-n">' + L0('Neste oppdrag kommer om ca. ', 'The next mission comes in about ') + next + '.</p>');
   const old = T.done.slice(0, 6);
-  if (old.length) h.push('<h4 class="tur-sec">' + L0('Tidligere', 'Earlier') + '</h4><div class="ph-card">' + old.map(d => '<div class="kv"><span>' + turEsc(L0(d.what[0], d.what[1])) + '</span><b>' + (d.ok ? kr(d.pay) : '<span class="r2">' + L0('ikke fullført', 'not done') + '</span>') + '</b></div>').join('') + '</div>');
+  if (old.length) h.push('<h4 class="tur-sec">' + L0('Tidligere', 'Earlier') + '</h4><div class="ph-card">' + old.map(d => '<div class="kv"><span>' + turEsc(L0(d.what[0], d.what[1])) + '</span><b>' + (d.ok ? kr(d.pay) : d.part ? kr(d.pay) + ' <span class="r2">' + L0('delvis', 'in part') + '</span>' : '<span class="r2">' + L0('ikke fullført', 'not done') + '</span>') + '</b></div>').join('') + '</div>');
   return h.join('');
 }
 // «Kjør dit»: the way there as Autonav finds it (to the pick-up first for freight), and off she goes, from the quay too

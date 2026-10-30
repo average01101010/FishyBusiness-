@@ -118,6 +118,8 @@ Planen: `docs/planer/grafikk-natur-og-miljo.md`, G5. Før dette ble alt tonet mo
 
 - **Skodda på fjellet rettet 29.10.2026** (Jonas' bilde fra Finnsnes i regn: den så ut som snø, hvit og i striper nedover lia): kanten bare fra støy på 300–700 m som driver med vinden (`uCD`, `env.cdrift`, en tiendedel av vindfarten), en bred og myk kant som er tynn nederst, og skyen litt mørkere enn himmelen (`env.ccol` 0,86 × horisonten). Bilde før og etter i `docs/pr/ccr-1d00422f-gjapvb/g10/skodde_for_etter.png`.
 
+- **Skyene uten flate felt og skarpe kanter (30.10.2026,** Jonas' bilder på sjøen fra nettbrettet): skystøyen tok utvalg opp mot tusener (vindens forskyvning), der grafikkbrikkens hash mister nøyaktighet og naboruter blir like. Nå gjentar støyen seg hver 289. rute og regner bare med små tall (`cq5`), med femtegrads overgang og hver oktav dreid mot den forrige (`cfbm`); lyset fra sola tar forskjellen 3 ganger, ikke 4. Kan bare ses på brikken som hadde feilen (SwiftShader regner alltid i 32 bit).
+
 ## 4.11e Innsjøer, elver, bekker og fosser (G2, 28.10.2026)
 
 Planen: `docs/planer/grafikk-natur-og-miljo.md`, G2. Før dette fantes det ikke ferskvann i 3D: innsjøene var bakke i 25 m-høydene.
