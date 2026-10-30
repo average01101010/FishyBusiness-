@@ -18,6 +18,8 @@ const SEASONAPP = (() => {
           (d.rows && d.rows.length ? '<table class="ph-tbl"><tr><th>#</th><th>' + L('Båt', 'Boat') + '</th><th>kg</th></tr>' + d.rows.slice(0, 8).map(r => '<tr' + (r.me ? ' class="here"' : '') + '><td>' + r.rank + '</td><td>' + (r.boat || '–') + (r.port && portById(r.port) ? ' <small>' + portById(r.port).name + '</small>' : '') + '</td><td>' + fmt(r.kg, 0) + '</td></tr>').join('') + '</table>' : '<p class="ph-note">' + L('Ingen båter har levert der ennå.', 'No boats have landed there yet.') + '</p>')
           : t && t.err ? '<p class="ph-note">' + L('Tavla er ikke å få tak i nå.', 'The board cannot be reached now.') + '</p>' : t ? '<p class="ph-note">' + L('Henter tavla …', 'Fetching the board …') + '</p>' : '<p class="ph-note">' + L('Tavla trenger nett og innlogging.', 'The board needs the net and a sign-in.') + '</p>') +
         (B && B.badge ? '<p><b>' + L('Merket «' + ev.badge[0] + ' ' + y + '» er ditt', 'The badge «' + ev.badge[1] + ' ' + y + '» is yours') + (B.rank ? ' · ' + L('nummer ', 'number ') + B.rank : '') + '</b></p>' : '') + '</div>'); }
+    // the fiskarlag's week (ui/09c-pubsoc.js PUBSOC.lagCard; docs/planer/oppdrag-2.md F1)
+    if (typeof PUBSOC !== 'undefined' && PUBSOC.lagCard) h.push(PUBSOC.lagCard());
     if (e) h.push('<div class="ph-card sn-now"><small>' + L('Nå', 'Now') + '</small><h4>' + L(e.post[0][0], e.post[0][1]) + '</h4><p>' + L(e.post[1][0], e.post[1][1]) + '</p></div>');
     // the festival from a week before to three days after
     if (H > F.H0 - 24 * 7 && H < F.H1 + 24 * 3){

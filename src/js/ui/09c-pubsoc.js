@@ -59,11 +59,21 @@ const PUBSOC = (() => {
   const LG = {d:null, at:0, busy:false, err:false};
   function lagFetch(cb){
     if (!cloudOn() || LG.busy || Date.now() - LG.at < 30000) return; LG.busy = true;
-    cloudRpc('lag_get', {w:wk()}).then(d => { LG.d = d; LG.err = false; }).catch(() => { LG.err = true; }).finally(() => { LG.at = Date.now(); LG.busy = false; if (cb) cb(); });
+    // (the club's harbour's place goes along, for the story in Kystposten when the goal is reached; 20261030140000_lag_goal.sql)
+    const q = LG.d && LG.d.port ? portById(LG.d.port) : null, pp = q ? q.p : S.boat.pos, at = {x:+pp.x.toFixed(3), y:+pp.y.toFixed(3)};   // (the boat's place until the club is known this session)
+    cloudRpc('lag_get', Object.assign({w:wk()}, at)).then(d => { LG.d = d; LG.err = false; lagHit(d); }).catch(() => { LG.err = true; }).finally(() => { LG.at = Date.now(); LG.busy = false; if (cb) cb(); });
+  }
+  // the goal reached, as the server says it (once a week for this player): a word from the club, and the event
+  function lagHit(d){
+    if (!d || !d.port || !d.hit) return; const w = wk(), P = S.pubSoc || (S.pubSoc = {}); if (P.lagHitW === w) return; P.lagHitW = w;
+    const q = portById(d.port), nm = q ? q.name : d.port;
+    msg('Fiskarlaget i ' + nm, 'Ukas mål er nådd: ' + fmt(d.kg, 0) + ' kg fra ' + d.active + ' båter. Hent din del i puben, og Kystposten skriver om laget.', 'This week\'s goal is reached: ' + fmt(d.kg, 0) + ' kg from ' + d.active + ' boats. Collect your share in the pub, and Kystposten writes about the club.');
+    if (typeof cloudEv === 'function') cloudEv('lag_goal_hit', {port:d.port, w, kg:d.kg, n:d.active, me:(d.members || []).some(m => m.me && m.kg > 0)});
   }
   // the week's goal: 1 500 kg for each member who has landed this week (at least one)
-  const lagGoal = d => { const act = (d.members || []).filter(m => m.kg > 0).length; return LAG_PER * Math.max(1, act); };
-  const lagSum = d => (d.members || []).reduce((a, m) => a + (m.kg || 0), 0);
+  // (the server's goal and sum when it has them, 20261030140000_lag_goal.sql; the same rule counted here for a server from before)
+  const lagGoal = d => d.goal > 0 ? d.goal : LAG_PER * Math.max(1, (d.members || []).filter(m => m.kg > 0).length);
+  const lagSum = d => d.kg != null ? d.kg : (d.members || []).reduce((a, m) => a + (m.kg || 0), 0);
   function lagHtml(){
     const pt = portById(S.boat.port), nm = pt ? pt.name : '', h = [];
     h.push('<p>' + L('Fiskarlaget i ' + nm + ' samler fiskerne som hører til her. Hver uke har laget et felles mål: 1 500 kg for hver som har levert. Når laget når det, får alle som er med ' + kr(LAG_PAY) + '. Den som ikke har fisket, trekker ikke målet opp.',
@@ -82,7 +92,7 @@ const PUBSOC = (() => {
     return h.join('');
   }
   function lagJoin(port){
-    cloudRpc('lag_join', {port}).then(r => { if (r !== 'ok') toast(L('Det gikk ikke nå.', 'That did not work now.')); LG.at = 0; lagFetch(() => { if (PUB3.panel === 'lag') PUB3.openSpot('lag'); }); })
+    cloudRpc('lag_join', {port, w:wk()}).then(r => { if (r === 'wait') toast(L('Du kan bytte lag når uka er over.', 'You can change club when the week is over.')); else if (r !== 'ok') toast(L('Det gikk ikke nå.', 'That did not work now.')); LG.at = 0; lagFetch(() => { if (PUB3.panel === 'lag') PUB3.openSpot('lag'); }); })
       .catch(() => toast(L('Det gikk ikke nå.', 'That did not work now.')));
   }
   function lagPay(){
@@ -163,5 +173,16 @@ const PUBSOC = (() => {
     return false;
   }
   function enter(){ greetFetch(); LG.at = 0; lagFetch(); }
-  return {here, whoHtml, greetFetch, lagHtml, lagFetch, quizHtml, act, enter, GREET, QUIZ, quizSet, _lg:LG, _g:G};
+  // the club's card for the Sesong app (ui/06d-season-folk.js): the week's goal and the boats, or where to join
+  function lagCard(){
+    if (!cloudOn()) return '';
+    const d = LG.d; if (!d) { lagFetch(() => { if (PHONE.isOpen() && PHONE.app === 'sesong') PHONE.render(); }); return '<div class="ph-card"><h4>' + L('Fiskarlaget', 'The fishing club') + '</h4><p class="ph-note">' + (LG.err ? L('Fikk ikke kontakt med laget nå.', 'Could not reach the club now.') : L('Henter laget …', 'Fetching the club …')) + '</p></div>'; }
+    if (!d.port) return '<div class="ph-card"><h4>' + L('Fiskarlaget', 'The fishing club') + '</h4><p class="ph-note">' + L('Du er ikke med i et fiskarlag. Bli med i puben i havna di: laget har et felles mål hver uke, og den som er borte, trekker ingen ned.', 'You are not in a fishing club. Join in the pub in your harbour: the club has a shared goal every week, and one who is away pulls nobody down.') + '</p></div>';
+    const q = portById(d.port), nm = q ? q.name : d.port, goal = lagGoal(d), sum = lagSum(d), pc = Math.min(100, Math.round(sum / goal * 100)), me = (d.members || []).find(m => m.me), act = d.active != null ? d.active : (d.members || []).filter(m => m.kg > 0).length;
+    return '<div class="ph-card sn-fest"><h4>' + L('Fiskarlaget i ' + nm, 'The fishing club of ' + nm) + '</h4><div class="pb-goal"><div style="width:' + pc + '%"></div></div>' +
+      '<p><b>' + fmt(sum / 1000, 1) + ' / ' + fmt(goal / 1000, 1) + ' ' + L('tonn denne uka', 'tonnes this week') + '</b> · ' + act + ' ' + L('båter har levert', 'boats have landed') + (me ? ' · ' + L('du: ', 'you: ') + fmt(me.kg || 0, 0) + ' kg' : '') + '</p>' +
+      (d.hit || sum >= goal ? '<p class="ph-note">' + L('Ukas mål er nådd. Hent din del i puben.', 'This week\'s goal is reached. Collect your share in the pub.') + '</p>' : '<p class="ph-note">' + L('Målet er 1 500 kg for hver som har levert. Den som ikke har fisket, trekker det ikke opp.', 'The goal is 1,500 kg for each who has landed. One who has not fished does not raise it.') + '</p>') +
+      ((d.members || []).length ? '<table class="ph-tbl"><tr><th>' + L('Båt', 'Boat') + '</th><th>kg</th></tr>' + (d.members || []).slice(0, 8).map(m => '<tr' + (m.me ? ' class="here"' : '') + '><td>' + (m.me ? L('Deg', 'You') : esc(m.user ? peerName(m.user) : L('Ukjent', 'Unknown'))) + '</td><td>' + fmt(m.kg || 0, 0) + '</td></tr>').join('') + '</table>' : '') + '</div>';
+  }
+  return {here, whoHtml, greetFetch, lagHtml, lagFetch, lagCard, quizHtml, act, enter, GREET, QUIZ, quizSet, _lg:LG, _g:G};
 })();

@@ -102,4 +102,5 @@
 
 ## Status
 
-- 30.10.2026: planen skrevet, Jonas' svar inn samme dag. F1 begynt.
+- 30.10.2026: planen skrevet, Jonas' svar inn samme dag.
+- 31.10.2026: **F1 bygd** (`20261030140000_lag_goal.sql`, `09c-pubsoc.js` `lagCard`/`lagHit`, `09h-press.js` `lag`, Sesong-kortet, `lagtest`). Dokumentert i `haill-pub-og-bonus.md`. Migreringen må kjøres. Jonas samme dag: oppdrag bare etter kapasitet (kvote, redskap, båt), skrevet inn under «Balansen» i `oppdrag-og-kystposten.md`.
