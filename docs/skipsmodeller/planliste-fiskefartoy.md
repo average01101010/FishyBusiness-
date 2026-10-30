@@ -8,6 +8,7 @@ fartøytyper, fra sjark til fabrikktråler, og brukes til to ting:
 
 Utfylt eksempel mot et ekte foto: [`eksempel-sulebas-sf-100-su.md`](eksempel-sulebas-sf-100-su.md).
 Analyse av ti flere referansebilder: [`referanseanalyse-runde-2.md`](referanseanalyse-runde-2.md).
+Kartlegging av båtene og utstyret i spillet, med feilkatalog: [`kartlegging-spillet.md`](kartlegging-spillet.md).
 
 ---
 
