@@ -112,6 +112,19 @@ function worldTop(w, grp){
   }
   return e;
 }
+// the village contest's board (bygde_top, 20261030170000_bygde.sql): the plants of each part of the coast ranked by what was landed in
+// a game week, and the caller's own plant's place; fetched at most once a minute, the Sesong app and Kystposten drawn again when it comes
+const BYTOP = {};
+function bygdeTop(w){
+  if (typeof CLOUD === 'undefined' || !CLOUD.on || !CLOUD.user || BYTOP.off) return null;
+  const e = BYTOP[w] || (BYTOP[w] = {at:0, data:null, busy:false, err:false});
+  if (!e.busy && Date.now() - e.at > 60000){
+    e.busy = true;
+    cloudRpc('bygde_top', {w}).then(d => { e.data = d; e.err = false; }).catch(x => { e.err = true; if (/ 404$/.test(x.message)) BYTOP.off = true; })
+      .finally(() => { e.busy = false; e.at = Date.now(); if (PHONE.isOpen() && (PHONE.app === 'sesong' || PHONE.app === 'post')) PHONE.render(); });
+  }
+  return e;
+}
 // the shared event's board (ev_top, 20261030130000_season_ev.sql), fetched at most once a minute, the Sesong app drawn again when it comes;
 // a server without it (404) is remembered and asked no more this session
 const EVTOP = {};

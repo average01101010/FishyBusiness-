@@ -17,7 +17,8 @@ async def main():
         r = await pg.evaluate("""(async () => { S.tut = 0; const q = portById(S.boat.port) || PORTS.find(x => x.mottak); S.boat.status = 'port'; S.boat.port = q.id; S.boat.pos = {...q.p};
           const calls = []; let lag = {port:q.id, n:9, goal:13500, kg:14200, active:9, hit:true, hitAt:1, members:[{user:'Kari', kg:4100, me:false}, {user:'', kg:2300, me:true}, {user:'Per', kg:1800, me:false}]};
           let joinR = 'wait', postR = 'ok'; const board = [{user:'Kari', boat:'Måken', k:2, sp:'sei', place:q.id, nm:0.8, age:600, me:false}, {user:'Per', boat:'Von', k:4, sp:null, place:null, nm:null, age:7200, me:false}, {user:'', boat:'Havbris', k:0, sp:null, place:null, nm:null, age:30, me:true}];
-          window.cloudRpc = async (fn, a) => { calls.push([fn, a]); if (fn === 'lag_get') return lag; if (fn === 'lag_join') return joinR; if (fn === 'lag_board') return board; if (fn === 'lag_post') return postR; return null; };
+          window.cloudRpc = async (fn, a) => { calls.push([fn, a]); if (fn === 'lag_get') return lag; if (fn === 'lag_join') return joinR; if (fn === 'lag_board') return board; if (fn === 'lag_post') return postR; if (fn === 'bygde_top') return bygde; return null; };
+          const reg = landsdel(q.p), others = PORTS.filter(x => x.mottak && x.id !== q.id).slice(0, 6); const bygde = {[reg]:{n:7, rows:others.slice(0, 5).map((x, i) => ({port:x.id, kg:9000 - i * 1500, n:4 - (i > 2 ? 2 : 0), me:false, rank:i + 1})).concat([{port:q.id, kg:1200, n:1, me:true, rank:6}]), mine:{port:q.id, kg:1200, rank:6}}};
           CLOUD.on = true; CLOUD.user = 'u1'; CLOUD.guest = false; S.pubSoc = {}; const m0 = S.msgs.length; const EV = []; const keepEv = cloudEv; cloudEv = (k, d) => EV.push({k, d});
           // the Sesong app: the club's card with the server's numbers
           PUBSOC._lg.d = null; PUBSOC._lg.at = 0; PHONE.show(true); PHONE.open('sesong'); PHONE.render(); await new Promise(r => setTimeout(r, 200)); PHONE.render();
@@ -46,9 +47,10 @@ async def main():
           postR = 'wait'; PUBSOC.act('lp:1'); await new Promise(r => setTimeout(r, 100)); const toastW2 = document.getElementById('toast').textContent;
           const lagwN = ACHL.find(a => a.id === 'lagw').v(), wkMark = !!((S.pubSoc.lagWk || {})[weekOf(S.t / 60)]);
           PHONE.show(true); PHONE.open('sesong'); PHONE.render(); await new Promise(r => setTimeout(r, 200)); PHONE.render(); const txt3 = document.getElementById('phView').innerText; const cardBoard = /Tavla/.test(txt3) && new RegExp('Seien står ved ' + q.name).test(txt3);
+          const bygdeParts = [new RegExp('Bygdekampen i ' + LANDSDEL[reg][0]).test(txt3), new RegExp('Ditt mottak, ' + q.name + ', er nummer 6 av 7').test(txt3), txt3.includes('1\\t' + others[0].name + '\\t9\\u00a0000\\t4'), txt3.includes('6\\t' + q.name + '\\t1\\u00a0200\\t1'), !/^4\t/m.test(txt3)], bygdeOk = bygdeParts.every(Boolean);
           [...document.querySelectorAll('#phView .ph-card')].find(c => /Fiskarlaget i/.test(c.textContent)).scrollIntoView();
-          return {card, withPlace, boardOk, mineOk, mine, postOk, toastP, plainOk, toastW2, lagwN, wkMark, cardBoard, said, ev, saidAgain, pubOk, toastW, withW, joinHint, story, txt:txt.slice(0, 200)}; })()""")
-        print(json.dumps(r, ensure_ascii=False)[:800])
+          return {card, withPlace, boardOk, mineOk, mine, bygdeOk, bygdeParts, postOk, toastP, plainOk, toastW2, lagwN, wkMark, cardBoard, said, ev, saidAgain, pubOk, toastW, withW, joinHint, story, txt:txt.slice(0, 200), t3:txt3.slice(txt3.indexOf('Bygdekampen'), txt3.indexOf('Bygdekampen') + 260)}; })()""")
+        print(json.dumps(r, ensure_ascii=False)[:800]); print('T3', json.dumps(r.get('t3', '')))
         print(ok(r['card'] and r['withPlace']), "the Sesong app shows the club's week with the server's goal and sum, the boats and your kilos, and the harbour's place goes with the call")
         print(ok(r['said'] == 1 and r['ev'] == 1 and r['saidAgain'] == 1), 'the goal reached is said once a week, with the event')
         print(ok(r['pubOk']), "the pub's panel uses the server's goal and sum")
@@ -60,9 +62,12 @@ async def main():
         print(ok('Tre lapper om dagen' in r['toastW2']), 'the fourth note of the day is refused with a word')
         print(ok(r['lagwN'] == 1 and r['wkMark']), 'a week with a landing as a member counts for the badge')
         print(ok(r['cardBoard']), "the Sesong app's club card shows the board's last lines")
+        print(ok(r['bygdeOk']), "the village contest's card names the part of the coast, the three plants above and your own plant's place")
         await pg.screenshot(path=os.path.join(OUT, 'lag-staaende.png'))
         await pg.set_viewport_size({'width': 1280, 'height': 800}); await pg.evaluate("PHONE.render(); [...document.querySelectorAll('#phView .ph-card')].find(c => /Fiskarlaget i/.test(c.textContent)).scrollIntoView()"); await pg.wait_for_timeout(200)
         await pg.screenshot(path=os.path.join(OUT, 'lag-liggende.png'))
+        await pg.evaluate("[...document.querySelectorAll('#phView .ph-card')].find(c => /Bygdekampen/.test(c.textContent)).scrollIntoView()"); await pg.wait_for_timeout(150); await pg.screenshot(path=os.path.join(OUT, 'bygde-liggende.png'))
+        await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.evaluate("PHONE.render(); [...document.querySelectorAll('#phView .ph-card')].find(c => /Bygdekampen/.test(c.textContent)).scrollIntoView()"); await pg.wait_for_timeout(200); await pg.screenshot(path=os.path.join(OUT, 'bygde-staaende.png'))
         # (the pub's own panel needs 3D: pubtest.py takes its pictures of the board, pub_lag_*.png)
         print('errors:', errs[:3])
         await b.close()
