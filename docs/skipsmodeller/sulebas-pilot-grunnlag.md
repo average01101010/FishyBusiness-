@@ -11,21 +11,44 @@
 
 ## 1. Fakta om båten
 
-| Hva | Verdi | Kilde |
-|---|---|---|
-| Navn, merke, kallesignal | SULEBAS, SF-100-SU, LECW | S (bildene) |
-| IMO | 9675092 | R: shipspotting.com (søketreff 30.10.2026) |
-| Design | Seacon SC38 | R: seacon.no (søketreff) |
-| Verft, levert | Solund Verft AS, byggenummer 6, februar 2014 | R: seacon.no (søketreff) |
-| Lengde over alt | **38,55 m** (byggerapporten) eller **34,32 m** (uavpic.com). Kildene er uenige | R: maritimt.com «Sulebas (04/2014)», uavpic.com. Må avgjøres mot merkeregisteret |
-| Bredde | 9,50 m (begge kildene) | R |
-| Bruttotonnasje | 499 | R: maritimt.com |
-| Dypgang, dybde til dekk, motor, propell, thrustere | ukjent | Sidene kunne ikke leses herfra (nettverket i økta stenger maritimt.com, seacon.no og uavpic.com) |
-| Bruk | Flerbruk: ringnot, snurrevad (fly-shooting) og garn | R: fiskerforum.com (om etterfølgeren «Sulehav») |
-| Eiere | Lending (Kolgrov, Solund). Hjemmehavn på skroget: FLORØ | R, S |
+Fra byggerapporten i Maritimt Magasin («Sulebas», 04/2014), skjermbilder fra Jonas 30.10.2026 (R), og søk (R).
 
-**Viktig:** ringnotbåten i spillet (`pelagisk`, `not75.py`) er 75 m. Sulebas er under 40 m og et annet slags fartøy: en
-flerbruks kystbåt med ringnot og snurrevad, ikke en stor pelagisk tråler/ringnotbåt. Se avgjørelse B1.
+| Hva | Verdi | Følger for modellen |
+|---|---|---|
+| Navn, merke, kallesignal | SULEBAS, SF-100-SU, LECW (IMO 9675092) | Brukes ikke i spillet (kap. 2) |
+| Design, verft | Seacon SC38. Skroget bygd ved Riga Shipyard (Latvia), utrustet og levert av Solund Verft AS (byggenummer 6) 15.02.2014 | – |
+| Klasse | DNV 1A1 Fishing Vessel, Sjøfartsdirektoratets regler for fiskefartøy, fartsområde Havfiske II | – |
+| **Lengde o.a.** | **38,55 m** | Låst |
+| **Lengde p.p.** | **34,00 m** | Avstanden mellom perpendikulærene: hekken stikker rundt 1 m akter for roraksen, baugen med bulb rundt 3,5 m forut for FP (A) |
+| **Bredde** | **9,50 m** | Låst |
+| **Dybde til hoveddekket** | **4,30 m** | Låst (fra kjølen) |
+| **Dybde til shelterdekket** | **6,60 m** | Låst: shelterdekket ligger 2,30 m over hoveddekket |
+| Bruttotonnasje | 499 | – |
+| Brennolje / RSW | 78,6 m³ / 419,5 m³ | RSW-tankene under hoveddekket midtskips: luker (DKS-03) |
+| Dypgang | Ikke oppgitt | Anslått fra bildene (kap. 4.0) |
+| Hovedmotor | 749 kW ved 1000 o/min, gir 5,04:1 | Propellen går rundt 200 o/min: stor propell |
+| Propellanlegg | Type P70.22.280.4 (vribare blader) | Tolket: CPP, 4 blader, rundt 2,80 m diameter (T: siste to tall) |
+| Ror | Eget styremaskinanlegg | Ror bak propellen |
+| Thrustere | To tunnelthrustere FU-45-LTC-1225, 368 og 450 kW | Tunnel rundt 1,2 m (T: «1225»). Merkene i bildene viser én forut og én akter |
+| Hjelpemotorer | 3 × 260 kW + akselgenerator 1240 kVA | – |
+| Dekkskran | 25 tm | Knekkbomkranen midtskips (bilde 1, 2) |
+| Fiskepumpekran | Egen kran | Kranen ved pumpa |
+| Notkran | Egen modell (NK-6000) | Kranen akter styrbord med kraftblokka |
+| Nothåndtering | Flålegger, mellomrull, notvinsj | Notbingen akter (RNG-03, -04) |
+| Vinsjer | 2 ankervinsjer, brystvinsj, ørekalvinsj | Ankervinsjene på bakken; brystvinsj og ørekalvinsj er ringnotvinsjer (snurpinga) |
+| Garn | Garnhaler og garngreier | Garnhaleren ved rekka (GRN-modulen: båten fisker også garn) |
+| Fiskepumpe, RSW, vakuum/lossing, ozon | Egne anlegg | Pumpa midtskips; losseanlegg på dekk (A) |
+| Fabrikk | Ja (lite anlegg) | Ikke synlig utvendig |
+| MOB-båt og davit | RRB 425 (4,25 m), davit MOB 400-B | Oransje redningsbåt bak styrehuset babord, 4,25 m |
+| Radarer | To: en 6 fots X-band og en «solid state» | To åpne radarantenner på mastetårnene |
+| Sonarer | To: en lavfrekvent sonar og en høyfrekvent, pluss ekkolodd | To sonarkjøler/senkerør under forskipet (SKR-15) |
+| Satellitt | SAT-TV-kuppel, Inmarsat-C, satellittelefoner, GMDSS A3 (MF/HF) | Radomene på taket, MF/HF-pisk, små sopper |
+| Annet | AIS, VHF ×2, UHF, kompass, GPS, strømlogg, notovervåking, CCTV | Små antenner og kameraer på mastene |
+
+Leverandørnavnene står i kilden, men brukes ikke i spillet.
+
+**Viktig:** ringnotbåten i spillet (`pelagisk`, `not75.py`) er 75 m. Sulebas er en annen klasse: en flerbruks kystbåt med
+ringnot, snurrevad og garn på 38,55 m. Se avgjørelse B1.
 
 ## 2. Reglene som gjelder modellen
 
@@ -365,8 +388,7 @@ Modellen får typede plasser for hver lanterne (`lights`), og spillet tenner dem
 
 ## 8. Det som mangler før 100 % klar
 
-1. **Mål fra registeret:** lengde (38,55 eller 34,32 m), dypgang og dybde. Fiskeridirektoratets merkeregister eller
-   Skipsregisteret på SF-100-SU / LECW / IMO 9675092. Jonas kan slå det opp, eller nettverket i økta må åpnes for kildene.
+1. ~~Mål fra registeret~~ **Løst 30.10.2026** med byggerapporten (kap. 1). Bare dypgangen mangler; den anslås fra bildene.
 2. **Bilder som mangler:** hekken rett bakfra; akterdekket ovenfra eller fra styrbord (vinsjer, binge, nothaler, snurpeblokker);
    baugen rett forfra; bakken ovenfra (ankervinsj); styrehusfronten rett forfra. Helst ett bilde i dokk (undervannsskroget). Har
    Jonas generalarrangementet (GA) for SC38, er det bedre enn alle bildene: det låser alle mål på en gang. Tegningen legges ikke i
@@ -379,4 +401,5 @@ Når 1–5 er på plass, er grunnlaget klart, og pilotøkta kan starte.
 
 ## Endringslogg
 
+- 30.10.2026: byggerapporten (hoveddata, maskineri, dekksutstyr, elektronikk) lagt inn i kap. 1.
 - 30.10.2026: første versjon (fakta, avgjørelser, sonene fra fire bilder, kravlista, lanternene, mangler).
