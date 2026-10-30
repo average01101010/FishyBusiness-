@@ -326,6 +326,8 @@
   const SKY_VS = 'attribute vec2 aP;varying vec2 vP;void main(){vP=aP;gl_Position=vec4(aP,0.9999,1.0);}';
   const SKY_FS = 'precision highp float;uniform vec3 uF;uniform vec3 uR;uniform vec3 uU;uniform vec2 uTan;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uSunD;uniform vec3 uSunCol;' +
     'uniform vec3 uCX;uniform vec3 uCY;uniform vec3 uCP;uniform float uPx;uniform float uCloud;uniform vec2 uCloudOff;uniform float uTime;uniform float uStars;uniform float uAur;uniform float uDay;uniform vec2 uWindDir;uniform vec3 uMoonD;uniform float uMoonA;uniform float uAirOn;varying vec2 vP;' + NOISE +
+    'float cq5(vec2 p){p=mod(p,289.0);vec2 i=floor(p),f=p-i;vec2 u=f*f*f*(f*(f*6.0-15.0)+10.0);vec2 j=mod(i+1.0,289.0);return mix(mix(hs(i),hs(vec2(j.x,i.y)),u.x),mix(hs(vec2(i.x,j.y)),hs(j),u.x),u.y);}' +
+    'float cfbm(vec2 p){const mat2 R=mat2(0.8,-0.6,0.6,0.8);float a=cq5(p)*0.6;p=R*p*2.3+5.2;a+=cq5(p)*0.3;p=R*p*2.2+1.7;return a+cq5(p)*0.1;}' +
     'vec3 tone(vec3 c){vec3 e=max(c-0.8,0.0);return min(c,vec3(0.8))+0.2*(1.0-exp(-e/0.2));}' +
     // the aurora's line across the sky plane: wide arcs, S-folds, small ripples and a tighter curl that wanders along it
     // lod fades the small folds and the curl where the samples along the ray stand too far apart to follow them (low in the sky)
@@ -389,13 +391,17 @@
     'float den=exp(-F*F/(w*w))*dd/w;acc+=hc*hp*r*pulse*seg*den*(1.0-fk*0.3)*0.5;}}}}' +
     'acc=acc/(1.0+0.35*max(acc.g,max(acc.r,acc.b)));' +
     'col+=acc*uAur*0.6*smoothstep(0.0,0.06,d.y)+vec3(0.03,0.16,0.08)*uAur*smoothstep(0.0,0.35,d.y)*(1.0-smoothstep(0.35,0.9,d.y))*0.35;}' +
-    'if(d.y>0.0){vec2 cp=d.xz/(d.y+0.08)*1.2+uCloudOff+160.0;float c=ns(cp)*0.6+ns(cp*2.3)*0.3+ns(cp*5.1)*0.1;float cov=smoothstep(1.0-uCloud-0.05,1.0-uCloud+0.35,c);' +
+    // the clouds' noise (30.10.2026, Jonas' pictures at sea: flat blocks with straight edges in the clouds on the tablet): the sample
+    // runs to thousands (the drift's offset), where a GPU's hash loses its precision and neighbouring cells come out alike; so the
+    // noise repeats every 289 cells and works on small numbers only, eases its cells with the quintic (no creases for the light's
+    // difference to show), and each octave is turned against the last so their cells never line up
+    'if(d.y>0.0){vec2 cp=d.xz/(d.y+0.08)*1.2+uCloudOff+160.0;float c=cfbm(cp);float cov=smoothstep(1.0-uCloud-0.05,1.0-uCloud+0.35,c);' +
     'vec3 cc=mix(uHor*0.85,vec3(0.9,0.92,0.95),0.35*uDay)*(0.3+0.7*uDay);' +
     // the clouds lit by the sun (G5, with the air on): the side of a cloud towards the sun is lit in the sun's colour (the density a step
     // towards the sun against here), a thick cloud's underside is dark, and the thin edges near the sun shine (the silver lining). Under a
     // full grey sky it stays the old flat grey
-    'if(uAirOn>0.5){vec2 sv=normalize(uSunD.xz+vec2(1e-4,0.0))*0.18;vec2 cq=cp+sv;float c2=ns(cq)*0.6+ns(cq*2.3)*0.3+ns(cq*5.1)*0.1;' +
-    'float li=clamp(0.55+(c-c2)*4.0,0.0,1.0)*smoothstep(-0.05,0.15,uSunD.y+0.1);float thick=smoothstep(0.35,1.0,cov)*smoothstep(0.3,0.9,uCloud);' +
+    'if(uAirOn>0.5){vec2 sv=normalize(uSunD.xz+vec2(1e-4,0.0))*0.18;vec2 cq=cp+sv;float c2=cfbm(cq);' +
+    'float li=clamp(0.55+(c-c2)*3.0,0.0,1.0)*smoothstep(-0.05,0.15,uSunD.y+0.1);float thick=smoothstep(0.35,1.0,cov)*smoothstep(0.3,0.9,uCloud);' +
     'vec3 lc=mix(uHor*0.55+uZen*0.15,uSunCol*0.95+uZen*0.25,li)*(1.0-0.3*thick);lc+=uSunCol*pow(sd,8.0)*cov*(1.0-cov)*2.2;' +
     'cc=mix(lc,cc,smoothstep(0.75,0.98,uCloud));}' +
     'col=mix(col,cc,cov*smoothstep(0.0,0.12,d.y)*0.95);}' +
