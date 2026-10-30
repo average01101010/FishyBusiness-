@@ -81,8 +81,8 @@ const HB = [
   {id:'patch', ch:4, t:['Patchnotes', 'Patch notes'], when:() => hbLand() >= 4, show:() => phoneApp('patch'),
     no:'Patchnotes forteller hva som er nytt i spillet. Prikken på appen betyr at noe er kommet.', en:'Patch notes tell what is new in the game. The dot on the app means something has arrived.'},
   // 5: gear and boat, the first week
-  {id:'oppdrag', ch:5, t:['Oppdrag', 'Orders'], when:() => hbLand() >= 4 && hbTry(() => ordState().offers.length > 0), show:() => phoneApp('ordl'),
-    no:'Oppdragstavla: turer med god betaling ut fra der du er. Lang tur, god lønn. Med trim går båten fortere, så turen tar kortere tid.', en:'The order board: well-paid trips from where you are. Long trip, good pay. With tuning the boat goes faster, so the trip takes less time.'},
+  {id:'oppdrag', ch:5, t:['Oppdrag', 'Orders'], when:() => (hbLand() >= 4 && hbTry(() => ordState().offers.length > 0)) || hbTry(() => S.turer.board.some(m => m.first) || S.turer.act.some(m => m.first)), show:() => phoneApp('ordl'),
+    no:'Oppdragstavla: turer med god betaling ut fra der du er. Det første ligger klart: litt post til nabohavna, uten hast. Lang tur, god lønn. Med trim går båten fortere, så turen tar kortere tid.', en:'The order board: well-paid trips from where you are. The first lies ready: a little mail for the next harbour, no hurry. Long trip, good pay. With tuning the boat goes faster, so the trip takes less time.'},
   {id:'butikk', ch:5, t:['Utstyrsbutikken', 'The tackle shop'], when:() => hbSvc('butikk'), show:() => hbDock(['butikk', 'fiskeutstyr']),
     no:'Utstyrsbutikken: line, garn og teiner trenger hver sin haler, og kroker, blåser og agn hører til redskapet. Det som ikke passer båten, kan du ikke kjøpe.', en:'The tackle shop: lines, nets and pots each need their hauler, and hooks, floats and bait belong to the gear. What does not fit the boat cannot be bought.'},
   {id:'verft', ch:5, t:['Verftet', 'The yard'], when:() => hbSvc('verft'), show:() => hbDock(['vedlikehold', 'oppgr', 'batmarked']),

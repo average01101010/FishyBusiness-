@@ -126,11 +126,20 @@ async def main():
               and sl['done'] and sl['gain'] == sl['pay'] and sl['lo'] <= sl['pay'] <= sl['hi'] <= sl['value'] and sl['ins'] and sl['gone'] and sl.get('ashore', True)),
               'a boat with engine trouble drifts until you are beside her; then she follows astern on the line, at 5.5 knots at most and with more fuel burnt; brought in, the insurer pays a salvage reward by her value and the danger, never above her value; ashore first, nothing', sl)
         # 6. the season's move (a decked sjark; the open boat keeps to sheltered water): land enough near the place before the week is out
+        #    in three stages (30.10.2026): a third landed pays a third and the mission goes on; all of it pays the rest, the whole reward in all;
+        #    a week that runs out after one stage keeps what was paid and stands as partly done, not as failed
         se = await pg.evaluate("""(() => { const T = turState(), ty = S.boat.type; S.boat.type = 'sjark'; applyVessel(); const m = turSesong(turHere()); S.boat.type = ty; applyVessel(); if (!m) return {none:true};
-          m.id = ++T.seq; m.until = S.t + 1440; T.board.push(m); turTake(m.id); const cash0 = S.cash;
-          turSale(m.to, {[m.sp]:m.kg / 2}); const half = T.act.some(x => x.id === m.id); turSale(m.to, {[m.sp]:m.kg / 2});
-          const done = T.done.find(d => d.id === m.id); return {sp:m.sp, to:m.to, nm:m.nm, kg:m.kg, half, done:!!(done && done.ok), gain:S.cash - cash0, pay:m.pay}; })()""")
-        check(se.get('none') or (se['half'] and se['done'] and se['gain'] == se['pay']), "the season's move: half the kilos landed there is half, all of it pays", se)
+          m.id = ++T.seq; m.until = S.t + 1440; T.board.push(m); turTake(m.id); const cash0 = S.cash, st = turStages(m);
+          turSale(m.to, {[m.sp]:st.at[0]}); const one = {act:T.act.some(x => x.id === m.id), stage:m.stage, paid:m.paid, gain:S.cash - cash0};
+          turSale(m.to, {[m.sp]:m.kg - st.at[0]}); const done = T.done.find(d => d.id === m.id), all = {done:!!(done && done.ok), gain:S.cash - cash0, pay:m.pay, sum:st.part.reduce((a, b) => a + b, 0)};
+          // a second move: one stage, then the week runs out
+          S.boat.type = 'sjark'; applyVessel(); const m2 = turSesong(turHere()); S.boat.type = ty; applyVessel(); let out = null;
+          if (m2){ m2.id = ++T.seq; m2.until = S.t + 1440; T.board.push(m2); turTake(m2.id); const c1 = S.cash, s2 = turStages(m2); turSale(m2.to, {[m2.sp]:s2.at[0]}); m2.due = S.t - 1; turHour();
+            const d2 = T.done.find(d => d.id === m2.id); out = {ended:!!d2, ok:d2 && d2.ok, part:d2 && d2.part, pay:d2 && d2.pay, kept:S.cash - c1, first:s2.part[0]}; }
+          return {sp:m.sp, to:m.to, nm:m.nm, kg:m.kg, at:st.at, part:st.part, one, all, out}; })()""")
+        check(se.get('none') or (se['one']['act'] and se['one']['stage'] == 1 and se['one']['gain'] == se['part'][0] and se['all']['done'] and se['all']['gain'] == se['all']['pay'] and se['all']['sum'] == se['all']['pay'] and se['at'][2] == se['kg']
+                                 and (se['out'] is None or (se['out']['ended'] and not se['out']['ok'] and se['out']['part'] and se['out']['pay'] == se['out']['first'] and se['out']['kept'] == se['out']['first']))),
+              "the season's move in three stages: a third landed pays a third and goes on, all of it pays the whole reward in all; a week that runs out after one stage keeps that stage's pay and stands as partly done", se)
         # 7. a deadline passed ends the mission, and freight goes back
         dl = await pg.evaluate("""(() => { const T = turState(); S.boat.status = 'port'; S.boat.port = S.home || PORTS[0].id; S.boat.pos = {...portById(S.boat.port).p}; S.hold = [];
           let m = null; for (const c of ['kort', 'mid', 'lang']){ m = turFrakt(turHere(), c, new Set()); if (m) break; } if (!m) return {none:true};
@@ -243,6 +252,75 @@ async def main():
           return {moved1:seq1 > seq0, moved2:seq2 > seq1, kg:after.kg, pay:after.pay, v:after.v, slots:after.slots, hold:BOAT.holdCap}; })()""")
         check(rr['moved1'] and not rr['moved2'] and rr['kg'] <= 2 * rr['hold'] and rr['pay'] < 400000 and rr['v'] == 3 and rr['slots'] == 4,
               'moving far makes a new board once a game day, not twice; a season\'s move from the oldest saves is brought down to two holds; the save comes over to the new rules with a full board', rr)
+        # 14. the measurement (30.10.2026): a board seen sends tur_show once for that set of missions; a mission taken sends tur_take with its id
+        #     and the real minutes allowed; given up it sends tur_fail with the same id, how it ended ('drop') and the share of the deadline used
+        ev = await pg.evaluate("""(() => { const T = turState(), EV = []; const keep = {ev:cloudEv, act:T.act, shown:T.shown}; cloudEv = (k, d) => EV.push({k, d}); T.act = []; T.shown = null;
+          turEnsure(true); turPage(); turPage(); const shows = EV.filter(e => e.k === 'tur_show').length, show = EV.find(e => e.k === 'tur_show');
+          const m = T.board[0]; turTake(m.id); const take = EV.find(e => e.k === 'tur_take'); S.t += 30; turDrop(m.id); const fail = EV.find(e => e.k === 'tur_fail');
+          cloudEv = keep.ev; T.act = keep.act; T.shown = keep.shown;
+          return {shows, show:show && show.d, take:take && take.d, fail:fail && fail.d, id:m.id}; })()""")
+        check(ev['shows'] == 1 and ev['show'] and ev['show']['n'] >= 1 and ev['take'] and ev['take']['id'] == ev['id'] and ev['take']['allow'] > ev['take']['min']
+              and ev['fail'] and ev['fail']['id'] == ev['id'] and ev['fail']['how'] == 'drop' and 0 < ev['fail']['frac'] < 1 and ev['fail']['pay'] == 0,
+              'the measurement: tur_show once per board seen; tur_take with the mission\'s id and the minutes allowed; given up, tur_fail with the same id, how=drop and the share of the deadline used', ev)
+        # 15. the first mission (30.10.2026): a player who has landed once and never taken a mission gets a short freight of mail laid on top of the
+        #     board, a few miles on, with a week's deadline, told once by the harbour; it takes no place on the board; none once a mission is done
+        fm = await pg.evaluate("""(() => { const T = turState(), EV = [], keep = {ev:cloudEv, done:T.done, act:T.act, board:T.board, slots:T.slots, told:T.firstTold, landN:S.landN, msgs:S.msgs.length}; cloudEv = (k, d) => EV.push({k, d});
+          T.done = []; T.act = []; T.board = []; T.firstTold = 0; S.landN = 1; S.boat.status = 'port'; S.boat.port = S.home || PORTS[0].id; S.boat.pos = {...portById(S.boat.port).p};
+          turEnsure(true); const m = T.board[0], first = m && m.first ? {k:m.k, kg:m.kg, nm:m.nm, hTot:m.hTot, pay:m.pay, from:m.from, to:m.to, n:T.board.length} : null;
+          const told = S.msgs.length - keep.msgs, ev1 = EV.filter(e => e.k === 'tur_first').length; turEnsure(true); const again = T.board.filter(x => x.first).length, told2 = S.msgs.length - keep.msgs, m2 = T.board.find(x => x.first);
+          const slots0 = T.slots; const err = m2 ? turTake(m2.id) : 'none'; const take = EV.find(e => e.k === 'tur_take' && e.d.first), slots1 = T.slots, act = T.act.some(x => x.first);
+          T.act = []; T.done = [{id:m2 ? m2.id : 0, ok:true}]; T.board = []; turEnsure(true); const none = !T.board.some(x => x.first);
+          cloudEv = keep.ev; Object.assign(T, {done:keep.done, act:keep.act, board:keep.board, slots:keep.slots, firstTold:keep.told}); S.landN = keep.landN;
+          return {first, told, ev1, again, told2, err, take:take && take.d, slots0, slots1, act, none, home:S.boat.port}; })()""")
+        check(fm['first'] and fm['first']['k'] == 'frakt' and 20 <= fm['first']['kg'] <= 40 and fm['first']['nm'] <= 35 and fm['first']['hTot'] == 168 and fm['first']['pay'] >= 500
+              and fm['told'] == 1 and fm['ev1'] == 1 and fm['again'] == 1 and fm['told2'] == 1 and fm['err'] is None and fm['take'] and fm['take']['first'] == 1 and fm['slots1'] == fm['slots0'] and fm['act'] and fm['none'],
+              "the first mission: a short freight of mail laid on top of the board after the first landing, a week to do it, told once by the harbour; taken, it uses no place on the board; none once a mission is done", fm)
+        # 16. the people behind the missions (30.10.2026): an order's card names the plant's manager; taken, she sends a word; landed, she
+        #     remembers how many the boat has landed there (the first, the second, the third), and the place counts it; from the third
+        #     she lays an order of her own on the board (20 % over the price, no place used), told by her, and not again within a week
+        pp = await pg.evaluate("""(() => { const T = turState(), keep = {done:T.done, act:T.act, board:T.board, rep:T.rep, slots:T.slots, msgs:S.msgs.length}; T.done = []; T.act = []; T.board = []; T.rep = {}; S.landN = 9;
+          const o = turHere(), me = turMe(); let q = null, m = null;
+          for (const cand of turPlants().filter(x => x.id !== S.boat.port).sort((a, b) => turNm(o, a.p) - turNm(o, b.p))){ const h = turNm(o, cand.p) / turV(); if (h < 0.4 || h >= 18) continue; const c = h < 3 ? 'kort' : h < 7.5 ? 'mid' : 'lang'; m = turBestAt(o, cand, h, c, me); if (m){ q = cand; break; } }
+          if (!m) return {none:true};
+          const name = folkPlantName(q.id), said = [], land = () => { const O = ordState(), a = O.active.find(x => x.tur === m.id); O.active = O.active.filter(x => x !== a); O.done.unshift({...a, ok:true}); turSale(q.id, {[m.sp]:m.kg}); };
+          const run = () => { m = Object.assign({}, m, {id:++T.seq, until:S.t + 9999, ask:false}); m.pay = turFinal(m); T.board.push(m); const n0 = S.msgs.length; turTake(m.id); const took = S.msgs.slice(n0).map(x => x.from + ': ' + x.no); const n1 = S.msgs.length; land(); said.push({took, landed:S.msgs.slice(n1).map(x => x.from + ': ' + x.no)}); };
+          run(); run(); const asksBefore = T.board.filter(x => x.ask).length; run();
+          const rep = T.rep[q.id] && T.rep[q.id].n, card = turCard(T.board.length ? T.board[0] : m, false);
+          const slots0 = T.slots; T.board = []; turEnsure(true); const ask = T.board.find(x => x.ask), askMsg = ask ? S.msgs[S.msgs.length - 1].from : null, slotsAfterLaid = T.slots;
+          let took2 = null; if (ask){ turTake(ask.id); took2 = {slots:T.slots, prem:ordState().active.find(x => x.tur === ask.id).prem, act:T.act.some(x => x.ask)}; T.act = []; ordState().active = []; }
+          T.board = []; turEnsure(true); const again = T.board.filter(x => x.ask).length;
+          Object.assign(T, {done:keep.done, act:keep.act, board:keep.board, rep:keep.rep, slots:keep.slots}); ordState().active = [];
+          return {name, said, asksBefore, rep, card:/Bestilling fra/.test(card), ask:ask && {prem:ask.prem, pay:ask.pay, to:ask.to, hTot:ask.hTot, base:ask.base}, askMsg, slots0, slotsAfterLaid, took2, again}; })()""")
+        ok16 = pp.get('none') or (len(pp['said']) == 3 and all(any(pp['name'] in t for t in s['took']) for s in pp['said']) and 'Første gang' in ' '.join(pp['said'][0]['landed']) and 'Andre gangen' in ' '.join(pp['said'][1]['landed'])
+                                  and 'Tredje gangen' in ' '.join(pp['said'][2]['landed']) and pp['rep'] == 3 and pp['card'] and pp['asksBefore'] == 0 and pp['ask'] and pp['ask']['prem'] == 0.2 and pp['askMsg'] and pp['name'] in pp['askMsg']
+                                  and pp['took2'] and pp['took2']['slots'] == pp['slotsAfterLaid'] and pp['took2']['prem'] == 0.2 and pp['took2']['act'] and pp['again'] == 0)
+        check(ok16, "the people: the order names the manager, she sends a word when it is taken, remembers the first, second and third landing, and from the third lays an order of her own (20 % over, no place used), not again within a week", pp)
+        # 17. something happens under way (30.10.2026): a long order gets one event when taken; fired, «more» has the plant ask for extra kilos
+        #     at a premium and pays them when the order lands with them; «tip» names where the species stands by the fish model (or stays
+        #     silent); «wx» speaks only when the forecast has worsened past the boat's limit, and then harbour time under a gale does not count
+        ev2 = await pg.evaluate("""(() => { const T = turState(), keep = {done:T.done, act:T.act, board:T.board, rep:T.rep, slots:T.slots}; T.done = []; T.act = []; T.board = []; T.rep = {};
+          const o = turHere(), me = turMe(), b = S.boat; let m = null;
+          for (const c of turPlants().filter(x => x.id !== b.port).sort((a, z) => turNm(o, a.p) - turNm(o, z.p))){ const h = turNm(o, c.p) / turV(); if (h < 3 || h >= 18) continue; m = turBestAt(o, c, h, h < 7.5 ? 'mid' : 'lang', me); if (m) break; }
+          if (!m) return {none:true};
+          let rolled = 0; for (let i = 0; i < 12; i++){ const t = Object.assign({}, m, {cls:'lang'}); turEventRoll(t); if (t.ev && ['more', 'tip', 'wx'].includes(t.ev.k) && t.ev.at > 0) rolled++; }
+          m.id = ++T.seq; m.until = S.t + 9999; m.cls = 'lang'; m.pay = turFinal(m); T.board.push(m); turTake(m.id); const act = T.act.find(x => x.id === m.id), had = !!act.ev;
+          const st0 = b.status; b.status = 'sailing'; const n0 = S.msgs.length;
+          act.ev = {k:'more', at:0, done:false}; turEventFire(act, b); const more = {extra:act.extra && act.extra.kg, prem:act.extra && act.extra.prem, said:S.msgs.length > n0 && S.msgs[S.msgs.length - 1].from};
+          act.ev = {k:'tip', at:0, done:false}; const n1 = S.msgs.length; turEventFire(act, b); const tip = {has:!!act.tip, said:S.msgs.length > n1 ? S.msgs[S.msgs.length - 1].from : null};
+          act.ev = {k:'wx', at:0, done:false}; const n2 = S.msgs.length; turEventFire(act, b); const wx = {has:!!act.wx, said:S.msgs.length > n2 ? S.msgs[S.msgs.length - 1].from : null};
+          b.status = st0;
+          // the extra kilos: landed with the order, they pay
+          const O = ordState(), a = O.active.find(x => x.tur === act.id), cash0 = S.cash; O.active = O.active.filter(x => x !== a); O.done.unshift({...a, ok:true});
+          turSale(act.to, {[act.sp]:act.kg + (act.extra ? act.extra.kg : 0)}); const paid = act.extraPaid || 0, gain = S.cash - cash0;
+          // in port under a gale, a mission whose forecast worsened does not lose deadline time
+          const w = {id:9, due:1000, wx:{hs:3, at:0}, t0:0, k:'frakt'}, w2 = {id:10, due:1000, t0:0, k:'frakt'}; T.act = [w, w2]; b.status = 'port'; let wind = 0; try { wind = windAt(S.t / 60, b.pos); } catch (e){} turStuck(T, b); b.status = st0;
+          const gale = {wind:+wind.toFixed(1), due:w.due, due2:w2.due};
+          Object.assign(T, {done:keep.done, act:keep.act, board:keep.board, rep:keep.rep, slots:keep.slots}); ordState().active = [];
+          return {rolled, had, more, tip, wx, paid, gain, gale, kg:act.kg, sp:act.sp}; })()""")
+        g = ev2.get('gale', {})
+        ok17 = ev2.get('none') or (ev2['rolled'] == 12 and ev2['had'] and ev2['more']['extra'] and ev2['more']['prem'] == 0.3 and ev2['more']['said'] and (not ev2['tip']['has'] or ev2['tip']['said']) and (not ev2['wx']['has'] or ev2['wx']['said'] == 'Kystradio')
+                                   and ev2['paid'] > 0 and ev2['gain'] >= ev2['paid'] and g['due2'] == 1000 and g['due'] == (1001 if g['wind'] >= 13.9 else 1000))
+        check(ok17, "something happens under way: a long mission rolls one event; the plant's call for extra kilos pays them when landed; the VHF tip and the worsened forecast speak only when the model bears them out; harbour time under a gale does not count against a mission the forecast turned on", ev2)
         check(errs == [], 'sidefeil', errs[:3])
         await br.close()
 

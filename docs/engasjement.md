@@ -60,6 +60,8 @@ Alt bygges for hele kysten. Hver endring skal kunne leses av i trakten (punkt 9)
 
 10. **Mannskap med liv** (Jonas 17.10.2026): folk som går mellom arbeidsoppgavene og vandrer på dekk når de er ledige, så livet deres (hjemsted, mål, historie, hendelser, avmønstring til egen båt). Plan og status i `docs/mannskap-plan.md`.
 
+11. **Sesongene som felles hendelser** (A2 i `docs/forslag.md`, bestilt 30.10.2026 som punkt 7 i `docs/research/oppdrag-gap-analyse.md`): Lofotfisket, Finnmarksfisket, Seisommeren og Krabbehøsten med én tavle for hele kysten, merke for året og premie til de tre beste. Første runde bygd 30.10.2026 (`docs/systemer/skyen-og-felles-verden.md` 5.25f); vimpelen, admin-redigering og NPC-landinger gjenstår.
+
 **Vurderes senere:** fiskarlag per hjemhavn (felles ukemål og oppslag, aldri slik at én spillers fravær skader andre), innholdsutvidelser som havsteget med blåkveite (legitimt så lenge grunnspillet føles komplett), abonnement («Rederi-medlemskap») med bekvemmeligheter der ingenting går tapt ved oppsigelse (vent til betalingsviljen for kosmetikk er kjent).
 
 ## Det vi ikke gjør
