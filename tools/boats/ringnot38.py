@@ -849,6 +849,15 @@ def superstructure(fine=True):
         if a[0] == 10.35 and b[0] == 10.35: continue
         A.poly([(a[0], a[1], ZB2 - 0.32), (b[0], b[1], ZB2 - 0.32), (b[0], b[1], ZB2 + 0.30), (a[0], a[1], ZB2 + 0.30)], w, (b[1] - a[1], -(b[0] - a[0]), 0))
     for yy in (-4.1, -1.15): acyl(A, (8.55, yy, z_dk(8.55) + 0.1), (8.55, yy, ZB2 - 0.2), 0.06, lambda z: w, seg=8)
+    # the same walkway on the port side (c6db804c: the liferafts and the red chest stand on it over the rescue boat)
+    WK2 = [(x, -y) for x, y in reversed(WK)]
+    prism(A, [(x + (0.05 if x < 9 else -0.05), y - (0.05 if y > 2 else -0.05)) for x, y in WK2], ZB2 - 0.2, ZB2, C['deck'])
+    for i in range(len(WK2)):
+        a, b = WK2[i], WK2[(i + 1) % len(WK2)]
+        if a[0] == 10.35 and b[0] == 10.35: continue
+        A.poly([(a[0], a[1], ZB2 - 0.32), (b[0], b[1], ZB2 - 0.32), (b[0], b[1], ZB2 + 0.30), (a[0], a[1], ZB2 + 0.30)], w, (b[1] - a[1], -(b[0] - a[0]), 0))
+    for yy in (4.1, 1.15): acyl(A, (8.55, yy, z_dk(8.55) + 0.1), (8.55, yy, ZB2 - 0.2), 0.06, lambda z: w, seg=8)
+    if fine: rail(A, [(10.3, 0.93, ZB2 + 0.30), (8.33, 0.93, ZB2 + 0.30), (8.33, 4.32, ZB2 + 0.30), (10.3, 4.32, ZB2 + 0.30)], h=12.05 - (ZB2 + 0.30), every=0.9)
     if fine:
         # the walkway's rail wraps the chute's inboard side: out along the side to 9.45 m, in to the cut-out, forward to the platform
         rail(A, [(10.3, -0.93, ZB2 + 0.30), (8.33, -0.93, ZB2 + 0.30), (8.33, -4.32, ZB2 + 0.30), (9.45, -4.32, ZB2 + 0.30), (9.45, -3.03, ZB2 + 0.30), (10.35, -3.03, ZB2 + 0.30)], h=12.05 - (ZB2 + 0.30), every=0.9)
@@ -1149,8 +1158,8 @@ def deck_gear(fine=True):
         A.poly([(bx0, by - 0.55, bz - 0.2), (bx1 - 0.8, by - 0.55, bz - 0.2), (bx1 - 0.3, by, bz - 0.05), (bx1 - 0.8, by + 0.55, bz - 0.2), (bx0, by + 0.55, bz - 0.2)], C['dark'], (0, 0, -1))
         abox(A, 9.0, 9.7, by - 0.3, by + 0.3, bz - 0.2, bz + 0.45, C['dark'])
         for x in (8.3, 10.6): abox(A, x - 0.1, x + 0.1, by - 0.7, by + 0.7, zd(x), bz - 0.18, C['steel'])
-        acyl(A, (10.0, 4.2, zd(10.0)), (10.0, 4.2, 11.4), 0.13, lambda z: W, seg=10)
-        beam(A, (10.0, 4.2, 11.35), (8.9, 3.6, 12.0), 0.16, 0.16, W)
+        acyl(A, (7.5, 4.2, zd(7.5)), (7.5, 4.2, 10.7), 0.13, lambda z: W, seg=10)
+        beam(A, (7.5, 4.2, 10.65), (8.2, 3.6, 10.4), 0.16, 0.16, W)
         for x in (0.8, 2.0):
             for yy in (-3.4, 3.4): acyl(A, (x - 0.45, yy, 10.12), (x + 0.45, yy, 10.12), 0.22, lambda z: C['dark'], seg=12)
     objs.append(A.done(30))
@@ -1269,6 +1278,13 @@ def aft_deck(fine=True):
         lifebuoy(A, (X_FC - 0.05, -2.9, zs(X_FC) + 1.6), (-1, 0, 0))
         lifebuoy(A, (8.28, -2.6, ZB2 + 0.0), (-1, 0, 0))
         lifebuoy(A, (12.5, 4.47, ZB2 + 0.0), (0, 1, 0))
+    # ---- the liferafts in their cradles on deck B's port side aft, and the red chest for rescue gear on the balcony (c6db804c, 7b36cbe5) ----
+    if fine:
+        for x in (8.78, 9.78):
+            acyl(A, (x - 0.45, 3.75, ZB2 + 0.5), (x + 0.45, 3.75, ZB2 + 0.5), 0.36, lambda z: W, seg=14)
+            acyl(A, (x - 0.25, 3.75, ZB2 + 0.5), (x + 0.25, 3.75, ZB2 + 0.5), 0.37, lambda z: C['orange'], seg=14)
+            for e in (-0.35, 0.35): abox(A, x + e - 0.03, x + e + 0.03, 3.4, 4.1, ZB2, ZB2 + 0.25, C['steel'])
+        abox(A, 9.2, 10.0, 1.5, 2.3, ZB2 - 0.85, ZB2 - 0.1, C['lampR'])
     # ---- the stairs: from the working deck up to the forecastle at starboard, and to the casing's deck by the house ----
     if fine:
         stair(A, X_FC - 2.6, -3.9, zs(24.5), X_FC + 0.05, z_dk(X_FC), 0.8, W)
