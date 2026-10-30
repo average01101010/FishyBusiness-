@@ -16,7 +16,7 @@ Punkt 4 i `docs/engasjement.md`. Jonas: en blanding av korte og lange oppdrag ut
     - **Tips på VHF** (`tip`, bestilling og sesong): en navngitt NPC-skipper (`TUR_SKIPPERS`, bare navn og båtnavn fra listene i spillet) sier hvor arten står tettest innen 12 nm fra mottaket, lest fra fiskemodellen (`heatSample`, 36 punkter rundt mottaket, minst 1 på skalaen), med avstand til nærmeste havn (`nearestPort`) og posisjon. Står det ikke fisk, sies ingenting.
     - **Varselet er skjerpet** (`wx`, alle typer): sjøen ved målet leses på nytt nå (`hsAtFc` i trepunkters trinn fram til fristen, høyst 48 timer), og bare når den går over båtens egen varselgrense (`BOAT.risk`, 0,8 for åpne båter) sier Kystradio fra, med høyde og time. Da teller ikke tida båten ligger i havn i kuling (vind ≥ 13,9 m/s ved havna, som kulingvarselet) mot fristen for det oppdraget (`turStuck`, `m.wx`); fristen flyttes ellers aldri, som før.
     - Kortet viser hendelsen når oppdraget er tatt («Ekstra», «Varselet», «Tips på VHF»). Hendelsen `tur_event` (id, type, minutter inn i turen). Første oppdrag får ingen. Patchnote `tur-301026`. Testen: `turtest` sjekk 17.
-    - **Antakelser:** 30–70 % av seilingstida, 30 % tillegg og 12 nm er startverdier. Tipset bruker modellens tetthet, ikke spillerens egne fangster. Kystvaktkontroll ved kai ble vurdert og ikke bygd (regelmotoren håndterer det ved levering alt).
+    - 30–70 % av seilingstida og halvparten av de middels er tidsvalg uten virkning på betalingen; 30 % tillegg på høyst 150 kg er bundet av balanseregelen under; 12 nm er rekkevidden en skipper på VHF kan si noe om. Tipset bruker modellens tetthet, ikke spillerens egne fangster. Kystvaktkontroll ved kai ble vurdert og ikke bygd (regelmotoren håndterer det ved levering alt).
 - **Nødanrop på tavla** (`turAskCards` i `ui/05f-turer.js`, 30.10.2026; gap-analysen punkt 6: alle oppdragene var solo): spørsmålene om slep fra andre spillere innen 30 nm (`PTOW._P.open`, `ui/10o-ptow.js`, 5.55 i `skyen-og-felles-verden.md`) står øverst på tavla under «Nødanrop», som kort med spiller, båt, avstand, belønningen (25 000 kr) og «Hjelp» (`pttake` i `phone/14-act.js` → `PTOW.take`). Slepet en har tatt, står som «Ditt slep» med «Rute dit» og «Gi fra deg» (`ptgo`, `ptdrop`). Meldinga om et nytt spørsmål nevner tavla. Ingenting nytt på serveren; kortene er det samme som merket i kartet. Additivt: ingen taper noe på å la være. Patchnote `tur-301026`. Testen: `ptowtest`.
 - **Vektet etter spilleren** (`turMe`, Jonas 07.10.2026). Grunnlaget er spillerens egen lagring, som har det samme som skyen. Spillet leser aldri databasen per spiller.
   - **Under ett år fartstid** (før første tur er ferdig): ingen lange oppdrag, bare et kort til.
@@ -93,6 +93,24 @@ Punkt 4 i `docs/engasjement.md`. Jonas: en blanding av korte og lange oppdrag ut
 - **Skjermen:** fanen «Turer» i Oppdrag-appen viser «Dine oppdrag», tavla og tidligere oppdrag. Bestillingene har egen fane. Kartet viser en stiplet ring der hvert oppdrag går (`turSvg`).
 - **Tavla** trekker nå blant typene med vekter (`draw` i `turMake`): de korte mellom bestilling, frakt, prøvefiske og fyrbilde, middels også med slep, og lange mellom bestilling, frakt og fyrbilde. Høyst ett prøvefiske og ett fyrbilde om gangen.
 - **Neste:** se Kystposten (4.27).
+
+### Balansen (30.10.2026, Jonas: «alt av oppdrag som legges inn må balanseres», «ingenting skal være svakt eller antatt»)
+
+Én regel holder alle oppdrag: **en time på et oppdrag betaler aldri mer enn båtens egen fisketime (`turCap`, det båttypen tjener på vanlig fiske uten haill) ganger en kjent faktor, og fisket forblir hovedinntekten ved antallet oppdrag, ikke ved prisen** (tilbudsbremsen 30 %). Alle tallene under er ledd i den regelen og låses av `tests/unit/turer.test.mjs`; endres ett av dem, er det et balansevalg som skrives inn her samme dag.
+
+| Hva | Faktor mot fisketimen | Hvorfor |
+|---|---|---|
+| Kort, middels, lang (rene turer) | 1,0 / 1,1 / 1,25 | Jonas 19.10.2026 (#73): betalt for jobben, litt mer for lange turer |
+| Der fisken er spillerens (bestilling, sesong, tapt redskap) | 0,5 i tillegg til fisken | Fisken selv er betalingen |
+| Prøvefiske for HI | 0,75 (+ inntil 20 % for nøyaktighet) | Fangsten er spillerens, målingen er arbeid |
+| Første oppdrag | 1,0 (kort) | Ingen gave i kroner, bare lav terskel: lite last, ei uke, ingenting tapt |
+| Bestyrerens egen bestilling («Til deg») | turbetalingen × 1,2 og 20 % over markedsprisen | Samme tillegg som en kvalitetsbestilling (`xq`, prem 0,2); 1,25 × 1,2 = 1,5 er taket for noe oppdrag |
+| Mottaket ringer (ekstra kilo) | 30 % over markedsprisen på høyst 150 kg og 40 % av bestillinga | Bundet til kiloene, aldri til tida; mottakets eget tillegg for fersk fisk det mangler |
+| Sesongflyttingen i etapper | tredeler av samme sum | Ingen ny krone, bare delt opp |
+| Nødanrop (slep av spiller) | 25 000 kr fast (`PTOW_PAY`, Jonas 09.10.2026) | Serveren tillater høyst tre betalte i døgnet, én per spiller |
+| Felles sesonger | premie 15 000 / 7 500 / 3 000 kr (som skreifestivalen), merke for tre lastrom av egen båt | Premien er den samme for alle; merket ber hver båt om samme andel av sitt eget arbeid |
+
+Tilbudet: høyst fire på tavla, to tatt, én ny plass per 18 spilltimer, tre ganger så sakte når ukas oppdrag har gitt mer enn 30 % av fangst + oppdrag. Det første oppdraget og bestyrerens egen bestilling tar ingen plass, men teller i andelen når de betales, så bremsen fanger dem. Målingen (`tur_done.pay` mot `sale.kr` i `admin_tur_share`) viser andelen per spiller; den lå på 12 % 5.–29.10.2026 og skal holde seg under 30 %.
 
 ## 4.27 Kystposten: den felles avisa (07.10.2026)
 
