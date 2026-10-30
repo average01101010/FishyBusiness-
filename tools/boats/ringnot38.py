@@ -542,6 +542,16 @@ def hull_side(fine=True):
             pts = [(xa, st_bot(xa)), (xb, st_bot(xb)), (xb + sl, st_top(xb + sl)), (xa + sl, st_top(xa + sl))]
             hull_patch(A, pts, sg, C['stripe'], rings=2)
         if fine:
+            # the hull's marks (the photograph on the slip 226293a9 and the stern 274df4a7): the draft scales on the bow close to the
+            # stem and on the stern quarter, the thruster rings over both tunnels, the two V marks and the bulb mark forward
+            along = lambda tt: -sg * tt
+            F.draft_scale(A, lambda z: (lambda p, n, tt: (p, n, along(tt)))(*surf(x_stem(z) - 0.55, z, sg, off=0.004)), 2.6, 5.2, C['mark'])
+            F.draft_scale(A, lambda z: (lambda p, n, tt: (p, n, along(tt)))(*surf(1.6, z, sg, off=0.004)), 2.6, 5.2, C['mark'])
+            p, n, tt = surf(33.4, 4.62, sg, off=0.004); F.thruster_symbol(A, p, n, (0, 0, 1), 0.28, C['mark'])
+            p, n, tt = surf(6.2, 4.62, sg, off=0.004); F.thruster_symbol(A, p, n, (0, 0, 1), 0.28, C['mark'])
+            for x in (31.6, 30.6):
+                p, n, tt = surf(x, 4.62, sg, off=0.004); F.vee(A, p, n, (0, 0, 1), 0.36, C['mark'])
+            p, n, tt = surf(29.8, 4.62, sg, off=0.004); F.bulb_symbol(A, p, n, (0, 0, 1), 0.5, C['mark'], fwd=sg)
             # the anchor's crown bolster under the pocket (a raised blue lip)
             o = rrect(31.5, 6.91, 2.29, 0.42, 0.21, n=5); hull_frame(A, o, sg, C['hull'], w=0.02, h=0.09)
     if not fine: return [A.done(30)]
@@ -1088,7 +1098,7 @@ def aft_deck(fine=True):
             acyl(A, (0.25, yy - 0.5, z_bw(0.2) + 0.25), (0.25, yy + 0.5, z_bw(0.2) + 0.25), 0.22, lambda z: C['dark'], seg=12)
             for e in (-0.55, 0.55): abox(A, 0.1, 0.4, yy + e - 0.04, yy + e + 0.04, z_bw(0.2), z_bw(0.2) + 0.3, C['steel'])
         # the ladder on the transom, from the waterline up the wall to its top
-        ladder(A, (-0.03, -0.9, WL + 0.3), (-0.03, -0.9, z_bw(0.0) - 0.1), 0.4, C['steel'], out=(-1, 0, 0))
+        ladder(A, (-0.03, 0.9, WL + 0.3), (-0.03, 0.9, z_bw(0.0) - 0.1), 0.4, C['steel'], out=(-1, 0, 0))
     # ---- the net chute: a wide white cone standing on the deck aft of the house at port, leaning aft, its mouth up and forward ----
     base = V((9.2, 1.4, zs(9.2))); tip = V((7.9, 1.4, 13.6)); ax = (tip - base).normalized(); s, u, _ = frame_of(ax)
     rings = []

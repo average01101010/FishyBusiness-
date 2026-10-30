@@ -444,6 +444,25 @@ Modellen får typede plasser for hver lanterne (`lights`), og spillet tenner dem
 - `vessel3d` med det nye taket, `brotest`, `lanterntest`, `deckshot`.
 - Jonas godkjenner nivået før resten av flåten tas.
 
+## 7.1 Kritikksløyfen (30.10.2026)
+
+Arbeidsmåten for piloten, og for båtene etter den: modellen rendres fra de samme vinklene som fotoene (`scratchpad/r38/shape.py`:
+`sq` styrbord låring høyt som 1000a4bd, `pq` babord låring som 8cdb9214, `aer` flybildet 82e91969, `slipq` slippen 226293a9,
+`sternv` hekken 274df4a7, og det ortografiske overlegget mot sidebildet 42432bd5), bildene sammenlignes med fotoene, feilene
+skrives opp, rettes og rendres på nytt. Overlegget mot sidebildet kjøres etter hver runde, så ingenting flytter seg.
+
+Runde 1 (akterskipet og dekksutstyret): notbingens skillevegg, rekkverket på den fremre brønnen, bøyene og tauskivene, rullene på
+hekkveggen, leideren på akterspeilet, nottrakta akter for styrehuset, kraftblokka på akterkranen, vakuumtankene og pumpehopperen,
+trappene til bakken og kassedekket, ankervinsjen og varpehodene. Funnet og rettet: plattformens dekkprisme lå i plan med kantplata
+(svart stripe), bingegulvet for lyst.
+
+Runde 2 (baug og hekk): leideren sto på styrbord, skal på babord; dypgangsmerkene på baug og hekk, thrusterringene over begge
+tunnelene, de to V-ene og bulbmerket lagt inn; baugens skala flyttet opp over thrusterrista.
+
+Igjen etter runde 2, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
+plater, sveis, rust, slitasje, glansen i malingen.
+
 ## 8. Det som mangler før 100 % klar
 
 1. ~~Mål fra registeret~~ **Løst 30.10.2026** med byggerapporten (kap. 1). Bare dypgangen mangler; den anslås fra bildene.
@@ -459,6 +478,7 @@ Når 1–5 er på plass, er grunnlaget klart, og pilotøkta kan starte.
 
 ## Endringslogg
 
+- 30.10.2026: kritikksløyfen (kap. 7.1), runde 1 og 2: akterskipet, dekksutstyret, merkene.
 - 30.10.2026: styrbords arbeidsdekk (båten er ikke symmetrisk), den forreste kranen snudd, alle åpninger som ekte hull (kap. 4.0).
 - 30.10.2026: kap. 4.0, alt målt på sidebilde 3 (spring, stevn, stripe, sida, styrehuset med plattform og skrått tak, hus, åpninger,
   pipe, master, kraner); modellen bygd og lagt over bildet.
