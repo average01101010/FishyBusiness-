@@ -77,6 +77,51 @@ ringnot, snurrevad og garn på 38,55 m. Se avgjørelse B1.
 Mål i meter langs skroget fra baugen er **anslag** fra bilde 2 (babord side, baugen til venstre, rundt 16,7 px/m med 38,55 m). Alt
 merket A skal kontrolleres mot bedre kilder (kap. 8).
 
+### 4.0 Målt på sidebilde 3 (30.10.2026)
+
+Bilde 3 er babord side under fart, tatt med tele fra land (3392 × 2400 i skjermbildet). Skala 80,47 px/m fra stevntoppen (u 118) til
+akterspeilet (u 3220). Høyder regnes fra shelterdekket, 6,60 m midtskips (byggerapporten), som ligger på v 1571 ved x = 18,2 m. Alle
+mål er i modellens ramme: x forover fra akterspeilet, z opp fra basislinja. Overlegget (`ov_edge`, ortografisk babord) treffer
+stevn, hekk, spring, stripe, styrehus, master og kraner innen et par cm i bildet.
+
+- **Spring er ekte.** Den blå toppen (shelterdekkets kant) går fra 7,39 m ved hekken, ned til 6,54 m ved x 15,5 og opp til 8,13 m ved
+  stevnen (målt hver 0,5 m etter fargen). Det eldre sidebildet viser samme stigning i meter, så den kommer ikke fra linsa. Den brede
+  hvite stripen har sin egen spring: toppen ligger på 4,92 m på det laveste og 5,57 m akter. Den er 0,33 m bred og går sammenhengende
+  fra 4,35 til 27,35 m, med tre skrå streker i hver ende.
+- **Stevnen** heller rundt 33°, gjennom 35,2 m i vannlinja (= AP + Lpp med rorstammen i 1,2 m) og opp til 9,18 m.
+- **Sida:** toppen ligger på 9,85 m rundt notbingen akter (0–6,35 m) og på 8,44–8,84 m langs øvre dekk. Forut stiger den til 9,18 m som
+  et lavt skansekledning. Rekkverkets topp ligger på 9,78 m fra 8 m og helt fram. Øvre dekk går nesten flatt fra 8,66 m (6,42 m) til
+  8,72 m ved baugen. Shelterdekket under er lukket hele veien fram.
+- **Styrehuset:** glass fra karmen på 11,95 m til overkanten på 13,18 m. Glasset heller utover på alle sider (0,30 m forut, 0,36 m
+  akter). Den blå takkanten ligger på 13,26–13,42 m og står 0,64 m ut over fronten og 0,3 m ellers. Taket skrår 0,6 m opp innover til
+  kompassdekket på 14,02 m, med rekkverk til 15,0 m. Dekk B er en plattform rundt styrehuset på 11,05 m, med rekkverk til 12,05 m,
+  fra 10,28 til 21,22 m. Døra på babord står mellom 11,58 og 12,18 m. Styrbords sidelys sitter på takskråningen, lampa ved x 14,6
+  og z 13,8. Kallesignalskiltet står på 11,85–14,69 m × 13,88–14,98 m.
+- **Huset på øvre dekk:** 11,73–20,35 m, med to par høye vinduer på hver side (z 9,72–10,5) og en blå linje på 9,88–10,0 m.
+- **Skrogsida:**
+  - Ankerlomma ligger på 30,6–32,2 × 7,40–7,94, med ankerkronen under.
+  - Lufteåpninger med lameller ligger på 5,76–6,05 m mellom 16,8 og 27,1 m.
+  - Innfelte trinn går fra dekket til vannet ved 22,5–22,9 m.
+  - Vinduer i shelterdekkssida: 13,0–14,4, 9,35–10,5 og 4,7–5,1 m.
+  - En sidedør står ved 6,65–7,65 m.
+  - Åtte lensporter sitter i bingeveggen (0,3–3,6 × 8,8–9,07 m), og fem utløp under de aktre strekene.
+- **Pipa:** står på babord akter, flukt med sida, på 4,06–6,36 m. Den går fra veggen til den blå toppen på 12,14–12,45 m og har ett
+  svanehalsrør.
+- **Formasten:** forkanten heller akterover og akterkanten står nesten loddrett (bunnen 30,14–31,38, toppen 29,9–30,3). Plattformene
+  ligger på 13,52 og 15,33 m, og topplanterna på 17,5 m. Lyskasteren står på den nedre plattformen.
+- **Radarmasta:** tårnet går til plattformen på 17,2 m og videre til kuppelplattformen på 19,3 m. Kuppel 1 har 1,3 m diameter og
+  sitter på x 14,3. Kuppel 2 har 1,5 m diameter og står på en stang ved x 11,5 (topp 21,5 m). Stigemasta har røde lys på 22,1 m.
+  Radarene står på 15,9–16,2 m (4,4 m antenne) og 18,0–18,2 m (1,6 m). Piskeantennene går til 24,2 og 24,7 m.
+- **Kranene:**
+  - Den forreste kranen er sammenfoldet, med knekken på 19,6 × 11,7 og jiben ned til hvilen ved 26,9 × 10,5.
+  - Akterkranen har søylen ved 7,2 m til 16,8 m og hodet til 18,1 m. Bommen går fram til 12,1 m.
+  - Hjulet til nothaleren (1,75 m) henger på et åk på 14,3 m.
+- **MOB-båten** (4,25 m) står på 7,85–12,05 m med davit ved 11,45 m.
+
+Antatt, ikke målt: alt som ligger på tvers av båten. Bredden på husene, styrehuset (±3,9) og plattformen (±4,45) er anslått, og
+master, kupler og kraner står midt i båten eller ved babord rekke. Styrbord side antas lik babord, bortsett fra pipa og døra. Det
+trengs bilder forfra, akterfra og fra styrbord.
+
 ### 4.1 Skrog og merking (begge sider)
 
 - **Silhuett:** høy bakk forut med tydelig spring, nesten rett dekkslinje akterover, høy lukket hekk med stor radius i hjørnene
@@ -401,5 +446,7 @@ Når 1–5 er på plass, er grunnlaget klart, og pilotøkta kan starte.
 
 ## Endringslogg
 
+- 30.10.2026: kap. 4.0, alt målt på sidebilde 3 (spring, stevn, stripe, sida, styrehuset med plattform og skrått tak, hus, åpninger,
+  pipe, master, kraner); modellen bygd og lagt over bildet.
 - 30.10.2026: byggerapporten (hoveddata, maskineri, dekksutstyr, elektronikk) lagt inn i kap. 1.
 - 30.10.2026: første versjon (fakta, avgjørelser, sonene fra fire bilder, kravlista, lanternene, mangler).
