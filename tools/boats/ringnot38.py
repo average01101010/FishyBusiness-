@@ -864,7 +864,7 @@ def superstructure(fine=True):
                 if 0 < t < 1: ts.append(t)
         if not side:
             # the aft wall and the front's facets: posts between the windows about every 1.3 m (Jonas 30.10.2026)
-            Lg = math.hypot(b[0] - a[0], b[1] - a[1]); k = int(Lg / 1.3 + 0.5)
+            Lg = math.hypot(b[0] - a[0], b[1] - a[1]); k = int(Lg / (2.0 if a[0] <= WX0 + 1e-6 and b[0] <= WX0 + 1e-6 else 1.3) + 0.5)
             ts += [j / k for j in range(1, k)]
         ts = sorted(ts) + [1.0]
         door_here = side and a[1] > 0
@@ -1087,17 +1087,19 @@ def deck_gear(fine=True):
     abox(A, 21.3, 22.5, -4.15, -3.35, z_sh(21.9), z_sh(21.9) + 0.9, C['yellow'])
     # -- the forward crane (knuckle boom, folded on its rest along the port side): its pedestal at the forecastle's aft end, the
     #    main boom aft and up to the knuckle at 19.7 m, the jib folded down and aft beside the house to its rest; the cylinders --
-    yc = -3.0
+    # (b34e7009 and 9d43d29b show the crane from port as well: its pedestal stands near the centreline on the forecastle's aft end)
+    yc = -1.8
     acyl(A, (26.85, yc, zd(26.85)), (26.85, yc, 10.2), 0.34, lambda z: W, seg=14)
     abox(A, 26.45, 27.25, yc - 0.4, yc + 0.4, 10.15, 10.55, W)
     # (the knuckle stands forward of deck B's front at 21.6 m, outboard of the vacuum tanks; the jib folds aft and down under the
     # platform to the working deck's aft end)
     # (4929aa51: the boom rises aft to the knuckle just under the wheelhouse's sill at the ship's side, outboard of deck B; the jib
     # folds down and aft along the side to the working deck)
-    beam(A, (26.85, yc, 10.5), (21.0, yc - 1.65, 11.9), 0.36, 0.32, W)
-    beam(A, (21.0, yc - 1.65, 11.85), (18.6, yc - 1.65, 9.4), 0.30, 0.30, W)
-    acyl(A, (26.2, yc - 0.3, 10.1), (23.3, yc - 1.1, 11.15), 0.07, lambda z: C['steel'], seg=8)
-    acyl(A, (20.9, yc - 1.85, 11.4), (19.5, yc - 1.85, 10.0), 0.08, lambda z: C['steel'], seg=8)
+    # (the boom swings outboard from the pedestal to the knuckle at the ship's side under the sill, the jib folds down along the side)
+    beam(A, (26.85, yc, 10.5), (21.0, -4.65, 11.9), 0.36, 0.32, W)
+    beam(A, (21.0, -4.65, 11.85), (18.6, -4.65, 9.4), 0.30, 0.30, W)
+    acyl(A, (26.2, yc - 0.3, 10.1), (23.3, -3.9, 11.15), 0.07, lambda z: C['steel'], seg=8)
+    acyl(A, (20.9, -4.85, 11.4), (19.5, -4.85, 10.0), 0.08, lambda z: C['steel'], seg=8)
     abox(A, 25.6, 26.1, yc - 0.4, yc - 0.381, 10.55, 10.75, C['yellow'])
     # -- the aft crane by the funnel: its column, the slewing head, the main boom forward over the deck, the link over it, the
     #    folded jib under it, the lift cylinder, the hanging arm with the yoke and the net hauler's wheel --
@@ -1290,6 +1292,11 @@ def name_strips(G):
     out.append([[G(XA - 0.03, y, 8.1) for y in ys], [G(XA - 0.03, y, 9.0) for y in ys]])
     for sg, xs in ((1, [5.9 - 3.4 * k / 12 for k in range(13)]), (-1, [2.5 + 3.4 * k / 12 for k in range(13)])):
         out.append([[G(x, sg * (hbz(x, 8.3) + 0.03), 8.3) for x in xs], [G(x, sg * (hbz(x, 9.1) + 0.03), 9.1) for x in xs]])
+    # on the wheelhouse's front under the windows (ba02ed9c): along the front's facets at the sill's height, right to left seen from ahead
+    oc, lw = wh_plan(WX0, WX1, WY); front = [p for p, w in zip(oc, lw) if w > 0.35]
+    ys = [front[0][1] + (front[-1][1] - front[0][1]) * k / 12 for k in range(13)]
+    xf = lambda y: interp(sorted((p[1], p[0]) for p in front), y) + 0.04
+    out.append([[G(xf(y), y, WS - 0.55) for y in ys], [G(xf(y), y, WS - 0.15) for y in ys]])
     return out
 
 def bower(G):

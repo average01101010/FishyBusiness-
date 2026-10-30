@@ -519,7 +519,14 @@ Runde 14 (fa9cc65c, 7b36cbe5, a5d2b0af): **vakuumtankene er lagt inn igjen, slik
 (1,35 m, Ø 0,84) som henger under dekk B's utstikk ved husfronten med hvite topper og to samlerør, ikke rør fra dekket som i
 runde 1 (de Jonas ba om å fjerne). Fjernversjonen holdt under 12 000 med `_F` 0,45 og grove tanker.
 
-Igjen etter runde 14, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 15 (9d43d29b slippen fra babord, ba02ed9c styrehusfronten, b34e7009 babord under fart, 0b9f58de pressebildet fra
+styrbord baug): den forreste kranen synes like godt fra babord, så foten står nær midtskips på bakkens akterkant (y −1,8), ikke ved
+styrbord rekke; navnet står på styrehusets front under vinduene (ny navnestripe i `names`, langs frontens fasetter); styrehusets
+bakvegg har to store ruter og døra (stolper hver 2,0 m der, 1,3 m ellers). Pressebildet lagt til som kontrollvinkel (`sbowair`).
+Pressebildet bekrefter: hele styrbord side er åpent arbeidsdekk med lav skansekledning fra bakken til hekken, kassen og huset
+til babord, hopperen med rørene midtskips til styrbord.
+
+Igjen etter runde 15, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 
