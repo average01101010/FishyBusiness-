@@ -109,3 +109,8 @@ har samme oppløsning som bruker-styrte båter»). Pilotbåten er ringnotbåten,
   kan heves til rundt 300 000 trekanter nær (omtrent 8 ganger dagens), NPC-båtene blir på dagens nivå; indeksene er ikke lenger det
   som må til for å få plass, og F1 kan legge vekten på WebGL 2, LOD og taket. Materialene i F2 koster per piksel og må måles på nytt.
   Usikkert: målt med en lett båt (8 009 trekanter); ringnotbåten ganger 8 er rundt 310 000, utenfor det som er målt.
+- **Referanseenheten (Jonas 30.10.2026: «Nå vet du hvor lista ligger»):** OnePlus Pad 3, Snapdragon 8 Elite, Adreno 830 (opptil
+  1,1 GHz), Oryon-CPU opptil 4,32 GHz, 12/16 GB LPDDR5X, skjerm 13,2″ LCD 3392 × 2400 (315 ppi) med opptil 144 Hz. Det høyeste
+  nivået skal se best mulig ut på den. Merk: spillet tegner i dag med pikseltetthet 1,5 på nivå 2 (`QUAL.dpr`), altså rundt
+  1940 × 1170 på en skjerm som har 3392 × 2042 i det samme vinduet, og når 50 bilder/s på en skjerm som kan vise 144. Hva som holder
+  det på 20 ms, finnes i F1 (profil av JS-tid mot GPU-tid), før et nytt «ultra»-nivå med full oppløsning vurderes.
