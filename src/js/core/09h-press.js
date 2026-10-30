@@ -140,6 +140,19 @@ function pressTop(){
         ['Hele topplista for kysten står i Salgslaget.', 'The whole leaderboard for the coast is in the Sales app.']].filter(Boolean)}); }
   return out;
 }
+// the village contest (docs/planer/oppdrag-2.md F3): last week's plant with most landed in each part of the coast (ui/10h-world.js bygdeTop)
+function pressBygde(){
+  const out = [], wk = typeof weekOf === 'function' ? weekOf(S.t / 60) - 1 : -1; if (wk < 0 || typeof bygdeTop !== 'function' || typeof LANDSDEL === 'undefined') return out;
+  const e = bygdeTop(wk), D = e && e.data; if (!D) return out;
+  for (const reg in LANDSDEL){ const d = D[reg], rows = d && d.rows || []; if (!rows.length) continue;
+    const a = rows[0], q = portById(a.port); if (!q) continue; const rn = LANDSDEL[reg], rest = rows.slice(1, 3).filter(r => portById(r.port));
+    out.push({key:'b' + wk + reg, t:Math.min(S.t, (wk + 1) * 168 * 60), kind:'bygde', x:q.p.x, y:q.p.y, me:!!a.me, big:false, img:null,
+      h:['Ukas mottak i ' + rn[0] + ': ' + q.name, 'Plant of the week in ' + rn[1] + ': ' + q.name],
+      ing:[q.name + ' fikk mest levert i ' + rn[0] + ' forrige uke: ' + fmt(a.kg, 0) + ' kg fra ' + (a.n || 0) + ' båter.', q.name + ' had most landed in ' + rn[1] + ' last week: ' + fmt(a.kg, 0) + ' kg from ' + (a.n || 0) + ' boats.'],
+      body:[rest.length ? ['Bak fulgte ' + rest.map(r => portById(r.port).name + ' med ' + fmt(r.kg, 0) + ' kg').join(' og ') + '.', 'Behind came ' + rest.map(r => portById(r.port).name + ' with ' + fmt(r.kg, 0) + ' kg').join(' and ') + '.'] : null,
+        ['Bygdekampen står i Sesong-appen: hvert mottak teller alt som leveres til det, uke for uke.', 'The village contest is in the Sesong app: every plant counts all that is landed to it, week by week.']].filter(Boolean)}); }
+  return out;
+}
 // the biggest landings of the last day: along the whole coast, and near home
 function pressLand(local){
   const home = pressHome(), out = [], L = PRESS.land.filter(l => portById(l.port) && (!local || dist(portById(l.port).p, home) <= PRESS.R));
@@ -201,6 +214,7 @@ function pressList(local){
   for (const s of pressLand(local)) out.push(s);
   for (const s of pressSkrei()) if (!local || near(s)) out.push(s);
   const top = local ? [] : pressTop(); for (const s of top) out.push(s);
+  for (const s of pressBygde()) if (!local || near(s)) out.push(s);
   const day = Math.floor(S.t / 1440);
   if (!local) for (let dd = day; dd >= Math.max(0, day - 6); dd--) for (const sp of pressRecords(dd)){ const s = pressPrice(sp, dd); if (s) out.push(s); }
   for (let dd = day; dd >= Math.max(0, day - 6); dd--) newsForDay(dd).forEach((a, i) => { if (top.length && /^Ukas toppfisker/.test(a.h.no)) return;   // the shared leaderboard's, not the local fleet's
