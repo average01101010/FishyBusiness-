@@ -483,12 +483,13 @@ grensen i `vessel3d.py` etter det.
 | Autolineren | M8 (platemasta med lettehull, plattform med rekkverk, fiskelanterner rødt over hvitt, leider, lyskastere), M19, M3, M15 | `al45.py` |
 | Kyst15 | M4 (avrundede hekkhjørner i skrogets farger, fender, klyss, redningsleider), M5 (seil av duk med bue, sømmer, kantbånd og forsterkninger), M15 (felles propell, anoder, baugthruster), M20 (kjølen som dødved, propellåpning) | `kyst15.py` |
 | Havsjark35 | M5 (seil av duk) | `havsjark35.py` |
+| Plastsjarken | M10: bak sideglasset sto en hel hvit vegg, så vinduene så ut som matte plater; nå er veggen bare der den er hel, med karmer, og det mørke rommet synes gjennom glasset. Taket har fått bue | `plast31.py` |
 | Teina (D1) | 1,55 × 1,45 × 1,07 m som i dataene. Daviten er hevet til 2,8 m så den høye teina går klar av rekka | `tools/gear/teine.py` |
 | Snøkrabbeteina (TEI-01, ny) | Konisk teine 1,3 m nederst, 0,7 m øverst og 0,62 m høy, med inngang ovenfra og agnboks; stables tolv i høyden med 0,16 m mellom | `teine.py` (`kon`, `kontopp`, `konlag`, `konlag11`) |
 | Juksamaskinene (D2) | Alle vises, opptil `jukseMax`: styrbord rekke først, så babord, der maskinen er snudd utover | `view3d/13-instruments.js` |
 | Teinene om bord (D5) | Vises når båten er rigget for teiner og ikke fisker: i stabler på modellens plasser (`kit.pots`) eller ved haleren, to i høyden under 12 m og tre ellers | `view3d/10-gear.js`, `09-landing-deck.js` |
 
-Står igjen: D3 (stampene), D4 (garnbingene), D6, D7, M6 (registreringsmerket), M10, M11, M13, M16–M18, U1 (typede plasser og
+Står igjen: D3 (stampene), D4 (garnbingene), D6, D7, M6 (registreringsmerket), M11, M13, M16–M18, U1 (typede plasser og
 `GEARMODELS`), U4 (liten haler, juksavinde, påhengsmotor), U5 (materialløftet), støtteseilet rullet inn i havn (M5, trenger at
 seilet blir en egen del som spillet kan skjule), og propell, anoder og thrustere på resten av kystbåtene (U7).
 

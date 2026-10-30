@@ -246,7 +246,11 @@ def wheelhouse(fine=True):
         if k == 'side':                                               # the sides: two windows each, a mullion between, solid aft of them
             segs = [(WX1 - 1.3, WX1 - 0.4), (WX1 - 2.3, WX1 - 1.42)]          # the same two panes on both sides, forward of the solid part aft
             sg = 1 if i == 6 else -1; y = sg * WY
-            A.poly([(WX0, y, zs), (WX1 - 0.25, y, zs), (WX1 - 0.25, y, zh), (WX0, y, zh)], w, (0, sg, 0))
+            # the wall only where it is solid: aft of the panes, the mullion between them, the post forward (M10, 30.10.2026: a whole white
+            # wall stood behind the glass, so the windows read as matte plates); through the panes the dark inside shows
+            for xa, xb in ((WX0, WX1 - 2.3), (WX1 - 1.42, WX1 - 1.3), (WX1 - 0.4, WX1 - 0.25)): A.poly([(xa, y, zs), (xb, y, zs), (xb, y, zh), (xa, y, zh)], w, (0, sg, 0))
+            for xa, xb in segs:
+                for xe in (xa, xb): abox(A, xe - 0.03, xe + 0.03, min(y, y + sg * 0.012), max(y, y + sg * 0.012), zs, zh, C['dark'])
             for xa, xb in segs: G.poly([(min(xa, xb), y + sg * 0.004, zs + 0.04), (max(xa, xb), y + sg * 0.004, zs + 0.04), (max(xa, xb), y + sg * 0.004, zh - 0.04), (min(xa, xb), y + sg * 0.004, zh - 0.04)], C['glass'], (0, sg, 0))
             for xa, xb in segs: abox(A, min(xa, xb) - 0.03, max(xa, xb) + 0.03, min(y, y + sg * 0.012), max(y, y + sg * 0.012), zs, zs + 0.04, C['dark']); abox(A, min(xa, xb) - 0.03, max(xa, xb) + 0.03, min(y, y + sg * 0.012), max(y, y + sg * 0.012), zh - 0.04, zh, C['dark'])
             continue
@@ -258,7 +262,13 @@ def wheelhouse(fine=True):
     door(A, 'x', WX1, 0.34, 0.98, z0, 1.85, face=+1, hinge=1)                                # the door forward to port, out onto the working deck
     # the roof with its lip and the visor, a rail aft, the side lights on its forward corners
     ro = [(WX0 - 0.12, -WY - 0.1), (WX1 - 0.2, -WY - 0.1), (WX1 + lean + 0.2, -1.05), (WX1 + lean + 0.2, 1.05), (WX1 - 0.2, WY + 0.1), (WX0 - 0.12, WY + 0.1)]
-    A.poly([(x, y, zr) for x, y in ro], C['inner'], (0, 0, -1)); A.poly([(x, y, zr + 0.1) for x, y in ro], C['roof'], (0, 0, 1))
+    A.poly([(x, y, zr) for x, y in ro], C['inner'], (0, 0, -1))
+    # the top with its camber (OVB-05: it was one flat slab): a crown 4 cm higher inside, falling to the edges
+    ri = [(x + (0.22 if x < WX0 else -0.22 if x > WX1 else 0.0), y * 0.82) for x, y in ro]
+    A.poly([(x, y, zr + 0.14) for x, y in ri], C['roof'], (0, 0, 1))
+    for i in range(len(ro)):
+        a, b, c, d = ro[i], ro[(i + 1) % len(ro)], ri[(i + 1) % len(ri)], ri[i]
+        A.poly([(a[0], a[1], zr + 0.1), (b[0], b[1], zr + 0.1), (c[0], c[1], zr + 0.14), (d[0], d[1], zr + 0.14)], C['roof'], ((a[0] + b[0]) / 2 - WX0 - 1.0, (a[1] + b[1]) / 2, 3.0))
     for i in range(len(ro)):
         a, b = ro[i], ro[(i + 1) % len(ro)]; A.poly([(a[0], a[1], zr), (b[0], b[1], zr), (b[0], b[1], zr + 0.1), (a[0], a[1], zr + 0.1)], w, (b[1] - a[1], -(b[0] - a[0]), 0))
     if fine:
