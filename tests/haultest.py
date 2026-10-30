@@ -37,8 +37,12 @@ async def main():
             await pg.screenshot(path=f'haul_{kind}.png')
             check(m and all(m['parts']) and a1 > a0, kind + 'haleren fra Blender står ved ripa, og skiva går rundt mens det hales', (m, round(a0, 2), round(a1, 2), st))
         # the skipper and two crew with «Haling» first in their chains
-        n = await pg.evaluate("(() => { const A = () => { const c = Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:[]}); return c; }; S.crew = [A(), A()]; S.me = S.cur; S.myJob = ['haling']; S.crew.forEach(c => c.job = ['haling']); return G3._debug.gopHands(); })()")
-        await pg.wait_for_timeout(1500); await pg.screenshot(path='haul_crew.png')
+        # (who stands where is worked out once a frame, waNow in view3d/10-gear.js: read it after a frame with the new crew, not in the
+        # same tick, which gave the last frame's answer; and with a haul under way, set again here, since the one above runs out while
+        # the test waits and then nobody hauls. Both made it red or green by chance, 30.10.2026)
+        await pg.evaluate(SET, 'line'); await pg.wait_for_timeout(500)
+        await pg.evaluate("(() => { const A = () => { const c = Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:[]}); return c; }; S.crew = [A(), A()]; S.me = S.cur; S.myJob = ['haling']; S.crew.forEach(c => c.job = ['haling']); })()")
+        await pg.wait_for_timeout(1500); n = await pg.evaluate("G3._debug.gopHands()"); await pg.screenshot(path='haul_crew.png')
         # only as many haul as the hauler has places for (Jonas 20.10.2026, #75: one man hauls the line, the others bleed, gut and ice)
         want = await pg.evaluate("(BOAT.stations && BOAT.stations.hauler) || 1")
         check(n == want, 'på «Haling» står så mange som haleren har plasser til, også når flere har Haling først', {'haler': n, 'plasser': want})
