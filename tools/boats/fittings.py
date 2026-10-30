@@ -374,12 +374,13 @@ def hose_reel(A, c, ax, R, w, m_frame, m_drum, m_hose, fine=True):
 
 
 # ---------- the riding sail ----------
-def sail(A, tack, clew, head, peak, m, m_edge, m_seam=None, side=(0, 1, 0), belly=0.08, n=10, k=8, panels=5, hollow=0.06):
+def sail(A, tack, clew, head, peak, m, m_edge, m_seam=None, side=(0, 1, 0), belly=0.08, n=10, k=8, panels=5, hollow=0.06, fine=True):
     """a riding sail of cloth (SJK-11, M5: it was a flat board of one colour) between its corners, tack and peak on the luff (the
     mast), clew and head on the leech: the cloth with its belly out to side, curving most a third of the way aft and a little above the
     middle, the leech cut hollow; both faces 4 mm apart so it shows from either side; the panels' seams across it (m_seam), the tapes
-    along all four edges and the reinforcing patches at the three loaded corners (m_edge)"""
+    along all four edges and the reinforcing patches at the three loaded corners (m_edge); fine=False: the cloth only, coarser"""
     tack, clew, head, peak, sd = V(tack), V(clew), V(head), V(peak), V(side).normalized()
+    if not fine: n, k = min(n, 4), min(k, 3)
     def P(u, t, o=0.0):
         L = tack + (peak - tack) * t; R = clew + (head - clew) * t
         hl = hollow * math.sin(math.pi * t) * (head - clew).length / 4   # the hollow leech, in toward the luff
@@ -398,6 +399,7 @@ def sail(A, tack, clew, head, peak, m, m_edge, m_seam=None, side=(0, 1, 0), bell
                     ua, ub = u0 + (u1 - u0) * a / nu, u0 + (u1 - u0) * (a + 1) / nu; ta, tb = t0 + (t1 - t0) * b / nt, t0 + (t1 - t0) * (b + 1) / nt
                     q = [P(ua, ta, o + f * 0.002), P(ub, ta, o + f * 0.002), P(ub, tb, o + f * 0.002), P(ua, tb, o + f * 0.002)]
                     A.poly(q if f > 0 else q[::-1], mm, sd * f)
+        if not fine: continue
         lu = 0.05 / max(0.5, (clew - tack).length); lt = 0.05 / max(0.5, (peak - tack).length)
         if m_seam is not None:
             for i in range(1, panels): t = i / panels; strip(0.0, 1.0, t - lt * 0.25, t + lt * 0.25, m_seam, nu=k)

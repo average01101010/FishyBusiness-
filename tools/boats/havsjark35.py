@@ -480,7 +480,7 @@ def rig(fine=True):
     lx = ax - 0.11
     head = (-0.38, 7.27); clew = (-0.96, 3.40); tack = (lx, 3.40); peak = (lx, 7.40)
     P3 = lambda q: (q[0], 0.0, q[1])
-    SA = Acc('sail'); F.sail(SA, P3(tack), P3(clew), P3(head), P3(peak), C['sail'], C['sailedge'], m_seam=C['sailseam'], belly=0.11, panels=5); objs.append(SA.done(80))
+    SA = Acc('sail'); F.sail(SA, P3(tack), P3(clew), P3(head), P3(peak), C['sail'], C['sailedge'], m_seam=C['sailseam'], belly=0.11, panels=5, fine=fine); objs.append(SA.done(80))
     objs.append(cyl('boom', (ax, 0, 3.30), (-1.06, 0, 3.30), 0.04, C['mast'], 10 if fine else 5))
     objs.append(cyl('gaff', (ax, 0, 7.43), (-0.40, 0, 7.27), 0.035, C['mast'], 10 if fine else 5))
     if not fine: return objs

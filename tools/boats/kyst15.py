@@ -246,8 +246,8 @@ def stern(fine=True):
     for sg in (1, -1):
         zs = [z_low(XA) + 0.05] + [WL - 0.08, WL + 0.12, Z_RUB - 0.1, Z_RUB + 0.1, z_red(XA)] + [zt - 0.02]
         for za, zb in zip(zs, zs[1:]):
-            pts = [(XA + 0.05, sg * (hbz(XA + 0.05, za + (zb - za) * i / 3) - 0.05), za + (zb - za) * i / 3) for i in range(4)]
-            F.pipe(A, pts, 0.085, band((za + zb) / 2), seg=8)
+            q = 3 if fine else 1; pts = [(XA + 0.05, sg * (hbz(XA + 0.05, za + (zb - za) * i / q) - 0.05), za + (zb - za) * i / q) for i in range(q + 1)]
+            F.pipe(A, pts, 0.085, band((za + zb) / 2), seg=8 if fine else 5)
     if fine:
         yf = hbz(XA, Z_RUB) - 0.12; acyl(A, (XA - 0.04, -yf, Z_RUB), (XA - 0.04, yf, Z_RUB), 0.07, lambda z: C['black'], seg=8)
         for y in (-2.25, 2.25):
@@ -269,7 +269,8 @@ def underwater(fine=True):
     # the fixed pitch propeller (FRM-01, fittings.py), the zinc anodes (FRM-04) and the bow thruster's tunnel (FRM-06)
     zc = 1.15; U = Acc('under')
     objs.append(cyl('shaft', (1.75, 0, zc), (2.6, 0, zc), 0.1, C['steel'], 10))
-    F.propeller(U, (1.42, 0, zc), (1, 0, 0), 0.68, C['prop'], n=4, hub=0.28, cpp=False, m_hub=C['prop'], m_guard=C['af'], fine=fine)
+    if fine: F.propeller(U, (1.42, 0, zc), (1, 0, 0), 0.68, C['prop'], n=4, hub=0.28, cpp=False, m_hub=C['prop'], m_guard=C['af'], fine=fine)
+    else: objs.append(cyl('hub', (1.25, 0, zc), (1.75, 0, zc), 0.2, C['prop'], 8, r1=0.15))   # (the far version: under water, no blades)
     if fine:
         for sg in (1, -1):
             for z in (0.7, 1.6): F.anode(U, (0.5, sg * 0.082, z), (0, sg, 0), (1, 0, 0), C['zinc'], L=0.22, w=0.07, t=0.03, m_strap=C['steel'])
@@ -358,7 +359,7 @@ def gear(fine=True):
     acyl(A, (0.55, 0, ZSD), (0.55, 0, 12.2), 0.09, lambda z: w, seg=10, r1=0.06)
     acyl(A, (0.55, 0, 6.6), (-2.0, 0, 6.6), 0.05, lambda z: w, seg=6)
     acyl(A, (0.55, 0, 11.2), (-1.5, 0, 11.9), 0.04, lambda z: w, seg=6)
-    F.sail(A, (0.5, 0, 6.75), (-1.75, 0, 6.75), (-1.45, 0, 11.75), (0.5, 0, 11.1), C['sail'], C['sailedge'], m_seam=C['sailseam'], belly=0.14, panels=6)
+    F.sail(A, (0.5, 0, 6.75), (-1.75, 0, 6.75), (-1.45, 0, 11.75), (0.5, 0, 11.1), C['sail'], C['sailedge'], m_seam=C['sailseam'], belly=0.14, panels=6, fine=fine)
     acyl(A, (0.55, 0, 12.2), (-0.6, 0, 12.0), 0.012, lambda z: C['dark'], seg=4)
     acyl(A, (0.55, 0, 12.2), (0.55, 0, 12.35), 0.22, lambda z: w, seg=12)
     # the hawse pipes' mouths high in the bow, forward of the registration mark (tilbakemelding: the old plates sat on it; the anchors
