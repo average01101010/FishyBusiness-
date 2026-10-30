@@ -20,6 +20,7 @@ import os, sys, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy
 from bpyutil import *
+import fittings as F
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE)); OUT = os.path.join(HERE, 'out')
 WL = 4.70; XA = -3.20; XF = 57.20; XM = (XA + XF) / 2
@@ -118,6 +119,12 @@ def colours():
     C['winch'] = mat('winch', (0.12, 0.28, 0.55), 0.5)
     C['rust'] = mat('rust', (0.35, 0.20, 0.12), 0.2)
     C['fish'] = mat('fishsilver', (0.66, 0.70, 0.72), 0.85, metal=0.4)
+    # fittings.py (30.10.2026): the anodes, the hull's painted marks (outside the paint zones), lenses, stainless, the doors' wear
+    C['zinc'] = mat('zinc', (0.62, 0.63, 0.64), 0.4)
+    C['mark'] = mat('markwhite', (0.92, 0.93, 0.92), 0.4)
+    C['lens'] = mat('lens', (0.92, 0.92, 0.85), 0.9)
+    C['inox'] = mat('inox', (0.78, 0.80, 0.82), 0.85, metal=0.8)
+    C['bright'] = mat('brightsteel', (0.72, 0.72, 0.70), 0.8, metal=0.9)
 
 
 def band_mat(z):
@@ -227,6 +234,14 @@ def rails(fine=True):
     return [A.done(30)]
 
 
+def surf(x, z, sg, off=0.0):
+    """the hull's outside at (x, z) on side sg (1 port): the point, its outward normal, and the direction along the hull forward"""
+    p = lambda xx, zz: V((xx, sg * (hbz(xx, zz) + off), zz))
+    tx = p(x + 0.15, z) - p(x - 0.15, z); tz = p(x, z + 0.15) - p(x, z - 0.15); n = tx.cross(tz)
+    if n.y * sg < 0: n = -n
+    return p(x, z), n.normalized(), tx.normalized()
+
+
 # ---------- the skeg, the nozzle and propeller, the rudder ----------
 def underwater(fine=True):
     objs = []
@@ -250,20 +265,21 @@ def underwater(fine=True):
             except ValueError: pass
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     objs.append(shade(obj_from_bm('nozzle', bm, [C['af']]), 40))
-    objs.append(cyl('hub', (1.30, 0, zc), (2.30, 0, zc), 0.42, C['prop'], 12, r1=0.30))
-    objs.append(cyl('shaft', (2.30, 0, zc), (3.2, 0, zc), 0.22, C['steel'], 10))
-    for k in range(4):
-        a = 2 * math.pi * k / 4 + 0.4; e = (0, math.cos(a), math.sin(a)); t = (0, -math.sin(a), math.cos(a))
-        bl = [(1.95 + 0.25 * f, (0.35 + 1.15 * r) * e[1] + t[1] * w, zc + (0.35 + 1.15 * r) * e[2] + t[2] * w)
-              for r, w, f in ((0, -0.30, 0), (0.5, -0.42, 0.4), (1.0, -0.20, 1.0), (1.0, 0.20, 1.0), (0.5, 0.40, -0.4), (0, 0.28, 0))]
-        objs.append(loft_rings('blade%d' % k, [[(p[0] - 0.04, p[1], p[2]) for p in bl], [(p[0] + 0.04, p[1], p[2]) for p in bl]], C['prop']))
+    # the controllable-pitch propeller in the nozzle (fittings.py; the photo of a CPP in dock, Jonas 30.10.2026): four skewed blades
+    # bolted to the boss, the cap and its bolts, the rope guard forward of the hub
+    U = Acc('under')
+    F.propeller(U, (1.80, 0, zc), (1, 0, 0), 1.46, C['prop'], n=4, hub=0.27, cpp=True, m_hub=C['prop'], m_bolt=C['steel'], m_guard=C['frame'], fine=fine)
+    acyl(U, (2.35, 0, zc), (3.2, 0, zc), 0.22, lambda z: C['steel'], seg=10)
     # the rudder (a flap rudder), hung under the counter aft of the nozzle
     rud = [(-0.20, 4.05), (-2.05, 4.05), (-2.25, 3.6), (-2.25, 0.10), (-2.05, -0.15), (-0.20, -0.15), (-0.05, 0.4), (-0.05, 3.6)]
     w = lambda x: 0.30 * max(0.25, 1 - abs(x + 0.75) / 1.6)
     objs.append(loft_rings('rudder', [[(x, w(x), z) for x, z in rud], [(x, -w(x), z) for x, z in rud]], C['af']))
     # the bulbous bow
-    B = [(50.6, 0.0, 0.0, 2.90), (51.6, 1.15, 1.95, 2.95), (53.0, 1.25, 1.85, 3.05), (54.5, 1.15, 1.6, 3.15), (55.6, 0.92, 1.28, 3.28),
-         (56.3, 0.66, 0.92, 3.40), (56.75, 0.36, 0.52, 3.48), (56.95, 0.06, 0.10, 3.50)]
+    # (30.10.2026, M7 in docs/skipsmodeller/kartlegging-spillet.md: the bulb stood up out of the sea ahead of the stem as a sharp
+    # red cone.) Its top now stays 0.35 m or more under the waterline forward of the stem, and the nose is rounded like a half
+    # ellipsoid instead of drawn to a point
+    B = [(50.6, 0.0, 0.0, 2.90), (51.6, 1.15, 1.70, 2.80), (53.0, 1.22, 1.55, 2.80), (54.5, 1.15, 1.40, 2.85), (55.6, 1.00, 1.20, 2.90),
+         (56.3, 0.82, 0.95, 2.95), (56.75, 0.68, 0.80, 2.98), (57.0, 0.46, 0.54, 3.00), (57.12, 0.22, 0.26, 3.01), (57.16, 0.04, 0.05, 3.01)]
     sg2 = 24 if fine else 10; rings = []
     for x, ry, rz, zc2 in B:
         ry = max(ry, 0.02); rz = max(rz, 0.02)
@@ -271,6 +287,17 @@ def underwater(fine=True):
     rings[0] = [(50.6, 0.6 * math.cos(2 * math.pi * k / sg2), 2.9 + 2.1 * math.sin(2 * math.pi * k / sg2)) for k in range(sg2)]
     bb = loft_rings('bulb', rings, C['af'], angle=60)
     objs.append(bb)
+    if fine:
+        # the anodes (SKR-19): on the rudder, on the nozzle's sides and on the skeg forward of it
+        for sg in (1, -1):
+            for z in (1.0, 2.8): F.anode(U, (-1.15, sg * (w(-1.15) + 0.002), z), (0, sg, 0), (1, 0, 0), C['zinc'], m_strap=C['steel'])
+            F.anode(U, (1.75, sg * 1.93, zc), (0, sg, 0), (1, 0, 0), C['zinc'], L=0.35, m_strap=C['steel'])
+            for x, z in ((4.0, 0.3), (6.5, 0.0)): F.anode(U, (x, sg * 0.452, z), (0, sg, 0), (1, 0, 0), C['zinc'], m_strap=C['steel'])
+    # the thrusters (SKR-14): two tunnels through the bow and one aft, with their grids
+    for x, z, r in ((47.0, 2.8, 0.85), (48.7, 3.1, 0.75), (6.0, 3.0, 0.70)):
+        for sg in (1, -1):
+            p, n, tt = surf(x, z, sg); F.thruster_tunnel(U, p, n, r, C['dark'], C['af'], m_prop=C['prop'], fine=fine)
+    objs.append(U.done(40))
     return objs
 
 
@@ -480,6 +507,36 @@ def side_details(fine=True):
     return [A.done(30)]
 
 
+# ---------- the hull's details (fittings.py, 30.10.2026): freeing ports, weld seams, draft marks and the symbols ----------
+def hull_details(fine=True):
+    A = Acc('details')
+    for sg in (1, -1):
+        # freeing ports at deck 3 along the open trawl deck aft of the superstructure (SKR-11)
+        for x in [4.2 + 3.0 * k for k in range(8)]:
+            p, n, tt = surf(x, D3 + 0.2, sg, off=0.004)
+            if fine: F.freeing_port(A, p, n, 0.7, 0.28, C['white'], C['dark'], flap=C['white'])
+        if not fine: continue
+        # the weld seams of the side plating (SKR-09): butts every 6 m, and two long seams
+        for x in [5.0 + 6.0 * k for k in range(8)]:
+            zs = [WL + 0.40 + (D3 + 0.9 - WL - 0.40) * i / 14 for i in range(15)]
+            F.seam(A, [surf(x, z, sg)[0] for z in zs], lambda q, sg=sg: surf(q.x, q.z, sg)[1], band_mat(7.0))
+        for z, m in ((7.1, C['hull']), (9.9, C['white'])):
+            xs = [XA + 1.0 + (47.0 - XA - 1.0) * i / 34 for i in range(35)]
+            F.seam(A, [surf(x, z, sg)[0] for x in xs], lambda q, sg=sg: surf(q.x, q.z, sg)[1], m)
+        # the draft marks on the bow, the stern quarter and amidships (IDN-06); the figures read from outside
+        along = lambda tt: -sg * tt
+        F.draft_scale(A, lambda z: (lambda p, n, tt: (p, n, along(tt)))(*surf(x_stem(z) - 0.6, z, sg, off=0.004)), 2.0, 6.4, C['mark'])
+        F.draft_scale(A, lambda z: (lambda p, n, tt: (p, n, along(tt)))(*surf(0.4, z, sg, off=0.004)), 4.2, 6.4, C['mark'])
+        F.draft_scale(A, lambda z: (lambda p, n, tt: (p, n, along(tt)))(*surf(XM, z, sg, off=0.004)), 3.8, 6.0, C['mark'])
+        # the thruster marks over the tunnels, the V marks and the bulb mark (IDN-08)
+        for x in (47.0, 48.7, 6.0):
+            p, n, tt = surf(x, WL + 0.75, sg, off=0.004); F.thruster_symbol(A, p, n, (0, 0, 1), 0.30, C['mark'])
+        for x in (45.6, 50.0):
+            p, n, tt = surf(x, WL + 0.75, sg, off=0.004); F.vee(A, p, n, (0, 0, 1), 0.32, C['mark'])
+        p, n, tt = surf(x_stem(WL + 0.75) - 1.3, WL + 0.75, sg, off=0.004); F.bulb_symbol(A, p, n, (0, 0, 1), 0.6, C['mark'], fwd=-sg)
+    return [A.done(30)]
+
+
 def build(fine=True):
     """all the parts: solids (to be joined and baked) and glass"""
     solids = build_hull(fine)
@@ -490,6 +547,7 @@ def build(fine=True):
     solids += trawl_deck(fine)
     o, g = superstructure(fine); solids += o
     solids += side_details(fine)
+    solids += hull_details(fine)
     return [s for s in solids if s], [x for x in g if x]
 
 
@@ -499,9 +557,11 @@ DOOR_W, DOOR_H = 2.2, 3.6
 def door_part():
     """one trawl door in its own frame: origin at the bracket where the warp is made fast, the door hanging below it, its face across
     y (the starboard door is the same turned round); a cambered plate with three slots, a frame, a shoe and the backstrops"""
-    A = Acc('door'); m = C['door']; n = 8; T = 0.16
+    A = Acc('door'); m = C['door']; n = 10; T = 0.16
+    # (30.10.2026, M9: the doors read as flat plates.) More camber, stiffeners on the back, a band of rust above the foot and the
+    # shoe worn bright, as on the doors that hang on the stern of a working trawler
     def P(u, v, s=0.0):        # u across (y) from -1 to 1, v down from 0 to 1, s through (x)
-        return (-0.35 - 0.25 * (1 - u * u) + s, u * DOOR_W / 2, -0.55 - v * DOOR_H)
+        return (-0.35 - 0.42 * (1 - u * u) + s, u * DOOR_W / 2, -0.55 - v * DOOR_H)
     slots = [(0.22, 0.30), (0.45, 0.53), (0.68, 0.76)]
     vs = [0.0] + sorted(set([a for a, b in slots] + [b for a, b in slots])) + [1.0]
     for i in range(len(vs) - 1):
@@ -520,8 +580,21 @@ def door_part():
     for k in range(n):
         u0 = -1 + 2 * k / n; u1 = -1 + 2 * (k + 1) / n
         A.poly([P(u0, 0), P(u1, 0), P(u1, 0, T), P(u0, 0, T)], C['steel'], (0, 0, 1)); A.poly([P(u0, 1), P(u1, 1), P(u1, 1, T), P(u0, 1, T)], C['rust'], (0, 0, -1))
-    # the shoe along the foot, worn bright
-    abox(A, -0.60, -0.20, -DOOR_W / 2, DOOR_W / 2, -0.55 - DOOR_H - 0.18, -0.55 - DOOR_H + 0.02, C['rust'])
+    # the stiffeners across the back between the slots and the one up the middle, the rust over the foot, and the shoe worn bright
+    for v in (0.12, 0.38, 0.61, 0.86):
+        for k in range(n):
+            u0 = -0.92 + 1.84 * k / n; u1 = -0.92 + 1.84 * (k + 1) / n
+            A.poly([P(u0, v - 0.025, T), P(u1, v - 0.025, T), P(u1, v - 0.025, T + 0.12), P(u0, v - 0.025, T + 0.12)], C['steel'], (0, 0, 1))
+            A.poly([P(u0, v - 0.025, T + 0.12), P(u1, v - 0.025, T + 0.12), P(u1, v + 0.025, T + 0.12), P(u0, v + 0.025, T + 0.12)], C['steel'], (1, 0, 0))
+    for j in range(12):
+        v0, v1 = j / 12, (j + 1) / 12
+        A.poly([P(-0.04, v0, T + 0.01), P(0.04, v0, T + 0.01), P(0.04, v1, T + 0.01), P(-0.04, v1, T + 0.01)], C['steel'], (1, 0, 0))
+        A.poly([P(-0.04, v0, T), P(-0.04, v1, T), P(-0.04, v1, T + 0.14), P(-0.04, v0, T + 0.14)], C['steel'], (0, -1, 0))
+    for k in range(n):
+        u0 = -1 + 2 * k / n; u1 = -1 + 2 * (k + 1) / n
+        for s_, nrm in ((-0.006, (-1, 0, 0)), (T + 0.006, (1, 0, 0))):
+            A.poly([P(u0, 0.88, s_), P(u1, 0.88, s_), P(u1, 0.995, s_), P(u0, 0.995, s_)], C['rust'], nrm)
+    abox(A, -0.62, -0.18, -DOOR_W / 2, DOOR_W / 2, -0.55 - DOOR_H - 0.18, -0.55 - DOOR_H + 0.02, C['bright'])
     # the bracket and the backstrops up to the shackle at the origin
     for u in (-0.55, 0.55):
         acyl(A, (0, 0, 0), P(u, 0.12, 0.08), 0.035, lambda z: C['steel'], seg=5)
