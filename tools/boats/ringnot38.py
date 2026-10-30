@@ -178,7 +178,7 @@ def colours():
     C['white'] = mat('white', (0.91, 0.91, 0.89), 0.5, zone=3)
     C['inner'] = mat('inner', (0.83, 0.84, 0.83), 0.35, zone=3)
     C['deck'] = mat('deck', (0.42, 0.44, 0.44), 0.15, zone=4)
-    C['bin'] = mat('bin', (0.52, 0.47, 0.40), 0.12, zone=4)
+    C['bin'] = mat('bin', (0.30, 0.30, 0.29), 0.12, zone=4)
     C['trim'] = mat('trim', (0.07, 0.24, 0.62), 0.5, zone=1)       # the blue bands on the superstructure and the masts
     C['steel'] = mat('steel', (0.62, 0.64, 0.66), 0.7, metal=0.7)
     C['galv'] = mat('galv', (0.70, 0.71, 0.70), 0.45, metal=0.6)
@@ -758,8 +758,8 @@ def superstructure(fine=True):
         door_x(A, HX0, 1.6, zd, face=-1)
     # ---- deck B: the platform round the wheelhouse, its edge plate (the name board's place on the front), its rail ----
     pp, plw = wh_plan(10.28, 21.22, 4.45, n=10, a=2.1, e=3.2)
-    prism(A, pp, ZB2 - 0.2, ZB2, C['deck'])
     pn = plan_normals(pp)
+    prism(A, offset_plan(pp, pn, lambda i: -0.05), ZB2 - 0.2, ZB2, C['deck'])
     for i in range(len(pp)):
         a, b = pp[i], pp[(i + 1) % len(pp)]; nr = (b[1] - a[1], -(b[0] - a[0]), 0)
         A.poly([(a[0], a[1], ZB2 - 0.32), (b[0], b[1], ZB2 - 0.32), (b[0], b[1], ZB2 + 0.30), (a[0], a[1], ZB2 + 0.30)], w, nr)
@@ -981,7 +981,7 @@ def deck_gear(fine=True):
     abox(A, 33.3, 35.0, -1.2, 1.2, zd(34), 10.55, C['tarp']); abox(A, 33.4, 34.9, -1.1, 1.1, 10.55, 10.8, C['tarp'])
     abox(A, 31.45, 32.4, -0.9, 0.9, zd(32), 10.5, W); acyl(A, (31.9, -0.75, 9.9), (31.9, 0.75, 9.9), 0.45, lambda z: C['bin'], seg=14)
     # the fish pump's vacuum tank and its housing between the wheelhouse and the forecastle, the boxes on it, the yellow chest
-    abox(A, 21.8, 25.9, -0.5, 2.7, zd(24), 10.25, C['dark']); abox(A, 26.5, 28.8, -1.8, 1.8, 10.1, 10.8, C['dark'])
+    abox(A, 26.5, 28.8, -1.8, 1.8, 10.1, 10.8, C['dark'])
     abox(A, 21.2, 23.0, 3.0, 4.2, zd(22), 9.8, C['yellow'])
     # -- the forward crane (knuckle boom, folded on its rest along the port side): its pedestal at the forecastle's aft end, the
     #    main boom aft and up to the knuckle at 19.7 m, the jib folded down and aft beside the house to its rest; the cylinders --
@@ -1024,9 +1024,111 @@ def deck_gear(fine=True):
         for x in (8.6, 11.0): abox(A, x - 0.1, x + 0.1, by - 0.7, by + 0.7, zd(x), bz - 0.18, C['steel'])
         acyl(A, (11.45, 4.2, zd(11.45)), (11.45, 4.2, 11.4), 0.13, lambda z: W, seg=10)
         beam(A, (11.45, 4.2, 11.35), (10.2, 3.6, 12.0), 0.16, 0.16, W)
-        abox(A, 8.4, 10.27, 1.2, 2.9, zd(9), 12.17, C['tarp'])
         for x in (0.8, 2.0):
             for yy in (-3.4, 3.4): acyl(A, (x - 0.45, yy, 10.12), (x + 0.45, yy, 10.12), 0.22, lambda z: C['dark'], seg=12)
+    objs.append(A.done(30))
+    return objs
+
+
+# ---------- the aft deck: the net bin's inside, the net chute, the power block, the vacuum tanks, the ladders and stairs ----------
+# (the photographs 82e91969 from the air, 1000a4bd from the starboard quarter, 8cdb9214 from the port quarter, 274df4a7 the stern)
+def spoked_wheel(A, c, ax, R, w, m, spokes=6, rim=0.06):
+    """a sheave: the rim as a short wide cylinder, a hub and flat spokes"""
+    c = V(c); ax = V(ax).normalized()
+    acyl(A, c - ax * w / 2, c + ax * w / 2, R, lambda z: m, seg=28, r1=R)
+    acyl(A, c - ax * (w / 2 + 0.03), c + ax * (w / 2 + 0.03), R * 0.28, lambda z: C['steel'], seg=12)
+    s, u, _ = frame_of(ax)
+    for k in range(spokes):
+        a = 2 * math.pi * k / spokes; d = s * math.cos(a) + u * math.sin(a)
+        beam(A, c + d * R * 0.25 + ax * (w / 2 + 0.02), c + d * R * 0.92 + ax * (w / 2 + 0.02), 0.07, 0.03, m, up=ax)
+        beam(A, c + d * R * 0.25 - ax * (w / 2 + 0.02), c + d * R * 0.92 - ax * (w / 2 + 0.02), 0.07, 0.03, m, up=ax)
+
+def ladder(A, p0, p1, w, m, step=0.3, out=(0, 1, 0)):
+    """a vertical ladder from p0 up to p1, w wide, standing out from its wall along out"""
+    p0 = V(p0); p1 = V(p1); o = V(out).normalized(); s = (p1 - p0).normalized().cross(o).normalized()
+    for sg in (1, -1):
+        acyl(A, p0 + s * sg * w / 2, p1 + s * sg * w / 2, 0.02, lambda z: m, seg=6)
+    n = int((p1 - p0).length / step); L = (p1 - p0).length
+    for k in range(1, n + 1):
+        q = p0 + (p1 - p0) * (k * step / L); acyl(A, q - s * w / 2, q + s * w / 2, 0.014, lambda z: m, seg=5, cap=False)
+    for t in (0.1, 0.9):
+        q = p0 + (p1 - p0) * t
+        for sg in (1, -1): acyl(A, q + s * sg * w / 2 - o * 0.15, q + s * sg * w / 2, 0.016, lambda z: m, seg=5)
+
+def stair(A, x0, y0, z0, x1, z1, w, m, side=(0, 1, 0)):
+    """an inclined stair from (x0, z0) up to (x1, z1), w wide across y from y0: the two stringers, the treads, a rail each side"""
+    n = max(2, int(abs(z1 - z0) / 0.24)); s = V(side).normalized() * w
+    a, b = V((x0, y0, z0)), V((x1, y0, z1))
+    for e in (V((0, 0, 0)), s):
+        beam(A, a + e, b + e, 0.04, 0.22, m)
+    for k in range(1, n + 1):
+        t = k / n; q = a + (b - a) * t
+        beam(A, q, q + s, 0.25, 0.03, m)
+    for e in (V((0, 0, 0)), s):
+        for t in (0.0, 0.5, 1.0):
+            q = a + (b - a) * t + e; acyl(A, q, q + V((0, 0, 0.95)), 0.02, lambda z: m, seg=6)
+        acyl(A, a + e + V((0, 0, 0.95)), b + e + V((0, 0, 0.95)), 0.024, lambda z: m, seg=6, cap=False)
+
+def aft_deck(fine=True):
+    A = Acc('aftdeck'); W = C['white']; objs = []
+    zs = z_sh
+    # ---- the net bin: a divider down the middle, the forward well with its rail on top, the rollers on the aft wall, the buoys ----
+    abox(A, 0.3, X_BIN - 0.05, -0.06, 0.06, zs(3.0), 8.9, W)
+    abox(A, 2.9, 3.0, -hbz(2.95, 8.0) + 0.1, 0.0, zs(2.95), 8.6, W)
+    if fine:
+        rail(A, [(0.35, -0.08, 8.9), (X_BIN - 0.1, -0.08, 8.9)], h=0.9, every=0.75, r=0.02)
+        rail(A, [(2.95, -hbz(2.95, 8.0) + 0.15, 8.6), (2.95, -0.1, 8.6)], h=0.9, every=0.75, r=0.02)
+        # the buoys and the rope coils in the bin
+        for c, r, m in (((1.2, 1.6, zs(1.2) + 0.55), 0.55, C['orange']), ((2.0, 2.5, zs(2.0) + 0.45), 0.45, C['orange']), ((4.2, 1.1, zs(4.2) + 0.4), 0.4, C['orange'])):
+            objs.append(sphere('buoy%d' % int(c[0] * 10), c, r, m, seg=16, rings=10))
+        for c, r, m in (((1.0, -2.2, zs(1.0)), 0.55, C['yellow']), ((2.2, -2.4, zs(2.2)), 0.5, C['green']), ((4.0, -1.4, zs(4.0)), 0.45, C['yellow'])):
+            acyl(A, c, (c[0], c[1], c[2] + 0.35), r, lambda z: m, seg=16)
+        # the two rollers on the transom wall's top aft, their frames
+        for yy in (-2.3, 2.3):
+            acyl(A, (0.25, yy - 0.5, z_bw(0.2) + 0.25), (0.25, yy + 0.5, z_bw(0.2) + 0.25), 0.22, lambda z: C['dark'], seg=12)
+            for e in (-0.55, 0.55): abox(A, 0.1, 0.4, yy + e - 0.04, yy + e + 0.04, z_bw(0.2), z_bw(0.2) + 0.3, C['steel'])
+        # the ladder on the transom, from the waterline up the wall to its top
+        ladder(A, (-0.03, -0.9, WL + 0.3), (-0.03, -0.9, z_bw(0.0) - 0.1), 0.4, C['steel'], out=(-1, 0, 0))
+    # ---- the net chute: a wide white cone standing on the deck aft of the house at port, leaning aft, its mouth up and forward ----
+    base = V((9.2, 1.4, zs(9.2))); tip = V((7.9, 1.4, 13.6)); ax = (tip - base).normalized(); s, u, _ = frame_of(ax)
+    rings = []
+    for t, r in ((0.0, 0.5), (0.25, 0.52), (0.55, 0.6), (0.8, 0.75), (1.0, 0.95)):
+        c = base + (tip - base) * t; rings.append([c + (s * math.cos(2 * math.pi * k / 20) + u * math.sin(2 * math.pi * k / 20)) * r for k in range(20)])
+    aring_loft(A, rings, W, cap0=True, cap1=False)
+    c = tip; A.poly([c + (s * math.cos(2 * math.pi * k / 20) + u * math.sin(2 * math.pi * k / 20)) * 0.95 for k in range(20)], C['dark'], ax)
+    aring_loft(A, [rings[-1], [p - ax * 0.4 + (p - c).normalized() * -0.08 for p in rings[-1]]], C['dark'], cap0=False, cap1=False)
+    # ---- the power block on the aft crane: the frame hanging from the boom's end, two sheaves and the net's drum between them ----
+    yc = 3.2
+    beam(A, (12.07, yc, 17.0), (12.07, yc, 15.3), 0.3, 0.3, W)
+    beam(A, (12.07, yc - 0.5, 15.3), (12.07, yc + 0.5, 15.3), 0.3, 0.3, W)
+    if fine:
+        spoked_wheel(A, (12.07, yc - 0.85, 14.8), (0, 1, 0), 0.62, 0.28, W)
+        spoked_wheel(A, (12.07, yc + 0.85, 14.6), (0, 1, 0), 0.52, 0.24, W)
+        acyl(A, (12.07, yc - 0.55, 14.7), (12.07, yc + 0.55, 14.7), 0.34, lambda z: C['dark'], seg=16)
+    # ---- the fish pump's vacuum tanks: three black uprights at the house's front to starboard, their manifold ----
+    for yy in (-1.55, -2.45, -3.35):
+        acyl(A, (20.95, yy, zs(20.95)), (20.95, yy, 10.85), 0.42, lambda z: C['black'], seg=18)
+        acyl(A, (20.95, yy, 10.85), (20.95, yy, 11.05), 0.3, lambda z: C['steel'], seg=12)
+    acyl(A, (20.95, -1.3, 10.95), (20.95, -3.6, 10.95), 0.09, lambda z: C['steel'], seg=8)
+    # ---- the fish pump's hopper amidships: a steel tank with a grating top, the pipes from it over the side ----
+    abox(A, 22.3, 25.4, -2.6, 0.2, zs(23.5), 10.1, C['steel'])
+    if fine:
+        for k in range(9): abox(A, 22.4 + 0.33 * k, 22.44 + 0.33 * k, -2.5, 0.1, 10.1, 10.14, C['dark'])
+        for k in range(8): abox(A, 22.4, 25.3, -2.5 + 0.33 * k, -2.46 + 0.33 * k, 10.1, 10.14, C['dark'])
+        P = [(23.5, -2.6, 9.6), (23.5, -3.4, 9.6), (23.5, -4.0, 9.2), (23.5, -4.4, 8.3)]
+        for a_, b_ in zip(P, P[1:]): acyl(A, a_, b_, 0.17, lambda z: C['steel'], seg=12)
+    # ---- the stairs: from the working deck up to the forecastle at starboard, and to the casing's deck by the house ----
+    if fine:
+        stair(A, X_FC - 2.6, -3.9, zs(24.5), X_FC + 0.05, z_dk(X_FC), 0.8, W)
+        stair(A, 9.0, -1.5, zs(9.5), 11.4, z_dk(11.4), 0.8, W)
+    # ---- the forecastle: the windlass (a drum with its rope between two cheeks), the two warping heads, the rope piles ----
+    zf = z_dk(33.0) + 0.12
+    for yy in (-1.6, 1.6):
+        acyl(A, (33.3, yy - 0.55, zf + 0.6), (33.3, yy + 0.55, zf + 0.6), 0.5, lambda z: C['dark'], seg=16)
+        for e in (-0.6, 0.6): abox(A, 32.8, 33.8, yy + e - 0.05, yy + e + 0.05, zf, zf + 1.1, W)
+        acyl(A, (33.3, yy - 0.3, zf + 0.6), (33.3, yy + 0.3, zf + 0.6), 0.52, lambda z: C['green'], seg=16)
+    for yy in (-2.6, 2.6):
+        acyl(A, (31.2, yy, zf), (31.2, yy, zf + 0.75), 0.22, lambda z: W, seg=12); acyl(A, (31.2, yy, zf + 0.75), (31.2, yy, zf + 0.9), 0.28, lambda z: C['steel'], seg=12)
     objs.append(A.done(30))
     return objs
 
@@ -1037,7 +1139,7 @@ def build(fine=True):
         # cut the openings: every hole through the hull's side, the bulwark's ones through its inside as well
         c1 = cutter(holes(), False); apply_cut(hull[0], c1); bpy.data.objects.remove(c1)
         c2 = cutter(holes(), True); apply_cut(hull[0], c2); apply_cut(dk[0], c2); bpy.data.objects.remove(c2)
-    solids = hull + bulb(fine) + underwater(fine) + dk + hull_side(fine) + funnel(fine) + masts(fine) + deck_gear(fine)
+    solids = hull + bulb(fine) + underwater(fine) + dk + hull_side(fine) + funnel(fine) + masts(fine) + deck_gear(fine) + aft_deck(fine)
     o, g = superstructure(fine); solids += o
     return [s for s in solids if s], [x for x in g if x]
 
