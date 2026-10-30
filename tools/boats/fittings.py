@@ -1,7 +1,7 @@
 """Shared fittings for the boat scripts (docs/skipsmodeller/kartlegging-spillet.md 7.4, 30.10.2026): the propeller and its hub, sacrificial
 anodes, the thruster tunnel with its grid, draft marks and the hull's symbols, weld seams, freeing ports, whip antennas, radomes and
 GPS mushrooms, searchlights, ladders with a cage, the net guard on a seiner's forecastle, the power block, the net funnel, the side
-hauler and a hose reel. Before this every script drew its own (the door seven times, the underwater gear ten), so a fault had to be
+hauler, a hose reel and a riding sail of cloth. Before this every script drew its own (the door seven times, the underwater gear ten), so a fault had to be
 fixed in each and a new boat took long; a script now calls these and keeps only what is its own.
 
 Every function draws into an Acc (bpyutil) in the script's frame (x forward, y to port, z up in all the boat scripts here) and takes
@@ -371,3 +371,37 @@ def hose_reel(A, c, ax, R, w, m_frame, m_drum, m_hose, fine=True):
     nt = 4 if fine else 2; hr = min(0.12, w / (2 * nt + 1))
     for k in range(nt):
         atorus(A, zc - ax * (w / 2 - hr * (2 * k + 1.2)), ax, R * 0.55 + hr * 2.4, hr, lambda a: m_hose, seg=seg, rseg=6)
+
+
+# ---------- the riding sail ----------
+def sail(A, tack, clew, head, peak, m, m_edge, m_seam=None, side=(0, 1, 0), belly=0.08, n=10, k=8, panels=5, hollow=0.06):
+    """a riding sail of cloth (SJK-11, M5: it was a flat board of one colour) between its corners, tack and peak on the luff (the
+    mast), clew and head on the leech: the cloth with its belly out to side, curving most a third of the way aft and a little above the
+    middle, the leech cut hollow; both faces 4 mm apart so it shows from either side; the panels' seams across it (m_seam), the tapes
+    along all four edges and the reinforcing patches at the three loaded corners (m_edge)"""
+    tack, clew, head, peak, sd = V(tack), V(clew), V(head), V(peak), V(side).normalized()
+    def P(u, t, o=0.0):
+        L = tack + (peak - tack) * t; R = clew + (head - clew) * t
+        hl = hollow * math.sin(math.pi * t) * (head - clew).length / 4   # the hollow leech, in toward the luff
+        R = R + (L - R).normalized() * hl * u ** 4
+        b = belly * math.sin(math.pi * min(1.0, u * 1.35)) * (0.55 + 0.45 * math.sin(math.pi * (0.1 + 0.8 * t)))
+        return L + (R - L) * u + sd * (b + o)
+    for o, f in ((0.002, 1), (-0.002, -1)):
+        for i in range(n):
+            for j in range(k):
+                q = [P(j / k, i / n, o), P((j + 1) / k, i / n, o), P((j + 1) / k, (i + 1) / n, o), P(j / k, (i + 1) / n, o)]
+                A.poly(q if f > 0 else q[::-1], m, sd * f)
+        # strips on the cloth: (u0, u1, t0, t1) in the sail's own measure, lifted a little more off the face
+        def strip(u0, u1, t0, t1, mm, nu=1, nt=1):
+            for a in range(nu):
+                for b in range(nt):
+                    ua, ub = u0 + (u1 - u0) * a / nu, u0 + (u1 - u0) * (a + 1) / nu; ta, tb = t0 + (t1 - t0) * b / nt, t0 + (t1 - t0) * (b + 1) / nt
+                    q = [P(ua, ta, o + f * 0.002), P(ub, ta, o + f * 0.002), P(ub, tb, o + f * 0.002), P(ua, tb, o + f * 0.002)]
+                    A.poly(q if f > 0 else q[::-1], mm, sd * f)
+        lu = 0.05 / max(0.5, (clew - tack).length); lt = 0.05 / max(0.5, (peak - tack).length)
+        if m_seam is not None:
+            for i in range(1, panels): t = i / panels; strip(0.0, 1.0, t - lt * 0.25, t + lt * 0.25, m_seam, nu=k)
+        strip(0.0, lu, 0.0, 1.0, m_edge, nt=n); strip(1.0 - lu, 1.0, 0.0, 1.0, m_edge, nt=n)
+        strip(0.0, 1.0, 0.0, lt, m_edge, nu=k); strip(0.0, 1.0, 1.0 - lt, 1.0, m_edge, nu=k)
+        for u0, t0 in ((0.0, 0.0), (1.0 - 5 * lu, 0.0), (1.0 - 5 * lu, 1.0 - 5 * lt)):
+            strip(u0, u0 + 5 * lu, t0, t0 + 5 * lt, m_edge, nu=2, nt=2)

@@ -14,6 +14,7 @@ import os, sys, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy
 from bpyutil import *
+import fittings as F
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE)); OUT = os.path.join(HERE, 'out')
 PROFIL = os.environ.get('HAVSJARK_PROFIL', ''); GA = os.environ.get('HAVSJARK_GA', '')
@@ -139,7 +140,7 @@ def colours():
     C['tub'] = mat('tub', (0.10, 0.36, 0.64), 0.45)
     C['box'] = mat('fishbox', (0.86, 0.88, 0.90), 0.4)
     C['rope'] = mat('rope', (0.85, 0.75, 0.25), 0.2)
-    C['sail'] = mat('sail', (0.88, 0.84, 0.72), 0.15)
+    C['sail'] = mat('sail', (0.88, 0.84, 0.72), 0.15); C['sailedge'] = mat('sailedge', (0.95, 0.94, 0.90), 0.25); C['sailseam'] = mat('sailseam', (0.78, 0.74, 0.62), 0.15)
     C['lred'] = mat('light_red', (0.9, 0.1, 0.08), 0.8, emit=0.5)
     C['lgreen'] = mat('light_green', (0.1, 0.8, 0.25), 0.8, emit=0.5)
     C['lwhite'] = mat('light_white', (1.0, 0.97, 0.88), 0.8, emit=0.5)
@@ -478,16 +479,8 @@ def rig(fine=True):
     # the riding sail: a quadrilateral between the gaff, the boom and the luff pole, slightly full
     lx = ax - 0.11
     head = (-0.38, 7.27); clew = (-0.96, 3.40); tack = (lx, 3.40); peak = (lx, 7.40)
-    rows = []
-    for i in range(9):
-        t = i / 8; xl = tack[0] + (peak[0] - tack[0]) * t; zl = tack[1] + (peak[1] - tack[1]) * t
-        xr = clew[0] + (head[0] - clew[0]) * t; zr = clew[1] + (head[1] - clew[1]) * t; row = []
-        for j in range(7):
-            u = j / 6; belly = 0.10 * math.sin(math.pi * u) * math.sin(math.pi * (0.15 + 0.7 * t))
-            row.append((xl + (xr - xl) * u, belly, zl + (zr - zl) * u))
-        rows.append(row)
-    sail = grid('sail', rows, lambda i, j: C['sail'], angle=80)
-    solidify(sail, 0.006); objs.append(sail)
+    P3 = lambda q: (q[0], 0.0, q[1])
+    SA = Acc('sail'); F.sail(SA, P3(tack), P3(clew), P3(head), P3(peak), C['sail'], C['sailedge'], m_seam=C['sailseam'], belly=0.11, panels=5); objs.append(SA.done(80))
     objs.append(cyl('boom', (ax, 0, 3.30), (-1.06, 0, 3.30), 0.04, C['mast'], 10 if fine else 5))
     objs.append(cyl('gaff', (ax, 0, 7.43), (-0.40, 0, 7.27), 0.035, C['mast'], 10 if fine else 5))
     if not fine: return objs

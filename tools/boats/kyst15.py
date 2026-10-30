@@ -15,6 +15,7 @@ import os, sys, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy
 from bpyutil import *
+import fittings as F
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE)); OUT = os.path.join(HERE, 'out')
 WL = 2.75; XA = 0.0; XF = 14.99; XM = (XA + XF) / 2; HB = 3.3
@@ -103,8 +104,9 @@ def colours():
     C['black'] = mat('black', (0.05, 0.05, 0.06), 0.35)
     C['glass'] = mat('glass', (0.05, 0.08, 0.11), 0.95)
     C['prop'] = mat('bronze', (0.70, 0.52, 0.27), 0.8, metal=0.9)
+    C['zinc'] = mat('zinc', (0.55, 0.57, 0.58), 0.35, metal=0.6)
     C['orange'] = mat('orange', (0.95, 0.38, 0.06), 0.45)
-    C['sail'] = mat('sail', (0.62, 0.11, 0.08), 0.15)
+    C['sail'] = mat('sail', (0.62, 0.11, 0.08), 0.15); C['sailedge'] = mat('sailedge', (0.42, 0.07, 0.05), 0.2); C['sailseam'] = mat('sailseam', (0.53, 0.09, 0.07), 0.15)
     C['wood'] = mat('door', (0.72, 0.52, 0.26), 0.4)
 
 NB = lambda fine: (9 if fine else 3, 1, 4 if fine else 2, 1, 4 if fine else 1, 4 if fine else 1)
@@ -224,17 +226,56 @@ def decks(fine=True):
     return [A.done(25)]
 
 
+def surf(x, z, sg, off=0.0):
+    """the hull's outside at (x, z) on side sg (1 port): the point, its outward normal, and the direction along the hull forward"""
+    p = lambda xx, zz: V((xx, sg * (hbz(xx, zz) + off), zz))
+    tx = p(x + 0.1, z) - p(x - 0.1, z) if x > 0.1 else p(x + 0.2, z) - p(x, z); tz = p(x, z + 0.1) - p(x, z - 0.1); n = tx.cross(tz)
+    if n.y * sg < 0: n = -n
+    return p(x, z), n.normalized(), tx.normalized()
+
+
+def stern(fine=True):
+    """the transom (M4: it ended in knife-edge corners on a bare face): the corners faired round with a bar in the hull's bands, the
+    rubber D-fender across it at the rubbing strake, the panama chocks in its top, the rescue ladder to starboard (SIK-09)"""
+    A = Acc('stern'); zt = z_top(XA)
+    def band(z):
+        if z < WL - 0.08: return C['af']
+        if z < WL + 0.12: return C['strake']
+        if abs(z - Z_RUB) < 0.1: return C['strake']
+        return C['hull'] if z < z_red(XA) else C['white']
+    for sg in (1, -1):
+        zs = [z_low(XA) + 0.05] + [WL - 0.08, WL + 0.12, Z_RUB - 0.1, Z_RUB + 0.1, z_red(XA)] + [zt - 0.02]
+        for za, zb in zip(zs, zs[1:]):
+            pts = [(XA + 0.05, sg * (hbz(XA + 0.05, za + (zb - za) * i / 3) - 0.05), za + (zb - za) * i / 3) for i in range(4)]
+            F.pipe(A, pts, 0.085, band((za + zb) / 2), seg=8)
+    if fine:
+        yf = hbz(XA, Z_RUB) - 0.12; acyl(A, (XA - 0.04, -yf, Z_RUB), (XA - 0.04, yf, Z_RUB), 0.07, lambda z: C['black'], seg=8)
+        for y in (-2.25, 2.25):
+            abox(A, XA - 0.07, XA + 0.04, y - 0.22, y + 0.22, zt - 0.36, zt + 0.01, C['steel']); abox(A, XA - 0.08, XA + 0.05, y - 0.12, y + 0.12, zt - 0.28, zt - 0.1, C['black'])
+        for k in range(8):
+            z = WL + 0.25 + 0.3 * k; abox(A, XA - 0.07, XA - 0.02, -1.95, -1.6, z, z + 0.03, C['steel'])
+        for y in (-1.97, -1.58): abox(A, XA - 0.07, XA - 0.02, y - 0.015, y + 0.015, WL + 0.15, WL + 2.5, C['steel'])
+    return [A.done(30)]
+
+
 def underwater(fine=True):
-    objs = [box('keel', 0.4, 12.6, -0.12, 0.12, 0.0, 0.9, C['af'])]
+    # the keel as deadwood up to the hull all along (it hung free under the run aft, and the propeller turned through it; found
+    # 30.10.2026), ending where the shaft comes out; the propeller turns in the aperture over the shoe that carries the rudder's heel
+    xs = [2.2 + (12.6 - 2.2) * k / 16 for k in range(17)]
+    top = [(x, z_low(x) + 0.15) for x in xs]; bot = [(x, 0.0) for x in reversed(xs)]
+    objs = [loft_rings('keel', [[(x, sy * 0.12, z) for x, z in top + bot] for sy in (1, -1)], C['af'])]
+    objs.append(box('shoe', 0.1, 2.25, -0.09, 0.09, 0.0, 0.12, C['af']))
     objs.append(loft_rings('forefootkeel', [[(12.6, sy * 0.12, 0.0), (12.6, sy * 0.12, 0.9), (13.4, sy * 0.08, 1.45), (13.0, sy * 0.1, 0.0)] for sy in (1, -1)], C['af']))
-    zc = 1.15
-    objs.append(cyl('hub', (1.15, 0, zc), (1.75, 0, zc), 0.2, C['prop'], 12, r1=0.15))
+    # the fixed pitch propeller (FRM-01, fittings.py), the zinc anodes (FRM-04) and the bow thruster's tunnel (FRM-06)
+    zc = 1.15; U = Acc('under')
     objs.append(cyl('shaft', (1.75, 0, zc), (2.6, 0, zc), 0.1, C['steel'], 10))
-    for k in range(4):
-        a = 2 * math.pi * k / 4 + 0.5; e = (0, math.cos(a), math.sin(a)); t = (0, -math.sin(a), math.cos(a))
-        bl = [(1.35 + 0.12 * f, (0.18 + 0.52 * r) * e[1] + t[1] * w, zc + (0.18 + 0.52 * r) * e[2] + t[2] * w)
-              for r, w, f in ((0, -0.14, 0), (0.5, -0.2, 0.4), (1.0, -0.1, 1.0), (1.0, 0.1, 1.0), (0.5, 0.19, -0.4), (0, 0.12, 0))]
-        objs.append(loft_rings('blade%d' % k, [[(p[0] - 0.02, p[1], p[2]) for p in bl], [(p[0] + 0.02, p[1], p[2]) for p in bl]], C['prop']))
+    F.propeller(U, (1.42, 0, zc), (1, 0, 0), 0.68, C['prop'], n=4, hub=0.28, cpp=False, m_hub=C['prop'], m_guard=C['af'], fine=fine)
+    if fine:
+        for sg in (1, -1):
+            for z in (0.7, 1.6): F.anode(U, (0.5, sg * 0.082, z), (0, sg, 0), (1, 0, 0), C['zinc'], L=0.22, w=0.07, t=0.03, m_strap=C['steel'])
+            for x in (3.5, 7.5): F.anode(U, (x, sg * 0.122, 0.45), (0, sg, 0), (1, 0, 0), C['zinc'], L=0.24, w=0.07, t=0.03, m_strap=C['steel'])
+            p, n, tt = surf(12.0, 1.75, sg); F.thruster_tunnel(U, p, n, 0.22, C['dark'], C['af'], m_prop=C['prop'], fine=fine)
+    objs.append(U.done(30))
     rud = [(0.95, 2.3), (0.15, 2.3), (0.08, 2.1), (0.08, 0.15), (0.15, 0.05), (0.95, 0.05)]
     w = lambda x: 0.08 * max(0.35, 1 - abs(x - 0.5) / 0.5)
     objs.append(loft_rings('rudder', [[(x, w(x), z) for x, z in rud], [(x, -w(x), z) for x, z in rud]], C['af']))
@@ -317,7 +358,7 @@ def gear(fine=True):
     acyl(A, (0.55, 0, ZSD), (0.55, 0, 12.2), 0.09, lambda z: w, seg=10, r1=0.06)
     acyl(A, (0.55, 0, 6.6), (-2.0, 0, 6.6), 0.05, lambda z: w, seg=6)
     acyl(A, (0.55, 0, 11.2), (-1.5, 0, 11.9), 0.04, lambda z: w, seg=6)
-    for sg in (1, -1): A.poly([(0.5, sg * 0.01, 6.75), (-1.75, sg * 0.01, 6.75), (-1.45, sg * 0.01, 11.75), (0.5, sg * 0.01, 11.1)], C['sail'], (0, sg, 0))
+    F.sail(A, (0.5, 0, 6.75), (-1.75, 0, 6.75), (-1.45, 0, 11.75), (0.5, 0, 11.1), C['sail'], C['sailedge'], m_seam=C['sailseam'], belly=0.14, panels=6)
     acyl(A, (0.55, 0, 12.2), (-0.6, 0, 12.0), 0.012, lambda z: C['dark'], seg=4)
     acyl(A, (0.55, 0, 12.2), (0.55, 0, 12.35), 0.22, lambda z: w, seg=12)
     # the hawse pipes' mouths high in the bow, forward of the registration mark (tilbakemelding: the old plates sat on it; the anchors
@@ -335,7 +376,7 @@ def gear(fine=True):
 
 
 def build(fine=True):
-    solids = build_hull(fine) + decks(fine) + underwater(fine)
+    solids = build_hull(fine) + decks(fine) + underwater(fine) + stern(fine)
     o, g = gear(fine); solids += o
     return [s for s in solids if s], [x for x in g if x]
 
@@ -406,7 +447,7 @@ def kit(G):
 
 SHOTS = [('bow3q', (28.0, -17.0, 6.5), (7.5, 0, 4.5), 35), ('stern3q', (-10.0, -12.0, 8.0), (6.0, 0, 5.0), 35), ('side', (7.5, -31, 5.0), (7.5, 0, 6.0), 35),
          ('above', (22.0, 14.0, 18.0), (7.5, 0, 4.0), 35), ('haul', (9.0, -8.0, 5.0), (6.0, -2.5, 4.4), 35), ('stern', (-20.0, 0.5, 6.0), (5.0, 0, 5.0), 30),
-         ('helm', (20.0, -7.0, 7.5), (11.5, -0.3, 6.6), 30), ('ladder', (3.0, -7.5, 7.0), (6.0, -1.3, 4.8), 40)]
+         ('helm', (20.0, -7.0, 7.5), (11.5, -0.3, 6.6), 30), ('ladder', (3.0, -7.5, 7.0), (6.0, -1.3, 4.8), 40), ('under', (-6.0, -6.0, 1.2), (2.0, 0, 1.4), 35)]
 
 def main():
     os.makedirs(OUT, exist_ok=True)
