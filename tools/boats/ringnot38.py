@@ -974,12 +974,18 @@ def dome(A, c, r, h, m, base=None, fine=True):
     aring_loft(A, rings, m, cap0=True)
     acyl(A, c + V((0, 0, -0.04)), c, r * 0.75, lambda z: base or C['steel'], seg=16)
 
-def platform(A, x0, x1, hw, z, m_edge, rail_h=0.35, fine=True):
-    """a small mast platform: the blue edge band under it, its grating and a low rail round it"""
+def platform(A, x0, x1, hw, z, m_edge, rail_h=0.35, fine=True, plate=0.3):
+    """a mast platform: the blue band at its edge, a solid white plate above it round the platform, its grating and the rail on top
+    (95c900de, 5e85f70b)"""
     abox(A, x0, x1, -hw, hw, z - 0.22, z, m_edge)
     abox(A, x0 + 0.02, x1 - 0.02, -hw + 0.02, hw - 0.02, z, z + 0.01, C['deck'])
+    if plate:
+        P = [(x0, -hw), (x1, -hw), (x1, hw), (x0, hw)]
+        for i in range(4):
+            a, b = P[i], P[(i + 1) % 4]
+            A.poly([(a[0], a[1], z), (b[0], b[1], z), (b[0], b[1], z + plate), (a[0], a[1], z + plate)], C['white'], (b[1] - a[1], -(b[0] - a[0]), 0))
     if fine and rail_h:
-        rail(A, [(x0, -hw, z), (x1, -hw, z), (x1, hw, z), (x0, hw, z), (x0, -hw, z)], h=rail_h, every=0.6, r=0.02, mid=False)
+        rail(A, [(x0, -hw, z + plate), (x1, -hw, z + plate), (x1, hw, z + plate), (x0, hw, z + plate), (x0, -hw, z + plate)], h=rail_h, every=0.6, r=0.02, mid=False)
 
 def lamp(A, c, m, r=0.09, h=0.22):
     c = V(c); acyl(A, c, c + V((0, 0, h)), r, lambda z: m, seg=10); acyl(A, c + V((0, 0, h)), c + V((0, 0, h + 0.03)), r * 1.1, lambda z: C['black'], seg=10)
@@ -999,13 +1005,20 @@ def masts(fine=True):
         rings.append(ell((xf + xa) / 2, 0.0, z, (xf - xa) / 2, hy, 16))
     aring_loft(A, rings, W)
     acyl(A, (30.1, 0, 15.33), (29.97, 0, 17.45), 0.11, lambda z: W, seg=10, r1=0.08)
-    platform(A, 29.50, 31.70, 0.85, 13.52, T, fine=fine)
-    platform(A, 29.46, 30.80, 0.55, 15.33, T, rail_h=0.27, fine=fine)
+    platform(A, 29.50, 31.70, 0.85, 13.52, T, fine=fine, plate=0.28)
+    platform(A, 29.46, 30.80, 0.55, 15.33, T, rail_h=0.27, fine=fine, plate=0.22)
     abox(A, 29.50, 30.14, -0.35, 0.35, 17.25, 17.45, T)
     lamp(A, (29.97, 0, 17.47), C['lampW'])                 # the masthead light
     if fine:
         searchlight(A, (31.05, 0.0, 14.45), 0.38)
-        searchlight(A, (30.95, 0.3, 13.0), 0.16)            # the deck floodlight under the lower platform
+        # the twin floodlights on a bracket on the mast's fore face (5e85f70b), aimed forward and down over the forecastle
+        for yy in (-0.3, 0.3): searchlight(A, (31.35, yy, 11.45), 0.21, aim=(0.85, 0, -0.5))
+        searchlight(A, (31.3, 0.0, 10.95), 0.21, aim=(0.85, 0, -0.5))
+        # the rungs up the aft face from the deck to the upper platform
+        for z in [9.0 + 0.3 * k for k in range(21)]:
+            xa = interp([(8.70, 30.14), (11.0, 30.10), (13.3, 30.02), (15.33, 29.90)], z) - 0.02
+            acyl(A, (xa, -0.18, z), (xa, 0.18, z), 0.014, lambda z_: C['steel'], seg=4)
+            for yy in (-0.18, 0.18): acyl(A, (xa + 0.12, yy, z), (xa, yy, z), 0.012, lambda z_: C['steel'], seg=4)
         acyl(A, (29.72, 0, 14.77), (29.92, 0, 14.77), 0.12, lambda z: C['black'], seg=10)   # the horn on its aft face
         for z in [15.6 + 0.3 * k for k in range(6)]: acyl(A, (30.05, -0.12, z), (30.05, 0.12, z), 0.012, lambda z_: C['steel'], seg=4)
     # -- the radar mast on the wheelhouse's roof: the tapered tower to the upper platform, its column to the dome's platform, the
@@ -1014,7 +1027,7 @@ def masts(fine=True):
     oct_ = lambda cx, cy, z, hx, hy, c=0.12: [(cx - hx + c, cy - hy, z), (cx + hx - c, cy - hy, z), (cx + hx, cy - hy + c, z), (cx + hx, cy + hy - c, z),
                                              (cx + hx - c, cy + hy, z), (cx - hx + c, cy + hy, z), (cx - hx, cy + hy - c, z), (cx - hx, cy - hy + c, z)]
     aring_loft(A, [oct_(12.7, 0, ZR, 1.05, 0.95), oct_(12.6, 0, 16.95, 0.55, 0.6)], W)
-    platform(A, 11.90, 15.85, 1.30, 17.20, T, fine=fine)
+    platform(A, 11.90, 15.85, 1.30, 17.20, T, fine=fine, plate=0.45)
     aring_loft(A, [oct_(13.85, 0, 17.2, 0.52, 0.48, 0.08), oct_(13.9, 0, 19.1, 0.32, 0.32, 0.06)], W)
     abox(A, 12.88, 14.47, -0.75, 0.75, 19.10, 19.30, T)
     dome(A, (14.30, 0, 19.30), 0.66, 0.55, W, fine=fine)

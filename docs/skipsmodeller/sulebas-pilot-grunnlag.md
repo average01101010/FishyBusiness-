@@ -511,7 +511,11 @@ på speilet i bildet), med flat bunn og en knekk ut til sida 1,0 m høyere, ikke
 bakkens akterskott, gangbanens akterkant og dekk B's babordkant; sidedøra akter på babord som et hvitt dørblad med vindu i
 nisjen. Fjernversjonen 11 595 punkter, nærversjonen 93 352.
 
-Igjen etter runde 12, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 13 (5e85f70b, 95c900de, fa9cc65c): mastenes plattformer har en hvit kantplate (0,22–0,45 m) over det blå båndet og
+rekkverket oppå, ikke bare rekkverk; formasten har stigetrinn opp akterkanten fra dekket til den øvre plattformen, og to
+lyskastere i bøyle på forkanten (11,45 m) pluss én under, rettet forover og ned over bakken.
+
+Igjen etter runde 13, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 
