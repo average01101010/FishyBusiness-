@@ -173,7 +173,7 @@ function plan2Step(H){
   if (!plan2Made(o)){ if (o.building) return; const C = plan2Check(o); if (!C.ok){ plan2Stop(o, 'check', C.errors[0], C.errors[0]); return; }
     plan2Wait(o, 'make', 'Lager planen på nytt …', 'Making the plan again …', H + 1 / 60); plan2Make(o, err => { if (err && o.on) plan2Stop(o, 'make', err, err); }); return; }
   // a trip that ended where it should (at anchor), or anywhere else (a stop at sea, a takeover): the day goes on from here
-  if (o.run && o.run.trip){ const tr = o.run.trip; o.run.trip = null; if (tr.anchor && b.anch) o.run.i = tr.to + 1; else o.run.replan = true; }
+  if (o.run && o.run.trip){ const tr = o.run.trip; o.run.trip = null; plan2Caught(o, tr); if (tr.anchor && b.anch) o.run.i = tr.to + 1; else o.run.replan = true; }
   P2_DEPTH = 0; plan2Decide(o, H);
 }
 function plan2Decide(o, H){
@@ -227,6 +227,9 @@ function plan2NewDay(o, H){
 }
 // the day's costs (diesel, bait, baiting, the crew's shares are in the landing) go to its date
 function plan2CostDay(o, r){ const d = gDate(r.t0).toISOString().slice(0, 10), D = plan2StatDay(o, d), c = Math.max(0, Math.round(S.stats.costs - (r.cost0 || S.stats.costs))); D.cost += c; o.stats.sum.cost = (o.stats.sum.cost || 0) + c; }
+// what a trip caught, landed or kept aboard: the statistics count the catch on the day she comes in, not only the landings (a plan
+// that lands when the hold is full, shows the days fished before the first landing)
+function plan2Caught(o, tr){ if (!tr || tr.kg0 == null) return; const kg = Math.round(holdTotal() - tr.kg0); if (kg <= 0) return; const D = plan2StatDay(o, gDate(S.t / 60).toISOString().slice(0, 10)); for (const X of [D, o.stats.sum]){ X.caught = (X.caught || 0) + kg; X.out = (X.out || 0) + 1; } }
 function plan2StatDay(o, d){ let D = o.stats.days.find(x => x.d === d); if (!D){ D = {d, trips:0, kg:0, kr:0, lott:0, cost:0, conf:0, sp:{}, port:{}}; o.stats.days.push(D); while (o.stats.days.length > 60) o.stats.days.shift(); } return D; }
 // ---- a trip: the steps from i0 to the next port call, as waypoints on the kept legs
 function plan2Trip(o, D, i0){
@@ -288,7 +291,7 @@ function plan2Go(o, H, i0){
   if (!meAboard() && !S.lic && b.kgear && !kveiteClosed(H)) S.target = 'kveite';
   const here = plan2Here(o);
   S.plan = {wps:T.wps, idx:0, speed:BOAT.vcruise, returning:false, depAt:null, ops:true, opsK:T.kind, unsafe:[], noJig:!!T.noJig, p2:{from:i0, to:T.to, start:{x:here.p.x, y:here.p.y, port:here.port}}};
-  r.trip = {from:i0, to:T.to, t0:S.t, anchor:!!T.wps[T.wps.length - 1].anchor}; r.wait = null; o.hold = 0; o.stop = null;
+  r.trip = {from:i0, to:T.to, t0:S.t, kg0:holdTotal(), anchor:!!T.wps[T.wps.length - 1].anchor}; r.wait = null; o.hold = 0; o.stop = null;
   if (T.kind === 'home') log('Går hjem til ' + (portById(o.home) || {name:'?'}).name + (o.homeA && T.wps[T.wps.length - 1].anchor ? ' og legger seg til ankers' : '') + '.', 'Going home to ' + (portById(o.home) || {name:'?'}).name + (o.homeA && T.wps[T.wps.length - 1].anchor ? ' to lie at anchor' : '') + '.');
   else if (T.kind === 'land') log('Går til ' + (portById(o.M) || {name:'mottaket'}).name + ' for å levere.', 'Going to ' + (portById(o.M) || {name:'the plant'}).name + ' to land.');
   else if (T.kind === 'rest') log('Går for å hvile om bord.', 'Going to rest aboard.');
@@ -320,6 +323,7 @@ function plan2Sea(o, H){
 function plan2Landed(pid, k){
   const o = plan2Ops(); if (!o || !o.run) return; const r = o.run, tr = r.trip; r.trip = null;
   if (tr) r.i = tr.to;
+  plan2Caught(o, tr);
   const s = r.day && r.day.steps[r.i], want = s ? (s.k === 'lever' || s.k === 'agn' ? o.M : s.k === 'hjem' ? o.home : s.k === 'hvile' && s.where === 'kai' ? o.M : null) : null;
   if (!s || (want && want !== pid)) r.replan = true;
   o.hold = 0;

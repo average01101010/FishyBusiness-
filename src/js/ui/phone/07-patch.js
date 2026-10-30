@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p149', '30.10.2026', 'Driftsplanen viser fangsten om bord', 'The operations plan shows the catch aboard', [
+       ['Statistikken i driftsplanen teller det båten har fisket hver dag, også fangsten som ligger i is om bord og ennå ikke er levert, og antall turer og leveringer hver for seg.', 'The statistics in the operations plan count what the boat has caught each day, also the catch kept in ice aboard and not yet landed, and the trips and the landings each on their own.'],
+       ['Siden viser hvor mye som er om bord nå, og når det leveres etter Levering-raden.', 'The page shows how much is aboard now, and when it is landed by the Landing row.']]],
     ['g5-301026', '30.10.2026', 'Båtene i detalj', 'The boats in detail', [
        ['Ringnotbåten har fått kraftblokka på bommen, nottrakta, sidehaleren, fiskepumpa med sugeslangen og notgjerdet, og hvite master med plattformer, leidere og antenner.', 'The purse seiner has her power block on its boom, the net funnel, the side hauler, the fish pump with its suction hose and the net guard, and white masts with platforms, ladders and antennas.'],
        ['Snøkrabbefartøyet har teinene stablet på teinedekket, så mange som er om bord, og trekker koniske snøkrabbeteiner.', 'The snow crab vessel has her pots stacked on the pot deck, as many as are aboard, and hauls conical snow crab pots.'],
