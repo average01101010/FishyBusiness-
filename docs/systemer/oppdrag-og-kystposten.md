@@ -110,6 +110,18 @@ Punkt 4 i `docs/engasjement.md`. Jonas: en blanding av korte og lange oppdrag ut
 | Nødanrop (slep av spiller) | 25 000 kr fast (`PTOW_PAY`, Jonas 09.10.2026) | Serveren tillater høyst tre betalte i døgnet, én per spiller |
 | Felles sesonger | premie 15 000 / 7 500 / 3 000 kr (som skreifestivalen), merke for tre lastrom av egen båt | Premien er den samme for alle; merket ber hver båt om samme andel av sitt eget arbeid |
 
+**Kapasiteten** (Jonas 31.10.2026: «spillere som er tom for feks torskekvote [skal ikke få] masse oppdrag med å fiske torsk … gi spillere oppdrag basert på hva de faktisk har kapasitet til å gjennomføre»): ingenting tilbys som båten ikke kan gjøre nå, og det sjekkes før tilbudet, ikke etter. Det gjelder også det som kommer senere (kjeder, leteoppdrag, bestyrerens egen bestilling, hendelser underveis), som alle går gjennom de samme funksjonene:
+
+| Hva sjekkes | Hvor | Gjelder |
+|---|---|---|
+| Kvoterom for arten (`turRoom`: igjen under maksimal- og garantert kvote, fartøykvoten i lukket gruppe, bifangst uten adgang; aldri over 80 % av det som er igjen, minst 150 kg for bestilling, 1 000 for sesong) | `turBestAt`, `turSesong`, `turGarn`, `turEventFire` (ekstra kilo) | bestilling, bestyrerens egen, sesong, tapt redskap, mottaket ringer |
+| Redskap og hender (`turSpOk`: krabbe krever teiner, blåkveite garn eller line; garn krever to om bord og garn) | `turBestAt`, `turSesong`, `turGarn`, prøvestasjon (juksa lovlig, `ruBlockMsg`) | alle med fisk |
+| Drivstoff (75 % av full tank, tur-retur for tapt redskap), eksponering for åpne båter (≤ 0,7), varselet mot båtens grense i timene turen tar | `turCan` | alle |
+| Plass om bord (`cargoRoom`, dekk før lasterom) | `turFrakt`, `turFirst`, `turEventFire` | frakt, første oppdrag, ekstra kilo |
+| Lys som faktisk kommer før fristen (`turLysNext`) | `turFoto` | fyrbilde |
+
+Er svaret nei, lages ikke oppdraget, og tavla fylles med noe annet; er alt nei (tom kvote, ingen redskap), står tavla med frakt, fyrbilder, slep og prøvefiske, som ikke trenger kvote. Hendelsen «mottaket ringer» ber bare om det kvoten har rom for over bestillinga (rettet 31.10.2026; før sjekket den bare plassen). `turtest` sjekk 17 låser det.
+
 Tilbudet: høyst fire på tavla, to tatt, én ny plass per 18 spilltimer, tre ganger så sakte når ukas oppdrag har gitt mer enn 30 % av fangst + oppdrag. Det første oppdraget og bestyrerens egen bestilling tar ingen plass, men teller i andelen når de betales, så bremsen fanger dem. Målingen (`tur_done.pay` mot `sale.kr` i `admin_tur_share`) viser andelen per spiller; den lå på 12 % 5.–29.10.2026 og skal holde seg under 30 %.
 
 ## 4.27 Kystposten: den felles avisa (07.10.2026)

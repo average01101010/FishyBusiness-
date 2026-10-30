@@ -305,7 +305,9 @@ async def main():
           let rolled = 0; for (let i = 0; i < 12; i++){ const t = Object.assign({}, m, {cls:'lang'}); turEventRoll(t); if (t.ev && ['more', 'tip', 'wx'].includes(t.ev.k) && t.ev.at > 0) rolled++; }
           m.id = ++T.seq; m.until = S.t + 9999; m.cls = 'lang'; m.pay = turFinal(m); T.board.push(m); turTake(m.id); const act = T.act.find(x => x.id === m.id), had = !!act.ev;
           const st0 = b.status; b.status = 'sailing'; const n0 = S.msgs.length;
-          act.ev = {k:'more', at:0, done:false}; turEventFire(act, b); const more = {extra:act.extra && act.extra.kg, prem:act.extra && act.extra.prem, said:S.msgs.length > n0 && S.msgs[S.msgs.length - 1].from};
+          act.ev = {k:'more', at:0, done:false}; turEventFire(act, b); const more = {extra:act.extra && act.extra.kg, prem:act.extra && act.extra.prem, said:S.msgs.length > n0 && S.msgs[S.msgs.length - 1].from, room:turRoom(act.sp, S.t / 60)};
+          // no extra kilos beyond the quota's room: with the quota nearly used up, the call does not come (Jonas 31.10.2026)
+          const keepRoom = turRoom; const n0b = S.msgs.length; const a2 = Object.assign({}, act, {extra:null, ev:{k:'more', at:0, done:false}}); window.turRoom = () => a2.kg + 20; turEventFire(a2, b); window.turRoom = keepRoom; const noRoom = {extra:a2.extra, said:S.msgs.length > n0b};
           act.ev = {k:'tip', at:0, done:false}; const n1 = S.msgs.length; turEventFire(act, b); const tip = {has:!!act.tip, said:S.msgs.length > n1 ? S.msgs[S.msgs.length - 1].from : null};
           act.ev = {k:'wx', at:0, done:false}; const n2 = S.msgs.length; turEventFire(act, b); const wx = {has:!!act.wx, said:S.msgs.length > n2 ? S.msgs[S.msgs.length - 1].from : null};
           b.status = st0;
@@ -316,9 +318,9 @@ async def main():
           const w = {id:9, due:1000, wx:{hs:3, at:0}, t0:0, k:'frakt'}, w2 = {id:10, due:1000, t0:0, k:'frakt'}; T.act = [w, w2]; b.status = 'port'; let wind = 0; try { wind = windAt(S.t / 60, b.pos); } catch (e){} turStuck(T, b); b.status = st0;
           const gale = {wind:+wind.toFixed(1), due:w.due, due2:w2.due};
           Object.assign(T, {done:keep.done, act:keep.act, board:keep.board, rep:keep.rep, slots:keep.slots}); ordState().active = [];
-          return {rolled, had, more, tip, wx, paid, gain, gale, kg:act.kg, sp:act.sp}; })()""")
+          return {rolled, had, more, noRoom, tip, wx, paid, gain, gale, kg:act.kg, sp:act.sp}; })()""")
         g = ev2.get('gale', {})
-        ok17 = ev2.get('none') or (ev2['rolled'] == 12 and ev2['had'] and ev2['more']['extra'] and ev2['more']['prem'] == 0.3 and ev2['more']['said'] and (not ev2['tip']['has'] or ev2['tip']['said']) and (not ev2['wx']['has'] or ev2['wx']['said'] == 'Kystradio')
+        ok17 = ev2.get('none') or (ev2['rolled'] == 12 and ev2['had'] and ev2['more']['extra'] and ev2['more']['prem'] == 0.3 and ev2['more']['said'] and (not ev2['more']['room'] or ev2['kg'] + ev2['more']['extra'] <= ev2['more']['room'] * 0.8 + 10) and not ev2['noRoom']['extra'] and not ev2['noRoom']['said'] and (not ev2['tip']['has'] or ev2['tip']['said']) and (not ev2['wx']['has'] or ev2['wx']['said'] == 'Kystradio')
                                    and ev2['paid'] > 0 and ev2['gain'] >= ev2['paid'] and g['due2'] == 1000 and g['due'] == (1001 if g['wind'] >= 13.9 else 1000))
         check(ok17, "something happens under way: a long mission rolls one event; the plant's call for extra kilos pays them when landed; the VHF tip and the worsened forecast speak only when the model bears them out; harbour time under a gale does not count against a mission the forecast turned on", ev2)
         check(errs == [], 'sidefeil', errs[:3])

@@ -241,7 +241,10 @@ function turTipAt(m){
 }
 function turEventFire(m, b){
   const ev = m.ev; ev.done = true; const H = S.t / 60, q = m.to && portById(m.to);
-  if (ev.k === 'more' && q){ const kg = Math.round(clamp(m.kg * 0.4, TUR_EV.more.kg[0], TUR_EV.more.kg[1]) / 10) * 10; if (cargoRoom() < kg) return;
+  if (ev.k === 'more' && q){ let kg = Math.round(clamp(m.kg * 0.4, TUR_EV.more.kg[0], TUR_EV.more.kg[1]) / 10) * 10;
+    // only what the quota has room for on top of the order (Jonas 31.10.2026: never ask for cod a boat has no quota left for), and the hold
+    const room = turRoom(m.sp, H); if (isFinite(room)) kg = Math.min(kg, Math.floor(Math.max(0, room * 0.8 - m.kg) / 10) * 10);
+    if (kg < TUR_EV.more.kg[0] || cargoRoom() < kg) return;
     m.extra = {kg, prem:TUR_EV.more.prem, got:0}; const spn = [SPECIES[m.sp].no.toLowerCase(), SPECIES[m.sp].en.toLowerCase()];
     msg(turManager(m.to), 'Jeg ringer fra mottaket: får du med ' + fmt(kg, 0) + ' kg ' + spn[0] + ' til, over de ' + fmt(m.kg, 0) + ', betaler jeg ' + Math.round(TUR_EV.more.prem * 100) + ' % ekstra for dem. Om ikke, er det greit.',
       'Calling from the plant: if you bring ' + fmt(kg, 0) + ' kg of ' + spn[1] + ' on top of the ' + fmt(m.kg, 0) + ', I pay ' + Math.round(TUR_EV.more.prem * 100) + ' % extra for them. If not, that is fine.'); }
