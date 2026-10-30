@@ -276,10 +276,11 @@ def underwater(fine=True):
     objs.append(loft_rings('rudder', [[(x, w(x), z) for x, z in rud], [(x, -w(x), z) for x, z in rud]], C['af']))
     # the bulbous bow
     # (30.10.2026, M7 in docs/skipsmodeller/kartlegging-spillet.md: the bulb stood up out of the sea ahead of the stem as a sharp
-    # red cone.) Its top now stays 0.35 m or more under the waterline forward of the stem, and the nose is rounded like a half
-    # ellipsoid instead of drawn to a point
-    B = [(50.6, 0.0, 0.0, 2.90), (51.6, 1.15, 1.70, 2.80), (53.0, 1.22, 1.55, 2.80), (54.5, 1.15, 1.40, 2.85), (55.6, 1.00, 1.20, 2.90),
-         (56.3, 0.82, 0.95, 2.95), (56.75, 0.68, 0.80, 2.98), (57.0, 0.46, 0.54, 3.00), (57.12, 0.22, 0.26, 3.01), (57.16, 0.04, 0.05, 3.01)]
+    # red cone.) Its top now runs level 0.28 m under the waterline (the same in the drawing's draft, so it stays under in a calm sea
+    # and shows in the troughs, as a real one does), its underside sweeping up to the nose, which is rounded like a half ellipsoid
+    # instead of drawn to a point (vessel3d measures her length at the waterline, which the bulb's nose gives: 60.3 m overall)
+    B = [(50.6, 0, 0, 2.90), (51.6, 1.15, 1.70, 2.72), (53.0, 1.22, 1.55, 2.87), (54.5, 1.15, 1.40, 3.02), (55.6, 1.00, 1.20, 3.22),
+         (56.3, 0.82, 0.95, 3.47), (56.75, 0.68, 0.80, 3.62), (57.0, 0.46, 0.54, 3.80), (57.12, 0.22, 0.26, 3.85), (57.16, 0.04, 0.05, 3.86)]
     sg2 = 24 if fine else 10; rings = []
     for x, ry, rz, zc2 in B:
         ry = max(ry, 0.02); rz = max(rz, 0.02)
