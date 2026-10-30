@@ -11,7 +11,8 @@ const G3 = (() => {
       ', 3D i ' + Math.round((performance.now() - GLN.t0) / 60000) + ' min, buffere ' + GLN.b + ', teksturer ' + GLN.t + ', nivå ' + QUAL.lvl + ', biter ' + CH.size + (m ? ', JS ' + Math.round(m.usedJSHeapSize / 1048576) + ' MB' : ''); };
   let HG = null, NEARM = null, MIDM = null, FINEM = null, loading = false, LIGHTS = [], snowNow = null, grassAt = null;   // the snow line in use (m; below 0 in winter), null before the first frame
   // Quality (phase K8 of the coast plan): 0 low, 1 medium, 2 high, 3 ultra (Jonas 05.10.2026: «en ultra grafikk setting ... finne ut
-  // hvor grensa ligger for flagship-modeller»; only when chosen, never by auto, and only where 32-bit indices are there: UINT).
+  // hvor grensa ligger for flagship-modeller»; only where 32-bit indices are there: UINT; when chosen, and since F1 of the boat models
+  // also by auto on a device that measures fast enough: qualTick).
   // 'auto' (the setting S.settings.q3d) steps down a level when the
   // frames have been slower than 28 a second for 4 s, and up when faster than 50 for 12 s, but not back up to a level it left within
   // the last two minutes. «#qfix» in the address (the tests) keeps it at high. Per level: the drawing's pixels (dpr), the near
@@ -34,12 +35,30 @@ const G3 = (() => {
   const PROF = {on:false, rec:false, skip:{}, dpr:0, sync:false, wait:false, acc:null, cur:null, t0:0, f0:0};
   const PMK = k => { if (PROF.on) profMark(k); };
   const QUAL = {lvl:2, bad:0, good:0, cap:2, capT:0, fix:/qfix/.test(location.hash), dpr:[1, 1.25, 1.5, 3], near:[[3000, 6000], [6000, 12000], [6000, 12000], [9000, 18000]],
-    nearN:[256, 256, 256, 384], midN:[256, 256, 256, 384], farN:[255, 255, 255, 511], chunkR:[1300, 1300, 1300, 2200], lodK:[1, 1, 1, 1.8]};
+    nearN:[256, 256, 256, 384], midN:[256, 256, 256, 384], farN:[255, 255, 255, 511], chunkR:[1300, 1300, 1300, 2200], lodK:[1, 1, 1, 1.8],
+    // your boat's versions by her length in the drawing's pixels (F1, 30.10.2026, 19-wildlife-npc.js ownTier): near over the first, middle over
+    // the second, far under it; ultra keeps the near one 1.8 times further out, like everything else there
+    blod:[[300, 75], [270, 68], [240, 60], [135, 34]]};
   let UINT = false;
   function qualSet(){ const v = S.settings.q3d || 'auto'; if (QUAL.fix) QUAL.lvl = 2; else if (v !== 'auto') QUAL.lvl = v === 'ultra' && !UINT && gl ? 2 : {low:0, mid:1, high:2, ultra:3}[v]; return v; }
   // one frame's step of the automatic quality (dt s, fps the frame rate); returns the level
+  // ultra by the measured frame time (docs/planer/grafikk-batmodeller.md F1, valg 2 A, 30.10.2026; before, ultra came only when chosen):
+  // 'auto' tries it on a device with 32-bit indices that has drawn high at over 80 frames a second for 20 s (over 55 once ultra has held
+  // there); it goes back to high after 3 s under 45, and the device remembers how it went (ULTRA_KEY, for this version of the levels:
+  // ULTRA_VER), so it does not go up and down. QUAL.autoU false keeps auto from it.
+  const ULTRA_KEY = 'dsb_ultra', ULTRA_VER = 'a', QU = {good:0, bad:0, held:0, st:null};
+  const ultraSt = () => { if (QU.st === null){ QU.st = ''; try { const v = localStorage.getItem(ULTRA_KEY) || ''; if (v.endsWith(':' + ULTRA_VER)) QU.st = v.split(':')[0]; } catch (e){} } return QU.st; };
+  const ultraSet = v => { QU.st = v; try { localStorage.setItem(ULTRA_KEY, v + ':' + ULTRA_VER); } catch (e){} };
+  QUAL.autoU = true;
   function qualTick(dt, fps, now){
     if (qualSet() !== 'auto' || QUAL.fix || !fps) return QUAL.lvl;
+    if (QUAL.lvl === 3){
+      if (fps < 45){ QU.bad += dt; QU.held = 0; if (QU.bad > 3){ if (ultraSt() !== 'ok') ultraSet('no'); QUAL.lvl = 2; QUAL.cap = 2; QUAL.capT = now; QU.bad = QU.good = 0; } }
+      else { QU.bad = 0; if (fps >= 55){ QU.held += dt; if (QU.held > 15 && ultraSt() !== 'ok') ultraSet('ok'); } }
+      return QUAL.lvl;
+    }
+    if (QUAL.lvl === 2 && QUAL.autoU && UINT && ultraSt() !== 'no' && now - QUAL.capT > 120000){
+      if (fps > (ultraSt() === 'ok' ? 55 : 80)){ QU.good += dt; if (QU.good > 20){ QUAL.lvl = 3; QU.good = QU.bad = QU.held = 0; QUAL.good = QUAL.bad = 0; return 3; } } else QU.good = 0; }
     // down after 4 s under 28 frames a second; up again after 8 s over 40, but not within 30 s of a step down (it went up after 12 s
     // over 50 and not within two minutes, which on the tablet never came, 03.10.2026)
     if (now - QUAL.capT > 30000) QUAL.cap = 2;

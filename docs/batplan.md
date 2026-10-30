@@ -187,7 +187,7 @@ Oppdragsøkonomien fra 17.10.2026 (`docs/OVERLEVERING.md` 4.26) gjør at fisket 
 - B14 malingssoner: 1 skrog, 2 stripe/bånd, 3 overbygg, 4 dekk (nytt: overbygget kan males, dekket får eget valg; Jonas 17.10.2026: ja)
 - B15 ankrene fra del 4, inkludert `hatch`, `bunk`, `door`, og dekkskartet (`walktest`) grønt uten `DECK_OVR`
 - B16 slitasje og rust som vertex-mørking, mer på gamle båter (år), ikke som tekstur
-- B17 LOD: `lod0` for nær, `lod1` for 150–400 m, og NPC-utgaven; trekantbudsjett 80 000 for båter under 12 m, 150 000 for kystbåtene, 250 000 for havbåtene (måles av eksporten og skrives i loggen)
+- B17 LOD: `lod0` for nær (egen båt), `lodm` for middels (lokalflåten nær og egen båt lenger unna; lages av eksporten med Decimate når `lod0` har over 40 000 trekanter, `LODM_TRIS` i `bpyutil.py`), `lod1` for fjern og NPC-utgaven; taket for `lod0` er rundt 300 000 trekanter (900 000 punkter i spillet, `vessel3d`-testen), `lodm` 40 000 (120 000 punkter, dagens nivå), satt i F1 30.10.2026 etter målingen på Pad 3 (`docs/planer/grafikk-batmodeller.md`). Budsjettene under er ikke lenger taket, men et anslag for hva en båt trenger: 80 000 for båter under 12 m, 150 000 for kystbåtene, 250 000 for havbåtene (måles av eksporten og skrives i loggen)
 - B18 sidebildet (`pic-TYPE`) tatt fra samme vinkel og lys for alle
 - B19 kontrollbilder fra åtte vinkler i `tools/boats/out/`, sett på før commit
 - B20 ingen ekte navn, logoer eller registreringsnumre i modellen

@@ -151,14 +151,32 @@
   function pvm(t, liv){
     const key = liv ? t + '|own' : t; let E = PVM[key];
     // a design that cuts the hull (vessel3d.js livGeo) is a new shape: the own buffers are built again
-    if (E && liv && E.geoK !== livGeo(liv)){ for (const b of [E.hull.pb, E.hull.nb, E.hull.cb]) gl.deleteBuffer(b); E = PVM[key] = null; }
-    if (!E){ const m = liv ? buildVesselModel(t, 1, liv) : vesselModel(t); if (!m) return null;
+    if (E && liv && E.geoK !== livGeo(liv)){ for (const H of [E.hull, E.h1, E.h0]) if (H) for (const b of [H.pb, H.nb, H.cb]) gl.deleteBuffer(b); E = PVM[key] = null; }
+    if (!E){ const m = buildVesselModel(t, 2, liv); if (!m) return null;
       const up = o => ({pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3});
       let cap = null; if (m.cap){ const c = MB(); for (const tr of m.cap) c.tri(tr[0], tr[1], tr[2], [0, 0, 0]); cap = c.mesh(); }
       E = PVM[key] = {hull:up(m.o), glass:up(m.glass), cap, livK:livKey(liv), geoK:livGeo(liv)}; }
-    if (liv){ const k = livKey(liv); if (E.livK !== k){ E.livK = k; const m = buildVesselModel(t, 1, liv);
+    if (liv){ const k = livKey(liv); if (E.livK !== k){ E.livK = k; const m = buildVesselModel(t, 2, liv);
       if (m && m.o.c.length === E.hull.n * 4){ gl.bindBuffer(gl.ARRAY_BUFFER, E.hull.cb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(m.o.c), gl.STATIC_DRAW); } } }
     return E;
+  }
+  // your boat's middle (1) and far (0) versions (docs/planer/grafikk-batmodeller.md F1, 30.10.2026), built the first time they are
+  // wanted and again when the paint or the shape has changed; a model with no such version (lodm, lod1) wears the near one (2) there
+  function pvmHull(t, liv, tier){
+    const E = pvm(t, liv); if (!E) return null; if (tier >= 2 || !glbPart(t, tier ? 'lodm' : 'lod1')) return E.hull;
+    const k = 'h' + tier, want = E.livK + '|' + E.geoK; let H = E[k];
+    if (H && H.key !== want){ for (const b of [H.pb, H.nb, H.cb]) gl.deleteBuffer(b); H = E[k] = null; }
+    if (!H){ const m = buildVesselModel(t, tier ? 1 : 0.3, liv); if (!m) return E.hull; H = E[k] = {pb:buf(new Float32Array(m.o.p)), nb:buf(new Float32Array(m.o.n)), cb:buf(new Float32Array(m.o.c)), n:m.o.p.length / 3, key:want}; }
+    return H;
+  }
+  // which version of your boat is drawn: by how long she looks in the drawing, in its pixels (her length over the distance, times the
+  // drawing's height over the view's height there, so the zoom and the pixel density are in it). QUAL.blod holds [near, middle] in pixels
+  // per level, [0, 0] keeps her near at every distance (the level's LOD off); 15 % either way before she changes, so she does not flicker
+  const OWNL = {tier:2, px:0};
+  function ownTier(t, M){
+    const B = QUAL.blod[QUAL.lvl], V = VESSELS[t] || {len:8}; if (!B || !B[0]) return OWNL.tier = 2;
+    const d = Math.max(0.1, Math.hypot(M[12], M[13], M[14])), px = OWNL.px = V.len / d * canvas.height / (2 * Math.tan(curFov / 2)), T = OWNL.tier;
+    return OWNL.tier = px > B[0] * (T >= 2 ? 0.87 : 1.15) ? 2 : px > B[1] * (T >= 1 ? 0.87 : 1.15) ? 1 : 0;
   }
   // the people on the boats seen from outside: the own boat's skipper and crew by their looks, each local boat's by a look from her id (a dozen
   // in all), made once and kept (kind: 'skip' at the wheel, 'skipDeck' on deck, 'crew')

@@ -22,11 +22,11 @@ async def main():
         if ONLY: types = [t for t in types if t in ONLY]
         counts = {}
         for t in types:
-            info = await pg.evaluate("""(t => { const t0 = performance.now(), m = buildVesselModel(t, 1), ms = performance.now() - t0, b = S.boat; b.type = t; applyVessel(); G3.vesselChanged();
+            info = await pg.evaluate("""(t => { const t0 = performance.now(), m = buildVesselModel(t, 2), ms = performance.now() - t0, mid = buildVesselModel(t, 1).o.p.length / 3, b = S.boat; b.type = t; applyVessel(); G3.vesselChanged();
               S.crew = [0, 1, 2].map(() => Object.assign(genCrew(), {bi:false, off:false})).slice(0, VESSELS[t].crewMax);
               const V = VESSELS[t], hull = (() => { if (!m.glb) return null; const H = glbPart(t, 'lod0') || m.o; let z0 = 1e9, z1 = -1e9, x0 = 1e9, x1 = -1e9; for (let i = 0; i < H.p.length; i += 3){ const y = H.p[i + 1]; if (y < -0.3 || y > 1.5) continue; const x = H.p[i], z = H.p[i + 2]; z0 = Math.min(z0, z); z1 = Math.max(z1, z); x0 = Math.min(x0, x); x1 = Math.max(x1, x); } return [+(x1 - x0).toFixed(2), +(z1 - z0).toFixed(2)]; })();
               const need = ['eye', 'skipperAt', 'crewSpots', 'lights', 'hauler', 'pole', 'deck', 'stern', 'bow'];
-              return {verts:m.o.p.length / 3, glass:m.glass.p.length / 3, ms:Math.round(ms * 10) / 10, len:V.len, beam:V.beam, cls:V.cls, glb:!!m.glb, hull, geoOk:need.every(k => m.geo && m.geo[k] != null),
+              return {verts:m.o.p.length / 3, mid, glass:m.glass.p.length / 3, ms:Math.round(ms * 10) / 10, len:V.len, beam:V.beam, cls:V.cls, glb:!!m.glb, hull, geoOk:need.every(k => m.geo && m.geo[k] != null),
                 nan:m.o.p.some(x => !isFinite(x)) || m.o.n.some(x => !isFinite(x)),
                 box:(() => { let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9, y0 = 1e9; for (let i = 0; i < m.o.p.length; i += 3){ const x = m.o.p[i], y = m.o.p[i + 1], z = m.o.p[i + 2]; x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); y0 = Math.min(y0, y); } return [+(x1 - x0).toFixed(2), +(z1 - z0).toFixed(2), +(-y0).toFixed(2)]; })()}; })""", t)
             counts[t] = info
@@ -38,9 +38,11 @@ async def main():
             await pg.screenshot(path=os.path.join(OUT, 'vessel_%s_helm.png' % t)); await pg.evaluate("G3.setHelm(false)")
         print(json.dumps(counts, ensure_ascii=False))
         for t, i in counts.items():
-            # a detailed model from tools/boats is drawn as triangles without shared corners: about three points to a triangle
-            budget = 120000 if i['glb'] else 45000 if i['cls'] == 'hav' else 25000
-            print(ok(i['verts'] <= budget and not i['nan']), '%s: %d punkter (budsjett %d), bygget på %.1f ms, uten NaN' % (t, i['verts'], budget, budget and i['ms']))
+            # a detailed model from tools/boats is drawn as triangles without shared corners: about three points to a triangle. Your own
+            # boat near (lod 2) up to some 300 000 triangles since F1 (30.10.2026, the Pad 3 measurement), its middle version (lod 1, the
+            # local fleet near by: lodm, else lod0) at today's 120 000 points (docs/planer/grafikk-batmodeller.md)
+            budget = 900000 if i['glb'] else 45000 if i['cls'] == 'hav' else 25000; bmid = 120000 if i['glb'] else budget
+            print(ok(i['verts'] <= budget and i['mid'] <= bmid and not i['nan']), '%s: %d punkter nær (budsjett %d), %d middels (budsjett %d), bygget på %.1f ms, uten NaN' % (t, i['verts'], budget, i['mid'], bmid, budget and i['ms']))
             L = i['len']
             if i['glb']:
                 # the hull from just below the waterline to 1.5 m above it (the fender strake, the stem up to the strake), without the bow roller,

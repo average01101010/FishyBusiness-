@@ -2580,7 +2580,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 47 `bootGame()`
   - 150 `bootFail(e)`
 
-## `src/js/vessel3d.js` (1266 linjer)
+## `src/js/vessel3d.js` (1269 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -2624,64 +2624,64 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 389 `glbPart(type, name)`
   - 392 `glbPaint(part, liv)`
   - 400 `glbZones(type)`
-  - 405 `glbModel(type, lod, liv)`
-  - 430 `vesselSpec(type)`
-  - 431 `buildVesselModel(type, lod, liv)`
-  - 471 `vesselGeo(type, hs, sp, house, anch)`
-  - 483 `vesselModel(type)`
-  - 484 `geoOf(type)`
-- **488** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
-  - 507 `modelLiv(L)`
-  - 514 `hullLiv(b)`
-  - 515 `livKey(liv)`
-  - 517 `livGeo(liv)`
-  - 522 `livStr(b)`
-  - 534 `livPen(s)`
-  - 536 `livMark(s)`
-  - 537 `livParse(s)`
-- **542** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
-  - 546 `topsides(type)`
-  - 564 `designLines(TS, liv)`
-  - 573 `glbDesign(type, part, liv)`
-  - 607 `designFits(type, k)`
-  - 614 `kitLiv(liv)`
-- **616** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
-- **665** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
-  - 676 `logoCanvas(cv, L, img)`
-  - 687 `logoStrips(type)`
-  - 689 `logoStr(L)`
-  - 690 `logoParse(s)`
-  - 694 `flagCanvas(cv, code, shape, logo)`
-  - 706 `flagOf(L)`
-- **707** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
-  - 716 `hullTris(type)`
-  - 730 `sideStrip(type, frac, hMax, aspect, drop)`
-  - 762 `nameStrips(type)`
-  - 798 `stripProud(type, st)`
-  - 821 `stripPaint(type, st)`
-  - 842 `markStrips(type)`
-  - 862 `anchorLen(bw)`
-  - 865 `markRGB(type, liv)`
-  - 873 `hullRGB(type, liv)`
-  - 883 `npcKit(L, B)`
-  - 886 `npcModel(type, lod, liv)`
-  - 888 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **900** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 913 `wkPart(name, kit)`
-  - 923 `wkPut(B, o, ax, s, at)`
-  - 933 `wkLimb(B, o, A, E, r)`
-  - 940 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 962 `vesselSVG(type, w, h)`
-- **1000** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1007 `deckMap(type)`
-  - 1136 `deckPass(M, k, q)`
-  - 1141 `passLine(M, A, B)`
-  - 1143 `linkPass(M, k, q)`
-  - 1147 `deckComp(M)`
-  - 1156 `deckPath(M, a, b)`
-- **1187** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1200 `lanterns(G, V, st)`
-  - 1230 `deckPoints(type)`
+  - 407 `glbModel(type, lod, liv)`
+  - 432 `vesselSpec(type)`
+  - 433 `buildVesselModel(type, lod, liv)`
+  - 474 `vesselGeo(type, hs, sp, house, anch)`
+  - 486 `vesselModel(type)`
+  - 487 `geoOf(type)`
+- **491** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
+  - 510 `modelLiv(L)`
+  - 517 `hullLiv(b)`
+  - 518 `livKey(liv)`
+  - 520 `livGeo(liv)`
+  - 525 `livStr(b)`
+  - 537 `livPen(s)`
+  - 539 `livMark(s)`
+  - 540 `livParse(s)`
+- **545** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
+  - 549 `topsides(type)`
+  - 567 `designLines(TS, liv)`
+  - 576 `glbDesign(type, part, liv)`
+  - 610 `designFits(type, k)`
+  - 617 `kitLiv(liv)`
+- **619** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
+- **668** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
+  - 679 `logoCanvas(cv, L, img)`
+  - 690 `logoStrips(type)`
+  - 692 `logoStr(L)`
+  - 693 `logoParse(s)`
+  - 697 `flagCanvas(cv, code, shape, logo)`
+  - 709 `flagOf(L)`
+- **710** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
+  - 719 `hullTris(type)`
+  - 733 `sideStrip(type, frac, hMax, aspect, drop)`
+  - 765 `nameStrips(type)`
+  - 801 `stripProud(type, st)`
+  - 824 `stripPaint(type, st)`
+  - 845 `markStrips(type)`
+  - 865 `anchorLen(bw)`
+  - 868 `markRGB(type, liv)`
+  - 876 `hullRGB(type, liv)`
+  - 886 `npcKit(L, B)`
+  - 889 `npcModel(type, lod, liv)`
+  - 891 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **903** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 916 `wkPart(name, kit)`
+  - 926 `wkPut(B, o, ax, s, at)`
+  - 936 `wkLimb(B, o, A, E, r)`
+  - 943 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 965 `vesselSVG(type, w, h)`
+- **1003** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1010 `deckMap(type)`
+  - 1139 `deckPass(M, k, q)`
+  - 1144 `passLine(M, A, B)`
+  - 1146 `linkPass(M, k, q)`
+  - 1150 `deckComp(M)`
+  - 1159 `deckPath(M, a, b)`
+- **1190** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1203 `lanterns(G, V, st)`
+  - 1233 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (471 linjer)
 
@@ -2699,23 +2699,23 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **435** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
   - 465 `npcCrewCtx(n, G)`
 
-## `src/js/view3d/00-head.js` (100 linjer)
+## `src/js/view3d/00-head.js` (119 linjer)
 
 - **2** 3D VIEW (plain WebGL, no dependencies)
-  - 39 `qualSet()`
-  - 41 `qualTick(dt, fps, now)`
-- **72** math
-  - 73 `persp(fovy, asp, n, f)`
-  - 74 `viewDir(f, up)`
-  - 81 `mul(a, b)`
-  - 82 `model(px, py, pz, yaw, pitch, roll)`
-- **90** noise
-  - 91 `vn2(x, y, s)`
-  - 96 `fbm(x, y, o, s)`
-  - 97 `ridged(x, y)`
-  - 98 `rng(seed)`
+  - 43 `qualSet()`
+  - 53 `qualTick(dt, fps, now)`
+- **91** math
+  - 92 `persp(fovy, asp, n, f)`
+  - 93 `viewDir(f, up)`
+  - 100 `mul(a, b)`
+  - 101 `model(px, py, pz, yaw, pitch, roll)`
+- **109** noise
+  - 110 `vn2(x, y, s)`
+  - 115 `fbm(x, y, o, s)`
+  - 116 `ridged(x, y)`
+  - 117 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (479 linjer)
+## `src/js/view3d/01-shaders.js` (491 linjer)
 
 ---------- shaders ----------
 
@@ -2725,12 +2725,13 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **153** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
   - 422 `cloudStep(dt)`
   - 428 `skyFrame(u, Hh, tn, bv)`
-  - 440 `compile(type, src, nm)`
-  - 446 `program(vs, fs, attrs, nm = '?')`
-  - 454 `buf(data, target, usage)`
-  - 459 `airSet(u, terr)`
-  - 464 `attr(loc, b, size)`
-  - 477 `upload(pos, col, idx)`
+  - 443 `glsl3(src, fs)`
+  - 451 `compile(type, src, nm)`
+  - 458 `program(vs, fs, attrs, nm = '?')`
+  - 466 `buf(data, target, usage)`
+  - 471 `airSet(u, terr)`
+  - 476 `attr(loc, b, size)`
+  - 489 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (94 linjer)
 
@@ -3199,21 +3200,21 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 78 `staleShore(pk)`
   - 79 `drawShore(VP)`
 
-## `src/js/view3d/18-setup.js` (148 linjer)
+## `src/js/view3d/18-setup.js` (165 linjer)
 
 ---------- setup ----------
 
 - **1** setup
-  - 30 `init()`
-  - 126 `anchorAlarm3d(kind)`
-  - 129 `sayBoat(id, txt)`
-  - 131 `sayWorker(pid, idx, nm, no, en)`
-  - 135 `crewFx3d(c, kind, o)`
-  - 137 `say3d(c, no, en)`
-  - 141 `buildLabels()`
-  - 142 `resize()`
+  - 32 `init()`
+  - 143 `anchorAlarm3d(kind)`
+  - 146 `sayBoat(id, txt)`
+  - 148 `sayWorker(pid, idx, nm, no, en)`
+  - 152 `crewFx3d(c, kind, o)`
+  - 154 `say3d(c, no, en)`
+  - 158 `buildLabels()`
+  - 159 `resize()`
 
-## `src/js/view3d/19-wildlife-npc.js` (182 linjer)
+## `src/js/view3d/19-wildlife-npc.js` (200 linjer)
 
 ---------- wildlife ----------
 
@@ -3229,8 +3230,10 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 120 `windows(m, x0, x1, y, z, h, col, sideX)`
   - 121 `buildNPC()`
   - 151 `pvm(t, liv)`
-  - 166 `personMesh(kind, look, key)`
-  - 178 `people()`
+  - 165 `pvmHull(t, liv, tier)`
+  - 176 `ownTier(t, M)`
+  - 184 `personMesh(kind, look, key)`
+  - 196 `people()`
 
 ## `src/js/view3d/20-trawl-seine.js` (275 linjer)
 
@@ -3325,7 +3328,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 301 `drawEffects(VP, eye, BM, dt, t)`
   - 403 `updateLabels(VP, eye, W, Hh)`
 
-## `src/js/view3d/25-controls.js` (184 linjer)
+## `src/js/view3d/25-controls.js` (187 linjer)
 
 ---------- controls ----------
 

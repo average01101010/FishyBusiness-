@@ -484,6 +484,13 @@ def on_drawing(render_png, drawing, box, out_png, alpha=0.55):
     g.alpha_composite(r); g.save(out_png)
 
 
+# the middle version's triangles (docs/planer/grafikk-batmodeller.md F1, 30.10.2026): the near model (lod0) of your own boat may have
+# up to some 300 000 triangles (the Pad 3 measurement, F0); one over LODM_TRIS gets a middle version (lodm) collapsed to this many, which
+# the local fleet near by and your boat at a middle distance wear (today's level: 120 000 points in the game, some 40 000 triangles).
+# The game takes lod0 where a model has no lodm.
+LODM_TRIS = 40000
+
+
 def export_boat(build, to_game, to_game_n, out_dir, glb_name, data_b64, extras, side=None, dry=False, more=None):
     """bake and write a boat: build(fine) -> (solids, glass); lod0 + glass + lod1 into a GLB, base64 to data_b64 (unless dry), and the
     side picture side = (pic_b64, cx, cz, ortho). The objects of the fine build must already exist as BOAT0 and GLASS0.
@@ -492,6 +499,14 @@ def export_boat(build, to_game, to_game_n, out_dir, glb_name, data_b64, extras, 
     boat = bpy.data.objects['BOAT0']; gl = bpy.data.objects['GLASS0']
     bake_ao(boat, samples=48, distance=0.9)
     A0 = mesh_arrays(boat, to_game, to_game_n); AG = mesh_arrays(gl, to_game, to_game_n, ao=False)
+    # the middle version: a copy of the baked near model with a collapsing Decimate (mesh_arrays reads it evaluated); the faces keep
+    # their materials (the paint zones) and the corners their baked shade
+    Am = None; n0 = len(A0['idx']) // 3
+    if n0 > LODM_TRIS:
+        bm = boat.copy(); bm.data = boat.data.copy(); bm.name = 'BOATM'; boat.users_collection[0].objects.link(bm)
+        md = bm.modifiers.new('lodm', 'DECIMATE'); md.decimate_type = 'COLLAPSE'; md.ratio = LODM_TRIS / n0; md.use_collapse_triangulate = True
+        Am = mesh_arrays(bm, to_game, to_game_n)
+        bpy.data.objects.remove(bm, do_unlink=True)
     AM = []
     for p in more or []:
         p['_o'] = p['obj']() if callable(p['obj']) else p['obj']          # a callable makes its object after the hull is baked
@@ -508,10 +523,10 @@ def export_boat(build, to_game, to_game_n, out_dir, glb_name, data_b64, extras, 
     boat1.hide_render = True
     size_pic = side_picture(out_dir, side[0] if not dry else os.path.join(out_dir, 'side_pic.b64'), *side[1:]) if side else None
     glb = os.path.join(out_dir, glb_name)
-    n = write_glb(glb, [('lod0', A0, 1.0), ('glass', AG, 0.35), ('lod1', A1, 1.0)] + AM, extras)
+    n = write_glb(glb, [('lod0', A0, 1.0), ('glass', AG, 0.35), ('lod1', A1, 1.0)] + ([('lodm', Am, 1.0)] if Am else []) + AM, extras)
     open(data_b64 if not dry else glb + '.b64', 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())
     tri = lambda A: len(A['idx']) // 3
-    print('GLB %.0f KB, lod0 %d tris / %d verts, glass %d tris, lod1 %d tris / %d verts; side picture %s' % (n / 1024, tri(A0), len(A0['pos']), tri(AG), tri(A1), len(A1['pos']), size_pic))
+    print('GLB %.0f KB, lod0 %d tris / %d verts, glass %d tris, lod1 %d tris / %d verts%s; side picture %s' % (n / 1024, tri(A0), len(A0['pos']), tri(AG), tri(A1), len(A1['pos']), ', lodm %d tris' % tri(Am) if Am else '', size_pic))
     return A0, A1
 
 

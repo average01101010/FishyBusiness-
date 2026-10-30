@@ -402,9 +402,11 @@ function glbZones(type){
   if (P && P.zone) for (let i = 0; i < P.zone.length; i++) z[P.zone[i]] = 1;
   return GLBZ[type] = z;
 }
+// lod: 2 near (lod0, your own boat close by: up to some 300 000 triangles), 1 middle (lodm where the model has one, else lod0: the
+// local fleet near by and your boat further off, today's level), under 1 far (lod1); docs/planer/grafikk-batmodeller.md F1
 function glbModel(type, lod, liv){
   const G = glbLoad(type); if (!G || !G.parts.lod0) return null;
-  const part = lod >= 1 ? G.parts.lod0 : (G.parts.lod1 || G.parts.lod0); let o = part;
+  const part = lod >= 2 ? G.parts.lod0 : lod >= 1 ? (G.parts.lodm || G.parts.lod0) : (G.parts.lod1 || G.parts.lod0); let o = part;
   if (liv && DESIGNS.some(k => liv[k])) o = glbDesign(type, part, liv); else if (liv && (liv.hull || liv.house || liv.deck)) o = glbPaint(part, liv);
   // an outboard and its propeller are parts of their own, in their own frames (they turn in the game): the whole boat carries them in place
   const sk = G.ex.anchors && G.ex.anchors.skiff;
@@ -425,13 +427,14 @@ function glbModel(type, lod, liv){
   if (L){ cap = []; for (let i = 0; i < L.p.length; i += 9) cap.push([[L.p[i], L.p[i + 1], L.p[i + 2]], [L.p[i + 3], L.p[i + 4], L.p[i + 5]], [L.p[i + 6], L.p[i + 7], L.p[i + 8]]]); }
   return {o, glass:lod >= 1 && G.parts.glass ? G.parts.glass : {p:[], n:[], c:[]}, cap, geo:Object.assign({gw:1, open:false, hand:false}, G.ex.anchors), hs:null, glb:true};
 }
-// a model for a type: the hull with its fittings (near: lod 1), the glass, the depth cap for open hulls, and where things are
+// a model for a type: the hull with its fittings (near: lod 1, a detailed model's own near version at 2), the glass, the depth cap for open hulls, and where things are
 const VMODEL = {};
 function vesselSpec(type){ return SPEC3D[type] || null; }
 function buildVesselModel(type, lod, liv){
   lod = lod || 1; const V = VESSELS[type], sp = vesselSpec(type); if (!V || !sp) return null;
   { const g = glbModel(type, lod, liv); if (g) return g; }       // a detailed model, also for the hand-steered starter boat
   if (sp.hand) return null;
+  lod = Math.min(lod, 1);   // (the kit models have no level over near)
   const H = Object.assign({L:V.len, B:V.beam, T:V.draft}, sp.hull, liv ? {col:Object.assign({}, sp.hull.col, kitLiv(liv))} : null), hs = hullShape(H), o = VB(), gb = VB(); o.lod = lod; gb.lod = lod;
   hullBuild(o, hs, lod); const hullN = o.p.length;   // the hull's own triangles come first (nameStrips reads them)
   let house = null, roofY = null; const anch = {};
