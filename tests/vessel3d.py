@@ -47,7 +47,8 @@ async def main():
             if i['glb']:
                 # the hull from just below the waterline to 1.5 m above it (the fender strake, the stem up to the strake), without the bow roller,
                 # the riding sail's boom and the gantry over the stern
-                print(ok(abs(i['hull'][1] - L) / L < 0.03 and abs(i['hull'][0] - i['beam']) / i['beam'] < 0.05 and i['geoOk']), '%s (GLB): skroget er %.2f m langt og %.2f m bredt mot %.2f x %.2f m, og alle plassene for 3D-visningen finnes' % (t, i['hull'][1], i['hull'][0], L, i['beam']))
+                # (a raked stem over a bulb, as on the pilot boat, makes the hull in this band up to 6 % shorter than her length over all)
+                print(ok(-0.06 < (i['hull'][1] - L) / L < 0.03 and abs(i['hull'][0] - i['beam']) / i['beam'] < 0.05 and i['geoOk']), '%s (GLB): skroget er %.2f m langt og %.2f m bredt mot %.2f x %.2f m, og alle plassene for 3D-visningen finnes' % (t, i['hull'][1], i['hull'][0], L, i['beam']))
             else: print(ok(abs(i['box'][1] - L) / L < 0.08), '%s: modellen er %.2f m lang mot %.2f m i dataene' % (t, i['box'][1], L))
         # the market's showroom: the boat afloat off the harbour, the camera turning round it, a chip with the way back
         if not ONLY or 'showroom' in ONLY:

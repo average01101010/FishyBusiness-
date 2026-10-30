@@ -199,28 +199,28 @@ delvis (½) eller mangler (✗). Punkter som ikke gjelder en ringnot-/snurrevadb
 ### SKR Skrog
 | ID | Modellen skal ha | Info |
 |---|---|---|
-| SKR-01 | 38,55 × 9,50 m (B1), dybde og dypgang fra register | ½ |
+| SKR-01 | 38,55 × 9,50 m (B1), dybde og dypgang fra register | ✓ (byggerapporten; dypgangen 3,85 lest av bildene) |
 | SKR-02 | Spring opp mot bakken, rett dekkslinje akter | ✓ |
 | SKR-03 | Rett, svakt foroverlent stevn med flare | ✓ |
-| SKR-04 | Bulb i vannflaten | ½ (form ukjent under vann) |
-| SKR-05 | Høy hekk med store hjørneradier, speil | ½ (ikke sett rett bakfra) |
-| SKR-06 | Rundspant, myk kimming | ½ |
-| SKR-07 | Kjøl, slingrekjøl | ✗ |
-| SKR-08 | Skeg og propellåpning | ✗ |
+| SKR-04 | Bulb i vannflaten | ✓ (slippbildene 226293a9, 9d43d29b) |
+| SKR-05 | Høy hekk med store hjørneradier, speil | ✓ (274df4a7: nedsenket speil, flat bunn, knekk) |
+| SKR-06 | Rundspant, myk kimming | ✓ |
+| SKR-07 | Kjøl, slingrekjøl | ✓ (kjølplate, slingrekjøler) |
+| SKR-08 | Skeg og propellåpning | ✓ |
 | SKR-09 | Plateskjøter i felt på 2–3 m, lang skjøt midt i det blå (SUL-SKR-05) | ✓ |
 | SKR-10 | Hvit skanse med avrundet topp, brutt midtskips (SUL-SKR-07, -13) | ✓ |
 | SKR-11 | Lenseporter øverst i det blå | ✓ |
 | SKR-12 | Rad med firkantede overbordsutløp og runde utløp (SUL-SKR-15, -16) | ✓ |
-| SKR-13 | Sjøkister | ✗ (A) |
-| SKR-14 | Baug- og akterthrustertunnel | ½ (merkene sett, plass anslått) |
-| SKR-15 | Sonar og senkekjøl | ✗ (A) |
+| SKR-13 | Sjøkister | ✓ (riller midtskips) |
+| SKR-14 | Baug- og akterthrustertunnel | ✓ (riste på kurven, 6,2 og 34,0 m) |
+| SKR-15 | Sonar og senkekjøl | ✓ (to sonartrunker) |
 | SKR-16 | Slitelister og blått rørrekkverk midtskips (SUL-SKR-14) | ✓ |
 | SKR-17 | Isforsterkning | ✗ |
 | SKR-18 | Stål | ✓ |
-| SKR-19 | Anoder | ✗ (A) |
+| SKR-19 | Anoder | ✓ (ror, skeg, side, bunnkant) |
 | SKR-20 | Ankerlomme, porter | ✓ |
 | SKR-21 | Innfelte leidertrinn i siden og hekken | ✓ |
-| SKR-22 | Ventilasjonsrister | ½ |
+| SKR-22 | Ventilasjonsrister | ✓ (lameller i ekte hull) |
 
 ### DKS Dekk
 | ID | Modellen skal ha | Info |
@@ -231,7 +231,7 @@ delvis (½) eller mangler (✗). Punkter som ikke gjelder en ringnot-/snurrevadb
 | DKS-04 | Lufte- og peilerør langs skansen | ½ |
 | DKS-05 | Ventilasjon på overbygget | ½ |
 | DKS-06 | Rør og kabelbaner | ½ |
-| DKS-07 | Dører (overbygg, styrehus) | ½ |
+| DKS-07 | Dører (overbygg, styrehus) | ✓ (styrehus babord, hus begge sider, kasse, bakke, sidedør) |
 | DKS-08 | Trapper og leidere (bakken, masta, styrehuset) | ✓ |
 | DKS-09 | Brannutstyr | ✗ (A, standardplasser) |
 | DKS-10 | Drenering | ½ |
@@ -251,7 +251,7 @@ delvis (½) eller mangler (✗). Punkter som ikke gjelder en ringnot-/snurrevadb
 | OVB-06 | Brovinger | ½ |
 | OVB-07 | Akterstyreplass mot arbeidsdekket | ✗ |
 | OVB-08 | Vinduer i dekkshus og akter | ✓ |
-| OVB-09 | Skorstein/eksostårn akter babord | ½ (T) |
+| OVB-09 | Skorstein/eksostårn akter babord | ✓ (trapes, to rør) |
 | OVB-10 | Utstyr på skott (lys, høyttalere, skap) | ½ |
 | OVB-11 | Styrehustak med mastetårnene | ✓ |
 | OVB-12 | Konsoll og stoler synlige gjennom glasset | ½ (A) |
@@ -265,12 +265,12 @@ delvis (½) eller mangler (✗). Punkter som ikke gjelder en ringnot-/snurrevadb
 |---|---|---|
 | MST-01 | To trappede mastetårn på styrehustaket med blå bånd | ✓ |
 | MST-02 | Formast: konisk rørmast med to plattformer | ✓ |
-| MST-03 | Åpne radarantenner (to) | ½ (lengde anslått) |
+| MST-03 | Åpne radarantenner (to) | ✓ (4,4 og 1,6 m) |
 | MST-04 | To radomer, rundt 1,2 m | ✓ |
 | MST-05 | 3–4 høye piskantenner | ✓ |
 | MST-06 | Småantenner (GPS, AIS) | ½ |
 | MST-07 | Sensorer (vindmåler) | ½ |
-| MST-08 | Tyfon | ✗ (A) |
+| MST-08 | Tyfon | ✓ (formastas akterkant) |
 | MST-09 | Signalfigurer | – (spillet tegner) |
 | MST-10 | Flagg (flaggstang akter) | ½ |
 | MST-11 | Skjult elektronikk | – |
@@ -280,9 +280,9 @@ delvis (½) eller mangler (✗). Punkter som ikke gjelder en ringnot-/snurrevadb
 ### FOR Fortøyning og forskip
 | ID | Modellen skal ha | Info |
 |---|---|---|
-| FOR-01 | Ankervinsj på bakken | ✗ (ikke sett) |
+| FOR-01 | Ankervinsj på bakken | ✓ (under presenning, 82e91969) |
 | FOR-02 | Ankerlomme med anker (spillets anker) | ✓ |
-| FOR-03 | Fortøyningsvinsjer | ✗ (A) |
+| FOR-03 | Fortøyningsvinsjer | ✓ (to varpevinsjer på arbeidsdekket, to varpehoder på bakken) |
 | FOR-04 | Klyss (3–4 panama forut, SUL-SKR-08) og pullerter | ✓ |
 | FOR-05 | Fendere | ½ |
 | FOR-06 | Bakk | ✓ |
@@ -291,11 +291,11 @@ delvis (½) eller mangler (✗). Punkter som ikke gjelder en ringnot-/snurrevadb
 ### FRM Fremdrift
 | ID | Modellen skal ha | Info |
 |---|---|---|
-| FRM-01 | Propell (CPP antatt) | ✗ |
-| FRM-02 | Dyse | ✗ |
-| FRM-03 | Ror | ✗ |
-| FRM-04 | Aksel og tauvern | ✗ |
-| FRM-05 | Baug- og akterthruster | ½ |
+| FRM-01 | Propell (CPP antatt) | ✓ (CPP, fire blad, 2,80 m) |
+| FRM-02 | Dyse | ✓ (ingen dyse: propell i brønn, 9d43d29b) |
+| FRM-03 | Ror | ✓ (profilror med endeplate) |
+| FRM-04 | Aksel og tauvern | ✓ |
+| FRM-05 | Baug- og akterthruster | ✓ |
 | FRM-06 | Eksos (tårnet akter) og kjølevannsutløp | ½ |
 | FRM-07 | Rødt bunnstoff, hvit vannlinjestripe | ✓ |
 
@@ -312,14 +312,14 @@ delvis (½) eller mangler (✗). Punkter som ikke gjelder en ringnot-/snurrevadb
 ### SIK Sikkerhet
 | ID | Modellen skal ha | Info |
 |---|---|---|
-| SIK-01 | Redningsflåter i holdere (`kit.raft`) | ½ (antall og plass) |
+| SIK-01 | Redningsflåter i holdere (`kit.raft`) | ✓ (to på dekk B babord akter) |
 | SIK-02 | Oransje MOB-båt i vugge med davit, babord bak styrehuset | ✓ |
 | SIK-03 | Livbøyer med lys (`kit.buoys`) | ✓ |
 | SIK-04 | Nødpeilesender | ½ |
 | SIK-05 | Rekkverk overalt der det er fall | ✓ |
 | SIK-06 | Skilting | ½ |
 | SIK-07 | Livliner | ✗ |
-| SIK-08 | Kister for redningsutstyr | ½ |
+| SIK-08 | Kister for redningsutstyr | ✓ (den røde kisten på balkongen) |
 
 ### FSK Fangsthåndtering
 | ID | Modellen skal ha | Info |
@@ -472,7 +472,104 @@ på kassen ved hopperen, dør og to vinduer i bakkens akterskott på styrbord, d
 
 Runde 5 (mot 95c900de): radarmastas to tårn som platetårn med rette sider og avfasede hjørner, ikke runde.
 
-Igjen etter runde 5, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 6–7: akterkranen målt på sidebildet (bommen til knekken ved 11,4 m, jiben foldet akterover under den), nottrakta,
+presenningskassen, ankervinsjens runde presenning, tausnella, den runde luka, varpevinsjene, A-ramma på hekken; fjernversjonen
+trimmet under 12 000 punkter.
+
+Runde 8 (Jonas' meldinger 30.10.2026, bildene 7b36cbe5, 3bd16b40, c6db804c, 5f57d449, a5d2b0af): **nottrakta står helt på
+styrbord side av styrehuset**, utenfor husveggen på øvre dekk (fot 12,9 m, y −3,95), med munningen akterover i vindushøyde over
+plattformens rekkverk (topp 12,9 m). **Kraftblokka henger rett over munningen** (10,3 m, 14,5 m) på svingarmen fra jibens tupp:
+nota hales over blokka, faller gjennom trakta og legges i notbingen akterut. Plattformen (dekk B) er skåret ut rundt trakta
+(kanten inn til y −3,0 mellom 10,35 og 13,9 m) og ført akterover til 8,3 m som en gangbane på to stolper, med en lavere balkong på
+husets tak under. Styrehusets bakside har stolper mellom vinduene som de andre sidene (hver 1,3 m). Vinduene i huset under
+styrehuset manglet glass (glasset lå 2 cm inne i veggen); nå ligger det like utenfor.
+
+Runde 9 (Jonas 30.10.2026: «Trakten clipper gjennom styrhuset»): en **klasjsjekk** er lagt inn i sløyfen
+(`scratchpad/r38/clipcheck.py`): hvert punkt i dekksutstyret, mastene og akterdekket prøves mot styrehusets plan (mellom dekk B og
+takkanten), dekk B's kantplate og huset under; gangbanens rekkverk prøves mot traktas rør. Første kjøring: 147 klasj. Rettet:
+trakta flyttet akterover og utover (fot 12,3 m / y −4,55, munning 9,7 m / 13,05 m) så munningen er helt akter for styrehusets
+bakvegg og over rekkverket; plattformens rekkverk stopper ved utskjæringens innerhjørne og gangbanens rekkverk går rundt traktas
+innside; vakuumtankene flyttet fram under dekk B's utstikk med toppen under kantplata; den forreste kranens knekk flyttet fram
+foran dekk B's front og utenfor tankene, jiben under plattformen; MOB-båten og daviten akter for huset og dekk B. Sluttkjøring:
+0 klasj. Sjekken kjøres etter hver runde fra nå.
+
+Runde 10 (Jonas 30.10.2026: «arbeidsdekk nesten hele veien bak på styrbord-siden», a5d2b0af, 4929aa51): **arbeidsdekket på
+styrbord går fra notbingens vegg (7,3 m) til bakken (25,8 m)**, med lav skansekledning og blått rørrekkverk hele veien; runde 4
+tok feil om stykket akter for huset. Huset under styrehuset står på øvre dekk med sin styrbord vegg (y −3,35) som kassens vegg ned
+til shelterdekket; akter for huset en kasse under gangbanen med dør (8,8–9,6 m) og vinduene i veggen; forut for huset springer
+kassen inn til y −0,6 med en tverrvegg ved 20,35 m. Døra i husets styrbord side er på arbeidsdekkets nivå. Trinnene under sidedøra
+akter (7,3–7,7 m) på begge sider. **De tre svarte vakuumtankene er tatt ut** (Jonas: «Hva er disse svarte rørene? Fjern dem»); på
+bildene henger tre korte svarte tanker (rundt 1,3 m) under plattformen ved husfronten, ikke fra dekket og opp som mine var.
+Hopperen flyttet til y −0,7…−3,5. Klasjsjekk: 0.
+
+Runde 11: en vegg som rendret svart viste seg å være to flater i samme plan (husets kassevegg oppå dekkets); den ene skygget den
+andre. Regel fra nå: **aldri to flater i samme plan**; `dbg12.py`-metoden (skjul objekt for objekt, slett flata) finner slike.
+Styrbord sidedør akter tatt ut (det er arbeidsdekk der). Kontrollbildene rendres med himmellys 0,45 og eksponering −1,0.
+
+Runde 12 (hekkbildet 274df4a7, flybildet 82e91969, kaibildet 47d6785c): akterspeilet går 0,65 m under bunnstofflinja (rød stripe
+på speilet i bildet), med flat bunn og en knekk ut til sida 1,0 m høyere, ikke en rund (`section_body`, x < 2,6); livbøyer på
+bakkens akterskott, gangbanens akterkant og dekk B's babordkant; sidedøra akter på babord som et hvitt dørblad med vindu i
+nisjen. Fjernversjonen 11 595 punkter, nærversjonen 93 352.
+
+Runde 13 (5e85f70b, 95c900de, fa9cc65c): mastenes plattformer har en hvit kantplate (0,22–0,45 m) over det blå båndet og
+rekkverket oppå, ikke bare rekkverk; formasten har stigetrinn opp akterkanten fra dekket til den øvre plattformen, og to
+lyskastere i bøyle på forkanten (11,45 m) pluss én under, rettet forover og ned over bakken.
+
+Runde 14 (fa9cc65c, 7b36cbe5, a5d2b0af): **vakuumtankene er lagt inn igjen, slik de er på bildene**: tre korte svarte tanker
+(1,35 m, Ø 0,84) som henger under dekk B's utstikk ved husfronten med hvite topper og to samlerør, ikke rør fra dekket som i
+runde 1 (de Jonas ba om å fjerne). Fjernversjonen holdt under 12 000 med `_F` 0,45 og grove tanker.
+
+Runde 15 (9d43d29b slippen fra babord, ba02ed9c styrehusfronten, b34e7009 babord under fart, 0b9f58de pressebildet fra
+styrbord baug): den forreste kranen synes like godt fra babord, så foten står nær midtskips på bakkens akterkant (y −1,8), ikke ved
+styrbord rekke; navnet står på styrehusets front under vinduene (ny navnestripe i `names`, langs frontens fasetter); styrehusets
+bakvegg har to store ruter og døra (stolper hver 2,0 m der, 1,3 m ellers). Pressebildet lagt til som kontrollvinkel (`sbowair`).
+Pressebildet bekrefter: hele styrbord side er åpent arbeidsdekk med lav skansekledning fra bakken til hekken, kassen og huset
+til babord, hopperen med rørene midtskips til styrbord.
+
+Runde 16 (slippbildet fra babord 9d43d29b mot sidebildet 42432bd5): tre skrå streker høyt på baugen (34,0–35,5 m, z 6,75–7,25)
+ved siden av klasseringen (ringen modelleres ikke); fire runde utløp i det røde over bulben (31,0–32,5 m, z 3,7); **fire store
+vinduer i shelterdekkets babordside** (15,6–25,2 m, z 7,45–8,3) fantes da båten var ny, men er plateslått over: sidebildet viser
+bare omrissene, så de er tegnet som hvite paneler flush i sida med en tynn kant. Dypgangsmerkenes rekkefølge på baugen stemmer
+med slippbildet (thrusterringen forrest, V-ene akter for den).
+
+Runde 17 (undervannsskroget mot slippbildet 9d43d29b): bunnen er flat med en markert kant der den står på blokkene, propellen
+i brønn med roret bak og hekkthrusteren forut for den, bulben med gitteret og firebladet propell, alt som i modellen. Lagt til: en
+rad sinkanoder langs bunnkanten hver 2,6 m fra 8,5 til 29,3 m (de små grå rektanglene i bildet) og en endeplate under roret.
+Dypgangsskalaen på baugen leser like mot bildet (siffer hver 0,2 m, M ved hele metre, 0,5 m akter for stevnen).
+
+Runde 18 (c6db804c, 7b36cbe5): gangbanen akter for styrehuset finnes på **begge** sider (dekk B ført akterover til 8,3 m, på to
+stolper, med rekkverk); på babord står to redningsflåter i holdere (8,95 og 10,0 m) over MOB-båten, og den røde utstyrskisten
+på balkongen under. MOB-båtens davit flyttet til båtens akterende (7,5 m) så den ikke går gjennom gangbanen.
+
+Runde 19 (c6db804c i nærbilde): flåtene og den røde kisten står sammen på den lavere balkongen på husets tak (z 10,2), under
+gangbanen, ikke oppe på den; flyttet. Fjernversjonen 11 802 punkter (`_F` 0,42), nærversjonen 133 247.
+
+Runde 20 (bakken fra lufta 82e91969 og fra låringen 274df4a7): ankervinsjen (to grå gypsier med grønt tau) står oppå
+bakkhuset babord for masta (28,8 m), ikke på dekket forut; presenningsformen på 33,2–34,9 m i sidebildet er notvinsjen (et
+avsmalnende hvitt fundament med tausnella på tvers oppå) under dekke, nå bygd åpen på 33,6 m litt til styrbord; livbøye på
+bakkens akterskott på begge sider. Bakkens rekke (plate med rørrekkverk oppå), varpehodene, tausnella ved masta og den runde
+luka stemmer med bildene.
+
+Runde 21 (bakkens side 26–38,5 m på sidebildet, slippbildet 226293a9): ankerlomma ligger på 30,8–32,35 × 7,42–7,98 (0,15 m
+lenger fram enn først målt), ankerkronens list under den på 30,65–32,75; et tredje klyss i rekka ved 29,85–30,15 m. Ingen rad av
+små åpninger i bakkens side: det slippbildet viste, var de store vinduene akter, og åpningen ved 25,9–27,2 m er et vindu i
+bakkens side (en person synes i det på slippbildet).
+
+Runde 22 (baugoverlegget mot sidebildet, 25–39,5 m): ankerlomma, klyssene, bakkens vindu og rekka ligger på fotoet; de tre høye
+strekene lå 0,5 m for langt akter og er flyttet til 34,5–36,0 m.
+
+Ferdigstilling (30.10.2026, Jonas: «gjør den helt ferdig»): de egne hjelperne for nottrakt, kraftblokk, radom, pisk, lyskaster og
+leider byttet ut med de felles beslagene i `fittings.py` (`net_funnel`, `power_block`, `radome`, `whip`, `gps`, `searchlight`,
+`ladder`, `hose_reel`), så piloten og de andre båtene har samme beslag. Eksportert til `src/data/boat-ringnot38.b64` og
+`-side.b64`, inn i malen og som typen `ringnot38` i `VESSELS` (låst). `lodm` (Decimate til 40 000 trekanter) lages for første gang.
+
+I spillet (`vessel3d ringnot38`, 30.10.2026): 357 906 punkter nær (taket 900 000), 120 000 middels (`lodm`), bygget på 197 ms, alle
+plassene finnes; `brotest`: hodet under taket (2,97 m rom, øyet 1,65 m) og utsyn gjennom vinduene. Skroget måles til 36,67 m i
+testens bånd (vannlinja til 1,5 m over) mot 38,55 m over alt, fordi stevnen heller over bulben; testen tillater nå 6 % kortere.
+Fjernversjonen er 13 607 punkter (Jonas 30.10.2026: «Drit i den grensa»; taket for egen båt nær er 300 000 trekanter,
+middels og NPC 40 000).
+
+Igjen etter runde 22, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 
@@ -491,6 +588,7 @@ Når 1–5 er på plass, er grunnlaget klart, og pilotøkta kan starte.
 
 ## Endringslogg
 
+- 30.10.2026: kravlista (kap. 5) ajourført etter runde 17: det som er bygd, er merket ✓ med kilden.
 - 30.10.2026: kritikksløyfen runde 4: arbeidsdekket bare 20,35–25,8 m, forreste kran til styrbord, pipa med to rør.
 - 30.10.2026: kritikksløyfen (kap. 7.1), runde 1 og 2: akterskipet, dekksutstyret, merkene.
 - 30.10.2026: styrbords arbeidsdekk (båten er ikke symmetrisk), den forreste kranen snudd, alle åpninger som ekte hull (kap. 4.0).

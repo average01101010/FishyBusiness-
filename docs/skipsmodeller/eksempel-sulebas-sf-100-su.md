@@ -9,6 +9,8 @@ modellkrav.
 
 ## 0. Om eksemplet
 
+(Båten i dette eksemplet ble bygd 30.10.2026 som pilotbåten `ringnot38`; det som faktisk ble målt og bygd, står i `sulebas-pilot-grunnlag.md` og `sulebas-bygging.md`. Tallene her er anslagene fra før byggingen.)
+
 ### 0.1 Kolonner og koder
 
 Kolonnene følger planlisten (kap. 0), med tre tillegg for bildeanalyse:

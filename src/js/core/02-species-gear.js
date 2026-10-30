@@ -153,7 +153,17 @@ const VESSELS = {
     rigs:[], jukseMax:0, gearMax:{garn:0, stamp:0, teine:4}, svcH:800, svcCost:900000, svcJobH:120, cls:'hav', price:250000000, priceNew:800000000, year:2010, lock:true,
     crew:{key:['skipper', 'styrmann', 'maskinsjef', '2. maskinist', 'kokk'], teams:[{role:'dekk', n:7}], rot:1},
     hullMat:'stål', hold:{kind:'rsw', m3:2800}, deckCargo:80000, iceMaker:0, gutMachine:0, lph:1000, cabins:8, fac:{house:'hus', shelter:true, galley:'bysse', wc:true, dry:true, mess:true}, stations:{table:2, hauler:2}, crane:5,
-    desc:{no:'Ringnotsnurper og pelagisk tråler for sild, makrell og kolmule, med kjølte sjøvannstanker (RSW). Krever ringnotkonsesjon.', en:'Purse seiner and pelagic trawler for herring, mackerel and blue whiting, with refrigerated sea water tanks (RSW). Needs a purse seine licence.'}}
+    desc:{no:'Ringnotsnurper og pelagisk tråler for sild, makrell og kolmule, med kjølte sjøvannstanker (RSW). Krever ringnotkonsesjon.', en:'Purse seiner and pelagic trawler for herring, mackerel and blue whiting, with refrigerated sea water tanks (RSW). Needs a purse seine licence.'}},
+  // the pilot boat of the graphics plan (docs/planer/grafikk-batmodeller.md F4, docs/skipsmodeller/sulebas-pilot-grunnlag.md): a 38.55 m
+  // multi-purpose purse seiner and fly-shooter built in Blender after a real boat's build report and photographs (tools/boats/ringnot38.py);
+  // her place in the ladder is not decided (B1 = C), so she is locked like the ocean fleet. Data from the build report: Lpp 34.00, B 9.50,
+  // 499 GT, fuel 78.6 m3, RSW 419.5 m3, 749 kW (1,018 hp) main engine
+  ringnot38:{name:{no:'Kystnotbåt 38,55 m, ringnot og snurrevad', en:'38.55 m coastal purse seiner and fly-shooter'}, len:38.55, beam:9.5, draft:3.85, disp:800, holdCap:400000, iceCap:0, fuelCap:78600, hp:1018, engine:{no:'1 018 hk diesel', en:'1,018 hp diesel'},
+    vmax:13, vcruise:11, accel:1.2, turnR:200, planing:false, outboard:false, diesel:true, risk:[5, 8, 22, 28], sea:0.05, crewMax:8, berths:10, tubCap:1200, land:'tub', std:['plotter', 'vhf', 'ais', 'chirp', 'sonar'],
+    rigs:[], jukseMax:0, gearMax:{garn:0, stamp:0, teine:4}, svcH:600, svcCost:450000, svcJobH:80, cls:'hav', price:95000000, priceNew:180000000, year:2014, lock:true,
+    crew:{key:['skipper', 'styrmann', 'maskinsjef', 'kokk'], teams:[{role:'dekk', n:4}], rot:1},
+    hullMat:'stål', hold:{kind:'rsw', m3:420}, deckCargo:30000, iceMaker:0, gutMachine:0, lph:220, cabins:6, fac:{house:'hus', shelter:true, galley:'bysse', wc:true, dry:true, mess:true}, stations:{table:2, hauler:2}, crane:3,
+    desc:{no:'Kystnotbåt med ringnot og snurrevad, kjølte sjøvannstanker (RSW) og fiskepumpe. Åpent arbeidsdekk på styrbord side.', en:'Coastal purse seiner and fly-shooter with refrigerated sea water tanks (RSW) and a fish pump. An open working deck on the starboard side.'}}
 };
 const BOAT = Object.assign({}, VESSELS.skiff);
 const PRICE = {fuel:23.9, diesel:14.5, ice:1.5, iceBag:2.0, gear:1900, kgear:2490, tow:4500, rescue:6000, member:1250};
