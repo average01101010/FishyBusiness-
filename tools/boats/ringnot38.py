@@ -55,14 +55,12 @@ def z_sh(x): return interp(ZS, x)
 # the starboard side is lower: an open working deck on the shelter deck runs along it from the net bin's high wall (which curves down
 # to the deck at 5.5-7.3 m) to the forecastle (rising again at 25.8-26.6 m), with only a pipe rail on the side's edge (photographs
 # 274df4a7 and 82e91969, Jonas 30.10.2026: "båten er høyere på babord rekka enn styrbord fordi den har et arbeidsdekk på styrbord")
-X_WD = (7.3, 25.8)             # the starboard working deck's ends at the side
+X_WD = (20.35, 25.8)           # the starboard working deck's ends at the side (the house's front to the forecastle)
 Y_C = -0.6                     # the casing's starboard wall: the upper deck to port of it, the working deck to starboard
 def z_bw(x, sg=1):
-    if sg > 0 or x <= 5.0 or x >= 26.6: return interp(ZB, x)
+    if sg > 0 or x < X_WD[0] or x >= 26.6: return interp(ZB, x)
     lo = z_sh(x) + 0.35          # the low bulwark plate along the working deck, under the blue pipe rail
-    if X_WD[0] <= x <= X_WD[1]: return lo
-    if x < X_WD[0]:
-        t = (x - 5.0) / (X_WD[0] - 5.0); return lo + (interp(ZB, x) - lo) * (1 - t ** 1.6) ** 1.4
+    if x <= X_WD[1]: return lo
     t = (x - X_WD[1]) / (26.6 - X_WD[1]); return lo + (interp(ZB, x) - lo) * (3 * t * t - 2 * t ** 3)
 # the stem (z, x), read off the same photograph above the bow wave: raked about 33 degrees, through 35.2 m at the waterline (the
 # forward perpendicular, AP + Lpp); below the water the forefoot runs into the bulb
@@ -479,6 +477,7 @@ def holes():
     while z > 4.85: H.append((1, 22.50, 22.92, z - 0.05, z + 0.05, 0.02, 'box', 0.12)); z -= 0.38
     for x0, x1, z0, z1 in ((13.03, 13.46, 7.17, 7.87), (13.92, 14.36, 7.17, 7.87), (9.35, 9.78, 7.30, 8.00), (10.04, 10.47, 7.30, 8.00), (4.69, 5.12, 7.40, 8.12)):
         H.append((1, x0, x1, z0, z1, 0.08, 'glass', 0.08))
+        if x0 > 9: H.append((-1, x0, x1, z0, z1, 0.08, 'glass', 0.08))     # (5e85f70b: the same windows on starboard)
     H.append((1, 6.65, 7.65, 7.22, 8.33, 0.06, 'box', 1.2)); H.append((1, 6.55, 7.36, 5.80, 6.00, 0.03, 'box', 0.15))
     for k in range(8):
         xc = 3.45 - 0.433 * k; H.append((1, xc - 0.13, xc + 0.13, 8.80, 9.07, 0.06, 'thru', 0.0))
@@ -488,8 +487,8 @@ def holes():
     for x0, x1 in ((26.15, 27.10), (23.87, 24.84), (22.84, 23.70), (21.33, 22.14), (20.40, 21.16), (18.57, 19.33), (19.38, 20.14), (16.80, 17.60),
                    (13.00, 13.70), (11.20, 11.90), (9.90, 10.60), (8.60, 9.30)):
         H.append((-1, x0, x1, 5.76, 6.05, 0.06, 'louvre', 0.25))
-    z = z_sh(8.6) - 0.25
-    while z > 4.85: H.append((-1, 8.0, 8.42, z - 0.05, z + 0.05, 0.02, 'box', 0.12)); z -= 0.38
+    z = z_sh(24.2) - 0.25
+    while z > 4.85: H.append((-1, 24.0, 24.42, z - 0.05, z + 0.05, 0.02, 'box', 0.12)); z -= 0.38
     H.append((-1, 27.05, 28.45, 7.65, 8.60, 0.30, 'box', 1.0))
     return H
 
@@ -596,7 +595,9 @@ def hull_side(fine=True):
 def funnel(fine=True):
     A = Acc('funnel'); W = C['white']
     zb = 9.85; zt = 12.14; y0, y1 = 2.9, hbz(5.2, 9.5)
-    xa0, xa1, xt0, xt1 = 4.06, 6.36, 4.35, 6.07
+    # (the photograph at the quay 47d6785c: the funnel is a trapezoid seen from the side, 2.9 m at its foot on the bin's wall and
+    # 1.45 m under the blue cap, its fore face sloping more than its aft)
+    xa0, xa1, xt0, xt1 = 3.75, 6.65, 4.45, 5.90
     ring = lambda zz, t: [(xa0 + (xt0 - xa0) * t, y0 + 0.05 * t), (xa1 + (xt1 - xa1) * t, y0 + 0.05 * t), (xa1 + (xt1 - xa1) * t, y1 - 0.25 * t), (xa0 + (xt0 - xa0) * t, y1 - 0.25 * t)]
     lo, hi = ring(zb, 0), ring(zt, 1)
     for i in range(4):
@@ -609,11 +610,11 @@ def funnel(fine=True):
         A.poly([(a[0], a[1], zt), (b[0], b[1], zt), (b[0], b[1], 12.45), (a[0], a[1], 12.45)], C['trim'], ((b[1] - a[1]), -(b[0] - a[0]), 0))
     A.poly([(x, y, 12.45) for x, y in cap], C['trim'], (0, 0, 1))
     if fine:
-        # the exhaust: one big pipe out of the cap bent aft in a swan neck, its black rain cap, a small pipe beside it
-        P = [(5.30, 3.55, 12.45), (5.30, 3.55, 12.95), (5.18, 3.55, 13.25), (4.95, 3.55, 13.42)]
-        for a_, b_ in zip(P, P[1:]): acyl(A, a_, b_, 0.25, lambda z: C['steel'], seg=14)
-        acyl(A, P[-1], (4.82, 3.55, 13.46), 0.26, lambda z: C['black'], seg=14)
-        acyl(A, (4.75, 3.2, 12.45), (4.75, 3.2, 13.2), 0.08, lambda z: C['black'], seg=8)
+        # the exhausts: two bare steel pipes out of the cap, each rising 1.3 m and bending aft in a swan neck (47d6785c, 82e91969)
+        for yy, h in ((y0 + 0.5, 13.75), (y1 - 0.55, 13.55)):
+            P = [(5.25, yy, 12.45), (5.25, yy, h - 0.45), (5.12, yy, h - 0.18), (4.88, yy, h - 0.02), (4.62, yy, h)]
+            for a_, b_ in zip(P, P[1:]): acyl(A, a_, b_, 0.19, lambda z: C['steel'], seg=14)
+            acyl(A, P[-1], (4.45, yy, h), 0.2, lambda z: C['black'], seg=14)
     return [A.done(30)]
 
 
@@ -662,18 +663,18 @@ def decks(fine=True):
     y = hbz(X_BIN, 7.5) - 0.06
     A.poly([(X_BIN, -y, z_sh(X_BIN)), (X_BIN, y, z_sh(X_BIN)), (X_BIN, y, z_dk(X_BIN)), (X_BIN, -y, z_dk(X_BIN))], W, (-1, 0, 0))
     # ---- the upper deck: over the casing to port of Y_C aft of the forecastle, the whole breadth on the forecastle ----
-    xs = [X_BIN + 0.4 * i for i in range(int((XF - X_BIN) / 0.4) + 1)] + [X_FC]
+    xs = [X_BIN + 0.4 * i for i in range(int((XF - X_BIN) / 0.4) + 1)] + [X_FC, X_WD[0]]
     xs = sorted(x for x in set(round(v, 4) for v in xs) if hbz(x, z_dk(x)) > 0.3); xs.append(xs[-1] + 0.25)
     for x0, x1 in zip(xs, xs[1:]):
         e0, e1 = hbz(x0, z_dk(x0)) - 0.02, max(0.0, hbz(x1, z_dk(x1)) - 0.02)
-        if x1 <= X_FC + 1e-6: lo0, lo1 = Y_C, Y_C
+        if X_WD[0] - 1e-6 <= x0 and x1 <= X_FC + 1e-6: lo0, lo1 = Y_C, Y_C
         else: lo0, lo1 = -e0, -e1
         for k in range(4):
             f0, f1 = k / 4, (k + 1) / 4
             P = lambda x, e, lo, f: (x, lo + (e - lo) * f, z_dk(x) + camber(lo + (e - lo) * f, x))
             A.poly([P(x0, e0, lo0, f0), P(x0, e0, lo0, f1), P(x1, e1, lo1, f1), P(x1, e1, lo1, f0)], C['deck'], (0, 0, 1))
     # the casing's starboard wall down to the working deck, the working deck itself, the forecastle's aft bulkhead over it
-    xw = [X_BIN + 0.4 * i for i in range(int((X_FC - X_BIN) / 0.4) + 1)] + [X_FC]
+    xw = [X_WD[0] + 0.4 * i for i in range(int((X_FC - X_WD[0]) / 0.4) + 1)] + [X_FC]
     xw = sorted(set(round(v, 4) for v in xw))
     for x0, x1 in zip(xw, xw[1:]):
         A.poly([(x0, Y_C, z_sh(x0)), (x1, Y_C, z_sh(x1)), (x1, Y_C, z_dk(x1) + camber(Y_C, x1)), (x0, Y_C, z_dk(x0) + camber(Y_C, x0))], W, (0, -1, 0))
@@ -684,7 +685,10 @@ def decks(fine=True):
     # the side's inside: over the working deck where it rises at its ends, round the forecastle on both sides
     xf = [X_FC + 0.4 * i for i in range(int((XF - X_FC) / 0.4) + 1)]; xf = [x for x in xf if hbz(x, z_dk(x)) > 0.3]
     for sg in (1, -1): side_wall(A, xf, sg, z_dk, lambda x, sg=sg: z_bw(x, sg))
-    side_wall(A, [X_BIN + 0.1 * i for i in range(int((X_WD[0] + 0.1 - X_BIN) / 0.1) + 1)] + [X_WD[1] + 0.1 * i for i in range(int((X_FC - X_WD[1]) / 0.1) + 1)], -1, z_sh, lambda x: z_bw(x, -1))
+    side_wall(A, [X_WD[0] + 0.1 * i for i in range(int((X_FC - X_WD[0]) / 0.1) + 1)], -1, z_sh, lambda x: z_bw(x, -1))
+    # the working deck's aft end: the house's front down to the deck between the casing wall and the side
+    e = hbz(X_WD[0], z_sh(X_WD[0])) - 0.05
+    A.poly([(X_WD[0], -e, z_sh(X_WD[0])), (X_WD[0], Y_C, z_sh(X_WD[0])), (X_WD[0], Y_C, z_dk(X_WD[0])), (X_WD[0], -e, z_dk(X_WD[0]))], W, (1, 0, 0))
     if fine:
         # the rails: to port along the side's top from the bin to the stem, to starboard round the forecastle, the blue pipe rail
         # along the working deck's edge, white rails on the casing's edge and across the casing's and the forecastle's aft ends
@@ -693,12 +697,14 @@ def decks(fine=True):
         pipe_rail(A, [(x, hbz(x, z_bw(x)) - 0.04, z_bw(x)) for x in xs], top, W)
         xs = [x for x in [26.6 + 0.7 * i for i in range(18)] if x < XF - 0.15] + [XF - 0.12]
         pipe_rail(A, [(x, -(hbz(x, z_bw(x, -1)) - 0.04), z_bw(x, -1)) for x in xs], top, W)
+        xs = [x for x in [X_BIN + 0.1 + 0.7 * i for i in range(48)] if x < X_WD[0] - 0.1] + [X_WD[0] - 0.08]
+        pipe_rail(A, [(x, -(hbz(x, z_bw(x, -1)) - 0.04), z_bw(x, -1)) for x in xs], top, W)
         xs = [X_WD[0] + (X_WD[1] - X_WD[0]) * i / 18 for i in range(19)]
         pipe_rail(A, [(x, -(hbz(x, z_bw(x, -1)) - 0.04), z_bw(x, -1)) for x in xs], lambda x: z_sh(x) + 1.1, C['trim'], rails=2)
-        xs = [X_BIN + 0.1 + (X_FC - 0.1 - X_BIN - 0.1) * i / 20 for i in range(21)]
+        xs = [X_WD[0] + 0.1 + (X_FC - 0.1 - X_WD[0] - 0.1) * i / 8 for i in range(9)]
         pipe_rail(A, [(x, Y_C + 0.05, z_dk(x) + camber(Y_C, x)) for x in xs], lambda x: z_dk(x) + 1.05, W)
         y = hbz(X_BIN, z_dk(X_BIN)) - 0.05
-        pipe_rail(A, [(X_BIN + 0.05, Y_C + 0.05, z_dk(X_BIN)), (X_BIN + 0.05, (Y_C + y) / 2, z_dk(X_BIN)), (X_BIN + 0.05, y, z_dk(X_BIN))], top, W)
+        pipe_rail(A, [(X_BIN + 0.05, -y, z_dk(X_BIN)), (X_BIN + 0.05, -y / 2, z_dk(X_BIN)), (X_BIN + 0.05, 0.0, z_dk(X_BIN)), (X_BIN + 0.05, y / 2, z_dk(X_BIN)), (X_BIN + 0.05, y, z_dk(X_BIN))], top, W)
         e = hbz(X_FC, z_dk(X_FC)) - 0.1
         pipe_rail(A, [(X_FC + 0.05, -e, z_dk(X_FC)), (X_FC + 0.05, (Y_C - e) / 2, z_dk(X_FC)), (X_FC + 0.05, Y_C, z_dk(X_FC))], lambda x: z_dk(x) + 1.05, W)
     return [A.done(30)]
@@ -751,7 +757,7 @@ def superstructure(fine=True):
     zd = z_dk(HX0)
     # ---- the house on the upper deck, its corners rounded, the blue line round it at 9.88-10.0 m ----
     hp = rrect((HX0 + HX1) / 2, 0.0, HX1 - HX0, 2 * HY, 0.85, n=6)
-    prism(A, hp, z_sh(HX0) - 0.05, ZB2 - 0.2, w, top=False)
+    prism(A, hp, zd - 0.1, ZB2 - 0.2, w, top=False)
     hn = plan_normals(hp)
     for i in range(len(hp)):
         a, b = hp[i], hp[(i + 1) % len(hp)]; na, nb = hn[i], hn[(i + 1) % len(hp)]
@@ -761,7 +767,7 @@ def superstructure(fine=True):
         for sg in (1, -1):
             for x0, x1 in ((16.78, 17.10), (16.24, 16.56), (15.19, 15.46), (14.65, 14.96)):
                 wall_window(A, G, x0, x1, 9.72, 10.50, sg * HY, sg)
-            door(A, 13.30, 14.10, sg * HY, zd if sg > 0 else z_sh(13.7), face=sg)
+            door(A, 13.30, 14.10, sg * HY, zd, face=sg)
         for yy in (-1.6, -0.55, 0.55, 1.6):
             P = rrect(yy, 10.11, 0.5, 0.78, 0.08, n=3)
             G.poly([(HX1 + 0.01, p[0], p[1]) for p in P][::-1], C['glass'], (1, 0, 0))
@@ -992,17 +998,17 @@ def deck_gear(fine=True):
     abox(A, 31.45, 32.4, -0.9, 0.9, zd(32), 10.5, W); acyl(A, (31.9, -0.75, 9.9), (31.9, 0.75, 9.9), 0.45, lambda z: C['bin'], seg=14)
     # the fish pump's vacuum tank and its housing between the wheelhouse and the forecastle, the boxes on it, the yellow chest
     abox(A, 26.5, 28.8, -1.8, 1.8, 10.1, 10.8, C['dark'])
-    abox(A, 21.2, 23.0, 3.0, 4.2, zd(22), 9.8, C['yellow'])
+    abox(A, 21.3, 22.5, -4.15, -3.35, z_sh(21.9), z_sh(21.9) + 0.9, C['yellow'])
     # -- the forward crane (knuckle boom, folded on its rest along the port side): its pedestal at the forecastle's aft end, the
     #    main boom aft and up to the knuckle at 19.7 m, the jib folded down and aft beside the house to its rest; the cylinders --
-    acyl(A, (26.85, 3.2, zd(26.85)), (26.85, 3.2, 10.2), 0.34, lambda z: W, seg=14)
-    abox(A, 26.45, 27.25, 2.8, 3.6, 10.15, 10.55, W)
-    beam(A, (26.85, 3.2, 10.5), (19.7, 3.6, 11.5), 0.36, 0.32, W)
-    beam(A, (19.7, 3.65, 11.45), (18.3, 3.9, 9.75), 0.30, 0.30, W)
-    acyl(A, (26.2, 3.05, 10.1), (23.1, 3.15, 10.75), 0.07, lambda z: C['steel'], seg=8)
-    acyl(A, (20.2, 3.75, 11.0), (19.0, 3.85, 10.0), 0.08, lambda z: C['steel'], seg=8)
-    abox(A, 25.6, 26.1, 3.0 + 0.181, 3.0 + 0.19, 10.62, 10.82, C['yellow'])
-    abox(A, 18.1, 18.5, 3.6, 4.2, zd(18.3), 9.6, C['dark'])
+    yc = -3.0
+    acyl(A, (26.85, yc, zd(26.85)), (26.85, yc, 10.2), 0.34, lambda z: W, seg=14)
+    abox(A, 26.45, 27.25, yc - 0.4, yc + 0.4, 10.15, 10.55, W)
+    beam(A, (26.85, yc, 10.5), (19.7, yc - 0.4, 11.5), 0.36, 0.32, W)
+    beam(A, (19.7, yc - 0.45, 11.45), (18.6, yc - 0.7, 9.4), 0.30, 0.30, W)
+    acyl(A, (26.2, yc - 0.15, 10.1), (23.1, yc - 0.05, 10.75), 0.07, lambda z: C['steel'], seg=8)
+    acyl(A, (20.2, yc - 0.55, 11.0), (19.2, yc - 0.65, 10.0), 0.08, lambda z: C['steel'], seg=8)
+    abox(A, 25.6, 26.1, yc - 0.19, yc - 0.181, 10.62, 10.82, C['yellow'])
     # -- the aft crane by the funnel: its column, the slewing head, the main boom forward over the deck, the link over it, the
     #    folded jib under it, the lift cylinder, the hanging arm with the yoke and the net hauler's wheel --
     xc, yc = 7.16, 3.2
@@ -1100,6 +1106,13 @@ def aft_deck(fine=True):
             for e in (-0.55, 0.55): abox(A, 0.1, 0.4, yy + e - 0.04, yy + e + 0.04, z_bw(0.2), z_bw(0.2) + 0.3, C['steel'])
         # the ladder on the transom, from the waterline up the wall to its top
         ladder(A, (-0.03, 0.9, WL + 0.3), (-0.03, 0.9, z_bw(0.0) - 0.1), 0.4, C['steel'], out=(-1, 0, 0))
+    if fine:
+        pts = [(x, hbz(x, z_bw(x)) - 0.05, z_bw(x) + 0.03) for x in [0.15 + 0.5 * k for k in range(13)]]
+        for sg in (1, -1):
+            P = [V((x, sg * y, z)) for x, y, z in pts]
+            for a, b in zip(P, P[1:]): acyl(A, a, b, 0.03, lambda z: W, seg=8, cap=False)
+        y = hbz(0.15, z_bw(0.15)) - 0.05
+        acyl(A, (0.15, -y, z_bw(0.15) + 0.03), (0.15, y, z_bw(0.15) + 0.03), 0.03, lambda z: W, seg=8, cap=False)
     # ---- the net chute: a wide white cone standing on the deck aft of the house at port, leaning aft, its mouth up and forward ----
     base = V((9.2, 1.4, zs(9.2))); tip = V((7.9, 1.4, 13.6)); ax = (tip - base).normalized(); s, u, _ = frame_of(ax)
     rings = []
@@ -1121,6 +1134,8 @@ def aft_deck(fine=True):
         acyl(A, (20.95, yy, zs(20.95)), (20.95, yy, 10.85), 0.42, lambda z: C['black'], seg=18)
         acyl(A, (20.95, yy, 10.85), (20.95, yy, 11.05), 0.3, lambda z: C['steel'], seg=12)
     acyl(A, (20.95, -1.3, 10.95), (20.95, -3.6, 10.95), 0.09, lambda z: C['steel'], seg=8)
+    abox(A, 20.35, 21.55, -3.85, -1.05, 10.85, 10.92, C['steel'])
+    if fine: rail(A, [(20.35, -1.05, 10.92), (20.35, -3.85, 10.92), (21.55, -3.85, 10.92), (21.55, -1.05, 10.92)], h=0.9, every=0.7, r=0.018)
     # ---- the fish pump's hopper amidships: a steel tank with a grating top, the pipes from it over the side ----
     abox(A, 22.3, 25.4, -2.6, 0.2, zs(23.5), 10.1, C['steel'])
     if fine:
@@ -1131,7 +1146,10 @@ def aft_deck(fine=True):
     # ---- the stairs: from the working deck up to the forecastle at starboard, and to the casing's deck by the house ----
     if fine:
         stair(A, X_FC - 2.6, -3.9, zs(24.5), X_FC + 0.05, z_dk(X_FC), 0.8, W)
-        stair(A, 9.0, -1.5, zs(9.5), 11.4, z_dk(11.4), 0.8, W)
+        stair(A, 21.0, Y_C - 0.9, zs(21.0), 23.2, z_dk(23.2), 0.8, W)
+        door_x(A, X_FC, -2.3, zs(X_FC), face=-1)
+        for yy in (-1.45, -0.85):
+            A.poly([(X_FC - 0.005, yy - 0.22, 7.45), (X_FC - 0.005, yy + 0.22, 7.45), (X_FC - 0.005, yy + 0.22, 8.05), (X_FC - 0.005, yy - 0.22, 8.05)], C['glass'], (-1, 0, 0))
     # ---- the forecastle: the windlass (a drum with its rope between two cheeks), the two warping heads, the rope piles ----
     zf = z_dk(33.0) + 0.12
     for yy in (-1.6, 1.6):

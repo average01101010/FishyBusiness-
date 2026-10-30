@@ -462,7 +462,15 @@ tunnelene, de to V-ene og bulbmerket lagt inn; baugens skala flyttet opp over th
 Runde 3 (mot 8cdb9214 og 82e91969): akterkranens søyle som avsmalnende kasse, ankervinsjens presenning lavere og lenger akter,
 skansekledningen 0,35 m langs arbeidsdekket under det blå rekkverket.
 
-Igjen etter runde 3, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 4 (mot 4929aa51, 5e85f70b, 47d6785c, 82e91969, nye bilder 30.10.2026): **arbeidsdekket på styrbord ligger bare mellom
+husfronten (20,35 m) og bakken (25,8 m)**; akter for huset er styrbord side lukket opp til øvre dekk som babord, med husets vinduer i
+den (anslaget 7,3–25,8 m var feil). **Den forreste kranen står på styrbord** (foten ved bakkens akterkant, bommen akterover over
+arbeidsdekket og hopperen, jiben foldet ned bak vakuumtankene), ikke babord. Pipa er en trapes (2,9 m ved foten, 1,45 m under den
+blå toppen) med **to** bare stålrør med svanehals. Trinnene ned sida på styrbord ligger ved 24,0–24,4 m (mellom lufteåpningene),
+ikke ved 8 m. Lagt til: rørrekkverk langs bingeveggens topp, plattform med rekkverk på vakuumtankene, trapp fra arbeidsdekket opp
+på kassen ved hopperen, dør og to vinduer i bakkens akterskott på styrbord, den gule kisten på arbeidsdekket.
+
+Igjen etter runde 4, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 
@@ -481,6 +489,7 @@ Når 1–5 er på plass, er grunnlaget klart, og pilotøkta kan starte.
 
 ## Endringslogg
 
+- 30.10.2026: kritikksløyfen runde 4: arbeidsdekket bare 20,35–25,8 m, forreste kran til styrbord, pipa med to rør.
 - 30.10.2026: kritikksløyfen (kap. 7.1), runde 1 og 2: akterskipet, dekksutstyret, merkene.
 - 30.10.2026: styrbords arbeidsdekk (båten er ikke symmetrisk), den forreste kranen snudd, alle åpninger som ekte hull (kap. 4.0).
 - 30.10.2026: kap. 4.0, alt målt på sidebilde 3 (spring, stevn, stripe, sida, styrehuset med plattform og skrått tak, hus, åpninger,
