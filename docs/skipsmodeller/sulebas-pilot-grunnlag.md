@@ -515,7 +515,11 @@ Runde 13 (5e85f70b, 95c900de, fa9cc65c): mastenes plattformer har en hvit kantpl
 rekkverket oppå, ikke bare rekkverk; formasten har stigetrinn opp akterkanten fra dekket til den øvre plattformen, og to
 lyskastere i bøyle på forkanten (11,45 m) pluss én under, rettet forover og ned over bakken.
 
-Igjen etter runde 13, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 14 (fa9cc65c, 7b36cbe5, a5d2b0af): **vakuumtankene er lagt inn igjen, slik de er på bildene**: tre korte svarte tanker
+(1,35 m, Ø 0,84) som henger under dekk B's utstikk ved husfronten med hvite topper og to samlerør, ikke rør fra dekket som i
+runde 1 (de Jonas ba om å fjerne). Fjernversjonen holdt under 12 000 med `_F` 0,45 og grove tanker.
+
+Igjen etter runde 14, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 

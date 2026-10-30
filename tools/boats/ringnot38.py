@@ -280,7 +280,7 @@ def neck():
 
 def hull_rows(fine=True, sg=1):
     """the hull's rows (stations) for side sg: the main body from the transom to the neck, the bulb's nose and the bow above it"""
-    x0, x1, zp = neck(); _F[0] = 1.0 if fine else 0.5
+    x0, x1, zp = neck(); _F[0] = 1.0 if fine else 0.45
     st = [XA + 0.04 * i for i in range(5)] + [0.25 * i for i in range(1, 24)] + [6.0 + 0.4 * i for i in range(56)] + [28.4 + 0.2 * i for i in range(60)]
     st += list(ST_X) + [5.0 + 0.15 * i for i in range(17)] + [25.4 + 0.15 * i for i in range(10)]
     if not fine: st = [XA, 0.2, 0.6, 1.2, 2.0, 3.0, 4.0, 5.0, 6.5, 8.0, 10.0] + [12.0 + 2.0 * i for i in range(8)] + [28.0 + 1.0 * i for i in range(8)]
@@ -290,7 +290,7 @@ def hull_rows(fine=True, sg=1):
         p = pieces(x, sg)[0]; zs = z_sh(x)
         lo, up = split_at(p, max(zp, p[0][1] + 0.25) if x < x0 else min(p, key=lambda q: q[0] if abs(q[1] - zp) < 0.6 else 9)[1])
         main.append((x, lo_pts(lo), up_pts(up, x)))
-    nb, nu = (22, 30) if fine else (5, 6)
+    nb, nu = (22, 30) if fine else (4, 5)
     bulb, bow = [main[-1][1]], [main[-1][2]]
     for k in range(1, nb):
         t = k / nb; x = x1 + (XN - x1) * (1 - (1 - t) ** 1.8); bulb.append(lo_pts(pieces(x, sg)[0]))
@@ -1227,7 +1227,17 @@ def aft_deck(fine=True):
     inner = [[p + (c_ - p).normalized() * 0.06 for p in r] for r, c_ in zip(rings, [foot + (tip - foot) * t for t in ts_])]
     aring_loft(A, inner[::-1], C['dark'], cap0=False, cap1=False)
     aring_loft(A, [rings[-1], inner[-1]], W, cap0=False, cap1=False); aring_loft(A, [inner[0], rings[0]], W, cap0=False, cap1=False)
-    # (the fish pump's three vacuum tanks at the house's front were here; taken out, Jonas 30.10.2026: "Hva er disse svarte rørene? Fjern dem")
+    # the fish pump's three vacuum tanks: short black drums hanging under deck B's overhang at the house's front, their white tops
+    # under the edge plate, the manifold between them (fa9cc65c, 7b36cbe5, a5d2b0af; Jonas 30.10.2026 had the tall ones taken out,
+    # which stood from the deck up and were wrong: these are 1.35 m tall and hang from the platform)
+    for yy in (-1.55, -2.45, -3.35):
+        acyl(A, (21.35, yy, 9.40), (21.35, yy, 10.60), 0.42, lambda z: C['black'], seg=18 if fine else 8)
+        if fine:
+            acyl(A, (21.35, yy, 10.60), (21.35, yy, 10.72), 0.36, lambda z: W, seg=14)
+            acyl(A, (21.35, yy, 9.30), (21.35, yy, 9.40), 0.30, lambda z: C['steel'], seg=12)
+    if fine:
+        acyl(A, (21.35, -1.2, 10.3), (21.35, -3.7, 10.3), 0.08, lambda z: C['steel'], seg=8)
+        acyl(A, (21.35, -1.2, 9.55), (21.35, -3.7, 9.55), 0.08, lambda z: C['steel'], seg=8)
     # ---- the fish pump's hopper amidships: a steel tank with a grating top, the pipes from it over the side ----
     abox(A, 22.3, 25.4, -3.5, -0.7, zs(23.5), 10.1, C['steel'])
     if fine:
