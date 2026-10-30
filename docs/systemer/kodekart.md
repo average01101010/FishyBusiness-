@@ -1046,86 +1046,93 @@ Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/e
 - **204** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
   - 205 `freeFirst(k)`
 
-## `src/js/core/09g-turer.js` (846 linjer)
+## `src/js/core/09g-turer.js` (939 linjer)
 
 Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md point 4)
 
 - **1** Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md point 4)
-  - 76 `turState()`
-  - 82 `turRebase(T)`
-  - 96 `turV()`
-  - 97 `turRange()`
-  - 102 `turCap()`
-  - 106 `turOwn()`
-  - 117 `turRate()`
-  - 119 `turWeek()`
-  - 123 `turSlow()`
-  - 125 `turFinal(m)`
-  - 127 `turSpOk(sp)`
-  - 131 `turForm()`
-  - 133 `turClass(hGame)`
-  - 138 `turFishH(kg, sp)`
-  - 154 `turCan(a, b, hGame, back, fc = true)`
-- **164** the quotas: what is left to land of a species (kg; Infinity where nothing limits it)
-  - 170 `turRoom(sp, H)`
-- **178** the offers
-  - 179 `turPlants()`
-  - 184 `turMe()`
-  - 190 `turOrder(cand, me)`
-  - 192 `turBest(o, cls, used, me = turMe()`
-  - 199 `turBestAt(o, q, h, cls, me)`
-  - 213 `turFrakt(o, cls, used, me = turMe()`
-- **226** something happens under way
-  - 229 `turEventRoll(m)`
-  - 235 `turTipAt(m)`
-  - 242 `turEventFire(m, b)`
-- **261** the people: who sends a mission, and what they remember
-  - 266 `turManagerSays(m, n)`
-  - 276 `turAsk(T = turState()`
-- **290** the first mission
-  - 293 `turFirst(o)`
-  - 308 `turFirstEnsure(T = turState()`
-  - 319 `turGarn(o)`
-  - 337 `turValue(L)`
-  - 342 `turSlep(o, cls)`
-  - 362 `turNpcs()`
-  - 374 `turMinute()`
-  - 403 `turStuck(T, b)`
-  - 412 `turProveMinute(m, b)`
-  - 436 `turSesong(o)`
-  - 457 `turStages(m)`
-  - 464 `turSesongStage(m)`
-- **477** survey fishing for Havforskningsinstituttet
-  - 482 `turProve(o, cls)`
-  - 509 `turProveFish(m)`
-  - 520 `turProveDone(m)`
-  - 527 `turEkkoSaw(m)`
-- **535** a picture of a lighthouse for Kystposten
-  - 545 `turLysNext(m, from)`
-  - 546 `turFoto(o, cls)`
-  - 567 `turFotoAt()`
-  - 570 `turFotoTake(m, seen, img)`
-  - 589 `turMake()`
-  - 615 `turEnsure(force)`
-  - 636 `turWay()`
-  - 643 `turDetour(m, way = turWay()`
-- **655** taking, doing and finishing
-  - 656 `turTake(id)`
-  - 684 `turDrop(id)`
-  - 689 `cargoJob(kg, no, en)`
-  - 690 `turLoad(m)`
-  - 699 `turSpawn(m)`
-  - 718 `turEnd(m, ok, why, how)`
-  - 732 `turPayOut(m, from, no, en, part)`
-  - 740 `turDock(pid)`
-  - 754 `turSale(pid, bySp)`
-  - 767 `turHauled(s)`
-  - 771 `turHour()`
-  - 790 `turWhat(m)`
-- **801** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
-  - 815 `turSay(who, no, en, k)`
-  - 820 `turDepart()`
-  - 840 `turMechanic()`
+  - 84 `turState()`
+  - 90 `turRebase(T)`
+  - 104 `turV()`
+  - 105 `turRange()`
+  - 110 `turCap()`
+  - 114 `turOwn()`
+  - 125 `turRate()`
+  - 127 `turWeek()`
+  - 131 `turSlow()`
+  - 133 `turFinal(m)`
+  - 135 `turSpOk(sp)`
+  - 139 `turForm()`
+  - 141 `turClass(hGame)`
+  - 146 `turFishH(kg, sp)`
+  - 162 `turCan(a, b, hGame, back, fc = true)`
+- **172** the quotas: what is left to land of a species (kg; Infinity where nothing limits it)
+  - 178 `turRoom(sp, H)`
+- **186** the offers
+  - 187 `turPlants()`
+  - 192 `turMe()`
+  - 198 `turOrder(cand, me)`
+  - 200 `turBest(o, cls, used, me = turMe()`
+  - 207 `turBestAt(o, q, h, cls, me)`
+  - 221 `turFrakt(o, cls, used, me = turMe()`
+- **234** something happens under way
+  - 237 `turEventRoll(m)`
+  - 243 `turTipAt(m)`
+  - 250 `turEventFire(m, b)`
+- **269** the search: where does the species stand
+  - 272 `turLeteSamples(c, sp, H)`
+  - 280 `turLeteQs(c, sp, samples)`
+  - 297 `turLete(o, cls, me = turMe()`
+  - 319 `turLeteMinute(m, b)`
+  - 331 `turLetePlace(p)`
+  - 337 `turLeteAnswer(id, qi, opt)`
+- **353** the people: who sends a mission, and what they remember
+  - 358 `turManagerSays(m, n)`
+  - 368 `turAsk(T = turState()`
+- **382** the first mission
+  - 385 `turFirst(o)`
+  - 400 `turFirstEnsure(T = turState()`
+  - 411 `turGarn(o)`
+  - 429 `turValue(L)`
+  - 434 `turSlep(o, cls)`
+  - 454 `turNpcs()`
+  - 466 `turMinute()`
+  - 495 `turStuck(T, b)`
+  - 504 `turProveMinute(m, b)`
+  - 528 `turSesong(o)`
+  - 549 `turStages(m)`
+  - 556 `turSesongStage(m)`
+- **569** survey fishing for Havforskningsinstituttet
+  - 574 `turProve(o, cls)`
+  - 601 `turProveFish(m)`
+  - 612 `turProveDone(m)`
+  - 619 `turEkkoSaw(m)`
+- **627** a picture of a lighthouse for Kystposten
+  - 637 `turLysNext(m, from)`
+  - 638 `turFoto(o, cls)`
+  - 659 `turFotoAt()`
+  - 662 `turFotoTake(m, seen, img)`
+  - 681 `turMake()`
+  - 707 `turEnsure(force)`
+  - 728 `turWay()`
+  - 735 `turDetour(m, way = turWay()`
+- **747** taking, doing and finishing
+  - 748 `turTake(id)`
+  - 776 `turDrop(id)`
+  - 781 `cargoJob(kg, no, en)`
+  - 782 `turLoad(m)`
+  - 791 `turSpawn(m)`
+  - 810 `turEnd(m, ok, why, how)`
+  - 824 `turPayOut(m, from, no, en, part)`
+  - 832 `turDock(pid)`
+  - 846 `turSale(pid, bySp)`
+  - 859 `turHauled(s)`
+  - 863 `turHour()`
+  - 882 `turWhat(m)`
+- **894** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
+  - 908 `turSay(who, no, en, k)`
+  - 913 `turDepart()`
+  - 933 `turMechanic()`
 
 ## `src/js/core/09h-press.js` (206 linjer)
 
@@ -1874,12 +1881,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (787 linjer)
+## `src/js/ui/phone/07-patch.js` (788 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 780 `patch()`
+  - 781 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (87 linjer)
 
@@ -1963,7 +1970,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
 - **162** actions
   - 165 `switchVessel(k)`
 
-## `src/js/ui/phone/14-act.js` (245 linjer)
+## `src/js/ui/phone/14-act.js` (246 linjer)
 
   - 2 `act(a, d)`
   - 8 `act0(a, d)`
@@ -2028,23 +2035,23 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 69 `achLong()`
   - 80 `achChip()`
 
-## `src/js/ui/05f-turer.js` (174 linjer)
+## `src/js/ui/05f-turer.js` (179 linjer)
 
 ---------- Turoppdrag in the Oppdrag app (core/09g-turer.js): the board made from where the boat is, and the missions taken ----------
 
 - **1** Turoppdrag in the Oppdrag app (core/09g-turer.js): the board made from where the boat is, and the missions taken
   - 7 `turCard(m, act, det)`
-  - 47 `turAskCards()`
-  - 62 `turPage()`
-  - 81 `turGo(id)`
-  - 104 `turSvg(u, inV)`
-- **114** the measuring board (Havforskningsinstituttet's sample, core turProveFish): each fish lies with its snout against the board's
-  - 119 `turMeasure(id)`
-- **155** the lighthouse picture: the shutter shows within 3 km of the lighthouse while the 3D view is up; without it the card's button
-  - 159 `turFotoKeep(id, img)`
-  - 160 `turFotoSrc(id)`
-  - 161 `turFotoUi()`
-  - 165 `turFotoShoot(id)`
+  - 52 `turAskCards()`
+  - 67 `turPage()`
+  - 86 `turGo(id)`
+  - 109 `turSvg(u, inV)`
+- **119** the measuring board (Havforskningsinstituttet's sample, core turProveFish): each fish lies with its snout against the board's
+  - 124 `turMeasure(id)`
+- **160** the lighthouse picture: the shutter shows within 3 km of the lighthouse while the 3D view is up; without it the card's button
+  - 164 `turFotoKeep(id, img)`
+  - 165 `turFotoSrc(id)`
+  - 166 `turFotoUi()`
+  - 170 `turFotoShoot(id)`
 
 ## `src/js/ui/05g-press.js` (75 linjer)
 

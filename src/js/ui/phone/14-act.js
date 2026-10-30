@@ -182,6 +182,7 @@
     else if (a === 'turdrop'){ turDrop(+d.id); }
     else if (a === 'turgo'){ turGo(+d.id); show(false); return false; }
     else if (a === 'turmeas'){ show(false); turMeasure(+d.id); return false; }
+    else if (a === 'turans'){ turLeteAnswer(+d.id, +d.q, d.o); }
     else if (a === 'pttake'){ const o = (PTOW._P.open || []).find(x => String(x.id) === String(d.id)); if (o) PTOW.take(o); show(false); return false; }
     else if (a === 'ptgo'){ const H = S.ptowH; show(false); if (H && typeof leiaTo === 'function'){ if (typeof openPlotter === 'function') openPlotter(); leiaTo({x:H.x, y:H.y}); } return false; }
     else if (a === 'ptdrop'){ PTOW.drop(); }

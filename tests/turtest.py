@@ -323,6 +323,20 @@ async def main():
         ok17 = ev2.get('none') or (ev2['rolled'] == 12 and ev2['had'] and ev2['more']['extra'] and ev2['more']['prem'] == 0.3 and ev2['more']['said'] and (not ev2['more']['room'] or ev2['kg'] + ev2['more']['extra'] <= ev2['more']['room'] * 0.8 + 10) and not ev2['noRoom']['extra'] and not ev2['noRoom']['said'] and (not ev2['tip']['has'] or ev2['tip']['said']) and (not ev2['wx']['has'] or ev2['wx']['said'] == 'Kystradio')
                                    and ev2['paid'] > 0 and ev2['gain'] >= ev2['paid'] and g['due2'] == 1000 and g['due'] == (1001 if g['wind'] >= 13.9 else 1000))
         check(ok17, "something happens under way: a long mission rolls one event; the plant's call for extra kilos pays them when landed; the VHF tip and the worsened forecast speak only when the model bears them out; harbour time under a gale does not count against a mission the forecast turned on", ev2)
+        # 18. the search (L1, 30.10.2026): a mission with the questions the model can answer, the species one the boat may fish and land; three
+        #     places fished inside the area (an hour each, apart) and the questions are hers; right answers pay the bonus; the line stays in S.lete
+        le = await pg.evaluate("""(() => { const T = turState(), ty = S.boat.type, keep = {act:T.act, board:T.board}; T.act = []; T.board = []; S.boat.type = 'sjark'; applyVessel(); S.boat.fuel = BOAT.fuelCap;
+          let m = null; for (let i = 0; i < 6 && !m; i++) m = turLete(turHere(), 'mid'); S.boat.type = ty; applyVessel(); if (!m) return {none:true};
+          const okSp = turSpOk(m.sp) && turRoom(m.sp, S.t / 60) >= 200, qs = m.qs.map(q => q.k), ansIn = m.qs.every(q => q.opts.includes(q.ans));
+          m.id = ++T.seq; m.until = S.t + 9999; m.pay = turFinal(m); T.board.push(m); turTake(m.id); const a = T.act.find(x => x.id === m.id); const b = S.boat, st = b.status, p0 = {...b.pos};
+          b.status = 'fishing'; const places = [[0, 0], [1.2, 0], [0, 1.2]]; const seen = [];
+          for (const [dx, dy] of places){ b.pos = {x:m.p.x + dx, y:m.p.y + dy}; for (let k = 0; k < 60; k++) turLeteMinute(a, b); seen.push(a.seen.length); }
+          const stage = a.stage, cash0 = S.cash; b.pos = p0; b.status = st;
+          for (let i = 0; i < a.qs.length; i++) turLeteAnswer(a.id, i, a.qs[i].ans);
+          const d = T.done.find(x => x.id === m.id), L = (S.lete || {})[m.sp] || [];
+          Object.assign(T, keep); return {sp:m.sp, okSp, qs, ansIn, seen, stage, done:!!(d && d.ok), gain:S.cash - cash0, pay:d && d.pay, base:m.base, bonus:m.bonusMax, line:L[0] && L[0].no, who:turLeteWho(m)}; })()""")
+        check(le.get('none') or (le['okSp'] and 1 <= len(le['qs']) <= 3 and le['ansIn'] and le['seen'] == [1, 2, 3] and le['stage'] == 'answer' and le['done'] and le['pay'] == le['base'] + le['bonus'] and le['gain'] == le['pay'] and le['line'] and le['who']),
+              'the search: a species the boat may fish and land, one to three questions the model can answer, three places fished an hour each make the questions hers, all right pays the full bonus, and the line stays', le)
         check(errs == [], 'sidefeil', errs[:3])
         await br.close()
 

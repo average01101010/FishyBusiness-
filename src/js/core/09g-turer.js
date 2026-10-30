@@ -28,6 +28,14 @@
 //           measured for length, hi.no): fish a while at a station and measure ten fish on the board (a small game in the Oppdrag
 //           app), or run an echo sounder line through three points at no more than 8 knots. The institute pays for the time; the
 //           catch is the player's
+//   lete    a search (docs/planer/oppdrag-2.md L1, Jonas 30.10.2026: «lærer spillerne om arter, habitat, bestander og vandringsmønstre»):
+//           the plant's manager (her species) or Havforskningsinstituttet wants to know where a species stands now in an area 5 nm
+//           round a point. The player fishes at three places of her own choosing inside it (an hour each, the chart's heat map as
+//           always) and answers the questions the fish model can tell apart there (turLeteQs: which side of the centre it stands
+//           thickest, shallower or deeper than the species' usual depth, out on the open coast or in the lee; a question is asked only
+//           when the model's own densities differ on it, so nothing is promised the model does not know). The answers are checked
+//           against the model's density, the catch is the player's, the time is paid (keepF × 1.5 as the station) and up to 20 % more
+//           for right answers; what was found stays as a line of the player's own in S.lete (the fish guide shows it, L2)
 //   foto    a picture of a lighthouse for Kystposten (src/data/fyr.json, tools/map/fyr.py), now and then in a light it asks for:
 //           low sun, the light lit, the northern lights or heavy weather, offered only when that light comes within the deadline.
 //           Within 3 km, the lighthouse in the 3D view's picture and nothing in front of it (G3.seen), the shutter takes it (G3.snap)
@@ -258,6 +266,90 @@ function turEventFire(m, b){
       'The forecast has worsened since you took the mission: ' + fmt(worst, 1) + ' m sea at ' + (q ? q.name : 'the place') + ' in ' + at + ' hours, more than your boat takes. The deadline stands, but time in harbour under a gale does not count against it.'); }
   if (typeof cloudEv === 'function') cloudEv('tur_event', {id:m.id, k:ev.k, min:Math.round((S.t - m.t0) / GAME_RATE)});
 }
+// ---- the search: where does the species stand ----
+const TUR_LETE = {R:5, far:[10, 20], spots:3, need:60, apart:0.8, nQ:3, bonus:0.2};   // nm round the centre, nm away, places to fish, game minutes each, km between them, questions at most, bonus for right answers
+// the model's densities at points round the centre: [{p, v, d (m), E}] in open water
+function turLeteSamples(c, sp, H){
+  const out = [], i = HEATI[sp]; if (i === undefined) return out; const R = TUR_LETE.R * NM;
+  for (let a = 0; a < 12; a++) for (const r of [0.35, 0.7, 1]){ const p = {x:c.x + Math.sin(a * Math.PI / 6) * R * r, y:c.y - Math.cos(a * Math.PI / 6) * R * r};
+    try { if (isLandFar(p) || coastDistFar(p) < 0.4) continue; const q = denPlace(p); if (!q) continue; out.push({p, v:heatSample(p, H)[i] || 0, d:q.d, E:q.E}); } catch (e){} }
+  return out;
+}
+// the questions the samples can answer, with the right answer by the model: side (where it stands thickest), depth (shallower or
+// deeper than the species' usual depth), lee (out on the open coast or in the lee). Pure, so tests/unit/turer.test.mjs locks it
+function turLeteQs(c, sp, samples){
+  const S0 = samples.filter(x => x.v > 0); if (S0.length < 6) return [];
+  const best = S0.slice().sort((a, b) => b.v - a.v), top = best.slice(0, Math.max(3, Math.floor(best.length / 4))), lo = best.slice(-Math.max(3, Math.floor(best.length / 4)));
+  if (best[0].v < 1 || best[0].v < 2 * best[best.length - 1].v) return [];   // (nothing to find: it stands the same everywhere)
+  const mean = a => a.reduce((s, x) => s + x, 0) / a.length, qs = [];
+  // the side: the heaviest quarter's mean bearing from the centre, in four
+  const bx = mean(top.map(x => (x.p.x - c.x) * x.v)), by = mean(top.map(x => (x.p.y - c.y) * x.v)), ang = (Math.atan2(bx, -by) * 180 / Math.PI + 360) % 360;
+  const side = ang < 45 || ang >= 315 ? 'N' : ang < 135 ? 'E' : ang < 225 ? 'S' : 'W';
+  if (Math.hypot(bx, by) > 0.15 * TUR_LETE.R * NM * mean(top.map(x => x.v))) qs.push({k:'side', ans:side, opts:['N', 'E', 'S', 'W']});
+  // the depth: the heaviest quarter against the lightest, when they differ by a fifth of the species' usual depth
+  const dTop = mean(top.map(x => x.d)), dLo = mean(lo.map(x => x.d)), mid = SPECIES[sp].dep[0];
+  if (Math.abs(dTop - dLo) >= 0.2 * mid && Math.abs(dTop - mid) >= 0.1 * mid) qs.push({k:'dyp', ans:dTop > mid ? 'dyp' : 'grunt', opts:['grunt', 'dyp'], m:Math.round(mid / 10) * 10});
+  // the lee: open coast or sheltered, when the exposure differs by 0.25
+  const eTop = mean(top.map(x => x.E)), eLo = mean(lo.map(x => x.E));
+  if (Math.abs(eTop - eLo) >= 0.25) qs.push({k:'ly', ans:eTop > eLo ? 'ut' : 'ly', opts:['ut', 'ly']});
+  return qs.slice(0, TUR_LETE.nQ);
+}
+function turLete(o, cls, me = turMe()){
+  const H = S.t / 60, c = TUR.cls[cls], v = turV(), room = sp => turRoom(sp, H);
+  // a species in season the boat can fish and land (the capacity rule: gear, quota, the heat map knows it), the player's own first
+  const sps = Object.keys(SPECIES).filter(sp => HEATI[sp] !== undefined && !SPECIES[sp].shell && spCatchable(sp, H) && turSpOk(sp) && room(sp) >= 200).sort((a, b) => (me.sp[b] || 0) - (me.sp[a] || 0));
+  if (!sps.length) return null;
+  for (let tries = 0; tries < 30; tries++){
+    const sp = sps[Math.min(sps.length - 1, Math.floor(Math.random() * Math.min(3, sps.length)))], a = Math.random() * Math.PI * 2, nm = TUR_LETE.far[0] + Math.random() * (TUR_LETE.far[1] - TUR_LETE.far[0]), d = nm * NM / TUR.detour;
+    const p = {x:o.x + Math.sin(a) * d, y:o.y - Math.cos(a) * d};
+    try { if (isLandFar(p)) continue; const cd = coastDistFar(p); if (cd < 1 || cd > 15) continue; } catch (e){ continue; }
+    const qs = turLeteQs(p, sp, turLeteSamples(p, sp, H)); if (!qs.length) continue;
+    const h = turNm(o, p) / v + TUR_LETE.spots * TUR_LETE.need / 60 + 0.5;
+    if (h < c.h[0] || h >= c.h[1] || !turCan(o, p, h, true)) continue;
+    try { if (typeof ruBlockMsg === 'function' && ruBlockMsg({p, len:BOAT.len, gear:null, sp, hand:false})) continue; } catch (e){}
+    // who asks (L-A B): the nearest plant that takes the species, within 30 nm; else the institute
+    const q = turPlants().filter(x => x.mk && x.mk.sp && x.mk.sp[sp] && turNm(p, x.p) <= 30).sort((x, y) => turNm(p, x.p) - turNm(p, y.p))[0];
+    const base = turPay(h, TUR.keepF * 1.5);
+    return {k:'lete', cls, p, r:TUR_LETE.R, sp, qs, from:q ? q.id : null, seen:[], spot:null, min:0, stage:'fish', nm:Math.round(turNm(o, p)), h, base, bonusMax:Math.round(base * TUR_LETE.bonus / 100) * 100, hTot:h * 2.5 + 12};
+  }
+  return null;
+}
+// each minute fishing inside the area counts for the place she is at (a new place when 0.8 km from the ones done); an hour makes a
+// place; three places and the questions are hers to answer
+function turLeteMinute(m, b){
+  if (m.stage !== 'fish' || b.status !== 'fishing' || dist(b.pos, m.p) > m.r * NM) return;
+  if (m.seen.some(s => dist(s, b.pos) < TUR_LETE.apart)) return;
+  if (!m.spot || dist(m.spot, b.pos) > TUR_LETE.apart){ m.spot = {x:b.pos.x, y:b.pos.y}; m.min = 0; }
+  m.min++; if (m.min < TUR_LETE.need) return;
+  m.seen.push(m.spot); m.spot = null; m.min = 0;
+  if (m.seen.length >= TUR_LETE.spots){ m.stage = 'answer'; m.ans = {};
+    msg(turLeteWho(m), 'Tre plasser fisket. Hva så du? Svar på kortet i Oppdrag-appen.', 'Three places fished. What did you see? Answer on the card in the Oppdrag app.'); }
+  else log('Plass ' + m.seen.length + ' av ' + TUR_LETE.spots + ' fisket for leteoppdraget.', 'Place ' + m.seen.length + ' of ' + TUR_LETE.spots + ' fished for the search.');
+}
+const turLeteWho = m => m.from ? turManager(m.from) : 'Havforskningsinstituttet';
+// the place as the fishers name it: by the nearest plant or harbour (not a shop or a yard), «ved» within 1.5 nm
+function turLetePlace(p){
+  const np = PORTS.filter(q => q.mottak || !q.sted).sort((a, b) => dist(a.p, p) - dist(b.p, p))[0]; if (!np) return nearestPlace(p);
+  const nmP = dist(np.p, p) / NM; return nmP < 1.5 ? {no:'ved ' + np.name, en:'off ' + np.name} : {no:fmt(nmP, 1) + ' nm fra ' + np.name, en:fmt(nmP, 1) + ' nm from ' + np.name};
+}
+// an answer to one question; all answered, the model checks them, the time is paid and the bonus for the right ones, and what was
+// found stays as the player's own line for the species in that area
+function turLeteAnswer(id, qi, opt){
+  const T = turState(), m = T.act.find(x => x.id === id); if (!m || m.k !== 'lete' || m.stage !== 'answer') return;
+  const q = m.qs[qi]; if (!q || !q.opts.includes(opt)) return; m.ans[qi] = opt;
+  if (Object.keys(m.ans).length < m.qs.length) return;
+  const right = m.qs.filter((q2, i) => m.ans[i] === q2.ans).length, bonus = Math.round(m.bonusMax * right / m.qs.length / 100) * 100;
+  m.right = right; m.pay = (m.pay || m.base) + bonus;
+  const spn = [SPECIES[m.sp].no.toLowerCase(), SPECIES[m.sp].en.toLowerCase()], mon = gDate(S.t / 60).getUTCMonth();
+  const MN = [['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'][mon], ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][mon]];
+  const pl = turLetePlace(m.p);
+  const SIDE = {N:['nord', 'north'], E:['øst', 'east'], S:['sør', 'south'], W:['vest', 'west']};
+  const parts = m.qs.map(q2 => q2.k === 'side' ? ['tettest ' + SIDE[q2.ans][0] + ' i området', 'thickest to the ' + SIDE[q2.ans][1]] : q2.k === 'dyp' ? [(q2.ans === 'dyp' ? 'dypere' : 'grunnere') + ' enn ' + q2.m + ' m', (q2.ans === 'dyp' ? 'deeper' : 'shallower') + ' than ' + q2.m + ' m'] : [q2.ans === 'ut' ? 'ut mot åpent hav' : 'inne i ly', q2.ans === 'ut' ? 'out toward the open sea' : 'in the lee']);
+  const line = [SPECIES[m.sp].no + ' ' + pl.no + ' i ' + MN[0] + ': ' + parts.map(x => x[0]).join(', ') + '.', SPECIES[m.sp].en + ' ' + pl.en + ' in ' + MN[1] + ': ' + parts.map(x => x[1]).join(', ') + '.'];
+  const L = S.lete || (S.lete = {}); (L[m.sp] || (L[m.sp] = [])).unshift({t:S.t, p:{x:Math.round(m.p.x * 10) / 10, y:Math.round(m.p.y * 10) / 10}, mon, no:line[0], en:line[1]}); L[m.sp] = L[m.sp].slice(0, 12);
+  if (typeof cloudEv === 'function') cloudEv('tur_lete', {id:m.id, sp:m.sp, n:m.qs.length, right});
+  turPayOut(m, turLeteWho(m), (right === m.qs.length ? 'Alt stemte med det vi ser. ' : right ? right + ' av ' + m.qs.length + ' stemte. ' : 'Det stemte ikke med det vi ser, men turen er betalt. ') + 'Slik står ' + spn[0] + 'en der nå: ' + line[0], (right === m.qs.length ? 'All of it matches what we see. ' : right ? right + ' of ' + m.qs.length + ' matched. ' : 'It did not match what we see, but the trip is paid. ') + 'This is how the ' + spn[1] + ' stands there now: ' + line[1]);
+}
 // ---- the people: who sends a mission, and what they remember ----
 const turRep = (T = turState()) => T.rep || (T.rep = {});
 const turRepN = id => { const r = turRep()[id]; return r ? r.n || 0 : 0; };
@@ -375,7 +467,7 @@ function turMinute(){
   const T = S.turer; if (!T || !T.act.length) return;
   const b = S.boat;
   turStuck(T, b);
-  for (const m of T.act.slice()){ if (m.k === 'prove' && m.vid === S.cur) turProveMinute(m, b);
+  for (const m of T.act.slice()){ if (m.k === 'prove' && m.vid === S.cur) turProveMinute(m, b); if (m.k === 'lete' && m.vid === S.cur) try { turLeteMinute(m, b); } catch (e){ console.warn('turLete', e); }
     if (m.ev && !m.ev.done && m.vid === S.cur && ['sailing', 'fishing'].includes(b.status) && S.t - m.t0 >= m.ev.at) try { turEventFire(m, b); } catch (e){ m.ev.done = true; console.warn('turEvent', e); }
     if (m.k !== 'slep') continue;
     // she drifts with the wind, about 3 % of it, toward the side it blows to; never so fast that she reaches land before three times
@@ -592,7 +684,7 @@ function turMake(){
   const has = k => T.act.some(m => m.k === k) || T.board.some(m => m.k === k) || B.some(m => m.k === k);
   // the first of a weighted draw that the boat can do (a weight's key Math.random() ** (1 / w): the heavier, the likelier first)
   const draw = list => { for (const [, f] of list.filter(x => x[0] > 0).map(x => [Math.pow(Math.random(), 1 / x[0]), x[1]]).sort((a, b) => b[0] - a[0])){ const m = f(); if (m) return m; } return null; };
-  const prove = cls => () => has('prove') ? null : turProve(o, cls), foto = cls => () => has('foto') ? null : turFoto(o, cls);
+  const prove = cls => () => has('prove') ? null : turProve(o, cls), foto = cls => () => has('foto') ? null : turFoto(o, cls), lete = cls => () => has('lete') ? null : turLete(o, cls, me);
   try {
     const garn = !has('garn');
     add(draw([[1, () => turBest(o, 'kort', used)], [1, () => turFrakt(o, 'kort', used)], [0.6, prove('kort')], [0.5, foto('kort')]]));
@@ -600,7 +692,7 @@ function turMake(){
     const slep = !has('slep'), help = () => (Math.random() < 0.5 ? (garn && turGarn(o)) || (slep && turSlep(o, 'kort')) : (slep && turSlep(o, 'kort')) || (garn && turGarn(o))) || null;
     add(help() || turFrakt(o, 'kort', used) || turBest(o, 'kort', used));
     if (B.filter(m => m.cls === 'kort').length < 2) add(draw([[1, () => turFrakt(o, 'kort', used)], [0.6, prove('kort')], [0.6, foto('kort')], [0.5, () => !has('slep') ? turSlep(o, 'kort') : null]]));
-    add(draw([[1, () => turBest(o, 'mid', used)], [1, () => turFrakt(o, 'mid', used)], [0.4, () => !has('slep') ? turSlep(o, 'mid') : null], [0.6, prove('mid')], [0.6, foto('mid')]]));
+    add(draw([[1, () => turBest(o, 'mid', used)], [1, () => turFrakt(o, 'mid', used)], [0.4, () => !has('slep') ? turSlep(o, 'mid') : null], [0.6, prove('mid')], [0.6, foto('mid')], [0.8, lete('mid')]]));
     // the newcomer, until the first trip is done: one more short instead of the long; the season's move from the third year
     if (me.y < 1) add(turFrakt(o, 'kort', used) || turBest(o, 'kort', used));
     else add(draw([[1, () => turBest(o, 'lang', used)], [1, () => turFrakt(o, 'lang', used)], [0.8, foto('lang')]]));
@@ -648,7 +740,7 @@ function turDetour(m, way = turWay(), o = turHere()){
     else if (m.k === 'best'){ const t = P(m.to); if (t) via = (turNm(o, t) + turNm(t, way)) / v; }
     else if (m.k === 'slep'){ const t = P(m.to); if (t) via = turNm(o, m.p) / v + turNm(m.p, t) / Math.min(TUR_TOWV, v * 0.75) + 0.5 + turNm(t, way) / v; }
     else if (m.k === 'prove' && m.kind === 'ekko'){ const len = (dist(m.pts[0], m.pts[1]) + dist(m.pts[1], m.pts[2])) / NM; via = turNm(o, m.pts[0]) / v + len / Math.min(v, TUR.ekkoV) + turNm(m.pts[2], way) / v; }
-    else { const work = m.k === 'prove' ? m.need / 60 : m.k === 'garn' ? 1.5 : 0.3; via = (turNm(o, m.p) + turNm(m.p, way)) / v + work; }
+    else { const work = m.k === 'prove' ? m.need / 60 : m.k === 'lete' ? TUR_LETE.spots * TUR_LETE.need / 60 : m.k === 'garn' ? 1.5 : 0.3; via = (turNm(o, m.p) + turNm(m.p, way)) / v + work; }
   } catch (e){ return null; }
   return via == null ? null : turMinR(Math.max(0, via - turNm(o, way) / v));
 }
@@ -795,6 +887,7 @@ function turWhat(m){
   if (m.k === 'slep') return ['Slep «' + m.boat + '» til ' + to, 'Tow the «' + m.boat + '» to ' + to];
   if (m.k === 'prove') return m.kind === 'ekko' ? ['Ekkoloddlinje for Havforskningsinstituttet', 'Echo line for the Institute of Marine Research'] : ['Prøvefiske for Havforskningsinstituttet', 'Survey fishing for the Institute of Marine Research'];
   if (m.k === 'foto') return ['Bilde av ' + turFyrName(m) + ' for Kystposten', 'A picture of ' + turFyrName(m) + ' for Kystposten'];
+  if (m.k === 'lete'){ const pl = turLetePlace(m.p); return ['Finn ut hvor ' + SPECIES[m.sp].no.toLowerCase() + 'en står ' + pl.no, 'Find out where the ' + SPECIES[m.sp].en.toLowerCase() + ' stands ' + pl.en]; }
   return ['Sesong: ' + fmt(m.kg, 0) + ' kg ' + SPECIES[m.sp].no.toLowerCase() + ' ved ' + to, 'Season: ' + fmt(m.kg, 0) + ' kg of ' + SPECIES[m.sp].en.toLowerCase() + ' at ' + to];
 }
 const turDur = hGame => { const m = turMinR(hGame); return m < 60 ? m + ' min' : Math.floor(m / 60) + ' t ' + String(m % 60).padStart(2, '0') + ' min'; };
