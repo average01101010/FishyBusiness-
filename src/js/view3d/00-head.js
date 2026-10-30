@@ -26,6 +26,13 @@ const G3 = (() => {
   // boats in a harbour (Jonas 30.10.2026: the NPC boats need not have the detail of the boats players steer); the frame
   // times of each set-up are summed in the frame loop (24-cinema.js) and the run (G3.bench, 25-controls.js) shows them in a table
   const BENCH = {on:false, k:1, n:0, rec:false, sum:0, cnt:0, slow:0, tris:0};
+  // the profile (#prof, docs/planer/grafikk-batmodeller.md F1, 30.10.2026): where a frame's time goes, the main thread's per part of the
+  // frame against the GPU's (EXT_disjoint_timer_query where the browser has it), and what the frame costs with one part left out at a
+  // time or at another pixel density (G3.prof, 25-controls.js); PMK(k) marks where part k of the frame begins (24-cinema.js), and does
+  // nothing while it is off. skip: the parts left out ({all, terr, sea, trees, boats}), dpr: the drawing's pixels a CSS pixel (9 = the
+  // screen's own), sync: read a pixel back at each mark (the GPU's time per part where there is no timer), wait: read one back at the end
+  const PROF = {on:false, rec:false, skip:{}, dpr:0, sync:false, wait:false, acc:null, cur:null, t0:0, f0:0};
+  const PMK = k => { if (PROF.on) profMark(k); };
   const QUAL = {lvl:2, bad:0, good:0, cap:2, capT:0, fix:/qfix/.test(location.hash), dpr:[1, 1.25, 1.5, 3], near:[[3000, 6000], [6000, 12000], [6000, 12000], [9000, 18000]],
     nearN:[256, 256, 256, 384], midN:[256, 256, 256, 384], farN:[255, 255, 255, 511], chunkR:[1300, 1300, 1300, 2200], lodK:[1, 1, 1, 1.8]};
   let UINT = false;

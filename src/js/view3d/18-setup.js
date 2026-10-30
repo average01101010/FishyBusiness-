@@ -1,7 +1,7 @@
   // ---------- setup ----------
   // What stopped the 3D view, shown with the message so a device it fails on tells why (the user's phone 04.10.2026: «3D-visning
   // støttes ikke» with no more to go on): the step and the error, or the shader's log
-  let failWhy = '', stage = '', GPU = '', glWatch = false;
+  let failWhy = '', stage = '', GPU = '', glWatch = false, GL2 = false;   // (WebGL 2: F1)
   // How heavy a sea this device has managed, kept on the device (dsb_sea): 0 the full sea, 1 the far pass's simpler sea for both passes
   // (no sea-state texture in the vertex shader, four wind waves, no ripples), 2 the flat basic sea. On a PC the shaders are compiled by
   // Direct3D's compiler when they are linked, and the full sea can take it so long that the browser restarts the GPU and the page loses
@@ -140,7 +140,7 @@
   // layer stays for the crew's lines and the anchor alarm)
   function buildLabels(){ labelsEl.innerHTML = ''; labelEls = []; }
   function resize(){
-    const r = wrap.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, QUAL.dpr[QUAL.lvl]);
+    const r = wrap.getBoundingClientRect(), dpr = PROF.dpr ? Math.min(window.devicePixelRatio || 1, PROF.dpr) : Math.min(window.devicePixelRatio || 1, QUAL.dpr[QUAL.lvl]);
     const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
     if (canvas.width !== w || canvas.height !== h){ canvas.width = w; canvas.height = h; }
   }

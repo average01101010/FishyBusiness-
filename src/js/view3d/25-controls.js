@@ -69,8 +69,87 @@
     window.BENCHR = {gpu:GPU, lvl:QUAL.lvl, type:vtype(), rows:out.map(({line, ...r}) => r)}; return window.BENCHR;
   }
   if (/bench/.test(location.hash)) (function go(){ if (active && S.boat) setTimeout(() => bench(), 6000); else setTimeout(go, 1000); })();
+  // ---------- the profile (#prof, F1) ----------
+  // The parts of a frame as PMK marks them in frame0: the updates before drawing (the boat, the waves, the foam texture, the chunks, the
+  // camera), the sky, the far pass's land, statics and boats, its wind turbines and sea, the near pass's land, statics, trees and the near
+  // field, your boat with her people and deck and the plant she lies at, the other things (the fleet, the air, the gear in the sea, the
+  // docks, the wildlife), the flags and the near sea, and the lights, glass and effects last.
+  const PSEC = ['upd', 'sky', 'farT', 'farSea', 'nearT', 'boat', 'obj', 'nearSea', 'fx'];
+  const PSNAME = {upd:'oppdatering', sky:'himmel', farT:'fjernt land', farSea:'fjern sjø', nearT:'nært land, trær', boat:'egen båt', obj:'flåten, ting', nearSea:'nær sjø', fx:'lys og glass'};
+  // the GPU's timer: one TIME_ELAPSED query per part per frame, read some frames later, all dropped when the GPU says the times were
+  // disjoint (a power state change); WebGL 2 has it as EXT_disjoint_timer_query_webgl2, WebGL 1 as EXT_disjoint_timer_query
+  const PQ = {tried:false, x:null, v2:false, free:[], cur:null, frame:[], pend:[]}, PX1 = new Uint8Array(4);
+  function pqInit(){ if (PQ.tried) return PQ.x; PQ.tried = true;
+    try { PQ.x = (GL2 && gl.getExtension('EXT_disjoint_timer_query_webgl2')) || null; PQ.v2 = !!PQ.x; if (!PQ.x) PQ.x = gl.getExtension('EXT_disjoint_timer_query') || null; } catch (e){ PQ.x = null; }
+    return PQ.x; }
+  const pqNew = () => PQ.free.pop() || (PQ.v2 ? gl.createQuery() : PQ.x.createQueryEXT());
+  const pqBegin = q => PQ.v2 ? gl.beginQuery(PQ.x.TIME_ELAPSED_EXT, q) : PQ.x.beginQueryEXT(PQ.x.TIME_ELAPSED_EXT, q);
+  const pqEnd = () => PQ.v2 ? gl.endQuery(PQ.x.TIME_ELAPSED_EXT) : PQ.x.endQueryEXT(PQ.x.TIME_ELAPSED_EXT);
+  const pqReady = q => PQ.v2 ? gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE) : PQ.x.getQueryObjectEXT(q, PQ.x.QUERY_RESULT_AVAILABLE_EXT);
+  const pqVal = q => PQ.v2 ? gl.getQueryParameter(q, gl.QUERY_RESULT) : PQ.x.getQueryObjectEXT(q, PQ.x.QUERY_RESULT_EXT);
+  function pqPoll(){
+    const dis = gl.getParameter(PQ.x.GPU_DISJOINT_EXT);
+    while (PQ.pend.length){ const F = PQ.pend[0], last = F.q[F.q.length - 1]; if (!dis && last && !pqReady(last[1])) break; PQ.pend.shift();
+      if (!dis){ let s = 0; for (const [k, q] of F.q){ const ms = pqVal(q) / 1e6; F.acc.gpu[k] = (F.acc.gpu[k] || 0) + ms; s += ms; } F.acc.gpuN++; F.acc.gpuSum += s; }
+      for (const [, q] of F.q) if (dis) PQ.v2 ? gl.deleteQuery(q) : PQ.x.deleteQueryEXT(q); else PQ.free.push(q); }
+  }
+  const pAcc = () => ({n:0, sum:0, slow:0, js:0, cpu:{}, gpu:{}, gpuN:0, gpuSum:0, wait:0, hist:new Array(8).fill(0), lt:0, ltN:0});
+  const PHIST = [9, 12, 15, 18, 22, 28, 36];   // the frame intervals' bins (ms): 144, 120, 90/72, 60, 50, 40, 30 Hz and slower
+  // a frame begins (from frame0, with the interval since the last one and when frame() began)
+  function profBegin(rdt, j0){ const P = PROF, A = P.acc; P.f0 = j0; P.cur = 'upd'; P.t0 = j0;
+    if (P.rec && A){ A.n++; A.sum += rdt; if (rdt > 1 / 50) A.slow++; const ms = rdt * 1000; let b = 0; while (b < PHIST.length && ms >= PHIST[b]) b++; A.hist[b]++; }
+    if (PQ.x && A){ PQ.frame = []; const q = pqNew(); pqBegin(q); PQ.frame.push(['upd', q]); PQ.cur = q; } }
+  function profMark(k){ const P = PROF, A = P.acc; if (!A || !P.cur) return;
+    if (P.sync) gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, PX1);
+    const n = performance.now(); if (P.rec) A.cpu[P.cur] = (A.cpu[P.cur] || 0) + n - P.t0; P.cur = k; P.t0 = n;
+    if (PQ.x && PQ.cur){ pqEnd(); PQ.cur = null; if (k){ const q = pqNew(); pqBegin(q); PQ.frame.push([k, q]); PQ.cur = q; } } }
+  function profEnd(){ const P = PROF, A = P.acc; profMark(null); if (!A) return;
+    if (P.wait){ const w0 = performance.now(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, PX1); if (P.rec) A.wait += performance.now() - w0; }
+    if (P.rec) A.js += performance.now() - P.f0;
+    if (PQ.x){ if (PQ.frame.length) PQ.pend.push({acc:A, q:PQ.frame}); PQ.frame = []; pqPoll(); } }
+  // the run: each set-up 2.5 s to settle and 4 s measured, from where the camera is (put the boat where the frame is slow first); then the
+  // parts of the frame live, every half second, until the table is tapped. The rows: the frame interval (ms and frames a second), the
+  // share over 20 ms, the main thread's time in the frame (JS), the GPU's (where it has a timer) and the wait for the GPU at the end.
+  const PSET = [['som nå', {}], ['tomt bilde', {skip:{all:1}}], ['tetthet 0,75', {dpr:0.75}], ['tetthet 1', {dpr:1}], ['tetthet full', {dpr:9}],
+    ['uten terreng', {skip:{terr:1}}], ['uten sjø', {skip:{sea:1}}], ['uten trær/nær', {skip:{trees:1}}], ['uten båter', {skip:{boats:1}}],
+    ['vent på GPU', {wait:true}], ['synk per del', {sync:true}]];
+  async function prof(sets){
+    sets = sets || PSET; const wait = ms => new Promise(r => setTimeout(r, ms)), out = [], P = PROF; let live = null, lt = null;
+    const old = document.getElementById('profOut'); if (old) old.remove();
+    const el = document.createElement('div'); el.id = 'profOut'; el.style.cssText = 'position:fixed;left:8px;top:8px;z-index:99999;background:rgba(0,0,0,0.84);color:#fff;font:12px/1.3 monospace;padding:10px 12px;border-radius:8px;max-width:96vw;max-height:96vh;overflow:auto;white-space:pre;pointer-events:auto';
+    document.body.appendChild(el); pqInit();
+    const f1 = v => (Math.round(v * 10) / 10).toFixed(1);
+    const head = () => 'Profil F1 · ' + vtype() + ' · ' + (GPU || 'ukjent GPU') + '\nWebGL ' + (GL2 ? 2 : 1) + ' · GPU-tid ' + (PQ.x ? 'ja' : 'nei (nettleseren gir ikke tidtakeren)') + ' · nivå ' + QUAL.lvl + ' · vindu ' + innerWidth + '×' + innerHeight + ' @' + (window.devicePixelRatio || 1) + ' · tegnes ' + canvas.width + '×' + canvas.height + '\n';
+    const rowHead = 'oppsett             ms   b/s  >20ms     JS    GPU   vent  tegnes\n';
+    const row = (nm, A, px) => { const n = Math.max(1, A.n), ms = A.sum * 1000 / n;
+      return nm.padEnd(15) + f1(ms).padStart(7) + String(Math.round(ms ? 1000 / ms : 0)).padStart(6) + (Math.round(100 * A.slow / n) + ' %').padStart(7) + f1(A.js / n).padStart(7) + (A.gpuN ? f1(A.gpuSum / A.gpuN) : '-').padStart(7) + (A.wait ? f1(A.wait / n) : '-').padStart(7) + '  ' + px; };
+    const hist = A => 'bildeintervall (ms): ' + ['<9', '9-12', '12-15', '15-18', '18-22', '22-28', '28-36', '>36'].map((b, i) => b + ':' + Math.round(100 * A.hist[i] / Math.max(1, A.n)) + '%').join(' ');
+    const secs = (A, S) => 'del               JS ms  GPU ms  synk ms\n' + PSEC.map(k => PSNAME[k].padEnd(16) + f1((A.cpu[k] || 0) / Math.max(1, A.n)).padStart(7) + (A.gpuN ? f1((A.gpu[k] || 0) / A.gpuN) : '-').padStart(8) + (S ? f1((S.cpu[k] || 0) / Math.max(1, S.n)) : '-').padStart(9)).join('\n');
+    const longTasks = A => { try { lt = new PerformanceObserver(l => { for (const e of l.getEntries()){ A.ltN++; A.lt += e.duration; } }); lt.observe({type:'longtask'}); } catch (e){ lt = null; } };
+    let base = null, syncA = null;
+    P.on = true;
+    try {
+      for (const [nm, o] of sets){
+        Object.assign(P, {skip:o.skip || {}, dpr:o.dpr || 0, sync:!!o.sync, wait:!!o.wait, rec:false, acc:pAcc()});
+        el.textContent = head() + rowHead + out.map(r => r.line).join('\n') + '\n… ' + nm; await wait(2500);
+        const A = P.acc = pAcc(); if (lt) lt.disconnect(); longTasks(A); P.rec = true; await wait(4000); P.rec = false; await wait(150);
+        const r = {set:nm, ms:Math.round(A.sum * 10000 / Math.max(1, A.n)) / 10, js:Math.round(A.js * 10 / Math.max(1, A.n)) / 10, gpu:A.gpuN ? Math.round(A.gpuSum * 10 / A.gpuN) / 10 : null, wait:Math.round(A.wait * 10 / Math.max(1, A.n)) / 10, slow:Math.round(100 * A.slow / Math.max(1, A.n)), px:canvas.width + '×' + canvas.height, lt:A.ltN, ltMs:Math.round(A.lt), hist:A.hist.slice()};
+        r.line = row(nm, A, r.px); out.push(r); if (!base) base = A; if (o.sync) syncA = A;
+      }
+    } finally { Object.assign(P, {skip:{}, dpr:0, sync:false, wait:false, rec:false}); if (lt){ lt.disconnect(); lt = null; } }
+    // what stays on the screen: the table, the first set-up's intervals and long tasks, and the parts of the frame now, live
+    const sum = head() + rowHead + out.map(r => r.line).join('\n') + '\n\n' + (base ? hist(base) + '\nlange oppgaver (over 50 ms) i 4 s: ' + out[0].lt + ', ' + out[0].ltMs + ' ms\n\n' : '');
+    window.PROFR = {gpu:GPU, gl:GL2 ? 2 : 1, timer:!!PQ.x, lvl:QUAL.lvl, type:vtype(), dpr:window.devicePixelRatio || 1, rows:out.map(({line, ...r}) => r), secs:base ? Object.fromEntries(PSEC.map(k => [k, {js:Math.round((base.cpu[k] || 0) * 100 / Math.max(1, base.n)) / 100, gpu:base.gpuN ? Math.round((base.gpu[k] || 0) * 100 / base.gpuN) / 100 : null, sync:syncA ? Math.round((syncA.cpu[k] || 0) * 100 / Math.max(1, syncA.n)) / 100 : null}])) : {}};
+    let liveA = P.acc = pAcc(); P.rec = true;
+    const show = () => { el.textContent = sum + 'Nå (siste 2 s):\n' + secs(liveA, syncA) + '\n' + row('nå', liveA, canvas.width + '×' + canvas.height) + '\n\nTa et skjermbilde og send det. Trykk her for å lukke.'; };
+    show(); let tick = 0;
+    live = setInterval(() => { if (!document.body.contains(el)){ clearInterval(live); P.on = false; P.acc = null; return; } if (++tick % 4 === 0){ show(); liveA = P.acc = pAcc(); } }, 500);
+    el.onclick = () => { clearInterval(live); P.on = false; P.rec = false; P.acc = null; el.remove(); };
+    return window.PROFR;
+  }
+  if (/prof/.test(location.hash)) (function go(){ if (active && S.boat) setTimeout(() => prof(), 6000); else setTimeout(go, 1000); })();
   return {
-    bench,
+    bench, prof,
     // the quality: with a setting ('auto', 'low', 'mid', 'high') it applies it; returns the level now and the frame rate
     quality(v){ if (v){ S.settings.q3d = v; QUAL.bad = QUAL.good = 0; QUAL.cap = 2; qualSet(); } return {lvl:QUAL.lvl, set:S.settings.q3d || 'auto', fps:FPS.v, ultra:UINT}; },
     show, toggle(){ return show(!active); }, hold(on){ HOLD = !!on; if (!on) lastF = performance.now(); }, isActive:() => active, say:say3d, crewFx:crewFx3d, sayWorker, sayBoat, anchorAlarm:anchorAlarm3d, haltNeed:() => dynLive() ? dynHaltNeed() : active ? trkHaltNeed() : 0, get failWhy(){ return failWhy; },
