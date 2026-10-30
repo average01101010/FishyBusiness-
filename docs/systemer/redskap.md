@@ -133,6 +133,12 @@ Utstyret på dekk er egne Blender-modeller i `tools/deck/` og står på faste pl
 
 **Test:** `tests/deckshot.py` (3D): alle delene er med, hver kystbåt har plassene dataene krever, flåtene og bøyene tegnes i tallet reglene krever med tekst på hver bøye, radaren vises og går rundt, de åpne båtene har fangsten i kar, kranen er foldet på sjøen og ute ved kaia med kasser på dekk; bilder `deck_*.png` liggende og to stående. `G3._debug.kitStat` viser hva siste bilde tegnet av utstyret.
 
+**Teinene og juksamaskinene i riktig antall (30.10.2026, kartleggingen D1, D2, D5):**
+- **Teina** (`tools/gear/teine.py` → `gear-pot`) har målene i dataene, 1,55 × 1,45 × 1,07 m (`POTS`, Jonas 08.10.2026); `pot.half` er halve lengden, `pot.halfw` halve bredden og `pot.ring` hvor høyt over teina ringen i hanefoten sitter. Daviten er hevet til 2,8 m så den høye teina går klar av rekka.
+- **Snøkrabbeteina** er ny i samme GLB: konisk, 1,3 m nederst, 0,7 m øverst og 0,62 m høy, med inngangen ovenfra (`kon`). Stablet står de tolv i høyden med 0,16 m mellom (`kontopp`, `konlag`, `konlag11`, ekstra `kon`). Målene er våre egne (ingen tegning), etter de vanlige teinene i Barentshavet.
+- **Teinene om bord** vises når båten er rigget for teiner og ikke fisker (`drawPotsAboard` i `view3d/10-gear.js`, fra `drawRigRest`), ikke bare under setting og trekking: på modellens plasser (`kit.pots`: `at` med foten til hver stabel, `spot` der teina tømmes, `kind`) i stabler, ellers ved haleren som når de trekkes, to i høyden under 12 m og tre på de større. Snøkrabbefartøyet har 38 plasser (456 teiner synlige) og trekker den koniske teina, uten luke og davit. `KST.pots` sier hvor mange som ble tegnet.
+- **Juksamaskinene:** alle båten har, opptil `jukseMax` (før høyst tre). `jigRail` leser plassene av modellen på styrbord rekke først og så babord, der maskinen er snudd utover (fjerde tall i plassen er siden).
+
 ## 5.63 Redskapet om bord, agnet og juksa, synlig uten hint (tilbakemelding #74, Jonas 20.10.2026)
 
 Spilleren fikk ingenting på juksa selv om ekkoloddet viste mye blåkveite, og fant ikke banklina sin under «Sett ut» (bare hyselina var egnet). Jonas: «Ikke vis hint, men det må gjøres mer intuitivt hva båten har slags fiskeredskaper ombord og hva disse eventuelt er egnet med», og agnet må kunne tas av for å egne med noe annet. Løsningen viser tilstanden slik den er, uten tips.

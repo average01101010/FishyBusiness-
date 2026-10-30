@@ -1042,73 +1042,73 @@ Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/e
 - **204** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
   - 205 `freeFirst(k)`
 
-## `src/js/core/09g-turer.js` (685 linjer)
+## `src/js/core/09g-turer.js` (691 linjer)
 
 Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md point 4)
 
 - **1** Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md point 4)
-  - 57 `turState()`
-  - 63 `turRebase(T)`
-  - 77 `turV()`
-  - 78 `turRange()`
-  - 83 `turCap()`
-  - 87 `turOwn()`
-  - 98 `turRate()`
-  - 100 `turWeek()`
-  - 104 `turSlow()`
-  - 106 `turFinal(m)`
-  - 108 `turSpOk(sp)`
-  - 112 `turForm()`
-  - 114 `turClass(hGame)`
-  - 119 `turFishH(kg, sp)`
-  - 135 `turCan(a, b, hGame, back, fc = true)`
-- **145** the quotas: what is left to land of a species (kg; Infinity where nothing limits it)
-  - 151 `turRoom(sp, H)`
-- **159** the offers
-  - 160 `turPlants()`
-  - 165 `turMe()`
-  - 171 `turOrder(cand, me)`
-  - 173 `turBest(o, cls, used, me = turMe()`
-  - 189 `turFrakt(o, cls, used, me = turMe()`
-  - 203 `turGarn(o)`
-  - 221 `turValue(L)`
-  - 226 `turSlep(o, cls)`
-  - 246 `turNpcs()`
-  - 258 `turMinute()`
-  - 285 `turStuck(T, b)`
-  - 293 `turProveMinute(m, b)`
-  - 317 `turSesong(o)`
-- **336** survey fishing for Havforskningsinstituttet
-  - 341 `turProve(o, cls)`
-  - 368 `turProveFish(m)`
-  - 379 `turProveDone(m)`
-  - 386 `turEkkoSaw(m)`
-- **394** a picture of a lighthouse for Kystposten
-  - 404 `turLysNext(m, from)`
-  - 405 `turFoto(o, cls)`
-  - 426 `turFotoAt()`
-  - 429 `turFotoTake(m, seen, img)`
-  - 448 `turMake()`
-  - 474 `turEnsure(force)`
-  - 493 `turWay()`
-  - 500 `turDetour(m, way = turWay()`
-- **512** taking, doing and finishing
-  - 513 `turTake(id)`
-  - 537 `turDrop(id)`
-  - 542 `cargoJob(kg, no, en)`
-  - 543 `turLoad(m)`
-  - 552 `turSpawn(m)`
-  - 568 `turEnd(m, ok, why)`
-  - 579 `turPayOut(m, from, no, en)`
-  - 586 `turDock(pid)`
-  - 599 `turSale(pid, bySp)`
-  - 610 `turHauled(s)`
-  - 614 `turHour()`
-  - 629 `turWhat(m)`
-- **640** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
-  - 654 `turSay(who, no, en, k)`
-  - 659 `turDepart()`
-  - 679 `turMechanic()`
+  - 59 `turState()`
+  - 65 `turRebase(T)`
+  - 79 `turV()`
+  - 80 `turRange()`
+  - 85 `turCap()`
+  - 89 `turOwn()`
+  - 100 `turRate()`
+  - 102 `turWeek()`
+  - 106 `turSlow()`
+  - 108 `turFinal(m)`
+  - 110 `turSpOk(sp)`
+  - 114 `turForm()`
+  - 116 `turClass(hGame)`
+  - 121 `turFishH(kg, sp)`
+  - 137 `turCan(a, b, hGame, back, fc = true)`
+- **147** the quotas: what is left to land of a species (kg; Infinity where nothing limits it)
+  - 153 `turRoom(sp, H)`
+- **161** the offers
+  - 162 `turPlants()`
+  - 167 `turMe()`
+  - 173 `turOrder(cand, me)`
+  - 175 `turBest(o, cls, used, me = turMe()`
+  - 191 `turFrakt(o, cls, used, me = turMe()`
+  - 205 `turGarn(o)`
+  - 223 `turValue(L)`
+  - 228 `turSlep(o, cls)`
+  - 248 `turNpcs()`
+  - 260 `turMinute()`
+  - 287 `turStuck(T, b)`
+  - 295 `turProveMinute(m, b)`
+  - 319 `turSesong(o)`
+- **338** survey fishing for Havforskningsinstituttet
+  - 343 `turProve(o, cls)`
+  - 370 `turProveFish(m)`
+  - 381 `turProveDone(m)`
+  - 388 `turEkkoSaw(m)`
+- **396** a picture of a lighthouse for Kystposten
+  - 406 `turLysNext(m, from)`
+  - 407 `turFoto(o, cls)`
+  - 428 `turFotoAt()`
+  - 431 `turFotoTake(m, seen, img)`
+  - 450 `turMake()`
+  - 476 `turEnsure(force)`
+  - 495 `turWay()`
+  - 502 `turDetour(m, way = turWay()`
+- **514** taking, doing and finishing
+  - 515 `turTake(id)`
+  - 539 `turDrop(id)`
+  - 544 `cargoJob(kg, no, en)`
+  - 545 `turLoad(m)`
+  - 554 `turSpawn(m)`
+  - 573 `turEnd(m, ok, why, how)`
+  - 585 `turPayOut(m, from, no, en)`
+  - 592 `turDock(pid)`
+  - 605 `turSale(pid, bySp)`
+  - 616 `turHauled(s)`
+  - 620 `turHour()`
+  - 635 `turWhat(m)`
+- **646** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
+  - 660 `turSay(who, no, en, k)`
+  - 665 `turDepart()`
+  - 685 `turMechanic()`
 
 ## `src/js/core/09h-press.js` (202 linjer)
 
@@ -1857,12 +1857,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (767 linjer)
+## `src/js/ui/phone/07-patch.js` (775 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 760 `patch()`
+  - 768 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (87 linjer)
 
@@ -2011,22 +2011,22 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 69 `achLong()`
   - 80 `achChip()`
 
-## `src/js/ui/05f-turer.js` (148 linjer)
+## `src/js/ui/05f-turer.js` (151 linjer)
 
 ---------- Turoppdrag in the Oppdrag app (core/09g-turer.js): the board made from where the boat is, and the missions taken ----------
 
 - **1** Turoppdrag in the Oppdrag app (core/09g-turer.js): the board made from where the boat is, and the missions taken
   - 7 `turCard(m, act, det)`
   - 40 `turPage()`
-  - 55 `turGo(id)`
-  - 78 `turSvg(u, inV)`
-- **88** the measuring board (Havforskningsinstituttet's sample, core turProveFish): each fish lies with its snout against the board's
-  - 93 `turMeasure(id)`
-- **129** the lighthouse picture: the shutter shows within 3 km of the lighthouse while the 3D view is up; without it the card's button
-  - 133 `turFotoKeep(id, img)`
-  - 134 `turFotoSrc(id)`
-  - 135 `turFotoUi()`
-  - 139 `turFotoShoot(id)`
+  - 58 `turGo(id)`
+  - 81 `turSvg(u, inV)`
+- **91** the measuring board (Havforskningsinstituttet's sample, core turProveFish): each fish lies with its snout against the board's
+  - 96 `turMeasure(id)`
+- **132** the lighthouse picture: the shutter shows within 3 km of the lighthouse while the 3D view is up; without it the card's button
+  - 136 `turFotoKeep(id, img)`
+  - 137 `turFotoSrc(id)`
+  - 138 `turFotoUi()`
+  - 142 `turFotoShoot(id)`
 
 ## `src/js/ui/05g-press.js` (75 linjer)
 
@@ -2662,7 +2662,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 85 `ridged(x, y)`
   - 86 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (471 linjer)
+## `src/js/view3d/01-shaders.js` (473 linjer)
 
 ---------- shaders ----------
 
@@ -2670,14 +2670,14 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **103** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
 - **135** the boat's own foam, when she has way on
 - **153** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
-  - 414 `cloudStep(dt)`
-  - 420 `skyFrame(u, Hh, tn, bv)`
-  - 432 `compile(type, src, nm)`
-  - 438 `program(vs, fs, attrs, nm = '?')`
-  - 446 `buf(data, target, usage)`
-  - 451 `airSet(u, terr)`
-  - 456 `attr(loc, b, size)`
-  - 469 `upload(pos, col, idx)`
+  - 416 `cloudStep(dt)`
+  - 422 `skyFrame(u, Hh, tn, bv)`
+  - 434 `compile(type, src, nm)`
+  - 440 `program(vs, fs, attrs, nm = '?')`
+  - 448 `buf(data, target, usage)`
+  - 453 `airSet(u, terr)`
+  - 458 `attr(loc, b, size)`
+  - 471 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (94 linjer)
 
@@ -2836,7 +2836,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **296** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
 - **397** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
 
-## `src/js/view3d/09-landing-deck.js` (507 linjer)
+## `src/js/view3d/09-landing-deck.js` (508 linjer)
 
 ---------- landing the catch ----------
 
@@ -2871,35 +2871,38 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 300 `jobTubs(j)`
   - 304 `drawMendNet(BMrel, G, d, R)`
   - 318 `drawRigRest(BMrel, G, d)`
-- **330** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
-  - 336 `boyeCanvas(txt)`
-  - 342 `boyeTex()`
-  - 347 `boyeQ()`
-  - 348 `drawSafety(BMrel, G, VP, t)`
-  - 369 `cargoUnits(G)`
-  - 370 `drawCargo(BMrel, G, hide)`
-  - 385 `crFrames(X, Q, BMrel, p)`
-  - 394 `crLink(X, a2)`
-  - 397 `drawCrane(BMrel, G, VP, t, d)`
-  - 453 `dkTub(G)`
-  - 454 `drawDeck(BMrel, eye, VP, t, DK)`
+- **331** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
+  - 337 `boyeCanvas(txt)`
+  - 343 `boyeTex()`
+  - 348 `boyeQ()`
+  - 349 `drawSafety(BMrel, G, VP, t)`
+  - 370 `cargoUnits(G)`
+  - 371 `drawCargo(BMrel, G, hide)`
+  - 386 `crFrames(X, Q, BMrel, p)`
+  - 395 `crLink(X, a2)`
+  - 398 `drawCrane(BMrel, G, VP, t, d)`
+  - 454 `dkTub(G)`
+  - 455 `drawDeck(BMrel, eye, VP, t, DK)`
 
-## `src/js/view3d/10-gear.js` (260 linjer)
+## `src/js/view3d/10-gear.js` (288 linjer)
 
 ---------- passive gear: buoys at both ends of every set, and the work over the rail when setting and hauling ----------
 
 - **1** passive gear: buoys at both ends of every set, and the work over the rail when setting and hauling
   - 3 `buildGear()`
-  - 29 `drawGearSea(eye, t, VP, H)`
-  - 51 `drawSetting(BMrel, t, g, G, stack, x0)`
-  - 68 `haulFish(g)`
-  - 77 `haulModel(kind)`
-  - 86 `gopHauls()`
-  - 98 `potDeck(G, HP, sx, d, pw, vt)`
-  - 110 `tankAt(x, z, d, vt)`
-  - 128 `drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg)`
-  - 184 `drawCrabTank(BMrel, G, d, sx, HP)`
-  - 191 `drawGearOp(BMrel, eye, VP, t)`
+  - 30 `drawGearSea(eye, t, VP, H)`
+  - 52 `drawSetting(BMrel, t, g, G, stack, x0)`
+  - 69 `haulFish(g)`
+  - 78 `haulModel(kind)`
+  - 87 `gopHauls()`
+  - 101 `potDeck(G, HP, sx, d, pw, vt, ph)`
+  - 108 `drawPotStacks(BMrel, K, n)`
+  - 116 `stackTop(K, i, d)`
+  - 120 `drawPotsAboard(BMrel, G, d, n)`
+  - 136 `tankAt(x, z, d, vt)`
+  - 154 `drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg)`
+  - 212 `drawCrabTank(BMrel, G, d, sx, HP)`
+  - 219 `drawGearOp(BMrel, eye, VP, t)`
 
 ## `src/js/view3d/11-bunker.js` (65 linjer)
 
@@ -2933,7 +2936,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 116 `handKit(t)`
   - 137 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (477 linjer)
+## `src/js/view3d/13-instruments.js` (483 linjer)
 
 ---------- the skiff's live instruments ----------
 
@@ -2962,15 +2965,15 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 178 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
   - 312 `drawSkiffGlass(BMrel, VP)`
   - 317 `jigRail(t, G)`
-  - 334 `drawJigRail(BMrel, VP, t, G, dt)`
-  - 365 `drawGlass(m, BMrel, VP)`
-  - 384 `drawDrops(m, BMrel, VP, t)`
-  - 395 `buildBoat()`
-  - 421 `buildFlag()`
-  - 433 `flagTex()`
-  - 448 `penTex()`
-  - 461 `mastTop(G)`
-  - 465 `updateFlag(t, appW)`
+  - 338 `drawJigRail(BMrel, VP, t, G, dt)`
+  - 371 `drawGlass(m, BMrel, VP)`
+  - 390 `drawDrops(m, BMrel, VP, t)`
+  - 401 `buildBoat()`
+  - 427 `buildFlag()`
+  - 439 `flagTex()`
+  - 454 `penTex()`
+  - 467 `mastTop(G)`
+  - 471 `updateFlag(t, appW)`
 
 ## `src/js/view3d/14-sea.js` (300 linjer)
 

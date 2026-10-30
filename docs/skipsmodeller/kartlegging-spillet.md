@@ -318,6 +318,8 @@ Funnet i bildene fra spillet og i skriptene. «T» betyr tolket fra bildet, ikke
 | M16 | Den samme moderne knekkbomkranen står på 1978-båten som på de nye | L | kyst21 | Krantype eller lastebom etter båtens år (KRN-09, EPO) |
 | M17 | Flåtebeholderen på hardtoppen virker stor for snekka (T) | L | snekke | Sjekk mot målene for en firemannsflåte |
 | M18 | Utstyret: linehaleren og teinedaviten er blokkete og tynne, krabbekaret svært enkelt (284 trekanter), fiskene kantete på nært hold | L | utstyr | Løftes når de flyttes til de nye festepunktene (U4) |
+| M19 | De akterste topplanternene står for lavt over den forre: 2,0 m på snøkrabbefartøyet og 0,9 m på autolineren. COLREG vedlegg I 2(a)(ii) krever minst 4,5 m når båten fører to (påbudt fra 50 m, regel 23(a)(ii)). Funnet og rettet 30.10.2026 | M | snokrabbe, autoliner | Akterste mast eller stang høy nok, og regelen sjekket for hver ny havbåt (MST-04) |
+| M20 | Kjølen på 15-meteren hang løst under skroget akter (en kasse fra 0 til 0,9 m under et skrog som går opp til 1,3 m), og propellbladene gikk gjennom den. Funnet og rettet 30.10.2026: dødved opp til skroget, propellåpning over en sko | M | kyst15 | Se undervannsskroget fra siden og nedenfra i kontrollbildene; propellen skal ha klaring i en åpning (FRM-01, SKR-07) |
 
 ### 6.2 Feil mellom data og modell
 
@@ -373,6 +375,9 @@ del 7).
     bokstavene skjeves aldri med stevnen. Bokstavhøyden følger forskriften og lengden.
 13. **Båten skal se ut som det den gjør.** En teinebåt har teiner på dekk, en ringnotbåt har kraftblokk,
     nottrakt og notgjerde, og en tråler har tunge dører. Sjekk typemodulen i planlisten før modellen leveres.
+14. **Lanternene følger COLREG også i høyden.** To topplanterner står minst 4,5 m over hverandre, med den akterste
+    høyest, og den forreste minst like høyt over skroget som båten er bred (vedlegg I 2(a)). Radarer og antenner står
+    under eller ved siden av lanternen, aldri foran den i samme høyde.
 
 ---
 
@@ -466,6 +471,26 @@ Rekkefølgen følger arbeidsmåten i `CLAUDE.md`: én økt per oppgave, en plan 
 
 **Før U5 og U6 må budsjettet avklares** (D8): mål bildetiden på nettbrettet med en tyngre modell, og sett
 grensen i `vessel3d.py` etter det.
+
+### 8.1 Utført 30.10.2026 («Kjør på»)
+
+| Hva | Funn som er rettet | Hvor |
+|---|---|---|
+| Felles beslag (U3, del av U7) | Propell med vridde, skjeve blad og CPP-nav, anoder, thrustertunnel med rist, dypgangsmerker, thruster- og bulbmerker, sveisesømmer, lenseporter, piskeantenner, radomer, GPS-sopper, lyskastere, leidere med bur, notgjerde, kraftblokk, nottrakt, sidehaler, slangetrommel og støtteseil av duk | `tools/boats/fittings.py` |
+| Ringnotbåten | M2 (kraftblokk på bom, nottrakt, sidehaler, pumpe og sugeslange, notgjerde), M8 (hvite master med plattformer, rå, leider og antenner), M3, M12, M15 | `not75.py` |
+| Tråleren | M7 (bulben under vann og rundere), M9 (krumme dører med stivere, sko og slitasje), M3, M15 | `tral60.py` |
+| Snøkrabbefartøyet | M1 (stabler av koniske teiner på teinedekket, tegnet av spillet etter antallet om bord), M8 (radarer på egne plattformer, GPS, pisker, satellittkuppel, lyskastere, leider), M19, M3, M4 (avrundede hekkhjørner, klyss, leider), M15, M14 (pullerter) | `krabbe50.py`, `kit.pots` |
+| Autolineren | M8 (platemasta med lettehull, plattform med rekkverk, fiskelanterner rødt over hvitt, leider, lyskastere), M19, M3, M15 | `al45.py` |
+| Kyst15 | M4 (avrundede hekkhjørner i skrogets farger, fender, klyss, redningsleider), M5 (seil av duk med bue, sømmer, kantbånd og forsterkninger), M15 (felles propell, anoder, baugthruster), M20 (kjølen som dødved, propellåpning) | `kyst15.py` |
+| Havsjark35 | M5 (seil av duk) | `havsjark35.py` |
+| Teina (D1) | 1,55 × 1,45 × 1,07 m som i dataene. Daviten er hevet til 2,8 m så den høye teina går klar av rekka | `tools/gear/teine.py` |
+| Snøkrabbeteina (TEI-01, ny) | Konisk teine 1,3 m nederst, 0,7 m øverst og 0,62 m høy, med inngang ovenfra og agnboks; stables tolv i høyden med 0,16 m mellom | `teine.py` (`kon`, `kontopp`, `konlag`, `konlag11`) |
+| Juksamaskinene (D2) | Alle vises, opptil `jukseMax`: styrbord rekke først, så babord, der maskinen er snudd utover | `view3d/13-instruments.js` |
+| Teinene om bord (D5) | Vises når båten er rigget for teiner og ikke fisker: i stabler på modellens plasser (`kit.pots`) eller ved haleren, to i høyden under 12 m og tre ellers | `view3d/10-gear.js`, `09-landing-deck.js` |
+
+Står igjen: D3 (stampene), D4 (garnbingene), D6, D7, M6 (registreringsmerket), M10, M11, M13, M16–M18, U1 (typede plasser og
+`GEARMODELS`), U4 (liten haler, juksavinde, påhengsmotor), U5 (materialløftet), støtteseilet rullet inn i havn (M5, trenger at
+seilet blir en egen del som spillet kan skjule), og propell, anoder og thrustere på resten av kystbåtene (U7).
 
 ---
 

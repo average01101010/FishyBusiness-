@@ -241,6 +241,22 @@
   - **Data:** `src/data/harbour-unit.b64` (585 KB), i malen som `glb-harbour`. Det gamle fiskebruket og det store anlegget (`kaimottak.py b` og `c`, 05.10.2026) ligger i `harbour-unit-b.b64` og `harbour-unit-c.b64` (635 og 598 KB GLB), i malen som `glb-harbour-b` og `glb-harbour-c`.
 
 
+## Felles beslag i båtskriptene (`tools/boats/fittings.py`, 30.10.2026)
+
+Etter kartleggingen (`docs/skipsmodeller/kartlegging-spillet.md`, kap. 7.4 og 8.1) tegnes beslagene ett sted, i skriptets ramme
+(x forover, y babord, z opp), med båtens egne materialer som argumenter: propell med vridde, skjeve blad og CPP-nav eller fast
+stigning med tauvern, anoder, thrustertunnel med rist, dypgangsmerker (hver 0,2 m, hele meter som «nM»), thruster-, bulb- og
+V-merker, sveisesømmer, lenseporter, piskeantenner, radomer, GPS-sopper, lyskastere, leidere med og uten bur, notgjerde, kraftblokk,
+nottrakt, sidehaler, slangetrommel og støtteseil av duk (bue, hul akterlik, paneler, kantbånd og forsterkninger). `not75`,
+`tral60`, `krabbe50`, `al45`, `kyst15` og `havsjark35` bruker dem; de andre skriptene tar dem i bruk når de endres. Hvert skript har
+en `surf(x, z, sg)` som gir punktet, normalen og retningen forover på skroget, så merker og beslag ligger på flaten.
+
+**Lanternene i høyden** (funnet 30.10.2026): to topplanterner står minst 4,5 m over hverandre med den akterste høyest (COLREG vedlegg
+I 2(a)(ii)); snøkrabbefartøyet og autolineren hadde 2,0 og 0,9 m og er rettet. Radarer står under lanternen eller ikke foran den.
+
+**Snøkrabbefartøyets teiner** er dekksutstyr, ikke skrog: modellen har bare plassene (`kit.pots`), og spillet tegner stablene etter
+antallet om bord (`docs/systemer/redskap.md`).
+
 ## 5.26 Måker og halere fra Blender (03.10.2026)
 
 - **Måkene** (`tools/wild/maake.py`, `src/data/gull.b64`):
