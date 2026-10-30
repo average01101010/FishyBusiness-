@@ -282,7 +282,7 @@ def neck():
 
 def hull_rows(fine=True, sg=1):
     """the hull's rows (stations) for side sg: the main body from the transom to the neck, the bulb's nose and the bow above it"""
-    x0, x1, zp = neck(); _F[0] = 1.0 if fine else 0.45
+    x0, x1, zp = neck(); _F[0] = 1.0 if fine else 0.42
     st = [XA + 0.04 * i for i in range(5)] + [0.25 * i for i in range(1, 24)] + [6.0 + 0.4 * i for i in range(56)] + [28.4 + 0.2 * i for i in range(60)]
     st += list(ST_X) + [5.0 + 0.15 * i for i in range(17)] + [25.4 + 0.15 * i for i in range(10)]
     if not fine: st = [XA, 0.2, 0.6, 1.2, 2.0, 3.0, 4.0, 5.0, 6.5, 8.0, 10.0] + [12.0 + 2.0 * i for i in range(8)] + [28.0 + 1.0 * i for i in range(8)]
@@ -1280,11 +1280,13 @@ def aft_deck(fine=True):
         lifebuoy(A, (12.5, 4.47, ZB2 + 0.0), (0, 1, 0))
     # ---- the liferafts in their cradles on deck B's port side aft, and the red chest for rescue gear on the balcony (c6db804c, 7b36cbe5) ----
     if fine:
-        for x in (8.78, 9.78):
-            acyl(A, (x - 0.45, 3.75, ZB2 + 0.5), (x + 0.45, 3.75, ZB2 + 0.5), 0.36, lambda z: W, seg=14)
-            acyl(A, (x - 0.25, 3.75, ZB2 + 0.5), (x + 0.25, 3.75, ZB2 + 0.5), 0.37, lambda z: C['orange'], seg=14)
-            for e in (-0.35, 0.35): abox(A, x + e - 0.03, x + e + 0.03, 3.4, 4.1, ZB2, ZB2 + 0.25, C['steel'])
-        abox(A, 9.2, 10.0, 1.5, 2.3, ZB2 - 0.85, ZB2 - 0.1, C['lampR'])
+        # (c6db804c: both rafts and the chest stand on the lower balcony at the house's top, under the walkway)
+        zb_ = ZB2 - 0.85
+        for x in (8.65, 9.55):
+            acyl(A, (x - 0.42, 2.3, zb_ + 0.4), (x + 0.42, 2.3, zb_ + 0.4), 0.34, lambda z: W, seg=14)
+            acyl(A, (x - 0.22, 2.3, zb_ + 0.4), (x + 0.22, 2.3, zb_ + 0.4), 0.35, lambda z: C['orange'], seg=14)
+            for e in (-0.32, 0.32): abox(A, x + e - 0.03, x + e + 0.03, 1.95, 2.65, zb_, zb_ + 0.2, C['steel'])
+        abox(A, 9.9, 10.25, 1.3, 1.9, zb_, zb_ + 0.7, C['lampR'])
     # ---- the stairs: from the working deck up to the forecastle at starboard, and to the casing's deck by the house ----
     if fine:
         stair(A, X_FC - 2.6, -3.9, zs(24.5), X_FC + 0.05, z_dk(X_FC), 0.8, W)

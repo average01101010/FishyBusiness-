@@ -541,7 +541,10 @@ Runde 18 (c6db804c, 7b36cbe5): gangbanen akter for styrehuset finnes på **begge
 stolper, med rekkverk); på babord står to redningsflåter i holdere (8,95 og 10,0 m) over MOB-båten, og den røde utstyrskisten
 på balkongen under. MOB-båtens davit flyttet til båtens akterende (7,5 m) så den ikke går gjennom gangbanen.
 
-Igjen etter runde 18, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 19 (c6db804c i nærbilde): flåtene og den røde kisten står sammen på den lavere balkongen på husets tak (z 10,2), under
+gangbanen, ikke oppe på den; flyttet. Fjernversjonen 11 802 punkter (`_F` 0,42), nærversjonen 133 247.
+
+Igjen etter runde 19, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 
