@@ -262,6 +262,19 @@ async def main():
         check(ev['shows'] == 1 and ev['show'] and ev['show']['n'] >= 1 and ev['take'] and ev['take']['id'] == ev['id'] and ev['take']['allow'] > ev['take']['min']
               and ev['fail'] and ev['fail']['id'] == ev['id'] and ev['fail']['how'] == 'drop' and 0 < ev['fail']['frac'] < 1 and ev['fail']['pay'] == 0,
               'the measurement: tur_show once per board seen; tur_take with the mission\'s id and the minutes allowed; given up, tur_fail with the same id, how=drop and the share of the deadline used', ev)
+        # 15. the first mission (30.10.2026): a player who has landed once and never taken a mission gets a short freight of mail laid on top of the
+        #     board, a few miles on, with a week's deadline, told once by the harbour; it takes no place on the board; none once a mission is done
+        fm = await pg.evaluate("""(() => { const T = turState(), EV = [], keep = {ev:cloudEv, done:T.done, act:T.act, board:T.board, slots:T.slots, told:T.firstTold, landN:S.landN, msgs:S.msgs.length}; cloudEv = (k, d) => EV.push({k, d});
+          T.done = []; T.act = []; T.board = []; T.firstTold = 0; S.landN = 1; S.boat.status = 'port'; S.boat.port = S.home || PORTS[0].id; S.boat.pos = {...portById(S.boat.port).p};
+          turEnsure(true); const m = T.board[0], first = m && m.first ? {k:m.k, kg:m.kg, nm:m.nm, hTot:m.hTot, pay:m.pay, from:m.from, to:m.to, n:T.board.length} : null;
+          const told = S.msgs.length - keep.msgs, ev1 = EV.filter(e => e.k === 'tur_first').length; turEnsure(true); const again = T.board.filter(x => x.first).length, told2 = S.msgs.length - keep.msgs, m2 = T.board.find(x => x.first);
+          const slots0 = T.slots; const err = m2 ? turTake(m2.id) : 'none'; const take = EV.find(e => e.k === 'tur_take' && e.d.first), slots1 = T.slots, act = T.act.some(x => x.first);
+          T.act = []; T.done = [{id:m2 ? m2.id : 0, ok:true}]; T.board = []; turEnsure(true); const none = !T.board.some(x => x.first);
+          cloudEv = keep.ev; Object.assign(T, {done:keep.done, act:keep.act, board:keep.board, slots:keep.slots, firstTold:keep.told}); S.landN = keep.landN;
+          return {first, told, ev1, again, told2, err, take:take && take.d, slots0, slots1, act, none, home:S.boat.port}; })()""")
+        check(fm['first'] and fm['first']['k'] == 'frakt' and 20 <= fm['first']['kg'] <= 40 and fm['first']['nm'] <= 35 and fm['first']['hTot'] == 168 and fm['first']['pay'] >= 500
+              and fm['told'] == 1 and fm['ev1'] == 1 and fm['again'] == 1 and fm['told2'] == 1 and fm['err'] is None and fm['take'] and fm['take']['first'] == 1 and fm['slots1'] == fm['slots0'] and fm['act'] and fm['none'],
+              "the first mission: a short freight of mail laid on top of the board after the first landing, a week to do it, told once by the harbour; taken, it uses no place on the board; none once a mission is done", fm)
         check(errs == [], 'sidefeil', errs[:3])
         await br.close()
 

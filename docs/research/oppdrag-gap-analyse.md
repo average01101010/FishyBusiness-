@@ -141,8 +141,8 @@ Hver linje passer i én økt etter `docs/utviklingsplan.md`.
 | # | Hva | Hvorfor først | Måles som |
 |---|---|---|---|
 | 1 | Måling: `how` i `tur_fail`, `id`, `tur_show`, `frac` (bygd 30.10.2026) | Alt etterpå skal leses av her | Andel uten utfall → 0 |
-| 2 | Garantert første oppdrag i Første uke, kapittel 2 | Største terskel, 4 av 14 | Andel som tar oppdrag nr. 2 innen 7 dager |
-| 3 | Sesongflytting i tre etapper med delbelønning | 7 av 11 feiler | Fullført + delvis mot feilet |
+| 2 | Garantert første oppdrag etter første levering (bygd 30.10.2026, på tavla, ikke som milepæl) | Største terskel, 4 av 14 | Andel som tar oppdrag nr. 2 innen 7 dager |
+| 3 | Sesongflytting i tre etapper med delbelønning (bygd 30.10.2026) | 7 av 11 feiler | Fullført + delvis mot feilet |
 | 4 | Avsender med navn og én linje hukommelse ved levering | Hook, immersion, billig med `09d-folk.js` | Gjentatte oppdrag fra samme sted |
 | 5 | Én sann hendelse underveis per langt oppdrag | Emergens, variasjon | Fullføringsgrad lange, økt-lengde |
 | 6 | Nødanrop fra spillere på tavla | Sosialt, additivt | Andel med venn etter 7 dager |

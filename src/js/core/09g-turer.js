@@ -33,6 +33,10 @@
 //           Within 3 km, the lighthouse in the 3D view's picture and nothing in front of it (G3.seen), the shutter takes it (G3.snap)
 //           and the paper prints it (T.press, newsForDay)
 // The crew talks about the trip as it starts (turDepart): the time it takes, and now and then the engine (the trim app's words).
+// The first mission (turFirst, 30.10.2026; 4 of 14 players had taken one, the playtest: «turte ikke»): a player who has landed once and
+// never taken a mission gets a short freight of mail laid ready on the board, from the harbour she is at to one a few miles on, on her
+// way where she has one, with a week's deadline and nothing lost if it runs out. It takes no place on the board, is told once by the
+// harbour, and is made again from the new place if the board is remade before it is taken.
 // Measured (cloudEv): tur_show when a new board is seen, tur_take, and tur_done or tur_fail with how it ended and the share of the
 // deadline used, all with the mission's id (30.10.2026, so taken, dropped, timed out and done can be told apart in admin).
 const TUR = {
@@ -202,6 +206,34 @@ function turFrakt(o, cls, used, me = turMe()){
     return {k:'frakt', cls, from:from.id, to:q.id, p:q.p, nm:Math.round((pick ? turNm(o, from.p) : 0) + turNm(from.p, q.p)), h, kg, what:[g.no, g.en], base:turPay(h, c.f), hTot:h * 2.5 + 12};
   }
   return null;
+}
+// ---- the first mission ----
+const TUR_FIRST = {nm:[1.5, 12], nmFar:35, kg:[20, 40], hTot:168};   // a few miles (the nearest harbour with a quay within 35 nm when none is near: the plants are up to 20 nm apart), a little mail, a game week
+const turFirstDue = () => { const T = S.turer; return !!(S.landN >= 1 && !(typeof tutOn === 'function' && tutOn()) && !(T && (T.done.length || T.act.some(m => m.first) || T.board.some(m => m.first)))); };
+function turFirst(o){
+  const v = turV(), from = S.boat.status === 'port' ? portById(S.boat.port) : nearestPort(S.boat.pos); if (!from) return null;
+  const way = turWay(), pick = S.boat.status === 'port' ? 0 : turNm(o, from.p) / v, room = cargoRoom();
+  const kg = Math.round(clamp(Math.min(room * 0.6, BOAT.holdCap * 0.1), TUR_FIRST.kg[0], TUR_FIRST.kg[1]) / 10) * 10; if (room < kg) return null;
+  for (const far of [TUR_FIRST.nm[1], TUR_FIRST.nmFar]){
+    // the nearest first; a harbour on her way (within 15 nm of it) goes before it when it is at most half as far again
+    const cand = PORTS.filter(q => q.id !== from.id && q.pier).map(q => ({q, nm:turNm(from.p, q.p)})).filter(x => x.nm >= TUR_FIRST.nm[0] && x.nm <= far).sort((a, b) => a.nm - b.nm);
+    const onw = cand.length && way ? cand.find(x => turNm(x.q.p, way) < 15 && x.nm <= cand[0].nm * 1.5) : null; if (onw && onw !== cand[0]) cand.splice(0, 0, ...cand.splice(cand.indexOf(onw), 1));
+    for (const {q, nm} of cand){ const h = pick + nm / v;
+      if (!turCan(from.p, q.p, nm / v, false) || (pick && !turCan(o, from.p, pick, false))) continue;
+      return {k:'frakt', cls:'kort', first:true, from:from.id, to:q.id, p:q.p, nm:Math.round((pick ? turNm(o, from.p) : 0) + nm), h, kg, what:[TUR_GOODS[1].no, TUR_GOODS[1].en], base:turPay(h, TUR.cls.kort.f), hTot:TUR_FIRST.hTot}; }
+  }
+  return null;
+}
+// laid on the board when it is due (from the app and every game hour), told once by the harbour it goes from
+function turFirstEnsure(T = turState(), o = turHere()){
+  if (!turFirstDue()) return null;
+  const m = turFirst(o); if (!m) return null;
+  m.id = ++T.seq; m.until = S.t + TUR_FIRST.hTot * 60; m.pay = turFinal(m); T.board.unshift(m);
+  if (!T.firstTold){ T.firstTold = S.t; const f = portById(m.from), t = portById(m.to);
+    msg(f.name, 'Har du plass til ' + fmt(m.kg, 0) + ' kg post og pakker til ' + t.name + '? Det er ' + Math.round(turNm(f.p, t.p)) + ' nautiske mil, og det haster ikke: ei uke har du. Oppdraget ligger klart på tavla i Oppdrag-appen, og det betaler ' + kr(m.pay) + '.',
+      'Have you room for ' + fmt(m.kg, 0) + ' kg of mail and parcels for ' + t.name + '? It is ' + Math.round(turNm(f.p, t.p)) + ' nautical miles, and there is no hurry: you have a week. The mission lies ready on the board in the Oppdrag app, and it pays ' + kr(m.pay) + '.');
+    if (typeof cloudEv === 'function') cloudEv('tur_first', {id:m.id, nm:m.nm, kg:m.kg, pay:m.pay}); }
+  return m;
 }
 // lost gear near the coast within a short trip: a string of nets if two can haul it, else a bank line one can
 function turGarn(o){
@@ -513,6 +545,7 @@ function turEnsure(force){
     const C = turMake(), on = new Set(T.board.map(m => m.k + m.cls)), pick = C.filter(m => !on.has(m.k + m.cls)).concat(C.filter(m => on.has(m.k + m.cls)));
     for (const m of pick){ if (T.board.length >= want) break; m.id = ++T.seq; m.until = S.t + TUR.life * 60; if (m.base == null) m.base = m.pay || 500; m.pay = turFinal(m); T.board.push(m); }
   }
+  turFirstEnsure(T, o);   // (the newcomer's first mission, on top, taking no place)
   return T;
 }
 // where the boat is going: the end of the route she sails, else the plant she has landed at most of late (her last eight landings)
@@ -540,7 +573,7 @@ function turTake(id){
   const T = turState(), m = T.board.find(x => x.id === id); if (!m) return turL('Oppdraget er ikke lenger på tavla.', 'The mission is no longer on the board.');
   if (T.act.length >= TUR.maxAct) return turL('Du har allerede to oppdrag. Fullfør eller gi fra deg ett først.', 'You already have two missions. Finish or give one up first.');
   if (m.k === 'frakt' && cargoRoom() < m.kg) return turL('Det er ikke plass på dekk eller i lasterommet. Lever fangsten først.', 'There is no room on deck or in the hold. Land the catch first.');
-  T.board.splice(T.board.indexOf(m), 1); T.slots = Math.max(0, (T.slots == null ? TUR.boardMax : T.slots) - 1);   // (its place on the board is used)
+  T.board.splice(T.board.indexOf(m), 1); if (!m.first) T.slots = Math.max(0, (T.slots == null ? TUR.boardMax : T.slots) - 1);   // (its place on the board is used; the first mission has none)
   m.t0 = S.t; m.due = S.t + Math.round(m.hTot * 60); m.vid = S.cur;
   if (m.base == null) m.base = m.pay || 500; m.pay = turFinal(m);
   if (m.k === 'slep'){ m.pf = m.pay / Math.max(1, m.base); m.payLo = turSalvage(m, 0); m.payHi = turSalvage(m, 1); }
@@ -554,7 +587,7 @@ function turTake(id){
   if (m.k === 'foto') msg('Kystposten', 'Fint at du tar den. Vi vil ha et bilde av ' + turFyrName(m) + (m.lys ? ' ' + TUR_LYS[m.lys].no : '') + '. Snu kameraet mot fyret og trykk på utløseren når du er innen 3 km.', 'Good that you take it. We want a picture of ' + turFyrName(m) + (m.lys ? ' ' + TUR_LYS[m.lys].en : '') + '. Turn the camera to the lighthouse and press the shutter when you are within 3 km.');
   if (m.k === 'slep'){ m.stage = 'reach'; msg(m.owner, 'Takk for at du kommer! «' + m.boat + '» har motorstopp og ligger og driver ved ' + coordStr(m.p) + '.', 'Thank you for coming! The «' + m.boat + '» has engine trouble and is drifting at ' + coordStr(m.p) + '.'); }
   T.act.push(m);
-  if (typeof cloudEv === 'function') cloudEv('tur_take', {id:m.id, k:m.k, cls:m.cls, nm:m.nm, min:turMinR(m.h), allow:turMinR(m.hTot)});
+  if (typeof cloudEv === 'function') cloudEv('tur_take', Object.assign({id:m.id, k:m.k, cls:m.cls, nm:m.nm, min:turMinR(m.h), allow:turMinR(m.hTot)}, m.first ? {first:1} : {}));
   // (the deck log says the deadline as it is set, in both tongues: the day, the hour and the real time it leaves)
   const dd = gDate(m.due / 60), p2 = n => String(n).padStart(2, '0'), at = p2(dd.getUTCHours()) + ':' + p2(dd.getUTCMinutes()), dn = typeof DAYS !== 'undefined' ? [DAYS.no[dd.getUTCDay()] + ' ' + dd.getUTCDate() + '. ' + MONS.no[dd.getUTCMonth()], DAYS.en[dd.getUTCDay()] + ' ' + dd.getUTCDate() + ' ' + MONS.en[dd.getUTCMonth()]] : ['', ''];
   log('Tok oppdraget: ' + turWhat(m)[0] + '. Frist ' + dn[0] + ' kl. ' + at + ', om ca. ' + turDur(m.hTot) + '.', 'Took the mission: ' + turWhat(m)[1] + '. Deadline ' + dn[1] + ' at ' + at + ', in about ' + turDur(m.hTot) + '.');
@@ -605,7 +638,7 @@ function turEnd(m, ok, why, how){
   T.done.unshift({id:m.id, k:m.k, cls:m.cls, to:m.to || null, ok, pay:ok ? m.pay : paid, part:paid > 0, t:S.t, what:turWhat(m)}); T.done = T.done.slice(0, 20);
   if (why) log(why, why);
   const frac = m.due > m.t0 ? Math.round((S.t - m.t0) / (m.due - m.t0) * 100) / 100 : null;
-  if (typeof cloudEv === 'function') cloudEv(ok ? 'tur_done' : 'tur_fail', Object.assign({id:m.id, k:m.k, cls:m.cls, nm:m.nm, trim:!!trimOn(S.boat), min:Math.round((S.t - m.t0) / GAME_RATE), frac, pay:ok ? Math.round(m.pay || 0) : Math.round(m.paid || 0)}, ok ? {} : {how:how || 'other', stage:m.k === 'sesong' ? m.stage || 0 : undefined}));
+  if (typeof cloudEv === 'function') cloudEv(ok ? 'tur_done' : 'tur_fail', Object.assign({id:m.id, k:m.k, cls:m.cls, nm:m.nm, trim:!!trimOn(S.boat), min:Math.round((S.t - m.t0) / GAME_RATE), frac, pay:ok ? Math.round(m.pay || 0) : Math.round(m.paid || 0)}, m.first ? {first:1} : {}, ok ? {} : {how:how || 'other', stage:m.k === 'sesong' ? m.stage || 0 : undefined}));
 }
 function turPayOut(m, from, no, en, part){
   const amt = part != null ? part : m.pay;
@@ -644,6 +677,7 @@ function turHauled(s){
 }
 function turHour(){
   const T = turState(), d = Math.floor(S.t / 1440), L = T.sea || (T.sea = {});
+  T.board = T.board.filter(m => m.until > S.t); if (turFirstDue()) try { turFirstEnsure(T); } catch (e){ console.warn('turFirst', e); }
   if (S.boat.status === 'sailing' || S.boat.status === 'fishing') L[d] = (L[d] || 0) + 1;   // the sea hours for the player's own rate (turOwn)
   for (const k in L) if (+k < d - 15) delete L[k];
   for (const m of T.act.slice()) if (m.due && S.t > m.due){
@@ -653,6 +687,7 @@ function turHour(){
     if (m.k === 'slep' && m.stage === 'tow') continue;   // and the tow under way
     if (m.k === 'prove' && m.stage === 'measure') continue;   // the fish are caught; the board waits
     if (m.k === 'sesong' && (m.paid || 0) > 0) msg('Kystposten', 'Uka er ute i ' + portById(m.to).name + ': ' + fmt(m.got || 0, 0) + ' av ' + fmt(m.kg, 0) + ' kg ' + SPECIES[m.sp].no.toLowerCase() + ' levert, ' + (m.stage || 0) + ' av 3 etapper. Du beholder ' + kr(m.paid) + '.', 'The week is out at ' + portById(m.to).name + ': ' + fmt(m.got || 0, 0) + ' of ' + fmt(m.kg, 0) + ' kg of ' + SPECIES[m.sp].en.toLowerCase() + ' landed, ' + (m.stage || 0) + ' of 3 stages. You keep ' + kr(m.paid) + '.');
+    else if (m.first) msg(portById(m.from).name, 'Uka gikk, og posten til ' + portById(m.to).name + ' tok en annen båt. Det gjør ingenting. Tavla har nye oppdrag når du vil.', 'The week went by, and the mail for ' + portById(m.to).name + ' went with another boat. No harm done. The board has new missions when you want them.');
     else msg(m.k === 'garn' ? m.owner : 'Oppdrag', 'Fristen gikk ut: ' + turWhat(m)[0] + '. Ta et nytt fra tavla når det passer.', 'The deadline passed: ' + turWhat(m)[1] + '. Take a new one from the board when it suits you.');
     turEnd(m, false, null, 'due');
   }
