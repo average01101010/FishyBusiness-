@@ -486,7 +486,7 @@ def holes():
     for sg in (1, -1):
         z = 7.0
         while z > 4.85: H.append((sg, 7.3, 7.72, z - 0.05, z + 0.05, 0.02, 'box', 0.12)); z -= 0.38
-    H.append((-1, 6.65, 7.65, 7.22, 8.33, 0.06, 'box', 1.2))
+    # (no side door on the starboard side aft: the working deck is open there, a5d2b0af)
     for k in range(8):
         xc = 3.45 - 0.433 * k; H.append((1, xc - 0.13, xc + 0.13, 8.80, 9.07, 0.06, 'thru', 0.0))
     # starboard: the louvres under the working deck (the photographs from starboard show more of them, further aft; the places

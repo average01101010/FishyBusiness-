@@ -502,7 +502,11 @@ akter (7,3–7,7 m) på begge sider. **De tre svarte vakuumtankene er tatt ut** 
 bildene henger tre korte svarte tanker (rundt 1,3 m) under plattformen ved husfronten, ikke fra dekket og opp som mine var.
 Hopperen flyttet til y −0,7…−3,5. Klasjsjekk: 0.
 
-Igjen etter runde 10, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 11: en vegg som rendret svart viste seg å være to flater i samme plan (husets kassevegg oppå dekkets); den ene skygget den
+andre. Regel fra nå: **aldri to flater i samme plan**; `dbg12.py`-metoden (skjul objekt for objekt, slett flata) finner slike.
+Styrbord sidedør akter tatt ut (det er arbeidsdekk der). Kontrollbildene rendres med himmellys 0,45 og eksponering −1,0.
+
+Igjen etter runde 11, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 
