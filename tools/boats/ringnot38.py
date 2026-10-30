@@ -385,6 +385,8 @@ def underwater(fine=True):
         return [(c0 - ch * sc * u, yt(u), z) for u in us] + [(c0 - ch * sc * u, -yt(u), z) for u in reversed(us[1:-1])]
     zr = [3.35, 3.0, 2.0, 1.0, 0.45, 0.25, 0.14, 0.10]; sr = [1.0, 1.0, 1.0, 1.0, 0.99, 0.95, 0.85, 0.6]
     objs.append(loft_rings('rudder', [foil(z, k) for z, k in zip(zr, sr)], C['af'], angle=60))
+    # the end plate under the rudder (9d43d29b): a flat plate a little wider than the blade
+    objs.append(box('rudderplate', TE - 0.05, LE + 0.05, -0.26, 0.26, 0.06, 0.12, C['af']))
     wr = lambda x: 0.145
     objs.append(cyl('stock', (AP, 0, 3.3), (AP, 0, z_low(AP) + 0.2), 0.16, C['af'], 12))
     if fine:
@@ -394,6 +396,9 @@ def underwater(fine=True):
             for x, z in ((5.0, 0.9), (7.5, 0.35)): F.anode(U, (x, sg * 0.322, z), (0, sg, 0), (1, 0, 0), C['zinc'], L=0.36, m_strap=C['steel'])
             for x in (12.0, 18.0, 24.0):
                 p, n, tt = surf(x, 0.9, sg, off=0.003); F.anode(U, p, n, (1, 0, 0), C['zinc'], L=0.4, m_strap=C['steel'])
+            # the row of anodes along the bottom's edge from the stern to the bulb (9d43d29b on the slip)
+            for x in [8.5 + 2.6 * k for k in range(9)]:
+                p, n, tt = surf(x, 0.32, sg, off=0.003); F.anode(U, p, n, (1, 0, 0), C['zinc'], L=0.36, m_strap=C['steel'])
             # the bilge keels amidships at the turn of the bilge
             pts = [surf(x, 0.55, sg)[0] for x in [10.0 + 0.8 * k for k in range(18)]]
             for a, b in zip(pts, pts[1:]):

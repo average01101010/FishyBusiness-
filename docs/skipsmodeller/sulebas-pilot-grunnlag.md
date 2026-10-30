@@ -532,7 +532,12 @@ vinduer i shelterdekkets babordside** (15,6–25,2 m, z 7,45–8,3) fantes da b�
 bare omrissene, så de er tegnet som hvite paneler flush i sida med en tynn kant. Dypgangsmerkenes rekkefølge på baugen stemmer
 med slippbildet (thrusterringen forrest, V-ene akter for den).
 
-Igjen etter runde 16, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 17 (undervannsskroget mot slippbildet 9d43d29b): bunnen er flat med en markert kant der den står på blokkene, propellen
+i brønn med roret bak og hekkthrusteren forut for den, bulben med gitteret og firebladet propell, alt som i modellen. Lagt til: en
+rad sinkanoder langs bunnkanten hver 2,6 m fra 8,5 til 29,3 m (de små grå rektanglene i bildet) og en endeplate under roret.
+Dypgangsskalaen på baugen leser like mot bildet (siffer hver 0,2 m, M ved hele metre, 0,5 m akter for stevnen).
+
+Igjen etter runde 17, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 
