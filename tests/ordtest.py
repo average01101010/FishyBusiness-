@@ -34,7 +34,7 @@ async def main():
           O.offers.splice(0, 1); o.due = S.t + 60; O.active.push(o); const r0 = repOf(o.cust); S.t += 120; ordersTick(S.t / 60); return {cust:o.cust, repBefore:r0, repAfter:repOf(o.cust), active:O.active.length}; })()""")
         print('missed:', json.dumps(miss))
         # clothes through the equipment app
-        await pg.evaluate("S.cash = 20000; S.clothes = {olje:0, varme:0}; PHONE.open('utstyr')"); await pg.wait_for_timeout(400)
+        await pg.evaluate("S.cash = 20000; S.clothes = {olje:0, varme:0}; PHONE.open('utstyrb')"); await pg.wait_for_timeout(400)
         await pg.evaluate("document.querySelector('[data-pa=cloth][data-k=varme]').click()"); await pg.wait_for_timeout(300)
         print('clothes bought:', await pg.evaluate("JSON.stringify(S.clothes)"), 'cash', await pg.evaluate("S.cash"))
         await pg.evaluate("document.querySelector('.ph-appv') && document.querySelector('.ph-appv').parentElement.scrollTo(0, 99999)"); await pg.wait_for_timeout(300)

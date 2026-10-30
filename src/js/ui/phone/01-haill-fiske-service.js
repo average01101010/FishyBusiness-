@@ -22,26 +22,27 @@
   }
   // --- the tackle shop on the quay: a purchase takes two taps, the second one confirms the price
   // the first-trip guide hands out the hand jig and the first fill of ice (07b-first-trip.js)
-  const shopBtn = (k, kg, c, label, fill) => { const pt = portById(S.boat.port), here = atKind(k === 'ice' ? 'mottak' : 'butikk') && pt; if (tutFree(k)) c = 0; const on = shopPend && shopPend.k === k && shopPend.kg === kg, dis = !here || c > spendable(), pr = c ? kr(c) : k === 'ice' ? L('på huset', 'on the house') : L('gratis', 'free'), fa = fill ? ' data-fill="1"' : '';
-      return on ? '<div class="ph-row2"><button class="ph-btn p" data-pa="shop" data-k="' + k + '" data-kg="' + kg + '"' + fa + '>' + L('Bekreft · ', 'Confirm · ') + pr + '</button><button class="ph-btn alt" data-pa="shop0">' + L('Avbryt', 'Cancel') + '</button></div>'
-        : '<button class="ph-btn" data-pa="shop" data-k="' + k + '" data-kg="' + kg + '"' + fa + (dis ? ' disabled' : '') + '>' + label + ' · ' + pr + '</button>'; };
+  // a purchase takes two taps: the first turns the button itself into «Bekreft · price» with a small ✕ beside it, for a few seconds
+  // (M1, ui/05a-itemcard.js IC_CONFIRM_MS); the first-trip guide hands out the hand jig and the first fill of ice (07b-first-trip.js)
+  const shopBtn = (k, kg, c, label, fill) => { const pt = portById(S.boat.port), here = atKind(k === 'ice' ? 'mottak' : 'butikk') && pt; if (tutFree(k)) c = 0; const on = shopPend && shopPend.k === k && shopPend.kg === kg && Date.now() - shopPend.t <= IC_CONFIRM_MS, dis = !here || c > spendable(), pr = c ? kr(c) : k === 'ice' ? L('på huset', 'on the house') : L('gratis', 'free'), fa = fill ? ' data-fill="1"' : '';
+      return on ? '<span class="ic-cf"><button class="ph-btn p" data-pa="shop" data-k="' + k + '" data-kg="' + kg + '"' + fa + '>' + L('Bekreft · ', 'Confirm · ') + pr + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
+        : '<button class="ph-btn p" data-pa="shop" data-k="' + k + '" data-kg="' + kg + '"' + fa + (dis ? ' disabled' : '') + '>' + label + ' · ' + pr + '</button>'; };
   function fiske(){
-    const b = S.boat, pt = portById(b.port), here = atKind('butikk') && pt, ice = here && pt.ice, room = shopIceRoom(), ikr = shopIceKr();
+    const b = S.boat, pt = portById(b.port), here = atKind('butikk') && pt;
     const h = ['<div class="ph-c"><div class="ph-card"><h4>' + (here ? (pt.id === 'finnsnes' ? L('Fiskeutstyr på kaia i Finnsnes', 'The tackle shop on the quay in Finnsnes') : L('Butikken i ', 'The shop in ') + pt.name) : L('Du er ikke ved en utstyrsbutikk', 'You are not at a tackle shop')) + '</h4><p class="ph-note">' +
-      (here ? L('Her får du det du trenger for å fiske med juksa, garn, line og teiner. Klær, elektronikk, halere og juksamaskiner finner du under Elektronikk og haler.', 'Everything you need to fish with a jig, nets, line and pots. Clothes, electronics, haulers and jigging machines are under Electronics and haulers.') : L('Du kan se hva som finnes, men utstyr kjøper du i utstyrsbutikken.', 'You can look, but gear is bought at the tackle shop.')) + '</p></div>'].concat(here ? [] : nearHint('butikk'));
-    const buy = shopBtn;
-    const have = '<p class="r0"><b>' + L('Om bord', 'Aboard') + '</b></p>';
-    h.push('<div class="ph-card"><h4>' + L('Håndjuksa', 'Hand jig') + '</h4><p>' + L('Snøre, søkke, pilk og markkroker på en rull ved ripa. Med den fisker du torsk, sei og hyse. Uten juksa kan du ikke fiske for hånd.', 'Line, sinker, pilk and fly hooks on a reel at the rail. It takes cod, saithe and haddock. Without it you cannot fish by hand.') + '</p>' + kv(L('Pris', 'Price'), kr(PRICE.gear)) + (b.gear ? have : buy('jig', 0, PRICE.gear, L('Kjøp håndjuksa', 'Buy a hand jig'))) + '</div>');
-    if (!tutOn()) h.push('<div class="ph-card"><h4>' + L('Kveiteutstyr', 'Halibut gear') + '</h4><p>' + L('Kveitepilk, kraftig snøre og gaff. Med kveitepilken tar juksa mest kveite og lite annet. Kveita er fredet fra 20. desember til og med 20. april.', 'Halibut pilk, heavy line and gaff. With the halibut pilk the jig takes mostly halibut and little else. Halibut is closed from 20 December to 20 April.') + '</p>' + kv(L('Pris', 'Price'), kr(PRICE.kgear)) + (b.kgear ? have : buy('kgear', 0, PRICE.kgear, L('Kjøp kveiteutstyr', 'Buy halibut gear'))) + '</div>');
-    h.push('</div>');
+      (here ? L('Juksa, garn, line og teiner. Halere, juksamaskiner, elektronikk og klær står under Elektronikk og haler.', 'Jigs, nets, line and pots. Haulers, jigging machines, electronics and clothes are under Electronics and haulers.') : L('Du kan se hva som finnes, men utstyr kjøper du i utstyrsbutikken.', 'You can look, but gear is bought at the tackle shop.')) + '</p></div>'].concat(here ? [] : nearHint('butikk'));
+    const have = L('Om bord', 'Aboard');
+    h.push(itemCard({k:'jig', name:L('Håndjuksa', 'Hand jig'), price:PRICE.gear, have:b.gear ? have : '', btns:b.gear ? '' : shopBtn('jig', 0, PRICE.gear, L('Kjøp', 'Buy'))}));
+    if (!tutOn()) h.push(itemCard({k:'kgear', name:L('Kveiteutstyr', 'Halibut gear'), price:PRICE.kgear, have:b.kgear ? have : '', btns:b.kgear ? '' : shopBtn('kgear', 0, PRICE.kgear, L('Kjøp', 'Buy'))}));
     if (!tutOn()) h.push(redskap('kjop'));
+    h.push('</div>');
     return h.join('');
   }
   // the tackle shop's service (Jonas 08.10.2026): the shop mends and changes in half the time for a fee, and buys the gear back
   function service(){
     const b = S.boat, pt = portById(b.port), here = atKind('butikk') && pt, pg = careInit(S.pgear), h = ['<div class="ph-c">'];
     if (!here) h.push(nearHint('butikk'));
-    h.push('<div class="ph-card"><h4>' + L('Service i utstyrsbutikken', 'Service at the tackle shop') + '</h4><p class="ph-note">' + L('Butikken reparerer og bytter på halve tiden mot et gebyr, og kjøper redskap tilbake til en firedel av nypris ganger standen. Det lønner seg aldri å kjøpe og selge. Slitt redskap bør byttes ut.', 'The shop mends and changes in half the time for a fee, and buys gear back at a quarter of the new price times its condition. It never pays to buy and sell. Worn gear should be replaced.') + '</p></div>');
+    h.push('<div class="ph-card"><h4>' + L('Service i utstyrsbutikken', 'Service at the tackle shop') + '</h4><p class="ph-note">' + L('Butikken reparerer og bytter på halve tiden mot et gebyr, og kjøper redskap tilbake.', 'The shop mends and changes in half the time for a fee, and buys gear back.') + '</p><button type="button" class="ic-more" data-pa="open" data-a="handbok" data-hbid="lex_service">' + L('Mer om service ›', 'More on service ›') + '</button></div>');
     const sell = (w, k, n, lbl) => cbtn('caresell', 'data-w="' + w + '" data-k="' + k + '" data-n="' + n + '"', L('Selg ', 'Sell ') + lbl + ' · ' + kr(sellValue(w, k, n)), here);
     for (const lk of ['hyse', 'bank']){ const L0 = pg.lines[lk]; if (!L0.n) continue; const un = L0.n - L0.baited, qh = careQuote('hooks', lk, true), ql = careQuote('line', lk, true);
       h.push('<div class="ph-card"><h4>' + LINE_KINDS[lk][S.lang] + '</h4>' + kv(L('Lina', 'The line'), pctOf(L0.cond) + ' · ' + L('tak ', 'ceiling ') + pctOf(L0.max)) + cbar(L0.cond) + kv(L('Kroker som må byttes', 'Hooks to change'), hooksNeed(lk)) + '<div class="ph-btncol">' +
@@ -60,12 +61,10 @@
     return h.join('') + '</div>';
   }
   function iceCard(){
-    const b = S.boat, pt = portById(b.port), here = atKind('mottak') && pt, ice = here && pt.ice, room = shopIceRoom(), ikr = shopIceKr(), buy = shopBtn;
-    const h = [];
-    h.push('<div class="ph-card"><h4>' + L('Is', 'Ice') + '</h4><p>' + L('Is holder fisken fersk. Uten is faller kvaliteten fort, og mottaket betaler mindre. Du bruker rundt 0,3 kg is per kg fisk.', 'Ice keeps the fish fresh. Without it the quality drops fast and the plant pays less. You use about 0.3 kg of ice per kg of fish.') + '</p>' +
-      kv(L('Om bord', 'Aboard'), fmt(b.ice, 0) + ' / ' + BOAT.iceCap + ' kg') + '<div class="ph-bar"><i style="width:' + Math.round(clamp(b.ice / BOAT.iceCap, 0, 1) * 100) + '%"></i></div>' +
-      kv(L('Pris', 'Price'), fmt(ikr, 2) + ' kr/kg') + (here ? '<p class="ph-note">' + L('Isen kommer fra isrenna på mottakskaia.', 'The ice comes down the chute at the plant\'s quay.') + '</p>' : '<p class="ph-note">' + L('Is selges på fiskemottaket.', 'Ice is sold at the fish plant.') + '</p>') +
-      (room < 1 ? '<p class="r0"><b>' + L('Iskassa er full', 'The ice box is full') + '</b></p>' : '<div class="ph-btncol">' + (room > 60 && !tutFree('ice') ? buy('ice', 50, Math.round(50 * ikr), L('50 kg is', '50 kg of ice')) : '') + buy('ice', room, Math.round(room * ikr), L('Fyll opp, ', 'Fill up, ') + room + ' kg', true) + '</div>') + '</div>');
+    const b = S.boat, pt = portById(b.port), here = atKind('mottak') && pt, room = shopIceRoom(), ikr = shopIceKr(), buy = shopBtn;
+    const btns = room < 1 ? '' : (room > 60 && !tutFree('ice') ? buy('ice', 50, Math.round(50 * ikr), L('50 kg', '50 kg')) : '') + buy('ice', room, Math.round(room * ikr), L('Fyll opp, ', 'Fill up, ') + room + ' kg', true);
+    const h = [itemCard({k:'ice', name:L('Is', 'Ice'), price:fmt(ikr, 2) + ' kr/kg', cond:b.ice / BOAT.iceCap, condL:L('Om bord ', 'Aboard ') + fmt(b.ice, 0) + ' / ' + BOAT.iceCap + ' kg',
+      have:room < 1 ? L('Iskassa er full', 'The ice box is full') : '', note:here ? L('Isen kommer fra isrenna på mottakskaia.', 'The ice comes down the chute at the plant\'s quay.') : L('Is selges på fiskemottaket.', 'Ice is sold at the fish plant.'), btns})];
     if (!here) h.push(nearHint('mottak'));
     return h.join('');
   }

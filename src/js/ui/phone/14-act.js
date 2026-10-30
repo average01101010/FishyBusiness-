@@ -10,10 +10,11 @@
     if (a !== 'shop') shopPend = null;
     if ((/^adm/.test(a) || (a === 'open' && d.a === 'admin')) && !adminOk()) return false;   // the Admin app is only Jonas's (adminOk)
     if (a === 'open' && d.a === 'garderobe'){ show(false); WARD.open(); return; }      // the wardrobe is a sheet of its own (ui/10g-wardrobe.js)
+    if (a === 'open' && d.a === 'handbok' && typeof HBUI !== 'undefined') HBUI.only = d.hbid || null;   // an item card's «Mer» opens its one entry (ui/05a-itemcard.js)
     if (a === 'open'){ appSeen(d.a); app = d.a === 'kaiboden' ? kbLast : d.a; confirmMayday = false; if (d.s) sub[d.a] = d.s; if (d.a === 'post') sub.postArt = null; }
     else if (a === 'home'){ app = 'home'; }
     else if (a === 'back'){ app = 'home'; }
-    else if (a === 'shop'){ const k = d.k, kg = +d.kg || 0; if (!shopPend || shopPend.k !== k || shopPend.kg !== kg){ shopPend = {k, kg}; return true; } shopPend = null; const free = tutFree(k), why = shopBuy(k, kg, free); if (why){ toast(L(why[0], why[1])); } else if (free){ if (k === 'ice') S.iceFree = 0; tutMark('free_' + k); } }
+    else if (a === 'shop'){ const k = d.k, kg = +d.kg || 0; if (!shopPend || shopPend.k !== k || shopPend.kg !== kg || Date.now() - shopPend.t > IC_CONFIRM_MS){ shopPend = {k, kg, t:Date.now()}; return true; } shopPend = null; const free = tutFree(k), why = shopBuy(k, kg, free); if (why){ toast(L(why[0], why[1])); } else if (free){ if (k === 'ice') S.iceFree = 0; tutMark('free_' + k); } }
     else if (a === 'shop0'){ }
     else if (a === 'shopgear'){ app = 'redskap'; sub.redskap = 'kjop'; }
     else if (a === 'close'){ show(false); return; }
@@ -56,6 +57,7 @@
     else if (a === 'admFuel'){ const b = S.boat, add = Math.max(0, BOAT.fuelCap - b.fuel); b.fuel = BOAT.fuelCap; if (b.status === 'adrift' && add > 0) b.status = 'idle'; log('Admin: tanken fylt (' + fmt(add) + ' L).', 'Admin: the tank filled (' + fmt(add) + ' L).'); }
     else if (a === 'hbshow'){ HBUI.show(d.id); return; }   // «Vis meg» in Håndboka: the phone closes and the tip points (07c-handbook.js)
     else if (a === 'hbskip'){ HBUI.toggle(+d.ch); }
+    else if (a === 'hball'){ HBUI.only = null; }
     else if (a === 'sub'){ sub[app] = d.s; if (app === 'post') sub.postArt = null; }
     else if (a === 'acy') sub.acy = d.y;                // the year shown in the bank's accounts
     else if (a === 'bkmv'){ const B = bankS(), k = d.k === 'skatt' ? 'skatt' : 'spare', v = d.v === '-all' ? -B[k] : +d.v; if (!bankMove(k, v)) toast(L(v > 0 ? 'Brukskontoen er tom.' : 'Kontoen er tom.', v > 0 ? 'The current account is empty.' : 'The account is empty.')); }

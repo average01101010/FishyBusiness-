@@ -25,7 +25,7 @@ os.makedirs(LOGS, exist_ok=True)
 
 # draw 3D: they look at the 3D view itself (frames, camera, quays, cranes, pumps)
 D3 = ['benchshot', 'havnshot', 'lifeshot', 'wetshot', 'vindshot', 'treeshot', 'wakeshot', 'anchor3d', 'skytest', 'jigshot', 'naust3dtest', 'pubtest', 'helmjit', 'anchorlight3d', 'saytest', 'yardtest', 'dbg23o', 'trackfollow', 'tral3d', 'seatrytest', 'sitetest', 'coast3d', 'ultratest', 'camtest', 'moortest', 'landtest', 'bunkertest', 'heattest', 'vessel3d', 'unittest', 'sea3d', 'teleport3d', 'lighttest', 'kinotest', 'haultest', 'vectest', 'potshot', 'aurorashot', 'penshot', 'deckshot', 'workshot', 'brotest']
-LITE = ['eventtest', 'boktest', 'lotttest', 'skattetest', 'driftsplan2test', 'driftsplan2ui', 'driftsplan2map', 'slidertest', 'anchorswing', 'selfcrew', 'crewclip', 'regmarktest', 'dockrow', 'hulltest', 'dyntest', 'crewlifetest', 'crewwalk', 'walktest', 'tabtest', 'navbarshot', 'skiptest', 'synctest', 'installtest', 'looktest', 'hbtest', 'naustclear', 'rectest', 'ptowtest', 'seaworktest', 'hailtest', 'gbtest', 'sharetest', 'friendtest', 'searchtest', 'savestest', 'caretest', 'yardupgtest', 'jigalongtest', 'heatgeartest', 'anchortest', 'drifttest', 'driftuitest', 'plantsaytest', 'cashfxtest', 'autonavtest', 'placetest', 'sidetab', 'guidetest', 'stedertest', 'icestep', 'heatpick', 'peergear', 'turtest', 'posttest', 'merketest', 'fartstidtest', 'maletest', 'climtest', 'sqltest', 'cloudtest', 'guesttest', 'kjoptest', 'r4test', 'tutdrift', 'worldtest', 'pushtest', 'feedbacktest', 'hudtest', 'obstest', 'marktest', 'rorbutest', 'admintest', 'tut', 'starttest', 'seasontest', 'uishots', 'quotatest', 'rulestest', 'npctest', 'havntest', 'keeptest', 'tidetest', 'trip2', 'docktest', 'booktest', 'decktest', 'geartest', 'loretest', 'tattest', 'towtest', 'airtest', 'fleet2test', 'fleet3test', 'opsowntest', 'routetest', 'naustleia',
+LITE = ['itemcardtest', 'eventtest', 'boktest', 'lotttest', 'skattetest', 'driftsplan2test', 'driftsplan2ui', 'driftsplan2map', 'slidertest', 'anchorswing', 'selfcrew', 'crewclip', 'regmarktest', 'dockrow', 'hulltest', 'dyntest', 'crewlifetest', 'crewwalk', 'walktest', 'tabtest', 'navbarshot', 'skiptest', 'synctest', 'installtest', 'looktest', 'hbtest', 'naustclear', 'rectest', 'ptowtest', 'seaworktest', 'hailtest', 'gbtest', 'sharetest', 'friendtest', 'searchtest', 'savestest', 'caretest', 'yardupgtest', 'jigalongtest', 'heatgeartest', 'anchortest', 'drifttest', 'driftuitest', 'plantsaytest', 'cashfxtest', 'autonavtest', 'placetest', 'sidetab', 'guidetest', 'stedertest', 'icestep', 'heatpick', 'peergear', 'turtest', 'posttest', 'merketest', 'fartstidtest', 'maletest', 'climtest', 'sqltest', 'cloudtest', 'guesttest', 'kjoptest', 'r4test', 'tutdrift', 'worldtest', 'pushtest', 'feedbacktest', 'hudtest', 'obstest', 'marktest', 'rorbutest', 'admintest', 'tut', 'starttest', 'seasontest', 'uishots', 'quotatest', 'rulestest', 'npctest', 'havntest', 'keeptest', 'tidetest', 'trip2', 'docktest', 'booktest', 'decktest', 'geartest', 'loretest', 'tattest', 'towtest', 'airtest', 'fleet2test', 'fleet3test', 'opsowntest', 'routetest', 'naustleia',
         'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'fuelcal', 'bunktest', 'lanterntest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest', 'maptest', 'mig2test', 'charttest', 'helmtest', 'soundtest', 'sleeptest', 'pwatest', 'bktest']
 # they measure milliseconds, so they run alone at the end, when nothing else takes the CPU
 SOLO = ['routetest', 'heattest', 'landtest', 'charttest']
@@ -39,7 +39,7 @@ MUST = {'trip2': ('"st":"port"', 'ender ikke i havn'), 'tut': ('"tut": 0', 'veil
 COVER = {
   'src/js/ui/phone/14-act.js':['docktest', 'turtest', 'teleport3d'],
   'src/js/ui/phone/13-mannskap-bank-meld.js':['skattetest', 'lotttest', 'boktest', 'skiptest', 'docktest'],
-  'src/js/ui/phone/12-utstyr-redskap.js':['shoptest', 'geartest'],
+  'src/js/ui/phone/12-utstyr-redskap.js':['shoptest', 'geartest', 'itemcardtest'], 'src/js/ui/05a-itemcard.js':['itemcardtest', 'shoptest'], 'tests/itemcardtest.py':['itemcardtest'],
   'src/js/ui/phone/11-rederi.js':['boktest', 'fleet3test', 'fleet2test'],
   'src/js/ui/phone/10-fartoy.js':['fleet3test', 'vesseltest'],
   'src/js/ui/phone/09-vaer-post-salg-redning.js':['posttest', 'shoptest'],
@@ -49,8 +49,8 @@ COVER = {
   'src/js/ui/phone/05-rigg-innst-admin.js':['admintest', 'docktest'],
   'src/js/ui/phone/04-kvote.js':['quotatest'],
   'src/js/ui/phone/03-regler.js':['rulestest'],
-  'src/js/ui/phone/02-havn-last-agn-ordre.js':['shoptest', 'docktest'],
-  'src/js/ui/phone/01-haill-fiske-service.js':['shoptest', 'docktest'],
+  'src/js/ui/phone/02-havn-last-agn-ordre.js':['shoptest', 'docktest', 'itemcardtest', 'geartest'],
+  'src/js/ui/phone/01-haill-fiske-service.js':['shoptest', 'docktest', 'itemcardtest', 'icestep'],
   'src/js/ui/phone/00-shell.js':['docktest', 'teleport3d'],
   'src/js/view3d/25-controls.js':['helmjit', 'teleport3d', 'benchshot'],
   'src/js/view3d/24-cinema.js':['kinotest', 'wetshot', 'benchshot'],
