@@ -107,8 +107,12 @@ async function turGo(id){
 }
 // the chart: a ring where each mission goes (and where freight waits), with its name when the chart is close enough
 function turSvg(u, inV){
-  const T = S.turer; if (!T || !T.act.length) return '';
   const g = [];
+  // what a search found, a day on the chart (S.lete; docs/planer/oppdrag-2.md L2): a ring where the species stood, with its name
+  for (const sp in (S.lete || {})) for (const x of S.lete[sp]){ if (S.t - x.t > 1440 || !x.p || !inV(x.p.x, x.p.y)) continue;
+    g.push('<circle cx="' + x.p.x + '" cy="' + x.p.y + '" r="' + (TUR_LETE.R * NM) + '" class="turmk lete" fill="none" stroke-width="' + (1.5 * u) + '" stroke-dasharray="' + (3 * u) + ' ' + (3 * u) + '"/>');
+    if (view.z > 0.5) g.push(txt({x:x.p.x + 6 * u, y:x.p.y - 6 * u}, turEsc((S.lang === 'en' ? 'Found: ' : 'Funnet: ') + SPECIES[sp][S.lang === 'en' ? 'en' : 'no'].toLowerCase()), 'lbl-tur', 10.5 * u, 'stroke-width="' + (2.5 * u) + '"')); }
+  const T = S.turer; if (!T || !T.act.length) return g.join('');
   for (const m of T.act){ const ekko = m.k === 'prove' && m.kind === 'ekko';
     if (ekko && m.at < 3) g.push('<polyline points="' + m.pts.slice(m.at).map(q => q.x + ',' + q.y).join(' ') + '" class="turmk" fill="none" stroke-width="' + (1.5 * u) + '" stroke-dasharray="' + (2 * u) + ' ' + (3 * u) + '"/>');
     const p = m.k === 'frakt' && m.stage === 'pick' ? portById(m.from).p : m.k === 'slep' && m.stage === 'tow' ? portById(m.to).p : ekko ? m.pts[Math.min(2, m.at || 0)] : m.k === 'foto' ? m.fyr : m.p; if (!p || !inV(p.x, p.y)) continue;

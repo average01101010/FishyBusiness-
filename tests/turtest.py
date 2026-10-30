@@ -333,10 +333,10 @@ async def main():
           for (const [dx, dy] of places){ b.pos = {x:m.p.x + dx, y:m.p.y + dy}; for (let k = 0; k < 60; k++) turLeteMinute(a, b); seen.push(a.seen.length); }
           const stage = a.stage, cash0 = S.cash; b.pos = p0; b.status = st;
           for (let i = 0; i < a.qs.length; i++) turLeteAnswer(a.id, i, a.qs[i].ans);
-          const d = T.done.find(x => x.id === m.id), L = (S.lete || {})[m.sp] || [];
-          Object.assign(T, keep); return {sp:m.sp, okSp, qs, ansIn, seen, stage, done:!!(d && d.ok), gain:S.cash - cash0, pay:d && d.pay, base:m.base, bonus:m.bonusMax, line:L[0] && L[0].no, who:turLeteWho(m)}; })()""")
-        check(le.get('none') or (le['okSp'] and 1 <= len(le['qs']) <= 3 and le['ansIn'] and le['seen'] == [1, 2, 3] and le['stage'] == 'answer' and le['done'] and le['pay'] == le['base'] + le['bonus'] and le['gain'] == le['pay'] and le['line'] and le['who']),
-              'the search: a species the boat may fish and land, one to three questions the model can answer, three places fished an hour each make the questions hers, all right pays the full bonus, and the line stays', le)
+          const d = T.done.find(x => x.id === m.id), L = (S.lete || {})[m.sp] || [], ring = /turmk lete/.test(turSvg(1, () => true)), badge = achC('lete');
+          Object.assign(T, keep); return {sp:m.sp, okSp, qs, ansIn, seen, stage, done:!!(d && d.ok), gain:S.cash - cash0, pay:d && d.pay, base:m.base, bonus:m.bonusMax, line:L[0] && L[0].no, who:turLeteWho(m), ring, badge}; })()""")
+        check(le.get('none') or (le['okSp'] and 1 <= len(le['qs']) <= 3 and le['ansIn'] and le['seen'] == [1, 2, 3] and le['stage'] == 'answer' and le['done'] and le['pay'] == le['base'] + le['bonus'] and le['gain'] == le['pay'] and le['line'] and le['who'] and le['ring'] and le['badge'] >= 1),
+              'the search: a species the boat may fish and land, one to three questions the model can answer, three places fished an hour each make the questions hers, all right pays the full bonus, the line stays, the ring is on the chart for a day and the badge counts', le)
         check(errs == [], 'sidefeil', errs[:3])
         await br.close()
 

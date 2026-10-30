@@ -347,6 +347,7 @@ function turLeteAnswer(id, qi, opt){
   const parts = m.qs.map(q2 => q2.k === 'side' ? ['tettest ' + SIDE[q2.ans][0] + ' i området', 'thickest to the ' + SIDE[q2.ans][1]] : q2.k === 'dyp' ? [(q2.ans === 'dyp' ? 'dypere' : 'grunnere') + ' enn ' + q2.m + ' m', (q2.ans === 'dyp' ? 'deeper' : 'shallower') + ' than ' + q2.m + ' m'] : [q2.ans === 'ut' ? 'ut mot åpent hav' : 'inne i ly', q2.ans === 'ut' ? 'out toward the open sea' : 'in the lee']);
   const line = [SPECIES[m.sp].no + ' ' + pl.no + ' i ' + MN[0] + ': ' + parts.map(x => x[0]).join(', ') + '.', SPECIES[m.sp].en + ' ' + pl.en + ' in ' + MN[1] + ': ' + parts.map(x => x[1]).join(', ') + '.'];
   const L = S.lete || (S.lete = {}); (L[m.sp] || (L[m.sp] = [])).unshift({t:S.t, p:{x:Math.round(m.p.x * 10) / 10, y:Math.round(m.p.y * 10) / 10}, mon, no:line[0], en:line[1]}); L[m.sp] = L[m.sp].slice(0, 12);
+  if (typeof achAdd === 'function') achAdd('lete');   // the badge «Letefisker» (core/09f-merker.js ACHL)
   if (typeof cloudEv === 'function') cloudEv('tur_lete', {id:m.id, sp:m.sp, n:m.qs.length, right});
   turPayOut(m, turLeteWho(m), (right === m.qs.length ? 'Alt stemte med det vi ser. ' : right ? right + ' av ' + m.qs.length + ' stemte. ' : 'Det stemte ikke med det vi ser, men turen er betalt. ') + 'Slik står ' + spn[0] + 'en der nå: ' + line[0], (right === m.qs.length ? 'All of it matches what we see. ' : right ? right + ' of ' + m.qs.length + ' matched. ' : 'It did not match what we see, but the trip is paid. ') + 'This is how the ' + spn[1] + ' stands there now: ' + line[1]);
 }
