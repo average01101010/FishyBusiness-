@@ -248,6 +248,89 @@ Rekkefølgen er valgt så spillerne får noe (M1–M5) før sponsorene får noe 
 - Dag 7/30-retensjon for spillere som har brukt bruktmarkedet mot ikke.
 - For sponsorene: 4.4.
 
+## 10. Gjennomføringsplanen (30.10.2026, etter Jonas' svar)
+
+Jonas 30.10.2026: «Reglen om "ingen ekte firmanavn eller organisasjonsnavn" skal endres til at det ikke skal være i spillet uten en skriftlig avtale. Personvernserklæringen og vilkårene kan skrives om. Jeg legger ved noen bilder jeg har funnet på sidene til skipsmeglere. La meg gjerne få en full plan for hva du tenker å gjøre og hvorfor før du går i gang med arbeidet.»
+
+### 10.1 Avgjort
+
+- **V1 = A.** Regelen i `CLAUDE.md` er endret samme dag: ingen ekte firma- eller organisasjonsnavn uten skriftlig avtale, og da bare gjennom sponsordataene i databasen, merket som samarbeid. Alt uten avtale heter etter stedet som før.
+- **Personvernerklæringen og vilkårene kan skrives om.** Ordlyden står i 10.5 og bygges i M0, så Jonas ser den før den rulles ut.
+- Ingenting annet er bygd. Resten av valgene (10.4) venter.
+
+### 10.2 Det meglersidene lærer oss
+
+Jonas sendte sider fra to meglere: en norsk skipsmegler med rundt 36 båter til salgs (medlem av Norsk Skipsmeglerforbund), og en internasjonal markedsplass med over 6 000 fartøy. Begge er forbilder for bruktmarkedet i M4, og den siste er også et eksempel på hva vi ikke skal gjøre. Firmaene nevnes ikke i spillet; de er bare forbilder her.
+
+| Trekk på meglersidene | Hvorfor det virker | Slik gjør vi det i spillet |
+|---|---|---|
+| **Hver båt er én oppføring med nummer** («#4078», «Anse-ID 1960») | Én båt, én historie, én side. Nummeret gjør den omtalbar («den der 4078-en»). | Oppføringer med løpenummer per år («DSB-2027-041»), båtnavnet hun har, ikke typen. |
+| **Nøkkelfakta-stripa** (Bygget 2003 · 65 m · dypgang 8,1 m) øverst, så detaljene | Tre tall som sier alt på ett blikk, før avsnittene. | Stripa på hvert kort og øverst i databladet: byggeår · lengde · motortimer · pris. Databladets åtte seksjoner beholdes under. |
+| **Strukturert spesifikasjon** («Type skrog», «Hovedmotorer», «Timetall», «Kraner», «Instrumenter i rorhus», «Lugarer», «Marsfart / maksfart») | Det er slik kjøperne leser båter. Vårt datablad har alt dette alt (`specSecs`). | Databladet får to nye seksjoner for brukte båter: **Tilstand** (skrog, motor, elektronikk, redskap, med stand i prosent) og **Følger med** (haler, juksamaskiner, garn, VHF). |
+| **Lang fritekst i selgerens stemme** («Alle opplysninger er gjort så korrekt som mulig, men uten ansvar for mulige feil og mangler») | Det er mennesker som selger. Forbeholdet er ekte, og det gir grunn til takst. | Hver oppføring får to–tre setninger i selgerens stemme (NPC-skipper, dødsbo, megler) på dialekt, og forbeholdet står. Taksten (M4) finner det forbeholdet skjuler. |
+| **Selgerkortet** («Selger: Steve, firma, Kontakt selger, Alle brukerens oppføringer») | Et ansikt og en vei til å spørre. | Selgerkortet med navn og hjemsted (NPC fra B2), «Kontakt selger» åpner ett spørsmål og ett bud (10.4, V9), «Alle hans oppføringer» når en megler har flere. |
+| **«Lagt til 11. nov 2021» og «3847 visninger»** | Dato sier hvor lenge den har stått (pris på vei ned), visninger er sosialt bevis. | «Lagt ut for 12 dager siden» og «sett av 31 skippere» fra felles telling (V3 B) eller anslått (V3 A). Prisen går ned 2 % i uka etter tre uker, synlig som «Prisen satt ned». |
+| **Prisestimat + mva, «Our offers are standard valid for 30 days», «subject to prior sale»** | Prisen er et utgangspunkt, og båten kan bli solgt før deg. | «Prisantydning» i stedet for «Pris» på brukte båter, bud fra 90 % (V9), og oppføringen forsvinner når en annen (NPC eller spiller) kjøper. Det er den eneste knappheten vi lager, og den er ekte. |
+| **GA-tegning til nedlasting** | Fagfolk vil se tegningen. | Sideriss-SVG-en er vår GA. Legg til riss ovenfra (dekksplanen fra kit-festepunktene: kar, stamper, kran) når modellen har det. |
+| **Bildegalleri 1/27, også innvendig** | Bilder selger. | Tre–fire faste vinkler fra showroomet (baug, side, akter, dekk) tatt som bilder når oppføringen lages (`G3.showroom` + lerret), slik at kortet har bilde uten at 3D er oppe. Innredning finnes ikke (Jonas 06.10.2026), så ingen innvendige bilder. |
+| **Fremhevede oppføringer med krone (betalt plass)** | Markedsplassen tjener på plassering, ikke på reklame. | Et sponsorformat (F6 utvidet): en megler kan kjøpe «fremhevet» på sine oppføringer, merket «Fremhevet · formidlet av X». Høyst to per fane. |
+| **Kategorier og filtre** («Snurpenottråler», «Fiskebåt 26 m», land) | Finn det du leter etter. | Fanene (åpen, hjemmel, kyst, hav) beholdes, pluss sortering: nærmest, billigst, nyest, «passer meg» (egenkapital og blad B). |
+| **«Forespørsler om ønskede fartøyer»** | Kjøpere som sier hva de vil ha. | «Ønsket båt» (V10): spilleren sier type og pris, og markedet varsler i Rederi når en slik dukker opp. Ingen push. |
+| **«Solgte fartøyer»** | Prishistorikk gir trygghet og anker. | «Solgt siste måned» nederst i Båthandel: type, pris, sted, uten kjøpernavn. Gir ærlig ankerpris. |
+| **«Tilbud om tidsleie»** | Leie i stedet for kjøp. | Ikke nå. Notert som idé for senere (en sesong med leid båt i lukket gruppe). |
+| **Utstyrslistene nevner merker** (vinsjer, radar, ekkolodd, kraner, autopilot med modellnavn og årstall) | Slik er ekte båter beskrevet. Merkene er en del av verdien. | Det er F1: en sponsors haler eller radar står med modellnavn i «Følger med» på en brukt båt. Uten avtale står det «garnhaler», som nå. |
+| **«Ekstern annonse. Markedsplassen er ikke selger, megler, agent …», «Tillit og samsvar», «Rapporter oppføring»** | Tydelig hvem som står bak, og en vei å klage. | «Formidlet av X» på meglerens oppføringer, og «Sponsorer»-siden sier at spillet ikke er part i noe ekte salg. Lenken ut er alltid merket. |
+| **Det vi ikke tar med:** bannerannonser for kjoler nederst på en trålerside, samtykkebanner for annonser, «No photo available»-plassholdere, titler i store bokstaver over fem linjer | Reklamen er urelatert og ødelegger tilliten; plassholdere ser uferdig ut; store bokstaver leses dårlig. | Ingen tredjepartsannonser (regel). Hver oppføring har alltid bilde (vi lager det selv). Titler er båtnavnet og typen, i vanlig skrift. |
+
+### 10.3 Øktene, i rekkefølge, med hvorfor
+
+Hver økt leser denne fila og systemdokumentet, bygger, oppdaterer status nederst og avslutter med `/lever` og `/okt-slutt`. Rekkefølgen: først det som bare er dokumenter og juss (M0), så det spillerne merker (M1–M5), så sponsor-grunnmuren (M6–M7), så formatene (M8) og salgsmateriellet (M9). M1 og M6 kan gå parallelt (ulike filer).
+
+| Økt | Hva | Hvorfor nå | Filer | Tester | Måles |
+|---|---|---|---|---|---|
+| **M0 Reglene og vilkårene** | `docs/engasjement.md` «Det vi ikke gjør» presiseres (ingen belønnings- eller avbrytende reklame; sponsede varer og skilt etter planen er tillatt). `src/legal/personvern.html` og `vilkar.html` får avsnittene i 10.5. `kilder.html` får «Samarbeidspartnere» (tom til første avtale). `docs/handelssteder.md` får bruktmarkedet og sponsorformatene som regel. | Juss før kode. Jonas godkjenner ordlyden før den rulles ut (sidene bygges med `src/`, så en push ruller dem ut). | `docs/`, `src/legal/` | ingen (tekst) | – |
+| **M1 Varekortet** | Ett varekort (3.1) for utstyr, redskap, klær, is og agn: bilde, én linje med tall, pris med anker, stand, én knapp med bekreftelse i knappen, «Mer» til Håndboka. Bildene lages av modellene (`vesselSVG`-mønsteret for `EQUIP`, ellers kontrollbilder). Leksikonteksten flyttes til Håndboka. «Prisene er foreløpige» bort. | Alt senere (sponsormerket, bruktmarkedets «Følger med») bruker kortet. | `ui/phone/12-utstyr-redskap.js`, `01-haill-fiske-service.js`, `02-havn-last-agn-ordre.js`, `07c-handbook.js`, `styles.css`, `tools/gear/pic.py` (nytt) | `shoptest`, `stedertest`, `caretest`, `icestep`, ny `shopuitest` (begge formater) | kjøp per butikkbesøk (`shop_view`, `shop_buy` i `tm_batch`) |
+| **M2 Butikken på ny** | Tre faner (Redskap, Elektronikk, Haler og dekk), «Til «Idamor»» først, Innkjøpslista øverst, Service som fane under Beholdning › Redskap, kjøpmannen med navn, dialekt og én linje. Vifta i knappelinja får to knapper (Butikk, Service borte). | Det spillerne ser hver dag. | `ui/10c-dock.js`, `ui/phone/12-…`, `01-…`, `core/09d-folk.js` (kjøpmannen) | `docktest`, `stedertest`, `caretest`, `shopuitest` | tid fra butikk åpnet til kjøp |
+| **M3 Prøv før du kjøper** | Utstyr vist på egen båt i 3D før kjøpet (halere, juksamaskin, radar, krabbekar) med `paintView`-kameraet; kjøpsøyeblikket for utstyr (heises om bord fra kaia med kranen eller bæres, 10 s). | Eierskapseffekten, og modellene finnes alt. | `ui/10j-paint.js` (kameraet gjenbrukes), `view3d/10-gear.js`, `view3d/22-docks-air.js` | `maletest`, ny `trytest` (3D), `deckshot` | andel som prøver før kjøp |
+| **M4 Bruktmarkedet** | Oppføringer etter 10.2: nummer, navn, nøkkelfakta-stripa, bilder fra showroomet, Tilstand og Følger med, selgerkortet med fritekst, «Lagt ut for», «sett av», prisantydning som synker, takst (første gratis), prøvetur, «Solgt siste måned», sortering, «Ønsket båt» (V10), «Kontakt selger» med bud (V9), salg i kommisjon. Faste tilbud beholdes. «Neste mål» på kortet. | Den største endringen for spillerne, og plassen megleren skal inn på. | `core/09k-market.js` (nytt), `ui/phone/10-fartoy.js`, `core/05-vessels.js` (`vesselValue`), `supabase/migrations/…_listings.sql` (V3 B) | `fleet2test`, `vesseltest`, ny `markettest` (ukas oppføringer like på to enheter, takst, bud, kommisjon, solgt-lista), `cloudtest` (V3 B) | tid fra «Neste mål» til kjøp, andel med takst, angrede kjøp |
+| **M5 Kjøpsøyeblikket for båt** | Om bord ved verftets kai i 3D, navnet males, flagget går opp, innbyttebåten blir liggende med «Til salgs» og kommer igjen i markedet med nytt navn (B2). 15 s, kan hoppes over. | Toppen og slutten av kjøpet. | `view3d/23-camera-frame.js`, `24-cinema.js`, `ui/10j-paint.js`, `core/09k-market.js` | `yardtest`, `kinotest`, `markettest` | – |
+| **M6 Sponsor-grunnmuren** | Tabellene `sponsors` og `sponsor_placements`, `sp_now()`, admin-fanen «Sponsorer» (legg til, slå av, forhåndsvis), `core/09j-sponsor.js`, varemerket på varekortet (F1) med samme tall som det generiske (V5), lenke ut merket og i ny fane (F8), «Sponsorer» i Håndboka og på kildesiden, testsponsoren «Nordlys Utstyr» bare i testdata. | Grunnmuren alle formatene står på. En ny avtale er en rad i admin, ingen utrulling. | `supabase/migrations/…_sponsors.sql`, `src/admin/index.html`, `core/09j-sponsor.js` (nytt), `ui/10q-sponsor.js` (nytt), `ui/phone/12-…`, `07c-handbook.js` | `sqltest`, `admintest`, ny `sponsortest` (uten avtale ingen merker; merket og generisk like tall; lenken merket) | – |
+| **M7 Skilt og måling** | `anchors.sign` på butikken (`shop_sign`, `board`, `gable_board` finnes som bokser i `butikk.py`) og verftet (`steder.py y`), teksturen som rederilogoen (`logo_put`-mønsteret, 256 × 256 WebP), målingen per IAB (areal, vinkel, tid, ikke når siden er skjult), `sp_view` i `tm_batch`, admin-rapporten med CSV. | Det er dokumentasjonen vi selger på. | `tools/harbour/butikk.py`, `steder.py` (`/blender`), `view3d/06-buildings-lights.js`, `view3d/17-draw.js`, `ui/10f-cloud.js`, `supabase/migrations/…_sp_view.sql`, admin | ny `signshot` (3D), `sponsortest`, `cloudtest` | synlige visninger og sekunder per plassering |
+| **M8 Resten av formatene** | Kystposten-annonse (F4, sakstypen `annonse` i `PRESS_KINDS`, merket), Garderoben og Malerverkstedet (F5), sponsede hendelser (F3, feltet `sponsor` i `season_ev`), gaver (F7), meglerens oppføringer (F6) med «fremhevet» og import fra CSV (`tools/broker/import.py`). | Når grunnmuren og markedet står. | `core/09h-press.js`, `ui/10g-wardrobe.js`, `core/09i-look.js`, `ui/10j-paint.js`, `core/09c-seasons.js`, `core/09f-merker.js`, `core/09k-market.js`, `tools/broker/` | `presstest`, `wardtest`, `maletest`, `eventtest`, `markettest`, `sponsortest` | klikk ut per format |
+| **M9 Mediekortet og demobygget** | Mediekortet fra admin (spillere, økter, hjemhavner per fylke, flåten, bilder), demobygget med testsponsoren (`KYST_DEMO=1 node build.mjs`), ett dokument Jonas kan sende. | Det Jonas trenger for å ringe. | admin, `build.mjs`, `docs/sponsor/mediekort.md` | `admintest`, `boottest` | – |
+
+### 10.4 Valgene som står igjen
+
+V1 er avgjort (A). V2–V8 står som i del 7, og to nye kom av meglersidene:
+
+9. **V9 Bud og forhandling i bruktmarkedet.** A: «Kontakt selger» gir ett bud per oppføring per dag, fra 90 % av prisantydningen; selgeren svarer etter hvor lenge båten har stått og hvor mange som har sett den (anbefalt: det er slik båter kjøpes, og det er en liten ferdighet). B: fast pris, som i dag. C: bud også mellom spillere (krever V3 B og moderering; senere).
+10. **V10 «Ønsket båt».** A: spilleren legger inn type og pris, og Rederi-appen varsler når en slik kommer, ingen push (anbefalt: det gir en grunn til å åpne spillet uten å mase). B: ikke nå.
+
+Svar gjerne som før: «2A, 3A, 4A, 5A, 6A, 7A, 8A, 9A, 10A, kjør på», eller det du vil ha annerledes.
+
+### 10.5 Ordlyden i reglene og vilkårene (bygges i M0, Jonas godkjenner)
+
+- **`docs/engasjement.md`, «Det vi ikke gjør», linja «Reklame for belønning. Ingen reklame i spillet.»** blir: «Reklame for belønning, videoreklame, avbrytende bannere og tredjeparts annonsenettverk. Sponsede varer, skilt, hendelser, klær og meglerens oppføringer etter `docs/planer/butikker-og-sponsorer.md` er tillatt: alltid merket, aldri med spillfordel, aldri på sjøen, i kartplotteren, i HUD eller i push.»
+- **`src/legal/personvern.html`, linja «Vi viser ikke reklame, sporer deg ikke for reklame og selger ikke opplysninger til noen.»** blir: «Spillet kan vise sponsede varer, skilt og annonser fra navngitte samarbeidspartnere, merket som samarbeid eller annonse. Vi måler hvor lenge slike skilt er synlige på skjermen, samlet for alle spillere og uten å dele hvem du er. Ingen samarbeidspartner får opplysninger om deg, og vi bruker ingen annonsenettverk, informasjonskapsler eller sporing fra andre.» Avsnittet om lagring (ekomloven § 3-15) står. Under «Hva vi lagrer» kommer «hvor lenge sponsede skilt var synlige i økta (bare når du deler statistikk)».
+- **`src/legal/vilkar.html`, nytt punkt «Samarbeidspartnere»:** «Noen varer, skilt, hendelser og oppføringer i spillet er sponset av navngitte samarbeidspartnere og er merket som det. En sponset vare virker aldri bedre i spillet enn den usponsede. Lenker til en samarbeidspartners egne sider åpner utenfor spillet og er merket. Det Store Blå er ikke part i noe kjøp, salg eller avtale du gjør med en samarbeidspartner utenfor spillet.»
+- **`src/legal/kilder.html`:** avsnittet «Samarbeidspartnere» med lista (tom: «Ingen ennå.»).
+- **`docs/handelssteder.md`:** bruktmarkedet som regel under Verftet, og «Sponsede varer» med regelen om like tall.
+
+### 10.6 Antatt og usikkert
+
+- Tersklene i målingen (1,5 % av skjermen, 55°, 1 s) er anslag til den fulle IAB-teksten er lest. Vi selger ikke på tallene før det.
+- Forbrukertilsynet har ingen veiledning for produktplassering i spill; vi følger mfl. § 3 og merker alt. Første avtale sees av advokat (Jonas).
+- Konkurranseregler for ekte premier (F3) er ikke sjekket.
+- Bruktmarkedets priser (±15 %, 2 % ned i uka etter tre uker, bud fra 90 %) er startverdier for spilltesting.
+- Bildene fra showroomet forutsetter at `G3.showroom` kan tegne til et lerret uten at spilleren ser det; må prøves i M4, ellers brukes sideriss-SVG-en alene.
+- Meglerens CSV-format er ukjent til første megler finnes; importen bygges for lengde, byggeår, skrogmateriale, pris og lenke, som alle meglersidene viser.
+
+### 10.7 Det planen ikke gjør
+
+- Tidsleie av båt, bud mellom spillere, og ekte båter som egne 3D-modeller (en meglers båt vises som nærmeste spilltype).
+- Ingen endring i Kaiboden, haill, trim eller Skippertak.
+- Ingen patchnotes om sponsing, priser eller psykologi. Patchnotes for M1–M5 sier bare hva butikkene og markedet gjør nytt.
+
 ## Kilder
 
 - IAB, Intrinsic In-Game Measurement Guidelines (2009, 2.0 2022): https://www.iab.com/blog/intrinsic-in-game-measurement-guidelines/ og https://www.iab.com/blog/first-update-to-intrinsic-in-game-standards-released-since-2009/
