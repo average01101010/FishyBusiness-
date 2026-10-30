@@ -1,0 +1,382 @@
+# Sulebas: byggegrunnlaget for pilotmodellen (F4)
+
+> Forarbeidet til pilotbåten i `docs/planer/grafikk-batmodeller.md` (F4). Jonas 30.10.2026: «Når vi har gjort alt av forarbeid og
+> analyser og du mener vi er 100% klar, så skal vi starte en ny økt der vi skal lage en blender-modell av pilotbåten sulebas i det
+> detaljnivået vi ønsker.» Dette dokumentet er det økta bygger fra. Det bygger på bildeanalysen
+> (`eksempel-sulebas-sf-100-su.md`, ett bilde, SUL-ID-ene), Jonas' tre nye bilder 30.10.2026 (ikke i repoet, fotografenes bilder) og
+> planlisten (`planliste-fiskefartoy.md`).
+>
+> **Status: ikke klar ennå.** Kapittel 8 sier hva som mangler. Kildekoder: **S** sett i bilde, **T** tolket, **A** antatt,
+> **R** fra en skriftlig kilde.
+
+## 1. Fakta om båten
+
+| Hva | Verdi | Kilde |
+|---|---|---|
+| Navn, merke, kallesignal | SULEBAS, SF-100-SU, LECW | S (bildene) |
+| IMO | 9675092 | R: shipspotting.com (søketreff 30.10.2026) |
+| Design | Seacon SC38 | R: seacon.no (søketreff) |
+| Verft, levert | Solund Verft AS, byggenummer 6, februar 2014 | R: seacon.no (søketreff) |
+| Lengde over alt | **38,55 m** (byggerapporten) eller **34,32 m** (uavpic.com). Kildene er uenige | R: maritimt.com «Sulebas (04/2014)», uavpic.com. Må avgjøres mot merkeregisteret |
+| Bredde | 9,50 m (begge kildene) | R |
+| Bruttotonnasje | 499 | R: maritimt.com |
+| Dypgang, dybde til dekk, motor, propell, thrustere | ukjent | Sidene kunne ikke leses herfra (nettverket i økta stenger maritimt.com, seacon.no og uavpic.com) |
+| Bruk | Flerbruk: ringnot, snurrevad (fly-shooting) og garn | R: fiskerforum.com (om etterfølgeren «Sulehav») |
+| Eiere | Lending (Kolgrov, Solund). Hjemmehavn på skroget: FLORØ | R, S |
+
+**Viktig:** ringnotbåten i spillet (`pelagisk`, `not75.py`) er 75 m. Sulebas er under 40 m og et annet slags fartøy: en
+flerbruks kystbåt med ringnot og snurrevad, ikke en stor pelagisk tråler/ringnotbåt. Se avgjørelse B1.
+
+## 2. Reglene som gjelder modellen
+
+- **Ingen ekte navn i spillet** (CLAUDE.md 07.10.2026): ikke «SULEBAS», «FLORØ», «SF-100-SU», «LECW», rederilogoen «LR» eller
+  produsentnavnet på kranene («TRIPLEX»). Spillerens eget navn, hjemhavn og merke settes på navnefeltene (`names`, `regmark`) som
+  på de andre båtene. Modellen får bare feltene og et nøytralt merke.
+- **Bare utsiden** (06.10.2026): ingen innredning, men det som synes gjennom vinduene (konsoll, stoler, lys) er utside (OVB-12).
+- **Ingen kjøpbart utstyr modellert inn** (18.10.2026): skipets egne systemer (kraner, kraftblokk, nottrakt, vinsjer, pumpe,
+  tauspoler, galge) er skrog. Nota, korklina, tauene og fangsten tegnes av spillet. Det som kan kjøpes (radar, flåter, livbøyer)
+  står på festepunkter (`kit`).
+- **Ingen kode velger etter båttypens navn** (`vesseltest`).
+- **Lanternene etter sjøveisreglene** (kap. 6).
+
+## 3. Avgjørelser før bygging
+
+| # | Spørsmål | Valg | Anbefaling |
+|---|---|---|---|
+| B1 | Hvor i spillet hører båten hjemme? | A) Ny båttype på rundt 38 m (flerbruk ringnot og snurrevad) i stigen mellom kystbåtene og havflåten. B) Erstatter modellen for dagens 75 m ringnotbåt (feil størrelse og type). C) Bygges som pilot nå, plassen i spillet avgjøres etterpå | **C.** Modellen bygges i riktig størrelse, og ingenting i spillmekanikken endres i pilotøkta. B frarådes: proporsjonene til en 38 m båt blir feil på 75 m |
+| B2 | Fargene | A) Som Sulebas: blått skrog, hvit skanse og overbygg, rødt bunnstoff, hvit vannlinjestripe, blå striper på taket. B) Eget design | **A** som standard (det er ikke et firmanavn, og spilleren kan male om). Logo og navn byttes |
+| B3 | Detaljnivå i tall | Nær 250 000–300 000 trekanter (F0-målingen), middels 30 000, fjern 4 000 | Som foreslått. Endelig etter F1 |
+| B4 | Rekkefølge | A) Piloten bygges etter F1–F3 (materialene finnes). B) Geometrien nå, materialene etterpå | **A.** UV-ene må legges mens modellen bygges |
+| B5 | Hvilken scene vises i kontrollbildene | Gange, ringnot med pumping (som originalbildet), snurrevad | Alle tre. Utstyrsstillingene legges inn som deler som kan flyttes |
+
+## 4. Båten sone for sone
+
+Mål i meter langs skroget fra baugen er **anslag** fra bilde 2 (babord side, baugen til venstre, rundt 16,7 px/m med 38,55 m). Alt
+merket A skal kontrolleres mot bedre kilder (kap. 8).
+
+### 4.1 Skrog og merking (begge sider)
+
+- **Silhuett:** høy bakk forut med tydelig spring, nesten rett dekkslinje akterover, høy lukket hekk med stor radius i hjørnene
+  (SUL-SKR-01, -11). Hvit skanse og overbygg, blått skrog, hvit vannlinjestripe, mørkt rødt bunnstoff (S, alle bildene).
+- **Baug:** rett, svakt foroverlent stevn, flare, bulb i vannflaten (SUL-SKR-02–04). Ankerlomme i overgangen hvit/blå (SUL-SKR-10).
+  Rederilogo i hvit ring og fem hvite fartsstriper høyt på det blå forut (bilde 2: «LR»-ringen og stripene ved stevnen) – byttes
+  med nøytral logo. Registreringsmerket på den hvite skansen forut, begge sider (bilde 2: «SF-100-SU» på babord).
+- **Langs siden:** rad med firkantede åpninger i det blå like over vannlinja (bilde 1 og 3), lenseporter øverst i det blå, et par
+  firkantede vinduer i det hvite midtskips (bilde 3), utvendige leidertrinn i siden (bilde 2 midtskips, bilde 1 aktre hjørne).
+- **Akter:** baugthruster- og akterthrustermerke (⊕) med tre–fire hvite vertikale streker (rister) like over vannlinja akter
+  (bilde 1, 3: «ꟾꟾꟾ ⊕»). Navn og hjemhavn to steder på det hvite akter: på hekkens skrå hjørne og lenger forut på aktre
+  overbygg (bilde 1, 2, 3). Rad med små vinduer (8–10) i det hvite akter på styrbord (bilde 2 «SULEBAS FLORØ»-veggen).
+- **Hekkspeilet:** ikke sett rett bakfra. Bilde 3 viser hvit øvre del med navn og leidertrinn i hjørnet (A for resten).
+
+### 4.2 Forskipet (0–12 m fra baugen)
+
+- **Bakk** med rekkverk rundt, ankervinsj (ikke sett, A), en blå presenning over noe på bakken (bilde 2: rund, rundt 1,5 m),
+  livbøye med lys på rekkverket (bilde 1).
+- **Formast** (rundt 8–9 m fra baugen): hvit konisk rørmast, to plattformer med blå kant og rekkverk, lyskaster, lanterner,
+  toppstang med lys (bilde 1, 2, 3). Leider på masta (bilde 1: trapp/leider ved foten).
+- **Leidere** fra hoveddekket opp til bakken (bilde 1: skrå trapp med rekkverk ved formastas fot).
+
+### 4.3 Midtskips arbeidsdekk (12–20 m)
+
+- **Knekkbomkran** med fundament ved bakken styrbord, bommen lagt akterover langs overbygget (bilde 1: «TRIPLEX»-bom med gult
+  skilt; bilde 2: bommen ligger forover over dekket). SUL-DEK-09.
+- **Pumpestasjon** med fiskepumpe, svivel og trakt (SUL-DEK-05, -06, -08). **Sugeslangen er grønn** i bilde 1 (rundt 0,35 m),
+  lagt utenbords langs styrbord side fra midtskips mot baugen (i originalbildet sort og hengende i kjedelinje).
+- **Portalramme** over skutesiden ved pumpa (SUL-DEK-10), **mørk enhet** bak kranfundamentet (SUL-DEK-11: nettrommel eller
+  sidehaler).
+- Gul kasse (fiskekasse/oppbevaring) og mye løst utstyr på dekk (bilde 2, 3).
+
+### 4.4 Overbygg og styrehus (rundt 17–28 m)
+
+- **Styrehuset** på et dekkshus, vinduer rundt hele fronten og sidene (10–12 ruter, skråstilte, sorte karmer), taket med
+  overheng og **blå stripe langs takkanten** (bilde 1, 2, 3). Skilt med kallesignalet på taket (byttes med spillerens).
+- **To mastetårn på taket:** hvite, trappede tårn med blå bånd. Det aktre er høyest, med to radomer (hvite kuler, rundt 1,2 m),
+  åpne radarantenner, plattformer med rekkverk, lanterner på en rå; flere høye piskantenner (3–4) (bilde 1, 2, 3).
+- **Bak styrehuset på babord:** oransje MOB-båt i vugge med davit, blå presenning over noe ved siden av (bilde 2, 3).
+- **Hvite kjegle-/traktformer** ved styrehuset (bilde 1): nottrakt (SUL-DEK-04, Jonas' tolkning).
+- **Hvite trommer med flenser** (bilde 1: to–fire spoler på tvers ved styrehusets bakkant): tauspoler for snurrevad (SNV-01), T.
+- Redningsflåter i holdere og livbøyer på rekkverket (bilde 1: røde ringer).
+
+### 4.5 Akterskipet (28–38 m)
+
+- **Aktre kran / blokkbom** på styrbord akter: høy hvit søyle med bom, kraftblokka hengende fra spissen (rund skive med
+  lettelseshull, SUL-DEK-01–03; bilde 2 og 3 viser den samme rundskiven fra babord).
+- **Tårn akter på babord** med blå kappe og logoring (bilde 2, 3): skorstein/eksoskasse (T).
+- **Lukket akterdekk** med høy skanse (notbinge, SUL-DEK-12), hvitt lavt dekkshus akter (bilde 3).
+- Vinsjer, snurpeblokker, nettrommel: ikke sett (A).
+
+### 4.6 Under vann
+
+Ikke sett i noen av bildene. Antas (A): én propell i dyse eller åpen CPP, ror bak, bulb, slingrekjøl, baug- og akterthruster
+(merkene viser begge), anoder, sonar senket under forskipet (ringnot har sonar). Må kontrolleres (kap. 8).
+
+## 5. Kravlista mot planlisten
+
+Hvert punkt i planlisten som gjelder båten, med hva Sulebas har og hva modellen skal ha. «Info» viser om grunnlaget er klart (✓),
+delvis (½) eller mangler (✗). Punkter som ikke gjelder en ringnot-/snurrevadbåt er utelatt (trål, line, garn, teine, fabrikk).
+
+### SKR Skrog
+| ID | Modellen skal ha | Info |
+|---|---|---|
+| SKR-01 | 38,55 × 9,50 m (B1), dybde og dypgang fra register | ½ |
+| SKR-02 | Spring opp mot bakken, rett dekkslinje akter | ✓ |
+| SKR-03 | Rett, svakt foroverlent stevn med flare | ✓ |
+| SKR-04 | Bulb i vannflaten | ½ (form ukjent under vann) |
+| SKR-05 | Høy hekk med store hjørneradier, speil | ½ (ikke sett rett bakfra) |
+| SKR-06 | Rundspant, myk kimming | ½ |
+| SKR-07 | Kjøl, slingrekjøl | ✗ |
+| SKR-08 | Skeg og propellåpning | ✗ |
+| SKR-09 | Plateskjøter i felt på 2–3 m, lang skjøt midt i det blå (SUL-SKR-05) | ✓ |
+| SKR-10 | Hvit skanse med avrundet topp, brutt midtskips (SUL-SKR-07, -13) | ✓ |
+| SKR-11 | Lenseporter øverst i det blå | ✓ |
+| SKR-12 | Rad med firkantede overbordsutløp og runde utløp (SUL-SKR-15, -16) | ✓ |
+| SKR-13 | Sjøkister | ✗ (A) |
+| SKR-14 | Baug- og akterthrustertunnel | ½ (merkene sett, plass anslått) |
+| SKR-15 | Sonar og senkekjøl | ✗ (A) |
+| SKR-16 | Slitelister og blått rørrekkverk midtskips (SUL-SKR-14) | ✓ |
+| SKR-17 | Isforsterkning | ✗ |
+| SKR-18 | Stål | ✓ |
+| SKR-19 | Anoder | ✗ (A) |
+| SKR-20 | Ankerlomme, porter | ✓ |
+| SKR-21 | Innfelte leidertrinn i siden og hekken | ✓ |
+| SKR-22 | Ventilasjonsrister | ½ |
+
+### DKS Dekk
+| ID | Modellen skal ha | Info |
+|---|---|---|
+| DKS-01 | Bakk, åpent arbeidsdekk midtskips, lukket akterdekk/notbinge | ✓ |
+| DKS-02 | Dekksbelegg (grått, slitt beige i bingen) | ½ |
+| DKS-03 | Luker til RSW-tankene | ✗ (ikke sett ovenfra tett nok) |
+| DKS-04 | Lufte- og peilerør langs skansen | ½ |
+| DKS-05 | Ventilasjon på overbygget | ½ |
+| DKS-06 | Rør og kabelbaner | ½ |
+| DKS-07 | Dører (overbygg, styrehus) | ½ |
+| DKS-08 | Trapper og leidere (bakken, masta, styrehuset) | ✓ |
+| DKS-09 | Brannutstyr | ✗ (A, standardplasser) |
+| DKS-10 | Drenering | ½ |
+| DKS-11 | Le-tak og skjermer | ½ |
+| DKS-12 | Løst dekksutstyr (presenninger, kasser) | ✓ |
+| DKS-13 | Gassflasker | ✗ (A) |
+| DKS-14 | Landgang | ✗ (A) |
+
+### OVB Overbygg
+| ID | Modellen skal ha | Info |
+|---|---|---|
+| OVB-01 | Dekkshus med styrehus over, midtskips–forut | ✓ |
+| OVB-02 | Kantet, moderne formspråk med skråstilte vinduer | ✓ |
+| OVB-03 | 10–12 skråstilte ruter rundt fronten, sorte karmer | ✓ |
+| OVB-04 | Klarsiktsruter og vindusviskere | ½ (ikke sett tydelig) |
+| OVB-05 | Takoverheng med blå kant | ✓ |
+| OVB-06 | Brovinger | ½ |
+| OVB-07 | Akterstyreplass mot arbeidsdekket | ✗ |
+| OVB-08 | Vinduer i dekkshus og akter | ✓ |
+| OVB-09 | Skorstein/eksostårn akter babord | ½ (T) |
+| OVB-10 | Utstyr på skott (lys, høyttalere, skap) | ½ |
+| OVB-11 | Styrehustak med mastetårnene | ✓ |
+| OVB-12 | Konsoll og stoler synlige gjennom glasset | ½ (A) |
+| OVB-13 | Takflater sett ovenfra | ½ (bilde 3) |
+| OVB-14 | Skylight | ✗ |
+| OVB-15 | Flybru | – (finnes ikke) |
+| OVB-16 | Navnefelt på styrehuset (spillerens navn) | ✓ |
+
+### MST Master og elektronikk
+| ID | Modellen skal ha | Info |
+|---|---|---|
+| MST-01 | To trappede mastetårn på styrehustaket med blå bånd | ✓ |
+| MST-02 | Formast: konisk rørmast med to plattformer | ✓ |
+| MST-03 | Åpne radarantenner (to) | ½ (lengde anslått) |
+| MST-04 | To radomer, rundt 1,2 m | ✓ |
+| MST-05 | 3–4 høye piskantenner | ✓ |
+| MST-06 | Småantenner (GPS, AIS) | ½ |
+| MST-07 | Sensorer (vindmåler) | ½ |
+| MST-08 | Tyfon | ✗ (A) |
+| MST-09 | Signalfigurer | – (spillet tegner) |
+| MST-10 | Flagg (flaggstang akter) | ½ |
+| MST-11 | Skjult elektronikk | – |
+| MST-12 | Vant og barduner | ½ |
+| MST-13 | Flaggline | ½ |
+
+### FOR Fortøyning og forskip
+| ID | Modellen skal ha | Info |
+|---|---|---|
+| FOR-01 | Ankervinsj på bakken | ✗ (ikke sett) |
+| FOR-02 | Ankerlomme med anker (spillets anker) | ✓ |
+| FOR-03 | Fortøyningsvinsjer | ✗ (A) |
+| FOR-04 | Klyss (3–4 panama forut, SUL-SKR-08) og pullerter | ✓ |
+| FOR-05 | Fendere | ½ |
+| FOR-06 | Bakk | ✓ |
+| FOR-07 | Stevnbeslag | ½ |
+
+### FRM Fremdrift
+| ID | Modellen skal ha | Info |
+|---|---|---|
+| FRM-01 | Propell (CPP antatt) | ✗ |
+| FRM-02 | Dyse | ✗ |
+| FRM-03 | Ror | ✗ |
+| FRM-04 | Aksel og tauvern | ✗ |
+| FRM-05 | Baug- og akterthruster | ½ |
+| FRM-06 | Eksos (tårnet akter) og kjølevannsutløp | ½ |
+| FRM-07 | Rødt bunnstoff, hvit vannlinjestripe | ✓ |
+
+### LYS Lys
+| ID | Modellen skal ha | Info |
+|---|---|---|
+| LYS-01–06 | Etter kap. 6 | ✓ (regelen), ½ (plassene) |
+| LYS-07 | Arbeidslys på master, kraner, overbygg | ½ |
+| LYS-08 | Lyskastere (formasta, styrehustaket) | ✓ |
+| LYS-09 | Innvendig lys bak vinduene om natta | ½ |
+| LYS-10 | Lysstillinger: havn, gange, fiske, ankret | ✓ |
+| LYS-11 | Pyntelys | – |
+
+### SIK Sikkerhet
+| ID | Modellen skal ha | Info |
+|---|---|---|
+| SIK-01 | Redningsflåter i holdere (`kit.raft`) | ½ (antall og plass) |
+| SIK-02 | Oransje MOB-båt i vugge med davit, babord bak styrehuset | ✓ |
+| SIK-03 | Livbøyer med lys (`kit.buoys`) | ✓ |
+| SIK-04 | Nødpeilesender | ½ |
+| SIK-05 | Rekkverk overalt der det er fall | ✓ |
+| SIK-06 | Skilting | ½ |
+| SIK-07 | Livliner | ✗ |
+| SIK-08 | Kister for redningsutstyr | ½ |
+
+### FSK Fangsthåndtering
+| ID | Modellen skal ha | Info |
+|---|---|---|
+| FSK-01 | Fiskepumpe på dekk midtskips | ✓ |
+| FSK-02 | Grønn sugeslange (0,35 m), utenbords langs styrbord | ✓ |
+| FSK-03 | Avvanner og renner | ✗ |
+| FSK-04 | Fangstmottak | ✗ |
+| FSK-05 | Bløgge- og sløyeplass (snurrevad) | ✗ |
+| FSK-06 | Kar og kasser (gul kasse) | ½ |
+| FSK-07 | Tankluker (RSW) | ✗ |
+
+### KRN Kraner og løfteutstyr
+| ID | Modellen skal ha | Info |
+|---|---|---|
+| KRN-01 | To kranfundament: midtskips styrbord ved bakken, akter styrbord | ✓ |
+| KRN-02 | Bommer og sylindre (knekkbom midtskips, blokkbom akter) | ✓ |
+| KRN-03 | Blå hydraulikkslanger i bue | ✓ |
+| KRN-04 | Kranspiss med skive og krok | ✓ |
+| KRN-05 | Bomstøtte for midtkranen | ½ |
+| KRN-06 | Galge/portal ved pumpa (SUL-DEK-10) | ½ |
+| KRN-07 | Hjelpevinsjer | ✗ |
+| KRN-08 | Blokker og wire | ½ |
+| KRN-09 | Lastebom | – |
+
+### IDN Identitet
+| ID | Modellen skal ha | Info |
+|---|---|---|
+| IDN-01 | Felt for registreringsmerket på den hvite skansen forut, begge sider | ✓ |
+| IDN-02 | Felt for navn og hjemhavn akter (to steder) og på styrehuset | ✓ |
+| IDN-03 | Skilt for kallesignalet på taket, begge sider | ✓ |
+| IDN-04 | IMO-nummer (Sulebas har ett, 499 BT): utelates eller blir spillerens eget | ½ (avgjøres med B1) |
+| IDN-05 | Nøytral logo i hvit ring og fem fartsstriper forut | ✓ |
+| IDN-06 | Dypgangsmerker | ½ (ikke lest i bildene) |
+| IDN-07 | Fribordsmerke | ½ |
+| IDN-08 | Thrustermerker ⊕ forut og akter, V-merker | ✓ |
+| IDN-09 | Produsentmerker | – (ikke i spillet) |
+| IDN-10 | Dekaler som eget lag | ✓ |
+| IDN-11 | Stor skroggrafikk | – |
+
+### MAT Materialer (krever F2)
+| ID | Modellen skal ha | Info |
+|---|---|---|
+| MAT-01, -02 | Fargene i B2, skarpe grenser ved stripa og skansen | ✓ |
+| MAT-03 | Marinemaling med glans | ✓ (F2) |
+| MAT-04 | Grått antisklidekk, slitt beige i bingen | ½ |
+| MAT-05 | Galvanisert og rustfritt stål | ✓ (F2) |
+| MAT-06 | Gummi (slange, fendere) | ✓ |
+| MAT-07 | Tau og not | ✓ |
+| MAT-08 | Glass med speiling | ✓ (F2) |
+| MAT-09 | Presenninger (blå) | ✓ |
+| MAT-10 | Propellbronse | ✓ |
+| MAT-11 | Tre | – |
+
+### SLT Slitasje (krever F2)
+Kantslitasje på skansens toppkant og hekken (SUL-SKR-11), rennestriper under lenseporter og utløp, redskapsslitasje i bingen og
+ved blokka, groe ved vannlinja, sot ved eksosen. Alt ½: synlig i bildene, men ikke kartlagt flate for flate. SLT-09 (is og snø)
+som spillets vær.
+
+### MAN Mål for folk
+MAN-01–08 som planlisten: rekkverk 1,0–1,1 m, dører 0,8 × 2,0 m, dekkshøyde 2,3–2,5 m, trinn 0,25–0,3 m. ✓
+
+### MIL Miljø
+Spillets eget (vannlinje, skum, kjølvann, måker, havn). ✓
+
+### RNG Ringnot
+| ID | Modellen skal ha | Info |
+|---|---|---|
+| RNG-01 | Kraftblokk som henger fra blokkbommen akter (to hvite skiver med lettelseshull, sort trommel, motor i trådbur) | ✓ |
+| RNG-02 | Blokkbom/notkran akter styrbord | ✓ |
+| RNG-03 | Notbinge akter | ½ (innsiden ikke sett) |
+| RNG-04 | Nothaler/notlegger | ✗ |
+| RNG-05 | Sidehaler | ½ (mørk enhet midtskips, T) |
+| RNG-06 | Snurpevinsj | ✗ |
+| RNG-07 | Snurpeblokker | ✗ |
+| RNG-08 | Ringer og ringstokk | ✗ |
+| RNG-09 | Korkline (spillet tegner) | ✓ |
+| RNG-10 | Notbøye | ½ |
+| RNG-11 | Notgjerde | ½ |
+| RNG-12 | Pumping: pumpe, slange, trakt, svivel | ✓ |
+| RNG-13 | Sonar | ✗ (A) |
+| RNG-14 | RSW-tanker (luker) | ✗ |
+| RNG-15 | Nottrakt (hvitt buet rør med trakt) | ✓ (T: Jonas' tolkning) |
+
+### SNV Snurrevad (båten er flerbruk)
+| ID | Modellen skal ha | Info |
+|---|---|---|
+| SNV-01 | Tauspoler (hvite trommer med flenser ved styrehuset) | ½ (T) |
+| SNV-02 | Snurrevadvinsj | ✗ |
+| SNV-03 | Nettrommel | ✗ (kanskje den mørke enheten) |
+| SNV-04 | Hekkrull eller sidegalge | ✗ |
+| SNV-05 | Tau (spillet) | ✓ |
+| SNV-06 | Bøye | ½ |
+| SNV-07 | Arbeidsdekk | ½ |
+
+**Oppsummert:** av rundt 170 punkter er omtrent 75 klare (✓), 55 delvis (½) og 40 mangler (✗). Det som mangler mest, er under
+vann, akterdekket ovenfra (vinsjer, binge, nothaler) og hekken rett bakfra.
+
+## 6. Lanternene etter sjøveisreglene
+
+FOR-1975-12-01-5, lest på Lovdata 30.10.2026 (sist endret 26.06.2025). For en båt på 38,55 m og 9,50 m bredde:
+
+- **Topplanterne** (regel 23 a): én er påbudt (den andre er frivillig under 50 m). Den skal stå minst 9,5 m over skroget (vedlegg I
+  2(a)(i): minst bredden, opptil 12 m). Føres to, skal den akterste stå minst 4,5 m høyere (2(a)(ii)) og helst halve lengden
+  bak (3(a)). **Anbefaling:** én topplanterne på formasta, som på bildene.
+- **Sidelanterner** (regel 23 a iii) på styrehusets sider eller brovinger, med matte sorte skjermer innvendig (LYS-02).
+- **Akterlanterne** (regel 23 a iv) akter.
+- **Fiske** (regel 26): rødt over hvitt rundtlys (ringnot, snurrevad, garn), minst 2 m fra hverandre (vedlegg I 2(i), 20 m og
+  over), den nederste minst 4 m over sidelanternene (2(j)). Gjelder også om båten tråler (grønt over hvitt).
+- **Tilleggssignaler for ringnot** (vedlegg II): to gule lys som blinker vekselvis, i loddrett linje (LYS-05). Må leses på
+  Lovdata før de bygges inn (ikke sjekket 30.10.2026).
+- **Ankerlys og NUC** (regel 27, 30): ett hvitt rundtlys forut; to røde i loddrett linje, 2 m fra hverandre.
+
+Modellen får typede plasser for hver lanterne (`lights`), og spillet tenner dem (`lanterns()` i `vessel3d.js`).
+
+## 7. Godkjenning av piloten
+
+- Kontrollbilder fra kameraene K1–K7 i planlisten (kap. 30) i Blender, og fra de samme vinklene som Jonas' fire bilder, side om
+  side med bildene.
+- Skjermbilder fra spillet i begge formater, dag og natt (lanternene), i havn og under fiske.
+- Bildetid på Pad 3 i havna med båten som egen båt (`#bench`).
+- `vessel3d` med det nye taket, `brotest`, `lanterntest`, `deckshot`.
+- Jonas godkjenner nivået før resten av flåten tas.
+
+## 8. Det som mangler før 100 % klar
+
+1. **Mål fra registeret:** lengde (38,55 eller 34,32 m), dypgang og dybde. Fiskeridirektoratets merkeregister eller
+   Skipsregisteret på SF-100-SU / LECW / IMO 9675092. Jonas kan slå det opp, eller nettverket i økta må åpnes for kildene.
+2. **Bilder som mangler:** hekken rett bakfra; akterdekket ovenfra eller fra styrbord (vinsjer, binge, nothaler, snurpeblokker);
+   baugen rett forfra; bakken ovenfra (ankervinsj); styrehusfronten rett forfra. Helst ett bilde i dokk (undervannsskroget). Har
+   Jonas generalarrangementet (GA) for SC38, er det bedre enn alle bildene: det låser alle mål på en gang. Tegningen legges ikke i
+   repoet, bare målene.
+3. **Avgjørelsene B1–B5** (kap. 3).
+4. **F1–F3 ferdige** (WebGL 2 og nytt tak, materialene, skyggene), etter grafikkplanen.
+5. **Vedlegg II** (tilleggslysene for ringnot) lest på Lovdata.
+
+Når 1–5 er på plass, er grunnlaget klart, og pilotøkta kan starte.
+
+## Endringslogg
+
+- 30.10.2026: første versjon (fakta, avgjørelser, sonene fra fire bilder, kravlista, lanternene, mangler).
