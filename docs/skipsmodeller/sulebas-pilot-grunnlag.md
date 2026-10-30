@@ -526,7 +526,13 @@ bakvegg har to store ruter og døra (stolper hver 2,0 m der, 1,3 m ellers). Pres
 Pressebildet bekrefter: hele styrbord side er åpent arbeidsdekk med lav skansekledning fra bakken til hekken, kassen og huset
 til babord, hopperen med rørene midtskips til styrbord.
 
-Igjen etter runde 15, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 16 (slippbildet fra babord 9d43d29b mot sidebildet 42432bd5): tre skrå streker høyt på baugen (34,0–35,5 m, z 6,75–7,25)
+ved siden av klasseringen (ringen modelleres ikke); fire runde utløp i det røde over bulben (31,0–32,5 m, z 3,7); **fire store
+vinduer i shelterdekkets babordside** (15,6–25,2 m, z 7,45–8,3) fantes da båten var ny, men er plateslått over: sidebildet viser
+bare omrissene, så de er tegnet som hvite paneler flush i sida med en tynn kant. Dypgangsmerkenes rekkefølge på baugen stemmer
+med slippbildet (thrusterringen forrest, V-ene akter for den).
+
+Igjen etter runde 16, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 

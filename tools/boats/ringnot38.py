@@ -81,6 +81,8 @@ STRIPE = [(2.7, 5.57), (4.6, 5.47), (6.5, 5.36), (8.3, 5.25), (10.2, 5.13), (12.
           (21.4, 4.98), (23.2, 5.02), (25.1, 5.08), (27.0, 5.17), (28.8, 5.23), (30.5, 5.30)]
 ST_W, ST_X = 0.33, (4.35, 27.35)
 ST_DASH = [(2.58, 3.11), (3.16, 3.68), (3.78, 4.26), (27.44, 28.11), (28.25, 28.88), (29.07, 29.64)]
+# three more slanted dashes high on the bow under the shelter deck's edge, beside the class ring (9d43d29b; the ring is not modelled)
+BOW_DASH = [(34.0, 34.4), (34.55, 34.95), (35.1, 35.5)]
 def st_top(x): return interp(STRIPE, x)
 def st_bot(x): return st_top(x) - ST_W
 
@@ -479,6 +481,7 @@ def holes():
     H = []
     for sg in (1, -1):
         H.append((sg, 30.60, 32.20, 7.40, 7.94, 0.10, 'pocket', 0.55))
+        for k in range(4): H.append((sg, 31.0 + 0.42 * k, 31.22 + 0.42 * k, 3.62, 3.84, 0.11, 'box', 0.1))   # the four round outlets over the bulb (9d43d29b)
         H.append((sg, 34.33, 34.67, 8.70, 8.90, 0.09, 'thru', 0.0)); H.append((sg, 37.90, 38.10, 8.62, 8.82, 0.09, 'thru', 0.0))
         for k in range(5):
             xc = 4.15 - 0.45 * k; H.append((sg, xc - 0.07, xc + 0.07, 4.62, 5.18, 0.03, 'box', 0.12))
@@ -559,6 +562,10 @@ def hull_side(fine=True):
             pts = [(xa, st_bot(xa)), (xb, st_bot(xb)), (xb + sl, st_top(xb + sl)), (xa + sl, st_top(xa + sl))]
             if fine: hull_patch(A, pts, sg, C['stripe'], rings=2)
             else: A.poly([on_hull(x, z, sg, 0.004) for x, z in pts][::sg], C['stripe'], (0, sg, 0))
+        for xa, xb in BOW_DASH:
+            pts = [(xa, 6.75), (xb, 6.75), (xb + 0.12, 7.25), (xa + 0.12, 7.25)]
+            if fine: hull_patch(A, pts, sg, C['stripe'], rings=2)
+            else: A.poly([on_hull(x, z, sg, 0.004) for x, z in pts][::sg], C['stripe'], (0, sg, 0))
         if fine:
             # the hull's marks (the photograph on the slip 226293a9 and the stern 274df4a7): the draft scales on the bow close to the
             # stem and on the stern quarter, the thruster rings over both tunnels, the two V marks and the bulb mark forward
@@ -570,6 +577,11 @@ def hull_side(fine=True):
             for x in (31.6, 30.6):
                 p, n, tt = surf(x, 4.62, sg, off=0.004); F.vee(A, p, n, (0, 0, 1), 0.36, C['mark'])
             p, n, tt = surf(29.8, 4.62, sg, off=0.004); F.bulb_symbol(A, p, n, (0, 0, 1), 0.5, C['mark'], fwd=sg)
+            if sg > 0:
+                # four large windows in the shelter deck's port side (9d43d29b, on the slip when new) were plated over later: the
+                # side photograph 42432bd5 shows only their outlines, so they are drawn as flush white panels with a thin rim
+                for x0, x1 in ((23.75, 25.2), (20.4, 22.2), (17.9, 19.6), (15.6, 17.3)):
+                    o = rrect((x0 + x1) / 2, 7.87, x1 - x0, 0.85, 0.12, n=4); hull_frame(A, o, sg, W, w=0.035, h=0.012)
             # the anchor's crown bolster under the pocket (a raised blue lip)
             o = rrect(31.5, 6.91, 2.29, 0.42, 0.21, n=5); hull_frame(A, o, sg, C['hull'], w=0.02, h=0.09)
     if not fine: return [A.done(30)]
