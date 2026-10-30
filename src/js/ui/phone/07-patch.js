@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['lag-311026', '31.10.2026', 'Fiskarlagets uke, felles for alle', 'The fishing club\'s week, shared by all', [
+       ['Fiskarlagets ukemål telles nå likt for alle i laget. Sesong-appen viser lagets uke: tonn av målet, hvor mange båter som har levert, og dine kilo. Når laget når målet, skriver Kystposten om det, og laget sier fra. Bytte til et annet lag venter til uka er over.', 'The fishing club\'s weekly goal is now counted the same for everyone in the club. The Sesong app shows the club\'s week: tonnes of the goal, how many boats have landed, and your kilos. When the club reaches its goal, Kystposten writes about it, and the club says so. Changing to another club waits until the week is over.']]],
     ['g5-301026', '30.10.2026', 'Båtene i detalj', 'The boats in detail', [
        ['Ringnotbåten har fått kraftblokka på bommen, nottrakta, sidehaleren, fiskepumpa med sugeslangen og notgjerdet, og hvite master med plattformer, leidere og antenner.', 'The purse seiner has her power block on its boom, the net funnel, the side hauler, the fish pump with its suction hose and the net guard, and white masts with platforms, ladders and antennas.'],
        ['Snøkrabbefartøyet har teinene stablet på teinedekket, så mange som er om bord, og trekker koniske snøkrabbeteiner.', 'The snow crab vessel has her pots stacked on the pot deck, as many as are aboard, and hauls conical snow crab pots.'],

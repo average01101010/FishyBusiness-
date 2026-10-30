@@ -1046,7 +1046,7 @@ Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/e
 - **204** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
   - 205 `freeFirst(k)`
 
-## `src/js/core/09g-turer.js` (843 linjer)
+## `src/js/core/09g-turer.js` (846 linjer)
 
 Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md point 4)
 
@@ -1079,55 +1079,55 @@ Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md poi
   - 229 `turEventRoll(m)`
   - 235 `turTipAt(m)`
   - 242 `turEventFire(m, b)`
-- **258** the people: who sends a mission, and what they remember
-  - 263 `turManagerSays(m, n)`
-  - 273 `turAsk(T = turState()`
-- **287** the first mission
-  - 290 `turFirst(o)`
-  - 305 `turFirstEnsure(T = turState()`
-  - 316 `turGarn(o)`
-  - 334 `turValue(L)`
-  - 339 `turSlep(o, cls)`
-  - 359 `turNpcs()`
-  - 371 `turMinute()`
-  - 400 `turStuck(T, b)`
-  - 409 `turProveMinute(m, b)`
-  - 433 `turSesong(o)`
-  - 454 `turStages(m)`
-  - 461 `turSesongStage(m)`
-- **474** survey fishing for Havforskningsinstituttet
-  - 479 `turProve(o, cls)`
-  - 506 `turProveFish(m)`
-  - 517 `turProveDone(m)`
-  - 524 `turEkkoSaw(m)`
-- **532** a picture of a lighthouse for Kystposten
-  - 542 `turLysNext(m, from)`
-  - 543 `turFoto(o, cls)`
-  - 564 `turFotoAt()`
-  - 567 `turFotoTake(m, seen, img)`
-  - 586 `turMake()`
-  - 612 `turEnsure(force)`
-  - 633 `turWay()`
-  - 640 `turDetour(m, way = turWay()`
-- **652** taking, doing and finishing
-  - 653 `turTake(id)`
-  - 681 `turDrop(id)`
-  - 686 `cargoJob(kg, no, en)`
-  - 687 `turLoad(m)`
-  - 696 `turSpawn(m)`
-  - 715 `turEnd(m, ok, why, how)`
-  - 729 `turPayOut(m, from, no, en, part)`
-  - 737 `turDock(pid)`
-  - 751 `turSale(pid, bySp)`
-  - 764 `turHauled(s)`
-  - 768 `turHour()`
-  - 787 `turWhat(m)`
-- **798** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
-  - 812 `turSay(who, no, en, k)`
-  - 817 `turDepart()`
-  - 837 `turMechanic()`
+- **261** the people: who sends a mission, and what they remember
+  - 266 `turManagerSays(m, n)`
+  - 276 `turAsk(T = turState()`
+- **290** the first mission
+  - 293 `turFirst(o)`
+  - 308 `turFirstEnsure(T = turState()`
+  - 319 `turGarn(o)`
+  - 337 `turValue(L)`
+  - 342 `turSlep(o, cls)`
+  - 362 `turNpcs()`
+  - 374 `turMinute()`
+  - 403 `turStuck(T, b)`
+  - 412 `turProveMinute(m, b)`
+  - 436 `turSesong(o)`
+  - 457 `turStages(m)`
+  - 464 `turSesongStage(m)`
+- **477** survey fishing for Havforskningsinstituttet
+  - 482 `turProve(o, cls)`
+  - 509 `turProveFish(m)`
+  - 520 `turProveDone(m)`
+  - 527 `turEkkoSaw(m)`
+- **535** a picture of a lighthouse for Kystposten
+  - 545 `turLysNext(m, from)`
+  - 546 `turFoto(o, cls)`
+  - 567 `turFotoAt()`
+  - 570 `turFotoTake(m, seen, img)`
+  - 589 `turMake()`
+  - 615 `turEnsure(force)`
+  - 636 `turWay()`
+  - 643 `turDetour(m, way = turWay()`
+- **655** taking, doing and finishing
+  - 656 `turTake(id)`
+  - 684 `turDrop(id)`
+  - 689 `cargoJob(kg, no, en)`
+  - 690 `turLoad(m)`
+  - 699 `turSpawn(m)`
+  - 718 `turEnd(m, ok, why, how)`
+  - 732 `turPayOut(m, from, no, en, part)`
+  - 740 `turDock(pid)`
+  - 754 `turSale(pid, bySp)`
+  - 767 `turHauled(s)`
+  - 771 `turHour()`
+  - 790 `turWhat(m)`
+- **801** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
+  - 815 `turSay(who, no, en, k)`
+  - 820 `turDepart()`
+  - 840 `turMechanic()`
 
-## `src/js/core/09h-press.js` (202 linjer)
+## `src/js/core/09h-press.js` (206 linjer)
 
 Kystposten: the coast's paper (07.10.2026)
 
@@ -1137,20 +1137,20 @@ Kystposten: the coast's paper (07.10.2026)
 - **35** the words
   - 39 `pressWho(it)`
   - 45 `pressStory(it)`
-  - 120 `pressTop()`
-  - 132 `pressLand(local)`
-- **142** the market: a record price, the highest in a year (Jonas 07.10.2026: «Ta rekordpriser»)
-  - 147 `pressIx(sp, d)`
-  - 148 `pressHigh(sp, d)`
-  - 149 `pressRecords(d)`
-  - 150 `pressPrice(sp, d)`
-  - 165 `pressDay(H)`
-- **169** the year's first skrei: the first cod landing north of Stad (62° N) after the skrei season begins (09c-seasons.js), from the
-  - 171 `pressSkreiH(y)`
-  - 173 `pressSkrei()`
-  - 184 `pressList(local)`
-  - 200 `pressUnread()`
-  - 201 `pressSeen()`
+  - 124 `pressTop()`
+  - 136 `pressLand(local)`
+- **146** the market: a record price, the highest in a year (Jonas 07.10.2026: «Ta rekordpriser»)
+  - 151 `pressIx(sp, d)`
+  - 152 `pressHigh(sp, d)`
+  - 153 `pressRecords(d)`
+  - 154 `pressPrice(sp, d)`
+  - 169 `pressDay(H)`
+- **173** the year's first skrei: the first cod landing north of Stad (62° N) after the skrei season begins (09c-seasons.js), from the
+  - 175 `pressSkreiH(y)`
+  - 177 `pressSkrei()`
+  - 188 `pressList(local)`
+  - 204 `pressUnread()`
+  - 205 `pressSeen()`
 
 ## `src/js/core/09i-look.js` (111 linjer)
 
@@ -1874,12 +1874,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (785 linjer)
+## `src/js/ui/phone/07-patch.js` (787 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 778 `patch()`
+  - 780 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (87 linjer)
 
@@ -2091,7 +2091,7 @@ Father's naust: setting it to rights and the trophy wall (core/07c-naust.js, cor
 
 - **1** Father's naust: setting it to rights and the trophy wall (core/07c-naust.js, core/09b-records.js)
 
-## `src/js/ui/06d-season-folk.js` (61 linjer)
+## `src/js/ui/06d-season-folk.js` (63 linjer)
 
 the phone's Sesong and Folk apps (05.10.2026; the rules are in core/09c-seasons.js and core/09d-folk.js)
 
@@ -2283,14 +2283,14 @@ actions
 - **198** the panels
 - **250** the top bar, open and close
 
-## `src/js/ui/09c-pubsoc.js` (168 linjer)
+## `src/js/ui/09c-pubsoc.js` (189 linjer)
 
 ---------- the pub's social side (ui/09b-pub.js; supabase/migrations/20261009120000_pub.sql) ----------
 
 - **1** the pub's social side (ui/09b-pub.js; supabase/migrations/20261009120000_pub.sql)
 - **11** who is here tonight: the players' boats lying in this harbour
 - **57** the harbour's fiskarlag
-- **94** the week's quiz: five questions from the bank, the same for everyone in a game week
+- **104** the week's quiz: five questions from the bank, the same for everyone in a game week
 
 ## `src/js/ui/10-rod-acts.js` (88 linjer)
 
@@ -2666,21 +2666,21 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **435** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
   - 465 `npcCrewCtx(n, G)`
 
-## `src/js/view3d/00-head.js` (93 linjer)
+## `src/js/view3d/00-head.js` (100 linjer)
 
 - **2** 3D VIEW (plain WebGL, no dependencies)
-  - 32 `qualSet()`
-  - 34 `qualTick(dt, fps, now)`
-- **65** math
-  - 66 `persp(fovy, asp, n, f)`
-  - 67 `viewDir(f, up)`
-  - 74 `mul(a, b)`
-  - 75 `model(px, py, pz, yaw, pitch, roll)`
-- **83** noise
-  - 84 `vn2(x, y, s)`
-  - 89 `fbm(x, y, o, s)`
-  - 90 `ridged(x, y)`
-  - 91 `rng(seed)`
+  - 39 `qualSet()`
+  - 41 `qualTick(dt, fps, now)`
+- **72** math
+  - 73 `persp(fovy, asp, n, f)`
+  - 74 `viewDir(f, up)`
+  - 81 `mul(a, b)`
+  - 82 `model(px, py, pz, yaw, pitch, roll)`
+- **90** noise
+  - 91 `vn2(x, y, s)`
+  - 96 `fbm(x, y, o, s)`
+  - 97 `ridged(x, y)`
+  - 98 `rng(seed)`
 
 ## `src/js/view3d/01-shaders.js` (479 linjer)
 
@@ -3274,7 +3274,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **91** frame
   - 95 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (416 linjer)
+## `src/js/view3d/24-cinema.js` (421 linjer)
 
 ---------- cinema (the user's wish 03.10.2026) ----------
 
@@ -3283,16 +3283,16 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 19 `kinoNext(t)`
   - 38 `kinoCam(t, rdt)`
   - 58 `introStart(sec)`
-  - 63 `frame()`
-  - 65 `frame0()`
-  - 237 `snapTake()`
-  - 242 `drawRoute(VP, eye)`
-  - 254 `driftSpray(VP, eye, dt, t, col)`
-  - 269 `drawSmoke(VP, eye, BM, dt)`
-  - 296 `drawEffects(VP, eye, BM, dt, t)`
-  - 398 `updateLabels(VP, eye, W, Hh)`
+  - 64 `frame()`
+  - 66 `frame0()`
+  - 242 `snapTake()`
+  - 247 `drawRoute(VP, eye)`
+  - 259 `driftSpray(VP, eye, dt, t, col)`
+  - 274 `drawSmoke(VP, eye, BM, dt)`
+  - 301 `drawEffects(VP, eye, BM, dt, t)`
+  - 403 `updateLabels(VP, eye, W, Hh)`
 
-## `src/js/view3d/25-controls.js` (105 linjer)
+## `src/js/view3d/25-controls.js` (184 linjer)
 
 ---------- controls ----------
 
@@ -3302,3 +3302,10 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 30 `showroom(type)`
   - 39 `show(on, auto)`
   - 54 `bench(ks, ns)`
+- **72** the profile (#prof, F1)
+  - 82 `pqInit()`
+  - 90 `pqPoll()`
+  - 99 `profBegin(rdt, j0)`
+  - 102 `profMark(k)`
+  - 106 `profEnd()`
+  - 116 `prof(sets)`

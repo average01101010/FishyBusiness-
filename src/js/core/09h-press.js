@@ -17,7 +17,7 @@
 // the game (no push: Kystposten sends none, 20261008000000_push_ops.sql). A record price (the highest in a
 // year) is reckoned in every game alike (pressRecords), and the year's first skrei comes from the shared landings (pressSkrei).
 const PRESS = {R:150, keep:40, remote:[], land:[], at:0, told:{}, toldAt:0, skrei:null};
-const PRESS_KINDS = ['boat', 'name', 'aground', 'rescue', 'salv', 'foto', 'fish', 'fs', 'ach', 'as', 'tur', 'kvote'];
+const PRESS_KINDS = ['boat', 'name', 'aground', 'rescue', 'salv', 'foto', 'fish', 'fs', 'ach', 'as', 'tur', 'kvote', 'lag'];
 function pressState(){ const P = S.press || (S.press = {own:[], seen:0, n:0, q:[]}); P.q = P.q || []; return P; }
 const pressCompany = () => (typeof access === 'function' && access() === 'lukket') ? String(S.company || '').slice(0, 40) : '';
 // a story of the player's own; loc holds what stays on this device (a picture's id)
@@ -109,6 +109,10 @@ function pressStory(it){
       s.ing = P2(w[0] + ' kom til ' + port + ' med ' + fmt(d.kg || 0, 0) + ' kg last' + (pressPort(d.from) ? ' fra ' + pressPort(d.from) : '') + '.', w[1] + ' came to ' + port + ' with ' + fmt(d.kg || 0, 0) + ' kg of freight' + (pressPort(d.from) ? ' from ' + pressPort(d.from) : '') + '.'); }
     else return null;
     s.body.push(P2('Turen var på rundt ' + fmt(d.nm || 0, 0) + ' nautiske mil.', 'The trip was about ' + fmt(d.nm || 0, 0) + ' nautical miles.')); }
+  else if (it.kind === 'lag'){ const port = pressPort(d.port); if (!port || !(d.kg > 0)) return null;   // (written by the server, 20261030140000_lag_goal.sql: no names)
+    s.h = P2('Fiskarlaget i ' + port + ' nådde ukemålet', 'The fishing club of ' + port + ' reached its weekly goal');
+    s.ing = P2(fmt(d.kg, 0) + ' kg levert av ' + (d.n || 0) + ' båter denne uka. Laget setter målet etter hvor mange som har levert, så ingen trekker de andre ned.', fmt(d.kg, 0) + ' kg landed by ' + (d.n || 0) + ' boats this week. The club sets its goal by how many have landed, so nobody pulls the others down.');
+    s.body.push(P2('Fiskarlagene samler fiskerne som hører til i hver havn. Medlemskapet tegnes i puben.', 'The fishing clubs gather the fishers who belong in each harbour. Membership is taken in the pub.')); s.big = (d.kg || 0) >= 20000; }
   else if (it.kind === 'kvote'){ if (!(d.kf > 0)) return null;
     s.h = P2(w[0] + ' kjøper strukturkvote', w[1] + ' buys a structure quota');
     s.ing = P2(w[0] + ' har kjøpt strukturkvote og får kvotefaktor ' + fmt(d.kf / 10000, 2) + ' mer i 20 år.', w[1] + ' has bought a structure quota and gets ' + fmt(d.kf / 10000, 2) + ' more in quota factor for 20 years.');
