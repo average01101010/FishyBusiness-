@@ -118,6 +118,19 @@ stevn, hekk, spring, stripe, styrehus, master og kraner innen et par cm i bildet
   - Hjulet til nothaleren (1,75 m) henger på et åk på 14,3 m.
 - **MOB-båten** (4,25 m) står på 7,85–12,05 m med davit ved 11,45 m.
 
+**Styrbord er lavere enn babord** (Jonas 30.10.2026, bildene 274df4a7, 82e91969, 3f711e55). På styrbord ligger et åpent
+arbeidsdekk på shelterdekket fra 7,3 til 25,8 m, med bare et blått rørrekkverk (1,1 m) på skrogkanten. Den høye bingeveggen akter
+bøyer ned mot dekket ved 5,0–7,3 m, og forut reiser sida seg til bakken ved 25,8–26,6 m. Babord halvdel er et lukket hus (kassen,
+`Y_C` = −0,6 m) opp til øvre dekk. Huset på dekket går ned til arbeidsdekket på styrbord. Den forreste kranen står på foten ved
+bakken (26,85 m, babord) og ligger foldet akterover langs babord side med knekken ved 19,7 m. Det leste jeg feil første gang, og
+flybildet viser det.
+
+**Åpningene er ekte hull** (Jonas 30.10.2026: «ikke bare bruk svarte teksturer»). Skroget og skansekledningens innside skjæres med
+et prisme gjennom omrisset (`holes()` og `cutter()`, boolsk EXACT). Lokket som løseren legger over hullet, slettes etterpå. Hvert
+hull får en lysning: platekanten og så et mørkt rom bak med bakvegg (`box`), lameller (`louvre`), glass (`glass`) eller ankeret
+(`pocket`). Hull gjennom skansekledningen (`thru`) viser dekket bak. På styrbord er stedene for lufteåpningene akter for 16 m,
+trinnene ved 8 m og den store åpningen i baksida (27,05–28,45 m) anslått fra skråbilder uten skala.
+
 Antatt, ikke målt: alt som ligger på tvers av båten. Bredden på husene, styrehuset (±3,9) og plattformen (±4,45) er anslått, og
 master, kupler og kraner står midt i båten eller ved babord rekke. Styrbord side antas lik babord, bortsett fra pipa og døra. Det
 trengs bilder forfra, akterfra og fra styrbord.
@@ -446,6 +459,7 @@ Når 1–5 er på plass, er grunnlaget klart, og pilotøkta kan starte.
 
 ## Endringslogg
 
+- 30.10.2026: styrbords arbeidsdekk (båten er ikke symmetrisk), den forreste kranen snudd, alle åpninger som ekte hull (kap. 4.0).
 - 30.10.2026: kap. 4.0, alt målt på sidebilde 3 (spring, stevn, stripe, sida, styrehuset med plattform og skrått tak, hus, åpninger,
   pipe, master, kraner); modellen bygd og lagt over bildet.
 - 30.10.2026: byggerapporten (hoveddata, maskineri, dekksutstyr, elektronikk) lagt inn i kap. 1.
