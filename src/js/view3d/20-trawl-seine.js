@@ -186,6 +186,9 @@
   }
   function drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named){
     const m = pvm(t, liv); if (!m) return; const P = people(); nSetup(VP); const wr = named && wearOn(t); drawN(m.hull, BMrel); if (wr) wearOff();
+    if (named && BENCH.on){ for (let j = 1; j < BENCH.k; j++) drawN(m.hull, BMrel);
+      for (let i = 0; i < BENCH.n; i++){ const M = chain(BMrel, M4.T(((i % 4) - 1.5) * ((G.beam || 4) + 3), 0, (Math.floor(i / 4) + 1) * ((G.stern || 5) * 2 + 6))); drawN(m.hull, M); }
+      BENCH.tris = Math.round(m.hull.n / 3) * (BENCH.k + BENCH.n); }
     const ds = onDeck && G.crewSpots && ncrew < G.crewSpots.length ? G.crewSpots[ncrew] : null;
     if (skipper && ds) drawN((named && ownPerson('skipDeck')) || P.skipDeck, chain(BMrel, M4.T(ds[0], ds[1], ds[2]), M4.RY(ds[3] || 0)));
     else if (skipper) drawN((named && ownPerson('skip')) || P.skip, chain(BMrel, M4.T(G.skipperAt[0], G.skipperAt[1], G.skipperAt[2])));

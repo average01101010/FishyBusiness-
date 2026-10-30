@@ -1,7 +1,7 @@
 # Grafikk: båtmodellene på et nytt nivå (plan, 30.10.2026)
 
 > Planen for å løfte båtene og utstyret til et detaljnivå på høyde med spill som viser kjøretøy på nært hold. Skrevet etter
-> `/planlegg` 30.10.2026. **Ikke vedtatt.** Ingenting bygges før Jonas sier «kjør på».
+> `/planlegg` 30.10.2026. **Vedtatt 30.10.2026.**
 
 ## 1. Bestillingen
 
@@ -96,4 +96,10 @@ lages to ganger (først uten UV-er og materialer, så med).
 
 ## Status
 
-Ikke vedtatt (30.10.2026).
+Vedtatt 30.10.2026 (Jonas: «Kjør på», med anbefalingene A i alle fire valg; og: «Tenker det går fint om npc-båter ikke
+har samme oppløsning som bruker-styrte båter»). Pilotbåten er ringnotbåten, med Jonas' tre nye bilder av Sulebas (30.10.2026, ikke i repoet).
+
+- **F0 bygd 30.10.2026:** `G3.bench(ks, ns)` (`view3d/25-controls.js`, `BENCH` i `00-head.js`), startet med `#bench` i adressen: egen båt
+  tegnet k = 1, 2, 4, 8 ganger og 0, 5, 10, 20 andre båter på dagens nivå rundt henne, 2,5 s innsvinging og 4 s måling per oppsett,
+  tabell på skjermen (bildetid, bilder/s, andel bilder over 20 ms). Test: `benchshot`. **Venter på målingen fra Pad 3**, som krever
+  at koden er rullet ut.

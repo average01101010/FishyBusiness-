@@ -21,6 +21,11 @@ const G3 = (() => {
   // the camera's far plane at 260 km (170) and the clearest air 90 km (50), the sea's wave patch 2 m apart (4 m below), buildings and
   // trees out to 2.2 km (1.3 km), the plants, the naust and the boats in full 1.8 times further out, and the meshes and the shadows
   // given twice the time a frame.
+  // the measuring run for the boat models (docs/planer/grafikk-batmodeller.md F0, 30.10.2026): your boat drawn k times over (the same
+  // outline, k times the vertex work, as a k times finer model would give) and n more of her round about at today's detail, as the other
+  // boats in a harbour (Jonas 30.10.2026: the NPC boats need not have the detail of the boats players steer); the frame
+  // times of each set-up are summed in the frame loop (24-cinema.js) and the run (G3.bench, 25-controls.js) shows them in a table
+  const BENCH = {on:false, k:1, n:0, rec:false, sum:0, cnt:0, slow:0, tris:0};
   const QUAL = {lvl:2, bad:0, good:0, cap:2, capT:0, fix:/qfix/.test(location.hash), dpr:[1, 1.25, 1.5, 3], near:[[3000, 6000], [6000, 12000], [6000, 12000], [9000, 18000]],
     nearN:[256, 256, 256, 384], midN:[256, 256, 256, 384], farN:[255, 255, 255, 511], chunkR:[1300, 1300, 1300, 2200], lodK:[1, 1, 1, 1.8]};
   let UINT = false;

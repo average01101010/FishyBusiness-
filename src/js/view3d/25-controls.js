@@ -49,7 +49,28 @@
     if (hooks.onView) hooks.onView(active);
     return true;
   }
+  // the measuring run (F0): every set-up of k (the model's work over) and n (more boats round her) for 2.5 s to settle and 4 s
+  // measured, the camera off her quarter so the group is in view; the table goes on the screen and into window.BENCHR
+  async function bench(ks, ns){
+    ks = ks || [1, 2, 4, 8]; ns = ns || [0, 5, 10, 20]; const wait = ms => new Promise(r => setTimeout(r, ms)), out = [], c = cam, keep = {yaw:c.yaw, pitch:c.pitch, dist:c.dist, helm:c.helm};
+    const el = document.createElement('div'); el.id = 'benchOut'; el.style.cssText = 'position:fixed;left:8px;top:8px;z-index:99999;background:rgba(0,0,0,0.82);color:#fff;font:13px/1.35 monospace;padding:10px 12px;border-radius:8px;max-width:94vw;white-space:pre;pointer-events:auto';
+    document.body.appendChild(el); const G = GEO(vtype()) || {}, L = (G.stern || 5) * 2;
+    const head = 'Måling F0 · ' + vtype() + ' · ' + (GPU || 'ukjent GPU') + ' · nivå ' + QUAL.lvl + ' · ' + innerWidth + '×' + innerHeight + ' @' + (window.devicePixelRatio || 1) + '\n k  båter   trekanter     ms   bilder/s  over 20 ms\n';
+    BENCH.on = true; c.helm = false; c.yaw = 0.7; c.pitch = 0.35; c.dist = Math.max(30, L * 3.2);
+    try {
+      for (const n of ns) for (const k of ks){
+        BENCH.k = k; BENCH.n = n; BENCH.rec = false; el.textContent = head + out.map(r => r.line).join('\n') + '\n… k=' + k + ' n=' + n; await wait(2500);
+        BENCH.sum = BENCH.cnt = BENCH.slow = 0; BENCH.rec = true; await wait(4000); BENCH.rec = false;
+        const ms = BENCH.cnt ? BENCH.sum * 1000 / BENCH.cnt : 0, r = {k, n, tris:BENCH.tris, ms:Math.round(ms * 10) / 10, fps:Math.round(ms ? 1000 / ms : 0), slow:BENCH.cnt ? Math.round(100 * BENCH.slow / BENCH.cnt) : 0};
+        r.line = String(k).padStart(2) + String(n + 1).padStart(7) + String(r.tris).padStart(12) + String(r.ms).padStart(7) + String(r.fps).padStart(10) + String(r.slow + ' %').padStart(11); out.push(r);
+      }
+    } finally { BENCH.on = false; BENCH.k = 1; BENCH.n = 0; Object.assign(c, keep); }
+    el.textContent = head + out.map(r => r.line).join('\n') + '\n\nTa et skjermbilde og send det. Trykk her for å lukke.'; el.onclick = () => el.remove();
+    window.BENCHR = {gpu:GPU, lvl:QUAL.lvl, type:vtype(), rows:out.map(({line, ...r}) => r)}; return window.BENCHR;
+  }
+  if (/bench/.test(location.hash)) (function go(){ if (active && S.boat) setTimeout(() => bench(), 6000); else setTimeout(go, 1000); })();
   return {
+    bench,
     // the quality: with a setting ('auto', 'low', 'mid', 'high') it applies it; returns the level now and the frame rate
     quality(v){ if (v){ S.settings.q3d = v; QUAL.bad = QUAL.good = 0; QUAL.cap = 2; qualSet(); } return {lvl:QUAL.lvl, set:S.settings.q3d || 'auto', fps:FPS.v, ultra:UINT}; },
     show, toggle(){ return show(!active); }, hold(on){ HOLD = !!on; if (!on) lastF = performance.now(); }, isActive:() => active, say:say3d, crewFx:crewFx3d, sayWorker, sayBoat, anchorAlarm:anchorAlarm3d, haltNeed:() => dynLive() ? dynHaltNeed() : active ? trkHaltNeed() : 0, get failWhy(){ return failWhy; },
