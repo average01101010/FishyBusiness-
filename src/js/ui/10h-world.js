@@ -112,10 +112,31 @@ function worldTop(w, grp){
   }
   return e;
 }
+// the shared event's board (ev_top, 20261030130000_season_ev.sql), fetched at most once a minute, the Sesong app drawn again when it comes;
+// a server without it (404) is remembered and asked no more this session
+const EVTOP = {};
+function evTop(ev, y){
+  if (typeof CLOUD === 'undefined' || !CLOUD.on || !CLOUD.user || EVTOP.off) return null;
+  const key = ev + '|' + y, e = EVTOP[key] || (EVTOP[key] = {at:0, data:null, busy:false, err:false});
+  if (!e.busy && Date.now() - e.at > 60000){
+    e.busy = true;
+    cloudRpc('ev_top', {ev, y}).then(d => { e.data = d; e.err = false; }).catch(x => { e.err = true; if (/ 404$/.test(x.message)) EVTOP.off = true; })
+      .finally(() => { e.busy = false; e.at = Date.now(); if (PHONE.isOpen() && PHONE.app === 'sesong') PHONE.render(); });
+  }
+  return e;
+}
+// an event that has ended closes once its board has come (core/09c-seasons.js evClose); without the cloud, with no board
+function evCloseTick(){
+  const P = S.evPending; if (!P || !P.length || typeof evClose !== 'function') return;
+  for (const q of P.slice()){ const e = EVENTS.find(x => x.id === q.id); if (!e){ S.evPending = P.filter(x => x !== q); continue; }
+    const t = evTop(e.id, q.y); if (t && t.busy) continue;
+    if (!t || t.err || t.data){ evClose(e, q.y, t && t.data ? t.data : null); S.evPending = S.evPending.filter(x => x !== q); } }
+}
 function worldStart(){
   if (!CLOUD.on) return;
   WSH.rec = true; setTimeout(worldShare, 20000); setInterval(worldShare, 600000);
   setTimeout(worldTick, 3000); setInterval(worldTick, 15000);
+  setInterval(() => { try { evCloseTick(); } catch (e){ console.warn('evClose', e); } }, 20000);
   if (typeof pressStart === 'function') pressStart();   // Kystposten's stories to and from the cloud (ui/05g-press.js)
   document.addEventListener('visibilitychange', () => { if (!document.hidden) worldTick(); });
   setInterval(() => { if (PEERS.length && Date.now() - WORLDP.last > 60000) PEERS.length = 0; }, 10000);   // gone quiet (offline)

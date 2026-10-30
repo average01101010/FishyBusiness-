@@ -146,7 +146,7 @@ Hver linje passer i én økt etter `docs/utviklingsplan.md`.
 | 4 | Avsender med navn og én linje hukommelse ved levering (bygd 30.10.2026, med bestyrerens egen bestilling fra tredje) | Hook, immersion, billig med `09d-folk.js` | Gjentatte oppdrag fra samme sted |
 | 5 | Én sann hendelse underveis per langt oppdrag (bygd 30.10.2026) | Emergens, variasjon | Fullføringsgrad lange, økt-lengde |
 | 6 | Nødanrop fra spillere på tavla (bygd 30.10.2026) | Sosialt, additivt | Andel med venn etter 7 dager |
-| 7 | A2 Lofotfisket som felles tavle | «Denne uka»-sløyfen | D7/D30 med merke mot uten |
+| 7 | A2 Lofotfisket som felles tavle (første runde bygd 30.10.2026; migrering må kjøres) | «Denne uka»-sløyfen | D7/D30 med merke mot uten |
 
 ---
 

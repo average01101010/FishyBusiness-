@@ -38,6 +38,42 @@ const SEASON_FIXED = [[4, 21, ['Kveitefisket åpner', 'Halibut fishing opens']],
 // the day of the year an event begins in year y
 const seasonDoy = (e, y) => doyOf(y, e.m, e.d) + Math.round((h2(y, 7700 + SEASON_EV.indexOf(e)) - 0.5) * 2 * e.j);
 // the season on now: the last event begun (from last year's when none has this year)
+// ===== the seasons as shared events (30.10.2026; docs/forslag.md A2, point 7 of docs/research/oppdrag-gap-analyse.md) =====
+// Lofotfisket, Finnmarksfisket, Seisommeren and Krabbehøsten: everything landed inside the area in the days counts on one board for
+// everyone (supabase/migrations/20261030130000_season_ev.sql ev_top; the game marks each landing with its event, wshLand). The
+// areas are boxes in lat/lon, near the statistical areas 00 (Vestfjorden), 03/04 (Finnmark), the whole coast, and east of 26° E for the
+// crab (the quota area). The same days and areas for all, on the shared clock. Nobody has to win: over the badge's kilos you have been
+// part of it (EV_BADGE), and the top three get the festival's prizes. The board, the prizes and the badge need the cloud; without it
+// the event is only the words. The pennant with the year on the boat is for later (the livery's p: is the week's pennant).
+const EVENTS = [
+  {id:'lofot', no:'Lofotfisket', en:'The Lofoten fishery', from:[1, 20], to:[4, 10], box:{lat0:67.2, lat1:68.7, lon0:12.0, lon1:16.2}, sp:['torsk'], badge:['Lofotfisker', 'Lofoten fisher'], kg:1000},
+  {id:'finnmark', no:'Finnmarksfisket', en:'The Finnmark fishery', from:[4, 25], to:[6, 15], box:{lat0:69.5, lat1:71.5, lon0:21.5, lon1:31.5}, sp:['torsk'], badge:['Finnmarksfisker', 'Finnmark fisher'], kg:1000},
+  {id:'sei', no:'Seisommeren', en:'The saithe summer', from:[6, 10], to:[8, 31], box:null, sp:['sei'], badge:['Seifisker', 'Saithe fisher'], kg:1000},
+  {id:'krabbe', no:'Krabbehøsten', en:'The crab autumn', from:[9, 1], to:[11, 30], box:{lat0:69.5, lat1:71.5, lon0:26.0, lon1:31.5}, sp:['krabbe'], badge:['Krabbefisker', 'Crab fisher'], kg:300}
+];
+const EV_PRIZE = [15000, 7500, 3000];
+const evDays = (e, y) => { const H0 = Math.round((Date.UTC(y, e.from[0] - 1, e.from[1]) - EPOCH) / 36e5), H1 = Math.round((Date.UTC(y, e.to[0] - 1, e.to[1] + 1) - EPOCH) / 36e5); return {y, H0, H1, days:Math.round((H1 - H0) / 24)}; };
+const evOn = (e, H) => { const D = evDays(e, yearH(H)); return H >= D.H0 && H < D.H1 ? D : null; };
+const evNow = H => EVENTS.filter(e => evOn(e, H));
+const evDayN = (e, H) => { const D = evOn(e, H); return D ? Math.floor((H - D.H0) / 24) + 1 : 0; };
+// whether a place lies in the event's area (the plant's position in lat/lon)
+function evIn(e, p){ if (!e.box || !p) return !!p; let ll = null; try { ll = natLL(p); } catch (x){ return false; } return !!ll && ll.lat >= e.box.lat0 && ll.lat <= e.box.lat1 && ll.lon >= e.box.lon0 && ll.lon <= e.box.lon1; }
+// the event a landing falls in: active now, the species one of its own, the plant inside its area (the id, or '')
+function evAt(H, port, sps){ const q = typeof portById === 'function' ? portById(port) : null; if (!q) return '';
+  for (const e of evNow(H)) if (evIn(e, q.p) && (!sps || sps.some(sp => e.sp.includes(sp)))) return e.id; return ''; }
+const evBadges = () => (S.ach && S.ach.ev) || {};
+// the closing (seasonDay the day after, then evCloseTick when the board has come): the prizes to the top three and the badge to
+// everyone over the kilos, told by Kystposten; without the cloud only the words
+function evClose(e, y, top){
+  const k = e.id + y, A = S.ach || (S.ach = {}); A.ev = A.ev || {}; if (A.ev[k]) return;
+  const me = top && top.mine, kg = me ? me.kg || 0 : 0, rk = me ? me.rank : null, name = (S.lang === 'en' ? e.en : e.no) + ' ' + y;
+  A.ev[k] = {kg:Math.round(kg), rank:rk, badge:kg >= e.kg, t:S.t};
+  if (rk && rk <= 3){ const p = EV_PRIZE[rk - 1]; book('annet', p, 'Premie, ' + e.no + ' ' + y, 'Prize, ' + e.en + ' ' + y);
+    msg('Kystposten', (rk === 1 ? 'Du vant ' : 'Du ble nummer ' + rk + ' i ') + e.no + ' ' + y + ' med ' + fmt(kg, 0) + ' kg. Premien er ' + kr(p) + '.', (rk === 1 ? 'You won ' : 'You came ' + ['', 'second', 'third'][rk - 1] + ' in ') + e.en + ' ' + y + ' with ' + fmt(kg, 0) + ' kg. The prize is ' + kr(p) + '.'); }
+  if (kg >= e.kg) msg('Kystposten', e.no + ' ' + y + ' er over. Du leverte ' + fmt(kg, 0) + ' kg der' + (rk ? ', som nummer ' + rk + ' av ' + (top.n || rk) : '') + '. Merket «' + e.badge[0] + ' ' + y + '» er ditt.', e.en + ' ' + y + ' is over. You landed ' + fmt(kg, 0) + ' kg there' + (rk ? ', ' + rk + ' of ' + (top.n || rk) : '') + '. The badge «' + e.badge[1] + ' ' + y + '» is yours.');
+  else if (top && top.rows && top.rows.length) msg('Kystposten', e.no + ' ' + y + ' er over: ' + fmt(top.kg || 0, 0) + ' kg levert av ' + (top.n || 0) + ' båter. «' + (top.rows[0].boat || '–') + '» leverte mest.', e.en + ' ' + y + ' is over: ' + fmt(top.kg || 0, 0) + ' kg landed by ' + (top.n || 0) + ' boats. «' + (top.rows[0].boat || '–') + '» landed most.');
+  if (typeof cloudEv === 'function') cloudEv('ev_close', {ev:e.id, y, kg:Math.round(kg), rank:rk});
+}
 function seasonNow(H){
   const y = yearH(H), d = doyH(H); let best = null;
   for (const yy of [y - 1, y]) for (const e of SEASON_EV){ const dd = seasonDoy(e, yy) + (yy < y ? -365 : 0); if (dd <= d && (!best || dd > best.dd)) best = {e, dd}; }
@@ -80,6 +116,11 @@ const FEST_PRIZE = [15000, 7500, 3000];
 function seasonDay(H){
   const y = yearH(H), d = doyH(H); S.seasonSeen = S.seasonSeen || {};
   for (const e of SEASON_EV){ const k = e.id + y; if (seasonDoy(e, y) !== d || S.seasonSeen[k]) continue; S.seasonSeen[k] = 1; radio(e.vhf[0], e.vhf[1]); }
+  // the shared events: the opening on the VHF, and the closing the day after the last (the board is fetched first, ui/10h-world.js evCloseTick)
+  for (const e of EVENTS){ const D = evDays(e, y), k = 'ev' + e.id + y;
+    if (H >= D.H0 && H < D.H0 + 24 && !S.seasonSeen[k]){ S.seasonSeen[k] = 1; const mn = typeof MONS !== 'undefined' ? [MONS.no[e.to[0] - 1], MONS.en[e.to[0] - 1]] : ['', ''];
+      radio(e.no + ' er i gang. Alt som leveres i området fram til ' + e.to[1] + '. ' + mn[0] + ', teller på tavla. Se Sesong-appen.', e.en + ' is on. Everything landed in the area until ' + e.to[1] + ' ' + mn[1] + ' counts on the board. See the Sesong app.'); }
+    if (H >= D.H1 && H < D.H1 + 24 * 14 && !S.seasonSeen[k + 'x']){ S.seasonSeen[k + 'x'] = 1; S.evPending = (S.evPending || []).concat([{id:e.id, y}]); } }
   const F = festDays(y), kf = 'fest' + y;
   if (H >= F.H0 - 24 * 3 && H < F.H0 && !S.seasonSeen[kf + 'a']){ S.seasonSeen[kf + 'a'] = 1; msg('Kystposten', 'Skreifestivalen er neste helg. Største torsk landet fra lørdag til søndag kl. 18 vinner 15 000 kr.', 'The skrei festival is next weekend. The biggest cod landed from Saturday to Sunday 18:00 wins NOK 15,000.'); }
   if (H >= F.H1 && !S.seasonSeen[kf]){
