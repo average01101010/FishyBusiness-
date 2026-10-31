@@ -210,6 +210,62 @@ Resultatet kunne vært bedre med en høyere grad av nøyaktighet og oppløsning 
 
 Med de kildene og de materialene ville den samme arbeidsmåten gitt en modell som er vanskelig å skille fra fotografiet.
 
+## 11. Lært av revisjonen av trebåten (31.10.2026)
+
+Revisjonen av `trebat` (`snekke23.py`, `trebat-grunnlag.md`, `trebat-bygging.md`) var den første båten etter piloten, og den første
+uten et eneste bilde. Dette gjelder alle båter som revideres eller bygges etter den.
+
+**Uten bilder: kontroller mot dataene.**
+- Skriv en `check()` i skriptet som regner modellen mot `VESSELS` og tabellene: lengde over alt, største bredde, dybde, og **volumet
+  under vannlinja mot deplasementet** (snittenes areal, Simpson langs lengden, ganget med 1,025). Den fant at det gamle skroget ga
+  3,26 t mot 1,9 t i dataene, en feil ingen hadde sett fordi ingen hadde regnet. Rett formen (kjølens dybde, reising, kimming), ikke
+  dataene, med mindre en kilde sier noe annet.
+- Overlegget mot en linjetegning tegnet fra tabellene sjekker at modellen følger sine egne mål. Si i grunnlaget at det ikke er et foto.
+
+**Klasjsjekken må måle riktig.**
+- Mål avstanden fra punktet til bordenes innside **langs normalen i snittet** (nærmeste punkt på snittkurven), ikke vannrett ved samme
+  høyde: den vannrette målingen ga tusenvis av falske treff der bunnen er nesten flat.
+- Unnta bare det som skal ligge utenpå (lister, nagler), etter materialet.
+- Det som var galt, hadde nesten alltid samme årsak: **en del målt midt på seg selv der skroget smalner** (akterskipet, baugen) eller
+  der sida har utfall. Mål bredden i den smale enden og i den laveste høyden delen når, og sett spant inn etter hvor fort sida smalner.
+
+**Klinkbygd skrog som én flate** (oppskriften står i `snekke23.py`, `hull`): ett rutenett per side med rader etter bordgangene, to
+rader i hvert land (bordkanten mellom dem), bordet skrått fra landet til neste land, innsida trukket inn bordtykkelsen langs normalen.
+Hvert bords hette lander på sponningen i sin egen høyde (`eaten`, `land_g`), og landet høvles bort de siste 0,45 m (gangene).
+`remove_doubles` og `dissolve_degenerate` rydder bordene som har sluttet; skjær vannlinja med `bisect_plane` så tjæra får skarp kant
+i stedet for trapper av flater.
+
+**Spillet stiller krav til modellen som ikke står i planlisten.** Slå dem opp før lanterner, stenger og soner plasseres:
+- **Rorkulten svinger 41° hver vei** (`13-instruments.js`: `wheelA × 0,3`, høyst 2,4 rad). Ingenting på akterdekket innenfor
+  rorkultens lengde fra rorhodet.
+- **Vimpelregelen** (`mastTop`): en hvit lykt som står høyere enn flaggstanga og mer enn 1 m fra den, regnes som en mast, og båten får
+  vimpel (`penshot`). Åpne båter skal ha stanga høyest.
+- **Registreringsmerket** (`regmarktest`): flater utenfor sone 1 som vender ut der merket skal stå, teller som noe som stikker ut.
+  Nagler, bordkanter og annet malingen går over, skal være i skrogets sone.
+- **Middelsmodellen** (`vessel3d`): delene (rorkult, propell) tegnes oppå `lodm`, og summen må holde 120 000 punkter. Sett
+  `bpyutil.LODM_TRIS` lavere i skriptet når båten har deler.
+- **Skroget** måles i båndet −0,3 til 1,5 m over vannlinja: −6 % til +3 % av lengden og ±5 % av bredden.
+
+**Lanternene på små båter:** under 12 m skal den hvite rundtlysende stå minst 1 m over sidelanternene når den føres sammen med dem
+(COLREG vedlegg I 2(d)). Den gamle trebåten hadde 0,84 m. Legg en sjekk i `check()`. Unntaket «under 7 m» gjelder ikke en båt på
+nøyaktig 7,00 m.
+
+**Miljøet og testene.**
+- `bpy 4.5.4` krever Python 3.11: `uv venv -p /usr/bin/python3.11 /opt/bpyenv && VIRTUAL_ENV=/opt/bpyenv uv pip install bpy==4.5.4 pillow`.
+- **Kjør aldri Blender-rendring og en SwiftShader-test, eller to SwiftShader-sider, samtidig.** Skjermbildene går ut på tid (120 s)
+  og testen blir rød uten at noe er galt. Kjør testene etter hverandre i bakgrunnen med logg per test.
+- Tidsbruken for én båttype: `vessel3d` 4 min, `brotest` 3, `lanterntest` 1, `vesseltest` 2, `regmarktest` 1, `penshot` 10–12,
+  `jigshot` 13, `potshot` 10, `anchor3d` 7–12, `deckshot` over 50 (alle båter, går ut på tid; kjør den bare når dekksplassene er endret).
+- **Skill det som var rødt fra før:** legg en `git worktree` av utgangspunktet, bygg den, og kjør de røde testene mot den med
+  `KYST_DIST=<worktree>/dist`. Da vet du hva du har gjort, og hva som var der.
+- Ta før-skjermbildene fra spillet **før** eksporten (bygget har fortsatt den gamle modellen). `tests/t23shot.py` (`TAG=for`/`etter`)
+  er malen for begge formater, utenfra og fra skipperens plass.
+- Sjekk at arbeidsgrenen har spillet: grenen kan stå på første commit, og da må den bygges på den nyeste grenen.
+
+**Størrelsen.** Startbåten gikk fra 0,85 til 5,3 MB. For båter alle laster ved start (trebåten, skiffen), se på stasjonstallet
+midtskips der skroget er nesten rett, før detaljene ellers tas ned.
+
 ## Endringslogg
 
 - 30.10.2026: første versjon, skrevet etter at båten lå i spillet (Jonas: «Skriv et detaljert dokument over hele byggingen»).
+- 31.10.2026: kap. 11, det revisjonen av trebåten lærte (kontroll mot dataene uten bilder, klasjsjekk langs normalen, spillets krav til modellen, testene og miljøet).
