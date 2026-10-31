@@ -43,6 +43,9 @@ SETUP = """(sh) => {
   return {t:S.t, type:S.boat.type, pos:b.pos};
 }"""
 
+KEYLOG = """() => { const e = G3._debug.eye, bv = G3._debug.bv, t = performance.now() / 1000; if (!e) return null;
+  return {up:+(e[1] - Math.max(G3._debug.terrH(e[0], e[2]), G3._debug.seaH(e[0], e[2], t))).toFixed(1), free:+G3._debug.camFree([bv.x, bv.y + 1.2, bv.z], e).toFixed(2), d:Math.round(Math.hypot(e[0] - bv.x, e[2] - bv.z)), fov:G3._debug.curFov, lvl:G3._debug.QUAL.lvl, fps:G3.fps}; }"""
+
 def lerp(a, b, u): return a + (b - a) * u
 def key_at(keys, t):
     if t <= keys[0]['t']: return keys[0]
@@ -55,7 +58,7 @@ def key_at(keys, t):
 
 async def main():
     ap = argparse.ArgumentParser(); ap.add_argument('shot'); ap.add_argument('--size', default='540x960'); ap.add_argument('--fps', type=int, default=30)
-    ap.add_argument('--keys', type=int, default=5); ap.add_argument('--all', action='store_true'); ap.add_argument('--out', default=None); ap.add_argument('--dist', default=os.path.join(ROOT, 'dist'))
+    ap.add_argument('--keys', type=int, default=5); ap.add_argument('--all', action='store_true'); ap.add_argument('--stills', action='store_true', help='only the key frames: the boat is moved along her track to each key, one frame is drawn, one picture taken (for a machine without a GPU)'); ap.add_argument('--out', default=None); ap.add_argument('--dist', default=os.path.join(ROOT, 'dist'))
     a = ap.parse_args(); sh = json.load(open(a.shot)); w, h = map(int, a.size.split('x'))
     name = os.path.splitext(os.path.basename(a.shot))[0]; out = a.out or os.path.join(ROOT, 'trailer', 'control-m1', name + '-' + a.size); os.makedirs(out, exist_ok=True)
     base = serve(a.dist); url = base + 'index.html#seed=%d,notut' % sh.get('seed', 1)
@@ -82,10 +85,37 @@ async def main():
         ready = await pg.evaluate("({fps:G3.fps, vec:G3._debug.vec.tiles.length, trees:G3._debug.trees.n, life:G3._debug.life.M, eye:G3._debug.eye})")
         print('ready', ready, flush=True)
         cam = sh['cam']
-        if cam['mode'] == 'intro': await pg.evaluate("(s) => G3.intro(s)", cam.get('sec', 5))
         await pg.clock.pause_at(int(time.time() * 1000))
+        # the intro is started only now, on the frozen clock: started before the pause, it had run out by the first frame (the
+        # faked clock catches up with real time when it is paused, and SwiftShader's slow frames had let several seconds pass)
+        if cam['mode'] == 'intro': print('intro', await pg.evaluate("(s) => G3.intro(s)", cam.get('sec', 5)), flush=True)
         tf = time.time(); pre = int(round(sh.get('pre', 0) * a.fps)); clock_ms = 0
-        for i in range(-pre, n):
+        if a.stills:
+            # no pre-roll and no frames between the keys: the boat is put where her track has her at the key's time (knots, at the
+            # game's 6x pace), the camera set, two frames drawn so the view settles, and the picture taken
+            # from the shot's own start, not from where the boat has got to while the terrain loaded in real time (she sailed 500 m
+            # in those 20 s the first time)
+            pos0 = [sh['pos']['x'], sh['pos']['y'], math.radians(sh.get('heading', 0))] if sh.get('pos') else await pg.evaluate("[S.boat.pos.x, S.boat.pos.y, S.boat.heading]"); tprev = 0.0
+            for i in keys_at:
+                t = i / a.fps; d = sh.get('speed', 0) * 0.5144 * 6 * t / 1000
+                if cam['mode'] == 'intro':
+                    # the intro runs on the clock: jump it forward to the key's time without drawing the frames between
+                    if t > tprev: await pg.clock.fast_forward(int(round((t - tprev) * 1000)))
+                    tprev = t
+                else:
+                    await pg.evaluate("([x, y, h, d]) => { S.boat.pos = {x:x + Math.sin(h) * d, y:y - Math.cos(h) * d}; G3._debug.bv.init = false; }", [pos0[0], pos0[1], pos0[2], d])
+                    # the fine terrain, not isLandFar: the far mask is 200 m cells and reads a narrow sound as land
+                    land = await pg.evaluate("G3._debug.terrH(S.boat.pos.x * 1000, S.boat.pos.y * 1000) > 0.3")
+                    if land: print('ADVARSEL: båten er på land ved nøkkelbilde', i, flush=True); log['errors'].append('land at key %d' % i)
+                if cam['mode'] == 'orbit':
+                    k = key_at(cam['keys'], t)
+                    await pg.evaluate("(k) => { const c = G3._debug.cam; c.yaw = k.yaw * Math.PI / 180; c.pitch = k.pitch * Math.PI / 180; c.dist = k.dist; c.fov = k.fov; c.helm = false; }", k)
+                t1 = time.time(); await pg.clock.run_for(int(round(step))); await pg.clock.run_for(int(round(step)))
+                path = os.path.join(out, 'f%04d.png' % i); await pg.screenshot(path=path, timeout=600000)
+                k = await pg.evaluate(KEYLOG)
+                log['keys'].append({'frame': i, 't': round(t, 2), 'file': os.path.basename(path), **(k or {})}); print('key', i, k, 'bilde %.0fs' % (time.time() - t1), flush=True)
+            n = len(keys_at); pre = 0
+        for i in range(-pre, n if not a.stills else 0):
             t = max(0, i) / a.fps
             # run_for takes whole milliseconds: step to the nearest ms of the exact frame time, so 60 fps alternates 16 and 17 ms
             target = int(round((i + pre + 1) * step)); ticks = max(1, target - clock_ms); clock_ms += ticks
@@ -98,8 +128,7 @@ async def main():
             if i < 0: continue
             if a.all or i in keys_at:
                 path = os.path.join(out, 'f%04d.png' % i); await pg.screenshot(path=path, timeout=180000)
-                k = await pg.evaluate("""() => { const e = G3._debug.eye, bv = G3._debug.bv, t = performance.now() / 1000; if (!e) return null;
-                  return {up:+(e[1] - Math.max(G3._debug.terrH(e[0], e[2]), G3._debug.seaH(e[0], e[2], t))).toFixed(1), free:+G3._debug.camFree([bv.x, bv.y + 1.2, bv.z], e).toFixed(2), d:Math.round(Math.hypot(e[0] - bv.x, e[2] - bv.z)), fov:G3._debug.curFov, lvl:G3._debug.QUAL.lvl, fps:G3.fps}; }""")
+                k = await pg.evaluate(KEYLOG)
                 log['keys'].append({'frame': i, 't': round(t, 2), 'file': os.path.basename(path), **(k or {})}); print('key', i, k, '%.0fs' % (time.time() - tf), flush=True)
         log['seconds'] = round(time.time() - tf, 1); log['per_frame_s'] = round((time.time() - tf) / (n + pre), 2)
         print('film: %d bilder på %.0fs, %.1fs per bilde' % (n + pre, log['seconds'], log['per_frame_s']), flush=True)

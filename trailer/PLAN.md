@@ -144,8 +144,8 @@ CLAUDE.md krever «mål og se» for hver engasjementsendring. Traileren er en sl
 | Fase | Hva | Resultat | Avhenger av |
 |---|---|---|---|
 | **F0** | Avklaringer. Gjort 30.10.2026, se del 1 og del 6. Gjenstår: om hele kysten kan hentes i skyen, og at filmoppsettet kjører på iMacen. | Denne planen | – |
-| **F1** | Filmoppsettet: kunstig klokke, klipp-JSON, teleportering, væroppslag, kontrollbilder, de automatiske kontrollene. PR med `G3.film`. | `trailer/tools/film.py`, `HARNESS.md` | F0 |
-| **F2** | De to viktigste klippene først, i halv størrelse: naustdøra med trebåten (klipp 1–2) og snurperen under brua (klipp 13). Holder de, holder resten. | Kontrollbilder og forhåndsvisning til Jonas | F1 |
+| **F1** | Filmoppsettet: kunstig klokke, klipp-JSON, teleportering, væroppslag, kontrollbilder, de automatiske kontrollene. PR med `G3.film`. **Første utgave 31.10.2026:** frossen klokke, klipp-JSON, kamerabaner rundt båten, intro, stillbildemodus for skyen, landsjekk, kontaktark. Gjenstår: væroppslag, hopp-sjekk, mast mot bru, fritt kamera. | `trailer/tools/film.py`, `HARNESS.md` | F0 |
+| **F2** | De to viktigste klippene først, i halv størrelse: naustdøra med trebåten (klipp 1–2) og snurperen under brua (klipp 13). Holder de, holder resten. **Første kontaktark 31.10.2026** i `control-m1/`: snurperen går under brua som planlagt; introen virker, men båten må stå ved naustet i Vangshamn. | Kontrollbilder og forhåndsvisning til Jonas | F1 |
 | **F3** | Musikk: Jonas lager versjonene etter `audio/SUNO-PROMPT.md`, vi analyserer og velger. Klippekart. | `audio/music-edit-1.json` | F0 |
 | **F4** | Resten av opptakslista, `script.md`, `shotlist.md` låst mot klippekartet. Første grovklipp. | `rough/m1.mp4` | F2, F3 |
 | **F5** | Runder: Jonas ser på mobilen, notater med tidskode, retting, nytt grovklipp. Som Laksebaronen, 3–5 runder. | `rough/m2…` | F4 |
