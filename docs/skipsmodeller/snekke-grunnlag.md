@@ -165,7 +165,7 @@ stampene og lasten står forut i cockpiten til babord, klar av stolen og blødek
 
 Grønne på den endelige modellen: `vessel3d snekke` (punkter nær og middels innenfor taket, skroget 8,04 × 2,73 m), `brotest snekke`
 (1,98 m over plassen, øyet 1,65, utsyn), `lanterntest`, `regmarktest` for snekka (merket på jevn maling, 0,75 m fra ankeret), `vesseltest`,
-`maletest` (sone 3 og 4 som før, nå også sone 2), `walktest` (alle plassene). `regmarktest` er rød for `ringnot38`, som på utgangspunktet.
+`maletest` (sone 3 og 4 som før, nå også sone 2), `walktest` (alle plassene), `penshot` (snekka har mast og får vimpel, de åpne båtene ikke), `jigshot`, `docktest`, og `vessel3d` for alle 15 typer (rundt 60 minutter). `regmarktest` er rød for `ringnot38`, også på utgangspunktet (kjørt mot en `git worktree` av `ccr-bbe9c816-r2609u`).
 
 ## 7. Det som ikke kan måles
 
