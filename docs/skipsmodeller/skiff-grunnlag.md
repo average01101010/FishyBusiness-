@@ -169,6 +169,15 @@ ikke noe foto å legge over (kap. 7).
 | 8 | Sløyebordet og karet (Jonas: «Det går jo ikke», «logisk og realistisk») | Spillets bord sto bak skipperen oppå setet og benken; blødekaret ved skipperens sete | Eget sløyebord over babord ripe ved konsollen (`work.own`), blødekaret på dørken forut for fiskeren på styrbord, fangstkaret babord forut for sløyebordet. Klasjsjekken fant brakettbeinet 5 cm ut fra sida: kortet til fenderlista. 0 |
 | 9 | Broa i spillet | Skjermene helt i nedkanten under knappene | Blikket senket fra −0,30 til −0,40 rad (`hp`) |
 
+| 10 | `vessel3d skiff` | Skroget målt 2,60 m bredt mot 2,45 (±5 %): sløyebordet stakk 16 cm forbi ripa | Bordet 6 cm forbi fenderlista (som trebåtens): 2,54 m, grønn |
+
+## 6.1b Testene (31.10.2026)
+
+Grønne: `vessel3d skiff` (174 621 punkter nær, 119 013 middels mot 120 000; 6,02 × 2,54 m), `brotest skiff`, `lanterntest`
+(`['allround', 'side', 'side']`), `vesseltest`, `camtest`, `moortest`, `maletest`, og skiffens linje i `regmarktest`. Rød som var rød
+før (trebat-grunnlaget kap. 6.3): `regmarktest` for `ringnot38`. Skjermbilder fra spillet i begge formater, før (`TAG=for`, med den gamle
+JS-skiffen) og etter (`TAG=etter`): `tests/out/skiff_*`. Nattbildet K6 rendret i Blender (lanternene tent).
+
 ## 6.2 Arbeidet om bord (plassene)
 
 Fiskeren står ved styrbord ripe forut for konsollen ved haleren (`skiff.fisher`, `haul`); blødekaret står på dørken rett forut for ham

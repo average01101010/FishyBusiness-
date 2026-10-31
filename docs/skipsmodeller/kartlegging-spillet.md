@@ -225,7 +225,7 @@ Tallene er lest ut av GLB-filene. `lod0` er nærmodellen og `lod1` avstandsmodel
 
 | Type | Skript | Lengde | lod0 / lod1 (trek.) | Fil | Festepunkter for utstyr (`kit`) |
 |---|---|---|---|---|---|
-| `skiff` | `skiff59.py` | 5,9 m | 54 845 / 2 317 (`lodm` 36 499; før 31.10.2026: 11 190 / 990) | 4 430 KB | bøyer 2, kar 1, garn, stamper, last 1 |
+| `skiff` | `skiff59.py` | 5,9 m | 55 035 / 2 507 (`lodm` 36 499; før 31.10.2026: 11 190 / 990) | 4 458 KB | bøyer 2, kar 1, garn, stamper, last 1 |
 | `trebat` | `snekke23.py` | 7,0 m | 81 616 / 2 694 (`lodm` 36 499; før 31.10.2026: 17 906 / 1 416) | 5 294 KB | bøyer 2, garn, stamper, last 1 |
 | `snekke` | `snekke26.py` | 7,9 m | 10 332 / 1 589 | 412 KB | flåte 1, bøyer 2, radar, kar 1, garn, stamper, last 1 |
 | `plastsjark` | `plast31.py` | 9,45 m | 6 961 / 2 405 | 319 KB | flåte 1, bøyer 2, radar, garn, stamper, last 2 |

@@ -58,10 +58,10 @@ mot speilet og brønnen), `skiff59.py check` og eksporten. Rundene står i grunn
 
 | | Før | Etter |
 |---|---|---|
-| Nær (`lod0`) | 11 190 trekanter | 54 845 |
+| Nær (`lod0`) | 11 190 trekanter | 55 035 |
 | Middels (`lodm`) | – | 36 499 (motoren og propellen kommer i tillegg: 3 172) |
-| Fjern (`lod1`) | 990 | 2 317 |
-| GLB | 404 KB | 4 430 KB |
+| Fjern (`lod1`) | 990 | 2 507 |
+| GLB | 404 KB | 4 458 KB |
 
 ## 6. Kjøring
 

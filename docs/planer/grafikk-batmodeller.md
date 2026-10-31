@@ -146,5 +146,5 @@ har samme oppløsning som bruker-styrte båter»). Pilotbåten er ringnotbåten,
 - **F5, skiffen 31.10.2026** (`tools/boats/skiff59.py`, `docs/skipsmodeller/skiff-grunnlag.md`, `skiff-bygging.md`; Jonas: «Løft den til
   samme nivå», uten bilder): skrevet på nytt, skroget med speil, hakk, poder, foring, benk, brønn og dekk som ett nett, lukene,
   lommene og stangholderne som ekte hull, tårnplate, ny påhengsmotor og nye felles beslag i `fittings.py` (også rattet og
-  motoren). 54 845 trekanter nær, `lodm` 36 499, fjern 2 317, GLB 4,4 MB. Funnet underveis: egen skiff ble ikke tegnet med
+  motoren). 55 035 trekanter nær, `lodm` 36 499, fjern 2 507, GLB 4,4 MB. Funnet underveis: egen skiff ble ikke tegnet med
   Blender-modellen i spillet (`glbHas` husket «nei» fra før dataene var hentet); rettet, med levende skjermer på modellens konsoll.
