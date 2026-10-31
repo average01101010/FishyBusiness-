@@ -138,3 +138,8 @@ har samme oppløsning som bruker-styrte båter»). Pilotbåten er ringnotbåten,
   (plassen i stigen ikke avgjort, B1 = C). Avvik fra planen: piloten ble bygd før F2 og F3 (Jonas ba om det), så den har ingen UV-er
   eller materialer; de må legges på når F2 er inne. Avvikslista er kap. 5 (kravlista) og kap. 10 i `sulebas-bygging.md`. Det som
   ikke kunne måles uten flere bilder (alt på tvers, dekksutstyrets plasser), står der. **Jonas godkjenner nivået før F5.**
+- **F5, trebåten 31.10.2026** (`tools/boats/snekke23.py`, `docs/skipsmodeller/trebat-grunnlag.md`, `trebat-bygging.md`; Jonas: «Løft den
+  til samme nivå og arbeidsmåte som pilotbåten», uten bilder eller tegning): skrevet på nytt etter `ringnot38.py`, skroget som én flate
+  med klinkland og nagler, propellbrønnen som ekte hull, kritikksløyfen med kontroll mot tabellene i stedet for overlegg mot foto.
+  81 616 trekanter nær, `lodm` 36 499, fjern 2 694, GLB 5,3 MB. Rekkefølgen i F5 sier skiffen først; trebåten ble tatt først fordi
+  Jonas bestilte den.

@@ -226,7 +226,7 @@ Tallene er lest ut av GLB-filene. `lod0` er nærmodellen og `lod1` avstandsmodel
 | Type | Skript | Lengde | lod0 / lod1 (trek.) | Fil | Festepunkter for utstyr (`kit`) |
 |---|---|---|---|---|---|
 | `skiff` | `skiff59.py` | 5,9 m | 11 190 / 990 | 404 KB | bøyer 2, kar 1, garn, stamper, last 1 |
-| `trebat` | `snekke23.py` | 7,0 m | 17 906 / 1 416 | 853 KB | bøyer 2, garn, stamper, last 1 |
+| `trebat` | `snekke23.py` | 7,0 m | 81 616 / 2 694 (`lodm` 36 499; før 31.10.2026: 17 906 / 1 416) | 5 294 KB | bøyer 2, garn, stamper, last 1 |
 | `snekke` | `snekke26.py` | 7,9 m | 10 332 / 1 589 | 412 KB | flåte 1, bøyer 2, radar, kar 1, garn, stamper, last 1 |
 | `plastsjark` | `plast31.py` | 9,45 m | 6 961 / 2 405 | 319 KB | flåte 1, bøyer 2, radar, garn, stamper, last 2 |
 | `sjark` (målestokken) | `havsjark35.py` | 10,57 m | 26 074 / 2 663 | 902 KB | flåte 1, bøyer 2, radar, åpen radar, garn, stamper, last 2 |
@@ -273,7 +273,7 @@ bilderunden. Den er vurdert fra sidebildet i Båthandelen. Oversiktsbildet ligge
 
 | Båt | Helhet | Det som er bra | Det som trekker ned (se 6.1) |
 |---|---|---|---|
-| `trebat` (snekke23) | **God** | Klinkbord, slitt tre, tofter, motorkasse, rorkult, lanterner og livbøye. Slitasjen er overbevisende | Håndjuksa tegnes i koden |
+| `trebat` (snekke23) | **God** (revidert 31.10.2026 etter pilotens arbeidsmåte, `trebat-grunnlag.md`) | Skroget som én flate med klinkland, nagler og ganger, propellbrønn i dødveden, ror av bord, spant, bunnstokker, kne, motor med glødehode og lyddemper, lanterner. Slitasjen er overbevisende | Håndjuksa tegnes i koden. Ingen bilder av forbildet: målene er antatt for typen |
 | `snekke` (snekke26) | **God** | Støpte klinkbord, marineblått bånd, hardtopp, cockpit med kar og bord, badeleider | M13, M17 |
 | `plastsjark` (plast31) | **Svak** | Riktig profil og fargebånd, lenseporter, lanterner på riktig side | M10, M13. Lavest detalj av alle (6 961 trek.) |
 | `sjark` (havsjark35) | **God** (målestokken) | Spring og striper, rigg med vaiere, lastebom, styrhus | M5, M6, M14. Redskapsrommet akter er en glatt kasse |
