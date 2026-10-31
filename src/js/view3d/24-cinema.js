@@ -212,7 +212,7 @@
     { const cap = VG.hand ? (SK ? SK.cap : CAPM) : VG.open ? pvm(VT, hullLiv(S.boat)).cap : null; if (cap){ gl.colorMask(false, false, false, false); drawLit(cap, BMrel); gl.colorMask(true, true, true, true); } }
     glChk('nearObj'); if (!SKP.sea){ drawSea(VPn, eye, t, nearFar, 0);
     drawSea(VPn, eye, t, false); }
-    PMK('fx'); glChk('seaN'); drawBeams(VPn, eye, t);
+    PMK('fx'); glChk('seaN'); drawBeams(VPn, eye, t); drawWorkCones(VPn, eye, t, BMrel, VG); glChk('cones');
     if (BLD && env.night > 0.02){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false); drawChunkLights(VPn, eye); gl.depthMask(true); gl.disable(gl.BLEND); }
     drawEffects(VPn, eye, BMabs, dt, t); drawBlows(VPn, eye, dt); drawNPCLights(VPn); drawAirLights(VPn, t); drawRescueLights(VPn, t); drawSeaLights(VPn, eye, t, true);
     if (VG.hand) drawSkiffGlass(BMrel, VPn); else { const gm = pvm(VT, hullLiv(S.boat)).glass; drawGlass(gm, BMrel, VPn); drawDrops(gm, BMrel, VPn, t); }
@@ -298,6 +298,38 @@
       drawPts(n, gl.POINTS, VP, col, [320, 700, 1150, 1700][q], 2, null, 512);
     });
   }
+  // Green water and the scuppers (Gemini's review, Jonas 31.10.2026: «Kjør på»): when the sea stands over the deck's edge (a bow that
+  // digs into a sea, a roll that puts the rail under), water comes aboard (SCW.w, a rough measure of how much lies on deck) by how far
+  // the sea is over the edge, three times as fast over the bulwark's top; it runs off through the scuppers along both sides, faster the
+  // more there is, most out of the side that stands highest over the sea, as small jets thrown out and down that fall into the sea and
+  // are gone there. Your own boat only (the camera is near her); the hand-worked boats have no scuppers. On «Lav» half as many.
+  const SCN = 500, SCW = {w:0, acc:0, n:0, x:new Float64Array(SCN), y:new Float64Array(SCN), z:new Float64Array(SCN), vx:new Float32Array(SCN), vy:new Float32Array(SCN), vz:new Float32Array(SCN), age:new Float32Array(SCN).fill(99), life:new Float32Array(SCN)};
+  function scupperWater(VP, eye, BM, dt, t, col){
+    const VG = GEO(vtype());
+    if (!VG.hand && VG.deck && dt > 0){
+      const dy = VG.deck.y, hb = VG.side || (VG.beam || 3) / 2, z0 = VG.bow, z1 = VG.stern, gw = Math.max(VG.gw || 0, dy + 0.3), L = z1 - z0;
+      let inflow = 0, hi = [0, 0];
+      for (const [sx, fz] of [[-1, 0.1], [1, 0.1], [-1, 0.45], [1, 0.45], [-1, 0.85], [1, 0.85]]){
+        const p = xf(BM, [sx * hb * 0.95, dy, z0 + L * fz]), over = seaH(p[0], p[2], t) - p[1];
+        if (over > 0) inflow += over * (over > gw - dy ? 3 : 1); hi[sx > 0 ? 1 : 0] += Math.max(0, -over); }
+      SCW.w = Math.min(3, SCW.w + inflow * dt * 2.5);
+      const out = SCW.w * Math.min(1, dt * 1.2); SCW.w -= out; SCW.acc += out * 260 * (QUAL.lvl >= 2 ? 1 : 0.5);
+      const nS = Math.max(3, Math.min(10, Math.round(L / 2.2))), ps = hi[1] + 0.05 > 0 ? (hi[1] + 0.05) / (hi[0] + hi[1] + 0.1) : 0.5;
+      const fx = Math.sin(bv.head), fz = -Math.cos(bv.head), way = (bv.spd || 0) * 0.9, O = xf(BM, [0, 0, 0]);
+      while (SCW.acc >= 1){ SCW.acc -= 1;
+        const sx = Math.random() < ps ? 1 : -1, z = z0 + L * (0.15 + 0.7 * (Math.floor(Math.random() * nS) + 0.5) / nS) + (Math.random() - 0.5) * 0.12;
+        const p = xf(BM, [sx * hb * 1.02, dy + 0.04, z]), q = xf(BM, [sx, -0.25, 0]), sp = 0.9 + Math.random() * 1.4, i = SCW.n = (SCW.n + 1) % SCN;
+        SCW.x[i] = p[0]; SCW.y[i] = p[1]; SCW.z[i] = p[2]; SCW.vx[i] = (q[0] - O[0]) * sp + fx * way; SCW.vy[i] = (q[1] - O[1]) * sp; SCW.vz[i] = (q[2] - O[2]) * sp + fz * way; SCW.age[i] = 0; SCW.life[i] = 0.9 + Math.random() * 0.5; }
+    }
+    let n = 0;
+    for (let i = 0; i < SCN; i++){
+      if (SCW.age[i] >= SCW.life[i]) continue;
+      SCW.age[i] += dt; SCW.vy[i] -= 9.8 * dt; SCW.x[i] += SCW.vx[i] * dt; SCW.y[i] += SCW.vy[i] * dt; SCW.z[i] += SCW.vz[i] * dt;
+      if (SCW.y[i] < seaHFast(SCW.x[i], SCW.z[i], t)){ SCW.age[i] = 99; continue; }
+      PB[n * 3] = SCW.x[i] - eye[0]; PB[n * 3 + 1] = SCW.y[i] - eye[1]; PB[n * 3 + 2] = SCW.z[i] - eye[2]; PA[n] = 0.85 * (1 - 0.6 * SCW.age[i] / SCW.life[i]); n++; }
+    if (n) drawPts(n, gl.POINTS, VP, col, 46, 1);
+    SCW.drawn = n;
+  }
   function drawEffects(VP, eye, BM, dt, t){
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
     const foamCol = [Math.min(1, env.amb[0] * 1.4 + env.sunCol[0] * 0.8), Math.min(1, env.amb[1] * 1.4 + env.sunCol[1] * 0.8), Math.min(1, env.amb[2] * 1.4 + env.sunCol[2] * 0.8)];
@@ -369,6 +401,7 @@
       PB[n * 3] = wk.x[i] - eye[0]; PB[n * 3 + 1] = wk.y[i] - eye[1]; PB[n * 3 + 2] = wk.z[i] - eye[2]; PA[n] = Math.pow(Math.max(0, 1 - wk.age[i] / wk.life[i]), 1.5) * 0.75; n++;
     }
     if (QUAL.lvl) drawPts(n, gl.POINTS, VP, foamCol, 95, 2);   // (soft, as mist: round discs read as blobs)
+    scupperWater(VP, eye, BM, dt, t, [foamCol[0] * 0.88, foamCol[1] * 0.95, foamCol[2]]);
     if (QUAL.lvl) driftSpray(VP, eye, dt, t, foamCol);
     drawSmoke(VP, eye, BM, dt);
     // fishing lines
