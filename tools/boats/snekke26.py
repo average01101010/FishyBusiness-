@@ -143,7 +143,7 @@ def lap_z(x, k):
     z0 = WL + 0.15; z1 = zs(x) - BAND[0] - 0.03; return z0 + (z1 - z0) * k / LAPS
 
 NKB = 4                      # rows up the keel's side
-NBOT = 14                    # rows from the root to the boot top's foot
+NBOT = 18                    # rows from the root to the boot top's foot
 def section(x, fine=True):
     """the whole half-section at x as (y, z, kind) from the keel's underside on the centre line to the sheer; the counts never change
     (points collapse where a band is empty: aft of the keel, at the stem). kind: 'k' keel, 'b' bottom, 'l' lap (its lower edge, standing
@@ -300,7 +300,7 @@ def yb(x): return max(0.2, min(yi(x) - 0.03, y_at(x, ZC) - 0.07))   # the liner'
 def stations(fine=True):
     sp = [XA, XC0, X_KA - 0.002, X_KA, X_BH, CXF, CXN]
     if fine:
-        xs = [0.03, 0.06, 0.09] + [0.16 + 0.05 * i for i in range(147)] + [7.5 + 0.025 * i for i in range(16)] + [X_KA + 0.035, X_KA + 0.07, X_KA + 0.105, X_KA + 0.14]
+        xs = [0.03, 0.06, 0.09] + [0.16 + 0.035 * i for i in range(210)] + [7.5 + 0.025 * i for i in range(16)] + [X_KA + 0.035, X_KA + 0.07, X_KA + 0.105, X_KA + 0.14]
         laps = [lambda x, k=k: lap_z(x, k) for k in range(1, LAPS + 1)]
         sp += stem_stations(lambda x: kb(x) if x >= X_KA else 0.0, [WL + 0.15] + laps + [lambda x: zs(x) - BAND[0], lambda x: zs(x) - BAND[1]], 5.0, XF - 0.015)
     else:

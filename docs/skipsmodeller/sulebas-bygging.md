@@ -317,8 +317,41 @@ lanternene med sterk emisjon) viser om de står og vender riktig.
 - Middelsmodellen: sett `LODM_TRIS` til 40 000 minus delene spillet tegner oppå den (skiffen: motoren og propellen, 3 172).
 - Sjekk GLB-ens `name` og andre felt i `extras` for ekte navn (B20): skiffens hadde produsentens.
 
+## 13. Lært av revisjonen av plastsnekka (01.11.2026)
+
+Revisjonen av `snekke` (`snekke26.py`, `snekke-grunnlag.md`, `snekke-bygging.md`) var den tredje uten bilder, og den første med kjøl,
+innenbords propell i brønn og et dørhus med styreplass. Dette gjelder alle båter etter den.
+
+**Regn ut det gamle skroget før du ser på det.** Det gamle skriptets snitt ga 10,5 t mot 3,0 t i dataene, og ingen hadde sett det fordi
+bildene så riktige ut over vannet. Last skriptet med `bpy` byttet ut med en tom modul (`sys.modules['bpy'] = types.ModuleType('bpy')`) og
+integrer snittene: det tar sekunder, uten Blender. Samme triks tegner spantrisset og profilen med PIL (`lines.py`), og formen kan da
+rettes mot volumet i mange runder før noe rendres.
+
+**Vannlinjebredden kan ikke leses av et sidebilde.** Står den nær største bredde (her 2,52 mot 2,70 m), må kroppen bli flat for å holde
+deplasementet, og kimmingen får en knekk i vannlinja. En rundbunnet båt med utfall har vannlinjebredden rundt 85–88 % av største bredde.
+Si i grunnlaget at den er antatt.
+
+**Kjølen er en del av skroget.** Snittet starter på kjølens underkant på senterlinja og går opp kjølens side til roten før kroppen; der
+kjølen ikke finnes, samles punktene i roten. To stasjoner 2 mm fra hverandre ved kjølens akterkant gir en skarp kant der akselen kommer ut,
+og propellbrønnen er da rommet mellom kjølen, skoen og roret, uten boolsk utskjæring.
+
+**Skipperen skal stå der en ekte skipper står.** Den gamle modellen hadde styreplassen på et gulv i ripehøyde med hodet inntil taket, og
+plotteren var en stor svart plate i synsfeltet. Regn ut i `check()`: takhøyden over plassen (`brotest` krever 1,8 m for den som står),
+øyet over vindskjermens fot og under taket, og vinkelen ned til dashbordet mot `hp` og `fov` (øyet ser ned til `hp − fov/2`).
+
+**Et dørhus må henge sammen i alle hjørner.** Vindskjermens vinger, ruffens topp, skottet og sidene på ripa møtes ikke av seg selv når
+hardtoppen er smalere enn båten: legg sidene i ett skrått plan fra ripa til hardtoppens kant, før skottet ut til det planet under vingene,
+og la vingenes ytre kant ligge i det. En femkant av glass som ikke er plan, blir flekkete.
+
+**Blender-rendringen fra øyet sier lite om broa** (glasset rendres ugjennomsiktig); se broa i spillet.
+
+**Små ting fra økta:** et navn i skriptet kan skygge for et annet (`ROOT` var både repo-stien og en tabell; eksporten ville skrevet feil
+sted). En kommando i forgrunnen stopper etter 10 minutter; skjermbildene og testene kjøres i bakgrunnen med et lite skript som tar dem
+etter hverandre og skriver én logg per test (`runtests.sh`).
+
 ## Endringslogg
 
+- 01.11.2026: kap. 13, det revisjonen av plastsnekka lærte (regn ut det gamle skroget først, vannlinjebredden, kjølen i skrogets flate, styreplassen, dørhuset, broa i spillet).
 - 30.10.2026: første versjon, skrevet etter at båten lå i spillet (Jonas: «Skriv et detaljert dokument over hele byggingen»).
 - 31.10.2026: kap. 12, det revisjonen av skiffen lærte (sjekk at spillet viser modellen, det arvede, festene, arbeidsflyten, klasjsjekk av skrogets egne flater, fargegrenser med spring, bredden i vessel3d, felles beslag også for det spillet beveger, K6, miljøet).
 - 31.10.2026: kap. 11, det revisjonen av trebåten lærte (kontroll mot dataene uten bilder, klasjsjekk langs normalen, spillets krav til modellen, testene og miljøet).

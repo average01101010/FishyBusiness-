@@ -2,9 +2,9 @@ Revider båtmodellen: [BÅTENS NAVN]
 
 Dette er en eksisterende Blender-modell i spillet som ikke ble bygd etter noen plan. Løft den til samme nivå og arbeidsmåte som pilotbåten ringnot38 og de reviderte båtene trebat og skiff (F5 i docs/planer/grafikk-batmodeller.md). Finn selv ut hvilken type i VESSELS og hvilket skript i tools/boats/ navnet gjelder.
 
-GRENEN: main er tom; spillet ligger på arbeidsgrenene. Bygg på den nyeste grenen med spillet (nå ccr-bbe9c816-r2609u, som har trebåten, skiffen og lærdommene) og commit underveis.
+GRENEN: main er tom; spillet ligger på arbeidsgrenene. Bygg på den nyeste grenen med spillet (nå ccr-3349da69-ayyd2k, som har trebåten, skiffen, plastsnekka og lærdommene; den er også rullet ut til ccr-5e1ba2f4-pusvyd) og commit underveis.
 
-LES FØRST, I SIN HELHET, før du endrer noe: docs/INDEKS.md, docs/skipsmodeller/sulebas-bygging.md (arbeidsmåten; reglene i kap. 7 og lærdommene i kap. 11 og 12 gjelder), /blender-skillen, docs/skipsmodeller/planliste-fiskefartoy.md (også kap. 29 og 30), docs/skipsmodeller/sulebas-pilot-grunnlag.md (malen for grunnlaget), trebat-grunnlag.md og skiff-grunnlag.md (eksempler på reviderte båter), docs/skipsmodeller/kartlegging-spillet.md og docs/batplan.md (det som er kjent om båten), skriptet, ringnot38.py, fittings.py og bpyutil.py, og det spillet bruker fra modellen (VESSELS, SPEC3D, ankrene og koden som tegner båten). Si fra hvis du ikke har lest noe av dette.
+LES FØRST, I SIN HELHET, før du endrer noe: docs/INDEKS.md, docs/skipsmodeller/sulebas-bygging.md (arbeidsmåten; reglene i kap. 7 og lærdommene i kap. 11, 12 og 13 gjelder), /blender-skillen, docs/skipsmodeller/planliste-fiskefartoy.md (også kap. 29 og 30), docs/skipsmodeller/sulebas-pilot-grunnlag.md (malen for grunnlaget), trebat-grunnlag.md, skiff-grunnlag.md og snekke-grunnlag.md (eksempler på reviderte båter; snekka er den første med kjøl, innenbords propell i brønn og dørhus), docs/skipsmodeller/kartlegging-spillet.md og docs/batplan.md (det som er kjent om båten), skriptet, ringnot38.py, fittings.py og bpyutil.py, og det spillet bruker fra modellen (VESSELS, SPEC3D, ankrene og koden som tegner båten). Si fra hvis du ikke har lest noe av dette.
 
 KILDENE: Jeg legger ved de bildene jeg har. Finn selv ut hva hvert bilde viser og hva det kan brukes til (rett fra siden = mål, skrått = form). Har jeg ikke lagt ved bilder, bruk det som finnes i repoet og dokumentene (kildene i skriptets kommentarer, tegningsmål, kartlegging-spillet.md), og si hvilke bilder som ville gjort resultatet bedre. Spør meg bare om det som ikke kan avgjøres uten meg.
 
@@ -33,3 +33,12 @@ FERDIG BETYR:
 - Du får lov å pushe og rulle ut til detstorebla.no (ccr-5e1ba2f4-pusvyd) når testene er grønne. Sjekk at utrullingen ble grønn.
 
 Kjør på.
+
+---
+
+Det neste økt bør vite (etter plastsnekka 01.11.2026):
+- Regn ut det gamle skrogets deplasement før du ser på bildene (kap. 13): snekka hadde 10,5 t mot 3,0 t uten at noen hadde sett det.
+- `tests/sn26shot.py` er malen for før- og etter-bildene (utenfra K1 og K2, broa, dekket under fiske med to mann og fangst, natt K6), og
+  `scratchpad`-verktøyene står beskrevet i `snekke-bygging.md` kap. 3 (shots, lines, clip, sheet, runtests).
+- Felles beslag nye 01.11.2026: `single_lever`, `helm_seat`, `stern_lantern`, `foil_rudder`. Slå opp i `fittings.py` først.
+- Neste i rekkefølgen etter `docs/batplan.md` del 10: `hs11.py` (sjarkny), så `hurtig11.py` og `malo36.py`.

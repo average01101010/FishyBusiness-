@@ -150,6 +150,23 @@ volumet), `clip.py` (klasjsjekken), `snekke26.py check` og eksporten.
 | 3 | Første rendring | Hovedformen, kjølen, brønnen, roret på skoen, hullene, dørhuset, rattet riktig; dashbordet like mørkt som skjermene | Dashbordet lyst, skjermene i mørke rammer |
 | 4 | Klasjsjekken | 503 punkter: fotlista sank 1,7 cm ned i skrogkanten (366), kompasshuset gjennom skottet inn i ruffen (6), tanklufterens rør gjennom sida (12); resten var hullenes egne foringer | Fotlista på dekket, kompasset på dashbordet, lufteren som hette utenpå: 0 |
 
+| 5 | Eksport og spillet (`sn26shot.py`, `vessel3d`, `brotest`, `lanterntest`, `regmarktest`, `vesseltest`, `maletest`, `walktest`) | 51 267 trekanter; alle grønne. Broa: dashbordet med kompass, målere og plotter synes, utsynet gjennom vindskjermen; dekket: sløyebordet over babord ripe med fisken på, blødekaret ved fiskeren; `walktest` finner alle plassene | – |
+| 6 | Tettere skrog (stasjon hver 3,5 cm, 18 rader i bunnen) og nattbildet K6 | Klinkbordene og stevnen jevnere; K6 fra styrbord baug viser bare den grønne og den hvite (den røde og akterlanterna skjermet bort, som de skal), om babord den røde på ruffsida; klasjsjekken 0 | 68 057 trekanter, GLB 4,3 MB |
+
+## 6.2 Arbeidet om bord (plassene)
+
+Fiskeren står ved styrbord ripe ved haleren (2,05 m fra speilet, under hardtoppens akterkant), med skipperen ved rattet like forut for seg.
+Blødekaret (`work.tub`, 75 %) står på dørken rett akter for ham, så fisken går fra ripa rett i karet. Sløyebordet er båtens eget, over
+babord ripe tvers av haleren (`work.table`, `own`, `top` 0,86 m over dørken), med ytterkanten 3 cm utenfor ripa så avfallet går i sjøen;
+den som sløyer står på dørken innenfor det. Den sløyde fisken går i fangstkaret med is akter på senterlinja (`kit.tubs`, 300 l). Garnkaret,
+stampene og lasten står forut i cockpiten til babord, klar av stolen og blødekaret. Motorluka i dørken er flush, så karene kan stå på den.
+
+## 6.3 Testene (01.11.2026)
+
+Grønne på den endelige modellen: `vessel3d snekke` (punkter nær og middels innenfor taket, skroget 8,04 × 2,73 m), `brotest snekke`
+(1,98 m over plassen, øyet 1,65, utsyn), `lanterntest`, `regmarktest` for snekka (merket på jevn maling, 0,75 m fra ankeret), `vesseltest`,
+`maletest` (sone 3 og 4 som før, nå også sone 2), `walktest` (alle plassene). `regmarktest` er rød for `ringnot38`, som på utgangspunktet.
+
 ## 7. Det som ikke kan måles
 
 - **Deplasementet:** skroget gir 3,58 t under vannlinja mot 3,0 t i `VESSELS` (19 % over; 3,0 t gir vannlinja 4 cm lavere). Grunnere blir
