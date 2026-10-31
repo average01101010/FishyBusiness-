@@ -225,7 +225,7 @@ Tallene er lest ut av GLB-filene. `lod0` er nærmodellen og `lod1` avstandsmodel
 
 | Type | Skript | Lengde | lod0 / lod1 (trek.) | Fil | Festepunkter for utstyr (`kit`) |
 |---|---|---|---|---|---|
-| `skiff` | `skiff59.py` | 5,9 m | 11 190 / 990 | 404 KB | bøyer 2, kar 1, garn, stamper, last 1 |
+| `skiff` | `skiff59.py` | 5,9 m | 54 845 / 2 317 (`lodm` 36 499; før 31.10.2026: 11 190 / 990) | 4 430 KB | bøyer 2, kar 1, garn, stamper, last 1 |
 | `trebat` | `snekke23.py` | 7,0 m | 81 616 / 2 694 (`lodm` 36 499; før 31.10.2026: 17 906 / 1 416) | 5 294 KB | bøyer 2, garn, stamper, last 1 |
 | `snekke` | `snekke26.py` | 7,9 m | 10 332 / 1 589 | 412 KB | flåte 1, bøyer 2, radar, kar 1, garn, stamper, last 1 |
 | `plastsjark` | `plast31.py` | 9,45 m | 6 961 / 2 405 | 319 KB | flåte 1, bøyer 2, radar, garn, stamper, last 2 |
@@ -286,7 +286,7 @@ bilderunden. Den er vurdert fra sidebildet i Båthandelen. Oversiktsbildet ligge
 | `snokrabbe` (krabbe50) | **Svak** | Portal og MOB-båt | **M1**, M3, M4, M14 |
 | `bunntral` (tral60) | **Middels** | Hekkslipp, galge, A-ramme, nettrommel, tråldører og MOB-båt er på plass | M7, M9, M3, M6 |
 | `pelagisk` (not75) | **Svak** | Notbinge, trålrull og overbygg midtskips | **M2**, M3, M6, M8, M9 |
-| `skiff` (skiff59) | God (fra sidebildet) | Bygd etter GA, egen påhengsmotor | D6 (samme motor for 60 og 90 hk) |
+| `skiff` (skiff59) | **God** (revidert 31.10.2026 etter pilotens arbeidsmåte, `skiff-grunnlag.md`) | Linjene fra GA-en, skroget som én flate med speil, hakk og poder, ekte hull, tårnplate, konsoll med festet vindskjerm, ny påhengsmotor som felles beslag | D6 (90 hk-motoren kan nå lages med `F.outboard`, men vises ikke ennå). Ingen bilder: alt inni er antatt |
 
 **Samlet:** de åpne småbåtene og havsjarken holder et godt nivå. Sjarkene på 10–11 m og kystbåtene er
 gjenkjennelige, men flate. Havbåtene er langt under nivået i planlisten og i referansebildene (Sulebas,
@@ -336,7 +336,7 @@ Funnet i bildene fra spillet og i skriptene. «T» betyr tolket fra bildet, ikke
 | D3 | Båtene kan ha opptil 33 stamper, men høyst 8 tegnes (4 under 8 m) | M | `drawLineTubs` |
 | D4 | Garnet vises som én garnhaug i ett 1000-literskar, uansett om det er 6 eller 240 garn | M | `drawRigRest`, `drawNetTub` |
 | D5 | Teinene om bord vises ikke når båten er rigget for teiner, bare under setting og trekking | M | `drawPots` er eneste sted teinene tegnes |
-| D6 | Påhengsmotoren på 90 hk har ingen egen modell | L | `EQUIP.motor90`, `skiff59.py` |
+| D6 | Påhengsmotoren på 90 hk har ingen egen modell (31.10.2026: `fittings.outboard(hp=90)` kan lage den; ikke koblet til `EQUIP.motor90` ennå) | L | `EQUIP.motor90`, `skiff59.py` |
 | D7 | VHF, AIS, kartplotter, CHIRP og sonar kjøpes, men synes ikke (radaren gjør det) | M | `EQUIP` |
 | D8 | Testen `vessel3d.py` setter et tak på 120 000 punkter (rundt 40 000 trekanter), mens båtplanen (B17) sier 80 000–250 000 trekanter. Planen kan ikke følges uten at testen endres | M | `tests/vessel3d.py`, `docs/batplan.md` |
 | D9 | Havbåtene har ingen festepunkter for utstyr (`kit` er tom). Alt er bakt inn, så det kan ikke oppgraderes eller byttes | H (for framtida) | `al45`, `krabbe50`, `tral60`, `not75` |

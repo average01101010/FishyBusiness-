@@ -68,6 +68,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `docs/skipsmodeller/kartlegging-spillet.md` | Kartleggingen av det som finnes i spillet (arter, redskap, utstyrsmodeller, båtene, feil), arbeidslista og det som er utført 30.10.2026. |
 | `docs/skipsmodeller/sulebas-pilot-grunnlag.md` | Pilotbåtens byggegrunnlag: fakta fra byggerapporten, reglene, avgjørelsene B1–B5, alle målene fra bildene (kap. 4.0), kravlista mot planlisten, lanternene, kritikksløyfens 22 runder (kap. 7.1). |
 | `docs/skipsmodeller/trebat-grunnlag.md`, `trebat-bygging.md` | Startbåten `trebat` revidert etter pilotens arbeidsmåte (F5, 31.10.2026): avvikslista før endring, målene, kravlista, lanternene, kritikksløyfens runder, og det korte byggedokumentet. |
+| `docs/skipsmodeller/skiff-grunnlag.md`, `skiff-bygging.md` | Skiffen `skiff` revidert etter pilotens arbeidsmåte (F5, 31.10.2026): avvikslista før endring, kravlista per planliste-ID, lanternene, kritikksløyfens runder, rettingen som fikk Blender-modellen inn som egen båt i spillet, og det korte byggedokumentet. |
 | `docs/skipsmodeller/sulebas-bygging.md` | **Slik bygges en båt:** hele byggingen av pilotbåten fra bilde til spill, kildene og hva de gir, målingen, skroget som én flate, hullene, kritikksløyfen, eksporten, feilene og reglene de ga, hva neste båt trenger, og hva som ville gjort resultatet bedre. Les før en ny båtmodell. |
 | `docs/mannskap-plan.md` | Planen for mannskapet. |
 | `docs/plan-blakveite.md`, `docs/blakveite.md` | Blåkveita: planen og kunnskapen. |

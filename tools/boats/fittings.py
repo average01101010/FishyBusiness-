@@ -407,3 +407,235 @@ def sail(A, tack, clew, head, peak, m, m_edge, m_seam=None, side=(0, 1, 0), bell
         strip(0.0, 1.0, 0.0, lt, m_edge, nu=k); strip(0.0, 1.0, 1.0 - lt, 1.0, m_edge, nu=k)
         for u0, t0 in ((0.0, 0.0), (1.0 - 5 * lu, 0.0), (1.0 - 5 * lu, 1.0 - 5 * lt)):
             strip(u0, u0 + 5 * lu, t0, t0 + 5 * lt, m_edge, nu=2, nt=2)
+
+
+# ---------- small open boats (the skiff's revision, 31.10.2026; Jonas: «lag gjerne modeller av utstyr som kan brukes felles på andre
+# båter»): lofts, a horn cleat, the lanterns with their screens, a bow roller, a hatch lid, tread plate, the lining of a hole, and an
+# outboard motor sized by its horsepower ----------
+def loft(A, rings, mf, cap0=False, cap1=True, out=None):
+    """faces between closed rings of points (each the same count), mf(i) the material of band i; the faces turned away from each
+    ring's centre (or along out(centre) when given); cap0/cap1 close the first and the last ring"""
+    R = [[V(p) for p in r] for r in rings]; vs = [[A.v(p) for p in r] for r in R]; cen = [sum(r, V()) / len(r) for r in R]
+    n = len(R[0])
+    for i in range(len(R) - 1):
+        for k in range(n):
+            j = (k + 1) % n; mid = (R[i][k] + R[i][j] + R[i + 1][j] + R[i + 1][k]) / 4; cc = (cen[i] + cen[i + 1]) / 2
+            A.f([vs[i][k], vs[i][j], vs[i + 1][j], vs[i + 1][k]], mf(i), out(mid, cc) if out else mid - cc)
+    if cap0: A.f(list(vs[0]), mf(0), cen[0] - cen[1])
+    if cap1: A.f(list(vs[-1]), mf(len(R) - 2), cen[-1] - cen[-2])
+
+
+def sring(xc, z, lf, lb, ly, nf=2.6, nb=2.6, ny=2.6, seg=24, y0=0.0):
+    """a horizontal superellipse ring at height z: lf forward (+x) of xc, lb aft, ly to each side; nf/nb its fullness forward and aft
+    (2 an ellipse, higher fuller, lower pointed): the cowling, the leg and the plate of an outboard"""
+    out = []
+    for k in range(seg):
+        t = 2 * math.pi * k / seg; c = math.cos(t); s = math.sin(t); n_ = nf if c >= 0 else nb
+        out.append((xc + (lf if c >= 0 else lb) * math.copysign(abs(c) ** (2 / n_), c), y0 + ly * math.copysign(abs(s) ** (2 / ny), s), z))
+    return out
+
+
+def prism_side(A, poly, y0, y1, m, ax=(0, 1, 0)):
+    """a flat plate cut to the outline poly [(x, z)] in the x-z plane, from y0 to y1 (both faces and the edges)"""
+    a = [A.v((x, y0, z)) for x, z in poly]; b = [A.v((x, y1, z)) for x, z in poly]; n = len(poly)
+    A.f(a, m, (0, -1, 0) if y0 < y1 else (0, 1, 0)); A.f(b, m, (0, 1, 0) if y0 < y1 else (0, -1, 0))
+    c = V((sum(p[0] for p in poly) / n, (y0 + y1) / 2, sum(p[1] for p in poly) / n))
+    for k in range(n):
+        j = (k + 1) % n; A.f([a[k], a[j], b[j], b[k]], m, (a[k].co + a[j].co) / 2 - c)
+
+
+def cleat(A, c, n, along, L, m):
+    """a horn cleat on a surface at c (outward normal n), its horn along along, L long: two feet a little into the surface, the horn
+    round, thickest in the middle and tapering to its tips, which turn up a little (FOR-04)"""
+    n = V(n).normalized(); a = V(along); a = (a - n * a.dot(n)).normalized(); b = n.cross(a); c = V(c); h = 0.30 * L
+    for sg in (1, -1):
+        p0 = c + a * (sg * 0.20 * L) - n * 0.003; p1 = c + a * (sg * 0.15 * L) + n * h
+        acyl(A, p0, p1, 0.07 * L, lambda z: m, seg=8, r1=0.055 * L)
+    pts = []
+    for i in range(9):
+        t = -0.5 + i / 8; pts.append((c + a * (t * L) + n * (h + 0.05 * L * (2 * t) ** 2), 0.075 * L * (1 - 0.55 * (2 * t) ** 2) + 0.01 * L))
+    for (p, r), (q, r1) in zip(pts, pts[1:]): acyl(A, p, q, r, lambda z: m, seg=8, r1=r1)
+    A.poly([pts[0][0] + b * (pts[0][1] * math.cos(2 * math.pi * k / 8)) + n * (pts[0][1] * math.sin(2 * math.pi * k / 8)) for k in range(8)], m, -a)
+
+
+def side_lantern(A, c, fwd, out, m_lens, m_body, m_screen, R=0.03, H=0.045, foot=0.0):
+    """a sidelight for a small boat, its lens's centre at c: the lens an arc of a cylinder from right ahead round to 22.5 degrees abaft
+    the beam on its own side (out; 112.5 degrees, COLREG annex I 9(a)), the housing behind it with base and cap, and a matt black
+    screen inboard reaching past the lens's fore edge, so no light shows across the bow (LYS-02); foot: a pedestal down to the deck"""
+    f = V(fwd).normalized(); o = V(out).normalized(); z = V((0, 0, 1)); c = V(c); seg = 10
+    arc = [f * math.cos(math.radians(112.5) * k / seg) + o * math.sin(math.radians(112.5) * k / seg) for k in range(seg + 1)]
+    lo = [A.v(c + d * R - z * (H / 2)) for d in arc]; hi = [A.v(c + d * R + z * (H / 2)) for d in arc]
+    for k in range(seg): A.f([lo[k], lo[k + 1], hi[k + 1], hi[k]], m_lens, arc[k] + arc[k + 1])
+    # the housing: aft of the lens and inboard, closing its back; base and cap over all
+    obox(A, c - f * 0.018 + o * (0.45 * R), f * 0.02, o * (0.5 * R + 0.01), z * (H / 2), m_body)
+    for zz in (-1, 1):
+        obox(A, c + z * (zz * (H / 2 + 0.004)) + f * (0.5 * R - 0.018) + o * (0.5 * R), f * (0.5 * R + 0.026), o * (0.5 * R + 0.016), z * 0.004, m_body)
+    obox(A, c + f * (0.5 * R + 0.002) - o * 0.012, f * (0.5 * R + 0.034), o * 0.003, z * (H / 2 + 0.008), m_screen)
+    if foot > 0: obox(A, c - z * (H / 2 + 0.008 + foot / 2) + f * (0.5 * R - 0.018) + o * (0.5 * R), f * (0.5 * R + 0.02), o * (0.5 * R + 0.01), z * (foot / 2 + 0.003), m_body)
+
+
+def allround_lantern(A, c, m_lens, m_body, R=0.028, H=0.06):
+    """an all-round white light on top of a pole, the lens's centre at c: the base, the lens all round and the cap with its dome"""
+    c = V(c); z = V((0, 0, 1))
+    acyl(A, c - z * (H / 2 + 0.035), c - z * (H / 2), R + 0.004, lambda q: m_body, seg=16, r1=R + 0.006)
+    acyl(A, c - z * (H / 2), c + z * (H / 2), R, lambda q: m_lens, seg=16, cap=False)
+    acyl(A, c + z * (H / 2), c + z * (H / 2 + 0.012), R + 0.006, lambda q: m_body, seg=16)
+    acyl(A, c + z * (H / 2 + 0.012), c + z * (H / 2 + 0.03), R + 0.004, lambda q: m_body, seg=16, r1=0.008)
+
+
+def bow_roller(A, aft, fore, m_frame, m_roller, R=0.035, W=0.11, deck=None, x_end=None):
+    """a bow roller on its bracket from aft (on the deck) to fore (the roller's axis, out over the stem): two cheek plates, the roller,
+    the keeper pin over it, the bolts in the base plate (FOR-07, M13); deck(x) the deck's height under it (default: aft's)"""
+    aft, fore = V(aft), V(fore); dz = deck or (lambda x: aft.z)
+    x0, x1 = aft.x, fore.x; zr = fore.z
+    xe = min(x1 - 2.2 * R, x_end if x_end is not None else 1e9)        # where the cheeks leave the deck (x_end: where the deck ends at the stem)
+    poly = [(x0, dz(x0) - 0.004), (xe, dz(xe) - 0.004), (x1 + R * 0.5, zr - R * 0.95), (x1 + R * 1.05, zr + R * 0.1),
+            (x1 - R * 0.2, zr + R * 1.7), (x0 + 0.10, dz(x0 + 0.10) + 0.045), (x0, dz(x0) + 0.03)]
+    for sg in (1, -1): prism_side(A, poly, sg * (W / 2 - 0.006), sg * (W / 2 + 0.002), m_frame)
+    acyl(A, (x1, -W / 2 + 0.008, zr), (x1, W / 2 - 0.008, zr), R, lambda q: m_roller, seg=16)
+    acyl(A, (x1 - R * 0.15, -W / 2 - 0.004, zr + R * 1.45), (x1 - R * 0.15, W / 2 + 0.004, zr + R * 1.45), 0.007, lambda q: m_frame, seg=8)
+    obox(A, (x0 + 0.10, 0, dz(x0 + 0.10) + 0.002), (0.10, 0, 0), (0, W / 2 + 0.012, 0), (0, 0, 0.005), m_frame)
+
+
+def hatch_lid(A, x0, x1, y0, y1, z, m_lid, m_fit, hinge='+x', t=0.012):
+    """a hatch lid lying in its frame, its top at z: the lid's top and its edges down t (the frame's gutter is the deck's own), two
+    hinges on the hinge side and a flush lifting ring at the other (DKS-03)"""
+    for nm, pts, out in (('top', [(x0, y0, z), (x1, y0, z), (x1, y1, z), (x0, y1, z)], (0, 0, 1)),):
+        A.poly(pts, m_lid, out)
+    for (a, b, out) in (((x0, y0), (x1, y0), (0, -1, 0)), ((x1, y0), (x1, y1), (1, 0, 0)), ((x1, y1), (x0, y1), (0, 1, 0)), ((x0, y1), (x0, y0), (-1, 0, 0))):
+        A.poly([(a[0], a[1], z), (b[0], b[1], z), (b[0], b[1], z - t), (a[0], a[1], z - t)], m_lid, out)
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    if hinge in ('+x', '-x'):
+        xh = x1 if hinge == '+x' else x0
+        for yy in (y0 + 0.25 * (y1 - y0), y0 + 0.75 * (y1 - y0)):
+            acyl(A, (xh, yy - 0.03, z + 0.004), (xh, yy + 0.03, z + 0.004), 0.007, lambda q: m_fit, seg=8)
+        xr = x0 + 0.06 if hinge == '+x' else x1 - 0.06
+        atorus(A, (xr, cy, z + 0.002), (0, 0, 1), 0.026, 0.004, lambda a: m_fit, seg=14, rseg=5)
+    else:
+        yh = y1 if hinge == '+y' else y0
+        for xx in (x0 + 0.25 * (x1 - x0), x0 + 0.75 * (x1 - x0)):
+            acyl(A, (xx - 0.03, yh, z + 0.004), (xx + 0.03, yh, z + 0.004), 0.007, lambda q: m_fit, seg=8)
+        yr = y0 + 0.06 if hinge == '+y' else y1 - 0.06
+        atorus(A, (cx, yr, z + 0.002), (0, 0, 1), 0.026, 0.004, lambda a: m_fit, seg=14, rseg=5)
+
+
+def tread_plate(A, x0, x1, y0, y1, z, m, inside=lambda x, y: True, pitch=0.05, L=0.026, w=0.007, h=0.0016):
+    """aluminium tread plate (DKS-02, MAT-04): raised lozenges in a checker of crossed pairs, pitch apart, on the flat at height z
+    (their feet a little into it, so no face lies in its plane); inside(x, y) leaves out the places where they must not be"""
+    nx = int((x1 - x0) / pitch); ny = int((y1 - y0) / pitch)
+    for i in range(nx + 1):
+        for j in range(ny + 1):
+            x = x0 + (i + 0.5) * pitch; y = y0 + (j + 0.5) * pitch
+            if x > x1 - pitch * 0.3 or y > y1 - pitch * 0.3 or not inside(x, y): continue
+            a = math.pi / 4 if (i + j) % 2 else -math.pi / 4
+            d = V((math.cos(a), math.sin(a), 0)); s = V((-d.y, d.x, 0)); c = V((x, y, z - 0.0004))
+            b0, b1, b2, b3 = c - d * (L / 2), c - s * (w / 2), c + d * (L / 2), c + s * (w / 2)
+            r0 = c - d * (L / 2 - w * 0.6) + V((0, 0, h)); r1 = c + d * (L / 2 - w * 0.6) + V((0, 0, h))
+            A.poly([b0, b1, r0], m, (b0 + b1) / 2 - c - s * 0.001); A.poly([b1, b2, r1, r0], m, -s + V((0, 0, 0.5)))
+            A.poly([b2, b3, r1], m, (b2 + b3) / 2 - c + s * 0.001); A.poly([b3, b0, r0, r1], m, s + V((0, 0, 0.5)))
+
+
+def hole_lining(A, ring, d, depth, m, m_end=None, steps=2):
+    """the inside of a real hole: from the hole's ring of points (a hole the script has cut in a surface) a tube along d, depth deep,
+    its faces turned inward, closed at the bottom (m_end): a rod holder's tube, an outlet's pipe"""
+    d = V(d).normalized(); P = [V(p) for p in ring]; c = sum(P, V()) / len(P); n = len(P)
+    rings = [P] + [[p + d * (depth * k / steps) for p in P] for k in range(1, steps + 1)]
+    vs = [[A.v(p) for p in r] for r in rings]
+    for i in range(steps):
+        cc = c + d * (depth * (i + 0.5) / steps)
+        for k in range(n):
+            j = (k + 1) % n; mid = (rings[i][k] + rings[i + 1][j]) / 2
+            A.f([vs[i][k], vs[i][j], vs[i + 1][j], vs[i + 1][k]], m, cc - mid)
+    A.f(list(vs[-1]), m_end or m, -d)
+
+
+def outboard(A, P, at, hp, M, shaft=0.635, tw=0.05, fine=True):
+    """an outboard motor clamped on a transom's notch (FRM-01, M15; the skiff's 60 hp, and any other hp: the powerhead and the
+    gearcase grow with hp ** 0.3), in the boat's frame (x forward): at = (x of the transom's aft face, y of the motor's centre line,
+    z of the notch's top); shaft from the notch to the anti-cavitation plate (20 in 0.51, 25 in 0.635), tw the transom's thickness at
+    the notch (the brackets' inner legs and screws on its inside). Drawn into A: the cowling
+    with its grey band and the lower cowl, the leg as a foil, the plate, the gearcase with its torpedo, skeg, water intakes and the
+    trim tab anode, the clamp brackets over the notch with their screws, the tilt tube, the swivel and the power trim and tilt, the
+    steering arm, the rigging hose. The propeller into P (its own part: it turns) with F.propeller. Returns the propeller's centre.
+    M: materials {'cowl', 'band', 'leg', 'steel', 'chrome', 'dark', 'rubber', 'anode', 'prop'}."""
+    xt, y0, zn = at; s = (hp / 60.0) ** 0.3; zc = zn - shaft; zt = zc - 0.165 * s
+    X = lambda dx: xt + dx * s
+    def ring(dz, xc, lf, lb, ly, nf=2.6, nb=2.4, seg=24): return sring(X(xc), dz, lf * s, lb * s, ly * s, nf, nb, 2.6, seg, y0)
+    seg = 24 if fine else 10
+    # the leg, the lower cowl and the cowling in one loft from the plate up: grey band at the split line
+    zH = lambda dz: zn + 0.10 + (dz - 0.10) * s if dz > 0.10 else zn + dz
+    R = [ring(zc + 0.004, -0.50, 0.18, 0.23, 0.068, 2.2, 1.4, seg), ring(zc + 0.20, -0.50, 0.18, 0.23, 0.068, 2.2, 1.4, seg),
+         ring(zn - 0.24, -0.50, 0.19, 0.23, 0.075, 2.2, 1.5, seg), ring(zn - 0.17, -0.50, 0.21, 0.24, 0.12, 2.4, 2.0, seg),
+         ring(zn - 0.11, -0.50, 0.24, 0.255, 0.155, 2.6, 2.3, seg), ring(zn - 0.03, -0.505, 0.28, 0.28, 0.18, 2.6, 2.4, seg),
+         ring(zn + 0.06, -0.51, 0.305, 0.29, 0.19, 2.6, 2.4, seg), ring(zH(0.10), -0.515, 0.315, 0.295, 0.195, 2.6, 2.4, seg),
+         ring(zH(0.10), -0.52, 0.338, 0.31, 0.208, 2.7, 2.5, seg), ring(zH(0.16), -0.52, 0.338, 0.31, 0.208, 2.7, 2.5, seg),
+         ring(zH(0.165), -0.52, 0.335, 0.307, 0.206, 2.7, 2.5, seg), ring(zH(0.26), -0.525, 0.33, 0.305, 0.203, 2.7, 2.5, seg),
+         ring(zH(0.37), -0.535, 0.32, 0.30, 0.198, 2.7, 2.5, seg), ring(zH(0.46), -0.545, 0.30, 0.285, 0.185, 2.6, 2.4, seg),
+         ring(zH(0.53), -0.555, 0.265, 0.26, 0.16, 2.5, 2.3, seg), ring(zH(0.575), -0.56, 0.20, 0.21, 0.12, 2.4, 2.2, seg),
+         ring(zH(0.60), -0.565, 0.10, 0.12, 0.06, 2.2, 2.0, seg)]
+    mats = [M['leg']] * 7 + [M['cowl'], M['band'], M['band']] + [M['cowl']] * 7
+    loft(A, R, lambda i: mats[i], cap0=False, cap1=True)
+    # the plate over the propeller, the gearcase's strut, the torpedo and the skeg
+    pl = ring(zc, -0.55, 0.24, 0.25, 0.15, 3.0, 4.0, seg)
+    loft(A, [pl, [(p[0], p[1], zc + 0.018) for p in pl]], lambda i: M['leg'], cap0=True, cap1=True)
+    loft(A, [ring(zt + 0.02, -0.47, 0.17, 0.17, 0.05, 2.2, 1.5, seg), ring(zc + 0.006, -0.49, 0.17, 0.18, 0.058, 2.2, 1.5, seg)], lambda i: M['leg'], cap0=False, cap1=False)
+    tor = [(-0.28, 0.0), (-0.285, 0.026), (-0.30, 0.045), (-0.33, 0.06), (-0.38, 0.068), (-0.52, 0.067), (-0.59, 0.058), (-0.625, 0.048)]
+    TR = []
+    for dx, r in tor:
+        TR.append([(X(dx), y0 + r * s * math.cos(2 * math.pi * k / 16), zt + r * s * math.sin(2 * math.pi * k / 16)) for k in range(16)])
+    loft(A, TR, lambda i: M['leg'], cap0=False, cap1=True, out=lambda mid, cc: V((0, mid.y - y0, mid.z - zt)))
+    skeg = [(X(-0.58), zt - 0.02 * s), (X(-0.36), zt - 0.02 * s), (X(-0.45), zt - 0.19 * s), (X(-0.525), zt - 0.215 * s), (X(-0.585), zt - 0.18 * s)]
+    prism_side(A, skeg, y0 - 0.009 * s, y0 + 0.009 * s, M['leg'])
+    obox(A, (X(-0.66), y0, zc - 0.012), (0.04 * s, 0, 0), (0, 0.012, 0), (0, 0, 0.012), M['anode'])           # the trim tab, an anode
+    if fine:
+        for sg in (1, -1):                                                                                # the water intakes
+            for k in range(4):
+                obox(A, (X(-0.40 - 0.022 * k), y0 + sg * 0.05 * s, zt + 0.075 * s), (0.006, 0, 0), (0, 0.004, 0), (0, 0, 0.03 * s), M['dark'])
+        acyl(A, (X(-0.70), y0, zn - 0.30), (X(-0.735), y0, zn - 0.30), 0.012, lambda q: M['dark'], seg=10)   # the idle exhaust relief
+        acyl(A, (X(-0.40), y0 + 0.19 * s, zn - 0.04), (X(-0.40), y0 + 0.205 * s, zn - 0.04), 0.006, lambda q: M['steel'], seg=8)   # the tell-tale
+        obox(A, (X(-0.83), y0, zH(0.13)), (0.008, 0, 0), (0, 0.04, 0), (0, 0, 0.018), M['dark'])          # the cowl's latch
+    # the clamp brackets over the notch, their screws in the well, the tilt tube, the swivel with its steering tube, the trim and tilt
+    xi = xt + tw + 0.003; xo = xi + 0.028
+    br = [(xo, zn + 0.06), (xo, zn - 0.12), (xi, zn - 0.12), (xi, zn + 0.004), (xt - 0.004, zn + 0.004),
+          (xt - 0.004, zn - 0.20), (X(-0.12), zn - 0.22), (X(-0.16), zn - 0.08), (X(-0.12), zn + 0.06)]
+    for sg in (1, -1):
+        prism_side(A, br, y0 + sg * 0.095 * s, y0 + sg * 0.11 * s, M['leg'])
+        if fine:
+            yy = y0 + sg * 0.10 * s
+            acyl(A, (xo, yy, zn - 0.07), (xo + 0.06, yy, zn - 0.07), 0.009, lambda q: M['steel'], seg=8)
+            acyl(A, (xo + 0.06, yy - 0.04, zn - 0.07), (xo + 0.06, yy + 0.04, zn - 0.07), 0.008, lambda q: M['steel'], seg=8)
+    acyl(A, (X(-0.06), y0 - 0.125 * s, zn + 0.035), (X(-0.06), y0 + 0.125 * s, zn + 0.035), 0.022, lambda q: M['steel'], seg=12)
+    acyl(A, (X(-0.20), y0, zn - 0.24), (X(-0.20), y0, zn + 0.07), 0.042 * s, lambda q: M['leg'], seg=14)
+    acyl(A, (X(-0.09), y0, zn - 0.22), (X(-0.09), y0, zn - 0.07), 0.04 * s, lambda q: M['leg'], seg=12)
+    acyl(A, (X(-0.09), y0, zn - 0.07), (X(-0.16), y0, zn + 0.01), 0.012, lambda q: M['chrome'], seg=8)
+    obox(A, (X(-0.13), y0, zn - 0.225), (0.05, 0, 0), (0, 0.035, 0), (0, 0, 0.012), M['anode'])
+    # the steering arm forward over the notch, and the rigging hose from the lower cowl's front down into the well
+    obox(A, (X(-0.10), y0, zn + 0.085), (0.11 * s, 0, 0), (0, 0.016, 0), (0, 0, 0.01), M['steel'])
+    if fine:
+        h0 = V((X(-0.21), y0 - 0.06 * s, zn - 0.02)); h1 = V((xt + 0.20, y0 - 0.12, zn - 0.10))
+        pts = [h0 + (h1 - h0) * (i / 6) + V((0, 0, 0.07 * math.sin(math.pi * i / 6))) for i in range(7)]
+        for a, b in zip(pts, pts[1:]): acyl(A, a, b, 0.02, lambda q: M['rubber'], seg=10)
+    c = V((X(-0.66), y0, zt))
+    propeller(P, c, (1, 0, 0), 0.17 * s, M['prop'], n=3, hub=0.30, pitch=1.25, skew=0.32, cpp=False, fine=fine)
+    acyl(P, c - V((0.028 * s + 0.055 * s, 0, 0)), c - V((0.028 * s + 0.058 * s, 0, 0)), 0.018 * s, lambda q: M['dark'], seg=12)
+    return c
+
+
+def helm_wheel(A, c, ax, R, m_rim, m_spoke, m_hub, n=5, knob=True, dish=0.045):
+    """a steering wheel for a console or a dash (every boat but the old wooden one gets one: Jonas 31.10.2026): centre c, ax its axis
+    pointing out toward the helmsman, R the rim's radius; a foam-gripped rim, n stainless spokes dished back to the hub, the hub
+    with its nut cap, the helm's shaft back into the dash, and a spinner knob on the rim. Draw it at the origin with ax along the
+    game's own axis when the game turns it (skiff59.py: the part 'wheel')."""
+    c = V(c); a = V(ax).normalized(); s, u, _ = frame_of(a)
+    atorus(A, c, a, R, 0.017, lambda q: m_rim, seg=40, rseg=8)
+    h = c - a * dish
+    for k in range(n):
+        t = 2 * math.pi * k / n + math.pi / 2; e = s * math.cos(t) + u * math.sin(t)
+        p0 = h + e * 0.040; pm = c - a * (dish * 0.35) + e * (R * 0.6); p1 = c + e * (R - 0.012)
+        acyl(A, p0, pm, 0.0075, lambda q: m_spoke, seg=6, cap=False); acyl(A, pm, p1, 0.0075, lambda q: m_spoke, seg=6, cap=False)
+    acyl(A, h - a * 0.015, h + a * 0.012, 0.048, lambda q: m_spoke, seg=18)
+    acyl(A, h + a * 0.012, h + a * 0.032, 0.030, lambda q: m_hub, seg=14, r1=0.022)
+    acyl(A, h - a * 0.015, h - a * 0.14, 0.022, lambda q: m_hub, seg=12)
+    if knob:
+        e = s * math.cos(-0.5) + u * math.sin(-0.5); k0 = c + e * R
+        acyl(A, k0, k0 + a * 0.065, 0.012, lambda q: m_hub, seg=10, r1=0.014)

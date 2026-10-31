@@ -328,8 +328,8 @@
       needle:{rpm:0, fuel:0, temp:8, volt:12.6}, wheelA:0, headPrev:null, propA:0, tP:0, tG:0};
     SK.pp = {skipper:[0, 0.2, 0.8, false, [[-0.12, 1.12, 0.05], [0.16, 1.1, 0.05]]], crew:[0.26, 0.32, 1.16, true, null], fisher:[0, 0, 0, false, false]};
     if (glbHas('worker')) SK.wk = wkMeshes(lookMe());      // the fisher's arms, drawn live
-    // the detailed model from tools/boats (skiff59.py): hull, glass, the lid, the outboard and its propeller from the GLB, and the places
-    // from its anchors; the console's screens are part of the model and not live
+    // the detailed model from tools/boats (skiff59.py): hull, glass, the lid, the outboard and its propeller, the wheel from the GLB, and the
+    // places from its anchors; the live plotter, gauges and VHF on the model's dash where it has them (skiff.scr)
     const GK = glbHas('skiff') ? geoOf('skiff') : null, A = GK && GK.skiff;
     if (A){
       const up = o => o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null;
@@ -337,6 +337,12 @@
       SK.motor = up(glbPart('skiff', 'outboard')) || SK.motor; SK.prop = up(glbPart('skiff', 'prop')) || SK.prop; SK.propAt = A.prop;
       const cp = glbPart('skiff', 'cap'); if (cp){ const c = MB(); for (let i = 0; i < cp.p.length; i += 9) c.tri([cp.p[i], cp.p[i + 1], cp.p[i + 2]], [cp.p[i + 3], cp.p[i + 4], cp.p[i + 5]], [cp.p[i + 6], cp.p[i + 7], cp.p[i + 8]], [1, 1, 1]); SK.cap = c.mesh(); }
       SK.wheelAt = A.wheel; SK.wheelTilt = A.wheelTilt; SK.leverAt = A.lever; SK.motorAt = A.motor; SK.live = false;
+      // the places with it: the eye at the wheel, the lights, the pole (VGEO.skiff was settled when the page loaded, before the models
+      // were fetched, and so kept the old kit's eye, which stood forward of the model's console, 31.10.2026)
+      VGEO.skiff = GK;
+      SK.wheel = up(glbPart('skiff', 'wheel')) || SK.wheel;      // the model's own wheel (fittings.helm_wheel), turned like the old one
+      // the live plotter, gauges and VHF on the screens of the model's dash (skiff.scr, Jonas 31.10.2026: «Blender + levende skjermer»)
+      if (A.scr && A.scr.plot && A.scr.gauge){ SK.qPlot = texQuad(...A.scr.plot); SK.qGauge = texQuad(...A.scr.gauge); if (A.scr.vhf) SK.qVhf = texQuad(...A.scr.vhf); SK.live = true; }
       if (A.names) SK.qName = A.names.map(([B, T]) => texStrip(B, T));
       const w = A.wheel, ps = NB(); person(ps, A.skipper[0], A.skipper[1], A.skipper[2], false, [[w[0] - 0.14, w[1] + 0.14, w[2] + 0.05], [w[0] + 0.14, w[1] + 0.12, w[2] + 0.05]], lookMe()); SK.skipper = ps.mesh();
       const pc = NB(); person(pc, A.seat[0], A.seat[1], A.seat[2], true, null, lookCrew(0) || 'crew'); SK.crew = pc.mesh();
