@@ -639,3 +639,65 @@ def helm_wheel(A, c, ax, R, m_rim, m_spoke, m_hub, n=5, knob=True, dish=0.045):
     if knob:
         e = s * math.cos(-0.5) + u * math.sin(-0.5); k0 = c + e * R
         acyl(A, k0, k0 + a * 0.065, 0.012, lambda q: m_hub, seg=10, r1=0.014)
+
+
+# ---------- the helm and the stern of a small inboard boat (the snekke's revision, 01.11.2026): the single-lever control, the helm
+# seat on its pedestal, the stern light and a rudder blade of foil section, for any boat that has them ----------
+def single_lever(A, c, out, fwd, m_body, m_lever, m_knob, lean=0.35):
+    """a single-lever engine control (throttle and gear in one) on a console's side wall at c (out: the wall's outward normal, fwd the
+    boat's forward): the rounded housing flush on the wall, the lever's hub, the lever leaning forward (ahead) by lean radians from
+    upright, its knob, and the neutral button; the lever moves in the plane of the wall"""
+    o = V(out).normalized(); f = V(fwd); f = (f - o * f.dot(o)).normalized(); u = o.cross(f).normalized()
+    if u.z < 0: u = -u
+    c = V(c)
+    obox(A, c + o * 0.018, f * 0.065, u * 0.085, o * 0.018, m_body)
+    acyl(A, c + o * 0.036, c + o * 0.058, 0.045, lambda q: m_body, seg=16)
+    acyl(A, c + o * 0.058, c + o * 0.064, 0.012, lambda q: m_knob, seg=10)            # the neutral button
+    d = (u * math.cos(lean) + f * math.sin(lean)).normalized(); h = c + o * 0.05
+    acyl(A, h, h + d * 0.17, 0.010, lambda q: m_lever, seg=8, r1=0.008)
+    acyl(A, h + d * 0.17 - o * 0.03, h + d * 0.17 + o * 0.035, 0.016, lambda q: m_knob, seg=12)
+
+
+def helm_seat(A, foot, fwd, h, m_post, m_cush, m_back=None, fine=True):
+    """a helm seat on its pedestal at foot (on the sole), facing fwd: the round foot plate a little into the sole, the post, the swivel,
+    the moulded seat with its cushion (h its top over the foot), and a low backrest; the post's adjusting lever"""
+    foot = V(foot); f = V((fwd[0], fwd[1], 0)).normalized(); s = V((-f.y, f.x, 0)); z = V((0, 0, 1)); seg = 20 if fine else 8
+    acyl(A, foot - z * 0.003, foot + z * 0.012, 0.17, lambda q: m_post, seg=seg)
+    acyl(A, foot + z * 0.012, foot + z * (h - 0.12), 0.045, lambda q: m_post, seg=14 if fine else 6)
+    acyl(A, foot + z * (h - 0.12), foot + z * (h - 0.09), 0.11, lambda q: m_post, seg=14 if fine else 6)
+    c = foot + z * (h - 0.09)
+    rings = []
+    for dz, k in ((0.0, 0.92), (0.02, 1.0), (0.07, 1.0), (0.09, 0.9)):
+        rings.append([c + z * dz + f * (0.21 * k * math.copysign(abs(math.cos(t)) ** 0.6, math.cos(t))) + s * (0.22 * k * math.copysign(abs(math.sin(t)) ** 0.6, math.sin(t))) for t in [2 * math.pi * i / 16 for i in range(16)]])
+    loft(A, rings, lambda i: m_cush, cap0=True, cap1=True)
+    b = c + z * 0.09 - f * 0.20
+    obox(A, b + z * 0.17 - f * 0.02, f * 0.035, s * 0.19, z * 0.15, m_back or m_cush)
+    obox(A, b + z * 0.04 + f * 0.01, f * 0.012, s * 0.04, z * 0.06, m_post)
+    if fine: acyl(A, foot + z * (h - 0.25) + s * 0.045, foot + z * (h - 0.25) + s * 0.10, 0.007, lambda q: m_post, seg=6)
+
+
+def stern_lantern(A, c, aft, m_lens, m_body, R=0.028, H=0.05):
+    """a stern light at c (the lens's centre), showing 135 degrees over the stern (67.5 each side of aft, COLREG annex I 9(a)): the lens
+    an arc of a cylinder, the housing closing it forward, base and cap; aft the direction it shines"""
+    a = V((aft[0], aft[1], 0)).normalized(); s = V((-a.y, a.x, 0)); z = V((0, 0, 1)); c = V(c); seg = 10
+    half = math.radians(67.5); arc = [a * math.cos(-half + 2 * half * k / seg) + s * math.sin(-half + 2 * half * k / seg) for k in range(seg + 1)]
+    lo = [A.v(c + d * R - z * (H / 2)) for d in arc]; hi = [A.v(c + d * R + z * (H / 2)) for d in arc]
+    for k in range(seg): A.f([lo[k], lo[k + 1], hi[k + 1], hi[k]], m_lens, arc[k] + arc[k + 1])
+    obox(A, c - a * (0.4 * R), a * (0.45 * R), s * (R * 0.95), z * (H / 2), m_body)
+    for zz in (-1, 1): obox(A, c + z * (zz * (H / 2 + 0.004)), a * (R + 0.004), s * (R + 0.004), z * 0.004, m_body)
+
+
+def foil_rudder(A, stock, z0, z1, chord, m, thick=0.12, top=None, n=12, rows=6):
+    """a rudder blade of a symmetric foil section (NACA 00xx, thick its share of the chord) hung on its stock: stock = (x, y) of the
+    leading edge (the stock in its nose), the blade running aft (-x) chord long from z0 (its foot) to z1 (or top(x), the hull's bottom
+    over it, less a little), the foot rounded; FRM-03"""
+    xs, ys = stock
+    def ring(z, sc):
+        us = [0.5 * (1 - math.cos(math.pi * k / n)) for k in range(n + 1)]
+        yt = lambda u: 5 * thick * chord * sc * (0.2969 * math.sqrt(u) - 0.1260 * u - 0.3516 * u * u + 0.2843 * u ** 3 - 0.1036 * u ** 4)
+        pts = [(xs - chord * u, ys + yt(u), z) for u in us] + [(xs - chord * u, ys - yt(u), z) for u in reversed(us[1:-1])]
+        if top: pts = [(x, y, min(z, top(x))) for x, y, z in pts]
+        return pts
+    zs_ = [z0, z0 + 0.012] + [z0 + 0.03 + (z1 - z0 - 0.03) * k / rows for k in range(rows + 1)]
+    sc = [0.5, 0.85] + [1.0] * (rows + 1)
+    loft(A, [ring(z, k) for z, k in zip(zs_, sc)], lambda i: m, cap0=True, cap1=True, out=lambda mid, cc: V((0, mid.y - ys, mid.z - cc.z)) if abs(mid.y - ys) > 1e-4 else V((0, 0, mid.z - cc.z)))
