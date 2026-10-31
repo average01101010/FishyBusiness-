@@ -1,0 +1,42 @@
+{
+  "name": "Kystnotbåten legger ut fra Finnsnes og går under Gisundbrua i midnattssol",
+  "when": "2027-06-21T02:00:00Z",
+  "boat": "ringnot38",
+  "pos": {
+    "x": 866.985,
+    "y": 365.808
+  },
+  "heading": 32,
+  "speed": 8,
+  "quality": "high",
+  "pre": 4,
+  "load_s": 20,
+  "dur": 10,
+  "notes": "Gisundbrua: midtpunkt 69.2435 N 17.9612 E (x 867.08, y 365.655 km), retning 122°, bjelkebru. Sundets akse 32°/212°. Båten starter 180 m sørvest for brumidten på aksen (sjø, 0,18 km fra land) og går nordøst; under brua rundt 7 s ved 8 knop (24,7 m/s i spillets tempo). Et startpunkt mellom kaia og brua (867.24, 365.78) var på land.",
+  "cam": {
+    "mode": "orbit",
+    "keys": [
+      {
+        "t": 0,
+        "yaw": 200,
+        "pitch": 3,
+        "dist": 90,
+        "fov": 40
+      },
+      {
+        "t": 5,
+        "yaw": 250,
+        "pitch": 10,
+        "dist": 80,
+        "fov": 42
+      },
+      {
+        "t": 10,
+        "yaw": 320,
+        "pitch": 22,
+        "dist": 120,
+        "fov": 45
+      }
+    ]
+  }
+}

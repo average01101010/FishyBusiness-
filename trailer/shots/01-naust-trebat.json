@@ -1,0 +1,13 @@
+{
+  "name": "Fars naust: døra og trebåten ved kaia i grålysning",
+  "when": "2026-10-12T06:00:00Z",
+  "boat": "trebat",
+  "quality": "high",
+  "load_s": 15,
+  "dur": 6,
+  "cam": {
+    "mode": "intro",
+    "sec": 6
+  },
+  "notes": "Grålysning på 69° N i midten av oktober er rundt kl. 08 lokal tid (06 UTC). 04:30 UTC var natt med stjerner."
+}

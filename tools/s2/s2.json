@@ -1,0 +1,5 @@
+{
+  "what": "the Sentinel-2 summer mosaic per coastal tile (tools/s2/s2.py), built by .github/workflows/s2.yml when this file changes and kept as a release s2-<run number>; tools/map/kart.json names the one the map release takes ('s2')",
+  "parts": 24,
+  "run": 2
+}
