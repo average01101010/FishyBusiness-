@@ -87,7 +87,7 @@ async function turGo(id){
   const T = turState(), m = T.act.find(x => x.id === id), b = S.boat; if (!m) return;
   const L0 = (no, en) => S.lang === 'en' ? en : no;
   if (!['idle', 'port'].includes(b.status) || (S.plan && S.plan.depAt)){ toast(L0('Båten er opptatt. Stopp det den holder på med først.', 'The boat is busy. Stop what it is doing first.')); return; }
-  if (!meAboard() && !crewAboard().length){ toast(L0('Båten har ikke mannskap. Uten deg om bord trenger den folk.', 'The boat has no crew. Without you aboard it needs hands.')); return; }
+  if (!meAboard() && !crewAboard().length){ toast(L0(...noCrewText())); return; }
   const sea = m.k === 'garn' || m.k === 'prove' || m.k === 'foto' || m.k === 'lete' || (m.k === 'slep' && m.stage !== 'tow'), ekko = m.k === 'prove' && m.kind === 'ekko';
   const toPort = m.k === 'frakt' && m.stage === 'pick' ? m.from : sea ? null : m.to, q = toPort ? portById(toPort) : null;
   const end = q ? q.p : ekko ? m.pts[m.at || 0] : m.k === 'prove' || m.k === 'foto' || m.k === 'lete' ? m.p : {x:m.p.x + (m.k === 'slep' ? 0.06 : 0.12), y:m.p.y}, aPort = b.status === 'port' ? b.port : null;
