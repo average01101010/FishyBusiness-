@@ -1904,12 +1904,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (795 linjer)
+## `src/js/ui/phone/07-patch.js` (803 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 788 `patch()`
+  - 796 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -1941,7 +1941,7 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 121 `redning()`
 - **138** vessels: my vessel overview and the market
 
-## `src/js/ui/phone/10-fartoy.js` (143 linjer)
+## `src/js/ui/phone/10-fartoy.js` (145 linjer)
 
   - 10 `goals()`
   - 25 `goalsCard()`
@@ -1950,8 +1950,8 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 43 `market()`
   - 67 `specSecs(k, O)`
   - 91 `sheet(k, O)`
-  - 122 `fartoy(tab0)`
-- **142** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
+  - 124 `fartoy(tab0)`
+- **144** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
 
 ## `src/js/ui/phone/11-rederi.js` (70 linjer)
 
@@ -1994,7 +1994,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
 - **162** actions
   - 165 `switchVessel(k)`
 
-## `src/js/ui/phone/14-act.js` (246 linjer)
+## `src/js/ui/phone/14-act.js` (255 linjer)
 
   - 2 `act(a, d)`
   - 8 `act0(a, d)`
@@ -2580,7 +2580,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 47 `bootGame()`
   - 150 `bootFail(e)`
 
-## `src/js/vessel3d.js` (1276 linjer)
+## `src/js/vessel3d.js` (1278 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -2619,69 +2619,69 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 270 `partNetBin(o, hs, p)`
 - **272** one spec per type: the hull and the fittings. The skiff is hand-built in view3d.js
 - **361** detailed models from GLB files (tools/boats, built in Blender from the yards' drawings)
-  - 370 `glbParse(b64)`
-  - 391 `glbLoad(type)`
-  - 396 `glbPart(type, name)`
-  - 399 `glbPaint(part, liv)`
-  - 407 `glbZones(type)`
-  - 414 `glbModel(type, lod, liv)`
-  - 439 `vesselSpec(type)`
-  - 440 `buildVesselModel(type, lod, liv)`
-  - 481 `vesselGeo(type, hs, sp, house, anch)`
-  - 493 `vesselModel(type)`
-  - 494 `geoOf(type)`
-- **498** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
-  - 517 `modelLiv(L)`
-  - 524 `hullLiv(b)`
-  - 525 `livKey(liv)`
-  - 527 `livGeo(liv)`
-  - 532 `livStr(b)`
-  - 544 `livPen(s)`
-  - 546 `livMark(s)`
-  - 547 `livParse(s)`
-- **552** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
-  - 556 `topsides(type)`
-  - 574 `designLines(TS, liv)`
-  - 583 `glbDesign(type, part, liv)`
-  - 617 `designFits(type, k)`
-  - 624 `kitLiv(liv)`
-- **626** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
-- **675** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
-  - 686 `logoCanvas(cv, L, img)`
-  - 697 `logoStrips(type)`
-  - 699 `logoStr(L)`
-  - 700 `logoParse(s)`
-  - 704 `flagCanvas(cv, code, shape, logo)`
-  - 716 `flagOf(L)`
-- **717** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
-  - 726 `hullTris(type)`
-  - 740 `sideStrip(type, frac, hMax, aspect, drop)`
-  - 772 `nameStrips(type)`
-  - 808 `stripProud(type, st)`
-  - 831 `stripPaint(type, st)`
-  - 852 `markStrips(type)`
-  - 872 `anchorLen(bw)`
-  - 875 `markRGB(type, liv)`
-  - 883 `hullRGB(type, liv)`
-  - 893 `npcKit(L, B)`
-  - 896 `npcModel(type, lod, liv)`
-  - 898 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **910** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 923 `wkPart(name, kit)`
-  - 933 `wkPut(B, o, ax, s, at)`
-  - 943 `wkLimb(B, o, A, E, r)`
-  - 950 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 972 `vesselSVG(type, w, h)`
-- **1010** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1017 `deckMap(type)`
-  - 1146 `deckPass(M, k, q)`
-  - 1151 `passLine(M, A, B)`
-  - 1153 `linkPass(M, k, q)`
-  - 1157 `deckComp(M)`
-  - 1166 `deckPath(M, a, b)`
-- **1197** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1210 `lanterns(G, V, st)`
-  - 1240 `deckPoints(type)`
+  - 372 `glbParse(b64)`
+  - 393 `glbLoad(type)`
+  - 398 `glbPart(type, name)`
+  - 401 `glbPaint(part, liv)`
+  - 409 `glbZones(type)`
+  - 416 `glbModel(type, lod, liv)`
+  - 441 `vesselSpec(type)`
+  - 442 `buildVesselModel(type, lod, liv)`
+  - 483 `vesselGeo(type, hs, sp, house, anch)`
+  - 495 `vesselModel(type)`
+  - 496 `geoOf(type)`
+- **500** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
+  - 519 `modelLiv(L)`
+  - 526 `hullLiv(b)`
+  - 527 `livKey(liv)`
+  - 529 `livGeo(liv)`
+  - 534 `livStr(b)`
+  - 546 `livPen(s)`
+  - 548 `livMark(s)`
+  - 549 `livParse(s)`
+- **554** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
+  - 558 `topsides(type)`
+  - 576 `designLines(TS, liv)`
+  - 585 `glbDesign(type, part, liv)`
+  - 619 `designFits(type, k)`
+  - 626 `kitLiv(liv)`
+- **628** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
+- **677** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
+  - 688 `logoCanvas(cv, L, img)`
+  - 699 `logoStrips(type)`
+  - 701 `logoStr(L)`
+  - 702 `logoParse(s)`
+  - 706 `flagCanvas(cv, code, shape, logo)`
+  - 718 `flagOf(L)`
+- **719** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
+  - 728 `hullTris(type)`
+  - 742 `sideStrip(type, frac, hMax, aspect, drop)`
+  - 774 `nameStrips(type)`
+  - 810 `stripProud(type, st)`
+  - 833 `stripPaint(type, st)`
+  - 854 `markStrips(type)`
+  - 874 `anchorLen(bw)`
+  - 877 `markRGB(type, liv)`
+  - 885 `hullRGB(type, liv)`
+  - 895 `npcKit(L, B)`
+  - 898 `npcModel(type, lod, liv)`
+  - 900 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **912** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 925 `wkPart(name, kit)`
+  - 935 `wkPut(B, o, ax, s, at)`
+  - 945 `wkLimb(B, o, A, E, r)`
+  - 952 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 974 `vesselSVG(type, w, h)`
+- **1012** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1019 `deckMap(type)`
+  - 1148 `deckPass(M, k, q)`
+  - 1153 `passLine(M, A, B)`
+  - 1155 `linkPass(M, k, q)`
+  - 1159 `deckComp(M)`
+  - 1168 `deckPath(M, a, b)`
+- **1199** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1212 `lanterns(G, V, st)`
+  - 1242 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (471 linjer)
 
@@ -2967,7 +2967,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 31 `nearestBunker(eye)`
   - 32 `drawBunker(B, eye, VP, T, BMrel)`
 
-## `src/js/view3d/12-skiff.js` (348 linjer)
+## `src/js/view3d/12-skiff.js` (354 linjer)
 
 ---------- boat ----------
 
