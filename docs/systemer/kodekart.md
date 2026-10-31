@@ -1904,12 +1904,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (795 linjer)
+## `src/js/ui/phone/07-patch.js` (804 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 788 `patch()`
+  - 797 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -1941,7 +1941,7 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 121 `redning()`
 - **138** vessels: my vessel overview and the market
 
-## `src/js/ui/phone/10-fartoy.js` (143 linjer)
+## `src/js/ui/phone/10-fartoy.js` (145 linjer)
 
   - 10 `goals()`
   - 25 `goalsCard()`
@@ -1950,8 +1950,8 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 43 `market()`
   - 67 `specSecs(k, O)`
   - 91 `sheet(k, O)`
-  - 122 `fartoy(tab0)`
-- **142** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
+  - 124 `fartoy(tab0)`
+- **144** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
 
 ## `src/js/ui/phone/11-rederi.js` (70 linjer)
 
@@ -1994,7 +1994,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
 - **162** actions
   - 165 `switchVessel(k)`
 
-## `src/js/ui/phone/14-act.js` (246 linjer)
+## `src/js/ui/phone/14-act.js` (255 linjer)
 
   - 2 `act(a, d)`
   - 8 `act0(a, d)`
@@ -2830,7 +2830,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 307 `obox(nb, c, u, n, len, wid, y0, h, k)`
   - 313 `buildHarbourFittings()`
 
-## `src/js/view3d/06-buildings-lights.js` (309 linjer)
+## `src/js/view3d/06-buildings-lights.js` (390 linjer)
 
 ---------- real buildings (OpenStreetMap), streamed in 1 km chunks inside the terrain corridor ----------
 
@@ -2852,9 +2852,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 228 `drawSeaLights(VP, eye, t, near)`
 - **243** lights that light up round them at night (the user's wish 03.10.2026)
   - 248 `pickLights(eye, t)`
-  - 269 `plSet(u)`
-  - 274 `drawBeams(VP, eye, t)`
-  - 302 `drawChunkLights(VP, eye)`
+  - 273 `plSet(u)`
+  - 278 `drawBeams(VP, eye, t)`
+  - 329 `workLights(type, G)`
+  - 346 `airGlow()`
+  - 347 `drawWorkCones(VP, eye, t, BMrel, VG)`
+  - 383 `drawChunkLights(VP, eye)`
 
 ## `src/js/view3d/07-harbour-unit.js` (128 linjer)
 
@@ -2967,28 +2970,31 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 31 `nearestBunker(eye)`
   - 32 `drawBunker(B, eye, VP, T, BMrel)`
 
-## `src/js/view3d/12-skiff.js` (348 linjer)
+## `src/js/view3d/12-skiff.js` (409 linjer)
 
 ---------- boat ----------
 
 - **1** boat
 - **3** the starter boat: a 19 ft centre-console skiff, modelled in detail
-  - 54 `NB()`
-  - 62 `lookMesh(look)`
-  - 69 `nSetup(VP)`
-  - 75 `wearOn(t)`
-  - 76 `wearOff()`
-  - 77 `drawN(m, M)`
-  - 79 `texStrip(Pb, Pt)`
-  - 80 `texQuad(P0, P1, P2, P3)`
-  - 81 `mkTex()`
-  - 82 `upTex(t, cv)`
-  - 83 `drawTexQuad(q, tex, M, VP, lit, nrm)`
-- **91** the open boats worked by hand: one kit per type
-  - 99 `refreshPeople(K)`
-  - 110 `useHand(t)`
-  - 116 `handKit(t)`
-  - 137 `buildSkiff()`
+  - 86 `NB()`
+  - 94 `lookMesh(look)`
+  - 101 `nSetup(VP)`
+  - 107 `wearOn(t)`
+  - 108 `wearOff()`
+  - 116 `wetTick(key, M, sv, len, beam, top, spd)`
+  - 127 `lifeOn(key, M, sv, type, age, keep, spd, G)`
+  - 135 `lifeOff()`
+  - 138 `drawN(m, M)`
+  - 140 `texStrip(Pb, Pt)`
+  - 141 `texQuad(P0, P1, P2, P3)`
+  - 142 `mkTex()`
+  - 143 `upTex(t, cv)`
+  - 144 `drawTexQuad(q, tex, M, VP, lit, nrm)`
+- **152** the open boats worked by hand: one kit per type
+  - 160 `refreshPeople(K)`
+  - 171 `useHand(t)`
+  - 177 `handKit(t)`
+  - 198 `buildSkiff()`
 
 ## `src/js/view3d/13-instruments.js` (483 linjer)
 
@@ -3310,7 +3316,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **91** frame
   - 95 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (421 linjer)
+## `src/js/view3d/24-cinema.js` (454 linjer)
 
 ---------- cinema (the user's wish 03.10.2026) ----------
 
@@ -3325,8 +3331,9 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 247 `drawRoute(VP, eye)`
   - 259 `driftSpray(VP, eye, dt, t, col)`
   - 274 `drawSmoke(VP, eye, BM, dt)`
-  - 301 `drawEffects(VP, eye, BM, dt, t)`
-  - 403 `updateLabels(VP, eye, W, Hh)`
+  - 307 `scupperWater(VP, eye, BM, dt, t, col)`
+  - 333 `drawEffects(VP, eye, BM, dt, t)`
+  - 436 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (187 linjer)
 

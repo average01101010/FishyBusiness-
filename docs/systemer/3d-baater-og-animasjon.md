@@ -279,6 +279,49 @@ antallet om bord (`docs/systemer/redskap.md`).
 - **Taket:** `lod0` for egen båt rundt 300 000 trekanter (900 000 punkter i spillet, der hver trekant har egne punkter), `lodm` og NPC-nær 40 000 (120 000 punkter). `vessel3d` sjekker begge. Eksporten (`export_boat` i `tools/boats/bpyutil.py`) lager `lodm` med Decimate (collapse) av den bakte nærmodellen når den har over `LODM_TRIS` = 40 000 trekanter; flatene beholder materialet (malingssonene) og hjørnene den bakte skyggen. Pilotbåten `ringnot38` (119 302 trekanter nær) er den første med `lodm`; Decimate-steget virker (30.10.2026). De andre båtene er under 40 000 og har ingen `lodm`.
 - **Ultra etter målt bildetid** (valg 2 A; før kom ultra bare når den var valgt): `auto` prøver ultra på en enhet med 32-bits indekser som har tegnet Høy over 80 bilder/s i 20 s (over 55 når ultra har holdt før), går tilbake til Høy etter 3 s under 45, og husker utfallet (`dsb_ultra`, `ULTRA_VER`) så den ikke går opp og ned; ikke innen 2 minutter etter et steg ned. `QUAL.autoU = false` slår det av. Spilleren kan fortsatt velge nivå selv. Med 20 ms på Pad 3 i dag kommer forsøket ikke i gang før det som holder bildet, er funnet (profilen).
 
+## Skroget i sjøen, dekkslysene og spygattene (31.10.2026)
+
+Etter Geminis gjennomgang av grafikken (Jonas 31.10.2026: «Kjør på, men sørg for at det blir så bra som du klarer. Vent med F2»).
+Ingenting her rører modellene i `tools/boats/`; alt er skyggere og JavaScript, så revisjonen av båtene i andre økter går videre som før.
+
+- **Himmelen i lakken** (`LITN_FS` i `view3d/12-skiff.js`): fresnel-leddet speiler nå himmelskyggerens egen gradient (`uHor` mot
+  `uZen`, de samme som `env.hor` og `env.zen`) over horisonten, den mørke sjøen under den og gløden rundt sola (`uAirMie`). Det
+  erstatter en fast omgivelsesfarge (`uAmb` × 1,2). Fresnel er Schlicks (4 % rett på) ganget med glansen, så skrogsiden sett langs
+  båten skinner med himmelen, mens bunnstoffet (glans 0,15–0,2) nesten ikke speiler. Horisonten er en skarp linje i blank lakk og en
+  myk overgang i matt maling (bredden går med glansen i annen). Dette gjelder alt som tegnes med modellprogrammet (båter, folk, utstyr).
+- **Våtbeltet over vannlinja** (`LIFE_GL`, `wetTick`): for hvert hjørne av skroget (baug og hekk, babord og styrbord) holder spillet
+  høyden sjøen sist sto over vannlinja (`seaH`, de samme bølgene som tegnes), og den tørker 3,5 cm i sekundet. Under fart går baugbølgen opp
+  stevnen (omtrent en tredel av v²/2g). Det som rullingen og stampingen har dyppet, er mørkere og blankere, med en ujevn kant. Egen båt
+  (`'me'`) og flåten nær deg (én oppføring per båt i `WETS`, ryddes etter 30 s ute av syne).
+- **Alderen på flåten** (`npcAge` i `12-skiff.js`, `uAge`): hver båt i lokalflåten får en fast alder fra id-en (0,15–0,9). En gammel
+  båt har renner fra spygattene langs ripa og fra klussen i baugen (rustbrune på stål, gråbrune på glassfiber, tre og aluminium),
+  mattere maling og en skitten stripe av grønske like over vannlinja (bredere på store båter). **Egen båt eldes aldri av tid**: hun får
+  bare ripene og skadene fra Fysikk 3 (`wearOn`), og andres spillerbåter får alder 0. `G3._debug.hl.meAge` lar testene se det på
+  egen båt.
+- **Lyskjeglene fra dekkslysene** (`drawWorkCones` i `view3d/06-buildings-lights.js`, etter fyrlyktenes stråler i `frame0`): en
+  kjegle (16 sider, 5 ringer, halv vinkel 0,5 rad) fra lampa ned mot dekket eller sjøen, tegnet med lys som legges til, uten dybde,
+  begge sider. Lysstyrken følger |n·v| (lys i midten der blikket går gjennom mest luft, tynn i kanten), avtar fra lampa, og lufta i den
+  driver (støy i verdens ramme, brettet som `AIRE`), med fallende striper i regn og snø. Hvor mye den synes, er luftas (`airGlow`): litt
+  en klar natt, mye i tåke (`env.vis`), nedbør og sjørokk. Lampene: modellens egne `work`-lys (`geo.lights`); en lampe på kompassdekket
+  over broen er en lyskaster og holdes mørk (den brukes for å finne en blåse, ikke mens båten ligger og arbeider). En modell uten
+  `work`-lys får én på styrhustaket (sidelanternenes høyde) i enden mot arbeidsdekket, rettet mot det, om hun har styrhus. Egen båt
+  viser dem når hun ikke går (en skipper som går i mørket holder dekket mørkt så broen ikke blendes), flåten når de fisker (innen
+  900 m). Fargen: natrium, halogen eller kald LED etter båten. Flåtens dekkslys er også punktlys i `pickLights` (dekket og sjøen rundt
+  dem lyser opp). Av på «Lav». `G3._debug.cones` teller kjeglene.
+- **Spygattene** (`scupperWater` i `view3d/24-cinema.js`): når sjøen står over dekkskanten ved baugen, skuldrene eller hekken, kommer
+  vann om bord (`SCW.w`) etter hvor langt over, tre ganger så fort over skansekledningen. Det renner ut gjennom spygattene langs begge
+  sider (3–10 etter lengden), fortere jo mer som ligger der, mest ut av siden som står høyest, som små stråler som faller i sjøen og
+  blir borte der. Bare egen båt; håndbåtene har ingen spygatter. Halvparten så mange på «Lav» og «Middels».
+- **Testene** (ikke i `run.py`, for øynene): `tests/hullshot.py` (sol, sjø, gammel og baug; `KYST_DIST=dist-old` tar de samme bildene
+  av et annet bygg), `tests/coneshot.py` (en januarnatt i klar luft, tåke og regn; `CONE_TYPE`, `CONE_YAW`, `CONE_D`) og
+  `tests/scuppershot.py` (en småbåt mot kuling). `#life0` i adressen slår av skrogets liv.
+
+**Radarene i modellene står stille.** Skannerne som er modellert inn i skroget (pilotbåten `ringnot38.py`: den lange på
+kompassdekket og den korte på plattformen), er en del av skrogmodellen og kan ikke dreie. Den kjøpte radaren dreier (24 omdreininger
+i minuttet, `RADS` i `09-landing-deck.js`). Oppskrift til modellrevisjonen (F5): legg skannerstanga i et eget objekt med et ankerpunkt
+(slik `radarA` og `radar_bar4` er laget i `tools/gear`), eksporter den som egen del, og la `drawVessel` tegne den med `M4.RY(RADS.a)`
+om ankeret. Det ble ikke gjort her, fordi modellene revideres i andre økter.
+
 ## 5.26 Måker og halere fra Blender (03.10.2026)
 
 - **Måkene** (`tools/wild/maake.py`, `src/data/gull.b64`):
