@@ -128,7 +128,7 @@ det ga ujevn kvalitet mellom båtene og ble byttet ut til slutt. Regel for neste
 
 Dette er den viktigste delen å ta med videre. Etter hver endring:
 
-1. **Rendre fra fotovinklene** (`scratchpad/r38/shape.py`, ett navn per vinkel: `sq`, `pq`, `aer`, `slipq`, `sternv`, `sqz`,
+1. **Rendre fra fotovinklene** (nå `tools/boats/qa/shots.py` for K1–K7; for piloten `scratchpad/r38/shape.py`, ett navn per vinkel: `sq`, `pq`, `aer`, `slipq`, `sternv`, `sqz`,
    `whaft`, `chute`, `fcrane`, `fmast`, `rmast`, `sbowair`, `pmid`, `ustern`, `fcair`): himmellys 0,45, eksponering −1,0, så
    det hvite ikke brenner ut. Sammenlign med fotoet side om side; skriv ned hvert avvik.
 2. **Overlegg mot sidebildet** (`overlay3.py x0 x1 z0 z1 px/m`): ortografisk rendring fra babord i den målte skalaen, lagt over
@@ -345,12 +345,38 @@ og la vingenes ytre kant ligge i det. En femkant av glass som ikke er plan, blir
 
 **Blender-rendringen fra øyet sier lite om broa** (glasset rendres ugjennomsiktig); se broa i spillet.
 
+**Verktøyene ligger i repoet nå (`tools/boats/qa/`).** Tre revisjoner skrev sine egne rendrings- og sjekkskript i kladdemappa, og de
+forsvant med økta hver gang. Nå: `shots.py` (K1–K7 med K6 om natta, forfra, akterfra, under, øyet og skriptets egne nærbilder `CLOSE`),
+`sheet.py` (kontaktark å se på og sende), `stubcheck.py` (et skripts `check()` uten Blender, og `--volume` som veier et skrog fra
+snittfunksjonen), `lines_snekke26.py` (spantriss og volum med PIL) og `clip_snekke26.py` (klasjsjekken, eksempler å kopiere for neste båt),
+og `runtests.sh` (testene for en båt etter hverandre, én logg per test). Forbedre dem i stedet for å skrive nye.
+
+**Vei de båtene som ikke er revidert, før du velger den neste.** `stubcheck.py --volume` på snittfunksjonene 01.11.2026 (grove anslag:
+hvert skripts snittfunksjon må sjekkes for hva den returnerer): `plast31` rundt 22 t mot 6, `hs11` 45 mot 15, `kyst15` 121 mot 75, `kyst21` 249
+mot 190, `malo36` 29 mot 20; `hurtig11` (13 mot 12) og `havsjark35` (11 mot 12) ser riktige ut. Står i `kartlegging-spillet.md` (D8).
+
+**Én funksjon for hver malingslinje.** Planet `bisect_plane` skjærer langs, og funksjonen som maler flatene og slitasjen (`paint_line`),
+må være den samme linja; første versjon hadde en rett linje i snittet og en knekk midtskips i malingen.
+
+**Klasjsjekken må kjenne beslag som er skrudd på utsida.** En hette på en buet side ligger opptil 2 cm inn i flaten i sine egne hjørner;
+unnta slike på plassen (som lensepumpens utløp), ikke på materialet, ellers forsvinner ekte feil i samme materiale.
+
+**K6 fra begge sider.** Fra styrbord baug skal bare den grønne og den hvite synes (den røde og akterlanterna skjermet bort), fra babord den
+røde. Nattbildet fra spillet (`sn26shot.py`) og fra Blender viser om skjermene og sektorene er riktige.
+
+**Spillet dreier bare rattet på håndbåtene.** På en båt uten `hand` (snekka, sjarkene, kystbåtene) står rattet fast i modellen; bare
+skiffens ratt er en egen del spillet dreier (`skiff.wheel`). Rattet er likevel `F.helm_wheel`, så det kan bli en del når spillet kan dreie det
+på alle båter (backloggen).
+
 **Små ting fra økta:** et navn i skriptet kan skygge for et annet (`ROOT` var både repo-stien og en tabell; eksporten ville skrevet feil
 sted). En kommando i forgrunnen stopper etter 10 minutter; skjermbildene og testene kjøres i bakgrunnen med et lite skript som tar dem
-etter hverandre og skriver én logg per test (`runtests.sh`).
+etter hverandre og skriver én logg per test (`runtests.sh`). Vent på at bakgrunnsjobben selv melder seg ferdig; løkker som venter på
+den i bakgrunnen, stoppes etter 30 minutter. Pakk aldri `run.py` inn i en kortere `timeout`: da drepes den mens en 3D-test går, testen
+lever videre (stopp den på prosess-id, ikke `pkill -f` med et mønster fra ditt eget skall), og neste test kjører ved siden av den.
 
 ## Endringslogg
 
+- 01.11.2026: kap. 13 utvidet: verktøyene i `tools/boats/qa/`, vektene av de ureviderte båtene, malingslinja, klasjsjekken av beslag på utsida, K6 fra begge sider, rattet på båtene uten `hand`, tidsgrensene.
 - 01.11.2026: kap. 13, det revisjonen av plastsnekka lærte (regn ut det gamle skroget først, vannlinjebredden, kjølen i skrogets flate, styreplassen, dørhuset, broa i spillet).
 - 30.10.2026: første versjon, skrevet etter at båten lå i spillet (Jonas: «Skriv et detaljert dokument over hele byggingen»).
 - 31.10.2026: kap. 12, det revisjonen av skiffen lærte (sjekk at spillet viser modellen, det arvede, festene, arbeidsflyten, klasjsjekk av skrogets egne flater, fargegrenser med spring, bredden i vessel3d, felles beslag også for det spillet beveger, K6, miljøet).

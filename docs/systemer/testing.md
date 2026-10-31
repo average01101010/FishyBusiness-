@@ -11,7 +11,7 @@ Fra `CLAUDE.md` 26.10.2026 (Jonas 07.10.2026, «Spør før hver test»: «Dekker
 | `tut` | 40 min (ett format rundt 25 min) | veiledningen «Første tur», åpningen (brev, startsted) eller knappene den trykker på. Begge formater når tipsene eller knappene endres; ellers ett format med `KYST_TUT_ONE=liggende` eller `staaende` (Jonas 27.10.2026) |
 | `tutcoast` | 15 min (`--all` rundt en time) | feltet og miksen for første tur (`tutFieldNear` i `08c-start.js`, `TUTB`/`tutBonus`), reglene (`03e-rules.js`) eller fiskemodellen. Krever hele kysten i bygget, og står ikke i `run.py` sine lister. Kjøres for seg: `python3 tests/tutcoast.py` |
 | `heattest` | 30 min | varmekartet, ekkoloddet, sonaren eller fiskemodellen |
-| `vessel3d` | 24 min, over 40 min i skyen fra 30.10.2026 (går ut på tid i `run.py`: kjør den direkte, `python3 -u tests/vessel3d.py`) | båtmodellene, malingen eller detaljnivåene (`glbModel`) |
+| `vessel3d` | 24 min, over 40 min i skyen fra 30.10.2026, rundt 60 min 01.11.2026 (går ut på tid i `run.py`: kjør den direkte, `python3 -u tests/vessel3d.py`, eller med `tools/boats/qa/runtests.sh vessel3d`; for én båt `vessel3d.py <type>`, 4 min) | båtmodellene, malingen eller detaljnivåene (`glbModel`) |
 | `sea3d` | 15 min | havskyggeren eller sjøtilstanden |
 | `trackfollow` | 30 min | styringen, Autonav, rutene eller manøvreringsmodellen (`16b-dyn.js`) |
 | `tral3d` | 12 min | trål eller not |

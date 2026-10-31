@@ -29,3 +29,6 @@ FERDIG BETYR:
 - Du får lov å pushe og rulle ut til detstorebla.no (ccr-5e1ba2f4-pusvyd) når testene er grønne. Sjekk at utrullingen ble grønn.
 
 Kjør på.
+
+Verktøy (fra 01.11.2026): kritikksløyfens skript ligger i `tools/boats/qa/` (shots, sheet, stubcheck, clip- og lines-eksemplene, runtests);
+bruk og forbedre dem i stedet for å skrive nye i kladdemappa. Vei båten med `stubcheck.py --volume` før noe annet (`kartlegging-spillet.md` D8).

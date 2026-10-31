@@ -338,6 +338,7 @@ Funnet i bildene fra spillet og i skriptene. «T» betyr tolket fra bildet, ikke
 | D5 | Teinene om bord vises ikke når båten er rigget for teiner, bare under setting og trekking | M | `drawPots` er eneste sted teinene tegnes |
 | D6 | Påhengsmotoren på 90 hk har ingen egen modell (31.10.2026: `fittings.outboard(hp=90)` kan lage den; ikke koblet til `EQUIP.motor90` ennå) | L | `EQUIP.motor90`, `skiff59.py` |
 | D7 | VHF, AIS, kartplotter, CHIRP og sonar kjøpes, men synes ikke (radaren gjør det) | M | `EQUIP` |
+| D8 | Skrogenes volum under vannlinja mot `disp` (01.11.2026, `tools/boats/qa/stubcheck.py --volume`, grove anslag: hver snittfunksjon må sjekkes for hva den returnerer): snekka hadde 10,5 t mot 3,0 (rettet); `plast31` rundt 22 t mot 6, `hs11` 45 mot 15, `kyst15` 121 mot 75, `kyst21` 249 mot 190, `malo36` 29 mot 20; `hurtig11` og `havsjark35` stemmer. Revidert: trebåten 2,11 mot 1,9, skiffen 1,60 mot 1,0, snekka 3,58 mot 3,0 | M | `tools/boats/*.py`, `VESSELS.disp` |
 | D8 | Testen `vessel3d.py` setter et tak på 120 000 punkter (rundt 40 000 trekanter), mens båtplanen (B17) sier 80 000–250 000 trekanter. Planen kan ikke følges uten at testen endres | M | `tests/vessel3d.py`, `docs/batplan.md` |
 | D9 | Havbåtene har ingen festepunkter for utstyr (`kit` er tom). Alt er bakt inn, så det kan ikke oppgraderes eller byttes | H (for framtida) | `al45`, `krabbe50`, `tral60`, `not75` |
 

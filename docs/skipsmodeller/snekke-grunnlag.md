@@ -139,8 +139,8 @@ Typer i ankrene: `allround`, `port`, `stbd`, `stern`, `work` (arbeidslyset under
 
 ## 6.1 Kritikksløyfen (01.11.2026)
 
-Verktøyene i økta sin kladdemappe (`scratchpad/sn/`): `shots.py` (K1–K7 og nærbilder), `lines.py` (spantriss og profil fra tabellene,
-volumet), `clip.py` (klasjsjekken), `snekke26.py check` og eksporten.
+Verktøyene ligger i `tools/boats/qa/`: `shots.py` (K1–K7 og nærbilder), `lines_snekke26.py` (spantriss og profil fra tabellene,
+volumet), `clip_snekke26.py` (klasjsjekken), `snekke26.py check` og eksporten.
 
 | Runde | Hva | Funnet | Rettet |
 |---|---|---|---|

@@ -4,6 +4,8 @@
 
 **Spillet publiseres på detstorebla.no** (Jonas 08.10.2026): en push til arbeidsgrenen som endrer `src/` ruller det ut av `.github/workflows/deploy.yml` («Appen på Hetzner», PWA-bygget). Sjekk at kjøringen er grønn med `gh api repos/average01101010/FishyBusiness-/actions/runs`.
 
+**Før pushen til utrullingsgrenen** (01.11.2026): sjekk at den er en ren framoverføring, `git fetch origin ccr-5e1ba2f4-pusvyd && git merge-base --is-ancestor origin/ccr-5e1ba2f4-pusvyd HEAD`. Svarer den nei, har en annen økt pushet dit: slå den sammen inn i din gren og test før du pusher (`git push origin HEAD:ccr-5e1ba2f4-pusvyd`).
+
 **Når pushen ikke utløser kjøringen** (sett 31.10.2026): en push av en sammenslåing rett etter at en annen økt hadde pushet til grenen, fikk ingen kjøring, og den forrige pushen ble avbrutt av `cancel-in-progress`. Da startes begge kjøringene for hånd på grentoppen, uten tom commit: `gh api -X POST repos/average01101010/FishyBusiness-/actions/workflows/deploy.yml/dispatches -f ref=ccr-5e1ba2f4-pusvyd` og det samme for `pwa.yml` (begge har `workflow_dispatch`). Sjekk etterpå at `head_sha` i kjøringene er grentoppen.
 
 **Porter før utrullingen (29.10.2026):** begge workflowene kjører `node tests/unit/run.mjs` rett etter utsjekkingen (enhetstestene av kjernen, sekunder) og `KYST_DIST=dist-pwa python3 tests/run.py smoke boottest` etter bygget (spillet starter, leser en lagring og stepper klokka med hele kystens pakker, uten sidefeil; Playwright 1.63 og Chromium installeres i jobben, rundt et minutt). En rød stopper opplastingen, og det er neste oppgave. Lagringstesten (`savestest.py`, `docs/lansering.md` B7) venter på offentliggjøringen.

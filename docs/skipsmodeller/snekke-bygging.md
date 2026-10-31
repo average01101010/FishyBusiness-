@@ -47,10 +47,10 @@ ga 10,5 t mot 3,0 t).
 
 ## 3. Kritikksløyfen
 
-Verktøyene i økta sin kladdemappe (`scratchpad/sn/`): `shots.py` (K1–K7 i planlisten kap. 30.3, K6 om natta med lanternene tent, og
-nærbilder av styreplassen, vindskjermen, hekken, baugen, propellbrønnen og arbeidsplassen), `lines.py` (spantriss, profil og volum uten
-Blender), `clip.py` (klasjsjekken: beslagene, styreplassen og dørhuset mot skrogets innside i snittets høyde, under dørken og inni ruffen;
-skrogets egne dekk mot skrogets utside), `sheet.py` (kontaktark), `snekke26.py check` og eksporten. Rundene står i grunnlaget kap. 6.1.
+Verktøyene ligger i repoet, `tools/boats/qa/` (flyttet dit fra kladdemappa etter økta): `shots.py` (K1–K7 i planlisten kap. 30.3, K6 om natta med lanternene tent, og
+nærbilder av styreplassen, vindskjermen, hekken, baugen, propellbrønnen og arbeidsplassen), `lines_snekke26.py` (spantriss, profil og volum uten
+Blender), `stubcheck.py`, `clip_snekke26.py` (klasjsjekken: beslagene, styreplassen og dørhuset mot skrogets innside i snittets høyde, under dørken og inni ruffen;
+skrogets egne dekk mot skrogets utside), `sheet.py` (kontaktark), `snekke26.py check` (eller `stubcheck.py` uten Blender), `runtests.sh` og eksporten. Rundene står i grunnlaget kap. 6.1.
 
 ## 4. Spillet
 

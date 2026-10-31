@@ -42,3 +42,6 @@ Det neste økt bør vite (etter plastsnekka 01.11.2026):
   `scratchpad`-verktøyene står beskrevet i `snekke-bygging.md` kap. 3 (shots, lines, clip, sheet, runtests).
 - Felles beslag nye 01.11.2026: `single_lever`, `helm_seat`, `stern_lantern`, `foil_rudder`. Slå opp i `fittings.py` først.
 - Neste i rekkefølgen etter `docs/batplan.md` del 10: `hs11.py` (sjarkny), så `hurtig11.py` og `malo36.py`.
+
+Verktøy (fra 01.11.2026): kritikksløyfens skript ligger i `tools/boats/qa/` (shots, sheet, stubcheck, clip- og lines-eksemplene, runtests);
+bruk og forbedre dem i stedet for å skrive nye i kladdemappa. Vei båten med `stubcheck.py --volume` før noe annet (`kartlegging-spillet.md` D8).
