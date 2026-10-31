@@ -162,8 +162,9 @@
     // whoever works the deck leaves their place: alone, the skipper leaves the wheel
     // resting ashore in the naust or a rorbu (15-energy.js; Jonas 05.10.2026: «Ved hvile forsvinner skipperen fra båten») he is not aboard
     // never more people aboard than the crew list (tilbakemelding #24): the crew at the hauler and the one at the table leave their
-    // places, and with you ashore one of the crew is at the wheel
-    PMK('boat'); DECKACT = deckActivity(); const awaySk = (DECKACT.on && DECKACT.me) || gopMe() || (meAboard() && resting()), awayCr = DECKACT.on && DECKACT.crew ? 1 : 0;
+    // places, and with you ashore one of the crew is at the wheel; with you aboard another of your boats and no crew in this one, nobody
+    // is drawn at the wheel (tilbakemelding #102: the skipper sat in the boat while the game said she had no crew)
+    PMK('boat'); DECKACT = deckActivity(); const awaySk = (DECKACT.on && DECKACT.me) || gopMe() || (meAboard() && resting()) || (!meAboard() && !ncrew), awayCr = DECKACT.on && DECKACT.crew ? 1 : 0;
     const gHaul = S.boat.gop && !VG.hand ? Math.min(3, gopHands()) - (gopMe() ? 1 : 0) : 0, helmCr = !meAboard() && !awaySk ? 1 : 0;
     // under way the crew are inside (the user: no reason for them to stand on deck all day, 03.10.2026); whoever guts is at the table
     // (drawDeck), and in an open boat they sit where they are. The one at the table leaves their place (a skiff drew them twice).
