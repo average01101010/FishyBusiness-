@@ -265,7 +265,60 @@ nøyaktig 7,00 m.
 **Størrelsen.** Startbåten gikk fra 0,85 til 5,3 MB. For båter alle laster ved start (trebåten, skiffen), se på stasjonstallet
 midtskips der skroget er nesten rett, før detaljene ellers tas ned.
 
+## 12. Lært av revisjonen av skiffen (31.10.2026)
+
+Revisjonen av `skiff` (`skiff59.py`, `skiff-grunnlag.md`, `skiff-bygging.md`) var den andre uten bilder, og den første der modellen
+viste seg ikke å være i bruk i spillet. Dette gjelder alle båter etter den.
+
+**Sjekk at spillet faktisk viser modellen du reviderer, før du begynner.**
+- Før-bildene fra spillet viste den gamle håndlagde JS-skiffen, ikke Blender-modellen: `glbHas` husket «nei» fra før modellfilene var
+  hentet (`bootData`), og `VGEO.skiff` ble bestemt da siden lastet. Feilen hadde stått i to dager uten at noen så den. Spør spillet
+  (Playwright: `glbHas(t)`, `G3.SK.hullT`, `geoOf(t)`) og se på før-bildene med det i tankene: ligner de skriptets rendringer?
+- En båt som tegnes av et håndsett (`hand`, `12-skiff.js`) henter skrog, ratt, glass, skjermer og plassene fra modellen bare når
+  `buildSkiff`/`handKit` finner den. Øyet på broa kommer fra `GEO(type)`; sjekk at det står bak konsollen, og at skjermene synes over
+  knappene (`hp`).
+
+**Gå gjennom det arvede like kritisk som det nye.** Skjermene i det gamle skriptet hadde toppen mot skipperen og vendte ned (planet var
+lent feil vei; `nrm` snudde bare flaten). Jonas så det, ikke sløyfen. Sjekk for hver plate hvilken vei den vender mot den som ser på den.
+
+**Alt skal være festet slik det er på en ekte båt.** Vindskjermen svevde 6 cm over konsollen, og bøylens bein sto i lufta utenfor den.
+For hvert beslag: hva holder det, og hvor går boltene? Et bilde rett mot festet (nærbilde i `shots.py`) avslører det.
+
+**Spillets utstyr på modellens plasser må gi en arbeidsflyt som går an.** Sløyebordet (`work.table`) sto bak skipperen oppå setet, og
+blødekaret ved setet. Se på skjermbildene fra spillet med fisket for øye: fiskeren ved ripa og haleren, blødekaret ved ham, sløyebordet
+med plass å stå, fangstkaret med is ved bordet, avfallet over ripa. Gir spillets bord ingen god plass, får båten sitt eget (`work.own`,
+`top`), som trebåten og skiffen.
+
+**Klasjsjekken må også prøve skrogets egne flater.** En kolonne for en luke (±0,58 m) ble ikke klemt inn der båten smalner, og en
+strimmel av kastedekket stakk ut gjennom sida forut. Sjekken prøvde bare utstyret. Alle faste kolonner og rader i et nett skal klemmes
+inn til det som omgir dem, og sjekken skal ta med dekkene og foringen i skrogets nett.
+
+**Flaten skal ikke bytte oppdeling brått.** Radene opp sida sto på faste høyder ved podene og klappet sammen der kimmingen steg over dem;
+det ga en kile i skyggen på baugen. Gli over fra én oppdeling til en annen over en meter.
+
+**Fargegrensene følger skrogets linjer** (planlisten kap. 29). Skjær dem med `bisect_plane` på skrå plan (skiffen: 15 mm/m forover), ikke
+vannrett, og mal etter hvilken side av planet flaten ligger.
+
+**Det som stikker ut over ripa, teller i `vessel3d`** (bredden ±5 %, målt i båndet −0,3 til 1,5 m over vannlinja). Sløyebordet stakk
+16 cm ut og gjorde skroget 2,60 m bredt mot 2,45. Hold slikt innenfor rundt 6 cm forbi fenderlista.
+
+**Felles beslag, også det spillet beveger.** Det som gjentar seg på flere båter, lages i `fittings.py` før det brukes: `helm_wheel`,
+`outboard` (etter hestekrefter), `cleat`, `side_lantern`, `allround_lantern`, `bow_roller`, `hatch_lid`, `tread_plate`, `hole_lining`,
+`loft`. En del spillet dreier eller flytter (rattet), eksporteres i spillets egen ramme for den (`wheel`: aksen langs +z mot skipperen),
+så spillet kan bruke modellens i stedet for sitt eget.
+
+**Kameraene i planlisten kap. 30.3, også K6 om natta.** Lanternene ses best tent; et nattbilde i Blender (himmelen nesten svart,
+lanternene med sterk emisjon) viser om de står og vender riktig.
+
+**Miljøet og testene.**
+- Python-Playwright: `pip install playwright==1.63.0` (samme versjon som Chromium i `/opt/pw-browsers`); ikke `playwright install`.
+- Kjør testene mot det endelige bygget: hver ny eksport krever nytt bygg og at testene som dekker båten kjøres på nytt.
+- `pkill -f` med et mønster som står i ditt eget kommandoskall, dreper skallet. Stopp bakgrunnsjobber etter navn på skriptet alene.
+- Middelsmodellen: sett `LODM_TRIS` til 40 000 minus delene spillet tegner oppå den (skiffen: motoren og propellen, 3 172).
+- Sjekk GLB-ens `name` og andre felt i `extras` for ekte navn (B20): skiffens hadde produsentens.
+
 ## Endringslogg
 
 - 30.10.2026: første versjon, skrevet etter at båten lå i spillet (Jonas: «Skriv et detaljert dokument over hele byggingen»).
+- 31.10.2026: kap. 12, det revisjonen av skiffen lærte (sjekk at spillet viser modellen, det arvede, festene, arbeidsflyten, klasjsjekk av skrogets egne flater, fargegrenser med spring, bredden i vessel3d, felles beslag også for det spillet beveger, K6, miljøet).
 - 31.10.2026: kap. 11, det revisjonen av trebåten lærte (kontroll mot dataene uten bilder, klasjsjekk langs normalen, spillets krav til modellen, testene og miljøet).
