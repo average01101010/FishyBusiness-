@@ -1,0 +1,30 @@
+# Revisjonslogg A2 (open): tilstandsskifter minutt for minutt, spilt i testbygget 26.10.2026
+# hjem Finnsnes · mottak Botnhamn · felt [('f1', 2, 6), ('f2', 2, 6)] · juksplasser 1
+# slutt: on=False stop=Går ikke ut: lina er ikke egnet. wait=None
+# tid: dag klokke | tilstand (plan:status@havn/redskapsarbeid ?venter !stopp) | energi | høyeste slitenhet | last kg
+D1 03:01  -:port@finnsnes?dep                            en=100 fat=  0 hold=    0
+D1 05:00  fish:unmooring@finnsnes                        en=100 fat=  0 hold=    0
+D1 05:01  fish:sailing                                   en=100 fat=  0 hold=    0
+D1 05:21  fish:fishing/set-line                          en=100 fat=  0 hold=    0
+D1 05:30  fish:fishing                                   en=100 fat=  0 hold=    0
+D1 05:31  fish:sailing                                   en=100 fat=  0 hold=    0
+D1 05:41  fish:fishing/set-line                          en=100 fat=  0 hold=    0
+D1 05:50  fish:fishing                                   en=100 fat=  0 hold=    0
+D1 05:51  fish:sailing                                   en=100 fat=  0 hold=    0
+D1 05:55  fish:fishing                                   en=100 fat=  0 hold=    0
+D1 09:55  fish:sailing                                   en=100 fat= 20 hold=   88
+D1 10:07  fish:fishing/haul-line                         en=100 fat= 23 hold=   88
+D1 10:49  fish:fishing                                   en=100 fat= 23 hold=  133
+D1 10:50  fish:sailing                                   en=100 fat= 23 hold=  133
+D1 11:00  fish:fishing/haul-line                         en=100 fat= 23 hold=  133
+D1 11:43  fish:fishing                                   en=100 fat= 28 hold=  147
+D1 11:44  fish:sailing                                   en=100 fat= 28 hold=  147
+D1 14:58  -:port@botnhamn/land                           en=100 fat= 35 hold=  147
+D1 15:07  -:port@botnhamn                                en=100 fat= 19 hold=    0
+D1 17:14  -:port@botnhamn!stop:fail!off                  en=100 fat=  0 hold=    0
+# landinger (o.rep): [{"w": "D1 15:07", "port": "botnhamn", "kg": 147, "kr": 549, "h": 10.1, "landed": true}]
+# salg: [{"w": "D1 15:07", "port": "botnhamn", "kg": 147, "total": 882, "conf": 0}]
+# redskap i sjøen ved slutt: []
+# «Neste tur» slik siden viste den: [{"at": "D1 03:01", "sk": [["05:00", "Går fra Finnsnes"], ["05:17", "Setter 2 stamper på felt 2"], ["05:39", "Setter 2 stamper på felt 1"], ["06:05", "Jukser på plass 1 (høyst 4,0 t)"], ["10:16", "Trekker felt 2"], ["11:02", "Trekker felt 1"], ["14:46", "Leverer i Botnhamn"], ["18:59", "Hjem til Finnsnes og hvile"]]}]
+# slutt: {"en": 100, "fat": [0, 0], "cash": 997337, "hold": 0, "status": "port", "port": "botnhamn", "pos": [863.55, 336.19], "revenue": 882, "kg": 147, "costs": 3545}
+# meldinger: D1 15:07 Norges Råfisklag: Båten har ikke adgang til å fiske torsk, hyse og sei. Av disse kan bare 10 % av landingen være bifangst, og høyst 2 tonn torsk i året. 110 kg er inndratt, verdi 3 322 kr. || D1 15:07 Roger Strand: Driftsrapport: 147 kg levert i Botnhamn, 549 kr etter lott, skippertillegg 27 kr. || D1 15:14 Roger Strand: Går ikke ut: lina er ikke egnet. || D1 16:14 Roger Strand: Går ikke ut: lina er ikke egnet. || D1 17:14 Roger Strand: Går ikke ut: lina er ikke egnet. || D1 17:14 Driftsplan: Driftsplanen for «T-333-LK» har stoppet: Går ikke ut: lina er ikke egnet.
