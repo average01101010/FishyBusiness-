@@ -533,10 +533,10 @@ GUT = (2.30, 2.90)                                   # the gutting board across 
 def gut_top(): return zs(sum(GUT) / 2) + 0.07
 def gutting_board(A):
     """the boat's own gutting board across the port gunwale abreast the console (Jonas 31.10.2026: the game's table stood behind the
-    skipper, «Det går jo ikke»): a white polyethylene board from over the cockpit out past the rubbing strake, so the offal goes over
+    skipper, «Det går jo ikke»): a white polyethylene board from over the cockpit out a little past the rubbing strake, so the offal goes over
     the side, with a low lip round its three inboard sides and a slot to the outboard edge; on two brackets clamped to the gunwale;
     the one who guts stands on the sole between it and the console"""
-    x0, x1 = GUT; zt = gut_top(); yin = yi(x0) - 0.20; yout = hbs(x1) + 0.16; t = 0.025
+    x0, x1 = GUT; zt = gut_top(); yin = yi(x0) - 0.26; yout = hbs(x0) + 0.09; t = 0.025     # 6 cm past the rubbing strake: vessel3d's beam (±5 %)
     obox(A, ((x0 + x1) / 2, (yin + yout) / 2, zt - t / 2), ((x1 - x0) / 2, 0, 0), (0, (yout - yin) / 2, 0), (0, 0, t / 2), C['white'])
     for (a, b) in (((x0, yin), (x1, yin)), ((x0, yin), (x0, yout - 0.05)), ((x1, yin), (x1, yout - 0.05))):
         c = V(((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, zt + 0.012)); d = V((b[0] - a[0], b[1] - a[1], 0))
