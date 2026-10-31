@@ -20,12 +20,44 @@
     'float db=smoothstep(0.0,0.12,vP.y)*(1.0-smoothstep(0.9*top,1.02*top,vP.y)),dz=wn(vec2(vP.z*0.8+2.1,vP.y*2.6+vP.x*0.3)),rs=wn(vec2(vP.z*3.0,vP.y*9.0));' +
     'float dm=clamp(uWear.y*sd*db*(0.35+0.65*smoothstep(0.2,0.8,bow))*smoothstep(0.5,0.68,dz+0.3*uWear.y)*1.6,0.0,1.0);' +
     'bc=mix(bc,mix(bc*0.35,vec3(0.32,0.16,0.07),0.45*smoothstep(0.4,0.8,rs)),dm*0.9);gs*=1.0-0.85*dm;}';
-  const LITN_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uAlpha;uniform float uEmis;uniform vec2 uWet;varying vec3 vW;varying vec3 vN;varying vec4 vC;' + PLG + AIR + WEAR_GL +
+  // The hull's life at sea (Gemini's review, Jonas 31.10.2026: «Kjør på»), in the same boat-local metres and on the same sides as the
+  // wear, after it. uAge = (age 0-1, steel 0-1, 0, 0): an old hull's rust or grime runs down from the scuppers along the sheer and,
+  // most, from the hawse at the bow (rust-brown on steel, a grey-brown dirt on fibreglass, wood and aluminium), its paint is duller, and
+  // a scum line of weed and dirt lies in the boot top just over the waterline. Only the local fleet has an age (n.id's hash, 20b's
+  // npcAge): your own boat is never made to look old by time. uWL = how high the sea last wetted the hull over the waterline, at the
+  // bow to port, the bow to starboard, the stern to port and the stern to starboard (m, the model's own): what the roll and the pitch
+  // dipped under is dark and glossy, with a ragged edge, and dries from the top down (wetTick in 20b).
+  const LIFE_GL = 'uniform vec4 uAge;uniform vec4 uWL;' +
+    'void lifeHull(inout vec3 bc,inout float gs){vec3 nm=normalize(vNm);float sd=smoothstep(0.35,0.7,length(nm.xz)),top=uWear.z;if(sd<=0.0||vP.y<-0.1||vP.y>top*1.08)return;' +
+    'float u=clamp(0.5-vP.z/(2.0*uWear.w),0.0,1.0),bow=clamp(-vP.z/uWear.w,0.0,1.0);' +
+    'if(uAge.x>0.0){float a=uAge.x,sc=1.6,cz=vP.z/sc,ci=floor(cz),fz=fract(cz),sg=step(0.0,vP.x);' +
+    'float r1=wh(vec2(ci,sg+3.0)),r2=wh(vec2(ci+7.0,sg)),r3=wh(vec2(ci,sg+11.0));' +
+    // a streak where the cell has one (more the older): its foot runs 0.3-1.4 of the topsides' height down, wavering and narrowing
+    'float L=top*(0.25+0.9*r2)*(0.5+0.5*a),dy=top-vP.y,t=clamp(dy/L,0.0,1.0),x0=0.2+0.6*r3+(wn(vec2(vP.y*1.7,ci))-0.5)*0.12;' +
+    'float w=(0.05+0.09*r2)*(1.0+0.9*t)/sc,k=step(r1,0.18+0.6*a)*(1.0-smoothstep(w*0.4,w,abs(fz-x0)))*pow(1.0-t,1.4)*step(0.0,dy)*(0.55+0.45*wn(vec2(vP.z*9.0,vP.y*5.0)));' +
+    // the hawse: a broad run from high on the bow, the strongest on an old steel hull
+    'float hz=-0.8*uWear.w,hw=0.18+0.25*a;k=max(k,(1.0-smoothstep(hw*0.3,hw,abs(vP.z-hz+(wn(vec2(vP.y*1.3,sg))-0.5)*0.25)))*pow(clamp((top*0.98-vP.y)/(top*0.95),0.0,1.0),0.6)*step(vP.y,top*0.98)*a*(0.6+0.4*wn(vec2(vP.z*6.0,vP.y*3.0))));' +
+    'k=clamp(k*sd*(0.6+0.8*a),0.0,1.0);vec3 rc=mix(vec3(0.3,0.27,0.2),vec3(0.5,0.22,0.08),uAge.y);bc=mix(bc,mix(bc*0.5,rc,0.8),k*0.72);gs*=1.0-0.6*k;' +
+    // the scum line, and the paint's gloss worn by sun and salt
+    'float sb=(0.6+uWear.w/25.0)*(0.1+0.08*a),sl=smoothstep(-0.02,0.04,vP.y)*(1.0-smoothstep(sb*0.5,sb,vP.y+(wn(vec2(vP.z*2.2,sg))-0.5)*sb*0.5))*sd*a*(0.5+0.5*wn(vec2(vP.z*4.0,vP.y*20.0)));' +
+    'bc=mix(bc,mix(bc*0.6,vec3(0.24,0.25,0.13),0.7),sl*0.8);gs*=1.0-0.35*a-0.4*sl;}' +
+    'vec4 wl=uWL;float hp=mix(wl.z,wl.x,u),hs=mix(wl.w,wl.y,u),hw2=mix(hp,hs,step(0.0,vP.x));' +
+    'if(hw2>0.005){float e=hw2*(0.85+0.3*wn(vec2(vP.z*3.1,0.5)))-0.05*pow(wn(vec2(vP.z*7.0,1.7)),2.0),wet=(1.0-smoothstep(e-0.04,e+0.02,vP.y))*sd;' +
+    'bc*=1.0-0.3*wet;gs=mix(gs,max(gs,0.85),wet);}}';
+  const LITN_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uAlpha;uniform float uEmis;uniform vec2 uWet;uniform vec3 uZen;uniform vec3 uHor;varying vec3 vW;varying vec3 vN;varying vec4 vC;' + PLG + AIR + WEAR_GL + LIFE_GL +
     'void main(){vec3 n=normalize(vN);vec3 V=normalize(-vW);if(dot(n,V)<0.0)n=-n;float dif=max(dot(n,uSun),0.0);vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 bc=vC.rgb;float gs=vC.a;if(uWear.x+uWear.y>0.0)wearHull(bc,gs);' +
+    'if(uAge.x+uWL.x+uWL.y+uWL.z+uWL.w>0.0)lifeHull(bc,gs);' +
     // G6: in the wet (uWet.x) the rough surfaces darken and everything gets glossier, the flat the most (a wet deck or quay shines)
     'bc*=1.0-0.22*uWet.x*(1.0-gs);gs=mix(gs,max(gs,0.5+0.35*smoothstep(0.5,0.9,n.y)),uWet.x);' +
-    'float sp=pow(max(dot(reflect(-uSun,n),V),0.0),mix(12.0,90.0,gs))*gs;float fr=pow(1.0-max(dot(n,V),0.0),4.0)*gs*0.35;' +
-    'vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))+uSunCol*sp*0.55+uAmb*1.2*fr+bc*uEmis;gl_FragColor=vec4(fin(c,vW),uAlpha);}';
+    'float sp=pow(max(dot(reflect(-uSun,n),V),0.0),mix(12.0,90.0,gs))*gs;' +
+    // The sky in the paint (31.10.2026): what a glossy surface mirrors is the sky shader's own gradient (uHor to uZen) over the horizon,
+    // the dark sea under it, and the glow round the sun; the horizon is a sharp line in fresh lacquer and a soft blend in dull paint.
+    // Schlick's fresnel (4 % head on) times the gloss, so the hull side seen along her length shines with the sky and the bottom paint
+    // (gloss 0.15-0.2) hardly at all. Before, a flat ambient colour stood in for the sky (uAmb x 1.2).
+    'vec3 R=reflect(-V,n);float hw=mix(0.45,0.015,gs*gs);vec3 up=mix(uHor,uZen,pow(clamp(R.y,0.0,1.0),0.55)),lo=uHor*vec3(0.2,0.3,0.33)+vec3(0.006,0.02,0.026)*dot(uAmb,vec3(1.0));' +
+    'vec3 sky=mix(lo,up,smoothstep(-hw,hw,R.y+0.01))+uAirMie*1.5*pow(max(dot(R,uAirSun),0.0),mix(3.0,24.0,gs));' +
+    'float fr=(0.04+0.96*pow(1.0-max(dot(n,V),0.0),5.0))*gs*0.85;' +
+    'vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))*(1.0-0.5*fr)+uSunCol*sp*0.55+sky*fr+bc*uEmis;gl_FragColor=vec4(fin(c,vW),uAlpha);}';
   const TEX_VS = 'attribute vec3 aPos;attribute vec2 aUV;uniform mat4 uVP;uniform mat4 uM;varying vec2 vUV;varying vec3 vW;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vUV=aUV;gl_Position=uVP*w;}';
   const TEX_FS = 'precision mediump float;uniform sampler2D uTex;uniform float uLit;uniform vec3 uN;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;varying vec2 vUV;varying vec3 vW;' + AIR +
     'void main(){vec4 t=texture2D(uTex,vUV);if(t.a<0.05)discard;vec3 c=uLit>0.5?t.rgb*(uAmb+uSunCol*max(dot(uN,uSun),0.0)):t.rgb;gl_FragColor=vec4(fin(c,vW),t.a);}';
@@ -68,12 +100,41 @@
   }
   function nSetup(VP){
     gl.useProgram(PRGN.p); const u = PRGN.u; plSet(u);
-    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); airSet(u); gl.uniform1f(u.uAlpha, 1); gl.uniform1f(u.uEmis, 0); gl.uniform4fv(u.uWear, WEAR0); if (u.uWet) gl.uniform2f(u.uWet, WETON ? env.wet || 0 : 0, 0);
+    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); airSet(u); gl.uniform1f(u.uAlpha, 1); gl.uniform1f(u.uEmis, 0); gl.uniform4fv(u.uWear, WEAR0); if (u.uAge){ gl.uniform4fv(u.uAge, ZERO4); gl.uniform4fv(u.uWL, ZERO4); } if (u.uZen){ gl.uniform3fv(u.uZen, env.zen || env.fog); gl.uniform3fv(u.uHor, env.hor || env.fog); } if (u.uWet) gl.uniform2f(u.uWet, WETON ? env.wet || 0 : 0, 0);
   }
   // your own hull's wear for the next draws (core/16c-hull.js b.dmg), and back to none
-  const WEAR0 = new Float32Array([0, 0, 1, 1]);
+  const WEAR0 = new Float32Array([0, 0, 1, 1]), ZERO4 = new Float32Array(4);
   function wearOn(t){ const d = S.boat && S.boat.dmg; if (!d || !(d.s > 0.004 || d.h > 0.004) || !PRGN.u.uWear) return false; const h = hullOf(t), G = GEO(t); gl.uniform4fv(PRGN.u.uWear, [Math.min(1, d.s), Math.min(1, d.h), (G && G.gw) || h.f + 0.15, h.L / 2]); return true; }
   function wearOff(){ if (PRGN.u.uWear) gl.uniform4fv(PRGN.u.uWear, WEAR0); }
+  // The hull's life for the next draw of a hull (LIFE_GL; #life0 in the address: off). key: one per boat ('me', or the NPC's id); M: her
+  // model matrix relative to the eye without her scale; sv: her scale (NPCs are one model stretched to their size); age 0-1 (0 for your
+  // own boat and other players'; HL.meAge, 0, is the tests' handle on your own); keep: the wear is on (wearOn), so uWear's scratches and damage stay. lifeOff() after the hull.
+  const HL = {on:!/life0/.test(location.hash), meAge:0}, WETS = new Map(), SV1 = [1, 1, 1];
+  // how high the sea last wetted her at the bow and the stern, to port and to starboard: the sea's height (seaH, the waves the screen
+  // draws) over the hull's waterline at those points, kept as the highest and drying 3.5 cm a second (a painted side runs off in a few
+  // seconds, the dark of the wet a little longer); under way the bow wave climbs her stem (about a third of v²/2g, the stagnation height)
+  function wetTick(key, M, sv, len, beam, top, spd){
+    const now = performance.now() / 1000, ts = (performance.now() - T0) / 1000; let w = WETS.get(key);
+    if (!w){ w = {h:new Float32Array(4), t:now}; WETS.set(key, w); if (WETS.size > 48) for (const [k, q] of WETS) if (now - q.t > 30) WETS.delete(k); }
+    const dt = Math.min(0.5, Math.max(0, now - w.t)), zb = len * 0.4, xb = beam * 0.42, bw = Math.min(0.34 * (spd || 0) ** 2 / 19.6, 0.35 * top); w.t = now;
+    for (let i = 0; i < 4; i++){
+      const lx = (i & 1 ? xb : -xb) * sv[0], lz = (i < 2 ? -zb : zb) * sv[2], p = xf(M, [lx, 0, lz]);
+      const imm = (seaH(p[0] + EYE[0], p[2] + EYE[2], ts) - p[1] - EYE[1]) / sv[1] + (i < 2 ? bw : 0);
+      w.h[i] = Math.max(0, Math.min(top, Math.max(imm, w.h[i] - dt * 0.035)));
+    }
+    return w.h;
+  }
+  function lifeOn(key, M, sv, type, age, keep, spd, G){
+    const u = PRGN.u; if (!HL.on || !u.uAge) return false;
+    const V = VESSELS[type] || {}, h = hullOf(type), top = (G && G.gw) || h.f + 0.15, len = V.len || h.L || 8;
+    if (!keep) gl.uniform4fv(u.uWear, [0, 0, top, len / 2]);
+    gl.uniform4fv(u.uAge, [age || 0, V.hullMat === 'stål' ? 1 : V.hullMat === 'alu' ? 0.15 : 0, 0, 0]);
+    gl.uniform4fv(u.uWL, wetTick(key, M, sv || SV1, len, V.beam || 3, top, spd));
+    return true;
+  }
+  function lifeOff(){ const u = PRGN.u; if (!u.uAge) return; gl.uniform4fv(u.uAge, ZERO4); gl.uniform4fv(u.uWL, ZERO4); gl.uniform4fv(u.uWear, WEAR0); }
+  // the local fleet's age, from the boat's id: from fairly kept (0.15) to a hard-worked old one (0.9), most in between
+  const npcAge = n => n.player ? 0 : 0.15 + 0.75 * Math.pow((lookHash('age' + n.id) % 1000) / 1000, 0.8);
   function drawN(m, M){ gl.uniformMatrix4fv(PRGN.u.uM, false, m.o ? relM(m) : M); attr(0, m.pb, 3); attr(1, m.nb, 3); gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 0, 0); gl.drawArrays(gl.TRIANGLES, 0, m.n); }
   // a decal strip following a curved surface: bottom and top point rows, texture u runs along the rows
   function texStrip(Pb, Pt){ const p = [], uv = [], n = Pb.length - 1; for (let i = 0; i < n; i++){ const u0 = i / n, u1 = (i + 1) / n; p.push(...Pb[i], ...Pb[i + 1], ...Pt[i + 1], ...Pb[i], ...Pt[i + 1], ...Pt[i]); uv.push(u0, 1, u1, 1, u1, 0, u0, 1, u1, 0, u0, 0); } return {pb:buf(new Float32Array(p)), ub:buf(new Float32Array(uv)), n:p.length / 3}; }

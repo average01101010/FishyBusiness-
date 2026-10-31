@@ -185,7 +185,7 @@
     const sp = at(-0.42, 0.75, 0); drawN(PM.seat, chain(M4.T(sp[0], sp[1], sp[2]), M4.RY(-h))); drawN(PM.wire, limbM(at(-0.42, 0.02, 0), sp, 0.03));
   }
   function drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named){
-    const m = pvm(t, liv); if (!m) return; const P = people(); nSetup(VP); const wr = named && wearOn(t); drawN(named && !BENCH.on ? pvmHull(t, liv, ownTier(t, BMrel)) || m.hull : m.hull, BMrel); if (wr) wearOff();
+    const m = pvm(t, liv); if (!m) return; const P = people(); nSetup(VP); const wr = named && wearOn(t), lf = named && !BENCH.on && lifeOn('me', BMrel, null, t, HL.meAge, wr, bv.spd, G); drawN(named && !BENCH.on ? pvmHull(t, liv, ownTier(t, BMrel)) || m.hull : m.hull, BMrel); if (lf) lifeOff(); else if (wr) wearOff();
     if (named && BENCH.on){ for (let j = 1; j < BENCH.k; j++) drawN(m.hull, BMrel);
       for (let i = 0; i < BENCH.n; i++){ const M = chain(BMrel, M4.T(((i % 4) - 1.5) * ((G.beam || 4) + 3), 0, (Math.floor(i / 4) + 1) * ((G.stern || 5) * 2 + 6))); drawN(m.hull, M); }
       BENCH.tris = Math.round(m.hull.n / 3) * (BENCH.k + BENCH.n); }
@@ -238,7 +238,7 @@
     if (!kit.length) return;
     const P = people(); nSetup(VP);
     for (const n of kit){ const K = n.K, G = K.geo, at = (p, r) => chain(n.M, M4.T(p[0] * K.sv[0], p[1] * K.sv[1], p[2] * K.sv[2]), M4.RY(r || 0));
-      drawN(K.hull, chain(n.M, K.S));
+      const lf = lifeOn(n.id, n.M, K.sv, K.t, npcAge(n), false, n.st === 'fishing' || n.st === 'port' ? 0 : 4, G); drawN(K.hull, chain(n.M, K.S)); if (lf) lifeOff();
       if (!K.glass) continue;
       drawNPCAnchor(n, K);   // her anchors stowed in their roller or hawse, as on your own boat
       if (npcCrewDraw(n, K, eye, t)) continue;   // her people walk her deck like yours (deckcrew.js crewSim)
