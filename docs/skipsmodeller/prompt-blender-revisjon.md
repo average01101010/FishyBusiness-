@@ -1,6 +1,6 @@
 Revider båtmodellen: [BÅTENS NAVN]
 
-Dette er en eksisterende Blender-modell i spillet som ikke ble bygd etter noen plan. Løft den til samme nivå og arbeidsmåte som pilotbåten ringnot38 og de reviderte båtene trebat og skiff (F5 i docs/planer/grafikk-batmodeller.md). Finn selv ut hvilken type i VESSELS og hvilket skript i tools/boats/ navnet gjelder.
+Dette er en eksisterende Blender-modell i spillet som ikke ble bygd etter noen plan. Løft den til samme nivå og arbeidsmåte som pilotbåten ringnot38 og de reviderte båtene trebat, skiff og snekke (F5 i docs/planer/grafikk-batmodeller.md). Finn selv ut hvilken type i VESSELS og hvilket skript i tools/boats/ navnet gjelder.
 
 GRENEN: main er tom; spillet ligger på arbeidsgrenene. Bygg på den nyeste grenen med spillet (nå ccr-3349da69-ayyd2k, som har trebåten, skiffen, plastsnekka og lærdommene; den er også rullet ut til ccr-5e1ba2f4-pusvyd) og commit underveis.
 
@@ -39,7 +39,7 @@ Kjør på.
 Det neste økt bør vite (etter plastsnekka 01.11.2026):
 - Regn ut det gamle skrogets deplasement før du ser på bildene (kap. 13): snekka hadde 10,5 t mot 3,0 t uten at noen hadde sett det.
 - `tests/sn26shot.py` er malen for før- og etter-bildene (utenfra K1 og K2, broa, dekket under fiske med to mann og fangst, natt K6), og
-  `scratchpad`-verktøyene står beskrevet i `snekke-bygging.md` kap. 3 (shots, lines, clip, sheet, runtests).
+  verktøyene for kritikksløyfen ligger i `tools/boats/qa/` (se under).
 - Felles beslag nye 01.11.2026: `single_lever`, `helm_seat`, `stern_lantern`, `foil_rudder`. Slå opp i `fittings.py` først.
 - Neste i rekkefølgen etter `docs/batplan.md` del 10: `hs11.py` (sjarkny), så `hurtig11.py` og `malo36.py`.
 
