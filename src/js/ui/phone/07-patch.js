@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['om-bord-311026', '31.10.2026', 'Hvem som er om bord', 'Who is aboard', [
+       ['Er du om bord på en annen av båtene dine, og denne ikke har mannskap, står det ingen skipper i den i 3D lenger. Meldingen «Båten har ikke mannskap» sier nå hvilken båt du er om bord på, og at du kan gå om bord på denne i Rederi-appen.', 'When you are aboard another of your boats and this one has no crew, no skipper stands in her in 3D any more. The message «The boat has no crew» now says which boat you are aboard, and that you can go aboard this one in the Company app.'],
+    ]],
     ['verft-3d-301026', '30.10.2026', 'Båten i 3D på verftet', 'The boat in 3D at the yard', [
        ['Når du ser på en båt i 3D i båthandelen, vises ikke gass, ratt og «Kast loss» for din egen båt. Kaster båten din loss eller går på grunn mens du ser, lukkes visningen og kameraet går tilbake til henne.', 'While you look at a boat in 3D in the boat market, the throttle, the wheel and «Cast off» for your own boat are hidden. If your boat casts off or runs aground while you look, the showroom closes and the camera goes back to her.']]],
     ['driftsplan-fangst-301026', '30.10.2026', 'Driftsplanen viser fangsten om bord', 'The operations plan shows the catch aboard', [

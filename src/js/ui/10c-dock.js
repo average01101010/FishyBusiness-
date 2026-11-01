@@ -240,7 +240,7 @@ const DOCK = (() => {
   async function moorGo(mo){
     const b = S.boat; menu = null;
     if (b.status !== 'idle' || (S.plan && S.plan.depAt)){ toast(L('Båten er opptatt. Stopp det den holder på med først.', 'The boat is busy. Stop what it is doing first.')); return; }
-    if (!meAboard() && !crewAboard().length){ toast(L('Båten har ikke mannskap. Uten deg om bord trenger den folk.', 'The boat has no crew. Without you aboard it needs hands.')); return; }
+    if (!meAboard() && !crewAboard().length){ toast(L(...noCrewText())); return; }
     let res; try { res = await leiaRoute({x:b.pos.x, y:b.pos.y}, {x:mo.x, y:mo.y}, null, mo.id); } catch (e){ console.error(e); res = {why:['Fant ingen vei inn.', 'Found no way in.']}; }
     if (res.why){ toast(L(res.why[0], res.why[1])); return; }
     if (b.status !== 'idle') return;   // something else started while the way was found
