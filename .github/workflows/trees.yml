@@ -1,0 +1,53 @@
+# The trees along the whole coast (G4, tools/trees/trees.py): the cover and the height of the canopy per game tile from Meta and WRI's
+# canopy height maps v2 (CC BY 4.0, s3://dataforgood-fb-data), in parts side by side, kept as a release trees-<run number>.
+# Started by a push that changes tools/trees/trees.json (on any branch), or by hand.
+name: Trær langs kysten
+on:
+  push:
+    paths: ['tools/trees/trees.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: '1'
+jobs:
+  part:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        k: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: pip install numpy pyproj rasterio
+      - run: python3 tools/trees/trees.py part ${{ matrix.k }} 12
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trees-part-${{ matrix.k }}
+          path: tools/trees/out/tiles/
+          retention-days: 3
+  release:
+    needs: part
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: trees-part-*
+          path: trees
+          merge-multiple: true
+      - name: The release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls trees | wc -l
+          TAG=trees-${{ github.run_number }}
+          tar czf trees.tgz trees
+          gh release create "$TAG" trees.tgz --target "${{ github.sha }}" --title "Trær $TAG" \
+            --notes "Canopy cover and height per coastal tile (tools/trees/trees.py, commit ${{ github.sha }}). Canopy height: Meta and World Resources Institute, CC BY 4.0."

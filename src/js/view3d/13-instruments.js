@@ -245,7 +245,7 @@
         }
       } else {
         // jigging machines on the rail work by themselves; the fisher takes the fish off as they come up
-        const n = Math.min(3, S.equip.jukse);
+        const n = Math.min(SKA.mach.length, S.equip.jukse);
         while (A.mc.length < n) A.mc.push({st:'jig', t:0, fish:[]});
         let busy = null;
         for (let k = 0; k < n; k++){ const m = A.mc[k], P = SKA.mach[k], G = SK.machG, tip = G ? [P[0] + G.x.tip[0], P[1] + G.x.tip[1], P[2] + G.x.tip[2]] : [P[0] + 0.8, P[1] + 0.62, P[2]]; m.t += dt;
@@ -313,7 +313,7 @@
   }
   function drawSkiffGlass(BMrel, VP){ if (SK) drawGlass(SK.glass, BMrel, VP); }
   // the jigging machines on a boat with a wheelhouse (Jonas 13.10.2026: «alle båter utenom havflåten skal ha anledning til å bruke
-  // juksamaskin»): up to three on the starboard rail by the working deck, clear of the hauler. Where the rail is, is read off the
+  // juksamaskin»): on the rails by the working deck (starboard first, then port), clear of the hauler. Where the rail is, is read off the
   // boat's own model once per type: in a slice across her at each place, the top of the outermost part of her side.
   const JIGR = {}, JIG_Z = {breisjark:[3.5, 4.25, 5.0]};    // where the side is covered forward (her shelter), the open deck aft
   function jigRail(t, G){
@@ -322,14 +322,18 @@
     if (P && G && G.deck){ const half = (G.beam || 3) / 2, hz = G.hauler ? G.hauler[2] : 1e9, st = G.stern || 4, bw = G.bow != null ? G.bow : -st, dy = G.deck.y;
       // the places to try: out from the middle of the working deck both ways, clear of the hauler and the ends
       const zs = JIG_Z[t] || [...Array(24).keys()].map(k => G.deck.z + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.35).filter(z => Math.abs(z - hz) > 0.6 && z < st - 0.9 && z > bw + 1.5);
-      for (const z of zs){ if (out.length >= 3) break; if (out.some(q => Math.abs(q[2] - z) < 0.7)) continue;
-        let xm = 0; for (let i = 0; i < P.length; i += 3) if (Math.abs(P[i + 2] - z) < 0.12 && P[i] > xm && P[i] < half + 0.3) xm = P[i];
-        if (xm < half * 0.6) continue;
-        // the top of her side there, a rail between knee and hip height over the deck
-        let ym = -1e9; for (let i = 0; i < P.length; i += 3) if (Math.abs(P[i + 2] - z) < 0.12 && P[i] > xm - 0.18 && P[i + 1] > ym && P[i + 1] < dy + 1.3) ym = P[i + 1];
-        if (ym < dy + 0.35) continue;
-        out.push([xm - 0.05, ym, z]); }
-      out.sort((a, b) => a[2] - b[2]); }
+      // as many as she may carry (jukseMax; Jonas' survey 30.10.2026, D2: only three were drawn of up to eight): the starboard rail
+      // first, then the port one, each place's fourth number the side (1 starboard, -1 port: the machine turned round to face out)
+      const max = Math.max(1, (VESSELS[t] || {}).jukseMax || 3);
+      for (const sd of [1, -1]){ const side = [];
+        for (const z of zs){ if (out.length + side.length >= max || side.length >= Math.ceil(max / 2) + (sd > 0 ? 1 : 0)) break; if (side.some(q => Math.abs(q[2] - z) < 0.7)) continue;
+          let xm = 0; for (let i = 0; i < P.length; i += 3){ const xs = sd * P[i]; if (Math.abs(P[i + 2] - z) < 0.12 && xs > xm && xs < half + 0.3) xm = xs; }
+          if (xm < half * 0.6) continue;
+          // the top of her side there, a rail between knee and hip height over the deck
+          let ym = -1e9; for (let i = 0; i < P.length; i += 3) if (Math.abs(P[i + 2] - z) < 0.12 && sd * P[i] > xm - 0.18 && P[i + 1] > ym && P[i + 1] < dy + 1.3) ym = P[i + 1];
+          if (ym < dy + 0.35) continue;
+          side.push([sd * (xm - 0.05), ym, z, sd]); }
+        side.sort((a, b) => a[2] - b[2]); out.push(...side); } }
     return (JIGR[t] = out);
   }
   const JA = {mc:[], t:null};
@@ -340,19 +344,21 @@
     if (!own || !MG){ JA.mc = []; return; }
     nSetup(VP);
     if (JA.t !== t){ JA.t = t; JA.mc = []; }
-    const spots = jigRail(t, G), n = Math.min(3, S.equip.jukse, spots.length); if (!n) return;
+    const spots = jigRail(t, G), n = Math.min(S.equip.jukse, spots.length); if (!n) return;
+    // a machine's frame, and a point of it, at its place (turned round on the port rail)
+    const atM = P => P[3] < 0 ? chain(BMrel, M4.T(P[0], P[1], P[2]), M4.RY(Math.PI)) : chain(BMrel, M4.T(P[0], P[1], P[2])), off = (P, v) => [P[0] + (P[3] || 1) * v[0], P[1] + v[1], P[2] + (P[3] || 1) * v[2]];
     const Q = window.CATCHQ || (window.CATCHQ = []), nowT = performance.now(), T = (SK.rodT || 0), L2R = q => xf(BMrel, q), x = MG.x, sp = x.spool, sh = x.sheave;
     while (Q.length && (nowT - Q[0].t > 15000 || Q.length > 12)) Q.shift();
-    if (!run){ JA.mc = []; for (let k = 0; k < n; k++){ const P = spots[k]; drawN(MG.body, chain(BMrel, M4.T(P[0], P[1], P[2])));
-      if (MG.spool) drawN(MG.spool, chain(BMrel, M4.T(P[0] + sp[0], P[1] + sp[1], P[2] + sp[2]))); if (MG.sheave) drawN(MG.sheave, chain(BMrel, M4.T(P[0] + sh[0], P[1] + sh[1], P[2] + sh[2]))); } return; }
+    if (!run){ JA.mc = []; for (let k = 0; k < n; k++){ const P = spots[k], M = atM(P); drawN(MG.body, M);
+      if (MG.spool) drawN(MG.spool, chain(M, M4.T(sp[0], sp[1], sp[2]))); if (MG.sheave) drawN(MG.sheave, chain(M, M4.T(sh[0], sh[1], sh[2]))); } return; }
     while (JA.mc.length < n) JA.mc.push({st:'jig', t:0, fish:[], a:0});
-    for (let k = 0; k < n; k++){ const m = JA.mc[k], P = spots[k], tip = [P[0] + x.tip[0], P[1] + x.tip[1], P[2] + x.tip[2]]; m.t += dt;
-      drawN(MG.body, chain(BMrel, M4.T(P[0], P[1], P[2])));
+    for (let k = 0; k < n; k++){ const m = JA.mc[k], P = spots[k], M = atM(P), tip = off(P, x.tip); m.t += dt;
+      drawN(MG.body, M);
       if (m.st === 'jig' && Q.length && (Q.length >= 2 || nowT - Q[0].t > 2000)){ m.fish = Q.splice(0, 3); m.st = 'haul'; m.t = 0; m.d0 = -1.6 - 0.5 * m.fish.length; }
       m.a = m.st === 'jig' ? 1.6 * Math.pow(Math.max(0, Math.sin(T * 2.6 + k * 1.7)), 3) : m.a - dt * 9;
-      if (MG.spool) drawN(MG.spool, chain(BMrel, M4.T(P[0] + sp[0], P[1] + sp[1], P[2] + sp[2]), M4.RZ(m.a)));
-      if (MG.sheave) drawN(MG.sheave, chain(BMrel, M4.T(P[0] + sh[0], P[1] + sh[1], P[2] + sh[2]), M4.RZ(m.a * x.spoolR / x.sheaveR)));
-      SK.lines.push([L2R([P[0] + sp[0], P[1] + sp[1] + x.spoolR, P[2] + sp[2]]), L2R([P[0] + x.lead[0], P[1] + x.lead[1], P[2] + x.lead[2]])]);
+      if (MG.spool) drawN(MG.spool, chain(M, M4.T(sp[0], sp[1], sp[2]), M4.RZ(m.a)));
+      if (MG.sheave) drawN(MG.sheave, chain(M, M4.T(sh[0], sh[1], sh[2]), M4.RZ(m.a * x.spoolR / x.sheaveR)));
+      SK.lines.push([L2R(off(P, [sp[0], sp[1] + x.spoolR, sp[2]])), L2R(off(P, x.lead))]);
       if (m.st === 'jig'){ const bob = 0.25 * Math.pow(Math.max(0, Math.sin(T * 2.6 + k * 1.7)), 3); SK.lines.push([L2R(tip), L2R([tip[0], -0.3 - bob, tip[2]])]); }
       else { const end = m.d0 + m.t * 1.3; let low = null;
         // the fish come up on the line and are taken in over the rail at the top (onto the deck, where the catch is shown)
@@ -368,6 +374,30 @@
     if (!m || !m.n) return; nSetup(VP); gl.uniform1f(PRGN.u.uAlpha, 0.2);
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
     drawN(m, BMrel); gl.disableVertexAttribArray(2);
+    gl.depthMask(true); gl.disable(gl.BLEND); gl.useProgram(PL.p);
+  }
+  // Rain on the wheelhouse's windows, seen from the helm (G6): beads that sit on the glass (more the harder it rains, some left while it
+  // dries) and drops that run down with a wet trail, in the glass's own frame so they stay on the window as the boat moves; spray in a
+  // gale too. Drawn over the glass with the same mesh; each bead lighter at the top and darker under, as a drop shows the sky upside down.
+  const DROP_FS = 'precision highp float;uniform float uRain;uniform float uT;uniform vec3 uSunCol;uniform vec3 uAmb;varying vec3 vW;varying vec3 vN;varying vec4 vC;varying vec3 vP;varying vec3 vNm;' + NOISE +
+    'void main(){vec3 a=abs(vNm);vec2 q=a.x>a.z?vP.zy:vP.xy;' +
+    'vec2 g=q*38.0;vec2 c=floor(g);vec2 f=fract(g)-0.5;float on=step(hs(c),uRain*0.32);vec2 o=vec2(hs(c+7.1),hs(c+3.3))-0.5;float r=0.08+0.3*pow(hs(c+1.7),2.0);' +
+    'vec2 dl=f-o*(1.0-2.0*r);float dd=length(dl*vec2(1.0,1.15));float bead=on*(1.0-smoothstep(r*0.75,r,dd));float lt=smoothstep(-0.3,0.7,dl.y/r);' +
+    'float cl=floor(q.x*30.0);float hc=hs(vec2(cl,9.0));float run=step(hc,uRain*0.3);float fx=fract(q.x*30.0)-0.5;float u=fract((q.y+uT*(0.05+0.12*hc))*0.8+hc*5.0);' +
+    'float head=run*(1.0-smoothstep(0.22,0.42,abs(fx)))*(1.0-smoothstep(0.006,0.018,u));float trail=run*(1.0-smoothstep(0.06,0.14,abs(fx)))*smoothstep(0.012,0.02,u)*(1.0-smoothstep(0.02,0.25,u));' +
+    'bead*=1.0-run*(1.0-smoothstep(0.3,0.5,abs(fx)))*smoothstep(0.0,0.02,u)*(1.0-smoothstep(0.02,0.5,u));' +
+    'float al=max(bead,head)*0.45+trail*0.14;if(al<0.01)discard;vec3 base=uAmb*1.3+uSunCol*0.25;vec3 col=base*(0.45+1.1*max(lt*bead,head*0.8))+uSunCol*0.5*smoothstep(0.55,0.9,lt)*bead;' +
+    'gl_FragColor=vec4(col,al);}';
+  let PDROP = null;
+  function drawDrops(m, BMrel, VP, t){
+    if (!m || !m.n || !cam.helm || !WETON) return;
+    const rain = env.temp > 0.5 ? sstep(0.04, 0.7, env.precip || 0) : 0, spray = sstep(12, 22, env.wind || 0) * 0.5, R = Math.max(rain, spray, (env.wet || 0) * 0.45);
+    if (R < 0.03) return;
+    if (!PDROP){ try { PDROP = program(LITN_VS, DROP_FS, ['aPos', 'aNor', 'aCol'], 'draaper'); } catch (e){ console.warn('draaper', e.message || e); PDROP = false; } }
+    if (!PDROP) return;
+    gl.useProgram(PDROP.p); const u = PDROP.u; gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniformMatrix4fv(u.uM, false, BMrel); gl.uniform1f(u.uRain, R); gl.uniform1f(u.uT, t % 3600); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb);
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
+    attr(0, m.pb, 3); attr(1, m.nb, 3); gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 0, 0); gl.drawArrays(gl.TRIANGLES, 0, m.n); gl.disableVertexAttribArray(2);
     gl.depthMask(true); gl.disable(gl.BLEND); gl.useProgram(PL.p);
   }
   function buildBoat(){

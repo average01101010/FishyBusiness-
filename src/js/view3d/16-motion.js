@@ -208,7 +208,7 @@
   }
 
   // ---------- particles ----------
-  const PN = 900, pp = new Float64Array(PN * 3); let pinit = false;
+  const PN = 900, pp = new Float64Array(PN * 3), PFL = new Float32Array(PN * 3); let pinit = false;
   const TRAIL = [];
   const WN = 700, wk = {x:new Float64Array(WN), y:new Float64Array(WN), z:new Float64Array(WN), vx:new Float64Array(WN), vy:new Float64Array(WN), vz:new Float64Array(WN), age:new Float64Array(WN).fill(99), life:new Float64Array(WN).fill(1), g:new Float64Array(WN), n:0, acc:0, sacc:0};
   function spawn(x, y, z, vx, vy, vz, life, g){ const i = wk.n = (wk.n + 1) % WN; wk.x[i] = x; wk.y[i] = y; wk.z[i] = z; wk.vx[i] = vx; wk.vy[i] = vy; wk.vz[i] = vz; wk.age[i] = 0; wk.life[i] = life; wk.g[i] = g; }

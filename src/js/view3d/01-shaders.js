@@ -4,13 +4,38 @@
   const PLG = '\n#define NPL 8\nuniform vec4 uPL[NPL];uniform vec3 uPC[NPL];uniform float uNPL;' +
     'vec3 pLit(vec3 p,vec3 n){vec3 s=vec3(0.0);for(int i=0;i<NPL;i++){if(float(i)>=uNPL)break;float R=uPL[i].w;if(R<=0.0)continue;vec3 L=uPL[i].xyz-p;float r2=dot(L,L);float a=max(0.0,1.0-r2/(R*R));' +
     'if(a<=0.0)continue;s+=uPC[i]*a*a*(0.2+0.8*max(dot(n,L*inversesqrt(r2+0.01)),0.0));}return s;}';
+  // The air and the light's shoulder (G5 of docs/planer/grafikk-natur-og-miljo.md), the end of every lit fragment shader: fin(c, v) for
+  // the colour c of a point at v from the eye. The haze as before has the visibility's density (uFogD) and the horizon's colour (uFog),
+  // but the extinction is per channel, the blue more than the red, so the far fells go blue and lose their contrast before they fade into
+  // the sky (Rayleigh), and towards the sun the haze is lit warm with the sky's own glow round the sun (Mie, uAirMie = the sky shader's
+  // term), so the land meets the horizon in the same colour. tone() keeps every value under 0.8 as it is and bends those above it softly
+  // towards white instead of clipping (the snow, the foam and the sunlit hulls keep their shading); a filmic curve with a toe was not
+  // taken: it darkens the night and the shadows that were tuned without it. uAirOn 0 (a program not set, or #air0) is the old haze.
+  // The cloud on the fells is here too (uCB: the base in m and how much; uCC its colour; uEye the eye's x and z modulo 4096 and its
+  // height), with one ragged edge for everything (the noise of the world's x and z, as the terrain's own wp), so the trees, the houses and
+  // the boats on a fell go into the cloud with the ground under them (with a smooth edge of their own the trees stood dark in it)
+  const AIR = 'uniform vec3 uAirSun;uniform vec3 uAirMie;uniform float uAirOn;uniform vec3 uCB;uniform vec3 uCC;uniform vec3 uEye;uniform vec2 uCD;' +
+    'float aH(vec2 p){vec3 q=fract(vec3(p.xyx)*0.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}' +
+    'float aN(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.0-2.0*f);return mix(mix(aH(i),aH(i+vec2(1.0,0.0)),u.x),mix(aH(i+vec2(0.0,1.0)),aH(i+vec2(1.0,1.0)),u.x),u.y);}' +
+    'vec3 tone(vec3 c){vec3 e=max(c-0.8,0.0);return min(c,vec3(0.8))+0.2*(1.0-exp(-e/0.2));}' +
+    'vec3 fin(vec3 c,vec3 v){float d=length(v);float k=uFogD*d;k*=k;if(uAirOn<0.5)return mix(c,uFog,1.0-exp(-k));' +
+    // (29.10.2026, Jonas' picture from Finnsnes: the cloud read as snow, white and in fingers down the fall line, standing still): the
+    // edge only from noise of 300-700 m, which drifts with the wind (uCD, m), a wide soft edge thin at its foot, and the cloud a little
+    // darker than the sky
+    'if(uCB.y>0.0){vec2 wq=mod(v.xz+uEye.xy+uCD,4096.0);float e=(aN(wq/700.0+31.0)-0.5)*170.0+(aN(wq/300.0+7.0)-0.5)*70.0;float k2=smoothstep(uCB.x-90.0,uCB.x+260.0,v.y+uEye.z+e);c=mix(c,uCC,k2*k2*(3.0-2.0*k2)*uCB.y);}' +
+    'vec3 T=exp(-k*vec3(0.8,0.95,1.2));float mu=max(dot(v/max(d,1.0),uAirSun),0.0);vec3 s=uFog+uAirMie*pow(mu,12.0);return tone(c*T+s*(1.0-T));}';
   const LIT_VS = 'attribute vec3 aPos;attribute vec3 aCol;uniform mat4 uVP;uniform mat4 uM;varying vec3 vW;varying vec3 vC;' +
     'void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vC=aCol;gl_Position=uVP*w;}';
   const LIT_FS = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;' +
-    'uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uEmis;uniform vec4 uHole;uniform vec4 uOver;varying vec3 vW;varying vec3 vC;' + PLG +
+    'uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uEmis;uniform vec4 uHole;uniform vec4 uOver;uniform vec2 uWet;varying vec3 vW;varying vec3 vC;' + PLG + AIR +
     'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec3 n=normalize(cross(dFdx(vW),dFdy(vW)));if(dot(n,vW)>0.0)n=-n;float dif=max(dot(n,uSun),0.0);' +
-    'vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 bc=mix(vC,uOver.rgb,uOver.a);vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))+bc*uEmis;float d=length(vW);float f=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(c,uFog,f),1.0);}';
-  const TER_VS = 'attribute vec3 aPos;attribute vec3 aCol;attribute vec3 aNor;attribute float aShd;attribute vec4 aMat;uniform mat4 uVP;uniform mat4 uM;uniform vec3 uPO;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vC=aCol;vN=aNor;vP=aPos+uPO;vS=aShd;vM=aMat;gl_Position=uVP*w;}';
+    'vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 bc=mix(vC,uOver.rgb,uOver.a);' +
+    // G6: snow on the faces that look up (uWet.y, env.snowC), and in the wet (uWet.x, env.wet) the rest darker with a sheen of the sun
+    // and the sky, most on the flat (a quay's deck, a roof, a road on a bridge)
+    'float up=smoothstep(0.55,0.9,n.y);bc=mix(bc,vec3(0.88,0.9,0.93),uWet.y*up*0.92);float wf=uWet.x*(1.0-uWet.y*up);bc*=1.0-0.3*wf;' +
+    'vec3 V=normalize(-vW);float wsp=pow(max(dot(reflect(-uSun,n),V),0.0),60.0)*wf*(0.25+0.75*up);float wfr=pow(1.0-max(dot(n,V),0.0),4.0)*wf*0.35*up;' +
+    'vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))+bc*uEmis+uSunCol*wsp*0.7+uAmb*wfr;gl_FragColor=vec4(fin(c,vW),1.0);}';
+  const TER_VS = 'attribute vec3 aPos;attribute vec3 aCol;attribute vec3 aNor;attribute float aShd;attribute vec4 aMat;attribute vec4 aCov;uniform mat4 uVP;uniform mat4 uM;uniform vec3 uPO;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;varying vec4 vV;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vC=aCol;vN=aNor;vP=aPos+uPO;vS=aShd;vM=aMat;vV=aCov;gl_Position=uVP*w;}';
   const NOISE = 'float hs(vec2 p){vec3 q=fract(vec3(p.xyx)*0.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}' +
     'float ns(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.0-2.0*f);return mix(mix(hs(i),hs(i+vec2(1.0,0.0)),u.x),mix(hs(i+vec2(0.0,1.0)),hs(i+vec2(1.0,1.0)),u.x),u.y);}';
   // The local sea (03b-sea.js) from the sea-state textures, n (32 x 32 over the near terrain) and w (128 x 128 over the whole map): R and G hold
@@ -37,8 +62,14 @@
   // the cusp lines and decay as s^-1/3; the bow wave climbs the stem and runs aft along each side at 25 degrees.
   // Both rise from nothing over the first 1.2 m behind the stern: starting at full height they made a step across the stern, drawn as a
   // white line on the water at the transom (feedback 08.10.2026).
-  const WAKE_GLSL = 'uniform vec4 uWk0;uniform vec4 uWk1;uniform vec4 uWk2;uniform vec4 uWk3;' +
+  // The pattern follows the way the boat came (Jonas 29.10.2026: «Se på propellbølgene til båten slik at disse svinger på lik linje som
+  // skummet bak båten»): uWkT the source's track behind it, seven points uWkS.x metres apart along it (the stern going ahead, the bow
+  // going astern), and s, q are measured along that track and off it (the nearest of its pieces) instead of along a straight line;
+  // the first piece reaches on forward (the bow wave), the last on back. uWkS.y 0: a straight line, as before. Written out with fixed
+  // indices (no loop over a uniform array: Adreno 642L, Direct3D 11).
+  const WAKE_GLSL = 'uniform vec4 uWk0;uniform vec4 uWk1;uniform vec4 uWk2;uniform vec4 uWk3;uniform vec4 uWkT[4];uniform vec2 uWkS;' +
     'float wakeH(vec2 P,float bow){if(uWk3.w<0.5)return 0.0;vec2 r=P-uWk0.xy;float s=-dot(r,uWk0.zw);float q=abs(r.x*uWk0.w-r.y*uWk0.z);float L=uWk2.x;' +
+    'if(uWkS.y>0.5&&dot(r,r)<pow(uWk1.w+L+20.0,2.0)){float bd=1e9;' + '{vec2 A=uWk0.xy;vec2 B=uWkT[0].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=min(t,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=0.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[0].xy;vec2 B=uWkT[0].zw;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=1.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[0].zw;vec2 B=uWkT[1].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=2.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[1].xy;vec2 B=uWkT[1].zw;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=3.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[1].zw;vec2 B=uWkT[2].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=4.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[2].xy;vec2 B=uWkT[2].zw;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=5.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[2].zw;vec2 B=uWkT[3].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=max(t,0.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=6.0*uWkS.x+t*l;q=d;}}' + '}' +
     'if(s<-L-2.0||s>uWk1.w||q>max(s,0.0)*0.42+L*0.6+4.0)return 0.0;float h=0.0;' +
     'if(s>0.0){float e=s*0.3536;float far=1.0-smoothstep(uWk1.w*0.55,uWk1.w,s);float a=uWk1.y*far*smoothstep(0.0,1.2,s);' +
     'h+=uWk1.z*a*inversesqrt(1.0+s/L)*cos(uWk1.x*s)*(1.0-smoothstep(e*0.75,e*1.02,q))*0.75;' +
@@ -80,24 +111,32 @@
   // along the hull and the bow wave (the hull swept along the way she came since the last frame, so a slow frame leaves no gap), the
   // water the transom leaves and the screw churns, the stern wave breaking along the Kelvin arms (wakeH, as the sea shader breaks it)
   // and the whitecaps the sea shader sets (the same crest, noise and threshold).
+  // The fetch the wind has had over the water just here (Jonas 29.10.2026: white blobs of whitecaps inside a harbour): the sea state
+  // knows the fetch on a grid of some 190 m, so a basin behind a breakwater took the open sea's. Six looks upwind in the shore texture
+  // (30-960 m, the first land ends it) give the root of the fetch (km) where the shore is in; the lesser of the two is the fetch.
+  const FETCHG = 'float fetchW(vec2 P,vec2 up,float sw){if(uLSOn<0.5)return sw;float f=-1.0;' +
+    [30, 60, 120, 240, 480, 960].map(d => '{vec2 lu=(P+up*' + d.toFixed(1) + '-uLRect.xy)*uLRect.zw;if(f<0.0){if(lu.x<0.0||lu.y<0.0||lu.x>1.0||lu.y>1.0)f=9.0;else if(texture2D(uLandS,lu).r*8.0-4.0>uTideL)f=' + (d / 1000).toFixed(3) + ';}}').join('') +
+    'return f<0.0||f>8.0?sw:min(sw,sqrt(f));}';
   const FOAM_VS = 'attribute vec2 aXZ;varying vec2 vUV;void main(){vUV=aXZ*0.5+0.5;gl_Position=vec4(aXZ,0.0,1.0);}';
-  const FOAM_FS = 'precision highp float;uniform sampler2D uPrev;uniform vec2 uShift;uniform float uN;uniform vec2 uRebase;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uTime;uniform vec2 uNFD;uniform float uWind;uniform vec2 uWindDir;' +
-    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;varying vec2 vUV;' + NOISE + SEA_STATE + WAKE_GLSL +
+  const FOAM_FS = 'precision highp float;uniform sampler2D uPrev;uniform vec2 uShift;uniform vec2 uShiftG;uniform vec2 uFoamG;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform float uN;uniform vec2 uRebase;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uTime;uniform vec2 uNFD;uniform float uWind;uniform vec2 uWindDir;' +
+    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;varying vec2 vUV;' + NOISE + SEA_STATE + WAKE_GLSL + FETCHG +
     // the hull's half width a metres forward of her origin: full in the body, drawn in over the forebody to the stem, a little to the transom
     'float hullW(float a){float hb=uHull.y;if(a>0.0){float t=clamp(a/uHull.z,0.0,1.0);return hb*sqrt(max(1.0-pow(t,2.6),0.0));}float t=clamp(-a/uHull.w,0.0,1.0);return hb*(1.0-0.25*t*t);}' +
     'void main(){' +
     // this texel in the map's own metres, in the sea shader's frame P (from the render origin) and the water's Pb
     'vec2 M=vUV*uFoamRect.w;vec2 P=M+uFoamRect.xy+uNFD;vec2 Pb=M+uFoamRect.xy;' +
     // what was here last frame, moved by whole texels (nothing from outside the old map)
+    // (the wake's foam, r and g, by its own whole texels besides: it lies still in the water, uShiftG and uFoamG, foamStep)
     'vec2 su=(gl_FragCoord.xy+uShift)/uN;vec4 old=(su.x>=0.0&&su.y>=0.0&&su.x<=1.0&&su.y<=1.0)?texture2D(uPrev,su):vec4(0.0);' +
+    'vec2 sg=(gl_FragCoord.xy+uShift+uShiftG)/uN;old.rg=(sg.x>=0.0&&sg.y>=0.0&&sg.x<=1.0&&sg.y<=1.0)?texture2D(uPrev,sg).rg:vec2(0.0);vec2 Mg=M-uFoamG;' +
     'float aw=old.r;float bw=(aw>0.002?old.g/aw:0.0)-uRebase.x;float ac=old.b;float bc=(ac>0.002?old.a/ac:0.0)-uRebase.y;if(bw<0.0){aw=0.0;bw=0.0;}if(bc<0.0){ac=0.0;bc=0.0;}' +
     'float dw=aw*exp(-max(uFoamT.x-bw,0.0)*uFoamT.y/uFoamT.z);float dc=ac*exp(-max(uFoamTc.x-bc,0.0)*uFoamTc.y/uFoamTc.z);' +
     'float iw=0.0;float ic=0.0;' +
     // --- the boat's own foam, when she has way on ---
     'if(uWk3.w>0.5){' +
     // the hull swept along the way she came this frame: the nearest point of that way, with her heading there
-    'vec2 B0=uFB.xy;vec2 B1=uFB.zw;vec2 dB=B1-B0;float l2=max(dot(dB,dB),1e-4);float tt=clamp(dot(M-B0,dB)/l2,0.0,1.0);vec2 C=mix(B0,B1,tt);vec2 f=normalize(mix(uFH.xy,uFH.zw,tt));vec2 rt=vec2(-f.y,f.x);' +
-    'vec2 r=M-C;float a=dot(r,f);float q=abs(dot(r,rt));float v=uFSp.x;float Fr=uFSp.y;float pl=uFSp.z;float w=hullW(a);float st=-uHull.w;float bo=uHull.z;' +
+    'vec2 B0=uFB.xy;vec2 B1=uFB.zw;vec2 dB=B1-B0;float l2=max(dot(dB,dB),1e-4);float tt=clamp(dot(Mg-B0,dB)/l2,0.0,1.0);vec2 C=mix(B0,B1,tt);vec2 f=normalize(mix(uFH.xy,uFH.zw,tt));vec2 rt=vec2(-f.y,f.x);' +
+    'vec2 r=Mg-C;float a=dot(r,f);float q=abs(dot(r,rt));float v=uFSp.x;float Fr=uFSp.y;float pl=uFSp.z;float w=hullW(a);float st=-uHull.w;float bo=uHull.z;' +
     // the wash along the side: a band outside the hull from the stem aft, widening aft as the bow wave runs out, thickest where the bow
     // wave breaks on the shoulder; a planing hull throws it further out; the water under the after body is churned too
     'float clump=0.6+0.4*ns(Pb*0.55+vec2(2.0,5.0));' +
@@ -107,34 +146,36 @@
     // the water the transom leaves and the screw churns: a band behind the stern, a beam wide, going on with her way
     'if(a<st+0.5&&a>st-6.0){float back=st+0.5-a;float wb=(hullW(st)+0.15+0.3+0.1*v+pl*(0.4+0.08*v))*(1.0+0.03*back)*(0.85+0.3*ns(Pb*0.45+vec2(4.0,9.0)));float band=1.0-smoothstep(wb*0.75,wb*1.1,q);float core=1.0-smoothstep(wb*0.2,wb*0.5,q);iw=max(iw,(0.7*band+0.3*core)*clump*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
     // the stern wave breaking along the Kelvin arms and the bow wave, as the sea shader breaks them (uWk0 is given in the map's metres)
-    'float wh=wakeH(M,1.0);if(wh>0.0){vec2 rr=M-uWk0.xy;float s=-dot(rr,uWk0.zw);float br=ns(Pb*1.4+vec2(uTime*1.3,0.0))*0.5+0.5;float lam=6.2832/uWk1.x;' +
+    'float wh=wakeH(Mg,1.0);if(wh>0.0){vec2 rr=Mg-uWk0.xy;float s=-dot(rr,uWk0.zw);float br=ns(Pb*1.4+vec2(uTime*1.3,0.0))*0.5+0.5;float lam=6.2832/uWk1.x;' +
     'float arm=uWk3.y*smoothstep(0.45,0.9,wh/max(uWk1.y,0.02))*(1.0-smoothstep(0.0,lam,s))*step(0.0,s)*br;' +
     'float bow=uWk3.x*smoothstep(0.35,0.85,wh/max(uWk2.y,0.02))*step(-uWk2.x-0.5,s)*step(s,0.2)*br;iw=max(iw,max(arm,bow)*0.9);}' +
     '}' +
     // --- the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold ---
     'if(uWind>6.0){vec4 S=seaAt(P);float px=uFoamRect.w/uN;vec3 N=vec3(0.0,1.0,0.0);float y=0.0;float sa=1e-6;float lost=0.0;vec2 w2=uWindDir;vec2 wp=vec2(-w2.y,w2.x);' +
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => SEA_WAVE(true, i)).join('') +
-    'float crest=y*inversesqrt(sa);float dw2=smoothstep(0.45,1.73,S.w);float Wc=clamp(3.84e-6*pow(max(uWind,0.3),3.41)*dw2,1e-5,0.5);' +
+    'float crest=y*inversesqrt(sa);float dw2=smoothstep(0.45,1.73,fetchW(P,-w2,S.w));float Wc=clamp(3.84e-6*pow(max(uWind,0.3),3.41)*dw2,1e-5,0.5);' +
     'vec2 cq=vec2(dot(Pb,w2),dot(Pb,wp));float fn=ns(cq*vec2(0.3,0.12)+vec2(uTime*0.25,0.0))*0.6+ns(cq*vec2(0.7,0.3)-vec2(uTime*0.4,uTime*0.1))*0.4;' +
     'float zt=sqrt(-2.0*log(Wc));zt-=(2.515517+0.802853*zt+0.010328*zt*zt)/(1.0+1.432788*zt+0.189269*zt*zt+0.001308*zt*zt*zt);float th=0.228+0.293*zt-0.016*zt*zt;' +
     'float fv=crest*0.25+fn*0.45;ic=smoothstep(th+0.02,th+0.09,fv);}' +
     // new foam over what is left of the old: born now
     'if(iw>dw){aw=iw;bw=uFoamT.x;}if(ic>dc){ac=ic;bc=uFoamTc.x;}' +
+    // none of the wake's foam on land (what the water carries onto a breakwater or a shore is gone)
+    'if(uLSOn>0.5){vec2 lu=(P-uFoamG-uLRect.xy)*uLRect.zw;if(lu.x>0.0&&lu.y>0.0&&lu.x<1.0&&lu.y<1.0&&texture2D(uLandS,lu).r*8.0-4.0>uTideL-0.1){aw=0.0;bw=0.0;}}' +
     'gl_FragColor=vec4(aw,bw*aw,ac,bc*ac);}';
   // the last resort when no sea program links: a flat sea with a little ripple, the sky in it and the sun's glitter
   const BASIC_VS = 'precision highp float;attribute vec2 aXZ;uniform mat4 uVP;uniform vec2 uOrigin;uniform vec3 uOriginRel;uniform vec2 uScale;varying vec3 vW;varying vec2 vXZ;' +
     'void main(){vec2 lxz=aXZ*uScale;vec3 rel=uOriginRel+vec3(lxz.x,0.0,lxz.y);vW=rel;vXZ=uOrigin+lxz;gl_Position=uVP*vec4(rel,1.0);}';
   const BASIC_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;uniform float uTime;varying vec3 vW;varying vec2 vXZ;' +
-    'void main(){float d=length(vW);vec3 V=normalize(-vW);vec2 p=vXZ;' +
+    AIR + 'void main(){float d=length(vW);vec3 V=normalize(-vW);vec2 p=vXZ;' +
     'vec3 N=normalize(vec3(0.05*sin(p.x*0.35+uTime*1.1)+0.03*sin(p.y*0.52-uTime*0.9)+0.02*sin((p.x+p.y)*1.7+uTime*2.3),1.0,0.05*cos(p.y*0.31+uTime*1.3)+0.03*cos(p.x*0.47+uTime*0.7)+0.02*cos((p.x-p.y)*1.9-uTime*2.1)));' +
     'float fr=0.02+0.98*pow(1.0-max(dot(N,V),0.0),5.0);vec3 R=reflect(-V,N);vec3 sky=mix(uHor,uZen,clamp(R.y*1.5,0.0,1.0));' +
     'vec3 body=uDeep*(uAmb*1.7+uSunCol*0.3*max(dot(N,uSun),0.0));vec3 col=mix(body,sky,fr)+uSunCol*pow(max(dot(R,uSun),0.0),220.0)*0.9;' +
-    'gl_FragColor=vec4(mix(uFog,col,exp(-uFogD*uFogD*d*d)),1.0);}';
+    'gl_FragColor=vec4(fin(col,vW),1.0);}';
   // FAR (the far pass beyond the near terrain): the four longest wind waves and the swell, the rest of the wind sea only as roughness, no ripples
   const SEA_FS = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;' +
-    'uniform float uTime;uniform float uWind;uniform vec2 uWindDir;uniform float uFlat;uniform float uSpec;uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec2 uNFD;uniform sampler2D uHgt;uniform float uHOn;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform vec4 uSRect;uniform float uSOn;uniform float uPx;uniform float uDbg;uniform sampler2D uFoam;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uFoamOn;' + PLG +
-    'varying vec3 vW;varying vec2 vXZ;' + NOISE + SEA_STATE + WAKE_GLSL +
-    'void main(){float d=length(vW);vec2 P=vXZ;vec4 S=seaAt(P);' +
+    'uniform float uTime;uniform float uWind;uniform vec2 uWindDir;uniform float uFlat;uniform float uSpec;uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec2 uNFD;uniform sampler2D uHgt;uniform float uHOn;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform vec4 uSRect;uniform float uSOn;uniform float uPx;uniform float uDbg;uniform sampler2D uFoam;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uFoamOn;uniform vec2 uFoamG;uniform vec2 uFoamW;' + PLG +
+    'varying vec3 vW;varying vec2 vXZ;' + NOISE + SEA_STATE + WAKE_GLSL + FETCHG +
+    AIR + 'void main(){float d=length(vW);vec2 P=vXZ;vec4 S=seaAt(P);' +
     // metres covered by one pixel here (grows with distance and grazing angle); a wave shorter than a few pixels is faded out and its slope becomes roughness instead
     'vec3 V=normalize(-vW);float px=d*uPx/max(abs(V.y),0.12);vec2 w=uWindDir;vec2 wp=vec2(-w.y,w.x);' +
     // gusts: slow patches of rougher and calmer water break up any repetition
@@ -168,7 +209,7 @@
     // 0.2-3 km of fetch to break (dw). They sit on the highest crests, broken into patches a few metres long across the wind (the threshold is fitted to the measured spread of crest
     // and noise, through the normal quantile of that share),
     // and where they are too small to see they whiten the sea by their share instead.
-    'vec3 fc=min(uAmb*1.3+uSunCol*0.85,vec3(1.0));float lod=1.0-smoothstep(0.35,1.6,px);float dw=smoothstep(0.45,1.73,S.w);' +
+    'vec3 fc=min(uAmb*1.3+uSunCol*0.85,vec3(1.0));float lod=1.0-smoothstep(0.35,1.6,px);float dw=smoothstep(0.45,1.73,fetchW(P,-w,S.w));' +
     'float Wc=clamp(3.84e-6*pow(max(uWind,0.3),3.41)*dw,1e-5,0.5);vec2 Pb=P-uNFD;vec2 cq=vec2(dot(Pb,w),dot(Pb,wp));float fn=ns(cq*vec2(0.3,0.12)+vec2(uTime*0.25,0.0))*0.6+ns(cq*vec2(0.7,0.3)-vec2(uTime*0.4,uTime*0.1))*0.4;' +
     'float zt=sqrt(-2.0*log(Wc));zt-=(2.515517+0.802853*zt+0.010328*zt*zt)/(1.0+1.432788*zt+0.189269*zt*zt+0.001308*zt*zt*zt);float th=0.228+0.293*zt-0.016*zt*zt;' +
     // The edge is as wide as the pixel (fwidth), so it never steps or crawls, with a thin soft rim of older foam outside it; the mottle
@@ -184,9 +225,9 @@
     // the foam map (14-sea.js foamStep): the foam the boat and the sea have left in the water, aged here. The wake's is dense by the hull
     // and breaks up into bubbles and streaks as it thins (noise that lies still in the water, Pb); the whitecaps' is what the crests left,
     // drawn out along the wind. The water under thin foam is milky with bubbles.
-    '\n#ifndef FAR\nif(uFoamOn>0.5){vec2 fu=(Pb-uFoamRect.xy)*uFoamRect.z;if(fu.x>0.0&&fu.y>0.0&&fu.x<1.0&&fu.y<1.0){vec4 m=texture2D(uFoam,fu);' +
+    '\n#ifndef FAR\nif(uFoamOn>0.5){vec2 fu=(Pb-uFoamRect.xy)*uFoamRect.z;if(fu.x>0.0&&fu.y>0.0&&fu.x<1.0&&fu.y<1.0){vec4 m=texture2D(uFoam,fu);m.rg=texture2D(uFoam,fu+uFoamG*uFoamRect.z).rg;vec2 Pw=Pb+uFoamW;' +
     'float b0=m.r>0.002?m.g/m.r:0.0;float c0=m.b>0.002?m.a/m.b:0.0;float aw=m.r*exp(-max(uFoamT.x-b0,0.0)*uFoamT.y/uFoamT.z);float ac=m.b*exp(-max(uFoamTc.x-c0,0.0)*uFoamTc.y/uFoamTc.z);' +
-    'float n1=ns(Pb*1.1+vec2(3.1,7.7));float n2=ns(Pb*2.9+vec2(1.3,9.2));float n3=ns(vec2(dot(Pb,w)*0.16,dot(Pb,wp)*1.2)+vec2(5.0,2.0));float n4=ns(Pb*0.4+vec2(8.0,1.0));' +
+    'float n1=ns(Pw*1.1+vec2(3.1,7.7));float n2=ns(Pw*2.9+vec2(1.3,9.2));float n3=ns(vec2(dot(Pb,w)*0.16,dot(Pb,wp)*1.2)+vec2(5.0,2.0));float n4=ns(Pw*0.4+vec2(8.0,1.0));' +
     'float dens=aw*(0.55+0.45*n4)*(0.6+0.4*n1);float fw=smoothstep(0.06,0.45,dens*(0.75+0.25*n2))*(0.6+0.4*min(aw*1.5,1.0))*lod;' +
     'float agc=max(uFoamTc.x-c0,0.0)*uFoamTc.y;float acv=ac*smoothstep(0.2,1.2,agc);float fcp=smoothstep(0.55,0.9,acv*(0.25+0.75*n3)*(0.6+0.4*n2))*lod*0.6;' +
     'foam=max(foam,max(fw,fcp));col=mix(col,fc*0.6+col*0.4,clamp(aw*0.35,0.0,0.4)*lod);}}\n#endif\n' +
@@ -195,16 +236,23 @@
     'float hb=texture2D(uHgt,su*(255.0/256.0)+0.5/256.0).r*16.0-8.0;float dep=uTideL-hb;float hl=length(S.xy);' +
     // where the shore texture is in (buildLandMask), the water's depth over the foreshore comes from it: the surf lies on the waterline
     // of the tide, on the coast's own line at high water and out on the foreshore at ebb; beyond the foreshore the heights as before,
-    // except the coarse mesh's own shelf by the line (its bed over 1 m), which is no shoal: 3 m deep there
-    'if(uLSOn>0.5){vec2 lu=(vW.xz-uLRect.xy)*uLRect.zw;if(lu.x>0.0&&lu.y>0.0&&lu.x<1.0&&lu.y<1.0){float hs=texture2D(uLandS,lu).r*8.0-4.0;dep=hs>-3.9?uTideL-hs:(hb>1.0?3.0:dep);}}' +
+    // except the coarse mesh's own shelf by the line (its bed over 1 m), which is no shoal: 3 m deep there; nor is the shallow the 23 m
+    // cells make where one of them is on land (a cell across the line blends the land's height with the bed, and the surf and the
+    // turquoise lay in a band 30-60 m off every shore, Jonas 28.10.2026)
+    'if(uLSOn>0.5){vec2 lu=(vW.xz-uLRect.xy)*uLRect.zw;if(lu.x>0.0&&lu.y>0.0&&lu.x<1.0&&lu.y<1.0){float hs=texture2D(uLandS,lu).r*8.0-4.0;' +
+    // (29.10.2026, Jonas' pictures from Bleik: the 5 m by the line made a dark ring a coarse cell wide round every islet and breakwater,
+    // stepped like the cells, and the coarse shallows beyond it a pale ring): the shore texture knows the depth to 4 m, so where it is
+    // in, the depth is its own down to 4 m and at least 4 m beyond, the coarse heights only deeper than that; the turquoise then fades
+    // out smoothly from the foreshore with no edge of the coarse cells
+    'dep=mix(max(dep,4.0),uTideL-hs,smoothstep(-3.95,-3.0,hs));}}' +
     'col=mix(col,vec3(0.07,0.33,0.32)*(uAmb*1.5+uSunCol*0.75),(1.0-smoothstep(0.3,5.0,dep))*0.42*(1.0-fr)*ef);' +
     'float bw=0.3+hl*1.4;float band=(1.0-smoothstep(0.0,bw,dep))*smoothstep(-0.2,0.02,dep);float sw=0.5+0.5*sin(uTime*0.9+dot(P,w)*0.06);' +
     'float ln=ns(P*0.32+vec2(uTime*0.35,-uTime*0.25))*0.6+ns(P*0.95-uTime*0.45)*0.4;' +
     'foam=max(foam,band*smoothstep(0.35,0.72,ln+band*0.2)*(0.3+0.7*clamp(hl*1.6,0.0,1.0))*(0.7+0.3*sw)*ef);}}' +
     'if(uDbg>0.5){gl_FragColor=vec4(vec3(clamp(foam,0.0,1.0)),1.0);return;}' +
-    'col=mix(col,fc,clamp(foam,0.0,1.0)*0.85);float fg=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(col,uFog,fg),1.0);}';
+    'col=mix(col,fc,clamp(foam,0.0,1.0)*0.85);gl_FragColor=vec4(fin(col,vW),1.0);}';
   const terFS = q => '#extension GL_OES_standard_derivatives : enable\n#define MATQ ' + q + '\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec4 uHole;' +
-    'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uTideY;uniform float uSwash;uniform vec3 uSand;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;uniform vec4 uMP;uniform vec4 uMQ;' + NOISE + PLG +
+    'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uTideY;uniform float uSwash;uniform vec3 uSand;uniform vec2 uWet;uniform float uExpo;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;varying vec4 vV;uniform vec4 uMP;uniform vec4 uMQ;' + NOISE + PLG + AIR +
     // the ground near the water is cut where the shore texture (buildLandMask: the foreshore's own height, h = r * 8 - 4) lies under
     // the tide, so the waterline is the coast's own line at high water and the foreshore's at ebb, whatever the mesh's cells
     'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec2 luv=(vW.xz-uGRect.xy)*uGRect.zw;' +
@@ -242,7 +290,17 @@
     'float peb=hs(floor(wp*1.5));rc=rc*(0.86+0.28*blk)*(1.0-crack*0.45)*(1.0+(peb-0.5)*1.2*R*(1.0-R));rc=mix(rc,vec3(0.56,0.58,0.46),lic*0.5);' +
     'float tf=(f1+0.5)+(f2+0.5)*0.5;float heath=smoothstep(0.5,0.75,ns(wp/16.0+5.0))*smoothstep(0.05,0.2,st)*(1.0-vM.y);' +
     'float bog=smoothstep(0.58,0.78,ns(wp/64.0+11.0))*(1.0-smoothstep(0.03,0.1,st))*smoothstep(70.0,20.0,h)*step(4.0,h)*(1.0-vM.y);' +
+    // where the land cover is known (vV: the bog's, the field's and the heath's shares, and 1 + the lichen fell's; 0 where unknown, G1):
+    // the heather where the heath is and not by a noise on any slope, the bog where the bog is (with its dark pools and sedge tussocks)
+    // and not on every flat low patch, the lichen's pale carpet broken by stones, and the tram lines of a field, turned per field
+    'float kn=step(0.5,vV.w);float mo=max(vV.w-1.0,0.0);' +
+    'heath=mix(heath,smoothstep(0.38,0.72,ns(wp/16.0+5.0))*vV.z*(1.0-vM.y),kn);' +
+    'float wet=smoothstep(0.15,0.65,vV.x)*(1.0-smoothstep(0.1,0.28,st));bog=mix(bog,wet*(0.75+0.25*smoothstep(0.3,0.7,ns(wp/24.0+11.0))),kn);' +
     'c*=1.0+(tf-0.75)*(0.24-vM.y*0.12);c=mix(c,c*vec3(0.92,0.78,0.86),heath*0.6);c=mix(c,vec3(0.4,0.37,0.2)*(0.9+0.2*tf),bog*0.55);' +
+    'float pool=kn*smoothstep(0.66,0.72,ns(wp/14.0+3.0)+f2*0.12)*smoothstep(0.55,0.9,vV.x)*(1.0-smoothstep(0.04,0.1,st));c=mix(c,vec3(0.07,0.08,0.08),pool*0.85);' +
+    'c=mix(c,vec3(0.72,0.72,0.62)*(0.85+0.3*f2),kn*mo*smoothstep(0.42,0.6,ns(wp*0.3+7.0))*0.55);' +
+    'vec2 fc=floor(wp/90.0);float fa=hs(fc)*3.1416;vec2 fd=vec2(cos(fa),sin(fa));float tram=abs(fract(dot(wp,fd)/18.0)-0.5);' +
+    'c*=1.0-kn*smoothstep(0.2,0.6,vV.y)*(0.06*(0.5+0.5*sin(dot(wp,fd)*2.0944))+0.07*(1.0-smoothstep(0.01,0.03,tram)));' +
     'c=mix(c0,c,det1);rc=mix(r0,rc,det1);}' +
     '\n#endif\n' +
     'n=normalize(n+vec3(b1*0.5+b3,0.0,b2*0.5-b3*0.6)*(0.2+st*0.7)*det*(1.0+R*0.8)*(1.0-S*0.7));' +
@@ -253,19 +311,35 @@
 'float sand=(1.0-smoothstep(1.2,2.1,h+b1*0.8))*step(0.05,h);c=mix(c,uSand,sand*0.7);' +
     // the tidal zone along the whole coast: rockweed up to about the high water and a pale band of barnacles above it, never under
     // snow (Jonas 07.10.2026: «det ser litt dumt ut når den eneste plassen det er tang og rur i verden er rundt stolpene til naustet»)
-    'float wd=(1.0-smoothstep(0.9,1.5,h+b2*0.6))*step(-0.6,h);c=mix(c,mix(vec3(0.22,0.19,0.1),vec3(0.32,0.28,0.14),ns(wp*0.35)),wd*0.92);' +
-    'float br=smoothstep(1.0,1.45,h+b2*0.6)*(1.0-smoothstep(1.55,2.1,h+b1*0.8));c=mix(c,vec3(0.7,0.7,0.66),br*0.55);' +
+    // G10: by the exposure to the open sea (uExpo, the core's expo where the boat is): in a sheltered fjord the rockweed grows thick
+    // and a little higher, on an open coast it is thinner and the barnacles' pale band climbs with the splash
+    'float wtop=mix(1.65,1.25,uExpo),btop=mix(1.85,2.7,uExpo);' +
+    'float wd=(1.0-smoothstep(wtop-0.6,wtop,h+b2*0.6))*step(-0.6,h);c=mix(c,mix(vec3(0.22,0.19,0.1),vec3(0.32,0.28,0.14),ns(wp*0.35)),wd*mix(0.95,0.75,uExpo));' +
+    'float br=smoothstep(wtop-0.5,wtop-0.05,h+b2*0.6)*(1.0-smoothstep(btop-0.55,btop,h+b1*0.8));c=mix(c,vec3(0.7,0.7,0.66),br*mix(0.4,0.65,uExpo));' +
     'if(uGOn>0.5&&ins>0.5){vec4 g=texture2D(uGround,uv);c=mix(c,g.rgb,g.a*ef);}' +
-    'float dif=max(dot(n,uSun),0.0)*mix(0.08,1.0,smoothstep(0.15,0.85,vS));vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 col=c*(amb+uSunCol*dif+pLit(vW,n));float f=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(col,uFog,f),1.0);}';
+    // G6: wet ground (uWet.x, env.wet) is darker, the rock and the foreshore most and the grass least, not under snow, with the sun's
+    // sheen on it
+    'float wf=uWet.x*(1.0-S)*(0.3+0.7*max(R,1.0-smoothstep(1.0,2.5,h)));c*=1.0-0.3*wf;' +
+    'float dif=max(dot(n,uSun),0.0)*mix(0.08,1.0,smoothstep(0.15,0.85,vS));vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 col=c*(amb+uSunCol*dif+pLit(vW,n));' +
+    'vec3 V=normalize(-vW);col+=uSunCol*pow(max(dot(reflect(-uSun,n),V),0.0),40.0)*wf*0.45*smoothstep(0.15,0.85,vS)*(1.0-smoothstep(300.0,1500.0,d));' +
+    'gl_FragColor=vec4(fin(col,vW),1.0);}';
   const SKY_VS = 'attribute vec2 aP;varying vec2 vP;void main(){vP=aP;gl_Position=vec4(aP,0.9999,1.0);}';
   const SKY_FS = 'precision highp float;uniform vec3 uF;uniform vec3 uR;uniform vec3 uU;uniform vec2 uTan;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uSunD;uniform vec3 uSunCol;' +
-    'uniform vec3 uCX;uniform vec3 uCY;uniform vec3 uCP;uniform float uPx;uniform float uCloud;uniform vec2 uCloudOff;uniform float uTime;uniform float uStars;uniform float uAur;uniform float uDay;uniform vec2 uWindDir;uniform vec3 uMoonD;uniform float uMoonA;varying vec2 vP;' + NOISE +
+    'uniform vec3 uCX;uniform vec3 uCY;uniform vec3 uCP;uniform float uPx;uniform float uCloud;uniform vec2 uCloudOff;uniform float uTime;uniform float uStars;uniform float uAur;uniform float uDay;uniform vec2 uWindDir;uniform vec3 uMoonD;uniform float uMoonA;uniform float uAirOn;varying vec2 vP;' + NOISE +
+    'float cq5(vec2 p){p=mod(p,289.0);vec2 i=floor(p),f=p-i;vec2 u=f*f*f*(f*(f*6.0-15.0)+10.0);vec2 j=mod(i+1.0,289.0);return mix(mix(hs(i),hs(vec2(j.x,i.y)),u.x),mix(hs(vec2(i.x,j.y)),hs(j),u.x),u.y);}' +
+    'float cfbm(vec2 p){const mat2 R=mat2(0.8,-0.6,0.6,0.8);float a=cq5(p)*0.6;p=R*p*2.3+5.2;a+=cq5(p)*0.3;p=R*p*2.2+1.7;return a+cq5(p)*0.1;}' +
+    'vec3 tone(vec3 c){vec3 e=max(c-0.8,0.0);return min(c,vec3(0.8))+0.2*(1.0-exp(-e/0.2));}' +
     // the aurora's line across the sky plane: wide arcs, S-folds, small ripples and a tighter curl that wanders along it
     // lod fades the small folds and the curl where the samples along the ray stand too far apart to follow them (low in the sky)
     'float aFold(float x,float fk,float T,float lod){float xc=5.0*sin(T*0.007+fk*5.0);float q=x-xc;' +
     'return 1.1*sin(x*0.16+T*0.012+fk*2.1)+0.55*sin(x*0.37-T*0.02+fk*4.7)+lod*(0.3*sin(x*0.9+T*0.05+fk)+0.9*exp(-q*q*0.12)*sin(q*1.6))+0.6*(ns(vec2(x*0.22-T*0.015,fk*7.0))-0.5);}' +
     'void main(){vec3 d=normalize(uF+vP.x*uTan.x*uR+vP.y*uTan.y*uU);float h=clamp(d.y,0.0,1.0);vec3 col=mix(uHor,uZen,pow(h,0.55));' +
     'float sd=max(dot(d,uSunD),0.0);col+=uSunCol*(pow(sd,12.0)*0.35+smoothstep(0.9993,0.99965,sd)*2.5)*(1.0-uCloud*0.9);' +
+    // the sky's light by the sun (G5, with the air on): a broad warm glow low over the horizon towards the sun, the sky a little deeper
+    // blue away from it, and at sunrise and sunset the earth's shadow (dark blue) low opposite the sun with the pink belt over it
+    'if(uAirOn>0.5){float cl=1.0-uCloud*0.85;col+=uSunCol*pow(sd,4.0)*0.14*(1.0-h)*cl;col*=1.0-0.07*(1.0-sd)*h*cl;' +
+    'vec2 sh=normalize(uSunD.xz+vec2(1e-4,0.0));float anti=max(-dot(normalize(d.xz+vec2(1e-4,0.0)),sh),0.0);float tw=exp(-pow(uSunD.y/0.07,2.0))*cl*anti*anti;' +
+    'col=mix(col,col*vec3(0.62,0.66,0.85),tw*(1.0-smoothstep(0.0,0.06,h))*0.7);col+=vec3(0.22,0.1,0.13)*tw*smoothstep(0.03,0.08,h)*(1.0-smoothstep(0.1,0.24,h));}' +
     // the night sky (Jonas 09.10.2026: «litt mer realistisk og spektakulær ... Litt som i spillet skyrim»): the stars and the Milky Way
     // stand where they are on the real sky and turn round the pole star with the sidereal time (uCX/uCY/uCP: the equator's RA 0h and
     // 6h and the pole, from the boat's latitude and longitude). Stars are round points a pixel or two wide (uPx), many faint and few bright,
@@ -317,9 +391,21 @@
     'float den=exp(-F*F/(w*w))*dd/w;acc+=hc*hp*r*pulse*seg*den*(1.0-fk*0.3)*0.5;}}}}' +
     'acc=acc/(1.0+0.35*max(acc.g,max(acc.r,acc.b)));' +
     'col+=acc*uAur*0.6*smoothstep(0.0,0.06,d.y)+vec3(0.03,0.16,0.08)*uAur*smoothstep(0.0,0.35,d.y)*(1.0-smoothstep(0.35,0.9,d.y))*0.35;}' +
-    'if(d.y>0.0){vec2 cp=d.xz/(d.y+0.08)*1.2+uCloudOff+160.0;float c=ns(cp)*0.6+ns(cp*2.3)*0.3+ns(cp*5.1)*0.1;float cov=smoothstep(1.0-uCloud-0.05,1.0-uCloud+0.35,c);' +
-    'vec3 cc=mix(uHor*0.85,vec3(0.9,0.92,0.95),0.35*uDay)*(0.3+0.7*uDay);col=mix(col,cc,cov*smoothstep(0.0,0.12,d.y)*0.95);}' +
-    'gl_FragColor=vec4(col,1.0);}';
+    // the clouds' noise (30.10.2026, Jonas' pictures at sea: flat blocks with straight edges in the clouds on the tablet): the sample
+    // runs to thousands (the drift's offset), where a GPU's hash loses its precision and neighbouring cells come out alike; so the
+    // noise repeats every 289 cells and works on small numbers only, eases its cells with the quintic (no creases for the light's
+    // difference to show), and each octave is turned against the last so their cells never line up
+    'if(d.y>0.0){vec2 cp=d.xz/(d.y+0.08)*1.2+uCloudOff+160.0;float c=cfbm(cp);float cov=smoothstep(1.0-uCloud-0.05,1.0-uCloud+0.35,c);' +
+    'vec3 cc=mix(uHor*0.85,vec3(0.9,0.92,0.95),0.35*uDay)*(0.3+0.7*uDay);' +
+    // the clouds lit by the sun (G5, with the air on): the side of a cloud towards the sun is lit in the sun's colour (the density a step
+    // towards the sun against here), a thick cloud's underside is dark, and the thin edges near the sun shine (the silver lining). Under a
+    // full grey sky it stays the old flat grey
+    'if(uAirOn>0.5){vec2 sv=normalize(uSunD.xz+vec2(1e-4,0.0))*0.18;vec2 cq=cp+sv;float c2=cfbm(cq);' +
+    'float li=clamp(0.55+(c-c2)*3.0,0.0,1.0)*smoothstep(-0.05,0.15,uSunD.y+0.1);float thick=smoothstep(0.35,1.0,cov)*smoothstep(0.3,0.9,uCloud);' +
+    'vec3 lc=mix(uHor*0.55+uZen*0.15,uSunCol*0.95+uZen*0.25,li)*(1.0-0.3*thick);lc+=uSunCol*pow(sd,8.0)*cov*(1.0-cov)*2.2;' +
+    'cc=mix(lc,cc,smoothstep(0.75,0.98,uCloud));}' +
+    'col=mix(col,cc,cov*smoothstep(0.0,0.12,d.y)*0.95);}' +
+    'gl_FragColor=vec4(uAirOn>0.5?tone(col):col,1.0);}';
   const PT_VS = 'attribute vec3 aPos;attribute float aA;uniform mat4 uVP;uniform vec3 uOff;uniform float uSize;uniform float uPull;uniform float uMax;varying float vA;' +
     'void main(){vA=aA;vec3 r=aPos+uOff;r-=normalize(r+vec3(0.0,0.0,1e-4))*min(length(r)*0.5,uPull);vec4 p=uVP*vec4(r,1.0);gl_Position=p;gl_PointSize=clamp(uSize/max(p.w,0.1),1.0,uMax);}';
   const PT_FS = 'precision mediump float;uniform vec3 uCol;uniform float uRound;varying float vA;' +
@@ -351,8 +437,20 @@
   // 05.10.2026: «shadere: Error», nothing more)
   const FS_HP = '\n#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n';
   const glWhy = (log, nm) => nm + ': ' + (gl.isContextLost() ? 'konteksten er mistet' : (log && log.trim()) || 'ingen logg fra driveren');
+  // the shaders are written in GLSL ES 1.00 (WebGL 1); on WebGL 2 (F1, 30.10.2026) they are turned into 3.00 word for word, as 1.00
+  // there has no derivatives (fwidth), and the same source draws the same picture: in and out for attribute and varying, texture() for
+  // texture2D, an out colour for gl_FragColor, and no #extension (derivatives are core). #version must be the first line.
+  function glsl3(src, fs){
+    src = src.replace(/#extension GL_OES_standard_derivatives\s*:\s*enable\s*\n?/g, '').replace(/\btexture2D\s*\(/g, 'texture(').replace(/\btextureCube\s*\(/g, 'texture(').replace(/\btexture2DLodEXT\s*\(/g, 'textureLod(');
+    if (fs) src = src.replace(/\bvarying\b/g, 'in').replace(/\bgl_FragColor\b/g, 'oCol_');
+    else src = src.replace(/\battribute\b/g, 'in').replace(/\bvarying\b/g, 'out');
+    // the out colour after the precision line (or at the top), so it never comes before a #define the source starts with
+    if (fs){ const m = /precision\s+\w+\s+float\s*;/.exec(src); src = m ? src.slice(0, m.index + m[0].length) + 'out vec4 oCol_;' + src.slice(m.index + m[0].length) : 'out vec4 oCol_;\n' + src; }
+    return '#version 300 es\n' + src;
+  }
   function compile(type, src, nm){
-    if (type === gl.FRAGMENT_SHADER) src = src.replace('precision highp float;', FS_HP);
+    if (type === gl.FRAGMENT_SHADER && !GL2) src = src.replace('precision highp float;', FS_HP);   // (ES 3.00 always has highp there)
+    if (GL2) src = glsl3(src, type === gl.FRAGMENT_SHADER);
     const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(glWhy(gl.getShaderInfoLog(s), nm + (type === gl.VERTEX_SHADER ? ' VS' : ' FS')));
     return s;
@@ -366,6 +464,15 @@
     return {p, u};
   }
   function buf(data, target, usage){ const b = gl.createBuffer(); target = target || gl.ARRAY_BUFFER; gl.bindBuffer(target, b); gl.bufferData(target, data, usage || gl.STATIC_DRAW); return b; }
+  // the air's uniforms for a program that has them (AIR); the sky's glow round the sun as the sky shader draws it (pow 12 x 0.35, less
+  // under cloud), so the haze towards the sun meets it
+  const AIRON = /air0/.test(location.hash) ? 0 : 1;
+  let AIRE = [0, 0, 0];   // the eye's x and z modulo 4096 and its height, set by drawTerrain each frame (the terrain's wp folds the same way)
+  function airSet(u, terr){
+    if (u.uAirOn) gl.uniform1f(u.uAirOn, AIRON);
+    if (u.uCB){ gl.uniform3fv(u.uCB, [env.cbase || 3000, env.cstr || 0, 0]); gl.uniform3fv(u.uCC, env.ccol || env.fog); gl.uniform3fv(u.uEye, AIRE); if (u.uCD) gl.uniform2fv(u.uCD, env.cdrift || [0, 0]); }
+    if (u.uAirSun){ gl.uniform3fv(u.uAirSun, env.sunDir || [0, 1, 0]); const k = 0.35 * (1 - 0.9 * (env.cloud || 0)); gl.uniform3fv(u.uAirMie, (env.sunCol || [0, 0, 0]).map(v => v * k)); }
+  }
   function attr(loc, b, size){ gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0); }
   // World meshes keep their vertices relative to their own origin m.o ([x, z], metres), so Float32 holds them to the millimetre
   // anywhere in the country; the model matrix carries the origin less the eye, worked out in doubles (relM). The shaders get the
@@ -373,6 +480,10 @@
   const relTo = (p, o) => { const P = new Float32Array(p); if (o) for (let i = 0; i < P.length; i += 3){ P[i] = p[i] - o[0]; P[i + 2] = p[i + 2] - o[1]; } return P; };
   const withOrigin = (m, o) => { if (o) m.o = o; return m; }, MESHMAX = 60000;
   const RO = {x:0, z:0, on:false}; let EYE = [0, 0, 0];
+  const WETON = !/wet0/.test(location.hash);
+  // #glchk in the address: the first GL error and the drawing step it came after (G3._debug.glFirst), for the tests
+  const GLCHK = /glchk/.test(location.hash); let GLFIRST = '';
+  const glChk = tag => { if (!GLCHK || GLFIRST) return; const e = gl.getError(); if (e) GLFIRST = tag + ':' + e; };   // G6's wet and snow on what is built and on the ground (#wet0 in the address: off)
   const relM = m => model(m.o[0] - EYE[0], (m.oy || 0) - EYE[1], m.o[1] - EYE[2], 0, 0, 0);   // oy: a mesh riding the tide (floatJob)
   const mapMid = () => [(HOME.x0 + HOME.x1) * 500, (HOME.y0 + HOME.y1) * 500];
   function upload(pos, col, idx){ const m = {pb:buf(pos), cb:buf(col), n:idx ? idx.length : pos.length / 3}; if (idx) m.ib = buf(idx, gl.ELEMENT_ARRAY_BUFFER); return m; }

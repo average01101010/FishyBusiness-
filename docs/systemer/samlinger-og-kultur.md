@@ -28,7 +28,7 @@ Jonas' avgjørelser står i `docs/engasjement.md`, arbeidslista punkt 1.5 og 3. 
   - **Skala:** ×1, ×1,5 og ×2,5 per kapittel, og ×3 for de langsiktige merkene.
   - **Trekningen er fast per spill** (`achRnd`, hash av `S.ach.seed` og milepælen). Gaven gis og lagres med en gang, så en omlasting gir ikke ny trekning.
   - **Under første tur** (`tutOn`) venter gavene i `S.ach.owe` og kommer når turen er over.
-- **De langsiktige merkene** (`ACHL`) har trinn, og hvert trinn gir en gave. Merkene er største levering (100 000 kr til 1 million), levert i alt (10 til 1000 t), fartstid (10 til 40 år), mottak, arter, nautiske mil, nattfiske, fars merker og andre spillere møtt på sjøen.
+- **De langsiktige merkene** (`ACHL`) har trinn, og hvert trinn gir en gave. Fra 31.10.2026 også «Letefisker» (leteoppdrag svart: 1, 5, 10, 25; `achAdd('lete')` i `09g-turer.js`). Merkene er største levering (100 000 kr til 1 million), levert i alt (10 til 1000 t), fartstid (10 til 40 år), mottak, arter, nautiske mil, nattfiske, fars merker og andre spillere møtt på sjøen.
 - **Et spill som er spilt før** (`achSeed`) blir krysset av for det det har gjort, og får ukas gaver. De langsiktige merkene starter der spillet er, uten gaver for det som alt er gjort.
 - **Første slep og første reparasjon er gratis** (`freeFirst` i `rescue` og `hullRepair`). Ved første slep får spilleren beholde fangsten, også ved nødanrop. En melding forklarer hvordan det kan unngås, og hva det koster neste gang.
 - **Det spilleren ser** (`ui/05e-merker.js`):

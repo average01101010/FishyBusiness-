@@ -317,7 +317,8 @@
   // mended stay in their tub and are spread over the rail where they are mended; Jonas 20.10.2026)
   function drawRigRest(BMrel, G, d){
     const b = S.boat, rig = typeof rigOf === 'function' ? rigOf() : b.rig, sx = G.beam / 2, DZ = d.z - 0.6, K = G.kit || {};
-    if (b.gop && b.status === 'fishing') return; if (!GB) buildGear();
+    KST.pots = 0; if (b.gop && b.status === 'fishing') return; if (!GB) buildGear();
+    if (rig === 'teiner') KST.pots = drawPotsAboard(BMrel, G, d, ((S.pgear || {}).pots || {}).big || 0);
     const J = (S.jobs || []).filter(j => !j.shop), EJ = J.filter(j => j.kind === 'egn' || j.kind === 'strip'), MJ = J.find(j => j.kind === 'mend'), pg = S.pgear || {};
     if (rig === 'garn' || MJ){ const mend = MJ ? (pg.shore || []).find(x => x.kind === 'mendself' && x.lenke && x.lenke.id === MJ.nid) : null, aboard = (pg.nets || []).reduce((a, l) => a + (l.n || 1), 0) + (mend ? mend.lenke.n || 1 : 0);
       const out = (typeof mySets === 'function' ? mySets() : []).filter(x => x.kind === 'garn').reduce((a, x) => a + (x.n || 0), 0), R = rigAt(G, 'garn', d);
@@ -331,7 +332,7 @@
   // 02-species-gear.js lsaOf), the radar that is bought, the freight on deck in crates and the crane. Nothing is drawn where the
   // model has no places or the kit is not in the page.
   const RAFTSZ = c => c <= 4 ? 4 : c <= 6 ? 6 : 12, RADS = {a:0, t:0}, BOYEQ = {}, BOYET = {k:'', top:null, bot:null, cv:null};
-  const KST = {raft:0, buoys:0, text:0, radar:0, cargo:0, crane:null, tubs:0, htub:0, vt:null, n:0};   // what the last frame drew of the kit, for which boat, and how many frames (the tests read it)
+  const KST = {raft:0, buoys:0, text:0, radar:0, cargo:0, crane:null, tubs:0, htub:0, pots:0, vt:null, n:0};   // what the last frame drew of the kit, for which boat, and how many frames (the tests read it)
   // the buoy's lettering: the boat's name over the ring and her home port under it, in black block capitals (§ 43)
   function boyeCanvas(txt){
     // (1024 × 116: the strip's own shape on the ring, 0.57 m of arc by 0.065 m, so the letters are not stretched)

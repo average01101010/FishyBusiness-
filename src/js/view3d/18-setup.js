@@ -1,7 +1,9 @@
   // ---------- setup ----------
   // What stopped the 3D view, shown with the message so a device it fails on tells why (the user's phone 04.10.2026: «3D-visning
   // støttes ikke» with no more to go on): the step and the error, or the shader's log
-  let failWhy = '', stage = '', GPU = '', glWatch = false;
+  let failWhy = '', stage = '', GPU = '', glWatch = false, GL2 = false;
+  // WebGL 2 or 1 (GL2); a device where the start on WebGL 2 failed is kept on WebGL 1 (dsb_gl1) for this version of the way it is set up
+  const GL1_KEY = 'dsb_gl1', GL1_VER = 'a';
   // How heavy a sea this device has managed, kept on the device (dsb_sea): 0 the full sea, 1 the far pass's simpler sea for both passes
   // (no sea-state texture in the vertex shader, four wind waves, no ripples), 2 the flat basic sea. On a PC the shaders are compiled by
   // Direct3D's compiler when they are linked, and the full sea can take it so long that the browser restarts the GPU and the page loses
@@ -33,8 +35,18 @@
       stage = 'webgl';
       // the settings the view wants, then plainer ones: some PCs (Adrian, 04.10.2026) give no context with antialiasing or the
       // high-performance GPU asked for, and do with neither
-      const ctxTry = o => { try { return canvas.getContext('webgl', o) || canvas.getContext('experimental-webgl', o); } catch (e){ return null; } };
+      // WebGL 2 first (docs/planer/grafikk-batmodeller.md F1, valg 1 A, 30.10.2026), WebGL 1 where there is none, where #gl1 is in the
+      // address, or where a start on WebGL 2 failed before on this device (GL1_KEY, set below): the same shaders and the same picture
+      const ctxTry = o => { try { return (want2 && canvas.getContext('webgl2', o)) || canvas.getContext('webgl', o) || canvas.getContext('experimental-webgl', o); } catch (e){ return null; } };
+      let want2 = !/gl1/.test(location.hash) && typeof WebGL2RenderingContext !== 'undefined'; try { if (!/gl2/.test(location.hash) && localStorage.getItem(GL1_KEY) === GL1_VER) want2 = false; } catch (e){}
       gl = ctxTry({antialias:true, alpha:false, powerPreference:'high-performance'}) || ctxTry({antialias:false, alpha:false}) || ctxTry({alpha:false, failIfMajorPerformanceCaveat:false}) || ctxTry(undefined);
+      GL2 = !!gl && typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
+      // WebGL 1's extensions that WebGL 2 has in its core: asked for by name as before (the trees, the near field, the turbines, the
+      // 32-bit indices, the derivatives), they answer with the core functions
+      if (GL2 && !gl.__x2){ gl.__x2 = true; const ge = gl.getExtension.bind(gl);
+        const core = {OES_standard_derivatives:{}, OES_element_index_uint:{}, ANGLE_instanced_arrays:{VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE:0x88FE, vertexAttribDivisorANGLE:(i, d) => gl.vertexAttribDivisor(i, d),
+          drawArraysInstancedANGLE:(m, f, c, n) => gl.drawArraysInstanced(m, f, c, n), drawElementsInstancedANGLE:(m, c, t, o, n) => gl.drawElementsInstanced(m, c, t, o, n)}};
+        gl.getExtension = nm => core[nm] || ge(nm); }
       // none at all: the browser has 3D off for the page, most often after the driver gave up here once (Chrome keeps it off until it is
       // closed and opened again), or for the machine
       if (!gl) throw new Error(S.lang === 'en' ? 'no WebGL context (the browser has turned 3D off, often after a driver error: close the browser fully and open it again)' : 'ingen WebGL-kontekst (nettleseren har slått av 3D, ofte etter en driverfeil: lukk nettleseren helt og åpne den igjen)');
@@ -68,7 +80,7 @@
       if (!gl.getExtension('OES_standard_derivatives')) throw new Error('mangler OES_standard_derivatives');
       UINT = !!gl.getExtension('OES_element_index_uint'); qualSet();   // 32-bit indices: the ultra level's big meshes
       stage = 'shadere';
-      PL = program(LIT_VS, LIT_FS, ['aPos', 'aCol'], 'lit'); PT = program(TER_VS, terFS(0), ['aPos', 'aCol', 'aNor', 'aShd', 'aMat'], 'terreng'); PTS = [PT, null, null]; PRGN = program(LITN_VS, LITN_FS, ['aPos', 'aNor', 'aCol'], 'modell'); PRGX = program(TEX_VS, TEX_FS, ['aPos', 'aUV'], 'tekstur'); PRGW = program(WK_VS, WK_FS, ['aPos', 'aW', 'aS'], 'kjølvann');
+      PL = program(LIT_VS, LIT_FS, ['aPos', 'aCol'], 'lit'); PT = program(TER_VS, terFS(0), ['aPos', 'aCol', 'aNor', 'aShd', 'aMat', 'aCov'], 'terreng'); PTS = [PT, null, null]; PRGN = program(LITN_VS, LITN_FS, ['aPos', 'aNor', 'aCol'], 'modell'); PRGX = program(TEX_VS, TEX_FS, ['aPos', 'aUV'], 'tekstur'); PRGW = program(WK_VS, WK_FS, ['aPos', 'aW', 'aS'], 'kjølvann');
       WKB = {p:new Float32Array(9000 * 3), w:new Float32Array(9000 * 4), s:new Float32Array(9000), pb:buf(new Float32Array(9000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), wb:buf(new Float32Array(9000 * 4), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), sb:buf(new Float32Array(9000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW)}; // the waves read the sea-state texture in the vertex shader where the GPU can (#novtf in the address tries without)
       SST_VS = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) >= 2 && !/novtf/.test(location.hash);
       // The sea is the heaviest program, and a phone's driver may refuse to link it with no word why (Adreno 642L, 05.10.2026: «sjø link:
@@ -113,6 +125,11 @@
       buildLabels();
       ready = true; return true;
     } catch (e){
+      // a start that failed on WebGL 2 with the context still there: this device goes on WebGL 1 from now on (until GL1_VER changes),
+      // and the page loads again once (at most every ten minutes) to start on it; the cloud is told why
+      if (GL2 && gl && !gl.isContextLost()){ let last = 0; try { localStorage.setItem(GL1_KEY, GL1_VER); last = +sessionStorage.getItem('dsb_gl1_reload') || 0; } catch (e2){}
+        if (typeof cloudErr === 'function') cloudErr('3D WebGL 2 feilet, tar WebGL 1 · ' + stage + ': ' + String(e && e.message || e).slice(0, 160) + ' · ' + GPU, 'view3d init', String(e && e.stack || ''));
+        if (Date.now() - last > 600000 && !/gl2/.test(location.hash)){ try { sessionStorage.setItem('dsb_gl1_reload', String(Date.now())); } catch (e2){} if (typeof save === 'function') save(); setTimeout(() => location.reload(), 300); } }
       console.error(e); failed = true; failWhy = stage + ': ' + String(e && e.message || e).replace(/\s+/g, ' ').slice(0, 160) + (GPU ? ' · ' + GPU : '');
       // to the cloud's error log with the GPU and its limits, so a phone it fails on can be looked into
       if (typeof cloudErr === 'function'){ let lim = ''; try { lim = ['MAX_FRAGMENT_UNIFORM_VECTORS', 'MAX_VERTEX_UNIFORM_VECTORS', 'MAX_VARYING_VECTORS', 'MAX_VERTEX_TEXTURE_IMAGE_UNITS'].map(k => k.replace('MAX_', '').toLowerCase() + '=' + gl.getParameter(gl[k])).join(' '); } catch (e2){} cloudErr('3D ' + failWhy, 'view3d init', lim + '\n' + String(e && e.stack || '')); }
@@ -140,7 +157,7 @@
   // layer stays for the crew's lines and the anchor alarm)
   function buildLabels(){ labelsEl.innerHTML = ''; labelEls = []; }
   function resize(){
-    const r = wrap.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, QUAL.dpr[QUAL.lvl]);
+    const r = wrap.getBoundingClientRect(), dpr = PROF.dpr ? Math.min(window.devicePixelRatio || 1, PROF.dpr) : Math.min(window.devicePixelRatio || 1, QUAL.dpr[QUAL.lvl]);
     const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
     if (canvas.width !== w || canvas.height !== h){ canvas.width = w; canvas.height = h; }
   }

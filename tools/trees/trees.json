@@ -1,0 +1,5 @@
+{
+  "what": "the canopy cover and height per coastal tile (tools/trees/trees.py, Meta and WRI's canopy height maps v2, CC BY 4.0), built by .github/workflows/trees.yml when this file changes and kept as a release trees-<run number>; tools/map/kart.json names the one the map release takes ('trees')",
+  "parts": 12,
+  "run": 1
+}

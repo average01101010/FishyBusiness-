@@ -139,9 +139,9 @@ function havnBerths(H, type, vid, n){
   // the quay faces within HAVN.r km that are not the players' places (quayFree) and fit her (90 % of the face her length and 2 m, its water her draught and half a metre)
   for (const t of vecTilesIn(cx - HAVN.r * 1000, cz - HAVN.r * 1000, cx + HAVN.r * 1000, cz + HAVN.r * 1000)) for (const f of t.quays){
     if (Math.hypot(f.x - cx, f.z - cz) > HAVN.r * 1000 + f.hl || !quayFree(f) || !quayFit(f, L, V.draft)) continue;
-    const lim = f.hl - L / 2 - 1;
+    const lim = f.hl - L / 2 - 1, res = faceReserved(f);   // (off the unit's block, basin and berths and the harbour point: L1, 07-harbours.js)
     for (let s = 0; s <= lim * 2; s += HAVN.step) for (const a of s ? [s / 2, -s / 2] : [0]){
-      if (Math.abs(a) > lim) continue;
+      if (Math.abs(a) > lim || resHit(res, a, L / 2 + 1)) continue;
       const off = B / 2 + 0.4, p = {x:(f.x + f.ux * a + f.nx * off) / 1000, y:(f.z + f.uz * a + f.nz * off) / 1000}, hd = Math.atan2(f.ux, -f.uz);
       if (!havnHullFree(p, hd, L, B, need, others, true, slabs)) continue;
       out.push({key:H.id + ':q' + f.id + '@' + Math.round(a), kind:'quay', face:{x:f.x + f.ux * a, z:f.z + f.uz * a, ux:f.ux, uz:f.uz, nx:f.nx, nz:f.nz, hl:L / 2 + 1, depth:f.depth == null ? QUAY_DEPTH_UNKNOWN : f.depth, kind:f.kind}, bp:p, hd, d:Math.hypot(p.x * 1000 - cx, p.y * 1000 - cz)});

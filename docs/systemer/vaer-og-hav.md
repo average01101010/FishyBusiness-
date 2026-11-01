@@ -174,6 +174,7 @@ Brukerens valg:
   | 10 | Hvitt hav fra 24,5 m/s |
 
   Skumtoppene dekker andelen W = 3,84·10⁻⁶·U^3,41 (Monahan og O'Muircheartaigh 1980) der sjøen har hatt 0,2–3 km å bryte på. De sitter på kammene, normalisert med eget standardavvik. Terskelen er tilpasset den målte spredningen: `0,228 + 0,293·z − 0,016·z²`, der z er normalkvantilen. Kanten er like bred som pikselen (`fwidth`), med en svak, myk rand utenfor, og flekkene inni glattes ut før de blir mindre enn et par piksler. Da hakker ikke kanten. Der skummet er for lite til å synes, blir havet hvitere i stedet. Brenningene følger sjøen som når hver strand.
+  **Brenningene og grunnene langs land** (Jonas 28.10.2026: «Hvorfor skummet noen meter ut fra selve vannkanten?»): nærmest land kommer dybden fra strandteksturen (`buildLandMask`, rundt 18 m ut fra linja), lenger ute fra nærnettets høyder (23 m ruter). En rute som krysser linja, blander landets høyde med bunnen og ga en falsk grunne 30–60 m ut fra all kyst, med skum og turkis. Utenfor strandteksturen er det nå bare en grunne der alle fire nabopunktene i nettet (±1,5 rute) ligger under vann; ellers regnes dybden som minst 5 m, så det turkise slutter der strandteksturens gjør, uten egen kant (`SEA_FS` i `01-shaders.js`). Prøvd ved Reine, Bergen, Bodø og Hammerfest (`docs/pr/ccr-1d00422f-gjapvb/brenning/`): feilen fantes alle fire stedene og er borte. I stille vær er det lite skum ved selve strandkanten, fordi båndet der er like bredt som bølgehøyden tilsier.
 - **Jevne overganger:**
   - Vind, høyde og dønning glir mot nye verdier med tidskonstant 4 s, retningen over 12 s.
   - Alle trekk har myke overganger.
@@ -228,6 +229,16 @@ Brukerens valg:
 
 **Ikke løst her:** skummet i kjølvannet og baugbølgen var alt i båtens ramme. Resten av fysikkplanen (manøvreringsmodell, bølgekrefter, skade) står i 5.58.
 
+## 5.20d Skummet i vannet, båtens bølger i sving og revers, og skumtopper i le (Jonas 29.10.2026, Bleik)
+
+Jonas sendte bilder fra Bleik: propellskummet drev som en rett strek rett gjennom moloen, båtens bølger svingte ikke med skummet, og det var skarpe flekker i vannet langs land og på grunnene.
+
+- **Skummet ligger i vannet** (`foamStep` i `14-sea.js`, `FOAM_FS`): kjølvannets skum (r, g i skumkartet) lå i nærfeltets ramme (5.20b), som følger båten med 5/6 av farten, så hele sporet gled med i hver sving. Nå flyttes det hele teksler hvert bilde (`uShiftG`) så det ligger fast i vannet der båten var, og vannet driver med strømmen (`curAt`: tidevannsstrømmen og vinddriften, langs land nær land) i spillets tempo. Skum på land (strandteksturen, `buildLandMask`) slettes. Skumtoppene (b, a) ligger som før i nærfeltets ramme. Levetiden er 14 s (et spor på rundt 150 m i full fart i spillets 6x).
+- **Bølgene følger sporet** (`WAKE_GLSL`, `wakeTrack`): kilden (hekken forover, baugen akterover, ut fra båtens egen vei mellom bildene) husker veien sin, og Kelvin-mønsteret regnes langs de sju bitene av den (`uWkT`, `uWkS`) i stedet for langs en rett linje bak hekken. Farten er manøvreringsmodellens når båten styres for hånd, også bakover.
+- **Skumtopper etter vindstrekningen der du er** (`FETCHG` i `01-shaders.js`): tilstanden til sjøen kjenner vindstrekningen på 190 m-ruter, så et havnebasseng fikk havets. Seks blikk opp mot vinden i strandteksturen (30-960 m) gir strekningen, og den minste av de to gjelder, både i sjøskyggeren og i skumkartet.
+- **Det turkise uten kant:** der strandteksturen slutter, gikk dybden brått over til nettets; nå glir den over mellom -4 og -1,5 m.
+- `tests/wakeshot.py` kjører båten for hånd utenfor Bleik (forover, hard sving, revers) og tar bilder ovenfra; kvaliteten holdes på Høy (`#qfix`), fordi skumkartet er av på Lav.
+
 ## 5.20c Skumkartet: skummet som blir liggende i sjøen (Fysikk 4, F1, 27.10.2026)
 
 Jonas 27.10.2026 (`docs/planer/fysikk-4-sjo-og-skrog.md`, valg 3A og 7A): kjølvannet og skummet først. Før var skummet bare det hvert bilde selv laget: skumtoppene over terskelen og kjølvannets brytning ved skroget, og sporet to tynne striper (`TRAIL`) som var borte etter 10 s. I sjøen blir skum liggende: vasken et skrog legger fra seg er hvit i titalls sekunder og hundrevis av meter, og skummet fra en kam ligger igjen og drar ut i striper med vinden (videoene fra chillboats.game).
@@ -254,3 +265,5 @@ Skyene på himmelen (`cp` i himmelskyggeleggeren) driver med vinden i skyhøyden
 ## Fysikk 4: sjøen og skroget (plan vedtatt 27.10.2026)
 
 Jonas 27.10.2026: «Ytterligere forbedring av vannfysikk og hvordan båten samhandler med vannet. Mål: Vannfysikk med en høy grad av realisme», med et notat om havsimulering og fire videoer fra chillboats.game. Planen står i `docs/planer/fysikk-4-sjo-og-skrog.md`, med gjennomgangen av notatet (det meste stemmer; sanntidsdata, SPH, BEM/Cummins, thrustere, hydroakustikk og kranfysikk tas ut) og bilder av dagens sjø mot videoene (kjølvannet er to tynne prikkerekker, skumtoppene glatte flekker på 5–30 m, kammene runde). Valgene: «1a, 2b, 3a, 4a, 5a, 6a, 7a, 8ok, 9a»: Gerstner-summen forbedres og FFT måles for seg; oppdrift per skrogsnitt i 3D med rull som i dag; skumkart som følger båten; kystnær sjø med shoaling, brytning og refraksjon; strøm og tidevannsstrøm som egen fase (mot anbefalingen); brottsjø sist; skummet først; konsekvensene samlet til slutt. Nettbrettet er en OnePlus Pad 3, nullpunkt 71 bilder/s og 14,1 ms på Høy i fint vær. Fasene (F1–F8) bygges én per økt og dokumenteres her og i `fysikk-og-styring.md` etter hvert.
+
+- **Det mørke beltet langs land rettet 29.10.2026** (Jonas' bilder fra Bleik): regelen om 5 m ved linja (der en av de grove cellene rundt var land) laget et mørkt belte en grov celle bredt rundt hver holme og molo, trappete som cellene, og de grove grunnene utenfor ble en lys ring. Nå gir fjærekartet (`uLandS`) dybden helt ned til 4 m der det finnes, og dybden er minst 4 m utenfor det; de grove høydene teller bare dypere enn det. Det turkise toner da jevnt ut fra fjæra. Bilde før og etter i `docs/pr/ccr-1d00422f-gjapvb/g10/grunt_for_etter.png`.

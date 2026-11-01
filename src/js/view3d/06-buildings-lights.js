@@ -54,7 +54,7 @@
   const FRAME = [0.93, 0.93, 0.9], BGLASS = [0.1, 0.13, 0.16], WARM = [1, 0.78, 0.42], DOORS = [[0.3,0.2,0.14],[0.2,0.3,0.24],[0.55,0.15,0.12],[0.9,0.9,0.88],[0.22,0.28,0.4]];
   function buildChunk(key, detail){
     const srcs = bldCells(key), c = {mesh:null, lights:null, nl:0, detail, dm:null, gd:null, gl:null};
-    const m = MB(), L = [], snowy = chunkSnow % 10 === 1, D = detail ? MB() : null, GD = detail ? MB() : null, GLm = detail ? MB() : null;
+    const m = MB(), L = [], SMK = [], snowy = chunkSnow % 10 === 1, D = detail ? MB() : null, GD = detail ? MB() : null, GLm = detail ? MB() : null;
     for (const [B, idx] of srcs) for (const j of idx){
       const i = j + B.seed, x = B.x[j], z = B.z[j], l = B.l[j], w = B.w[j], ty = B.t[j], lv = B.lv[j], ry = Math.PI / 2 - B.a[j], hsh = hash(i * 7 + 3);
       const ca = Math.cos(B.a[j]), sa = Math.sin(B.a[j]);
@@ -81,6 +81,8 @@
         case 15: wall = [0.5, 0.48, 0.45]; hg = 1.2; gable = false; break;
         default: wall = pick(PAL_HOUSE); hg = lv ? 2.8 * lv : 3.6; light = 0.3;
       }
+      // a chimney on some of the houses and cabins, for the smoke in the cold (G9, 17e-life.js)
+      if ((ty === 1 || ty === 4) && hash(i * 13 + 5) < 0.4) SMK.push(x + ca * l * 0.22, base + rise + hg + pitch * w * 0.5 + 0.7, z + sa * l * 0.22);
       if (snowy) roof = mix3(roof, SNOW, 0.85);
       const H = hg + rise;
       if (gable) m.house(x, base, z, w, l, H, ry, wall, roof, pitch, cap); else m.box(x, base, z, w, H, l, wall, ry, roof);
@@ -120,32 +122,39 @@
         if (ty === 6) wins(l, w / 2, bx, bz, ca, sa, [floor + 1.6], 0.8, 0.7, 4, -1);
       }
     }
-    addTrees(m, key, srcs, snowy);
+    addTrees(m, key, srcs, snowy, c);
     const o = c.o = [gridKeyX(key) * 1000, gridKeyY(key) * 1000];
     c.mesh = m.p.length ? m.mesh(o) : null;
     const RM = MB(); addRoads(RM, key, snowy); if (RM.p.length) c.rd = RM.mesh(o);
     if (detail){ if (D.p.length) c.dm = D.mesh(o); if (GD.p.length) c.gd = GD.mesh(o); if (GLm.p.length) c.gl = GLm.mesh(o); }
     if (L.length){ c.lights = buf(relTo(L, o)); c.nl = L.length / 3; }
+    if (SMK.length) c.smk = SMK;
     return c;
   }
   // trees: birch woods below the tree line with some pine, kept off roads and buildings; colours follow the season
   const treeSeason = () => { if (typeof seasonAt === 'function'){ const st = seasonAt(S.t / 60); return st.leaf < 0.4 ? 0 : st.yel > 0.45 ? 2 : 1; } const mo = gDate(S.t / 60).getUTCMonth(); return mo >= 5 && mo <= 7 ? 1 : mo === 8 ? 2 : 0; };
-  function addTrees(m, key, srcs, snowy){
+  function addTrees(m, key, srcs, snowy, c){
     const gz = gridKeyY(key), gx = gridKeyX(key), x0 = gx * 1000, z0 = gz * 1000, occ = new Uint8Array(1600);
     const mark = (x, z, r) => { const cx = Math.floor((x - x0) / 25), cz = Math.floor((z - z0) / 25); for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++){ const i = cx + b, j = cz + a; if (i >= 0 && j >= 0 && i < 40 && j < 40) occ[j * 40 + i] = 1; } };
     for (const [B, idx] of srcs) for (const i of idx) mark(B.x[i], B.z[i], Math.max(B.l[i], B.w[i]) > 30 ? 2 : 1);
     for (const r of roadsIn(x0 - 30, z0 - 30, x0 + 1030, z0 + 1030)){ for (let j = 1; j < r.xs.length; j++){ const L = Math.hypot(r.xs[j] - r.xs[j - 1], r.zs[j] - r.zs[j - 1]), n = Math.ceil(L / 12); for (let q = 0; q <= n; q++) mark(r.xs[j - 1] + (r.xs[j] - r.xs[j - 1]) * q / n, r.zs[j - 1] + (r.zs[j] - r.zs[j - 1]) * q / n, 0); } }
+    if (c && treeChunk(c, key, occ, snowy)) return;   // the trees from the map (G4, 17c-trees.js), where it has them
     const ses = treeSeason(), leaf = ses === 1 ? [0.15, 0.29, 0.11] : ses === 2 ? [0.7, 0.48, 0.12] : [0.55, 0.5, 0.47], pine = [0.06, 0.15, 0.08], trunk = [0.78, 0.76, 0.7];
     let count = 0;
-    for (let j = 0; j < 30 && count < 260; j++) for (let i = 0; i < 30 && count < 260; i++){
-      const hh = hash((gx * 7919 + gz * 104729) * 900 + j * 30 + i), x = x0 + (i + 0.15 + 0.7 * hash(hh * 1e7 | 0)) * 33.3, z = z0 + (j + 0.15 + 0.7 * hash((hh * 3e7 | 0) + 5)) * 33.3;
+    // the 900 places in a stride over the square (397 is prime to 900), so the cap of 260 does not fill the northern rows first
+    for (let q = 0; q < 900 && count < 260; q++){
+      const sq = q * 397 % 900, j = Math.floor(sq / 30), i = sq % 30, hh = hash((gx * 7919 + gz * 104729) * 900 + j * 30 + i), x = x0 + (i + 0.15 + 0.7 * hash(hh * 1e7 | 0)) * 33.3, z = z0 + (j + 0.15 + 0.7 * hash((hh * 3e7 | 0) + 5)) * 33.3;
       if (occ[Math.floor((z - z0) / 25) * 40 + Math.floor((x - x0) / 25)] || onUnit(x, z, 8) || onSite(x, z)) continue;
-      const h = terrH(x, z); if (h < 2.5 || h > 330) continue;
+      const h = terrH(x, z); if (h < 2.5 || h > 420) continue;
       const sl = Math.hypot(terrH(x + 10, z) - terrH(x - 10, z), terrH(x, z + 10) - terrH(x, z - 10)) / 20; if (sl > 0.75) continue;
       const LF = MAPD.L.forest, fc = Math.floor(x / (LF.c * 1000)), fr = Math.floor(z / (LF.c * 1000)), fo = HG && mapViewIn({x:x / 1000, y:z / 1000}) && mapIn(LF, fc, fr) && rcell(LF, fc, fr) ? 1 : 0;
-      const pr = (1 - sstep(210, 330, h)) * (1 - sstep(0.42, 0.75, sl)) * (fo ? 0.95 : 0.5) * sstep(0.36, 0.62, noise2(x / 260, z / 260, 31) * 0.7 + noise2(x / 60, z / 60, 37) * 0.3);
+      // where the land cover is known (G1): the woods where ESA has forest, a few low birches in the heath, the meadow and the town's
+      // gardens, none on the bog, the lichen fells, bare rock, the snow or the fields; else the old rule (the forest layer and a noise)
+      const cl = coverClass(x, z), CK = [0, 1, 0.07, 0.06, 0.01, 0.015, 0, 0, 0, 0.05, 0, 0, 0];   // (0, land with no class near the shore, keeps the old rule)
+      const pr = cl > 0 ? (1 - sstep(260, 420, h)) * (1 - sstep(0.42, 0.75, sl)) * CK[cl] * (cl === 1 ? 1 : sstep(0.4, 0.6, noise2(x / 120, z / 120, 31)))
+        : (1 - sstep(210, 330, h)) * (1 - sstep(0.42, 0.75, sl)) * (fo ? 0.95 : 0.5) * sstep(0.36, 0.62, noise2(x / 260, z / 260, 31) * 0.7 + noise2(x / 60, z / 60, 37) * 0.3);
       if (hash((hh * 5e7 | 0) + 11) > pr) continue;
-      const th = 4 + 6 * hash((hh * 9e7 | 0) + 13) * (1 - sstep(120, 320, h) * 0.55), y = h - 0.3, isPine = hash((hh * 2e7 | 0) + 17) < 0.18, v = 0.88 + 0.24 * hash((hh * 4e7 | 0) + 19);
+      const th = (cl === 2 ? 0.45 : 1) * (4 + 6 * hash((hh * 9e7 | 0) + 13) * (1 - sstep(120, 320, h) * 0.55)), y = h - 0.3, isPine = hash((hh * 2e7 | 0) + 17) < 0.18, v = 0.88 + 0.24 * hash((hh * 4e7 | 0) + 19);
       if (isPine){
         const col = mix3(snowy ? mix3(pine, SNOW, 0.35) : pine, [0, 0, 0], 0), r = th * 0.24, top = [x, y + th, z], pts = [0, 1, 2, 3, 4].map(k => { const a = k * 1.2566 + hh * 6; return [x + Math.cos(a) * r, y + th * 0.15, z + Math.sin(a) * r]; });
         m.box(x, y, z, 0.3, th * 0.2, 0.3, [0.35, 0.25, 0.18], 0); for (let k = 0; k < 5; k++) m.tri(top, pts[k], pts[(k + 1) % 5], col.map(c => c * v));
@@ -177,7 +186,7 @@
       }
     }
   }
-  function freeChunk(c){ const del = mm => { if (mm.parts) mm.parts.forEach(del); else { gl.deleteBuffer(mm.pb); gl.deleteBuffer(mm.cb); } }; for (const mm of [c.rd, c.mesh, c.dm, c.gd, c.gl]) if (mm) del(mm); if (c.lights) gl.deleteBuffer(c.lights); }
+  function freeChunk(c){ treeFree(c); const del = mm => { if (mm.parts) mm.parts.forEach(del); else { gl.deleteBuffer(mm.pb); gl.deleteBuffer(mm.cb); } }; for (const mm of [c.rd, c.mesh, c.dm, c.gd, c.gl]) if (mm) del(mm); if (c.lights) gl.deleteBuffer(c.lights); }
   function updateChunks(maxBuilds){
     if (!NEARM) return;
     const sf = (snowNow == null || snowNow < 80 ? 1 : 0) + 10 * treeSeason();

@@ -109,6 +109,18 @@ jobs:
           pattern: tiles-*
           path: tools/map/out/national
           merge-multiple: true
+      - name: The ground's summer colour (the release kart.json names, from .github/workflows/s2.yml)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=$(python3 -c "import json; print(json.load(open('tools/map/kart.json')).get('s2', ''))")
+          if [ -n "$TAG" ]; then mkdir -p tools/map/out && gh release download "$TAG" -p s2.tgz -D /tmp && tar xzf /tmp/s2.tgz -C tools/map/out && ls tools/map/out/s2 | wc -l; fi
+      - name: The trees (the release kart.json names, from .github/workflows/trees.yml)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=$(python3 -c "import json; print(json.load(open('tools/map/kart.json')).get('trees', ''))")
+          if [ -n "$TAG" ]; then mkdir -p tools/map/out && gh release download "$TAG" -p trees.tgz -D /tmp && tar xzf /tmp/trees.tgz -C tools/map/out && ls tools/map/out/trees | wc -l; fi
       - name: The packs
         working-directory: tools/map
         run: |

@@ -11,6 +11,11 @@ const GAME_RATE = 6;
 // time away when it is behind, and goes at half pace when a save from before is ahead, until the world has caught up with it.
 const WORLD_T0 = Date.UTC(2026, 9, 5, 15, 0, 0), WORLD_SEED = 20270301;
 const WCLOCK = {off:0, on:typeof location === 'undefined' ? false : !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || /(^#|[#,])world\b/.test(location.hash)};
+// #seed=N in the address (tests/_env.py puts it there, KYST_SEED) swaps Math.random for a seeded generator (mulberry32, the one the tests
+// used inside their own evaluate blocks), so a test run repeats: the weather, the catch, the crew, the orders and S.qseed come out the
+// same every time, and a red test is a bug and not a bad roll (29.10.2026). Nothing in the game sets it; a player's address never has it.
+{ const m = typeof location !== 'undefined' && /(^#|[#,])seed=(\d+)/.exec(location.hash || '');
+  if (m){ let a = (+m[2] || 1) | 0; Math.random = () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; } }
 const worldNow = () => Date.now() + WCLOCK.off;
 const worldTf = () => Math.max(0, (worldNow() - WORLD_T0) * GAME_RATE / 60000);
 const worldT = () => Math.floor(worldTf());
