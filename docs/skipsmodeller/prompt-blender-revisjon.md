@@ -37,6 +37,9 @@ Kjør på.
 ---
 
 Det neste økt bør vite (etter plastsjarken 01.11.2026):
+- Les `sulebas-bygging.md` kap. 15 først: tabellen over spillets krav (dekkskartet 1,85 m og lenkene til tak, navnet mot registreringsmerket,
+  LOD-grensene) skal inn i `check()` før overbygget formes; plastsjarken brukte to ekstra runder på dem. Selvvurderingen står i
+  `plastsjark-grunnlag.md` kap. 9 (66/100): ikke noe overlegg, et avvik bortforklart, en regel om testene brutt.
 - Sjekk hva snittfunksjonen returnerer før du veier: `qa/lines.py <skript> --section <navn>` tegner spantrisset og veier tre vannlinjer for
   alle skript (plast31: `curve` var hele skroget, 21,9 t mot 6). Kroppen under vannlinja som én kubisk kurve (`plast31.py body`) gir rund kimming uten knekk.
 - `tests/p31shot.py` er den nyeste malen for før- og etter-bildene; `runtests.sh` tar `P=<prefiks>` for loggnavnene.

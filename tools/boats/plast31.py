@@ -962,6 +962,16 @@ def check():
     out.append(('dashbordet %.0f grader under øyet (hp %.2f rad og fov %d: synsfeltet går ned til %.0f grader)' % (ang, HP, FOV, math.degrees(-HP) + FOV / 2), ang <= math.degrees(-HP) + FOV / 2))
     out.append(('rattet %.2f m forut for øyet (skipperen står bak det, ikke i det)' % (WHEEL[0] - SKIP[0]), 0.3 <= WHEEL[0] - SKIP[0] <= 0.55))
     out.append(('sløyebordet %.2f m over dekket, ytterkanten %.2f m utenfor ripa (vessel3d: bredden ±5 %%)' % (gut_top() - z_deck(5.35), 0.03), 0.8 <= gut_top() - z_deck(5.35) <= 0.95))
+    # the game's deck map (vessel3d.js deckMap: a floor needs DM_HEAD 1.85 m free over it; a surface within 0.6 m and 1.6 m of a part one can
+    # step onto is joined to the deck): the roof must not overhang the deck lower than that, nor lie near the hold's lid (round 10: the
+    # crew and the door ended up on the wheelhouse roof)
+    over = (WX1 + LEAN + 0.04) - WX1; head = zr_ - z_deck(WX1); lid = HOLD[0] - 0.03 - (WX1 + LEAN + 0.04); dh = (zr_ + 0.07) - (z_deck(5.17) + 0.225)
+    out.append(('taket henger %.2f m forut for frontens fot med %.2f m fri høyde over dekket (dekkskartet: 1.85, ellers høyst en celle, 0.2); %.2f m og %.2f m opp fra taket til lukelokket (knyttes til dekket under 0.6 m og 1.6 m)' % (over, head, lid, dh),
+                (head >= 1.85 or over <= 0.2) and (lid > 0.6 or dh > 1.6)))
+    # the game's registration mark on a 9-15 m boat lies about 0.7-1.3 m over the water forward (markStrips, regmarktest); the name strips
+    # on the bows must stay under it (maletest: they never lie on each other)
+    ntop = max(zs(x) - 0.70 for x in (6.60, 7.75)) - WL
+    out.append(('navnefeltet på baugen går til %.2f m over vannet (registreringsmerket fra rundt 0.71 m; maletest feiler ved mer enn 5 cm overlapp)' % ntop, ntop <= 0.71 + 0.045))
     for s, ok_ in out: print(('OK   ' if ok_ else 'FEIL ') + s)
     return all(o for _, o in out)
 

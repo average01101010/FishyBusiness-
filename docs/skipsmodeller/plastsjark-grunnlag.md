@@ -189,6 +189,32 @@ på arbeidsdekket, og ser fiskeren gjennom frontrutene.
   synes; et rett akterfra (speilet, roret); et rett forfra (utfallet og stevnen); et inn i styrhuset (konsollen, døra) og et ovenfra over
   arbeidsdekket (luka, haleren); og helst produsentens tegning.
 
+## 9. Selvvurdering (01.11.2026, etter Jonas' spørsmål)
+
+**Karakter: 66 av 100.** Skroget, kjølen, propellbrønnen, hullene, lanternene, testene og dokumentasjonen holder nivået fra de andre
+revisjonene, og båten er klart penere enn før. Det som trekker ned:
+
+- **Ingen overlegg.** Kritikksløyfen krever overlegg; uten foto skulle den ortografiske rendringen vært lagt over profilen fra `qa/lines.py`
+  (slik trebåten og skiffen gjorde mot linjene fra tabellene). Det ble ikke gjort.
+- **Spillets krav ble funnet av testene og etter-bildene, ikke slått opp først.** `sulebas-bygging.md` kap. 11 sier at spillet stiller krav
+  som må slås opp før overbygget formes. Dekkskartets 1,85 m og koblingen til taket (runde 10) og navnet mot registreringsmerket (runde 9)
+  kostet to ekstra runder med tester og bilder (rundt to timer).
+- **Et avvik i rendringen ble bortforklart.** De grå strekene på speilet i runde 1 og 2 ble skrevet bort som støy i slitasjen; i runde 3 viste
+  de seg å være to flater i samme plan, den feilen regelen i kap. 7 er laget for.
+- **Regelen om én SwiftShader-side om gangen ble brutt** én gang: et feilsøkingsskript gikk samtidig med `regmarktest` mot utgangspunktet
+  (resultatet ble likt det kjente, men kunne vært en falsk rød).
+- **Det som ble flyttet bort i stedet for løst:** gangen akter for styrhuset er for smal for dekkskartet (0,15 m mellom husets side og
+  skansekledningen), så mannskapsplassen akter ble flyttet forut. Plassene for spillets livbøye på styrhusets akterskott og flåten på taket er
+  ikke sett i spillet etter at dørken ble senket.
+- **Det som kunne vært penere:** styrhuset er fortsatt nær en kasse (rette sider, flatt tak med bare 5 cm bue), roret er stort og flatt i
+  profil, og fra broa synes instrumentene bare så vidt i spillet (dashbordet ligger lavt i synsfeltet; `hp` −0,30 ble valgt for å bestå
+  `check()`, ikke formgitt fra skipperens plass).
+- **Lesingen:** dokumentene i bestillingen er lest, men `ringnot38.py` bare i utdrag (hullene, utskjæringen, ankrene, eksporten), og
+  `fittings.py` og `bpyutil.py` i grensesnittene; `docs/systemer/3d-baater-og-animasjon.md` 5.13, `testing.md` og `vessel3d.js`' `deckMap`,
+  `markStrips` og `deckPoints` ble lest først da de feilet.
+
 ## Endringslogg
+
+- 01.11.2026: kap. 9, selvvurderingen; `check()` regner nå også takets høyde over dekket og navnefeltet mot registreringsmerket.
 
 - 01.11.2026: første versjon, gjennomgangen før endring og de første rundene.

@@ -410,7 +410,56 @@ det vil si rundt 4 000 trekanter. Hold beslag, karmer og ekstra rader ute av `bu
 avrundet hekk i stedet for et bredt speil, en scueringslist og kapp i tre mot hvit gelcoat og en mørk stripe, et lavt hus med et sammenhengende
 mørkt vindusbånd og en takkant i stripens farge, rustfritt og teak på dekk.
 
+## 15. Selvkritikk etter plastsjarken: det neste båt skal gjøre annerledes (01.11.2026)
+
+Jonas spurte etter revisjonen om økta lærte noe, om dokumentene var lest godt nok, og hvilken karakter arbeidet fortjente (66 av 100,
+`plastsjark-grunnlag.md` kap. 9). Det som ville løftet resultatet:
+
+**1. Slå opp spillets krav før overbygget formes, og regn dem i `check()`.** Tre av rundene på plastsjarken gikk til krav som stod i
+spillets kode og ble funnet av testene i stedet for i planen. Tabellen under samler det som er kjent; les den før ankre, tak, dører og
+navnefelt legges, og legg det som kan regnes inn i `check()` (plast31.py gjør det for taket og navnefeltet):
+
+| Krav | Hvor | Tall |
+|---|---|---|
+| Fri høyde over et dekk | `vessel3d.js` `deckMap` (`DM_HEAD`) | 1,85 m; et lavere tak over dekket gjør dekket under til ikke-dekk |
+| Flater som knyttes til dekket | `deckMap` (lenkene) | inntil 1,6 m høyere og 0,6 m unna en del man kan gå på (et lokk, en kasse): et tak nær et lokk blir dekk |
+| Plassene på dekket | `deckPoints`, `walktest` | alle `crewSpots`, `work`, `hauler`, `filler`, `doors` på dekkets høyde (`qa/deckpoints.py`) |
+| Takhøyde på broa | `brotest` | 1,8 m over `skipperAt` |
+| Rorkultens sveip | `13-instruments.js` | 41° hver vei (kap. 11) |
+| Vimpel | `mastTop` | en hvit lykt over flaggstanga og mer enn 1 m fra den er en mast |
+| Registreringsmerket | `markStrips`, `regmarktest` | jevn sone 1, ingenting som stikker ut; på 9–15 m rundt 0,7–1,3 m over vannet forut |
+| Navnet mot merket | `maletest` | navnefeltene og merket overlapper aldri mer enn 5 cm |
+| Middelsmodellen | `vessel3d` | 120 000 punkter med delene oppå (`LODM_TRIS`) |
+| Fjernmodellen | `vessel3d` (NPC) | 12 000 punkter, rundt 4 000 trekanter |
+| Bredden og lengden | `vessel3d` | ±5 % og −6 %/+3 % i båndet −0,3–1,5 m over vannlinja, det som stikker ut over ripa medregnet |
+
+**2. Overlegg også uten foto.** Legg den ortografiske rendringen fra siden over profilen fra `qa/lines.py` hver runde; den viser om stevnen,
+ripa, kjølen og overbygget følger tabellene, og om noe har flyttet seg.
+
+**3. Et avvik i en rendring undersøkes med en gang.** Strekene på plastsjarkens speil ble bortforklart i to runder før de viste seg å være to
+flater i samme plan. Alt som ser rart ut, er en feil til nærbildet viser noe annet.
+
+**4. Se på spillets utstyr på plassene etter hver høydeendring.** En senket dørk flytter livbøya på akterskottet og skipperens høyde; et
+flyttet lokk flytter garnkaret. Ta skjermbildene fra spillet før dokumentasjonen skrives, ikke etter.
+
+**5. Løs plassmangel i formen, ikke ved å flytte plassen.** Er gangen rundt huset for smal for dekkskartet, gjør huset smalere eller
+gangen bredere; flytt ikke mannskapet bort fra der folk faktisk står.
+
+**6. Formgi broa fra skipperens øye.** Velg øyets høyde, vindskjermens og dashbordets vinkel slik at instrumentene ligger midt i nedre del av
+synsfeltet, og sett `hp` etter det; ikke juster `hp` til `check()` blir grønn.
+
+**7. Les hele malen og spillets kode for modellen før første linje.** Pilotens skript (`ringnot38.py`), `fittings.py` og `bpyutil.py` er
+lange; les dem i sin helhet eller si fra om at de bare er lest i utdrag. Les `vessel3d.js` (`deckMap`, `deckPoints`, `markStrips`,
+`nameStrips`, `lanterns`) og testene som dekker båten (`vessel3d`, `brotest`, `walktest`, `maletest`, `regmarktest`) før skriptet skrives.
+
+**8. Én SwiftShader-side om gangen, også for feilsøking.** Vent til testen er ferdig før et feilsøkingsskript startes.
+
+**9. Når Jonas ber om en pen båt, avtal retningen tidlig.** Plastsjarkens estetiske løft kom først etter første bygg. En kort liste over
+grepene (spring, hekk, lister, hus, farger) før skroget formes, sparer en runde.
+
 ## Endringslogg
+
+- 01.11.2026: kap. 15, selvkritikken etter plastsjarken (spillets krav samlet i én tabell, overlegg uten foto, avvik undersøkes med en gang, utstyret på plassene, broa fra øyet, lesingen, én SwiftShader-side, estetikken avtalt tidlig).
 
 - 01.11.2026: kap. 14, det revisjonen av plastsjarken lærte (snittfunksjonen, `qa/lines.py`, kroppen som kubisk kurve, lette båter med kjøl, speilets innside, nedsenket dørk, fjernmodellens grense, det som gjør en båt pen).
 
