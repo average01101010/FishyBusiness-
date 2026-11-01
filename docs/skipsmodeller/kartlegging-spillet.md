@@ -227,8 +227,8 @@ Tallene er lest ut av GLB-filene. `lod0` er nærmodellen og `lod1` avstandsmodel
 |---|---|---|---|---|---|
 | `skiff` | `skiff59.py` | 5,9 m | 55 035 / 2 507 (`lodm` 36 499; før 31.10.2026: 11 190 / 990) | 4 458 KB | bøyer 2, kar 1, garn, stamper, last 1 |
 | `trebat` | `snekke23.py` | 7,0 m | 81 616 / 2 694 (`lodm` 36 499; før 31.10.2026: 17 906 / 1 416) | 5 294 KB | bøyer 2, garn, stamper, last 1 |
-| `snekke` | `snekke26.py` | 7,9 m | 10 332 / 1 589 | 412 KB | flåte 1, bøyer 2, radar, kar 1, garn, stamper, last 1 |
-| `plastsjark` | `plast31.py` | 9,45 m | 6 961 / 2 405 | 319 KB | flåte 1, bøyer 2, radar, garn, stamper, last 2 |
+| `snekke` | `snekke26.py` | 7,9 m | 68 057 / 3 071 (`lodm` 40 000; før 01.11.2026: 10 332 / 1 589) | 4 258 KB | flåte 1, bøyer 2, radar, kar 1, garn, stamper, last 1 |
+| `plastsjark` | `plast31.py` | 9,45 m | 76 755 / 3 803 (`lodm` 40 000; før 01.11.2026: 6 961 / 2 405) | 4 235 KB | flåte 1, bøyer 2, radar, garn, stamper, last 2 |
 | `sjark` (målestokken) | `havsjark35.py` | 10,57 m | 26 074 / 2 663 | 902 KB | flåte 1, bøyer 2, radar, åpen radar, garn, stamper, last 2 |
 | `hurtigsjark` | `hurtig11.py` | 10,99 m | 9 971 / 3 000 | 415 KB | som over, last 1, kran |
 | `sjarkny` | `hs11.py` | 10,99 m | 8 009 / 3 431 | 384 KB | som over, last 2, kran |
@@ -274,9 +274,9 @@ bilderunden. Den er vurdert fra sidebildet i Båthandelen. Oversiktsbildet ligge
 | Båt | Helhet | Det som er bra | Det som trekker ned (se 6.1) |
 |---|---|---|---|
 | `trebat` (snekke23) | **God** (revidert 31.10.2026 etter pilotens arbeidsmåte, `trebat-grunnlag.md`) | Skroget som én flate med klinkland, nagler og ganger, propellbrønn i dødveden, ror av bord, spant, bunnstokker, kne, motor med glødehode og lyddemper, lanterner. Slitasjen er overbevisende | Håndjuksa tegnes i koden. Ingen bilder av forbildet: målene er antatt for typen |
-| `snekke` (snekke26) | **God** | Støpte klinkbord, marineblått bånd, hardtopp, cockpit med kar og bord, badeleider | M13, M17 |
-| `plastsjark` (plast31) | **Svak** | Riktig profil og fargebånd, lenseporter, lanterner på riktig side | M10, M13. Lavest detalj av alle (6 961 trek.) |
-| `sjark` (havsjark35) | **God** (målestokken) | Spring og striper, rigg med vaiere, lastebom, styrhus | M5, M6, M14. Redskapsrommet akter er en glatt kasse |
+| `snekke` (snekke26) | **God** (revidert 01.11.2026 etter pilotens arbeidsmåte, `snekke-grunnlag.md`) | Skroget som én flate med støpte klinkbord og kjølen, propell i brønn mellom kjølen og roret på bronsesko, ekte hull (vinduer, nedgang, luker, lensporter, eksos), dørhus med vindskjerm, konsoll med ratt, plotter og enspak, eget sløyebord over babord ripe | Ingen bilder: alt under vann og alt inni er antatt; deplasementet 3,58 t mot 3,0 t |
+| `plastsjark` (plast31) | **God** (revidert 01.11.2026 etter pilotens arbeidsmåte, `plastsjark-grunnlag.md`; Jonas ga frie tøyler til å gjøre den pen) | Skroget som én flate med kjølen, propell i brønn foran profilroret, avrundet hekk, teak scueringslist og kapp, ekte hull (koøyer, nedgang, luker, lensporter med klaff, utløp), lavt styrhus med senket dørk og svart vindusbånd, konsoll mot skipperen, eget sløyebord | Ingen bilder: alt under vann og alt inni er antatt; deplasementet 6,63 t mot 6 t; bredden 3,30 i spillet mot 3,05–3,20 i annonsene |
+| `sjark` (havsjark35) | **God** (revidert 01.11.2026 etter pilotens arbeidsmåte, `havsjark-grunnlag.md`) | Skroget som én flate med ballastkjølen, ekte hull (spygatt, koøyer, luker, dør), broa fra skipperens øye, lovlige lanterner, seilet beslått i havn, redskapsrom med dør | M6 (spillets felt). Stripene knekker rundt stevnen; deplasementet 11,3 t mot 12 |
 | `hurtigsjark` (hurtig11) | **Middels** | Gjenkjennelig knekkspantskrog, fartsstriper, mast med stag, kran på riktig plass | M3, M11. Takvisiret er en tykk massiv plate |
 | `sjarkny` (hs11) | **Middels** | Styrhus med interiør, dører, kran, sløyebord | M3, M6, M14 |
 | `breisjark` (malo36) | **Middels til god** | Rigg, galge, ly og styrhus med panoramavinduer | M3. Store flate sider og skanse |
@@ -309,16 +309,16 @@ Funnet i bildene fra spillet og i skriptene. «T» betyr tolket fra bildet, ikke
 | M2 | Ringnotbåten mangler nesten alt ringnotutstyr: nottrakt, hengende kraftblokk (bare en gul klump på en tynn bom), sidehaler, pumpe og sugeslange, notgjerde | H | pelagisk | Løftes etter Sulebas-eksemplet (RNG-01–15) |
 | M3 | Store, helt flate skrogsider og vegger uten plateskjøter, lister, lenseporter eller beslag | M | kyst15, sjarkny, breisjark, hurtigsjark, autoliner, snokrabbe, bunntral, pelagisk | SKR-09–11, SKR-16, SKR-22 og materialløftet |
 | M4 | Kasseform: rett hekk med skarpe hjørner og et flatt, tomt speil | M | kyst15, autoliner, snokrabbe | Avrundede hjørner, og speil med navn, lys, leider og fendere (SKR-05, IDN-02) |
-| M5 | Støttesegl som stiv, ensfarget plate uten form, som også står oppe i havn | M | sjark, kyst15 | Seil med bue, kanter og lik, som kan rulles (SJK-11) |
+| M5 | Støttesegl som stiv, ensfarget plate uten form, som også står oppe i havn (sjark rettet 01.11.2026: to deler, satt til sjøs og beslått i havn, `drawSail`) | M | kyst15 | Seil med bue, kanter og lik, som kan rulles (SJK-11) |
 | M6 | Registreringsmerket blir skjevt (ser kursivt ut) på båter med skrå stevn, fordi feltet følger skrogets linjer (skriften er rett Arial Narrow). På de store båtene er det lite og nesten uleselig, og lys tekst på mørkt skrog blir svak i skumring | M | skjevt: sjark, hurtigsjark, snekke. Lite: kyst15, autoliner, bunntral, pelagisk | Loddrette bokstaver og bokstavhøyde etter forskriften. Sjekk lesbarheten i skumring (IDN-01) |
 | M7 | Bulben stikker opp av vannet som en spiss, rød kjegle foran baugen | M | bunntral | Rundere bulb, og sjekk vannlinja mot dypgangen (SKR-04) |
 | M8 | Mastene er glatte svarte rør (ringnotbåten) eller en massiv kile (formasta på autolineren) | M | pelagisk, autoliner | Mast med plattformer, rå, leidere, lanterner og antenner (MST-01, MST-02) |
 | M9 | Tråldørene er flate plater med striper | M | bunntral, pelagisk | Krum dør med ramme, sko, sjakler og slitasje (PTR-04, BTR-03) |
-| M10 | Plastsjarkens styrhus har matte sidevinduer som ser ut som plater, og et tykt, flatt tak | M | plastsjark | Glass med karm og refleks, takskjerm (OVB-03, OVB-05) |
+| M10 | Plastsjarkens styrhus har matte sidevinduer som ser ut som plater, og et tykt, flatt tak (rettet 01.11.2026: rutene i ekte åpninger med gummikarm i et svart vindusbånd, tynt tak med dryppkant og visir) | M | plastsjark | Glass med karm og refleks, takskjerm (OVB-03, OVB-05) |
 | M11 | Mørke, utflytende flekker på skrogsiden, trolig bakt skygge på store trekanter (T) | M | hurtigsjark | Flere punkter der skyggen bakes, eller skyggen som tekstur |
 | M12 | Stålskrogene er helt glatte, uten buler, sveis eller plateskjøter, også på 1978-båten | M | kyst21, havbåtene | SKR-09, EPO-02 |
-| M13 | Baugrulle og anker er en grå kloss foran stevnen | L | snekke, plastsjark | Stevnbeslag og baugrulle fra biblioteket (FOR-07) |
-| M14 | Dekkene er tomme ovenfra: ingen tau, fendere eller kasser når båten ikke fisker | M | sjark, sjarkny, kyst15, havbåtene | DKS-12, OVB-13 |
+| M13 | Baugrulle og anker er en grå kloss foran stevnen (snekka og plastsjarken rettet 01.11.2026: `F.bow_roller`, ankervinsj med gypsy) | L | – | Stevnbeslag og baugrulle fra biblioteket (FOR-07) |
+| M14 | Dekkene er tomme ovenfra: ingen tau, fendere eller kasser når båten ikke fisker (sjark rettet 01.11.2026) | M | sjarkny, kyst15, havbåtene | DKS-12, OVB-13 |
 | M15 | Undervannsskroget er forenklet. Propellbladene er flate plater uten vridning, og ingen har CPP-nav. Bare havsjark35 og malo36 har anoder, og bare hs11 har slingrekjøl. 8 av 14 skript har ikke lenseporter | M | alle | FRM-01–04, SKR-07, SKR-11, SKR-19 |
 | M16 | Den samme moderne knekkbomkranen står på 1978-båten som på de nye | L | kyst21 | Krantype eller lastebom etter båtens år (KRN-09, EPO) |
 | M17 | Flåtebeholderen på hardtoppen virker stor for snekka (T) | L | snekke | Sjekk mot målene for en firemannsflåte |
@@ -338,6 +338,7 @@ Funnet i bildene fra spillet og i skriptene. «T» betyr tolket fra bildet, ikke
 | D5 | Teinene om bord vises ikke når båten er rigget for teiner, bare under setting og trekking | M | `drawPots` er eneste sted teinene tegnes |
 | D6 | Påhengsmotoren på 90 hk har ingen egen modell (31.10.2026: `fittings.outboard(hp=90)` kan lage den; ikke koblet til `EQUIP.motor90` ennå) | L | `EQUIP.motor90`, `skiff59.py` |
 | D7 | VHF, AIS, kartplotter, CHIRP og sonar kjøpes, men synes ikke (radaren gjør det) | M | `EQUIP` |
+| D8 | Skrogenes volum under vannlinja mot `disp` (01.11.2026, `tools/boats/qa/stubcheck.py --volume`, grove anslag: hver snittfunksjon må sjekkes for hva den returnerer): snekka hadde 10,5 t mot 3,0 (rettet); `plast31` 21,9 t mot 6 (snittfunksjonen `curve` gir hele skroget; rettet 01.11.2026: 6,63 t), `hs11` 45 mot 15, `kyst15` 121 mot 75, `kyst21` 249 mot 190, `malo36` 29 mot 20; `hurtig11` stemmer. Revidert: trebåten 2,11 mot 1,9, skiffen 1,60 mot 1,0, snekka 3,58 mot 3,0, plastsjarken 6,63 mot 6,0, havsjarken 11,31 mot 12 (før 12,75 med kjølen som egen kropp) | M | `tools/boats/*.py`, `VESSELS.disp` |
 | D8 | Testen `vessel3d.py` setter et tak på 120 000 punkter (rundt 40 000 trekanter), mens båtplanen (B17) sier 80 000–250 000 trekanter. Planen kan ikke følges uten at testen endres | M | `tests/vessel3d.py`, `docs/batplan.md` |
 | D9 | Havbåtene har ingen festepunkter for utstyr (`kit` er tom). Alt er bakt inn, så det kan ikke oppgraderes eller byttes | H (for framtida) | `al45`, `krabbe50`, `tral60`, `not75` |
 

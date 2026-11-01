@@ -1,5 +1,6 @@
 """The vessel models in 3D (src/js/vessel3d.js): each type with a model is shown at sea from the side, the bow and the helm, and a
-screenshot is saved in tests/out/ (vessel_<type>_*.png) to be looked at. Prints the vertex count against the budget, and page errors."""
+screenshot is saved in tests/out/ (vessel_<type>_*.png) to be looked at; the showroom and another player's boat. The numbers (points
+against the budget, the hull's measures, the places, the local fleet's kit models) are checked in Node: tests/unit/vessel3d.test.mjs."""
 import asyncio, json, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _env import GAME
@@ -37,19 +38,8 @@ async def main():
             await pg.evaluate("G3.setHelm(true)"); await pg.wait_for_timeout(1500)
             await pg.screenshot(path=os.path.join(OUT, 'vessel_%s_helm.png' % t)); await pg.evaluate("G3.setHelm(false)")
         print(json.dumps(counts, ensure_ascii=False))
-        for t, i in counts.items():
-            # a detailed model from tools/boats is drawn as triangles without shared corners: about three points to a triangle. Your own
-            # boat near (lod 2) up to some 300 000 triangles since F1 (30.10.2026, the Pad 3 measurement), its middle version (lod 1, the
-            # local fleet near by: lodm, else lod0) at today's 120 000 points (docs/planer/grafikk-batmodeller.md)
-            budget = 900000 if i['glb'] else 45000 if i['cls'] == 'hav' else 25000; bmid = 120000 if i['glb'] else budget
-            print(ok(i['verts'] <= budget and i['mid'] <= bmid and not i['nan']), '%s: %d punkter nær (budsjett %d), %d middels (budsjett %d), bygget på %.1f ms, uten NaN' % (t, i['verts'], budget, i['mid'], bmid, budget and i['ms']))
-            L = i['len']
-            if i['glb']:
-                # the hull from just below the waterline to 1.5 m above it (the fender strake, the stem up to the strake), without the bow roller,
-                # the riding sail's boom and the gantry over the stern
-                # (a raked stem over a bulb, as on the pilot boat, makes the hull in this band up to 6 % shorter than her length over all)
-                print(ok(-0.06 < (i['hull'][1] - L) / L < 0.03 and abs(i['hull'][0] - i['beam']) / i['beam'] < 0.05 and i['geoOk']), '%s (GLB): skroget er %.2f m langt og %.2f m bredt mot %.2f x %.2f m, og alle plassene for 3D-visningen finnes' % (t, i['hull'][1], i['hull'][0], L, i['beam']))
-            else: print(ok(abs(i['box'][1] - L) / L < 0.08), '%s: modellen er %.2f m lang mot %.2f m i dataene' % (t, i['box'][1], L))
+        # the numbers (the points against the budget, NaN, the hull's length and beam, the places for the 3D view) are checked in Node in
+        # seconds since 01.11.2026: tests/unit/vessel3d.test.mjs (node tests/unit/run.mjs vessel3d); here only the pictures
         # the market's showroom: the boat afloat off the harbour, the camera turning round it, a chip with the way back
         if not ONLY or 'showroom' in ONLY:
             await pg.evaluate("(()=>{ const b = S.boat; b.type = 'skiff'; applyVessel(); G3.vesselChanged(); b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; })()"); await pg.wait_for_timeout(1500)
@@ -76,11 +66,7 @@ async def main():
                 await pg.evaluate("G3._debug.cam.yaw = %s" % yaw); await pg.wait_for_timeout(1600)
                 await pg.screenshot(path=os.path.join(OUT, 'vessel_npc_%d.png' % i))
             await pg.evaluate("S.mult = 1")
-            sc = [k[3] for k in npc['kits']] + [k[4] for k in npc['kits']]
-            # (within 30 % since 17.10.2026: the 8.9 m kit model left with the plastsjark, docs/batplan.md del 3, so a 9 m boat wears the havsjark scaled down until the new Blender model comes)
-            print(ok(all(0.75 <= x <= 1.3 for x in sc) and all(k[2] for k in npc['kits'])), 'every boat in the local fleet gets a kit model within 30 % of her length and beam', [k[:3] for k in npc['kits']])
-            # (GLB middle versions 12 000 since 17.10.2026: the models from the Blender round carry their doors, lamps and interiors in the middle version too)
-            print(ok(all(v[1] <= (120000 if v[3] else 25000) and v[2] <= (12000 if v[3] else 6000) for v in npc['verts']) and npc['liv'] > 0), 'near versions under 25 000 points (detailed GLB models 120 000), middle under 6 000 (GLB 12 000), and the liveries change the colours', npc['verts'])
+            # (the kit models' scale, budgets and liveries: tests/unit/vessel3d.test.mjs)
             print(ok(bool(npc.get('npc'))), 'found a boat on her ground for the screenshots', npc.get('npc'))
         # another player's boat: her own type's model, not the box boat (Jonas 05.10.2026: a friend in the same old wooden boat showed white)
         if not ONLY or 'peer' in ONLY:

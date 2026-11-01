@@ -12,7 +12,7 @@ Lest før planen: `VESSELS` (`core/02-species-gear.js`), databladet (`ui/05-phon
 | `skiff` | `skiff59.py` | 434 | åpen | 5,9 | 95 000 | 1+1 / 0 |
 | `snekke` | `snekke26.py` | 379 | åpen, h7 | 7,9 | 245 000 | 2+1 / 0 |
 | `plastsjark` | `plast31.py` (ny 17.10.2026) | 430 | åpen, h8 | 9,45 | 850 000 | 2+1 / 2 |
-| `sjark` | `havsjark35.py` (**målestokken**) | 623 | åpen, h9 | 10,57 | 1 150 000 | 3+1 / 2 |
+| `sjark` | `havsjark35.py` (målestokken; revidert 01.11.2026) | 623 | åpen, h9 | 10,57 | 1 150 000 | 3+1 / 2 |
 | `hurtigsjark` | `hurtig11.py` | 384 | åpen, h10 | 10,99 | 4 900 000 | 3+1 / 2 |
 | `breisjark` | `malo36.py` | 532 | åpen | 10,99 | 9 000 000 | 4+1 / 4 |
 | `sjarkny` | `hs11.py` | 251 | åpen | 10,99 | 10 500 000 | 3+1 / 3 |
@@ -196,13 +196,13 @@ Oppdragsøkonomien fra 17.10.2026 (`docs/OVERLEVERING.md` 4.26) gjør at fisket 
 
 **Rekkefølge** (etter hvor mye de ses, og hvor tynne skriptene er):
 1. `snekke23.py` (trebåten, startbåten alle ser): B8, B12, B16, interiør med motorkasse og rorkult er alt der; revidert etter pilotens arbeidsmåte 31.10.2026 (F5, `docs/skipsmodeller/trebat-grunnlag.md`)
-2. `snekke26.py`: B4–B6, B8, B12
+2. `snekke26.py`: B4–B6, B8, B12; revidert etter pilotens arbeidsmåte 01.11.2026 (F5, `docs/skipsmodeller/snekke-grunnlag.md`)
 3. `hs11.py` (sjarkny, det dyreste kjøpet under 11 m, tynnest skript): hele lista
 4. `hurtig11.py`: B5, B6, B8, B12
 5. `malo36.py`: B6, B8, B12, B16
 6. `kyst15.py`: hele lista, med shelterdekket og trappa som dekkskartet savner
 7. `kyst21.py`: hele lista, med galgen og rusten
-8. **ny plastsjark 9 m** (del 3): fra bunnen etter malen
+8. **ny plastsjark 9 m** (del 3): fra bunnen etter malen; revidert etter pilotens arbeidsmåte 01.11.2026 (F5, `docs/skipsmodeller/plastsjark-grunnlag.md`)
 9. `havsjark35.py`: B8 (typede lanterner), B12, B14 (overbygg-sone)
 10. `skiff59.py`: B8, B12; revidert etter pilotens arbeidsmåte 31.10.2026 (F5, `docs/skipsmodeller/skiff-grunnlag.md`)
 11. havbåtene `al45.py`, `krabbe50.py`, `tral60.py`, `not75.py`: B4, B7–B10, B12, B17 (Jonas 17.10.2026: alle nå, «så er det gjort»)
@@ -287,3 +287,5 @@ Kilden er Sjøveisreglene (forskrift 1. desember 1975 nr. 5 om forebygging av sa
 - 30.10.2026 (pilotbåten, F4 i grafikkplanen): kystnotbåten på 38,55 m `ringnot38.py` bygd etter en ekte båts byggerapport og 20 bilder gjennom 22 runder i kritikksløyfen, med `lodm` (B17) for første gang; i spillet som låst type (ikke i stigen). Hele byggingen og reglene som kom ut av den står i `docs/skipsmodeller/sulebas-bygging.md`.
 - 31.10.2026 (F5, startbåten `trebat`, `snekke23.py`): skrevet på nytt etter `ringnot38.py` (`docs/skipsmodeller/trebat-grunnlag.md`, `trebat-bygging.md`): skroget som én flate med klinkland, nagler og ganger, ryggen som én profil med propellbrønnen som ekte hull, roret av bord, spant, bunnstokker, kne, motoren med glødehode og lyddemper, `check()` mot tabellene og dataene (B1 så langt det går uten tegning), klasjsjekk 0. Den hvite rundtlysende løftet til 1,03 m over sidelanternene (vedlegg I 2(d)) og flyttet ut av rorkultens sveip. 81 616 trekanter nær, `lodm` 36 499, fjern 2 694. Ingen flåte eller livbøye i modellen (Jonas 31.10.2026). `VESSELS` uendret; skroget gir 2,11 t mot 1,9 t i dataene.
 - 31.10.2026 (F5, `skiff`, `skiff59.py`): skrevet på nytt etter `ringnot38.py` (`docs/skipsmodeller/skiff-grunnlag.md`, `skiff-bygging.md`): skroget som én flate med speilet, hakket, podene, foringen, benken og dekkene, ekte hull for luker, lommer, stangholdere og utløp, tårnplate, ny påhengsmotor, konsoll med festet vindskjerm og skjermer som heller riktig vei, `check()` mot tabellene, dataene og lanternereglene, klasjsjekk 0. Den hvite rundtlysende løftet til 1,05 m over sidelanternene (vedlegg I 2(d); den sto 0,86 m over). Produsentens navn tatt ut av GLB-en (B20). 55 035 trekanter nær, `lodm` 36 499, fjern 2 507. `VESSELS` uendret; skroget gir 1,60 t ved tegningens vannlinje mot 1,0 t i dataene.
+- 01.11.2026 (F5, plastsnekka `snekke`, `snekke26.py`): skrevet på nytt etter `ringnot38.py` (`docs/skipsmodeller/snekke-grunnlag.md`, `snekke-bygging.md`): det gamle skroget ga 10,5 t mot 3,0 t i dataene, kjølen hang som egen kropp og propellen og roret løst bak den. Nå skroget som én flate med støpte klinkbord og kjølen (snittet starter på kjølens underkant), kroppen 0,44 m under vannlinja med hul kjølrot og rund kimming (3,58 t; vannlinjebredden 2,32 m, antatt), propell i brønn mellom kjølens akterkant og profilroret på bronsesko, ekte hull, dørhus med vindskjerm og sider på ripa, styreplass på dørken med 1,98 m under taket (konsoll, ratt, plotter, enspak, kompass, VHF, stol), lanterner som felles beslag med skjerm, eget sløyebord over babord ripe (`work.own`), båndet i malingssone 2 (B14). Nye felles beslag: `single_lever`, `helm_seat`, `stern_lantern`, `foil_rudder`. 68 057 trekanter nær, `lodm` 40 000, fjern 3 071, GLB 4,3 MB (før 10 332 og 412 KB). `VESSELS.snekke` er ikke endret.
+- 01.11.2026 (F5, plastsjarken `plastsjark`, `plast31.py`): skrevet på nytt etter `snekke26.py` (`docs/skipsmodeller/plastsjark-grunnlag.md`, `plastsjark-bygging.md`). Det gamle snittet var en superellipse fra kjølens underkant (21,9 t mot 6 t i dataene), kjølen en egen kropp inni skroget og propellen inne i skroget; båten ble heller ikke bygd etter en ekte tegning (del 3), og det er fortsatt ingen tegning eller bilder i repoet. Nå skroget som én flate med kjølen (6,63 t; vannlinjebredden 2,80 m, antatt), propell i brønn foran profilroret, ekte hull, styrhus med senket dørk og svart vindusbånd, konsoll med ratt og skjermer vendt mot skipperen, lanterner som felles beslag med skjerm, eget sløyebord over babord ripe (`work.own`). Jonas ga frie tøyler til å gjøre båten pen; målene, planen for dekket og ankrene er beholdt. 76 755 trekanter nær, `lodm` 40 000, fjern 3 803, GLB 4,2 MB (før 6 961 og 319 KB). `VESSELS.plastsjark` er ikke endret; bredden 3,30 m er større enn i de fleste annonsene (3,05–3,20), og noen annonser tyder på styrhus midtskips (spørsmål til Jonas i grunnlaget kap. 8).

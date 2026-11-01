@@ -148,3 +148,7 @@ har samme oppløsning som bruker-styrte båter»). Pilotbåten er ringnotbåten,
   lommene og stangholderne som ekte hull, tårnplate, ny påhengsmotor og nye felles beslag i `fittings.py` (også rattet og
   motoren). 55 035 trekanter nær, `lodm` 36 499, fjern 2 507, GLB 4,4 MB. Funnet underveis: egen skiff ble ikke tegnet med
   Blender-modellen i spillet (`glbHas` husket «nei» fra før dataene var hentet); rettet, med levende skjermer på modellens konsoll.
+- **F5, havsjarken 01.11.2026** (`tools/boats/havsjark35.py`, `docs/skipsmodeller/havsjark-grunnlag.md`, `havsjark-bygging.md`; Jonas: «Løft
+  den til samme nivå», uten bilder): skrevet på nytt etter `plast31.py` med tegningenes mål; ballastkjølen i skrogets flate, ekte hull, ny
+  bro, lovlige lanterner, seilet satt til sjøs og beslått i havn. Spillet fikk `roofOver` og `stairs` i dekkskartet (rettet også
+  ringnotbåten og breisjarken) og typede fiskelys. 60 670 trekanter nær, `lodm` 39 035, fjern 4 283, GLB 3,8 MB.
