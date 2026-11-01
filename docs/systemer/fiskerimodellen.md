@@ -22,7 +22,9 @@
 
 | Torsk | Hyse | Sei | Lyr | Lange | Brosme | Uer | Kveite | Blåkveite |
 |---|---|---|---|---|---|---|---|---|
-| 0,37 | 0,3 | 0,6 | 0,3 | 0,3 | 0,35 | 0,5 | 0,35 | 0,6 |
+| 0,405 | 0,3 | 0,65 | 0,2 | 0,3 | 0,32 | 0,65 | 0,35 | 0,6 |
+
+  Kalibrert på nytt i B2 (01.11.2026, se 5.3c): før var det 0,37 / 0,3 / 0,6 / 0,3 / 0,3 / 0,35 / 0,5 / 0,35 / 0,6.
 
 - **Blåkveite** (07.10.2026, tilbakemelding #10; researchen i `docs/blakveite.md`, planen i `docs/plan-blakveite.md`):
   - **Hvor:** eggakanten. `eggaArea` (`03-simulation.js`, via feltet `area:'egga'`) gir null grunnere enn 280–400 m og dypere enn 1000–1150 m, null sør for 62° N, 0,15 fra Storegga til Helgeland, full styrke fra Lofoten (67,6–68,8° N) og nordover, × 0,4 i Vest-Finnmark og × 0,6 øst for 26,5° Ø (sluttseddelene 2025 per område). Vestfjorden × 0,15, de skjermede fjordbassengene i Troms × 0,12 (usikkert). Om vinteren (nov–feb) tynnes det sør for 70° N (inntil −45 %) og fylles nord for (+30 %), fordi gytefisken samles på kanten fra 70 til 75° N.
@@ -38,7 +40,7 @@
   - **Mottak og oppdrag** (07.10.2026, Jonas: «Alle mottak skal kunne ta i mot blåkveite»): salget har aldri skilt på mottak, så alle kjøper den. Alle mottak nord for 62° N får `mk.sp.blakveite` (`06b-coastports.js`, med kilo og måneder fra registeret der det har dem), og alle store kunder der får arten lagt til (`custSp`, `bkPlant` i `03-simulation.js`). Bestillingene kommer bare i direktefisket fram til stoppen varsles, for en båt under 28 m på blad B som eier line eller garn (`bkOrderable`, via `spCatchable`): 300–3000 kg, fire dager. `turRoom` er resten av maksimalkvoten, så Turer kan også gi bestillinger og sesongflytting for blåkveite.
   - **Kystposten** (`newsForDay` i `06-services.js`, forsiden): åpningen, varselet om stoppen tre dager før, stoppdagen, kvoterådet 26. juni og totalkvoten 17. oktober, sammen med torskens.
 
-- **Skreipulsen** (`skrei`): 0,6 / 2,0 / 2,5 / 0,8 for januar–april, 0,1 i desember. Den virker bare på eksponerte banker på 40–250 m og på de tre ytre feltene (`skreiSpot`).
+- **Skreipulsen** (`skrei`): 0,6 / 2,0 / 2,5 / 0,8 for januar–april, 0,1 i desember. Den virker bare på eksponerte banker på 40–250 m og på de tre ytre feltene (`skreiSpot`). Fra B2 (5.3c) er dette pulsen på Senjas breddegrad. Den går som en front langs kysten, og mengden per sted kommer fra sluttsedlene.
 - **`density(sp, p, H)`** er den ene kilden for fisk i spillet: fangst, ekkolodd, varmekart, garn, line, jukse-spillet og pubrykter. 30 × `density` × innsats er kg i timen (én person med håndjuksa har innsats 2). Den er delt i `denPlace(p)` (det alle arter deler: land, dybde, eksponering, helling og avstand til feltene), `denTime(H)` (sesongtallene, lagret for én time) og `denSp()` (artens egen sum). Delingen ga nøyaktig de samme tallene (kontrollsum over rutenett rundt alle feltene).
 - **Fisken trekker** (`hotspot`, `HOT`): Gode flekker på et mønster på 3,5 km. To felt overlapper hele tiden, hvert glir sin vei med 0,7–1,7 km i døgnet og toner inn og ut over 240 timer. Før hoppet hele mønsteret hver 120. time. Snittet er det samme som før (0,742 mot 0,737).
 - **Stimer** (`school`, `SCHOOL`): et finere mønster (400 m) som svømmer 0,5–1 km i timen i hver arts egen retning. Det gir ±15 % og er 1 i snitt, så fangsten over en dag er den samme, men bittet på ett sted kommer og går i løpet av en halvtime. Sonaren viser retningen (`schoolDrift`).
@@ -61,7 +63,7 @@
 
 ## 5.3b Datagrunnlaget: fisket langs kysten slik det virkelig var (B1 i `docs/planer/bestand-og-flaate.md`, 01.11.2026)
 
-`tools/npc/fiske.py` → `src/data/fiske.json`, releasen `fiske-N` (`.github/workflows/fiske.yml`, den 3. hver måned og når skriptet endres). Spillet leser ikke fila ennå: B2 (fordelingen og vandringen) og B3 (flåtetrykket) bygger på den, og L2/N1 og H1 bruker kommunetabellen.
+`tools/npc/fiske.py` → `src/data/fiske.json`, releasen `fiske-N` (`.github/workflows/fiske.yml`, den 3. hver måned og når skriptet endres). Spillet leser fila fra B2 (5.3c); B3 (flåtetrykket) bygger videre på den, og L2/N1 og H1 bruker kommunetabellen.
 
 - **Kildene** (NLOD, «Lisens for bruk av Fiskeridirektoratets data»):
   - Sluttsedlene, «fangstdata (seddel)» (`register.fiskeridir.no/uttrekk/fangstdata_<år>.csv.zip`), de to siste hele årene (nå 2024 og 2025), norske fartøy (`Fartøynasjonalitet` NOR), alle landingsnasjoner. Rundt 975 000 seddellinjer i året. Kolonnene som brukes: `Art - gruppe`/`Art - FDIR`, `Rundvekt`, `Hovedområde (kode)`, `Lokasjon (kode)` (lokasjonen står på hver seddellinje, også i `Fangstfelt (kode)` = kyst/hav + hovedområde + lokasjon), `Landingsmåned (kode)`, `Redskap (kode)`, `Lengdegruppe (kode)` (de fem gruppene under 11, 11–14,99, 15–20,99, 21–27,99, 28 m og over, etter `Største lengde`), `Fartøy ID`, `Landingsdato`, `Mottaksstasjon`, `Nord/sør for 62 grader nord`, `Sone`, `Fartøykommune (kode)` og navnet. `Kyst/hav (kode)` (0 hav, 8 kyst) brukes ikke; lengden og lokasjonen skiller.
@@ -93,6 +95,77 @@
 - **Krav 5b (5 000 aktive):** fila er statisk og følger appen (som `mottak.json`); den koster serveren ingenting per spiller. Releasen lages én gang i måneden på GitHub.
 - **Antatt eller usikkert:** to års snitt glatter ikke ut et år med uvanlig vandring (makrellen 2024 mot 2025: 250 000 mot 156 000 t); grensen på 5 000 kg er et valg for å holde fila under 400 kB; båtens redskap er det den landet mest kilo med, så en båt som fisker garn om vinteren og jukse om sommeren, telles som garnbåt.
 
+## 5.3c Fordelingen og vandringen (B2 i `docs/planer/bestand-og-flaate.md`, 01.11.2026)
+
+`core/03f-fiske.js`. `av`-tabellen og skreipulsen var de samme fra Lindesnes til Vardø. Nå følger fisken sluttsedlene per lokasjon og måned (5.3b), med vandringskurver der sedlene alene ikke viser bevegelsen.
+
+- **Fila i siden:** `fiske.json` ligger som tekst i siden (`/*@text(data/fiske.json)*/null`, ny form i `build.mjs` og `tests/unit/run.mjs`). Den leses med `JSON.parse` første gang fisket spør (`fkData`). Målt i Chromium: som objekt-literal kostet de 366 kB **51 ms** ved oppstart, og **73 ms** med CPU-en strupet 4×. Som tekst er det ~0 ms ved oppstart. Første oppslag koster `JSON.parse` (6–12 ms her, ~37 ms strupet) pluss byggingen av feltet (**42–62 ms** i Node, én gang). Siden vokser fra 6,31 til **6,84 MB**: 0,39 MB for `fiske.json` som tekst (med escapede anførselstegn) og resten for `felt.json` (128 kB). Jonas valgte tekst lest ved behov 01.11.2026.
+- **Leseren `fkCell(sp, område, måned, redskap, lengdegruppe)`** gir kg og landinger i året:
+  - for en lokasjon (`'05-29'`, kystflåten) eller et hovedområde (`'05'`, havflåten og landingene uten lokasjon)
+  - redskapet er et navn fra `meta.gear` eller `null`, og lengdegruppa 0–4 eller `null`
+  - Spillets `krabbe` er `kongekrabbe` i fila.
+- **Tettheten fra sedlene (valg A, Jonas 01.11.2026):** kilo per landing på lokasjonen og i måneden, justert for redskap og båtlengde. Hver landing måles mot snittet nasjonalt for sin redskap × lengdegruppe, så en kystgarnbåt og en linebåt på 20 m teller likt. Det ganges med andelen av lokasjonens landinger den måneden som hadde arten (innsatsen er alle landingene der: det høyeste tallet for noen art den måneden).
+  - **Glatting:** en firedel fra hver nabomåned, og halvparten av snittet for nabolokasjonene. Naboene er polygonene i `rules.json` som deler et hjørne (til 50 m).
+  - **Krymping:** tallet trekkes mot hovedområdets tall når det er under `FK.n0` = 20 landinger.
+  - **Forholdet til Senja:** spillet bruker tallet som forholdet til Senja-feltene (lokasjonene til `GROUNDS` 0–3) i samme måned, ganget med `av`. Grensene er 0,03–5.
+  - **Der det ikke finnes tall** (ingen landinger på lokasjonen eller i hovedområdet), er faktoren 1, og `av` holder.
+- **Torsken deles i to:**
+  - **Kysttorsken:** lokasjonens sommernivå (juni–september) mot Senjas.
+  - **Skreien:** lokasjonens overskudd over sommernivået januar–mai, mot Senjas. Den kommer og går med skreifronten og gytebestanden (`stockF`). Bergen har ikke noe slikt overskudd, og har derfor ingen skrei.
+  - Den store skreien i `sampleFish` følger det samme (`skreiShare`).
+- **Ikke med:** blåkveita og kongekrabben beholder sin egen geografi (`eggaArea`, `kingArea`), som alt var tatt fra de samme sedlene.
+- **Oppslaget per rute og time (5b):**
+  - **Lokasjonen per rute:** `lokOfCell(p)` gir lokasjonen (indeks i `RU.lok`) og midten av 2 km-ruta. Den slås opp én gang per rute og lagres i `LOKC`. Kandidatpolygonene per 10 km-blokk ligger i `LOKB`.
+  - **Måneden:** `denTime` gir månedsvektene (`fkMonth`) og skreifronten per dag med forskyvning, én gang per time.
+  - **Hvor `denSp` henter det:** fra `fkAvail(sp, q, T)`. `denPlace` legger ruta i `q.c`.
+  - **Målt:** oppslaget er **0,03 µs** per art og time, og 0,08 µs for ruta (0,2 µs første gang ruta slås opp). Et helt `density`-kall i Chromium tar 17,7 µs før og 18,5 µs etter med samme time. Når timen byttes hvert 2 000. kall, er det 16,4 µs før og 19,0 µs etter. Ingenting koster serveren.
+- **Vandringskurvene (`MIG`), med kilde:**
+  - **Skreien** (HI, «Skrei» og torskens gytevandring, hi.no; sluttsedlene per lokasjon):
+    - Spillets skreipuls er den som gjelder på Senjas breddegrad (snittet for `GROUNDS` 0–3, 69,5° N).
+    - Den kommer 7 dager tidligere per grad nordover og senere sørover, langs skreikysten 66–71,2° N. Båtsfjord har skreien 22 dager før Røst (`vandring.test.mjs`).
+    - Gytefeltene går fra Møre til Finnmark, så skreien tones ut sør for Stad (61,8–62,6° N).
+    - Mengden er lokasjonens overskudd i sedlene og gytebestanden.
+  - **NVG-silda** (HI, «Norsk vårgytande sild»): gyting på Møre og Haltenbanken (62–65,5° N) i februar–mars, beiting i Norskehavet om sommeren (utenfor rammen), overvintring utenfor Troms og Vesterålen (68,3–71° N) i oktober–januar. Sedlene viser det samme: havflåtens sild er i hovedområde 04 i oktober–januar (71 850 t i januar i året).
+  - **Makrellen** (HI, «Makrell»): langs kysten mai–november. Nordgrensen går fra 58° N i mai til 69° N i august, og ingen langs kysten desember–april.
+  - **Seien** (HI, «Sei»; sluttsedlene): gyting på Møre og Haltenbanken i februar–mars, stimene langs kysten nord for 65° N i mai. Kurven er 1 på Senja og fyller bare inn der sedlene ikke har lokasjonen. Der de har den, gjelder sedlene.
+  - **Snøkrabben** (HI, «Snøkrabbe»): bare nordøst i Barentshavet, øst for 30° Ø og nord for 72° N (hjørnet av rammen).
+- **De nye artene** sild, makrell og snøkrabbe (`SPECIES`, `npc:true`, valg 4 = A):
+  - De er bare for flåtetrykket (B3) og AIS (H1).
+  - De er ikke i `SP` eller `SHELL`, og `spCatchable` sier nei.
+  - De er ikke i Fiskeguiden eller rekordene (`PLAYSP`), og mottakene kjøper dem ikke.
+  - De ligger sist i `ALLSP`, etter blåkveita, så ingen andre arters frø flytter seg (krabben er fortsatt den niende).
+  - Prisene er grove anslag som ingenting leser ennå.
+- **Feltnavnene** (`tools/npc/felt.py` → `src/data/felt.json`, `feltIn` i `01e-marks.js`, tegnet i `ui/03-map.js`):
+  - **Kilden:** Fiskeridirektoratets «Fiskeplasser – redskap» (WFS `FiskeridirWFS_fiskeri`, lagene `fiskeplasser_aktive_redskap` med 2 101 felt og `fiskeplasser_passive_redskap` med 2 941). Lisensen er NLOD (Fiskeridirektoratets åpne data; GetCapabilities oppgir ingen avgift eller begrensning).
+  - **Feltene i lagene:** stedsnavn, status, kommune, opphav, datoer, brukere, merknader, opptil åtte art/redskap/fra/til, `alle_arter`, `alle_redskap` og polygonet.
+  - **Det som leses:** bare stedsnavnet, polygonet og om redskapet er aktivt eller passivt. «Brukere» og merknadene leses aldri.
+  - **Resultatet:** 4 684 felt etter at samme navn innen 3 km er slått sammen (128 kB). Skriftpunktet er tyngdepunktet når det ligger inne i polygonet, ellers midten av den bredeste raden.
+  - **I kartplotteren:** navn uten sirkel, i kursiv, fra zoom 1, de største først. Bare ett navn per celle på 110 × 22 piksler, og høyst 80 i bildet. Senjas egne navn (`GROUNDS`) vinner innen 1,5 km.
+  - **Der feltene mangler** (for eksempel rundt Båtsfjord, der WFS-en har få felt), står det ingen navn. NPC-båtene holder skråningsregelen for sine felt (`npc.py`, uendret).
+- **`k` kalibrert på nytt:**
+  - **Målet:** snittet av 60 × `density` (én person med håndjuksa) over sjøen på 20–300 m rundt hvert av de fire stedene i `simday`, timene 8–16 på fem dager i måneden, med urørt bestand.
+  - **Endringen:** summen over de fire stedene før mot etter ga torsk 0,91, sei 0,92, lyr 1,48, brosme 1,11 og uer 0,77. `k` ble justert for disse fem. Hyse, lange og kveite var innen 3 %.
+  - **`simday`** (Husøy mars, Gryllefjord mars, Husøy juli, Malangsgapet mai, kg på dagen): før **350 / 350 / 297 / 350**, etter **350 / 350 / 316 / 350**, altså innen ±10 % (tre av fire fyller lasterommet). Artene fordeler seg litt annerledes: mer torsk på Husøy og mindre på Gryllefjord, der sedlene har mindre torsk per landing.
+- **Kg i timen** for én person med håndjuksa (snittet over sjøen på 20–300 m innen 10 km, urørt bestand, 2028), før → etter:
+
+  | Sted og måned | Torsk | Sei | Hyse | Alle |
+  |---|---|---|---|---|
+  | Lofoten (Henningsvær–Svolvær), mars | 29,6 → 13,5 | 8,6 → 29,6 | 6,5 → 7,1 | 49,7 → 53,8 |
+  | Røst, mars | 43,7 → 35,2 | 10,1 → 52,0 | 8,4 → 20,7 | 67,9 → 113,9 |
+  | Bergen (Sotra–Fedje), mars | 33,1 → 12,9 | 9,7 → 46,9 | 9,3 → 11,0 | 59,4 → 89,9 |
+  | Bodø, mars | 39,8 → 16,4 | 10,7 → 52,7 | 10,3 → 12,6 | 68,2 → 94,0 |
+  | Finnmark (Båtsfjord), januar | 15,4 → 27,5 | 32,5 → 8,8 | 8,8 → 2,6 | 61,1 → 40,1 |
+  | Finnmark (Hammerfest), januar | 13,9 → 25,2 | 24,0 → 14,0 | 10,2 → 4,8 | 53,6 → 47,9 |
+  | Møre (Ålesund), februar | 21,3 → 14,8 | 11,9 → 58,4 | 8,1 → 7,4 | 47,2 → 97,4 |
+  | Husøy, mars (Senja) | 77,7 → 94,1 | 17,2 → 13,4 | 14,6 → 13,2 | 121,6 → 130,6 |
+
+- **Funnene, sagt rett ut:**
+  - **Lofoten i mars får *mindre* skrei enn i dag, ikke mer** (planen antok mer). Sedlene sier at en landing ved Henningsvær er mindre enn en landing fra Senja-feltene, også med samme redskap, lengde og måned (0,21 av Senjas i mars). Det samme gjelder kilo per lokasjon: 00-46 har 1 176 t i mars over to år, mot 5 110 t på 05-30. Lofotfisket er spredt over mange lokasjoner, og Vestfjorden har strengere regler for redskap og båtstørrelse.
+  - **Justert for redskap fjerner noe av sesongen.** Garna brukes mest i skreisesongen, så det nasjonale snittet per garnlanding har alt skreien i seg. Det gjelder alle steder likt, også Senja, så forholdet mellom stedene står.
+  - **Seien øker mye i februar–mars** langs Lofoten, Bodø, Bergen og Møre (3–5 ganger før). Grunnen er at Senjas egen sei per landing er lavest nettopp i mars (0,21 mot 0,6–1,5 andre steder), så forholdet blir stort. Mange lokasjoner treffer taket på 5. Gisundet (05-41) har mye sei per landing om vinteren (seinot). Derfor er feltet på første tur 85 kg i timen etter garantien (22 før), og `heattest` sjekker nå at feltet faller under 45 % av ringen. Bør ses i spilltest: blir det for mye, er taket (`FK.hi`) eller glattingen stedet å skru.
+  - **`calib` sammenligner ikke helt likt** før og etter: havpunktene trekkes med `Math.random` etter oppstarten, og flere arter i `ALLSP` gir andre trekk.
+- **Tester:** `tests/unit/vandring.test.mjs` (21 sjekker), `bktest` (frøene: blåkveita er sist av spillerens arter), `guidetest` (ti arter: `PLAYSP`), `heattest`.
+
 ## 5.33 Fiskeguiden (Jonas 08.10.2026)
 
 Appen **Fiskeguide** på telefonen (`ui/06f-fishguide.js`, `GUIDE`) svarer på «hvor og når skal jeg lete etter hver art» på noen sekunder. Alt leses fra fiskemodellen, så guiden aldri kan si noe annet enn havet gjør: `SPECIES` (`av` per måned og `skrei` for torsk, `dep` og `prod` for dyp og åpen kyst, `minKg`, `maxKg`, `pm` for pris), `SELQ` (hva redskapet beholder), `BAITS`/`baitF` (agn), reglenes datoer (kveite fredet 20. des–20. april, uer bare juni–august: `kveiteClosed` og `uerOpen` i `03-simulation.js`), og de to artene havet forteller per sted: blåkveite (`eggaArea`, lite sør for 62° N) og kongekrabbe (`kingArea`). Rene tekster for stedene (`WHERE`) er skrevet etter kommentarene og reglene i modellen.
@@ -100,6 +173,7 @@ Appen **Fiskeguide** på telefonen (`ui/06f-fishguide.js`, `GUIDE`) svarer på �
 - **Måned:** tolv måneds-knapper (nåværende har en prikk), «Mest å hente» (de tre beste, rangert etter `k × base × tilgang`), og alle ti arter med linje (måneden mot artens beste), dybdeintervall og kort sted. Stengte arter står sist og blekt. Merker: **Skrei**, **Fredet**, **Åpner 21. april**, **Fredet fra 20. des**, **Bare bifangst**, **Lite der du er** (blåkveite sør for 62° N, kongekrabbe der `kingArea` er under 0,1).
 - **Hele året:** ti arter × tolv måneder. Stripet er fredet, innrammet er den valgte måneden. En bokstav i toppraden åpner den måneden i månedsvisningen.
 - **Artskort:** søyler for alle måneder (skreien som egen blå del for torsk, trykk for å se måneden), Best og Bra som månedsområder, Hvor (dyp, sted, åpen kyst, kanter), Hvordan (redskap med ●●● lest av modellen, «–» for redskap som ikke tar arten, se 5.63; agn som gir mer enn 10 %), Pris (valgt måned, best og lavest betalt), Regler (minstemål, største lovlige, kveitas fredning) og en knapp til Regler-appen.
+- Guiden viser `PLAYSP` (spillerens arter), ikke havflåtens sild, makrell og snøkrabbe (B2, 01.11.2026).
 - Valgt måned og kort huskes i `GUIDE.st` (ikke i lagringen). Sesong-appen har en knapp hit under sin egen kalender.
 - Test: `tests/guidetest.py` (månedene, stengt og skrei, årsvisningen, kortene for torsk, blåkveite, kongekrabbe og kveite, «Lite der du er» sør og nord, engelsk).
 - **Det du har funnet ut** (31.10.2026, L2 i `docs/planer/oppdrag-2.md`): artskortet viser linjene fra spillerens egne leteoppdrag (`S.lete[art]`, skrevet av fiskemodellen når oppdraget er svart: sted ved nærmeste mottak, måned, side, dyp, ly), nyeste først, høyst seks. Testen: `guidetest`.

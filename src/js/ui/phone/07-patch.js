@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['fisk-011126', '01.11.2026', 'Fisken langs kysten', 'The fish along the coast', [
+       ['Hvor mye fisk det står langs kysten, følger nå Fiskeridirektoratets landinger per sted og måned. Bergen har ikke lenger skrei, og skreien kommer til Finnmark noen uker før den når Lofoten og Røst.', 'How much fish stands along the coast now follows Fiskeridirektoratet\'s landings by place and month. Bergen no longer has skrei, and the skrei reaches Finnmark some weeks before it reaches Lofoten and Røst.'],
+       ['Kartplotteren viser navnene på fiskeplassene langs hele kysten, fra Fiskeridirektoratets kart over fiskeplasser.', 'The chart plotter shows the names of the fishing grounds along the whole coast, from Fiskeridirektoratet\'s map of fishing grounds.'],
+    ]],
     ['kaier-011126', '01.11.2026', 'Båtene ligger ved ekte kaier', 'The boats lie at real quays', [
        ['Fiskebåtene langs kysten og på Senja ligger nå bare ved kaier og brygger som faktisk står der: ingen ligger lenger i fjæra eller oppe på stranda. Der et fiskebruk har kai som kartet bare viser som kystlinje, er kaia bygd.', 'The fishing boats along the coast and on Senja now lie only at quays and piers that really stand there: none lie in the shallows or up on the shore any more. Where a fish plant has a quay the chart shows only as coastline, the quay is built.'],
        ['Båter under 11 m kan også ligge ved en flytebrygge inne i havna eller på bøye. Større båter ligger bare ved kai, og en båt uten kaiplass ligger ikke synlig i havn.', 'Boats under 11 m may also lie at a floating dock inside the harbour or on a buoy. Bigger boats lie only at a quay, and a boat with no berth is not shown in port.'],
