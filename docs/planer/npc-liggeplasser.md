@@ -139,3 +139,4 @@ Usikkert: hvor mye av sluttsedlenes fangst som skal regnes som NPC-trykk i en ru
 
 - 01.11.2026: planen er skrevet. En lapp som gravde ut skråningen under Senja-flåten (som `npcPits`), ble prøvd i økta og tatt ut igjen før commit, etter Jonas' svar. Venter på valgene og klarsignal.
 - 01.11.2026: valg 1–3 er A. Valg 4 er Jonas' forslag om at kystflåten tar av den felles bestanden; innspillene er sendt, og svaret avgjør L2. Venter på klarsignal for L1.
+- 01.11.2026, senere: Jonas ba om at planen tenkes gjennom på nytt med havflåten, bestandene, vandringen og uttaket. Valg 4 og L2 er flyttet til `docs/planer/bestand-og-flaate.md` (B1–B4, L2/N1, H1). L1 og L3 står her.
