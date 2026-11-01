@@ -52,10 +52,13 @@ def colours():
     C['tankin'] = mat('tankin', (0.20, 0.44, 0.72), 0.35)
     C['water'] = mat('water', (0.05, 0.20, 0.24), 0.9)
     C['hose'] = mat('hose', (0.10, 0.12, 0.13), 0.3)
+    C['konnet'] = mat('konnet', (0.09, 0.20, 0.30), 0.15); C['konnet2'] = mat('konnet2', (0.06, 0.14, 0.21), 0.15)
+    C['konin'] = mat('konin', (0.025, 0.045, 0.06), 0.1)
 
-PX, PZ = 0.7, 0.65           # the pot's half width and height
+PX, PY, PZ = 0.775, 0.725, 1.07   # the pot's half length (the entrance sides at x = +-PX), half width and height (POTS in core/10-gear.js)
 HATCH = 0.3                  # the hatch's half width
-ENT = (0.25, 0.20, 0.42)     # the entrances: half width, bottom and top of the opening in the side
+ENT = (0.27, 0.34, 0.66)     # the entrances: half width, bottom and top of the opening in the side
+RING = 0.35                  # the bridle's ring over the top, where the rope is made fast
 
 def net_line(name, a, b, parts, m=None):
     parts.append(cyl(name, a, b, 0.0035, m or C['net'], seg=3, caps=False))
@@ -73,46 +76,104 @@ def clip(a0, a1, holes):
     return out
 
 def teine():
-    parts = []; r = 0.012; m = C['bar']
-    # the frame: bottom and top squares, the corner posts and a bar across the bottom
-    corners = [(-PX, -PX), (PX, -PX), (PX, PX), (-PX, PX)]
+    parts = []; r = 0.014; m = C['bar']
+    # the frame: bottom and top rectangles, the corner posts, a bar across the bottom both ways and a ring of bar round the middle
+    corners = [(-PX, -PY), (PX, -PY), (PX, PY), (-PX, PY)]
     for z in (0.0, PZ):
         parts.append(tube('frame', [(x, y, z) for x, y in corners] + [(corners[0][0], corners[0][1], z)], r, m, seg=6))
+    parts.append(tube('belt', [(x, y, PZ * 0.5) for x, y in corners] + [(corners[0][0], corners[0][1], PZ * 0.5)], 0.009, m, seg=5))
     for x, y in corners: parts.append(cyl('post', (x, y, 0), (x, y, PZ), r, m, seg=6))
-    parts.append(cyl('bar', (-PX, 0, 0), (PX, 0, 0), r, m, seg=6)); parts.append(cyl('bar', (0, -PX, 0), (0, PX, 0), r, m, seg=6))
+    parts.append(cyl('bar', (-PX, 0, 0), (PX, 0, 0), r, m, seg=6)); parts.append(cyl('bar', (0, -PY, 0), (0, PY, 0), r, m, seg=6))
     # the hatch's frame in the top
     parts.append(tube('hframe', [(-HATCH, -HATCH, PZ), (HATCH, -HATCH, PZ), (HATCH, HATCH, PZ), (-HATCH, HATCH, PZ), (-HATCH, -HATCH, PZ)], 0.009, m, seg=6))
-    st = 0.14; ks = [k * st for k in range(-4, 5)]
+    kx = [k * PX / 5 for k in range(-4, 5)]; ky = [k * PY / 5 for k in range(-4, 5)]
     # the netting: the bottom whole, the top round the hatch, the sides with the entrances in the two at x = +-PX
-    for k in ks:
-        net_line('nb', (k, -PX, 0.002), (k, PX, 0.002), parts); net_line('nb', (-PX, k, 0.002), (PX, k, 0.002), parts)
-        for y0, y1 in clip(-PX, PX, [(-HATCH, HATCH)] if abs(k) < HATCH else []): net_line('nt', (k, y0, PZ), (k, y1, PZ), parts)
+    for k in kx:
+        net_line('nb', (k, -PY, 0.002), (k, PY, 0.002), parts)
+        for y0, y1 in clip(-PY, PY, [(-HATCH, HATCH)] if abs(k) < HATCH else []): net_line('nt', (k, y0, PZ), (k, y1, PZ), parts)
+    for k in ky:
+        net_line('nb', (-PX, k, 0.002), (PX, k, 0.002), parts)
         for x0, x1 in clip(-PX, PX, [(-HATCH, HATCH)] if abs(k) < HATCH else []): net_line('nt', (x0, k, PZ), (x1, k, PZ), parts)
-    zs = [PZ * i / 5 for i in range(1, 5)]
+    zs = [PZ * i / 7 for i in range(1, 7)]
     for sd in (1, -1):
-        # the sides at y = +-PX: whole
-        for k in ks: net_line('ns', (k, sd * PX, 0), (k, sd * PX, PZ), parts)
-        for z in zs: net_line('ns', (-PX, sd * PX, z), (PX, sd * PX, z), parts)
+        # the sides at y = +-PY: whole
+        for k in kx: net_line('ns', (k, sd * PY, 0), (k, sd * PY, PZ), parts)
+        for z in zs: net_line('ns', (-PX, sd * PY, z), (PX, sd * PY, z), parts)
         # the sides at x = +-PX: with the entrance's opening
-        for k in ks:
+        for k in ky:
             for z0, z1 in clip(0, PZ, [(ENT[1], ENT[2])] if abs(k) < ENT[0] else []): net_line('ns', (sd * PX, k, z0), (sd * PX, k, z1), parts)
         for z in zs:
-            for y0, y1 in clip(-PX, PX, [(-ENT[0], ENT[0])] if ENT[1] < z < ENT[2] else []): net_line('ns', (sd * PX, y0, z), (sd * PX, y1, z), parts)
-        # the entrance: a bar round the opening, a netting funnel in to a hard ring 0.35 m inside, a little higher (the crab climbs in)
+            for y0, y1 in clip(-PY, PY, [(-ENT[0], ENT[0])] if ENT[1] < z < ENT[2] else []): net_line('ns', (sd * PX, y0, z), (sd * PX, y1, z), parts)
+        # the entrance: a bar round the opening, a netting funnel in to a hard ring 0.4 m inside, a little higher (the crab climbs in)
         o = [(sd * PX, -ENT[0], ENT[1]), (sd * PX, ENT[0], ENT[1]), (sd * PX, ENT[0], ENT[2]), (sd * PX, -ENT[0], ENT[2])]
-        xi = sd * (PX - 0.35); i = [(xi, -0.15, 0.30), (xi, 0.15, 0.30), (xi, 0.15, 0.40), (xi, -0.15, 0.40)]
+        xi = sd * (PX - 0.4); i = [(xi, -0.16, 0.46), (xi, 0.16, 0.46), (xi, 0.16, 0.58), (xi, -0.16, 0.58)]
         parts.append(tube('eframe', o + [o[0]], 0.008, m, seg=6)); parts.append(tube('ering', i + [i[0]], 0.007, C['ring'], seg=6))
         for q in range(4):
             a, b = V(o[q]), V(o[(q + 1) % 4]); c, d = V(i[q]), V(i[(q + 1) % 4])
             for t in (0.0, 0.33, 0.66): net_line('nf', a + (b - a) * t, c + (d - c) * t, parts, C['funnel'])
     # the bait box: a perforated tube hanging from the top's cross ropes, with an orange lid
-    for sx, sy in ((1, 1), (1, -1)): net_line('hang', (-sx * PX * 0.9, -sy * PX * 0.9, PZ - 0.01), (sx * PX * 0.9, sy * PX * 0.9, PZ - 0.01), parts, C['rope'])
-    parts.append(cyl('bait', (0, 0, 0.30), (0, 0, 0.52), 0.06, C['bait'], seg=10))
-    for z in (0.34, 0.40, 0.46): parts.append(torus('holes', (0, 0, z), (0, 0, 1), 0.061, 0.004, C['dark'], seg=12, rseg=3))
-    parts.append(cyl('blid', (0, 0, 0.52), (0, 0, 0.55), 0.065, C['baitlid'], seg=10))
-    parts.append(cyl('bstring', (0, 0, 0.55), (0, 0, PZ - 0.01), 0.004, C['rope'], seg=4, caps=False))
+    for sx, sy in ((1, 1), (1, -1)): net_line('hang', (-sx * PX * 0.9, -sy * PY * 0.9, PZ - 0.01), (sx * PX * 0.9, sy * PY * 0.9, PZ - 0.01), parts, C['rope'])
+    parts.append(cyl('bait', (0, 0, 0.46), (0, 0, 0.70), 0.06, C['bait'], seg=10))
+    for z in (0.51, 0.58, 0.65): parts.append(torus('holes', (0, 0, z), (0, 0, 1), 0.061, 0.004, C['dark'], seg=12, rseg=3))
+    parts.append(cyl('blid', (0, 0, 0.70), (0, 0, 0.73), 0.065, C['baitlid'], seg=10))
+    parts.append(cyl('bstring', (0, 0, 0.73), (0, 0, PZ - 0.01), 0.004, C['rope'], seg=4, caps=False))
     for p in parts: apply_all(p)
     return join(parts, 'teine')
+
+# ---------- the conical snow crab pot (snokrabbe), in stacks on the pot deck of the snow crab vessel ----------
+# What I chose myself (no drawings, the common Barents Sea pot): a bottom ring 1.3 m across of heavy bar, a top ring 0.7 m across,
+# 0.62 m high, eight bars between them, netting over the cone and the bottom, a netting funnel from the top ring down to a white
+# entrance ring 0.44 m across, the bait jar hanging under it. The pots nest: each stands 0.16 m over the one under it, twelve to a stack.
+KR0, KR1, KH = 0.65, 0.35, 0.62
+KRE, KZE = 0.22, 0.40
+KP, KS = 0.16, 12
+def kr(z): return KR0 + (KR1 - KR0) * z / KH
+def ring_at(a, z, r=None):
+    r = kr(z) if r is None else r; return (r * math.cos(a), r * math.sin(a), z)
+
+def kon_top(A, bottom=True, nm=24):
+    """a whole pot: the frame, the netting (nm meridians), the entrance and the bait jar (bottom: the bottom's netting, hidden in a stack)"""
+    m = C['bar']; n = C['konnet']; ln = lambda z: n
+    atorus(A, (0, 0, 0.018), (0, 0, 1), KR0, 0.018, lambda a: m, seg=28, rseg=4)
+    atorus(A, (0, 0, KH), (0, 0, 1), KR1, 0.012, lambda a: m, seg=20, rseg=3)
+    for k in range(8):
+        a = 2 * math.pi * k / 8 + 0.2; acyl(A, ring_at(a, 0.018, KR0), ring_at(a, KH, KR1), 0.009, lambda z: m, seg=4, cap=False)
+    for k in range(nm):
+        a = 2 * math.pi * (k + 0.5) / nm; acyl(A, ring_at(a, 0.03), ring_at(a, KH - 0.01), 0.0035, ln, seg=3, cap=False)
+    for i in (1, 2, 3):
+        z = KH * i / 4; atorus(A, (0, 0, z), (0, 0, 1), kr(z), 0.0035, lambda a: n, seg=20, rseg=3)
+    # the entrance: the funnel of netting down from the top ring to the white ring
+    atorus(A, (0, 0, KZE), (0, 0, 1), KRE, 0.011, lambda a: C['ring'], seg=20, rseg=3)
+    for k in range(12):
+        a = 2 * math.pi * k / 12; acyl(A, ring_at(a, KH, KR1), ring_at(a, KZE, KRE), 0.0035, ln, seg=3, cap=False)
+    atorus(A, (0, 0, (KH + KZE) / 2), (0, 0, 1), (KR1 + KRE) / 2, 0.0035, lambda a: n, seg=16, rseg=3)
+    # the bait jar on three strings from the entrance ring
+    acyl(A, (0, 0, 0.14), (0, 0, 0.29), 0.055, lambda z: C['bait'], seg=10)
+    acyl(A, (0, 0, 0.29), (0, 0, 0.31), 0.06, lambda z: C['baitlid'], seg=10)
+    for k in range(3):
+        a = 2 * math.pi * k / 3; acyl(A, (0.04 * math.cos(a), 0.04 * math.sin(a), 0.31), ring_at(a, KZE, KRE), 0.003, lambda z: C['rope'], seg=3, cap=False)
+    if bottom:
+        for k in range(12):
+            a = 2 * math.pi * k / 12; acyl(A, (0, 0, 0.006), (KR0 * math.cos(a), KR0 * math.sin(a), 0.006), 0.0035, ln, seg=3, cap=False)
+        for r in (0.22, 0.44): atorus(A, (0, 0, 0.006), (0, 0, 1), r, 0.0035, lambda a: n, seg=20, rseg=3)
+    # the dark inside seen through the netting (the pots under it in a stack, the deck under a lone one)
+    q = 16
+    for k in range(q):
+        a0, a1 = 2 * math.pi * k / q, 2 * math.pi * (k + 1) / q; d = -0.012
+        A.poly([ring_at(a0, 0.04, kr(0.04) + d), ring_at(a1, 0.04, kr(0.04) + d), ring_at(a1, KH - 0.02, kr(KH - 0.02) + d), ring_at(a0, KH - 0.02, kr(KH - 0.02) + d)], C['konin'], (math.cos((a0 + a1) / 2), math.sin((a0 + a1) / 2), 0.4))
+
+def kon_lag(A, z0):
+    """a pot nested under another, at z0: what shows of it is its bottom ring and the band of its cone below the next one's ring"""
+    m = C['bar']; q = 16; P = lambda a, z: (kr(z) * math.cos(a), kr(z) * math.sin(a), z0 + z)
+    atorus(A, (0, 0, z0 + 0.018), (0, 0, 1), KR0, 0.018, lambda a: m, seg=16, rseg=3)
+    # the band: dark (the pots inside seen through the netting) with the netting's meridians and a round over it as flat strips
+    for k in range(q):
+        a0, a1 = 2 * math.pi * k / q, 2 * math.pi * (k + 1) / q; nm = (math.cos((a0 + a1) / 2), math.sin((a0 + a1) / 2), 0.48)
+        A.poly([P(a0, 0.03), P(a1, 0.03), P(a1, KP + 0.03), P(a0, KP + 0.03)], C['konin'], nm)
+        w = 0.006 / KR0; Q = lambda a, z: tuple(c * 1.004 if i < 2 else c for i, c in enumerate(P(a, z)))
+        A.poly([Q(a0 - w, 0.03), Q(a0 + w, 0.03), Q(a0 + w, KP + 0.03), Q(a0 - w, KP + 0.03)], C['konnet'], nm)
+        A.poly([Q(a0, KP * 0.55 + 0.02), Q(a1, KP * 0.55 + 0.02), Q(a1, KP * 0.55 + 0.035), Q(a0, KP * 0.55 + 0.035)], C['konnet'], nm)
+
 
 def teinedor():
     # from its hinge at the hatch's forward edge (y = HATCH, z = PZ): the frame and its netting, a rubber strap to hold it shut
@@ -125,16 +186,18 @@ def teinedor():
     for p in parts: apply_all(p)
     return join(parts, 'teinedor')
 
-# the davit: the block 2.1 m up and 0.9 m out; the hauler's sheave on the post at 1.15 m, facing along the boat
-BLOCK = (0.9, 0.0, 2.1); BR = 0.11; SHEAVE = (0.16, 0.0, 1.15); SR = 0.2
+# the davit: the block 2.8 m up and 0.95 m out (the 1.07 m pot hangs clear of the rail under it); the hauler's sheave on the post at
+# 1.15 m, facing along the boat
+BLOCK = (0.95, 0.0, 2.8); BR = 0.11; SHEAVE = (0.16, 0.0, 1.15); SR = 0.2
 def davit():
     parts = []
     parts.append(cyl('foot', (0, 0, 0), (0, 0, 0.03), 0.16, C['galv'], seg=12))
-    parts.append(cyl('post', (0, 0, 0), (0, 0, 1.6), 0.07, C['galv'], seg=12))
-    arm = [(0, 0, 1.55), (0.12, 0, 1.92), (0.38, 0, 2.18), (0.7, 0, 2.32), (BLOCK[0], 0, 2.32)]
-    parts.append(tube('arm', arm, 0.05, C['galv'], seg=10))
+    parts.append(cyl('post', (0, 0, 0), (0, 0, 2.3), 0.08, C['galv'], seg=12))
+    for k in range(3): parts.append(box('gusset', -0.006, 0.006, -0.15, 0.15, 0.03, 0.28, C['galv'])); parts[-1].rotation_euler = (0, 0, k * math.pi / 3); apply_all(parts[-1])
+    arm = [(0, 0, 2.25), (0.12, 0, 2.62), (0.4, 0, 2.9), (0.72, 0, 3.02), (BLOCK[0], 0, 3.02)]
+    parts.append(tube('arm', arm, 0.055, C['galv'], seg=10))
     # the block hangs under the arm's end: a swivel, the cheek plates and the sheave
-    parts.append(cyl('swivel', (BLOCK[0], 0, 2.32), (BLOCK[0], 0, BLOCK[2] + BR + 0.04), 0.018, C['galv'], seg=6))
+    parts.append(cyl('swivel', (BLOCK[0], 0, 3.02), (BLOCK[0], 0, BLOCK[2] + BR + 0.04), 0.018, C['galv'], seg=6))
     for sd in (1, -1): parts.append(box('cheek', BLOCK[0] - BR - 0.03, BLOCK[0] + BR + 0.03, sd * 0.035 - 0.006, sd * 0.035 + 0.006, BLOCK[2] - BR - 0.03, BLOCK[2] + BR + 0.05, C['red']))
     parts.append(cyl('bsheave', (BLOCK[0], -0.028, BLOCK[2]), (BLOCK[0], 0.028, BLOCK[2]), BR, C['dark'], seg=16))
     # the hauler: a bracket from the post, the hydraulic motor behind the sheave (aft), hoses down the post
@@ -178,10 +241,17 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     reset(); colours()
     T = teine(); D = teinedor(); Dv = davit(); Sh = davitskive(); K = krabbekar()
-    parts = [(nm, mesh_arrays(o, to_game, to_game_n, ao=False), 1.0) for nm, o in (('teine', T), ('teinedor', D), ('davit', Dv), ('davitskive', Sh), ('krabbekar', K))]
+    A = Acc('kon'); kon_top(A); Ko = A.done(40)
+    A = Acc('kontopp'); kon_top(A, bottom=False, nm=16); Kt0 = A.done(40)
+    A = Acc('konlag'); kon_lag(A, 0.0); Kl = A.done(40)
+    A = Acc('konlag11'); [kon_lag(A, k * KP) for k in range(KS - 1)]; Kl11 = A.done(40)
+    parts = [(nm, mesh_arrays(o, to_game, to_game_n, ao=False), 1.0) for nm, o in (('teine', T), ('teinedor', D), ('davit', Dv), ('davitskive', Sh), ('krabbekar', K),
+                                                                               ('kon', Ko), ('kontopp', Kt0), ('konlag', Kl), ('konlag11', Kl11))]
     g = lambda p: [round(v, 4) for v in to_game(p)]
     ex = {'frame': 'kystfiske king crab pot, pot hauler and crab tank: x right (out over the side for the davit), y up, z aft; the pot and the tank from the middle of their bottoms, the hatch from its hinge, the davit from the foot of its post, the sheave from its axle',
-          'pot':{'half':PX, 'h':PZ, 'hinge':g((0, HATCH, PZ)), 'bridle':[g((x, y, PZ)) for x, y in ((-PX, -PX), (PX, -PX), (PX, PX), (-PX, PX))], 'bait':g((0, 0, 0.42))},
+          'pot':{'half':PX, 'halfw':PY, 'h':PZ, 'ring':RING, 'hinge':g((0, HATCH, PZ)), 'bridle':[g((x, y, PZ)) for x, y in ((-PX, -PY), (PX, -PY), (PX, PY), (-PX, PY))], 'bait':g((0, 0, 0.58))},
+          # the conical snow crab pot: its bottom ring's radius, its height, how much higher each nested one stands, how many to a stack
+          'kon':{'r':KR0, 'h':KH, 'pitch':KP, 'stack':KS, 'ring':0.3, 'bridle':[g(ring_at(2 * math.pi * k / 3, KH, KR1)) for k in range(3)]},
           'davit':{'block':g(BLOCK), 'blockR':BR, 'sheave':g(SHEAVE), 'sheaveR':SR},
           'tank':{'half':[TX - 0.04, TY - 0.04], 'water':TW}}
     glb = os.path.join(OUT, 'gear-pot.glb'); n = write_glb(glb, parts, ex)
@@ -191,9 +261,11 @@ def main():
     # renders: the pot with its hatch open, the davit and the tank beside it
     D.location = (0, HATCH, PZ); D.rotation_euler = (math.radians(70), 0, 0)
     Dv.location = (2.2, 0.3, 0); Sh.location = (2.2 + SHEAVE[0], 0.3 + SHEAVE[1], SHEAVE[2]); K.location = (-2.0, 0.2, 0)
+    Ko.location = (0.0, 2.4, 0); Kl.location = (3.2, 2.4, 0); Kt0.location = (3.2, 3.6, 0); Kl11.location = (1.5, 2.4, 0); Kt = Ko.copy(); Kt.data = Ko.data.copy(); bpy.context.collection.objects.link(Kt); Kt.location = (1.5, 2.4, (KS - 1) * KP)
     setup_render(1600, 1000, samples=24)
     camera((4.6, -5.2, 3.2), (0.2, 0.2, 0.7), lens=35); render(os.path.join(OUT, 'pot_3q.png'))
     camera((0.0, -0.4, 4.0), (0.0, 0.0, 0.0), ortho=2.0); render(os.path.join(OUT, 'pot_top.png'))
+    camera((4.2, -1.2, 2.4), (0.8, 2.4, 0.8), lens=35); render(os.path.join(OUT, 'pot_kon.png'))
 
 if __name__ == '__main__':
     main()

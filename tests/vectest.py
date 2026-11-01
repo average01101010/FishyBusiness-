@@ -88,9 +88,9 @@ async def main():
         await pg.wait_for_function("['16:6', '16:7', '17:6', '17:7'].every(k => VEC.tiles.has(k) || !vecHas(+k.split(':')[0], +k.split(':')[1]))", timeout=120000)
         fl = await pg.evaluate("""(() => { const faces = new Map(); for (const t of VEC.tiles.values()) for (const f of t.quays) faces.set(f.id, f); const out = []; let bad = 0, clash = 0;
           FLEET.forEach((f, i) => { const bp = npcBerths('fleet:' + f.home, {x:f.hp[0], y:f.hp[1]}, f.mates || FLEET.map((g, j) => ({key:'f' + j, L:g.L, B:g.B, T:g.T, home:g.home})).filter(g => g.home === f.home))['f' + i]; if (!bp) return;
-            const F = faces.get(bp.face); if (!F || !quayFit(F, f.L, f.T)) bad++; out.push({i, p:bp.p, L:f.L, face:bp.face}); });
+            const F = faces.get(bp.face.id); if (!F || !quayFit(F, f.L, f.T)) bad++; out.push({i, p:bp.p, L:f.L, face:bp.face.id}); });   // (the berth carries its face, L1)
           for (let a = 0; a < out.length; a++) for (let c = a + 1; c < out.length; c++) if (dist(out[a].p, out[c].p) * 1000 < (out[a].L + out[c].L) / 2 && out[a].face === out[c].face) clash++;
-          const big = npcBerths('test-big', {x:FLEET[0].hp[0], y:FLEET[0].hp[1]}, [{key:'big', L:150, B:22, T:12}]).big, mid = npcBerths('test-mid', {x:FLEET[0].hp[0], y:FLEET[0].hp[1]}, [{key:'mid', L:70, B:13, T:7}]).mid, mf = mid && faces.get(mid.face);
+          const big = npcBerths('test-big', {x:FLEET[0].hp[0], y:FLEET[0].hp[1]}, [{key:'big', L:150, B:22, T:12}]).big, mid = npcBerths('test-mid', {x:FLEET[0].hp[0], y:FLEET[0].hp[1]}, [{key:'mid', L:70, B:13, T:7}]).mid, mf = mid && faces.get(mid.face.id);
           const port = FLEET.map((f, i) => fleetState(i, S.t / 60)).filter(s => s.st === 'port'); return {placed:out.length, of:FLEET.length, bad, clash, big:!!big, mid:mf ? {kind:mf.kind, len:Math.round(mf.hl * 2), depth:mf.depth} : null, portBerth:port.filter(s => s.berth).length, port:port.length}; })()""")
         check(fl['placed'] >= FLEET_MIN and fl['bad'] == 0 and fl['clash'] == 0, 'Senja-flåten får kaiplasser som er lange og dype nok, og aldri to på samme plass', fl)
         check(not fl['big'], 'en båt på 150 m med 12 m dypgående får ingen plass ved kaiene på Husøy (en på 70 m med 7 m: %s)' % fl['mid'], fl['big'])

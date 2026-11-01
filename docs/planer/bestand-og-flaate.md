@@ -1,0 +1,127 @@
+# Én sjø: bestandene, vandringen, uttaket og flåten langs hele kysten (plan, 01.11.2026)
+
+Jonas 01.11.2026:
+
+- «Hele kystflåten skal ta av den verdens felles bestand av fisk. NPC-flåten skal simulere antall aktive fiskebåter i Norge basert på ekte fangstdata. Når en ny bruker registrerer seg i spillet skal 1 NPC-båt forsvinne, og på den måten klarer vi å holde en slags balanse i økosystemet.»
+- «Havflåten er et element av spillet som skal bygges ganske straks og modellene til båtene er allerede laget, det er dermed viktig at vi klarer å simulere dette med bestander, vandring, uttak, og alt annet på en så realistisk måte som mulig slik at modellen er helt ferdig utviklet når vi starter å få inn aktive brukere.»
+- «Spillet, verden, miljøet og opplevelsen skal være så realistisk som mulig.»
+
+Denne planen erstatter valg 4 i `docs/planer/npc-liggeplasser.md` (liggeplassene L1–L3 står der og bygges først) og fase N1–N2 i `docs/planer/npc-flaaten.md` (N3–N8 står). Den er grunnmuren som havsteget (spillerens egne havbåter) bygges på etterpå.
+
+## 1. Hva som finnes i dag, og hva som er feil med det
+
+**Fisken i sjøen** (`core/03-simulation.js` `density`): én funksjon gir kilo i timen på et punkt: artens grunntall × bunnen (dybde, eksponering, kant) × flekker som glir (`hotspot`) × stimer × **sesongtabellen `av`** × skreipulsen × **gytebestanden** (`stockF`) × **den lokale bestanden i ruter på 2 km** (`stockAt`).
+
+- `av` og skreipulsen er **de samme fra Lindesnes til Vardø**. Skreien kommer like sterkt til Bergen i mars som til Lofoten. Det er ikke realistisk. Bare blåkveita (`eggaArea`) og kongekrabben (`kingArea`) har sin egen geografi, hentet fra sluttsedlene.
+- **Bestandene år for år** (`core/03d-quota.js` `STOCK`, `stockYear`): gytebestand og totalkvote 2014–2027 fra HI/ICES, så en enkel modell per år med tilfeldige årsklasser og kvoteråd. Fisket **over rådet** holder bestanden nede. Det virkelige fisket er altså **allerede med** i bestanden, som et nasjonalt tall. Alle spillere har samme frø (`WORLD_SEED`), så den er felles.
+- **Kvotekjeden** (`norQuota`) deler totalkvoten på trål (28–33 %), havfiskeflåten (12,81 % av det konvensjonelle), lukket gruppe (Finnmarksmodellen) og åpen gruppe (6,62 %). Åpen gruppe fiskes av **2 100 virtuelle båter** dag for dag (`qyStep`) sammen med spillerne (`wshOpen`), og gir stopp, økning og fritt fiske som i virkeligheten. Lukket gruppe har et register på 1 622 NPC-eiere (`REGN`), og **kjøper en spiller en hjemmel, går én NPC ut**. Det er Jonas' idé, alt bygd, men bare lokalt i hver lagring.
+- **Den lokale bestanden** (`S.stock`): bare rutene spillerne har fisket i, ligger under 1, og vokser tilbake 0,4 % av underskuddet i timen. De andre spillernes fangst kommer ned fra serveren rute for rute (`wshTake`). Bare Senja-flåten (14 båter, 18 kg i timen) og tre faste felt tar fisk. **Kysten ellers er urørt av flåten.**
+- **NPC-flåten** (`npc-trafikk.md`): 4 137 båter etter kailengden, uten redskap, felt etter bunnens helling, ingen fangst. Havflåten finnes ikke som NPC. Havbåtene finnes som modeller (`bunntral`, `autoliner`, `pelagisk`, `snokrabbe`, `ringnot38`) og er låst (`lock`).
+- **Rammen** (`MAPB`, 1450 × 1720 km i UTM 33) når rundt 5° V ved 70° N og 33° Ø, altså eggakanten og Finnmarkskysten, men ikke Bjørnøya eller Nordsjøen vest for 1° Ø. Dypet til havs ligger i `deep` (1 km). Havbåtene ble låst «til kartet utvides vestover».
+
+**Konklusjonen:** det vi mangler, er ikke at NPC-båtene «tar fisk», men at det virkelige uttaket får **sted, tid og redskap**, at fisken **vandrer** etter de ekte dataene, og at NPC-flåten og spillerne deler **samme kvote**. Da blir ett system: det båtene du ser på AIS gjør, er det som trekker fisken ned der du fisker, og kvoten som stopper deg, er den samme som stopper dem.
+
+## 2. Modellen (tre lag, én klokke)
+
+Alt er en ren funksjon av den felles klokka pluss det serveren deler. Ingen spiller regner noe de andre ikke får.
+
+### Lag 1: bestandene (nasjonalt, per art, per år)
+
+- Som i dag: gytebestand, råd og totalkvote per år, felles frø. Utvides med artene havflåten trenger: **NVG-sild, makrell** (ringnotbåten og den pelagiske tråleren), **snøkrabbe** (snøkrabbefartøyet), **reke** (vurderes, valg 4). Kilder: HI/ICES-rådene (samme som for torsk, hyse, sei, blåkveite), Fiskeridirektoratets J-meldinger for kvotene.
+- **Fangsten holdes under totalkvoten.** NPC-flåtens uttak er totalkvoten minus det spillerne lander, fordelt på gruppene i kvotekjeden. Lander spillerne mer, fisker flåten mindre. Det er slik Norge faktisk virker: kvoten er taket, og flere aktive båter deler den samme kvoten. Ingenting tas to ganger, og bestanden kan aldri fiskes mer enn modellen tåler.
+- **Serveren får bestanden når spillerne betyr noe.** I dag lander spillerne en dråpe mot 285 000 t. Admin-dashbordet får en linje «spillernes andel av gruppekvoten», og når den passerer 1 % i en gruppe, flyttes årets fangst og bestandsmodellen for den arten til serveren (én rad per art og år). Til da holder frøet (valg 3).
+
+### Lag 2: fordelingen og vandringen (per art, per område, per måned)
+
+- **Datagrunnlaget er sluttsedlene** (Fiskeridirektoratets «fangstdata (seddel)», NLOD, alt lest av `tools/mottak/mottak.py`): for hver landing art, rundvekt, redskap, største lengde, fangstområde og lokasjon (Fiskeridirektoratets statistikkområder, som alt ligger i `rules.json`: 60 hovedområder og 578 lokasjoner), måned og fartøykommune. De to siste hele årene.
+- **Fordelingsfeltet `areaF(art, punkt, måned)`:** kilo per lokasjon og måned, delt på innsatsen (antall landinger), glattet mellom nabolokasjoner og over måneder. Det erstatter den ene `av`-tabellen der det finnes data, og holder den der det ikke gjør (fjordene innerst, Sørlandet om vinteren). Blåkveita er alt laget slik, så mønsteret finnes.
+- **Vandringene som egne kurver** der sluttsedlene alene ikke viser bevegelsen, fordi båtene bare fisker der de har lov:
+  - **Skreien:** inn fra Barentshavet til Finnmark og Troms i januar, Vesterålen og Lofoten februar–april, ut igjen i mai. Innsiget regnes som en front som går sørover med breddegraden, så Båtsfjord har skreien tre uker før Røst, og mengden følger gytebestanden. Kilde: HI (skreiinnsiget) og sluttsedlene per lokasjon og uke.
+  - **NVG-silda:** gyting på Mørekysten og Haltenbanken februar–mars, beiting i Norskehavet om sommeren, overvintring utenfor Troms og Vesterålen oktober–januar. Kilde: HI.
+  - **Makrellen:** nord langs kysten juli–september til Lofoten, sør og ut om høsten. Kilde: HI.
+  - **Seien:** gyting på Møre og Haltenbanken februar–mars, seistimene langs kysten i mai. Kilde: HI og sluttsedlene.
+  - **Lodda** tas ikke med som fiske, men kan senere brukes som det som trekker torsken til Finnmarkskysten i mars–april.
+- **Feltene får navn langs hele kysten** fra Fiskeridirektoratets «Fiskeplasser – redskap» (WFS), som i N1: navn uten sirkel i kartplotteren. Der de mangler, holdes skråningsregelen.
+- **Kalibreringen holdes:** `k` per art stilles slik at `simday.py` på Senja (Husøy mars, Gryllefjord mars, Husøy juli, Malangsgapet mai) gir de samme tallene ±10 % som i dag. Det som endrer seg, er resten av landet: Lofoten i mars får mer skrei enn i dag, Bergen får mindre.
+
+### Lag 3: uttaket der du fisker (ruter på 2 km, per time)
+
+- **Flåtetrykket `F(rute, time)`** i kg i timen per art: gruppens andel av kvoten (lag 1) lagt ut i rommet og tiden etter sluttsedlene (lag 2), delt på redskap og lengdegruppe: kystflåten (under 28 m, garn, line, jukse, snurrevad, teine) på lokasjonene, havflåten (trål, autoline, not) på hovedområdene. Trykket **nulles i en gruppe når gruppa er stoppet** (`qyStep` gir stoppen i dag), og NPC-båtene i gruppa blir liggende i havn. Det synes på AIS.
+- **Likevekten regnes, ikke simuleres:** den lokale bestanden er `grunnlinje(rute, time) × avvik(rute)`. Grunnlinja er likevekten mellom flåtetrykket og tilveksten (0,4 % i timen), i lukket form, så den kan regnes for hvilken som helst rute når som helst, lik for alle, uten at noen må ha sett båtene. Avviket er det spillerne gjør (`S.stock`, `wshTake`), som i dag. Senja-flåtens egne 18 kg og de tre faste feltene fjernes: de ligger i `F`.
+- **Båtene du ser, står der `F` er høyt.** Rørledningen (`npc.py`) gir hver havn båter etter fartøyregisteret (antall og lengde per kommune) og gir hver båt redskap og felt etter sluttsedlene for kommunen. Det NPC-båtene «gjør» i 3D og på AIS, er bare bildet av `F`; bestanden henger ikke på at noen ser dem, og den er lik for en spiller i Tromsø og en i Bergen.
+- **Balansen når spillere kommer til** (Jonas' «én NPC-båt forsvinner»), gjort på den realistiske måten:
+  - **Lukket gruppe:** en spiller som kjøper en hjemmel, tar plassen til en NPC-eier i registeret. Det finnes (`REGN`), og flyttes til serveren, så alle ser det samme registeret, og NPC-båten med den hjemmelen forsvinner fra havna si for alle.
+  - **Åpen gruppe:** det er fri adgang i virkeligheten, så antallet båter styres ikke. Det som gir balansen, er kvoten: spillernes landinger teller i gruppekvoten (finnes, `wshOpen`), flåtetrykket `F` går ned tilsvarende, og stoppen kommer tidligere for alle. Flåtens virtuelle 2 100 båter (`OPENF.n`) byttes ut med registerets tall for åpen gruppe minus spillernes aktive båter, så antallet båter ute stemmer.
+  - **Ingen straff for fravær:** en spiller som slutter, gir plassen tilbake etter 90 dager uten landinger (samme regel som aktivitetsmålingen i admin).
+  - Hvorfor ikke bokstavelig «én båt per registrering»: de fleste som registrerer seg, slutter etter noen dager, og kysten ville bli tom der ingen spiller, uten at det tas mindre fisk. Kvoten gir balansen i tonn, registeret gir den i båter.
+
+### Havflåten som NPC (bildet av lag 3 til havs)
+
+- Trålere, autolinere, ringnotbåter, snurrevadbåter og snøkrabbefartøy etter sluttsedlene (redskap, største lengde, hovedområde, måned). Hjemmehavnene er de store fiskerihavnene med kai som passer (L1-regelen: en tråler på 60 m trenger en ekte kai på 60 m og 6 m dybde). Turene varer døgn til uker etter båttypen, med levering ved mottakene som tar imot fryst og pelagisk fisk (registeret har dem).
+- Modellene finnes alt. Redskapet i sjøen (trål, not) finnes for spillerens båter (`view3d/20-trawl-seine.js`).
+- Rammen holder til eggakanten og Finnmarkskysten. Feltene utenfor rammen (Bjørnøya, Nordsjøen vest) regnes som «borte»: båten ligger utenfor rammen i turens lengde og kommer tilbake. Utvides rammen senere, kommer feltene med av seg selv.
+
+## 3. Fasene (hver er én økt)
+
+| Fase | Hva | Filer | Tester | Måles |
+|---|---|---|---|---|
+| **L1** | Liggeplass bare ved kai som står i 3D (`npc-liggeplasser.md`, valg 1–3 = A) | `07-harbours.js`, `05-vessels.js`, `view3d/03`, `view3d/22` | `npctest`, `havntest`, `berth3d` | kai/flytebrygge/bøye/flyttet per havn, bakken under skroget |
+| **B1** | Datagrunnlaget: `tools/npc/fiske.py` leser sluttsedlene og fartøyregisteret → `src/data/fiske.json` (per art: kg per lokasjon × måned × redskapsgruppe × lengdegruppe, antall landinger; per kommune: båter per lengdegruppe og redskap). Workflow `fiske.yml` som release `fiske-N` hver 3. i måneden, som `mottak.yml`. Også sild, makrell, snøkrabbe, reke. | `tools/npc/` (ny), `.github/workflows/fiske.yml`, `datarorledninger.md` | ny `tests/unit/fiske.test.mjs` (summene per art mot Fiskeridirektoratets årstall) | størrelsen på `fiske.json` (mål under 400 kB), dekning: andel lokasjoner med data per måned |
+| **B2** | Fordelingen og vandringen: `areaF`, skrei-, sild-, makrell- og seikurvene, feltnavnene fra WFS, `k` kalibrert på nytt | `03-simulation.js` (`denTime`, `denSp`), `02-species-gear.js` (nye arter, bare for `F` og AIS; ikke fiskbare for spilleren ennå), `01e-marks.js`/`ui/03-map.js` (navn) | `simday`, `calib`, `kvtest`, `bktest`, ny `tests/unit/vandring.test.mjs` (skreien i Båtsfjord før Røst, silda på Møre i februar, ingen skrei i Bergen) | `simday` ±10 % mot i dag; kg per time i Lofoten mars / Bergen mars / Finnmark januar før og etter |
+| **B3** | Flåtetrykket og grunnlinja: `F(rute, time)`, `stockAt = grunnlinje × avvik`, Senja-flåtens eget uttak og de tre feltene fjernet, `stockHour` uendret for avviket | `03-simulation.js`, `03d-quota.js` (`F` følger gruppene og stoppene), `05-vessels.js` | `simday`, `calib`, `progweek`, `quotatest`, ny `tests/unit/trykk.test.mjs` (årssummen av `F` per gruppe = gruppens kvote ± 2 %, `F` = 0 etter stopp) | fangst per dag for spilleren før og etter på de fire kalibreringsstedene; tiden `stockAt` tar (mål under 5 µs) |
+| **B4** | Balansen: registeret på serveren (`register` i Supabase: antall per lengdegruppe og kommune, `reg_take`/`reg_free`), `OPENF.n` fra registeret minus spillernes aktive båter, plassen tilbake etter 90 dager, admin-linja «spillernes andel av gruppekvoten» | `03d-quota.js`, `ui/10f-cloud.js`, `ui/10h-world.js`, ny migrering, admin | `sqltest`, `cloudtest`, `quotatest` | registerets tall før og etter et kjøp fra to kontoer |
+| **L2/N1** | Én nasjonal kystflåte: `npc.py` bruker registeret og `fiske.json` (antall, lengde, redskap og felt per kommune), Senja-ruta med, `FLEET` fjernet, båtene i en stoppet gruppe ligger inne, hjemler spillere eier er borte fra havnene. Ny kartrelease. | `tools/map/npc.py`, `kart.json`, `05-vessels.js`, `03-simulation.js`, `ui/03-map.js`, `view3d/20` | `npctest`, `fleet*`, `trip2`, `tut` | antall båter nasjonalt mot registerets aktive (4 614 i 2024); antall i Senja-ruta før/etter |
+| **H1** | Havflåten som NPC: typer, hjemmehavner med kai som passer, hovedområder og sesonger fra `fiske.json`, turlengder, levering, AIS og 3D med redskapet i sjøen, utenfor rammen = borte | `tools/map/npc.py`, `05-vessels.js`, `view3d/19`, `view3d/20`, `07-harbours.js` (`quayFit` for 45–75 m) | `npctest`, ny `havflaate.py` (trålere på Tromsøflaket i februar, ringnot på Møre i februar, snøkrabbe øst i rammen, alle i havn som passer) | antall havbåter mot registeret (trål, not, autoline); tegnekall i Tromsø havn |
+| **L3** | Stikkprøvene langs kysten i begge formater, systemdokumentene (`fiskerimodellen.md`, `kvoter-og-regler.md`, `npc-trafikk.md`) og backloggen | docs | `/stikkprove` | – |
+
+Rekkefølgen: L1 (synlig feil nå), B1 (alt annet står på den), B2, B3, B4, L2, H1, L3. Åtte økter. Havsteget for spilleren (trål, autoline, not som egne redskap, kvotene i trål- og havfiskegruppene, som alt ligger i kvotekjeden) er neste plan og bygger rett på H1 og B3.
+
+## 4. Valgene
+
+1. **Balansen når spillere kommer til:**
+   - **A** Kvoten gir balansen i tonn (flåtetrykket viker for spillernes landinger), og registeret gir den i båter (en hjemmel tar en NPC-plass; åpen gruppe teller aktive båter). Plassen tilbake etter 90 dager uten landinger.
+   - **B** Bokstavelig: én NPC-båt forsvinner for alltid per registrert konto.
+   - *Anbefaling A:* det er slik fiskeriet virker, det tar aldri mer enn kvoten, og kysten tømmes ikke av kontoer som sluttet.
+2. **Oppløsningen i fordelingen:**
+   - **A** Lokasjon × måned for kystflåten (578 lokasjoner), hovedområde × måned for havflåten, de to siste hele årene, glattet.
+   - **B** Bare hovedområde × måned (60 områder).
+   - *Anbefaling A:* kystfisket er lokalt (Hekkingen mot Malangsgapet), og lokasjonene ligger alt i `rules.json`.
+3. **Når bestanden flyttes til serveren:**
+   - **A** Nå: registeret og årets fangst per gruppe på serveren (B4), bestandsmodellen fortsatt fra frøet, og den flyttes når spillernes andel passerer 1 % av en gruppekvote (admin-linja sier fra).
+   - **B** Alt på serveren fra start.
+   - *Anbefaling A:* alt virker uten nett som i dag, og terskelen gjør at vi bygger serverdelen når den trengs, ikke før.
+4. **De pelagiske artene og skalldyra for havflåten:**
+   - **A** Sild, makrell og snøkrabbe legges inn i B1–B2 som arter NPC-flåten fisker og AIS viser, men som spilleren ikke kan fiske før havsteget. Reke venter.
+   - **B** Bare torsk, hyse, sei, lange, brosme og blåkveite; havflåten som NPC fisker bare dem.
+   - *Anbefaling A:* uten sild og makrell har ringnotbåten og den pelagiske tråleren ingenting å gjøre, og de er to av fem havbåter.
+
+## 5. Antatt eller usikkert
+
+- Kolonnenavnene for fangstområde, lokasjon og fartøykommune i sluttseddeluttrekket er ikke sjekket i denne økta (`mottak.py` leser bare mottak, art, vekt, redskap, lengde og måned). Sjekkes først i B1; finnes ikke lokasjon per landing, faller valg 2 til B.
+- Fartøyregisterets åpne utgave: om hjemkommune, lengde og redskap ligger i samme fil, er ikke sjekket (samme forbehold som i `npc-flaaten.md`).
+- Vandringskurvene (skrei, sild, makrell, sei) bygger på HIs beskrivelser og sluttsedlene, ikke på en egen bestandsmodell med alder og vekst. Det er en forenkling vi velger med vilje: det spilleren ser, er riktig i tid og rom, og bestanden år for år er fra HI.
+- Likevekten i lag 3 antar at tilveksten er den samme som i dag (0,4 % av underskuddet i timen). Den er aldri målt mot virkeligheten; den er kalibrert mot at et felt tar seg opp igjen på noen uker.
+- Rammen stopper ved Bjørnøya og 1° Ø. Havflåten mister de feltene til rammen utvides. Det er en egen avgjørelse (kartplanen).
+- Hvor stor del av en lokasjons fangst som skal legges som trykk på rutene, avhenger av hvor stor lokasjonen er mot feltene båtene faktisk bruker. Der WFS-fiskeplassene finnes, legges trykket på dem; ellers jevnt over lokasjonens vann på 20–300 m.
+- Ytelsen: `areaF` og `F` må slås opp per rute og time, ikke per punkt. Lokasjonsoppslaget (`ruLok`, polygontest mot 578 polygoner) lagres per 2 km-rute.
+
+## 5b. Kravet om 5 000 aktive brukere ved lansering (Jonas 01.11.2026)
+
+Jonas: «jeg vil gjerne være rustet til å kunne ha minst 5000 aktive brukere når jeg offentlig lanserer spillet.» Det setter tre krav på planen:
+
+- **Ingenting i modellen skal koste serveren per spiller per minutt.** Bestanden, flåten og vandringen er rene funksjoner av klokka og dataene i appen (lag 1–3), og det eneste serveren deler, er det den deler i dag (fangst per rute, landinger per gruppe) pluss registeret (B4). Et nytt serverkall per spiller legges ikke inn uten at B4 regner ut hva det koster med 5 000 samtidige: i dag sender hver spiller posisjonen hvert 15. sekund, henter verden hvert 10. minutt og spør om havneplasser høyst hvert 2. minutt. 5 000 spillere er da rundt 20 000 kall i minuttet bare for posisjonen, og det må måles mot Supabase-planen før lansering (egen oppgave i B4: en lasttest med 5 000 syntetiske spillere mot en kopi av databasen).
+- **Det som regnes i appen, må være billig nok for 5 000 ulike steder samtidig,** altså for hvilken som helst rute når som helst, uten at noen forhåndsregner hele kysten: likevekten i lag 3 i lukket form, oppslagene per rute og time (ikke per punkt), og `fiske.json` under 400 kB.
+- **Registeret og gruppekvoten tåler at 5 000 spillere er i åpen gruppe samtidig:** da er spillernes landinger ikke lenger en dråpe (5 000 × 5 t er 25 000 t mot gruppekvoten på rundt 19 000 t torsk), så terskelen i valg 3 (1 % av en gruppekvote) nås raskt, og bestanden og årets fangst per gruppe flyttes til serveren **før** lanseringen, ikke etter. B4 bygger den delen ferdig med terskelen slått av i admin, så den kan slås på den dagen.
+
+## 6. Hva planen ikke gjør
+
+- Ingen fiske for spilleren med trål, not eller autoline, og ingen opplåsing av havbåtene: det er havsteget, neste plan.
+- Ingen oppdrett, ingen ferjer, kystrute eller skipsfart (N3–N5), ingen vikeplikt (N8).
+- Ingen ekte fartøynavn, rederier eller firmanavn.
+- Ingen ventetid, straff eller tap for spilleren fordi andre spiller eller slutter.
+- Ingen aldersstrukturert bestandsmodell. Bestanden år for år er HIs tall og den enkle modellen vi har.
+
+## 7. Status
+
+- 01.11.2026: planen er skrevet etter Jonas' svar på valg 1–4 i `npc-liggeplasser.md` og beskjeden om at havflåten kommer snart.
+- 01.11.2026: Jonas: «Kjør på med det du anbefaler» (valg 1–4 = A) og kravet om 5 000 aktive brukere (5b). L1 bygd samme dag (`npc-liggeplasser.md`). Neste økt: B1.

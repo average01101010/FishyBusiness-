@@ -37,7 +37,7 @@ Rekkefølgen er også byggerekkefølgen. 14 økter til sammen.
 
 **Økter.** Server og app; NPC-stemmer og Fiskemeldinga; moderering, admin, personvern og test.
 
-### A2. Lofotfisket og årshjulet (2 økter)
+### A2. Lofotfisket og årshjulet (2 økter) — bestilt 30.10.2026, første runde bygd (se `docs/systemer/skyen-og-felles-verden.md` 5.25f)
 
 **Idéen.** Sesongene finnes som nyheter (`core/09c-seasons.js`). Nå blir de hendelser med en felles tavle: **Lofotfisket** 20. januar–10. april i statistikkområde 00 (Vestfjorden og Lofoten, polygonet ligger i `rules.json`), **Finnmarksfisket** 25. april–15. juni (område 03 og 04), **Seisommeren** 10. juni–31. august (hele kysten), **Krabbehøsten** 1. september–30. november (øst for 26° Ø). Alt som leveres innenfor området i perioden, teller på tavla: per båt, per mottak og totalt. Ingen trenger å vinne; det er å ha vært med som gir noe.
 

@@ -68,6 +68,7 @@ Appen **Fiskeguide** på telefonen (`ui/06f-fishguide.js`, `GUIDE`) svarer på �
 - **Artskort:** søyler for alle måneder (skreien som egen blå del for torsk, trykk for å se måneden), Best og Bra som månedsområder, Hvor (dyp, sted, åpen kyst, kanter), Hvordan (redskap med ●●● lest av modellen, «–» for redskap som ikke tar arten, se 5.63; agn som gir mer enn 10 %), Pris (valgt måned, best og lavest betalt), Regler (minstemål, største lovlige, kveitas fredning) og en knapp til Regler-appen.
 - Valgt måned og kort huskes i `GUIDE.st` (ikke i lagringen). Sesong-appen har en knapp hit under sin egen kalender.
 - Test: `tests/guidetest.py` (månedene, stengt og skrei, årsvisningen, kortene for torsk, blåkveite, kongekrabbe og kveite, «Lite der du er» sør og nord, engelsk).
+- **Det du har funnet ut** (31.10.2026, L2 i `docs/planer/oppdrag-2.md`): artskortet viser linjene fra spillerens egne leteoppdrag (`S.lete[art]`, skrevet av fiskemodellen når oppdraget er svart: sted ved nærmeste mottak, måned, side, dyp, ly), nyeste først, høyst seks. Testen: `guidetest`.
 - Ikke bygget: regionsvise tall for torsk, hyse og sei (modellen har ikke egne regioner for dem, bare dybde, åpen kyst og kanter), og «anbefalt felt der du er» (varmekartet og ekkoloddet viser hvor fisken står akkurat nå).
 
 ## 5.38 Juks i dødtiden (Jonas 09.10.2026)

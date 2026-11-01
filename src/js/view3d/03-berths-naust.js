@@ -19,24 +19,24 @@
     for (const [kk, c] of CH) if (moved.some(q => Math.hypot(c.x - q.x, c.z - q.z) < 700)){ freeChunk(c); CH.delete(kk); }
     staleMesh('near'); staleMesh('fine');
   }
-  // The coast's own boats at their quay berths (05-vessels.js moorHarbour, 4.16b) stood on the same bank: there too the ground goes down,
-  // where it stands over -1.2 m under the hull, out to her side and 6 m and along her length and 3 m, and only 1.5 m in from the face
-  // (no quay of ours is drawn there). Their places are fixed again only when packs or coast indexes come (MOOR.ver), so the set changes
-  // rarely: it is looked at every 30th frame for the harbours within 2.5 km of the boat, and kept in 64 m cells.
+  // The coast's own boats at their quay berths (05-vessels.js moorHarbour, 4.16b) and Senja's fleet at theirs (fleetBerth) stood on the
+  // same bank: in front of a berth at a quay that stands in 3D (L1: the berth carries its face, moored.face) the ground goes down the
+  // same way, where it stands over -1.2 m under the hull, out to her side and 6 m, along her length and 3 m, and 1.5 m in from the
+  // face (4 m where the game sets its own quay there, face.mod, as under the player's). A dock, a buoy or no place digs nothing. The
+  // places are fixed again only when packs or coast indexes come (MOOR.ver), so the set changes rarely: it is looked at every 30th
+  // frame for the harbours within 2.5 km of the boat, and kept in 64 m cells.
   const NPIT = {k:'', l:[], g:new Map(), off:false, n:0};
   function npcPits(){
     if (++NPIT.n % 30 || typeof MOOR === 'undefined' || !VEC.tiles.size) return;
-    const R = 2500, ex = bv.x, ez = bv.z, H = []; let k = MOOR.ver + ':';
-    for (const tl of vecTilesIn(ex - R, ez - R, ex + R, ez + R)) for (const h of tl.npc || []) if (h.moorVer === MOOR.ver && Math.hypot(h.x * 1000 - ex, h.y * 1000 - ez) < R){ H.push(h); k += Math.round(h.x * 1000) + ',' + Math.round(h.y * 1000) + ';'; }
+    const R = 2500, ex = bv.x, ez = bv.z, B = []; let k = MOOR.ver + ':';
+    for (const tl of vecTilesIn(ex - R, ez - R, ex + R, ez + R)) for (const h of tl.npc || []) if (h.moorVer === MOOR.ver && Math.hypot(h.x * 1000 - ex, h.y * 1000 - ez) < R){ k += Math.round(h.x * 1000) + ',' + Math.round(h.y * 1000) + ';'; for (const b of h.boats) if (b.moored && b.moored.face) B.push({f:b.moored.face, L:b.L, B:b.B, T:b.T}); }
+    if (typeof FLEET !== 'undefined' && typeof fleetBerth === 'function') FLEET.forEach((f, i) => { if (Math.hypot(f.hp[0] * 1000 - ex, f.hp[1] * 1000 - ez) > R + 600) return; const m = fleetBerth(i); if (m && m.face){ B.push({f:m.face, L:f.L, B:f.B, T:f.T}); k += 'f' + i + ':' + Math.round(m.face.x) + ',' + Math.round(m.face.z) + ';'; } });
     if (k === NPIT.k) return;
     const was = NPIT.l; NPIT.k = k; NPIT.l = []; NPIT.g = new Map(); NPIT.off = true;
-    for (const h of H) for (const b of h.boats){ const m = b.moored; if (!m || m.buoy || m.dock || m.none) continue;
-      const px = m.p.x * 1000, pz = m.p.y * 1000, sn = Math.sin(m.hd), cs = Math.cos(m.hd), B = b.B || 3, L = b.L || 10, o = B / 2 + 2;
+    for (const q of B){ const f = q.f, B2 = q.B || 3, L = q.L || 10, px = f.x + f.nx * (B2 / 2 + 0.4), pz = f.z + f.nz * (B2 / 2 + 0.4);
       if (terrRaw(px, pz) < -1.2) continue;
-      // (the face on the side with the bank: across her heading, the higher ground)
-      const sg = terrRaw(px + cs * o, pz + sn * o) > terrRaw(px - cs * o, pz - sn * o) ? 1 : -1, nx = -sg * cs, nz = -sg * sn, fx = px - nx * (B / 2 + 0.4), fz = pz - nz * (B / 2 + 0.4);
-      const a1 = L / 2 + 3, w = B + 6, r = Math.hypot(a1, w + 2) + 1;
-      NPIT.l.push({x:fx, z:fz, ux:sn, uz:-cs, nx, nz, a1, a0:L / 2 + 2, w, inl:1.5, d:Math.max(3, (b.T || 1.5) + 1), x0:fx - r, x1:fx + r, z0:fz - r, z1:fz + r}); }
+      const a1 = L / 2 + 3, w = B2 + 6, r = Math.hypot(a1, w + 4) + 1;
+      NPIT.l.push({x:f.x, z:f.z, ux:f.ux, uz:f.uz, nx:f.nx, nz:f.nz, a1, a0:L / 2 + 2, w, inl:f.mod ? 4 : 1.5, d:Math.max(3, (q.T || 1.5) + 1), x0:f.x - r, x1:f.x + r, z0:f.z - r, z1:f.z + r}); }
     NPIT.off = false;
     for (const q of NPIT.l) for (let i = Math.floor(q.x0 / 64); i <= Math.floor(q.x1 / 64); i++) for (let j = Math.floor(q.z0 / 64); j <= Math.floor(q.z1 / 64); j++){ const c = i * 65536 + j; let L = NPIT.g.get(c); if (!L) NPIT.g.set(c, L = []); L.push(q); }
     const moved = was.filter(q => !NPIT.l.some(p => p.x === q.x && p.z === q.z)).concat(NPIT.l.filter(q => !was.some(p => p.x === q.x && p.z === q.z)));
@@ -198,38 +198,108 @@
     for (let dz = -1; dz <= 2; dz++) for (let dx = -1; dx <= 2; dx++){ const wx = dx <= 0 ? (dx === 0 ? 1 - fx * 0.5 : 0.5 - fx * 0.5) : (dx === 1 ? 0.5 + fx * 0.5 : fx * 0.5), wz = dz <= 0 ? (dz === 0 ? 1 - fz * 0.5 : 0.5 - fz * 0.5) : (dz === 1 ? 0.5 + fz * 0.5 : fz * 0.5); s += F(ix + dx, iz + dz) * wx * wz; }
     return clamp(s / 2.25, 0, 1);
   }
+  // The land cover round a point (the 'cover' layer, G1 of docs/planer/grafikk-natur-og-miljo.md: Overture's detailed land cover from
+  // ESA WorldCover with OpenStreetMap's natural areas and land use over it, tools/map/region.py cover; a class per 50 m cell, 1 forest ... 12 shingle): the share of each class among the land cells of the 4 x 4 cells
+  // forestAt reads, weighted as it weighs them, into cv at k * 9 (0-255), and ck[k] = 1. Where the layer has no block (a tile from a
+  // release before it, outside Norway) or no land cell has a class, ck[k] = 0 and recolor keeps the rules from before.
+  const COVN = 12, COVS = 15, COVW = new Float32Array(COVN), COVB = {k:NaN, t:0};   // COVS: a point's bytes in cv, the 12 classes' shares and the satellites' summer colour (G3)
+    // the last block check that found them all, kept a second (a mesh asks the same few blocks for every point)
+  function coverAt(x, z, cv, ck, k){
+    ck[k] = 0; const LC = MAPD.L.cover; if (!HG || !LC) return;
+    const cm = LC.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz, n = LC.n;
+    if (!mapIn(LC, ix - 1, iz - 1) || !mapIn(LC, ix + 2, iz + 2)) return;
+    const b0 = Math.floor((ix - 1) / n), b1 = Math.floor((ix + 2) / n), c0 = Math.floor((iz - 1) / n), c1 = Math.floor((iz + 2) / n);
+    const bk = ((b0 * 8192 + c0) * 2 + (b1 - b0)) * 2 + (c1 - c0), now = performance.now();
+    // only a yes is kept (a second): a no is asked again, since the pack may come in the meantime and the mesh be built again at once
+    // (kept, a fine mesh built just after its pack came had no land cover: a lighter square a kilometre wide at Hammerfest, 28.10.2026)
+    if (bk !== COVB.k || now - COVB.t > 1000){ for (let by = c0; by <= c1; by++) for (let bx = b0; bx <= b1; bx++) if (!mapHasBlock(LC, bx, by)) return; COVB.k = bk; COVB.t = now; }
+    satAt(x, z, cv, k * COVS + 12);
+    COVW.fill(0); let s = 0;
+    for (let dz = -1; dz <= 2; dz++) for (let dx = -1; dx <= 2; dx++){
+      const v = rcell(LC, ix + dx, iz + dz); if (!v || v > COVN) continue;
+      const wx = dx <= 0 ? (dx === 0 ? 1 - fx * 0.5 : 0.5 - fx * 0.5) : (dx === 1 ? 0.5 + fx * 0.5 : fx * 0.5), wz = dz <= 0 ? (dz === 0 ? 1 - fz * 0.5 : 0.5 - fz * 0.5) : (dz === 1 ? 0.5 + fz * 0.5 : fz * 0.5);
+      COVW[v - 1] += wx * wz; s += wx * wz;
+    }
+    if (s < 1e-3) s = coverRing(LC, ix, iz);   // no class in the 4 x 4 cells (nearer the shore than ESA's polygons reach): the nearest ring
+    if (s < 1e-3) return;
+    for (let c = 0; c < COVN; c++) cv[k * COVS + c] = Math.round(COVW[c] / s * 255);
+    ck[k] = 1;
+  }
+  // the satellites' summer colour at a point (G3: Sentinel-2's median of the clear days from mid June to August, the scenes' own sun
+  // taken out, coast.py sat_tile) into cv at o, o + 1, o + 2 as R, G, B 1-255; 0, 0, 0 where there is none (the sea, outside Norway, a
+  // release before the layers). Packed as luma sy (50 m, 7 bits) and chroma sco, scg (100 m, 6 bits), each + 1, 0 for none: each read
+  // over the nearest 2 x 2 cells that have it, weighted bilinearly, and turned back (G = Y + Cg, R = Y - Cg + Co, B = Y - Cg - Co).
+  function satRead(L, x, z){
+    const cm = L.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz;
+    if (!mapIn(L, ix, iz) || !mapIn(L, ix + 1, iz + 1)) return -1;
+    const b0 = Math.floor(ix / L.n), b1 = Math.floor((ix + 1) / L.n), c0 = Math.floor(iz / L.n), c1 = Math.floor((iz + 1) / L.n);
+    if (!covBlk(L, b0, c0) || !covBlk(L, b1, c0) || !covBlk(L, b0, c1) || !covBlk(L, b1, c1)) return -1;   // (all four: by a block's corner the cells reach into three)
+    let v = 0, w = 0;
+    for (let dz = 0; dz <= 1; dz++) for (let dx = 0; dx <= 1; dx++){ const c = rcell(L, ix + dx, iz + dz); if (!c) continue; const q = (dx ? fx : 1 - fx) * (dz ? fz : 1 - fz) + 1e-4; v += (c - 1) * q; w += q; }
+    return w > 0.05 ? v / w : -1;
+  }
+  function satAt(x, z, cv, o){
+    cv[o] = cv[o + 1] = cv[o + 2] = 0; const SY = MAPD.L.sy, SO = MAPD.L.sco, SG = MAPD.L.scg; if (!SY || !SO || !SG) return;
+    const y = satRead(SY, x, z); if (y < 0) return; const co = satRead(SO, x, z), cg = satRead(SG, x, z); if (co < 0 || cg < 0) return;
+    const Y = y * 2 + 1, Co = co * 4 + 2 - 128, Cg = cg * 4 + 2 - 128, t = Y - Cg;
+    cv[o] = clamp(Math.round(t + Co), 1, 255); cv[o + 1] = clamp(Math.round(Y + Cg), 1, 255); cv[o + 2] = clamp(Math.round(t - Co), 1, 255);
+  }
+  // a block of the cover layer that is there, kept a second (positives only, as COVB)
+  const COVK = new Map();
+  function covBlk(LC, bx, by){ const key = (bx * 8192 + by) * 64 + LC.id, t = COVK.get(key), now = performance.now(); if (t && now - t < 1000) return true; if (!mapHasBlock(LC, bx, by)) return false; if (COVK.size > 64) COVK.clear(); COVK.set(key, now); return true; }
+  // the classes of the nearest ring of cells (2 to 10 cells out, 100-500 m) that has any, counted into COVW; the sum (0 if none). The
+  // land within 50-100 m of the shore often has no class (ESA's polygons stop short of OpenStreetMap's coastline), and the old rule
+  // there made dark patches and bands where the fells are bare (Hammerfest, 28.10.2026)
+  function coverRing(LC, ix, iz){
+    const n = LC.n; let s = 0;
+    for (let r = 2; r <= 10 && s === 0; r++) for (let dz = -r; dz <= r; dz++) for (let dx = -r; dx <= r; dx += (dz === -r || dz === r) ? 1 : 2 * r){
+      const cx = ix + dx, cz = iz + dz; if (!mapIn(LC, cx, cz) || !covBlk(LC, Math.floor(cx / n), Math.floor(cz / n))) continue;
+      const v = rcell(LC, cx, cz); if (v && v <= COVN){ COVW[v - 1]++; s++; }
+    }
+    return s;
+  }
+  // the land cover's class at a point (the nearest 50 m cell, 1 forest ... 12 shingle), 0 for land with none, -1 where the layer has no
+  // block there (the trees keep their old rule)
+  function coverClass(x, z){
+    const LC = MAPD.L.cover; if (!HG || !LC) return -1;
+    const cm = LC.c * 1000, ix = Math.floor(x / cm), iz = Math.floor(z / cm);
+    if (!mapIn(LC, ix, iz) || !mapHasBlock(LC, Math.floor(ix / LC.n), Math.floor(iz / LC.n))) return -1;
+    const v = rcell(LC, ix, iz); if (v) return v;
+    // land with no class: the most common class of the nearest ring that has any (coverRing)
+    COVW.fill(0); if (!coverRing(LC, ix, iz)) return 0; let b = 0; for (let c = 1; c < COVN; c++) if (COVW[c] > COVW[b]) b = c; return b + 1;
+  }
   // A mesh is built in three parts so it can be done a few rows a frame (meshTask): the heights row by row, then the normals, the
   // indices and the buffers at once. makeMesh does it all in one go.
   function meshBegin(x0, z0, sx, sz, n, hf){
     const N = n * n;
-    return {x0, z0, sx, sz, n, hf:hf || terrH, dx:sx / (n - 1), dz:sz / (n - 1), j:0, pos:new Float32Array(N * 3), h:new Float32Array(N), nz:new Float32Array(N), fo:new Float32Array(N)};
+    return {x0, z0, sx, sz, n, hf:hf || terrH, dx:sx / (n - 1), dz:sz / (n - 1), j:0, pos:new Float32Array(N * 3), h:new Float32Array(N), nz:new Float32Array(N), fo:new Float32Array(N), cv:new Uint8Array(N * COVS), ck:new Uint8Array(N)};
   }
   function meshRows(B, until){
-    const {x0, z0, n, dx, dz, hf, pos, h, nz, fo} = B;
+    const {x0, z0, n, dx, dz, hf, pos, h, nz, fo, cv, ck} = B;
     while (B.j < n){
       const j = B.j++;
       for (let i = 0; i < n; i++){
         const k = j * n + i, x = x0 + i * dx, z = z0 + j * dz, y = hf(x, z);
-        h[k] = y; pos[k * 3] = i * dx; pos[k * 3 + 1] = y; pos[k * 3 + 2] = j * dz; nz[k] = fbm(x / 600, z / 600, 2, 90); fo[k] = forestAt(x, z);
+        h[k] = y; pos[k * 3] = i * dx; pos[k * 3 + 1] = y; pos[k * 3 + 2] = j * dz; nz[k] = fbm(x / 600, z / 600, 2, 90); fo[k] = forestAt(x, z); if (y > 0) coverAt(x, z, cv, ck, k); else ck[k] = 0;   // (the sea has no class: its points would search the rings for nothing)
       }
       if (performance.now() > until) break;
     }
     return B.j >= n;
   }
   function meshEnd(B){
-    const {x0, z0, sx, sz, n, dx, dz, pos, h, nz, fo} = B, N = n * n, slope = new Float32Array(N), nor = new Float32Array(N * 3);
+    const {x0, z0, sx, sz, n, dx, dz, pos, h, nz, fo, cv, ck} = B, N = n * n, slope = new Float32Array(N), nor = new Float32Array(N * 3);
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
       const k = j * n + i, hx = (h[j * n + Math.min(n - 1, i + 1)] - h[j * n + Math.max(0, i - 1)]) / (2 * dx), hz = (h[Math.min(n - 1, j + 1) * n + i] - h[Math.max(0, j - 1) * n + i]) / (2 * dz);
       slope[k] = Math.hypot(hx, hz); const nl = Math.hypot(hx, 1, hz); nor[k * 3] = -hx / nl; nor[k * 3 + 1] = 1 / nl; nor[k * 3 + 2] = -hz / nl;
     }
     const big = N > 65536, idx = big ? new Uint32Array((n - 1) * (n - 1) * 6) : new Uint16Array((n - 1) * (n - 1) * 6); let q = 0;   // 32-bit on ultra (UINT)
     for (let j = 0; j < n - 1; j++) for (let i = 0; i < n - 1; i++){ const a = j * n + i, b = a + 1, c = a + n, d = c + 1; idx[q++] = a; idx[q++] = c; idx[q++] = b; idx[q++] = b; idx[q++] = c; idx[q++] = d; }
-    const col = new Float32Array(N * 3), m = {pb:buf(pos), cb:buf(col, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), nb:buf(nor), ib:buf(idx, gl.ELEMENT_ARRAY_BUFFER), n:idx.length, i32:big, h, nz, slope, fo, col, mat:new Float32Array(N * 4), x0, z0, sx, sz, pos, nor, gn:n, o:[x0, z0], sh:new Float32Array(N).fill(1)}; m.sb = buf(m.sh, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.mb = buf(m.mat, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.shKey = '';
+    const col = new Float32Array(N * 3), m = {pb:buf(pos), cb:buf(col, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), nb:buf(nor), ib:buf(idx, gl.ELEMENT_ARRAY_BUFFER), n:idx.length, i32:big, h, nz, slope, fo, cv, ck, col, mat:new Float32Array(N * 4), x0, z0, sx, sz, pos, nor, gn:n, o:[x0, z0], sh:new Float32Array(N).fill(1)}; m.sb = buf(m.sh, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.mb = buf(m.mat, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.shKey = '';
     recolor(m, snowNow == null ? 0 : snowNow);
     return m;
   }
   function makeMesh(x0, z0, sx, sz, n, hf){ const B = meshBegin(x0, z0, sx, sz, n, hf); meshRows(B, Infinity); return meshEnd(B); }
-  function freeMesh(m){ if (m.parts){ m.parts.forEach(freeMesh); return; } gl.deleteBuffer(m.pb); gl.deleteBuffer(m.cb); gl.deleteBuffer(m.ib); if (m.nb) gl.deleteBuffer(m.nb); if (m.sb) gl.deleteBuffer(m.sb); if (m.mb) gl.deleteBuffer(m.mb); }
+  function freeMesh(m){ if (m.parts){ m.parts.forEach(freeMesh); return; } gl.deleteBuffer(m.pb); gl.deleteBuffer(m.cb); gl.deleteBuffer(m.ib); if (m.nb) gl.deleteBuffer(m.nb); if (m.sb) gl.deleteBuffer(m.sb); if (m.mb) gl.deleteBuffer(m.mb); if (m.vb) gl.deleteBuffer(m.vb); }
   // the near terrain's own surface at x, z (its triangles over the ground without the units), so a fine patch meets it exactly
   function nearSurf(M, x, z){
     const n = M.gn, d = M.sx / (n - 1), gx = clamp((x - M.x0) / d, 0, n - 1.001), gz = clamp((z - M.z0) / d, 0, n - 1.001), i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j;
@@ -246,10 +316,10 @@
     let X0 = -E, X1 = E, Z0 = -B; if (U.f) for (let i = 0; i < U.f.length; i += 2){ X0 = Math.min(X0, U.f[i]); X1 = Math.max(X1, U.f[i]); Z0 = Math.min(Z0, U.f[i + 1]); }
     const xs = [...span(X0 - F, X0, 22), ...span(X0, X1, Math.ceil((X1 - X0) / 1.6)).slice(1), ...span(X1, X1 + F, 22).slice(1)];
     const zs = [...span(Z0 - F, Z0, 22), ...(Z0 < -B ? span(Z0, -B, Math.ceil((-B - Z0) / 2.5)).slice(1) : []), ...span(-B, 0, 14).slice(1), ...span(0, UG.basinZ + F, 34).slice(1)];
-    const nx = xs.length, nz = zs.length, N = nx * nz, pos = new Float32Array(N * 3), h = new Float32Array(N), nzA = new Float32Array(N), slope = new Float32Array(N), nor = new Float32Array(N * 3), fo = new Float32Array(N), pv = new Float32Array(N);
+    const nx = xs.length, nz = zs.length, N = nx * nz, pos = new Float32Array(N * 3), h = new Float32Array(N), nzA = new Float32Array(N), slope = new Float32Array(N), nor = new Float32Array(N * 3), fo = new Float32Array(N), pv = new Float32Array(N), cv = new Uint8Array(N * COVS), ck = new Uint8Array(N);
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++){
       const k = j * nx + i, w = unitW(U, xs[i], zs[j]), x = w[0], z = w[1], y = unitTerr(x, z, nearSurf(M, x, z));
-      h[k] = y; pos[k * 3] = x - U.o[0]; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z - U.o[1]; nzA[k] = fbm(x / 600, z / 600, 2, 90); fo[k] = forestAt(x, z);
+      h[k] = y; pos[k * 3] = x - U.o[0]; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z - U.o[1]; nzA[k] = fbm(x / 600, z / 600, 2, 90); fo[k] = forestAt(x, z); if (y > 0) coverAt(x, z, cv, ck, k); else ck[k] = 0;
       const dF = fillOut(U, xs[i], zs[j]), dG = Math.min(dF, blockOut(xs[i], zs[j], UG));
       pv[k] = dF < 0.5 ? 1 : dG < 14 && Math.abs(y - UNIT_TOP) < 0.25 ? 0.85 * sstep(14, 4, dG) : 0;
     }
@@ -261,7 +331,7 @@
     const idx = []; for (let j = 0; j < nz - 1; j++) for (let i = 0; i < nx - 1; i++){
       if (xs[i] >= -E - 1e-6 && xs[i + 1] <= E + 1e-6 && zs[j] >= -B - 1e-6 && zs[j + 1] <= 1e-6) continue;   // the quay's own block
       const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1; idx.push(a, c, b, b, c, d); }
-    const col = new Float32Array(N * 3), m = {pb:buf(pos), cb:buf(col, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), nb:buf(nor), ib:buf(new Uint16Array(idx), gl.ELEMENT_ARRAY_BUFFER), n:idx.length, h, nz:nzA, slope, fo, pv, col, mat:new Float32Array(N * 4), pos, nor, unit:U.id, o:[U.o[0], U.o[1]], sh:new Float32Array(N).fill(1)};
+    const col = new Float32Array(N * 3), m = {pb:buf(pos), cb:buf(col, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), nb:buf(nor), ib:buf(new Uint16Array(idx), gl.ELEMENT_ARRAY_BUFFER), n:idx.length, h, nz:nzA, slope, fo, cv, ck, pv, col, mat:new Float32Array(N * 4), pos, nor, unit:U.id, o:[U.o[0], U.o[1]], sh:new Float32Array(N).fill(1)};
     m.sb = buf(m.sh, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.mb = buf(m.mat, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.shKey = '';
     recolor(m, snowNow == null ? 0 : snowNow);
     return m;

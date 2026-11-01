@@ -27,7 +27,10 @@ function mapIdb(){
 }
 function idbDo(mode, f){ return mapIdb().then(db => db && new Promise(res => { try { const tx = db.transaction('f', mode), q = f(tx.objectStore('f')); tx.oncomplete = () => res(q && q.result); tx.onerror = tx.onabort = () => res(null); } catch (e){ res(null); } })); }
 async function mapFetch(pk){
-  const kept = await idbDo('readonly', s => s.get(pk.hash));
+  // the copy kept in IndexedDB, unless the store is slow to answer: a read waits behind the writes before it, and after a long jump
+  // (a teleport, a new place on the map) tens of packs are being written, so a read could wait half a minute and the view's packs not
+  // come at all (Tromsø 29.10.2026, the larger view packs of G3 and G4); after 1.5 s the network is asked instead
+  const kept = await Promise.race([idbDo('readonly', s => s.get(pk.hash)), new Promise(res => setTimeout(() => res(null), 1500))]);
   if (kept && kept.byteLength === pk.bytes){ MAPD.cached++; return new Uint8Array(kept); }
   // a pack that does not come (a slow or dropped connection, a proxy that cuts a large file, a hiccup on the server) is asked for again
   // up to three times, 0.7 s, 1.4 s and 2.1 s apart, before the player sees an error (08.10.2026: players stuck at «Kartet lastet ikke»)
@@ -125,11 +128,12 @@ function mapDecode(L, raw){
   // depth in half metres; the ground's height in half metres to 10 m and then 2 m steps (the page's own packing of hgt), kept as
   // Int16 decimetres (L.k = 0.1)
   if (L.dec === 'half'){ const out = new Float32Array(N); for (let i = 0; i < N; i++) out[i] = q[i] / 2; return out; }
+  if (L.dec === 'raw') return Int16Array.from(q);   // (the satellites' colour, G3: the values as they are)
   const out = new Int16Array(N); for (let i = 0; i < N; i++){ const a = Math.abs(q[i]); out[i] = Math.sign(q[i]) * (a < 20 ? a * 5 : 100 + (a - 20) * 20); }
   return out;
 }
 function mapBlock(L, bx, by){
-  const k = gridKey(bx, by) * 16 + L.id; let a = MAPD.blk.get(k);   // room for 16 layers (there are 10 with 'deep')
+  const k = gridKey(bx, by) * 64 + L.id; let a = MAPD.blk.get(k);   // room for 64 layers (there are 14 with the satellites' three)
   if (a){ MAPD.blk.delete(k); MAPD.blk.set(k, a); return a; }
   const pk = mapPackOf(L, bx, by), e = pk && pk.idx && pk.idx.get(L.name + ':' + bx + ':' + by);
   if (!pk || !pk.buf || !e){ MAPD.miss++; const er = new Error('map: ' + L.name + ' block ' + bx + ',' + by + (pk ? (pk.buf ? ' is not in ' : ' is not loaded (') + pk.file + (pk.buf ? '' : ')') : ' has no pack')); if (pk && !pk.buf) er.pk = pk; throw er; }

@@ -71,6 +71,10 @@ async def main():
         en = await pg.evaluate("""(() => { S.lang = 'en'; PHONE.open('guide'); const a = document.querySelector('.ph-appv').innerText; S.lang = 'no'; PHONE.open('sesong'); const l = !!document.querySelector('.ph-appv [data-a=guide]'); PHONE.show(false); return {a:a.slice(0, 160), l}; })()""")
         print(ok('Month' in en['a'] and 'The year' in en['a'] and en['l']), 'English text, and the Sesong app links to the guide', en)
         await pg.evaluate("PHONE.open('guide')"); await pg.wait_for_timeout(250); await pg.screenshot(path='guide_app.png')
+        # what the player found out on the search missions stands on the species card (L2, 31.10.2026)
+        fo = await pg.evaluate("""(() => { S.lete = {torsk:[{t:S.t, p:{x:1, y:1}, mon:2, no:'Torsk 3,2 nm fra Botnhamn i mars: tettest nord i området.', en:'Cod 3.2 nm from Botnhamn in March: thickest to the north.'}]}; PHONE.open('guide'); GUIDE.st.sp = 'torsk'; PHONE.render();
+          const t = document.getElementById('phView').innerText; const has = /Det du har funnet ut/.test(t) && /tettest nord i området/.test(t); S.lete = {}; PHONE.render(); const gone = !/Det du har funnet ut/.test(document.getElementById('phView').innerText); GUIDE.st.sp = null; PHONE.render(); return {has, gone}; })()""")
+        print(ok(fo['has'] and fo['gone']), "the species card shows what the player found out on the search missions, and nothing when there is nothing", fo)
         await tap('.gd-row[data-sp=torsk]'); await pg.screenshot(path='guide_card.png')
         print(ok(not errs), 'no page errors', errs[:3])
         await b.close()
