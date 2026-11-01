@@ -137,6 +137,11 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
 
+## Strøket 01.11.2026 (L1, båtene ved ekte kaier, b3fd4d0 og b0b0135)
+
+- **NPC-båtene lå i fjæra og på strandskråningen** (Jonas' bilder fra Finnsnes 01.11.2026; Senja-flåten uten graving, kystflåten med `npcPits`): en båt ligger bare ved en kai som står i 3D (`quayReal`), flytebrygge og bøye bare under 11 m og bare inne i havna, enhetenes kai åpen utenom plassene (`faceReserved`), og båter uten plass vises ikke i havn. `npc-trafikk.md` 4.16b-L1. Målt i Finnsnes, Tromsø, Bodø, Bergen og Båtsfjord.
+- **`unitNear` på 60 m rundt enhetens midtpunkt** holdt hele mottakskaia fri for NPC-båter; nå bare blokka, bassenget og de to plassene (`unitHit`).
+
 ## Strøket 30.10.2026 (målingen av oppdragene, sesongflyttingen i etapper)
 
 - **Sesongene var bare nyheter** (gap-analysen punkt 7, A2): felles tavle per hendelse med `ev_top`, landinger merket med hendelsen, merke og premie ved avslutning (`EVENTS` i `09c-seasons.js`, `evTop`/`evCloseTick` i `10h-world.js`, kortet i `06d-season-folk.js`). `eventtest`.
