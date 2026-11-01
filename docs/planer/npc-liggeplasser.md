@@ -136,6 +136,17 @@ Usikkert: hvor mye av sluttsedlenes fangst som skal regnes som NPC-trykk i en ru
 - Ingen graving i terrenget for å få en båt til å flyte der det ikke står en kai.
 
 ## 6. Status
+- 01.11.2026: **L1 bygd** (Jonas: «Kjør på med det du anbefaler», valg 1–3 = A). Regelen står i `npc-trafikk.md` 4.16b-L1. Målt med `kart-24` (proben i økta, kl. 03 i juni, båtene innen 2 km av stedet):
+
+  | Sted | Før (pakkens plass) | Etter |
+  |---|---|---|
+  | Finnsnes (Senja-flåten, 2) | begge ved kystkant (slag 3), bakken over −0,5 m under skroget | begge ved kailinja (slag 2) ved fiskebruket, bakken gravd ut, 0 over −0,5 m |
+  | Tromsø (4) | alle ved kystkant, 4 på skråningen | alle ved kystkant **ved industribygg** med trekai satt (mod), 0 på skråningen |
+  | Bodø (3) | alle ved kystkant, 3 på skråningen | som Tromsø, 0 på skråningen |
+  | Bergen (2) | alle ved kystkant, 2 på skråningen | som Tromsø, 0 på skråningen |
+  | Båtsfjord (9) | 3 brygge, 3 kailinje, 3 kystkant; 3 på skråningen | 3 brygge, 3 kailinje, 3 kystkant ved industribygg med kai satt; 0 på skråningen |
+
+  Testene: autonavtest, naustleia, npctest (Tromsø: 35 vist i havn, 30 ved kai, 23 med kai satt, 1 flytebrygge, 4 bøye, 2 skjult, 0 i fjæra, 0 på land), vectest (Senja-flåten 11 av 14 ved kai, 3 skjult i havn), bunkertest, moortest, unittest, sitetest, dbg23o, landtest og de 16 uten 3D fra `run.py changed` er grønne; heattest (1 t, varmekartets ytelse) ble ikke kjørt. Ingen av de 20 fikk flytebrygge, bøye eller ble skjult; tallene for hele AIS-rekkevidden ved Tromsø står i `npctest`-loggen. Svakhet: «før»-tallene for de fire kysthavnene er pakkens plasser (proben fikk ikke den gamle plasseringen til å kjøre innen 2 minutter), men `coastMoor` flyttet dem høyst 8 m fra samme front, så slaget er det samme.
 
 - 01.11.2026: planen er skrevet. En lapp som gravde ut skråningen under Senja-flåten (som `npcPits`), ble prøvd i økta og tatt ut igjen før commit, etter Jonas' svar. Venter på valgene og klarsignal.
 - 01.11.2026: valg 1–3 er A. Valg 4 er Jonas' forslag om at kystflåten tar av den felles bestanden; innspillene er sendt, og svaret avgjør L2. Venter på klarsignal for L1.
