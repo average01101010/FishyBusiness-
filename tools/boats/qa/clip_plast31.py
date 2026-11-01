@@ -24,19 +24,20 @@ for o in solids:
             if not (B.XA + 0.03 < x < B.XF - 0.08): continue
             zr, zs = B.zr(x), B.zs(x); zd = B.z_deck(x)
             if o.name == 'hull':
-                if mn in ('hull', 'af', 'boot', 'stripe'): continue
+                if mn in ('hull', 'af', 'boot', 'stripe', 'wood'): continue                      # (the rubbing strake stands out on purpose)
                 if zr < z < zs - 0.002 and abs(y) > B.y_at(x, z) + 0.002: report(o, 'deck outside hull', mn, p)
                 continue
             if mn in OUTSIDE: continue
             if o.name == 'under' and abs(y) > B.y_at(x, z) - 0.02: continue                    # bolted to the bottom, a little into it
             if any(abs(x - xo) < 0.05 and abs(z - B.WL - ho) < 0.05 for xo, _, ho in (B.EXH_W, B.BILGE)): continue    # the outlets' own linings
+            if any(x0 - 0.04 < x < x0 + l + 0.04 for x0, l in B.FREE) and B.z_deck(x) < z < B.z_deck(x) + 0.22 and abs(y) > B.ybw(x): continue   # the freeing ports' flaps and hinge rods, outside
             if abs(x - 4.30) < 0.04 and abs(z - B.zs(4.30) + 0.10) < 0.04: continue           # the tank's vent hood, screwed on the side
             # through the hull's side or the bulwark between the keel's root and the sheer
             if zr + 0.02 < z < zs - 0.02 and B.y_at(x, z) - 0.004 < abs(y) < B.y_at(x, z) + 0.08 and mn not in ('inner',): report(o, 'through the side', mn, p)
             # inside the bulwark (between its inside and the outside)
             if zd + 0.02 < z < zs - 0.03 and B.ybw(x) + 0.006 < abs(y) < B.y_at(x, z) - 0.006 and mn not in ('inner', 'rubber', 'steel'): report(o, 'in the bulwark', mn, p)
-            # under the deck (but not the openings' own linings: the hold, the freeing ports)
-            if B.XA + 0.1 < x < B.XF - 0.4 and zd - 0.4 < z < zd + B.camber(x, y) - 0.008 and abs(y) < B.ybw(x) - 0.02 and mn not in ('inner', 'cabin', 'white', 'steel'):
+            # under the deck (but not the openings' own linings: the hold, the freeing ports; nor the wheelhouse's sunk sole)
+            if B.XA + 0.1 < x < B.XF - 0.4 and not (B.WX0 < x < B.WX1 and abs(y) < B.WY) and zd - 0.4 < z < zd + B.camber(x, y) - 0.008 and abs(y) < B.ybw(x) - 0.02 and mn not in ('inner', 'cabin', 'white', 'steel'):
                 report(o, 'under the deck', mn, p)
             # inside the cabin trunk, apart from the openings' own linings
             if B.CX0 + 0.06 < x < B.CX1 - 0.3 and zd + 0.05 < z < B.ttop(x, min(abs(y), B.trunk_y(x, z))) - 0.008 and abs(y) < B.trunk_y(x, z) - 0.008 and mn not in ('cabin', 'white', 'inner', 'glass', 'alu', 'wood', 'steel', 'dark'):
