@@ -98,4 +98,22 @@ babord ripe tvers av luka (3,30), den fjerde akter ved redskapsrommets dør. Ski
 
 ## 7. Kritikksløyfen
 
-(fylles inn runde for runde)
+| Runde | Hva ble sett | Hva ble gjort |
+|---|---|---|
+| 0 (før) | Før-bilder, dekkpunkter (høyeste dekkcelle 3,35: taket), K1–K7 (K5 sto inne i redskapsrommet) | Avvikslista (kap. 4) |
+| 1 | Nytt skript eksportert på første forsøk (lod0 58 406, `lodm` 39 036, lod1 4 283). K1–K7 og nærbildene: ren profil, ekte hull, dør og lameller på redskapsrommet; styreplassen svart i rendringen (glasset er ugjennomsiktig i Cycles); natta riktig fra begge sider. Klipp-kontrollen (`qa/clip_havsjark35.py`, ny): 14 punkter (fenderne og ankerspillets fot i dekket) | Rettet; `shots.py` tar nå styreplassens bilder uten glasset og en egen `K5` når standardkameraet står i noe |
+| 2 | **Jonas: «Baugen ser veldig bulkete ut».** Vannlinjene målt: knekk på 50–60 mm i andrederiverte ved x 8,9–9,3, der kimmingsbuen i `vline` hoppet når bunnreisningen steg fort mot stevnen. Fenderlista en spiss sagtann i snittet | Buen byttet med en kubisk kurve fra kjølrota til ripa med fyldighet `FULL` per stasjon: knekken under 20 mm. Fenderlista avrundet (sju punkter). Deplasementet 11,31 t (6 % under 12 t) |
+| 3 | Dekkpunktene: bakken ble ikke dekk. Feilsøkt i dekkskartet celle for celle: vanten til styrbord (masta står til babord) krysset gangen ved huset i hodehøyde, trinnene dekket hele gangen, og avstanden fra bakken til dekket ble nøyaktig tre celler (0,2 × 3 > 0,6 i flyttall). Det fremre visiret ble dekk (1,2 m over bakken). Takregelen tok bakken for et tak over et rom (skrogbunnen inni er en «dørk») | Vanten til styrbord til et øye på takkanten, trinnene smale inntil huset, `stairs`-ankeret (spillet leser det nå), takregelen avgrenset (rommets dørk ikke under dekket, inntil to celler unna for visiret, ikke dekket selv) |
+| 4 | **Jonas: «Hvorfor er ikke spygattene åpne?»** Gummiklaffene utenpå hullene leste som svarte klosser | Klaffene og hengselstengene fjernet; hullene står åpne (nærbildet `c_free`) |
+
+Eksporten: lod0 60 670 trekanter (taket 300 000), `lodm` 39 035 (taket 40 000 minus seilets), lod1 4 283 / 5 863 punkter (taket 12 000),
+glass 260; GLB 3,78 MB mot 0,90 MB før. Seilet er to egne deler (`sail`, `sailf`).
+
+## 8. Selvvurdering
+
+**Karakter: 68/100.** Skroget er én flate med kjølen, hullene er ekte, broa er tegnet fra skipperens øye, lanternene er lovlige, og tre feil i
+spillet som rammet andre båter er rettet (ringnotbåtens sløyebord og is sto på et tak 6,25 m oppe; breisjarkens styrhustak var dekk;
+fiskelysene ble tent over mastetoppen). Trekk: (1) Jonas så bulene i baugen og klaffene foran spygattene før jeg meldte dem; begge burde vært
+fanget i nærbildene av runde 1, der baugen allerede så krøllete ut; (2) jeg ødela skriptet med en `sed` som byttet `X0` i alle navn og måtte
+gjenopprette det fra mitt eget skriv; (3) ingen overlegg mot tegningene (de ligger ikke i repoet), bare mot tabellene; (4) deplasementet ble
+11,3 t mot 12 t etter at buen ble byttet; (5) stripene knekker fortsatt synlig der de går rundt stevnen.

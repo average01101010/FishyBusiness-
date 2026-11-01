@@ -12,7 +12,7 @@ Lest før planen: `VESSELS` (`core/02-species-gear.js`), databladet (`ui/05-phon
 | `skiff` | `skiff59.py` | 434 | åpen | 5,9 | 95 000 | 1+1 / 0 |
 | `snekke` | `snekke26.py` | 379 | åpen, h7 | 7,9 | 245 000 | 2+1 / 0 |
 | `plastsjark` | `plast31.py` (ny 17.10.2026) | 430 | åpen, h8 | 9,45 | 850 000 | 2+1 / 2 |
-| `sjark` | `havsjark35.py` (**målestokken**) | 623 | åpen, h9 | 10,57 | 1 150 000 | 3+1 / 2 |
+| `sjark` | `havsjark35.py` (målestokken; revidert 01.11.2026) | 623 | åpen, h9 | 10,57 | 1 150 000 | 3+1 / 2 |
 | `hurtigsjark` | `hurtig11.py` | 384 | åpen, h10 | 10,99 | 4 900 000 | 3+1 / 2 |
 | `breisjark` | `malo36.py` | 532 | åpen | 10,99 | 9 000 000 | 4+1 / 4 |
 | `sjarkny` | `hs11.py` | 251 | åpen | 10,99 | 10 500 000 | 3+1 / 3 |

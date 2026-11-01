@@ -1,8 +1,8 @@
 Revider båtmodellen: [BÅTENS NAVN]
 
-Dette er en eksisterende Blender-modell i spillet som ikke ble bygd etter noen plan. Løft den til samme nivå og arbeidsmåte som pilotbåten ringnot38 og de reviderte båtene trebat, skiff, snekke og plastsjark (F5 i docs/planer/grafikk-batmodeller.md). Finn selv ut hvilken type i VESSELS og hvilket skript i tools/boats/ navnet gjelder.
+Dette er en eksisterende Blender-modell i spillet som ikke ble bygd etter noen plan. Løft den til samme nivå og arbeidsmåte som pilotbåten ringnot38 og de reviderte båtene trebat, skiff, snekke, plastsjark og sjark (havsjarken) (F5 i docs/planer/grafikk-batmodeller.md). Finn selv ut hvilken type i VESSELS og hvilket skript i tools/boats/ navnet gjelder.
 
-GRENEN: main er tom; spillet ligger på arbeidsgrenene. Bygg på den nyeste grenen med spillet (nå ccr-bdecba4a-xbp5d0, som har trebåten, skiffen, plastsnekka, plastsjarken, verktøyene i tools/boats/qa og lærdommene; den er også rullet ut til ccr-5e1ba2f4-pusvyd) og commit underveis.
+GRENEN: main er tom; spillet ligger på arbeidsgrenene. Bygg på den nyeste grenen med spillet (nå ccr-8b54bb95-extnah, som har trebåten, skiffen, plastsnekka, plastsjarken, havsjarken, verktøyene i tools/boats/qa og lærdommene; den er også rullet ut til ccr-5e1ba2f4-pusvyd) og commit underveis.
 
 LESING ER ET ABSOLUTT KRAV FØR NOE ARBEID BEGYNNER. Ingen rendring, ingen eksport og ingen endring i noe skript før alt under er lest i sin helhet, ikke i utdrag; store filer leses i flere biter til de er lest helt. Når du er ferdig, skriv en kort liste til meg over hver fil med én setning om det viktigste du tok med deg fra den, og si ærlig fra om noe ikke er lest helt, og hvorfor. (Plastsjarken fikk 66/100, blant annet fordi økta leste spillets kode for modellen først da testene feilet, sulebas-bygging.md kap. 15.)
   1. Arbeidsmåten: docs/INDEKS.md, CLAUDE.md, docs/skipsmodeller/sulebas-bygging.md hele (reglene i kap. 7, lærdommene i kap. 11–14, og kap. 15 med selvkritikken og tabellen over spillets krav), /blender-skillen, og «Det neste økt bør vite» nederst i denne fila.
@@ -43,6 +43,15 @@ FERDIG BETYR:
 Kjør på.
 
 ---
+
+Det neste økt bør vite (etter havsjarken 01.11.2026):
+- Les `sulebas-bygging.md` kap. 16: mål jevnheten i snittet (andrederiverte langs x) før bildene; Jonas så bulene i baugen før meg.
+  Kimmingen som kubisk kurve med fyldighet per stasjon (`havsjark35.py vline`, `FULL`), ikke som bue fra en hjørnevinkel.
+- Spillet fikk to regler i dekkskartet (`roofOver`: tak over rom er ikke dekk; `stairs: [{from, to}]`: trapper som lenker). Når en del ikke
+  blir dekk: se rutenettet (`M._floors`, `M._lab`, `M.h`), og prøv en endring i `deckMap` på alle typer mot bygget før (`KYST_DIST`).
+- `qa/clip_havsjark35.py` er den nyeste klipp-kontrollen; `tests/hs35shot.py` tar også K6 fra babord og K7 ovenfra.
+- Selvvurderingen står i `havsjark-grunnlag.md` kap. 8 (68/100).
+- Neste i rekkefølgen etter `docs/batplan.md` del 10: `hs11.py` (sjarkny, 45 t mot 15), så `hurtig11.py` og `malo36.py`.
 
 Det neste økt bør vite (etter plastsjarken 01.11.2026):
 - Les `sulebas-bygging.md` kap. 15 først: tabellen over spillets krav (dekkskartet 1,85 m og lenkene til tak, navnet mot registreringsmerket,

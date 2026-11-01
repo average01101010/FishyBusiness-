@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['havsjark-011126', '01.11.2026', 'Havsjarken bygd på nytt', 'The havsjark rebuilt', [
+       ['Havsjarken på 35 fot er bygd på nytt med et glatt skrog der ballastkjølen er en del av skroget, ekte spygatt, koøyer og luker, og en dør inn til styrhuset.', 'The 35 ft havsjark is rebuilt with a smooth hull where the ballast keel is part of the hull, real freeing ports, portholes and hatches, and a door into the wheelhouse.'],
+       ['Fra broa ser skipperen ratt, kartplotter, ekkolodd og kompass, og stytteseglet er beslått på bommen når båten ligger i havn.', 'From the helm the skipper sees the wheel, the plotter, the sounder and the compass, and the riding sail is furled on its boom when the boat lies in port.'],
+       ['Mannskapet går opp trappene til bakken, og fiskelysene tennes på armene sine på masta. Folk på ringnotbåten og breisjarken står ikke lenger på styrhustaket.', 'The crew climb the steps to the forecastle, and the fishing lights burn on their arms on the mast. People on the purse seiner and the wide sjark no longer stand on the wheelhouse roof.'],
+    ]],
     ['plastsjark-011126', '01.11.2026', 'Plastsjarken i ny drakt', 'The fibreglass sjark rebuilt', [
        ['Plastsjarken på 31 fot er bygd på nytt og penere: mer spring i baugen, avrundet hekk, teaklist langs ripa, et lavere styrhus med svart vindusbånd, og en ekte kjøl med propellen i en brønn foran roret.', 'The 31 ft fibreglass sjark is rebuilt and handsomer: more sheer in the bow, a rounded stern, a teak strake along the gunwale, a lower wheelhouse with a black window band, and a real keel with the propeller in an aperture ahead of the rudder.'],
        ['Fra broa ser skipperen nå ratt, kartplotter, ekkolodd og kompass foran seg, og koøyene, lukene og lensportene er ekte åpninger.', 'From the helm the skipper now sees the wheel, the plotter, the sounder and the compass ahead of him, and the portholes, hatches and freeing ports are real openings.'],

@@ -422,7 +422,9 @@ navnefelt legges, og legg det som kan regnes inn i `check()` (plast31.py gjør d
 | Krav | Hvor | Tall |
 |---|---|---|
 | Fri høyde over et dekk | `vessel3d.js` `deckMap` (`DM_HEAD`) | 1,85 m; et lavere tak over dekket gjør dekket under til ikke-dekk |
-| Flater som knyttes til dekket | `deckMap` (lenkene) | inntil 1,6 m høyere og 0,6 m unna en del man kan gå på (et lokk, en kasse): et tak nær et lokk blir dekk |
+| Flater som knyttes til dekket | `deckMap` (lenkene) | inntil 1,6 m høyere og under 0,6 m unna (tre celler er for langt: 0,2 × 3 > 0,6 i flyttall) en del på minst 20 celler man kan gå på (et lokk, en kasse): et tak nær et lokk blir dekk |
+| Tak over et rom | `deckMap` (`roofOver`, 01.11.2026) | en del der de fleste cellene ligger 1,85 m eller mer over en annen dørk (inntil to celler unna, ikke dekket selv, ikke under dekket), uten mannskapsplass, knyttes ikke: styrhustaket ved siden av bakken, visiret |
+| Trapper | `deckMap` (`stairs: [{from, to}]`, 01.11.2026) | en lenke fra dekkets celle ved foten til delen ved toppen, der gangen er for trang for kartets egen lenke |
 | Plassene på dekket | `deckPoints`, `walktest` | alle `crewSpots`, `work`, `hauler`, `filler`, `doors` på dekkets høyde (`qa/deckpoints.py`) |
 | Takhøyde på broa | `brotest` | 1,8 m over `skipperAt` |
 | Rorkultens sveip | `13-instruments.js` | 41° hver vei (kap. 11) |
@@ -457,7 +459,34 @@ lange; les dem i sin helhet eller si fra om at de bare er lest i utdrag. Les `ve
 **9. Når Jonas ber om en pen båt, avtal retningen tidlig.** Plastsjarkens estetiske løft kom først etter første bygg. En kort liste over
 grepene (spring, hekk, lister, hus, farger) før skroget formes, sparer en runde.
 
+## 16. Lært av revisjonen av havsjarken (01.11.2026)
+
+**Mål jevnheten i snittet, ikke bare volumet.** En kimmingsbue som bygges av en hjørnevinkel og en radius per stasjon, hopper når
+bunnreisningen stiger fort (mot stevnen): flatene vris, og baugen ser bulkete ut selv om hver stasjon er riktig. Jonas så det i nærbildet før
+meg. Sjekk vannlinjenes andrederiverte langs x (`y_at(x, z)` for noen z, steg på 0,1 m): over 20–30 mm er en synlig bule. En kubisk kurve fra
+kjølrota til ripa med kontrollpunktene trukket mot hjørnet (`FULL` per stasjon) endrer seg jevnt; volumet stilles med fyldigheten.
+
+**Det som henger foran et hull, er ikke et hull.** En gummiklaff utenpå en lensport er riktig om bord, men i spillets lys leser den som en
+svart kloss. Vis hullet åpent.
+
+**Dekkskartet bestemmer hvor folk går; sjekk det celle for celle når en del ikke blir dekk.** `qa/deckpoints.py` sier bare den høyeste
+cellen. Havsjarkens bakke ble ikke dekk av tre grunner som bare synes i rutenettet (`M._floors`, `M._lab`, `M.h`): en vant som krysset gangen
+i hodehøyde (masta står til babord, vanten til styrbord ripe gikk over gangen), trinn som dekket hele gangen, og tre celler mellom delene
+(lenken krever under 0,6 m, og 0,2 × 3 er litt over 0,6 i flyttall). Løsningen: vanten til takkanten, smale trinn inntil huset, og et
+`stairs`-anker som spillet nå leser. Prøv en endring i `deckMap` på alle typer mot bygget før (`KYST_DIST`): en retting av flyttallsgrensen
+endret ringnotbåten fra 1 362 til 5 875 dekkceller, og ble ikke gjort.
+
+**Et tak over et rom er ikke dekk.** Regelen `roofOver` fant at ringnotbåtens sløyebord og is sto på et tak 6,25 m oppe og at breisjarkens
+styrhustak var dekk. En «dørk» kan være skrogets bunn inni (under bakken): rommets dørk må ligge over dekket (`yLow`).
+
+**`sed` på korte navn er farlig.** `s/X0/.../` byttet `WH_X0` og alle andre navn med `X0` i hele skriptet. Rediger tabeller med et skript som
+finner akkurat den linja.
+
+**Glasset er ugjennomsiktig i Cycles.** Bildene inn i styrhuset ble svarte; `shots.py` tar nå `helm` og `c_helm*` uten glasset.
+
 ## Endringslogg
+
+- 01.11.2026: kap. 16, det revisjonen av havsjarken lærte (jevnheten i snittet, hull som synes åpne, dekkskartet celle for celle, tak over rom, trapper, `sed`, glasset i Cycles); tabellen i kap. 15 fikk taket over rommet og trappene.
 
 - 01.11.2026: kap. 15, selvkritikken etter plastsjarken (spillets krav samlet i én tabell, overlegg uten foto, avvik undersøkes med en gang, utstyret på plassene, broa fra øyet, lesingen, én SwiftShader-side, estetikken avtalt tidlig).
 

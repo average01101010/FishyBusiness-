@@ -1150,6 +1150,7 @@ CLOSE = [('c_helm', (6.40, -0.10, 2.80), (7.25, -0.55, 2.05), 30, False, False),
          ('c_stern', (-3.4, -2.6, 2.3), (0.3, 0, 1.0), 32, True, False), ('c_bow', (12.6, -2.6, 3.0), (9.8, 0, 1.9), 30, False, False),
          ('c_aperture', (1.4, -3.4, -0.9), (1.35, 0, -0.95), 30, False, False), ('c_work', (5.8, -0.2, 4.6), (3.4, 0.0, 0.8), 30, False, False),
          ('c_gear', (4.2, -2.6, 3.3), (1.9, 0.6, 2.0), 30, False, False), ('c_rig', (8.5, -6.0, 5.5), (4.5, 0.5, 5.5), 35, True, False),
+         ('c_free', (2.6, -4.2, 1.1), (2.2, -1.9, 0.7), 30, True, False),
          ('K6p', (5.3 + 31.0, 24.0, 3.0), (5.3, 0, 0.9), 100, True, True)]      # K6 from the port bow: the red and the white only
 
 def main():
