@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['verft-3d-301026', '30.10.2026', 'Båten i 3D på verftet', 'The boat in 3D at the yard', [
+       ['Når du ser på en båt i 3D i båthandelen, vises ikke gass, ratt og «Kast loss» for din egen båt. Kaster båten din loss eller går på grunn mens du ser, lukkes visningen og kameraet går tilbake til henne.', 'While you look at a boat in 3D in the boat market, the throttle, the wheel and «Cast off» for your own boat are hidden. If your boat casts off or runs aground while you look, the showroom closes and the camera goes back to her.']]],
     ['driftsplan-fangst-301026', '30.10.2026', 'Driftsplanen viser fangsten om bord', 'The operations plan shows the catch aboard', [
        ['Statistikken i driftsplanen teller det båten har fisket hver dag, også fangsten som ligger i is om bord og ennå ikke er levert, og antall turer og leveringer hver for seg.', 'The statistics in the operations plan count what the boat has caught each day, also the catch kept in ice aboard and not yet landed, and the trips and the landings each on their own.'],
        ['Siden viser hvor mye som er om bord nå, og når det leveres etter Levering-raden.', 'The page shows how much is aboard now, and when it is landed by the Landing row.'],
