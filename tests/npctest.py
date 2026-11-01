@@ -77,11 +77,39 @@ async def main():
               if (seen){ legs++; if (hit) land++; } } }
           const both = npcStates(S.t / 60).filter(n => n.coast && n.fleet).length; return {n, bad, senja, legs, land, both}; })()""")
         check(q['n'] > 30 and q['bad'] == 0, 'hver båt ligger langs en kaifront som er lang og dyp nok for henne', q)
+        # L1 (01.11.2026): in port a boat lies only at a quay that stands in 3D (quayReal: a pier, a quay line, or the coast by a fish
+        # plant with the game's own quay, face.mod), or under 11 m at a floating dock inside the harbour or on a buoy; one no such place
+        # takes is not shown (hidden), and no shown hull touches land
+        await pg.evaluate(AT, 3)
+        m = await pg.evaluate("""(() => { const H = S.t / 60, b = S.boat.pos, out = {shown:0, quay:0, mod:0, dock:0, buoy:0, hidden:0, bigDock:0, notReal:0, land:0, shore:0};
+          for (const t of VEC.tiles.values()) for (const h of t.npc || []){ if (dist(h, b) > AIS_KM - 1 || h.moorVer !== MOOR.ver) continue;
+            for (const bt of h.boats){ const m = bt.moored; if (!m) continue; if (m.none){ out.hidden++; continue; } out.shown++;
+              if (m.face){ out.quay++; if (m.face.mod) out.mod++; if (m.face.kind === 3 && !m.face.mod) out.shore++;
+                const f = t.quays.find(q => q.id === m.face.id); if (!f || !quayReal(f)) out.notReal++; }
+              else if (m.dock){ out.dock++; if (bt.L >= MOOR.SMALL) out.bigDock++; } else if (m.buoy){ out.buoy++; if (bt.L >= MOOR.SMALL) out.bigDock++; } else out.notReal++;
+              const s = Math.sin(m.hd), c = Math.cos(m.hd); for (const fa of [-1, -0.5, 0, 0.5, 1]) for (const ab of [-1, 0, 1]) if (isLand({x:m.p.x + (s * fa * bt.L / 2 + c * ab * bt.B / 2) / 1000, y:m.p.y + (-c * fa * bt.L / 2 + s * ab * bt.B / 2) / 1000})){ out.land++; break; } } }
+          // (the AIS: no boat in port without a place among them; the boats of a harbour whose places are not fixed yet lie at the pack's)
+          const ids = new Set(npcStates(H).filter(n => n.coast && n.st === 'port').map(n => n.id)); let aisNone = 0;
+          for (const t of VEC.tiles.values()) for (const h of t.npc || []) for (const bt of h.boats) if (bt.moored && bt.moored.none && ids.has(bt.id)) aisNone++;
+          return Object.assign(out, {ais:ids.size, aisNone}); })()""")
+        check(m['shown'] > 10 and m['notReal'] == 0 and m['shore'] == 0 and m['bigDock'] == 0 and m['land'] == 0, 'i havn ligger hver båt ved en kai som står i 3D, eller under 11 m ved flytebrygge eller bøye; ingen i fjæra, ingen på land', m)
+        check(m['aisNone'] == 0, 'båtene uten plass vises ikke i havn (ingen av dem på AIS)', (m['ais'], m['hidden'], m['aisNone']))
         check(q['senja'] == 0 and q['both'] == 0, 'ingen havn i Senja-ruta (FLEET er flåten der), og båtene langs kysten tar ikke fisk fra bestanden', q)
         check(q['legs'] > 20 and q['land'] <= q['legs'] * 0.08, 'leiene til feltene holder seg unna land (noen hjørner av 25 m-masken unntatt)', (q['land'], q['legs']))
         card = await pg.evaluate("(() => { const n = npcStates(S.t / 60).find(n => n.coast); AISSEL = n.id; const tr = aisTrack(n.id, (S.t + 0.5) / 60); return {info:aisInfo(n).includes('Fiskefartøy') || aisInfo(n).includes('Fishing'), size:/×/.test(aisInfo(n)), track:tr.length}; })()")
         check(card['info'] and card['size'] and card['track'] > 100, 'AIS-kortet og sporet virker for en båt langs kysten', card)
         ms = await pg.evaluate("(() => { const t0 = performance.now(); for (let i = 0; i < 20; i++){ COASTM.k = ''; npcStates(S.t / 60 + i / 3600); } return (performance.now() - t0) / 20; })()")
+        # Senja's fleet at Finnsnes (the user's pictures 01.11.2026: boats on the bank): at a quay that stands in 3D, or not shown in port
+        await pg.evaluate("""async () => { const c = P(69.2302, 17.9742); await mapNeed(c, MAPD.simR); const b = S.boat; b.pos = {x:c.x, y:c.y}; S.plan = null; b.v = 0;
+          const F = 3; vecWant(c.x - F, c.y - F, c.x + F, c.y + F); }""")
+        await pg.evaluate(AT, 3)
+        await pg.wait_for_function("(() => { const b = S.boat.pos; return VEC.wait.size === 0 && mapPacksIn('vec', b.x - 2, b.y - 2, b.x + 2, b.y + 2).every(pk => VEC.tiles.has(pk.tile[0] + ':' + pk.tile[1])) && coastFine(b) && coastIndexAt(b, false); })()", timeout=120000)
+        fl = await pg.evaluate("""(() => { const H = S.t / 60, c = S.boat.pos, out = {n:0, quay:0, hidden:0, shift:0, land:0};
+          FLEET.forEach((f, i) => { if (dist({x:f.hp[0], y:f.hp[1]}, c) > 2) return; out.n++; const st = fleetState(i, H); if (st.st !== 'port') return;
+            if (st.hidden){ out.hidden++; return; } if (st.face) out.quay++; else out.shift++;
+            const s = Math.sin(st.hd), cs = Math.cos(st.hd); for (const fa of [-1, -0.5, 0, 0.5, 1]) for (const ab of [-1, 0, 1]) if (isLand({x:st.p.x + (s * fa * f.L / 2 + cs * ab * f.B / 2) / 1000, y:st.p.y + (-cs * fa * f.L / 2 + s * ab * f.B / 2) / 1000})){ out.land++; break; } });
+          return out; })()""")
+        check(fl['n'] >= 2 and fl['shift'] == 0 and fl['land'] == 0, 'Senja-flåten i Finnsnes ligger ved en kai som står i 3D, eller vises ikke i havn; ingen i fjæra', fl)
         print('npcStates med båtene langs kysten (ms per kall):', round(ms, 2))
         check(not errs, 'ingen sidefeil', errs[:3])
         await b.close()

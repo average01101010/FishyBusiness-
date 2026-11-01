@@ -109,15 +109,16 @@ async def main():
           const c0 = S.cash; sell(); tab = 'port'; renderPanel();
           const h3 = [...document.querySelectorAll('#panel h3')].find(h => /Sluttseddel/.test(h.textContent)), tb = h3.nextElementSibling.querySelector('table');
           const rows = [...tb.querySelectorAll('tbody tr')].map(tr => ({sum:tr.classList.contains('sum'), c:[...tr.children].map(td => td.textContent)}));
-          return {rows, cash:S.cash - c0, total:S.lastSale.total, lott:S.lastSale.lott, tk:S.lastSale.tk.sum, mva:S.lastSale.mva, reg:!!S.mva, lines:S.lastSale.lines.map(x => x.sum)}; })()"""))
+          return {rows, cash:S.cash - c0, total:S.lastSale.total, lott:S.lastSale.lott, ls:S.lastSale.ls, fk:S.lastSale.fk.sum, tk:S.lastSale.tk.sum, mva:S.lastSale.mva, reg:!!S.mva, lines:S.lastSale.lines.map(x => x.sum)}; })()"""))
         rows = r['rows']; si = next(i for i, x in enumerate(rows) if x['sum'])
         body = [num(x['c'][-1]) for x in rows[:si]]; shown_total = num(rows[si]['c'][-1])
         kgs = [num(x['c'][3]) for x in rows[:si] if len(x['c']) == 6 and x['c'][0] not in ('Lever', 'Rogn')]
         check(all(v == int(v) for v in r['lines']) and sum(body) == shown_total == r['total'], 'radene på sluttseddelen summerer seg til totalen', [body, shown_total, r['total']])
         check(abs(sum(kgs) - num(rows[si]['c'][3])) < 0.01, 'kiloene summerer seg også', [kgs, rows[si]['c'][3]])
-        lott_row = [x for x in rows[si + 1:] if 'Lott' in x['c'][0]]; kasse = [x for x in rows[si + 1:] if 'Til kassa' in x['c'][0]]
-        check(r['tk'] > 0 and r['cash'] == r['total'] - r['tk'] - r['lott'] and lott_row and num(kasse[0]['c'][-1]) == r['cash'] and r['lott'] == round((r['total'] - r['tk']) * 0.23), 'kassa får nøyaktig total minus trekk og lott, og lotten er av det som er igjen etter trekkene', [r['cash'], r['total'], r['tk'], r['lott']])
-        tk_rows = [x for x in rows[si + 1:] if '%' in x['c'][0] and 'Lott' not in x['c'][0] and 'MVA' not in x['c'][0]]
+        # (Økonomi 2, Ø2: the share of the shared catch, the value less the levies and the trip's common costs, by the people aboard)
+        lott_row = [x for x in rows[si + 1:] if 'lott' in x['c'][0]]; kasse = [x for x in rows[si + 1:] if 'Til kassa' in x['c'][0]]
+        check(r['tk'] > 0 and r['cash'] == r['total'] - r['tk'] - r['lott'] and lott_row and num(kasse[0]['c'][-1]) == r['cash'] and r['ls']['D'] == r['total'] - r['tk'] - r['fk'] and abs(r['lott'] - r['ls']['D'] * r['ls']['M'] / r['ls']['tot'] * r['ls']['per'][0]['lots']) <= 1, 'kassa får nøyaktig total minus trekk og lott, og lotten er av delingsfangsten etter trekkene og felleskostnadene', [r['cash'], r['total'], r['tk'], r['lott']])
+        tk_rows = [x for x in rows[si + 1:] if '%' in x['c'][0] and 'lott' not in x['c'][0] and 'MVA' not in x['c'][0]]
         mva_rows = [num(x['c'][-1]) for x in rows[si + 1:] if 'MVA' in x['c'][0]]
         check(r['reg'] and r['mva'] > 0 and sorted(mva_rows) == [-r['mva'], r['mva']], 'over 50 000 kr på tolv måneder blir foretaket MVA-registrert, og MVA-en på 11,11 % står på seddelen og går videre til staten', [r['reg'], r['mva'], mva_rows])
         check(len([x for x in tk_rows if 'MVA' not in x['c'][0]]) == 5 and sum(num(x['c'][-1]) for x in tk_rows) == -r['tk'], 'sluttseddelen viser de fem trekkene for båter under 15 m (lagsavgift, pensjon, produkt, forskning, ressurs)', [x['c'][0] for x in tk_rows])

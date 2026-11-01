@@ -4,7 +4,8 @@
 // this boat follows her (status 'ptow', placed behind her as she reports, carried on along her heading between reports) until she moors,
 // and then lies in that harbour. Free for the one towed. If nobody takes the ask in 20 minutes, or the one who took it has not come in
 // 20 minutes, the rescue boat is called instead (as the plan said: the rescue boat as the fallback).
-// The helper: a red mark «Trenger slep» on the chart (a tap gives the card with «Hjelp»), Autonav there, and «Ta slep» among the boat's
+// The helper: a red mark «Trenger slep» on the chart (a tap gives the card with «Hjelp»), the same as a card on the board in the Oppdrag
+// app (ui/05f-turer.js turAskCards, 30.10.2026), Autonav there, and «Ta slep» among the boat's
 // buttons once she lies still within 150 m. Towing caps the speed and costs fuel as the tow trips do (03-simulation.js speedCap, fuelLph).
 // Mooring in a harbour ends it, and the game pays PTOW_PAY when the server allows (once a day for the same player, three a day).
 const PTOW_PAY = 25000, PTOW_WAIT = 20 * 60000, PTOW_BACK = 0.05;   // kr; real ms before the rescue boat; km behind the helper
@@ -91,7 +92,7 @@ const PTOW = (() => {
     rpc('tow_done', {id:H.id, port:String(pid)}).then(r => {
       S.ptowH = null; save(); if (!r || !r.ok) return;
       const pt = portById(pid), who = nm(H) + ' ' + bt(H);
-      if (r.pay){ S.cash += PTOW_PAY; S.stats.revenue += PTOW_PAY; if (typeof achAdd === 'function') achAdd('ptow');
+      if (r.pay){ book('annet', PTOW_PAY, 'Slep av en annen båt', 'Towing another boat'); if (typeof achAdd === 'function') achAdd('ptow');
         msg('Slep', 'Du slepte ' + who + ' inn til ' + (pt ? pt.name : 'havn') + '. Belønning ' + kr(PTOW_PAY) + '.', 'You towed ' + who + ' in to ' + (pt ? pt.name : 'harbour') + '. Reward ' + kr(PTOW_PAY) + '.'); }
       else msg('Slep', 'Du slepte ' + who + ' inn til ' + (pt ? pt.name : 'havn') + '. Takk! (Belønningen gis én gang i døgnet for samme spiller, og for tre slep i døgnet.)', 'You towed ' + who + ' in to ' + (pt ? pt.name : 'harbour') + '. Thanks! (The reward is given once a day for the same player, and for three tows a day.)');
       if (typeof refreshAll === 'function') refreshAll();
@@ -117,7 +118,7 @@ const PTOW = (() => {
     rpc('tow_open', {x:+S.boat.pos.x.toFixed(3), y:+S.boat.pos.y.toFixed(3), r:30 * NM}).then(list => {
       P.open = Array.isArray(list) ? list : [];
       for (const o of P.open) if (!P.seen[o.id]){ P.seen[o.id] = 1; const d = dist(S.boat.pos, o);
-        msg('Slep', nm(o) + ' ' + bt(o) + ' trenger slep ' + fmt(d / NM, 1) + ' nm unna. Belønning ' + kr(PTOW_PAY) + '. Trykk på merket i kartet for å hjelpe.', nm(o) + ' ' + bt(o) + ' needs a tow ' + fmt(d / NM, 1) + ' nm away. Reward ' + kr(PTOW_PAY) + '. Tap the mark on the chart to help.'); }
+        msg('Slep', nm(o) + ' ' + bt(o) + ' trenger slep ' + fmt(d / NM, 1) + ' nm unna. Belønning ' + kr(PTOW_PAY) + '. Trykk på merket i kartet eller på tavla i Oppdrag-appen for å hjelpe.', nm(o) + ' ' + bt(o) + ' needs a tow ' + fmt(d / NM, 1) + ' nm away. Reward ' + kr(PTOW_PAY) + '. Tap the mark on the chart or the board in the Oppdrag app to help.'); }
       if (typeof renderDyn === 'function' && document.body.classList.contains('vplot')) renderDyn();
     }).catch(() => {}).finally(() => { P.busy = false; });
   }

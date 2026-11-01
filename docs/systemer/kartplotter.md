@@ -39,7 +39,7 @@
   - Stiene ligger som `Path2D` i km, flisene fra sitt eget hjørne, så tallene holder seg små ved største zoom. Hver flis tegnes innenfor sin rute, så kantene der polygonene er kuttet, ikke blir streket opp.
 - **Gradnettet** tegnes i lerretet med et steg som gir minst tre paralleller over utsnittet (fra 10° ned til 15″). Meridianene får omtrent samme avstand på bakken. Breddene står ved venstre kant og lengdene ved nedre kant (`69°20'N`, `17°30'Ø`).
 - **Stedsnavnene** står i SVG-en (`chartNamesSvg`):
-  - Rang 0 vises alltid og kommer fra `names0` i kjernen, også over flisene. Rang 1 vises under 140 km, rang 2 under 30 km og rang 3 under 9 km, alle fra flisene. Et flisnavn som `names0` alt har innen 60 km, droppes.
+  - Rang 0 vises alltid og kommer fra `names0` i kjernen, også over flisene. Fra 26.10.2026 (E4) plasseres rang 0 før havneetikettene (`chartNamesSvg(…, 'first')` i `renderStatic`), og en havneetikett som ville dekke et slikt navn, droppes på det nivået (ikonet står; etiketten kommer igjen nærmere inne). Før sto havneetikettene først, og «Kaldfarnes fiskebruk» (18 km bred på 100 km-nivået) tok «Senja» av regionkartet. Rang 1 vises under 140 km, rang 2 under 30 km og rang 3 under 9 km, alle fra flisene. Et flisnavn som `names0` alt har innen 60 km, droppes.
   - Det viktigste kommer først, og et navn som dekker et navn som alt står (eller en havns navn), droppes.
   - Et sted med samme navn som en havn innen 3 km droppes.
   - De håndplasserte navnene og Senja-kysten (`geo-coast.b64`, `COAST_D`) er borte. Havnenavnene og feltnavnene vises først fra `view.z ≥ 0,5`.
@@ -125,3 +125,5 @@ Rederi-appen har også fått regnskap med lånene (tilbakemelding #9): resultat,
 Tromsøyas gater kom og gikk i kartplotteren. `vecPrune` slapp vec-flisene som lå langt fra punktene den fikk. Båten ber om det med bare sin egen posisjon (`05-vessels.js`, 120 km), og 3D-visningen med øyet. Med båten på vei mot Båtsfjord ble flisene under kartet sluppet. Kartet ba om dem igjen (`vecWant`), de kom, og så ble de sluppet på nytt.
 
 Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontroll: med kartet over Tromsø og båten ved Båtsfjord sto 3 666 veier igjen etter en runde med `vecPrune`, mot 0 uten. Det er målt med `KYST_VEC=1`, fordi vec-pakkene bare er med i bygget da.
+
+- **Fangstfeltene uten sirkel** (Jonas 28.10.2026: «Fjern sirklene for fangstfelt langs hele kysten. Bare navn på felt langs hele kysten er ok, men det skal ikke vises som en definert sirkel»): `renderStatic` i `ui/03-map.js` tegner bare feltets navn (fra `view.z ≥ 0,5`). Fisket bruker feltene som før.

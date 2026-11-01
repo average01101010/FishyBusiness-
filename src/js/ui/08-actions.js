@@ -63,7 +63,7 @@ function doAct(el){
   else if (act === 'sell'){ if (!tutAllow('sell')) return; if (berthKind(b) === 'naust'){ toast(L(NAUST_SAIL[0], NAUST_SAIL[1])); return; } if (!mottakOpen(S.t / 60)){ toast(L('Mottaket er stengt. Det åpner ', 'The plant is closed. It opens ') + mottakWhen(S.t / 60, S.lang === 'no') + '.'); return; } startLanding(false); }
   else if (act === 'rest'){ const why = restStart(); if (why){ toast(L(why[0], why[1])); return; } }
   else if (act === 'restend') restEnd();
-  else if (act === 'fuel'){ if (S.cash <= 0){ toast(t('no_cash')); return; } if (berthKind(b) === 'naust'){ toast(L(NAUST_SAIL[0], NAUST_SAIL[1])); return; } startFueling(false); }
+  else if (act === 'fuel'){ if (spendable() <= 0){ toast(t('no_cash')); return; } if (berthKind(b) === 'naust'){ toast(L(NAUST_SAIL[0], NAUST_SAIL[1])); return; } startFueling(false); }
   else if (act === 'ice'){ const why = shopBuy('ice', +el.dataset.kg || 50); if (why){ toast(L(why[0], why[1])); return; } }
   else if (act === 'gear' || act === 'kgear'){ PHONE.open('fiske'); return; }
   else if (act === 'reset'){ if (confirm(t('reset_q'))){ const lang = S.lang; S = newState(); S.lang = lang; S.intro = true; S.draft = []; draftForget(true); S.tut = NOTUT ? 0 : tutNew(); ensureFleet(); save(); refreshAll(); } return; }
@@ -183,10 +183,12 @@ function sell(){
   const tk = trekkOf(total, BOAT.len || 0), net = total - tk.sum;
   // VAT on the sale once the business is in the VAT register: it comes with the settlement and goes straight on to the state
   mvaCheck(total); const mva = S.mva ? mvaOf(total, tk) : 0;
-  // those on hyre have their day wage (payHyre) and no share
-  // and so do those who were aboard when the fish was caught, though given time off since (c.trip, set by addCatch)
-  const onIds = new Set(crewAboard(null, true).map(c => c.id)), aboardNow = (S.crew || []).filter(c => c.pay !== 'hyre' && (c.trip || onIds.has(c.id))), lott = Math.round(aboardNow.reduce((a, c) => a + c.share, 0) * net);
-  for (const c of aboardNow){ c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, net * c.share]]); if (typeof lifeEarn === 'function') lifeEarn(c, net * c.share); }
+  // the share system (Økonomi 2, Ø2, core/04-crew.js LOTT): the value less the levies and the trip's common costs (fuel, ice, bait) is
+  // the shared catch; the crew's part of it is split in their shares. Those aboard when the fish was caught share, though given time off
+  // since (c.trip, set by addCatch). The common costs were paid when bought; they only come off before the sharing.
+  const fk = tripCost(b), LS = lottSplit(net - fk.sum), lott = LS.crew;
+  for (const p of LS.per){ const c = p.c; c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, p.kr]]); if (typeof lifeEarn === 'function') lifeEarn(c, p.kr); }
+  b.trip = null;   // the next trip's common costs start now
   // back aboard after the trip they sat out; not at a landing that was still going when they were given time off, which put them
   // straight back aboard for the next trip (tilbakemelding #32)
   for (const c of S.crew){ delete c.trip; if (c.offTrip){ c.off = false; delete c.offTrip; } }
@@ -197,13 +199,14 @@ function sell(){
   achSale(total, Object.values(lines).map(r => r.sp));   // the badges (core/09f-merker.js)
   { const by = {}; for (const r of arr) by[r.sp] = (by[r.sp] || 0) + r.kg; turSale(port.id, by); }   // missions (core/09g-turer.js)
   const cashBefore = S.cash;
-  S.cash += net - lott - coopKr; S.stats.revenue += total; S.stats.costs += tk.sum + lott + coopKr;
+  bookAll({fisk:fishKr, tillegg:stKr + ordKr + exKr, trekk:-tk.sum, mannskap:-lott, kvote:-coopKr}, 'Levering, ' + port.name, 'Landing, ' + port.name);
+  bankAfterIncome(net - lott - coopKr);   // the set-aside for the tax and the regular savings (core/03-simulation.js, Økonomi 2 Ø3)
   if (coopKr > 0) log(S.lic.coop.name + ' fikk ' + kr(coopKr) + ' for torsken på kvoten hans.', S.lic.coop.name + ' got ' + kr(coopKr) + ' for the cod on his quota.'); S.stats.kg += kg; S.hold = [];
   const fs = S.marks.length ? S.marks[S.marks.length - 1] : null, field = fieldCode(S.fsess || fs || b.pos);
   // the whole landing note goes with the sale, for the deck log's Salg tab (ui/06b-book-tabs.js)
   S.saleSeq = (S.saleSeq || 0) + 1;
   const det = {id:S.saleSeq, ln:arr.map(r => [r.sp, r.c, r.g, r.gut ? 1 : 0, Math.round(r.kg * 10) / 10, r.sum, Math.round(r.n || 0)].concat(r.fz ? [1] : [])), ex:Object.fromEntries(Object.entries(ex).map(([n, v]) => [n, [Math.round(v.kg * 10) / 10, v.sum]])),
-    st:[stPct, stKr], ord:ordKr, conf:[Math.round(confKg), confKr, Math.round(crabSmall * 10) / 10, crabKr], roe:roeCut, crew:aboardNow.map(c => [c.name, c.share]), lott, fine:0, tk:[tk.lag, tk.pens, tk.prod, tk.forsk, tk.ress, tk.ktrl], mva};
+    st:[stPct, stKr], ord:ordKr, conf:[Math.round(confKg), confKr, Math.round(crabSmall * 10) / 10, crabKr], roe:roeCut, crew:LS.per.map(p => [p.c.name, p.lots, p.kr].concat(p.sk ? [1, p.x] : [])), lott, fk:[Math.round(fk.fuelL), fk.fuelKr, Math.round(fk.iceKg), fk.iceKr, fk.baitKr, fk.havnKr, fk.gearKr], dl:[LS.D, LS.M, LS.n, LS.own, LS.f], fine:0, tk:[tk.lag, tk.pens, tk.prod, tk.forsk, tk.ress, tk.ktrl], mva};
   folkSold(port.id, kg);   // the plant's manager keeps count (09d-folk.js)
   S.sales.push({t:S.t, v:S.cur, port:port.id, kg:Math.round(kg), total, sp:ALLSP.map(sp => [sp, Math.round(arr.filter(r => r.sp === sp).reduce((a, r) => a + r.kg, 0))]).filter(r => r[1] > 0), d:det}); if (S.sales.length > 200) S.sales.shift();
   // older notes keep their sums only, so the save stays small
@@ -217,7 +220,7 @@ function sell(){
   const crabFine = 0;
   if (crabDead > 0.05) msg(port.name, vt + fmt(crabDead, 1) + ' kg av kongekrabben var død og er vraket. Død krabbe betales ikke. Et krabbekar med sjøvann holder den levende i flere døgn.', vt + fmt(crabDead, 1) + ' kg of the king crab was dead and has been discarded. Dead crab is not paid for. A live crab tank keeps it alive for days.');
   // confKg and confKr count all that was confiscated (crab too); codKg and codKr are the cod, haddock and saithe rows on the note
-  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg:confKg + crabSmall, confKr:confKr + crabKr, codKg:confKg, codKr:confKr, crabKg:crabSmall, crabKr, crabDead, ordKr, ffKg:codFF, field, lott, tk, mva, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {})}; b.tripGear = {};
+  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg:confKg + crabSmall, confKr:confKr + crabKr, codKg:confKg, codKr:confKr, crabKg:crabSmall, crabKr, crabDead, ordKr, ffKg:codFF, field, lott, tk, mva, fk, ls:{D:LS.D, M:LS.M, n:LS.n, own:LS.own, tot:LS.tot, f:LS.f, ref:LS.ref, pot:LS.pot, mask:(S.equip && S.equip.jukse) || 0, per:LS.per.map(p => ({name:p.c.name, lots:p.lots, kr:p.kr, sk:p.sk, x:p.x, appr:p.appr}))}, coopKr, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {})}; b.tripGear = {};
   tatLanding(port.id); checkTattoos();
   if (S.tut && S.tut.catch) S.tut.catch = false;   // the first-trip guarantee ends with the first landing
   for (const x of S.hold) delete x._used;

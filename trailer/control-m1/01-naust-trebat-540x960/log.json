@@ -1,0 +1,78 @@
+{
+ "shot": {
+  "name": "Fars naust: døra og trebåten ved kaia i grålysning",
+  "when": "2026-10-12T06:00:00Z",
+  "boat": "trebat",
+  "quality": "high",
+  "load_s": 15,
+  "dur": 6,
+  "cam": {
+   "mode": "intro",
+   "sec": 6
+  },
+  "notes": "Grålysning på 69° N i midten av oktober er rundt kl. 08 lokal tid (06 UTC). 04:30 UTC var natt med stjerner."
+ },
+ "size": "540x960",
+ "fps": 30,
+ "frames": 180,
+ "keys": [
+  {
+   "frame": 0,
+   "t": 0.0,
+   "file": "f0000.png",
+   "up": 2.4,
+   "free": 1,
+   "d": 89,
+   "fov": 0.9599310885968813,
+   "lvl": 2,
+   "fps": null
+  },
+  {
+   "frame": 45,
+   "t": 1.5,
+   "file": "f0045.png",
+   "up": 3.1,
+   "free": 1,
+   "d": 76,
+   "fov": 0.9599310885968813,
+   "lvl": 2,
+   "fps": null
+  },
+  {
+   "frame": 90,
+   "t": 3.0,
+   "file": "f0090.png",
+   "up": 4.7,
+   "free": 1,
+   "d": 50,
+   "fov": 0.9599310885968813,
+   "lvl": 2,
+   "fps": null
+  },
+  {
+   "frame": 134,
+   "t": 4.47,
+   "file": "f0134.png",
+   "up": 6.3,
+   "free": 1,
+   "d": 27,
+   "fov": 0.9599310885968813,
+   "lvl": 2,
+   "fps": null
+  },
+  {
+   "frame": 179,
+   "t": 5.97,
+   "file": "f0179.png",
+   "up": 6.7,
+   "free": 1,
+   "d": 20,
+   "fov": 0.9599310885968813,
+   "lvl": 2,
+   "fps": null
+  }
+ ],
+ "errors": [],
+ "seconds": 221.0,
+ "per_frame_s": 44.2
+}

@@ -1,5 +1,7 @@
 # On-boarding: planen for nye spillere (09.10.2026)
 
+> Kapittel 1 (første tur) er skrevet om i Onboarding 2 (27.–28.10.2026, `docs/planer/onboarding-2.md`): 16 steg, ingen haill, én times fisketid, ingen mørk skjerm, telefonen og knappelinja viser bare det turen bruker. Der dette dokumentet og planen er uenige, gjelder planen og `docs/systemer/opning-og-veiledning.md`.
+
 Jonas' ønske: en sømløs og god start som hekter nye spillere så fort som mulig og motvirker churn. Dette er planen, lagt fram før
 bygging. Den bygger på det som finnes: åpningsscenen med brevet, startlista, naustet i 3D, veiledningen «Første tur»
 (`ui/07b-first-trip.js`, 26 trinn), Neste mål-brikka, milepælene (`09f-merker.js`, kapitler og drypp), trakten i admin.

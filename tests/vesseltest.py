@@ -14,7 +14,8 @@ def guard():
     src = open(os.path.join(ROOT, 'src/js/core/02-species-gear.js')).read()
     keys = re.findall(r"^  (\w+):\{name:", src[src.index('const VESSELS'):src.index('const BOAT')], re.M)
     hits = []
-    for d in ('src/js/core', 'src/js/ui', 'src/js'):
+    for d in ('src/js/core', 'src/js/ui', 'src/js', 'src/js/view3d', 'src/js/ui/phone'):   # (the last two: the pieces of view3d.js and the phone, E1)
+        if not os.path.isdir(os.path.join(ROOT, d)): continue
         for f in sorted(os.listdir(os.path.join(ROOT, d))):
             if not f.endswith('.js'): continue
             for i, line in enumerate(open(os.path.join(ROOT, d, f)), 1):
@@ -136,7 +137,7 @@ async def main():
             await pg.screenshot(path=os.path.join(ROOT, 'tests', 'out', 'market_' + tag + '.png'))
             print(tag, json.dumps(u, ensure_ascii=False)[:900])
             t = u['tabs']
-            print(ok(len(t['open']) == 8 and len(t['lic']) == 9 and len(t['kyst']) == 2 and len(t['hav']) == 4 and all(c[2] for v in t.values() for c in v)), tag + ': four tabs with every boat as a card with its side view')
+            print(ok(len(t['open']) == 8 and len(t['lic']) == 9 and len(t['kyst']) == 2 and len(t['hav']) == 5 and all(c[2] for v in t.values() for c in v)), tag + ': four tabs with every boat as a card with its side view')
             print(ok(u['havText'] and not u['havBuy'] and len(u['havSecs']) >= 3), tag + ': the ocean vessel has a full spec sheet (length, beam, draft, weight) and no buy button')
             print(ok(u['tiBtn'] and u['tiOk'] and not u['fleetBtn']), tag + ': an open-group boat is bought by trading in, not for the fleet, before the company has a closed-group vessel')
             print(ok('Hjemmel' in u['licSecs'] and u['licBtns'] == 2), tag + ': a boat with a right shows the right and both ways to buy')

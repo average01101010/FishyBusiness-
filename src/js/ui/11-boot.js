@@ -4,7 +4,25 @@
 let awayMs = 0, AWAY = 0, SIMREADY = false;
 const BOOT_T = Date.now();
 const g3Live = () => typeof G3 !== 'undefined' && G3.isActive();
-async function bootMap(){ await mapStart(); await bootMapLoad(); }
+async function bootMap(){ await Promise.all([(async () => { await mapStart(); await bootMapLoad(); })(), bootData()]); }
+// The data elements (the boat models, the pictures, Senja's buildings: src/data/*.b64) are out of the page from 29.10.2026 (build.mjs,
+// Jonas: the page need not be one file when that is better for the players): each empty <script type="application/octet-stream"
+// data-src="data/<id>-<hash>.bin"> gets its bytes fetched here beside the map and put back as base64 in textContent, so the readers
+// (vessel3d.js glbData, 08b-letter.js letterPic, view3d/06 bld) see what they always saw. The files are named by their hash, so the
+// browser and the service worker keep them, and a build changes only what changed. A file that does not come in four tries stops the
+// boot, like a pack. A one-file build (KYST_ONE=1) has no data-src and nothing to do here.
+async function bootData(){
+  const els = [...document.querySelectorAll('script[type="application/octet-stream"][data-src]')]; if (!els.length) return;
+  const b64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => { const s = String(r.result); res(s.slice(s.indexOf(',') + 1)); }; r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
+  await Promise.all(els.map(async el => {
+    const src = el.dataset.src; let r;
+    for (let t = 0; ; t++){
+      try { r = await fetch(src, t ? {cache:'reload'} : undefined); if (!r.ok) throw new Error('HTTP ' + r.status); break; }
+      catch (e){ if (t >= 3) throw new Error('data ' + src + ': ' + (e && e.message || e)); await new Promise(res => setTimeout(res, 700 * (t + 1))); }
+    }
+    el.textContent = await b64(await r.blob()); el.removeAttribute('data-src');
+  }));
+}
 // The packs round everything the saved game holds. It runs again after the cloud gate (08.10.2026, a player on a new PC: the cloud save
 // is put in place only then, and its boat may lie in a tile the first round never asked for: «mask block 105,20 is not loaded»).
 async function bootMapLoad(){
@@ -43,7 +61,7 @@ if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
     let back = 0;
     on(() => { const b = S.boat; b.type = 'trebat'; b.fuel = Math.min(b.fuel || 0, VESSELS.trebat.fuelCap); b.engH = 0; b.svcAt = 0;
       for (const q of Object.keys(EQUIP)) if (S.equip && S.equip[q] && !equipFits(q, 'trebat')){ back += EQUIP[q].price * (EQUIP[q].multi ? S.equip[q] : 1); S.equip[q] = EQUIP[q].multi ? 0 : false; } });
-    S.owned = ['trebat']; S.cash += back;
+    S.owned = ['trebat']; book('redskap', back, 'Utstyr tilbakebetalt', 'Equipment paid back');
     log('Aluminiumsskiffen kan nå bare kjøpes på verftet. Du har fått fars gamle trebåt i stedet' + (back ? ', og ' + kr(back) + ' tilbake for utstyr som ikke passer i henne' : '') + '.',
       'The aluminium skiff can now only be bought at the yard. You have Father’s old wooden boat instead' + (back ? ', and ' + kr(back) + ' back for gear that does not fit her' : '') + '.');
   } }
@@ -83,7 +101,7 @@ for (const v of S.fleet) withVessel(v, () => { const p = S.pgear.pots; if (p.sma
 for (const s of S.sets || []) if (s.kind === 'teine') s.pot = 'big';
 // «Kaffe på kaia» was replaced by the daily login bonus on 01.10.2026: unused free pub rounds are paid out, borrowed deck tubs
 // and the clean-hull bonus are gone, and the bonus starts at zero
-if (S.daily){ const v = S.daily.pubV || 0; if (v > 0){ S.cash += v * PUB_COST; log('Kaffe på kaia er lagt ned. Du fikk ' + kr(v * PUB_COST) + ' for ' + v + (v > 1 ? ' ubrukte pubrunder.' : ' ubrukt pubrunde.'), '«Coffee on the quay» is gone. You got ' + kr(v * PUB_COST) + ' for ' + v + ' unused pub round' + (v > 1 ? 's.' : '.')); } delete S.daily; }
+if (S.daily){ const v = S.daily.pubV || 0; if (v > 0){ book('annet', v * PUB_COST, 'Ubrukte pubrunder', 'Unused pub rounds'); log('Kaffe på kaia er lagt ned. Du fikk ' + kr(v * PUB_COST) + ' for ' + v + (v > 1 ? ' ubrukte pubrunder.' : ' ubrukt pubrunde.'), '«Coffee on the quay» is gone. You got ' + kr(v * PUB_COST) + ' for ' + v + ' unused pub round' + (v > 1 ? 's.' : '.')); } delete S.daily; }
 // trim was for good and free to try until 05.10.2026; now it is for a while and bought (core BOOSTS): the old fittings go
 for (const v of S.fleet || []) if (v.boat) delete v.boat.boost; if (S.boat) delete S.boat.boost;
 if (!S.haillInv) S.haillInv = {haill:0, luksus:0}; if (S.haill && !HAILL[S.haill.type]) S.haill.type = 'haill';   // the halibut luck is gone (04.10.2026)

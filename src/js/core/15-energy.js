@@ -48,8 +48,8 @@ function restStart(){
   const pt = b.port ? portById(b.port) : null;
   if (w === 'koye'){ const sk = crewOf(myVessel()).filter(c => !c.off).slice().sort((a, c) => c.attr.sjo - a.attr.sjo)[0]; log(b.anch ? 'Du gikk ned i køya mens båten ligger til ankers.' : 'Du gikk ned i køya. ' + sk.name.split(' ')[0] + ' har vakta.', b.anch ? 'You went down to the bunk while the boat lies at anchor.' : 'You went down to the bunk. ' + sk.name.split(' ')[0] + ' has the watch.'); }
   else if (w === 'rorbu'){
-    if (S.cash < RORBU.kr) return ['Du har ikke ' + kr(RORBU.kr) + ' til en natt på rorbua.', 'You do not have ' + kr(RORBU.kr) + ' for a night at the rorbu.'];
-    S.cash -= RORBU.kr; S.stats.costs += RORBU.kr;
+    if (spendable() < RORBU.kr) return ['Du har ikke ' + kr(RORBU.kr) + ' til en natt på rorbua.', 'You do not have ' + kr(RORBU.kr) + ' for a night at the rorbu.'];
+    book('land', -RORBU.kr, 'Rorbu', 'Rorbu');
     log('Du tok inn på rorbua i ' + pt.name + ' for ' + kr(RORBU.kr) + ' natta.', 'You took a room at the rorbu in ' + pt.name + ' for ' + kr(RORBU.kr) + ' a night.');
   } else log('Du gikk opp i naustet for å hvile.', 'You went up to the boathouse to rest.');
   S.rest = {port:b.port || null, w, t0:S.t, paid:S.t + RORBU.night}; achAdd('sleep');
@@ -66,8 +66,8 @@ function restMinute(){
   if (!S.rest) return;
   if (!resting()){ S.rest = null; return; }
   if (S.rest.w === 'rorbu' && S.t >= S.rest.paid){
-    if (S.cash < RORBU.kr){ restEnd(true); log('Du hadde ikke penger til en natt til på rorbua og gikk om bord.', 'You had no money for another night at the rorbu and went aboard.'); return; }
-    S.cash -= RORBU.kr; S.stats.costs += RORBU.kr; S.rest.paid += RORBU.night;
+    if (spendable() < RORBU.kr){ restEnd(true); log('Du hadde ikke penger til en natt til på rorbua og gikk om bord.', 'You had no money for another night at the rorbu and went aboard.'); return; }
+    book('land', -RORBU.kr, 'Rorbu', 'Rorbu'); S.rest.paid += RORBU.night;
     log('En natt til på rorbua, ' + kr(RORBU.kr) + '.', 'Another night at the rorbu, ' + kr(RORBU.kr) + '.');
   }
 }
@@ -102,6 +102,10 @@ function giveSkip(k){
 function energyMinute(){
   if (S.energy == null) S.energy = 100;
   if (energyOff()){ S.energy = 100; S.sleep = null; S.drowsy = false; S.enWarn = false; return; }
+  // the first trip holds the energy where it is, awake (Jonas 27.10.2026: «skru av energien til etter tutorialen»): a player away for hours
+  // in the middle of it would otherwise wake to the boat drifted ashore, where the guide has no way on; it runs again from the next minute
+  // after the first trip
+  if (S.tut && S.tut.v === 2){ if (S.sleep) S.sleep = null; S.drowsy = false; return; }
   // Skippertak: held at full, awake, and once it has run out, said once
   if (skipOn()){ if (S.sleep) S.sleep = null; restMinute(); S.energy = 100; S.drowsy = false; S.enWarn = false; return; }
   if (S.skip && !S.skip.told){ S.skip.told = true; log(SKIP[S.skip.k] ? SKIP[S.skip.k].no + ' har gått ut. Nå trenger du og mannskapet hvile igjen.' : 'Skippertak har gått ut.', (SKIP[S.skip.k] ? SKIP[S.skip.k].en : 'Skippertak') + ' has run out. You and the crews need rest again.'); }

@@ -63,7 +63,7 @@ const DOCK = (() => {
     return w === 'koye' ? I('rest', 'naust', 'Hvil i køya', 'Rest in the bunk', {act:'rest', pri:S.energy < 30}) : I('rest', 'naust', 'Hvil', 'Rest', {act:'rest', pri:S.energy < (w === 'rorbu' ? 60 : 40)});
   }
   // the operations plan wants you: it has stopped, or waits until you give the boat back (the Crew page has its line, ui/05c-drift.js)
-  const opsDot = () => { const o = S.ops; return !!(o && o.v === DRV && ((!o.on && o.stop) || (o.on && o.held))); };
+  const opsDot = () => { const o = S.ops; return !!(o && (o.v === DRV || o.v === DRV2) && ((!o.on && o.stop) || (o.on && o.held))); };
   // at home the rest is in the Bygd fan, and on the dock itself when you are tired or resting (five buttons crowd a phone)
   const restOnDock = () => resting() || S.energy < 40;
   function portItems(){
@@ -78,11 +78,12 @@ const DOCK = (() => {
     const sv = portServices(p, berthKind(b));
     return [restOnDock() ? restItem() : null,
       sv.mottak ? I('marked', 'marked', 'Mottak', 'Plant', {menu:'marked', dot:p.mottak && tot > 0.5 && !b.land}) : null,
-      sv.butikk ? I('butikk', 'butikk', 'Butikk', 'Shop', {menu:'butikk'}) : null,
-      I('bygd', 'bygd', 'Bygd', 'Village', {menu:'bygd'}),
-      sv.verft ? I('verft', 'verft', 'Verft', 'Yard', {menu:'verft', dot:svcOverdue() > 0}) : null,
+      // the first trip shows only the plant (Onboarding 2, O5, V7 A): the shop, the village, the yard and the inventory come after it
+      sv.butikk && !tutOn() ? I('butikk', 'butikk', 'Butikk', 'Shop', {menu:'butikk'}) : null,
+      tutOn() ? null : I('bygd', 'bygd', 'Bygd', 'Village', {menu:'bygd'}),
+      sv.verft && !tutOn() ? I('verft', 'verft', 'Verft', 'Yard', {menu:'verft', dot:svcOverdue() > 0}) : null,
       S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid', dot:opsDot()}) : null,
-      I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);   // «Planlegg» went 02.10.2026: the little chart opens the plotter
+      tutOn() ? null : I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);   // «Planlegg» went 02.10.2026: the little chart opens the plotter
   }
   function menuItems(m){
     const b = S.boat, p = port(), H = S.t / 60;

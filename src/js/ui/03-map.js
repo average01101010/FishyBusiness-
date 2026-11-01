@@ -350,11 +350,8 @@ let markEnd = Infinity;
 function renderStatic(){
   if (document.body.classList.contains('vplot')) scheduleChart();
   const u = 1 / view.px, g = [];
-  // grounds
-  for (const gr of GROUNDS){
-    g.push('<circle cx="' + gr.p.x + '" cy="' + gr.p.y + '" r="' + (gr.r * 0.75) + '" class="ground" stroke-width="' + u + '" stroke-dasharray="' + (4 * u) + ' ' + (3 * u) + '"/>');
-    if (view.z >= 0.5) g.push(txt({x:gr.p.x, y:gr.p.y + 3.6 * u}, gr.name[S.lang], 'lbl-ground', 11 * u, 'text-anchor="middle" stroke-width="' + (3 * u) + '"'));
-  }
+  // grounds: the name only, no circle (Jonas 28.10.2026: a ground is not a defined circle on the sea)
+  if (view.z >= 0.5) for (const gr of GROUNDS) g.push(txt({x:gr.p.x, y:gr.p.y + 3.6 * u}, gr.name[S.lang], 'lbl-ground', 11 * u, 'text-anchor="middle" stroke-width="' + (3 * u) + '"'));
   // what is inside the view (with a margin)
   const vr = svg.getBoundingClientRect(), vhh = MAP_H / view.z / 2 + 0.5, vww = vhh * (vr.width / (vr.height || 1)) + 0.5, vx0 = view.cx - vww, vx1 = view.cx + vww, vy0 = view.cy - vhh, vy1 = view.cy + vhh, inV = (x, y) => x > vx0 && x < vx1 && y > vy0 && y < vy1;
   // roads and bridges: Senja's and those of the coast's packs (01c-vec.js), asked for when the view is near enough to show them
@@ -365,6 +362,12 @@ function renderStatic(){
   const mR = Math.max(vx1 - vx0, vy1 - vy0) / 2 + 1, mX = (vx0 + vx1) / 2, mY = (vy0 + vy1) / 2;   // the coast's marks too (01e-marks.js)
   if (view.z > 3.5) for (const mk of marksNear('marks', mX, mY, mR)){ if (!inV(mk[0], mk[1]) || mk[2] === 'M' || mk[2] === 'm') continue; const c = mk[2] === 'L' || mk[2] === 'B' ? (mk[3] === 'starb' ? '#1f8a3c' : '#c8231c') : mk[2] === 'C' || mk[2] === 'S' ? '#d6a800' : '#333'; g.push('<circle cx="' + mk[0] + '" cy="' + mk[1] + '" r="' + (2 * u) + '" fill="' + c + '" stroke="#fff" stroke-width="' + (0.6 * u) + '"/>'); }
   if (view.z > 2) for (const L of marksNear('lights', mX, mY, mR)){ if (!inV(L[0], L[1])) continue; const s0 = (L[6] === 'M' ? 9 : 6.5) * u; g.push('<path d="M' + L[0] + ',' + L[1] + 'q' + (s0 * 0.35) + ',' + (-s0 * 0.5) + ' ' + (s0 * 0.12) + ',' + (-s0) + 'q' + (-s0 * 0.5) + ',' + (s0 * 0.3) + ' ' + (-s0 * 0.12) + ',' + s0 + 'z" class="lightsym"/><circle cx="' + L[0] + '" cy="' + L[1] + '" r="' + (1.3 * u) + '" class="lightdot" stroke-width="' + (0.8 * u) + '"/>'); }
+  // the power lines over the sea as the chart's dashed magenta overhead line, the wind turbines as its three-armed symbol (G7)
+  if (VIND && view.z > 2.5){ let d = ''; for (const q of VIND.s){ const x1 = q[0] / 1000, y1 = q[1] / 1000, x2 = q[2] / 1000, y2 = q[3] / 1000; if (!inV(x1, y1) && !inV(x2, y2) && !inV((x1 + x2) / 2, (y1 + y2) / 2)) continue; d += 'M' + x1.toFixed(3) + ',' + y1.toFixed(3) + 'L' + x2.toFixed(3) + ',' + y2.toFixed(3); }
+    if (d) g.push('<path d="' + d + '" fill="none" stroke="#a3268f" stroke-width="' + (1.4 * u) + '" stroke-dasharray="' + (5 * u) + ',' + (3 * u) + '"/>'); }
+  if (VIND && view.z > 2){ let d = ''; const r = (view.z > 5 ? 5 : 3.6) * u; for (const q of VIND.t){ const x = q[0] / 1000, y = q[1] / 1000; if (!inV(x, y)) continue;
+      for (let k = 0; k < 3; k++){ const a = k * 2.0944; d += 'M' + x.toFixed(3) + ',' + y.toFixed(3) + 'l' + (Math.sin(a) * r).toFixed(4) + ',' + (-Math.cos(a) * r).toFixed(4); } }
+    if (d) g.push('<path d="' + d + '" fill="none" stroke="#a3268f" stroke-width="' + (1.1 * u) + '" stroke-linecap="round"/>'); }
   // own catch marks, coloured by kilos per hour; each is gone from the chart 12 game hours after it was made (Jonas 05.10.2026: «Prikkene
   // med fangst-rate skal forsvinne etter 12 in-game timer»), and renderDyn redraws when the next one runs out
   markEnd = Infinity;
@@ -382,12 +385,15 @@ function renderStatic(){
   // Father's naust (ui/06c-notebook.js)
   g.push(NOTEBOOK.svg(u, inV));
   g.push(turSvg(u, inV));   // where the missions go (ui/05f-turer.js)
-  // ports, their names when the view is closer than the whole region; the place names (03a-chart.js) keep clear of them
-  const taken = [], pl = view.z >= 0.5;
+  // the rank-0 place names first (the big towns, fjords and islands: always shown, 03a-chart.js), then the ports, their names when the
+  // view is closer than the whole region, each label kept only where it does not cover a rank-0 name (the icon stands anyway); the other
+  // place names keep clear of the labels
+  const taken = [], pl = view.z >= 0.5, over = b => taken.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
+  g.push(chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, 'first'));
   for (const p of PORTS){
     const s = (pl ? 5 : 3) * u; if (!inV(p.p.x, p.p.y)) continue;
     g.push(portIcon(p, s * 1.25, u));
-    if (pl){ const nm = portLabel(p); g.push(txt({x:p.p.x + 10 * u, y:p.p.y + 4 * u}, nm, 'lbl-port', 13 * u, 'stroke-width="' + (3 * u) + '"')); taken.push([p.p.x - s, p.p.y - 9 * u, p.p.x + 10 * u + nm.length * 7.5 * u, p.p.y + 6 * u]); }
+    if (pl){ const nm = portLabel(p), bx = [p.p.x - s, p.p.y - 9 * u, p.p.x + 10 * u + nm.length * 7.5 * u, p.p.y + 6 * u]; if (over(bx)) continue; g.push(txt({x:p.p.x + 10 * u, y:p.p.y + 4 * u}, nm, 'lbl-port', 13 * u, 'stroke-width="' + (3 * u) + '"')); taken.push(bx); }
   }
   // the rorbuer (07d-rorbu.js): a little red house, the name when near
   if (view.z >= 0.5) for (const R of rorbuIn(vx0 - 1, vy0 - 1, vx1 + 1, vy1 + 1)){
@@ -403,7 +409,7 @@ function renderStatic(){
     if (view.z >= 4){ const nm = havnNm(H); g.push(txt({x:H.x + 8 * u, y:H.y + 4 * u}, nm, 'lbl-ground', 11 * u, 'stroke-width="' + (2.5 * u) + '"')); taken.push([H.x - s, H.y - 8 * u, H.x + 8 * u + nm.length * 6.5 * u, H.y + 6 * u]); }
   }
   g.push(soundingsSvg(vx0, vy0, vx1, vy1, u, taken));
-  g.push(chartNamesSvg(vx0, vy0, vx1, vy1, u, taken));
+  g.push(chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, 'rest'));
   gStatic.innerHTML = g.join('');
 }
 // each kind of place its own sign on the chart (Jonas 08.10.2026: «forskjellige ikoner på kartene for de forskjellige forhandlerne»):
@@ -502,6 +508,7 @@ function renderDyn(){
   // passive gear in the sea
   g.push(gearSvg(u));
   if (typeof driftSvg === 'function') g.push(driftSvg(u));   // the plan's places while one is picked or shown (ui/05c-drift.js)
+  if (typeof PLANMAP !== 'undefined') g.push(PLANMAP.svg(u));   // Driftsplan 2's places in plan mode (ui/03g-planmap.js)
   // other vessels (AIS)
   const Hn = (S.t + liveFrac()) / 60;
   AISNOW = npcStates(Hn).filter(aisShown);
@@ -579,11 +586,11 @@ if (window.visualViewport){ visualViewport.addEventListener('resize', pinKb); vi
 const ptrs = new Map(); let drag = null, pinch = null;
 svg.addEventListener('pointerdown', e => {
   svg.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
-  if (ptrs.size === 1){ drag = {sx:e.clientX, sy:e.clientY, cx:view.cx, cy:view.cy, moved:false}; const mp = toMap(e.clientX, e.clientY); drag.set = setGrab(mp); drag.wp = drag.set ? null : routeGrab(mp);
+  if (ptrs.size === 1){ drag = {sx:e.clientX, sy:e.clientY, cx:view.cx, cy:view.cy, moved:false}; const mp = toMap(e.clientX, e.clientY); drag.set = setGrab(mp); drag.pm = !drag.set && typeof PLANMAP !== 'undefined' ? PLANMAP.grab(mp) : null; drag.wp = drag.set || drag.pm ? null : routeGrab(mp);   // (a plan's pin before a waypoint, ui/03g-planmap.js)
     // a finger held still sets your own mark: told at the lift by the events' own times, not by a timer, which on a slow frame ran
     // before the lift of a plain tap and turned a waypoint into a mark (tut.py, 06.10.2026)
-    drag.t0 = e.timeStamp; drag.pin = !drag.set && !drag.wp && !SETM; }
-  else if (ptrs.size === 2){ const [a, c] = [...ptrs.values()]; pinch = {d:Math.hypot(a.x - c.x, a.y - c.y) || 1, z:view.z}; if (drag){ drag.moved = true; if (drag.wp){ routeDragCancel(drag.wp); drag.wp = null; drag.cx = view.cx; drag.cy = view.cy; } } }
+    drag.t0 = e.timeStamp; drag.pin = !drag.set && !drag.wp && !drag.pm && !SETM; }
+  else if (ptrs.size === 2){ const [a, c] = [...ptrs.values()]; pinch = {d:Math.hypot(a.x - c.x, a.y - c.y) || 1, z:view.z}; if (drag){ drag.moved = true; if (drag.wp){ routeDragCancel(drag.wp); drag.wp = null; drag.cx = view.cx; drag.cy = view.cy; } if (drag.pm){ PLANMAP.dragCancel(drag.pm); drag.pm = null; drag.cx = view.cx; drag.cy = view.cy; } } }
 });
 svg.addEventListener('pointermove', e => {
   if (!ptrs.has(e.pointerId)) return;
@@ -592,6 +599,7 @@ svg.addEventListener('pointermove', e => {
   else if (drag && ptrs.size === 1){
     const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
     if (drag.set){ drag.moved = true; setAim(toMap(e.clientX, e.clientY)); return; }
+    if (drag.pm){ if (drag.pm.moved || Math.hypot(dx, dy) > 5) PLANMAP.dragMove(drag.pm, toMap(e.clientX, e.clientY)); return; }
     if (drag.wp){ if (drag.wp.moved || Math.hypot(dx, dy) > 5) routeDragMove(drag.wp, toMap(e.clientX, e.clientY)); return; }
     if (Math.hypot(dx, dy) > 7) drag.moved = true;
     if (drag.moved){ view.cx = drag.cx - dx / view.px; view.cy = drag.cy - dy / view.px; applyView(); }
@@ -599,9 +607,11 @@ svg.addEventListener('pointermove', e => {
 });
 function ptrUp(e){
   if (drag && drag.set){ ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (ptrs.size === 0) drag = null; return; }
+  if (drag && drag.pm){ const g = drag.pm; drag.pm = null; ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (ptrs.size === 0) drag = null; if (e.type === 'pointerup') PLANMAP.dragEnd(g); else PLANMAP.dragCancel(g); return; }
   if (drag && drag.wp){ const g = drag.wp; drag.wp = null; ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (ptrs.size === 0) drag = null; if (e.type === 'pointerup') routeDragEnd(g); else routeDragCancel(g); return; }
   const tap = drag && !drag.moved && ptrs.size === 1 && e.type === 'pointerup';
   ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null;
+  if (tap && typeof PLANMAP !== 'undefined' && PLANMAP.isOn()){ PLANMAP.tap(toMap(e.clientX, e.clientY), 16 / view.px); if (ptrs.size === 0) drag = null; return; }   // plan mode: every tap is a place or a pin (ui/03g-planmap.js)
   if (tap && drag.pin && e.timeStamp - drag.t0 >= PIN_HOLD){ pinAdd(toMap(e.clientX, e.clientY)); if (ptrs.size === 0) drag = null; return; }
   if (tap && SETM){ setAim(toMap(e.clientX, e.clientY)); if (ptrs.size === 0) drag = null; return; }
   if (tap){ const mp = toMap(e.clientX, e.clientY), rr = 16 / view.px; const ph = (S.pins || []).find(q => dist(q, mp) < rr && !(q.until && q.until <= S.t)); if (ph){ pinOpen(ph.id); return; } if (typeof SHARE !== 'undefined' && SHARE.tap(mp, rr)) return; if (typeof PTOW !== 'undefined' && PTOW.tap(mp, rr)) return; const gh = gearHit(mp, rr * 0.8); if (gh){ gearTap(gh); renderDyn(); return; } let hit = null, bd = 1e9; for (const n of AISNOW){ const d = dist(n.p, mp); if (d < rr && d < bd){ bd = d; hit = n; } } if (hit && (hit.st === 'port' || hit.v === 0) && PORTS.some(q => dist(q.p, mp) < rr * 1.6)) hit = null; if (hit){ AISSEL = hit.id; renderDyn(); renderAisCard(); return; } addWaypoint(mp); }

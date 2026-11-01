@@ -44,6 +44,7 @@ function driftNew(over){
 // an older plan (sessions and routes, before 23.10.2026) is switched off with a word (Jonas: «nytt system, nye planer»); the gear in the sea stays
 function driftOps(){
   const o = S.ops; if (!o || o.v === DRV) return o;
+  if (o.v === 4) return null;   // a Driftsplan 2 plan (06g-plan2.js) is the new engine's, not this one's
   S.ops = null;
   msg(gL('Driftsplan', 'Operations plan'), 'Driftsplanen er laget på nytt og er enklere å sette opp. Den gamle planen for «' + S.boatName + '» er slått av. Lag en ny under Driftsplan. Redskapet i sjøen står der det står.', 'The operations plan has been made anew and is simpler to set up. The old plan for «' + S.boatName + '» is switched off. Make a new one under Operations plan. The gear in the sea stays where it is.');
   return null;
@@ -231,6 +232,7 @@ function driftRoles(o){
 const drWatchMode = o => !!o && (o.rhythm === 'watch' || o.rhythm === 'multi') && S.crew.length >= driftNeedHands;
 const driftWatchActive = o => !!o && o.v === DRV && o.on && drWatchMode(o) && !!S.plan && !!S.plan.ops && S.boat.status !== 'port';
 function driftWatch(H){
+  if (DRIFT2){ plan2WatchTick(H); return; }
   const o = S.ops;
   if (!driftWatchActive(o)){ for (const c of S.crew) if (c.sleepW) delete c.sleepW; return; }
   const R = driftRoles(o), aOn = Math.floor(driftHod(H) / DRWATCH) % 2 === 0, off = aOn ? R.B : R.A;
@@ -238,7 +240,7 @@ function driftWatch(H){
 }
 
 // ---- the weather the plan allows, while it runs (05-vessels.js turns back over it)
-function driftWx(){ const o = S.ops; if (!o || o.v !== DRV || !S.plan || !S.plan.ops) return null; const w = DRW[o.wx] || DRW.normal; return {wind:w.wind, hs:Math.min(w.hs, BOAT.risk[1] * 0.95), shelter:true}; }
+function driftWx(){ if (DRIFT2) return plan2Wx(); const o = S.ops; if (!o || o.v !== DRV || !S.plan || !S.plan.ops) return null; const w = DRW[o.wx] || DRW.normal; return {wind:w.wind, hs:Math.min(w.hs, BOAT.risk[1] * 0.95), shelter:true}; }
 // the most wind and sea over the hours ahead at the places of the trip (hsAt: sheltered where the place is), the open sea where a map is not in
 function driftWxAhead(o, H, dur, pts){
   const P = (pts || []).filter(Boolean), w0 = DRW[o.wx] || DRW.normal;
@@ -354,6 +356,7 @@ function driftFail(o, no, en){
 const drTook = () => !!(S.plan && !S.plan.ops) || (typeof helmOn === 'function' && helmOn());
 function driftResume(o){ o.held = null; o.hold = 0; o.wait = null; o.fails = 0; }
 function opsStep(H){
+  if (DRIFT2){ plan2Step(H); return; }   // Driftsplan 2 (06h-plan2-engine.js)
   const o = driftOps(), b = S.boat; if (!o || !o.on) return;
   if (!o.held && drTook()){ o.held = {t:S.t}; o.wait = null; log('Du har tatt over båten. Driftsplanen venter til du gir den tilbake.', 'You have taken the boat over. The plan waits until you give her back.'); }
   if (o.held) return;
@@ -481,6 +484,7 @@ function drRulesWhy(o, H, placesOnly){
 }
 // the boat has come in on the plan (05-vessels.js dock): a fishing trip or a trip to land unloads at the plant
 function opsLanded(pid, k){
+  if (DRIFT2){ plan2Landed(pid, k); return; }
   const o = driftOps(); if (!o) return;
   if (k === 'home' || k === 'rest'){ o.cur = null; if (k === 'rest' || holdTotal() < 0.5) return; }
   const pt = portById(pid); if (pt && pt.mottak && holdTotal() >= 0.5 && !mottakOpen(S.t / 60)){ S.boat.landWait = pid; return; }
@@ -493,9 +497,10 @@ function opsLanded(pid, k){
 // the bunker and ice at the plant: all of it (the plan has no stock choices since 23.10.2026)
 function driftStock(){ return {ice:true, fuel:true, gear:true, bait:true}; }
 function opsReport(pid, kg, total, landed){
+  if (DRIFT2){ plan2Report(pid, kg, total, landed); return; }
   const o = driftOps(), sk = meAboard() ? null : crewSkipper(), port = portById(pid);
   autoRestock();
-  const extra = S.tripOwner ? 0 : Math.round(Math.max(0, total) * 0.05); if (extra > 0){ S.cash -= extra; S.stats.costs += extra; }
+  const extra = S.tripOwner ? 0 : Math.round(Math.max(0, total) * 0.05); if (extra > 0) book('mannskap', -extra, 'Skippertillegg', 'Skipper bonus');
   const what = landed ? [fmt(kg, 0) + ' kg levert i ' + port.name + ', ' + kr(Math.round(total)) + ' etter lott' + (extra ? ', skippertillegg ' + kr(extra) : '') + '.', fmt(kg, 0) + ' kg landed at ' + port.name + ', ' + kr(Math.round(total)) + ' after shares' + (extra ? ', skipper bonus ' + kr(extra) : '') + '.']
     : kg > 0.5 ? [fmt(kg, 0) + ' kg om bord. ' + port.name + ' har ikke fiskemottak.', fmt(kg, 0) + ' kg aboard. ' + port.name + ' has no fish plant.'] : ['ingen fangst å levere.', 'no catch to land.'];
   if (o){ const c = o.cur || {}; o.rep.push({t:S.t, port:pid, kg:Math.round(kg), kr:Math.round(total), h:c.t0 ? Math.round((S.t - c.t0) / 6) / 10 : null, landed:!!landed}); while (o.rep.length > DRP.repMax) o.rep.shift(); o.cur = null; }

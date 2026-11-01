@@ -58,6 +58,9 @@ const ACHL = [
   {id:'mottak', n:['Mottak langs kysten', 'Plants along the coast'], tiers:[3, 5, 10, 25, 50], unit:'', v:() => achPorts()},
   {id:'fisk', n:['Fisk tatt', 'Fish caught'], tiers:[100, 1000, 5000, 10000, 50000, 100000], unit:'', v:() => achFish()},
   {id:'turer', n:['Turer fullført', 'Trips completed'], tiers:[10, 50, 100, 250, 500], unit:'', v:() => (S.stats && S.stats.trips) || 0},
+  {id:'lete', n:['Letefisker: leteoppdrag', 'Searcher: search missions'], tiers:[1, 5, 10, 25], unit:'', v:() => achC('lete')},
+  {id:'kjede', n:['Fast leverandør: tre oppdrag på rad', 'Regular supplier: three missions in a row'], tiers:[1, 3, 10], unit:'', v:() => achC('kjede')},
+  {id:'kv', n:['Rent skip: kontroller uten merknad', 'Clean ship: inspections without remarks'], tiers:[1, 5, 10], unit:'', v:() => achC('kv')},   // (core/09j-kystvakt.js kvFinish, docs/planer/oppdrag-2.md V1)   // (core/09g-turer.js turChainEnd, docs/planer/oppdrag-2.md K1)   // (core/09g-turer.js turLeteAnswer, docs/planer/oppdrag-2.md L2)
   {id:'havner', n:['Havner besøkt', 'Harbours visited'], tiers:[5, 10, 25, 50, 100], unit:'', v:() => achVisitN(() => true)},
   {id:'verft', n:['Verft besøkt', 'Yards visited'], tiers:[1, 3, 5, 10, 20], unit:'', v:() => achVisitN(pt => /verft/.test(pt.sted || ''))},
   {id:'butikk', n:['Utstyrsbutikker besøkt', 'Tackle shops visited'], tiers:[1, 3, 5, 10, 20], unit:'', v:() => achVisitN(pt => /butikk/.test(pt.sted || ''))},
@@ -73,7 +76,8 @@ const ACHL = [
   {id:'peer', n:['Andre spillere møtt på sjøen', 'Other players met at sea'], tiers:[1, 10, 50], unit:'', v:() => Object.keys((S.ach && S.ach.peers) || {}).length},
   // the pub (ui/09c-pubsoc.js): the week's quiz with every answer right, and the weeks the fiskarlag reached its goal
   {id:'quiz', n:['Quizmester på puben', 'Pub quiz master'], tiers:[1, 5, 20], unit:'', v:() => achC('quiz')},
-  {id:'lag', n:['Fiskarlagets ukemål', 'The fishing club\'s weekly goals'], tiers:[1, 5, 20], unit:'', v:() => achC('lag')}
+  {id:'lag', n:['Fiskarlagets ukemål', 'The fishing club\'s weekly goals'], tiers:[1, 5, 20], unit:'', v:() => achC('lag')},
+  {id:'lagw', n:['Fiskarlaget: uker med levering', 'The fishing club: weeks with a landing'], tiers:[1, 4, 12, 26, 52], unit:'', v:() => Object.keys((S.pubSoc || {}).lagWk || {}).length}   // (ui/09c-pubsoc.js lagWeek, docs/planer/oppdrag-2.md F2)
 ];
 const achOf = id => ACH.find(a => a.id === id);
 function achState(){
@@ -115,12 +119,12 @@ function achPool(scale){
   const lines = pg.lines ? (pg.lines.hyse ? pg.lines.hyse.n : 0) + (pg.lines.bank ? pg.lines.bank.n : 0) : 0, pots = pg.pots ? (pg.pots.big || 0) : 0;
   const nets = pg.nets || [], iceRoom = (BOAT.iceCap || 0) - (b.ice || 0), fuelRoom = (BOAT.fuelCap || 0) - (b.fuel || 0);
   const money = (lo, hi, who) => r => { const v = Math.round((lo + (hi - lo) * r) * scale / 100) * 100;
-    return {apply:() => { S.cash += v; }, t:L(who[0] + ' ' + kr(v) + '.', who[1] + ' ' + kr(v) + '.')}; };
+    return {apply:() => { book('annet', v, who[0], who[1]); }, t:L(who[0] + ' ' + kr(v) + '.', who[1] + ' ' + kr(v) + '.')}; };
   if (lines + pots > 0) add(0, 3, () => { const kg = sc(15); return {apply:() => { const B = baitOf(pg); B.makrell = (B.makrell || 0) + kg; }, t:L('Butikken gir deg ' + kg + ' kg makrell til agn.', 'The shop gives you ' + kg + ' kg of mackerel for bait.')}; });
   if (iceRoom > 20) add(0, 2, () => { const kg = Math.round(Math.min(iceRoom, sc(120))); return {apply:() => { b.ice = (b.ice || 0) + kg; }, t:L('Mottaket gir deg ' + kg + ' kg is.', 'The plant gives you ' + kg + ' kg of ice.')}; });
-  if (fuelRoom > 5) add(0, 2, () => { const l = Math.round(Math.min(fuelRoom, Math.max(10, sc(BOAT.fuelCap * 0.25)))); return {apply:() => { b.fuel = (b.fuel || 0) + l; }, t:L('Bunkerskaia fyller ' + l + ' liter på tanken.', 'The bunker quay puts ' + l + ' litres in the tank.')}; });
+  if (fuelRoom > 5) add(0, 2, () => { const l = Math.round(Math.min(fuelRoom, Math.max(10, sc(BOAT.fuelCap * 0.25)))); return {apply:() => { fuelAdd(b, l, 0); }, t:L('Bunkerskaia fyller ' + l + ' liter på tanken.', 'The bunker quay puts ' + l + ' litres in the tank.')}; });
   add(0, 2, money(1000, 3000, ['Salgslaget sender en premie for leveringene:', 'The sales organisation sends a prize for your landings:']));
-  if (fuelRoom > 10) add(1, 2, () => { const l = Math.round(fuelRoom); return {apply:() => { b.fuel = BOAT.fuelCap; }, t:L('Full tank fra bunkerskaia, ' + l + ' liter.', 'A full tank from the bunker quay, ' + l + ' litres.')}; });
+  if (fuelRoom > 10) add(1, 2, () => { const l = Math.round(fuelRoom); return {apply:() => { fuelAdd(b, BOAT.fuelCap - (b.fuel || 0), 0); }, t:L('Full tank fra bunkerskaia, ' + l + ' liter.', 'A full tank from the bunker quay, ' + l + ' litres.')}; });
   if (nets.some(n => (n.cond == null ? 1 : n.cond) < 0.95)) add(1, 3, () => ({apply:() => { for (const n of nets) n.cond = 1; }, t:L('Bøteriet bøter garna dine gratis.', 'The net loft mends your nets for free.')}));
   if ((b.foul || 0) > 0.1) add(1, 2, () => ({apply:() => { b.foul = 0; }, t:L('Dykkeren renser skroget gratis.', 'The diver cleans the hull for free.')}));
   if ((b.engH || 0) - (b.svcAt || 0) > (BOAT.svcH || 200) * 0.3) add(1, 2, () => ({apply:() => { b.svcAt = b.engH || 0; }, t:L('Mekanikeren går over motoren gratis.', 'The mechanic services the engine for free.')}));

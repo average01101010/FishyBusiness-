@@ -21,7 +21,10 @@ async def main():
         print(ok(r['same'] and 'eg' in r['mor'].lower() and 'kven' in r['mor'].lower() and 'fisken' in r['mor'] and 'itj' in r['tro'] and 'Æ' in r['tro'] and 'Eg' in r['vest'] and 'korleis' in r['vest']), 'the lines stand in the dialect of where the hand is from: Northern Norwegian as it is, Trøndelag, Møre and the west in their own words')
         await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(1500)
         s = await pg.evaluate("""(async () => { S.tut = 0; const c = genCrew(); c.name = 'Stian Testesen'; c.homePort = 'botnhamn'; S.crew = [c]; S.sayT = -1e9; S.boat.status = 'port'; const m0 = S.msgs.length;
-          const say = crewSay(c, 'chat'); await new Promise(r => setTimeout(r, 800)); const el = document.querySelector('.say3d'), vis = el && el.style.display !== 'none', txt = el ? el.textContent : '';
+          const say = crewSay(c, 'chat');
+          // (the bubble comes with the next 3D frame, which under SwiftShader can take seconds: waited for, up to five seconds, instead of a fixed 800 ms, 27.10.2026)
+          for (let k = 0; k < 50; k++){ const e = document.querySelector('.say3d'); if (e && e.style.display !== 'none' && e.textContent) break; await new Promise(r => setTimeout(r, 100)); }
+          const el = document.querySelector('.say3d'), vis = el && el.style.display !== 'none', txt = el ? el.textContent : '';
           return {say, vis, txt, log:S.log.slice(-1)[0].no, msgs:S.msgs.length - m0}; })()""")
         print(json.dumps(s, ensure_ascii=False))
         print(ok(s['say'] and s['vis'] and s['txt'].startswith('Stian: «')), 'in 3D the line stands over his head as «Stian: …»', s['txt'][:50])

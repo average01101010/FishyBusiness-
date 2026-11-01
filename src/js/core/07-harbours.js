@@ -71,18 +71,52 @@ const PIERBOX = (() => {
 // are in; none (null) where no face near has room, and the boat lies as before (berthSlot).
 const QUAY_DEPTH_UNKNOWN = 3;
 const quayFit = (f, L, T) => f.hl * 2 * 0.9 >= L + 2 && (f.depth == null ? QUAY_DEPTH_UNKNOWN : f.depth) >= T + 0.5;
-function quayFree(f){
-  if (f.free !== undefined) return f.free;
-  for (const pt of PORTS){
-    const px = pt.p.x * 1000, pz = pt.p.y * 1000; if (Math.abs(px - f.x) > f.hl + 60 || Math.abs(pz - f.z) > f.hl + 60) continue;
-    const a = clamp((px - f.x) * f.ux + (pz - f.z) * f.uz, -f.hl, f.hl); if (Math.hypot(f.x + f.ux * a - px, f.z + f.uz * a - pz) < 35) return f.free = false;
-  }
-  for (const U of UNITA){ const [lx, lz] = unitL(U, f.x, f.z); const g = ugeo(U); if (Math.abs(lx) < g.E + 40 && lz > -g.B - 15 && lz < g.basinZ + 25) return f.free = false; }
-  return f.free = true;
+// ===== L1 (01.11.2026; Jonas: «Båtene skal benytte seg av de ekte kaiene vi har laget modeller av og som vi har plassert rundt om i
+// verden», «Det er urealistisk at en stor sjark bare fortøyes rett i fjæra»): a boat lies only at a quay that stands in the 3D world =====
+// quayReal(f): kind 0 (the edge of a pier mapped as an area: slabInto draws it), kind 2 (a quay line: pierBoxes gives it a 6 m deck
+// and pierInto draws it), or kind 3 (straight coast) where a big industrial building (type 8 of 300 m² or more, as tools/map/vectors.py
+// counts a fish plant) stands within 30 m of the face: there the chart shows a quay that is mapped as the coastline alone, and the game
+// sets its own quay along the berth (f.mod: kai_betong, or kai_tre for a boat under 15 m, drawDocks). Kind 1 (a pier mapped as a
+// line, the pontoons of a marina) and the open shore never: a boat that no such face takes is not shown in port (05-vessels.js).
+const QUAY_BIG = 300;
+function quayReal(f){
+  if (f.real !== undefined) return f.real;
+  if (f.kind === 0 || f.kind === 2) return f.real = true;
+  f.real = false; if (f.kind !== 3 || !MAPD.man) return false;
+  const T = MAPD.man.tile * 1000, t = vecTile(Math.floor(f.x / T), Math.floor(f.z / T)), B = t && t.bld; if (!B) return false;
+  const R = f.hl + 130, x0 = Math.floor((f.x - R) / 1000), x1 = Math.floor((f.x + R) / 1000), z0 = Math.floor((f.z - R) / 1000), z1 = Math.floor((f.z + R) / 1000);
+  for (let ix = x0; ix <= x1; ix++) for (let iz = z0; iz <= z1; iz++){ const c = B.cells.get(gridKey(ix, iz)); if (!c) continue;
+    for (const i of c){ if (B.t[i] !== 8 || B.l[i] * B.w[i] < QUAY_BIG) continue;
+      const dx = B.x[i] - f.x, dz = B.z[i] - f.z, a = clamp(dx * f.ux + dz * f.uz, -f.hl, f.hl), d = Math.hypot(dx - f.ux * a, dz - f.uz * a);
+      if (d <= 30 + Math.hypot(B.l[i], B.w[i]) / 2){ f.mod = true; return f.real = true; } } }
+  return false;
 }
+// the parts of a face the harbour's boats keep off, as intervals along it (m from its middle): within 35 m of a harbour point (where
+// the player lies), and a harbour unit's block with its fill, its basin and its landing and bunker berths. The rest of a plant's, a
+// yard's or a shop's quay is for the harbour's boats too (Jonas 01.11.2026, choice 3), as at a real fish plant.
+function faceReserved(f){
+  if (f.res !== undefined) return f.res;
+  const blocked = (x, z) => {
+    for (const pt of PORTS){ const px = pt.p.x * 1000, pz = pt.p.y * 1000; if (Math.abs(px - x) < 35 && Math.abs(pz - z) < 35 && Math.hypot(px - x, pz - z) < 35) return true; }
+    for (const U of UNITA){ if (Math.abs(U.o[0] - x) > 220 || Math.abs(U.o[1] - z) > 220) continue; const [lx, lz] = unitL(U, x, z), g = ugeo(U);
+      if (Math.abs(lx) <= g.basinX + 4 && lz >= -g.B - 4 && lz <= g.basinZ + 4) return true;
+      for (const k in g.berth){ const b = g.berth[k]; if (Math.abs(lx - b[0]) <= b[1] / 2 + 3 && lz >= -4 && lz <= 30) return true; } }
+    return false; };
+  const out = []; let cur = null;
+  for (let a = -f.hl; a <= f.hl + 1e-6; a += 2){ if (blocked(f.x + f.ux * a, f.z + f.uz * a)){ if (cur) cur[1] = a + 1; else cur = [a - 1, a + 1]; } else if (cur){ out.push(cur); cur = null; } }
+  if (cur) out.push(cur);
+  return f.res = out;
+}
+// a face with any part left for the harbour's boats (the reserved parts are kept off within it: npcBerths, moorHarbour, havnBerths)
+function quayFree(f){ if (f.free !== undefined) return f.free; const r = faceReserved(f); return f.free = !(r.length === 1 && r[0][0] <= -f.hl + 1 && r[0][1] >= f.hl - 1); }
+const resHit = (res, a, half) => res.some(([r0, r1]) => a + half > r0 && a - half < r1);
+// the berth's face as the 3D view and the boat's state carry it: the point on the face by her middle, its directions, kind and whether
+// the game sets a quay there (mod)
+const faceAt = (f, a, L) => ({id:f.id, x:f.x + f.ux * a, z:f.z + f.uz * a, ux:f.ux, uz:f.uz, nx:f.nx, nz:f.nz, hl:L / 2 + 2, kind:f.kind, mod:!!f.mod, depth:f.depth == null ? QUAY_DEPTH_UNKNOWN : f.depth});
 const NPCB = new Map();
-// boats [{key, L, B, T}] of a harbour (group) round p (km), within R km: {key: {p (km), hd, face}} for those that got a place
-// (the hull clear of land: 15 points with a metre and half a metre to spare, as moorFree for the coast's boats, 4.16b)
+// boats [{key, L, B, T}] of a harbour (group) round p (km), within R km: {key: {p (km), hd, face}} for those that got a place at a face
+// that stands in 3D (quayReal), off its reserved parts (faceReserved), the hull clear of land (15 points with a metre and half a
+// metre to spare, as moorFree for the coast's boats, 4.16b)
 function hullDry(p, hd, L, B){
   const s = Math.sin(hd), c = Math.cos(hd), hl = L / 2 + 1, hb = B / 2 + 0.5;
   for (const fa of [-1, -0.5, 0, 0.5, 1]) for (const ab of [-1, 0, 1]) if (isLand({x:p.x + (s * fa * hl + c * ab * hb) / 1000, y:p.y + (-c * fa * hl + s * ab * hb) / 1000})) return false;
@@ -94,15 +128,15 @@ function npcBerths(group, p, boats, R = 0.6){
   const x = p.x * 1000, z = p.y * 1000, Rm = R * 1000, faces = [];
   for (const t of vecTilesIn(x - Rm, z - Rm, x + Rm, z + Rm)) for (const f of t.quays){
     const a = clamp((x - f.x) * f.ux + (z - f.z) * f.uz, -f.hl, f.hl), d = Math.hypot(f.x + f.ux * a - x, f.z + f.uz * a - z);
-    if (d <= Rm && quayFree(f)) faces.push([d, f]);
+    if (d <= Rm && quayReal(f) && quayFree(f)) faces.push([d, f]);
   }
   faces.sort((a, b) => a[0] - b[0] || (a[1].id < b[1].id ? -1 : 1));
   const used = new Map(), v = {};
   for (const b of boats){
     for (const [, f] of faces){
       if (!quayFit(f, b.L, b.T)) continue;
-      const u = used.get(f.id) || [], lim = f.hl - b.L / 2 - 1; let at = null;
-      for (let s = 0; s <= lim * 2 && at === null; s += 2) for (const a of s ? [s / 2, -s / 2] : [0]){ if (Math.abs(a) > lim || u.some(([a0, a1]) => a + b.L / 2 + 1 > a0 && a - b.L / 2 - 1 < a1)) continue; at = a; break; }
+      const u = used.get(f.id) || faceReserved(f).slice(), lim = f.hl - b.L / 2 - 1; let at = null;
+      for (let s = 0; s <= lim * 2 && at === null; s += 2) for (const a of s ? [s / 2, -s / 2] : [0]){ if (Math.abs(a) > lim || resHit(u, a, b.L / 2 + 1)) continue; at = a; break; }
       if (at === null) continue;
       // off the face by her half beam and 0.4 m, or up to 8 m further out where the face and the fine coast disagree; else the next face
       const hd0 = Math.atan2(f.ux, -f.uz); let q = null;
@@ -110,7 +144,7 @@ function npcBerths(group, p, boats, R = 0.6){
       if (!q) continue;
       u.push([at - b.L / 2 - 1, at + b.L / 2 + 1]); used.set(f.id, u);
       const flip = hash(hashStr(b.key)) < 0.5;
-      v[b.key] = {p:q, hd:hd0 + (flip ? Math.PI : 0), face:f.id};
+      v[b.key] = {p:q, hd:hd0 + (flip ? Math.PI : 0), face:faceAt(f, at, b.L)};
       break;
     }
   }
@@ -340,7 +374,7 @@ function startFueling(ops){
 function quayMinute(){
   const b = S.boat, f = b.fueling;
   if (f){
-    if (S.t > f.pumpAt && f.done < f.liters){ const l = Math.min(f.lpm, f.liters - f.done), c = l * fuelPrice(); if (c > S.cash){ f.liters = f.done; f.until = S.t + PUMP.stow; } else { b.fuel = Math.min(BOAT.fuelCap, b.fuel + l); f.done += l; f.paid = (f.paid || 0) + c; S.cash -= c; S.stats.costs += c; if (f.done >= f.liters - 0.01) f.until = Math.min(f.until, S.t + PUMP.stow); } }
+    if (S.t > f.pumpAt && f.done < f.liters){ const l = Math.min(f.lpm, f.liters - f.done), c = l * fuelPrice(); if (c > spendable()){ f.liters = f.done; f.until = S.t + PUMP.stow; } else { fuelAdd(b, Math.min(BOAT.fuelCap, b.fuel + l) - b.fuel, c); f.done += l; f.paid = (f.paid || 0) + c; book('diesel', -c, 'Bunkring', 'Bunkering'); if (f.done >= f.liters - 0.01) f.until = Math.min(f.until, S.t + PUMP.stow); } }
     if (S.t >= f.until){ b.fueling = null; log('Fylte ' + fmt(f.done, 0) + ' L for ' + kr(Math.round(f.paid || 0)) + '.', 'Filled ' + fmt(f.done, 0) + ' L for ' + kr(Math.round(f.paid || 0)) + '.'); }
   }
   const s = b.shift;
@@ -356,8 +390,8 @@ function quayMinute(){
 function buyIce(kg, free){
   const b = S.boat, pt = portById(b.port); if (b.status !== 'port' || !pt || !pt.ice) return false;
   if (berthKind(b) !== 'main'){ b.iceKg = kg; b.iceFree = !!free; return startShift('main', 'ice'); }
-  kg = Math.round(Math.min(kg, BOAT.iceCap - b.ice)); const c = free ? 0 : Math.round(kg * PRICE.ice); if (kg <= 0 || c > S.cash) return false;
-  b.ice += kg; S.cash -= c; S.stats.costs += c; iceChute(kg);
+  kg = Math.round(Math.min(kg, BOAT.iceCap - b.ice)); const c = free ? 0 : Math.round(kg * PRICE.ice); if (kg <= 0 || c > spendable()) return false;
+  b.ice += kg; book('is', -c, 'Is fra isrenna', 'Ice from the chute'); iceChute(kg);
   log('Kjøpte ' + kg + ' kg is fra isrenna for ' + kr(c) + '.', 'Bought ' + kg + ' kg of ice from the chute for ' + kr(c) + '.');
   // the first fill is on the plant (Jonas 07.10.2026): a new customer, and they know the old boat
   if (free) msg(FOLK_NAMES.plant[0] + ' på mottaket', 'Så det er du som har tatt over naustet! Faren din var innom her i fjor høst og snakket om deg. Første fylling is er på huset: vi kjenner igjen den gamle båten.', 'So you’re the one who has taken over the boathouse! Your father dropped in last autumn and talked about you. The first fill of ice is on the house: we know the old boat.');
@@ -370,7 +404,7 @@ const shopIceKr = () => { const pt = portById(S.boat.port); return pt && pt.ice 
 const shopIceRoom = () => Math.max(0, Math.round(BOAT.iceCap - S.boat.ice));
 // buys one thing; returns null, or why not as [no, en]. free: the first-trip tutorial hands it out
 function shopBuy(k, kg, free){
-  const b = S.boat, pt = portById(b.port), pay = c => { S.cash -= c; S.stats.costs += c; };
+  const b = S.boat, pt = portById(b.port), pay = (c, k, no, en, felles) => { book(k, -c, no, en); if (felles) tripAdd(b, 'jigKr', c); };
   if (b.status !== 'port' || !pt) return ['Butikken er på land. Handle når båten ligger i havn.', 'The shop is ashore. Buy when the boat is in port.'];
   if (pt.rorbu) return ['Det er ingen butikk ved rorbua. Handle i en havn.', 'There is no shop at the rorbu. Buy in a harbour.'];   // 07d-rorbu.js
   if (berthKind(b) === 'naust') return NAUST_NOSHOP;   // Father's naust is a home: nothing is sold there (Jonas 07.10.2026)
@@ -378,23 +412,23 @@ function shopBuy(k, kg, free){
     if (!portServices(pt, berthKind(b)).butikk) return ['Fiskeutstyr kjøper du i utstyrsbutikken.', 'You buy fishing gear at the tackle shop.'];
     const have = k === 'jig' ? b.gear : b.kgear, c = free ? 0 : Math.round((k === 'jig' ? PRICE.gear : PRICE.kgear) * (naustHas('benk') && atHome(b) ? 0.75 : 1));   // Father's workbench (07c-naust.js)
     if (have) return ['Det har du allerede om bord.', 'You already have that aboard.'];
-    if (c > S.cash) return ['Du har ikke nok penger.', 'Not enough money.'];
-    if (k === 'jig'){ b.gear = true; pay(c); log('Kjøpte håndjuksa med pilk og markkroker for ' + kr(c) + '.', 'Bought a hand jig with pilk and fly hooks for ' + kr(c) + '.');
+    if (c > spendable()) return ['Du har ikke nok penger.', 'Not enough money.'];
+    if (k === 'jig'){ b.gear = true; pay(c, 'redskap', 'Håndjuksa', 'Hand jig', true); log('Kjøpte håndjuksa med pilk og markkroker for ' + kr(c) + '.', 'Bought a hand jig with pilk and fly hooks for ' + kr(c) + '.');
       // the first trip's jig and ice are Father's: he paid for them before he went (the letter leaves nothing else)
       if (free) msg(FOLK_NAMES.shop + ' i butikken', 'Så det er du som har tatt over naustet. Faren din var innom her i fjor høst og betalte for ei ny juksa og is til den første turen. «Til den som tar over», sa han. Den har ligget her og venta på deg. Gutten bærer issekkene ned til båten.',
         'So you’re the one who has taken over the boathouse. Your father came in here last autumn and paid for a new jig and ice for the first trip. «For whoever takes over», he said. It has been lying here waiting for you. The boy will carry the ice down to the boat.'); }
-    else { b.kgear = true; pay(c); log('Kjøpte kveiteutstyr for ' + kr(c) + ': stor pilk, kraftig snøre og gaff.', 'Bought halibut gear for ' + kr(c) + ': big pilk, heavy line and gaff.'); }
+    else { b.kgear = true; pay(c, 'redskap', 'Kveiteutstyr', 'Halibut gear', true); log('Kjøpte kveiteutstyr for ' + kr(c) + ': stor pilk, kraftig snøre og gaff.', 'Bought halibut gear for ' + kr(c) + ': big pilk, heavy line and gaff.'); }
     if (c > 0) folkShop(); return null;
   }
   if (k === 'ice'){
     if (!pt.mottak) return ['Is og agn selges på fiskemottaket.', 'Ice and bait are sold at the fish plant.'];
     kg = Math.round(Math.min(kg, shopIceRoom())); if (kg < 1) return ['Iskassa er full.', 'The ice box is full.'];
-    const c = free ? 0 : Math.round(kg * shopIceKr()); if (c > S.cash) return ['Du har ikke nok penger.', 'Not enough money.'];
+    const c = free ? 0 : Math.round(kg * shopIceKr()); if (c > spendable()) return ['Du har ikke nok penger.', 'Not enough money.'];
     if (pt.ice && berthKind(b) !== 'naust'){
       if (b.shift || b.land && berthKind(b) !== 'main') return ['Vent til båten ligger ved mottakskaia.', 'Wait until the boat lies at the plant\'s quay.'];
       return buyIce(kg, free) ? null : ['Isrenna er opptatt. Prøv igjen litt senere.', 'The ice chute is busy. Try again a little later.'];
     }
-    b.ice += kg; pay(c);
+    b.ice += kg; pay(c, 'is', 'Is i sekker', 'Bagged ice');
     log('Kjøpte ' + kg + ' kg is i sekker for ' + kr(c) + '. Mottaket bar den om bord.', 'Bought ' + kg + ' kg of bagged ice for ' + kr(c) + '. The plant carried it aboard.');
     if (c > 0) folkShop(); return null;
   }

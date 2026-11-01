@@ -1,0 +1,45 @@
+# Revisjonslogg E9 (closed): tilstandsskifter minutt for minutt, spilt i testbygget 26.10.2026
+# hjem Finnsnes · mottak Botnhamn · felt [('f1', 2, 6), ('f2', 2, 6)] · juksplasser 1
+# slutt: on=False stop=Går ikke ut: lina er ikke egnet. wait=None
+# tid: dag klokke | tilstand (plan:status@havn/redskapsarbeid ?venter !stopp) | energi | høyeste slitenhet | last kg
+D1 03:01  -:port@finnsnes?dep                            en=100 fat=  0 hold=    0
+D1 05:00  fish:unmooring@finnsnes                        en=100 fat=  0 hold=    0
+D1 05:01  fish:sailing                                   en=100 fat=  0 hold=    0
+D1 05:21  fish:fishing/set-line                          en= 99 fat=  0 hold=    0
+D1 05:32  fish:fishing                                   en= 98 fat=  0 hold=    0
+D1 05:33  fish:sailing                                   en= 98 fat=  0 hold=    0
+D1 05:43  fish:fishing/set-line                          en= 97 fat=  0 hold=    0
+D1 05:54  fish:fishing                                   en= 96 fat=  0 hold=    0
+D1 05:55  fish:sailing                                   en= 96 fat=  0 hold=    0
+D1 05:59  fish:fishing                                   en= 96 fat=  0 hold=    0
+D1 09:59  fish:sailing                                   en= 79 fat= 17 hold=  172
+D1 10:11  fish:fishing/haul-line                         en= 78 fat= 20 hold=  172
+D1 11:03  fish:fishing                                   en= 75 fat= 24 hold=  220
+D1 11:04  fish:sailing                                   en= 75 fat= 24 hold=  220
+D1 11:14  fish:fishing/haul-line                         en= 74 fat= 24 hold=  220
+D1 12:05  fish:fishing                                   en= 70 fat= 29 hold=  231
+D1 12:06  fish:sailing                                   en= 70 fat= 29 hold=  231
+D1 12:13  -:idle                                         en= 70 fat= 29 hold=  231
+D1 14:14  -:idle!stop:fail!off                           en= 66 fat= 13 hold=  231
+D2 07:53  -:idle!stop:fail!off/zz                        en=  4 fat=  0 hold=  231
+D2 15:53  -:idle!stop:fail!off                           en= 60 fat=  0 hold=  231
+D3 08:13  -:idle!stop:fail!off/zz                        en=  0 fat=  0 hold=  231
+D3 16:13  -:idle!stop:fail!off                           en= 60 fat=  0 hold=  231
+D4 09:30  -:idle!stop:fail!off/zz                        en=  0 fat=  0 hold=  231
+D4 17:30  -:idle!stop:fail!off                           en= 60 fat=  0 hold=  231
+D5 10:47  -:idle!stop:fail!off/zz                        en=  0 fat=  0 hold=  231
+D5 18:47  -:idle!stop:fail!off                           en= 60 fat=  0 hold=  231
+D6 12:04  -:idle!stop:fail!off/zz                        en=  0 fat=  0 hold=  231
+D6 20:04  -:idle!stop:fail!off                           en= 60 fat=  0 hold=  231
+D7 13:21  -:idle!stop:fail!off/zz                        en=  0 fat=  0 hold=  231
+D7 21:21  -:idle!stop:fail!off                           en= 60 fat=  0 hold=  231
+D8 14:38  -:idle!stop:fail!off/zz                        en=  0 fat=  0 hold=  231
+D8 22:38  -:idle!stop:fail!off                           en= 60 fat=  0 hold=  231
+D9 15:55  -:idle!stop:fail!off/zz                        en=  0 fat=  0 hold=  231
+D9 23:55  -:idle!stop:fail!off                           en= 60 fat=  0 hold=  231
+# landinger (o.rep): []
+# salg: []
+# redskap i sjøen ved slutt: []
+# «Neste tur» slik siden viste den: [{"at": "D1 03:01", "sk": [["05:00", "Går fra Finnsnes"], ["05:17", "Setter 2 stamper på felt 2"], ["05:39", "Setter 2 stamper på felt 1"], ["06:05", "Jukser på plass 1 (høyst 4,0 t)"], ["10:16", "Trekker felt 2"], ["11:02", "Trekker felt 1"], ["14:46", "Leverer i Botnhamn"], ["18:59", "Hjem til Finnsnes og hvile"]]}]
+# slutt: {"en": 47, "fat": [0, 0], "cash": 1000000, "hold": 231, "status": "idle", "port": null, "pos": [868.47, 367.4], "revenue": 0, "kg": 0, "costs": 0}
+# meldinger: D1 12:14 Driftsplan: Går ikke ut: lina er ikke egnet. || D1 13:14 Driftsplan: Går ikke ut: lina er ikke egnet. || D1 14:14 Driftsplan: Går ikke ut: lina er ikke egnet. || D1 14:14 Driftsplan: Driftsplanen for «T-333-LK» har stoppet: Går ikke ut: lina er ikke egnet. || D5 23:00 Vegard Mathisen: Roger begynte å plystre. Vegard: – Ikke plystre om bord. Du plystrer opp storm. || D6 11:20 Kystposten: Kystposten gratulerer med 10 år på havet. Det er ikke mange forunt. || D7 18:00 Skreifestivalen: Nordstjerna fra Husøy vant med en torsk på 20,8 kg.

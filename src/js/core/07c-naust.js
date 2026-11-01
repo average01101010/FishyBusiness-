@@ -156,12 +156,12 @@ function naustWhy(k){
   if (naustHas(k)) return ['Det er gjort.', 'That is done.'];
   if (U.after && !naustHas(U.after)) return ['Taket må tettes først.', 'The roof must be made tight first.'];
   if (!atHome(S.boat)) return ['Snekkeren jobber når du er i hjemhavna.', 'The carpenter works while you are in the home harbour.'];
-  if (S.cash < U.kr) return ['Du har ikke nok penger.', 'Not enough money.'];
+  if (spendable() < U.kr) return ['Du har ikke nok penger.', 'Not enough money.'];
   return null;
 }
 function naustBuy(k){
   const why = naustWhy(k); if (why) return why;
-  const U = NAUST_UP.find(x => x.k === k); S.cash -= U.kr; S.stats.costs += U.kr; (S.naustUp = S.naustUp || {})[k] = S.t;
+  const U = NAUST_UP.find(x => x.k === k); book('land', -U.kr, 'Naustet: ' + U.no, 'The boathouse: ' + U.en); (S.naustUp = S.naustUp || {})[k] = S.t;
   log('Naustet: ' + U.no.toLowerCase() + ' for ' + kr(U.kr) + '.', 'The boathouse: ' + U.en.toLowerCase() + ' for ' + kr(U.kr) + '.');
   return null;
 }

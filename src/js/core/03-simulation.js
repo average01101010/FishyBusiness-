@@ -406,6 +406,10 @@ function loadF(){ return clamp(Math.pow(boatTons0() / Math.max(0.1, boatTons()),
 // was a different thing and is gone
 function foulHour(H){ const b = S.boat, m = gDate(H).getUTCMonth(), r = (m >= 5 && m <= 8 ? 0.012 : 0.004) / 24 * (S.equip && S.equip.antigro ? 0.3 : 1); b.foul = Math.min(1, (b.foul || 0) + r); }
 const foulSpeed = () => 1 - 0.15 * ((S.boat && S.boat.foul) || 0), foulFuel = () => 1 + 0.25 * ((S.boat && S.boat.foul) || 0);
+// the litres the engine burns, taken from the tank and counted on the trip's common costs (Økonomi 2, Ø2: tripOf in 04-crew.js);
+// litres put in at a price keep the tank's average price per litre (b.fuelKrL), which the trip's fuel is priced at
+function fuelUse(b, l){ const u = Math.min(b.fuel, Math.max(0, l)); b.fuel -= u; if (u > 0 && typeof tripOf === 'function') tripOf(b).fuelL += u; return u; }
+function fuelAdd(b, l, kr0){ const f0 = Math.max(0, b.fuel || 0), p0 = b.fuelKrL || fuelPrice(); b.fuel = f0 + l; if (l > 0) b.fuelKrL = (p0 * f0 + (kr0 || 0)) / (f0 + l); }
 function fuelLph(v, W){ const base = fuelBase(v, BOAT.vmax, BOAT.planing); return base * BOAT.fuelK * (1 + 0.015 * W) * Math.pow(boatTons() / boatTons0(), 2 / 3) * foulFuel() * ((typeof turTowing === 'function' && turTowing()) || (typeof ptowTowing === 'function' && ptowTowing()) ? 1.5 : 1); }
 function speedCap(hs, cb = 1){ const v = BOAT.vmax * clamp(1 - (hs - 0.3) * BOAT.sea * cb, 0.2, 1) * loadF() * foulSpeed() * (typeof hullSpeed === 'function' ? hullSpeed() : 1); return (typeof turTowing === 'function' && turTowing()) || (typeof ptowTowing === 'function' && ptowTowing()) ? Math.min(v, TUR_TOWV) : v; }   // with a boat in tow (09g-turer.js)
 
@@ -522,9 +526,16 @@ const AREAS = {egga:eggaArea};
 const TUT_FIELD = 4;   // Gisundet nord
 // the first trip's patch: where a start along the coast put it (S.tut.f, ui/08c-start.js), else Gisundet nord
 const tutFieldAt = () => (typeof S !== 'undefined' && S && S.tut && S.tut.f) ? S.tut.f : GROUNDS[TUT_FIELD];
+// the mix: the patch's own (S.tut.f.mix, the jig's fish that stand there now and are lawful there, ui/08c-start.js tutFieldNear), else
+// the skrei mix of the Senja start
 const TUTB = {peak:5.2, mix:{torsk:0.72, sei:0.18, hyse:0.1}};
+// the first trip's fishing (Onboarding 2, O3, V2 A, 27.10.2026): one hour (ten real minutes), and the guarantee tops up to half the hold
+// (175 kg in the starting boat) instead of a full one; the landing does not wait for a full hold
+const TUT_FISH_H = 1, TUT_HOLD = 0.5;
+const tutTarget = () => capHold() * TUT_HOLD;
+const tutMixOf = () => (typeof S !== 'undefined' && S && S.tut && S.tut.f && S.tut.f.mix) || TUTB.mix;
 function tutBonus(sp, p){
-  const m = TUTB.mix[sp]; if (!m || !(S && S.tut && S.tut.catch)) return 0;
+  const m = tutMixOf()[sp]; if (!m || !(S && S.tut && S.tut.catch)) return 0;
   const g = tutFieldAt(), d = dist(p, g.p), x = Math.max(0, d - g.r * 0.5) / (g.r * 0.33);
   return TUTB.peak * m * Math.exp(-x * x);
 }
@@ -573,7 +584,9 @@ function wshLand(port, H, acc, kgSp, codQ){ if (!WSH.rec) return; const Q = wq()
   const items = Object.entries(kgSp).filter(([, kg]) => kg > 0.01).slice(0, 24).map(([sp, kg]) => ({sp, kg:+kg.toFixed(1), kgq:sp === 'torsk' && acc === 'open' ? +codQ.toFixed(1) : 0}));
   // the boat's name goes with it for the open group's leaderboard (and the company's in the closed group, whose leaderboard shows it:
   // Jonas 05.10.2026); there is no hiding from the others (07.10.2026)
-  if (items.length) Q.l.push({gh:+H.toFixed(2), y:yearH(H), port, acc, items, boat:String(S.boatName || '').slice(0, 24), company:acc !== 'lukket' ? '' : String(S.company || '').slice(0, 40)}); }
+  const ev = typeof evAt === 'function' ? evAt(H, port, items.map(i => i.sp)) : '';   // the shared event it falls in (09c-seasons.js)
+  let reg = ''; try { const q = portById(port); if (q && typeof landsdel === 'function') reg = landsdel(q.p); } catch (e){}   // the part of the coast, for the village contest (bygde_top)
+  if (items.length) Q.l.push({gh:+H.toFixed(2), y:yearH(H), port, acc, items, boat:String(S.boatName || '').slice(0, 24), company:acc !== 'lukket' ? '' : String(S.company || '').slice(0, 40), ev, reg}); }
 function initStock(){
   const a = {};
   // the famous grounds are already worked by the local fleet when the game starts
@@ -735,59 +748,272 @@ const TREKK = {lag:0.0043, pens:0.004, prod:0.016, forsk:0.0135, ress:0.0042, kt
 // A business must register when its sales pass 50 000 kr in twelve months (merverdiavgiftsloven § 2-1); a fisher's business is then a
 // sole proprietorship (enkeltpersonforetak) in the Central Coordinating Register (Enhetsregisteret), which needs no company to fish.
 const MVA = {rate:0.1111, limit:50000};
-// Income tax (E4 of the economy plan, 04.10.2026). The year's profit is the revenue less the costs in S.stats (the levies, the shares,
-// fuel, gear, interest ...; not the instalments, the boats bought or the tax itself) less the boats' depreciation (14 % a year of the
-// hulls and engines, saldogruppe e; a quota right is not depreciated). As a sole proprietor (ENK) the profit is the owner's income:
-// 22 % on it less the fisherman's deduction (30 % of it, at most 160 000 kr, when at least 130 days of the year were spent fishing) and
-// the personal allowance, 7,6 % social security (fishers' rate; the product levy pays the rest) and the bracket tax. As a company (AS)
-// it pays 22 %, and keeps its books for 30 000 kr a year (an estimate). The rates are 2026's (Stortingets skattevedtak and the vedtak on
-// the folketrygd's levies for 2026, as regjeringen.no and others give them: found by search 04.10.2026, Lovdata and Skatteetaten were
-// shut from here). The social security has its lower limit (99 650 kr) and is at most 25 % of the income above it. A loss is not
-// carried forward. Paid every quarter on the year so far, settled at the new year.
+// ---------- the books (Økonomi 2, Ø1, 27.10.2026, docs/planer/okonomi/02-design.md) ----------
+// Every krone in or out goes through book(): a cost is negative, an income positive. The categories of the result feed S.stats.revenue
+// and S.stats.costs (which the tax, the plan's day statistics and the stats panel read), the year's sums in S.stats.y[year] (the
+// accounts in the bank) and the statement S.ledger (the last LEDGER_N postings). The categories outside the result (loans paid out,
+// instalments, vessels bought and sold, the transfers between the bank's accounts) move the money only. The tax is a category of its
+// own (S.stats.tax). VAT is not booked: it comes with the settlement and goes straight on to the state.
+const ACCT = {
+  fisk:{s:'in', no:'Fisk levert', en:'Fish landed'}, tillegg:{s:'in', no:'Tillegg, lever og rogn', en:'Premiums, liver and roe'}, oppdrag:{s:'in', no:'Oppdrag', en:'Missions'},
+  rente:{s:'in', no:'Renteinntekter', en:'Interest earned'}, annet:{s:'in', no:'Andre inntekter', en:'Other income'},
+  trekk:{s:'out', no:'Trekk til Råfisklaget og staten', en:'Sales organisation and state levies'}, mannskap:{s:'out', no:'Mannskap (lott)', en:'Crew (shares)'},
+  kvote:{s:'out', no:'Kvotesamarbeid', en:'Quota cooperation'}, diesel:{s:'out', no:'Drivstoff', en:'Fuel'}, is:{s:'out', no:'Is', en:'Ice'}, agn:{s:'out', no:'Agn og egning', en:'Bait and baiting'},
+  redskap:{s:'out', no:'Redskap og utstyr', en:'Gear and equipment'}, verft:{s:'out', no:'Verft og verksted', en:'Yard and workshop'}, havn:{s:'out', no:'Havneavgift', en:'Harbour dues'},
+  forsikring:{s:'out', no:'Forsikring og slep', en:'Insurance and towing'}, renter:{s:'out', no:'Rentekostnader', en:'Interest paid'}, regnskap:{s:'out', no:'Regnskap og gebyrer', en:'Books and fees'},
+  land:{s:'out', no:'Naust, rorbu, pub og klær', en:'Boathouse, rorbu, pub and clothes'},
+  eldre_inn:{s:'in', no:'Inntekter før regnskapet fikk poster', en:'Income before the accounts had categories'}, eldre_ut:{s:'out', no:'Kostnader før regnskapet fikk poster', en:'Costs before the accounts had categories'},
+  skatt:{s:'tax', no:'Skatt', en:'Tax'},
+  laan:{s:'bal', no:'Lån utbetalt', en:'Loans paid out'}, avdrag:{s:'bal', no:'Avdrag på lån', en:'Loan instalments'}, baat:{s:'bal', no:'Båter kjøpt og solgt', en:'Vessels bought and sold'},
+  spare:{s:'bal', no:'Til og fra sparekonto', en:'To and from savings'}, skattekonto:{s:'bal', no:'Til og fra skattekonto', en:'To and from the tax account'}
+};
+const LEDGER_N = 250;
+// a save from before the books: this tax year's income and costs so far (S.tx counts them from the new year) stand as one line each,
+// and the advance tax paid this year as the year's tax. Run the first time the books are touched, also for a save from the cloud.
+function bookMigrate(){
+  const Y = S.stats.y = {}, T = S.tx; if (!T) return;
+  const R = Y[T.y] = {}, inn = Math.round(S.stats.revenue - T.rev0), ut = Math.round(S.stats.costs - T.cost0);
+  if (inn) R.eldre_inn = inn; if (ut) R.eldre_ut = -ut; if (T.paid) R.skatt = -Math.round(T.paid);
+}
+const bookYear = (H = S.t / 60) => { if (!S.stats.y) bookMigrate(); const Y = S.stats.y, y = yearH(H); return Y[y] || (Y[y] = {}); };
+// parts {category: kr}; one posting on the statement (a landing is one line, with its levies and shares inside). A posting like the
+// last one (same text and category, within two game hours: the pump's litres, the day's harbour due) is added to it.
+function bookAll(parts, no, en, vid){
+  let sum = 0; const Y = bookYear(), P = {};
+  for (const k in parts){ const kr0 = Math.round(parts[k] || 0), B = ACCT[k]; if (!kr0 || !B) continue; P[k] = kr0; sum += kr0; Y[k] = (Y[k] || 0) + kr0;
+    if (B.s === 'in') S.stats.revenue += kr0; else if (B.s === 'out') S.stats.costs -= kr0; else if (B.s === 'tax') S.stats.tax = (S.stats.tax || 0) - kr0; }
+  const ks = Object.keys(P); if (!ks.length) return 0;
+  S.cash += sum;
+  const L = S.ledger || (S.ledger = []), last = L[L.length - 1], v = vid != null ? vid : S.cur;
+  no = no || ACCT[ks[0]].no; en = en || ACCT[ks[0]].en;
+  if (last && ks.length === 1 && last.p && Object.keys(last.p).length === 1 && last.p[ks[0]] != null && last.no === no && last.v === v && S.t - last.t < 120){ last.p[ks[0]] += P[ks[0]]; last.kr += sum; last.t = S.t; last.bal = Math.round(S.cash); }
+  else { L.push({t:S.t, kr:sum, no, en, p:P, v, bal:Math.round(S.cash)}); if (L.length > LEDGER_N) L.splice(0, L.length - LEDGER_N); }
+  return sum;
+}
+const book = (k, kr0, no, en, vid) => bookAll({[k]:kr0}, no, en, vid);
+// a year's result from its sums: income, costs, the result before tax (the depreciation is not booked: it moves no money)
+function bookResult(y){ bookYear(); const Y = S.stats.y[y] || {}; let inc = 0, cost = 0; for (const k in Y){ const B = ACCT[k]; if (!B) continue; if (B.s === 'in') inc += Y[k]; else if (B.s === 'out') cost -= Y[k]; }
+  return {inc, cost, res:inc - cost, tax:-(Y.skatt || 0), Y}; }
+// ---------- the bank's accounts (Økonomi 2, Ø3, 27.10.2026; Jonas: «Automatisk skatteavsetning, rente på sparekonto, kassakreditt med
+// rente») ----------
+// S.cash is the current account. The tax account (S.bank.skatt) takes a set-aside after each landing and mission paid: by default what the
+// tax on this year's profit so far comes to, less what is paid and set aside (taxOwed), at most half of what came in (Jonas: V3 A); or a
+// fixed share the player picks (Skatteetaten advises 40 %). The tax is paid from it first. The savings account (S.bank.spare) earns
+// interest, takes a fixed share of each landing if the player wants, and counts as equity when a vessel is bought. The overdraft
+// (kassekreditt) lets the current account go below zero to a limit, at a higher rate; below the limit nothing can be bought. The rates are
+// estimates (V4 A): savings 3,5 %, the overdraft 10 %, its limit 10 % of the fleet's value and at least 20 000 kr.
+const BANK = {kkMin:20000, kkF:0.10, kkRate:0.10, spRate:0.035, autoMax:0.5, pcts:[0.3, 0.4, 0.5], spPcts:[0, 0.1, 0.2, 0.3]};
+function bankS(){ const B = S.bank || (S.bank = {}); for (const [k, v] of [['skatt', 0], ['spare', 0], ['auto', true], ['pct', 0.4], ['spPct', 0], ['kkAcc', 0], ['spAcc', 0], ['spYr', 0], ['warnD', -1]]) if (B[k] == null) B[k] = v; return B; }
+const kkLimit = () => Math.max(BANK.kkMin, Math.round((S.fleet || []).reduce((a, v) => a + vesselValue(v), 0) * BANK.kkF / 1000) * 1000);
+// what can be spent now: the current account and the overdraft not yet used
+const spendable = () => S.cash + kkLimit();
+// the equity a purchase can use: the current account above zero and the savings
+const eqCash = () => Math.max(0, S.cash) + bankS().spare;
+// (taxOwed, what the tax account should hold, is with the tax below)
+// a move between the current account and one of the others (k 'skatt' or 'spare'); kr > 0 into the other account. Returns what moved.
+function bankMove(k, kr0, no, en){ const B = bankS(); let x = Math.round(kr0); if (x > 0) x = Math.min(x, Math.max(0, S.cash)); else x = -Math.min(-x, B[k]); if (!x) return 0;
+  B[k] += x; bookAll({[k === 'skatt' ? 'skattekonto' : 'spare']:-x}, no || (x > 0 ? (k === 'skatt' ? 'Til skattekontoen' : 'Til sparekontoen') : (k === 'skatt' ? 'Fra skattekontoen' : 'Fra sparekontoen')), en || (x > 0 ? 'To the ' + (k === 'skatt' ? 'tax account' : 'savings') : 'From the ' + (k === 'skatt' ? 'tax account' : 'savings'))); return x; }
+// after money has come in (a landing, a mission): the set-aside for the tax, and the share to savings
+function bankAfterIncome(inKr){
+  const B = bankS(); if (!(inKr > 0)) return;
+  const tx = B.auto ? Math.min(Math.max(0, taxOwed() - B.skatt), inKr * BANK.autoMax) : inKr * (B.pct || 0);
+  if (tx >= 1) bankMove('skatt', tx, 'Avsatt til skatt', 'Set aside for tax');
+  else if (B.auto && B.skatt - taxOwed() >= 1) bankMove('skatt', -(B.skatt - taxOwed()), 'Mer avsatt enn skatten, tilbake', 'More set aside than the tax, back');   // the automatic set-aside follows the tax down too
+  if (B.spPct > 0) bankMove('spare', inKr * B.spPct, 'Fast sparing', 'Regular savings');
+}
+// the tax paid: from the tax account first, the rest from the current account; a refund comes to the current account
+function taxPay(kr0, no, en){ const B = bankS(), x = Math.round(kr0); if (!x) return; if (x < 0){ book('skatt', -x, no, en); return; }
+  const from = Math.min(B.skatt, x); B.skatt -= from; bookAll({skatt:-x, skattekonto:from}, no, en); }
+// more on the tax account than the tax still owed goes back to the current account (after the settlement)
+function bankRelease(){ const B = bankS(), extra = Math.round(B.skatt - taxOwed()); if (extra >= 1){ bankMove('skatt', -extra, 'Overskudd på skattekontoen tilbake', 'Surplus on the tax account back');
+  msg('Kystbanken', kr(extra) + ' mer enn skatten var avsatt på skattekontoen og er flyttet tilbake til brukskontoen.', 'NOK ' + extra + ' more than the tax was set aside on the tax account and has been moved back to the current account.'); } }
+// at midnight: the overdraft's interest and the savings' interest run by the day and are paid the first of the month; a current account
+// below the overdraft's limit is told once a day
+function bankDay(H){
+  const B = bankS(), d = gDate(H);
+  if (S.cash < 0) B.kkAcc += -S.cash * BANK.kkRate / 365;
+  if (B.spare > 0) B.spAcc += B.spare * BANK.spRate / 365;
+  if (d.getUTCDate() === 1){
+    if (B.kkAcc >= 1){ const k0 = Math.round(B.kkAcc); B.kkAcc = 0; book('renter', -k0, 'Renter på kassekreditten', 'Overdraft interest'); }
+    if (B.spAcc >= 1){ const s0 = Math.round(B.spAcc); B.spAcc = 0; B.spare += s0; bookAll({rente:s0, spare:-s0}, 'Renter på sparekontoen', 'Interest on savings'); }
+  }
+  const day = Math.floor(H / 24); if (S.cash < -kkLimit() && B.warnD !== day){ B.warnD = day;
+    msg('Kystbanken', 'Brukskontoen er ' + kr(-S.cash) + ' i minus, over rammen på kassekreditten (' + kr(kkLimit()) + '). Til den er under rammen igjen, kan du ikke kjøpe noe. Lever fisk, eller flytt penger fra sparekontoen.', 'The current account is NOK ' + (-Math.round(S.cash)) + ' overdrawn, over the overdraft limit (NOK ' + kkLimit() + '). Until it is within the limit again, nothing can be bought. Land fish, or move money from the savings.'); }
+}
+// Income tax (E4 04.10.2026; Økonomi 2, Ø4 27.10.2026: the terms and the settlement as in life, docs/planer/okonomi/02-design.md).
+// The year's profit is the income less the costs in the books (the levies, the shares, fuel, gear, interest ...; not the instalments, the
+// vessels bought or the tax itself) less the depreciation: 14 % a year of each vessel's tax value (saldogruppe e; S.saldo, set at 70 % of
+// the price when bought, a quota right not depreciated; equipment is a cost when bought). A loss is carried forward (skatteloven
+// § 14-6), the sole proprietor's and the company's apart.
+// ENK: the profit is the owner's income: 22 % on it less the fisherman's deduction (§ 6-60: 30 %, at most 160 000 kr, with 130 days
+// fishing) and the personal allowance; social security 7,6 % (the fishers' rate) and the bracket tax on the personal income, which is
+// the profit less the shielding (skjermingsfradrag: the business's assets, the vessels' tax values and the quota rights, at the
+// shielding rate, an estimate). The advance (forskuddsskatt) falls due in four equal terms 15 March, 15 June, 15 September and
+// 15 December of the year itself (skattebetalingsloven § 10-20 (1), from 2021), set at last year's tax and changed when the year looks
+// more than 20 % different (as a new estimate sent in); under 2 000 kr it all falls due 15 June. The settlement comes in June the
+// year after (20 June here): what is still owed is taken, too much comes back.
+// AS: 22 % of the profit, all of which stays in the company (Jonas 27.10.2026: no private economy). Its advance falls due in two terms
+// 15 February and 15 April the year after (§ 10-20 (3)), each half the last tax set; the accountant reports a change when the year is
+// more than 20 % different. The settlement comes in October the year after (20 October here). The books cost 30 000 kr a year (an
+// estimate). Founding the company in the year splits it: the profit until then is the sole proprietor's.
+// The rates are 2026's (regjeringen.no «Skattesatser 2026», Sticos, Sands; Lovdata and Skatteetaten shut from here, found by search
+// 04.10 and 27.10.2026). Each payment is told by Skatteetaten a week before, and is taken from the tax account first (taxPay).
 const TAX = {alm:0.22, pfrad:114540, trygd:0.076, tlow:99650, trinn:[[226100, 0.017], [318300, 0.04], [725050, 0.137], [980100, 0.168], [1467200, 0.178]],
-  fisk:{share:0.30, max:160000, days:130}, as:{rate:0.22, capital:30000, fee:5570, books:30000}, dep:0.14};
-function taxOf(P, form, days){
-  const R = {P:Math.round(P), fd:0, alm:0, tryg:0, trinn:0, sum:0}; if (P <= 0) return R;
+  fisk:{share:0.30, max:160000, days:130}, as:{rate:0.22, capital:30000, fee:5570, books:30000}, dep:0.14, depF:1, skjerm:0.035, min:2000, change:0.2, warnD:7,
+  enkT:[[2, 15], [5, 15], [8, 15], [11, 15]], enkSettle:[5, 20], asT:[[1, 15], [3, 15]], asSettle:[9, 20]};
+// the tax of a profit P: form 'ENK' or 'AS', days fishing, the shielding deduction (ENK), the loss carried forward
+function taxOf(P, form, days, skj = 0, carry = 0){
+  const R = {P:Math.round(P), carry:0, fd:0, skj:0, alm:0, tryg:0, trinn:0, sum:0}; R.carry = Math.round(Math.min(Math.max(0, P), carry || 0)); P -= R.carry; if (P <= 0) return R;
   if (form === 'AS'){ R.alm = Math.round(P * TAX.as.rate); R.sum = R.alm; return R; }
   R.fd = days >= TAX.fisk.days ? Math.round(Math.min(P * TAX.fisk.share, TAX.fisk.max)) : 0;
-  R.alm = Math.round(Math.max(0, P - R.fd - TAX.pfrad) * TAX.alm); R.tryg = P > TAX.tlow ? Math.round(Math.min(P * TAX.trygd, (P - TAX.tlow) * 0.25)) : 0;
-  const B = TAX.trinn; for (let i = 0; i < B.length; i++){ const lo = B[i][0], hi = i + 1 < B.length ? B[i + 1][0] : Infinity; if (P > lo) R.trinn += (Math.min(P, hi) - lo) * B[i][1]; }
+  R.skj = Math.round(Math.min(P, skj)); const PI = P - R.skj;   // the personal income (skj below 0: interest added back, skjOf)
+  R.alm = Math.round(Math.max(0, P - R.fd - TAX.pfrad) * TAX.alm); R.tryg = PI > TAX.tlow ? Math.round(Math.min(PI * TAX.trygd, (PI - TAX.tlow) * 0.25)) : 0;
+  const B = TAX.trinn; for (let i = 0; i < B.length; i++){ const lo = B[i][0], hi = i + 1 < B.length ? B[i + 1][0] : Infinity; if (PI > lo) R.trinn += (Math.min(PI, hi) - lo) * B[i][1]; }
   R.trinn = Math.round(R.trinn); R.sum = R.alm + R.tryg + R.trinn; return R;
 }
-// the hulls' and engines' value for the depreciation (vesselValue less the quota right)
-const depBase = () => S.fleet.reduce((a, v) => { const b = vget(v, 'boat'), eq = vget(v, 'equip') || {}; return a + VESSELS[b.type].price * 0.7 + (eq.motor90 ? EQUIP.motor90.price * 0.5 : 0); }, 0);
-function txInit(H){ S.tx = {y:gDate(H).getUTCFullYear(), rev0:S.stats.revenue, cost0:S.stats.costs, paid:0, days:[]}; }
-// the profit of the year so far, with the depreciation for the part of the year that has gone
-function txProfit(H){ const T = S.tx, d = gDate(H), y0 = Date.UTC(T.y, 0, 1), frac = clamp((d.getTime() - y0) / (Date.UTC(T.y + 1, 0, 1) - y0), 0, 1);
-  return (S.stats.revenue - T.rev0) - (S.stats.costs - T.cost0) - depBase() * TAX.dep * frac; }
+// each vessel's tax value (saldo): its price when first seen (the quota right is apart, licValue, and is not depreciated), less 14 % a year
+function saldoOf(v){ const T = S.saldo || (S.saldo = {});
+  if (S.saldoV !== 2){ for (const k in T) T[k] = Math.round(T[k] / 0.7); S.saldoV = 2; }   // (before 28.10.2026 the tax value was 70 % of the price)
+  if (T[v.id] == null) T[v.id] = Math.round(VESSELS[vget(v, 'boat').type].price * TAX.depF); return T[v.id]; }
+const depBase = () => (S.fleet || []).reduce((a, v) => a + saldoOf(v), 0);
+// the shielding base: the vessels' tax values and the quota rights
+const skjBase = () => depBase() + (S.fleet || []).reduce((a, v) => a + licValue(vget(v, 'lic')), 0);
+// the shielding for the sole proprietor (skatteloven §§ 12-11, 12-13): 3,5 % (anslag) of the vessels' tax values and the quota less the
+// debt to the bank (the loans and the overdraft). The interest is a cost and lowers the 22 % in full; on the debt above the assets it is
+// added back to the personal income, so a large loan gives the interest's deduction once, not a shielding of assets the bank owns as
+// well. frac: the part of the year; ri: the interest booked so far scaled to the reckoning (1 = as booked). Before 28.10.2026 the debt was
+// not taken off (CapteinAdrian's question), which gave an indebted sole proprietor a little too little trygdeavgift and trinnskatt.
+function skjOf(frac, ri = 1){ const g = skjBase(), d = debt() + Math.max(0, -S.cash), Y = S.stats.y && S.tx ? S.stats.y[S.tx.y] || {} : {}, rent = Math.max(0, -(Y.renter || 0)) * ri;
+  return Math.max(0, g - d) * TAX.skjerm * frac - (d > g ? rent * (d - g) / d : 0); }
 const txForm = () => S.form === 'AS' ? 'AS' : 'ENK';
-// at midnight: the days at sea with you aboard, the company's books every month, the advance every quarter, the settlement at the new year
+const taxCarry = () => S.taxCarry || (S.taxCarry = {ENK:0, AS:0});
+function txInit(H, adv){ S.tx = {y:gDate(H).getUTCFullYear(), rev0:S.stats.revenue, cost0:S.stats.costs, f0:0, paid:0, adv:adv || 0, days:[], enk:null}; }
+// the part of the calendar year that has gone at game hour H
+function yearFrac(H){ const d = gDate(H), y = d.getUTCFullYear(), y0 = Date.UTC(y, 0, 1); return clamp((d.getTime() - y0) / (Date.UTC(y + 1, 0, 1) - y0), 0, 1); }
+// the profit of the year so far (of the company's part, when it was founded in the year), with the depreciation for the part that has gone
+function txProfit(H){ const T = S.tx, d = gDate(H), y0 = Date.UTC(T.y, 0, 1), frac = clamp((d.getTime() - y0) / (Date.UTC(T.y + 1, 0, 1) - y0), 0, 1);
+  return (S.stats.revenue - T.rev0) - (S.stats.costs - T.cost0) - depBase() * TAX.dep * Math.max(0, frac - (T.f0 || 0)) + (T.pre || 0); }
+// the tax of the sole proprietor's part of this year so far, and of the company's part
+function txNow(H = S.t / 60){ const T = S.tx; if (!T) return {enk:null, as:null};
+  const P = txProfit(H), C = taxCarry(), skj = skjOf(yearFrac(H));
+  if (S.form === 'AS') return {enk:null, as:taxOf(P, 'AS', 0, 0, C.AS)};
+  return {enk:taxOf(P, 'ENK', T.days.length, skj, C.ENK), as:null};
+}
+// the tax still owed: this year's so far less the advance paid, and the years closed but not settled. What the tax account should hold.
+function taxOwed(H = S.t / 60){ if (!S.tx) return 0; const N = txNow(H); let o = (N.enk ? N.enk.sum : 0) + (N.as ? N.as.sum : 0) - S.tx.paid;   // (T.paid: the sole proprietor's terms, or a company's advance from before the terms)
+  for (const y in (S.txY || {})){ const Y = S.txY[y]; for (const k of ['enk', 'as']) if (Y[k] && !Y[k].settled) o += Y[k].R.sum - Y[k].paid; }
+  return Math.max(0, Math.round(o)); }
+// the sole proprietor's advance for the year: last year's tax, changed when the year so far, carried to a whole year, is more than 20 %
+// off (the first year it is that estimate); the year's part until the company was founded when it was
+function enkAdv(H){ const T = S.tx; if (S.form === 'AS') return T.paid;
+  const fr = Math.max(0.2, yearFrac(H)), est = taxOf(txProfit(H) / fr, 'ENK', T.days.length / fr, skjOf(1, 1 / fr), taxCarry().ENK).sum;
+  return Math.abs(est - T.adv) > TAX.change * Math.max(T.adv, TAX.min) ? est : T.adv; }
+const atDay = (d, md) => d.getUTCMonth() === md[0] && d.getUTCDate() === md[1];
+const taxDate = (y, md) => Date.UTC(y, md[0], md[1]);
+// the payments ahead in the next year: [{t (ms), kind, y, kr}] (the amounts as they look now)
+function taxPlan(H = S.t / 60){
+  const T = S.tx, d = gDate(H), now = d.getTime(), out = [], y = d.getUTCFullYear(); if (!T) return out;
+  if (S.form !== 'AS'){ const adv = enkAdv(H), left = TAX.enkT.filter(md => taxDate(T.y, md) >= now - 864e5 + 1); const small = adv < TAX.min;
+    left.forEach((md, i) => { const kr0 = small ? (md[0] === 5 ? Math.max(0, adv - T.paid) : 0) : Math.max(0, (adv - T.paid) / left.length); if (kr0 >= 1) out.push({t:taxDate(T.y, md), kind:'enk', y:T.y, kr:Math.round(kr0)}); }); }
+  for (const yy in (S.txY || {})){ const Y = S.txY[yy], n = +yy;
+    if (Y.enk && !Y.enk.settled) out.push({t:taxDate(n + 1, TAX.enkSettle), kind:'enkS', y:n, kr:Y.enk.R.sum - Y.enk.paid});
+    if (Y.as && !Y.as.settled){ const tk = asBase(n) >= TAX.min ? Math.round(asBase(n) / 2) : 0; let left = Math.max(0, Y.as.R.sum - Y.as.paid), sum = 0;
+      TAX.asT.forEach((md, i) => { if (i < (Y.as.terms || 0) || !tk) return; const kr0 = Math.min(tk, left); left -= kr0; sum += kr0; if (kr0 >= 1) out.push({t:taxDate(n + 1, md), kind:'as', y:n, kr:kr0}); });
+      out.push({t:taxDate(n + 1, TAX.asSettle), kind:'asS', y:n, kr:Y.as.R.sum - Y.as.paid - sum}); } }
+  return out.filter(x => x.t >= now - 864e5 + 1 && Math.abs(x.kr) >= 1).sort((a, b) => a.t - b.t);
+}
+// the company's advance for a year: the last tax set (the year before's), or the year's own when it is more than 20 % off (the
+// accountant reports the change)
+function asBase(y){ const Y = (S.txY || {})[y], P = (S.txY || {})[y - 1], own = Y && Y.as ? Y.as.R.sum : 0, last = P && P.as ? P.as.R.sum : 0;
+  return Math.abs(own - last) > TAX.change * Math.max(last, TAX.min) ? own : last; }
+const TAXK = {enk:['Forskuddsskatt', 'Advance tax'], enkS:['Skatteoppgjøret', 'The tax settlement'], as:['Forskuddsskatt for selskapet', 'The company\'s advance tax'], asS:['Skatteoppgjøret for selskapet', 'The company\'s tax settlement']};
+// the year that has ended: its profit and tax set, the loss carried, the vessels' tax values written down, the next year's advance
+function txClose(H){
+  const T = S.tx, C = taxCarry(), Y = (S.txY || (S.txY = {}))[T.y] = {form:txForm()}, P = txProfit(H), skj = skjOf(1 - (T.f0 || 0));
+  const part = (P0, form, days, sk, paid) => { const R = taxOf(P0, form, days, sk, C[form]); C[form] += P0 < 0 ? -P0 : -R.carry; return {P:Math.round(P0), days, R, paid:Math.round(paid || 0), settled:false, terms:0}; };
+  // (an AS whole year has paid nothing in the year under the terms; what a save paid in it under the quarterly advance before 27.10.2026
+  // counts: T.paid is then the company's, CapteinAdrian 28.10.2026)
+  if (S.form === 'AS') Y.as = part(P, 'AS', 0, 0, T.paid); else Y.enk = part(P, 'ENK', T.days.length, skj, T.paid);
+  const tax = (Y.enk ? Y.enk.R.sum : 0) + (Y.as ? Y.as.R.sum : 0);
+  { bookYear(); const Yp = S.stats.y[T.y] || (S.stats.y[T.y] = {}); Yp._dep = Math.round(depBase() * TAX.dep); Yp._tax = tax; }   // for the accounts (bookResult)
+  for (const v of S.fleet || []) S.saldo[v.id] = Math.round(saldoOf(v) * (1 - TAX.dep));
+  for (const yy of Object.keys(S.txY)) if (+yy < T.y - 3) delete S.txY[yy];
+  const y0 = T.y; txInit(H, S.form === 'AS' ? 0 : (Y.enk ? Y.enk.R.sum : 0));
+  msg('Skatteetaten', 'Regnskapsåret ' + y0 + ' er avsluttet: overskudd ' + kr((Y.enk ? Y.enk.P : 0) + (Y.as ? Y.as.P : 0)) + ', beregnet skatt ' + kr(tax) + '. ' + (Y.enk ? 'Skatteoppgjøret for enkeltpersonforetaket kommer i juni. ' : '') + (Y.as ? 'Selskapet betaler forskudd 15. februar og 15. april, og oppgjøret kommer i oktober.' : ''),
+    'The financial year ' + y0 + ' is closed: profit NOK ' + ((Y.enk ? Y.enk.P : 0) + (Y.as ? Y.as.P : 0)) + ', tax reckoned NOK ' + tax + '. ' + (Y.enk ? 'The sole proprietorship\'s settlement comes in June. ' : '') + (Y.as ? 'The company pays its advance 15 February and 15 April, and the settlement comes in October.' : ''));
+}
+// a day with you aboard at sea counts as a day fishing (skatteloven § 6-60), whenever in the day; marked every hour (hourly). Before 28.10.2026
+// only a boat at sea at midnight counted, so a day's fishing from port to port did not.
+function taxDayMark(H){ if (!S.tx) return; taxFix(H); const T = S.tx, mv = vesselById(S.me), mb = mv ? vget(mv, 'boat') : null, day = Math.floor(H / 24);
+  if (mb && ['sailing', 'fishing'].includes(mb.status) && T.days[T.days.length - 1] !== day && gDate(H).getUTCFullYear() === T.y) T.days.push(day); }
+// the corrections of 28.10.2026 for saves from before (CapteinAdrian): a year split at a company's founding is put together again; the
+// days fishing get the landing days of the year the midnight count missed; a company that paid the advance in the income year under the
+// quarterly rules (before 27.10.2026) gets interest on it from when it was paid until when a company pays it (15 February and 15 April
+// the year after), as rentegodtgjørelse (tax free) at the savings rate
+function taxFix(H){
+  const T = S.tx; if (!T || S.txFix >= 2) return; S.txFix = 2;
+  if (T.enk){ T.pre = (T.pre || 0) + T.enk.P; T.enk = null; }
+  { const have = new Set(T.days); for (const s of S.sales || []){ const d = Math.floor(s.t / 1440); if (gDate(s.t / 60).getUTCFullYear() === T.y && !have.has(d)){ have.add(d); } } T.days = [...have].sort((a, b) => a - b); }
+  const cut = 189996;   // the game minute the terms came (27.10.2026 14:46 UTC)
+  if (S.form === 'AS' && T.paid > 0 && (S.formT || 0) < cut){
+    const due = Date.UTC(T.y + 1, 2, 15), ms = t => EPOCH + t * 6e4, paidMsgs = (S.msgs || []).filter(m => m.from === 'Skatteetaten' && m.t < cut)
+      .map(m => [m.t, +(((m.en || '').match(/^Advance tax for \d{4}: NOK (\d+) taken/) || [])[1] || 0)]).filter(x => x[1] > 0);
+    let left = T.paid, rg = 0; for (const [t, x] of paidMsgs){ const k = Math.min(x, left); left -= k; rg += k * BANK.spRate * Math.max(0, due - ms(t)) / 864e5 / 365; }
+    if (left > 0) rg += left * BANK.spRate * Math.max(0, due - Date.UTC(T.y, 6, 1)) / 864e5 / 365;   // the rest as paid 1 July
+    rg = Math.round(rg); if (rg >= 1){ book('skatt', rg, 'Rentegodtgjørelse fra Skatteetaten', 'Interest on tax paid early');
+      msg('Skatteetaten', 'Forskuddsskatten for ' + T.y + ' (' + kr(Math.round(T.paid)) + ') ble trukket i inntektsåret etter de gamle reglene i spillet, men et aksjeselskap betaler forskuddet 15. februar og 15. april året etter. Du får ' + kr(rg) + ' i rentegodtgjørelse for pengene som ble trukket for tidlig. Forskuddet regnes med, så skatten for ' + T.y + ' betales bare én gang.',
+        'The advance tax for ' + T.y + ' (NOK ' + Math.round(T.paid) + ') was taken in the income year under the game\'s old rules, but a company pays its advance on 15 February and 15 April the year after. You get NOK ' + rg + ' in interest for the money taken too early. The advance counts, so the tax for ' + T.y + ' is paid only once.'); }
+  }
+}
+// at midnight: the days at sea with you aboard, the year closed at the new year, the company's books every month, the terms and the
+// settlements on their days, and the week's notice before each
 function taxTick(H){
   if (!S.tx) txInit(H);
   const T = S.tx, d = gDate(H), mv = vesselById(S.me), mb = mv ? vget(mv, 'boat') : null, day = Math.floor(H / 24);
-  if (mb && ['sailing', 'fishing'].includes(mb.status) && T.days[T.days.length - 1] !== day) T.days.push(day);
-  if (d.getUTCDate() !== 1) return;
-  if (S.form === 'AS'){ const c = Math.round(TAX.as.books / 12); S.cash -= c; S.stats.costs += c; }
-  const m = d.getUTCMonth(); if (m % 3) return;
-  const L2 = (no, en) => S.lang === 'no' ? no : en;
-  if (m === 0 && d.getUTCFullYear() > T.y){
-    // the settlement for the year that has ended
-    const R = taxOf(txProfit(H), txForm(), T.days.length), rest = R.sum - T.paid; S.cash -= rest; S.stats.tax = (S.stats.tax || 0) + rest;
-    S.taxLast = {y:T.y, form:txForm(), days:T.days.length, R, paid:T.paid, rest};
-    msg('Skatteetaten', 'Skatteoppgjøret for ' + T.y + ' (' + (txForm() === 'AS' ? 'aksjeselskap' : 'enkeltpersonforetak') + '): overskudd ' + kr(R.P) + ', skatt ' + kr(R.sum) + (R.fd ? ', fiskerfradrag ' + kr(R.fd) : '') + '. Forskudd betalt ' + kr(T.paid) + '. ' + (rest >= 0 ? 'Restskatt ' + kr(rest) + ' er trukket.' : 'Du får ' + kr(-rest) + ' tilbake.'),
-      'The tax settlement for ' + T.y + ': profit NOK ' + R.P + ', tax NOK ' + R.sum + '. Paid in advance NOK ' + T.paid + '. ' + (rest >= 0 ? 'NOK ' + rest + ' still owed has been taken.' : 'NOK ' + (-rest) + ' comes back to you.'));
-    txInit(H); return;
+  if (T.adv == null) T.adv = T.paid || 0;   // a save from before the terms (Økonomi 2, Ø4): the advance paid stands as the year's so far
+  taxFix(H);
+  if (d.getUTCFullYear() > T.y) txClose(H);
+  if (d.getUTCDate() === 1 && S.form === 'AS') book('regnskap', -Math.round(TAX.as.books / 12), 'Regnskapsfører', 'Accountant');
+  const y = d.getUTCFullYear(), L2 = (no, en) => S.lang === 'no' ? no : en, B = bankS();
+  // the sole proprietor's terms
+  const ti = TAX.enkT.findIndex(md => atDay(d, md));
+  if (ti >= 0 && S.form !== 'AS'){
+    const adv = enkAdv(H), left = TAX.enkT.length - ti, small = adv < TAX.min; if (adv !== T.adv && Math.abs(adv - T.adv) >= 1){ T.adv = adv;
+      msg('Skatteetaten', 'Forskuddsskatten for ' + y + ' er endret til ' + kr(adv) + ' etter det året ser ut til å gi.', 'The advance tax for ' + y + ' is changed to NOK ' + adv + ' by what the year looks like giving.'); } else T.adv = adv;
+    const due = Math.round(small ? (TAX.enkT[ti][0] === 5 ? Math.max(0, adv - T.paid) : 0) : Math.max(0, (adv - T.paid) / left));
+    if (due >= 1){ taxPay(due, 'Forskuddsskatt ' + y + ', ' + (ti + 1) + '. termin', 'Advance tax ' + y + ', term ' + (ti + 1)); T.paid += due;
+      msg('Skatteetaten', (ti + 1) + '. termin av forskuddsskatten for ' + y + ': ' + kr(due) + ' er betalt. Betalt i år: ' + kr(T.paid) + ' av ' + kr(adv) + '.', 'Term ' + (ti + 1) + ' of the advance tax for ' + y + ': NOK ' + due + ' paid. Paid this year: NOK ' + T.paid + ' of ' + adv + '.'); }
   }
-  // the advance on the year so far (nothing comes back until the settlement)
-  const due = taxOf(txProfit(H), txForm(), T.days.length).sum - T.paid;
-  if (due > 0){ S.cash -= due; T.paid += due; S.stats.tax = (S.stats.tax || 0) + due;
-    msg('Skatteetaten', 'Forskuddsskatt for ' + T.y + ': ' + kr(due) + ' er trukket. Betalt i år: ' + kr(T.paid) + '.', 'Advance tax for ' + T.y + ': NOK ' + due + ' taken. Paid this year: NOK ' + T.paid + '.'); }
+  // the settlements and the company's terms for the year before
+  const Y = (S.txY || {})[y - 1];
+  if (Y && Y.enk && !Y.enk.settled && atDay(d, TAX.enkSettle)){ const E = Y.enk, rest = E.R.sum - E.paid; taxPay(rest, 'Skatteoppgjøret ' + (y - 1), 'Tax settlement ' + (y - 1)); E.settled = true;
+    S.taxLast = {y:y - 1, form:'ENK', days:E.days, R:E.R, paid:E.paid, rest};
+    msg('Skatteetaten', 'Skatteoppgjøret for ' + (y - 1) + ' (enkeltpersonforetak): overskudd ' + kr(E.P) + ', skatt ' + kr(E.R.sum) + (E.R.fd ? ', fiskerfradrag ' + kr(E.R.fd) : '') + (E.R.carry ? ', fremført underskudd ' + kr(E.R.carry) : '') + '. Forskudd betalt ' + kr(E.paid) + '. ' + (rest >= 0 ? 'Restskatt ' + kr(rest) + ' er betalt.' : 'Du får ' + kr(-rest) + ' tilbake.'),
+      'The tax settlement for ' + (y - 1) + ' (sole proprietorship): profit NOK ' + E.P + ', tax NOK ' + E.R.sum + '. Paid in advance NOK ' + E.paid + '. ' + (rest >= 0 ? 'NOK ' + rest + ' still owed has been paid.' : 'NOK ' + (-rest) + ' comes back to you.'));
+    bankRelease(); }
+  if (Y && Y.as && !Y.as.settled){ const A = Y.as, k = TAX.asT.findIndex(md => atDay(d, md));
+    if (k >= 0 && (A.terms || 0) <= k){ const due = Math.min(Math.round(asBase(y - 1) / 2), Math.max(0, A.R.sum - A.paid)); A.terms = k + 1; if (due >= 1 && asBase(y - 1) >= TAX.min){ taxPay(due, 'Forskuddsskatt for selskapet ' + (y - 1), 'The company\'s advance tax ' + (y - 1)); A.paid += due;
+      msg('Skatteetaten', (k + 1) + '. termin av selskapets forskuddsskatt for ' + (y - 1) + ': ' + kr(due) + ' er betalt.', 'Term ' + (k + 1) + ' of the company\'s advance tax for ' + (y - 1) + ': NOK ' + due + ' paid.'); } }
+    if (atDay(d, TAX.asSettle)){ const rest = A.R.sum - A.paid; taxPay(rest, 'Skatteoppgjøret for selskapet ' + (y - 1), 'The company\'s tax settlement ' + (y - 1)); A.settled = true;
+      S.taxLast = {y:y - 1, form:'AS', days:0, R:A.R, paid:A.paid, rest};
+      msg('Skatteetaten', 'Skatteoppgjøret for ' + (y - 1) + ' (' + (S.company || 'aksjeselskapet') + '): overskudd ' + kr(A.P) + ', skatt 22 % ' + kr(A.R.sum) + (A.R.carry ? ', fremført underskudd ' + kr(A.R.carry) : '') + '. Forskudd betalt ' + kr(A.paid) + '. ' + (rest >= 0 ? 'Restskatt ' + kr(rest) + ' er betalt.' : 'Selskapet får ' + kr(-rest) + ' tilbake.'),
+        'The tax settlement for ' + (y - 1) + ' (the company): profit NOK ' + A.P + ', tax 22 % NOK ' + A.R.sum + '. Paid in advance NOK ' + A.paid + '. ' + (rest >= 0 ? 'NOK ' + rest + ' still owed has been paid.' : 'The company gets NOK ' + (-rest) + ' back.'));
+      bankRelease(); } }
+  // a week before each payment, its amount and what the tax account holds
+  for (const p of taxPlan(H)){ const dd = Math.round((p.t - d.getTime()) / 864e5); if (dd !== TAX.warnD || Math.abs(p.kr) < 1) continue; const K = TAXK[p.kind];
+    msg('Skatteetaten', K[0] + ' for ' + p.y + ' forfaller ' + dayStr(H + dd * 24).replace(/^\S+ /, '') + ': ' + (p.kr >= 0 ? kr(p.kr) : kr(-p.kr) + ' tilbake') + '. Skattekontoen har ' + kr(Math.round(B.skatt)) + '.',
+      K[1] + ' for ' + p.y + ' falls due in a week: ' + (p.kr >= 0 ? 'NOK ' + p.kr : 'NOK ' + (-p.kr) + ' back') + '. The tax account holds NOK ' + Math.round(B.skatt) + '.'); }
 }
 // founding the company: the share capital stays the company's money, the registration fee goes
 function foundAS(){
   if (S.form === 'AS' || S.cash < TAX.as.capital + TAX.as.fee) return false;
-  S.cash -= TAX.as.fee; S.stats.costs += TAX.as.fee; S.form = 'AS'; S.formT = S.t; if (!S.company) S.company = (S.boatName || 'Havbris') + ' Fiskeri'; if (!/ AS$/.test(S.company)) S.company += ' AS'; pressPut('as', {type:S.boat.type});
-  msg('Brønnøysundregistrene', S.company + ' er registrert i Foretaksregisteret med ' + kr(TAX.as.capital) + ' i aksjekapital. Fra nå skattlegges overskuddet med 22 % i selskapet, uten fiskerfradrag, og selskapet fører regnskap. Rederi-appen ligger nå på telefonen.', S.company + ' is registered with NOK ' + TAX.as.capital + ' in share capital. From now the profit is taxed at 22 % in the company, without the fisherman\'s deduction, and the company keeps books. The Company app is now on the phone.');
+  // the sole proprietorship is converted to the company free of tax, with tax effect from 1 January of the year (skatteloven § 11-20; Sticos:
+  // «En skattefri omdanning har alltid skattemessig virkning fra 1. januar»): the whole year is the company's, and the advance the sole
+  // proprietor paid in it counts as paid (in life the owner has it back at his own settlement; the game has no private economy). Before
+  // 28.10.2026 the year was split at the founding.
+  book('regnskap', -TAX.as.fee, 'Registrering i Foretaksregisteret', 'Registration of the company');
+  S.form = 'AS'; S.formT = S.t; if (!S.company) S.company = (S.boatName || 'Havbris') + ' Fiskeri'; if (!/ AS$/.test(S.company)) S.company += ' AS'; pressPut('as', {type:S.boat.type});
+  msg('Brønnøysundregistrene', S.company + ' er registrert i Foretaksregisteret med ' + kr(TAX.as.capital) + ' i aksjekapital. Omdanningen har skattemessig virkning fra 1. januar: hele årets overskudd skattlegges med 22 % i selskapet, uten fiskerfradrag, og alt blir i selskapet. Forskuddsskatten du har betalt i år, regnes med. Selskapet fører regnskap, betaler forskudd 15. februar og 15. april året etter, og får skatteoppgjøret i oktober.', S.company + ' is registered with NOK ' + TAX.as.capital + ' in share capital. The conversion has tax effect from 1 January: the whole year\'s profit is taxed at 22 % in the company, without the fisherman\'s deduction, and all of it stays in the company. The advance tax you have paid this year counts. The company keeps books, pays its advance 15 February and 15 April the year after, and gets its settlement in October.');
   return true;
 }
 const mvaOf = (total, tk) => Math.round((total - tk.pens - tk.prod - tk.forsk - tk.ress - tk.ktrl) * MVA.rate);
@@ -818,7 +1044,7 @@ const LOANS = {loan:{who:'Kystbanken', rate:0.069}, loanIN:{who:'Innovasjon Norg
 const debt = () => (S.loan ? S.loan.bal : 0) + (S.loanIN ? S.loanIN.bal : 0);
 const innOK = () => bladB() && !S.inUsed && !S.fleet.some(v => vget(v, 'lic'));
 function takeLoan(amount, months, k){ k = k || 'loan'; const C = LOANS[k], r = C.rate / 12, n = months || 120, O = S[k], bal = (O ? O.bal : 0) + amount;
-  S[k] = {bal, rate:C.rate, pay:Math.round(bal * r / (1 - Math.pow(1 + r, -n))), next:O ? O.next : S.t + 30 * 24 * 60}; S.cash += amount;
+  S[k] = {bal, rate:C.rate, pay:Math.round(bal * r / (1 - Math.pow(1 + r, -n))), next:O ? O.next : S.t + 30 * 24 * 60}; book('laan', amount, 'Lån fra ' + C.who, 'Loan from ' + C.who);
   msg(C.who, (k === 'loanIN' ? 'Toppfinansieringen er innvilget: risikolån på ' : 'Lånet på ') + Math.round(amount) + ' kr er utbetalt, over ' + Math.round(n / 12) + ' år. Terminbeløp ' + S[k].pay + ' kr.', (k === 'loanIN' ? 'The top-up is granted: a risk loan of NOK ' : 'The loan of NOK ') + Math.round(amount) + ' has been paid out, over ' + Math.round(n / 12) + ' years. Monthly payment NOK ' + S[k].pay + '.'); }
 // a sold or traded-in vessel pays off the loans first (Kystbanken's, then Innovasjon Norge's); returns what went to the lenders
 function payDown(x){ let left = x; for (const k of ['loan', 'loanIN']){ const L = S[k]; if (!L || left <= 0) continue; const p = Math.min(L.bal, left); L.bal -= p; left -= p; if (L.bal < 1) S[k] = null; } return x - left; }
@@ -829,12 +1055,14 @@ function payDown(x){ let left = x; for (const k of ['loan', 'loanIN']){ const L 
 const INN = 0.15;
 function deal(price, ti, inn){
   const D = debt(), payoff = Math.min(ti, D), tiNet = ti - payoff, cost = price - tiNet, eqNeed = Math.max(0, price * (inn ? 0.2 - INN : 0.2) - tiNet);
-  const loanNeed = S.cash >= cost ? 0 : cost - Math.max(0, S.cash - 5000), bankL = Math.min(loanNeed, price * 0.8), inL = loanNeed - bankL;
+  const C0 = Math.max(0, S.cash) + bankS().spare, loanNeed = C0 >= cost ? 0 : cost - Math.max(0, C0 - 5000), bankL = Math.min(loanNeed, price * 0.8), inL = loanNeed - bankL;
   const cap = (S.fleet.reduce((a, v) => a + vesselValue(v), 0) - ti + price) * 0.8 + (inn ? price * INN : 0) - (D - payoff);
-  const why = !loanNeed ? null : S.sales.length < 3 ? 'notes' : S.cash < eqNeed ? 'eq' : inL > (inn ? price * INN : 0) + 1 || loanNeed > cap + 1 ? 'cap' : null;
+  const why = !loanNeed ? null : S.sales.length < 3 ? 'notes' : C0 < eqNeed ? 'eq' : inL > (inn ? price * INN : 0) + 1 || loanNeed > cap + 1 ? 'cap' : null;
   return {cost, eqNeed, loanNeed, bankL, inL, payoff, tiNet, ok:!why, why};
 }
-function finance(x, months){ if (x.payoff) payDown(x.payoff); if (x.bankL > 0) takeLoan(x.bankL, months); if (x.inL > 0) takeLoan(x.inL, 120, 'loanIN'); S.cash -= x.cost; }
+function finance(x, months){ if (x.payoff) payDown(x.payoff); if (x.bankL > 0) takeLoan(x.bankL, months); if (x.inL > 0) takeLoan(x.inL, 120, 'loanIN');
+  if (S.cash < x.cost && bankS().spare > 0) bankMove('spare', -(x.cost - S.cash), 'Fra sparekontoen til båtkjøpet', 'From the savings for the vessel');   // the savings are equity
+  book('baat', -x.cost, 'Båtkjøp', 'Vessel bought'); }
 function lenGroup(){ const L = BOAT.len || 5.8; return L < 8 ? 0 : L < 10 ? 1 : 2; }
 function codLimits(H){ if (H == null) H = S.t / 60; if (S.lic){ const c = licQ(S.lic, H).torsk; return {max:c, guar:c}; } const O = yearQuota(yearH(H)).open, g = lenGroup(); return {max:(O.max[g] + openMaxAdd(H)) * 1000, guar:O.guar[g] * 1000}; }
 // the open group's maximum-quota fishing is stopped when the group quota is estimated fished (the stop and the raises are worked out in

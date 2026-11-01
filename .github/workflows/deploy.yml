@@ -26,12 +26,23 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      # the unit tests of the core (tests/unit/run.mjs, 29.10.2026): seconds, no browser; a red one stops the roll-out before the map is fetched
+      - name: Unit tests of the core
+        run: node tests/unit/run.mjs
       - name: The whole coast's map packs (the newest kart- release, joined with Senja's)
         run: |
           pip install requests
           python3 tools/map/game.py
       - name: The app
         run: KYST_PWA=1 node build.mjs
+      # the boot test on the build that goes out (tests/boottest.py, 29.10.2026): the game must start, read a save and step its clock
+      # with the whole coast's packs and no page error, or nothing is uploaded. KYST_SEED=1 is the tests' default; run.py judges the
+      # output as it does locally (FEIL lines, page errors, Python errors)
+      - name: Boot test of the app
+        run: |
+          pip install playwright==1.63.0
+          python -m playwright install --with-deps chromium
+          KYST_DIST=dist-pwa python3 tests/run.py smoke boottest
       - name: Upload to the server
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}

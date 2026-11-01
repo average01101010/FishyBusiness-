@@ -20,7 +20,7 @@ async def main():
             await boot(pg, GAME + ',hb'); await pg.wait_for_timeout(600)   # ',hb': the tips are off in the tests' games unless asked for (07c-handbook.js hbPick)
             # 1. an old hand gets no drips: five landings when the book arrives
             a = await pg.evaluate("(() => { S.hb = null; S.landN = 5; const H = hbState(); return {skip:Object.keys(H.skip).length, ready:hbReady()}; })()")
-            check(a['skip'] == 5 and a['ready'] == 0, tag + ': five landings when the book arrives: every chapter at rest, nothing ready', a)
+            check(a['skip'] == len(json.loads(await pg.evaluate('JSON.stringify(HB_CH)'))) and a['ready'] == 0, tag + ': five landings when the book arrives: every chapter at rest, nothing ready', a)
             # 2. a new skipper after the first trip: the first drip comes (the fish guide, at sea or in port), no dimmed layer, with both buttons
             b = await pg.evaluate("(() => { S.hb = null; S.landN = 1; S.tut = 0; hbState(); tutUpdate(); const t = document.getElementById('tip'); return {hid:t.hidden, txt:document.getElementById('tipText').textContent.slice(0, 40), cur:S.hb.cur, dim:document.getElementById('tutDim').hidden, ok:document.getElementById('tipOk').hidden, alt:document.getElementById('tipAlt').textContent, ready:hbReady()}; })()")
             check(not b['hid'] and b['cur'] and b['dim'] and not b['ok'] and b['alt'] == 'Jeg kan dette' and b['ready'] >= 1, tag + ': after the first trip the first tip drips, without the dimmed layer, with «Skjønner» and «Jeg kan dette»', b)
@@ -36,7 +36,7 @@ async def main():
             # 6. the app: chapters with counts, a dot by the unseen, the search filters, «Vis meg» closes the phone and points
             await pg.evaluate("(() => { S.hb = {seen:{guide:1}, skip:{}, cur:null, at:Date.now()}; PHONE.show(true); PHONE.open('handbok'); })()"); await pg.wait_for_timeout(400)
             f = await pg.evaluate("(() => { const v = document.getElementById('phView'); return {ch:v.querySelectorAll('.hb-ch').length, tips:v.querySelectorAll('.hb-t').length, dots:v.querySelectorAll('.hb-dot').length, seen:v.querySelectorAll('.hb-t.seen').length, q:!!v.querySelector('#hbQ')}; })()")
-            check(f['ch'] == 5 and f['tips'] == len(json.loads(await pg.evaluate("JSON.stringify(HB.map(t => t.id))"))) and f['dots'] == f['tips'] - 1 and f['seen'] == 1 and f['q'], tag + ': the app lists five chapters, every tip, a dot by the unseen and the search field', f)
+            check(f['ch'] == len(json.loads(await pg.evaluate('JSON.stringify(HB_CH)'))) and f['tips'] == len(json.loads(await pg.evaluate("JSON.stringify(HB.map(t => t.id))"))) and f['dots'] == f['tips'] - 1 and f['seen'] == 1 and f['q'], tag + ': the app lists five chapters, every tip, a dot by the unseen and the search field', f)
             await pg.fill('#hbQ', 'diesel'); await pg.wait_for_timeout(200)
             g = await pg.evaluate("(() => { const v = document.getElementById('phView'); return {tips:v.querySelectorAll('.hb-t').length, first:(v.querySelector('.hb-t h4') || {}).textContent}; })()")
             check(g['tips'] == 1 and g['first'] == 'Diesel', tag + ': the search narrows the list to the tip that matches', g)

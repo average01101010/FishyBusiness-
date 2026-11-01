@@ -94,6 +94,11 @@ function pushItems(now){
     // (a trip on the operations plan is the crew's: they land, rest and go out again by themselves, so its arrival, a full hold and a tired
     // crew are not told; the plan's stop is, below)
     const P = S.plan, onPlan = !!(P && P.ops), O = S.ops && S.ops.v === DRV ? S.ops : null;
+    // Driftsplan 2 (core/06h-plan2-engine.js): a long wait that ends on its own (the weather, the crew's rest, a fitting, a closed field,
+    // a day off) is told when it ends, so the player knows the boat is out again; the plan's regular departures are not
+    if (DRIFT2 && typeof plan2Ops === 'function'){ const o = plan2Ops(), w = o && o.on && !o.held && o.run && o.run.wait;
+      if (w && w.until && w.until * 60 - S.t > 60){ const T = {wx:['Været har løyet. ' + nm + ' går ut.', 'The weather has eased. ' + nm + ' goes out.'], rest:['Mannskapet er uthvilt. ' + nm + ' går ut.', 'The crew are rested. ' + nm + ' goes out.'], jobs:['Arbeidet på ' + nm + ' er ferdig. Hun går ut.', 'The work on ' + nm + ' is done. She goes out.'], closed:['Feltet er åpent igjen. ' + nm + ' går ut.', 'The field is open again. ' + nm + ' goes out.'], off:['Fridagen er over. ' + nm + ' går ut.', 'The day off is over. ' + nm + ' goes out.']}[w.k];
+        if (T) add(w.until * 60, 'p2-' + w.k + '-' + tag, nm, T[0], T[1], 6, 2); } }
     if (P && P.idx < P.wps.length && out_ && !onPlan){
       const wps = P.wps.slice(P.idx), last = wps[wps.length - 1], pt = last.port && portById(last.port);
       let km = 0, a = b.pos, fishH = 0; wps.forEach((q, i) => { km += dist(a, q); a = q; if (i && q.fish > 0) fishH += q.fish; });

@@ -31,7 +31,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         pg = await (await b.new_context(viewport={'width': 1100, 'height': 800})).new_page(); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
-        await boot(pg)
+        await boot(pg); await pg.evaluate("DRIFT2 = false")   # (the old plan, until part 8 of Driftsplan 2 replaces this test)
         await pg.evaluate(SETUP)
 
         # 1. a jigging day with the crew, you ashore

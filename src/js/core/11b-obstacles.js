@@ -8,6 +8,8 @@
 //  - the piers and breakwaters on piles (PIERBOX and the packs' piers; not the quay decks, which stand on the land behind a face)
 //  - Father's naust's pile quay, and the rorbuer's quays (07d-rorbu.js)
 //  - the sea marks the 3D view builds: beacons, stakes, lights and buoys (SEAMARKS.marks, and the coast's from the chart packs, 01e-marks.js)
+//  - the wind turbines standing in the sea (VIND, 01c-vec.js); the power lines over the sea hang 30 m or more over it (view3d/17d-vind.js),
+//    higher than any boat (obsAir), so they are no obstacle
 // A harbour unit's block and fill are land already (isLand). Each thing is a circle, a box or a piece of deck, indexed per 250 m cell;
 // the index is built again when the coast's packs or marks change (VEC.ver, MARKS.ver) or the naust moves.
 // obsSegHit(a, b) gives the first thing a straight leg comes too near (or null); obsDetour(a, b) the points that take a leg round it:
@@ -71,6 +73,11 @@ function obsIndex(){
   }
   const mark = mk => { const r = obsMarkR[mk[2]]; if (r) put({t:0, x:mk[0] * 1000, z:mk[1] * 1000, r, why:'mark'}); };
   SEAMARKS.marks.forEach(mark); for (const t of MARKS.tiles.values()) if (t) t.marks.forEach(mark);   // and the coast's (01e-marks.js)
+  // the wind turbines that stand in the sea (the floating ones off Karmøy, a few on skerries; tools/vind/vind.py): the tower and its
+  // foundation (view3d/17d-vind.js draws it 0.045 x the hub across at the foot, the ring 0.11)
+  // (only where the map is in, mapReadyAt: isLand throws for a block not loaded and counts it as a miss; the index is built again as
+  // the packs come, VEC.ver)
+  if (VIND) for (const q of VIND.t){ const p = {x:q[0] / 1000, y:q[1] / 1000}; if (!mapReadyAt(p, 0)) continue; let land = true; try { land = isLand(p); } catch (e){ continue; } if (!land) put({t:0, x:q[0], z:q[1], r:Math.max(5, q[2] * 0.11), why:'turbine'}); }
   HIND.idx = idx; HIND.list = list; HIND.key = key; return idx;
 }
 // the distance (m) from the leg a-b (metres) to a thing, 0 inside it

@@ -52,7 +52,9 @@ async def main():
         # in 3D: a bunker station at each bunker quay and in Finnsnes; the move follows the game clock; the meter counts while the pump runs
         await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(1000)
         st = await pg.evaluate("JSON.stringify(G3._debug.BUNKERS.filter(B => !portById(B.id).coastal).map(B => B.id + '|' + B.kind))")
-        # the coast's receivers near by have their station at the quay (core/06b-coastports.js)
+        # the coast's receivers near by have their station at the bunker berth of their harbour unit: every coastal receiver has the
+        # unit from Blender, and quayFace gives its landing and bunker berths (docs/systemer/havner-og-mottak.md, Jonas 05.10.2026;
+        # before that they filled at the quay, which the check expected until 26.10.2026)
         cst = await pg.evaluate("JSON.stringify(G3._debug.BUNKERS.filter(B => portById(B.id).coastal).map(B => B.kind))")
         await pg.evaluate("""(()=>{ S.mult = 0.00001; S.cash = 1e6; const q = portById('husoy'), b = S.boat; b.status = 'port'; b.port = 'husoy'; b.pos = {...q.p}; b.berth = 'main'; b.shift = b.fueling = b.land = b.after = null; S.plan = null; G3.vesselChanged();
           const t0 = performance.now() / 1000; for (let i = 0; i < 60; i++) G3._debug.stepBoat(0.05, t0 + i * 0.05, 0); b.fuel = 5; startFueling(false); window.SH = {...b.shift}; const c = G3._debug.cam; c.dist = 14; c.yaw = 1.3; c.pitch = 0.3; })()""")
@@ -67,7 +69,7 @@ async def main():
         meter = await pg.evaluate("JSON.stringify((G3._debug.BUNKERS.find(B => B.id === 'husoy') || {}).last)")
         print('stations:', st, 'coast:', cst, 'phases:', ph, 'meter:', meter)
         print(ok(sorted(json.loads(st)) == sorted(['finnsnes|main'] + [k + '|bunker' for k in ['husoy', 'senjahopen', 'gryllefjord', 'botnhamn', 'torsken', 'sommaroy', 'brensholmen', 'frovag']])), 'a bunker station at every harbour unit\'s bunker berth, and at the quay in Finnsnes')
-        print(ok(all(k == 'main' for k in json.loads(cst))), 'the coast\'s receivers near by fill at their quay', len(json.loads(cst)))
+        print(ok(len(json.loads(cst)) >= 1 and all(k == 'bunker' for k in json.loads(cst))), 'the coast\'s receivers near by fill at their unit\'s bunker berth', len(json.loads(cst)))
         print(ok(ph == ['out', 'in', 'lines']), 'in 3D the move follows the game clock: lines in, over, lines on')
         m = json.loads(meter) if meter else {}
         print(ok(m.get('here') and 15 <= m.get('liters', 0) <= 30), 'the pump meter counts the litres while the nozzle is in')

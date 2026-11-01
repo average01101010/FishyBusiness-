@@ -104,6 +104,8 @@
 <script id="pic-autoliner" type="application/octet-stream">@include(data/boat-al45-side.b64)</script>
 <script id="glb-snokrabbe" type="application/octet-stream">@include(data/boat-krabbe50.b64)</script>
 <script id="pic-snokrabbe" type="application/octet-stream">@include(data/boat-krabbe50-side.b64)</script>
+<script id="glb-ringnot38" type="application/octet-stream">@include(data/boat-ringnot38.b64)</script>
+<script id="pic-ringnot38" type="application/octet-stream">@include(data/boat-ringnot38-side.b64)</script>
 <script id="glb-kyst21" type="application/octet-stream">@include(data/boat-kyst21.b64)</script>
 <script id="pic-kyst21" type="application/octet-stream">@include(data/boat-kyst21-side.b64)</script>
 <script id="glb-kyst15" type="application/octet-stream">@include(data/boat-kyst15.b64)</script>
@@ -132,6 +134,10 @@
 <script id="glb-pub" type="application/octet-stream">@include(data/pub.b64)</script>
 <script id="glb-naustinne" type="application/octet-stream">@include(data/naustinne.b64)</script>
 <script id="glb-gull" type="application/octet-stream">@include(data/gull.b64)</script>
+<script id="glb-trees" type="application/octet-stream">@include(data/trees.b64)</script>
+<script id="glb-vind" type="application/octet-stream">@include(data/vind.b64)</script>
+<script id="glb-dyr" type="application/octet-stream">@include(data/dyr.b64)</script>
+<script id="glb-naer" type="application/octet-stream">@include(data/naer.b64)</script>
 <script id="glb-fish" type="application/octet-stream">@include(data/fish.b64)</script>
 <script id="glb-deck-fish" type="application/octet-stream">@include(data/deck-fish.b64)</script>
 <script id="glb-deck-rig" type="application/octet-stream">@include(data/deck-rig.b64)</script>
@@ -178,6 +184,8 @@
 @include(js/core/06b-coastports.js)
 @include(js/core/06c-steder.js)
 @include(js/core/06d-drift.js)
+@include(js/core/06g-plan2.js)
+@include(js/core/06h-plan2-engine.js)
 @include(js/core/06e-anchor.js)
 @include(js/core/07-harbours.js)
 @include(js/core/07c-naust.js)
@@ -193,6 +201,7 @@
 @include(js/core/09g-turer.js)
 @include(js/core/09h-press.js)
 @include(js/core/09i-look.js)
+@include(js/core/09j-kystvakt.js)
 @include(js/core/10-gear.js)
 @include(js/core/10b-gearcare.js)
 @include(js/core/11-route.js)
@@ -210,15 +219,31 @@
 @include(js/ui/03a-chart.js)
 @include(js/ui/03-map.js)
 @include(js/ui/03b-route.js)
+@include(js/ui/03g-planmap.js)
 @include(js/ui/03c-heat.js)
 @include(js/ui/03d-setmode.js)
 @include(js/ui/03e-miniplot.js)
 @include(js/ui/03f-search.js)
 @include(js/ui/04-panels-instruments.js)
 @include(js/ui/05-tattoo-art.js)
-@include(js/ui/05-phone.js)
+@include(js/ui/phone/00-shell.js)
+@include(js/ui/phone/01-haill-fiske-service.js)
+@include(js/ui/phone/02-havn-last-agn-ordre.js)
+@include(js/ui/phone/03-regler.js)
+@include(js/ui/phone/04-kvote.js)
+@include(js/ui/phone/05-rigg-innst-admin.js)
+@include(js/ui/phone/06-render.js)
+@include(js/ui/phone/07-patch.js)
+@include(js/ui/phone/08-home-papers-merker.js)
+@include(js/ui/phone/09-vaer-post-salg-redning.js)
+@include(js/ui/phone/10-fartoy.js)
+@include(js/ui/phone/11-rederi.js)
+@include(js/ui/phone/12-utstyr-redskap.js)
+@include(js/ui/phone/13-mannskap-bank-meld.js)
+@include(js/ui/phone/14-act.js)
 @include(js/ui/05b-work.js)
 @include(js/ui/05c-drift.js)
+@include(js/ui/05d-plan2.js)
 @include(js/ui/05e-merker.js)
 @include(js/ui/05f-turer.js)
 @include(js/ui/05g-press.js)
@@ -264,7 +289,39 @@
 @include(js/deckcrew.js)
 </script>
 <script>
-@include(js/view3d.js)
+@include(js/view3d/00-head.js)
+@include(js/view3d/01-shaders.js)
+@include(js/view3d/02-mesh-terrain.js)
+@include(js/view3d/03-berths-naust.js)
+@include(js/view3d/04-vec-packs.js)
+@include(js/view3d/05-quays-breakwaters.js)
+@include(js/view3d/06-buildings-lights.js)
+@include(js/view3d/07-harbour-unit.js)
+@include(js/view3d/08-plants.js)
+@include(js/view3d/09-landing-deck.js)
+@include(js/view3d/10-gear.js)
+@include(js/view3d/11-bunker.js)
+@include(js/view3d/12-skiff.js)
+@include(js/view3d/13-instruments.js)
+@include(js/view3d/14-sea.js)
+@include(js/view3d/15-env-mooring.js)
+@include(js/view3d/16-motion.js)
+@include(js/view3d/17-draw.js)
+@include(js/view3d/17b-inland-water.js)
+@include(js/view3d/17c-trees.js)
+@include(js/view3d/17d-vind.js)
+@include(js/view3d/17e-life.js)
+@include(js/view3d/17f-near.js)
+@include(js/view3d/17g-marina.js)
+@include(js/view3d/17h-shore.js)
+@include(js/view3d/18-setup.js)
+@include(js/view3d/19-wildlife-npc.js)
+@include(js/view3d/20-trawl-seine.js)
+@include(js/view3d/21-rescue-anchor.js)
+@include(js/view3d/22-docks-air.js)
+@include(js/view3d/23-camera-frame.js)
+@include(js/view3d/24-cinema.js)
+@include(js/view3d/25-controls.js)
 </script>
 </body>
 </html>

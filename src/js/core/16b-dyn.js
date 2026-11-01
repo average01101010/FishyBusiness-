@@ -337,7 +337,7 @@ function dynTick(dt){
 function dynMinute(H, W){
   const b = S.boat, pl = S.plan;
   if (b.fuel <= 0){ b.fuel = 0; b.status = 'adrift'; b.v = 0; log('Tom for drivstoff. Båten driver.', 'Out of fuel. The boat is adrift.'); return; }
-  if (!DYN.hold) b.fuel = Math.max(0, b.fuel - fuelLph(b.v || 0, W) / 60);   // (held for the map, or a minute caught up without moving her: no fuel)
+  if (!DYN.hold) fuelUse(b, fuelLph(b.v || 0, W) / 60);   // (held for the map, or a minute caught up without moving her: no fuel)
   if (pl) obsSail(pl, b);
   if (meAboard() && DYN.nm){ tatAdd('nm', DYN.nm); DYN.nm = 0; }
 }
@@ -357,7 +357,7 @@ function dynHelm(d, dtG){
     if (coastSegHit(a, to)){ if (Math.abs(d.u) > 3 * KN_MS){ dynWrite(b, d); runAground(a); helmOff(); } else { d.X = X0; d.Y = Y0; d.u = 0; d.v = 0; dynWrite(b, d); h.v = 0; } return; }
     const gp = groundCheck(a, to); if (gp){ dynWrite(b, d); runAground(gp); helmOff(); return; } }
   dynWrite(b, d); h.v = d.u / KN_MS; h.yaw = d.r;
-  b.fuel = Math.max(0, b.fuel - fuelLph(Math.abs(h.v), windAt(H)) / 3600 * dtG);
+  fuelUse(b, fuelLph(Math.abs(h.v), windAt(H)) / 3600 * dtG);
   HELM.nm += dd / NM; if (HELM.nm > 0.05 && meAboard()){ tatAdd('nm', HELM.nm); HELM.nm = 0; }
 }
 // ---- the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in ----

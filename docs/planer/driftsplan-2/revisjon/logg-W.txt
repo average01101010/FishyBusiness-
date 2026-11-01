@@ -1,0 +1,43 @@
+# Revisjonslogg W (open): tilstandsskifter minutt for minutt, spilt i testbygget 26.10.2026
+# hjem Finnsnes · mottak Botnhamn · felt [('f1', 2, 6), ('f2', 2, 6)] · juksplasser 1
+# slutt: on=False stop=Går ikke ut: lina er ikke egnet. wait=None
+# tid: dag klokke | tilstand (plan:status@havn/redskapsarbeid ?venter !stopp) | energi | høyeste slitenhet | last kg
+D1 03:01  -:port@finnsnes?dep                            en=100 fat=  0 hold=    0
+D1 05:00  fish:unmooring@finnsnes                        en=100 fat=  0 hold=    0
+D1 05:01  fish:sailing                                   en=100 fat=  0 hold=    0
+D1 05:21  fish:fishing/set-line                          en=100 fat=  0 hold=    0
+D1 05:31  fish:fishing                                   en=100 fat=  0 hold=    0
+D1 05:32  fish:sailing                                   en=100 fat=  0 hold=    0
+D1 05:42  fish:fishing/set-line                          en=100 fat=  0 hold=    0
+D1 05:52  fish:fishing                                   en=100 fat=  0 hold=    0
+D1 05:53  fish:sailing                                   en=100 fat=  0 hold=    0
+D1 05:57  fish:fishing                                   en=100 fat=  0 hold=    0
+D1 09:57  fish:sailing                                   en=100 fat= 20 hold=   75
+D1 10:11  fish:fishing/haul-line                         en=100 fat= 23 hold=   75
+D1 10:52  fish:fishing                                   en=100 fat= 23 hold=  122
+D1 10:53  fish:sailing                                   en=100 fat= 23 hold=  122
+D1 11:01  -:idle/shelter                                 en=100 fat= 25 hold=  122
+D1 11:21  undefined:sailing                              en=100 fat= 25 hold=  122
+D1 11:42  -:port@finnsnes                                en=100 fat= 25 hold=  122
+D1 11:43  -:port@finnsnes?wx                             en=100 fat= 25 hold=  122
+D1 14:43  fish:port@finnsnes                             en=100 fat=  0 hold=  122
+D1 14:47  fish:unmooring@finnsnes                        en=100 fat=  0 hold=  122
+D1 14:48  fish:sailing                                   en=100 fat=  0 hold=  122
+D1 15:14  fish:fishing/haul-line                         en=100 fat=  1 hold=  122
+D1 15:54  fish:fishing                                   en=100 fat=  1 hold=  138
+D1 15:55  fish:sailing                                   en=100 fat=  1 hold=  138
+D1 15:59  fish:fishing                                   en=100 fat=  1 hold=  138
+D1 16:14  fish:sailing                                   en=100 fat=  6 hold=  144
+D1 19:47  -:port@botnhamn/land                           en=100 fat= 14 hold=  144
+D1 19:56  -:port@botnhamn                                en=100 fat= 14 hold=    0
+D1 20:03  home:unmooring@botnhamn                        en=100 fat=  0 hold=    0
+D1 20:04  home:sailing                                   en=100 fat=  0 hold=    0
+D1 23:20  -:port@finnsnes                                en=100 fat=  9 hold=    0
+D1 23:21  -:port@finnsnes?dep                            en=100 fat=  9 hold=    0
+D2 07:00  -:port@finnsnes!stop:fail!off                  en=100 fat=  0 hold=    0
+# landinger (o.rep): [{"w": "D1 19:56", "port": "botnhamn", "kg": 144, "kr": 476, "h": 5.2, "landed": true}]
+# salg: [{"w": "D1 19:56", "port": "botnhamn", "kg": 144, "total": 764, "conf": 0}]
+# redskap i sjøen ved slutt: []
+# «Neste tur» slik siden viste den: [{"at": "D1 03:01", "sk": [["05:00", "Går fra Finnsnes"], ["05:17", "Setter 2 stamper på felt 2"], ["05:39", "Setter 2 stamper på felt 1"], ["06:05", "Jukser på plass 1 (høyst 4,0 t)"], ["10:16", "Trekker felt 2"], ["11:02", "Trekker felt 1"], ["14:46", "Leverer i Botnhamn"], ["18:59", "Hjem til Finnsnes og hvile"]]}, {"at": "D2 03:00", "sk": [["05:00", "Går fra Finnsnes"], ["05:17", "Setter 2 stamper på felt 2"], ["05:39", "Setter 2 stamper på felt 1"], ["06:05", "Jukser på plass 1 (høyst 4,0 t)"], ["10:16", "Trekker felt 2"], ["11:02", "Trekker felt 1"], ["14:46", "Leverer i Botnhamn"], ["18:59", "Hjem til Finnsnes og hvile"]]}]
+# slutt: {"en": 100, "fat": [0, 0], "cash": 997070, "hold": 0, "status": "port", "port": "finnsnes", "pos": [867.75, 366.19], "revenue": 764, "kg": 144, "costs": 3694}
+# meldinger: D1 11:43 Edvard: Så det er du som har tatt over båten til far din. Jeg heter Edvard. Vi fisket sammen i førti år, han og jeg. Kom innom når du er i havn. || D1 11:43 Roger Strand: Venter på været: vinden blir 15 m/s, og grensen er 13 m/s. || D1 12:00 Værvarsel: Kuling ventet fra S rundt 15:00, 15 m/s (styrke 7). || D1 19:56 Norges Råfisklag: Båten har ikke adgang til å fiske torsk, hyse og sei. Av disse kan bare 10 % av landingen være bifangst, og høyst 2 tonn torsk i året. 113 kg er inndratt, verdi 3 420 kr. || D1 19:56 Roger Strand: Driftsrapport: 144 kg levert i Botnhamn, 476 kr etter lott, skippertillegg 24 kr. || D2 05:00 Roger Strand: Går ikke ut: lina er ikke egnet. || D2 06:00 Roger Strand: Går ikke ut: lina er ikke egnet. || D2 07:00 Roger Strand: Går ikke ut: lina er ikke egnet. || D2 07:00 Driftsplan: Driftsplanen for «T-333-LK» har stoppet: Går ikke ut: lina er ikke egnet. || D2 08:00 Edvard: Jeg hørte om torska på 16 kilo. Far din hadde vært stolt.
