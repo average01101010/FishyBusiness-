@@ -49,6 +49,8 @@ Det neste økt bør vite (etter havsjarken 01.11.2026):
   Kimmingen som kubisk kurve med fyldighet per stasjon (`havsjark35.py vline`, `FULL`), ikke som bue fra en hjørnevinkel.
 - Spillet fikk to regler i dekkskartet (`roofOver`: tak over rom er ikke dekk; `stairs: [{from, to}]`: trapper som lenker). Når en del ikke
   blir dekk: se rutenettet (`M._floors`, `M._lab`, `M.h`), og prøv en endring i `deckMap` på alle typer mot bygget før (`KYST_DIST`).
+- Nye verktøy: `qa/fair.py <skript>` (knekkene i skroget per stasjon og rad, og vannlinjene; kjør det før hvert nærbilde av baugen) og
+  `qa/deckgrid.py <type>` (dekkskartet rute for rute). Jonas fant bulene i baugen to ganger før meg: mål hele flaten, se på nærbildet.
 - `qa/clip_havsjark35.py` er den nyeste klipp-kontrollen; `tests/hs35shot.py` tar også K6 fra babord og K7 ovenfra.
 - Selvvurderingen står i `havsjark-grunnlag.md` kap. 8 (64/100). `check()` måler vannlinjenes jevnhet: bruk den i neste skript.
 - Tallsjekkene for modellene går i Node (`node tests/unit/run.mjs vessel3d`, 6 s), også lokalflåtens fjernmodell; `vessel3d.py` tar bare bildene.

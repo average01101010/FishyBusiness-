@@ -484,6 +484,18 @@ endret ringnotbåten fra 1 362 til 5 875 dekkceller, og ble ikke gjort.
 **Et tak over et rom er ikke dekk.** Regelen `roofOver` fant at ringnotbåtens sløyebord og is sto på et tak 6,25 m oppe og at breisjarkens
 styrhustak var dekk. En «dørk» kan være skrogets bunn inni (under bakken): rommets dørk må ligge over dekket (`yLow`).
 
+**Verktøyene: `qa/fair.py` og `qa/deckgrid.py`.** Feilsøkingen av baugen og bakken gikk i skript i scratchpad; de er nå verktøy for alle
+båter. `fair.py <skript>` summerer knekkene per stasjon og rad (lista og stevnen skal stå øverst; en stasjon midt i baugen skal ikke) og måler
+vannlinjene. `deckgrid.py <type> [boks]` viser dekkskartets deler, lenker og ruter.
+
+**Se på bildet selv før det meldes, og mål hele flaten når én feil er funnet.** Jonas så bulene i baugen, de svarte klaffene foran
+spygattene og at baugen fortsatt var bulkete etter første retting. Alle tre synes i nærbildene som alt var tatt. Etter første retting meldte jeg
+baugen som jevn uten å kjøre målingen på nytt over hele baugen; to overganger til (9,34 og 9,87) sto igjen.
+
+**Kjør hele testlista, og kjør en rød test på bygget før endringen.** `vessel3d.py <type>` hopper over lokalflåten, så fjernmodellens
+punkter ble ikke sjekket før Node-testen kom. `regmarktest` var rød for havsjarken og ble grønn med en retting i spillet; `penshot` var rød på
+en GL-feil som fantes før, og det viste bygget i `dist-base` (`git stash`, `KYST_DIST`).
+
 **`sed` på korte navn er farlig.** `s/X0/.../` byttet `WH_X0` og alle andre navn med `X0` i hele skriptet. Rediger tabeller med et skript som
 finner akkurat den linja.
 
