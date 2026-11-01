@@ -23,7 +23,9 @@ Skrevet på nytt etter `plast31.py` (det gamle skroget var to løse rutenett med
 - **Snittet** (`section`): fra kjølens underkant på senterlinja (`KEEL`, G) opp kjølens side og gjennom en hul kjølrot (kvadratisk Bézier)
   inn i kroppen (`vline`): en kubisk kurve fra senterlinjas bunn langs bunnreisningen, rundt kimmingen og opp langs utfallet til ripa.
   Kontrollpunktene trekkes mot hjørnet med fyldigheten `FULL` per stasjon, så snittet endrer seg jevnt (buen i det første skriptet hoppet
-  der bunnreisningen steg mot stevnen, og baugen ble bulkete). Så den svarte vannlinjestripa og bunnstoffet (skåret med `bisect_plane` på plan
+  der bunnreisningen steg mot stevnen, og baugen ble bulkete). Hjørnet holdes under ripa med et mykt minimum, også der bunnlinja og utfallet
+  blir parallelle (x 9,87): en rett reserve der knakk baugen loddrett. Kjølen glir over i stevnen den siste 0,8 m (`g` i `section`).
+  `check()` måler vannlinjenes jevnhet. Så den svarte vannlinjestripa og bunnstoffet (skåret med `bisect_plane` på plan
   som stiger 12 mm per meter), den røde stripa, fenderlista (avrundet, 5 cm ut, tynnes ut mot stevnen) og ripa. Antallet punkter er fast.
 - **Ett nett** (`Mesh`): kjølen, sidene, speilet, kappene, innsida av skansekledningen, aktre dekk med bue, bakkens skott og bakkedekket deler
   punktene. Dekket og speilets innside begynner 7 cm forut for speilets utside (`TT`).
@@ -61,8 +63,12 @@ Skrevet på nytt etter `plast31.py` (det gamle skroget var to løse rutenett med
   dekk), ringnotbåten (sløyebordet og isen sto på et tak 6,25 m oppe) og autolineren (et tak over et rom, ingen plass flyttet).
 - `view3d/20-trawl-seine.js`: `drawSail` for egen båt, verftets visning og andre båter.
 - `VESSELS.sjark.desc`: forbildets navn fjernet; GLB-navnet er «Havsjark 35 fot».
+- `vessel3d.js` `markStrips`: to lavere høyder under ripa (havsjarken har bare 0,35 m mellom fenderlista og ripa på baugen); `regmarktest`
+  er grønn, også for ringnotbåten.
+- `tests/unit/vessel3d.test.mjs`: tallsjekkene fra `vessel3d.py` i Node (6 s); `run.mjs` tar `scripts` og `data` fra en testfil.
 
 ## 4. Kritikksløyfen
 
 `qa/shots.py` (K1–K7, K6 fra begge sider, nærbildene i `CLOSE`), `qa/sheet.py`, `qa/lines.py`, `qa/clip_havsjark35.py` (ny),
-`qa/deckpoints.py`. Før- og etter-bildene i spillet: `tests/hs35shot.py` (`TAG=for`/`etter`), med K6 fra babord baug og K7 ovenfra.
+`qa/deckpoints.py`, `qa/fair.py` (ny: knekkene i nettet per stasjon og rad, og vannlinjenes jevnhet, for alle skript) og `qa/deckgrid.py`
+(ny: dekkskartet rute for rute). Før- og etter-bildene i spillet: `tests/hs35shot.py` (`TAG=for`/`etter`), med K6 fra babord baug og K7 ovenfra.

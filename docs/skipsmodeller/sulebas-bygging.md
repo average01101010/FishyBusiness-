@@ -466,6 +466,11 @@ bunnreisningen stiger fort (mot stevnen): flatene vris, og baugen ser bulkete ut
 meg. Sjekk vannlinjenes andrederiverte langs x (`y_at(x, z)` for noen z, steg på 0,1 m): over 20–30 mm er en synlig bule. En kubisk kurve fra
 kjølrota til ripa med kontrollpunktene trukket mot hjørnet (`FULL` per stasjon) endrer seg jevnt; volumet stilles med fyldigheten.
 
+**Et snitt med en reserve er to snitt.** Havsjarkens kimming fra en hjørnevinkel hadde en rett linje som reserve når hjørnet havnet over
+ripa eller linjene ble parallelle. Der reserven tok over (x 9,34 og 9,87), knakk flaten loddrett fra kjølen til lista, og det tok to runder å
+finne det fordi jeg rettet det første hoppet og ikke målte hele flaten. Mål kantvinklene i nettet (vinkelen mellom flatene) i baugen, og
+grens med et mykt minimum i stedet for en reserve.
+
 **Det som henger foran et hull, er ikke et hull.** En gummiklaff utenpå en lensport er riktig om bord, men i spillets lys leser den som en
 svart kloss. Vis hullet åpent.
 
@@ -478,6 +483,18 @@ endret ringnotbåten fra 1 362 til 5 875 dekkceller, og ble ikke gjort.
 
 **Et tak over et rom er ikke dekk.** Regelen `roofOver` fant at ringnotbåtens sløyebord og is sto på et tak 6,25 m oppe og at breisjarkens
 styrhustak var dekk. En «dørk» kan være skrogets bunn inni (under bakken): rommets dørk må ligge over dekket (`yLow`).
+
+**Verktøyene: `qa/fair.py` og `qa/deckgrid.py`.** Feilsøkingen av baugen og bakken gikk i skript i scratchpad; de er nå verktøy for alle
+båter. `fair.py <skript>` summerer knekkene per stasjon og rad (lista og stevnen skal stå øverst; en stasjon midt i baugen skal ikke) og måler
+vannlinjene. `deckgrid.py <type> [boks]` viser dekkskartets deler, lenker og ruter.
+
+**Se på bildet selv før det meldes, og mål hele flaten når én feil er funnet.** Jonas så bulene i baugen, de svarte klaffene foran
+spygattene og at baugen fortsatt var bulkete etter første retting. Alle tre synes i nærbildene som alt var tatt. Etter første retting meldte jeg
+baugen som jevn uten å kjøre målingen på nytt over hele baugen; to overganger til (9,34 og 9,87) sto igjen.
+
+**Kjør hele testlista, og kjør en rød test på bygget før endringen.** `vessel3d.py <type>` hopper over lokalflåten, så fjernmodellens
+punkter ble ikke sjekket før Node-testen kom. `regmarktest` var rød for havsjarken og ble grønn med en retting i spillet; `penshot` var rød på
+en GL-feil som fantes før, og det viste bygget i `dist-base` (`git stash`, `KYST_DIST`).
 
 **`sed` på korte navn er farlig.** `s/X0/.../` byttet `WH_X0` og alle andre navn med `X0` i hele skriptet. Rediger tabeller med et skript som
 finner akkurat den linja.

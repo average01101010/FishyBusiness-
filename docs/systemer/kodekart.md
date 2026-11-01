@@ -537,7 +537,7 @@ crew: people with skills, habits and moods
   - 300 `crewTick(H)`
   - 366 `codRoom(H)`
 
-## `src/js/core/05-vessels.js` (1009 linjer)
+## `src/js/core/05-vessels.js` (1010 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -557,62 +557,62 @@ crew: people with skills, habits and moods
   - 152 `coastState(b, H, hod = hodOf(H)`
 - **177** where a coast boat lies at home (Jonas 18.10.2026: «npc-båter mange plasser er plassert i landmassen når de ligger ved kai»;
   - 189 `unitHit(x, z, r)`
-  - 196 `inHarbour(x, z)`
-  - 202 `moorBlocked(x, z, r)`
-  - 211 `moorFree(p, hd, L, B, others)`
-  - 230 `docksIn(x0, z0, x1, z1)`
-  - 231 `dockFree(d, others, placed)`
-  - 248 `moorAround(h, p)`
-  - 251 `moorHarbour(h)`
-  - 323 `coastMoor(b)`
-  - 334 `seaward(p, c)`
-  - 336 `coastSpot(gr, dI, i)`
-  - 339 `coastCast(b, gr, dI, i, kc, Hc, spot)`
-  - 354 `coastNear(H, only)`
-  - 375 `npcStates(H, only)`
-  - 423 `peerName(s)`
-  - 424 `peerStates()`
-  - 437 `newState()`
-  - 448 `log(no, en, k)`
-  - 450 `navHour()`
-  - 457 `nearestPort(p)`
-  - 459 `nearestYard(p)`
-  - 461 `step()`
-  - 479 `vesselStep(H)`
-  - 559 `sailV(H, hs)`
-  - 571 `sail(H, W, hs)`
-  - 597 `sailReplan(pl, b, gp)`
-  - 622 `sailStop(pl, b, why)`
-  - 630 `haltPlan(need)`
-  - 640 `arrive(w)`
-  - 658 `unstuckWhy()`
-  - 664 `unstuckSpot()`
-  - 671 `unstuck()`
-  - 685 `dock(pid, berth)`
-  - 710 `catchFactors(H, W, hs)`
-  - 720 `fish(H, W, hs)`
-  - 791 `endFishing(why)`
-  - 806 `addCatch(sp, kg, cls, hook, opt)`
-- **819** work on deck: gutting and icing take hands and time
-  - 832 `deckHands()`
-  - 835 `deckPending()`
-  - 836 `deckEta(hands)`
-  - 841 `moveKg(x, kg, patch)`
-  - 849 `iceMinute()`
-  - 851 `deckMinute()`
-  - 869 `risk(W, hs)`
-  - 896 `hullRepair()`
-  - 899 `svcOverdue()`
-- **900** the rescue boat (plan E3, 05.10.2026)
-  - 920 `rescueBases()`
-  - 929 `rescueBase(p)`
-  - 936 `rescueAis(H)`
-  - 940 `rescue(keepCatch)`
-  - 964 `towSea(p)`
-  - 969 `towRoutes(b)`
-  - 980 `towStep(H)`
-  - 992 `towDone(t)`
-  - 998 `towPose(frac)`
+  - 197 `dockInHarbour(x, z)`
+  - 203 `moorBlocked(x, z, r)`
+  - 212 `moorFree(p, hd, L, B, others)`
+  - 231 `docksIn(x0, z0, x1, z1)`
+  - 232 `dockFree(d, others, placed)`
+  - 249 `moorAround(h, p)`
+  - 252 `moorHarbour(h)`
+  - 324 `coastMoor(b)`
+  - 335 `seaward(p, c)`
+  - 337 `coastSpot(gr, dI, i)`
+  - 340 `coastCast(b, gr, dI, i, kc, Hc, spot)`
+  - 355 `coastNear(H, only)`
+  - 376 `npcStates(H, only)`
+  - 424 `peerName(s)`
+  - 425 `peerStates()`
+  - 438 `newState()`
+  - 449 `log(no, en, k)`
+  - 451 `navHour()`
+  - 458 `nearestPort(p)`
+  - 460 `nearestYard(p)`
+  - 462 `step()`
+  - 480 `vesselStep(H)`
+  - 560 `sailV(H, hs)`
+  - 572 `sail(H, W, hs)`
+  - 598 `sailReplan(pl, b, gp)`
+  - 623 `sailStop(pl, b, why)`
+  - 631 `haltPlan(need)`
+  - 641 `arrive(w)`
+  - 659 `unstuckWhy()`
+  - 665 `unstuckSpot()`
+  - 672 `unstuck()`
+  - 686 `dock(pid, berth)`
+  - 711 `catchFactors(H, W, hs)`
+  - 721 `fish(H, W, hs)`
+  - 792 `endFishing(why)`
+  - 807 `addCatch(sp, kg, cls, hook, opt)`
+- **820** work on deck: gutting and icing take hands and time
+  - 833 `deckHands()`
+  - 836 `deckPending()`
+  - 837 `deckEta(hands)`
+  - 842 `moveKg(x, kg, patch)`
+  - 850 `iceMinute()`
+  - 852 `deckMinute()`
+  - 870 `risk(W, hs)`
+  - 897 `hullRepair()`
+  - 900 `svcOverdue()`
+- **901** the rescue boat (plan E3, 05.10.2026)
+  - 921 `rescueBases()`
+  - 930 `rescueBase(p)`
+  - 937 `rescueAis(H)`
+  - 941 `rescue(keepCatch)`
+  - 965 `towSea(p)`
+  - 970 `towRoutes(b)`
+  - 981 `towStep(H)`
+  - 993 `towDone(t)`
+  - 999 `towPose(frac)`
 
 ## `src/js/core/05c-air.js` (64 linjer)
 
