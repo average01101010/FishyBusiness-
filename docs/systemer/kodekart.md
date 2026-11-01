@@ -2742,7 +2742,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **45** terrain
   - 76 `terrRaw(x, z, dil)`
 
-## `src/js/view3d/03-berths-naust.js` (388 linjer)
+## `src/js/view3d/03-berths-naust.js` (383 linjer)
 
 ---------- The water at the berths the company holds in the coast's harbours (core/07e-havn.js) ----------
 
@@ -2751,33 +2751,33 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 27 `npcPits()`
   - 47 `berthPit(x, z, h)`
 - **55** Father's naust and the Finnsnes shop (tools/harbour/naust.py, butikk.py; where: core/07c-naust.js)
-  - 74 `rorbuNow()`
-  - 80 `sitesNow()`
-  - 113 `naustLift(o, u, nn)`
+  - 72 `rorbuNow()`
+  - 78 `sitesNow()`
+  - 113 `siteLift(F, o, u, nn)`
   - 123 `siteTerr(x, z, h)`
-  - 145 `onSite(x, z)`
-  - 155 `tileIn(kind, tx, ty)`
-  - 156 `tileH(L, kind, x, z)`
-  - 163 `terrH(x, z)`
-  - 172 `unitTerr(x, z, h0)`
-  - 197 `terrCoarse(x, z, dil)`
-  - 207 `forestAt(x, z)`
-  - 225 `coverAt(x, z, cv, ck, k)`
-  - 250 `satRead(L, x, z)`
-  - 259 `satAt(x, z, cv, o)`
-  - 267 `covBlk(LC, bx, by)`
-  - 271 `coverRing(LC, ix, iz)`
-  - 281 `coverClass(x, z)`
-  - 291 `meshBegin(x0, z0, sx, sz, n, hf)`
-  - 295 `meshRows(B, until)`
-  - 307 `meshEnd(B)`
-  - 319 `makeMesh(x0, z0, sx, sz, n, hf)`
-  - 320 `freeMesh(m)`
-  - 322 `nearSurf(M, x, z)`
-  - 332 `unitPatch(U, M)`
-  - 357 `buildPatches()`
-  - 366 `buildTerrain()`
-  - 375 `stream3d()`
+  - 140 `onSite(x, z)`
+  - 150 `tileIn(kind, tx, ty)`
+  - 151 `tileH(L, kind, x, z)`
+  - 158 `terrH(x, z)`
+  - 167 `unitTerr(x, z, h0)`
+  - 192 `terrCoarse(x, z, dil)`
+  - 202 `forestAt(x, z)`
+  - 220 `coverAt(x, z, cv, ck, k)`
+  - 245 `satRead(L, x, z)`
+  - 254 `satAt(x, z, cv, o)`
+  - 262 `covBlk(LC, bx, by)`
+  - 266 `coverRing(LC, ix, iz)`
+  - 276 `coverClass(x, z)`
+  - 286 `meshBegin(x0, z0, sx, sz, n, hf)`
+  - 290 `meshRows(B, until)`
+  - 302 `meshEnd(B)`
+  - 314 `makeMesh(x0, z0, sx, sz, n, hf)`
+  - 315 `freeMesh(m)`
+  - 317 `nearSurf(M, x, z)`
+  - 327 `unitPatch(U, M)`
+  - 352 `buildPatches()`
+  - 361 `buildTerrain()`
+  - 370 `stream3d()`
 
 ## `src/js/view3d/04-vec-packs.js` (283 linjer)
 
@@ -3104,7 +3104,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 214 `spawn(x, y, z, vx, vy, vz, life, g)`
   - 216 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
-## `src/js/view3d/17-draw.js` (189 linjer)
+## `src/js/view3d/17-draw.js` (190 linjer)
 
 ---------- drawing ----------
 
@@ -3116,8 +3116,8 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 46 `buildGround()`
   - 81 `buildLandMask()`
   - 104 `lmStep()`
-  - 140 `seaRing(u, eye, y, R, Hl)`
-  - 150 `drawSea(VP, eye, t, far, drop)`
+  - 141 `seaRing(u, eye, y, R, Hl)`
+  - 151 `drawSea(VP, eye, t, far, drop)`
 
 ## `src/js/view3d/17b-inland-water.js` (148 linjer)
 

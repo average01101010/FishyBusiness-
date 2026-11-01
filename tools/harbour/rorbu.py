@@ -10,7 +10,7 @@ cap, snow guards and a roof ladder up to the black chimney with its cap, and a r
 veranda (altan) on stilts along the sea gable and down the east side, with its railing, two tall poles with a rope and floats
 hanging from it, a small table and a bench, rubber boots by the door; wooden stairs from it down to the quay. In front, the pile
 quay: a deck of planks on bents of three piles with X bracing, a kerb, two wooden bollards, a ladder, fender piles and old tyres,
-the piles dark and weedy in the tidal zone. The bank of rocks and rockweed under it all runs up to grass behind.
+the piles dark and weedy in the tidal zone. It stands on the map's own ground (no bank of its own since 01.11.2026).
 
     pip install bpy==4.5.4
     python3 tools/harbour/rorbu.py          -> src/data/harbour-rorbu.b64, renders in tools/harbour/out/
@@ -126,49 +126,11 @@ def bankz(x, y):
 
 def under_house(x, y, pad=0.3): return RX0 - pad < x < RX1 + pad and RY0 - pad < y < RY1 + pad
 
-def ground_mat(z, x, y):
-    if z < -0.6: return C['weed2']
-    if z < 1.2: return C['weed'] if noise(x * 2.1, y * 1.7) > -0.08 else C['weed2']
-    if z < 1.62: return C['barn'] if noise(x * 1.9 + 5, y * 2.7) > 0.07 else C['rock3']
-    if z < QTOP + 0.05 or under_house(x, y, 0.6): return C['rock1'] if noise(x * 1.1 + 3, y * 1.3) > -0.02 else C['rock2']
-    k = noise(x * 0.9 + 7, y * 1.3)
-    return C['grass'] if k > -0.02 else C['grass2'] if k > -0.15 else C['heather']
-
-def bank(A, fine=True):
-    rr = random.Random(3); nx, ny = (28, 30) if fine else (16, 12)
-    xs = [-BX + 2 * BX * i / nx for i in range(nx + 1)]; ys = [BY0 + (BY1 - BY0) * j / ny for j in range(ny + 1)]
-    G = [[A.v((x, y, bankz(x, y) + (rr.uniform(-0.04, 0.04) if fine else 0.0))) for y in ys] for x in xs]
-    for i in range(len(xs) - 1):
-        for j in range(len(ys) - 1):
-            q = [G[i][j], G[i + 1][j], G[i + 1][j + 1], G[i][j + 1]]; cz = sum(v.co.z for v in q) / 4
-            A.f(q, ground_mat(cz, (xs[i] + xs[i + 1]) / 2, (ys[j] + ys[j + 1]) / 2), (0, 0, 1))
-    if not fine: return
-    # boulders along the shore, weedy below the high-water line, lichen on their tops above it; smaller under the house
-    def mf(cen, nrm):
-        if cen.z < 1.2: return C['weed'] if cen.z > -0.4 else C['weed2']
-        if cen.z < 1.62: return C['barn'] if rr.random() < 0.6 else C['rock3']
-        return C['lichrock'] if nrm.z > 0.65 and rr.random() < 0.5 else rr.choice((C['rock1'], C['rock2'], C['rock3']))
-    for k in range(30):
-        if k < 22: x = rr.uniform(-14.0, 14.0); y = rr.uniform(0.6, 9.5); r = rr.uniform(0.22, 0.8)
-        else: x = rr.uniform(-13.0, 13.0); y = rr.uniform(14.5, 20.0); r = rr.uniform(0.15, 0.5)
-        if under_house(x, y, 0.0) and r > 0.45: r = 0.45
-        arock(A, (x, y, bankz(x, y) - 0.25 * r), r, (rr.uniform(0.9, 1.3), rr.uniform(0.8, 1.2), rr.uniform(0.5, 0.75)), rr, mf, 1 if r > 0.5 else 0)
-    # tufts of grass and a few cow parsley heads on the bank behind
-    for k in range(34):
-        x = rr.uniform(-13.0, 13.0); y = rr.uniform(10.0, 20.5)
-        if under_house(x, y, 0.6) or (RX1 < x < VX1 + 0.3 and y < VYS + 0.3): continue
-        z = bankz(x, y)
-        if z < QTOP + 0.05: continue
-        m = rr.choice((C['grass'], C['grass2'], C['grass2']))
-        for b in range(5):
-            a = rr.uniform(0, 2 * math.pi); h = rr.uniform(0.25, 0.55); lx, ly = math.cos(a) * 0.1, math.sin(a) * 0.1
-            base = V((x + lx, y + ly, z - 0.02)); tip = base + V((lx * 1.6, ly * 1.6, h)); s = V((-ly, lx, 0)).normalized() * 0.025
-            A.poly((base - s, base + s, tip), m)
-        if k % 5 == 0:
-            for b in range(3):
-                bx, by = x + rr.uniform(-0.3, 0.3), y + rr.uniform(-0.3, 0.3); h = rr.uniform(0.7, 1.1)
-                acyl(A, (bx, by, z), (bx, by, z + h), 0.012, lambda zz: C['grass'], 4, cap=False)
-                arock(A, (bx, by, z + h), 0.09, (1.4, 1.4, 0.45), rr, lambda c_, n_: C['flower'], 0)
+# The model brings no ground of its own (Jonas 01.11.2026, as for Father's naust: «Jeg vil at de så sømløst som mulig skal passe inn i
+# miljøet»): the bank of squares, its boulders and tufts are gone; it stands on the map's own ground, lifted over it where the ground is
+# high (view3d naustLift). What stands on the ground goes SINK m further down than bankz, into it.
+SINK = 1.2
+def foot(x, y, d=0.0): return bankz(x, y) - d - SINK
 
 
 # ---------- the quay on piles ----------
@@ -182,7 +144,7 @@ def quay(A, fine=True):
         abox(A, x0, x1, y0, y1, QTOP - 0.5, QTOP, C['w2'])
         abox(A, x0, x1, 0.0, 0.17, QTOP, QTOP + 0.15, C['w4'])
         for xb in BENTS[::2]:
-            for py in (PILE_Y[0], PILE_Y[2]): abox(A, xb - 0.15, xb + 0.15, py - 0.15, py + 0.15, bankz(xb, py) - 0.2, QTOP - 0.5, C['wwet'])
+            for py in (PILE_Y[0], PILE_Y[2]): abox(A, xb - 0.15, xb + 0.15, py - 0.15, py + 0.15, foot(xb, py, 0.2), QTOP - 0.5, C['wwet'])
         for bx, by in BOLL: abox(A, bx - 0.15, bx + 0.15, by - 0.15, by + 0.15, QTOP, QTOP + 0.7, C['w2'])
         return
     # the deck: planks from the face to the back, 0.2 m apart with gaps, the tones of old grey wood
@@ -205,13 +167,13 @@ def quay(A, fine=True):
     for i, xb in enumerate(BENTS):
         for py in PILE_Y:
             dx, dy = rr.uniform(-0.04, 0.04), rr.uniform(-0.04, 0.04)
-            acyl(A, (xb + dx, py + dy, bankz(xb, py) - 0.4), (xb, py, QTOP - 0.55), rr.uniform(0.13, 0.16), tidal, 6, cuts=TCUTS)
+            acyl(A, (xb + dx, py + dy, foot(xb, py, 0.4)), (xb, py, QTOP - 0.55), rr.uniform(0.13, 0.16), tidal, 6, cuts=TCUTS)
         if i % 2 == 1:
             xx = xb + 0.17; za, zb = -0.6, QTOP - 0.62
             beam(A, (xx, PILE_Y[0], za), (xx, PILE_Y[2], zb), 0.18, 0.05, C['w4'], up=(1, 0, 0))
             beam(A, (xx + 0.05, PILE_Y[2], za), (xx + 0.05, PILE_Y[0], zb), 0.18, 0.05, C['w4'], up=(1, 0, 0))
         fx = xb + rr.uniform(-0.03, 0.03)
-        acyl(A, (fx, -0.17, bankz(fx, -0.2) - 0.4), (fx, -0.17, QTOP + 0.3), 0.14, tidal, 6, cuts=TCUTS)
+        acyl(A, (fx, -0.17, foot(fx, -0.2, 0.4)), (fx, -0.17, QTOP + 0.3), 0.14, tidal, 6, cuts=TCUTS)
     # a waling along the face piles, at half tide
     abox(A, x0 + 0.1, x1 - 0.1, 0.03, 0.15, 0.6, 0.82, C['weed2'])
     # wooden bollards through the deck, darker at the top with an iron band
@@ -406,12 +368,12 @@ def under(A, fine=True):
     rr = random.Random(11); zt = FLOOR - 0.58
     if not fine:
         for x in SXS[::2]:
-            for y in SYS[::3]: abox(A, x - 0.12, x + 0.12, y - 0.12, y + 0.12, bankz(x, y) - 0.2, zt, C['stilt'])
+            for y in SYS[::3]: abox(A, x - 0.12, x + 0.12, y - 0.12, y + 0.12, foot(x, y, 0.2), zt, C['stilt'])
         abox(A, RX0 + 0.05, RX1 - 0.05, RY0 + 0.05, RY1 - 0.05, zt, WALLB, C['stilt'], skip=('+z',))
         return
     for y in SYS:
         for x in SXS:
-            acyl(A, (x + rr.uniform(-0.04, 0.04), y + rr.uniform(-0.04, 0.04), bankz(x, y) - 0.25), (x, y, zt), 0.13, stiltm, 7, cuts=TCUTS)
+            acyl(A, (x + rr.uniform(-0.04, 0.04), y + rr.uniform(-0.04, 0.04), foot(x, y, 0.25)), (x, y, zt), 0.13, stiltm, 7, cuts=TCUTS)
     for x in SXS: abox(A, x - 0.1, x + 0.1, RY0 + 0.02, RY1 - 0.02, zt, WALLB, C['stilt'], skip=('+z',))
     A.poly([(RX0, RY0, WALLB), (RX1, RY0, WALLB), (RX1, RY1, WALLB), (RX0, RY1, WALLB)], C['sark'], (0, 0, -1))
     # X bracing between the tall stilts under the sea gable, and down the long sides' first bay
@@ -523,12 +485,12 @@ def veranda(A, fine=True):
         for za, zb_ in ((VFLOOR + 0.94, VFLOOR + 1.02), (VFLOOR + 0.46, VFLOOR + 0.54)):
             abox(A, STAIR[1], VX1, VY0, VY0 + 0.08, za, zb_, T); abox(A, VX1 - 0.08, VX1, VY0, VYS, za, zb_, T)
             abox(A, RX1, VX1, VYS - 0.08, VYS, za, zb_, T); abox(A, VX0, VX0 + 0.08, VY0, RY0, za, zb_, T)
-        for x, y in VST: abox(A, x - 0.1, x + 0.1, y - 0.1, y + 0.1, bankz(x, y) - 0.2, POLE_TOP if (x, y) in POLES else zb, C['stilt'])
+        for x, y in VST: abox(A, x - 0.1, x + 0.1, y - 0.1, y + 0.1, foot(x, y, 0.2), POLE_TOP if (x, y) in POLES else zb, C['stilt'])
         return
     # the stilts, the east corners' going on up as the tall poles
     for x, y in VST:
         pole = (x, y) in POLES
-        acyl(A, (x + rr.uniform(-0.03, 0.03), y + rr.uniform(-0.03, 0.03), bankz(x, y) - 0.25), (x, y, POLE_TOP if pole else zb), 0.11, lambda zz: stiltm(zz) if zz < VFLOOR else C['pole'], 7,
+        acyl(A, (x + rr.uniform(-0.03, 0.03), y + rr.uniform(-0.03, 0.03), foot(x, y, 0.25)), (x, y, POLE_TOP if pole else zb), 0.11, lambda zz: stiltm(zz) if zz < VFLOOR else C['pole'], 7,
              cuts=TCUTS + ((VFLOOR,) if pole else ()), r1=0.085 if pole else None)
     # the beams on them and the joists under the deck
     abox(A, VX0, VX1, VY0, VY0 + 0.16, zb, VFLOOR - 0.045, C['stilt'], skip=('+z',))
@@ -630,7 +592,7 @@ def neutral(o):
 
 def build(fine=True):
     A = Acc('rorbu'); Gl = Acc('rorbu_glass'); rr = random.Random(1)
-    bank(A, fine); quay(A, fine); under(A, fine); cabin(A, Gl, fine); roof(A, fine); veranda(A, fine); stairs(A, fine)
+    quay(A, fine); under(A, fine); cabin(A, Gl, fine); roof(A, fine); veranda(A, fine); stairs(A, fine)
     if fine: props(A, rr)
     solids = [A.done(tint=NEUTRAL)]
     g = Gl.done(tint=NEUTRAL) if fine else None
