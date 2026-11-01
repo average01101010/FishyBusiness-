@@ -701,3 +701,40 @@ def foil_rudder(A, stock, z0, z1, chord, m, thick=0.12, top=None, n=12, rows=6):
     zs_ = [z0, z0 + 0.012] + [z0 + 0.03 + (z1 - z0 - 0.03) * k / rows for k in range(rows + 1)]
     sc = [0.5, 0.85] + [1.0] * (rows + 1)
     loft(A, [ring(z, k) for z, k in zip(zs_, sc)], lambda i: m, cap0=True, cap1=True, out=lambda mid, cc: V((0, mid.y - ys, mid.z - cc.z)) if abs(mid.y - ys) > 1e-4 else V((0, 0, mid.z - cc.z)))
+
+
+# ---------- the deck of a decked sjark (the speed sjark's revision, 01.11.2026): bitts, the roller in a hauling port, a mushroom vent and a
+# work light under a roof's edge, for any boat that has them (the havsjark drew her own bitts) ----------
+def bitts(A, x, y, z, m, h=0.26, r=0.042, gap=0.13, along=(1, 0)):
+    """a pair of bitts on a foot plate at (x, y) on a deck at height z, the pair along along: the two posts, their caps, the cross pin"""
+    a = V((along[0], along[1], 0)).normalized(); s = V((-a.y, a.x, 0)); c = V((x, y, z))
+    obox(A, c + V((0, 0, 0.008)), a * (gap / 2 + r + 0.05), s * (r + 0.02), V((0, 0, 0.012)), m)
+    for sg in (1, -1):
+        p = c + a * (sg * gap / 2)
+        acyl(A, p - V((0, 0, 0.004)), p + V((0, 0, h)), r, lambda q: m, seg=12)
+        acyl(A, p + V((0, 0, h)), p + V((0, 0, h + 0.015)), r * 1.25, lambda q: m, seg=12)
+    acyl(A, c + a * (-gap / 2) + V((0, 0, h * 0.7)), c + a * (gap / 2) + V((0, 0, h * 0.7)), 0.012, lambda q: m, seg=8)
+
+
+def hauling_roller(A, x0, x1, y_out, y_in, z, m_frame, m_roller, R=0.06):
+    """the roller across the sill of a hauling port in a bulwark (the line comes in over it to the hauler): two cheek plates from the
+    port's ends, the roller between them along the boat, its axle in the cheeks; x0 < x1 along the boat, y_out the outside, y_in inside"""
+    lo, hi = min(y_out, y_in), max(y_out, y_in); ym = (y_out + y_in) / 2
+    for x in (x0, x1): abox(A, x - 0.012, x + 0.012, lo, hi, z - 0.10, z + 0.14, m_frame)
+    acyl(A, (x0 + 0.012, ym, z + R * 0.6), (x1 - 0.012, ym, z + R * 0.6), R, lambda q: m_roller, seg=16)
+    acyl(A, (x0 - 0.02, ym, z + R * 0.6), (x1 + 0.02, ym, z + R * 0.6), R * 0.25, lambda q: m_frame, seg=8)
+
+
+def mushroom_vent(A, c, m, r=0.05, h=0.26):
+    """a mushroom vent on a deck or a roof at c (its foot): the stem and the cap over it"""
+    c = V(c); acyl(A, c - V((0, 0, 0.004)), c + V((0, 0, h)), r, lambda q: m, seg=12)
+    acyl(A, c + V((0, 0, h)), c + V((0, 0, h + 0.08)), r * 2.4, lambda q: m, seg=16, r1=r)
+
+
+def work_light(A, c, aim, m_body, m_lens, w=0.12, h=0.07, d=0.06):
+    """an LED work light on a short bracket at c (its foot on the surface over it), its lens aimed along aim (LYS-07)"""
+    c = V(c); a = V(aim).normalized(); s = a.cross(V((0, 0, 1))); s = s.normalized() if s.length > 1e-6 else V((1, 0, 0)); u = s.cross(a).normalized()
+    acyl(A, c, c - V((0, 0, 0.05)), 0.01, lambda q: m_body, seg=6)
+    b = c - V((0, 0, 0.05 + h / 2))
+    obox(A, b, a * (d / 2), s * (w / 2), u * (h / 2), m_body)
+    A.poly([b + a * (d / 2 + 0.001) + s * (sx * (w / 2 - 0.01)) + u * (sy * (h / 2 - 0.01)) for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1))], m_lens, a)
