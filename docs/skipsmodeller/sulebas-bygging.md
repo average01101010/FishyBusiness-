@@ -374,7 +374,40 @@ etter hverandre og skriver én logg per test (`runtests.sh`). Vent på at bakgru
 den i bakgrunnen, stoppes etter 30 minutter. Pakk aldri `run.py` inn i en kortere `timeout`: da drepes den mens en 3D-test går, testen
 lever videre (stopp den på prosess-id, ikke `pkill -f` med et mønster fra ditt eget skall), og neste test kjører ved siden av den.
 
+## 14. Lært av revisjonen av plastsjarken (01.11.2026)
+
+Revisjonen av `plastsjark` (`plast31.py`, `plastsjark-grunnlag.md`, `plastsjark-bygging.md`) var den fjerde uten bilder, og den første der Jonas
+ba om en pen båt («jeg gir deg ganske frie tøyler til å skape en pen båt»). Dette gjelder alle båter etter den.
+
+**Sjekk hva snittfunksjonen returnerer før du stoler på vekta.** `curve` i det gamle skriptet ga hele snittet fra kjølens underkant til ripa,
+så `stubcheck.py --volume curve` veide hele skroget (21,9 t mot 6); en superellipse fra kjølens underkant er en kasse ned til full dypgang.
+`qa/lines.py` (ny, for alle skript: `--section`, `--keel`, `--root`, `--sheer`) tegner spantrisset og veier tre vannlinjer på et sekund, og formen
+ble rettet mot volumet i tre runder før noe ble rendret.
+
+**Kroppen under vannlinja som én kubisk kurve.** Kontrollpunkter i en catmull-kurve gir lett en knekk i vannlinja når utfallet over er stort.
+En kubisk Bézier fra kjølroten (første håndtak bratt opp: hul kjølrot) til vannlinja med siste håndtak langs utfallets helning gir en rund
+kimming som går over i sida uten knekk; to tall (`GB`) styrer fyldigheten. Kjølen smalner fra roten (1,9 × halv bredde) ned.
+
+**Lette båter med full kjøl blir grunne.** 6 t på 9,45 × 3,30 m med 1,35 m dypgang gir en kropp bare 0,5 m under vannlinja og en dyp kjøl;
+11 % over er prisen for en kropp som ser ut som en sjark. Si det i grunnlaget heller enn å presse bunnen flat.
+
+**Speilets innside er ikke speilets utside.** Dekket og innsida av skansekledningen må begynne speilets tykkelse forut for utsida (`TT`), og
+speilets topp få sin egen kapp; ellers ligger to flater i samme plan (en grå flekk på speilet i runde 3). Se på hekken i nærbilde.
+
+**En nedsenket dørk gir et lavere hus.** `brotest` krever 1,8 m under taket; med dørken 0,30 m under dekket (et hull i dekket, foring ned til
+dørken, et trinn inne ved døra) står huset 0,30 m lavere og båten blir straks penere. Døra blir 1,55 m over dekket; ankeret `doors` får
+dekkets høyde og `h` etter det.
+
+**Fjernmodellens grense er punkter, ikke trekanter.** `vessel3d` krever middels (`npcModel(t, 0.3, 2)`) under 12 000 punkter for GLB-modeller,
+det vil si rundt 4 000 trekanter. Hold beslag, karmer og ekstra rader ute av `build(False)`.
+
+**Det som gjør en enkel båt pen** (uten bilder, etter planlisten og typen): spring som stiger mer forut enn akter, utfall i baugen, en
+avrundet hekk i stedet for et bredt speil, en scueringslist og kapp i tre mot hvit gelcoat og en mørk stripe, et lavt hus med et sammenhengende
+mørkt vindusbånd og en takkant i stripens farge, rustfritt og teak på dekk.
+
 ## Endringslogg
+
+- 01.11.2026: kap. 14, det revisjonen av plastsjarken lærte (snittfunksjonen, `qa/lines.py`, kroppen som kubisk kurve, lette båter med kjøl, speilets innside, nedsenket dørk, fjernmodellens grense, det som gjør en båt pen).
 
 - 01.11.2026: kap. 13 utvidet: verktøyene i `tools/boats/qa/`, vektene av de ureviderte båtene, malingslinja, klasjsjekken av beslag på utsida, K6 fra begge sider, rattet på båtene uten `hand`, tidsgrensene.
 - 01.11.2026: kap. 13, det revisjonen av plastsnekka lærte (regn ut det gamle skroget først, vannlinjebredden, kjølen i skrogets flate, styreplassen, dørhuset, broa i spillet).

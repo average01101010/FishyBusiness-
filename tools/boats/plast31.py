@@ -66,8 +66,12 @@ ZROOT = [(XA, 1.28), (0.5, 1.16), (1.0, 1.04), (1.6, 0.93), (2.4, 0.86), (3.6, 0
 WKB = [(X_KA, 0.0), (X_KA + 0.16, 0.075), (3.0, 0.080), (6.0, 0.070), (7.6, 0.052), (XF, 0.040)]   # the keel's (the stem's) half siding
 GB = (0.28, 0.46, 0.34)       # the garboard and the bilge: the cubic's first handle (its share of the breadth, GB[2] its share of the depth), the second's reach
 def zs(x): return interp(SHEER, x)
-def hbs(x): return max(0.0, interp(BS, x))
-def hbw(x): return max(0.0, interp(BW, x))
+def stern_round(x):
+    """the quarters rounded in plan into a narrower transom (72 % of the beam), the way the sjarks of the type are drawn, not a wide box"""
+    if x >= 1.2: return 1.0
+    u = (1.2 - x) / 1.2; return 0.72 + 0.28 * math.sqrt(max(0.0, 1 - u * u))
+def hbs(x): return max(0.0, interp(BS, x) * stern_round(x))
+def hbw(x): return max(0.0, interp(BW, x) * stern_round(x))
 def kb(x): return interp(KB, x) if x >= X_KA - 1e-9 else None
 def wk(x): return interp(WKB, x) if x >= X_KA - 1e-9 else 0.0
 def smin(a, b, k):
@@ -182,7 +186,7 @@ def colours():
     w = lambda n, rgb, g=0.4, z=0, metal=0.0, emit=0.0: C.__setitem__(n, mat(n, rgb, g, zone=z, metal=metal, emit=emit))
     w('af', (0.55, 0.12, 0.08), 0.15); w('boot', (0.06, 0.06, 0.07), 0.45); w('hull', (0.93, 0.93, 0.90), 0.6, 1)
     w('stripe', (0.08, 0.14, 0.32), 0.55, 2); w('white', (0.93, 0.92, 0.86), 0.5, 3); w('roof', (0.88, 0.88, 0.84), 0.3, 3)
-    w('inner', (0.88, 0.88, 0.84), 0.3); w('cap', (0.90, 0.90, 0.87), 0.45); w('deck', (0.42, 0.50, 0.45), 0.12, 4); w('nonslip', (0.40, 0.48, 0.43), 0.06, 4)
+    w('inner', (0.88, 0.88, 0.84), 0.3); w('cap', (0.56, 0.37, 0.20), 0.35); w('deck', (0.42, 0.50, 0.45), 0.12, 4); w('nonslip', (0.40, 0.48, 0.43), 0.06, 4)
     w('steel', (0.78, 0.80, 0.82), 0.85, 0, 0.85); w('chrome', (0.86, 0.87, 0.89), 0.95, 0, 0.9); w('alu', (0.72, 0.74, 0.76), 0.6, 0, 0.7)
     w('dark', (0.12, 0.13, 0.14), 0.25); w('black', (0.04, 0.04, 0.05), 0.4); w('rubber', (0.05, 0.05, 0.06), 0.2); w('frame', (0.07, 0.07, 0.08), 0.45)
     w('screen', (0.03, 0.05, 0.07), 0.9); w('bezel', (0.10, 0.10, 0.11), 0.5); w('cush', (0.15, 0.16, 0.19), 0.35); w('switch', (0.20, 0.21, 0.22), 0.4)
@@ -288,6 +292,7 @@ class Mesh:
 WX0, WX1, WY = 0.95, 3.75, 1.28     # the wheelhouse: its aft and forward walls, its half width
 CX0, CX1 = 6.40, 8.55        # the cabin trunk: its aft face, and where its front has sloped down to the foredeck
 CAP = 0.085                  # the bulwark's cap, its width
+TT = 0.06                    # the transom's thickness: the deck and the transom's inside start this far forward of its outside
 def ysh(x): return section(x)[-1][0]
 def ycap(x): return max(0.0, ysh(x) - CAP)                  # the cap's inner edge
 def ybw(x): return max(0.0, y_at(x, z_deck(x)) - 0.065)      # the bulwark's foot on the deck (its inside leans in a little)
@@ -350,7 +355,7 @@ def hull_shell(M, fine=True):
         e = ybw(x); zd = z_deck(x); w = min(cabin_w(x), e - 0.04); wt = trunk_y(x, z_trunk(x)); t = z_trunk(x)
         P = [(x, w, zd + camber(x, w))] + [(x, wt * (1 - 2 * i / NT), max(t + 0.05 * (1 - (1 - 2 * i / NT) ** 2), zd + camber(x, wt * (1 - 2 * i / NT)) + 0.001)) for i in range(NT + 1)] + [(x, -w, zd + camber(x, w))]
         return edge(x, 1) + P + list(reversed(edge(x, -1)))
-    aft = [x for x in xs if x <= CX0 + 1e-9]; tr = [x for x in xs if CX0 - 1e-9 <= x <= CX1 + 1e-9]; fd = [x for x in xs if x >= CX1 - 1e-9]
+    aft = [x for x in xs if TT - 1e-9 <= x <= CX0 + 1e-9]; tr = [x for x in xs if CX0 - 1e-9 <= x <= CX1 + 1e-9]; fd = [x for x in xs if x >= CX1 - 1e-9]
     def em(j, n):
         return C['cap'] if j in (0, 1, n - 3, n - 2) else C['inner'] if j in (2, n - 4) else None
     def eo(j, n):
@@ -369,8 +374,11 @@ def hull_shell(M, fine=True):
     Fd = [drow(x) for x in fd]
     M.strip(Fd, lambda i, j: em(j, n) or C['nonslip'], lambda i, j: eo(j, n))
     # the transom's inside: the cap across the top and the inside down to the deck
-    r0 = D[0]; xa = r0[0][0]
-    M.f([r0[0], r0[1], r0[n - 2], r0[n - 1]], C['cap'], (0, 0, 1))
+    r0 = D[0]
+    # the cap across the transom's top: from the outside's sheer aft of TT (the transom's top edge and the quarters) in to the inside's edge
+    tops = [x for x in xs if x < TT - 1e-9]
+    port = [(S[x][-1][0], S[x][-1][1], S[x][-1][2]) for x in tops]
+    M.f(list(reversed(port)) + [(p_[0], -p_[1], p_[2]) for p_ in port] + [r0[n - 1], r0[n - 2], r0[1], r0[0]], C['cap'], (0, 0, 1))
     M.f([r0[2]] + r0[3:n - 3] + [r0[n - 3]] if False else [r0[1], r0[2], r0[3], r0[n - 4], r0[n - 3], r0[n - 2]], C['inner'], (1, 0, 0))
     # the trunk's aft face, from the deck up to its cambered top
     c = Tr[0]
@@ -594,7 +602,7 @@ def wheelhouse(A, G, fine=True):
     ri = [(x + (0.16 if x < WX0 else -0.16 if x > WX1 else 0.0), y * 0.88) for x, y in ro]
     for i in range(len(ro)):
         a, b = ro[i], ro[(i + 1) % len(ro)]; c, d = ri[(i + 1) % len(ri)], ri[i]; nrm = (b[1] - a[1], -(b[0] - a[0]), 0)
-        A.poly([(a[0], a[1], zr_), (b[0], b[1], zr_), (b[0], b[1], zr_ + 0.07), (a[0], a[1], zr_ + 0.07)], w, nrm)
+        A.poly([(a[0], a[1], zr_), (b[0], b[1], zr_), (b[0], b[1], zr_ + 0.07), (a[0], a[1], zr_ + 0.07)], C['stripe'], nrm)   # the roof's lip navy, as the stripe
         A.poly([(a[0], a[1], zr_ + 0.07), (b[0], b[1], zr_ + 0.07), (c[0], c[1], crown(*c)), (d[0], d[1], crown(*d))], C['roof'], (0, 0, 1))
     A.poly([(x, y, crown(x, y)) for x, y in ri], C['roof'], (0, 0, 1))
     for i in range(len(ro)):                                                                 # the drip edge under the lip
@@ -636,7 +644,7 @@ def helm(A, G, fine=True):
     w = C['inner']; z0, zs_, zh_, zr_ = wh_z(); (x0, dz0), (x1, dz1) = dash()
     A.poly([(HX0, HY0, z0), (HX0, HY1, z0), (HX0, HY1, dz0), (HX0, HY0, dz0)], w, (-1, 0, 0))
     A.poly([(HX0, HY0, dz0), (HX0, HY1, dz0), (x0, HY1, dz0), (x0, HY0, dz0)], w, (0, 0, 1))
-    A.poly([(x0, HY0, dz0), (x0, HY1, dz0), (x1, HY1, dz1), (x1, HY0, dz1)], C['dark'], dash_n())
+    A.poly([(x0, HY0, dz0), (x0, HY1, dz0), (x1, HY1, dz1), (x1, HY0, dz1)], C['board'], dash_n())     # the dash light, the screens dark in their bezels (snekka's lesson)
     xw = WX1 - 0.07
     for y, sg in ((HY0, -1), (HY1, 1)):
         A.poly([(HX0, y, z0), (xw, y, z0), (xw, y, dz1), (x1, y, dz1), (x0, y, dz0), (HX0, y, dz0)], w, (0, sg, 0))
@@ -696,7 +704,8 @@ def mast(A, crown, fine=True):
     # the dry exhaust beside the mast to port (a stack up through the roof with a rain cap), braced to the mast
     ex0 = (MX - 0.32, 0.55)
     acyl(A, (ex0[0], ex0[1], crown(*ex0) - 0.01), (ex0[0], ex0[1], crown(*ex0) + 0.08), 0.11, lambda q: C['steel'], seg=14)
-    acyl(A, (ex0[0], ex0[1], crown(*ex0) + 0.08), (ex0[0], ex0[1], zr_ + 1.48), 0.065, lambda q: C['black'], seg=12)
+    acyl(A, (ex0[0], ex0[1], crown(*ex0) + 0.08), (ex0[0], ex0[1], zr_ + 1.30), 0.065, lambda q: C['steel'], seg=12)
+    acyl(A, (ex0[0], ex0[1], zr_ + 1.30), (ex0[0], ex0[1], zr_ + 1.48), 0.065, lambda q: C['black'], seg=12)
     acyl(A, (ex0[0], ex0[1], zr_ + 1.48), (ex0[0] - 0.05, ex0[1], zr_ + 1.56), 0.075, lambda q: C['black'], seg=12)
     if fine:
         acyl(A, (ex0[0], ex0[1] - 0.06, zr_ + 1.2), (MX, 0.04, zr_ + 1.2), 0.012, s, seg=6)
@@ -782,7 +791,7 @@ def gut_top(): return z_deck(5.35) + 0.90
 def gutting_table(A):
     """a stainless table across the port bulwark at working height, its outer edge a little over the side so the offal goes into the sea,
     a lip along its inboard edge and its ends; two brackets from the cap up under it, two legs down to the deck"""
-    x0, x1 = GUT; zt = gut_top(); yo = max(ysh(x0), ysh(x1)) + 0.03; yi_ = 0.90
+    x0, x1 = GUT; zt = gut_top(); yo = max(ysh(x0), ysh(x1)) + 0.03; yi_ = 1.02
     abox(A, x0, x1, yi_, yo, zt - 0.03, zt, C['steel'])
     abox(A, x0, x1, yi_, yi_ + 0.02, zt, zt + 0.05, C['steel'])
     for x in (x0, x1 - 0.02): abox(A, x, x + 0.02, yi_, yo - 0.08, zt, zt + 0.05, C['steel'])
@@ -883,7 +892,7 @@ def anchors():
     z0, zs_, zh_, zr_ = wh_z(); hy = -(gunwale_y(HX) - 0.02); px, py = POLE
     return {'bower': bower(G), 'eye': G(SKIP[0], SKIP[1], z0 + 1.65), 'skipperAt': G(SKIP[0], SKIP[1], z0), 'hp': HP, 'fov': FOV,
             # the hands: the fisher at the hauler on the starboard rail, the one who guts at the table to port, one at the hold's hatch, one aft
-            'crewSpots': [G(5.85, -1.02, z_deck(5.85)) + [1.57], G(5.30, 0.62, z_deck(5.3)) + [-1.57], G(4.20, -0.30, z_deck(4.2)) + [3.14], G(0.55, -0.55, z_deck(0.55)) + [0.0]],
+            'crewSpots': [G(5.85, -1.02, z_deck(5.85)) + [1.57], G(5.30, 0.74, z_deck(5.3)) + [-1.57], G(4.20, -0.30, z_deck(4.2)) + [3.14], G(0.55, -0.55, z_deck(0.55)) + [0.0]],
             # typed lights (B8; rule 23 (d)(i), under 12 m: an all-round white and the side lights; the game also lights the stern light)
             'lights': [[G(MX, 0, white_z()), [1, 0.95, 0.85], 'allround'],
                        [G(LAMP_X + 0.012, WY + 0.068, lamp_z()), [1, 0.12, 0.1], 'port'],

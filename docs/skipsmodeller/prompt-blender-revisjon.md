@@ -1,10 +1,10 @@
 Revider båtmodellen: [BÅTENS NAVN]
 
-Dette er en eksisterende Blender-modell i spillet som ikke ble bygd etter noen plan. Løft den til samme nivå og arbeidsmåte som pilotbåten ringnot38 og de reviderte båtene trebat, skiff og snekke (F5 i docs/planer/grafikk-batmodeller.md). Finn selv ut hvilken type i VESSELS og hvilket skript i tools/boats/ navnet gjelder.
+Dette er en eksisterende Blender-modell i spillet som ikke ble bygd etter noen plan. Løft den til samme nivå og arbeidsmåte som pilotbåten ringnot38 og de reviderte båtene trebat, skiff, snekke og plastsjark (F5 i docs/planer/grafikk-batmodeller.md). Finn selv ut hvilken type i VESSELS og hvilket skript i tools/boats/ navnet gjelder.
 
-GRENEN: main er tom; spillet ligger på arbeidsgrenene. Bygg på den nyeste grenen med spillet (nå ccr-3349da69-ayyd2k, som har trebåten, skiffen, plastsnekka og lærdommene; den er også rullet ut til ccr-5e1ba2f4-pusvyd) og commit underveis.
+GRENEN: main er tom; spillet ligger på arbeidsgrenene. Bygg på den nyeste grenen med spillet (nå ccr-bdecba4a-xbp5d0, som har trebåten, skiffen, plastsnekka, plastsjarken, verktøyene i tools/boats/qa og lærdommene; den er også rullet ut til ccr-5e1ba2f4-pusvyd) og commit underveis.
 
-LES FØRST, I SIN HELHET, før du endrer noe: docs/INDEKS.md, docs/skipsmodeller/sulebas-bygging.md (arbeidsmåten; reglene i kap. 7 og lærdommene i kap. 11, 12 og 13 gjelder), /blender-skillen, docs/skipsmodeller/planliste-fiskefartoy.md (også kap. 29 og 30), docs/skipsmodeller/sulebas-pilot-grunnlag.md (malen for grunnlaget), trebat-grunnlag.md, skiff-grunnlag.md og snekke-grunnlag.md (eksempler på reviderte båter; snekka er den første med kjøl, innenbords propell i brønn og dørhus), docs/skipsmodeller/kartlegging-spillet.md og docs/batplan.md (det som er kjent om båten), skriptet, ringnot38.py, fittings.py og bpyutil.py, og det spillet bruker fra modellen (VESSELS, SPEC3D, ankrene og koden som tegner båten). Si fra hvis du ikke har lest noe av dette.
+LES FØRST, I SIN HELHET, før du endrer noe: docs/INDEKS.md, docs/skipsmodeller/sulebas-bygging.md (arbeidsmåten; reglene i kap. 7 og lærdommene i kap. 11, 12 og 13 gjelder), /blender-skillen, docs/skipsmodeller/planliste-fiskefartoy.md (også kap. 29 og 30), docs/skipsmodeller/sulebas-pilot-grunnlag.md (malen for grunnlaget), trebat-grunnlag.md, skiff-grunnlag.md, snekke-grunnlag.md og plastsjark-grunnlag.md (eksempler på reviderte båter; snekka er den første med kjøl, innenbords propell i brønn og dørhus, plastsjarken den første med styrhus og nedsenket dørk), docs/skipsmodeller/kartlegging-spillet.md og docs/batplan.md (det som er kjent om båten), skriptet, ringnot38.py, fittings.py og bpyutil.py, og det spillet bruker fra modellen (VESSELS, SPEC3D, ankrene og koden som tegner båten). Si fra hvis du ikke har lest noe av dette.
 
 KILDENE: Jeg legger ved de bildene jeg har. Finn selv ut hva hvert bilde viser og hva det kan brukes til (rett fra siden = mål, skrått = form). Har jeg ikke lagt ved bilder, bruk det som finnes i repoet og dokumentene (kildene i skriptets kommentarer, tegningsmål, kartlegging-spillet.md), og si hvilke bilder som ville gjort resultatet bedre. Spør meg bare om det som ikke kan avgjøres uten meg.
 
@@ -35,6 +35,15 @@ FERDIG BETYR:
 Kjør på.
 
 ---
+
+Det neste økt bør vite (etter plastsjarken 01.11.2026):
+- Sjekk hva snittfunksjonen returnerer før du veier: `qa/lines.py <skript> --section <navn>` tegner spantrisset og veier tre vannlinjer for
+  alle skript (plast31: `curve` var hele skroget, 21,9 t mot 6). Kroppen under vannlinja som én kubisk kurve (`plast31.py body`) gir rund kimming uten knekk.
+- `tests/p31shot.py` er den nyeste malen for før- og etter-bildene; `runtests.sh` tar `P=<prefiks>` for loggnavnene.
+- Fjernmodellen må holde 12 000 punkter (rundt 4 000 trekanter) i `vessel3d`; hold beslag og ekstra rader ute av `build(False)`.
+- Jonas ga frie tøyler til å gjøre plastsjarken pen: se `plastsjark-bygging.md` kap. 3 og `sulebas-bygging.md` kap. 14 for hva som virket.
+- Åpent spørsmål til Jonas: hvor står styrhuset på forbildet (akter eller midtskips)? `plastsjark-grunnlag.md` kap. 8.
+- Neste i rekkefølgen etter `docs/batplan.md` del 10: `hs11.py` (sjarkny, 45 t mot 15), så `hurtig11.py` og `malo36.py`.
 
 Det neste økt bør vite (etter plastsnekka 01.11.2026):
 - Regn ut det gamle skrogets deplasement før du ser på bildene (kap. 13): snekka hadde 10,5 t mot 3,0 t uten at noen hadde sett det.

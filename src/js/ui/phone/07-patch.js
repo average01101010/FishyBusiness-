@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['plastsjark-011126', '01.11.2026', 'Plastsjarken i ny drakt', 'The fibreglass sjark rebuilt', [
+       ['Plastsjarken på 31 fot er bygd på nytt og penere: mer spring i baugen, avrundet hekk, teaklist langs ripa, et lavere styrhus med svart vindusbånd, og en ekte kjøl med propellen i en brønn foran roret.', 'The 31 ft fibreglass sjark is rebuilt and handsomer: more sheer in the bow, a rounded stern, a teak strake along the gunwale, a lower wheelhouse with a black window band, and a real keel with the propeller in an aperture ahead of the rudder.'],
+       ['Fra broa ser skipperen nå ratt, kartplotter, ekkolodd og kompass foran seg, og koøyene, lukene og lensportene er ekte åpninger.', 'From the helm the skipper now sees the wheel, the plotter, the sounder and the compass ahead of him, and the portholes, hatches and freeing ports are real openings.'],
+       ['Sjarken har fått sitt eget sløyebord over babord ripe, med lasteromsluka mellom det og haleren.', 'The sjark has her own gutting table over the port rail, with the hold hatch between it and the hauler.'],
+    ]],
     ['snekke-011126', '01.11.2026', 'Plastsnekka i detalj', 'The fibreglass snekke in detail', [
        ['Plastsnekka på 26 fot er bygd på nytt: skroget med de støpte klinkbordene har fått en ekte kjøl med propellen i en brønn foran roret, vinduer, dør og luker som ekte åpninger, og lensporter og eksos i speilet.', 'The 26 ft fibreglass snekke is rebuilt: the hull with its moulded clinker planks has a real keel with the propeller in an aperture ahead of the rudder, windows, a door and hatches as real openings, and scuppers and the exhaust in the transom.'],
        ['Skipperen står nå på dørken under hardtoppen, med ratt, kartplotter, kompass og gasshendel foran seg, og ser ut gjennom vindskjermen.', 'The skipper now stands on the sole under the hard top, with the wheel, the plotter, the compass and the throttle in front of him, and looks out through the windscreen.'],
