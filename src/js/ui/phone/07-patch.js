@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['driftsplan-fangst-301026', '30.10.2026', 'Driftsplanen viser fangsten om bord', 'The operations plan shows the catch aboard', [
+       ['Statistikken i driftsplanen teller det båten har fisket hver dag, også fangsten som ligger i is om bord og ennå ikke er levert, og antall turer og leveringer hver for seg.', 'The statistics in the operations plan count what the boat has caught each day, also the catch kept in ice aboard and not yet landed, and the trips and the landings each on their own.'],
+       ['Siden viser hvor mye som er om bord nå, og når det leveres etter Levering-raden.', 'The page shows how much is aboard now, and when it is landed by the Landing row.'],
+       ['Utgiftene for hele planen viser tallet igjen, ikke «NaN kr».', 'The costs for the whole plan show the number again, not «NaN kr».']]],
     ['redskap-langs-281026', '28.10.2026', 'Båten går langs redskapet', 'The boat runs along the gear', [
        ['Når du setter eller trekker line, garn og teiner, går båten jevnt og sakte langs strengen i stedet for å stå stille og så hoppe et stykke fram.', 'When you set or haul lines, nets and pots, the boat runs slowly and evenly along the string instead of standing still and then jumping ahead.'],
        ['Dekksdagboka åpner igjen sluttsedler fra før lottsystemet der mannskapet var med.', 'The deck log opens landing notes again from before the share system where the crew were along.']]],
