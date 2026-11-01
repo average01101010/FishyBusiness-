@@ -172,9 +172,12 @@ def section(x, sg=1, fine=True):
     if x >= X_KA:
         b = kb(x); f = min(1.0, (x - X_KA) / 0.10); ww = wk(x) * f; wr = wroot(x) * f
         if x <= X_KF:
-            fw = 0.12 * f; zc = z_on(P, wr); zt = max(b + 0.06, zc - 0.10)
-            out += [(0.0, b, 'k'), (ww * 0.55, b, 'k'), (ww * 0.92, b + 0.014, 'k'), (ww, b + 0.04, 'k')] if fine else [(0.0, b, 'k'), (ww, b + 0.02, 'k')]
-            for i in range(1, nk + 1): t = i / nk; out.append((ww + (wr - ww) * t, b + (0.04 if fine else 0.02) + (zt - b - (0.04 if fine else 0.02)) * t, 'k'))
+            # the keel runs into the stem over its last 0.8 m: the root's width, the fillet and the rounding of its underside fade, so the
+            # rows meet the stem's without a step at X_KF (a 6-10 cm jump there kinked the stripes in the bow, Jonas 01.11.2026)
+            g = ss(X_KF, X_KF - 0.8, x); wr = ww + (wr - ww) * g
+            fw = 0.12 * f * g; zc = z_on(P, wr); zt = max(b + 0.06 * g, zc - 0.10 * g); e1, e2 = 0.014 * g, (0.04 if fine else 0.02) * g
+            out += [(0.0, b, 'k'), (ww * 0.55, b, 'k'), (ww * 0.92, b + e1, 'k'), (ww, b + e2, 'k')] if fine else [(0.0, b, 'k'), (ww, b + e2, 'k')]
+            for i in range(1, nk + 1): t = i / nk; out.append((ww + (wr - ww) * t, b + e2 + (zt - b - e2) * t, 'k'))
             y1 = wr + fw; z1 = z_on(P, y1)
             for i in range(1, nf + 1):
                 t = i / (nf + 1); u = 1 - t
@@ -562,7 +565,9 @@ def wheelhouse(fine=True):
             vv = V(v).normalized(); n = V(u).normalized().cross(vv).normalized()
             if nm.startswith('side'): n = V((0, 1 if nm.endswith('p') else -1, 0))
             if nm == 'aft': n = V((-1, 0, 0))
-            for k, poly in enumerate(wins): objs.append(plate('wd_%s%d' % (nm, k), V(o) + n * 0.004, u, vv, poly, C['dark'], nrm=n))
+            for k, poly in enumerate(wins):     # (the far version: each window a plain quad over its outline's box)
+                us = [q[0] for q in poly]; ws = [q[1] for q in poly]; box_ = [(min(us), min(ws)), (max(us), min(ws)), (max(us), max(ws)), (min(us), max(ws))]
+                objs.append(plate('wd_%s%d' % (nm, k), V(o) + n * 0.004, u, vv, box_, C['dark'], nrm=n))
     else:
         # the door: a white frame round the opening, the leaf in it a little in (its window, its handle, its hinges forward), a step
         # inside from the sill down to the floor
@@ -967,6 +972,7 @@ def underwater(fine=True):
     acyl(U, (RX_ - 0.04, 0, -1.66), (RX_ - 0.04, 0, z_low(RX_) + 0.08), 0.035, lambda q: C['steel'], seg=10)
     acyl(U, (RX_ - 0.04, 0, z_low(RX_) - 0.05), (RX_ - 0.04, 0, z_low(RX_) + 0.01), 0.07, lambda q: C['prop'], seg=12)
     px, py, pz = PROP
+    if not fine: return U.done(35)          # (the far version: no shaft or propeller under the water, it holds vessel3d's 12 000 points)
     acyl(U, (px + 0.07, 0, pz), (X_KA + 0.06, 0, pz), 0.03, lambda q: C['steel'], seg=10)
     acyl(U, (X_KA - 0.04, 0, pz), (X_KA + 0.06, 0, pz), 0.07, lambda q: C['prop'], seg=14, r1=0.08)
     acyl(U, (px + 0.14, 0, pz), (px + 0.20, 0, pz), 0.06, lambda q: C['anode'], seg=14)

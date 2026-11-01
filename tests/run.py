@@ -156,6 +156,10 @@ def report(r):
         for l in r['tail']: print('       | ' + l[:200])
 
 
+# what the unit tests read: the core, the boat models (tests/unit/vessel3d.test.mjs builds every model from src/data/ in Node, 01.11.2026)
+UNIT_SRC = ('src/js/core/', 'tests/unit/', 'src/js/vessel3d.js', 'src/data/boat-')
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     all3d = '--3d' in sys.argv
@@ -164,12 +168,12 @@ def main():
     if args[0] == 'changed':
         files, names = changed_tests()
         print('Endrede filer: ' + (', '.join(files) or 'ingen'))
-        if not names and not any(f.startswith(('src/js/core/', 'tests/unit/')) for f in files): print('Ingen tester dekker disse endringene. Ingenting å kjøre.'); sys.exit(0)
+        if not names and not any(f.startswith(UNIT_SRC) for f in files): print('Ingen tester dekker disse endringene. Ingenting å kjøre.'); sys.exit(0)
     else: names = [a.replace('.py', '') for a in args[1:]] if args[0] == 'smoke' else D3 + LITE
     names = list(dict.fromkeys(names))
     # the unit tests of the core (tests/unit/run.mjs, 29.10.2026): Node only, a few seconds, no build. They run first when the core or
     # the unit tests changed, in every full run, and in smoke when «unit» is named
-    unit = args[0] == 'full' or (args[0] == 'changed' and any(f.startswith(('src/js/core/', 'tests/unit/')) for f in files)) or 'unit' in names
+    unit = args[0] == 'full' or (args[0] == 'changed' and any(f.startswith(UNIT_SRC) for f in files)) or 'unit' in names
     names = [n for n in names if n != 'unit']
     unit_bad = False
     if unit:

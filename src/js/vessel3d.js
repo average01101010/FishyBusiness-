@@ -862,7 +862,9 @@ function markStrips(type){
   const nearAnc = st => st.some(([B, T]) => anc.some(([f, r]) => B.concat(T).some(p => Math.hypot(p[0] - f[0], p[1] - f[1], p[2] - f[2]) < r)));
   const ok = st => { if (stripProud(type, st[0]) || stripProud(type, st[1]) || nearAnc(st)) return null;
     const P = st.map(s => stripPaint(type, s)); if (P.some(p => !p || p.even < 0.9)) return null; return P; };
-  for (const dr of [0, 0.35, 0.7, 1.05]) for (const f of [0.11, 0.13, 0.09, 0.15, 0.17, 0.07, 0.19]) for (const k of [1, 0.85]){
+  // (down to 1.75 heights under the sheer since 01.11.2026: on the havsjark the fender strake runs 0.35 m under the sheer at the bow, so the
+  // mark goes under it; only a boat where every place higher up failed gets a lower one)
+  for (const dr of [0, 0.35, 0.7, 1.05, 1.4, 1.75]) for (const f of [0.11, 0.13, 0.09, 0.15, 0.17, 0.07, 0.19]) for (const k of [1, 0.85]){
     const st = sideStrip(type, f, h * k, 4, dr * h * k); if (!st) continue; const P = ok(st);
     if (P){ MARKPAINT[type] = P; return MARKSTRIP[type] = st; }
   }
