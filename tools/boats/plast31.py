@@ -391,7 +391,7 @@ PORTS = [7.00, 7.70]                                           # the portholes o
 def port_z(x): return z_deck(x) + 0.42
 COMP = (-0.30, 0.32, 0.06, 0.72)                              # the companionway in the trunk's aft face: y from, to; z over the deck from, to
 HATCH_F = (7.02, 7.52, -0.25, 0.25)                           # the forward hatch on the trunk's top
-HOLD = (4.40, 5.60, -0.62, 0.62)                              # the hold's hatch in the working deck
+HOLD = (4.62, 5.72, -0.62, 0.62)                              # the hold's hatch in the working deck
 FREE = [(4.25, 0.40), (5.45, 0.40), (1.55, 0.36)]             # the freeing ports in the bulwarks at the deck (x from, length)
 EXH_R = 0.035; BILGE_R = 0.016
 
@@ -409,7 +409,7 @@ def cutters():
     y0, y1, z0, z1 = COMP; zd = z_deck(CX0)
     out.append(((CX0, (y0 + y1) / 2, zd + (z0 + z1) / 2), (0, 1, 0), (0, 0, 1), rr_pts(0, 0, y1 - y0, z1 - z0, 0.05), 0.06))
     x0, x1, y0, y1 = HATCH_F; out.append((((x0 + x1) / 2, 0, ttop((x0 + x1) / 2, 0)), (1, 0, 0), (0, 1, 0), rr_pts(0, 0, x1 - x0, y1 - y0, 0.05), 0.12))
-    x0, x1, y0, y1 = HOLD; out.append((((x0 + x1) / 2, 0, z_deck(5.0) + 0.02), (1, 0, 0), (0, 1, 0), rr_pts(0, 0, x1 - x0, y1 - y0, 0.04), 0.10))
+    x0, x1, y0, y1 = HOLD; out.append((((x0 + x1) / 2, 0, z_deck(5.17) + 0.02), (1, 0, 0), (0, 1, 0), rr_pts(0, 0, x1 - x0, y1 - y0, 0.04), 0.10))
     out.append(((0, 0, z_deck(2.3)), (1, 0, 0), (0, 1, 0), wh_inner(), 0.12))                 # the deck inside the wheelhouse (its sole is sunk)
     for x, sg, h, r in ((EXH_W[0], EXH_W[1], EXH_W[2], EXH_R), (BILGE[0], BILGE[1], BILGE[2], BILGE_R)):
         out.append(((x, sg * y_at(x, WL + h), WL + h), (1, 0, 0), (0, 0, 1), circle(r, 16), 0.05))
@@ -498,7 +498,7 @@ def linings(A, G, fine=True):
     if fine:
         for yy in (-0.11, 0.11): acyl(A, (x1 + 0.03, yy - 0.03, zf + 0.012), (x1 + 0.03, yy + 0.03, zf + 0.012), 0.009, s, seg=8)
     # the hold: a coaming round the hole up from the deck, dark down into the hold, the lid on the coaming with its lip and dogs
-    x0, x1, y0, y1 = HOLD; zd0 = z_deck(5.0); o = rr_pts((x0 + x1) / 2, 0, x1 - x0, y1 - y0, 0.04, 3)
+    x0, x1, y0, y1 = HOLD; zd0 = z_deck(5.17); o = rr_pts((x0 + x1) / 2, 0, x1 - x0, y1 - y0, 0.04, 3)
     ring = [(x, y, z_deck(x) + camber(x, y) - 0.03) for x, y in o]
     tube(A, ring, (0, 0, -1), 0.45, C['inner'], C['cabin'])
     F.loft(A, [[(x, y, z_deck(x) + camber(x, y) - 0.03) for x, y in o], [(x, y, zd0 + 0.18) for x, y in o]], lambda i: C['white'], cap0=False, cap1=False,
@@ -596,7 +596,9 @@ def wheelhouse(A, G, fine=True):
         abox(A, WX1 + 0.03, WX1 + 0.045, 0.83, 0.92, zd_ + 0.69, zd_ + 0.71, C['steel'])
         for zz in (zd_ + 0.30, zd_ + 1.25): acyl(A, (WX1 + 0.01, 0.355, zz - 0.05), (WX1 + 0.01, 0.355, zz + 0.05), 0.012, lambda q: C['steel'], seg=8)
     # the roof: its underside, a thin lip with a drip edge all round, the visor over the front, the crown cambered 6 cm
-    ro = [(WX0 - 0.10, -WY - 0.08), (WX1 - 0.2, -WY - 0.08), (WX1 + LEAN + 0.22, -1.08), (WX1 + LEAN + 0.22, 1.08), (WX1 - 0.2, WY + 0.08), (WX0 - 0.10, WY + 0.08)]
+    ro = [(WX0 - 0.10, -WY - 0.08), (WX1 - 0.2, -WY - 0.08), (WX1 + LEAN + 0.04, -1.08), (WX1 + LEAN + 0.04, 1.08), (WX1 - 0.2, WY + 0.08), (WX0 - 0.10, WY + 0.08)]
+    # (the visor stands only 4 cm past the front: the game's deck map takes a roof within 0.6 m and 1.6 m of a part it can step onto,
+    # the hold's lid, for deck; vessel3d.js deckMap)
     A.poly([(x, y, zr_) for x, y in ro], C['inner'], (0, 0, -1))
     crown = lambda x, y: zr_ + 0.07 + 0.05 * (1 - min(1.0, (y / (WY + 0.08)) ** 2))
     ri = [(x + (0.16 if x < WX0 else -0.16 if x > WX1 else 0.0), y * 0.88) for x, y in ro]
@@ -716,7 +718,7 @@ def mast(A, crown, fine=True):
         F.searchlight(A, (WX1 - 0.20, 0.0, crown(WX1 - 0.2, 0) + 0.24), (1, 0, -0.08), 0.08, C['dark'], C['lens'], C['steel'])
         acyl(A, (WX1 - 0.20, 0.0, crown(WX1 - 0.2, 0) - 0.004), (WX1 - 0.20, 0.0, crown(WX1 - 0.2, 0) + 0.14), 0.03, s, seg=8)
         # the work lights under the roof's lip aft and forward, over the decks
-        for xx, ax in ((WX0 - 0.06, -1), (WX1 + LEAN + 0.12, 1)):
+        for xx, ax in ((WX0 - 0.06, -1), (WX1 + LEAN + 0.0, 1)):
             for yy in (-0.6, 0.6):
                 c = V((xx, yy, zr_ - 0.06)); obox(A, c, V((0.03, 0, 0)), V((0, 0.07, 0)), V((0, 0, 0.035)), C['dark'])
                 A.poly([c + V((ax * 0.031, -0.055, -0.025)), c + V((ax * 0.031, 0.055, -0.025)), c + V((ax * 0.031, 0.055, 0.025)), c + V((ax * 0.031, -0.055, 0.025))], C['lens'], (ax, 0, -0.3))
@@ -857,13 +859,14 @@ def to_game(p): return (-p[1], p[2] - WL, -(p[0] - XM))
 def to_game_n(n): return (-n[1], n[2], -n[0])
 
 def name_strips(G):
-    """where the name is written (vessel3d.js nameStrips): a strip on each bow under the stripe, a hand aft of the stem, and one across the
-    transom between the boot top and the cap"""
+    """where the name is written (vessel3d.js nameStrips): a strip on each bow under the registration mark, and one across the transom
+    between the boot top and the cap"""
     out = []
-    for sg, xs in ((1, [8.45 - 1.15 * k / 12 for k in range(13)]), (-1, [7.30 + 1.15 * k / 12 for k in range(13)])):
+    # (the game's registration mark lies forward on the bow 0.7-1.3 m over the water, markStrips: the name goes under it, maletest)
+    for sg, xs in ((1, [7.75 - 1.15 * k / 12 for k in range(13)]), (-1, [6.60 + 1.15 * k / 12 for k in range(13)])):
         B = []; T = []
         for x in xs:
-            for arr, dz in ((B, 0.62), (T, 0.34)): z = zs(x) - dz; arr.append(G(x, sg * (y_at(x, z) + 0.03), z))
+            for arr, dz in ((B, 0.98), (T, 0.70)): z = zs(x) - dz; arr.append(G(x, sg * (y_at(x, z) + 0.03), z))
         out.append([B, T])
     zb, zt = 1.90, 2.20; ys = [0.75 - 1.5 * k / 12 for k in range(13)]
     out.append([[G(x_of(0.0, zb) - 0.025, y, zb) for y in ys], [G(x_of(0.0, zt) - 0.025, y, zt) for y in ys]])
@@ -874,13 +877,13 @@ def kit_places(G):
     in its cradle on the wheelhouse roof forward of the mast to port, the ring buoys on the wheelhouse's aft wall to port (the first, with
     its light and line) and on the trunk's aft face to starboard of the companionway; the radome on the mast's platform; the net tub, the
     line tubs and the first freight on the hold's cover, the second pallet on the aft deck"""
-    r = lambda a: round(a, 3); z0, _, _, zr_ = wh_z(); zl = z_deck(5.0) + 0.225
+    r = lambda a: round(a, 3); z0, _, _, zr_ = wh_z(); zl = z_deck(5.17) + 0.225
     return {'raft': [G(WX0 + 1.75, 0.60, zr_ + 0.12) + [r(math.pi / 2)]],
             'buoys': [G(WX0 - 0.03, 0.80, z0 + 0.90) + [0.0], G(CX0 - 0.03, -0.72, z_deck(CX0) + 0.62) + [0.0]],
             'radar': G(RX, 0.0, zr_ + 0.99),
-            'garn': {'at': G(5.0, 0.0, zl), 'ry': 0.0},
-            'stamps': {'at': G(4.62, -0.26, zl), 'ry': r(math.pi)},
-            'cargo': [G(5.0, 0.0, zl) + [0.0], G(0.55, 0.62, z_deck(0.55)) + [r(math.pi / 2)]]}
+            'garn': {'at': G(5.17, 0.0, zl), 'ry': 0.0},
+            'stamps': {'at': G(4.80, -0.26, zl), 'ry': r(math.pi)},
+            'cargo': [G(5.17, 0.0, zl) + [0.0], G(0.55, 0.62, z_deck(0.55)) + [r(math.pi / 2)]]}
 
 def bower(G):
     return {'kind': 'plog', 'kg': 14, 'fair': G(XF + 0.06, 0, zs(XF - 0.05) + 0.085), 'gypsy': G(8.72, -0.19, z_deck(8.72) + 0.24), 'side': 0, 'deck': True}
@@ -891,22 +894,23 @@ def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     z0, zs_, zh_, zr_ = wh_z(); hy = -(gunwale_y(HX) - 0.02); px, py = POLE
     return {'bower': bower(G), 'eye': G(SKIP[0], SKIP[1], z0 + 1.65), 'skipperAt': G(SKIP[0], SKIP[1], z0), 'hp': HP, 'fov': FOV,
-            # the hands: the fisher at the hauler on the starboard rail, the one who guts at the table to port, one at the hold's hatch, one aft
-            'crewSpots': [G(5.85, -1.02, z_deck(5.85)) + [1.57], G(5.30, 0.74, z_deck(5.3)) + [-1.57], G(4.20, -0.30, z_deck(4.2)) + [3.14], G(0.55, -0.55, z_deck(0.55)) + [0.0]],
+            # the hands: the fisher at the hauler on the starboard rail, the one who guts at the table to port, one aft of the hold's hatch, one by
+            # the wheelhouse door to port (the aft deck behind the house is too narrow to walk to)
+            'crewSpots': [G(5.85, -1.02, z_deck(5.85)) + [1.57], G(5.30, 0.84, z_deck(5.3)) + [-1.57], G(4.20, -0.30, z_deck(4.2)) + [3.14], G(4.30, 1.12, z_deck(4.30)) + [0.0]],
             # typed lights (B8; rule 23 (d)(i), under 12 m: an all-round white and the side lights; the game also lights the stern light)
             'lights': [[G(MX, 0, white_z()), [1, 0.95, 0.85], 'allround'],
                        [G(LAMP_X + 0.012, WY + 0.068, lamp_z()), [1, 0.12, 0.1], 'port'],
                        [G(LAMP_X + 0.012, -(WY + 0.068), lamp_z()), [0.1, 1, 0.35], 'stbd'],
                        [G(px - 0.085, -gunwale_y(px), zs(px) + 1.212), [1, 0.95, 0.85], 'stern'],
-                       [G(WX1 + LEAN + 0.12, 0.0, zr_ - 0.08), [1, 0.95, 0.85], 'work'], [G(WX0 - 0.06, 0.0, zr_ - 0.08), [1, 0.95, 0.85], 'work']],
+                       [G(WX1 + LEAN + 0.03, 0.0, zr_ - 0.08), [1, 0.95, 0.85], 'work'], [G(WX0 - 0.06, 0.0, zr_ - 0.08), [1, 0.95, 0.85], 'work']],
             'doors': [{'at': G(WX1 + 0.03, 0.66, z_deck(2.3)), 'w': 0.64, 'h': DOOR_H, 'in': G(WX1 - 0.8, 0.66, z0), 'to': 'helm', 'hinge': 'port'},
                       {'at': G(CX0 - 0.03, 0.01, z_deck(CX0)), 'w': round(COMP[1] - COMP[0], 2), 'h': round(COMP[3], 2), 'in': G(CX0 + 0.8, 0.0, z_deck(CX0) - 0.5), 'to': 'cabin', 'hinge': 'port'}],
             'names': name_strips(G),
             # the work at sea, in its order (plastsjark-grunnlag kap. 6.2): the fisher at the starboard rail by the hauler; the bleeding tub
             # on the deck just aft of him; the gutting table is the boat's own, across the port bulwark abreast of him (own; top: where the fish
             # lie), the one who guts on the deck inboard of it; the gutted fish go down the hold's hatch between them, on ice
-            'work': {'table': G(sum(GUT) / 2, 1.30, z_deck(5.35)), 'tub': G(5.25, -0.95, z_deck(5.25)), 'own': True, 'top': round(gut_top() - WL, 3)},
-            'hatch': G(5.0, 0.0, z_deck(5.0) + 0.225), 'bunk': G(7.5, 0.5, z_deck(7.5) - 0.1), 'exhaust': G(MX - 0.37, 0.55, zr_ + 1.56),
+            'work': {'table': G(sum(GUT) / 2, 1.45, z_deck(5.35)), 'tub': G(5.30, -1.26, z_deck(5.30)), 'own': True, 'top': round(gut_top() - WL, 3)},
+            'hatch': G(5.17, 0.0, z_deck(5.17) + 0.225), 'bunk': G(7.5, 0.5, z_deck(7.5) - 0.1), 'exhaust': G(MX - 0.37, 0.55, zr_ + 1.56),
             'deck': {'y': round(z_deck(5.0) - WL, 3), 'z': round(-(5.0 - XM), 3)}, 'gw': round(zs(5.0) - WL, 3),
             'stern': round(XM - XA, 3), 'bow': round(-(XF - XM), 3), 'side': HB, 'beam': BEAM, 'pl': 3.3, 'rl': 1.4, 'open': False, 'hand': False,
             'pole': G(px - 0.08, -gunwale_y(px), zs(px) + 1.16), 'hauler': G(HX, hy, zs(HX) + 0.42), 'filler': G(3.95, ybw(3.95) - 0.12, z_deck(3.95) + 0.06),

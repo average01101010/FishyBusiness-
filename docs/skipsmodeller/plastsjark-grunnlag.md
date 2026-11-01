@@ -145,10 +145,25 @@ fra `lines_snekke26.py`), `clip_plast31.py` (klasjsjekken), `plast31.py check` o
 | 0 | Volumet av det gamle skroget (`stubcheck.py --volume curve`, `lines.py`) | 21,9 t mot 6 t; snittet er en superellipse fra kjølens underkant | Ny kropp (A1) |
 | 1 | `lines.py` på de nye tabellene | 7,9 t; flat bunn med en knekk i kimmingen i vannlinja og kjølen som en tynn finne | Under vannlinja en kubisk kurve som møter vannlinja langs utfallets helning; kjølen avsmalnende mot roten |
 | 2 | `lines.py` | 7,6 t | Vannlinjebredden 2,80 m (85 %), kjølroten høyere: 6,64 t (11 % over) |
+| 3 | Første bygg og rendring (`shots.py` r1) | 78 283 trekanter; skroget, kjølen, brønnen, roret, hullene og konsollen sitter; styrhuset står høyt og kasseaktig (Jonas midt i økta: «den minst estetisk pene modellen … frie tøyler til å skape en pen båt») | Mer spring forut, teak scueringslist, stripa bredere; dørken i styrhuset senket 0,30 m under dekket (hull i dekket, foring, trinn ved døra), så huset står lavere; svart vindusbånd |
+| 4 | Klasjsjekken | 1 768: scueringslista telt som dekk utenfor skroget (1 698, meningen), lensportenes hengselstang og klaff utenpå (70), kjettingrøret gjennom baugen (10), trinnet og dørken i det nedsenkede styrhuset (32) | Sjekken kjenner lista, lensportene og det nedsenkede huset; vinsjen og røret 6 cm akterover: 0 |
+| 5 | `vessel3d`s grense for fjernmodellen (12 000 punkter) | 6 499 trekanter fjern (19 500 punkter) | Færre rader i kjølen, bunnen og ved lista, ingen pullerter, karmer eller dørbeslag i `build(False)`: 3 783 |
+| 6 | I spillet (`p31shot.py`, `TAG=r1`) | Modellen vises (76 751 trekanter, alle ankre, seks typede lys); fra broa synes kompasset, men dashbordet var like mørkt som skjermene | Dashbordet lyst, skjermene i mørke rammer |
+| 7 | Nærbilde av hekken | Innsida av speilet og dekket lå i samme plan som speilets utside (grå flekk på speilet) | Dekket og innsida begynner 6 cm forut (`TT`), speilets topp har egen teakkapp |
+| 8 | Hekken og takkanten | Speilet bredt og flatt som en kasse; takkanten hvit og tykk | Hekken avrundet i plan inn til 72 % av bredden; takkanten marineblå som stripa, kappen i teak, eksosen rustfri med svart topp; sløyebordet smalere (0,65 m) |
+
+## 6.2 Arbeidet om bord (plassene)
+
+Fiskeren står ved haleren på styrbord ripe (5,95 m fra speilet, like akter for ruffen) med ansiktet utover. Blødekaret (`work.tub`) står på
+dekket rett akter for ham, så fisken går fra ripa rett i karet. Sløyebordet er båtens eget, i stål tvers over babord ripe (4,95–5,75 m,
+`work.table`, `own`, `top` 0,90 m over dekket), med ytterkanten 3 cm utenfor ripa så avfallet går i sjøen; den som sløyer står på dekket
+innenfor det. Lasteromsluka ligger midt mellom dem, så den sløyde fisken går rett ned i rommet på is (`hold.kind` `rom`). Garnkaret, stampene og
+den første lasten står på lukelokket, den andre lasten på akterdekket. Skipperen står ved rattet i styrhuset med døra forut om babord rett ut
+på arbeidsdekket, og ser fiskeren gjennom frontrutene.
 
 ## 7. Det som ikke kan måles
 
-- **Deplasementet:** skroget gir 6,64 t under vannlinja mot 6 t i `VESSELS` (11 % over; 6 t gir vannlinja 3 cm lavere). Grunnere blir bunnen
+- **Deplasementet:** skroget gir 6,63 t under vannlinja mot 6 t i `VESSELS` (11 % over; 6 t gir vannlinja 3 cm lavere). Grunnere blir bunnen
   flat. Annonsene nevner 5–11 t, trolig 7–8 t i drift; dataene er ikke endret.
 - **Bredden:** registrene og annonsene sier oftest 3,05 m (3,10–3,20 på noen), spillet har 3,30. Ikke endret: det første skriptet leste 3,05–3,30, og
   ingen kilde i økta kunne åpnes og leses i sin helhet.
