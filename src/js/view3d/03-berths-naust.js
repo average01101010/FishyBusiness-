@@ -54,17 +54,17 @@
   }
   // ---------- Father's naust and the Finnsnes shop (tools/harbour/naust.py, butikk.py; where: core/07c-naust.js) ----------
   // Each a model set down at a quay face, in its frame: x along the face (s.u), out to sea s.n, y up from mean sea level. The naust
-  // brings its own ground, a bank of rock and grass from 3 m out to 16 m in (NBANK, naust.py BANK): the ground under it is cut 0.4 m
-  // under that bank (and under its sides, which sink 1.2 m beyond 11 m out from the middle) and goes back to what it was within 8 m.
+  // stands on the map's own ground as it is (Jonas 01.11.2026: its own bank of 1 m squares «ser for jævlig ut», and «modellen må ikke
+  // grave ut landmasse ... Den må ligge oppå landmassen»; naust.py has no ground since): nothing is cut, its piles and posts reach down
+  // into the ground, and where the map's ground under the quay deck or the floor stands higher than their undersides, the whole model
+  // is lifted over it (s.lift, SFOOT: at most 2.5 m). Only the sea bed in front of its quay goes down (NPITW: where the chart has
+  // sea; the shore of the map falls 1 in 3 from the coast line, which had the boat dry on the foreshore), as in front of a held berth
+  // (BPIT): to her draught and a metre (at least 3 m), 16 m each way along the face and her beam and 8 m out, back within 8 m.
+  // The rorbuer the same since the same day (Jonas: «Fiks samme løsning for de andre relevante byggene også»; rorbu.py has no bank):
+  // lifted over the map's ground by their quay, cabin and veranda (SFOOT.rorbu), the sea bed down in front of their quay (14 m each way).
   // The shop's yard (anchors.apron, from the deck's back to 27.5 m in) is levelled 0.1 m under the deck and goes back within 12 m. The
   // map's houses on their ground go (onSite, in bldOnUnit) and so do the scattered trees. Drawn in full within 900 m, simply to 4 km.
-  const NBANK = [[-3.0, -2.9], [0.0, -2.6], [1.5, -1.6], [3.4, -0.45], [5.2, 0.55], [7.4, 1.45], [9.6, 2.1], [12.0, 2.75], [16.0, 3.3]];
-  const nbank = y => { if (y <= NBANK[0][0]) return NBANK[0][1]; for (let i = 1; i < NBANK.length; i++) if (y <= NBANK[i][0]){ const [a, va] = NBANK[i - 1], [b, vb] = NBANK[i]; return va + (vb - va) * (y - a) / (b - a); } return NBANK[NBANK.length - 1][1]; };
   const SHOP_APRON = [-19, 19, 9.6, 27.5];
-  // the rorbu's bank (rorbu.py BANK, in its anchors): [y inland, height] from 3 m out to 21 m in, its half width x1
-  const bankAt = (P, y) => { if (y <= P[0][0]) return P[0][1]; for (let i = 1; i < P.length; i++) if (y <= P[i][0]){ const [a, va] = P[i - 1], [b, vb] = P[i]; return va + (vb - va) * (y - a) / (b - a); } return P[P.length - 1][1]; };
-  let RBB;
-  const RBANK = () => { if (RBB === undefined){ const M = siteModel('rorbu:r'), b = M && M.A.bank; RBB = b ? {x1:b.x1, y0:b.y0, y1:b.y1, prof:b.prof} : null; } return RBB; };
   let SITES = null, SITEK = '';
   // the rorbuer near the boat, looked up again when she has moved 500 m or one more has been found (at most one new one is worked out
   // in a frame: rorbuSoon)
@@ -76,7 +76,7 @@
     return RBNEAR.key;
   }
   function sitesNow(){
-    const n = typeof naustSite === 'function' ? naustSite() : null, key = (n ? n.o.join(',') : '-') + '|' + rorbuNow();
+    const n = typeof naustSite === 'function' ? naustSite() : null, key = (n ? n.o.join(',') + (siteReady(n.o) ? '' : 'w') : '-') + '|' + rorbuNow() + RBNEAR.l.map(R => siteReady(R.site.o) ? '' : 'w').join('') + '|' + S.boat.type;
     if (SITES && SITEK === key) return SITES;
     SITEK = key; SITES = [];
     const sh = shopSite(); if (sh && glbHas('shop')) SITES.push({k:'shop', o:sh.o, u:sh.u, n:[-sh.u[1], sh.u[0]], clear:[[SHOP_APRON[0], SHOP_APRON[2] - 2, SHOP_APRON[1], SHOP_APRON[3]]]});
@@ -88,17 +88,35 @@
       if (hs.length === 9){ hs.sort((a, b) => a - b); SITES.push({k:'shop', near:true, o:sn.o, u:sn.u, n:nn, lev:clamp(hs[4], 1.2, 30), clear:[[SHOP_APRON[0], 0, SHOP_APRON[1], SHOP_APRON[3]]]}); }
       else SITEK = '';   // the ground is not in yet: try again next frame
     }
-    if (n && glbHas('naust')) SITES.push({k:'naust', o:n.o, u:n.u, n:[-n.u[1], n.u[0]], clear:[[-14, -1, 14, 16]]});
+    const V = VESSELS[S.boat.type] || {}, pit = a => ({d:Math.max(3, (V.draft || 1.5) + 1), w:(V.beam || 3) + 8, a});
+    if (n && glbHas('naust')){ const nn = [-n.u[1], n.u[0]];
+      SITES.push({k:'naust', o:n.o, u:n.u, n:nn, lift:siteLift(SFOOT.naust, n.o, n.u, nn), pit:pit(16), clear:[[-14, -1, 14, 16]]}); }
     // the rorbuer within 4 km of the boat (07d-rorbu.js; tools/harbour/rorbu.py), each in its colour; the model's 'clear' is where the
     // map's houses go
     if (glbHas('rorbu')) for (const R of RBNEAR.l){ const o = R.site.o, u = R.site.u, n = [-u[1], u[0]], M = siteModel('rorbu:' + R.v);
-      SITES.push({k:'rorbu', v:R.v, id:R.id, o, u, n, clear:[[-15, -1, 15, 21]]});
+      SITES.push({k:'rorbu', v:R.v, id:R.id, o, u, n, lift:siteLift(SFOOT.rorbu, o, u, n), pit:pit(14), clear:[[-15, -1, 15, 21]]});
       // its bollards (the model's anchors, x along the face and z out to sea) take the mooring lines (drawMooring)
       if (M && M.A.bollards) QB[faceKey({x:o[0], z:o[1]})] = M.A.bollards.map(q => ({x:o[0] + u[0] * q[0] + n[0] * q[2], z:o[1] + u[1] * q[0] + n[1] * q[2], a:q[0]})); }
     // a site that came after the ground round it was built: those terrain chunks and the near mesh are made again with its ground
     if (SITEK){ for (const [k, c] of CH) if (SITES.some(q => Math.hypot(c.x - q.o[0], c.z - q.o[1]) < 700)){ freeChunk(c); CH.delete(k); }
       if (NEARM) NEARM.stale = true; }
     return SITES;
+  }
+  // how far a naust or a rorbu must be lifted to stand on the map's ground, 0.1 m clear of it: [x0, x1, y0, y1 inland, the underside]
+  // per part. The naust: its quay deck (QTOP - 0.55, naust.py QUAY) and its floor's sills (QTOP - 0.22, NX0..NY1); the rorbu: its quay
+  // deck (QTOP - 0.5, rorbu.py QUAY), the cabin's floor beams (FLOOR - 0.58, RX0..RY1) and the veranda's beams (VFLOOR - 0.27, VX0..VYS).
+  // Worked out again once the packs of heights round it are in (siteReady is in SITEK; off the tiles with no pack, the far heights)
+  const SFOOT = {naust:[[-8.6, 7.6, 0.4, 3.4, QTOP - 0.55], [-5.9, 5.9, 3.4, 9.4, QTOP - 0.22]],
+    rorbu:[[-7, 7, 0.4, 3.5, QTOP - 0.5], [-3.25, 3.25, 5.2, 13.2, QTOP + 0.22], [-3.45, 4.75, 3.5, 8.6, QTOP + 0.48]]};
+  const siteReady = o => { const T = MAPD.man.tile * 1000; for (const k of ['view', 'far']) for (const dx of [-25, 25]) for (const dz of [-25, 25]){
+    const pk = MAPD.byTile.get(k + ':' + Math.floor((o[0] + dx) / T) + ':' + Math.floor((o[1] + dz) / T)); if (pk && !pk.buf) return false; } return true; };
+  function siteLift(F, o, u, nn){
+    let lift = 0;
+    for (const [x0, x1, y0, y1, under] of F) for (let x = x0; x <= x1 + 0.01; x += (x1 - x0) / 6) for (let y = y0; y <= y1 + 0.01; y += (y1 - y0) / 3){
+      const px = o[0] + u[0] * x - nn[0] * y, pz = o[1] + u[1] * x - nn[1] * y;
+      lift = Math.max(lift, terrRaw(px, pz) + 0.1 - under);
+    }
+    return Math.min(lift, 2.5);
   }
   // a point in a site's frame: [x along the face, y inland]
   const siteL = (s, x, z) => { const dx = x - s.o[0], dz = z - s.o[1]; return [dx * s.u[0] + dz * s.u[1], -(dx * s.n[0] + dz * s.n[1])]; };
@@ -107,14 +125,9 @@
     for (const s of L){
       if (Math.abs(x - s.o[0]) > 70 || Math.abs(z - s.o[1]) > 70) continue;
       const [lx, y] = siteL(s, x, z), ax = Math.abs(lx);
-      if (s.k === 'rorbu'){
-        const B = RBANK(); if (!B) continue; const d = Math.hypot(Math.max(0, ax - B.x1), Math.max(0, B.y0 - y, y - B.y1)); if (d >= 8) continue;
-        const cap = bankAt(B.prof, clamp(y, B.y0, B.y1)) - 0.4 - (ax > B.x1 - 4 ? Math.min(1, (ax - B.x1 + 4) / 4) * 1.2 : 0);
-        return h <= cap ? h : cap + (h - cap) * sstep(0, 8, d);
-      }
-      if (s.k === 'naust'){
-        const d = Math.hypot(Math.max(0, ax - 17), Math.max(0, -3 - y, y - 16)); if (d >= 8) continue;
-        const cap = nbank(clamp(y, -3, 16)) - 0.4 - (ax > 11 ? Math.min(1, (ax - 11) / 5) * 1.2 : 0);
+      if (s.pit){   // the naust and the rorbuer: on the map's ground as it is (lifted over it: s.lift); only the sea bed in front of the quay goes down
+        if (y >= 0.4) continue; const P = s.pit, d = Math.hypot(Math.max(0, ax - P.a + Math.min(0, y) * 10 / (P.w + 6)), Math.max(0, -P.w - y)); if (d >= 8) continue;
+        const cap = y <= -1 ? -P.d : -P.d + (y + 1) * (P.d - 0.5) / 1.4;
         return h <= cap ? h : cap + (h - cap) * sstep(0, 8, d);
       }
       const A = SHOP_APRON, d = Math.hypot(Math.max(0, A[0] - lx, lx - A[1]), Math.max(0, A[2] - y, y - A[3])); if (d >= 12) continue;

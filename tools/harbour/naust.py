@@ -7,8 +7,9 @@ with a dry-stone pier under its west gable; an old tile roof with moss and liche
 dormer with broken barge boards and a hoist beam over the loft door; two small four-pane windows, one pane out; a pole hung along
 the front on ropes, floats, a life ring and an anchor against the wall. In front of it, the quay on timber piles: the deck of loose
 planks with gaps, one gone, one broken, the kerb log, the bents with their bracing (one brace hangs loose), fender piles, wooden
-bollards, a ladder and old tyres for fenders, the piles green and weedy in the tidal zone and white with barnacles above it. The
-bank of rocks and rockweed under it all runs up to grass behind; an old færing lies upside down on trestles beside the house.
+bollards, a ladder and old tyres for fenders, the piles green and weedy in the tidal zone and white with barnacles above it. It
+stands on the map's own ground (the game shapes its terrain to BANK under it; the model has no ground of its own since 01.11.2026);
+an old færing lies upside down on trestles beside the house.
 
     pip install bpy==4.5.4
     python3 tools/harbour/naust.py          -> src/data/harbour-naust.b64, renders in tools/harbour/out/
@@ -107,55 +108,22 @@ def bankz(x, y):
         t = min(1.0, (ax - 11.0) / 5.0); t = t * t * (3 - 2 * t); z += (min(z, interp1(BANK, y) - 1.2) - z) * t
     return z
 
-def ground_mat(z, x, y, rr):
-    if z < -0.6: return C['weed2']
-    if z < 0.9: return C['weed'] if noise(x * 2.1, y * 1.7) > -0.08 else C['weed2']
-    if z < 1.5: return C['barn'] if noise(x * 1.9 + 5, y * 2.7) > 0.07 else C['rock3']
-    if z < QTOP + 0.1: return C['rock1'] if noise(x * 1.1 + 3, y * 1.3) > -0.02 else C['rock2']
-    k = noise(x * 0.9 + 7, y * 1.3)
-    return C['grass'] if k > -0.03 else C['grass2'] if k > -0.1 else C['heather']
-
-def bank(A, fine=True):
-    rr = random.Random(3); st = 1.0 if fine else 2.0; sy = 0.76 if fine else 1.9
-    xs = [-17.0 + st * i for i in range(int(34 / st) + 1)]; ys = [-3.0 + sy * j for j in range(int(19 / sy) + 1)]
-    G = [[A.v((x, y, bankz(x, y) + (rr.uniform(-0.04, 0.04) if fine else 0.0))) for y in ys] for x in xs]
-    for i in range(len(xs) - 1):
-        for j in range(len(ys) - 1):
-            q = [G[i][j], G[i + 1][j], G[i + 1][j + 1], G[i][j + 1]]; cz = sum(v.co.z for v in q) / 4
-            A.f(q, ground_mat(cz, xs[i], ys[j], rr), (0, 0, 1))
-    if not fine: return
-    # boulders along the shore, weedy below the high-water line, lichen on their tops above it
-    def mf(cen, nrm):
-        if cen.z < 0.85: return C['weed'] if cen.z > -0.4 else C['weed2']
-        return C['lichrock'] if nrm.z > 0.65 and rr.random() < 0.5 else rr.choice((C['rock1'], C['rock2'], C['rock3']))
-    for k in range(34):
-        x = rr.uniform(-14.5, 14.5); y = rr.uniform(0.8, 8.0) if k < 27 else rr.uniform(9.0, 14.0); r = rr.uniform(0.22, 0.85) * (0.6 if k >= 27 else 1.0)
-        if NX0 + 0.3 < x < NX1 - 0.3 and NY0 + 0.3 < y < NY1 - 0.3 and r > 0.5: r = 0.45   # under the house they are smaller
-        arock(A, (x, y, bankz(x, y) - 0.25 * r), r, (rr.uniform(0.9, 1.3), rr.uniform(0.8, 1.2), rr.uniform(0.5, 0.75)), rr, mf, 1 if r > 0.55 else 0)
-    # tufts of grass and a few cow parsley heads on the bank behind
-    for k in range(40):
-        x = rr.uniform(-12, 12); y = rr.uniform(9.6, 15.5)
-        if NX0 - 0.2 < x < NX1 + 0.2 and y < NY1 + 0.2: continue
-        z = bankz(x, y); m = rr.choice((C['grass'], C['grass2'], C['grass2']))
-        for b in range(5):
-            a = rr.uniform(0, 2 * math.pi); h = rr.uniform(0.25, 0.55); lx, ly = math.cos(a) * 0.1, math.sin(a) * 0.1
-            base = V((x + lx, y + ly, z - 0.02)); tip = base + V((lx * 1.6, ly * 1.6, h)); s = V((-ly, lx, 0)).normalized() * 0.025
-            for q in ((base - s, base + s, tip), (base + s, base - s + V((0, 0, 0.001)), tip)): A.poly(q, m)
-        if k % 5 == 0:
-            for b in range(3):
-                bx, by = x + rr.uniform(-0.3, 0.3), y + rr.uniform(-0.3, 0.3); h = rr.uniform(0.7, 1.1)
-                acyl(A, (bx, by, z), (bx, by, z + h), 0.012, lambda zz: C['grass'], 4, cap=False)
-                arock(A, (bx, by, z + h), 0.09, (1.4, 1.4, 0.45), rr, lambda c_, n_: C['flower'], 0)
+# The model brings no ground of its own any more (Jonas 01.11.2026: «Kan vi fjerne den pikselerte området rundt naustet slik at den rett og
+# slett bare står på påler på kartets egen landmasse?»): the bank of 1 m squares, its boulders and tufts are gone, and the game's own
+# terrain (view3d siteTerr, NBANK) is shaped to BANK under it. What stands on the ground goes SINK m further down than bankz, into it,
+# so it meets the terrain whether the map's ground there is at the bank or a little under it.
+SINK = 1.2
+def foot(x, y, d=0.0): return bankz(x, y) - d - SINK
 
 def stone_pier(A, rr):
     """the dry-stone pier under the west gable: courses of flat stones from the bank up to the sill"""
     top = FLOOR - 0.32; x0, x1 = NX0 - 0.42, NX0 + 0.42
-    z = min(bankz(NX0, y) for y in (NY0, NY1)) - 0.2
+    z = min(foot(NX0, y) for y in (NY0, NY1)) - 0.2
     while z < top - 0.05:
         h = min(rr.uniform(0.2, 0.34), top - z); y = NY0 - rr.uniform(0.0, 0.3)
         while y < NY1:
             L = rr.uniform(0.42, 0.8); yc = min(y + L / 2, NY1 - 0.15)
-            if z + h > bankz(NX0, yc) - 0.15:
+            if z + h > foot(NX0, yc) - 0.15:
                 a = rr.uniform(-0.08, 0.08); ca, sa = math.cos(a), math.sin(a); dx = rr.uniform(-0.05, 0.05)
                 obox(A, ((x0 + x1) / 2 + dx, yc, z + h / 2), (ca * (x1 - x0) / 2, sa * (x1 - x0) / 2, 0), (-sa * L / 2 * 0.96, ca * L / 2 * 0.96, 0), (0, 0, h / 2 * 0.95),
                      rr.choice((C['rock1'], C['rock2'], C['rock3'], C['lichrock'])))
@@ -164,7 +132,7 @@ def stone_pier(A, rr):
 
 def log_crib(A, rr):
     """a crib of round logs under the quay's west corner, as old quays stood on"""
-    x0, x1, y0, y1 = -8.7, -7.3, 1.9, 3.5; z = bankz(-8.0, 2.7) - 0.15; k = 0
+    x0, x1, y0, y1 = -8.7, -7.3, 1.9, 3.5; z = foot(-8.0, 2.7) - 0.15; k = 0
     while z < QTOP - 0.62:
         for s_ in (0, 1):
             if k % 2 == 0: p0, p1 = V((x0, y0 + 0.15 + s_ * (y1 - y0 - 0.3), z + 0.12)), V((x1, y0 + 0.15 + s_ * (y1 - y0 - 0.3), z + 0.12))
@@ -182,7 +150,7 @@ def quay(A, fine=True):
     if not fine:
         abox(A, x0, x1, y0, y1, QTOP - 0.55, QTOP, C['w2'])
         for xb in BENTS[::2]:
-            for py in (PILE_Y[0], PILE_Y[2]): abox(A, xb - 0.15, xb + 0.15, py - 0.15, py + 0.15, -2.0, QTOP - 0.55, C['wwet'])
+            for py in (PILE_Y[0], PILE_Y[2]): abox(A, xb - 0.15, xb + 0.15, py - 0.15, py + 0.15, -2.0 - SINK, QTOP - 0.55, C['wwet'])
         return
     # the deck: loose planks across, with gaps; one is gone, one broken at the face and hanging down
     n = int((x1 - x0) / 0.245); gone = {9, 41}; broke = 27
@@ -210,7 +178,7 @@ def quay(A, fine=True):
     for i, xb in enumerate(BENTS):
         for py in PILE_Y:
             dx, dy = rr.uniform(-0.06, 0.06), rr.uniform(-0.05, 0.05)
-            acyl(A, (xb + dx * 2, py + dy * 2, bankz(xb, py) - 0.4), (xb, py, QTOP - 0.55), rr.uniform(0.13, 0.17), tidal, 7, cuts=(-0.9, 0.2, 0.72, 0.88))
+            acyl(A, (xb + dx * 2, py + dy * 2, foot(xb, py, 0.4)), (xb, py, QTOP - 0.55), rr.uniform(0.13, 0.17), tidal, 7, cuts=(-0.9, 0.2, 0.72, 0.88))
         if i % 2 == 1:
             xx = xb + 0.17; za, zb = -0.6, QTOP - 0.62
             beam(A, (xx, PILE_Y[0], za), (xx, PILE_Y[2], zb), 0.05, 0.18, C['w4'] if True else None, up=(1, 0, 0))
@@ -221,7 +189,7 @@ def quay(A, fine=True):
                 beam(A, (xx + 0.05, PILE_Y[2], za), (xx + 0.05, PILE_Y[0], zb), 0.05, 0.18, C['w4'], up=(1, 0, 0))
         # a fender pile in front of each bent, its top rotted and slanted
         fx = xb + rr.uniform(-0.05, 0.05)
-        acyl(A, (fx, -0.17, bankz(fx, -0.2) - 0.4), (fx, -0.17, QTOP + rr.uniform(0.25, 0.5)), 0.14, tidal, 7, cuts=(-0.9, 0.2, 0.72, 0.88))
+        acyl(A, (fx, -0.17, foot(fx, -0.2, 0.4)), (fx, -0.17, QTOP + rr.uniform(0.25, 0.5)), 0.14, tidal, 7, cuts=(-0.9, 0.2, 0.72, 0.88))
     # wooden bollards through the deck, darker at the top with an iron band
     for bx, by in BOLL:
         acyl(A, (bx, by, QTOP - 0.6), (bx, by, QTOP + 0.75), 0.17, lambda zz: C['w2'] if zz < QTOP + 0.55 else C['wdark'], 10, cuts=(QTOP + 0.55,))
@@ -448,14 +416,14 @@ def naust(A, Gl, fine=True):
             A.poly([V((x, NY0, EAVES)), V((x, NY1, EAVES)), V((x, YM, RIDGE))], C['w2'], (1 if x > 0 else -1, 0, 0))
         A.poly([V((XD - DW / 2, NY0, EAVES)), V((XD + DW / 2, NY0, EAVES)), V((XD, NY0, DTOP))], C['w2'], (0, -1, 0))
         for y in (NY0, YM, NY1):
-            for x in (-3.0, 0.0, 3.0, NX1): abox(A, x - 0.13, x + 0.13, y - 0.13, y + 0.13, bankz(x, y) - 0.2, FLOOR - 0.32, C['w4'])
-        abox(A, NX0 - 0.42, NX0 + 0.42, NY0, NY1, bankz(NX0, YM) - 0.3, FLOOR - 0.32, C['rock2'])
+            for x in (-3.0, 0.0, 3.0, NX1): abox(A, x - 0.13, x + 0.13, y - 0.13, y + 0.13, foot(x, y, 0.2), FLOOR - 0.32, C['w4'])
+        abox(A, NX0 - 0.42, NX0 + 0.42, NY0, NY1, foot(NX0, YM, 0.3), FLOOR - 0.32, C['rock2'])
         return
     # what stands under the floor: posts on the rocks, the sills, the floor's underside, the stone pier under the west gable
     for y in (NY0, YM, NY1):
         for x in (-3.0, 0.0, 3.0, NX1):
             dx, dy = rr.uniform(-0.05, 0.05), rr.uniform(-0.05, 0.05)
-            acyl(A, (x + dx, y + dy, bankz(x, y) - 0.25), (x, y, FLOOR - 0.32), 0.13, lambda zz: C['wwet'] if zz < 0.6 else C['barn'] if zz < 0.85 else C['w4'], 8, cuts=(0.6, 0.85))
+            acyl(A, (x + dx, y + dy, foot(x, y, 0.25)), (x, y, FLOOR - 0.32), 0.13, lambda zz: C['wwet'] if zz < 0.6 else C['barn'] if zz < 0.85 else C['w4'], 8, cuts=(0.6, 0.85))
         abox(A, NX0, NX1, y - 0.12, y + 0.12, FLOOR - 0.32, FLOOR - 0.08, C['w4'])
     abox(A, NX0, NX1, NY0, NY1, FLOOR - 0.12, FLOOR - 0.02, C['sark'], skip=('+z',))
     stone_pier(A, rr)
@@ -532,12 +500,12 @@ def faering(fine=True):
     for r, c, g in (rings[0], rings[-1]): A.f(list(r), C['tar'], V((-1 if r is rings[0][0] else 1, 0, 0)))
     for tx in (X0 + 1.0, X1 - 1.0):
         for s_ in (-1, 1):
-            beam(A, (tx - 0.35, Y + s_ * 0.55, bankz(tx - 0.35, Y + s_ * 0.55) - 0.1), (tx, Y + s_ * 0.5, Zk - H - 0.05), 0.08, 0.08, C['w4'])
-            beam(A, (tx + 0.35, Y + s_ * 0.55, bankz(tx + 0.35, Y + s_ * 0.55) - 0.1), (tx, Y + s_ * 0.5, Zk - H - 0.05), 0.08, 0.08, C['w4'])
+            beam(A, (tx - 0.6, Y + s_ * 0.55, foot(tx - 0.6, Y + s_ * 0.55, 0.1)), (tx, Y + s_ * 0.5, Zk - H - 0.05), 0.08, 0.08, C['w4'])
+            beam(A, (tx + 0.6, Y + s_ * 0.55, foot(tx + 0.6, Y + s_ * 0.55, 0.1)), (tx, Y + s_ * 0.5, Zk - H - 0.05), 0.08, 0.08, C['w4'])
         beam(A, (tx, Y - 0.8, Zk - H - 0.1), (tx, Y + 0.8, Zk - H - 0.1), 0.12, 0.1, C['w2'])
     # two oars against the boat
     for k, oy in enumerate((Y - B / 2 - 0.15, Y - B / 2 - 0.35)):
-        ox = X0 + 1.6 + 0.9 * k; base = V((ox, oy - 0.35, bankz(ox, oy - 0.35))); tip = V((ox + 0.4, oy, Zk + 0.1))
+        ox = X0 + 1.6 + 0.9 * k; base = V((ox, oy - 0.6, foot(ox, oy - 0.6, 0.6 - SINK))); tip = V((ox + 0.4, oy, Zk + 0.1))
         acyl(A, base, tip, 0.025, lambda zz: C['w3'], 6)
         d = (tip - base).normalized(); obox(A, base + d * 0.35, d * 0.35, V((0, 0, 1)).cross(d).normalized() * 0.075, V((0, 0, 1)).cross(d).cross(d).normalized() * 0.012, C['w3'])
     return [A.done(40)]
@@ -546,7 +514,7 @@ def faering(fine=True):
 # ---------- all of it ----------
 def build(fine=True):
     A = Acc('naust'); Gl = Acc('naust_glass'); rr = random.Random(1)
-    bank(A, fine); quay(A, fine); naust(A, Gl, fine); roof(A, fine); dormer(A, rr, fine)
+    quay(A, fine); naust(A, Gl, fine); roof(A, fine); dormer(A, rr, fine)
     if fine: log_crib(A, rr); quay_props(A, rr)
     solids = [A.done()] + faering(fine)
     g = Gl.done() if fine else None

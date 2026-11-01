@@ -38,9 +38,9 @@ async def main():
           const c = G3._debug.cam; c.helm = false; c.dist = 45; c.pitch = 0.2; c.yaw = 2.6; return {id:R.id, v:R.v, site:!!R.site, rest:resting()}; })()""")
         await pg.wait_for_timeout(16000)
         q = await pg.evaluate("""(id => { const s = G3._debug.sitesNow().find(s => s.id === id), M = s && G3._debug.siteModel('rorbu:' + s.v);
-          const h = s ? G3._debug.terrH(s.o[0] - s.n[0] * 8, s.o[1] - s.n[1] * 8) : null; return {site:!!s, model:!!M, bank:h === null ? null : +h.toFixed(2), rest:resting()}; })""", r['id'])
+          const h = s ? G3._debug.terrH(s.o[0] - s.n[0] * 8, s.o[1] - s.n[1] * 8) - (QTOP + 0.22 + s.lift) : null; return {site:!!s, model:!!M, lift:s ? s.lift : null, under:h === null ? null : +h.toFixed(2), rest:resting()}; })""", r['id'])
         print(json.dumps({'r': r, 'q': q}))
-        print(ok(r['site'] and q['site'] and q['model'] and q['bank'] is not None and -1.5 < q['bank'] < 2.5 and q['rest']), 'by Gryllefjord the rorbu stands on its bank in 3D in its colour (%s), with the boat at its quay and the skipper ashore' % r['v'])
+        print(ok(r['site'] and q['site'] and q['model'] and q['under'] is not None and q['under'] <= 0 and q['rest']), 'by Gryllefjord the rorbu stands on the map\'s own ground in 3D (its floor over it, lifted %s m; no bank of its own since 01.11.2026) in its colour (%s), with the boat at its quay and the skipper ashore' % (q['lift'], r['v']))
         await pg.screenshot(path='coast_rorbu.png', timeout=120000)
         await pg.evaluate("restEnd(true)")
         # the coast's marks and lights off Tromsø at night
