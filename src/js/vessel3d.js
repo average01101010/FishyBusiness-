@@ -1098,13 +1098,29 @@ function deckMap(type){
   // a cell under two levels that are both deck (the working deck and the shelter deck over it) stands for the deck itself, else for the bigger part
   const inDeck = new Int32Array(N).fill(-1); const refresh = () => { for (let k = 0; k < N; k++){ inDeck[k] = -1; const lb = lab[k]; if (!lb) continue;
     for (let g = 0; g < lb.length; g++) if (onDeck.has(lb[g]) && (inDeck[k] < 0 || lb[g] === main || (lb[inDeck[k]] !== main && size[lb[g]] > size[lb[inDeck[k]]]))) inDeck[k] = g; } };
+  // a roof over a room with a floor of its own (the havsjark's wheelhouse amidships, 1.3 m over the forecastle's walkway beside it) is
+  // no deck: a part most of whose cells lie DM_HEAD or more over another floor within two cells, with no crew spot or deck anchor on
+  // it, is not linked (01.11.2026; a shelter deck one walks on is reached by a hand-set link or carries the crew's places)
+  const roofOver = L => { if (hitDeck[L] || hitSpot[L]) return false; let over = 0;
+    const room = (q, y, near) => floors[q] && floors[q].some((f, h) => f[0] <= y - DM_HEAD + 0.05 && f[0] >= yLow - 0.3 && (f[1] || size[lab[q][h]] >= 20) && !(near && lab[q][h] === main));
+    for (const [k, g] of cellsOf(L)){ const y = floors[k][g][0], i = k % nx, j = (k - i) / nx; let hit = false;   // (within two cells a room's floor that is not the deck itself: the visor over the front windows, the lip)
+      for (let dj = -2; dj <= 2 && !hit; dj++) for (let di = -2; di <= 2 && !hit; di++){ const ii = i + di, jj = j + dj; if (ii >= 0 && jj >= 0 && ii < nx && jj < nz && room(jj * nx + ii, y, di || dj)) hit = true; }
+      if (hit) over++; }   // (a room's floor, its furniture's cells too: not below the deck and not a scrap; the hull's bottom under a forecastle is no room)
+    return over > size[L] / 2; };
   for (let round = 0; round < 3; round++){ refresh(); let added = false;
-    for (let L = 0; L < nl; L++){ if (onDeck.has(L) || size[L] < 20) continue; let best = null;
+    for (let L = 0; L < nl; L++){ if (onDeck.has(L) || size[L] < 20 || roofOver(L)) continue; let best = null;
       for (const [k, g] of cellsOf(L)){ if (inDeck[k] >= 0) continue; const y = floors[k][g][0], i = k % nx, j = (k - i) / nx;   // (a cell the deck already stands for cannot be the part's end of the link)
         for (let dj = -3; dj <= 3; dj++) for (let di = -3; di <= 3; di++){ const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const q = jj * nx + ii, gq = inDeck[q]; if (gq < 0) continue;
           const d = Math.hypot(di, dj) * DM_C, dy = y - floors[q][gq][0]; if (d > 0.6 || dy > 1.6 || dy < -1.2) continue;   // (a roof lies higher than 1.6 m; a stair to a shelter deck is a hand-set link) if (Math.abs(dy) < DM_STEP && d <= DM_C * 1.5) continue;   // a step this small the fill would have taken: it is barred, so a gap stays a gap unless something lies between
           const sc = d + Math.abs(dy) * 0.2; if (!best || sc < best.sc) best = {sc, a:q, b:k, g, dy}; } }
       if (best){ onDeck.add(L); links.push([best.a, best.b, Math.round(best.dy * 100) / 100]); added = true; } }
+    // the stairs the model names (anchors.stairs: [{from, to}], points in the game's frame on the two floors; kyst15's stair to the
+    // shelter deck, the havsjark's steps up to the forecastle beside the wheelhouse, 01.11.2026): a link from the deck's floor at the
+    // foot to the part at the head
+    refresh();
+    for (const st of Array.isArray(G.stairs) ? G.stairs : []){ const a = st && st.from, b = st && st.to; if (!a || !b) continue; const ka = cellOf(a[0], a[2]), kb = cellOf(b[0], b[2]); if (ka < 0 || kb < 0 || inDeck[ka] < 0 || !floors[kb]) continue;
+      let g = -1; for (let h = 0; h < floors[kb].length; h++) if (lab[kb][h] >= 0 && Math.abs(floors[kb][h][0] - b[1]) < 0.3 && (g < 0 || Math.abs(floors[kb][h][0] - b[1]) < Math.abs(floors[kb][g][0] - b[1]))) g = h;
+      if (g < 0) continue; if (!onDeck.has(lab[kb][g])){ onDeck.add(lab[kb][g]); added = true; } if (!links.some(l => l[0] === ka && l[1] === kb)) links.push([ka, kb, Math.round((floors[kb][g][0] - floors[ka][inDeck[ka]][0]) * 100) / 100]); }
     if (!added) break; }
   refresh();
   // what the deck cannot reach on foot or by a link (a part that lies over deck cells keeps only the cells of its own) is dropped
@@ -1226,7 +1242,11 @@ function lanterns(G, V, st){
     if (st.aground && len >= 12){ push(up(mt, sp), 'r', 'nuc'); push(up(mt, 2 * sp), 'r', 'nuc'); }
     return out; }
   if (st.fishing){
-    push(mt, 'w', 'fishW'); push(up(mt, sp), st.trawl ? 'g' : 'r', st.trawl ? 'trawlG' : 'fishR');
+    // a model that carries its fishing lights on their own ('fishR' over 'fishW', the havsjark's red over white on arms forward of the
+    // mast) lights them where they are; else the white at the masthead's place and the red (the green) a spacing over it
+    const fR = typed ? T('fishR')[0] : null, fW = typed ? T('fishW')[0] : null;
+    if (fR && fW && !st.trawl){ push(fW[0], 'w', 'fishW'); push(fR[0], 'r', 'fishR'); }
+    else { push(mt, 'w', 'fishW'); push(up(mt, sp), st.trawl ? 'g' : 'r', st.trawl ? 'trawlG' : 'fishR'); }
     if (st.trawl && len >= 50) push(extra.length && extra[0][0][1] > mt[1] + sp ? extra[0][0] : up(mt, 2 * sp), 'w', 'masthead2');
     if (moving) sideStern();
     return out; }
