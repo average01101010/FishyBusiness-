@@ -1904,12 +1904,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (809 linjer)
+## `src/js/ui/phone/07-patch.js` (819 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 802 `patch()`
+  - 812 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -2580,7 +2580,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 47 `bootGame()`
   - 150 `bootFail(e)`
 
-## `src/js/vessel3d.js` (1278 linjer)
+## `src/js/vessel3d.js` (1300 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -2660,28 +2660,28 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 810 `stripProud(type, st)`
   - 833 `stripPaint(type, st)`
   - 854 `markStrips(type)`
-  - 874 `anchorLen(bw)`
-  - 877 `markRGB(type, liv)`
-  - 885 `hullRGB(type, liv)`
-  - 895 `npcKit(L, B)`
-  - 898 `npcModel(type, lod, liv)`
-  - 900 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **912** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 925 `wkPart(name, kit)`
-  - 935 `wkPut(B, o, ax, s, at)`
-  - 945 `wkLimb(B, o, A, E, r)`
-  - 952 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 974 `vesselSVG(type, w, h)`
-- **1012** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1019 `deckMap(type)`
-  - 1148 `deckPass(M, k, q)`
-  - 1153 `passLine(M, A, B)`
-  - 1155 `linkPass(M, k, q)`
-  - 1159 `deckComp(M)`
-  - 1168 `deckPath(M, a, b)`
-- **1199** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1212 `lanterns(G, V, st)`
-  - 1242 `deckPoints(type)`
+  - 876 `anchorLen(bw)`
+  - 879 `markRGB(type, liv)`
+  - 887 `hullRGB(type, liv)`
+  - 897 `npcKit(L, B)`
+  - 900 `npcModel(type, lod, liv)`
+  - 902 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **914** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 927 `wkPart(name, kit)`
+  - 937 `wkPut(B, o, ax, s, at)`
+  - 947 `wkLimb(B, o, A, E, r)`
+  - 954 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 976 `vesselSVG(type, w, h)`
+- **1014** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1021 `deckMap(type)`
+  - 1166 `deckPass(M, k, q)`
+  - 1171 `passLine(M, A, B)`
+  - 1173 `linkPass(M, k, q)`
+  - 1177 `deckComp(M)`
+  - 1186 `deckPath(M, a, b)`
+- **1217** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1230 `lanterns(G, V, st)`
+  - 1264 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (471 linjer)
 
@@ -3235,7 +3235,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (275 linjer)
+## `src/js/view3d/20-trawl-seine.js` (281 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -3251,10 +3251,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 167 `spHold(f)`
   - 170 `deckWork(G)`
   - 178 `drawHelmKit(BMrel, eye, G)`
-  - 187 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
-  - 212 `npcMesh(n, lod)`
-  - 221 `drawNPC(eye, t, H, VP)`
-  - 254 `npcCrewDraw(n, K, eye, t)`
+  - 190 `sailOf(t)`
+  - 191 `drawSail(t, M, set)`
+  - 192 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
+  - 218 `npcMesh(n, lod)`
+  - 227 `drawNPC(eye, t, H, VP)`
+  - 260 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (165 linjer)
 
