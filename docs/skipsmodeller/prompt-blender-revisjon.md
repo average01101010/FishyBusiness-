@@ -2,10 +2,10 @@ Revider båtmodellen: [BÅTENS NAVN]
 
 Dette er en eksisterende Blender-modell i spillet som ikke ble bygd etter noen plan. Løft den til samme nivå og arbeidsmåte som pilotbåten ringnot38 og de reviderte båtene trebat, skiff, snekke, plastsjark og sjark (havsjarken) (F5 i docs/planer/grafikk-batmodeller.md). Finn selv ut hvilken type i VESSELS og hvilket skript i tools/boats/ navnet gjelder.
 
-GRENEN: main er tom; spillet ligger på arbeidsgrenene. Bygg på den nyeste grenen med spillet (nå ccr-8b54bb95-extnah, som har trebåten, skiffen, plastsnekka, plastsjarken, havsjarken, verktøyene i tools/boats/qa og lærdommene; den er også rullet ut til ccr-5e1ba2f4-pusvyd) og commit underveis.
+GRENEN: main er tom; spillet ligger på arbeidsgrenene. Bygg på den nyeste grenen med spillet (nå ccr-7d69b776-9fggkf, som har trebåten, skiffen, plastsnekka, plastsjarken, havsjarken, hurtigsjarken, verktøyene i tools/boats/qa og lærdommene; den er også rullet ut til ccr-5e1ba2f4-pusvyd) og commit underveis.
 
 LESING ER ET ABSOLUTT KRAV FØR NOE ARBEID BEGYNNER. Ingen rendring, ingen eksport og ingen endring i noe skript før alt under er lest i sin helhet, ikke i utdrag; store filer leses i flere biter til de er lest helt. Når du er ferdig, skriv en kort liste til meg over hver fil med én setning om det viktigste du tok med deg fra den, og si ærlig fra om noe ikke er lest helt, og hvorfor. (Plastsjarken fikk 66/100, blant annet fordi økta leste spillets kode for modellen først da testene feilet, sulebas-bygging.md kap. 15. Havsjarken fikk 64/100: Jonas fant bulene i baugen og de svarte klaffene foran spygattene før økta, i bilder som alt var tatt, kap. 16.)
-  1. Arbeidsmåten: docs/INDEKS.md, CLAUDE.md, docs/skipsmodeller/sulebas-bygging.md hele (reglene i kap. 7, lærdommene i kap. 11–16, kap. 15 med selvkritikken og tabellen over spillets krav, og kap. 16 om jevnheten i skroget og dekkskartet), /blender-skillen, og «Det neste økt bør vite» nederst i denne fila.
+  1. Arbeidsmåten: docs/INDEKS.md, CLAUDE.md, docs/skipsmodeller/sulebas-bygging.md hele (reglene i kap. 7, lærdommene i kap. 11–17, kap. 15 med selvkritikken og tabellen over spillets krav, og kap. 16 om jevnheten i skroget og dekkskartet), /blender-skillen, og «Det neste økt bør vite» nederst i denne fila.
   2. Kravlista: docs/skipsmodeller/planliste-fiskefartoy.md hele, også kap. 29 og 30.
   3. Malene for grunnlaget: sulebas-pilot-grunnlag.md, og trebat-, skiff-, snekke-, plastsjark- og havsjark-grunnlag.md med byggedokumentene (snekka er den første med kjøl, innenbords propell i brønn og dørhus, plastsjarken den første med styrhus og nedsenket dørk, havsjarken den første med ballastkjølen i skrogets flate, bakk og trapper i dekkskartet; selvvurderingene står sist i grunnlagene).
   4. Det som er kjent om båten: docs/skipsmodeller/kartlegging-spillet.md (også M-punktene og D8), docs/batplan.md (også statuslinjene for båten), docs/systemer/baater.md og docs/systemer/3d-baater-og-animasjon.md (også 5.13).
@@ -44,6 +44,16 @@ FERDIG BETYR:
 Kjør på.
 
 ---
+
+Det neste økt bør vite (etter hurtigsjarken 01.11.2026):
+- Grenen med alt er nå ccr-7d69b776-9fggkf (rullet ut til ccr-5e1ba2f4-pusvyd).
+- Les `sulebas-bygging.md` kap. 17: tabeller lest av bilder leses med en glatt kurve (`hurtig11.py pchip`), linjene skal ende der de møter
+  stevnen, og det spilleren venter å se (lensporter, spygatt), skal synes fra dekket.
+- `hurtig11.py` er den nyeste malen for en hardknekt planende båt (skeg i snittet, sprutlister, slagflate, liste, skjul og tynt tak);
+  `tests/hu11shot.py` for bildene i spillet (rundt 50 minutter for begge formater: start det først, alene).
+- Fjernmodellen: spillets lokalflåte teller tre punkter per trekant; hold `build(False)` under 4 000 trekanter.
+- Selvvurderingen står i `hurtigsjark-grunnlag.md` kap. 8.
+- Neste i rekkefølgen etter `docs/batplan.md` del 10: `hs11.py` (sjarkny, 45 t mot 15), så `malo36.py`.
 
 Det neste økt bør vite (etter havsjarken 01.11.2026):
 - Les `sulebas-bygging.md` kap. 16: mål jevnheten i snittet (andrederiverte langs x) før bildene; Jonas så bulene i baugen før meg.

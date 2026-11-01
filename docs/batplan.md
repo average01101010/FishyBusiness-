@@ -13,7 +13,7 @@ Lest før planen: `VESSELS` (`core/02-species-gear.js`), databladet (`ui/05-phon
 | `snekke` | `snekke26.py` | 379 | åpen, h7 | 7,9 | 245 000 | 2+1 / 0 |
 | `plastsjark` | `plast31.py` (ny 17.10.2026) | 430 | åpen, h8 | 9,45 | 850 000 | 2+1 / 2 |
 | `sjark` | `havsjark35.py` (målestokken; revidert 01.11.2026) | 623 | åpen, h9 | 10,57 | 1 150 000 | 3+1 / 2 |
-| `hurtigsjark` | `hurtig11.py` | 384 | åpen, h10 | 10,99 | 4 900 000 | 3+1 / 2 |
+| `hurtigsjark` | `hurtig11.py` (revidert 01.11.2026) | 384 | åpen, h10 | 10,99 | 4 900 000 | 3+1 / 2 |
 | `breisjark` | `malo36.py` | 532 | åpen | 10,99 | 9 000 000 | 4+1 / 4 |
 | `sjarkny` | `hs11.py` | 251 | åpen | 10,99 | 10 500 000 | 3+1 / 3 |
 | `kyst15` | `kyst15.py` | 304 | lukket, h14 | 14,99 | 18 000 000 | 5+1 / 6 |
@@ -198,7 +198,7 @@ Oppdragsøkonomien fra 17.10.2026 (`docs/OVERLEVERING.md` 4.26) gjør at fisket 
 1. `snekke23.py` (trebåten, startbåten alle ser): B8, B12, B16, interiør med motorkasse og rorkult er alt der; revidert etter pilotens arbeidsmåte 31.10.2026 (F5, `docs/skipsmodeller/trebat-grunnlag.md`)
 2. `snekke26.py`: B4–B6, B8, B12; revidert etter pilotens arbeidsmåte 01.11.2026 (F5, `docs/skipsmodeller/snekke-grunnlag.md`)
 3. `hs11.py` (sjarkny, det dyreste kjøpet under 11 m, tynnest skript): hele lista
-4. `hurtig11.py`: B5, B6, B8, B12
+4. `hurtig11.py`: B5, B6, B8, B12; revidert etter pilotens arbeidsmåte 01.11.2026 (F6, `docs/skipsmodeller/hurtigsjark-grunnlag.md`)
 5. `malo36.py`: B6, B8, B12, B16
 6. `kyst15.py`: hele lista, med shelterdekket og trappa som dekkskartet savner
 7. `kyst21.py`: hele lista, med galgen og rusten

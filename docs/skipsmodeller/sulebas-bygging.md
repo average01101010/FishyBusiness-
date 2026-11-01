@@ -501,7 +501,37 @@ finner akkurat den linja.
 
 **Glasset er ugjennomsiktig i Cycles.** Bildene inn i styrhuset ble svarte; `shots.py` tar nå `helm` og `c_helm*` uten glasset.
 
+## 17. Lært av revisjonen av hurtigsjarken (01.11.2026)
+
+**Linjer lest av bilder skal leses glatt.** Tabellene fra bildene (kjølen, slaget, knekken, ripa) ble lest med rette stykker mellom punktene
+(`interp`). Hvert snitt knakk der stigningen skiftet: `fair.py` målte 100° tvers over stasjonene ved x 10,0 og 10,5 på det gamle skroget. Les
+dem med en monoton kubisk kurve gjennom de samme punktene (`hurtig11.py pchip`): punktene står der de ble lest, knekkene forsvinner.
+
+**En linje som ikke møter stevnen, lager en finne.** Det gamle skriptet lot slaget og knekken ende forbi stevnen og klemte dem til kjøllinja
+med `max`, så snittet fikk punkter på senterlinja i ulik høyde (to sider i samme plan). Sett hver linjes ende der den møter stevnen
+(`X_CE`, `X_KE`), og la bredden gå til null der.
+
+**En hardknekt planende båt har knekker med vilje.** Slaget, listene og sprutlistene skal stå skarpe; `fair.py` summerer dem også. Les tallene
+per stasjon (en stasjon midt i baugen skal ikke stå øverst) og mål vannlinjene bare mellom slaget og knekken (`check()`), der sida skal være
+glatt.
+
+**Det som drenerer dekket, må synes fra dekket.** Første utkast lenset arbeidsdekket gjennom rør til små spygatt under lista, fordi dekket lå i
+knekkens høyde og en lensport ville skåret i lista. Det er riktig på noen båter, men det leste ikke: Jonas spurte «Har båten ingen
+spygatt?». Dekket ble løftet over lista, og lensportene ble skåret åpne gjennom skansekledningen ved dekket. Når et valg gjør noe som spilleren
+venter å se, usynlig, velg formen som viser det.
+
+**Se med skipperens øyne fra der han står.** Første utkast satte ham bak stolpen mellom frontrutene (y −0,75 mot hjørnet −0,95);
+`helm`-bildet viste en svart stolpe midt i synet. Sett skipperen midt bak en rute, og park viskerne langs rutas underkant.
+
+**Fjernmodellen teller punkter, ikke trekanter.** Spillets lokalflåte teller tre punkter per trekant: 4 461 trekanter ble 13 383 punkter mot
+12 000. Lanterner og ankerspill i fjernversjonen må være enkle klosser.
+
+**Bilder i fjernkjøring tar tid.** `hu11shot.py` (14 bilder i SwiftShader) brukte rundt 50 minutter. Start det først, og gjør
+Blender-arbeidet etter, aldri ved siden av.
+
 ## Endringslogg
+
+- 01.11.2026: kap. 17, det revisjonen av hurtigsjarken lærte (glatte linjer fra bilder, linjer som møter stevnen, knekker med vilje, lensporter som synes, skipperens øye, fjernmodellens punkter).
 
 - 01.11.2026: kap. 16, det revisjonen av havsjarken lærte (jevnheten i snittet, hull som synes åpne, dekkskartet celle for celle, tak over rom, trapper, `sed`, glasset i Cycles); tabellen i kap. 15 fikk taket over rommet og trappene.
 
