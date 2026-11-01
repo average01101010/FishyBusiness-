@@ -19,24 +19,24 @@
     for (const [kk, c] of CH) if (moved.some(q => Math.hypot(c.x - q.x, c.z - q.z) < 700)){ freeChunk(c); CH.delete(kk); }
     staleMesh('near'); staleMesh('fine');
   }
-  // The coast's own boats at their quay berths (05-vessels.js moorHarbour, 4.16b) stood on the same bank: there too the ground goes down,
-  // where it stands over -1.2 m under the hull, out to her side and 6 m and along her length and 3 m, and only 1.5 m in from the face
-  // (no quay of ours is drawn there). Their places are fixed again only when packs or coast indexes come (MOOR.ver), so the set changes
-  // rarely: it is looked at every 30th frame for the harbours within 2.5 km of the boat, and kept in 64 m cells.
+  // The coast's own boats at their quay berths (05-vessels.js moorHarbour, 4.16b) and Senja's fleet at theirs (fleetBerth) stood on the
+  // same bank: in front of a berth at a quay that stands in 3D (L1: the berth carries its face, moored.face) the ground goes down the
+  // same way, where it stands over -1.2 m under the hull, out to her side and 6 m, along her length and 3 m, and 1.5 m in from the
+  // face (4 m where the game sets its own quay there, face.mod, as under the player's). A dock, a buoy or no place digs nothing. The
+  // places are fixed again only when packs or coast indexes come (MOOR.ver), so the set changes rarely: it is looked at every 30th
+  // frame for the harbours within 2.5 km of the boat, and kept in 64 m cells.
   const NPIT = {k:'', l:[], g:new Map(), off:false, n:0};
   function npcPits(){
     if (++NPIT.n % 30 || typeof MOOR === 'undefined' || !VEC.tiles.size) return;
-    const R = 2500, ex = bv.x, ez = bv.z, H = []; let k = MOOR.ver + ':';
-    for (const tl of vecTilesIn(ex - R, ez - R, ex + R, ez + R)) for (const h of tl.npc || []) if (h.moorVer === MOOR.ver && Math.hypot(h.x * 1000 - ex, h.y * 1000 - ez) < R){ H.push(h); k += Math.round(h.x * 1000) + ',' + Math.round(h.y * 1000) + ';'; }
+    const R = 2500, ex = bv.x, ez = bv.z, B = []; let k = MOOR.ver + ':';
+    for (const tl of vecTilesIn(ex - R, ez - R, ex + R, ez + R)) for (const h of tl.npc || []) if (h.moorVer === MOOR.ver && Math.hypot(h.x * 1000 - ex, h.y * 1000 - ez) < R){ k += Math.round(h.x * 1000) + ',' + Math.round(h.y * 1000) + ';'; for (const b of h.boats) if (b.moored && b.moored.face) B.push({f:b.moored.face, L:b.L, B:b.B, T:b.T}); }
+    if (typeof FLEET !== 'undefined' && typeof fleetBerth === 'function') FLEET.forEach((f, i) => { if (Math.hypot(f.hp[0] * 1000 - ex, f.hp[1] * 1000 - ez) > R + 600) return; const m = fleetBerth(i); if (m && m.face){ B.push({f:m.face, L:f.L, B:f.B, T:f.T}); k += 'f' + i + ':' + Math.round(m.face.x) + ',' + Math.round(m.face.z) + ';'; } });
     if (k === NPIT.k) return;
     const was = NPIT.l; NPIT.k = k; NPIT.l = []; NPIT.g = new Map(); NPIT.off = true;
-    for (const h of H) for (const b of h.boats){ const m = b.moored; if (!m || m.buoy || m.dock || m.none) continue;
-      const px = m.p.x * 1000, pz = m.p.y * 1000, sn = Math.sin(m.hd), cs = Math.cos(m.hd), B = b.B || 3, L = b.L || 10, o = B / 2 + 2;
+    for (const q of B){ const f = q.f, B2 = q.B || 3, L = q.L || 10, px = f.x + f.nx * (B2 / 2 + 0.4), pz = f.z + f.nz * (B2 / 2 + 0.4);
       if (terrRaw(px, pz) < -1.2) continue;
-      // (the face on the side with the bank: across her heading, the higher ground)
-      const sg = terrRaw(px + cs * o, pz + sn * o) > terrRaw(px - cs * o, pz - sn * o) ? 1 : -1, nx = -sg * cs, nz = -sg * sn, fx = px - nx * (B / 2 + 0.4), fz = pz - nz * (B / 2 + 0.4);
-      const a1 = L / 2 + 3, w = B + 6, r = Math.hypot(a1, w + 2) + 1;
-      NPIT.l.push({x:fx, z:fz, ux:sn, uz:-cs, nx, nz, a1, a0:L / 2 + 2, w, inl:1.5, d:Math.max(3, (b.T || 1.5) + 1), x0:fx - r, x1:fx + r, z0:fz - r, z1:fz + r}); }
+      const a1 = L / 2 + 3, w = B2 + 6, r = Math.hypot(a1, w + 4) + 1;
+      NPIT.l.push({x:f.x, z:f.z, ux:f.ux, uz:f.uz, nx:f.nx, nz:f.nz, a1, a0:L / 2 + 2, w, inl:f.mod ? 4 : 1.5, d:Math.max(3, (q.T || 1.5) + 1), x0:f.x - r, x1:f.x + r, z0:f.z - r, z1:f.z + r}); }
     NPIT.off = false;
     for (const q of NPIT.l) for (let i = Math.floor(q.x0 / 64); i <= Math.floor(q.x1 / 64); i++) for (let j = Math.floor(q.z0 / 64); j <= Math.floor(q.z1 / 64); j++){ const c = i * 65536 + j; let L = NPIT.g.get(c); if (!L) NPIT.g.set(c, L = []); L.push(q); }
     const moved = was.filter(q => !NPIT.l.some(p => p.x === q.x && p.z === q.z)).concat(NPIT.l.filter(q => !was.some(p => p.x === q.x && p.z === q.z)));

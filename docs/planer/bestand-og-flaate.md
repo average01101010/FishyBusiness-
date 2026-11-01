@@ -105,6 +105,14 @@ Rekkefølgen: L1 (synlig feil nå), B1 (alt annet står på den), B2, B3, B4, L2
 - Hvor stor del av en lokasjons fangst som skal legges som trykk på rutene, avhenger av hvor stor lokasjonen er mot feltene båtene faktisk bruker. Der WFS-fiskeplassene finnes, legges trykket på dem; ellers jevnt over lokasjonens vann på 20–300 m.
 - Ytelsen: `areaF` og `F` må slås opp per rute og time, ikke per punkt. Lokasjonsoppslaget (`ruLok`, polygontest mot 578 polygoner) lagres per 2 km-rute.
 
+## 5b. Kravet om 5 000 aktive brukere ved lansering (Jonas 01.11.2026)
+
+Jonas: «jeg vil gjerne være rustet til å kunne ha minst 5000 aktive brukere når jeg offentlig lanserer spillet.» Det setter tre krav på planen:
+
+- **Ingenting i modellen skal koste serveren per spiller per minutt.** Bestanden, flåten og vandringen er rene funksjoner av klokka og dataene i appen (lag 1–3), og det eneste serveren deler, er det den deler i dag (fangst per rute, landinger per gruppe) pluss registeret (B4). Et nytt serverkall per spiller legges ikke inn uten at B4 regner ut hva det koster med 5 000 samtidige: i dag sender hver spiller posisjonen hvert 15. sekund, henter verden hvert 10. minutt og spør om havneplasser høyst hvert 2. minutt. 5 000 spillere er da rundt 20 000 kall i minuttet bare for posisjonen, og det må måles mot Supabase-planen før lansering (egen oppgave i B4: en lasttest med 5 000 syntetiske spillere mot en kopi av databasen).
+- **Det som regnes i appen, må være billig nok for 5 000 ulike steder samtidig,** altså for hvilken som helst rute når som helst, uten at noen forhåndsregner hele kysten: likevekten i lag 3 i lukket form, oppslagene per rute og time (ikke per punkt), og `fiske.json` under 400 kB.
+- **Registeret og gruppekvoten tåler at 5 000 spillere er i åpen gruppe samtidig:** da er spillernes landinger ikke lenger en dråpe (5 000 × 5 t er 25 000 t mot gruppekvoten på rundt 19 000 t torsk), så terskelen i valg 3 (1 % av en gruppekvote) nås raskt, og bestanden og årets fangst per gruppe flyttes til serveren **før** lanseringen, ikke etter. B4 bygger den delen ferdig med terskelen slått av i admin, så den kan slås på den dagen.
+
 ## 6. Hva planen ikke gjør
 
 - Ingen fiske for spilleren med trål, not eller autoline, og ingen opplåsing av havbåtene: det er havsteget, neste plan.
@@ -115,4 +123,5 @@ Rekkefølgen: L1 (synlig feil nå), B1 (alt annet står på den), B2, B3, B4, L2
 
 ## 7. Status
 
-- 01.11.2026: planen er skrevet etter Jonas' svar på valg 1–4 i `npc-liggeplasser.md` og beskjeden om at havflåten kommer snart. Venter på valgene 1–4 over og klarsignal for L1.
+- 01.11.2026: planen er skrevet etter Jonas' svar på valg 1–4 i `npc-liggeplasser.md` og beskjeden om at havflåten kommer snart.
+- 01.11.2026: Jonas: «Kjør på med det du anbefaler» (valg 1–4 = A) og kravet om 5 000 aktive brukere (5b). L1 bygd samme dag (`npc-liggeplasser.md`). Neste økt: B1.
