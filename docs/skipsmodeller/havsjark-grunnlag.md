@@ -106,14 +106,18 @@ babord ripe tvers av luka (3,30), den fjerde akter ved redskapsrommets dør. Ski
 | 3 | Dekkpunktene: bakken ble ikke dekk. Feilsøkt i dekkskartet celle for celle: vanten til styrbord (masta står til babord) krysset gangen ved huset i hodehøyde, trinnene dekket hele gangen, og avstanden fra bakken til dekket ble nøyaktig tre celler (0,2 × 3 > 0,6 i flyttall). Det fremre visiret ble dekk (1,2 m over bakken). Takregelen tok bakken for et tak over et rom (skrogbunnen inni er en «dørk») | Vanten til styrbord til et øye på takkanten, trinnene smale inntil huset, `stairs`-ankeret (spillet leser det nå), takregelen avgrenset (rommets dørk ikke under dekket, inntil to celler unna for visiret, ikke dekket selv) |
 | 4 | **Jonas: «Hvorfor er ikke spygattene åpne?»** Gummiklaffene utenpå hullene leste som svarte klosser | Klaffene og hengselstengene fjernet; hullene står åpne (nærbildet `c_free`) |
 
-Eksporten: lod0 60 670 trekanter (taket 300 000), `lodm` 39 035 (taket 40 000 minus seilets), lod1 4 283 / 5 863 punkter (taket 12 000),
-glass 260; GLB 3,78 MB mot 0,90 MB før. Seilet er to egne deler (`sail`, `sailf`).
+| 5 | Testene: `vessel3d sjark`, `brotest sjark`, `lanterntest`, `vesseltest`, `maletest`, `walktest` grønne; **`regmarktest` rød for havsjarken** (merket fant ikke plass: bare 0,35 m mellom fenderlista og ripa på baugen) og for ringnotbåten (rød også før); `penshot` rød på GL-feil 1282, den samme på bygget før endringene. Den nye Node-testen (`tests/unit/vessel3d.test.mjs`) fant at fjernmodellen hadde 12 849 punkter mot 12 000 (`vessel3d.py sjark` hopper over lokalflåten) | `markStrips` prøver to lavere høyder under ripa (bare båter der alle høyere plasser feilet): `regmarktest` grønn, også ringnotbåten. Fjernmodellen uten aksel og propell og med enkle vinduer: 3 799 trekanter, 11 397 punkter |
+| 6 | **Jonas: «Er det bare meg eller virker baugen ganske bulkete fortsatt?»** Kantene i skroget målt (vinkelen mellom flatene): en knekk på 10–14° langs stasjonen x 9,34 fra kjølen til lista, og en bule ved x 9,87. Årsak: der bunnreisningen blir bratt, klatrer kimmingens hjørne over ripa (9,34), og så blir bunnlinja og utfallet parallelle (9,87); begge gangene falt snittet tilbake til en rett linje. Overgangen fra kjølen til stevnen ved 9,5 hoppet også 6–10 cm | Hjørnet holdes under ripa med et mykt minimum, ingen rett reserve; kjølen glir over i stevnen den siste 0,8 m. `check()` måler nå vannlinjenes jevnhet (største endring i stigningen 0,012 m per 6 cm-steg, grense 0,02) |
+
+Eksporten: lod0 60 590 trekanter (taket 300 000), `lodm` 39 036 (taket 40 000 minus seilets), lod1 3 799 / 5 156 punkter (taket 12 000),
+glass 260; GLB 3,77 MB mot 0,90 MB før. Seilet er to egne deler (`sail`, `sailf`).
 
 ## 8. Selvvurdering
 
-**Karakter: 68/100.** Skroget er én flate med kjølen, hullene er ekte, broa er tegnet fra skipperens øye, lanternene er lovlige, og tre feil i
+**Karakter: 64/100.** Skroget er én flate med kjølen, hullene er ekte, broa er tegnet fra skipperens øye, lanternene er lovlige, og tre feil i
 spillet som rammet andre båter er rettet (ringnotbåtens sløyebord og is sto på et tak 6,25 m oppe; breisjarkens styrhustak var dekk;
 fiskelysene ble tent over mastetoppen). Trekk: (1) Jonas så bulene i baugen og klaffene foran spygattene før jeg meldte dem; begge burde vært
-fanget i nærbildene av runde 1, der baugen allerede så krøllete ut; (2) jeg ødela skriptet med en `sed` som byttet `X0` i alle navn og måtte
+fanget i nærbildene av runde 1, der baugen allerede så krøllete ut, og baugen måtte rettes to ganger fordi jeg første gang rettet bare det første
+hoppet jeg fant i stedet for å måle hele flaten; (2) jeg ødela skriptet med en `sed` som byttet `X0` i alle navn og måtte
 gjenopprette det fra mitt eget skriv; (3) ingen overlegg mot tegningene (de ligger ikke i repoet), bare mot tabellene; (4) deplasementet ble
 11,3 t mot 12 t etter at buen ble byttet; (5) stripene knekker fortsatt synlig der de går rundt stevnen.

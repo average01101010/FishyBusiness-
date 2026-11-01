@@ -92,8 +92,13 @@ def vline(x, sg=1):
         d1 = (math.cos(dr), math.sin(dr)); d2 = (-math.sin(fl), -math.cos(fl))
         den = d1[0] * d2[1] - d1[1] * d2[0]
         s_ = (h * d2[1] - (zs - zl) * d2[0]) / den
+        # (where the deadrise is steep the corner climbs over the sheer, x 9.34 forward: held just under it, so the cubic goes on without a
+        # step; the straight fallback that took over there kinked the bow from the keel to the strake)
+        # (and further forward, x 9.87, the deadrise and the flare make the two lines parallel and then diverge: s_ runs to infinity and turns
+        # negative, so the same bound holds there)
+        cap = (zs - zl) * 0.999 / max(1e-6, d1[1]); s_ = (max(s_, 1e-9) ** -4 + cap ** -4) ** -0.25 if s_ > 0 else cap   # (a soft minimum: no kink where it starts to bind)
         C = (d1[0] * s_, zl + d1[1] * s_)
-        if s_ <= 0 or C[1] >= zs or C[0] >= h + 1e-6:
+        if s_ <= 0:
             P = [(h * k / n, zl + (zs - zl) * k / n) for k in range(n + 1)]
         else:
             # a cubic from the keel's root out along the deadrise and round the bilge up along the flare to the sheer: its control points
@@ -1143,6 +1148,14 @@ def check():
     xs2 = [x for x in xs if True]; z0b, z1b = -0.3, 1.5
     ln = max(x_of(x, z1b) for x in xs2 if z_low(x) < z1b) - min(x_of(0.0, z) for z in (z0b, z1b))
     out.append(('vessel3d: skroget i båndet -0.3 til 1.5 m er %.2f m langt (lengden %.2f, -6 %% til +3 %%) og %.2f m bredt (bredden %.2f, ±5 %%)' % (ln, L, 2 * mr, BEAM), -0.06 < (ln - L) / L < 0.03 and abs(2 * mr - BEAM) / BEAM < 0.05))
+    # the hull's fairness (sulebas-bygging kap. 16; Jonas 01.11.2026: «Baugen ser veldig bulkete ut»): the waterlines from 0.5 m to the
+    # sheer, their slope's change from one 6 cm step to the next, away from the stem (where each one ends on it)
+    worst = (0.0, 0, 0)
+    for z in (0.5, 0.8, 1.0, 1.3, 1.6):
+        xs3 = [3.0 + 0.06 * i for i in range(130) if z_low(3.0 + 0.06 * i + 0.18) < z - 0.05]
+        yv = [y_at(x, z) for x in xs3]; d = [b - a for a, b in zip(yv, yv[1:])]
+        for i in range(1, len(d)): worst = max(worst, (abs(d[i] - d[i - 1]), xs3[i], z))
+    out.append(('vannlinjene jevne: største endring i stigningen %.3f m per 6 cm-steg (ved x %.2f, z %.1f; en bule synes over rundt 0,02)' % worst, worst[0] < 0.02))
     for s, ok_ in out: print(('OK   ' if ok_ else 'FEIL ') + s)
     return all(o for _, o in out)
 

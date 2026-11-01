@@ -466,6 +466,11 @@ bunnreisningen stiger fort (mot stevnen): flatene vris, og baugen ser bulkete ut
 meg. Sjekk vannlinjenes andrederiverte langs x (`y_at(x, z)` for noen z, steg på 0,1 m): over 20–30 mm er en synlig bule. En kubisk kurve fra
 kjølrota til ripa med kontrollpunktene trukket mot hjørnet (`FULL` per stasjon) endrer seg jevnt; volumet stilles med fyldigheten.
 
+**Et snitt med en reserve er to snitt.** Havsjarkens kimming fra en hjørnevinkel hadde en rett linje som reserve når hjørnet havnet over
+ripa eller linjene ble parallelle. Der reserven tok over (x 9,34 og 9,87), knakk flaten loddrett fra kjølen til lista, og det tok to runder å
+finne det fordi jeg rettet det første hoppet og ikke målte hele flaten. Mål kantvinklene i nettet (vinkelen mellom flatene) i baugen, og
+grens med et mykt minimum i stedet for en reserve.
+
 **Det som henger foran et hull, er ikke et hull.** En gummiklaff utenpå en lensport er riktig om bord, men i spillets lys leser den som en
 svart kloss. Vis hullet åpent.
 
