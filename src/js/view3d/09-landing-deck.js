@@ -160,22 +160,28 @@
   // a rigid tool held at A with its head (the part's -z) along dir
   // ---- the hands in their grips (tools/harbour/hender.py): the meshes once for all the figures (the glove is the same on every look),
   // and where each grip holds its thing (the worker GLB's extras 'hands': per grip and side, the point and the axis in the hand's frame) ----
+  // (the sides swapped, tilbakemelding #105, 01.11.2026: hender.py builds «the right hand» with its thumb at +x = palm × fingers, which
+  // is a left hand: palm down on the rail its thumb pointed out, not in. The GLB's hL_ meshes and grips are the true right hand and the
+  // hR_ ones the true left, so they are taken that way round here, and the taped band, made for the hL_ mesh that was the left hand, is
+  // mirrored onto the new left (hR_))
   let HANDM = null;
+  const mirX = o => { if (!o) return o; const p = o.p.slice(), n = o.n.slice(); for (let i = 0; i < p.length; i += 3){ p[i] = -p[i]; n[i] = -n[i]; } return {p, n, c:o.c}; };
   function handMeshes(){
-    if (HANDM !== null) return HANDM; const g = n => { const o = wkPart(n, 'crew'); return o ? upA(o) : null; }, GR = ['relax', 'flat', 'grip', 'hold', 'pinch', 'hook'];
-    const Rm = {}, Lm = {}; for (const k of GR){ Rm[k] = g('hR_' + k); Lm[k] = g('hL_' + k); }
-    const ex = (glbLoad('worker') || {}).ex || {};
-    return HANDM = Rm.relax && Lm.relax && ex.hands ? {R:Rm, L:Lm, lo:g('hand_lo') || g('hand'), tape:g('tape_L'), grip:ex.hands} : false;
+    if (HANDM !== null) return HANDM; const raw = n => wkPart(n, 'crew'), g = n => { const o = raw(n); return o ? upA(o) : null; }, GR = ['relax', 'flat', 'grip', 'hold', 'pinch', 'hook'];
+    const Rm = {}, Lm = {}; for (const k of GR){ Rm[k] = g('hL_' + k); Lm[k] = g('hR_' + k); }
+    const ex = (glbLoad('worker') || {}).ex || {}, grip = {}; for (const k in ex.hands || {}){ const s = ex.hands[k]; grip[k] = {R:s.L, L:s.R}; }
+    return HANDM = Rm.relax && Lm.relax && ex.hands ? {R:Rm, L:Lm, lo:g('hand_lo') || g('hand'), tape:upA(mirX(raw('tape_L'))), grip} : false;
   }
   const sub3 = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], add3 = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], mul3 = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
   const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], crs3 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
   const nrm3 = v => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
-  // a hand's frame [x, y, z]: the fingers along z, the palm toward y, x = y × z (the thumb at +x on the right hand, -x on the left).
+  // a hand's frame [x, y, z]: the fingers along z, the palm toward y, x = y × z (the thumb at -x on the right hand, +x on the left:
+  // palm down and the fingers forward, x is the figure's right, so the right thumb points in, as a real hand's; handMeshes).
   // Holding a handle (sp.a, its axis) the fist closes across it: x along the handle, the thumb toward a tool's head (sp.tool) or the
   // palm toward sp.n; otherwise the palm turned toward sp.n, the wrist bending to lay a flat hand flat
   function handFrame(z0, sp, side){
     if (sp.a){ const a = nrm3(sp.a), z = nrm3(sub3(z0, mul3(a, dot3(z0, a)))); let x = a, y = crs3(z, a);
-      if (sp.tool ? side < 0 : sp.n && dot3(y, sp.n) < 0){ x = mul3(a, -1); y = mul3(y, -1); } return [x, y, z]; }
+      if (sp.tool ? side > 0 : sp.n && dot3(y, sp.n) < 0){ x = mul3(a, -1); y = mul3(y, -1); } return [x, y, z]; }
     const n = nrm3(sp.n), z = nrm3(sub3(z0, mul3(n, dot3(z0, n) * (sp.g === 'flat' ? 1 : 0.6)))), y = nrm3(sub3(n, mul3(z, dot3(n, z))));
     return [crs3(y, z), y, z]; }
   const inFrame = (Fr, v) => [Fr[0][0] * v[0] + Fr[1][0] * v[1] + Fr[2][0] * v[2], Fr[0][1] * v[0] + Fr[1][1] * v[1] + Fr[2][1] * v[2], Fr[0][2] * v[0] + Fr[1][2] * v[1] + Fr[2][2] * v[2]];

@@ -139,6 +139,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
 
+## Strøket 01.11.2026 (tilbakemelding #105, hendene)
+
+- **Mannskapets hender var speilvendt** (tilbakemelding #105): tomlene pekte utover på rekka. Rettet i `handMeshes` ved å bytte `hL_`/`hR_` (se `docs/systemer/folk-om-bord.md`). Står igjen: `tools/harbour/hender.py` bør få tommelen på −x på høyre hånd neste gang hendene bygges i Blender, og byttet tas bort samtidig.
+
 ## Strøket 01.11.2026 (L1, båtene ved ekte kaier, b3fd4d0 og b0b0135)
 
 - **NPC-båtene lå i fjæra og på strandskråningen** (Jonas' bilder fra Finnsnes 01.11.2026; Senja-flåten uten graving, kystflåten med `npcPits`): en båt ligger bare ved en kai som står i 3D (`quayReal`), flytebrygge og bøye bare under 11 m og bare inne i havna, enhetenes kai åpen utenom plassene (`faceReserved`), og båter uten plass vises ikke i havn. `npc-trafikk.md` 4.16b-L1. Målt i Finnsnes, Tromsø, Bodø, Bergen og Båtsfjord.

@@ -5,6 +5,9 @@
        ['Skipperen står bak rattet og ser plotteren, ekkoloddet og kompasset, og mannskapet går opp trinnene til styrhuset og sidedekkene. Den som sløyer, står ikke lenger i haleporten.', 'The skipper stands behind the wheel and sees the plotter, the sounder and the compass, and the crew climb the steps to the wheelhouse and the side decks. The one who guts no longer stands in the hauling port.'],
        ['Sidelanternene har skjerm, og fiskelysene sitter på masta. På alle båter synes sidelanternene og hekklyset nå bare fra den kanten de skal lyse mot.', 'The side lights have screens, and the fishing lights sit on the mast. On every boat the side lights and the stern light now show only toward the arc they light.'],
     ]],
+    ['hender-011126', '01.11.2026', 'Hendene riktig vei', 'The hands the right way round', [
+       ['Mannskapet hadde høyre og venstre hånd byttet om, så tomlene pekte utover når de holdt hendene på rekka. Nå peker tomlene innover, som på ekte hender.', 'The crew had their right and left hands swapped, so the thumbs pointed out when they rested their hands on the rail. Now the thumbs point in, as on real hands.'],
+    ]],
     ['naust-bakke-011126', '01.11.2026', 'Naustet og rorbuene står på bakken', 'The boathouse and the rorbuer stand on the ground', [
        ['Fars naust og rorbuene har ikke lenger sin egen flekk av ruter rundt seg. De står på påler på landet slik det er der, og løftes litt der bakken er høy.', 'Father\'s boathouse and the rorbuer no longer have their own patch of squares round them. They stand on piles on the land as it is there, and are lifted a little where the ground is high.'],
     ]],
