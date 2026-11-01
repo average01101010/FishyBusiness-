@@ -85,7 +85,8 @@ Jonas 04.10.2026: «alle nye brukere skal få bestemme selv hvor i landet de øn
 - **Butikken** (`shopSite`) står bak kaifronten i Finnsnes, med x = 0 midt på fronten.
 - `view3d.js` har `SITES`, som brukes slik:
   - `sitesNow` gir plassene, og modellene tegnes av `drawSites`, fullt innen 900 m og enkelt ut til 4 km.
-  - Bakken (`siteTerr` i `terrRaw`) skjæres 0,4 m under naustets egen fjærebanke (`NBANK` = `BANK` i `naust.py`, fra 3 m ute til 16 m inne) og går tilbake til det den var innen 8 m.
+  - Naustet står oppå kartets egen bakke slik den er (Jonas 01.11.2026: «modellen må ikke grave ut landmasse … Den må ligge oppå landmassen»): modellen har ikke lenger sin egen fjærebanke av ruter, steiner og gresstuster, og bakken skjæres ikke. Pålene, stolpene, steinmuren, tømmerkassen og bukkene under færingen går 1,2 m lenger ned (`SINK` i `naust.py`), inn i bakken. Står kartets bakke under kaidekket eller gulvet høyere enn undersiden deres, løftes hele modellen over den (`naustLift`, `s.lift`, høyst 2,5 m). Bare sjøbunnen foran kaifronten senkes, der sjøkartet har sjø (kartets strand faller 1:3 fra kystlinja, så båten lå tørt): til båtens dypgang og en meter (minst 3 m), 16 m langs fronten til hver side og båtens bredde og 8 m ut, tilbake til det den var innen 8 m (`s.pit`).
+  - Rorbuene (`rorbu.py`) har fortsatt sin egen bank av ruter (`RBANK`).
   - Butikkens plass (fra 9,6 m til 27,5 m inn) planeres 0,1 m under kaidekket og går tilbake til det den var innen 12 m.
   - Kartets hus og trærne der modellene står, tas bort (`onSite`, med `clear`-rektanglene fra modellenes ankere).
 - Kartplotteren viser naustet som et lite hus med navnet «Fars naust» (`NOTEBOOK.svg`).

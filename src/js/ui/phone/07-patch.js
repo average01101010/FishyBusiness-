@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['naust-bakke-011126', '01.11.2026', 'Naustet står på bakken', 'The boathouse stands on the ground', [
+       ['Fars naust har ikke lenger sin egen flekk av ruter rundt seg. Det står på påler på landet slik det er der, og løftes litt der bakken er høy.', 'Father\'s boathouse no longer has its own patch of squares round it. It stands on piles on the land as it is there, and is lifted a little where the ground is high.'],
+    ]],
     ['havsjark-011126', '01.11.2026', 'Havsjarken bygd på nytt', 'The havsjark rebuilt', [
        ['Havsjarken på 35 fot er bygd på nytt med et glatt skrog der ballastkjølen er en del av skroget, ekte spygatt, koøyer og luker, og en dør inn til styrhuset.', 'The 35 ft havsjark is rebuilt with a smooth hull where the ballast keel is part of the hull, real freeing ports, portholes and hatches, and a door into the wheelhouse.'],
        ['Fra broa ser skipperen ratt, kartplotter, ekkolodd og kompass, og stytteseglet er beslått på bommen når båten ligger i havn.', 'From the helm the skipper sees the wheel, the plotter, the sounder and the compass, and the riding sail is furled on its boom when the boat lies in port.'],

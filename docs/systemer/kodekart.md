@@ -1904,12 +1904,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (809 linjer)
+## `src/js/ui/phone/07-patch.js` (822 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 802 `patch()`
+  - 815 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -2580,7 +2580,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 47 `bootGame()`
   - 150 `bootFail(e)`
 
-## `src/js/vessel3d.js` (1278 linjer)
+## `src/js/vessel3d.js` (1300 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -2660,28 +2660,28 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 810 `stripProud(type, st)`
   - 833 `stripPaint(type, st)`
   - 854 `markStrips(type)`
-  - 874 `anchorLen(bw)`
-  - 877 `markRGB(type, liv)`
-  - 885 `hullRGB(type, liv)`
-  - 895 `npcKit(L, B)`
-  - 898 `npcModel(type, lod, liv)`
-  - 900 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **912** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 925 `wkPart(name, kit)`
-  - 935 `wkPut(B, o, ax, s, at)`
-  - 945 `wkLimb(B, o, A, E, r)`
-  - 952 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 974 `vesselSVG(type, w, h)`
-- **1012** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1019 `deckMap(type)`
-  - 1148 `deckPass(M, k, q)`
-  - 1153 `passLine(M, A, B)`
-  - 1155 `linkPass(M, k, q)`
-  - 1159 `deckComp(M)`
-  - 1168 `deckPath(M, a, b)`
-- **1199** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1212 `lanterns(G, V, st)`
-  - 1242 `deckPoints(type)`
+  - 876 `anchorLen(bw)`
+  - 879 `markRGB(type, liv)`
+  - 887 `hullRGB(type, liv)`
+  - 897 `npcKit(L, B)`
+  - 900 `npcModel(type, lod, liv)`
+  - 902 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **914** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 927 `wkPart(name, kit)`
+  - 937 `wkPut(B, o, ax, s, at)`
+  - 947 `wkLimb(B, o, A, E, r)`
+  - 954 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 976 `vesselSVG(type, w, h)`
+- **1014** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1021 `deckMap(type)`
+  - 1166 `deckPass(M, k, q)`
+  - 1171 `passLine(M, A, B)`
+  - 1173 `linkPass(M, k, q)`
+  - 1177 `deckComp(M)`
+  - 1186 `deckPath(M, a, b)`
+- **1217** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1230 `lanterns(G, V, st)`
+  - 1264 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (471 linjer)
 
@@ -2742,7 +2742,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **45** terrain
   - 76 `terrRaw(x, z, dil)`
 
-## `src/js/view3d/03-berths-naust.js` (370 linjer)
+## `src/js/view3d/03-berths-naust.js` (388 linjer)
 
 ---------- The water at the berths the company holds in the coast's harbours (core/07e-havn.js) ----------
 
@@ -2751,32 +2751,33 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 27 `npcPits()`
   - 47 `berthPit(x, z, h)`
 - **55** Father's naust and the Finnsnes shop (tools/harbour/naust.py, butikk.py; where: core/07c-naust.js)
-  - 72 `rorbuNow()`
-  - 78 `sitesNow()`
-  - 105 `siteTerr(x, z, h)`
-  - 127 `onSite(x, z)`
-  - 137 `tileIn(kind, tx, ty)`
-  - 138 `tileH(L, kind, x, z)`
-  - 145 `terrH(x, z)`
-  - 154 `unitTerr(x, z, h0)`
-  - 179 `terrCoarse(x, z, dil)`
-  - 189 `forestAt(x, z)`
-  - 207 `coverAt(x, z, cv, ck, k)`
-  - 232 `satRead(L, x, z)`
-  - 241 `satAt(x, z, cv, o)`
-  - 249 `covBlk(LC, bx, by)`
-  - 253 `coverRing(LC, ix, iz)`
-  - 263 `coverClass(x, z)`
-  - 273 `meshBegin(x0, z0, sx, sz, n, hf)`
-  - 277 `meshRows(B, until)`
-  - 289 `meshEnd(B)`
-  - 301 `makeMesh(x0, z0, sx, sz, n, hf)`
-  - 302 `freeMesh(m)`
-  - 304 `nearSurf(M, x, z)`
-  - 314 `unitPatch(U, M)`
-  - 339 `buildPatches()`
-  - 348 `buildTerrain()`
-  - 357 `stream3d()`
+  - 74 `rorbuNow()`
+  - 80 `sitesNow()`
+  - 113 `naustLift(o, u, nn)`
+  - 123 `siteTerr(x, z, h)`
+  - 145 `onSite(x, z)`
+  - 155 `tileIn(kind, tx, ty)`
+  - 156 `tileH(L, kind, x, z)`
+  - 163 `terrH(x, z)`
+  - 172 `unitTerr(x, z, h0)`
+  - 197 `terrCoarse(x, z, dil)`
+  - 207 `forestAt(x, z)`
+  - 225 `coverAt(x, z, cv, ck, k)`
+  - 250 `satRead(L, x, z)`
+  - 259 `satAt(x, z, cv, o)`
+  - 267 `covBlk(LC, bx, by)`
+  - 271 `coverRing(LC, ix, iz)`
+  - 281 `coverClass(x, z)`
+  - 291 `meshBegin(x0, z0, sx, sz, n, hf)`
+  - 295 `meshRows(B, until)`
+  - 307 `meshEnd(B)`
+  - 319 `makeMesh(x0, z0, sx, sz, n, hf)`
+  - 320 `freeMesh(m)`
+  - 322 `nearSurf(M, x, z)`
+  - 332 `unitPatch(U, M)`
+  - 357 `buildPatches()`
+  - 366 `buildTerrain()`
+  - 375 `stream3d()`
 
 ## `src/js/view3d/04-vec-packs.js` (283 linjer)
 
@@ -3103,7 +3104,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 214 `spawn(x, y, z, vx, vy, vz, life, g)`
   - 216 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
-## `src/js/view3d/17-draw.js` (186 linjer)
+## `src/js/view3d/17-draw.js` (189 linjer)
 
 ---------- drawing ----------
 
@@ -3115,8 +3116,8 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 46 `buildGround()`
   - 81 `buildLandMask()`
   - 104 `lmStep()`
-  - 137 `seaRing(u, eye, y, R, Hl)`
-  - 147 `drawSea(VP, eye, t, far, drop)`
+  - 140 `seaRing(u, eye, y, R, Hl)`
+  - 150 `drawSea(VP, eye, t, far, drop)`
 
 ## `src/js/view3d/17b-inland-water.js` (148 linjer)
 
@@ -3235,7 +3236,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (275 linjer)
+## `src/js/view3d/20-trawl-seine.js` (281 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -3251,10 +3252,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 167 `spHold(f)`
   - 170 `deckWork(G)`
   - 178 `drawHelmKit(BMrel, eye, G)`
-  - 187 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
-  - 212 `npcMesh(n, lod)`
-  - 221 `drawNPC(eye, t, H, VP)`
-  - 254 `npcCrewDraw(n, K, eye, t)`
+  - 190 `sailOf(t)`
+  - 191 `drawSail(t, M, set)`
+  - 192 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
+  - 218 `npcMesh(n, lod)`
+  - 227 `drawNPC(eye, t, H, VP)`
+  - 260 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (165 linjer)
 

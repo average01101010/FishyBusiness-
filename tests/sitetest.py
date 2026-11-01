@@ -1,5 +1,5 @@
 """Father's naust by the home harbour and the shop on the Finnsnes quay in 3D (05.10.2026, core/07c-naust.js, view3d.js SITES): where the
-naust stands (on a straight shore, water in front, land behind, off the harbours), the ground cut under its bank and levelled under the
+naust stands (on a straight shore, water in front, land behind, off the harbours), the map's own ground under it as it is (the model lifted over it) and levelled under the
 shop's yard, no mapped house on their ground, and a naust found for a home along the coast. Pictures: site_naust.png, site_shop.png.
 Prints OK or FEIL per check."""
 from _env import GAME, boot
@@ -18,14 +18,14 @@ async def main():
         r = await pg.evaluate("""(() => { const L = G3._debug.sitesNow(), n = L.find(s => s.k === 'naust'), sh = L.find(s => s.k === 'shop'), R = {kinds:L.map(s => s.k)};
           if (n){ const at = (x, y) => [n.o[0] + n.u[0] * x - n.n[0] * y, n.o[1] + n.u[1] * x - n.n[1] * y], land = q => isLand({x:q[0] / 1000, y:q[1] / 1000});
             R.naust = {front:[10, 20, 30].map(v => land(at(0, -v))), behind:[10, 18].map(v => land(at(0, v))), portD:Math.round(Math.min(...PORTS.map(q => Math.hypot(q.p.x * 1000 - n.o[0], q.p.y * 1000 - n.o[1])))),
-              ground:[0, 4, 8, 12].map(y => +(G3._debug.terrH(...at(0, y)) - [-2.6, -0.15, 1.7, 2.75][[0, 4, 8, 12].indexOf(y)]).toFixed(2)), clear:G3._debug.onSite(...at(0, 6)), home:+(Math.hypot(n.o[0] - portById('finnsnes').p.x * 1000, n.o[1] - portById('finnsnes').p.y * 1000)).toFixed(0)}; }
+              lift:n.lift, ground:[[-6, 1], [6, 3], [-4, 5], [4, 8], [0, 9]].map(([x, y]) => +(G3._debug.terrH(...at(x, y)) - ((y <= 3.4 ? QTOP - 0.55 : QTOP - 0.22) + n.lift)).toFixed(2)), clear:G3._debug.onSite(...at(0, 6)), home:+(Math.hypot(n.o[0] - portById('finnsnes').p.x * 1000, n.o[1] - portById('finnsnes').p.y * 1000)).toFixed(0)}; }
           if (sh){ const at = (x, y) => [sh.o[0] + sh.u[0] * x - sh.n[0] * y, sh.o[1] + sh.u[1] * x - sh.n[1] * y]; R.shop = {yard:[[0, 15], [-12, 20], [12, 25]].map(([x, y]) => +G3._debug.terrH(...at(x, y)).toFixed(2)), clear:G3._debug.onSite(...at(0, 18))}; }
           R.models = ['naust', 'shop'].map(k => !!G3._debug.siteModel(k)); return R; })()""")
         print(json.dumps(r))
         print(ok(r['kinds'][:2] == ['shop', 'naust'] and all(r['models'])), 'the shop and Father\'s naust are set down by Finnsnes, with their models', r['kinds'])
         N = r.get('naust') or {}
         print(ok(N and not any(N['front']) and all(N['behind']) and N['portD'] >= 70 and 50 <= N['home'] <= 400), 'the naust stands on the shore: water 10-30 m in front, land behind, at least 70 m from a harbour, near the home harbour', N)
-        print(ok(N and all(g <= -0.3 for g in N['ground']) and N['clear']), 'the ground under the naust is cut under its own bank, and the map\'s houses go there', N.get('ground'))
+        print(ok(N and all(g <= 0 for g in N['ground']) and 0 <= N['lift'] <= 2.5 and N['clear']), 'the naust stands on the map\'s own ground, not cut (no bank of its own since 01.11.2026): the ground is under its quay deck and floor, lifted %s m over it, and the map\'s houses go there' % N.get('lift'), N.get('ground'))
         Sh = r.get('shop') or {}
         print(ok(Sh and all(abs(h - 2.3) < 0.05 for h in Sh['yard']) and Sh['clear']), 'the shop\'s yard is levelled just under the deck, and the map\'s houses go there', Sh)
         # pictures: the naust from the water, the shop from the berth
