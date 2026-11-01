@@ -17,6 +17,15 @@ const FDIR = {
 // the quota counts and the notes are not quite the same thing (quota flexibility between the years, estimates for the fresh-fish and
 // coastal schemes from Råfisklaget), so 1 %; ling, tusk and Greenland halibut meet the table to the tonne
 const TOL = 0.01;
+// Fiskeridirektoratet's official statistics, table F.06.002 «Fangst av norske fartøy etter landingsnasjon, art og redskap (2000-2025)»
+// (statistikkbanken.fiskeridir.no, PxWeb, updated 18.06.2026, hentet 01.11.2026): rundvekt in tonnes, all landing nations, all gear, all
+// areas, summed over the species codes (taskekrabbe: 0502001-0502003, kongekrabbe: 0503001 and 0504002). Every species of fiske.json.
+const FDIR_TOT = {
+  2024: {torsk: 207809, hyse: 74354, sei: 196841, lyr: 2772, lange: 17319, brosme: 13265, uer: 8948, kveite: 4065, blakveite: 14423,
+         krabbe: 3988, kongekrabbe: 1526, sild: 259031, makrell: 250187, snokrabbe: 10462},
+  2025: {torsk: 170945, hyse: 69900, sei: 175989, lyr: 2267, lange: 15635, brosme: 12853, uer: 10196, kveite: 2673, blakveite: 12246,
+         krabbe: 3780, kongekrabbe: 2391, sild: 258730, makrell: 156234, snokrabbe: 13431},
+};
 
 export default function (t){
   const file = join(SRC, 'fiske.json'), F = JSON.parse(readFileSync(file, 'utf8')), M = F.meta;
@@ -33,6 +42,15 @@ export default function (t){
     for (const [k, tonnes] of Object.entries(ref)){
       const got = (M.chk[y] || {})[k] / 1000;
       t.ok(Math.abs(got / tonnes - 1) <= TOL, `${k} ${y}: ${Math.round(got)} t mot Fiskeridirektoratets ${tonnes} t (±${TOL * 100} %)`);
+    }
+  }
+  // every species and year against the official statistics (the notes are updated after the table was made, so 1 %)
+  for (const y of M.years){
+    const ref = FDIR_TOT[y];
+    if (!ref){ t.note(`ingen årstall fra statistikkbanken i testen for ${y}: legg dem inn fra tabell F.06.002`); continue; }
+    for (const [s, tonnes] of Object.entries(ref)){
+      const got = (M.tot[s] || {})[y] / 1000;
+      t.ok(Math.abs(got / tonnes - 1) <= TOL, `${s} ${y}: ${Math.round(got)} t mot Fiskeridirektoratets årstall ${tonnes} t (±${TOL * 100} %)`);
     }
   }
   // every species: the cells hold all the kilos of the totals (the small cells are joined, not dropped; kg has three figures)
