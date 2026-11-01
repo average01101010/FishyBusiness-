@@ -143,7 +143,7 @@
   const foamSize = () => QUAL.lvl >= 2 ? 1024 : 512;
   function foamFree(){ for (let k = 0; k < 2; k++){ if (FOAM.fb[k]) gl.deleteFramebuffer(FOAM.fb[k]); if (FOAM.tex[k]) gl.deleteTexture(FOAM.tex[k]); FOAM.fb[k] = FOAM.tex[k] = null; } FOAM.ok = false; }
   function foamInit(){
-    foamFree(); if (!FOAM.on || !PS || PS.basic || PS.lite) return;
+    foamFree(); if (!FOAM.on || !PS || PS.basic || (PS.lite && !PS.mid)) return;   // (the middle sea on level 1 has the foam: its fragment shader is the full one)
     try {
       if (!FOAM.prog) FOAM.prog = program(FOAM_VS, FOAM_FS, ['aXZ'], 'skumkart');
       const N = foamSize();

@@ -158,14 +158,32 @@
     INTRO = {t0:performance.now(), dur:sec || 5, e0:[x, Math.max(terrH(x, z), 0) + 2.4, z]}; cam.helm = false; return true;
   }
   let j0F = 0;
-  function frame(){ const j0 = j0F = performance.now(); frame0(); JSMS = JSMS ? JSMS * 0.92 + (performance.now() - j0) * 0.08 : performance.now() - j0; }
+  // The frame's clock (tilbakemelding #106, 01.11.2026: «litt hakkete» in Firefox, 5120 x 1440 at 240 Hz): the browsers give the time in
+  // whole milliseconds or a little finer (Firefox, reduced timer precision), so at 4.2 ms a frame the steps read 4 or 5 ms and the
+  // world moved by a fifth more or less each frame. FCLK follows the screen's beat instead: the next frame is expected one period on,
+  // and the clock is pulled an eighth of the way to what the browser says; a skipped frame counts as whole periods, and a hitch or an uneven frame rate (off by more than 2.5 ms, or 0.6 of a period)
+  // takes the browser's time as it is. WALLF (core/01-world.js) is the same moment on Date.now()'s scale, for the boat's pose between
+  // the model's steps (dynPose) and the game time between the minutes (currentFrac), while this frame is drawn.
+  const FCLK = {r:0, raw:0, p:0, off:0};
+  function frameClock(raw){ const C = FCLK, d = raw - C.raw, w = Date.now() - raw;
+    C.off = !C.off || Math.abs(w - C.off) > 50 ? w : C.off + (w - C.off) * 0.02;
+    if (!C.r || d <= 0 || d > 250){ C.r = C.raw = raw; C.p = 0; return raw; }
+    C.raw = raw; if (!C.p){ C.p = d; C.r = raw; return raw; }
+    // (a frame the browser skipped is a whole number of periods, k, and leaves the period as it was)
+    const k = Math.max(1, Math.round((raw - C.r) / C.p)), pred = C.r + k * C.p, err = raw - pred;
+    if (Math.abs(err) < Math.min(C.p * 0.6, 2.5)){ C.r = pred + err * 0.12; if (k === 1) C.p += (d - C.p) * 0.03; } else { C.r = raw; C.p += (d - C.p) * 0.1; }
+    return C.r; }
+  let FRAMEP = 0;
+  function frame(){ const j0 = j0F = performance.now(); FRAMEP = /rawclock/.test(location.hash) ? j0 : frameClock(j0); WALLF = FRAMEP + FCLK.off;
+    try { frame0(); } finally { WALLF = 0; FRAMEP = 0; }
+    JSMS = JSMS ? JSMS * 0.92 + (performance.now() - j0) * 0.08 : performance.now() - j0; }
   let FRAMEN = 0;
   function frame0(){ FRAMEN++;
     if (!active){ raf = 0; return; }
     raf = requestAnimationFrame(frame);
     if (document.hidden || NO3D || HOLD) return;
     resize();
-    const now = performance.now(), dt = Math.min(0.1, (now - lastF) / 1000), rdt = Math.max(1e-3, (now - lastF) / 1000); lastF = now;
+    const now = FRAMEP || performance.now(), dt = Math.max(0, Math.min(0.1, (now - lastF) / 1000)), rdt = Math.max(1e-3, (now - lastF) / 1000); lastF = now;
     FPS.v = FPS.v ? FPS.v * 0.95 + 0.05 / rdt : 1 / rdt; FRAMEMS = FRAMEMS * 0.8 + Math.min(500, rdt * 1000) * 0.2; if (PROF.on) profBegin(rdt, j0F); if (BENCH.on){ if (BENCH.rec){ BENCH.sum += rdt; BENCH.cnt++; if (rdt > 1 / 50) BENCH.slow++; } } else if (!PROF.on) qualTick(dt, FPS.v, now); if (now - FPS.at > 500){ FPS.at = now; const fe = fpsEl(); if (fe) fe.textContent = Math.round(FPS.v) + ' bilder/s · ' + (1000 / FPS.v).toFixed(1) + ' ms · ' + ['Lav', 'Middels', 'Høy', 'Ultra'][QUAL.lvl]; }
     const t = (now - T0) / 1000, frac = currentFrac(), H = (S.t + frac) / 60;
     computeEnv(H); updateBoat(dt, t, frac, rdt); updateWaves(dt, H); nfStep(); updateWake(); foamStep(dt, t); updateNear(); ssStep(rdt); updateShadows(); updateChunks(CH.size ? 2 : 999);
