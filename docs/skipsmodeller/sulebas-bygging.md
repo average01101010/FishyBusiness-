@@ -398,6 +398,11 @@ speilets topp få sin egen kapp; ellers ligger to flater i samme plan (en grå f
 dørken, et trinn inne ved døra) står huset 0,30 m lavere og båten blir straks penere. Døra blir 1,55 m over dekket; ankeret `doors` får
 dekkets høyde og `h` etter det.
 
+**Spillets dekkskart har egne krav.** `deckMap` (`vessel3d.js`) tar bare gulv med 1,85 m fri høyde over seg (`DM_HEAD`), og knytter en
+flate inntil 1,6 m høyere og 0,6 m unna til dekket. Et tak som henger over dekket lavere enn 1,85 m (visiret over en nedsenket dørk), og et
+lukelokk nær kanten av taket, gjorde styrhustaket til dekk, og spillet satte døra og mannskapet der. Se på dekket i spillet og spør
+`deckPoints(type)` hvor plassene havnet (alle skal ha dekkets høyde): `tools/boats/qa/deckpoints.py <type>`.
+
 **Fjernmodellens grense er punkter, ikke trekanter.** `vessel3d` krever middels (`npcModel(t, 0.3, 2)`) under 12 000 punkter for GLB-modeller,
 det vil si rundt 4 000 trekanter. Hold beslag, karmer og ekstra rader ute av `build(False)`.
 

@@ -151,6 +151,17 @@ fra `lines_snekke26.py`), `clip_plast31.py` (klasjsjekken), `plast31.py check` o
 | 6 | I spillet (`p31shot.py`, `TAG=r1`) | Modellen vises (76 751 trekanter, alle ankre, seks typede lys); fra broa synes kompasset, men dashbordet var like mørkt som skjermene | Dashbordet lyst, skjermene i mørke rammer |
 | 7 | Nærbilde av hekken | Innsida av speilet og dekket lå i samme plan som speilets utside (grå flekk på speilet) | Dekket og innsida begynner 6 cm forut (`TT`), speilets topp har egen teakkapp |
 | 8 | Hekken og takkanten | Speilet bredt og flatt som en kasse; takkanten hvit og tykk | Hekken avrundet i plan inn til 72 % av bredden; takkanten marineblå som stripa, kappen i teak, eksosen rustfri med svart topp; sløyebordet smalere (0,65 m) |
+| 9 | Testene (`vessel3d`, `brotest`, `lanterntest`, `regmarktest`, `vesseltest`, `maletest`, `walktest`) | `maletest`: navnet og registreringsmerket lå oppå hverandre på baugen (merket 0,71–1,28 m over vannet) | Navnefeltene under merket, x 6,6–7,75 |
+| 10 | Etter-bildene fra spillet | En mann sto oppå styrhustaket: spillets dekkskart (`deckMap`) krever 1,85 m over en dekkscelle, så dekket under visiret (1,65 m med den senkede dørken) falt ut, og taket ble knyttet til dekket via lasteromslokket (1,5 m opp, 0,3 m bort); døra, påfyllingen og plassen akter havnet på taket | Visiret 4 cm forbi fronten, luka 0,22 m forover, blødekaret og plassen akter flyttet (den smale gangen akter for huset er ikke dekk i kartet): alle plassene på dekket |
+
+## 6.1b Testene (01.11.2026)
+
+Grønne på den endelige modellen: `vessel3d plastsjark` (230 265 punkter nær, 119 997 middels mot 120 000, skroget 9,45 × 3,34 m, alle plassene),
+`brotest plastsjark` (1,96 m over plassen, øyet 1,65), `lanterntest`, `regmarktest` for plastsjarken (merket på jevn maling, 0,55 m fra stevnen),
+`vesseltest`, `maletest` (sone 1–4; navnet og merket ligger ikke oppå hverandre), `walktest` (alle plassene, 0 veier gjennom huset). Rød som var
+rød før: `regmarktest` for `ringnot38` (også rød mot bygget fra før endringen, `KYST_DIST`). Plassene på dekket sjekket med `qa/deckpoints.py`
+(alle i dekkets høyde). Skjermbilder fra spillet i begge formater, før og etter: `tests/out/p31_for_*.png`, `p31_etter_*.png` (utenfra, akter,
+broa, dekket under fiske, natt K6); K6 fra begge sider i Blender (`tools/boats/out/qa/p31etter_K6.png`, `_K6p.png`).
 
 ## 6.2 Arbeidet om bord (plassene)
 

@@ -64,5 +64,5 @@ marineblå takkant, rustfri eksos med svart topp, og et ryddig dekk med de faste
 ## 4. Kritikksløyfen og spillet
 
 `qa/shots.py` (K1–K7, K6 om natta, nærbildene i `CLOSE`), `qa/sheet.py`, `qa/lines.py` (ny, for alle skript), `qa/stubcheck.py`,
-`qa/clip_plast31.py`, `qa/runtests.sh` (nå med `P=` for loggnavnet). Spillet viste Blender-modellen også før revisjonen
+`qa/clip_plast31.py`, `qa/deckpoints.py` (ny: hvor spillets dekkskart setter plassene), `qa/runtests.sh` (nå med `P=` for loggnavnet). Spillet viste Blender-modellen også før revisjonen
 (`glbHas('plastsjark')`, 7 077 trekanter). Før- og etter-bildene i begge formater: `tests/p31shot.py` (`TAG=for`/`etter`).

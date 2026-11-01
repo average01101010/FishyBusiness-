@@ -228,7 +228,7 @@ Tallene er lest ut av GLB-filene. `lod0` er nærmodellen og `lod1` avstandsmodel
 | `skiff` | `skiff59.py` | 5,9 m | 55 035 / 2 507 (`lodm` 36 499; før 31.10.2026: 11 190 / 990) | 4 458 KB | bøyer 2, kar 1, garn, stamper, last 1 |
 | `trebat` | `snekke23.py` | 7,0 m | 81 616 / 2 694 (`lodm` 36 499; før 31.10.2026: 17 906 / 1 416) | 5 294 KB | bøyer 2, garn, stamper, last 1 |
 | `snekke` | `snekke26.py` | 7,9 m | 68 057 / 3 071 (`lodm` 40 000; før 01.11.2026: 10 332 / 1 589) | 4 258 KB | flåte 1, bøyer 2, radar, kar 1, garn, stamper, last 1 |
-| `plastsjark` | `plast31.py` | 9,45 m | 76 721 / 3 803 (`lodm` 40 000; før 01.11.2026: 6 961 / 2 405) | 4 233 KB | flåte 1, bøyer 2, radar, garn, stamper, last 2 |
+| `plastsjark` | `plast31.py` | 9,45 m | 76 755 / 3 803 (`lodm` 40 000; før 01.11.2026: 6 961 / 2 405) | 4 235 KB | flåte 1, bøyer 2, radar, garn, stamper, last 2 |
 | `sjark` (målestokken) | `havsjark35.py` | 10,57 m | 26 074 / 2 663 | 902 KB | flåte 1, bøyer 2, radar, åpen radar, garn, stamper, last 2 |
 | `hurtigsjark` | `hurtig11.py` | 10,99 m | 9 971 / 3 000 | 415 KB | som over, last 1, kran |
 | `sjarkny` | `hs11.py` | 10,99 m | 8 009 / 3 431 | 384 KB | som over, last 2, kran |

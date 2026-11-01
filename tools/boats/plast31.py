@@ -974,7 +974,8 @@ ZC = 1.87                    # the working deck's height (for shots.py K5)
 CLOSE = [('c_helm', (2.45, -0.25, 3.55), (3.45, -0.75, 2.9), 30, False, False), ('c_wh', (6.8, -3.4, 3.6), (2.5, -0.4, 3.0), 30, True, False),
          ('c_stern', (-2.6, -2.0, 2.4), (0.2, 0, 1.8), 32, True, False), ('c_bow', (11.0, -1.8, 3.4), (9.0, 0, 2.8), 30, False, False),
          ('c_aperture', (0.9, -3.0, 0.5), (0.8, 0, 0.55), 30, False, False), ('c_work', (5.3, -0.2, 4.6), (5.2, 0.1, 1.9), 28, False, False),
-         ('c_trunk', (9.6, -2.6, 3.6), (7.0, 0, 2.6), 30, False, False)]
+         ('c_trunk', (9.6, -2.6, 3.6), (7.0, 0, 2.6), 30, False, False),
+         ('K6p', (29.3, 19.2, 4.35), (4.725, 0, 2.25), 100, True, True)]      # K6 from the port bow: the red and the white only
 
 def main():
     os.makedirs(OUT, exist_ok=True)
