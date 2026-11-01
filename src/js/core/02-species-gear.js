@@ -4,25 +4,25 @@
 // cls: size classes by round weight [from kg, minimum price NOK/kg round, label, hook premium] from Råfisklaget's minimum prices;
 // uh: kg round weight per kg gutted without head; size: [median kg, log-spread]; minKg: minimum legal size (released below).
 const SPECIES = {
-  torsk:{no:'Torsk', en:'Cod', k:0.37, base:1.0, prod:0.6, dep:[70, 1.0], av:[1,1,1,1,1,1,1,1,1,1.1,1.1,1], skrei:[0.6,2.0,2.5,0.8,0,0,0,0,0,0,0,0.1],
+  torsk:{no:'Torsk', en:'Cod', k:0.405, base:1.0, prod:0.6, dep:[70, 1.0], av:[1,1,1,1,1,1,1,1,1,1.1,1.1,1], skrei:[0.6,2.0,2.5,0.8,0,0,0,0,0,0,0,0.1],
     pm:[52.6,55.0,54.5,52.9,43.7,42.4,39.9,42.0,43.3,51.5,51.7,50.9], sig:0.04, size:[2.0, 0.55], skreiSize:[5.0, 0.4], minKg:0.8, uh:1.5, liver:6.5, roe:10,
     cls:[[9, 45.33, 'Over 9 kg'], [6, 43.67, '6–9 kg'], [3.7, 42.00, '3,7–6 kg'], [1.5, 40.33, '1,5–3,7 kg'], [0, 38.67, 'Under 1,5 kg']], ref:2},
   hyse:{no:'Hyse', en:'Haddock', k:0.3, base:0.55, prod:0.62, dep:[110, 0.9], av:[1.7,2.0,1.4,0.7,0.6,0.6,0.8,0.6,0.8,1.0,0.9,0.8],
     pm:[26.4,26.8,25.4,26.8,27.4,26.6,22.9,23.7,28.9,30.1,32.3,32.6], sig:0.03, size:[1.3, 0.4], minKg:0.5, uh:1.4, liver:3.5, roe:7,
     cls:[[1.1, 20.95, 'Over 1,1 kg', 1.128], [0.8, 18.09, '0,8–1,1 kg'], [0, 3.51, 'Under 0,8 kg']], ref:0},
-  sei:{no:'Sei', en:'Saithe', k:0.6, base:0.8, prod:0.5, dep:[45, 1.2], av:[2.1,0.9,0.5,0.6,2.1,1.0,0.6,0.6,0.8,0.7,1.1,1.0],
+  sei:{no:'Sei', en:'Saithe', k:0.65, base:0.8, prod:0.5, dep:[45, 1.2], av:[2.1,0.9,0.5,0.6,2.1,1.0,0.6,0.6,0.8,0.7,1.1,1.0],
     pm:[21.2,22.4,21.9,20.7,17.6,18.0,17.0,19.1,22.7,24.4,26.2,26.9], sig:0.07, size:[2.0, 0.55], minKg:0.35, uh:1.35, liver:3.5, roe:7,
     cls:[[3.1, 20.51, 'Over 3,1 kg'], [1.6, 19.77, '1,6–3,1 kg'], [0.7, 18.22, '0,7–1,6 kg'], [0, 11.00, 'Under 0,7 kg']], ref:1},
-  lyr:{no:'Lyr', en:'Pollack', k:0.3, base:0.12, prod:0.35, dep:[40, 0.9], av:[1.4,1.2,1.6,2.0,1.1,0.6,0.5,0.6,0.9,0.7,0.7,0.7],
+  lyr:{no:'Lyr', en:'Pollack', k:0.2, base:0.12, prod:0.35, dep:[40, 0.9], av:[1.4,1.2,1.6,2.0,1.1,0.6,0.5,0.6,0.9,0.7,0.7,0.7],
     pm:[21.4,21.4,20.7,21.4,23.6,24.3,25.0,25.0,25.0,27.9,27.9,27.1], sig:0.03, size:[2.2, 0.4], minKg:0.5, uh:1.4,
     cls:[[2.8, 21.43, 'Over 2,8 kg'], [1.4, 17.14, '1,4–2,8 kg'], [0, 7.14, 'Under 1,4 kg']], ref:1},
   lange:{no:'Lange', en:'Ling', k:0.3, base:0.18, prod:0.65, dep:[250, 0.7], av:[1.0,1.0,1.3,1.6,2.0,1.0,0.5,0.6,0.9,0.7,0.8,0.6],
     pm:[12.9,12.9,13.6,13.6,15.0,14.3,13.6,12.9,13.6,14.3,15.7,15.7], sig:0.03, size:[4.0, 0.5], minKg:0.8, uh:1.4,
     cls:[[2.8, 13.57, 'Over 2,8 kg'], [1.0, 8.57, '1–2,8 kg'], [0, 4.30, 'Under 1 kg']], ref:0},
-  brosme:{no:'Brosme', en:'Tusk', k:0.35, base:0.2, prod:0.65, dep:[220, 0.7], av:[1.1,1.1,1.0,0.9,0.8,0.9,0.6,0.7,1.1,1.1,1.5,1.2],
+  brosme:{no:'Brosme', en:'Tusk', k:0.32, base:0.2, prod:0.65, dep:[220, 0.7], av:[1.1,1.1,1.0,0.9,0.8,0.9,0.6,0.7,1.1,1.1,1.5,1.2],
     pm:[12,12,13,12,13,12,11,12,12,12,13,14], sig:0.03, size:[2.2, 0.4], minKg:0.5, uh:1.4,
     cls:[[1.4, 8.57, 'Over 1,4 kg'], [0, 2.86, 'Under 1,4 kg']], ref:0},
-  uer:{no:'Uer', en:'Redfish', k:0.5, base:0.1, prod:0.7, dep:[200, 0.7], av:[0.8,0.7,1.0,0.8,0.9,1.1,0.7,1.1,1.4,1.6,1.1,0.7],
+  uer:{no:'Uer', en:'Redfish', k:0.65, base:0.1, prod:0.7, dep:[200, 0.7], av:[0.8,0.7,1.0,0.8,0.9,1.1,0.7,1.1,1.4,1.6,1.1,0.7],
     pm:[15,14,16,18,19,15,14,17,16,17,18,17], sig:0.03, size:[1.0, 0.35], minKg:0.3, uh:1,
     cls:[[0.7, 13.25, 'Over 0,7 kg'], [0, 7.00, 'Under 0,7 kg']], ref:0},
   kveite:{no:'Kveite', en:'Halibut', k:0.35, base:0.05, prod:0.7, dep:[120, 0.9], av:[0.6,0.6,0.6,0.7,0.8,0.8,0.6,0.9,1.5,1.3,1.7,1.8],
@@ -50,12 +50,26 @@ const SPECIES = {
   // 614 in January; 2026 so far January 608, April 218, June 461, September 398); the months between are interpolated, an estimate
   krabbe:{no:'Kongekrabbe', en:'King crab', shell:true, live:true, k:0.5, base:0.6, prod:0.3, dep:[80, 0.8], av:[1,1,1,1,1,1,1,1,1,1,1,1],
     pm:[610,560,380,190,300,460,450,420,400,420,470,560], sig:0.05, size:[1.5, 0.45], minKg:0, uh:1,
-    cls:[[3.2, 296, 'Hann over 3,2 kg'], [2.2, 291, 'Hann 2,2–3,2 kg'], [1.6, 246, 'Hann 1,6–2,2 kg'], [0.8, 66, 'Hann 0,8–1,6 kg'], [0, 80, 'Hunnkrabbe'], [0, 100, 'Skadd hann'], [0, 20, 'Under 0,8 kg']], ref:1}
+    cls:[[3.2, 296, 'Hann over 3,2 kg'], [2.2, 291, 'Hann 2,2–3,2 kg'], [1.6, 246, 'Hann 1,6–2,2 kg'], [0.8, 66, 'Hann 0,8–1,6 kg'], [0, 80, 'Hunnkrabbe'], [0, 100, 'Skadd hann'], [0, 20, 'Under 0,8 kg']], ref:1},
+  // The ocean fleet's species (B2 of docs/planer/bestand-og-flaate.md, valg 4 = A, 01.11.2026): Norwegian spring-spawning herring,
+  // mackerel and snow crab, for the fleet's pressure and AIS (B3, H1) only. npc: the player cannot fish, buy or sell them, and they are
+  // not in the Fish guide, SP or SHELL until the ocean step; they come last in ALLSP, after the late ones, so no other species' seeds
+  // move. Where and when they are is areaF and MIG in 03f-fiske.js (the landing notes and HI); av is flat for that reason. The prices
+  // are rough first-hand means for 2025 (Norges Sildesalgslag: herring about 9, mackerel about 24 kr/kg; snow crab about 110 kr/kg),
+  // estimates that nothing reads yet; size and dep are HI's typical figures.
+  sild:{no:'Sild', en:'Herring', npc:true, k:1, base:1, prod:0.5, dep:[80, 1.4], av:[1,1,1,1,1,1,1,1,1,1,1,1],
+    pm:[9,9,9,9,9,9,9,9,9,9,9,9], sig:0.05, size:[0.35, 0.2], minKg:0.1, uh:1, cls:[[0, 9, 'Sild']], ref:0},
+  makrell:{no:'Makrell', en:'Mackerel', npc:true, k:1, base:1, prod:0.5, dep:[40, 1.4], av:[1,1,1,1,1,1,1,1,1,1,1,1],
+    pm:[24,24,24,24,24,24,24,24,24,24,24,24], sig:0.05, size:[0.45, 0.25], minKg:0.1, uh:1, cls:[[0, 24, 'Makrell']], ref:0},
+  snokrabbe:{no:'Snøkrabbe', en:'Snow crab', npc:true, shell:true, k:1, base:1, prod:0.3, dep:[250, 0.6], av:[1,1,1,1,1,1,1,1,1,1,1,1],
+    pm:[110,110,110,110,110,110,110,110,110,110,110,110], sig:0.05, size:[0.6, 0.3], minKg:0, uh:1, cls:[[0, 110, 'Snøkrabbe']], ref:0}
 };
 // fish are caught by jig, line and net; shellfish only in pots. Everything that loops over fish uses SP; ALLSP adds the shellfish after
-// the first fish and the late ones (added after the crab) last, so the per-species seeds (ALLSP.indexOf) keep their values
-const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell), SHELL = Object.keys(SPECIES).filter(sp => SPECIES[sp].shell),
-  ALLSP = SP.filter(sp => !SPECIES[sp].late).concat(SHELL, SP.filter(sp => SPECIES[sp].late));
+// the first fish, the late ones (added after the crab) and last the ocean fleet's (npc), so the per-species seeds (ALLSP.indexOf) keep
+// their values. PLAYSP is ALLSP without the ocean fleet's: what the player can fish and the Fish guide and the records show.
+const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell && !SPECIES[sp].npc), SHELL = Object.keys(SPECIES).filter(sp => SPECIES[sp].shell && !SPECIES[sp].npc),
+  ALLSP = SP.filter(sp => !SPECIES[sp].late).concat(SHELL, SP.filter(sp => SPECIES[sp].late), Object.keys(SPECIES).filter(sp => SPECIES[sp].npc)),
+  PLAYSP = ALLSP.filter(sp => !SPECIES[sp].npc);
 // ---------- vessels, equipment, crew ----------
 // The vessels, from the open starter boat to the ocean fleet. Every rule reads these fields, never the key:
 //  len, beam, draft (m), disp (displacement loaded, tonnes; an estimate), holdCap, iceCap (kg), fuelCap (L), hp, vmax, vcruise (kn),

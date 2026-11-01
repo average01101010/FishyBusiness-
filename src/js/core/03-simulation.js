@@ -457,7 +457,7 @@ function gauss(u1, u2){ return Math.sqrt(-2 * Math.log(Math.max(1e-9, u1))) * Ma
 // one fish's round weight (kg): cod mixes resident coastal cod with larger spawning cod in the season
 function sampleFish(sp, p, H){
   const s = SPECIES[sp]; let sz = s.size;
-  if (sp === 'torsk'){ const k = seasonal(s.av, H), sk = seasonal(s.skrei, H) * skreiSpot(p); if (Math.random() < sk / (k + sk + 1e-9)) sz = s.skreiSize; }
+  if (sp === 'torsk' && Math.random() < skreiShare(p, H)) sz = s.skreiSize;
   return Math.round(sz[0] * Math.exp(sz[1] * gauss(Math.random(), Math.random())) * 100) / 100;
 }
 function clsOf(sp, kg){ const c = SPECIES[sp].cls; for (let i = 0; i < c.length; i++) if (kg >= c[i][0]) return i; return c.length - 1; }
@@ -478,14 +478,15 @@ function uerOpen(H){ const m = gDate(H).getUTCMonth(); return m >= 5 && m <= 7; 
 function denPlace(p){
   if (isLand(p)) return null;
   const d = depthF(p), E = exposure(p);
-  return {p, d, E, edge:sstep(1.5, 12, slopeAt(p)), gd:GROUNDS.map(g => dist(p, g.p)), skr:-1};
+  return {p, d, E, edge:sstep(1.5, 12, slopeAt(p)), gd:GROUNDS.map(g => dist(p, g.p)), skr:-1, c:lokOfCell(p)};   // c: the 2 km cell's location (03f-fiske.js)
 }
 const DENT = {H:NaN, T:null};
 function denTime(H){
   if (DENT.H === H) return DENT.T;
-  const T = {uerOpen:uerOpen(H)};
+  // fk: the month weights for the field from the landing notes, skf: the skrei front per day of shift (03f-fiske.js)
+  const T = {uerOpen:uerOpen(H), H, fk:fkMonth(H), skf:{}};
   // cod, haddock and saithe follow their spawning stock from year to year (stockF in 03d-quota.js; 1 in March 2027)
-  for (const sp of ALLSP){ const s = SPECIES[sp], f = stockF(sp, H); T[sp] = {av:seasonal(s.av, H) * f, skrei:sp === 'torsk' ? seasonal(s.skrei, H) * f : 0}; }
+  for (const sp of ALLSP){ const s = SPECIES[sp], f = stockF(sp, H); T[sp] = {av:seasonal(s.av, H) * f, sf:f}; }
   DENT.H = H; DENT.T = T; return T;
 }
 function denSp(sp, q, H, T){
@@ -494,8 +495,9 @@ function denSp(sp, q, H, T){
   // the named grounds are known for a reason
   for (let i = 0; i < GROUNDS.length; i++){ const g = GROUNDS[i], dd = q.gd[i]; if (dd > g.r * 3) continue; v += (g.sp[sp] || 0) * Math.exp(-((dd / g.r) ** 2)) * 0.45; }
   const day = 0.75 + 0.5 * vn(H / 24 + p.x * 0.05, 300 + ALLSP.indexOf(sp));
-  let av = T[sp].av;
-  if (sp === 'torsk'){ if (q.skr < 0) q.skr = skreiSpot(p, q.d, q.E); av += T[sp].skrei * q.skr; }
+  // the season and the place from the landing notes and the migrations (areaF, 03f-fiske.js), where the one table av and the skrei
+  // pulse were the same from Lindesnes to Vardø until B2 (01.11.2026); the Greenland halibut and the king crab keep their own areas
+  let av = FK_SP[sp] ? fkAvail(sp, q, T) : T[sp].av;
   if (sp === 'uer' && !T.uerOpen) av *= 0.15;
   if (s.shell) v *= kingArea(p); else v *= school(sp, p, H);
   if (s.area) v *= AREAS[s.area](p, q.d, H, q.E);
@@ -1168,7 +1170,7 @@ function bkOrderable(H){ const s = bkSeason(yearH(H)), g = S.pgear; return H >= 
 // every plant north of 62° N orders it (Jonas 07.10.2026: «Alle mottak skal kunne ta i mot blåkveite»)
 function bkPlant(id){ const q = portById(id); return !!(q && q.mottak !== false && natLL(q.p).lat >= 62); }
 function custSp(c){ return c.big && bkPlant(c.port) && !c.sp.includes('blakveite') ? c.sp.concat('blakveite') : c.sp; }
-function spCatchable(sp, H){ if (sp === 'blakveite') return bkOrderable(H); if (sp === 'kveite' && kveiteClosed(H)) return false; if (sp === 'uer' && !uerOpen(H)) return false; if (sp === 'kveite' && !S.boat.kgear) return false;
+function spCatchable(sp, H){ if (SPECIES[sp].npc) return false; if (sp === 'blakveite') return bkOrderable(H); if (sp === 'kveite' && kveiteClosed(H)) return false; if (sp === 'uer' && !uerOpen(H)) return false; if (sp === 'kveite' && !S.boat.kgear) return false;
   const s = SPECIES[sp]; let a = seasonal(s.av, H); if (sp === 'torsk') a += seasonal(s.skrei, H); return a >= 0.6; }
 function ordersTick(H){
   const O = ordState();
