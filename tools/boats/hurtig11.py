@@ -519,7 +519,7 @@ WS, WH, WR = 3.42, 4.46, 4.62                                  # the window band
 WT = 0.06
 RT = 0.07                    # the roof's edge (its lip) and the crown over it
 X_SH = 3.80; X_SC = 4.30     # the roof's after edge over the working deck, the shelter's screens from here to the bulkhead
-DOOR = (-1.02, -0.42, ZFD + 0.02, 4.48)                        # the door to the wheelhouse in its aft wall, to starboard (y0, y1, sill, head)
+DOOR = (-1.02, -0.42, ZFD + 0.055, 4.48)                        # the door to the wheelhouse in its aft wall, to starboard (y0, y1, sill, head)
 def lean(z): return LEAN * (z - ZFD) / (WR - ZFD)
 def wh_ring(z):
     d = lean(z)
@@ -578,7 +578,7 @@ def wheelhouse(fine=True):
         # the door: a white frame round the opening, the leaf hooked open back against the wall to port (its window, handle, hinges),
         # three steps up from the shelter's deck to its sill
         y0, y1, z0, z1 = DOOR; x = WX0
-        o = rr_pts((y0 + y1) / 2, (z0 + z1) / 2, y1 - y0, z1 - z0, 0.06, 3); fo = rr_pts((y0 + y1) / 2, (z0 + z1) / 2, y1 - y0 + 0.07, z1 - z0 + 0.07, 0.09, 3)
+        o = rr_pts((y0 + y1) / 2, (z0 + z1) / 2, y1 - y0, z1 - z0, 0.06, 3); fo = [(a, max(b, z0)) for a, b in rr_pts((y0 + y1) / 2, (z0 + z1) / 2, y1 - y0 + 0.07, z1 - z0 + 0.07, 0.09, 3)]   # (the frame stops at the sill)
         for k in range(len(o)):
             a, b = o[k], o[(k + 1) % len(o)]; c_, d_ = fo[(k + 1) % len(fo)], fo[k]
             A.poly([(x - 0.012, a[0], a[1]), (x - 0.012, b[0], b[1]), (x - 0.012, c_[0], c_[1]), (x - 0.012, d_[0], d_[1])], C['white'], (-1, 0, 0))
@@ -593,7 +593,7 @@ def wheelhouse(fine=True):
         acyl(A, (lx1, ly1 - 0.05, z0 + 0.5), (x, ly1 - 0.05, z0 + 0.5), 0.01, lambda q: C['steel'], seg=6)             # the hook holding it open
         stairs(A, y0 + 0.02, y1 - 0.02)
         # the floor's lip at the door, inside: a wooden sill
-        abox(A, WX0 + 0.002, WX0 + WT + 0.02, y0, y1, ZFD - 0.004, ZFD + 0.03, C['wood'])
+        abox(A, WX0 + 0.002, WX0 + WT + 0.02, y0, y1, ZFD - 0.004, z0 + 0.004, C['wood'])
     # the roof: its underside, a thin lip with a drip edge all round, the visor over the front, the crown rising a little to the middle
     ring = roof_ring()
     A.poly([(x, y, WR) for x, y in ring], C['inner'], (0, 0, -1))
@@ -728,7 +728,7 @@ def decks(A, fine=True):
         for sg in (1, -1): acyl(A, (10.62, sg * 0.24, z_bk(10.62) + camber(10.62, 0.24) - 0.004), (10.62, sg * 0.24, z_cap(10.62) + 0.61), 0.016, s, seg=8)
     # the windlass on the foredeck, the chain pipe forward of it, the bow roller over the stem's head (the anchor is the game's: bower)
     wx = WINDLASS; zd = z_bk(wx) + camber(wx, 0)
-    abox(A, wx - 0.20, wx + 0.20, -0.18, 0.18, zd - 0.03, zd + 0.08, C['dark'])
+    abox(A, wx - 0.20, wx + 0.20, -0.18, 0.18, zd - 0.004, zd + 0.08, C['dark'])
     if not fine:                            # (the far version: the windlass a block, no rollers; vessel3d's 12 000 points)
         abox(A, wx - 0.16, wx + 0.16, -0.25, 0.25, zd + 0.08, zd + 0.36, C['dark']); return
     acyl(A, (wx, -0.16, zd + 0.24), (wx, 0.16, zd + 0.24), 0.13, lambda q: C['dark'], seg=18)
@@ -761,8 +761,8 @@ def decks(A, fine=True):
             F.pipe(A, [(p[0], sg * (ybw(p[0], sg) + 0.01), p[2] - 0.30), (p[0], p[1], p[2] - 0.30), (p[0], p[1], p[2]), (p[0], sg * (ybw(p[0], sg) + 0.04), p[2])], 0.014, C['steel'], 6)
         F.pipe(A, pts, 0.022, C['steel'], 8)
     # the stainless locker in the starboard quarter: its body against the bulwark, the lid's seam and hasp (the crane stands on it)
-    x0, x1, dpt = LOCKER; yo = -(ybw(0.8, -1) - 0.01); yi = yo + dpt; zt = locker_top()
-    abox(A, x0, x1, yo, yi, ZMD, zt, C['plate'])
+    x0, x1, dpt = LOCKER; yo = -(ybw(x0, -1) - 0.01); yi = yo + dpt; zt = locker_top()
+    abox(A, x0, x1, yo, yi, ZMD + camber(0.8, yi) - 0.004, zt, C['plate'])
     abox(A, x0 + 0.03, x1 - 0.03, yi, yi + 0.006, zt - 0.10, zt - 0.09, C['dark'])
     obox(A, (x0 + (x1 - x0) * 0.75, yi + 0.012, zt - 0.16), V((0.03, 0, 0)), V((0, 0.006, 0)), V((0, 0, 0.05)), C['steel'])
     # the slim mast on the port quarter: its foot plate on the cap, the pole, a cross-tree, two struts; the flag flies from its top (pole)
@@ -928,7 +928,7 @@ def kit_places(G):
     deck and out over the quay to starboard; no rest (it folds up tight at sea)"""
     r = lambda v: round(v, 3); h = math.pi / 2
     gr = lambda x: ybw(x) - 0.13 - 0.022           # the port grab rail's inboard face
-    x0, x1, dpt = LOCKER; yo = -(ybw(0.8, -1) - 0.01)
+    x0, x1, dpt = LOCKER; yo = -(ybw(x0, -1) - 0.01)
     return {'raft': [G(4.45, 0.70, roof_top(4.45, 0.7)) + [r(h)]],
             'buoys': [G(X_SC - 0.03, ysh(X_SC) - 0.20, 3.55) + [0.0], G(1.0, gr(1.0), ZMD + 0.80) + [r(h)]],
             'radar': G(MX + 0.55, 0, 6.75), 'radarA': G(MX + 0.85, 0, 8.16),

@@ -112,6 +112,12 @@ midt i hekken, lasteplassen i babord hekk, kranen på kista i styrbord hekk.
 | Runde | Hva ble sett | Hva ble gjort |
 |---|---|---|
 | 0 (før) | Før-bilder i begge formater, `fair.py`, spantrisset, K1–K7 | Avvikslista (kap. 4) |
+| 1 | Nytt skript; `check()` grønn utenom vekta på første forsøk (13,86 t, 15,5 % over): bunnen gjort rett V, 13,70 t. `fair.py` på det nye skroget: 100° tvers over stasjonene ved x 10,0 og 10,5, der tabellene fra bildene skiftet stigning, og fordekkets rampe for bratt | Tabellene lest med en monoton kubisk kurve (`pchip`), rampen slakket (9,70–10,62). Gjenværende knekker er listene, slaget og skegens rot (med vilje) |
+| 2 | K1–K7 og nærbildene: ren profil, ekte hull, skjul og trinn. Broa: skipperen sto bak stolpen mellom frontrutene (svart stolpe midt i synet), en vindusvisker sto loddrett i synsfeltet; fartsstripas streker akter leste som vinduer | Skipperen midt bak styrbords rute (y −0,46), viskerne parkert langs rutas underkant, strekene kortere mot hekken |
+| 3 | Eksport: lod1 4 461 trekanter; Node-testen fant 13 383 punkter i lokalflåten mot 12 000 (tre punkter per trekant) | Ankerspillet en kloss og lanternene enkle i fjernversjonen: 3 225 trekanter, 9 675 punkter |
+| 4 | **Jonas: «Har båten ingen spygatt?»** Spygattene var små rør under lista og leste ikke | Arbeidsdekket løftet til 2,16 over lista, åpne lensporter gjennom skansekledningen ved dekket (B6); haleporten 0,44 over dekket, to trinn opp; lugarnedgangen i skottet fjernet |
+| 5 | Klipp-kontrollen (`qa/clip_hurtig11.py`, ny): 44 punkter: døras karm under dekkets bue, ankerspillets fot og kista 2–3 cm ned i dekket, kista inn i skansen akter (bredden målt ved 0,8 m, ikke ved kistas akterkant) | Rettet: 0 |
+| 6 | Testene: `vessel3d hurtigsjark`, `brotest hurtigsjark`, `lanterntest`, `vesseltest`, `regmarktest`, `maletest`, `walktest`, `penshot` grønne; enhetstestene 245 OK. `deckshot` rød på kranen for alle fire båtene med kran (kyst15, kyst21, hurtigsjark, sjarkny): stillingen ble ikke nådd innen tidsgrensen | Kjørt på bygget før endringene (`dist-base`) for å se om feilen er ny (kap. 7, merknad) |
 
 ## 8. Selvvurdering
 
