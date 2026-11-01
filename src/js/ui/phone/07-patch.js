@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['autonav-lukket-271026', '27.10.2026', 'Autonav med spillet lukket', 'Autonav with the game closed', [
+       ['Møter båten grunt vann på Autonav mens spillet er lukket, finner den veien rundt og går videre til målet og fisket. Før ble den liggende ved grunna resten av tiden du var borte.', 'If the boat meets shallow water on Autonav while the game is closed, she finds the way round and goes on to the destination and the fishing. Before, she lay by the shallows for the rest of the time you were away.']]],
     ['autonav-hjorne-261026', '26.10.2026', 'Autonav', 'Autonav', [
        ['Autonav setter ikke lenger båten på grunn når hun skjærer et hjørne eller driver av ruta i fart. Hun stopper i stedet, og Autonav finner en vei rundt.', 'Autonav no longer puts the boat aground when she cuts a corner or drifts off the route at speed. She stops instead, and Autonav finds a way round.']]],
     ['kaier-011126', '01.11.2026', 'Båtene ligger ved ekte kaier', 'The boats lie at real quays', [
