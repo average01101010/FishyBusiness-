@@ -90,6 +90,38 @@ Modellene som faktisk står ute i verden og som en båt kan ligge ved:
    - **B** Båtene i Senja-ruta tar fisk som `FLEET` gjør nå.
    - *Anbefaling A:* bestandsmodellen har alt det virkelige fisket med, og B ville gjøre fisket på Senja tynnere enn resten av landet (det samme som valg 3 i `npc-flaaten.md`).
 
+### Svarene (Jonas 01.11.2026)
+
+- Valg 1, 2 og 3: **A**.
+- Valg 4: verken A eller B. Jonas: «Hele kystflåten skal ta av den verdens felles bestand av fisk. NPC-flåten skal simulere antall aktive fiskebåter i Norge basert på ekte fangstdata. Når en ny bruker registrerer seg i spillet skal 1 NPC-båt forsvinne, og på den måten klarer vi å holde en slags balanse i økosystemet.» Han spurte hva jeg tenker om det.
+- Innspillene står under. Valg 4 avgjøres før L2 bygges, og L1 avhenger ikke av det.
+
+### Innspill til valg 4 (01.11.2026, venter på svar)
+
+Hvordan bestanden er laget i dag (`core/03-simulation.js`):
+
+- `S.stock` er et lokalt uttak i ruter på 2 × 2 km (1 er urørt). Det går ned med fangsten og tar igjen 0,4 % av underskuddet i timen (`stockHour`).
+- Hver spillers spill regner sin egen kopi. De andre spillernes fangst kommer ned fra serveren rute for rute (`WSH`, `wshTake`).
+- Senja-flåten tar 18 kg i timen per båt når den fisker. Et fast trykk på tre av Senja-feltene tar 12 kg (`stockHour`).
+
+Ideen gir en ekte konkurranse om fisken, og den passer med valgene. Fire ting bør endres for at den skal virke i en felles verden:
+
+1. **Uttaket som funksjon av klokka per rute, ikke per båt.**
+   - Båtene regnes bare innen 15 km fra spilleren (`coastNear`), så hver spiller ville bare se NPC-uttaket rundt seg selv. Et felt du kommer til, ville være urørt av flåten, og to spillere ville ha ulike bestander.
+   - Bedre: hver rute får et NPC-trykk i kg i timen etter sluttsedlene (område, måned og redskap), og likevekten mellom trykk og tilvekst regnes ut av klokka for hvilken som helst rute når den trengs.
+   - Båtene i 3D og på AIS står der trykket er, men bestanden henger ikke på at noen ser dem.
+2. **Balanse etter fangst, ikke etter registrering.**
+   - Mange registrerer seg og slutter. Én båt borte per registrering gjør kysten tom over tid, og fisken vokser tilbake der ingen spiller.
+   - Bedre: NPC-trykket i et område går ned med det de aktive spillerne har landet der de siste 30 dagene (tonn mot tonn). Båtene tas bort etter det, én om gangen, i spillernes egne områder. Spillere som slutter, gir båtene tilbake.
+   - Det følger også regelen om ingen straff for fravær: ingen mister noe fordi andre har sluttet.
+3. **Serveren bestemmer hvilke båter som er borte,** så alle ser den samme flåten (et tall per område fra Supabase, og båtene velges i fast rekkefølge etter hash). Kystflåten er i dag en ren funksjon av klokka og pakkene, så dette er det eneste den trenger fra serveren.
+4. **Kalibrering før det slås på.**
+   - Fangsten per time for spilleren er i dag kalibrert uten NPC-uttak langs kysten (bare på Senja).
+   - NPC-trykket må settes slik at en vanlig dag på et vanlig felt gir omtrent den samme fangsten som i dag. Ellers blir kjernesløyfen dårligere uten at noe annet er bedre.
+   - Det måles med de faste fangsttestene og et anslag fra sluttsedlene før det rulles ut.
+
+Usikkert: hvor mye av sluttsedlenes fangst som skal regnes som NPC-trykk i en rute på 2 km. Det meste av den virkelige fangsten tas av havfiskeflåten langt ute, som spillet ikke har felt for. Det må avgrenses til kystflåtens redskap og områder.
+
 ## 4. Antatt eller usikkert
 
 - Om kailinjene (slag 2) tegnes med dekke i 3D, er ikke sjekket. Det avgjøres først i L1.
@@ -106,3 +138,4 @@ Modellene som faktisk står ute i verden og som en båt kan ligge ved:
 ## 6. Status
 
 - 01.11.2026: planen er skrevet. En lapp som gravde ut skråningen under Senja-flåten (som `npcPits`), ble prøvd i økta og tatt ut igjen før commit, etter Jonas' svar. Venter på valgene og klarsignal.
+- 01.11.2026: valg 1–3 er A. Valg 4 er Jonas' forslag om at kystflåten tar av den felles bestanden; innspillene er sendt, og svaret avgjør L2. Venter på klarsignal for L1.
