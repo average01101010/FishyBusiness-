@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['hender-011126', '01.11.2026', 'Hendene riktig vei', 'The hands the right way round', [
+       ['Mannskapet hadde høyre og venstre hånd byttet om, så tomlene pekte utover når de holdt hendene på rekka. Nå peker tomlene innover, som på ekte hender.', 'The crew had their right and left hands swapped, so the thumbs pointed out when they rested their hands on the rail. Now the thumbs point in, as on real hands.'],
+    ]],
     ['naust-bakke-011126', '01.11.2026', 'Naustet og rorbuene står på bakken', 'The boathouse and the rorbuer stand on the ground', [
        ['Fars naust og rorbuene har ikke lenger sin egen flekk av ruter rundt seg. De står på påler på landet slik det er der, og løftes litt der bakken er høy.', 'Father\'s boathouse and the rorbuer no longer have their own patch of squares round them. They stand on piles on the land as it is there, and are lifted a little where the ground is high.'],
     ]],

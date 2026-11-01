@@ -1913,12 +1913,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (848 linjer)
+## `src/js/ui/phone/07-patch.js` (851 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 841 `patch()`
+  - 844 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -2901,7 +2901,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **296** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
 - **397** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
 
-## `src/js/view3d/09-landing-deck.js` (508 linjer)
+## `src/js/view3d/09-landing-deck.js` (514 linjer)
 
 ---------- landing the catch ----------
 
@@ -2920,34 +2920,34 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 156 `kit(f, nm)`
   - 159 `kitX(f)`
 - **161** the hands in their grips (tools/harbour/hender.py): the meshes once for all the figures (the glove is the same on every look),
-  - 164 `handMeshes()`
-  - 176 `handFrame(z0, sp, side)`
-  - 185 `handSpecs(st, F, R, hands)`
-  - 231 `toolM(A, dir)`
-  - 238 `dkEvent(kind, at, sp, kg, o)`
-  - 244 `dkFor(who, p, task)`
-  - 252 `dkEv(e, BMrel, G)`
-  - 254 `catchQ()`
-  - 259 `dkTick()`
-  - 270 `dkBloodDraw(VP)`
-  - 279 `rigAt(G, kind, d)`
-  - 283 `drawNetTub(BMrel, at, fill, ry)`
-  - 289 `drawLineTubs(BMrel, at, n, baited, green, ry, fill)`
-  - 300 `jobTubs(j)`
-  - 304 `drawMendNet(BMrel, G, d, R)`
-  - 318 `drawRigRest(BMrel, G, d)`
-- **331** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
-  - 337 `boyeCanvas(txt)`
-  - 343 `boyeTex()`
-  - 348 `boyeQ()`
-  - 349 `drawSafety(BMrel, G, VP, t)`
-  - 370 `cargoUnits(G)`
-  - 371 `drawCargo(BMrel, G, hide)`
-  - 386 `crFrames(X, Q, BMrel, p)`
-  - 395 `crLink(X, a2)`
-  - 398 `drawCrane(BMrel, G, VP, t, d)`
-  - 454 `dkTub(G)`
-  - 455 `drawDeck(BMrel, eye, VP, t, DK)`
+  - 169 `handMeshes()`
+  - 182 `handFrame(z0, sp, side)`
+  - 191 `handSpecs(st, F, R, hands)`
+  - 237 `toolM(A, dir)`
+  - 244 `dkEvent(kind, at, sp, kg, o)`
+  - 250 `dkFor(who, p, task)`
+  - 258 `dkEv(e, BMrel, G)`
+  - 260 `catchQ()`
+  - 265 `dkTick()`
+  - 276 `dkBloodDraw(VP)`
+  - 285 `rigAt(G, kind, d)`
+  - 289 `drawNetTub(BMrel, at, fill, ry)`
+  - 295 `drawLineTubs(BMrel, at, n, baited, green, ry, fill)`
+  - 306 `jobTubs(j)`
+  - 310 `drawMendNet(BMrel, G, d, R)`
+  - 324 `drawRigRest(BMrel, G, d)`
+- **337** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
+  - 343 `boyeCanvas(txt)`
+  - 349 `boyeTex()`
+  - 354 `boyeQ()`
+  - 355 `drawSafety(BMrel, G, VP, t)`
+  - 376 `cargoUnits(G)`
+  - 377 `drawCargo(BMrel, G, hide)`
+  - 392 `crFrames(X, Q, BMrel, p)`
+  - 401 `crLink(X, a2)`
+  - 404 `drawCrane(BMrel, G, VP, t, d)`
+  - 460 `dkTub(G)`
+  - 461 `drawDeck(BMrel, eye, VP, t, DK)`
 
 ## `src/js/view3d/10-gear.js` (288 linjer)
 
