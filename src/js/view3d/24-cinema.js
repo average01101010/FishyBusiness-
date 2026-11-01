@@ -111,8 +111,8 @@
   // will do; want: a kind asked for (the tests, the trailer's harness), taken if it will do
   function kinoNext(t, want, why){
     const land = KINO.land = kinoLand(), v = bv.spd || 0, set = K => { KINO.log.push([K.type, why || 'end', Math.round(t)]); if (KINO.log.length > 40) KINO.log.shift(); KINO.shot = K; KINO.eye = null; KINO.eyeR = null; KINO.hid = 0; KINO.last.push(K.type); if (KINO.last.length > 5) KINO.last.shift(); };
-    if (want && KSHOT[want]){ const K = kinoMake(want, t, land); if (kinoOk(K, t)){ set(K); return; } }
     const fit = KTYPES.filter(k => (!KSHOT[k].go || v > 3) && (k !== 'vista' || land.any) && (KSHOT[k].sea * (1 - land.l) + KSHOT[k].land * land.l) > 0);
+    if (want && fit.includes(want)){ const K = kinoMake(want, t, land); if (kinoOk(K, t)){ set(K); return; } }
     let pool = fit.filter(k => !KINO.last.includes(k)); if (!pool.length) pool = fit.filter(k => k !== KINO.last[KINO.last.length - 1]);
     for (let tries = 0; tries < 8 && pool.length; tries++){
       const w = pool.map(k => KSHOT[k].sea * (1 - land.l) + KSHOT[k].land * land.l), tot = w.reduce((a, b) => a + b, 0); let r = hash(KINO.n * 31 + tries * 7 + 11) * tot, i = 0;

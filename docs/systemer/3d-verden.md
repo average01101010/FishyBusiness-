@@ -248,7 +248,7 @@ Planen: G7. NVEs lister (kart.nve.no, api.nve.no) er stengt fra containeren; Ope
   - Kameraene som står i verden (`shore`, `pass`, `away`) står stille, og bare siktet følger båten.
   - Er båten skjult bak land, bygg eller båter i mer enn ett sekund, klippes det til neste opptak.
   - Nærplanet går ut med et høyt kamera langt unna (`KINO.near`, 0,25–6 m), som for det vanlige kameraet.
-- **For testene og trailerens harness:** `G3._debug.kinoNext(type)` ber om et bestemt slag (det tas hvis det går), `G3._debug.kinoTypes` lister dem, og `G3._debug.kino` gir slag, nummer, linse, høyde, fri sikt og avstand.
+- **For testene og trailerens harness:** `G3._debug.kinoNext(type)` ber om et bestemt slag (det tas hvis det passer der båten er og går klar), `G3._debug.kinoTypes` lister dem, og `G3._debug.kino` gir slag, nummer, linse, høyde, fri sikt og avstand.
 - **«Skjul»** tar bort statusboksen, knappene, kompasset og minikartet. Bare de to kinoknappene står igjen.
 - Kameraknappen avslutter kino.
 
