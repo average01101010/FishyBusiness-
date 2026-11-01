@@ -163,6 +163,8 @@ tårnene runde i stedet for platetårn, flåtene oppe på gangbanen i stedet for
 
 ## 7. Det som gikk galt, og regelen det ga
 
+**Godkjenningsgrensen (Jonas 01.11.2026): ingenting under 75/100 er godkjent.** Hver revisjon slutter med en ærlig selvvurdering i grunnlaget; under 75 er båten ikke ferdig, og økta tar neste runde i kritikksløyfen på det som trekker ned. Ingen av de vurderte båtene har nådd grensen (plastsjarken 66, havsjarken 64, hurtigsjarken 62; trebåten, skiffen og snekka fikk ingen karakter).
+
 | Feil | Regel |
 |---|---|
 | Bulb som egen kropp med skarp skjøt | Skroget er én flate; alt som vokser ut av det, slås sammen med `smax` |
@@ -531,6 +533,7 @@ Blender-arbeidet etter, aldri ved siden av.
 
 ## Endringslogg
 
+- 01.11.2026: kap. 7, godkjenningsgrensen 75/100 (Jonas).
 - 01.11.2026: kap. 17, det revisjonen av hurtigsjarken lærte (glatte linjer fra bilder, linjer som møter stevnen, knekker med vilje, lensporter som synes, skipperens øye, fjernmodellens punkter).
 
 - 01.11.2026: kap. 16, det revisjonen av havsjarken lærte (jevnheten i snittet, hull som synes åpne, dekkskartet celle for celle, tak over rom, trapper, `sed`, glasset i Cycles); tabellen i kap. 15 fikk taket over rommet og trappene.

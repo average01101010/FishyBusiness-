@@ -122,7 +122,7 @@ midt i hekken, lasteplassen i babord hekk, kranen på kista i styrbord hekk.
 
 ## 8. Selvvurdering
 
-**Karakter: 62/100.** Skroget er én flate med skegen, listene og slaget, linjene fra bildene er glatte, hullene er ekte, broa er tegnet fra
+**Karakter: 62/100: ikke godkjent** (grensen er 75/100, Jonas 01.11.2026; satt etter at vurderingen ble skrevet). Det som må til for å nå den: et overlegg mot bilder i kjent målestokk, vekta nærmere 12 t, etter-bilder i stående format, og en runde der Jonas ikke finner noe selv. Skroget er én flate med skegen, listene og slaget, linjene fra bildene er glatte, hullene er ekte, broa er tegnet fra
 skipperens øye, lanternene er lovlige med fiskelys, arbeidsflyten henger sammen (fiskeren i haleporten, karet akter for ham, benken til
 babord), klipp-kontrollen står på 0 og alle kontrollene i `check()` er grønne. Trekk: (1) Jonas måtte spørre etter lensportene: jeg valgte
 spygatt under lista som var riktige på papiret, men som ikke synes; (2) treg økt: før-bildene i spillet tok 50 minutter, og en rød
