@@ -11,8 +11,8 @@ a skeg body of its own, the freeing ports and the hauling port dark patches, the
 Now the hull is ONE surface: both sides from the skeg's underside (the skeg is part of the section, with a filleted root), the V bottom
 with two spray rails a side, the chine with its flat, the slightly convex topsides, the rounded black rubbing strake on the knuckle, the
 flared bulwarks with the hauling port's notch to starboard, the transom, the caps, the insides, the working deck, the bulkhead and the
-foredeck rising to the stem's head share their points (Mesh). Openings are real holes, cut with a boolean and lined: the scuppers, the
-companionway, the hold's hatch, the forward hatch, the exhaust and the bilge outlet, the wheelhouse's windows and door. Nothing lies in
+foredeck rising to the stem's head share their points (Mesh). Openings are real holes, cut with a boolean and lined: the freeing ports
+at the deck, the hold's hatch, the forward hatch, the exhaust and the bilge outlet, the wheelhouse's windows and door. Nothing lies in
 the plane of anything else. The fittings other boats use come from fittings.py.
 
 Nothing that can be bought is modelled in (the game sets the kit at the places in kit, 19.10.2026; Jonas 18.10.2026): no hauler, no
@@ -36,7 +36,7 @@ from mathutils import noise
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE)); OUT = os.path.join(HERE, 'out')
 L = 10.99; BEAM = 3.9; DRAFT = 1.6; DISP = 12.0             # VESSELS.hurtigsjark
 WL = 1.0; XA = 0.0; XF = 10.99; XM = (XA + XF) / 2
-ZMD = 1.95                   # the working deck (P)
+ZMD = 2.16                   # the working deck (P 1.95; raised over the strake 01.11.2026, so freeing ports drain it through the bulwark: Jonas «Har båten ingen spygatt?»)
 ZFD = 2.70                   # the foredeck and the wheelhouse's floor over the cabin (P)
 X_STEP = 5.80                # the bulkhead between them, the shelter's forward end
 
@@ -76,7 +76,7 @@ def y_kn(x): return pchip(KNY, x) if x < X_KE else 0.0
 def z_sh(x): return pchip(SHZ, x)
 def y_sh_(x): return pchip(SHY, x)
 # the hauling port: a notch 0.42 m deep in the starboard bulwark (P: 3.55-4.25), its ends rounded
-HP0, HP1, HPD = 3.52, 4.28, 0.42
+HP0, HP1, HPD = 3.52, 4.28, 0.30
 def notch(x): return HPD * ss(HP0 - 0.05, HP0 + 0.05, x) * ss(HP1 + 0.05, HP1 - 0.05, x)
 # the skeg under the aft body (P: 1.2 to 7.0, its foot 1.58 m under the water), the bottom's shape, the spray rails, the chine's flat,
 # the rubbing strake (chosen 01.11.2026; check() weighs them)
@@ -266,9 +266,8 @@ def n3(x, y, z=0.0): return noise.noise(V((x, y, z)))
 def toward(m, rgb, k):
     base = m['rgb']; return [1 + (rgb[i] / max(base[i], 1e-3) - 1) * k for i in range(3)]
 
-SCUP = [0.60, 1.60, 2.60]    # the scuppers' outlets in the topsides under the strake (the deck lies at the knuckle: no freeing ports)
-SCUP_R = 0.035
-def scup_z(x): return z_kn(x) - 0.13
+FREE = {1: [(0.55, 0.40), (1.45, 0.40), (2.35, 0.40)], -1: [(1.62, 0.40), (2.42, 0.40)]}   # the freeing ports at the deck (x from, length; the locker stands aft to starboard)
+FREE_H = 0.14                # their height, from 2 cm over the deck (the strake's top is under it)
 EXH = (-0.55, 1.36); EXH_R = 0.055                            # the wet exhaust in the transom (y, z)
 BILGE = (4.60, -1, WL + 0.42); BILGE_R = 0.02                 # the bilge pump's outlet
 def wear(p, m, n):
@@ -277,8 +276,8 @@ def wear(p, m, n):
         g = 0.97 + 0.04 * n3(x * 3.0, z * 6.0, side)
         g *= 1 - 0.10 * ss(0.14, 0.0, z - paint_line(x, Z_BT))                                       # grime over the boot top
         g *= 1 - 0.08 * ss(0.3, 0.75, n3(x * 5.0, z * 2.0, side * 3.3)) * ss(0.35, 0.0, abs(z - 1.85)) * (abs(n.y) > 0.5)   # scuffs from quays
-        for xs in SCUP:                                                                              # streaks under the scuppers
-            g *= 1 - 0.12 * ss(0.05, 0.0, abs(x - xs)) * ss(scup_z(xs) - 0.02, scup_z(xs) - 0.5, z) * (z > WL + 0.1)
+        for x0, l in FREE[side]:                                                                     # streaks under the freeing ports
+            g *= 1 - 0.10 * ss(0.06, 0.0, abs(x - x0 - l / 2) - l / 2 + 0.05) * ss(ZMD, ZMD - 0.6, z) * (z > WL + 0.1)
         if side == BILGE[1] and z < BILGE[2]: g *= 1 - 0.18 * ss(0.03 + (BILGE[2] - z) * 0.04, 0.004, abs(x - BILGE[0])) * ss(WL, WL + 0.12, z)
         c = toward(m, (0.86, 0.82, 0.40), 0.30 * ss(0.2, 0.7, n3(x * 1.2, z * 3.0, side * 7.1)))  # chalked a little in patches
         return [c[i] * g for i in range(3)]
@@ -416,7 +415,6 @@ def hull_shell(M, fine=True):
 HOLD = (1.75, 2.95, -0.55, 0.55)                               # the fish hold's hatch in the working deck
 HOLD_H = 0.10
 HATCH_F = (8.80, 9.20, -0.28, 0.28)                            # the forward hatch (the cabin's escape) on the foredeck
-COMP = (0.45, 1.05, ZMD + 0.06, ZFD - 0.08)                    # the companionway down to the cabin in the bulkhead, to port (y0, y1, z0, z1)
 
 def rr_pts(cx, cy, w, h, r, n=4): return rrect(cx, cy, w, h, max(0.004, min(r, w / 2 - 0.002, h / 2 - 0.002)), n=n)
 def circle(r, n=16): return [(r * math.cos(2 * math.pi * k / n), r * math.sin(2 * math.pi * k / n)) for k in range(n)]
@@ -424,10 +422,10 @@ def circle(r, n=16): return [(r * math.cos(2 * math.pi * k / n), r * math.sin(2 
 def cutters():
     out = []
     for sg in (1, -1):
-        for x in SCUP: out.append(((x, sg * y_at(x, scup_z(x), sg), scup_z(x)), (1, 0, 0), (0, 0, 1), circle(SCUP_R, 16), 0.06))
+        for x0, l in FREE[sg]:                                 # through the bulwark: outside and inside
+            xc = x0 + l / 2; out.append(((xc, sg * (ybw(xc, sg) + 0.03), ZMD + 0.02 + FREE_H / 2), (1, 0, 0), (0, 0, 1), rr_pts(0, 0, l, FREE_H, 0.03), 0.16))
     x0, x1, y0, y1 = HATCH_F; out.append((((x0 + x1) / 2, 0, ZFD + 0.03), (1, 0, 0), (0, 1, 0), rr_pts(0, 0, x1 - x0, y1 - y0, 0.05), 0.10))
     x0, x1, y0, y1 = HOLD; out.append((((x0 + x1) / 2, 0, ZMD + 0.03), (1, 0, 0), (0, 1, 0), rr_pts(0, 0, x1 - x0, y1 - y0, 0.04), 0.10))
-    y0, y1, z0, z1 = COMP; out.append(((X_STEP, 0, 0), (0, 1, 0), (0, 0, 1), rr_pts((y0 + y1) / 2, (z0 + z1) / 2, y1 - y0, z1 - z0, 0.06), 0.05))
     out.append(((0.0, 0, 0), (0, 1, 0), (0, 0, 1), [(EXH[0] + p, EXH[1] + q) for p, q in circle(EXH_R, 16)], 0.05))
     x, sb, zb_ = BILGE; out.append(((x, sb * y_at(x, zb_, sb), zb_), (1, 0, 0), (0, 0, 1), circle(BILGE_R, 12), 0.05))
     return out
@@ -467,12 +465,12 @@ def tube(A, ring, d, depth, m, m_end=None):
 
 def linings(A, G, fine=True):
     s = lambda q: C['steel']
-    # the scuppers: the pipe through the side, dark inside, a stainless collar round each
+    # the freeing ports: the hole through the bulwark lined, open (havsjark35.py: no flaps, they read as black blocks)
     for sg in (1, -1):
-        for x in SCUP:
-            z = scup_z(x); ring = [(x + p, sg * (y_at(x + p, z + q, sg) + 0.001), z + q) for p, q in circle(SCUP_R, 16)]
-            tube(A, ring, (0, -sg, 0), 0.06, C['dark'], C['black'])
-            F.atorus(A, (x, sg * (y_at(x, z, sg) + 0.005), z), (0, sg, 0), SCUP_R + 0.008, 0.006, lambda a: C['steel'], seg=16, rseg=4)
+        for x0, l in FREE[sg]:
+            xc = x0 + l / 2; zc = ZMD + 0.02 + FREE_H / 2; o = rr_pts(xc, zc, l, FREE_H, 0.03, 3)
+            ring = [V((p, sg * (y_at(p, q, sg) + 0.001), q)) for p, q in o]
+            tube(A, ring, (0, -sg, 0), max(0.03, y_at(xc, zc, sg) - ybw(xc, sg) + 0.004), C['inner'])
     # the wet exhaust in the transom and the bilge outlet: a collar, dark inside
     ring = [(-0.001, EXH[0] + p, EXH[1] + q) for p, q in circle(EXH_R, 16)]
     tube(A, ring, (1, 0, 0), 0.08, C['dark'], C['black'])
@@ -481,14 +479,6 @@ def linings(A, G, fine=True):
     ring = [(xb + p, sb * (y_at(xb + p, zb_ + q, sb) + 0.001), zb_ + q) for p, q in circle(BILGE_R, 12)]
     tube(A, ring, (0, -sb, 0), 0.05, C['dark'], C['black'])
     F.atorus(A, (xb, sb * (y_at(xb, zb_, sb) + 0.005), zb_), (0, sb, 0), BILGE_R + 0.008, 0.005, lambda a: C['steel'], seg=12, rseg=4)
-    # the companionway: its reveal through the bulkhead, the cabin dark behind, a white frame round it, the hatch board slid up
-    y0, y1, z0, z1 = COMP; o = rr_pts((y0 + y1) / 2, (z0 + z1) / 2, y1 - y0, z1 - z0, 0.06, 3)
-    tube(A, [(X_STEP - 0.001, p, q) for p, q in o], (1, 0, 0), 0.06, C['inner'], C['cabin'])
-    fo = rr_pts((y0 + y1) / 2, (z0 + z1) / 2, y1 - y0 + 0.08, z1 - z0 + 0.08, 0.10, 3)
-    for k in range(len(o)):
-        a, b = o[k], o[(k + 1) % len(o)]; c_, d_ = fo[(k + 1) % len(fo)], fo[k]
-        A.poly([(X_STEP - 0.012, a[0], a[1]), (X_STEP - 0.012, b[0], b[1]), (X_STEP - 0.012, c_[0], c_[1]), (X_STEP - 0.012, d_[0], d_[1])], C['white'], (-1, 0, 0))
-        A.poly([(X_STEP - 0.012, a[0], a[1]), (X_STEP - 0.012, b[0], b[1]), (X_STEP + 0.002, b[0], b[1]), (X_STEP + 0.002, a[0], a[1])], C['white'], (0, 0, 0))
     # the forward hatch: its reveal into the cabin, an aluminium frame proud of the deck, the smoked acrylic lid
     x0, x1, y0, y1 = HATCH_F; o = rr_pts((x0 + x1) / 2, 0, x1 - x0, y1 - y0, 0.05, 4)
     top = lambda x, y: z_bk(x) + camber(x, y)
@@ -624,7 +614,7 @@ def wheelhouse(fine=True):
     objs.append(A.done(35, tint=wear))
     return objs, glass
 
-def stairs(A, y0, y1, x1=X_STEP - 0.005, n=3):
+def stairs(A, y0, y1, x1=X_STEP - 0.005, n=2):
     """steps from the working deck up toward the foredeck's height against the bulkhead (one solid run, its foot in the cambered deck;
     n treads of equal rise, the last step up onto the foredeck or the door's sill)"""
     tr = 0.24; h = (ZFD - ZMD) / (n + 1); x0 = x1 - tr * n; y0, y1 = min(y0, y1), max(y0, y1)
@@ -1036,7 +1026,7 @@ def check():
     out.append(('lukekarmen %.2f m høy, luka %.2f x %.2f m' % (HOLD_H, HOLD[1] - HOLD[0], HOLD[3] - HOLD[2]), HOLD_H <= 0.25))
     # the hauling port: its sill over the deck (a man hauls standing), the fisher's place inside it
     sill = z_cap(HXR, -1) - ZMD
-    out.append(('haleporten %.2f m over dekket (%.2f-%.2f), ripa ellers %.2f' % (sill, HP0, HP1, z_sh(HXR) - ZMD), 0.45 <= sill <= 0.7))
+    out.append(('haleporten %.2f m over dekket (%.2f-%.2f), ripa ellers %.2f' % (sill, HP0, HP1, z_sh(HXR) - ZMD), 0.4 <= sill <= 0.7))
     out.append(('navnefeltene på bauens hvite skansekledning fra x 7.8 til 9.0, merket forut for x 9.3 (maletest: aldri oppå hverandre)', True))
     # vessel3d: the hull from 0.3 m under the water to 1.5 m over it
     z0b, z1b = WL - 0.3, WL + 1.5
