@@ -1913,12 +1913,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (856 linjer)
+## `src/js/ui/phone/07-patch.js` (861 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 849 `patch()`
+  - 854 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -3323,23 +3323,27 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **91** frame
   - 95 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (431 linjer)
+## `src/js/view3d/24-cinema.js` (528 linjer)
 
----------- cinema (the user's wish 03.10.2026) ----------
+---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
-- **1** cinema (the user's wish 03.10.2026)
-  - 8 `kinoWant(K, t)`
-  - 19 `kinoNext(t)`
-  - 38 `kinoCam(t, rdt)`
-  - 58 `introStart(sec)`
-  - 64 `frame()`
-  - 66 `frame0()`
-  - 252 `snapTake()`
-  - 257 `drawRoute(VP, eye)`
-  - 269 `driftSpray(VP, eye, dt, t, col)`
-  - 284 `drawSmoke(VP, eye, BM, dt)`
-  - 311 `drawEffects(VP, eye, BM, dt, t)`
-  - 413 `updateLabels(VP, eye, W, Hh)`
+- **1** cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026)
+  - 24 `kinoLand()`
+  - 31 `kinoSight(a, b)`
+  - 36 `kinoWant(K, t, B)`
+  - 82 `kinoOk(K, t)`
+  - 92 `kinoMake(type, t, land)`
+  - 112 `kinoNext(t, want, why)`
+  - 130 `kinoCam(t, rdt)`
+  - 155 `introStart(sec)`
+  - 161 `frame()`
+  - 163 `frame0()`
+  - 349 `snapTake()`
+  - 354 `drawRoute(VP, eye)`
+  - 366 `driftSpray(VP, eye, dt, t, col)`
+  - 381 `drawSmoke(VP, eye, BM, dt)`
+  - 408 `drawEffects(VP, eye, BM, dt, t)`
+  - 510 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (187 linjer)
 
