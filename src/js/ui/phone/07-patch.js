@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['redskap-langs-281026', '28.10.2026', 'Båten går langs redskapet', 'The boat runs along the gear', [
+       ['Når du setter eller trekker line, garn og teiner, går båten jevnt og sakte langs strengen i stedet for å stå stille og så hoppe et stykke fram.', 'When you set or haul lines, nets and pots, the boat runs slowly and evenly along the string instead of standing still and then jumping ahead.'],
+       ['Dekksdagboka åpner igjen sluttsedler fra før lottsystemet der mannskapet var med.', 'The deck log opens landing notes again from before the share system where the crew were along.']]],
     ['skipper-alene-281026', '28.10.2026', 'Rettelser', 'Fixes', [
        ['I trebåten og færingen står skipperen ikke lenger både ved rekka med juksa og ved sløyebordet når du er alene om bord. Mens du sløyer og iser, ligger juksa.', 'In the wooden boat and the skiff the skipper no longer stands both at the rail with the jig and at the gutting table when you are alone aboard. While you gut and ice, the jig rests.']]],
     ['autonav-lukket-271026', '27.10.2026', 'Autonav med spillet lukket', 'Autonav with the game closed', [
