@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['skipper-alene-281026', '28.10.2026', 'Rettelser', 'Fixes', [
+       ['I trebåten og færingen står skipperen ikke lenger både ved rekka med juksa og ved sløyebordet når du er alene om bord. Mens du sløyer og iser, ligger juksa.', 'In the wooden boat and the skiff the skipper no longer stands both at the rail with the jig and at the gutting table when you are alone aboard. While you gut and ice, the jig rests.']]],
     ['autonav-lukket-271026', '27.10.2026', 'Autonav med spillet lukket', 'Autonav with the game closed', [
        ['Møter båten grunt vann på Autonav mens spillet er lukket, finner den veien rundt og går videre til målet og fisket. Før ble den liggende ved grunna resten av tiden du var borte.', 'If the boat meets shallow water on Autonav while the game is closed, she finds the way round and goes on to the destination and the fishing. Before, she lay by the shallows for the rest of the time you were away.']]],
     ['autonav-hjorne-261026', '26.10.2026', 'Autonav', 'Autonav', [
