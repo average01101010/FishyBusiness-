@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p152', '01.11.2026', 'Autonav snur før den gir gass', 'Autonav turns before it opens up', [
+       ['Ligger båten med baugen mot land når du starter Autonav, gir den ikke lenger full gass rett fram og går på grunn. Den rygger ut til den har plass, og snur rolig mot siden med mest åpent vann før den legger seg på ruta.', 'When the boat lies with her bow to the shore as you start Autonav, she no longer goes full ahead and runs aground. She backs out until she has room, and turns slowly to the side with the most open water before she settles on the route.'],
+    ]],
     ['havsjark-011126', '01.11.2026', 'Havsjarken bygd på nytt', 'The havsjark rebuilt', [
        ['Havsjarken på 35 fot er bygd på nytt med et glatt skrog der ballastkjølen er en del av skroget, ekte spygatt, koøyer og luker, og en dør inn til styrhuset.', 'The 35 ft havsjark is rebuilt with a smooth hull where the ballast keel is part of the hull, real freeing ports, portholes and hatches, and a door into the wheelhouse.'],
        ['Fra broa ser skipperen ratt, kartplotter, ekkolodd og kompass, og stytteseglet er beslått på bommen når båten ligger i havn.', 'From the helm the skipper sees the wheel, the plotter, the sounder and the compass, and the riding sail is furled on its boom when the boat lies in port.'],
