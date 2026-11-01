@@ -192,8 +192,9 @@ function unitHit(x, z, r){
     for (const k in g.berth){ const b = g.berth[k]; if (Math.abs(lx - b[0]) <= b[1] / 2 + r + 2 && lz >= -4 && lz <= 30) return true; } }
   return false;
 }
-// inside a harbour (for a floating dock, L1): a quay face that stands in 3D within 80 m, or a breakwater within 120 m
-function inHarbour(x, z){
+// inside a harbour, for a floating dock (L1): a quay face that stands in 3D within 80 m, or a breakwater within 120 m (x, z in m;
+// not inHarbour of 01-world.js, which is the harbour pocket a route may cross)
+function dockInHarbour(x, z){
   for (const t of vecTilesIn(x - 130, z - 130, x + 130, z + 130)){
     for (const f of t.quays){ if (!quayReal(f)) continue; const a = clamp((x - f.x) * f.ux + (z - f.z) * f.uz, -f.hl, f.hl); if (Math.hypot(f.x + f.ux * a - x, f.z + f.uz * a - z) <= 80) return true; }
     for (const P of t.molos || []) for (let i = 1; i < P.length; i++){ const [ax, az] = P[i - 1], [bx, bz] = P[i], dx = bx - ax, dz = bz - az, l2 = dx * dx + dz * dz || 1, u = clamp(((x - ax) * dx + (z - az) * dz) / l2, 0, 1); if (Math.hypot(ax + dx * u - x, az + dz * u - z) <= 120) return true; } }
@@ -278,7 +279,7 @@ function moorHarbour(h){
   const dockable = need.filter(b => b.L < MOOR.SMALL);
   if (dockable.length){
     const others = docksIn(cx - 400, cz - 400, cx + 400, cz + 400);
-    const avoid = (x, z) => moorBlocked(x, z, 20) || !inHarbour(x, z);
+    const avoid = (x, z) => moorBlocked(x, z, 20) || !dockInHarbour(x, z);
     for (const [r0, r1] of [[15, 150], [150, 300], [300, 450]]){
       const sp = shoreSpot(cx, cz, r0, r1, {half:5, bend:3, out:[6, 12, 20, 30], inl:[4, 10], avoid, pref:r0}); if (!sp) continue;
       const d = {o:sp.o, u:sp.u, n:[-sp.u[1], sp.u[0]], s0:FDOCK.GH - 0.6, np:Math.min(4, Math.max(1, Math.ceil(dockable.reduce((a, b) => a + b.L + 1.5, 0) / 2 / FDOCK.PL))), h};

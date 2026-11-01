@@ -88,9 +88,12 @@ async def main():
                 const f = t.quays.find(q => q.id === m.face.id); if (!f || !quayReal(f)) out.notReal++; }
               else if (m.dock){ out.dock++; if (bt.L >= MOOR.SMALL) out.bigDock++; } else if (m.buoy){ out.buoy++; if (bt.L >= MOOR.SMALL) out.bigDock++; } else out.notReal++;
               const s = Math.sin(m.hd), c = Math.cos(m.hd); for (const fa of [-1, -0.5, 0, 0.5, 1]) for (const ab of [-1, 0, 1]) if (isLand({x:m.p.x + (s * fa * bt.L / 2 + c * ab * bt.B / 2) / 1000, y:m.p.y + (-c * fa * bt.L / 2 + s * ab * bt.B / 2) / 1000})){ out.land++; break; } } }
-          const shown = npcStates(H).filter(n => n.coast && n.st === 'port').length; return Object.assign(out, {ais:shown}); })()""")
+          // (the AIS: no boat in port without a place among them; the boats of a harbour whose places are not fixed yet lie at the pack's)
+          const ids = new Set(npcStates(H).filter(n => n.coast && n.st === 'port').map(n => n.id)); let aisNone = 0;
+          for (const t of VEC.tiles.values()) for (const h of t.npc || []) for (const bt of h.boats) if (bt.moored && bt.moored.none && ids.has(bt.id)) aisNone++;
+          return Object.assign(out, {ais:ids.size, aisNone}); })()""")
         check(m['shown'] > 10 and m['notReal'] == 0 and m['shore'] == 0 and m['bigDock'] == 0 and m['land'] == 0, 'i havn ligger hver båt ved en kai som står i 3D, eller under 11 m ved flytebrygge eller bøye; ingen i fjæra, ingen på land', m)
-        check(m['ais'] == m['shown'], 'båtene uten plass vises ikke i havn (AIS viser bare de som ligger ved noe)', (m['ais'], m['shown'], m['hidden']))
+        check(m['aisNone'] == 0, 'båtene uten plass vises ikke i havn (ingen av dem på AIS)', (m['ais'], m['hidden'], m['aisNone']))
         check(q['senja'] == 0 and q['both'] == 0, 'ingen havn i Senja-ruta (FLEET er flåten der), og båtene langs kysten tar ikke fisk fra bestanden', q)
         check(q['legs'] > 20 and q['land'] <= q['legs'] * 0.08, 'leiene til feltene holder seg unna land (noen hjørner av 25 m-masken unntatt)', (q['land'], q['legs']))
         card = await pg.evaluate("(() => { const n = npcStates(S.t / 60).find(n => n.coast); AISSEL = n.id; const tr = aisTrack(n.id, (S.t + 0.5) / 60); return {info:aisInfo(n).includes('Fiskefartøy') || aisInfo(n).includes('Fishing'), size:/×/.test(aisInfo(n)), track:tr.length}; })()")
