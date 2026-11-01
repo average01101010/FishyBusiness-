@@ -475,12 +475,31 @@ function dynAuto(d, dtG){
     for (const c of T.corners){ if (c.s <= T.s - 2 * L) continue; if (c.s > T.s + 600) break; const vTurn = Math.min(vc, Math.max(vTmin, vc * (1 - c.th / Math.PI))); if (c.s - T.s > -L) vCmd = Math.min(vCmd, dynVEase(cal, c.s - T.s - L, vTurn)); else vCmd = Math.min(vCmd, vTurn); }
     vCmd = Math.min(vCmd, dynVEase(cal, ds - 0.3));
     if (ds < 4) vCmd = Math.min(vCmd, Math.sqrt(2 * 0.12 * Math.max(0, ds - 0.25)) + 0.04);
+    // room for the bow (tilbakemelding #104, 01.11.2026): the ground check above looks along the line, but a boat lying with her bow
+    // to the shore when Autonav starts must turn before she is on the line, and went full ahead into the land first (the new 11 m sjark
+    // 25 m off the shore south of Finnsnes: aground at 5-8 knots within 10-80 m, even with the route leading straight away behind her).
+    // Once a second, when her heading is over 30 degrees off the leg's, the water ahead of her bow is checked as far as she needs to
+    // stop, turn on her slowest calibrated radius and clear half her length. With ground there she turns at the speed that radius was
+    // measured at (slower, the rudder has no bite and she lay still), and with too little room for the turn she first backs straight
+    // astern, the wheel amidships, until she has it and 20 m more (as long as the water behind her is clear, and at most four lengths)
+    if (!(T.bchk-- > 0)){ T.bchk = Math.round(1 / h); const was = T.bow; T.bow = null; const err = Math.abs(dynAng(d.psi, dynSegHd(T, dynSeg(T, T.s))));
+      if (err > 0.5){ const N0 = cal.nom[0], Rb = Math.max(N0.R, d.u * d.u / P.alat), need = Rb + L / 2 + 5, look = dynEaseDist(cal, Math.max(0, d.u)) + need + 10, fx = Math.sin(d.psi), fy = -Math.cos(d.psi), a0 = {x:d.X / 1000, y:d.Y / 1000};
+        let gp = null; try { gp = groundCheck(a0, {x:a0.x + fx * look / 1000, y:a0.y + fy * look / 1000}); } catch (e){}
+        if (gp){ const gd = dist(a0, gp) * 1000, bk = was && was.astern ? was.bk : {x:d.X, y:d.Y}; let astern = false;
+          if (gd < (was && was.astern ? need + 25 : need) && Math.hypot(d.X - bk.x, d.Y - bk.y) < 4 * L) try { astern = !groundCheck(a0, {x:a0.x - fx * 2 * L / 1000, y:a0.y - fy * 2 * L / 1000}); } catch (e){}
+          // (the turn goes to the side with the most open water, kept once chosen: the shorter way round the controller takes may be
+          // the one towards the shore, and she backed and filled there for minutes in the stikkprøve at Bergen)
+          let side = was && was.side; if (!side){ const room = sg => { const hh = d.psi + sg * 0.8; let q = null; try { q = groundCheck(a0, {x:a0.x + Math.sin(hh) * look / 1000, y:a0.y - Math.cos(hh) * look / 1000}); } catch (e){} return q ? dist(a0, q) : 1e9; };
+            const rs = room(1), rp = room(-1); side = rs === rp ? (dynAng(d.psi, dynSegHd(T, dynSeg(T, T.s))) >= 0 ? 1 : -1) : rs > rp ? 1 : -1; }
+          T.bow = {gd, astern, bk, u:N0.u, side}; } } }
+    if (T.bow) vCmd = Math.min(vCmd, T.bow.astern ? 0 : T.bow.u);
     // (the lever goes over gradually, a quarter of its travel a game second, as a hand moves it)
     // the throttle for the acceleration that brings her to the commanded speed in three game seconds, and along the easing curve
     // when she is slackening off (the resistance she has at this speed counted in, so she follows the curve and does not lag it)
     const aDes = (vCmd - d.u) / 3 + (vCmd < vBase - 0.05 && d.u > 0.1 ? -0.7 * cal.aC : 0), F = P.mx * aDes + P.k1 * d.u + P.k2 * capF * d.u * Math.abs(d.u);
     const thrT = vCmd < 0.05 && d.u < 0.3 ? (d.u > 0.02 ? -0.15 : 0) : F >= 0 ? clamp(F / (E.kT * P.Tmax * (1 - 0.35 * Math.max(0, d.u) / P.umax)), 0, 1) : clamp(F / (0.6 * E.kT * P.Tmax), -0.6, 0);
-    const thr = d.thr = d.thr == null ? thrT : d.thr + clamp(thrT - d.thr, -0.25 * h, 0.25 * h);
+    const thrB = T.bow && T.bow.astern ? (d.u > -0.6 ? -0.35 : 0) : thrT;   // (backing out from the shore: slow astern, the wheel amidships)
+    const thr = d.thr = d.thr == null ? thrB : d.thr + clamp(thrB - d.thr, -0.25 * h, 0.25 * h);
     // the rudder: line of sight on the leg she is on, or on the next one from where a turn on her own radius must begin to meet it
     // (so she cuts the corner by R(1/cos(th/2) - 1) and never swings outside); the course wanted is the leg's, bent towards it by
     // the cross-track error over a look-ahead of a radius and a half (stable: the heading loop is much faster than that)
@@ -495,7 +514,7 @@ function dynAuto(d, dtG){
     if (seg + 1 <= n - 1){ const th = Math.abs(dynAng(dynSegHd(T, seg), dynSegHd(T, seg + 1))), lead = Math.min(Rt * Math.tan(Math.min(th, 2.6) / 2) + Math.abs(d.u) * (Tn + 0.5 * DYN_RUD / P.drate), 0.5 * (T.L[seg] - T.L[seg - 1])); if (T.L[seg] - T.s < lead) seg++; }
     const sa = T.P[seg - 1], hdP = dynSegHd(T, seg), ye = (d.X - sa[0]) * Math.cos(hdP) + (d.Y - sa[1]) * Math.sin(hdP);
     const chi = Math.abs(d.u) > 0.3 ? d.psi + Math.atan2(d.v, d.u) : d.psi, chiD = hdP - Math.atan(ye / Math.max(1.5 * Rt, L));
-    const rud = clamp((Kp * dynAng(chi, chiD) - Kd * d.r) / DYN_RUD, -1, 1);
+    const rud = T.bow ? (T.bow.astern ? 0 : T.bow.side) : clamp((Kp * dynAng(chi, chiD) - Kd * d.r) / DYN_RUD, -1, 1);
     dynInt(P, d, thr, rud, h, capF, E); dynMove(d, h);
     // (a line drawn through a pier: she touches it on her fenders and is put off it; not in the last lengths into a harbour, which the
     // quay's lines take, 3D moorStep)

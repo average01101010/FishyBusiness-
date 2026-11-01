@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p152', '01.11.2026', 'Autonav snur før den gir gass', 'Autonav turns before it opens up', [
+       ['Ligger båten med baugen mot land når du starter Autonav, gir den ikke lenger full gass rett fram og går på grunn. Den rygger ut til den har plass, og snur rolig mot siden med mest åpent vann før den legger seg på ruta.', 'When the boat lies with her bow to the shore as you start Autonav, she no longer goes full ahead and runs aground. She backs out until she has room, and turns slowly to the side with the most open water before she settles on the route.'],
+    ]],
     ['om-bord-311026', '31.10.2026', 'Hvem som er om bord', 'Who is aboard', [
        ['Er du om bord på en annen av båtene dine, og denne ikke har mannskap, står det ingen skipper i den i 3D lenger. Meldingen «Båten har ikke mannskap» sier nå hvilken båt du er om bord på, og at du kan gå om bord på denne i Rederi-appen.', 'When you are aboard another of your boats and this one has no crew, no skipper stands in her in 3D any more. The message «The boat has no crew» now says which boat you are aboard, and that you can go aboard this one in the Company app.'],
     ]],
