@@ -158,8 +158,10 @@
         // (drifting, core lieDrift: she keeps close to where the drift has her, on the time that has really gone, as under the model,
         // so slow frames never leave her behind the chart and the simulation; she comes there from where the model stopped her)
         bv.spd *= Math.exp(-dt * 1.2); bv.yr *= Math.exp(-dt * 2);
+        // (setting or hauling, she has way on along the string: the minute's move, core/10-gear.js)
+        const gm = b.gop && b.gop.mv && b.gop.mv.t === S.t ? b.gop.mv : null; if (gm) bv.spd = Math.hypot(gm.x, gm.y) * 1000 * simRate() / 60;
         // (at anchor she swings round it along the minute's move as well: core/06e-anchor.js)
-        const sw = b.drv || (b.anch && b.anch.mv), k = sw ? 1 - Math.exp(-Math.min(30, rdt || dt) * 3) : 1 - Math.exp(-dt * 1.5); bv.px += (tx - bv.px) * k; bv.pz += (tz - bv.pz) * k;
+        const sw = b.drv || (b.anch && b.anch.mv) || gm, k = sw ? 1 - Math.exp(-Math.min(30, rdt || dt) * 3) : 1 - Math.exp(-dt * 1.5); bv.px += (tx - bv.px) * k; bv.pz += (tz - bv.pz) * k;
         bv.cog += angDiff(bv.cog, pr.hd) * (1 - Math.exp(-dt * (b.anch ? 2 : 0.7)));
       }
       // the bow points a little into the turn, so the stern skids out

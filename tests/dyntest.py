@@ -108,6 +108,20 @@ async def main():
             else:
                 check(False, 'a route for the planing hull is under way', q)
             await pg.evaluate("(() => { const b = S.boat; b.type = 'trebat'; applyVessel(); b.status = 'idle'; S.plan = null; b.dyn = null; })()")
+        # 2c. ground under her own way at speed on a leg the route called safe (a corner cut on her radius, a drift off the line): she
+        # is held back and Autonav finds a way round, never aground (tilbakemelding #96, 26.10.2026: before, the model's last check ran
+        # her aground in that case). The ground is put under the model's own step once, in open water, so the way round is there.
+        if r:
+            q = await pg.evaluate("""async (c0) => { const b = S.boat, c = {x:c0[0] / 1000, y:c0[1] / 1000}; b.status = 'idle'; b.v = 0; b.dyn = null; S.plan = null; S.helm = null; b.pos = {x:c.x, y:c.y}; b.heading = 0;
+              const A = {x:c.x, y:c.y - 0.5}, B = {x:c.x + 0.5, y:c.y - 0.5}; S.draft = [A, B].map(q => ({x:q.x, y:q.y, port:null, fish:0, leia:true})); S.draftSpeed = 6;
+              doAct({dataset:{act:'start'}, disabled:false}); const g = document.getElementById('ruGo'); if (g) g.click();
+              const n0 = (S.incidents || []).length; window.__gc0 = groundCheck; window.__hit = 1;
+              groundCheck = function(a, z){ const v = S.boat; if (window.__hit > 0 && v.status === 'sailing' && v.dyn && Math.abs(v.dyn.u) > 1.5 && a.x === v.pos.x && a.y === v.pos.y && dist(a, z) > 0){ window.__hit--; return {x:z.x, y:z.y}; } return window.__gc0(a, z); };
+              for (let i = 0; i < 1200 && S.boat.status === 'sailing'; i++) await new Promise(res => setTimeout(res, 250));
+              groundCheck = window.__gc0; const lg = S.log.slice(-12).map(l => l.no || '').join(' | ');
+              return {st:b.status, hit:window.__hit === 0, aground:(S.incidents || []).slice(n0).some(e => e.k === 'aground'), round:/Grunt vann forut/.test(lg), on:/fant en vei rundt/.test(lg), end:+(dist(b.pos, B) * 1000).toFixed(1)}; }""", r['line'][0])
+            check(q['hit'] and q['st'] == 'idle' and not q['aground'] and q['round'] and q['on'] and q['end'] < 1, '2c. ground under her own way at speed on a safe Autonav leg: held back, a way round is found, she goes on to the end, never aground', q)
+            await pg.evaluate("(() => { const b = S.boat; b.status = 'idle'; S.plan = null; b.dyn = null; })()")
         # 3. by hand on the same model: full ahead gathers way, the rudder turns her, neutral loses it
         h = await pg.evaluate("""() => { S.settings.manual = true; const b = S.boat; b.status = 'idle'; S.plan = null; helmTake(); S.helm.thr = 1; S.helm.rud = 0; return {on:helmOn(), v:S.helm.v}; }""")
         await pg.wait_for_timeout(8000)

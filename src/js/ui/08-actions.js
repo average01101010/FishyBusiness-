@@ -22,7 +22,7 @@ function doAct(el){
         '<p class="note">' + L('Der venter båten uten å fiske eller sette redskap. Flytt punktet, eller kast loss likevel.', 'There the boat waits without fishing or setting gear. Move the point, or cast off anyway.') + '</p>' +
         '<div class="btns"><button class="btn primary" data-close>' + L('Endre ruta', 'Change the route') + '</button><button class="btn" id="ruGo">' + L('Kast loss likevel', 'Cast off anyway') + '</button></div>');
         $('ruGo').onclick = () => { $('modal').hidden = true; doAct({dataset:{act:'start', ruok:'1'}, disabled:false}); }; return; } }
-    if (!meAboard() && !crewAboard().length){ toast(L('Båten har ikke mannskap. Uten deg om bord trenger den folk.', 'The boat has no crew. Without you aboard it needs hands.')); return; }
+    if (!meAboard() && !crewAboard().length){ toast(L(...noCrewText())); return; }
     const later = S.draftDep && S.draftDep > S.t ? S.draftDep : null;
     if (!later && b.status === 'port' && S.jobs && S.jobs.length){ toast(t(jobsCrewOnly() ? 'crew_busy' : 'yard_busy', hm((jobsDone() || S.t) / 60))); return; }
     S.plan = {wps:S.draft.map(w => ({...w})), idx:0, speed:S.draftSpeed, returning:false, depAt:later, unsafe:draftHazards().map(h => h.unsafe)};
@@ -32,7 +32,7 @@ function doAct(el){
       const W = windAt(S.t / 60); if (S.settings.autoOn && W > S.settings.autoW) log('Det blåser ' + W.toFixed(0) + ' m/s, over grensen for å snu. Båten snur ikke av seg selv før vinden har løyet.', 'It blows ' + W.toFixed(0) + ' m/s, over the turn-back limit. The boat will not turn back by itself until the wind has eased.'); }
     // the chart plotter stays open: the skipper goes back to 3D himself (the user's wish 02.10.2026)
   }
-  else if (act === 'depnow'){ if (!S.plan) return; if (b.status === 'port' && S.jobs && S.jobs.length){ toast(t(jobsCrewOnly() ? 'crew_busy' : 'yard_busy', hm((jobsDone() || S.t) / 60))); return; } if (!meAboard() && !crewAboard().length){ toast(L('Båten har ikke mannskap. Uten deg om bord trenger den folk.', 'The boat has no crew. Without you aboard it needs hands.')); return; } depart(); if (!G3.isActive()) G3.show(true, true); }
+  else if (act === 'depnow'){ if (!S.plan) return; if (b.status === 'port' && S.jobs && S.jobs.length){ toast(t(jobsCrewOnly() ? 'crew_busy' : 'yard_busy', hm((jobsDone() || S.t) / 60))); return; } if (!meAboard() && !crewAboard().length){ toast(L(...noCrewText())); return; } depart(); if (!G3.isActive()) G3.show(true, true); }
   else if (act === 'cn'){ S.settings.chartNight = el.dataset.m; renderBase(); scheduleStatic(); if (typeof MINIP !== 'undefined') MINIP.key = ''; }
   else if (act === 'rl'){ S.settings.ruleLayer = el.dataset.m === 'on'; renderBase(); scheduleStatic(); paintChart(1); }
   else if (act === 'cm'){ const m = el.dataset.m; if (m === 'fish' && !S.equip.plotter){ toast(t('need_plotter')); PHONE.open('utstyrb'); return; } S.settings.chart = m; renderBase(); scheduleStatic(); }
@@ -300,7 +300,8 @@ const CATCHUP_CAP = 72 * 60;
 // Game minutes are played only while every vessel's waters are loaded (simAreaReady, 01b-mapdata.js): what is left waits in
 // CATCH_LEFT and is played by the tick once the packs are in, so a slow network makes the clock wait, never guess.
 let CATCH_LEFT = 0;
-function playMinutes(n){ let i = 0; for (; i < n; i++){ if (!simAreaReady()){ CATCH_LEFT += n - i; break; } step(); } return i; }
+// (the time away, away: also while Autonav finds a way round shallow water, sailWaiting in core/05-vessels.js)
+function playMinutes(n, away){ let i = 0; for (; i < n; i++){ if (!simAreaReady() || (away && sailWaiting())){ CATCH_LEFT += n - i; break; } step(); } return i; }
 // on the world's clock (core/01-world.js) the time away is what the game is behind it, all of it; more than two weeks is skipped to the
 // last two (the clock moves on, the simulation plays the last two weeks)
 const WORLD_SIM_MAX = 14 * 24 * 60;
@@ -309,7 +310,7 @@ function catchUp(realMs){
   if (WCLOCK.on){ const w = worldT(); mins = Math.max(0, w - S.t); if (mins > WORLD_SIM_MAX){ S.t = w - WORLD_SIM_MAX; mins = WORLD_SIM_MAX; } realMs = mins / GAME_RATE * 60000; }
   if (mins < 1) return;
   if (mins >= 10) awayStart(mins, realMs);
-  playMinutes(mins);
+  playMinutes(mins, true);
   panelDirty = true;
   if (!CATCH_LEFT && AWAYR) awayEnd();
   if (realMs >= 5 * 60000) WAKE_BACK = true;
@@ -323,7 +324,7 @@ function tick(){
   if (dt > 8 && typeof cloudWake === 'function') cloudWake();
   if (TAB.held || TAB.wait) return;
   // (until the simulation's data is in, the clock waits: 11-boot.js)
-  if (SIMREADY){ if (CATCH_LEFT > 0){ DYN.on = false; const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n); panelDirty = true; if (!CATCH_LEFT && AWAYR) awayEnd(); }
+  if (SIMREADY){ if (CATCH_LEFT > 0){ DYN.on = false; const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n, true); panelDirty = true; if (!CATCH_LEFT && AWAYR) awayEnd(); }
   else if (WCLOCK.on){
     // one clock for everyone: step on to the world's minute; more than ten minutes behind (the tab slept) is time away; a save from
     // before that is ahead goes at half pace until the world has caught up with it
@@ -340,7 +341,7 @@ function tick(){
   else if (dt > 6 && dt * simRate() / 60 > 10){ DYN.on = false; catchUp(dt * 1000); acc += (dt * simRate() / 60) % 1; } else { dynTick(dt); acc += dt * simRate() / 60; let n = 0; while (acc >= 1 && n < 3000 && simAreaReady()){ step(); acc -= 1; n++; } } }
   if (WAKE_BACK && !CATCH_LEFT){ WAKE_BACK = false; if (asleep()) wakeEarly(true); }
   heatTick();
-  if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); HUI.tick(); energyUi(); turFotoUi(); INSTR.renderGPS(); renderRouteTools(); tutUpdate(); PHONE.status(); PHONE.tickHome();
+  if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); showroomTick(); HUI.tick(); energyUi(); turFotoUi(); INSTR.renderGPS(); renderRouteTools(); tutUpdate(); PHONE.status(); PHONE.tickHome();
   if (S.order) deliverOrder();
   // the chart's night colours follow the sun: drawn again when they change
   if (S.t !== CHN.t){ CHN.t = S.t; if (chartNight() !== CHN.v && document.body.classList.contains('vplot')) renderBase(); }

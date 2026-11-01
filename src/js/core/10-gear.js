@@ -319,14 +319,17 @@ function gearOpMinute(H, W, hs){
   if (g.op === 'haul' && holdTotal() >= capHold() - 0.01){ log('Lasten er full. Resten av redskapet står igjen.', 'The hold is full. The rest of the gear stays in the sea.'); gopAbort('full'); return; }
   // the catch of one unit comes aboard in slices as the string comes over the rail, not all at the end (tilbakemelding #30: «fisken
   // kommer om bord etter hvert, så man kan sløye underveis»): per 100 hooks on a line, in thirds on a net, a pot at once
-  if (g.lead > 0){ g.lead--; b.v = 0.3; return; }   // the end lines first
-  g.prog += haulSlow(g) / gopUnitMin(g, H, hs);
+  if (g.lead > 0){ g.lead--; b.v = 0.3; g.mv = null; return; }   // the end lines first
+  const step = haulSlow(g) / gopUnitMin(g, H, hs); g.prog += step;
   const SL = g.op === 'haul' ? g.sl || 1 : 1; g.sub = g.sub || 0;
   while (g.done < g.n && g.prog >= (g.sub + 1) / SL){
     if (g.op === 'haul') haulUnit(g, H, SL);
     g.sub++; if (g.sub >= SL){ g.sub = 0; g.prog -= 1; g.done++; }
   }
   const f = Math.min(1, (g.done + g.prog) / g.n); b.pos = {x:g.a.x + (g.b.x - g.a.x) * f, y:g.a.y + (g.b.y - g.a.y) * f};
+  // the next minute's move along the string at this pace, so the chart and the 3D view run her slowly along it through the minute
+  // instead of standing and then jumping a minute's way at once (tilbakemelding #99)
+  const df = Math.min(1, f + (step > 0 && isFinite(step) ? step / g.n : 0)) - f; g.mv = {x:(g.b.x - g.a.x) * df, y:(g.b.y - g.a.y) * df, t:S.t};
   if (Math.hypot(g.b.x - g.a.x, g.b.y - g.a.y) > 1e-6) b.heading = Math.atan2(g.b.x - g.a.x, -(g.b.y - g.a.y));
   b.v = 2.5;
   if (g.done >= g.n) (g.op === 'set' ? finishSet : finishHaul)(g, H);
