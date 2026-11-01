@@ -230,7 +230,16 @@
       let L3 = lanterns(VG, V0, {port:b0.status === 'port', anch:anchored, v:b0.v || 0, fishing:b0.status === 'fishing' || !!b0.gop, trawl:V0.cls === 'hav' && !(V0.rigs || []).length, aground:b0.status === 'aground', nuc:b0.status === 'engine' || b0.status === 'adrift'}), drawn = L3.length;
       if (anchored && alarm && L3.length) L3 = L3.map(([p, c], i) => i ? [p, c] : [p, (performance.now() / 250) % 2 < 1 ? [1, 0.1, 0.06] : [0.25, 0.02, 0.02]]);   // the anchor alarm turns the light red and flashing (06e-anchor.js)
       ANCHAL.drawn = drawn;
-      for (const [lp, lc] of L3){ const q = xf(BMrel, lp); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VPn, lc, anchored ? 420 : 260, true); }
+      // the side lights and the stern light shine only in their arcs (vedlegg I 9(a): a side from right ahead to 22.5 degrees abaft the beam
+      // on its own side, the stern 67.5 degrees each side of aft); the glow drew them all round, so the green showed from the port bow
+      // through the wheelhouse (01.11.2026). The eye is the frame's origin (BMrel is relative to it)
+      for (const [lp, lc, lk] of L3){ const q = xf(BMrel, lp);
+        if (lk === 'side' || lk === 'stern'){ const f = xf(BMrel, [lp[0], lp[1], lp[2] - 1]), r = xf(BMrel, [lp[0] + 1, lp[1], lp[2]]);
+          const fw = -((f[0] - q[0]) * q[0] + (f[1] - q[1]) * q[1] + (f[2] - q[2]) * q[2]), sb = -((r[0] - q[0]) * q[0] + (r[1] - q[1]) * q[1] + (r[2] - q[2]) * q[2]);
+          const ang = Math.atan2(Math.abs(sb), fw) * 180 / Math.PI;
+          if (lk === 'side' && (ang > 112.5 || (lp[0] < 0 ? sb > 0.05 : sb < -0.05) && ang > 1)) continue;
+          if (lk === 'stern' && ang < 180 - 67.5) continue; }
+        PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VPn, lc, anchored ? 420 : 260, true); }
       gl.depthMask(true); gl.disable(gl.BLEND);
     }
     updateLabels(VPf, eye, W, Hh);

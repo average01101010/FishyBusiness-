@@ -1913,12 +1913,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (848 linjer)
+## `src/js/ui/phone/07-patch.js` (853 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 841 `patch()`
+  - 846 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -3323,7 +3323,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **91** frame
   - 95 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (422 linjer)
+## `src/js/view3d/24-cinema.js` (431 linjer)
 
 ---------- cinema (the user's wish 03.10.2026) ----------
 
@@ -3334,12 +3334,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 58 `introStart(sec)`
   - 64 `frame()`
   - 66 `frame0()`
-  - 243 `snapTake()`
-  - 248 `drawRoute(VP, eye)`
-  - 260 `driftSpray(VP, eye, dt, t, col)`
-  - 275 `drawSmoke(VP, eye, BM, dt)`
-  - 302 `drawEffects(VP, eye, BM, dt, t)`
-  - 404 `updateLabels(VP, eye, W, Hh)`
+  - 252 `snapTake()`
+  - 257 `drawRoute(VP, eye)`
+  - 269 `driftSpray(VP, eye, dt, t, col)`
+  - 284 `drawSmoke(VP, eye, BM, dt)`
+  - 311 `drawEffects(VP, eye, BM, dt, t)`
+  - 413 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (187 linjer)
 

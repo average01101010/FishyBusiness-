@@ -66,7 +66,7 @@ snittfunksjonen: `tools/boats/out/qa/hu11for_lines.png` (bunnreisning 12,5° ved
 | A4 | **Skipperen står i rattet og stolen** (rattet x 7,17, stolen 7,15, skipperen 7,15) | `house`, ankrene | H | B10 |
 | A5 | **Skjermene vender feil** (toppen mot skipperen, flaten ned) og står utenfor synsfeltet; broa i spillet er svarte stolper og en mørk himling | `house`, `hp` | H | Dashbord som skrår opp forover med skjermene i det, tynne sprosser, lys himling, `hp` −0,26 (B10) |
 | A6 | **Sløyebenken står i haleporten** (benken 3,5–4,0 til styrbord, porten 3,55–4,25): fiskeren ved haleren og den som sløyer står på samme sted | `house`, `work` | H | Benken er spillets, ved babord ripe tvers av luka (B11) |
-| A7 | **Sidelanternene uten skjerm på takkanten**: den røde synes fra styrbord baug (natt-bildet fra styrbord), og de sitter på et 0,3 m tykt tak | `lights` | H | `F.side_lantern` med skjerm innenbords på husets sider forut for vinduene, under takkanten (4,42) |
+| A7 | **Sidelanternene uten skjerm på takkanten**: den grønne synes fra babord baug gjennom styrhuset (natt-bildet fra babord), og de sitter på et 0,3 m tykt tak | `lights` | H | `F.side_lantern` med skjerm innenbords på husets sider forut for vinduene, under takkanten (4,42). Etter-bildet viste den grønne fra babord fortsatt: spillets lysskinn tegnet side- og hekklys hele veien rundt, på alle båter. Rettet i spillet (`24-cinema.js`: sidelanternene fra rett forut til 22,5° akter for tvers på egen side, hekklyset 67,5° til hver side akterut, vedlegg I 9(a)) |
 | A8 | **Ingen fiskelys** | `lights` | M | Rødt over hvitt rundtlysende på en arm akter for masta (8,55 og 7,50; kap. 5) |
 | A9 | **Taket er en blokk på 0,30 m** med visir som en kloss (M) | `house` | M | Tynt tak med gul kant, dryppkant og bue (B7) |
 | A10 | **Flate sider** (M3: ingen lister, lensporter eller beslag) og **mørke flekker på skrogsida** (M11: bakt AO på store trekanter) | `hull` | M | Lista, sprutlistene, slagflaten, spygattene med krage, slitasje per hjørne (B16); skroget i tette stasjoner (0,06 m) så AO-en blir jevn |
@@ -117,8 +117,16 @@ midt i hekken, lasteplassen i babord hekk, kranen på kista i styrbord hekk.
 | 3 | Eksport: lod1 4 461 trekanter; Node-testen fant 13 383 punkter i lokalflåten mot 12 000 (tre punkter per trekant) | Ankerspillet en kloss og lanternene enkle i fjernversjonen: 3 225 trekanter, 9 675 punkter |
 | 4 | **Jonas: «Har båten ingen spygatt?»** Spygattene var små rør under lista og leste ikke | Arbeidsdekket løftet til 2,16 over lista, åpne lensporter gjennom skansekledningen ved dekket (B6); haleporten 0,44 over dekket, to trinn opp; lugarnedgangen i skottet fjernet |
 | 5 | Klipp-kontrollen (`qa/clip_hurtig11.py`, ny): 44 punkter: døras karm under dekkets bue, ankerspillets fot og kista 2–3 cm ned i dekket, kista inn i skansen akter (bredden målt ved 0,8 m, ikke ved kistas akterkant) | Rettet: 0 |
-| 6 | Testene: `vessel3d hurtigsjark`, `brotest hurtigsjark`, `lanterntest`, `vesseltest`, `regmarktest`, `maletest`, `walktest`, `penshot` grønne; enhetstestene 245 OK. `deckshot` rød på kranen for alle fire båtene med kran (kyst15, kyst21, hurtigsjark, sjarkny): stillingen ble ikke nådd innen tidsgrensen | Kjørt på bygget før endringene (`dist-base`) for å se om feilen er ny (kap. 7, merknad) |
+| 6 | Testene: `vessel3d hurtigsjark`, `brotest hurtigsjark`, `lanterntest`, `vesseltest`, `regmarktest`, `maletest`, `walktest`, `penshot` grønne; enhetstestene 245 OK. `deckshot` rød på kranen for alle fire båtene med kran (kyst15, kyst21, hurtigsjark, sjarkny): stillingen ble ikke nådd innen tidsgrensen | Ikke min: feilen rammer også de tre kranbåtene jeg ikke har rørt. Kjøringen på bygget før ble avbrutt (Jonas: «Du bestemmer selv hva du mener er relevant å teste»); ført i BACKLOG |
+| 7 | Etter-bildene i spillet (liggende): broa med dashbord og skjermer, dekket med lensportene, kranen på kista. **Natt fra babord baug: den grønne synes gjennom styrhuset** | Spillets lysskinn følger nå lanternenes sektorer (A7); `lanterntest` og nattbildene tatt på nytt |
 
 ## 8. Selvvurdering
 
-(Fylles ut når modellen er ferdig.)
+**Karakter: 62/100.** Skroget er én flate med skegen, listene og slaget, linjene fra bildene er glatte, hullene er ekte, broa er tegnet fra
+skipperens øye, lanternene er lovlige med fiskelys, arbeidsflyten henger sammen (fiskeren i haleporten, karet akter for ham, benken til
+babord), klipp-kontrollen står på 0 og alle kontrollene i `check()` er grønne. Trekk: (1) Jonas måtte spørre etter lensportene: jeg valgte
+spygatt under lista som var riktige på papiret, men som ikke synes; (2) treg økt: før-bildene i spillet tok 50 minutter, og en rød
+kranprøve som ikke var min, kostet nesten en time før jeg så at den rammet båter jeg ikke hadde rørt; (3) en redigering dupliserte halve
+skriptet (hentet tilbake fra git), og en testrunde startet mot en gammel eksport; (4) ingen overlegg mot bildene (de ligger ikke i repoet),
+og bunnen, skegen og husets inndeling er antatt; (5) 13,7 t mot 12 t; (6) etter-bildene i spillet bare i liggende format (modellen er lik i
+begge, og brukerflaten er ikke endret).
