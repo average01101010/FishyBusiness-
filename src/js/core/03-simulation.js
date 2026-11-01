@@ -425,23 +425,38 @@ function slopeAt(p){ const e = 0.1, a = depthF({x:p.x + e, y:p.y}), b = depthF({
 // sliding its own way at 0.7–1.7 km a day and fading in and out over 240 hours, so the fish move along instead of jumping every
 // five days. The blend is scaled back to the spread of one field, so the mean stays where it was.
 const HOT = {T:120, v:0.05, cell:3.5};   // hours, km an hour, km
+// each field drifts its own way, steered by the species' migration where it has one (migDir in 03f-fiske.js: the skrei's patches drift
+// south-west along the coast in winter and back in spring, B2 01.11.2026), and from a reference time in the middle of its life, so the
+// drift never adds up to more than its own life's worth
 function hotField(sp, p, H, k){
-  const si = ALLSP.indexOf(sp), a = 2 * Math.PI * h2(k, 700 + si), v = HOT.v * (0.6 + 0.8 * h2(k, 720 + si)), tt = H - k * HOT.T;
-  return noise2((p.x - Math.sin(a) * v * tt) / HOT.cell, (p.y + Math.cos(a) * v * tt) / HOT.cell, 20 + si + 97 * k);
+  const si = ALLSP.indexOf(sp), v = HOT.v * (0.6 + 0.8 * h2(k, 720 + si)), d = migDir(sp, p, k, HOT.T, 0.7, 1), tt = H - k * HOT.T;
+  return noise2((p.x - d[0] * v * tt) / HOT.cell, (p.y + d[1] * v * tt) / HOT.cell, 20 + si + 97 * k);
 }
 function hotspot(sp, p, H){
   const f = H / HOT.T, k = Math.floor(f), u = sstep(0, 1, f - k), a = hotField(sp, p, H, k), b = hotField(sp, p, H, k + 1);
   const n = clamp(0.5 + ((a - 0.5) * (1 - u) + (b - 0.5) * u) / Math.hypot(1 - u, u), 0, 1); return 0.3 + 1.5 * n * n;
 }
-// Schools: a finer pattern (400 m) that swims 0.5–1 km an hour on each species' own heading. It averages 1, so it moves the bite
-// about within half an hour without changing the catch over a day. The sonar shows it.
-const SCHOOL = {cell:0.4, amp:0.3};
+// Schools: a finer pattern (400 m) that swims 0.5–1 km an hour. It averages 1, so it moves the bite about within half an hour without
+// changing the catch over a day. Since B2 (01.11.2026) the schools swim where the species is going at that time and place (migDir:
+// the skrei south-west to the spawning grounds in January-March, the mackerel north in summer, and so on) and wander where it is not,
+// in fields of SCHOOL.T hours that fade into each other, so a school can turn without the pattern jumping. The sonar shows the heading.
+const SCHOOL = {cell:0.4, amp:0.3, T:6};
+function schField(sp, p, H, k, si, v){
+  const d = migDir(sp, p, k, SCHOOL.T, 1, 0), tt = H - k * SCHOOL.T;
+  return noise2((p.x - d[0] * v * tt) / SCHOOL.cell, (p.y + d[1] * v * tt) / SCHOOL.cell, 60 + si + 31 * (k & 1023));
+}
 function school(sp, p, H){
-  const si = ALLSP.indexOf(sp), a = 2 * Math.PI * h2(si, 740), v = 0.5 + 0.5 * h2(si, 741);
-  return 1 - SCHOOL.amp / 2 + SCHOOL.amp * noise2((p.x - Math.sin(a) * v * H) / SCHOOL.cell, (p.y + Math.cos(a) * v * H) / SCHOOL.cell, 60 + si);
+  const si = ALLSP.indexOf(sp), v = 0.5 + 0.5 * h2(si, 741), f = H / SCHOOL.T, k = Math.floor(f), u = sstep(0, 1, f - k);
+  const a = schField(sp, p, H, k, si, v), b = schField(sp, p, H, k + 1, si, v);
+  const n = clamp(0.5 + ((a - 0.5) * (1 - u) + (b - 0.5) * u) / Math.hypot(1 - u, u), 0, 1);
+  return 1 - SCHOOL.amp / 2 + SCHOOL.amp * n;
 }
 // where a species' schools are heading (radians, map north up), for the sonar
-function schoolHeading(sp){ return 2 * Math.PI * h2(ALLSP.indexOf(sp), 740); }
+function schoolHeading(sp, p, H){
+  if (!p) p = S && S.boat ? S.boat.pos : {x:0, y:0}; if (H == null) H = S ? S.t / 60 : 0;
+  const f = H / SCHOOL.T, k = Math.floor(f), u = sstep(0, 1, f - k), a = migDir(sp, p, k, SCHOOL.T, 1, 0), b = migDir(sp, p, k + 1, SCHOOL.T, 1, 0);
+  return Math.atan2(a[0] * (1 - u) + b[0] * u, a[1] * (1 - u) + b[1] * u);
+}
 // The fjord lines for coastal cod along the whole coast (insideFjord) and the other rules are in 03e-rules.js.
 // Fiskeridirektoratet's statistical locations: the location's polygon from rules.json (03e-rules.js), or near Senja the nearest
 // representative point when there are no rule data
@@ -604,7 +619,8 @@ function stockHour(H){
   for (const K of cells){
     const x = gridKeyX(K), y = gridKeyY(K), v = stkGet(s, K), nb = (at(x - 1, y) + at(x + 1, y) + at(x, y - 1) + at(x, y + 1)) / 4;
     // regrowth has a smallest step, so a cell comes all the way back to 1 (rounding used to stop it at 0.876)
-    const g = v < 1 ? Math.max((1 - v) * 0.004, 0.0001) : 0;
+    // while the skrei passes, new fish swim into a fished cell on its way: the regrowth up to three times faster (skreiFlow, 03f-fiske.js)
+    const g = v < 1 ? Math.max((1 - v) * 0.004 * (1 + 2 * skreiFlow(K, H)), 0.0001) : 0;
     stkSet(nx, K, Math.round(Math.min(1, v + g + (nb - v) * 0.01) * 1e4) / 1e4);
   }
   S.stock = nx;

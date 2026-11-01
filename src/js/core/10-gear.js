@@ -532,7 +532,8 @@ function soakHour(s, H){
   // a line's bait: the tubs' kinds weighed by how many (an old set without them: makrell, as the old bait)
   const bw = s.kind === 'line' ? (s.baitW || {makrell:s.n}) : null, bwN = bw ? Object.values(bw).reduce((a, v) => a + v, 0) || 1 : 1, lineB = sp => { if (!bw) return 1; let v = 0; for (const k in bw) v += bw[k] * baitF(k, sp); return v / bwN; };
   let gen = 0;   // a species with its own stock layer (the Greenland halibut, stk) is taken from that, the rest from the common one
-  for (const sp in sel){ const r = 30 * G.q * units * sel[sp] * density(sp, mid, H) * luck(sp) * lineB(sp) * f * cond; if (r > 0){ add(sp, r, r / SPECIES[sp].size[0]); tot += r; if (!SPECIES[sp].stk) gen += r; else if (!s.dry) takeStock(mid, r, sp); } }
+  // the fish up and down in the water through the day (gearVertF, 03f-fiske.js): bottom gear takes more by day, the floating net by night
+  for (const sp in sel){ const r = 30 * G.q * units * sel[sp] * density(sp, mid, H) * luck(sp) * lineB(sp) * f * cond * gearVertF(sp, key, mid, H); if (r > 0){ add(sp, r, r / SPECIES[sp].size[0]); tot += r; if (!SPECIES[sp].stk) gen += r; else if (!s.dry) takeStock(mid, r, sp); } }
   if (!s.dry) takeStock(mid, gen);
   // amphipods (marflo) and hagfish eat what hangs dead in the gear after the first day
   const loss = (s.kind === 'line' ? 0.07 : 0.03) * sstep(20, 28, a);

@@ -97,10 +97,85 @@ const MIG = {
   sei(lat, lon, mf){
     return 1 + 1.2 * migBump(mf, 1.8, 1.4) * migBand(lat, 62, 65.5, 0.4) + 0.8 * migBump(mf, 4.5, 1.2) * sstep(64.5, 65.5, lat);
   },
+  // Capelin (HI, «Lodde», hi.no): spawns along the coast of Finnmark and Kola in March-April, and the cod follows it in to the coast
+  // (the «loddetorsk»). A pulse with the same weight over the season as the skrei pulse (peak 3.7 against 2.5, narrower), on the
+  // Finnmark coast from Loppa east (lon > 21.5, lat > 70.2); there the cod's spring comes half with the skrei front and half with it.
+  lodde(lat, lon, mf){ return 3.7 * migBump(mf, 3.3, 1.6); },
+  loddeW(lat, lon){ return 0.5 * sstep(70.0, 70.4, lat) * sstep(21.2, 21.8, lon); },
   // Snow crab (HI, «Snøkrabbe», hi.no): a newcomer in the Barents Sea, spreading west from the Russian side; fished in the east of the
   // Norwegian zone and in the Loophole, north of 72° N and east of 30° E (the corner of the game's frame). None along the coast.
   snokrabbe(lat, lon){ return sstep(28.5, 31, lon) * sstep(71.6, 72.4, lat); },
 };
+
+// ---- where the fish swim: the heading of the schools and of the good patches, by species, season and place ----
+// A compass bearing (0 north, clockwise, in the grid) blended from the species' migration at that time and place and a slow local
+// wander. Sources as the curves above (HI): the skrei goes south-west along the coast to the spawning grounds in January-March and
+// north-east back to the Barents Sea in April-May, and in Finnmark in to the coast after the capelin in March-April; the saithe out to
+// the spawning banks in January-March and in along the coast in April-June; the haddock out to the shelf edge to spawn in March-May;
+// the herring in to the spawning grounds in February-March, out to the Norwegian Sea in April-July and north-east to the wintering
+// fjords of Troms in September-November; the mackerel north along the coast in May-August and south and out in September-November.
+// The rest (pollack, ling, tusk, redfish, halibut, Greenland halibut) only wander. Out to sea is a smooth bearing by stretch of coast.
+const RAD_ = Math.PI / 180;
+function migOffshore(lat, lon){
+  // west off Vestlandet, west-north-west off Møre to Lofoten, north-west off Troms, north off Finnmark, south in the Skagerrak
+  const v = (b, w) => [Math.sin(b * RAD_) * w, -Math.cos(b * RAD_) * w];
+  const sk = 1 - sstep(58.3, 58.9, lat), fm = sstep(70.2, 70.7, lat) * sstep(21, 22.5, lon), tr = sstep(68.8, 69.4, lat) * (1 - fm), mo = sstep(61.5, 62.5, lat) * (1 - tr) * (1 - fm), we = Math.max(0, 1 - sk - mo - tr - fm);
+  const a = [[180, sk], [270, we], [295, mo], [325, tr], [5, fm]]; let x = 0, y = 0; for (const [b, w] of a){ const q = v(b, w); x += q[0]; y += q[1]; }
+  return Math.atan2(x, -y) / RAD_;
+}
+// {b: bearing in degrees, w: 0-1 how strongly the species is migrating there now}
+function migHeading(sp, lat, lon, mf){
+  const off = migOffshore(lat, lon), parts = [];
+  if (sp === 'torsk' && lat > 65.5){ const k = sstep(65.5, 66.5, lat); parts.push([225, 0.8 * k * migBump(mf, 1.5, 1.8)], [45, 0.8 * k * migBump(mf, 4.4, 1.2)]);
+    if (MIG.loddeW(lat, lon) > 0) parts.push([off + 180, 1.2 * MIG.loddeW(lat, lon) * migBump(mf, 3.2, 1.2)]); }
+  else if (sp === 'sei') parts.push([off, 0.6 * migBump(mf, 1.4, 1.5)], [off + 180, 0.6 * migBump(mf, 4.6, 1.6)]);
+  else if (sp === 'hyse') parts.push([off, 0.4 * migBump(mf, 3.8, 1.5)], [off + 180, 0.3 * migBump(mf, 7, 1.5)]);
+  else if (sp === 'sild') parts.push([off + 180, 0.8 * migBump(mf, 1.5, 1.1)], [off, 0.8 * migBump(mf, 5.2, 2)], [45, 0.7 * migBump(mf, 9.6, 1.5)]);
+  else if (sp === 'makrell') parts.push([0, 0.8 * migBump(mf, 6.2, 2.4)], [210, 0.8 * migBump(mf, 10, 1.5)]);
+  let x = 0, y = 0, w = 0; for (const [b, k] of parts){ if (k <= 0) continue; x += Math.sin(b * RAD_) * k; y += Math.cos(b * RAD_) * k; w += k; }
+  return w > 0 ? {b:Math.atan2(x, y) / RAD_, w:Math.min(1, Math.hypot(x, y))} : {b:0, w:0};
+}
+// The heading of a species' schools or patches in a period k (of T hours): the migration blended with a slow wander that differs from
+// place to place (a noise over ~100 km) and from period to period; mw is how much the migration may steer (the patches drift more
+// freely). It is worked out at the nodes of a 20 km grid, kept per node, period and kind, and read between the four nodes round a point,
+// so the pattern bends smoothly and has no seams. migDir gives the direction as a vector [east, north] (length 1 or less).
+const MIGN = {c:20, ll:new Map(), a:new Map()};
+function migNode(si, sp, ix, iy, k, T, mw, kind){
+  const key = ((gridKey(ix, iy) * 256 + (k & 255)) * 16 + si) * 2 + kind; let v = MIGN.a.get(key); if (v) return v;
+  const nk = gridKey(ix, iy); let ll = MIGN.ll.get(nk); if (!ll){ ll = natLL({x:(ix + 0.5) * MIGN.c, y:(iy + 0.5) * MIGN.c}); MIGN.ll.set(nk, ll); }
+  const seed = kind ? 700 : 740, wa = 2 * Math.PI * (h2(k, seed + si) + 0.35 * (noise2(ll.lon * 0.6, ll.lat * 1.2, seed + 13 * si + (k & 127)) - 0.5));
+  const m = migHeading(sp, ll.lat, ll.lon, mfOfH(k * T + T / 2)), w = m.w * mw;
+  v = [Math.sin(wa) * (1 - w) + Math.sin(m.b * RAD_) * w, Math.cos(wa) * (1 - w) + Math.cos(m.b * RAD_) * w];
+  if (MIGN.a.size > 60000) MIGN.a.clear(); MIGN.a.set(key, v); return v;
+}
+function migDir(sp, p, k, T, mw, kind){
+  const si = ALLSP.indexOf(sp), gx = p.x / MIGN.c - 0.5, gy = p.y / MIGN.c - 0.5, ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy;
+  const a = migNode(si, sp, ix, iy, k, T, mw, kind), b = migNode(si, sp, ix + 1, iy, k, T, mw, kind), c = migNode(si, sp, ix, iy + 1, k, T, mw, kind), d = migNode(si, sp, ix + 1, iy + 1, k, T, mw, kind);
+  const e = (a[0] * (1 - fx) + b[0] * fx) * (1 - fy) + (c[0] * (1 - fx) + d[0] * fx) * fy, n = (a[1] * (1 - fx) + b[1] * fx) * (1 - fy) + (c[1] * (1 - fx) + d[1] * fx) * fy;
+  const l = Math.hypot(e, n) || 1; return [e / l, n / l];
+}
+// the month as a float (0 = 1 January) for an hour
+function mfOfH(H){ const d = gDate(H); return d.getUTCMonth() + (d.getUTCDate() - 1) / 31; }
+
+// ---- the fish up and down in the water: by night most species rise from the bottom (HI; the diel vertical migration) ----
+// z: the share of the water column above the bottom where the fish stands, by day and by night. Bottom nets and lines fish what
+// stands near the bottom, the floating net what stands high; the jig is dropped to the fish, and bites best at dusk and dawn.
+const VERT = {torsk:[0.06, 0.25], hyse:[0.03, 0.1], sei:[0.3, 0.6], lyr:[0.2, 0.4], lange:[0.02, 0.05], brosme:[0.02, 0.05], uer:[0.1, 0.25],
+  kveite:[0.05, 0.15], blakveite:[0.03, 0.08], sild:[0.25, 0.75], makrell:[0.45, 0.6]};
+// night (0 day, 1 night) and twilight (0-1, the sun between 6° below and 4° above the horizon) of a 2 km cell, kept for the hour
+function cellNight(c, H){
+  const h = Math.floor(H); if (c.nH === h) return c;
+  const e = sunAt(h + 0.5, P(c.lat, c.lon)).el; c.nH = h; c.nt = 1 - sstep(-12, -2, e); const dt = Math.min(1, Math.abs(e + 1) / 5); c.tw = 0.5 + 0.5 * Math.cos(Math.PI * dt); return c;
+}
+function vertZ(sp, night){ const v = VERT[sp]; return v ? v[0] + (v[1] - v[0]) * night : 0.1; }
+// what a set gear gets of the species at the hour against the day's mean: bottom gear the fish near the bottom, the floating net the
+// fish high up (the mean over a day and a night is about 1, so the calibration of the gear holds)
+function gearVertF(sp, key, p, H){
+  const v = VERT[sp]; if (!v) return 1; const n = cellNight(lokOfCell(p), H).nt, z = vertZ(sp, n), zm = (v[0] + v[1]) / 2;
+  return key === 'garn:flyt' ? z / zm : (1 - z) / (1 - zm);
+}
+// the jig's bite through the day: best at dusk and dawn, when the fish feeds (up to +15 %)
+function biteF(sp, p, H){ if (!VERT[sp]) return 1; return 1 + 0.15 * cellNight(lokOfCell(p), H).tw; }
 
 // ---- the field from the notes: per species a Float32Array of locations × 12 months against Senja (NaN: no figure) ----
 // the neighbours of each location: the polygons in rules.json that share a corner (to 50 m)
@@ -179,6 +254,11 @@ function skreiFront(lat, H, T){
   // the spawning grounds go from Møre to Finnmark (HI): none south of Stad
   const v = seasonal(SPECIES.torsk.skrei, H + d * 24) * sstep(61.8, 62.6, lat); if (c) c[ck] = v; return v;
 }
+// the spring cod's pulse at a cell: the skrei front, and in Finnmark half of it with the capelin (MIG.lodde)
+function skreiPulse(c, H, T){
+  const lw = MIG.loddeW(c.lat, c.lon), f = skreiFront(c.lat, H, T); if (lw <= 0) return f;
+  return f * (1 - lw) + lw * MIG.lodde(c.lat, c.lon, T && T.fk ? T.fk.mf : mfOfH(H));
+}
 // What density() puts where av was: the species' availability at a place (q from denPlace, q.c the cell) in the hour T (denTime), with
 // the spawning stock (T[sp].av and .skrei carry stockF). The cell's location is looked up once per 2 km cell, the month once per hour.
 function fkAvail(sp, q, T){
@@ -186,7 +266,7 @@ function fkAvail(sp, q, T){
   if (sp === 'torsk'){
     if (q.skr < 0) q.skr = skreiSpot(q.p, q.d, q.E);
     const b = F && l >= 0 && F.base[l] === F.base[l] ? F.base[l] : 1, x = F && l >= 0 && F.skrei[l] === F.skrei[l] ? F.skrei[l] : 1;
-    return t.av * b + skreiFront(c.lat, T.H, T) * t.sf * q.skr * x;
+    return t.av * b + skreiPulse(c, T.H, T) * t.sf * q.skr * x;
   }
   let v = F && l >= 0 ? fkAt(F.m, l, T.fk) : NaN;
   const mig = MIG[sp];
@@ -204,5 +284,13 @@ function areaF(sp, p, H){
 function skreiShare(p, H){
   const c = lokOfCell(p), F = fkBuild() && FK.af.torsk, l = c.l;
   const b = F && l >= 0 && F.base[l] === F.base[l] ? F.base[l] : 1, x = F && l >= 0 && F.skrei[l] === F.skrei[l] ? F.skrei[l] : 1;
-  const k = seasonal(SPECIES.torsk.av, H) * b, sk = skreiFront(c.lat, H) * skreiSpot(p) * x; return sk / (k + sk + 1e-9);
+  const k = seasonal(SPECIES.torsk.av, H) * b, sk = skreiPulse(c, H) * skreiSpot(p) * x; return sk / (k + sk + 1e-9);
+}
+// How much skrei is passing through a 2 km stock cell (gridKey of S.stock) at an hour, 0-1: the spring pulse at the cell against its top,
+// times how much skrei the location has in the notes. A fished cell on the skrei's way fills faster while it passes (stockHour).
+function skreiFlow(K, H){
+  const F = fkBuild() && FK.af.torsk; if (!F) return 0;
+  const c = lokOfCell({x:(gridKeyX(K) + 0.5) * 2, y:(gridKeyY(K) + 0.5) * 2}), l = c.l; if (l < 0) return 0;
+  const x = F.skrei[l] === F.skrei[l] ? Math.min(1, F.skrei[l]) : 0; if (x <= 0) return 0;
+  return x * clamp(skreiPulse(c, H) / 2.5, 0, 1);
 }

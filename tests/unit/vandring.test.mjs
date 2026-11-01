@@ -54,4 +54,35 @@ export default function (t){
   t.eq(ALLSP.slice(-4), ['blakveite', 'sild', 'makrell', 'snokrabbe'], 'de nye artene ligger sist i ALLSP, etter blåkveita');
   t.eq(ALLSP.indexOf('krabbe'), 8, 'krabben er fortsatt den niende');
   K.set('S', K.newState()); t.ok(K.recList().length === PLAYSP.length && K.recList().every(r => !K.SPECIES[r.sp].npc), 'rekordene viser ikke de nye artene');
+
+  // ---- the fish move: where the schools swim, up and down in the water, the capelin, the skrei streaming in (B2, 01.11.2026) ----
+  const ang = (a, b) => Math.abs(((a - b) % 360 + 540) % 360 - 180);
+  const mh = K.migHeading('torsk', 68.2, 14.5, 1.5), mo = K.migHeading('torsk', 68.2, 14.5, 4.4), mb = K.migHeading('torsk', 60.4, 5.0, 1.5);
+  t.ok(mh.w > 0.5 && ang(mh.b, 225) < 30, `skreistimene i Lofoten går sørvest i februar (${mh.b.toFixed(0)}°, styrke ${mh.w.toFixed(2)})`);
+  t.ok(mo.w > 0.4 && ang(mo.b, 45) < 30, `og nordøst ut igjen i slutten av april (${mo.b.toFixed(0)}°)`);
+  t.ok(mb.w === 0, 'torsken i Bergen vandrer ikke (bare vimser)');
+  const mk = K.migHeading('makrell', 62, 5, 6.2), sw = K.migHeading('sild', 69.5, 17, 9.6);
+  t.ok(mk.w > 0.5 && ang(mk.b, 0) < 30 && sw.w > 0.4 && ang(sw.b, 45) < 45, `makrellen går nord i juli (${mk.b.toFixed(0)}°), silda nordøst mot Troms i oktober (${sw.b.toFixed(0)}°)`);
+  // the heading is smooth in space (no seams at the 20 km nodes) and the schools turn without jumping
+  const q0 = K.P(68.2, 14.5), kk = Math.floor(H(1, 10) / K.SCHOOL.T); let worst = 0;
+  for (let i = 0; i < 40; i++){ const a = K.migDir('torsk', {x:q0.x + i * 0.5, y:q0.y + i * 0.37}, kk, K.SCHOOL.T, 1, 0), b = K.migDir('torsk', {x:q0.x + i * 0.5 + 0.05, y:q0.y + i * 0.37}, kk, K.SCHOOL.T, 1, 0); worst = Math.max(worst, Math.hypot(a[0] - b[0], a[1] - b[1])); }
+  t.ok(worst < 0.01, `retningen er jevn i rommet: høyst ${worst.toFixed(4)} over 50 m`);
+  let jump = 0, mean = 0, n = 0; for (let m = 0; m < 600; m++){ const h0 = H(1, 10) + m / 60, a = K.school('torsk', q0, h0), b = K.school('torsk', q0, h0 + 1 / 60); jump = Math.max(jump, Math.abs(a - b)); }
+  for (let i = 0; i < 400; i++){ mean += K.school('torsk', {x:q0.x + (i % 20) * 0.13, y:q0.y + Math.floor(i / 20) * 0.17}, H(1, 10) + i * 0.7); n++; }
+  t.ok(jump < 0.03 && Math.abs(mean / n - 1) < 0.05, `stimene snur uten hopp (høyst ${jump.toFixed(3)} per minutt) og gir 1 i snitt (${(mean / n).toFixed(3)})`);
+  // up and down in the water: higher by night, the bottom gear by day and the floating net by night, about 1 over a day
+  const hus = K.GROUNDS[0].p; let bot = 0, flt = 0, bD = 0, bN = 0; for (let h = 0; h < 24; h++){ const hh = H(2, 10) + h - 8, g = K.gearVertF('torsk', 'garn', hus, hh); bot += g; flt += K.gearVertF('sei', 'garn:flyt', hus, hh); if (h === 12) bD = g; if (h === 0) bN = g; }
+  t.ok(K.vertZ('sild', 1) > 2 * K.vertZ('sild', 0) && K.vertZ('torsk', 1) > K.vertZ('torsk', 0), 'silda og torsken står høyere i vannet om natta');
+  t.ok(bD > bN && Math.abs(bot / 24 - 1) < 0.08 && Math.abs(flt / 24 - 1) < 0.25, `bunngarnet tar mer torsk om dagen (${bD.toFixed(2)} mot ${bN.toFixed(2)} om natta), snittet over døgnet ${(bot / 24).toFixed(2)}; flytegarnet ${(flt / 24).toFixed(2)}`);
+  let bmax = 0, bnoon = K.biteF('torsk', hus, H(5, 21) + 3); for (let h = 0; h < 24; h += 0.25) bmax = Math.max(bmax, K.biteF('torsk', hus, H(2, 10) - 8 + h));
+  t.ok(bmax > 1.1 && bnoon < 1.02, `juksa biter best i skumringen (${bmax.toFixed(2)}), midt på dagen som før (${bnoon.toFixed(2)})`);
+  // the capelin: in Finnmark the cod's spring comes later than the skrei front alone, in March-April
+  const cB = K.lokOfCell(K.P(...BAT)), cL = K.lokOfCell(K.P(...LOF)), pb = K.skreiPulse(cB, H(3, 10)), pf = K.skreiFront(cB.lat, H(3, 10)), pl = K.skreiPulse(cL, H(3, 10));
+  t.ok(pb > pf + 0.3 && pb > pl, `lodda trekker torsken inn til Finnmark i april (${pb.toFixed(2)} mot skreifronten alene ${pf.toFixed(2)}, Lofoten ${pl.toFixed(2)})`);
+  let iB = 0, iS = 0; for (let d = 0; d < 150; d++){ iB += K.skreiPulse(cB, H(0, 1) + d * 24); iS += K.skreiFront(K.MIG.latRef, H(0, 1) + d * 24); }
+  t.ok(Math.abs(iB / iS - 1) < 0.2, `lodda flytter torsken i tid, ikke mengden over våren (${(iB / iS).toFixed(2)} mot Senja)`);
+  // the skrei streams in: a fished cell on its way fills faster while it passes, not in summer and not in Bergen
+  const kOf = (lat, lon) => { const p = K.P(lat, lon); return K.gridKey(Math.floor(p.x / 2), Math.floor(p.y / 2)); };
+  const fl = K.skreiFlow(kOf(...LOF), H(2, 15)), fj = K.skreiFlow(kOf(...LOF), H(6, 15)), fb = K.skreiFlow(kOf(...BERGEN), H(2, 15));
+  t.ok(fl > 0.1 && fj < 0.02 && fb === 0, `skreien strømmer inn i Lofoten i mars (${fl.toFixed(2)}), ikke i juli (${fj.toFixed(2)}) eller i Bergen (${fb})`);
 }

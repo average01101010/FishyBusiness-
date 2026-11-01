@@ -96,7 +96,7 @@ function heatReadout(){
   let h = '';
   if (S.tut && S.tut.catch) h += '<p class="hr-note">' + L('Første tur: full last er garantert.', 'First trip: a full hold is guaranteed.') + '</p>';
   if (HEATC.tier === 'sonar' && !(SPECIES[heatSpecies()] || {}).shell){ const sp = heatSpecies(), s2 = sp === 'all' ? 'torsk' : sp, nm = {torsk:['Torskestimene', 'The cod schools'], hyse:['Hysestimene', 'The haddock schools'], sei:['Seistimene', 'The saithe schools'], blakveite:['Blåkveita', 'The Greenland halibut']}[s2] || [SPECIES[s2].no.replace(/^./, c => c.toUpperCase()) + 'stimene', 'The ' + SPECIES[s2].en.toLowerCase() + ' schools'];
-    h += '<p class="hr-note">' + nm[S.lang === 'no' ? 0 : 1] + L(' trekker mot ', ' are heading ') + compassOf(schoolDrift(s2).a) + '.</p>'; }
+    h += '<p class="hr-note">' + nm[S.lang === 'no' ? 0 : 1] + L(' trekker mot ', ' are heading ') + compassOf(schoolDrift(s2, S.boat.pos, S.t / 60).a) + '.</p>'; }
   return h;
 }
 // where a value sits on the scale (0–1), and the scale as a CSS gradient in the same colours as the map

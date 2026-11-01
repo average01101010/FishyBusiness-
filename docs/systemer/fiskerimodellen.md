@@ -42,8 +42,8 @@
 
 - **Skreipulsen** (`skrei`): 0,6 / 2,0 / 2,5 / 0,8 for januar–april, 0,1 i desember. Den virker bare på eksponerte banker på 40–250 m og på de tre ytre feltene (`skreiSpot`). Fra B2 (5.3c) er dette pulsen på Senjas breddegrad. Den går som en front langs kysten, og mengden per sted kommer fra sluttsedlene.
 - **`density(sp, p, H)`** er den ene kilden for fisk i spillet: fangst, ekkolodd, varmekart, garn, line, jukse-spillet og pubrykter. 30 × `density` × innsats er kg i timen (én person med håndjuksa har innsats 2). Den er delt i `denPlace(p)` (det alle arter deler: land, dybde, eksponering, helling og avstand til feltene), `denTime(H)` (sesongtallene, lagret for én time) og `denSp()` (artens egen sum). Delingen ga nøyaktig de samme tallene (kontrollsum over rutenett rundt alle feltene).
-- **Fisken trekker** (`hotspot`, `HOT`): Gode flekker på et mønster på 3,5 km. To felt overlapper hele tiden, hvert glir sin vei med 0,7–1,7 km i døgnet og toner inn og ut over 240 timer. Før hoppet hele mønsteret hver 120. time. Snittet er det samme som før (0,742 mot 0,737).
-- **Stimer** (`school`, `SCHOOL`): et finere mønster (400 m) som svømmer 0,5–1 km i timen i hver arts egen retning. Det gir ±15 % og er 1 i snitt, så fangsten over en dag er den samme, men bittet på ett sted kommer og går i løpet av en halvtime. Sonaren viser retningen (`schoolDrift`).
+- **Fisken trekker** (`hotspot`, `HOT`): Gode flekker på et mønster på 3,5 km. To felt overlapper hele tiden, hvert glir sin vei med 0,7–1,7 km i døgnet og toner inn og ut over 240 timer. Fra B2 styrer artens vandring der og da retningen (`migDir`, se 5.3c «Fisken beveger seg»). Før hoppet hele mønsteret hver 120. time. Snittet er det samme som før (0,742 mot 0,737).
+- **Stimer** (`school`, `SCHOOL`): et finere mønster (400 m) som svømmer 0,5–1 km i timen. Fra B2 svømmer stimene dit arten vandrer på stedet og i sesongen, i felt på 6 timer som toner over i hverandre (se 5.3c). Før hadde hver art én fast retning for hele kysten. Det gir ±15 % og er 1 i snitt, så fangsten over en dag er den samme, men bittet på ett sted kommer og går i løpet av en halvtime. Sonaren viser retningen (`schoolDrift`).
 - **Bestanden** (`STK`, `S.stock`, ruter på 2 km): Den leses mellom de fire nærmeste rutene (`gridBilinear`), og fangsten trekkes fra de samme fire med samme vekter (`stockW`). Nedtrekket der du fisker er kg/K·Σw², altså mykere enn før, men det samlede uttaket er det samme. Gjenveksten har et minste steg og runder til 1e-4, så en rute kommer helt tilbake til 1: en rute på 0,5 er full igjen etter rundt 42 dager. Før stoppet den på 0,876, og krabbe på 0,667. Krabbe (`S.cstk`) er fortsatt én verdi per rute, som før, fordi teinekalibreringen hviler på det og varmekartet ikke viser krabbe.
 - **Fangst:** `density() × luck(sp) × targetF(sp) × innsats × værstraff`, deretter trekkes hver fisk for seg med egen vekt.
   - Fisk under minstemålet slippes.
@@ -164,7 +164,36 @@
   - **Justert for redskap fjerner noe av sesongen.** Garna brukes mest i skreisesongen, så det nasjonale snittet per garnlanding har alt skreien i seg. Det gjelder alle steder likt, også Senja, så forholdet mellom stedene står.
   - **Seien øker mye i februar–mars** langs Lofoten, Bodø, Bergen og Møre (3–5 ganger før). Grunnen er at Senjas egen sei per landing er lavest nettopp i mars (0,21 mot 0,6–1,5 andre steder), så forholdet blir stort. Mange lokasjoner treffer taket på 5. Gisundet (05-41) har mye sei per landing om vinteren (seinot). Derfor er feltet på første tur 85 kg i timen etter garantien (22 før), og `heattest` sjekker nå at feltet faller under 45 % av ringen. Bør ses i spilltest: blir det for mye, er taket (`FK.hi`) eller glattingen stedet å skru.
   - **`calib` sammenligner ikke helt likt** før og etter: havpunktene trekkes med `Math.random` etter oppstarten, og flere arter i `ALLSP` gir andre trekk.
-- **Tester:** `tests/unit/vandring.test.mjs` (21 sjekker), `bktest` (frøene: blåkveita er sist av spillerens arter), `guidetest` (ti arter: `PLAYSP`), `heattest`.
+- **Fisken beveger seg** (Jonas 01.11.2026: «En fisk er jo et levende vesen som beveger seg … Kjør på med alt»):
+  - **Retningen etter art, sesong og sted** (`migHeading`, `migDir`):
+    - Stimene og de gode flekkene svømmer dit arten vandrer der og da, blandet med en langsom vimsing som er ulik fra sted til sted (støy over ~100 km) og fra periode til periode.
+    - **Skreien** går sørvest langs kysten mot gytefeltene i januar–mars og nordøst tilbake i april–mai (nord for 66° N). I Finnmark går den inn mot land etter lodda i mars–april.
+    - **Seien** går ut på gytebankene i januar–mars og inn langs kysten i april–juni.
+    - **Hysa** går ut mot eggakanten i mars–mai.
+    - **Silda** går inn mot gytefeltene i februar–mars, ut i Norskehavet i april–juli og nordøst mot vinterfjordene i Troms i september–november.
+    - **Makrellen** går nord i mai–august og sør og ut i september–november.
+    - **De andre artene** vimser bare.
+    - **«Ut til havs»** er en jevn kurs per kyststrekning (`migOffshore`).
+    - **Uten skjøter:** retningen regnes i knutepunkter hver 20. km per art og periode, lagres der og leses mellom de fire rundt et punkt. Mønsteret bøyer seg da jevnt (høyst 0,0001 forskjell over 50 m).
+    - **Stimene:** feltene varer 6 timer og toner over i hverandre, så en stim kan snu uten at mønsteret hopper (høyst 0,012 per minutt), og snittet er 1. Flekkene beholder sine 120 timer, og vandringen styrer 70 % av retningen.
+    - Sonaren sier hvor stimene trekker der båten er (`schoolDrift(sp, p, H)`).
+  - **Opp og ned i vannet** (`VERT`, `vertZ`, `cellNight`; HI om døgnvandringen):
+    - Hver art har en høyde over bunnen om dagen og om natta, som andel av vannsøylen: torsk 0,06/0,25, hyse 0,03/0,1, sei 0,3/0,6, sild 0,25/0,75, makrell 0,45/0,6, de dype artene nær bunnen.
+    - Natta regnes fra solhøyden (`sunAt`) per 2 km-rute og time.
+    - **Bunngarn og line** tar fisken nær bunnen, og **flytegarnet** den som står høyt (`gearVertF`). Snittet over et døgn er rundt 1, så kalibreringen av redskapet står: bunngarnet tar 1,11 om dagen og 0,89 om natta i mars, snittet er 1,01.
+    - **Juksa** biter inntil 15 % bedre i skumringen (`biteF`, solen mellom −6° og +4°). Midt på dagen er den som før, og under midnattssola er det ingen skumring.
+    - **Ekkoloddet** tegner merkene der torsken står i vannet (`echoSvg`).
+  - **Lodda** (HI, «Lodde»): gyter langs kysten av Finnmark og Kola i mars–april, og torsken følger den inn.
+    - Fra Loppa og østover (`MIG.loddeW`) kommer halvparten av torskens vår med skreifronten og halvparten med loddepulsen (topp 3,7, samme vekt over våren som skreipulsen).
+    - Båtsfjord i april: 2,23 mot 0,76 med fronten alene. Mengden over våren er den samme (1,00 mot Senja).
+  - **Skreien strømmer inn** (`skreiFlow`): mens skreien går forbi, fylles en nedfisket rute på dens vei opptil tre ganger raskere. Det er fordi ny fisk svømmer inn, ikke fordi den gamle vokser. Det er ingenting i juli og ingenting i Bergen.
+    - Innsig fra naborutene fantes alt (1 % i timen mot snittet av de fire rundt, `stockHour`). Det har jeg sagt feil om tidligere.
+  - **Ikke ennå:** skreien som én mengde, der det som tas i Finnmark i januar mangler i Lofoten i mars. Spillerne tar for lite til at det merkes uten flåten, så det bygges i B3 sammen med flåtetrykket `F`. Fisken reagerer heller ikke på temperatur, strøm (bare kveita, ved strømstille) eller vær.
+  - **Målt:**
+    - `simday` 350 / 350 / 326 / 350 kg (+9,8 % i juli, innenfor ±10 %; tilfeldige trekk og stimmønsteret, ikke skumringen).
+    - `density` rundt +1 µs per kall (median 18,2 → 19,2 µs, tre kjøringer hver, vekselvis; maskinen svinger ±15 %).
+    - Grønne: `heattest`, `geartest`, `jigalongtest`, `bktest` og `r4test`.
+- **Tester:** `tests/unit/vandring.test.mjs` (33 sjekker), `bktest` (frøene: blåkveita er sist av spillerens arter), `guidetest` (ti arter: `PLAYSP`), `heattest`.
 
 ## 5.33 Fiskeguiden (Jonas 08.10.2026)
 
