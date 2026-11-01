@@ -504,8 +504,13 @@ function dynAuto(d, dtG){
     if (ds < 4 && d.u > vCmd + 0.02) d.u = Math.max(vCmd + 0.02, d.u - cal.aC * h);
   }
   // what the model could not see: the last bit of land under her (a route the player drew through it, or a corner cut too fine)
+  // (on a leg the route called safe she is held back where she was and the net under Autonav finds a way round from there, as for
+  // the shallows seen on the line ahead (sailReplan, 05-vessels.js); only the player's own unsafe leg puts her aground. Before, a
+  // corner cut on her radius or a drift off the line at speed ran her aground on an Autonav route, tilbakemelding #96, 26.10.2026)
   const a = {x:X0 / 1000, y:Y0 / 1000}, to = {x:d.X / 1000, y:d.Y / 1000}; let gp = null; try { gp = Math.hypot(d.X - X0, d.Y - Y0) > 0.01 ? groundCheck(a, to) : null; } catch (e){}
-  if (gp){ if ((pl.unsafe && pl.unsafe[pl.idx]) || Math.abs(d.u) > 1.5){ dynWrite(b, d); runAground(gp); return; } d.X = X0; d.Y = Y0; d.u = 0; d.v = 0; }
+  if (gp){ if (pl.unsafe && pl.unsafe[pl.idx]){ dynWrite(b, d); runAground(gp); return; }
+    const fast = Math.abs(d.u) > 1.5; d.X = X0; d.Y = Y0; d.u = 0; d.v = 0;
+    if (fast && !pl.replan){ d.r = 0; dynWrite(b, d); if (!sailReplan(pl, b, gp)) runAground(gp); return; } }
   DYN.nm += Math.hypot(d.X - X0, d.Y - Y0) / 1000 / NM;
   dynWrite(b, d);
 }
