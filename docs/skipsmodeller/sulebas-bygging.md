@@ -128,7 +128,7 @@ det ga ujevn kvalitet mellom båtene og ble byttet ut til slutt. Regel for neste
 
 Dette er den viktigste delen å ta med videre. Etter hver endring:
 
-1. **Rendre fra fotovinklene** (`scratchpad/r38/shape.py`, ett navn per vinkel: `sq`, `pq`, `aer`, `slipq`, `sternv`, `sqz`,
+1. **Rendre fra fotovinklene** (nå `tools/boats/qa/shots.py` for K1–K7; for piloten `scratchpad/r38/shape.py`, ett navn per vinkel: `sq`, `pq`, `aer`, `slipq`, `sternv`, `sqz`,
    `whaft`, `chute`, `fcrane`, `fmast`, `rmast`, `sbowair`, `pmid`, `ustern`, `fcair`): himmellys 0,45, eksponering −1,0, så
    det hvite ikke brenner ut. Sammenlign med fotoet side om side; skriv ned hvert avvik.
 2. **Overlegg mot sidebildet** (`overlay3.py x0 x1 z0 z1 px/m`): ortografisk rendring fra babord i den målte skalaen, lagt over
@@ -210,6 +210,307 @@ Resultatet kunne vært bedre med en høyere grad av nøyaktighet og oppløsning 
 
 Med de kildene og de materialene ville den samme arbeidsmåten gitt en modell som er vanskelig å skille fra fotografiet.
 
+## 11. Lært av revisjonen av trebåten (31.10.2026)
+
+Revisjonen av `trebat` (`snekke23.py`, `trebat-grunnlag.md`, `trebat-bygging.md`) var den første båten etter piloten, og den første
+uten et eneste bilde. Dette gjelder alle båter som revideres eller bygges etter den.
+
+**Uten bilder: kontroller mot dataene.**
+- Skriv en `check()` i skriptet som regner modellen mot `VESSELS` og tabellene: lengde over alt, største bredde, dybde, og **volumet
+  under vannlinja mot deplasementet** (snittenes areal, Simpson langs lengden, ganget med 1,025). Den fant at det gamle skroget ga
+  3,26 t mot 1,9 t i dataene, en feil ingen hadde sett fordi ingen hadde regnet. Rett formen (kjølens dybde, reising, kimming), ikke
+  dataene, med mindre en kilde sier noe annet.
+- Overlegget mot en linjetegning tegnet fra tabellene sjekker at modellen følger sine egne mål. Si i grunnlaget at det ikke er et foto.
+
+**Klasjsjekken må måle riktig.**
+- Mål avstanden fra punktet til bordenes innside **langs normalen i snittet** (nærmeste punkt på snittkurven), ikke vannrett ved samme
+  høyde: den vannrette målingen ga tusenvis av falske treff der bunnen er nesten flat.
+- Unnta bare det som skal ligge utenpå (lister, nagler), etter materialet.
+- Det som var galt, hadde nesten alltid samme årsak: **en del målt midt på seg selv der skroget smalner** (akterskipet, baugen) eller
+  der sida har utfall. Mål bredden i den smale enden og i den laveste høyden delen når, og sett spant inn etter hvor fort sida smalner.
+
+**Klinkbygd skrog som én flate** (oppskriften står i `snekke23.py`, `hull`): ett rutenett per side med rader etter bordgangene, to
+rader i hvert land (bordkanten mellom dem), bordet skrått fra landet til neste land, innsida trukket inn bordtykkelsen langs normalen.
+Hvert bords hette lander på sponningen i sin egen høyde (`eaten`, `land_g`), og landet høvles bort de siste 0,45 m (gangene).
+`remove_doubles` og `dissolve_degenerate` rydder bordene som har sluttet; skjær vannlinja med `bisect_plane` så tjæra får skarp kant
+i stedet for trapper av flater.
+
+**Spillet stiller krav til modellen som ikke står i planlisten.** Slå dem opp før lanterner, stenger og soner plasseres:
+- **Rorkulten svinger 41° hver vei** (`13-instruments.js`: `wheelA × 0,3`, høyst 2,4 rad). Ingenting på akterdekket innenfor
+  rorkultens lengde fra rorhodet.
+- **Vimpelregelen** (`mastTop`): en hvit lykt som står høyere enn flaggstanga og mer enn 1 m fra den, regnes som en mast, og båten får
+  vimpel (`penshot`). Åpne båter skal ha stanga høyest.
+- **Registreringsmerket** (`regmarktest`): flater utenfor sone 1 som vender ut der merket skal stå, teller som noe som stikker ut.
+  Nagler, bordkanter og annet malingen går over, skal være i skrogets sone.
+- **Middelsmodellen** (`vessel3d`): delene (rorkult, propell) tegnes oppå `lodm`, og summen må holde 120 000 punkter. Sett
+  `bpyutil.LODM_TRIS` lavere i skriptet når båten har deler.
+- **Skroget** måles i båndet −0,3 til 1,5 m over vannlinja: −6 % til +3 % av lengden og ±5 % av bredden.
+
+**Lanternene på små båter:** under 12 m skal den hvite rundtlysende stå minst 1 m over sidelanternene når den føres sammen med dem
+(COLREG vedlegg I 2(d)). Den gamle trebåten hadde 0,84 m. Legg en sjekk i `check()`. Unntaket «under 7 m» gjelder ikke en båt på
+nøyaktig 7,00 m.
+
+**Miljøet og testene.**
+- `bpy 4.5.4` krever Python 3.11: `uv venv -p /usr/bin/python3.11 /opt/bpyenv && VIRTUAL_ENV=/opt/bpyenv uv pip install bpy==4.5.4 pillow`.
+- **Kjør aldri Blender-rendring og en SwiftShader-test, eller to SwiftShader-sider, samtidig.** Skjermbildene går ut på tid (120 s)
+  og testen blir rød uten at noe er galt. Kjør testene etter hverandre i bakgrunnen med logg per test.
+- Tidsbruken for én båttype: `vessel3d` 4 min, `brotest` 3, `lanterntest` 1, `vesseltest` 2, `regmarktest` 1, `penshot` 10–12,
+  `jigshot` 13, `potshot` 10, `anchor3d` 7–12, `deckshot` over 50 (alle båter, går ut på tid; kjør den bare når dekksplassene er endret).
+- **Skill det som var rødt fra før:** legg en `git worktree` av utgangspunktet, bygg den, og kjør de røde testene mot den med
+  `KYST_DIST=<worktree>/dist`. Da vet du hva du har gjort, og hva som var der.
+- Ta før-skjermbildene fra spillet **før** eksporten (bygget har fortsatt den gamle modellen). `tests/t23shot.py` (`TAG=for`/`etter`)
+  er malen for begge formater, utenfra og fra skipperens plass.
+- Sjekk at arbeidsgrenen har spillet: grenen kan stå på første commit, og da må den bygges på den nyeste grenen.
+
+**Størrelsen.** Startbåten gikk fra 0,85 til 5,3 MB. For båter alle laster ved start (trebåten, skiffen), se på stasjonstallet
+midtskips der skroget er nesten rett, før detaljene ellers tas ned.
+
+## 12. Lært av revisjonen av skiffen (31.10.2026)
+
+Revisjonen av `skiff` (`skiff59.py`, `skiff-grunnlag.md`, `skiff-bygging.md`) var den andre uten bilder, og den første der modellen
+viste seg ikke å være i bruk i spillet. Dette gjelder alle båter etter den.
+
+**Sjekk at spillet faktisk viser modellen du reviderer, før du begynner.**
+- Før-bildene fra spillet viste den gamle håndlagde JS-skiffen, ikke Blender-modellen: `glbHas` husket «nei» fra før modellfilene var
+  hentet (`bootData`), og `VGEO.skiff` ble bestemt da siden lastet. Feilen hadde stått i to dager uten at noen så den. Spør spillet
+  (Playwright: `glbHas(t)`, `G3.SK.hullT`, `geoOf(t)`) og se på før-bildene med det i tankene: ligner de skriptets rendringer?
+- En båt som tegnes av et håndsett (`hand`, `12-skiff.js`) henter skrog, ratt, glass, skjermer og plassene fra modellen bare når
+  `buildSkiff`/`handKit` finner den. Øyet på broa kommer fra `GEO(type)`; sjekk at det står bak konsollen, og at skjermene synes over
+  knappene (`hp`).
+
+**Gå gjennom det arvede like kritisk som det nye.** Skjermene i det gamle skriptet hadde toppen mot skipperen og vendte ned (planet var
+lent feil vei; `nrm` snudde bare flaten). Jonas så det, ikke sløyfen. Sjekk for hver plate hvilken vei den vender mot den som ser på den.
+
+**Alt skal være festet slik det er på en ekte båt.** Vindskjermen svevde 6 cm over konsollen, og bøylens bein sto i lufta utenfor den.
+For hvert beslag: hva holder det, og hvor går boltene? Et bilde rett mot festet (nærbilde i `shots.py`) avslører det.
+
+**Spillets utstyr på modellens plasser må gi en arbeidsflyt som går an.** Sløyebordet (`work.table`) sto bak skipperen oppå setet, og
+blødekaret ved setet. Se på skjermbildene fra spillet med fisket for øye: fiskeren ved ripa og haleren, blødekaret ved ham, sløyebordet
+med plass å stå, fangstkaret med is ved bordet, avfallet over ripa. Gir spillets bord ingen god plass, får båten sitt eget (`work.own`,
+`top`), som trebåten og skiffen.
+
+**Klasjsjekken må også prøve skrogets egne flater.** En kolonne for en luke (±0,58 m) ble ikke klemt inn der båten smalner, og en
+strimmel av kastedekket stakk ut gjennom sida forut. Sjekken prøvde bare utstyret. Alle faste kolonner og rader i et nett skal klemmes
+inn til det som omgir dem, og sjekken skal ta med dekkene og foringen i skrogets nett.
+
+**Flaten skal ikke bytte oppdeling brått.** Radene opp sida sto på faste høyder ved podene og klappet sammen der kimmingen steg over dem;
+det ga en kile i skyggen på baugen. Gli over fra én oppdeling til en annen over en meter.
+
+**Fargegrensene følger skrogets linjer** (planlisten kap. 29). Skjær dem med `bisect_plane` på skrå plan (skiffen: 15 mm/m forover), ikke
+vannrett, og mal etter hvilken side av planet flaten ligger.
+
+**Det som stikker ut over ripa, teller i `vessel3d`** (bredden ±5 %, målt i båndet −0,3 til 1,5 m over vannlinja). Sløyebordet stakk
+16 cm ut og gjorde skroget 2,60 m bredt mot 2,45. Hold slikt innenfor rundt 6 cm forbi fenderlista.
+
+**Felles beslag, også det spillet beveger.** Det som gjentar seg på flere båter, lages i `fittings.py` før det brukes: `helm_wheel`,
+`outboard` (etter hestekrefter), `cleat`, `side_lantern`, `allround_lantern`, `bow_roller`, `hatch_lid`, `tread_plate`, `hole_lining`,
+`loft`. En del spillet dreier eller flytter (rattet), eksporteres i spillets egen ramme for den (`wheel`: aksen langs +z mot skipperen),
+så spillet kan bruke modellens i stedet for sitt eget.
+
+**Kameraene i planlisten kap. 30.3, også K6 om natta.** Lanternene ses best tent; et nattbilde i Blender (himmelen nesten svart,
+lanternene med sterk emisjon) viser om de står og vender riktig.
+
+**Miljøet og testene.**
+- Python-Playwright: `pip install playwright==1.63.0` (samme versjon som Chromium i `/opt/pw-browsers`); ikke `playwright install`.
+- Kjør testene mot det endelige bygget: hver ny eksport krever nytt bygg og at testene som dekker båten kjøres på nytt.
+- `pkill -f` med et mønster som står i ditt eget kommandoskall, dreper skallet. Stopp bakgrunnsjobber etter navn på skriptet alene.
+- Middelsmodellen: sett `LODM_TRIS` til 40 000 minus delene spillet tegner oppå den (skiffen: motoren og propellen, 3 172).
+- Sjekk GLB-ens `name` og andre felt i `extras` for ekte navn (B20): skiffens hadde produsentens.
+
+## 13. Lært av revisjonen av plastsnekka (01.11.2026)
+
+Revisjonen av `snekke` (`snekke26.py`, `snekke-grunnlag.md`, `snekke-bygging.md`) var den tredje uten bilder, og den første med kjøl,
+innenbords propell i brønn og et dørhus med styreplass. Dette gjelder alle båter etter den.
+
+**Regn ut det gamle skroget før du ser på det.** Det gamle skriptets snitt ga 10,5 t mot 3,0 t i dataene, og ingen hadde sett det fordi
+bildene så riktige ut over vannet. Last skriptet med `bpy` byttet ut med en tom modul (`sys.modules['bpy'] = types.ModuleType('bpy')`) og
+integrer snittene: det tar sekunder, uten Blender. Samme triks tegner spantrisset og profilen med PIL (`lines.py`), og formen kan da
+rettes mot volumet i mange runder før noe rendres.
+
+**Vannlinjebredden kan ikke leses av et sidebilde.** Står den nær største bredde (her 2,52 mot 2,70 m), må kroppen bli flat for å holde
+deplasementet, og kimmingen får en knekk i vannlinja. En rundbunnet båt med utfall har vannlinjebredden rundt 85–88 % av største bredde.
+Si i grunnlaget at den er antatt.
+
+**Kjølen er en del av skroget.** Snittet starter på kjølens underkant på senterlinja og går opp kjølens side til roten før kroppen; der
+kjølen ikke finnes, samles punktene i roten. To stasjoner 2 mm fra hverandre ved kjølens akterkant gir en skarp kant der akselen kommer ut,
+og propellbrønnen er da rommet mellom kjølen, skoen og roret, uten boolsk utskjæring.
+
+**Skipperen skal stå der en ekte skipper står.** Den gamle modellen hadde styreplassen på et gulv i ripehøyde med hodet inntil taket, og
+plotteren var en stor svart plate i synsfeltet. Regn ut i `check()`: takhøyden over plassen (`brotest` krever 1,8 m for den som står),
+øyet over vindskjermens fot og under taket, og vinkelen ned til dashbordet mot `hp` og `fov` (øyet ser ned til `hp − fov/2`).
+
+**Et dørhus må henge sammen i alle hjørner.** Vindskjermens vinger, ruffens topp, skottet og sidene på ripa møtes ikke av seg selv når
+hardtoppen er smalere enn båten: legg sidene i ett skrått plan fra ripa til hardtoppens kant, før skottet ut til det planet under vingene,
+og la vingenes ytre kant ligge i det. En femkant av glass som ikke er plan, blir flekkete.
+
+**Blender-rendringen fra øyet sier lite om broa** (glasset rendres ugjennomsiktig); se broa i spillet.
+
+**Verktøyene ligger i repoet nå (`tools/boats/qa/`).** Tre revisjoner skrev sine egne rendrings- og sjekkskript i kladdemappa, og de
+forsvant med økta hver gang. Nå: `shots.py` (K1–K7 med K6 om natta, forfra, akterfra, under, øyet og skriptets egne nærbilder `CLOSE`),
+`sheet.py` (kontaktark å se på og sende), `stubcheck.py` (et skripts `check()` uten Blender, og `--volume` som veier et skrog fra
+snittfunksjonen), `lines_snekke26.py` (spantriss og volum med PIL) og `clip_snekke26.py` (klasjsjekken, eksempler å kopiere for neste båt),
+og `runtests.sh` (testene for en båt etter hverandre, én logg per test). Forbedre dem i stedet for å skrive nye.
+
+**Vei de båtene som ikke er revidert, før du velger den neste.** `stubcheck.py --volume` på snittfunksjonene 01.11.2026 (grove anslag:
+hvert skripts snittfunksjon må sjekkes for hva den returnerer): `plast31` rundt 22 t mot 6, `hs11` 45 mot 15, `kyst15` 121 mot 75, `kyst21` 249
+mot 190, `malo36` 29 mot 20; `hurtig11` (13 mot 12) og `havsjark35` (11 mot 12) ser riktige ut. Står i `kartlegging-spillet.md` (D8).
+
+**Én funksjon for hver malingslinje.** Planet `bisect_plane` skjærer langs, og funksjonen som maler flatene og slitasjen (`paint_line`),
+må være den samme linja; første versjon hadde en rett linje i snittet og en knekk midtskips i malingen.
+
+**Klasjsjekken må kjenne beslag som er skrudd på utsida.** En hette på en buet side ligger opptil 2 cm inn i flaten i sine egne hjørner;
+unnta slike på plassen (som lensepumpens utløp), ikke på materialet, ellers forsvinner ekte feil i samme materiale.
+
+**K6 fra begge sider.** Fra styrbord baug skal bare den grønne og den hvite synes (den røde og akterlanterna skjermet bort), fra babord den
+røde. Nattbildet fra spillet (`sn26shot.py`) og fra Blender viser om skjermene og sektorene er riktige.
+
+**Spillet dreier bare rattet på håndbåtene.** På en båt uten `hand` (snekka, sjarkene, kystbåtene) står rattet fast i modellen; bare
+skiffens ratt er en egen del spillet dreier (`skiff.wheel`). Rattet er likevel `F.helm_wheel`, så det kan bli en del når spillet kan dreie det
+på alle båter (backloggen).
+
+**Små ting fra økta:** et navn i skriptet kan skygge for et annet (`ROOT` var både repo-stien og en tabell; eksporten ville skrevet feil
+sted). En kommando i forgrunnen stopper etter 10 minutter; skjermbildene og testene kjøres i bakgrunnen med et lite skript som tar dem
+etter hverandre og skriver én logg per test (`runtests.sh`). Vent på at bakgrunnsjobben selv melder seg ferdig; løkker som venter på
+den i bakgrunnen, stoppes etter 30 minutter. Pakk aldri `run.py` inn i en kortere `timeout`: da drepes den mens en 3D-test går, testen
+lever videre (stopp den på prosess-id, ikke `pkill -f` med et mønster fra ditt eget skall), og neste test kjører ved siden av den.
+
+## 14. Lært av revisjonen av plastsjarken (01.11.2026)
+
+Revisjonen av `plastsjark` (`plast31.py`, `plastsjark-grunnlag.md`, `plastsjark-bygging.md`) var den fjerde uten bilder, og den første der Jonas
+ba om en pen båt («jeg gir deg ganske frie tøyler til å skape en pen båt»). Dette gjelder alle båter etter den.
+
+**Sjekk hva snittfunksjonen returnerer før du stoler på vekta.** `curve` i det gamle skriptet ga hele snittet fra kjølens underkant til ripa,
+så `stubcheck.py --volume curve` veide hele skroget (21,9 t mot 6); en superellipse fra kjølens underkant er en kasse ned til full dypgang.
+`qa/lines.py` (ny, for alle skript: `--section`, `--keel`, `--root`, `--sheer`) tegner spantrisset og veier tre vannlinjer på et sekund, og formen
+ble rettet mot volumet i tre runder før noe ble rendret.
+
+**Kroppen under vannlinja som én kubisk kurve.** Kontrollpunkter i en catmull-kurve gir lett en knekk i vannlinja når utfallet over er stort.
+En kubisk Bézier fra kjølroten (første håndtak bratt opp: hul kjølrot) til vannlinja med siste håndtak langs utfallets helning gir en rund
+kimming som går over i sida uten knekk; to tall (`GB`) styrer fyldigheten. Kjølen smalner fra roten (1,9 × halv bredde) ned.
+
+**Lette båter med full kjøl blir grunne.** 6 t på 9,45 × 3,30 m med 1,35 m dypgang gir en kropp bare 0,5 m under vannlinja og en dyp kjøl;
+11 % over er prisen for en kropp som ser ut som en sjark. Si det i grunnlaget heller enn å presse bunnen flat.
+
+**Speilets innside er ikke speilets utside.** Dekket og innsida av skansekledningen må begynne speilets tykkelse forut for utsida (`TT`), og
+speilets topp få sin egen kapp; ellers ligger to flater i samme plan (en grå flekk på speilet i runde 3). Se på hekken i nærbilde.
+
+**En nedsenket dørk gir et lavere hus.** `brotest` krever 1,8 m under taket; med dørken 0,30 m under dekket (et hull i dekket, foring ned til
+dørken, et trinn inne ved døra) står huset 0,30 m lavere og båten blir straks penere. Døra blir 1,55 m over dekket; ankeret `doors` får
+dekkets høyde og `h` etter det.
+
+**Spillets dekkskart har egne krav.** `deckMap` (`vessel3d.js`) tar bare gulv med 1,85 m fri høyde over seg (`DM_HEAD`), og knytter en
+flate inntil 1,6 m høyere og 0,6 m unna til dekket. Et tak som henger over dekket lavere enn 1,85 m (visiret over en nedsenket dørk), og et
+lukelokk nær kanten av taket, gjorde styrhustaket til dekk, og spillet satte døra og mannskapet der. Se på dekket i spillet og spør
+`deckPoints(type)` hvor plassene havnet (alle skal ha dekkets høyde): `tools/boats/qa/deckpoints.py <type>`.
+
+**Fjernmodellens grense er punkter, ikke trekanter.** `vessel3d` krever middels (`npcModel(t, 0.3, 2)`) under 12 000 punkter for GLB-modeller,
+det vil si rundt 4 000 trekanter. Hold beslag, karmer og ekstra rader ute av `build(False)`.
+
+**Det som gjør en enkel båt pen** (uten bilder, etter planlisten og typen): spring som stiger mer forut enn akter, utfall i baugen, en
+avrundet hekk i stedet for et bredt speil, en scueringslist og kapp i tre mot hvit gelcoat og en mørk stripe, et lavt hus med et sammenhengende
+mørkt vindusbånd og en takkant i stripens farge, rustfritt og teak på dekk.
+
+## 15. Selvkritikk etter plastsjarken: det neste båt skal gjøre annerledes (01.11.2026)
+
+Jonas spurte etter revisjonen om økta lærte noe, om dokumentene var lest godt nok, og hvilken karakter arbeidet fortjente (66 av 100,
+`plastsjark-grunnlag.md` kap. 9). Det som ville løftet resultatet:
+
+**1. Slå opp spillets krav før overbygget formes, og regn dem i `check()`.** Tre av rundene på plastsjarken gikk til krav som stod i
+spillets kode og ble funnet av testene i stedet for i planen. Tabellen under samler det som er kjent; les den før ankre, tak, dører og
+navnefelt legges, og legg det som kan regnes inn i `check()` (plast31.py gjør det for taket og navnefeltet):
+
+| Krav | Hvor | Tall |
+|---|---|---|
+| Fri høyde over et dekk | `vessel3d.js` `deckMap` (`DM_HEAD`) | 1,85 m; et lavere tak over dekket gjør dekket under til ikke-dekk |
+| Flater som knyttes til dekket | `deckMap` (lenkene) | inntil 1,6 m høyere og under 0,6 m unna (tre celler er for langt: 0,2 × 3 > 0,6 i flyttall) en del på minst 20 celler man kan gå på (et lokk, en kasse): et tak nær et lokk blir dekk |
+| Tak over et rom | `deckMap` (`roofOver`, 01.11.2026) | en del der de fleste cellene ligger 1,85 m eller mer over en annen dørk (inntil to celler unna, ikke dekket selv, ikke under dekket), uten mannskapsplass, knyttes ikke: styrhustaket ved siden av bakken, visiret |
+| Trapper | `deckMap` (`stairs: [{from, to}]`, 01.11.2026) | en lenke fra dekkets celle ved foten til delen ved toppen, der gangen er for trang for kartets egen lenke |
+| Plassene på dekket | `deckPoints`, `walktest` | alle `crewSpots`, `work`, `hauler`, `filler`, `doors` på dekkets høyde (`qa/deckpoints.py`) |
+| Takhøyde på broa | `brotest` | 1,8 m over `skipperAt` |
+| Rorkultens sveip | `13-instruments.js` | 41° hver vei (kap. 11) |
+| Vimpel | `mastTop` | en hvit lykt over flaggstanga og mer enn 1 m fra den er en mast |
+| Registreringsmerket | `markStrips`, `regmarktest` | jevn sone 1, ingenting som stikker ut; på 9–15 m rundt 0,7–1,3 m over vannet forut |
+| Navnet mot merket | `maletest` | navnefeltene og merket overlapper aldri mer enn 5 cm |
+| Middelsmodellen | `vessel3d` | 120 000 punkter med delene oppå (`LODM_TRIS`) |
+| Fjernmodellen | `vessel3d` (NPC) | 12 000 punkter, rundt 4 000 trekanter |
+| Bredden og lengden | `vessel3d` | ±5 % og −6 %/+3 % i båndet −0,3–1,5 m over vannlinja, det som stikker ut over ripa medregnet |
+
+**2. Overlegg også uten foto.** Legg den ortografiske rendringen fra siden over profilen fra `qa/lines.py` hver runde; den viser om stevnen,
+ripa, kjølen og overbygget følger tabellene, og om noe har flyttet seg.
+
+**3. Et avvik i en rendring undersøkes med en gang.** Strekene på plastsjarkens speil ble bortforklart i to runder før de viste seg å være to
+flater i samme plan. Alt som ser rart ut, er en feil til nærbildet viser noe annet.
+
+**4. Se på spillets utstyr på plassene etter hver høydeendring.** En senket dørk flytter livbøya på akterskottet og skipperens høyde; et
+flyttet lokk flytter garnkaret. Ta skjermbildene fra spillet før dokumentasjonen skrives, ikke etter.
+
+**5. Løs plassmangel i formen, ikke ved å flytte plassen.** Er gangen rundt huset for smal for dekkskartet, gjør huset smalere eller
+gangen bredere; flytt ikke mannskapet bort fra der folk faktisk står.
+
+**6. Formgi broa fra skipperens øye.** Velg øyets høyde, vindskjermens og dashbordets vinkel slik at instrumentene ligger midt i nedre del av
+synsfeltet, og sett `hp` etter det; ikke juster `hp` til `check()` blir grønn.
+
+**7. Les hele malen og spillets kode for modellen før første linje.** Pilotens skript (`ringnot38.py`), `fittings.py` og `bpyutil.py` er
+lange; les dem i sin helhet eller si fra om at de bare er lest i utdrag. Les `vessel3d.js` (`deckMap`, `deckPoints`, `markStrips`,
+`nameStrips`, `lanterns`) og testene som dekker båten (`vessel3d`, `brotest`, `walktest`, `maletest`, `regmarktest`) før skriptet skrives.
+
+**8. Én SwiftShader-side om gangen, også for feilsøking.** Vent til testen er ferdig før et feilsøkingsskript startes.
+
+**9. Når Jonas ber om en pen båt, avtal retningen tidlig.** Plastsjarkens estetiske løft kom først etter første bygg. En kort liste over
+grepene (spring, hekk, lister, hus, farger) før skroget formes, sparer en runde.
+
+## 16. Lært av revisjonen av havsjarken (01.11.2026)
+
+**Mål jevnheten i snittet, ikke bare volumet.** En kimmingsbue som bygges av en hjørnevinkel og en radius per stasjon, hopper når
+bunnreisningen stiger fort (mot stevnen): flatene vris, og baugen ser bulkete ut selv om hver stasjon er riktig. Jonas så det i nærbildet før
+meg. Sjekk vannlinjenes andrederiverte langs x (`y_at(x, z)` for noen z, steg på 0,1 m): over 20–30 mm er en synlig bule. En kubisk kurve fra
+kjølrota til ripa med kontrollpunktene trukket mot hjørnet (`FULL` per stasjon) endrer seg jevnt; volumet stilles med fyldigheten.
+
+**Et snitt med en reserve er to snitt.** Havsjarkens kimming fra en hjørnevinkel hadde en rett linje som reserve når hjørnet havnet over
+ripa eller linjene ble parallelle. Der reserven tok over (x 9,34 og 9,87), knakk flaten loddrett fra kjølen til lista, og det tok to runder å
+finne det fordi jeg rettet det første hoppet og ikke målte hele flaten. Mål kantvinklene i nettet (vinkelen mellom flatene) i baugen, og
+grens med et mykt minimum i stedet for en reserve.
+
+**Det som henger foran et hull, er ikke et hull.** En gummiklaff utenpå en lensport er riktig om bord, men i spillets lys leser den som en
+svart kloss. Vis hullet åpent.
+
+**Dekkskartet bestemmer hvor folk går; sjekk det celle for celle når en del ikke blir dekk.** `qa/deckpoints.py` sier bare den høyeste
+cellen. Havsjarkens bakke ble ikke dekk av tre grunner som bare synes i rutenettet (`M._floors`, `M._lab`, `M.h`): en vant som krysset gangen
+i hodehøyde (masta står til babord, vanten til styrbord ripe gikk over gangen), trinn som dekket hele gangen, og tre celler mellom delene
+(lenken krever under 0,6 m, og 0,2 × 3 er litt over 0,6 i flyttall). Løsningen: vanten til takkanten, smale trinn inntil huset, og et
+`stairs`-anker som spillet nå leser. Prøv en endring i `deckMap` på alle typer mot bygget før (`KYST_DIST`): en retting av flyttallsgrensen
+endret ringnotbåten fra 1 362 til 5 875 dekkceller, og ble ikke gjort.
+
+**Et tak over et rom er ikke dekk.** Regelen `roofOver` fant at ringnotbåtens sløyebord og is sto på et tak 6,25 m oppe og at breisjarkens
+styrhustak var dekk. En «dørk» kan være skrogets bunn inni (under bakken): rommets dørk må ligge over dekket (`yLow`).
+
+**Verktøyene: `qa/fair.py` og `qa/deckgrid.py`.** Feilsøkingen av baugen og bakken gikk i skript i scratchpad; de er nå verktøy for alle
+båter. `fair.py <skript>` summerer knekkene per stasjon og rad (lista og stevnen skal stå øverst; en stasjon midt i baugen skal ikke) og måler
+vannlinjene. `deckgrid.py <type> [boks]` viser dekkskartets deler, lenker og ruter.
+
+**Se på bildet selv før det meldes, og mål hele flaten når én feil er funnet.** Jonas så bulene i baugen, de svarte klaffene foran
+spygattene og at baugen fortsatt var bulkete etter første retting. Alle tre synes i nærbildene som alt var tatt. Etter første retting meldte jeg
+baugen som jevn uten å kjøre målingen på nytt over hele baugen; to overganger til (9,34 og 9,87) sto igjen.
+
+**Kjør hele testlista, og kjør en rød test på bygget før endringen.** `vessel3d.py <type>` hopper over lokalflåten, så fjernmodellens
+punkter ble ikke sjekket før Node-testen kom. `regmarktest` var rød for havsjarken og ble grønn med en retting i spillet; `penshot` var rød på
+en GL-feil som fantes før, og det viste bygget i `dist-base` (`git stash`, `KYST_DIST`).
+
+**`sed` på korte navn er farlig.** `s/X0/.../` byttet `WH_X0` og alle andre navn med `X0` i hele skriptet. Rediger tabeller med et skript som
+finner akkurat den linja.
+
+**Glasset er ugjennomsiktig i Cycles.** Bildene inn i styrhuset ble svarte; `shots.py` tar nå `helm` og `c_helm*` uten glasset.
+
 ## Endringslogg
 
+- 01.11.2026: kap. 16, det revisjonen av havsjarken lærte (jevnheten i snittet, hull som synes åpne, dekkskartet celle for celle, tak over rom, trapper, `sed`, glasset i Cycles); tabellen i kap. 15 fikk taket over rommet og trappene.
+
+- 01.11.2026: kap. 15, selvkritikken etter plastsjarken (spillets krav samlet i én tabell, overlegg uten foto, avvik undersøkes med en gang, utstyret på plassene, broa fra øyet, lesingen, én SwiftShader-side, estetikken avtalt tidlig).
+
+- 01.11.2026: kap. 14, det revisjonen av plastsjarken lærte (snittfunksjonen, `qa/lines.py`, kroppen som kubisk kurve, lette båter med kjøl, speilets innside, nedsenket dørk, fjernmodellens grense, det som gjør en båt pen).
+
+- 01.11.2026: kap. 13 utvidet: verktøyene i `tools/boats/qa/`, vektene av de ureviderte båtene, malingslinja, klasjsjekken av beslag på utsida, K6 fra begge sider, rattet på båtene uten `hand`, tidsgrensene.
+- 01.11.2026: kap. 13, det revisjonen av plastsnekka lærte (regn ut det gamle skroget først, vannlinjebredden, kjølen i skrogets flate, styreplassen, dørhuset, broa i spillet).
 - 30.10.2026: første versjon, skrevet etter at båten lå i spillet (Jonas: «Skriv et detaljert dokument over hele byggingen»).
+- 31.10.2026: kap. 12, det revisjonen av skiffen lærte (sjekk at spillet viser modellen, det arvede, festene, arbeidsflyten, klasjsjekk av skrogets egne flater, fargegrenser med spring, bredden i vessel3d, felles beslag også for det spillet beveger, K6, miljøet).
+- 31.10.2026: kap. 11, det revisjonen av trebåten lærte (kontroll mot dataene uten bilder, klasjsjekk langs normalen, spillets krav til modellen, testene og miljøet).
