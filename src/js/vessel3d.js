@@ -349,7 +349,14 @@ const SPEC3D = {
     parts:[['block', {zf:-34, za:-17, w:14, h:2.8, nwin:4, nside:6, col:VC.white, roof:VC.deck}], ['house', {zf:-32, za:-21, w:12, h:2.8, rake:-0.4, sill:1.15, nwin:7, nside:4, on:'block', col:VC.white, roof:VC.white, frame:VC.black, aftWin:true}],
       ['mast', {z:-22.5, h:6.5, radar:'open', radarL:4, r:0.15, span:2.2, on:'house'}], ['funnel', {z:-15.5, w:2.4, l:3.4, h:4.6, col:VC.green, on:'block'}], ['raft', {x:-5.6, z:-18, on:'block'}], ['raft', {x:5.6, z:-18, on:'block'}],
       ['pblock', {z:6, h:9, l:4}], ['netbin', {z:24, l:18, h:2.2}], ['drum', {z:12, r:1.3, wf:0.5}], ['gantry', {z:35, h:9, col:VC.yellow}], ['crane', {z:-6, x:5, h:3, reach:9}], ['rails', {s0:0.84, s1:0.97, h:1}]],
-    work:{z:12}, crew:[[4.5, 10, -1.6], [-4.5, 14, 1.6], [2, 18, 3.14]]}
+    work:{z:12}, crew:[[4.5, 10, -1.6], [-4.5, 14, 1.6], [2, 18, 3.14]]},
+  // the pilot boat (tools/boats/ringnot38.py): the detailed GLB is what the game draws; this is the parametric stand-in should the GLB be missing
+  ringnot38:{hull:{form:'round', F:3.9, fr:2.4, ar:0.5, rake:3.8, srake:0, tw:0.9, smax:0.45, entry:2.6, run:1.2, Tc:3.85, n:3.4, flare:0.05, flareFwd:0.06, bulb:1.9, bulH:1.0, trise:0.4, NS:52, railR:0.08,
+      col:{hull:VC.blue, stripe:VC.white, bottom:VC.afRed, boot:VC.white, deck:VC.deck, inner:VC.inner, rail:VC.white}, stripeW:0.33},
+    parts:[['block', {zf:-9, za:-0.5, w:8.4, h:2.0, nwin:4, nside:4, col:VC.white, roof:VC.deck}], ['house', {zf:-7.5, za:-1.5, w:7.8, h:2.1, rake:-0.3, sill:0.9, nwin:8, nside:4, on:'block', col:VC.white, roof:VC.white, frame:VC.black, aftWin:true}],
+      ['mast', {z:-5.5, h:5.5, radar:'open', radarL:4.4, r:0.12, span:1.8, on:'house'}], ['funnel', {z:14, w:1.5, l:2.9, h:2.3, col:VC.blue, on:'block'}], ['raft', {x:3.5, z:9.5, on:'block'}],
+      ['pblock', {z:9, h:8, l:3}], ['netbin', {z:16, l:6, h:2.9}], ['crane', {z:-7.5, x:-1.8, h:2, reach:7}], ['rails', {s0:0.84, s1:0.97, h:1}]],
+    work:{z:-4}, crew:[[-3.5, -4, 1.57], [-2, -2.5, 0], [-1.5, -5.5, 3.14], [0.2, 9.5, 3.14]], open:true}
 };
 // ---------- detailed models from GLB files (tools/boats, built in Blender from the yards' drawings) ----------
 // The GLB holds the near model (lod0), the glass and the simple model for the fleet at a distance (lod1), in the game's frame,
@@ -359,7 +366,9 @@ const SPEC3D = {
 // The data sits in non-running <script id="glb-TYPE"> and <script id="pic-TYPE"> elements in the page (src/index.html), so the big
 // strings never pass through the script parser and the clock's first ticks are not held up by them.
 const GLBM = {}, glbData = (k, type) => { const el = typeof document !== 'undefined' && document.getElementById(k + '-' + type), s = el ? el.textContent.trim() : ''; return s.length > 100 ? s : null; };
-const GLBHAS = {}; function glbHas(type){ if (!(type in GLBHAS)) GLBHAS[type] = !!glbData('glb', type); return GLBHAS[type]; }
+// (only a yes is kept: the models are fetched at boot (ui/11-boot.js bootData), and a no asked before they came in was kept for good, so
+// the player's own skiff was drawn with the old hand-made kit and never with its Blender model, 31.10.2026)
+const GLBHAS = {}; function glbHas(type){ if (!GLBHAS[type]) GLBHAS[type] = !!glbData('glb', type); return GLBHAS[type]; }
 function glbParse(b64){
   const bin = atob(b64), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
   const dv = new DataView(u8.buffer); if (dv.getUint32(0, true) !== 0x46546C67) return null;
@@ -402,9 +411,11 @@ function glbZones(type){
   if (P && P.zone) for (let i = 0; i < P.zone.length; i++) z[P.zone[i]] = 1;
   return GLBZ[type] = z;
 }
+// lod: 2 near (lod0, your own boat close by: up to some 300 000 triangles), 1 middle (lodm where the model has one, else lod0: the
+// local fleet near by and your boat further off, today's level), under 1 far (lod1); docs/planer/grafikk-batmodeller.md F1
 function glbModel(type, lod, liv){
   const G = glbLoad(type); if (!G || !G.parts.lod0) return null;
-  const part = lod >= 1 ? G.parts.lod0 : (G.parts.lod1 || G.parts.lod0); let o = part;
+  const part = lod >= 2 ? G.parts.lod0 : lod >= 1 ? (G.parts.lodm || G.parts.lod0) : (G.parts.lod1 || G.parts.lod0); let o = part;
   if (liv && DESIGNS.some(k => liv[k])) o = glbDesign(type, part, liv); else if (liv && (liv.hull || liv.house || liv.deck)) o = glbPaint(part, liv);
   // an outboard and its propeller are parts of their own, in their own frames (they turn in the game): the whole boat carries them in place
   const sk = G.ex.anchors && G.ex.anchors.skiff;
@@ -425,13 +436,14 @@ function glbModel(type, lod, liv){
   if (L){ cap = []; for (let i = 0; i < L.p.length; i += 9) cap.push([[L.p[i], L.p[i + 1], L.p[i + 2]], [L.p[i + 3], L.p[i + 4], L.p[i + 5]], [L.p[i + 6], L.p[i + 7], L.p[i + 8]]]); }
   return {o, glass:lod >= 1 && G.parts.glass ? G.parts.glass : {p:[], n:[], c:[]}, cap, geo:Object.assign({gw:1, open:false, hand:false}, G.ex.anchors), hs:null, glb:true};
 }
-// a model for a type: the hull with its fittings (near: lod 1), the glass, the depth cap for open hulls, and where things are
+// a model for a type: the hull with its fittings (near: lod 1, a detailed model's own near version at 2), the glass, the depth cap for open hulls, and where things are
 const VMODEL = {};
 function vesselSpec(type){ return SPEC3D[type] || null; }
 function buildVesselModel(type, lod, liv){
   lod = lod || 1; const V = VESSELS[type], sp = vesselSpec(type); if (!V || !sp) return null;
   { const g = glbModel(type, lod, liv); if (g) return g; }       // a detailed model, also for the hand-steered starter boat
   if (sp.hand) return null;
+  lod = Math.min(lod, 1);   // (the kit models have no level over near)
   const H = Object.assign({L:V.len, B:V.beam, T:V.draft}, sp.hull, liv ? {col:Object.assign({}, sp.hull.col, kitLiv(liv))} : null), hs = hullShape(H), o = VB(), gb = VB(); o.lod = lod; gb.lod = lod;
   hullBuild(o, hs, lod); const hullN = o.p.length;   // the hull's own triangles come first (nameStrips reads them)
   let house = null, roofY = null; const anch = {};
@@ -850,7 +862,9 @@ function markStrips(type){
   const nearAnc = st => st.some(([B, T]) => anc.some(([f, r]) => B.concat(T).some(p => Math.hypot(p[0] - f[0], p[1] - f[1], p[2] - f[2]) < r)));
   const ok = st => { if (stripProud(type, st[0]) || stripProud(type, st[1]) || nearAnc(st)) return null;
     const P = st.map(s => stripPaint(type, s)); if (P.some(p => !p || p.even < 0.9)) return null; return P; };
-  for (const dr of [0, 0.35, 0.7, 1.05]) for (const f of [0.11, 0.13, 0.09, 0.15, 0.17, 0.07, 0.19]) for (const k of [1, 0.85]){
+  // (down to 1.75 heights under the sheer since 01.11.2026: on the havsjark the fender strake runs 0.35 m under the sheer at the bow, so the
+  // mark goes under it; only a boat where every place higher up failed gets a lower one)
+  for (const dr of [0, 0.35, 0.7, 1.05, 1.4, 1.75]) for (const f of [0.11, 0.13, 0.09, 0.15, 0.17, 0.07, 0.19]) for (const k of [1, 0.85]){
     const st = sideStrip(type, f, h * k, 4, dr * h * k); if (!st) continue; const P = ok(st);
     if (P){ MARKPAINT[type] = P; return MARKSTRIP[type] = st; }
   }
@@ -1086,13 +1100,29 @@ function deckMap(type){
   // a cell under two levels that are both deck (the working deck and the shelter deck over it) stands for the deck itself, else for the bigger part
   const inDeck = new Int32Array(N).fill(-1); const refresh = () => { for (let k = 0; k < N; k++){ inDeck[k] = -1; const lb = lab[k]; if (!lb) continue;
     for (let g = 0; g < lb.length; g++) if (onDeck.has(lb[g]) && (inDeck[k] < 0 || lb[g] === main || (lb[inDeck[k]] !== main && size[lb[g]] > size[lb[inDeck[k]]]))) inDeck[k] = g; } };
+  // a roof over a room with a floor of its own (the havsjark's wheelhouse amidships, 1.3 m over the forecastle's walkway beside it) is
+  // no deck: a part most of whose cells lie DM_HEAD or more over another floor within two cells, with no crew spot or deck anchor on
+  // it, is not linked (01.11.2026; a shelter deck one walks on is reached by a hand-set link or carries the crew's places)
+  const roofOver = L => { if (hitDeck[L] || hitSpot[L]) return false; let over = 0;
+    const room = (q, y, near) => floors[q] && floors[q].some((f, h) => f[0] <= y - DM_HEAD + 0.05 && f[0] >= yLow - 0.3 && (f[1] || size[lab[q][h]] >= 20) && !(near && lab[q][h] === main));
+    for (const [k, g] of cellsOf(L)){ const y = floors[k][g][0], i = k % nx, j = (k - i) / nx; let hit = false;   // (within two cells a room's floor that is not the deck itself: the visor over the front windows, the lip)
+      for (let dj = -2; dj <= 2 && !hit; dj++) for (let di = -2; di <= 2 && !hit; di++){ const ii = i + di, jj = j + dj; if (ii >= 0 && jj >= 0 && ii < nx && jj < nz && room(jj * nx + ii, y, di || dj)) hit = true; }
+      if (hit) over++; }   // (a room's floor, its furniture's cells too: not below the deck and not a scrap; the hull's bottom under a forecastle is no room)
+    return over > size[L] / 2; };
   for (let round = 0; round < 3; round++){ refresh(); let added = false;
-    for (let L = 0; L < nl; L++){ if (onDeck.has(L) || size[L] < 20) continue; let best = null;
+    for (let L = 0; L < nl; L++){ if (onDeck.has(L) || size[L] < 20 || roofOver(L)) continue; let best = null;
       for (const [k, g] of cellsOf(L)){ if (inDeck[k] >= 0) continue; const y = floors[k][g][0], i = k % nx, j = (k - i) / nx;   // (a cell the deck already stands for cannot be the part's end of the link)
         for (let dj = -3; dj <= 3; dj++) for (let di = -3; di <= 3; di++){ const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const q = jj * nx + ii, gq = inDeck[q]; if (gq < 0) continue;
           const d = Math.hypot(di, dj) * DM_C, dy = y - floors[q][gq][0]; if (d > 0.6 || dy > 1.6 || dy < -1.2) continue;   // (a roof lies higher than 1.6 m; a stair to a shelter deck is a hand-set link) if (Math.abs(dy) < DM_STEP && d <= DM_C * 1.5) continue;   // a step this small the fill would have taken: it is barred, so a gap stays a gap unless something lies between
           const sc = d + Math.abs(dy) * 0.2; if (!best || sc < best.sc) best = {sc, a:q, b:k, g, dy}; } }
       if (best){ onDeck.add(L); links.push([best.a, best.b, Math.round(best.dy * 100) / 100]); added = true; } }
+    // the stairs the model names (anchors.stairs: [{from, to}], points in the game's frame on the two floors; kyst15's stair to the
+    // shelter deck, the havsjark's steps up to the forecastle beside the wheelhouse, 01.11.2026): a link from the deck's floor at the
+    // foot to the part at the head
+    refresh();
+    for (const st of Array.isArray(G.stairs) ? G.stairs : []){ const a = st && st.from, b = st && st.to; if (!a || !b) continue; const ka = cellOf(a[0], a[2]), kb = cellOf(b[0], b[2]); if (ka < 0 || kb < 0 || inDeck[ka] < 0 || !floors[kb]) continue;
+      let g = -1; for (let h = 0; h < floors[kb].length; h++) if (lab[kb][h] >= 0 && Math.abs(floors[kb][h][0] - b[1]) < 0.3 && (g < 0 || Math.abs(floors[kb][h][0] - b[1]) < Math.abs(floors[kb][g][0] - b[1]))) g = h;
+      if (g < 0) continue; if (!onDeck.has(lab[kb][g])){ onDeck.add(lab[kb][g]); added = true; } if (!links.some(l => l[0] === ka && l[1] === kb)) links.push([ka, kb, Math.round((floors[kb][g][0] - floors[ka][inDeck[ka]][0]) * 100) / 100]); }
     if (!added) break; }
   refresh();
   // what the deck cannot reach on foot or by a link (a part that lies over deck cells keeps only the cells of its own) is dropped
@@ -1214,7 +1244,11 @@ function lanterns(G, V, st){
     if (st.aground && len >= 12){ push(up(mt, sp), 'r', 'nuc'); push(up(mt, 2 * sp), 'r', 'nuc'); }
     return out; }
   if (st.fishing){
-    push(mt, 'w', 'fishW'); push(up(mt, sp), st.trawl ? 'g' : 'r', st.trawl ? 'trawlG' : 'fishR');
+    // a model that carries its fishing lights on their own ('fishR' over 'fishW', the havsjark's red over white on arms forward of the
+    // mast) lights them where they are; else the white at the masthead's place and the red (the green) a spacing over it
+    const fR = typed ? T('fishR')[0] : null, fW = typed ? T('fishW')[0] : null;
+    if (fR && fW && !st.trawl){ push(fW[0], 'w', 'fishW'); push(fR[0], 'r', 'fishR'); }
+    else { push(mt, 'w', 'fishW'); push(up(mt, sp), st.trawl ? 'g' : 'r', st.trawl ? 'trawlG' : 'fishR'); }
     if (st.trawl && len >= 50) push(extra.length && extra[0][0][1] > mt[1] + sp ? extra[0][0] : up(mt, 2 * sp), 'w', 'masthead2');
     if (moving) sideStern();
     return out; }
@@ -1225,7 +1259,7 @@ function lanterns(G, V, st){
   if (len >= 50) push(extra.length ? extra[0][0] : up(mt, 1.5), 'w', 'masthead2');
   return out;
 }
-const HELM_KIT = {autoliner:1, bunntral:1, pelagisk:1, snokrabbe:1};   // the coastal models from the Blender round (sjarkny, hurtigsjark, kyst15, kyst21) have their console, wheel and chair in the model (tools/boats)
+const HELM_KIT = {autoliner:1, bunntral:1, pelagisk:1, snokrabbe:1, ringnot38:1};   // the coastal models from the Blender round (sjarkny, hurtigsjark, kyst15, kyst21) have their console, wheel and chair in the model (tools/boats)
 const DECKPTS = {};
 function deckPoints(type){
   if (type in DECKPTS) return DECKPTS[type]; const M = deckMap(type), G = geoOf(type); if (!M || !G){ DECKPTS[type] = null; return null; }

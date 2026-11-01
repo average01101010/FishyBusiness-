@@ -137,7 +137,7 @@ async def main():
             await pg.screenshot(path=os.path.join(ROOT, 'tests', 'out', 'market_' + tag + '.png'))
             print(tag, json.dumps(u, ensure_ascii=False)[:900])
             t = u['tabs']
-            print(ok(len(t['open']) == 8 and len(t['lic']) == 9 and len(t['kyst']) == 2 and len(t['hav']) == 4 and all(c[2] for v in t.values() for c in v)), tag + ': four tabs with every boat as a card with its side view')
+            print(ok(len(t['open']) == 8 and len(t['lic']) == 9 and len(t['kyst']) == 2 and len(t['hav']) == 5 and all(c[2] for v in t.values() for c in v)), tag + ': four tabs with every boat as a card with its side view')
             print(ok(u['havText'] and not u['havBuy'] and len(u['havSecs']) >= 3), tag + ': the ocean vessel has a full spec sheet (length, beam, draft, weight) and no buy button')
             print(ok(u['tiBtn'] and u['tiOk'] and not u['fleetBtn']), tag + ': an open-group boat is bought by trading in, not for the fleet, before the company has a closed-group vessel')
             print(ok('Hjemmel' in u['licSecs'] and u['licBtns'] == 2), tag + ': a boat with a right shows the right and both ways to buy')

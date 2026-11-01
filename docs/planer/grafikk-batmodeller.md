@@ -114,3 +114,41 @@ har samme oppløsning som bruker-styrte båter»). Pilotbåten er ringnotbåten,
   nivået skal se best mulig ut på den. Merk: spillet tegner i dag med pikseltetthet 1,5 på nivå 2 (`QUAL.dpr`), altså rundt
   1940 × 1170 på en skjerm som har 3392 × 2042 i det samme vinduet, og når 50 bilder/s på en skjerm som kan vise 144. Hva som holder
   det på 20 ms, finnes i F1 (profil av JS-tid mot GPU-tid), før et nytt «ultra»-nivå med full oppløsning vurderes.
+- **F1 bygd 30.10.2026** (`docs/systemer/3d-baater-og-animasjon.md`, «Tegnegrunnlaget for båtene»):
+  - **Profilen `#prof`** (`G3.prof`) rullet ut først, så Jonas kan måle på Pad 3: hovedtråden og GPU-en per del av bildet (ni deler),
+    og bildet med én del tatt ut eller i en annen pikseltetthet (11 oppsett, rundt 75 s), med fordelingen av bildeintervallene og
+    de lange oppgavene. **Venter på målingen.** Den skal avgjøre om de 20 ms er GPU-en (fyllrate, sjøen, terrenget), hovedtråden eller
+    takten nettleseren gir (tomt bilde), og det er der ytelsen hentes før ultra kan komme av seg selv på Pad 3.
+  - **WebGL 2 med WebGL 1 som reserve:** samme skyggere, oversatt fra GLSL ES 1.00 til 3.00 ved kompileringen; alle 21 programmene
+    kompilerer på begge, og bildet er det samme i SwiftShader. `#gl1` tvinger WebGL 1. Enheten, ikke kvalitetsnivået, velger
+    konteksten; en enhet der WebGL 2 feiler ved oppstart, går over til WebGL 1 og husker det.
+  - **Tre detaljnivåer for egen båt** (nær `lod0`, middels `lodm`, fjern `lod1`) etter hvor lang hun er på skjermen, med terskler per
+    nivå (`QUAL.blod`, kan slås av per nivå). NPC-båtene er på dagens nivå (`lodm`, ellers `lod0`). **Taket:** egen båt nær rundt
+    300 000 trekanter (900 000 punkter), middels og NPC 40 000 (120 000 punkter), i `vessel3d.py`, `batplan.md` (B17) og eksporten
+    (`LODM_TRIS`, Decimate). Pilotbåten `ringnot38` fikk `lodm` 30.10.2026 (119 302 trekanter nær, Decimate til 40 000, 13 600 punkter fjern); Decimate-steget virker.
+  - **Ultra etter målt bildetid:** `auto` prøver ultra (full oppløsning, opptil 3 i pikseltetthet) etter 20 s over 80 bilder/s på
+    Høy, går tilbake under 45 og husker utfallet per enhet; `QUAL.autoU` slår det av. Med dagens 20 ms på Pad 3 starter forsøket ikke.
+    Svakere enheter er som før.
+  - **Ikke gjort i F1 (står i planen):** indekserte båter (`drawElements` med GLB-indeksene), komprimerte punkter og utstyret som
+    instanser. Målingen i F0 viste at trekantene ikke koster målbart, så de er utsatt til profilen viser at geometrien eller minnet
+    betyr noe.
+- **F4 bygd 30.10.2026** (`tools/boats/ringnot38.py`, `docs/skipsmodeller/sulebas-pilot-grunnlag.md`, `docs/skipsmodeller/sulebas-bygging.md`):
+  kystnotbåten på 38,55 m bygd etter byggerapporten og 20 bilder, 22 runder i kritikksløyfen (rendring fra fotovinklene, overlegg mot
+  sidebildet i målt skala, klasjsjekk, punkttelling), eksportert med `lod0`, `lodm` og `lod1`, i spillet som låst type `ringnot38`
+  (plassen i stigen ikke avgjort, B1 = C). Avvik fra planen: piloten ble bygd før F2 og F3 (Jonas ba om det), så den har ingen UV-er
+  eller materialer; de må legges på når F2 er inne. Avvikslista er kap. 5 (kravlista) og kap. 10 i `sulebas-bygging.md`. Det som
+  ikke kunne måles uten flere bilder (alt på tvers, dekksutstyrets plasser), står der. **Jonas godkjenner nivået før F5.**
+- **F5, trebåten 31.10.2026** (`tools/boats/snekke23.py`, `docs/skipsmodeller/trebat-grunnlag.md`, `trebat-bygging.md`; Jonas: «Løft den
+  til samme nivå og arbeidsmåte som pilotbåten», uten bilder eller tegning): skrevet på nytt etter `ringnot38.py`, skroget som én flate
+  med klinkland og nagler, propellbrønnen som ekte hull, kritikksløyfen med kontroll mot tabellene i stedet for overlegg mot foto.
+  81 616 trekanter nær, `lodm` 36 499, fjern 2 694, GLB 5,3 MB. Rekkefølgen i F5 sier skiffen først; trebåten ble tatt først fordi
+  Jonas bestilte den.
+- **F5, skiffen 31.10.2026** (`tools/boats/skiff59.py`, `docs/skipsmodeller/skiff-grunnlag.md`, `skiff-bygging.md`; Jonas: «Løft den til
+  samme nivå», uten bilder): skrevet på nytt, skroget med speil, hakk, poder, foring, benk, brønn og dekk som ett nett, lukene,
+  lommene og stangholderne som ekte hull, tårnplate, ny påhengsmotor og nye felles beslag i `fittings.py` (også rattet og
+  motoren). 55 035 trekanter nær, `lodm` 36 499, fjern 2 507, GLB 4,4 MB. Funnet underveis: egen skiff ble ikke tegnet med
+  Blender-modellen i spillet (`glbHas` husket «nei» fra før dataene var hentet); rettet, med levende skjermer på modellens konsoll.
+- **F5, havsjarken 01.11.2026** (`tools/boats/havsjark35.py`, `docs/skipsmodeller/havsjark-grunnlag.md`, `havsjark-bygging.md`; Jonas: «Løft
+  den til samme nivå», uten bilder): skrevet på nytt etter `plast31.py` med tegningenes mål; ballastkjølen i skrogets flate, ekte hull, ny
+  bro, lovlige lanterner, seilet satt til sjøs og beslått i havn. Spillet fikk `roofOver` og `stairs` i dekkskartet (rettet også
+  ringnotbåten og breisjarken) og typede fiskelys. 60 670 trekanter nær, `lodm` 39 035, fjern 4 283, GLB 3,8 MB.

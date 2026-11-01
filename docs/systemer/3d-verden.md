@@ -47,7 +47,7 @@
   | Havskyggeren | fjernvarianten helt inn til bølgefeltet | full | full | full |
   | Sjørokk og sprut i lufta | av | på | på | på |
 
-  - **Ultra** (Jonas 05.10.2026: «en ultra grafikk setting ... finne ut hvor grensa ligger for flagship-modeller») velges bare for hånd, aldri av Auto. Det krever 32-bits indekser (`OES_element_index_uint`, `UINT`), ellers blir det Høy. Nettene over 65 536 punkter får `Uint32`-indekser (`i32`), og tegnekallene velger type etter det. Bildetakten vises med «Vis bildetakt» i Innstillinger. Testen er `tests/ultratest.py`.
+  - **Ultra** (Jonas 05.10.2026: «en ultra grafikk setting ... finne ut hvor grensa ligger for flagship-modeller») velges for hånd, og fra 30.10.2026 også av Auto på en enhet som måler raskt nok (forsøket i `qualTick`, F1 i `docs/planer/grafikk-batmodeller.md`, valg 2 A: etter 20 s over 80 bilder/s på Høy, tilbake under 45, utfallet huskes i `dsb_ultra`; detaljer i `3d-baater-og-animasjon.md`). Det krever 32-bits indekser (`OES_element_index_uint`, `UINT`; kjerne i WebGL 2), ellers blir det Høy. **Konteksten** er WebGL 2 der den finnes, med WebGL 1 som reserve (`#gl1`), og skyggerne oversettes fra GLSL ES 1.00 til 3.00 ved kompileringen (`glsl3`, F1). Nettene over 65 536 punkter får `Uint32`-indekser (`i32`), og tegnekallene velger type etter det. Bildetakten vises med «Vis bildetakt» i Innstillinger. Testen er `tests/ultratest.py`.
 
   - Auto går ned et nivå etter 4 s under 28 bilder/s og opp et nivå etter 12 s over 50, men ikke tilbake til et nivå den forlot før det har gått to minutter.
   - `#qfix` i adressen holder nivået på Høy. Testene bruker det (`_env.py`), fordi SwiftShader bare gir noen få bilder/s.

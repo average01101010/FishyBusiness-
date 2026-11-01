@@ -2,7 +2,7 @@
 // holds every mission to the boat's own fishing hour (turCap), and this locks the numbers that rule is made of, so a change in one of
 // them is a change in the balance and not a slip. Also the shared events: their days, Fiskeridirektoratet's areas and the badge's kilos.
 export default function (t){
-  const {TUR, TUR_ASK, TUR_EV, TUR_FIRST, EV_PRIZE, EV_BADGE, EVENTS, FEST_PRIZE, turStages, turPay, turFinal, turCap, evDays, evIn, evBadgeNeed, natP, newState} = t.K;
+  const {TUR, TUR_ASK, TUR_EV, TUR_FIRST, TUR_LETE, EV_PRIZE, EV_BADGE, EVENTS, FEST_PRIZE, SPECIES, NM, turStages, turPay, turFinal, turCap, turLeteQs, evDays, evIn, evBadgeNeed, natP, newState} = t.K;
   t.K.set('S', newState());
   // the rule: an hour on a mission pays the fishing hour times at most 1.25 (long), the fish's own missions half of it on top of the fish;
   // the manager's own order times 1.2 on that, so never over 1.5 fishing hours; the first mission is a short one, times 1.0
@@ -39,4 +39,17 @@ export default function (t){
   t.ok(EV_BADGE.holds === 3 && EV_BADGE.min === 1000 && EV_BADGE.max === 30000, 'merket: tre lastrom, minst 1 000 kg, høyst 30 t');
   t.eq(evBadgeNeed(350), 1050, 'trebåten: 1 050 kg'); t.eq(evBadgeNeed(5000), 15000, '5 t lasterom: 15 t'); t.eq(evBadgeNeed(400000), 30000, 'den store: taket 30 t'); t.eq(evBadgeNeed(0), 1000, 'uten lasterom: golvet');
   t.eq(EV_PRIZE.join(','), FEST_PRIZE.join(','), 'hendelsenes premier er festivalens (Jonas 05.10.2026)');
+  // the search (L1): questions only where the model's densities differ; the time paid as the station, up to 20 % for right answers
+  t.ok(TUR_LETE.spots === 3 && TUR_LETE.need === 60 && TUR_LETE.bonus === 0.2 && TUR_LETE.R === 5, 'leteoppdrag: tre plasser à en spilltime, 5 nm, inntil 20 % for riktige svar');
+  const c = {x:0, y:0}, R = TUR_LETE.R * NM, mk = (a, r, v, d, E) => ({p:{x:Math.sin(a) * R * r, y:-Math.cos(a) * R * r}, v, d, E});
+  const north = [], flat = [];
+  for (let i = 0; i < 12; i++) for (const r of [0.35, 0.7, 1]){ const a = i * Math.PI / 6, isN = Math.cos(a) > 0.5;
+    north.push(mk(a, r, isN ? 6 : 1, isN ? 160 : 60, isN ? 0.9 : 0.4)); flat.push(mk(a, r, 3, 70, 0.6)); }
+  const qn = turLeteQs(c, 'hyse', north), kinds = qn.map(q => q.k);
+  t.ok(kinds.includes('side') && qn.find(q => q.k === 'side').ans === 'N', 'hysa tettest i nord: spørsmålet om side, svaret N');
+  t.ok(kinds.includes('dyp') && qn.find(q => q.k === 'dyp').ans === 'dyp' && qn.find(q => q.k === 'dyp').m === SPECIES.hyse.dep[0], 'dypere i nord enn hysas vanlige ' + SPECIES.hyse.dep[0] + ' m: spørsmålet om dyp, svaret dyp');
+  t.ok(kinds.includes('ly') && qn.find(q => q.k === 'ly').ans === 'ut', 'mer eksponert i nord: spørsmålet om ly, svaret ut');
+  t.ok(qn.every(q => q.opts.includes(q.ans)), 'svaret er alltid et av valgene');
+  t.eq(turLeteQs(c, 'hyse', flat).length, 0, 'står den likt overalt, stilles ingen spørsmål (ingenting å finne)');
+  t.eq(turLeteQs(c, 'hyse', north.slice(0, 4)).length, 0, 'for få punkter i åpent vann: ingen spørsmål');
 }

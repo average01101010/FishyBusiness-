@@ -33,7 +33,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `redskap.md` | Redskap og utstyr: de andres redskap i havet, utstyrsstatus og service, dekksutstyret, redskapet om bord synlig, redskap i sjøen. | `core/10-gear.js`, `core/10b-gearcare.js`, `ui/09-hand-fishing.js` |
 | `fiskerimodellen.md` | Kart, fjordlinje og fangstfelt, fiskerimodellen, Fiskeguiden, juks i dødtiden. Spesifikasjonen står i `docs/spesifikasjon.md`. | `core/03-simulation.js`, `core/03c-*`, `ui/06f-fishguide.js` |
 | `priser-og-salg.md` | Priser, kvalitet og salg, bestillingene. | `core/03-simulation.js` (`grade`, `sell`), `core/08-*` |
-| `kvoter-og-regler.md` | Kvoter og regulering, reglenes kartdata, regelmotoren, Regler-appen, varsel før feil, regelverket og kildene. | `core/03d-quota.js`, `core/03e-rules.js`, `src/data/rules.json`, `tools/rules/` |
+| `kvoter-og-regler.md` | Kvoter og regulering, reglenes kartdata, regelmotoren, Regler-appen, varsel før feil, Kystvakta om bord, regelverket og kildene. | `core/03d-quota.js`, `core/03e-rules.js`, `core/09j-kystvakt.js`, `src/data/rules.json`, `tools/rules/` |
 | `folk-om-bord.md` | Mannskapet, kulde og klær, arbeid om bord, mat, hviletid og energien, mannskapets arbeid på sjøen, karakteren og garderoben. Planen står i `docs/mannskap-plan.md`. | `core/04-crew.js`, `core/14-crewlife.js`, `ui/05b-work.js`, `ui/13-work.js`, `tools/harbour/arbeider.py`, `tools/harbour/garderobe.py` |
 | `driftsplan.md` | Driftsplanen (`S.ops`), Driftsplan-appen, den gamle planleggeren. | `core/06d-drift.js`, `ui/05c-drift.js` |
 | `oppdrag-og-kystposten.md` | Turoppdrag fra der du er, Kystposten. | `core/09g-turer.js`, `ui/06b-book-tabs.js` |
@@ -61,10 +61,25 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `docs/forslag.md` | Forslagslista fra 13.10.2026 (dybde og sjel). |
 | `docs/slagplan.md` | Slagplanen fra 05.10.2026 med status. |
 | `docs/batplan.md` | Planen for båtene og stigen. |
+| `docs/planer/grafikk-batmodeller.md` | Grafikk: båtmodellene (plan 30.10.2026, vedtatt): F0 målingen på Pad 3, F1 WebGL 2 og tre detaljnivåer med taket på 300 000 trekanter, F2 materialer, F3 skygger, F4 pilotbåten (bygd), F5 resten av flåten, F6 utstyret. |
+| `docs/skipsmodeller/planliste-fiskefartoy.md` | Kravlista for en Blender-modell av et fiskefartøy: alle punktene per sone (skrog, dekk, overbygg, master, lys, sikkerhet, fangst, kraner, identitet, materialer, slitasje), med prioritet. |
+| `docs/skipsmodeller/referanseanalyse-runde-2.md` | Bildeanalysene av ti referansebåter og det de la til i planlisten. |
+| `docs/skipsmodeller/eksempel-sulebas-sf-100-su.md` | Eksempel på et utfylt prosjektark etter planlisten. |
+| `docs/skipsmodeller/kartlegging-spillet.md` | Kartleggingen av det som finnes i spillet (arter, redskap, utstyrsmodeller, båtene, feil), arbeidslista og det som er utført 30.10.2026. |
+| `docs/skipsmodeller/sulebas-pilot-grunnlag.md` | Pilotbåtens byggegrunnlag: fakta fra byggerapporten, reglene, avgjørelsene B1–B5, alle målene fra bildene (kap. 4.0), kravlista mot planlisten, lanternene, kritikksløyfens 22 runder (kap. 7.1). |
+| `docs/skipsmodeller/trebat-grunnlag.md`, `trebat-bygging.md` | Startbåten `trebat` revidert etter pilotens arbeidsmåte (F5, 31.10.2026): avvikslista før endring, målene, kravlista, lanternene, kritikksløyfens runder, og det korte byggedokumentet. |
+| `docs/skipsmodeller/prompt-blender-ny-bat.md` | Jonas' prompt for å bygge en ny båtmodell (bytt navnet øverst). Oppdateres etter hver ny båt med grenen og det neste økt bør vite. |
+| `docs/skipsmodeller/prompt-blender-revisjon.md` | Jonas' prompt for å revidere en eksisterende båtmodell (bytt navnet øverst). Oppdateres etter hver revisjon med grenen og det neste økt bør vite. |
+| `docs/skipsmodeller/skiff-grunnlag.md`, `skiff-bygging.md` | Skiffen `skiff` revidert etter pilotens arbeidsmåte (F5, 31.10.2026): avvikslista før endring, kravlista per planliste-ID, lanternene, kritikksløyfens runder, rettingen som fikk Blender-modellen inn som egen båt i spillet, og det korte byggedokumentet. |
+| `docs/skipsmodeller/snekke-grunnlag.md`, `snekke-bygging.md` | Plastsnekka `snekke` revidert etter pilotens arbeidsmåte (F5, 01.11.2026): avvikslista før endring (det gamle skroget ga 10,5 t mot 3,0 t), kravlista, lanternene, kritikksløyfens runder, arbeidsflyten om bord, og det korte byggedokumentet. |
+| `docs/skipsmodeller/plastsjark-grunnlag.md`, `plastsjark-bygging.md` | Plastsjarken `plastsjark` revidert etter pilotens arbeidsmåte (F5, 01.11.2026): avvikslista før endring (det gamle skroget ga 21,9 t mot 6 t), kravlista, lanternene, kritikksløyfens runder, arbeidsflyten om bord, det som ble gjort for at båten skal bli pen, og det korte byggedokumentet. |
+| `docs/skipsmodeller/havsjark-grunnlag.md`, `havsjark-bygging.md` | Havsjarken `sjark` revidert etter pilotens arbeidsmåte (F5, 01.11.2026): avvikslista før endring, lanternene, arbeidsflyten, kritikksløyfens runder (bulene i baugen, de åpne spygattene, bakken som ikke ble dekk), selvvurderingen, spillets nye regler for tak og trapper, og det korte byggedokumentet. |
+| `docs/skipsmodeller/sulebas-bygging.md` | **Slik bygges en båt:** hele byggingen av pilotbåten fra bilde til spill, kildene og hva de gir, målingen, skroget som én flate, hullene, kritikksløyfen, eksporten, feilene og reglene de ga, hva neste båt trenger, og hva som ville gjort resultatet bedre; kap. 11–14 det revisjonene av trebåten, skiffen, plastsnekka og plastsjarken lærte, kap. 15 selvkritikken og tabellen over spillets krav til modellen. Les før en ny båtmodell. Verktøyene for kritikksløyfen ligger i `tools/boats/qa/`. |
 | `docs/mannskap-plan.md` | Planen for mannskapet. |
 | `docs/plan-blakveite.md`, `docs/blakveite.md` | Blåkveita: planen og kunnskapen. |
 | `docs/lansering.md` | Det som gjenstår før lansering, og serveren. |
 | `docs/onboarding.md` | Onboardingen. |
+| `docs/planer/oppdrag-2.md` | Oppdrag 2 (30.10.2026): leteoppdrag (L1–L2), oppdragskjeder (K1), fiskarlaget (F1–F3) og Kystvakta (V1), med valgene og forklaringene Jonas ba om. Venter på valg og «kjør på». |
 | `docs/planer/onboarding-2.md` | Onboarding 2 (27.10.2026): kortere første tur for hele kysten, målingene som viser frafall under seilingen ut, fasene O0–O6, de ti prinsippene mot churn og valgene V1–V8. Venter på svar. |
 
 ## Regler og kilder

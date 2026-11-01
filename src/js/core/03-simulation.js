@@ -585,7 +585,8 @@ function wshLand(port, H, acc, kgSp, codQ){ if (!WSH.rec) return; const Q = wq()
   // the boat's name goes with it for the open group's leaderboard (and the company's in the closed group, whose leaderboard shows it:
   // Jonas 05.10.2026); there is no hiding from the others (07.10.2026)
   const ev = typeof evAt === 'function' ? evAt(H, port, items.map(i => i.sp)) : '';   // the shared event it falls in (09c-seasons.js)
-  if (items.length) Q.l.push({gh:+H.toFixed(2), y:yearH(H), port, acc, items, boat:String(S.boatName || '').slice(0, 24), company:acc !== 'lukket' ? '' : String(S.company || '').slice(0, 40), ev}); }
+  let reg = ''; try { const q = portById(port); if (q && typeof landsdel === 'function') reg = landsdel(q.p); } catch (e){}   // the part of the coast, for the village contest (bygde_top)
+  if (items.length) Q.l.push({gh:+H.toFixed(2), y:yearH(H), port, acc, items, boat:String(S.boatName || '').slice(0, 24), company:acc !== 'lukket' ? '' : String(S.company || '').slice(0, 40), ev, reg}); }
 function initStock(){
   const a = {};
   // the famous grounds are already worked by the local fleet when the game starts
