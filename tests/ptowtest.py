@@ -44,6 +44,9 @@ async def main():
           const m1 = S.msgs.length; PTOW._P.at = 0; PTOW.tick(); await wait(80); R.heard = S.msgs.slice(m1).some(m => /Kari .*trenger slep/.test(m.no));
           PHONE.show(false); openPlotter(); renderDyn(); R.mark = /Trenger slep/.test(document.getElementById('map').innerHTML);
           R.tap = PTOW.tap({x:b.pos.x + 2, y:b.pos.y}, 0.2); const c = document.getElementById('ptCard'); R.cardH = !c.hidden && /Hjelp/.test(c.innerText);
+          // the ask on the board in the Oppdrag app too (30.10.2026), with «Hjelp» that takes it
+          PHONE.show(true); PHONE.open('ordl'); PHONE.render(); const pv = document.getElementById('phView'); R.board = /Nødanrop/.test(pv.innerText) && /Trenger slep: Kari «Nordlys»/.test(pv.innerText) && !!pv.querySelector('[data-pa="pttake"]');
+          calls.length = 0; pv.querySelector('[data-pa="pttake"]').click(); await wait(80); R.boardTake = (calls.find(x => x[0] === 'tow_take') || [0, null])[1]; S.ptowH = null; PHONE.show(false);
           calls.length = 0; c.querySelector('[data-p="take"]').click(); await wait(80); R.take = (calls.find(x => x[0] === 'tow_take') || [0, null])[1]; R.H = S.ptowH && S.ptowH.st === 'come';
           const I = (id, ic, no, en, o) => Object.assign({id}, o || {});
           R.farItem = PTOW.dockItem(I) === null; S.plan = null; b.status = 'idle'; b.pos = {x:b.pos.x + 1.95, y:b.pos.y}; b.v = 0;
@@ -56,6 +59,7 @@ async def main():
         print(ok(r['done']), 'when she moors, the boat lies in that harbour, with thanks in the messages')
         print(ok(r['rescue']), 'nobody in 20 minutes: the ask is cancelled and the rescue boat comes')
         print(ok(r['heard'] and r['mark'] and r['tap'] and r['cardH'] and r['take'] == {'id': 9} and r['H']), 'the helper hears of the ask, sees it on the chart, and takes it from the card')
+        print(ok(r.get('board') and r.get('boardTake') == {'id': 9}), 'the ask stands on the board in the Oppdrag app under «Nødanrop», and «Hjelp» there takes it')
         print(ok(r['farItem'] and r['item'] and r['towing']), '«Ta slep» only within 150 m, and the speed is capped while towing')
         print(ok(r['paid'] == 25000 and r['badge'] == 1 and r['clear']), 'moored: the game pays 25 000 kr and the badge counts', [r['paid'], r['badge']])
         print('errors:', errs[:3]); await br.close()

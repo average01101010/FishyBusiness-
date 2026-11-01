@@ -10,10 +10,10 @@
     if (a !== 'shop') shopPend = null;
     if ((/^adm/.test(a) || (a === 'open' && d.a === 'admin')) && !adminOk()) return false;   // the Admin app is only Jonas's (adminOk)
     if (a === 'open' && d.a === 'garderobe'){ show(false); WARD.open(); return; }      // the wardrobe is a sheet of its own (ui/10g-wardrobe.js)
-    if (a === 'open'){ app = d.a === 'kaiboden' ? kbLast : d.a; confirmMayday = false; if (d.s) sub[d.a] = d.s; if (d.a === 'post') sub.postArt = null; }
+    if (a === 'open'){ appSeen(d.a); app = d.a === 'kaiboden' ? kbLast : d.a; confirmMayday = false; if (d.s) sub[d.a] = d.s; if (d.a === 'post') sub.postArt = null; }
     else if (a === 'home'){ app = 'home'; }
     else if (a === 'back'){ app = 'home'; }
-    else if (a === 'shop'){ const k = d.k, kg = +d.kg || 0; if (!shopPend || shopPend.k !== k || shopPend.kg !== kg){ shopPend = {k, kg}; return true; } shopPend = null; const free = tutFree(k), why = shopBuy(k, kg, free); if (why){ toast(L(why[0], why[1])); } else if (free) tutMark('free_' + k); }
+    else if (a === 'shop'){ const k = d.k, kg = +d.kg || 0; if (!shopPend || shopPend.k !== k || shopPend.kg !== kg){ shopPend = {k, kg}; return true; } shopPend = null; const free = tutFree(k), why = shopBuy(k, kg, free); if (why){ toast(L(why[0], why[1])); } else if (free){ if (k === 'ice') S.iceFree = 0; tutMark('free_' + k); } }
     else if (a === 'shop0'){ }
     else if (a === 'shopgear'){ app = 'redskap'; sub.redskap = 'kjop'; }
     else if (a === 'close'){ show(false); return; }
@@ -143,6 +143,15 @@
       pressPut('boat', {type:d.k, nb:V2.isNew ? 1 : 0, price:V2.price});   // Kystposten (core/09h-press.js)
       if (ti && S.lic){ log('Kvoten i lukket gruppe fulgte med den gamle båten.', 'The closed-group quota went with the old vessel.'); S.lic = null; freshQuota(); openUsedLoad(); }
     }
+    else if (a === 'adminbuy'){
+      // the admin's free vessel for testing (adminOk: Jonas' account on the cloud's hosts, any local build): no price, no right, no lock, no yard; she
+      // lies in the port the followed vessel is in, or the nearest one, and is followed at once
+      if (typeof adminOk !== 'function' || !adminOk() || !VESSELS[d.k]) return;
+      const pid = S.boat.port || nearestPort(S.boat.pos).id, v = newVesselObj(d.k, pid);
+      storeVessel(curVessel()); bindVessel(v); if (typeof G3 !== 'undefined') G3.vesselChanged();
+      log('Admin: tok ' + VESSELS[d.k].name.no + ' gratis til flåten. Hun heter «' + v.boatName + '» og ligger i ' + portById(pid).name + '.', 'Admin: took the ' + VESSELS[d.k].name.en + ' into the fleet for free. She is called «' + v.boatName + '» and lies at ' + portById(pid).name + '.');
+      toast(L('«' + v.boatName + '» er din. Du følger henne nå.', '«' + v.boatName + '» is yours. You follow her now.')); refreshAll();
+    }
     else if (a === 'vsel'){ selV = d.id; }
     else if (a === 'goto'){ const v = vesselById(d.id); if (!v) return; if (SEL_APPS.includes(d.a)) selV = v.id; else if (v.id !== S.cur){ storeVessel(curVessel()); bindVessel(v); selV = null; if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); } app = d.a; }
     else if (a === 'vfollow'){ const v = vesselById(d.id); if (!v || v.id === S.cur) return; storeVessel(curVessel()); bindVessel(v); selV = null; if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); }
@@ -182,6 +191,10 @@
     else if (a === 'turdrop'){ turDrop(+d.id); }
     else if (a === 'turgo'){ turGo(+d.id); show(false); return false; }
     else if (a === 'turmeas'){ show(false); turMeasure(+d.id); return false; }
+    else if (a === 'turans'){ turLeteAnswer(+d.id, +d.q, d.o); }
+    else if (a === 'pttake'){ const o = (PTOW._P.open || []).find(x => String(x.id) === String(d.id)); if (o) PTOW.take(o); show(false); return false; }
+    else if (a === 'ptgo'){ const H = S.ptowH; show(false); if (H && typeof leiaTo === 'function'){ if (typeof openPlotter === 'function') openPlotter(); leiaTo({x:H.x, y:H.y}); } return false; }
+    else if (a === 'ptdrop'){ PTOW.drop(); }
     else if (a === 'turfoto'){ turFotoShoot(+d.id); }
     else if (a === 'ordtake'){ const O = ordState(), o = O.offers.find(x => x.id === +d.id); if (!o || O.active.length >= 3) return; O.offers.splice(O.offers.indexOf(o), 1); o.due = S.t + o.days * 1440; O.active.push(o); log('Tok en bestilling fra ' + CUSTOMERS.find(c => c.id === o.cust).no + '.', 'Took an order from ' + CUSTOMERS.find(c => c.id === o.cust).no + '.'); }
     else if (a === 'cloth'){ const C = CLOTHES[d.k], people = 1 + S.crew.length, have = (S.clothes || {})[d.k] || 0; if (!C || have >= people) return; if (spendable() < C.price){ toast(t('no_cash')); return; } book('land', -C.price, C.no, C.en); S.clothes = S.clothes || {olje:0, varme:0}; S.clothes[d.k] = have + 1; log('Kjøpte ' + C.no.toLowerCase() + '.', 'Bought ' + C.en.toLowerCase() + '.'); }

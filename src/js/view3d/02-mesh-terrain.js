@@ -52,7 +52,10 @@
   const snowLine = H => typeof snowLineAt === 'function' ? snowLineAt(H) : seasonal(SNOWLINE, H) + clamp(typeof climDiff === 'function' ? climDiff('t', H) : 0, -6, 8) * 150;
   // the grass and the birch by the season where the boat is (core seasonAt, V3): 0 straw-coloured to 1 green; the birch bare, in leaf
   // or yellow
-  const grassNow = () => typeof seasonAt === 'function' ? Math.round(seasonAt(S.t / 60).grass * 10) / 10 : 1;
+  // the autumn colours (ruska, G1): how far the yellowing has come since the autumn set in (seasonAt yel, 0-1 over ten days, until the
+// new year), and how much of the birch's leaf still hangs; the heath goes red-brown with it and stays so under the snow, the woods yellow
+const ruskNow = () => { if (typeof seasonAt !== 'function') return [0, 1]; const s = seasonAt(S.t / 60); return [Math.round(s.yel * 10) / 10, Math.round(s.leaf * 10) / 10]; };
+const grassNow = () => typeof seasonAt === 'function' ? Math.round(seasonAt(S.t / 60).grass * 10) / 10 : 1;
   // real ground height (m) at world x/z (m); sea floor is shaped from shore distance and exposure; where a harbour unit stands, its
   // ground (unitTerr)
   // The shore (#61, Jonas 12.10.2026: land missing along the water, a brown line in the sea, the surf beside the land): one profile,

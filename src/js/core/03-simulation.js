@@ -526,9 +526,16 @@ const AREAS = {egga:eggaArea};
 const TUT_FIELD = 4;   // Gisundet nord
 // the first trip's patch: where a start along the coast put it (S.tut.f, ui/08c-start.js), else Gisundet nord
 const tutFieldAt = () => (typeof S !== 'undefined' && S && S.tut && S.tut.f) ? S.tut.f : GROUNDS[TUT_FIELD];
+// the mix: the patch's own (S.tut.f.mix, the jig's fish that stand there now and are lawful there, ui/08c-start.js tutFieldNear), else
+// the skrei mix of the Senja start
 const TUTB = {peak:5.2, mix:{torsk:0.72, sei:0.18, hyse:0.1}};
+// the first trip's fishing (Onboarding 2, O3, V2 A, 27.10.2026): one hour (ten real minutes), and the guarantee tops up to half the hold
+// (175 kg in the starting boat) instead of a full one; the landing does not wait for a full hold
+const TUT_FISH_H = 1, TUT_HOLD = 0.5;
+const tutTarget = () => capHold() * TUT_HOLD;
+const tutMixOf = () => (typeof S !== 'undefined' && S && S.tut && S.tut.f && S.tut.f.mix) || TUTB.mix;
 function tutBonus(sp, p){
-  const m = TUTB.mix[sp]; if (!m || !(S && S.tut && S.tut.catch)) return 0;
+  const m = tutMixOf()[sp]; if (!m || !(S && S.tut && S.tut.catch)) return 0;
   const g = tutFieldAt(), d = dist(p, g.p), x = Math.max(0, d - g.r * 0.5) / (g.r * 0.33);
   return TUTB.peak * m * Math.exp(-x * x);
 }
@@ -577,7 +584,9 @@ function wshLand(port, H, acc, kgSp, codQ){ if (!WSH.rec) return; const Q = wq()
   const items = Object.entries(kgSp).filter(([, kg]) => kg > 0.01).slice(0, 24).map(([sp, kg]) => ({sp, kg:+kg.toFixed(1), kgq:sp === 'torsk' && acc === 'open' ? +codQ.toFixed(1) : 0}));
   // the boat's name goes with it for the open group's leaderboard (and the company's in the closed group, whose leaderboard shows it:
   // Jonas 05.10.2026); there is no hiding from the others (07.10.2026)
-  if (items.length) Q.l.push({gh:+H.toFixed(2), y:yearH(H), port, acc, items, boat:String(S.boatName || '').slice(0, 24), company:acc !== 'lukket' ? '' : String(S.company || '').slice(0, 40)}); }
+  const ev = typeof evAt === 'function' ? evAt(H, port, items.map(i => i.sp)) : '';   // the shared event it falls in (09c-seasons.js)
+  let reg = ''; try { const q = portById(port); if (q && typeof landsdel === 'function') reg = landsdel(q.p); } catch (e){}   // the part of the coast, for the village contest (bygde_top)
+  if (items.length) Q.l.push({gh:+H.toFixed(2), y:yearH(H), port, acc, items, boat:String(S.boatName || '').slice(0, 24), company:acc !== 'lukket' ? '' : String(S.company || '').slice(0, 40), ev, reg}); }
 function initStock(){
   const a = {};
   // the famous grounds are already worked by the local fleet when the game starts
@@ -809,6 +818,7 @@ function bankAfterIncome(inKr){
   const B = bankS(); if (!(inKr > 0)) return;
   const tx = B.auto ? Math.min(Math.max(0, taxOwed() - B.skatt), inKr * BANK.autoMax) : inKr * (B.pct || 0);
   if (tx >= 1) bankMove('skatt', tx, 'Avsatt til skatt', 'Set aside for tax');
+  else if (B.auto && B.skatt - taxOwed() >= 1) bankMove('skatt', -(B.skatt - taxOwed()), 'Mer avsatt enn skatten, tilbake', 'More set aside than the tax, back');   // the automatic set-aside follows the tax down too
   if (B.spPct > 0) bankMove('spare', inKr * B.spPct, 'Fast sparing', 'Regular savings');
 }
 // the tax paid: from the tax account first, the rest from the current account; a refund comes to the current account
@@ -849,23 +859,32 @@ function bankDay(H){
 // The rates are 2026's (regjeringen.no «Skattesatser 2026», Sticos, Sands; Lovdata and Skatteetaten shut from here, found by search
 // 04.10 and 27.10.2026). Each payment is told by Skatteetaten a week before, and is taken from the tax account first (taxPay).
 const TAX = {alm:0.22, pfrad:114540, trygd:0.076, tlow:99650, trinn:[[226100, 0.017], [318300, 0.04], [725050, 0.137], [980100, 0.168], [1467200, 0.178]],
-  fisk:{share:0.30, max:160000, days:130}, as:{rate:0.22, capital:30000, fee:5570, books:30000}, dep:0.14, depF:0.7, skjerm:0.035, min:2000, change:0.2, warnD:7,
+  fisk:{share:0.30, max:160000, days:130}, as:{rate:0.22, capital:30000, fee:5570, books:30000}, dep:0.14, depF:1, skjerm:0.035, min:2000, change:0.2, warnD:7,
   enkT:[[2, 15], [5, 15], [8, 15], [11, 15]], enkSettle:[5, 20], asT:[[1, 15], [3, 15]], asSettle:[9, 20]};
 // the tax of a profit P: form 'ENK' or 'AS', days fishing, the shielding deduction (ENK), the loss carried forward
 function taxOf(P, form, days, skj = 0, carry = 0){
   const R = {P:Math.round(P), carry:0, fd:0, skj:0, alm:0, tryg:0, trinn:0, sum:0}; R.carry = Math.round(Math.min(Math.max(0, P), carry || 0)); P -= R.carry; if (P <= 0) return R;
   if (form === 'AS'){ R.alm = Math.round(P * TAX.as.rate); R.sum = R.alm; return R; }
   R.fd = days >= TAX.fisk.days ? Math.round(Math.min(P * TAX.fisk.share, TAX.fisk.max)) : 0;
-  R.skj = Math.round(Math.min(P, Math.max(0, skj))); const PI = P - R.skj;   // the personal income
+  R.skj = Math.round(Math.min(P, skj)); const PI = P - R.skj;   // the personal income (skj below 0: interest added back, skjOf)
   R.alm = Math.round(Math.max(0, P - R.fd - TAX.pfrad) * TAX.alm); R.tryg = PI > TAX.tlow ? Math.round(Math.min(PI * TAX.trygd, (PI - TAX.tlow) * 0.25)) : 0;
   const B = TAX.trinn; for (let i = 0; i < B.length; i++){ const lo = B[i][0], hi = i + 1 < B.length ? B[i + 1][0] : Infinity; if (PI > lo) R.trinn += (Math.min(PI, hi) - lo) * B[i][1]; }
   R.trinn = Math.round(R.trinn); R.sum = R.alm + R.tryg + R.trinn; return R;
 }
-// each vessel's tax value (saldo), 70 % of its price when first seen (the rest stands for the quota right and the gear), less 14 % a year
-function saldoOf(v){ const T = S.saldo || (S.saldo = {}); if (T[v.id] == null) T[v.id] = Math.round(VESSELS[vget(v, 'boat').type].price * TAX.depF); return T[v.id]; }
+// each vessel's tax value (saldo): its price when first seen (the quota right is apart, licValue, and is not depreciated), less 14 % a year
+function saldoOf(v){ const T = S.saldo || (S.saldo = {});
+  if (S.saldoV !== 2){ for (const k in T) T[k] = Math.round(T[k] / 0.7); S.saldoV = 2; }   // (before 28.10.2026 the tax value was 70 % of the price)
+  if (T[v.id] == null) T[v.id] = Math.round(VESSELS[vget(v, 'boat').type].price * TAX.depF); return T[v.id]; }
 const depBase = () => (S.fleet || []).reduce((a, v) => a + saldoOf(v), 0);
 // the shielding base: the vessels' tax values and the quota rights
 const skjBase = () => depBase() + (S.fleet || []).reduce((a, v) => a + licValue(vget(v, 'lic')), 0);
+// the shielding for the sole proprietor (skatteloven §§ 12-11, 12-13): 3,5 % (anslag) of the vessels' tax values and the quota less the
+// debt to the bank (the loans and the overdraft). The interest is a cost and lowers the 22 % in full; on the debt above the assets it is
+// added back to the personal income, so a large loan gives the interest's deduction once, not a shielding of assets the bank owns as
+// well. frac: the part of the year; ri: the interest booked so far scaled to the reckoning (1 = as booked). Before 28.10.2026 the debt was
+// not taken off (CapteinAdrian's question), which gave an indebted sole proprietor a little too little trygdeavgift and trinnskatt.
+function skjOf(frac, ri = 1){ const g = skjBase(), d = debt() + Math.max(0, -S.cash), Y = S.stats.y && S.tx ? S.stats.y[S.tx.y] || {} : {}, rent = Math.max(0, -(Y.renter || 0)) * ri;
+  return Math.max(0, g - d) * TAX.skjerm * frac - (d > g ? rent * (d - g) / d : 0); }
 const txForm = () => S.form === 'AS' ? 'AS' : 'ENK';
 const taxCarry = () => S.taxCarry || (S.taxCarry = {ENK:0, AS:0});
 function txInit(H, adv){ S.tx = {y:gDate(H).getUTCFullYear(), rev0:S.stats.revenue, cost0:S.stats.costs, f0:0, paid:0, adv:adv || 0, days:[], enk:null}; }
@@ -873,33 +892,34 @@ function txInit(H, adv){ S.tx = {y:gDate(H).getUTCFullYear(), rev0:S.stats.reven
 function yearFrac(H){ const d = gDate(H), y = d.getUTCFullYear(), y0 = Date.UTC(y, 0, 1); return clamp((d.getTime() - y0) / (Date.UTC(y + 1, 0, 1) - y0), 0, 1); }
 // the profit of the year so far (of the company's part, when it was founded in the year), with the depreciation for the part that has gone
 function txProfit(H){ const T = S.tx, d = gDate(H), y0 = Date.UTC(T.y, 0, 1), frac = clamp((d.getTime() - y0) / (Date.UTC(T.y + 1, 0, 1) - y0), 0, 1);
-  return (S.stats.revenue - T.rev0) - (S.stats.costs - T.cost0) - depBase() * TAX.dep * Math.max(0, frac - (T.f0 || 0)); }
+  return (S.stats.revenue - T.rev0) - (S.stats.costs - T.cost0) - depBase() * TAX.dep * Math.max(0, frac - (T.f0 || 0)) + (T.pre || 0); }
 // the tax of the sole proprietor's part of this year so far, and of the company's part
 function txNow(H = S.t / 60){ const T = S.tx; if (!T) return {enk:null, as:null};
-  const P = txProfit(H), C = taxCarry(), skj = skjBase() * TAX.skjerm * yearFrac(H);
-  if (S.form === 'AS') return {enk:T.enk ? taxOf(T.enk.P, 'ENK', T.enk.days, T.enk.skj, C.ENK) : null, as:taxOf(P, 'AS', 0, 0, C.AS)};
+  const P = txProfit(H), C = taxCarry(), skj = skjOf(yearFrac(H));
+  if (S.form === 'AS') return {enk:null, as:taxOf(P, 'AS', 0, 0, C.AS)};
   return {enk:taxOf(P, 'ENK', T.days.length, skj, C.ENK), as:null};
 }
 // the tax still owed: this year's so far less the advance paid, and the years closed but not settled. What the tax account should hold.
-function taxOwed(H = S.t / 60){ if (!S.tx) return 0; const N = txNow(H); let o = (N.enk ? N.enk.sum - S.tx.paid : 0) + (N.as ? N.as.sum : 0);
+function taxOwed(H = S.t / 60){ if (!S.tx) return 0; const N = txNow(H); let o = (N.enk ? N.enk.sum : 0) + (N.as ? N.as.sum : 0) - S.tx.paid;   // (T.paid: the sole proprietor's terms, or a company's advance from before the terms)
   for (const y in (S.txY || {})){ const Y = S.txY[y]; for (const k of ['enk', 'as']) if (Y[k] && !Y[k].settled) o += Y[k].R.sum - Y[k].paid; }
   return Math.max(0, Math.round(o)); }
 // the sole proprietor's advance for the year: last year's tax, changed when the year so far, carried to a whole year, is more than 20 %
 // off (the first year it is that estimate); the year's part until the company was founded when it was
-function enkAdv(H){ const T = S.tx; if (T.enk) return taxOf(T.enk.P, 'ENK', T.enk.days, T.enk.skj, taxCarry().ENK).sum; if (S.form === 'AS') return T.paid;
-  const fr = Math.max(0.2, yearFrac(H)), est = taxOf(txProfit(H) / fr, 'ENK', T.days.length / fr, skjBase() * TAX.skjerm, taxCarry().ENK).sum;
+function enkAdv(H){ const T = S.tx; if (S.form === 'AS') return T.paid;
+  const fr = Math.max(0.2, yearFrac(H)), est = taxOf(txProfit(H) / fr, 'ENK', T.days.length / fr, skjOf(1, 1 / fr), taxCarry().ENK).sum;
   return Math.abs(est - T.adv) > TAX.change * Math.max(T.adv, TAX.min) ? est : T.adv; }
 const atDay = (d, md) => d.getUTCMonth() === md[0] && d.getUTCDate() === md[1];
 const taxDate = (y, md) => Date.UTC(y, md[0], md[1]);
 // the payments ahead in the next year: [{t (ms), kind, y, kr}] (the amounts as they look now)
 function taxPlan(H = S.t / 60){
   const T = S.tx, d = gDate(H), now = d.getTime(), out = [], y = d.getUTCFullYear(); if (!T) return out;
-  if (S.form !== 'AS' || T.enk){ const adv = enkAdv(H), left = TAX.enkT.filter(md => taxDate(T.y, md) >= now - 864e5 + 1); const small = adv < TAX.min;
+  if (S.form !== 'AS'){ const adv = enkAdv(H), left = TAX.enkT.filter(md => taxDate(T.y, md) >= now - 864e5 + 1); const small = adv < TAX.min;
     left.forEach((md, i) => { const kr0 = small ? (md[0] === 5 ? Math.max(0, adv - T.paid) : 0) : Math.max(0, (adv - T.paid) / left.length); if (kr0 >= 1) out.push({t:taxDate(T.y, md), kind:'enk', y:T.y, kr:Math.round(kr0)}); }); }
   for (const yy in (S.txY || {})){ const Y = S.txY[yy], n = +yy;
     if (Y.enk && !Y.enk.settled) out.push({t:taxDate(n + 1, TAX.enkSettle), kind:'enkS', y:n, kr:Y.enk.R.sum - Y.enk.paid});
-    if (Y.as && !Y.as.settled){ const tk = asBase(n) >= TAX.min ? Math.round(asBase(n) / 2) : 0; TAX.asT.forEach((md, i) => { if (i >= (Y.as.terms || 0) && tk) out.push({t:taxDate(n + 1, md), kind:'as', y:n, kr:tk}); });
-      out.push({t:taxDate(n + 1, TAX.asSettle), kind:'asS', y:n, kr:Y.as.R.sum - Y.as.paid - tk * (2 - (Y.as.terms || 0))}); } }
+    if (Y.as && !Y.as.settled){ const tk = asBase(n) >= TAX.min ? Math.round(asBase(n) / 2) : 0; let left = Math.max(0, Y.as.R.sum - Y.as.paid), sum = 0;
+      TAX.asT.forEach((md, i) => { if (i < (Y.as.terms || 0) || !tk) return; const kr0 = Math.min(tk, left); left -= kr0; sum += kr0; if (kr0 >= 1) out.push({t:taxDate(n + 1, md), kind:'as', y:n, kr:kr0}); });
+      out.push({t:taxDate(n + 1, TAX.asSettle), kind:'asS', y:n, kr:Y.as.R.sum - Y.as.paid - sum}); } }
   return out.filter(x => x.t >= now - 864e5 + 1 && Math.abs(x.kr) >= 1).sort((a, b) => a.t - b.t);
 }
 // the company's advance for a year: the last tax set (the year before's), or the year's own when it is more than 20 % off (the
@@ -909,10 +929,11 @@ function asBase(y){ const Y = (S.txY || {})[y], P = (S.txY || {})[y - 1], own = 
 const TAXK = {enk:['Forskuddsskatt', 'Advance tax'], enkS:['Skatteoppgjøret', 'The tax settlement'], as:['Forskuddsskatt for selskapet', 'The company\'s advance tax'], asS:['Skatteoppgjøret for selskapet', 'The company\'s tax settlement']};
 // the year that has ended: its profit and tax set, the loss carried, the vessels' tax values written down, the next year's advance
 function txClose(H){
-  const T = S.tx, C = taxCarry(), Y = (S.txY || (S.txY = {}))[T.y] = {form:txForm()}, P = txProfit(H), skj = skjBase() * TAX.skjerm * (1 - (T.f0 || 0));
+  const T = S.tx, C = taxCarry(), Y = (S.txY || (S.txY = {}))[T.y] = {form:txForm()}, P = txProfit(H), skj = skjOf(1 - (T.f0 || 0));
   const part = (P0, form, days, sk, paid) => { const R = taxOf(P0, form, days, sk, C[form]); C[form] += P0 < 0 ? -P0 : -R.carry; return {P:Math.round(P0), days, R, paid:Math.round(paid || 0), settled:false, terms:0}; };
-  if (T.enk) Y.enk = part(T.enk.P, 'ENK', T.enk.days, T.enk.skj, T.paid);
-  if (S.form === 'AS') Y.as = part(P, 'AS', 0, 0, 0); else Y.enk = part(P, 'ENK', T.days.length, skj, T.paid);
+  // (an AS whole year has paid nothing in the year under the terms; what a save paid in it under the quarterly advance before 27.10.2026
+  // counts: T.paid is then the company's, CapteinAdrian 28.10.2026)
+  if (S.form === 'AS') Y.as = part(P, 'AS', 0, 0, T.paid); else Y.enk = part(P, 'ENK', T.days.length, skj, T.paid);
   const tax = (Y.enk ? Y.enk.R.sum : 0) + (Y.as ? Y.as.R.sum : 0);
   { bookYear(); const Yp = S.stats.y[T.y] || (S.stats.y[T.y] = {}); Yp._dep = Math.round(depBase() * TAX.dep); Yp._tax = tax; }   // for the accounts (bookResult)
   for (const v of S.fleet || []) S.saldo[v.id] = Math.round(saldoOf(v) * (1 - TAX.dep));
@@ -921,20 +942,43 @@ function txClose(H){
   msg('Skatteetaten', 'Regnskapsåret ' + y0 + ' er avsluttet: overskudd ' + kr((Y.enk ? Y.enk.P : 0) + (Y.as ? Y.as.P : 0)) + ', beregnet skatt ' + kr(tax) + '. ' + (Y.enk ? 'Skatteoppgjøret for enkeltpersonforetaket kommer i juni. ' : '') + (Y.as ? 'Selskapet betaler forskudd 15. februar og 15. april, og oppgjøret kommer i oktober.' : ''),
     'The financial year ' + y0 + ' is closed: profit NOK ' + ((Y.enk ? Y.enk.P : 0) + (Y.as ? Y.as.P : 0)) + ', tax reckoned NOK ' + tax + '. ' + (Y.enk ? 'The sole proprietorship\'s settlement comes in June. ' : '') + (Y.as ? 'The company pays its advance 15 February and 15 April, and the settlement comes in October.' : ''));
 }
+// a day with you aboard at sea counts as a day fishing (skatteloven § 6-60), whenever in the day; marked every hour (hourly). Before 28.10.2026
+// only a boat at sea at midnight counted, so a day's fishing from port to port did not.
+function taxDayMark(H){ if (!S.tx) return; taxFix(H); const T = S.tx, mv = vesselById(S.me), mb = mv ? vget(mv, 'boat') : null, day = Math.floor(H / 24);
+  if (mb && ['sailing', 'fishing'].includes(mb.status) && T.days[T.days.length - 1] !== day && gDate(H).getUTCFullYear() === T.y) T.days.push(day); }
+// the corrections of 28.10.2026 for saves from before (CapteinAdrian): a year split at a company's founding is put together again; the
+// days fishing get the landing days of the year the midnight count missed; a company that paid the advance in the income year under the
+// quarterly rules (before 27.10.2026) gets interest on it from when it was paid until when a company pays it (15 February and 15 April
+// the year after), as rentegodtgjørelse (tax free) at the savings rate
+function taxFix(H){
+  const T = S.tx; if (!T || S.txFix >= 2) return; S.txFix = 2;
+  if (T.enk){ T.pre = (T.pre || 0) + T.enk.P; T.enk = null; }
+  { const have = new Set(T.days); for (const s of S.sales || []){ const d = Math.floor(s.t / 1440); if (gDate(s.t / 60).getUTCFullYear() === T.y && !have.has(d)){ have.add(d); } } T.days = [...have].sort((a, b) => a - b); }
+  const cut = 189996;   // the game minute the terms came (27.10.2026 14:46 UTC)
+  if (S.form === 'AS' && T.paid > 0 && (S.formT || 0) < cut){
+    const due = Date.UTC(T.y + 1, 2, 15), ms = t => EPOCH + t * 6e4, paidMsgs = (S.msgs || []).filter(m => m.from === 'Skatteetaten' && m.t < cut)
+      .map(m => [m.t, +(((m.en || '').match(/^Advance tax for \d{4}: NOK (\d+) taken/) || [])[1] || 0)]).filter(x => x[1] > 0);
+    let left = T.paid, rg = 0; for (const [t, x] of paidMsgs){ const k = Math.min(x, left); left -= k; rg += k * BANK.spRate * Math.max(0, due - ms(t)) / 864e5 / 365; }
+    if (left > 0) rg += left * BANK.spRate * Math.max(0, due - Date.UTC(T.y, 6, 1)) / 864e5 / 365;   // the rest as paid 1 July
+    rg = Math.round(rg); if (rg >= 1){ book('skatt', rg, 'Rentegodtgjørelse fra Skatteetaten', 'Interest on tax paid early');
+      msg('Skatteetaten', 'Forskuddsskatten for ' + T.y + ' (' + kr(Math.round(T.paid)) + ') ble trukket i inntektsåret etter de gamle reglene i spillet, men et aksjeselskap betaler forskuddet 15. februar og 15. april året etter. Du får ' + kr(rg) + ' i rentegodtgjørelse for pengene som ble trukket for tidlig. Forskuddet regnes med, så skatten for ' + T.y + ' betales bare én gang.',
+        'The advance tax for ' + T.y + ' (NOK ' + Math.round(T.paid) + ') was taken in the income year under the game\'s old rules, but a company pays its advance on 15 February and 15 April the year after. You get NOK ' + rg + ' in interest for the money taken too early. The advance counts, so the tax for ' + T.y + ' is paid only once.'); }
+  }
+}
 // at midnight: the days at sea with you aboard, the year closed at the new year, the company's books every month, the terms and the
 // settlements on their days, and the week's notice before each
 function taxTick(H){
   if (!S.tx) txInit(H);
   const T = S.tx, d = gDate(H), mv = vesselById(S.me), mb = mv ? vget(mv, 'boat') : null, day = Math.floor(H / 24);
   if (T.adv == null) T.adv = T.paid || 0;   // a save from before the terms (Økonomi 2, Ø4): the advance paid stands as the year's so far
-  if (mb && ['sailing', 'fishing'].includes(mb.status) && T.days[T.days.length - 1] !== day) T.days.push(day);
+  taxFix(H);
   if (d.getUTCFullYear() > T.y) txClose(H);
   if (d.getUTCDate() === 1 && S.form === 'AS') book('regnskap', -Math.round(TAX.as.books / 12), 'Regnskapsfører', 'Accountant');
   const y = d.getUTCFullYear(), L2 = (no, en) => S.lang === 'no' ? no : en, B = bankS();
   // the sole proprietor's terms
   const ti = TAX.enkT.findIndex(md => atDay(d, md));
-  if (ti >= 0 && (S.form !== 'AS' || S.tx.enk)){
-    const adv = enkAdv(H), left = TAX.enkT.length - ti, small = adv < TAX.min; if (adv !== T.adv && !T.enk && Math.abs(adv - T.adv) >= 1){ T.adv = adv;
+  if (ti >= 0 && S.form !== 'AS'){
+    const adv = enkAdv(H), left = TAX.enkT.length - ti, small = adv < TAX.min; if (adv !== T.adv && Math.abs(adv - T.adv) >= 1){ T.adv = adv;
       msg('Skatteetaten', 'Forskuddsskatten for ' + y + ' er endret til ' + kr(adv) + ' etter det året ser ut til å gi.', 'The advance tax for ' + y + ' is changed to NOK ' + adv + ' by what the year looks like giving.'); } else T.adv = adv;
     const due = Math.round(small ? (TAX.enkT[ti][0] === 5 ? Math.max(0, adv - T.paid) : 0) : Math.max(0, (adv - T.paid) / left));
     if (due >= 1){ taxPay(due, 'Forskuddsskatt ' + y + ', ' + (ti + 1) + '. termin', 'Advance tax ' + y + ', term ' + (ti + 1)); T.paid += due;
@@ -948,7 +992,7 @@ function taxTick(H){
       'The tax settlement for ' + (y - 1) + ' (sole proprietorship): profit NOK ' + E.P + ', tax NOK ' + E.R.sum + '. Paid in advance NOK ' + E.paid + '. ' + (rest >= 0 ? 'NOK ' + rest + ' still owed has been paid.' : 'NOK ' + (-rest) + ' comes back to you.'));
     bankRelease(); }
   if (Y && Y.as && !Y.as.settled){ const A = Y.as, k = TAX.asT.findIndex(md => atDay(d, md));
-    if (k >= 0 && (A.terms || 0) <= k){ const due = Math.round(asBase(y - 1) / 2); A.terms = k + 1; if (due >= 1 && asBase(y - 1) >= TAX.min){ taxPay(due, 'Forskuddsskatt for selskapet ' + (y - 1), 'The company\'s advance tax ' + (y - 1)); A.paid += due;
+    if (k >= 0 && (A.terms || 0) <= k){ const due = Math.min(Math.round(asBase(y - 1) / 2), Math.max(0, A.R.sum - A.paid)); A.terms = k + 1; if (due >= 1 && asBase(y - 1) >= TAX.min){ taxPay(due, 'Forskuddsskatt for selskapet ' + (y - 1), 'The company\'s advance tax ' + (y - 1)); A.paid += due;
       msg('Skatteetaten', (k + 1) + '. termin av selskapets forskuddsskatt for ' + (y - 1) + ': ' + kr(due) + ' er betalt.', 'Term ' + (k + 1) + ' of the company\'s advance tax for ' + (y - 1) + ': NOK ' + due + ' paid.'); } }
     if (atDay(d, TAX.asSettle)){ const rest = A.R.sum - A.paid; taxPay(rest, 'Skatteoppgjøret for selskapet ' + (y - 1), 'The company\'s tax settlement ' + (y - 1)); A.settled = true;
       S.taxLast = {y:y - 1, form:'AS', days:0, R:A.R, paid:A.paid, rest};
@@ -963,11 +1007,13 @@ function taxTick(H){
 // founding the company: the share capital stays the company's money, the registration fee goes
 function foundAS(){
   if (S.form === 'AS' || S.cash < TAX.as.capital + TAX.as.fee) return false;
-  // the year until now is the sole proprietor's; the company's profit counts from today, its registration fee first (Økonomi 2, Ø4)
-  { const H = S.t / 60; if (!S.tx) txInit(H); const T = S.tx, fr = yearFrac(H); T.enk = {P:Math.round(txProfit(H)), days:T.days.length, skj:Math.round(skjBase() * TAX.skjerm * fr)}; T.rev0 = S.stats.revenue; T.cost0 = S.stats.costs; T.f0 = fr; }
+  // the sole proprietorship is converted to the company free of tax, with tax effect from 1 January of the year (skatteloven § 11-20; Sticos:
+  // «En skattefri omdanning har alltid skattemessig virkning fra 1. januar»): the whole year is the company's, and the advance the sole
+  // proprietor paid in it counts as paid (in life the owner has it back at his own settlement; the game has no private economy). Before
+  // 28.10.2026 the year was split at the founding.
   book('regnskap', -TAX.as.fee, 'Registrering i Foretaksregisteret', 'Registration of the company');
   S.form = 'AS'; S.formT = S.t; if (!S.company) S.company = (S.boatName || 'Havbris') + ' Fiskeri'; if (!/ AS$/.test(S.company)) S.company += ' AS'; pressPut('as', {type:S.boat.type});
-  msg('Brønnøysundregistrene', S.company + ' er registrert i Foretaksregisteret med ' + kr(TAX.as.capital) + ' i aksjekapital. Fra nå skattlegges overskuddet med 22 % i selskapet, uten fiskerfradrag, og alt blir i selskapet. Selskapet fører regnskap, betaler forskuddsskatt i februar og april året etter, og får skatteoppgjøret i oktober. Overskuddet så langt i år skattlegges som før, i enkeltpersonforetaket.', S.company + ' is registered with NOK ' + TAX.as.capital + ' in share capital. From now the profit is taxed at 22 % in the company, without the fisherman\'s deduction, and all of it stays in the company. The company keeps books, pays its advance tax in February and April the year after, and gets its settlement in October. The profit so far this year is taxed as before, in the sole proprietorship.');
+  msg('Brønnøysundregistrene', S.company + ' er registrert i Foretaksregisteret med ' + kr(TAX.as.capital) + ' i aksjekapital. Omdanningen har skattemessig virkning fra 1. januar: hele årets overskudd skattlegges med 22 % i selskapet, uten fiskerfradrag, og alt blir i selskapet. Forskuddsskatten du har betalt i år, regnes med. Selskapet fører regnskap, betaler forskudd 15. februar og 15. april året etter, og får skatteoppgjøret i oktober.', S.company + ' is registered with NOK ' + TAX.as.capital + ' in share capital. The conversion has tax effect from 1 January: the whole year\'s profit is taxed at 22 % in the company, without the fisherman\'s deduction, and all of it stays in the company. The advance tax you have paid this year counts. The company keeps books, pays its advance 15 February and 15 April the year after, and gets its settlement in October.');
   return true;
 }
 const mvaOf = (total, tk) => Math.round((total - tk.pens - tk.prod - tk.forsk - tk.ress - tk.ktrl) * MVA.rate);

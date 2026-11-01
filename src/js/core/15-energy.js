@@ -102,6 +102,10 @@ function giveSkip(k){
 function energyMinute(){
   if (S.energy == null) S.energy = 100;
   if (energyOff()){ S.energy = 100; S.sleep = null; S.drowsy = false; S.enWarn = false; return; }
+  // the first trip holds the energy where it is, awake (Jonas 27.10.2026: «skru av energien til etter tutorialen»): a player away for hours
+  // in the middle of it would otherwise wake to the boat drifted ashore, where the guide has no way on; it runs again from the next minute
+  // after the first trip
+  if (S.tut && S.tut.v === 2){ if (S.sleep) S.sleep = null; S.drowsy = false; return; }
   // Skippertak: held at full, awake, and once it has run out, said once
   if (skipOn()){ if (S.sleep) S.sleep = null; restMinute(); S.energy = 100; S.drowsy = false; S.enWarn = false; return; }
   if (S.skip && !S.skip.told){ S.skip.told = true; log(SKIP[S.skip.k] ? SKIP[S.skip.k].no + ' har gått ut. Nå trenger du og mannskapet hvile igjen.' : 'Skippertak har gått ut.', (SKIP[S.skip.k] ? SKIP[S.skip.k].en : 'Skippertak') + ' has run out. You and the crews need rest again.'); }

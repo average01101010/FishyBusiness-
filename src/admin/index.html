@@ -145,7 +145,7 @@ function turCards(){
   if (!TURE || (TURE.days !== Math.min(90, DAYS) && !TURE.err)){ if (!TURE || !TURE.loading){ TURE = {loading:true, days:-1}; turLoad(); } return card('Oppdrag og fangst', '<p class="note">Henter …</p>'); }
   if (TURE.err) return card('Oppdrag og fangst', '<p class="warn">' + esc(TURE.err) + '</p>', 'Er migreringen supabase/migrations/20261017120000_turokonomi.sql kjørt?');
   const sh = (TURE.share || []).map(r => Object.assign({}, r, {pct:(r.tur + r.fish) > 0 ? r.tur / (r.tur + r.fish) : 0}));
-  return card('Oppdrag og fangst per spiller', table(sh, [['player', 'Spiller'], ['boat', 'Båt'], ['tur', 'Oppdrag (kr)', v => nf(v, 0)], ['fish', 'Fangst (kr)', v => nf(v, 0)], ['pct', 'Andel oppdrag', v => pct(v)], ['done', 'Fullført'], ['failed', 'Feilet']]), 'Fra hendelsene (bare spillere som har sagt ja til statistikk). Bremsen i spillet sikter mot rundt 30 % per spilluke; beløp for oppdrag finnes fra 17.10.2026.') +
+  return card('Oppdrag og fangst per spiller', table(sh, [['player', 'Spiller'], ['boat', 'Båt'], ['tur', 'Oppdrag (kr)', v => nf(v, 0)], ['fish', 'Fangst (kr)', v => nf(v, 0)], ['pct', 'Andel oppdrag', v => pct(v)], ['shown', 'Tavler sett', v => v == null ? '–' : v], ['taken', 'Tatt', v => v == null ? '–' : v], ['done', 'Fullført'], ['dropped', 'Gitt fra seg', v => v == null ? '–' : v], ['due', 'Frist ute', v => v == null ? '–' : v], ['failed', 'Feilet ellers'], ['frac', 'Brukt av fristen', v => v == null ? '–' : pct(v)]]), 'Fra hendelsene (bare spillere som har sagt ja til statistikk). Bremsen i spillet sikter mot rundt 30 % per spilluke; beløp for oppdrag finnes fra 17.10.2026, og tavler sett, gitt fra seg, frist ute og brukt av fristen (snitt for de fullførte) fra 30.10.2026 (migreringen 20261030120000_tur_how.sql).') +
     card('Mistenkelige pengehopp', table(TURE.flags, [['at', 'Tid', v => esc(new Date(v).toLocaleString('nb-NO'))], ['player_id', 'Spiller'], ['cash0', 'Før', v => nf(v, 0)], ['cash1', 'Etter', v => nf(v, 0)], ['delta', 'Økning', v => nf(v, 0)], ['explained', 'Forklart av salg og oppdrag', v => nf(v, 0)], ['game_dt', 'Spillminutter']]), 'En lagring der kassa steg mer enn 300 000 kr og mer enn dobbelt så mye som loggede salg og oppdrag. Bare et flagg: ingenting avvises eller tas fra noen.');
 }
 // ---------- the devices (supabase/migrations/20261006160000_device_data.sql): the frame rate by graphics chip, and the errors with the chips they hit ----------
@@ -343,16 +343,16 @@ VIEW.trakt = () => {
       worst ? 'Størst frafall før «' + esc(FN_STEPS[worst.i][1]) + '»: ' + Math.round(worst.fall * 100) + ' % kommer ikke videre. Der er neste sted å gjøre noe.' : '') +
     card('Per uke de startet', table(FN.weeks, [['wk', 'Uke fra', v => esc(String(v).slice(0, 10))], ['start', 'Startet'], ['catch', 'Fangst', (v, x) => r(v, x.start)], ['land1', '1. levering', (v, x) => r(v, x.start)],
       ['land3', '3. levering', (v, x) => r(v, x.start)], ['reg', 'Registrert', (v, x) => r(v, x.start)], ['d1', 'Dag 1', (v, x) => r(v, x.d1n)], ['d7', 'Dag 7', (v, x) => r(v, x.d7n)], ['d30', 'Dag 30', (v, x) => r(v, x.d30n)]]),
-      'Andel av dem som startet den uka. Dag 1, 7 og 30 regnes av dem som har hatt så lang tid.') + tuView() + hbView();
+      'Andel av dem som startet den uka. Dag 1, 7 og 30 regnes av dem som har hatt så lang tid.') + tuView() + ttView() + hbView();
 };
 // ---------- the first trip's steps (supabase/migrations/20261010100000_tut_steps.sql; the game's ui/07b-first-trip.js; docs/onboarding.md) ----------
 // Each step of the guided first trip in the game's order: how many reached it of those who began the guide, and the median real
 // seconds it took. Where the count falls off, or the seconds pile up, is where the guide is changed next.
-const TUT_STEPS = [['n1', 'Naustet'], ['n2', 'Trofeveggen'], ['n3', 'Ovnen og lista'], ['nout', 'Gå ut'], ['intro', 'Båten'], ['gps', 'Åpne kartplotteren'], ['route1', 'Rute til feltet'], ['fish2', 'Fisketid på punktet'], ['cast1', 'Kast loss'],
-  ['chip', 'Neste-brikka'], ['kino', 'Kino på'], ['kino2', 'Kino av'], ['cam', 'Broa'], ['cam2', 'Broa, tilbake'], ['sail', 'På vei ut'], ['luck', 'Fiskelykka'], ['haill', 'Haill hentet'], ['luckhud', 'Haill i statusboksen'],
-  ['fish', 'Juksa / jukse selv'], ['deck', 'Bløgging og sløying'], ['full', 'Lasten full'], ['route2', 'Rute til mottaket'], ['cast2', 'Kast loss hjem'], ['legs', 'Kurslista'], ['tour', 'Omvisningen'], ['hud', 'Statusboksen'],
-  ['apps', 'Telefonen'], ['vaer', 'Vær-appen'], ['salg', 'Salgslaget'], ['regler', 'Regler'], ['redning', 'Redning'], ['land', 'Levert'], ['slip', 'Sluttseddelen'], ['reg', 'Registrering'], ['book', 'Dekksdagboka'], ['ice', 'Is'],
-  ['beh', 'Beholdning'], ['crew', 'Mannskap'], ['goal', 'Neste mål']];
+// the steps of the first trip since Onboarding 2 (O2–O5, 27.10.2026, docs/planer/onboarding-2.md); the steps before it (n2, n3, chip,
+// kino, cam, luck, haill, the look round on the way home, ice, crew …) are still in the events but no longer in the trip
+const TUT_STEPS = [['n1', 'Naustet'], ['nout', 'Gå ut'], ['intro', 'Båten'], ['gps', 'Åpne kartplotteren'], ['route1', 'Rute til feltet'], ['fish2', 'Fisketid på punktet'], ['cast1', 'Kast loss'],
+  ['sail', 'På vei ut'], ['fish', 'Juksa / jukse selv'], ['deck', 'Bløgging og sløying'], ['full', 'Fisket ferdig'], ['route2', 'Rute til mottaket'], ['cast2', 'Kast loss hjem'], ['land', 'Levert'],
+  ['slip', 'Sluttseddelen'], ['reg', 'Registrering'], ['goal', 'Neste mål']];
 let TU = null;
 async function tuLoad(){ await null; try { TU = DEMO ? tuDemo() : await rpc('admin_tut', {weeks:8}); } catch (e){ TU = {err:e.message}; } if (TAB === 'trakt') render(); }
 function tuDemo(){ const st = {}; let n = 40; TUT_STEPS.forEach(([id], i) => { n = Math.max(12, n - (i % 4 === 0 ? 2 : 0)); st[id] = {n, med:20 + (i * 37) % 90, settled:i % 3}; }); return {started:40, steps:st, done:12, doneMed:1560}; }
@@ -368,11 +368,30 @@ function tuView(){
   return '<div class="grid">' + kpi('Begynte på Første tur', nf(TU.started || 0, 0), 'siste 8 uker, med statistikk') + kpi('Fullførte', nf(TU.done || 0, 0), Math.round((TU.done || 0) / all * 100) + ' % av dem som begynte') + kpi('Median tid, hele turen', mm(TU.doneMed), 'ekte tid') + '</div>' +
     card('Første tur, trinn for trinn', body, worst ? 'Størst frafall før «' + esc(TUT_STEPS[worst.i][1]) + '»: ' + Math.round(worst.fall * 100) + ' % kommer ikke videre. Tida er ekte sekunder på trinnet (trinn som ble avgjort av et senere trinn teller ikke).' : 'Tida er ekte sekunder på trinnet.');
 }
+// ---------- The first trip's clock (supabase/migrations/20261027120000_tut_time.sql; Onboarding 2, O0) ----------
+// Per region of the start (the game's REGIONS in ui/08c-start.js) and for the whole coast: the time to the first fish from the letter's
+// «Ta over» (the goal is five minutes), and how long the map and Father's naust took after «Start her». 'ukjent': steps sent before 27.10.2026.
+const TT_REG = [['alle', 'Hele kysten'], ['ofin', 'Øst-Finnmark'], ['vfin', 'Vest-Finnmark'], ['troms', 'Troms'], ['lofv', 'Lofoten og Vesterålen'], ['hel', 'Helgeland og Salten'],
+  ['tro', 'Trøndelag'], ['more', 'Møre og Romsdal'], ['vest', 'Vestlandet'], ['sor', 'Rogaland og Sørlandet'], ['ukjent', 'Uten landsdel (før 27.10)']];
+let TT = null;
+async function ttLoad(){ await null; try { TT = DEMO ? ttDemo() : await rpc('admin_tut_time', {weeks:8}); } catch (e){ TT = {err:e.message}; } if (TAB === 'trakt') render(); }
+function ttDemo(){ const o = {}; TT_REG.forEach(([r], i) => { o[r] = {started:20 - i, fish:14 - i, done:9 - (i >> 1), fishMed:240 + i * 25, fishP90:520 + i * 30, fish5:8 - (i >> 1), fishBoatMed:150 + i * 20, loads:18 - i, mapMed:6 + i, mapP90:14 + i, naustMed:11 + i, naustP90:30 + i, noRoom:i % 3, letterMed:40}; }); return o; }
+function ttView(){
+  if (!TT){ ttLoad(); return '<p class="note">Henter …</p>'; }
+  if (TT.err) return card('Tid til første fisk', '<p class="warn">' + esc(TT.err) + '</p>', 'Er migreringen supabase/migrations/20261027120000_tut_time.sql kjørt?');
+  const mm = s => s == null ? '–' : s >= 90 ? (Math.round(s / 6) / 10).toString().replace('.', ',') + ' min' : Math.round(s) + ' s', a = TT.alle || {};
+  const rows = TT_REG.filter(([r]) => TT[r]).map(([r, nm]) => { const x = TT[r];
+    return '<tr><td>' + esc(nm) + '</td><td>' + nf(x.started || 0, 0) + '</td><td>' + nf(x.fish || 0, 0) + '</td><td>' + nf(x.done || 0, 0) + '</td><td>' + mm(x.fishMed) + '</td><td class="note">' + mm(x.fishP90) + '</td><td>' + (x.fish ? Math.round((x.fish5 || 0) / x.fish * 100) + ' %' : '–') + '</td><td>' + mm(x.mapMed) + '</td><td>' + mm(x.naustMed) + '</td><td class="note">' + mm(x.naustP90) + '</td><td class="note">' + nf(x.noRoom || 0, 0) + '</td></tr>'; }).join('');
+  const body = '<table><tr><th>Landsdel</th><th>Begynte</th><th>Fikk fisk</th><th>Fullførte</th><th>Til første fisk</th><th>90 %</th><th>Under 5 min</th><th>Kartet</th><th>Naustet</th><th>90 %</th><th>Uten naust</th></tr>' + rows + '</table>';
+  return '<div class="grid">' + kpi('Tid til første fisk', mm(a.fishMed), 'median fra brevets «Ta over»; målet er 5 min') + kpi('Første fisk innen 5 min', a.fish ? Math.round((a.fish5 || 0) / a.fish * 100) + ' %' : '–', 'av dem som fikk fisk') +
+    kpi('Fra «Start her» til naustet', mm(a.naustMed), '90 %: ' + mm(a.naustP90)) + '</div>' +
+    card('Første tur per landsdel', body, 'Ekte tid. «Kartet»: fra «Start her» til kartet er lastet. «Naustet»: fra «Start her» til fars naust er åpent i 3D. «Uten naust»: uten 3D, eller naustet ble ikke funnet innen 25 s.');
+}
 // ---------- Håndboka's drips (supabase/migrations/20261010120000_hb.sql; the game's ui/07c-handbook.js) ----------
 // Each tip of chapters 2–6: how many read it («Skjønner») and how many put the chapter to rest from it («Jeg kan dette»). A tip many
 // skip from is one that comes too early or says too little.
-const HB_TIPS = [[2, 'Tur 2 og 3', [['rute', 'Egen rute'], ['guide', 'Fiskeguiden'], ['ekko', 'Ekkoloddet'], ['tide', 'Flo og fjære'], ['regler', 'Kan jeg fiske her?'], ['sesong', 'Sesongen'], ['post', 'Kystposten'], ['meld', 'Meldinger']]],
-  [3, 'Kvelden og natta', [['energi', 'Hvile'], ['kulde', 'Kulda'], ['diesel', 'Diesel'], ['rorbu', 'Rorbua']]],
+const HB_TIPS = [[2, 'Tur 2 og 3', [['is', 'Is før turen'], ['bok', 'Dekksdagboka'], ['status', 'Statusboksen'], ['beh', 'Beholdning'], ['rute', 'Egen rute'], ['guide', 'Fiskeguiden'], ['lykke', 'Fiskelykke og haill'], ['ekko', 'Ekkoloddet'], ['tide', 'Flo og fjære'], ['regler', 'Kan jeg fiske her?'], ['sesong', 'Sesongen'], ['post', 'Kystposten'], ['meld', 'Meldinger']]],
+  [3, 'Kvelden og natta', [['mannskap', 'Mannskap'], ['vaer', 'Været'], ['redning', 'Redning'], ['energi', 'Hvile'], ['kulde', 'Kulda'], ['diesel', 'Diesel'], ['rorbu', 'Rorbua']]],
   [4, 'Rutinen', [['drift', 'Driftsplanen'], ['topp', 'Salgslaget og topplista'], ['merker', 'Milepæler'], ['tilbake', 'Si fra'], ['patch', 'Patchnotes']]],
   [5, 'Utstyr og båt', [['oppdrag', 'Oppdrag'], ['butikk', 'Utstyrsbutikken'], ['verft', 'Verftet'], ['neste', 'Neste båt']]],
   [6, 'Sosialt og økonomi', [['venner', 'Venner'], ['ais', 'Andre båter'], ['pub', 'Puben'], ['rederi', 'Rederiet'], ['kvote', 'Kvoten']]]];

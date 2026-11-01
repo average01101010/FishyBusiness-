@@ -191,7 +191,8 @@ body.vplot #gps::after{display:none}
 #pub3 .pb-who{list-style:none;padding:0}#pub3 .pb-who li{padding:6px 0;border-top:1px solid rgba(255,255,255,.08)}#pub3 .pb-who small{color:#cdbb98}
 #pub3 .pb-gr{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}#pub3 .pb-gr button{padding:6px 9px;font-size:12px}
 #pub3 .pb-got{list-style:none;padding:0}#pub3 .pb-got small{color:#bfae8c}
-#pub3 .pb-goal{height:10px;border-radius:5px;background:#3a2f24;overflow:hidden;margin:8px 0 2px}#pub3 .pb-goal div{height:100%;background:linear-gradient(90deg,#c9a227,#e6c862)}
+#pub3 .pb-goal{height:10px;border-radius:5px;background:#3a2f24;overflow:hidden;margin:8px 0 2px}#pub3 .pb-goal div{height:100%;background:linear-gradient(90deg,#c9a227,#e6c862)}#phone .pb-goal{height:10px;border-radius:5px;background:#3a2f24;overflow:hidden;margin:8px 0 2px}#phone .pb-goal div{height:100%;background:linear-gradient(90deg,#c9a227,#e6c862)}
+#phone .pb-got{list-style:none;padding:0;margin:4px 0}#phone .pb-got li{padding:4px 0;border-top:1px solid rgba(0,0,0,.08);font-size:13px}#phone .pb-got small{color:#6c6356}
 #pub3 .pb-qs{display:flex;flex-direction:column;gap:6px;margin:8px 0}#pub3 .pb-qs button{text-align:left}#pub3 .pb-qa small{color:#cdbb98}
 body.in-pub #dock,body.in-pub #dockFan,body.in-pub #dockInfo,body.in-pub .ov,body.in-pub #hud,body.in-pub #miniPlot,body.in-pub #logbook{display:none!important}
 #pubUI .pubodds{font-size:11px;opacity:.7;margin:10px 0 0}.haill{color:#e0b93c}.ph-row2{display:flex;gap:6px;margin:4px 0 8px}.ph-row2 .ph-btn{flex:1;margin:0}
@@ -250,7 +251,7 @@ body.v3d #aisCard{display:none} .lbl-ais{font-family:var(--sans);font-weight:600
 .ph-app{background:none;border:0;color:#fff;display:flex;flex-direction:column;align-items:center;gap:6px;font:500 11.5px var(--sans);cursor:pointer;position:relative}
 .ph-app .ic{width:58px;height:58px;border-radius:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.25)}
 .ph-app .ic svg{width:30px;height:30px}
-.ph-app .bd{position:absolute;top:-5px;right:10px;min-width:19px;height:19px;border-radius:10px;background:#e0412f;color:#fff;font:700 11px/19px var(--sans);padding:0 5px}
+.ph-app .bd{position:absolute;top:-5px;right:10px;min-width:19px;height:19px;border-radius:10px;background:#e0412f;color:#fff;font:700 11px/19px var(--sans);padding:0 5px}.ph-app .bd.ny{background:#1e8c6e;font-size:10px;text-transform:uppercase;letter-spacing:.03em}
 .ph-appv{min-height:100%;background:#f3f6f8;color:#15252f}
 .ph-top{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:10px;padding:12px 14px;color:#fff;font:700 16px var(--sans)}
 .ph-top .ic{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.2)} .ph-top .ic svg{width:18px;height:18px}

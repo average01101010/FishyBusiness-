@@ -78,11 +78,12 @@ const DOCK = (() => {
     const sv = portServices(p, berthKind(b));
     return [restOnDock() ? restItem() : null,
       sv.mottak ? I('marked', 'marked', 'Mottak', 'Plant', {menu:'marked', dot:p.mottak && tot > 0.5 && !b.land}) : null,
-      sv.butikk ? I('butikk', 'butikk', 'Butikk', 'Shop', {menu:'butikk'}) : null,
-      I('bygd', 'bygd', 'Bygd', 'Village', {menu:'bygd'}),
-      sv.verft ? I('verft', 'verft', 'Verft', 'Yard', {menu:'verft', dot:svcOverdue() > 0}) : null,
+      // the first trip shows only the plant (Onboarding 2, O5, V7 A): the shop, the village, the yard and the inventory come after it
+      sv.butikk && !tutOn() ? I('butikk', 'butikk', 'Butikk', 'Shop', {menu:'butikk'}) : null,
+      tutOn() ? null : I('bygd', 'bygd', 'Bygd', 'Village', {menu:'bygd'}),
+      sv.verft && !tutOn() ? I('verft', 'verft', 'Verft', 'Yard', {menu:'verft', dot:svcOverdue() > 0}) : null,
       S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid', dot:opsDot()}) : null,
-      I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);   // «Planlegg» went 02.10.2026: the little chart opens the plotter
+      tutOn() ? null : I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);   // «Planlegg» went 02.10.2026: the little chart opens the plotter
   }
   function menuItems(m){
     const b = S.boat, p = port(), H = S.t / 60;

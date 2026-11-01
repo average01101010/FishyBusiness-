@@ -632,6 +632,19 @@ def main():
         print(ok(TUr['started'] == 2 and TUr['steps']['gps']['n'] == 2 and TUr['steps']['gps']['med'] == 21 and TUr['steps']['route1']['n'] == 2 and TUr['steps']['route1']['med'] == 40
                  and TUr['steps']['route1']['settled'] == 1 and TUr['done'] == 1 and TUr['doneMed'] == 1500 and TUx['pl'][0] and TUx['mfa'][0]),
               "the first trip's steps: players and median seconds per step, settled steps without time, the trips finished; only the admin with MFA reads it", TUr)
+        # the first trip's clock (20261027120000_tut_time.sql, Onboarding 2 O0): per region and for the whole coast, the players who began,
+        # got a fish and finished, the median seconds to the first fish and how many within five minutes, the map and the naust after
+        # «Start her», and the loads without the naust; the steps above have no region ('ukjent'); only the admin with MFA reads it
+        sql("""insert into public.events (player_id, kind, data) values ('user_01FN1', 'tut_step', '{"id":"n1","s":3,"r":"vest"}'), ('user_01FN3', 'tut_step', '{"id":"n1","s":4,"r":"troms"}'),
+            ('user_01FN1', 'tut_load', '{"r":"vest","letter":40,"map":8,"naust":14}'), ('user_01FN3', 'tut_load', '{"r":"troms","letter":30,"map":6,"naust":null}'),
+            ('user_01FN1', 'tut_fish', '{"r":"vest","s":240,"sBoat":150}'), ('user_01FN3', 'tut_fish', '{"r":"troms","s":420,"sBoat":300}'), ('user_01FN1', 'tut_done', '{"s":900,"r":"vest"}')""")
+        TT = json.loads(sql("select public.admin_tut_time(8)", AD2, 'authenticated'))
+        TTx = {'pl': sql("select public.admin_tut_time(8)", B, 'authenticated', expect_err=True), 'mfa': sql("select public.admin_tut_time(8)", AD1, 'authenticated', expect_err=True)}
+        A, V = TT.get('alle', {}), TT.get('vest', {})
+        print(ok(A.get('fish') == 2 and A.get('fishMed') == 330 and A.get('fish5') == 1 and A.get('naustMed') == 14 and A.get('noRoom') == 1 and A.get('mapMed') == 7
+                 and V.get('started') == 1 and V.get('fish') == 1 and V.get('done') == 1 and V.get('fishMed') == 240 and V.get('fishBoatMed') == 150
+                 and TT.get('troms', {}).get('naustMed') is None and 'ukjent' in TT and TTx['pl'][0] and TTx['mfa'][0]),
+              "the first trip's clock: per region and in all, the time to the first fish and how many within five minutes, the map and the naust after «Start her», the starts without the naust; only the admin with MFA reads it", TT)
         # Håndboka's drips (20261010120000_hb.sql): per tip, the players who read it and who put the chapter to rest from it; only the
         # admin with MFA reads it
         sql("""insert into public.events (player_id, kind, data) values ('user_01FN1', 'hb', '{"id":"guide","how":"seen"}'), ('user_01FN1', 'hb', '{"id":"guide","how":"seen"}'),

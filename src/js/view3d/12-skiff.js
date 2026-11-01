@@ -20,13 +20,15 @@
     'float db=smoothstep(0.0,0.12,vP.y)*(1.0-smoothstep(0.9*top,1.02*top,vP.y)),dz=wn(vec2(vP.z*0.8+2.1,vP.y*2.6+vP.x*0.3)),rs=wn(vec2(vP.z*3.0,vP.y*9.0));' +
     'float dm=clamp(uWear.y*sd*db*(0.35+0.65*smoothstep(0.2,0.8,bow))*smoothstep(0.5,0.68,dz+0.3*uWear.y)*1.6,0.0,1.0);' +
     'bc=mix(bc,mix(bc*0.35,vec3(0.32,0.16,0.07),0.45*smoothstep(0.4,0.8,rs)),dm*0.9);gs*=1.0-0.85*dm;}';
-  const LITN_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uAlpha;uniform float uEmis;varying vec3 vW;varying vec3 vN;varying vec4 vC;' + PLG + WEAR_GL +
+  const LITN_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uAlpha;uniform float uEmis;uniform vec2 uWet;varying vec3 vW;varying vec3 vN;varying vec4 vC;' + PLG + AIR + WEAR_GL +
     'void main(){vec3 n=normalize(vN);vec3 V=normalize(-vW);if(dot(n,V)<0.0)n=-n;float dif=max(dot(n,uSun),0.0);vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 bc=vC.rgb;float gs=vC.a;if(uWear.x+uWear.y>0.0)wearHull(bc,gs);' +
+    // G6: in the wet (uWet.x) the rough surfaces darken and everything gets glossier, the flat the most (a wet deck or quay shines)
+    'bc*=1.0-0.22*uWet.x*(1.0-gs);gs=mix(gs,max(gs,0.5+0.35*smoothstep(0.5,0.9,n.y)),uWet.x);' +
     'float sp=pow(max(dot(reflect(-uSun,n),V),0.0),mix(12.0,90.0,gs))*gs;float fr=pow(1.0-max(dot(n,V),0.0),4.0)*gs*0.35;' +
-    'vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))+uSunCol*sp*0.55+uAmb*1.2*fr+bc*uEmis;float d=length(vW);float f=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(c,uFog,f),uAlpha);}';
+    'vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))+uSunCol*sp*0.55+uAmb*1.2*fr+bc*uEmis;gl_FragColor=vec4(fin(c,vW),uAlpha);}';
   const TEX_VS = 'attribute vec3 aPos;attribute vec2 aUV;uniform mat4 uVP;uniform mat4 uM;varying vec2 vUV;varying vec3 vW;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vUV=aUV;gl_Position=uVP*w;}';
-  const TEX_FS = 'precision mediump float;uniform sampler2D uTex;uniform float uLit;uniform vec3 uN;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;varying vec2 vUV;varying vec3 vW;' +
-    'void main(){vec4 t=texture2D(uTex,vUV);if(t.a<0.05)discard;vec3 c=uLit>0.5?t.rgb*(uAmb+uSunCol*max(dot(uN,uSun),0.0)):t.rgb;float d=length(vW);float f=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(c,uFog,f),t.a);}';
+  const TEX_FS = 'precision mediump float;uniform sampler2D uTex;uniform float uLit;uniform vec3 uN;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;varying vec2 vUV;varying vec3 vW;' + AIR +
+    'void main(){vec4 t=texture2D(uTex,vUV);if(t.a<0.05)discard;vec3 c=uLit>0.5?t.rgb*(uAmb+uSunCol*max(dot(uN,uSun),0.0)):t.rgb;gl_FragColor=vec4(fin(c,vW),t.a);}';
   let PRGN = null, PRGX = null, SK = null, PRGW = null, WKB = null, CHARM_AT = [0.2, 1.6, 0.1];
   const fishOf = sp => SK.fishM[sp] || SK.fishM.torsk;      // a species' fish mesh (tools/fish), 1 m long
   // the places on the starter boat that the live parts and the people use, in its frame; a detailed model (GLB) brings its own
@@ -66,7 +68,7 @@
   }
   function nSetup(VP){
     gl.useProgram(PRGN.p); const u = PRGN.u; plSet(u);
-    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); gl.uniform1f(u.uAlpha, 1); gl.uniform1f(u.uEmis, 0); gl.uniform4fv(u.uWear, WEAR0);
+    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); airSet(u); gl.uniform1f(u.uAlpha, 1); gl.uniform1f(u.uEmis, 0); gl.uniform4fv(u.uWear, WEAR0); if (u.uWet) gl.uniform2f(u.uWet, WETON ? env.wet || 0 : 0, 0);
   }
   // your own hull's wear for the next draws (core/16c-hull.js b.dmg), and back to none
   const WEAR0 = new Float32Array([0, 0, 1, 1]);
@@ -81,7 +83,7 @@
   function drawTexQuad(q, tex, M, VP, lit, nrm){
     gl.useProgram(PRGX.p); const u = PRGX.u;
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniformMatrix4fv(u.uM, false, M); gl.uniform1f(u.uLit, lit ? 1 : 0); gl.uniform3fv(u.uN, nrm || [0, 1, 0]);
-    gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD);
+    gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); airSet(u);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(u.uTex, 0);
     attr(0, q.pb, 3); attr(1, q.ub, 2); gl.drawArrays(gl.TRIANGLES, 0, q.n || 6);
   }
@@ -326,8 +328,8 @@
       needle:{rpm:0, fuel:0, temp:8, volt:12.6}, wheelA:0, headPrev:null, propA:0, tP:0, tG:0};
     SK.pp = {skipper:[0, 0.2, 0.8, false, [[-0.12, 1.12, 0.05], [0.16, 1.1, 0.05]]], crew:[0.26, 0.32, 1.16, true, null], fisher:[0, 0, 0, false, false]};
     if (glbHas('worker')) SK.wk = wkMeshes(lookMe());      // the fisher's arms, drawn live
-    // the detailed model from tools/boats (skiff59.py): hull, glass, the lid, the outboard and its propeller from the GLB, and the places
-    // from its anchors; the console's screens are part of the model and not live
+    // the detailed model from tools/boats (skiff59.py): hull, glass, the lid, the outboard and its propeller, the wheel from the GLB, and the
+    // places from its anchors; the live plotter, gauges and VHF on the model's dash where it has them (skiff.scr)
     const GK = glbHas('skiff') ? geoOf('skiff') : null, A = GK && GK.skiff;
     if (A){
       const up = o => o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null;
@@ -335,6 +337,12 @@
       SK.motor = up(glbPart('skiff', 'outboard')) || SK.motor; SK.prop = up(glbPart('skiff', 'prop')) || SK.prop; SK.propAt = A.prop;
       const cp = glbPart('skiff', 'cap'); if (cp){ const c = MB(); for (let i = 0; i < cp.p.length; i += 9) c.tri([cp.p[i], cp.p[i + 1], cp.p[i + 2]], [cp.p[i + 3], cp.p[i + 4], cp.p[i + 5]], [cp.p[i + 6], cp.p[i + 7], cp.p[i + 8]], [1, 1, 1]); SK.cap = c.mesh(); }
       SK.wheelAt = A.wheel; SK.wheelTilt = A.wheelTilt; SK.leverAt = A.lever; SK.motorAt = A.motor; SK.live = false;
+      // the places with it: the eye at the wheel, the lights, the pole (VGEO.skiff was settled when the page loaded, before the models
+      // were fetched, and so kept the old kit's eye, which stood forward of the model's console, 31.10.2026)
+      VGEO.skiff = GK;
+      SK.wheel = up(glbPart('skiff', 'wheel')) || SK.wheel;      // the model's own wheel (fittings.helm_wheel), turned like the old one
+      // the live plotter, gauges and VHF on the screens of the model's dash (skiff.scr, Jonas 31.10.2026: «Blender + levende skjermer»)
+      if (A.scr && A.scr.plot && A.scr.gauge){ SK.qPlot = texQuad(...A.scr.plot); SK.qGauge = texQuad(...A.scr.gauge); if (A.scr.vhf) SK.qVhf = texQuad(...A.scr.vhf); SK.live = true; }
       if (A.names) SK.qName = A.names.map(([B, T]) => texStrip(B, T));
       const w = A.wheel, ps = NB(); person(ps, A.skipper[0], A.skipper[1], A.skipper[2], false, [[w[0] - 0.14, w[1] + 0.14, w[2] + 0.05], [w[0] + 0.14, w[1] + 0.12, w[2] + 0.05]], lookMe()); SK.skipper = ps.mesh();
       const pc = NB(); person(pc, A.seat[0], A.seat[1], A.seat[2], true, null, lookCrew(0) || 'crew'); SK.crew = pc.mesh();

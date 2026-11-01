@@ -49,7 +49,7 @@ Rasterkartene ligger ikke lenger i siden. Siden gikk fra 9,3 til 6,2 MB, og kart
   |---|---|---|
   | `core` | `mask` (land, 25 m), `dc` (avstand til land, 100 m), `expo` (eksponering, 500 m) | alltid, før spillet starter |
   | `sim` | `depth` (dybde i halve meter, 50 m) | rundt båtene og redskapene før klokka går |
-  | `view` | `hgt` (høyde, 25 m), `forest` (skog, 50 m) | til 3D, etter hvert som de kommer |
+  | `view` | `hgt` (høyde, 25 m), `forest` (skog, 50 m), `cover` (arealdekket, 50 m, fra 28.10.2026: 4.11c i `3d-verden.md`) | til 3D, etter hvert som de kommer |
 
   - Det som ser langt, leser bare kjernen: strøklengdestrålene og den lokale flåtens drift og fiske. Derfor ligger 25 m-masken i kjernen. Den er 63 KB for Senja og anslått til rundt 10 MB for hele kysten. K6 kan gi de som ser langt en grovere maske.
   - Planen hadde masken i `sim`. `maptest` viste at strøklengdestrålene da leste pakker langt fra båten.

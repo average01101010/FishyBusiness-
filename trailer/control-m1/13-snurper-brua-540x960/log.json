@@ -1,0 +1,107 @@
+{
+ "shot": {
+  "name": "Kystnotbåten legger ut fra Finnsnes og går under Gisundbrua i midnattssol",
+  "when": "2027-06-21T02:00:00Z",
+  "boat": "ringnot38",
+  "pos": {
+   "x": 866.985,
+   "y": 365.808
+  },
+  "heading": 32,
+  "speed": 8,
+  "quality": "high",
+  "pre": 4,
+  "load_s": 20,
+  "dur": 10,
+  "notes": "Gisundbrua: midtpunkt 69.2435 N 17.9612 E (x 867.08, y 365.655 km), retning 122°, bjelkebru. Sundets akse 32°/212°. Båten starter 180 m sørvest for brumidten på aksen (sjø, 0,18 km fra land) og går nordøst; under brua rundt 7 s ved 8 knop (24,7 m/s i spillets tempo). Et startpunkt mellom kaia og brua (867.24, 365.78) var på land.",
+  "cam": {
+   "mode": "orbit",
+   "keys": [
+    {
+     "t": 0,
+     "yaw": 200,
+     "pitch": 3,
+     "dist": 90,
+     "fov": 40
+    },
+    {
+     "t": 5,
+     "yaw": 250,
+     "pitch": 10,
+     "dist": 80,
+     "fov": 42
+    },
+    {
+     "t": 10,
+     "yaw": 320,
+     "pitch": 22,
+     "dist": 120,
+     "fov": 45
+    }
+   ]
+  }
+ },
+ "size": "540x960",
+ "fps": 30,
+ "frames": 300,
+ "keys": [
+  {
+   "frame": 0,
+   "t": 0.0,
+   "file": "f0000.png",
+   "up": 6,
+   "free": 1,
+   "d": 89,
+   "fov": 0.9599310885968813,
+   "lvl": 2,
+   "fps": null
+  },
+  {
+   "frame": 75,
+   "t": 2.5,
+   "file": "f0075.png",
+   "up": 10.9,
+   "free": 1,
+   "d": 84,
+   "fov": 0.9599310885968813,
+   "lvl": 2,
+   "fps": null
+  },
+  {
+   "frame": 150,
+   "t": 5.0,
+   "file": "f0150.png",
+   "up": 15.1,
+   "free": 1,
+   "d": 78,
+   "fov": 0.9599310885968813,
+   "lvl": 2,
+   "fps": null
+  },
+  {
+   "frame": 224,
+   "t": 7.47,
+   "file": "f0224.png",
+   "up": 28.4,
+   "free": 1,
+   "d": 95,
+   "fov": 0.9599310885968813,
+   "lvl": 2,
+   "fps": null
+  },
+  {
+   "frame": 299,
+   "t": 9.97,
+   "file": "f0299.png",
+   "up": 46,
+   "free": 1,
+   "d": 111,
+   "fov": 0.9599310885968813,
+   "lvl": 2,
+   "fps": null
+  }
+ ],
+ "errors": [],
+ "seconds": 176.1,
+ "per_frame_s": 35.22
+}

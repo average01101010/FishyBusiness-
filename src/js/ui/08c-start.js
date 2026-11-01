@@ -94,24 +94,56 @@ function showStart(done){
     if (sel) hits.querySelectorAll('[data-id="' + sel.pt.id + '"]').forEach(e => e.classList.add('on')); });
   pick(ports[0].pt.id);
   el.querySelector('#stGo').addEventListener('click', async () => {
-    if (!sel) return; const b = el.querySelector('#stGo'), tx = el.querySelector('#stPickTx'); b.disabled = true; b.textContent = L('Laster kartet …', 'Loading the map …');
+    if (!sel) return; const b = el.querySelector('#stGo'), tx = el.querySelector('#stPickTx'); b.disabled = true; if (S.tutT && !S.intro) S.tutT.pick = Date.now(); b.textContent = L('Laster kartet …', 'Loading the map …');
     try { await chooseStart(sel.pt, (n, m) => { b.textContent = L('Laster kartet · ', 'Loading the map · ') + n + L(' av ', ' of ') + m; }); }
     catch (e){   // no map, no start: the player is told, and tries again (Jonas 10.10.2026)
       console.error(e); b.disabled = false; b.textContent = L('Prøv igjen', 'Try again');
       tx.innerHTML = '<b>' + L('Kartet kom ikke fram.', 'The map did not arrive.') + '</b><br><small>' + L('Sjekk nettet og prøv igjen.', 'Check the connection and try again.') + '</small>'; return; }
+    if (S.tutT && !S.intro) S.tutT.map = Date.now();
     el.remove(); done();
   });
 }
-// the patch for «Første tur» near a harbour: the best cod within 1.5 to 6 km, in 20 to 150 m of water (r 1.2 km), where the sea stays
-// under the starting boat's careful limit the next six hours
-function tutFieldNear(pt){
-  const H = S.t / 60, lim = (VESSELS[S.boat.type] || VESSELS.skiff).risk[0]; let best = null;   // in water under the boat's careful limit the next hours if there is any
-  for (let r = 1.5; r <= 6; r += 0.5) for (let a = 0; a < 360; a += 15){
-    const q = {x:pt.p.x + Math.sin(a * Math.PI / 180) * r, y:pt.p.y - Math.cos(a * Math.PI / 180) * r};
-    if (isLand(q)) continue; const d = depthF(q); if (d < 20 || d > 150) continue;
-    const s = density('torsk', q, H) - r * 0.02 - (startSeaMax(q, H) > lim ? 100 : 0); if (!best || s > best.s) best = {s, p:q};
+// the patch for «Første tur» near a harbour (Onboarding 2, O1, docs/planer/onboarding-2.md, 27.10.2026). Never missing, never on Senja
+// for a start elsewhere, never unlawful, and near, so the first bite comes within minutes: the best fish 1.5 to 2.5 km out first, then
+// 3 to 6 km, then anything from 1 to 10 km in 10 to 250 m of water, the place in a ring worth most at this week's prices; in the sea under the starting boat's careful limit the next six
+// hours; where the rules let a hand jig fish at all on the date (rulesAt: closed fields, the spawning areas south of 62° N 1.1–30.4,
+// the Oslo fjord), the boat would otherwise lie and wait there (05-vessels.js). Its mix is the jig's fish that stand there now (density),
+// each lawful there on the date and taken by the plant it is landed at; cod not outside the baseline in the Skagerrak, east of
+// Lindesnes, where Norwegian vessels may not fish it (FOR-2022-12-16-2281 § 1, the same rule each year; the rules engine has no
+// Skagerrak layer yet). The first catch's amount stays guaranteed (core/03-simulation.js TUTB, tutBonus).
+const TUT_SP = ['torsk', 'sei', 'lyr', 'hyse'];
+const TUT_TIERS = [[1.5, 2.5, 20, 150], [3, 6, 20, 150], [1, 10, 10, 250]];
+const tutSkagOut = q => { const ll = natLL(q); return ll.lat < 59.95 && ll.lon > 7.05 && !(ruBits(q) & 1); };
+// the mix at a place: shares of the lawful jig fish there now, the small ones (under 5 %) left out; {} when none is lawful. val: what it
+// is worth, density by this week's price, so the patch is where the first landing pays best (cod where the cod is), not just where most stands
+function tutMixAt(q, H, len, land){
+  const takes = land && land.mk && land.mk.sp ? sp => !!land.mk.sp[sp] : () => true;
+  const ok = sp => !(sp === 'torsk' && tutSkagOut(q)) && rulesAt({p:q, H, len, gear:'juksa', sp, hand:true}).v !== 'no';
+  let sps = TUT_SP.filter(sp => takes(sp) && ok(sp)); if (!sps.length) sps = TUT_SP.filter(ok);   // a plant that takes none of them: the plant is not asked
+  const den = {}; let sum = 0, val = 0; for (const sp of sps){ let d = 0, pr = 10; try { d = density(sp, q, H); pr = marketPrice(sp, H) || 10; } catch (e){} den[sp] = d; sum += d; val += d * pr; }
+  const mix = {}; if (sum > 0){ let t = 0; for (const sp of sps) if (den[sp] / sum >= 0.05){ mix[sp] = den[sp] / sum; t += mix[sp]; } for (const sp in mix) mix[sp] = Math.round(mix[sp] / t * 100) / 100; }
+  else for (const [sp, v] of Object.entries(TUTB.mix)) if (sps.includes(sp)) mix[sp] = v;
+  if (!Object.keys(mix).length && sps.length) mix[sps[0]] = 1;
+  return {mix, sum, val};
+}
+function tutFieldNear(pt, land){
+  const H = S.t / 60, V = VESSELS[S.boat.type] || VESSELS.skiff, lim = V.risk[0], len = V.len || 7;
+  const at = q => ({x:Math.round(q.x * 1000) / 1000, y:Math.round(q.y * 1000) / 1000});
+  for (const [r0, r1, d0, d1] of TUT_TIERS){
+    let best = null;
+    for (let r = r0; r <= r1 + 1e-6; r += 0.25) for (let a = 0; a < 360; a += 15){
+      const q = {x:pt.p.x + Math.sin(a * Math.PI / 180) * r, y:pt.p.y - Math.cos(a * Math.PI / 180) * r};
+      if (isLand(q)) continue; const d = depthF(q); if (d < d0 || d > d1) continue;
+      if (startSeaMax(q, H) > lim) continue;
+      if (ruBlockMsg({p:q, H, len, gear:'juksa', sp:null, hand:true})) continue;
+      const m = tutMixAt(q, H, len, land); if (!Object.keys(m.mix).length) continue;
+      const s = m.val * (1 - r * 0.02); if (!best || s > best.s) best = {s, p:q, mix:m.mix};
+    }
+    if (best) return {p:at(best.p), r:1.2, mix:best.mix};
   }
-  return best ? {p:{x:Math.round(best.p.x * 1000) / 1000, y:Math.round(best.p.y * 1000) / 1000}, r:1.2} : null;
+  // nothing anywhere near (never seen): the most sheltered sea 2 km out, with what the rules allow there
+  const q = startRing(pt)[0], m = tutMixAt(q, H, len, land);
+  return {p:at(q), r:1.2, mix:Object.keys(m.mix).length ? m.mix : {sei:1}};
 }
 // move a new game to the harbour: its waters loaded first, then the boat, the trail, the first trip's patch and landing
 // a game from before moving its home (Settings, «Hjemsted»): only the home and Father's naust go there; the boat stays where she is and
@@ -120,11 +152,11 @@ let START_HOMEONLY = false;
 async function chooseStart(pt, onProgress){
   if (START_HOMEONLY){ START_HOMEONLY = false; S.home = pt.id; S.naust = null; view.cx = pt.p.x; view.cy = pt.p.y; save(); refreshAll(); return; }
   S.home = pt.id; S.naust = null; S.boat.berth = 'naust';   // the boat lies at Father's naust (07c-naust.js); the plant's quay until it is found
-  await mapNeed(pt.p, Math.max(MAPD.simR, 7.5));   // the first trip's patch is looked for up to 6 km out (tutFieldNear)
+  await mapNeed(pt.p, Math.max(MAPD.simR, 10.5));   // the first trip's patch is looked for up to 10 km out (tutFieldNear)
   const b = S.boat; b.port = pt.id; b.status = 'port'; b.pos = {x:pt.p.x, y:pt.p.y}; b.v = 0; S.trail = [{x:pt.p.x, y:pt.p.y, port:pt.id}]; S.draft = []; S.plan = null;
   // the first trip (made when the boat gets her name, tutNew) starts from here
   // Vangshamn has no plant: the first catch goes to Botnhamn, 5.7 km west
-  { const f = tutFieldNear(pt); S.tutStart = {land:pt.mottak ? pt.id : 'botnhamn'}; if (f) S.tutStart.f = {...f, at:{no:'utenfor ' + pt.name, en:'off ' + pt.name}}; if (S.tut && S.tut.v === 2) Object.assign(S.tut, S.tutStart); }
+  { const f = tutFieldNear(pt, portById(pt.mottak ? pt.id : 'botnhamn')); S.tutStart = {land:pt.mottak ? pt.id : 'botnhamn', reg:startInfo(pt).region}; if (f) S.tutStart.f = {...f, at:{no:'utenfor ' + pt.name, en:'off ' + pt.name}}; if (S.tut && S.tut.v === 2) Object.assign(S.tut, S.tutStart); }
   view.cx = pt.p.x; view.cy = pt.p.y;
   // the whole first trip's ground in before the game begins: the harbour, the patch of fish and the landing, every kind of pack the chart and
   // the 3D view read there (the player has nothing left to wait for after this screen)

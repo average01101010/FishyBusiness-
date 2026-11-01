@@ -106,6 +106,7 @@ function panelRoute(){
   if (false){ let rk = 0, a0 = b.pos; for (const w of S.draft){ rk += rocksNear(a0, w, 0.03); a0 = w; } if (rk) h.push('<p class="warn">' + (S.lang === 'no' ? 'Ruten går tett forbi ' + rk + (rk === 1 ? ' skjær eller båe' : ' skjær og båer') + '. Sjekk kartet.' : 'The route passes close to ' + rk + (rk === 1 ? ' rock' : ' rocks') + '. Check the chart.') + '</p>'); }
   if (e.fuel > b.fuel){ h.push('<p class="bad">' + t('nofuel') + '</p>'); can = false; }
   else if (e.fuel > b.fuel * 0.8) h.push('<p class="warn">' + t('lowres') + '</p>');
+  { const why = typeof tutStartWhy === 'function' ? tutStartWhy() : null; if (why){ h.push('<p class="note tutwhy">' + why + '</p>'); can = false; } }   // the first trip: what «Kast loss» waits for
   h.push('<div class="btns rbar"><button class="btn primary" data-act="start"' + (can ? '' : ' disabled') + '>' + t('start') + '</button><button class="btn" data-act="clear">' + t('clear') + '</button></div>');
   return h.join('');
 }
@@ -323,6 +324,12 @@ function portSlip(){
     if (ls.coopKr > 0) h.push(row(LN('Kvotesamarbeid', 'Quota cooperation'), '', '−' + fmt(ls.coopKr, 0)));
     if (tk.sum > 0 || ls.lott > 0) h.push(row('<b>' + LN('Til kassa', 'To the cash box') + '</b>', '', '<b>' + fmt(ls.total - tk.sum - ls.lott - (ls.coopKr || 0), 0) + '</b>', 'sum'));
     h.push('</tbody></table></div>');
+    // the first landing (Onboarding 2, O4, backlog 10.2): the trip was better than usual, and what the jig gives here now; and that others
+    // land here too (the shared world's last day at this plant, WSH.mkt, 10h-world.js), only when there are any: no number is made up
+    if (tutOn() && S.tut.fk && S.tut.fk.d > 0){ const F = S.tut.fk, kg = ls.lines.reduce((a, r) => a + r.kg, 0), n = Math.round(kg * Math.max(0, (F.d - F.t) / F.d) / TUT_FISH_H / 10) * 10;
+      h.push('<p class="note tutnorm">' + LN('Første tur var ekstra god: fisken sto tett. Med håndjuksa gir fisket her nå vanligvis ' + (n >= 10 ? 'rundt ' + fmt(n, 0) + ' kg' : 'under 10 kg') + ' i timen, mer med juksamaskin og bedre felt.', 'The first trip was better than usual: the fish stood dense. With a hand jig the fishing here usually gives ' + (n >= 10 ? 'about ' + fmt(n, 0) + ' kg' : 'under 10 kg') + ' an hour now, more with a jigging machine and better grounds.') + '</p>'); }
+    if (tutOn() && typeof WSH !== 'undefined' && WSH.mkt && WSH.mkt[ls.port]){ const m = Object.entries(WSH.mkt[ls.port]).sort((a, b) => b[1] - a[1]);
+      if (m.length && SPECIES[m[0][0]]) h.push('<p class="note tutpeers">' + LN('Andre fiskere har også levert her det siste døgnet, mest ' + SPECIES[m[0][0]].no.toLowerCase() + '. Topplista står i Salgslaget.', 'Other fishermen have landed here in the last day too, mostly ' + SPECIES[m[0][0]].en.toLowerCase() + '. The top list is in the sales organisation.') + '</p>'); }
     if (S2 && F && F.sum > 0) h.push('<p class="note">' + LN('Felleskostnadene ble betalt fra kontoen da de oppsto. Her trekkes de bare fra før fangsten deles, slik oppgjørsavtalene sier, og ikke fra kassa en gang til.', 'The common costs were paid from the account when they came. Here they only come off before the catch is shared, as the settlement agreements say, not from the cash box again.') + '</p>');
     if (ls.crabFine) h.push('<p class="note">' + LN('Overtredelsesgebyr fra Fiskeridirektoratet for krabbe under minstemålet: ', 'Fine from the Directorate of Fisheries for undersized crab: ') + kr(ls.crabFine) + LN('. Det står ikke på sluttseddelen, men er trukket fra kassa.', '. It is not on the landing note, but has been taken from the cash box.') + '</p>');
     for (const o of (ls.ord || [])) h.push('<p class="note">' + LN('Bestilling fra ' + o.cust + ': ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].no.toLowerCase() + ', tillegg ' + kr(Math.round(o.kr)) + (o.done ? ', ferdig levert, bonus ' + kr(o.bonus) : ', ' + fmt(o.left, 0) + ' kg igjen') + '.', 'Order from ' + o.cust + ': ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].en.toLowerCase() + ', premium ' + kr(Math.round(o.kr)) + (o.done ? ', fully delivered, bonus ' + kr(o.bonus) : ', ' + fmt(o.left, 0) + ' kg left') + '.') + '</p>');

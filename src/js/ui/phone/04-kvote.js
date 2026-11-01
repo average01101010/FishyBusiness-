@@ -1,7 +1,7 @@
   // the Kvote app: your quotas, the open group's season, the stocks, and the market for rights (core/03d-quota.js)
   function kvote(){ const t = ['mine', 'open', 'stock', 'mkt'].includes(sub.kvote) ? sub.kvote : 'mine', H = S.t / 60;
     const top = subs('kvote', [['mine', 'Mine kvoter', 'My quotas'], ['open', 'Åpen gruppe', 'Open group'], ['stock', 'Bestand', 'Stock'], ['mkt', 'Marked', 'Market']]);
-    if (t === 'mine') return top + '<div class="ph-c">' + '<h4 style="margin:4px 2px 6px">' + L('Papirer', 'Papers') + '</h4>' + papBladB() + papPermit() + (rederiOpen() ? '' : papBiz()) + '</div>' + salg('kvote');
+    if (t === 'mine') return top + '<div class="ph-c">' + '<h4 style="margin:4px 2px 6px">' + L('Papirer', 'Papers') + '</h4>' + papBladB() + papPermit() + papKv() + (rederiOpen() ? '' : papBiz()) + '</div>' + salg('kvote');
     return top + '<div class="ph-c">' + (t === 'open' ? kvOpen(H) : t === 'stock' ? kvStock(H) : kvMkt(H)) + '</div>'; }
   const MNS = () => S.lang === 'no' ? ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'] : ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const doyStr = (y, d) => { const t = new Date(Date.UTC(y, 0, 1 + d)); return t.getUTCDate() + (S.lang === 'no' ? '. ' : ' ') + MNS()[t.getUTCMonth()]; };
