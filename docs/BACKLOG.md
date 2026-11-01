@@ -140,6 +140,12 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
 
+## Strøket 01.11.2026 (tilbakemelding #106 og kartplotteren)
+
+- **Havet nær båten glatt på Windows** (#106): mellomsjøen på nivå 1 (`docs/systemer/vaer-og-hav.md`). Står igjen: ikke prøvd på ekte Direct3D; følg med på «3D mellomsjø feilet» i feilloggen.
+- **Hakking ved høy bildefrekvens** (#106): bildeklokka `frameClock` og `WALLF`/`wallNow` (`view3d/24-cinema.js`, `core/01-world.js`). Simulert, ikke prøvd i Firefox på 240 Hz.
+- **Kartplotteren uten kart til spilleren zoomet ut**: `chartCompose` tegner foreløpige fliser på nytt når pakkene er inne, uansett hvordan de kom (`docs/systemer/kartplotter.md`).
+
 ## Strøket 01.11.2026 (tilbakemelding #105, hendene)
 
 - **Mannskapets hender var speilvendt** (tilbakemelding #105): tomlene pekte utover på rekka. Rettet i `handMeshes` ved å bytte `hL_`/`hR_` (se `docs/systemer/folk-om-bord.md`). Står igjen: `tools/harbour/hender.py` bør få tommelen på −x på høyre hånd neste gang hendene bygges i Blender, og byttet tas bort samtidig.
