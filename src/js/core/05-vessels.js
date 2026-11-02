@@ -166,6 +166,13 @@ function flaateData(){
 const LG_OF = L => L < 11 ? 0 : L < 15 ? 1 : L < 21 ? 2 : 3;
 function flaateApply(t){
   const D = flaateData(); if (!D || !t.npc) return;
+  // Senja's square's harbours (tools/npc/senja.py: npc.py's rule run on the packs, the square let in), after the pack's own
+  const X = D.x && D.x[t.tx + ':' + t.ty];
+  if (X){ const ox = t.tx * MAPD.man.tile * 1000, oz = t.ty * MAPD.man.tile * 1000, k = (x, z) => ({x:(ox + x) / 1000, y:(oz + z) / 1000}), n0 = t.npc.length;
+    X.forEach((h, j) => { const hi = n0 + j;
+      t.npc.push({x:(ox + h.x) / 1000, y:(oz + h.z) / 1000, senja:true,
+        boats:h.b.map((b, bi) => ({id:'c' + t.tx + ':' + t.ty + '.' + hi + '.' + bi, L:b[0], B:b[1], T:b[2], p:k(b[3], b[4]), hd:b[5], name:b[6], liv:(hi * 7 + bi) % 4})),
+        grounds:h.g.map(g => { const pts = []; for (let i = 0; i + 1 < g[2].length; i += 2) pts.push(k(g[2][i], g[2][i + 1])); return {p:k(g[0], g[1]), pts}; })}); }); }
   t.npc.forEach((h, hi) => {
     const e = D.h[t.tx + ':' + t.ty + '.' + hi], slots = h.boats; if (!e){ h.boats = []; return; }
     h.boats = e.map(([bi, L, g]) => { const s = slots[bi]; if (!s) return null;
@@ -197,15 +204,36 @@ function coastGround(G, dI, i, H){
 function coastState(b, H, hod = hodOf(H)){
   const i = b.seed || (b.seed = hashStr(b.id) % 1000003);
   const dep = 4 + hash(i * 13 + 5) * 4, e = ((hod - dep) % 24 + 24) % 24, day0 = H - e, dI = Math.floor((day0 + 6) / 24), G = b.h.grounds;
-  const moored = coastMoor(b);
+  const moored = coastMoor(b), pk = G.length ? coastGearKind(b) : null, set = pk ? coastSet(b, pk, Math.floor(dI / PASSIVE[pk].per), i, day0 + 12) : null;
+  // (nets and pots lie in the sea between the days out; a line only while she is out with it)
+  const home = set && pk !== 'line' ? Object.assign({}, moored, {set:{a:set.a, b:set.b, k:pk}}) : moored;
   // a day out is at most 17 hours (the weather is not asked at night)
-  if (e > 17 || !G.length || hash(dI * 17 + i * 7) < 0.3 || windAt(day0, b.p) >= (b.L >= 15 ? 15 : b.L >= 12 ? 13.5 : 12) || (b.open && openDone(day0))) return moored;
-  const gr = coastGround(G, dI, i, day0 + 12), R = gr.R || (gr.R = prepRoute(gr.pts.map(q => [q.x, q.y]))), RR = gr.RR || (gr.RR = prepRoute(gr.pts.map(q => [q.x, q.y]).reverse()));
+  if (e > 17 || !G.length || hash(dI * 17 + i * 7) < 0.3 || windAt(day0, b.p) >= (b.L >= 15 ? 15 : b.L >= 12 ? 13.5 : 12) || (b.open && openDone(day0))) return home;
+  const gr = set ? set.gr : coastGround(G, dI, i, day0 + 12), R = gr.R || (gr.R = prepRoute(gr.pts.map(q => [q.x, q.y]))), RR = gr.RR || (gr.RR = prepRoute(gr.pts.map(q => [q.x, q.y]).reverse()));
   const cs = ((b.L >= 14 ? 9.8 : 7.8) + hash(i * 3 + 1) * 1.8) * clamp(1 - (hsOpen(day0, b.p) - 1.2) * 0.12, 0.65, 1) * NM, hsp = 5 * NM;
   const m0 = R.pts[0], wy = coastWay(b, moored, m0), t0 = wy.len / hsp, tr = R.len / cs, T = t0 + tr, fishH = 5 + hash(dI * 7 + i * 3) * 3.5;
   const along = (a, c, u) => ({p:{x:a.x + (c.x - a.x) * u, y:a.y + (c.y - a.y) * u}, hd:Math.atan2(c.x - a.x, -(c.y - a.y))});
-  if (e < t0){ const q = coastWayAt(wy, e / t0, false); return {p:q.p, hd:q.hd, st:'out'}; }
-  if (e < T){ const a = atRoute(R, (e - t0) * cs); return {p:a.p, hd:a.hd, st:'out'}; }
+  const gs = set && pk !== 'line' ? {a:set.a, b:set.b, k:pk} : undefined;
+  if (e < t0){ const q = coastWayAt(wy, e / t0, false); return {p:q.p, hd:q.hd, st:'out', set:gs}; }
+  if (e < T){ const a = atRoute(R, (e - t0) * cs); return {p:a.p, hd:a.hd, st:'out', set:gs}; }
+  if (set){
+    // the passive gear: over to the set's end a, then (nets, pots) hauled a to b and set again b to a, or (a line) set a to b, standing
+    // a few hours by its end, hauled b to a; back to the ground's centre and home. The part of the string in the sea goes with her.
+    const tin = Math.max(1e-3, dist(gr.p, set.a) / cs), tback = tin, fH = fishH, A = set.a, Bp = set.b, line = pk === 'line';
+    if (e < T + tin){ const q = along(gr.p, A, (e - T) / tin); return {p:q.p, hd:q.hd, st:'out', set:gs}; }
+    if (e < T + tin + fH){ const u = (e - T - tin) / fH;
+      if (line){
+        if (u < 0.15){ const q = along(A, Bp, u / 0.15); return {p:q.p, hd:q.hd, st:'fishing', set:{a:A, b:q.p, k:pk}}; }
+        if (u < 0.55) return {p:{...Bp}, hd:Math.atan2(Bp.x - A.x, -(Bp.y - A.y)), st:'fishing', set:{a:A, b:Bp, k:pk}};
+        const q = along(Bp, A, (u - 0.55) / 0.45); return {p:q.p, hd:q.hd, st:'fishing', set:{a:A, b:q.p, k:pk}}; }
+      if (u < 0.65){ const q = along(A, Bp, u / 0.65); return {p:q.p, hd:q.hd, st:'fishing', set:{a:q.p, b:Bp, k:pk}}; }
+      const q = along(Bp, A, (u - 0.65) / 0.35); return {p:q.p, hd:q.hd, st:'fishing', set:{a:q.p, b:Bp, k:pk}}; }
+    if (e < T + tin + fH + tback){ const q = along(A, gr.p, (e - T - tin - fH) / tback); return {p:q.p, hd:q.hd, st:'in', set:gs}; }
+    const eb = e - T - tin - fH - tback;
+    if (eb < tr){ const a = atRoute(RR, eb * cs); return {p:a.p, hd:a.hd, st:'in', set:gs}; }
+    if (eb < tr + t0){ const q = coastWayAt(wy, 1 - (eb - tr) / t0, true); return {p:q.p, hd:q.hd, st:'in', set:gs}; }
+    return home;
+  }
   // on the ground: over to the boat's own spot, whole casts drifting off it (each cast ends where the next starts), back to the centre
   const spot = coastSpot(gr, dI, i), C = 0.75, nc = Math.max(1, Math.round(fishH / C)), fH = nc * C, tin = Math.max(1e-3, dist(gr.p, spot) / cs);
   if (e < T + tin){ const q = along(gr.p, spot, (e - T) / tin); return {p:q.p, hd:q.hd, st:'out'}; }
@@ -293,7 +321,10 @@ function dockFree(d, others, placed){
 // the boats of other harbours fixed already within 600 m of p (km): they keep their places, the new ones keep off them
 function moorAround(h, p){ const out = []; for (const t of vecTilesIn(p.x * 1000 - 600, p.y * 1000 - 600, p.x * 1000 + 600, p.y * 1000 + 600)) for (const g of t.npc || []){ if (g === h || g.moorVer !== MOOR.ver) continue;
   for (const b of g.boats) if (b.moored && !b.moored.none && dist(b.moored.p, p) < 0.6){ const q = b.moored.buoy, D = b.L * 2 + 2 * MOOR.PEN;
-    out.push(q ? {p:q, hd:b.moored.hd, L:D, B:D, buoy:true} : {p:b.moored.p, hd:b.moored.hd, L:b.L, B:b.B}); } } return out; }
+    out.push(q ? {p:q, hd:b.moored.hd, L:D, B:D, buoy:true} : {p:b.moored.p, hd:b.moored.hd, L:b.L, B:b.B}); } }
+  // Senja's named boats (FLEET) at their berths: the square's coast boats (senja.py) keep off them
+  if (h.senja) FLEET.forEach((f, i) => { if (dist({x:f.hp[0], y:f.hp[1]}, p) > 1.2) return; const m = fleetBerth(i); if (m) out.push({p:m.p, hd:m.hd, L:f.L, B:f.B}); });
+  return out; }
 function moorHarbour(h){
   // fixed again: its own docks and buoys out of the obstacles first (they would push its boats about)
   if ((h.docks && h.docks.length) || h.boats.some(b => b.moored && b.moored.buoy)){ h.docks = []; FDOCK.ver++; }
@@ -396,13 +427,36 @@ function coastCast(b, gr, dI, i, kc, Hc, spot){
   }
   M.set(key, c); return c;
 }
-const COASTM = {k:'', v:[]};
+// ===== The coast boats' own gear in the sea (Jonas 02.11.2026: «Garn, liner og annet utstyr skal være synlig og vises i kartplotteren») =====
+// A boat whose main gear (flaate.json, the register's) is passive has her gear in the sea as Norwegian coast boats do: a garn boat a
+// lenke of nets on her ground of the week, hauled and set again on each day out (and left soaking when the weather keeps her in); a pot
+// boat a lenke of pots on her ground of the month; a line boat sets her line in the morning, lets it stand a few hours and hauls it the
+// same day. 'blandet' is garn or line by a draw. The set is a function of the clock and the boat alone (every player sees the same),
+// from her spot on the ground across the wind's way, turned until both ends and the line between are on water. The chart and the 3D
+// view draw them as the other players' sets (NPCGEAR, filled by coastNear for the boats within reach).
+const PASSIVE = {garn:{per:7, len:[0.35, 0.8]}, line:{per:1, len:[1.4, 3.0]}, teine:{per:28, len:[0.4, 0.9]}};
+const NPCGEAR = [];
+function coastGearKind(b){
+  if (b.pk !== undefined) return b.pk; let g = b.gear;
+  if (g === 'blandet') g = hash((hashStr(b.id) % 1000003) * 7 + 3) < 0.5 ? 'garn' : 'line';
+  return (b.pk = PASSIVE[g] ? g : null);
+}
+// the boat's set of a period pI (a week for nets, a day for lines, a month for pots): {k, a, b, gr}
+function coastSet(b, k, pI, i, H){
+  const fine = coastFine(b.p) ? 1 : 0, key = k + ':' + pI + ':' + fine; if (b.cs && b.cs.key === key) return b.cs.v;
+  const G = b.h.grounds, d0 = pI * PASSIVE[k].per, gr = coastGround(G, d0, i, H), a = coastSpot(gr, d0, i), R = PASSIVE[k].len;
+  const L = R[0] + (R[1] - R[0]) * hash(pI * 71 + i * 13), a0 = hash(pI * 83 + i * 29) * 2 * Math.PI; let v = {k, a, b:a, gr};
+  out: for (const f of [1, 0.6, 0.35]) for (let j = 0; j < 8; j++){ const an = a0 + j * Math.PI / 4, e = {x:a.x + Math.sin(an) * L * f, y:a.y - Math.cos(an) * L * f};
+    if ([0.25, 0.5, 0.75, 1].some(u => coastLand({x:a.x + (e.x - a.x) * u, y:a.y + (e.y - a.y) * u}))) continue; v = {k, a, b:e, gr}; break out; }
+  b.cs = {key, v}; return v;
+}
+const COASTM = {k:'', v:[], g:[]};
 function coastNear(H, only){
   const b = S && S.boat; if (!b || !b.pos || !MAPD.man) return [];
   const R = AIS_KM, x = b.pos.x, y = b.pos.y, F = R + 25, k = H + '|' + x.toFixed(2) + ',' + y.toFixed(2) + '|' + VEC.ver;
   if (!only && COASTM.k === k) return COASTM.v;
   vecWant(x - F, y - F, x + F, y + F); vecPrune([b.pos], 120);
-  const out = [], hod = hodOf(H), hod1 = hodOf(H - 1 / 60);
+  const out = [], gear = [], hod = hodOf(H), hod1 = hodOf(H - 1 / 60);
   for (const t of vecTilesIn((x - F) * 1000, (y - F) * 1000, (x + F) * 1000, (y + F) * 1000)) for (const h of t.npc || []){
     // a harbour whose berths, routes and grounds all lie beyond the range is passed over (its reach: the farthest of them from its
     // middle, worked out once; a long waterfront is one harbour)
@@ -411,12 +465,14 @@ function coastNear(H, only){
     for (const bt of h.boats){
       if (only && only !== bt.id) continue;
       if (bt.lg != null && bt.lg < 3 && hash(hashStr(bt.id) % 1000003 * 5 + 17) < heldShare(bt.lg)) continue;   // a player holds that right
-      bt.h = h; const A = coastState(bt, H, hod); if (A.hidden || dist(A.p, b.pos) > R) continue;
+      bt.h = h; const A = coastState(bt, H, hod);
+      if (!only && A.set && A.set.a !== A.set.b && Math.min(dist(A.set.a, b.pos), dist(A.set.b, b.pos)) <= R) gear.push({k:A.set.k, a:A.set.a, b:A.set.b, id:bt.id, name:bt.name});
+      if (A.hidden || dist(A.p, b.pos) > R) continue;
       const P = A.st === 'port' ? A : coastState(bt, H - 1 / 60, hod1), dx = A.p.x - P.p.x, dy = A.p.y - P.p.y, sog = Math.hypot(dx, dy) / NM * 60;
       out.push({id:bt.id, name:bt.name, type:bt.L >= 14 ? 'kyst' : 'sjark', p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, coast:true, L:bt.L, B:bt.B, T:bt.T, liv:bt.liv});
     }
   }
-  if (!only){ COASTM.k = k; COASTM.v = out; }
+  if (!only){ COASTM.k = k; COASTM.v = out; COASTM.g = gear; }
   return out;
 }
 function npcStates(H, only){
@@ -445,6 +501,9 @@ function npcStates(H, only){
   });
   // the coast's boats within AIS range of the boat you follow (part 5)
   if (!only || only[0] === 'c') for (const n of coastNear(H, only)) out.push(n);
+  // the ocean fleet within AIS range (H1, 05d-hav.js), and the coast's and the ocean fleet's gear in the sea for the chart and the 3D view
+  if ((!only || only[0] === 'v') && typeof havNear === 'function') for (const n of havNear(H, only)) out.push(n);
+  if (!only){ NPCGEAR.length = 0; for (const g of COASTM.g) NPCGEAR.push(g); if (typeof HAV !== 'undefined') for (const g of HAV.gear) NPCGEAR.push(g); }
   // a boat in a mission: drifting with engine trouble, or on the tow line (09g-turer.js)
   if (!only || only[0] === 't') for (const n of turNpcs()) if (!only || only === n.id) out.push(n);
   // the coast guard's ship alongside during an inspection (09j-kystvakt.js)

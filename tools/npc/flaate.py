@@ -11,11 +11,15 @@
 #   meta  made, src, gear, shrunk (boats taken as long as the berth, the kommune's quays in the map being shorter than the boat), shared (boats that share a berth: the game moves them along the quay or onto a buoy), lgN (the boats placed by length group), openShare (the share under 11 m in the open group), the counts: active (the register's active boats under 28 m along the coast), placed, over (active boats of a kommune
 #         with more boats than berths), none (the kommuner with active boats and no harbour in the packs: Senja's square, whose fleet is
 #         the game's FLEET, and inland), harbours, empty (harbours whose kommune has no active boats left for them)
+#   x     {"tx:ty": [harbour, ...]}: Senja's square's harbours (tools/npc/senja.py, as npc.py writes them), after the pack's own
 #   h     {"tx:ty.hi": [[bi, L, gear], ...]}: the harbour's berth bi (its place in the pack) gets a boat of L m and the gear (meta.gear)
 import os, sys, json, time, zlib, urllib.request, hashlib
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
 CACHE = os.path.join(HERE, 'cache'); KOMF = os.path.join(CACHE, 'kommune.json')
 CAPH = 16   # boats a harbour at most
+SENJAF = os.path.join(CACHE, 'senja.json'); SENJA = json.load(open(SENJAF)) if os.path.exists(SENJAF) else {}
+# Senja's own named boats (FLEET in 05-vessels.js, all of Senja kommune, 5530) by length group: the register's boats there less these
+FLEETLG = {'5530': [8, 5, 1, 0]}
 LG = [(6.0, 10.99), (11.0, 14.99), (15.0, 20.99), (21.0, 27.99)]   # the length groups under 28 m (fiske.json meta.lg)
 
 def h01(*a): return int(hashlib.sha256(repr(a).encode()).hexdigest()[:12], 16) / 16 ** 12
@@ -31,6 +35,9 @@ def harbours(game):
             J = json.loads(zlib.decompress(body[bl[3]:bl[3] + bl[4]], -15))
             for hi, h in enumerate(J['h']):
                 out.append({'k': f'{tx}:{ty}.{hi}', 'x': (tx * 50000 + h['x']) / 1000, 'y': (ty * 50000 + h['z']) / 1000, 'slots': [b[0] for b in h['b']]})
+            # Senja's square (tools/npc/senja.py): its harbours after the pack's own, as the game adds them (flaateApply)
+            for j, h in enumerate(SENJA.get(f'{tx}:{ty}', [])):
+                hi = len(J['h']) + j; out.append({'k': f'{tx}:{ty}.{hi}', 'x': (tx * 50000 + h['x']) / 1000, 'y': (ty * 50000 + h['z']) / 1000, 'slots': [b[0] for b in h['b']]})
     return out
 
 def kommune(hs):
@@ -61,6 +68,10 @@ def main(game):
         boats = []
         for lg, g, reg, act, res in rows:
             if lg <= 3 and act > 0: boats += [(lg, g)] * act
+        for lg, n in enumerate(FLEETLG.get(knr, [])):
+            for _ in range(n):
+                i = next((i for i, b in enumerate(boats) if b[0] == lg), None)
+                if i is not None: boats.pop(i)
         active += len(boats)
         if not boats: continue
         H = byk.get(knr)
@@ -96,7 +107,8 @@ def main(game):
     meta = {'made': time.strftime('%Y-%m-%d'), 'src': 'Fiskeridirektoratets fartøyregister og sluttsedler (fiske.json kom, NLOD); havnene fra kartpakkene (tools/map/npc.py); kommunene fra Geonorges kommuneinfo (Kartverket)',
             'gear': gears, 'active': active, 'placed': placed, 'shared': shared, 'shrunk': shrunk, 'over': over, 'none': none, 'harbours': len(hs), 'empty': empty, 'lgN': lgN, 'openShare': round(min(0.9, 2100 / max(1, lgN[0])), 3)}
     f = os.environ.get('KYST_FLAATE') or os.path.join(ROOT, 'src', 'data', 'flaate.json')
-    open(f, 'w').write(json.dumps({'meta': meta, 'h': out}, ensure_ascii=False, separators=(',', ':')) + '\n')
+    meta['senja'] = sum(len(v) for v in SENJA.values())
+    open(f, 'w').write(json.dumps({'meta': meta, 'h': out, 'x': SENJA}, ensure_ascii=False, separators=(',', ':')) + '\n')
     print(json.dumps({k: v for k, v in meta.items() if k != 'none'}), 'none:', sum(none.values()), 'in', len(none), 'kommuner', f'{os.path.getsize(f) / 1000:.0f} kB')
 
 if __name__ == '__main__': main(sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'tools', 'map', 'out', 'game'))

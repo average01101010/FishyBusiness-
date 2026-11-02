@@ -601,7 +601,7 @@ crew: people with skills, habits and moods
   - 300 `crewTick(H)`
   - 366 `codRoom(H)`
 
-## `src/js/core/05-vessels.js` (1062 linjer)
+## `src/js/core/05-vessels.js` (1121 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -621,69 +621,72 @@ crew: people with skills, habits and moods
 - **152** One national coastal fleet (L2/N1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 161 `flaateData()`
   - 167 `flaateApply(t)`
-  - 181 `openDone(day0)`
-  - 186 `heldShare(lg)`
-  - 192 `coastGround(G, dI, i, H)`
-  - 197 `coastState(b, H, hod = hodOf(H)`
-- **222** where a coast boat lies at home (Jonas 18.10.2026: «npc-båter mange plasser er plassert i landmassen når de ligger ved kai»;
-  - 234 `unitHit(x, z, r)`
-  - 242 `dockInHarbour(x, z)`
-  - 248 `moorBlocked(x, z, r)`
-  - 257 `moorFree(p, hd, L, B, others)`
-  - 276 `docksIn(x0, z0, x1, z1)`
-  - 277 `dockFree(d, others, placed)`
-  - 294 `moorAround(h, p)`
-  - 297 `moorHarbour(h)`
-  - 369 `coastMoor(b)`
-  - 380 `seaward(p, c)`
-  - 382 `coastSpot(gr, dI, i)`
-  - 385 `coastCast(b, gr, dI, i, kc, Hc, spot)`
-  - 400 `coastNear(H, only)`
-  - 422 `npcStates(H, only)`
-  - 470 `peerName(s)`
-  - 471 `peerStates()`
-  - 484 `newState()`
-  - 495 `log(no, en, k)`
-  - 497 `navHour()`
-  - 504 `nearestPort(p)`
-  - 506 `nearestYard(p)`
-  - 508 `step()`
-  - 526 `vesselStep(H)`
-  - 606 `sailV(H, hs)`
-  - 618 `sail(H, W, hs)`
-  - 647 `sailWaiting()`
-  - 648 `sailReplan(pl, b, gp)`
-  - 675 `sailStop(pl, b, why)`
-  - 683 `haltPlan(need)`
-  - 693 `arrive(w)`
-  - 711 `unstuckWhy()`
-  - 717 `unstuckSpot()`
-  - 724 `unstuck()`
-  - 738 `dock(pid, berth)`
-  - 763 `catchFactors(H, W, hs)`
-  - 773 `fish(H, W, hs)`
-  - 844 `endFishing(why)`
-  - 859 `addCatch(sp, kg, cls, hook, opt)`
-- **872** work on deck: gutting and icing take hands and time
-  - 885 `deckHands()`
-  - 888 `deckPending()`
-  - 889 `deckEta(hands)`
-  - 894 `moveKg(x, kg, patch)`
-  - 902 `iceMinute()`
-  - 904 `deckMinute()`
-  - 922 `risk(W, hs)`
-  - 949 `hullRepair()`
-  - 952 `svcOverdue()`
-- **953** the rescue boat (plan E3, 05.10.2026)
-  - 973 `rescueBases()`
-  - 982 `rescueBase(p)`
-  - 989 `rescueAis(H)`
-  - 993 `rescue(keepCatch)`
-  - 1017 `towSea(p)`
-  - 1022 `towRoutes(b)`
-  - 1033 `towStep(H)`
-  - 1045 `towDone(t)`
-  - 1051 `towPose(frac)`
+  - 188 `openDone(day0)`
+  - 193 `heldShare(lg)`
+  - 199 `coastGround(G, dI, i, H)`
+  - 204 `coastState(b, H, hod = hodOf(H)`
+- **250** where a coast boat lies at home (Jonas 18.10.2026: «npc-båter mange plasser er plassert i landmassen når de ligger ved kai»;
+  - 262 `unitHit(x, z, r)`
+  - 270 `dockInHarbour(x, z)`
+  - 276 `moorBlocked(x, z, r)`
+  - 285 `moorFree(p, hd, L, B, others)`
+  - 304 `docksIn(x0, z0, x1, z1)`
+  - 305 `dockFree(d, others, placed)`
+  - 322 `moorAround(h, p)`
+  - 328 `moorHarbour(h)`
+  - 400 `coastMoor(b)`
+  - 411 `seaward(p, c)`
+  - 413 `coastSpot(gr, dI, i)`
+  - 416 `coastCast(b, gr, dI, i, kc, Hc, spot)`
+- **430** The coast boats' own gear in the sea (Jonas 02.11.2026: «Garn, liner og annet utstyr skal være synlig og vises i kartplotteren»)
+  - 439 `coastGearKind(b)`
+  - 445 `coastSet(b, k, pI, i, H)`
+  - 454 `coastNear(H, only)`
+  - 478 `npcStates(H, only)`
+  - 529 `peerName(s)`
+  - 530 `peerStates()`
+  - 543 `newState()`
+  - 554 `log(no, en, k)`
+  - 556 `navHour()`
+  - 563 `nearestPort(p)`
+  - 565 `nearestYard(p)`
+  - 567 `step()`
+  - 585 `vesselStep(H)`
+  - 665 `sailV(H, hs)`
+  - 677 `sail(H, W, hs)`
+  - 706 `sailWaiting()`
+  - 707 `sailReplan(pl, b, gp)`
+  - 734 `sailStop(pl, b, why)`
+  - 742 `haltPlan(need)`
+  - 752 `arrive(w)`
+  - 770 `unstuckWhy()`
+  - 776 `unstuckSpot()`
+  - 783 `unstuck()`
+  - 797 `dock(pid, berth)`
+  - 822 `catchFactors(H, W, hs)`
+  - 832 `fish(H, W, hs)`
+  - 903 `endFishing(why)`
+  - 918 `addCatch(sp, kg, cls, hook, opt)`
+- **931** work on deck: gutting and icing take hands and time
+  - 944 `deckHands()`
+  - 947 `deckPending()`
+  - 948 `deckEta(hands)`
+  - 953 `moveKg(x, kg, patch)`
+  - 961 `iceMinute()`
+  - 963 `deckMinute()`
+  - 981 `risk(W, hs)`
+  - 1008 `hullRepair()`
+  - 1011 `svcOverdue()`
+- **1012** the rescue boat (plan E3, 05.10.2026)
+  - 1032 `rescueBases()`
+  - 1041 `rescueBase(p)`
+  - 1048 `rescueAis(H)`
+  - 1052 `rescue(keepCatch)`
+  - 1076 `towSea(p)`
+  - 1081 `towRoutes(b)`
+  - 1092 `towStep(H)`
+  - 1104 `towDone(t)`
+  - 1110 `towPose(frac)`
 
 ## `src/js/core/05c-air.js` (64 linjer)
 
@@ -692,6 +695,19 @@ crew: people with skills, habits and moods
 - **1** aircraft over the coast (plan E4, 05.10.2026)
   - 35 `airLegs()`
   - 47 `airStates(H, p, km)`
+
+## `src/js/core/05d-hav.js` (125 linjer)
+
+The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
+
+- **1** The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
+  - 18 `havData()`
+  - 31 `havTrip(s, k)`
+  - 39 `havWay(s, gi)`
+  - 51 `havBerth(s)`
+  - 57 `havFish(s, k, u, g)`
+  - 92 `havState(s, H)`
+  - 104 `havNear(H, only)`
 
 ## `src/js/core/06-services.js` (252 linjer)
 
@@ -1740,7 +1756,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 111 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 124 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (709 linjer)
+## `src/js/ui/03-map.js` (712 linjer)
 
 ---------- map ----------
 
@@ -1777,16 +1793,16 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 443 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
   - 462 `scheduleStatic()`
   - 467 `aisTrack(id, H)`
-  - 470 `aisInfo(n)`
-  - 483 `renderAisCard()`
-  - 484 `renderDyn()`
-  - 562 `pinAdd(mp)`
-  - 567 `pinOpen(id, fresh)`
-  - 587 `pinKb()`
-  - 618 `ptrUp(e)`
-  - 648 `unzoom()`
-  - 655 `portByLabel(pt)`
-  - 660 `addWaypoint(pt)`
+  - 472 `aisInfo(n)`
+  - 486 `renderAisCard()`
+  - 487 `renderDyn()`
+  - 565 `pinAdd(mp)`
+  - 570 `pinOpen(id, fresh)`
+  - 590 `pinKb()`
+  - 621 `ptrUp(e)`
+  - 651 `unzoom()`
+  - 658 `portByLabel(pt)`
+  - 663 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (219 linjer)
 
@@ -2002,12 +2018,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (897 linjer)
+## `src/js/ui/phone/07-patch.js` (904 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 890 `patch()`
+  - 897 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -2449,7 +2465,7 @@ actions
 - **1** the jig game: jigging by hand yourself, and the buttons and hooks around it
   - 86 `refreshAll()`
 
-## `src/js/ui/10-gear-ui.js` (208 linjer)
+## `src/js/ui/10-gear-ui.js` (227 linjer)
 
 passive gear on screen: the action bar, the fish panel, the chart and the route
 
@@ -2469,13 +2485,15 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 116 `jigSets()`
   - 126 `gearPanel()`
   - 145 `gearSvg(u)`
-  - 161 `gearHit(p, r)`
-  - 163 `buoyStandoff(s, e)`
-  - 168 `gearTap(hit)`
-  - 180 `wpActOptions(w)`
-  - 186 `wpActLabel(a)`
-  - 192 `wpActCycle(w)`
-  - 197 `gearDoAct(act, el)`
+  - 171 `otherGearHit(p, r)`
+  - 172 `otherGearCard(s)`
+  - 180 `gearHit(p, r)`
+  - 182 `buoyStandoff(s, e)`
+  - 187 `gearTap(hit)`
+  - 199 `wpActOptions(w)`
+  - 205 `wpActLabel(a)`
+  - 211 `wpActCycle(w)`
+  - 216 `gearDoAct(act, el)`
 
 ## `src/js/ui/10c-dock.js` (342 linjer)
 
@@ -2602,22 +2620,22 @@ PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase
   - 197 `pushCatToggle(k)`
   - 202 `pushToggle()`
 
-## `src/js/ui/10h-world.js` (160 linjer)
+## `src/js/ui/10h-world.js` (162 linjer)
 
 ---------- the shared world V3: the other players' boats (05.10.2026; supabase/migrations/20261005220000_presence.sql) ----------
 
 - **1** the shared world V3: the other players' boats (05.10.2026; supabase/migrations/20261005220000_presence.sql)
   - 11 `worldTick()`
   - 42 `gearSync(now)`
-  - 58 `peerLogo(hid, ver)`
-- **68** the shared world V2 (05.10.2026; core/03-simulation.js WSH): one sea, one quota and one market. Every ten minutes, and soon
-  - 77 `worldShare()`
-- **102** the leaderboards (05.10.2026; Salgslaget → Toppliste; supabase/migrations/20261006020000_toplist.sql): the players of the whole
-  - 107 `worldTop(w, grp)`
-  - 121 `bygdeTop(w)`
-  - 134 `evTop(ev, y)`
-  - 145 `evCloseTick()`
-  - 151 `worldStart()`
+  - 60 `peerLogo(hid, ver)`
+- **70** the shared world V2 (05.10.2026; core/03-simulation.js WSH): one sea, one quota and one market. Every ten minutes, and soon
+  - 79 `worldShare()`
+- **104** the leaderboards (05.10.2026; Salgslaget → Toppliste; supabase/migrations/20261006020000_toplist.sql): the players of the whole
+  - 109 `worldTop(w, grp)`
+  - 123 `bygdeTop(w)`
+  - 136 `evTop(ev, y)`
+  - 147 `evCloseTick()`
+  - 153 `worldStart()`
 
 ## `src/js/ui/10i-shop.js` (113 linjer)
 
@@ -3058,25 +3076,25 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 460 `dkTub(G)`
   - 461 `drawDeck(BMrel, eye, VP, t, DK)`
 
-## `src/js/view3d/10-gear.js` (288 linjer)
+## `src/js/view3d/10-gear.js` (289 linjer)
 
 ---------- passive gear: buoys at both ends of every set, and the work over the rail when setting and hauling ----------
 
 - **1** passive gear: buoys at both ends of every set, and the work over the rail when setting and hauling
   - 3 `buildGear()`
   - 30 `drawGearSea(eye, t, VP, H)`
-  - 52 `drawSetting(BMrel, t, g, G, stack, x0)`
-  - 69 `haulFish(g)`
-  - 78 `haulModel(kind)`
-  - 87 `gopHauls()`
-  - 101 `potDeck(G, HP, sx, d, pw, vt, ph)`
-  - 108 `drawPotStacks(BMrel, K, n)`
-  - 116 `stackTop(K, i, d)`
-  - 120 `drawPotsAboard(BMrel, G, d, n)`
-  - 136 `tankAt(x, z, d, vt)`
-  - 154 `drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg)`
-  - 212 `drawCrabTank(BMrel, G, d, sx, HP)`
-  - 219 `drawGearOp(BMrel, eye, VP, t)`
+  - 53 `drawSetting(BMrel, t, g, G, stack, x0)`
+  - 70 `haulFish(g)`
+  - 79 `haulModel(kind)`
+  - 88 `gopHauls()`
+  - 102 `potDeck(G, HP, sx, d, pw, vt, ph)`
+  - 109 `drawPotStacks(BMrel, K, n)`
+  - 117 `stackTop(K, i, d)`
+  - 121 `drawPotsAboard(BMrel, G, d, n)`
+  - 137 `tankAt(x, z, d, vt)`
+  - 155 `drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg)`
+  - 213 `drawCrabTank(BMrel, G, d, sx, HP)`
+  - 220 `drawGearOp(BMrel, eye, VP, t)`
 
 ## `src/js/view3d/11-bunker.js` (65 linjer)
 
@@ -3110,44 +3128,44 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 116 `handKit(t)`
   - 137 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (485 linjer)
+## `src/js/view3d/13-instruments.js` (491 linjer)
 
 ---------- the skiff's live instruments ----------
 
 - **1** the skiff's live instruments
   - 11 `engineOn()`
   - 12 `paintPlotter()`
-  - 58 `dial(g, cx, cy, r, v0, v1, v, a0, a1, ticks, labels, title, redFr…)`
-  - 69 `paintGauges(dt)`
-  - 85 `paintVhf()`
-  - 95 `paintName(t, liv)`
-  - 102 `markCanvas(cv, txt, light)`
-  - 108 `markTex(t, liv)`
-  - 116 `imgOf(src)`
-  - 117 `curLogo()`
-  - 118 `logoTexOf(L, img)`
-  - 126 `logoQ(t)`
-  - 127 `drawLogo(t, M, VP, L, img)`
-  - 130 `markQ(t)`
-  - 131 `drawMark(t, M, VP, liv)`
-  - 132 `nameCanvas(cv, nm, light)`
-  - 141 `nameTex(nm, light, mark)`
-  - 149 `drawNPCNames(kit, VP)`
-  - 164 `nameQ(t)`
-  - 166 `paintHand()`
-  - 175 `limbM(A, B, r)`
-  - 178 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
-  - 314 `drawSkiffGlass(BMrel, VP)`
-  - 319 `jigRail(t, G)`
-  - 340 `drawJigRail(BMrel, VP, t, G, dt)`
-  - 373 `drawGlass(m, BMrel, VP)`
-  - 392 `drawDrops(m, BMrel, VP, t)`
-  - 403 `buildBoat()`
-  - 429 `buildFlag()`
-  - 441 `flagTex()`
-  - 456 `penTex()`
-  - 469 `mastTop(G)`
-  - 473 `updateFlag(t, appW)`
+  - 64 `dial(g, cx, cy, r, v0, v1, v, a0, a1, ticks, labels, title, redFr…)`
+  - 75 `paintGauges(dt)`
+  - 91 `paintVhf()`
+  - 101 `paintName(t, liv)`
+  - 108 `markCanvas(cv, txt, light)`
+  - 114 `markTex(t, liv)`
+  - 122 `imgOf(src)`
+  - 123 `curLogo()`
+  - 124 `logoTexOf(L, img)`
+  - 132 `logoQ(t)`
+  - 133 `drawLogo(t, M, VP, L, img)`
+  - 136 `markQ(t)`
+  - 137 `drawMark(t, M, VP, liv)`
+  - 138 `nameCanvas(cv, nm, light)`
+  - 147 `nameTex(nm, light, mark)`
+  - 155 `drawNPCNames(kit, VP)`
+  - 170 `nameQ(t)`
+  - 172 `paintHand()`
+  - 181 `limbM(A, B, r)`
+  - 184 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
+  - 320 `drawSkiffGlass(BMrel, VP)`
+  - 325 `jigRail(t, G)`
+  - 346 `drawJigRail(BMrel, VP, t, G, dt)`
+  - 379 `drawGlass(m, BMrel, VP)`
+  - 398 `drawDrops(m, BMrel, VP, t)`
+  - 409 `buildBoat()`
+  - 435 `buildFlag()`
+  - 447 `flagTex()`
+  - 462 `penTex()`
+  - 475 `mastTop(G)`
+  - 479 `updateFlag(t, appW)`
 
 ## `src/js/view3d/14-sea.js` (300 linjer)
 
@@ -3355,7 +3373,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (281 linjer)
+## `src/js/view3d/20-trawl-seine.js` (284 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -3363,7 +3381,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 8 `trawlKit(t)`
   - 16 `alongM(A, d)`
   - 23 `trawlState(now)`
-  - 32 `drawTrawl(t, A, BMrel, now)`
+  - 32 `drawTrawl(t, A, BMrel, now, stO)`
 - **57** the purse seine (tools/boats/not75.py; Jonas 06.10.2026: «Denne kan både bruke ringnot og trål og trenger dermed
   - 63 `seineState(now)`
   - 69 `drawSeine(t, A, BMrel, VP, now)`
@@ -3375,8 +3393,8 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 191 `drawSail(t, M, set)`
   - 192 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
   - 218 `npcMesh(n, lod)`
-  - 227 `drawNPC(eye, t, H, VP)`
-  - 260 `npcCrewDraw(n, K, eye, t)`
+  - 228 `drawNPC(eye, t, H, VP)`
+  - 263 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (165 linjer)
 

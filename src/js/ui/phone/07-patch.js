@@ -1,8 +1,15 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['hav-021126', '02.11.2026', 'Havflåten', 'The ocean fleet', [
+       ['Trålere, ringnotbåter, autolinere, snurrevadbåter og snøkrabbefartøy er ute på havet langs hele kysten. De følger sesongene og ligger ved kaier som er store nok for dem.', 'Trawlers, purse seiners, autoliners, Danish seiners and snow crab vessels are out at sea along the whole coast. They follow the seasons and lie at quays big enough for them.'],
+       ['Trålerne tråler på feltene, autolinerne setter og drar line, og snøkrabbefartøyene har teinelenkene sine i sjøen. Du ser dem på AIS og i kartplotteren.', 'The trawlers trawl on the grounds, the autoliners set and haul their lines, and the snow crab vessels have their pots in the sea. You see them on the AIS and the chart plotter.'],
+    ]],
     ['flaate2-021126', '02.11.2026', 'Fiskeflåten der den hører hjemme', 'The fishing fleet where it belongs', [
        ['Båtene i havnene langs kysten er nå fiskeflåten slik den er registrert, kommune for kommune: mange i fiskeværene i Finnmark og Lofoten, færre i byene. De har ekte lengder og redskap.', 'The boats in the harbours along the coast are now the fishing fleet as it is registered, municipality by municipality: many in the fishing villages of Finnmark and Lofoten, fewer in the towns. They have real lengths and gear.'],
        ['Når åpen gruppe stoppes, blir båtene der liggende i havn.', 'When the open group is stopped, its boats stay in port.'],
+       ['Senja har fått de samme havnene og båtene som resten av kysten.', 'Senja now has the same harbours and boats as the rest of the coast.'],
+       ['Båtene som fisker med garn, line og teiner, har redskapet sitt i sjøen. Du ser bøyene på sjøen og lenkene i kartplotteren.', 'The boats that fish with nets, lines and pots have their gear in the sea. You see the buoys on the water and the strings on the chart plotter.'],
+       ['Trykk på en bøye i kartet for å se hva slags redskap det er, og hvem som eier det, også andre spilleres.', 'Tap a buoy on the chart to see what gear it is and whose it is, other players\' too.'],
     ]],
     ['sesong-021126', '02.11.2026', 'Årstidene langs kysten', 'The seasons along the coast', [
        ['Når på året fisken står hvor, følger nå landingene sted for sted, også på Senja: seien står tettere om sommeren og høsten enn før, og hver art har sin egen sesong der du er.', 'When in the year the fish stand where now follows the landings place by place, Senja too: the saithe stand thicker in summer and autumn than before, and every species has its own season where you are.'],
