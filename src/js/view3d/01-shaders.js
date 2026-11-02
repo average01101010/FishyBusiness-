@@ -33,12 +33,13 @@
     // seamless noise (680, 290 and 130 m; 820 and 370 m) that drift at their own pace and heading (uCD.xy and .zw, gathered frame by frame
     // in computeEnv), so it changes shape slowly instead of sliding as one stiff pattern. How much a point goes into the cloud is the
     // cloud's density gathered along the line of sight through the layer (aG, the mean over the heights the line passes), against about
-    // 330 m of visibility inside it: a far top in it is gone, a near slope at the base only hazy, the highest tops stand above a thin
-    // layer, and seen from above the layer (a camera high up) what is under it is under the cloud, as from a plane
+    // 330 m of visibility inside it, and only as much as the point itself stands in the cloud (D): a far top in it is gone, a near slope
+    // at the base only hazy, the highest tops stand above a thin layer, and from a camera high above the layer the sea and the land under
+    // the base still show (seen through the whole layer, as from a plane, everything went grey, and the game with it)
     'if(uCB.y>0.0){vec2 wp=v.xz+uEye.xy;vec2 qa=mod(wp+uCD.xy,4096.0)/4096.0,qb=mod(wp+uCD.zw,4096.0)/4096.0;' +
     'float e=(aNp(qa*6.0,6.0)-0.5)*150.0+(aNp(qb*5.0,5.0)-0.5)*110.0+(aNp(qa*14.0+3.0,14.0)-0.5)*60.0+(aNp(qb*11.0+7.0,11.0)-0.5)*45.0+(aNp(qa*32.0+5.0,32.0)-0.5)*30.0;' +
-    'float b=v.y+uEye.z+e-uCB.x,a=uEye.z+e-uCB.x;float m=abs(b-a)>2.0?(aG(b)-aG(a))/(b-a):smoothstep(-90.0,260.0,b)-smoothstep(uCB.z-150.0,uCB.z+150.0,b);' +
-    'c=mix(c,uCC,(1.0-exp(-d*m/110.0))*uCB.y);}' +
+    'float b=v.y+uEye.z+e-uCB.x,a=uEye.z+e-uCB.x,D=smoothstep(-90.0,260.0,b)-smoothstep(uCB.z-150.0,uCB.z+150.0,b);float m=abs(b-a)>2.0?(aG(b)-aG(a))/(b-a):D;' +
+    'c=mix(c,uCC,(1.0-exp(-d*m/110.0))*sqrt(max(D,0.0))*uCB.y);}' +
     'vec3 T=exp(-k*vec3(0.8,0.95,1.2));float mu=max(dot(v/max(d,1.0),uAirSun),0.0);vec3 s=uFog+uAirMie*pow(mu,12.0);return tone(c*T+s*(1.0-T));}';
   const LIT_VS = 'attribute vec3 aPos;attribute vec3 aCol;uniform mat4 uVP;uniform mat4 uM;varying vec3 vW;varying vec3 vC;' +
     'void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vC=aCol;gl_Position=uVP*w;}';
