@@ -146,7 +146,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - Ikke kjørt i siste regresjon (tidsgrensen): heattest, sea3d, teleport3d, lighttest, kinotest, haultest, potshot, aurorashot, penshot, deckshot, workshot, brotest og tut. De dekker ingen filer som ble endret i D2 og D3.
 
 **Regresjonen 02.11.2026 (butikkgrenen M0–M2 flettet inn i arbeidsgrenen, bare Senja i bygget):** 136 av 173 rakk å gå før tidsgrensen på 7000 s; 35 3D-tester ble ikke kjørt (anchor3d til brotest). 116 grønne. Ingen rød kom av flettingen; de som var nye i lista, ble kjørt på grunnbygget (arbeidsgrenen på 6721a17) og var røde der også:
-- **Røde også på grunnbygget:** dyntest (ringnot38: taktisk diameter og stopplengde), quotatest (kvotesamarbeidet: eieren får ikke betalt, `paid: False`), treeshot (trærne og programmet deres kommer ikke inn, `n: 0`), shot23 (`#modeBtn` er ikke synlig; testen står ikke i noen liste i `run.py` og er trolig utdatert).
+- **Røde også på grunnbygget:** dyntest (ringnot38: taktisk diameter og stopplengde), quotatest (kvotesamarbeidet: eieren får ikke betalt, `paid: False`), treeshot (trærne og programmet deres kommer ikke inn, `n: 0`), shot23 (`#modeBtn` er ikke synlig; testen sto ikke i noen liste i `run.py` og ble slettet 02.11.2026).
 - **Krever hele kysten** (som før): autonavtest, npctest, havntest, marktest, og nå også havnshot (strendene ved Bergen, `tiles: 0`) og lifeshot (Bodø om natta, røyk i Hammerfest).
 - **Varierer mellom kjøringer også med frø:** drifttest scenario 6 («a long trip rests aboard away from home») var rød to ganger og grønn to ganger på samme bygg med `seed=1`, og `rep2` er 4 eller 5 også på grunnbygget. Altså tid, ikke kast; testen bør spille minuttene uten `tick` ved siden av (som maptest).
 - docktest rød ved siden av en annen test, grønn alene (10.7). sidetab, pwatest, maptest som før.
@@ -155,7 +155,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 ## 10.7 Små ryddejobber
 
 - **`docktest` kan feile ved siden av en annen test** (30.10.2026, M2): én kjøring sammen med `nettest` fant ikke viftene (`#dockFan [data-dk=…]`) og ble rød på alle viftesjekkene; alene var den grønn med 96 OK, og i kjøringen før var viftene der. Trolig tid (vifta tegnes etter 150–200 ms ventetid i testen). Testen bør vente på vifta i stedet for en fast pause.
-- **`ordtest` er utdatert** (funnet 30.10.2026 i M1): den trykker på fanen «Bestillinger» i Salgslaget, som ikke finnes lenger (bestillingene er oppdrag), og stopper der. Klærne den prøver etterpå, ligger under `utstyrb` (rettet i testen). Testen må skrives om mot oppdragstavla eller tas ut.
+- ~~`ordtest` er utdatert~~: slettet 02.11.2026 (bestillingene er oppdrag nå; `docs/systemer/testing.md`, «Ryddet 02.11.2026»). Klærne i `utstyrb` har ingen egen test etter dette.
 
 - `S.owned` skrives fortsatt (`03-simulation.js`, `05-phone.js`, `05-vessels.js`), men leses bare av en lagringsmigrering i `11-boot.js`.
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
