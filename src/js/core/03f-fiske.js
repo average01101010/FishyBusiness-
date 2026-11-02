@@ -25,7 +25,7 @@ const FISKE_T = /*@text(data/fiske.json)*/null;
 const FK_SP = {torsk:'torsk', hyse:'hyse', sei:'sei', lyr:'lyr', lange:'lange', brosme:'brosme', uer:'uer', kveite:'kveite', sild:'sild', makrell:'makrell', snokrabbe:'snokrabbe'};
 // season: 'av' (the location against Senja in the same month × the old table av) or 'data' (the location against Senja's mean over the
 // year, so the season comes from the notes too, also at Senja; tests/fasit.py measures which agrees better with a year it has not seen)
-const FK = {d:null, n0:20, nb:0.5, mo:0.25, lo:0.03, hi:5, skreiM:5, season:'av'};
+const FK = {d:null, n0:20, nb:0.5, mo:0.25, lo:0.03, hi:5, skreiM:5, season:'av', torsk:'split'};
 function fkData(){
   if (FK.d !== null) return FK.d;
   try { FK.d = typeof FISKE_T === 'string' ? JSON.parse(FISKE_T) : (FISKE_T || false); } catch (e){ FK.d = false; }
@@ -245,7 +245,10 @@ function fkBuild(){
       const B = new Float32Array(NL).fill(NaN), X = new Float32Array(NL).fill(NaN);
       for (let l = 0; l < NL; l++){ const b = summer(m => idx[l * 12 + m]); if (isNaN(b)) continue; let x = 0; for (let m = 0; m < FK.skreiM; m++){ const v = idx[l * 12 + m]; if (!isNaN(v)) x += Math.max(0, v - b); }
         B[l] = clamp(b / rb, FK.lo, FK.hi); X[l] = clamp(x / rx, 0, FK.hi); }
-      af[sp] = {base:B, skrei:X};
+      // the month by month table as for the other species (FK.torsk = 'data' uses it; tests/fasit.py measures it)
+      let rs = 0, rk = 0; for (let m = 0; m < 12; m++) if (R[m] > 0){ rs += R[m]; rk++; } const rm = rk ? rs / rk : 0;
+      if (rm > 0) for (let j = 0; j < NL * 12; j++) if (!isNaN(idx[j])) A[j] = clamp(idx[j] / rm, FK.lo, FK.hi * 2);
+      af[sp] = {base:B, skrei:X, m:A};
     } else {
       if (FK.season === 'data'){
         // against Senja's mean over the year, and the old table divided out again (density() multiplies by av)
@@ -280,6 +283,10 @@ function skreiPulse(c, H, T){
 // the spawning stock (T[sp].av and .skrei carry stockF). The cell's location is looked up once per 2 km cell, the month once per hour.
 function fkAvail(sp, q, T){
   const t = T[sp], c = q.c, l = c.l, F = FK.af ? FK.af[sp] : fkBuild() && FK.af[sp];
+  if (sp === 'torsk' && FK.torsk === 'data' && F && F.m){
+    // all the cod from the notes month by month (against Senja's mean over the year), the stock as for the rest
+    const v = l >= 0 ? fkAt(F.m, l, T.fk) : NaN; return t.av * (v === v ? v : 1);
+  }
   if (sp === 'torsk'){
     if (q.skr < 0) q.skr = skreiSpot(q.p, q.d, q.E);
     const b = F && l >= 0 && F.base[l] === F.base[l] ? F.base[l] : 1, x = F && l >= 0 && F.skrei[l] === F.skrei[l] ? F.skrei[l] : 1;

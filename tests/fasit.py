@@ -85,7 +85,8 @@ VARIANTS = {'spillet':'', 'uten-grunnlinje':'TRK.r = 1e9; LOKC.forEach(c => { c.
   'uten-begge':'TRK.r = 1e9; LOKC.forEach(c => { c.tH = -1; }); for (const sp of SP) SPECIES[sp].av = SPECIES[sp].av.map(() => 1); DENT.H = NaN;',
   'sesong-fra-sedlene':"FK.season = 'data'; FK.af = undefined; fkBuild();",
   'uten-front':'MIG.skreiDays = 0; for (const c of LOKC.values()) c.tH = -1;',
-  'uten-lodde':'MIG.loddeW = () => 0;'}
+  'uten-lodde':'MIG.loddeW = () => 0;',
+  'alt-fra-sedlene':"FK.season = 'data'; FK.torsk = 'data'; FK.af = undefined; fkBuild();"}
 # which variants to run: FASIT_VARIANTS=all, or a comma list of names
 def variant_names():
     v = os.environ.get('FASIT_VARIANTS') or 'spillet'
@@ -104,10 +105,10 @@ JS = """async ([locs, sps, variants]) => {
     if (!pts.length) continue; npts += pts.length; P8[code] = pts;
   }
   // each variant from a fresh copy of the tables it changes
-  const keep = {r:TRK.r, av:Object.fromEntries(SP.map(sp => [sp, SPECIES[sp].av.slice()])), season:FK.season, days:MIG.skreiDays, lw:MIG.loddeW};
+  const keep = {r:TRK.r, av:Object.fromEntries(SP.map(sp => [sp, SPECIES[sp].av.slice()])), season:FK.season, torsk:FK.torsk, days:MIG.skreiDays, lw:MIG.loddeW};
   for (const [name, setup] of variants){
     TRK.r = keep.r; for (const sp of SP) SPECIES[sp].av = keep.av[sp].slice(); DENT.H = NaN; LOKC.forEach(c => { c.tH = -1; }); TRKM.clear();
-    if (FK.season !== keep.season){ FK.season = keep.season; FK.af = undefined; fkBuild(); } MIG.skreiDays = keep.days; MIG.loddeW = keep.lw;
+    if (FK.season !== keep.season || FK.torsk !== keep.torsk){ FK.season = keep.season; FK.torsk = keep.torsk; FK.af = undefined; fkBuild(); } MIG.skreiDays = keep.days; MIG.loddeW = keep.lw;
     if (setup) (new Function(setup))();
     const res = out[name] = {};
     for (const code in P8){ const pts = P8[code], row = {}; for (const sp of sps) row[sp] = [];
