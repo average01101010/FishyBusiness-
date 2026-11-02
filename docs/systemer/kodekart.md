@@ -1933,12 +1933,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (879 linjer)
+## `src/js/ui/phone/07-patch.js` (883 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 872 `patch()`
+  - 876 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -2023,7 +2023,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
 - **162** actions
   - 165 `switchVessel(k)`
 
-## `src/js/ui/phone/13b-nettet.js` (127 linjer)
+## `src/js/ui/phone/13b-nettet.js` (134 linjer)
 
 Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.md, Jonas 30.10.2026)
 
@@ -2036,14 +2036,15 @@ Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.
   - 27 `buyList()`
   - 42 `shopTop(cur)`
 - **54** fetching a reservation: the same purchase as over the counter; null when it went, else why not (a string)
-  - 55 `equipBuy(k)`
-  - 67 `clothBuy(k)`
-  - 74 `pickTake(o)`
-- **86** the Net: the bookmarks, and the web shop
-  - 88 `nett()`
-  - 98 `netShop()`
+  - 58 `equipTry(k)`
+  - 60 `equipBuy(k)`
+  - 74 `clothBuy(k)`
+  - 81 `pickTake(o)`
+- **93** the Net: the bookmarks, and the web shop
+  - 95 `nett()`
+  - 105 `netShop()`
 
-## `src/js/ui/phone/14-act.js` (273 linjer)
+## `src/js/ui/phone/14-act.js` (274 linjer)
 
   - 2 `act(a, d)`
   - 8 `act0(a, d)`
@@ -2408,14 +2409,14 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 192 `wpActCycle(w)`
   - 197 `gearDoAct(act, el)`
 
-## `src/js/ui/10c-dock.js` (342 linjer)
+## `src/js/ui/10c-dock.js` (344 linjer)
 
 ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 
 - **1** the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side
-- **281** the drawer
-  - 324 `renderActs()`
-  - 337 `showroomTick()`
+- **282** the drawer
+  - 326 `renderActs()`
+  - 339 `showroomTick()`
 
 ## `src/js/ui/10d-helm.js` (51 linjer)
 
@@ -2989,7 +2990,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 460 `dkTub(G)`
   - 461 `drawDeck(BMrel, eye, VP, t, DK)`
 
-## `src/js/view3d/10-gear.js` (288 linjer)
+## `src/js/view3d/10-gear.js` (306 linjer)
 
 ---------- passive gear: buoys at both ends of every set, and the work over the rail when setting and hauling ----------
 
@@ -3007,7 +3008,8 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 136 `tankAt(x, z, d, vt)`
   - 154 `drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg)`
   - 212 `drawCrabTank(BMrel, G, d, sx, HP)`
-  - 219 `drawGearOp(BMrel, eye, VP, t)`
+  - 222 `drawHaulRest(BMrel, G, d, VP)`
+  - 237 `drawGearOp(BMrel, eye, VP, t)`
 
 ## `src/js/view3d/11-bunker.js` (65 linjer)
 
@@ -3385,20 +3387,24 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 408 `drawEffects(VP, eye, BM, dt, t)`
   - 510 `updateLabels(VP, eye, W, Hh)`
 
-## `src/js/view3d/25-controls.js` (187 linjer)
+## `src/js/view3d/25-controls.js` (205 linjer)
 
 ---------- controls ----------
 
 - **1** controls
-  - 18 `paintView(on)`
-  - 23 `paintAim(C, yawW)`
-  - 30 `showroom(type)`
-  - 39 `show(on, auto)`
-  - 54 `bench(ks, ns)`
-- **72** the profile (#prof, F1)
-  - 82 `pqInit()`
-  - 90 `pqPoll()`
-  - 99 `profBegin(rdt, j0)`
-  - 102 `profMark(k)`
-  - 106 `profEnd()`
-  - 116 `prof(sets)`
+  - 19 `paintView(on)`
+  - 24 `paintAim(C, yawW)`
+  - 35 `tryView(k)`
+  - 36 `hoist(k)`
+  - 38 `tryEq()`
+  - 44 `liftY(k)`
+  - 48 `showroom(type)`
+  - 57 `show(on, auto)`
+  - 72 `bench(ks, ns)`
+- **90** the profile (#prof, F1)
+  - 100 `pqInit()`
+  - 108 `pqPoll()`
+  - 117 `profBegin(rdt, j0)`
+  - 120 `profMark(k)`
+  - 124 `profEnd()`
+  - 134 `prof(sets)`
