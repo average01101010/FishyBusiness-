@@ -136,6 +136,13 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **Ytelse sett i testene (ikke rettet):** med SwiftShader står hovedtråden stille i opptil et minutt nå og da (ingen bilder, ingen `evaluate`); spillklokka tar igjen tiden (`tick` spiller 4–5 minutter på ett tikk), mens 3D-ting som trekkes per bilde (ankerkjettingen `ANC3.Lg`) henger etter. Testene tåler det nå; om det også skjer på nettbrettet, er det en lagg Jonas vil merke.
 - Ikke kjørt i siste regresjon (tidsgrensen): heattest, sea3d, teleport3d, lighttest, kinotest, haultest, potshot, aurorashot, penshot, deckshot, workshot, brotest og tut. De dekker ingen filer som ble endret i D2 og D3.
 
+**Regresjonen 02.11.2026 (butikkgrenen M0–M2 flettet inn i arbeidsgrenen, bare Senja i bygget):** 136 av 173 rakk å gå før tidsgrensen på 7000 s; 35 3D-tester ble ikke kjørt (anchor3d til brotest). 116 grønne. Ingen rød kom av flettingen; de som var nye i lista, ble kjørt på grunnbygget (arbeidsgrenen på 6721a17) og var røde der også:
+- **Røde også på grunnbygget:** dyntest (ringnot38: taktisk diameter og stopplengde), quotatest (kvotesamarbeidet: eieren får ikke betalt, `paid: False`), treeshot (trærne og programmet deres kommer ikke inn, `n: 0`), shot23 (`#modeBtn` er ikke synlig; testen står ikke i noen liste i `run.py` og er trolig utdatert).
+- **Krever hele kysten** (som før): autonavtest, npctest, havntest, marktest, og nå også havnshot (strendene ved Bergen, `tiles: 0`) og lifeshot (Bodø om natta, røyk i Hammerfest).
+- **Varierer mellom kjøringer også med frø:** drifttest scenario 6 («a long trip rests aboard away from home») var rød to ganger og grønn to ganger på samme bygg med `seed=1`, og `rep2` er 4 eller 5 også på grunnbygget. Altså tid, ikke kast; testen bør spille minuttene uten `tick` ved siden av (som maptest).
+- docktest rød ved siden av en annen test, grønn alene (10.7). sidetab, pwatest, maptest som før.
+- Kjørt for seg etterpå fordi de dekker butikkene: tut (28 OK, `"tut": 0`), heattest (66 OK), dbg23o (stille).
+
 ## 10.7 Små ryddejobber
 
 - **`docktest` kan feile ved siden av en annen test** (30.10.2026, M2): én kjøring sammen med `nettest` fant ikke viftene (`#dockFan [data-dk=…]`) og ble rød på alle viftesjekkene; alene var den grønn med 96 OK, og i kjøringen før var viftene der. Trolig tid (vifta tegnes etter 150–200 ms ventetid i testen). Testen bør vente på vifta i stedet for en fast pause.
