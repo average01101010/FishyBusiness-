@@ -531,6 +531,28 @@ venter å se, usynlig, velg formen som viser det.
 **Bilder i fjernkjøring tar tid.** `hu11shot.py` (14 bilder i SwiftShader) brukte rundt 50 minutter. Start det først, og gjør
 Blender-arbeidet etter, aldri ved siden av.
 
+## 18. Lært av revisjonen av den nye hurtigsjarken (02.11.2026)
+
+**Malen gjelder koden, ikke formen.** Første utkast av `sjarkny` brukte `hurtig11.py` som mal og ble en bredere kopi av den brukte
+hurtigsjarken (skrå stevn, skjul med skjermer, A-mast). Jonas: «Den blir alt for lik den andre hurtigsjarken … det må være en markant
+design-forskjell, spesielt siden den du holder på med nå er en nyere årsmodell.» To båter i samme klasse skal skille seg i silhuetten
+(stevn, frontvinduer, husets bredde og plass, mast). Spør etter retningen før skroget formes når to typer ligner (kap. 15.9), og les det
+gamle skriptets kilder først: her lå en generalarrangementstegning bak hele det første skriptet.
+
+**En tegning med målestokk slår alt annet; legg den over hver runde.** Da Jonas viste tegningen igjen, ble skroget, overbygget og masta
+lagt over sideriss (`qa/overlay_hs11.py`: K3s ortografisk, tegningens speil og grunnlinje som origo, 131,7 px/m). Overlegget fant det
+nærbildene ikke viste: kjølen for dyp forut, masta 0,25 m for langt akter, og at det jeg leste som et høyt akterhus, var en flaggstang.
+
+**Tegningens vekt kan være noe annet enn dataenes.** `VESSELS.disp` (15 t) er lettvekta; tegningens 42 t er største deplasement. Det
+gamle skroget (44,6 t ved vannlinja 1,18) var riktig etter tegningen. Les tegningens hovedmål (Δmax, G) før en bunn tegnes om for å
+treffe `disp`.
+
+**En linje som ender høyt i stevnen, løfter lista.** Knekken endte der kjølen nådde 2,6 m, så den hvite lista bøyde 0,5 m opp i baugen.
+Sett endepunktet (`X_KE`) der kjølen har listas høyde.
+
+**`pkill -f` treffer eget skall.** En `pkill -f shots.py` drepte kommandoen den sto i og to venteløkker (`pgrep -f` i en løkke matcher
+også seg selv). Vent på en bakgrunnsjobb med jobbens eget varsel, ikke med `pgrep -f` på et navn som står i kommandolinja.
+
 ## Endringslogg
 
 - 01.11.2026: kap. 7, godkjenningsgrensen 75/100 (Jonas).

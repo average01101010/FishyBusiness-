@@ -1,11 +1,11 @@
 Revider båtmodellen: [BÅTENS NAVN]
 
-Dette er en eksisterende Blender-modell i spillet som ikke ble bygd etter noen plan. Løft den til samme nivå og arbeidsmåte som pilotbåten ringnot38 og de reviderte båtene trebat, skiff, snekke, plastsjark, sjark (havsjarken) og hurtigsjark (F5 i docs/planer/grafikk-batmodeller.md). Finn selv ut hvilken type i VESSELS og hvilket skript i tools/boats/ navnet gjelder.
+Dette er en eksisterende Blender-modell i spillet som ikke ble bygd etter noen plan. Løft den til samme nivå og arbeidsmåte som pilotbåten ringnot38 og de reviderte båtene trebat, skiff, snekke, plastsjark, sjark (havsjarken) hurtigsjark og den nye hurtigsjarken sjarkny (F5 i docs/planer/grafikk-batmodeller.md). Finn selv ut hvilken type i VESSELS og hvilket skript i tools/boats/ navnet gjelder.
 
-GRENEN: main er tom; spillet ligger på arbeidsgrenene. Bygg på den nyeste grenen med spillet (nå ccr-7d69b776-9fggkf, som har trebåten, skiffen, plastsnekka, plastsjarken, havsjarken, hurtigsjarken, verktøyene i tools/boats/qa og lærdommene; den er også rullet ut til ccr-5e1ba2f4-pusvyd) og commit underveis.
+GRENEN: main er tom; spillet ligger på arbeidsgrenene. Bygg på den nyeste grenen med spillet (nå ccr-70d301a0-y5jgev, som har trebåten, skiffen, plastsnekka, plastsjarken, havsjarken, hurtigsjarken, den nye hurtigsjarken, verktøyene i tools/boats/qa og lærdommene; den er også rullet ut til ccr-5e1ba2f4-pusvyd) og commit underveis.
 
 LESING ER ET ABSOLUTT KRAV FØR NOE ARBEID BEGYNNER. Ingen rendring, ingen eksport og ingen endring i noe skript før alt under er lest i sin helhet, ikke i utdrag; store filer leses i flere biter til de er lest helt. Når du er ferdig, skriv en kort liste til meg over hver fil med én setning om det viktigste du tok med deg fra den, og si ærlig fra om noe ikke er lest helt, og hvorfor. (Plastsjarken fikk 66/100, blant annet fordi økta leste spillets kode for modellen først da testene feilet, sulebas-bygging.md kap. 15. Havsjarken fikk 64/100: Jonas fant bulene i baugen og de svarte klaffene foran spygattene før økta, i bilder som alt var tatt, kap. 16. Hurtigsjarken fikk 62/100: Jonas måtte spørre etter lensportene, og økta brukte timer på tester som ikke kunne si noe nytt, kap. 17.)
-  1. Arbeidsmåten: docs/INDEKS.md, CLAUDE.md, docs/skipsmodeller/sulebas-bygging.md hele (reglene i kap. 7, lærdommene i kap. 11–17, kap. 15 med selvkritikken og tabellen over spillets krav, og kap. 16 om jevnheten i skroget og dekkskartet), /blender-skillen, og «Det neste økt bør vite» nederst i denne fila.
+  1. Arbeidsmåten: docs/INDEKS.md, CLAUDE.md, docs/skipsmodeller/sulebas-bygging.md hele (reglene i kap. 7, lærdommene i kap. 11–18, kap. 15 med selvkritikken og tabellen over spillets krav, og kap. 16 om jevnheten i skroget og dekkskartet), /blender-skillen, og «Det neste økt bør vite» nederst i denne fila.
   2. Kravlista: docs/skipsmodeller/planliste-fiskefartoy.md hele, også kap. 29 og 30.
   3. Malene for grunnlaget: sulebas-pilot-grunnlag.md, og trebat-, skiff-, snekke-, plastsjark-, havsjark- og hurtigsjark-grunnlag.md med byggedokumentene (snekka er den første med kjøl, innenbords propell i brønn og dørhus, plastsjarken den første med styrhus og nedsenket dørk, havsjarken den første med ballastkjølen i skrogets flate, bakk og trapper i dekkskartet, hurtigsjarken den første hardknekte planende med skeg i snittet, sprutlister, lensporter ved dekket og skjul under tynt tak; selvvurderingene står sist i grunnlagene).
   4. Det som er kjent om båten: docs/skipsmodeller/kartlegging-spillet.md (også M-punktene og D8), docs/batplan.md (også statuslinjene for båten), docs/systemer/baater.md og docs/systemer/3d-baater-og-animasjon.md (også 5.13).
@@ -46,6 +46,16 @@ FERDIG BETYR:
 Kjør på.
 
 ---
+
+Det neste økt bør vite (etter den nye hurtigsjarken 02.11.2026):
+
+- Les `sulebas-bygging.md` kap. 18: malen gjelder koden, ikke formen. To typer i samme klasse skal skille seg i silhuetten; Jonas avviste
+  et første utkast som lignet den brukte hurtigsjarken. Spør etter retningen tidlig når typen ligner en annen.
+- Se etter tegninger eller bilder bak det gamle skriptet (kommentarene øverst, `3d-baater-og-animasjon.md`) og be Jonas om dem; med en
+  tegning legges modellen over sideriss hver runde (`qa/overlay_hs11.py` er malen).
+- Tegningens vekt (Δmax) og dataenes `disp` (lettvekt) er ikke det samme: les begge før bunnen tegnes om.
+- `hs11.py` er malen for en tung arbeidsbåt med loddrett stevn, kjøl, dyse og et hus som fyller bredden.
+- Selvvurderingen står i `sjarkny-grunnlag.md` kap. 8; farten (`vmax` 25 mot tegningens 12 kn) venter på Jonas.
 
 Det neste økt bør vite (etter hurtigsjarken 01.11.2026):
 - Grenen med alt er nå ccr-7d69b776-9fggkf (rullet ut til ccr-5e1ba2f4-pusvyd).
