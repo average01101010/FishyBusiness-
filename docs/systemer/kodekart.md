@@ -1437,7 +1437,7 @@ Bruktmarkedet (M4 in docs/planer/butikker-og-sponsorer.md, 3.3, 10.2, 10.2b; V3 
   - 144 `mktTiListing(r)`
   - 154 `mktEvery(H)`
 
-## `src/js/core/09l-sponsor.js` (25 linjer)
+## `src/js/core/09l-sponsor.js` (26 linjer)
 
 Sponsorer (M6 in docs/planer/butikker-og-sponsorer.md 4 and 5; CLAUDE.md: a real name, logo or product only with a written
 
@@ -2707,7 +2707,7 @@ The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the to
 
 - **1** The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the top and the end of the purchase
 
-## `src/js/ui/10r-sponsor.js` (38 linjer)
+## `src/js/ui/10r-sponsor.js` (42 linjer)
 
 Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
 
@@ -3044,7 +3044,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 274 `drawBeams(VP, eye, t)`
   - 302 `drawChunkLights(VP, eye)`
 
-## `src/js/view3d/07-harbour-unit.js` (128 linjer)
+## `src/js/view3d/07-harbour-unit.js` (205 linjer)
 
 ---------- the harbour unit (tools/harbour/kaimottak.py): quay, fish plant, crane, forklift, ice silo and bunker station in one ----------
 
@@ -3060,6 +3060,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 95 `siteSnow(P, snow)`
   - 109 `siteModel(k)`
   - 119 `drawSites(eye, VP, near, far)`
+- **128** sponsors' signs (M7, docs/planer/butikker-og-sponsorer.md F2 and 4.4)
+  - 144 `signTex(sp)`
+  - 158 `signSeen(M, F, VP, eye)`
+  - 169 `drawSigns(eye, VP)`
+  - 193 `signOcc(VP)`
+  - 204 `signTake()`
 
 ## `src/js/view3d/08-plants.js` (456 linjer)
 
@@ -3501,7 +3507,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **91** frame
   - 95 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (528 linjer)
+## `src/js/view3d/24-cinema.js` (529 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -3516,14 +3522,14 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 155 `introStart(sec)`
   - 161 `frame()`
   - 163 `frame0()`
-  - 349 `snapTake()`
-  - 354 `drawRoute(VP, eye)`
-  - 366 `driftSpray(VP, eye, dt, t, col)`
-  - 381 `drawSmoke(VP, eye, BM, dt)`
-  - 408 `drawEffects(VP, eye, BM, dt, t)`
-  - 510 `updateLabels(VP, eye, W, Hh)`
+  - 350 `snapTake()`
+  - 355 `drawRoute(VP, eye)`
+  - 367 `driftSpray(VP, eye, dt, t, col)`
+  - 382 `drawSmoke(VP, eye, BM, dt)`
+  - 409 `drawEffects(VP, eye, BM, dt, t)`
+  - 511 `updateLabels(VP, eye, W, Hh)`
 
-## `src/js/view3d/25-controls.js` (205 linjer)
+## `src/js/view3d/25-controls.js` (211 linjer)
 
 ---------- controls ----------
 
