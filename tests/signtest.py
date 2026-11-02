@@ -7,6 +7,12 @@ import asyncio, json
 from playwright.async_api import async_playwright
 
 
+async def shot(pg, path):
+    # (SwiftShader can stall for minutes; a picture that does not come is said, not a failure of what the test checks)
+    try: await pg.screenshot(path=path, timeout=150000)
+    except Exception as e: print('skjermbildet %s kom ikke: %s' % (path, str(e)[:80]))
+
+
 def check(ok, what, extra=''):
     print(('OK  ' if ok else 'FEIL') + ' ' + what + (('  ' + json.dumps(extra, ensure_ascii=False, default=str)[:500]) if extra != '' else ''))
 
@@ -31,9 +37,9 @@ async def main():
             if pl.get('imp', 0) >= 1 and pl.get('sec', 0) >= 1: break
         check(seen['tex'] >= 1, 'banneret med partnerens navn er tegnet', seen)
         check(pl.get('imp', 0) >= 1 and pl.get('sec', 0) >= 1 and pl.get('area', 0) >= 0.015 and (pl.get('last') or {}).get('vis'), 'synlig og stort nok: det telles som sett etter ett sekund', pl)
-        await pg.screenshot(path='skilt_liggende.png')
+        await shot(pg, 'skilt_liggende.png')
         await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(6000)
-        await pg.screenshot(path='skilt_staaende.png')
+        await shot(pg, 'skilt_staaende.png')
         await pg.set_viewport_size({'width': 1280, 'height': 800})
         # from behind the shop: the building hides it, and nothing is counted
         await pg.evaluate("G3.signTake(); G3.signAt('back', 14)")
