@@ -36,8 +36,10 @@ export default function (t){
   // the snow crab is in the far north-east only
   t.ok(at('snokrabbe', ...LOF, H(5, 15)) === 0 && K.MIG.snokrabbe(72.6, 32) > 0.9, 'snøkrabben er bare nordøst i Barentshavet');
   // saithe: the notes rule where they have the location, and Senja keeps its saithe
-  const se = at('sei', HUSOY.lat, HUSOY.lon, H(4, 15)) / K.seasonal(K.SPECIES.sei.av, H(4, 15));
-  t.ok(se > 0.4 && se < 2.5, `seien på Senja i mai holder seg nær før (faktor ${se.toFixed(2)})`);
+  // since 02.11.2026 the season comes from the notes too (FK.season 'data'): Senja's saithe in May is the notes' level against Senja's
+  // mean over the year, not the old table's May peak
+  const se = at('sei', HUSOY.lat, HUSOY.lon, H(4, 15));
+  t.ok(se > 0.1 && se < 3, `seien på Senja i mai følger sedlene (${se.toFixed(2)} mot Senjas snitt over året)`);
 
   // the reader: kg and landings a year by location, month, gear and length group, and by main area for the ocean fleet
   const c = K.fkCell('torsk', '00-46', 2), cg = K.fkCell('torsk', '00-46', 2, 'garn'), ch = K.fkCell('sild', '04', 0);
