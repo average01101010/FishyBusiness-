@@ -155,7 +155,6 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 ## 10.7 Små ryddejobber
 
-- **M6: kjør migreringen** `supabase/migrations/20261102130000_sponsors.sql` i Supabase (02.11.2026: verktøyet ba om bekreftelse som ikke kom). Før den er kjørt, svarer `sp_now` 404 og spillet viser ingen sponsorer, uten feil. Kildesiden skrives for hånd når første avtale kommer.
 - **M5 står igjen** (02.11.2026): navnet malt og flagget heist i selve 3D-modellen (nå et kort over bildet), innbyttebåten liggende ved verftets kai med «Til salgs» til neste uke.
 - **M4 står igjen** (02.11.2026, etter andre del): prøvetur ved kaia, bilder fra showroomet, og V3 B (felles telling av visninger og at en oppføring trekkes for alle når én spiller kjøper; nå forsvinner hun bare for kjøperen). `docs/planer/butikker-og-sponsorer.md`.
 - **fleet2test ventet fast 1,8 s etter reload** og ble rød da oppstarten ble tregere (lasteskjermen); venter nå på `S.fleet` (02.11.2026).
