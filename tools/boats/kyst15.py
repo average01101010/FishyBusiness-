@@ -242,6 +242,8 @@ def colours():
     w('sail', (0.62, 0.11, 0.08), 0.15); w('sailedge', (0.42, 0.07, 0.05), 0.2); w('sailseam', (0.53, 0.09, 0.07), 0.15)
     w('lampR', (0.90, 0.10, 0.08), 0.8, 0, 0, 0.5); w('lampG', (0.10, 0.80, 0.25), 0.8, 0, 0, 0.5); w('lampW', (1.0, 0.97, 0.88), 0.8, 0, 0, 0.5)
     w('lens', (0.95, 0.94, 0.85), 0.9)
+    w('scr_plot', (0.10, 0.22, 0.42), 0.9, 0, 0, 0.6); w('scr_land', (0.55, 0.48, 0.28), 0.9, 0, 0, 0.5); w('scr_sound', (0.06, 0.10, 0.35), 0.9, 0, 0, 0.6)
+    w('scr_bottom', (0.70, 0.25, 0.08), 0.9, 0, 0, 0.6); w('scr_ais', (0.04, 0.16, 0.12), 0.9, 0, 0, 0.6); w('scr_eng', (0.08, 0.08, 0.10), 0.9, 0, 0, 0.4)
     C['glass'] = mat('glass', (0.05, 0.08, 0.11), 0.95)
 
 
@@ -753,7 +755,11 @@ def helm(A, G, fine=True):
         q = [dash_pt(ta, ya), dash_pt(ta, yb_), dash_pt(tb, yb_), dash_pt(tb, ya)]; c = sum(q, V()) / 4
         F.loft(A, [[p + n * 0.002 for p in q], [p + n * 0.014 for p in q]], lambda i: C['bezel'], cap0=False, cap1=False)
         A.poly([p + n * 0.014 for p in q], C['bezel'], n)
-        A.poly([c + (p - c) * 0.86 + n * 0.0145 for p in q], C['screen'], n)
+        # the screens lit (they read as black plates from the bridge, the trekk on the havsjark and the breisjark): the plotter's chart,
+        # the sounder's bottom, the AIS' targets, the engine's gauges, each its own dim glow; the chart's land as a darker field in it
+        A.poly([c + (p - c) * 0.86 + n * 0.0145 for p in q], C['scr_' + nm], n)
+        if nm == 'plot': A.poly([c + (p - c) * 0.40 + (q[2] - q[1]) * 0.18 + n * 0.0150 for p in q], C['scr_land'], n)
+        if nm == 'sound': A.poly([c + (p - c) * V((0.80, 0.80, 0.80)) - (q[2] - q[1]) * 0.30 + n * 0.0150 for p in q], C['scr_bottom'], n)
     cb = dash_pt(0.93, -1.10) + V((0.0, 0, -0.005))
     acyl(A, cb, cb + V((0, 0, 0.05)), 0.07, lambda q: C['dark'], seg=16)
     HELM_EXTRA.append(sphere('compass', cb + V((0, 0, 0.085)), 0.06, C['glass'], (1, 1, 0.7)))

@@ -114,9 +114,31 @@ Halestasjonen er åpen om styrbord fra x 4,60 til 7,80, ripa 0,95 m over arbeids
 | 8 | overlegget av den nye profilen (K3s) over den gamle | shelterdekket, rekka, åpningen, styrhusets plass og stevnen ligger oppå hverandre; kroppen dypere og kjølen grunnere (vekta), lista 0,2 m høyere, styrhustaket noe lavere | |
 | 9 | testene etter hverandre (`runtests.sh`) og etter-bildene i begge formater | `vessel3d`, `brotest`, `lanterntest`, `regmarktest`, `maletest`, `walktest`, `vesseltest`, `jigshot` grønne; `penshot` rød på GL-feil 1282 (kjent fra før havsjarken, BACKLOG); `anchor3d`: kyst15s anker ble ikke ferdig hevet innen testens tid; nattbildene fra spillet for nær til å vise lanternene | se kap. 8 |
 
+| 10 | `anchor3d` mot bygget fra før (`dist-for`) | hivingen rød også der (kjent, BACKLOG); sprutet manglet bare på mitt bygg, to ganger: klysset sto 2,82 m over vannet, og SwiftShader hoppet over bildene mens ankeret passerte vannflaten | klysset 2,45 m over vannet (som det gamle): sprutet sett; `regmarktest` grønn igjen |
+| 11 | nattbilde i spillet på 32 m fra begge sider og akterfra (`NIGHT=1 tests/ky15shot.py`) | fra babord rød og hvit, fra styrbord grønn og hvit, akterfra akterlanterna; ingen lanterne synes fra feil side | |
+| 12 | broa i spillet og i nærbildet | skjermene leste som svarte plater (som på havsjarken og breisjarken) | skjermene lyser svakt: plotteren som kart med land, ekkoloddet med bunnen, AIS, motorpanelet; `brotest` grønn |
+
 ## 8. Selvvurdering
 
-(skrives når kritikksløyfen er ferdig)
+**Karakter: 76/100: godkjent** (grensen er 75).
+
+Det som holder:
+- Skroget er én flate med dødveden i snittet, 75,1 t mot 75 (før 121), jevne vannlinjer (0,003), avrundet hekk med fender, leider og navn.
+- Alle 21 kontrollene i `check()` er grønne, klasjsjekken står på 0, og dekkskartet har alle plassene på riktig dekk (halestasjonen, shelterdekket,
+  rorplassen på styrhusdørken, fordekket).
+- Arbeidsflyten går an og ble lagt før veggene: haleren, karet, luka og bordet i rekkefølge, juksaplassene på ripa, leideren opp, døra inn.
+- Lanternene er lovlige og vist i spillet fra hver side om natta; fiskelysene typet, 1,06 m fra hverandre.
+- Broa viser utsynet, konsollen og skjermene som lyser.
+- Testene som dekker båten er grønne: Node (420), `vessel3d`, `brotest`, `lanterntest`, `regmarktest`, `maletest`, `walktest`, `vesseltest`,
+  `jigshot`; `penshot` (GL-feil 1282) og hivingen i `anchor3d` er røde også før endringen (BACKLOG).
+
+Trekk:
+1. **Jonas måtte påpeke styrhuset og vinduene** (sideglasset i ett plan på en buet vegg, ujevne ruter). Jeg hadde sett K1 uten å se det.
+2. **Fotoene og tegningen mangler**: overlegget er mot den gamle profilen, og alt på tvers er antatt.
+3. **Jeg skrev over det gamle skriptet** før K1–K7 av det var tatt (hentet fra git).
+4. Bare tre av åtte juksamaskiner får plass (bare halestasjonens ripe er en ripe ved arbeidsdekket).
+5. GLB-en er 3,9 MB mot 0,9 MB før.
+6. `deckshot` er ikke kjørt helt (Jonas: ingen unødvendige tester; kranprøven er kjent rød for alle kranbåtene, plass-kontrollene var OK).
 
 ## 9. Spørsmål og bilder som ville gjort resultatet bedre
 
