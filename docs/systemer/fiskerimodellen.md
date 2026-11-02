@@ -258,7 +258,15 @@
     - **Seiens gytebestand 2014–2026** er lagt inn i `STOCK.sei` fra samme vurdering; før var bare 2026 og 2027 med. ICES' vurdering fra 2025 lå høyere (413 kt i 2025 mot 234 kt i 2026-vurderingen).
     - Gytebestandene i spillet for 2025–2026 stemmer med rapportene for alle tre.
     - **Grunnlinja ble høyere:** Husøy i mars er 0,73 (før 0,64), og skreien er 0,77 igjen i juni. Fangsten på Senja-stedene flyttet seg høyst 6 % (hyse), så `k` står.
-  - **Fortsatt anslag:** beskatningsratene for artene uten bestand i spillet og tilveksten `r`.
+  - **Kysttorsken år for år** (`KYSTT`, `kystF` i `03d-quota.js`; ICES 2026 via `sag.ices.dk`):
+    - **Nord for 67° N** (`cod.27.1-2.coastN`, nøkkel 22637): gytebestanden falt fra 99 036 t i 2012 til 53 035 t i 2023, og tok seg opp til 71 729 t i 2024 og 80 933 t i 2025.
+    - **62–67° N** (`cod.27.2.coastS`, nøkkel 23775): bare B/Bmsy, fra 0,74 i 2012 til 0,42–0,44 i 2023–2026. Fiskedødeligheten lå 1,5–1,66 ganger over nivået for maksimalt bærekraftig utbytte hvert år 2012–2025. Bestanden er svak og overfisket.
+    - **Hvordan det brukes:** den stedegne torskens nivå er kvadratroten av bestanden mot 2024–2025, årene sedlene er fra, med glidende overgang ved 67° N og 62° N. Etter siste år med data holdes nivået, fordi vi ikke har en egen framskriving. Sør for 62° N har spillet ingen serie (Nordsjøen og Skagerrak er andre bestander), så faktoren er 1.
+    - **Målt:** nord for 67° N gir det 1,14 i 2014, 0,90 i 2023 og 1,03 fra 2025.
+  - **Uer:** beskatningsraten er 0,19 (anslaget 0,12 × 1,59). ICES 2026 (`reg.27.1-2`, vanlig uer, nøkkel 23725) har fiskedødeligheten 1,52–1,61 ganger over nivået for maksimalt bærekraftig utbytte i 2022–2025.
+  - **Lange og brosme** (`lin.27.1-2`, `usk.27.1-2`, ICES 2025) har bare indekser (kg per 1 000 kroker og relativ fiskedødelighet), ingen absolutt bestand, så anslagene (0,2) står. Lyr og kveite vurderes ikke av ICES nord for 62° N.
+  - **Etter dette:** fangsten på Senja-stedene er innen 6 % av før B2 (torsk +4 %, hyse +6 %), og `k` står.
+  - **Fortsatt anslag:** beskatningsratene for lyr, lange, brosme, kveite og snøkrabbe, tilveksten `r`, og skalaen 0,12 for uer.
   - **Kalibreringen etter B4:** summen per art over de fire Senja-stedene er innen 2–4 % av før B2, så `k` står.
   - **Ytelsen:** en rute regner trykket for alle elleve arter med etterslep én gang per time. Det tar rundt 12 µs for en rute fra forrige time og 30 µs første gang ruta slås opp (fiskeplassene, grunnlinja). Oppslaget etterpå tar 0,13–0,21 µs. Et varmekart med 2 500 ruter koster da 30–75 ms én gang per spilltime (10 ekte minutter). Det bør flyttes ut av hovedtråden hvis det merkes på Pad 3.
   - **Kg i timen med håndjuksa etter B4** (urørt avvik; før B2 → B2 → B4):

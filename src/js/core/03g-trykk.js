@@ -36,8 +36,9 @@ const TRK = {r:0.004, groundW:3, groundR:2, hph:730.5,
   // and SSB 352 kt in 2025, 1 069 and 338 kt in 2026), haddock 3.1 (the same report, 4.7: TSB 494 692 t and SSB 157 942 t in 2025),
   // saithe 2.1 (ICES 2026, pok.27.1-2, gives no total biomass: the catch of 2025, 147 482 t, over the share F 0.399 takes with M 0.2,
   // F/Z (1 - e^-Z) = 0.30, is about 490 kt against an SSB of 234 kt); and the share of the year's biomass the fleet takes for the
-  // species without a stock in the game (a harvest rate; estimates: ICES's for ling and tusk is about 0.2, redfish and halibut lower)
-  tsb:{torsk:3.1, hyse:3.1, sei:2.1}, harv:{lyr:0.25, lange:0.2, brosme:0.2, uer:0.12, kveite:0.12, snokrabbe:0.2},
+  // species without a stock in the game (a harvest rate; estimates, except golden redfish: 0.12 × 1.59, ICES 2026 reg.27.1-2 has F at
+  // 1.52-1.61 times Fmsy in 2022-2025; ICES's ling and tusk give only indices, pollack and halibut are not assessed north of 62° N)
+  tsb:{torsk:3.1, hyse:3.1, sei:2.1}, harv:{lyr:0.25, lange:0.2, brosme:0.2, uer:0.19, kveite:0.12, snokrabbe:0.2},
   // herring and mackerel: the spawning stocks of ICES's 2025 assessments (NVG herring about 3.2 Mt, NEA mackerel about 3.6 Mt; t)
   ssb:{sild:3.2e6, makrell:3.6e6},
   ys:{}};

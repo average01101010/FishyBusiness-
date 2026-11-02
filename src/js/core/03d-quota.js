@@ -114,6 +114,22 @@ const STOCK = {
     tac:{2020:27000, 2021:27000, 2022:25000, 2023:25000, 2024:21250, 2025:19000, 2026:19000},
     adv27:19610, Blim:33391, Bpa:46747, Bm:75000, a:0.1, sd:0.06, cap:0.2, slack:0.1}
 };
+// The coastal cod are not the Northeast Arctic cod (B4, 02.11.2026): ICES assesses them on their own (the Stock Assessment Graphs database,
+// sag.ices.dk, read 02.11.2026). North of 67° N (cod.27.1-2.coastN, assessment of 2026, key 22637): the spawning stock in tonnes. Between
+// 62 and 67° N (cod.27.2.coastS, 2026, key 23775): only B/Bmsy, the stock against the level of the largest lasting yield (data-limited;
+// F was 1.5-1.66 times Fmsy every year 2012-2025). South of 62° N the game has no series (the North Sea and Skagerrak cod are other
+// stocks): 1. The resident cod's level in a year is the square root of the stock against 2024-2025, the years of the landing notes the
+// places come from (fiske.json); after the last year of data it holds (no projection of our own).
+const KYSTT = {
+  N:{2012:99036, 2013:99679, 2014:103685, 2015:94896, 2016:98719, 2017:81216, 2018:74416, 2019:61230, 2020:65388, 2021:56729, 2022:54951, 2023:53035, 2024:71729, 2025:80933},
+  S:{2012:0.74, 2013:0.68, 2014:0.67, 2015:0.66, 2016:0.66, 2017:0.63, 2018:0.59, 2019:0.54, 2020:0.5, 2021:0.48, 2022:0.44, 2023:0.42, 2024:0.42, 2025:0.42, 2026:0.44}};
+function kystAt(T, y){ const ys = Object.keys(T).map(Number), y0 = Math.min(...ys), y1 = Math.max(...ys), yy = clamp(y, y0, y1); return T[yy] != null ? T[yy] : T[y1]; }
+function kystF(lat, H){
+  const y = yearH(H) + doyH(H) / 365, a = Math.floor(y), f = y - a, at = T => kystAt(T, a) * (1 - f) + kystAt(T, a + 1) * f;
+  const n = Math.sqrt(at(KYSTT.N) / ((KYSTT.N[2024] + KYSTT.N[2025]) / 2)), s = Math.sqrt(at(KYSTT.S) / ((KYSTT.S[2024] + KYSTT.S[2025]) / 2));
+  const wn = sstep(66.6, 67.4, lat), ws = (1 - wn) * sstep(61.6, 62.4, lat);
+  return n * wn + s * ws + (1 - wn - ws);
+}
 const STKY = {};
 function stockYear(sp, y){
   // the server's stock when the admin has turned it on (B4, world_cfg.stock_server; WSH.stock comes with the world)

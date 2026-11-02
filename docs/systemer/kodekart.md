@@ -412,7 +412,7 @@ STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the wo
   - 76 `hsWork(p, H)`
   - 78 `stabTick(H)`
 
-## `src/js/core/03d-quota.js` (271 linjer)
+## `src/js/core/03d-quota.js` (288 linjer)
 
 Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood from 1 October 2026 (J-161-2026, fiskeridir.no)
 
@@ -429,44 +429,46 @@ Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood f
   - 91 `freshQuota()`
   - 92 `licStart(lic)`
 - **93** the stocks and the total quotas year by year. History and the advice for 2027 from the Institute of Marine Research (hi.no,
-  - 117 `stockYear(sp, y)`
-  - 134 `ssbAt(sp, H)`
-  - 135 `stockF(sp, H)`
-- **137** the open group's season. About 2 100 boats fish the group quota down a day at a time (more in the skrei season and on days
-  - 148 `qyOf(y)`
-  - 155 `qyBoats(Y, y)`
-  - 156 `qyStep(Y, y, d)`
-  - 174 `quotaNewYear(y)`
-  - 177 `qyAt(H)`
-  - 179 `codStopDoy(y)`
-  - 180 `openMaxAdd(H)`
-  - 185 `ffPlan(y)`
-  - 193 `ffPct(H)`
-- **195** the closed group's register: a fixed number of rights (1 622 in the cod fishery north of 62° N on 17.10.2025, case document
-  - 203 `npcReg()`
-  - 204 `regSend(fn, id)`
-  - 209 `regTake(id)`
-  - 211 `regFree(id)`
-  - 213 `regSeller(id, H)`
-- **215** structure quotas (forskrift om spesielle kvoteordninger for kystfiskeflåten, J-244-2025): quota lengths 11–27.99 m may buy a
-  - 219 `structRoom(l, id)`
-  - 221 `structPrice(id, H)`
-  - 222 `structIn(l, id, H)`
-  - 223 `licExtra(l)`
-  - 225 `structExpire(l, y)`
-- **226** the special scheme for quota lengths under 11 m (kap. 2, from 2025): an owner with two such boats, both owned since the year
-  - 228 `twoOK(la, lb, y)`
-- **229** quota cooperation (J-161-2026 § 31): two closed-group boats under 11 m with different owners; both owners aboard, the passive
-  - 233 `coopOffer(H)`
-  - 234 `coopOK(l, y)`
-- **236** Greenland halibut (blåkveite) for vessels under 28 m (J-241-2025, the regulation for 2026; docs/blakveite.md 2-3, 07.10.2026)
-  - 244 `bkSeason(y)`
-  - 247 `bkOpen(H)`
-  - 253 `bkDirect(H, len)`
-  - 255 `bkState(H)`
-  - 258 `bkAllow(H, bk, all)`
-  - 263 `bkLanded(H, bk, all)`
-  - 265 `bkNews(H)`
+  - 126 `kystAt(T, y)`
+  - 127 `kystF(lat, H)`
+  - 134 `stockYear(sp, y)`
+  - 151 `ssbAt(sp, H)`
+  - 152 `stockF(sp, H)`
+- **154** the open group's season. About 2 100 boats fish the group quota down a day at a time (more in the skrei season and on days
+  - 165 `qyOf(y)`
+  - 172 `qyBoats(Y, y)`
+  - 173 `qyStep(Y, y, d)`
+  - 191 `quotaNewYear(y)`
+  - 194 `qyAt(H)`
+  - 196 `codStopDoy(y)`
+  - 197 `openMaxAdd(H)`
+  - 202 `ffPlan(y)`
+  - 210 `ffPct(H)`
+- **212** the closed group's register: a fixed number of rights (1 622 in the cod fishery north of 62° N on 17.10.2025, case document
+  - 220 `npcReg()`
+  - 221 `regSend(fn, id)`
+  - 226 `regTake(id)`
+  - 228 `regFree(id)`
+  - 230 `regSeller(id, H)`
+- **232** structure quotas (forskrift om spesielle kvoteordninger for kystfiskeflåten, J-244-2025): quota lengths 11–27.99 m may buy a
+  - 236 `structRoom(l, id)`
+  - 238 `structPrice(id, H)`
+  - 239 `structIn(l, id, H)`
+  - 240 `licExtra(l)`
+  - 242 `structExpire(l, y)`
+- **243** the special scheme for quota lengths under 11 m (kap. 2, from 2025): an owner with two such boats, both owned since the year
+  - 245 `twoOK(la, lb, y)`
+- **246** quota cooperation (J-161-2026 § 31): two closed-group boats under 11 m with different owners; both owners aboard, the passive
+  - 250 `coopOffer(H)`
+  - 251 `coopOK(l, y)`
+- **253** Greenland halibut (blåkveite) for vessels under 28 m (J-241-2025, the regulation for 2026; docs/blakveite.md 2-3, 07.10.2026)
+  - 261 `bkSeason(y)`
+  - 264 `bkOpen(H)`
+  - 270 `bkDirect(H, len)`
+  - 272 `bkState(H)`
+  - 275 `bkAllow(H, bk, all)`
+  - 280 `bkLanded(H, bk, all)`
+  - 282 `bkNews(H)`
 
 ## `src/js/core/03e-rules.js` (271 linjer)
 
@@ -498,7 +500,7 @@ The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a 
   - 253 `ruOpenNear(p, q, maxKm)`
   - 262 `ruTips()`
 
-## `src/js/core/03f-fiske.js` (324 linjer)
+## `src/js/core/03f-fiske.js` (326 linjer)
 
 The fishing along the coast as it really was, and where the fish is from it (B2 of docs/planer/bestand-og-flaate.md, 01.11.2026).
 
@@ -528,29 +530,29 @@ The fishing along the coast as it really was, and where the fish is from it (B2 
   - 263 `skreiFront(lat, H, T)`
   - 269 `skreiPulse(c, H, T)`
   - 275 `fkAvail(sp, q, T)`
-  - 292 `areaF(sp, p, H)`
-  - 298 `skreiShare(p, H)`
-  - 305 `skreiFlow(K, H)`
-- **312** the sea's warmth: the fish go deeper when the surface is warmer than they like (B4, 02.11.2026)
-  - 319 `tempDepthK(sp, c, H)`
+  - 294 `areaF(sp, p, H)`
+  - 300 `skreiShare(p, H)`
+  - 307 `skreiFlow(K, H)`
+- **314** the sea's warmth: the fish go deeper when the surface is warmer than they like (B4, 02.11.2026)
+  - 321 `tempDepthK(sp, c, H)`
 
-## `src/js/core/03g-trykk.js` (203 linjer)
+## `src/js/core/03g-trykk.js` (206 linjer)
 
 The fleet's pressure and the stock's baseline (B3 of docs/planer/bestand-og-flaate.md, 02.11.2026). The whole Norwegian fleet takes
 
-  - 46 `trkAreas()`
-  - 61 `trkCellW(c)`
-  - 68 `trkSkreiMonths(D)`
-  - 76 `trykkYear(sp, y)`
-  - 132 `trkBiomass(sp, y, notes)`
-  - 139 `trykkOpenScale(H)`
-  - 148 `trkPlayersF(sp, y, Y)`
-  - 158 `trkMonth(h)`
-  - 164 `trkCell(c, H)`
-  - 189 `fleetF(sp, p, H)`
-  - 190 `fleetU(sp, p, H)`
-  - 192 `baseAt(p, sp, H)`
-  - 198 `skreiLeft(H)`
+  - 49 `trkAreas()`
+  - 64 `trkCellW(c)`
+  - 71 `trkSkreiMonths(D)`
+  - 79 `trykkYear(sp, y)`
+  - 135 `trkBiomass(sp, y, notes)`
+  - 142 `trykkOpenScale(H)`
+  - 151 `trkPlayersF(sp, y, Y)`
+  - 161 `trkMonth(h)`
+  - 167 `trkCell(c, H)`
+  - 192 `fleetF(sp, p, H)`
+  - 193 `fleetU(sp, p, H)`
+  - 195 `baseAt(p, sp, H)`
+  - 201 `skreiLeft(H)`
 
 ## `src/js/core/04-crew.js` (368 linjer)
 

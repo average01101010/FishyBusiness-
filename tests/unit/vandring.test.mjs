@@ -92,4 +92,9 @@ export default function (t){
   const calm = K.gearVertF('torsk', 'garn', hus, H(5, 21) + 4), wind0 = K.windAt; let gale;
   K.set('windAt', () => 22); gale = K.gearVertF('torsk', 'garn', hus, H(5, 21) + 5); K.set('windAt', wind0);
   t.ok(gale < calm, `i storm står bunnfisken høyere, og bunngarnet tar mindre (${calm.toFixed(2)} → ${gale.toFixed(2)})`);
+
+  // the coastal cod's own stock (ICES 2026): north of 67° N it fell to 2023 and came back in 2024-2025; 62-67° N is low and level
+  const Hy = yy => (Date.UTC(yy, 6, 1) - K.EPOCH) / 3.6e6;
+  t.ok(K.kystF(69.5, Hy(2023)) < 0.92 && Math.abs(K.kystF(69.5, Hy(2025)) - 1) < 0.08 && K.kystF(69.5, Hy(2014)) > 1.1, `kysttorsken nord for 67° N følger ICES: ${[2014, 2023, 2025, 2030].map(yy => K.kystF(69.5, Hy(yy)).toFixed(2)).join(' / ')} (2014, 2023, 2025, 2030)`);
+  t.ok(Math.abs(K.kystF(64, Hy(2030)) - 1) < 0.08 && K.kystF(64, Hy(2012)) > 1.25 && K.kystF(60.4, Hy(2014)) === 1, `62-67° N var sterkere i 2012 (${K.kystF(64, Hy(2012)).toFixed(2)}) og holder nivået; sør for 62° N har spillet ingen serie`);
 }

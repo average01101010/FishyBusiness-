@@ -280,7 +280,9 @@ function fkAvail(sp, q, T){
     // the skrei is one body of fish: what the fleet has taken of it so far this season is not there further along (skreiLeft, 03g-trykk.js)
     if (T.skl === undefined) T.skl = skreiLeft(T.H);
     // the resident coastal cod is not the Northeast Arctic cod: it does not follow that stock's spawners (stockF), only the skrei does
-    return t.av / (t.sf || 1) * b + skreiPulse(c, T.H, T) * t.sf * q.skr * x * T.skl;
+    // the coastal cod's own stock year by year (ICES: north of 67° N and 62-67° N; kystF in 03d-quota.js), kept for the hour per latitude
+    const kk = T.kf || (T.kf = {}), kl = Math.round(c.lat * 5), kf = kk[kl] !== undefined ? kk[kl] : (kk[kl] = kystF(c.lat, T.H));
+    return t.av / (t.sf || 1) * b * kf + skreiPulse(c, T.H, T) * t.sf * q.skr * x * T.skl;
   }
   let v = F && l >= 0 ? fkAt(F.m, l, T.fk) : NaN;
   const mig = MIG[sp];
