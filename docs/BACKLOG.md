@@ -155,6 +155,9 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 ## 10.7 Små ryddejobber
 
+- **M4 står igjen** (02.11.2026): levering med NPC-skipper, prøvetur ved kaia, bilder fra showroomet, kommisjonssalg («Legg ut hos megleren»), «Neste mål» på kortet, og V3 B (felles telling av visninger og at en oppføring trekkes for alle når én spiller kjøper; nå forsvinner hun bare for kjøperen). `docs/planer/butikker-og-sponsorer.md`.
+- **fleet2test ventet fast 1,8 s etter reload** og ble rød da oppstarten ble tregere (lasteskjermen); venter nå på `S.fleet` (02.11.2026).
+
 - **`docktest` kan feile ved siden av en annen test** (30.10.2026, M2): én kjøring sammen med `nettest` fant ikke viftene (`#dockFan [data-dk=…]`) og ble rød på alle viftesjekkene; alene var den grønn med 96 OK, og i kjøringen før var viftene der. Trolig tid (vifta tegnes etter 150–200 ms ventetid i testen). Testen bør vente på vifta i stedet for en fast pause.
 - **`ordtest` er utdatert** (funnet 30.10.2026 i M1): den trykker på fanen «Bestillinger» i Salgslaget, som ikke finnes lenger (bestillingene er oppdrag), og stopper der. Klærne den prøver etterpå, ligger under `utstyrb` (rettet i testen). Testen må skrives om mot oppdragstavla eller tas ut.
 
