@@ -1683,7 +1683,7 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
 - **1** i18n
   - 110 `t(k, ...a)`
 
-## `src/js/ui/02-format-state.js` (169 linjer)
+## `src/js/ui/02-format-state.js` (180 linjer)
 
 ---------- formatting ----------
 
@@ -1711,10 +1711,12 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 94 `migrateV2(o)`
   - 106 `load()`
 - **126** UI state
-  - 135 `toast(msg, ms)`
-  - 147 `saveCode()`
-  - 155 `codeRead(code)`
-  - 163 `loadCode(code)`
+  - 137 `booting()`
+  - 138 `loaderGone()`
+  - 145 `toast(msg, ms)`
+  - 158 `saveCode()`
+  - 166 `codeRead(code)`
+  - 174 `loadCode(code)`
 
 ## `src/js/ui/03a-chart.js` (147 linjer)
 
@@ -1996,12 +1998,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (889 linjer)
+## `src/js/ui/phone/07-patch.js` (893 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 882 `patch()`
+  - 886 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 

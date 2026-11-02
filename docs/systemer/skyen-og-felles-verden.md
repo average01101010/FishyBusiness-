@@ -272,6 +272,10 @@ Jonas valgte dem fra lista (nr. 5 og 7).
   - Øverst står «Kystfiske langs norskekysten» i sperrede versaler mellom to streker, og navnet stort i Source Serif 4.
   - Nederst løper en tynn lysstripe, med «Laster kysten …» under.
   - `.gone` toner den ut og skjuler den etterpå (`visibility`), og da stopper stripa.
+  - **Ingenting legger seg oppå den** (Jonas 02.11.2026: «Ingenting skal komme opp på skjermen mens spillet står å laster»). `<body>` har klassen `booting` til `loaderGone()` (`ui/02-format-state.js`) tar bort lasteskjermen; alle tre stedene som gjør det (3D er oppe, 3D feilet, `bootFail`) går gjennom den.
+    - Så lenge `booting` står, skjuler `styles.css` dialogen (`#modal`, for eksempel «Båten etter far» og «Mens du var borte»), meldingslinja, tipsene, telefonen, dagboka og de andre overleggene med `visibility`, så de bygges og får knappene sine som før, bare usynlig.
+    - `toast()` legger meldingene i kø (høyst 12) i stedet for å vise dem. `loaderGone()` spiller dem i rekkefølge etter uttoningen, hver i høyst 6 s før den neste; «Laster 3D-terreng …» droppes.
+    - Brevet fra far (`#letter`), startstedet (`#startPick`) og innloggingen (`#cloudGate`) skjules ikke: de er egne steg, og 3D-en venter på de to første (`go3d` i `ui/11-boot.js`).
 - **Innloggingen** (`cloudGateShow` i `ui/10f-cloud.js`):
   - Den har samme bilde og tittel.
   - Teksten og knappene står i et halvgjennomsiktig kort med uskarp bakgrunn. På telefon og nettbrett ligger kortet nederst. På brede skjermer (minst 900 × 600, liggende) står det til venstre, så naustet synes.

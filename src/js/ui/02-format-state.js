@@ -132,7 +132,18 @@ hooks.onLog = () => { panelDirty = true; };
 
 // ms: how long it stays (a message from the phone, 10 s: Jonas 13.10.2026 «De forsvinner ganske fort nå»); a short note over a message
 // that is still up gives the message back for the rest of its time
+// Nothing pops up over the loading screen (Jonas 02.11.2026): while «Laster kysten …» is up (body.booting), the dialogs and overlays
+// are hidden in styles.css and the toasts wait in a queue; loaderGone() takes the screen away and plays what waited, in order
+function booting(){ return document.body.classList.contains('booting'); }
+function loaderGone(){
+  const ld = document.getElementById('loader'); if (ld) ld.classList.add('gone');
+  if (!booting()) return; document.body.classList.remove('booting');
+  const q = (toast._q || []).filter(([m]) => m !== t('loading3d')); toast._q = null;
+  let at = 700;   // after the fade
+  for (const [m, ms] of q){ setTimeout(() => toast(m, ms), at); at += Math.min(ms || 2600, 6000); }
+}
 function toast(msg, ms){
+  if (booting()){ (toast._q = toast._q || []).push([msg, ms]); if (toast._q.length > 12) toast._q.shift(); return; }
   const el = $('toast'); if (ms) toast._keep = {msg, until:Date.now() + ms};
   el.textContent = msg; el.classList.add('on'); clearTimeout(toast._t);
   const back = () => { const k = toast._keep; if (k && k.msg !== msg && k.until > Date.now() + 500){ msg = k.msg; el.textContent = msg; toast._t = setTimeout(back, k.until - Date.now()); return; }

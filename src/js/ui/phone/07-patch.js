@@ -4,6 +4,13 @@
        ['Sjarken på 36 fot er bygd på nytt: ett skrog med kjølen, ekte lensporter og luker, et nytt styrhus med konsoll og skjermer, og lanternene og fiskelysene på riktige plasser.', 'The 36 ft sjark is built anew: one hull with the keel, real freeing ports and hatches, a new wheelhouse with a console and screens, and the lights and fishing lights in their right places.'],
        ['Lyet er åpent om styrbord, så mannskapet arbeider ved haleren og juksamaskinene der; sløyebordet står om babord.', 'The shelter is open to starboard, so the crew work at the hauler and the jigging machines there; the gutting table stands to port.'],
     ]],
+    ['laster-021126', '02.11.2026', 'Ro mens kysten lastes', 'Quiet while the coast loads', [
+       ['Ingenting legger seg lenger oppå skjermen mens spillet laster. Kortet om båten etter far, «Mens du var borte» og meldingene fra kystradioen og folk på land kommer når kysten er lastet, i den rekkefølgen de kom.', 'Nothing lies over the screen any more while the game loads. The card about father\'s boat, «While you were away» and the messages from the coast radio and people ashore come when the coast has loaded, in the order they came.']
+    ]],
+    ['skodde-021126', '02.11.2026', 'Skodda på fjellet', 'The cloud on the fells', [
+       ['Skodda på fjellet driver nå rolig med vinden i stedet for å flakke, og endrer form litt etter litt.', 'The cloud on the fells now drifts calmly with the wind instead of flickering, and slowly changes shape.'],
+       ['Skylaget har en overside: i et tynt lag står de høyeste toppene over skya, og nær lia er skodda tynnere enn langt unna.', 'The cloud layer has a top: in a thin layer the highest peaks stand above it, and near the slope the cloud is thinner than far away.'],
+    ]],
     ['flaate-021126', '02.11.2026', 'Hele flåten fisker av samme bestand', 'The whole fleet fishes the same stock', [
        ['Fiskeflåten langs hele kysten tar sin kvote der og når den virkelig fisker: feltene der mange fisker, er tynnere i sesongen og tar seg opp når flåten går hjem. Når åpen gruppe stoppes, får sjøen hvile.', 'The fleet along the whole coast takes its quota where and when it really fishes: the grounds where many fish are thinner in the season and recover when the fleet goes home. When the open group is stopped, the sea gets a rest.'],
        ['Skreien er én mengde: det som tas i Finnmark og Troms tidlig i sesongen, kommer ikke til Lofoten, så skreien tynnes utover våren.', 'The skrei is one body of fish: what is taken in Finnmark and Troms early in the season does not reach Lofoten, so the skrei thins through the spring.'],

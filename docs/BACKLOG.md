@@ -162,6 +162,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
 
+## Strøket 02.11.2026 (lasteskjermen)
+
+- Kortene («Båten etter far», «Mens du var borte») og meldingene (kystradioen, folk på land, «Laster 3D-terreng …») kom opp oppå «Laster kysten …». Nå venter de til lasteskjermen er borte (`loaderGone`, `body.booting`).
+
 ## Strøket 01.11.2026 (tilbakemelding #106 og kartplotteren)
 
 - **Havet nær båten glatt på Windows** (#106): mellomsjøen på nivå 1 (`docs/systemer/vaer-og-hav.md`). Står igjen: ikke prøvd på ekte Direct3D; følg med på «3D mellomsjø feilet» i feilloggen.
