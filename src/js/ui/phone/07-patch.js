@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['skodde-021126', '02.11.2026', 'Skodda på fjellet', 'The cloud on the fells', [
+       ['Skodda på fjellet driver nå rolig med vinden i stedet for å flakke, og endrer form litt etter litt.', 'The cloud on the fells now drifts calmly with the wind instead of flickering, and slowly changes shape.'],
+       ['Skylaget har en overside: i et tynt lag står de høyeste toppene over skya, og nær lia er skodda tynnere enn langt unna.', 'The cloud layer has a top: in a thin layer the highest peaks stand above it, and near the slope the cloud is thinner than far away.'],
+    ]],
     ['flaate-021126', '02.11.2026', 'Hele flåten fisker av samme bestand', 'The whole fleet fishes the same stock', [
        ['Fiskeflåten langs hele kysten tar sin kvote der og når den virkelig fisker: feltene der mange fisker, er tynnere i sesongen og tar seg opp når flåten går hjem. Når åpen gruppe stoppes, får sjøen hvile.', 'The fleet along the whole coast takes its quota where and when it really fishes: the grounds where many fish are thinner in the season and recover when the fleet goes home. When the open group is stopped, the sea gets a rest.'],
        ['Skreien er én mengde: det som tas i Finnmark og Troms tidlig i sesongen, kommer ikke til Lofoten, så skreien tynnes utover våren.', 'The skrei is one body of fish: what is taken in Finnmark and Troms early in the season does not reach Lofoten, so the skrei thins through the spring.'],
