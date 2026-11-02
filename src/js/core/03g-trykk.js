@@ -32,10 +32,12 @@
 // – redskap», felt.json: three times as much within 2 km of a named ground); the ocean fleet's (h) only outside the baseline, where the
 // big boats may fish (J-161-2026 § 32).
 const TRK = {r:0.004, groundW:3, groundR:2, hph:730.5,
-  // exploitable biomass against the spawning stock (cod, haddock, saithe: the stock of age 3+ is about twice the spawners in the HI and
-  // ICES assessments of the 2020s), and the share of the year's biomass the fleet takes for the species without a stock in the game
-  // (a harvest rate; ICES's for ling and tusk is about 0.2, redfish and halibut lower; estimates)
-  tsb:{torsk:2, hyse:2, sei:2}, harv:{lyr:0.25, lange:0.2, brosme:0.2, uer:0.12, kveite:0.12, snokrabbe:0.2},
+  // the stock of age 3+ against the spawners: cod 3.1 (JRN-AFWG 2026, IMR-VNIRO report 2026 nr. 5, 3.6.5 and Table 3.20: TSB 1 102 kt
+  // and SSB 352 kt in 2025, 1 069 and 338 kt in 2026), haddock 3.1 (the same report, 4.7: TSB 494 692 t and SSB 157 942 t in 2025),
+  // saithe 2.1 (ICES 2026, pok.27.1-2, gives no total biomass: the catch of 2025, 147 482 t, over the share F 0.399 takes with M 0.2,
+  // F/Z (1 - e^-Z) = 0.30, is about 490 kt against an SSB of 234 kt); and the share of the year's biomass the fleet takes for the
+  // species without a stock in the game (a harvest rate; estimates: ICES's for ling and tusk is about 0.2, redfish and halibut lower)
+  tsb:{torsk:3.1, hyse:3.1, sei:2.1}, harv:{lyr:0.25, lange:0.2, brosme:0.2, uer:0.12, kveite:0.12, snokrabbe:0.2},
   // herring and mackerel: the spawning stocks of ICES's 2025 assessments (NVG herring about 3.2 Mt, NEA mackerel about 3.6 Mt; t)
   ssb:{sild:3.2e6, makrell:3.6e6},
   ys:{}};

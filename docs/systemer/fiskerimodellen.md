@@ -212,7 +212,7 @@
   - **Spillernes landinger** i åpen gruppe går fra trykket, fordi `qyStep` teller dem sammen med de andres fra serveren. For de lukkede gruppene er spillernes fangst ikke delt per gruppe på serveren ennå, så den kommer oppå flåtens. Det er en dråpe i dag; B4 flytter registeret og gruppenes fangst til serveren.
 - **Hvor i lokasjonen:** trykket legges tre ganger så tett innen 2 km fra et navngitt felt i «Fiskeplasser – redskap» (`felt.json`, `trkCellW`), og jevnt ellers. Summen per lokasjon er den samme. Havflåtens trykk legges bare utenfor grunnlinja, der de store båtene kan fiske (J-161-2026 § 32).
 - **Hvor mye av fisken som tas** (`fleetU`): trykket mot fisken i ruta.
-  - **Fisken totalt per art:** for torsk, hyse og sei er det gytebestanden (`STOCK`, HI/ICES) × 2, som omtrent er bestanden fra 3 år og eldre i vurderingene fra 2020-tallet. Silda og makrellen tar ICES' gytebestander for 2025 (3,2 og 3,6 Mt). For resten er det årets landinger delt på en beskatningsrate: lyr 0,25, lange og brosme 0,2, uer og kveite 0,12, snøkrabbe 0,2. Alle disse er anslag.
+  - **Fisken totalt per art:** for torsk, hyse og sei er det gytebestanden (`STOCK`) ganget med forholdet til totalbestanden: torsk 3,1 og hyse 3,1 (JRN-AFWG 2026), sei 2,1 (regnet fra ICES 2026, se «Ekte tall for bestanden» under). Silda og makrellen tar ICES' gytebestander for 2025 (3,2 og 3,6 Mt). For resten er det årets landinger delt på en beskatningsrate: lyr 0,25, lange og brosme 0,2, uer og kveite 0,12, snøkrabbe 0,2. Alle disse er anslag.
   - **Fordelingen:** fisken deles først mellom kyst og hav etter hvor fangsten tas den måneden. I mars står torsken mest på kysten for å gyte, om sommeren ute i Barentshavet. Innenfor hver fordeles den etter fangst per landing mot snittet for samme redskap og lengde, ganget med arealet.
   - Fangst per landing kan bare sammenlignes innenfor samme redskap. Den første versjonen, som blandet trål og kystgarn, ga havområdene nesten all fisken og Husøy en grunnlinje på 0,26.
 - **Grunnlinja** (`baseAt(p, sp, H)`): `r / (r + u)`, der `r` = 0,004 i timen er tilveksten til `S.stock` (fisk som kommer tilbake og svømmer inn). Det er den lukkede formen for likevekten. Bestanden blir da `stockAt = baseAt × avviket i S.stock` for fiskeartene. Blåkveita og krabben har egne lag og ingen grunnlinje.
@@ -251,7 +251,14 @@
     - **Ikke funnet kilde:** Ehrich og Stransky (1999) om kuling og fisken i Nordsjøen ble bare funnet som referanse. Løkkeborg og Pina (1997) fant at line satt før daggry og på tvers av strømmen ga mer hyse, men ikke mer torsk. Det er ikke bygd inn, fordi spillet ikke regner retningen på lina mot strømmen.
   - **Lofoten:** sedlene for 2024–2025 sier at skreien sto minst like tett på Senja-feltene som ved Henningsvær. Det gjelder både per landing og per km² (00-46 er 0,53 av Senja; Stamsund 00-48 er 1,95). HIs kartlegging av gytefeltene i 1983–1985 fant rundt 40 % av eggene i Lofoten og viktige gytefelt langs Troms. Visit Norway (reiselivskilde, ikke måling) skriver at mye av skreien de siste årene har gått lenger nord, til Vesterålen og Senja. Modellen står derfor på sedlene; et kompromiss med kilo per km² ga ikke et bedre bilde (mer ved Stamsund, langt mindre ved Røst).
   - **Gytetoppen mot fronten:** HI (1983–1985) fant gytetoppen på det nordligste feltet rundt 14 dager *senere* enn i Lofoten. Skreifronten i spillet gjelder når skreien kommer inn fra Barentshavet (Båtsfjord før Røst), ikke når den gyter. Begge deler kan stemme samtidig.
-  - **Ikke rettet:** forholdet mellom totalbestand og gytebestand (×2). Torsk og hyse vurderes nå av den norsk-russiske gruppa (JRN-AFWG), ikke ICES, og tabellene deres for 2025 ble ikke funnet. Faktoren står som anslag. Beskatningsratene for artene uten bestand og tilveksten `r` er også anslag. Rapportene ligger på `nr.no`, `ices-library.figshare.com`, `ices.dk` og `imr.brage.unit.no`, som er stengt i miljøets nettverk (02.11.2026); når de åpnes, kan tallene hentes.
+  - **Ekte tall for bestanden** (02.11.2026, etter at Jonas åpnet vertene):
+    - **Torsk** (JRN-AFWG 2026, IMR-VNIRO-rapport 2026 nr. 5, Sikt NVA, kap. 3.6.5 og tabell 3.20): totalbestanden (3 år og eldre) var 1 102 kt og gytebestanden 352 kt i 2025. I 2026 er det 1 069 og 338 kt. Forholdet er 3,1 (`TRK.tsb`). F5–10 var 0,548 i 2025.
+    - **Hyse** (samme rapport, kap. 4.7): totalbestanden var 494 692 t og gytebestanden 157 942 t i 2025. Forholdet er 3,1. Gytebestanden er 165 kt i 2026.
+    - **Sei** (ICES 2026, `pok.27.1-2`, databasen over bestandsvurderinger `sag.ices.dk`, nøkkel 22657): ICES oppgir ingen totalbestand. Forholdet 2,1 er regnet ut av fangsten i 2025 (147 482 t) delt på andelen fiskedødeligheten 0,399 tar med naturlig dødelighet 0,2: F/Z·(1 − e^−Z) = 0,30. Det gir rundt 490 kt mot en gytebestand på 234 kt.
+    - **Seiens gytebestand 2014–2026** er lagt inn i `STOCK.sei` fra samme vurdering; før var bare 2026 og 2027 med. ICES' vurdering fra 2025 lå høyere (413 kt i 2025 mot 234 kt i 2026-vurderingen).
+    - Gytebestandene i spillet for 2025–2026 stemmer med rapportene for alle tre.
+    - **Grunnlinja ble høyere:** Husøy i mars er 0,73 (før 0,64), og skreien er 0,77 igjen i juni. Fangsten på Senja-stedene flyttet seg høyst 6 % (hyse), så `k` står.
+  - **Fortsatt anslag:** beskatningsratene for artene uten bestand i spillet og tilveksten `r`.
   - **Kalibreringen etter B4:** summen per art over de fire Senja-stedene er innen 2–4 % av før B2, så `k` står.
   - **Ytelsen:** en rute regner trykket for alle elleve arter med etterslep én gang per time. Det tar rundt 12 µs for en rute fra forrige time og 30 µs første gang ruta slås opp (fiskeplassene, grunnlinja). Oppslaget etterpå tar 0,13–0,21 µs. Et varmekart med 2 500 ruter koster da 30–75 ms én gang per spilltime (10 ekte minutter). Det bør flyttes ut av hovedtråden hvis det merkes på Pad 3.
   - **Kg i timen med håndjuksa etter B4** (urørt avvik; før B2 → B2 → B4):
@@ -265,7 +272,7 @@
     | Husøy, mars | 77,7 → 94,1 → 50,7 | |
 
 - **Antatt eller usikkert:**
-  - Bestanden × 2, beskatningsratene og tilveksten `r` er anslag.
+  - Beskatningsratene for artene uten bestand i spillet og tilveksten `r` er anslag. Forholdet mellom totalbestand og gytebestand er fra JRN-AFWG og ICES (2026).
   - Etterslepet er en lukket tilnærming (likevekten med trykket for en tid siden), ikke en simulert dynamikk.
   - Fordelingen av fisken mellom kyst og hav etter fangsten antar at flåten fisker der fisken er.
   - Trål og havfiske er lagt jevnt over hele hovedområdet utenfor grunnlinja.
