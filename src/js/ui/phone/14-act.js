@@ -137,10 +137,13 @@
     else if (a === 'hullclean'){ if (!atKind('verft') || (S.jobs || []).some(j => j.kind === 'hull')) return; const c = 1500 + Math.round(BOAT.len * 400 / 100) * 100; if (spendable() < c) return;
       if (!queueJob({kind:'hull', h:6, no:'Skrogrens på slipp', en:'Hull cleaning on the slip'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } book('verft', -c, 'Skrogrens på slipp', 'Hull cleaning on the slip'); log('Bestilte skrogrens på slipp, ' + kr(c) + '.', 'Ordered a hull cleaning on the slip, ' + kr(c) + '.'); }
     else if (a === 'trimbuy'){ const b = S.boat, B = BOOSTS[d.k]; if (!B || !canBoost(VESSELS[b.type])) return; payBuy(d.k, () => { b.trim = {k:d.k, t0:S.t}; applyVessel(); log(B.no + ' er på i ' + B.h + ' timer. Toppfart nå ' + fmt(BOAT.vmax, 1) + ' knop.', B.en + ' is on for ' + B.h + ' hours. Top speed now ' + fmt(BOAT.vmax, 1) + ' knots.'); toast(L(B.no + ': ', B.en + ': ') + fmt(BOAT.vmax, 1) + ' kn'); }); }
+    else if (/^mg/.test(a)){ if (!mgAct(a, d)) return; }   // Kystmegleren (phone/13c-megler.js, M4)
+    else if (a === 'eqtry'){ equipTry(d.k); return true; }   // try it on the boat in 3D (M3)
     else if (a === 'equip'){ const E = EQUIP[d.k]; if (!E) return;
       // expensive equipment confirms in the button, as the counter's other buys do (M2: IC_CONFIRM_KR)
-      if (E.price >= IC_CONFIRM_KR && !(shopPend && shopPend.k === 'equip:' + d.k && Date.now() - shopPend.t <= IC_CONFIRM_MS)){ shopPend = {k:'equip:' + d.k, kg:0, t:Date.now()}; return true; }
-      shopPend = null; const why = equipBuy(d.k); if (why){ toast(why); return true; } } else if (a === 'equipOLD'){ const E = EQUIP[d.k]; if (E.multi) S.equip[d.k] = (S.equip[d.k] || 0) + 1; else S.equip[d.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); updateMapButtons(); INSTR.show(); }
+      const pk = 'equip:' + d.k + (d.sp ? ':sp' : '');   // (the partner's item confirms on its own card, M6)
+      if (E.price >= IC_CONFIRM_KR && !(shopPend && shopPend.k === pk && Date.now() - shopPend.t <= IC_CONFIRM_MS)){ shopPend = {k:pk, kg:0, t:Date.now()}; return true; }
+      shopPend = null; const why = equipBuy(d.k); if (why){ toast(why); return true; } SPUI.setBrand(d.k, d.sp ? spOf('item', d.k) : null); if (d.sp && typeof cloudEv === 'function') cloudEv('sp_buy', {pl:(spOf('item', d.k) || {}).id || 0}); } else if (a === 'equipOLD'){ const E = EQUIP[d.k]; if (E.multi) S.equip[d.k] = (S.equip[d.k] || 0) + 1; else S.equip[d.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); updateMapButtons(); INSTR.show(); }
     else if (a === 'hire'){ const c = candidates().find(x => x.id === d.id); if (c && S.crew.length < BOAT.crewMax){ S.crew.push(crewUpgrade(c)); log(c.name + ' er ansatt som ' + c.lv + '.', c.name + ' joined as ' + c.lvEn + '.'); } }
     else if (a === 'fire'){ if (!crewAshore()) return; const c = S.crew[+d.i]; if (c){ crewSettle(c); S.crew.splice(+d.i, 1); } if (c) log(c.name + ' har gått i land.', c.name + ' has gone ashore.'); }
     else if (a === 'repay'){ const k = d.k || 'loan', Q = S[k]; if (!Q || S.cash < 10000) return; const x = Math.min(10000, Q.bal); book('avdrag', -x, 'Ekstra innbetaling, ' + LOANS[k].who, 'Extra repayment, ' + LOANS[k].who); Q.bal -= x; if (Q.bal < 1) S[k] = null; }
@@ -157,7 +160,7 @@
       const x = deal(V2.price, ti); if (!x.ok){ toast(whyText(x) || t('no_cash')); return; } finance(x, 120); achAdd('boat');
       // a new build is delivered at once, at this yard, like a used vessel (Jonas 13.10.2026: «Fjern byggetiden når man bestiller nybygg»)
       if (ti) switchVessel(d.k);
-      else { const v = newVesselObj(d.k, S.boat.port); log('Kjøpte ' + V2.name.no + ' til flåten. Hun heter «' + v.boatName + '» og ligger i ' + portById(S.boat.port).name + '.', 'Bought the ' + V2.name.en + ' for the fleet. She is called «' + v.boatName + '» and lies at ' + portById(S.boat.port).name + '.'); }
+      else { const v = newVesselObj(d.k, S.boat.port); setTimeout(() => BUYM.show(v), 60); log('Kjøpte ' + V2.name.no + ' til flåten. Hun heter «' + v.boatName + '» og ligger i ' + portById(S.boat.port).name + '.', 'Bought the ' + V2.name.en + ' for the fleet. She is called «' + v.boatName + '» and lies at ' + portById(S.boat.port).name + '.'); }
       pressPut('boat', {type:d.k, nb:V2.isNew ? 1 : 0, price:V2.price});   // Kystposten (core/09h-press.js)
       if (ti && S.lic){ log('Kvoten i lukket gruppe fulgte med den gamle båten.', 'The closed-group quota went with the old vessel.'); regFree(S.lic.id); S.lic = null; freshQuota(); openUsedLoad(); }
     }
@@ -255,7 +258,7 @@
       let nm;
       let fished; regTake(O.id);   // the NPC owner leaves the register (03d-quota.js)
       if (ti){ if (!S.lic && S.cur === ov) openUsedSave(S.quota); switchVessel(O.ves); S.lic = lic; fished = licStart(lic); nm = S.boatName; }
-      else { if (ov) openUsedSave(vget(vesselById(ov), 'quota')); const v = newVesselObj(O.ves, S.boat.port, lic); fished = withVessel(v, () => licStart(lic)); nm = v.boatName; log('Kjøpte ' + O.no.toLowerCase() + ' til flåten. Hun heter «' + nm + '».', 'Bought a ' + O.en.toLowerCase() + ' for the fleet. She is called «' + nm + '».'); }
+      else { if (ov) openUsedSave(vget(vesselById(ov), 'quota')); const v = newVesselObj(O.ves, S.boat.port, lic); fished = withVessel(v, () => licStart(lic)); nm = v.boatName; setTimeout(() => BUYM.show(v), 60); log('Kjøpte ' + O.no.toLowerCase() + ' til flåten. Hun heter «' + nm + '».', 'Bought a ' + O.en.toLowerCase() + ' for the fleet. She is called «' + nm + '».'); }
       pressPut('boat', {type:O.ves, lic:1});
       msg('Fiskeridirektoratet', 'Deltakeradgangen i lukket gruppe (hjemmelslengde ' + O.hl + ') er registrert på «' + nm + '». Fartøykvoten for torsk i år er ' + fmt(O.cod / 1000, 2) + ' tonn. Selgeren har fisket ' + fmt(fished / 1000, 2) + ' tonn av den, og det trekkes fra (§ 29).' + (lost ? ' Rederiet har nå en båt i lukket gruppe, så «' + lost + '» kan ikke lenger delta i åpen gruppe. Hun kan fortsatt fiske kveite, krabbe og annet enn torsk, hyse og sei.' : ''), 'The closed-group participation right (quota length ' + O.hl + ') is registered to the «' + nm + '». The vessel quota for cod this year is ' + fmt(O.cod / 1000, 2) + ' t. The seller has fished ' + fmt(fished / 1000, 2) + ' t of it, which comes off (§ 29).' + (lost ? ' The company now has a vessel in the closed group, so the «' + lost + '» can no longer take part in the open group. She can still fish halibut, crab and anything but cod, haddock and saithe.' : ''));
     }

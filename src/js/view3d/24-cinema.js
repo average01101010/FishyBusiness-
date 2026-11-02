@@ -158,7 +158,7 @@
     INTRO = {t0:performance.now(), dur:sec || 5, e0:[x, Math.max(terrH(x, z), 0) + 2.4, z]}; cam.helm = false; return true;
   }
   let j0F = 0;
-  function frame(){ const j0 = j0F = performance.now(); frame0(); JSMS = JSMS ? JSMS * 0.92 + (performance.now() - j0) * 0.08 : performance.now() - j0; }
+  function frame(){ const j0 = j0F = performance.now(), EQ0 = S.equip, TE = tryEq(); if (TE) S.equip = TE; try { frame0(); } finally { S.equip = EQ0; } JSMS = JSMS ? JSMS * 0.92 + (performance.now() - j0) * 0.08 : performance.now() - j0; }
   let FRAMEN = 0;
   function frame0(){ FRAMEN++;
     if (!active){ raf = 0; return; }

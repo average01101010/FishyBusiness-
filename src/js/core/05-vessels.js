@@ -461,7 +461,7 @@ function nearestYard(p){ let best = null, bd = 1e9; for (const q of PORTS){ if (
 
 function step(){
   if (!S.fleet || !S.fleet.length) ensureFleet();
-  if (S.t % 60 === 0){ ordersTick(S.t / 60); turHour(); kvHour(); borsTick(S.t / 60); eachVessel(() => { crewTick(S.t / 60); if (!(S.jobs && S.jobs.some(j => j.kind === 'hull' && j.until))) foulHour(S.t / 60); }); }   // (no fouling while she is on the slip)
+  if (S.t % 60 === 0){ ordersTick(S.t / 60); turHour(); kvHour(); mktHour(S.t / 60); borsTick(S.t / 60); eachVessel(() => { crewTick(S.t / 60); if (!(S.jobs && S.jobs.some(j => j.kind === 'hull' && j.until))) foulHour(S.t / 60); }); }   // (no fouling while she is on the slip)
   S.t += 1; const H = S.t / 60;
   energyMinute();
   turMinute();   // a tow made fast (09g-turer.js)

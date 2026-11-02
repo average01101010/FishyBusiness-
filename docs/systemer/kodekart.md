@@ -1403,6 +1403,50 @@ Bestilt til henting (M2 in docs/planer/butikker-og-sponsorer.md, 10.2b, V12 A; J
   - 45 `pickAdd(port, w, k, s, n)`
   - 58 `pickDrop(id)`
 
+## `src/js/core/09k-market.js` (155 linjer)
+
+Bruktmarkedet (M4 in docs/planer/butikker-og-sponsorer.md, 3.3, 10.2, 10.2b; V3 A, V9 A, V10 A, V11 A; Jonas 30.10.2026)
+
+- **1** Bruktmarkedet (M4 in docs/planer/butikker-og-sponsorer.md, 3.3, 10.2, 10.2b; V3 A, V9 A, V10 A, V11 A; Jonas 30.10.2026)
+  - 21 `mktRnd(key)`
+  - 22 `mktState()`
+  - 26 `mktFair(k, y, c, ex)`
+  - 30 `mktMake(w, i)`
+  - 54 `mktAll(H)`
+  - 60 `mktListings(H)`
+  - 62 `mktSold(H)`
+  - 63 `mktById(id, H)`
+  - 66 `mktAsk(L, H)`
+  - 68 `mktPrice(L, H)`
+  - 75 `mktBid(id, kr)`
+  - 87 `mktTakstSays(L)`
+  - 89 `mktWishHits(H)`
+  - 92 `mktTakeOver(L, b, eq)`
+- **97** your own boat at the broker (commission, 3.3 «Legg ut til salgs»): listed from anywhere at her market value; she must lie in port
+  - 102 `mktOwnValue(v)`
+  - 107 `mktOwn(vid)`
+  - 109 `mktOwnWhy(v)`
+  - 110 `mktListOwn(vid)`
+  - 114 `mktUnlist(vid)`
+- **115** delivery (10.2b «Få henne levert»): a skipper from the yard sails a boat of yours that nobody is aboard to the port you choose, for
+  - 118 `mktDelWhy(v, to)`
+  - 119 `mktDeliver(vid, to)`
+  - 125 `mktHour(H)`
+- **141** the boat you traded in (M5, B2): she lies at the yard and is bought by a fisherman, who puts her out again a week or two later at
+  - 143 `mktTradeIn(type, engH, port, old)`
+  - 144 `mktTiListing(r)`
+  - 154 `mktEvery(H)`
+
+## `src/js/core/09l-sponsor.js` (25 linjer)
+
+Sponsorer (M6 in docs/planer/butikker-og-sponsorer.md 4 and 5; CLAUDE.md: a real name, logo or product only with a written
+
+- **1** Sponsorer (M6 in docs/planer/butikker-og-sponsorer.md 4 and 5; CLAUDE.md: a real name, logo or product only with a written
+  - 9 `spSet(rows)`
+  - 16 `spOf(kind, target)`
+  - 18 `spSponsors()`
+  - 20 `spUrl(site)`
+
 ## `src/js/core/11-route.js` (496 linjer)
 
 ---------- Autonav (once «Følg leia»): a route along the fairway ----------
@@ -1998,12 +2042,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (905 linjer)
+## `src/js/ui/phone/07-patch.js` (918 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 898 `patch()`
+  - 911 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -2035,17 +2079,17 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 121 `redning()`
 - **138** vessels: my vessel overview and the market
 
-## `src/js/ui/phone/10-fartoy.js` (145 linjer)
+## `src/js/ui/phone/10-fartoy.js` (147 linjer)
 
   - 10 `goals()`
   - 25 `goalsCard()`
 - **30** the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
   - 39 `mkCard(k, O)`
   - 43 `market()`
-  - 67 `specSecs(k, O)`
-  - 91 `sheet(k, O)`
-  - 124 `fartoy(tab0)`
-- **144** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
+  - 69 `specSecs(k, O)`
+  - 93 `sheet(k, O)`
+  - 126 `fartoy(tab0)`
+- **146** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
 
 ## `src/js/ui/phone/11-rederi.js` (70 linjer)
 
@@ -2054,20 +2098,20 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 32 `rederi()`
 - **69** equipment
 
-## `src/js/ui/phone/12-utstyr-redskap.js` (176 linjer)
+## `src/js/ui/phone/12-utstyr-redskap.js` (180 linjer)
 
 the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the shop's (electronics, haulers, the jigging machine and the clothes)
 
   - 2 `utstyr(mode)`
-- **45** gear: in the sea, aboard (baiting and mending), and the shop
-- **46** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
-- **51** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
-  - 55 `lineCard(lk, o)`
-  - 80 `egnChooser(lk, o)`
-  - 104 `careAboard(inPort, p)`
-  - 128 `redskap(tab0)`
+- **49** gear: in the sea, aboard (baiting and mending), and the shop
+- **50** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
+- **55** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
+  - 59 `lineCard(lk, o)`
+  - 84 `egnChooser(lk, o)`
+  - 108 `careAboard(inPort, p)`
+  - 132 `redskap(tab0)`
 
-## `src/js/ui/phone/13-mannskap-bank-meld.js` (175 linjer)
+## `src/js/ui/phone/13-mannskap-bank-meld.js` (177 linjer)
 
 --- crew
 
@@ -2088,7 +2132,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
 - **162** actions
   - 165 `switchVessel(k)`
 
-## `src/js/ui/phone/13b-nettet.js` (127 linjer)
+## `src/js/ui/phone/13b-nettet.js` (136 linjer)
 
 Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.md, Jonas 30.10.2026)
 
@@ -2101,14 +2145,30 @@ Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.
   - 27 `buyList()`
   - 42 `shopTop(cur)`
 - **54** fetching a reservation: the same purchase as over the counter; null when it went, else why not (a string)
-  - 55 `equipBuy(k)`
-  - 67 `clothBuy(k)`
-  - 74 `pickTake(o)`
-- **86** the Net: the bookmarks, and the web shop
-  - 88 `nett()`
-  - 98 `netShop()`
+  - 58 `equipTry(k)`
+  - 60 `equipBuy(k)`
+  - 74 `clothBuy(k)`
+  - 81 `pickTake(o)`
+- **93** the Net: the bookmarks, and the web shop
+  - 95 `nett()`
+  - 107 `netShop()`
 
-## `src/js/ui/phone/14-act.js` (273 linjer)
+## `src/js/ui/phone/13c-megler.js` (152 linjer)
+
+Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/planer/butikker-og-sponsorer.md 3.3, 10.2, 10.2b)
+
+- **1** Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/planer/butikker-og-sponsorer.md 3.3, 10.2, 10.2b)
+  - 9 `mgSays(Q)`
+  - 30 `mgCard(Q)`
+  - 37 `mgGoal(Q)`
+  - 41 `mgOwnRow(v)`
+  - 51 `megler()`
+  - 68 `mgWishCard()`
+  - 77 `mgSheet(Q)`
+  - 111 `mgHere()`
+  - 118 `mgAct(a, d)`
+
+## `src/js/ui/phone/14-act.js` (276 linjer)
 
   - 2 `act(a, d)`
   - 8 `act0(a, d)`
@@ -2313,22 +2373,22 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 235 `tutUpdate()`
   - 258 `tipPlace(txt, T0, o)`
 
-## `src/js/ui/07c-handbook.js` (239 linjer)
+## `src/js/ui/07c-handbook.js` (240 linjer)
 
 Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
 
 - **1** Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
   - 10 `hbState()`
-  - 172 `hbPick()`
-  - 180 `hbEv(id, how)`
-  - 181 `hbDone(id)`
-  - 182 `hbSkip(ch, id)`
-  - 184 `hbReady()`
-- **186** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
-  - 192 `appShown(id)`
-  - 196 `appUnlock(id)`
-  - 198 `appSeen(id)`
-  - 199 `hbUpdate()`
+  - 173 `hbPick()`
+  - 181 `hbEv(id, how)`
+  - 182 `hbDone(id)`
+  - 183 `hbSkip(ch, id)`
+  - 185 `hbReady()`
+- **187** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
+  - 193 `appShown(id)`
+  - 197 `appUnlock(id)`
+  - 199 `appSeen(id)`
+  - 200 `hbUpdate()`
 
 ## `src/js/ui/10g-wardrobe.js` (125 linjer)
 
@@ -2473,14 +2533,14 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 192 `wpActCycle(w)`
   - 197 `gearDoAct(act, el)`
 
-## `src/js/ui/10c-dock.js` (342 linjer)
+## `src/js/ui/10c-dock.js` (344 linjer)
 
 ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 
 - **1** the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side
-- **281** the drawer
-  - 324 `renderActs()`
-  - 337 `showroomTick()`
+- **282** the drawer
+  - 326 `renderActs()`
+  - 339 `showroomTick()`
 
 ## `src/js/ui/10d-helm.js` (51 linjer)
 
@@ -2640,6 +2700,18 @@ THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a butto
   - 187 `logoCheck()`
   - 195 `giveCos(k)`
   - 207 `regSet(n)`
+
+## `src/js/ui/10q-buymoment.js` (36 linjer)
+
+The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the top and the end of the purchase
+
+- **1** The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the top and the end of the purchase
+
+## `src/js/ui/10r-sponsor.js` (38 linjer)
+
+Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
+
+- **1** Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
 
 ## `src/js/ui/10k-friends.js` (133 linjer)
 
@@ -3054,7 +3126,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 460 `dkTub(G)`
   - 461 `drawDeck(BMrel, eye, VP, t, DK)`
 
-## `src/js/view3d/10-gear.js` (288 linjer)
+## `src/js/view3d/10-gear.js` (306 linjer)
 
 ---------- passive gear: buoys at both ends of every set, and the work over the rail when setting and hauling ----------
 
@@ -3072,7 +3144,8 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 136 `tankAt(x, z, d, vt)`
   - 154 `drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg)`
   - 212 `drawCrabTank(BMrel, G, d, sx, HP)`
-  - 219 `drawGearOp(BMrel, eye, VP, t)`
+  - 222 `drawHaulRest(BMrel, G, d, VP)`
+  - 237 `drawGearOp(BMrel, eye, VP, t)`
 
 ## `src/js/view3d/11-bunker.js` (65 linjer)
 
@@ -3450,20 +3523,24 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 408 `drawEffects(VP, eye, BM, dt, t)`
   - 510 `updateLabels(VP, eye, W, Hh)`
 
-## `src/js/view3d/25-controls.js` (187 linjer)
+## `src/js/view3d/25-controls.js` (205 linjer)
 
 ---------- controls ----------
 
 - **1** controls
-  - 18 `paintView(on)`
-  - 23 `paintAim(C, yawW)`
-  - 30 `showroom(type)`
-  - 39 `show(on, auto)`
-  - 54 `bench(ks, ns)`
-- **72** the profile (#prof, F1)
-  - 82 `pqInit()`
-  - 90 `pqPoll()`
-  - 99 `profBegin(rdt, j0)`
-  - 102 `profMark(k)`
-  - 106 `profEnd()`
-  - 116 `prof(sets)`
+  - 19 `paintView(on)`
+  - 24 `paintAim(C, yawW)`
+  - 35 `tryView(k)`
+  - 36 `hoist(k)`
+  - 38 `tryEq()`
+  - 44 `liftY(k)`
+  - 48 `showroom(type)`
+  - 57 `show(on, auto)`
+  - 72 `bench(ks, ns)`
+- **90** the profile (#prof, F1)
+  - 100 `pqInit()`
+  - 108 `pqPoll()`
+  - 117 `profBegin(rdt, j0)`
+  - 120 `profMark(k)`
+  - 124 `profEnd()`
+  - 134 `prof(sets)`

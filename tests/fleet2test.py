@@ -106,7 +106,7 @@ async def main():
 
         # 4. save and load with two vessels
         await pg.evaluate("save()")
-        await pg.reload(); await pg.wait_for_timeout(1800)
+        await pg.reload(); await pg.wait_for_function("typeof S !== 'undefined' && S && S.fleet && S.fleet.length > 0", timeout=60000); await pg.wait_for_timeout(300)
         rl = await pg.evaluate("JSON.stringify({fleet:S.fleet.map(v => vget(v, 'boatName')), me:S.me, cur:S.cur, bound:curVessel().boat === S.boat && curVessel().hold === S.hold})")
         print('after reload:', rl)
         r = json.loads(rl)

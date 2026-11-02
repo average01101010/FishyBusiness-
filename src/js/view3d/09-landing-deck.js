@@ -366,8 +366,8 @@
     // (where the model gives both the same place, the open array stands there when she has both)
     const on = b.status !== 'port' && !b.land; if (on) RADS.a = (RADS.a + Math.max(0, Math.min(0.2, t - RADS.t)) * 2.5) % (Math.PI * 2); RADS.t = t;
     const shared = K.radar && K.radarA && Math.hypot(K.radar[0] - K.radarA[0], K.radar[1] - K.radarA[1], K.radar[2] - K.radarA[2]) < 0.4;
-    if (K.radar && eq.radar && !(shared && eq.radarA)){ const D = kit('safe', 'radome'); if (D){ drawN(D, chain(BMrel, M4.T(K.radar[0], K.radar[1], K.radar[2]))); KST.radar = 1; } }
-    if (K.radarA && eq.radarA){ const P = kit('safe', 'radar_ped'), A = kit('safe', 'radar_bar4'), ba = X.bar_at || [0, 0.38, 0], M = chain(BMrel, M4.T(K.radarA[0], K.radarA[1], K.radarA[2]));
+    if (K.radar && eq.radar && !(shared && eq.radarA)){ const D = kit('safe', 'radome'); if (D){ drawN(D, chain(BMrel, M4.T(K.radar[0], K.radar[1] + liftY('radar'), K.radar[2]))); KST.radar = 1; } }
+    if (K.radarA && eq.radarA){ const P = kit('safe', 'radar_ped'), A = kit('safe', 'radar_bar4'), ba = X.bar_at || [0, 0.38, 0], M = chain(BMrel, M4.T(K.radarA[0], K.radarA[1] + liftY('radarA'), K.radarA[2]));
       if (P) drawN(P, M); if (A){ drawN(A, chain(M, M4.T(ba[0], ba[1], ba[2]), M4.RY(RADS.a))); KST.radar = 2; } }
     if (BM.length){ const T = boyeTex(), q = boyeQ(); if (T && q[0]){ gl.disableVertexAttribArray(2); for (const M of BM){ drawTexQuad(q[0], T.top, M, VP, true, [0, 0.2, 0]); if (q[1]) drawTexQuad(q[1], T.bot, M, VP, true, [0, 0.2, 0]); KST.text++; } nSetup(VP); } }
   }
@@ -470,7 +470,7 @@
     const tSide = tx < 0 ? 1 : -1, kTop = XF[big ? 'benk_top' : 'bord_top'], topY = own && W.top != null ? W.top + 0.02 : KB && kTop != null ? d.y + kTop + 0.02 : d.y + 0.885;
     const potRig = b.rig === 'teiner' && !(typeof deckPending === 'function' && deckPending() > 0.5);
     KST.tank = null; if (!G.hand){ if (!GB) buildGear(); drawCrabTank(BMrel, G, d, Bm / 2, G.hauler || [Bm / 2 * 0.92, d.y + 1, d.z - 1.3]); nSetup(VP); }
-    drawRigRest(BMrel, G, d);
+    drawRigRest(BMrel, G, d); drawHaulRest(BMrel, G, d, VP); nSetup(VP);
     KST.raft = KST.buoys = KST.text = KST.radar = KST.cargo = KST.tubs = 0; KST.crane = null; KST.vt = vt; KST.n++;
     drawSafety(BMrel, G, VP, t); const lifted = drawCrane(BMrel, G, VP, t, d); drawCargo(BMrel, G, lifted ? 1 : 0);
     if (!potRig){

@@ -28,11 +28,15 @@
     for (const k of keys){ const E = EQUIP[k];
       if (!equipFits(k, S.boat.type)){ nofit.push(E.name[S.lang]); continue; }
       const have = E.multi ? S.equip[k] : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1, fitting = (S.jobs || []).some(j => j.kind === 'fit' && j.k === k);
-      if (have >= max){ aboard.push(E.name[S.lang] + (E.multi ? ' × ' + have : '')); continue; }
+      if (have >= max){ const br = SPUI.brandOf(k); aboard.push(E.name[S.lang] + (br && br.m ? ' (' + br.m + ')' : '') + (E.multi ? ' × ' + have : '')); continue; }
       const pend = shopPend && shopPend.k === 'equip:' + k && Date.now() - shopPend.t <= IC_CONFIRM_MS, dis = !(atKind(EQ_YARD(k) ? 'verft' : 'butikk') && spendable() >= E.price);
       const btn = pend ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(E.price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
         : '<button class="ph-btn p" data-pa="equip" data-k="' + k + '"' + (dis ? ' disabled' : '') + '>' + L('Kjøp og monter', 'Buy and fit') + ' · ' + realDur(fitHours(k) * 60) + '</button>';
-      h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? (have || 0) + ' / ' + max : '', price:E.price, have:fitting && !E.multi ? L('Til montering', 'Being fitted') : '', btns:fitting && !E.multi ? '' : btn}));
+      h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? (have || 0) + ' / ' + max : '', price:E.price, have:fitting && !E.multi ? L('Til montering', 'Being fitted') : '', note:typeof G3 !== 'undefined' && G3.trying === k ? L('Vises på «' + S.boatName + '» nå, før du har kjøpt. Dra for å se rundt.', 'Shown on the «' + S.boatName + '» now, before you buy. Drag to look round.') : '', btns:fitting && !E.multi ? '' : '<span class="ic-row">' + btn + tryBtn(k) + '</span>'}));
+      // the same item from a partner with a written agreement (M6, ui/10r-sponsor.js): same price, same numbers, marked
+      if (!(fitting && !E.multi) && typeof spOf === 'function' && spOf('item', k)){ const pend2 = shopPend && shopPend.k === 'equip:' + k + ':sp' && Date.now() - shopPend.t <= IC_CONFIRM_MS;
+        h.push(SPUI.card(k, pend2 ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-sp="1" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(E.price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
+          : '<span class="ic-row"><button class="ph-btn p" data-pa="equip" data-sp="1" data-k="' + k + '"' + (dis ? ' disabled' : '') + '>' + L('Kjøp og monter', 'Buy and fit') + ' · ' + realDur(fitHours(k) * 60) + '</button>' + tryBtn(k) + '</span>')); }
     }
     if (mode === 'butikk'){ const people = 1 + S.crew.length, c = S.clothes || {}, H = S.t / 60, cp = coldPen(H);
       h.push('<h4 style="margin:12px 2px 6px">' + L('Klær til mannskapet', 'Clothes for the crew') + '</h4><p class="ph-note">' + L('Nå: effektiv temperatur ' + Math.round(effTemp(H)) + ' °C, fisket går ' + Math.round(cp * 100) + ' % tregere. Alle om bord trenger sine egne.', 'Now: effective temperature ' + Math.round(effTemp(H)) + ' °C, fishing ' + Math.round(cp * 100) + '% slower. Everyone aboard needs their own.') + '</p>');
