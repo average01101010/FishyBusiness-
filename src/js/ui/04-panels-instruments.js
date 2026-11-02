@@ -87,7 +87,7 @@ function renderHud(){
   if (hud.dataset.v !== hudV || performance.now() - hudT > 2000){ hudV = hud.dataset.v; hudT = performance.now(); requestAnimationFrame(() => { const mw = $('mapwrap').style, hr = hud.getBoundingClientRect(), top = Math.round(hr.bottom - $('mapwrap').getBoundingClientRect().top + 6) + 'px', w = Math.round(hr.width) + 'px'; if (mw.getPropertyValue('--gpsTop') !== top) mw.setProperty('--gpsTop', top); if (mw.getPropertyValue('--hudW') !== w) mw.setProperty('--hudW', w); }); }
 }
 // position/heading between simulation steps, so instruments and 3D move smoothly
-function liveFrac(){ return clamp(acc + (wallNow() - lastWall) / 1000 * simRate() / 60, 0, 0.999); }
+function liveFrac(){ return clamp(acc + (Date.now() - lastWall) / 1000 * simRate() / 60, 0, 0.999); }
 function livePose(frac){
   if (frac === undefined) frac = liveFrac();
   const b = S.boat, q0 = quayPos(b); let p = {x:q0.x, y:q0.y}, hd = b.heading, idx = S.plan ? S.plan.idx : 0;   // at the naust, its berth

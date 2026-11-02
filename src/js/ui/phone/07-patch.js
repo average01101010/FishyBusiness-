@@ -1,8 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
-    ['hav-windows-011126', '01.11.2026', 'Havet på Windows, jevnere bevegelse og kartet i plotteren', 'The sea on Windows, smoother motion and the chart in the plotter', [
+    ['hav-windows-011126', '01.11.2026', 'Havet på Windows og kartet i plotteren', 'The sea on Windows and the chart in the plotter', [
        ['På de fleste Windows-PC-er var havet nær båten glatt og mørkt, uten krusninger, kjølvann, skum eller lys fra lanternene på vannet. Nå får de det samme havet som andre, med de lengste bølgene litt enklere.', 'On most Windows PCs the sea near the boat was smooth and dark, with no ripples, wake, foam or lantern light on the water. Now they get the same sea as others, with the longest waves a little simpler.'],
-       ['Båten og landskapet går jevnere på skjermer med høy bildefrekvens (144 og 240 Hz), særlig i Firefox.', 'The boat and the landscape move more smoothly on high refresh rate screens (144 and 240 Hz), Firefox above all.'],
        ['Kartet i kartplotteren kommer når du åpner den. Før ble det stående uten dybder til du zoomet langt ut.', 'The chart in the plotter comes when you open it. Before, it stayed without depths until you zoomed far out.'],
     ]],
     ['sjarkny-021126', '02.11.2026', 'Den nye hurtigsjarken bygd på nytt', 'The new speed sjark rebuilt', [

@@ -1,10 +1,4 @@
 const EPOCH = Date.UTC(2027, 2, 1, 6, 0, 0);
-// the wall clock as the 3D frame being drawn sees it (tilbakemelding #106, 01.11.2026: «litt hakkete» in Firefox on a 240 Hz screen):
-// Date.now() moves in whole milliseconds, so at 4.2 ms a frame the boat's pose between the model's steps (dynPose) and the game time
-// between the minutes (currentFrac) moved 4 or 5 ms a frame, a judder of a fifth. While a 3D frame is drawn (view3d/24-cinema.js frame)
-// WALLF holds the frame's smoothed time on the same scale; outside it, the plain clock.
-let WALLF = 0;
-const wallNow = () => WALLF || Date.now();
 // game minutes per real minute: 6 makes a fishing trip one evening, the skrei season two real weeks and a year about two months
 const GAME_RATE = 6;
 // ---------- one clock for everyone (05.10.2026, the shared world V1) ----------
