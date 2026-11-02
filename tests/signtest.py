@@ -22,26 +22,28 @@ async def main():
         await pg.wait_for_timeout(4000)
         lk = await pg.evaluate("G3.signLook()")
         check(lk is not None and lk['d'] < 80, 'butikken i Finnsnes står ved kaia der båten ligger', lk)
-        # behind the boat, low (the camera on the far side of the boat from the banner): hidden, so not counted
-        await pg.wait_for_timeout(8000)
-        hid = await pg.evaluate("G3.signs")
-        hp = hid['pl'].get('-3') or {}
-        check(hp.get('last') and hp['last'].get('vis') is False and hp.get('imp', 0) == 0, 'bak båten er banneret skjult og telles ikke', hp)
-        # from the side and higher, where it shows: seen within a few tries of the camera's angle
+        # the test camera straight at the banner from the quay: seen, and counted after a second
+        await pg.evaluate("G3.signAt('front', 10)")
         pl = {}
-        for off in (1.2, -1.2, 0.8, -0.8, 1.6, -1.6):
-            await pg.evaluate("G3.signLook(%s, 14, 0.35)" % off)
-            for _ in range(10):
-                await pg.wait_for_timeout(1500)
-                seen = await pg.evaluate("G3.signs"); pl = seen['pl'].get('-3') or {}
-                if pl.get('imp', 0) >= 1 and pl.get('sec', 0) >= 1: break
-            if pl.get('imp', 0) >= 1: break
+        for _ in range(20):
+            await pg.wait_for_timeout(2000)
+            seen = await pg.evaluate("G3.signs"); pl = seen['pl'].get('-3') or {}
+            if pl.get('imp', 0) >= 1 and pl.get('sec', 0) >= 1: break
         check(seen['tex'] >= 1, 'banneret med partnerens navn er tegnet', seen)
-        check(pl.get('imp', 0) >= 1 and pl.get('sec', 0) >= 1 and pl.get('area', 0) >= 0.015 and pl['last'].get('vis'), 'synlig og stort nok: det telles som sett etter ett sekund', pl)
+        check(pl.get('imp', 0) >= 1 and pl.get('sec', 0) >= 1 and pl.get('area', 0) >= 0.015 and (pl.get('last') or {}).get('vis'), 'synlig og stort nok: det telles som sett etter ett sekund', pl)
         await pg.screenshot(path='skilt_liggende.png')
         await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(6000)
         await pg.screenshot(path='skilt_staaende.png')
         await pg.set_viewport_size({'width': 1280, 'height': 800})
+        # from behind the shop: the building hides it, and nothing is counted
+        await pg.evaluate("G3.signTake(); G3.signAt('back', 14)")
+        hp = {}
+        for _ in range(12):
+            await pg.wait_for_timeout(2000)
+            hp = (await pg.evaluate("G3.signs"))['pl'].get('-3') or {}
+            if (hp.get('last') or {}).get('vis') is False: break
+        check((hp.get('last') or {}).get('vis') is False and hp.get('imp', 0) == 0, 'bak butikken er banneret skjult og telles ikke', hp)
+        await pg.evaluate("G3.signAt('front', 10)"); await pg.wait_for_timeout(6000)
         # the counts are handed over once for sending, then start again
         t1 = await pg.evaluate("G3.signTake()"); t2 = await pg.evaluate("G3.signTake()")
         check(any(x['pl'] == -3 and x['imp'] >= 1 for x in t1) and all(x['imp'] == 0 for x in t2 if x['pl'] == -3) and all(set(x) == {'pl', 'imp', 'sec'} for x in t1),
