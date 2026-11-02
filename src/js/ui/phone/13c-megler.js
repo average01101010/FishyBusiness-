@@ -30,9 +30,24 @@
   function mgCard(Q){
     const V = VESSELS[Q.type], d = mktDays(Q), cut = mktCut(Q);
     return '<button class="ph-card vcard mg-card" data-pa="mgsel" data-id="' + Q.id + '"><span class="vpic">' + vesselSVG(Q.type) + '</span><span class="vtx"><b>«' + Q.name + '» <small class="mg-nr">' + Q.id + '</small></b><small>' + V.name[S.lang] + ' · ' + Q.year + ' · ' + fmt(Q.engH, 0) + L(' motortimer', ' engine hours') + '</small>' +
-      '<span class="vpr">' + kr(mktPrice(Q)) + (cut ? ' <i class="mg-cut">' + L('satt ned', 'reduced') + '</i>' : '') + '</span><small>' + L('Ligger i ', 'Lies at ') + portById(Q.port).name + ' · ' + fmt(mgNm(Q), 0) + ' nm · ' + (d ? L('lagt ut for ' + d + ' dager siden', 'listed ' + d + ' days ago') : L('lagt ut i dag', 'listed today')) + '</small></span></button>';
+      '<span class="vpr">' + kr(mktPrice(Q)) + (cut ? ' <i class="mg-cut">' + L('satt ned', 'reduced') + '</i>' : '') + '</span>' + mgGoal(Q) + '<small>' + L('Ligger i ', 'Lies at ') + portById(Q.port).name + ' · ' + fmt(mgNm(Q), 0) + ' nm · ' + (d ? L('lagt ut for ' + d + ' dager siden', 'listed ' + d + ' days ago') : L('lagt ut i dag', 'listed today')) + '</small></span></button>';
   }
   const mgFits = Q => deal(mktPrice(Q), tradeIn()).ok;
+  // «Neste mål» on the card: how far the equity is from what the bank wants for her (with the boat you have traded in)
+  function mgGoal(Q){ const x = deal(mktPrice(Q), tradeIn()); if (x.ok) return '<small class="mg-goal ok">' + L('Innen rekkevidde nå', 'Within reach now') + '</small>';
+    if (x.why === 'notes') return '<small class="mg-goal">' + L('Banken vil se tre sluttsedler først', 'The bank wants three landing notes first') + '</small>';
+    const pc = Math.min(0.99, eqCash() / Math.max(1, x.eqNeed)); return '<small class="mg-goal">' + L('Egenkapital: ' + Math.round(pc * 100) + ' % av det banken krever', 'Equity: ' + Math.round(pc * 100) + ' % of what the bank wants') + '</small><span class="qbar"><i style="width:' + (pc * 100).toFixed(0) + '%"></i></span>'; }
+  // your own boats: listed with the broker, or the button to list one, and delivery to where you are or home (Rederi app and the broker's page)
+  function mgOwnRow(v){
+    const o = mktOwn(v.id), b = vget(v, 'boat'), nm = vget(v, 'boatName'), D = (mktState().del || []).find(d => d.vid === v.id), H = S.t / 60, h = [];
+    if (D) return '<p class="ph-note">' + L('Seiles til ' + portById(D.to).name + ', framme om ' + Math.max(1, Math.round(D.H1 - H)) + ' timer.', 'Being sailed to ' + portById(D.to).name + ', there in ' + Math.max(1, Math.round(D.H1 - H)) + ' hours.') + '</p>';
+    if (o) h.push('<p class="ph-note">' + L('Til salgs hos Kystmegleren for ' + kr(o.kr) + '. Selges innen ' + Math.max(1, Math.ceil((o.H1 - H) / 24)) + ' dager; megleren tar 5 %. Hun må ligge i havn til da.', 'For sale at Kystmegleren for ' + kr(o.kr) + '. Sold within ' + Math.max(1, Math.ceil((o.H1 - H) / 24)) + ' days; the broker takes 5 %. She must lie in port until then.') + '</p><button class="ph-btn alt" data-pa="mgunown" data-id="' + v.id + '">' + L('Trekk fra salg', 'Withdraw') + '</button>');
+    else if (!mktOwnWhy(v)) h.push('<button class="ph-btn" data-pa="mgown" data-id="' + v.id + '">' + L('Legg ut hos Kystmegleren · ca. ', 'List at Kystmegleren · about ') + kr(mktOwnValue(v)) + '</button>');
+    if (v.id !== S.me && b.status === 'port'){ const meB = vget(vesselById(S.me), 'boat'), home = S.home || HOME0, to = [];
+      if (meB && meB.status === 'port' && meB.port && meB.port !== b.port) to.push(meB.port); if (home && home !== b.port && !to.includes(home)) to.push(home);
+      for (const p of to){ const q = portById(p); if (!q) continue; const c = mktDelKr(dist(b.pos, q.p) / NM); h.push('<button class="ph-btn alt" data-pa="mgdel" data-id="' + v.id + '" data-to="' + p + '"' + (c > spendable() || o ? ' disabled' : '') + '>' + L('Få henne levert til ' + q.name + ' · ', 'Have her delivered to ' + q.name + ' · ') + kr(c) + '</button>'); } }
+    return h.length ? '<div class="ph-btncol mg-own">' + h.join('') + '</div>' : '';
+  }
   function megler(){
     if (mgSel){ const Lx = mktById(mgSel); if (Lx) return mgSheet(Lx); mgSel = null; }
     const tab = sub.mgtab || 'alle', so = sub.mgsort || 'near', h = ['<div class="ph-c"><button class="ph-btn alt mkback" data-pa="sub" data-s="home">‹ ' + L('Nettet', 'The Net') + '</button><div class="net-bar">kystmegleren.detstorebla.no</div>'];
@@ -43,6 +58,8 @@
     A.sort(so === 'cheap' ? (a, b) => mktPrice(a) - mktPrice(b) : so === 'new' ? (a, b) => b.H0 - a.H0 : (a, b) => mgNm(a) - mgNm(b));
     h.push('<p class="ph-note">' + L(A.length + ' båter til salgs langs kysten. Bud kan gis herfra; takst og kjøp der båten ligger.', A.length + ' boats for sale along the coast. Bids can be made from here; survey and purchase where the boat lies.') + '</p>');
     h.push(mgWishCard());
+    const mine = S.fleet.filter(v => v.id !== S.me);
+    if (mine.length) h.push('<div class="ph-card"><h4>' + L('Dine båter', 'Your boats') + '</h4>' + mine.map(v => '<p><b>«' + vget(v, 'boatName') + '»</b> · ' + VESSELS[vget(v, 'boat').type].name[S.lang] + '</p>' + mgOwnRow(v)).join('') + '</div>');
     h.push(A.length ? A.map(mgCard).join('') : '<p class="ph-note">' + L('Ingen båter passer akkurat nå.', 'No boats suit just now.') + '</p>');
     const sold = mktSold().slice(0, 8);
     if (sold.length) h.push('<div class="ph-card"><h4>' + L('Solgt siste måned', 'Sold in the last month') + '</h4>' + sold.map(x => kv(VESSELS[x.type].name[S.lang] + ' ' + x.year + ' · ' + portById(x.port).name, kr(mktAsk(x, x.H1 - 1)))).join('') + '</div>');
@@ -105,6 +122,11 @@
     if (a === 'mgsort'){ sub.mgsort = d.s; return true; }
     if (a === 'mgwish'){ const c = (document.getElementById('mgWishC') || {}).value || 'open', mx = +(document.getElementById('mgWishMax') || {}).value || 0; M.wish = {cls:c, max:Math.max(0, Math.round(mx))}; if (typeof cloudEv === 'function') cloudEv('mkt_wish', {cls:c}); return true; }
     if (a === 'mgwish0'){ M.wish = null; return true; }
+    if (a === 'mgown'){ const v = vesselById(d.id); if (!v) return true; const why = mktListOwn(v.id); if (why){ toast(why === 'sea' ? L('Hun må ligge i havn.', 'She must lie in port.') : why === 'aboard' ? L('Du er om bord i henne.', 'You are aboard her.') : L('Det går ikke nå.', 'Not now.')); return true; }
+      log('«' + vget(v, 'boatName') + '» er lagt ut hos Kystmegleren for ' + kr(mktOwn(v.id).kr) + '.', '«' + vget(v, 'boatName') + '» is listed at Kystmegleren for ' + kr(mktOwn(v.id).kr) + '.'); if (typeof cloudEv === 'function') cloudEv('mkt_list', {type:vget(v, 'boat').type}); return true; }
+    if (a === 'mgunown'){ mktUnlist(d.id); return true; }
+    if (a === 'mgdel'){ const v = vesselById(d.id); if (!v) return true; const why = mktDeliver(v.id, d.to); if (why){ toast(why === 'cash' ? t('no_cash') : why === 'sea' ? L('Hun må ligge i havn.', 'She must lie in port.') : L('Det går ikke nå.', 'Not now.')); return true; }
+      log('En skipper fra verftet seiler «' + vget(v, 'boatName') + '» til ' + portById(d.to).name + '.', 'A skipper from the yard sails the «' + vget(v, 'boatName') + '» to ' + portById(d.to).name + '.'); if (typeof cloudEv === 'function') cloudEv('mkt_deliver', {nm:Math.round(dist(vget(v, 'boat').pos, portById(d.to).p) / NM)}); return true; }
     const Lx = d.id ? mktById(d.id) : null; if (!Lx) return false;
     if (a === 'mgbid'){ const kr0 = +(document.getElementById('mgBid') || {}).value || 0, r = mktBid(Lx.id, kr0), sel = '«' + Lx.seller.name + '»';
       mgMsg[Lx.id] = r.err === 'today' ? L('Du har alt gitt bud i dag.', 'You have bid today already.') : r.err === 'low' ? L('Budet må være minst ' + kr(r.min) + '.', 'The bid must be at least ' + kr(r.min) + '.') : r.err === 'full' ? L('Det er prisantydningen: kjøp henne heller ved verftet.', 'That is the asking price: buy her at the yard instead.') : r.err ? L('Båten er ikke til salgs lenger.', 'The boat is no longer for sale.') :
@@ -122,7 +144,7 @@
       const x = deal(price, ti); if (!x.ok){ toast(whyText(x) || t('no_cash')); return true; } finance(x, 120); achAdd('boat');
       if (ti){ switchVessel(Lx.type); mktTakeOver(Lx, S.boat, S.equip); applyVessel(); log('«' + S.boatName + '» er nå ' + L(V2.name.no.toLowerCase(), V2.name.en.toLowerCase()) + 'en som het «' + Lx.name + '», bygd ' + Lx.year + '.', '«' + S.boatName + '» is now the ' + V2.name.en.toLowerCase() + ' that was called «' + Lx.name + '», built ' + Lx.year + '.');
         if (S.lic){ log('Kvoten i lukket gruppe fulgte med den gamle båten.', 'The closed-group quota went with the old vessel.'); regFree(S.lic.id); S.lic = null; freshQuota(); openUsedLoad(); } }
-      else { const v = newVesselObj(Lx.type, S.boat.port); v.boatName = Lx.name; mktTakeOver(Lx, v.boat, v.equip); log('Kjøpte «' + Lx.name + '» (' + V2.name.no.toLowerCase() + ', ' + Lx.year + ') til flåten. Hun ligger i ' + portById(S.boat.port).name + '.', 'Bought «' + Lx.name + '» (' + V2.name.en.toLowerCase() + ', ' + Lx.year + ') for the fleet. She lies at ' + portById(S.boat.port).name + '.'); }
+      else { const v = newVesselObj(Lx.type, S.boat.port); v.boatName = Lx.name; mktTakeOver(Lx, v.boat, v.equip); log('Kjøpte «' + Lx.name + '» (' + V2.name.no.toLowerCase() + ', ' + Lx.year + ') til flåten. Hun ligger i ' + portById(S.boat.port).name + ', og kan leveres der du vil fra Rederi-appen.', 'Bought «' + Lx.name + '» (' + V2.name.en.toLowerCase() + ', ' + Lx.year + ') for the fleet. She lies at ' + portById(S.boat.port).name + ' and can be delivered from the Company app.'); }
       pressPut('boat', {type:Lx.type, nb:0, price}); if (typeof cloudEv === 'function') cloudEv('mkt_buy', {id:Lx.id, type:Lx.type, price, ti:!!ti, takst:!!M.takst[Lx.id], bid:price < mktAsk(Lx)});
       mgSel = null; return true; }
     return false;

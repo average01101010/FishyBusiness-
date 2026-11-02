@@ -94,3 +94,47 @@ function mktTakeOver(L, b, eq){
   for (const [q, n] of Object.entries(L.ex)) eq[q] = EQUIP[q] && EQUIP[q].multi ? Math.min(V.jukseMax || 0, Math.max(eq[q] || 0, n)) : true;
   mktState().bought.push(L.id); delete mktState().deals[L.id];
 }
+// ---- your own boat at the broker (commission, 3.3 «Legg ut til salgs»): listed from anywhere at her market value; she must lie in port
+// until she is sold, within 1–3 weeks, and the broker keeps 5 %. Taken out to sea, the listing is withdrawn. S.mkt.own = [{vid, H0, H1, kr}]
+const MKT_COMM = 0.05;
+const mktKr = n => typeof kr === 'function' ? kr(n) : Math.round(n) + ' kr';   // (kr is the UI's; the unit tests run the core alone)
+// what she fetches on the market: the type's used price by her state (the hours since service and the weed on her), and her gear at 60 %
+function mktOwnValue(v){
+  const b = vget(v, 'boat'), V = VESSELS[b.type], eq = vget(v, 'equip') || {}, svc = clamp(((b.engH || 0) - (b.svcAt || 0)) / Math.max(1, V.svcH), 0, 1.5), c = clamp(1 - 0.25 * svc - 0.3 * (b.foul || 0), 0.3, 1);
+  let p = V.price * (0.85 + 0.25 * c); for (const q of Object.keys(eq)) if (EQUIP[q] && eq[q] && !(V.std || []).includes(q)) p += EQUIP[q].price * (EQUIP[q].multi ? eq[q] : 1) * 0.6;
+  return mktRound(p + licValue(vget(v, 'lic')) * 0.95);
+}
+function mktOwn(vid){ return (mktState().own || []).find(o => o.vid === vid) || null; }
+// why she cannot be listed (a string), or null
+function mktOwnWhy(v){ if (!v) return 'gone'; if (v.id === S.me) return 'aboard'; if (S.fleet.length < 2) return 'only'; if (vget(v, 'boat').status !== 'port') return 'sea'; if (mktOwn(v.id)) return 'listed'; return null; }
+function mktListOwn(vid){
+  const v = vesselById(vid), why = mktOwnWhy(v); if (why) return why; const M = mktState(), H = S.t / 60;
+  M.own = M.own || []; M.own.push({vid, H0:H, H1:H + (7 + Math.floor(mktRnd('own|' + vid + '|' + Math.floor(H)) * 15)) * 24, kr:mktOwnValue(v)}); return null;
+}
+function mktUnlist(vid){ const M = mktState(); M.own = (M.own || []).filter(o => o.vid !== vid); }
+// ---- delivery (10.2b «Få henne levert»): a skipper from the yard sails a boat of yours that nobody is aboard to the port you choose, for
+// game money by the distance; she is away while he sails her (8 knots, two hours to make ready). S.mkt.del = [{vid, from, to, H1, kr}]
+const mktDelKr = nm => Math.round((2000 + 80 * nm) / 100) * 100;
+function mktDelWhy(v, to){ if (!v) return 'gone'; if (v.id === S.me) return 'aboard'; const b = vget(v, 'boat'); if (b.status !== 'port') return 'sea'; if (b.port === to) return 'there'; if ((mktState().del || []).some(d => d.vid === v.id)) return 'busy'; if (!portById(to)) return 'port'; return null; }
+function mktDeliver(vid, to){
+  const v = vesselById(vid), why = mktDelWhy(v, to); if (why) return why; const b = vget(v, 'boat'), nm = dist(b.pos, portById(to).p) / NM, kr = mktDelKr(nm);
+  if (spendable() < kr) return 'cash'; book('baat', -kr, 'Levering av «' + vget(v, 'boatName') + '»', 'Delivery of «' + vget(v, 'boatName') + '»');
+  const M = mktState(); M.del = M.del || []; M.del.push({vid, from:b.port, to, H1:S.t / 60 + 2 + nm / 8, kr}); mktUnlist(vid); return null;
+}
+// once an hour (05-vessels.js): the deliveries that are there, and your boats the broker has sold
+function mktHour(H){
+  const M = mktState();
+  for (const d of (M.del || []).slice()){ const v = vesselById(d.vid); if (!v){ M.del.splice(M.del.indexOf(d), 1); continue; }
+    // you went aboard her, or her plan took her out: the delivery is off, and the yard pays back
+    if (v.id === S.me || vget(v, 'boat').status !== 'port' || vget(v, 'boat').port !== d.from){ M.del.splice(M.del.indexOf(d), 1); book('baat', d.kr, 'Levering avlyst', 'Delivery called off'); log('Leveringen av «' + vget(v, 'boatName') + '» ble avlyst, og verftet betalte tilbake ' + mktKr(d.kr) + '.', 'The delivery of «' + vget(v, 'boatName') + '» was called off, and the yard paid back ' + mktKr(d.kr) + '.'); continue; }
+    if (H >= d.H1){ const b = vget(v, 'boat'), q = portById(d.to); b.port = d.to; b.pos = {x:q.p.x, y:q.p.y}; b.status = 'port'; const tr = vget(v, 'trail'); if (Array.isArray(tr)) tr.push({x:q.p.x, y:q.p.y, port:d.to});
+      M.del.splice(M.del.indexOf(d), 1); log('«' + vget(v, 'boatName') + '» er levert i ' + q.name + '.', '«' + vget(v, 'boatName') + '» has been delivered at ' + q.name + '.'); } }
+  for (const o of (M.own || []).slice()){ const v = vesselById(o.vid); if (!v){ mktUnlist(o.vid); continue; }
+    if (vget(v, 'boat').status !== 'port' || v.id === S.me){ mktUnlist(o.vid); log('«' + vget(v, 'boatName') + '» er trukket fra Kystmegleren: hun må ligge i havn til hun er solgt.', '«' + vget(v, 'boatName') + '» is withdrawn from Kystmegleren: she must lie in port until she is sold.'); continue; }
+    if (H < o.H1) continue;
+    const nm = vget(v, 'boatName'), net = Math.round(o.kr * (1 - MKT_COMM));
+    if (v.id === S.cur){ bindVessel(vesselById(S.me)); if (typeof G3 !== 'undefined' && G3.vesselChanged) G3.vesselChanged(); }
+    if (v.id === openVesselId()) openUsedSave(vget(v, 'quota'));
+    mktUnlist(o.vid); const paid = payDown(net); S.fleet.splice(S.fleet.indexOf(v), 1); book('baat', net - paid, 'Båt solgt gjennom megler', 'Vessel sold through the broker');
+    log('Kystmegleren solgte «' + nm + '» for ' + mktKr(o.kr) + '. Du fikk ' + mktKr(net) + ' etter megleren.' + (paid ? ' ' + mktKr(paid) + ' gikk til å innfri lån.' : ''), 'Kystmegleren sold the «' + nm + '» for ' + mktKr(o.kr) + '. You got ' + mktKr(net) + ' after the broker.' + (paid ? ' ' + mktKr(paid) + ' went to pay off loans.' : '')); }
+}

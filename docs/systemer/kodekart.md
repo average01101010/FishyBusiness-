@@ -1403,7 +1403,7 @@ Bestilt til henting (M2 in docs/planer/butikker-og-sponsorer.md, 10.2b, V12 A; J
   - 45 `pickAdd(port, w, k, s, n)`
   - 58 `pickDrop(id)`
 
-## `src/js/core/09k-market.js` (97 linjer)
+## `src/js/core/09k-market.js` (141 linjer)
 
 Bruktmarkedet (M4 in docs/planer/butikker-og-sponsorer.md, 3.3, 10.2, 10.2b; V3 A, V9 A, V10 A, V11 A; Jonas 30.10.2026)
 
@@ -1422,6 +1422,16 @@ Bruktmarkedet (M4 in docs/planer/butikker-og-sponsorer.md, 3.3, 10.2, 10.2b; V3 
   - 87 `mktTakstSays(L)`
   - 89 `mktWishHits(H)`
   - 92 `mktTakeOver(L, b, eq)`
+- **97** your own boat at the broker (commission, 3.3 «Legg ut til salgs»): listed from anywhere at her market value; she must lie in port
+  - 102 `mktOwnValue(v)`
+  - 107 `mktOwn(vid)`
+  - 109 `mktOwnWhy(v)`
+  - 110 `mktListOwn(vid)`
+  - 114 `mktUnlist(vid)`
+- **115** delivery (10.2b «Få henne levert»): a skipper from the yard sails a boat of yours that nobody is aboard to the port you choose, for
+  - 118 `mktDelWhy(v, to)`
+  - 119 `mktDeliver(vid, to)`
+  - 125 `mktHour(H)`
 
 ## `src/js/core/11-route.js` (496 linjer)
 
@@ -2018,12 +2028,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (909 linjer)
+## `src/js/ui/phone/07-patch.js` (911 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 902 `patch()`
+  - 904 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -2129,18 +2139,20 @@ Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.
   - 95 `nett()`
   - 107 `netShop()`
 
-## `src/js/ui/phone/13c-megler.js` (130 linjer)
+## `src/js/ui/phone/13c-megler.js` (152 linjer)
 
 Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/planer/butikker-og-sponsorer.md 3.3, 10.2, 10.2b)
 
 - **1** Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/planer/butikker-og-sponsorer.md 3.3, 10.2, 10.2b)
   - 9 `mgSays(Q)`
   - 30 `mgCard(Q)`
-  - 36 `megler()`
-  - 51 `mgWishCard()`
-  - 60 `mgSheet(Q)`
-  - 94 `mgHere()`
-  - 101 `mgAct(a, d)`
+  - 37 `mgGoal(Q)`
+  - 41 `mgOwnRow(v)`
+  - 51 `megler()`
+  - 68 `mgWishCard()`
+  - 77 `mgSheet(Q)`
+  - 111 `mgHere()`
+  - 118 `mgAct(a, d)`
 
 ## `src/js/ui/phone/14-act.js` (275 linjer)
 

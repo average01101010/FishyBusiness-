@@ -85,6 +85,27 @@ async def main():
         await pg.evaluate("(() => { mktState().wish = {cls:'open', max:1e9}; PHONE.show(true); PHONE.open('nett'); const bk = document.querySelector('#phone .mkback[data-s=home]'); if (bk) bk.click(); })()"); await pg.wait_for_timeout(300)
         wt = await pg.evaluate("(document.querySelector('#phone .net-tile[data-s=megler]') || {}).innerText || ''")
         check('passer ønsket' in wt, 'Nettet sier hvor mange som passer ønsket båt', wt)
+        # the goal line on the cards
+        gl = await pg.evaluate("(() => { const bk = document.querySelector('#phone .net-tile[data-s=megler]'); if (bk) bk.click(); return document.querySelectorAll('#phone .mg-card .mg-goal').length === document.querySelectorAll('#phone .mg-card').length; })()")
+        await pg.wait_for_timeout(200)
+        gl = await pg.evaluate("document.querySelectorAll('#phone .mg-card .mg-goal').length > 0 && document.querySelectorAll('#phone .mg-card .mg-goal').length === document.querySelectorAll('#phone .mg-card').length")
+        check(gl, 'hvert kort sier hvor nær egenkapitalen er det banken krever')
+        # your own boat: a second boat at a yard, listed with the broker from the Company app, withdrawn, and delivered to where you are
+        r = await pg.evaluate("""(() => { const yard = PORTS.find(p => portServices(p).verft && p.id !== S.boat.port && dist(p.p, S.boat.pos) / NM < 150 && dist(p.p, S.boat.pos) / NM > 10);
+          const v = newVesselObj('skiff', yard.id); vget(v, 'boat').status = 'port'; S.cash = 2e6; window._v = v.id; PHONE.open('rederi'); const q = s => document.querySelector('#phone ' + s);
+          const btn = {own:!!q('[data-pa=mgown][data-id=' + v.id + ']'), del:[...document.querySelectorAll('#phone [data-pa=mgdel][data-id=' + v.id + ']')].map(b => b.dataset.to)};
+          q('[data-pa=mgown][data-id=' + v.id + ']').click(); const listed = !!mktOwn(v.id), un = !!q('[data-pa=mgunown][data-id=' + v.id + ']');
+          q('[data-pa=mgunown][data-id=' + v.id + ']').click(); const c0 = S.cash; q('[data-pa=mgdel][data-id=' + v.id + '][data-to=' + S.boat.port + ']').click();
+          return {btn, listed, un, gone:!mktOwn(v.id), del:(mktState().del || []).length, paid:c0 - S.cash, home:S.boat.port, row:(q('.mg-own') || {}).textContent || ''}; })()""")
+        check(r['btn']['own'] and r['home'] in r['btn']['del'] and r['listed'] and r['un'] and r['gone'] and r['del'] == 1 and r['paid'] > 0,
+              'Rederi-appen legger en båt ut hos megleren, trekker henne, og får henne levert dit du er', r)
+        await pg.screenshot(path='megler_rederi_liggende.png')
+        d = await pg.evaluate("(() => { const D = mktState().del[0]; S.t = Math.ceil(D.H1) * 60; mktHour(S.t / 60); return {port:vget(vesselById(window._v), 'boat').port, me:S.boat.port}; })()")
+        check(d['port'] == d['me'], 'når seilingstida er gått, ligger hun der du er', d)
+        await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.evaluate("PHONE.open('rederi')"); await pg.wait_for_timeout(300)
+        await pg.screenshot(path='megler_rederi_staaende.png')
+        fit4 = await pg.evaluate(FIT % '#phone')
+        check(not fit4, 'Rederi-appen får plass stående', fit4)
         print('sidefeil', errs)
         await br.close()
 
