@@ -23,7 +23,9 @@
 const FISKE_T = /*@text(data/fiske.json)*/null;
 // the game's species and their name in fiske.json; the ones with their own geography are not here
 const FK_SP = {torsk:'torsk', hyse:'hyse', sei:'sei', lyr:'lyr', lange:'lange', brosme:'brosme', uer:'uer', kveite:'kveite', sild:'sild', makrell:'makrell', snokrabbe:'snokrabbe'};
-const FK = {d:null, n0:20, nb:0.5, mo:0.25, lo:0.03, hi:5, skreiM:5};
+// season: 'av' (the location against Senja in the same month × the old table av) or 'data' (the location against Senja's mean over the
+// year, so the season comes from the notes too, also at Senja; tests/fasit.py measures which agrees better with a year it has not seen)
+const FK = {d:null, n0:20, nb:0.5, mo:0.25, lo:0.03, hi:5, skreiM:5, season:'av'};
 function fkData(){
   if (FK.d !== null) return FK.d;
   try { FK.d = typeof FISKE_T === 'string' ? JSON.parse(FISKE_T) : (FISKE_T || false); } catch (e){ FK.d = false; }
@@ -245,7 +247,11 @@ function fkBuild(){
         B[l] = clamp(b / rb, FK.lo, FK.hi); X[l] = clamp(x / rx, 0, FK.hi); }
       af[sp] = {base:B, skrei:X};
     } else {
-      for (let j = 0; j < NL * 12; j++){ const r = R[j % 12]; if (!isNaN(idx[j]) && r > 0) A[j] = clamp(idx[j] / r, FK.lo, FK.hi); }
+      if (FK.season === 'data'){
+        // against Senja's mean over the year, and the old table divided out again (density() multiplies by av)
+        let rs = 0, rk = 0; for (let m = 0; m < 12; m++) if (R[m] > 0){ rs += R[m]; rk++; } const rm = rk ? rs / rk : 0, av = SPECIES[sp].av;
+        if (rm > 0) for (let j = 0; j < NL * 12; j++) if (!isNaN(idx[j])) A[j] = clamp(idx[j] / rm / (av[j % 12] || 1), FK.lo, FK.hi * 2);
+      } else for (let j = 0; j < NL * 12; j++){ const r = R[j % 12]; if (!isNaN(idx[j]) && r > 0) A[j] = clamp(idx[j] / r, FK.lo, FK.hi); }
       // no Senja figure for the species (herring, mackerel, snow crab are not fished there): against the coast's mean instead
       if (!R.some(r => r > 0)){ let s = 0, k = 0; for (let j = 0; j < NL * 12; j++) if (!isNaN(idx[j])){ s += idx[j]; k++; } const mu = k ? s / k : 1;
         for (let j = 0; j < NL * 12; j++) A[j] = isNaN(idx[j]) ? NaN : clamp(idx[j] / mu, 0, FK.hi); }
