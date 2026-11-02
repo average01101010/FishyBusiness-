@@ -62,6 +62,12 @@ function blDist(p){
 }
 const blNm = p => blDist(p) / 1.852;
 function ruHom(p){ for (const h of RU.hom) if (ruIn(h.P, p.x, p.y)) return h.c; return null; }
+// the four parts of the coast for the village contest (docs/planer/oppdrag-2.md F3, 31.10.2026): north of 62° N is Nord-Norge from
+// 65° N (Nordland's southern end at Bindal) and Midt-Norge below it (Trøndelag and Møre, the 62° line being the rules' own); south of
+// 62° N the west coast to 7° E (Rogaland and Vestland) and Sørlandet with the Skagerrak and the Oslo fjord east of it. A plain split
+// for a weekly contest between the plants, not an administrative border
+const LANDSDEL = {nord:['Nord-Norge', 'Northern Norway'], midt:['Midt-Norge', 'Central Norway'], vest:['Vestlandet', 'Western Norway'], sor:['Sørlandet og Oslofjorden', 'Southern Norway and the Oslo fjord']};
+function landsdel(p){ const ll = LL(p); if (ll.lat >= 65) return 'nord'; if (ll.lat >= 62) return 'midt'; return ll.lon < 7 ? 'vest' : 'sor'; }
 function ruLok(p){ for (const h of RU.lok) if (ruIn(h.P, p.x, p.y)) return h.c; return null; }
 // the zone of the closing lines a point is in (for its lines' names), and the features of a layer that hold it
 function ruZone(p){ for (const z of RU.zones) if (ruIn(z.P, p.x, p.y)) return z; return null; }

@@ -87,12 +87,14 @@ async def main():
           window.worldTop = (w, g) => ({data:{rows:g === 'open' ? [{rank:1, boat:'Toppbåten', company:'', port:port, kg:9100, me:false}, {rank:2, boat:'Nummer To', company:'', port:port, kg:7000, me:false}] : []}});
           const F = pressList(false), top = F.find(x => x.kind === 'top'), oldTop = F.some(x => x.kind === 'gen' && /^Ukas toppfisker/.test(x.h[0]));
           window.worldTop = () => null; const noTop = pressList(false).some(x => x.kind === 'top'); window.worldTop = wt0;
+          const bt0 = window.bygdeTop, p2 = PORTS.find(x => x.mottak && x.id !== port) || portById(port); window.bygdeTop = () => ({data:{[landsdel(portById(port).p)]:{n:2, rows:[{port, kg:12400, n:5, me:false, rank:1}, {port:p2.id, kg:8000, n:3, me:false, rank:2}]}}});
+          const by = pressList(false).find(x => x.kind === 'bygde'); window.bygdeTop = bt0;
           PRESS.land = [{gh:S.t / 60 - 1, port:port, acc:'open', kg:1500, sp:'torsk', boat:'Meg', company:'', me:true}];
           const rpc0 = window.cloudRpc; window.cloudRpc = async fn => fn === 'news_get' ? {news:[], land:PRESS.land} : null; CLOUD.on = true; CLOUD.user = {id:'u'}; CLOUD.guest = false;
           PRESS.toldAt = 0; PRESS.at = 0; await pressFetch(true); PRESS.at = 0; await pressFetch(true); window.cloudRpc = rpc0; CLOUD.on = false; CLOUD.user = null;
           await new Promise(r => setTimeout(r, 4500));
           const told = window.__t.filter(x => /Dagens største landing/.test(x)).length;
-          return {kinds, ok:own.every(Boolean), heads:own.filter(Boolean).map(x => x.h[0]), hole:/undefined|NaN/.test(JSON.stringify(own)), top:top && top.h[0], topBody:top && top.body.length, oldTop, noTop, told}; })()""")
+          return {kinds, ok:own.every(Boolean), heads:own.filter(Boolean).map(x => x.h[0]), hole:/undefined|NaN/.test(JSON.stringify(own)), top:top && top.h[0], topBody:top && top.body.length, oldTop, noTop, told, by:by && by.h[0] + ' | ' + by.ing[0] + ' | ' + by.body[0][0]}; })()""")
         check(mo['kinds'] == ['tur:sesong', 'tur:best', 'kvote'] and mo['ok'] and not mo['hole'] and mo['top'] and 'Toppbåten' in mo['top'] and mo['topBody'] == 2 and not mo['oldTop'] and not mo['noTop'] and mo['told'] == 1,
               "more kinds: the season's move and a long trip done (not a short one), a structure quota; the week's top boats from the shared leaderboard in place of the local fleet's; the day's biggest landing told to its lander once", mo)
         # 6. a record price (the highest in a year, the same day in every game) on the front page, told once; the year's first skrei from

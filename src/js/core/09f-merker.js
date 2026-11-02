@@ -58,6 +58,9 @@ const ACHL = [
   {id:'mottak', n:['Mottak langs kysten', 'Plants along the coast'], tiers:[3, 5, 10, 25, 50], unit:'', v:() => achPorts()},
   {id:'fisk', n:['Fisk tatt', 'Fish caught'], tiers:[100, 1000, 5000, 10000, 50000, 100000], unit:'', v:() => achFish()},
   {id:'turer', n:['Turer fullført', 'Trips completed'], tiers:[10, 50, 100, 250, 500], unit:'', v:() => (S.stats && S.stats.trips) || 0},
+  {id:'lete', n:['Letefisker: leteoppdrag', 'Searcher: search missions'], tiers:[1, 5, 10, 25], unit:'', v:() => achC('lete')},
+  {id:'kjede', n:['Fast leverandør: tre oppdrag på rad', 'Regular supplier: three missions in a row'], tiers:[1, 3, 10], unit:'', v:() => achC('kjede')},
+  {id:'kv', n:['Rent skip: kontroller uten merknad', 'Clean ship: inspections without remarks'], tiers:[1, 5, 10], unit:'', v:() => achC('kv')},   // (core/09j-kystvakt.js kvFinish, docs/planer/oppdrag-2.md V1)   // (core/09g-turer.js turChainEnd, docs/planer/oppdrag-2.md K1)   // (core/09g-turer.js turLeteAnswer, docs/planer/oppdrag-2.md L2)
   {id:'havner', n:['Havner besøkt', 'Harbours visited'], tiers:[5, 10, 25, 50, 100], unit:'', v:() => achVisitN(() => true)},
   {id:'verft', n:['Verft besøkt', 'Yards visited'], tiers:[1, 3, 5, 10, 20], unit:'', v:() => achVisitN(pt => /verft/.test(pt.sted || ''))},
   {id:'butikk', n:['Utstyrsbutikker besøkt', 'Tackle shops visited'], tiers:[1, 3, 5, 10, 20], unit:'', v:() => achVisitN(pt => /butikk/.test(pt.sted || ''))},
@@ -73,7 +76,8 @@ const ACHL = [
   {id:'peer', n:['Andre spillere møtt på sjøen', 'Other players met at sea'], tiers:[1, 10, 50], unit:'', v:() => Object.keys((S.ach && S.ach.peers) || {}).length},
   // the pub (ui/09c-pubsoc.js): the week's quiz with every answer right, and the weeks the fiskarlag reached its goal
   {id:'quiz', n:['Quizmester på puben', 'Pub quiz master'], tiers:[1, 5, 20], unit:'', v:() => achC('quiz')},
-  {id:'lag', n:['Fiskarlagets ukemål', 'The fishing club\'s weekly goals'], tiers:[1, 5, 20], unit:'', v:() => achC('lag')}
+  {id:'lag', n:['Fiskarlagets ukemål', 'The fishing club\'s weekly goals'], tiers:[1, 5, 20], unit:'', v:() => achC('lag')},
+  {id:'lagw', n:['Fiskarlaget: uker med levering', 'The fishing club: weeks with a landing'], tiers:[1, 4, 12, 26, 52], unit:'', v:() => Object.keys((S.pubSoc || {}).lagWk || {}).length}   // (ui/09c-pubsoc.js lagWeek, docs/planer/oppdrag-2.md F2)
 ];
 const achOf = id => ACH.find(a => a.id === id);
 function achState(){

@@ -62,13 +62,24 @@ const PARAMS = ['Math', 'window', 'self', 'document', 'localStorage', 'sessionSt
 const EXPORTER = `\nconst __K = {set:(n, v) => { __K.__v = v; eval(n + ' = __K.__v'); }, get:n => eval(n)};
 for (const n of ${JSON.stringify(NAMES)}) { try { __K[n] = eval(n); } catch (e) {} }
 return __K;`;
-let coreFn;
+const FNS = {};
+// a test file may also ask for scripts after the core (export const scripts = ['js/vessel3d.js']: the boat models, which need no WebGL)
+// and for the page's data elements (export const data = true: document.getElementById('glb-sjark') gives the model's base64 as the
+// built page's <script type="application/octet-stream"> does), so the models are checked in Node from src/data/ without a build
+const DATAEL = Object.fromEntries([...readFileSync(join(SRC, 'index.html'), 'utf8').matchAll(/<script id="([^"]+)" type="application\/octet-stream">@include\(([^)]+)\)<\/script>/g)].map(m => [m[1], m[2]]));
+const DATACACHE = {};
+function dataEl(id){ const f = DATAEL[id]; if (!f) return null; if (!(f in DATACACHE)) DATACACHE[f] = readFileSync(join(SRC, f), 'utf8'); return {textContent:DATACACHE[f]}; }
 // `stubs` from a test file (export const stubs = {location:{hash:'#seed=5', hostname:'localhost'}}) replace the defaults by name. Math is a
 // copy of its own (Object.create(Math)) so a core that replaces Math.random (#seed) does not touch the harness's or the next test's
-function fresh(stubs){
-  coreFn = coreFn || new Function(...PARAMS, CORE + EXPORTER);
+function fresh(stubs, scripts, data){
+  const key = (scripts || []).join('|');
+  if (!FNS[key]){ const extra = (scripts || []).map(f => `// ---- ${f}\n` + expand(f)).join('\n'), src = CORE + '\n' + extra;
+    const names = [...new Set([...src.matchAll(/^(?:function\s+([A-Za-z_$][\w$]*)|(?:const|let)\s+([A-Za-z_$][\w$]*))/gm)].map(m => m[1] || m[2])
+      .concat([...src.matchAll(/^(?:const|let)\s[^\n]*?;\s*function\s+([A-Za-z_$][\w$]*)/gm)].map(m => m[1])))];   // (vessel3d.js puts a function after a const on one line: glbHas)
+    FNS[key] = new Function(...PARAMS, src + EXPORTER.replace(JSON.stringify(NAMES), JSON.stringify(names))); }
   const w = Object.assign(browserStubs(), stubs || {}); w.Math = Object.create(Math);
-  return {K:coreFn(...PARAMS.map(p => w[p]))};
+  if (data){ const gid = w.document.getElementById; w.document.getElementById = id => dataEl(id) || gid(id); }
+  return {K:FNS[key](...PARAMS.map(p => w[p]))};
 }
 
 function harness(name, K){
@@ -94,8 +105,8 @@ let fails = 0, checks = 0;
 for (const f of files){
   const name = basename(f, '.test.mjs');
   const mod = await import(pathToFileURL(join(HERE, f)).href);
-  const {K} = fresh(mod.stubs), t = harness(name, K);
-  t.fresh = stubs => fresh(stubs).K;   // another core, for a test that compares two runs
+  const {K} = fresh(mod.stubs, mod.scripts, mod.data), t = harness(name, K);
+  t.fresh = stubs => fresh(stubs, mod.scripts, mod.data).K;   // another core, for a test that compares two runs
   try { mod.default(t); }
   catch (e){ t.out.push('FEIL ' + name + ': ' + (e && e.stack || e)); fails++; }
   for (const line of t.out) console.log(line);

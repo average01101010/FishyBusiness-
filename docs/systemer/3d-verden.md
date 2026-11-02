@@ -47,7 +47,7 @@
   | Havskyggeren | fjernvarianten helt inn til bølgefeltet | full | full | full |
   | Sjørokk og sprut i lufta | av | på | på | på |
 
-  - **Ultra** (Jonas 05.10.2026: «en ultra grafikk setting ... finne ut hvor grensa ligger for flagship-modeller») velges bare for hånd, aldri av Auto. Det krever 32-bits indekser (`OES_element_index_uint`, `UINT`), ellers blir det Høy. Nettene over 65 536 punkter får `Uint32`-indekser (`i32`), og tegnekallene velger type etter det. Bildetakten vises med «Vis bildetakt» i Innstillinger. Testen er `tests/ultratest.py`.
+  - **Ultra** (Jonas 05.10.2026: «en ultra grafikk setting ... finne ut hvor grensa ligger for flagship-modeller») velges for hånd, og fra 30.10.2026 også av Auto på en enhet som måler raskt nok (forsøket i `qualTick`, F1 i `docs/planer/grafikk-batmodeller.md`, valg 2 A: etter 20 s over 80 bilder/s på Høy, tilbake under 45, utfallet huskes i `dsb_ultra`; detaljer i `3d-baater-og-animasjon.md`). Det krever 32-bits indekser (`OES_element_index_uint`, `UINT`; kjerne i WebGL 2), ellers blir det Høy. **Konteksten** er WebGL 2 der den finnes, med WebGL 1 som reserve (`#gl1`), og skyggerne oversettes fra GLSL ES 1.00 til 3.00 ved kompileringen (`glsl3`, F1). Nettene over 65 536 punkter får `Uint32`-indekser (`i32`), og tegnekallene velger type etter det. Bildetakten vises med «Vis bildetakt» i Innstillinger. Testen er `tests/ultratest.py`.
 
   - Auto går ned et nivå etter 4 s under 28 bilder/s og opp et nivå etter 12 s over 50, men ikke tilbake til et nivå den forlot før det har gått to minutter.
   - `#qfix` i adressen holder nivået på Høy. Testene bruker det (`_env.py`), fordi SwiftShader bare gir noen få bilder/s.
@@ -222,26 +222,35 @@ Planen: G7. NVEs lister (kart.nve.no, api.nve.no) er stengt fra containeren; Ope
   - I Senja-dataene gjelder det Hekkingen og Bukkskinn.
 - `lighttest.py` sjekker lysene og kjeglene.
 
-## 5.24 Kino-visning (03.10.2026)
+## 5.24 Kino-visning (03.10.2026, ny regi 01.11.2026)
 
-- **Knappen** (filmkamera) under kameraknappen skrur kino på og av (`G3.kino`, `KINO` i `view3d.js`).
-- **Opptakene** varer 12–20 s og går etter tur:
-  - drone som sirkler
-  - lavt langs siden i vannflaten
-  - forfra mot baugen
-  - fra land når båten går forbi, med telelinse: bildet er rundt fire båtlengder høyt uansett avstand (6–40°)
-  - landskap
-  - bakfra over kjølvannet
-- **Kameraet:** øyet og siktepunktet glattes over 0,7 s, med klipp ved nytt opptak. Horisonten er vannrett.
-  - Glattingen skjer relativt til båten (`KINO.eyeR`, `KINO.tgtR`).
-  - Før ble den gjort i verdensrammen. Siden båten går seks ganger raskere på skjermen (71 m/s ved 23 kn), hang kameraet rundt 50 m etter, og båten var som oftest utenfor bildet (Jonas 04.10.2026).
-  - Kameraet fra land står stille, og bare siktet følger båten.
-  - Er båten skjult bak land i mer enn ett sekund, klippes det til neste opptak.
-  - Landskapsbildet er tatt nærmere (120 m bak og 80 m til siden), med siktet 60 m foran båten.
-- **Opptak som hoppes over:** et opptak med øyet i land eller sjø, eller med noe mellom kameraet og båten (`camFree`), hoppes over. Gisundbrua stenger for eksempel for halvparten av opptakene nord for Finnsnes.
+- **Knappen** (filmkamera) under kameraknappen skrur kino på og av (`G3.kino`, `KINO` i `view3d/24-cinema.js`).
+- **Brukes til trailerklipp** (Jonas 01.11.2026: «det må se bra ut»). Regien ble bygd om 01.11.2026 fra seks faste opptak etter tur til fjorten slag som velges etter hvor båten er.
+- **Opptakene** (`KSHOT`) varer 8–20 s. Hvert har en vekt ute på havet og en ved land, og en lengde:
+  - `drone`: sirkler rundt båten, stiger litt og zoomer sakte inn
+  - `low`: lavt langs siden i vannflaten, med litt håndholdt skjelv
+  - `ahead`: forfra, skyver sakte inn mot baugen
+  - `pass`: et kamera lavt ved kursen som båten går tett forbi; det panorerer med henne, og linsen holder størrelsen hennes (bare i fart)
+  - `shore`: fra land med telelinse, bildet tre–fire båtlengder høyt, kryper innover
+  - `chase`: bakfra over kjølvannet, svaier litt fra side til side
+  - `vista`: bare ved land. Høyt (90–380 m) på sjøsiden av båten, ser forbi henne mot fjellene og glir sakte på tvers (parallakse)
+  - `reveal`: kran fra lavt bak båten opp og bakover, siktet løftes fra båten mot landet
+  - `pullback`: trekker seg ut fra tett på båten til 500–900 m unna og høyt, til båten er en prikk i fjorden med landet bak
+  - `vertigo`: dolly zoom: kameraet går bakover mens linsen lukker seg, så båten holder størrelsen og landet bak vokser
+  - `top`: rett ovenfra, dreier sakte og stiger
+  - `flyover`: fra lavt foran båten opp over henne og ned bak, og ender som høy chase langs kursen
+  - `profile`: fra siden med lang linse (10–30°), med landet som glir forbi bak
+  - `away`: kameraet blir stående mens båten går fra det, og linsen følger henne ut (bare i fart)
+- **Valget** (`kinoNext`): `kinoLand` ser etter land i 24 retninger ut til 3,5 km. Andelen med land blander vektene mellom hav og land, så landskapsopptakene kommer oftest nær land og nesten aldri langt til havs. Samme slag kommer ikke igjen innen fem opptak. Sideopptakene står på sjøsiden, så landet er bak båten.
+- **Opptak som hoppes over** (`kinoOk`): ved start, midt og slutt (med båten flyttet fram langs kursen) må øyet være over bakken, et lavt øye over vann (unntatt kameraene som står på land), og verken terrenget (`kinoSight`), bygg, kaier eller båter (`camFree`) stå mellom øyet og båten.
+- **Kameraet:** banene er glattet (smoothstep og sinus), og øyet og siktepunktet glattes i tillegg over 0,7 s, med klipp ved nytt opptak. Linsen glattes over 0,5 s. Horisonten er vannrett.
+  - Glattingen skjer relativt til båten (`KINO.eyeR`, `KINO.tgtR`). Før ble den gjort i verdensrammen. Siden båten går seks ganger raskere på skjermen (71 m/s ved 23 kn), hang kameraet rundt 50 m etter, og båten var som oftest utenfor bildet (Jonas 04.10.2026).
+  - Kameraene som står i verden (`shore`, `pass`, `away`) står stille, og bare siktet følger båten.
+  - Er båten skjult bak land, bygg eller båter i mer enn ett sekund, klippes det til neste opptak.
+  - Nærplanet går ut med et høyt kamera langt unna (`KINO.near`, 0,25–6 m), som for det vanlige kameraet.
+- **For testene og trailerens harness:** `G3._debug.kinoNext(type)` ber om et bestemt slag (det tas hvis det passer der båten er og går klar), `G3._debug.kinoTypes` lister dem, og `G3._debug.kino` gir slag, nummer, linse, høyde, fri sikt og avstand.
 - **«Skjul»** tar bort statusboksen, knappene, kompasset og minikartet. Bare de to kinoknappene står igjen.
 - Kameraknappen avslutter kino.
-- Funksjonene for kinokameraet kom med i commiten for ytelse ved en feil, men brukes først med kino-commiten.
 
 ## 5.40 Bro-visningen rister ikke (09.10.2026)
 

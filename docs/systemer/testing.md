@@ -11,7 +11,7 @@ Fra `CLAUDE.md` 26.10.2026 (Jonas 07.10.2026, «Spør før hver test»: «Dekker
 | `tut` | 40 min (ett format rundt 25 min) | veiledningen «Første tur», åpningen (brev, startsted) eller knappene den trykker på. Begge formater når tipsene eller knappene endres; ellers ett format med `KYST_TUT_ONE=liggende` eller `staaende` (Jonas 27.10.2026) |
 | `tutcoast` | 15 min (`--all` rundt en time) | feltet og miksen for første tur (`tutFieldNear` i `08c-start.js`, `TUTB`/`tutBonus`), reglene (`03e-rules.js`) eller fiskemodellen. Krever hele kysten i bygget, og står ikke i `run.py` sine lister. Kjøres for seg: `python3 tests/tutcoast.py` |
 | `heattest` | 30 min | varmekartet, ekkoloddet, sonaren eller fiskemodellen |
-| `vessel3d` | 24 min | båtmodellene eller malingen |
+| `vessel3d` | 24 min, over 40 min i skyen fra 30.10.2026, rundt 60 min 01.11.2026 (går ut på tid i `run.py`: kjør den direkte, `python3 -u tests/vessel3d.py`, eller med `tools/boats/qa/runtests.sh vessel3d`; for én båt `vessel3d.py <type>`, 4 min) | bildene av båtmodellene (tallene sjekker `node tests/unit/run.mjs vessel3d` på sekunder fra 01.11.2026; `vessel3d.py` trengs bare når noen skal se på bildene) |
 | `sea3d` | 15 min | havskyggeren eller sjøtilstanden |
 | `trackfollow` | 30 min | styringen, Autonav, rutene eller manøvreringsmodellen (`16b-dyn.js`) |
 | `tral3d` | 12 min | trål eller not |
@@ -22,6 +22,8 @@ Fra `CLAUDE.md` 26.10.2026 (Jonas 07.10.2026, «Spør før hver test»: «Dekker
 | `coast3d`, `sitetest` | 4–5 min | terrenget, kartdataene eller mottaksregisteret |
 | `kjoptest` | 3,5 min | butikken |
 | `lighttest`, `ultratest`, `uishots`, `haultest` | 2–3 min | lys, ultra-grafikk, UI-oppsett, haling |
+| `f1test` | 4 min | konteksten (WebGL 2 og 1), skyggeroversettelsen (`glsl3`), egen båts detaljnivåer, ultra-forsøket i `qualTick` |
+| `profshot`, `benchshot` | 3–5 min | profilen (`#prof`) og målebenken (`#bench`), merkene i bildeløkka |
 
 Hvilke tester som dekker hvilke filer, står i `COVER` i `tests/run.py`. Funksjonstestene og triksene står nedenfor (kapittel 11).
 
@@ -117,7 +119,8 @@ Hvilke tester som dekker hvilke filer, står i `COVER` i `tests/run.py`. Funksjo
   - `fleet3test.py`: fase 3. Varsler, båtvelgeren, inntekt per båt og service per båt.
   - `fleet2test.py`: fase 2. Levering med og uten adgang, to båter på driftsplan i en simulert uke, knappene i Fartøy-appen, nybygg til flåten, og lagring med to båter. Skriver `OK` eller `FEIL` per sjekk.
   - `vesseltest.py`: fartøystigen. Ingen valg etter typenavn i `src/js`, fullt datablad og fornuftige forhold for hver type, utstyr som passer, de fem tilbudene, fjordlinja for 21 m, Båthandel liggende og stående (faner, kort med sideriss, havbåtene låst, knapper på 44 px), innbytte til 8,9-metersjarken, og progresjonen: blad B ved tiende landingsdag, migrering, innbyttet som innfrir lånet, inngangen med toppfinansiering, «Neste mål», banken, papirene og salg som innfrir lån.
-  - `vessel3d.py` (3D): hver modell på sjøen fra siden, baugen, akter og rattet (`tests/out/vessel_<type>_*.png`, se på dem), punkter mot budsjettet, lengden innenfor 8 %, visningen i Båthandel, og NPC-båtene (modell per båt, skalering, punkter per utgave og et bilde ved siden av en båt som fisker). `python3 tests/vessel3d.py npc` kjører bare NPC-delen.
+  - `vessel3d.py` (3D): hver modell på sjøen fra siden, baugen, akter og rattet (`tests/out/vessel_<type>_*.png`, se på dem), visningen i Båthandel, en annen spillers båt og et bilde ved siden av en NPC-båt som fisker. `python3 tests/vessel3d.py npc` kjører bare NPC-delen.
+  - `tests/unit/vessel3d.test.mjs` (Node, rundt 6 s, flyttet fra `vessel3d.py` 01.11.2026): hver modell bygd fra `src/data/` som siden bygger den, punktene nær og middels mot budsjettet, NaN, skrogets lengde og bredde mot `VESSELS`, plassene 3D-visningen trenger, og lokalflåtens modeller (skalering innenfor 30 %, punkter nær og fjern, utgavene). `run.mjs` tar `scripts` og `data` fra en testfil (skript etter kjernen, sidens dataelementer); `run.py changed` kjører den når `vessel3d.js` eller en `src/data/boat-*`-fil er endret. Den fant 01.11.2026 at havsjarkens fjernmodell hadde 12 849 punkter mot 12 000, som `vessel3d.py sjark` ikke ser (den hopper over lokalflåten).
   - `progweek.py` (LES): boten som spiller fram til første båt i lukket gruppe (V8). Les dagen og turen for blad B og inngangen i hvert tempo.
   - `opsowntest.py`: driftsplan med deg om bord. Turen er din, torsken går på kvoten, ingenting blir inndratt, ingen kveiteomlegging og ikke noe skippertillegg. Skipperen alene gir de gamle reglene. Sjekker også at lagrede planturer rettes ved oppstart. Velger selv en rolig dag, fordi planen blir på land i for mye sjø.
 - **Triks:**

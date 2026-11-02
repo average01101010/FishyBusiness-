@@ -123,6 +123,10 @@
     for (const U of UNITA){ if (!near(U.o[0], U.o[1])) continue; const q = ugeo(U);
       poly([[-q.basinX, 0.2], [q.basinX, 0.2], [q.basinX, q.basinZ], [-q.basinX, q.basinZ]].map(([a, b]) => unitW(U, a, b)), -4); }
     for (const f of qPockets()){ if (!near(f.x, f.z)) continue; const s = f.hl + 4, Q = (a, b) => [f.x + f.ux * a + f.nx * b, f.z + f.uz * a + f.nz * b]; poly([Q(-s, 0.2), Q(s, 0.2), Q(s, POCKET), Q(-s, POCKET)], -4); }
+    // the water in front of Father's naust and the rorbuer (siteTerr: s.pit), so a boat at their quays lies in the sea and not on the
+    // foreshore's ramp
+    for (const s of sitesNow()){ if (!s.pit || !near(s.o[0], s.o[1])) continue; const Q = (a, b) => [s.o[0] + s.u[0] * a + s.n[0] * b, s.o[1] + s.u[1] * a + s.n[1] * b], A = s.pit.a;
+      poly([Q(-A, -0.2), Q(A, -0.2), Q(A + 10, s.pit.w + 6), Q(-A - 10, s.pit.w + 6)], -4); }
     for (const U of UNITA){ if (!near(U.o[0], U.o[1])) continue;
       const fl = []; for (let i = 0; i < U.f.length; i += 2) fl.push(unitW(U, U.f[i], U.f[i + 1])); poly(fl, COAST3.top, true);
       const q = ugeo(U); poly([[-q.E, -q.B], [q.E, -q.B], [q.E, 0], [-q.E, 0]].map(([a, b]) => unitW(U, a, b)), COAST3.top, true); }

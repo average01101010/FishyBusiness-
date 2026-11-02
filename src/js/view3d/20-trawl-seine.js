@@ -184,14 +184,20 @@
     drawN(PM.wire, limbM(c, at(0.62, 0.98, 0), 0.025));   // the column down to the console
     const sp = at(-0.42, 0.75, 0); drawN(PM.seat, chain(M4.T(sp[0], sp[1], sp[2]), M4.RY(-h))); drawN(PM.wire, limbM(at(-0.42, 0.02, 0), sp, 0.03));
   }
+  // a riding sail the model carries as two parts of its own ('sail' set, 'sailf' furled on its boom; the havsjark, 01.11.2026): set at
+  // sea, furled in port and in the yard's showroom (M5: no boat lies at the quay with her sail up)
+  const SAILM = {};
+  function sailOf(t){ if (!(t in SAILM)) SAILM[t] = typeof glbHas === 'function' && glbHas(t) && glbPart(t, 'sail') ? {set:upA(glbPart(t, 'sail')), furl:upA(glbPart(t, 'sailf'))} : null; return SAILM[t]; }
+  function drawSail(t, M, set){ const sl = sailOf(t); if (!sl) return; const m = set ? sl.set : sl.furl; if (m) drawN(m, M); }
   function drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named){
-    const m = pvm(t, liv); if (!m) return; const P = people(); nSetup(VP); const wr = named && wearOn(t); drawN(m.hull, BMrel); if (wr) wearOff();
+    const m = pvm(t, liv); if (!m) return; const P = people(); nSetup(VP); const wr = named && wearOn(t); drawN(named && !BENCH.on ? pvmHull(t, liv, ownTier(t, BMrel)) || m.hull : m.hull, BMrel); if (wr) wearOff();
+    drawSail(t, BMrel, named && S.boat && S.boat.status !== 'port');
     if (named && BENCH.on){ for (let j = 1; j < BENCH.k; j++) drawN(m.hull, BMrel);
       for (let i = 0; i < BENCH.n; i++){ const M = chain(BMrel, M4.T(((i % 4) - 1.5) * ((G.beam || 4) + 3), 0, (Math.floor(i / 4) + 1) * ((G.stern || 5) * 2 + 6))); drawN(m.hull, M); }
       BENCH.tris = Math.round(m.hull.n / 3) * (BENCH.k + BENCH.n); }
     const ds = onDeck && G.crewSpots && ncrew < G.crewSpots.length ? G.crewSpots[ncrew] : null;
     if (skipper && ds) drawN((named && ownPerson('skipDeck')) || P.skipDeck, chain(BMrel, M4.T(ds[0], ds[1], ds[2]), M4.RY(ds[3] || 0)));
-    else if (skipper) drawN((named && ownPerson('skip')) || P.skip, chain(BMrel, M4.T(G.skipperAt[0], G.skipperAt[1], G.skipperAt[2])));
+    else if (skipper && G.skipperAt) drawN((named && ownPerson('skip')) || P.skip, chain(BMrel, M4.T(G.skipperAt[0], G.skipperAt[1], G.skipperAt[2])));
     for (let i = 0; i < ncrew && i < G.crewSpots.length; i++){ const c = G.crewSpots[i]; drawN((named && ownPerson('crew', i)) || P.crew, chain(BMrel, M4.T(c[0], c[1], c[2]), M4.RY(c[3] || 0))); }
     if (G.trawl) drawTrawl(t, G.trawl, BMrel, performance.now() / 1000);
     if (G.seine) drawSeine(t, G.seine, BMrel, VP, performance.now() / 1000);
@@ -238,7 +244,7 @@
     if (!kit.length) return;
     const P = people(); nSetup(VP);
     for (const n of kit){ const K = n.K, G = K.geo, at = (p, r) => chain(n.M, M4.T(p[0] * K.sv[0], p[1] * K.sv[1], p[2] * K.sv[2]), M4.RY(r || 0));
-      drawN(K.hull, chain(n.M, K.S));
+      drawN(K.hull, chain(n.M, K.S)); drawSail(K.t, chain(n.M, K.S), n.st !== 'port');
       if (!K.glass) continue;
       drawNPCAnchor(n, K);   // her anchors stowed in their roller or hawse, as on your own boat
       if (npcCrewDraw(n, K, eye, t)) continue;   // her people walk her deck like yours (deckcrew.js crewSim)

@@ -1,51 +1,148 @@
-  // ---------- cinema (the user's wish 03.10.2026) ----------
-  // «Kino» lets the camera film the trip by itself: shots of 12-20 s in turn, a drone circling high, low along the side at the waterline,
-  // from ahead looking back at the bow, from the shore as she passes (with a long lens), a wide shot of the landscape, and from behind over the wake. The
-  // eye and the aim move through a filter of 0.7 s (cut at a new shot), the horizon is level (no roll), and a shot whose eye would be
-  // in the land or the sea, or with the land between it and the boat, is passed over for the next.
-  const KINO = {on:false, shot:null, n:0, eye:null, tgt:null};
-  const KTYPES = ['drone', 'low', 'ahead', 'shore', 'wide', 'chase'];
-  function kinoWant(K, t){
-    const L = Math.max(5, (VESSELS[vtype()] || {}).len || 6), C = [bv.x, bv.y + 1.2, bv.z], fx = Math.sin(bv.head), fz = -Math.cos(bv.head), rx = Math.cos(bv.head), rz = Math.sin(bv.head), s = K.side, u = t - K.t0;
-    const sea = (x, z) => Math.max(terrH(x, z), seaH(x, z, t));
-    if (K.type === 'drone'){ const a = K.a0 + u * 0.06 * s, R = 45 + L * 3; const e = [C[0] + Math.sin(a) * R, 0, C[2] - Math.cos(a) * R]; e[1] = sea(e[0], e[2]) + 26 + L; return [e, C, 50]; }
-    if (K.type === 'low'){ const e = [C[0] + rx * s * (L * 0.35 + 5) - fx * L * (0.3 - u * 0.012), 0, C[2] + rz * s * (L * 0.35 + 5) - fz * L * (0.3 - u * 0.012)]; e[1] = sea(e[0], e[2]) + 0.9; return [e, [C[0] + fx * L * 0.4, C[1], C[2] + fz * L * 0.4], 55]; }
-    if (K.type === 'ahead'){ const e = [C[0] + fx * (L * 2.2 + 22) + rx * s * 5, 0, C[2] + fz * (L * 2.2 + 22) + rz * s * 5]; e[1] = sea(e[0], e[2]) + 2.6; return [e, C, 45]; }
-    // from the shore a long lens: the frame about four boat lengths high wherever she is
-    if (K.type === 'shore'){ const e = [K.px, sea(K.px, K.pz) + 1.8, K.pz], d = Math.hypot(C[0] - e[0], C[2] - e[2]); return [e, C, clamp(2 * Math.atan(2 * L / Math.max(1, d)) / DEG, 6, 40)]; }
-    if (K.type === 'wide'){ const e = [C[0] - fx * 120 + rx * s * 80, 0, C[2] - fz * 120 + rz * s * 80]; e[1] = sea(e[0], e[2]) + 45; return [e, [C[0] + fx * 60, C[1], C[2] + fz * 60], 55]; }
-    const e = [C[0] - fx * (L * 3 + 18), 0, C[2] - fz * (L * 3 + 18)]; e[1] = sea(e[0], e[2]) + 7 + L * 0.3; return [e, [C[0] + fx * 30, C[1], C[2] + fz * 30], 50];
+  // ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
+  // «Kino» lets the camera film the trip by itself, for the game's trailer clips (Jonas 01.11.2026: «det må se bra ut»). A shot lasts
+  // 8-20 s and is picked by weight from fourteen kinds, by where she is: near land the landscape shots come up (a high vista over the
+  // boat towards the mountains, a crane that rises and opens on them, a pull-back from close on the boat to far out over the fjord, a
+  // dolly zoom that draws the land in behind her, a long lens from the side with the land sliding by behind), out at sea the shots
+  // round the boat (a drone circling, low along the side at the waterline, a push-in from ahead, a pass-by that pans as she goes,
+  // a chase over the wake, straight down from above, a fly-over from bow to stern, and a camera left behind as she sails off). Each
+  // shot moves on an eased path, the lens zooms in some (the shore's and the pass-by's follow her size), the horizon stays level, and
+  // the low ones shake a little as if held by hand. No kind comes twice within five shots. A shot whose eye would be in the land, or with
+  // the land, a building or a boat between it and her, at its start, middle or end, is passed over; one that loses her for a second
+  // cuts to the next.
+  const KINO = {on:false, shot:null, n:0, eye:null, tgt:null, fov:50, near:0.25, last:[], land:null, log:[]};
+  // weight at sea, weight by land, the length (s) and whether she must be under way
+  const KSHOT = {
+    drone:  {sea:3,   land:2,   dur:[12, 18]}, low:   {sea:3,   land:1.5, dur:[9, 14]},  ahead:  {sea:2.5, land:1.5, dur:[10, 14]},
+    pass:   {sea:2,   land:2,   dur:[8, 11], go:1}, shore:{sea:0.3, land:2.5, dur:[11, 16]}, chase:{sea:2,   land:1,   dur:[10, 14]},
+    vista:  {sea:0,   land:4,   dur:[14, 20]}, reveal:{sea:0.6, land:3,   dur:[12, 16]}, pullback:{sea:0.8, land:3, dur:[14, 20]},
+    vertigo:{sea:0.8, land:2,   dur:[8, 11]},  top:   {sea:1.5, land:1,   dur:[10, 14]}, flyover:{sea:1.5, land:1.5, dur:[10, 13]},
+    profile:{sea:1,   land:2.5, dur:[12, 16]}, away:  {sea:1,   land:2,   dur:[10, 14], go:1}};
+  const KTYPES = Object.keys(KSHOT);
+  const kEase = s => s * s * (3 - 2 * s), kSine = s => 0.5 - 0.5 * Math.cos(Math.PI * clamp(s, 0, 1));
+  // where the land is round her: the nearest land in 24 directions out to 3.5 km; its share of the round, the way to it (weighted by
+  // nearness and height), the nearest and the highest
+  function kinoLand(){
+    let sx = 0, sz = 0, n = 0, near = 1e9, hmax = 0;
+    for (let a = 0; a < 24; a++){ const A = a / 24 * 6.2832, dx = Math.sin(A), dz = -Math.cos(A);
+      for (const d of [250, 500, 900, 1500, 2400, 3500]){ const h = terrH(bv.x + dx * d, bv.z + dz * d); if (h > 2){ const w = (1 + Math.min(h, 400) / 80) * 500 / d; sx += dx * w; sz += dz * w; n++; near = Math.min(near, d); hmax = Math.max(hmax, h); break; } } }
+    const l = Math.hypot(sx, sz); return {score:n / 24, l:clamp(n / 24 * 3, 0, 1), dx:l > 1e-6 ? sx / l : Math.sin(bv.head), dz:l > 1e-6 ? sz / l : -Math.cos(bv.head), near, hmax, any:n > 0};
   }
-  function kinoNext(t){
-    for (let k = 0; k < KTYPES.length; k++){
-      const type = KTYPES[(KINO.n++) % KTYPES.length], K = {type, t0:t, dur:12 + 8 * hash(KINO.n * 7 + 3), side:hash(KINO.n * 13 + 1) < 0.5 ? -1 : 1, a0:hash(KINO.n * 5 + 2) * 6.28};
-      if (type === 'shore'){
-        // a point 60-210 m off her course ahead, on the side with land if there is any near; the boat sails past it
-        const fx = Math.sin(bv.head), fz = -Math.cos(bv.head), rx = Math.cos(bv.head), rz = Math.sin(bv.head), ahead = 90 + Math.max(0, bv.spd || 0) * 6; let best = null;
-        for (const off of [60, 110, 160, 210]){ for (const sd of [1, -1]){ const x = bv.x + fx * ahead + rx * sd * off, z = bv.z + fz * ahead + rz * sd * off; if (terrH(x, z) > 1.5){ best = [x, z]; break; } } if (best) break; }
-        if (!best) best = [bv.x + fx * ahead + rx * K.side * 70, bv.z + fz * ahead + rz * K.side * 70];
-        K.px = best[0]; K.pz = best[1];
-      }
-      const [e, g] = kinoWant(K, t);
-      if (camFree(g, e) > 0.9){ KINO.shot = K; KINO.eye = e.slice(); KINO.tgt = g.slice(); KINO.eyeR = null; KINO.hid = 0; return; }
+  // nothing of the ground between a and b (the eye and her)
+  function kinoSight(a, b){
+    for (let i = 1; i <= 12; i++){ const k = i / 13 * 0.94, x = a[0] + (b[0] - a[0]) * k, y = a[1] + (b[1] - a[1]) * k, z = a[2] + (b[2] - a[2]) * k; if (terrH(x, z) > y - 0.4) return false; }
+    return true;
+  }
+  // the eye, the aim and the lens (degrees) of shot K at time t, round the boat B (bv, or where she will be); 'fixed' shots stand in the world
+  function kinoWant(K, t, B){
+    B = B || bv;
+    const L = Math.max(5, (VESSELS[vtype()] || {}).len || 6), C = [B.x, B.y + 1.2, B.z], fx = Math.sin(B.head), fz = -Math.cos(B.head), rx = Math.cos(B.head), rz = Math.sin(B.head), s = K.side, u = t - K.t0, p = clamp(u / K.dur, 0, 1), tide = env.tide || 0;
+    const sea = (x, z) => Math.max(terrH(x, z), seaH(x, z, t));
+    // low: over the waves where it stands (it rides them as a boat would); high: over the still sea and well clear of the ground
+    const lo = (x, z, h) => [x, sea(x, z) + h, z], hi = (x, z, h) => [x, Math.max(tide + h, terrH(x, z) + h * 0.6), z];
+    const rel = (a, b) => [C[0] + fx * a + rx * b, C[2] + fz * a + rz * b];   // a ahead, b to starboard
+    const LD = K.ld || [fx, fz], PD = [-LD[1], LD[0]];                     // the way to the land, and across it
+    const shake = (g, amp) => { const d = Math.hypot(g[0] - C[0], g[2] - C[2]) + 20, a = amp * d; return [g[0] + a * (Math.sin(u * 1.31 + K.a0) + 0.5 * Math.sin(u * 2.93)), g[1] + a * 0.7 * (Math.sin(u * 1.07 + 2) + 0.4 * Math.sin(u * 3.7)), g[2] + a * Math.sin(u * 1.71 + 4)]; };
+    const ahead = k => [C[0] + fx * k, C[1], C[2] + fz * k];
+    switch (K.type){
+      case 'drone': { const a = K.a0 + s * (u * 0.05 + 0.02 * u * u / K.dur), R = 45 + L * 3, h = 24 + L + u * 0.6; return [hi(C[0] + Math.sin(a) * R, C[2] - Math.cos(a) * R, h), ahead(L * 0.6), 50 - 6 * kSine(p)]; }
+      case 'low': { const q = rel(-L * (0.3 - u * 0.02), s * (L * 0.35 + 5)); return [lo(q[0], q[1], 0.9), shake(ahead(L * 0.4), 0.0025), 55]; }
+      case 'ahead': { const d = L * 2.6 + 32 - (L * 0.8 + 16) * kSine(p), q = rel(d, s * 5); return [lo(q[0], q[1], 2.6), C, 45 - 5 * kSine(p)]; }
+      // a long lens from the shore: the frame some four boat lengths high wherever she is, creeping in to three
+      case 'shore': { const e = [K.px, sea(K.px, K.pz) + 1.8, K.pz], d = Math.hypot(C[0] - e[0], C[2] - e[2]); return [e, shake(C, 0.0006), clamp(2 * Math.atan((2 - 0.5 * kSine(p)) * L / Math.max(1, d)) / DEG, 5, 40), 1]; }
+      // she comes at a camera by the course, low, and goes by close; it pans with her and the lens holds her size
+      case 'pass': { const e = [K.px, sea(K.px, K.pz) + 1.6, K.pz], d = Math.hypot(C[0] - e[0], C[2] - e[2]); return [e, shake(C, 0.0015), clamp(2 * Math.atan(2.6 * L / Math.max(1, d)) / DEG, 20, 62), 1]; }
+      // left behind: she sails off into the picture, and the lens follows her out
+      case 'away': { const e = [K.px, sea(K.px, K.pz) + 9, K.pz], d = Math.hypot(C[0] - e[0], C[2] - e[2]); return [e, shake(ahead(L * 0.5), 0.0008), clamp(2 * Math.atan(3.5 * L / Math.max(1, d)) / DEG, 6, 52), 1]; }
+      case 'chase': { const q = rel(-(L * 3 + 18), Math.sin(u * 0.35 + K.a0) * 6); return [hi(q[0], q[1], 7 + L * 0.3), ahead(30), 50]; }
+      // the vista: high on the sea side of her, looking past her at the land, trucking slowly across it (the near hills slide against the far)
+      case 'vista': { const R = clamp(K.near * 0.5 + 200, 250, 700), H = clamp(R * 0.45 + K.hmax * 0.3, 90, 380) * (1.08 - 0.12 * p), w = (p - 0.5) * R * 0.5 * s + R * 0.4 * s;
+        return [hi(C[0] - LD[0] * R + PD[0] * w, C[2] - LD[1] * R + PD[1] * w, H), [C[0] + LD[0] * R * 0.6, tide + K.hmax * 0.15, C[2] + LD[1] * R * 0.6], 56]; }
+      // the crane: from low behind her it rises and draws back, and the aim lifts from her to the land beyond
+      case 'reveal': { const a = Math.atan2(-LD[0], LD[1]) + s * 0.5, q = kSine(p), d = 24 + 51 * q, h = 2.5 + 45.5 * kEase(p), dx = -Math.sin(a), dz = Math.cos(a);
+        return [hi(C[0] - dx * d, C[2] - dz * d, h), [C[0] + LD[0] * 200 * q, C[1] + (tide - C[1]) * q, C[2] + LD[1] * 200 * q], 48 + 12 * q]; }
+      // the pull-back: from close on her out and up, until she is a speck in the fjord with the land behind her
+      case 'pullback': { const q = kSine(p), a = Math.atan2(-LD[0], LD[1]) + s * 0.6, dx = -Math.sin(a), dz = Math.cos(a), R = K.R, d = L * 1.6 + 10 + (R - L * 1.6 - 10) * q, h = 3.5 + R * 0.42 * Math.pow(q, 1.2);
+        return [hi(C[0] - dx * d, C[2] - dz * d, h), [C[0] + LD[0] * d * 0.3 * q, C[1], C[2] + LD[1] * d * 0.3 * q], 50]; }
+      // the dolly zoom: back away while the lens closes, so she keeps her size and the land behind her swells
+      case 'vertigo': { const a = Math.atan2(-LD[0], LD[1]) + s * 0.35, dx = -Math.sin(a), dz = Math.cos(a), D0 = L * 1.8 + 10, d = D0 * (1 + 2.2 * kSine(p));
+        return [hi(C[0] - dx * d, C[2] - dz * d, 2.5 + d * 0.04), C, 2 * Math.atan(Math.tan(31 * DEG) * D0 / d) / DEG]; }
+      // straight down from above, turning slowly and rising
+      case 'top': { const a = K.a0 + u * 0.05 * s, h = 55 + L * 3 + (30 + L) * kSine(p), b = h * 0.22; return [hi(C[0] - Math.sin(a) * b, C[2] + Math.cos(a) * b, h), ahead(L * 0.3), 50]; }
+      // the fly-over: from low ahead of her, up over her and down behind, ending as a high chase looking on along her course
+      case 'flyover': { const q = kSine(p), q2 = rel((55 + L) - (100 + 2 * L) * q, s * 4 * q); return [hi(q2[0], q2[1], 6 + 16 * q + 14 * Math.sin(Math.PI * q)), ahead(70 * kEase(p)), 55]; }
+      // from the side with a long lens, the land behind her sliding by
+      case 'profile': { const D = 110 + L * 4, q = rel(D * 0.25 - D * 0.5 * p, s * D); return [lo(q[0], q[1], 3.5), shake(ahead(L * 0.3), 0.0005), clamp(2 * Math.atan(2.2 * L / D) / DEG, 10, 30)]; }
     }
-    KINO.shot = {type:'drone', t0:t, dur:12, side:1, a0:0}; KINO.eye = null; KINO.eyeR = null; KINO.hid = 0;
+    return [hi(C[0], C[2] + 50, 30), C, 50];
+  }
+  // the boat as she will be u seconds on along her heading
+  const kinoAt = u => ({x:bv.x + Math.sin(bv.head) * (bv.spd || 0) * u, y:bv.y, z:bv.z - Math.cos(bv.head) * (bv.spd || 0) * u, head:bv.head});
+  // a shot will do when its eye is clear of the ground (and over water if it is low), and nothing stands between it and her, at its
+  // start, middle and end
+  function kinoOk(K, t){
+    for (const f of [0, 0.5, 1]){
+      const B = kinoAt(K.dur * f), [e, g, , fixed] = kinoWant(K, t + K.dur * f, B), C = [B.x, B.y + 1.2, B.z], gr = terrH(e[0], e[2]);
+      if (gr > e[1] - 0.5) return false;
+      if (!fixed && e[1] - Math.max(gr, env.tide || 0) < 6 && gr > (env.tide || 0) - 0.3) return false;
+      if (!kinoSight(e, C)) return false;
+      if (!f && (camFree(C, e) < 0.9 || camFree(g, e) < 0.85)) return false;
+    }
+    return true;
+  }
+  function kinoMake(type, t, land){
+    const n = ++KINO.n, D = KSHOT[type].dur, K = {type, t0:t, dur:D[0] + (D[1] - D[0]) * hash(n * 7 + 3), side:hash(n * 13 + 1) < 0.5 ? -1 : 1, a0:hash(n * 5 + 2) * 6.28, ld:[land.dx, land.dz], near:land.near < 1e8 ? land.near : 2000, hmax:land.hmax};
+    const fx = Math.sin(bv.head), fz = -Math.cos(bv.head), rx = Math.cos(bv.head), rz = Math.sin(bv.head), L = Math.max(5, (VESSELS[vtype()] || {}).len || 6), v = bv.spd || 0;
+    // with the land to one side, the side shots stand on the sea side of her, so the land is behind her
+    if (land.any && (type === 'profile' || type === 'low' || type === 'pass')){ const sd = Math.sign(land.dx * rx + land.dz * rz) || 1; K.side = type === 'profile' ? -sd : hash(n * 17) < 0.7 ? -sd : sd; }
+    if (type === 'shore'){
+      // a point 60-210 m off her course ahead, on the side with land if there is any near; the boat sails past it
+      const ah = 90 + Math.max(0, v) * 6; let best = null;
+      for (const off of [60, 110, 160, 210]){ for (const sd of [1, -1]){ const x = bv.x + fx * ah + rx * sd * off, z = bv.z + fz * ah + rz * sd * off; if (terrH(x, z) > 1.5){ best = [x, z]; break; } } if (best) break; }
+      if (!best) best = [bv.x + fx * ah + rx * K.side * 70, bv.z + fz * ah + rz * K.side * 70];
+      K.px = best[0]; K.pz = best[1];
+    }
+    // she comes by the camera half way through the shot
+    if (type === 'pass'){ const A = clamp(v * K.dur * 0.5, 40, 600), o = L * 0.6 + 7; K.px = bv.x + fx * A + rx * K.side * o; K.pz = bv.z + fz * A + rz * K.side * o; }
+    if (type === 'away'){ K.px = bv.x - fx * (L * 2 + 18) + rx * K.side * 8; K.pz = bv.z - fz * (L * 2 + 18) + rz * K.side * 8; }
+    if (type === 'pullback') K.R = 500 + 400 * hash(n * 11 + 5) * (land.any ? 1 : 0.6);
+    return K;
+  }
+  // the next shot: drawn by weight from the kinds that fit (not one of the last five, landscape shots only with land near), the first that
+  // will do; want: a kind asked for (the tests, the trailer's harness), taken if it will do
+  function kinoNext(t, want, why){
+    const land = KINO.land = kinoLand(), v = bv.spd || 0, set = K => { KINO.log.push([K.type, why || 'end', Math.round(t)]); if (KINO.log.length > 40) KINO.log.shift(); KINO.shot = K; KINO.eye = null; KINO.eyeR = null; KINO.hid = 0; KINO.last.push(K.type); if (KINO.last.length > 5) KINO.last.shift(); };
+    const fit = KTYPES.filter(k => (!KSHOT[k].go || v > 3) && (k !== 'vista' || land.any) && (KSHOT[k].sea * (1 - land.l) + KSHOT[k].land * land.l) > 0);
+    if (want && fit.includes(want)){ const K = kinoMake(want, t, land); if (kinoOk(K, t)){ set(K); return; } }
+    let pool = fit.filter(k => !KINO.last.includes(k)); if (!pool.length) pool = fit.filter(k => k !== KINO.last[KINO.last.length - 1]);
+    for (let tries = 0; tries < 8 && pool.length; tries++){
+      const w = pool.map(k => KSHOT[k].sea * (1 - land.l) + KSHOT[k].land * land.l), tot = w.reduce((a, b) => a + b, 0); let r = hash(KINO.n * 31 + tries * 7 + 11) * tot, i = 0;
+      while (i < pool.length - 1 && r >= w[i]){ r -= w[i]; i++; }
+      const K = kinoMake(pool[i], t, land); if (kinoOk(K, t)){ set(K); return; }
+      pool.splice(i, 1);
+    }
+    set({type:'drone', t0:t, dur:12, side:1, a0:hash(KINO.n * 3) * 6.28});
   }
   // The eye and the aim are smoothed in the boat's frame (as offsets from her), so they keep up with her at the screen's speed (six
   // times real: 71 m/s at 23 knots); in the world's frame the filter of 0.7 s left them some 50 m behind her and she ran out of the
-  // picture (the user 04.10.2026: «I cinematic-view vises som oftest ikke båten»). The shore camera stands still and only its aim
-  // follows. A shot that loses her behind the land for a second cuts to the next.
+  // picture (the user 04.10.2026: «I cinematic-view vises som oftest ikke båten»). The cameras that stand in the world (shore, pass-by,
+  // left behind) stand still and only their aim follows. The lens is smoothed too (0.5 s). A shot that loses her behind the land, a
+  // building or a boat for a second cuts to the next.
   function kinoCam(t, rdt){
-    if (!KINO.shot || t - KINO.shot.t0 > KINO.shot.dur || t < KINO.shot.t0) kinoNext(t);
-    const C = [bv.x, bv.y, bv.z], [e, g, fov] = kinoWant(KINO.shot, t), k = 1 - Math.exp(-Math.min(0.25, rdt) / 0.7), fixed = KINO.shot.type === 'shore';
+    if (!KINO.shot || t - KINO.shot.t0 > KINO.shot.dur || t < KINO.shot.t0) kinoNext(t, KINO.want, KINO.want ? 'want' : 'end'), KINO.want = null;
+    const C = [bv.x, bv.y, bv.z], [e, g, fov, fixed] = kinoWant(KINO.shot, t), k = 1 - Math.exp(-Math.min(0.25, rdt) / 0.7), kf = 1 - Math.exp(-Math.min(0.25, rdt) / 0.5);
     const eW = fixed ? e : [e[0] - C[0], e[1] - C[1], e[2] - C[2]], gR = [g[0] - C[0], g[1] - C[1], g[2] - C[2]];
-    if (!KINO.eyeR){ KINO.eyeR = eW.slice(); KINO.tgtR = gR.slice(); }
+    if (!KINO.eyeR){ KINO.eyeR = eW.slice(); KINO.tgtR = gR.slice(); KINO.fov = fov; }
     for (let i = 0; i < 3; i++){ KINO.eyeR[i] += (eW[i] - KINO.eyeR[i]) * k; KINO.tgtR[i] += (gR[i] - KINO.tgtR[i]) * k; }
+    if (fixed) KINO.eyeR = eW.slice();
+    KINO.fov += (fov - KINO.fov) * kf;
     const eye = fixed ? KINO.eyeR.slice() : [KINO.eyeR[0] + C[0], KINO.eyeR[1] + C[1], KINO.eyeR[2] + C[2]], tgt = [KINO.tgtR[0] + C[0], KINO.tgtR[1] + C[1], KINO.tgtR[2] + C[2]];
     const gy = Math.max(terrH(eye[0], eye[2]), seaH(eye[0], eye[2], t)) + 0.6; if (eye[1] < gy) eye[1] = gy;
-    if (camFree([C[0], C[1] + 1.2, C[2]], eye) < 0.6){ KINO.hid = (KINO.hid || 0) + rdt; if (KINO.hid > 1) kinoNext(t); } else KINO.hid = 0;
+    const B = [C[0], C[1] + 1.2, C[2]];
+    if (camFree(B, eye) < 0.6 || !kinoSight(eye, B)){ KINO.hid = (KINO.hid || 0) + rdt; if (KINO.hid > 1) kinoNext(t, null, (camFree(B, eye) < 0.6 ? 'box' : 'land')); } else KINO.hid = 0;
+    // the near plane goes out with a high, far camera (the depth could not tell the sea from the shore a few km off; 23-camera-frame.js)
+    const dB = Math.hypot(eye[0] - B[0], eye[1] - B[1], eye[2] - B[2]); KINO.near = clamp(Math.min(dB * 0.3, eye[1] - gy + 0.6) * 0.02, 0.25, 6);
     KINO.eye = eye; KINO.tgt = tgt;
-    return {eye:eye.slice(), tgt, fov};
+    return {eye:eye.slice(), tgt, fov:KINO.fov};
   }
   // the main thread's time a frame takes (ms, smoothed; the GL commands are queued, so this is the JS side): with the frame rate it tells a
   // phone or a PC held back by the script from one held back by the graphics card (the devices' telemetry, 10f-cloud.js cloudDev)
@@ -60,7 +157,8 @@
     const N = [-n.u[1], n.u[0]], x = n.o[0] + N[0] * 2, z = n.o[1] + N[1] * 2;   // N: out to sea (07c-naust.js shoreSpot)
     INTRO = {t0:performance.now(), dur:sec || 5, e0:[x, Math.max(terrH(x, z), 0) + 2.4, z]}; cam.helm = false; return true;
   }
-  function frame(){ const j0 = performance.now(); frame0(); JSMS = JSMS ? JSMS * 0.92 + (performance.now() - j0) * 0.08 : performance.now() - j0; }
+  let j0F = 0;
+  function frame(){ const j0 = j0F = performance.now(); frame0(); JSMS = JSMS ? JSMS * 0.92 + (performance.now() - j0) * 0.08 : performance.now() - j0; }
   let FRAMEN = 0;
   function frame0(){ FRAMEN++;
     if (!active){ raf = 0; return; }
@@ -68,7 +166,7 @@
     if (document.hidden || NO3D || HOLD) return;
     resize();
     const now = performance.now(), dt = Math.min(0.1, (now - lastF) / 1000), rdt = Math.max(1e-3, (now - lastF) / 1000); lastF = now;
-    FPS.v = FPS.v ? FPS.v * 0.95 + 0.05 / rdt : 1 / rdt; FRAMEMS = FRAMEMS * 0.8 + Math.min(500, rdt * 1000) * 0.2; if (BENCH.on){ if (BENCH.rec){ BENCH.sum += rdt; BENCH.cnt++; if (rdt > 1 / 50) BENCH.slow++; } } else qualTick(dt, FPS.v, now); if (now - FPS.at > 500){ FPS.at = now; const fe = fpsEl(); if (fe) fe.textContent = Math.round(FPS.v) + ' bilder/s · ' + (1000 / FPS.v).toFixed(1) + ' ms · ' + ['Lav', 'Middels', 'Høy', 'Ultra'][QUAL.lvl]; }
+    FPS.v = FPS.v ? FPS.v * 0.95 + 0.05 / rdt : 1 / rdt; FRAMEMS = FRAMEMS * 0.8 + Math.min(500, rdt * 1000) * 0.2; if (PROF.on) profBegin(rdt, j0F); if (BENCH.on){ if (BENCH.rec){ BENCH.sum += rdt; BENCH.cnt++; if (rdt > 1 / 50) BENCH.slow++; } } else if (!PROF.on) qualTick(dt, FPS.v, now); if (now - FPS.at > 500){ FPS.at = now; const fe = fpsEl(); if (fe) fe.textContent = Math.round(FPS.v) + ' bilder/s · ' + (1000 / FPS.v).toFixed(1) + ' ms · ' + ['Lav', 'Middels', 'Høy', 'Ultra'][QUAL.lvl]; }
     const t = (now - T0) / 1000, frac = currentFrac(), H = (S.t + frac) / 60;
     computeEnv(H); updateBoat(dt, t, frac, rdt); updateWaves(dt, H); nfStep(); updateWake(); foamStep(dt, t); updateNear(); ssStep(rdt); updateShadows(); updateChunks(CH.size ? 2 : 999);
     // camera
@@ -121,7 +219,7 @@
     // the near plane moves out with the camera when it is high above the boat (Jonas' video from Båtsfjord 09.10.2026): at 0.25 m the depth
     // could not tell the sea from the shore a few kilometres off (the sea came through the low land in teal stripes); nothing is drawn
     // that near a high camera, and at the boat's own distances (to some 50 m) it stays as it was
-    const nearN = cam.helm || kfov ? 0.25 : clamp(Math.min(cam.dist, eye[1]) * 0.005, 0.25, 15), VPn = mul(persp(fov, asp, nearN, nearFar), V.m);
+    const nearN = kfov ? KINO.near || 0.25 : cam.helm ? 0.25 : clamp(Math.min(cam.dist, eye[1]) * 0.005, 0.25, 15), VPn = mul(persp(fov, asp, nearN, nearFar), V.m);
     const TM = model(-eye[0], -eye[1], -eye[2], 0, 0, 0);
     const BMrel = model(bv.x - eye[0], bv.y - eye[1], bv.z - eye[2], -bv.head, bv.pitch, bv.roll);
     const BMabs = Array.from(model(0, 0, 0, -bv.head, bv.pitch, bv.roll)); BMabs[12] = bv.x; BMabs[13] = bv.y; BMabs[14] = bv.z;   // world position in full precision (see the eye above)
@@ -130,7 +228,8 @@
     const ax = Math.sin(wdir) * wv - Math.sin(bv.head) * bms, az = -Math.cos(wdir) * wv + Math.cos(bv.head) * bms, appW = Math.hypot(ax, az), appB = Math.atan2(ax, -az);
     updateFlag(t, appW);
 
-    gl.viewport(0, 0, W, Hh); gl.clearColor(env.fog[0], env.fog[1], env.fog[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    PMK('sky'); gl.viewport(0, 0, W, Hh); gl.clearColor(env.fog[0], env.fog[1], env.fog[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    const SKP = PROF.skip; if (SKP.all){ profEnd(); return; }   // the profile's empty frame: what the browser and the screen give with nothing drawn
     gl.disable(gl.CULL_FACE); gl.disable(gl.BLEND); gl.depthMask(true);
     // sky
     gl.disable(gl.DEPTH_TEST); gl.useProgram(PK.p);
@@ -141,10 +240,10 @@
     gl.disableVertexAttribArray(1); attr(0, SKYQ, 2); gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
     // far pass
-    glChk('frame'); pickLights(eye, t);
-    drawTerrain(TM, eye, VPf, false); drawWater(VPf, eye); litSetup(VPf); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM); drawUnits(eye, VPf, false, 15000); drawSites(eye, VPf, false, 15000); if (NPCM) for (const n of npcStates(H)){ const x = n.p.x * 1000, z = n.p.y * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d < 30000 && !((n.fleet || n.coast) && d < 1500)) drawLit(NPCM[n.type], model(x - eye[0], (env.tide || 0) - eye[1], z - eye[2], -n.hd, 0, 0)); }
-    glChk('far'); drawVind(VPf, eye, dt, true); glChk('vindF');
-    drawSea(VPf, eye, t, 1); glChk('seaF');
+    PMK('farT'); glChk('frame'); pickLights(eye, t);
+    if (!SKP.terr) drawTerrain(TM, eye, VPf, false); drawWater(VPf, eye); litSetup(VPf); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM); drawUnits(eye, VPf, false, 15000); drawSites(eye, VPf, false, 15000); if (NPCM && !SKP.boats) for (const n of npcStates(H)){ const x = n.p.x * 1000, z = n.p.y * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d < 30000 && !((n.fleet || n.coast) && d < 1500)) drawLit(NPCM[n.type], model(x - eye[0], (env.tide || 0) - eye[1], z - eye[2], -n.hd, 0, 0)); }
+    PMK('farSea'); glChk('far'); drawVind(VPf, eye, dt, true); glChk('vindF');
+    if (!SKP.sea) drawSea(VPf, eye, t, 1); glChk('seaF');
     drawSeaLights(VPf, eye, t, false);
     lifePts(VPf, eye, t, true);
     if (env.night > 0.02){
@@ -154,14 +253,15 @@
       gl.depthMask(true); gl.disable(gl.BLEND);
     }
     // near pass
-    gl.clear(gl.DEPTH_BUFFER_BIT);
+    PMK('nearT'); gl.clear(gl.DEPTH_BUFFER_BIT);
     const VT = vtype(), VG = GEO(VT), ncrew = Math.min(crewAboard().length, (VG.crewSpots || []).length); if (VG.hand) useHand(VT);
-    drawTerrain(TM, eye, VPn, true); updateWater(eye); drawWater(VPn, eye); updateShore(eye); drawShore(VPn); litSetup(VPn); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM); glChk('nearT'); drawTrees(VPn, eye); drawNear(VPn, eye, t); glChk('trees'); drawVind(VPn, eye, dt, false); glChk('vind'); litSetup(VPn);
+    if (!SKP.terr) drawTerrain(TM, eye, VPn, true); updateWater(eye); drawWater(VPn, eye); updateShore(eye); drawShore(VPn); litSetup(VPn); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM); glChk('nearT'); if (!SKP.trees){ drawTrees(VPn, eye); drawNear(VPn, eye, t); } glChk('trees'); drawVind(VPn, eye, dt, false); glChk('vind'); litSetup(VPn);
     // whoever works the deck leaves their place: alone, the skipper leaves the wheel
     // resting ashore in the naust or a rorbu (15-energy.js; Jonas 05.10.2026: «Ved hvile forsvinner skipperen fra båten») he is not aboard
     // never more people aboard than the crew list (tilbakemelding #24): the crew at the hauler and the one at the table leave their
-    // places, and with you ashore one of the crew is at the wheel
-    DECKACT = deckActivity(); const awaySk = (DECKACT.on && DECKACT.me) || gopMe() || (meAboard() && resting()), awayCr = DECKACT.on && DECKACT.crew ? 1 : 0;
+    // places, and with you ashore one of the crew is at the wheel; with you aboard another of your boats and no crew in this one, nobody
+    // is drawn at the wheel (tilbakemelding #102: the skipper sat in the boat while the game said she had no crew)
+    PMK('boat'); DECKACT = deckActivity(); const awaySk = (DECKACT.on && DECKACT.me) || gopMe() || (meAboard() && resting()) || (!meAboard() && !crewAboard().length), awayCr = DECKACT.on && DECKACT.crew ? 1 : 0;
     const gHaul = S.boat.gop && !VG.hand ? Math.min(3, gopHands()) - (gopMe() ? 1 : 0) : 0, helmCr = !meAboard() && !awaySk ? 1 : 0;
     // under way the crew are inside (the user: no reason for them to stand on deck all day, 03.10.2026); whoever guts is at the table
     // (drawDeck), and in an open boat they sit where they are. The one at the table leaves their place (a skiff drew them twice).
@@ -174,7 +274,8 @@
     // the people aboard walk the deck (deckcrew.js): the boat is drawn without her fixed figures, and the agents are drawn after her
     const DKON = !VG.hand && typeof CREW3D !== 'undefined' && CREW3D.on();
     if (DKON){ CREW3D.setJig(jigRail(VT, VG)); CREW3D.setRoll(bv.roll); CREW3D.setHelm(!!cam.helm); CREW3D.tick(dt); }
-    if (VG.hand){ drawSkiff(BMrel, VPn, dt, !cam.helm && !awaySk, deckCrew > 0); gl.useProgram(PL.p); }
+    if (SKP.boats){}
+    else if (VG.hand){ drawSkiff(BMrel, VPn, dt, !cam.helm && !awaySk, deckCrew > 0); gl.useProgram(PL.p); }
     // jigging from a boat with a wheelhouse, the skipper leaves the wheel for the rail (the hand-worked boats do the same in drawSkiff),
     // also with crew aboard: he tends the jig while they gut (tilbakemelding #62: on a sjark with two hands he stood in the wheelhouse
     // while one hand looked on); he stays at the wheel only when the crew fill every deck place
@@ -196,8 +297,9 @@
     if (SAY.w && plant && plant.id === SAY.w.pid && plant.wpos && performance.now() - SAY.t0 < SAYMS){ const q = plant.wpos[SAY.w.idx] || plant.wpos[Object.keys(plant.wpos)[0]]; if (q) SAY.a = [q.x - eye[0], q.y + 2.1 - eye[1], q.z - eye[2]]; }
     if (SAY.b && performance.now() - SAY.t0 < SAYMS){ const n = (npcNow || []).find(q => q.id === SAY.b); if (n) SAY.a = [n.p.x * 1000 - eye[0], (env.tide || 0) + 7 - eye[1], n.p.y * 1000 - eye[2]]; }
     const bunk = PM ? nearestBunker(eye) : null; if (bunk) bunk.last = drawBunker(bunk, eye, VPn, t, BMrel); gl.useProgram(PL.p);
-    glChk('boat'); wildSpawn(t); drawNPC(eye, t, H, VPn); glChk('npc'); drawAir(eye, t, H, VPn); drawGearSea(eye, t, VPn, H); glChk('gear'); drawDocks(eye, t, VPn); drawFloats(eye, t, VPn); glChk('docks'); drawFits(eye, VPn); drawMarinas(eye, t, VPn); glChk('marina'); drawWild(eye, t, dt); glChk('wild'); drawLife(eye, t, VPn); glChk('life'); lifePts(VPn, eye, t, false); glChk('lifePts');
+    PMK('obj'); glChk('boat'); wildSpawn(t); if (!SKP.boats) drawNPC(eye, t, H, VPn); glChk('npc'); drawAir(eye, t, H, VPn); drawGearSea(eye, t, VPn, H); glChk('gear'); drawDocks(eye, t, VPn); drawFloats(eye, t, VPn); glChk('docks'); drawFits(eye, VPn); drawMarinas(eye, t, VPn); glChk('marina'); drawWild(eye, t, dt); glChk('wild'); drawLife(eye, t, VPn); glChk('life'); lifePts(VPn, eye, t, false); glChk('lifePts');
 
+    PMK('nearSea');
     // the ensign in its hours (core/03-simulation.js flagUp; always while the paint shop tries one on); the pennant flies day and night
     gl.disableVertexAttribArray(2);
     if (PAINTPRE || flagUp(S.t / 60, S.boat.pos)){ const pole = xf(BMrel, VG.pole), fl = flagTex(), FM = model(pole[0], pole[1], pole[2], Math.PI / 2 - appB, 0, 0);
@@ -206,9 +308,9 @@
     gl.useProgram(PL.p);
     if (SHOW && SHOW.M && GEO(SHOW.t).open && pvm(SHOW.t).cap){ gl.colorMask(false, false, false, false); drawLit(pvm(SHOW.t).cap, SHOW.M); gl.colorMask(true, true, true, true); }
     { const cap = VG.hand ? (SK ? SK.cap : CAPM) : VG.open ? pvm(VT, hullLiv(S.boat)).cap : null; if (cap){ gl.colorMask(false, false, false, false); drawLit(cap, BMrel); gl.colorMask(true, true, true, true); } }
-    glChk('nearObj'); drawSea(VPn, eye, t, nearFar, 0);
-    drawSea(VPn, eye, t, false);
-    glChk('seaN'); drawBeams(VPn, eye, t);
+    glChk('nearObj'); if (!SKP.sea){ drawSea(VPn, eye, t, nearFar, 0);
+    drawSea(VPn, eye, t, false); }
+    PMK('fx'); glChk('seaN'); drawBeams(VPn, eye, t);
     if (BLD && env.night > 0.02){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false); drawChunkLights(VPn, eye); gl.depthMask(true); gl.disable(gl.BLEND); }
     drawEffects(VPn, eye, BMabs, dt, t); drawBlows(VPn, eye, dt); drawNPCLights(VPn); drawAirLights(VPn, t); drawRescueLights(VPn, t); drawSeaLights(VPn, eye, t, true);
     if (VG.hand) drawSkiffGlass(BMrel, VPn); else { const gm = pvm(VT, hullLiv(S.boat)).glass; drawGlass(gm, BMrel, VPn); drawDrops(gm, BMrel, VPn, t); }
@@ -225,10 +327,20 @@
       let L3 = lanterns(VG, V0, {port:b0.status === 'port', anch:anchored, v:b0.v || 0, fishing:b0.status === 'fishing' || !!b0.gop, trawl:V0.cls === 'hav' && !(V0.rigs || []).length, aground:b0.status === 'aground', nuc:b0.status === 'engine' || b0.status === 'adrift'}), drawn = L3.length;
       if (anchored && alarm && L3.length) L3 = L3.map(([p, c], i) => i ? [p, c] : [p, (performance.now() / 250) % 2 < 1 ? [1, 0.1, 0.06] : [0.25, 0.02, 0.02]]);   // the anchor alarm turns the light red and flashing (06e-anchor.js)
       ANCHAL.drawn = drawn;
-      for (const [lp, lc] of L3){ const q = xf(BMrel, lp); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VPn, lc, anchored ? 420 : 260, true); }
+      // the side lights and the stern light shine only in their arcs (vedlegg I 9(a): a side from right ahead to 22.5 degrees abaft the beam
+      // on its own side, the stern 67.5 degrees each side of aft); the glow drew them all round, so the green showed from the port bow
+      // through the wheelhouse (01.11.2026). The eye is the frame's origin (BMrel is relative to it)
+      for (const [lp, lc, lk] of L3){ const q = xf(BMrel, lp);
+        if (lk === 'side' || lk === 'stern'){ const f = xf(BMrel, [lp[0], lp[1], lp[2] - 1]), r = xf(BMrel, [lp[0] + 1, lp[1], lp[2]]);
+          const fw = -((f[0] - q[0]) * q[0] + (f[1] - q[1]) * q[1] + (f[2] - q[2]) * q[2]), sb = -((r[0] - q[0]) * q[0] + (r[1] - q[1]) * q[1] + (r[2] - q[2]) * q[2]);
+          const ang = Math.atan2(Math.abs(sb), fw) * 180 / Math.PI;
+          if (lk === 'side' && (ang > 112.5 || (lp[0] < 0 ? sb > 0.05 : sb < -0.05) && ang > 1)) continue;
+          if (lk === 'stern' && ang < 180 - 67.5) continue; }
+        PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VPn, lc, anchored ? 420 : 260, true); }
       gl.depthMask(true); gl.disable(gl.BLEND);
     }
     updateLabels(VPf, eye, W, Hh);
+    if (PROF.on) profEnd();
     if (SNAP) snapTake();
   }
   // a picture of the frame just drawn, for the feedback app (ui/06e-feedback.js): read in the same task as the drawing, while the

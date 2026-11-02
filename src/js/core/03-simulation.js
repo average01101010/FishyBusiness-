@@ -19,6 +19,11 @@ function openVesselId(){ if (S.fleet.some(v => vget(v, 'lic'))) return null; con
 // a waypoint where the boat stops: a port, fishing hours, or work with passive gear (set or haul)
 function wpStop(w){ return !!(w.port || w.fish > 0 || w.act); }
 function meAboard(){ return !S.me || S.me === S.cur; }
+// the toast when a boat with nobody aboard is told to go: with you aboard another of your boats, it says which one and how to change
+// (tilbakemelding #102: the player thought the skipper was aboard)
+function noCrewText(){ const v = !meAboard() && typeof vesselById === 'function' ? vesselById(S.me) : null, n = v ? vget(v, 'boatName') : '';
+  return n ? ['Båten har ikke mannskap. Du er om bord på «' + n + '». Gå om bord på denne i Rederi-appen, eller mønstre på folk.', 'The boat has no crew. You are aboard the «' + n + '». Go aboard this one in the Company app, or sign on hands.']
+    : ['Båten har ikke mannskap. Uten deg om bord trenger den folk.', 'The boat has no crew. Without you aboard it needs hands.']; }
 // what the bound vessel may land of cod, haddock and saithe: 'lukket' with a closed-group right, 'open' on the open-group vessel when
 // the owner was aboard for the trip, otherwise 'none': bycatch only (J-30-2026 § 35)
 function access(){ if (S.lic) return 'lukket'; return S.cur === openVesselId() && S.tripOwner !== false ? 'open' : 'none'; }
@@ -585,7 +590,8 @@ function wshLand(port, H, acc, kgSp, codQ){ if (!WSH.rec) return; const Q = wq()
   // the boat's name goes with it for the open group's leaderboard (and the company's in the closed group, whose leaderboard shows it:
   // Jonas 05.10.2026); there is no hiding from the others (07.10.2026)
   const ev = typeof evAt === 'function' ? evAt(H, port, items.map(i => i.sp)) : '';   // the shared event it falls in (09c-seasons.js)
-  if (items.length) Q.l.push({gh:+H.toFixed(2), y:yearH(H), port, acc, items, boat:String(S.boatName || '').slice(0, 24), company:acc !== 'lukket' ? '' : String(S.company || '').slice(0, 40), ev}); }
+  let reg = ''; try { const q = portById(port); if (q && typeof landsdel === 'function') reg = landsdel(q.p); } catch (e){}   // the part of the coast, for the village contest (bygde_top)
+  if (items.length) Q.l.push({gh:+H.toFixed(2), y:yearH(H), port, acc, items, boat:String(S.boatName || '').slice(0, 24), company:acc !== 'lukket' ? '' : String(S.company || '').slice(0, 40), ev, reg}); }
 function initStock(){
   const a = {};
   // the famous grounds are already worked by the local fleet when the game starts

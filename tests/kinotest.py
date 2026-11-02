@@ -1,6 +1,6 @@
-"""The cinema (view3d.js KINO, 08-actions.js kinoUi; the user's wish 03.10.2026): under way off Senja with «Kino» on, the camera goes
-through its shots (drone, low along the side, from ahead, from the shore, wide, from behind), each with the eye clear of the land and
-the sea and the boat in sight; «Skjul» hides the HUD and the buttons but the two cinema buttons; the camera button ends the cinema.
+"""The cinema (view3d.js KINO, 08-actions.js kinoUi; the user's wish 03.10.2026, fourteen shots 01.11.2026): under way off Senja with
+«Kino» on, the camera goes through its shots (eight drawn by the director, no kind twice, then the landscape shots asked for by name),
+each with the eye clear of the land and the sea and the boat in sight; «Skjul» hides the HUD and the buttons but the two cinema buttons; the camera button ends the cinema.
 A picture per shot: kino_<shot>.png. Prints OK or FEIL."""
 from _env import GAME, boot
 import asyncio, json
@@ -23,17 +23,25 @@ async def main():
         await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(4000)
         await pg.click('#kinoBtn'); await pg.wait_for_timeout(2500)
         seen = {}
-        for i in range(6):
+        order = []
+        for want in [None] * 8 + ['vista', 'pullback', 'reveal', 'vertigo', 'profile']:
             # (the next shot is picked on the next frame: wait for it, up to 10 s, rather than a fixed time; few frames a second in the tests)
-            k0 = await pg.evaluate("G3.kinoShot")
-            await pg.evaluate("G3._debug.kinoNext()")
-            try: await pg.wait_for_function("(k0) => !!G3._debug.kino && !!G3.kinoShot && G3.kinoShot !== k0", arg=k0, timeout=10000)
+            k0 = await pg.evaluate("G3._debug.kino && G3._debug.kino.n")
+            await pg.evaluate("(w) => G3._debug.kinoNext(w)", want)
+            try: await pg.wait_for_function("(k0) => !!G3._debug.kino && G3._debug.kino.n !== k0", arg=k0, timeout=10000)
             except Exception: pass
-            await pg.wait_for_timeout(1500)
+            await pg.wait_for_timeout(2500)
             k = await pg.evaluate("G3._debug.kino")
-            if k: seen[k['type']] = k; await pg.screenshot(path="kino_%s.png" % k["type"], timeout=120000)
+            if k:
+                order.append(k['type'])
+                if k['type'] not in seen: seen[k['type']] = k; await pg.screenshot(path="kino_%s.png" % k["type"], timeout=120000)
         bad = {t: (round(k['up'], 1), round(k['free'], 2)) for t, k in seen.items() if k['up'] < 0.3 or k['free'] < 0.85}
-        check(len(seen) >= 5, 'kino går gjennom opptakene', sorted(seen))
+        print('opptak:', order)
+        # (the director's own log: in the tests' few frames a second a shot may also end by itself between two asked for)
+        full = await pg.evaluate("G3._debug.kinoLog"); log = [q[0] for q in full]
+        rep = [i for i in range(len(log)) if full[i][1] != 'want' and log[i] in log[max(0, i - 5):i]]
+        check(len(log) >= 6 and not rep, 'kino går gjennom opptakene uten å gjenta et slag innen fem', log)
+        check(len(seen) >= 10, 'opptakene er mange slag', sorted(seen))
         check(not bad, 'i hvert opptak er øyet over land og sjø, og båten er i bildet uten land imellom', bad or {t: round(k['d']) for t, k in seen.items()})
         await pg.click('#kinoHud'); await pg.wait_for_timeout(400)
         vis = await pg.evaluate("['hud', 'dock', 'phoneFab', 'compass3d', 'kinoBtn', 'kinoHud'].map(id => { const e = document.getElementById(id); return id + ':' + (e && getComputedStyle(e).display !== 'none' ? 1 : 0); })")

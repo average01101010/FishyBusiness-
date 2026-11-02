@@ -40,14 +40,19 @@ function berthShift(p, key, big){
   let best = null, bd = 0.15; for (const q of PORTS){ const d = dist(p, q.p); if (d < bd){ bd = d; best = q; } }
   if (!best) return p; const f = 1 - bd / 0.15, o = berthSlot(best, key, big); return {x:p.x + o.x * f, y:p.y + o.y * f};
 }
-// at home the boat lies at a quay face of the map data that fits her (npcBerths, 07-harbours.js), and goes from there to the way out
-// over its first 450 m (and back); without one, off the harbour point as before (berthShift)
+// at home the boat lies at a quay face of the map data that stands in 3D and fits her (npcBerths, 07-harbours.js), and goes from
+// there to the way out over its first 450 m (and back). Without the packs (the artifact, the Senja-only test build) off the harbour
+// point as before (berthShift); with them and no such face, she is not shown in port (L1, 01.11.2026: no boat lies in the fjære) and
+// her day starts at the harbour point.
+function fleetBerth(i){
+  const f = FLEET[i], mates = f.mates || (f.mates = FLEET.map((g, j) => ({key:'f' + j, L:g.L, B:g.B, T:g.T, home:g.home})).filter(g => g.home === f.home));
+  return npcBerths('fleet:' + f.home, {x:f.hp[0], y:f.hp[1]}, mates)['f' + i] || null;
+}
+const fleetPacks = f => { if (!MAPD.man) return false; const T = MAPD.man.tile; return !!vecTile(Math.floor(f.hp[0] / T), Math.floor(f.hp[1] / T)); };
 function fleetState(i, H){
-  const s = fleetState0(i, H), f = FLEET[i], home = {x:f.hp[0], y:f.hp[1]};
-  const mates = f.mates || (f.mates = FLEET.map((g, j) => ({key:'f' + j, L:g.L, B:g.B, T:g.T, home:g.home})).filter(g => g.home === f.home));
-  const bp = npcBerths('fleet:' + f.home, home, mates)['f' + i];
-  if (!bp){ s.p = berthShift(s.p, 'f' + i, false); return s; }
-  if (s.st === 'port') return {p:bp.p, hd:bp.hd, st:'port', berth:bp.face};
+  const s = fleetState0(i, H), f = FLEET[i], home = {x:f.hp[0], y:f.hp[1]}, bp = fleetBerth(i);
+  if (!bp){ if (!fleetPacks(f)){ s.p = berthShift(s.p, 'f' + i, false); return s; } return s.st === 'port' ? {p:home, hd:s.hd, st:'port', hidden:true} : s; }
+  if (s.st === 'port') return {p:bp.p, hd:bp.hd, st:'port', berth:bp.face.id, face:bp.face};
   const d = dist(s.p, home); if (d < 0.45 && (s.st === 'out' || s.st === 'in')){ const u = d / 0.45; s.p = {x:bp.p.x + (s.p.x - bp.p.x) * u, y:bp.p.y + (s.p.y - bp.p.y) * u}; }
   return s;
 }
@@ -99,6 +104,7 @@ const hodOf = H => { const g = gDate(H); return g.getUTCHours() + g.getUTCMinute
 // boat, mooring version and mouth: {k, pts, len}
 function coastWay(b, moored, m0){
   const k = MOOR.ver + ':' + m0.x + ':' + m0.y; if (b.way && b.way.k === k) return b.way;
+  if (moored.none) return (b.way = {k, pts:[m0, m0], len:1e-6});   // no place in the harbour (L1): her day starts and ends at the mouth
   const p = moored.p, clear = (a, c) => { if (obsSegHit(a, c, 3)) return false; const n = Math.ceil(dist(a, c) * 1000 / 15); for (let i = 1; i < n; i++){ const u = i / n; if (coastLand({x:a.x + (c.x - a.x) * u, y:a.y + (c.y - a.y) * u})) return false; } return true; };
   let pts = [p, m0];
   if (!moored.buoy){
@@ -177,10 +183,26 @@ function coastState(b, H, hod = hodOf(H)){
 // boats placed before it. A boat that does not fit is moved off the face the least that frees her (up to 8 m, then along the face),
 // and one that still does not is put on a mooring buoy in the basin (as small boats lie in Norwegian harbours), swinging to the
 // harbour's mouth. Until the coast is in, the pack's place stands (nothing is drawn so near anyway).
-const MOOR = {ver:-1, PEN:3};   // PEN: the mooring pennant from the buoy to the bow (m)
+const MOOR = {ver:-1, PEN:3, SMALL:11};   // PEN: the mooring pennant from the buoy to the bow (m); SMALL: under it a boat may lie at a dock or a buoy
+// a hull of half length r about x, z in a harbour unit's block (with its fill behind), its basin or its landing and bunker berths (L1,
+// choice 3: the rest of the plant's quay is the harbour's boats' too)
+function unitHit(x, z, r){
+  for (const U of UNITA){ if (Math.abs(U.o[0] - x) > 240 || Math.abs(U.o[1] - z) > 240) continue; const [lx, lz] = unitL(U, x, z), g = ugeo(U);
+    if (Math.abs(lx) <= g.basinX + r + 2 && lz >= -g.B - 4 && lz <= g.basinZ + 4) return true;
+    for (const k in g.berth){ const b = g.berth[k]; if (Math.abs(lx - b[0]) <= b[1] / 2 + r + 2 && lz >= -4 && lz <= 30) return true; } }
+  return false;
+}
+// inside a harbour, for a floating dock (L1): a quay face that stands in 3D within 80 m, or a breakwater within 120 m (x, z in m;
+// not inHarbour of 01-world.js, which is the harbour pocket a route may cross)
+function dockInHarbour(x, z){
+  for (const t of vecTilesIn(x - 130, z - 130, x + 130, z + 130)){
+    for (const f of t.quays){ if (!quayReal(f)) continue; const a = clamp((x - f.x) * f.ux + (z - f.z) * f.uz, -f.hl, f.hl); if (Math.hypot(f.x + f.ux * a - x, f.z + f.uz * a - z) <= 80) return true; }
+    for (const P of t.molos || []) for (let i = 1; i < P.length; i++){ const [ax, az] = P[i - 1], [bx, bz] = P[i], dx = bx - ax, dz = bz - az, l2 = dx * dx + dz * dz || 1, u = clamp(((x - ax) * dx + (z - az) * dz) / l2, 0, 1); if (Math.hypot(ax + dx * u - x, az + dz * u - z) <= 120) return true; } }
+  return false;
+}
 function moorBlocked(x, z, r){
   for (const q of PORTS) if (Math.abs(q.p.x * 1000 - x) < r + 60 && Math.abs(q.p.y * 1000 - z) < r + 60 && Math.hypot(q.p.x * 1000 - x, q.p.y * 1000 - z) < r + 45) return true;
-  if (unitNear(x, z, r + 60)) return true;
+  if (unitHit(x, z, r)) return true;
   if (typeof havnBlocked === 'function' && havnBlocked(x, z, r)) return true;   // the berths the players hold (07e-havn.js)
   const nh = S && S.naust && S.naust.o; if (nh && Math.hypot(nh[0] - x, nh[1] - z) < r + 45) return true;
   for (const R of rorbuIn(x / 1000 - 0.3, z / 1000 - 0.3, x / 1000 + 0.3, z / 1000 + 0.3)){ const s = R.site, o = s && s.o; if (Math.hypot((o ? o[0] : R.cand.x * 1000) - x, (o ? o[1] : R.cand.y * 1000) - z) < r + 35) return true; }
@@ -225,26 +247,39 @@ function dockFree(d, others, placed){
 }
 // the boats of other harbours fixed already within 600 m of p (km): they keep their places, the new ones keep off them
 function moorAround(h, p){ const out = []; for (const t of vecTilesIn(p.x * 1000 - 600, p.y * 1000 - 600, p.x * 1000 + 600, p.y * 1000 + 600)) for (const g of t.npc || []){ if (g === h || g.moorVer !== MOOR.ver) continue;
-  for (const b of g.boats) if (b.moored && dist(b.moored.p, p) < 0.6){ const q = b.moored.buoy, D = b.L * 2 + 2 * MOOR.PEN;
+  for (const b of g.boats) if (b.moored && !b.moored.none && dist(b.moored.p, p) < 0.6){ const q = b.moored.buoy, D = b.L * 2 + 2 * MOOR.PEN;
     out.push(q ? {p:q, hd:b.moored.hd, L:D, B:D, buoy:true} : {p:b.moored.p, hd:b.moored.hd, L:b.L, B:b.B}); } } return out; }
 function moorHarbour(h){
   // fixed again: its own docks and buoys out of the obstacles first (they would push its boats about)
   if ((h.docks && h.docks.length) || h.boats.some(b => b.moored && b.moored.buoy)){ h.docks = []; FDOCK.ver++; }
   h.moorVer = -1;
-  const placed = moorAround(h, h), mouth = h.grounds.length ? h.grounds[0].pts[0] : null, need = [];
+  const placed = moorAround(h, h), mouth = h.grounds.length ? h.grounds[0].pts[0] : null, need = [], cx = h.x * 1000, cz = h.y * 1000;
+  // the quay faces of the harbour that stand in 3D (quayReal) with room left (quayFree), the one her pack's place is at first (the
+  // pack laid her at a face of the map data; the fine coast may put it a few metres off): along each from that place outward in 2 m
+  // steps, off its reserved parts (faceReserved), off the face by her half beam and 0.4 m and up to 8 m further out, the hull free
+  const faces = [];
+  for (const t of vecTilesIn(cx - 450, cz - 450, cx + 450, cz + 450)) for (const f of t.quays) if (quayReal(f) && quayFree(f) && Math.hypot(f.x - cx, f.z - cz) < 450 + f.hl) faces.push(f);
   for (const b of h.boats){
-    const s = Math.sin(b.hd), c = Math.cos(b.hd); let m = null;
-    // off the face: the boat's beam direction both ways, the least that frees her; then along the face too
-    const tryAt = (along, off) => { const p = {x:b.p.x + (s * along + c * off) / 1000, y:b.p.y + (-c * along + s * off) / 1000}; return moorFree(p, b.hd, b.L, b.B, placed) ? p : null; };
-    for (let off = 0; off <= 8 && !m; off += 0.5) for (const sg of off ? [1, -1] : [1]){ const p = tryAt(0, sg * off); if (p){ m = {p, hd:b.hd}; break; } }
-    for (let al = b.L / 2; al <= b.L * 2 && !m; al += b.L / 2) for (const sa of [1, -1]){ for (let off = 0; off <= 6 && !m; off += 1) for (const sg of off ? [1, -1] : [1]){ const p = tryAt(sa * al, sg * off); if (p){ m = {p, hd:b.hd}; break; } } if (m) break; }
-    if (m){ b.moored = {p:m.p, hd:m.hd, st:'port'}; placed.push({p:m.p, hd:m.hd, L:b.L, B:b.B}); } else need.push(b);
+    const bx = b.p.x * 1000, bz = b.p.y * 1000, dOf = f => { const a = clamp((bx - f.x) * f.ux + (bz - f.z) * f.uz, -f.hl, f.hl); return Math.hypot(f.x + f.ux * a - bx, f.z + f.uz * a - bz); };
+    faces.sort((f, g) => dOf(f) - dOf(g) || (f.id < g.id ? -1 : 1));
+    let m = null;
+    for (const f of faces){
+      if (!quayFit(f, b.L, b.T)) continue; const res = faceReserved(f), lim = f.hl - b.L / 2 - 1; if (lim < 0) continue;
+      const a0 = clamp((bx - f.x) * f.ux + (bz - f.z) * f.uz, -lim, lim), hd0 = Math.atan2(f.ux, -f.uz);
+      for (let s = 0; s <= lim * 2 && !m; s += 2) for (const a of s ? [a0 + s / 2, a0 - s / 2] : [a0]){
+        if (Math.abs(a) > lim || resHit(res, a, b.L / 2 + 1)) continue;
+        for (let off = b.B / 2 + 0.4; off <= b.B / 2 + 8.5 && !m; off += 1){ const p = {x:(f.x + f.ux * a + f.nx * off) / 1000, y:(f.z + f.uz * a + f.nz * off) / 1000}; if (moorFree(p, hd0, b.L, b.B, placed)) m = {p, hd:hd0 + (hash(hashStr(b.id)) < 0.5 ? Math.PI : 0), face:faceAt(f, a, b.L)}; }
+        if (m) break; }
+      if (m) break;
+    }
+    if (m){ b.moored = {p:m.p, hd:m.hd, st:'port', face:m.face}; placed.push({p:m.p, hd:m.hd, L:b.L, B:b.B}); } else need.push(b);
   }
-  // a floating dock for the boats under 15 m the quays did not take (the bigger ones lie at quays or on buoys)
-  const dockable = need.filter(b => b.L < 15);
+  // a floating dock inside the harbour for the boats under 11 m the quays did not take (L1, choice 2: a bigger boat lies at a quay or
+  // not at all; a dock on the open shore outside the harbour is no harbour)
+  const dockable = need.filter(b => b.L < MOOR.SMALL);
   if (dockable.length){
-    const cx = h.x * 1000, cz = h.y * 1000, others = docksIn(cx - 400, cz - 400, cx + 400, cz + 400);
-    const avoid = (x, z) => moorBlocked(x, z, 20);
+    const others = docksIn(cx - 400, cz - 400, cx + 400, cz + 400);
+    const avoid = (x, z) => moorBlocked(x, z, 20) || !dockInHarbour(x, z);
     for (const [r0, r1] of [[15, 150], [150, 300], [300, 450]]){
       const sp = shoreSpot(cx, cz, r0, r1, {half:5, bend:3, out:[6, 12, 20, 30], inl:[4, 10], avoid, pref:r0}); if (!sp) continue;
       const d = {o:sp.o, u:sp.u, n:[-sp.u[1], sp.u[0]], s0:FDOCK.GH - 0.6, np:Math.min(4, Math.max(1, Math.ceil(dockable.reduce((a, b) => a + b.L + 1.5, 0) / 2 / FDOCK.PL))), h};
@@ -266,9 +301,10 @@ function moorHarbour(h){
       break;
     }
   }
-  // a mooring buoy in the basin for the rest: water with room to swing (the length and 8 m from the coast), away from the berths and the rest
+  // a mooring buoy in the basin for the rest under 11 m: water with room to swing (the length and 8 m from the coast), away from the
+  // berths and the rest. A bigger boat with no quay gets no place (none): she is not shown in port, and her day starts at the mouth
   for (const b of need){
-    let m = null;
+    let m = null; if (b.L >= MOOR.SMALL){ b.moored = {p:b.p, hd:b.hd, st:'port', none:true}; continue; }
     for (let r = 40; r <= 420 && !m; r += 30) for (let k = 0; k < 16 && !m; k++){
       const a = (k + hash(hashStr(b.id) + r) * 0.9) / 16 * 2 * Math.PI, p = {x:h.x + Math.sin(a) * r / 1000, y:h.y - Math.cos(a) * r / 1000};
       if (!coastFine(p) || isLand(p) || coastDistM(p, 100) < b.L + 8 || depthF(p) < b.T + 1.5) continue;
@@ -287,9 +323,10 @@ function moorHarbour(h){
 }
 function coastMoor(b){
   const h = b.h; MOOR.ver = VEC.ver * 1000 + COAST.built;   // new packs or coast indexes: the places are fixed again (rarely)
-  if (h && h.moorVer === MOOR.ver && b.moored) return b.moored;
+  if (h && h.moorVer === MOOR.ver && b.moored) return b.moored.none ? Object.assign({hidden:true}, b.moored) : b.moored;
   // the fine coast must be in round the harbour before the places are fixed; meanwhile the pack's place
-  if (h && coastFine(b.p) && coastIndexAt(b.p, false)){ moorHarbour(h); return b.moored; }
+  // (and the 25 m mask 500 m round the harbour, which the search for a dock or a buoy reads: a block not yet in would throw)
+  if (h && coastFine(b.p) && coastIndexAt(b.p, false) && [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]].every(([dx, dy]) => { const q = {x:h.x + dx, y:h.y + dy}; return !mapSimAt(q) || mapReadyAt(q, 0); })){ moorHarbour(h); return b.moored.none ? Object.assign({hidden:true}, b.moored) : b.moored; }
   return {p:b.p, hd:b.hd, st:'port'};
 }
 // land for the coast's boats: the 25 m mask where its pack is in, else the national core's 200 m (always there)
@@ -328,7 +365,7 @@ function coastNear(H, only){
     if (dist(h, b.pos) - h.reach > R) continue;
     for (const bt of h.boats){
       if (only && only !== bt.id) continue;
-      bt.h = h; const A = coastState(bt, H, hod); if (dist(A.p, b.pos) > R) continue;
+      bt.h = h; const A = coastState(bt, H, hod); if (A.hidden || dist(A.p, b.pos) > R) continue;
       const P = A.st === 'port' ? A : coastState(bt, H - 1 / 60, hod1), dx = A.p.x - P.p.x, dy = A.p.y - P.p.y, sog = Math.hypot(dx, dy) / NM * 60;
       out.push({id:bt.id, name:bt.name, type:bt.L >= 14 ? 'kyst' : 'sjark', p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, coast:true, L:bt.L, B:bt.B, T:bt.T, liv:bt.liv});
     }
@@ -357,13 +394,15 @@ function npcStates(H, only){
   // the local fleet: out early, fish on their banks, home in the afternoon; bigger boats go out in worse weather
   FLEET.forEach((f, i) => {
     if (only && only !== 'f' + i) return;
-    const A = fleetState(i, H), B = fleetState(i, H - 1 / 60), dx = A.p.x - B.p.x, dy = A.p.y - B.p.y, sog = Math.hypot(dx, dy) / NM * 60;
+    const A = fleetState(i, H); if (A.hidden) return; const B = fleetState(i, H - 1 / 60), dx = A.p.x - B.p.x, dy = A.p.y - B.p.y, sog = Math.hypot(dx, dy) / NM * 60;
     out.push({id:'f' + i, name:f.n, type:f.L >= 14 ? 'kyst' : 'sjark', p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, fleet:true, fi:i, L:f.L, B:f.B, liv:i % 4});
   });
   // the coast's boats within AIS range of the boat you follow (part 5)
   if (!only || only[0] === 'c') for (const n of coastNear(H, only)) out.push(n);
   // a boat in a mission: drifting with engine trouble, or on the tow line (09g-turer.js)
   if (!only || only[0] === 't') for (const n of turNpcs()) if (!only || only === n.id) out.push(n);
+  // the coast guard's ship alongside during an inspection (09j-kystvakt.js)
+  if (!only || only === 'kv') for (const n of kvNpcs()) out.push(n);
   // the old hands who went to a boat of their own, fishing out of their home port (14-crewlife.js alumniStates)
   if ((!only || only.startsWith('al')) && typeof alumniStates === 'function') for (const n of alumniStates(H)) if (!only || only === n.id) out.push(n);
   // the other players' boats near by (the shared world V3, ui/10h-world.js)
@@ -422,10 +461,11 @@ function nearestYard(p){ let best = null, bd = 1e9; for (const q of PORTS){ if (
 
 function step(){
   if (!S.fleet || !S.fleet.length) ensureFleet();
-  if (S.t % 60 === 0){ ordersTick(S.t / 60); turHour(); borsTick(S.t / 60); eachVessel(() => { crewTick(S.t / 60); if (!(S.jobs && S.jobs.some(j => j.kind === 'hull' && j.until))) foulHour(S.t / 60); }); }   // (no fouling while she is on the slip)
+  if (S.t % 60 === 0){ ordersTick(S.t / 60); turHour(); kvHour(); borsTick(S.t / 60); eachVessel(() => { crewTick(S.t / 60); if (!(S.jobs && S.jobs.some(j => j.kind === 'hull' && j.until))) foulHour(S.t / 60); }); }   // (no fouling while she is on the slip)
   S.t += 1; const H = S.t / 60;
   energyMinute();
   turMinute();   // a tow made fast (09g-turer.js)
+  kvMinute();   // the coast guard alongside (09j-kystvakt.js)
   if (S.t % 60 === 0){ hourly(); eachVessel(navHour); eachVessel(loreHour); }
   if (S.t % 60 === 0) for (const pid in S.market) for (const sp in S.market[pid]) S.market[pid][sp] *= 0.97;
   if (S.t % 60 === 0 && S.stock) stockHour(H);
@@ -554,7 +594,11 @@ function sail(H, W, hs){
 // back to the draft. Three tries a leg at most. (Tilbakemeldinger #47 and #48, 08.10.2026: a boat on Autonav must never end up on
 // land. The legs are checked when the route is made; this is the net under them, also after a drift, a pause or a tow.)
 // Returns true when she is held back here, false when the leg is the player's own unsafe one (then she grounds as before).
-const SAIL_RP = {n:0, at:''};
+const SAIL_RP = {n:0, at:'', wait:0, since:0};
+// a way round being found while the time away is played (ui/08-actions.js playMinutes): the minutes wait for it, as they wait for the
+// map, so a boat that meets shallow water with the game closed goes round and on instead of lying still for the rest of the time away
+// (tilbakemelding #97); a search that never answers holds them 20 s at most
+function sailWaiting(){ return SAIL_RP.wait > 0 && Date.now() - SAIL_RP.since < 20000; }
 function sailReplan(pl, b, gp){
   if (pl.unsafe && pl.unsafe[pl.idx]) return false;
   const w = pl.wps[pl.idx], d = dist(b.pos, gp);
@@ -569,14 +613,16 @@ function sailReplan(pl, b, gp){
   // on this vessel's state when the way is found (the player may be aboard another by then)
   const bound = fn => { const v = typeof vesselById === 'function' ? vesselById(vid) : null; if (v && v.id !== S.cur) onVessel(v, fn); else fn(); };
   let pr; try { pr = leiaRoute(from, to, null, w.port || null); } catch (e){ pr = Promise.resolve(null); }
-  pr.then(res => bound(() => {
+  let open = true; const done = () => { if (open){ open = false; SAIL_RP.wait = Math.max(0, SAIL_RP.wait - 1); } };
+  SAIL_RP.wait++; SAIL_RP.since = Date.now();
+  pr.then(res => bound(() => { done();
     if (S.plan !== PL || !PL.replan) return;   // the route was changed meanwhile
     PL.replan = null;
     if (!res || res.why || !res.wps || !res.wps.length){ sailStop(PL, S.boat, none); return; }
     const ins = res.wps.slice(0, -1).map(q => ({x:q.x, y:q.y, port:null, fish:0, leia:true, obs:true}));
     PL.wps.splice(PL.idx, 0, ...ins); if (PL.unsafe) PL.unsafe.splice(PL.idx, 0, ...ins.map(() => false)); PL.obsK = null;
     log('Autonav fant en vei rundt. Går videre.', 'Autonav found a way round. Going on.', 'nav');
-  })).catch(e => { console.error(e); bound(() => { if (S.plan === PL && PL.replan){ PL.replan = null; sailStop(PL, S.boat, none); } }); });
+  })).catch(e => { done(); console.error(e); bound(() => { if (S.plan === PL && PL.replan){ PL.replan = null; sailStop(PL, S.boat, none); } }); });
   return true;
 }
 // the boat stops where she is, and what is left of the route goes back to the draft (as «pause» does, ui/03b-route.js routePause)
