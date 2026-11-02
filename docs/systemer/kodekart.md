@@ -1210,7 +1210,7 @@ Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md poi
   - 958 `turDepart()`
   - 978 `turMechanic()`
 
-## `src/js/core/09h-press.js` (228 linjer)
+## `src/js/core/09h-press.js` (233 linjer)
 
 Kystposten: the coast's paper (07.10.2026)
 
@@ -1233,8 +1233,8 @@ Kystposten: the coast's paper (07.10.2026)
   - 196 `pressSkreiH(y)`
   - 198 `pressSkrei()`
   - 209 `pressList(local)`
-  - 226 `pressUnread()`
-  - 227 `pressSeen()`
+  - 231 `pressUnread()`
+  - 232 `pressSeen()`
 
 ## `src/js/core/09i-look.js` (111 linjer)
 
@@ -1403,7 +1403,7 @@ Bestilt til henting (M2 in docs/planer/butikker-og-sponsorer.md, 10.2b, V12 A; J
   - 45 `pickAdd(port, w, k, s, n)`
   - 58 `pickDrop(id)`
 
-## `src/js/core/09k-market.js` (155 linjer)
+## `src/js/core/09k-market.js` (173 linjer)
 
 Bruktmarkedet (M4 in docs/planer/butikker-og-sponsorer.md, 3.3, 10.2, 10.2b; V3 A, V9 A, V10 A, V11 A; Jonas 30.10.2026)
 
@@ -1417,27 +1417,28 @@ Bruktmarkedet (M4 in docs/planer/butikker-og-sponsorer.md, 3.3, 10.2, 10.2b; V3 
   - 62 `mktSold(H)`
   - 63 `mktById(id, H)`
   - 66 `mktAsk(L, H)`
-  - 68 `mktPrice(L, H)`
-  - 75 `mktBid(id, kr)`
-  - 87 `mktTakstSays(L)`
-  - 89 `mktWishHits(H)`
-  - 92 `mktTakeOver(L, b, eq)`
-- **97** your own boat at the broker (commission, 3.3 «Legg ut til salgs»): listed from anywhere at her market value; she must lie in port
-  - 102 `mktOwnValue(v)`
-  - 107 `mktOwn(vid)`
-  - 109 `mktOwnWhy(v)`
-  - 110 `mktListOwn(vid)`
-  - 114 `mktUnlist(vid)`
-- **115** delivery (10.2b «Få henne levert»): a skipper from the yard sails a boat of yours that nobody is aboard to the port you choose, for
-  - 118 `mktDelWhy(v, to)`
-  - 119 `mktDeliver(vid, to)`
-  - 125 `mktHour(H)`
-- **141** the boat you traded in (M5, B2): she lies at the yard and is bought by a fisherman, who puts her out again a week or two later at
-  - 143 `mktTradeIn(type, engH, port, old)`
-  - 144 `mktTiListing(r)`
-  - 154 `mktEvery(H)`
+  - 69 `mktPrice(L, H)`
+  - 76 `mktBid(id, kr)`
+  - 88 `mktTakstSays(L)`
+  - 90 `mktWishHits(H)`
+  - 93 `mktTakeOver(L, b, eq)`
+- **98** your own boat at the broker (commission, 3.3 «Legg ut til salgs»): listed from anywhere at her market value; she must lie in port
+  - 103 `mktOwnValue(v)`
+  - 108 `mktOwn(vid)`
+  - 110 `mktOwnWhy(v)`
+  - 111 `mktListOwn(vid)`
+  - 115 `mktUnlist(vid)`
+- **116** delivery (10.2b «Få henne levert»): a skipper from the yard sails a boat of yours that nobody is aboard to the port you choose, for
+  - 119 `mktDelWhy(v, to)`
+  - 120 `mktDeliver(vid, to)`
+  - 126 `mktHour(H)`
+- **142** the boat you traded in (M5, B2): she lies at the yard and is bought by a fisherman, who puts her out again a week or two later at
+  - 144 `mktTradeIn(type, engH, port, old)`
+  - 145 `mktTiListing(r)`
+  - 158 `mktBrokerListings(H)`
+  - 172 `mktEvery(H)`
 
-## `src/js/core/09l-sponsor.js` (26 linjer)
+## `src/js/core/09l-sponsor.js` (31 linjer)
 
 Sponsorer (M6 in docs/planer/butikker-og-sponsorer.md 4 and 5; CLAUDE.md: a real name, logo or product only with a written
 
@@ -2153,7 +2154,7 @@ Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.
   - 95 `nett()`
   - 107 `netShop()`
 
-## `src/js/ui/phone/13c-megler.js` (152 linjer)
+## `src/js/ui/phone/13c-megler.js` (156 linjer)
 
 Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/planer/butikker-og-sponsorer.md 3.3, 10.2, 10.2b)
 
@@ -2163,10 +2164,10 @@ Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/pla
   - 37 `mgGoal(Q)`
   - 41 `mgOwnRow(v)`
   - 51 `megler()`
-  - 68 `mgWishCard()`
-  - 77 `mgSheet(Q)`
-  - 111 `mgHere()`
-  - 118 `mgAct(a, d)`
+  - 69 `mgWishCard()`
+  - 78 `mgSheet(Q)`
+  - 115 `mgHere()`
+  - 122 `mgAct(a, d)`
 
 ## `src/js/ui/phone/14-act.js` (276 linjer)
 
@@ -2251,7 +2252,7 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 170 `turFotoUi()`
   - 174 `turFotoShoot(id)`
 
-## `src/js/ui/05g-press.js` (75 linjer)
+## `src/js/ui/05g-press.js` (76 linjer)
 
 ---------- Kystposten on the phone (core/09h-press.js): the front page and the local tab, a story to read on, the unread count on
 
@@ -2259,12 +2260,12 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 6 `pressImg(s, small)`
   - 13 `pressPage(local)`
   - 26 `pressArticle(s)`
-  - 31 `pressFind(key)`
-  - 33 `pressNotify(s)`
-  - 40 `pressFlush()`
-  - 51 `pressFetch(force)`
-  - 66 `pressSkreiFetch()`
-  - 74 `pressStart()`
+  - 32 `pressFind(key)`
+  - 34 `pressNotify(s)`
+  - 41 `pressFlush()`
+  - 52 `pressFetch(force)`
+  - 67 `pressSkreiFetch()`
+  - 75 `pressStart()`
 
 ## `src/js/ui/06-logbook.js` (115 linjer)
 
@@ -2296,7 +2297,7 @@ Father's naust: setting it to rights and the trophy wall (core/07c-naust.js, cor
 
 - **1** Father's naust: setting it to rights and the trophy wall (core/07c-naust.js, core/09b-records.js)
 
-## `src/js/ui/06d-season-folk.js` (76 linjer)
+## `src/js/ui/06d-season-folk.js` (77 linjer)
 
 the phone's Sesong and Folk apps (05.10.2026; the rules are in core/09c-seasons.js and core/09d-folk.js)
 
@@ -2390,13 +2391,13 @@ Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps ev
   - 199 `appSeen(id)`
   - 200 `hbUpdate()`
 
-## `src/js/ui/10g-wardrobe.js` (125 linjer)
+## `src/js/ui/10g-wardrobe.js` (133 linjer)
 
 Garderoben: the player changes how his figure looks (Jonas 10.10.2026)
 
 - **1** Garderoben: the player changes how his figure looks (Jonas 10.10.2026)
 - **14** the right-hand side: what the current tab offers
-- **43** the little renderer
+- **50** the little renderer
 
 ## `src/js/ui/08-actions.js` (415 linjer)
 
@@ -2707,7 +2708,7 @@ The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the to
 
 - **1** The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the top and the end of the purchase
 
-## `src/js/ui/10r-sponsor.js` (42 linjer)
+## `src/js/ui/10r-sponsor.js` (52 linjer)
 
 Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
 
@@ -3044,7 +3045,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 274 `drawBeams(VP, eye, t)`
   - 302 `drawChunkLights(VP, eye)`
 
-## `src/js/view3d/07-harbour-unit.js` (205 linjer)
+## `src/js/view3d/07-harbour-unit.js` (223 linjer)
 
 ---------- the harbour unit (tools/harbour/kaimottak.py): quay, fish plant, crane, forklift, ice silo and bunker station in one ----------
 
@@ -3061,11 +3062,11 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 109 `siteModel(k)`
   - 119 `drawSites(eye, VP, near, far)`
 - **128** sponsors' signs (M7, docs/planer/butikker-og-sponsorer.md F2 and 4.4)
-  - 144 `signTex(sp)`
-  - 158 `signSeen(M, F, VP, eye)`
-  - 169 `drawSigns(eye, VP)`
-  - 193 `signOcc(VP)`
-  - 204 `signTake()`
+  - 150 `signTex(sp)`
+  - 164 `signSeen(M, F, VP, eye)`
+  - 176 `drawSigns(eye, VP)`
+  - 205 `signOcc(VP)`
+  - 222 `signTake()`
 
 ## `src/js/view3d/08-plants.js` (456 linjer)
 
@@ -3529,7 +3530,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 409 `drawEffects(VP, eye, BM, dt, t)`
   - 511 `updateLabels(VP, eye, W, Hh)`
 
-## `src/js/view3d/25-controls.js` (211 linjer)
+## `src/js/view3d/25-controls.js` (214 linjer)
 
 ---------- controls ----------
 
