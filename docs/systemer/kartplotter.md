@@ -128,3 +128,31 @@ Tromsøyas gater kom og gikk i kartplotteren. `vecPrune` slapp vec-flisene som l
 Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontroll: med kartet over Tromsø og båten ved Båtsfjord sto 3 666 veier igjen etter en runde med `vecPrune`, mot 0 uten. Det er målt med `KYST_VEC=1`, fordi vec-pakkene bare er med i bygget da.
 
 - **Fangstfeltene uten sirkel** (Jonas 28.10.2026: «Fjern sirklene for fangstfelt langs hele kysten. Bare navn på felt langs hele kysten er ok, men det skal ikke vises som en definert sirkel»): `renderStatic` i `ui/03-map.js` tegner bare feltets navn (fra `view.z ≥ 0,5`). Fisket bruker feltene som før.
+
+## 5.47 Mindre støy i kartet: navnene med prioritet og navnet ved trykk (E1–E2, Jonas 02.11.2026)
+
+Jonas, med et bilde fra Hammerfest: «Vi må passe på at ikke blir alt for mye info og navn på kartet som overlapper hverandre slik at det bare blir støy.» Valgene 1A, 2A og 3A i `docs/planer/kart-etiketter.md`.
+
+- **Én runde for navnene (E1, `renderStatic` i `ui/03-map.js`):** navnene samles (`lbl`) og settes i prioritetsrekkefølge:
+  0. stedsnavnene av rang 0 (de største øyene, byene og fjordene), som før: de er få, og de er det man finner fram etter. Uten dem forsvant «Senja» under et mottaksnavn i regionkartet (`charttest`). Det er et avvik fra 2A, der stedsnavnene kom etter havnene.
+  1. handelsstedene (mottak, butikk, verft, naust)
+  2. dine merker og fangstmerkene
+  3. rorbuene
+  4. havnene
+  5. de navngitte feltene
+  6. dybdetallene og resten av stedsnavnene
+
+  Et navn som ville dekke et annet, tegnes ikke. Ikonet står, og navnet går i `LBLHID`.
+- **Havnene (3A):** en havn får ikke navn når et handelssted innen 1 km har samme stedsnavn først, eller når en havn med samme navn står innen 1,5 km.
+- **AIS-navnene (`renderDyn`, 1A):** fiskebåtene (kystflåten, Senja-flåten og havflåten) får navn bare når de er ute, ikke i havn, og bare når kartet er under 4 km høyt. Navnene viker for alt det statiske laget satte (`LBLBOX`) og for hverandre. Spillerne og den valgte båten får alltid navn.
+- **Navnet ved trykk (E2, `tapName`):** et trykk på et ikon som står uten navn, viser navnet i en mørk boble i 2,5 sekunder. Trykket gjør ellers det det gjorde før (ruta). Trykk på en båt gir AIS-kortet, og trykk på en annens redskap gir redskapskortet.
+- **Test:** `tests/etikett.py` (med vec-pakkene): Hammerfest, Bergen og Tromsø i begge formater. Ingen navn overlapper, fiskebåtene i havn står uten navn, og trykket viser navnet og tar det bort igjen.
+- **Større ikoner som viser hva stedet er** (Jonas 02.11.2026: «Kan du gjøre iconer litt større slik at de er lettere å se for brukerne? Lag det gjerne også slik at ikonene er relevante for hva de står for»): handelsstedene er 19 px tvers over nær inne (før 12,5), havnene 15 px (før 10) og rorbuene 16 px (før 11).
+  - Mottaket: fisk med øye på blå sirkel.
+  - Butikken: krok med øye og mothake på oransje firkant.
+  - Verftet: båt på slipp med styrehus på grønn sirkel.
+  - Naustet: brunt naust med de brede portene.
+  - Havna: anker (`anchorPath`) på grønnblå sirkel.
+  - Rorbua: rødt hus med dør på tre pæler.
+  - Navnene står ett ikon og 5 px til høyre for ikonet.
+

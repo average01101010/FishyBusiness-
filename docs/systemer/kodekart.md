@@ -1756,7 +1756,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 111 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 124 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (712 linjer)
+## `src/js/ui/03-map.js` (763 linjer)
 
 ---------- map ----------
 
@@ -1788,21 +1788,23 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 326 `scheduleChart()`
   - 329 `renderBase()`
   - 343 `updateMapButtons()`
-  - 354 `renderStatic()`
-  - 428 `portIcon(p, s, u)`
-  - 443 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 462 `scheduleStatic()`
-  - 467 `aisTrack(id, H)`
-  - 472 `aisInfo(n)`
-  - 486 `renderAisCard()`
-  - 487 `renderDyn()`
-  - 565 `pinAdd(mp)`
-  - 570 `pinOpen(id, fresh)`
-  - 590 `pinKb()`
-  - 621 `ptrUp(e)`
-  - 651 `unzoom()`
-  - 658 `portByLabel(pt)`
-  - 663 `addWaypoint(pt)`
+  - 355 `tapName(mp, rr)`
+  - 360 `renderStatic()`
+  - 459 `portIcon(p, s, u)`
+  - 480 `anchorPath(x, y, s, u)`
+  - 488 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 507 `scheduleStatic()`
+  - 512 `aisTrack(id, H)`
+  - 517 `aisInfo(n)`
+  - 531 `renderAisCard()`
+  - 532 `renderDyn()`
+  - 616 `pinAdd(mp)`
+  - 621 `pinOpen(id, fresh)`
+  - 641 `pinKb()`
+  - 672 `ptrUp(e)`
+  - 702 `unzoom()`
+  - 709 `portByLabel(pt)`
+  - 714 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (219 linjer)
 
@@ -2018,12 +2020,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (904 linjer)
+## `src/js/ui/phone/07-patch.js` (906 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 897 `patch()`
+  - 899 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 

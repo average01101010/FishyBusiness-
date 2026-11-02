@@ -54,4 +54,6 @@ Stikkprøven (`/stikkprove`) i stående og liggende format på Hammerfest, Berge
 
 ## Status
 
-- 02.11.2026: planen lagt fram. Venter på valgene og klarsignal.
+- 02.11.2026: planen lagt fram.
+- 02.11.2026: **E1 og E2 bygd** (Jonas: «Gjennomfør E1 og E2», valgene 1A, 2A og 3A). Se 5.47 i `kartplotter.md`.
+  - Hammerfest (Rypefjord, Jonas' bilde): butikken står alene, og havna like ved har bare ikon (navnet ved trykk). Ingen overlapp der, i Bergen eller i Tromsø, i begge formater (`etikett.py`).
