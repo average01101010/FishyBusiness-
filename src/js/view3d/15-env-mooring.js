@@ -21,6 +21,7 @@
     // the snow on quays, breakwaters and roofs: the shore's (the snow line under the sea), or the fresh fall
     env.snowC = Math.max(snowNow == null ? 0 : clamp(1 - snowNow / 60, 0, 1) * 0.6, WETQ.fresh * 0.95);   // (the old snow on a quay or a road is cleared and trodden; the fresh fall lies white)
   }
+  const CDR = {t:0, d:[0, 0, 1700, 2900]};   // the drift of the cloud on the fells (two layers, m), see computeEnv
   function computeEnv(H){
     // the sun's and the moon's true azimuths onto the grid the world is drawn on
     const s = sunAt(H), el = s.el, er = el * DEG, gz = gridGamma({x:bv.x / 1000, y:bv.z / 1000}) * DEG, saz = s.az - gz; env.el = el;
@@ -41,9 +42,19 @@
     // the cloud base on the fells (G5): from about 2 700 m under a broken sky down to 250-300 m under a full grey one, 150 m lower in rain
     // or snow; only a sky over 55 % cloud lays it on the ground at all. Its colour is the overcast horizon's, so the cloud on the fell is the sky's
     env.cbase = 250 + 2500 * Math.pow(1 - env.cloud, 1.5) - 150 * sstep(0.1, 0.6, env.precip || 0); env.cstr = sstep(0.55, 0.85, env.cloud) * 0.92;
+    // the layer's thickness (02.11.2026): about 450 m in a sky just grey enough to lay it on the fells, to some 1 500 m under a full
+    // overcast, so in a thin layer the highest tops stand above it, as they do on the coast
+    env.cthick = 450 + 1100 * sstep(0.7, 1, env.cloud);
     env.ccol = hor.map(v => v * 0.86);
-    // the cloud on the fells drifts with the wind (a tenth of its speed, as the eye sees the cloud's edge move), from the shared clock
-    { const wd = env.windDir || [1, 0], w = env.wind || windAt(H), s = (H * 3600) * w * 0.1; env.cdrift = [-(wd[0] * s) % 4096, -(wd[1] * s) % 4096]; }
+    // the cloud on the fells drifts downwind, gathered frame by frame in real seconds (as the sky's clouds, cloudStep): two layers, one at
+    // a fifth of the wind and one slower and veered 30 degrees, so its edge changes shape slowly. (Before 02.11.2026 it was the shared
+    // clock's hours times the wind now: a change of the wind of a hundredth of a m/s moved the cloud hundreds of metres, and on the fells
+    // it boiled from frame to frame with the camera still. Jonas' video.) The noise repeats at 4096 m, so the wrap is seamless.
+    { const now = performance.now(), dt = CDR.t ? Math.min(0.25, Math.max(0, (now - CDR.t) / 1000)) : 0; CDR.t = now;
+      const wd = env.windDir || [1, 0], w = clamp(env.wind != null ? env.wind : windAt(H), 0, 30), ra = (0.3 + 0.2 * w) * dt, rb = (0.2 + 0.12 * w) * dt, c = 0.866, sn = 0.5;
+      CDR.d[0] -= wd[0] * ra; CDR.d[1] -= wd[1] * ra; CDR.d[2] -= (wd[0] * c - wd[1] * sn) * rb; CDR.d[3] -= (wd[1] * c + wd[0] * sn) * rb;
+      for (let i = 0; i < 4; i++) CDR.d[i] = ((CDR.d[i] % 4096) + 4096) % 4096;
+      env.cdrift = CDR.d; }
     env.stars = sstep(-5, -12, el) * (1 - env.cloud); env.spec = sstep(-1, 4, el) * (1 - env.cloud) * 2.2;
     env.night = sstep(3, -5, el);
     // moon: where it is, how full, and the light it gives at night
