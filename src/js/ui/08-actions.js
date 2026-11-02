@@ -411,4 +411,4 @@ $('kinoHud').onclick = () => { document.body.classList.toggle('kino-clean'); kin
 $('fotoBtn').onclick = () => turFotoShoot(null);
 $('phoneFab').onclick = () => PHONE.toggle();
 $('plotStyle').onclick = () => {};
-hooks.on3dFail = () => { setBodyView(false); $('loader').classList.add('gone'); $('plotClose').hidden = true; tab = 'route'; renderPanel(); applyView(); renderStatic(); renderDyn(); };
+hooks.on3dFail = () => { setBodyView(false); loaderGone(); $('plotClose').hidden = true; tab = 'route'; renderPanel(); applyView(); renderStatic(); renderDyn(); };

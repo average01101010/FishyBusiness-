@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['laster-021126', '02.11.2026', 'Ro mens kysten lastes', 'Quiet while the coast loads', [
+       ['Ingenting legger seg lenger oppå skjermen mens spillet laster. Kortet om båten etter far, «Mens du var borte» og meldingene fra kystradioen og folk på land kommer når kysten er lastet, i den rekkefølgen de kom.', 'Nothing lies over the screen any more while the game loads. The card about father\'s boat, «While you were away» and the messages from the coast radio and people ashore come when the coast has loaded, in the order they came.']
+    ]],
     ['skodde-021126', '02.11.2026', 'Skodda på fjellet', 'The cloud on the fells', [
        ['Skodda på fjellet driver nå rolig med vinden i stedet for å flakke, og endrer form litt etter litt.', 'The cloud on the fells now drifts calmly with the wind instead of flickering, and slowly changes shape.'],
        ['Skylaget har en overside: i et tynt lag står de høyeste toppene over skya, og nær lia er skodda tynnere enn langt unna.', 'The cloud layer has a top: in a thin layer the highest peaks stand above it, and near the slope the cloud is thinner than far away.'],
