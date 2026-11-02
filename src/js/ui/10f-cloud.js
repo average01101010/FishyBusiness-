@@ -41,7 +41,8 @@ function cloudDev(){
 function cloudMeta(){
   // at the gate the game is not loaded yet (S comes in bootGame)
   const S = cloudS() || {}, ua = navigator.userAgent, b = S.boat || {};
-  const browser = /SamsungBrowser/.test(ua) ? 'samsung' : /Edg\//.test(ua) ? 'edge' : /Firefox\//.test(ua) ? 'firefox' : /Chrome\//.test(ua) ? 'chrome' : /Safari\//.test(ua) ? 'safari' : 'other';
+  // Opera is told apart from Chrome (it is Chromium and says Chrome/ too), so its frame rate shows on its own (tilbakemelding #109)
+  const browser = /SamsungBrowser/.test(ua) ? 'samsung' : /OPR\/|OPX\/|OPT\//.test(ua) ? 'opera' : /Edg\//.test(ua) ? 'edge' : /Firefox\//.test(ua) ? 'firefox' : /Chrome\//.test(ua) ? 'chrome' : /Safari\//.test(ua) ? 'safari' : 'other';
   const platform = /Android/.test(ua) ? 'android' : /iPhone|iPad|iPod/.test(ua) ? 'ios' : /Windows/.test(ua) ? 'windows' : /Mac OS X/.test(ua) ? 'mac' : /Linux/.test(ua) ? 'linux' : 'other';
   const pwa = !!(window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches));
   const fleet = S.fleet || [], VES = typeof VESSELS !== 'undefined' ? VESSELS : {};
