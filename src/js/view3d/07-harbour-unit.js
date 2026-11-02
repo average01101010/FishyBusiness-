@@ -140,7 +140,13 @@
   const SIGNF = {shop:{x0:-16.2, x1:-12.4, y0:QTOP + 2.7, y1:QTOP + 4.6, z:-(11.5 - 2.5)}, s:{x0:-16.2 - 5, x1:-12.4 - 5, y0:QTOP + 2.7, y1:QTOP + 4.6, z:-(11.5 - 2 - 2.5)}};
   const SIGNV = {pl:{}, last:0, act:performance.now(), tex:{}, q:{}, seen:0, cur:[], oq:{}};
   ['pointerdown', 'keydown', 'wheel'].forEach(e => addEventListener(e, () => { SIGNV.act = performance.now(); }, {passive:true}));
-  const signSp = id => typeof spOf === 'function' ? (spOf('sign', id) || spOf('sign', 'all')) : null;
+  // the placement for a place: its own (the port's id), its kind's ('butikk:all', 'mottak:all', 'verft:all'), or everywhere ('all')
+  const signSp = (id, kind) => typeof spOf === 'function' ? (spOf('sign', id) || spOf('sign', kind + ':all') || spOf('sign', 'all')) : null;
+  // the plant (kaimottak.py: the building x -26..0.5, the silo at x 2.5, the pump at 17.5): on the deck east of the silo, 12 m in; the yard
+  // (steder.py y: the berths at x -20 and 30, the hull on blocks at x -57): at the deck's east end, 6 m in
+  SIGNF.mottak = {x0:6.0, x1:9.8, y0:QTOP + 2.0, y1:QTOP + 3.9, z:-12.0}; SIGNF.y = {x0:43.0, x1:46.8, y0:QTOP + 2.0, y1:QTOP + 3.9, z:-6.0};
+  // a model's own place for it (anchors.sign = [x0, x1, y0, y1, z] in the game's frame, from the next export of the buildings), else the one here
+  const signF = (M, k) => { const A = M && M.A && M.A.sign; return Array.isArray(A) && A.length === 5 ? {x0:A[0], x1:A[1], y0:A[2], y1:A[3], z:A[4]} : SIGNF[k]; };
   function signTex(sp){
     const key = sp.id; if (SIGNV.tex[key]) return SIGNV.tex[key].t;
     const cv = document.createElement('canvas'); cv.width = cv.height = 256; const g = cv.getContext('2d');
@@ -161,30 +167,36 @@
     if (P.some(q => q.w <= 0)) return {area:0, ang:90, ok:false};
     let a = 0; for (let i = 0; i < 4; i++){ const p = P[i], q = P[(i + 1) % 4]; const cx = (v => Math.max(-1, Math.min(1, v))); a += cx(p.x) * cx(q.y) - cx(q.x) * cx(p.y); }
     const area = Math.abs(a) / 2 / 4;   // of the screen (NDC is 2 x 2), clipped to it
+    let u = 0; for (let i = 0; i < 4; i++){ const p = P[i], q = P[(i + 1) % 4]; u += p.x * q.y - q.x * p.y; } const whole = Math.abs(u) / 2 / 4, inside = whole > 0 ? area / whole : 0;   // the share of it inside the screen
     // the field's normal (model +z) in the eye's frame, against the direction from the field to the eye (the origin)
     const nx = M[8], ny = M[9], nz = M[10], nl = Math.hypot(nx, ny, nz) || 1, cxm = (P[0].X + P[2].X) / 2, cym = (P[0].Y + P[2].Y) / 2, czm = (P[0].Z + P[2].Z) / 2, dl = Math.hypot(cxm, cym, czm) || 1;
     const cos = -(nx * cxm + ny * cym + nz * czm) / nl / dl, ang = Math.acos(Math.max(-1, Math.min(1, cos))) * 180 / Math.PI;
-    return {area, ang, ok:area >= 0.015 && ang < 55};
+    return {area, ang, inside, ok:area >= 0.015 && ang < 55 && inside >= 0.5};
   }
   function drawSigns(eye, VP){
     const now = performance.now(), dt = Math.min(0.5, (now - (SIGNV.last || now)) / 1000); SIGNV.last = now;
     const live = !document.hidden && now - SIGNV.act < 120000, list = [];
-    for (const s of sitesNow()) if (s.k === 'shop' && !s.near){ const sp = signSp('finnsnes'); if (sp) list.push({sp, F:SIGNF.shop, M:chain(M4.T(s.o[0] - eye[0], (s.lift || 0) - eye[1], s.o[1] - eye[2]), M4.RY(Math.atan2(-s.u[1], s.u[0]))), o:s.o}); }
-    for (const U of UNITA) if (U.v === 's'){ const sp = signSp(U.id); if (sp && Math.hypot(U.o[0] - eye[0], U.o[1] - eye[2]) < 600) list.push({sp, F:SIGNF.s, M:unitMat(U, eye), o:U.o}); }
-    SIGNV.seen = 0; SIGNV.cur = []; if (!list.length) return;
+    for (const s of sitesNow()) if (s.k === 'shop' && !s.near){ const sp = signSp('finnsnes', 'butikk'); if (sp) list.push({sp, F:signF(siteModel('shop'), 'shop'), key:'shop', M:chain(M4.T(s.o[0] - eye[0], (s.lift || 0) - eye[1], s.o[1] - eye[2]), M4.RY(Math.atan2(-s.u[1], s.u[0]))), o:s.o}); }
+    for (const U of UNITA){ if (Math.hypot(U.o[0] - eye[0], U.o[1] - eye[2]) > 600) continue; const k = U.v === 's' ? 's' : U.v === 'y' ? 'y' : 'mottak', sp = signSp(U.id, k === 's' ? 'butikk' : k === 'y' ? 'verft' : 'mottak');
+      if (sp) list.push({sp, F:signF(unitModel(U.v), k), key:k + (U.v === 's' || U.v === 'y' ? '' : U.v), M:unitMat(U, eye), o:U.o}); }
+    SIGNV.seen = 0; SIGNV.cur = []; SIGNV.flags = 0; SIGNV.drawn = list.map(L => L.key); if (!list.length) return;
     for (const L of list){
-      const F = L.F, key = L.F === SIGNF.shop ? 'shop' : 's'; if (!SIGNV.q[key]) SIGNV.q[key] = texQuad([F.x0, F.y0, F.z], [F.x1, F.y0, F.z], [F.x1, F.y1, F.z], [F.x0, F.y1, F.z]);
+      const F = L.F, key = L.key; if (!SIGNV.q[key]) SIGNV.q[key] = texQuad([F.x0, F.y0, F.z], [F.x1, F.y0, F.z], [F.x1, F.y1, F.z], [F.x0, F.y1, F.z]);
       drawTexQuad(SIGNV.q[key], signTex(L.sp), L.M, VP, true, [0, 0, 1]);
       // the two posts from the deck to the banner's top (in the eye's frame, as the plant's wires are drawn)
       const W = p => [L.M[0] * p[0] + L.M[4] * p[1] + L.M[8] * p[2] + L.M[12], L.M[1] * p[0] + L.M[5] * p[1] + L.M[9] * p[2] + L.M[13], L.M[2] * p[0] + L.M[6] * p[1] + L.M[10] * p[2] + L.M[14]];
       if (PM && PM.wire){ nSetup(VP); for (const x of [F.x0 + 0.2, F.x1 - 0.2]) drawN(PM.wire, limbM(W([x, QTOP, F.z - 0.06]), W([x, F.y1 + 0.05, F.z - 0.06]), 0.05)); }
+      // the partner's flag on a pole of its own beside the banner (data.flag): 7 m, the flag 1.8 x 1.2 m from the pole's top
+      if (L.sp.data && L.sp.data.flag){ const px = F.x1 + 1.2, top = QTOP + 7.0; if (PM && PM.wire){ nSetup(VP); drawN(PM.wire, limbM(W([px, QTOP, F.z]), W([px, top, F.z]), 0.06)); }
+        const fk = 'f' + key; if (!SIGNV.q[fk]) SIGNV.q[fk] = texQuad([px + 0.08, top - 1.25, F.z], [px + 1.88, top - 1.25, F.z], [px + 1.88, top - 0.05, F.z], [px + 0.08, top - 0.05, F.z]);
+        drawTexQuad(SIGNV.q[fk], signTex(L.sp), L.M, VP, true, [0, 0, 1]); SIGNV.flags = (SIGNV.flags || 0) + 1; }
       if (Math.hypot(L.o[0] - eye[0], L.o[1] - eye[2]) > 150) continue;
-      SIGNV.cur.push({id:L.sp.id, F, M:L.M, key});
+      const ok = L.sp.id + '@' + key + ':' + Math.round(L.o[0]) + ',' + Math.round(L.o[1]); SIGNV.cur.push({id:L.sp.id, ok, F, M:L.M, key});
       // hidden behind something (a boat, the tank, a shed): the occlusion query of the last frames says (signOcc); without WebGL 2 there
       // is no such query, and nothing is counted rather than counting what may be hidden
-      const O = SIGNV.oq[L.sp.id], vis = !!(O && O.vis);
+      const O = SIGNV.oq[ok], vis = !!(O && O.vis);
       const r = signSeen(L.M, F, VP, eye), C = SIGNV.pl[L.sp.id] || (SIGNV.pl[L.sp.id] = {imp:0, sec:0, run:0, area:0}); r.ok = r.ok && vis; r.vis = vis;
-      C.last = {area:+r.area.toFixed(4), ang:Math.round(r.ang), vis:r.vis}; if (r.ok && live){ C.run += dt; C.area = Math.max(C.area, r.area); SIGNV.seen++; if (C.run >= 1){ if (C.run - dt < 1) C.imp++; C.sec += dt; } } else C.run = 0;
+      C.last = {area:+r.area.toFixed(4), ang:Math.round(r.ang), vis:r.vis, cells:O ? O.cells : 0, inside:+(r.inside || 0).toFixed(2)}; if (r.ok && live){ C.run += dt; C.area = Math.max(C.area, r.area); SIGNV.seen++; if (C.run >= 1){ if (C.run - dt < 1) C.imp++; C.sec += dt; } } else C.run = 0;
     }
     gl.useProgram(PL.p);
   }
@@ -193,11 +205,17 @@
   function signOcc(VP){
     if (!GL2 || !SIGNV.cur.length) return;
     gl.colorMask(false, false, false, false); gl.depthMask(false);
-    for (const c of SIGNV.cur){ const O = SIGNV.oq[c.id] || (SIGNV.oq[c.id] = {q:null, pend:false, vis:false});
-      if (O.pend){ if (!gl.getQueryParameter(O.q, gl.QUERY_RESULT_AVAILABLE)) continue; O.vis = !!gl.getQueryParameter(O.q, gl.QUERY_RESULT); O.pend = false; }
-      if (!O.q) O.q = gl.createQuery(); const F = c.F, k = 'o' + c.key;
-      if (!SIGNV.q[k]) SIGNV.q[k] = texQuad([F.x0 + 0.3, F.y0 + 0.2, F.z + 0.03], [F.x1 - 0.3, F.y0 + 0.2, F.z + 0.03], [F.x1 - 0.3, F.y1 - 0.2, F.z + 0.03], [F.x0 + 0.3, F.y1 - 0.2, F.z + 0.03]);
-      gl.beginQuery(gl.ANY_SAMPLES_PASSED_CONSERVATIVE, O.q); drawTexQuad(SIGNV.q[k], SIGNV.tex[c.id].t, c.M, VP, false, [0, 0, 1]); gl.endQuery(gl.ANY_SAMPLES_PASSED_CONSERVATIVE); O.pend = true; }
+    // six cells (3 x 2), each with a query of its own: the banner counts as unobstructed when at least three of them show (IAB: half its
+    // pixels in view); a cell's answer comes a frame or two later
+    for (const c of SIGNV.cur){ const O = SIGNV.oq[c.ok] || (SIGNV.oq[c.ok] = {q:[], pend:[], cell:[], vis:false, cells:0});
+      const F = c.F, w = (F.x1 - F.x0) / 3, hh = (F.y1 - F.y0) / 2;
+      for (let n = 0; n < 6; n++){
+        if (O.pend[n]){ if (!gl.getQueryParameter(O.q[n], gl.QUERY_RESULT_AVAILABLE)) continue; O.cell[n] = !!gl.getQueryParameter(O.q[n], gl.QUERY_RESULT); O.pend[n] = false; }
+        if (!O.q[n]) O.q[n] = gl.createQuery(); const k = 'o' + c.key + n, cx = F.x0 + (n % 3) * w, cy = F.y0 + Math.floor(n / 3) * hh, z = F.z + 0.03;
+        if (!SIGNV.q[k]) SIGNV.q[k] = texQuad([cx + 0.05, cy + 0.05, z], [cx + w - 0.05, cy + 0.05, z], [cx + w - 0.05, cy + hh - 0.05, z], [cx + 0.05, cy + hh - 0.05, z]);
+        gl.beginQuery(gl.ANY_SAMPLES_PASSED_CONSERVATIVE, O.q[n]); drawTexQuad(SIGNV.q[k], SIGNV.tex[c.id].t, c.M, VP, false, [0, 0, 1]); gl.endQuery(gl.ANY_SAMPLES_PASSED_CONSERVATIVE); O.pend[n] = true;
+      }
+      O.cells = O.cell.filter(Boolean).length; O.vis = O.cells >= 3; }
     gl.depthMask(true); gl.colorMask(true, true, true, true); gl.useProgram(PL.p);
   }
   // the counts since the last time, per placement ({pl, imp, sec}), handed over to be sent (ui/10r-sponsor.js)

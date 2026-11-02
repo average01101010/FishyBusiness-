@@ -22,4 +22,9 @@ function spUrl(site){ if (!/^https:\/\//.test(site || '')) return null; try { co
 const SP_TEST = [
   {id:-1, kind:'item', target:'garnhaler', data:{model:'Nordlys GH-200', line:'Garnhaler med hydraulisk drift'}, sponsor:{id:-1, name:'Nordlys Utstyr', logo:null, site:'https://example.org/nordlys'}},
   {id:-2, kind:'item', target:'jukse', data:{model:'Nordlys J-3'}, sponsor:{id:-1, name:'Nordlys Utstyr', logo:null, site:'https://example.org/nordlys'}},
-  {id:-3, kind:'sign', target:'all', data:{}, sponsor:{id:-1, name:'Nordlys Utstyr', logo:null, site:'https://example.org/nordlys'}}];
+  {id:-4, kind:'press', target:'kystposten', data:{h:'Nordlys Utstyr: haler og redskap til kystflåten', text:'Garnhalere, linehalere og juksamaskiner, levert og montert langs hele kysten. Se utvalget hos oss.'}, sponsor:{id:-1, name:'Nordlys Utstyr', logo:null, site:'https://example.org/nordlys'}},
+  {id:-5, kind:'look', target:'top', data:{name:'Nordlys arbeidsjakke', tp:'oilskin', tk:2}, sponsor:{id:-1, name:'Nordlys Utstyr', logo:null, site:'https://example.org/nordlys'}},
+  {id:-6, kind:'event', target:'lofot', data:{prize:'en garnhaler til vinneren'}, sponsor:{id:-1, name:'Nordlys Utstyr', logo:null, site:'https://example.org/nordlys'}},
+  {id:-7, kind:'gift', target:'welcome', data:{item:'olje', text:'En oljehyre til deg som er ny på kysten.'}, sponsor:{id:-1, name:'Nordlys Utstyr', logo:null, site:'https://example.org/nordlys'}},
+  {id:-8, kind:'broker', target:'b1', data:{type:'sjark', year:1996, price:1290000, port:'finnsnes', name:'Nordlys I', hours:8400, line:'Godt vedlikeholdt sjark, ny motor 2019.', featured:true, url:'https://example.org/nordlys/sjark'}, sponsor:{id:-2, name:'Nordlys Båtmegling', logo:null, site:'https://example.org/megling'}},
+  {id:-3, kind:'sign', target:'all', data:{flag:true}, sponsor:{id:-1, name:'Nordlys Utstyr', logo:null, site:'https://example.org/nordlys'}}];

@@ -25,12 +25,19 @@ const WARD = (() => {
           + sub(L2('Farge (som håret)', 'Colour (as the hair)')) + colRow(LOOK_HAIR_C, LOOK_HAIR_CN, l.hc, 'hc');
       case 'hat': return sub(L2('Hodeplagg', 'Headwear')) + '<div class="wd-chips">' + LOOK_HAT.map(h => chip(h[ix], l.ht === h[0], 'data-wd="set" data-k="ht" data-v="' + h[0] + '"')).join('') + '</div>'
         + (l.ht === 'none' ? '' : sub(L2('Farge', 'Colour')) + colRow(LOOK_COL, LOOK_COL_N, l.hk, 'hk', '<button class="wd-chip small' + (l.hk == null ? ' on' : '') + '" data-wd="set" data-k="hk" data-v="-">' + L2('Som den er', 'As it comes') + '</button>'));
-      case 'top': return sub(L2('Jakke og overdel', 'Jacket')) + '<div class="wd-chips">' + LOOK_TOP.map(h => chip(h[ix], l.tp === h[0], 'data-wd="set" data-k="tp" data-v="' + h[0] + '"')).join('') + '</div>' + sub(L2('Farge', 'Colour')) + colRow(LOOK_COL, LOOK_COL_N, l.tk, 'tk');
+      case 'top': return sub(L2('Jakke og overdel', 'Jacket')) + '<div class="wd-chips">' + LOOK_TOP.map(h => chip(h[ix], l.tp === h[0], 'data-wd="set" data-k="tp" data-v="' + h[0] + '"')).join('') + '</div>' + sub(L2('Farge', 'Colour')) + colRow(LOOK_COL, LOOK_COL_N, l.tk, 'tk') + spTop(l);
       case 'legs': return sub(L2('Buksefarge', 'Trouser colour')) + colRow(LOOK_COL, LOOK_COL_N, l.lg, 'lg');
       case 'shoe': return sub(L2('Sko og støvler', 'Shoes and boots')) + '<div class="wd-chips">' + LOOK_SHOE.map(h => chip(h[ix], l.sh === h[0], 'data-wd="set" data-k="sh" data-v="' + h[0] + '"')).join('') + '</div>'
         + sub(L2('Farge', 'Colour')) + '<div class="wd-sws">' + LOOK_SHOE_COLS.map(i => swatch(LOOK_COL[i], l.sc === i, 'data-wd="set" data-k="sc" data-v="' + i + '"', LOOK_COL_N[i][S.lang === 'no' ? 0 : 1])).join('') + '</div>';
     }
     return '';
+  }
+  // a partner's garment (M8, F5; docs/planer/butikker-og-sponsorer.md): free to wear, marked, one of the shapes and colours there are
+  function spTop(l){
+    const P = typeof spOf === 'function' ? spOf('look', 'top') : null, D = P && P.data; if (!D || !LOOK_TOP.some(x => x[0] === D.tp) || !(D.tk >= 0 && D.tk < LOOK_COL.length)) return '';
+    const on = l.tp === D.tp && l.tk === D.tk, esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
+    return sub(L2('Fra en samarbeidspartner', 'From a partner')) + '<div class="wd-chips">' + chip(esc(D.name || P.sponsor.name) + ' · ' + L2('gratis', 'free'), on, 'data-wd="sptop"') + '</div>' +
+      '<div class="wd-note"><span class="ic-sp-tag">' + L2('Samarbeid', 'Partnership') + '</span> ' + L2('levert av ', 'supplied by ') + esc(P.sponsor.name) + '. ' + L2('Bare utseende: den virker som de andre.', 'Looks only: it works as the others do.') + '</div>';
   }
   function html(){
     return '<div class="wd-view"><canvas class="wd-cv"></canvas><div class="wd-vb">'
@@ -106,6 +113,7 @@ const WARD = (() => {
     const b = e.target.closest('[data-wd]'); if (!b || !root) return; const a = b.dataset.wd;
     if (a === 'tab'){ st.tab = b.dataset.v; render(true); }
     else if (a === 'set') set(b.dataset.k, b.dataset.v);
+    else if (a === 'sptop'){ const P = spOf('look', 'top'); if (P){ st.look.tp = P.data.tp; st.look.tk = +P.data.tk; st.look = lookClean(st.look); render(true); if (typeof cloudEv === 'function') cloudEv('sp_look', {pl:P.id}); } }
     else if (a === 'turn'){ st.yaw += 0.6 * +b.dataset.v; redraw(); }
     else if (a === 'zoom'){ st.zoom = st.zoom ? 0 : 1; render(true); }
     else if (a === 'rand'){ st.look = randomLook(); render(true); }

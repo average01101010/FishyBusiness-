@@ -237,11 +237,13 @@ def anchors():
         x0, x1, y0, y1 = [B.SHOP[0] + BX, B.SHOP[1] + BX, B.SHOP[2] + BY, B.SHOP[3] + BY]
         A['solids'] = [quay, [(x0 + x1) / 2, -(y0 + y1) / 2, x1 - x0 + 1.1, y1 - y0 + 1.1, -3.0, B.RIDGE + 0.3]]
         A['lamps'] = [G(x, y, QTOP + 8.85) for x, y in ((-24.0, 1.4), (0.0, 1.4), (24.0, 1.4), (-6.0, 23.0), (12.0, 23.0))] + [G(B.DOOR + BX, B.SHOP[2] + BY - 0.75, QTOP + 2.9)]
+        A['sign'] = [-16.2 + BX, -12.4 + BX, QTOP + 2.7, QTOP + 4.6, -(B.SHOP[2] + BY - 2.5)]   # a partner's banner (M7), as the Finnsnes shop's
         return A
     K.HL, K.DEPTH, K.WALL_BOT = YE - 0.4, YB - 0.4, YBOT
     A = K.anchors()
     hx0, hx1, hy0, hy1 = -14.0, 26.0, 12.0, 32.0
     A['face'] = {'hl': YE + 0.4, 'depth': YB + 0.4, 'kerb': K.KERB, 'deckY': QTOP, 'bottom': YBOT}
+    A['sign'] = [43.0, 46.8, QTOP + 2.0, QTOP + 3.9, -6.0]   # a partner's banner (M7): at the deck's east end, 6 m in
     A['deck'] = [G(-YE - 0.4, 0.0), G(YE + 0.4, 0.0), G(YE + 0.4, YB + 0.4), G(-YE - 0.4, YB + 0.4)]
     A['basin'] = {'x': 66.0, 'z': 44.0, 'depth': -13.0}
     A['berths'] = {'main': {'x': MAIN_X, 'len': 90.0}, 'bunker': {'x': BUNK_X, 'len': 40.0}}
