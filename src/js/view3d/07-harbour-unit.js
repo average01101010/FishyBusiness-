@@ -142,9 +142,9 @@
   ['pointerdown', 'keydown', 'wheel'].forEach(e => addEventListener(e, () => { SIGNV.act = performance.now(); }, {passive:true}));
   // the placement for a place: its own (the port's id), its kind's ('butikk:all', 'mottak:all', 'verft:all'), or everywhere ('all')
   const signSp = (id, kind) => typeof spOf === 'function' ? (spOf('sign', id) || spOf('sign', kind + ':all') || spOf('sign', 'all')) : null;
-  // the plant (kaimottak.py: the building x -26..0.5, the silo at x 2.5, the pump at 17.5): on the deck east of the silo and the parked truck, 14 m in; the yard
+  // the plant (kaimottak.py: the building x -26..0.5, the silo at x 2.5, the pump at 17.5): high on the plant building's front at its west end (the deck east of the silo had the ice chute and the truck in front); the yard
   // (steder.py y: the berths at x -20 and 30, the hull on blocks at x -57): at the deck's east end, 6 m in
-  SIGNF.mottak = {x0:9.5, x1:13.3, y0:QTOP + 2.0, y1:QTOP + 3.9, z:-14.0}; SIGNF.y = {x0:43.0, x1:46.8, y0:QTOP + 2.0, y1:QTOP + 3.9, z:-6.0};
+  SIGNF.mottak = {x0:-24.0, x1:-20.2, y0:QTOP + 3.4, y1:QTOP + 5.3, z:-(10.0 - 0.08)}; SIGNF.y = {x0:43.0, x1:46.8, y0:QTOP + 2.0, y1:QTOP + 3.9, z:-6.0};
   // a model's own place for it (anchors.sign = [x0, x1, y0, y1, z] in the game's frame, from the next export of the buildings), else the one here
   const signF = (M, k) => { const A = M && M.A && M.A.sign; return Array.isArray(A) && A.length === 5 ? {x0:A[0], x1:A[1], y0:A[2], y1:A[3], z:A[4]} : SIGNF[k]; };
   function signTex(sp){
