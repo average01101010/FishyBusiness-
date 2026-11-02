@@ -7,7 +7,7 @@
 Forberedelser til hele kysten (planen står i `docs/kart/`). Fra K4 er spillets ramme den nasjonale UTM 33-rammen (4.7).
 
 - **Projeksjonen** (`core/00-proj.js`, første fil i det felles skriptet, med `'use strict'`):
-  - `utm33(lat, lon)` gir `{E, N, gamma, k}` og `utm33inv(E, N)` går tilbake. Krüger/Karney med sjette ordens rekker. Avviket mot PROJ (EPSG:25833) er 0,006 mm fra Utsira til Grense Jakobselv (`projtest.py`, referansen fra `tools/map/projref.py`).
+  - `utm33(lat, lon)` gir `{E, N, gamma, k}` og `utm33inv(E, N)` går tilbake. Krüger/Karney med sjette ordens rekker. Avviket mot PROJ (EPSG:25833) er 0,006 mm fra Utsira til Grense Jakobselv (`tests/unit/proj.test.mjs`, flyttet fra `projtest.py` 02.11.2026, referansen fra `tools/map/projref.py`).
   - `gamma` er meridiankonvergensen: sann kurs = rutenettskurs + γ.
   - `natP`/`natLL` er den nasjonale rammen i km: x = (E + 250 km)/1000, y = (8 050 km − N)/1000. Fra K4 er dette spillets ramme: `P`/`LL` i `01-world.js` er `natP`/`natLL`.
 - **`gridKey(ix, iy)`** er nøkkelen for rutenettsceller, med `gridKeyX`/`gridKeyY` tilbake. Den tåler 2²⁰ celler hver vei og negative tall. Strøklengdebufferet, varmekartet, 3D-bitene og kamerakollisjonen bruker den.

@@ -1,7 +1,26 @@
 // The national frame (core/00-proj.js, 01-world.js): UTM zone 33 in km, x = (E + 250 km) / 1000 east, y = (8 050 km − N) / 1000 south,
 // and the grid convergence that turns a grid bearing into a true one. Known points along the coast go there and back.
+// UTM 33 itself against PROJ (tests/proj_ref.json from tools/map/projref.py, pyproj EPSG:25833), moved here from tests/projtest.py 02.11.2026.
+import { readFileSync } from 'node:fs';
+const REF = JSON.parse(readFileSync(new URL('../proj_ref.json', import.meta.url), 'utf8'));
 export default function (t){
-  const {natP, natLL, P, gridGamma, trueDeg, newState} = t.K;
+  const {natP, natLL, P, gridGamma, trueDeg, newState, utm33, utm33inv} = t.K;
+  {
+    const RAD = Math.PI / 180;
+    let dE = 0, dG = 0, dK = 0, dBack = 0, dFrame = 0;
+    for (const q of REF){
+      const u = utm33(q.lat, q.lon); dE = Math.max(dE, Math.hypot(u.E - q.E, u.N - q.N)); dG = Math.max(dG, Math.abs(u.gamma - q.gamma)); dK = Math.max(dK, Math.abs(u.k - q.k));
+      const ll = utm33inv(u.E, u.N); dBack = Math.max(dBack, Math.hypot((ll.lat - q.lat) * 111320, (ll.lon - q.lon) * 111320 * Math.cos(q.lat * RAD)));
+      const g = natLL(natP(q.lat, q.lon)); dFrame = Math.max(dFrame, Math.hypot((g.lat - q.lat) * 111320, (g.lon - q.lon) * 111320 * Math.cos(q.lat * RAD)));
+    }
+    t.ok(dE < 0.001, 'UTM 33 fram er innen 1 mm av PROJ i alle ' + REF.length + ' punktene (' + (dE * 1000).toFixed(4) + ' mm)');
+    t.ok(dG < 1e-7 && dK < 1e-9, 'meridiankonvergensen og punktskalaen stemmer med PROJ');
+    t.ok(dBack < 1e-5 && dFrame < 1e-5, 'tilbake til lat/lon innen 0,01 mm, også gjennom rammen i km');
+    const gj = natP(69.7895, 30.9555), id = natP(58.9, 11.43), sw = natP(57.0, 4.0);
+    t.ok(0 < gj.x && gj.x < 1450 && 0 < gj.y && gj.y < 1720 && 0 < id.x && id.x < 1450 && 0 < id.y && id.y < 1720 && sw.x > 0 && sw.y < 1720, 'rammen rommer Grense Jakobselv, Iddefjorden og havet utenfor Jæren');
+    const a = utm33(69.5, 25), c = utm33(69.5001, 25), brg = Math.atan2(c.E - a.E, c.N - a.N) / RAD;
+    t.ok(Math.abs(brg + a.gamma) < 1e-3, 'sann nord ligger γ mot klokka fra rutenettets nord (sann kurs = rutenettkurs + γ)');
+  }
   t.K.set('S', newState());
   const pts = {Bergen:[60.3913, 5.3221], Ålesund:[62.4722, 6.1549], Bodø:[67.2804, 14.4049], Finnsnes:[69.2287, 17.9816], Hammerfest:[70.6634, 23.6821], Vardø:[70.3705, 31.1107]};
   for (const [name, [lat, lon]] of Object.entries(pts)){

@@ -1,4 +1,4 @@
-# Reference values for tests/projtest.py from pyproj (PROJ, EPSG:25833 ETRS89 / UTM 33N): a grid over Norway and the far corners.
+# Reference values for tests/unit/proj.test.mjs from pyproj (PROJ, EPSG:25833 ETRS89 / UTM 33N): a grid over Norway and the far corners.
 # pip install pyproj; python3 tools/map/projref.py
 import json, os
 from pyproj import Transformer, Proj
