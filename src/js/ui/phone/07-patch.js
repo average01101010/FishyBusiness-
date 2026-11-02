@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['kyst15-021126', '02.11.2026', 'Kystbåten på 14,99 m', 'The 14.99 m coastal vessel', [
+       ['Kystbåten på 14,99 m er bygd på nytt: ett skrog med kjølen og avrundet hekk, en åpen halestasjon om styrbord med haler, kar, sløyebord og luke, leider opp til shelterdekket, og et styrhus i full bredde med vindusbånd, konsoll og skjermer.', 'The 14.99 m coastal vessel is built anew: one hull with the keel and a rounded stern, an open hauling station to starboard with the hauler, the tub, the gutting table and the hatch, a ladder up to the shelter deck, and a full-width wheelhouse with its window band, console and screens.'],
+       ['Lanternene og fiskelysene står på lovlige plasser, og støtteseglet er satt til sjøs og beslått i havn.', 'The lanterns and the fishing lights stand where the rules ask, and the steadying sail is set at sea and furled in port.'],
+    ]],
     ['m5-021126', '02.11.2026', 'Båten er din', 'The boat is yours', [
        ['Når du kjøper en båt, males navnet på og flagget går opp, mens kameraet går rundt henne ved kaia. Det varer 15 sekunder og kan hoppes over.', 'When you buy a boat, the name is painted on and the flag goes up while the camera turns round her at the quay. It lasts 15 seconds and can be skipped.'],
        ['Båten du bytter inn, blir kjøpt av en fisker og kommer igjen hos Kystmegleren ved samme verft, med nytt navn.', 'The boat you trade in is bought by a fisherman and comes back at Kystmegleren at the same yard, under a new name.']]],

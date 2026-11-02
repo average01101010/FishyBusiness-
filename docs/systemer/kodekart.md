@@ -2042,12 +2042,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (914 linjer)
+## `src/js/ui/phone/07-patch.js` (918 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 907 `patch()`
+  - 911 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -2767,7 +2767,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 47 `bootGame()`
   - 152 `bootFail(e)`
 
-## `src/js/vessel3d.js` (1300 linjer)
+## `src/js/vessel3d.js` (1303 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -3185,7 +3185,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 116 `handKit(t)`
   - 137 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (488 linjer)
+## `src/js/view3d/13-instruments.js` (490 linjer)
 
 ---------- the skiff's live instruments ----------
 
@@ -3213,16 +3213,16 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 175 `limbM(A, B, r)`
   - 178 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
   - 314 `drawSkiffGlass(BMrel, VP)`
-  - 322 `jigRail(t, G)`
-  - 343 `drawJigRail(BMrel, VP, t, G, dt)`
-  - 376 `drawGlass(m, BMrel, VP)`
-  - 395 `drawDrops(m, BMrel, VP, t)`
-  - 406 `buildBoat()`
-  - 432 `buildFlag()`
-  - 444 `flagTex()`
-  - 459 `penTex()`
-  - 472 `mastTop(G)`
-  - 476 `updateFlag(t, appW)`
+  - 324 `jigRail(t, G)`
+  - 345 `drawJigRail(BMrel, VP, t, G, dt)`
+  - 378 `drawGlass(m, BMrel, VP)`
+  - 397 `drawDrops(m, BMrel, VP, t)`
+  - 408 `buildBoat()`
+  - 434 `buildFlag()`
+  - 446 `flagTex()`
+  - 461 `penTex()`
+  - 474 `mastTop(G)`
+  - 478 `updateFlag(t, appW)`
 
 ## `src/js/view3d/14-sea.js` (300 linjer)
 
