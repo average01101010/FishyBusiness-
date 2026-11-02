@@ -97,7 +97,7 @@ begin
   if free <= 0 then raise exception 'no owner left'; end if;
   insert into reg_held (player_id, id) values (p, reg_take.rid)
     on conflict (player_id, id) do update set n = least(20, reg_held.n + 1), at = now();
-  delete from world_agg;   -- the register changed: everybody sees it at once (a purchase is rare)
+  delete from world_agg where y is not null;   -- the register changed: everybody sees it at once (a purchase is rare; the where for pg_safeupdate)
   return reg_free_counts();
 end $$;
 create or replace function public.reg_free(rid text) returns jsonb
@@ -107,7 +107,7 @@ begin
   if p is null then raise exception 'not signed in'; end if;
   delete from reg_held h where h.player_id = p and h.id = reg_free.rid and h.n <= 1;
   update reg_held h set n = h.n - 1 where h.player_id = p and h.id = reg_free.rid;
-  delete from world_agg;
+  delete from world_agg where y is not null;
   return reg_free_counts();
 end $$;
 
