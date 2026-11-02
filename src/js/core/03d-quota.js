@@ -115,6 +115,8 @@ const STOCK = {
 };
 const STKY = {};
 function stockYear(sp, y){
+  // the server's stock when the admin has turned it on (B4, world_cfg.stock_server; WSH.stock comes with the world)
+  if (typeof WSH !== 'undefined' && WSH.stock){ const r = WSH.stock.find(q => q[0] === sp && q[1] === y); if (r) return {ssb:r[2], tac:r[3], adv:r[4]}; }
   const key = sp + ':' + y + ':' + (S && S.qseed || 0); if (STKY[key]) return STKY[key];
   const P = STOCK[sp], seed = (S && S.qseed || 0) % 100003, u = k => h2(y * 977 + seed, 4000 + k + ALLSP.indexOf(sp) * 31);
   const curve = b => Math.pow(b, 0.55) * Math.sqrt(Math.min(1, b / P.Bpa)), A = P.adv27 / curve(P.ssb[2027]);
@@ -148,19 +150,23 @@ function qyOf(y){ S.qy = S.qy || {}; let Y = S.qy[y]; if (Y) return Y;
   Y = S.qy[y] = {d:-1, c:0, me:0, r:0, stop:null, ann:null, add:0, free:null, log:[], n:Math.round(OPENF.n * (0.92 + 0.14 * u(1))), act:0.8 + 0.18 * u(2), sk:0.85 + 0.3 * u(3), freeDay:doyOf(y, 9, 27) + Math.floor(u(4) * 14)};
   for (const k in S.qy) if (+k < y - 2) delete S.qy[k];   // the save keeps three years
   return Y; }
+// the open group's boats out: the register's (OPENF.n, drawn per year) less the players active in the open group this year (WSH.openBoats,
+// B4): a player who fishes the open group takes the place of one of the virtual boats, so the number of boats out stays right
+function qyBoats(Y, y){ const p = typeof WSH !== 'undefined' && WSH.y === y ? (WSH.openBoats || 0) : 0; return Math.max(Math.round(Y.n * 0.5), Y.n - p); }
 function qyStep(Y, y, d){
+  const n = qyBoats(Y, y);
   const O = yearQuota(y).open, Qf = O.Q - O.ff, H = hOfDoy(y, d), m = new Date(Date.UTC(y, 0, 1 + d)).getUTCMonth();
   let good = 0; for (const h of [8, 12, 16]) if (windAt(H + h) < 12) good++;
   const mx = O.max.reduce((a, v, i) => a + OPENF.mix[i] * (v + Y.add), 0) * (Y.free != null && d >= Y.free ? 2 : 1), gu = O.guar.reduce((a, v, i) => a + OPENF.mix[i] * v, 0);
   const open = Y.stop == null || d < Y.stop, cap = Y.act * (open ? mx : gu), e = OPENF.season[m] * good / 3 * stockF('torsk', H + 12) * Y.sk;
-  const dc = Y.n * OPENF.k * e * Math.max(0, cap - Y.c / Y.n); Y.c += dc; Y.r = 0.7 * Y.r + 0.3 * dc;
+  const dc = n * OPENF.k * e * Math.max(0, cap - Y.c / n); Y.c += dc; Y.r = 0.7 * Y.r + 0.3 * dc;
   if (Y.stop != null || Y.free != null) return;
   // (the stops came between 24 March and 15 May; later in the year the boats' own maximum quotas hold the catch)
   if (d >= 14 && d < doyOf(y, 6, 1) && Y.c + Y.me + wshOpen(y) + 7 * Y.r >= Qf){ Y.stop = d + 7; Y.ann = d; Y.log.push([d, 'stop', Y.stop]); return; }
   // on 1 May and 1 June: a raise when what the boats can take on their maximum quotas falls short of the group quota, and free
   // fishing in the autumn when even the raised quotas will not take it
-  const got = Y.c + Y.me + wshOpen(y), proj = Math.max(got, Y.n * Y.act * mx * 0.97);
-  if ((d === doyOf(y, 5, 1) || d === doyOf(y, 6, 1)) && proj < 0.95 * Qf){ const s = Math.max(0.5, Math.round((Qf - proj) / Y.n / Y.act * 2) / 2); Y.add += s; Y.log.push([d, 'raise', s]); }
+  const got = Y.c + Y.me + wshOpen(y), proj = Math.max(got, n * Y.act * mx * 0.97);
+  if ((d === doyOf(y, 5, 1) || d === doyOf(y, 6, 1)) && proj < 0.95 * Qf){ const s = Math.max(0.5, Math.round((Qf - proj) / n / Y.act * 2) / 2); Y.add += s; Y.log.push([d, 'raise', s]); }
   if (d === Y.freeDay && got < 0.85 * Qf){ Y.free = d; Y.log.push([d, 'free']); }
 }
 // the year's course up to H, or up to today for a later H (what is not yet known is not worked out)
@@ -191,8 +197,18 @@ function ffPct(H){ const d = doyH(H); let p = 0; for (const [d0, v] of ffPlan(ye
 // from one of them, so there is one owner fewer for each right you buy, and structuring takes the boat out for good. When the game
 // has real players on a shared server, they take NPCs' places in the same register. ----
 const REGN = {u7:300, h7:280, h8:230, h9:200, h10:162, h14:291, h20:103};
-function npcReg(){ return S.npcReg || (S.npcReg = {...REGN}); }
-function regTake(id){ const R = npcReg(); R[id] = Math.max(0, (R[id] || 0) - 1); }
+// B4 (02.11.2026): the register is the server's when the game is online (one for all players, supabase/migrations/20261102120000_register.sql:
+// a right one player buys is gone from the NPC owners for everybody, and a player who neither lands nor buys for 90 days gives the place
+// back); it comes with the world every ten minutes (WSH.reg) and after each purchase or sale. Offline the save keeps its own as before.
+function npcReg(){ const R = S.npcReg || (S.npcReg = {...REGN}); if (typeof WSH !== 'undefined' && WSH.reg) for (const k in REGN) if (WSH.reg[k] != null) R[k] = WSH.reg[k]; return R; }
+function regSend(fn, id){
+  if (typeof cloudRpc !== 'function' || typeof CLOUD === 'undefined' || !CLOUD.on || !CLOUD.user) return;
+  cloudRpc(fn, {rid:id}).then(r => { if (r && typeof r === 'object') WSH.reg = r; })
+    .catch(e => { if (/no owner left/.test(e && e.message)) log('Registeret på land hadde ingen eier igjen med den hjemmelslengden; kjøpet står i lagringen din.', 'The register ashore had no owner left at that quota length; the purchase stands in your save.'); });
+}
+function regTake(id){ const R = npcReg(); R[id] = Math.max(0, (R[id] || 0) - 1); regSend('reg_take', id); }
+// a right that leaves the player (sold with the boat) goes back to the NPC owners
+function regFree(id){ const R = npcReg(); R[id] = Math.min(REGN[id] || 0, (R[id] || 0) + 1); regSend('reg_free', id); }
 // the owner selling a right this week: a name and a home harbour, the same all week
 function regSeller(id, H){ const w = weekOfH(H), u = k => h2(w * 31 + id.charCodeAt(1) * 7 + id.length, 8200 + k);
   return {name:CREW_M[Math.floor(u(1) * CREW_M.length)] + ' ' + CREW_SN[Math.floor(u(2) * CREW_SN.length)], home:CREW_HOME[Math.floor(u(3) * CREW_HOME.length)][0]}; }

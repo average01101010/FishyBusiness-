@@ -236,9 +236,31 @@
   - **`progweek`:** 311 kg per tur mot 341 før B2. Blad B dag 18 mot 15, inngangen i lukket gruppe dag 23 mot 22.
   - **`geartest`:** garnet vest av Gryllefjord gikk over grensen (47 kg per garn) før `k` ble justert, og er innenfor etterpå.
 - **Tester:** ny `tests/unit/trykk.test.mjs` (21 sjekker: gruppekvotene, åpen gruppe etter stoppen, grunnlinja, skreien gjennom sesongen, ingen Senja-flåte, tiden). Grønne: `simday`, `calib`, `progweek`, `kvtest`, `geartest`, `bktest`, `heattest`, `jigalongtest`, `posttest` og `guidetest`. `quotatest` er rød på kvotesamarbeidet, som før (backloggen).
+- **Rettet i B4 (02.11.2026):**
+  - **Spillernes fangst trekkes fra flåten.** Lukket gruppes torsk og all hyse og sei viker for det spillerne har landet i år (`trkPlayersF`; de andres fangst fra serveren, din egen fra kvoten din). Åpen gruppes virtuelle båter er 2 100 minus de aktive spillerne (`qyBoats`).
+  - **Etterslepet:** grunnlinja følger trykket med etterslep, ikke månedstabellen direkte. Den er likevekten med trykket så lenge før som stedet trenger for å finne seg til ro (`1/(r+u)` timer, høyst 30 døgn, i steg på 6 timer). Et felt som fiskes hardt i mars, er derfor tynt ut i april og fylles over et par uker.
+  - **Trålerne og notbåtene** legges tre ganger så tett på fiskeplassene for aktive redskap (`felt.json` `g` = a eller b) i sitt hovedområde, utenfor grunnlinja.
+  - **Temperaturen** (`tempDepthK`, `TWARM`): fisken går dypere når overflaten er varmere enn den liker. Grensen er torsk og hyse 10 °C, sei 12, lyr 14 og kveite 10. Over grensen går den foretrukne dybden 12 % dypere per grad, høyst dobbelt så dypt.
+    - Kilder: Svein Sundby (UiB) i Fædrelandsvennen 10.08.2012: torsken holder seg helst i vann på 0–10 °C nær kysten, i fjordene og på bankene. HIs notat til reguleringsmøtet 2022 (sak 30, fiskeforbudet for torsk i Skagerrak): kysttorsken der lever i den varme enden av det den liker, blir stresset av små økninger, og har strategier for å komme seg gjennom varmt overflatevann om sommeren.
+    - Grensene for sei, lyr og kveite og 12 % per grad er anslag.
+    - Overflatetemperaturen er `seaTemp` (Senjas år, flyttet etter de månedlige snittene fra marine-API-et for stedet), per rute og time.
+  - **Kysttorsken følger ikke skreiens bestand.** Den stedegne torsken ganges ikke lenger med gytebestanden for NØ-arktisk torsk (`stockF`); det gjør bare skreien. Kysttorsken har egne vurderinger hos ICES (nord og sør for 62° N), men vi har ikke tidsserien. Derfor er den uten trend år for år. Sør for 62° N er nivået det sedlene viser.
+  - **Ikke rettet:** forholdet mellom totalbestand og gytebestand (×2). Torsk og hyse vurderes nå av den norsk-russiske gruppa (JRN-AFWG), ikke ICES, og tabellene deres for 2025 ble ikke funnet. Faktoren står som anslag. Beskatningsratene for artene uten bestand og tilveksten `r` er også anslag.
+  - **Kalibreringen etter B4:** summen per art over de fire Senja-stedene er innen 2–4 % av før B2, så `k` står.
+  - **Ytelsen:** en rute regner trykket for alle elleve arter med etterslep én gang per time. Det tar rundt 12 µs for en rute fra forrige time og 30 µs første gang ruta slås opp (fiskeplassene, grunnlinja). Oppslaget etterpå tar 0,13–0,21 µs. Et varmekart med 2 500 ruter koster da 30–75 ms én gang per spilltime (10 ekte minutter). Det bør flyttes ut av hovedtråden hvis det merkes på Pad 3.
+  - **Kg i timen med håndjuksa etter B4** (urørt avvik; før B2 → B2 → B4):
+
+    | Sted og måned | Torsk | Sei |
+    |---|---|---|
+    | Lofoten, mars | 29,6 → 13,5 → 8,2 | 8,6 → 29,6 → 17,5 |
+    | Bergen, mars | 33,1 → 12,9 → 10,8 | 9,7 → 46,9 → 34,9 |
+    | Båtsfjord, januar | 15,4 → 27,5 → 21,3 | |
+    | Bodø, mars | 39,8 → 16,4 → 12,6 | |
+    | Husøy, mars | 77,7 → 94,1 → 50,7 | |
+
 - **Antatt eller usikkert:**
   - Bestanden × 2, beskatningsratene og tilveksten `r` er anslag.
-  - Likevekten er kvasistatisk: den følger månedstabellene, ikke en ekte etterslep-dynamikk.
+  - Etterslepet er en lukket tilnærming (likevekten med trykket for en tid siden), ikke en simulert dynamikk.
   - Fordelingen av fisken mellom kyst og hav etter fangsten antar at flåten fisker der fisken er.
   - Trål og havfiske er lagt jevnt over hele hovedområdet utenfor grunnlinja.
   - Kysttorsken sør for 62° N er ikke en egen bestand.

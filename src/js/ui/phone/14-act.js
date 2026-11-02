@@ -141,7 +141,7 @@
       if (ti) switchVessel(d.k);
       else { const v = newVesselObj(d.k, S.boat.port); log('Kjøpte ' + V2.name.no + ' til flåten. Hun heter «' + v.boatName + '» og ligger i ' + portById(S.boat.port).name + '.', 'Bought the ' + V2.name.en + ' for the fleet. She is called «' + v.boatName + '» and lies at ' + portById(S.boat.port).name + '.'); }
       pressPut('boat', {type:d.k, nb:V2.isNew ? 1 : 0, price:V2.price});   // Kystposten (core/09h-press.js)
-      if (ti && S.lic){ log('Kvoten i lukket gruppe fulgte med den gamle båten.', 'The closed-group quota went with the old vessel.'); S.lic = null; freshQuota(); openUsedLoad(); }
+      if (ti && S.lic){ log('Kvoten i lukket gruppe fulgte med den gamle båten.', 'The closed-group quota went with the old vessel.'); regFree(S.lic.id); S.lic = null; freshQuota(); openUsedLoad(); }
     }
     else if (a === 'adminbuy'){
       // the admin's free vessel for testing (adminOk: Jonas' account on the cloud's hosts, any local build): no price, no right, no lock, no yard; she
@@ -210,7 +210,7 @@
     else if (a === 'struct'){
       // a structure quota: buy a right in the same group, scrap the boat, and add its quota factor less 10 % (03d-quota.js)
       const l = S.lic; if (!l || !structRoom(l, d.id) || !atTrade()) return; const pr = structPrice(d.id, S.t / 60), x = deal(pr, 0); if (!x.ok){ toast(whyText(x) || t('no_cash')); return; } finance(x, 180);
-      const sl = regSeller(d.id, S.t / 60), k = structIn(l, d.id, S.t / 60); pressPut('kvote', {kf:Math.round(k * 10000), type:S.boat.type});
+      const sl = regSeller(d.id, S.t / 60), k = structIn(l, d.id, S.t / 60); regTake(d.id);   // the boat structured away leaves the register too pressPut('kvote', {kf:Math.round(k * 10000), type:S.boat.type});
       msg('Fiskeridirektoratet', 'Strukturkvoten er tildelt «' + S.boatName + '»: kvotefaktor ' + fmt(k, 4) + ' fra båten til ' + sl.name + ' (' + HJ[d.id].hl + '), som er tatt ut av registeret. Den gjelder i 20 år.', 'The structure quota is granted to the «' + S.boatName + '»: quota factor ' + fmt(k, 4) + ' from ' + sl.name + '\'s boat (' + HJ[d.id].hl + '), which is struck off the register. It runs for 20 years.'); }
     else if (a === 'two'){
       // the special scheme under 11 m: one boat fishes both quotas, the other right is given up and the boat sold

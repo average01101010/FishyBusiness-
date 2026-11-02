@@ -268,7 +268,8 @@ function fkAvail(sp, q, T){
     const b = F && l >= 0 && F.base[l] === F.base[l] ? F.base[l] : 1, x = F && l >= 0 && F.skrei[l] === F.skrei[l] ? F.skrei[l] : 1;
     // the skrei is one body of fish: what the fleet has taken of it so far this season is not there further along (skreiLeft, 03g-trykk.js)
     if (T.skl === undefined) T.skl = skreiLeft(T.H);
-    return t.av * b + skreiPulse(c, T.H, T) * t.sf * q.skr * x * T.skl;
+    // the resident coastal cod is not the Northeast Arctic cod: it does not follow that stock's spawners (stockF), only the skrei does
+    return t.av / (t.sf || 1) * b + skreiPulse(c, T.H, T) * t.sf * q.skr * x * T.skl;
   }
   let v = F && l >= 0 ? fkAt(F.m, l, T.fk) : NaN;
   const mig = MIG[sp];
@@ -295,4 +296,17 @@ function skreiFlow(K, H){
   const c = lokOfCell({x:(gridKeyX(K) + 0.5) * 2, y:(gridKeyY(K) + 0.5) * 2}), l = c.l; if (l < 0) return 0;
   const x = F.skrei[l] === F.skrei[l] ? Math.min(1, F.skrei[l]) : 0; if (x <= 0) return 0;
   return x * clamp(skreiPulse(c, H) / 2.5, 0, 1);
+}
+
+// ---- the sea's warmth: the fish go deeper when the surface is warmer than they like (B4, 02.11.2026) ----
+// The cod keeps best to water of 0-10 °C on the coast, in the fjords and on the banks (Svein Sundby, Bergen University, 2012), and HI
+// notes that the coastal cod of the Skagerrak lives in the warm end of what it likes and is stressed by small rises, and gets through
+// a warm summer surface by keeping deeper. The upper limit per species (°C): cod and haddock 10 (that source), saithe 12, pollack 14,
+// halibut 10 (estimates); over it the preferred depth goes 12 % deeper per degree, at most twice as deep (an estimate). The surface
+// temperature is seaTemp (Senja's year moved by the marine API's monthly means at the place), kept per 2 km cell and hour.
+const TWARM = {torsk:10, hyse:10, sei:12, lyr:14, kveite:10};
+function tempDepthK(sp, c, H){
+  const tw = TWARM[sp]; if (!tw || !c) return 1;
+  const h = Math.floor(H); if (c.sH !== h){ c.sH = h; c.sst = seaTemp(h + 0.5, {x:c.cx, y:c.cy}); }
+  return c.sst > tw ? Math.min(2, 1 + 0.12 * (c.sst - tw)) : 1;
 }

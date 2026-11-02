@@ -21,9 +21,9 @@
 // (codChain), so the year's pressure of a group is its quota. The open group's pressure follows its own season day by day (qyAt: about
 // 2 100 boats, the stop, the raises; the open group's maximum-quota fishing stops when the Directorate says so, and the pressure with it).
 // Haddock and saithe: all the notes scaled to Norway's quota (norQuota). The other species: the notes as they were (no quota chain).
-// The players' landings in the open group come off its pressure (qyStep counts them, with the other players' from the server). The
-// closed groups' are not split by group on the server yet, so there a player's catch comes on top of the fleet's (a drop: B4 moves the
-// register and the groups' catch to the server).
+// The players' landings come off the groups' pressure, so the fleet never takes the same fish twice: the open group's in qyStep (with the
+// other players' from the server), the closed group's cod and all the haddock and saithe through trkPlayersF (B4: the others' catch this
+// year per group comes with the world, WSH.grp, and your own from the quota you have landed).
 //
 // How much of the cell's fish is taken: F against the fish there. The fish in an area is the species' biomass (from the spawning stock
 // for cod, haddock and saithe, HI/ICES via STOCK; for the rest the year's landings over a harvest rate) laid out by the catch per landing
@@ -47,19 +47,22 @@ function trkAreas(){
   if (TRK.A) return TRK.A;
   const area = P => { let a = 0; for (const p of P){ const r = p.rings[0]; let s = 0; for (let i = 0, j = r.length - 2; i < r.length; j = i, i += 2) s += (r[j] - r[i]) * (r[j + 1] + r[i + 1]); a += Math.abs(s) / 2; } return a; };
   const lok = RU.lok.map(h => Math.max(1, area(h.P))), hom = RU.hom.map(h => Math.max(1, area(h.P)));
-  const gc = new Float64Array(RU.lok.length), seen = new Set();
+  const gc = new Float64Array(RU.lok.length), gch = new Float64Array(RU.hom.length), seen = new Set(), seenA = new Set(), homI = new Map(RU.hom.map((h, i) => [h.c, i]));
   for (const f of (typeof feltData === 'function' && feltData()) || []){
+    // the grounds for active gear (trawl, seine, Danish seine) take the ocean fleet's pressure in their main area
+    if (f.g !== 'p') for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){ const ix = Math.floor(f.x / 2) + dx, iy = Math.floor(f.y / 2) + dy, k = gridKey(ix, iy); if (seenA.has(k)) continue;
+      if (Math.hypot((ix + 0.5) * 2 - f.x, (iy + 0.5) * 2 - f.y) > TRK.groundR + 1) continue; seenA.add(k); const c = lokOfCell({x:(ix + 0.5) * 2, y:(iy + 0.5) * 2}); const hi = c.l >= 0 ? homI.get(RU.lok[c.l].c.slice(0, 2)) : undefined; if (hi !== undefined) gch[hi]++; }
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){ const ix = Math.floor(f.x / 2) + dx, iy = Math.floor(f.y / 2) + dy, k = gridKey(ix, iy); if (seen.has(k)) continue;
       if (Math.hypot((ix + 0.5) * 2 - f.x, (iy + 0.5) * 2 - f.y) > TRK.groundR + 1) continue; seen.add(k); const c = lokOfCell({x:(ix + 0.5) * 2, y:(iy + 0.5) * 2}); if (c.l >= 0) gc[c.l]++; } }
-  return TRK.A = {lok, hom, gc, homI:new Map(RU.hom.map((h, i) => [h.c, i]))};
+  return TRK.A = {lok, hom, gc, gch, homI};
 }
 // a cell's weight within its location: three times on the named grounds; and the location's sum of weights (its cells, the ground
 // cells counted three times)
 function trkCellW(c){
   if (c.gw !== undefined) return c.gw;
-  let w = 1; const D = typeof feltData === 'function' && feltData();
-  if (D){ const x = c.cx, y = c.cy, s = FELT.cell; outer: for (let gy = Math.floor((y - 3) / s); gy <= Math.floor((y + 3) / s); gy++) for (let gx = Math.floor((x - 3) / s); gx <= Math.floor((x + 3) / s); gx++){ const a = FELT.grid.get(gridKey(gx, gy)); if (a) for (const f of a) if (Math.hypot(f.x - x, f.y - y) < TRK.groundR + 1){ w = TRK.groundW; break outer; } } }
-  return c.gw = w;
+  let w = 1, wa = 1; const D = typeof feltData === 'function' && feltData();
+  if (D){ const x = c.cx, y = c.cy, s = FELT.cell; for (let gy = Math.floor((y - 3) / s); gy <= Math.floor((y + 3) / s); gy++) for (let gx = Math.floor((x - 3) / s); gx <= Math.floor((x + 3) / s); gx++){ const a = FELT.grid.get(gridKey(gx, gy)); if (a) for (const f of a) if (Math.hypot(f.x - x, f.y - y) < TRK.groundR + 1){ w = TRK.groundW; if (f.g !== 'p') wa = TRK.groundW; } } }
+  c.gwa = wa; return c.gw = w;
 }
 // the national skrei season from the notes: the cod over the summer level, January-May, by month (kg a year at the notes' level)
 function trkSkreiMonths(D){
@@ -93,16 +96,16 @@ function trykkYear(sp, y){
   } else if (sp === 'hyse' || sp === 'sei'){
     const Y = yearQuota(y); Q.all = Y.nor[sp] * 1000; scale = {all:Q.all / Math.max(1, notes.all)};
   } else { Q.all = notes.all; scale = {all:1}; }
-  const K = new Float32Array(NL * 12), KO = new Float32Array(NL * 12), Hh = new Float32Array(NH * 12), sums = {};
+  const K = new Float32Array(NL * 12), KO = new Float32Array(NL * 12), KL = new Float32Array(NL * 12), Hh = new Float32Array(NH * 12), sums = {};
   for (const g of TRK_G) sums[g] = 0;
   const hph = TRK.hph;
   for (const tab of ['k', 'h']) for (const [a, ms] of o[tab]){
     const l = tab === 'k' ? lmap[a] : -1, h = tab === 'h' ? hmap[a] : -1;
     for (let m = 0; m < 12; m++){ const c = ms[m]; for (let i = 0; i < c.length; i += 3){
       const g = grpOf(tab, c[i]), kg = c[i + 1] / ny * (scale[g] || 0);
-      if (sp === 'torsk' && g === 'u11'){ const op = kg * scale.fo; sums.open += op; sums.u11 += kg - op; if (l >= 0){ KO[l * 12 + m] += op / hph; K[l * 12 + m] += (kg - op) / hph; } else if (h >= 0) Hh[h * 12 + m] += kg / hph; continue; }
+      if (sp === 'torsk' && g === 'u11'){ const op = kg * scale.fo; sums.open += op; sums.u11 += kg - op; if (l >= 0){ KO[l * 12 + m] += op / hph; K[l * 12 + m] += (kg - op) / hph; KL[l * 12 + m] += (kg - op) / hph; } else if (h >= 0) Hh[h * 12 + m] += kg / hph; continue; }
       sums[g] += kg;
-      if (l >= 0) K[l * 12 + m] += kg / hph; else if (h >= 0) Hh[h * 12 + m] += kg / hph;
+      if (l >= 0){ K[l * 12 + m] += kg / hph; if (g === 'g11' || g === 'g15' || g === 'g21') KL[l * 12 + m] += kg / hph; } else if (h >= 0) Hh[h * 12 + m] += kg / hph;
     } }
   }
   // the biomass: the stock (kg) laid out by catch per landing against the national mean for the gear and length group (the density),
@@ -123,7 +126,7 @@ function trykkYear(sp, y){
     if (tk > 0) for (const [a, ms] of o.k){ const l = lmap[a]; if (l >= 0) BK[l * 12 + m] = bk * dens(ms[m]) / tk; }   // per km²
     if (th > 0) for (const [a, ms] of o.h){ const h = hmap[a]; if (h >= 0) BH[h * 12 + m] = bh * dens(ms[m]) / th; }
   }
-  return TRK.ys[key] = {K, KO, Hh, BK, BH, sums, Q, notes, Bt, skrei:sp === 'torsk' ? trkSkreiMonths(D).map(v => v * (scale.u11 ? (Q.u11 + Q.open + Q.g11 + Q.g15 + Q.g21 + Q.tral + Q.hav) / Math.max(1, notes.u11 + notes.g11 + notes.g15 + notes.g21 + notes.tral + notes.hav) : 1)) : null};
+  return TRK.ys[key] = {K, KO, KL, Hh, BK, BH, sums, Q, notes, Bt, skrei:sp === 'torsk' ? trkSkreiMonths(D).map(v => v * (scale.u11 ? (Q.u11 + Q.open + Q.g11 + Q.g15 + Q.g21 + Q.tral + Q.hav) / Math.max(1, notes.u11 + notes.g11 + notes.g15 + notes.g21 + notes.tral + notes.hav) : 1)) : null};
 }
 // the species' biomass in the waters of fiske.json (kg): from the spawning stock where the game has one, else the landings over a harvest rate
 function trkBiomass(sp, y, notes){
@@ -140,22 +143,45 @@ function trykkOpenScale(H){
   const d = doyH(H), m = new Date(Date.UTC(y, 0, 1 + d)).getUTCMonth(); let notesDay = 0; for (let l = 0; l < RU.lok.length; l++) notesDay += T.KO[l * 12 + m] * 24;
   const r = Y.r * 1000; return notesDay > 0 ? clamp(r / notesDay, 0, 4) : 1;
 }
+// what is left of a group's quota for the fleet when the players have landed theirs this year (1: nothing landed by players): the
+// closed group's cod (lc) and all of the haddock and saithe (all); the others' from the server, your own from your quota this year
+function trkPlayersF(sp, y, Y){
+  const grp = typeof WSH !== 'undefined' && WSH.y === y ? WSH.grp || {} : {}, q = S && S.quota && S.quota.y === y ? S.quota : null;
+  if (sp === 'torsk'){ const QL = Y.Q.u11 + Y.Q.g11 + Y.Q.g15 + Y.Q.g21; if (!QL) return 1; const P = (grp['lukket:torsk'] || 0) + (S && S.lic && q ? q.torsk || 0 : 0); return clamp(1 - P / QL, 0, 1); }
+  if (sp === 'hyse' || sp === 'sei'){ if (!Y.Q.all) return 1; const P = (grp['open:' + sp] || 0) + (grp['lukket:' + sp] || 0) + (q ? q[sp] || 0 : 0); return clamp(1 - P / Y.Q.all, 0, 1); }
+  return 1;
+}
 // the fleet's pressure (kg an hour) and the share taken an hour at a 2 km cell, from the month's tables between mid-months (cached per
 // cell and hour for all species: c.tH, c.tF, c.tU)
+// the year, the month weights and the open group's scale of an hour, kept for the last hours asked (the lag reads a few hours back)
+const TRKM = new Map();
+function trkMonth(h){ let M = TRKM.get(h); if (M) return M; const y = yearH(h + 0.5);
+  M = {y, T:fkMonth(h + 0.5), osv:undefined, os(){ return this.osv === undefined ? (this.osv = trykkOpenScale(h + 0.5)) : this.osv; }};
+  if (TRKM.size > 400) TRKM.clear(); TRKM.set(h, M); return M; }
+// The baseline lags behind the pressure: a place fished hard comes down over days and fills again over days, so the balance at an hour is
+// the balance with the pressure some time before, as long as it takes the place to settle (1 / (r + u) hours: about ten days where the
+// fleet is light, less where it is heavy). In closed form: the pressure is read at H - that time (trkCell's lagged share, tU).
 function trkCell(c, H){
   const h = Math.floor(H); if (c.tH === h) return c;
   c.tH = h; c.tF = c.tF || new Float32Array(TRK_SP.length); c.tU = c.tU || new Float32Array(TRK_SP.length);
-  const y = yearH(H), T = fkMonth(H), l = c.l, A = trkAreas(), os = trykkOpenScale(H);
-  let hi = -1; if (c.hom === undefined){ const hc = l >= 0 ? RU.lok[l].c.slice(0, 2) : null; c.hom = hc && A.homI.has(hc) ? A.homI.get(hc) : -1; c.out = !insideBaseline({x:c.cx, y:c.cy}); }
-  hi = c.hom;
-  const w = l >= 0 ? trkCellW(c) : 1, wl = l >= 0 ? (A.lok[l] / 4 + (TRK.groundW - 1) * A.gc[l]) / (A.lok[l] / 4) : 1;
-  const mi = (arr, i) => arr[i * 12 + T.i0] * (1 - T.f) + arr[i * 12 + T.i1] * T.f;
-  for (let s = 0; s < TRK_SP.length; s++){
-    const Y = trykkYear(TRK_SP[s], y); if (!Y){ c.tF[s] = 0; c.tU[s] = 0; continue; }
+  const l = c.l, A = trkAreas();
+  if (c.hom === undefined){ const hc = l >= 0 ? RU.lok[l].c.slice(0, 2) : null; c.hom = hc && A.homI.has(hc) ? A.homI.get(hc) : -1; c.out = !insideBaseline({x:c.cx, y:c.cy}); }
+  const hi = c.hom, w = l >= 0 ? trkCellW(c) : 1, wa = l >= 0 ? (trkCellW(c), c.gwa) : 1;
+  const wl = l >= 0 ? (A.lok[l] / 4 + (TRK.groundW - 1) * A.gc[l]) / (A.lok[l] / 4) : 1, wh = hi >= 0 ? (A.hom[hi] / 4 + (TRK.groundW - 1) * A.gch[hi]) / (A.hom[hi] / 4) : 1;
+  // the pressure (kg an hour) and the fish (kg) in the cell at an hour
+  const at = (Hx, s) => {
+    const hk = Math.floor(Hx), M = trkMonth(hk), y = M.y, T = M.T, Ys = M.Ys || (M.Ys = TRK_SP.map(sp => trykkYear(sp, y))), Y = Ys[s]; if (!Y) return [0, 0];
+    const mi = (arr, i) => arr[i * 12 + T.i0] * (1 - T.f) + arr[i * 12 + T.i1] * T.f, pfs = M.pf || (M.pf = TRK_SP.map((sp, i) => trkPlayersF(sp, y, Ys[i]))), pf = pfs[s], sp_ = TRK_SP[s];
     let f = 0, b = 0;
-    if (l >= 0){ const fl = (mi(Y.K, l) + mi(Y.KO, l) * os) / (A.lok[l] / 4) * w / wl; f += fl; b += mi(Y.BK, l) * 4; }
-    if (hi >= 0 && c.out){ f += mi(Y.Hh, hi) / (A.hom[hi] / 4); b += mi(Y.BH, hi) * 4; }
-    c.tF[s] = f; c.tU[s] = b > 0 ? Math.min(0.05, f / b) : 0;
+    // the closed group's cod gives way to the players' (KL), haddock and saithe all of it (pf), the open group follows its season
+    if (l >= 0){ const kk = sp_ === 'torsk' ? mi(Y.K, l) - mi(Y.KL, l) * (1 - pf) : mi(Y.K, l) * pf; f += (kk + mi(Y.KO, l) * (sp_ === 'torsk' ? M.os() : 0)) / (A.lok[l] / 4) * w / wl; b += mi(Y.BK, l) * 4; }
+    if (hi >= 0 && c.out){ f += mi(Y.Hh, hi) * (sp_ === 'torsk' ? 1 : pf) / (A.hom[hi] / 4) * wa / wh; b += mi(Y.BH, hi) * 4; }
+    return [f, b];
+  };
+  for (let s = 0; s < TRK_SP.length; s++){
+    const [f, b] = at(H, s), u0 = b > 0 ? Math.min(0.05, f / b) : 0; c.tF[s] = f;
+    const lag = Math.round(Math.min(24 * 30, 1 / (TRK.r + u0)) / 6) * 6, [f1, b1] = at(H - lag, s);   // in steps of six hours, so the hours are shared
+    c.tU[s] = b1 > 0 ? Math.min(0.05, f1 / b1) : 0;
   }
   return c;
 }

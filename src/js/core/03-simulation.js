@@ -516,7 +516,7 @@ function denSp(sp, q, H, T){
   if (sp === 'uer' && !T.uerOpen) av *= 0.15;
   if (s.shell) v *= kingArea(p); else v *= school(sp, p, H);
   if (s.area) v *= AREAS[s.area](p, q.d, H, q.E);
-  return 1.6 * s.k * v * day * av * depthFactor(sp, q.d) * stockAt(p, sp, H) + tutBonus(sp, p);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
+  return 1.6 * s.k * v * day * av * depthFactor(sp, q.d, tempDepthK(sp, q.c, H)) * stockAt(p, sp, H) + tutBonus(sp, p);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
 }
 function density(sp, p, H){ const q = denPlace(p); return q ? denSp(sp, q, H, denTime(H)) : 0; }
 // Where the Greenland halibut is (07.10.2026, docs/plan-blakveite.md 1-2): the shelf edge between 300 and 1100 m (none shallower, none
@@ -594,7 +594,7 @@ function takeStock(p, kg, sp, npc){
 // fleet's in 03d-quota.js) and how many boats, and what they delivered to each plant (kg at game hour mH, decaying 3 % an hour as
 // S.market does). The fish they took comes down cell by cell and is taken from this game's sea at once (wshTake). S.wq holds what
 // goes up: the cells this game's boats took fish from, and its sales. rec is on only with the cloud. ----
-const WSH = {rec:false, y:0, open:0, boats:0, mkt:{}, mH:0};
+const WSH = {rec:false, y:0, open:0, boats:0, mkt:{}, mH:0, reg:null, openBoats:0, grp:{}, stock:null};
 function wq(){ return S.wq || (S.wq = {c:{}, l:[]}); }
 function wshOpen(y){ return WSH.y === y ? WSH.open : 0; }
 function wshSat(pid, sp, H){ const m = WSH.mkt[pid]; return m && m[sp] ? m[sp] * Math.pow(0.97, Math.max(0, H - WSH.mH)) : 0; }
@@ -631,7 +631,8 @@ function stockHour(H){
 }
 // preferred depth (m) and spread per species: cod and saithe on the banks, haddock deeper, ling and tusk deep
 const DPREF = Object.fromEntries(ALLSP.map(sp => [sp, SPECIES[sp].dep]));
-function depthFactor(sp, d){ const q = DPREF[sp]; return 0.3 + 0.7 * Math.exp(-((Math.log(Math.max(d, 2) / q[0]) / q[1]) ** 2)); }
+// k: the preferred depth moved by the sea's warmth (tempDepthK in 03f-fiske.js; 1 in water the species likes)
+function depthFactor(sp, d, k = 1){ const q = DPREF[sp]; return 0.3 + 0.7 * Math.exp(-((Math.log(Math.max(d, 2) / (q[0] * k)) / q[1]) ** 2)); }
 const SST = [3.6,3.1,3.2,3.9,5.6,8.2,10.8,11.4,9.8,7.8,6.0,4.6];
 // where a harbour unit stands (07-harbours.js) its quay is dry and its basin dredged
 // the depth below chart datum (m): the tiles' depth where they have it, else the sea floor offshore from the core, else the model
