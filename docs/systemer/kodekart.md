@@ -2905,7 +2905,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 116 `ridged(x, y)`
   - 117 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (508 linjer)
+## `src/js/view3d/01-shaders.js` (511 linjer)
 
 ---------- shaders ----------
 
@@ -2921,7 +2921,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 483 `buf(data, target, usage)`
   - 488 `airSet(u, terr)`
   - 493 `attr(loc, b, size)`
-  - 506 `upload(pos, col, idx)`
+  - 509 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (94 linjer)
 
@@ -3504,7 +3504,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **91** frame
   - 95 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (528 linjer)
+## `src/js/view3d/24-cinema.js` (590 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -3517,14 +3517,22 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 112 `kinoNext(t, want, why)`
   - 130 `kinoCam(t, rdt)`
   - 155 `introStart(sec)`
-  - 161 `frame()`
-  - 163 `frame0()`
-  - 349 `snapTake()`
-  - 354 `drawRoute(VP, eye)`
-  - 366 `driftSpray(VP, eye, dt, t, col)`
-  - 381 `drawSmoke(VP, eye, BM, dt)`
-  - 408 `drawEffects(VP, eye, BM, dt, t)`
-  - 510 `updateLabels(VP, eye, W, Hh)`
+- **161** the picture watched (02.11.2026; Jonas: «Det er viktig at vi fanger opp så mye potensielle feil som oppstår så fort som
+  - 174 `gfxErr(msg, ctx)`
+  - 179 `glReport(e, tag)`
+  - 180 `gfxStart(now)`
+  - 187 `gfxJudge(px, day, vis)`
+  - 194 `gfxPix(j)`
+  - 201 `gfxNaN(eye, VPn)`
+  - 211 `gfxEnd(now, eye, VPn, W, Hh)`
+  - 221 `frame()`
+  - 223 `frame0()`
+  - 411 `snapTake()`
+  - 416 `drawRoute(VP, eye)`
+  - 428 `driftSpray(VP, eye, dt, t, col)`
+  - 443 `drawSmoke(VP, eye, BM, dt)`
+  - 470 `drawEffects(VP, eye, BM, dt, t)`
+  - 572 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (205 linjer)
 

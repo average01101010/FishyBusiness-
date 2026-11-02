@@ -158,17 +158,78 @@
     INTRO = {t0:performance.now(), dur:sec || 5, e0:[x, Math.max(terrH(x, z), 0) + 2.4, z]}; cam.helm = false; return true;
   }
   let j0F = 0;
+  // ---------- the picture watched (02.11.2026; Jonas: «Det er viktig at vi fanger opp så mye potensielle feil som oppstår så fort som
+  // mulig») ----------
+  // What goes wrong in the picture without throwing, sent like the other errors (ui/10f-cloud.js cloudErr: once a session each, with the
+  // device), each with the graphics chip, the quality, the sea level and the view:
+  // - GL errors: one frame each five seconds asks the driver after each step (glChk); what came between the frames is told as that.
+  //   A wrong call leaves things out, black or in the wrong colour without stopping anything (the INVALID_OPERATION 1282 the tests
+  //   saw after the pennants, which no player could tell us).
+  // - NaN: the eye, the boat or the view matrix not a number, and the whole world or the boat is gone from the picture.
+  // - The picture: every fifteen seconds nine points of it (a 3 x 3 grid) are read back. In daylight, black twice running, or one
+  //   colour three times running in clear weather, is a picture that is not there (night, fog and the transitions are left out).
+  // - A canvas of 0 px while the 3D view is on.
+  const GFX = {probeAt:0, pixAt:0, black:0, flat:0, nan:false, px:new Uint8Array(4)};
+  const GLNAME = {1280:'INVALID_ENUM', 1281:'INVALID_VALUE', 1282:'INVALID_OPERATION', 1285:'OUT_OF_MEMORY', 1286:'INVALID_FRAMEBUFFER_OPERATION'};
+  function gfxErr(msg, ctx){
+    if (typeof cloudErr !== 'function') return;
+    let base = {}; try { base = {lvl:QUAL.lvl, sea:seaLvl, gl2:GL2, w:canvas.width, h:canvas.height, view:KINO.on ? 'kino' : SHOW ? 'show' : PAINTV ? 'paint' : cam.helm ? 'helm' : 'cam', vis:env.vis, day:env.day}; } catch (e){}
+    cloudErr(msg + ' · ' + GPU, 'view3d gfx', JSON.stringify(Object.assign(base, ctx || {})), 'gfx');
+  }
+  function glReport(e, tag){ GLPROBE = false; gfxErr('3D GL-feil ' + (GLNAME[e] || e) + ' etter ' + tag, {code:e, tag}); }
+  function gfxStart(now){
+    GLPROBE = false;
+    if (GLCHK || now - GFX.probeAt < 5000 || gl.isContextLost()) return;
+    GFX.probeAt = now; GLPROBE = true;
+    const e = gl.getError(); if (e && e !== gl.CONTEXT_LOST_WEBGL) glReport(e, 'mellom rammene');
+  }
+  // what nine points of the picture say (also for the test): 'black' in daylight, 'flat' in daylight and clear weather, or ''
+  function gfxJudge(px, day, vis){
+    let mx = 0; const lo = [255, 255, 255], hi = [0, 0, 0];
+    for (const p of px) for (let c = 0; c < 3; c++){ const v = p[c]; if (v < lo[c]) lo[c] = v; if (v > hi[c]) hi[c] = v; if (v > mx) mx = v; }
+    if (!day) return {k:'', rgb:lo};
+    if (mx < 10) return {k:'black', rgb:lo};
+    return {k:Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]) <= 2 && vis > 10 ? 'flat' : '', rgb:lo};
+  }
+  function gfxPix(j){
+    GFX.black = j.k === 'black' ? GFX.black + 1 : 0; GFX.flat = j.k === 'flat' ? GFX.flat + 1 : 0;
+    if (GFX.black === 2) gfxErr('3D svart skjerm på dagtid', {rgb:j.rgb});
+    if (GFX.flat === 3) gfxErr('3D bildet er én farge på dagtid', {rgb:j.rgb});
+  }
+  // (before the camera is placed, from the boat and the camera's own numbers: a NaN there throws in the reads of the map that place
+  // it, and the frame never gets to its end; after the frame, from the eye and the view matrix)
+  function gfxNaN(eye, VPn){
+    if (GFX.nan) return false;
+    const fin = a => a.every(v => v === undefined || isFinite(v));
+    const boat = fin([bv.x, bv.y, bv.z, bv.head, bv.pitch, bv.roll]), camOk = fin([cam.yaw, cam.pitch, cam.dist, cam.zoom, cam.hy, cam.hp]);
+    if (boat && camOk && (!eye || (fin(eye) && fin([VPn[0], VPn[5], VPn[14]])))) return false;
+    GFX.nan = true; const r = v => v === undefined ? null : isFinite(v) ? Math.round(v * 100) / 100 : String(v);
+    gfxErr('3D NaN i ' + (!boat ? 'egen båt' : 'kameraet'), {eye:eye ? eye.map(r) : null, bv:{x:r(bv.x), y:r(bv.y), z:r(bv.z), head:r(bv.head), pitch:r(bv.pitch), roll:r(bv.roll), v:r(bv.v)},
+      cam:{helm:!!cam.helm, dist:r(cam.dist), pitch:r(cam.pitch), yaw:r(cam.yaw), zoom:r(cam.zoom), hy:r(cam.hy), hp:r(cam.hp)}, kino:!!KINO.on});
+    return true;
+  }
+  function gfxEnd(now, eye, VPn, W, Hh){
+    if (GLPROBE){ glChk('slutten av rammen'); GLPROBE = false; }
+    gfxNaN(eye, VPn);
+    if (now - GFX.pixAt < 15000 || INTRO || gl.isContextLost()) return;
+    GFX.pixAt = now;
+    if (!W || !Hh){ gfxErr('3D lerretet er 0 px', {cw:canvas.clientWidth, ch:canvas.clientHeight}); return; }
+    const px = [];
+    for (const gy of [0.2, 0.5, 0.8]) for (const gx of [0.2, 0.5, 0.8]){ gl.readPixels(Math.floor(W * gx), Math.floor(Hh * gy), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, GFX.px); px.push([GFX.px[0], GFX.px[1], GFX.px[2]]); }
+    gfxPix(gfxJudge(px, env.night < 0.2 && env.day > 0.8, env.vis || 0));
+  }
   function frame(){ const j0 = j0F = performance.now(), EQ0 = S.equip, TE = tryEq(); if (TE) S.equip = TE; try { frame0(); } finally { S.equip = EQ0; } JSMS = JSMS ? JSMS * 0.92 + (performance.now() - j0) * 0.08 : performance.now() - j0; }
   let FRAMEN = 0;
   function frame0(){ FRAMEN++;
     if (!active){ raf = 0; return; }
     raf = requestAnimationFrame(frame);
     if (document.hidden || NO3D || HOLD) return;
-    resize();
+    resize(); gfxStart(performance.now());
     const now = performance.now(), dt = Math.min(0.1, (now - lastF) / 1000), rdt = Math.max(1e-3, (now - lastF) / 1000); lastF = now;
     FPS.v = FPS.v ? FPS.v * 0.95 + 0.05 / rdt : 1 / rdt; FRAMEMS = FRAMEMS * 0.8 + Math.min(500, rdt * 1000) * 0.2; if (PROF.on) profBegin(rdt, j0F); if (BENCH.on){ if (BENCH.rec){ BENCH.sum += rdt; BENCH.cnt++; if (rdt > 1 / 50) BENCH.slow++; } } else if (!PROF.on) qualTick(dt, FPS.v, now); if (now - FPS.at > 500){ FPS.at = now; const fe = fpsEl(); if (fe) fe.textContent = Math.round(FPS.v) + ' bilder/s · ' + (1000 / FPS.v).toFixed(1) + ' ms · ' + ['Lav', 'Middels', 'Høy', 'Ultra'][QUAL.lvl]; }
     const t = (now - T0) / 1000, frac = currentFrac(), H = (S.t + frac) / 60;
     computeEnv(H); updateBoat(dt, t, frac, rdt); updateWaves(dt, H); nfStep(); updateWake(); foamStep(dt, t); updateNear(); ssStep(rdt); updateShadows(); updateChunks(CH.size ? 2 : 999);
+    gfxNaN(null);
     // camera
     let eye, V, kfov = 0;
     if (KINO.on && !SHOW && !PAINTV){
@@ -340,6 +401,7 @@
       gl.depthMask(true); gl.disable(gl.BLEND);
     }
     updateLabels(VPf, eye, W, Hh);
+    gfxEnd(now, eye, VPn, W, Hh);
     if (PROF.on) profEnd();
     if (SNAP) snapTake();
   }
