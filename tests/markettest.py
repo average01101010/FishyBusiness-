@@ -81,6 +81,25 @@ async def main():
         af = await pg.evaluate("({type:S.boat.type, engH:S.boat.engH, eq:JSON.parse(JSON.stringify(S.equip)), gone:!mktListings().some(x => x.id === '%s'), log:S.log.slice(-3).map(x => x.no).join(' | ')})" % Lid)
         ex_ok = all(af['eq'].get(q) for q in L0['ex'])
         check(btn and af['type'] == L0['type'] and af['engH'] == L0['engH'] and ex_ok and af['gone'], 'kjøpt med innbytte: båten er hennes, med motortimene og utstyret, og hun er borte fra markedet', [btn, af, L0['ex']])
+        # the moment (M5): the name painted on, the flag, the camera round her, and «Hopp over»
+        await pg.wait_for_timeout(400)
+        bm = await pg.evaluate("(() => { const e = document.getElementById('buyMoment'); return e ? {name:e.querySelector('.bm-name').getAttribute('aria-label'), letters:e.querySelectorAll('.bm-name span').length, flag:!!e.querySelector('.bm-flag svg'), skip:!!e.querySelector('.bm-skip'), sub:e.querySelector('.bm-sub').textContent, drawer:document.getElementById('drawer').hidden, phone:!!(document.getElementById('phone') && document.getElementById('phone').classList.contains('on'))} : null; })()")
+        check(bm and bm['name'] == await pg.evaluate("S.boatName") and bm['letters'] == len(bm['name']) and bm['flag'] and bm['skip'] and str(L0['year']) in bm['sub'] and bm['drawer'],
+              'kjøpsøyeblikket: navnet males bokstav for bokstav, flagget, byggeåret og stedet, skuffen lukket', bm)
+        await pg.wait_for_timeout(5500); await pg.screenshot(path='kjop_liggende.png')
+        await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(600); await pg.screenshot(path='kjop_staaende.png')
+        fitm = await pg.evaluate(FIT % '#buyMoment')
+        await pg.set_viewport_size({'width': 1280, 'height': 800})
+        await pg.evaluate("document.querySelector('#buyMoment .bm-skip').click()"); await pg.wait_for_timeout(200)
+        check(not fitm and await pg.evaluate("!document.getElementById('buyMoment')"), '«Hopp over» lukker det med en gang, og ingenting stikker ut stående', fitm)
+        # the boat traded in comes back on the market at the same yard under a new name a week or two later
+        ti = await pg.evaluate("""(() => { const r = mktState().ti[mktState().ti.length - 1], T = mktTiListing(r), now = mktListings().some(x => x.id === T.id), later = mktListings(T.H0 + 1).some(x => x.id === T.id);
+          return {type:r.type, port:r.port, old:r.old, L:{type:T.type, port:T.port, name:T.name, days:Math.round((T.H0 - r.H) / 24)}, now, later}; })()""")
+        check(ti['L']['type'] == ti['type'] and ti['L']['port'] == ti['port'] and ti['L']['name'] != ti['old'] and 7 <= ti['L']['days'] <= 15 and not ti['now'] and ti['later'],
+              'innbyttebåten kommer igjen i markedet ved samme verft med nytt navn etter ei til to uker', ti)
+        # the moment ends by itself after 15 s
+        await pg.evaluate("BUYM.show()"); await pg.wait_for_timeout(15600)
+        check(await pg.evaluate("!document.getElementById('buyMoment')"), 'kjøpsøyeblikket lukker seg selv etter 15 sekunder')
         # the wish
         await pg.evaluate("(() => { mktState().wish = {cls:'open', max:1e9}; PHONE.show(true); PHONE.open('nett'); const bk = document.querySelector('#phone .mkback[data-s=home]'); if (bk) bk.click(); })()"); await pg.wait_for_timeout(300)
         wt = await pg.evaluate("(document.querySelector('#phone .net-tile[data-s=megler]') || {}).innerText || ''")

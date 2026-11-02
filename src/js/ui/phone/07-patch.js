@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['m5-021126', '02.11.2026', 'Båten er din', 'The boat is yours', [
+       ['Når du kjøper en båt, males navnet på og flagget går opp, mens kameraet går rundt henne ved kaia. Det varer 15 sekunder og kan hoppes over.', 'When you buy a boat, the name is painted on and the flag goes up while the camera turns round her at the quay. It lasts 15 seconds and can be skipped.'],
+       ['Båten du bytter inn, blir kjøpt av en fisker og kommer igjen hos Kystmegleren ved samme verft, med nytt navn.', 'The boat you trade in is bought by a fisherman and comes back at Kystmegleren at the same yard, under a new name.']]],
     ['m4-021126', '02.11.2026', 'Brukte båter hos Kystmegleren', 'Used boats at Kystmegleren', [
        ['Nettet har fått Kystmegleren: brukte båter til salgs langs hele kysten, hver med navn, byggeår, motortimer, tilstand, det som følger med og selgerens egne ord. Alle ser de samme båtene, og de blir solgt til andre fiskere etter hvert.', 'The Net has Kystmegleren: used boats for sale along the whole coast, each with a name, year, engine hours, condition, what comes with her and the seller\'s own words. Everyone sees the same boats, and they get sold to other fishermen in time.'],
        ['Gi bud hvor du enn er, ett om dagen. Takst og kjøp skjer ved verftet der båten ligger, og den første taksten er gratis. Verftet viser «Båter til salgs her».', 'Make a bid wherever you are, one a day. Survey and purchase happen at the yard where the boat lies, and the first survey is free. The yard shows «Boats for sale here».'],

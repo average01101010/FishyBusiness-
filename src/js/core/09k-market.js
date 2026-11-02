@@ -57,10 +57,10 @@ function mktAll(H){
   MKTC.w = w; MKTC.all = all; return all;
 }
 // what is for sale now: put out, not yet sold, not bought by you
-function mktListings(H){ if (H == null) H = S.t / 60; const M = mktState(); return mktAll(H).filter(L => L.H0 <= H && H < L.H1 && !M.bought.includes(L.id)); }
+function mktListings(H){ if (H == null) H = S.t / 60; const M = mktState(); return mktEvery(H).filter(L => L.H0 <= H && H < L.H1 && !M.bought.includes(L.id)); }
 // sold within the last 30 days (to a fisherman along the coast): an honest anchor for the prices; never who bought
-function mktSold(H){ if (H == null) H = S.t / 60; const M = mktState(); return mktAll(H).filter(L => L.H1 <= H && H - L.H1 < 30 * 24 && !M.bought.includes(L.id)).sort((a, b) => b.H1 - a.H1); }
-function mktById(id, H){ return mktAll(H == null ? S.t / 60 : H).find(L => L.id === id) || null; }
+function mktSold(H){ if (H == null) H = S.t / 60; const M = mktState(); return mktEvery(H).filter(L => L.H1 <= H && H - L.H1 < 30 * 24 && !M.bought.includes(L.id)).sort((a, b) => b.H1 - a.H1); }
+function mktById(id, H){ return mktEvery(H == null ? S.t / 60 : H).find(L => L.id === id) || null; }
 const mktDays = (L, H) => Math.max(0, Math.floor(((H == null ? S.t / 60 : H) - L.H0) / 24));
 // the asking price now: down 2 % a week from the fourth week; an accepted bid holds for a week
 function mktAsk(L, H){ const d = mktDays(L, H), cuts = d >= MKT.cutAfter ? 1 + Math.floor((d - MKT.cutAfter) / 7) : 0; return mktRound(L.price * Math.pow(1 - MKT.cutWeek, cuts)); }
@@ -90,7 +90,7 @@ function mktWishHits(H){ const W = mktState().wish; if (!W) return []; return mk
 // the boat bought: her hours, her state and her gear go into the vessel state (b: the boat, eq: its equipment); the engine's true state sets
 // how soon the next service is due, the hull's how much weed she carries
 function mktTakeOver(L, b, eq){
-  const V = VESSELS[L.type]; b.engH = L.engH; b.svcAt = Math.round(L.engH - V.svcH * (1 - L.motorT)); b.foul = Math.max(0, Math.min(1, (1 - L.cond.hull) * 0.8));
+  const V = VESSELS[L.type]; b.built = L.year; b.engH = L.engH; b.svcAt = Math.round(L.engH - V.svcH * (1 - L.motorT)); b.foul = Math.max(0, Math.min(1, (1 - L.cond.hull) * 0.8));
   for (const [q, n] of Object.entries(L.ex)) eq[q] = EQUIP[q] && EQUIP[q].multi ? Math.min(V.jukseMax || 0, Math.max(eq[q] || 0, n)) : true;
   mktState().bought.push(L.id); delete mktState().deals[L.id];
 }
@@ -138,3 +138,17 @@ function mktHour(H){
     mktUnlist(o.vid); const paid = payDown(net); S.fleet.splice(S.fleet.indexOf(v), 1); book('baat', net - paid, 'Båt solgt gjennom megler', 'Vessel sold through the broker');
     log('Kystmegleren solgte «' + nm + '» for ' + mktKr(o.kr) + '. Du fikk ' + mktKr(net) + ' etter megleren.' + (paid ? ' ' + mktKr(paid) + ' gikk til å innfri lån.' : ''), 'Kystmegleren sold the «' + nm + '» for ' + mktKr(o.kr) + '. You got ' + mktKr(net) + ' after the broker.' + (paid ? ' ' + mktKr(paid) + ' went to pay off loans.' : '')); }
 }
+// ---- the boat you traded in (M5, B2): she lies at the yard and is bought by a fisherman, who puts her out again a week or two later at
+// the same yard under a new name (your own market only: V3 A). S.mkt.ti = [{type, engH, port, H, old, n}]
+function mktTradeIn(type, engH, port, old){ const M = mktState(); if (!VESSELS[type] || !portById(port)) return; M.ti = M.ti || []; M.ti.push({type, engH:Math.round(engH || 0), port, H:S.t / 60, old:old || '', n:M.ti.length}); if (M.ti.length > 12) M.ti.shift(); }
+function mktTiListing(r){
+  const V = VESSELS[r.type], R = q => mktRnd('ti|' + r.H + '|' + r.n + '|' + q), H0 = Math.floor(r.H / 24 + 7 + R('d') * 7) * 24 + 9, now = yearH(Math.max(0, H0));
+  const names = MKT.names.filter(n => n !== r.old), year = Math.min(now - 1, V.year), hull = 0.6 + 0.3 * R('hull'), motor = 0.6 + 0.3 * R('motor'), elek = 0.55 + 0.3 * R('elek'), c = (hull + motor + elek) / 3;
+  const fair = mktFair(r.type, year, c, {}), pt = portById(r.port);
+  return {id:'DSB-' + now + '-B' + String(r.n + 1).padStart(2, '0'), w:-1, i:r.n, type:r.type, name:names[Math.floor(R('name') * names.length)], year, age:Math.max(1, now - year), engH:r.engH + Math.round(R('h') * 40) * 10,
+    cond:{hull, motor, elek}, motorT:motor, flaw:false, ex:{}, price:mktRound(fair * (0.98 + 0.12 * R('p'))), fair:mktRound(fair), port:r.port,
+    seller:{kind:'skipper', name:MKT.first[Math.floor(R('fn') * MKT.first.length)] + ' ' + MKT.last[Math.floor(R('ln') * MKT.last.length)], home:String(pt.name).replace(/\s+(verft|båtverft|slipp|fiskemottak|mottak|fiskebruk)$/i, '')},
+    H0, H1:H0 + 21 * 24, look:4, acc:0.05, txt:2, ti:true};
+}
+// the coast's listings and the boats you traded in, as one list
+function mktEvery(H){ const M = mktState(), T = (M.ti || []).map(mktTiListing); return T.length ? mktAll(H).concat(T) : mktAll(H); }

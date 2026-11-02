@@ -1368,3 +1368,22 @@ body.pm #hud,body.pm #pinCard{visibility:hidden}
 .net-tile{display:flex;flex-direction:column;gap:4px;text-align:left;background:#fff;border:0;border-radius:12px;padding:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);cursor:pointer;font:inherit;color:#15252f}
 .net-tile .net-ic{background:#eef3f6;border-radius:10px;aspect-ratio:8/5;display:flex;align-items:center;justify-content:center;padding:4px}.net-tile .net-ic svg{width:100%;height:100%}
 .net-tile small{color:#5b6c76;font-size:12px}
+/* the moment a boat is bought (M5, ui/10q-buymoment.js) */
+.bm{position:fixed;left:0;right:0;bottom:calc(96px + env(safe-area-inset-bottom));display:flex;justify-content:center;z-index:60;pointer-events:none;padding:0 16px}
+.bm-card{pointer-events:auto;background:#0e1a24;color:#fff;border-radius:16px;padding:16px 20px;max-width:520px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.35);animation:bmIn .6s ease-out both}
+.bm-k{margin:0 0 6px;font-size:13px;opacity:.75;letter-spacing:.04em;text-transform:uppercase}
+.bm-row{display:flex;align-items:flex-end;gap:14px}
+.bm-name{font-family:'Rock Salt','Caveat',cursive;font-size:clamp(26px,6vw,40px);line-height:1.2;overflow-wrap:anywhere}
+.bm-name span{display:inline-block;opacity:0;transform:translateY(4px) scale(.9);animation:bmPaint .35s ease-out forwards}
+.bm-pole{position:relative;width:30px;height:64px;flex:none}
+.bm-pole i{position:absolute;left:2px;bottom:0;width:3px;height:64px;background:#c9d2d8;border-radius:2px}
+.bm-flag{position:absolute;left:5px;bottom:0;width:24px;animation:bmFlag 2.6s 5s ease-in-out forwards}
+.bm-fl{display:block;width:24px;height:17px;transform-origin:left center;animation:bmWave 1.2s 7.6s ease-in-out infinite alternate}
+.bm-sub{margin:8px 0 2px;font-size:14px;opacity:.9}
+.bm-note{margin:0 0 10px;font-size:13px;opacity:.75}
+.bm-skip{min-height:40px}
+@keyframes bmIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes bmPaint{to{opacity:1;transform:none}}
+@keyframes bmFlag{from{bottom:0}to{bottom:46px}}
+@keyframes bmWave{from{transform:skewY(0)}to{transform:skewY(-4deg) scaleX(.94)}}
+@media (prefers-reduced-motion:reduce){.bm-name span,.bm-flag,.bm-fl,.bm-card{animation-duration:.01s;animation-delay:0s}}
