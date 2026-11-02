@@ -388,7 +388,7 @@ HXX = 7.30                   # the hauler at the opening's forward end, on the s
 TUB = (6.55, -2.35)          # the bleeding tub (the game's) just aft of the fisher at the hauler
 TABLE = (4.78, 5.78, -1.52, -0.96)   # her own gutting table along the inboard wall aft, across the hatch from the work at the side (B6)
 HOLD = (5.30, 6.10, -2.30, -1.70)    # the hold's hatch between the tub and the table: the gutted fish go down on ice
-LADDER = (7.02, 7.72, -1.56, -0.96)  # the companion ladder up to the shelter deck at the inboard forward corner, its well over it
+LADDER = (7.02, 7.72, -1.56, -0.96)  # the companion ladder up to the shelter deck at the inboard forward corner (its foot aft, rising forward), its well over it
 IDOOR = (6.10, 6.80)         # the door in the inboard wall into the closed working deck
 JIGX = [4.95, 5.65, 6.35]    # the jigging machines on the sill aft of the hauler (13-instruments.js JIG_Z)
 def ybi(x): return y_at(x, ZMD, -1) - 0.07           # the hull's inside at the station (at the deck, where the side is narrowest: it flares out above)
@@ -502,8 +502,8 @@ def linings(A, G, fine=True):
         A.poly([(a[0], a[1], zt), (b[0], b[1], zt), (c_[0], c_[1], zt), (d_[0], d_[1], zt)], C['white'], (0, 0, 1))
     if fine:
         # the rail round the well, open at its aft end where the ladder comes up
-        for x, y in ((x0 + 0.03, y0 + 0.03), (x1 - 0.03, y0 + 0.03), (x1 - 0.03, y1 - 0.03)): acyl(A, (x, y, zt), (x, y, zt + 0.72), 0.018, s, seg=8)
-        F.pipe(A, [(x0 + 0.03, y0 + 0.03, zt + 0.72), (x1 - 0.03, y0 + 0.03, zt + 0.72), (x1 - 0.03, y1 - 0.03, zt + 0.72), (x0 + 0.03, y1 - 0.03, zt + 0.72)], 0.02, C['steel'], 8)
+        for x, y in ((x1 - 0.03, y0 + 0.03), (x0 + 0.03, y0 + 0.03), (x0 + 0.03, y1 - 0.03)): acyl(A, (x, y, zt), (x, y, zt + 0.72), 0.018, s, seg=8)
+        F.pipe(A, [(x1 - 0.03, y0 + 0.03, zt + 0.72), (x0 + 0.03, y0 + 0.03, zt + 0.72), (x0 + 0.03, y1 - 0.03, zt + 0.72), (x1 - 0.03, y1 - 0.03, zt + 0.72)], 0.02, C['steel'], 8)
 
 
 def station(A, G, fine=True):
@@ -544,11 +544,11 @@ def station(A, G, fine=True):
     # the companion ladder: steep treads on two stringers from the deck up through the well, aft to forward, a handrail
     x0, x1, y0, y1 = LADDER; nt = 7; zt = lambda k: ZMD + (z_sd(7.4) - ZMD) * k / (nt + 1)
     for k in range(1, nt + 1):
-        xk = x1 - 0.06 - (x1 - x0 - 0.16) * k / nt
+        xk = x0 + 0.06 + (x1 - x0 - 0.16) * k / nt
         abox(A, xk - 0.07, xk + 0.07, y0 + 0.04, y1 - 0.04, zt(k) - 0.035, zt(k), C['alu'])
     for yy in (y0 + 0.02, y1 - 0.02):
-        beam(A, (x1 - 0.02, yy, ZMD), (x0 + 0.06, yy, z_sd(7.4) + 0.02), 0.035, 0.16, C['alu'], up=(1, 0, 1))
-    if fine: F.pipe(A, [(x1 - 0.02, y1 - 0.05, ZMD + 0.9), (x0 + 0.06, y1 - 0.05, z_sd(7.4) + 0.9)], 0.016, C['steel'], 8)
+        beam(A, (x0 + 0.02, yy, ZMD), (x1 - 0.06, yy, z_sd(7.4) + 0.02), 0.035, 0.16, C['alu'], up=(-1, 0, 1))
+    if fine: F.pipe(A, [(x0 + 0.02, y1 - 0.05, ZMD + 0.9), (x1 - 0.06, y1 - 0.05, z_sd(7.4) + 0.9)], 0.016, C['steel'], 8)
     # the hold's hatch: a low coaming, the tread plate lid with its hinges and its lifting ring
     hx0, hx1, hy0, hy1 = HOLD; ob = rr_pts((hx0 + hx1) / 2, (hy0 + hy1) / 2, hx1 - hx0, hy1 - hy0, 0.04, 3)
     F.loft(A, [[(x, y, ZMD - 0.004) for x, y in ob], [(x, y, ZMD + 0.10) for x, y in ob]], lambda i: C['white'], cap0=False, cap1=False, out=lambda mid, cc: V((mid.x - cc.x, mid.y - cc.y, 0)))
@@ -1071,7 +1071,7 @@ def anchors():
                        [G(*STERN_L), [1, 0.95, 0.85], 'stern'], [G(MX + LAMP_ARM, 0, FISH_R), [1, 0.12, 0.1], 'fishR'], [G(MX + LAMP_ARM, 0, FISH_W), [1, 0.95, 0.85], 'fishW'],
                        [G(WX0 - 0.08, 0.0, WR - 0.06), [1, 0.95, 0.85], 'work'], [G(7.1, -2.0, CEIL - 0.06), [1, 0.95, 0.85], 'work']],
             # the companion ladder from the station up to the shelter deck (deckMap: the shelter deck lies 2.15 m over the working deck)
-            'stairs': [{'from': G(LADDER[1] - 0.10, (LADDER[2] + LADDER[3]) / 2, ZMD), 'to': G(LADDER[0] - 0.25, (LADDER[2] + LADDER[3]) / 2 - 0.25, sdeck(6.7, 1.5))},
+            'stairs': [{'from': G(LADDER[0] - 0.15, (LADDER[2] + LADDER[3]) / 2, ZMD), 'to': G(LADDER[1] + 0.30, (LADDER[2] + LADDER[3]) / 2, sdeck(8.0, 1.25))},
                        # (the port corner's door is closed: the way through it to the foredeck)
                        {'from': G(WXS - 0.25, 1.75, sdeck(11.7, 1.75)), 'to': G(12.95, 2.05, sdeck(12.95, 2.05))}],
             'doors': [{'at': G(WX0 - 0.03, (ADOOR[0] + ADOOR[1]) / 2, sdeck(WX0, 1.4)), 'w': round(ADOOR[1] - ADOOR[0], 2), 'h': 1.96,
@@ -1080,7 +1080,7 @@ def anchors():
             'names': name_strips(G),
             # the work at sea: the fisher at the hauler forward in the opening, the bleeding tub (the game's) just aft of him, her own
             # gutting table along the inboard wall aft, the hold's hatch between them for the gutted fish on ice
-            'work': {'table': G((TABLE[0] + TABLE[1]) / 2, (TABLE[2] + TABLE[3]) / 2, ZMD), 'tub': G(TUB[0], TUB[1], ZMD), 'own': True, 'top': round(ZMD + 0.90 - WL, 3)},
+            'work': {'table': G((TABLE[0] + TABLE[1]) / 2, (TABLE[2] + TABLE[3]) / 2, ZMD), 'tub': G(TUB[0], TUB[1], ZMD), 'own': True, 'top': round(ZMD + 0.90 - WL, 3), 'stand': 1},
             'hatch': G((HOLD[0] + HOLD[1]) / 2, (HOLD[2] + HOLD[3]) / 2, ZMD + 0.13), 'bunk': G(9.8, 1.0, ZMD + 0.6), 'exhaust': G(WX0 - 0.22, 2.05, WR + 1.30),
             'deck': {'y': round(ZMD - WL, 3), 'z': round(-(6.2 - XM), 3)}, 'gw': round(SILL - WL, 3),
             'stern': round(XM - XA, 3), 'bow': round(-(XF - XM), 3), 'side': round(BEAM / 2, 3), 'beam': BEAM, 'pl': 6.0, 'rl': 2.5, 'open': False, 'hand': False,

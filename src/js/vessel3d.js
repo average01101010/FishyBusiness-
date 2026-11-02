@@ -1267,7 +1267,10 @@ function deckPoints(type){
   // the gutting table and the bleeding tub, where drawDeck stands people (view3d.js): inboard of the table, inboard of the tub
   const tx = W ? W.table[0] : -(Bm / 2 - 0.42), tz = W ? W.table[2] : d.z, ux = W ? W.tub[0] : Bm / 2 - 0.62, uz = W ? W.tub[2] : d.z + 0.35;
   // (within far: on a shelter-decker the table's default place can lie where the model has no floor, and the work moves to the deck)
-  put('sloy', tx + (tx < 0 ? 0.62 : -0.62), tz, tx < 0 ? -Math.PI / 2 : Math.PI / 2, far); put('is', ux + (ux > tx ? -0.62 : 0.62), uz, ux > tx ? Math.PI / 2 : -Math.PI / 2, far);
+  // (work.stand: the side of the table one stands at, 1 to starboard of it, -1 to port; by default toward the middle of the boat, as at a
+  // table on the bulwark. The 15 m shelter-decker's table stands along the hauling station's inboard wall, so she stands outboard of it)
+  const sd = W && W.stand ? Math.sign(W.stand) : (tx < 0 ? 1 : -1);
+  put('sloy', tx + sd * 0.62, tz, sd > 0 ? -Math.PI / 2 : Math.PI / 2, far); put('is', ux + (ux > tx ? -0.62 : 0.62), uz, ux > tx ? Math.PI / 2 : -Math.PI / 2, far);
   if (G.hauler) put('haling', G.hauler[0] * 0.7, G.hauler[2], G.hauler[0] > 0 ? Math.PI / 2 : -Math.PI / 2, 1.6);
   // the helm, or the door when the house has no floor in the model. Not a cell over the wheel: the house's roof is deck in the map (joined
   // by the links), so the nearest cell over the wheel was the roof and the skipper steered from up there (the sjark and the havsjark,
