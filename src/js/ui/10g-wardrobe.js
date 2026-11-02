@@ -35,7 +35,7 @@ const WARD = (() => {
   // a partner's garment (M8, F5; docs/planer/butikker-og-sponsorer.md): free to wear, marked, one of the shapes and colours there are
   function spTop(l){
     const P = typeof spOf === 'function' ? spOf('look', 'top') : null, D = P && P.data; if (!D || !LOOK_TOP.some(x => x[0] === D.tp) || !(D.tk >= 0 && D.tk < LOOK_COL.length)) return '';
-    const on = l.tp === D.tp && l.tk === D.tk, esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
+    const sub = t => '<div class="wd-sub">' + t + '</div>', on = l.tp === D.tp && l.tk === D.tk, esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
     return sub(L2('Fra en samarbeidspartner', 'From a partner')) + '<div class="wd-chips">' + chip(esc(D.name || P.sponsor.name) + ' · ' + L2('gratis', 'free'), on, 'data-wd="sptop"') + '</div>' +
       '<div class="wd-note"><span class="ic-sp-tag">' + L2('Samarbeid', 'Partnership') + '</span> ' + L2('levert av ', 'supplied by ') + esc(P.sponsor.name) + '. ' + L2('Bare utseende: den virker som de andre.', 'Looks only: it works as the others do.') + '</div>';
   }

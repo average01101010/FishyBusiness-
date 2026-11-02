@@ -44,6 +44,8 @@ async def main():
         check(m['first'] == 'DSB-M-8' and m['tag'], 'meglerens båt står først, merket «formidlet av»', m)
         await pg.evaluate("document.querySelector('#phone .mg-card[data-id=\"DSB-M-8\"]').click()"); await pg.wait_for_timeout(300)
         s = await pg.evaluate("(() => { const b = document.querySelector('#phone .mg-broker'), l = b && b.querySelector('a.ic-sp-link'); return {card:!!b, link:l && l.textContent, rel:l && l.rel, line:b && b.textContent.includes('ny motor 2019')}; })()")
+        pr = await pg.evaluate("(() => { const L = mktById('DSB-M-8'); return {ask:mktAsk(L), price:L.price, days:mktDays(L), seen:mktSeen(L)}; })()")
+        check(pr['ask'] == pr['price'] and pr['price'] > 100000 and pr['days'] < 8 and pr['seen'] < 200, 'meglerens båt har prisen megleren gir, lagt ut denne uka', pr)
         check(s['card'] and s['line'] and 'ekte båten' in (s['link'] or '') and 'sponsored' in (s['rel'] or ''), 'siden har meglerens kort, teksten og lenken til den ekte båten', s)
         await pg.screenshot(path='m8_megler_liggende.png')
         await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(300); await pg.screenshot(path='m8_megler_staaende.png')

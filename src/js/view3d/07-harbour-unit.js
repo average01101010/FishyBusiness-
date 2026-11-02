@@ -142,9 +142,9 @@
   ['pointerdown', 'keydown', 'wheel'].forEach(e => addEventListener(e, () => { SIGNV.act = performance.now(); }, {passive:true}));
   // the placement for a place: its own (the port's id), its kind's ('butikk:all', 'mottak:all', 'verft:all'), or everywhere ('all')
   const signSp = (id, kind) => typeof spOf === 'function' ? (spOf('sign', id) || spOf('sign', kind + ':all') || spOf('sign', 'all')) : null;
-  // the plant (kaimottak.py: the building x -26..0.5, the silo at x 2.5, the pump at 17.5): on the deck east of the silo, 12 m in; the yard
+  // the plant (kaimottak.py: the building x -26..0.5, the silo at x 2.5, the pump at 17.5): on the deck east of the silo and the parked truck, 14 m in; the yard
   // (steder.py y: the berths at x -20 and 30, the hull on blocks at x -57): at the deck's east end, 6 m in
-  SIGNF.mottak = {x0:6.0, x1:9.8, y0:QTOP + 2.0, y1:QTOP + 3.9, z:-12.0}; SIGNF.y = {x0:43.0, x1:46.8, y0:QTOP + 2.0, y1:QTOP + 3.9, z:-6.0};
+  SIGNF.mottak = {x0:9.5, x1:13.3, y0:QTOP + 2.0, y1:QTOP + 3.9, z:-14.0}; SIGNF.y = {x0:43.0, x1:46.8, y0:QTOP + 2.0, y1:QTOP + 3.9, z:-6.0};
   // a model's own place for it (anchors.sign = [x0, x1, y0, y1, z] in the game's frame, from the next export of the buildings), else the one here
   const signF = (M, k) => { const A = M && M.A && M.A.sign; return Array.isArray(A) && A.length === 5 ? {x0:A[0], x1:A[1], y0:A[2], y1:A[3], z:A[4]} : SIGNF[k]; };
   function signTex(sp){
@@ -178,7 +178,7 @@
     const live = !document.hidden && now - SIGNV.act < 120000, list = [];
     for (const s of sitesNow()) if (s.k === 'shop' && !s.near){ const sp = signSp('finnsnes', 'butikk'); if (sp) list.push({sp, F:signF(siteModel('shop'), 'shop'), key:'shop', M:chain(M4.T(s.o[0] - eye[0], (s.lift || 0) - eye[1], s.o[1] - eye[2]), M4.RY(Math.atan2(-s.u[1], s.u[0]))), o:s.o}); }
     for (const U of UNITA){ if (Math.hypot(U.o[0] - eye[0], U.o[1] - eye[2]) > 600) continue; const k = U.v === 's' ? 's' : U.v === 'y' ? 'y' : 'mottak', sp = signSp(U.id, k === 's' ? 'butikk' : k === 'y' ? 'verft' : 'mottak');
-      if (sp) list.push({sp, F:signF(unitModel(U.v), k), key:k + (U.v === 's' || U.v === 'y' ? '' : U.v), M:unitMat(U, eye), o:U.o}); }
+      if (sp) list.push({sp, F:signF(unitModel(U.v), k), key:k + (U.v === 's' || U.v === 'y' ? '' : (U.v || 'a')), M:unitMat(U, eye), o:U.o}); }
     SIGNV.seen = 0; SIGNV.cur = []; SIGNV.flags = 0; SIGNV.drawn = list.map(L => L.key); if (!list.length) return;
     for (const L of list){
       const F = L.F, key = L.key; if (!SIGNV.q[key]) SIGNV.q[key] = texQuad([F.x0, F.y0, F.z], [F.x1, F.y0, F.z], [F.x1, F.y1, F.z], [F.x0, F.y1, F.z]);

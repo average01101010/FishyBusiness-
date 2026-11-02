@@ -63,7 +63,8 @@ function mktSold(H){ if (H == null) H = S.t / 60; const M = mktState(); return m
 function mktById(id, H){ return mktEvery(H == null ? S.t / 60 : H).find(L => L.id === id) || null; }
 const mktDays = (L, H) => Math.max(0, Math.floor(((H == null ? S.t / 60 : H) - L.H0) / 24));
 // the asking price now: down 2 % a week from the fourth week; an accepted bid holds for a week
-function mktAsk(L, H){ const d = mktDays(L, H), cuts = d >= MKT.cutAfter ? 1 + Math.floor((d - MKT.cutAfter) / 7) : 0; return mktRound(L.price * Math.pow(1 - MKT.cutWeek, cuts)); }
+function mktAsk(L, H){ if (L.broker) return L.price;   // (a broker's boat keeps the price the broker gives)
+  const d = mktDays(L, H), cuts = d >= MKT.cutAfter ? 1 + Math.floor((d - MKT.cutAfter) / 7) : 0; return mktRound(L.price * Math.pow(1 - MKT.cutWeek, cuts)); }
 const mktCut = (L, H) => mktAsk(L, H) < L.price;
 function mktPrice(L, H){ if (H == null) H = S.t / 60; const D = mktState().deals[L.id]; return D && H < D.until ? Math.min(D.kr, mktAsk(L, H)) : mktAsk(L, H); }
 // seen by how many skippers (an estimate from the days out; V3 B will count for real)
@@ -164,7 +165,7 @@ function mktBrokerListings(H){
     out.push({id:'DSB-M' + r.id, w:-2, i:r.id, type:D.type, name:String(D.name || V.name.no).slice(0, 28), year, age:Math.max(1, yearH(H) - year), engH:Math.max(0, Math.round(+D.hours || 0)),
       cond:{hull:c, motor:c, elek:c}, motorT:c, flaw:false, ex:{}, price, fair:mktRound(fair), port:pt.id,
       seller:{kind:'megler', name:r.sponsor.name, home:String(pt.name).replace(/\s+(verft|båtverft|slipp|fiskemottak|mottak|fiskebruk)$/i, '')},
-      H0:-1e9, H1:1e9, look:5, acc:0.04, txt:0, broker:{name:r.sponsor.name, url:spUrl(D.url || r.sponsor.site), pl:r.id, line:String(D.line || '').slice(0, 300), featured:!!D.featured}});
+      H0:Math.floor(H / 168) * 168, H1:1e9, look:5, acc:0.04, txt:0, broker:{name:r.sponsor.name, url:spUrl(D.url || r.sponsor.site), pl:r.id, line:String(D.line || '').slice(0, 300), featured:!!D.featured}});
   }
   return out;
 }

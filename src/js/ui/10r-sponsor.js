@@ -14,7 +14,7 @@ var SPUI = (() => {
   // sender's name; 'welcome' to every player while it is active. Never haill, never Skippertak (they are sold)
   function gifts(){
     if (typeof S === 'undefined' || !S || !S.clothes) return; S.spGift = S.spGift || {};
-    for (const r of SPN.list) if (r.kind === 'gift' && r.target === 'welcome' && !S.spGift[r.id]){ const D = r.data || {}, C = typeof CLOTHES !== 'undefined' && CLOTHES[D.item]; if (!C) continue;
+    for (const r of SPN.list) if (r.kind === 'gift' && r.target === 'welcome' && !(r.id in S.spGift)){ const D = r.data || {}, C = typeof CLOTHES !== 'undefined' && CLOTHES[D.item]; if (!C) continue;
       S.spGift[r.id] = S.t; S.clothes[D.item] = (S.clothes[D.item] || 0) + 1;
       if (typeof msg === 'function') msg(r.sponsor.name, (D.text ? String(D.text).slice(0, 200) + ' ' : '') + 'Gaven ligger i Beholdning: ' + C.no.toLowerCase() + '. (Samarbeid)', (D.text_en ? String(D.text_en).slice(0, 200) + ' ' : '') + 'The gift is in the Inventory: ' + C.en.toLowerCase() + '. (Partnership)');
       log('Gave fra ' + r.sponsor.name + ': ' + C.no.toLowerCase() + '.', 'A gift from ' + r.sponsor.name + ': ' + C.en.toLowerCase() + '.');
