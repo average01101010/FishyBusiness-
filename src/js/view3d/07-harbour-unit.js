@@ -136,7 +136,8 @@
   // screen, so the partner's sign is a banner on two posts on the apron, 2.5 m in front of the shop, facing the quay: 4 x 2 m, which from
   // a boat at the quay with the camera 15-18 m off covers about 1.5 % of the screen)
   // (it stands at the shop's west end, x -15.4..-11.4: further east the Finnsnes bunker tank, x 0.1..4.7 at y 6.2, stood in front of it)
-  const SIGNF = {shop:{x0:-15.4, x1:-11.4, y0:QTOP + 1.0, y1:QTOP + 3.0, z:-(11.5 - 2.5)}, s:{x0:-15.4 - 5, x1:-11.4 - 5, y0:QTOP + 1.0, y1:QTOP + 3.0, z:-(11.5 - 2 - 2.5)}};
+  // (and high, 2.7-4.6 m over the deck, west of the board with the place's name: lower down, the boat on its trailer at the west end hid half of it)
+  const SIGNF = {shop:{x0:-16.2, x1:-12.4, y0:QTOP + 2.7, y1:QTOP + 4.6, z:-(11.5 - 2.5)}, s:{x0:-16.2 - 5, x1:-12.4 - 5, y0:QTOP + 2.7, y1:QTOP + 4.6, z:-(11.5 - 2 - 2.5)}};
   const SIGNV = {pl:{}, last:0, act:performance.now(), tex:{}, q:{}, seen:0, cur:[], oq:{}};
   ['pointerdown', 'keydown', 'wheel'].forEach(e => addEventListener(e, () => { SIGNV.act = performance.now(); }, {passive:true}));
   const signSp = id => typeof spOf === 'function' ? (spOf('sign', id) || spOf('sign', 'all')) : null;
