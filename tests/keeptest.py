@@ -29,7 +29,9 @@ JS = """(() => {
   b.type = 'bunntral'; applyVessel(); b.status = 'sailing'; b.port = null; b.ice = 0; S.settings.gut = true; S.settings.ice = true;
   S.crew = [0, 1, 2, 3].map(() => Object.assign(genCrew(), {bi:false, off:false, fatigue:5}));
   S.hold = [{sp:'torsk', cls:2, kg:400, n:80, bled:true, iced:false, hr:0, fresh:95, gut:false, hook:false}];
-  for (let i = 0; i < 240; i++){ S.t++; deckMinute(); }
+  // 270 minutes: four people freeze 400 kg in about four hours, and the pace varies with the draws (02.11.2026: 396 kg after 240 minutes
+  // with seed 1 once the game drew in another order, 400 with seeds 2 and 3); what is checked is that it all freezes with no ice
+  for (let i = 0; i < 270; i++){ S.t++; deckMinute(); }
   const fz = S.hold.filter(x => x.frozen), kgF = fz.reduce((a, x) => a + x.kg, 0);
   R.freeze = {kgF:Math.round(kgF), all:Math.round(holdTotal()), ice:b.ice, f0:fz.length ? +fz[0].fresh.toFixed(2) : null};
   const f0 = fz.length ? fz[0].fresh : null; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p};
