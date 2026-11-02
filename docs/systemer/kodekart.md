@@ -1998,12 +1998,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (893 linjer)
+## `src/js/ui/phone/07-patch.js` (905 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 886 `patch()`
+  - 898 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -2695,7 +2695,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 47 `bootGame()`
   - 152 `bootFail(e)`
 
-## `src/js/vessel3d.js` (1300 linjer)
+## `src/js/vessel3d.js` (1303 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -2830,23 +2830,23 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 116 `ridged(x, y)`
   - 117 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (491 linjer)
+## `src/js/view3d/01-shaders.js` (508 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
-- **103** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **135** the boat's own foam, when she has way on
-- **153** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
-  - 422 `cloudStep(dt)`
-  - 428 `skyFrame(u, Hh, tn, bv)`
-  - 443 `glsl3(src, fs)`
-  - 451 `compile(type, src, nm)`
-  - 458 `program(vs, fs, attrs, nm = '?')`
-  - 466 `buf(data, target, usage)`
-  - 471 `airSet(u, terr)`
-  - 476 `attr(loc, b, size)`
-  - 489 `upload(pos, col, idx)`
+- **120** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
+- **152** the boat's own foam, when she has way on
+- **170** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
+  - 439 `cloudStep(dt)`
+  - 445 `skyFrame(u, Hh, tn, bv)`
+  - 460 `glsl3(src, fs)`
+  - 468 `compile(type, src, nm)`
+  - 475 `program(vs, fs, attrs, nm = '?')`
+  - 483 `buf(data, target, usage)`
+  - 488 `airSet(u, terr)`
+  - 493 `attr(loc, b, size)`
+  - 506 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (94 linjer)
 
@@ -3106,7 +3106,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 116 `handKit(t)`
   - 137 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (485 linjer)
+## `src/js/view3d/13-instruments.js` (490 linjer)
 
 ---------- the skiff's live instruments ----------
 
@@ -3134,16 +3134,16 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 175 `limbM(A, B, r)`
   - 178 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
   - 314 `drawSkiffGlass(BMrel, VP)`
-  - 319 `jigRail(t, G)`
-  - 340 `drawJigRail(BMrel, VP, t, G, dt)`
-  - 373 `drawGlass(m, BMrel, VP)`
-  - 392 `drawDrops(m, BMrel, VP, t)`
-  - 403 `buildBoat()`
-  - 429 `buildFlag()`
-  - 441 `flagTex()`
-  - 456 `penTex()`
-  - 469 `mastTop(G)`
-  - 473 `updateFlag(t, appW)`
+  - 324 `jigRail(t, G)`
+  - 345 `drawJigRail(BMrel, VP, t, G, dt)`
+  - 378 `drawGlass(m, BMrel, VP)`
+  - 397 `drawDrops(m, BMrel, VP, t)`
+  - 408 `buildBoat()`
+  - 434 `buildFlag()`
+  - 446 `flagTex()`
+  - 461 `penTex()`
+  - 474 `mastTop(G)`
+  - 478 `updateFlag(t, appW)`
 
 ## `src/js/view3d/14-sea.js` (300 linjer)
 
@@ -3181,23 +3181,23 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 292 `seaH(x, z, t)`
   - 298 `seaHFast(x, z, t)`
 
-## `src/js/view3d/15-env-mooring.js` (147 linjer)
+## `src/js/view3d/15-env-mooring.js` (158 linjer)
 
 ---------- environment ----------
 
 - **1** environment
   - 3 `pal(el)`
   - 12 `wetSet(H)`
-  - 24 `computeEnv(H)`
-- **60** mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off)
-  - 64 `buildMooring()`
-  - 66 `berthNow()`
-  - 72 `approach(F, bp, u0, du0)`
-  - 83 `pathM(pts)`
-  - 88 `pathAt(M, s)`
-  - 89 `lieAlongside(dt, bp)`
-  - 92 `moorStep(dt, bp, at = dt)`
-  - 124 `drawMooring(BMrel, eye, VP, t)`
+  - 25 `computeEnv(H)`
+- **71** mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off)
+  - 75 `buildMooring()`
+  - 77 `berthNow()`
+  - 83 `approach(F, bp, u0, du0)`
+  - 94 `pathM(pts)`
+  - 99 `pathAt(M, s)`
+  - 100 `lieAlongside(dt, bp)`
+  - 103 `moorStep(dt, bp, at = dt)`
+  - 135 `drawMooring(BMrel, eye, VP, t)`
 
 ## `src/js/view3d/16-motion.js` (227 linjer)
 

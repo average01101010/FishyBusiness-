@@ -22,7 +22,7 @@ og det som slås opp. Si fra i svaret om noe i del 1 ikke er lest helt.
   (be Jonas om dem).
 - Grunnlaget og skriptet til den reviderte båten som ligner mest (malen for koden, ikke for formen; kap. 18): rundbunnet sjark med bakk
   `havsjark35.py` og `malo36.py`, med ly også `malo36.py`, hardknekt `hurtig11.py`, tung arbeidsbåt etter tegning `hs11.py`, åpne båter
-  `snekke23.py`, `skiff59.py` og `snekke26.py`, styrhus akter `plast31.py`. Selvvurderingen står sist i hvert grunnlag.
+  `snekke23.py`, `skiff59.py` og `snekke26.py`, styrhus akter `plast31.py`, shelterdekker med halestasjon og styrhus i full bredde `kyst15.py`. Selvvurderingen står sist i hvert grunnlag.
 - `docs/skipsmodeller/kartlegging-spillet.md`: båtens rader, M-punktene og D8. `docs/batplan.md`: statuslinjene for båten.
   `docs/systemer/3d-baater-og-animasjon.md` 5.13.
 - Spillets kode for modellen, før skriptet planlegges: `VESSELS` og `SPEC3D` for typen, og det tabellen i `sulebas-bygging.md` kap. 15
@@ -42,4 +42,5 @@ og det som slås opp. Si fra i svaret om noe i del 1 ikke er lest helt.
 
 ## Endringslogg
 
+- 02.11.2026: kystbåten (`kyst15.py`) lagt til malene for en shelterdekker.
 - 02.11.2026: første versjon (Jonas: pilotbåten skal leses i hver økt).

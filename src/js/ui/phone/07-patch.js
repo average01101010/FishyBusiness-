@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['kyst15-021126', '02.11.2026', 'Kystbåten på 14,99 m', 'The 14.99 m coastal vessel', [
+       ['Kystbåten på 14,99 m er bygd på nytt: ett skrog med kjølen og avrundet hekk, en åpen halestasjon om styrbord med haler, kar, sløyebord og luke, leider opp til shelterdekket, og et styrhus i full bredde med vindusbånd, konsoll og skjermer.', 'The 14.99 m coastal vessel is built anew: one hull with the keel and a rounded stern, an open hauling station to starboard with the hauler, the tub, the gutting table and the hatch, a ladder up to the shelter deck, and a full-width wheelhouse with its window band, console and screens.'],
+       ['Lanternene og fiskelysene står på lovlige plasser, og støtteseglet er satt til sjøs og beslått i havn.', 'The lanterns and the fishing lights stand where the rules ask, and the steadying sail is set at sea and furled in port.'],
+    ]],
     ['breisjark-021126', '02.11.2026', 'Sjarken på 36 fot med bakk og ly', 'The 36 ft sjark with forecastle and shelter', [
        ['Sjarken på 36 fot er bygd på nytt: ett skrog med kjølen, ekte lensporter og luker, et nytt styrhus med konsoll og skjermer, og lanternene og fiskelysene på riktige plasser.', 'The 36 ft sjark is built anew: one hull with the keel, real freeing ports and hatches, a new wheelhouse with a console and screens, and the lights and fishing lights in their right places.'],
        ['Lyet er åpent om styrbord, så mannskapet arbeider ved haleren og juksamaskinene der; sløyebordet står om babord.', 'The shelter is open to starboard, so the crew work at the hauler and the jigging machines there; the gutting table stands to port.'],

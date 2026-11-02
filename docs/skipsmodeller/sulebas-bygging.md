@@ -582,7 +582,44 @@ deler i et rutenett.
 **`pgrep -f` i en venteløkke finner seg selv** (kap. 18) også når mønsteret er skriptnavnet: vent på en fil eller et ord i loggen jobben
 skriver selv (`until grep -q FERDIG log`). Og `pkill -f "python3 skript.py"` i en kommando drepte kommandoen selv igjen: stopp på prosess-id.
 
+## 20. Lært av revisjonen av kystbåten (02.11.2026)
+
+Kystbåten (`kyst15.py`, `kyst15-grunnlag.md`) var den første shelterdekkeren etter piloten: arbeidsdekket under shelterdekket, en åpen
+halestasjon om styrbord, styrhuset forut i full bredde.
+
+**Se hva et vedlagt bilde viser før det brukes.** Bildet som fulgte bestillingen, var båthandelens sidebilde av den gamle modellen, ikke et
+foto av forbildet. Det gir den gamle profilen (et brukbart overlegg, kap. 19), ikke mål. Si det til Jonas med en gang og be om de ekte bildene.
+
+**Render den gamle modellen før skriptet skrives over.** Jeg skrev det nye skriptet over det gamle før K1–K7 av det gamle var tatt; det gamle
+måtte hentes fra git (`git show HEAD:tools/boats/<skript>.py`). Ta de gamle rendringene først, eller legg det gamle skriptet ved siden av.
+
+**En lett båt med fast dypgang blir en finnekjøl.** Med `disp` 75 t (den tomme båten i spillet, Jonas) og dypgangen 3,0 m med kjølen ga første
+utkast en grunn kropp og en 1,4 m dyp kjøl under: det så ut som en seilbåt i K3. Tegn kroppen dypere og slankere (lavere fyldighet, mer
+bunnreisning) og kjølen grunnere; vekta holdes med fyldigheten. Hold også hekkens bunn ved vannlinja, ellers blir åpningen over roret en
+hule.
+
+**Vinduer på en vegg som følger ripa.** Et styrhus i full bredde står på ripa, og sideveggen smalner 0,35 m forover. Sideglass i ett plan ble
+liggende inne i veggen akter og utenfor den forut; Jonas: «Styrhuset og vinduene ser også ganske fucked ut». Legg hver rute i veggens eget
+plan der den står (tangenten langs ripa), og gi huset et sammenhengende mørkt vindusbånd med tynne stolper i stedet for hvite vegger mellom
+rutene: det leser ryddig og skjuler små ulikheter.
+
+**Lanterner på taket må stå over takets bue.** Sidelanternene sto på brett 8,30–8,33 m mens taket buet til 8,44: de lå inne i taket, og K6 var
+svart. Regn lanternens høyde mot takets øverste punkt der den står.
+
+**En leider er en lenke bare når begge ender ligger i frie celler.** Leideren hadde foten klemt mot halestasjonens endevegg; foten lå i en sperret
+celle, `stairs` ble ikke lenke, og shelterdekket, styrhuset og fordekket falt ut av dekkskartet (ingen rorplass). Snu leideren så foten står på
+fritt dekk, og kjør `qa/deckpoints.py` rett etter første eksport: alle plassene skal ha dekkets høyde, også `ror`.
+
+**Spillets antakelser om bordet og ripa.** `deckPoints` satte den som sløyer på innsida av bordet (mot senterlinja), og `jigRail` tok skrogets
+egne punkter under 1,3 m over arbeidsdekket for en ripe langs hele den lukkede sida. Begge passer en åpen båt, ikke en shelterdekker. Nå:
+`work.stand` (hvilken side av bordet man står) og `JIG_Z` for typen. Se etter slike antakelser i spillets kode når båten er av en ny slags.
+
+**Før-bildene i fjernkjøring kan dø.** `ky15shot.py` sto i en time på broa etter at arbeidsprosessen ble startet på nytt, og jobben var borte.
+Jonas tok før-bildene selv på nettbrettet på noen minutter. Spør om det når bildene i SwiftShader trekker ut.
+
 ## Endringslogg
+
+- 02.11.2026: kap. 20, det revisjonen av kystbåten lærte (se hva et bilde viser, render det gamle først, finnekjølen, vinduer på en buet vegg, lanterner over takets bue, leideren som lenke, spillets antakelser om bordet og ripa, før-bildene).
 
 - 02.11.2026: kap. 19, det revisjonen av breisjarken lærte (utstyrets plasser før vegger, ripa som hopper, hjørnet som forsvinner i baugen, skallet med lokk, overlegg mot den gamle profilen).
 - 01.11.2026: kap. 7, godkjenningsgrensen 75/100 (Jonas).
