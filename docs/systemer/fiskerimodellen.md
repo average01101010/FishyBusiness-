@@ -22,9 +22,9 @@
 
 | Torsk | Hyse | Sei | Lyr | Lange | Brosme | Uer | Kveite | Blåkveite |
 |---|---|---|---|---|---|---|---|---|
-| 0,405 | 0,3 | 0,65 | 0,2 | 0,3 | 0,32 | 0,65 | 0,35 | 0,6 |
+| 0,345 | 0,245 | 0,49 | 0,145 | 0,215 | 0,22 | 0,44 | 0,26 | 0,6 |
 
-  Kalibrert på nytt i B2 (01.11.2026, se 5.3c): før var det 0,37 / 0,3 / 0,6 / 0,3 / 0,3 / 0,35 / 0,5 / 0,35 / 0,6.
+  Kalibrert på nytt i B3 (02.11.2026, se 5.3d), da grunnlinja tok over for det håndlagde utgangspunktet rundt Senja. I B2 (01.11.2026, 5.3c) var det 0,405 / 0,3 / 0,65 / 0,2 / 0,3 / 0,32 / 0,65 / 0,35 / 0,6, og før det 0,37 / 0,3 / 0,6 / 0,3 / 0,3 / 0,35 / 0,5 / 0,35 / 0,6.
 
 - **Blåkveite** (07.10.2026, tilbakemelding #10; researchen i `docs/blakveite.md`, planen i `docs/plan-blakveite.md`):
   - **Hvor:** eggakanten. `eggaArea` (`03-simulation.js`, via feltet `area:'egga'`) gir null grunnere enn 280–400 m og dypere enn 1000–1150 m, null sør for 62° N, 0,15 fra Storegga til Helgeland, full styrke fra Lofoten (67,6–68,8° N) og nordover, × 0,4 i Vest-Finnmark og × 0,6 øst for 26,5° Ø (sluttseddelene 2025 per område). Vestfjorden × 0,15, de skjermede fjordbassengene i Troms × 0,12 (usikkert). Om vinteren (nov–feb) tynnes det sør for 70° N (inntil −45 %) og fylles nord for (+30 %), fordi gytefisken samles på kanten fra 70 til 75° N.
@@ -44,7 +44,7 @@
 - **`density(sp, p, H)`** er den ene kilden for fisk i spillet: fangst, ekkolodd, varmekart, garn, line, jukse-spillet og pubrykter. 30 × `density` × innsats er kg i timen (én person med håndjuksa har innsats 2). Den er delt i `denPlace(p)` (det alle arter deler: land, dybde, eksponering, helling og avstand til feltene), `denTime(H)` (sesongtallene, lagret for én time) og `denSp()` (artens egen sum). Delingen ga nøyaktig de samme tallene (kontrollsum over rutenett rundt alle feltene).
 - **Fisken trekker** (`hotspot`, `HOT`): Gode flekker på et mønster på 3,5 km. To felt overlapper hele tiden, hvert glir sin vei med 0,7–1,7 km i døgnet og toner inn og ut over 240 timer. Fra B2 styrer artens vandring der og da retningen (`migDir`, se 5.3c «Fisken beveger seg»). Før hoppet hele mønsteret hver 120. time. Snittet er det samme som før (0,742 mot 0,737).
 - **Stimer** (`school`, `SCHOOL`): et finere mønster (400 m) som svømmer 0,5–1 km i timen. Fra B2 svømmer stimene dit arten vandrer på stedet og i sesongen, i felt på 6 timer som toner over i hverandre (se 5.3c). Før hadde hver art én fast retning for hele kysten. Det gir ±15 % og er 1 i snitt, så fangsten over en dag er den samme, men bittet på ett sted kommer og går i løpet av en halvtime. Sonaren viser retningen (`schoolDrift`).
-- **Bestanden** (`STK`, `S.stock`, ruter på 2 km): Den leses mellom de fire nærmeste rutene (`gridBilinear`), og fangsten trekkes fra de samme fire med samme vekter (`stockW`). Nedtrekket der du fisker er kg/K·Σw², altså mykere enn før, men det samlede uttaket er det samme. Gjenveksten har et minste steg og runder til 1e-4, så en rute kommer helt tilbake til 1: en rute på 0,5 er full igjen etter rundt 42 dager. Før stoppet den på 0,876, og krabbe på 0,667. Krabbe (`S.cstk`) er fortsatt én verdi per rute, som før, fordi teinekalibreringen hviler på det og varmekartet ikke viser krabbe.
+- **Bestanden** (`STK`, `S.stock`, ruter på 2 km). Fra B3 (5.3d) er dette spillernes avvik, og bestanden på et sted er grunnlinja (hele flåtens trykk) × avviket: Den leses mellom de fire nærmeste rutene (`gridBilinear`), og fangsten trekkes fra de samme fire med samme vekter (`stockW`). Nedtrekket der du fisker er kg/K·Σw², altså mykere enn før, men det samlede uttaket er det samme. Gjenveksten har et minste steg og runder til 1e-4, så en rute kommer helt tilbake til 1: en rute på 0,5 er full igjen etter rundt 42 dager. Før stoppet den på 0,876, og krabbe på 0,667. Krabbe (`S.cstk`) er fortsatt én verdi per rute, som før, fordi teinekalibreringen hviler på det og varmekartet ikke viser krabbe.
 - **Fangst:** `density() × luck(sp) × targetF(sp) × innsats × værstraff`, deretter trekkes hver fisk for seg med egen vekt.
   - Fisk under minstemålet slippes.
   - Kveite i fredningstiden eller over 100 kg slippes.
@@ -194,6 +194,54 @@
     - `density` rundt +1 µs per kall (median 18,2 → 19,2 µs, tre kjøringer hver, vekselvis; maskinen svinger ±15 %).
     - Grønne: `heattest`, `geartest`, `jigalongtest`, `bktest` og `r4test`.
 - **Tester:** `tests/unit/vandring.test.mjs` (33 sjekker), `bktest` (frøene: blåkveita er sist av spillerens arter), `guidetest` (ti arter: `PLAYSP`), `heattest`.
+
+## 5.3d Flåtetrykket og grunnlinja (B3 i `docs/planer/bestand-og-flaate.md`, 02.11.2026)
+
+`core/03g-trykk.js`. Hele den norske flåten tar av den felles bestanden. Det spilleren møter på et sted, er likevekten mellom flåtens trykk der og hvor fort fisken kommer tilbake, ganget med det spillerne selv har gjort. Alt er en ren funksjon av den felles klokka og dataene i appen. Det er likt for alle, uten at noen må ha sett båtene, og serveren spørres ikke om noe nytt (5b).
+
+- **Trykket `F`** (`trykkYear(sp, år)`, `fleetF(sp, p, H)` i kg i timen i 2 km-ruta):
+  - **Utgangspunktet:** landingene i sedlene (`fiske.json`) per lokasjon (kysten) og hovedområde (havet), måned, redskap og lengdegruppe, skalert til årets kvote for hver gruppe i kvotekjeden (`codChain`).
+  - **Gruppene for torsk:**
+    - Kystens lengdegrupper er lukket gruppe per hjemmelslengde (under 11, 11–14,99, 15–20,99, 21–27,99 m).
+    - Åpen gruppe er en andel av båtene under 11 m, i forholdet mellom åpen gruppes kvote og lukket gruppes under 11 m.
+    - Båtene på 28 m og over er trål (trålredskap) og havfiske (resten).
+    - Sedler under 28 m uten lokasjon regnes til kysten, lagt per hovedområde.
+  - **Årssummen per gruppe er gruppekvoten.** 2027: åpen 10 537 t, under 11 m 23 719, 11–14,99 m 23 408, 15–20,99 m 21 676, 21–27,99 m 15 935, trål 38 041 og havfiske 12 450 t. Til sammen 146 kt av Norges 160 kt; resten er avsetningene på toppen.
+  - **Hyse og sei:** alle sedlene skalert til Norges kvote (`norQuota`). **De andre artene:** sedlene som de var. Sild, makrell og snøkrabbe er med, for havflåten (H1).
+  - **Åpen gruppe** følger sesongen sin dag for dag (`qyAt`: rundt 2 100 båter, stoppen, økningene). Trykket er gruppas fangst den dagen mot sedlenes nivå (`trykkOpenScale`). Etter stoppen er båtene som er over den garanterte kvoten ferdige, og trykket faller med fangsten, ofte til null.
+  - **Spillernes landinger** i åpen gruppe går fra trykket, fordi `qyStep` teller dem sammen med de andres fra serveren. For de lukkede gruppene er spillernes fangst ikke delt per gruppe på serveren ennå, så den kommer oppå flåtens. Det er en dråpe i dag; B4 flytter registeret og gruppenes fangst til serveren.
+- **Hvor i lokasjonen:** trykket legges tre ganger så tett innen 2 km fra et navngitt felt i «Fiskeplasser – redskap» (`felt.json`, `trkCellW`), og jevnt ellers. Summen per lokasjon er den samme. Havflåtens trykk legges bare utenfor grunnlinja, der de store båtene kan fiske (J-161-2026 § 32).
+- **Hvor mye av fisken som tas** (`fleetU`): trykket mot fisken i ruta.
+  - **Fisken totalt per art:** for torsk, hyse og sei er det gytebestanden (`STOCK`, HI/ICES) × 2, som omtrent er bestanden fra 3 år og eldre i vurderingene fra 2020-tallet. Silda og makrellen tar ICES' gytebestander for 2025 (3,2 og 3,6 Mt). For resten er det årets landinger delt på en beskatningsrate: lyr 0,25, lange og brosme 0,2, uer og kveite 0,12, snøkrabbe 0,2. Alle disse er anslag.
+  - **Fordelingen:** fisken deles først mellom kyst og hav etter hvor fangsten tas den måneden. I mars står torsken mest på kysten for å gyte, om sommeren ute i Barentshavet. Innenfor hver fordeles den etter fangst per landing mot snittet for samme redskap og lengde, ganget med arealet.
+  - Fangst per landing kan bare sammenlignes innenfor samme redskap. Den første versjonen, som blandet trål og kystgarn, ga havområdene nesten all fisken og Husøy en grunnlinje på 0,26.
+- **Grunnlinja** (`baseAt(p, sp, H)`): `r / (r + u)`, der `r` = 0,004 i timen er tilveksten til `S.stock` (fisk som kommer tilbake og svømmer inn). Det er den lukkede formen for likevekten. Bestanden blir da `stockAt = baseAt × avviket i S.stock` for fiskeartene. Blåkveita og krabben har egne lag og ingen grunnlinje.
+  - **Målt i 2027:**
+
+    | Sted | Januar | Mars | Juli |
+    |---|---|---|---|
+    | Husøy | 0,64 | 0,64 | 1,00 |
+    | Malangsgapet | 0,72 | 0,77 | 1,00 |
+    | Henningsvær | 0,92 | 0,81 | 0,99 |
+    | Båtsfjord | 0,94 | 0,96 | 0,91 |
+    | Bergen | 1,00 | 1,00 | 1,00 |
+
+  - Det gamle håndlagde utgangspunktet rundt Senjas fire felt (`initStock`, 0,55–0,9 hele året) er borte. `initStock` gir nå et urørt avvik.
+- **Skreien som én mengde** (`skreiLeft(H)`): skreisesongens fangst så langt mot gytebestanden. Sesongens fangst er den nasjonale torsken over sommernivået i januar–mai, skalert til årets kvoter. Det som er tatt i Finnmark i januar, er ikke der i Lofoten i mars. Andelen som er igjen: 1,00 / 0,98 / 0,91 / 0,81 / 0,76 / 0,75 den 1. januar–juni 2027. Den ganges på skreidelen i `fkAvail`.
+- **Senja-flåtens eget uttak er fjernet:** 18 kg i timen per båt og de tre faste feltene i `stockHour`. Det ligger nå i trykket, langs hele kysten. NPC-båtene på Senja vises som før, og L2/N1 gir dem redskap og felt etter `F`.
+- **Ytelsen:** ruta regner trykket og andelen for alle elleve arter én gang per time (`trkCell`: 5,6 µs første gang i en ny time). Oppslaget etterpå tar 0,13 µs, under kravet på 5 µs. Årstabellene bygges én gang per art og år (60 ms for torsk).
+- **Kalibreringen:**
+  - **`k`:** med den ekte bestanden i begge bygg ga grunnlinja 17–48 % mer fisk på de fire Senja-stedene enn det gamle utgangspunktet. `k` er delt på forholdet, så summen over de fire stedene er den samme som før B2.
+  - **`simday`:** 350 / 350 / 350 / 350 kg (alle fyller lasterommet). Juli på Husøy er nå over ±10 % mot før B2 (297), fordi flåten nesten ikke fisker der om sommeren. Mars er litt lavere (snittet ved Husøy 72 mot 82 kg i timen).
+  - **`progweek`:** 311 kg per tur mot 341 før B2. Blad B dag 18 mot 15, inngangen i lukket gruppe dag 23 mot 22.
+  - **`geartest`:** garnet vest av Gryllefjord gikk over grensen (47 kg per garn) før `k` ble justert, og er innenfor etterpå.
+- **Tester:** ny `tests/unit/trykk.test.mjs` (21 sjekker: gruppekvotene, åpen gruppe etter stoppen, grunnlinja, skreien gjennom sesongen, ingen Senja-flåte, tiden). Grønne: `simday`, `calib`, `progweek`, `kvtest`, `geartest`, `bktest`, `heattest`, `jigalongtest`, `posttest` og `guidetest`. `quotatest` er rød på kvotesamarbeidet, som før (backloggen).
+- **Antatt eller usikkert:**
+  - Bestanden × 2, beskatningsratene og tilveksten `r` er anslag.
+  - Likevekten er kvasistatisk: den følger månedstabellene, ikke en ekte etterslep-dynamikk.
+  - Fordelingen av fisken mellom kyst og hav etter fangsten antar at flåten fisker der fisken er.
+  - Trål og havfiske er lagt jevnt over hele hovedområdet utenfor grunnlinja.
+  - Kysttorsken sør for 62° N er ikke en egen bestand.
 
 ## 5.33 Fiskeguiden (Jonas 08.10.2026)
 

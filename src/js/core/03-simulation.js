@@ -516,7 +516,7 @@ function denSp(sp, q, H, T){
   if (sp === 'uer' && !T.uerOpen) av *= 0.15;
   if (s.shell) v *= kingArea(p); else v *= school(sp, p, H);
   if (s.area) v *= AREAS[s.area](p, q.d, H, q.E);
-  return 1.6 * s.k * v * day * av * depthFactor(sp, q.d) * stockAt(p, sp) + tutBonus(sp, p);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
+  return 1.6 * s.k * v * day * av * depthFactor(sp, q.d) * stockAt(p, sp, H) + tutBonus(sp, p);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
 }
 function density(sp, p, H){ const q = denPlace(p); return q ? denSp(sp, q, H, denTime(H)) : 0; }
 // Where the Greenland halibut is (07.10.2026, docs/plan-blakveite.md 1-2): the shelf edge between 300 and 1100 m (none shallower, none
@@ -573,10 +573,13 @@ function stockW(p){
 function stockFill(v){ const m = {}; for (let iy = Math.floor(HOME.y0 / STK.c) - 1; iy <= Math.floor(HOME.y1 / STK.c) + 1; iy++) for (let ix = Math.floor(HOME.x0 / STK.c) - 1; ix <= Math.floor(HOME.x1 / STK.c) + 1; ix++) stkSet(m, gridKey(ix, iy), v); return m; }
 // Shellfish have their own layer (S.cstk), made when the first pot is hauled. It stays one value per cell: pots stand still for
 // days and work the cell as a patch, the heat map does not show crab, and the pot calibration rests on it.
-function stockAt(p, sp){
+// B3 (02.11.2026): for a fish species the stock is the baseline (the balance with the whole fleet's pressure, baseAt in 03g-trykk.js, the
+// same for every player) times the deviation in S.stock (what the players have done); without a species, the deviation alone
+function stockAt(p, sp, H){
   if (sp && SPECIES[sp].shell) return S && S.cstk ? stkGet(S.cstk, stockIdx(p)) : 1;
   if (sp && SPECIES[sp].stk) return S && S[SPECIES[sp].stk] ? stkGet(S[SPECIES[sp].stk], stockIdx(p)) : 1;   // the Greenland halibut's own
-  if (!S || !S.stock) return 1; let v = 0; for (const [k, w] of stockW(p)) v += stkGet(S.stock, k) * w; return v;
+  const b = sp ? baseAt(p, sp, H == null ? (S ? S.t / 60 : 0) : H) : 1;
+  if (!S || !S.stock) return b; let v = 0; for (const [k, w] of stockW(p)) v += stkGet(S.stock, k) * w; return b * v;
 }
 // npc: the local fleet's take (stockHour), which every game works out for itself; what the player's own boats take is also kept for
 // the other players (the shared world V2)
@@ -604,14 +607,9 @@ function wshLand(port, H, acc, kgSp, codQ){ if (!WSH.rec) return; const Q = wq()
   const ev = typeof evAt === 'function' ? evAt(H, port, items.map(i => i.sp)) : '';   // the shared event it falls in (09c-seasons.js)
   let reg = ''; try { const q = portById(port); if (q && typeof landsdel === 'function') reg = landsdel(q.p); } catch (e){}   // the part of the coast, for the village contest (bygde_top)
   if (items.length) Q.l.push({gh:+H.toFixed(2), y:yearH(H), port, acc, items, boat:String(S.boatName || '').slice(0, 24), company:acc !== 'lukket' ? '' : String(S.company || '').slice(0, 40), ev, reg}); }
-function initStock(){
-  const a = {};
-  // the famous grounds are already worked by the local fleet when the game starts
-  for (const g of GROUNDS.slice(0, 4)){ const R = g.r * 1.2;
-    for (let iy = Math.floor((g.p.y - R) / STK.c); iy <= Math.floor((g.p.y + R) / STK.c); iy++) for (let ix = Math.floor((g.p.x - R) / STK.c); ix <= Math.floor((g.p.x + R) / STK.c); ix++){
-      const d = Math.hypot((ix + 0.5) * STK.c - g.p.x, (iy + 0.5) * STK.c - g.p.y), k = gridKey(ix, iy); if (d < R) stkSet(a, k, Math.min(stkGet(a, k), 0.55 + 0.35 * d / R)); } }
-  return a;
-}
+// the players' deviation starts untouched: how hard the grounds are worked by the whole fleet is the baseline (B3, baseAt in 03g-trykk.js),
+// which took over from the depletion this used to lay round Senja's four grounds
+function initStock(){ return {}; }
 function stockHour(H){
   // the cells below 1 and their neighbours: each moves towards its neighbours' mean and grows back
   const s = S.stock, nx = {}, cells = new Set(), at = (x, y) => stkGet(s, gridKey(x, y));
@@ -628,10 +626,8 @@ function stockHour(H){
   if (S.cstk){ const c = {}; for (const k in S.cstk){ const v = S.cstk[k]; stkSet(c, k, Math.round(Math.min(1, v + Math.max((1 - v) * 0.0015, 0.0001)) * 1e4) / 1e4); } S.cstk = c; }
   // the Greenland halibut grows slowly and lives long (M 0.12-0.16): its cells come back slower still
   if (S.bstk){ const c = {}; for (const k in S.bstk){ const v = S.bstk[k]; stkSet(c, k, Math.round(Math.min(1, v + Math.max((1 - v) * 0.001, 0.0001)) * 1e4) / 1e4); } S.bstk = c; }
-  // the local fleet works the known grounds on fishable days
-  for (const q of npcStates(H)) if (q.fleet && q.st === 'fishing') takeStock(q.p, 18, null, true);
-  const hr = gDate(H).getUTCHours();
-  if (hr >= 6 && hr < 15 && windAt(H) < 12) for (const g of GROUNDS.slice(0, 3)) for (let k = 0; k < 5; k++){ const a = k * 1.26 + H * 0.07, q = {x:g.p.x + Math.cos(a) * g.r * 0.45 * (k ? 1 : 0), y:g.p.y + Math.sin(a) * g.r * 0.45 * (k ? 1 : 0)}; if (!isLandFar(q)) takeStock(q, 12, null, true); }
+  // the local fleet's take (18 kg an hour a Senja boat, and the three known grounds) went out in B3 (02.11.2026): the whole fleet's
+  // pressure is in the baseline (baseAt, 03g-trykk.js), along the whole coast
 }
 // preferred depth (m) and spread per species: cod and saithe on the banks, haddock deeper, ling and tusk deep
 const DPREF = Object.fromEntries(ALLSP.map(sp => [sp, SPECIES[sp].dep]));

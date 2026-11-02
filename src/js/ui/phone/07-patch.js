@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['flaate-021126', '02.11.2026', 'Hele flåten fisker av samme bestand', 'The whole fleet fishes the same stock', [
+       ['Fiskeflåten langs hele kysten tar sin kvote der og når den virkelig fisker: feltene der mange fisker, er tynnere i sesongen og tar seg opp når flåten går hjem. Når åpen gruppe stoppes, får sjøen hvile.', 'The fleet along the whole coast takes its quota where and when it really fishes: the grounds where many fish are thinner in the season and recover when the fleet goes home. When the open group is stopped, the sea gets a rest.'],
+       ['Skreien er én mengde: det som tas i Finnmark og Troms tidlig i sesongen, kommer ikke til Lofoten, så skreien tynnes utover våren.', 'The skrei is one body of fish: what is taken in Finnmark and Troms early in the season does not reach Lofoten, so the skrei thins through the spring.'],
+    ]],
     ['fisk-011126', '01.11.2026', 'Fisken langs kysten', 'The fish along the coast', [
        ['Hvor mye fisk det står langs kysten, følger nå Fiskeridirektoratets landinger per sted og måned. Bergen har ikke lenger skrei, og skreien kommer til Finnmark noen uker før den når Lofoten og Røst.', 'How much fish stands along the coast now follows Fiskeridirektoratet\'s landings by place and month. Bergen no longer has skrei, and the skrei reaches Finnmark some weeks before it reaches Lofoten and Røst.'],
        ['Kartplotteren viser navnene på fiskeplassene langs hele kysten, fra Fiskeridirektoratets kart over fiskeplasser.', 'The chart plotter shows the names of the fishing grounds along the whole coast, from Fiskeridirektoratet\'s map of fishing grounds.'],

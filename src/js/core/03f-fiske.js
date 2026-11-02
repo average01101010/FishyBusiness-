@@ -59,7 +59,7 @@ function lokOfCell(p){
   const cx = (ix + 0.5) * 2, cy = (iy + 0.5) * 2; let l = -1;
   if (RU.ok) for (const i of lokCands(Math.floor(cx / 10), Math.floor(cy / 10))) if (ruIn(RU.lok[i].P, cx, cy)){ l = i; break; }
   if (LOKC.size > 200000) LOKC.clear();
-  const ll = natLL({x:cx, y:cy}); c = {l, lat:ll.lat, lon:ll.lon}; LOKC.set(key, c); return c;
+  const ll = natLL({x:cx, y:cy}); c = {l, lat:ll.lat, lon:ll.lon, cx, cy}; LOKC.set(key, c); return c;
 }
 
 // ---- the migrations (MIG): HI's descriptions, as curves of time and place ----
@@ -266,7 +266,9 @@ function fkAvail(sp, q, T){
   if (sp === 'torsk'){
     if (q.skr < 0) q.skr = skreiSpot(q.p, q.d, q.E);
     const b = F && l >= 0 && F.base[l] === F.base[l] ? F.base[l] : 1, x = F && l >= 0 && F.skrei[l] === F.skrei[l] ? F.skrei[l] : 1;
-    return t.av * b + skreiPulse(c, T.H, T) * t.sf * q.skr * x;
+    // the skrei is one body of fish: what the fleet has taken of it so far this season is not there further along (skreiLeft, 03g-trykk.js)
+    if (T.skl === undefined) T.skl = skreiLeft(T.H);
+    return t.av * b + skreiPulse(c, T.H, T) * t.sf * q.skr * x * T.skl;
   }
   let v = F && l >= 0 ? fkAt(F.m, l, T.fk) : NaN;
   const mig = MIG[sp];
