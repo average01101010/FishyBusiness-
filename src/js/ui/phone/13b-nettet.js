@@ -52,6 +52,11 @@
     return h.join('');
   }
   // ---- fetching a reservation: the same purchase as over the counter; null when it went, else why not (a string)
+  // trying gear on the boat in 3D before it is bought (M3): what was tried this session, for the measure (shop_buy tried, shop_try)
+  const TRIED = new Set();
+  const tryable = k => typeof G3 !== 'undefined' && !!G3.tryView && (G3.TRY3D || []).includes(k) && S.boat.status === 'port' && !S.boat.land && equipFits(k, S.boat.type);
+  function equipTry(k){ if (!tryable(k)) return; const on = G3.trying === k; G3.tryView(on ? null : k); if (!on){ TRIED.add(k); if (typeof cloudEv === 'function') cloudEv('shop_try', {k}); } }
+  const tryBtn = k => !tryable(k) ? '' : '<button class="ph-btn alt" data-pa="eqtry" data-k="' + k + '"' + (G3.trying === k ? ' aria-pressed="true"' : '') + '>' + (G3.trying === k ? L('Ta av igjen', 'Take it off') : L('Prøv på båten', 'Try it on the boat')) + '</button>';
   function equipBuy(k){
     const E = EQUIP[k]; if (!E) return L('Ukjent utstyr.', 'Unknown equipment.');
     if (!atKind(EQ_YARD(k) ? 'verft' : 'butikk')) return L('Det monteres ' + (EQ_YARD(k) ? 'på verftet.' : 'i utstyrsbutikken.'), 'It is fitted ' + (EQ_YARD(k) ? 'at the yard.' : 'at the tackle shop.'));
@@ -62,7 +67,9 @@
     if (!queueJob({kind:'fit', k, h:fitHours(k), no:'Montering av ' + E.name.no.toLowerCase(), en:'Fitting the ' + E.name.en})) return L('Arbeidskøen er full.', 'The work queue is full.');
     book('redskap', -E.price, E.name.no, E.name.en); achAdd('equip'); shopBought(E.name.no, E.name.en); folkShop();
     log('Kjøpt ' + E.name.no + '. Monteres i verkstedet.', 'Bought the ' + E.name.en + '. Being fitted at the yard.');
-    if (typeof cloudEv === 'function') cloudEv('shop_buy', {w:'equip', k}); return null;
+    // the moment it is bought: it is lifted aboard on your own boat in 3D (M3, 10 s), and the measure says whether it was tried on first
+    const tried = TRIED.has(k); TRIED.delete(k); if (typeof G3 !== 'undefined' && G3.tryView){ G3.tryView(null); G3.hoist(k); }
+    if (typeof cloudEv === 'function') cloudEv('shop_buy', {w:'equip', k, tried}); return null;
   }
   function clothBuy(k){
     const C = CLOTHES[k], people = 1 + S.crew.length, have = (S.clothes || {})[k] || 0; if (!C) return L('Ukjent plagg.', 'Unknown clothing.');

@@ -210,11 +210,29 @@
   // the live crab tank on deck (EQUIP.krabbekar) with the crabs from the hold in it: aboard only while she is rigged for pots (Jonas
   // 21.10.2026: «Om båten ikke er rigget med teiner skal det ikke være noe krabbekar ombord»)
   function drawCrabTank(BMrel, G, d, sx, HP){
-    if (!S.equip.krabbekar || rigOf() !== 'teiner' || !GB || !GB.tank) return;
+    if (!S.equip.krabbekar || (rigOf() !== 'teiner' && !tryLive('krabbekar')) || !GB || !GB.tank) return;   // (or tried on in the shop, M3)
     const pw = ((GB.px || {}).pot || {}).half || 0.7, D = potDeck(G, HP, sx, d, pw), T = (GB.px || {}).tank || {half:[0.36, 0.56], water:0.58};
-    const s = D.tank[4] || 1; drawN(GB.tank, chain(BMrel, M4.T(D.tank[0], D.tank[1], D.tank[2]), M4.S(s))); KST.tank = D.tank.slice();
+    const s = D.tank[4] || 1; drawN(GB.tank, chain(BMrel, M4.T(D.tank[0], D.tank[1] + liftY('krabbekar'), D.tank[2]), M4.S(s))); KST.tank = D.tank.slice();
     const kg = S.hold.reduce((a, x) => a + (x.sp === 'krabbe' ? x.kg : 0), 0), n = Math.min(Math.round(14 * s * s), Math.ceil(kg / 4));
     for (let k = 0; k < n; k++) drawN(fishOf('krabbe'), chain(BMrel, M4.T(D.tank[0] + (hash(k * 5 + 7) - 0.5) * T.half[0] * s * 1.5, D.tank[1] + (T.water - 0.04) * s + Math.floor(k / 5) * 0.03, D.tank[2] + (hash(k * 7 + 9) - 0.5) * T.half[1] * s * 1.6), M4.RY(hash(k) * 6.3), M4.S(0.75)));
+  }
+  // the hauler bolted on while she is not working her gear (M3): the one tried on or being lifted aboard, else the one for her rig, else
+  // whichever she has (a net or line hauler on its post; the pot hauler on its davit when she is rigged for pots). drawGearOp draws it
+  // while the gear is worked. The skiff's small hauler stands on its rail place.
+  function drawHaulRest(BMrel, G, d, VP){
+    const b = S.boat; KST.haul = null; if (b.gop && b.status === 'fishing') return; if (!GB) buildGear();
+    const eq = S.equip || {}, rig = typeof rigOf === 'function' ? rigOf() : b.rig, own = k => !!eq[k] && equipFits(k, vtype());
+    const hot = TRYK && /haler$/.test(TRYK) ? TRYK : HOIST && /haler$/.test(HOIST.k) ? HOIST.k : null;
+    const pick = hot || (rig === 'teiner' && own('teinehaler') ? 'teinehaler' : rig === 'line' && own('linehaler') ? 'linehaler' : rig === 'garn' && own('garnhaler') ? 'garnhaler' : own('garnhaler') ? 'garnhaler' : own('linehaler') ? 'linehaler' : null);
+    if (!pick) return; const up = liftY(pick);
+    if (G.hand){ if (pick === 'garnhaler' || !SKA || !SKA.haul) return; nSetup(VP); drawN(GB.haul, chain(BMrel, M4.T(SKA.haul[0], SKA.haul[1] + up, SKA.haul[2]))); KST.haul = pick; return; }
+    if (!G.hauler) return; const P0 = [G.beam / 2 - 0.2, d.y + up, G.hauler[2]], X = GB.px || {};
+    if (pick === 'teinehaler'){ if (!GB.davit || (G.kit && G.kit.pots)) return; nSetup(VP); drawN(GB.davit, chain(BMrel, M4.T(P0[0], P0[1], P0[2])));
+      if (GB.davitSh && X.davit) drawN(GB.davitSh, chain(BMrel, M4.T(P0[0] + X.davit.sheave[0], P0[1] + X.davit.sheave[1], P0[2] + X.davit.sheave[2]))); KST.haul = pick; return; }
+    const HM = haulModel(pick === 'garnhaler' ? 'garn' : 'line');
+    if (!HM){ nSetup(VP); drawN(GB.haul, chain(BMrel, M4.T(G.hauler[0], G.hauler[1] + up, G.hauler[2]))); KST.haul = pick; return; }
+    const at = q => chain(BMrel, M4.T(P0[0] + q[0], P0[1] + q[1], P0[2] + q[2]));
+    litSetup(VP); drawLit(HM.frame, at([0, 0, 0])); drawLit(HM.sheave, at(HM.ax)); drawLit(HM.stripper, at(HM.st)); KST.haul = pick;
   }
   function drawGearOp(BMrel, eye, VP, t){
     const b = S.boat, g = b.gop; if (!g || b.status !== 'fishing') return; if (!GB) buildGear();

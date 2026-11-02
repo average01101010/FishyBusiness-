@@ -14,10 +14,11 @@
 
   // the paint shop (ui/10j-paint.js): the camera turns slowly round your own boat, and she sits in the middle of what the drawer leaves
   // free (left of it lying down, above it standing up), so the colour being tried is seen as it is chosen
+  // (standing up the view is narrow: the camera goes further out, so all of her shows)
   let PAINTV = null;
   function paintView(on){
     if (on){ if (PAINTV) return; PAINTV = {was:active, yaw:cam.yaw, pitch:cam.pitch, dist:cam.dist, el:document.getElementById('drawer')};
-      const V = VESSELS[vtype()]; cam.pitch = 0.2; cam.dist = Math.max(11, V.len * 1.6); cam.yaw = 1.1; if (!active) show(true, true); }
+      const V = VESSELS[vtype()]; cam.pitch = 0.2; cam.dist = Math.max(11, V.len * 1.6) * (innerHeight > innerWidth ? 1.7 : 1); cam.yaw = 1.1; if (!active) show(true, true); }
     else if (PAINTV){ const P = PAINTV; PAINTV = null; cam.yaw = P.yaw; cam.pitch = P.pitch; cam.dist = P.dist; if (!P.was) show(false); }
   }
   function paintAim(C, yawW){
@@ -25,6 +26,22 @@
     if (r.left > W * 0.3){ const k = (W - r.left) / W * tf * (W / Hh); C[0] += Math.cos(yawW) * k; C[2] += Math.sin(yawW) * k; }
     else C[1] -= Math.max(0, Hh - r.top) / Hh * tf;
   }
+  // trying gear on before it is bought (M3, docs/planer/butikker-og-sponsorer.md): the item tried, one just bought being lifted aboard
+  // (HOIST, 10 s) and those waiting to be fitted are drawn on your own boat as if they were hers, the camera turning round her as in the
+  // paint shop. Drawing only: frame() (24-cinema.js) swaps S.equip for the frame and puts it back before anything else runs
+  let TRYK = null, HOIST = null, HOISTTM = 0;
+  const TRY3D = ['linehaler', 'garnhaler', 'teinehaler', 'jukse', 'krabbekar', 'radar', 'radarA'];
+  function tryView(k){ k = TRY3D.includes(k) ? k : null; if (k === TRYK) return; TRYK = k; if (k) paintView(true); else if (!HOIST) paintView(false); }
+  function hoist(k){ if (!TRY3D.includes(k) || !S.boat || S.boat.status !== 'port') return; HOIST = {k, t0:performance.now()}; paintView(true); clearTimeout(HOISTTM);
+    HOISTTM = setTimeout(() => { HOIST = null; if (!TRYK) paintView(false); }, 10000); }
+  function tryEq(){
+    if (!S.equip) return null; const ks = (S.jobs || []).filter(j => j.kind === 'fit' && TRY3D.includes(j.k)).map(j => j.k);
+    if (TRYK) ks.push(TRYK); if (HOIST && !ks.includes(HOIST.k)) ks.push(HOIST.k); if (!ks.length) return null;
+    const E = Object.assign({}, S.equip); for (const k of ks) E[k] = k === 'jukse' ? (E.jukse || 0) + 1 : true; return E;
+  }
+  // how high above its place the item being lifted aboard hangs: down from 5 m over the first 6 s, eased in
+  function liftY(k){ if (!HOIST || HOIST.k !== k) return 0; const u = clamp((performance.now() - HOIST.t0) / 6000, 0, 1), s = u * u * (3 - 2 * u); return 5 * (1 - s); }
+  const tryLive = k => TRYK === k || !!(HOIST && HOIST.k === k);
   // the market's showroom: a vessel type drawn afloat off the harbour you are in, the camera turning round it; null ends it
   let SHOW = null;
   function showroom(type){
@@ -171,7 +188,7 @@
         npc:npcNow.map(n => ({x:n.p.x * 1000, z:n.p.y * 1000, v:n.v || 0, st:n.st, big:n.type === 'coastal' || n.type === 'ferry'})).concat(RB && RB.q ? [{x:RB.q.r.p.x * 1000, z:RB.q.r.p.y * 1000, v:RB.q.r.v * 1.4, st:'sailing', big:true}] : [])}; },
     zoom(f){ if (cam.helm) cam.fov = clamp(cam.fov * f, 12, 75); else cam.dist = clamp(cam.dist * f, 7, 8000); }, reset(){ if (cam.helm){ cam.hy = 0; cam.hp = -0.07; cam.fov = 55; } else { cam.yaw = 0.55; cam.pitch = 0.26; cam.dist = 21; } },
     vesselChanged(){ bv.init = false; bv.st = null; TRAIL.length = 0; },
-    showroom, get showing(){ return SHOW ? SHOW.t : null; }, paintView, get painting(){ return !!PAINTV; },
+    showroom, get showing(){ return SHOW ? SHOW.t : null; }, paintView, get painting(){ return !!PAINTV; }, tryView, hoist, get trying(){ return TRYK; }, get hoisting(){ return HOIST ? HOIST.k : null; }, TRY3D,
     roadsReady(){ if (NEARM) buildGround(); for (const c of CH.values()) freeChunk(c); CH.clear(); },
     fineReady(){ if (FINEM){ freeMesh(FINEM); FINEM = null; } if (NEARM){ freeMesh(NEARM); NEARM = null; updateNear(); } },
     fishCam(){ cam.helm = false; cam.dist = 7; cam.pitch = 0.22; cam.yaw = -0.85; },

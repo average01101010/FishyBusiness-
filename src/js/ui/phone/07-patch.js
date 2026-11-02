@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['m3-021126', '02.11.2026', 'Prøv utstyret på båten', 'Try the gear on the boat', [
+       ['I butikken kan halerne, juksamaskinen, krabbekaret og radaren prøves på din egen båt før du kjøper. Trykk «Prøv på båten», så står det om bord og kameraet går rundt henne.', 'In the shop the haulers, the jigging reel, the crab tank and the radar can be tried on your own boat before you buy. Tap «Try it on the boat» and it stands aboard while the camera turns round her.'],
+       ['Det du kjøper, heises om bord og står på dekk mens det monteres. En haler du eier, står nå på plassen sin også i havn.', 'What you buy is lifted aboard and stands on deck while it is fitted. A hauler you own now stands at its place in port too.'],
+       ['Malerverkstedet viser hele båten også når skjermen står.', 'The paint shop shows the whole boat with the screen standing up too.']]],
     ['m2-021126', '02.11.2026', 'Nettet og butikken på kaia', 'The Net and the shop on the quay', [
        ['Ny app på telefonen: Nettet. Nettbutikken der viser alt utstyrsbutikkene har, hvor du enn er. Bestill til henting i butikken du velger, og betal og få det montert når du kommer dit.', 'A new app on the phone: the Net. Its web shop shows everything the tackle shops carry, wherever you are. Order for collection at the shop you choose, and pay and have it fitted when you get there.'],
        ['I butikken står kjøpmannen og prater på stedets dialekt. Øverst ligger det du har bestilt dit, og en liste over det båten trenger nå: kroker, line, garn, juksasett, blåsesett og klær.', 'In the shop the keeper stands and chats in the local dialect. At the top lies what you ordered there, and a list of what the boat needs now: hooks, line, nets, jig sets, buoy sets and clothes.'],
