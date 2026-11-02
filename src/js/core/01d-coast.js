@@ -129,7 +129,7 @@ function coastWorker(){
     const src = coastBuild.toString() + '\nonmessage = e => { const D = e.data; try { const r = coastBuild(D.b, D.T, D.CC, D.COX, D.COY); postMessage({id:D.id, r}, [r.wl.buffer, r.wb.buffer, r.cs.buffer, r.ce.buffer, r.ed.buffer, r.K.buffer]); } catch (err){ postMessage({id:D.id, err:String(err)}); } };';
     const w = new Worker(URL.createObjectURL(new Blob([src], {type:'text/javascript'})));
     w.onmessage = e => { const {id, r, err} = e.data, q = COAST.wait.get(id); COAST.wait.delete(id); if (!q) return; if (err){ console.error('coast: ' + err); q.res(coastBuildHere(q.pk)); return; } COAST.ms += performance.now() - q.t0; q.res(coastDone(q.pk, r)); };
-    w.onerror = () => { COAST.worker = false; for (const [id, q] of COAST.wait){ COAST.wait.delete(id); q.res(coastBuildHere(q.pk)); } };
+    w.onerror = e => { console.error('coast worker', (e && e.message) || 'error'); COAST.worker = false; for (const [id, q] of COAST.wait){ COAST.wait.delete(id); q.res(coastBuildHere(q.pk)); } };
     return COAST.worker = w;
   } catch (e){ return COAST.worker = false; }
 }

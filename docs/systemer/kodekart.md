@@ -2,6 +2,12 @@
 
 Seksjonene og funksjonene i hver kildefil, med linjenummer, i rekkefølgen malen setter dem sammen i (`src/index.html`). Lages av `python3 tools/docs/kodekart.py` og skrives på nytt av `/lever`, så linjenumrene kan være litt gamle; navnene og rekkefølgen stemmer. Slå opp her og bruk `grep` i stedet for å lese en stor fil hel.
 
+## `src/js/errtrap.js` (48 linjer)
+
+THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp så mange feil automatisk som mulig slik at vi
+
+- **1** THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp så mange feil automatisk som mulig slik at vi
+
 ## `src/js/core/00-proj.js` (65 linjer)
 
 - **2** CORE START
@@ -2546,7 +2552,7 @@ SOUND (the user's wish 03.10.2026)
 - **82** inside Father's naust (Jonas 09.10.2026: «Kjør på med lyd i naustet»; ui/09c-naust3d.js)
 - **141** the music (Jonas 05.10.2026: «rolig ambient instrumentaler som svak stemning i bakgrunnen. Må kunne skrus av i innstillinger»)
 
-## `src/js/ui/10f-cloud.js` (800 linjer)
+## `src/js/ui/10f-cloud.js` (926 linjer)
 
 THE CLOUD (04.10.2026; docs/lansering.md E and F)
 
@@ -2556,79 +2562,92 @@ THE CLOUD (04.10.2026; docs/lansering.md E and F)
   - 22 `cloudS()`
   - 28 `cloudGpu()`
   - 35 `cloudDev()`
-  - 41 `cloudMeta()`
-- **54** talking to Supabase
-  - 55 `cloudToken()`
-- **56** guests (06.10.2026; Jonas: «nye brukere ikke trenger å logge inn til å starte med», the account after the third landing)
-  - 62 `guestGet()`
-  - 63 `guestAuth(path, body)`
-  - 71 `guestToken()`
-  - 79 `guestStart()`
-  - 85 `cloudRpc(fn, args, opt)`
-- **97** the gate: before the game starts
-  - 98 `cloudGateShow(html)`
-  - 105 `cloudGateHide()`
-  - 109 `worldSync()`
-  - 114 `cloudGate()`
-- **182** after the start: hooks, measurements, the save
-  - 183 `cloudStart()`
-  - 210 `cloudAsk()`
-  - 220 `cloudConsent(yes, by)`
-  - 226 `cloudBegin()`
-  - 234 `cloudEv(k, d)`
-  - 235 `cloudFlush(end)`
-  - 244 `cloudErr(msg, src, stack)`
-- **252** the save between devices (05.10.2026; supabase/migrations/20261005200000_save_sync.sql)
-  - 259 `syncGet()`
-  - 260 `syncSet(rev, at, rv, sq)`
-  - 266 `deviceId()`
-  - 270 `deviceName()`
-  - 275 `cloudStatus(s)`
-  - 276 `cloudStatusText()`
-  - 285 `saveSum(o)`
-  - 289 `sumText(m)`
-  - 296 `cloudChoose(here, cloud, when, box)`
-  - 311 `cloudKeptNote(where)`
-  - 316 `cloudTake(cs)`
-  - 322 `cloudSync(cs)`
-  - 346 `cloudSaveSoon(closing, manual)`
-  - 385 `cloudSoon(ms)`
-- **386** one device at a time (13.10.2026, supabase/migrations/20261013120000_active.sql)
-  - 396 `cloudFp()`
-  - 397 `cloudClaim(wait)`
-  - 410 `cloudBeat()`
-  - 426 `cloudWake()`
-  - 432 `cloudPassed(h)`
-  - 447 `cloudHeldShow(h)`
-  - 456 `cloudPlayHere()`
-  - 466 `cloudCheckHead()`
-  - 475 `cloudConflict(cl, moved)`
-  - 505 `cloudHist()`
-  - 510 `cloudRestore(id)`
-- **521** what is measured: the game's own functions, wrapped once they are all defined
-  - 522 `cloudHooks()`
-- **545** the account card in Settings
-  - 546 `cloudCard()`
-  - 570 `histRows()`
-  - 582 `cloudAccountDel()`
-  - 593 `cloudMediaDel()`
-  - 599 `cloudAct(a, d)`
-- **633** registering, for a guest: in the game's own words, never a wall before the third landing
-  - 642 `guestHave()`
-  - 648 `guestAsk(why)`
-  - 672 `namesKept()`
-  - 673 `namesKeep(o)`
-  - 675 `namesApply()`
-  - 683 `nameTake(n, quiet)`
-  - 693 `nameCheck()`
-  - 708 `nameSuggest()`
-  - 717 `nameAsk(why, reason)`
-  - 742 `guestOpenAsk()`
-  - 750 `nameNudge(force)`
-  - 763 `guestNudge(step)`
-  - 775 `guestLogin(src)`
-  - 781 `guestRegister(signIn)`
-  - 793 `guestGift()`
+  - 42 `cloudMeta()`
+- **55** talking to Supabase
+  - 56 `cloudToken()`
+- **57** guests (06.10.2026; Jonas: «nye brukere ikke trenger å logge inn til å starte med», the account after the third landing)
+  - 63 `guestGet()`
+  - 64 `guestAuth(path, body)`
+  - 72 `guestToken()`
+  - 80 `guestStart()`
+  - 86 `cloudRpc(fn, args, opt)`
+- **98** the gate: before the game starts
+  - 99 `cloudGateShow(html)`
+  - 106 `cloudGateHide()`
+  - 110 `worldSync()`
+  - 115 `cloudGate()`
+- **183** after the start: hooks, measurements, the save
+  - 184 `cloudStart()`
+  - 209 `cloudAsk()`
+  - 219 `cloudConsent(yes, by)`
+  - 225 `cloudBegin()`
+  - 233 `cloudEv(k, d)`
+  - 234 `cloudFlush(end)`
+- **243** the errors (04.10.2026; caught everywhere since 02.11.2026, js/errtrap.js)
+  - 254 `srcMapStr(s)`
+  - 267 `errNoise(msg)`
+  - 272 `cloudErr(msg, src, stack, kind)`
+  - 283 `errSend(e)`
+  - 287 `errQueue()`
+  - 288 `errKeep(list)`
+  - 292 `errFlush()`
+  - 313 `errStart()`
+- **321** a page that stops or stands still while it is on the screen
+  - 328 `aliveRead()`
+  - 329 `aliveBeat(gone)`
+  - 340 `aliveCheck()`
+  - 364 `hangWatch()`
+- **378** the save between devices (05.10.2026; supabase/migrations/20261005200000_save_sync.sql)
+  - 385 `syncGet()`
+  - 386 `syncSet(rev, at, rv, sq)`
+  - 392 `deviceId()`
+  - 396 `deviceName()`
+  - 401 `cloudStatus(s)`
+  - 402 `cloudStatusText()`
+  - 411 `saveSum(o)`
+  - 415 `sumText(m)`
+  - 422 `cloudChoose(here, cloud, when, box)`
+  - 437 `cloudKeptNote(where)`
+  - 442 `cloudTake(cs)`
+  - 448 `cloudSync(cs)`
+  - 472 `cloudSaveSoon(closing, manual)`
+  - 511 `cloudSoon(ms)`
+- **512** one device at a time (13.10.2026, supabase/migrations/20261013120000_active.sql)
+  - 522 `cloudFp()`
+  - 523 `cloudClaim(wait)`
+  - 536 `cloudBeat()`
+  - 552 `cloudWake()`
+  - 558 `cloudPassed(h)`
+  - 573 `cloudHeldShow(h)`
+  - 582 `cloudPlayHere()`
+  - 592 `cloudCheckHead()`
+  - 601 `cloudConflict(cl, moved)`
+  - 631 `cloudHist()`
+  - 636 `cloudRestore(id)`
+- **647** what is measured: the game's own functions, wrapped once they are all defined
+  - 648 `cloudHooks()`
+- **671** the account card in Settings
+  - 672 `cloudCard()`
+  - 696 `histRows()`
+  - 708 `cloudAccountDel()`
+  - 719 `cloudMediaDel()`
+  - 725 `cloudAct(a, d)`
+- **759** registering, for a guest: in the game's own words, never a wall before the third landing
+  - 768 `guestHave()`
+  - 774 `guestAsk(why)`
+  - 798 `namesKept()`
+  - 799 `namesKeep(o)`
+  - 801 `namesApply()`
+  - 809 `nameTake(n, quiet)`
+  - 819 `nameCheck()`
+  - 834 `nameSuggest()`
+  - 843 `nameAsk(why, reason)`
+  - 868 `guestOpenAsk()`
+  - 876 `nameNudge(force)`
+  - 889 `guestNudge(step)`
+  - 901 `guestLogin(src)`
+  - 907 `guestRegister(signIn)`
+  - 919 `guestGift()`
 
 ## `src/js/ui/10g-push.js` (206 linjer)
 

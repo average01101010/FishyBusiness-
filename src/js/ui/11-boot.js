@@ -151,7 +151,7 @@ bootMap().then(cloudGate).then(bootMapLoad).then(() => { bootGame(); cloudHooks(
 // had again the same way)
 function bootFail(e){
   const msg = String(e && e.message || e), en = !/^no/.test((navigator.language || 'no').toLowerCase()) && !/^nb|^nn/.test((navigator.language || '').toLowerCase()), L = (no, eng) => en ? eng : no;
-  try { if (typeof cloudErr === 'function') cloudErr('boot: ' + msg, 'boot', e && e.stack); } catch (e2){}
+  try { if (typeof cloudErr === 'function') cloudErr('boot: ' + msg, 'boot', e && e.stack); if (typeof errStart === 'function') errStart(); } catch (e2){}   // (the game is not coming: what waited for it goes now)
   const safe = /safe/.test(location.hash), prev = (() => { try { return !!localStorage.getItem(KEY_PREV); } catch (e2){ return false; } })();
   loaderGone();   // the loading screen lies over the dialog otherwise
   const m = document.getElementById('modal'); if (!m) return; m.hidden = false;
