@@ -70,19 +70,61 @@ Før-bildene er tatt i spillet i begge formater (`tests/ma36shot.py`, `TAG=for`)
 
 ## 5. Lanternene
 
-Fylles ut etter kritikksløyfen.
+Under 12 m (sjøveisreglene regel 23 og 26, vedlegg I; regnet i `check()`), typet i `anchors.lights`:
+
+| Lys | Plass | Kontroll |
+|---|---|---|
+| Hvit rundtlysende (`allround`) | toppen av formasta, 9,21 m over grunnlinja | 3,53 m over sidelanternene (2(d): minst 1 m) |
+| Rød og grønn (`port`, `stbd`) | på brett på styrhustakets forre hjørner, med skjerm innenfor (`F.side_lantern`) | 1,78 m over skroget mot den hvites 6,11 (2(g): høyst tre firedeler, 4,58) |
+| Akterlanterne (`stern`) | på galgens akterende, vendt akterover (`F.stern_lantern`) | |
+| Fiskelys rødt over hvitt (`fishR`, `fishW`) | på korte armer forut for masta, 8,92 og 7,85 m | 1,07 m fra hverandre (2(i): minst 1 m; tegningen ga 0,97), det hvite 2,17 m over sidelanternene (2(j): minst 2,14) |
+| Arbeidslys (`work`) | under lyets takkant akter og over den åpne sida | ingen lanterne |
+
+Masta med den hvite står 7 m fra flaggstanga og over den: spillet gir vimpel (`mastTop`).
 
 ## 6. Arbeidsflyten og plassene
 
-Fylles ut etter kritikksløyfen.
+Jonas 02.11.2026 (med et bilde av styrbord side): «Kan du fjerne dette vinduet på styrbordsiden slik at mannskapet har plass til å
+arbeide der? Er vel omtrent der juksamaskinene, garnhaler eller linehaler blir stående.» Lyet er nå åpent om styrbord fra x 3,10 til
+5,88 (ripa opp til 4,45 m, en list under taket og et håndtak langs den), og tegningens haleport og de to vinduene er én åpning. Om
+babord står veggen med de to vinduene.
+
+| Plass | Hvor (x, y) | Hvorfor |
+|---|---|---|
+| Haleren (`hauler`) | 5,47, styrbord ripe, med halerulla på kappen | forut i den åpne sida, under arbeidslyset |
+| Fiskeren ved haleren (`spot0`) | 5,30, −1,30 | |
+| Blødekaret (`work.tub`, spillets) | 4,62, −1,45 | rett akter for haleren |
+| Den som bløgger (`spot1`) | 4,62, −0,85 | innenfor karet |
+| Sløyebordet (`work.table`, eget, `own`) | 3,20–4,10, babord ripe | over luka fra karet; avfallet over babord ripe |
+| Den som sløyer (`spot2`) | 3,65, 0,90 | innenfor bordet, vendt mot babord |
+| Lasteromsluka (`hatch`) | 3,92–5,48 midt | mellom karet og bordet: fisken ned på is |
+| Garnkaret og stampene (`kit.garn`, `kit.stamps`) | 5,10, babord | forut for bordet, over luka fra haleren |
+| Juksamaskinene (`13-instruments.js JIG_Z`) | styrbord x 3,85 og 3,15 i den åpne sida, 1,75 og 1,05 på akterdekket; babord 0,55 | ripa der det er plass, ikke ved bordet, casingen eller stigen |
+| Skipperen (`skipperAt`, `ror`) | 7,08, −0,55 på styrhusdørken | bak rattet, setet bak ham |
+
+`qa/deckpoints.py breisjark` (det nye bygget): alle plassene på dekkets høyde (0,88–0,95 over vannet), rorplassen på styrhusdørken
+(1,93; i den gamle modellen hadde dørken 1,79 m under taket og var ikke dekk), døra på gangen ved bakken (1,90), og ingen dekkscelle på
+noe tak (den høyeste er bakken, 1,95).
 
 ## 7. Kritikksløyfen
 
-Fylles ut underveis.
+| Runde | Hva ble sett på | Funn | Retting |
+|---|---|---|---|
+| 0 | `stubcheck` på det gamle snittet, `fair.py` på det gamle skroget | 28,6 + 0,9 t; bule 0,038 i baugen | (avvikslista) |
+| 1 | `check()` på første utkast | 23,05 t; vannlinja hoppet 0,38 m ved x 9,66 (hjørnet i snittet forsvant når bunnreisning + utfall gikk over 90°); propellen 5 cm fra skroget; dashbordet utenfor synsfeltet; gangen 0,40 | myk overgang (`softplus`, mykt minimum); propellen 1,06; `hp` −0,35; huset 4 cm inn |
+| 2 | `check()` | knekk i vannlinja ved x 6,42: kurven i snittet gikk til ripa, og ripa hopper ved bakken | kurven til en jevn linje over ripa, klippet ved ripa (`z_ref`, `h_ref`) |
+| 3 | `check()`, vekta | vannlinjebredden falt til 83 % | mer bunnreisning og fyldigere kimming: 21,9 t, 85 % |
+| 4 | `fair.py` på det nye skroget | vannlinjene 0,008 (grensen 0,02); knekkene står i stevnen, fenderlista og trinnene | |
+| 5 | klasjsjekken (`qa/clip_malo36.py`) | 78: trinnene i skansen, vinsjfoten og ventilene under dekket, casingens tak i skansen, husets fot | flyttet; sjekken måler skansens innside etter høyden. **0** |
+| 6 | les koden mot dekkskartet | styrhusskallets lokk ga 1,81 m under taket over dørken | skallet åpent oppe, takets underside lukker det |
+| 7 | nærbilder | stigen opp på lyet gikk gjennom takplata (også i den gamle) | stigen akter for takkanten, åpning i rekka |
+| 8 | K1–K7, nærbildene | fenderlistas svarte bånd 25 cm bredt (flaten over lista fikk listas farge); viskerne tvers over rutene sett fra rattet | listas øverste punkt hører til skansen; viskerne kortere og parkert lavt |
+| 9 | Jonas' bilde av styrbord side | vinduene står der mannskapet skal arbeide | styrbord side av lyet åpen; bordet til babord; juksaplassene per side |
+| 10 | Node-testen | fjernmodellen 18 165 punkter mot 12 000 | lyets vegger og beslagene grovere i `build(False)`: 11 754 |
 
 ## 8. Selvvurdering
 
-Fylles ut til slutt.
+Fylles ut når testene og bildene fra spillet er sett.
 
 ## 9. Spørsmål til Jonas
 
