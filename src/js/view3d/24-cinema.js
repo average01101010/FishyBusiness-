@@ -175,7 +175,7 @@
   // - The picture: every fifteen seconds nine points of it (a 3 x 3 grid) are read back. In daylight, black twice running, or one
   //   colour three times running in clear weather, is a picture that is not there (night, fog and the transitions are left out).
   // - A canvas of 0 px while the 3D view is on.
-  const GFX = {probeAt:0, pixAt:0, black:0, flat:0, nan:false, px:new Uint8Array(4), tags:[], k:0, prev:'starten av rammen'};
+  const GFX = {probeAt:0, pixAt:0, black:0, flat:0, nan:false, px:new Uint8Array(4), tags:[], k:0, prev:"starten av rammen", pend:null, pbo:null, buf:null};
   const GLNAME = {1280:'INVALID_ENUM', 1281:'INVALID_VALUE', 1282:'INVALID_OPERATION', 1285:'OUT_OF_MEMORY', 1286:'INVALID_FRAMEBUFFER_OPERATION'};
   function gfxErr(msg, ctx){
     if (typeof cloudErr !== 'function') return;
@@ -226,12 +226,36 @@
   function gfxEnd(now, eye, VPn, W, Hh){
     if (GLPROBE){ glChk('slutten av rammen'); GLPROBE = false; }
     gfxNaN(eye, VPn);
-    if (now - GFX.pixAt < 15000 || INTRO || gl.isContextLost()) return;
+    if (gl.isContextLost()){ GFX.pend = null; GFX.pbo = null; return; }
+    // the nine points are read without waiting for the GPU where it can (WebGL 2): into a buffer, with a fence, and taken out a few frames
+    // later when the fence says the GPU is done. A read that waits (readPixels into memory) held the frame until the GPU had drawn it,
+    // which on a GPU drawn by the CPU stopped ultratest's screenshot; WebGL 1 reads that way, but not on such a GPU.
+    if (GFX.pend){
+      const P = GFX.pend, st = gl.clientWaitSync(P.sync, 0, 0);
+      if (st === gl.TIMEOUT_EXPIRED && now - P.t < 5000) return;
+      if (st === gl.ALREADY_SIGNALED || st === gl.CONDITION_SATISFIED){
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, GFX.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, GFX.buf); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+        const px = []; for (let i = 0; i < 9; i++) px.push([GFX.buf[i * 4], GFX.buf[i * 4 + 1], GFX.buf[i * 4 + 2]]);
+        gfxPix(gfxJudge(px, P.day, P.vis));
+      }
+      gl.deleteSync(P.sync); GFX.pend = null; return;
+    }
+    if (now - GFX.pixAt < 15000 || INTRO) return;
     GFX.pixAt = now;
     if (!W || !Hh){ gfxErr('3D lerretet er 0 px', {cw:canvas.clientWidth, ch:canvas.clientHeight}); return; }
-    const px = [];
-    for (const gy of [0.2, 0.5, 0.8]) for (const gx of [0.2, 0.5, 0.8]){ gl.readPixels(Math.floor(W * gx), Math.floor(Hh * gy), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, GFX.px); px.push([GFX.px[0], GFX.px[1], GFX.px[2]]); }
-    gfxPix(gfxJudge(px, env.night < 0.2 && env.day > 0.8, env.vis || 0));
+    const day = env.night < 0.2 && env.day > 0.8, vis = env.vis || 0, at = [];
+    for (const gy of [0.2, 0.5, 0.8]) for (const gx of [0.2, 0.5, 0.8]) at.push([Math.floor(W * gx), Math.floor(Hh * gy)]);
+    if (GL2 && gl.fenceSync){
+      if (!GFX.pbo){ GFX.pbo = gl.createBuffer(); GFX.buf = new Uint8Array(36); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, GFX.pbo); gl.bufferData(gl.PIXEL_PACK_BUFFER, 36, gl.STREAM_READ); }
+      gl.bindBuffer(gl.PIXEL_PACK_BUFFER, GFX.pbo);
+      at.forEach(([x, y], i) => gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, i * 4));
+      gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+      GFX.pend = {sync:gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0), t:now, day, vis};
+      return;
+    }
+    if (GFX.soft) return;
+    const px = at.map(([x, y]) => { gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, GFX.px); return [GFX.px[0], GFX.px[1], GFX.px[2]]; });
+    gfxPix(gfxJudge(px, day, vis));
   }
   function frame(){ const j0 = j0F = performance.now(), EQ0 = S.equip, TE = tryEq(); if (TE) S.equip = TE; try { frame0(); } finally { S.equip = EQ0; } JSMS = JSMS ? JSMS * 0.92 + (performance.now() - j0) * 0.08 : performance.now() - j0; }
   let FRAMEN = 0;
