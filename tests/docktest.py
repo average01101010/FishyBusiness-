@@ -192,7 +192,11 @@ async def run(p, w, h, tag):
     check(await pg.evaluate("SETM === null && !S.boat.gop && document.getElementById('setBar').hidden"), 'Avbryt lukker settemodus uten å sette noe')
 
     # «Ta opp» lights up within 0.3 km of a buoy; Auto-nav to a buoy goes to a point just off it
-    r = json.loads(await J("""(() => { const b = S.boat, p = b.pos, s = {id:'tst', vid:S.cur, kind:'line', lk:'hyse', n:1, hooks:700, a:{x:p.x + 2, y:p.y}, b:{x:p.x + 3, y:p.y}, tSet:S.t, depth:40, heavy:false};
+    r = json.loads(await J("""(() => { const b = S.boat, p = b.pos, deep = q => !isLand(q) && depthF(q) >= 10;
+      // a string in open water near the boat (the depth 50 m off the buoy must hold whatever the tide; the spot was once just 2 km east)
+      let dx = 2, dy = 0; search: for (const r of [2, 1.5, 3, 1, 4]) for (let k = 0; k < 16; k++){ const a = k / 16 * Math.PI * 2, A = {x:p.x + r * Math.cos(a), y:p.y + r * Math.sin(a)}, B = {x:A.x + Math.cos(a), y:A.y + Math.sin(a)}, F = {x:A.x - 0.05 * Math.cos(a), y:A.y - 0.05 * Math.sin(a)};
+        if (deep(A) && deep(B) && deep(F)){ dx = A.x - p.x; dy = A.y - p.y; break search; } }
+      const s = {id:'tst', vid:S.cur, kind:'line', lk:'hyse', n:1, hooks:700, a:{x:p.x + dx, y:p.y + dy}, b:{x:p.x + dx * 1.5, y:p.y + dy * 1.5}, tSet:S.t, depth:40, heavy:false};
       S.sets = (S.sets || []).filter(x => x.id !== 'tst'); S.sets.push(s); renderActs();
       const far = DOCK.items().find(x => x.id === 'taopp'); const sf = buoyStandoff(s, s.a);
       b.pos = {x:sf.x, y:sf.y}; renderActs(); const near = DOCK.items().find(x => x.id === 'taopp');

@@ -17,11 +17,12 @@
   // (standing up the view is narrow: the camera goes further out, so all of her shows)
   let PAINTV = null;
   function paintView(on){
-    if (on){ if (PAINTV) return; PAINTV = {was:active, yaw:cam.yaw, pitch:cam.pitch, dist:cam.dist, el:document.getElementById('drawer')};
+    if (on){ if (PAINTV) return; PAINTV = {was:active, yaw:cam.yaw, pitch:cam.pitch, dist:cam.dist, el:document.getElementById('drawer'), port:innerHeight > innerWidth};
       const V = VESSELS[vtype()]; cam.pitch = 0.2; cam.dist = Math.max(11, V.len * 1.6) * (innerHeight > innerWidth ? 1.7 : 1); cam.yaw = 1.1; if (!active) show(true, true); }
     else if (PAINTV){ const P = PAINTV; PAINTV = null; cam.yaw = P.yaw; cam.pitch = P.pitch; cam.dist = P.dist; if (!P.was) show(false); }
   }
   function paintAim(C, yawW){
+    const port = innerHeight > innerWidth; if (port !== PAINTV.port){ PAINTV.port = port; cam.dist *= port ? 1.7 : 1 / 1.7; }   // the screen turned
     const el = PAINTV.el; if (!el || el.hidden) return; const r = el.getBoundingClientRect(), W = innerWidth || 1, Hh = innerHeight || 1, tf = Math.tan(27.5 * DEG) * cam.dist;
     if (r.left > W * 0.3){ const k = (W - r.left) / W * tf * (W / Hh); C[0] += Math.cos(yawW) * k; C[2] += Math.sin(yawW) * k; }
     else C[1] -= Math.max(0, Hh - r.top) / Hh * tf;

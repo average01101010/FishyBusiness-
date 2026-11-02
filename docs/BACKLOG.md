@@ -140,7 +140,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **Røde også på grunnbygget:** dyntest (ringnot38: taktisk diameter og stopplengde), quotatest (kvotesamarbeidet: eieren får ikke betalt, `paid: False`), treeshot (trærne og programmet deres kommer ikke inn, `n: 0`), shot23 (`#modeBtn` er ikke synlig; testen står ikke i noen liste i `run.py` og er trolig utdatert).
 - **Krever hele kysten** (som før): autonavtest, npctest, havntest, marktest, og nå også havnshot (strendene ved Bergen, `tiles: 0`) og lifeshot (Bodø om natta, røyk i Hammerfest).
 - **Varierer mellom kjøringer også med frø:** drifttest scenario 6 («a long trip rests aboard away from home») var rød to ganger og grønn to ganger på samme bygg med `seed=1`, og `rep2` er 4 eller 5 også på grunnbygget. Altså tid, ikke kast; testen bør spille minuttene uten `tick` ved siden av (som maptest).
-- docktest rød ved siden av en annen test, grønn alene (10.7). sidetab, pwatest, maptest som før.
+- docktest: «Ta opp er grått … 50 m fra blåsa» var rød på flettebygget også alene, fordi testen la blåsa 2 km øst for båten, og uten besøket på Service-siden (M2) gikk klokka og tidevannet annerledes, så punktet 50 m utenfor ble for grunt. Rettet i testen 02.11.2026 (M3): blåsa legges der det er minst 10 m både ved blåsa, på stubben og 50 m utenfor; grønn alene med 96 OK. sidetab, pwatest, maptest som før.
 - Kjørt for seg etterpå fordi de dekker butikkene: tut (28 OK, `"tut": 0`), heattest (66 OK), dbg23o (stille).
 
 ## 10.7 Små ryddejobber
