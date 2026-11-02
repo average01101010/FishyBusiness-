@@ -399,7 +399,7 @@ PORTS = [8.30, 9.05, 9.80]   # the cabins' portholes in the white side under the
 PORT_Z = 5.42; PORT_R = 0.12
 VENTS = [(2.0, 2.7), (11.0, 11.6)]   # the engine room's air (aft) and the forepeak's (louvred, both sides)
 VENT_Z = (5.15, 5.45)
-HAWSE = (14.12, 5.82); HAWSE_R = 0.17        # the hawse pipes' mouths high in the bow, forward of the registration mark (bower)
+HAWSE = (14.02, 5.45); HAWSE_R = 0.17        # the hawse pipes' mouths high in the bow, forward of the registration mark (bower)
 WELL = (LADDER[0] - 0.02, LADDER[1] + 0.02, LADDER[2] - 0.02, LADDER[3] + 0.02)
 FREE = [(0.8, 0.5), (2.6, 0.5), (4.4, 0.5), (6.2, 0.5), (8.0, 0.5)]   # the freeing slots in the shelter deck's bulwark at the deck
 FREE_F = [(12.9, 0.45), (13.6, 0.40)]                           # and round the foredeck
