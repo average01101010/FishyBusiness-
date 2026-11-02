@@ -106,6 +106,13 @@ Halestasjonen er åpen om styrbord fra x 4,60 til 7,80, ripa 0,95 m over arbeids
 | 0 | `stubcheck` og `lines.py` på det gamle snittet; før-bildene i spillet | 120,9 t; avvikslista kap. 4 | |
 | 1 | `check()` på første utkast | 51 t (vannlinjebredden 78 %), bredden i `vessel3d`-båndet −7 %, det hvite fiskelyset 2,04 m over sidelanternene (krav 2,20), en knekk ved stevnen | fyldighet 0,95 og lavere bunnreisning midtskips, forfoten fyldigere: 73,4 t, 90 %; fiskelysene løftet |
 | 2 | spantriss og profil (`qa/lines.py`) | knekk i profilen der kjølen møter forfoten (x 11,4) | kjølen blandet glatt inn i forfoten; 21 av 21 kontroller grønne |
+| 3 | K1–K7 av den gamle (fra git) og den nye i Blender | kroppen grunn og kjølen 1,4 m dyp under den (en finnekjøl i K3s); hekkens bunn over vannet, en hule over roret; K6 svart: sidelanternene sto inne i styrhustakets bue (8,30 mot 8,44 m) | kroppen 0,4 m dypere, fyldigheten 0,72 og bunnreisningen 12° midtskips: 75,1 t; hekken ved vannlinja; lanternene på brett over taket; lista 0,2 m høyere (bredden i `vessel3d`-båndet 6,30 m) |
+| 4 | klasjsjekken (`qa/clip_kyst15.py`, ny) | 104: 80 var en feil i sjekken (halestasjonens område), 24 ekte (dekket i halestasjonen ut i skrogsida: innsida målt der skroget er bredere) | innsida målt ved dekket. **0** |
+| 5 | **Jonas: «Styrhuset og vinduene ser også ganske fucked ut»** | ujevne ruter med tykke hvite stolper; sideglasset i ett plan mens veggen følger ripa og smalner 0,35 m; hjørnedøra som en hvit plate | sammenhengende svart vindusbånd, tre like frontruter, én rute i hvert frontskjørt, hver siderute i veggens eget plan, roret lavere |
+| 6 | nærbildene (halestasjonen, broa, baugen, hekken, åpningen, leideren) | ingenting nytt | |
+| 7 | eksport, Node (420 OK), `qa/deckpoints.py` | shelterdekket, styrhuset og fordekket ikke i dekkskartet (ingen rorplass): leiderens fot lå i en sperret celle mot endeveggen; den som sløyer havnet på shelterdekket (spillet setter ham mot senterlinja) | leideren snudd, foten på fritt dekk; `work.stand` i `deckPoints`; alle plassene på riktig dekk |
+| 8 | overlegget av den nye profilen (K3s) over den gamle | shelterdekket, rekka, åpningen, styrhusets plass og stevnen ligger oppå hverandre; kroppen dypere og kjølen grunnere (vekta), lista 0,2 m høyere, styrhustaket noe lavere | |
+| 9 | testene etter hverandre (`runtests.sh`) og etter-bildene i begge formater | `vessel3d`, `brotest`, `lanterntest`, `regmarktest`, `maletest`, `walktest`, `vesseltest`, `jigshot` grønne; `penshot` rød på GL-feil 1282 (kjent fra før havsjarken, BACKLOG); `anchor3d`: kyst15s anker ble ikke ferdig hevet innen testens tid; nattbildene fra spillet for nær til å vise lanternene | se kap. 8 |
 
 ## 8. Selvvurdering
 
