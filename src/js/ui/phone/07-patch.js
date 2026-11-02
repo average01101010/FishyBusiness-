@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['jevn-021126', '02.11.2026', 'Jevnere båter rundt deg', 'Smoother boats around you', [
+       ['Båtene til de andre spillerne glir videre mellom posisjonsmeldingene, følger svingen de er i, og legger seg mykt inn på den nye posisjonen i stedet for å hoppe. Posisjonen som sendes, er der båten faktisk er, ikke der den var ved forrige spillminutt.', 'The other players\' boats glide on between their position reports, follow the turn they are in, and ease onto the new position instead of jumping. The position sent is where the boat actually is, not where she was at the last game minute.'],
+       ['Lokalflåten, kystruta og ferja står ikke lenger stille et øyeblikk hvert tiende sekund, og de svinger mykt i stedet for å snu på stedet.', 'The local fleet, the coastal ship and the ferry no longer stand still for a moment every ten seconds, and they turn smoothly instead of swinging round on the spot.'],
+    ]],
     ['kveil-021126', '02.11.2026', 'Ingen taukveiling uten tau', 'No coiling without a rope', [
        ['Mannskapet og du kveiler ikke lenger tau som ikke finnes. Den som er ledig, feier, ser over redskapen eller tar en annen pause, og den første ved haleren hiver inn redskapen.', 'The crew and you no longer coil rope that is not there. Whoever is free sweeps, looks over the gear or takes another break, and the first at the hauler hauls the gear in.'],
     ]],

@@ -15,7 +15,12 @@ async function worldTick(){
     const b = S.boat;
     // the paint (vessel3d.js livStr) and the sea time (core/09e-fartstid.js) go along; a server without them yet (404) gets the
     // position without the newest first, then without the paint
-    const a = {x:+b.pos.x.toFixed(4), y:+b.pos.y.toFixed(4), hd:+(b.heading || 0).toFixed(3),
+    // where she is now, between the simulation's minutes (ui/04-panels-instruments.js livePose, the manoeuvring model's pose when it
+    // has her): b.pos is the minute's place, up to a game minute (10 real seconds, some 250 m under way) behind, which the others saw as
+    // a jump at every report
+    let L = null; try { L = typeof livePose === 'function' ? livePose() : null; } catch (e){ L = null; }
+    const lp = L && L.p && isFinite(L.p.x) && isFinite(L.p.y) && dist(L.p, b.pos) < 2 ? L.p : b.pos, lh = L && isFinite(L.hd) ? L.hd : b.heading || 0;
+    const a = {x:+lp.x.toFixed(4), y:+lp.y.toFixed(4), hd:+(((lh % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)).toFixed(3),
       v:+(b.status === 'sailing' ? b.v || 0 : 0).toFixed(1), st:String(b.status || ''), boat:S.boatName || '', vtype:b.type || ''}, lv = livStr(b);
     if (lv && !WORLDP.noLiv) a.liv = lv;
     // the figures: the skipper's look and the first four hands' (core/09i-look.js; supabase/migrations/20261010140000_look.sql)

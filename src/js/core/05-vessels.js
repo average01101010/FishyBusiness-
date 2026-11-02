@@ -413,7 +413,7 @@ function npcStates(H, only){
 }
 // The other players' boats as the server last told them (ui/10h-world.js fills PEERS every 15 s: {id, boat, vtype, x, y, hd, v, st, liv,
 // user, fs, at}: the owner's player name and sea time in points, core/09e-fartstid.js),
-// carried on along their heading at their speed for up to 30 real seconds since they were heard, so they glide between reports. They
+// carried on between the reports and eased onto each new one (PTRK below), so they glide with no jump. They
 // look like the boat type they are (its length and beam pick the model, view3d.js npcKit) and carry the boat's name on the AIS.
 const PEERS = [];
 // The other players' sets standing in the sea near this boat (ui/10h-world.js, supabase gear_near): {k (garn, line, teine), a:{x, y}, b:{x, y}}, with
@@ -422,17 +422,65 @@ const PEERGEAR = [];
 // another player's boat name goes into the chart's SVG and the AIS card as HTML, so nothing that could make markup is kept (the
 // server strips the same, supabase/migrations/20261006020000_toplist.sql)
 function peerName(s){ return String(s || '').replace(/[<>&"'`\\]/g, '').trim().slice(0, 24) || '–'; }
+// Between the reports (every 15 s) a peer's boat is carried on along her heading at her speed, turning as she was turning between her last
+// two reports (the turn dying out over PT_TURN s, so a turn at a route's corner is followed and then straightened), for up to PT_MAX s,
+// after which she slows to a stop over PT_STOP s. When a new report comes, she is not moved there at once: the gap between where she is
+// shown and where the new report puts her is taken up smoothly (PT_BLEND, longer for a bigger gap), so she glides onto the new track
+// with no jump (Jonas 02.11.2026: «andre brukere sine båter … beveger seg i realtime uten hakking eller lagging»). A gap of more than
+// PT_SNAP km (she has been towed, or reset) is jumped. PTRK holds the track per peer.
+const PTRK = new Map();
+const PT_TURN = 6;   // s: a turn dies out over this
+const PT_MAX = 35;   // s at full speed with no new report
+const PT_STOP = 10;   // s to slow to a stop after that
+const PT_SNAP = 1.5;   // km: a bigger gap to a new report is jumped
+const ptAng = (a, b) => { let d = (b - a) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return d; };
+// where the report q puts her t real seconds after it: {x, y, hd}
+function ptPred(q, w, t){
+  const moving = q.st === 'sailing' && q.v > 0.2; if (!moving || t <= 0) return {x:q.x, y:q.y, hd:q.hd};
+  // the time she has gone at full speed: all of it up to PT_MAX, then slowing to a stop over PT_STOP
+  const te = t <= PT_MAX ? t : PT_MAX + PT_STOP * (1 - Math.exp(-(t - PT_MAX) / PT_STOP)), spd = q.v * NM * GAME_RATE / 3600;   // km per real second
+  const hdAt = u => q.hd + w * PT_TURN * (1 - Math.exp(-u / PT_TURN));
+  if (Math.abs(w) < 1e-4) return {x:q.x + Math.sin(q.hd) * spd * te, y:q.y - Math.cos(q.hd) * spd * te, hd:q.hd};
+  const n = Math.min(24, 4 + Math.ceil(te / 2)), du = te / n; let x = q.x, y = q.y;
+  for (let k = 0; k < n; k++){ const h = hdAt((k + 0.5) * du); x += Math.sin(h) * spd * du; y -= Math.cos(h) * spd * du; }
+  return {x, y, hd:hdAt(te)};
+}
+// the track's pose at real time now (ms): the prediction from the last report plus what is left of the gap from the one before
+function ptPose(T, now){
+  const P = ptPred(T.q, T.w, (now - T.q.at) / 1000);
+  if (T.off){ const u = (now - T.off.t0) / T.off.dur;
+    if (u >= 1) T.off = null;
+    else { const k = 1 - u * u * (3 - 2 * u); P.x += T.off.x * k; P.y += T.off.y * k; P.hd += T.off.hd * k; } }
+  return P;
+}
+// a report into the track (ui/10h-world.js worldTick fills PEERS; here each peer's newest report is taken up once)
+function ptTake(q, now){
+  let T = PTRK.get(q.id);
+  if (T && T.q.at === q.at && T.q.x === q.x && T.q.y === q.y) return T;
+  // the same report again (the boat's page is hidden: the server keeps her last report for two minutes): her track stands
+  if (T && Math.abs(T.q.at - q.at) < 1500 && T.q.x === q.x && T.q.y === q.y && T.q.hd === q.hd){ T.q = Object.assign({}, q, {at:T.q.at}); return T; }
+  if (!T){ T = {q, w:0, off:null}; PTRK.set(q.id, T); return T; }
+  const shown = ptPose(T, now), old = T.q, dt = (q.at - old.at) / 1000;
+  // her turn rate from the last two reports (both under way, and not too far apart in time), as far as a boat turns
+  T.w = q.st === 'sailing' && old.st === 'sailing' && dt > 2 && dt < 45 ? clamp(ptAng(old.hd, q.hd) / dt, -0.25, 0.25) : 0;
+  T.q = q; T.off = null;
+  const P = ptPred(q, T.w, (now - q.at) / 1000), gx = shown.x - P.x, gy = shown.y - P.y, gd = Math.hypot(gx, gy), gh = ptAng(P.hd, shown.hd);
+  if (gd < PT_SNAP && (gd > 1e-5 || Math.abs(gh) > 1e-3)) T.off = {x:gx, y:gy, hd:gh, t0:now, dur:1000 * clamp(1 + gd * 1000 / 70, 1.2, 6)};
+  return T;
+}
 function peerStates(){
   const out = [], now = Date.now();
   for (const q of PEERS){
-    const V = VESSELS[q.vtype] || VESSELS.trebat, dt = Math.min(30, Math.max(0, (now - q.at) / 1000)), moving = q.st === 'sailing' && q.v > 0.2;
-    const d = moving ? q.v * NM * dt * GAME_RATE / 3600 : 0, p = {x:q.x + Math.sin(q.hd) * d, y:q.y - Math.cos(q.hd) * d};
-    out.push({id:'p' + q.id, name:peerName(q.boat), type:V.len >= 11 ? 'kyst' : 'sjark', p, hd:q.hd, cog:q.hd, v:moving ? q.v : 0, st:q.st === 'fishing' ? 'fishing' : q.st === 'port' ? 'port' : 'out', player:true, vtype:q.vtype, L:V.len, B:V.beam || V.len / 3, liv:String(q.liv || '').slice(0, 160), lk:String(q.lk || '').slice(0, 64), ck:String(q.ck || '').slice(0, 300),
+    const V = VESSELS[q.vtype] || VESSELS.trebat, moving = q.st === 'sailing' && q.v > 0.2;
+    const T = ptTake(q, now), P = ptPose(T, now), p = {x:P.x, y:P.y}, age = (now - q.at) / 1000;
+    const v = moving ? (age <= PT_MAX ? q.v : q.v * Math.exp(-(age - PT_MAX) / PT_STOP)) : 0;
+    out.push({id:'p' + q.id, name:peerName(q.boat), type:V.len >= 11 ? 'kyst' : 'sjark', p, hd:P.hd, cog:P.hd, v:Math.round(v * 10) / 10, st:q.st === 'fishing' ? 'fishing' : q.st === 'port' ? 'port' : 'out', player:true, vtype:q.vtype, L:V.len, B:V.beam || V.len / 3, liv:String(q.liv || '').slice(0, 160), lk:String(q.lk || '').slice(0, 64), ck:String(q.ck || '').slice(0, 300),
       user:q.user ? peerName(q.user).slice(0, 20) : '', fs:Math.max(0, +q.fs || 0)});
   }
+  // the tracks of boats no longer heard go after two minutes
+  if (PTRK.size > PEERS.length) for (const [id, T] of PTRK) if (now - T.q.at > 120000 && !PEERS.some(q => q.id === id)) PTRK.delete(id);
   return out;
 }
-
 const hooks = {};
 let S;
 function newState(){

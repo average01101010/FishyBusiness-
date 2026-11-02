@@ -117,3 +117,7 @@ Jonas: «Båten burde som oftest ligge til en skikkelig kai fremfor å ligge på
   - Ekkoloddvinduet (`#echoWrap`) er fjernet (02.10.2026). GPS-boksen (`#instr`, `INSTR`) står igjen.
   - **Konsollen i 3D** (skiffen) viser den samme varmen (`heatDrawInto`) og «EKKOLODD AV» når ekkoloddet er av. Med CHIRP viser konsollkartet litt mer enn ±1,1 km.
   - Ytelse: Rundt 10 µs per rute her og rundt 40 µs med CPU-en struping fire ganger. Hele sonarsirkelen (4 000 ruter) tar 0,15–0,18 s fordelt på biter, og en full oppdatering kommer hvert annet spillminutt.
+
+## Jevn bevegelse i 3D (02.11.2026)
+
+`drawNPC` (`view3d/20-trawl-seine.js`) regner båtene med sin egen klokke (`npcClock`): spillminuttet og tiden siden, ikke holdt på 0,999 av minuttet som `currentFrac`. Før sto båtene stille i opptil 0,2 s hvert tiende sekund, til 200 ms-ticken tok neste minutt. Klokka går aldri bakover med en brøkdel; et ekte sprang (innhenting, nytt spill) tas som det er. Kursen båten tegnes med, dreier mot den virkelige over rundt et halvt sekund (`npcHead`), så den ikke snur på stedet i et hjørne av ruta eller mellom drift og tilbakeløp. Posisjonen er fortsatt nøyaktig. En snuing over 150° (ved kai) og båtene på slep tas med en gang.
