@@ -1671,7 +1671,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 111 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 124 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (699 linjer)
+## `src/js/ui/03-map.js` (703 linjer)
 
 ---------- map ----------
 
@@ -1688,36 +1688,36 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 65 `chartPan()`
   - 71 `chartWhole(V)`
   - 77 `chartCompose(V, tiles, budget)`
-  - 107 `chartWork()`
-  - 118 `chartFlush()`
-  - 124 `chartTile(V, i, j, q)`
-  - 140 `chartWant(V)`
-  - 148 `chartPump()`
-  - 158 `chartLoadLine()`
-  - 164 `chartWarm(wps)`
-  - 171 `chartWarmNext()`
-  - 175 `chartCame(pk)`
-  - 190 `ruLayerCanvas(A)`
-  - 199 `chartVectors(V, again)`
-  - 235 `chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st)`
-  - 322 `scheduleChart()`
-  - 325 `renderBase()`
-  - 339 `updateMapButtons()`
-  - 350 `renderStatic()`
-  - 418 `portIcon(p, s, u)`
-  - 433 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 452 `scheduleStatic()`
-  - 457 `aisTrack(id, H)`
-  - 460 `aisInfo(n)`
-  - 473 `renderAisCard()`
-  - 474 `renderDyn()`
-  - 552 `pinAdd(mp)`
-  - 557 `pinOpen(id, fresh)`
-  - 577 `pinKb()`
-  - 608 `ptrUp(e)`
-  - 638 `unzoom()`
-  - 645 `portByLabel(pt)`
-  - 650 `addWaypoint(pt)`
+  - 111 `chartWork()`
+  - 122 `chartFlush()`
+  - 128 `chartTile(V, i, j, q)`
+  - 144 `chartWant(V)`
+  - 152 `chartPump()`
+  - 162 `chartLoadLine()`
+  - 168 `chartWarm(wps)`
+  - 175 `chartWarmNext()`
+  - 179 `chartCame(pk)`
+  - 194 `ruLayerCanvas(A)`
+  - 203 `chartVectors(V, again)`
+  - 239 `chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st)`
+  - 326 `scheduleChart()`
+  - 329 `renderBase()`
+  - 343 `updateMapButtons()`
+  - 354 `renderStatic()`
+  - 422 `portIcon(p, s, u)`
+  - 437 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 456 `scheduleStatic()`
+  - 461 `aisTrack(id, H)`
+  - 464 `aisInfo(n)`
+  - 477 `renderAisCard()`
+  - 478 `renderDyn()`
+  - 556 `pinAdd(mp)`
+  - 561 `pinOpen(id, fresh)`
+  - 581 `pinKb()`
+  - 612 `ptrUp(e)`
+  - 642 `unzoom()`
+  - 649 `portByLabel(pt)`
+  - 654 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (219 linjer)
 
@@ -1933,12 +1933,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (870 linjer)
+## `src/js/ui/phone/07-patch.js` (879 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 863 `patch()`
+  - 872 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -3251,19 +3251,19 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 78 `staleShore(pk)`
   - 79 `drawShore(VP)`
 
-## `src/js/view3d/18-setup.js` (165 linjer)
+## `src/js/view3d/18-setup.js` (191 linjer)
 
 ---------- setup ----------
 
 - **1** setup
-  - 32 `init()`
-  - 143 `anchorAlarm3d(kind)`
-  - 146 `sayBoat(id, txt)`
-  - 148 `sayWorker(pid, idx, nm, no, en)`
-  - 152 `crewFx3d(c, kind, o)`
-  - 154 `say3d(c, no, en)`
-  - 158 `buildLabels()`
-  - 159 `resize()`
+  - 49 `init()`
+  - 169 `anchorAlarm3d(kind)`
+  - 172 `sayBoat(id, txt)`
+  - 174 `sayWorker(pid, idx, nm, no, en)`
+  - 178 `crewFx3d(c, kind, o)`
+  - 180 `say3d(c, no, en)`
+  - 184 `buildLabels()`
+  - 185 `resize()`
 
 ## `src/js/view3d/19-wildlife-npc.js` (200 linjer)
 
