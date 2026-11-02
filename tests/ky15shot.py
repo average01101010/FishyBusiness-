@@ -34,27 +34,33 @@ async def main():
             await boot(pg); await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(3000)
             await pg.evaluate(SET, [TYPE, 'ute', 11]); await pg.wait_for_function("geoOf('kyst15') && geoOf('kyst15').skipperAt", timeout=120000)
             if f == 'liggende': print('model', json.dumps(await pg.evaluate(ASK, TYPE)), flush=True)
-            # K1: the starboard bow quarter, a little above the water
-            await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 14; c.pitch = 0.16; c.yaw = 2.5; })()"); await pg.wait_for_timeout(5000)
-            await pg.screenshot(path=shot('ute', f), timeout=400000)
-            # K2: the port stern quarter, higher, into the cockpit
-            await pg.evaluate("(() => { const c = G3._debug.cam; c.dist = 11; c.pitch = 0.34; c.yaw = -0.7; })()"); await pg.wait_for_timeout(4000)
-            await pg.screenshot(path=shot('akter', f), timeout=400000)
-            await pg.evaluate("G3.setHelm(true)"); await pg.wait_for_timeout(4000)
-            await pg.screenshot(path=shot('bro', f), timeout=400000)
-            await pg.evaluate("G3.setHelm(false)")
-            # the work at sea: fishing on the ground, two hands, line rig, the catch
-            await pg.evaluate(SET, [TYPE, 'dekk', 11]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 8.5; c.pitch = 0.62; c.yaw = 0.9; })()"); await pg.wait_for_timeout(6000)
-            await pg.screenshot(path=shot('dekk', f), timeout=400000)
-            # K6: K1 at night
-            await pg.evaluate(SET, [TYPE, 'ute', 22]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 13; c.pitch = 0.16; c.yaw = 2.5; })()"); await pg.wait_for_timeout(6000)
-            await pg.screenshot(path=shot('natt', f), timeout=400000)
-            # K6 from the port bow too: the red and the white, the green screened off
-            await pg.evaluate("(() => { const c = G3._debug.cam; c.yaw = -2.5; })()"); await pg.wait_for_timeout(4000)
-            await pg.screenshot(path=shot('nattbb', f), timeout=400000)
-            # K7: from above by day in port-like stillness (the deck and the roofs seen from a drone, M14)
-            await pg.evaluate(SET, [TYPE, 'ute', 11]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 16; c.pitch = 0.95; c.yaw = 1.9; })()"); await pg.wait_for_timeout(5000)
-            await pg.screenshot(path=shot('ovenfra', f), timeout=400000)
+            if os.environ.get('NIGHT'):
+                # K6 at night under way from a distance (the lanterns over the frame's top at 13 m): starboard bow, port bow, astern
+                for nm, yaw in (('natt_sb', 2.5), ('natt_bb', -2.5), ('natt_akter', 0.0)):
+                    await pg.evaluate(SET, [TYPE, 'ute', 22]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 32; c.pitch = 0.10; c.yaw = %s; })()" % yaw); await pg.wait_for_timeout(6000)
+                    await pg.screenshot(path=shot(nm, f), timeout=400000)
+            else:
+                # K1: the starboard bow quarter, a little above the water
+                await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 14; c.pitch = 0.16; c.yaw = 2.5; })()"); await pg.wait_for_timeout(5000)
+                await pg.screenshot(path=shot('ute', f), timeout=400000)
+                # K2: the port stern quarter, higher, into the cockpit
+                await pg.evaluate("(() => { const c = G3._debug.cam; c.dist = 11; c.pitch = 0.34; c.yaw = -0.7; })()"); await pg.wait_for_timeout(4000)
+                await pg.screenshot(path=shot('akter', f), timeout=400000)
+                await pg.evaluate("G3.setHelm(true)"); await pg.wait_for_timeout(4000)
+                await pg.screenshot(path=shot('bro', f), timeout=400000)
+                await pg.evaluate("G3.setHelm(false)")
+                # the work at sea: fishing on the ground, two hands, line rig, the catch
+                await pg.evaluate(SET, [TYPE, 'dekk', 11]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 8.5; c.pitch = 0.62; c.yaw = 0.9; })()"); await pg.wait_for_timeout(6000)
+                await pg.screenshot(path=shot('dekk', f), timeout=400000)
+                # K6: K1 at night
+                await pg.evaluate(SET, [TYPE, 'ute', 22]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 13; c.pitch = 0.16; c.yaw = 2.5; })()"); await pg.wait_for_timeout(6000)
+                await pg.screenshot(path=shot('natt', f), timeout=400000)
+                # K6 from the port bow too: the red and the white, the green screened off
+                await pg.evaluate("(() => { const c = G3._debug.cam; c.yaw = -2.5; })()"); await pg.wait_for_timeout(4000)
+                await pg.screenshot(path=shot('nattbb', f), timeout=400000)
+                # K7: from above by day in port-like stillness (the deck and the roofs seen from a drone, M14)
+                await pg.evaluate(SET, [TYPE, 'ute', 11]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 16; c.pitch = 0.95; c.yaw = 1.9; })()"); await pg.wait_for_timeout(5000)
+                await pg.screenshot(path=shot('ovenfra', f), timeout=400000)
             print(f, 'errors', errs, flush=True)
             await pg.close()
         await br.close()
