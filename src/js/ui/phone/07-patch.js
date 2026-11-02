@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['sesong-021126', '02.11.2026', 'Årstidene langs kysten', 'The seasons along the coast', [
+       ['Når på året fisken står hvor, følger nå landingene sted for sted, også på Senja: seien står tettere om sommeren og høsten enn før, og hver art har sin egen sesong der du er.', 'When in the year the fish stand where now follows the landings place by place, Senja too: the saithe stand thicker in summer and autumn than before, and every species has its own season where you are.'],
+    ]],
     ['flaate-021126', '02.11.2026', 'Hele flåten fisker av samme bestand', 'The whole fleet fishes the same stock', [
        ['Fiskeflåten langs hele kysten tar sin kvote der og når den virkelig fisker: feltene der mange fisker, er tynnere i sesongen og tar seg opp når flåten går hjem. Når åpen gruppe stoppes, får sjøen hvile.', 'The fleet along the whole coast takes its quota where and when it really fishes: the grounds where many fish are thinner in the season and recover when the fleet goes home. When the open group is stopped, the sea gets a rest.'],
        ['Skreien er én mengde: det som tas i Finnmark og Troms tidlig i sesongen, kommer ikke til Lofoten, så skreien tynnes utover våren.', 'The skrei is one body of fish: what is taken in Finnmark and Troms early in the season does not reach Lofoten, so the skrei thins through the spring.'],

@@ -501,41 +501,41 @@ The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a 
   - 253 `ruOpenNear(p, q, maxKm)`
   - 262 `ruTips()`
 
-## `src/js/core/03f-fiske.js` (326 linjer)
+## `src/js/core/03f-fiske.js` (356 linjer)
 
 The fishing along the coast as it really was, and where the fish is from it (B2 of docs/planer/bestand-og-flaate.md, 01.11.2026).
 
-  - 27 `fkData()`
-  - 33 `fkIndex(fs)`
-  - 40 `fkCell(sp, area, m, gear, lg)`
-- **48** the location of a 2 km cell (ruLok kept per cell, plan 5b: looked up per cell and hour, not per point)
-  - 50 `lokCands(bx, by)`
-  - 57 `lokOfCell(p)`
-- **65** the migrations (MIG): HI's descriptions, as curves of time and place
-- **110** where the fish swim: the heading of the schools and of the good patches, by species, season and place
-  - 119 `migOffshore(lat, lon)`
-  - 127 `migHeading(sp, lat, lon, mf)`
-  - 143 `migNode(si, sp, ix, iy, k, T, mw, kind)`
-  - 151 `migDir(sp, p, k, T, mw, kind)`
-  - 158 `mfOfH(H)`
-- **160** the fish up and down in the water: by night most species rise from the bottom (HI; the diel vertical migration)
-  - 166 `cellNight(c, H)`
-  - 170 `vertZ(sp, night)`
-  - 177 `gearVertF(sp, key, p, H)`
-  - 185 `biteF(sp, p, H)`
-- **191** the field from the notes: per species a Float32Array of locations × 12 months against Senja (NaN: no figure)
-  - 193 `fkNeighbours()`
-  - 201 `fkBuild()`
-  - 259 `fkMonth(H)`
-  - 261 `fkAt(a, l, T)`
-  - 263 `skreiFront(lat, H, T)`
-  - 269 `skreiPulse(c, H, T)`
-  - 275 `fkAvail(sp, q, T)`
-  - 294 `areaF(sp, p, H)`
-  - 300 `skreiShare(p, H)`
-  - 307 `skreiFlow(K, H)`
-- **314** the sea's warmth: the fish go deeper when the surface is warmer than they like (B4, 02.11.2026)
-  - 321 `tempDepthK(sp, c, H)`
+  - 33 `fkData()`
+  - 39 `fkIndex(fs)`
+  - 46 `fkCell(sp, area, m, gear, lg)`
+- **54** the location of a 2 km cell (ruLok kept per cell, plan 5b: looked up per cell and hour, not per point)
+  - 56 `lokCands(bx, by)`
+  - 63 `lokOfCell(p)`
+- **71** the migrations (MIG): HI's descriptions, as curves of time and place
+- **116** where the fish swim: the heading of the schools and of the good patches, by species, season and place
+  - 125 `migOffshore(lat, lon)`
+  - 133 `migHeading(sp, lat, lon, mf)`
+  - 149 `migNode(si, sp, ix, iy, k, T, mw, kind)`
+  - 157 `migDir(sp, p, k, T, mw, kind)`
+  - 164 `mfOfH(H)`
+- **166** the fish up and down in the water: by night most species rise from the bottom (HI; the diel vertical migration)
+  - 172 `cellNight(c, H)`
+  - 176 `vertZ(sp, night)`
+  - 183 `gearVertF(sp, key, p, H)`
+  - 191 `biteF(sp, p, H)`
+- **197** the field from the notes: per species a Float32Array of locations × 12 months against Senja (NaN: no figure)
+  - 199 `fkNeighbours()`
+  - 207 `fkBuild()`
+  - 272 `fkMonth(H)`
+  - 274 `fkAt(a, l, T)`
+  - 276 `skreiFront(lat, H, T)`
+  - 282 `skreiPulse(c, H, T)`
+  - 288 `fkAvail(sp, q, T)`
+  - 324 `areaF(sp, p, H)`
+  - 330 `skreiShare(p, H)`
+  - 337 `skreiFlow(K, H)`
+- **344** the sea's warmth: the fish go deeper when the surface is warmer than they like (B4, 02.11.2026)
+  - 351 `tempDepthK(sp, c, H)`
 
 ## `src/js/core/03g-trykk.js` (206 linjer)
 
@@ -1996,12 +1996,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (889 linjer)
+## `src/js/ui/phone/07-patch.js` (893 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 882 `patch()`
+  - 886 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
