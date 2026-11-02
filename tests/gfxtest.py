@@ -57,7 +57,9 @@ async def main():
         check(st['tags'] >= 6 and st['k'] >= 1, 'the frame\'s steps are learnt and one is asked about each round', st)
         # a camera that is not a number
         await pg.evaluate("G3._debug.cam.helm = false; window.__yaw = G3._debug.cam.yaw; G3._debug.cam.yaw = NaN")
-        await pg.wait_for_timeout(3000)
+        for _ in range(60):   # (SwiftShader may take its time over a frame: wait for the report, at most 30 s)
+            if any(e['msg'].startswith('3D NaN i kameraet') for e in gfx()): break
+            await pg.wait_for_timeout(500)
         await pg.evaluate("G3._debug.cam.yaw = window.__yaw || 0")
         nan = [e for e in gfx() if e['msg'].startswith('3D NaN i kameraet')]
         nj = json.loads(nan[0]['stack']) if nan else {}
