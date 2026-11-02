@@ -155,6 +155,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 ## 10.7 Små ryddejobber
 
+- **M7 står igjen** (02.11.2026): skilt ved verftene og mottakene, sponsorflagg, og `anchors.sign` i `tools/harbour/butikk.py` og `steder.py` (plassen står nå i `SIGNF` i `view3d/07-harbour-unit.js`; flytt den til modellens ankre neste gang byggene eksporteres med Blender). Tersklene (1,5 %, 55°, 1 s) sjekkes mot IABs fulle tekst før vi selger på tallene. Migreringen `20261102140000_sp_report.sql` må kjøres i Supabase.
 - **M5 står igjen** (02.11.2026): navnet malt og flagget heist i selve 3D-modellen (nå et kort over bildet), innbyttebåten liggende ved verftets kai med «Til salgs» til neste uke.
 - **M4 står igjen** (02.11.2026, etter andre del): prøvetur ved kaia, bilder fra showroomet, og V3 B (felles telling av visninger og at en oppføring trekkes for alle når én spiller kjøper; nå forsvinner hun bare for kjøperen). `docs/planer/butikker-og-sponsorer.md`.
 - **fleet2test ventet fast 1,8 s etter reload** og ble rød da oppstarten ble tregere (lasteskjermen); venter nå på `S.fleet` (02.11.2026).

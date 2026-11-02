@@ -4,10 +4,11 @@ export default function (t){
   const K = t.K, {spSet, spOf, spSponsors, spUrl, SP_TEST, EQUIP} = K;
   t.eq(spOf('item', 'garnhaler'), null, 'uten avtale er det ingen sponsor');
   const price = EQUIP.garnhaler.price, eq0 = JSON.stringify(EQUIP.garnhaler);
-  t.eq(spSet(SP_TEST), 2, 'testsponsoren gir to plasseringer');
+  t.eq(spSet(SP_TEST), 3, 'testsponsoren gir tre plasseringer (to varer og skiltet)');
+  t.eq(spOf('sign', 'all').sponsor.name, 'Nordlys Utstyr', 'skiltet gjelder alle butikkene');
   t.eq(spOf('item', 'garnhaler').sponsor.name, 'Nordlys Utstyr', 'garnhaleren har testsponsoren');
   t.eq(JSON.stringify(EQUIP.garnhaler), eq0, 'og utstyret er det samme (pris ' + price + ')');
-  t.eq(spSponsors().length, 1, 'én sponsor, med to plasseringer');
+  t.eq(spSponsors().length, 1, 'én sponsor, med tre plasseringer');
   t.eq(spSet([{id:1, kind:'item', target:'vhf', data:{}, sponsor:{id:1, name:'X', site:'javascript:alert(1)', logo:'http://x/y.png'}}, {id:2, kind:'reklame', target:'x', sponsor:{name:'Y'}}, {id:3, kind:'item', target:'ais', sponsor:{name:''}}]), 1, 'en ukjent plassering og en sponsor uten navn tas ikke med');
   t.eq(spOf('item', 'vhf').sponsor.site, null, 'en lenke som ikke er https, fjernes');
   t.eq(spOf('item', 'vhf').sponsor.logo, null, 'og en logo som ikke er https');

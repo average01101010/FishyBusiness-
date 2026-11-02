@@ -189,7 +189,10 @@
         npc:npcNow.map(n => ({x:n.p.x * 1000, z:n.p.y * 1000, v:n.v || 0, st:n.st, big:n.type === 'coastal' || n.type === 'ferry'})).concat(RB && RB.q ? [{x:RB.q.r.p.x * 1000, z:RB.q.r.p.y * 1000, v:RB.q.r.v * 1.4, st:'sailing', big:true}] : [])}; },
     zoom(f){ if (cam.helm) cam.fov = clamp(cam.fov * f, 12, 75); else cam.dist = clamp(cam.dist * f, 7, 8000); }, reset(){ if (cam.helm){ cam.hy = 0; cam.hp = -0.07; cam.fov = 55; } else { cam.yaw = 0.55; cam.pitch = 0.26; cam.dist = 21; } },
     vesselChanged(){ bv.init = false; bv.st = null; TRAIL.length = 0; },
-    showroom, get showing(){ return SHOW ? SHOW.t : null; }, paintView, get painting(){ return !!PAINTV; }, tryView, hoist, get trying(){ return TRYK; }, get hoisting(){ return HOIST ? HOIST.k : null; }, TRY3D,
+    showroom, get showing(){ return SHOW ? SHOW.t : null; }, paintView, get painting(){ return !!PAINTV; }, signLook(off, dist, pitch){ const s = (SITES || sitesNow()).find(q => q.k === 'shop' && !q.near); if (!s) return null; const F = SIGNF.shop, ry = Math.atan2(-s.u[1], s.u[0]), cx = (F.x0 + F.x1) / 2;
+      // the banner's middle in the world (the model's x along u, its z out to sea along -n), then the camera on the far side of the boat from it, low and near
+      const R = (x, z) => [s.o[0] + Math.cos(ry) * x + Math.sin(ry) * z, s.o[1] - Math.sin(ry) * x + Math.cos(ry) * z], P = R(cx, F.z), yawW = Math.atan2(P[0] - bv.x, -(P[1] - bv.z));
+      cam.helm = false; cam.yaw = yawW - bv.head + (off || 0); cam.pitch = pitch != null ? pitch : 0.08; cam.dist = dist || 4; return {d:Math.hypot(P[0] - bv.x, P[1] - bv.z), P}; }, signTake, get signs(){ return {pl:JSON.parse(JSON.stringify(SIGNV.pl)), seen:SIGNV.seen, tex:Object.keys(SIGNV.tex).length}; }, tryView, hoist, get trying(){ return TRYK; }, get hoisting(){ return HOIST ? HOIST.k : null; }, TRY3D,
     roadsReady(){ if (NEARM) buildGround(); for (const c of CH.values()) freeChunk(c); CH.clear(); },
     fineReady(){ if (FINEM){ freeMesh(FINEM); FINEM = null; } if (NEARM){ freeMesh(NEARM); NEARM = null; updateNear(); } },
     fishCam(){ cam.helm = false; cam.dist = 7; cam.pitch = 0.22; cam.yaw = -0.85; },

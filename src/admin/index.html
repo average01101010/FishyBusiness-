@@ -319,6 +319,8 @@ function lgDemo(){
 // 'item' with an equipment key (garnhaler, jukse, radar …) and the model's name; the game shows it marked «Samarbeid», beside the generic
 // item at the same price and with the same numbers. Switching off takes it out of the game within the hour (sp_now).
 let SPN = null;
+let SPR = null;
+async function sprLoad(){ await null; try { SPR = DEMO ? [{week:'2026-W45', pl:1, sponsor:'Nordlys Utstyr', kind:'sign:all', players:12, imp:41, sec:388, clicks:3, buys:1}] : await rpc('admin_sp_report', {days:DAYS}); } catch (e){ SPR = {err:e.message}; } if (TAB === 'sponsorer') render(); }
 async function spLoad(){ await null; try { SPN = DEMO ? [{id:1, name:'Nordlys Utstyr', kind:'founding', site:'https://example.org/nordlys', agreement:'Demo', active:true, placements:[{id:1, kind:'item', target:'garnhaler', data:{model:'Nordlys GH-200'}, active:true}]}] : await rpc('sp_admin_list', {}); } catch (e){ SPN = {err:e.message}; } if (TAB === 'sponsorer') render(); }
 VIEW.sponsorer = () => {
   if (!SPN){ spLoad(); return '<p class="note">Henter …</p>'; }
@@ -334,9 +336,20 @@ VIEW.sponsorer = () => {
     '<div class="card"><h3>Ny sponsor</h3><p class="note">Bare med skriftlig avtale. Navnet vises i spillet merket «Samarbeid». Forhåndsvis i spillet med #sptest (testsponsoren) før en ekte legges inn.</p>' +
     '<div class="sprow"><input id="spN" placeholder="Navn" maxlength="60"><select id="spK"><option value="founding">Founding partner</option><option value="vare">Vare</option><option value="sted">Sted</option><option value="sesong">Sesong</option><option value="megler">Megler</option></select>' +
     '<input id="spS" placeholder="https://… (nettsiden)" maxlength="200"><input id="spA" placeholder="Avtalen (hvor den ligger)" maxlength="200"><button id="spNew">Legg til</button></div></div>' +
-    (SPN.length ? SPN.map(row).join('') : '<p class="note">Ingen sponsorer ennå.</p>') + '<p class="note"><a href="../#sptest" target="_blank" rel="noopener">Forhåndsvis spillet med testsponsoren ›</a></p>';
+    (SPN.length ? SPN.map(row).join('') : '<p class="note">Ingen sponsorer ennå.</p>') + spReport() + '<p class="note"><a href="../#sptest" target="_blank" rel="noopener">Forhåndsvis spillet med testsponsoren ›</a></p>';
 };
+// the report per placement and week (4.4): what we sell on, with the CSV for the partner
+function spReport(){
+  if (!SPR){ sprLoad(); return card('Rekkevidde', '<p class="note">Henter …</p>'); }
+  if (SPR.err) return card('Rekkevidde', '<p class="warn">' + esc(SPR.err) + '</p>', 'Er migreringen supabase/migrations/20261102140000_sp_report.sql kjørt?');
+  return card('Rekkevidde per uke', (SPR.length ? table(SPR.map(r => ({...r, sec:nf(r.sec, 0)})), [['week', 'Uke'], ['sponsor', 'Sponsor'], ['kind', 'Plassering'], ['players', 'Unike spillere'], ['imp', 'Synlige visninger'], ['sec', 'Sekunder synlig'], ['clicks', 'Klikk ut'], ['buys', 'Kjøp']]) : '<p class="note">Ingen målinger ennå.</p>') +
+    '<button id="spCsv"' + (SPR.length ? '' : ' disabled') + '>Last ned CSV</button>',
+    'En synlig visning er et skilt som dekker minst 1,5 % av skjermen innenfor 55° i minst ett sekund (startverdier etter IABs retningslinjer for intrinsisk måling i spill; sjekkes mot den fulle teksten før vi selger på dem). Bare fra spillere som deler statistikk, og ingenting mens spillet står urørt i to minutter eller siden er skjult.');
+}
 function spWire(){
+  if ($('#spCsv')) $('#spCsv').onclick = () => { const cols = ['week', 'sponsor', 'kind', 'players', 'imp', 'sec', 'clicks', 'buys'], q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const csv = [cols.join(';')].concat(SPR.map(r => cols.map(c => q(r[c])).join(';'))).join('\n'), a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], {type:'text/csv'})); a.download = 'sponsorer-rekkevidde.csv'; a.click(); };
   const go = async (fn, args) => { try { if (!DEMO) await rpc(fn, args); SPN = null; render(); } catch (e){ alert(e.message); } };
   if ($('#spNew')) $('#spNew').onclick = () => { const n = $('#spN').value.trim(), a = $('#spA').value.trim(); if (!n || a.length < 3){ alert('Navn og avtale må fylles inn.'); return; }
     go('sp_admin_put', {id:null, name:n, kind:$('#spK').value, logo:null, site:$('#spS').value.trim() || null, agreement:a}); };

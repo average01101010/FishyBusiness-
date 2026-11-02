@@ -125,3 +125,79 @@
     }
     if (set){ gl.disableVertexAttribArray(2); gl.useProgram(PL.p); }
   }
+  // ---------- sponsors' signs (M7, docs/planer/butikker-og-sponsorer.md F2 and 4.4) ----------
+  // A partner with a written agreement (core/09l-sponsor.js spOf('sign', …)) gets a banner with the logo in front of the shop, on the Finnsnes shop (site 'shop') and on the tackle shops along the coast (harbour unit 's'). The target is
+  // the port's id, or 'all'. Its place is in the shop model's frame (tools/harbour/butikk.py: the front at y = SHOP[2] = 11.5, the door at
+  // x = -7; steder.py shifts the shop by BX, BY = -5, -2 on the unit). Nothing at sea, in the chart plotter or in the HUD.
+  // The measure as IAB's intrinsic in-game guidelines (start values, 4.4): the field counts as seen while it covers at least 1.5 % of the
+  // screen and faces the camera within 55°; one view after a second in a row, and the seconds add up. Nothing is counted while the page is
+  // hidden or nobody has touched the game for two minutes (SIGNV.idle). SIGNV.take() hands the counts over and starts again.
+  // (a field on the wall beside the board was tried first: from the boat at the quay, 20-30 m off, it covered well under 0.1 % of the
+  // screen, so the partner's sign is a banner on two posts on the apron, 2.5 m in front of the shop, facing the quay: 4 x 2 m, which from
+  // a boat at the quay with the camera 15-18 m off covers about 1.5 % of the screen)
+  // (it stands at the shop's west end, x -15.4..-11.4: further east the Finnsnes bunker tank, x 0.1..4.7 at y 6.2, stood in front of it)
+  const SIGNF = {shop:{x0:-15.4, x1:-11.4, y0:QTOP + 1.0, y1:QTOP + 3.0, z:-(11.5 - 2.5)}, s:{x0:-15.4 - 5, x1:-11.4 - 5, y0:QTOP + 1.0, y1:QTOP + 3.0, z:-(11.5 - 2 - 2.5)}};
+  const SIGNV = {pl:{}, last:0, act:performance.now(), tex:{}, q:{}, seen:0, cur:[], oq:{}};
+  ['pointerdown', 'keydown', 'wheel'].forEach(e => addEventListener(e, () => { SIGNV.act = performance.now(); }, {passive:true}));
+  const signSp = id => typeof spOf === 'function' ? (spOf('sign', id) || spOf('sign', 'all')) : null;
+  function signTex(sp){
+    const key = sp.id; if (SIGNV.tex[key]) return SIGNV.tex[key].t;
+    const cv = document.createElement('canvas'); cv.width = cv.height = 256; const g = cv.getContext('2d');
+    const paint = img => { g.fillStyle = '#f4f4f1'; g.fillRect(0, 0, 256, 256); g.strokeStyle = '#1d3b5a'; g.lineWidth = 10; g.strokeRect(5, 5, 246, 246);
+      if (img){ const k = Math.min(200 / img.width, 200 / img.height); g.drawImage(img, 128 - img.width * k / 2, 128 - img.height * k / 2, img.width * k, img.height * k); }
+      else { g.fillStyle = '#1d3b5a'; g.textAlign = 'center'; g.textBaseline = 'middle'; const w = String(sp.sponsor.name).toUpperCase().split(/\s+/); let fs = 46; g.font = 'bold ' + fs + 'px Archivo, sans-serif';
+        while (fs > 18 && w.some(x => g.measureText(x).width > 220)){ fs -= 2; g.font = 'bold ' + fs + 'px Archivo, sans-serif'; }
+        w.slice(0, 3).forEach((x, i, a) => g.fillText(x, 128, 128 + (i - (a.length - 1) / 2) * fs * 1.1)); }
+      const T = SIGNV.tex[key]; if (T) upTex(T.t, cv); };
+    const t = mkTex(); SIGNV.tex[key] = {t}; paint(null); upTex(t, cv);
+    if (sp.sponsor.logo){ const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { try { paint(im); } catch (e){} }; im.src = sp.sponsor.logo; }
+    return t;
+  }
+  // the screen's share and the angle of a field (M: its model matrix in the eye's frame; F: the field), and whether it counts
+  function signSeen(M, F, VP, eye){
+    const P = [[F.x0, F.y0, F.z], [F.x1, F.y0, F.z], [F.x1, F.y1, F.z], [F.x0, F.y1, F.z]].map(p => { const X = M[0] * p[0] + M[4] * p[1] + M[8] * p[2] + M[12], Y = M[1] * p[0] + M[5] * p[1] + M[9] * p[2] + M[13], Z = M[2] * p[0] + M[6] * p[1] + M[10] * p[2] + M[14];
+      const cx = VP[0] * X + VP[4] * Y + VP[8] * Z + VP[12], cy = VP[1] * X + VP[5] * Y + VP[9] * Z + VP[13], cw = VP[3] * X + VP[7] * Y + VP[11] * Z + VP[15]; return {X, Y, Z, x:cx / cw, y:cy / cw, w:cw}; });
+    if (P.some(q => q.w <= 0)) return {area:0, ang:90, ok:false};
+    let a = 0; for (let i = 0; i < 4; i++){ const p = P[i], q = P[(i + 1) % 4]; const cx = (v => Math.max(-1, Math.min(1, v))); a += cx(p.x) * cx(q.y) - cx(q.x) * cx(p.y); }
+    const area = Math.abs(a) / 2 / 4;   // of the screen (NDC is 2 x 2), clipped to it
+    // the field's normal (model +z) in the eye's frame, against the direction from the field to the eye (the origin)
+    const nx = M[8], ny = M[9], nz = M[10], nl = Math.hypot(nx, ny, nz) || 1, cxm = (P[0].X + P[2].X) / 2, cym = (P[0].Y + P[2].Y) / 2, czm = (P[0].Z + P[2].Z) / 2, dl = Math.hypot(cxm, cym, czm) || 1;
+    const cos = -(nx * cxm + ny * cym + nz * czm) / nl / dl, ang = Math.acos(Math.max(-1, Math.min(1, cos))) * 180 / Math.PI;
+    return {area, ang, ok:area >= 0.015 && ang < 55};
+  }
+  function drawSigns(eye, VP){
+    const now = performance.now(), dt = Math.min(0.5, (now - (SIGNV.last || now)) / 1000); SIGNV.last = now;
+    const live = !document.hidden && now - SIGNV.act < 120000, list = [];
+    for (const s of sitesNow()) if (s.k === 'shop' && !s.near){ const sp = signSp('finnsnes'); if (sp) list.push({sp, F:SIGNF.shop, M:chain(M4.T(s.o[0] - eye[0], (s.lift || 0) - eye[1], s.o[1] - eye[2]), M4.RY(Math.atan2(-s.u[1], s.u[0]))), o:s.o}); }
+    for (const U of UNITA) if (U.v === 's'){ const sp = signSp(U.id); if (sp && Math.hypot(U.o[0] - eye[0], U.o[1] - eye[2]) < 600) list.push({sp, F:SIGNF.s, M:unitMat(U, eye), o:U.o}); }
+    SIGNV.seen = 0; SIGNV.cur = []; if (!list.length) return;
+    for (const L of list){
+      const F = L.F, key = L.F === SIGNF.shop ? 'shop' : 's'; if (!SIGNV.q[key]) SIGNV.q[key] = texQuad([F.x0, F.y0, F.z], [F.x1, F.y0, F.z], [F.x1, F.y1, F.z], [F.x0, F.y1, F.z]);
+      drawTexQuad(SIGNV.q[key], signTex(L.sp), L.M, VP, true, [0, 0, 1]);
+      // the two posts from the deck to the banner's top (in the eye's frame, as the plant's wires are drawn)
+      const W = p => [L.M[0] * p[0] + L.M[4] * p[1] + L.M[8] * p[2] + L.M[12], L.M[1] * p[0] + L.M[5] * p[1] + L.M[9] * p[2] + L.M[13], L.M[2] * p[0] + L.M[6] * p[1] + L.M[10] * p[2] + L.M[14]];
+      if (PM && PM.wire){ nSetup(VP); for (const x of [F.x0 + 0.2, F.x1 - 0.2]) drawN(PM.wire, limbM(W([x, QTOP, F.z - 0.06]), W([x, F.y1 + 0.05, F.z - 0.06]), 0.05)); }
+      if (Math.hypot(L.o[0] - eye[0], L.o[1] - eye[2]) > 150) continue;
+      SIGNV.cur.push({id:L.sp.id, F, M:L.M, key});
+      // hidden behind something (a boat, the tank, a shed): the occlusion query of the last frames says (signOcc); without WebGL 2 there
+      // is no such query, and nothing is counted rather than counting what may be hidden
+      const O = SIGNV.oq[L.sp.id], vis = !!(O && O.vis);
+      const r = signSeen(L.M, F, VP, eye), C = SIGNV.pl[L.sp.id] || (SIGNV.pl[L.sp.id] = {imp:0, sec:0, run:0, area:0}); r.ok = r.ok && vis; r.vis = vis;
+      C.last = {area:+r.area.toFixed(4), ang:Math.round(r.ang), vis:r.vis}; if (r.ok && live){ C.run += dt; C.area = Math.max(C.area, r.area); SIGNV.seen++; if (C.run >= 1){ if (C.run - dt < 1) C.imp++; C.sec += dt; } } else C.run = 0;
+    }
+    gl.useProgram(PL.p);
+  }
+  // after the boats, the plants and the rest of the near objects are drawn (24-cinema.js): each banner drawn this frame is drawn again
+  // without colour inside an occlusion query (WebGL 2: any sample passed), a hair in front of itself; the answer comes a frame or two later
+  function signOcc(VP){
+    if (!GL2 || !SIGNV.cur.length) return;
+    gl.colorMask(false, false, false, false); gl.depthMask(false);
+    for (const c of SIGNV.cur){ const O = SIGNV.oq[c.id] || (SIGNV.oq[c.id] = {q:null, pend:false, vis:false});
+      if (O.pend){ if (!gl.getQueryParameter(O.q, gl.QUERY_RESULT_AVAILABLE)) continue; O.vis = !!gl.getQueryParameter(O.q, gl.QUERY_RESULT); O.pend = false; }
+      if (!O.q) O.q = gl.createQuery(); const F = c.F, k = 'o' + c.key;
+      if (!SIGNV.q[k]) SIGNV.q[k] = texQuad([F.x0 + 0.3, F.y0 + 0.2, F.z + 0.03], [F.x1 - 0.3, F.y0 + 0.2, F.z + 0.03], [F.x1 - 0.3, F.y1 - 0.2, F.z + 0.03], [F.x0 + 0.3, F.y1 - 0.2, F.z + 0.03]);
+      gl.beginQuery(gl.ANY_SAMPLES_PASSED_CONSERVATIVE, O.q); drawTexQuad(SIGNV.q[k], SIGNV.tex[c.id].t, c.M, VP, false, [0, 0, 1]); gl.endQuery(gl.ANY_SAMPLES_PASSED_CONSERVATIVE); O.pend = true; }
+    gl.depthMask(true); gl.colorMask(true, true, true, true); gl.useProgram(PL.p);
+  }
+  // the counts since the last time, per placement ({pl, imp, sec}), handed over to be sent (ui/10r-sponsor.js)
+  function signTake(){ const out = []; for (const [pl, C] of Object.entries(SIGNV.pl)) if (C.imp || C.sec >= 1) out.push({pl:+pl, imp:C.imp, sec:Math.round(C.sec)}); for (const C of Object.values(SIGNV.pl)){ C.imp = 0; C.sec = 0; } return out; }

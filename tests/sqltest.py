@@ -384,6 +384,9 @@ def main():
         sql("select public.sp_admin_on('p', %s, false)" % plid, AD2, 'authenticated'); R['spOff'] = json.loads(sql("select public.sp_now()", A, 'authenticated'))
         sql("select public.sp_admin_on('p', %s, true)" % plid, AD2, 'authenticated'); sql("select public.sp_admin_on('s', %s, false)" % spid, AD2, 'authenticated'); R['spOffS'] = json.loads(sql("select public.sp_now()", A, 'authenticated'))
         R['spList'] = json.loads(sql("select public.sp_admin_list()", AD2, 'authenticated')); R['spListPl'] = sql("select public.sp_admin_list()", A, 'authenticated', expect_err=True)
+        sql("insert into public.events (player_id, kind, data) values ('user_01AAA', 'sp_view', '{\"pl\": %s, \"imp\": 3, \"sec\": 40}'), ('user_01BBB', 'sp_view', '{\"pl\": %s, \"imp\": 1, \"sec\": 9000}'), ('user_01AAA', 'sp_click', '{\"pl\": %s}')" % (plid, plid, plid))
+        R['spRep'] = json.loads(sql("select public.admin_sp_report(30)", AD2, 'authenticated')); R['spRepPl'] = sql("select public.admin_sp_report(30)", A, 'authenticated', expect_err=True)
+        sql("delete from public.events where kind in ('sp_view', 'sp_click')")   # (the deletion check further down counts every event)
         R['spRead'] = sql("select count(*) from public.sponsors", A, 'authenticated'); R['spReadAnon'] = sql("select count(*) from public.sponsor_placements", {'role': 'anon'}, 'anon')
         R['lgNo'] = sql("select public.logo_put('%s')" % LIMG, A, 'authenticated', expect_err=True)
         sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_l1', 'user_01AAA', 'des_logo', 49, 'open', '{}')"); sql("select public.shop_paid('cs_l1', 'pi_l1')")
@@ -533,8 +536,8 @@ def main():
               {'quote': q, 'paid': (R['sPaid1'], R['sPaid2']), 'pending': pd, 'after': R['sAfter'], 'end': R['sEnd']})
         sn = R['spNow']
         print(ok(R['spPl'][0] and R['spAd1'][0] and R['spNoAgr'][0] and R['spBadUrl'][0] and len(sn) == 1 and sn[0]['target'] == 'garnhaler' and sn[0]['sponsor']['name'] == 'Testmerke' and sn[0]['data'].get('model') == 'GH-200'
-                 and R['spOff'] == [] and R['spOffS'] == [] and len(R['spList']) == 1 and len(R['spList'][0]['placements']) == 1 and R['spListPl'][0] and R['spRead'] == '0' and R['spReadAnon'] == '0'),
-              'sponsors: only the admin with the second factor adds one, and only with an agreement and an https site; sp_now gives anyone what is active and nothing switched off; no player reads the tables',
+                 and R['spOff'] == [] and R['spOffS'] == [] and len(R['spList']) == 1 and len(R['spList'][0]['placements']) == 1 and R['spListPl'][0] and R['spRead'] == '0' and R['spReadAnon'] == '0' and R['spRepPl'][0] and len(R['spRep']) == 1 and R['spRep'][0]['imp'] == 4 and R['spRep'][0]['sec'] == 640 and R['spRep'][0]['clicks'] == 1 and R['spRep'][0]['sponsor'] == 'Testmerke'),
+              'sponsors: only the admin with the second factor adds one, and only with an agreement and an https site; sp_now gives anyone what is active and nothing switched off; no player reads the tables; the report per placement and week (views, seconds capped at 600 a send, clicks) only for the admin',
               {k: R[k] for k in ('spPl', 'spAd1', 'spNoAgr', 'spBadUrl', 'spOff', 'spOffS', 'spListPl', 'spRead', 'spReadAnon')})
         print(ok(R['lgNo'][0] and R['lgV'] == ['1', '2'] and R['lgBad'][0] and R['lgGet'] and R['lgGet'].get('img', '').startswith('data:image/png') and R['lgRead'][0] and R['lgAdmPl'][0] and R['lgRmPl'][0]
                  and len(R['lgAdm']) == 1 and R['lgAdm'][0]['who'] == hidA and R['lgRm'] == 't' and R['lgGone'] == 'null' and R['lgMine'].get('removed') is True and R['lgMine'].get('reason') == 'Støtende innhold'

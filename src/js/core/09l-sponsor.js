@@ -21,4 +21,5 @@ function spUrl(site){ if (!/^https:\/\//.test(site || '')) return null; try { co
 // the made-up sponsor for the tests and the demo build (never in the game's own data: only with #sptest in the address)
 const SP_TEST = [
   {id:-1, kind:'item', target:'garnhaler', data:{model:'Nordlys GH-200', line:'Garnhaler med hydraulisk drift'}, sponsor:{id:-1, name:'Nordlys Utstyr', logo:null, site:'https://example.org/nordlys'}},
-  {id:-2, kind:'item', target:'jukse', data:{model:'Nordlys J-3'}, sponsor:{id:-1, name:'Nordlys Utstyr', logo:null, site:'https://example.org/nordlys'}}];
+  {id:-2, kind:'item', target:'jukse', data:{model:'Nordlys J-3'}, sponsor:{id:-1, name:'Nordlys Utstyr', logo:null, site:'https://example.org/nordlys'}},
+  {id:-3, kind:'sign', target:'all', data:{}, sponsor:{id:-1, name:'Nordlys Utstyr', logo:null, site:'https://example.org/nordlys'}}];

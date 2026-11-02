@@ -32,6 +32,10 @@ var SPUI = (() => {
   }
   // a click out is counted (sp_click, the placement only)
   document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a.ic-sp-link'); if (a && typeof cloudEv === 'function') cloudEv('sp_click', {pl:+a.dataset.pl || 0}); });
+  // the signs' measure (view3d drawSigns, M7): one sp_view per placement every ten minutes and when the page is hidden; only with the
+  // player's consent to statistics, as every event (cloudEv sends nothing without it)
+  function sendViews(){ if (typeof G3 === 'undefined' || !G3.signTake || typeof cloudEv !== 'function') return; for (const v of G3.signTake()) cloudEv('sp_view', v); }
+  setInterval(sendViews, 600000); addEventListener('pagehide', sendViews, true); document.addEventListener('visibilitychange', () => { if (document.hidden) sendViews(); }, true);   // (capture: before the cloud sends its batch)
   setTimeout(start, 1500);
-  return {load, card, hb, brandOf, setBrand};
+  return {load, card, hb, brandOf, setBrand, sendViews};
 })();
