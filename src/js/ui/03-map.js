@@ -354,6 +354,12 @@ function renderStatic(){
   if (view.z >= 0.5) for (const gr of GROUNDS) g.push(txt({x:gr.p.x, y:gr.p.y + 3.6 * u}, gr.name[S.lang], 'lbl-ground', 11 * u, 'text-anchor="middle" stroke-width="' + (3 * u) + '"'));
   // what is inside the view (with a margin)
   const vr = svg.getBoundingClientRect(), vhh = MAP_H / view.z / 2 + 0.5, vww = vhh * (vr.width / (vr.height || 1)) + 0.5, vx0 = view.cx - vww, vx1 = view.cx + vww, vy0 = view.cy - vhh, vy1 = view.cy + vhh, inV = (x, y) => x > vx0 && x < vx1 && y > vy0 && y < vy1;
+  // the named grounds along the whole coast (Fiskeridirektoratet's «Fiskeplasser – redskap», 01e-marks.js feltIn), the same way: the
+  // largest first, and none where a name already stands (cells of 110 × 22 pixels), so a close view shows more of them
+  if (view.z >= 1){ const taken = new Set(), cw = 110 * u, ch = 22 * u; for (const gr of GROUNDS) taken.add(Math.floor(gr.p.x / cw) + ':' + Math.floor(gr.p.y / ch));
+    let n = 0; for (const f of feltIn(vx0, vy0, vx1, vy1)){ const k = Math.floor(f.x / cw) + ':' + Math.floor(f.y / ch), k2 = Math.floor((f.x + cw / 2) / cw) + ':' + Math.floor(f.y / ch);
+      if (taken.has(k) || taken.has(k2)) continue; taken.add(k); taken.add(k2);
+      g.push(txt({x:f.x, y:f.y + 3.4 * u}, f.n.replace(/[&<>]/g, c => c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;'), 'lbl-ground lbl-felt', 10 * u, 'text-anchor="middle" stroke-width="' + (3 * u) + '"')); if (++n >= 80) break; } }
   // roads and bridges: Senja's and those of the coast's packs (01c-vec.js), asked for when the view is near enough to show them
   if (view.z > 2.5){ vecWant(vx0, vy0, vx1, vy1, () => scheduleStatic()); vecPrune([{x:view.cx, y:view.cy}, S.boat.pos]); }
   if (view.z > 3){ const d = []; for (const r of roadsIn(vx0 * 1000, vy0 * 1000, vx1 * 1000, vy1 * 1000)){ if (r.c > 3 && view.z < 6) continue; d.push('M' + Array.from(r.xs, (x, j) => (x / 1000).toFixed(3) + ',' + (r.zs[j] / 1000).toFixed(3)).join('L')); } if (d.length) g.push('<path d="' + d.join('') + '" class="road" stroke-width="' + (1.1 * u) + '"/>'); }

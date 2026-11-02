@@ -1,0 +1,42 @@
+# The fishing along the coast as it really was (B1 of docs/planer/bestand-og-flaate.md, 01.11.2026): tools/npc/fiske.py reads
+# Fiskeridirektoratet's landing notes (fangstdata (seddel), NLOD, the last two whole years) and the vessel register (uttrekk fra
+# fartøyregisteret, NLOD) and writes the catch per location × month × gear × length group and the boats per kommune. The result is kept
+# as a release fiske-<run number> (fiske.json), which goes into src/data/fiske.json. The notes of the last year are updated every night
+# by the directorate and come in full early in the new year; the register is a new extract every night.
+# Started by a push that changes tools/npc/fiske.py or this file (on any branch), on the 3rd of every month (on the default branch), or by
+# hand from the Actions tab once this file is on main.
+name: Fisket langs kysten
+on:
+  push:
+    paths: ['tools/npc/fiske.py', '.github/workflows/fiske.yml']
+  schedule:
+    - cron: '17 6 3 * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: '1'
+jobs:
+  fiske:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: pip install requests   # tools/mottak/mottak.py fetches the notes; fiske.py reads them with it
+      - name: fiske.json
+        run: KYST_FISKE=fiske.json python3 tools/npc/fiske.py
+      - name: The checks (the sums against Fiskeridirektoratet's figures, the locations against rules.json, the size)
+        run: cp fiske.json src/data/fiske.json && node tests/unit/run.mjs fiske
+      - name: The release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=fiske-${{ github.run_number }}
+          gh release create "$TAG" fiske.json --target "${{ github.sha }}" --title "Fiske $TAG" \
+            --notes "Fiskeridirektoratets fangstdata (seddel) og uttrekk fra fartøyregisteret (NLOD): fangst per lokasjon, måned, redskap og lengdegruppe, og båtene per kommune (tools/npc/fiske.py), commit ${{ github.sha }}."

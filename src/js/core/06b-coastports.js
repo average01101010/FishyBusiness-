@@ -84,7 +84,7 @@ const COASTQ = {};
     PORTS.push({id, name, xy:[q[0], q[1]], shore:[q[0], q[1]], pier:true, fuel:true, ice:true, mottak:true, pf, coast:{x:(cx - nx * 30) / 1000, y:(cz - nz * 30) / 1000},
       p:{x:Math.round(cx + nx * 15) / 1000, y:Math.round(cz + nz * 15) / 1000}, i:PORTS.length, mk, coastal:true});
     // the plant posts orders too (03-simulation.js ordersTick, near where you fish): for what it takes in most of
-    const csp = Object.entries(mk.sp).filter(([s]) => SPECIES[s] && !SPECIES[s].shell && s !== 'blakveite')   // its orders: 03-simulation.js bkPlant
+    const csp = Object.entries(mk.sp).filter(([s]) => SPECIES[s] && !SPECIES[s].shell && !SPECIES[s].npc && s !== 'blakveite')   // its orders: 03-simulation.js bkPlant
       .sort((a, b) => b[1].kg - a[1].kg).map(e => e[0]).slice(0, 3);
     CUSTOMERS.push({id:'c' + id, no:'Mottaket i ' + name, port:id, sp:csp.length ? csp : ['torsk', 'sei', 'hyse'], big:true, q:'A', coastal:true});
   }

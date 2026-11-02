@@ -19,10 +19,11 @@ import vm from 'node:vm';
 
 const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = join(HERE, '..', '..'), SRC = join(ROOT, 'src');
 
-// the same expansion as build.mjs: @include(path) and /*@include(path)*/null, relative to src/
+// the same expansion as build.mjs: @include(path), /*@include(path)*/null and /*@text(path)*/null (the file as a string), relative to src/
 function expand(file, stack = []){
   if (stack.includes(file)) throw new Error('include cycle: ' + [...stack, file].join(' -> '));
-  return readFileSync(join(SRC, file), 'utf8').replace(/\/\*@include\(([^)]+)\)\*\/null|@include\(([^)]+)\)/g,
+  return readFileSync(join(SRC, file), 'utf8').replace(/\/\*@text\(([^)]+)\)\*\/null/g, (_, path) => JSON.stringify(readFileSync(join(SRC, path), 'utf8').replace(/\n$/, '')))
+    .replace(/\/\*@include\(([^)]+)\)\*\/null|@include\(([^)]+)\)/g,
     (_, jsonPath, path) => expand(jsonPath || path, [...stack, file]).replace(/\n$/, ''));
 }
 // the core files in the template's order (the template is the one place that order is written)

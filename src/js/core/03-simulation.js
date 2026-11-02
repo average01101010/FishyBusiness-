@@ -430,23 +430,38 @@ function slopeAt(p){ const e = 0.1, a = depthF({x:p.x + e, y:p.y}), b = depthF({
 // sliding its own way at 0.7–1.7 km a day and fading in and out over 240 hours, so the fish move along instead of jumping every
 // five days. The blend is scaled back to the spread of one field, so the mean stays where it was.
 const HOT = {T:120, v:0.05, cell:3.5};   // hours, km an hour, km
+// each field drifts its own way, steered by the species' migration where it has one (migDir in 03f-fiske.js: the skrei's patches drift
+// south-west along the coast in winter and back in spring, B2 01.11.2026), and from a reference time in the middle of its life, so the
+// drift never adds up to more than its own life's worth
 function hotField(sp, p, H, k){
-  const si = ALLSP.indexOf(sp), a = 2 * Math.PI * h2(k, 700 + si), v = HOT.v * (0.6 + 0.8 * h2(k, 720 + si)), tt = H - k * HOT.T;
-  return noise2((p.x - Math.sin(a) * v * tt) / HOT.cell, (p.y + Math.cos(a) * v * tt) / HOT.cell, 20 + si + 97 * k);
+  const si = ALLSP.indexOf(sp), v = HOT.v * (0.6 + 0.8 * h2(k, 720 + si)), d = migDir(sp, p, k, HOT.T, 0.7, 1), tt = H - k * HOT.T;
+  return noise2((p.x - d[0] * v * tt) / HOT.cell, (p.y + d[1] * v * tt) / HOT.cell, 20 + si + 97 * k);
 }
 function hotspot(sp, p, H){
   const f = H / HOT.T, k = Math.floor(f), u = sstep(0, 1, f - k), a = hotField(sp, p, H, k), b = hotField(sp, p, H, k + 1);
   const n = clamp(0.5 + ((a - 0.5) * (1 - u) + (b - 0.5) * u) / Math.hypot(1 - u, u), 0, 1); return 0.3 + 1.5 * n * n;
 }
-// Schools: a finer pattern (400 m) that swims 0.5–1 km an hour on each species' own heading. It averages 1, so it moves the bite
-// about within half an hour without changing the catch over a day. The sonar shows it.
-const SCHOOL = {cell:0.4, amp:0.3};
+// Schools: a finer pattern (400 m) that swims 0.5–1 km an hour. It averages 1, so it moves the bite about within half an hour without
+// changing the catch over a day. Since B2 (01.11.2026) the schools swim where the species is going at that time and place (migDir:
+// the skrei south-west to the spawning grounds in January-March, the mackerel north in summer, and so on) and wander where it is not,
+// in fields of SCHOOL.T hours that fade into each other, so a school can turn without the pattern jumping. The sonar shows the heading.
+const SCHOOL = {cell:0.4, amp:0.3, T:6};
+function schField(sp, p, H, k, si, v){
+  const d = migDir(sp, p, k, SCHOOL.T, 1, 0), tt = H - k * SCHOOL.T;
+  return noise2((p.x - d[0] * v * tt) / SCHOOL.cell, (p.y + d[1] * v * tt) / SCHOOL.cell, 60 + si + 31 * (k & 1023));
+}
 function school(sp, p, H){
-  const si = ALLSP.indexOf(sp), a = 2 * Math.PI * h2(si, 740), v = 0.5 + 0.5 * h2(si, 741);
-  return 1 - SCHOOL.amp / 2 + SCHOOL.amp * noise2((p.x - Math.sin(a) * v * H) / SCHOOL.cell, (p.y + Math.cos(a) * v * H) / SCHOOL.cell, 60 + si);
+  const si = ALLSP.indexOf(sp), v = 0.5 + 0.5 * h2(si, 741), f = H / SCHOOL.T, k = Math.floor(f), u = sstep(0, 1, f - k);
+  const a = schField(sp, p, H, k, si, v), b = schField(sp, p, H, k + 1, si, v);
+  const n = clamp(0.5 + ((a - 0.5) * (1 - u) + (b - 0.5) * u) / Math.hypot(1 - u, u), 0, 1);
+  return 1 - SCHOOL.amp / 2 + SCHOOL.amp * n;
 }
 // where a species' schools are heading (radians, map north up), for the sonar
-function schoolHeading(sp){ return 2 * Math.PI * h2(ALLSP.indexOf(sp), 740); }
+function schoolHeading(sp, p, H){
+  if (!p) p = S && S.boat ? S.boat.pos : {x:0, y:0}; if (H == null) H = S ? S.t / 60 : 0;
+  const f = H / SCHOOL.T, k = Math.floor(f), u = sstep(0, 1, f - k), a = migDir(sp, p, k, SCHOOL.T, 1, 0), b = migDir(sp, p, k + 1, SCHOOL.T, 1, 0);
+  return Math.atan2(a[0] * (1 - u) + b[0] * u, a[1] * (1 - u) + b[1] * u);
+}
 // The fjord lines for coastal cod along the whole coast (insideFjord) and the other rules are in 03e-rules.js.
 // Fiskeridirektoratet's statistical locations: the location's polygon from rules.json (03e-rules.js), or near Senja the nearest
 // representative point when there are no rule data
@@ -462,7 +477,7 @@ function gauss(u1, u2){ return Math.sqrt(-2 * Math.log(Math.max(1e-9, u1))) * Ma
 // one fish's round weight (kg): cod mixes resident coastal cod with larger spawning cod in the season
 function sampleFish(sp, p, H){
   const s = SPECIES[sp]; let sz = s.size;
-  if (sp === 'torsk'){ const k = seasonal(s.av, H), sk = seasonal(s.skrei, H) * skreiSpot(p); if (Math.random() < sk / (k + sk + 1e-9)) sz = s.skreiSize; }
+  if (sp === 'torsk' && Math.random() < skreiShare(p, H)) sz = s.skreiSize;
   return Math.round(sz[0] * Math.exp(sz[1] * gauss(Math.random(), Math.random())) * 100) / 100;
 }
 function clsOf(sp, kg){ const c = SPECIES[sp].cls; for (let i = 0; i < c.length; i++) if (kg >= c[i][0]) return i; return c.length - 1; }
@@ -483,14 +498,15 @@ function uerOpen(H){ const m = gDate(H).getUTCMonth(); return m >= 5 && m <= 7; 
 function denPlace(p){
   if (isLand(p)) return null;
   const d = depthF(p), E = exposure(p);
-  return {p, d, E, edge:sstep(1.5, 12, slopeAt(p)), gd:GROUNDS.map(g => dist(p, g.p)), skr:-1};
+  return {p, d, E, edge:sstep(1.5, 12, slopeAt(p)), gd:GROUNDS.map(g => dist(p, g.p)), skr:-1, c:lokOfCell(p)};   // c: the 2 km cell's location (03f-fiske.js)
 }
 const DENT = {H:NaN, T:null};
 function denTime(H){
   if (DENT.H === H) return DENT.T;
-  const T = {uerOpen:uerOpen(H)};
+  // fk: the month weights for the field from the landing notes, skf: the skrei front per day of shift (03f-fiske.js)
+  const T = {uerOpen:uerOpen(H), H, fk:fkMonth(H), skf:{}};
   // cod, haddock and saithe follow their spawning stock from year to year (stockF in 03d-quota.js; 1 in March 2027)
-  for (const sp of ALLSP){ const s = SPECIES[sp], f = stockF(sp, H); T[sp] = {av:seasonal(s.av, H) * f, skrei:sp === 'torsk' ? seasonal(s.skrei, H) * f : 0}; }
+  for (const sp of ALLSP){ const s = SPECIES[sp], f = stockF(sp, H); T[sp] = {av:seasonal(s.av, H) * f, sf:f}; }
   DENT.H = H; DENT.T = T; return T;
 }
 function denSp(sp, q, H, T){
@@ -499,12 +515,13 @@ function denSp(sp, q, H, T){
   // the named grounds are known for a reason
   for (let i = 0; i < GROUNDS.length; i++){ const g = GROUNDS[i], dd = q.gd[i]; if (dd > g.r * 3) continue; v += (g.sp[sp] || 0) * Math.exp(-((dd / g.r) ** 2)) * 0.45; }
   const day = 0.75 + 0.5 * vn(H / 24 + p.x * 0.05, 300 + ALLSP.indexOf(sp));
-  let av = T[sp].av;
-  if (sp === 'torsk'){ if (q.skr < 0) q.skr = skreiSpot(p, q.d, q.E); av += T[sp].skrei * q.skr; }
+  // the season and the place from the landing notes and the migrations (areaF, 03f-fiske.js), where the one table av and the skrei
+  // pulse were the same from Lindesnes to Vardø until B2 (01.11.2026); the Greenland halibut and the king crab keep their own areas
+  let av = FK_SP[sp] ? fkAvail(sp, q, T) : T[sp].av;
   if (sp === 'uer' && !T.uerOpen) av *= 0.15;
   if (s.shell) v *= kingArea(p); else v *= school(sp, p, H);
   if (s.area) v *= AREAS[s.area](p, q.d, H, q.E);
-  return 1.6 * s.k * v * day * av * depthFactor(sp, q.d) * stockAt(p, sp) + tutBonus(sp, p);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
+  return 1.6 * s.k * v * day * av * depthFactor(sp, q.d, tempDepthK(sp, q.c, H)) * stockAt(p, sp, H) + tutBonus(sp, p);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
 }
 function density(sp, p, H){ const q = denPlace(p); return q ? denSp(sp, q, H, denTime(H)) : 0; }
 // Where the Greenland halibut is (07.10.2026, docs/plan-blakveite.md 1-2): the shelf edge between 300 and 1100 m (none shallower, none
@@ -561,10 +578,13 @@ function stockW(p){
 function stockFill(v){ const m = {}; for (let iy = Math.floor(HOME.y0 / STK.c) - 1; iy <= Math.floor(HOME.y1 / STK.c) + 1; iy++) for (let ix = Math.floor(HOME.x0 / STK.c) - 1; ix <= Math.floor(HOME.x1 / STK.c) + 1; ix++) stkSet(m, gridKey(ix, iy), v); return m; }
 // Shellfish have their own layer (S.cstk), made when the first pot is hauled. It stays one value per cell: pots stand still for
 // days and work the cell as a patch, the heat map does not show crab, and the pot calibration rests on it.
-function stockAt(p, sp){
+// B3 (02.11.2026): for a fish species the stock is the baseline (the balance with the whole fleet's pressure, baseAt in 03g-trykk.js, the
+// same for every player) times the deviation in S.stock (what the players have done); without a species, the deviation alone
+function stockAt(p, sp, H){
   if (sp && SPECIES[sp].shell) return S && S.cstk ? stkGet(S.cstk, stockIdx(p)) : 1;
   if (sp && SPECIES[sp].stk) return S && S[SPECIES[sp].stk] ? stkGet(S[SPECIES[sp].stk], stockIdx(p)) : 1;   // the Greenland halibut's own
-  if (!S || !S.stock) return 1; let v = 0; for (const [k, w] of stockW(p)) v += stkGet(S.stock, k) * w; return v;
+  const b = sp ? baseAt(p, sp, H == null ? (S ? S.t / 60 : 0) : H) : 1;
+  if (!S || !S.stock) return b; let v = 0; for (const [k, w] of stockW(p)) v += stkGet(S.stock, k) * w; return b * v;
 }
 // npc: the local fleet's take (stockHour), which every game works out for itself; what the player's own boats take is also kept for
 // the other players (the shared world V2)
@@ -579,7 +599,7 @@ function takeStock(p, kg, sp, npc){
 // fleet's in 03d-quota.js) and how many boats, and what they delivered to each plant (kg at game hour mH, decaying 3 % an hour as
 // S.market does). The fish they took comes down cell by cell and is taken from this game's sea at once (wshTake). S.wq holds what
 // goes up: the cells this game's boats took fish from, and its sales. rec is on only with the cloud. ----
-const WSH = {rec:false, y:0, open:0, boats:0, mkt:{}, mH:0};
+const WSH = {rec:false, y:0, open:0, boats:0, mkt:{}, mH:0, reg:null, openBoats:0, grp:{}, stock:null};
 function wq(){ return S.wq || (S.wq = {c:{}, l:[]}); }
 function wshOpen(y){ return WSH.y === y ? WSH.open : 0; }
 function wshSat(pid, sp, H){ const m = WSH.mkt[pid]; return m && m[sp] ? m[sp] * Math.pow(0.97, Math.max(0, H - WSH.mH)) : 0; }
@@ -592,14 +612,9 @@ function wshLand(port, H, acc, kgSp, codQ){ if (!WSH.rec) return; const Q = wq()
   const ev = typeof evAt === 'function' ? evAt(H, port, items.map(i => i.sp)) : '';   // the shared event it falls in (09c-seasons.js)
   let reg = ''; try { const q = portById(port); if (q && typeof landsdel === 'function') reg = landsdel(q.p); } catch (e){}   // the part of the coast, for the village contest (bygde_top)
   if (items.length) Q.l.push({gh:+H.toFixed(2), y:yearH(H), port, acc, items, boat:String(S.boatName || '').slice(0, 24), company:acc !== 'lukket' ? '' : String(S.company || '').slice(0, 40), ev, reg}); }
-function initStock(){
-  const a = {};
-  // the famous grounds are already worked by the local fleet when the game starts
-  for (const g of GROUNDS.slice(0, 4)){ const R = g.r * 1.2;
-    for (let iy = Math.floor((g.p.y - R) / STK.c); iy <= Math.floor((g.p.y + R) / STK.c); iy++) for (let ix = Math.floor((g.p.x - R) / STK.c); ix <= Math.floor((g.p.x + R) / STK.c); ix++){
-      const d = Math.hypot((ix + 0.5) * STK.c - g.p.x, (iy + 0.5) * STK.c - g.p.y), k = gridKey(ix, iy); if (d < R) stkSet(a, k, Math.min(stkGet(a, k), 0.55 + 0.35 * d / R)); } }
-  return a;
-}
+// the players' deviation starts untouched: how hard the grounds are worked by the whole fleet is the baseline (B3, baseAt in 03g-trykk.js),
+// which took over from the depletion this used to lay round Senja's four grounds
+function initStock(){ return {}; }
 function stockHour(H){
   // the cells below 1 and their neighbours: each moves towards its neighbours' mean and grows back
   const s = S.stock, nx = {}, cells = new Set(), at = (x, y) => stkGet(s, gridKey(x, y));
@@ -607,7 +622,8 @@ function stockHour(H){
   for (const K of cells){
     const x = gridKeyX(K), y = gridKeyY(K), v = stkGet(s, K), nb = (at(x - 1, y) + at(x + 1, y) + at(x, y - 1) + at(x, y + 1)) / 4;
     // regrowth has a smallest step, so a cell comes all the way back to 1 (rounding used to stop it at 0.876)
-    const g = v < 1 ? Math.max((1 - v) * 0.004, 0.0001) : 0;
+    // while the skrei passes, new fish swim into a fished cell on its way: the regrowth up to three times faster (skreiFlow, 03f-fiske.js)
+    const g = v < 1 ? Math.max((1 - v) * 0.004 * (1 + 2 * skreiFlow(K, H)), 0.0001) : 0;
     stkSet(nx, K, Math.round(Math.min(1, v + g + (nb - v) * 0.01) * 1e4) / 1e4);
   }
   S.stock = nx;
@@ -615,14 +631,13 @@ function stockHour(H){
   if (S.cstk){ const c = {}; for (const k in S.cstk){ const v = S.cstk[k]; stkSet(c, k, Math.round(Math.min(1, v + Math.max((1 - v) * 0.0015, 0.0001)) * 1e4) / 1e4); } S.cstk = c; }
   // the Greenland halibut grows slowly and lives long (M 0.12-0.16): its cells come back slower still
   if (S.bstk){ const c = {}; for (const k in S.bstk){ const v = S.bstk[k]; stkSet(c, k, Math.round(Math.min(1, v + Math.max((1 - v) * 0.001, 0.0001)) * 1e4) / 1e4); } S.bstk = c; }
-  // the local fleet works the known grounds on fishable days
-  for (const q of npcStates(H)) if (q.fleet && q.st === 'fishing') takeStock(q.p, 18, null, true);
-  const hr = gDate(H).getUTCHours();
-  if (hr >= 6 && hr < 15 && windAt(H) < 12) for (const g of GROUNDS.slice(0, 3)) for (let k = 0; k < 5; k++){ const a = k * 1.26 + H * 0.07, q = {x:g.p.x + Math.cos(a) * g.r * 0.45 * (k ? 1 : 0), y:g.p.y + Math.sin(a) * g.r * 0.45 * (k ? 1 : 0)}; if (!isLandFar(q)) takeStock(q, 12, null, true); }
+  // the local fleet's take (18 kg an hour a Senja boat, and the three known grounds) went out in B3 (02.11.2026): the whole fleet's
+  // pressure is in the baseline (baseAt, 03g-trykk.js), along the whole coast
 }
 // preferred depth (m) and spread per species: cod and saithe on the banks, haddock deeper, ling and tusk deep
 const DPREF = Object.fromEntries(ALLSP.map(sp => [sp, SPECIES[sp].dep]));
-function depthFactor(sp, d){ const q = DPREF[sp]; return 0.3 + 0.7 * Math.exp(-((Math.log(Math.max(d, 2) / q[0]) / q[1]) ** 2)); }
+// k: the preferred depth moved by the sea's warmth (tempDepthK in 03f-fiske.js; 1 in water the species likes)
+function depthFactor(sp, d, k = 1){ const q = DPREF[sp]; return 0.3 + 0.7 * Math.exp(-((Math.log(Math.max(d, 2) / (q[0] * k)) / q[1]) ** 2)); }
 const SST = [3.6,3.1,3.2,3.9,5.6,8.2,10.8,11.4,9.8,7.8,6.0,4.6];
 // where a harbour unit stands (07-harbours.js) its quay is dry and its basin dredged
 // the depth below chart datum (m): the tiles' depth where they have it, else the sea floor offshore from the core, else the model
@@ -1173,7 +1188,7 @@ function bkOrderable(H){ const s = bkSeason(yearH(H)), g = S.pgear; return H >= 
 // every plant north of 62° N orders it (Jonas 07.10.2026: «Alle mottak skal kunne ta i mot blåkveite»)
 function bkPlant(id){ const q = portById(id); return !!(q && q.mottak !== false && natLL(q.p).lat >= 62); }
 function custSp(c){ return c.big && bkPlant(c.port) && !c.sp.includes('blakveite') ? c.sp.concat('blakveite') : c.sp; }
-function spCatchable(sp, H){ if (sp === 'blakveite') return bkOrderable(H); if (sp === 'kveite' && kveiteClosed(H)) return false; if (sp === 'uer' && !uerOpen(H)) return false; if (sp === 'kveite' && !S.boat.kgear) return false;
+function spCatchable(sp, H){ if (SPECIES[sp].npc) return false; if (sp === 'blakveite') return bkOrderable(H); if (sp === 'kveite' && kveiteClosed(H)) return false; if (sp === 'uer' && !uerOpen(H)) return false; if (sp === 'kveite' && !S.boat.kgear) return false;
   const s = SPECIES[sp]; let a = seasonal(s.av, H); if (sp === 'torsk') a += seasonal(s.skrei, H); return a >= 0.6; }
 function ordersTick(H){
   const O = ordState();

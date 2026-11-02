@@ -30,3 +30,32 @@ function marksNear(kind, x, y, R){
   for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++){ const t = MARKS.tiles.get(tx + ':' + ty); if (t) for (const q of t[kind]) a.push(q); }
   if (MARKS.near.size > 24) MARKS.near.clear(); MARKS.near.set(key, a); return a;
 }
+
+// ===== THE NAMES OF THE FISHING GROUNDS ALONG THE WHOLE COAST (B2 of docs/planer/bestand-og-flaate.md, 01.11.2026) =====
+// Fiskeridirektoratet's «Fiskeplasser – redskap» (the grounds for active and passive gear, from interviews with the fishermen, NLOD),
+// made by tools/npc/felt.py into src/data/felt.json: a label point, a name, a size and the kind of gear for 4 684 grounds. The chart
+// plotter writes them as names without a circle, as Senja's grounds (ui/03-map.js); Senja's own names (GROUNDS) win within 1.5 km.
+// Where a stretch has no mapped grounds, there are no names, and the NPC boats keep the slope rule for theirs (tools/map/npc.py).
+// The file is a string in the page and is read the first time the chart asks (128 kB).
+//   feltIn(x0, y0, x1, y1)  the grounds in a box (km), the largest first: {x, y, n (name), r (size, km), g ('a' active, 'p' passive, 'b' both)}
+const FELT_T = /*@text(data/felt.json)*/null;
+const FELT = {d:null, cell:10, grid:null};
+function feltData(){
+  if (FELT.d !== null) return FELT.d;
+  let D = null; try { D = typeof FELT_T === 'string' ? JSON.parse(FELT_T) : FELT_T; } catch (e){ D = null; }
+  if (!D || !D.p){ FELT.d = false; return false; }
+  const u = D.meta.unit, out = [], grid = new Map(); let x = 0, y = 0;
+  for (let i = 0; i < D.n.length; i++){
+    x += D.p[i * 2]; y += D.p[i * 2 + 1];
+    const f = {x:x * u, y:y * u, n:D.n[i], r:D.r[i] / 10, g:D.g[i]};
+    if (GROUNDS.some(g => Math.hypot(g.p.x - f.x, g.p.y - f.y) < 1.5)) continue;
+    out.push(f); const k = gridKey(Math.floor(f.x / FELT.cell), Math.floor(f.y / FELT.cell)); let a = grid.get(k); if (!a) grid.set(k, a = []); a.push(f);
+  }
+  FELT.grid = grid; FELT.d = out; return out;
+}
+function feltIn(x0, y0, x1, y1){
+  if (!feltData()) return []; const out = [], c = FELT.cell;
+  for (let gy = Math.floor(y0 / c); gy <= Math.floor(y1 / c); gy++) for (let gx = Math.floor(x0 / c); gx <= Math.floor(x1 / c); gx++){
+    const a = FELT.grid.get(gridKey(gx, gy)); if (a) for (const f of a) if (f.x >= x0 && f.x <= x1 && f.y >= y0 && f.y <= y1) out.push(f); }
+  return out.sort((a, b) => b.r - a.r);
+}

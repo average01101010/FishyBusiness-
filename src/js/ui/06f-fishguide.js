@@ -107,7 +107,7 @@ const GUIDE = (() => {
   }
   const monthBar = m => '<div class="gd-mon">' + MI.map(i => '<button class="' + (i === m ? 'on' : '') + (i === nowM() ? ' now' : '') + '" data-pa="gdMon" data-m="' + i + '">' + mshort(i) + '</button>').join('') + '</div>';
   function monthView(){
-    const m = month(), order = ALLSP.slice().sort((a, b) => (status(a, m) === 'closed') - (status(b, m) === 'closed') || pot(b, m) - pot(a, m));
+    const m = month(), order = PLAYSP.slice().sort((a, b) => (status(a, m) === 'closed') - (status(b, m) === 'closed') || pot(b, m) - pot(a, m));
     return monthBar(m) + '<div class="ph-card gd-now"><small>' + (m === nowM() ? L('Nå', 'Now') + ' · ' : '') + mname(m) + '</small><h4>' + L('Mest å hente', 'Most to be had') + '</h4>' +
       '<p>' + order.filter(sp => status(sp, m) !== 'closed').slice(0, 3).map(sp => '<b style="color:' + COL[sp] + '">' + L(SPECIES[sp].no, SPECIES[sp].en) + '</b>').join(' · ') + '</p></div>' +
       order.map(sp => row(sp, m)).join('') +
@@ -117,7 +117,7 @@ const GUIDE = (() => {
   function yearView(){
     const m = month();
     return '<div class="ph-card gd-yr"><div class="gd-yrow gd-yh"><span></span>' + MI.map(i => '<button class="' + (i === m ? 'on' : '') + (i === nowM() ? ' now' : '') + '" data-pa="gdMonY" data-m="' + i + '">' + mshort(i).slice(0, 1).toUpperCase() + '</button>').join('') + '</div>' +
-      ALLSP.map(sp => '<button class="gd-yrow" data-pa="gdSp" data-sp="' + sp + '"><span class="gd-sp"><span class="gd-dot" style="background:' + COL[sp] + '"></span>' + L(SPECIES[sp].no, SPECIES[sp].en) + '</span>' +
+      PLAYSP.map(sp => '<button class="gd-yrow" data-pa="gdSp" data-sp="' + sp + '"><span class="gd-sp"><span class="gd-dot" style="background:' + COL[sp] + '"></span>' + L(SPECIES[sp].no, SPECIES[sp].en) + '</span>' +
         MI.map(i => '<i class="' + (i === m ? 'on' : '') + (status(sp, i) === 'closed' ? ' cl' : status(sp, i) === 'bycatch' ? ' by' : '') + '" style="background:' + (status(sp, i) === 'closed' ? '' : 'rgba(30,140,110,' + (0.08 + 0.92 * rel(sp, i)).toFixed(2) + ')') + '"></i>').join('') + '</button>').join('') + '</div>' +
       '<p class="ph-note">' + L('Mørkere farge: mer fisk den måneden, mot artens beste. Stripet: fredet. Prikkete: bare bifangst. Trykk på en bokstav for å se en annen måned, eller på en art for å lese om den.', 'Darker: more fish that month against the species\' best. Striped: closed. Dotted: by-catch only. Tap a letter to see another month, or a species to read about it.') + '</p>';
   }

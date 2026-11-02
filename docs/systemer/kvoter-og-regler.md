@@ -101,6 +101,7 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
   - **Økning:** Maksimalkvotene økes 1. mai og 1. juni når båtene ikke kan ta gruppekvoten.
   - **Fritt fiske** kan komme om høsten.
   - **Din fangst** teller med.
+  - **Trykket i sjøen** (B3, 02.11.2026): gruppas fangst dag for dag er også åpen gruppes trykk på bestanden langs kysten (`trykkOpenScale` i `03g-trykk.js`), og de andre gruppene i kvotekjeden fisker sin kvote etter sedlene. Se 5.3d i `fiskerimodellen.md`.
   - **Kalibrering mot 2019–2026** (`k = 0,02`):
     - Med 2026-kvotene kommer stoppen i snitt 20. april (16. april i virkeligheten).
     - Rundt en tredjedel av årene har ingen stopp (3 av 8 år i 2019–2026).

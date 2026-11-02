@@ -17,7 +17,7 @@ async def main():
         # 1. the app is on the home screen, and opens on this month with all ten species
         r = await pg.evaluate("""(() => { S.tut = 0; S.lang = 'no'; PHONE.show(true); const home = !!document.querySelector('.ph-app[data-a=guide]'); PHONE.open('guide');
           const rows = [...document.querySelectorAll('.gd-row')].map(x => x.dataset.sp), chips = document.querySelectorAll('.gd-mon button').length, now = document.querySelectorAll('.gd-mon button.now.on').length;
-          return {home, rows, chips, now, n:ALLSP.length}; })()""")
+          return {home, rows, chips, now, n:PLAYSP.length}; })()""")
         print(json.dumps(r, ensure_ascii=False))
         print(ok(r['home'] and len(r['rows']) == r['n'] == 10 and r['chips'] == 12 and r['now'] == 1), 'the app is on the home screen and opens on this month: ten species, twelve month chips', [r['home'], len(r['rows']), r['chips'], r['now']])
         # 2. the months, tapped: March has the skrei first; January has the halibut closed (and last); July the redfish open, the cod without skrei

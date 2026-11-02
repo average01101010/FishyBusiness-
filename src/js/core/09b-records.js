@@ -36,4 +36,4 @@ const FAR_REC = {sp:'torsk', kg:24.6, year:1998, how:'juksa'};
 const farRecPlace = () => { const h = portById(S.home || HOME0); return h ? h.name : ''; };
 const farRecBeaten = () => { const r = recState().torsk; return !!(r && r.kg > FAR_REC.kg); };
 // every species in order, with its record or null: [{sp, rec}]
-const recList = () => { const R = recState(); return Object.keys(SPECIES).map(sp => ({sp, rec:R[sp] || null})); };
+const recList = () => { const R = recState(); return PLAYSP.map(sp => ({sp, rec:R[sp] || null})); };

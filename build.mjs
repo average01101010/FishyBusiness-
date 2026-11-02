@@ -2,7 +2,9 @@
 // Assembles src/ into one self-contained page, dist/index.html, which is what gets published as the artifact.
 // src/index.html is the template. Every @include(path) is replaced by that file (path relative to src/),
 // minus its final newline, and included files may include others. In JS, a JSON value is written
-// /*@include(path)*/null so the source file still parses on its own; the whole placeholder is replaced.
+// /*@include(path)*/null so the source file still parses on its own; the whole placeholder is replaced. /*@text(path)*/null puts the file
+// in as a string literal instead (B2, 01.11.2026: fiske.json is read with JSON.parse the first time the fishing needs it; as an object
+// literal its 366 kB cost 51 ms at startup in Chromium, 73 ms with the CPU slowed four times).
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, copyFileSync, statSync, existsSync, rmSync } from 'node:fs';
 import { dirname, join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -28,7 +30,8 @@ const DIST = process.env.KYST_DIST || join(ROOT, PWA ? 'dist-pwa' : 'dist'), OUT
 function expand(file, stack = []){
   if (stack.includes(file)) throw new Error('include cycle: ' + [...stack, file].join(' -> '));
   const text = readFileSync(join(SRC, file), 'utf8');
-  return text.replace(/\/\*@include\(([^)]+)\)\*\/null|@include\(([^)]+)\)/g,
+  return text.replace(/\/\*@text\(([^)]+)\)\*\/null/g, (_, path) => JSON.stringify(readFileSync(join(SRC, path), 'utf8').replace(/\n$/, '')).replace(/<\//g, '<\\/'))
+    .replace(/\/\*@include\(([^)]+)\)\*\/null|@include\(([^)]+)\)/g,
     (_, jsonPath, path) => expand(jsonPath || path, [...stack, file]).replace(/\n$/, ''));
 }
 
