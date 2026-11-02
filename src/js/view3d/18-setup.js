@@ -15,7 +15,7 @@
   // is lost (Firefox: every compile after it fails with no log, isContextLost still false), the level being tried is written down first
   // (SEA_TRY) and cleared when it has worked: a try that never came back puts the next load a level down.
   const SEA_KEY = 'dsb_sea', SEA_TRY = 'dsb_sea_try'; let seaLvl = 0, seaBumped = false;
-  const seaLvlGet = () => { const m = /sealvl=(\d)/.exec(location.hash); if (m) return Math.min(2, +m[1]); let v = 0, t = null;
+  const seaLvlGet = () => { const m = /sealvl=(\d)/.exec(location.hash); if (m) return Math.min(2, +m[1]); if (/seamid/.test(location.hash)) return 1; let v = 0, t = null;
     try { v = +localStorage.getItem(SEA_KEY) || 0; t = localStorage.getItem(SEA_TRY); } catch (e){}
     if (t !== null && +t + 1 > v){ v = Math.min(2, +t + 1); seaBumped = true; try { localStorage.setItem(SEA_KEY, String(v)); } catch (e){} }
     return Math.min(2, /Direct3D/i.test(GPU) ? Math.max(v, 1) : v); };
@@ -26,6 +26,23 @@
     try { const v = localStorage.getItem(SEA_OK) || ''; return v.startsWith(SEA_VER + ':') ? v.slice(SEA_VER.length + 1) : null; } catch (e){ return null; } };
   const seaOkSet = v => { if (/sealvl=|sealite/.test(location.hash)) return; try { if (v) localStorage.setItem(SEA_OK, SEA_VER + ':' + v); else localStorage.removeItem(SEA_OK); } catch (e){} };
   const seaTryMark = on => { if (/sealvl=/.test(location.hash)) return; try { if (on) localStorage.setItem(SEA_TRY, String(seaLvl)); else localStorage.removeItem(SEA_TRY); } catch (e){} };
+  // The middle sea on level 1 (tilbakemelding #106, 01.11.2026: Firefox on a GTX 980, «Havet vises ikke»; Jonas: «Det er viktig at
+  // spillet oppleves så likt som mulig uansett hvilken enhet eller nettleser»): level 1 drew the near sea with the far pass's shader, with
+  // no short waves, ripples, wake, foam or lanterns on the water, and every Direct3D starts there. It now first tries the lite vertex
+  // shader (the four longest wind waves and the swell, the part a driver choked on: Adreno 642L 05.10.2026, «VS alene feil, FS alene
+  // ok») with the full fragment shader, and the far pass on the lite vertex shader too. A device that loses its context or its GPU
+  // process on it (SEA_MIDTRY left behind) is marked (SEA_MID) and starts on the old level 1 next time, without a level bump. #seamid in
+  // the address forces it, #sealvl= and #nomid leave it out (the tests of the old levels).
+  const SEA_MID = 'dsb_sea_mid', SEA_MIDTRY = 'dsb_sea_midtry'; let seaMidTry = false;
+  const seaMidOn = () => { if (/seamid/.test(location.hash)) return true; if (/sealvl=|nomid/.test(location.hash)) return false;
+    try { return localStorage.getItem(SEA_MID) !== SEA_VER + ':no'; } catch (e){ return true; } };
+  const seaMidFailed = why => { seaMidTry = false; if (/seamid/.test(location.hash)) return;
+    try { localStorage.setItem(SEA_MID, SEA_VER + ':no'); localStorage.removeItem(SEA_MIDTRY); } catch (e){}
+    if (typeof cloudErr === 'function') cloudErr('3D mellomsjø feilet (' + why + '), neste start på sjønivå 1 · ' + GPU, 'view3d init', ''); };
+  const seaMidMark = on => { seaMidTry = on; if (/seamid/.test(location.hash)) return; try { if (on) localStorage.setItem(SEA_MIDTRY, '1'); else localStorage.removeItem(SEA_MIDTRY); } catch (e){} };
+  // a try of the middle sea that never came back: that one is marked, and the level is not bumped for it
+  const seaMidLeft = () => { let t = null; try { t = localStorage.getItem(SEA_MIDTRY); } catch (e){} if (t === null) return;
+    try { localStorage.removeItem(SEA_TRY); } catch (e){} seaMidFailed('forsøket kom ikke tilbake'); };
   // after a compile or link that failed with no word why: a moment for the browser to notice a lost context, before trying the next
   const glSettle = async () => { await new Promise(r => setTimeout(r, 80)); if (gl.isContextLost()) throw new Error('konteksten er mistet'); };
   const opt = (nm, f) => { try { f(); } catch (e){ console.error(nm, e); } };    // a part the view can do without
@@ -63,7 +80,10 @@
         // starts again when the browser gives the context back
         glWatch = true; let wasReady = false;
         canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); wasReady = ready; ready = false; failed = true; show(false);
-          if (!wasReady && stage === 'shadere' && seaLvl < 2){ try { localStorage.setItem(SEA_KEY, String(seaLvl + 1)); } catch (e2){}
+          // (on the middle sea the level stays: the next start leaves the middle sea out)
+          if (!wasReady && stage === 'shadere' && seaMidTry){ seaMidFailed('konteksten mistet');
+            failWhy = S.lang === 'en' ? 'the graphics driver gave up while starting. Reload the page and the game tries a simpler sea' : 'grafikkdriveren ga opp under oppstarten. Last siden på nytt, så prøver spillet en enklere sjø'; }
+          else if (!wasReady && stage === 'shadere' && seaLvl < 2){ try { localStorage.setItem(SEA_KEY, String(seaLvl + 1)); } catch (e2){}
             failWhy = S.lang === 'en' ? 'the graphics driver gave up while starting. Reload the page and the game tries a simpler sea' : 'grafikkdriveren ga opp under oppstarten. Last siden på nytt, så prøver spillet en enklere sjø';
             if (typeof cloudErr === 'function') cloudErr('3D konteksten mistet i shaderne, sjønivå ' + seaLvl + ' → ' + (seaLvl + 1) + ' · ' + GPU, 'view3d init', ''); }
           else { failWhy = 'WebGL-konteksten ble mistet'; if (wasReady && typeof cloudErr === 'function') cloudErr('3D konteksten mistet under spill · ' + GPU + ' · ' + glDiag(), 'view3d', ''); } });
@@ -86,7 +106,7 @@
       // The sea is the heaviest program, and a phone's driver may refuse to link it with no word why (Adreno 642L, 05.10.2026: «sjø link:
       // ingen logg fra driveren»): then it tries without the texture in the vertex shader, then with the far pass's simpler waves, and
       // tells the cloud which one it took
-      seaLvl = seaLvlGet(); seaTryMark(true);
+      seaMidLeft(); seaLvl = seaLvlGet(); seaTryMark(true);
       if (seaBumped && typeof cloudErr === 'function') cloudErr('3D sjønivå ' + seaLvl + ' etter et forsøk som ikke kom tilbake · ' + GPU, 'view3d init', '');
       // [no texture in the vertex shader, the far pass's waves, the lite vertex shader]; the one that worked on this device last time with
       // these shaders (SEA_OK) is where it starts, so a phone does not link the ones its driver refused at every start
@@ -95,6 +115,11 @@
       const seaWhy = [], seaOk = seaOkGet(); let seaKnown = false;
       if (seaOk === 'basic') { seaTry = []; seaKnown = true; } else if (seaOk){ const k = seaTry.findIndex(t => t.join() === seaOk); if (k > 0){ seaTry = seaTry.slice(k); seaKnown = true; } }
       PS = null;
+      // the middle sea first on level 1 (seaMidOn above): the lite vertex shader with the full fragment shader; failing, it is marked and
+      // the old level 1 follows in the same start, with no word in seaWhy (that list is the old levels' fallbacks)
+      if (seaLvl === 1 && !seaKnown && seaMidOn()){ seaMidMark(true);
+        try { PS = program('#define NOSST\n' + SEA_VS_LITE, SEAF(SEA_FS), ['aXZ'], 'sjø middels'); SST_VS = false; PS.far = false; PS.lite = true; PS.mid = true; seaOkSet(null); seaTry = []; }
+        catch (e){ if (gl.isContextLost()) throw e; seaMidFailed(String(e.message || e).slice(0, 120)); if (/ingen logg/.test(e.message)) await glSettle(); } }
       for (const [nosst, far, lite] of seaTry){
         try { PS = program((nosst ? '#define NOSST\n' : '') + (lite ? SEA_VS_LITE : SEA_VS), SEAF((far ? '#define FAR\n' : '') + SEA_FS), ['aXZ'], 'sjø'); SST_VS = !nosst; PS.far = far; PS.lite = lite;
           if (seaWhy.length || seaKnown) seaOkSet([nosst, far, lite].join()); else seaOkSet(null); break; }
@@ -110,9 +135,10 @@
         catch (e){ throw new Error(seaWhy.join(' / ') + seaDiag); }
       }
       if (!PS){ PS = program(BASIC_VS, BASIC_FS, ['aXZ'], 'enkel sjø'); PS.basic = true; SST_VS = false; }
-      try { PSF = PS.basic || PS.far ? PS : program('#define NOSST\n' + SEA_VS, SEAF('#define FAR\n' + SEA_FS), ['aXZ'], 'sjø langt'); }
+      // (the middle sea's far pass on the lite vertex shader as well: the full one is what Direct3D could not take)
+      try { PSF = PS.basic || PS.far ? PS : program('#define NOSST\n' + (PS.mid ? SEA_VS_LITE : SEA_VS), SEAF('#define FAR\n' + SEA_FS), ['aXZ'], 'sjø langt'); }
       catch (e){ if (gl.isContextLost()) throw e; seaWhy.push(e.message); PSF = PS; }
-      await glSettle(); seaTryMark(false);   // the sea came through and the context is still there
+      await glSettle(); seaTryMark(false); if (seaMidTry) seaMidMark(false);   // the sea came through and the context is still there
       if (seaWhy.length && typeof cloudErr === 'function') cloudErr('3D sjø med reserve (' + (SST_VS ? 'vtf' : 'novtf') + (PSF === PS ? ', én sjø' : '') + (PS.lite ? ', lett' : '') + seaDiag + ') · ' + GPU, 'view3d init', seaWhy.join('\n'));
       SSDUMMY = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); PK = program(SKY_VS, SKY_FS, ['aP'], 'himmel'); PP = program(PT_VS, PT_FS, ['aPos', 'aA'], 'punkter');
       DYNP = buf(new Float32Array(4000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); DYNA = buf(new Float32Array(4000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);

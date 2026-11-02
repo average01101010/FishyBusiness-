@@ -72,7 +72,7 @@ Alt bygges for hele kysten. Hver endring skal kunne leses av i trakten (punkt 9)
 - **Straff for fravær:** ingen push om tapt bonus eller tapt plass, ingen streak som nulles.
 - **Lengre ventetider, eller energi og trøtthet gjort tyngre for å selge.** Trøttheten er simulering og skal forbli det. Energi selges bare som avløsning av simuleringens egen trøtthet (Skippertak, Jonas 12.10.2026): energimodellen (`ENERGY`, `RORBU`, mannskapets slitasje) gjøres aldri tyngre for å selge mer, gratisveien (hvile i naustet og på rorbua) beholdes som den er, og ingen popup eller push foreslår kjøp når noen er trøtt. `tests/skiptest.py` låser tallene. Skippertak selges bare for ekte penger, aldri for spillets kroner.
 - **Vervepyramider med spam.** Et enkelt «inviter en venn» med en liten gave til begge er greit.
-- **Reklame for belønning.** Ingen reklame i spillet.
+- **Reklame for belønning, videoreklame, avbrytende bannere og tredjeparts annonsenettverk.** Sponsede varer, skilt, hendelser, klær, annonser i Kystposten og meglerens oppføringer etter `docs/planer/butikker-og-sponsorer.md` er tillatt (Jonas 30.10.2026): alltid merket, bare med skriftlig avtale, aldri med spillfordel (en sponset vare har samme tall som den usponsede), aldri på sjøen, i kartplotteren, i HUD, i Driftsplanen eller i push.
 - **Sosial forpliktelse som felle.** Topplister, fiskarlag og felles mål er additive.
 - **Barn.** 13-årsgrensen for samtykke står, butikken er låst for gjester, og ingen gamblinglignende mekanikk.
 

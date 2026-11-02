@@ -22,7 +22,7 @@ async def main():
         # (equipment is bought in the equipment shop, with the boat at its quay: docs/handelssteder.md)
         await pg.evaluate("(async () => { const b = S.boat, q = PORTS.filter(p => p.sted === 'butikk').sort((x, y) => dist(x.p, b.pos) - dist(y.p, b.pos))[0]; await mapNeed(q.p, 3); dock(q.id); })()")
         await pg.evaluate("S.cash = 100000; PHONE.open('utstyrb')"); await pg.wait_for_timeout(400)
-        await pg.evaluate("document.querySelector('[data-pa=equip][data-k=linehaler]').click()"); await pg.wait_for_timeout(300)
+        for _ in range(2): await pg.evaluate("document.querySelector('[data-pa=equip][data-k=linehaler]').click()"); await pg.wait_for_timeout(300)   # 68 000 kr confirms in the button (M2)
         j = await pg.evaluate("JSON.stringify(S.jobs.map(j => ({k:j.k, h:j.h, until:j.until})))")
         jobs = json.loads(j)
         check(len(jobs) == 1 and jobs[0]['h'] == 3 and isinstance(jobs[0]['until'], (int, float)), 'haleren får 3 spilltimer i verkstedet (30 ekte minutter)', j)

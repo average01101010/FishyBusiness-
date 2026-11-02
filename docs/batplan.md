@@ -197,7 +197,7 @@ Oppdragsøkonomien fra 17.10.2026 (`docs/OVERLEVERING.md` 4.26) gjør at fisket 
 **Rekkefølge** (etter hvor mye de ses, og hvor tynne skriptene er):
 1. `snekke23.py` (trebåten, startbåten alle ser): B8, B12, B16, interiør med motorkasse og rorkult er alt der; revidert etter pilotens arbeidsmåte 31.10.2026 (F5, `docs/skipsmodeller/trebat-grunnlag.md`)
 2. `snekke26.py`: B4–B6, B8, B12; revidert etter pilotens arbeidsmåte 01.11.2026 (F5, `docs/skipsmodeller/snekke-grunnlag.md`)
-3. `hs11.py` (sjarkny, det dyreste kjøpet under 11 m, tynnest skript): hele lista
+3. `hs11.py` (sjarkny, det dyreste kjøpet under 11 m, tynnest skript): hele lista; bygd på nytt etter tegningen 01.–02.11.2026 (F7, `docs/skipsmodeller/sjarkny-grunnlag.md`)
 4. `hurtig11.py`: B5, B6, B8, B12; revidert etter pilotens arbeidsmåte 01.11.2026 (F6, `docs/skipsmodeller/hurtigsjark-grunnlag.md`)
 5. `malo36.py`: B6, B8, B12, B16
 6. `kyst15.py`: hele lista, med shelterdekket og trappa som dekkskartet savner

@@ -58,6 +58,7 @@
   - En ny flis kommer først grovt (¼ oppløsning) med en gang. Så tegnes den fint, 8 ms per bilde, fra midten og ut.
   - Når kartet dras, tegnes flisene som finnes der de nå er (`chartPan`), så det blir aldri mørke felt.
   - Mangler pakkene, tegnes flisene fra kjernen (`prov`) og på nytt når pakkene kommer (`chartCame`).
+  - Kom pakkene en annen vei enn plotterens egen bestilling (simuleringen, 3D, det lille kartet, `mapPreload`), hørte `chartCame` aldri om dem, og plotteren, som åpner på samme zoom hver gang (`PLOT_KM`), viste kjerneflisene til spilleren zoomet langt ut (01.11.2026, flere spillere). `chartCompose` ser nå selv etter: en `prov`-flis der pakkene den ventet på er inne, merkes `stale` og tegnes på nytt først i køen (`chartWork`); den gamle står til den nye er klar.
   - Fjæra leses bilineært fra masken med kantutjevning.
   - Kystlinja forenkles etter pikselstørrelsen (`pathStep`) og strekes som tre hårstreker under fyllet. En bred strek kostet 0,7 s rundt hele landet med CPU strupet 4×.
   - Dybden nær inne regnes med B-spline i hver 4. piksel og interpoleres imellom.

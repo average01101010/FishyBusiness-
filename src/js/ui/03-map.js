@@ -88,6 +88,10 @@ function chartCompose(V, tiles, budget){
       const dd = Math.hypot(i - cx, j - cy);
       if (!t){ need.push([dd - 1e3, i, j]); continue; }
       if (t.q > 1) need.push([dd, i, j]);   // (a tile painted before its packs came is painted again when they come: chartCame)
+      // and when they came some other way (the simulation, the 3D view, the little chart in 3D, mapPreload): chartCame never heard of
+      // them, and the plotter, opening at the same zoom each time, kept the land-core tile until the player zoomed out (01.11.2026:
+      // «for å få inn kartet må brukeren zoome langt ut»). It stays on screen until the new one is painted.
+      else if (t.prov && (t.stale || t.wait.every(pk => pk.buf))){ t.stale = true; need.push([dd - 500, i, j]); }
       ctx.drawImage(t.cv, X(i), Y(j), X(i + 1) - X(i), Y(j + 1) - Y(j));
       CT.tiles.delete(tk); CT.tiles.set(tk, t);   // the least recently used goes first
     }
@@ -108,7 +112,7 @@ function chartWork(){
   CT.raf = 0; const V = CT.v; if (!V || !V.lv || !CT.job.length || !document.body.classList.contains('vplot')) return;
   const until = performance.now() + (performance.now() - (CT.moved || 0) < 400 ? 8 : 16); let did = 0;
   while (CT.job.length && (performance.now() < until || !did)){
-    const [i, j] = CT.job.shift(), tk = i + ',' + j, t = CT.tiles.get(tk); if (t && t.q === 1) continue;
+    const [i, j] = CT.job.shift(), tk = i + ',' + j, t = CT.tiles.get(tk); if (t && t.q === 1 && !t.stale) continue;
     CT.tiles.set(tk, chartTile(V, i, j, t ? 1 : 4)); did++;
   }
   if (did) chartCompose(V, true, 0);

@@ -42,7 +42,7 @@ async def run(p, w, h, tag):
     check(lbl[:3] == ['Butikk', 'Bygd', 'Verft'], 'knappene har kort tekst under ikonet', lbl)
 
     # the fans (at home Bygd also has «Hvil», the rest in Father's naust: 15-energy.js, 05.10.2026)
-    for m, want in (('butikk', ['fiskeutstyr', 'service', 'elektronikk']), ('bygd', ['pub', 'gjestebok', 'bank', 'oppdrag', 'mannskap', 'rest']), ('verft', ['batmarked', 'oppgr', 'vedlikehold', 'maler', 'bunker'])):
+    for m, want in (('butikk', ['fiskeutstyr', 'elektronikk']), ('bygd', ['pub', 'gjestebok', 'bank', 'oppdrag', 'mannskap', 'rest']), ('verft', ['batmarked', 'oppgr', 'vedlikehold', 'maler', 'bunker'])):
         await tap_el('#dock [data-dk=' + m + ']'); await pg.wait_for_timeout(250)
         f = await pg.evaluate("[...document.querySelectorAll('#dockFan [data-dk]')].map(x => x.dataset.dk)")
         vis = await pg.evaluate("!document.getElementById('dockFan').hidden")
@@ -52,7 +52,7 @@ async def run(p, w, h, tag):
     check(await pg.evaluate("document.getElementById('dockFan').hidden"), 'et nytt trykk lukker viften')
 
     # pages in the yard and the village
-    for m, it, title, sel in (('verft', 'oppgr', 'Oppgraderinger', '[data-pa=equip]'), ('butikk', 'fiskeutstyr', 'Fiskeutstyr', '[data-pa=grbuy]'), ('butikk', 'elektronikk', 'Elektronikk og haler', '[data-pa=equip]'), ('butikk', 'service', 'Service', '.ph-card'), ('verft', 'batmarked', 'Båthandel', '[data-pa=mksel]'),
+    for m, it, title, sel in (('verft', 'oppgr', 'Oppgraderinger', '[data-pa=equip]'), ('butikk', 'fiskeutstyr', 'Fiskeutstyr', '[data-pa=grbuy]'), ('butikk', 'elektronikk', 'Elektronikk og haler', '[data-pa=equip]'), ('verft', 'batmarked', 'Båthandel', '[data-pa=mksel]'),
                               ('verft', 'vedlikehold', 'Vedlikehold', '[data-pa=svc]'), ('bygd', 'bank', 'Kystbanken', '.ph-big'), ('bygd', 'oppdrag', 'Oppdrag', '.ph-card'), ('bygd', 'mannskap', 'Mannskap', '.ph-card')):
         await tap_el('#dock [data-dk=' + m + ']'); await pg.wait_for_timeout(200)
         await tap_el('#dockFan [data-dk=' + it + ']'); await pg.wait_for_timeout(300)
@@ -106,7 +106,7 @@ async def run(p, w, h, tag):
     # the phone has only the apps that are left, and Kvote is one of them
     await pg.evaluate("PHONE.open('home')"); await pg.wait_for_timeout(400)
     apps = await pg.evaluate("[...document.querySelectorAll('#phone .ph-app')].map(x => x.dataset.a)")
-    BASE = ['vaer', 'post', 'meld', 'salg', 'kvote', 'regler', 'drift', 'ordl', 'kaiboden', 'merker', 'redning', 'patch', 'tilbake', 'innst', 'admin']   # and since 05.10.2026 Notatbok, Sesong and Folk among them, and Tilbakemelding, and Fiskeguide from 08.10.2026; Haill and Trim in Kaiboden, and Håndboka and Garderoben
+    BASE = ['vaer', 'post', 'meld', 'salg', 'kvote', 'regler', 'drift', 'ordl', 'nett', 'kaiboden', 'merker', 'redning', 'patch', 'tilbake', 'innst', 'admin']   # Nettet from 30.10.2026 (M2); and since 05.10.2026 Notatbok, Sesong and Folk among them, and Tilbakemelding, and Fiskeguide from 08.10.2026; Haill and Trim in Kaiboden, and Håndboka and Garderoben
     check([a for a in apps if a in BASE] == BASE and all(a in BASE + ['sesong', 'guide', 'folk', 'handbok', 'garderobe'] for a in apps), 'telefonen har appene, med Kvote, Regler, Kaiboden, Patchnotes og Admin i rekkefølge', apps)
     # the Rederi app only once the company is founded in the bank (Jonas 06.10.2026)
     rd = await pg.evaluate("(() => { const has = () => [...document.querySelectorAll('#phone .ph-app')].some(x => x.dataset.a === 'rederi'); const f0 = S.form, r0 = has(); S.form = 'AS'; PHONE.open('home'); const r1 = has(); S.form = f0; PHONE.open('home'); return [r0, r1]; })()")

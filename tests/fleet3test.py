@@ -31,7 +31,7 @@ async def main():
           // docs/handelssteder.md)
           const bu = PORTS.filter(p => p.sted === 'butikk').sort((x, y) => dist(x.p, v2.boat.pos) - dist(y.p, v2.boat.pos))[0]; await mapNeed(bu.p, 3); withVessel(v2, () => dock(bu.id));
           PHONE.open('utstyrb'); [...document.querySelectorAll('[data-pa="vsel"]')].find(x => x.dataset.id === v2.id).click();
-          q('[data-pa="equip"][data-k="chirp"]').click();
+          q('[data-pa="equip"][data-k="chirp"]').click(); q('[data-pa="equip"][data-k="chirp"]').click();
           R.equip = {v2jobs:(vget(v2, 'jobs') || []).map(j => j.kind + ':' + j.k), v1jobs:(S.jobs || []).map(j => j.kind + ':' + j.k), cur:S.cur, sel:PHONE.sel};
           // income per vessel
           withVessel(v2, () => { S.boat.status = 'port'; S.boat.port = 'husoy'; S.hold = [{sp:'sei', cls:1, kg:200, n:40, bled:true, iced:true, hr:0, fresh:95, gut:false, hook:true}]; S.tripOwner = true; sell(); });
