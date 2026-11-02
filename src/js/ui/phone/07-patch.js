@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['flaate2-021126', '02.11.2026', 'Fiskeflåten der den hører hjemme', 'The fishing fleet where it belongs', [
+       ['Båtene i havnene langs kysten er nå fiskeflåten slik den er registrert, kommune for kommune: mange i fiskeværene i Finnmark og Lofoten, færre i byene. De har ekte lengder og redskap.', 'The boats in the harbours along the coast are now the fishing fleet as it is registered, municipality by municipality: many in the fishing villages of Finnmark and Lofoten, fewer in the towns. They have real lengths and gear.'],
+       ['Når åpen gruppe stoppes, blir båtene der liggende i havn.', 'When the open group is stopped, its boats stay in port.'],
+    ]],
     ['sesong-021126', '02.11.2026', 'Årstidene langs kysten', 'The seasons along the coast', [
        ['Når på året fisken står hvor, følger nå landingene sted for sted, også på Senja: seien står tettere om sommeren og høsten enn før, og hver art har sin egen sesong der du er.', 'When in the year the fish stand where now follows the landings place by place, Senja too: the saithe stand thicker in summer and autumn than before, and every species has its own season where you are.'],
     ]],

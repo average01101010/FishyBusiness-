@@ -170,6 +170,10 @@ function flaateApply(t){
     const e = D.h[t.tx + ':' + t.ty + '.' + hi], slots = h.boats; if (!e){ h.boats = []; return; }
     h.boats = e.map(([bi, L, g]) => { const s = slots[bi]; if (!s) return null;
       const lg = LG_OF(L), b = Object.assign({}, s, {L, B:Math.round((0.3 * L + 0.9) * 10) / 10, T:Math.round((0.09 * L + 0.6) * 10) / 10, gear:D.meta.gear[g] || 'annet', lg});
+      // the berth was placed for the breadth of the boat npc.py put there: a narrower boat comes in to the quay by half the difference
+      if (s.B > b.B && t.quays){ const x = s.p.x * 1000, z = s.p.y * 1000; let best = null;
+        for (const f of t.quays){ const a = (x - f.x) * f.ux + (z - f.z) * f.uz, o = (x - f.x) * f.nx + (z - f.z) * f.nz; if (Math.abs(a) <= f.hl && o > 0 && o < s.B / 2 + 3 && (!best || o < best.o)) best = {f, o}; }
+        if (best){ const d = (s.B - b.B) / 2 / 1000; b.p = {x:s.p.x - best.f.nx * d, y:s.p.y - best.f.nz * d}; } }
       b.open = lg === 0 && hash(hashStr(b.id) % 1000003 * 3 + 11) < (D.meta.openShare || 0); return b; }).filter(Boolean);
   });
 }

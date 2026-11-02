@@ -56,10 +56,14 @@ async def main():
               return {fishing:a.length, fine, land, most:Math.max(0, ...cell.values())}; })()"""))
         check(all(v['land'] == 0 for v in spread) and sum(v['fishing'] for v in spread) > 5, 'ingen båt som fisker, står på land', spread)
         check(all(v['most'] <= 4 for v in spread), 'høyst fire båter som fisker i samme 300 m-rute (de sprer seg over feltet)', spread)
-        # the share the game keeps of kart-6's boats (NPC_KEEP): about the active fleet of 2024 along the whole coast
-        kp = await pg.evaluate("""(() => { let raw = 0, kept = 0, empty = 0; for (const t of VEC.tiles.values()){ raw += t.npcRaw || 0; for (const h of t.npc || []){ kept += h.boats.length; if (!h.boats.length) empty++; } } return {raw, kept, empty, keep:NPC_KEEP}; })()""")
-        share = kp['kept'] / max(1, kp['raw'])
-        check(kp['empty'] == 0 and (kp['keep'] >= 1 or share * 19411 < 6000), 'rundt 4 600 båter langs kysten (Fiskeridirektoratet: 4 614 aktive i 2024), og hver havn har minst én', dict(kp, share=round(share, 3), coast=round(share * 19411)))
+        # L2/N1 (02.11.2026): the boats in the harbours are the register's active boats of the harbour's kommune (flaate.json): every
+        # loaded harbour has as many boats as flaate.json gives it, and along the whole coast the boats placed are most of the register's
+        # active under 28 m (4 134 in 2025; Fiskeridirektoratet: 4 614 active of all lengths in 2024). A harbour may lie empty when its
+        # kommune has no boats left for it
+        kp = await pg.evaluate("""(() => { const D = flaateData(); let raw = 0, kept = 0, want = 0, empty = 0, harb = 0;
+          for (const t of VEC.tiles.values()){ raw += t.npcRaw || 0; (t.npc || []).forEach((h, hi) => { harb++; kept += h.boats.length; want += (D.h[t.tx + ':' + t.ty + '.' + hi] || []).length; if (!h.boats.length) empty++; }); }
+          return {raw, kept, want, empty, harb, placed:D.meta.placed, active:D.meta.active}; })()""")
+        check(kp['kept'] == kp['want'] and kp['kept'] > 0 and kp['placed'] >= 0.9 * kp['active'], 'havnene har registerets aktive båter for kommunen (flaate.json), og langs kysten er de fleste aktive under 28 m plassert', kp)
         # the coast's boats have no names on the chart when it is zoomed out (more than 4 km tall), but the one you tapped has
         lb = await pg.evaluate("""(() => { const all = npcStates(S.t / 60), other = new Set(all.filter(n => !n.coast).map(n => n.name)), names = new Set(all.filter(n => n.coast && !other.has(n.name)).map(n => n.name)), cnt = () => [...document.querySelectorAll('.lbl-ais')].filter(e => names.has(e.textContent)).length;
           const z0 = view.z; view.cx = S.boat.pos.x; view.cy = S.boat.pos.y; view.z = MAP_H / 8; applyView(); renderDyn(); const out = cnt(); view.z = MAP_H / 2.5; applyView(); renderDyn(); const inn = cnt(); view.z = z0; applyView(); return {out, inn}; })()""")

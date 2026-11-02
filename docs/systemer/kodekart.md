@@ -87,7 +87,7 @@ MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in p
   - 189 `simAreaReady()`
   - 197 `mapDrop(pk)`
 
-## `src/js/core/01c-vec.js` (214 linjer)
+## `src/js/core/01c-vec.js` (215 linjer)
 
 THE COAST'S VECTORS (part 4 of the coast-wide plan, 03.10.2026): buildings, roads, bridges, piers and quay faces
 
@@ -97,15 +97,15 @@ THE COAST'S VECTORS (part 4 of the coast-wide plan, 03.10.2026): buildings, road
   - 45 `vecDecode(D)`
   - 120 `flyteTile(tx, ty)`
   - 129 `vecFinish(r)`
-  - 137 `vecWorker()`
-  - 154 `vecInput(pk, inflate)`
-  - 162 `vecDecodeHere(pk)`
-  - 164 `vecTile(tx, ty)`
-  - 173 `vecTilesIn(x0, z0, x1, z1)`
-  - 181 `roadsIn(x0, z0, x1, z1)`
-  - 194 `bridgesIn(x0, z0, x1, z1)`
-  - 196 `vecWant(x0, y0, x1, y1, then)`
-  - 204 `vecPrune(pts, R = 60)`
+  - 138 `vecWorker()`
+  - 155 `vecInput(pk, inflate)`
+  - 163 `vecDecodeHere(pk)`
+  - 165 `vecTile(tx, ty)`
+  - 174 `vecTilesIn(x0, z0, x1, z1)`
+  - 182 `roadsIn(x0, z0, x1, z1)`
+  - 195 `bridgesIn(x0, z0, x1, z1)`
+  - 197 `vecWant(x0, y0, x1, y1, then)`
+  - 205 `vecPrune(pts, R = 60)`
 
 ## `src/js/core/01d-coast.js` (148 linjer)
 
@@ -601,7 +601,7 @@ crew: people with skills, habits and moods
   - 300 `crewTick(H)`
   - 366 `codRoom(H)`
 
-## `src/js/core/05-vessels.js` (1016 linjer)
+## `src/js/core/05-vessels.js` (1062 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -618,66 +618,72 @@ crew: people with skills, habits and moods
   - 105 `coastWay(b, moored, m0)`
   - 129 `coastCells(a, z)`
   - 145 `coastWayAt(w, u, back)`
-  - 152 `coastState(b, H, hod = hodOf(H)`
-- **177** where a coast boat lies at home (Jonas 18.10.2026: «npc-båter mange plasser er plassert i landmassen når de ligger ved kai»;
-  - 189 `unitHit(x, z, r)`
-  - 197 `dockInHarbour(x, z)`
-  - 203 `moorBlocked(x, z, r)`
-  - 212 `moorFree(p, hd, L, B, others)`
-  - 231 `docksIn(x0, z0, x1, z1)`
-  - 232 `dockFree(d, others, placed)`
-  - 249 `moorAround(h, p)`
-  - 252 `moorHarbour(h)`
-  - 324 `coastMoor(b)`
-  - 335 `seaward(p, c)`
-  - 337 `coastSpot(gr, dI, i)`
-  - 340 `coastCast(b, gr, dI, i, kc, Hc, spot)`
-  - 355 `coastNear(H, only)`
-  - 376 `npcStates(H, only)`
-  - 424 `peerName(s)`
-  - 425 `peerStates()`
-  - 438 `newState()`
-  - 449 `log(no, en, k)`
-  - 451 `navHour()`
-  - 458 `nearestPort(p)`
-  - 460 `nearestYard(p)`
-  - 462 `step()`
-  - 480 `vesselStep(H)`
-  - 560 `sailV(H, hs)`
-  - 572 `sail(H, W, hs)`
-  - 601 `sailWaiting()`
-  - 602 `sailReplan(pl, b, gp)`
-  - 629 `sailStop(pl, b, why)`
-  - 637 `haltPlan(need)`
-  - 647 `arrive(w)`
-  - 665 `unstuckWhy()`
-  - 671 `unstuckSpot()`
-  - 678 `unstuck()`
-  - 692 `dock(pid, berth)`
-  - 717 `catchFactors(H, W, hs)`
-  - 727 `fish(H, W, hs)`
-  - 798 `endFishing(why)`
-  - 813 `addCatch(sp, kg, cls, hook, opt)`
-- **826** work on deck: gutting and icing take hands and time
-  - 839 `deckHands()`
-  - 842 `deckPending()`
-  - 843 `deckEta(hands)`
-  - 848 `moveKg(x, kg, patch)`
-  - 856 `iceMinute()`
-  - 858 `deckMinute()`
-  - 876 `risk(W, hs)`
-  - 903 `hullRepair()`
-  - 906 `svcOverdue()`
-- **907** the rescue boat (plan E3, 05.10.2026)
-  - 927 `rescueBases()`
-  - 936 `rescueBase(p)`
-  - 943 `rescueAis(H)`
-  - 947 `rescue(keepCatch)`
-  - 971 `towSea(p)`
-  - 976 `towRoutes(b)`
-  - 987 `towStep(H)`
-  - 999 `towDone(t)`
-  - 1005 `towPose(frac)`
+- **152** One national coastal fleet (L2/N1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
+  - 161 `flaateData()`
+  - 167 `flaateApply(t)`
+  - 181 `openDone(day0)`
+  - 186 `heldShare(lg)`
+  - 192 `coastGround(G, dI, i, H)`
+  - 197 `coastState(b, H, hod = hodOf(H)`
+- **222** where a coast boat lies at home (Jonas 18.10.2026: «npc-båter mange plasser er plassert i landmassen når de ligger ved kai»;
+  - 234 `unitHit(x, z, r)`
+  - 242 `dockInHarbour(x, z)`
+  - 248 `moorBlocked(x, z, r)`
+  - 257 `moorFree(p, hd, L, B, others)`
+  - 276 `docksIn(x0, z0, x1, z1)`
+  - 277 `dockFree(d, others, placed)`
+  - 294 `moorAround(h, p)`
+  - 297 `moorHarbour(h)`
+  - 369 `coastMoor(b)`
+  - 380 `seaward(p, c)`
+  - 382 `coastSpot(gr, dI, i)`
+  - 385 `coastCast(b, gr, dI, i, kc, Hc, spot)`
+  - 400 `coastNear(H, only)`
+  - 422 `npcStates(H, only)`
+  - 470 `peerName(s)`
+  - 471 `peerStates()`
+  - 484 `newState()`
+  - 495 `log(no, en, k)`
+  - 497 `navHour()`
+  - 504 `nearestPort(p)`
+  - 506 `nearestYard(p)`
+  - 508 `step()`
+  - 526 `vesselStep(H)`
+  - 606 `sailV(H, hs)`
+  - 618 `sail(H, W, hs)`
+  - 647 `sailWaiting()`
+  - 648 `sailReplan(pl, b, gp)`
+  - 675 `sailStop(pl, b, why)`
+  - 683 `haltPlan(need)`
+  - 693 `arrive(w)`
+  - 711 `unstuckWhy()`
+  - 717 `unstuckSpot()`
+  - 724 `unstuck()`
+  - 738 `dock(pid, berth)`
+  - 763 `catchFactors(H, W, hs)`
+  - 773 `fish(H, W, hs)`
+  - 844 `endFishing(why)`
+  - 859 `addCatch(sp, kg, cls, hook, opt)`
+- **872** work on deck: gutting and icing take hands and time
+  - 885 `deckHands()`
+  - 888 `deckPending()`
+  - 889 `deckEta(hands)`
+  - 894 `moveKg(x, kg, patch)`
+  - 902 `iceMinute()`
+  - 904 `deckMinute()`
+  - 922 `risk(W, hs)`
+  - 949 `hullRepair()`
+  - 952 `svcOverdue()`
+- **953** the rescue boat (plan E3, 05.10.2026)
+  - 973 `rescueBases()`
+  - 982 `rescueBase(p)`
+  - 989 `rescueAis(H)`
+  - 993 `rescue(keepCatch)`
+  - 1017 `towSea(p)`
+  - 1022 `towRoutes(b)`
+  - 1033 `towStep(H)`
+  - 1045 `towDone(t)`
+  - 1051 `towPose(frac)`
 
 ## `src/js/core/05c-air.js` (64 linjer)
 
@@ -1996,12 +2002,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (893 linjer)
+## `src/js/ui/phone/07-patch.js` (897 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 886 `patch()`
+  - 890 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
