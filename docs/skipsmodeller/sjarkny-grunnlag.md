@@ -103,10 +103,21 @@ styrbord frontrute. Kranen på kista i babord hekk når luka, lasteplassen og ka
 | 4 | Overlegget: kjølen for dyp forut (møtte ikke forfotens bue), masta 0,25 m for langt akter; «akterhuset» på 3,57 var flaggstanga | Kjølen inn i forfoten fra 8,0, masta flyttet, flaggstang på speilet, kranens kiste 1,30 høy |
 | 5 | Nærbildet av baugen: lista bøyde 0,5 m opp i stevnen (knekken møtte stevnen ved 2,6) | Knekken ender ved 10,94, i listas høyde |
 | 6 | Eksport: lod0 60 935 trekanter, lodm 40 000, lod1 2 561 (fjernmodellen); GLB 3,5 MB. Enhetstestene 245 OK. `deckpoints`: alle plassene på dekket, skipperen 1,20 nås gjennom døra | – |
+| 7 | Etter-bildene i spillet i begge formater (`tests/out/hs11_etter_*`): modellen, kranen i babord hekk, livbøyene, flåten, skipperen bak ruta, sidelanternene om natta (rød fra babord, grønn fra styrbord). Broa: tre ruter, dashbordets skjermer leser som store svarte flater ovenfra | Står (kap. 8) |
+| 8 | Testene (`runtests.sh`, etter hverandre): `vessel3d sjarkny`, `brotest sjarkny` (rom 1,92, mørk 0,06), `lanterntest`, `regmarktest` (merket på jevn sone 1, 0,69 fra stevnen), `vesseltest`, `maletest`, `walktest` grønne; `deckshot` se BACKLOG (kranprøven var rød for alle kranbåtene før) | – |
 
 ## 8. Selvvurdering
 
-(skrives når testene er kjørt)
+**Karakter: 70/100: ikke godkjent** (grensen er 75). Skroget er én flate etter tegningen og lagt over sideriss, vekta og dypgangen stemmer
+med tegningen (45 t mot 42, 2,06), klipp-kontrollen står på 0, alle kontrollene i `check()` er grønne, lanternene er lovlige med fiskelys,
+arbeidsflyten følger tegningen (haleren rett akter for styrhuset, karet og benken akter for den, luka midt akter, kranen i babord hekk), og
+testene er grønne. Trekk: (1) **Jonas måtte rette retningen to ganger**: første utkast var en kopi av den brukte hurtigsjarken i formen, og
+tegningen som lå bak det gamle skriptet (kommentaren øverst sa det) ble ikke etterspurt før han viste den; (2) jeg tegnet først en planende
+bunn for å treffe `disp` 15 t, før jeg så at tegningens 42 t er største deplasement og 16 t lettvekt; (3) bare sideriss er lagt over;
+planet, for- og akterrisset er lest av øyemål (husets bredde, slaget, bunnreisningen); (4) mastestanga er 1,4 m høyere enn på tegningen
+for fiskelysene; (5) broa i spillet viser skjermene som store svarte flater, og stolpene mellom rutene er tykke; (6) farten er ikke avgjort.
+
+Det som må til for 75: Jonas ser på bildene uten å finne noe nytt, overlegg også på plan og for-/akterriss, og en finere bro.
 
 ## 9. Spørsmål til Jonas
 
