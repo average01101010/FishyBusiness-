@@ -170,12 +170,23 @@ function cellNight(c, H){
 function vertZ(sp, night){ const v = VERT[sp]; return v ? v[0] + (v[1] - v[0]) * night : 0.1; }
 // what a set gear gets of the species at the hour against the day's mean: bottom gear the fish near the bottom, the floating net the
 // fish high up (the mean over a day and a night is about 1, so the calibration of the gear holds)
+// In a gale the bottom fish come off the bottom: Cape hake rise in the water with strong winds and are less available to the bottom trawl
+// (Rhodes University, the hake off South Africa's west coast; the near-bottom currents the wind sets up); used here as an analogy for cod,
+// haddock, saithe and pollack, not measured on them: up to 0.15 higher in the water from 10 to 20 m/s of wind
+const STORMZ = {torsk:1, hyse:1, sei:1, lyr:1};
 function gearVertF(sp, key, p, H){
-  const v = VERT[sp]; if (!v) return 1; const n = cellNight(lokOfCell(p), H).nt, z = vertZ(sp, n), zm = (v[0] + v[1]) / 2;
+  const v = VERT[sp]; if (!v) return 1; const n = cellNight(lokOfCell(p), H).nt, zm = (v[0] + v[1]) / 2;
+  const z = Math.min(0.95, vertZ(sp, n) + (STORMZ[sp] ? 0.15 * sstep(10, 20, windAt(H, p)) : 0));
   return key === 'garn:flyt' ? z / zm : (1 - z) / (1 - zm);
 }
-// the jig's bite through the day: best at dusk and dawn, when the fish feeds (up to +15 %)
-function biteF(sp, p, H){ if (!VERT[sp]) return 1; return 1 + 0.15 * cellNight(lokOfCell(p), H).tw; }
+// the jig's bite through the day: best at dusk and dawn, when the fish feeds (up to +15 %); and for cod a smaller peak when the tidal
+// current is weak (+8 % at slack water): acoustic telemetry of cod at artificial reefs in the North Sea found them most active at twilight
+// and next most at low current velocity (VLIZ, Reubens et al.); the halibut's slack-water bite is targetF's own
+function biteF(sp, p, H){
+  if (!VERT[sp]) return 1; let f = 1 + 0.15 * cellNight(lokOfCell(p), H).tw;
+  if (sp === 'torsk'){ const cur = Math.abs(tideH(H + 0.5) - tideH(H - 0.5)); f *= 1 + 0.08 * (1 - clamp(cur / 0.35, 0, 1)); }
+  return f;
+}
 
 // ---- the field from the notes: per species a Float32Array of locations × 12 months against Senja (NaN: no figure) ----
 // the neighbours of each location: the polygons in rules.json that share a corner (to 50 m)

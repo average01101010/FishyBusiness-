@@ -75,7 +75,7 @@ export default function (t){
   t.ok(K.vertZ('sild', 1) > 2 * K.vertZ('sild', 0) && K.vertZ('torsk', 1) > K.vertZ('torsk', 0), 'silda og torsken står høyere i vannet om natta');
   t.ok(bD > bN && Math.abs(bot / 24 - 1) < 0.08 && Math.abs(flt / 24 - 1) < 0.25, `bunngarnet tar mer torsk om dagen (${bD.toFixed(2)} mot ${bN.toFixed(2)} om natta), snittet over døgnet ${(bot / 24).toFixed(2)}; flytegarnet ${(flt / 24).toFixed(2)}`);
   let bmax = 0, bnoon = K.biteF('torsk', hus, H(5, 21) + 3); for (let h = 0; h < 24; h += 0.25) bmax = Math.max(bmax, K.biteF('torsk', hus, H(2, 10) - 8 + h));
-  t.ok(bmax > 1.1 && bnoon < 1.02, `juksa biter best i skumringen (${bmax.toFixed(2)}), midt på dagen som før (${bnoon.toFixed(2)})`);
+  t.ok(bmax > 1.1 && bnoon < 1.09, `juksa biter best i skumringen (${bmax.toFixed(2)}), midt på dagen som før, bortsett fra stille strøm (${bnoon.toFixed(2)})`);
   // the capelin: in Finnmark the cod's spring comes later than the skrei front alone, in March-April
   const cB = K.lokOfCell(K.P(...BAT)), cL = K.lokOfCell(K.P(...LOF)), pb = K.skreiPulse(cB, H(3, 10)), pf = K.skreiFront(cB.lat, H(3, 10)), pl = K.skreiPulse(cL, H(3, 10));
   t.ok(pb > pf + 0.3 && pb > pl, `lodda trekker torsken inn til Finnmark i april (${pb.toFixed(2)} mot skreifronten alene ${pf.toFixed(2)}, Lofoten ${pl.toFixed(2)})`);
@@ -85,4 +85,11 @@ export default function (t){
   const kOf = (lat, lon) => { const p = K.P(lat, lon); return K.gridKey(Math.floor(p.x / 2), Math.floor(p.y / 2)); };
   const fl = K.skreiFlow(kOf(...LOF), H(2, 15)), fj = K.skreiFlow(kOf(...LOF), H(6, 15)), fb = K.skreiFlow(kOf(...BERGEN), H(2, 15));
   t.ok(fl > 0.1 && fj < 0.02 && fb === 0, `skreien strømmer inn i Lofoten i mars (${fl.toFixed(2)}), ikke i juli (${fj.toFixed(2)}) eller i Bergen (${fb})`);
+
+  // the current and the weather (B4): cod bites a little better at slack water; in a gale the bottom fish come off the bottom
+  let slack = 0, run = 1e9; for (let m = 0; m < 24 * 60; m += 10){ const h = H(5, 21) + 3 + m / 60, b = K.biteF('torsk', hus, h); if (b > slack) slack = b; if (b < run) run = b; }
+  t.ok(slack > run * 1.04 && slack < 1.1, `torsken biter litt bedre i stille strøm midt på dagen (${run.toFixed(3)} til ${slack.toFixed(3)})`);
+  const calm = K.gearVertF('torsk', 'garn', hus, H(5, 21) + 4), wind0 = K.windAt; let gale;
+  K.set('windAt', () => 22); gale = K.gearVertF('torsk', 'garn', hus, H(5, 21) + 5); K.set('windAt', wind0);
+  t.ok(gale < calm, `i storm står bunnfisken høyere, og bunngarnet tar mindre (${calm.toFixed(2)} → ${gale.toFixed(2)})`);
 }

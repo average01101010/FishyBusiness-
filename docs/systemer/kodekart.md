@@ -498,7 +498,7 @@ The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a 
   - 253 `ruOpenNear(p, q, maxKm)`
   - 262 `ruTips()`
 
-## `src/js/core/03f-fiske.js` (313 linjer)
+## `src/js/core/03f-fiske.js` (324 linjer)
 
 The fishing along the coast as it really was, and where the fish is from it (B2 of docs/planer/bestand-og-flaate.md, 01.11.2026).
 
@@ -518,21 +518,21 @@ The fishing along the coast as it really was, and where the fish is from it (B2 
 - **160** the fish up and down in the water: by night most species rise from the bottom (HI; the diel vertical migration)
   - 166 `cellNight(c, H)`
   - 170 `vertZ(sp, night)`
-  - 173 `gearVertF(sp, key, p, H)`
-  - 178 `biteF(sp, p, H)`
-- **180** the field from the notes: per species a Float32Array of locations × 12 months against Senja (NaN: no figure)
-  - 182 `fkNeighbours()`
-  - 190 `fkBuild()`
-  - 248 `fkMonth(H)`
-  - 250 `fkAt(a, l, T)`
-  - 252 `skreiFront(lat, H, T)`
-  - 258 `skreiPulse(c, H, T)`
-  - 264 `fkAvail(sp, q, T)`
-  - 281 `areaF(sp, p, H)`
-  - 287 `skreiShare(p, H)`
-  - 294 `skreiFlow(K, H)`
-- **301** the sea's warmth: the fish go deeper when the surface is warmer than they like (B4, 02.11.2026)
-  - 308 `tempDepthK(sp, c, H)`
+  - 177 `gearVertF(sp, key, p, H)`
+  - 185 `biteF(sp, p, H)`
+- **191** the field from the notes: per species a Float32Array of locations × 12 months against Senja (NaN: no figure)
+  - 193 `fkNeighbours()`
+  - 201 `fkBuild()`
+  - 259 `fkMonth(H)`
+  - 261 `fkAt(a, l, T)`
+  - 263 `skreiFront(lat, H, T)`
+  - 269 `skreiPulse(c, H, T)`
+  - 275 `fkAvail(sp, q, T)`
+  - 292 `areaF(sp, p, H)`
+  - 298 `skreiShare(p, H)`
+  - 305 `skreiFlow(K, H)`
+- **312** the sea's warmth: the fish go deeper when the surface is warmer than they like (B4, 02.11.2026)
+  - 319 `tempDepthK(sp, c, H)`
 
 ## `src/js/core/03g-trykk.js` (203 linjer)
 
@@ -1971,12 +1971,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (834 linjer)
+## `src/js/ui/phone/07-patch.js` (835 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 827 `patch()`
+  - 828 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
