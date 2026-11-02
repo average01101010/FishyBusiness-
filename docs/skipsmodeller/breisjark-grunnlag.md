@@ -55,7 +55,7 @@ Før-bildene er tatt i spillet i begge formater (`tests/ma36shot.py`, `TAG=for`)
 | A6 | **Lensportene er svarte plater** på skrogsida, ikke hull | kap. 7, 16, 17 | Ekte hull gjennom skansen ved dekket, tre per side |
 | A7 | Fargegrensene vannrette (bunnstoffet, vannlinjestripa) | planliste kap. 29 | Stiger 12 mm per meter forover |
 | A8 | **Fiskelysene 0,97 m fra hverandre**; loven krever minst 1 m (vedlegg I 2(i)). Lysene er ikke typet (`fishR`/`fishW`), så spillet tegnet sine egne ved mastetoppen | LYS-04 | 1,07 m, typet |
-| A9 | **Sidelanternene er bare fargede klosser**, uten skjerm: den røde synes over baugen fra styrbord | LYS-02 | `F.side_lantern` med skjerm på brett |
+| A9 | **Sidelanternene er bare fargede klosser** uten skjerm (spillet tegner lyset der modellen sier, så det synes ikke i før-bildene; skjermen mangler i modellen) | LYS-02 | `F.side_lantern` med skjerm på brett |
 | A10 | **GLB-ens navn er et ekte merkenavn** | B20 | Nøytralt navn |
 | A11 | **Lyets vegger står oppå ripa uten skjøt**, taket er en kasse som henger 0,8 m akter for veggene uten støtte | kap. 12 | Veggene 4 mm utenpå med skjøt; to stolper til skansen akter |
 | A12 | **Galgen over hekken henger i lufta** akter: bjelkene går ut over speilet uten noe under | kap. 12 | To stolper på speilets kapp |
@@ -80,7 +80,7 @@ Under 12 m (sjøveisreglene regel 23 og 26, vedlegg I; regnet i `check()`), type
 | Fiskelys rødt over hvitt (`fishR`, `fishW`) | på korte armer forut for masta, 8,92 og 7,85 m | 1,07 m fra hverandre (2(i): minst 1 m; tegningen ga 0,97), det hvite 2,17 m over sidelanternene (2(j): minst 2,14) |
 | Arbeidslys (`work`) | under lyets takkant akter og over den åpne sida | ingen lanterne |
 
-Masta med den hvite står 7 m fra flaggstanga og over den: spillet gir vimpel (`mastTop`).
+Masta med den hvite står 7 m fra flaggstanga og over den: spillet gir vimpel (`mastTop`). Nattbildene fra spillet (`ma36_etter_natt*`): den røde synes fra babord, den grønne fra styrbord.
 
 ## 6. Arbeidsflyten og plassene
 
@@ -126,7 +126,32 @@ noe tak (den høyeste er bakken, 1,95).
 
 ## 8. Selvvurdering
 
-Fylles ut når testene og bildene fra spillet er sett.
+**Karakter: 72/100: ikke godkjent** (grensen er 75).
+
+Det som holder:
+- Skroget er én flate med dødveden i snittet, ekte hull og jevne vannlinjer (0,008 mot 0,038 før).
+- Profilen ligger oppå den gamle, som ble lagt over tegningen.
+- Vekta er 21,9 t mot 29,5 t før. Dypgangen stemmer.
+- Klasjsjekken står på 0, og alle 21 kontrollene i `check()` er grønne.
+- Lanternene er lovlige, med skjermer og typede fiskelys.
+- Broa viser konsollen og instrumentene fra skipperens øye. Rorplassen ligger på styrhusdørken for første gang.
+- Arbeidsflyten går an: haleren, karet, luka og bordet ligger i rekkefølge.
+- Testene som dekker båten er grønne: Node (420), `vessel3d`, `brotest`, `lanterntest`, `regmarktest`, `maletest`, `walktest`,
+  `vesseltest`, `penshot` og `jigshot`.
+
+Trekk:
+1. **Jonas måtte påpeke vinduene om styrbord** der mannskapet arbeider. Plassene for haleren og juksamaskinene ble ikke lagt inn før
+   lyet ble formet (kap. 19).
+2. **Tegningen er ikke i repoet.** Overlegget er mot den gamle profilen, og plan, forriss og akterriss er ikke lagt over noe.
+3. **Vekta er ikke avgjort:** 21,9 t ved tegningens vannlinje mot `disp` 20.
+4. **Bare tre av seks juksamaskiner får plass.** Den høye akterskansen om styrbord er for høy for spillets regel for ripa (`jigRail`).
+5. **Skjermene på broa er mørke flater** (som havsjarken), og nattbildet fra Blender er for mørkt til å si noe om lanternene. Nattbildet
+   fra spillet viser dem.
+6. **Jeg fant selv** at lyets tak ble mørkt i spillet, og at stigen gikk gjennom taket. Begge er rettet, men de ble funnet sent.
+7. Testene i spillet ble kjørt på eksporten før taket ble delt i et rutenett. Node-testen og etter-bildene er tatt på den siste.
+
+Det som må til for 75: Jonas ser på bildene uten å finne noe nytt, tegningen legges over sideriss og plan, og vekta og juksaplassene
+avgjøres.
 
 ## 9. Spørsmål til Jonas
 
