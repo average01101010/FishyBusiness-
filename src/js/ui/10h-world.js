@@ -91,7 +91,7 @@ async function worldShare(){
     const H = S.t / 60, y = yearH(H), r = await cloudRpc('world_get', {since:S.wcur || 0, y, gh:+H.toFixed(2)});
     if (r){ WSH.y = y; WSH.open = (r.open || 0) / 1000; WSH.boats = r.boats || 0; WSH.mH = H; WSH.mkt = {};
       // B4: the register, the open group's active players, the others' catch per group (kg) and the server's stock when it is on
-      if (r.reg) WSH.reg = r.reg; WSH.openBoats = r.open_boats || 0; WSH.grp = r.grp || {};
+      if (r.reg) WSH.reg = r.reg; WSH.openBoats = r.open_boats || 0; WSH.grp = r.grp || {}; TRKM.clear(); LOKC.forEach(c => { c.tH = -1; });   // the fleet's pressure gives way to the new catch at once
       const st = r.stock || null; if (JSON.stringify(st) !== JSON.stringify(WSH.stock || null)){ WSH.stock = st; for (const k in STKY) delete STKY[k]; for (const k in YQC) delete YQC[k]; TRK.ys = {}; DENT.H = NaN; }
       for (const [pid, sp, kg] of r.mkt || []) (WSH.mkt[pid] = WSH.mkt[pid] || {})[sp] = kg;
       for (const [k, kg] of r.cells || []) wshTake(k, kg);

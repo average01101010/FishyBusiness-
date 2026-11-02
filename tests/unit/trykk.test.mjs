@@ -48,8 +48,8 @@ export default function (t){
   // 7. B4: the players' landings come off the fleet, the open group's virtual boats give way to the active players, the register and
   // the stock come from the server when it has them
   const WSH = K.get('WSH'), Y7 = K.trykkYear('torsk', y), QL = Y7.Q.u11 + Y7.Q.g11 + Y7.Q.g15 + Y7.Q.g21;
-  WSH.y = y; WSH.grp = {}; K.LOKC.clear(); const f0 = K.fleetF('torsk', hus, H(2, 20));
-  WSH.grp = {'lukket:torsk':0.2 * QL, 'open:hyse':0.1 * K.trykkYear('hyse', y).Q.all}; K.LOKC.clear(); const f1 = K.fleetF('torsk', hus, H(2, 20));
+  WSH.y = y; WSH.grp = {}; K.LOKC.clear(); K.TRKM.clear(); const f0 = K.fleetF('torsk', hus, H(2, 20));
+  WSH.grp = {'lukket:torsk':0.2 * QL, 'open:hyse':0.1 * K.trykkYear('hyse', y).Q.all}; K.LOKC.clear(); K.TRKM.clear(); const f1 = K.fleetF('torsk', hus, H(2, 20));
   t.near(K.trkPlayersF('torsk', y, Y7), 0.8, 1e-9, 'lukket gruppe: når spillerne har landet 20 % av gruppekvoten, har flåten 80 % igjen');
   t.ok(f1 < f0 && f1 > 0.6 * f0, `og trykket på Husøy viker (${f0.toFixed(1)} → ${f1.toFixed(1)} kg/t; trål og havfiske fisker sitt)`);
   t.near(K.trkPlayersF('hyse', y, K.trykkYear('hyse', y)), 0.9, 1e-9, 'hysa: spillernes 10 % går fra flåtens');
