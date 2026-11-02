@@ -556,7 +556,15 @@ def shelter(fine=True):
         for x in (h0 + 0.25, (h0 + h1) / 2, h1 - 0.25): acyl(A, (x, yi - 0.001, hz - 0.08), (x, yi + 0.06, hz - 0.08), 0.012, lambda q: C['steel'], seg=8)
     # the roof: a plate with a rounded lip over the walls, reaching aft over the aft deck (G: 2.20), its underside white
     zr0, zr1 = SH_TOP, ROOF_SH; yr = 2.10
-    abox(A, SH_RX0, SH_X1 + 0.04, -yr, yr, zr0 + 0.02, zr1, C['roof'], skip=('-z',))
+    abox(A, SH_RX0, SH_X1 + 0.04, -yr, yr, zr0 + 0.02, zr1, C['roof'], skip=('-z', '+z'))
+    # its top as a grid: one big face has only its four corners to carry the baked shade, and those lie in the lip's shadow (the roof
+    # came out dark in the game)
+    NX_, NY_ = (14, 10) if fine else (1, 1)
+    for i in range(NX_):
+        for j in range(NY_):
+            xa, xb = SH_RX0 + (SH_X1 + 0.04 - SH_RX0) * i / NX_, SH_RX0 + (SH_X1 + 0.04 - SH_RX0) * (i + 1) / NX_
+            ya, yb = -yr + 2 * yr * j / NY_, -yr + 2 * yr * (j + 1) / NY_
+            A.poly([(xa, ya, zr1), (xb, ya, zr1), (xb, yb, zr1), (xa, yb, zr1)], C['roof'], (0, 0, 1))
     A.poly([(SH_RX0, -yr, zr0 + 0.02), (SH_X1 + 0.04, -yr, zr0 + 0.02), (SH_X1 + 0.04, yr, zr0 + 0.02), (SH_RX0, yr, zr0 + 0.02)], C['inner'], (0, 0, -1))
     for sg in (1, -1): abox(A, SH_RX0 - 0.01, SH_X1 + 0.05, sg * yr - 0.012, sg * yr + 0.012, zr0 - 0.02, zr1 + 0.01, C['cap'])
     abox(A, SH_RX0 - 0.012, SH_RX0 + 0.012, -yr, yr, zr0 - 0.02, zr1 + 0.01, C['cap'])

@@ -120,6 +120,8 @@ noe tak (den høyeste er bakken, 1,95).
 | 7 | nærbilder | stigen opp på lyet gikk gjennom takplata (også i den gamle) | stigen akter for takkanten, åpning i rekka |
 | 8 | K1–K7, nærbildene | fenderlistas svarte bånd 25 cm bredt (flaten over lista fikk listas farge); viskerne tvers over rutene sett fra rattet | listas øverste punkt hører til skansen; viskerne kortere og parkert lavt |
 | 9 | Jonas' bilde av styrbord side | vinduene står der mannskapet skal arbeide | styrbord side av lyet åpen; bordet til babord; juksaplassene per side |
+| 11 | overlegget av den nye profilen (K3s) over den gamle, som ble lagt over tegningen da den ble målt | stevnen, kjøllinja, ripa med trinnene, lyet og styrhuset ligger oppå hverandre; styrhustaket 8 cm høyere (B5) | |
+| 12 | etter-bildene i spillet | lyets tak mørkt i spillet (én flate med fire hjørner i skyggen fra listene) | taket som rutenett |
 | 10 | Node-testen | fjernmodellen 18 165 punkter mot 12 000 | lyets vegger og beslagene grovere i `build(False)`: 11 754 |
 
 ## 8. Selvvurdering

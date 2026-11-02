@@ -575,8 +575,12 @@ Regn den indre takhøyden, ikke `WH_TOP`.
 **Uten tegning: legg den nye profilen over den gamle.** Den gamle modellens K3 ble lagt over tegningen da den ble målt; den er et
 brukbart overlegg til tegningen kommer, så lenge tabellene er de samme.
 
+**En stor flate med fire hjørner blir mørk i spillet.** Skyggen bakes per hjørne; lyets tak var én flate på 3,8 × 4,2 m med hjørnene inne
+i skyggen fra listene rundt kanten, og hele taket ble mørkt i spillet (lyst i Cycles, som regner skyggen per piksel). Del store, flate
+deler i et rutenett.
+
 **`pgrep -f` i en venteløkke finner seg selv** (kap. 18) også når mønsteret er skriptnavnet: vent på en fil eller et ord i loggen jobben
-skriver selv (`until grep -q FERDIG log`).
+skriver selv (`until grep -q FERDIG log`). Og `pkill -f "python3 skript.py"` i en kommando drepte kommandoen selv igjen: stopp på prosess-id.
 
 ## Endringslogg
 
