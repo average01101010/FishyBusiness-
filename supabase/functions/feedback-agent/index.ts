@@ -11,6 +11,7 @@
 // only the agent_* functions, so with the token nothing else in the database can be read or changed: no player, save or purchase.
 // SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are given to every Edge Function by Supabase.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { serveReported } from '../_shared/report.ts';   // a throw or a 5xx goes to the game's error list (02.11.2026)
 
 const TOKEN = Deno.env.get('FEEDBACK_AGENT_TOKEN') || '';
 const json = (o: unknown, status = 200) => new Response(JSON.stringify(o), {status, headers: {'Content-Type': 'application/json'}});
@@ -24,7 +25,7 @@ async function same(a: string, b: string){
   return d === 0;
 }
 
-Deno.serve(async (req) => {
+serveReported('feedback-agent', async (req) => {
   if (req.method !== 'POST') return json({ok: false, why: 'POST only'}, 405);
   if (TOKEN.length < 32) return json({ok: false, why: 'FEEDBACK_AGENT_TOKEN is not set (32 characters or more)'}, 503);
   const got = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');

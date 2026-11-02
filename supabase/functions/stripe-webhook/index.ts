@@ -10,12 +10,13 @@
 // Supabase token. The secrets, set by Jonas only: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET (whsec_…, from the endpoint in Stripe).
 import Stripe from 'npm:stripe@23.0.0';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { serveReported } from '../_shared/report.ts';   // a throw or a 5xx goes to the game's error list (02.11.2026)
 
 const SK = Deno.env.get('STRIPE_SECRET_KEY') || '', WH = Deno.env.get('STRIPE_WEBHOOK_SECRET') || '';
 const stripe = new Stripe(SK || 'sk_unset', {httpClient: Stripe.createFetchHttpClient()});
 const crypto = Stripe.createSubtleCryptoProvider();
 
-Deno.serve(async (req) => {
+serveReported('stripe-webhook', async (req) => {
   if (req.method !== 'POST') return new Response('method', {status: 405});
   if (!WH) return new Response('not set up', {status: 503});
   const sig = req.headers.get('stripe-signature') || '', raw = await req.text();

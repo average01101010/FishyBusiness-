@@ -88,7 +88,34 @@ function tabLose(){
   const b = document.getElementById('tabHere'); if (b) b.onclick = () => location.reload();
   if (!g) location.reload();
 }
-function save(){ if (SAVE_OFF || !tabMine()) return; try { S.lastReal = Date.now(); S.seq = (S.seq || 0) + 1; let o = S; if (S.fleet && S.fleet.length){ storeVessel(curVessel()); o = Object.assign({}, S); for (const k of VKEYS) delete o[k]; } localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} }
+// the save watched (02.11.2026, the error trap, ui/10f-cloud.js cloudErr): JSON writes a number that is not a number (NaN, Infinity)
+// as null without a word, so a fault in a sum wiped the value in the save and the player only saw money, fuel or a place gone. Once a
+// minute the save is written through a replacer that notes where such numbers are (the path, indices as #), with the fuel and the ice
+// that cannot be below zero; and a save that cannot be written (the storage full: QuotaExceededError) was dropped in silence. Each is
+// sent once a session (cloudErr), with what was found and the size of the save.
+const SAVECHK = {at:0};
+function saveJson(o){
+  if (typeof cloudErr !== 'function' || Date.now() - SAVECHK.at < 60000) return JSON.stringify(o);
+  SAVECHK.at = Date.now();
+  const bad = [], path = new Map();
+  const j = JSON.stringify(o, function (k, v){
+    const p = path.get(this), here = p ? p + '.' + k : k;
+    if (typeof v === 'number' && !isFinite(v)){ if (bad.length < 12) bad.push([here, String(v)]); }
+    else if (v && typeof v === 'object') path.set(v, here);
+    return v;
+  });
+  try { for (const [nm, b] of [['boat', o.boat]].concat((o.fleet || []).map((v, i) => ['fleet.' + i + '.boat', v && v.boat])))
+    if (b) for (const k of ['fuel', 'ice']) if (typeof b[k] === 'number' && b[k] < -0.01) bad.push([nm + '.' + k, String(Math.round(b[k] * 100) / 100)]); } catch (e){}
+  if (bad.length){
+    const keys = [...new Set(bad.map(q => q[0].replace(/\.\d+(?=\.|$)/g, '.#')))].slice(0, 6).join(', ');
+    cloudErr('Lagringen har ugyldige tall: ' + keys, 'save', JSON.stringify({bad, t:o.t, seq:o.seq}), 'state');
+  }
+  return j;
+}
+function save(){ if (SAVE_OFF || !tabMine()) return; let j = ''; try { S.lastReal = Date.now(); S.seq = (S.seq || 0) + 1; let o = S; if (S.fleet && S.fleet.length){ storeVessel(curVessel()); o = Object.assign({}, S); for (const k of VKEYS) delete o[k]; } j = saveJson(o); localStorage.setItem(KEY, j); }
+  catch (e){ try { if (typeof cloudErr === 'function') cloudErr('Lagringen feilet: ' + (e && e.name || 'Error') + ': ' + String(e && e.message || e).slice(0, 120), 'save', JSON.stringify({kb:Math.round(j.length / 1024), store:saveStoreKb()}), 'state'); } catch (e2){} } }
+// what the page has in localStorage, in kB (for a save that would not fit)
+function saveStoreKb(){ try { let n = 0; for (let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); n += k.length + (localStorage.getItem(k) || '').length; } return Math.round(n / 1024); } catch (e){ return null; } }
 // v1 to v2: every point {x, y} (km) anywhere in the save goes through LG; the stock's dense grids of the legacy frame (40 x 42 cells of
 // 2 km) become the sparse cells of the national frame, the lowest value where two old cells land in one new; headings turn with the frame
 function migrateV2(o){

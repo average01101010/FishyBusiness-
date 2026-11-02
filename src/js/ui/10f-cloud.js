@@ -100,10 +100,11 @@ function cloudGateShow(html){
   // the same picture and type as the loading screen (styles.css): the name over the sky, the text and the buttons in a card over the water
   let g = document.getElementById('cloudGate');
   if (!g){ g = document.createElement('div'); g.id = 'cloudGate'; g.className = 'dsb-bg'; document.body.appendChild(g); }
+  if (typeof bootGate === 'function') bootGate(true);   // the time at the gate is the player's, not the start's (11-boot.js)
   g.innerHTML = '<div class="ld-top"><span class="ld-k">' + cloudL('Kystfiske langs norskekysten', 'Coastal fishing in Norway') + '</span><h1 class="ld-t">Det Store Blå</h1></div><div class="cg-card">' + html + '</div>';
   return g;
 }
-function cloudGateHide(){ const g = document.getElementById('cloudGate'); if (g) g.remove(); }
+function cloudGateHide(){ const g = document.getElementById('cloudGate'); if (g) g.remove(); if (typeof bootGate === 'function') bootGate(false); }
 const cloudBtn = (id, label, primary) => '<button id="' + id + '" type="button" class="cg-btn' + (primary ? ' pri' : '') + '">' + label + '</button>';
 // the world's clock from the page's own server (core/01-world.js): the Date of a fresh HEAD of the page, to the second, against the
 // middle of the round trip, so a device with a wrong clock is on the same minute as everyone else; offline the device's own clock
@@ -229,6 +230,7 @@ function cloudBegin(){
   setInterval(() => { if (!document.hidden) CLOUD.active += 5; if (typeof G3 !== 'undefined' && G3._debug && !document.hidden){ const f = G3._debug.fps; if (f > 0) CLOUD.fps.push(f); } }, 5000);
   setInterval(() => cloudFlush(false), 60000);
   cloudEv('start', {});
+  if (typeof BOOTW !== 'undefined' && BOOTW.res) cloudEv('boot', BOOTW.res);   // how long the start took, step by step (11-boot.js bootDone)
 }
 function cloudEv(k, d){ if (!CLOUD.sid) return; if (CLOUD.q.length < 500) CLOUD.q.push({k, t:Date.now(), d:d || {}}); }
 async function cloudFlush(end){
@@ -307,6 +309,9 @@ async function errFlush(){
   const T = typeof window !== 'undefined' && window.DSB_ERRTRAP; if (!T) return;
   T.to = (m, s, st, k) => cloudErr(m, s, st, k);
   addEventListener('pagehide', () => { if (!ERR.ready && ERR.pend.length) errKeep(ERR.pend.splice(0)); });   // a page closed at the gate or the loading: next time
+  // the service worker's errors come as a message (src/pwa/sw.js swErr)
+  try { if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', e => { const d = e.data;
+    if (d && Array.isArray(d.dsbErr)) for (const q of d.dsbErr) cloudErr(q.msg, 'sw', q.stack + (q.v ? '\nsw ' + q.v : ''), 'sw'); }); } catch (e){}
   const q = T.q.splice(0); for (const [m, s, st, k] of q) cloudErr(m, s, st, k);
 })();
 // the game is up (cloudStart) or did not start (bootFail): what waited goes now, and the page starts watching for hangs and crashes
@@ -316,6 +321,7 @@ function errStart(){
   const p = ERR.pend.splice(0); for (const e of p) errSend(e);
   errFlush(); addEventListener('online', () => setTimeout(errFlush, 3000));
   setTimeout(errFlush, 60000);
+  try { if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage({dsbErrPull:1}); } catch (e){}   // what the worker kept
   hangWatch();
 }
 // ---------- a page that stops or stands still while it is on the screen ----------

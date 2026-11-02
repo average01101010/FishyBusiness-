@@ -798,6 +798,26 @@ def main():
               'the world brings the register, the open group\'s active players and the others\' catch per group; the stock only when the admin has turned it on')
         print(ok(G['cfgA'] and G['cfg1'] and G['cfgBad'] and G['shareA'] and G['share'] == ['cfg', 'grp', 'open_boats', 'reg', 'reg_total', 'stock'] and G['tables']),
               'only the admin with the second factor turns the switches and sees the share; no player reads the tables')
+        # the admin told at once (20261102130000_err_alert.sql): the first look starts the cursor; a new message and three crashes give one
+        # push to the admin with a subscription; within half an hour no other, and the cursor waits; then the next; no player runs it
+        E = {}
+        adm = sql("select id from public.players order by id limit 1")
+        sql("update public.players set game_admin = true where id = '%s'; insert into public.push_subs (endpoint, player_id, p256dh, auth, lang) values ('https://push.test/adm', '%s', 'k', 'a', 'no') on conflict do nothing" % (adm, adm))
+        E['first'] = sql("select public.err_alert()")
+        sql("insert into public.errors (msg, src) values ('errtest ny 1282 feil', 'x'), ('Krasj: siden stoppet mens den var på skjermen · 3d', 'crash'), ('Krasj: siden stoppet mens den var på skjermen · 3d', 'crash'), ('Krasj: siden stoppet mens den var på skjermen · kart', 'crash'), ('TypeError: x', 'view3d.js:5')")
+        E['one'] = sql("select public.err_alert()")
+        E['body'] = sql("select replace(body, E'\\n', ' | ') from public.push_queue where tag = 'dsb-err' and player_id = '%s' order by id desc limit 1" % adm)
+        sql("insert into public.errors (msg, src) values ('errtest annen', 'x')")
+        E['wait'] = sql("select public.err_alert()")
+        sql("update public.push_state set v = v - 3600 where k = 'err_alert_at'")
+        E['next'] = sql("select public.err_alert()"); E['body2'] = sql("select replace(body, E'\\n', ' | ') from public.push_queue where tag = 'dsb-err' order by id desc limit 1")
+        sql("insert into public.errors (msg, src) values ('errtest ny 999 feil', 'x')"); sql("update public.push_state set v = v - 3600 where k = 'err_alert_at'")
+        E['same'] = sql("select public.err_alert()")
+        E['anon'] = sql("select public.err_alert()", {}, 'anon', expect_err=True)[0]; E['pl'] = sql("select public.err_alert()", A, 'authenticated', expect_err=True)[0]
+        sql("update public.players set game_admin = false where id = '%s'; delete from public.push_subs where endpoint = 'https://push.test/adm'; delete from public.push_queue where tag = 'dsb-err'" % adm)
+        print(ok(E['first'] == '0' and E['one'] == '1' and '«errtest ny 1282 feil»' in E['body'] and 'nye feil' in E['body'] and '3 krasj' in E['body'] and 'TypeError: x' not in E['body']
+                 and E['wait'] == '0' and E['next'] == '1' and 'errtest annen' in E['body2'] and E['same'] == '0' and E['anon'] and E['pl']),
+              'a new error or three crashes push the admin once, never a known one; half an hour between, nothing lost; numbers do not make a message new; no player runs it', E)
         # the load of 5 000 players (plan 5b; KYST_LAST=5000): landings and catches for that many players, then what world_get costs
         NL = int(os.environ.get('KYST_LAST') or 0)
         if NL:

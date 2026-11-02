@@ -11,12 +11,13 @@
 // The secret, set by Jonas only: WORKOS_API_KEY (the Production key, sk_live_… under API Keys in WorkOS). SUPABASE_URL and
 // SUPABASE_ANON_KEY are given to every Edge Function by Supabase.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { serveReported } from '../_shared/report.ts';   // a throw or a 5xx goes to the game's error list (02.11.2026)
 
 const KEY = Deno.env.get('WORKOS_API_KEY') || '';
 const CORS = {'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info'};
 const json = (o: unknown, status = 200) => new Response(JSON.stringify(o), {status, headers: {...CORS, 'Content-Type': 'application/json'}});
 
-Deno.serve(async (req) => {
+serveReported('account-delete', async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, {headers: CORS});
   if (req.method === 'GET') return json({ready: !!KEY});
   if (req.method !== 'POST') return json({error: 'method'}, 405);

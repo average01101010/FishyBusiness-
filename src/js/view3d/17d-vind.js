@@ -73,7 +73,7 @@
     const now = performance.now() / 1000;
     if (!far){ if (now - VD.at > 0.5 || Math.hypot(eye[0] - VD.O[0], eye[2] - VD.O[1]) > 300) vdBuild(eye, now); }
     else if (VD.at < 0) vdBuild(eye, now);
-    if (!VD.P){ try { VD.P = program(VD_VS, VD_FS, ['aP', 'aN', 'aC', 'aI', 'aJ'], 'vind'); VD.LP = program(VD_LVS, VD_LFS, ['aP'], 'vindl'); } catch (e){ console.warn('vind', e.message || e); VD.on = false; return; } }
+    if (!VD.P){ try { VD.P = program(VD_VS, VD_FS, ['aP', 'aN', 'aC', 'aI', 'aJ'], 'vind'); VD.LP = program(VD_LVS, VD_LFS, ['aP'], 'vindl'); } catch (e){ console.warn('3D ' + 'vind' + ' faller bort · ' + GPU, e); VD.on = false; return; } }
     const p = {x:eye[0] / 1000, y:eye[2] / 1000}, w = env.wind != null ? env.wind : windAt(S.t / 60, p), wd = (windDir(S.t / 60, p) - gridGamma(p) + 180) * DEG;
     if (!far) VD.ang += vdTip(w) * Math.min(dt || 0, 0.1);
     const X = TREE.ext, P = VD.P, u = P.u, O = [VD.O[0] - eye[0], -eye[1], VD.O[1] - eye[2]];

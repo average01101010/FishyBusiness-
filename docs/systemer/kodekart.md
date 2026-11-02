@@ -2,7 +2,7 @@
 
 Seksjonene og funksjonene i hver kildefil, med linjenummer, i rekkefølgen malen setter dem sammen i (`src/index.html`). Lages av `python3 tools/docs/kodekart.py` og skrives på nytt av `/lever`, så linjenumrene kan være litt gamle; navnene og rekkefølgen stemmer. Slå opp her og bruk `grep` i stedet for å lese en stor fil hel.
 
-## `src/js/errtrap.js` (48 linjer)
+## `src/js/errtrap.js` (60 linjer)
 
 THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp så mange feil automatisk som mulig slik at vi
 
@@ -1723,7 +1723,7 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
 - **1** i18n
   - 110 `t(k, ...a)`
 
-## `src/js/ui/02-format-state.js` (180 linjer)
+## `src/js/ui/02-format-state.js` (207 linjer)
 
 ---------- formatting ----------
 
@@ -1747,16 +1747,18 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 74 `tabMark()`
   - 75 `tabMine()`
   - 81 `tabLose()`
-  - 91 `save()`
-  - 94 `migrateV2(o)`
-  - 106 `load()`
-- **126** UI state
-  - 137 `booting()`
-  - 138 `loaderGone()`
-  - 145 `toast(msg, ms)`
-  - 158 `saveCode()`
-  - 166 `codeRead(code)`
-  - 174 `loadCode(code)`
+  - 97 `saveJson(o)`
+  - 115 `save()`
+  - 118 `saveStoreKb()`
+  - 121 `migrateV2(o)`
+  - 133 `load()`
+- **153** UI state
+  - 164 `booting()`
+  - 165 `loaderGone()`
+  - 172 `toast(msg, ms)`
+  - 185 `saveCode()`
+  - 193 `codeRead(code)`
+  - 201 `loadCode(code)`
 
 ## `src/js/ui/03a-chart.js` (147 linjer)
 
@@ -2298,7 +2300,7 @@ the phone's Sesong and Folk apps (05.10.2026; the rules are in core/09c-seasons.
 
 - **1** the phone's Sesong and Folk apps (05.10.2026; the rules are in core/09c-seasons.js and core/09d-folk.js)
 
-## `src/js/ui/06e-feedback.js` (252 linjer)
+## `src/js/ui/06e-feedback.js` (258 linjer)
 
 Tilbakemelding: the players' feedback on the phone (05.10.2026)
 
@@ -2552,7 +2554,7 @@ SOUND (the user's wish 03.10.2026)
 - **82** inside Father's naust (Jonas 09.10.2026: «Kjør på med lyd i naustet»; ui/09c-naust3d.js)
 - **141** the music (Jonas 05.10.2026: «rolig ambient instrumentaler som svak stemning i bakgrunnen. Må kunne skrus av i innstillinger»)
 
-## `src/js/ui/10f-cloud.js` (926 linjer)
+## `src/js/ui/10f-cloud.js` (932 linjer)
 
 THE CLOUD (04.10.2026; docs/lansering.md E and F)
 
@@ -2573,81 +2575,81 @@ THE CLOUD (04.10.2026; docs/lansering.md E and F)
   - 86 `cloudRpc(fn, args, opt)`
 - **98** the gate: before the game starts
   - 99 `cloudGateShow(html)`
-  - 106 `cloudGateHide()`
-  - 110 `worldSync()`
-  - 115 `cloudGate()`
-- **183** after the start: hooks, measurements, the save
-  - 184 `cloudStart()`
-  - 209 `cloudAsk()`
-  - 219 `cloudConsent(yes, by)`
-  - 225 `cloudBegin()`
-  - 233 `cloudEv(k, d)`
-  - 234 `cloudFlush(end)`
-- **243** the errors (04.10.2026; caught everywhere since 02.11.2026, js/errtrap.js)
-  - 254 `srcMapStr(s)`
-  - 267 `errNoise(msg)`
-  - 272 `cloudErr(msg, src, stack, kind)`
-  - 283 `errSend(e)`
-  - 287 `errQueue()`
-  - 288 `errKeep(list)`
-  - 292 `errFlush()`
-  - 313 `errStart()`
-- **321** a page that stops or stands still while it is on the screen
-  - 328 `aliveRead()`
-  - 329 `aliveBeat(gone)`
-  - 340 `aliveCheck()`
-  - 364 `hangWatch()`
-- **378** the save between devices (05.10.2026; supabase/migrations/20261005200000_save_sync.sql)
-  - 385 `syncGet()`
-  - 386 `syncSet(rev, at, rv, sq)`
-  - 392 `deviceId()`
-  - 396 `deviceName()`
-  - 401 `cloudStatus(s)`
-  - 402 `cloudStatusText()`
-  - 411 `saveSum(o)`
-  - 415 `sumText(m)`
-  - 422 `cloudChoose(here, cloud, when, box)`
-  - 437 `cloudKeptNote(where)`
-  - 442 `cloudTake(cs)`
-  - 448 `cloudSync(cs)`
-  - 472 `cloudSaveSoon(closing, manual)`
-  - 511 `cloudSoon(ms)`
-- **512** one device at a time (13.10.2026, supabase/migrations/20261013120000_active.sql)
-  - 522 `cloudFp()`
-  - 523 `cloudClaim(wait)`
-  - 536 `cloudBeat()`
-  - 552 `cloudWake()`
-  - 558 `cloudPassed(h)`
-  - 573 `cloudHeldShow(h)`
-  - 582 `cloudPlayHere()`
-  - 592 `cloudCheckHead()`
-  - 601 `cloudConflict(cl, moved)`
-  - 631 `cloudHist()`
-  - 636 `cloudRestore(id)`
-- **647** what is measured: the game's own functions, wrapped once they are all defined
-  - 648 `cloudHooks()`
-- **671** the account card in Settings
-  - 672 `cloudCard()`
-  - 696 `histRows()`
-  - 708 `cloudAccountDel()`
-  - 719 `cloudMediaDel()`
-  - 725 `cloudAct(a, d)`
-- **759** registering, for a guest: in the game's own words, never a wall before the third landing
-  - 768 `guestHave()`
-  - 774 `guestAsk(why)`
-  - 798 `namesKept()`
-  - 799 `namesKeep(o)`
-  - 801 `namesApply()`
-  - 809 `nameTake(n, quiet)`
-  - 819 `nameCheck()`
-  - 834 `nameSuggest()`
-  - 843 `nameAsk(why, reason)`
-  - 868 `guestOpenAsk()`
-  - 876 `nameNudge(force)`
-  - 889 `guestNudge(step)`
-  - 901 `guestLogin(src)`
-  - 907 `guestRegister(signIn)`
-  - 919 `guestGift()`
+  - 107 `cloudGateHide()`
+  - 111 `worldSync()`
+  - 116 `cloudGate()`
+- **184** after the start: hooks, measurements, the save
+  - 185 `cloudStart()`
+  - 210 `cloudAsk()`
+  - 220 `cloudConsent(yes, by)`
+  - 226 `cloudBegin()`
+  - 235 `cloudEv(k, d)`
+  - 236 `cloudFlush(end)`
+- **245** the errors (04.10.2026; caught everywhere since 02.11.2026, js/errtrap.js)
+  - 256 `srcMapStr(s)`
+  - 269 `errNoise(msg)`
+  - 274 `cloudErr(msg, src, stack, kind)`
+  - 285 `errSend(e)`
+  - 289 `errQueue()`
+  - 290 `errKeep(list)`
+  - 294 `errFlush()`
+  - 318 `errStart()`
+- **327** a page that stops or stands still while it is on the screen
+  - 334 `aliveRead()`
+  - 335 `aliveBeat(gone)`
+  - 346 `aliveCheck()`
+  - 370 `hangWatch()`
+- **384** the save between devices (05.10.2026; supabase/migrations/20261005200000_save_sync.sql)
+  - 391 `syncGet()`
+  - 392 `syncSet(rev, at, rv, sq)`
+  - 398 `deviceId()`
+  - 402 `deviceName()`
+  - 407 `cloudStatus(s)`
+  - 408 `cloudStatusText()`
+  - 417 `saveSum(o)`
+  - 421 `sumText(m)`
+  - 428 `cloudChoose(here, cloud, when, box)`
+  - 443 `cloudKeptNote(where)`
+  - 448 `cloudTake(cs)`
+  - 454 `cloudSync(cs)`
+  - 478 `cloudSaveSoon(closing, manual)`
+  - 517 `cloudSoon(ms)`
+- **518** one device at a time (13.10.2026, supabase/migrations/20261013120000_active.sql)
+  - 528 `cloudFp()`
+  - 529 `cloudClaim(wait)`
+  - 542 `cloudBeat()`
+  - 558 `cloudWake()`
+  - 564 `cloudPassed(h)`
+  - 579 `cloudHeldShow(h)`
+  - 588 `cloudPlayHere()`
+  - 598 `cloudCheckHead()`
+  - 607 `cloudConflict(cl, moved)`
+  - 637 `cloudHist()`
+  - 642 `cloudRestore(id)`
+- **653** what is measured: the game's own functions, wrapped once they are all defined
+  - 654 `cloudHooks()`
+- **677** the account card in Settings
+  - 678 `cloudCard()`
+  - 702 `histRows()`
+  - 714 `cloudAccountDel()`
+  - 725 `cloudMediaDel()`
+  - 731 `cloudAct(a, d)`
+- **765** registering, for a guest: in the game's own words, never a wall before the third landing
+  - 774 `guestHave()`
+  - 780 `guestAsk(why)`
+  - 804 `namesKept()`
+  - 805 `namesKeep(o)`
+  - 807 `namesApply()`
+  - 815 `nameTake(n, quiet)`
+  - 825 `nameCheck()`
+  - 840 `nameSuggest()`
+  - 849 `nameAsk(why, reason)`
+  - 874 `guestOpenAsk()`
+  - 882 `nameNudge(force)`
+  - 895 `guestNudge(step)`
+  - 907 `guestLogin(src)`
+  - 913 `guestRegister(signIn)`
+  - 925 `guestGift()`
 
 ## `src/js/ui/10g-push.js` (206 linjer)
 
@@ -2759,16 +2761,21 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 
-## `src/js/ui/11-boot.js` (168 linjer)
+## `src/js/ui/11-boot.js` (192 linjer)
 
 ---------- boot ----------
 
 - **1** boot
-  - 7 `bootMap()`
-  - 14 `bootData()`
-  - 28 `bootMapLoad()`
-  - 47 `bootGame()`
-  - 152 `bootFail(e)`
+  - 13 `bootStep(next)`
+  - 14 `bootAway()`
+  - 15 `bootGate(on)`
+  - 17 `bootInfo()`
+  - 19 `bootDone()`
+  - 30 `bootMap()`
+  - 37 `bootData()`
+  - 51 `bootMapLoad()`
+  - 70 `bootGame()`
+  - 175 `bootFail(e)`
 
 ## `src/js/vessel3d.js` (1300 linjer)
 

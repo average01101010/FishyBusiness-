@@ -28,6 +28,18 @@
     var r = e.reason;
     put(r && r.message ? (r.name && r.name !== 'Error' ? r.name + ': ' : '') + r.message : String(r), 'promise', r && r.stack, 'promise');
   });
+  // console.warn too, but only when it is handed an Error: the catches that go on after a fault (the missions, the coast guard, the
+  // plan's builder, a 3D layer that falls back) write it there; a warning in words alone is a note, not a fault
+  var cw = console.warn;
+  console.warn = function(){
+    cw.apply(console, arguments);
+    if (T.busy) return;
+    try {
+      var err = null, parts = [];
+      for (var i = 0; i < arguments.length; i++){ var a = arguments[i]; if (a instanceof Error && !err) err = a; parts.push(a instanceof Error ? String(a) : typeof a === 'string' ? a : ''); }
+      if (err) put(parts.join(' ').trim(), 'warn', err.stack, 'warn');
+    } catch (e){}
+  };
   var ce = console.error;
   console.error = function(){
     ce.apply(console, arguments);

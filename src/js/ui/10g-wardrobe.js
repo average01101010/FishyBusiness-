@@ -46,10 +46,10 @@ const WARD = (() => {
     + 'vec3 amb=mix(vec3(0.34,0.36,0.40),vec3(0.62,0.66,0.72),n.y*0.5+0.5);vec3 c=vC.rgb*(amb+vec3(1.0,0.96,0.90)*d*0.8)+vec3(1.0)*pow(h,22.0)*vC.a*0.22;gl_FragColor=vec4(pow(c,vec3(0.9)),1.0);}';
   function initGL(){
     try { gl = cv.getContext('webgl', {antialias:true, alpha:true, preserveDrawingBuffer:true}) || cv.getContext('experimental-webgl'); } catch (e){ gl = null; }
-    if (!gl) return false;
+    if (!gl){ console.error('garderobe 3d: ingen WebGL'); return false; }   // (the error trap sends it: the wardrobe shows no figure then)
     const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); return o; };
     prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
-    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)){ gl = null; return false; }
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)){ console.error('garderobe 3d: ' + ((gl.getProgramInfoLog(prog) || '').trim() || (gl.isContextLost() ? 'konteksten er mistet' : 'ingen logg fra driveren'))); gl = null; return false; }
     buf = {p:gl.createBuffer(), n:gl.createBuffer(), c:gl.createBuffer(), cnt:0};
     return true;
   }

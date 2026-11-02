@@ -61,7 +61,7 @@
   function drawNear(VP, eye, t){ const t0 = performance.now(); drawNear0(VP, eye, t); NEAR.ms = NEAR.ms * 0.9 + (performance.now() - t0) * 0.1; }
   function drawNear0(VP, eye, t){
     if (!NEAR.on || QUAL.lvl === 0 || !treeExt() || !nearModels()) return;
-    if (!NEAR.P){ try { NEAR.P = program(NEAR_VS, NEAR_FS, ['aP', 'aN', 'aC', 'aI', 'aJ'], 'naer'); } catch (e){ console.warn('naer', e.message || e); NEAR.on = false; return; } }
+    if (!NEAR.P){ try { NEAR.P = program(NEAR_VS, NEAR_FS, ['aP', 'aN', 'aC', 'aI', 'aJ'], 'naer'); } catch (e){ console.warn('3D ' + 'naer' + ' faller bort · ' + GPU, e); NEAR.on = false; return; } }
     const R = NEAR_R[QUAL.lvl], i0 = Math.floor((eye[0] - R) / NEAR_SQ), i1 = Math.floor((eye[0] + R) / NEAR_SQ), j0 = Math.floor((eye[2] - R) / NEAR_SQ), j1 = Math.floor((eye[2] + R) / NEAR_SQ);
     // too high above the ground to see them: nothing
     if (eye[1] - Math.max(0, terrH(eye[0], eye[2])) > R * 1.5) return;
