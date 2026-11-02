@@ -13,7 +13,7 @@ OUTSIDE = {'anode', 'prop', 'af', 'rubber', 'lampR', 'lampG', 'strake'}       # 
 hits = collections.Counter(); ex = {}
 def report(o, why, mname, p):
     k = (o.name, why, mname); hits[k] += 1; ex.setdefault(k, tuple(round(v, 3) for v in p))
-inStation = lambda x, y, z: B.OP0 - 0.06 < x < B.OP1 + 0.06 and B.YB - 0.06 < y < 0 and B.ZMD - 0.05 < z < B.CEIL + 0.02
+inStation = lambda x, y, z: B.OP0 - 0.06 < x < B.OP1 + 0.06 and -B.ybi(x) - 0.10 < y < B.YB + 0.06 and B.ZMD - 0.05 < z < B.CEIL + 0.02
 inWH = lambda x, y, z: B.WX0 - 0.01 < x < B.WXF + B.LEAN + 0.2 and abs(y) < B.wy(min(max(x, B.WX0), B.WXS)) + 0.01 and z > B.z_sd(x) - 0.05
 inWell = lambda x, y: B.WELL[0] - 0.05 < x < B.WELL[1] + 0.05 and B.WELL[2] - 0.05 < y < B.WELL[3] + 0.05
 for o in solids:

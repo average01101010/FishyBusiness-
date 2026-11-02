@@ -67,8 +67,8 @@ def pchip(tab, x):
     return (2 * t ** 3 - 3 * t * t + 1) * ys[i] + (t ** 3 - 2 * t * t + t) * h * m[i] + (-2 * t ** 3 + 3 * t * t) * ys[i + 1] + (t ** 3 - t * t) * h * m[i + 1]
 
 # the body's bottom on the centreline (the keel's root aft and forward of the deadwood), the forefoot and the raked stem (x grows along it)
-LOW = [(XA, 3.10), (0.6, 2.70), (1.4, 2.20), (2.5, 1.72), (3.6, 1.48), (5.0, 1.38), (8.0, 1.36), (10.0, 1.42), (11.4, 1.62), (12.4, 1.96),
-       (13.15, 2.45), (13.65, 2.95), (14.0, 3.50), (14.35, 4.25), (14.65, 5.10), (14.85, 5.90), (XF, 6.96)]
+LOW = [(XA, 2.88), (0.6, 2.42), (1.4, 1.86), (2.5, 1.34), (3.6, 1.08), (5.0, 0.98), (8.0, 0.96), (10.0, 1.06), (11.4, 1.34), (12.4, 1.74),
+       (13.15, 2.30), (13.65, 2.86), (14.0, 3.45), (14.35, 4.22), (14.65, 5.08), (14.85, 5.90), (XF, 6.96)]
 def z_low(x): return pchip(LOW, x)
 # the deadwood keel's underside, falling aft to the shoe (the deepest point, the data's 3.0 m), running into the forefoot at X_KF
 X_KA, X_KF = 1.75, 11.4
@@ -87,14 +87,14 @@ HB = [(XA, 2.62), (0.15, 2.86), (0.45, 3.04), (1.0, 3.17), (2.0, 3.25), (3.5, 3.
       (12.0, 2.86), (12.8, 2.52), (13.5, 2.05), (14.1, 1.48), (14.55, 0.88), (14.85, 0.36), (XF, 0.0)]
 def hb(x): return max(0.0, pchip(HB, x))
 # the section: its deadrise, the flare and the fullness of the bilge (weighed in check() against the 75 t)
-DR = [(XA, 3), (1.5, 5), (3.5, 7), (7.0, 8), (9.5, 11), (11.0, 17), (12.2, 27), (13.2, 42), (14.0, 58), (XF, 70)]
+DR = [(XA, 4), (1.5, 7), (3.5, 10), (7.0, 12), (9.5, 15), (11.0, 20), (12.2, 29), (13.2, 44), (14.0, 60), (XF, 70)]
 FL = [(XA, 2), (3.0, 2), (8.0, 2.5), (10.5, 5), (12.0, 9), (13.2, 15), (14.2, 22), (XF, 26)]
-FULL = [(XA, 0.86), (1.5, 0.90), (3.5, 0.94), (8.0, 0.95), (10.5, 0.91), (12.0, 0.85), (13.2, 0.76), (XF, 0.62)]
+FULL = [(XA, 0.66), (1.5, 0.69), (3.5, 0.72), (8.0, 0.72), (10.5, 0.68), (12.0, 0.62), (13.2, 0.56), (XF, 0.48)]
 # the white rubbing strake, the red hull's top (white over it), the bottom paint and the white boot top, rising 12 mm a metre forward
-RUB = [(XA, 4.12), (6.0, 4.10), (9.0, 4.14), (11.0, 4.24), (12.6, 4.46), (13.8, 4.74), (XF, 5.06)]
+RUB = [(XA, 4.32), (6.0, 4.30), (9.0, 4.34), (11.0, 4.44), (12.6, 4.64), (13.8, 4.90), (XF, 5.20)]
 def z_rub(x): return pchip(RUB, x)
 RUBH, RUBW = 0.06, 0.06
-RED = [(XA, 4.90), (6.0, 4.86), (9.0, 4.90), (11.0, 5.02), (12.6, 5.30), (13.8, 5.62), (XF, 5.98)]
+RED = [(XA, 4.96), (6.0, 4.92), (9.0, 4.96), (11.0, 5.08), (12.6, 5.34), (13.8, 5.64), (XF, 5.98)]
 def z_red(x): return pchip(RED, x)
 Z_AF = WL - 0.03; Z_BT = WL + 0.10; SLB = 0.012
 def paint_line(x, z0): return z0 + SLB * (x - XM)
@@ -391,7 +391,7 @@ HOLD = (5.30, 6.10, -2.30, -1.70)    # the hold's hatch between the tub and the 
 LADDER = (7.02, 7.72, -1.56, -0.96)  # the companion ladder up to the shelter deck at the inboard forward corner, its well over it
 IDOOR = (6.10, 6.80)         # the door in the inboard wall into the closed working deck
 JIGX = [4.95, 5.65, 6.35]    # the jigging machines on the sill aft of the hauler (13-instruments.js JIG_Z)
-def ybi(x): return y_at(x, ZMD + 0.3, -1) - 0.07     # the hull's inside at the station, a little in from the outside
+def ybi(x): return y_at(x, ZMD, -1) - 0.07           # the hull's inside at the station (at the deck, where the side is narrowest: it flares out above)
 
 
 # ---------- the openings: real holes, cut with a boolean and lined ----------
@@ -603,18 +603,24 @@ def wh_ring(z):
     return out
 def wh_floor(x, y): return sdeck(x, y)
 def wh_faces():
-    """(name, origin, u, v, windows) for the walls carrying windows: three front panes, a pane in the starboard corner, the door's pane
-    and a pane in the port corner, three panes a side, two aft beside the door"""
+    """(name, origin, u, v, windows) for the panes in the dark window band (Jonas 02.11.2026: the first draft's panes were uneven, with
+    thick white posts, and the side panes lay in one plane while the wall follows the sheer's curve in): three equal front panes; one pane
+    in the starboard corner, one beside the door in the port corner; three panes a side, each in the wall's own plane where it stands; two
+    aft beside the door"""
     vl = (LEAN / (WR - WS), 0, 1.0); vlen = math.hypot(vl[0], 1.0); s = lambda z: (z - WS) * vlen
-    wz = (s(WS + 0.04) + s(WH - 0.02)) / 2; wh_ = s(WH - 0.02) - s(WS + 0.04); Fc = []
-    Fc.append(('front', (WXF, 0, WS), (0, 1, 0), vl, [rrect(u, wz, 0.74, wh_, 0.06, 3) for u in (-0.82, 0.0, 0.82)]))
+    wz = (s(WS + 0.03) + s(WH - 0.03)) / 2; wh_ = s(WH - 0.03) - s(WS + 0.03); Fc = []
+    pw = (2 * WFY - 0.10 - 2 * 0.05) / 3
+    Fc.append(('front', (WXF, 0, WS), (0, 1, 0), vl, [rrect(u, wz, pw, wh_, 0.04, 3) for u in (-(pw + 0.05), 0.0, pw + 0.05)]))
     for nm, a, b in (('corner_s', (WXS, -wy(WXS)), (WXF, -WFY)), ('corner_p', (WXF, WFY), (WXS, wy(WXS)))):
-        u = (b[0] - a[0], b[1] - a[1], 0); mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, WS)
-        Fc.append((nm, mid, u, vl, [rrect(0.0, wz, 0.78, wh_, 0.06, 3)]))
-    side = lambda: [rrect(x, (WS + WH) / 2 + 0.02, 0.62, WH - WS - 0.04, 0.06, 3) for x in (9.95, 10.75, 11.50)]
-    Fc.append(('side_p', (0, 0, 0), (1, 0, 0), (0, 0, 1), side()))
-    Fc.append(('side_s', (0, 0, 0), (1, 0, 0), (0, 0, 1), side()))
-    Fc.append(('aft', (WX0, 0, 0), (0, 1, 0), (0, 0, 1), [rrect(y, (WS + WH) / 2 + 0.02, 0.80, WH - WS - 0.04, 0.06, 3) for y in (-0.15, 1.20)]))
+        u = (b[0] - a[0], b[1] - a[1], 0); mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, WS); Lf = math.hypot(u[0], u[1])
+        if nm == 'corner_s': Fc.append((nm, mid, u, vl, [rrect(0.0, wz, Lf - 0.16, wh_, 0.04, 3)]))
+        else: Fc.append((nm, mid, u, vl, [rrect((-Lf / 2 + 0.08 + CDOOR - 0.38) / 2, wz, (CDOOR - 0.38) - (-Lf / 2 + 0.08), wh_, 0.04, 3)]))
+    zc = (WS + WH) / 2; hz = WH - WS - 0.06
+    for sg, nm in ((1, 'side_p'), (-1, 'side_s')):
+        for k, (x0, x1) in enumerate(((9.42, 10.18), (10.24, 11.00), (11.06, 11.82))):
+            cx = (x0 + x1) / 2; t = (wy(cx + 0.05) - wy(cx - 0.05)) / 0.10; u = V((1, sg * t, 0)).normalized(); L_ = (x1 - x0) * math.hypot(1, t)
+            Fc.append(('%s%d' % (nm, k), (cx, sg * wy(cx), 0), tuple(u), (0, 0, 1), [rrect(0.0, zc, L_, hz, 0.04, 3)]))
+    Fc.append(('aft', (WX0, 0, 0), (0, 1, 0), (0, 0, 1), [rrect(y, zc, 0.86, hz, 0.04, 3) for y in (-0.30, 1.30)]))
     return Fc
 ADOOR = (-1.78, -1.06)       # the door in the aft wall to starboard, onto the shelter deck (y), hooked open
 CDOOR = 0.10                 # the port corner's door: its middle along the facet from the facet's middle (m), onto the foredeck
@@ -624,22 +630,20 @@ def wheelhouse(fine=True):
     shell.data.materials.append(C['inner']); solidify(shell, WT, 1); apply_all(shell)
     cuts = []
     def nrm_of(nm, u, vv):
-        if nm == 'side_p': return V((0, 1, 0))
-        if nm == 'side_s': return V((0, -1, 0))
-        if nm == 'aft': return V((-1, 0, 0))
         n = V(u).normalized().cross(vv).normalized()
+        if nm.startswith('side_p'): return n if n.y > 0 else -n
+        if nm.startswith('side_s'): return n if n.y < 0 else -n
+        if nm == 'aft': return V((-1, 0, 0))
         return n if n.x > 0 else -n
     zf = sdeck(10.5, 0)
     for nm, o, u, v, wins in wh_faces():
         vv = V(v).normalized(); n = nrm_of(nm, u, vv)
-        if nm in ('side_p', 'side_s'): o = (0, (1 if nm == 'side_p' else -1) * wy(10.7), 0)
         for k, poly in enumerate(wins):
-            if nm == 'corner_p': poly = rrect(-0.30, poly[0][1] * 0 + sum(p[1] for p in poly) / len(poly), 0.30, max(p[1] for p in poly) - min(p[1] for p in poly), 0.05, 3)
             if fine: cuts.append(plate_cutter('wc_%s%d' % (nm, k), o, u, vv, poly, 0.45))
             cx = sum(p[0] for p in poly) / len(poly); cy = sum(p[1] for p in poly) / len(poly)
             if fine:
-                outer = [(p[0] + (0.03 if p[0] > cx else -0.03), p[1] + (0.03 if p[1] > cy else -0.03)) for p in poly]
-                objs.append(frame_ring('wf_%s%d' % (nm, k), V(o) + n * 0.004, u, vv, outer, poly, C['frame'], 0.0, 0.022, nrm=n))
+                outer = [(p[0] + (0.02 if p[0] > cx else -0.02), p[1] + (0.02 if p[1] > cy else -0.02)) for p in poly]
+                objs.append(frame_ring('wf_%s%d' % (nm, k), V(o) + n * 0.004, u, vv, outer, poly, C['frame'], 0.0, 0.015, nrm=n))
                 glass.append(plate('wg_%s%d' % (nm, k), V(o) - n * 0.03, u, vv, poly, C['glass'], nrm=n))
             else:
                 us = [q[0] for q in poly]; ws = [q[1] for q in poly]; box_ = [(min(us), min(ws)), (max(us), min(ws)), (max(us), max(ws)), (min(us), max(ws))]
@@ -651,6 +655,16 @@ def wheelhouse(fine=True):
         a, b = (WXF, WFY), (WXS, wy(WXS)); u = (b[0] - a[0], b[1] - a[1], 0); mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, sdeck(12.3, 1.9) - 0.02)
         cuts.append(plate_cutter('wc_cdoor', mid, u, (LEAN / (WR - WS) * 0, 0, 1), rr_pts(CDOOR, 0.97, 0.66, 1.94, 0.06, 3), 0.35))
         cut(shell, cuts)
+    # the window band dark all round (a white house with a black band, the panes in it, the mullions between them black)
+    me = shell.data
+    if 'frame' not in [m.name for m in me.materials]: me.materials.append(C['frame'])
+    fi = [m.name for m in me.materials].index('frame'); wi = [m.name for m in me.materials].index(C['white'].name)
+    bm = bmesh.new(); bm.from_mesh(me)
+    bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], dist=1e-5, plane_co=(0, 0, WS - 0.04), plane_no=(0, 0, 1))
+    bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], dist=1e-5, plane_co=(0, 0, WH + 0.04), plane_no=(0, 0, 1))
+    for f in bm.faces:
+        if f.material_index == wi and WS - 0.04 < f.calc_center_median().z < WH + 0.04: f.material_index = fi
+    bm.to_mesh(me); bm.free()
     objs.append(shell)
     if fine:
         # the aft door, hooked open back against the wall to port (hs11.py): its frame, the leaf with its pane, handle and hook
@@ -675,7 +689,7 @@ def wheelhouse(fine=True):
         glass.append(plate('cdoor_glass', P(0, 0, -0.021), u, (0, 0, 1), rr_pts(0, zc0 + 1.45, 0.34, 0.46, 0.06, 3), C['glass'], nrm=nn))
         acyl(A, P(0.24, zc0 + 1.0, -0.02), P(0.24, zc0 + 1.0, 0.03), 0.012, lambda q: C['steel'], seg=8)
     # the roof: its underside, a lip all round with a drip edge, the visor over the front, the crown, the rail aft where the rafts lie
-    ring = offset_poly([(p[0], p[1]) for p in wh_ring(WR)], 0.10); ring = [(x + (0.12 if x > WXS - 0.05 else 0.0), y) for x, y in ring]
+    ring = offset_poly([(p[0], p[1]) for p in wh_ring(WR)[:2 * len(SIDE_XS) + 2]], 0.10)   # (the aft wall's own points lie in one line: offset_poly needs corners); ring = [(x + (0.12 if x > WXS - 0.05 else 0.0), y) for x, y in ring]
     A.poly([(x, y, WR + 0.001) for x, y in ring], C['inner'], (0, 0, -1))
     crown = lambda x, y: WR + 0.12 + 0.06 * (1 - min(1.0, (y / 3.3) ** 2))
     ri = offset_poly(ring, -0.16)
@@ -859,10 +873,10 @@ def surf(x, z, sg, off=0.0):
 MX = 9.95                    # the mast on the roof's after part
 M_TOP = 12.15
 def white_z(): return M_TOP + 0.10          # the masthead light on its top (12-20 m: a masthead light, 225 degrees forward)
-FISH_R, FISH_W = 11.78, 10.72              # the fishing lights red over white on arms forward of the mast (rule 26)
+FISH_R, FISH_W = 11.90, 10.84              # the fishing lights red over white on arms forward of the mast (rule 26)
 LAMP_ARM = 0.42
 RAD_P = (10.65, 9.30)        # the open array's platform forward of the mast (kit.radarA: x, its top)
-SIDE = (12.10, 8.38)         # the side lights on boards on the roof's forward corners (x, z), their screens inboard
+SIDE = (12.10, 8.58)         # the side lights on boards on the roof's forward corners (x, z), their screens inboard
 AM = (0.70, 0.0); AM_TOP = 12.0             # the mizzen on the shelter deck at the stern
 STERN_L = (0.48, 0.0, 7.30)  # the stern light on the mizzen's aft face, over the transom
 def rig(A, crown, fine=True):
@@ -952,7 +966,7 @@ PROP = (1.12, 0.0, 0.88); PR = 0.68                           # the propeller's 
 def underwater(fine=True):
     U = Acc('under')
     abox(U, -0.05, X_KA + 0.06, -0.08, 0.08, 0.0, 0.10, C['af'])                                         # the shoe from the keel to the rudder's heel
-    F.foil_rudder(U, (RX_, 0.0), 0.10, z_low(RX_) - 0.04, 0.72, C['af'], thick=0.13, top=lambda x: z_low(max(x, XA)) - 0.04, n=12 if fine else 5, rows=6 if fine else 2)
+    F.foil_rudder(U, (RX_, 0.0), 0.10, 2.30, 0.72, C['af'], thick=0.13, top=lambda x: z_low(max(x, XA)) - 0.04, n=12 if fine else 5, rows=6 if fine else 2)
     acyl(U, (RX_ - 0.05, 0, 0.10), (RX_ - 0.05, 0, z_low(RX_) + 0.10), 0.05, lambda q: C['steel'], seg=10)
     px, py, pz = PROP
     if not fine: return U.done(35)
@@ -1096,7 +1110,7 @@ def check():
     xs = [XA + (XF - XA) * i / 400 for i in range(401)]
     loa = XF - (XA - 0.045 - 0.065)
     out.append(('lengde over alt %.2f m (fenderen over speilet til stevnens topp) mot %.2f; skroget %.2f' % (loa, L, XF - XA), abs(XF - XA - L) < 0.02))
-    mb = max(ysh(x) for x in xs[::4]); mr = max(y_at(x, z_rub(x)) + RUBW for x in xs[::4]); mw = max(y_at(x, WL) for x in xs)
+    mb = max(ysh(x) for x in xs[::4]); mr = max(max(y_at(x, z_rub(x)) + RUBW, y_at(x, WL + 1.5)) for x in xs[::4]); mw = max(y_at(x, WL) for x in xs)
     out.append(('største bredde %.2f m ved ripa, %.2f over lista, mot %.2f (vannlinja %.2f m, %.0f %%)' % (2 * mb, 2 * mr, BEAM, 2 * mw, 100 * mw / mb), abs(2 * max(mb, mr) - BEAM) / BEAM < 0.03))
     out.append(('dypgang %.2f m med kjølen (skoen under propellen) mot %.2f i VESSELS; kroppen alene %.2f' % (WL - 0.0, DRAFT, WL - min(z_low(x) for x in xs)), abs(WL - DRAFT) < 0.05))
     out.append(('fribord: arbeidsdekket %.2f m over vannet, shelterdekket %.2f midtskips, ripa %.2f ved stevnen og %.2f ved speilet' % (ZMD - WL, z_sd(XM) - WL, z_cap(XF) - WL, z_cap(XA) - WL), ZMD - WL > 0.6))
