@@ -149,13 +149,54 @@ function coastWayAt(w, u, back){
     d -= L; }
   return {p:{...w.pts[w.pts.length - 1]}, hd:0};
 }
+// ===== One national coastal fleet (L2/N1 of docs/planer/bestand-og-flaate.md, 02.11.2026) =====
+// The boats in the harbours along the coast are the vessel register's active boats under 28 m, kommune by kommune (tools/npc/flaate.py ->
+// src/data/flaate.json, from fiske.json kom and Geonorge's kommuner), on the berths of the map's harbours (npc.py), the biggest boats on
+// the biggest berths; a harbour whose kommune has no boats left for it lies empty. Each boat has its length group (lg) and main gear. A
+// boat under 11 m fishes in the open group by a draw (about OPENF.n of them along the coast) and stays in port when the group is stopped
+// and the boats are done (trykkOpenScale); the boats that answer to the rights players hold (the register on the server, npcReg) are
+// not shown; and the ground of the day is drawn by the fleet's pressure there (fleetF, 03g-trykk.js).
+const FLAATE_T = /*@text(data/flaate.json)*/null;
+const FLAATE = {d:null, stop:new Map()};
+function flaateData(){
+  if (FLAATE.d !== null) return FLAATE.d;
+  try { FLAATE.d = typeof FLAATE_T === 'string' ? JSON.parse(FLAATE_T) : false; } catch (e){ FLAATE.d = false; }
+  return FLAATE.d;
+}
+const LG_OF = L => L < 11 ? 0 : L < 15 ? 1 : L < 21 ? 2 : 3;
+function flaateApply(t){
+  const D = flaateData(); if (!D || !t.npc) return;
+  t.npc.forEach((h, hi) => {
+    const e = D.h[t.tx + ':' + t.ty + '.' + hi], slots = h.boats; if (!e){ h.boats = []; return; }
+    h.boats = e.map(([bi, L, g]) => { const s = slots[bi]; if (!s) return null;
+      const lg = LG_OF(L), b = Object.assign({}, s, {L, B:Math.round((0.3 * L + 0.9) * 10) / 10, T:Math.round((0.09 * L + 0.6) * 10) / 10, gear:D.meta.gear[g] || 'annet', lg});
+      b.open = lg === 0 && hash(hashStr(b.id) % 1000003 * 3 + 11) < (D.meta.openShare || 0); return b; }).filter(Boolean);
+  });
+}
+// whether the open group's boats are done on a day: the group stopped and its catch that day about nothing (kept per day)
+function openDone(day0){
+  const d = Math.floor(day0 / 24); let v = FLAATE.stop.get(d); if (v !== undefined) return v;
+  v = typeof trykkOpenScale === 'function' && trykkOpenScale(d * 24 + 12) < 0.05; if (FLAATE.stop.size > 400) FLAATE.stop.clear(); FLAATE.stop.set(d, v); return v;
+}
+// the boats behind the rights the players hold, by length group: the register's NPC owners gone (u7-h10 under 11 m, h14 11-14.99, h20 15-20.99)
+function heldShare(lg){
+  const D = flaateData(); if (!D || !D.meta.lgN) return 0; const R = npcReg(), gone = id => Math.max(0, (REGN[id] || 0) - (R[id] || 0));
+  const held = lg === 0 ? gone('u7') + gone('h7') + gone('h8') + gone('h9') + gone('h10') : lg === 1 ? gone('h14') : lg === 2 ? gone('h20') : 0;
+  return held / Math.max(1, D.meta.lgN[lg] || 1);
+}
+// the ground of the day, drawn by the fleet's pressure there (cod, saithe and haddock), each ground at least a little
+function coastGround(G, dI, i, H){
+  if (G.length < 2 || typeof fleetF !== 'function') return G[Math.floor(hash(dI * 31 + i) * G.length)];
+  const w = G.map(g => { const k = 'fw' + dI; if (g[k] === undefined){ g[k] = 0.2 + fleetF('torsk', g.p, H) + fleetF('sei', g.p, H) + fleetF('hyse', g.p, H); } return g[k]; });
+  let r = hash(dI * 31 + i) * w.reduce((a, v) => a + v, 0); for (let j = 0; j < G.length; j++){ r -= w[j]; if (r <= 0) return G[j]; } return G[G.length - 1];
+}
 function coastState(b, H, hod = hodOf(H)){
   const i = b.seed || (b.seed = hashStr(b.id) % 1000003);
   const dep = 4 + hash(i * 13 + 5) * 4, e = ((hod - dep) % 24 + 24) % 24, day0 = H - e, dI = Math.floor((day0 + 6) / 24), G = b.h.grounds;
   const moored = coastMoor(b);
   // a day out is at most 17 hours (the weather is not asked at night)
-  if (e > 17 || !G.length || hash(dI * 17 + i * 7) < 0.3 || windAt(day0, b.p) >= (b.L >= 15 ? 15 : b.L >= 12 ? 13.5 : 12)) return moored;
-  const gr = G[Math.floor(hash(dI * 31 + i) * G.length)], R = gr.R || (gr.R = prepRoute(gr.pts.map(q => [q.x, q.y]))), RR = gr.RR || (gr.RR = prepRoute(gr.pts.map(q => [q.x, q.y]).reverse()));
+  if (e > 17 || !G.length || hash(dI * 17 + i * 7) < 0.3 || windAt(day0, b.p) >= (b.L >= 15 ? 15 : b.L >= 12 ? 13.5 : 12) || (b.open && openDone(day0))) return moored;
+  const gr = coastGround(G, dI, i, day0 + 12), R = gr.R || (gr.R = prepRoute(gr.pts.map(q => [q.x, q.y]))), RR = gr.RR || (gr.RR = prepRoute(gr.pts.map(q => [q.x, q.y]).reverse()));
   const cs = ((b.L >= 14 ? 9.8 : 7.8) + hash(i * 3 + 1) * 1.8) * clamp(1 - (hsOpen(day0, b.p) - 1.2) * 0.12, 0.65, 1) * NM, hsp = 5 * NM;
   const m0 = R.pts[0], wy = coastWay(b, moored, m0), t0 = wy.len / hsp, tr = R.len / cs, T = t0 + tr, fishH = 5 + hash(dI * 7 + i * 3) * 3.5;
   const along = (a, c, u) => ({p:{x:a.x + (c.x - a.x) * u, y:a.y + (c.y - a.y) * u}, hd:Math.atan2(c.x - a.x, -(c.y - a.y))});
@@ -365,6 +406,7 @@ function coastNear(H, only){
     if (dist(h, b.pos) - h.reach > R) continue;
     for (const bt of h.boats){
       if (only && only !== bt.id) continue;
+      if (bt.lg != null && bt.lg < 3 && hash(hashStr(bt.id) % 1000003 * 5 + 17) < heldShare(bt.lg)) continue;   // a player holds that right
       bt.h = h; const A = coastState(bt, H, hod); if (A.hidden || dist(A.p, b.pos) > R) continue;
       const P = A.st === 'port' ? A : coastState(bt, H - 1 / 60, hod1), dx = A.p.x - P.p.x, dy = A.p.y - P.p.y, sog = Math.hypot(dx, dy) / NM * 60;
       out.push({id:bt.id, name:bt.name, type:bt.L >= 14 ? 'kyst' : 'sjark', p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, coast:true, L:bt.L, B:bt.B, T:bt.T, liv:bt.liv});

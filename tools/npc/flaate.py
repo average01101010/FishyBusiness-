@@ -8,13 +8,14 @@
 #                                               kommuneinfo and kept in tools/npc/cache/kommune.json)
 #
 # flaate.json:
-#   meta  made, src, gear, lgN (the boats placed by length group), openShare (the share under 11 m in the open group), the counts: active (the register's active boats under 28 m along the coast), placed, over (active boats of a kommune
+#   meta  made, src, gear, shared (boats that share a berth: the game moves them along the quay or onto a buoy), lgN (the boats placed by length group), openShare (the share under 11 m in the open group), the counts: active (the register's active boats under 28 m along the coast), placed, over (active boats of a kommune
 #         with more boats than berths), none (the kommuner with active boats and no harbour in the packs: Senja's square, whose fleet is
 #         the game's FLEET, and inland), harbours, empty (harbours whose kommune has no active boats left for them)
 #   h     {"tx:ty.hi": [[bi, L, gear], ...]}: the harbour's berth bi (its place in the pack) gets a boat of L m and the gear (meta.gear)
 import os, sys, json, time, zlib, urllib.request, hashlib
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
 CACHE = os.path.join(HERE, 'cache'); KOMF = os.path.join(CACHE, 'kommune.json')
+CAPH = 16   # boats a harbour at most
 LG = [(6.0, 10.99), (11.0, 14.99), (15.0, 20.99), (21.0, 27.99)]   # the length groups under 28 m (fiske.json meta.lg)
 
 def h01(*a): return int(hashlib.sha256(repr(a).encode()).hexdigest()[:12], 16) / 16 ** 12
@@ -54,7 +55,7 @@ def main(game):
     byk = {}
     for h in hs:
         if K.get(h['k']): byk.setdefault(K[h['k']], []).append(h)
-    out, placed, over, active, none = {}, 0, 0, 0, {}
+    out, placed, over, active, none, shared = {}, 0, 0, 0, {}, 0
     for knr, rows in F['kom'].items():
         # the kommune's active boats under 28 m, the biggest first: [lg, gear]
         boats = []
@@ -70,7 +71,12 @@ def main(game):
         for j, (lg, g) in enumerate(boats):
             lo, hi = LG[lg]; L = round(lo + (hi - lo) * h01(knr, j, 'L'), 1)
             pick = next(((bl, k, bi) for bl, k, bi in berths if (k, bi) not in used and bl >= min(L, 11) * 0.8), None)
-            if pick is None: over += 1; continue
+            if pick is None:
+                # no berth of her own: she shares one in the kommune's harbour with the most berths and room left (at most CAPH boats
+                # a harbour); the game moves her along the quay or onto a buoy in the basin (coastMoor), or leaves a big boat unseen
+                hh = sorted(H, key=lambda h: (len(out.get(h['k'], [])) >= CAPH, -len(h['slots']), len(out.get(h['k'], []))))[0]
+                if len(out.get(hh['k'], [])) >= CAPH: over += 1; continue
+                n0 = len(out.get(hh['k'], [])); out.setdefault(hh['k'], []).append([n0 % len(hh['slots']), L, g]); placed += 1; shared += 1; continue
             bl, k, bi = pick; used.add((k, bi)); L = min(L, round(bl * 1.25, 1)) if bl < L * 0.8 else L
             out.setdefault(k, []).append([bi, L, g]); placed += 1
     empty = sum(1 for h in hs if h['k'] not in out)
@@ -80,7 +86,7 @@ def main(game):
     for e in out.values():
         for bi, L, g in e: lgN[0 if L < 11 else 1 if L < 15 else 2 if L < 21 else 3] += 1
     meta = {'made': time.strftime('%Y-%m-%d'), 'src': 'Fiskeridirektoratets fartøyregister og sluttsedler (fiske.json kom, NLOD); havnene fra kartpakkene (tools/map/npc.py); kommunene fra Geonorges kommuneinfo (Kartverket)',
-            'gear': gears, 'active': active, 'placed': placed, 'over': over, 'none': none, 'harbours': len(hs), 'empty': empty, 'lgN': lgN, 'openShare': round(min(0.9, 2100 / max(1, lgN[0])), 3)}
+            'gear': gears, 'active': active, 'placed': placed, 'shared': shared, 'over': over, 'none': none, 'harbours': len(hs), 'empty': empty, 'lgN': lgN, 'openShare': round(min(0.9, 2100 / max(1, lgN[0])), 3)}
     f = os.environ.get('KYST_FLAATE') or os.path.join(ROOT, 'src', 'data', 'flaate.json')
     open(f, 'w').write(json.dumps({'meta': meta, 'h': out}, ensure_ascii=False, separators=(',', ':')) + '\n')
     print(json.dumps({k: v for k, v in meta.items() if k != 'none'}), 'none:', sum(none.values()), 'in', len(none), 'kommuner', f'{os.path.getsize(f) / 1000:.0f} kB')
