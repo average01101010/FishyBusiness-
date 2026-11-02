@@ -122,7 +122,8 @@ function echoSvg(){
   g.push('<path d="' + path + '" fill="#b04a16"/>');
   const n = Math.round(Math.min(60, tot * 26));
   for (let i = 0; i < n; i++){
-    const x = Math.random() * W, y = bottom * (0.55 + 0.42 * Math.random());
+    // the marks stand where the cod stands in the water now: near the bottom by day, higher by night (vertZ, 03f-fiske.js)
+    const zc = vertZ('torsk', cellNight(lokOfCell(b.pos), H).nt), x = Math.random() * W, y = bottom * (1 - 0.03 - zc * 0.9 - 0.25 * Math.random() * (0.4 + zc));
     g.push('<ellipse cx="' + x.toFixed(1) + '" cy="' + (y - 4).toFixed(1) + '" rx="' + (2 + Math.random() * 3).toFixed(1) + '" ry="1.6" fill="' + (Math.random() < 0.3 ? '#f2d33a' : '#4fc0e8') + '"/>');
   }
   g.push('</svg>');

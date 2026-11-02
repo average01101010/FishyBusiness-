@@ -123,4 +123,4 @@ function heatWork(){
 function heatAt(p){ const cs = HEATC.cs; if (!cs) return null; const c = HEATC.cells.get(heatKey(Math.floor(p.x / cs), Math.floor(p.y / cs))); return c && c.v ? c.v : null; }
 
 // where a species' schools are swimming, and how fast (km an hour), for the sonar
-function schoolDrift(sp){ const si = ALLSP.indexOf(sp); return {a:schoolHeading(sp), v:0.5 + 0.5 * h2(si, 741)}; }
+function schoolDrift(sp, p, H){ const si = ALLSP.indexOf(sp); return {a:schoolHeading(sp, p, H), v:0.5 + 0.5 * h2(si, 741)}; }

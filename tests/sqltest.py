@@ -275,6 +275,7 @@ def main():
         R['wB'] = json.loads(sql("select public.world_get(0, 2027, 1010)", B, 'authenticated'))
         R['wA'] = json.loads(sql("select public.world_get(0, 2027, 1000)", A, 'authenticated'))
         sql("""select public.land_put(1001, 2027, 'senjahopen', 'open', '[{"sp":"torsk","kg":90000,"kgq":90000}]')""", A, 'authenticated')
+        sql("update public.world_agg set at = now() - interval '2 minutes'")   # B4: the year's shared picture is at most a minute old
         R['wCap'] = json.loads(sql("select public.world_get(0, 2027, 1001)", B, 'authenticated'))
         R['wOtherY'] = json.loads(sql("select public.world_get(0, 2028, 1001)", B, 'authenticated'))
         sql("select public.catch_put(1000, '[[549755813890, 200], [549755813891, 50]]')", A, 'authenticated')
@@ -762,6 +763,69 @@ def main():
                  and T['mineA'] == ['needer', 'tow', 'Havbris'] and T['bad'] is False and T['done'] == {'ok': True, 'pay': True} and T['mineA2'] == ['done', 'finnsnes']
                  and T['done2'] == {'ok': True, 'pay': False} and T['back'] and T['table']),
               'towing between players: an ask seen near, taken once, hooked within 200 m, done in a harbour, paid once a day for the same player, handed back; no guest, no table open', T)
+        # B4 (02.11.2026, supabase/migrations/20261102120000_register.sql): the closed group's register is one for all players: a right
+        # bought by one is gone from the NPC owners for the others; refused when none is left; a holder who neither lands nor buys for
+        # 90 days gives the place back; the world brings the register, the open group's active players and the others' catch per group;
+        # the stock comes from the server only when the admin turns it on; only the admin with the second factor reaches the switches
+        G = {}; wg = lambda who: json.loads(sql("select public.world_get(0, 2027, 1000)", who, 'authenticated'))
+        G['r0'] = wg(A)['reg']['h9']
+        G['a1'] = json.loads(sql("select public.reg_take('h9')", A, 'authenticated'))['h9']
+        G['b1'] = json.loads(sql("select public.reg_take('h9')", B, 'authenticated'))['h9']
+        G['seenA'] = wg(A)['reg']['h9']; G['seenB'] = wg(B)['reg']['h9']
+        sql("update public.reg_rights set total = 1 where id = 'h20'")
+        G['last'] = json.loads(sql("select public.reg_take('h20')", A, 'authenticated'))['h20']
+        G['full'] = sql("select public.reg_take('h20')", B, 'authenticated', expect_err=True)
+        G['bad'] = sql("select public.reg_take('h99')", A, 'authenticated', expect_err=True)[0]
+        # B has neither landed nor bought for 100 days: the place goes back
+        sql("update public.reg_held set at = now() - interval '100 days' where player_id = '%s'; update public.landings set at = now() - interval '100 days' where player_id = '%s'" % (B['sub'], B['sub']))
+        G['idle'] = wg(A)['reg']['h9']
+        G['freed'] = json.loads(sql("select public.reg_free('h9')", A, 'authenticated'))['h9']
+        W = wg(A); G['keys'] = sorted(k for k in ('reg', 'open_boats', 'grp', 'stock') if k in W); G['stockOff'] = W['stock'] is None
+        G['cfgA'] = sql("select public.admin_cfg_set('stock_server', 'true')", A, 'authenticated', expect_err=True)[0]
+        G['cfg1'] = sql("select public.admin_cfg_set('stock_server', 'true')", AD1, 'authenticated', expect_err=True)[0]
+        sql("select public.admin_cfg_set('stock_server', 'true')", AD2, 'authenticated')
+        G['cfgBad'] = sql("select public.admin_cfg_set('share_limit', '7')", AD2, 'authenticated', expect_err=True)[0]
+        sql("select public.admin_stock_set('torsk', 2028, 400000, 330000, 320000)", AD2, 'authenticated')
+        G['stockOn'] = wg(B)['stock']
+        G['shareA'] = sql("select public.admin_share(2027)", A, 'authenticated', expect_err=True)[0]
+        SH = json.loads(sql("select public.admin_share(2027)", AD2, 'authenticated')); G['share'] = sorted(SH.keys())
+        G['tables'] = all(sql("select * from public.%s" % t, A, 'authenticated', expect_err=True)[0] for t in ('reg_held', 'reg_rights', 'world_cfg', 'world_stock'))
+        print(ok(G['r0'] == 200 and G['a1'] == 199 and G['b1'] == 198 and G['seenA'] == G['seenB'] == 198),
+              'the register is one for all: 200 NPC owners at 9-9.9 m, 199 after a purchase by one account and 198 after the other, the same seen by both', G)
+        print(ok(G['last'] == 0 and G['full'][0] and 'no owner left' in G['full'][1] and G['bad']), 'refused when no NPC owner is left at that length, and for a length the game does not sell')
+        print(ok(G['idle'] == 199 and G['freed'] == 200), 'a holder idle for 90 days gives the place back, and a right sold goes back to the NPCs')
+        print(ok(G['keys'] == ['grp', 'open_boats', 'reg', 'stock'] and G['stockOff'] and G['stockOn'] == [['torsk', 2028, 400000, 330000, 320000]]),
+              'the world brings the register, the open group\'s active players and the others\' catch per group; the stock only when the admin has turned it on')
+        print(ok(G['cfgA'] and G['cfg1'] and G['cfgBad'] and G['shareA'] and G['share'] == ['cfg', 'grp', 'open_boats', 'reg', 'reg_total', 'stock'] and G['tables']),
+              'only the admin with the second factor turns the switches and sees the share; no player reads the tables')
+        # the load of 5 000 players (plan 5b; KYST_LAST=5000): landings and catches for that many players, then what world_get costs
+        NL = int(os.environ.get('KYST_LAST') or 0)
+        if NL:
+            t0 = time.time()
+            sql("insert into public.players (id) select 'last_' || g from generate_series(1, %d) g on conflict do nothing" % NL)
+            sql("insert into public.landings (player_id, gh, y, port, sp, acc, kg, kgq) select 'last_' || (g %% %d + 1), 1000 + g * 0.01, 2027, 'p' || (g %% 300), case g %% 3 when 0 then 'torsk' when 1 then 'sei' else 'hyse' end, case when g %% 5 = 0 then 'lukket' else 'open' end, 300 + g %% 400, 300 + g %% 400 from generate_series(1, %d) g" % (NL, NL * 40))
+            sql("insert into public.reg_held (player_id, id) select 'last_' || g, (array['u7','h7','h8','h9','h10','h14','h20'])[g %% 7 + 1] from generate_series(1, %d) g where g %% 5 = 0 on conflict do nothing" % NL)
+            fill = time.time() - t0; sql("analyze")
+            t0 = time.time(); k = 20; wg(A)
+            for _ in range(k): wg(A)
+            per = (time.time() - t0) / k
+            t0 = time.time(); [sql("select public.reg_free_counts()") for _ in range(k)]; regs = (time.time() - t0) / k
+            parts = {'select1': "select 1", 'open': "select coalesce(sum(s),0) from (select least(sum(l.kgq), 60000) s from landings l where l.y = 2027 and l.acc = 'open' and l.sp = 'torsk' and l.player_id <> 'x' group by l.player_id) a",
+                     'boats': "select count(distinct l.player_id) from landings l where l.y = 2027 and l.player_id <> 'x'",
+                     'agg_fresh': "update public.world_agg set at = now() - interval '2 minutes'; select public.world_agg_get(2027)", 'agg_cached': "select public.world_agg_get(2027)",
+                     'grp': "select count(*) from (select l.acc, l.sp, sum(l.kg) from landings l where l.y = 2027 and l.acc in ('open','lukket') and l.sp in ('torsk','hyse','sei') and l.player_id <> 'x' group by l.acc, l.sp) a",
+                     'reg': "select public.reg_free_counts()", 'mkt': "select count(*) from landings l where l.at > now() - interval '1 day'"}
+            PT = {}
+            for nm, q in parts.items():
+                t0 = time.time(); [sql(q) for _ in range(5)]; PT[nm] = round((time.time() - t0) / 5 * 1000, 1)
+            # the position every 15 s (20 000 calls a minute with 5 000 players) and what the near boats cost, with 5 000 boats in presence
+            sql("insert into public.presence (player_id, x, y, at) select 'last_' || g, 600 + (g %% 100) * 5, 200 + (g / 100) * 10, now() from generate_series(1, %d) g on conflict do nothing" % NL)
+            many = lambda q, who, n: (lambda t0: ([sql(q, who, 'authenticated') for _ in range(n)], (time.time() - t0) / n)[1])(time.time())
+            PT['pos_put'] = round(many("select public.pos_put(850, 350, 0, 3, 'out', 'Havbris', 'trebat')", A, 5) * 1000, 1)
+            PT['pos_near'] = round(many("select public.pos_near(850, 350, 20)", A, 5) * 1000, 1)
+            print('LASTPARTS', json.dumps(PT))
+            print('LAST', json.dumps({'players': NL, 'landings': NL * 40, 'fill_s': round(fill, 1), 'world_get_ms': round(per * 1000, 1), 'reg_ms': round(regs * 1000, 1),
+                  'world_get_per_min_5000': round(NL / 10), 'db_s_per_min': round(NL / 10 * per, 1)}))
     finally:
         run(*as_pg([os.path.join(BIN, 'pg_ctl'), '-D', data, '-m', 'immediate', 'stop']))
         shutil.rmtree(tmp, ignore_errors=True)

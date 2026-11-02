@@ -315,17 +315,20 @@
   // the jigging machines on a boat with a wheelhouse (Jonas 13.10.2026: «alle båter utenom havflåten skal ha anledning til å bruke
   // juksamaskin»): on the rails by the working deck (starboard first, then port), clear of the hauler. Where the rail is, is read off the
   // boat's own model once per type: in a slice across her at each place, the top of the outermost part of her side.
-  const JIGR = {}, JIG_Z = {breisjark:[3.5, 4.25, 5.0]};    // where the side is covered forward (her shelter), the open deck aft
+  // the places along a model's rails where the side is no rail to bolt a machine to (a shelter's wall, a casing, a table): per side, 1 starboard
+  // and -1 port, in the game's z. The breisjark (malo36.py, 02.11.2026, Jonas: the shelter open to starboard for the work): starboard in the
+  // open side under the shelter aft of the bleeding tub and on the aft deck clear of the ladder; port aft of the casing
+  const JIGR = {}, JIG_Z = {breisjark:{1:[1.33, 2.03, 3.43, 4.13], '-1':[4.63]}};
   function jigRail(t, G){
     if (t in JIGR) return JIGR[t];
     const m = vesselModel(t), P = m && m.o && m.o.p, out = [];
     if (P && G && G.deck){ const half = (G.beam || 3) / 2, hz = G.hauler ? G.hauler[2] : 1e9, st = G.stern || 4, bw = G.bow != null ? G.bow : -st, dy = G.deck.y;
       // the places to try: out from the middle of the working deck both ways, clear of the hauler and the ends
-      const zs = JIG_Z[t] || [...Array(24).keys()].map(k => G.deck.z + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.35).filter(z => Math.abs(z - hz) > 0.6 && z < st - 0.9 && z > bw + 1.5);
+      const zs0 = JIG_Z[t] || [...Array(24).keys()].map(k => G.deck.z + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.35).filter(z => Math.abs(z - hz) > 0.6 && z < st - 0.9 && z > bw + 1.5);
       // as many as she may carry (jukseMax; Jonas' survey 30.10.2026, D2: only three were drawn of up to eight): the starboard rail
       // first, then the port one, each place's fourth number the side (1 starboard, -1 port: the machine turned round to face out)
       const max = Math.max(1, (VESSELS[t] || {}).jukseMax || 3);
-      for (const sd of [1, -1]){ const side = [];
+      for (const sd of [1, -1]){ const side = [], zs = Array.isArray(zs0) ? zs0 : zs0[sd] || [];
         for (const z of zs){ if (out.length + side.length >= max || side.length >= Math.ceil(max / 2) + (sd > 0 ? 1 : 0)) break; if (side.some(q => Math.abs(q[2] - z) < 0.7)) continue;
           let xm = 0; for (let i = 0; i < P.length; i += 3){ const xs = sd * P[i]; if (Math.abs(P[i + 2] - z) < 0.12 && xs > xm && xs < half + 0.3) xm = xs; }
           if (xm < half * 0.6) continue;

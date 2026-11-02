@@ -34,12 +34,12 @@ async def main():
           R.deepJun = +density('blakveite', window.DEEP, Hj).toFixed(4);
           const sk = P(58.30, 9.40); try { await mapNeed(sk, 2); } catch (e){} R.skagDepth = Math.round(depthF(sk)); R.skag = +density('blakveite', sk, Hj).toFixed(4);
           R.area = [eggaArea(E, 700, Hj, 1), eggaArea(E, 250, Hj, 1), eggaArea(E, 1200, Hj, 1)].map(v => +v.toFixed(3));
-          R.seeds = ALLSP.indexOf('krabbe') === 8 && ALLSP[ALLSP.length - 1] === 'blakveite' && SP.includes('blakveite');
+          R.seeds = ALLSP.indexOf('krabbe') === 8 && ALLSP[ALLSP.indexOf('blakveite') + 1] === (ALLSP.find(sp => SPECIES[sp].npc) || undefined) && ALLSP.filter(sp => !SPECIES[sp].npc).pop() === 'blakveite' && SP.includes('blakveite');
           return R; })()""")
         print('where:', json.dumps(r))
         print(ok(r['edgeJun'] > 0.2 and r['bankJun'] < 0.01 and r['deepJun'] < 0.01 and r['skag'] < 0.001), 'on the edge at 600-850 m off Andøya, none on the cod bank, none deeper than 1100 m and none south of 62° N (the Skagerrak trench)')
         print(ok(r['edgeJan'] < 0.6 * r['edgeJun'] and r['area'][1] == 0 and r['area'][2] == 0 and r['area'][0] > 0.5), 'thinner off Andøya in winter (the spawners are further north), and only between 300 and 1100 m')
-        print(ok(r['seeds']), 'the other species keep their seeds: the crab is still the ninth, the Greenland halibut last')
+        print(ok(r['seeds']), 'the other species keep their seeds: the crab is still the ninth, the Greenland halibut last of the player\'s (the ocean fleet\'s herring, mackerel and snow crab after it, B2)')
 
         # 3. the jig hardly takes it, the bank line does; the end lines take time on deep water
         r = await pg.evaluate("""(() => { const R = {}, b = S.boat, E = window.EDGE; S.t = Math.round(HOUR(2028, 5, 10, 6) * 60);

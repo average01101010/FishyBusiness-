@@ -553,8 +553,38 @@ Sett endepunktet (`X_KE`) der kjølen har listas høyde.
 **`pkill -f` treffer eget skall.** En `pkill -f shots.py` drepte kommandoen den sto i og to venteløkker (`pgrep -f` i en løkke matcher
 også seg selv). Vent på en bakgrunnsjobb med jobbens eget varsel, ikke med `pgrep -f` på et navn som står i kommandolinja.
 
+## 19. Lært av revisjonen av breisjarken (02.11.2026)
+
+**Se hvor spillets utstyr står før en vegg eller et vindu legges.** Lyet hadde to vinduer om styrbord akkurat der haleren og
+juksamaskinene står (`hauler`, `JIG_Z`); Jonas: «fjerne dette vinduet på styrbordsiden slik at mannskapet har plass til å arbeide der».
+Legg plassene (`hauler`, `work`, `JIG_Z`/`jigRail`, `kit`) inn på K4 og K3 før overbygget formes, og la sida være åpen der folk arbeider
+ved ripa. Plassene juksamaskinene får, er nå per side (`JIG_Z[t] = {1: [...], '-1': [...]}`).
+
+**En ripe som hopper, skal ikke styre snittet.** Kurven i snittet gikk til ripa; der ripa steg 0,9 m ved bakken, endret hele snittet seg
+ned til vannlinja (knekk ved x 6,42). Tegn kurven til en jevn linje over ripa (`z_ref`, med halvbredden ført opp langs utfallet fra en
+glattet ripe, `h_ref`) og klipp ved den ekte ripa.
+
+**Hjørnet i snittet kan forsvinne i baugen.** Når ripa står høyt over kjølen, møtes bunnlinja og sidelinja under kjølen og så ikke i det
+hele tatt (bunnreisning + utfall over 90°); hjørnet hoppet fra positivt til negativt og ga 0,38 m sprang i vannlinja. En myk positiv del
+(`softplus`) og et mykt minimum med ripas høyde gir en jevn overgang til V-en (`malo36.py vline`).
+
+**Et skall med lokk og `solidify` senker taket.** `loft_rings(..., cap1=True)` og `solidify` innover la et lokk 6 cm under styrhustaket;
+dørken fikk 1,81 m fri høyde og ble ikke dekk (rorplassen falt til døra). Når taket har sin egen underside, skal skallet være åpent oppe.
+Regn den indre takhøyden, ikke `WH_TOP`.
+
+**Uten tegning: legg den nye profilen over den gamle.** Den gamle modellens K3 ble lagt over tegningen da den ble målt; den er et
+brukbart overlegg til tegningen kommer, så lenge tabellene er de samme.
+
+**En stor flate med fire hjørner blir mørk i spillet.** Skyggen bakes per hjørne; lyets tak var én flate på 3,8 × 4,2 m med hjørnene inne
+i skyggen fra listene rundt kanten, og hele taket ble mørkt i spillet (lyst i Cycles, som regner skyggen per piksel). Del store, flate
+deler i et rutenett.
+
+**`pgrep -f` i en venteløkke finner seg selv** (kap. 18) også når mønsteret er skriptnavnet: vent på en fil eller et ord i loggen jobben
+skriver selv (`until grep -q FERDIG log`). Og `pkill -f "python3 skript.py"` i en kommando drepte kommandoen selv igjen: stopp på prosess-id.
+
 ## Endringslogg
 
+- 02.11.2026: kap. 19, det revisjonen av breisjarken lærte (utstyrets plasser før vegger, ripa som hopper, hjørnet som forsvinner i baugen, skallet med lokk, overlegg mot den gamle profilen).
 - 01.11.2026: kap. 7, godkjenningsgrensen 75/100 (Jonas).
 - 01.11.2026: kap. 17, det revisjonen av hurtigsjarken lærte (glatte linjer fra bilder, linjer som møter stevnen, knekker med vilje, lensporter som synes, skipperens øye, fjernmodellens punkter).
 

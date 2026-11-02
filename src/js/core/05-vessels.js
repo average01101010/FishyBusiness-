@@ -762,7 +762,7 @@ function fish(H, W, hs){
     const dn = density(sp, b.pos, H); dsum += dn; tsum += tutBonus(sp, b.pos);
     // the first trip: how much of the fish stood there of itself, for the landing note's «what fishing gives here» (Onboarding 2, O4)
     if (S.tut && S.tut.v === 2){ const F = S.tut.fk || (S.tut.fk = {d:0, t:0}); F.d += dn; F.t += tutBonus(sp, b.pos); }
-    S.facc[sp] = (S.facc[sp] || 0) + 30 * (S.target === 'kveite' && b.kgear ? keff : eff) * dn * luck(sp) * targetF(sp, H) * (SPECIES[sp].jig != null ? SPECIES[sp].jig : 1) * wpen * pen * (0.5 + Math.random()) / 60;   // jig: what the jig takes of a species (the Greenland halibut next to none)
+    S.facc[sp] = (S.facc[sp] || 0) + 30 * (S.target === 'kveite' && b.kgear ? keff : eff) * dn * luck(sp) * targetF(sp, H) * (SPECIES[sp].jig != null ? SPECIES[sp].jig : 1) * biteF(sp, b.pos, H) * wpen * pen * (0.5 + Math.random()) / 60;   // jig: what the jig takes of a species (the Greenland halibut next to none)
     if (!S.fnext[sp]) S.fnext[sp] = sampleFish(sp, b.pos, H);
     while (S.facc[sp] >= S.fnext[sp] && room > 0){
       const w = S.fnext[sp]; S.facc[sp] -= w; S.fnext[sp] = sampleFish(sp, b.pos, H);

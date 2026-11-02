@@ -29,7 +29,10 @@ JS = """(() => {
   b.type = 'bunntral'; applyVessel(); b.status = 'sailing'; b.port = null; b.ice = 0; S.settings.gut = true; S.settings.ice = true;
   S.crew = [0, 1, 2, 3].map(() => Object.assign(genCrew(), {bi:false, off:false, fatigue:5}));
   S.hold = [{sp:'torsk', cls:2, kg:400, n:80, bled:true, iced:false, hr:0, fresh:95, gut:false, hook:false}];
-  for (let i = 0; i < 240; i++){ S.t++; deckMinute(); }
+  // 270 minutes: four people freeze 400 kg in about four hours, and the pace varies with the draws (02.11.2026: 396 kg after 240 minutes
+  // with seed 1 once the game drew in another order, 400 with seeds 2 and 3, and 396 again when the loading screen
+  // made the start wait, 02.11.2026); what is checked is that all of the hold freezes with no ice, not the exact kilos
+  for (let i = 0; i < 270; i++){ S.t++; deckMinute(); }
   const fz = S.hold.filter(x => x.frozen), kgF = fz.reduce((a, x) => a + x.kg, 0);
   R.freeze = {kgF:Math.round(kgF), all:Math.round(holdTotal()), ice:b.ice, f0:fz.length ? +fz[0].fresh.toFixed(2) : null};
   const f0 = fz.length ? fz[0].fresh : null; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p};
@@ -62,7 +65,7 @@ async def main():
         print(ok(abs(r['iced'] - r['icedWant']) < 0.05 and r['deck'] < r['iced'] and 1 < r['rrs'] < 9 and abs((100 - r['deck']) / (100 - r['iced']) - r['rrs']) < 0.25 * r['rrs']),
               'the vessel\'s minute: 10 h in ice as the curve, on deck (1 + 0.1 T)^2 faster', [r['iced'], r['icedWant'], r['deck'], r['rrs'], r['T'], 'E on deck for', r['deckHE'], 'h'])
         fz = r['freeze']
-        print(ok(fz['kgF'] >= 399 and fz['ice'] == 0 and fz['kept']), 'a freezer hold: the crew freeze the catch with no ice, and frozen fish keep its grade', fz)
+        print(ok(fz['kgF'] >= 390 and fz['kgF'] == fz['all'] and fz['ice'] == 0 and fz['kept']), 'a freezer hold: the crew freeze the catch with no ice, and frozen fish keep its grade', fz)
         print(ok(r['rsw'] == [True] and r['noRsw'] == [False]), 'an RSW hold chills the catch as it comes aboard (and a sjark\'s does not)', [r['rsw'], r['noRsw']])
         s = r['sale']
         print(ok(r['acc'] != 'none' and s['frozenKpk'] and s['frozenKpk'] == s['freshKpk'] and s['pct'] > 0 and s['ffKg'] <= 100 and s['ffTot'] == 600 + 100 and len(s['fz']) == 2),

@@ -79,7 +79,9 @@ async def tutorial(pg):
       S.tut = keep.tut; S.haill = keep.haill; b.status = 'port'; S.hold = []; S.stock = initStock();
       return R; })())"""))
     check(r['ring'] >= 100 and r['edge'] < r['ring'] * 0.3, 'første tur: feltet i ringen er varmt (over 100 kg/t), kanten svakere', {k: round(r[k], 1) for k in ('ring', 'edge')})
-    check(r['after'] < 40, 'når garantien er over, er feltet vanlig igjen', round(r['after'], 1))
+    # B2 (01.11.2026): the field itself follows the landing notes, and Gisundet has much saithe in March (05-41), so the plain field is
+    # no longer under 40 kg/h; what is checked is that the guarantee is gone: far under the ring
+    check(r['after'] < r['ring'] * 0.45, 'når garantien er over, er feltet vanlig igjen (under 45 % av ringen)', round(r['after'], 1))
     check(r['hold'] >= 349, 'to timer på feltet gir full last (350 kg)', round(r['hold'], 1))
     check(r['top'] / r['hold'] < 0.35, 'påfyllingen er bare et sikkerhetsnett (under 35 % av fangsten)', round(r['top'] / r['hold'], 3))
     check(abs(r['removed'] - r['want']) < 0.05 * r['want'] + 1, 'bare bestandens egen andel trekkes fra bestanden, ikke skreiflekken eller påfyllingen', {k: round(r[k], 1) for k in ('removed', 'want', 'hold')})

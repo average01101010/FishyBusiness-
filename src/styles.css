@@ -109,6 +109,8 @@ body.vplot #gps::after{display:none}
 #loader{position:absolute;inset:0;z-index:20;transition:opacity .6s,visibility 0s}
 #loader.gone{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .6s,visibility 0s .6s}
 #loader.gone .ld-bar::after{animation:none}
+/* nothing comes up over the loading screen (loaderGone in ui/02-format-state.js); the letter, the start place and the sign-in are steps of their own and stay */
+body.booting :is(#modal,#toast,#tip,#tutDim,#tutRing,#phone,#book,#showChip,#turMeas,#pubUI,#setBar,#dockFan,#aisCard,#pinCard,#drawer){visibility:hidden!important}
 #loader::before,#cloudGate::before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(3,9,20,.6),rgba(3,9,20,0) 36%,rgba(3,9,20,0) 64%,rgba(3,9,20,.66))}
 .ld,#cloudGate{position:relative;height:100%;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;align-items:center;text-align:center;color:#eef4fb;
   padding:max(8vh,calc(env(safe-area-inset-top) + 32px)) 20px max(6vh,calc(env(safe-area-inset-bottom) + 24px))}
@@ -221,7 +223,7 @@ body.v3d #aisCard{display:none} .lbl-ais{font-family:var(--sans);font-weight:600
 .lightsym{fill:#c2188f;opacity:.85} .lightdot{fill:#fff;stroke:#c2188f}
 .depc{fill:none;stroke:var(--water);stroke-width:.7;opacity:.45} .depc.deep{opacity:.22}
 #map.plot .offmap{fill:#05090d} #map.plot .sea{fill:#0b1a2a} #map.plot .land{fill:#262b23;stroke:#6b755c} #map.plot .depc{stroke:#000;opacity:.32} #map.plot .grid{stroke:rgba(255,255,255,.07)}
-#map.plot .lbl-land{fill:#8d9a78} #map.plot .lbl-water{fill:#d7eef7} #map.plot .lbl-port{fill:#f1f5f6;stroke:#0b1a2a} #map.plot .lbl-ground{fill:#e6f6fb;stroke:#0b1a2a} #map.plot .ground{fill:none;stroke:#fff;opacity:.55}
+#map.plot .lbl-land{fill:#8d9a78} #map.plot .lbl-water{fill:#d7eef7} #map.plot .lbl-port{fill:#f1f5f6;stroke:#0b1a2a} #map.plot .lbl-ground{fill:#e6f6fb;stroke:#0b1a2a} #map .lbl-felt{font-style:italic;opacity:.85} #map.plot .ground{fill:none;stroke:#fff;opacity:.55}
 #map.plot .port{fill:#0b1a2a;stroke:#fff} #map.plot .port.home{fill:#fff} #map.plot .rorbu{fill:#c23a2b;stroke:#fff} #map.plot .havn{fill:#17807d;stroke:#fff} #map.plot .havn-h{fill:#fff} #map.plot .trail{stroke:#fff}
 .phonebtn{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:40px}
 .phonebtn i{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:9px;background:#e0412f;color:#fff;font:700 10px/17px var(--sans);font-style:normal;padding:0 4px}

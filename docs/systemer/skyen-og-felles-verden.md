@@ -123,8 +123,20 @@ Jonas: «det er viktig at alle har en delt klokke fordi dette er et online-spill
     - `world_top(w, grp)` rangerer spillerne langs hele kysten etter hva de har landet i åpen eller lukket gruppe i spilluke `w`, altså spilltime w·168 til (w+1)·168 som `weekOf`. Hver landing teller høyst 10 t i åpen gruppe og 60 t i lukket. Lista har topp 20, med båtnavnet (og rederiet i lukket gruppe) fra siste salg, mottaket de har levert mest til, og spillerens egen plass.
     - Salgslaget → Toppliste (`worldTop` i `ui/10h-world.js`) har fanene Åpen gruppe og Lukket gruppe (standard er spillerens egen) og Denne uka/Forrige uke. Lista hentes når den vises, høyst én gang i minuttet per liste, og på nytt etter egne salg. Uten sky vises Senja-flåten som før, nå med båtnavnet ditt og hjemhavna i stedet for firmanavnet og Finnsnes.
   - **Båtnavn fra andre spillere** blir HTML i kartets SVG og AIS-kortet. Derfor fjernes `<>&"'` og backslash og backtick både i spillet (`peerName` i `core/05-vessels.js`) og på serveren (`pos_put` og `land_put`). Før 05.10.2026 kunne et båtnavn med markup ha kjørt kode hos andre spillere i nærheten.
-  - **Ikke felles ennå:** gytebestanden og totalkvoten (spillerne er en dråpe mot 285 000 t), registeret over lukket gruppe (`REGN`) og krabbebestanden.
-  - **Test:** `sqltest` (summer, tak, markør, lås, sletting) og `cloudtest` (salg og celler opp, kvote, pris og bestand ned, markøren).
+  - **Registeret og balansen (B4, 02.11.2026, `supabase/migrations/20261102120000_register.sql`):**
+    - **Registeret i lukket gruppe** er ett for alle (`reg_rights`, `reg_held`): en hjemmel en spiller kjøper (`reg_take`), er borte fra NPC-eierne for alle, og en hjemmel som selges med båten, går tilbake (`reg_free`). Det nektes når ingen NPC-eier er igjen med den hjemmelslengden. En spiller uten landing eller kjøp på 90 dager gir plassen tilbake.
+    - **`world_get` har med** registeret (`reg`), de aktive spillerne i åpen gruppe i år (`open_boats`, 90 dager), de andres fangst i år per gruppe og art (`grp`, kg) og bestanden fra serveren når admin har slått den på (`stock`). Det kommer ingen nye kall per spiller: alt følger det kallet som alt går hvert tiende minutt, og `reg_take`/`reg_free` sendes bare ved kjøp og salg.
+    - **I spillet:** `npcReg` leser serverens register. Den virtuelle flåten i åpen gruppe er 2 100 båter minus de aktive spillerne (`qyBoats`), aldri under halvparten. Flåtens trykk viker for spillernes fangst i lukket gruppe og i hyse og sei (`trkPlayersF`). `stockYear` tar serverens år når bryteren er på.
+    - **Ytelsen med 5 000 spillere** (`KYST_LAST=5000 python3 tests/sqltest.py`: 5 000 spillere, 200 000 landinger, 5 000 båter i `presence`, lokal PostgreSQL 16):
+      - **Summene og det felles bildet:** årets summer per år, gruppe, art og spiller holdes i `world_year` (en trigger på `landings`), og det felles bildet (`world_agg`) regnes høyst én gang i minuttet.
+      - **`world_get`:** 126–136 ms per kall, målt gjennom psql; psql selv tar rundt 30 ms. Det meste av resten er markedet siste døgn (`mkt`), og i testen er alle 200 000 landingene fra siste døgn. Uten sammendraget var kallet 337–372 ms, og delene som fantes før B4 (`open`, `boats`, `mkt`) kostet alene rundt 130 ms.
+      - **Posisjonen** (`pos_put`) er under 1 ms over psql, og nabobåtene (`pos_near`) rundt 5 ms.
+      - **Hva det betyr:** 500 kall i minuttet til `world_get` og 20 000 til `pos_put` er da rundt 50 og 20 s databasetid i minuttet i verste fall.
+      - **Ikke målt:** det PostgREST, nettet og Supabase-planen legger til per kall. Det må prøves mot prosjektet før lansering.
+    - **Admin:** fanen «Økonomi i spillet» har spillernes andel av gruppekvoten per gruppe og art (`admin_share`), registeret, og bryteren for bestanden på serveren med årene som ligger der (`admin_cfg_set`, `admin_stock_set`). Panelet sier fra når en gruppe passerer 1 % (`share_limit`).
+    - **Migreringen må Jonas kjøre i SQL Editor**, etter de fire fra 30.10. Til den er kjørt, svarer `world_get` som før, og spillet bruker sitt eget register (`npcReg` faller tilbake til lagringen).
+  - **Ikke felles ennå:** krabbebestanden. Gytebestanden og totalkvoten er felles fra serveren når admin slår på bryteren (B4); til da er de frøets.
+  - **Test:** `sqltest` (summer, tak, markør, lås, sletting; registeret med to kontoer, 90 dager, bryteren, og lasten med `KYST_LAST=5000`), `cloudtest` (salg og celler opp, kvote, pris og bestand ned, markøren) og `tests/unit/trykk.test.mjs` (spillernes andel, åpen gruppes båter, registeret og bestanden fra serveren).
 
 ## 4.24 Fartstid og «Mens du var borte» (07.10.2026)
 
@@ -260,6 +272,10 @@ Jonas valgte dem fra lista (nr. 5 og 7).
   - Øverst står «Kystfiske langs norskekysten» i sperrede versaler mellom to streker, og navnet stort i Source Serif 4.
   - Nederst løper en tynn lysstripe, med «Laster kysten …» under.
   - `.gone` toner den ut og skjuler den etterpå (`visibility`), og da stopper stripa.
+  - **Ingenting legger seg oppå den** (Jonas 02.11.2026: «Ingenting skal komme opp på skjermen mens spillet står å laster»). `<body>` har klassen `booting` til `loaderGone()` (`ui/02-format-state.js`) tar bort lasteskjermen; alle tre stedene som gjør det (3D er oppe, 3D feilet, `bootFail`) går gjennom den.
+    - Så lenge `booting` står, skjuler `styles.css` dialogen (`#modal`, for eksempel «Båten etter far» og «Mens du var borte»), meldingslinja, tipsene, telefonen, dagboka og de andre overleggene med `visibility`, så de bygges og får knappene sine som før, bare usynlig.
+    - `toast()` legger meldingene i kø (høyst 12) i stedet for å vise dem. `loaderGone()` spiller dem i rekkefølge etter uttoningen, hver i høyst 6 s før den neste; «Laster 3D-terreng …» droppes.
+    - Brevet fra far (`#letter`), startstedet (`#startPick`) og innloggingen (`#cloudGate`) skjules ikke: de er egne steg, og 3D-en venter på de to første (`go3d` i `ui/11-boot.js`).
 - **Innloggingen** (`cloudGateShow` i `ui/10f-cloud.js`):
   - Den har samme bilde og tittel.
   - Teksten og knappene står i et halvgjennomsiktig kort med uskarp bakgrunn. På telefon og nettbrett ligger kortet nederst. På brede skjermer (minst 900 × 600, liggende) står det til venstre, så naustet synes.

@@ -98,6 +98,7 @@ function render(){
   if (TAB === 'navn') nmWire();
   if (TAB === 'avis') nwWire();
   if (TAB === 'merker' && $('#acR')) $('#acR').onclick = () => { AC = null; render(); };
+  if (TAB === 'okonomi') havWire();
   if (TAB === 'trakt' && $('#fnR')) $('#fnR').onclick = () => { FN = null; TU = null; HBF = null; render(); };
 }
 
@@ -128,7 +129,7 @@ const VIEW = {
   bruk: D => card('Appene og knappene som brukes', bars(D.features)) + card('Redskap', bars(D.gear)) + card('Båtene spillerne har nå', bars(D.boats)) +
     card('Grunnstøtinger', '<p>I perioden: <b>' + nf(D.groundings.count, 0) + '</b></p>' + bars(D.groundings.by_boat) + table((D.groundings.where || []).slice(0, 20), [['x', 'x'], ['y', 'y'], ['v', 'Fart (kn)']])) +
     card('Turene', '<div class="grid">' + kpi('Leveringer', nf(D.trips.count, 0)) + kpi('Snitt kast loss → levering', nf(D.trips.avg_trip_min, 0) + ' min spilltid') + kpi('Snitt per levering', nf(D.trips.avg_kr, 0) + ' kr') + '</div><h3>Mottak</h3>' + bars(D.trips.ports) + '<h3>Fangstfelt</h3>' + bars(D.trips.fields)),
-  okonomi: D => '<div class="grid">' + kpi('Gini for kassa', nf(D.economy.gini_cash, 3), '0 er likt, 1 er alt hos én') + kpi('Gini for flåten', nf(D.economy.gini_fleet, 3)) + kpi('Median kasse', nf(D.economy.cash_p50, 0) + ' kr') + kpi('90-persentil kasse', nf(D.economy.cash_p90, 0) + ' kr') + '</div>' + turCards(),
+  okonomi: D => '<div class="grid">' + kpi('Gini for kassa', nf(D.economy.gini_cash, 3), '0 er likt, 1 er alt hos én') + kpi('Gini for flåten', nf(D.economy.gini_fleet, 3)) + kpi('Median kasse', nf(D.economy.cash_p50, 0) + ' kr') + kpi('90-persentil kasse', nf(D.economy.cash_p90, 0) + ' kr') + '</div>' + turCards() + havCards(),
   penger: D => { const m = D.money; return '<div class="grid">' + kpi('Inntekt i perioden', nf(m.revenue_nok, 0) + ' kr') + kpi('Betalende', nf(m.payers, 0)) + kpi('ARPU', nf(m.arpu, 2) + ' kr') + kpi('Konvertering', pct(m.conversion)) +
     kpi('Gjenkjøp', pct(m.repurchase)) + kpi('Tid til første kjøp', nf(m.ttfp_days) + ' dager') + kpi('Refusjoner', pct(m.refund_rate)) + kpi('Forlatt kasse', pct(m.abandon_rate)) + '</div>' +
     card('Boostere', bars(m.boosters)) + card('Transaksjonslogg (Stripe)', table(m.log, [['at', 'Tid', v => esc(new Date(v).toLocaleString('nb-NO'))], ['player', 'Spiller'], ['product', 'Produkt'], ['nok', 'Kr'], ['status', 'Status'], ['id', 'Stripe-økt']]), 'Fylles når Stripe-webhooken er koblet på.'); },
@@ -147,6 +148,39 @@ function turCards(){
   const sh = (TURE.share || []).map(r => Object.assign({}, r, {pct:(r.tur + r.fish) > 0 ? r.tur / (r.tur + r.fish) : 0}));
   return card('Oppdrag og fangst per spiller', table(sh, [['player', 'Spiller'], ['boat', 'Båt'], ['tur', 'Oppdrag (kr)', v => nf(v, 0)], ['fish', 'Fangst (kr)', v => nf(v, 0)], ['pct', 'Andel oppdrag', v => pct(v)], ['shown', 'Tavler sett', v => v == null ? '–' : v], ['taken', 'Tatt', v => v == null ? '–' : v], ['done', 'Fullført'], ['dropped', 'Gitt fra seg', v => v == null ? '–' : v], ['due', 'Frist ute', v => v == null ? '–' : v], ['failed', 'Feilet ellers'], ['frac', 'Brukt av fristen', v => v == null ? '–' : pct(v)]]), 'Fra hendelsene (bare spillere som har sagt ja til statistikk). Bremsen i spillet sikter mot rundt 30 % per spilluke; beløp for oppdrag finnes fra 17.10.2026, og tavler sett, gitt fra seg, frist ute og brukt av fristen (snitt for de fullførte) fra 30.10.2026 (migreringen 20261030120000_tur_how.sql).') +
     card('Mistenkelige pengehopp', table(TURE.flags, [['at', 'Tid', v => esc(new Date(v).toLocaleString('nb-NO'))], ['player_id', 'Spiller'], ['cash0', 'Før', v => nf(v, 0)], ['cash1', 'Etter', v => nf(v, 0)], ['delta', 'Økning', v => nf(v, 0)], ['explained', 'Forklart av salg og oppdrag', v => nf(v, 0)], ['game_dt', 'Spillminutter']]), 'En lagring der kassa steg mer enn 300 000 kr og mer enn dobbelt så mye som loggede salg og oppdrag. Bare et flagg: ingenting avvises eller tas fra noen.');
+}
+// ---------- the sea and the fleet (B4 of docs/planer/bestand-og-flaate.md, supabase/migrations/20261102120000_register.sql): the players'
+// share of each group quota (when one passes share_limit, 1 %, the stock and the year's catch should be moved to the server: turn on
+// stock_server and lay in the stock rows), the closed group's register (NPC owners left per quota length), and the switch ----------
+// the group quotas to measure against, t: 2026 from J-161-2026 § 5 and § 2; 2027 from the game's chain at HI's advice (codChain in
+// 03d-quota.js with the total quota at the advice: the agreed one may come up to 8 % over), so a share from 2027 is a little high
+const HAVQ = {2026:{'open:torsk':9257, 'lukket:torsk':72945, 'open:hyse':78289, 'lukket:hyse':78289, 'open:sei':150770, 'lukket:sei':150770},
+  2027:{'open:torsk':10537, 'lukket:torsk':84738, 'open:hyse':94000, 'lukket:hyse':94000, 'open:sei':114000, 'lukket:sei':114000}};
+let HAV = null, HAVY = new Date().getUTCFullYear();
+async function havLoad(){ await null; try { HAV = DEMO ? {grp:[{acc:'open', sp:'torsk', t:12.4, n:9}], open_boats:9, reg:{u7:298, h7:280, h8:229, h9:200, h10:162, h14:291, h20:103}, reg_total:{u7:300, h7:280, h8:230, h9:200, h10:162, h14:291, h20:103}, cfg:{stock_server:false, share_limit:0.01}, stock:[]} : await rpc('admin_share', {y:HAVY}); } catch (e){ HAV = {err:e.message}; } if (TAB === 'okonomi') render(); }
+function havCards(){
+  if (!HAV){ HAV = {loading:true}; havLoad(); return card('Havet og flåten', '<p class="note">Henter …</p>'); }
+  if (HAV.loading) return card('Havet og flåten', '<p class="note">Henter …</p>');
+  if (HAV.err) return card('Havet og flåten', '<p class="warn">' + esc(HAV.err) + '</p>', 'Er migreringen supabase/migrations/20261102120000_register.sql kjørt?');
+  const Q = HAVQ[HAVY] || HAVQ[2027], lim = +(HAV.cfg && HAV.cfg.share_limit) || 0.01, on = !!(HAV.cfg && HAV.cfg.stock_server);
+  const rows = (HAV.grp || []).map(r => { const q = Q[r.acc + ':' + r.sp] || 0, sh = q ? r.t / q : 0; return Object.assign({}, r, {q, sh, over:sh >= lim}); });
+  const over = rows.filter(r => r.over);
+  const reg = Object.keys(HAV.reg_total || {}).map(k => ({id:k, left:(HAV.reg || {})[k], total:HAV.reg_total[k], players:HAV.reg_total[k] - ((HAV.reg || {})[k] || 0)}));
+  return card('Spillernes andel av gruppekvoten ' + HAVY, (over.length ? '<p class="warn">Spillerne har passert ' + pct(lim) + ' av gruppekvoten i ' + over.map(r => r.acc + ' ' + r.sp).join(', ') + '. Bestanden og årets fangst bør flyttes til serveren (bryteren under).</p>' : '<p class="note">Under ' + pct(lim) + ' i alle grupper: bestanden kan bli i spillet.</p>') +
+      table(rows, [['acc', 'Gruppe', v => v === 'open' ? 'Åpen' : 'Lukket'], ['sp', 'Art'], ['t', 'Spillerne (t)', v => nf(v, 1)], ['q', 'Gruppekvote (t)', v => nf(v, 0)], ['sh', 'Andel', v => pct(v)], ['n', 'Spillere']]) +
+      '<p>Aktive spillere i åpen gruppe (90 dager): <b>' + nf(HAV.open_boats, 0) + '</b>; de tar plassen til like mange av flåtens virtuelle båter.</p>',
+      'Gruppekvotene ' + (HAVQ[HAVY] ? HAVY : 2027) + (HAVY >= 2027 ? ' er spillets kjede ved rådet (avtalt kvote kan bli inntil 8 % høyere)' : ' er J-161-2026') + '. For hyse og sei er det Norges kvote.') +
+    card('Registeret i lukket gruppe', table(reg, [['id', 'Hjemmelslengde', v => ({u7:'under 7 m', h7:'7–7,9 m', h8:'8–8,9 m', h9:'9–9,9 m', h10:'10–10,9 m', h14:'14–14,9 m', h20:'20–20,9 m'})[v] || esc(v)], ['total', 'Hjemler'], ['players', 'Hos spillere'], ['left', 'NPC-eiere igjen']]), 'En spiller uten landing eller kjøp på 90 dager gir plassen tilbake.') +
+    card('Bestanden på serveren', '<p>Bryteren: <b>' + (on ? 'på' : 'av') + '</b> <button id="havSw">' + (on ? 'Slå av' : 'Slå på') + '</button></p>' +
+      table(HAV.stock, [['sp', 'Art'], ['y', 'År'], ['ssb', 'Gytebestand (t)', v => nf(v, 0)], ['tac', 'Totalkvote (t)', v => nf(v, 0)], ['adv', 'Råd (t)', v => nf(v, 0)]]) +
+      '<p><select id="havSp"><option>torsk</option><option>hyse</option><option>sei</option><option>blakveite</option></select> <input id="havY" type="number" value="' + (HAVY + 1) + '" style="width:5em"> ' +
+      '<input id="havSsb" type="number" placeholder="gytebestand t" style="width:9em"> <input id="havTac" type="number" placeholder="totalkvote t" style="width:9em"> <input id="havAdv" type="number" placeholder="råd t" style="width:8em"> <button id="havSet">Lagre år</button></p>',
+      'Når bryteren er på, bruker alle spill denne bestanden og totalkvoten for årene som står her, i stedet for hver lagrings egen modell. Legg inn årene før den slås på.');
+}
+function havWire(){
+  const sw = $('#havSw'); if (sw) sw.onclick = async () => { sw.disabled = true; try { if (!DEMO) await rpc('admin_cfg_set', {ck:'stock_server', cv:!(HAV.cfg && HAV.cfg.stock_server)}); else HAV.cfg.stock_server = !HAV.cfg.stock_server; HAV = DEMO ? HAV : null; } catch (e){ alert(e.message); } render(); };
+  const st = $('#havSet'); if (st) st.onclick = async () => { const v = id => +$(id).value; if (!(v('#havSsb') > 0)) { alert('Gytebestanden mangler.'); return; } st.disabled = true;
+    try { if (!DEMO) await rpc('admin_stock_set', {ssp:$('#havSp').value, sy:v('#havY'), sssb:v('#havSsb'), stac:v('#havTac') || 0, sadv:v('#havAdv') || 0}); HAV = DEMO ? HAV : null; } catch (e){ alert(e.message); } render(); };
 }
 // ---------- the devices (supabase/migrations/20261006160000_device_data.sql): the frame rate by graphics chip, and the errors with the chips they hit ----------
 let DEV = null;
