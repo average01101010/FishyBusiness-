@@ -1403,7 +1403,7 @@ Bestilt til henting (M2 in docs/planer/butikker-og-sponsorer.md, 10.2b, V12 A; J
   - 45 `pickAdd(port, w, k, s, n)`
   - 58 `pickDrop(id)`
 
-## `src/js/core/09k-market.js` (141 linjer)
+## `src/js/core/09k-market.js` (155 linjer)
 
 Bruktmarkedet (M4 in docs/planer/butikker-og-sponsorer.md, 3.3, 10.2, 10.2b; V3 A, V9 A, V10 A, V11 A; Jonas 30.10.2026)
 
@@ -1432,6 +1432,10 @@ Bruktmarkedet (M4 in docs/planer/butikker-og-sponsorer.md, 3.3, 10.2, 10.2b; V3 
   - 118 `mktDelWhy(v, to)`
   - 119 `mktDeliver(vid, to)`
   - 125 `mktHour(H)`
+- **141** the boat you traded in (M5, B2): she lies at the yard and is bought by a fisherman, who puts her out again a week or two later at
+  - 143 `mktTradeIn(type, engH, port, old)`
+  - 144 `mktTiListing(r)`
+  - 154 `mktEvery(H)`
 
 ## `src/js/core/11-route.js` (496 linjer)
 
@@ -2028,12 +2032,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (911 linjer)
+## `src/js/ui/phone/07-patch.js` (914 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 904 `patch()`
+  - 907 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -2097,7 +2101,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
   - 104 `careAboard(inPort, p)`
   - 128 `redskap(tab0)`
 
-## `src/js/ui/phone/13-mannskap-bank-meld.js` (175 linjer)
+## `src/js/ui/phone/13-mannskap-bank-meld.js` (177 linjer)
 
 --- crew
 
@@ -2686,6 +2690,12 @@ THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a butto
   - 187 `logoCheck()`
   - 195 `giveCos(k)`
   - 207 `regSet(n)`
+
+## `src/js/ui/10q-buymoment.js` (36 linjer)
+
+The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the top and the end of the purchase
+
+- **1** The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the top and the end of the purchase
 
 ## `src/js/ui/10k-friends.js` (133 linjer)
 
