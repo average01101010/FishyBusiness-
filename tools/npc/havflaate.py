@@ -31,9 +31,9 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.pat
 KIND = {'tral': 'bunntral', 'not': 'pelagisk', 'snurrevad': 'ringnot38', 'line': 'autoliner', 'teine': 'snokrabbe', 'garn': 'ringnot38'}
 PLANTG = {'tral': 'Trål', 'not': 'Not'}   # the rest: Konvensjonelle
 DEPTH = {'tral': (100, 600), 'not': (40, 3000), 'snurrevad': (40, 300), 'line': (100, 1000), 'teine': (150, 450), 'garn': (40, 400)}
-NAMES = ['Havtind', 'Nordtrål', 'Polarfangst', 'Kystfangst', 'Havbris', 'Atlantic', 'Nordfangst', 'Havstrand', 'Ishavet', 'Barentshav',
-         'Nordkapp', 'Lofotfisk', 'Vesteraalen', 'Havørn', 'Storegg', 'Havglimt', 'Ramoen', 'Skjongholm', 'Havsula', 'Malangsfjord', 'Sørøy',
-         'Havbør', 'Nordsjø', 'Fjordfangst', 'Havdønning', 'Kvitøy', 'Hopen', 'Bjørnøyfisk', 'Vestfjord', 'Røstbanken', 'Polarbris']
+NAMES = ['Havglimt', 'Kvitbris', 'Stormvær', 'Nordglimt', 'Havsula', 'Sølvbølge', 'Polarstrand', 'Havdønning', 'Ishavsbris', 'Djupvær',
+         'Bankhavet', 'Kaldbakk', 'Brattvær', 'Havstreif', 'Måkeskjær', 'Skodde', 'Havtrost', 'Nordbank', 'Gråbølge', 'Kvitskjær', 'Sjøfalk',
+         'Havbør', 'Djuphavet', 'Fjordglimt', 'Stormsvale', 'Kvitøy', 'Hopen', 'Isranda', 'Vestbanken', 'Djupbanken', 'Polarbris']   # made up: no real vessel's name (CLAUDE.md)
 H01 = lambda *a: int(hashlib.sha256(repr(a).encode()).hexdigest()[:12], 16) / 16 ** 12
 
 def core(game):

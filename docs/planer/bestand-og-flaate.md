@@ -147,3 +147,12 @@ Jonas: «jeg vil gjerne være rustet til å kunne ha minst 5000 aktive brukere n
   - **Redskapet:** kystbåtenes garn, liner og teiner står i sjøen etter klokka og vises på kartet, i 3D-plotteren og som blåser i 3D.
   - **H1:** `tools/npc/havflaate.py` gir 248 av registerets 249 fartøy på 28 m og over en hjemmehavn ved et mottak som tar redskapet. Feltene og sesongene kommer fra sedlene for 28 m og over, og leiene går langs farledene. `core/05d-hav.js` seiler dem etter klokka: tråling med trålen i 3D, notkast, autoline, teinelenker, og AIS. Det er ingen ny kartrelease. Se 4.16d og 4.17 i `npc-trafikk.md`.
   - **Neste:** L3.
+- 02.11.2026: **L3, stikkprøvene langs kysten** (Jonas: «Kjør på videre»). Kystbåtene, Senja-havnene, NPC-redskapet og havflåten er prøvd i Kristiansand, Bergen, Trondheim, Bodø, Tromsø, Finnsnes, Husøy, Hammerfest og Båtsfjord, i juni og februar klokka 12.
+  - **Ingen feil:** ingen båt på land, ingen lenke eller line over land, og alle havskip i havn ligger ved kai som passer (2 av 2 i Kristiansand, 5 av 5 i Tromsø, 3 av 3 i Hammerfest og Båtsfjord). Ingen sidefeil, og `npcStates` tar 0,3–3,3 ms.
+  - **Redskapet:** garn langs hele kysten, teiner i sør og nord (Kristiansand 9, Hammerfest 2), og linene i Båtsfjord i februar (11).
+  - **Senja-havnene** har båter ved Finnsnes og Husøy (14 havner innen rekkevidde).
+  - **Havflåten** er på AIS overalt utenom Trondheim og Bergen i februar: trålere i Hammerfest, Båtsfjord og Bodø (på vei ut i februar), og ringnot i Tromsø.
+  - Skjermbilder i stående og liggende format er sett på.
+  - **Funnet og rettet:** havflåtens navneliste hadde navn som kunne tilhøre ekte fartøy. Den er byttet ut med oppdiktede navn (CLAUDE.md).
+  - **Lagt merke til, ikke en feil:** en dag med halvparten av Tromsø-båtene på fridag var et utslag (snittet over 200 dager er 30 %). Kartet ber om pakkene der det sist sto, også når båten er flyttet langt bort i en test.
+  - Planen er dermed bygd ferdig (L1, B1–B4, L2, H1 og L3), men L2–L3 er ikke rullet ut.
