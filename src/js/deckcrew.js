@@ -163,9 +163,9 @@ function crewSim(src){
     if (st === 'blogg') return at(PL.bleed, 1.4) || idleGoal(p, ctx, 'look');
     if (st === 'haling'){ const q = p.role === 'plukk' ? at(PL.pick, 1.4) : p.role === 'teine' ? at(PL.pot, 1.4) : at(PL.haul[Math.min(1, n)], 1.4); return q || idleGoal(p, ctx, 'look'); }
     if (st === 'fiske'){ const q = jigSpot(n); return q || idleGoal(p, ctx, 'lean'); }
-    if (st === 'stell' && p.jw && (p.jw.kind === 'pr' || p.jw.kind === 'jg')){ const q = at(PL.pot, 1.4); return q || idleGoal(p, ctx, 'coil'); }   // (the pots and the jig sets are seen to by the hauler's side)
-    if (st === 'egn' || st === 'strip' || st === 'stell'){ const q = at(PL.tubAt(n), 1.2); if (q){ q.task = st === 'stell' ? 'egn' : st; q.tub = n; } return q || idleGoal(p, ctx, 'coil'); }
-    if (st === 'mend'){ const q = PL.mend[n % Math.max(1, PL.mend.length)], g = q ? at(q, 1.0) : null; if (g) g.task = 'mend'; return g || idleGoal(p, ctx, 'coil'); }
+    if (st === 'stell' && p.jw && (p.jw.kind === 'pr' || p.jw.kind === 'jg')){ const q = at(PL.pot, 1.4); return q || idleGoal(p, ctx, 'look'); }   // (the pots and the jig sets are seen to by the hauler's side)
+    if (st === 'egn' || st === 'strip' || st === 'stell'){ const q = at(PL.tubAt(n), 1.2); if (q){ q.task = st === 'stell' ? 'egn' : st; q.tub = n; } return q || idleGoal(p, ctx, 'look'); }
+    if (st === 'mend'){ const q = PL.mend[n % Math.max(1, PL.mend.length)], g = q ? at(q, 1.0) : null; if (g) g.task = 'mend'; return g || idleGoal(p, ctx, 'look'); }
     if (st === 'last') return at(PL.cargo, 1.6) || idleGoal(p, ctx, 'look');
     if (st === 'kokk') return PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:null, inside:'in'} : null;
     return idleGoal(p, ctx);
@@ -173,11 +173,11 @@ function crewSim(src){
   // the station and its part (at the hauler: the hauler, the picker, the pot hand): a person keeps the place while it stays the same
   const kindOf = p => p.st === 'haling' ? 'haling:' + (p.role === 'haler' ? 'h' : p.role) : p.st === 'pause' && p.idle ? 'pause:' + p.idle + (p.with ? '>' + p.with : '') : p.st;
   // ---- a free person: something to do for a while, by the weather, the hour and their nature ----
-  const IDLE = ['lean', 'lean', 'look', 'coffee', 'coil', 'sweep', 'sit'];
+  const IDLE = ['lean', 'lean', 'look', 'coffee', 'sweep', 'sit'];
   // (p.idle: the break the game chose, kept as long as it lasts there; each its own place and pose, view3d.js drawWorker: facing out over
   // the rail (lean, look, coffee, smoke, snus, the phone, the binoculars, the northern lights, seasick), back to the rail (back, chat, the
-  // knife, the lunch), over the deck (scrub, hose, coil), sitting on a tub (sit), by the gear (gear))
-  const IDLE_IN = {back:1, chat:1, knife:1, lunch:1, sweep:1, coil:1, hose:1, sit:1, worry:0};
+  // knife, the lunch), over the deck (scrub, hose), sitting on a tub (sit), by the gear (gear))
+  const IDLE_IN = {back:1, chat:1, knife:1, lunch:1, sweep:1, hose:1, sit:1, worry:0};
   // ---- no limb through a wall, the rail or anything else (Jonas 23.10.2026: «Sørg også for at mannskapet aldri "clipper" gjennom vegger,
   // rekka eller andre ting»). The rail at a place: how far ahead of it its top is and how high (rays down in front of the place, the
   // model's own surface, vessel3d.js deckMap M.hit); the hands that rest on the rail rest on its top there (view3d.js drawWorker st.rail).
@@ -212,7 +212,6 @@ function crewSim(src){
       case 'snus': return std([0.26, 1.47, 0.02], [0.26, 1.1, -0.04], [[0.02, 1.42, 0.21], [d, top, 0.2]], [[0.02, 1.42, -0.21], [d, top, -0.2]]);
       case 'sweep': return std([0.25, 1.0, 0.1], [0.35, 0.8, -0.05], [[0.25, 1.0, 0.1], [0.8, 0.12, 0]], [[0.8, 0.06, 0.42], [0.8, 0.06, -0.42]]);
       case 'hose': return std([0.45, 1.15, 0.12], [0.3, 1.1, -0.1], [[0.12, 0.02, 0.62], [0.12, 0.46, 0.62]], [[0.12, 0.3, 0.5], [0.45, 1.15, 0.12]]);
-      case 'coil': return std([0.47, 1.2, 0.12], [0.3, 1.0, -0.15]);
       // the work at its places (the stations' own places from the models; tested, not chosen)
       // (at the rail, rail is its top as at a break: the jig hauled up over it, the hauler's lever and the line just over it; at the gutting
       // table rail[1] is the table's top, the hands working on it)
@@ -262,11 +261,11 @@ function crewSim(src){
       const g1 = idlePlace(k === 'gear' ? 'look' : k, L, id), g = g1 || idlePlace('look', leans, id); if (!g) return null;
       return {k:g.k, h:g.h, rail:g.rail, off:g.off, task:g1 && k !== 'gear' ? k : 'look', until:1e12, idle:true, with:p.with || null}; }
     let act = force || IDLE[Math.floor(rnd() * IDLE.length)];
-    if (!force){ if (T.includes('makelig') && rnd() < 0.5) act = rnd() < 0.5 ? 'lean' : 'coffee'; if ((T.includes('arbeidsjern') || T.includes('perfeksjonist')) && rnd() < 0.5) act = rnd() < 0.5 ? 'sweep' : 'coil';
+    if (!force){ if (T.includes('makelig') && rnd() < 0.5) act = rnd() < 0.5 ? 'lean' : 'coffee'; if ((T.includes('arbeidsjern') || T.includes('perfeksjonist')) && rnd() < 0.5) act = 'sweep';
       if ((ctx.night || ctx.wind > 12) && rnd() < 0.5 && PT.door && !ctx.open) return {k:PT.door.k, h:PT.door.h || 0, task:null, inside:'in', until:nowS() + 40 + rnd() * 80}; }
     if (act === 'sit') act = 'lean';
-    // sweeping and coiling are done with the back to the rail, over the deck: facing out the broom went over the side and the coiling arm
-    // worked up and down over the rail like a jig (Jonas 21.10.2026, #81 and #84); a place where the pose is clear of everything
+    // sweeping is done with the back to the rail, over the deck: facing out the broom went over the side (Jonas 21.10.2026, #81 and
+    // #84; the coiling went 02.11.2026: no rope to coil, and it looked like jigging); a place where the pose is clear of everything
     const g1 = idlePlace(act, leans.slice(Math.floor(rnd() * leans.length)).concat(leans), id), g = g1 || idlePlace('look', leans, id); if (!g) return null;
     return {k:g.k, h:g.h, rail:g.rail, off:g.off, task:g1 ? act : 'look', until:nowS() + 30 + rnd() * 60, idle:true};
   }

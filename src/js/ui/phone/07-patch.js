@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['kveil-021126', '02.11.2026', 'Ingen taukveiling uten tau', 'No coiling without a rope', [
+       ['Mannskapet og du kveiler ikke lenger tau som ikke finnes. Den som er ledig, feier, ser over redskapen eller tar en annen pause, og den første ved haleren hiver inn redskapen.', 'The crew and you no longer coil rope that is not there. Whoever is free sweeps, looks over the gear or takes another break, and the first at the hauler hauls the gear in.'],
+    ]],
     ['kyst15-021126', '02.11.2026', 'Kystbåten på 14,99 m', 'The 14.99 m coastal vessel', [
        ['Kystbåten på 14,99 m er bygd på nytt: ett skrog med kjølen og avrundet hekk, en åpen halestasjon om styrbord med haler, kar, sløyebord og luke, leider opp til shelterdekket, og et styrhus i full bredde med vindusbånd, konsoll og skjermer.', 'The 14.99 m coastal vessel is built anew: one hull with the keel and a rounded stern, an open hauling station to starboard with the hauler, the tub, the gutting table and the hatch, a ladder up to the shelter deck, and a full-width wheelhouse with its window band, console and screens.'],
        ['Lanternene og fiskelysene står på lovlige plasser, og støtteseglet er satt til sjøs og beslått i havn.', 'The lanterns and the fishing lights stand where the rules ask, and the steadying sail is set at sea and furled in port.'],

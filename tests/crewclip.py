@@ -8,7 +8,7 @@ import asyncio, json
 from playwright.async_api import async_playwright
 
 ok = lambda c: 'OK  ' if c else 'FEIL'
-BREAKS = ['lean', 'back', 'look', 'coffee', 'sit', 'chat', 'sweep', 'hose', 'coil', 'knife', 'lunch', 'phone', 'binoc', 'aurora', 'seasick', 'gear', 'smoke', 'snus']
+BREAKS = ['lean', 'back', 'look', 'coffee', 'sit', 'chat', 'sweep', 'hose', 'knife', 'lunch', 'phone', 'binoc', 'aurora', 'seasick', 'gear', 'smoke', 'snus']
 JS = """((breaks) => { const R = {}, b = S.boat, t0 = b.type, g = GROUNDS[2].p; S.tut = 0; S.settings.autoOn = false; S.me = S.cur;
   const orig = idleAssign; let FORCE = null;
   window.idleAssign = (P, ctx) => { orig(P, ctx); if (!FORCE) return; let i = 0; for (const p of P){ if (p.st !== 'pause' || !p.c) continue; p.idle = FORCE[i % FORCE.length]; p.with = null; i++; }
