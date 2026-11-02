@@ -1387,3 +1387,7 @@ body.pm #hud,body.pm #pinCard{visibility:hidden}
 @keyframes bmFlag{from{bottom:0}to{bottom:46px}}
 @keyframes bmWave{from{transform:skewY(0)}to{transform:skewY(-4deg) scaleX(.94)}}
 @media (prefers-reduced-motion:reduce){.bm-name span,.bm-flag,.bm-fl,.bm-card{animation-duration:.01s;animation-delay:0s}}
+/* sponsored items (M6): marked as a partnership, the link out marked */
+.ic-sp-tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;background:#e8eef3;color:#2a4a62;border-radius:4px;padding:1px 6px;margin-right:4px}
+.ic-sp-out{margin:4px 0 0;font-size:13px}.ic-sp-out small{opacity:.7}
+.ic-sp-link{color:#1d5f8f;font-weight:600}

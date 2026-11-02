@@ -141,8 +141,9 @@
     else if (a === 'eqtry'){ equipTry(d.k); return true; }   // try it on the boat in 3D (M3)
     else if (a === 'equip'){ const E = EQUIP[d.k]; if (!E) return;
       // expensive equipment confirms in the button, as the counter's other buys do (M2: IC_CONFIRM_KR)
-      if (E.price >= IC_CONFIRM_KR && !(shopPend && shopPend.k === 'equip:' + d.k && Date.now() - shopPend.t <= IC_CONFIRM_MS)){ shopPend = {k:'equip:' + d.k, kg:0, t:Date.now()}; return true; }
-      shopPend = null; const why = equipBuy(d.k); if (why){ toast(why); return true; } } else if (a === 'equipOLD'){ const E = EQUIP[d.k]; if (E.multi) S.equip[d.k] = (S.equip[d.k] || 0) + 1; else S.equip[d.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); updateMapButtons(); INSTR.show(); }
+      const pk = 'equip:' + d.k + (d.sp ? ':sp' : '');   // (the partner's item confirms on its own card, M6)
+      if (E.price >= IC_CONFIRM_KR && !(shopPend && shopPend.k === pk && Date.now() - shopPend.t <= IC_CONFIRM_MS)){ shopPend = {k:pk, kg:0, t:Date.now()}; return true; }
+      shopPend = null; const why = equipBuy(d.k); if (why){ toast(why); return true; } SPUI.setBrand(d.k, d.sp ? spOf('item', d.k) : null); if (d.sp && typeof cloudEv === 'function') cloudEv('sp_buy', {pl:(spOf('item', d.k) || {}).id || 0}); } else if (a === 'equipOLD'){ const E = EQUIP[d.k]; if (E.multi) S.equip[d.k] = (S.equip[d.k] || 0) + 1; else S.equip[d.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); updateMapButtons(); INSTR.show(); }
     else if (a === 'hire'){ const c = candidates().find(x => x.id === d.id); if (c && S.crew.length < BOAT.crewMax){ S.crew.push(crewUpgrade(c)); log(c.name + ' er ansatt som ' + c.lv + '.', c.name + ' joined as ' + c.lvEn + '.'); } }
     else if (a === 'fire'){ if (!crewAshore()) return; const c = S.crew[+d.i]; if (c){ crewSettle(c); S.crew.splice(+d.i, 1); } if (c) log(c.name + ' har gått i land.', c.name + ' has gone ashore.'); }
     else if (a === 'repay'){ const k = d.k || 'loan', Q = S[k]; if (!Q || S.cash < 10000) return; const x = Math.min(10000, Q.bal); book('avdrag', -x, 'Ekstra innbetaling, ' + LOANS[k].who, 'Extra repayment, ' + LOANS[k].who); Q.bal -= x; if (Q.bal < 1) S[k] = null; }

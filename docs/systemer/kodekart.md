@@ -1437,6 +1437,16 @@ Bruktmarkedet (M4 in docs/planer/butikker-og-sponsorer.md, 3.3, 10.2, 10.2b; V3 
   - 144 `mktTiListing(r)`
   - 154 `mktEvery(H)`
 
+## `src/js/core/09l-sponsor.js` (25 linjer)
+
+Sponsorer (M6 in docs/planer/butikker-og-sponsorer.md 4 and 5; CLAUDE.md: a real name, logo or product only with a written
+
+- **1** Sponsorer (M6 in docs/planer/butikker-og-sponsorer.md 4 and 5; CLAUDE.md: a real name, logo or product only with a written
+  - 9 `spSet(rows)`
+  - 16 `spOf(kind, target)`
+  - 18 `spSponsors()`
+  - 20 `spUrl(site)`
+
 ## `src/js/core/11-route.js` (496 linjer)
 
 ---------- Autonav (once «Følg leia»): a route along the fairway ----------
@@ -2088,18 +2098,18 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 32 `rederi()`
 - **69** equipment
 
-## `src/js/ui/phone/12-utstyr-redskap.js` (176 linjer)
+## `src/js/ui/phone/12-utstyr-redskap.js` (180 linjer)
 
 the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the shop's (electronics, haulers, the jigging machine and the clothes)
 
   - 2 `utstyr(mode)`
-- **45** gear: in the sea, aboard (baiting and mending), and the shop
-- **46** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
-- **51** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
-  - 55 `lineCard(lk, o)`
-  - 80 `egnChooser(lk, o)`
-  - 104 `careAboard(inPort, p)`
-  - 128 `redskap(tab0)`
+- **49** gear: in the sea, aboard (baiting and mending), and the shop
+- **50** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
+- **55** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
+  - 59 `lineCard(lk, o)`
+  - 84 `egnChooser(lk, o)`
+  - 108 `careAboard(inPort, p)`
+  - 132 `redskap(tab0)`
 
 ## `src/js/ui/phone/13-mannskap-bank-meld.js` (177 linjer)
 
@@ -2158,7 +2168,7 @@ Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/pla
   - 111 `mgHere()`
   - 118 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (275 linjer)
+## `src/js/ui/phone/14-act.js` (276 linjer)
 
   - 2 `act(a, d)`
   - 8 `act0(a, d)`
@@ -2363,22 +2373,22 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 235 `tutUpdate()`
   - 258 `tipPlace(txt, T0, o)`
 
-## `src/js/ui/07c-handbook.js` (239 linjer)
+## `src/js/ui/07c-handbook.js` (240 linjer)
 
 Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
 
 - **1** Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
   - 10 `hbState()`
-  - 172 `hbPick()`
-  - 180 `hbEv(id, how)`
-  - 181 `hbDone(id)`
-  - 182 `hbSkip(ch, id)`
-  - 184 `hbReady()`
-- **186** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
-  - 192 `appShown(id)`
-  - 196 `appUnlock(id)`
-  - 198 `appSeen(id)`
-  - 199 `hbUpdate()`
+  - 173 `hbPick()`
+  - 181 `hbEv(id, how)`
+  - 182 `hbDone(id)`
+  - 183 `hbSkip(ch, id)`
+  - 185 `hbReady()`
+- **187** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
+  - 193 `appShown(id)`
+  - 197 `appUnlock(id)`
+  - 199 `appSeen(id)`
+  - 200 `hbUpdate()`
 
 ## `src/js/ui/10g-wardrobe.js` (125 linjer)
 
@@ -2696,6 +2706,12 @@ THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a butto
 The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the top and the end of the purchase
 
 - **1** The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the top and the end of the purchase
+
+## `src/js/ui/10r-sponsor.js` (38 linjer)
+
+Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
+
+- **1** Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
 
 ## `src/js/ui/10k-friends.js` (133 linjer)
 
