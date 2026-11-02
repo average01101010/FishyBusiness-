@@ -37,6 +37,9 @@ async def main():
         await boot(pg, GAME_TUT + '#notut')
         await pg.evaluate("if (!G3.isActive()) G3.show(true)")
         await pg.wait_for_function("G3.isActive() && ERR.ready && G3._debug.fps > 0", timeout=180000); await pg.wait_for_timeout(4000)
+        # (SwiftShader is a GPU drawn by the CPU, where the game does not ask the driver for its errors: the test asks all the same)
+        soft = await pg.evaluate("(() => { const g = G3._debug.gfx; const s = g.soft; g.force = true; return s; })()")
+        check(soft is True, 'on a GPU drawn by the CPU (SwiftShader) the game does not ask the driver for its errors by itself', soft)
         gfx = lambda: [c[1] for c in calls if c[0] == 'tm_error' and c[1].get('src') == 'view3d gfx']
         # the real picture: read back, and neither black nor one colour
         await pg.evaluate("G3._debug.gfx.pixAt = 0")
@@ -46,9 +49,12 @@ async def main():
         # a GL error between two frames
         await pg.evaluate("""(() => { const c = document.getElementById('gl'), g = c.getContext('webgl2') || c.getContext('webgl'); g.bindTexture(0x1234, null); G3._debug.gfx.probeAt = 0; })()""")
         await pg.wait_for_timeout(4000)
-        gl = [e for e in gfx() if e['msg'].startswith('3D GL-feil INVALID_ENUM etter mellom rammene')]
+        gl = [e for e in gfx() if e['msg'].startswith('3D GL-feil INVALID_ENUM mellom rammene')]
         gj = json.loads(gl[0]['stack']) if gl else {}
         check(gl and ' · ' in gl[0]['msg'] and gj.get('code') == 1280 and 'lvl' in gj and 'gl2' in gj, 'a GL error is sent with the step it came after, the graphics chip, the quality and the view', gl[:1])
+        # the steps of the frame are learnt, and each round asks about the next one (two questions to the driver a round)
+        st = await pg.evaluate("(() => { const g = G3._debug.gfx; return {tags:g.tags.length, k:g.k}; })()")
+        check(st['tags'] >= 6 and st['k'] >= 1, 'the frame\'s steps are learnt and one is asked about each round', st)
         # a camera that is not a number
         await pg.evaluate("G3._debug.cam.helm = false; window.__yaw = G3._debug.cam.yaw; G3._debug.cam.yaw = NaN")
         await pg.wait_for_timeout(3000)

@@ -162,25 +162,40 @@
   // mulig») ----------
   // What goes wrong in the picture without throwing, sent like the other errors (ui/10f-cloud.js cloudErr: once a session each, with the
   // device), each with the graphics chip, the quality, the sea level and the view:
-  // - GL errors: one frame each five seconds asks the driver after each step (glChk); what came between the frames is told as that.
+  // - GL errors: one frame each five seconds asks the driver twice: at the start (what came between the frames) and at one step of the
+  //   frame (glChk), the next step each time round, so the step an error comes before is found within a few rounds. Each question waits
+  //   for the GPU to finish what it was given, so a question after every step (twelve a frame) held a heavy frame up so long in
+  //   SwiftShader that ultratest's screenshot did not come; two are nothing on a phone. On a GPU drawn by the CPU (SwiftShader, which
+  //   Chrome also falls back to on a phone whose GPU it blocks; llvmpipe; Microsoft's basic renderer) even one question a round held
+  //   ultratest's screenshot up for two minutes, so it is not asked there: that is the weakest device, and a stall costs most on it.
+  //   (GFX.force: the test's way to ask all the same.)
   //   A wrong call leaves things out, black or in the wrong colour without stopping anything (the INVALID_OPERATION 1282 the tests
   //   saw after the pennants, which no player could tell us).
   // - NaN: the eye, the boat or the view matrix not a number, and the whole world or the boat is gone from the picture.
   // - The picture: every fifteen seconds nine points of it (a 3 x 3 grid) are read back. In daylight, black twice running, or one
   //   colour three times running in clear weather, is a picture that is not there (night, fog and the transitions are left out).
   // - A canvas of 0 px while the 3D view is on.
-  const GFX = {probeAt:0, pixAt:0, black:0, flat:0, nan:false, px:new Uint8Array(4)};
+  const GFX = {probeAt:0, pixAt:0, black:0, flat:0, nan:false, px:new Uint8Array(4), tags:[], k:0, prev:'starten av rammen'};
   const GLNAME = {1280:'INVALID_ENUM', 1281:'INVALID_VALUE', 1282:'INVALID_OPERATION', 1285:'OUT_OF_MEMORY', 1286:'INVALID_FRAMEBUFFER_OPERATION'};
   function gfxErr(msg, ctx){
     if (typeof cloudErr !== 'function') return;
     let base = {}; try { base = {lvl:QUAL.lvl, sea:seaLvl, gl2:GL2, w:canvas.width, h:canvas.height, view:KINO.on ? 'kino' : SHOW ? 'show' : PAINTV ? 'paint' : cam.helm ? 'helm' : 'cam', vis:env.vis, day:env.day}; } catch (e){}
     cloudErr(msg + ' · ' + GPU, 'view3d gfx', JSON.stringify(Object.assign(base, ctx || {})), 'gfx');
   }
-  function glReport(e, tag){ GLPROBE = false; gfxErr('3D GL-feil ' + (GLNAME[e] || e) + ' etter ' + tag, {code:e, tag}); }
+  function glReport(e, tag){ GLPROBE = false; gfxErr('3D GL-feil ' + (GLNAME[e] || e) + ' ' + tag, {code:e, tag}); }
+  // the step asked about this round (the steps are learnt from the frame itself, so a new step is asked about too)
+  function glProbe(tag){
+    if (!GFX.tags.includes(tag)) GFX.tags.push(tag);
+    const want = GFX.tags[GFX.k % GFX.tags.length];
+    if (tag !== want){ GFX.prev = tag; return; }
+    GLPROBE = false; GFX.k++;
+    const e = gl.getError(); if (e && e !== gl.CONTEXT_LOST_WEBGL) glReport(e, 'mellom ' + GFX.prev + ' og ' + tag);
+  }
   function gfxStart(now){
     GLPROBE = false;
-    if (GLCHK || now - GFX.probeAt < 5000 || gl.isContextLost()) return;
-    GFX.probeAt = now; GLPROBE = true;
+    if (GFX.soft === undefined && GPU) GFX.soft = /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(GPU);
+    if (GLCHK || (GFX.soft && !GFX.force) || now - GFX.probeAt < 5000 || gl.isContextLost()) return;
+    GFX.probeAt = now; GLPROBE = true; GFX.prev = 'starten av rammen';
     const e = gl.getError(); if (e && e !== gl.CONTEXT_LOST_WEBGL) glReport(e, 'mellom rammene');
   }
   // what nine points of the picture say (also for the test): 'black' in daylight, 'flat' in daylight and clear weather, or ''

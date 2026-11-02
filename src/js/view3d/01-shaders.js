@@ -503,7 +503,7 @@
   // (#glchk: the tests' check of every frame; for the players one frame each five seconds is checked, GLPROBE, and the first error
   // is sent with the step it came after: gfxStart and glReport in 24-cinema.js)
   const glChk = tag => { if (GLCHK){ if (GLFIRST) return; const e = gl.getError(); if (e) GLFIRST = tag + ':' + e; return; }
-    if (!GLPROBE) return; const e = gl.getError(); if (e && e !== gl.CONTEXT_LOST_WEBGL) glReport(e, tag); };   // G6's wet and snow on what is built and on the ground (#wet0 in the address: off)
+    if (!GLPROBE){ if (GFX.tags.length < 40 && !GFX.tags.includes(tag)) GFX.tags.push(tag); return; } glProbe(tag); };   // (the steps are learnt from every frame)   // G6's wet and snow on what is built and on the ground (#wet0 in the address: off)
   const relM = m => model(m.o[0] - EYE[0], (m.oy || 0) - EYE[1], m.o[1] - EYE[2], 0, 0, 0);   // oy: a mesh riding the tide (floatJob)
   const mapMid = () => [(HOME.x0 + HOME.x1) * 500, (HOME.y0 + HOME.y1) * 500];
   function upload(pos, col, idx){ const m = {pb:buf(pos), cb:buf(col), n:idx ? idx.length : pos.length / 3}; if (idx) m.ib = buf(idx, gl.ELEMENT_ARRAY_BUFFER); return m; }
