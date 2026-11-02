@@ -63,6 +63,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `docs/slagplan.md` | Slagplanen fra 05.10.2026 med status. |
 | `docs/batplan.md` | Planen for båtene og stigen. |
 | `docs/planer/grafikk-batmodeller.md` | Grafikk: båtmodellene (plan 30.10.2026, vedtatt): F0 målingen på Pad 3, F1 WebGL 2 og tre detaljnivåer med taket på 300 000 trekanter, F2 materialer, F3 skygger, F4 pilotbåten (bygd), F5 resten av flåten, F6 utstyret. |
+| `docs/skipsmodeller/leseliste.md` | **Leselista for båtmodellene:** det hver økt som bygger eller reviderer en båt, leser helt først (pilotbåten, planlisten, /blender, bestillingen), det som gjelder båten, og det som slås opp. |
 | `docs/skipsmodeller/planliste-fiskefartoy.md` | Kravlista for en Blender-modell av et fiskefartøy: alle punktene per sone (skrog, dekk, overbygg, master, lys, sikkerhet, fangst, kraner, identitet, materialer, slitasje), med prioritet. |
 | `docs/skipsmodeller/referanseanalyse-runde-2.md` | Bildeanalysene av ti referansebåter og det de la til i planlisten. |
 | `docs/skipsmodeller/eksempel-sulebas-sf-100-su.md` | Eksempel på et utfylt prosjektark etter planlisten. |
