@@ -78,8 +78,13 @@ def measures(model, truth):
         if a: xs.append(sum(a) / len(a)); ys.append(sum(b) / len(b))
     return {'all': spearman(xa, ya), 'place': spearman(xp, yp), 'season': spearman(xs, ys), 'cells': len(xa), 'places': len(xp)}
 
-JS = """async ([locs, sps]) => {
-  S.mult = 0; S.stock = {}; S.bstk = {}; const out = {}, t0 = performance.now(); let npts = 0;
+# variants run on the same points in the same page (FASIT_VARIANTS=all): the parts of the model switched off one at a time, to see
+# which of them moves the measures
+VARIANTS = {'spillet':'', 'uten-grunnlinje':'TRK.r = 1e9; LOKC.forEach(c => { c.tH = -1; });',
+  'uten-av':'for (const sp of SP) SPECIES[sp].av = SPECIES[sp].av.map(() => 1); DENT.H = NaN;',
+  'uten-begge':'TRK.r = 1e9; LOKC.forEach(c => { c.tH = -1; }); for (const sp of SP) SPECIES[sp].av = SPECIES[sp].av.map(() => 1); DENT.H = NaN;'}
+JS = """async ([locs, sps, variants]) => {
+  S.mult = 0; S.stock = {}; S.bstk = {}; const out = {}, P8 = {}, t0 = performance.now(); let npts = 0;
   const idx = new Map(RU.lok.map((h, i) => [h.c, i]));
   for (const code of locs){
     const i = idx.get(code); if (i === undefined) continue; const P = RU.lok[i].P; if (!P.length) continue;
@@ -89,14 +94,22 @@ JS = """async ([locs, sps]) => {
     // a fixed draw per location (h2), so every build samples the same points
     while (pts.length < 6 && k < 400){ k++; const q = {x:bb[0] + (bb[2] - bb[0]) * h2(i, 9000 + k), y:bb[1] + (bb[3] - bb[1]) * h2(i, 9500 + k)};
       if (!ruIn(P, q.x, q.y)) continue; let d; try { if (isLand(q)) continue; d = depthF(q); } catch (e){ continue; } if (d >= 20 && d <= 300) pts.push(q); }
-    if (!pts.length) continue; npts += pts.length;
-    const row = {}; for (const sp of sps) row[sp] = [];
-    for (let m = 0; m < 12; m++){ const acc = {}; let n = 0;
-      for (const day of [5, 15, 25]) for (const h of [8, 12, 16]){ const H = (Date.UTC(2027, m, day, h) - EPOCH) / 3.6e6; n++;
-        for (const q of pts) for (const sp of sps) acc[sp] = (acc[sp] || 0) + density(sp, q, H) / pts.length; }
-      for (const sp of sps) row[sp].push(acc[sp] / n); }
-    out[code] = row;
+    if (!pts.length) continue; npts += pts.length; P8[code] = pts;
   }
+  // each variant from a fresh copy of the tables it changes
+  const keep = {r:TRK.r, av:Object.fromEntries(SP.map(sp => [sp, SPECIES[sp].av.slice()]))};
+  for (const [name, setup] of variants){
+    TRK.r = keep.r; for (const sp of SP) SPECIES[sp].av = keep.av[sp].slice(); DENT.H = NaN; LOKC.forEach(c => { c.tH = -1; }); TRKM.clear();
+    if (setup) (new Function(setup))();
+    const res = out[name] = {};
+    for (const code in P8){ const pts = P8[code], row = {}; for (const sp of sps) row[sp] = [];
+      for (let m = 0; m < 12; m++){ const acc = {}; let n = 0;
+        for (const day of [5, 15, 25]) for (const h of [8, 12, 16]){ const H = (Date.UTC(2027, m, day, h) - EPOCH) / 3.6e6; n++;
+          for (const q of pts) for (const sp of sps) acc[sp] = (acc[sp] || 0) + density(sp, q, H) / pts.length; }
+        for (const sp of sps) row[sp].push(acc[sp] / n); }
+      res[code] = row; }
+  }
+  TRK.r = keep.r; for (const sp of SP) SPECIES[sp].av = keep.av[sp];
   return {out, npts, ms:Math.round(performance.now() - t0)};
 }"""
 
@@ -106,16 +119,19 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(); pg = await b.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
-        r = await pg.evaluate(JS, [locs, SPS])
+        names = list(VARIANTS) if os.environ.get('FASIT_VARIANTS') == 'all' else ['spillet']
+        r = await pg.evaluate(JS, [locs, SPS, [[n, VARIANTS[n]] for n in names]])
         await b.close()
-    res = {'label': label, 'truth': os.path.basename(os.environ['FASIT_TRUTH']), 'points': r['npts'], 'ms': r['ms'], 'species': {}}
-    for sp in SPS:
-        model = {l: r['out'][l][sp] for l in r['out']}
-        res['species'][sp] = measures(model, truth_index(truthF, sp))
     os.makedirs(os.path.join(HERE, 'out'), exist_ok=True)
-    json.dump(res, open(os.path.join(HERE, 'out', 'fasit-%s.json' % label), 'w'), indent=1, ensure_ascii=False)
-    print('fasit', label, 'mot', res['truth'], '·', res['points'], 'punkter,', res['ms'], 'ms')
-    for sp, v in res['species'].items(): print('  %-8s alle %s · steder %s · sesong %s · (%d celler, %d steder)' % (sp, v['all'], v['place'], v['season'], v['cells'], v['places']))
+    for name in names:
+        res = {'label': label, 'variant': name, 'truth': os.path.basename(os.environ['FASIT_TRUTH']), 'points': r['npts'], 'ms': r['ms'], 'species': {}}
+        for sp in SPS:
+            model = {l: r['out'][name][l][sp] for l in r['out'][name]}
+            res['species'][sp] = measures(model, truth_index(truthF, sp))
+        tag = label if name == 'spillet' else label + '-' + name
+        json.dump(res, open(os.path.join(HERE, 'out', 'fasit-%s.json' % tag), 'w'), indent=1, ensure_ascii=False)
+        print('fasit', tag, 'mot', res['truth'], '·', res['points'], 'punkter,', res['ms'], 'ms')
+        for sp, v in res['species'].items(): print('  %-8s alle %s · steder %s · sesong %s · (%d celler, %d steder)' % (sp, v['all'], v['place'], v['season'], v['cells'], v['places']))
     print('errors:', errs[:3])
 
 if __name__ == '__main__': asyncio.run(main())
