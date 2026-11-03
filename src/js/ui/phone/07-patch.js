@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['jevnt3d-031126', '03.11.2026', 'Jevnere 3D på raske skjermer', 'Smoother 3D on fast screens', [
+       ['Båten og verden beveger seg jevnere i 3D på skjermer med høy oppdateringsfrekvens, også i Firefox.', 'The boat and the world move more smoothly in 3D on high refresh rate screens, in Firefox too.'],
+       ['Spiller du i Firefox eller Opera på Android, viser innlastingen et lite kort om at spillet går jevnest i Chrome.', 'If you play in Firefox or Opera on Android, the loading screen shows a small card saying the game runs smoothest in Chrome.'],
+    ]],
     ['lavgrafikk-031126', '03.11.2026', 'Lav grafikk på store skjermer', 'Low graphics on big screens', [
        ['På laveste 3D-nivå tegnes bildet i høyst rundt full HD og strekkes til skjermen, så store skjermer med svakt skjermkort får flere bilder i sekundet. Mindre skjermer og de andre nivåene er som før.', 'At the lowest 3D level the picture is drawn at about full HD at most and stretched to the screen, so big screens on a weak graphics card get more frames a second. Smaller screens and the other levels are as before.']]],
     ['skrog-311026', '03.11.2026', 'Båtene i sjøen og lyset om natta', 'The boats in the sea and the lights at night', [
