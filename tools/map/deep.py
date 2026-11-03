@@ -14,9 +14,15 @@ import os, sys, json, time, zipfile, numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import frame
 C = 1.0   # km
-GEBCO_URLS = ['https://www.bodc.ac.uk/data/open_download/gebco/gebco_2025/geotiff/',
+# where GEBCO 2025 is looked for: GEBCO's pages (the links to BODC's downloads) and Source Cooperative's cloud-optimised copy (its STAC
+# catalogue); the links found are printed and tried in turn, a .tif read over HTTP ranges, a .zip downloaded whole
+GEBCO_PAGES = ['https://www.gebco.net/data-products-gridded-bathymetry-data/gebco2025-grid', 'https://www.gebco.net/data-products/historical-data-sets',
+               'https://www.gebco.net/gebco2025-grid', 'https://data.source.coop/cboettig/high-seas/gebco-2025/stac-collection.json',
+               'https://data.source.coop/cboettig/high-seas/README.md']
+GEBCO_URLS = ['https://www.bodc.ac.uk/data/open_download/gebco/gebco_2025/geotiff/', 'https://www.bodc.ac.uk/data/open_download/gebco/gebco_2025/zip/',
               'https://www.bodc.ac.uk/data/open_download/gebco/gebco_2025_sub_ice_topo/geotiff/']
 GEBCO_TILES = {-90: 'n90.0_s0.0_w-90.0_e0.0', 0: 'n90.0_s0.0_w0.0_e90.0'}   # west edge -> the name's part; 240 pixels a degree
+BOX = (-57.0, 52.5, 86.0, 85.0)   # lon/lat round frame.WIDE
 GD = os.path.join(HERE, 'out', 'gebco')
 
 def cells():
@@ -34,39 +40,62 @@ def mean9(h, shape):
     ny, nx = shape; d = np.clip(-h, 0, None).reshape(ny, 3, nx, 3).mean(axis=(1, 3)); land = (h > 0).reshape(ny, 3, nx, 3).sum(axis=(1, 3)) >= 5
     return np.where(land, 0, d).astype(np.float32)
 
-def gebco_fetch():
-    import requests, tifffile
-    os.makedirs(GD, exist_ok=True); z = os.path.join(GD, 'gebco.zip'); used = None
-    for u in GEBCO_URLS:
+def gebco_links():
+    import re, requests
+    found = []
+    for p in GEBCO_PAGES:
         try:
+            r = requests.get(p, timeout=60); print('page', p, r.status_code, len(r.text), flush=True)
+            if r.status_code != 200: continue
+            base = p.rsplit('/', 1)[0] + '/'
+            for h in re.findall(r'(?:href|"href")\s*[=:]\s*"([^"]+)"', r.text) + re.findall(r'(https?://[^\s"'<>)]+)', r.text):
+                if not h.startswith('http'): h = (requests.compat.urljoin(p, h))
+                if re.search(r'gebco.?2025', h, re.I) and not re.search(r'tid|\.(png|jpe?g|pdf|html?)$', h, re.I): found.append(h)
+        except Exception as e: print('page failed', p, repr(e)[:200], flush=True)
+    found = list(dict.fromkeys(found)); print('links', json.dumps(found, indent=0), flush=True)
+    tif = [h for h in found if h.lower().endswith(('.tif', '.tiff'))]; dl = [h for h in found if 'open_download' in h or h.lower().endswith('.zip')]
+    return tif + dl + [u for u in GEBCO_URLS if u not in dl]
+
+# a source as {west edge: (reader of rows r0..r1 and cols, pixels a degree, north edge)}
+def gebco_open():
+    import requests, rasterio
+    from rasterio.windows import from_bounds
+    os.makedirs(GD, exist_ok=True)
+    for u in gebco_links():
+        try:
+            if u.lower().endswith(('.tif', '.tiff')):   # cloud-optimised: only the window
+                ds = rasterio.open('/vsicurl/' + u); print('cog', u, ds.width, ds.height, ds.bounds, ds.dtypes, flush=True)
+                w = from_bounds(BOX[0], BOX[1], BOX[2], BOX[3], ds.transform).round_offsets().round_lengths()
+                A = ds.read(1, window=w); t = ds.window_transform(w); print('read', A.shape, flush=True)
+                return [(A, t)], u
+            z = os.path.join(GD, 'gebco.zip')
             with requests.get(u, stream=True, timeout=600) as r:
                 print(u, r.status_code, r.headers.get('content-type'), r.headers.get('content-length'), flush=True)
-                if r.status_code != 200: continue
+                if r.status_code != 200 or 'html' in (r.headers.get('content-type') or ''): continue
                 with open(z + '.part', 'wb') as o:
                     for c in r.iter_content(1 << 22): o.write(c)
-            os.replace(z + '.part', z); zipfile.ZipFile(z).namelist(); used = u; break
+            os.replace(z + '.part', z); zf = zipfile.ZipFile(z); names = zf.namelist(); print('zip', os.path.getsize(z), names, flush=True); out = []
+            for part in GEBCO_TILES.values():
+                m = [n for n in names if part in n and n.lower().endswith(('.tif', '.tiff'))]
+                if not m: break
+                f = zf.extract(m[0], GD); ds = rasterio.open(f); w = from_bounds(max(BOX[0], ds.bounds.left), BOX[1], min(BOX[2], ds.bounds.right), BOX[3], ds.transform).round_offsets().round_lengths()
+                out.append((ds.read(1, window=w), ds.window_transform(w)))
+            os.remove(z)
+            if len(out) == 2: return out, u
         except Exception as e: print('failed', u, repr(e)[:300], flush=True)
-    if not used: sys.exit('GEBCO 2025 could not be fetched from ' + ', '.join(GEBCO_URLS))
-    zf = zipfile.ZipFile(z); names = zf.namelist(); print('zip', os.path.getsize(z), names, flush=True); T = {}
-    for w, part in GEBCO_TILES.items():
-        m = [n for n in names if part in n and n.lower().endswith(('.tif', '.tiff'))]; assert m, part
-        f = zf.extract(m[0], GD); T[w] = tifffile.memmap(f) if tifffile.TiffFile(f).pages[0].is_memmappable else tifffile.imread(f)
-        print('tile', w, m[0], T[w].shape, T[w].dtype, flush=True)
-    os.remove(z)
-    return T, used
+    sys.exit('GEBCO 2025 was not found')
 
 def gebco_layer():
-    T, used = gebco_fetch(); x0, y0, nx, ny = cells(); D = np.zeros((ny, nx), np.float32); t0 = time.time()
+    T, used = gebco_open(); x0, y0, nx, ny = cells(); D = np.zeros((ny, nx), np.float32); t0 = time.time()
     for j0 in range(0, ny, 100):
         j1 = min(ny, j0 + 100); (lon, lat), sh = band_ll(j0, j1); lon = lon.ravel(); lat = lat.ravel(); h = np.zeros(lon.size, np.float32)
-        for w, A in T.items():
-            n = A.shape[0] / 90.0; m = (lon >= w) & (lon < w + 90)
-            r = np.clip(((90 - lat[m]) * n).astype(int), 0, A.shape[0] - 1); c = np.clip(((lon[m] - w) * n).astype(int), 0, A.shape[1] - 1)
-            h[m] = A[r, c]
+        for A, t in T:
+            c = np.floor((lon - t.c) / t.a).astype(int); r = np.floor((lat - t.f) / t.e).astype(int); m = (c >= 0) & (r >= 0) & (c < A.shape[1]) & (r < A.shape[0])
+            h[m] = A[r[m], c[m]]
         D[j0:j1] = mean9(h, sh)
-        print('rows', j0, j1, 'deepest', int(D[j0:j1].max()), round(time.time() - t0), 's', flush=True)
+        if j0 % 500 == 0: print('rows', j0, j1, 'deepest', int(D[j0:j1].max()), round(time.time() - t0), 's', flush=True)
     np.savez_compressed(os.path.join(GD, 'gebco1k.npz'), d=D, src=np.array('GEBCO 2025 Grid (GEBCO Compilation Group 2025), ' + used))
-    print(json.dumps({'cells': [nx, ny], 'sea': int((D > 0).sum()), 'deepest': float(D.max()), 'over500m': int((D >= 500).sum())}))
+    print(json.dumps({'cells': [nx, ny], 'sea': int((D > 0).sum()), 'deepest': float(D.max()), 'over500m': int((D >= 500).sum()), 'src': used}))
 
 # the stand-in: Terrarium z8 (ETOPO1 offshore)
 def terrarium_layer():
