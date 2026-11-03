@@ -54,6 +54,9 @@ export default function (t){
     const Ld = K.havLand(LS, Ltr), pl = D.p[Ld.pi], end = Ld.Wd.RR.pts[Ld.Wd.RR.pts.length - 1], hm = Ld.Wh.R.pts[Ld.Wh.R.pts.length - 1], home = D.p[LS.pi];
     t.ok(seq2.join(',').includes('out,fishing,in:go,port:land,in'), `en tur med levering ved ${pl[0]} (hjemme ${home[0]}): ${seq2.join(' → ')}`);
     t.ok(Math.hypot(end.x - pl[1], end.y - pl[2]) < 0.01 && Math.hypot(hm.x - home[1], hm.y - home[2]) < 0.01 && LS.land >= 4 && LS.land <= 8, `leia ender ved leveringsmottaket, hjemturen ved hjemmemottaket, ${LS.land.toFixed(1)} timer ved kai`);
+    // the visitors at the plant: she is among those lying there while she lands, and not before she comes
+    let inV = 0, before = 0; for (let h = 0; h < LS.C * 24; h += 0.5){ const a = K.havState(LS, H1 + h, {x:-1e6, y:-1e6}), v = K.havVisitors(Ld.pi, H1 + h).includes(LS); if (a.lev === 'land' && v) inV++; if (a.lev !== 'land' && v) before++; }
+    t.ok(inV > 0 && before === 0, `ved leveringsmottaket står hun blant de besøkende bare mens hun leverer (${inV} halvtimer)`);
     const share = D.ships.reduce((a, q) => { for (let k = 0; k < 30; k++){ const r = K.havTrip(q, k); if (r && r.e[1] != null){ a.n++; if (K.havLand(q, r)) a.l++; } } return a; }, {n:0, l:0});
     t.ok(share.l > share.n * 0.2, `${share.l} av ${share.n} turer leverer ved et annet mottak enn hjemmemottaket`);
   } else t.ok(false, 'en tur som leverer borte finnes');

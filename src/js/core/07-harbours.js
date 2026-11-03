@@ -148,6 +148,7 @@ function npcBerths(group, p, boats, R = 0.6){
       break;
     }
   }
+  if (NPCB.size > 2000) NPCB.clear();   // (the ocean fleet's visitors make a group per set of ships at a plant, 05d-hav.js havBerth)
   NPCB.set(group, {ver, v}); return v;
 }
 // The way in: waypoints from open water to the harbour point, outermost first. Found breadth-first through the water cells of the

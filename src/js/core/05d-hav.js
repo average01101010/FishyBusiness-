@@ -61,12 +61,27 @@ function havLeg(a, b){
     W = {R:prepRoute(pts)}; }
   if (HAV.way.size > 600) HAV.way.clear(); HAV.way.set(key, W); return W;
 }
-// the berths of a plant's ships (npcBerths: a face that stands in 3D and fits, off the plant's own berths): her own ships, then the
-// ships that may come to land there (the same list whatever the hour, so a berth stays where it is)
-function havBerth(s, pi){
-  const D = havData(); if (pi == null) pi = s.pi; const pl = D.p[pi], mates = (D.byPlant.get(pi) || []).concat(D.visit.get(pi) || []).map(q => ({key:q.id, L:q.L, B:q.B, T:q.T}));
+// the berths of a plant's ships (npcBerths: a face that stands in 3D and fits, off the plant's own berths): at home her plant's own
+// ships; at a plant she lands at (H, the hour), its own ships first and then the visitors lying there now, in the order they came, so
+// a ship keeps her berth while she lies there unless one who came before her leaves
+function havBerth(s, pi, H){
+  const D = havData(); if (pi == null) pi = s.pi; const pl = D.p[pi]; let grp = 'hav:' + pl[0], ships = D.byPlant.get(pi) || [];
+  if (pi !== s.pi){ const v = havVisitors(pi, H); ships = ships.concat(v); grp += ':' + v.map(q => q.id).join(','); }
+  const mates = ships.map(q => ({key:q.id, L:q.L, B:q.B, T:q.T}));
   // (the land round the quays not loaded yet, a moment after a jump: no berth this time, she is not shown until it is)
-  try { return npcBerths('hav:' + pl[0], {x:pl[1], y:pl[2]}, mates, 1.5)[s.id] || null; } catch (e){ if (/not loaded/.test(e.message)) return null; throw e; }
+  try { return npcBerths(grp, {x:pl[1], y:pl[2]}, mates, 1.5)[s.id] || null; } catch (e){ if (/not loaded/.test(e.message)) return null; throw e; }
+}
+// the ships lying at plant pi at hour H to land their catch, the first come first (kept per plant and minute)
+const HAVVIS = new Map();
+function havVisitors(pi, H){
+  const D = havData(), key = pi + '|' + Math.floor(H * 60); let out = HAVVIS.get(key); if (out) return out; out = [];
+  for (const s of D.visit.get(pi) || []){
+    const t = H / 24 + s.ph, k = Math.floor(t / s.C), e = t - k * s.C; if (e < s.port) continue;
+    const tr = havTrip(s, k); if (!tr || tr.e[1] == null || tr.e[5] !== pi) continue; const Ld = havLand(s, tr); if (!Ld) continue;
+    const v = s.kn * NM, steam = havWay(s, tr.gi).R.len / v, F = s.trip * 24 - steam - Ld.back - s.land - Ld.home, arr = (e - s.port) * 24 - steam - F - Ld.back;
+    if (arr >= 0 && arr < s.land) out.push([arr, s]); }
+  out = out.sort((a, b) => b[0] - a[0] || a[1].i - b[1].i).map(q => q[1]);   // (longest there first)
+  if (HAVVIS.size > 200) HAVVIS.clear(); HAVVIS.set(key, out); return out;
 }
 // the landing of a trip (task 2, 03.11.2026): the plant the ground's catch goes to (havflaate.py: the nearest along the fairways that
 // takes the gear and has a quay for her), the ways there and home, and the hours at the quay; null when she lands at home, or when the
@@ -137,7 +152,7 @@ function havState(s, H, near){
     if (b < Ld.back + s.land){ const pl = havData().p[Ld.pi];
       // (her berth only when the plant is within reach of the one asking: its quays and land are loaded only there)
       if (near && Math.hypot(pl[1] - near.x, pl[2] - near.y) > AIS_KM + 2) return {hidden:true, st:'port', lev:'land', at:Ld.pi};
-      const m = havBerth(s, Ld.pi); return m ? {p:m.p, hd:m.hd, st:'port', face:m.face, lev:'land', at:Ld.pi} : {hidden:true, st:'port', lev:'land', at:Ld.pi}; }
+      const m = havBerth(s, Ld.pi, H); return m ? {p:m.p, hd:m.hd, st:'port', face:m.face, lev:'land', at:Ld.pi} : {hidden:true, st:'port', lev:'land', at:Ld.pi}; }
     const a = atRoute(Ld.Wh.R, Math.min(Ld.Wh.R.len, (b - Ld.back - s.land) * v)); return {p:a.p, hd:a.hd, st:'in'};
   }
   const F = Math.max(0, Th - 2 * steam);
