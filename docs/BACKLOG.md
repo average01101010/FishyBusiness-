@@ -194,6 +194,13 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
 
+## Strøket 03.11.2026 (havsteget H1b R1, ccr-f23363d4-rx3fvy, ikke rullet ut)
+
+- `harbourtest` rød på Finnsnes: testen forventet båten en halv bredde fra den gamle kaifronten, men kaia bygges ut til båten (`quayOut`). Testen er rettet (80a772e).
+- `vesseltest` rød på `03d-quota.js:301`: `sp === 'snokrabbe'` sammenlignet en art med samme navn som en båttype. Det er nå et oppslag i tabellen `HAVF_SP` (6e116a2).
+- `sidetab` rød i liggende format: lista ble målt mens den fortsatt gled ut. Testen venter nå til den står stille (943aa46).
+- `autonavtest`, `npctest` og `havflaate` er grønne med hele kysten (kart-28). De er bare røde uten den, som `testing.md` sier.
+
 ## Strøket 03.11.2026 (havflåten og havsteget H0, ccr-6829f3d4-kl3gp4, rullet ut 595de50)
 
 - Nota og snurrevaden i 3D for havflåten (ad65c37), levering ved mottaket som tar fangsten (50ba30a, 836aafa), garnet og lina under vann (3064ac9), havfiskefartøyene jukser ikke (08125db).
