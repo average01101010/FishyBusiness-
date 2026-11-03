@@ -284,9 +284,14 @@ Hvert valg har en anbefaling og én setning om hvorfor.
   - **Havmottak:** 11 nye havner bare for havflåten.
   - **Regelen:** et havfiskefartøy legger til og leverer bare der kaia passer og mottaket tar redskapet.
   - **Prisene:** sild, makrell og snøkrabbe har fått prisene fra sedlene for 2025.
-  - **Ikke gjort:**
-    - Egen pris for fryst fisk er et spørsmål til Jonas, fordi det brøt en avtale.
-    - Mannskapet som lag er flyttet til H7 (valg V5).
-    - Kystvaktas havsjekker er flyttet til H1.
-    - Rypefjord og Fiskarstrand øst venter på at butikken og verftet flyttes.
-  - Se 4.18c i `havner-og-mottak.md`. Neste: H1, som venter på valgene V1–V6.
+  - **Etter Jonas' svar samme dag:**
+    - «Prisene skal reflektere virkeligheten»: torsk, hyse og sei fryst om bord selges etter sedlenes pris for sjøfryst fisk (`pmF`, 5.4 i `priser-og-salg.md`).
+    - «Rypefjord og fiskarstrand øst må også ha mottak for havflåten. Flytt om så butikken eller verftet»: butikken i Rypefjord (559 m) og verftet ved Fiskarstrand (1,2 km) er flyttet med `tools/steder/havflytt.py`. Det er nå 13 havner bare for havflåten.
+    - «Ja» til utrulling: rullet ut 03.11.2026 (595de50), med Hetzner og Pages grønne.
+  - **Flyttet til senere faser:** mannskapet som lag til H7 (valg V5), og Kystvaktas havsjekker til H1.
+  - **Tester:**
+    - Kjernetestene: 593 OK.
+    - Grønne: `keeptest`, `stedertest`, `placetest`, `shoptest`, `docktest`, `starttest`, `seasontest`, `trip2` og `selltest`.
+    - Stikkprøven og skjermbilder i begge formater: Båtsfjord, Tromsdalen, Melbu, Måløy, Selje, Skudeneshavn, Kristiansand, Rypefjord og Fiskarstrand øst.
+  - Se 4.18c i `havner-og-mottak.md`.
+  - **Neste:** H1 i en ny økt, når valgene V1–V6 er tatt.
