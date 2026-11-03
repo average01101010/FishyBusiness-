@@ -32,7 +32,7 @@
 
   | | Lav | Middels | Høy | Ultra |
   |---|---|---|---|---|
-  | Største `dpr` | 1 | 1,25 | 1,5 | 3 (skjermens egne) |
+  | Største `dpr` | 1, og høyst 2,1 millioner piksler (`px0`, rundt full HD; 03.11.2026, fra grenen `claude/admiring-cray-otunlz`: Iris Xe på 3440 × 1440 holdt 17 bilder/s) | 1,25 | 1,5 | 3 (skjermens egne) |
   | Nærterreng (nær / langt kamera) | 3 / 6 km | 6 / 12 km | 6 / 12 km | 9 / 18 km |
   | Punkter per side: nær / midt / fjern | 256 / 256 / 255 | 256 / 256 / 255 | 256 / 256 / 255 | 384 / 384 / 511 |
   | Finbakken (1 km rundt båten) | 768 m, 192 | 1024 m, 256 | 1024 m, 256 | 1024 m, 384 (2,7 m) |

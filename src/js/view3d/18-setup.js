@@ -183,7 +183,7 @@
   // layer stays for the crew's lines and the anchor alarm)
   function buildLabels(){ labelsEl.innerHTML = ''; labelEls = []; }
   function resize(){
-    const r = wrap.getBoundingClientRect(), dpr = PROF.dpr ? Math.min(window.devicePixelRatio || 1, PROF.dpr) : Math.min(window.devicePixelRatio || 1, QUAL.dpr[QUAL.lvl]);
+    const r = wrap.getBoundingClientRect(), dpr = PROF.dpr ? Math.min(window.devicePixelRatio || 1, PROF.dpr) : Math.min(window.devicePixelRatio || 1, QUAL.dpr[QUAL.lvl], QUAL.lvl ? 9 : Math.sqrt(QUAL.px0 / Math.max(1, r.width * r.height)));
     const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
     if (canvas.width !== w || canvas.height !== h){ canvas.width = w; canvas.height = h; }
   }

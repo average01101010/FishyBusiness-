@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['lavgrafikk-031126', '03.11.2026', 'Lav grafikk på store skjermer', 'Low graphics on big screens', [
+       ['På laveste 3D-nivå tegnes bildet i høyst rundt full HD og strekkes til skjermen, så store skjermer med svakt skjermkort får flere bilder i sekundet. Mindre skjermer og de andre nivåene er som før.', 'At the lowest 3D level the picture is drawn at about full HD at most and stretched to the screen, so big screens on a weak graphics card get more frames a second. Smaller screens and the other levels are as before.']]],
     ['skrog-311026', '03.11.2026', 'Båtene i sjøen og lyset om natta', 'The boats in the sea and the lights at night', [
        ['Blank maling speiler nå himmelen: skrogsiden viser horisonten og himmelens farger, skarpt i fersk lakk og mykt i matt maling, og bunnstoffet speiler nesten ingenting.', 'Glossy paint now mirrors the sky: the hull side shows the horizon and the sky\'s colours, sharp in fresh lacquer and soft in dull paint, and the bottom paint hardly mirrors at all.'],
        ['Skroget blir vått der sjøen har vært: når båten ruller og stamper, er siden over vannlinja mørk og blank en stund før den tørker, og baugbølgen væter stevnen under fart.', 'The hull gets wet where the sea has been: when the boat rolls and pitches, the side above the waterline is dark and glossy for a while before it dries, and the bow wave wets the stem under way.'],
