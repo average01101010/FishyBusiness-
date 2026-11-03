@@ -260,7 +260,7 @@ Jonas valgte V1 B 03.11.2026 (`docs/planer/havsteget-h1b-rammen.md`): rammen ska
     - tidene i driftsplanen (`roughH`, `plan2LegH`, `legMin`) og turoppdragene (`turNm`)
   - **På kysten** endres tidene med 0,03 % på Senja og høyst 0,4 % ved Grense Jakobselv.
   - **Ikke regnet om:**
-    - Ekkoloddets og sonarens radius (`12-heat.js`) og andre radier på under 2 nm står i rutenett-km. Der er feilen høyst 4 % av en radius, ved Island.
+    - Små radier på under 2 nm (fangstmerkene og turoppdragenes ringer) står i rutenett-km. Der er feilen høyst 4 % av en radius, ved Island. Ekkoloddets og sonarens rekkevidde (`12-heat.js`) er regnet om.
     - NPC-kystflåten, ferjene og hurtigbåtene, som bare går der k er 0,9996–1,0042.
 - **Projeksjonen** er sjekket mot PROJ ut til 43° fra midtmeridianen: 17 punkter i havfeltene i `tests/proj_ref.json` (`tools/map/projref.py`), innen 0,006 mm, γ innen 1e-9° og k innen 1e-10. `kmTrue` er innen 0,05 % av Vincenty på ellipsoiden i Danmarkstredet, Petsjorahavet og på Senja (`tests/unit/rammen.test.mjs`).
 - **Ikke ennå:**
