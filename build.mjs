@@ -35,7 +35,11 @@ function expand(file, stack = []){
     (_, jsonPath, path) => expand(jsonPath || path, [...stack, file]).replace(/\n$/, ''));
 }
 
-const html = expand('index.html');
+// KYST_DEMO=1 (M9, docs/planer/butikker-og-sponsorer.md 4.6): the demo build for a prospective partner, with the made-up test sponsor
+// «Nordlys Utstyr» on from the start (as #sptest), so every format can be shown on the tablet. Never the game's own build; put it in a
+// folder of its own (KYST_DIST=dist-demo)
+const DEMO = process.env.KYST_DEMO === '1';
+const html = expand('index.html').replace('/*@demo*/false', DEMO ? 'true' : 'false');
 // every script must compile as a whole: the core and UI files share one script, so a name declared twice at the top level
 // (which node --check on each file cannot see) stops the page. Here it stops the build instead.
 for (const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g)){
@@ -100,7 +104,9 @@ if (PWA){
 { const A = join(SRC, 'admin');
   if (existsSync(A)){ mkdirSync(join(DIST, 'admin'), {recursive:true});
     const cfg = readFileSync(join(SRC, 'data', 'cloud.json'), 'utf8').trim();
-    writeFileSync(join(DIST, 'admin', 'index.html'), readFileSync(join(A, 'index.html'), 'utf8').replace('/*@cloud*/null', cfg)); } }
+    // the ports' names and parts of the coast for the media card (src/data/port-regions.json, written by tests/unit/regions.test.mjs)
+    const reg = existsSync(join(SRC, 'data', 'port-regions.json')) ? readFileSync(join(SRC, 'data', 'port-regions.json'), 'utf8').trim() : 'null';
+    writeFileSync(join(DIST, 'admin', 'index.html'), readFileSync(join(A, 'index.html'), 'utf8').replace('/*@cloud*/null', cfg).replace('/*@regions*/null', reg)); } }
 // the privacy and terms pages (docs/lansering.md D) next to the game, as the sign-in and the consent link them (personvern.html,
 // vilkar.html), each with the shared style put in
 { const L = join(SRC, 'legal');

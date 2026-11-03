@@ -1,12 +1,14 @@
 // ===== Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
 // handbook's page. Marked «Samarbeid» everywhere (mfl. § 3); a sponsored item is sold beside the generic one, at the same price and with
 // the same numbers, and is the same EQUIP item with a name on it. Nothing sponsored at sea, in the chart plotter, in the HUD or in push. =====
+// the demo build (KYST_DEMO=1 node build.mjs, M9) turns the test sponsor on from the start; build.mjs puts true in its place
+const SP_DEMO = /*@demo*/false;
 var SPUI = (() => {
   const L = (no, en) => S.lang === 'en' ? en : no, esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
   let tm = 0;
   // the list: the test sponsor with #sptest (tests, demo), else the cloud's sp_now() now and every hour; quietly nothing without it
   function load(){
-    if (/sptest/.test(location.hash || '')){ spSet(SP_TEST); gifts(); return; }
+    if (SP_DEMO || /sptest/.test(location.hash || '')){ spSet(SP_TEST); gifts(); return; }
     if (typeof cloudRpc !== 'function' || typeof CLOUD_CFG === 'undefined' || !CLOUD_CFG || !CLOUD_CFG.supabaseUrl) return;
     cloudRpc('sp_now', {}, {anon:true}).then(r => { spSet(r); gifts(); }).catch(() => {});
   }

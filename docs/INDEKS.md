@@ -59,6 +59,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `docs/planer/grafikk-natur-og-miljo.md` | Grafikk: natur, miljø og omgivelser (plan 28.10.2026): de offentlige kartdataene vi kan ta inn (arealdekket, innsjøer og elver, Sentinel-2, SR16-skogen, vindturbiner og kraftspenn; ikke oppdrettsanlegg) og løftene i lys og luft (tonemapping, luftperspektiv, skybase, vått), i ni faser G1–G9. Vedtatt 28.10.2026, valgene tatt av økta. |
 | `docs/planer/npc-flaaten.md` | NPC-flåten for hele landet (plan 28.10.2026): fiskeflåten fra Fiskeridirektoratets register, sluttsedler og fiskeplasser, oppførsel etter redskap og sesong, ferjer, kystruta, hurtigbåter, skipsfart, fritidsbåter, modellene og vikeplikten, i åtte faser N1–N8. Venter på valgene. |
 | `docs/planer/butikker-og-sponsorer.md` | Butikker, markeder og sponsorer (plan 30.10.2026): slik butikkene er i dag, psykologien som passer og ikke passer, ett felles varekort, Båthandelen som bruktmarked med takst og kommisjonssalg, de åtte sponsorformatene (vare, skilt, hendelse, Kystposten, klær, megler, gave, lenke), måling etter IAB, det juridiske (merking, personvern, regelen om ekte navn), teknisk design og fasene M1–M9. Venter på valgene V1–V8. |
+- `docs/sponsor/mediekort.md`: dokumentet til mulige samarbeidspartnere (M9), med tallene fra admin → Mediekort og demobygget.
 | `docs/forslag.md` | Forslagslista fra 13.10.2026 (dybde og sjel). |
 | `docs/slagplan.md` | Slagplanen fra 05.10.2026 med status. |
 | `docs/batplan.md` | Planen for båtene og stigen. |

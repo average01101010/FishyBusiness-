@@ -2043,12 +2043,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (918 linjer)
+## `src/js/ui/phone/07-patch.js` (921 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 911 `patch()`
+  - 914 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
 
@@ -2708,7 +2708,7 @@ The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the to
 
 - **1** The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the top and the end of the purchase
 
-## `src/js/ui/10r-sponsor.js` (52 linjer)
+## `src/js/ui/10r-sponsor.js` (54 linjer)
 
 Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
 
@@ -2871,7 +2871,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 1230 `lanterns(G, V, st)`
   - 1264 `deckPoints(type)`
 
-## `src/js/deckcrew.js` (471 linjer)
+## `src/js/deckcrew.js` (470 linjer)
 
 - **2** CREW3D: the people aboard as agents who walk the deck (docs/mannskap-plan.md, del 1; Jonas 17.10.2026: no teleporting)
   - 14 `crewSim(src)`
@@ -2880,12 +2880,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **125** what the game says: everyone's station this minute, and the boat's state
 - **175** a free person: something to do for a while, by the weather, the hour and their nature
 - **181** no limb through a wall, the rail or anything else (Jonas 23.10.2026: «Sørg også for at mannskapet aldri "clipper" gjennom vegger,
-- **273** the work at its place, clear of everything: at the rail the hands go to the rail's own top (a step back when it is close), at the
-- **288** a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre)
-- **300** the agents follow the people aboard
-- **415** the body on its way, clear of everything: the shoulders and the chest and back as upright lines; one that would go through a wall
-- **435** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
-  - 465 `npcCrewCtx(n, G)`
+- **272** the work at its place, clear of everything: at the rail the hands go to the rail's own top (a step back when it is close), at the
+- **287** a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre)
+- **299** the agents follow the people aboard
+- **414** the body on its way, clear of everything: the shoulders and the chest and back as upright lines; one that would go through a wall
+- **434** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
+  - 464 `npcCrewCtx(n, G)`
 
 ## `src/js/view3d/00-head.js` (119 linjer)
 
