@@ -23,6 +23,7 @@ ALLOW = re.compile(r'^(src/js/|src/styles\.css$|tests/|docs/)')
 DENY = re.compile(r'^(src/js/errtrap\.js|src/js/ui/10f-cloud\.js|src/js/ui/10i-shop\.js|src/js/ui/10q-buymoment\.js|src/js/ui/10g-push\.js|'
                   r'src/js/ui/06e-feedback\.js|src/js/lib/|tests/_env\.py|tests/run\.py|tests/unit/run\.mjs|docs/systemer/tilbakemelding-og-admin\.md)')
 MAX_LINES, MAX_FILES = 400, 15
+RETRY = 2   # how many times a test red with the fix, green without, is run again alone before it stops the fix
 BAD = [(re.compile(r'https?://(?!(www\.)?detstorebla\.no\b)', re.I), 'en adresse til en annen vert'),
        (re.compile(r'\beval\s*\(|\bnew\s+Function\b|\bFunction\s*\(\s*[\'"`]|\bimport\s*\('), 'tekst som kjøres som kode'),
        (re.compile(r'document\.cookie|sendBeacon|\bWebSocket\b|new\s+(Shared)?Worker\b|document\.write\b|\bsetTimeout\s*\(\s*[\'"`]'), 'noe en retting av spillet ikke trenger'),
@@ -105,14 +106,25 @@ def main():
                 base, _ = run_tests(base_dir, on_base); R['tests']['base'] = base
             finally:
                 subprocess.run(['git', 'worktree', 'remove', '--force', base_dir], cwd=ROOT, capture_output=True)
+            # a test red with the fix and green without is run again, alone, up to RETRY times (03.11.2026: tabtest went red at random
+            # on the working branch too, 3 of 5 runs, and stopped PR #39, a right fix): green once is a test that is not steady, and the
+            # fix goes on; red every time is the fix. The runs are in the result (tests.retry).
+            R['tests']['retry'] = {}
             for n in names:
                 if mine.get(n) == 'FEIL' and (n not in base or base.get(n) != 'FEIL'):
-                    R['why'].append('testen %s er rød med rettingen%s' % (n, '' if n not in base else ', grønn uten'))
+                    again = []
+                    for _ in range(RETRY):
+                        r, _l = run_tests(ROOT, [n]); again.append(r.get(n)); 
+                        if r.get(n) in ('OK', 'LES'): break
+                    R['tests']['retry'][n] = again
+                    if again and again[-1] in ('OK', 'LES'): R['tests'].setdefault('flaky', []).append(n); continue
+                    R['why'].append('testen %s er rød med rettingen%s, også %d ganger til alene' % (n, '' if n not in base else ', grønn uten', len(again)))
                 if n not in mine: R['why'].append('testen %s ga ikke noe svar' % n)
             R['tests']['log'] = log
     R['ok'] = not R['why']
     print(('SLIPPES UT' if R['ok'] else 'STOPPET') + ': ' + ('; '.join(R['why']) or 'filene, størrelsen, koden og testene holder'))
     for l in R['bad'][:20]: print('  ' + l)
+    if R['tests'].get('flaky'): print('ustabile (røde én gang, grønne alene etterpå):', ', '.join(R['tests']['flaky']))
     if 'pr' in R['tests']: print('tester:', json.dumps({n: [R['tests']['pr'].get(n), R['tests'].get('base', {}).get(n)] for n in R['tests']['names']}, ensure_ascii=False))
     if a.out: json.dump(R, open(a.out, 'w'), ensure_ascii=False, indent=1)
     sys.exit(0 if R['ok'] else 1)
