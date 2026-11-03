@@ -150,6 +150,13 @@ function gearSvg(u){
     g.push('<line x1="' + s.a.x + '" y1="' + s.a.y + '" x2="' + s.b.x + '" y2="' + s.b.y + '" class="gline peer" stroke="#8d9aa3" stroke-width="' + (1.8 * u) + '"' + dash + '/>');
     for (const e of [s.a, s.b]) g.push('<circle cx="' + e.x + '" cy="' + e.y + '" r="' + (3.2 * u) + '" class="buoy peer" fill="#a9b4bb" stroke-width="' + (1.1 * u) + '"/>');
   }
+  // the coast boats' and the ocean fleet's nets, lines and pots (NPCGEAR, 05-vessels.js, 05d-hav.js): in the grey of the others' sets,
+  // with no name (Jonas 02.11.2026: a tap on a buoy tells whose it is, otherGearCard)
+  for (const s of NPCGEAR){
+    const dash = s.k === 'line' ? ' stroke-dasharray="' + (5 * u) + ' ' + (3 * u) + '"' : s.k === 'teine' ? ' stroke-dasharray="' + (1.5 * u) + ' ' + (3 * u) + '"' : '';
+    g.push('<line x1="' + s.a.x + '" y1="' + s.a.y + '" x2="' + s.b.x + '" y2="' + s.b.y + '" class="gline peer npc" stroke="#7f8f99" stroke-width="' + (1.6 * u) + '"' + dash + '/>');
+    for (const e of [s.a, s.b]) g.push('<circle cx="' + e.x + '" cy="' + e.y + '" r="' + (2.8 * u) + '" class="buoy peer npc" fill="#e0884a" stroke-width="' + (1 * u) + '"/>');
+  }
   for (const s of S.sets || []){
     const st = setState(s), c = SETCOL[s.kind], dash = s.kind === 'line' ? ' stroke-dasharray="' + (5 * u) + ' ' + (3 * u) + '"' : s.kind === 'teine' ? ' stroke-dasharray="' + (1.5 * u) + ' ' + (3 * u) + '"' : '';
     g.push('<line x1="' + s.a.x + '" y1="' + s.a.y + '" x2="' + s.b.x + '" y2="' + s.b.y + '" class="gline ' + st + '" stroke="' + c + '" stroke-width="' + (2.2 * u) + '"' + dash + '/>');
@@ -157,6 +164,18 @@ function gearSvg(u){
     if (view.z > 3 || st === 'due' || st === 'late' || st === 'lost') g.push(txt({x:s.b.x + 6 * u, y:s.b.y - 5 * u}, (s.lost ? '✕ ' : '') + setLabel(s, true) + (S.fleet.length > 1 && s.vid !== S.cur ? ' (' + vget(setVessel(s) || curVessel(), 'boatName') + ')' : ''), 'lbl-gear ' + st, 10 * u, 'stroke-width="' + (3 * u) + '"'));
   }
   return g.join('');
+}
+// a tap on a buoy of someone else's set (the other players', PEERGEAR, and the coast's and ocean fleet's, NPCGEAR): a card with the gear and
+// whose it is (Jonas 02.11.2026: «Trenger ikke å vises navn i kartet, men at man eventuelt kan trykke på fiskeredskapet for mer å få opp
+// info om hvem som eier redskapet»). The other players' owner is their player name and boat as the server gives them (gear_near2)
+function otherGearHit(p, r){ let best = null, bd = r; for (const s of PEERGEAR.concat(NPCGEAR)) for (const e of [s.a, s.b]){ const d = dist(e, p); if (d < bd){ bd = d; best = s; } } return best; }
+function otherGearCard(s){
+  const el = $('aisCard'), G = GEAR[s.k], peer = PEERGEAR.includes(s), m = dist(s.a, s.b) * 1000, me = S.boat && S.boat.pos ? Math.min(dist(s.a, S.boat.pos), dist(s.b, S.boat.pos)) / NM : null;
+  const rows = [[GL('Redskap', 'Gear'), G ? GL(G.no, G.en) : s.k], peer ? [GL('Eier', 'Owner'), s.user || '–'] : [GL('Eier', 'Owner'), GL('Fiskefartøy', 'Fishing vessel')], [GL('Båt', 'Boat'), (peer ? s.boat : s.name) || '–'],
+    [GL('Lengde', 'Length'), m >= 1000 ? fmt(m / 1000, 1) + ' km' : Math.round(m) + ' m']].concat(me == null ? [] : [[GL('Avstand', 'Distance'), fmt(me, 1) + ' nm']]);
+  AISSEL = null; el.innerHTML = '<div class="ai-h"><b>' + (G ? GL(G.no, G.en) : s.k) + '</b><button type="button" id="aisX" aria-label="Lukk">✕</button></div><div class="ai-t">' + (peer ? GL('Spillerens redskap', "A player's gear") : GL('Fiskefartøyets redskap', "A fishing vessel's gear")) + '</div>' +
+    rows.map(r => '<div class="ai-r"><span>' + r[0] + '</span><span>' + pinEsc(r[1]) + '</span></div>').join('');
+  el.hidden = false; $('aisX').onclick = () => { el.hidden = true; };
 }
 function gearHit(p, r){ let best = null, bd = r; for (const s of S.sets || []) for (const e of [s.a, s.b]){ const d = dist(e, p); if (d < bd){ bd = d; best = {s, e}; } } return best; }
 // a point 50 m off the buoy, away from the string, so the boat stops clear of it and within reach of the haul

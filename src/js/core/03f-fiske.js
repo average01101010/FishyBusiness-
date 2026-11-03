@@ -23,7 +23,13 @@
 const FISKE_T = /*@text(data/fiske.json)*/null;
 // the game's species and their name in fiske.json; the ones with their own geography are not here
 const FK_SP = {torsk:'torsk', hyse:'hyse', sei:'sei', lyr:'lyr', lange:'lange', brosme:'brosme', uer:'uer', kveite:'kveite', sild:'sild', makrell:'makrell', snokrabbe:'snokrabbe'};
-const FK = {d:null, n0:20, nb:0.5, mo:0.25, lo:0.03, hi:5, skreiM:5};
+// season: 'av' (the location against Senja in the same month × the old table av) or 'data' (the location against Senja's mean over the
+// year, so the season comes from the notes too, also at Senja; tests/fasit.py measures which agrees better with a year it has not seen)
+// season 'data' and torsk 'data' since 02.11.2026: tests/fasit.py with the game built on the notes of 2024 against 2025 (a year it had
+// not seen) gave, over location × month, cod 0.44 → 0.54, saithe 0.32 → 0.54, pollack 0.45 → 0.62, ling 0.59 → 0.67, tusk 0.39 → 0.57,
+// redfish 0.48 → 0.54, halibut 0.68 → 0.80, haddock 0.44 → 0.47 (Spearman; the ceiling, 2024's notes alone, 0.61-0.82), and through
+// the year saithe -0.25 → 0.84 and cod 0.59 → 0.85 (ceiling 0.75 and 0.93)
+const FK = {d:null, n0:20, nb:0.5, mo:0.25, lo:0.03, hi:5, skreiM:5, season:'data', torsk:'data'};
 function fkData(){
   if (FK.d !== null) return FK.d;
   try { FK.d = typeof FISKE_T === 'string' ? JSON.parse(FISKE_T) : (FISKE_T || false); } catch (e){ FK.d = false; }
@@ -243,9 +249,16 @@ function fkBuild(){
       const B = new Float32Array(NL).fill(NaN), X = new Float32Array(NL).fill(NaN);
       for (let l = 0; l < NL; l++){ const b = summer(m => idx[l * 12 + m]); if (isNaN(b)) continue; let x = 0; for (let m = 0; m < FK.skreiM; m++){ const v = idx[l * 12 + m]; if (!isNaN(v)) x += Math.max(0, v - b); }
         B[l] = clamp(b / rb, FK.lo, FK.hi); X[l] = clamp(x / rx, 0, FK.hi); }
-      af[sp] = {base:B, skrei:X};
+      // the month by month table as for the other species (FK.torsk = 'data' uses it; tests/fasit.py measures it)
+      let rs = 0, rk = 0; for (let m = 0; m < 12; m++) if (R[m] > 0){ rs += R[m]; rk++; } const rm = rk ? rs / rk : 0;
+      if (rm > 0) for (let j = 0; j < NL * 12; j++) if (!isNaN(idx[j])) A[j] = clamp(idx[j] / rm, FK.lo, FK.hi * 2);
+      af[sp] = {base:B, skrei:X, m:A}; FK.rb = rm > 0 ? rb / rm : 0;
     } else {
-      for (let j = 0; j < NL * 12; j++){ const r = R[j % 12]; if (!isNaN(idx[j]) && r > 0) A[j] = clamp(idx[j] / r, FK.lo, FK.hi); }
+      if (FK.season === 'data'){
+        // against Senja's mean over the year, and the old table divided out again (density() multiplies by av)
+        let rs = 0, rk = 0; for (let m = 0; m < 12; m++) if (R[m] > 0){ rs += R[m]; rk++; } const rm = rk ? rs / rk : 0, av = SPECIES[sp].av;
+        if (rm > 0) for (let j = 0; j < NL * 12; j++) if (!isNaN(idx[j])) A[j] = clamp(idx[j] / rm / (av[j % 12] || 1), FK.lo, FK.hi * 2);
+      } else for (let j = 0; j < NL * 12; j++){ const r = R[j % 12]; if (!isNaN(idx[j]) && r > 0) A[j] = clamp(idx[j] / r, FK.lo, FK.hi); }
       // no Senja figure for the species (herring, mackerel, snow crab are not fished there): against the coast's mean instead
       if (!R.some(r => r > 0)){ let s = 0, k = 0; for (let j = 0; j < NL * 12; j++) if (!isNaN(idx[j])){ s += idx[j]; k++; } const mu = k ? s / k : 1;
         for (let j = 0; j < NL * 12; j++) A[j] = isNaN(idx[j]) ? NaN : clamp(idx[j] / mu, 0, FK.hi); }
@@ -274,6 +287,23 @@ function skreiPulse(c, H, T){
 // the spawning stock (T[sp].av and .skrei carry stockF). The cell's location is looked up once per 2 km cell, the month once per hour.
 function fkAvail(sp, q, T){
   const t = T[sp], c = q.c, l = c.l, F = FK.af ? FK.af[sp] : fkBuild() && FK.af[sp];
+  if (sp === 'torsk' && FK.torsk === 'data' && F && F.m && l >= 0){
+    // The cod's level in the location and month is the notes' (against Senja's mean over the year). Within the month it is shared
+    // between the resident coastal cod (the location's summer level, base) and the skrei (what is over it), and the skrei part moves
+    // with the front and the capelin day by day (the pulse against its mean over the month, so the month's level stays the notes'),
+    // stands thicker on the skrei spots (skreiSpot against a mean of about 0.6), and thins with what the fleet has taken (skreiLeft)
+    // and follows the spawning stock (stockF); the coastal cod follows its own stock (kystF).
+    let v = fkAt(F.m, l, T.fk); if (v !== v) v = 1;
+    const bl = F.base[l] === F.base[l] ? F.base[l] * (FK.rb || 0) : v, res = Math.min(v, bl), sk = v - res;
+    if (q.skr < 0) q.skr = skreiSpot(q.p, q.d, q.E);
+    if (T.skl === undefined) T.skl = skreiLeft(T.H);
+    const kk = T.kf || (T.kf = {}), kl = Math.round(c.lat * 5), kf = kk[kl] !== undefined ? kk[kl] : (kk[kl] = kystF(c.lat, T.H));
+    let rel = 1; if (sk > 0){ const pm = T.pm || (T.pm = {}); let mean = pm[kl]; if (mean === undefined){ const d0 = gDate(T.H), y = d0.getUTCFullYear(), mo = d0.getUTCMonth(); mean = 0;
+        for (const day of [3, 10, 17, 24]) mean += skreiPulse(c, (Date.UTC(y, mo, day, 12) - EPOCH) / 3.6e6) / 4; pm[kl] = mean; }
+      rel = clamp(skreiPulse(c, T.H, T) / Math.max(0.05, mean), 0, 3); }
+    const f = t.av / (t.sf || 1);   // the table av is flat for cod, the stock is put on below
+    return f * (res * kf + sk * rel * clamp((0.4 + q.skr) / 1.0, 0, 1.6) * T.skl * (t.sf || 1));
+  }
   if (sp === 'torsk'){
     if (q.skr < 0) q.skr = skreiSpot(q.p, q.d, q.E);
     const b = F && l >= 0 && F.base[l] === F.base[l] ? F.base[l] : 1, x = F && l >= 0 && F.skrei[l] === F.skrei[l] ? F.skrei[l] : 1;

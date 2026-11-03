@@ -214,6 +214,7 @@ body.v3d #aisCard{display:none} .lbl-ais{font-family:var(--sans);font-weight:600
 /* the other players stand out from the coast's own boats (Jonas 07.10.2026): gold, larger, a ring round them and their names early */
 .ais-halo{fill:none;stroke:#f2b33d;opacity:.6} .lbl-ais.pl{fill:#8a5a00;font-weight:700}
 #map.plot .ais.player{fill:#ffc94a;stroke:#fff1b8} #map.plot .ais-halo{stroke:#ffc94a} #map.plot .lbl-ais.pl{fill:#ffd36b}
+.tapname{fill:rgba(16,28,38,.92);stroke:#7fb3cc} .lbl-tapname{font-family:var(--sans);font-weight:600;fill:#f4f7f9}
 .route.unsafe{stroke:#f2b705!important}
 #chartcv{position:absolute;pointer-events:none;display:none} body.vplot #chartcv{display:block}
 #chload{position:absolute;left:50%;top:10px;transform:translateX(-50%);padding:4px 12px;border-radius:12px;background:rgba(8,20,32,.72);color:#e8f0f6;font-size:12px;pointer-events:none;z-index:3;display:none;white-space:nowrap} body.vplot #chload:not([hidden]){display:block} body.vplot #map .sea,body.vplot #map .offmap{fill:transparent!important} 
@@ -224,7 +225,7 @@ body.v3d #aisCard{display:none} .lbl-ais{font-family:var(--sans);font-weight:600
 .depc{fill:none;stroke:var(--water);stroke-width:.7;opacity:.45} .depc.deep{opacity:.22}
 #map.plot .offmap{fill:#05090d} #map.plot .sea{fill:#0b1a2a} #map.plot .land{fill:#262b23;stroke:#6b755c} #map.plot .depc{stroke:#000;opacity:.32} #map.plot .grid{stroke:rgba(255,255,255,.07)}
 #map.plot .lbl-land{fill:#8d9a78} #map.plot .lbl-water{fill:#d7eef7} #map.plot .lbl-port{fill:#f1f5f6;stroke:#0b1a2a} #map.plot .lbl-ground{fill:#e6f6fb;stroke:#0b1a2a} #map .lbl-felt{font-style:italic;opacity:.85} #map.plot .ground{fill:none;stroke:#fff;opacity:.55}
-#map.plot .port{fill:#0b1a2a;stroke:#fff} #map.plot .port.home{fill:#fff} #map.plot .rorbu{fill:#c23a2b;stroke:#fff} #map.plot .havn{fill:#17807d;stroke:#fff} #map.plot .havn-h{fill:#fff} #map.plot .trail{stroke:#fff}
+#map.plot .port{fill:#0b1a2a;stroke:#fff} #map.plot .port.home{fill:#fff} #map.plot .rorbu{fill:#c23a2b;stroke:#fff} #map.plot .havn{fill:#17807d;stroke:#fff} #map.plot .havn-h{fill:#fff} #map.plot .rorbu-p{stroke:#fff} #map.plot .trail{stroke:#fff}
 .phonebtn{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:40px}
 .phonebtn i{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:9px;background:#e0412f;color:#fff;font:700 10px/17px var(--sans);font-style:normal;padding:0 4px}
 #phone{position:fixed;right:18px;bottom:14px;z-index:60;width:min(330px,94vw);height:min(660px,88vh);transform:translateY(0);transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s;filter:drop-shadow(0 18px 40px rgba(0,0,0,.45))}
@@ -433,7 +434,7 @@ body.vplot .attr{display:block!important;left:6px;right:auto}
 .lbl-peak{font-family:var(--sans);font-style:italic;fill:var(--landEdge);paint-order:stroke;stroke:var(--land);stroke-linejoin:round}
 #map.nav .lbl-town{fill:#2c2416;stroke:#e8d7a6} #map.nav .townpt{fill:#2c2416} #map.nav .lbl-peak{fill:#6b5a36;stroke:#e8d7a6}
 #map.plot .lbl-town{fill:#e9eef0;stroke:#262b23} #map.plot .townpt{fill:#e9eef0} #map.plot .lbl-peak{fill:#a5b08f;stroke:#262b23}
-.havn{fill:#17807d;stroke:#fff} .havn-h{fill:#fff} .port{fill:var(--sea);stroke:var(--ink)} .port.home{fill:var(--ink)} .pi{stroke:#fff} .pi-m{fill:#1f6fb2} .pi-b{fill:#d9822b} .pi-v{fill:#2f7d5b} .pi-n{fill:#8a5a3c} .pi-g{fill:#fff} .pi-l{fill:none;stroke:#fff;stroke-linecap:round} .rorbu{fill:#b8382a;stroke:var(--ink)}
+.havn{fill:#17807d;stroke:#fff} .havn-h{fill:#fff} .havn-l{fill:none;stroke:#fff;stroke-linecap:round;stroke-linejoin:round} .rorbu-p{stroke:var(--ink);stroke-linecap:round} .rorbu-d{fill:#fff} .pi-e{fill:#1f6fb2} .port{fill:var(--sea);stroke:var(--ink)} .port.home{fill:var(--ink)} .pi{stroke:#fff} .pi-m{fill:#1f6fb2} .pi-b{fill:#d9822b} .pi-v{fill:#2f7d5b} .pi-n{fill:#8a5a3c} .pi-g{fill:#fff} .pi-l{fill:none;stroke:#fff;stroke-linecap:round} .rorbu{fill:#b8382a;stroke:var(--ink)}
 .ground{fill:rgba(47,109,134,.05);stroke:var(--water);opacity:.7}
 .route{fill:none;stroke:var(--mag);stroke-linecap:round;stroke-linejoin:round}
 .route.bad{stroke:var(--bad)}

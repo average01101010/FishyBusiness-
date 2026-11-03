@@ -46,8 +46,10 @@ async function gearSync(now){
     if (sig !== GEARP.sig || now - GEARP.put > 300000){ await cloudRpc('gear_put', {sets:mine}); GEARP.sig = sig; GEARP.put = now; }
     const b = S.boat;
     if (now - GEARP.got > 60000 || !GEARP.at || dist(GEARP.at, b.pos) > 5){
-      const list = await cloudRpc('gear_near', {x:b.pos.x, y:b.pos.y, r:GEAR_R}) || [];
-      PEERGEAR.length = 0; for (const q of list) if (Array.isArray(q) && q.length === 5) PEERGEAR.push({k:q[0], a:{x:q[1], y:q[2]}, b:{x:q[3], y:q[4]}});
+      // (gear_near2 with the owner's player name and boat, 20261102130000_gear_owner.sql; gear_near where that is not run yet)
+      let list = null; if (!GEARP.old){ try { list = await cloudRpc('gear_near2', {x:b.pos.x, y:b.pos.y, r:GEAR_R}); } catch (e){ if (/ 404$/.test(e.message)) GEARP.old = true; else throw e; } }
+      if (GEARP.old) list = await cloudRpc('gear_near', {x:b.pos.x, y:b.pos.y, r:GEAR_R});
+      PEERGEAR.length = 0; for (const q of list || []) if (Array.isArray(q) && q.length >= 5) PEERGEAR.push({k:q[0], a:{x:q[1], y:q[2]}, b:{x:q[3], y:q[4]}, user:q[5] || '', boat:q[6] || ''});
       GEARP.got = now; GEARP.at = {x:b.pos.x, y:b.pos.y};
     }
   } catch (e){ if (/ 404$/.test(e.message)){ GEARP.off = true; PEERGEAR.length = 0; } }

@@ -818,6 +818,15 @@ def main():
               'the world brings the register, the open group\'s active players and the others\' catch per group; the stock only when the admin has turned it on')
         print(ok(G['cfgA'] and G['cfg1'] and G['cfgBad'] and G['shareA'] and G['share'] == ['cfg', 'grp', 'open_boats', 'reg', 'reg_total', 'stock'] and G['tables']),
               'only the admin with the second factor turns the switches and sees the share; no player reads the tables')
+        # whose gear it is (02.11.2026, 20261102130000_gear_owner.sql): gear_near2 gives B's sets to A with B's player name and boat, never
+        # A's own, and gear_near still gives them with nothing of the owner
+        sql("select public.gear_put('[[\"g1\", \"garn\", 900.1, 300.1, 900.3, 300.1]]'::jsonb)", B, 'authenticated')
+        sql("delete from public.presence where player_id = '%s'; insert into public.presence (player_id, boat, vtype, x, y, st) values ('%s', 'Havbris', 'trebat', 900, 300, 'port')" % (B['sub'], B['sub']))
+        g2 = json.loads(sql("select public.gear_near2(900, 300, 5)", A, 'authenticated')); g1 = json.loads(sql("select public.gear_near(900, 300, 5)", A, 'authenticated'))
+        own = json.loads(sql("select public.gear_near2(900, 300, 5)", B, 'authenticated'))
+        mine = [q for q in g2 if q[0] == 'garn' and abs(q[1] - 900.1) < 1e-3]; nmB = sql("select coalesce((select name from public.names where player_id = '%s' and removed_at is null), '')" % B['sub']).strip()
+        print(ok(len(mine) == 1 and mine[0][5] == nmB and mine[0][6] == 'Havbris' and all(len(q) == 5 for q in g1) and not any(abs(q[1] - 900.1) < 1e-3 for q in own)),
+              'gear_near2 gives the others\' sets with the owner\'s player name and boat, never your own; gear_near still has nothing of the owner', (mine, nmB, len(g1), len(own)))
         # the load of 5 000 players (plan 5b; KYST_LAST=5000): landings and catches for that many players, then what world_get costs
         NL = int(os.environ.get('KYST_LAST') or 0)
         if NL:

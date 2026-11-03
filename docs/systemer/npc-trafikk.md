@@ -81,6 +81,91 @@ Jonas, med bilder fra Finnsnes der Senja-flåten sto på strandskråningen: «B�
 - **Målt** (proben i økta, kl. 03 i juni, havnene innen 2 km, `kart-24`): Finnsnes 2 båter fra kystkant til kailinja ved fiskebruket; Tromsø 4, Bodø 3, Bergen 2 og Båtsfjord 9 båter, alle ved brygge, kailinje eller kystkant ved industribygg med kai satt; bakken under hvert skrog under −0,5 m etter gravingen (før: 14 av 20 på skråningen). Tabellen står i `docs/planer/npc-liggeplasser.md`.
 - **Test:** `npctest.py` sjekker at hver båt i havn ligger ved en front som står i 3D eller (under 11 m) ved flytebrygge eller bøye, ingen i fjæra (slag 3 uten modul), ingen på land, at båtene uten plass ikke vises, og at Senja-flåten i Finnsnes ligger ved en slik kai eller ikke vises.
 
+#### 4.16d Én nasjonal kystflåte: registerets båter i havnene (L2/N1 av `docs/planer/bestand-og-flaate.md`, 02.11.2026)
+
+Båtene i havnene langs kysten er fartøyregisterets aktive båter under 28 m, kommune for kommune. Før var det én båt per 150 m kaifront.
+
+- **Kildene:**
+  - Registerets aktive båter per kommune, lengdegruppe og hovedredskap kommer fra `fiske.json` `kom` (B1: fartøyregisteret og sluttsedlene, NLOD).
+  - Havnene, kaiplassene, feltene og leiene er kartpakkenes (`npc.py`, uendret, ingen ny kartrelease).
+  - Kommunen per havn kommer fra Geonorges kommuneinfo (Kartverket), slått opp én gang og lagret i `tools/npc/cache/kommune.json`.
+- **`tools/npc/flaate.py` → `src/data/flaate.json` (65 kB):**
+  - Kommunens aktive båter fordeles på havnene der: de største båtene først, hver på den minste ledige kaiplassen den passer.
+  - En båt uten egen plass deler en plass i havna med flest plasser og ledig rom, høyst 16 båter per havn. Spillet flytter den langs kaia eller ut på bøye (`coastMoor`, 4.16b-L1).
+  - Når kommunens største ledige plass er kortere enn båten, regnes båten så lang som plassen. Det gjelder 671 båter: kartets kaier er laget for båter på 7–11 m, så 11–14,99 m gir 403 plasserte mot registerets 624.
+- **Målt 02.11.2026:**
+  - 4 134 aktive båter under 28 m. 3 995 av dem er plassert (1 464 deler kaiplass), 2 har ingen kaiplass, og 137 er i 10 kommuner uten havn i pakkene, mest Senja, der `FLEET` er flåten.
+  - 1 193 av 3 187 havner ligger tomme, fordi kommunen ikke har flere aktive båter.
+  - Båter innen 15 km, før (én per kaiplass) → etter:
+
+    | Sted | Før | Etter | Redskap etter |
+    |---|---|---|---|
+    | Honningsvåg | 23 | 150 | garn 63, jukse 48, line 28, teine 9 |
+    | Båtsfjord | 9 | 48 | 36 linebåter |
+    | Bodø | 21 | 20 | |
+    | Bergen | 23 | 13 | |
+
+- **I spillet** (`05-vessels.js`):
+  - **Båtene:** `flaateApply` (fra `vecFinish` i `01c-vec.js`) legger registerets båter på havnas kaiplasser med lengde, bredde, dypgang, lengdegruppe og redskap. En smalere båt flyttes inntil kaia med halve forskjellen i bredde.
+  - **Åpen gruppe:** en båt under 11 m fisker i åpen gruppe ved trekning. Andelen (`openShare`, 0,60) er 2 100 båter (`OPENF.n`) mot de plasserte under 11 m. Båten blir liggende i havn når gruppa er stoppet og fangsten er nesten null (`openDone`, `trykkOpenScale`).
+  - **Spillernes hjemler:** båtene bak hjemlene spillerne eier, vises ikke (`heldShare`: registeret på serveren, `npcReg`, per lengdegruppe).
+  - **Feltet for dagen** trekkes etter flåtetrykket der (`coastGround`, `fleetF` for torsk, sei og hyse, med 0,2 til hvert felt).
+- **Senja-ruta (02.11.2026, Jonas: «Fiks sånn at Senja også har havner slik at området fungerer som det skal langs hele kysten»):**
+  - `tools/npc/senja.py` kjører `npc.build` på de fire rutene over Senja-ruta med lagene fra spillets egne pakker (masken og dybden fra sim-pakkene, kaifrontene fra vec-pakken), med Senja-ruta sluppet inn. Det gir samme regel som resten av kysten uten ny kartrelease. Prøvd mot en rute utenfor Senja: byggingen fra pakkene gir nøyaktig de samme havnene og kaiplassene som kartreleasen.
+  - 103 havner med 261 kaiplasser. `flaate.py` leser dem fra `tools/npc/cache/senja.json` og legger dem i `flaate.json` (`x`), og `flaateApply` legger dem etter pakkens egne havner (`h.senja`).
+  - Senja kommune (5530) får registerets båter minus de 14 i `FLEET` (8 under 11 m, 5 på 11–14,99 m, 1 på 15–20,99 m). `FLEET` står, med sine navn og ruter.
+  - De nye båtene holder seg unna `FLEET`-båtenes kaiplasser (`moorAround`). En båt kan ligge utenpå en `FLEET`-båt, slik båter gjør i en full havn.
+  - Plassert langs hele kysten: 4 105 av 4 120 aktive. Bare 13 båter i 7 innlandskommuner står uten havn.
+- **Redskapet i sjøen (02.11.2026, Jonas: «Garn, liner og annet utstyr skal være synlig og vises i kartplotteren»):**
+  - En båt med passivt hovedredskap (`garn`, `line`, `teine`; `blandet` trekkes til garn eller line) har redskapet sitt i sjøen (`coastSet`, `coastGearKind`). Garnbåten har en lenke på 0,35–0,8 km på ukas felt. Teinebåten har en lenke på 0,4–0,9 km på månedens felt. Linebåten setter en line på 1,4–3 km om morgenen og trekker den samme dag.
+  - Lenka ligger fra båtens plass på feltet, snudd til begge ender og linja mellom er på vann.
+  - Dagen ute: garn- og teinebåten drar lenka a→b og setter den igjen b→a. Linebåten setter a→b, står ved enden i noen timer og drar b→a. Delen som er i sjøen, følger båten.
+  - Garn og teiner blir stående når været holder båten inne.
+  - Jukse- og snurrevadbåtene driver som før.
+  - Alt er en funksjon av klokka og båten, så alle spillerne ser det samme.
+  - `NPCGEAR` fylles av `coastNear` (og havflåten, 4.17) for båtene innen rekkevidde. Kartet (`gearSvg`) tegner lenkene i grått med oransje bøyer, uten navn. 3D-plotteren (`paintPlotter`) tegner dem sammen med de andre spillernes (`PEERGEAR`) og dine egne, og sjøen i 3D (`drawGearSea`) setter blåsene på endene.
+  - **Hvem som eier redskapet (Jonas 02.11.2026: «Trenger ikke å vises navn i kartet, men at man eventuelt kan trykke på fiskeredskapet for mer å få opp info om hvem som eier redskapet»):** et trykk på en bøye i kartet til en annen spiller eller en NPC-båt (`otherGearHit`, etter dine egne bøyer og AIS-båtene) åpner et kort (`otherGearCard`) med redskapet, eieren (spillerens navn, eller «Fiskefartøy»), båten, lengden og avstanden. Spillerens navn og båt kommer fra den nye `gear_near2` (`supabase/migrations/20261102130000_gear_owner.sql`, Jonas må kjøre den). Til den er kjørt, henter spillet redskapet med `gear_near` som før, uten eier. Navnet vises som tekst, og et navn admin har tatt bort, kommer ikke med.
+- **Ikke gjort ennå:**
+  - Kortere båter enn i registeret der kartet mangler lange kaier.
+  - Garnet og lina mellom bøyene vises ikke under vann i 3D, bare blåsene.
+- **Tester:**
+  - Ny `tests/unit/flaate.test.mjs` (14 sjekker).
+  - `npctest`: havnene har `flaate.json` sine båter, og «hver båt ligger langs en kaifront som er lang og dyp nok» står.
+  - Grønne: `havntest`, `harbourtest`, `trip2`, `keeptest`, `autonavtest`, `turtest`, `decktest`, `worktest`, `towtest`, `tattest`, `peergear`, `vectest`, `vindshot` og `heattest`.
+
+#### 4.17 Havflåten som NPC (H1 av `docs/planer/bestand-og-flaate.md`, 02.11.2026)
+
+Registerets aktive fartøy på 28 m og over seiler etter klokka, som kystflåten.
+
+- **`tools/npc/havflaate.py` → `src/data/havflaate.json` (36 kB):**
+  - **Fartøyene:** `fiske.json` `kom`, lengdegruppe 28+ per kommune og hovedredskap: 249 aktive, og 248 får en hjemmehavn. Fordelingen er 111 trål, 72 ringnot, 22 snurrevad, 21 autoline, 17 teine (snøkrabbe) og 5 garn.
+  - **Modellene:** hvert fartøy er spillets egen modell av sitt slag, i modellens lengde: `bunntral`, `pelagisk`, `ringnot38` (snurrevad og garn), `autoliner` og `snokrabbe`. Registeret gir bare lengdegruppen.
+  - **Hjemmehavn:** et mottak i kommunen som tar imot redskapet (`Trål`, `Not` eller `Konvensjonelle` i `mottak.json`), med lengst kai. Har kommunen ikke noe, brukes det nærmeste innen 250 km fra kommunens punkt (Austevoll, Herøy). Kommunenavnene og -punktene kommer fra Geonorge.
+  - **Felt og sesong:** sluttsedlene for 28 m og over per redskap (`sp` `k` og `h`, idx redskap*6+4) som kilo per måned og hovedområde. For hvert redskap tas de 12 tyngste områdene, med opptil tre punkter med vann i redskapets dybde. Punktene ligger 6 km fra land for trål, line og teine (28 m og over fisker utenfor 4 nm, J-161-2026 § 32) og 2 km for resten.
+  - **Borte:** områder utenfor rammen eller uten slikt vann er «borte» (14 av 164; Bjørnøya, Svalbardsonen, Nordsjøen vest og snøkrabbefeltene øst).
+  - **Leiene:** fra farledsnodene mottaket når med et rent rett strekk, til nodene feltet når (`pa` og feltets siste felt). Spillet finner veien gjennom nettet (`lnetPath`).
+- **I spillet (`core/05d-hav.js`):**
+  - **Syklusen:** havnedager og en tur. Lengden avhenger av redskapet: trål 5–12 døgn, ringnot 2–5, snurrevad 3–6, autoline og snøkrabbe 14–28, garn 4–8.
+  - **Sesongen:** turens felt trekkes etter månedens landinger for redskapet. En måned med lite gir færre turer, så ringnotflåten ligger mest i havn om sommeren (`havTrip`).
+  - **I havn:** skipet ligger ved en kaifront nær mottaket som står i 3D og er lang og dyp nok (`npcBerths`, `quayFit`). Finnes ingen, vises det ikke i havn.
+  - **Til feltet:** langs farledene og rett ut fra siste node, med 11–13 knop.
+  - **På feltet** fisker skipet som redskapet sitt (`havFish`):
+    - Trålen tauer i 5 timer med 4 knop fram og tilbake gjennom feltet, og trålen står ute i 3D (`drawTrawl` med slepetilstanden).
+    - Ringnota leter i 3 timer, kaster rundt stimen og snurper. Snurrevaden tar et kast hver 3. time.
+    - Autolineren setter en line på 10 km på 1,2 timer og drar den forrige på 10,8 timer.
+    - Snøkrabbe- og garnfartøyet har seks lenker side om side og drar og setter dem etter tur.
+    - Linene og lenkene går i `NPCGEAR`.
+  - **AIS:** skipene innen 15 km (`havNear`, `npcStates` med id `v…`) med båttype, redskap, størrelse og status («Tråler», «Kaster nota», «Setter og drar line»). `havNear` regner bare ut skipene som kan være nær: i havn nær deg, eller på en tur der leia kan gå forbi.
+  - **Borte:** et skip med felt utenfor rammen vises ikke på turen.
+- **Forenklet, og sagt rett ut:**
+  - Leveringen er alltid ved hjemmemottaket.
+  - Nota og snurrevaden vises ikke i 3D; trålen gjør det.
+  - Feltpunktene innenfor et hovedområde er trukket, ikke målt.
+  - Fartøyene tar ikke fisk av spillets bestand. Den delen er med i flåtetrykket (B3, `03g-trykk.js`).
+- **Tester:**
+  - `tests/unit/hav.test.mjs`: sesongene (trålerne på Tromsøflaket, Finnmarkskysten og i Lofoten i februar; ringnot på makrellen i september og på silda utenfor Troms i november; ringnot mest i havn i juni), snøkrabbe for det meste borte, leia, en tur ut–fiske–inn, trålen innen feltet, linene og teinelenkene.
+  - `tests/havflaate.py` (med vec-pakkene): leiene holder seg av land, skipene ved Tromsø i februar, kai som passer, egne modeller, tiden og en tråler som tråler.
+
 #### 4.16c Liggeplass for spillerens båt i havnene (D2 av driftsplanen, Jonas 23.10.2026)
 
 Jonas: «Båten burde som oftest ligge til en skikkelig kai fremfor å ligge på anker … Vår båt burde også kunne ligge ved disse om det er en ledig plass som passer vår båt, i verste fall skal man kunne ligge ved fiskemottak, utstyrsbutikker, verft eller på anker, men anker vil som regel være siste alternativ med mindre man har en veldig stor båt.» Svarene: A b (havneavgift per døgn etter lengden), B a (god hvile bare om bord med køyer), C «fra 24 Meter og opp» (anker er vanlig fra 24 m), D a (serveren holder rede på hvem som ligger hvor).

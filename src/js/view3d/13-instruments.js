@@ -26,6 +26,12 @@
     g.save(); g.beginPath(); g.rect(0, top, cw, ch); g.clip();
     // the echo sounder's heat map, the same as on the chart plotter (ui/03c-heat.js)
     if (typeof heatDrawInto === 'function') heatDrawInto(g, p, cw / 2, top + ch / 2, cw / (2 * rng), true);   // without the blur filter (costly on a tablet)
+    // the sets in the sea, as on the chart: ours in their colours, the other players' and the coast boats' (NPCGEAR) in grey
+    const setLn = (s, a, c, col, w, k) => { g.strokeStyle = col; g.lineWidth = w; g.setLineDash(k === 'line' ? [7, 4] : k === 'teine' ? [2, 4] : []); g.beginPath(); g.moveTo(X(a.x) + cw / 2, Y(a.y)); g.lineTo(X(c.x) + cw / 2, Y(c.y)); g.stroke(); g.setLineDash([]);
+      for (const e of [a, c]){ g.fillStyle = s; g.beginPath(); g.arc(X(e.x) + cw / 2, Y(e.y), 4, 0, Math.PI * 2); g.fill(); } };
+    for (const q of PEERGEAR) setLn('#a9b4bb', q.a, q.b, '#8d9aa3', 2, q.k);
+    for (const q of NPCGEAR) setLn('#e0884a', q.a, q.b, '#7f8f99', 2, q.k);
+    for (const q of S.sets || []) if (!q.lost) setLn(SETCOL[q.kind] || '#e0884a', q.a, q.b, SETCOL[q.kind] || '#e0884a', 3, q.kind);
     // route and trail
     if (S.plan){ g.strokeStyle = '#d6336c'; g.lineWidth = 3; g.beginPath(); g.moveTo(X(p.x) + cw / 2, Y(p.y)); for (const w of S.plan.wps.slice(S.plan.idx)) g.lineTo(X(w.x) + cw / 2, Y(w.y)); g.stroke(); }
     // other vessels
