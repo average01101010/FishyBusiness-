@@ -48,7 +48,7 @@ def gebco_links():
             r = requests.get(p, timeout=60); print('page', p, r.status_code, len(r.text), flush=True)
             if r.status_code != 200: continue
             base = p.rsplit('/', 1)[0] + '/'
-            for h in re.findall(r'(?:href|"href")\s*[=:]\s*"([^"]+)"', r.text) + re.findall(r'(https?://[^\s"'<>)]+)', r.text):
+            for h in re.findall(r'(?:href|"href")\s*[=:]\s*"([^"]+)"', r.text) + re.findall(r'https?://[^\s"\'<>)]+', r.text):
                 if not h.startswith('http'): h = (requests.compat.urljoin(p, h))
                 if re.search(r'gebco.?2025', h, re.I) and not re.search(r'tid|\.(png|jpe?g|pdf|html?)$', h, re.I): found.append(h)
         except Exception as e: print('page failed', p, repr(e)[:200], flush=True)
