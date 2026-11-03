@@ -17,7 +17,7 @@
   function terProg(q){
     if (PTS[q]) return PTS[q];
     try { PTS[q] = program(TER_VS, terFS(q), ['aPos', 'aCol', 'aNor', 'aShd', 'aMat', 'aCov'], 'terreng' + q); }
-    catch (e){ console.warn('terreng' + q, e.message || e); PTS[q] = terProg(q - 1); }
+    catch (e){ console.warn('3D ' + 'terreng' + q + ' faller bort · ' + GPU, e); PTS[q] = terProg(q - 1); }
     return PTS[q];
   }
   const MATQ_FIX = (location.hash.match(/mat(\d)/) || [])[1];

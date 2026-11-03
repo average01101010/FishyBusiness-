@@ -2,6 +2,12 @@
 
 Seksjonene og funksjonene i hver kildefil, med linjenummer, i rekkefølgen malen setter dem sammen i (`src/index.html`). Lages av `python3 tools/docs/kodekart.py` og skrives på nytt av `/lever`, så linjenumrene kan være litt gamle; navnene og rekkefølgen stemmer. Slå opp her og bruk `grep` i stedet for å lese en stor fil hel.
 
+## `src/js/errtrap.js` (60 linjer)
+
+THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp så mange feil automatisk som mulig slik at vi
+
+- **1** THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp så mange feil automatisk som mulig slik at vi
+
 ## `src/js/core/00-proj.js` (65 linjer)
 
 - **2** CORE START
@@ -1750,7 +1756,7 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
 - **1** i18n
   - 110 `t(k, ...a)`
 
-## `src/js/ui/02-format-state.js` (180 linjer)
+## `src/js/ui/02-format-state.js` (207 linjer)
 
 ---------- formatting ----------
 
@@ -1774,16 +1780,18 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 74 `tabMark()`
   - 75 `tabMine()`
   - 81 `tabLose()`
-  - 91 `save()`
-  - 94 `migrateV2(o)`
-  - 106 `load()`
-- **126** UI state
-  - 137 `booting()`
-  - 138 `loaderGone()`
-  - 145 `toast(msg, ms)`
-  - 158 `saveCode()`
-  - 166 `codeRead(code)`
-  - 174 `loadCode(code)`
+  - 97 `saveJson(o)`
+  - 115 `save()`
+  - 118 `saveStoreKb()`
+  - 121 `migrateV2(o)`
+  - 133 `load()`
+- **153** UI state
+  - 164 `booting()`
+  - 165 `loaderGone()`
+  - 172 `toast(msg, ms)`
+  - 185 `saveCode()`
+  - 193 `codeRead(code)`
+  - 201 `loadCode(code)`
 
 ## `src/js/ui/03a-chart.js` (147 linjer)
 
@@ -2327,7 +2335,7 @@ the phone's Sesong and Folk apps (05.10.2026; the rules are in core/09c-seasons.
 
 - **1** the phone's Sesong and Folk apps (05.10.2026; the rules are in core/09c-seasons.js and core/09d-folk.js)
 
-## `src/js/ui/06e-feedback.js` (252 linjer)
+## `src/js/ui/06e-feedback.js` (258 linjer)
 
 Tilbakemelding: the players' feedback on the phone (05.10.2026)
 
@@ -2583,7 +2591,7 @@ SOUND (the user's wish 03.10.2026)
 - **82** inside Father's naust (Jonas 09.10.2026: «Kjør på med lyd i naustet»; ui/09c-naust3d.js)
 - **141** the music (Jonas 05.10.2026: «rolig ambient instrumentaler som svak stemning i bakgrunnen. Må kunne skrus av i innstillinger»)
 
-## `src/js/ui/10f-cloud.js` (800 linjer)
+## `src/js/ui/10f-cloud.js` (932 linjer)
 
 THE CLOUD (04.10.2026; docs/lansering.md E and F)
 
@@ -2593,79 +2601,92 @@ THE CLOUD (04.10.2026; docs/lansering.md E and F)
   - 22 `cloudS()`
   - 28 `cloudGpu()`
   - 35 `cloudDev()`
-  - 41 `cloudMeta()`
-- **54** talking to Supabase
-  - 55 `cloudToken()`
-- **56** guests (06.10.2026; Jonas: «nye brukere ikke trenger å logge inn til å starte med», the account after the third landing)
-  - 62 `guestGet()`
-  - 63 `guestAuth(path, body)`
-  - 71 `guestToken()`
-  - 79 `guestStart()`
-  - 85 `cloudRpc(fn, args, opt)`
-- **97** the gate: before the game starts
-  - 98 `cloudGateShow(html)`
-  - 105 `cloudGateHide()`
-  - 109 `worldSync()`
-  - 114 `cloudGate()`
-- **182** after the start: hooks, measurements, the save
-  - 183 `cloudStart()`
+  - 42 `cloudMeta()`
+- **55** talking to Supabase
+  - 56 `cloudToken()`
+- **57** guests (06.10.2026; Jonas: «nye brukere ikke trenger å logge inn til å starte med», the account after the third landing)
+  - 63 `guestGet()`
+  - 64 `guestAuth(path, body)`
+  - 72 `guestToken()`
+  - 80 `guestStart()`
+  - 86 `cloudRpc(fn, args, opt)`
+- **98** the gate: before the game starts
+  - 99 `cloudGateShow(html)`
+  - 107 `cloudGateHide()`
+  - 111 `worldSync()`
+  - 116 `cloudGate()`
+- **184** after the start: hooks, measurements, the save
+  - 185 `cloudStart()`
   - 210 `cloudAsk()`
   - 220 `cloudConsent(yes, by)`
   - 226 `cloudBegin()`
-  - 234 `cloudEv(k, d)`
-  - 235 `cloudFlush(end)`
-  - 244 `cloudErr(msg, src, stack)`
-- **252** the save between devices (05.10.2026; supabase/migrations/20261005200000_save_sync.sql)
-  - 259 `syncGet()`
-  - 260 `syncSet(rev, at, rv, sq)`
-  - 266 `deviceId()`
-  - 270 `deviceName()`
-  - 275 `cloudStatus(s)`
-  - 276 `cloudStatusText()`
-  - 285 `saveSum(o)`
-  - 289 `sumText(m)`
-  - 296 `cloudChoose(here, cloud, when, box)`
-  - 311 `cloudKeptNote(where)`
-  - 316 `cloudTake(cs)`
-  - 322 `cloudSync(cs)`
-  - 346 `cloudSaveSoon(closing, manual)`
-  - 385 `cloudSoon(ms)`
-- **386** one device at a time (13.10.2026, supabase/migrations/20261013120000_active.sql)
-  - 396 `cloudFp()`
-  - 397 `cloudClaim(wait)`
-  - 410 `cloudBeat()`
-  - 426 `cloudWake()`
-  - 432 `cloudPassed(h)`
-  - 447 `cloudHeldShow(h)`
-  - 456 `cloudPlayHere()`
-  - 466 `cloudCheckHead()`
-  - 475 `cloudConflict(cl, moved)`
-  - 505 `cloudHist()`
-  - 510 `cloudRestore(id)`
-- **521** what is measured: the game's own functions, wrapped once they are all defined
-  - 522 `cloudHooks()`
-- **545** the account card in Settings
-  - 546 `cloudCard()`
-  - 570 `histRows()`
-  - 582 `cloudAccountDel()`
-  - 593 `cloudMediaDel()`
-  - 599 `cloudAct(a, d)`
-- **633** registering, for a guest: in the game's own words, never a wall before the third landing
-  - 642 `guestHave()`
-  - 648 `guestAsk(why)`
-  - 672 `namesKept()`
-  - 673 `namesKeep(o)`
-  - 675 `namesApply()`
-  - 683 `nameTake(n, quiet)`
-  - 693 `nameCheck()`
-  - 708 `nameSuggest()`
-  - 717 `nameAsk(why, reason)`
-  - 742 `guestOpenAsk()`
-  - 750 `nameNudge(force)`
-  - 763 `guestNudge(step)`
-  - 775 `guestLogin(src)`
-  - 781 `guestRegister(signIn)`
-  - 793 `guestGift()`
+  - 235 `cloudEv(k, d)`
+  - 236 `cloudFlush(end)`
+- **245** the errors (04.10.2026; caught everywhere since 02.11.2026, js/errtrap.js)
+  - 256 `srcMapStr(s)`
+  - 269 `errNoise(msg)`
+  - 274 `cloudErr(msg, src, stack, kind)`
+  - 285 `errSend(e)`
+  - 289 `errQueue()`
+  - 290 `errKeep(list)`
+  - 294 `errFlush()`
+  - 318 `errStart()`
+- **327** a page that stops or stands still while it is on the screen
+  - 334 `aliveRead()`
+  - 335 `aliveBeat(gone)`
+  - 346 `aliveCheck()`
+  - 370 `hangWatch()`
+- **384** the save between devices (05.10.2026; supabase/migrations/20261005200000_save_sync.sql)
+  - 391 `syncGet()`
+  - 392 `syncSet(rev, at, rv, sq)`
+  - 398 `deviceId()`
+  - 402 `deviceName()`
+  - 407 `cloudStatus(s)`
+  - 408 `cloudStatusText()`
+  - 417 `saveSum(o)`
+  - 421 `sumText(m)`
+  - 428 `cloudChoose(here, cloud, when, box)`
+  - 443 `cloudKeptNote(where)`
+  - 448 `cloudTake(cs)`
+  - 454 `cloudSync(cs)`
+  - 478 `cloudSaveSoon(closing, manual)`
+  - 517 `cloudSoon(ms)`
+- **518** one device at a time (13.10.2026, supabase/migrations/20261013120000_active.sql)
+  - 528 `cloudFp()`
+  - 529 `cloudClaim(wait)`
+  - 542 `cloudBeat()`
+  - 558 `cloudWake()`
+  - 564 `cloudPassed(h)`
+  - 579 `cloudHeldShow(h)`
+  - 588 `cloudPlayHere()`
+  - 598 `cloudCheckHead()`
+  - 607 `cloudConflict(cl, moved)`
+  - 637 `cloudHist()`
+  - 642 `cloudRestore(id)`
+- **653** what is measured: the game's own functions, wrapped once they are all defined
+  - 654 `cloudHooks()`
+- **677** the account card in Settings
+  - 678 `cloudCard()`
+  - 702 `histRows()`
+  - 714 `cloudAccountDel()`
+  - 725 `cloudMediaDel()`
+  - 731 `cloudAct(a, d)`
+- **765** registering, for a guest: in the game's own words, never a wall before the third landing
+  - 774 `guestHave()`
+  - 780 `guestAsk(why)`
+  - 804 `namesKept()`
+  - 805 `namesKeep(o)`
+  - 807 `namesApply()`
+  - 815 `nameTake(n, quiet)`
+  - 825 `nameCheck()`
+  - 840 `nameSuggest()`
+  - 849 `nameAsk(why, reason)`
+  - 874 `guestOpenAsk()`
+  - 882 `nameNudge(force)`
+  - 895 `guestNudge(step)`
+  - 907 `guestLogin(src)`
+  - 913 `guestRegister(signIn)`
+  - 925 `guestGift()`
 
 ## `src/js/ui/10g-push.js` (206 linjer)
 
@@ -2783,16 +2804,21 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 
-## `src/js/ui/11-boot.js` (168 linjer)
+## `src/js/ui/11-boot.js` (192 linjer)
 
 ---------- boot ----------
 
 - **1** boot
-  - 7 `bootMap()`
-  - 14 `bootData()`
-  - 28 `bootMapLoad()`
-  - 47 `bootGame()`
-  - 152 `bootFail(e)`
+  - 13 `bootStep(next)`
+  - 14 `bootAway()`
+  - 15 `bootGate(on)`
+  - 17 `bootInfo()`
+  - 19 `bootDone()`
+  - 30 `bootMap()`
+  - 37 `bootData()`
+  - 51 `bootMapLoad()`
+  - 70 `bootGame()`
+  - 175 `bootFail(e)`
 
 ## `src/js/vessel3d.js` (1303 linjer)
 
@@ -2929,7 +2955,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 116 `ridged(x, y)`
   - 117 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (508 linjer)
+## `src/js/view3d/01-shaders.js` (511 linjer)
 
 ---------- shaders ----------
 
@@ -2945,7 +2971,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 483 `buf(data, target, usage)`
   - 488 `airSet(u, terr)`
   - 493 `attr(loc, b, size)`
-  - 506 `upload(pos, col, idx)`
+  - 509 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (94 linjer)
 
@@ -3534,7 +3560,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **91** frame
   - 95 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (529 linjer)
+## `src/js/view3d/24-cinema.js` (631 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -3547,14 +3573,23 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 112 `kinoNext(t, want, why)`
   - 130 `kinoCam(t, rdt)`
   - 155 `introStart(sec)`
-  - 161 `frame()`
-  - 163 `frame0()`
-  - 350 `snapTake()`
-  - 355 `drawRoute(VP, eye)`
-  - 367 `driftSpray(VP, eye, dt, t, col)`
-  - 382 `drawSmoke(VP, eye, BM, dt)`
-  - 409 `drawEffects(VP, eye, BM, dt, t)`
-  - 511 `updateLabels(VP, eye, W, Hh)`
+- **161** the picture watched (02.11.2026; Jonas: «Det er viktig at vi fanger opp så mye potensielle feil som oppstår så fort som
+  - 180 `gfxErr(msg, ctx)`
+  - 185 `glReport(e, tag)`
+  - 187 `glProbe(tag)`
+  - 194 `gfxStart(now)`
+  - 202 `gfxJudge(px, day, vis)`
+  - 209 `gfxPix(j)`
+  - 216 `gfxNaN(eye, VPn)`
+  - 226 `gfxEnd(now, eye, VPn, W, Hh)`
+  - 261 `frame()`
+  - 263 `frame0()`
+  - 452 `snapTake()`
+  - 457 `drawRoute(VP, eye)`
+  - 469 `driftSpray(VP, eye, dt, t, col)`
+  - 484 `drawSmoke(VP, eye, BM, dt)`
+  - 511 `drawEffects(VP, eye, BM, dt, t)`
+  - 613 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (214 linjer)
 

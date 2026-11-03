@@ -158,17 +158,118 @@
     INTRO = {t0:performance.now(), dur:sec || 5, e0:[x, Math.max(terrH(x, z), 0) + 2.4, z]}; cam.helm = false; return true;
   }
   let j0F = 0;
+  // ---------- the picture watched (02.11.2026; Jonas: «Det er viktig at vi fanger opp så mye potensielle feil som oppstår så fort som
+  // mulig») ----------
+  // What goes wrong in the picture without throwing, sent like the other errors (ui/10f-cloud.js cloudErr: once a session each, with the
+  // device), each with the graphics chip, the quality, the sea level and the view:
+  // - GL errors: one frame each five seconds asks the driver twice: at the start (what came between the frames) and at one step of the
+  //   frame (glChk), the next step each time round, so the step an error comes before is found within a few rounds. Each question waits
+  //   for the GPU to finish what it was given, so a question after every step (twelve a frame) held a heavy frame up so long in
+  //   SwiftShader that ultratest's screenshot did not come; two are nothing on a phone. On a GPU drawn by the CPU (SwiftShader, which
+  //   Chrome also falls back to on a phone whose GPU it blocks; llvmpipe; Microsoft's basic renderer) even one question a round held
+  //   ultratest's screenshot up for two minutes, so it is not asked there: that is the weakest device, and a stall costs most on it.
+  //   (GFX.force: the test's way to ask all the same.)
+  //   A wrong call leaves things out, black or in the wrong colour without stopping anything (the INVALID_OPERATION 1282 the tests
+  //   saw after the pennants, which no player could tell us).
+  // - NaN: the eye, the boat or the view matrix not a number, and the whole world or the boat is gone from the picture.
+  // - The picture: every fifteen seconds nine points of it (a 3 x 3 grid) are read back. In daylight, black twice running, or one
+  //   colour three times running in clear weather, is a picture that is not there (night, fog and the transitions are left out).
+  // - A canvas of 0 px while the 3D view is on.
+  const GFX = {probeAt:0, pixAt:0, black:0, flat:0, nan:false, px:new Uint8Array(4), tags:[], k:0, prev:"starten av rammen", pend:null, pbo:null, buf:null};
+  const GLNAME = {1280:'INVALID_ENUM', 1281:'INVALID_VALUE', 1282:'INVALID_OPERATION', 1285:'OUT_OF_MEMORY', 1286:'INVALID_FRAMEBUFFER_OPERATION'};
+  function gfxErr(msg, ctx){
+    if (typeof cloudErr !== 'function') return;
+    let base = {}; try { base = {lvl:QUAL.lvl, sea:seaLvl, gl2:GL2, w:canvas.width, h:canvas.height, view:KINO.on ? 'kino' : SHOW ? 'show' : PAINTV ? 'paint' : cam.helm ? 'helm' : 'cam', vis:env.vis, day:env.day}; } catch (e){}
+    cloudErr(msg + ' · ' + GPU, 'view3d gfx', JSON.stringify(Object.assign(base, ctx || {})), 'gfx');
+  }
+  function glReport(e, tag){ GLPROBE = false; gfxErr('3D GL-feil ' + (GLNAME[e] || e) + ' ' + tag, {code:e, tag}); }
+  // the step asked about this round (the steps are learnt from the frame itself, so a new step is asked about too)
+  function glProbe(tag){
+    if (!GFX.tags.includes(tag)) GFX.tags.push(tag);
+    const want = GFX.tags[GFX.k % GFX.tags.length];
+    if (tag !== want){ GFX.prev = tag; return; }
+    GLPROBE = false; GFX.k++;
+    const e = gl.getError(); if (e && e !== gl.CONTEXT_LOST_WEBGL) glReport(e, 'mellom ' + GFX.prev + ' og ' + tag);
+  }
+  function gfxStart(now){
+    GLPROBE = false;
+    if (GFX.soft === undefined && GPU) GFX.soft = /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(GPU);
+    if (GLCHK || (GFX.soft && !GFX.force) || now - GFX.probeAt < 5000 || gl.isContextLost()) return;
+    GFX.probeAt = now; GLPROBE = true; GFX.prev = 'starten av rammen';
+    const e = gl.getError(); if (e && e !== gl.CONTEXT_LOST_WEBGL) glReport(e, 'mellom rammene');
+  }
+  // what nine points of the picture say (also for the test): 'black' in daylight, 'flat' in daylight and clear weather, or ''
+  function gfxJudge(px, day, vis){
+    let mx = 0; const lo = [255, 255, 255], hi = [0, 0, 0];
+    for (const p of px) for (let c = 0; c < 3; c++){ const v = p[c]; if (v < lo[c]) lo[c] = v; if (v > hi[c]) hi[c] = v; if (v > mx) mx = v; }
+    if (!day) return {k:'', rgb:lo};
+    if (mx < 10) return {k:'black', rgb:lo};
+    return {k:Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]) <= 2 && vis > 10 ? 'flat' : '', rgb:lo};
+  }
+  function gfxPix(j){
+    GFX.black = j.k === 'black' ? GFX.black + 1 : 0; GFX.flat = j.k === 'flat' ? GFX.flat + 1 : 0;
+    if (GFX.black === 2) gfxErr('3D svart skjerm på dagtid', {rgb:j.rgb});
+    if (GFX.flat === 3) gfxErr('3D bildet er én farge på dagtid', {rgb:j.rgb});
+  }
+  // (before the camera is placed, from the boat and the camera's own numbers: a NaN there throws in the reads of the map that place
+  // it, and the frame never gets to its end; after the frame, from the eye and the view matrix)
+  function gfxNaN(eye, VPn){
+    if (GFX.nan) return false;
+    const fin = a => a.every(v => v === undefined || isFinite(v));
+    const boat = fin([bv.x, bv.y, bv.z, bv.head, bv.pitch, bv.roll]), camOk = fin([cam.yaw, cam.pitch, cam.dist, cam.zoom, cam.hy, cam.hp]);
+    if (boat && camOk && (!eye || (fin(eye) && fin([VPn[0], VPn[5], VPn[14]])))) return false;
+    GFX.nan = true; const r = v => v === undefined ? null : isFinite(v) ? Math.round(v * 100) / 100 : String(v);
+    gfxErr('3D NaN i ' + (!boat ? 'egen båt' : 'kameraet'), {eye:eye ? eye.map(r) : null, bv:{x:r(bv.x), y:r(bv.y), z:r(bv.z), head:r(bv.head), pitch:r(bv.pitch), roll:r(bv.roll), v:r(bv.v)},
+      cam:{helm:!!cam.helm, dist:r(cam.dist), pitch:r(cam.pitch), yaw:r(cam.yaw), zoom:r(cam.zoom), hy:r(cam.hy), hp:r(cam.hp)}, kino:!!KINO.on});
+    return true;
+  }
+  function gfxEnd(now, eye, VPn, W, Hh){
+    if (GLPROBE){ glChk('slutten av rammen'); GLPROBE = false; }
+    gfxNaN(eye, VPn);
+    if (gl.isContextLost()){ GFX.pend = null; GFX.pbo = null; return; }
+    // the nine points are read without waiting for the GPU where it can (WebGL 2): into a buffer, with a fence, and taken out a few frames
+    // later when the fence says the GPU is done. A read that waits (readPixels into memory) held the frame until the GPU had drawn it,
+    // which on a GPU drawn by the CPU stopped ultratest's screenshot; WebGL 1 reads that way, but not on such a GPU.
+    if (GFX.pend){
+      const P = GFX.pend, st = gl.clientWaitSync(P.sync, 0, 0);
+      if (st === gl.TIMEOUT_EXPIRED && now - P.t < 5000) return;
+      if (st === gl.ALREADY_SIGNALED || st === gl.CONDITION_SATISFIED){
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, GFX.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, GFX.buf); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+        const px = []; for (let i = 0; i < 9; i++) px.push([GFX.buf[i * 4], GFX.buf[i * 4 + 1], GFX.buf[i * 4 + 2]]);
+        gfxPix(gfxJudge(px, P.day, P.vis));
+      }
+      gl.deleteSync(P.sync); GFX.pend = null; return;
+    }
+    // (not on a GPU drawn by the CPU either: there the read into a buffer waits all the same, a frame of seconds that made skytest's
+    // clouds jump ahead; GFX.force for the test)
+    if (now - GFX.pixAt < 15000 || INTRO || (GFX.soft && !GFX.force)) return;
+    GFX.pixAt = now;
+    if (!W || !Hh){ gfxErr('3D lerretet er 0 px', {cw:canvas.clientWidth, ch:canvas.clientHeight}); return; }
+    const day = env.night < 0.2 && env.day > 0.8, vis = env.vis || 0, at = [];
+    for (const gy of [0.2, 0.5, 0.8]) for (const gx of [0.2, 0.5, 0.8]) at.push([Math.floor(W * gx), Math.floor(Hh * gy)]);
+    if (GL2 && gl.fenceSync){
+      if (!GFX.pbo){ GFX.pbo = gl.createBuffer(); GFX.buf = new Uint8Array(36); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, GFX.pbo); gl.bufferData(gl.PIXEL_PACK_BUFFER, 36, gl.STREAM_READ); }
+      gl.bindBuffer(gl.PIXEL_PACK_BUFFER, GFX.pbo);
+      at.forEach(([x, y], i) => gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, i * 4));
+      gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+      GFX.pend = {sync:gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0), t:now, day, vis};
+      return;
+    }
+    const px = at.map(([x, y]) => { gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, GFX.px); return [GFX.px[0], GFX.px[1], GFX.px[2]]; });
+    gfxPix(gfxJudge(px, day, vis));
+  }
   function frame(){ const j0 = j0F = performance.now(), EQ0 = S.equip, TE = tryEq(); if (TE) S.equip = TE; try { frame0(); } finally { S.equip = EQ0; } JSMS = JSMS ? JSMS * 0.92 + (performance.now() - j0) * 0.08 : performance.now() - j0; }
   let FRAMEN = 0;
   function frame0(){ FRAMEN++;
     if (!active){ raf = 0; return; }
     raf = requestAnimationFrame(frame);
     if (document.hidden || NO3D || HOLD) return;
-    resize();
+    resize(); gfxStart(performance.now());
     const now = performance.now(), dt = Math.min(0.1, (now - lastF) / 1000), rdt = Math.max(1e-3, (now - lastF) / 1000); lastF = now;
     FPS.v = FPS.v ? FPS.v * 0.95 + 0.05 / rdt : 1 / rdt; FRAMEMS = FRAMEMS * 0.8 + Math.min(500, rdt * 1000) * 0.2; if (PROF.on) profBegin(rdt, j0F); if (BENCH.on){ if (BENCH.rec){ BENCH.sum += rdt; BENCH.cnt++; if (rdt > 1 / 50) BENCH.slow++; } } else if (!PROF.on) qualTick(dt, FPS.v, now); if (now - FPS.at > 500){ FPS.at = now; const fe = fpsEl(); if (fe) fe.textContent = Math.round(FPS.v) + ' bilder/s · ' + (1000 / FPS.v).toFixed(1) + ' ms · ' + ['Lav', 'Middels', 'Høy', 'Ultra'][QUAL.lvl]; }
     const t = (now - T0) / 1000, frac = currentFrac(), H = (S.t + frac) / 60;
     computeEnv(H); updateBoat(dt, t, frac, rdt); updateWaves(dt, H); nfStep(); updateWake(); foamStep(dt, t); updateNear(); ssStep(rdt); updateShadows(); updateChunks(CH.size ? 2 : 999);
+    gfxNaN(null);
     // camera
     let eye, V, kfov = 0;
     if (KINO.on && !SHOW && !PAINTV){
@@ -341,6 +442,7 @@
       gl.depthMask(true); gl.disable(gl.BLEND);
     }
     updateLabels(VPf, eye, W, Hh);
+    gfxEnd(now, eye, VPn, W, Hh);
     if (PROF.on) profEnd();
     if (SNAP) snapTake();
   }

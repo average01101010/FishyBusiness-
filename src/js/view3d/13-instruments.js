@@ -404,7 +404,7 @@
     if (!m || !m.n || !cam.helm || !WETON) return;
     const rain = env.temp > 0.5 ? sstep(0.04, 0.7, env.precip || 0) : 0, spray = sstep(12, 22, env.wind || 0) * 0.5, R = Math.max(rain, spray, (env.wet || 0) * 0.45);
     if (R < 0.03) return;
-    if (!PDROP){ try { PDROP = program(LITN_VS, DROP_FS, ['aPos', 'aNor', 'aCol'], 'draaper'); } catch (e){ console.warn('draaper', e.message || e); PDROP = false; } }
+    if (!PDROP){ try { PDROP = program(LITN_VS, DROP_FS, ['aPos', 'aNor', 'aCol'], 'draaper'); } catch (e){ console.warn('3D ' + 'draaper' + ' faller bort · ' + GPU, e); PDROP = false; } }
     if (!PDROP) return;
     gl.useProgram(PDROP.p); const u = PDROP.u; gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniformMatrix4fv(u.uM, false, BMrel); gl.uniform1f(u.uRain, R); gl.uniform1f(u.uT, t % 3600); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb);
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
