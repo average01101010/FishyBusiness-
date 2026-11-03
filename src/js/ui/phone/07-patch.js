@@ -1,7 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['havmottak-031126', '03.11.2026', 'Mottakene for havflåten', 'The ocean fleet\'s plants', [
-       ['Elleve store mottak for havfiskeflåten er kommet på kartet, blant annet i Måløy, Selje, Florø og Egersund. Der legger trålere og ringnotbåter til for å levere.', 'Eleven large plants for the ocean fleet are on the chart, among them Måløy, Selje, Florø and Egersund. Trawlers and purse seiners land their catch there.'],
+       ['Tretten store mottak for havfiskeflåten er kommet på kartet, blant annet i Måløy, Selje, Florø, Egersund og Rypefjord ved Hammerfest. Der legger trålere og ringnotbåter til for å levere.', 'Thirteen large plants for the ocean fleet are on the chart, among them Måløy, Selje, Florø, Egersund and Rypefjord by Hammerfest. Trawlers and purse seiners land their catch there.'],
+       ['Utstyrsbutikken i Rypefjord og verftet ved Fiskarstrand har flyttet til nye kaier like ved.', 'The tackle shop in Rypefjord and the yard by Fiskarstrand have moved to new quays close by.'],
+       ['Fisk som er fryst om bord, betales etter prisen for sjøfryst fisk.', 'Fish frozen at sea is paid at the price of sea-frozen fish.'],
     ]],
     ['hav-031126', '03.11.2026', 'Nota, levering og redskapet under vann', 'The seine, landing and the gear under water', [
        ['Ringnotbåtene kaster nota rundt stimen, snurper og pumper, og snurrevadbåtene setter og drar snurrevaden. Du ser det i 3D.', 'The purse seiners shoot the seine round the school, purse it and pump, and the Danish seiners set and haul their seine. You see it in 3D.'],

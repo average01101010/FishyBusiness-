@@ -5,13 +5,13 @@
 // uh: kg round weight per kg gutted without head; size: [median kg, log-spread]; minKg: minimum legal size (released below).
 const SPECIES = {
   torsk:{no:'Torsk', en:'Cod', k:0.376, base:1.0, prod:0.6, dep:[70, 1.0], av:[1,1,1,1,1,1,1,1,1,1.1,1.1,1], skrei:[0.6,2.0,2.5,0.8,0,0,0,0,0,0,0,0.1],
-    pm:[52.6,55.0,54.5,52.9,43.7,42.4,39.9,42.0,43.3,51.5,51.7,50.9], sig:0.04, size:[2.0, 0.55], skreiSize:[5.0, 0.4], minKg:0.8, uh:1.5, liver:6.5, roe:10,
+    pmF:[54.3,54.5,53.8,53.5,52.4,52.8,52.9,55.3,58.9,64.1,66.5,60.4], pm:[52.6,55.0,54.5,52.9,43.7,42.4,39.9,42.0,43.3,51.5,51.7,50.9], sig:0.04, size:[2.0, 0.55], skreiSize:[5.0, 0.4], minKg:0.8, uh:1.5, liver:6.5, roe:10,
     cls:[[9, 45.33, 'Over 9 kg'], [6, 43.67, '6–9 kg'], [3.7, 42.00, '3,7–6 kg'], [1.5, 40.33, '1,5–3,7 kg'], [0, 38.67, 'Under 1,5 kg']], ref:2},
   hyse:{no:'Hyse', en:'Haddock', k:0.297, base:0.55, prod:0.62, dep:[110, 0.9], av:[1.7,2.0,1.4,0.7,0.6,0.6,0.8,0.6,0.8,1.0,0.9,0.8],
-    pm:[26.4,26.8,25.4,26.8,27.4,26.6,22.9,23.7,28.9,30.1,32.3,32.6], sig:0.03, size:[1.3, 0.4], minKg:0.5, uh:1.4, liver:3.5, roe:7,
+    pmF:[43.5,41.9,40.5,39.2,36.9,37.8,37.6,38.0,42.0,47.8,45.7,44.6], pm:[26.4,26.8,25.4,26.8,27.4,26.6,22.9,23.7,28.9,30.1,32.3,32.6], sig:0.03, size:[1.3, 0.4], minKg:0.5, uh:1.4, liver:3.5, roe:7,
     cls:[[1.1, 20.95, 'Over 1,1 kg', 1.128], [0.8, 18.09, '0,8–1,1 kg'], [0, 3.51, 'Under 0,8 kg']], ref:0},
   sei:{no:'Sei', en:'Saithe', k:0.9, base:0.8, prod:0.5, dep:[45, 1.2], av:[2.1,0.9,0.5,0.6,2.1,1.0,0.6,0.6,0.8,0.7,1.1,1.0],
-    pm:[21.2,22.4,21.9,20.7,17.6,18.0,17.0,19.1,22.7,24.4,26.2,26.9], sig:0.07, size:[2.0, 0.55], minKg:0.35, uh:1.35, liver:3.5, roe:7,
+    pmF:[21.8,22.8,22.2,21.5,22.5,23.2,24.2,23.9,24.9,25.2,23.1,22.5], pm:[21.2,22.4,21.9,20.7,17.6,18.0,17.0,19.1,22.7,24.4,26.2,26.9], sig:0.07, size:[2.0, 0.55], minKg:0.35, uh:1.35, liver:3.5, roe:7,
     cls:[[3.1, 20.51, 'Over 3,1 kg'], [1.6, 19.77, '1,6–3,1 kg'], [0.7, 18.22, '0,7–1,6 kg'], [0, 11.00, 'Under 0,7 kg']], ref:1},
   lyr:{no:'Lyr', en:'Pollack', k:0.136, base:0.12, prod:0.35, dep:[40, 0.9], av:[1.4,1.2,1.6,2.0,1.1,0.6,0.5,0.6,0.9,0.7,0.7,0.7],
     pm:[21.4,21.4,20.7,21.4,23.6,24.3,25.0,25.0,25.0,27.9,27.9,27.1], sig:0.03, size:[2.2, 0.4], minKg:0.5, uh:1.4,
@@ -65,6 +65,10 @@ const SPECIES = {
   snokrabbe:{no:'Snøkrabbe', en:'Snow crab', npc:true, shell:true, k:1, base:1, prod:0.3, dep:[250, 0.6], av:[1,1,1,1,1,1,1,1,1,1,1,1],
     pm:[133.3,133.0,136.8,118.5,94.5,123,123,123,123,123,123,128], sig:0.05, size:[0.6, 0.3], minKg:0, uh:1, cls:[[0, 94.5, 'Snøkrabbe']], ref:0}
 };
+// pmF (cod, haddock, saithe): the price of fish frozen at sea, by month, from the landing notes for 2025 from vessels of 28 m and over
+// (Fiskeridirektoratet, fangstdata 2025, NLOD; kroner a kilo round weight, the frozen lots only; November and December filled between
+// their neighbours). A frozen lot sells at it instead of pm (clsPrice, 03-simulation.js). Jonas 03.11.2026: «Prisene skal reflektere
+// virkeligheten» (until then frozen fish was paid as fresh, by Råfisklaget's minimum prices, which are the same for both).
 // fish are caught by jig, line and net; shellfish only in pots. Everything that loops over fish uses SP; ALLSP adds the shellfish after
 // the first fish, the late ones (added after the crab) and last the ocean fleet's (npc), so the per-species seeds (ALLSP.indexOf) keep
 // their values. PLAYSP is ALLSP without the ocean fleet's: what the player can fish and the Fish guide and the records show.

@@ -62,7 +62,7 @@ const STEDER_D = /*@include(data/steder.json)*/null;   // the shops and yards (0
   const hkg = x => wf(x) + HAV_SP.reduce((a, s) => a + ((x.sp[s] || [0])[0] || 0), 0) + ((x.sp.blakveite || [0])[0] || 0);
   for (const x of MOTTAK.m.filter(x => (x.t === 'Ordinært anlegg' || x.t === 'Kaiselger') && x.q && !ok.includes(x) && (x.big || 0) >= 0.2 && hkg(x) >= 500000).sort((a, b) => hkg(b) - hkg(a))){
     // (within 1.5 km of a harbour it is part of it; a harbour of its own keeps 1.5 km to the shops, yards and rorbuer as every plant does,
-    // docs/handelssteder.md, so one by a shop or yard is left out until the places are moved: Rypefjord, Fiskarstrand øst, 03.11.2026)
+    // docs/handelssteder.md; tools/steder/havflytt.py moved the shop in Rypefjord and the yard by Fiskarstrand øst for that, 03.11.2026)
     const g = groups.find(g => Math.min(km(g.lead.p, x.p), km(g.lead.q, x.q)) < 1.5);
     if (g){ g.hav.push(x); continue; }
     if (STEDER_D && STEDER_D.r && STEDER_D.r.some(r => Math.hypot(r[0] - x.p[0], r[1] - x.p[1]) < 1.5)) continue;

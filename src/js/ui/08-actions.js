@@ -140,7 +140,7 @@ function sell(){
     const sp = x.sp, sd = SPECIES[sp], c = x.cls != null ? x.cls : sd.ref, g = grade(x.fresh);
     // king crab is paid by class while it lives (no grades), and nothing once dead (Råfisklaget: dead crab 0 kr)
     const deadKC = sp === 'krabbe' && (x.fresh || 0) < KC.dead;
-    let ppk = sp === 'krabbe' ? (deadKC ? 0 : clsPrice(port, sp, c, H, false)) : g === 'V' ? 1 : clsPrice(port, sp, c, H, x.hook) * GM[g];
+    let ppk = sp === 'krabbe' ? (deadKC ? 0 : clsPrice(port, sp, c, H, false)) : g === 'V' ? 1 : clsPrice(port, sp, c, H, x.hook, x.frozen) * GM[g];   // (a frozen lot at the price of fish frozen at sea, pmF)
     if (x.gut && (sp === 'hyse' || sp === 'sei')) ppk += 0.30;           // no gutting fee deducted
     let v = x.kg * ppk, gross = v;
     if (deadKC) crabDead += x.kg;

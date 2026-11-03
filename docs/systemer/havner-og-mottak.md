@@ -87,8 +87,8 @@ Jonas 03.11.2026: «Start H0 - Grunnmuren». Grunnmuren gjør at havbåtene får
     - Ligger det innen 1,5 km av en havn, hører det til den havna (`mk.hav`).
     - Ellers blir det en egen havn bare for havfiskefartøy (`havOnly`, `havMottak`, `mottak:false`). Kystbåtene kan ikke legge til der, det kommer ingen bestillinger derfra, og driftsplanen og Kystkartet ser det ikke.
     - Mottaket må ligge 1,5 km fra butikker, verft og rorbuer (`docs/handelssteder.md`).
-    - 11 slike havner: Ellingsøy vest, Florø, Selje, Hjørungavåg, Fiskarstrand, Lødingen, Longva, Måløy, Bulandet, Egersund sør og Avaldsnes.
-    - Rypefjord (Hammerfest) og Fiskarstrand øst er tatt ut, fordi butikken og verftet står under 1,5 km unna. Det står i backloggen.
+    - 13 slike havner: Ellingsøy vest, Florø, Selje, Hjørungavåg, Fiskarstrand, Fiskarstrand øst, Lødingen, Longva, Måløy, Rypefjord (Hammerfest), Bulandet, Egersund sør og Avaldsnes.
+    - Butikken i Rypefjord og verftet ved Fiskarstrand sto under 1,5 km fra havflåtens mottak. De er flyttet med `tools/steder/havflytt.py` (Jonas 03.11.2026: «Rypefjord og fiskarstrand øst må også ha mottak for havflåten. Flytt om så butikken eller verftet»): butikken 559 m til en kai på 96 m i Rypefjord, og verftet 1,2 km til en kai på 36 m. Flyttingen følger reglene i `landflytt.py`: land bak, ingen bro, 1,5 km til alle andre steder og 5 km mellom verft.
   - **`portWhy(pt, type)`:** et havfiskefartøy (`cls:'hav'`) kan legge til og levere bare der kaia er lang og dyp nok (som `quayFit`: 90 % av kaia minst lengden og 2 m, dybden minst dypgangen og 0,5 m). I tillegg må mottaket ta minst 5 % fra en av båtens redskapsgrupper (`VESSELS.mottak`: Trål, Not, Konvensjonelle), eller få en femdel fra 28 m og over. Grunnen gis på norsk og engelsk. Kystbåtene kan bruke alle mottakene som før.
   - **Ukjent dybde:** 0 i registeret (57 av 293 kaier) betyr at dybden ikke er kjent. Den regnes som 3 m (`QUAY_DEPTH_UNKNOWN`, som `quayFit`), og meldingen sier at den ikke er kjent.
   - **Stikkprøve 03.11.2026:** Båtsfjord, Tromsdalen, Selje og Skudeneshavn tar alle havbåtene. Melbu (84 m) nekter den pelagiske (75 m). Måløy (46 m) tar bare kystnotbåten. Kristiansand har ukjent dybde. En sjark kan ikke legge til ved et havmottak. Skjermbilder av Måløy i begge formater.
@@ -103,9 +103,9 @@ Jonas 03.11.2026: «Start H0 - Grunnmuren». Grunnmuren gjør at havbåtene får
     | bunntral | 7 |
     | pelagisk | 4 |
 
-    Det er av 161 kystmottak med kai. I tillegg kommer de 11 havnene som bare er for havflåten.
+    Det er av 161 kystmottak med kai. I tillegg kommer de 13 havnene som bare er for havflåten.
 - **Prisene (`core/02-species-gear.js`):**
-  - **Fryst fisk betales fortsatt som fersk av samme klasse,** slik det ble avtalt (`priser-og-salg.md`). Sluttsedlene for 2025 (fartøy på 28 m og over, bare de fryste partiene) gir torsk 52–66, hyse 37–48 og sei 22–25 kr per kg rund vekt. For 2024–2025 er fryst / fersk 1,19 for torsk, 2,5 for hyse og 1,6 for sei. Om havbåtene skal få sin egen pris for fryst fisk, er et spørsmål til Jonas (backloggen).
+  - **Fisk fryst om bord** får sin egen pris etter sedlene (`pmF`, Jonas 03.11.2026: «Prisene skal reflektere virkeligheten»), se 5.4 i `priser-og-salg.md`.
   - Sild, makrell og snøkrabbe har prisene per måned fra de samme sedlene: sild i RSW 11,5–12,8 kr, makrell i RSW 14–48 kr (lavest om sommeren, høyest i oktober) og fryst snøkrabbe 94–137 kr.
   - Månedene uten landinger er fylt mellom naboene, og laveste måned er gulvet.
 - **Tester:** `tests/unit/havsteg.test.mjs` (havnene, regelen, grunnen, prisene for havartene) og `regions` (landsdelene til de nye havnene, `port-regions.json` skrevet på nytt).

@@ -1,6 +1,6 @@
 // The ocean step's groundwork (H0 of docs/planer/havsteget.md, 03.11.2026): which plants take an ocean vessel (06b-coastports.js
 // portWhy: the quay's length and depth, the gear groups it takes in, or a fifth from 28 m and over), and the prices of fish frozen at
-// herring, mackerel and snow crab from the landing notes for 2025 (frozen fish is paid as fresh, as agreed: priser-og-salg.md).
+// the prices of fish frozen at sea (pmF) and of herring, mackerel and snow crab from the landing notes for 2025.
 export default function (t){
   const K = t.K; K.set('S', K.newState());
   const P = K.PORTS.filter(p => p.mottak && p.mk && p.mk.q), V = K.VESSELS;
@@ -25,7 +25,9 @@ export default function (t){
   t.ok(wu && /ikke kjent/.test(wu[0]), `ukjent dybde i registeret (0) regnes som ${K.QUAY_DEPTH_UNKNOWN} m og sies som ukjent: ${unk && unk.name}, «${wu && wu[0]}»`);
   // prices: the ocean species from the notes
   const pt = P[0], H = (Date.UTC(2027, 2, 15) - K.EPOCH) / 36e5;
-  const pr = sp => K.clsPrice(pt, sp, K.SPECIES[sp].ref, H, false);
+  const pr = (sp, fz) => K.clsPrice(pt, sp, K.SPECIES[sp].ref, H, false, fz);
+  t.ok(pr('hyse', true) > pr('hyse', false) && pr('torsk', true) > 40 && pr('sei', true) > 18, `fryst om bord i mars (sedlene 2025): torsk ${pr('torsk', true)} (fersk ${pr('torsk', false)}), hyse ${pr('hyse', true)} (${pr('hyse', false)}), sei ${pr('sei', true)} (${pr('sei', false)}) kr/kg`);
+  t.ok(pr('lyr', true) === pr('lyr', false), 'en art uten pris for fryst selges som fersk');
   const sild = pr('sild'), mak = K.clsPrice(pt, 'makrell', 0, (Date.UTC(2027, 8, 15) - K.EPOCH) / 36e5, false), sk = pr('snokrabbe');
   t.ok(sild > 10 && sild < 15 && mak > 35 && mak < 50 && sk > 110 && sk < 160, `sild ${sild}, makrell i september ${mak}, snøkrabbe ${sk} kr/kg (sluttsedlene 2025)`);
 }
