@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['havmottak-031126', '03.11.2026', 'Mottakene for havflåten', 'The ocean fleet\'s plants', [
+       ['Elleve store mottak for havfiskeflåten er kommet på kartet, blant annet i Måløy, Selje, Florø og Egersund. Der legger trålere og ringnotbåter til for å levere.', 'Eleven large plants for the ocean fleet are on the chart, among them Måløy, Selje, Florø and Egersund. Trawlers and purse seiners land their catch there.'],
+    ]],
     ['hav-031126', '03.11.2026', 'Nota, levering og redskapet under vann', 'The seine, landing and the gear under water', [
        ['Ringnotbåtene kaster nota rundt stimen, snurper og pumper, og snurrevadbåtene setter og drar snurrevaden. Du ser det i 3D.', 'The purse seiners shoot the seine round the school, purse it and pump, and the Danish seiners set and haul their seine. You see it in 3D.'],
        ['Havflåten leverer fangsten ved det nærmeste mottaket som tar imot den og har kai stor nok, ligger der noen timer og går så hjem. AIS viser når et skip er på vei for å levere og når det leverer.', 'The ocean fleet lands its catch at the nearest plant that takes it and has a quay big enough, lies there a few hours and then goes home. The AIS shows when a ship is on its way to land and when it is landing.'],

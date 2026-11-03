@@ -73,6 +73,41 @@ Jonas 04.10.2026: «alle nye brukere skal få bestemme selv hvor i landet de øn
 - `tests/starttest.py` sjekker havnene, Salgslaget, hele veien fra brevet til båtnavnet med start i nord, feltet og tipsene der, et salg ved kystmottaket og flyttingen.
 - **Svakheter:** Bestillingene (`CUSTOMERS`), mannskapets hjemsteder, NPC-flåten og avisa er fortsatt Senja. Kysthavnene får ikke kaiutstyr i 3D når båten kommer dit etter at 3D er bygget, før siden lastes på nytt. Naustet er ikke plassert ennå.
 
+## 4.18c Mottakene for havfiskeflåten (H0 av `docs/planer/havsteget.md`, 03.11.2026)
+
+Jonas 03.11.2026: «Start H0 - Grunnmuren». Grunnmuren gjør at havbåtene får havner og priser før de låses opp i H1. Spillerne merker bare de nye mottakene på kartet.
+
+- **Dataene (`tools/mottak/mottak.py hav`):** henter sluttsedlene 2024–2025 (Fiskeridirektoratet, NLOD) og føyer to ting inn i `src/data/mottak.json` slik den er. Flyttingene for bruer og land, som ble gjort etter at fila ble laget, står derfor.
+  - Sild (NVG), makrell og snøkrabbe blant artene per mottak.
+  - `big`: andelen av alt mottaket tar imot, som kommer fra fartøy på 28 m og over. 88 mottak får en femdel eller mer.
+  - Den vanlige kjøringen av verktøyet teller det samme.
+- **Havnene (`core/06b-coastports.js`):**
+  - **Hva hver havn kjenner:** redskapsgruppene den tar imot (`mk.gear`), andelen fra 28 m og over (`mk.big`), havartene (`mk.hsp`), og kaia (`mk.q`: lengde og dybde fra registerets kaifront, den lengste i havna).
+  - **Havflåtens mottak:** et mottak som tar minst 500 t i året av spillets arter og havartene, med en femdel eller mer fra 28 m og over.
+    - Ligger det innen 1,5 km av en havn, hører det til den havna (`mk.hav`).
+    - Ellers blir det en egen havn bare for havfiskefartøy (`havOnly`, `havMottak`, `mottak:false`). Kystbåtene kan ikke legge til der, det kommer ingen bestillinger derfra, og driftsplanen og Kystkartet ser det ikke.
+    - Mottaket må ligge 1,5 km fra butikker, verft og rorbuer (`docs/handelssteder.md`).
+    - 11 slike havner: Ellingsøy vest, Florø, Selje, Hjørungavåg, Fiskarstrand, Lødingen, Longva, Måløy, Bulandet, Egersund sør og Avaldsnes.
+    - Rypefjord (Hammerfest) og Fiskarstrand øst er tatt ut, fordi butikken og verftet står under 1,5 km unna. Det står i backloggen.
+  - **`portWhy(pt, type)`:** et havfiskefartøy (`cls:'hav'`) kan legge til og levere bare der kaia er lang og dyp nok (som `quayFit`: 90 % av kaia minst lengden og 2 m, dybden minst dypgangen og 0,5 m). I tillegg må mottaket ta minst 5 % fra en av båtens redskapsgrupper (`VESSELS.mottak`: Trål, Not, Konvensjonelle), eller få en femdel fra 28 m og over. Grunnen gis på norsk og engelsk. Kystbåtene kan bruke alle mottakene som før.
+  - **Hvor regelen gjelder:** «Fortøy» (`moorAll`), Autonav til en havn (`leiaTo`), salget (`sell`) og «Lever» (`portServices`).
+  - **Målt:**
+
+    | Fartøy | Mottak som tar det |
+    |---|---|
+    | autoliner | 30 |
+    | snøkrabbe | 17 |
+    | ringnot38 | 35 |
+    | bunntral | 7 |
+    | pelagisk | 4 |
+
+    Det er av 161 kystmottak med kai. I tillegg kommer de 11 havnene som bare er for havflåten.
+- **Prisene (`core/02-species-gear.js`):**
+  - **Fryst fisk betales fortsatt som fersk av samme klasse,** slik det ble avtalt (`priser-og-salg.md`). Sluttsedlene for 2025 (fartøy på 28 m og over, bare de fryste partiene) gir torsk 52–66, hyse 37–48 og sei 22–25 kr per kg rund vekt. For 2024–2025 er fryst / fersk 1,19 for torsk, 2,5 for hyse og 1,6 for sei. Om havbåtene skal få sin egen pris for fryst fisk, er et spørsmål til Jonas (backloggen).
+  - Sild, makrell og snøkrabbe har prisene per måned fra de samme sedlene: sild i RSW 11,5–12,8 kr, makrell i RSW 14–48 kr (lavest om sommeren, høyest i oktober) og fryst snøkrabbe 94–137 kr.
+  - Månedene uten landinger er fylt mellom naboene, og laveste måned er gulvet.
+- **Tester:** `tests/unit/havsteg.test.mjs` (havnene, regelen, grunnen, prisene for havartene) og `regions` (landsdelene til de nye havnene, `port-regions.json` skrevet på nytt).
+
 ## 5.25f Fars naust og butikken på kaia i 3D (05.10.2026)
 
 - Modellene kommer fra `tools/harbour/naust.py` og `butikk.py`, og hvor de står, regner `core/07c-naust.js` ut. De ligger i siden som `glb-naust` og `glb-shop`.

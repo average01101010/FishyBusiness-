@@ -7,7 +7,8 @@
 #   year), boats (vessels a year), sp {species: [kg a year, share live, price index, months as a 12-bit mask]}, gear {group: share},
 #   p [x, y] in the game's frame (km), q the quay face it lies at from the game's vector packs [x, y, the normal's angle, length m,
 #   depth m, kind, metres from the register's point] or null when none is within 600 m,
-#   small (share of the landings from boats under 15 m), rf (Råfisklaget's type and zone)
+#   small (share of the landings from boats under 15 m), big (share from vessels of 28 m and over), rf (Råfisklaget's type and zone)
+#   python3 tools/mottak/mottak.py hav   adds big and herring, mackerel and snow crab to src/data/mottak.json as it is (H0, 03.11.2026)
 # Personal data in Råfisklaget's map (contact, e-mail, phone) is dropped as it is read.
 # No company names (Jonas 07.10.2026: «vi må fjerne alle ekte firma-navn fra fiskemottakene ... Jeg orker ikke å bli saksøkt»): the register's
 # name of the firm is used to find the receiver but never written out; the game names a receiver by its place (v, the postal town).
@@ -27,8 +28,9 @@ ADR = 'https://ws.geonorge.no/adresser/v1/sok'
 # the game's species by the notes' «Art - gruppe» and «Art - FDIR» (and king crab, which is coming): cod of either stock, haddock,
 # saithe, pollack, ling, tusk, common redfish (not beaked), Atlantic halibut, Greenland halibut (blåkveite, 07.10.2026), brown crab
 # of either sex, king crab
-GROUP = {'Torsk': 'torsk', 'Hyse': 'hyse', 'Sei': 'sei', 'Taskekrabbe': 'krabbe', 'Kongekrabbe, han': 'kongekrabbe', 'Kongekrabbe, annen': 'kongekrabbe'}
-ART = {'Lyr': 'lyr', 'Lange': 'lange', 'Brosme': 'brosme', 'Uer (vanlig)': 'uer', 'Kveite': 'kveite', 'Blåkveite': 'blakveite'}
+GROUP = {'Torsk': 'torsk', 'Hyse': 'hyse', 'Sei': 'sei', 'Taskekrabbe': 'krabbe', 'Kongekrabbe, han': 'kongekrabbe', 'Kongekrabbe, annen': 'kongekrabbe',
+         'Makrell': 'makrell', 'Snøkrabbe': 'snokrabbe'}   # (the ocean step, H0 of docs/planer/havsteget.md, 03.11.2026: mackerel and snow crab)
+ART = {'Lyr': 'lyr', 'Lange': 'lange', 'Brosme': 'brosme', 'Uer (vanlig)': 'uer', 'Kveite': 'kveite', 'Blåkveite': 'blakveite', 'Norsk vårgytende sild': 'sild'}
 def species(art, group): return GROUP.get(group) or ART.get(art)
 def get(url, f, **kw):
     if os.path.exists(f): return f
@@ -82,10 +84,11 @@ def notes_count(years):
             if r[iNat].strip('"') != 'NOR': continue
             mt = r[iM].strip('"')
             if not mt: continue
-            e = agg.setdefault(mt, dict(kg=0.0, docs=set(), boats=set(), sp={}, gear={}, small=0.0))
+            e = agg.setdefault(mt, dict(kg=0.0, docs=set(), boats=set(), sp={}, gear={}, small=0.0, big=0.0))
             kg = num(r[iW]); e['kg'] += kg; e['docs'].add(r[iDoc]); e['boats'].add(r[iBoat])
             g = r[iG].strip('"'); e['gear'][g] = e['gear'].get(g, 0.0) + kg
             if 0 < num(r[iLen]) < 15: e['small'] += kg
+            if num(r[iLen]) >= 28: e['big'] += kg      # (vessels of 28 m and over: the ocean fleet's plants)
             sp = species(r[iA].strip('"'), r[iAG].strip('"'))
             if sp:
                 s = e['sp'].setdefault(sp, [0.0, 0.0, 0.0, 0]); m = r[iMon].strip('"'); v = num(r[iV])
@@ -159,6 +162,20 @@ def main():
         # only the places, into the receivers already made (src/data/mottak.json)
         f = os.environ.get('KYST_MOTTAK') or os.path.join(ROOT, 'src', 'data', 'mottak.json'); d = json.load(open(f)); places(d['m'])
         json.dump(d, open(f, 'w'), ensure_ascii=False, separators=(',', ':')); print(sum(1 for x in d['m'] if x.get('v')), 'of', len(d['m']), 'with a place'); return
+    if sys.argv[1:] == ['hav']:
+        # only what the ocean step needs (H0, 03.11.2026), into the receivers already made, so the moves made after (bruflytt,
+        # landflytt) stay: herring, mackerel and snow crab among the species, and big, the share landed from vessels of 28 m and over
+        f = os.environ.get('KYST_MOTTAK') or os.path.join(ROOT, 'src', 'data', 'mottak.json'); d = json.load(open(f)); years = d['meta']['years']; ny = len(years)
+        agg = notes(years); n = 0
+        for x in d['m']:
+            a = agg.get(x['id'])
+            if not a: continue
+            x['big'] = round(a.get('big', 0) / a['kg'], 3) if a['kg'] else 0
+            for k in ('sild', 'makrell', 'snokrabbe'):
+                v = a['sp'].get(k)
+                if v and v[0] / ny >= 50: x['sp'][k] = [round(v[0] / ny), round(v[1] / v[0], 2) if v[0] else 0, round(v[2], 2), v[3]]; n += 1
+        d['meta']['hav'] = time.strftime('%Y-%m-%d') + ': sild, makrell, snøkrabbe og big (andel fra fartøy 28 m og over) fra sluttsedlene ' + '-'.join(map(str, years))
+        json.dump(d, open(f, 'w'), ensure_ascii=False, separators=(',', ':')); print(n, 'species rows added,', sum(1 for x in d['m'] if x.get('big', 0) >= 0.2), 'plants with a fifth or more from 28 m and over'); return
     Y = int(time.strftime('%Y')); years = [int(a) for a in sys.argv[1:]] or [Y - 2, Y - 1]
     os.makedirs(CACHE, exist_ok=True); os.makedirs(OUT, exist_ok=True)
     reg = register(); rf = rafisklaget(); agg = notes(years); ny = len(years)
@@ -179,7 +196,7 @@ def main():
         gear = {k: round(v / a['kg'], 3) for k, v in sorted(a['gear'].items(), key=lambda kv: -kv[1]) if a['kg'] and v / a['kg'] >= 0.02}
         x, y = frame.to_nat(e['ll'][1], e['ll'][0]); x, y = float(x), float(y)
         out.append(dict(id=mt, t=e['t'], k=e['k'], ll=e['ll'], p=[round(x, 4), round(y, 4)], q=snap(Q, x, y) if Q else None, src=e['src'], kg=round(kg), n_land=round(a['docs'] / ny), boats=round(a['boats'] / ny),
-                        sp=sp, gear=gear, small=round(a['small'] / a['kg'], 3) if a['kg'] else 0, rf=[f['type'], f['zone']] if f else None))
+                        sp=sp, gear=gear, small=round(a['small'] / a['kg'], 3) if a['kg'] else 0, big=round(a.get('big', 0) / a['kg'], 3) if a['kg'] else 0, rf=[f['type'], f['zone']] if f else None))
     out.sort(key=lambda x: -x['kg']); places(out)
     meta = dict(made=time.strftime('%Y-%m-%d'), years=years, src='Fiskeridirektoratet: kjøperregisteret og fangstdata (seddel), NLOD; Norges Råfisklag: mottakskartet',
                 n=len(out), nogeo=nogeo)
