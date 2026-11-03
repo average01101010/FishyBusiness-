@@ -199,6 +199,10 @@
       // the banner's middle in the world (the model's x along u, its z out to sea along -n), then the camera on the far side of the boat from it, low and near
       const R = (x, z) => [s.o[0] + Math.cos(ry) * x + Math.sin(ry) * z, s.o[1] - Math.sin(ry) * x + Math.cos(ry) * z], P = R(cx, F.z), yawW = Math.atan2(P[0] - bv.x, -(P[1] - bv.z));
       cam.helm = false; cam.yaw = yawW - bv.head + (off || 0); cam.pitch = pitch != null ? pitch : 0.08; cam.dist = dist || 4; return {d:Math.hypot(P[0] - bv.x, P[1] - bv.z), P}; }, signTake, get signs(){ return {pl:JSON.parse(JSON.stringify(SIGNV.pl, (k, v) => k === 'q' || k === 'pend' ? undefined : v)), seen:SIGNV.seen, tex:Object.keys(SIGNV.tex).length, drawn:SIGNV.drawn || [], flags:SIGNV.flags || 0}; }, tryView, hoist, get trying(){ return TRYK; }, get hoisting(){ return HOIST ? HOIST.k : null; }, TRY3D,
+    // a test camera behind a boat of the fleet (task 4, 03.11.2026): aimed at her, from astern along her heading (off turns it round her)
+    npcLook(id, dist, pitch, off){ if (id == null){ SIGNV.look = null; SIGNV.npc = null; return null; } const n = npcNow.find(q => q.id === id); if (!n) return null; SIGNV.npc = {id, off:off || 0};
+      SIGNV.look = [n.p.x * 1000, (env.tide || 0) + 3, n.p.y * 1000]; cam.helm = false; cam.yaw = n.hd + (off || 0) - bv.head; cam.pitch = pitch != null ? pitch : 0.2; cam.dist = dist || 120;
+      return {x:n.p.x, y:n.p.y, hd:n.hd, st:n.st, trawl:!!n.trawl, seine:n.seine || null, kit:!!n.K}; },
     roadsReady(){ if (NEARM) buildGround(); for (const c of CH.values()) freeChunk(c); CH.clear(); },
     fineReady(){ if (FINEM){ freeMesh(FINEM); FINEM = null; } if (NEARM){ freeMesh(NEARM); NEARM = null; updateNear(); } },
     fishCam(){ cam.helm = false; cam.dist = 7; cam.pitch = 0.22; cam.yaw = -0.85; },

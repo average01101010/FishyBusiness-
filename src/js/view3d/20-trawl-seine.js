@@ -249,6 +249,8 @@
     if (!NPCM) return;
     npcNow = npcStates(H).filter(n => !n.rs && Math.hypot(n.p.x * 1000 - eye[0], n.p.y * 1000 - eye[2]) < 16000);   // the rescue boat has her own model (RB)
     const kit = [];
+    // (a test camera following a boat of the fleet, G3.npcLook: aimed at her and from astern of her as she goes)
+    if (SIGNV.npc){ const f = npcNow.find(q => q.id === SIGNV.npc.id); if (f){ SIGNV.look = [f.p.x * 1000, (env.tide || 0) + 3, f.p.y * 1000]; cam.yaw = f.hd + SIGNV.npc.off - bv.head; } }
     for (const n of npcNow){
       // a boat on your tow line (core/09g-turer.js): placed astern of your boat as the view shows her, 30 m of line from your stern
       // to her bow, so she follows smoothly between the simulation's minutes
