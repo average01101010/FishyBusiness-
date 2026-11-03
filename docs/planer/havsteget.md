@@ -297,7 +297,7 @@ Hvert valg har en anbefaling og én setning om hvorfor.
     - Stikkprøven og skjermbilder i begge formater: Båtsfjord, Tromsdalen, Melbu, Måløy, Selje, Skudeneshavn, Kristiansand, Rypefjord og Fiskarstrand øst.
   - Se 4.18c i `havner-og-mottak.md`.
   - **Neste:** H1 i en ny økt, når valgene V1–V6 er tatt.
-- 03.11.2026: **H1 bygd** (Jonas: «Start H1»; gren `ccr-2f9fa76d-44zqtm`, rullet ut fra `ccr-5e1ba2f4-pusvyd`). Valgene V1 A, V2 B og V3 A, se toppen.
+- 03.11.2026: **H1 bygd** (Jonas: «Start H1»; gren `ccr-2f9fa76d-44zqtm`; rullet ut fra `ccr-5e1ba2f4-pusvyd` 03.11.2026 (77be245), med Hetzner og Pages grønne). Valgene V1 A, V2 B og V3 A, se toppen.
   - **Tillatelsene:** fire, med kvotefaktor, og kvoten per faktor fra J-161-2026. Gruppedelingen for torsk, hyse og sei følger kvotekjeden.
   - **Registeret:** antallet er som i virkeligheten (26, 36, 69 og 34), og ett NPC-skip er borte for hver tillatelse en spiller eier.
   - **Prisen:** skroget pluss kvotene til sin verdi. Ukas selger har sine faktorer.
