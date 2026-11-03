@@ -37,7 +37,7 @@
   const grpText = (V, O) => O ? L('lukket gruppe, hjemmel ' + O.hl + ' (faktisk lengde ' + fmt(V.len, 2) + ' m)', 'closed group, right of ' + O.hl + ' (actual length ' + fmt(V.len, 2) + ' m)') : V.cls === 'hav' ? L('havfiske, konsesjon', 'ocean, licence') : V.len >= 11 ? L('bare lukket gruppe (11 m og mer)', 'closed group only (11 m and more)') : V.len < 8 ? L('åpen gruppe under 8 m', 'open group under 8 m') : V.len < 10 ? L('åpen gruppe 8–9,99 m', 'open group 8–9.99 m') : L('åpen gruppe 10–10,99 m', 'open group 10–10.99 m');
   const tn = n => n >= 10000 ? fmt(n / 1000, n >= 100000 ? 0 : 1) + ' t' : fmt(n, 0) + ' kg';
   function mkCard(k, O){
-    const V = VESSELS[k], price = O ? V.price + licValue(O) : V.price, mine = S.boat.type === k && !O, tag = V.lock ? L('kommer', 'coming') : O ? O.hl : V.isNew ? L('nybygg', 'new build') : L('brukt', 'used');
+    const V = VESSELS[k], price = O ? V.price + licValue(O) : V.cls === 'hav' && typeof havPrice === 'function' ? havPrice(k, S.t / 60) : V.price, mine = S.boat.type === k && !O, tag = V.lock ? L('kommer', 'coming') : O ? O.hl : V.isNew ? L('nybygg', 'new build') : L('brukt', 'used');
     return '<button class="ph-card vcard' + (mine ? ' mine' : '') + '" data-pa="mksel" data-k="' + k + '"' + (O ? ' data-o="' + O.k + '"' : '') + '><span class="vpic">' + vesselSVG(k) + '</span><span class="vtx"><b>' + (O ? O[S.lang] : V.name[S.lang]) + '</b><small>' + fmt(V.len, 2) + ' × ' + fmt(V.beam, 1) + ' × ' + fmt(V.draft, 1) + ' m · ' + tn(V.holdCap) + '</small><span class="vpr">' + kr(price) + ' <i>' + tag + '</i></span></span></button>';
   }
   function market(){
@@ -57,7 +57,7 @@
       h.push('<p class="ph-note">' + L('Kystbåter fra 11 m. De kan bare fiske torsk, hyse og sei med hjemmel i lukket gruppe. Hjemlene for 11–21 m kommer senere, så nå selges de uten.', 'Coastal vessels from 11 m. They can only fish cod, haddock and saithe with a closed-group right. Rights for 11–21 m come later, so for now they are sold without.') + '</p>');
       for (const [k, V] of Object.entries(VESSELS)) if (V.cls === 'kyst') h.push(mkCard(k));
     } else {
-      h.push('<p class="ph-note">' + L('Havfiskeflåten fisker utenfor 12 nm, vest for dagens kart. Båtene kan ses, men ikke kjøpes før havfeltene åpner.', 'The ocean fleet fishes outside 12 nm, west of today\'s chart. The vessels can be looked at, but not bought until the ocean grounds open.') + '</p>');
+      h.push('<p class="ph-note">' + L('Havfiskefartøy fra 28 m. Hver båt trenger en tillatelse med kvotefaktorer, og den følger med båten til kvotens verdi. Båtene kan ses, men ikke kjøpes ennå. Tillatelsene og kvotene står i Kvote-appen under Marked.', 'Ocean vessels from 28 m. Each needs a permit with quota factors, and it comes with the vessel at the quota\'s value. They can be looked at, but not bought yet. The permits and quotas are in the Quota app under Market.') + '</p>');
       for (const [k, V] of Object.entries(VESSELS)) if (V.cls === 'hav') h.push(mkCard(k));
     }
     if (!atKind('verft')) h.push('<p class="ph-note">' + L('Båter kjøpes og selges på verftet.', 'Vessels are bought and sold at the yard.') + '</p>' + nearHint('verft'));
@@ -67,7 +67,7 @@
   // apply says «ingen», «–» or «ikke på denne båten»; it is never left out, so two boats side by side read alike
   const NOTHERE = () => L('ikke på denne båten', 'not on this boat');
   function specSecs(k, O){
-    const V = VESSELS[k], price = O ? V.price + licValue(O) : V.price, no = L('ingen', 'none'), ja = L('ja', 'yes'), yn = x => x ? ja : L('nei', 'no'), upto = n => n ? L('inntil ', 'up to ') + fmt(n, 0) : no, nm = q => EQUIP[q].name[S.lang];
+    const V = VESSELS[k], price = O ? V.price + licValue(O) : V.cls === 'hav' && typeof havPrice === 'function' ? havPrice(k, S.t / 60) : V.price, no = L('ingen', 'none'), ja = L('ja', 'yes'), yn = x => x ? ja : L('nei', 'no'), upto = n => n ? L('inntil ', 'up to ') + fmt(n, 0) : no, nm = q => EQUIP[q].name[S.lang];
     const holdTxt = {dekk:L('dekkslast i kasser og kar, ', 'deck load in boxes and tubs, '), rom:L('lasterom med is, ', 'a hold with ice, '), frys:L('fryseri, ', 'freezer hold, '), rsw:L('RSW-tanker, ', 'RSW tanks, ')}[V.hold.kind] + tn(V.holdCap) + ' (' + fmt(V.hold.m3, V.hold.m3 < 10 ? 1 : 0) + ' m³)';
     const house = {open:L('åpen båt', 'open boat'), hardtop:L('hardtopp over styreplassen', 'a hardtop over the helm'), hus:L('styrhus', 'wheelhouse')}[V.fac.house], galley = {none:no, plate:L('kokeplate', 'a hotplate'), bysse:L('bysse', 'a galley')}[V.fac.galley];
     const hull = {tre:L('tre', 'wood'), alu:L('aluminium', 'aluminium'), glassfiber:L('glassfiber', 'fibreglass'), 'stål':L('stål', 'steel')}[V.hullMat];
@@ -91,7 +91,7 @@
       [L('Oppgraderinger på verftet', 'Upgrades at the yard'), upRows.concat([kv(L('Større lasterom', 'A larger hold'), V.cls !== 'hav' ? ja : NOTHERE()), kv(L('Større motor', 'A bigger engine'), !V.outboard ? ja : NOTHERE())])]];
   }
   function sheet(k, O){
-    const V = VESSELS[k], bn = '«' + S.boatName + '»', ti = tradeIn(), free = atKind('verft') && !S.order, price = O ? V.price + licValue(O) : V.price, mine = S.boat.type === k && !O, h = [];
+    const V = VESSELS[k], bn = '«' + S.boatName + '»', ti = tradeIn(), free = atKind('verft') && !S.order, price = O ? V.price + licValue(O) : V.cls === 'hav' && typeof havPrice === 'function' ? havPrice(k, S.t / 60) : V.price, mine = S.boat.type === k && !O, h = [];
     const sec = (t, rows) => '<div class="vsec"><h5>' + t + '</h5>' + rows.filter(Boolean).join('') + '</div>';
     h.push('<button class="ph-btn alt mkback" data-pa="mksel">‹ ' + L('Tilbake til listen', 'Back to the list') + '</button>');
     h.push('<div class="ph-card vsheet"><h4>' + (O ? O[S.lang] : V.name[S.lang]) + '</h4><div class="vbig">' + vesselSVG(k) + '</div><p>' + V.desc[S.lang] + '</p>');
@@ -99,9 +99,17 @@
     if (O){ const yearly = Math.round(O.cod * avgPrice('torsk', S.t / 60, 7) / 1000) * 1000;
       h.push(sec(L('Hjemmel', 'Right'), [kv(L('Hjemmelslengde', 'Quota length'), O.hl), kv(L('Faktisk lengde', 'Actual length'), fmt(V.len, 2) + ' m'), kv(L('Torsk, fartøykvote', 'Cod, vessel quota'), fmt(O.cod / 1000, 3) + ' t'), kv(L('Hyse, maks / garantert', 'Haddock, max / guaranteed'), tq(O.hyse[0], 1) + ' / ' + tq(O.hyse[1], 1)),
         kv(L('Sei, maks / garantert', 'Saithe, max / guaranteed'), tq(O.sei[0], 1) + ' / ' + tq(O.sei[1], 1)), kv(L('Kvotepris', 'Quota price'), O.kpk + ' kr/kg · ' + kr(licValue(O))), kv(L('Torsk per år', 'Cod a year'), L('ca. ', 'about ') + kr(yearly))])); }
+    // an ocean vessel: the permit that comes with her, its vessel quota this year and how many the register has left (H1 of the ocean step)
+    const hid = V.cls === 'hav' && typeof havLicFor === 'function' ? havLicFor(k) : null;
+    if (hid){ const P = HAVLIC[hid], O = havOffer(hid, S.t / 60), Q = havQ(O), y = yearH(S.t / 60), G = havGroup(hid, y), t1 = n => n === Infinity ? L('ingen fartøykvote', 'no vessel quota') : fmt(n / 1000, 0) + ' t', NM = {torsk:['Torsk', 'Cod'], hyse:['Hyse', 'Haddock'], sei:['Sei', 'Saithe'], sild:['NVG-sild', 'NVG herring'], snokrabbe:['Snøkrabbe', 'Snow crab']};
+      h.push(sec(L('Tillatelse', 'Permit'), [kv(L('Tillatelse', 'Permit'), L(P.no, P.en)), kv(L('Selger', 'Seller'), O.from), kv(L('Kvotefaktor', 'Quota factor'), fmt(O.kf, 2) + ' · ' + L('snittet ', 'the mean ') + fmt(HAVKF[hid], 2)),
+        ...Object.keys(P.q26).map(sp => kv(L(NM[sp][0], NM[sp][1]) + ' ' + y, t1(Array.isArray(Q[sp]) ? Q[sp][0] : Q[sp]) + ' · ' + L('gruppa ', 'the group ') + fmt(G[sp], 0) + ' t')),
+        kv(L('Kvoteverdi', 'Quota value'), kr(havValue(O)) + ' · ' + L('skroget ', 'the hull ') + kr(V.price)),
+        kv(L('Ledige i registeret', 'Left in the register'), fmt(npcReg()[hid] || 0, 0) + ' ' + L('av', 'of') + ' ' + HREG[hid]), kv(L('Kilde', 'Source'), P.src)])); }
     for (const [t, rows] of secs.slice(1)) h.push(sec(t, rows));
     // buying
-    if (V.lock) h.push('<p class="ph-note">' + L('Havfiske kommer når kartet utvides vestover, utenfor 12 nm. Krever konsesjon.', 'Ocean fishing comes when the chart is extended west, outside 12 nm. Needs a licence.') + '</p>');
+    if (V.lock) h.push('<p class="ph-note">' + (hid ? L('Kan ikke kjøpes ennå. Prisen er skroget og kvotene: ' + HAVLIC[hid].no.toLowerCase() + ' med kvotefaktorene til selgeren følger med båten. Det krever blad B.', 'Cannot be bought yet. The price is the hull and the quotas: the ' + HAVLIC[hid].en.toLowerCase() + ' with the seller\'s quota factors comes with her. It needs blad B.') : L('Kan ikke kjøpes ennå.', 'Cannot be bought yet.')) + '</p>');
+    else if (hid && !mine && havLicWhy(k)) h.push('<p class="ph-note"><b>' + L(havLicWhy(k)[0], havLicWhy(k)[1]) + '</b></p>');
     else if (mine) h.push('<p class="ph-note">' + L(bn + ' er en slik båt.', bn + ' is one of these.') + '</p>');
     else if (O){ const mineO = S.lic && S.lic.id === O.id && S.boat.type === O.ves, inn = innOK(), A = deal(price, ti, inn), B = deal(price, 0, inn), F = S.fm || {n:0, kr:0}, bb = bladB();
       if (mineO) h.push('<p class="ph-note">' + L(bn + ' har denne hjemmelen.', bn + ' has this right.') + '</p>');

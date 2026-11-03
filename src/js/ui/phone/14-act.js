@@ -157,12 +157,17 @@
       // data-ti="1": trade in the vessel you follow; data-ti="0": add a vessel to the fleet (not an open-group boat before the company has a closed-group one)
       const V2 = VESSELS[d.k], ti = d.ti === '0' ? 0 : tradeIn(); if (!V2 || V2.lock || !atKind('verft') || S.order || (ti && S.boat.type === d.k)) return;
       if (!ti && V2.len < 11 && !hasLic()){ toast(L('Et rederi kan bare ha én båt i åpen gruppe.', 'A company can only have one boat in the open group.')); return; }
-      const x = deal(V2.price, ti); if (!x.ok){ toast(whyText(x) || t('no_cash')); return; } finance(x, 120); achAdd('boat');
+      // an ocean vessel comes with her permit from an NPC owner in the register (H1 of the ocean step, 03d-quota.js havLicTake)
+      const hw = V2.cls === 'hav' ? havLicWhy(d.k) : null; if (hw){ toast(L(hw[0], hw[1])); return; }
+      const x = deal(V2.cls === 'hav' ? havPrice(d.k, S.t / 60) : V2.price, ti); if (!x.ok){ toast(whyText(x) || t('no_cash')); return; } finance(x, 120); achAdd('boat');
+      const hl = V2.cls === 'hav' ? havLicTake(d.k, S.t / 60) : null; let hn = '';
       // a new build is delivered at once, at this yard, like a used vessel (Jonas 13.10.2026: «Fjern byggetiden når man bestiller nybygg»)
       if (ti) switchVessel(d.k);
-      else { const v = newVesselObj(d.k, S.boat.port); setTimeout(() => BUYM.show(v), 60); log('Kjøpte ' + V2.name.no + ' til flåten. Hun heter «' + v.boatName + '» og ligger i ' + portById(S.boat.port).name + '.', 'Bought the ' + V2.name.en + ' for the fleet. She is called «' + v.boatName + '» and lies at ' + portById(S.boat.port).name + '.'); }
+      else { const v = newVesselObj(d.k, S.boat.port, hl); hn = v.boatName; setTimeout(() => BUYM.show(v), 60); log('Kjøpte ' + V2.name.no + ' til flåten. Hun heter «' + v.boatName + '» og ligger i ' + portById(S.boat.port).name + '.', 'Bought the ' + V2.name.en + ' for the fleet. She is called «' + v.boatName + '» and lies at ' + portById(S.boat.port).name + '.'); }
       pressPut('boat', {type:d.k, nb:V2.isNew ? 1 : 0, price:V2.price});   // Kystposten (core/09h-press.js)
       if (ti && S.lic){ log('Kvoten i lukket gruppe fulgte med den gamle båten.', 'The closed-group quota went with the old vessel.'); regFree(S.lic.id); S.lic = null; freshQuota(); openUsedLoad(); }
+      if (hl){ if (ti){ S.lic = hl; freshQuota(); }
+        msg('Fiskeridirektoratet', HAVLIC[hl.id].no + ' med kvotefaktor ' + fmt(hl.kf, 2) + ' er registrert på «' + (ti ? S.boatName : hn) + '». Den er kjøpt fra ' + hl.from + '.', 'A ' + HAVLIC[hl.id].en.toLowerCase() + ' with quota factor ' + fmt(hl.kf, 2) + ' is registered to the vessel. It was bought from ' + hl.from + '.'); }
     }
     else if (a === 'adminbuy'){
       // the admin's free vessel for testing (adminOk: Jonas' account on the cloud's hosts, any local build): no price, no right, no lock, no yard; she

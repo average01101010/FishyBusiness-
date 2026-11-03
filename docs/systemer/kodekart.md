@@ -419,7 +419,7 @@ STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the wo
   - 76 `hsWork(p, H)`
   - 78 `stabTick(H)`
 
-## `src/js/core/03d-quota.js` (288 linjer)
+## `src/js/core/03d-quota.js` (368 linjer)
 
 Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood from 1 October 2026 (J-161-2026, fiskeridir.no)
 
@@ -430,52 +430,62 @@ Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood f
   - 40 `yearQuota(y)`
 - **54** the closed group: quota lengths the game sells, with J-161-2026's quota factors and quantities (§§ 16, 18, 19). Cod is a fixed
   - 71 `licQ(l, H, len)`
-  - 82 `sellerCod(id, H)`
-  - 88 `openUsedSave(q)`
-  - 90 `openUsedLoad()`
-  - 91 `freshQuota()`
-  - 92 `licStart(lic)`
-- **93** the stocks and the total quotas year by year. History and the advice for 2027 from the Institute of Marine Research (hi.no,
-  - 126 `kystAt(T, y)`
-  - 127 `kystF(lat, H)`
-  - 134 `stockYear(sp, y)`
-  - 151 `ssbAt(sp, H)`
-  - 152 `stockF(sp, H)`
-- **154** the open group's season. About 2 100 boats fish the group quota down a day at a time (more in the skrei season and on days
-  - 165 `qyOf(y)`
-  - 172 `qyBoats(Y, y)`
-  - 173 `qyStep(Y, y, d)`
-  - 191 `quotaNewYear(y)`
-  - 194 `qyAt(H)`
-  - 196 `codStopDoy(y)`
-  - 197 `openMaxAdd(H)`
-  - 202 `ffPlan(y)`
-  - 210 `ffPct(H)`
-- **212** the closed group's register: a fixed number of rights (1 622 in the cod fishery north of 62° N on 17.10.2025, case document
-  - 220 `npcReg()`
-  - 221 `regSend(fn, id)`
-  - 226 `regTake(id)`
-  - 228 `regFree(id)`
-  - 230 `regSeller(id, H)`
-- **232** structure quotas (forskrift om spesielle kvoteordninger for kystfiskeflåten, J-244-2025): quota lengths 11–27.99 m may buy a
-  - 236 `structRoom(l, id)`
-  - 238 `structPrice(id, H)`
-  - 239 `structIn(l, id, H)`
-  - 240 `licExtra(l)`
-  - 242 `structExpire(l, y)`
-- **243** the special scheme for quota lengths under 11 m (kap. 2, from 2025): an owner with two such boats, both owned since the year
-  - 245 `twoOK(la, lb, y)`
-- **246** quota cooperation (J-161-2026 § 31): two closed-group boats under 11 m with different owners; both owners aboard, the passive
-  - 250 `coopOffer(H)`
-  - 251 `coopOK(l, y)`
-- **253** Greenland halibut (blåkveite) for vessels under 28 m (J-241-2025, the regulation for 2026; docs/blakveite.md 2-3, 07.10.2026)
-  - 261 `bkSeason(y)`
-  - 264 `bkOpen(H)`
-  - 270 `bkDirect(H, len)`
-  - 272 `bkState(H)`
-  - 275 `bkAllow(H, bk, all)`
-  - 280 `bkLanded(H, bk, all)`
-  - 282 `bkNews(H)`
+  - 83 `sellerCod(id, H)`
+  - 89 `openUsedSave(q)`
+  - 91 `openUsedLoad()`
+  - 92 `freshQuota()`
+  - 93 `licStart(lic)`
+- **94** the stocks and the total quotas year by year. History and the advice for 2027 from the Institute of Marine Research (hi.no,
+  - 127 `kystAt(T, y)`
+  - 128 `kystF(lat, H)`
+  - 135 `stockYear(sp, y)`
+  - 152 `ssbAt(sp, H)`
+  - 153 `stockF(sp, H)`
+- **155** the open group's season. About 2 100 boats fish the group quota down a day at a time (more in the skrei season and on days
+  - 166 `qyOf(y)`
+  - 173 `qyBoats(Y, y)`
+  - 174 `qyStep(Y, y, d)`
+  - 192 `quotaNewYear(y)`
+  - 195 `qyAt(H)`
+  - 197 `codStopDoy(y)`
+  - 198 `openMaxAdd(H)`
+  - 203 `ffPlan(y)`
+  - 211 `ffPct(H)`
+- **213** the closed group's register: a fixed number of rights (1 622 in the cod fishery north of 62° N on 17.10.2025, case document
+  - 229 `npcReg()`
+  - 231 `regSend(fn, id)`
+  - 236 `regTake(id)`
+  - 238 `regFree(id)`
+  - 240 `regSeller(id, H)`
+- **242** structure quotas (forskrift om spesielle kvoteordninger for kystfiskeflåten, J-244-2025): quota lengths 11–27.99 m may buy a
+  - 246 `structRoom(l, id)`
+  - 248 `structPrice(id, H)`
+  - 249 `structIn(l, id, H)`
+  - 250 `licExtra(l)`
+  - 252 `structExpire(l, y)`
+- **253** the special scheme for quota lengths under 11 m (kap. 2, from 2025): an owner with two such boats, both owned since the year
+  - 255 `twoOK(la, lb, y)`
+- **256** quota cooperation (J-161-2026 § 31): two closed-group boats under 11 m with different owners; both owners aboard, the passive
+  - 260 `coopOffer(H)`
+  - 261 `coopOK(l, y)`
+- **263** the ocean permits (H1 of docs/planer/havsteget.md, 03.11.2026). Jonas' choices the same day: V1 A (the autoliner first), V2 B
+  - 294 `havLicFor(type)`
+  - 296 `havF(id, sp, y)`
+  - 305 `havGroup(id, y)`
+  - 308 `havQ(l, H)`
+  - 315 `havLicWhy(type)`
+  - 322 `havOffer(id, H)`
+  - 325 `havValue(l, H)`
+  - 327 `havPrice(type, H)`
+  - 329 `havLicTake(type, H)`
+- **333** Greenland halibut (blåkveite) for vessels under 28 m (J-241-2025, the regulation for 2026; docs/blakveite.md 2-3, 07.10.2026)
+  - 341 `bkSeason(y)`
+  - 344 `bkOpen(H)`
+  - 350 `bkDirect(H, len)`
+  - 352 `bkState(H)`
+  - 355 `bkAllow(H, bk, all)`
+  - 360 `bkLanded(H, bk, all)`
+  - 362 `bkNews(H)`
 
 ## `src/js/core/03e-rules.js` (271 linjer)
 
@@ -708,21 +718,22 @@ crew: people with skills, habits and moods
   - 35 `airLegs()`
   - 47 `airStates(H, p, km)`
 
-## `src/js/core/05d-hav.js` (187 linjer)
+## `src/js/core/05d-hav.js` (195 linjer)
 
 The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
 
 - **1** The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
-  - 18 `havData()`
-  - 33 `havTrip(s, k)`
-  - 41 `havWay(s, gi, pi)`
-  - 53 `havLeg(a, b)`
-  - 67 `havBerth(s, pi, H)`
-  - 76 `havVisitors(pi, H)`
-  - 89 `havLand(s, tr)`
-  - 98 `havFish(s, k, u, g)`
-  - 139 `havState(s, H, near)`
-  - 164 `havNear(H, only)`
+  - 22 `havHeld(s)`
+  - 23 `havData()`
+  - 40 `havTrip(s, k)`
+  - 48 `havWay(s, gi, pi)`
+  - 60 `havLeg(a, b)`
+  - 74 `havBerth(s, pi, H)`
+  - 83 `havVisitors(pi, H)`
+  - 96 `havLand(s, tr)`
+  - 105 `havFish(s, k, u, g)`
+  - 146 `havState(s, H, near)`
+  - 171 `havNear(H, only)`
 
 ## `src/js/core/06-services.js` (252 linjer)
 
@@ -2079,7 +2090,7 @@ the Regler app (R3 of the rules plan, 05.10.2026): «Her og nå» answers «can 
   - 44 `ruLearn()`
   - 54 `regler()`
 
-## `src/js/ui/phone/04-kvote.js` (64 linjer)
+## `src/js/ui/phone/04-kvote.js` (71 linjer)
 
 the Kvote app: your quotas, the open group's season, the stocks, and the market for rights (core/03d-quota.js)
 
@@ -2112,12 +2123,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (981 linjer)
+## `src/js/ui/phone/07-patch.js` (982 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 974 `patch()`
+  - 975 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (94 linjer)
 
@@ -2134,7 +2145,7 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 74 `merker()`
   - 86 `lore()`
 
-## `src/js/ui/phone/09-vaer-post-salg-redning.js` (139 linjer)
+## `src/js/ui/phone/09-vaer-post-salg-redning.js` (140 linjer)
 
 --- weather
 
@@ -2145,11 +2156,11 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 24 `post()`
 - **30** sales organisation
   - 34 `salg(s)`
-- **120** rescue
-  - 121 `redning()`
-- **138** vessels: my vessel overview and the market
+- **121** rescue
+  - 122 `redning()`
+- **139** vessels: my vessel overview and the market
 
-## `src/js/ui/phone/10-fartoy.js` (147 linjer)
+## `src/js/ui/phone/10-fartoy.js` (155 linjer)
 
   - 10 `goals()`
   - 25 `goalsCard()`
@@ -2158,8 +2169,8 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 43 `market()`
   - 69 `specSecs(k, O)`
   - 93 `sheet(k, O)`
-  - 126 `fartoy(tab0)`
-- **146** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
+  - 134 `fartoy(tab0)`
+- **154** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
 
 ## `src/js/ui/phone/11-rederi.js` (70 linjer)
 
@@ -2238,7 +2249,7 @@ Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/pla
   - 115 `mgHere()`
   - 122 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (278 linjer)
+## `src/js/ui/phone/14-act.js` (283 linjer)
 
   - 2 `act(a, d)`
   - 8 `act0(a, d)`

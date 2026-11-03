@@ -4,7 +4,9 @@ Jonas 03.11.2026: «Fungerer tråling, snurpnot for oss brukerne også?» (svar:
 
 Fra før (01.11.2026, `bestand-og-flaate.md`): «Havflåten er et element av spillet som skal bygges ganske straks og modellene til båtene er allerede laget, det er dermed viktig at vi klarer å simulere dette med bestander, vandring, uttak, og alt annet på en så realistisk måte som mulig slik at modellen er helt ferdig utviklet når vi starter». Og: «Når en ny bruker registrerer seg i spillet skal 1 NPC-båt forsvinne.»
 
-Planen bygger på `bestand-og-flaate.md` (B1–B4, L1–L3, H1), som er ferdig og rullet ut. Ingenting bygges før Jonas har svart på valgene og sagt «kjør på».
+Planen bygger på `bestand-og-flaate.md` (B1–B4, L1–L3, H1), som er ferdig og rullet ut.
+
+**Valgene tatt 03.11.2026:** V1 A (Jonas: «Ja, du kan gjerne lage autolineren først»), V2 B og V3 A (Jonas: «Prisene må reflektere det virkelige liv, og tillatelsene må også være realitiske. Husk: vi lager en simulering av fiskerinæringen i norge, og da må vi være så tett opp mot realiteten som mulig»). V4, V5 og V6 venter.
 
 ## 1. Hva som finnes i dag
 
@@ -229,17 +231,17 @@ Hver fase er én økt. Rekkefølgen under følger anbefalingene i valgene (kap. 
 
 Hvert valg har en anbefaling og én setning om hvorfor.
 
-**V1 Hvilken havbåt først**
+**V1 Hvilken havbåt først** (valgt: A, 03.11.2026)
 - **A (anbefalt): autolineren.** Line finnes alt, så den første havturen kommer raskest og lærer oss frysing, skift, havmottak og tillatelser før de vanskelige redskapene.
 - **B: tråleren.** Den er mest ikonisk, men alt er nytt på én gang (aktivt redskap, trålregler, fabrikk).
 - **C: snøkrabbe.** Den bygger på teinene, men de fleste feltene er utenfor rammen.
 
-**V2 Prisene og veien dit**
+**V2 Prisene og veien dit** (valgt: B, 03.11.2026)
 - **A (anbefalt): spillets nivå.** Dagens priser på 60–250 M inkluderer en tillatelse med én kvotefaktor. Flere faktorer kjøpes som strukturkvote. Et nytt mellomsteg (snurrevad- eller autoline-båt på rundt 28–35 m til 25–40 M) fyller hullet. Da kan havbåten nås på uker eller måneder uten å betale, slik reglene krever.
 - **B: ekte nivå,** med hundrevis av MNOK for kvotene. Det er realistisk, men nesten ingen spiller kommer dit.
 - **C: båten til spillets pris, og kvoten leies** per år av en NPC-reder. Det er realistisk og lett å komme i gang, men spilleren eier aldri kvoten.
 
-**V3 Tillatelsene**
+**V3 Tillatelsene** (valgt: A, 03.11.2026, så realistisk som mulig)
 - **A (anbefalt): som i virkeligheten, forenklet.** Én tillatelse per gruppe (torsketrål, konvensjonelt hav, ringnot, snøkrabbe) med kvotefaktor. Et begrenset register der ett NPC-skip forsvinner når en spiller kjøper, slik Jonas har bestemt for kysten. Snurrevad 28+ under konvensjonelt hav til vi har funnet regelen.
 - **B: en «havlisens» per redskap** uten faktorer og strukturkvote.
 - **C: ingen tillatelse,** bare båten.
@@ -295,3 +297,12 @@ Hvert valg har en anbefaling og én setning om hvorfor.
     - Stikkprøven og skjermbilder i begge formater: Båtsfjord, Tromsdalen, Melbu, Måløy, Selje, Skudeneshavn, Kristiansand, Rypefjord og Fiskarstrand øst.
   - Se 4.18c i `havner-og-mottak.md`.
   - **Neste:** H1 i en ny økt, når valgene V1–V6 er tatt.
+- 03.11.2026: **H1 bygd** (Jonas: «Start H1»; gren `ccr-2f9fa76d-44zqtm`, rullet ut fra `ccr-5e1ba2f4-pusvyd`). Valgene V1 A, V2 B og V3 A, se toppen.
+  - **Tillatelsene:** fire, med kvotefaktor, og kvoten per faktor fra J-161-2026. Gruppedelingen for torsk, hyse og sei følger kvotekjeden.
+  - **Registeret:** antallet er som i virkeligheten (26, 36, 69 og 34), og ett NPC-skip er borte for hver tillatelse en spiller eier.
+  - **Prisen:** skroget pluss kvotene til sin verdi. Ukas selger har sine faktorer.
+  - Se 5.5b i `docs/systemer/kvoter-og-regler.md`.
+  - **Flyttet:** Kystvaktas havsjekker følger redskapet til H2 og H4. Strukturkvote og eiertak kommer i H8. Landingene skilles fra lukket gruppe (`access`) i H2.
+  - **Ny i H2 etter V2 B:** mellomsteget på 28–35 m fra V2 A faller bort. Prisene gjør havsteget langt, og stigen må vurderes i H8.
+  - **Neste:** H2 autolineren (V1 A).
+

@@ -149,6 +149,39 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
   - Ingen kvote.
 - **Uer:** Direktefiske bare med juksa i juni–august for båter under 15 m.
 
+## 5.5b Havtillatelsene og kvotefaktorene (H1 av `docs/planer/havsteget.md`, 03.11.2026)
+
+Jonas 03.11.2026: «Start H1». Valgene samme dag: «Ja, du kan gjerne lage autolineren først» (V1 A), og «Prisene må reflektere det virkelige liv, og tillatelsene må også være realitiske. Husk: vi lager en simulering av fiskerinæringen i norge, og da må vi være så tett opp mot realiteten som mulig» (V2 B: ekte nivå, V3 A: tillatelsene som i virkeligheten). Koden er i `core/03d-quota.js` (`HAVLIC`, `HREG`, `HAVKF`, `HPK`, `havQ`, `havGroup`, `havOffer`, `havValue`, `havPrice`, `havLicWhy`, `havLicTake`).
+
+- **Tillatelsene:** én per gruppe, med kvotefaktor.
+  - **Torsketråltillatelse** (`tral`, konsesjonsforskriften § 2-1) for frysetråleren. Per kvotefaktor 1,00 i 2026: 372 t torsk, 332 t hyse og 422 t sei (J-161-2026 §§ 7–9).
+  - **Konvensjonell havfisketillatelse** (`konv`) for autolineren: 118 t torsk og 107 t hyse per faktor. Sei 272 t gjelder bare med garnseitillatelse, som spillet ikke har. Uten den har sei ingen fartøykvote her (antatt). Snurrevad over 28 m legges hit til regelen er funnet.
+  - **Ringnottillatelse** (`rnot`, § 4-1) for de to notbåtene: NVG-sild, 49 % av Norges 342 666 t fordelt på 69 tillatelser. Én faktor er her snittillatelsen; den virkelige følger konsesjonskapasiteten i hl (antatt).
+  - **Snøkrabbetillatelse** (`krab`): garantert fartøykvote 351 t i 2026 og 472 t i 2027 (totalkvoten 12 336 og 16 594 t).
+- **Fartøykvoten** er kvotefaktorene (egne pluss struktur, `l.extra`) ganger kvoten per faktor for året. `licQ` gir den for en havtillatelse i samme form som for kystens hjemler, så salget, Kvote-appen og torskegrensa (`codLimits`) virker som før.
+- **Gruppedelingen** (J-161-2026 § 5, `havGroup`):
+  - Torsk følger kvotekjeden. Trålstigen gir 32 535 t (torsketrål 31 785 og seitrål 750), og 12,81 % gir 10 717 t til havfiskeflåten, begge eksakt for 2026.
+  - Hyse og sei følger Norges kvote, sild står som 2026, og snøkrabbe følger totalkvoten.
+- **Registeret** (`HREG`, i samme register som hjemlene, `npcReg`):
+  - **Antallet er som i virkeligheten:** 26 konvensjonelle havfiskefartøy (Fiskeridirektoratets høringsnotat 26.03.2026, tabellen for 2025) og 36 torsketrålere (snl.no 2019, ikke bekreftet for 2025). I tillegg 69 ringnottillatelser (21.10.2025) og 34 snøkrabbetillatelser. Det siste tallet er regnet ut: 12 036 t delt på 351 t. Et svar til Stortinget nevner rundt 70, uten år.
+  - **NPC-skipene:** for hver tillatelse en spiller eier, er ett NPC-skip av samme slag borte fra havet (`havHeld` i `05d-hav.js`, Jonas' regel). NPC-havflåten har flere skip enn tillatelsene, fordi reketrål, seitrål og andre tillatelser fisker ved siden av.
+  - **Serveren:** `supabase/migrations/20261103180000_havkonsesjon.sql` legger de fire i `reg_rights`. `reg_take` og `reg_free` virker som for hjemlene.
+  - **En gammel lagring** får havtillatelsene fulle.
+- **Tilbudet** (`havOffer`): ukas selger er en NPC-eier med sine kvotefaktorer, 0,6–1,4 ganger gruppas snitt.
+  - Snittet er 2,37 for torsketrål (85,4 faktorer på 36 tillatelser) og 3,49 for konvensjonelt hav (90,8 på 26), strukturkvotene medregnet.
+  - Tilbudet er det samme hele uka.
+- **Prisen (V2 B):** skroget (dagens 60–250 M er brukte skrog) pluss kvotene til sin verdi (`havValue`, `HPK`).
+  - Torsk koster 260 kr/kg (`KPK`, som for kysten). De andre artene koster i forhold til førstehåndsprisen mot torsk: hyse og sei 124, sild 74 og snøkrabbe 712 kr/kg.
+  - En snittillatelse blir rundt 155 MNOK for konvensjonelt hav og 450 MNOK for torsketrål. Autolineren med ukas tillatelse koster for eksempel 208 MNOK.
+  - Ingen kilde oppgir kvotepriser for havflåten. Nofima 2018 og avisene («Østerfjord» med kvoteverdier over 400 MNOK) peker samme vei. Sild og snøkrabbe er mest usikre: strukturkvote i ringnot skal gå for godt over 100 MNOK per 100 basistonn. Det må sjekkes før H3 og H5.
+- **Kjøpet** (`buy` i `ui/phone/14-act.js`): en havbåt krever blad B (som lukket gruppe) og en ledig tillatelse i registeret. Prisen er `havPrice`, og tillatelsen tas fra eieren (`havLicTake`) og legges på båten (`S.lic` med `hav:true`). Fiskeridirektoratet sender melding. Ved innbytte går tillatelsen tilbake til registeret, som hjemlene. Båtene står fortsatt som `lock:true`, så kjøpet åpner først når H2 låser opp autolineren.
+- **Det spilleren ser:**
+  - Kvote-appen → Marked har kortet «Havtillatelser» med eierne igjen og kvoten per faktor for året.
+  - Båthandelen → Havfiske har seksjonen «Tillatelse» på databladet: selger, kvotefaktor mot snittet, fartøykvoten og gruppa per art, kvoteverdien mot skroget, ledige i registeret og kilden.
+  - Mine kvoter viser tillatelsen og kvotefaktoren for en havbåt.
+- **Ikke med ennå:** Kystvaktas havsjekker (trål innenfor 12 nm, maskevidde, rist) kommer med redskapet i H2 og H4, fordi ingen havbåt kan fiske før da. Heller ikke med er strukturkvote og eiertak for havtillatelsene (konvensjonelt hav 10 %, § 12). `access()` gir fortsatt `lukket` for en havbåt, så landingene teller i lukket gruppe på serveren; det må skilles ut i H2.
+- **Tester:** `tests/unit/havlic.test.mjs` (kvoten per faktor mot J-tabellen, gruppene, kjeden, faktorene og prisene, registeret ned og opp, ett NPC-skip borte) og `sqltest` (registeret på serveren).
+
 ## 5.28 Regelmotoren langs hele kysten (R2 av regelplanen, 05.10.2026)
 
 - **Blåkveite (07.10.2026):** for line og garn (eller arten) nord for 62° N på 400 m og dypere: `bk5o` (åpent, med perioden og maksimalkvoten), `bk5c` (stengt: bare bifangst, 7 %), `bkB` (uten blad B), `bk7` (28 m og over: bare bifangst). Dypere enn 1000 m blokkeres bunnredskap (`bk1000`: «nye fiskeområder» krever egen tillatelse etter forskrift om bunnredskap). Minstemål 45 cm i `ruMinSize`. Regler-appen har arten som eget valg.

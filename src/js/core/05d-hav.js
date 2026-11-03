@@ -15,6 +15,11 @@ const HAV = {d:null, way:new Map(), k:'', v:[], gear:[]};
 const HAVG = {tral:{trip:[5, 12], port:[1, 2.5], kn:12, fish:'tow', r:4}, not:{trip:[2, 5], port:[1, 3], kn:13, fish:'purse', r:1.5},
   snurrevad:{trip:[3, 6], port:[1, 2], kn:11, fish:'seine', r:1.2}, line:{trip:[14, 28], port:[2, 4], kn:11, fish:'line', r:5},
   teine:{trip:[14, 28], port:[2, 4], kn:11, fish:'pots', r:3, len:4}, garn:{trip:[4, 8], port:[1, 2], kn:10, fish:'pots', r:1.2, len:1.2}};
+// the permit behind each gear of the NPC ocean fleet (HAVLIC in 03d-quota.js)
+const HAVGEAR = {tral:'tral', not:'rnot', snurrevad:'konv', line:'konv', garn:'konv', teine:'krab'};
+// whether a ship's place is held by a player: the register has n fewer NPC owners of her permit than it started with, and she is among
+// the first n of them (Jonas 01.11.2026: «Når en ny bruker registrerer seg i spillet skal 1 NPC-båt forsvinne», for the ocean permits in H1)
+function havHeld(s){ if (typeof HREG === 'undefined' || !s.lid) return false; const n = Math.max(0, (HREG[s.lid] || 0) - (npcReg()[s.lid] || 0)); return n > 0 && s.lr <= n; }
 function havData(){
   if (HAV.d !== null) return HAV.d;
   try { HAV.d = typeof HAV_T === 'string' ? JSON.parse(HAV_T) : false; } catch (e){ HAV.d = false; }
@@ -26,6 +31,8 @@ function havData(){
     return {i, id:'v' + i, g, pi, name, vtype:D.kind[g], L:V.len, B:V.beam, T:V.draft || 6, port, trip, C:port + trip, ph:s * (port + trip), kn:G.kn * (0.92 + 0.16 * hash(i * 41 + 3))}; });
   D.byPlant = new Map(); for (const s of D.ships){ let a = D.byPlant.get(s.pi); if (!a) D.byPlant.set(s.pi, a = []); a.push(s); s.land = 4 + 4 * hash(s.i * 43 + 9); }
   // the ships that may land at a plant other than their home (a ground of their gear lands there)
+  // the rank of each ship among those of her permit (H1 of the ocean step: the first n of a kind leave the sea when players hold n permits)
+  const rk = {}; D.ships.map(s => [hash(s.i * 59 + 21), s]).sort((x, y) => x[0] - y[0]).forEach(([, s]) => { const id = HAVGEAR[s.g] || 'tral'; s.lid = id; s.lr = rk[id] = (rk[id] || 0) + 1; });
   D.visit = new Map(); for (const s of D.ships){ const seen = new Set(); for (const e of D.g[s.g] || []){ const dp = e[5]; if (dp == null || dp === s.pi || seen.has(dp)) continue; seen.add(dp); let a = D.visit.get(dp); if (!a) D.visit.set(dp, a = []); a.push(s); } }
   return D;
 }
@@ -167,6 +174,7 @@ function havNear(H, only){
   const out = [], gear = [], R = AIS_KM;
   for (const s of D.ships){
     if (only && only !== s.id) continue;
+    if (havHeld(s)) continue;   // a player holds her permit: she is off the sea
     // (a ship cannot be near when she is in port far off, away, or on a trip whose plant and ground both lie far off the line between
     // them: her way runs along the coast between the two, at most some 200 km off that line)
     if (!only){ const pl = D.p[s.pi], t = H / 24 + s.ph, kk = Math.floor(t / s.C), e = t - kk * s.C, near = (a, c, m) => segDist(b.pos, a, c) <= m;

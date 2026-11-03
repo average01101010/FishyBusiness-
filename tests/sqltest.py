@@ -822,6 +822,11 @@ def main():
               'the world brings the register, the open group\'s active players and the others\' catch per group; the stock only when the admin has turned it on')
         print(ok(G['cfgA'] and G['cfg1'] and G['cfgBad'] and G['shareA'] and G['share'] == ['cfg', 'grp', 'open_boats', 'reg', 'reg_total', 'stock'] and G['tables']),
               'only the admin with the second factor turns the switches and sees the share; no player reads the tables')
+        # H1 of the ocean step (03.11.2026, 20261103180000_havkonsesjon.sql): the ocean permits are in the same register, as many as in life; one bought is gone for everybody, and a permit the game does not have is refused
+        H1 = {'tral': json.loads(sql("select public.reg_take('tral')", A, 'authenticated'))['tral'], 'seen': wg(B)['reg'], 'bad': sql("select public.reg_take('reke')", A, 'authenticated', expect_err=True)[0]}
+        H1['back'] = json.loads(sql("select public.reg_free('tral')", A, 'authenticated'))['tral']
+        print(ok(H1['tral'] == 35 and H1['seen'].get('tral') == 35 and H1['seen'].get('konv') == 26 and H1['seen'].get('rnot') == 69 and H1['seen'].get('krab') == 34 and H1['bad'] and H1['back'] == 36),
+              'the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 purse seine, 34 snow crab; back to 36 when sold', {k: H1[k] for k in ('tral', 'bad', 'back')})
         # whose gear it is (02.11.2026, 20261102130000_gear_owner.sql): gear_near2 gives B's sets to A with B's player name and boat, never
         # A's own, and gear_near still gives them with nothing of the owner
         sql("select public.gear_put('[[\"g1\", \"garn\", 900.1, 300.1, 900.3, 300.1]]'::jsonb)", B, 'authenticated')

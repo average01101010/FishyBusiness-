@@ -69,6 +69,7 @@ const HJ = {
 // a right's quotas in kg for the year of H, on a boat of largest length len: {torsk, hyse:[max, guaranteed], sei:[max, guaranteed]}
 // (Infinity for no maximum). Old saves keep the right's id and get the year's figures from it.
 function licQ(l, H, len){
+  if (l && HAVLIC[l.id]) return havQ(l, H);   // an ocean permit (H1 of the ocean step, below)
   const R = l && HJ[l.id]; if (!R) return {torsk:l ? l.cod || 0 : 0, hyse:l && l.hyse ? l.hyse : [0, 0], sei:l && l.sei ? l.sei : [0, 0]};
   const Y = yearQuota(yearH(H == null ? S.t / 60 : H)), L = len || BOAT.len || 5.8, kg = t => t == null ? Infinity : Math.round(t * 1000);
   const hMax = R.hyse[1][L < 11 ? 0 : 1], sb = R.sei[2], si = sb.filter(b => L >= b).length, sMax = R.sei[1][si];
@@ -214,10 +215,19 @@ function ffPct(H){ const d = doyH(H); let p = 0; for (const [d0, v] of ffPlan(ye
 // from one of them, so there is one owner fewer for each right you buy, and structuring takes the boat out for good. When the game
 // has real players on a shared server, they take NPCs' places in the same register. ----
 const REGN = {u7:300, h7:280, h8:230, h9:200, h10:162, h14:291, h20:103};
+// the ocean permits in the same register (H1 of docs/planer/havsteget.md, Jonas 03.11.2026: «tillatelsene må også være realistiske»):
+// as many as there are in life. Konvensjonelle havfiskefartøy 26 (Fiskeridirektoratet, høringsnotat 26.03.2026, the table for 2025),
+// torsketrål 36 (snl.no «torskefiske», 2019; not confirmed for 2025), ringnot 69 (21.10.2025), snow crab 34 (worked out: 12 036 t for
+// the fleet over 351 t guaranteed each; a reply to the Storting speaks of about 70 permits, year not given). For each permit a player
+// holds, one NPC ship of the kind leaves the sea (Jonas' rule, havHeld in 05d-hav.js; the NPC fleet has more ships than permits, as
+// vessels with other permits, shrimp and saithe trawl among them, fish beside them)
+const HREG = {tral:36, konv:26, rnot:69, krab:34};
 // B4 (02.11.2026): the register is the server's when the game is online (one for all players, supabase/migrations/20261102120000_register.sql:
 // a right one player buys is gone from the NPC owners for everybody, and a player who neither lands nor buys for 90 days gives the place
 // back); it comes with the world every ten minutes (WSH.reg) and after each purchase or sale. Offline the save keeps its own as before.
-function npcReg(){ const R = S.npcReg || (S.npcReg = {...REGN}); if (typeof WSH !== 'undefined' && WSH.reg) for (const k in REGN) if (WSH.reg[k] != null) R[k] = WSH.reg[k]; return R; }
+// (H1 of docs/planer/havsteget.md, 03.11.2026: the ocean permits HREG share the register; a save from before gets them full)
+function npcReg(){ const R = S.npcReg || (S.npcReg = {...REGN}); for (const k in HREG) if (R[k] == null) R[k] = HREG[k];
+  if (typeof WSH !== 'undefined' && WSH.reg){ for (const k in REGN) if (WSH.reg[k] != null) R[k] = WSH.reg[k]; for (const k in HREG) if (WSH.reg[k] != null) R[k] = WSH.reg[k]; } return R; }
 function regSend(fn, id){
   if (typeof cloudRpc !== 'function' || typeof CLOUD === 'undefined' || !CLOUD.on || !CLOUD.user) return;
   cloudRpc(fn, {rid:id}).then(r => { if (r && typeof r === 'object') WSH.reg = r; })
@@ -225,7 +235,7 @@ function regSend(fn, id){
 }
 function regTake(id){ const R = npcReg(); R[id] = Math.max(0, (R[id] || 0) - 1); regSend('reg_take', id); }
 // a right that leaves the player (sold with the boat) goes back to the NPC owners
-function regFree(id){ const R = npcReg(); R[id] = Math.min(REGN[id] || 0, (R[id] || 0) + 1); regSend('reg_free', id); }
+function regFree(id){ const R = npcReg(); R[id] = Math.min(REGN[id] || HREG[id] || 0, (R[id] || 0) + 1); regSend('reg_free', id); }
 // the owner selling a right this week: a name and a home harbour, the same all week
 function regSeller(id, H){ const w = weekOfH(H), u = k => h2(w * 31 + id.charCodeAt(1) * 7 + id.length, 8200 + k);
   return {name:CREW_M[Math.floor(u(1) * CREW_M.length)] + ' ' + CREW_SN[Math.floor(u(2) * CREW_SN.length)], home:CREW_HOME[Math.floor(u(3) * CREW_HOME.length)][0]}; }
@@ -250,6 +260,76 @@ const COOP = {share:0.5};
 function coopOffer(H){ const ids = ['u7', 'h7', 'h8', 'h9', 'h10'], w = weekOfH(H), id = ids[Math.floor(h2(w * 13, 8300) * ids.length)]; return {id, ...regSeller(id + 'c', H)}; }
 function coopOK(l, y){ return !!(l && HJ[l.id] && HJ[l.id].grp === 'u11' && !l.two && (l.since || 0) < y && !(l.coop && l.coop.y === y)); }
 
+// ---- the ocean permits (H1 of docs/planer/havsteget.md, 03.11.2026). Jonas' choices the same day: V1 A (the autoliner first), V2 B
+// («Prisene må reflektere det virkelige liv»: the quota is paid at its value on top of the hull), V3 A («tillatelsene må også være
+// realistiske»: one permit per group as in life, with the seller's quota factors). The vessel quota is the quota factors (the permit's
+// own plus structure quota, l.extra) times the year's quota per factor 1.00. Sources (kap. 2 of the plan):
+//   tral  torsketråltillatelse, konsesjonsforskriften § 2-1; J-161-2026 §§ 7-9: 372 t cod, 332 t haddock, 422 t saithe per factor 1.00
+//   konv  konvensjonell havfisketillatelse (autoline and nets over 28 m; Danish seine over 28 m under it until the rule is found):
+//         118 t cod and 107 t haddock per factor; saithe 272 t only with garnseitillatelse, which the game does not have (kap. 6), so
+//         saithe has no vessel quota here (an assumption: not confirmed what the group fishes without it)
+//   rnot  ringnottillatelse, § 4-1: NVG herring, Norway's 342 666 t, about 49 % to the purse seiners, over the 69 permits (21.10.2025);
+//         the real factor follows the licence capacity in hl, here one factor is the mean permit (an assumption)
+//   krab  snow crab permit, the regulation for 2026: a guaranteed vessel quota of 351 t (12 336 t in all, 16 594 t in 2027)
+// A permit for sale carries the factors its NPC owner has: the group's factors over its vessels (trawl 31 785 / 372 = 85.4 over 36,
+// conventional 10 717 / 118 = 90.8 over 26: 2.37 and 3.49 on average, structure quota included), 0.6-1.4 times the mean, the same all week.
+// Each group's quota for cod, haddock and saithe (J-161-2026 § 5, «gruppedeling») follows the year: the trawl and the ocean-going
+// conventional vessels' cod from the quota chain (codChain: the trawl ladder and the 12.81 %, which give 32 535 and 10 717 t for 2026
+// exactly), haddock and saithe with Norway's quota (fh, fs); herring as 2026; snow crab with its total quota (2027 known, then held).
+const HAVLIC = {
+  tral:{no:'Torsketråltillatelse', en:'Cod trawl permit', ves:['bunntral'], gear:['tral'], q26:{torsk:372, hyse:332, sei:422}, grp26:{torsk:31785, hyse:28665, sei:43397}, src:'konsesjonsforskriften § 2-1; J-161-2026 §§ 5, 7–9'},
+  konv:{no:'Konvensjonell havfisketillatelse', en:'Ocean-going conventional permit', ves:['autoliner'], gear:['line', 'garn', 'snurrevad'], q26:{torsk:118, hyse:107, sei:null}, grp26:{torsk:10717, hyse:8647, sei:6128}, src:'konsesjonsforskriften; J-161-2026 §§ 5, 13'},
+  rnot:{no:'Ringnottillatelse', en:'Purse seine permit', ves:['pelagisk', 'ringnot38'], gear:['not'], q26:{sild:342666 * 0.49 / 69}, grp26:{sild:342666 * 0.49}, src:'konsesjonsforskriften § 4-1; NVG-reguleringen 2026'},
+  krab:{no:'Snøkrabbetillatelse', en:'Snow crab permit', ves:['snokrabbe'], gear:['teine'], q26:{snokrabbe:351}, grp26:{snokrabbe:12336}, src:'Regulering av fangst av snøkrabbe i 2026'}
+};
+// the mean quota factors a vessel of the group holds (the group's factors in 2026 over its permits)
+const HAVKF = {tral:31785 / 372 / 36, konv:10717 / 118 / 26, rnot:1, krab:1};
+// the quota price, kr per kg of the vessel quota (V2 B): cod at KPK as for the coast (260 kr/kg, Hepsøfjord 2025; no source publishes
+// quota prices), the other species in proportion to their first-hand price against cod (Råfisklaget's minimum prices 2026: haddock and
+// saithe about 20 against 42 kr; herring 12 and snow crab 115 kr from the landing notes 2025). Estimates: an average conventional permit
+// (3.49 factors) comes to about 155 MNOK, an average trawl permit (2.37) to about 450 MNOK; the herring and the snow crab are the least
+// certain (a structure quota in the purse seine fleet is said to go for well over 100 MNOK per 100 basistonn)
+const HPK = {torsk:KPK, hyse:Math.round(KPK * 20 / 42), sei:Math.round(KPK * 20 / 42), sild:Math.round(KPK * 12 / 42), snokrabbe:Math.round(KPK * 115 / 42)};
+// the permit an ocean vessel type needs (null for a coast boat)
+function havLicFor(type){ for (const id in HAVLIC) if (HAVLIC[id].ves.includes(type)) return id; return null; }
+// the factor a group's 2026 figures are scaled by in year y, per species
+function havF(id, sp, y){
+  if (y <= 2026) return 1; const Y = yearQuota(y), ch = Y.chain, R = ch.N - (880 + 7000 + Math.max(3000, 0.009 * ch.N) + 500 + 2543 + 450) - ch.open;
+  const tr = R < 130000 ? 0.28 : R > 330000 ? 0.33 : 0.28 + 0.05 * (R - 130000) / 200000;
+  if (sp === 'torsk') return id === 'tral' ? R * tr / 32535.29 : R * (1 - tr) * 0.1281 / 10717.12;
+  if (sp === 'hyse') return Y.fh; if (sp === 'sei') return Y.fs;
+  if (sp === 'snokrabbe') return 16594 / 12336;
+  return 1;
+}
+// a group's quota in tonnes for the year (§ 5 for cod, haddock and saithe; the purse seiners' herring; the snow crab total)
+function havGroup(id, y){ const P = HAVLIC[id], o = {}; for (const sp in P.grp26) o[sp] = Math.round(P.grp26[sp] * havF(id, sp, y)); return o; }
+// a permit's vessel quota in kg for the year of H, in the shape licQ gives (haddock and saithe as [maximum, guaranteed], Infinity for
+// no vessel quota), and the ocean species by name; a permit is {id, kf (default 1), extra (structure quota, later)}
+function havQ(l, H){
+  const P = HAVLIC[l.id], y = yearH(H == null ? S.t / 60 : H), kf = (l.kf || 1) + (l.extra || 0), kg = sp => P.q26[sp] == null ? (sp in P.q26 ? Infinity : 0) : Math.round(P.q26[sp] * havF(l.id, sp, y) * kf * 1000);
+  const o = {torsk:kg('torsk'), hyse:[kg('hyse'), kg('hyse')], sei:[kg('sei'), kg('sei')]};
+  for (const sp in P.q26) if (!(sp in o)) o[sp] = kg(sp); return o;
+}
+// what is wrong with taking a permit for an ocean vessel now: blad B (the participation act § 6 as for the closed group) and an NPC owner left
+// in the register; null when it can be taken
+function havLicWhy(type){
+  const id = havLicFor(type); if (!id) return null; const P = HAVLIC[id];
+  if (!bladB()) return [P.no + ' krever blad B i fiskermanntallet. Se Papirer.', 'A ' + P.en.toLowerCase() + ' needs blad B of the fishermen\'s register. See Papers.'];
+  if ((npcReg()[id] || 0) <= 0) return ['Registeret har ingen ' + P.no.toLowerCase() + ' igjen å selge.', 'The register has no ' + P.en.toLowerCase() + ' left to sell.'];
+  return null;
+}
+// the permit for sale this week with an ocean vessel: its NPC owner and the quota factors he has (0.6-1.4 times the group's mean)
+function havOffer(id, H){ const sl = regSeller(id, H), u = h2(weekOfH(H) * 37 + id.charCodeAt(0) * 11 + id.length, 8400);
+  return {id, kf:Math.round(HAVKF[id] * (0.6 + 0.8 * u) * 100) / 100, from:sl.name + ', ' + sl.home}; }
+// what the permit's quotas are worth this year (HPK), kr
+function havValue(l, H){ const Q = havQ(l, H); let v = 0; for (const sp in HPK){ const q = Q[sp], kg = Array.isArray(q) ? q[1] : q; if (kg && kg !== Infinity) v += kg * HPK[sp]; } return Math.round(v / 1e5) * 1e5; }
+// the price of an ocean vessel with this week's permit: the hull and the quota
+function havPrice(type, H){ const id = havLicFor(type); return (VESSELS[type] || {}).price + (id ? havValue(havOffer(id, H), H) : 0); }
+// the permit taken from an NPC owner when an ocean vessel is bought (one NPC ship of her kind leaves the sea, havHeld in 05d-hav.js)
+function havLicTake(type, H){
+  const id = havLicFor(type); if (!id || havLicWhy(type)) return null; const P = HAVLIC[id], O = havOffer(id, H);
+  regTake(id); return {id, hav:true, hl:P.no, kf:O.kf, since:yearH(H), from:O.from};
+}
 // ---- Greenland halibut (blåkveite) for vessels under 28 m (J-241-2025, the regulation for 2026; docs/blakveite.md 2-3, 07.10.2026) ----
 // The direct fishery is one period from 25 May 00:00 until Fiskeridirektoratet stops it when the group quota (5 230 t) is reckoned
 // fished, announced 2-3 days before with a time limit for taking up the gear (2026: 30 days, 2025: 97 days; here each year's length is
