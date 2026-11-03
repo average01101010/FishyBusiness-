@@ -78,6 +78,8 @@ async def main():
         await A.click('#tabHere'); await A.wait_for_function(READY, timeout=120000)
         a2 = await A.evaluate("({cash:S.cash, lost:TAB.lost})")
         check(a2['cash'] == 222222 and not a2['lost'], '«Spill her» loads the page again with the game as it is now', a2)
+        # (another page's localStorage write reaches this page a moment later in Chromium: wait until C sees A's mark, as a page in use would)
+        await C.wait_for_function("(JSON.parse(localStorage.getItem(KEY_OWN) || 'null') || {}).tab !== TAB.id", timeout=15000)
         c1 = await C.evaluate("(() => { save(); return TAB.lost; })()")
         check(c1, 'and the page that had it before is passed by in its turn', c1)
         check(not errs, 'no page errors (two pages)', errs[:3])
