@@ -112,7 +112,7 @@ function saveJson(o){
   }
   return j;
 }
-function save(){ if (SAVE_OFF || !tabMine()) return; let j = ''; try { S.lastReal = Date.now(); S.seq = (S.seq || 0) + 1; let o = S; if (S.fleet && S.fleet.length){ storeVessel(curVessel()); o = Object.assign({}, S); for (const k of VKEYS) delete o[k]; } j = saveJson(o); localStorage.setItem(KEY, j); }
+function save(){ if (SAVE_OFF || !S || !tabMine()) return;   /* !S: the page went hidden while the map was still loading, before bootGame gave it a state; nothing to save yet */ let j = ''; try { S.lastReal = Date.now(); S.seq = (S.seq || 0) + 1; let o = S; if (S.fleet && S.fleet.length){ storeVessel(curVessel()); o = Object.assign({}, S); for (const k of VKEYS) delete o[k]; } j = saveJson(o); localStorage.setItem(KEY, j); }
   catch (e){ try { if (typeof cloudErr === 'function') cloudErr('Lagringen feilet: ' + (e && e.name || 'Error') + ': ' + String(e && e.message || e).slice(0, 120), 'save', JSON.stringify({kb:Math.round(j.length / 1024), store:saveStoreKb()}), 'state'); } catch (e2){} } }
 // what the page has in localStorage, in kB (for a save that would not fit)
 function saveStoreKb(){ try { let n = 0; for (let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); n += k.length + (localStorage.getItem(k) || '').length; } return Math.round(n / 1024); } catch (e){ return null; } }
