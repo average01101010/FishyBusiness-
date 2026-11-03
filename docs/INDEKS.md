@@ -89,6 +89,8 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `docs/onboarding.md` | Onboardingen. |
 | `docs/planer/oppdrag-2.md` | Oppdrag 2 (30.10.2026): leteoppdrag (L1–L2), oppdragskjeder (K1), fiskarlaget (F1–F3) og Kystvakta (V1), med valgene og forklaringene Jonas ba om. Venter på valg og «kjør på». |
 | `docs/planer/onboarding-2.md` | Onboarding 2 (27.10.2026): kortere første tur for hele kysten, målingene som viser frafall under seilingen ut, fasene O0–O6, de ti prinsippene mot churn og valgene V1–V8. Venter på svar. |
+| `docs/planer/lover-og-regler.md` | Lover og regler på sjøen (28.10.2026): sjøveisreglene, sjøloven, skipssikkerhetsloven, skipsarbeidsloven, merkeforskriften, havne- og farvannsloven, farvannsskiltene og IALA, i fasene L0–L8 (én lov om gangen), valgene V1–V6, lista over påbudt utstyr per båt og kildene. Venter på «kjør på». |
+| `docs/planer/verktoy-fra-game-studios.md` | Vurdering 28.10.2026 av Claude Code Game Studios (github.com/donchitos): det vi bør ta (deny-liste, øktstart-, commit- og lesevakt som hooks, historikk for ustabile tester, «se testen feile først», én sikkerhetsgjennomgang), det vi lar ligge (roller, GDD/epics/stories, `project.yaml`), og valgene 1–4. Venter på svar. |
 
 ## Regler og kilder
 

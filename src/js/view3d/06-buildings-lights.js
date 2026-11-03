@@ -255,6 +255,10 @@
       const c = LCOL[(L[5].find(q => q[2] === 'w') || L[5][0] || [0, 0, 'w'])[2]] || LCOL.w, R = L[6] === 'M' || L[3] >= 10 ? 170 : L[3] >= 6 ? 90 : 50;
       add(Math.hypot(x - eye[0], z - eye[2]) - R, x, lightY(L, x, z), z, R, c, 2.4);
     });
+    // the local fleet's deck lights while they fish (the cones' lamps, drawWorkCones): the deck and the sea round them lit, from last frame's places
+    if (QUAL.lvl > 0 && typeof npcNow !== 'undefined') for (const n of npcNow){ if (!n.K || !n.M || n.st !== 'fishing') continue; const wl = workLights(n.K.t, n.K.geo); if (!wl.length) continue;
+      const q = xf(n.M, [wl[0][0][0] * n.K.sv[0], wl[0][0][1] * n.K.sv[1], wl[0][0][2] * n.K.sv[2]]), x = q[0] + eye[0], z = q[2] + eye[2];
+      add(Math.hypot(q[0], q[2]) - 30, x, q[1] + eye[1], z, Math.min(40, 12 + (n.L || 10)), WCOL[lookHash('wl' + n.id) % 3], 1.1); }
     // the quays' floodlights, at the berth of each harbour near by
     for (const q of PORTS){
       const x = q.p.x * 1000, z = q.p.y * 1000; if (Math.abs(x - eye[0]) > 2500 || Math.abs(z - eye[2]) > 2500) continue;
@@ -298,6 +302,83 @@
     gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE); gl.depthMask(false);
     gl.drawArrays(gl.TRIANGLES, 0, k / 4);
     gl.depthMask(true); gl.disable(gl.BLEND); gl.disableVertexAttribArray(1);
+  }
+  // The deck lights' cones in the air at night (Gemini's review, Jonas 31.10.2026: «Kjør på»): a boat that works in the dark lights her
+  // deck from the house and the mast, and in mist, rain, snow or spray the light stands as a cone in the air. Each work light is a cone
+  // shell (16 sides, 5 rings) from the lamp down to the deck or the sea, drawn adding light, both faces, without writing depth: what
+  // the eye sees through the middle of the cone is bright and its edges are thin (|n·v|), it fades along its length from the lamp, and
+  // the air in it drifts (noise in the world's frame, folded as AIRE), with falling streaks when it rains or snows. How much it shows is
+  // the air's: a little on a clear night, much in fog (visibility), precipitation and spindrift. The lamps: a model's own 'work'
+  // lights (tools/boats, geo.lights), else one over the house's aft end aimed at the work deck; an open boat without them and the
+  // hand-worked boats have none.
+  // Your own boat shows them when she is not under way (a skipper steaming in the dark keeps the deck dark, so the wheelhouse is not
+  // blinded), the local fleet when they fish. Colours: sodium yellow, halogen white or cold LED, by the boat. Off on «Lav».
+  const WCN = 16, WCR = 5, WCF = 7, WCMAX = 14, WCV = new Float32Array(WCMAX * WCN * WCR * 6 * WCF), WLC = {};
+  const WCOL = [[1, 0.7, 0.36], [1, 0.9, 0.74], [0.82, 0.9, 1]];
+  const WC_VS = 'attribute vec3 aPos;attribute vec3 aNor;attribute float aS;uniform mat4 uVP;varying vec3 vP;varying vec3 vN;varying float vS;void main(){vP=aPos;vN=aNor;vS=aS;gl_Position=uVP*vec4(aPos,1.0);}';
+  const WC_FS = 'precision highp float;uniform vec3 uCol;uniform float uK;uniform float uT;uniform float uFogD;uniform vec3 uEyeM;uniform float uRain;varying vec3 vP;varying vec3 vN;varying float vS;' +
+    'float h1(vec2 p){vec3 q=fract(vec3(p.xyx)*0.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}' +
+    'float n1(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.0-2.0*f);return mix(mix(h1(i),h1(i+vec2(1.0,0.0)),u.x),mix(h1(i+vec2(0.0,1.0)),h1(i+vec2(1.0,1.0)),u.x),u.y);}' +
+    'void main(){vec3 v=normalize(-vP);float a=abs(dot(normalize(vN),v));a=a*a*(3.0-2.0*a);' +
+    'float I=(1.0-vS)*(1.0-vS)*(0.4+0.6/(1.0+vS*5.0))*smoothstep(0.0,0.06,vS+0.02);' +
+    'vec3 w=vP+uEyeM;float m=0.65+0.35*n1(vec2(w.x*0.45+uT*0.35,w.y*0.45-uT*0.2+w.z*0.3))+0.25*n1(vec2(w.z*1.3-uT*0.5,w.x*1.1+w.y*0.9));' +
+    'm+=uRain*0.9*smoothstep(0.82,0.97,n1(vec2(w.x*9.0+w.z*7.0,w.y*0.7+uT*7.0)));' +
+    'gl_FragColor=vec4(uCol*(a*I*m*uK*exp(-uFogD*length(vP)*0.8)),1.0);}';
+  let PWC = null, WCB = null, WCN_ = 0;
+  // the work lights of a type in its own frame: [[x, y, z], [dx, dy, dz]] (unit, down), cached per type
+  function workLights(type, G){
+    if (type in WLC) return WLC[type]; if (!G) return []; if (G.hand){ WLC[type] = []; return []; }
+    const L = (G.lights || []).filter(l => l && l[0] && l[2] === 'work').map(l => l[0]), out = [];
+    const tg = G.work ? G.work.table : G.deck ? [0, G.deck.y, G.deck.z] : G.hauler || null;
+    // a lamp on the compass deck over the bridge is a searchlight, kept dark: it looks ahead to find a buoy or a mooring, and a boat
+    // lying still at her work does not burn it. A model that names no deck light gets one on her wheelhouse's roof at the end towards
+    // the work deck, aimed at it, if she has a house (not an open boat)
+    const sa = G.skipperAt, deckL = sa ? L.filter(p => !(Math.abs(p[2] - sa[2]) < 4 && p[1] > sa[1] + 1.5)) : L;
+    if (sa && !deckL.length && !G.open){
+      // on the roof: the side lights' height (they stand on the wheelhouse's roof or its wings), towards the work deck from them
+      const sl = (G.lights || []).filter(l => l && l[0] && (l[2] === 'port' || l[2] === 'stbd')).map(l => l[0]), ly = sl.length ? Math.max(...sl.map(q => q[1])) + 0.15 : sa[1] + 2.2;
+      const lz = sl.length ? sl[0][2] : sa[2], dz = tg ? tg[2] - lz : 3; deckL.push([0, ly, lz + Math.sign(dz || 1) * Math.min(1.6, Math.abs(dz) * 0.4)]); }
+    for (const p of deckL){
+      const T = tg || [p[0], G.gw || 1, p[2] + 3], dx = T[0] - p[0], dz = T[2] - p[2], hz = Math.hypot(dx, dz), dy = -Math.max(p[1] - (T[1] || 0), 1.3 * hz, 1);
+      const l = Math.hypot(dx, dy, dz); out.push([p, [dx / l, dy / l, dz / l]]); }
+    return WLC[type] = out;
+  }
+  function airGlow(){ const vis = env.vis || 30, rain = sstep(0.03, 0.6, env.precip || 0), spray = sstep(13, 24, env.wind || 0); return Math.min(1.7, 0.4 + 0.8 * sstep(25, 1.5, vis) + 0.55 * rain + 0.35 * spray); }
+  function drawWorkCones(VP, eye, t, BMrel, VG){
+    WCN_ = 0; if (env.night < 0.08 || QUAL.lvl === 0) return;
+    const cones = [], wantMe = !VG.hand && S.boat.status !== 'sailing' && S.boat.status !== 'port';
+    const add = (M, sv, type, G, col, k) => { for (const [p, d] of workLights(type, G)){ if (cones.length >= WCMAX) return;
+      const P = xf(M, [p[0] * sv[0], p[1] * sv[1], p[2] * sv[2]]), Q = xf(M, [(p[0] + d[0]) * sv[0], (p[1] + d[1]) * sv[1], (p[2] + d[2]) * sv[2]]), D = [Q[0] - P[0], Q[1] - P[1], Q[2] - P[2]], dl = Math.hypot(D[0], D[1], D[2]) || 1;
+      const Dn = [D[0] / dl, D[1] / dl, D[2] / dl], h = P[1] + eye[1] - (env.tide || 0), deck = (G.deck ? G.deck.y : G.gw || 1) * sv[1], len = Math.min(28, Math.max(2.5, (Math.min(h, h - deck * 0.5) + 0.2) / Math.max(0.35, -Dn[1])));
+      cones.push([P, Dn, len, col, k, 0.5]); } };
+    if (wantMe) add(BMrel, [1, 1, 1], vtype(), VG, WCOL[(VESSELS[vtype()] || {}).len >= 20 ? 2 : 1], 1);
+    for (const n of (typeof npcNow !== 'undefined' ? npcNow : [])){
+      if (cones.length >= WCMAX) break; if (!n.K || !n.M || n.st !== 'fishing') continue;
+      const d = Math.hypot(n.M[12], n.M[14]); if (d > 900) continue;
+      add(n.M, n.K.sv, n.K.t, n.K.geo, WCOL[lookHash('wl' + n.id) % 3], 1 - sstep(500, 900, d)); }
+    if (!cones.length) return;
+    let k = 0; const put = (x, y, z, nx, ny, nz, s) => { WCV[k++] = x; WCV[k++] = y; WCV[k++] = z; WCV[k++] = nx; WCV[k++] = ny; WCV[k++] = nz; WCV[k++] = s; };
+    const ranges = [];
+    for (const [P, D, len, col, kk, ang] of cones){
+      const k0 = k, u0 = Math.abs(D[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
+      let U = [D[1] * u0[2] - D[2] * u0[1], D[2] * u0[0] - D[0] * u0[2], D[0] * u0[1] - D[1] * u0[0]]; const ul = Math.hypot(U[0], U[1], U[2]); U = U.map(v => v / ul);
+      const W = [D[1] * U[2] - D[2] * U[1], D[2] * U[0] - D[0] * U[2], D[0] * U[1] - D[1] * U[0]], cs = Math.cos(ang), sn = Math.sin(ang), tg = Math.tan(ang);
+      const pt = (j, i) => { const s = j / WCR, a = i / WCN * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a), r = 0.12 + s * len * tg, R = [U[0] * ca + W[0] * sa, U[1] * ca + W[1] * sa, U[2] * ca + W[2] * sa];
+        return [P[0] + D[0] * s * len + R[0] * r, P[1] + D[1] * s * len + R[1] * r, P[2] + D[2] * s * len + R[2] * r, R[0] * cs - D[0] * sn, R[1] * cs - D[1] * sn, R[2] * cs - D[2] * sn, s]; };
+      for (let j = 0; j < WCR; j++) for (let i = 0; i < WCN; i++){ const a = pt(j, i), b = pt(j, i + 1), c = pt(j + 1, i + 1), e = pt(j + 1, i); put(...a); put(...b); put(...c); put(...a); put(...c); put(...e); }
+      ranges.push([k0 / WCF, (k - k0) / WCF, col, kk]);
+    }
+    WCN_ = cones.length;
+    if (!PWC) PWC = program(WC_VS, WC_FS, ['aPos', 'aNor', 'aS'], 'lyskjegle');
+    if (!WCB) WCB = gl.createBuffer();
+    gl.useProgram(PWC.p); const u = PWC.u; gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform1f(u.uT, t); gl.uniform1f(u.uFogD, env.fogD || 0); gl.uniform3fv(u.uEyeM, [eye[0] % 4096, eye[1], eye[2] % 4096]);
+    gl.uniform1f(u.uRain, sstep(0.03, 0.6, env.precip || 0));
+    gl.bindBuffer(gl.ARRAY_BUFFER, WCB); gl.bufferData(gl.ARRAY_BUFFER, WCV.subarray(0, k), gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, WCF * 4, 0); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, WCF * 4, 12); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 1, gl.FLOAT, false, WCF * 4, 24);
+    gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE); gl.depthMask(false); gl.disable(gl.CULL_FACE);
+    const air = airGlow() * env.night * 0.5;
+    for (const [first, cnt, col, kk] of ranges){ gl.uniform3fv(u.uCol, col); gl.uniform1f(u.uK, air * kk); gl.drawArrays(gl.TRIANGLES, first, cnt); }
+    gl.depthMask(true); gl.disable(gl.BLEND); gl.disableVertexAttribArray(1); gl.disableVertexAttribArray(2);
   }
   function drawChunkLights(VP, eye){
     gl.useProgram(PP.p); const u = PP.u;
