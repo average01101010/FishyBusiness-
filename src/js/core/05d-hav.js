@@ -24,7 +24,9 @@ function havData(){
   D.ships = D.v.map(([g, pi, name], i) => { const V = VESSELS[D.kind[g]] || VESSELS.bunntral, s = hash(i * 977 + 13), G = HAVG[g] || HAVG.tral;
     const port = G.port[0] + (G.port[1] - G.port[0]) * hash(i * 31 + 5), trip = G.trip[0] + (G.trip[1] - G.trip[0]) * hash(i * 37 + 7);
     return {i, id:'v' + i, g, pi, name, vtype:D.kind[g], L:V.len, B:V.beam, T:V.draft || 6, port, trip, C:port + trip, ph:s * (port + trip), kn:G.kn * (0.92 + 0.16 * hash(i * 41 + 3))}; });
-  D.byPlant = new Map(); for (const s of D.ships){ let a = D.byPlant.get(s.pi); if (!a) D.byPlant.set(s.pi, a = []); a.push(s); }
+  D.byPlant = new Map(); for (const s of D.ships){ let a = D.byPlant.get(s.pi); if (!a) D.byPlant.set(s.pi, a = []); a.push(s); s.land = 4 + 4 * hash(s.i * 43 + 9); }
+  // the ships that may land at a plant other than their home (a ground of their gear lands there)
+  D.visit = new Map(); for (const s of D.ships){ const seen = new Set(); for (const e of D.g[s.g] || []){ const dp = e[5]; if (dp == null || dp === s.pi || seen.has(dp)) continue; seen.add(dp); let a = D.visit.get(dp); if (!a) D.visit.set(dp, a = []); a.push(s); } }
   return D;
 }
 // the trip k of a ship: whether she goes (the month's weight), the ground (by the month's landings of her gear), and its row
@@ -35,11 +37,11 @@ function havTrip(s, k){
   let r = hash(k * 151 + s.i * 11 + 2) * tot; for (let j = 0; j < G.length; j++){ r -= G[j][3][m]; if (r <= 0) return {gi:j, e:G[j]}; }
   return {gi:G.length - 1, e:G[G.length - 1]};
 }
-// the way from the plant to a ground: the plant, its fairway nodes to the ground's, the ground (kept per plant and ground)
-function havWay(s, gi){
-  const D = havData(), key = s.pi + ':' + s.g + ':' + gi; let W = HAV.way.get(key); if (W !== undefined) return W;
-  const pl = D.p[s.pi], e = D.g[s.g][gi], from = {x:pl[1], y:pl[2]}, to = {x:e[1], y:e[2]}, pts = [[from.x, from.y]];
-  const pa = D.pa[s.pi] || [], ga = e[4] || [];
+// the way from a plant to a ground: the plant, its fairway nodes to the ground's, the ground (kept per plant and ground)
+function havWay(s, gi, pi){
+  const D = havData(); if (pi == null) pi = s.pi; const key = pi + ':' + s.g + ':' + gi; let W = HAV.way.get(key); if (W !== undefined) return W;
+  const pl = D.p[pi], e = D.g[s.g][gi], from = {x:pl[1], y:pl[2]}, to = {x:e[1], y:e[2]}, pts = [[from.x, from.y]];
+  const pa = D.pa[pi] || [], ga = e[4] || [];
   const P = typeof LNET !== 'undefined' && LNET && pa.length && ga.length ? lnetPath(pa.map(q => [q[0], q[1]]), ga) : null;
   // (out of the plant through the water to the fairway: the way's bends the tool found for the node the net starts at)
   if (P){ const o = pa.find(q => q[0] === P.nodes[0]); if (o) for (let i = 2; i + 1 < o.length; i += 2) pts.push([o[i], o[i + 1]]); for (const v of P.nodes) pts.push([LNET.X[v], LNET.Y[v]]); }
@@ -47,10 +49,34 @@ function havWay(s, gi){
   W = {R:prepRoute(pts), RR:prepRoute(pts.slice().reverse()), to};
   if (HAV.way.size > 600) HAV.way.clear(); HAV.way.set(key, W); return W;
 }
-// the berths of a plant's ships (npcBerths: a face that stands in 3D and fits, off the plant's own berths)
-function havBerth(s){
-  const D = havData(), pl = D.p[s.pi], mates = D.byPlant.get(s.pi).map(q => ({key:q.id, L:q.L, B:q.B, T:q.T}));
-  return npcBerths('hav:' + pl[0], {x:pl[1], y:pl[2]}, mates, 1.5)[s.id] || null;
+// the way from one plant to another along the fairways (from the plant she landed at, home): null when the net has none
+function havLeg(a, b){
+  const D = havData(), key = 'L' + a + ':' + b; let W = HAV.way.get(key); if (W !== undefined) return W;
+  const A = D.pa[a] || [], B = D.pa[b] || [], pa = D.p[a], pb = D.p[b];
+  const P = typeof LNET !== 'undefined' && LNET && A.length && B.length ? lnetPath(A.map(q => [q[0], q[1]]), B.map(q => [q[0], q[1]])) : null;
+  if (!P) W = null;
+  else { const pts = [[pa[1], pa[2]]], bend = (o, out) => { const q = []; for (let i = 2; i + 1 < o.length; i += 2) q.push([o[i], o[i + 1]]); return out ? q : q.reverse(); };
+    const oa = A.find(q => q[0] === P.nodes[0]), ob = B.find(q => q[0] === P.nodes[P.nodes.length - 1]);
+    if (oa) pts.push(...bend(oa, true)); for (const v of P.nodes) pts.push([LNET.X[v], LNET.Y[v]]); if (ob) pts.push(...bend(ob, false)); pts.push([pb[1], pb[2]]);
+    W = {R:prepRoute(pts)}; }
+  if (HAV.way.size > 600) HAV.way.clear(); HAV.way.set(key, W); return W;
+}
+// the berths of a plant's ships (npcBerths: a face that stands in 3D and fits, off the plant's own berths): her own ships, then the
+// ships that may come to land there (the same list whatever the hour, so a berth stays where it is)
+function havBerth(s, pi){
+  const D = havData(); if (pi == null) pi = s.pi; const pl = D.p[pi], mates = (D.byPlant.get(pi) || []).concat(D.visit.get(pi) || []).map(q => ({key:q.id, L:q.L, B:q.B, T:q.T}));
+  // (the land round the quays not loaded yet, a moment after a jump: no berth this time, she is not shown until it is)
+  try { return npcBerths('hav:' + pl[0], {x:pl[1], y:pl[2]}, mates, 1.5)[s.id] || null; } catch (e){ if (/not loaded/.test(e.message)) return null; throw e; }
+}
+// the landing of a trip (task 2, 03.11.2026): the plant the ground's catch goes to (havflaate.py: the nearest along the fairways that
+// takes the gear and has a quay for her), the ways there and home, and the hours at the quay; null when she lands at home, or when the
+// detour would leave less than a quarter of the trip to fish
+function havLand(s, tr){
+  const D = havData(), dp = tr.e[5]; if (dp == null || dp === s.pi) return null;
+  const a = D.p[dp], h = D.p[s.pi]; if (Math.hypot(a[1] - h[1], a[2] - h[2]) < 5) return null;   // (the same harbour: she lands at home)
+  const v = s.kn * NM, W = havWay(s, tr.gi), Wd = havWay(s, tr.gi, dp), Wh = havLeg(dp, s.pi); if (!Wh) return null;
+  const out = W.R.len / v, back = Wd.R.len / v, home = Wh.R.len / v, Th = s.trip * 24;
+  return out + back + s.land + home > Th * 0.75 ? null : {pi:dp, Wd, Wh, back, home};
 }
 const havRot = (a, dx, dy) => ({x:Math.cos(a) * dx - Math.sin(a) * dy, y:Math.sin(a) * dx + Math.cos(a) * dy});
 // on the ground: where she is at hour u of her fishing, the gear in the sea ({k, a, b}) and whether the trawl is out
@@ -93,14 +119,28 @@ function havFish(s, k, u, g){
   const l = len(j % N), q = Math.min(1, v / 2.6), p = {x:l.a.x + (l.b.x - l.a.x) * q, y:l.a.y + (l.b.y - l.a.y) * q}; out.set.push({k:kind, a:p, b:l.b});
   return Object.assign(out, {p, hd:Math.atan2(l.b.x - l.a.x, -(l.b.y - l.a.y))});
 }
-// where a ship is at hour H: {p, hd, st, set, trawl, seine} or {hidden}
-function havState(s, H){
+// where a ship is at hour H: {p, hd, st, set, trawl, seine, lev, at} or {hidden} (lev: 'go' on her way to land at the plant at, 'land' there;
+// near: the place asked from, so a far plant's berth is not looked for where its map is not loaded)
+function havState(s, H, near){
   const t = H / 24 + s.ph, k = Math.floor(t / s.C), e = t - k * s.C;
   const port = () => { const m = havBerth(s); return m ? {p:m.p, hd:m.hd, st:'port', face:m.face} : {hidden:true, st:'port'}; };
   if (e < s.port) return port();
   const tr = havTrip(s, k); if (!tr) return port();
   if (tr.e[1] == null) return {hidden:true, st:'away'};
-  const W = havWay(s, tr.gi), v = s.kn * NM, steam = W.R.len / v, h = (e - s.port) * 24, Th = s.trip * 24, F = Math.max(0, Th - 2 * steam);
+  const W = havWay(s, tr.gi), v = s.kn * NM, steam = W.R.len / v, h = (e - s.port) * 24, Th = s.trip * 24, Ld = havLand(s, tr);
+  if (Ld){
+    // to the ground, fish, to the plant that takes the catch, lie there some hours, and home along the fairways
+    const F = Th - steam - Ld.back - s.land - Ld.home;
+    if (h < steam){ const a = atRoute(W.R, h * v); return {p:a.p, hd:a.hd, st:'out'}; }
+    if (h < steam + F){ const f = havFish(s, k, h - steam, W.to); return {p:f.p, hd:f.hd, st:'fishing', set:f.set, trawl:f.trawl, seine:f.seine}; }
+    const b = h - steam - F; if (b < Ld.back){ const a = atRoute(Ld.Wd.RR, b * v); return {p:a.p, hd:a.hd, st:'in', lev:'go', at:Ld.pi}; }
+    if (b < Ld.back + s.land){ const pl = havData().p[Ld.pi];
+      // (her berth only when the plant is within reach of the one asking: its quays and land are loaded only there)
+      if (near && Math.hypot(pl[1] - near.x, pl[2] - near.y) > AIS_KM + 2) return {hidden:true, st:'port', lev:'land', at:Ld.pi};
+      const m = havBerth(s, Ld.pi); return m ? {p:m.p, hd:m.hd, st:'port', face:m.face, lev:'land', at:Ld.pi} : {hidden:true, st:'port', lev:'land', at:Ld.pi}; }
+    const a = atRoute(Ld.Wh.R, Math.min(Ld.Wh.R.len, (b - Ld.back - s.land) * v)); return {p:a.p, hd:a.hd, st:'in'};
+  }
+  const F = Math.max(0, Th - 2 * steam);
   if (h < Math.min(steam, Th / 2)){ const a = atRoute(W.R, h * v); return {p:a.p, hd:a.hd, st:'out'}; }
   if (h < steam + F){ const f = havFish(s, k, h - steam, W.to); return {p:f.p, hd:f.hd, st:'fishing', set:f.set, trawl:f.trawl, seine:f.seine}; }
   const b = Math.max(0, h - steam - F), a = atRoute(W.RR, Math.min(W.RR.len, (F > 0 ? b : h - Th / 2) * v)); return {p:a.p, hd:a.hd, st:'in'};
@@ -117,12 +157,14 @@ function havNear(H, only){
     if (!only){ const pl = D.p[s.pi], t = H / 24 + s.ph, kk = Math.floor(t / s.C), e = t - kk * s.C, near = (a, c, m) => segDist(b.pos, a, c) <= m;
       const tr = e < s.port ? null : havTrip(s, kk), P0 = {x:pl[1], y:pl[2]};
       if (!tr){ if (dist(P0, b.pos) > R + 2) continue; }
-      else if (tr.e[1] == null || !near(P0, {x:tr.e[1], y:tr.e[2]}, R + 200)) continue; }
-    const A = havState(s, H); if (A.hidden) continue;
+      else if (tr.e[1] == null) continue;
+      else { const G0 = {x:tr.e[1], y:tr.e[2]}, dp = tr.e[5], Q = dp != null && dp !== s.pi ? {x:D.p[dp][1], y:D.p[dp][2]} : null;
+        if (!near(P0, G0, R + 200) && !(Q && (near(G0, Q, R + 200) || near(Q, P0, R + 200)))) continue; } }
+    const A = havState(s, H, b.pos); if (A.hidden) continue;
     if (A.set) for (const q of A.set) if (q.a !== q.b && Math.min(dist(q.a, b.pos), dist(q.b, b.pos)) <= R) gear.push({k:q.k, a:q.a, b:q.b, id:s.id, name:s.name});
     if (dist(A.p, b.pos) > R) continue;
-    const P = A.st === 'port' ? A : havState(s, H - 1 / 60), dx = A.p.x - P.p.x, dy = A.p.y - P.p.y, sog = P.hidden ? 0 : Math.hypot(dx, dy) / NM * 60;
-    out.push({id:s.id, name:s.name, type:'kyst', hav:s.g, vtype:s.vtype, p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, L:s.L, B:s.B, T:s.T, liv:s.i % 4, trawl:!!A.trawl, seine:A.seine || null});
+    const P = A.st === 'port' ? A : havState(s, H - 1 / 60, b.pos), dx = A.p.x - P.p.x, dy = A.p.y - P.p.y, sog = P.hidden ? 0 : Math.hypot(dx, dy) / NM * 60;
+    out.push({id:s.id, name:s.name, type:'kyst', hav:s.g, vtype:s.vtype, p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, L:s.L, B:s.B, T:s.T, liv:s.i % 4, trawl:!!A.trawl, seine:A.seine || null, lev:A.lev || null});
   }
   if (!only){ HAV.k = k; HAV.v = out; HAV.gear = gear; }
   return out;

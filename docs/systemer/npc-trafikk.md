@@ -156,15 +156,20 @@ Registerets aktive fartøy på 28 m og over seiler etter klokka, som kystflåten
     - Autolineren setter en line på 10 km på 1,2 timer og drar den forrige på 10,8 timer.
     - Snøkrabbe- og garnfartøyet har seks lenker side om side og drar og setter dem etter tur.
     - Linene og lenkene går i `NPCGEAR`.
+  - **Levering ved mottaket som tar fangsten (03.11.2026, Jonas: «Havflåten leverer ved mottak som tar imot fangsten, ikke alltid ved hjemmemottaket»):**
+    - `havflaate.py` gir hvert felt et leveringsmottak (`g` sjette felt, indeks i `p`): det nærmeste langs farledene (Dijkstra fra feltets noder, pluss mottakets vei ut) som tar redskapet (`mottak.json` `gear` minst 5 % `Trål`, `Not` eller `Konvensjonelle`) og har kai som passer modellen (`q[3]` × 0,9 ≥ lengde + 2 m og `q[4]` ≥ dypgang + 0,5 m, som `quayFit`). 150 av 150 felt i rammen har et, fordelt på 36 mottak; median 150 km langs leia fra feltet.
+    - I spillet (`havLand`, `havLeg`): etter fisket går skipet langs farledene til leveringsmottaket (`st:'in'`, `lev:'go'`), ligger ved en kai der som passer i 4–8 timer (`st:'port'`, `lev:'land'`; `havBerth` med mottakets egne skip først og så de som kan komme for å levere, samme liste hele tida, så plassen står), og går hjem langs farledene. Fisketida blir kortere med omveien. Gir omveien mindre enn en firedel av turen til fiske, ligger mottaket under 5 km fra hjemmet (samme havn), eller finnes ingen vei mellom mottakene, leverer hun hjemme som før. Kaia slås bare opp når mottaket er innen rekkevidde av den som spør (`havState(s, H, near)`), og ikke før kartet der er lastet. Alt er fortsatt en funksjon av klokka. 70 % av turene leverer et annet sted enn hjemme.
+    - AIS-kortet sier «På vei til mottaket for å levere» og «Leverer fangsten».
+    - **Rettet i verktøyet samtidig:** den utrettede veien ut av et mottak kunne gå over land i enden av første strekk, fordi sjekken hoppet over 350 m i begge ender, ikke bare ved mottaket. Sjekken prøver nå hver 50. m (før 100 m), så et strekk som streifer hjørnet av en landrute, blir tatt. Det ble synlig da nye mottak kom med (Trondheim, Florø).
   - **AIS:** skipene innen 15 km (`havNear`, `npcStates` med id `v…`) med båttype, redskap, størrelse og status («Tråler», «Kaster nota», «Setter og drar line»). `havNear` regner bare ut skipene som kan være nær: i havn nær deg, eller på en tur der leia kan gå forbi.
   - **Borte:** et skip med felt utenfor rammen vises ikke på turen.
 - **Forenklet, og sagt rett ut:**
-  - Leveringen er alltid ved hjemmemottaket.
   - Feltpunktene innenfor et hovedområde er trukket, ikke målt.
   - Fartøyene tar ikke fisk av spillets bestand. Den delen er med i flåtetrykket (B3, `03g-trykk.js`).
 - **Tester:**
   - `tests/unit/hav.test.mjs`: sesongene (trålerne på Tromsøflaket, Finnmarkskysten og i Lofoten i februar; ringnot på makrellen i september og på silda utenfor Troms i november; ringnot mest i havn i juni), snøkrabbe for det meste borte, leia, en tur ut–fiske–inn, trålen innen feltet, linene og teinelenkene.
-  - `tests/havflaate.py` (med vec-pakkene): leiene holder seg av land, skipene ved Tromsø i februar, kai som passer, egne modeller, tiden og en tråler som tråler.
+  - `tests/havflaate.py` (med vec-pakkene): leiene holder seg av land (også inn til leveringsmottaket og hjem derfra), skipene ved Tromsø i februar, kai som passer, egne modeller, tiden, en tråler som tråler, og et skip som leverer ved et annet mottak, ved kai som passer, med «Leverer fangsten» på AIS.
+  - `tests/unit/hav.test.mjs` (03.11.2026): hvert leveringsmottak tar redskapet og har kai for skipet, en tur med levering borte (ut, fiske, inn til mottaket, ved kai, hjem), og andelen turer som leverer borte.
 
 #### 4.16c Liggeplass for spillerens båt i havnene (D2 av driftsplanen, Jonas 23.10.2026)
 

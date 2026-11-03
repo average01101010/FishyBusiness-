@@ -41,6 +41,22 @@ export default function (t){
   const sp = seq(ns0, 6), sd = seq(sv0, 3), f1 = K.havFish(ns0, 1, 3.2, g0).seine, f2 = K.havFish(sv0, 1, 2, g0).seine;
   t.ok(sp === '-,shoot,purse,haul,pump' && sd === '-,shoot,haul', `notkastet etter klokka: ringnot ${sp}; snurrevad ${sd}`);
   t.ok(f1.purse && f1.R === 120 && f1.k > 0.5 && f1.k < 0.7 && !f2.purse && f2.R === 500, `ringen: ringnot ${f1.R} m (k ${f1.k.toFixed(2)}), snurrevad ${f2.R} m`);
+  // landing (03.11.2026): a ground's catch goes to the nearest plant along the fairways that takes the gear and has a quay for her
+  const MO = new Map((K.MOTTAK && K.MOTTAK.m || []).map(m => [m.id, m])), want = {tral:'Trål', not:'Not'};
+  let nL = 0, bad = []; for (const g in D.g) for (const e of D.g[g]){ if (e[5] == null) continue; nL++; const m = MO.get(D.p[e[5]][0]), V = K.VESSELS[D.kind[g]];
+    if (m && !((m.gear || {})[want[g] || 'Konvensjonelle'] >= 0.05 && m.q[3] * 0.9 >= V.len + 2 && m.q[4] >= V.draft + 0.5)) bad.push(g + ' ' + e[0] + ' ' + m.id); }
+  t.ok(nL >= 100 && !bad.length, `${nL} felt har et mottak for fangsten som tar redskapet og har kai for skipet` + (MO.size ? '' : ' (mottakene ikke lest)'), bad.slice(0, 4));
+  // a trip that lands away from home: out, fishing, in to that plant, at its quay some hours, and home; the clock alone
+  let LS = null, Lk = 0, Ltr = null;
+  for (const q of D.ships){ for (let k = 0; k < 60 && !LS; k++){ const r = K.havTrip(q, k); if (r && r.e[1] != null && K.havLand(q, r)){ LS = q; Lk = k; Ltr = r; } } if (LS) break; }
+  if (LS){ const H1 = (Lk * LS.C - LS.ph) * 24, seq2 = []; let atP = null;
+    for (let h = 0; h < LS.C * 24; h += 0.5){ const a = K.havState(LS, H1 + h), tag = a.st + (a.lev ? ':' + a.lev : ''); if (seq2[seq2.length - 1] !== tag) seq2.push(tag); if (a.lev === 'go') atP = a; }
+    const Ld = K.havLand(LS, Ltr), pl = D.p[Ld.pi], end = Ld.Wd.RR.pts[Ld.Wd.RR.pts.length - 1], hm = Ld.Wh.R.pts[Ld.Wh.R.pts.length - 1], home = D.p[LS.pi];
+    t.ok(seq2.join(',').includes('out,fishing,in:go,port:land,in'), `en tur med levering ved ${pl[0]} (hjemme ${home[0]}): ${seq2.join(' → ')}`);
+    t.ok(Math.hypot(end.x - pl[1], end.y - pl[2]) < 0.01 && Math.hypot(hm.x - home[1], hm.y - home[2]) < 0.01 && LS.land >= 4 && LS.land <= 8, `leia ender ved leveringsmottaket, hjemturen ved hjemmemottaket, ${LS.land.toFixed(1)} timer ved kai`);
+    const share = D.ships.reduce((a, q) => { for (let k = 0; k < 30; k++){ const r = K.havTrip(q, k); if (r && r.e[1] != null){ a.n++; if (K.havLand(q, r)) a.l++; } } return a; }, {n:0, l:0});
+    t.ok(share.l > share.n * 0.2, `${share.l} av ${share.n} turer leverer ved et annet mottak enn hjemmemottaket`);
+  } else t.ok(false, 'en tur som leverer borte finnes');
   // the clock alone: the same hour gives the same place
   const a = K.havState(s, H0 + 30), b = K.havState(s, H0 + 30); t.ok(a.p.x === b.p.x && a.p.y === b.p.y, 'samme tid gir samme sted');
 }

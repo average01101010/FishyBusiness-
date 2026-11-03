@@ -13,6 +13,8 @@
 # gear*6+4), as kilos per month per location or main area; the twelve heaviest areas of each gear, each with up to three points of
 # water in it at the gear's depths (rules.json lok/hom polygons, the core's 200 m land and 1 km depth). An area outside the game's
 # frame, or with no such water, is «borte»: the vessel is away for the trip and comes back.
+# Landing: the catch from a ground goes to the nearest plant along the fairways that takes the gear and has a quay long and deep enough
+# for her (mottak.json gear and q); she lies there some hours and steams home along the fairways.
 # The ways: Kystverket's fairways (leinett.json), from the nodes a plant reaches by a clean straight leg to the nodes a ground reaches
 # (the game finds the way between them through the net).
 #
@@ -20,7 +22,8 @@
 #   meta    made, src, n (vessels), byGear, homes, grounds, routes, away (areas out of reach)
 #   kind    {gear: model id}
 #   p       plants [[mottak id, x, y]]
-#   g       {gear: [[area code, x, y, [12 kg a month], [[node, km], ...]], ...]}  (x, y null: away)
+#   g       {gear: [[area code, x, y, [12 kg a month], [[node, km], ...], plant], ...]}  (x, y null: away; plant: the index in p of
+#           the plant the catch is landed at, the nearest along the fairways that takes the gear and has a quay for her; null: home)
 #   v       vessels [[gear, plant index, name]]
 #   pa      [[[node, km, x, y, x, y, ...], ...]] per plant: the fairway nodes it reaches through the water, with the way's bends there; a
 #           ground's are the last field of its row ([node, km]: a clean straight leg)
@@ -30,6 +33,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE)); CACHE = os.path.join(HERE, 'cache')
 KIND = {'tral': 'bunntral', 'not': 'pelagisk', 'snurrevad': 'ringnot38', 'line': 'autoliner', 'teine': 'snokrabbe', 'garn': 'ringnot38'}
 PLANTG = {'tral': 'Trål', 'not': 'Not'}   # the rest: Konvensjonelle
+SIZE = {'bunntral': (60.3, 5.1), 'pelagisk': (75.0, 7.5), 'ringnot38': (38.55, 3.85), 'autoliner': (45.4, 3.8), 'snokrabbe': (50.0, 6.0)}   # VESSELS len, draft
 DEPTH = {'tral': (100, 600), 'not': (40, 3000), 'snurrevad': (40, 300), 'line': (100, 1000), 'teine': (150, 450), 'garn': (40, 400)}
 NAMES = ['Havglimt', 'Kvitbris', 'Stormvær', 'Nordglimt', 'Havsula', 'Sølvbølge', 'Polarstrand', 'Havdønning', 'Ishavsbris', 'Djupvær',
          'Bankhavet', 'Kaldbakk', 'Brattvær', 'Havstreif', 'Måkeskjær', 'Skodde', 'Havtrost', 'Nordbank', 'Gråbølge', 'Kvitskjær', 'Sjøfalk',
@@ -88,9 +92,10 @@ def main(game):
     C = core(game); LAND, lc = C['land200']; DEEP, dc = C['deep']
     land = lambda x, y: not (0 <= x < 1450 and 0 <= y < 1720) or LAND[min(LAND.shape[0] - 1, int(y / lc)), min(LAND.shape[1] - 1, int(x / lc))] == 1
     depth = lambda x, y: float(DEEP[min(DEEP.shape[0] - 1, int(y / dc)), min(DEEP.shape[1] - 1, int(x / dc))]) * 10 if 0 <= x < 1450 and 0 <= y < 1720 else 0
-    def clear(a, b, skip=0.0):
-        d = math.hypot(b[0] - a[0], b[1] - a[1]); n = max(1, int(d / 0.1))
-        return all(not land(a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n) for k in range(n + 1) if d * k / n >= skip and d * (n - k) / n >= skip)
+    # (skip: the first stretch from a left out, the plant's own cell that may be land on this map; at b only when both)
+    def clear(a, b, skip=0.0, both=True):
+        d = math.hypot(b[0] - a[0], b[1] - a[1]); n = max(1, int(d / 0.05))   # (every 50 m: a leg grazing a cell's corner is caught)
+        return all(not land(a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n) for k in range(n + 1) if d * k / n >= skip and (not both or d * (n - k) / n >= skip))
     P = rules_polys(); KN = kommunenavn()
     # the vessels by kommune and gear
     ves = []
@@ -188,7 +193,7 @@ def main(game):
             st = [P[0]]; j = 0
             while j < len(P) - 1:
                 k2 = len(P) - 1
-                while k2 > j + 1 and not clear(P[j], P[k2], 0.35 if j == 0 else 0): k2 -= 1
+                while k2 > j + 1 and not clear(P[j], P[k2], 0.35 if j == 0 else 0, False): k2 -= 1   # (not past land at the far end, 03.11.2026)
                 st.append(P[k2]); j = k2
             L = sum(math.hypot(st[q][0] - st[q - 1][0], st[q][1] - st[q - 1][1]) for q in range(1, len(st)))
             out.append((i, L, st[1:-1]))
@@ -213,10 +218,6 @@ def main(game):
         V.append([g, pidx[m['id']], NAMES[int(H01(knr, g, j) * len(NAMES))] + (' ' + 'I' * (1 + int(H01(knr, g, j, 'n') * 2)) if H01(knr, g, j, 'r') < 0.5 else '')])
     # the ways: the fairway nodes each plant reaches by a clean straight leg (or the nearest three at three times the length), and the
     # nodes each ground reaches; the game finds the way through the net between them (lnetPath, 11c-leinett.js) when she sails it
-    pa = []
-    for mid, px, py in plants:
-        a = WO[mid]
-        pa.append([[i, round(L, 2)] + [round(v, 3) for q in mid_ for v in q] for i, L, mid_ in a])
     noWay = 0
     for g, out in grounds.items():
         for e in out:
@@ -224,10 +225,34 @@ def main(game):
             a = access((e[1], e[2]), 250, 40, 0) or access((e[1], e[2]), 600, 80, 0)
             if not a: noWay += 1
             e.append([[i, round(d, 2)] for i, d in a[:6]])
+    # the plant each ground's catch is landed at (task 2, 03.11.2026): the nearest along the fairways that takes the gear and has a quay
+    # long and deep enough for the gear's model (the game's quayFit: 90 % of the quay at least her length and 2 m, and her draught and
+    # 0.5 m); the ship steams there from the ground, lies there some hours and goes home. The home plant when none is nearer.
+    def fits(m, g):
+        L, T = SIZE[KIND[g]]; return m['q'][3] * 0.9 >= L + 2 and m['q'][4] >= T + 0.5
+    MOI = {m['id']: m for m in MO}; deliv = 0; far = []
+    for g, out in grounds.items():
+        cand = [m for m in MO if takes(m, g) and fits(m, g)]
+        for e in out:
+            if e[1] is None or not e[4]: e.append(None); continue
+            D, _ = dijkstra([(i, d) for i, d in e[4]]); best = None
+            for m in cand:
+                c = min((D[i] + L for i, L, _ in WO[m['id']]), default=np.inf)
+                if np.isfinite(c) and (best is None or c < best[0]): best = (c, m)
+            if best is None: e.append(None); continue
+            m = best[1]
+            # (a plant within 5 km of the ships' homes is the same harbour: they land at home; the game checks it per ship, havLand)
+            if m['id'] not in pidx: pidx[m['id']] = len(plants); plants.append([m['id'], round(m['q'][0], 3), round(m['q'][1], 3)])
+            e.append(pidx[m['id']]); deliv += 1; far.append(best[0])
+    pa = []
+    for mid, px, py in plants:
+        a = WO[mid]
+        pa.append([[i, round(L, 2)] + [round(v, 3) for q in mid_ for v in q] for i, L, mid_ in a])
     by = {}
     for v in V: by[v[0]] = by.get(v[0], 0) + 1
     meta = {'made': time.strftime('%Y-%m-%d'), 'src': 'Fiskeridirektoratets fartøyregister og sluttsedler (fiske.json, NLOD); mottakene (mottak.json); Kystverkets farleder (leinett.json); kommunene fra Geonorge (Kartverket)',
-            'n': len(V), 'active': len(ves), 'noHome': noHome, 'byGear': by, 'homes': len(plants), 'grounds': sum(len(v) for v in grounds.values()), 'away': away, 'noWay': noWay}
+            'n': len(V), 'active': len(ves), 'noHome': noHome, 'byGear': by, 'homes': len(plants), 'grounds': sum(len(v) for v in grounds.values()), 'away': away, 'noWay': noWay,
+            'landAt': deliv, 'landPlants': len({e[5] for o in grounds.values() for e in o if e[5] is not None}), 'landKm': round(float(np.median(far))) if far else 0}
     f = os.environ.get('KYST_HAV') or os.path.join(ROOT, 'src', 'data', 'havflaate.json')
     open(f, 'w').write(json.dumps({'meta': meta, 'kind': KIND, 'p': plants, 'g': grounds, 'v': V, 'pa': pa}, ensure_ascii=False, separators=(',', ':')) + '\n')
     print(json.dumps(meta, ensure_ascii=False), f'{os.path.getsize(f) / 1000:.0f} kB')
