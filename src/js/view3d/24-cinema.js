@@ -240,7 +240,9 @@
       }
       gl.deleteSync(P.sync); GFX.pend = null; return;
     }
-    if (now - GFX.pixAt < 15000 || INTRO) return;
+    // (not on a GPU drawn by the CPU either: there the read into a buffer waits all the same, a frame of seconds that made skytest's
+    // clouds jump ahead; GFX.force for the test)
+    if (now - GFX.pixAt < 15000 || INTRO || (GFX.soft && !GFX.force)) return;
     GFX.pixAt = now;
     if (!W || !Hh){ gfxErr('3D lerretet er 0 px', {cw:canvas.clientWidth, ch:canvas.clientHeight}); return; }
     const day = env.night < 0.2 && env.day > 0.8, vis = env.vis || 0, at = [];
@@ -253,7 +255,6 @@
       GFX.pend = {sync:gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0), t:now, day, vis};
       return;
     }
-    if (GFX.soft) return;
     const px = at.map(([x, y]) => { gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, GFX.px); return [GFX.px[0], GFX.px[1], GFX.px[2]]; });
     gfxPix(gfxJudge(px, day, vis));
   }

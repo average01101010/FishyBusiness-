@@ -55,8 +55,8 @@ async def main():
         # the steps of the frame are learnt, and each round asks about the next one (two questions to the driver a round)
         st = await pg.evaluate("(() => { const g = G3._debug.gfx; return {tags:g.tags.length, k:g.k}; })()")
         check(st['tags'] >= 6 and st['k'] >= 1, 'the frame\'s steps are learnt and one is asked about each round', st)
-        # a camera that is not a number
-        await pg.evaluate("G3._debug.cam.helm = false; window.__yaw = G3._debug.cam.yaw; G3._debug.cam.yaw = NaN")
+        # a camera that is not a number (with the driver's questions and the reads off again: forced on SwiftShader they make each frame long)
+        await pg.evaluate("G3._debug.cam.helm = false; G3._debug.gfx.force = false; window.__yaw = G3._debug.cam.yaw; G3._debug.cam.yaw = NaN")
         for _ in range(60):   # (SwiftShader may take its time over a frame: wait for the report, at most 30 s)
             if any(e['msg'].startswith('3D NaN i kameraet') for e in gfx()): break
             await pg.wait_for_timeout(500)
