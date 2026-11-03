@@ -12,7 +12,7 @@ export default function (t){
   t.ok(Object.values(cnt).every(v => v > 0) && cnt.pelagisk < cnt.ringnot38 && Object.values(cnt).every(v => v < P.length), `mottak som tar havbåtene: ${JSON.stringify(cnt)} av ${P.length}`);
   const bad = [];
   for (const p of P) for (const k of ['autoliner', 'bunntral', 'pelagisk']){ if (!K.portFits(p, k)) continue; const T = V[k];
-    if (p.mk.q[0] * 0.9 < T.len + 2 || p.mk.q[1] < T.draft + 0.5 || !(T.mottak.some(g => (p.mk.gear[g] || 0) >= 0.05) || p.mk.big >= 0.2)) bad.push(p.name + ' ' + k); }
+    if (p.mk.q[0] * 0.9 < T.len + 2 || (p.mk.q[1] > 0 ? p.mk.q[1] : K.QUAY_DEPTH_UNKNOWN) < T.draft + 0.5 || !(T.mottak.some(g => (p.mk.gear[g] || 0) >= 0.05) || p.mk.big >= 0.2)) bad.push(p.name + ' ' + k); }
   t.ok(!bad.length, 'hvert mottak som tar en havbåt, har kai lang og dyp nok og tar redskapet', bad.slice(0, 4));
   const short = P.find(p => p.mk.q[0] < 40), w = short && K.portWhy(short, 'bunntral');
   t.ok(w && /for kort/.test(w[0]) && /too short/.test(w[1]), `en kort kai sier hvorfor på norsk og engelsk: «${w && w[0]}»`);
@@ -21,6 +21,8 @@ export default function (t){
   t.ok(HO.length >= 8 && HO.every(p => !p.mottak && p.havMottak && p.mk && p.mk.big >= 0.2) && HO.every(p => !K.portFits(p, 'sjark')), `${HO.length} mottak bare for havflåten (ikke mottak for kystbåtene): ${HO.map(p => p.name).join(', ')}`);
   t.ok(ho('pelagisk').length + ho('ringnot38').length > 0, `ringnot og pelagisk tar imot ved ${[...new Set(ho('pelagisk').concat(ho('ringnot38')))].join(', ')}`);
   t.ok(!K.CUSTOMERS.some(c => HO.some(p => p.id === c.port)), 'mottakene bare for havflåten legger ikke ut bestillinger');
+  const unk = P.find(p => p.mk.q[1] === 0 && p.mk.q[0] > 90), wu = unk && K.portWhy(unk, 'autoliner');
+  t.ok(wu && /ikke kjent/.test(wu[0]), `ukjent dybde i registeret (0) regnes som ${K.QUAY_DEPTH_UNKNOWN} m og sies som ukjent: ${unk && unk.name}, «${wu && wu[0]}»`);
   // prices: the ocean species from the notes
   const pt = P[0], H = (Date.UTC(2027, 2, 15) - K.EPOCH) / 36e5;
   const pr = sp => K.clsPrice(pt, sp, K.SPECIES[sp].ref, H, false);

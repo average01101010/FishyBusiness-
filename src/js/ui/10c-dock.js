@@ -93,7 +93,7 @@ const DOCK = (() => {
     const bunkerItem = () => { const need = BOAT.fuelCap - b.fuel;
       return I('bunker', 'bunker', 'Bunkring', 'Fuel', {act:'fuel', off:!p.fuel ? [L('Det er ikke drivstoff å få i ' + p.name + '.', 'There is no fuel to be had in ' + p.name + '.')] : need < 0.5 ? [L('Tanken er full.', 'The tank is full.')] : portBusy(b) ? [L('Vent til arbeidet på kaia er ferdig.', 'Wait until the work on the quay is done.')] : null}); };
     if (m === 'marked') return [
-      I('lever', 'lever', 'Lever', 'Land', {page:'lever', off:!sv.mottak && [L('Det er ikke noe fiskemottak i ' + p.name + '.', 'There is no fish plant in ' + p.name + '.')], pri:p.mottak && holdTotal() > 0.5 && !b.land}),
+      I('lever', 'lever', 'Lever', 'Land', {page:'lever', off:!portServices(p, berthKind(b)).mottak && [L('Det er ikke noe fiskemottak i ' + p.name + '.', 'There is no fish plant in ' + p.name + '.')], pri:portServices(p, berthKind(b)).mottak && holdTotal() > 0.5 && !b.land}),
       I('is', 'is', 'Is', 'Ice', {page:'is'}),
       I('agn', 'agn', 'Agn', 'Bait', {page:'agn'}),
       bunkerItem()];

@@ -128,7 +128,7 @@ function landConf(H, q, acc){
 }
 function sell(){
   const b = S.boat, port = portById(b.port); if (!port || !(port.mottak || port.havOnly)) return;
-  { const why = portWhy(port, b.type); if (why){ toast(L(why[0], why[1])); return; } }   // an ocean vessel: a plant that takes her (havsteget H0)
+  { const why = portWhy(port, b.type); if (why){ toast(S.lang === 'en' ? why[1] : why[0]); return; } }   // an ocean vessel: a plant that takes her (havsteget H0)
   const H = S.t / 60, q = quotaState(), lines = {}, extra = [], acc = access(), kgOf = sp => S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0);
   let kg = 0;
   const wk = weekOfH(H); if (q.ffW !== wk){ q.ffW = wk; q.ffTot = 0; q.ffCod = 0; }

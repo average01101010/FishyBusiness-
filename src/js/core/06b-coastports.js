@@ -120,7 +120,8 @@ function plantsNear(p, n = 10){
 }
 // ===== the ocean vessels at the plants (H0 of docs/planer/havsteget.md, 03.11.2026) =====
 // A plant takes an ocean vessel (cls 'hav') when its quay is long and deep enough for her, by the same rule as the fleet's berths
-// (07-harbours.js quayFit: 90 % of the face at least her length and 2 m, and her draught and 0.5 m), and it takes in her catch: one of
+// (07-harbours.js quayFit: 90 % of the face at least her length and 2 m, and her draught and 0.5 m, an unknown depth taken as
+// QUAY_DEPTH_UNKNOWN), and it takes in her catch: one of
 // her gear groups (VESSELS mottak: Trål, Not, Konvensjonelle) is 5 % or more of what it takes in, or a fifth or more comes from vessels of
 // 28 m and over. Every plant takes the coast's boats as before. A harbour with no register plant (mk) takes no ocean vessel.
 // portWhy gives the reason in both languages, or null when she may moor and land there.
@@ -128,9 +129,10 @@ function portWhy(pt, type){
   const V = VESSELS[type]; if (!pt || !(pt.mottak || pt.havOnly)) return null;
   if (!V || V.cls !== 'hav') return pt.havOnly ? ['Mottaket her tar bare imot fra havfiskefartøy.', 'The plant here takes only ocean vessels.'] : null;
   const mk = pt.mk; if (!mk || !mk.q) return ['Kaia her er ikke registrert for havfiskefartøy.', 'The quay here is not registered for ocean vessels.'];
-  const [len, dep] = mk.q;
+  const nf = v => String(Math.round(v * 10) / 10).replace('.', ','), len = mk.q[0], known = mk.q[1] > 0, dep = known ? mk.q[1] : QUAY_DEPTH_UNKNOWN;   // (0 in the register: not known, as quayFit takes it)
   if (!(len * 0.9 >= V.len + 2)) return ['Kaia her er ' + Math.round(len) + ' m, for kort for en båt på ' + Math.round(V.len) + ' m.', 'The quay here is ' + Math.round(len) + ' m, too short for a ' + Math.round(V.len) + ' m vessel.'];
-  if (!(dep >= V.draft + 0.5)) return ['Kaia her har ' + Math.round(dep * 10) / 10 + ' m dybde, for grunt for en dypgang på ' + Math.round(V.draft * 10) / 10 + ' m.', 'The quay here has ' + Math.round(dep * 10) / 10 + ' m of water, too shallow for a draught of ' + Math.round(V.draft * 10) / 10 + ' m.'];
+  if (!(dep >= V.draft + 0.5)) return known ? ['Kaia her har ' + nf(dep) + ' m dybde, for grunt for en dypgang på ' + nf(V.draft) + ' m.', 'The quay here has ' + Math.round(dep * 10) / 10 + ' m of water, too shallow for a draught of ' + Math.round(V.draft * 10) / 10 + ' m.']
+    : ['Dybden ved kaia her er ikke kjent, så den er ikke trygg for en dypgang på ' + nf(V.draft) + ' m.', 'The depth at the quay here is not known, so it is not safe for a draught of ' + Math.round(V.draft * 10) / 10 + ' m.'];
   if (!((V.mottak || []).some(g => (mk.gear[g] || 0) >= 0.05) || (mk.big || 0) >= 0.2)) return ['Mottaket her tar ikke imot fangst fra havfiskefartøy med ' + (V.mottak || []).join(' eller ').toLowerCase() + '.', 'The plant here takes no catch from ocean vessels of this kind.'];
   return null;
 }

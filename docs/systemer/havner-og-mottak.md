@@ -90,6 +90,8 @@ Jonas 03.11.2026: «Start H0 - Grunnmuren». Grunnmuren gjør at havbåtene får
     - 11 slike havner: Ellingsøy vest, Florø, Selje, Hjørungavåg, Fiskarstrand, Lødingen, Longva, Måløy, Bulandet, Egersund sør og Avaldsnes.
     - Rypefjord (Hammerfest) og Fiskarstrand øst er tatt ut, fordi butikken og verftet står under 1,5 km unna. Det står i backloggen.
   - **`portWhy(pt, type)`:** et havfiskefartøy (`cls:'hav'`) kan legge til og levere bare der kaia er lang og dyp nok (som `quayFit`: 90 % av kaia minst lengden og 2 m, dybden minst dypgangen og 0,5 m). I tillegg må mottaket ta minst 5 % fra en av båtens redskapsgrupper (`VESSELS.mottak`: Trål, Not, Konvensjonelle), eller få en femdel fra 28 m og over. Grunnen gis på norsk og engelsk. Kystbåtene kan bruke alle mottakene som før.
+  - **Ukjent dybde:** 0 i registeret (57 av 293 kaier) betyr at dybden ikke er kjent. Den regnes som 3 m (`QUAY_DEPTH_UNKNOWN`, som `quayFit`), og meldingen sier at den ikke er kjent.
+  - **Stikkprøve 03.11.2026:** Båtsfjord, Tromsdalen, Selje og Skudeneshavn tar alle havbåtene. Melbu (84 m) nekter den pelagiske (75 m). Måløy (46 m) tar bare kystnotbåten. Kristiansand har ukjent dybde. En sjark kan ikke legge til ved et havmottak. Skjermbilder av Måløy i begge formater.
   - **Hvor regelen gjelder:** «Fortøy» (`moorAll`), Autonav til en havn (`leiaTo`), salget (`sell`) og «Lever» (`portServices`).
   - **Målt:**
 
