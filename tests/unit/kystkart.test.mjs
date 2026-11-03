@@ -31,4 +31,10 @@ export default function (t){
   t.eq(c2.arter[0], 3, 'tre arter fra salgene');
   t.eq(c2.fyr[0], 1, 'bildet i avisa teller');
   t.eq(c2.omr[0], 1, 'fangstmerket utenfor Bergen gir ett område (' + Object.keys(S2.kk.hom).join(',') + ')');
+  // the steps (K2 part 2, core/09f-merker.js ACHL): one badge per list, the last species step is every species
+  const {ACHL} = t.K, id = k => ACHL.find(x => x.id === k);
+  t.ok(['mottak', 'fyr', 'omr', 'arter'].every(id), 'hver liste har et merke med trinn');
+  t.eq(id('arter').tiers[id('arter').tiers.length - 1], kkSpecies().length, 'siste artstrinn er alle artene');
+  t.ok(id('mottak').tiers.every(v => v <= c0.mottak[1]) && id('fyr').tiers.every(v => v <= c0.fyr[1]) && id('omr').tiers.every(v => v <= c0.omr[1]), 'ingen trinn over det som finnes');
+  t.eq(id('fyr').v(), 1, 'fyrmerket leser Kystkartet (spillet over: ett fyr)'); t.eq(id('omr').v(), 1, 'områdemerket leser Kystkartet');
 }
