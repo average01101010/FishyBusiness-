@@ -12,7 +12,7 @@ Koden: klienten `src/js/ui/10g-push.js` (`pushItems` → `push_plan`), serveren 
 - **Spilleren velger ikke antall.** Vi justerer ned heller om tilbakemeldingene sier det. Hun kan bare slå av gruppene «Båten og driften» og «Ukas beste fisker» (og hele push).
 - **Testfasen:** vi tåler litt mer. Tallene under er startverdier.
 - **Kystposten sender ingen varsler** (appen har prikk). Heller ingen sesonger, kvote, topplista («noen gikk forbi deg» er borte) eller annet verdensnytt.
-- **Verden: ett varsel i uka**, Norges beste fisker (åpen og lukket gruppe). Se «Ukas beste fisker» under.
+- **Verden: ett varsel i uka**, «Ukas fangst» søndag kveld med egen uke og Norges beste fisker (åpen og lukket gruppe). Se «Ukas beste fisker» under.
 
 ## Hva som varsles (alt i gruppen `drift`)
 
@@ -44,6 +44,8 @@ Hvert varsel er skrevet rolig, med båtens navn, hva som har skjedd og hva hun k
 - Planen legges når appen går i bakgrunnen og tømmes når hun er tilbake, så ingenting kommer mens hun spiller. Planen gjelder 40 ekte timer fram (serveren tar to døgn).
 
 ## Ukas beste fisker
+
+**Endret 03.11.2026 (Ukas fangst, Oppdrag 2 U1):** varselet går nå **søndag fra 19:00** og heter «Ukas fangst» for den som har levert de siste sju dagene: «Du leverte 2,3 t, plass 14 av 230 i åpen gruppe. Ukas beste fisker …». Den som ikke har levert, får teksten under som før. Fortsatt ett varsel i uka fra verden. Se 5.59 i `docs/systemer/haill-pub-og-bonus.md`.
 
 Hver **mandag fra 08:00 norsk tid** (sjekkes hver time av pg_cron, `push_week`): «Ukas beste fisker i åpen gruppe er «Båt» med 12,3 t. I lukket gruppe: …», ut fra de siste sju dagene av landingene (gjester er utelatt). Det betyr en ekte uke, ikke en spilluke (en spilluke er bare 28 ekte timer). Går bort med bryteren «Ukas beste fisker».
 

@@ -16,6 +16,7 @@
 // SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY are given to every Edge Function by Supabase.
 import Stripe from 'npm:stripe@23.0.0';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { serveReported } from '../_shared/report.ts';   // a throw or a 5xx goes to the game's error list (02.11.2026)
 
 const SK = Deno.env.get('STRIPE_SECRET_KEY') || '';
 const MANAGED = Deno.env.get('STRIPE_MANAGED') === '1', TAX = Deno.env.get('STRIPE_TAX') === '1';
@@ -24,7 +25,7 @@ const TAX_CODE = 'txcd_10201001';   // Video Games, downloaded, not a subscripti
 const CORS = {'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info'};
 const json = (o: unknown, status = 200) => new Response(JSON.stringify(o), {status, headers: {...CORS, 'Content-Type': 'application/json'}});
 
-Deno.serve(async (req) => {
+serveReported('shop-checkout', async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, {headers: CORS});
   if (req.method === 'GET') return json({ready: !!SK});
   if (req.method !== 'POST') return json({error: 'method'}, 405);

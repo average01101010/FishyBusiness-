@@ -336,10 +336,13 @@ def main():
         R['pWeekOffQ'] = sql("select count(*) from public.push_queue where tag = 'top-week' and player_id = 'user_01BBB'")
         sql("delete from public.push_queue where tag = 'top-week'"); sql("select public.push_prefs(true)", B, 'authenticated')
         R['pWeek'] = sql("select public.push_week(true)", None, 'service_role') + '/' + sql("select string_agg(body, ' | ' order by body) from public.push_queue where tag = 'top-week'")
+        R['pWeekMe'] = sql("select body from public.push_queue where tag = 'top-week' and player_id = 'user_01BBB'")
         sql("delete from public.push_queue where tag = 'top-week'")
         # the day gate: Monday 08:00 once, not on Tuesday, not twice in a week
         R['pWeekTue'] = sql("set dsb.clock = '2026-10-06 09:00:00+02'; select public.push_week()", None, 'service_role')
-        R['pWeekMon'] = sql("set dsb.clock = '2026-10-12 09:00:00+02'; select public.push_week()", None, 'service_role') + '/' + sql("set dsb.clock = '2026-10-12 10:00:00+02'; select public.push_week()", None, 'service_role')
+        R['pWeekSun18'] = sql("set dsb.clock = '2026-10-11 18:30:00+02'; select public.push_week()", None, 'service_role')
+        R['pWeekMon'] = sql("set dsb.clock = '2026-10-11 19:30:00+02'; select public.push_week()", None, 'service_role') + '/' + sql("set dsb.clock = '2026-10-11 20:30:00+02'; select public.push_week()", None, 'service_role')
+        R['pWeekTitle'] = sql("select string_agg(distinct title, '|') from public.push_queue where tag = 'top-week'")
         R['pWeekPl'] = sql("select public.push_week(true)", A, 'authenticated', expect_err=True)
         R['pPaper'] = sql("select public.push_paper()", None, 'service_role')   # Kystposten sends no push (20261008000000_push_ops.sql)
         R['wBadT'] = sql("select public.land_put('NaN', 2027, 'x', 'open', '[]')", A, 'authenticated', expect_err=True)
@@ -526,8 +529,9 @@ def main():
               'push: what is due at once goes as one message, the most important first; six a day for a new player (but five unanswered ones in a row cut it to two until she opens the app), 12 and 24 with more sessions; no quiet night; what has stopped mattering is dropped',
               {'merge': pm, 'cap': R['pCap'], '12': R['pCap12'], '24': R['pCap24'], '2': R['pCap2'], 'night': R['pNight'], 'stale': R['pStale']})
         print(ok(R['pPass'] == '0' and R['pWeekOff'] == '1' and R['pWeekOffQ'] == '0' and R['pWeek'].startswith('2/') and 'Ukas beste fisker i åpen gruppe er «Havbris» med ' in R['pWeek'] and ' I lukket gruppe: «' in R['pWeek']
-                 and R['pWeekTue'] == '0' and R['pWeekMon'] == '2/0' and R['pWeekPl'][0] and R['pPaper'] == '0'),
-              "push from the server: no leaderboard message; once a week (Monday from 08:00) the best fisher of the last seven days to each who has it on (not with it turned off); players cannot call it", {'pass': R['pPass'], 'off': [R['pWeekOff'], R['pWeekOffQ']], 'week': R['pWeek'], 'tue': R['pWeekTue'], 'mon': R['pWeekMon']})
+                 and R['pWeekTue'] == '0' and R['pWeekSun18'] == '0' and R['pWeekMon'] == '2/0' and R['pWeekPl'][0] and R['pPaper'] == '0'
+                 and R['pWeekMe'].startswith('Du leverte ') and ' i åpen gruppe. Ukas beste fisker i åpen gruppe er «Havbris»' in R['pWeekMe'] and R['pWeekTitle'] == 'Ukas fangst'),
+              "push from the server: no leaderboard message; once a week (Sunday from 19:00) «Ukas fangst»: her own kilos and place in her group over the last seven days, and the best fisher, to each who has it on (not with it turned off); players cannot call it", {'pass': R['pPass'], 'off': [R['pWeekOff'], R['pWeekOffQ']], 'week': R['pWeek'], 'me': R['pWeekMe'], 'tue': R['pWeekTue'], 'sun18': R['pWeekSun18'], 'mon': R['pWeekMon'], 'title': R['pWeekTitle']})
         q, pd = R['sQuote'], R['sPend']
         print(ok(q.get('price_nok') == 49 and q.get('data', {}).get('k') == 'turbo' and R['sNoProd'][0] and R['sAnon'][0] and R['sPaid1'] == 't' and R['sPaid2'] == 'f'
                  and len(pd) == 1 and pd[0]['product'] == 'trim_turbo' and pd[0]['data'].get('give') == 'trim' and pd[0]['data'].get('boat') == 'v1' and R['sPendB'] == []
@@ -827,6 +831,26 @@ def main():
         mine = [q for q in g2 if q[0] == 'garn' and abs(q[1] - 900.1) < 1e-3]; nmB = sql("select coalesce((select name from public.names where player_id = '%s' and removed_at is null), '')" % B['sub']).strip()
         print(ok(len(mine) == 1 and mine[0][5] == nmB and mine[0][6] == 'Havbris' and all(len(q) == 5 for q in g1) and not any(abs(q[1] - 900.1) < 1e-3 for q in own)),
               'gear_near2 gives the others\' sets with the owner\'s player name and boat, never your own; gear_near still has nothing of the owner', (mine, nmB, len(g1), len(own)))
+        # the admin told at once (20261102150000_err_alert.sql): the first look starts the cursor; a new message and three crashes give one
+        # push to the admin with a subscription; within half an hour no other, and the cursor waits; then the next; no player runs it
+        E = {}
+        adm = sql("select id from public.players order by id limit 1")
+        sql("update public.players set game_admin = true where id = '%s'; insert into public.push_subs (endpoint, player_id, p256dh, auth, lang) values ('https://push.test/adm', '%s', 'k', 'a', 'no') on conflict do nothing" % (adm, adm))
+        E['first'] = sql("select public.err_alert()")
+        sql("insert into public.errors (msg, src) values ('errtest ny 1282 feil', 'x'), ('Krasj: siden stoppet mens den var på skjermen · 3d', 'crash'), ('Krasj: siden stoppet mens den var på skjermen · 3d', 'crash'), ('Krasj: siden stoppet mens den var på skjermen · kart', 'crash'), ('TypeError: x', 'view3d.js:5')")
+        E['one'] = sql("select public.err_alert()")
+        E['body'] = sql("select replace(body, E'\\n', ' | ') from public.push_queue where tag = 'dsb-err' and player_id = '%s' order by id desc limit 1" % adm)
+        sql("insert into public.errors (msg, src) values ('errtest annen', 'x')")
+        E['wait'] = sql("select public.err_alert()")
+        sql("update public.push_state set v = v - 3600 where k = 'err_alert_at'")
+        E['next'] = sql("select public.err_alert()"); E['body2'] = sql("select replace(body, E'\\n', ' | ') from public.push_queue where tag = 'dsb-err' order by id desc limit 1")
+        sql("insert into public.errors (msg, src) values ('errtest ny 999 feil', 'x')"); sql("update public.push_state set v = v - 3600 where k = 'err_alert_at'")
+        E['same'] = sql("select public.err_alert()")
+        E['anon'] = sql("select public.err_alert()", {}, 'anon', expect_err=True)[0]; E['pl'] = sql("select public.err_alert()", A, 'authenticated', expect_err=True)[0]
+        sql("update public.players set game_admin = false where id = '%s'; delete from public.push_subs where endpoint = 'https://push.test/adm'; delete from public.push_queue where tag = 'dsb-err'" % adm)
+        print(ok(E['first'] == '0' and E['one'] == '1' and '«errtest ny 1282 feil»' in E['body'] and 'nye feil' in E['body'] and '3 krasj' in E['body'] and 'TypeError: x' not in E['body']
+                 and E['wait'] == '0' and E['next'] == '1' and 'errtest annen' in E['body2'] and E['same'] == '0' and E['anon'] and E['pl']),
+              'a new error or three crashes push the admin once, never a known one; half an hour between, nothing lost; numbers do not make a message new; no player runs it', E)
         # the load of 5 000 players (plan 5b; KYST_LAST=5000): landings and catches for that many players, then what world_get costs
         NL = int(os.environ.get('KYST_LAST') or 0)
         if NL:

@@ -81,9 +81,9 @@ const PUB3 = (() => {
       if (!gl) throw new Error('no webgl');
       const pr = prog(VS, FS), pt = prog(VT, FT), M = load(); if (!M) throw new Error('no model');
       P = Object.assign(M, {pr, pt, sq:signQuad(M.A), stex:null, sname:''});
-      cv.addEventListener('webglcontextlost', e => { e.preventDefault(); gl = null; P = null; failed = false; });
+      cv.addEventListener('webglcontextlost', e => { e.preventDefault(); gl = null; P = null; failed = false; console.error('pub 3d: konteksten mistet'); });   // (the error trap sends it)
       return true;
-    } catch (e){ failed = true; gl = null; console.warn('pub 3d', e); return false; }
+    } catch (e){ failed = true; gl = null; console.error('pub 3d', e); return false; }   // (the error trap sends it: the page falls back to the flat picture)
   }
 
   // ---------- matrices (column-major) ----------

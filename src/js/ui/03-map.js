@@ -397,6 +397,7 @@ function renderStatic(){
   // Father's naust (ui/06c-notebook.js)
   g.push(NOTEBOOK.svg(u, inV));
   g.push(turSvg(u, inV));   // where the missions go (ui/05f-turer.js)
+  if (typeof kkSvg === 'function') g.push(kkSvg(u, inV));   // Kystkartet, when it is laid over the chart (ui/05h-kystkart.js)
   // the rank-0 place names first (the big towns, fjords and islands: always shown, 03a-chart.js), then the ports, their names when the
   // view is closer than the whole region, each label kept only where it does not cover a rank-0 name (the icon stands anyway); the other
   // place names keep clear of the labels

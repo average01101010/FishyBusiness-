@@ -73,11 +73,12 @@
   // The app keeps its id 'merker'.
   function merker(){
     if (typeof achCheck === 'function') achCheck(true);
-    const tab = sub.merker || 'uke', tabs = subs('merker', [['uke', 'Første uke', 'First week'], ['merker', 'Merker', 'Badges'], ['rekord', 'Rekordfisk', 'Record fish'], ['overtro', 'Fra gamle dager', 'The old ways'], ['tatover', 'Tatoveringer', 'Tattoos'], ['kyst', 'Kystfareren', 'Coastfarer']]);
+    const tab = sub.merker || 'uke', tabs = subs('merker', [['uke', 'Første uke', 'First week'], ['merker', 'Merker', 'Badges'], ['rekord', 'Rekordfisk', 'Record fish'], ['overtro', 'Fra gamle dager', 'The old ways'], ['tatover', 'Tatoveringer', 'Tattoos'], ['kyst', 'Kystfareren', 'Coastfarer'], ['kart', 'Kystkartet', 'Coast map']]);
     if (tab === 'tatover') return '<div class="ph-c">' + tabs + tattoos() + '</div>';
     if (tab === 'merker') return '<div class="ph-c">' + tabs + fsCard() + achLong() + '</div>';
     if (tab === 'rekord') return '<div class="ph-c">' + tabs + '<div class="ph-card">' + NOTEBOOK.wall(true) + '</div></div>';
     if (tab === 'overtro') return '<div class="ph-c">' + tabs + lore() + '</div>';
+    if (tab === 'kart') return '<div class="ph-c">' + tabs + kkTab() + '</div>';   // Kystkartet (ui/05h-kystkart.js)
     if (tab === 'kyst') return '<div class="ph-c">' + tabs + GBOOK.kyst() + '</div>';   // the guestbooks signed (ui/10m-guestbook.js)
     return '<div class="ph-c">' + tabs + achWeek() + '</div>';
   }

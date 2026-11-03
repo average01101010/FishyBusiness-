@@ -27,15 +27,38 @@ const SRC = join(ROOT, 'src');
 const PWA = process.env.KYST_PWA === '1', VECP = PWA || process.env.KYST_VEC === '1', ONE = process.env.KYST_ONE === '1';
 const DIST = process.env.KYST_DIST || join(ROOT, PWA ? 'dist-pwa' : 'dist'), OUT = join(DIST, 'index.html');
 
+// The source map (02.11.2026, the error trap js/errtrap.js): every JS file starts with a mark /*@@src <file>:1@@*/, and after a file
+// included inside a JS file the parent's place is marked again (/*@@src <parent>:<line>@@*/). At the end (srcMarks) the marks are
+// taken out and become a table of the page's lines: from page line L on, the code is <file> from line N. The table goes last in the
+// page (DSB_SRCMAP), so it moves no line, and the cloud (ui/10f-cloud.js srcMapStr) turns «index.html:41234:17» in an error's stack
+// into «ui/10f-cloud.js:248:17» before it is sent: the error list then points at the file and line to fix.
+const MARK = (f, l) => `/*@@src ${f}:${l}@@*/`;
 function expand(file, stack = []){
   if (stack.includes(file)) throw new Error('include cycle: ' + [...stack, file].join(' -> '));
-  const text = readFileSync(join(SRC, file), 'utf8');
-  return text.replace(/\/\*@text\(([^)]+)\)\*\/null/g, (_, path) => JSON.stringify(readFileSync(join(SRC, path), 'utf8').replace(/\n$/, '')).replace(/<\//g, '<\\/'))
+  const text = readFileSync(join(SRC, file), 'utf8'), js = file.endsWith('.js');
+  // (@text puts a file in as one line, so the lines after it are where they were)
+  const out = text.replace(/\/\*@text\(([^)]+)\)\*\/null/g, (_, path) => JSON.stringify(readFileSync(join(SRC, path), 'utf8').replace(/\n$/, '')).replace(/<\//g, '<\\/'))
     .replace(/\/\*@include\(([^)]+)\)\*\/null|@include\(([^)]+)\)/g,
-    (_, jsonPath, path) => expand(jsonPath || path, [...stack, file]).replace(/\n$/, ''));
+    (_, jsonPath, path, at, whole) => expand(jsonPath || path, [...stack, file]).replace(/\n$/, '') + (js ? MARK(file, whole.slice(0, at).split('\n').length) : ''));
+  return js ? MARK(file, 1) + out : out;
+}
+function srcMarks(page){
+  const lines = page.split('\n'), files = [], m = [];
+  for (let i = 0; i < lines.length; i++){
+    if (!lines[i].includes('/*@@src ')) continue;
+    let last = null;
+    lines[i] = lines[i].replace(/\/\*@@src ([^@]+?):(\d+)@@\*\//g, (_, f, l) => { last = [f, +l]; return ''; });
+    let k = files.indexOf(last[0]); if (k < 0){ k = files.length; files.push(last[0]); }
+    m.push(i + 1, k, last[1]);   // (the last mark on a line: a file that ends there and its parent going on)
+  }
+  return {page:lines.join('\n'), map:{f:files.map(f => f.replace(/^js\//, '')), m}};
 }
 
-const html = expand('index.html');
+// KYST_DEMO=1 (M9, docs/planer/butikker-og-sponsorer.md 4.6): the demo build for a prospective partner, with the made-up test sponsor
+// «Nordlys Utstyr» on from the start (as #sptest), so every format can be shown on the tablet. Never the game's own build; put it in a
+// folder of its own (KYST_DIST=dist-demo)
+const DEMO = process.env.KYST_DEMO === '1';
+const html = expand('index.html').replace('/*@demo*/false', DEMO ? 'true' : 'false');
 // every script must compile as a whole: the core and UI files share one script, so a name declared twice at the top level
 // (which node --check on each file cannot see) stops the page. Here it stops the build instead.
 for (const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g)){
@@ -85,6 +108,9 @@ writeFileSync(join(MAPOUT, 'manifest.json'), JSON.stringify(mapMan)); mapFiles.p
 // and the admin's tables tell the builds apart; until now every build reported 'dev'
 const ver = createHash('sha256').update(page).update(JSON.stringify(mapMan)).update(JSON.stringify(dataFiles)).digest('hex').slice(0, 12);
 page = page.replace('</head>', `<meta name="dsb-version" content="${ver}">\n</head>`);
+{ const sm = srcMarks(page), b = sm.page.lastIndexOf('</body>');
+  if (b < 0){ console.error('build: no </body> for the source map'); process.exit(1); }
+  page = sm.page.slice(0, b) + '<script>window.DSB_SRCMAP=' + JSON.stringify(sm.map) + ';</script>' + sm.page.slice(b); }
 writeFileSync(OUT, page);
 console.log(`${basename(DIST)}/index.html: ${(Buffer.byteLength(page) / 1e6).toFixed(2)} MB, version ${ver}`);
 console.log(`${basename(DIST)}/map/: ${mapFiles.length - 1} packs, ${(mapBytes / 1e6).toFixed(2)} MB (${MAPSRC === GAMEMAP ? 'the whole coast, tools/map/out/game' : MAPSRC})`);
@@ -100,7 +126,9 @@ if (PWA){
 { const A = join(SRC, 'admin');
   if (existsSync(A)){ mkdirSync(join(DIST, 'admin'), {recursive:true});
     const cfg = readFileSync(join(SRC, 'data', 'cloud.json'), 'utf8').trim();
-    writeFileSync(join(DIST, 'admin', 'index.html'), readFileSync(join(A, 'index.html'), 'utf8').replace('/*@cloud*/null', cfg)); } }
+    // the ports' names and parts of the coast for the media card (src/data/port-regions.json, written by tests/unit/regions.test.mjs)
+    const reg = existsSync(join(SRC, 'data', 'port-regions.json')) ? readFileSync(join(SRC, 'data', 'port-regions.json'), 'utf8').trim() : 'null';
+    writeFileSync(join(DIST, 'admin', 'index.html'), readFileSync(join(A, 'index.html'), 'utf8').replace('/*@cloud*/null', cfg).replace('/*@regions*/null', reg)); } }
 // the privacy and terms pages (docs/lansering.md D) next to the game, as the sign-in and the consent link them (personvern.html,
 // vilkar.html), each with the shared style put in
 { const L = join(SRC, 'legal');

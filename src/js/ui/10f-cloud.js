@@ -33,7 +33,8 @@ function cloudGpu(){
   return CLOUD_GPU;
 }
 function cloudDev(){
-  const g = typeof G3 !== 'undefined' ? G3 : null, q = g && g.quality ? g.quality() : {}, s = window.screen || {};
+  // (the quality reads the settings, which are not there before the game is loaded: an error at the start then had no device with it)
+  const g = typeof G3 !== 'undefined' ? G3 : null, s = window.screen || {}; let q = {}; try { q = (g && g.quality ? g.quality() : {}) || {}; } catch (e){}
   return {gpu:cloudGpu(), cores:navigator.hardwareConcurrency || null, mem:navigator.deviceMemory || null,
     scr:Math.round(s.width || innerWidth) + 'x' + Math.round(s.height || innerHeight) + '@' + Math.round((devicePixelRatio || 1) * 10) / 10,
     lvl:q.lvl == null ? null : q.lvl, view:g && g.isActive && g.isActive() ? '3d' : 'kart', js:g && g._debug && g._debug.jsms ? Math.round(g._debug.jsms * 10) / 10 : null};
@@ -99,10 +100,11 @@ function cloudGateShow(html){
   // the same picture and type as the loading screen (styles.css): the name over the sky, the text and the buttons in a card over the water
   let g = document.getElementById('cloudGate');
   if (!g){ g = document.createElement('div'); g.id = 'cloudGate'; g.className = 'dsb-bg'; document.body.appendChild(g); }
+  if (typeof bootGate === 'function') bootGate(true);   // the time at the gate is the player's, not the start's (11-boot.js)
   g.innerHTML = '<div class="ld-top"><span class="ld-k">' + cloudL('Kystfiske langs norskekysten', 'Coastal fishing in Norway') + '</span><h1 class="ld-t">Det Store Blå</h1></div><div class="cg-card">' + html + '</div>';
   return g;
 }
-function cloudGateHide(){ const g = document.getElementById('cloudGate'); if (g) g.remove(); }
+function cloudGateHide(){ const g = document.getElementById('cloudGate'); if (g) g.remove(); if (typeof bootGate === 'function') bootGate(false); }
 const cloudBtn = (id, label, primary) => '<button id="' + id + '" type="button" class="cg-btn' + (primary ? ' pri' : '') + '">' + label + '</button>';
 // the world's clock from the page's own server (core/01-world.js): the Date of a fresh HEAD of the page, to the second, against the
 // middle of the round trip, so a device with a wrong clock is on the same minute as everyone else; offline the device's own clock
@@ -183,11 +185,9 @@ async function cloudGate(){
 function cloudStart(){
   // what the start chose between two games, told once the game is up (cloudKeptNote)
   try { const n = sessionStorage.getItem('dsb_note'); if (n){ sessionStorage.removeItem('dsb_note'); setTimeout(() => toast(n), 1500); } } catch (e){}
+  errStart();   // the errors that waited for the game go now, and the hangs are watched (also without the cloud this time: they wait on the device)
   if (!CLOUD.on) return;
   { const sy = syncGet(); if (sy && sy.rv != null) TAB.rv = sy.rv; }   // the revision this page's game comes from (cloudSaveSoon sends from it)
-  window.addEventListener('error', e => { cloudErr(e.message, (e.filename || '') + ':' + (e.lineno || ''), e.error && e.error.stack);
-    if (e.error && typeof FEEDBACK !== 'undefined') setTimeout(() => FEEDBACK.nudge('err'), 2000); });   // what the player saw helps (06e-feedback.js)
-  window.addEventListener('unhandledrejection', e => cloudErr(String(e.reason && e.reason.message || e.reason), 'promise', e.reason && e.reason.stack));
   // the question waits until the first-start dialog (company and boat names) is done and no other dialog is open
   if (CLOUD.consent == null){ const iv = setInterval(() => { const m = document.getElementById('modal'); if (S.intro && S.boatName && m && m.hidden){ clearInterval(iv); setTimeout(cloudAsk, 1500); } }, 2000); }
   else if (CLOUD.consent) cloudBegin();
@@ -230,6 +230,7 @@ function cloudBegin(){
   setInterval(() => { if (!document.hidden) CLOUD.active += 5; if (typeof G3 !== 'undefined' && G3._debug && !document.hidden){ const f = G3._debug.fps; if (f > 0) CLOUD.fps.push(f); } }, 5000);
   setInterval(() => cloudFlush(false), 60000);
   cloudEv('start', {});
+  if (typeof BOOTW !== 'undefined' && BOOTW.res) cloudEv('boot', BOOTW.res);   // how long the start took, step by step (11-boot.js bootDone)
 }
 function cloudEv(k, d){ if (!CLOUD.sid) return; if (CLOUD.q.length < 500) CLOUD.q.push({k, t:Date.now(), d:d || {}}); }
 async function cloudFlush(end){
@@ -241,11 +242,142 @@ async function cloudFlush(end){
     if (CLOUD.fps.length >= 3){ const f = CLOUD.fps.splice(0); cloudRpc('tm_perf', {fps:f.reduce((a, v) => a + v, 0) / f.length, low:Math.min(...f), drops:f.filter(v => v < 20).length, meta:{...cloudMeta(), ...cloudDev()}}, {anon:true}).catch(() => {}); }
   } catch (e){ CLOUD.q = evs.concat(CLOUD.q).slice(0, 500); CLOUD.active += act; }
 }
-function cloudErr(msg, src, stack){
-  if (!CLOUD.on || !msg || CLOUD.errs >= 20 || CLOUD.errSeen[msg]) return;
-  if (/Failed to start the audio device|The AudioContext was not allowed to start/i.test(String(msg))) return;   // the phone's audio is taken or no tap has come yet: not a fault of the game (10e-sound.js tries again at the next tap)
-  CLOUD.errSeen[msg] = 1; CLOUD.errs++;
-  cloudRpc('tm_error', {msg:String(msg).slice(0, 400), src:String(src || '').slice(0, 200), stack:String(stack || '').slice(0, 2000), meta:{...cloudMeta(), ...cloudDev()}}).catch(() => {});
+// ---------- the errors (04.10.2026; caught everywhere since 02.11.2026, js/errtrap.js) ----------
+// Jonas 02.11.2026: «det viktigste er at vi klarer å fange opp så mange feil automatisk som mulig slik at vi slipper at brukere må
+// rapportere alt de opplever». What the trap catches (thrown, rejected, files that did not load, console.error), what the page itself
+// sees (a crash: the page that stopped while it was on the screen, found at the next start; a hang: the page that stood still for
+// seconds while on the screen) and what other code reports (cloudErr) all go to tm_error, each message once a session and at most
+// ERR_MAX of them. The places in the stack are turned into the source files and lines (srcMapStr, the build's DSB_SRCMAP). Until the
+// game is up (errStart in cloudStart) the errors wait, so the start and the sign-in send nothing first; what cannot be sent (no
+// network, no cloud this time) waits on the device (ERRQ_KEY, at most 25, a week) and goes with the next start or when the net is back.
+// The server keeps who sent an error only with the player's consent (tm_error); without the cloud (the tests, the artifact) nothing is sent.
+const ERRQ_KEY = 'dsb_errq', ERR_MAX = 25;
+const ERR = {ready:false, pend:[], sending:false};
+function srcMapStr(s){
+  s = String(s || ''); const M = typeof window !== 'undefined' && window.DSB_SRCMAP; if (!M || !M.m || !s) return s;
+  const here = location.origin + location.pathname;
+  return s.replace(/((?:https?|file):\/\/[^\s@()]+?):(\d+)(?::(\d+))?(?=$|[\s)\n])/g, (m, u, l, c) => {
+    if (u.split(/[?#]/)[0] !== here) return m;
+    const n = +l, a = M.m; let lo = 0, hi = a.length / 3 - 1, k = -1;
+    while (lo <= hi){ const mid = (lo + hi) >> 1; if (a[mid * 3] <= n){ k = mid; lo = mid + 1; } else hi = mid - 1; }
+    if (k < 0) return m;
+    return M.f[a[k * 3 + 1]] + ':' + (a[k * 3 + 2] + n - a[k * 3]) + (c ? ':' + c : '');
+  });
+}
+// not the game's fault, or nothing to go on: the phone's audio taken or no tap yet (10e-sound.js tries again at the next tap), the
+// browser's own ResizeObserver note, a script from another site that tells nothing, a fetch stopped on purpose, the network gone
+function errNoise(msg){
+  msg = String(msg);
+  // (a fetch the network let down says so in the browser's words and nothing more: the save and the cloud try again by themselves)
+  return /Failed to start the audio device|The AudioContext was not allowed to start|ResizeObserver loop|^Script error\.?$|AbortError|The user aborted a request|Failed to fetch|NetworkError when attempting|^(TypeError: )?Load failed$|net::ERR_/i.test(msg);
+}
+function cloudErr(msg, src, stack, kind){
+  if (!msg || !cloudOn()) return;   // no cloud for this page (the tests, the artifact, another host): nothing to send to
+  msg = String(msg); if (errNoise(msg)) return;
+  const key = msg.slice(0, 160);
+  if (CLOUD.errs >= ERR_MAX || CLOUD.errSeen[key]) return;
+  CLOUD.errSeen[key] = 1; CLOUD.errs++;
+  // (each half alone: while the page loads, one of them may not be able to say its part yet)
+  const meta = {}; try { Object.assign(meta, cloudMeta()); } catch (e){} try { Object.assign(meta, cloudDev()); } catch (e){}
+  errSend({msg:srcMapStr(msg).slice(0, 400), src:srcMapStr(src).slice(0, 200), stack:srcMapStr(stack).slice(0, 2000), meta});
+  if (kind === 'throw' && CLOUD.on && ERR.ready && typeof FEEDBACK !== 'undefined') setTimeout(() => { try { FEEDBACK.nudge('err'); } catch (e){} }, 2000);   // what the player saw helps (06e-feedback.js)
+}
+function errSend(e){
+  if (!ERR.ready){ ERR.pend.push(e); return; }
+  cloudRpc('tm_error', e).catch(() => errKeep([e]));
+}
+function errQueue(){ try { const q = JSON.parse(localStorage.getItem(ERRQ_KEY) || '[]'); return Array.isArray(q) ? q : []; } catch (e){ return []; } }
+function errKeep(list){
+  try { const now = Date.now(), q = errQueue().concat(list.map(e => ({...e, at:e.at || now}))).filter(e => now - (e.at || 0) < 7 * 864e5).slice(-25);
+    localStorage.setItem(ERRQ_KEY, JSON.stringify(q)); } catch (e){}
+}
+async function errFlush(){
+  if (ERR.sending || !cloudOn() || navigator.onLine === false) return;
+  const q = errQueue(); if (!q.length) return;
+  ERR.sending = true;
+  try { localStorage.removeItem(ERRQ_KEY); } catch (e){}
+  for (let i = 0; i < q.length; i++){
+    const e = q[i], age = Math.round((Date.now() - (e.at || Date.now())) / 60000);
+    const meta = {...(e.meta || {}), late_min:age};
+    try { await cloudRpc('tm_error', {msg:e.msg, src:e.src, stack:e.stack, meta}); }
+    catch (x){ errKeep(q.slice(i)); break; }
+  }
+  ERR.sending = false;
+}
+// what the trap caught goes here from now on, and what it caught before the cloud was loaded comes now
+(function errTake(){
+  const T = typeof window !== 'undefined' && window.DSB_ERRTRAP; if (!T) return;
+  T.to = (m, s, st, k) => cloudErr(m, s, st, k);
+  addEventListener('pagehide', () => { if (!ERR.ready && ERR.pend.length) errKeep(ERR.pend.splice(0)); });   // a page closed at the gate or the loading: next time
+  // the service worker's errors come as a message (src/pwa/sw.js swErr)
+  try { if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', e => { const d = e.data;
+    if (d && Array.isArray(d.dsbErr)) for (const q of d.dsbErr) cloudErr(q.msg, 'sw', q.stack + (q.v ? '\nsw ' + q.v : ''), 'sw'); }); } catch (e){}
+  const q = T.q.splice(0); for (const [m, s, st, k] of q) cloudErr(m, s, st, k);
+})();
+// the game is up (cloudStart) or did not start (bootFail): what waited goes now, and the page starts watching for hangs and crashes
+function errStart(){
+  if (ERR.ready) return;
+  ERR.ready = true;
+  const p = ERR.pend.splice(0); for (const e of p) errSend(e);
+  errFlush(); addEventListener('online', () => setTimeout(errFlush, 3000));
+  setTimeout(errFlush, 60000);
+  try { if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage({dsbErrPull:1}); } catch (e){}   // what the worker kept
+  hangWatch();
+}
+// ---------- a page that stops or stands still while it is on the screen ----------
+// Android ends a page that uses too much memory, a GPU driver can take the browser with it, and a page in an endless loop can only be
+// closed: none of it gives an error. Each page writes how it is every five seconds (ALIVE_KEY: on the screen or not, the view, the
+// quality, how long it has been up, the JS memory) and takes it away at pagehide. A page that finds another one's note, five beats
+// old and written while that page was on the screen, knows that page stopped without closing: a crash (or the battery), sent as
+// «Krasj». A page in the background is often ended by the phone without a pagehide; that is not a fault and is not sent.
+const ALIVE_KEY = 'dsb_alive', ALIVE = {id:'p' + Math.random().toString(36).slice(2, 10), t0:Date.now()};
+function aliveRead(){ try { const a = JSON.parse(localStorage.getItem(ALIVE_KEY) || '{}'); return a && typeof a === 'object' ? a : {}; } catch (e){ return {}; } }
+function aliveBeat(gone){
+  try {
+    const a = aliveRead();
+    if (gone) delete a[ALIVE.id];
+    else { let d = {}; try { d = cloudDev(); } catch (e){}
+      const mem = performance && performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : null;
+      a[ALIVE.id] = {t:Date.now(), vis:!document.hidden, up:Math.round((Date.now() - ALIVE.t0) / 1000), view:d.view, lvl:d.lvl, mem, ready:typeof SIMREADY !== 'undefined' && !!SIMREADY,
+        v:(document.querySelector('meta[name=dsb-version]') || {}).content || 'dev'}; }
+    localStorage.setItem(ALIVE_KEY, JSON.stringify(a));
+  } catch (e){}
+}
+function aliveCheck(){
+  const a = aliveRead(), now = Date.now(); let changed = false;
+  for (const id of Object.keys(a)){
+    if (id === ALIVE.id) continue;
+    const b = a[id] || {};
+    if (now - (b.t || 0) < 25000) continue;   // another page of the game, still beating
+    delete a[id]; changed = true;
+    if (!b.vis) continue;
+    const where = !b.ready ? 'under lasting' : b.view === '3d' ? '3d' : 'kart', mins = Math.round((now - b.t) / 60000);
+    cloudErr('Krasj: siden stoppet mens den var på skjermen · ' + where, 'crash',
+      JSON.stringify({version:b.v, up_s:b.up, view:b.view, lvl:b.lvl, js_mb:b.mem, min_ago:mins}), 'crash');
+  }
+  if (changed) try { localStorage.setItem(ALIVE_KEY, JSON.stringify(a)); } catch (e){}
+}
+(function aliveStart(){
+  if (typeof document === 'undefined' || typeof localStorage === 'undefined') return;
+  aliveCheck(); aliveBeat();
+  setInterval(() => aliveBeat(), 5000);
+  document.addEventListener('visibilitychange', () => aliveBeat());
+  addEventListener('pagehide', () => aliveBeat(true));
+  addEventListener('pageshow', e => { if (e.persisted) aliveBeat(); });   // back from the browser's cache
+})();
+// a hang: a timer every second that comes late by seconds while the page is on the screen (a long task: the time away played at
+// once, a big build, a loop). Over two minutes is a computer that slept, not a hang. Each bucket once a session (cloudErr).
+function hangWatch(){
+  let last = performance.now(), vis = !document.hidden;
+  document.addEventListener('visibilitychange', () => { last = performance.now(); vis = !document.hidden; });
+  setInterval(() => {
+    const n = performance.now(), gap = (n - last) / 1000; last = n;
+    if (!vis || document.hidden || gap < 5 || gap > 120) return;
+    const b = gap < 10 ? '5–10' : gap < 30 ? '10–30' : '30–120';
+    let d = {}; try { d = cloudDev(); } catch (e){}
+    cloudErr('Heng: spillet sto stille i ' + b + ' s · ' + (d.view || '?'), 'hang', JSON.stringify({s:Math.round(gap * 10) / 10, view:d.view, lvl:d.lvl, js_ms:d.js,
+      js_mb:performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : null}), 'hang');
+  }, 1000);
 }
 // the save goes up when it has changed (every three minutes and when the page closes); an older one than the cloud's is refused,
 // and then the player chooses

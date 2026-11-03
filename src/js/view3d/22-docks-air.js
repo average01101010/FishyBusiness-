@@ -6,29 +6,59 @@
     DKM = false; if (typeof glbHas !== 'function' || !glbHas('brygge')) return;
     const up = nm => { const o = glbPart('brygge', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; };
     DKM = {kar:up('landkar'), gang:up('landgang'), pon:up('ponton'), end:up('ponton_end'), fin:up('finger'), boye:up('boye'), kaib:up('kai_betong'), ktre:up('kai_tre')};
-    if (!DKM.pon || !DKM.gang) DKM = false;
+    if (!DKM.pon || !DKM.gang) DKM = false; else DKM.fill = quayFill();
+  }
+  // the fill behind a quay built out over the shore (core/07-harbours.js quayOut): a unit box, x -0.5..0.5 along the face, y 0..1 up,
+  // z -1..0 in towards the land, in kai_betong's own concrete (its deck and its wall, read from the model), scaled to the bays' length,
+  // from 3 m under mean sea level to the deck and from the back of the quay's deck in onto the shore
+  function quayFill(){
+    const o = glbPart('brygge', 'kai_betong'); let top = [0.56, 0.56, 0.54, 0.2], side = [0.5, 0.5, 0.48, 0.2], ty = -1e9;
+    if (o) for (let i = 0; i < o.p.length / 3; i++){ const c = [o.c[i * 4], o.c[i * 4 + 1], o.c[i * 4 + 2], o.c[i * 4 + 3]], y = o.p[i * 3 + 1];
+      if (o.n[i * 3 + 1] > 0.9 && y < 2.45 && y > ty && o.p[i * 3 + 2] < -1){ ty = y; top = c; }
+      if (Math.abs(o.n[i * 3]) > 0.9 && Math.abs(o.p[i * 3]) > 2.95 && y > 0.6 && y < 2.0) side = c; }
+    const B = VB(), q = (a, b, c, d, k) => B.quad(a, b, c, d, k);
+    q([-0.5, 1, 0], [0.5, 1, 0], [0.5, 1, -1], [-0.5, 1, -1], top);
+    q([-0.5, 0, -1], [0.5, 0, -1], [0.5, 1, -1], [-0.5, 1, -1], side); q([0.5, 0, 0], [-0.5, 0, 0], [-0.5, 1, 0], [0.5, 1, 0], side);
+    q([-0.5, 0, 0], [-0.5, 0, -1], [-0.5, 1, -1], [-0.5, 1, 0], side); q([0.5, 0, -1], [0.5, 0, 0], [0.5, 1, 0], [0.5, 1, -1], side);
+    return upA(B);
   }
   function drawDocks(eye, t, VP){
-    if (typeof MOOR === 'undefined' || !VEC.tiles.size) return;
+    if (typeof MOOR === 'undefined') return;
     const R = 1500, H = [];
     for (const tl of vecTilesIn(eye[0] - R, eye[2] - R, eye[0] + R, eye[2] + R)) for (const h of tl.npc || []) if (h.moorVer === MOOR.ver && Math.hypot(h.x * 1000 - eye[0], h.y * 1000 - eye[2]) < R + 500) H.push(h);
-    if (!H.length) return; if (DKM === null) buildDocks(); if (!DKM) return;
+    if (DKM === null) buildDocks(); if (!DKM) return;   // (on with no harbour of the coast's boats near: the player's quays below)
     nSetup(VP); const tide = env.tide || 0;
     // the berths the company holds along a quay face or the shore of a harbour (core/07e-havn.js): a quay front where she lies, in 6 m
     // bays, its top 2.4 m over mean sea level: concrete at a quay (kai_betong: the face at z = 0, the deck back to z = -5), and a timber
     // pier on piles along the shore for a boat under 15 m (kai_tre: 4.2 m wide about z = 0, so its middle 2.3 m in from the face); the
     // piers are drawn already
-    // (quayMod: n bays of 6 m along the face about the berth's middle)
+    // (quayMod: n bays of 6 m along the face about the berth's middle, their front f.out out from the face where the quay is built out
+    // over the 3D shore (quayOut, 03.11.2026), and behind the quay's deck the fill in onto the shore (3 m in from a coast face, 1.5 m in
+    // under a pier's or a quay's own deck, kinds 0 and 2, which are drawn a centimetre lower there so their decks do not fight). A timber
+    // pier for a boat under 15 m by the shore when one bay of it reaches the land; else concrete.)
+    // The naust's and a rorbu's own pile quay (f.tre) is met by timber: rows of kai_tre side by side from her out to it.
     const quayMod = (f, L) => { let yaw = Math.atan2(-f.uz, f.ux); if (-f.uz * f.nx + f.ux * f.nz < 0) yaw += Math.PI;
-      const tre = f.kind === 3 && L < 15 && DKM.ktre, M = tre ? DKM.ktre : DKM.kaib, bk = tre ? 2.3 : 0;
-      const n = Math.ceil((L + 4) / 6); for (let k = 0; k < n; k++){ const a = (k - (n - 1) / 2) * 6; drawN(M, model(f.x + f.ux * a - f.nx * bk - eye[0], -eye[1], f.z + f.uz * a - f.nz * bk - eye[2], yaw, 0, 0)); } };
+      const out = f.out || 0, inl = f.kind === 3 ? 3 : f.tre ? 0.5 : 1.5, y0 = f.kind === 3 ? 0 : -0.012;
+      const tre = DKM.ktre && (f.tre || f.kind === 3 && L < 15 && out <= 2.2), M = tre ? DKM.ktre : DKM.kaib, n = Math.ceil((L + 4) / 6);
+      const rows = tre ? Math.max(1, Math.ceil((out + inl) / 4.2)) : 1;
+      for (let r = 0; r < rows; r++){ const bk = (tre ? 2.3 + 4.2 * r : 0) - out;
+        for (let k = 0; k < n; k++){ const a = (k - (n - 1) / 2) * 6; drawN(M, model(f.x + f.ux * a - f.nx * bk - eye[0], y0 - eye[1], f.z + f.uz * a - f.nz * bk - eye[2], yaw, 0, 0)); } }
+      const D = out + inl - 5; if (tre || D <= 0.05 || !DKM.fill) return;
+      const sx = n * 6, sy = FDOCK.QTOP + 3;   // (M4.S is uniform: the box is scaled on its own axes here)
+      drawN(DKM.fill, chain(model(f.x + f.nx * (out - 5) - eye[0], y0 - 3 - eye[1], f.z + f.nz * (out - 5) - eye[2], yaw, 0, 0), new Float32Array([sx,0,0,0, 0,sy,0,0, 0,0,D,0, 0,0,0,1]))); };
+    // (a berth of the harbour's own boats with a quay of the game's: at a fish plant's coast face, or built out over the shore)
+    const ownQuay = f => f && !f.dock && (f.mod || (f.out || 0) > 0.3);
     if (DKM.kaib && typeof havnStore === 'function'){ const st = havnStore();
-      for (const id in st.s){ const s = st.s[id], f = s.face; if (!s.vid || !f || f.dock || !(f.kind === 2 || f.kind === 3) || Math.hypot(f.x - eye[0], f.z - eye[2]) > R) continue; quayMod(f, s.L); } }
+      for (const id in st.s){ const s = st.s[id], f = s.face; if (!s.vid || !f || f.dock || !(f.kind === 2 || f.kind === 3 || (f.out || 0) > 0.3) || Math.hypot(f.x - eye[0], f.z - eye[2]) > R) continue;
+        const bp = f.out === undefined && typeof berthPose === 'function' ? berthPose(id, s.vtype) : null; quayMod(bp ? Object.assign({}, f, {out:bp.face.out}) : f, s.L); } }
+    // where the boat lies at a harbour's quay, the naust or a rorbu with the quay built out to her over the shore (berthPose face.out;
+    // the held berths are above)
+    if (DKM.kaib && typeof berthNow === 'function'){ const bp = berthNow(), f = bp && bp.face; if (f && !f.unit && (f.out || 0) > 0.3 && !(typeof isBerth === 'function' && isBerth(S.boat.port)) && Math.hypot(f.x - eye[0], f.z - eye[2]) <= R) quayMod(f, bp.Lb); }
     // the harbours' own boats and Senja's fleet where the game sets a quay along the berth (a fish plant's quay mapped as the coastline
     // alone: 07-harbours.js quayReal, face.mod; L1, choice 1)
     if (DKM.kaib){
-      for (const h of H) for (const b of h.boats){ const f = b.moored && b.moored.face; if (f && f.mod && Math.hypot(f.x - eye[0], f.z - eye[2]) <= R) quayMod(f, b.L); }
-      if (typeof FLEET !== 'undefined' && typeof fleetBerth === 'function') FLEET.forEach((f, i) => { if (Math.hypot(f.hp[0] * 1000 - eye[0], f.hp[1] * 1000 - eye[2]) > R + 600) return; const m = fleetBerth(i); if (m && m.face && m.face.mod) quayMod(m.face, f.L); });
+      for (const h of H) for (const b of h.boats){ const f = b.moored && b.moored.face; if (ownQuay(f) && Math.hypot(f.x - eye[0], f.z - eye[2]) <= R) quayMod(f, b.L); }
+      if (typeof FLEET !== 'undefined' && typeof fleetBerth === 'function') FLEET.forEach((f, i) => { if (Math.hypot(f.hp[0] * 1000 - eye[0], f.hp[1] * 1000 - eye[2]) > R + 600) return; const m = fleetBerth(i); if (m && ownQuay(m.face)) quayMod(m.face, f.L); });
     }
     for (const h of H){
       for (const d of h.docks || []){ const [ox, oz] = d.o, [nx, nz] = d.n; if (Math.hypot(ox - eye[0], oz - eye[2]) > R) continue;
