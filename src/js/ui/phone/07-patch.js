@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['jevnt3d-031126', '03.11.2026', 'Jevnere 3D på raske skjermer', 'Smoother 3D on fast screens', [
+       ['Båten og verden beveger seg jevnere i 3D på skjermer med høy oppdateringsfrekvens, også i Firefox.', 'The boat and the world move more smoothly in 3D on high refresh rate screens, in Firefox too.'],
+       ['Spiller du i Firefox eller Opera på Android, viser innlastingen et lite kort om at spillet går jevnest i Chrome.', 'If you play in Firefox or Opera on Android, the loading screen shows a small card saying the game runs smoothest in Chrome.'],
+    ]],
     ['hav-031126', '03.11.2026', 'Nota, levering og redskapet under vann', 'The seine, landing and the gear under water', [
        ['Ringnotbåtene kaster nota rundt stimen, snurper og pumper, og snurrevadbåtene setter og drar snurrevaden. Du ser det i 3D.', 'The purse seiners shoot the seine round the school, purse it and pump, and the Danish seiners set and haul their seine. You see it in 3D.'],
        ['Havflåten leverer fangsten ved det nærmeste mottaket som tar imot den og har kai stor nok, ligger der noen timer og går så hjem. AIS viser når et skip er på vei for å levere og når det leverer.', 'The ocean fleet lands its catch at the nearest plant that takes it and has a quay big enough, lies there a few hours and then goes home. The AIS shows when a ship is on its way to land and when it is landing.'],
