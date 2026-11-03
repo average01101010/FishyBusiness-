@@ -44,7 +44,7 @@ async def main():
               const b = S.boat; b.status = 'idle'; b.port = null; S.plan = null; S.draft = []; b.pos = {x:q.x, y:q.y}; b.heading = 0; b.v = 0;
               vecWant(q.x - 3, q.y - 3, q.x + 3, q.y + 3);
               S.t = Math.round((Date.UTC(2027, 5, 15, 1) - EPOCH) / 6e4) + k; WX_FORCE = {w:3, d:200}; if (!G3.isActive()) G3.show(true); }""", [lat, lon, k])
-            try: await pg.wait_for_function("(() => { const b = S.boat.pos; return VEC.wait.size === 0 && coastFine(b) && coastIndexAt(b, false); })()", timeout=120000)
+            try: await pg.wait_for_function("(() => { COASTM.k = ''; npcStates(S.t / 60); const b = S.boat.pos, F = 4; return VEC.wait.size === 0 && coastFine(b) && !!coastIndexAt(b, false) && mapPacksIn('vec', b.x - F, b.y - F, b.x + F, b.y + F).every(pk => VEC.tiles.has(pk.tile[0] + ':' + pk.tile[1])); })()", timeout=120000)
             except Exception: print(name, 'kysten kom ikke inn innen 2 min'); R[name] = {'n': 0, 'wait': True}; await ctx.close(); continue
             await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(4000)
             boats = await pg.evaluate(PROBE)
