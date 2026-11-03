@@ -31,7 +31,7 @@ function miniBg(c, R, k, W, H, dpr){
   const d = MINIP.img.data, sx = BW / k / n, sy = BH / k / n;
   for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
     const q = {x:x0 + (i + 0.5) * sx, y:y0 + (j + 0.5) * sy}, o = (j * n + i) * 4; let cl;
-    if (q.x < MAPB.x0 || q.y < MAPB.y0 || q.x >= MAPB.x1 || q.y >= MAPB.y1) cl = night ? [5, 9, 13] : [221, 227, 229];
+    if (!inFrame(q)) cl = night ? [5, 9, 13] : [221, 227, 229];
     else if (dok ? isLand(q) : isLandFar(q)) cl = night ? [42, 38, 30] : [232, 215, 166];
     else { const v = dok ? depthF(q) : depthModel(q); cl = night ? (v < s2 ? [22, 52, 84] : v < sd ? [16, 38, 62] : [9, 20, 33]) : v < s2 ? [134, 180, 223] : v < sd ? [167, 203, 235] : [249, 251, 252]; }
     d[o] = cl[0]; d[o + 1] = cl[1]; d[o + 2] = cl[2]; d[o + 3] = 255;

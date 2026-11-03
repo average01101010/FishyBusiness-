@@ -222,6 +222,56 @@ Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Gi
   - Autoruta («Følg leia», nå Autonav) leste 100 m-avstanden over hele `dc`-laget. Det er løst med vinduet i K9 (4.12).
   - Detaljflisene for hele kysten (`out/national/lite`) er ikke i git, og bygget bruker dem ikke ennå.
 
+## 4.9b Rammen for havflåten (H1b R1 i havsteget, 03.11.2026)
+
+Jonas valgte V1 B 03.11.2026 (`docs/planer/havsteget-h1b-rammen.md`): rammen skal ta med alt havet havflåten fisker i.
+
+- **`MAPB`** (`core/01-world.js`) er x −1 100 til 2 500 og y −1 250 til 1 720 km. Den tar med:
+  - Øst-Grønland og Danmarkstredet
+  - Island, Færøyane og Jan Mayen
+  - hele Svalbard med Kvitøya
+  - russisk sone til Novaja Semlja
+
+  Origo er der det var, så lagringene og serverens posisjoner er uendret.
+- **Lagene for det som ser langt** (`farL(kind, p)`):
+  - **Inne i den gamle rammen** (0–1 450 × 0–1 750) gjelder kjernens `land200`, `dc200` og `expo`.
+  - **Utenfor** gjelder de grove lagene over hele rammen: `land1k` (land på 1 km), `dc1k` (avstand til land på 1 km, u8 i steg på 0,5 km, høyst 127,5 km) og `expo2k` (eksponering på 2 km). De lages i R2 og ligger i kjernen, så de er alltid lastet.
+  - Hvilket lag som leses, følger av p alene, så simuleringen er lik uansett hva som er lastet (4.6).
+  - Leserne: `isLandFar`, `coastDistFar`, `expoFar` (`exposure`, `swellFactor`, ankringen, 3D-terrengets eksponering), `landFracM` (3D-bakken utenfor flisene) og `dcCellFar` (ruteplanleggerens grove celler).
+- **Uten data** (før R2, eller i et hjørne ingen lag dekker):
+  - land for båtene (`isLandFar`)
+  - åpent hav for strøklengdestrålene (`fetchRay` legger til `FETCH.open`)
+  - sjø i 3D
+  - «utenfor kartet» på skjermene (`inFrame`: sjøkartet, miniplotteren og den lille plotteren)
+
+  Det er slik utenfor rammen var før, så spillet er likt til de grove lagene kommer.
+- **Skalafaktoren** (`gridScale(p)`, k per km-rute, med siste rute ved hånden fordi manøvreringsmodellen spør hvert steg):
+  - **Hvorfor:** spillet regner i rutenett-km. På kysten er k 0,9996–1,0042, men ved Island 1,036 og i Petsjorahavet 1,023, så avstand og fart må regnes om.
+  - **Det som beveger seg,** går sann fart × k i rutenettet:
+    - seilasen (`sail`)
+    - rorstyringen (`helmPose`)
+    - manøvreringsmodellen (`dynMove`, der modellens meter er sanne)
+    - havflåten (`havV`: snittet av k hjemme og på feltet, ett tall per tur fordi turen er en funksjon av klokka)
+    - driften uten motor
+  - **Det som vises,** er sann avstand, `kmTrue(a, b)` = rutenettets avstand / k i midten:
+    - nm i plotteren, ruta og navigasjonen
+    - AIS-farten
+    - nm-telleren i tatoveringene
+    - tidene i driftsplanen (`roughH`, `plan2LegH`, `legMin`) og turoppdragene (`turNm`)
+  - **På kysten** endres tidene med 0,03 % på Senja og høyst 0,4 % ved Grense Jakobselv.
+  - **Ikke regnet om:**
+    - Ekkoloddets og sonarens radius (`12-heat.js`) og andre radier på under 2 nm står i rutenett-km. Der er feilen høyst 4 % av en radius, ved Island.
+    - NPC-kystflåten, ferjene og hurtigbåtene, som bare går der k er 0,9996–1,0042.
+- **Projeksjonen** er sjekket mot PROJ ut til 43° fra midtmeridianen: 17 punkter i havfeltene i `tests/proj_ref.json` (`tools/map/projref.py`), innen 0,006 mm, γ innen 1e-9° og k innen 1e-10. `kmTrue` er innen 0,05 % av Vincenty på ellipsoiden i Danmarkstredet, Petsjorahavet og på Senja (`tests/unit/rammen.test.mjs`).
+- **Ikke ennå:**
+  - R2: de grove lagene, `deep` og `coast0` over hele rammen
+  - R3: Svalbard og Jan Mayen i detalj
+  - R4: sonene
+  - R5: hav og is
+  - R6: havflåten på de nye feltene
+  - R7: Longyearbyen
+  - R8: stikkprøvene
+
 ## 4.12c Sjømerker langs hele kysten (05.10.2026)
 
 Jonas: «Sjømerker må ordnes langs hele kysten. Alt senja har, må resten av norge ha også. Dette er ikke en senja-simulator».

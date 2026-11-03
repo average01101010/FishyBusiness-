@@ -47,6 +47,14 @@ const LGrot = (x, y) => { const a = LG(x, y), b = LG(x + 0.01, y); return Math.a
 const GAMMA_C = new Map();
 // a heading on the grid (radians, clockwise from grid north) as a true bearing in degrees, 0-360, for what the crew reads
 const trueDeg = (r, p) => ((r * 180 / Math.PI + gridGamma(p)) % 360 + 360) % 360;
+// the scale of the grid at p (UTM's k, by the km cell, H1b of the ocean step): a true km is k grid km. On the coast k is 0.9996-1.0042;
+// out where the ocean fleet fishes (Iceland, the Pechora Sea) it is up to 1.04, so what moves goes its true speed times k on the grid,
+// and a distance shown is the grid's over k (kmTrue). The last cell is kept at hand: the manoeuvring model asks every step.
+const KSC = {k:-1, v:1}, KSCALE_C = new Map();
+function gridScale(p){ const k = gridKey(Math.floor(p.x), Math.floor(p.y)); if (k === KSC.k) return KSC.v; let g = KSCALE_C.get(k);
+  if (g === undefined){ const l = natLL({x:Math.floor(p.x) + 0.5, y:Math.floor(p.y) + 0.5}); g = utm33(l.lat, l.lon).k; KSCALE_C.set(k, g); } KSC.k = k; KSC.v = g; return g; }
+// true km between two points: the grid's distance over the scale at the middle (k changes by under 0.1 % in 100 km)
+const kmTrue = (a, b) => dist(a, b) / gridScale({x:(a.x + b.x) / 2, y:(a.y + b.y) / 2});
 function gridGamma(p){ const k = gridKey(Math.floor(p.x), Math.floor(p.y)); let g = GAMMA_C.get(k); if (g === undefined){ const l = natLL({x:Math.floor(p.x) + 0.5, y:Math.floor(p.y) + 0.5}); g = utm33(l.lat, l.lon).gamma; GAMMA_C.set(k, g); } return g; }
 // HOME is Senja's map, the box round the legacy square (km; its edges bow by millimetres): where the game starts, the 2D zoom's
 // measure (MAP_W, MAP_H) and the 3D view's wide meshes. MAPB is the frame the map covers since phase K6 of the coast plan: the whole
@@ -55,7 +63,27 @@ const HOME = (() => { const b = {x0:1e9, y0:1e9, x1:-1e9, y1:-1e9}, W = LEGF.W, 
   for (let i = 0; i <= 32; i++) for (const [x, y] of [[W * i / 32, 0], [W * i / 32, H], [0, H * i / 32], [W, H * i / 32]]){ const q = LG(x, y); b.x0 = Math.min(b.x0, q.x); b.y0 = Math.min(b.y0, q.y); b.x1 = Math.max(b.x1, q.x); b.y1 = Math.max(b.y1, q.y); }
   return b; })();
 const MAP_W = HOME.x1 - HOME.x0, MAP_H = HOME.y1 - HOME.y0;
-const MAPB = {x0:0, y0:0, x1:1450, y1:1720};
+// From H1b of the ocean step (docs/planer/havsteget-h1b-rammen.md, Jonas 03.11.2026: V1 B) the frame takes in the seas the ocean fleet
+// fishes: East Greenland and the Denmark Strait, Iceland, Jan Mayen, all Svalbard and the Russian zone to Novaya Zemlya. The origin is
+// where it was, so the saves keep their places; the frame grows to negative x and y and to the east. Where no layer has data it is land,
+// as off the frame was before (farL).
+const MAPB = {x0:-1100, y0:-1250, x1:2500, y1:1720};
+// The layers for what looks far, by what covers p: the national core's fine ones (200 m land and distance, 500 m openness) where they
+// are (the old frame, 0-1450 x 0-1720 km), else the wide frame's coarse ones (1 km, 2 km) that the core has over the rest from H1b.
+// Both are always loaded with the core, and which one is read follows from p alone, so the simulation is the same whatever else is
+// in. No layer at p: no data (land for a boat, the open sea for a fetch ray, as off the frame before).
+const FARL = {land:['land200', 'land1k'], dc:['dc200', 'dc1k'], expo:['expo', 'expo2k']}, DCSTEP = {dc200:0.1, dc1k:0.5};
+function farL(kind, p){ const n = FARL[kind], A = MAPD.L[n[0]]; if (A && mapCellIn(A, p)) return A; const B = MAPD.L[n[1]]; return B && mapCellIn(B, p) ? B : null; }
+const mapCellIn = (L, p) => { const ix = Math.floor(p.x / L.c), iy = Math.floor(p.y / L.c); return ix >= L.ix0 && iy >= L.iy0 && ix < L.ix0 + L.nx && iy < L.iy0 + L.ny; };
+// whether the map has anything at p (the screens draw off-map where it has not)
+const inFrame = p => p.x >= MAPB.x0 && p.y >= MAPB.y0 && p.x < MAPB.x1 && p.y < MAPB.y1 && !!farL('land', p);
+// the openness (0-255) for what looks far; 0 where there is none
+function expoFar(p){ const L = farL('expo', p); return L ? rbil(L, p) : 0; }
+// the land at x, z (metres) between the four nearest cells (0-1), for the 3D view's ground off the tiles; 0 where there is none (the 3D
+// view drew the sea off the frame, and still does where the map has no data)
+function landFracM(x, z){ const L = farL('land', {x:x / 1000, y:z / 1000}); return L ? rbilM(L, x, z) : 0; }
+// the far distance to the shore of p's own cell (km), as the route's coarse grids read it
+function dcCellFar(p){ const L = farL('dc', p); return L ? rcell(L, Math.floor(p.x / L.c), Math.floor(p.y / L.c)) * DCSTEP[L.name] : 0; }
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const gDate = H => new Date(EPOCH + H * 3600000);
@@ -188,7 +216,7 @@ const DC = {nx:0, ny:0, ix0:0, iy0:0};
 // (a block no pack has, at a tile's seaward edge, is open sea: the core's word then, as depthF and leiaShore have it; a block a pack has
 // but is not loaded still throws, as it should; CI check of all plant pairs 08.10.2026: «dc block has no pack» on a 2 000 km route)
 function coastDist(p){ if (!mapSimAt(p)) return coastDistFar(p); try { return rbil(MAPD.L.dc, p); } catch (e){ if (/has no pack/.test(e.message)) return coastDistFar(p); throw e; } }
-function coastDistFar(p){ return rbil(MAPD.L.dc200, p) * 0.1; }
+function coastDistFar(p){ const L = farL('dc', p); return L ? rbil(L, p) * DCSTEP[L.name] : 0; }
 const dcCell = v => rcell(MAPD.L.dc, DC.ix0 + v % DC.nx, DC.iy0 + Math.floor(v / DC.nx));
 // Real depths: Kartverket 50 m depth model (open data), resampled to 100 m; gaps near land filled smoothly
 const GEO_CONTOURS = '@include(data/geo-contours.b64)', CONTOUR_LEVELS = [5,10,20,30,50,100,150,200,300,500,800];
@@ -213,7 +241,7 @@ function isLand(p){
 // for what looks far (the fetch rays, the local fleet, the grounds' stock): the national core only, land at 200 m
 function isLandFar(p){
   if (!(p.x >= MAPB.x0 && p.y >= MAPB.y0 && p.x < MAPB.x1 && p.y < MAPB.y1)) return true;
-  const L = MAPD.L.land200; return rcell(L, Math.floor(p.x / L.c), Math.floor(p.y / L.c)) === 1;
+  const L = farL('land', p); return !L || rcell(L, Math.floor(p.x / L.c), Math.floor(p.y / L.c)) === 1;
 }
 // for the screens (a tap on the chart, the route editor): the 25 m mask if its pack is in, else the core's 200 m and the pack is
 // asked for; never part of the simulation

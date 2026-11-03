@@ -218,7 +218,7 @@ function windDir(H, p){
   const f = clamp(sa / windAt(H, p), 0, 1), b = base * Math.PI / 180, x = (1 - f) * Math.sin(b) + f * sx / sa, y = (1 - f) * Math.cos(b) + f * sy / sa;
   return ((Math.atan2(x, y) * 180 / Math.PI) % 360 + 360) % 360;
 }
-function exposure(p){ return 0.2 + 0.8 * rbil(MAPD.L.expo, p) / 255; }
+function exposure(p){ return 0.2 + 0.8 * expoFar(p) / 255; }
 // the waves (hsAt, hsOpen) are in 03b-sea.js
 function fcErr(H, now, seed){ const ahead = Math.max(0, H - now), issue = Math.floor(now / 6); return (vn(H / 10, seed + issue) - 0.5) * 0.7 * Math.min(1, ahead / 48); }
 function fcWind(H, now, p){ return windAt(H, p) * (1 + fcErr(H - wxPlace(p).dt, now - wxPlace(p).dt, 900)); }
@@ -659,7 +659,7 @@ function depthHas(p){
 // about 260 m
 function deepAt(p){
   const L = MAPD.L.deep; if (!L || !MAPD.core || !MAPD.core.buf) return 0;
-  const gx = p.x / L.c - 0.5, gy = p.y / L.c - 0.5; if (gx < 0 || gy < 0 || gx > L.nx - 1 || gy > L.ny - 1) return 0;
+  const gx = p.x / L.c - 0.5, gy = p.y / L.c - 0.5; if (gx < L.ix0 || gy < L.iy0 || gx > L.ix0 + L.nx - 1 || gy > L.iy0 + L.ny - 1) return 0;
   return rbil(L, p);
 }
 function offDepth(p){ const z = deepAt(p); return z > 5 ? z : depthModel(p); }

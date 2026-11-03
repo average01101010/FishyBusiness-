@@ -85,8 +85,9 @@ function dynInt(P, s, thr, rud, h, capF, E){
 }
 // ... and where that takes her: X east, Y south (metres), psi the heading (grid, clockwise from north)
 function dynMove(s, h){
-  const c = Math.cos(s.psi), sn = Math.sin(s.psi);
-  s.X += (s.u * sn + s.v * c) * h; s.Y -= (s.u * c - s.v * sn) * h; s.psi += s.r * h;
+  // (the model's metres are true ones; on the grid they are k of them, gridScale, H1b of the ocean step)
+  const c = Math.cos(s.psi), sn = Math.sin(s.psi), hk = h * gridScale({x:s.X / 1000, y:s.Y / 1000});
+  s.X += (s.u * sn + s.v * c) * hk; s.Y -= (s.u * c - s.v * sn) * hk; s.psi += s.r * h;
 }
 const dynZero = () => ({u:0, v:0, r:0, dl:0, psi:0, X:0, Y:0});
 // the throttle that holds the speed u
@@ -358,7 +359,7 @@ function dynHelm(d, dtG){
     const gp = groundCheck(a, to); if (gp){ dynWrite(b, d); runAground(gp); helmOff(); return; } }
   dynWrite(b, d); h.v = d.u / KN_MS; h.yaw = d.r;
   fuelUse(b, fuelLph(Math.abs(h.v), windAt(H)) / 3600 * dtG);
-  HELM.nm += dd / NM; if (HELM.nm > 0.05 && meAboard()){ tatAdd('nm', HELM.nm); HELM.nm = 0; }
+  HELM.nm += dd / gridScale(a) / NM; if (HELM.nm > 0.05 && meAboard()){ tatAdd('nm', HELM.nm); HELM.nm = 0; }
 }
 // ---- the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in ----
 const dynSig = pl => pl.wps.length + ':' + pl.wps.map(w => w.x.toFixed(5) + ',' + w.y.toFixed(5) + (w.port || '')).join(';');
@@ -530,7 +531,7 @@ function dynAuto(d, dtG){
   if (gp){ if (pl.unsafe && pl.unsafe[pl.idx]){ dynWrite(b, d); runAground(gp); return; }
     const fast = Math.abs(d.u) > 1.5; d.X = X0; d.Y = Y0; d.u = 0; d.v = 0;
     if (fast && !pl.replan){ d.r = 0; dynWrite(b, d); if (!sailReplan(pl, b, gp)) runAground(gp); return; } }
-  DYN.nm += Math.hypot(d.X - X0, d.Y - Y0) / 1000 / NM;
+  DYN.nm += Math.hypot(d.X - X0, d.Y - Y0) / 1000 / gridScale(a) / NM;
   dynWrite(b, d);
 }
 // for the 3D view's tests: the line and where she is on it, in the shape the old follower had (trackfollow.py)

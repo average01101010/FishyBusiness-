@@ -258,7 +258,7 @@ function drSetOf(o, f){ const kind = drKind(o); return mySets().find(s => s.fid 
 function drTrip(o, H, budget, dry){
   const b = S.boat, kind = drKind(o), here = drHere(o), M = drP(o, 'M');
   if (!M) return null;
-  const stops = [], late = [], v = Math.max(1, BOAT.vcruise || 7), roughH = (a, c) => dist(a, c) * 1.25 / (v * NM);
+  const stops = [], late = [], v = Math.max(1, BOAT.vcruise || 7), roughH = (a, c) => kmTrue(a, c) * 1.25 / (v * NM);
   // the gear: what stands and is due is hauled (and set again), what is not in the sea is set; a soak that fits in the trip is set first and hauled last
   if (kind){
     const baited = () => S.pgear ? (S.pgear.lines.hyse.baited || 0) + (S.pgear.lines.bank.baited || 0) : 0;
@@ -540,7 +540,7 @@ function driftSketch(o){
     const here = drHere(o); wps = T.wps; t = t0; a = here.p; out.push({t, no:'Går fra ' + (here.port ? nmP(here.port) : 'der båten ligger'), en:'Leaves ' + (here.port ? nmP(here.port) : 'where the boat lies')});
   }
   for (const w of wps){
-    t += dist(a, w) / (v * NM); a = w;
+    t += kmTrue(a, w) / (v * NM); a = w;
     if (w.act){ const i = o.fields.findIndex(f => f.id === w.act.fid), fn = i >= 0 ? 'felt ' + (i + 1) : 'feltet', fe = i >= 0 ? 'field ' + (i + 1) : 'the field', n = w.act.n, set = w.act.only === 'set', reset = !set && !w.act.final;
       out.push(set ? {t, no:'Setter ' + n + ' ' + GEAR[kind].u[n === 1 ? 0 : 1] + ' på ' + fn, en:'Sets ' + n + ' ' + GEAR[kind].u[n === 1 ? 2 : 3] + ' at ' + fe, k:'st'} : {t, no:(reset ? 'Trekker og setter på nytt på ' : 'Trekker ') + fn, en:(reset ? 'Hauls and sets again at ' : 'Hauls ') + fe, k:'st'});
       t += n * (set ? DRP.setH[kind] : DRP.haulH[kind] + (reset ? DRP.setH[kind] : 0));

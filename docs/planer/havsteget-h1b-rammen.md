@@ -282,12 +282,12 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
 
 - **Hva:**
   - **Havna:** Longyearbyen blir havn for spillerens båter, med kai og liggeplass etter `quayFit`, og ly.
-  - **Ikke mottak:** man kan ikke levere fisk der, og det er ingen butikk og ikke noe verft.
-  - **Diesel:** i dag kjøpes diesel bare på mottak og verft (`docs/handelssteder.md`). Forslaget er at Longyearbyen får bunkring ved kaia som et unntak, fordi det er det eneste stedet på Svalbard. **Det trenger Jonas' ja,** fordi det er et unntak fra handelsstedene.
+  - **Ikke mottak:** man kan ikke levere fisk der.
+  - **Verft og utstyrsbutikk** (Jonas 03.11.2026: «Ja, longyearbyen må ha verft og utstyrsbutikk, på denne måten er spillerne dekket mot det meste»). Diesel kjøpes på verftet, som langs kysten, så handelsstedene trenger ikke noe unntak. Verftet og butikken plasseres etter regelen i `docs/handelssteder.md` (minst 1,5 km fra hverandre, i ly, ved kai) og heter etter stedet.
   - **Mannskapsbytte:** mannskapet reiser med fly til og fra fastlandet. Det tar en ekte reisetid og har en billettpris fra kilde.
   - **I 3D:** kaia og byggene fra vec-pakkene (R3).
   - **Navnet** er stedsnavnet, ikke et firma.
-- **Filer:** `core/06b-coastports.js`, `core/07-harbours.js`, `core/04-crew.js`, `docs/handelssteder.md`.
+- **Filer:** `core/06b-coastports.js`, `core/07-harbours.js`, `core/04-crew.js`, `src/data/steder.json` (`tools/steder/steder.py`), `docs/handelssteder.md`.
 - **Tester:** `havntest`, `docktest`, `crewlifetest`, og en tur fra Tromsø til Longyearbyen med mannskapsbytte.
 
 ### R8 Stikkprøver, spilltest og utrulling
@@ -304,7 +304,7 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
 - **V1 Hvor langt rammen går.** Valgt **B**: også Jan Mayen, Island, Grønland og russisk sone. Løses som i kap. 3a. Det som ble anbefalt (A), var x −500 til 1 600 og y −1 000 til 1 720.
 - **V2 Land med detalj.** Valgt **B**: hele Svalbard i detalj, sammen med Jan Mayen, Bjørnøya og Hopen.
 - **V3 Isen i Barentshavet.** Valgt **A**: iskanten etter måned, fra klimatologien. En daglig iskant (C) kan komme senere oppå den.
-- **V4 Havner utenfor fastlandet.** Valgt **B**: Longyearbyen som havn uten mottak. Bunkringen der trenger Jonas' ja (R7).
+- **V4 Havner utenfor fastlandet.** Valgt **B**: Longyearbyen som havn uten mottak, med verft (diesel) og utstyrsbutikk (Jonas 03.11.2026, svar på spørsmålet om bunkring: «Ja, så lenge det blir så realistisk som mulig»).
 
 ## 5. Antatt eller usikkert
 
@@ -327,7 +327,7 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
 
 ## 6. Hva planen ikke gjør
 
-- Ingen mottak, butikker eller verft på Svalbard eller i utlandet. Longyearbyen er havn uten mottak (V4 B).
+- Ingen mottak på Svalbard eller i utlandet. Longyearbyen er havn uten mottak, med verft og utstyrsbutikk (V4 B), og ingen butikker eller verft i utlandet.
 - Ingen detaljfliser for utenlandsk land: Island, Færøyane, Grønland, Russland og Shetland får det nabolandene har i dag.
 - Ingen nye arter eller redskap. Det kommer i H2–H6.
 - Ingen daglig iskant (V3 C) ennå.
@@ -338,6 +338,16 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
 
 - 03.11.2026: planen er skrevet etter Jonas' bestilling.
 - 03.11.2026: valgene er tatt: V1 B, V2 B, V3 A og V4 B. Planen er skrevet om med kap. 3a (slik V1 B løses), R7 Longyearbyen og R8 stikkprøvene.
-- Venter på:
-  - Jonas' ja eller nei til bunkring i Longyearbyen (R7)
-  - «kjør på» for R1
+- 03.11.2026: Jonas: Longyearbyen får verft og utstyrsbutikk (diesel på verftet), og «Kjør på». «Husk at alt som antas å være svakt skal du først prøve å løse, og om du ikke får det til skal det føres opp på listen.»
+- 03.11.2026: **R1 bygd** (gren `ccr-f23363d4-rx3fvy`, ikke rullet ut; R1 rulles ut sammen med R2). Se 4.9b i `docs/systemer/kart-og-terreng.md`.
+  - **Rammen:** `MAPB` er x −1 100 til 2 500 og y −1 250 til 1 720. Origo er der det var.
+  - **Leserne for det som ser langt** (`farL`): kjernens 200 m- og 500 m-lag i den gamle rammen, og de grove lagene `land1k`, `dc1k` (0,5 km-steg) og `expo2k` utenfor, når R2 har laget dem. Hvilket lag som brukes, følger av posisjonen.
+  - **Uten data** er det land for båtene, åpent hav for strøklengdestrålene, sjø i 3D og «utenfor kartet» på skjermene, som utenfor rammen før. Spillet er derfor likt som i dag til R2 kommer.
+  - **Klemmene mot 0** i ruteplanleggeren og `deepAt` følger nå lagenes utstrekning.
+  - **Skalafaktoren:** `gridScale(p)` (k per km-rute) og `kmTrue(a, b)`. Den gjelder i:
+    - bevegelsen: seilasen, rorstyringen, manøvreringsmodellen, havflåten (`havV`) og driften uten motor
+    - farten som vises (AIS)
+    - avstandene som vises (plotteren, ruta, navigasjonen)
+    - tidene i driftsplanen og turoppdragene
+  - **Tester:** ny `tests/unit/rammen.test.mjs` (51 sjekker), med PROJ-punkter ute i havfeltene i `tests/proj_ref.json` (`projref.py`). 670 OK i alle enhetstestene.
+  - **Neste:** R2 (kjernen og releasen) i en ny økt.

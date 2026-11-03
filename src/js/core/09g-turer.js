@@ -103,7 +103,7 @@ const cargoKg = () => (S.cargo || []).reduce((a, c) => a + c.kg, 0);
 // route takes along a coast)
 function turV(){ const T = trimOn(S.boat); return Math.max(2, (BOAT.vcruise || 6) / (T ? T.x : 1)); }
 function turRange(){ const v = turV(); return (BOAT.fuelCap || 60) * v / Math.max(0.2, fuelLph(v, 6)); }
-const turNm = (a, b) => dist(a, b) * TUR.detour / NM;
+const turNm = (a, b) => kmTrue(a, b) * TUR.detour / NM;
 const turHere = () => S.boat.status === 'port' && portById(S.boat.port) ? portById(S.boat.port).p : S.boat.pos;
 // what the boat earns in an hour of fishing, in real time: from her hold, as the first players earned (9 000 kr an hour in the
 // 23-foot boat, about one landing an hour; a bigger boat earns more, but not in step with her hold)
@@ -330,7 +330,7 @@ const turLeteWho = m => m.from ? turManager(m.from) : 'Havforskningsinstituttet'
 // the place as the fishers name it: by the nearest plant or harbour (not a shop or a yard), «ved» within 1.5 nm
 function turLetePlace(p){
   const np = PORTS.filter(q => q.mottak || !q.sted).sort((a, b) => dist(a.p, p) - dist(b.p, p))[0]; if (!np) return nearestPlace(p);
-  const nmP = dist(np.p, p) / NM; return nmP < 1.5 ? {no:'ved ' + np.name, en:'off ' + np.name} : {no:fmt(nmP, 1) + ' nm fra ' + np.name, en:fmt(nmP, 1) + ' nm from ' + np.name};
+  const nmP = kmTrue(np.p, p) / NM; return nmP < 1.5 ? {no:'ved ' + np.name, en:'off ' + np.name} : {no:fmt(nmP, 1) + ' nm fra ' + np.name, en:fmt(nmP, 1) + ' nm from ' + np.name};
 }
 // an answer to one question; all answered, the model checks them, the time is paid and the bonus for the right ones, and what was
 // found stays as the player's own line for the species in that area
@@ -958,7 +958,7 @@ function turSay(who, no, en, k){
 }
 function turDepart(){
   const b = S.boat, pl = S.plan; if (!pl || !pl.wps || !pl.wps.length || !meAboard()) return;
-  let nm = 0, p = b.pos; for (let i = pl.idx || 0; i < pl.wps.length; i++){ nm += dist(p, pl.wps[i]) / NM; p = pl.wps[i]; }
+  let nm = 0, p = b.pos; for (let i = pl.idx || 0; i < pl.wps.length; i++){ nm += kmTrue(p, pl.wps[i]) / NM; p = pl.wps[i]; }
   const T0 = trimOn(b), v = Math.max(2, Math.min(pl.speed || BOAT.vcruise || 6, turTowing() ? TUR_TOWV : 99)), hGame = nm / v, min = turMinR(hGame);
   if (min < 20) return;
   log('Beregnet framme kl. ' + hm(S.t / 60 + hGame) + ', om ca. ' + turDur(hGame) + '.', 'Expected there at ' + hm(S.t / 60 + hGame) + ', in about ' + turDur(hGame) + '.');
