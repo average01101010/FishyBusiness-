@@ -1411,3 +1411,12 @@ body.pm #hud,body.pm #pinCard{visibility:hidden}
 /* Ukas fangst (ui/05i-ukas.js): the Sunday card */
 .ukc h2{margin:2px 0 10px} .uk-l{margin:0 0 10px;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;text-align:left;font-size:14px;line-height:1.35}
 .uk-l dt{color:#5b6c76;font-size:12.5px;padding-top:1px} .uk-l dd{margin:0} .uk-l dd.uk-top{grid-column:1/-1;font-size:15px;margin-bottom:4px} .uk-big{font-size:22px}
+/* the browser card on the loading screen (ui/10p-install.js BRWTIP): over the loader and the game till it is closed */
+#brwTip{position:fixed;z-index:30;left:50%;bottom:max(16px,calc(env(safe-area-inset-bottom) + 12px));transform:translateX(-50%);width:min(420px,calc(100vw - 32px));box-sizing:border-box;
+  padding:14px 16px 12px;border-radius:14px;background:rgba(8,20,38,.92);border:1px solid rgba(243,205,133,.35);box-shadow:0 8px 28px rgba(0,8,24,.5);color:#eef4fb;font:14px/1.45 var(--sans);text-align:left}
+#brwTip b{display:block;font-size:15px;margin-bottom:4px;color:#f3cd85}
+#brwTip p{margin:0 0 6px}
+#brwTip .bt-n{font-size:12.5px;color:rgba(228,238,250,.75)}
+#brwTip .bt-b{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+#brwTip button,#brwTip a{font:600 14px/1 var(--sans);padding:10px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#eef4fb;text-decoration:none;min-height:40px;box-sizing:border-box;display:inline-flex;align-items:center}
+#brwTip a{background:#f3cd85;border-color:#f3cd85;color:#0b1a2e}

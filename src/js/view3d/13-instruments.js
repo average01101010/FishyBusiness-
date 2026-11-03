@@ -191,7 +191,7 @@
     // with all hands on deck, nobody fishes; nor when the one aboard alone is at the table or the tub (drawDeck draws him there; tilbakemelding
     // #98: he jigged at the rail and gutted at the table at once)
     const fishing = S.boat.status === 'fishing' && !S.boat.deckStop && !(DECKACT.on && DECKACT.alone);
-    refreshPeople(SK); paintHand(); const wr = wearOn(vtype()); drawN(SK.hull, BMrel); if (wr) wearOff(); if (showSkipper && !fishing) drawN(SK.skipper, BMrel); if (showCrew) drawN(SK.crew, BMrel);
+    refreshPeople(SK); paintHand(); const wr = wearOn(vtype()), lf = lifeOn('me', BMrel, null, vtype(), HL.meAge, wr, bv.spd, GEO(vtype())); drawN(SK.hull, BMrel); if (lf) lifeOff(); else if (wr) wearOff(); if (showSkipper && !fishing) drawN(SK.skipper, BMrel); if (showCrew) drawN(SK.crew, BMrel);
     SK.rodT += dt; SK.lines = [];
     const T = SK.rodT, A = SK.anim || (SK.anim = {mode:null, st:'jig', t:0, fish:[], fly:[], th:0, mc:[], bq:[], bl:null});
     const kv = S.target === 'kveite' && S.boat.kgear && !kveiteClosed(S.t / 60), mode = !fishing ? null : S.boat.gop ? 'gear' : (!kv && S.equip && S.equip.jukse > 0 && !window.jigActive) ? 'machine' : (S.boat.gear || kv) ? 'juksa' : null;

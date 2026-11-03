@@ -17,43 +17,43 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 60 `natP(lat, lon)`
   - 61 `natLL(p)`
 
-## `src/js/core/01-world.js` (390 linjer)
+## `src/js/core/01-world.js` (396 linjer)
 
-- **4** one clock for everyone (05.10.2026, the shared world V1)
-  - 44 `gridGamma(p)`
-  - 59 `b64bytes(s)`
-  - 60 `varints(b)`
-  - 68 `loadFine()`
-  - 76 `loadRoads()`
-  - 92 `inHarbour(p)`
-  - 99 `legHazard(a, c, sd)`
-  - 109 `legHazardMemo(a, c, sd)`
-  - 114 `draftHazards()`
-  - 124 `legReady(a, c)`
-  - 131 `nearestPlace(p)`
-  - 135 `groundCheck(a, c)`
-  - 146 `runAground(p)`
-  - 161 `rocksNear(a, b, r)`
-  - 171 `rocksIn(x0, y0, x1, y1)`
-  - 184 `coastDist(p)`
-  - 185 `coastDistFar(p)`
-  - 191 `decodeContours()`
-  - 200 `isLand(p)`
-  - 208 `isLandFar(p)`
-  - 214 `isLandUI(p)`
-  - 220 `inHarbourPocket(p)`
-  - 226 `harbourNear(x, z)`
-  - 232 `qPockets()`
-  - 233 `pocketHit(US, QS, x, z)`
-  - 240 `pocketsIn(x0, y0, x1, y1)`
-  - 249 `legClear(a, b)`
-  - 280 `portLabel(p)`
-- **296** the harbour unit (02.10.2026)
-  - 337 `fillOut(U, lx, lz)`
-  - 350 `onUnitGround(p)`
-  - 357 `unitCovers(x, z, m)`
-  - 365 `bridgeUnderUnit(br, extra)`
-  - 370 `portApproach(pt)`
+- **10** one clock for everyone (05.10.2026, the shared world V1)
+  - 50 `gridGamma(p)`
+  - 65 `b64bytes(s)`
+  - 66 `varints(b)`
+  - 74 `loadFine()`
+  - 82 `loadRoads()`
+  - 98 `inHarbour(p)`
+  - 105 `legHazard(a, c, sd)`
+  - 115 `legHazardMemo(a, c, sd)`
+  - 120 `draftHazards()`
+  - 130 `legReady(a, c)`
+  - 137 `nearestPlace(p)`
+  - 141 `groundCheck(a, c)`
+  - 152 `runAground(p)`
+  - 167 `rocksNear(a, b, r)`
+  - 177 `rocksIn(x0, y0, x1, y1)`
+  - 190 `coastDist(p)`
+  - 191 `coastDistFar(p)`
+  - 197 `decodeContours()`
+  - 206 `isLand(p)`
+  - 214 `isLandFar(p)`
+  - 220 `isLandUI(p)`
+  - 226 `inHarbourPocket(p)`
+  - 232 `harbourNear(x, z)`
+  - 238 `qPockets()`
+  - 239 `pocketHit(US, QS, x, z)`
+  - 246 `pocketsIn(x0, y0, x1, y1)`
+  - 255 `legClear(a, b)`
+  - 286 `portLabel(p)`
+- **302** the harbour unit (02.10.2026)
+  - 343 `fillOut(U, lx, lz)`
+  - 356 `onUnitGround(p)`
+  - 363 `unitCovers(x, z, m)`
+  - 371 `bridgeUnderUnit(br, extra)`
+  - 376 `portApproach(pt)`
 
 ## `src/js/core/01b-mapdata.js` (202 linjer)
 
@@ -144,18 +144,18 @@ THE SEA MARKS ALONG THE WHOLE COAST (05.10.2026; Jonas: «Sjømerker må ordnes 
   - 43 `feltData()`
   - 56 `feltIn(x0, y0, x1, y1)`
 
-## `src/js/core/02-species-gear.js` (246 linjer)
+## `src/js/core/02-species-gear.js` (250 linjer)
 
 Placeholder prices (NOK/kg, grade A) – to be tuned
 
-- **74** vessels, equipment, crew
-  - 191 `fuelWeek(w)`
-  - 193 `fuelPrice(H = S.t / 60, pid = S.boat && S.boat.port, diesel = BOAT.die…)`
-  - 220 `equipFits(k, type)`
-  - 223 `fuelBase(v, vmax, planing)`
-  - 224 `fuelKOf(V)`
-  - 226 `vesselDerive(V)`
-  - 240 `lsaOf(V)`
+- **78** vessels, equipment, crew
+  - 195 `fuelWeek(w)`
+  - 197 `fuelPrice(H = S.t / 60, pid = S.boat && S.boat.port, diesel = BOAT.die…)`
+  - 224 `equipFits(k, type)`
+  - 227 `fuelBase(v, vmax, planing)`
+  - 228 `fuelKOf(V)`
+  - 230 `vesselDerive(V)`
+  - 244 `lsaOf(V)`
 
 ## `src/js/core/03-simulation.js` (1217 linjer)
 
@@ -293,8 +293,8 @@ fleet: each vessel keeps its own state; the company holds the rest. The simulati
   - 708 `supplyFactor(H)`
   - 715 `weekOfH(H)`
   - 716 `weekDev(sp, H)`
-  - 722 `marketPrice(sp, H)`
-  - 724 `clsPrice(port, sp, c, H, hook)`
+  - 722 `marketPrice(sp, H, fz)`
+  - 724 `clsPrice(port, sp, c, H, hook, fz)`
   - 730 `price(port, sp, H)`
   - 732 `avgPrice(sp, H, days)`
 - **733** quotas north of 62° N: the regulation and the year's figures are in 03d-quota.js
@@ -2112,12 +2112,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (967 linjer)
+## `src/js/ui/phone/07-patch.js` (981 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 960 `patch()`
+  - 974 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (94 linjer)
 
@@ -2661,7 +2661,7 @@ SOUND (the user's wish 03.10.2026)
 - **82** inside Father's naust (Jonas 09.10.2026: «Kjør på med lyd i naustet»; ui/09c-naust3d.js)
 - **141** the music (Jonas 05.10.2026: «rolig ambient instrumentaler som svak stemning i bakgrunnen. Må kunne skrus av i innstillinger»)
 
-## `src/js/ui/10f-cloud.js` (932 linjer)
+## `src/js/ui/10f-cloud.js` (933 linjer)
 
 THE CLOUD (04.10.2026; docs/lansering.md E and F)
 
@@ -2672,91 +2672,91 @@ THE CLOUD (04.10.2026; docs/lansering.md E and F)
   - 28 `cloudGpu()`
   - 35 `cloudDev()`
   - 42 `cloudMeta()`
-- **55** talking to Supabase
-  - 56 `cloudToken()`
-- **57** guests (06.10.2026; Jonas: «nye brukere ikke trenger å logge inn til å starte med», the account after the third landing)
-  - 63 `guestGet()`
-  - 64 `guestAuth(path, body)`
-  - 72 `guestToken()`
-  - 80 `guestStart()`
-  - 86 `cloudRpc(fn, args, opt)`
-- **98** the gate: before the game starts
-  - 99 `cloudGateShow(html)`
-  - 107 `cloudGateHide()`
-  - 111 `worldSync()`
-  - 116 `cloudGate()`
-- **184** after the start: hooks, measurements, the save
-  - 185 `cloudStart()`
-  - 210 `cloudAsk()`
-  - 220 `cloudConsent(yes, by)`
-  - 226 `cloudBegin()`
-  - 235 `cloudEv(k, d)`
-  - 236 `cloudFlush(end)`
-- **245** the errors (04.10.2026; caught everywhere since 02.11.2026, js/errtrap.js)
-  - 256 `srcMapStr(s)`
-  - 269 `errNoise(msg)`
-  - 274 `cloudErr(msg, src, stack, kind)`
-  - 285 `errSend(e)`
-  - 289 `errQueue()`
-  - 290 `errKeep(list)`
-  - 294 `errFlush()`
-  - 318 `errStart()`
-- **327** a page that stops or stands still while it is on the screen
-  - 334 `aliveRead()`
-  - 335 `aliveBeat(gone)`
-  - 346 `aliveCheck()`
-  - 370 `hangWatch()`
-- **384** the save between devices (05.10.2026; supabase/migrations/20261005200000_save_sync.sql)
-  - 391 `syncGet()`
-  - 392 `syncSet(rev, at, rv, sq)`
-  - 398 `deviceId()`
-  - 402 `deviceName()`
-  - 407 `cloudStatus(s)`
-  - 408 `cloudStatusText()`
-  - 417 `saveSum(o)`
-  - 421 `sumText(m)`
-  - 428 `cloudChoose(here, cloud, when, box)`
-  - 443 `cloudKeptNote(where)`
-  - 448 `cloudTake(cs)`
-  - 454 `cloudSync(cs)`
-  - 478 `cloudSaveSoon(closing, manual)`
-  - 517 `cloudSoon(ms)`
-- **518** one device at a time (13.10.2026, supabase/migrations/20261013120000_active.sql)
-  - 528 `cloudFp()`
-  - 529 `cloudClaim(wait)`
-  - 542 `cloudBeat()`
-  - 558 `cloudWake()`
-  - 564 `cloudPassed(h)`
-  - 579 `cloudHeldShow(h)`
-  - 588 `cloudPlayHere()`
-  - 598 `cloudCheckHead()`
-  - 607 `cloudConflict(cl, moved)`
-  - 637 `cloudHist()`
-  - 642 `cloudRestore(id)`
-- **653** what is measured: the game's own functions, wrapped once they are all defined
-  - 654 `cloudHooks()`
-- **677** the account card in Settings
-  - 678 `cloudCard()`
-  - 702 `histRows()`
-  - 714 `cloudAccountDel()`
-  - 725 `cloudMediaDel()`
-  - 731 `cloudAct(a, d)`
-- **765** registering, for a guest: in the game's own words, never a wall before the third landing
-  - 774 `guestHave()`
-  - 780 `guestAsk(why)`
-  - 804 `namesKept()`
-  - 805 `namesKeep(o)`
-  - 807 `namesApply()`
-  - 815 `nameTake(n, quiet)`
-  - 825 `nameCheck()`
-  - 840 `nameSuggest()`
-  - 849 `nameAsk(why, reason)`
-  - 874 `guestOpenAsk()`
-  - 882 `nameNudge(force)`
-  - 895 `guestNudge(step)`
-  - 907 `guestLogin(src)`
-  - 913 `guestRegister(signIn)`
-  - 925 `guestGift()`
+- **56** talking to Supabase
+  - 57 `cloudToken()`
+- **58** guests (06.10.2026; Jonas: «nye brukere ikke trenger å logge inn til å starte med», the account after the third landing)
+  - 64 `guestGet()`
+  - 65 `guestAuth(path, body)`
+  - 73 `guestToken()`
+  - 81 `guestStart()`
+  - 87 `cloudRpc(fn, args, opt)`
+- **99** the gate: before the game starts
+  - 100 `cloudGateShow(html)`
+  - 108 `cloudGateHide()`
+  - 112 `worldSync()`
+  - 117 `cloudGate()`
+- **185** after the start: hooks, measurements, the save
+  - 186 `cloudStart()`
+  - 211 `cloudAsk()`
+  - 221 `cloudConsent(yes, by)`
+  - 227 `cloudBegin()`
+  - 236 `cloudEv(k, d)`
+  - 237 `cloudFlush(end)`
+- **246** the errors (04.10.2026; caught everywhere since 02.11.2026, js/errtrap.js)
+  - 257 `srcMapStr(s)`
+  - 270 `errNoise(msg)`
+  - 275 `cloudErr(msg, src, stack, kind)`
+  - 286 `errSend(e)`
+  - 290 `errQueue()`
+  - 291 `errKeep(list)`
+  - 295 `errFlush()`
+  - 319 `errStart()`
+- **328** a page that stops or stands still while it is on the screen
+  - 335 `aliveRead()`
+  - 336 `aliveBeat(gone)`
+  - 347 `aliveCheck()`
+  - 371 `hangWatch()`
+- **385** the save between devices (05.10.2026; supabase/migrations/20261005200000_save_sync.sql)
+  - 392 `syncGet()`
+  - 393 `syncSet(rev, at, rv, sq)`
+  - 399 `deviceId()`
+  - 403 `deviceName()`
+  - 408 `cloudStatus(s)`
+  - 409 `cloudStatusText()`
+  - 418 `saveSum(o)`
+  - 422 `sumText(m)`
+  - 429 `cloudChoose(here, cloud, when, box)`
+  - 444 `cloudKeptNote(where)`
+  - 449 `cloudTake(cs)`
+  - 455 `cloudSync(cs)`
+  - 479 `cloudSaveSoon(closing, manual)`
+  - 518 `cloudSoon(ms)`
+- **519** one device at a time (13.10.2026, supabase/migrations/20261013120000_active.sql)
+  - 529 `cloudFp()`
+  - 530 `cloudClaim(wait)`
+  - 543 `cloudBeat()`
+  - 559 `cloudWake()`
+  - 565 `cloudPassed(h)`
+  - 580 `cloudHeldShow(h)`
+  - 589 `cloudPlayHere()`
+  - 599 `cloudCheckHead()`
+  - 608 `cloudConflict(cl, moved)`
+  - 638 `cloudHist()`
+  - 643 `cloudRestore(id)`
+- **654** what is measured: the game's own functions, wrapped once they are all defined
+  - 655 `cloudHooks()`
+- **678** the account card in Settings
+  - 679 `cloudCard()`
+  - 703 `histRows()`
+  - 715 `cloudAccountDel()`
+  - 726 `cloudMediaDel()`
+  - 732 `cloudAct(a, d)`
+- **766** registering, for a guest: in the game's own words, never a wall before the third landing
+  - 775 `guestHave()`
+  - 781 `guestAsk(why)`
+  - 805 `namesKept()`
+  - 806 `namesKeep(o)`
+  - 808 `namesApply()`
+  - 816 `nameTake(n, quiet)`
+  - 826 `nameCheck()`
+  - 841 `nameSuggest()`
+  - 850 `nameAsk(why, reason)`
+  - 875 `guestOpenAsk()`
+  - 883 `nameNudge(force)`
+  - 896 `guestNudge(step)`
+  - 908 `guestLogin(src)`
+  - 914 `guestRegister(signIn)`
+  - 926 `guestGift()`
 
 ## `src/js/ui/10g-push.js` (206 linjer)
 
@@ -2869,11 +2869,12 @@ Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sp
 - **111** the polling
 - **125** the chart: the asks near, and the card
 
-## `src/js/ui/10p-install.js` (69 linjer)
+## `src/js/ui/10p-install.js` (100 linjer)
 
 put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
+- **70** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
 ## `src/js/ui/11-boot.js` (192 linjer)
 
@@ -3010,21 +3011,21 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **434** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
   - 464 `npcCrewCtx(n, G)`
 
-## `src/js/view3d/00-head.js` (119 linjer)
+## `src/js/view3d/00-head.js` (121 linjer)
 
 - **2** 3D VIEW (plain WebGL, no dependencies)
-  - 43 `qualSet()`
-  - 53 `qualTick(dt, fps, now)`
-- **91** math
-  - 92 `persp(fovy, asp, n, f)`
-  - 93 `viewDir(f, up)`
-  - 100 `mul(a, b)`
-  - 101 `model(px, py, pz, yaw, pitch, roll)`
-- **109** noise
-  - 110 `vn2(x, y, s)`
-  - 115 `fbm(x, y, o, s)`
-  - 116 `ridged(x, y)`
-  - 117 `rng(seed)`
+  - 45 `qualSet()`
+  - 55 `qualTick(dt, fps, now)`
+- **93** math
+  - 94 `persp(fovy, asp, n, f)`
+  - 95 `viewDir(f, up)`
+  - 102 `mul(a, b)`
+  - 103 `model(px, py, pz, yaw, pitch, roll)`
+- **111** noise
+  - 112 `vn2(x, y, s)`
+  - 117 `fbm(x, y, o, s)`
+  - 118 `ridged(x, y)`
+  - 119 `rng(seed)`
 
 ## `src/js/view3d/01-shaders.js` (511 linjer)
 
@@ -3142,7 +3143,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 307 `obox(nb, c, u, n, len, wid, y0, h, k)`
   - 313 `buildHarbourFittings()`
 
-## `src/js/view3d/06-buildings-lights.js` (309 linjer)
+## `src/js/view3d/06-buildings-lights.js` (390 linjer)
 
 ---------- real buildings (OpenStreetMap), streamed in 1 km chunks inside the terrain corridor ----------
 
@@ -3164,9 +3165,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 228 `drawSeaLights(VP, eye, t, near)`
 - **243** lights that light up round them at night (the user's wish 03.10.2026)
   - 248 `pickLights(eye, t)`
-  - 269 `plSet(u)`
-  - 274 `drawBeams(VP, eye, t)`
-  - 302 `drawChunkLights(VP, eye)`
+  - 273 `plSet(u)`
+  - 278 `drawBeams(VP, eye, t)`
+  - 329 `workLights(type, G)`
+  - 346 `airGlow()`
+  - 347 `drawWorkCones(VP, eye, t, BMrel, VG)`
+  - 383 `drawChunkLights(VP, eye)`
 
 ## `src/js/view3d/07-harbour-unit.js` (223 linjer)
 
@@ -3288,28 +3292,31 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 31 `nearestBunker(eye)`
   - 32 `drawBunker(B, eye, VP, T, BMrel)`
 
-## `src/js/view3d/12-skiff.js` (354 linjer)
+## `src/js/view3d/12-skiff.js` (415 linjer)
 
 ---------- boat ----------
 
 - **1** boat
 - **3** the starter boat: a 19 ft centre-console skiff, modelled in detail
-  - 54 `NB()`
-  - 62 `lookMesh(look)`
-  - 69 `nSetup(VP)`
-  - 75 `wearOn(t)`
-  - 76 `wearOff()`
-  - 77 `drawN(m, M)`
-  - 79 `texStrip(Pb, Pt)`
-  - 80 `texQuad(P0, P1, P2, P3)`
-  - 81 `mkTex()`
-  - 82 `upTex(t, cv)`
-  - 83 `drawTexQuad(q, tex, M, VP, lit, nrm)`
-- **91** the open boats worked by hand: one kit per type
-  - 99 `refreshPeople(K)`
-  - 110 `useHand(t)`
-  - 116 `handKit(t)`
-  - 137 `buildSkiff()`
+  - 86 `NB()`
+  - 94 `lookMesh(look)`
+  - 101 `nSetup(VP)`
+  - 107 `wearOn(t)`
+  - 108 `wearOff()`
+  - 116 `wetTick(key, M, sv, len, beam, top, spd)`
+  - 127 `lifeOn(key, M, sv, type, age, keep, spd, G)`
+  - 135 `lifeOff()`
+  - 138 `drawN(m, M)`
+  - 140 `texStrip(Pb, Pt)`
+  - 141 `texQuad(P0, P1, P2, P3)`
+  - 142 `mkTex()`
+  - 143 `upTex(t, cv)`
+  - 144 `drawTexQuad(q, tex, M, VP, lit, nrm)`
+- **152** the open boats worked by hand: one kit per type
+  - 160 `refreshPeople(K)`
+  - 171 `useHand(t)`
+  - 177 `handKit(t)`
+  - 198 `buildSkiff()`
 
 ## `src/js/view3d/13-instruments.js` (496 linjer)
 
@@ -3639,7 +3646,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **91** frame
   - 95 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (631 linjer)
+## `src/js/view3d/24-cinema.js` (687 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -3661,14 +3668,16 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 209 `gfxPix(j)`
   - 216 `gfxNaN(eye, VPn)`
   - 226 `gfxEnd(now, eye, VPn, W, Hh)`
-  - 261 `frame()`
-  - 263 `frame0()`
-  - 452 `snapTake()`
-  - 457 `drawRoute(VP, eye)`
-  - 469 `driftSpray(VP, eye, dt, t, col)`
-  - 484 `drawSmoke(VP, eye, BM, dt)`
-  - 511 `drawEffects(VP, eye, BM, dt, t)`
-  - 613 `updateLabels(VP, eye, W, Hh)`
+  - 268 `frameClock(raw)`
+  - 277 `frame()`
+  - 282 `frame0()`
+  - 475 `snapTake()`
+  - 480 `drawRoute(VP, eye)`
+  - 492 `driftSpray(VP, eye, dt, t, col)`
+  - 507 `drawSmoke(VP, eye, BM, dt)`
+  - 540 `scupperWater(VP, eye, BM, dt, t, col)`
+  - 566 `drawEffects(VP, eye, BM, dt, t)`
+  - 669 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (218 linjer)
 

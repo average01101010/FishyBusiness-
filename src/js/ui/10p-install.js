@@ -66,3 +66,34 @@ const INSTALL = (() => {
   }
   return {can, card, ask, go, start, standalone};
 })();
+
+// ================= the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109) =================
+// Firefox and Opera on Android drew the 3D view at 27-35 frames a second on a tablet that has 60 in Chrome, even on the lowest 3D
+// level, so the browser and not the drawing held it back. Those browsers get a small card on the loading screen: the game runs
+// smoothest in Chrome, or as the app installed from Chrome. Once a day at most; it stays till it is closed. Another browser keeps a
+// storage of its own, so a guest is told to register first (the account brings the game along). Firefox asking for the desktop site
+// on Android says Linux, so a Linux Firefox with a touch screen counts too. #brwtip in the address shows it anywhere (the tests).
+const BRWTIP = (() => {
+  const KEY = 'dsb_brwtip', ua = navigator.userAgent, force = /brwtip/.test(location.hash);
+  const which = () => force ? 'Firefox' : /OPR\/|OPX\/|OPT\//.test(ua) && /Android/.test(ua) ? 'Opera'
+    : /Firefox\//.test(ua) && (/Android/.test(ua) || (/Linux/.test(ua) && navigator.maxTouchPoints > 0)) ? 'Firefox' : null;
+  const L = (no, en) => { const s = typeof cloudS === 'function' ? cloudS() : null; const lang = s && s.lang ? s.lang : /^(nb|nn|no)/i.test(navigator.language || 'no') ? 'no' : 'en'; return lang === 'en' ? en : no; };
+  function show(){
+    const b = which(); if (!b) return false;
+    try { if (!force && Date.now() - (+localStorage.getItem(KEY) || 0) < 864e5) return false; localStorage.setItem(KEY, String(Date.now())); } catch (e){}
+    const host = location.host || 'detstorebla.no', path = location.pathname || '/';
+    const el = document.createElement('div'); el.id = 'brwTip'; el.setAttribute('role', 'dialog');
+    el.innerHTML = '<b>' + L('Spillet går jevnest i Chrome', 'The game runs smoothest in Chrome') + '</b><p>' +
+      L(b + ' på Android tegner 3D-bildet tregere enn Chrome, så det kan hakke. Åpne spillet i Chrome, eller installer det som app fra Chrome (menyen ⋮, «Installer app»).',
+        b + ' on Android draws the 3D view more slowly than Chrome, so it may stutter. Open the game in Chrome, or install it as an app from Chrome (the ⋮ menu, «Install app»).') +
+      '</p><p class="bt-n">' + L('Er du gjest, registrerer du deg først, så blir spillet med deg til Chrome.', 'If you play as a guest, register first so your game comes along to Chrome.') + '</p>' +
+      '<div class="bt-b"><button type="button" class="bt-x">' + L('Lukk', 'Close') + '</button><a class="bt-go" href="intent://' + host + path + '#Intent;scheme=https;package=com.android.chrome;end">' + L('Åpne i Chrome', 'Open in Chrome') + '</a></div>';
+    el.querySelector('.bt-x').onclick = () => el.remove();
+    el.querySelector('.bt-go').onclick = () => { try { if (typeof cloudEv === 'function') cloudEv('brwtip_go', {b}); } catch (e){} };
+    document.body.appendChild(el);
+    setTimeout(() => { try { if (typeof cloudEv === 'function') cloudEv('brwtip_show', {b}); } catch (e){} }, 30000);   // once the cloud has a session
+    return true;
+  }
+  return {show, which};
+})();
+try { BRWTIP.show(); } catch (e){}

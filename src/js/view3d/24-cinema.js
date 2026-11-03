@@ -258,14 +258,37 @@
     const px = at.map(([x, y]) => { gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, GFX.px); return [GFX.px[0], GFX.px[1], GFX.px[2]]; });
     gfxPix(gfxJudge(px, day, vis));
   }
-  function frame(){ const j0 = j0F = performance.now(), EQ0 = S.equip, TE = tryEq(); if (TE) S.equip = TE; try { frame0(); } finally { S.equip = EQ0; } JSMS = JSMS ? JSMS * 0.92 + (performance.now() - j0) * 0.08 : performance.now() - j0; }
+  // The frame's clock (tilbakemelding #106, 01.11.2026: «litt hakkete» in Firefox, 5120 x 1440 at 240 Hz): the browsers give the time in
+  // whole milliseconds or a little finer (Firefox, reduced timer precision), so at 4.2 ms a frame the steps read 4 or 5 ms and the
+  // world moved by a fifth more or less each frame. FCLK follows the screen's beat instead: the next frame is expected one period on,
+  // and the clock is pulled an eighth of the way to what the browser says; a skipped frame counts as whole periods, and a hitch or an uneven frame rate (off by more than 2.5 ms, or 0.6 of a period)
+  // takes the browser's time as it is. WALLF (core/01-world.js) is the same moment on Date.now()'s scale, for the boat's pose between
+  // the model's steps (dynPose) and the game time between the minutes (currentFrac), while this frame is drawn.
+  const FCLK = {r:0, raw:0, p:0, off:0};
+  function frameClock(raw){ const C = FCLK, d = raw - C.raw, w = Date.now() - raw;
+    C.off = !C.off || Math.abs(w - C.off) > 50 ? w : C.off + (w - C.off) * 0.02;
+    if (!C.r || d <= 0 || d > 250){ C.r = C.raw = raw; C.p = 0; return raw; }
+    C.raw = raw; if (!C.p){ C.p = d; C.r = raw; return raw; }
+    // (a frame the browser skipped is a whole number of periods, k, and leaves the period as it was)
+    const k = Math.max(1, Math.round((raw - C.r) / C.p)), pred = C.r + k * C.p, err = raw - pred;
+    if (Math.abs(err) < Math.min(C.p * 0.6, 2.5)){ C.r = pred + err * 0.12; if (k === 1) C.p += (d - C.p) * 0.03; } else { C.r = raw; C.p += (d - C.p) * 0.1; }
+    return C.r; }
+  let FRAMEP = 0;
+  function frame(){ const j0 = j0F = performance.now(), EQ0 = S.equip, TE = tryEq(); if (TE) S.equip = TE;
+    FRAMEP = /rawclock/.test(location.hash) ? j0 : frameClock(j0); WALLF = /rawclock/.test(location.hash) ? 0 : FRAMEP + FCLK.off;
+    try { frame0(); } finally { S.equip = EQ0; WALLF = 0; FRAMEP = 0; }
+    JSMS = JSMS ? JSMS * 0.92 + (performance.now() - j0) * 0.08 : performance.now() - j0; }
   let FRAMEN = 0;
   function frame0(){ FRAMEN++;
     if (!active){ raf = 0; return; }
     raf = requestAnimationFrame(frame);
     if (document.hidden || NO3D || HOLD) return;
     resize(); gfxStart(performance.now());
-    const now = performance.now(), dt = Math.min(0.1, (now - lastF) / 1000), rdt = Math.max(1e-3, (now - lastF) / 1000); lastF = now;
+    // the first frame after the view is shown or let go (lastF 0, view3d/25-controls.js) counts as one frame at 60 a second: measured
+    // from the call that started it, it read a fraction of a millisecond, and the frame rate's average (FPS.v) started at thousands
+    // and took a minute to come down under SwiftShader (the frame clock's first try, 02.11.2026: FPS.v 200-570 against 18-83)
+    if (!lastF) lastF = (FRAMEP || performance.now()) - 1000 / 60;
+    const now = FRAMEP || performance.now(), dt = Math.max(0, Math.min(0.1, (now - lastF) / 1000)), rdt = Math.max(1e-3, (now - lastF) / 1000); lastF = now;
     FPS.v = FPS.v ? FPS.v * 0.95 + 0.05 / rdt : 1 / rdt; FRAMEMS = FRAMEMS * 0.8 + Math.min(500, rdt * 1000) * 0.2; if (PROF.on) profBegin(rdt, j0F); if (BENCH.on){ if (BENCH.rec){ BENCH.sum += rdt; BENCH.cnt++; if (rdt > 1 / 50) BENCH.slow++; } } else if (!PROF.on) qualTick(dt, FPS.v, now); if (now - FPS.at > 500){ FPS.at = now; const fe = fpsEl(); if (fe) fe.textContent = Math.round(FPS.v) + ' bilder/s · ' + (1000 / FPS.v).toFixed(1) + ' ms · ' + ['Lav', 'Middels', 'Høy', 'Ultra'][QUAL.lvl]; }
     const t = (now - T0) / 1000, frac = currentFrac(), H = (S.t + frac) / 60;
     computeEnv(H); updateBoat(dt, t, frac, rdt); updateWaves(dt, H); nfStep(); updateWake(); foamStep(dt, t); updateNear(); ssStep(rdt); updateShadows(); updateChunks(CH.size ? 2 : 999);
@@ -412,7 +435,7 @@
     signOcc(VPn);   // the partners' banners: hidden or not (07-harbour-unit.js, M7)
     glChk('nearObj'); if (!SKP.sea){ drawSea(VPn, eye, t, nearFar, 0);
     drawSea(VPn, eye, t, false); if (!SKP.gear) drawGearUnder(VPn, eye); glChk('gearU'); }
-    PMK('fx'); glChk('seaN'); drawBeams(VPn, eye, t);
+    PMK('fx'); glChk('seaN'); drawBeams(VPn, eye, t); drawWorkCones(VPn, eye, t, BMrel, VG); glChk('cones');
     if (BLD && env.night > 0.02){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false); drawChunkLights(VPn, eye); gl.depthMask(true); gl.disable(gl.BLEND); }
     drawEffects(VPn, eye, BMabs, dt, t); drawBlows(VPn, eye, dt); drawNPCLights(VPn); drawAirLights(VPn, t); drawRescueLights(VPn, t); drawSeaLights(VPn, eye, t, true);
     if (VG.hand) drawSkiffGlass(BMrel, VPn); else { const gm = pvm(VT, hullLiv(S.boat)).glass; drawGlass(gm, BMrel, VPn); drawDrops(gm, BMrel, VPn, t); }
@@ -508,6 +531,38 @@
       drawPts(n, gl.POINTS, VP, col, [320, 700, 1150, 1700][q], 2, null, 512);
     });
   }
+  // Green water and the scuppers (Gemini's review, Jonas 31.10.2026: «Kjør på»): when the sea stands over the deck's edge (a bow that
+  // digs into a sea, a roll that puts the rail under), water comes aboard (SCW.w, a rough measure of how much lies on deck) by how far
+  // the sea is over the edge, three times as fast over the bulwark's top; it runs off through the scuppers along both sides, faster the
+  // more there is, most out of the side that stands highest over the sea, as small jets thrown out and down that fall into the sea and
+  // are gone there. Your own boat only (the camera is near her); the hand-worked boats have no scuppers. On «Lav» half as many.
+  const SCN = 500, SCW = {w:0, acc:0, n:0, x:new Float64Array(SCN), y:new Float64Array(SCN), z:new Float64Array(SCN), vx:new Float32Array(SCN), vy:new Float32Array(SCN), vz:new Float32Array(SCN), age:new Float32Array(SCN).fill(99), life:new Float32Array(SCN)};
+  function scupperWater(VP, eye, BM, dt, t, col){
+    const VG = GEO(vtype());
+    if (!VG.hand && VG.deck && dt > 0){
+      const dy = VG.deck.y, hb = VG.side || (VG.beam || 3) / 2, z0 = VG.bow, z1 = VG.stern, gw = Math.max(VG.gw || 0, dy + 0.3), L = z1 - z0;
+      let inflow = 0, hi = [0, 0];
+      for (const [sx, fz] of [[-1, 0.1], [1, 0.1], [-1, 0.45], [1, 0.45], [-1, 0.85], [1, 0.85]]){
+        const p = xf(BM, [sx * hb * 0.95, dy, z0 + L * fz]), over = seaH(p[0], p[2], t) - p[1];
+        if (over > 0) inflow += over * (over > gw - dy ? 3 : 1); hi[sx > 0 ? 1 : 0] += Math.max(0, -over); }
+      SCW.w = Math.min(3, SCW.w + inflow * dt * 2.5);
+      const out = SCW.w * Math.min(1, dt * 1.2); SCW.w -= out; SCW.acc += out * 260 * (QUAL.lvl >= 2 ? 1 : 0.5);
+      const nS = Math.max(3, Math.min(10, Math.round(L / 2.2))), ps = hi[1] + 0.05 > 0 ? (hi[1] + 0.05) / (hi[0] + hi[1] + 0.1) : 0.5;
+      const fx = Math.sin(bv.head), fz = -Math.cos(bv.head), way = (bv.spd || 0) * 0.9, O = xf(BM, [0, 0, 0]);
+      while (SCW.acc >= 1){ SCW.acc -= 1;
+        const sx = Math.random() < ps ? 1 : -1, z = z0 + L * (0.15 + 0.7 * (Math.floor(Math.random() * nS) + 0.5) / nS) + (Math.random() - 0.5) * 0.12;
+        const p = xf(BM, [sx * hb * 1.02, dy + 0.04, z]), q = xf(BM, [sx, -0.25, 0]), sp = 0.9 + Math.random() * 1.4, i = SCW.n = (SCW.n + 1) % SCN;
+        SCW.x[i] = p[0]; SCW.y[i] = p[1]; SCW.z[i] = p[2]; SCW.vx[i] = (q[0] - O[0]) * sp + fx * way; SCW.vy[i] = (q[1] - O[1]) * sp; SCW.vz[i] = (q[2] - O[2]) * sp + fz * way; SCW.age[i] = 0; SCW.life[i] = 0.9 + Math.random() * 0.5; }
+    }
+    let n = 0;
+    for (let i = 0; i < SCN; i++){
+      if (SCW.age[i] >= SCW.life[i]) continue;
+      SCW.age[i] += dt; SCW.vy[i] -= 9.8 * dt; SCW.x[i] += SCW.vx[i] * dt; SCW.y[i] += SCW.vy[i] * dt; SCW.z[i] += SCW.vz[i] * dt;
+      if (SCW.y[i] < seaHFast(SCW.x[i], SCW.z[i], t)){ SCW.age[i] = 99; continue; }
+      PB[n * 3] = SCW.x[i] - eye[0]; PB[n * 3 + 1] = SCW.y[i] - eye[1]; PB[n * 3 + 2] = SCW.z[i] - eye[2]; PA[n] = 0.85 * (1 - 0.6 * SCW.age[i] / SCW.life[i]); n++; }
+    if (n) drawPts(n, gl.POINTS, VP, col, 46, 1);
+    SCW.drawn = n;
+  }
   function drawEffects(VP, eye, BM, dt, t){
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
     const foamCol = [Math.min(1, env.amb[0] * 1.4 + env.sunCol[0] * 0.8), Math.min(1, env.amb[1] * 1.4 + env.sunCol[1] * 0.8), Math.min(1, env.amb[2] * 1.4 + env.sunCol[2] * 0.8)];
@@ -579,6 +634,7 @@
       PB[n * 3] = wk.x[i] - eye[0]; PB[n * 3 + 1] = wk.y[i] - eye[1]; PB[n * 3 + 2] = wk.z[i] - eye[2]; PA[n] = Math.pow(Math.max(0, 1 - wk.age[i] / wk.life[i]), 1.5) * 0.75; n++;
     }
     if (QUAL.lvl) drawPts(n, gl.POINTS, VP, foamCol, 95, 2);   // (soft, as mist: round discs read as blobs)
+    scupperWater(VP, eye, BM, dt, t, [foamCol[0] * 0.88, foamCol[1] * 0.95, foamCol[2]]);
     if (QUAL.lvl) driftSpray(VP, eye, dt, t, foamCol);
     drawSmoke(VP, eye, BM, dt);
     // fishing lines
