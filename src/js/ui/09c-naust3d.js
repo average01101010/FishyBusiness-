@@ -83,9 +83,9 @@ const NAUST3D = (() => {
       if (!gl) throw new Error('no webgl');
       const pr = prog(VS, FS), pf = prog(VF, 'precision mediump float;varying vec3 vC;void main(){gl_FragColor=vec4(vC,1.0);}'), M = load(); if (!M) throw new Error('no model');
       P = Object.assign(M, {pr, pf, fish:loadFish()}); P.board = boardBuf(1.18, 0.4, 0.035);
-      cv.addEventListener('webglcontextlost', e => { e.preventDefault(); gl = null; P = null; failed = false; });
+      cv.addEventListener('webglcontextlost', e => { e.preventDefault(); gl = null; P = null; failed = false; console.error('naust 3d: konteksten mistet'); });   // (the error trap sends it)
       return true;
-    } catch (e){ failed = true; gl = null; console.warn('naust 3d', e); return false; }
+    } catch (e){ failed = true; gl = null; console.error('naust 3d', e); return false; }   // (the error trap sends it: the page falls back to the flat picture)
   }
 
   // ---------- matrices (column-major) ----------

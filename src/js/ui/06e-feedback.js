@@ -237,10 +237,16 @@ const FEEDBACK = (() => {
     if (why === 'land' && (now - (st.fbSent || 0)) / 36e5 < 48) return false;
     st.fbNudge = {...last, at:now, [why]:now}; save();
     const T = NUDGE_T[why];
+    // the picture of the game taken now, before the dialog covers it (02.11.2026, the error trap): what was on the screen when it went
+    // wrong is in the form if the player goes on, and it can be taken out there like any other picture
+    const shot = why === 'land' || D.imgs.length || typeof G3 === 'undefined' || !G3.isActive() || !G3.snap ? null : G3.snap(MAXPX).catch(() => null);
     modal('<div class="ob fb-nudge"><h2>' + L2(T[0], T[1]) + '</h2><p>' + L2(T[2], T[3]) + '</p><p class="note">🎁 ' +
       L2('Hjelper tipset ditt oss å gjøre spillet bedre, får du 12 timer med fullt haill (+100 % fiskelykke) som takk.', 'If your tip helps us make the game better, you get 12 hours of full luck (+100 % catch luck) as a thank-you.') + '</p>' +
       '<div class="btns"><button class="btn" data-close>' + L2('Ikke nå', 'Not now') + '</button><button class="btn primary" id="fbGo" data-close>' + L2('Gi tilbakemelding', 'Give feedback') + '</button></div></div>');
-    $('fbGo').addEventListener('click', () => { if (why !== 'land' && !D.topic) D.topic = 'bug'; PHONE.open('tilbake'); });
+    $('fbGo').addEventListener('click', async () => { if (why !== 'land' && !D.topic) D.topic = 'bug';
+      const u = shot && await shot;
+      if (u && !D.imgs.length){ const im = new Image(); await new Promise(q => { im.onload = q; im.onerror = q; im.src = u; }); const r = im.naturalWidth ? shrink(im, im.naturalWidth, im.naturalHeight) : null; if (r) D.imgs.push(r); }
+      PHONE.open('tilbake'); });
     if (typeof cloudEv === 'function') cloudEv('fb_nudge', {why});
     return true;
   }

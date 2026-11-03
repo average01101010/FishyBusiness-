@@ -78,7 +78,7 @@
   }
   function drawTrees(VP, eye){
     if (!TREE.ext || !TREE.M) return;
-    if (!TREE.P){ try { TREE.P = program(TREE_VS, TREE_FS, ['aP', 'aN', 'aC', 'aI', 'aJ'], 'traer'); } catch (e){ console.warn('traer', e.message || e); TREE.P = false; TREE.on = false; } }
+    if (!TREE.P){ try { TREE.P = program(TREE_VS, TREE_FS, ['aP', 'aN', 'aC', 'aI', 'aJ'], 'traer'); } catch (e){ console.warn('3D ' + 'traer' + ' faller bort · ' + GPU, e); TREE.P = false; TREE.on = false; } }
     if (!TREE.P) return;
     const P = TREE.P, u = P.u, X = TREE.ext, se = treeSeasonU(); gl.useProgram(P.p);
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); airSet(u);

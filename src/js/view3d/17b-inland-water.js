@@ -130,7 +130,7 @@
   const WATERK = (location.hash.match(/water([AL])/) || [])[1];   // #waterA only the areas, #waterL only the lines and falls (to find a fault)
   function drawWater(VP, eye){
     if (!WATER.size || WATER0) return;
-    if (!PW){ try { PW = program(WATER_VS, WATER_FS, ['aPos', 'aT'], 'vann'); } catch (e){ console.warn('vann', e.message || e); PW = false; } }
+    if (!PW){ try { PW = program(WATER_VS, WATER_FS, ['aPos', 'aT'], 'vann'); } catch (e){ console.warn('3D ' + 'vann' + ' faller bort · ' + GPU, e); PW = false; } }
     if (!PW) return;
     gl.useProgram(PW.p); const u = PW.u;
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); airSet(u);

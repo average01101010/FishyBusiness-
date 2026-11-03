@@ -4,6 +4,29 @@
 let awayMs = 0, AWAY = 0, SIMREADY = false;
 const BOOT_T = Date.now();
 const g3Live = () => typeof G3 !== 'undefined' && G3.isActive();
+// The start timed (02.11.2026, the error trap; ui/10f-cloud.js cloudErr): a player who waits 40 s for the game does not tell us, he
+// goes. From the navigation (performance.now() counts from it, so the download of the page is in) to the game built, less the time
+// at the sign-in gate (the player's own) and in the background (a tab loads slowly there). Over 30 s is sent as «Treg oppstart» with
+// the time of each step; a start still not done after 90 s on the screen as «Oppstarten står fast», with the step it stands in, and
+// at once (errStart: the game it waits for may never come). The times go as the event 'boot' too (cloudBegin), with the consent.
+const BOOTW = {stage:'kart og data', steps:{}, gate:0, gateAt:0, hid:0, hidAt:document.hidden ? performance.now() : 0, done:false, stuck:false, res:null};
+function bootStep(next){ const n = performance.now(); BOOTW.steps[BOOTW.stage] = Math.round(n - (BOOTW.last || 0)); BOOTW.last = n; BOOTW.stage = next; }
+function bootAway(){ const n = performance.now(); return BOOTW.gate + (BOOTW.gateAt ? n - BOOTW.gateAt : 0) + BOOTW.hid + (BOOTW.hidAt ? n - BOOTW.hidAt : 0); }
+function bootGate(on){ const n = performance.now(); if (on && !BOOTW.gateAt) BOOTW.gateAt = n; else if (!on && BOOTW.gateAt){ BOOTW.gate += n - BOOTW.gateAt; BOOTW.gateAt = 0; } }
+document.addEventListener('visibilitychange', () => { if (BOOTW.done) return; const n = performance.now(); if (document.hidden){ if (!BOOTW.hidAt) BOOTW.hidAt = n; } else if (BOOTW.hidAt){ BOOTW.hid += n - BOOTW.hidAt; BOOTW.hidAt = 0; } });
+function bootInfo(){ return {s:Math.round((performance.now() - bootAway()) / 100) / 10, stage:BOOTW.stage, steps:BOOTW.steps, gate_s:Math.round(BOOTW.gate / 1000), hid_s:Math.round(BOOTW.hid / 1000),
+  net:(navigator.connection && navigator.connection.effectiveType) || null, mem:navigator.deviceMemory || null}; }
+function bootDone(){
+  if (BOOTW.done) return; bootStep('ferdig'); BOOTW.done = true;
+  const r = BOOTW.res = bootInfo(); delete r.stage;
+  if (r.s > 30 && typeof cloudErr === 'function') cloudErr('Treg oppstart: ' + (r.s < 60 ? '30–60' : r.s < 120 ? '60–120' : 'over 120') + ' s', 'boot', JSON.stringify(r), 'slow');
+}
+const BOOT_WATCH = setInterval(() => {
+  if (BOOTW.done){ clearInterval(BOOT_WATCH); return; }
+  if (BOOTW.stuck || BOOTW.gateAt || document.hidden || performance.now() - bootAway() < 90000) return;
+  BOOTW.stuck = true;
+  try { if (typeof cloudErr === 'function') cloudErr('Oppstarten står fast: ' + BOOTW.stage, 'boot', JSON.stringify(bootInfo()), 'slow'); if (typeof errStart === 'function') errStart(); } catch (e){}
+}, 5000);
 async function bootMap(){ await Promise.all([(async () => { await mapStart(); await bootMapLoad(); })(), bootData()]); }
 // The data elements (the boat models, the pictures, Senja's buildings: src/data/*.b64) are out of the page from 29.10.2026 (build.mjs,
 // Jonas: the page need not be one file when that is better for the players): each empty <script type="application/octet-stream"
@@ -143,7 +166,7 @@ if (AWAY){ catchUp(AWAY + Date.now() - BOOT_T); AWAY = 0; refreshAll(); } lastWa
 loadRoads().then(r => { ROADS = r; scheduleStatic(); if (g3Live()) G3.roadsReady(); }).catch(e => console.error(e));
 loadFine().then(f => { FINE = f; if (g3Live()) G3.fineReady(); }).catch(e => console.error(e));
 }
-bootMap().then(cloudGate).then(bootMapLoad).then(() => { bootGame(); cloudHooks(); cloudStart(); try { INSTALL.start(); } catch (e){} try { sessionStorage.removeItem('dsb_needpk'); } catch (e){} }).catch(e => { console.error(e);
+bootMap().then(() => { bootStep('innlogging og skyen'); return cloudGate(); }).then(() => { bootStep('kartet rundt lagringen'); return bootMapLoad(); }).then(() => { bootStep('spillet bygges'); bootGame(); bootDone(); cloudHooks(); cloudStart(); try { INSTALL.start(); } catch (e){} try { sessionStorage.removeItem('dsb_needpk'); } catch (e){} }).catch(e => { console.error(e);
   // a read in a pack that is not in: remember the pack and start again with it, a few times at most, before the player sees the error
   try { if (e && e.pk && e.pk.file){ const L = JSON.parse(sessionStorage.getItem('dsb_needpk') || '[]'); if (L.length < 8 && !L.includes(e.pk.file)){ L.push(e.pk.file); sessionStorage.setItem('dsb_needpk', JSON.stringify(L)); location.reload(); return; } } } catch (e2){} bootFail(e); });
 // A start that fails never leaves the player stuck (Jonas 08.10.2026): what went wrong goes to the admin's error list, and the player can try
@@ -151,7 +174,8 @@ bootMap().then(cloudGate).then(bootMapLoad).then(() => { bootGame(); cloudHooks(
 // had again the same way)
 function bootFail(e){
   const msg = String(e && e.message || e), en = !/^no/.test((navigator.language || 'no').toLowerCase()) && !/^nb|^nn/.test((navigator.language || '').toLowerCase()), L = (no, eng) => en ? eng : no;
-  try { if (typeof cloudErr === 'function') cloudErr('boot: ' + msg, 'boot', e && e.stack); } catch (e2){}
+  BOOTW.done = true;   // (not stuck: it stopped, and says so)
+  try { if (typeof cloudErr === 'function') cloudErr('boot: ' + msg, 'boot', e && e.stack); if (typeof errStart === 'function') errStart(); } catch (e2){}   // (the game is not coming: what waited for it goes now)
   const safe = /safe/.test(location.hash), prev = (() => { try { return !!localStorage.getItem(KEY_PREV); } catch (e2){ return false; } })();
   loaderGone();   // the loading screen lies over the dialog otherwise
   const m = document.getElementById('modal'); if (!m) return; m.hidden = false;
