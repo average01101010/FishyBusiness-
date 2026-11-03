@@ -17,43 +17,48 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 60 `natP(lat, lon)`
   - 61 `natLL(p)`
 
-## `src/js/core/01-world.js` (396 linjer)
+## `src/js/core/01-world.js` (424 linjer)
 
 - **10** one clock for everyone (05.10.2026, the shared world V1)
-  - 50 `gridGamma(p)`
-  - 65 `b64bytes(s)`
-  - 66 `varints(b)`
-  - 74 `loadFine()`
-  - 82 `loadRoads()`
-  - 98 `inHarbour(p)`
-  - 105 `legHazard(a, c, sd)`
-  - 115 `legHazardMemo(a, c, sd)`
-  - 120 `draftHazards()`
-  - 130 `legReady(a, c)`
-  - 137 `nearestPlace(p)`
-  - 141 `groundCheck(a, c)`
-  - 152 `runAground(p)`
-  - 167 `rocksNear(a, b, r)`
-  - 177 `rocksIn(x0, y0, x1, y1)`
-  - 190 `coastDist(p)`
-  - 191 `coastDistFar(p)`
-  - 197 `decodeContours()`
-  - 206 `isLand(p)`
-  - 214 `isLandFar(p)`
-  - 220 `isLandUI(p)`
-  - 226 `inHarbourPocket(p)`
-  - 232 `harbourNear(x, z)`
-  - 238 `qPockets()`
-  - 239 `pocketHit(US, QS, x, z)`
-  - 246 `pocketsIn(x0, y0, x1, y1)`
-  - 255 `legClear(a, b)`
-  - 286 `portLabel(p)`
-- **302** the harbour unit (02.10.2026)
-  - 343 `fillOut(U, lx, lz)`
-  - 356 `onUnitGround(p)`
-  - 363 `unitCovers(x, z, m)`
-  - 371 `bridgeUnderUnit(br, extra)`
-  - 376 `portApproach(pt)`
+  - 54 `gridScale(p)`
+  - 58 `gridGamma(p)`
+  - 76 `farL(kind, p)`
+  - 81 `expoFar(p)`
+  - 84 `landFracM(x, z)`
+  - 86 `dcCellFar(p)`
+  - 93 `b64bytes(s)`
+  - 94 `varints(b)`
+  - 102 `loadFine()`
+  - 110 `loadRoads()`
+  - 126 `inHarbour(p)`
+  - 133 `legHazard(a, c, sd)`
+  - 143 `legHazardMemo(a, c, sd)`
+  - 148 `draftHazards()`
+  - 158 `legReady(a, c)`
+  - 165 `nearestPlace(p)`
+  - 169 `groundCheck(a, c)`
+  - 180 `runAground(p)`
+  - 195 `rocksNear(a, b, r)`
+  - 205 `rocksIn(x0, y0, x1, y1)`
+  - 218 `coastDist(p)`
+  - 219 `coastDistFar(p)`
+  - 225 `decodeContours()`
+  - 234 `isLand(p)`
+  - 242 `isLandFar(p)`
+  - 248 `isLandUI(p)`
+  - 254 `inHarbourPocket(p)`
+  - 260 `harbourNear(x, z)`
+  - 266 `qPockets()`
+  - 267 `pocketHit(US, QS, x, z)`
+  - 274 `pocketsIn(x0, y0, x1, y1)`
+  - 283 `legClear(a, b)`
+  - 314 `portLabel(p)`
+- **330** the harbour unit (02.10.2026)
+  - 371 `fillOut(U, lx, lz)`
+  - 384 `onUnitGround(p)`
+  - 391 `unitCovers(x, z, m)`
+  - 399 `bridgeUnderUnit(br, extra)`
+  - 404 `portApproach(pt)`
 
 ## `src/js/core/01b-mapdata.js` (202 linjer)
 
@@ -419,7 +424,7 @@ STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the wo
   - 76 `hsWork(p, H)`
   - 78 `stabTick(H)`
 
-## `src/js/core/03d-quota.js` (368 linjer)
+## `src/js/core/03d-quota.js` (370 linjer)
 
 Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood from 1 October 2026 (J-161-2026, fiskeridir.no)
 
@@ -471,21 +476,21 @@ Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood f
 - **263** the ocean permits (H1 of docs/planer/havsteget.md, 03.11.2026). Jonas' choices the same day: V1 A (the autoliner first), V2 B
   - 294 `havLicFor(type)`
   - 296 `havF(id, sp, y)`
-  - 305 `havGroup(id, y)`
-  - 308 `havQ(l, H)`
-  - 315 `havLicWhy(type)`
-  - 322 `havOffer(id, H)`
-  - 325 `havValue(l, H)`
-  - 327 `havPrice(type, H)`
-  - 329 `havLicTake(type, H)`
-- **333** Greenland halibut (blåkveite) for vessels under 28 m (J-241-2025, the regulation for 2026; docs/blakveite.md 2-3, 07.10.2026)
-  - 341 `bkSeason(y)`
-  - 344 `bkOpen(H)`
-  - 350 `bkDirect(H, len)`
-  - 352 `bkState(H)`
-  - 355 `bkAllow(H, bk, all)`
-  - 360 `bkLanded(H, bk, all)`
-  - 362 `bkNews(H)`
+  - 307 `havGroup(id, y)`
+  - 310 `havQ(l, H)`
+  - 317 `havLicWhy(type)`
+  - 324 `havOffer(id, H)`
+  - 327 `havValue(l, H)`
+  - 329 `havPrice(type, H)`
+  - 331 `havLicTake(type, H)`
+- **335** Greenland halibut (blåkveite) for vessels under 28 m (J-241-2025, the regulation for 2026; docs/blakveite.md 2-3, 07.10.2026)
+  - 343 `bkSeason(y)`
+  - 346 `bkOpen(H)`
+  - 352 `bkDirect(H, len)`
+  - 354 `bkState(H)`
+  - 357 `bkAllow(H, bk, all)`
+  - 362 `bkLanded(H, bk, all)`
+  - 364 `bkNews(H)`
 
 ## `src/js/core/03e-rules.js` (271 linjer)
 
@@ -718,7 +723,7 @@ crew: people with skills, habits and moods
   - 35 `airLegs()`
   - 47 `airStates(H, p, km)`
 
-## `src/js/core/05d-hav.js` (195 linjer)
+## `src/js/core/05d-hav.js` (199 linjer)
 
 The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
 
@@ -729,11 +734,12 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 48 `havWay(s, gi, pi)`
   - 60 `havLeg(a, b)`
   - 74 `havBerth(s, pi, H)`
-  - 83 `havVisitors(pi, H)`
-  - 96 `havLand(s, tr)`
-  - 105 `havFish(s, k, u, g)`
-  - 146 `havState(s, H, near)`
-  - 171 `havNear(H, only)`
+  - 83 `havV(s, tr)`
+  - 87 `havVisitors(pi, H)`
+  - 100 `havLand(s, tr)`
+  - 109 `havFish(s, k, u, g)`
+  - 150 `havState(s, H, near)`
+  - 175 `havNear(H, only)`
 
 ## `src/js/core/06-services.js` (252 linjer)
 
@@ -1584,7 +1590,7 @@ WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå
   - 61 `lnetAccess(p, i, sd, st, straight)`
   - 76 `lnetRoute(from, to, sd, st)`
 
-## `src/js/core/12-heat.js` (127 linjer)
+## `src/js/core/12-heat.js` (128 linjer)
 
 ---------- the echo-sounder heat map: how much fish there is around the boat ----------
 
@@ -1598,9 +1604,9 @@ WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå
   - 62 `heatRigFactor()`
   - 67 `heatReset()`
   - 70 `heatTick()`
-  - 104 `heatWork()`
-  - 123 `heatAt(p)`
-  - 126 `schoolDrift(sp, p, H)`
+  - 105 `heatWork()`
+  - 124 `heatAt(p)`
+  - 127 `schoolDrift(sp, p, H)`
 
 ## `src/js/core/13-work.js` (343 linjer)
 
@@ -1722,7 +1728,7 @@ MANUAL HELM (the user's wish 03.10.2026)
   - 63 `helmCast()`
   - 69 `helmCastDone(pid, kind)`
 
-## `src/js/core/16b-dyn.js` (538 linjer)
+## `src/js/core/16b-dyn.js` (539 linjer)
 
 HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
 
@@ -1730,48 +1736,48 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 27 `dynPar(V)`
   - 52 `dynInt(P, s, thr, rud, h, capF, E)`
   - 87 `dynMove(s, h)`
-  - 93 `dynThrEq(P, u, capF)`
-- **94** the calibration: measured on the model itself, once a vessel
-  - 95 `dynTurn(P, V, u0 = V.vcruise * KN_MS)`
-  - 106 `dynAccel(P)`
-  - 112 `dynStops(P)`
-  - 116 `dynCal(key)`
-  - 140 `dynStopDist(cal, v)`
-  - 144 `dynVStop(cal, d)`
-- **145** the wind and the sea on her this tick (Fysikk 2)
-  - 158 `dynEnv(b, d, cal, H, dtG = 0)`
-- **185** contact: the hull against the piers, the breakwaters and the harbour units' quays (Fysikk 2)
-  - 194 `dynObsNear(X, Y, R)`
-  - 201 `dynInside(O, x, z)`
-  - 212 `dynContact(b, d, P, O)`
-- **238** with no way on: she drifts (Fysikk 2)
-  - 244 `dynDrift(type, p, H)`
-  - 262 `lieDrift(H)`
-- **285** the state, in step with the boat the rest of the game reads
-  - 286 `dynState(b)`
-  - 297 `dynWrite(b, d)`
-  - 302 `dynCan()`
-  - 307 `dynLive()`
-  - 312 `dynPose()`
-  - 319 `dynRest()`
-  - 320 `dynLivePose(frac)`
-  - 322 `dynHaltNeed()`
-- **323** the tick
-  - 324 `dynTick(dt)`
-  - 337 `dynMinute(H, W)`
-- **344** by hand (16-helm.js): the throttle and the rudder into the model
-  - 345 `dynHelm(d, dtG)`
-- **363** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
-  - 365 `dynLineBuild(pl, dep)`
-  - 385 `dynLineAt(T, s)`
-  - 391 `dynSeg(T, s)`
-  - 392 `dynSegHd(T, i)`
-  - 393 `dynLineProj(T, x, z, s0, back = 30)`
-  - 403 `dynLineHd(T, s, r0)`
-  - 410 `dynGroundAhead(T, s, look)`
-- **419** the autopilot
-  - 420 `dynAuto(d, dtG)`
-  - 537 `dynTrackView()`
+  - 94 `dynThrEq(P, u, capF)`
+- **95** the calibration: measured on the model itself, once a vessel
+  - 96 `dynTurn(P, V, u0 = V.vcruise * KN_MS)`
+  - 107 `dynAccel(P)`
+  - 113 `dynStops(P)`
+  - 117 `dynCal(key)`
+  - 141 `dynStopDist(cal, v)`
+  - 145 `dynVStop(cal, d)`
+- **146** the wind and the sea on her this tick (Fysikk 2)
+  - 159 `dynEnv(b, d, cal, H, dtG = 0)`
+- **186** contact: the hull against the piers, the breakwaters and the harbour units' quays (Fysikk 2)
+  - 195 `dynObsNear(X, Y, R)`
+  - 202 `dynInside(O, x, z)`
+  - 213 `dynContact(b, d, P, O)`
+- **239** with no way on: she drifts (Fysikk 2)
+  - 245 `dynDrift(type, p, H)`
+  - 263 `lieDrift(H)`
+- **286** the state, in step with the boat the rest of the game reads
+  - 287 `dynState(b)`
+  - 298 `dynWrite(b, d)`
+  - 303 `dynCan()`
+  - 308 `dynLive()`
+  - 313 `dynPose()`
+  - 320 `dynRest()`
+  - 321 `dynLivePose(frac)`
+  - 323 `dynHaltNeed()`
+- **324** the tick
+  - 325 `dynTick(dt)`
+  - 338 `dynMinute(H, W)`
+- **345** by hand (16-helm.js): the throttle and the rudder into the model
+  - 346 `dynHelm(d, dtG)`
+- **364** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
+  - 366 `dynLineBuild(pl, dep)`
+  - 386 `dynLineAt(T, s)`
+  - 392 `dynSeg(T, s)`
+  - 393 `dynSegHd(T, i)`
+  - 394 `dynLineProj(T, x, z, s0, back = 30)`
+  - 404 `dynLineHd(T, s, r0)`
+  - 411 `dynGroundAhead(T, s, look)`
+- **420** the autopilot
+  - 421 `dynAuto(d, dtG)`
+  - 538 `dynTrackView()`
 
 ## `src/js/core/16c-hull.js` (146 linjer)
 
