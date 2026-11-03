@@ -344,11 +344,16 @@ function moorHarbour(h){
       const a0 = clamp((bx - f.x) * f.ux + (bz - f.z) * f.uz, -lim, lim), hd0 = Math.atan2(f.ux, -f.uz);
       for (let s = 0; s <= lim * 2 && !m; s += 2) for (const a of s ? [a0 + s / 2, a0 - s / 2] : [a0]){
         if (Math.abs(a) > lim || resHit(res, a, b.L / 2 + 1)) continue;
-        for (let off = b.B / 2 + 0.4; off <= b.B / 2 + 8.5 && !m; off += 1){ const p = {x:(f.x + f.ux * a + f.nx * off) / 1000, y:(f.z + f.uz * a + f.nz * off) / 1000}; if (moorFree(p, hd0, b.L, b.B, placed)) m = {p, hd:hd0 + (hash(hashStr(b.id)) < 0.5 ? Math.PI : 0), face:faceAt(f, a, b.L)}; }
+        // (out from the face as far as the quay must be built out over the 3D shore, quayOut in 07-harbours.js)
+        const g0 = quayOut(f, a, b.L); if (g0 < 0) continue;
+        for (let off = b.B / 2 + 0.4 + g0; off <= b.B / 2 + 8.5 + g0 && !m; off += 1){ const p = {x:(f.x + f.ux * a + f.nx * off) / 1000, y:(f.z + f.uz * a + f.nz * off) / 1000}; if (moorFree(p, hd0, b.L, b.B, placed)) m = {p, hd:hd0 + (hash(hashStr(b.id)) < 0.5 ? Math.PI : 0), face:faceAt(f, a, b.L, off - b.B / 2 - 0.4)}; }
         if (m) break; }
       if (m) break;
     }
-    if (m){ b.moored = {p:m.p, hd:m.hd, st:'port', face:m.face}; placed.push({p:m.p, hd:m.hd, L:b.L, B:b.B}); } else need.push(b);
+    if (m){ b.moored = {p:m.p, hd:m.hd, st:'port', face:m.face}; placed.push({p:m.p, hd:m.hd, L:b.L, B:b.B});
+      // the quay built out to her (from 3 m in on the shore to her side) is in the way of the boats placed after her
+      const F = m.face; if (F.out > 0.3){ const c = (F.out - 3) / 2; placed.push({p:{x:(F.x + F.nx * c) / 1000, y:(F.z + F.nz * c) / 1000}, hd:m.hd, L:b.L + 4, B:F.out + 3}); }
+    } else need.push(b);
   }
   // a floating dock inside the harbour for the boats under 11 m the quays did not take (L1, choice 2: a bigger boat lies at a quay or
   // not at all; a dock on the open shore outside the harbour is no harbour)

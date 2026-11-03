@@ -112,7 +112,31 @@ function quayFree(f){ if (f.free !== undefined) return f.free; const r = faceRes
 const resHit = (res, a, half) => res.some(([r0, r1]) => a + half > r0 && a - half < r1);
 // the berth's face as the 3D view and the boat's state carry it: the point on the face by her middle, its directions, kind and whether
 // the game sets a quay there (mod)
-const faceAt = (f, a, L) => ({id:f.id, x:f.x + f.ux * a, z:f.z + f.uz * a, ux:f.ux, uz:f.uz, nx:f.nx, nz:f.nz, hl:L / 2 + 2, kind:f.kind, mod:!!f.mod, depth:f.depth == null ? QUAY_DEPTH_UNKNOWN : f.depth});
+// out: how far out from the face the quay's front stands where she lies (quayOut; the 3D view builds the quay out to there, drawDocks)
+const faceAt = (f, a, L, out) => ({id:f.id, x:f.x + f.ux * a, z:f.z + f.uz * a, ux:f.ux, uz:f.uz, nx:f.nx, nz:f.nz, hl:L / 2 + 2, kind:f.kind, mod:!!f.mod, out:Math.max(0, out || 0), depth:f.depth == null ? QUAY_DEPTH_UNKNOWN : f.depth});
+// The quay built out over the shore (Jonas 03.11.2026: «NPC båtene langs hele kysten ligger ved utgravd landmasse, ikke ekte modellerte
+// kaier som glir sømløst inn i miljøet»). The 3D shore (view3d terrRaw, COAST3) stands 2 m over the sea at the fine coast line and falls
+// 1 in 3 (1 in 1.5 at a breakwater), and a face of the packs lies on that line or near it, so a boat laid at the face sat on the bank and
+// the ground was dug out under her in a pit with walls over the water (npcPits). Now the bank is left as it is: quayOut gives how far
+// out from the face (m) the quay's front must stand for the bank to be QOUT.clear under the sea along her whole side, she lies there,
+// and the 3D view draws a concrete quay (or a timber pier) from the shore out to her (drawDocks quayMod). -1: more than QOUT.max out.
+const QOUT = {top:2.0, g:3, gMole:1.5, clear:0.6, max:16};
+function quayOut(f, a, L){
+  if (typeof coastSdIf !== 'function') return 0;
+  let g = 0;
+  for (let it = 0; it < 6; it++){
+    let need = 0;
+    for (const fa of [-0.5, -0.25, 0, 0.25, 0.5]){
+      const s = a + fa * (L + 2), x = f.x + f.ux * s + f.nx * (g + 0.4), z = f.z + f.uz * s + f.nz * (g + 0.4);
+      if (harbourNear(x, z) && inHarbourPocket({x:x / 1000, y:z / 1000})) continue;   // a designed quay's pocket: deep already
+      const sd = coastSdIf({x:x / 1000, y:z / 1000}, 30); if (sd !== sd) continue;
+      need = Math.max(need, sd + (QOUT.top + QOUT.clear) * (COAST.mole ? QOUT.gMole : QOUT.g));
+    }
+    if (need <= 0.05) return g;
+    g += need + 0.2; if (g > QOUT.max) return -1;
+  }
+  return g;
+}
 const NPCB = new Map();
 // boats [{key, L, B, T}] of a harbour (group) round p (km), within R km: {key: {p (km), hd, face}} for those that got a place at a face
 // that stands in 3D (quayReal), off its reserved parts (faceReserved), the hull clear of land (15 points with a metre and half a
@@ -138,13 +162,15 @@ function npcBerths(group, p, boats, R = 0.6){
       const u = used.get(f.id) || faceReserved(f).slice(), lim = f.hl - b.L / 2 - 1; let at = null;
       for (let s = 0; s <= lim * 2 && at === null; s += 2) for (const a of s ? [s / 2, -s / 2] : [0]){ if (Math.abs(a) > lim || resHit(u, a, b.L / 2 + 1)) continue; at = a; break; }
       if (at === null) continue;
-      // off the face by her half beam and 0.4 m, or up to 8 m further out where the face and the fine coast disagree; else the next face
-      const hd0 = Math.atan2(f.ux, -f.uz); let q = null;
-      for (let k = 0; k <= 8 && !q; k += 2){ const off = b.B / 2 + 0.4 + k, cp = {x:(f.x + f.ux * at + f.nx * off) / 1000, y:(f.z + f.uz * at + f.nz * off) / 1000}; if (hullDry(cp, hd0, b.L, b.B)) q = cp; }
+      // off the face by her half beam and 0.4 m and as far as the quay must be built out over the shore (quayOut), or up to 8 m further
+      // out where the face and the fine coast disagree; else the next face
+      const g0 = quayOut(f, at, b.L); if (g0 < 0) continue;
+      const hd0 = Math.atan2(f.ux, -f.uz); let q = null, gq = 0;
+      for (let k = 0; k <= 8 && !q; k += 2){ const off = b.B / 2 + 0.4 + g0 + k, cp = {x:(f.x + f.ux * at + f.nx * off) / 1000, y:(f.z + f.uz * at + f.nz * off) / 1000}; if (hullDry(cp, hd0, b.L, b.B)){ q = cp; gq = g0 + k; } }
       if (!q) continue;
       u.push([at - b.L / 2 - 1, at + b.L / 2 + 1]); used.set(f.id, u);
       const flip = hash(hashStr(b.key)) < 0.5;
-      v[b.key] = {p:q, hd:hd0 + (flip ? Math.PI : 0), face:faceAt(f, at, b.L)};
+      v[b.key] = {p:q, hd:hd0 + (flip ? Math.PI : 0), face:faceAt(f, at, b.L, gq)};
       break;
     }
   }
