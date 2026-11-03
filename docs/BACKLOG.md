@@ -60,6 +60,7 @@
 - **NPC-båter ved flytebrygger tegnet som linje** ligger rundt 0,9 m fra pontongkanten (kaiplassen regnes mot en brygge på 4,2 m).
 - **Liggeplassene etter L1** (01.11.2026): båter fra 11 m uten kai som står i 3D, vises ikke i havn; L2/N1 i `bestand-og-flaate.md` gir dem en annen havn i rørledningen. Kaimodulen ved slag 3 settes bare ved industribygg over 300 m²; andre fiskevær med kai kartlagt som kystlinje kan ha mistet båtene sine, og det måles i L3.
 - **Utviklingsplanen** (`docs/utviklingsplan.md`): E1 (oppdelingen av `view3d.js` og `05-phone.js`), E4 (de røde testene i 10.6: gjort 26.10.2026 så nær som tegnetiden i charttest, en ytelsesoppgave), D4 (rutinen får stikkprøver og skjermbilder) og D5 (ukentlig regresjon).
+- **Verktøy fra Claude Code Game Studios** (vurdering 28.10.2026, `docs/planer/verktoy-fra-game-studios.md`): hooks og deny-liste i `.claude/settings.json` (A1–A4), regelen «se testen feile før den stoles på» (A6), historikk for ustabile tester i `run.py` (A5) og én sikkerhetsgjennomgang av skyen (A7). Økta svarte på valgene på Jonas' bes: A7 først (én økt, bare lesing), så A1, A2, A4 og A6 i én økt; A3 og A5 venter; ingen statuslinje. Venter på «kjør på». Ingen `.claude/settings.json` eller hooks finnes i dag.
 
 ## 10. Kjente problemer og åpne spørsmål
 
