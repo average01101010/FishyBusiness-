@@ -6,7 +6,7 @@ Fra før (01.11.2026, `bestand-og-flaate.md`): «Havflåten er et element av spi
 
 Planen bygger på `bestand-og-flaate.md` (B1–B4, L1–L3, H1), som er ferdig og rullet ut.
 
-**Valgene tatt 03.11.2026:** V1 A (Jonas: «Ja, du kan gjerne lage autolineren først»), V2 B og V3 A (Jonas: «Prisene må reflektere det virkelige liv, og tillatelsene må også være realitiske. Husk: vi lager en simulering av fiskerinæringen i norge, og da må vi være så tett opp mot realiteten som mulig»). V4, V5 og V6 venter.
+**Valgene tatt 03.11.2026:** V1 A (Jonas: «Ja, du kan gjerne lage autolineren først»), V2 B og V3 A (Jonas: «Prisene må reflektere det virkelige liv, og tillatelsene må også være realitiske. Husk: vi lager en simulering av fiskerinæringen i norge, og da må vi være så tett opp mot realiteten som mulig»). V4 C, V5 A og V6 A (Jonas 03.11.2026, svar på valgene). Med V4 C utvides rammen før havbåtene fisker: en ny fase H1b (rammen) kommer foran H2, og punktet i kap. 6 om at planen ikke utvider rammen, gjelder ikke lenger.
 
 ## 1. Hva som finnes i dag
 
@@ -246,16 +246,16 @@ Hvert valg har en anbefaling og én setning om hvorfor.
 - **B: en «havlisens» per redskap** uten faktorer og strukturkvote.
 - **C: ingen tillatelse,** bare båten.
 
-**V4 Hvor havbåtene fisker før rammen utvides**
+**V4 Hvor havbåtene fisker før rammen utvides** (valgt: C, 03.11.2026)
 - **A (anbefalt): innenfor dagens ramme.** Finnmarkskysten, Tromsøflaket, eggakanten, Vestfjorden og vest av Møre. Felt utenfor rammen (Bjørnøya, Svalbard, snøkrabbe øst) er «borte» også for spilleren: turen går dit og kommer tilbake med fangst etter sedlene, uten at den spilles.
 - **B: vent med havsteget** til rammen er utvidet (ny kartrelease først).
 - **C: utvid rammen som første fase** i havsteget.
 
-**V5 Mannskapet på en havbåt**
+**V5 Mannskapet på en havbåt** (valgt: A, 03.11.2026)
 - **A (anbefalt): lag med navngitte nøkkelfolk.** Skipper, styrmann, maskinsjef, kokk og bas er personer med liv. Dekk og fabrikk er lag med antall, ferdighet og lott. Dette holder ytelsen og appen håndterlig og gir likevel folk å bry seg om.
 - **B: alle om bord som enkeltpersoner,** opptil 30. Det er tungt i appen og i 3D.
 
-**V6 Hvordan spilleren fisker med trål og not**
+**V6 Hvordan spilleren fisker med trål og not** (valgt: A, 03.11.2026)
 - **A (anbefalt): automatisk med valg, og hånda på rattet når man vil.** Spilleren legger slepet eller velger stimen og trykker «Sett ut», og båten gjør resten, også i driftsplanen og når appen er lukket. Den som vil, styrer slepet og kastet selv.
 - **B: bare aktiv styring.** Det er morsomt én gang og tungt den tiende, og passer dårlig med den felles klokka.
 
@@ -272,7 +272,7 @@ Hvert valg har en anbefaling og én setning om hvorfor.
 
 ## 6. Hva planen ikke gjør
 
-- Ingen utvidet ramme (Bjørnøya, Svalbard, Nordsjøen vest). Det er kartplanen.
+- ~~Ingen utvidet ramme (Bjørnøya, Svalbard, Nordsjøen vest). Det er kartplanen.~~ Endret 03.11.2026 med V4 C: rammen utvides i H1b, før H2.
 - Ingen reketrål, loddetrål, kolmule, tobis, industritrål eller garnseitillatelse.
 - Ingen ekte fartøynavn, rederier eller firmanavn (CLAUDE.md).
 - Ingenting av havsteget selges for ekte penger. Tillatelser og kvoter kan bare kjøpes for penger tjent i spillet.
@@ -304,5 +304,7 @@ Hvert valg har en anbefaling og én setning om hvorfor.
   - Se 5.5b i `docs/systemer/kvoter-og-regler.md`.
   - **Flyttet:** Kystvaktas havsjekker følger redskapet til H2 og H4. Strukturkvote og eiertak kommer i H8. Landingene skilles fra lukket gruppe (`access`) i H2.
   - **Ny i H2 etter V2 B:** mellomsteget på 28–35 m fra V2 A faller bort. Prisene gjør havsteget langt, og stigen må vurderes i H8.
-  - **Neste:** H2 autolineren (V1 A).
+  - Migreringen `20261103180000_havkonsesjon.sql` er kjørt 03.11.2026 (Jonas: «SQL success»).
+  - Valgene V4 C, V5 A og V6 A er tatt 03.11.2026.
+  - **Neste:** H1b. Rammen utvides til feltene utenfor dagens kart (Bjørnøya, Svalbard-sonen, snøkrabbefeltene øst og Nordsjøen vest) med kart, dybde, regler og leier. Den må planlegges først (`/planlegg`), fordi det er en ny kartrelease. Deretter H2 autolineren (V1 A).
 
