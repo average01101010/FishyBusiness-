@@ -310,7 +310,7 @@
     { const cap = VG.hand ? (SK ? SK.cap : CAPM) : VG.open ? pvm(VT, hullLiv(S.boat)).cap : null; if (cap){ gl.colorMask(false, false, false, false); drawLit(cap, BMrel); gl.colorMask(true, true, true, true); } }
     signOcc(VPn);   // the partners' banners: hidden or not (07-harbour-unit.js, M7)
     glChk('nearObj'); if (!SKP.sea){ drawSea(VPn, eye, t, nearFar, 0);
-    drawSea(VPn, eye, t, false); }
+    drawSea(VPn, eye, t, false); if (!SKP.gear) drawGearUnder(VPn, eye); glChk('gearU'); }
     PMK('fx'); glChk('seaN'); drawBeams(VPn, eye, t);
     if (BLD && env.night > 0.02){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false); drawChunkLights(VPn, eye); gl.depthMask(true); gl.disable(gl.BLEND); }
     drawEffects(VPn, eye, BMabs, dt, t); drawBlows(VPn, eye, dt); drawNPCLights(VPn); drawAirLights(VPn, t); drawRescueLights(VPn, t); drawSeaLights(VPn, eye, t, true);

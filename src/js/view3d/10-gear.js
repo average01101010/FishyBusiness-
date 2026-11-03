@@ -42,6 +42,80 @@
       drawN(GB.buoy, model(x - eye[0], y - eye[1], z - eye[2], Math.PI / 2 - wd, -sz * 0.9, sx * 0.9)); }
     gl.useProgram(PL.p);
   }
+  // the string between the buoys under water (task 3, 03.11.2026): the buoy ropes down to the grapnels, the net (float line, lead line
+  // and the meshes between) or the line (with its snoods), and the pots on their rope, along the bottom; for your own sets, the other
+  // players' (PEERGEAR) and the coast's and ocean fleet's (NPCGEAR). The sea is drawn opaque, so a point under water is drawn where the
+  // eye's ray to it crosses the surface: the same pixel, and the depth of the water there, so boats and land in front still hide it and a
+  // wave crest hides it as it would. It fades as the water takes it (to a third at VIS m), with the distance (gone at UNDER_R) and as the
+  // eye looks flatter over the sea (the surface reflects). Lines of one pixel, at most four calls a frame, the sea floor read once a set.
+  const UNDER = new Map(), UNDER_R = 450, UNDER_DET = 120, VIS = 2.5;   // (seen from a boat, at a slant, through waves: a few metres; Jonas 03.11.2026)
+  const UNDERW = new WeakMap();
+  let UNDER_NEW = 0;   // (the sets whose sea floor is read this frame: at most six, the rest the next frames, so no frame stalls)
+  function underProf(s, kind){
+    let P = UNDERW.get(s); if (P && P.ax === s.a.x && P.bx === s.b.x && P.ay === s.a.y && P.by === s.b.y) return P;
+    const key = kind + ':' + s.a.x.toFixed(5) + ',' + s.a.y.toFixed(5) + ':' + s.b.x.toFixed(5) + ',' + s.b.y.toFixed(5); P = UNDER.get(key); if (P){ UNDERW.set(s, P); return P; }
+    if (UNDER_NEW++ >= 6) return null;
+    const A = [s.a.x * 1000, s.a.y * 1000], B = [s.b.x * 1000, s.b.y * 1000], L = Math.hypot(B[0] - A[0], B[1] - A[1]), n = Math.max(2, Math.min(240, Math.ceil(L / 6)));
+    const dep = (x, z) => { try { return clamp(depthF({x:x / 1000, y:z / 1000}), 1.5, 400); } catch (e){ return null; } };
+    let pend = false, dmin = 1e9; const pts = [];
+    for (let i = 0; i <= n; i++){ const f = i / n, x = A[0] + (B[0] - A[0]) * f, z = A[1] + (B[1] - A[1]) * f, d = dep(x, z); if (d == null) pend = true; const dd = d == null ? 30 : d; pts.push([x, z, dd]); if (dd < dmin) dmin = dd; }
+    // the grapnels: off the buoys along the string by half the depth (the buoy rope's slope), at most a fifth of the string each
+    const ux = L > 0.1 ? (B[0] - A[0]) / L : 1, uz = L > 0.1 ? (B[1] - A[1]) / L : 0, oa = Math.min(pts[0][2] * 0.5, L * 0.2), ob = Math.min(pts[n][2] * 0.5, L * 0.2);
+    P = {A, B, L, pts, dmin, ga:[A[0] + ux * oa, A[1] + uz * oa], gb:[B[0] - ux * ob, B[1] - uz * ob], ux, uz, ax:s.a.x, ay:s.a.y, bx:s.b.x, by:s.b.y};
+    if (!pend){ if (UNDER.size > 400) UNDER.clear(); UNDER.set(key, P); UNDERW.set(s, P); }
+    return P;
+  }
+  const UNDER_K = {garn:'garn', line:'line', teine:'teine', teiner:'teine'};
+  // the four batches by colour (the ropes and lines, the float line, the meshes and snoods, the pots): x, y, z, alpha per vertex, kept
+  const UB = [0, 1, 2, 3].map(() => ({v:new Float32Array(3900 * 4), n:0}));
+  let UNDER_MS = 0, UNDER_N = 0;
+  function drawGearUnder(VP, eye){
+    const t0 = performance.now(); UNDER_N = 0;
+    const own = S.sets || []; if (!own.length && !PEERGEAR.length && !NPCGEAR.length) return;
+    const E = {x:eye[0] / 1000, y:eye[2] / 1000}, tide = env.tide || 0, ys = tide + 0.06 - eye[1], R = UNDER_R / 1000, deep = VIS * 3;
+    if (ys >= -0.3) return;   // (the eye at the surface: nothing to look down into)
+    const lite = env.night != null ? 1 - 0.85 * env.night : 1;
+    for (const B of UB) B.n = 0; UNDER_NEW = 0;
+    // a point (x, the depth below the surface, z) to where the eye sees it on the surface, and how much of it shows; false when not
+    const put = (B, x, d, z) => { if (B.n >= 3900) return false; const px = x - eye[0], pz = z - eye[2], py = tide - d - eye[1]; if (py >= ys) return false; const k = ys / py, h = Math.sqrt(px * px + pz * pz);
+      const a = Math.exp(-d / VIS) * clamp(1 - (h - UNDER_R * 0.4) / (UNDER_R * 0.6), 0, 1) * clamp(-ys / Math.max(1, h) * 3, 0.15, 1) * lite, o = B.n * 4;
+      B.v[o] = px * k; B.v[o + 1] = ys; B.v[o + 2] = pz * k; B.v[o + 3] = a; B.n++; return true; };
+    const seg = (B, x0, d0, z0, x1, d1, z1) => { if (d0 > deep && d1 > deep) return; const n0 = B.n; if (!put(B, x0, d0, z0) || !put(B, x1, d1, z1)) B.n = n0; };
+    const one = (s, k0) => {
+      if (!s || s.lost || !s.a || !s.b || segDist(E, s.a, s.b) > R) return; const kind = UNDER_K[k0] || 'garn', P = underProf(s, kind); if (!P) return; const pts = P.pts, n = pts.length - 1; UNDER_N++;
+      // the buoy ropes: from the buoy at the surface down to the grapnel on the bottom (only their top shows)
+      const r0 = Math.min(deep, pts[0][2]) / pts[0][2], r1 = Math.min(deep, pts[n][2]) / pts[n][2];
+      seg(UB[0], P.A[0], 0.3, P.A[1], P.A[0] + (P.ga[0] - P.A[0]) * r0, Math.min(deep, pts[0][2]), P.A[1] + (P.ga[1] - P.A[1]) * r0);
+      seg(UB[0], P.B[0], 0.3, P.B[1], P.B[0] + (P.gb[0] - P.B[0]) * r1, Math.min(deep, pts[n][2]), P.B[1] + (P.gb[1] - P.B[1]) * r1);
+      // the string along the bottom, only where the bottom is within sight (most sets lie deeper and end here)
+      const top = kind === 'garn' ? 2.6 : 0.5; if (P.dmin - top > deep) return;
+      const lo = clamp(Math.min(P.L * 0.2, pts[0][2] * 0.5) / Math.max(1, P.L), 0, 0.5), hi = 1 - clamp(Math.min(P.L * 0.2, pts[n][2] * 0.5) / Math.max(1, P.L), 0, 0.5);
+      const at = f => { const q = clamp(f, 0, 1) * n, i = Math.min(n - 1, Math.floor(q)), u = q - i, a = pts[i], b = pts[i + 1]; return [a[0] + (b[0] - a[0]) * u, a[2] + (b[2] - a[2]) * u, a[1] + (b[1] - a[1]) * u]; };
+      const m = Math.max(2, Math.min(120, Math.ceil(P.L * (hi - lo) / (8 + segDist(E, s.a, s.b) * 60))));   // (8 m strokes near, 32 m at 400 m)
+      const step = kind === 'garn' ? 3 : kind === 'line' ? 2.5 : 22, nx = Math.max(1, Math.min(160, Math.round(P.L * (hi - lo) / step)));
+      for (let i = 0; i < m; i++){ const a = at(lo + (hi - lo) * i / m), b = at(lo + (hi - lo) * (i + 1) / m);
+        if (kind === 'garn'){ seg(UB[0], a[0], a[1] - 0.2, a[2], b[0], b[1] - 0.2, b[2]); seg(UB[1], a[0], a[1] - 2.6, a[2], b[0], b[1] - 2.6, b[2]); }   // lead line, float line 2.4 m above it
+        else seg(UB[0], a[0], a[1] - (kind === 'line' ? 0.5 : 0.1), a[2], b[0], b[1] - (kind === 'line' ? 0.5 : 0.1), b[2]); }
+      // the meshes (a stroke every 3 m), the snoods with their hooks (every 2.5 m), the pots (every 22 m), only where they can show
+      // (only within UNDER_DET of the eye: further off a stroke every few metres is less than a pixel apart, one grey with the string)
+      const ex = eye[0] - P.A[0], ez = eye[2] - P.A[1], tc = (ex * P.ux + ez * P.uz) / Math.max(1, P.L), pp = Math.abs(ex * P.uz - ez * P.ux), w = Math.sqrt(Math.max(0, UNDER_DET * UNDER_DET - pp * pp)) / Math.max(1, P.L);
+      if (w <= 0 || UB[2].n >= 3900) return;
+      const j0 = Math.max(0, Math.floor((tc - w - lo) / (hi - lo) * nx)), j1 = Math.min(nx, Math.ceil((tc + w - lo) / (hi - lo) * nx));
+      for (let j = j0; j <= j1; j++){ const a = at(lo + (hi - lo) * j / nx); if (a[1] - top > deep) continue;
+        if (kind === 'garn') seg(UB[2], a[0], a[1] - 0.2, a[2], a[0], a[1] - 2.6, a[2]);
+        else if (kind === 'line') seg(UB[2], a[0], a[1] - 0.5, a[2], a[0] + P.uz * 0.3, a[1] - 0.05, a[2] - P.ux * 0.3);
+        else put(UB[3], a[0], a[1] - 0.3, a[2]); }
+    };
+    for (const s of own) one(s, s.kind); for (const s of PEERGEAR) one(s, s.k); for (const s of NPCGEAR) one(s, s.k);
+    if (UB.every(B => !B.n)){ UNDER_MS = UNDER_MS * 0.9 + (performance.now() - t0) * 0.1; return; }
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
+    const COL = [[0.5, 0.58, 0.5], [0.95, 0.8, 0.36], [0.62, 0.78, 0.72], [0.34, 0.5, 0.4]];   // (pale: seen through green water)
+    for (let c = 0; c < 4; c++){ const B = UB[c], nV = c === 3 ? B.n : B.n - (B.n & 1); if (!nV) continue;
+      for (let i = 0; i < nV; i++){ PB[i * 3] = B.v[i * 4]; PB[i * 3 + 1] = B.v[i * 4 + 1]; PB[i * 3 + 2] = B.v[i * 4 + 2]; PA[i] = B.v[i * 4 + 3] * 0.85; }
+      drawPts(nV, c === 3 ? gl.POINTS : gl.LINES, VP, COL[c], c === 3 ? 60 : 1, c === 3); }
+    gl.depthMask(true); gl.disable(gl.BLEND); gl.useProgram(PL.p);
+    UNDER_MS = UNDER_MS * 0.9 + (performance.now() - t0) * 0.1;
+  }
   // the work on deck: the hauler turning, the string running over it to the water, pots stacking, the net piling in its bin
   // The haulers from Blender (tools/gear/haler.py, the user's drawings 03.10.2026): the net hauler and the line hauler on a post inside
   // the starboard rail with the arm out over the side. Parts from their own origins: the frame from the post's foot, the sheave and the

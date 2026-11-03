@@ -127,7 +127,6 @@ Båtene i havnene langs kysten er fartøyregisterets aktive båter under 28 m, k
   - **Hvem som eier redskapet (Jonas 02.11.2026: «Trenger ikke å vises navn i kartet, men at man eventuelt kan trykke på fiskeredskapet for mer å få opp info om hvem som eier redskapet»):** et trykk på en bøye i kartet til en annen spiller eller en NPC-båt (`otherGearHit`, etter dine egne bøyer og AIS-båtene) åpner et kort (`otherGearCard`) med redskapet, eieren (spillerens navn, eller «Fiskefartøy»), båten, lengden og avstanden. Spillerens navn og båt kommer fra den nye `gear_near2` (`supabase/migrations/20261102130000_gear_owner.sql`, Jonas må kjøre den). Til den er kjørt, henter spillet redskapet med `gear_near` som før, uten eier. Navnet vises som tekst, og et navn admin har tatt bort, kommer ikke med.
 - **Ikke gjort ennå:**
   - Kortere båter enn i registeret der kartet mangler lange kaier.
-  - Garnet og lina mellom bøyene vises ikke under vann i 3D, bare blåsene.
 - **Tester:**
   - Ny `tests/unit/flaate.test.mjs` (14 sjekker).
   - `npctest`: havnene har `flaate.json` sine båter, og «hver båt ligger langs en kaifront som er lang og dyp nok» står.
