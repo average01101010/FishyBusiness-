@@ -156,3 +156,9 @@ Jonas: «jeg vil gjerne være rustet til å kunne ha minst 5000 aktive brukere n
   - **Funnet og rettet:** havflåtens navneliste hadde navn som kunne tilhøre ekte fartøy. Den er byttet ut med oppdiktede navn (CLAUDE.md).
   - **Lagt merke til, ikke en feil:** en dag med halvparten av Tromsø-båtene på fridag var et utslag (snittet over 200 dager er 30 %). Kartet ber om pakkene der det sist sto, også når båten er flyttet langt bort i en test.
   - Planen er dermed bygd ferdig (L1, B1–B4, L2, H1 og L3), men L2–L3 er ikke rullet ut.
+- 03.11.2026: **H1 videre: nota, levering og redskapet under vann** (gren `ccr-6829f3d4-kl3gp4`, fra `ccr-5e1ba2f4-pusvyd` 722a02d der L2–L3 og kartet ble rullet ut samme dag).
+  - **Nota og snurrevaden i 3D:** fasene etter klokka (`havFish` `seine`), tegnet med `drawSeine` uten spillerens `SEINE`, som trålen med `NPCTOW`.
+  - **Levering:** hvert felt har sitt leveringsmottak (nærmest langs farledene, tar redskapet, kai som passer). Skipet går dit, ligger 4–8 timer og går hjem. 70 % av turene leverer borte.
+  - **Garnet og lina under vann** mellom blåsene, så langt sikten (et par meter) tillater.
+  - **Juksa:** havfiskefartøyene kan ikke jukse (Jonas).
+  - Se 4.17 i `npc-trafikk.md` og 5.31 i `redskap.md`.
