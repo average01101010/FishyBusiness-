@@ -2,7 +2,14 @@
 
 Jonas 03.11.2026, valg V4 C i `havsteget.md`: «utvid rammen som første fase i havsteget». Samme dag: «Planlegg H1b av havsteget med /planlegg: utvid spillets ramme til feltene utenfor dagens kart (Bjørnøya, Svalbard-sonen, snøkrabbefeltene øst, Nordsjøen vest), slik at havflåten kan fiske der (V4 C). Ikke bygg noe før jeg har svart på valgene og sagt «kjør på».»
 
-H1b kommer foran H2 (autolineren). Ingenting her er bygd.
+**Valgene tatt 03.11.2026** (Jonas: «V1 B, men vi må løse dette på en smart måte som ikke ødelegger opplevelsen for spillerne, men samtidig er realistisk. V2 B, V3 A, V4 B»):
+
+- **V1 B:** hele havet havflåten fisker i, også Jan Mayen, Island, Grønland og russisk sone. Kap. 3a forklarer hvordan det gjøres uten at spillet blir tyngre for spillerne på kysten.
+- **V2 B:** hele Svalbard i detalj.
+- **V3 A:** iskanten etter måned.
+- **V4 B:** Longyearbyen som havn uten mottak.
+
+H1b kommer foran H2 (autolineren). Ingenting her er bygd. Planen venter på «kjør på».
 
 ## 1. Hva som finnes i dag
 
@@ -11,20 +18,28 @@ H1b kommer foran H2 (autolineren). Ingenting her er bygd.
 - Spillets ramme er UTM 33 i km: x = (E + 250 km)/1000 og y = (8 050 km − N)/1000 (`natP`/`natLL`, `core/00-proj.js`).
 - `MAPB = {x0:0, y0:0, x1:1450, y1:1720}` (`core/01-world.js:58`). Utenfor er det land (`isLand`, linje 207 og 215). Nordkanten y = 0 ligger ved 72,5° N, og vestkanten x = 0 ligger ved 1–2° Ø.
 
-**Der feltene ligger** (regnet med spillets egen `utm33`, 03.11.2026):
+**Der feltene ligger** (regnet med spillets egen `utm33`, 03.11.2026). γ er meridiankonvergensen, k er skalafaktoren:
 
 | Sted | x | y | γ | k |
 |---|---|---|---|---|
 | Bjørnøya (74,45° N 19° Ø) | 870 | −216 | 3,9° | 0,9998 |
 | Sørkapp (76,5° N) | 789 | −441 | 1,5° | 0,9996 |
 | Nordspissen av Svalbard (80,8° N) | 839 | −925 | 4,9° | 0,9997 |
-| Hopen | 1 009 | −463 | 9,7° | 1,0004 |
+| Kvitøya (80,1° N 32° Ø) | 1 072 | −890 | 16,8° | 1,0009 |
 | Sentralbanken (76° N 35° Ø), snøkrabbe | 1 280 | −476 | 19,5° | 1,0030 |
 | Smutthullet (73,5° N 37° Ø) | 1 433 | −234 | 21,2° | 1,0053 |
-| Vikingbanken (60° N 2° Ø) | 28 | 1 327 | −11,3° | 1,0060 |
+| Kanin, russisk sone (68,5° N 44° Ø) | 1 898 | 173 | 27,3° | 1,0158 |
+| Petsjorahavet (69,5° N 52° Ø) | 2 118 | −93 | 35,2° | 1,0226 |
+| Novaja Semlja (74° N 56° Ø) | 1 919 | −585 | 39,9° | 1,0164 |
+| Jan Mayen (71° N 8,5° V) | −85 | 8 | −22,3° | 1,0081 |
+| Nord-Island (66,5° N 18° V) | −661 | 288 | −30,8° | 1,0241 |
+| Reykjavík (64,1° N 22° V) | −971 | 417 | −34,1° | 1,0361 |
+| Danmarkstredet (66,5° N 27° V) | −998 | 50 | −39,5° | 1,0372 |
+| Øst-Grønland (70° N 22° V) | −585 | −139 | −35,3° | 1,0215 |
+| Færøyane (62° N 7° V) | −386 | 980 | −19,6° | 1,0154 |
 | Shetland nord (61° N 1° V) | −109 | 1 181 | −14,1° | 1,0087 |
+| Vikingbanken (60° N 2° Ø) | 28 | 1 327 | −11,3° | 1,0060 |
 | Nordsjøen vest (59° N 2° V) | −220 | 1 385 | −14,7° | 1,0111 |
-| Russisk sone (72° N 50° Ø), til sammenligning | 1 896 | −284 | 33,7° | 1,0157 |
 
 **Det NPC-havflåten regner som «borte» i dag** (`src/data/havflaate.json`, `tools/npc/havflaate.py:93`, 4.17 i `npc-trafikk.md`). Tallene er summen over månedene for de 12 tyngste hovedområdene per redskap, slik `havflaate.py` velger dem:
 
@@ -42,6 +57,7 @@ H1b kommer foran H2 (autolineren). Ingenting her er bygd.
 | 23 | 78,6° N 27° Ø, øst av Svalbard | snøkrabbe | lite |
 
 - Det betyr at hele snøkrabbefisket er borte i dag, sammen med 63 % av autolinefisket og 22 % av trålfisket og snurrevaden.
+- Med V1 B er ingen av disse borte lenger.
 
 **Det som har fast utstrekning 0–1 450 × 0–1 720:**
 
@@ -65,8 +81,9 @@ H1b kommer foran H2 (autolineren). Ingenting her er bygd.
   - Klimaet (`src/data/climate.json`) har punkter bare langs fastlandet.
   - Tidevannet (`src/data/tide.json`) har punkter per kystflis.
   - Kystflisene velges etter Overtures landegrense `NO` (`national.py:40`). Svalbard kan ha koden `SJ` der, og da faller øyene ut. **Ikke sjekket.**
+- **Diesel** kjøpes på fiskemottak og verft (`docs/handelssteder.md`, `fuelPrice` i `core/02-species-gear.js:197`).
 
-**Origo flyttes ikke.** Lagringene (`kystfiske_v2`), serverens posisjoner og alle data beholder koordinatene sine. Rammen vokser bare til negative x og y.
+**Origo flyttes ikke.** Lagringene (`kystfiske_v2`), serverens posisjoner og alle data beholder koordinatene sine. Rammen vokser bare til negative x og y og østover.
 
 ## 2. Regelverket det bygger på
 
@@ -91,124 +108,203 @@ Sjekket med søk 03.11.2026. Lovdata og Fiskeridirektoratets sider kunne ikke le
   - Gytefeltene er stengt i sesongen.
   - Ingen egen forskrift for 2026 ble funnet.
   - Kilde: Fiskeridirektoratets reguleringsmøte november 2025, foreløpig forslag om torsk i Nordsjøen og Skagerrak i 2026.
-- **Færøysk sone:** egen forskrift for bunnfisk i færøysk fiskerisone (FAOLEX). Gjelder bare om rammen tar med Færøyane (V1).
-- **Grensene:** Kartverkets «Norges maritime grenser» ligger alt i `tools/rules/` (`nmg-25833.gml`). Den har grunnlinjene, territorialfarvannet og sonene, også ved Svalbard. Delelinja mot Russland og grensene mot britisk og færøysk sone må sjekkes i fila.
+- **Færøysk sone:** egen forskrift for bunnfisk i færøysk fiskerisone (FAOLEX).
+- **Nytt med V1 B, ikke søkt ennå:**
+  - **Russisk sone:** adgangen kommer fra den norsk-russiske fiskerikommisjonen og krever lisens fra russiske myndigheter, søkt gjennom Fiskeridirektoratet.
+  - **Islandsk og grønlandsk sone:** adgangen kommer fra de bilaterale avtalene.
+  - **Fiskerisonen ved Jan Mayen:** norsk sone.
+  - Alt må leses i kilden i R4.
+- **Grensene:** Kartverkets «Norges maritime grenser» ligger alt i `tools/rules/` (`nmg-25833.gml`). Den har grunnlinjene, territorialfarvannet og sonene, også ved Svalbard og Jan Mayen. Grensene mot Russland, Island, Grønland, Færøyane og Storbritannia må sjekkes i fila.
+
+## 3a. Slik løses V1 B uten at spillet blir tyngre for spillerne
+
+Rammen blir rundt 3 600 × 2 920 km, som er 4,2 ganger så stor som i dag. Tre ting kunne ødelagt opplevelsen. Her er løsningene.
+
+### Det som lastes
+
+Kjernen lastes alltid og er 2,9 MB i dag. Den skal ikke vokse for den som fisker på kysten.
+
+- **Den gamle kjernen blir som den er:** samme lag og samme størrelse på 0–1 450 × 0–1 720.
+- **Et nytt grovt lag over hele den nye rammen lastes også alltid:**
+  - land og avstand til land på 1 km, eksponering på 2 km og dybde på 1 km
+  - anslått til 0,3–0,6 MB, fordi det meste er åpent hav
+- **Landet på 200 m utenfor den gamle rammen** (Svalbard, Island, Færøyane, Grønland, Russland) og detaljflisene lastes bare der det trengs, som `sim`-pakkene i dag:
+  - rundt egne båter, av barrieren (`simAreaReady`)
+  - rundt det 2D-kartet og 3D-visningen viser
+- **Simuleringen avhenger aldri av hva som tilfeldigvis er lastet** (4.6). Strøklengdestrålene og det andre som ser langt, bruker:
+  - 200 m-laget innenfor den gamle rammen
+  - 1 km-laget utenfor
+  
+  Hvilket lag som brukes, følger av posisjonen, ikke av lastingen. Begge lagene er alltid lastet, så det er like for alle.
+
+### Avstandene (skalafaktoren k)
+
+I dag regner spillet avstand og fart i rutenett-km. Det gikk an, fordi k er 0,9996–1,0042 langs kysten. Ved Island er k 1,037, og en tur dit ville tatt 4 % for lang tid.
+
+- **Løsningen:** båtene beveger seg i sann avstand. Fart i rutenettet = sann fart × k(p). `gridScale(p)` regnes per km-rute, som `gridGamma`.
+- **Avstandene som vises** (nm i ruta, rekkevidden, drivstoffet) deles på k.
+- **På kysten** endres tidene med 0,03 % på Senja og høyst 0,4 % ved Grense Jakobselv. Det er riktigere enn i dag og merkes ikke.
+- **I 3D** er verden tegnet i rutenett-meter. UTM bevarer formene, så land og båter ser riktige ut. Ved Island er alt 4 % større i rutenettet, men det ser likt ut, fordi båten også går 4 % fortere i det. Dette må sees på i R7.
+
+### Retningene (γ)
+
+γ er opptil 40° ved Novaja Semlja og Danmarkstredet. Alt som vises som sann retning, går alt gjennom `trueDeg`, og vinden, dønningen og sola dreies med γ (4.7).
+
+- **Det som prøves:** at bølgene, vinden, sola, lyktsektorene og kompasset stemmer ved x −1 000 og 2 100.
+- **Projeksjonen** er Krüger av sjette orden og holder seg nøyaktig langt ut over 40° fra midtmeridianen. Det sjekkes mot PROJ med nye punkter i `projref.py`.
+
+### Rammen
+
+- x −1 100 til 2 500 og y −1 250 til 1 720.
+- Det tar med Øst-Grønland og Danmarkstredet, Island, Jan Mayen, Svalbard med Kvitøya og hovedområde 24, og russisk sone til Novaja Semlja og Petsjorahavet.
+
+### Landet
+
+Norsk land får detalj, og utenlandsk land får det som nabolandene har i dag:
+
+- **Detaljfliser** (fjæra, sjømerkene, 3D ved kaia): Svalbard (V2 B), Jan Mayen, Bjørnøya og Hopen.
+- **Bare land på 200 m, kyst i sjøkartet og fjernhøyder i 3D:** Island, Færøyane, Shetland, Grønland og Russland, som Sverige og Finland i dag. Fisket der skjer uansett utenfor territorialfarvannet.
 
 ## 3. Fasene
 
 Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten data er land.
 
-### R1 Rammen i koden
+### R1 Rammen og skalafaktoren i koden
 
 - **Hva:**
-  - `MAPB` får den nye utstrekningen fra V1.
-  - Klemmen mot 0 i `11-route.js:48` blir `MAPB.x0`/`MAPB.y0`. Det samme gjelder alle andre klemmer mot 0 som gjelder posisjon (søk med `grep`).
-  - 2D-kartet (`ui/03-map.js:14` og `334`) og miniplotteren følger `MAPB` fra før. Det må sjekkes at de tegner riktig med negative y.
+  - `MAPB` får den nye utstrekningen.
+  - Klemmene mot 0 (`11-route.js:48` og andre som gjelder posisjon) blir `MAPB.x0`/`MAPB.y0`.
+  - 2D-kartet og miniplotteren tegner riktig med negative koordinater.
+  - Det grove laget utenfor den gamle rammen leses av `isLandFar`, `coastDistFar`, `fetchRay` og dybdemodellen (3a).
+  - `gridScale(p)` legges inn, og fart og viste avstander bruker den (3a).
   - `HOME`, `MAP_W` og `MAP_H` beholdes.
-  - Utenfor lagene til den nye kjernen kommer (R2), gjelder det som i dag: land.
-- **Filer:** `core/01-world.js`, `core/11-route.js`, `ui/03-map.js`, `ui/03e-miniplot.js`, `view3d/02-mesh-terrain.js:77`.
+- **Filer:** `core/00-proj.js`, `core/01-world.js`, `core/01b-mapdata.js`, `core/03b-sea.js`, `core/05-vessels.js` (bevegelsen), `core/11-route.js`, `ui/03-map.js`, `ui/03e-miniplot.js`, `view3d/02-mesh-terrain.js:77`.
 - **Tester:**
-  - `tests/unit/` får nye sjekker for `utm33` og `utm33inv` fram og tilbake ved 81° N, 6° V og 40° Ø, `gridKey` med negative tall og `isLand` utenfor rammen.
-  - `projtest` med referansepunkter fra `projref.py` ute i de nye feltene.
-  - `routetest` og `boottest`.
-- **Måles:** at Senja og kysten er uendret (`trip2`, `simday`).
+  - `tests/unit/` får nye sjekker:
+    - `utm33` og `utm33inv` fram og tilbake ved Reykjavík, Danmarkstredet, Novaja Semlja og Kvitøya
+    - `gridScale` mot k
+    - `gridKey` med negative tall
+    - `isLand` og strøklengden utenfor den gamle rammen
+  - `projtest` med referansepunkter fra `projref.py` i de nye feltene.
+  - `routetest`, `boottest` og `maptest`.
+- **Måles:**
+  - At kysten er så godt som uendret: `trip2` og `simday`, med tidene innen 0,4 %.
+  - At ingenting leser en blokk som ikke er lastet (`MAPD.miss`).
 
 ### R2 Kjernen for den nye rammen (rørledningen og releasen)
 
 - **Hva:**
   - Rørledningen tar rammen fra én konstant i `frame.py` i stedet for 1450/1720 på seks steder.
-  - `national.py`:
-    - `mask200` og `dc200` tar med Svalbard, Bjørnøya, Hopen, Shetland og Færøyane, slik nabolandene er med i dag.
-    - `expo` regnes på nytt for den nye rammen.
-  - **Dybden** til havs (`deep`) kommer fra GEBCO 2025 (15″, fri bruk) i stedet for ETOPO1 gjennom Terrarium, på 1 km som i dag. Der Kartverkets 50 m-modell finnes, gjelder den fortsatt. Trålen og teinene trenger riktig dybde på bankene.
-  - `coast0` dekker hele den nye rammen. Fjernhøydene (`far`) dekker Svalbard og Bjørnøya, slik at landet står i 3D sett fra sjøen.
+  - Det grove laget (land og avstand på 1 km, eksponering på 2 km, dybde på 1 km) over hele den nye rammen legges i kjernen.
+  - Landet på 200 m utenfor den gamle rammen blir pakker per 50 km-flis, som lastes etter behov (3a).
+  - **Dybden** til havs kommer fra GEBCO 2025 (15″, fri bruk) i stedet for ETOPO1 gjennom Terrarium. Der Kartverkets 50 m-modell finnes, gjelder den fortsatt. Trålen og teinene trenger riktig dybde på bankene.
+  - `coast0` dekker hele den nye rammen. Fjernhøydene (`far`) dekker Svalbard, Jan Mayen, Island, Færøyane, Grønlands østkyst og Russland.
   - Ny release `kart-N` (endre `run` i `kart.json`).
 - **Filer:** `tools/map/frame.py`, `national.py`, `deep.py`, `pack.py`, `chart.py`, `game.py`, `.github/workflows/kart.yml`.
 - **Tester:**
-  - `maptest`, `teleport3d` (to nye steder: Bjørnøya og Sentralbanken) og `charttest`.
-  - `tests/unit/` får en sjekk på manifestet, at lagene begynner der rammen begynner.
+  - `maptest` og `charttest`.
+  - `teleport3d` med fire nye steder: Bjørnøya, Sentralbanken, Nord-Island og Petsjorahavet.
+  - `tests/unit/` får en sjekk på manifestet, at lagene dekker rammen.
 - **Måles:**
-  - Kjernepakken lastes alltid, så størrelsen teller. Den er 2,9 MB i dag. Anslaget er 4–5 MB, men det er ikke målt.
-  - Tida for `mask200` i Actions.
-  - Hvor lang tid første oppstart tar på nettbrettet.
+  - Kjernen skal være høyst 3,5 MB (2,9 MB i dag).
+  - Første oppstart på nettbrettet skal ikke bli merkbart lengre.
+  - Tida for kjøringen i Actions.
 
-### R3 Land med detalj der det trengs (V2)
+### R3 Svalbard og Jan Mayen i detalj (V2 B)
 
 - **Hva:**
-  - Detaljfliser (`sim`, `view`, `chart`) for øyene V2 velger, gjennom den samme `coast.py` som kysten.
-  - Kystflisene velges også etter Svalbard (`SJ`) hvis Overture skiller den ut.
-  - Sjømerker og fyr fra Geofabriks Svalbard-uttrekk. `norway-latest` har trolig ikke Svalbard, og det må sjekkes.
-  - Dybden der Kartverket ikke har data: GEBCO, blandet inn som dybdemodellen gjør i dag.
-- **Filer:** `tools/map/national.py` (`tiles`), `coast.py`, `sjomerker.py`, `sjomerker.json`, `fyr.py`.
-- **Tester:** `marktest` og `coast3d` ved Bjørnøya, og skjermbilder i begge formater.
-- **Måles:** releasens størrelse og antallet nye fliser.
+  - Detaljfliser (`sim`, `view`, `chart`) for Svalbard, Jan Mayen, Bjørnøya og Hopen, gjennom den samme `coast.py` som kysten. Det er anslagsvis 60–70 fliser.
+  - Kystflisene velges også etter Svalbard og Jan Mayen (`SJ`) hvis Overture skiller dem ut.
+  - **Sentinel-2 og trelaget** (`s2.yml`, `trees.yml`): Svalbard har ingen skog, så trelaget er tomt der. Satellittfargen må tas om sommeren uten snø, og det må sjekkes at mosaikken finnes så langt nord.
+  - **Bygg og kaier** i vec-pakkene fra Overture: Longyearbyen, Ny-Ålesund, Barentsburg og Sveagruva.
+  - **Sjømerker og fyr** fra Geofabriks Svalbard-uttrekk. `norway-latest` har trolig ikke Svalbard, og det må sjekkes.
+  - **Dybden:** Kartverkets 50 m-modell der den finnes, ellers GEBCO.
+- **Filer:** `tools/map/national.py` (`tiles`), `coast.py`, `vectors.py`, `sjomerker.py`, `sjomerker.json`, `fyr.py`, `tools/s2/`, `tools/trees/`.
+- **Tester:** `marktest`, `coast3d` og `vectest` ved Longyearbyen og Bjørnøya, og skjermbilder i begge formater.
+- **Måles:**
+  - Releasens størrelse og antallet nye fliser (anslått til rundt 30 % større).
+  - At Pages og Hetzner tar det.
 
 ### R4 Reglene og sonene
 
 - **Hva:**
-  - `rules.json` får sonene utenfor fastlandet:
+  - `rules.json` får sonene:
     - fiskevernsonen ved Svalbard og Svalbards territorialfarvann
     - Bjørnøya 20 nm
-    - Smutthullet
-    - delelinja mot Russland
-    - britisk sone, og færøysk sone hvis V1 tar den med
+    - fiskerisonen ved Jan Mayen
+    - Smutthullet og Smottet
+    - russisk, islandsk, grønlandsk, færøysk og britisk sone
   - Statistikkområdene utenfor dagens ramme (`stats()` i `regler.py:368`) tas med, så `fiske.json` og `lok` kan brukes der.
-  - `rulesAt` sier hva som gjelder i hver sone: torsk i fiskevernsonen etter forskriften for året, Bjørnøya 20 nm stengt, snøkrabbe bare med tillatelse, og britisk sone bare med adgangskvoten.
-  - Hvert punkt leses i kilden (Lovdata, Fiskeridirektoratet) før det bygges inn, og kilden oppgis i `kvoter-og-regler.md`.
-- **Filer:** `tools/rules/regler.py`, `src/data/rules.json`, `core/03e-rules.js`, `ui/phone` (Regler-appen).
-- **Tester:** `rulestest` og `tests/unit/` (rules), med et punkt i hver sone og et på hver side av hver grense.
+  - `rulesAt` sier hva som gjelder i hver sone. **Forslaget til hvordan det blir realistisk uten å bli tungt:**
+    - **Norske soner** (fiskevernsonen og Jan Mayen): fiske med havtillatelsen og fartøykvoten, etter forskriften for året. Bjørnøya 20 nm er stengt.
+    - **Utenlandske soner:**
+      - Fisket skjer på Norges kvote i sonen fra avtalen (kvoten for sonen i J-meldingen). Den er et tak for hele gruppa, felles for alle spillerne og NPC-ene, som gruppekvotene i dag.
+      - Russisk sone krever i tillegg en **lisens**. Spilleren søker om den i Papirer-appen, og den kommer etter en ekte behandlingstid hvis tallet finnes i kilden. Den koster ikke penger og kan ikke kjøpes fort for ekte penger (CLAUDE.md: «Friction for Flow»).
+      - Utenfor kvoten og lisensen sier Regler-appen og varselet før feil fra, som for kysten.
+  - Hvert punkt leses i kilden (Lovdata, Fiskeridirektoratet, avtalene med Russland, Island, Grønland, Færøyane og Storbritannia) før det bygges inn, og kilden oppgis i `kvoter-og-regler.md`. Det som ikke kan bekreftes, stenges heller enn å gjettes.
+- **Filer:** `tools/rules/regler.py`, `src/data/rules.json`, `core/03e-rules.js`, `core/03d-quota.js`, `ui/phone` (Regler-appen og Papirer-appen), og en ny migrering hvis sonekvotene skal telles på serveren.
+- **Tester:** `rulestest`, `quotatest` og `tests/unit/` (rules), med et punkt i hver sone og et på hver side av hver grense.
 
-### R5 Hav, vær og is
+### R5 Hav, vær og is (V3 A)
 
 - **Hva:**
-  - **Klimaet:** nye punkter i `climate.json` for Bjørnøya, Hopen, Longyearbyen, Sentralbanken, Smutthullet, Vikingbanken og Shetland (`klima.yml`, Open-Meteo og ERA5 som i dag).
-  - **Tidevannet:** punkter ved Svalbard fra Kartverket (`tidevann.yml`). Ute i åpent hav brukes nærmeste punkt.
-  - **Isen** etter V3.
-  - **Lyset:** sola, mørketida og midnattssola ved 80° N sjekkes (`sun` etter posisjon), og nordlyset.
+  - **Klimaet:** nye punkter i `climate.json` for Bjørnøya, Hopen, Longyearbyen, Kvitøya, Sentralbanken, Smutthullet, Petsjorahavet, Jan Mayen, Nord-Island, Danmarkstredet, Færøyane, Vikingbanken og Shetland (`klima.yml`, Open-Meteo og ERA5 som i dag).
+  - **Tidevannet:** punkter ved Svalbard og Jan Mayen fra Kartverket (`tidevann.yml`). Ute i åpent hav og ved utenlandske kyster brukes nærmeste punkt, eller en global tidevannsmodell hvis en fri kilde finnes.
+  - **Isen (V3 A):**
+    - Iskonsentrasjonen etter måned, som middel for 1991–2020 fra OSI SAF eller Meteorologisk institutt, på 10 km.
+    - Den lages som en ny datafil `src/data/is.json`, med eget verktøy og egen workflow.
+    - Over en grense (anslått til 40 % konsentrasjon) er sjøen stengt for båter uten isklasse. Autonav seiler rundt.
+    - Grensen glir mellom månedene, så den flytter seg dag for dag og ikke i hopp.
+    - Gjelder Barentshavet, rundt Svalbard og Danmarkstredet.
+  - **Lyset:** sola, mørketida, midnattssola og nordlyset ved 80° N sjekkes.
   - **Dekningen:** telefonens dekning er null langt til havs (`coverage`). Sjekkes.
-- **Filer:** `tools/klima/`, `tools/tide/`, `core/03-simulation.js` (tidevann, sol), `core/03b-sea.js`, og en ny fil `core/03h-is.js` hvis V3 er A eller C.
-- **Tester:** `tidetest`, `seatest`, en sjekk av sola i `tests/unit/` (ingen egen soltest finnes), og en enhetstest for isen.
+- **Filer:** `tools/klima/`, `tools/tide/`, nytt verktøy `tools/is/`, `core/03-simulation.js` (tidevann, sol), `core/03b-sea.js`, ny fil `core/03h-is.js` (og i `COVER` i `run.py`), `core/11-route.js`.
+- **Tester:**
+  - `tidetest` og `seatest`.
+  - En enhetstest for isen: stengt i mars ved Kong Karls land, åpent i september, ingen hopp mellom dagene.
+  - En sjekk av sola i `tests/unit/`.
 
 ### R6 Fisken og havflåten på de nye feltene
 
 - **Hva:**
-  - **Fisken:** `fiske.json` har alt landingene per hovedområde for 28 m og over. Fordelingen og vandringen (`MIG.snokrabbe`, skreien, seien, makrellen) får regne der.
-  - **Havflåten:** `havflaate.py` kjøres på nytt med den nye rammen. Feltene som var «borte», blir felt med leier: rett ut fra siste farledsnode over åpent hav, slik feltene i dag.
-  - Turene går fra og til mottakene på fastlandet (V4). AIS og kartplotteren viser skipene der.
-  - **Navigasjonen:** Autonav og ruteplanleggeren over åpent hav, 400–900 km. Rutenettet i `11-route.js` må ikke bli for stort (`N = nx * ny`). Over åpent hav skal ruta bli rette strekk.
+  - **Fisken:** `fiske.json` har alt landingene per hovedområde for 28 m og over. Fordelingen og vandringen (`MIG.snokrabbe`, skreien, seien, makrellen, sild og lodde) får regne der.
+  - **Havflåten:** `havflaate.py` kjøres på nytt med den nye rammen. Alle feltene som var «borte», blir felt med leier over åpent hav, slik feltene i dag.
+  - Isen stenger felt og tvinger fram omveier for NPC-ene også.
+  - **Navigasjonen:** Autonav og ruteplanleggeren over åpent hav, 400–1 500 km. Rutenettet i `11-route.js` må ikke bli for stort (`N = nx * ny`). Over åpent hav skal ruta bli rette strekk, sjekket mot 1 km-laget, og ellers den fine sjekken nær land.
 - **Filer:** `tools/npc/havflaate.py`, `src/data/havflaate.json`, `core/03f-fiske.js`, `core/05d-hav.js`, `core/11-route.js`.
-- **Tester:** `tests/unit/flaate.test.mjs` (ingen felt borte i rammen), `npctest`, `autonavtest`, og en ny rute i `routes.json` fra Hammerfest til Bjørnøya.
-- **Måles:**
-  - Hvor mange felt som fortsatt er borte. Etter V1 A: Island og Grønland og russisk sone.
-  - At `havNear` ikke blir tyngre.
+- **Tester:**
+  - `tests/unit/flaate.test.mjs`: ingen felt borte.
+  - `npctest` og `autonavtest`.
+  - Nye ruter i `routes.json`: Hammerfest til Bjørnøya, Tromsø til Longyearbyen, Båtsfjord til Petsjorahavet og Ålesund til Nord-Island.
+- **Måles:** at `havNear` og AIS ikke blir tyngre, og at en rute på 1 500 km planlegges på under 1 s på nettbrettet.
 
-### R7 Stikkprøver, spilltest og utrulling
+### R7 Longyearbyen som havn (V4 B)
 
 - **Hva:**
-  - Seilas fra Båtsfjord til Sentralbanken, Hammerfest til Bjørnøya, Tromsø til Sørkapp, Ålesund til Shetland og Måløy til Vikingbanken, med kart, 3D, regler, vær og is.
+  - **Havna:** Longyearbyen blir havn for spillerens båter, med kai og liggeplass etter `quayFit`, og ly.
+  - **Ikke mottak:** man kan ikke levere fisk der, og det er ingen butikk og ikke noe verft.
+  - **Diesel:** i dag kjøpes diesel bare på mottak og verft (`docs/handelssteder.md`). Forslaget er at Longyearbyen får bunkring ved kaia som et unntak, fordi det er det eneste stedet på Svalbard. **Det trenger Jonas' ja,** fordi det er et unntak fra handelsstedene.
+  - **Mannskapsbytte:** mannskapet reiser med fly til og fra fastlandet. Det tar en ekte reisetid og har en billettpris fra kilde.
+  - **I 3D:** kaia og byggene fra vec-pakkene (R3).
+  - **Navnet** er stedsnavnet, ikke et firma.
+- **Filer:** `core/06b-coastports.js`, `core/07-harbours.js`, `core/04-crew.js`, `docs/handelssteder.md`.
+- **Tester:** `havntest`, `docktest`, `crewlifetest`, og en tur fra Tromsø til Longyearbyen med mannskapsbytte.
+
+### R8 Stikkprøver, spilltest og utrulling
+
+- **Hva:**
+  - Seilas fra Båtsfjord til Sentralbanken og Petsjorahavet, Hammerfest til Bjørnøya, Tromsø til Longyearbyen, Ålesund til Nord-Island og Færøyane, og Måløy til Vikingbanken og Shetland.
+  - På hver: kart, 3D (bølgene, sola og kompasset ved store γ), regler, vær, is og drivstoff.
   - Skjermbilder i begge formater.
   - Full regresjon med hele kysten (`/regresjon`) og utrulling.
 - **Tester:** `/stikkprove`, `/regresjon`.
 
 ## 4. Valgene
 
-**V1 Hvor langt rammen går**
-- **A (anbefalt): x −500 til 1 600 og y −1 000 til 1 720.** Det tar med Svalbard helt i nord, Bjørnøya, snøkrabbefeltene i fiskevernsonen og i norsk sone øst til delelinja, Smutthullet, og Nordsjøen vest til Shetland og Færøyane. Island, Grønland, Jan Mayen og russisk sone er fortsatt «borte». Det er de fire stedene Jonas nevnte, med god margin, og γ holder seg under 22° på de østligste feltene.
-- **B: også Jan Mayen, Island og russisk sone** (x −1 400 til 2 500). Da er alt havflåten fisker, med, men rammen blir rundt fire ganger så stor som i dag. γ blir opptil 35°, k blir 1,02, og kjernen blir tyngre for alle.
-
-**V2 Land med detalj**
-- **A (anbefalt): detaljfliser bare for Bjørnøya og Hopen.** Spitsbergen og øyene utenfor Nordsjøen får land på 200 m, kyst i sjøkartet og fjernhøyder i 3D. Fisket skjer flere nautiske mil fra land, så det er bare de små øyene som ligger midt i feltene, som trenger fjæra og sjømerkene.
-- **B: hele Svalbard i detalj.** Det gir anslagsvis 60 nye fliser og rundt 30 % større release, med fjorder, Longyearbyen og alt i 3D.
-- **C: bare kjernen overalt.** Bjørnøya blir da en klump på 200 m.
-
-**V3 Isen i Barentshavet**
-- **A (anbefalt): iskanten etter måned, fra klimatologien** (iskonsentrasjonen 1991–2020 fra OSI SAF eller Meteorologisk institutt). Båtene seiler ikke inn i tett is, og snøkrabbefeltene i nord stenger seg selv om vinteren. Det er ekte, gratis og den samme for alle spillerne.
-- **B: ingen is.** Det er enklest, men da kan man fiske ved Kong Karls land i mars.
-- **C: dagens iskart hver dag** fra en workflow, som tidevannet. Det er mest ekte, men det er mer arbeid, og kan komme senere oppå A.
-
-**V4 Havner utenfor fastlandet**
-- **A (anbefalt): ingen nye havner i H1b.** Turene går fra og til mottakene på fastlandet, som de gjør for NPC-flåten og i virkeligheten.
-- **B: Longyearbyen som havn uten mottak** (drivstoff, ly og mannskapsbytte).
+- **V1 Hvor langt rammen går.** Valgt **B**: også Jan Mayen, Island, Grønland og russisk sone. Løses som i kap. 3a. Det som ble anbefalt (A), var x −500 til 1 600 og y −1 000 til 1 720.
+- **V2 Land med detalj.** Valgt **B**: hele Svalbard i detalj, sammen med Jan Mayen, Bjørnøya og Hopen.
+- **V3 Isen i Barentshavet.** Valgt **A**: iskanten etter måned, fra klimatologien. En daglig iskant (C) kan komme senere oppå den.
+- **V4 Havner utenfor fastlandet.** Valgt **B**: Longyearbyen som havn uten mottak. Bunkringen der trenger Jonas' ja (R7).
 
 ## 5. Antatt eller usikkert
 
@@ -217,22 +313,31 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
   - Hvilke forskrifter som gjelder i fiskevernsonen i 2026.
   - Om snøkrabbe fortsatt har en stengt periode.
   - Ingen forskrift for britisk sone 2026 er funnet.
-- **Avstand i rutenettet:** spillet regner avstand og fart i rutenett-km, uten skalafaktoren k. Det gir 0,5 % for lang avstand ved Smutthullet og 1,1 % i Nordsjøen vest, mot 0,4 % ved Grense Jakobselv i dag. For en tur på tre døgn er det opptil 45 minutter. Planen retter det ikke, fordi det ville endre tidene langs hele kysten. Det tas opp igjen hvis spilltesten merker det.
-- **Svalbard i Overture:** om Svalbard har landkoden `NO` eller `SJ` i Overture, avgjør om flisvalget finner øyene. Om Geofabriks Norge-uttrekk har med Svalbard, avgjør hvor sjømerkene kommer fra.
-- **Dybden ved Svalbard:** Kartverkets 50 m-modell dekker trolig ikke Svalbard. GEBCO (rundt 460 m nord–sør) er grov for skjærene ved Bjørnøya.
-- **Kjernens størrelse** er bare et anslag (4–5 MB mot 2,9 MB) og må måles i R2.
-- **Kildene for isen** (OSI SAF og Meteorologisk institutts iskart) og lisensen deres er ikke lest.
-- **Tidevannet:** om `api.sehavniva.no` gir punkter på Svalbard, er ikke sjekket.
-- **3D ved store γ:** ved Smutthullet er γ 21°, slik at bølgene, vinden og sola dreies mye mellom rutenett og sann retning. Dette er regnet riktig i dag (4.7), men er aldri prøvd så langt ute.
+  - Avtalene med Russland, Island og Grønland er ikke søkt ennå.
+- **Den russiske lisensen:** behandlingstida og hvordan den søkes i dag, er ikke funnet. Finnes ingen kilde, foreslås det at lisensen kommer med havtillatelsen uten ventetid, heller enn en oppdiktet ventetid.
+- **Skalafaktoren (3a)** endrer tidene langs kysten litt, høyst 0,4 %. Tester med faste tider kan trenge nye tall. Det er en tilsiktet endring.
+- **3D ved store γ og k:** dette er regnet riktig etter 4.7, men aldri prøvd ved 40° og 4 %.
+- **Svalbard i Overture:** om Svalbard og Jan Mayen har landkoden `NO` eller `SJ` i Overture, avgjør om flisvalget finner øyene. Om Geofabriks Norge-uttrekk har med Svalbard, avgjør hvor sjømerkene kommer fra.
+- **Dybden ved Svalbard:** Kartverkets 50 m-modell dekker trolig ikke Svalbard. GEBCO (rundt 460 m nord–sør) er grov for skjærene.
+- **Størrelsen:** det grove laget (0,3–0,6 MB) og releasen med Svalbard (rundt 30 % større) er anslag. De måles i R2 og R3.
+- **Isen:** kildene (OSI SAF og Meteorologisk institutts iskart) og lisensen deres er ikke lest. Grensen på 40 % er et anslag. Ingen av havbåtene har isklasse i dataene.
+- **Tidevannet:** om `api.sehavniva.no` gir punkter på Svalbard og Jan Mayen, er ikke sjekket. Det er heller ikke sjekket om det finnes en fri global tidevannsmodell.
+- **Sentinel-2 så langt nord** (snø, skyer, lav sol) er ikke prøvd.
+- **Flybilletten og reisetida** for mannskapet mellom Longyearbyen og Tromsø trenger en kilde.
 
 ## 6. Hva planen ikke gjør
 
-- Ingen fiske i Island, Grønland, Jan Mayen eller russisk sone (med V1 A).
-- Ingen mottak eller handelssteder på Svalbard eller i utlandet (V4 A). Regelen i `docs/handelssteder.md` står.
+- Ingen mottak, butikker eller verft på Svalbard eller i utlandet. Longyearbyen er havn uten mottak (V4 B).
+- Ingen detaljfliser for utenlandsk land: Island, Færøyane, Grønland, Russland og Shetland får det nabolandene har i dag.
 - Ingen nye arter eller redskap. Det kommer i H2–H6.
+- Ingen daglig iskant (V3 C) ennå.
 - Origo flyttes ikke, og lagringene endres ikke.
 - Ingen ekte firma-, fartøy- eller rederinavn (CLAUDE.md).
 
 ## 7. Status
 
-- 03.11.2026: planen er skrevet etter Jonas' bestilling. Den venter på valgene V1–V4 og «kjør på».
+- 03.11.2026: planen er skrevet etter Jonas' bestilling.
+- 03.11.2026: valgene er tatt: V1 B, V2 B, V3 A og V4 B. Planen er skrevet om med kap. 3a (slik V1 B løses), R7 Longyearbyen og R8 stikkprøvene.
+- Venter på:
+  - Jonas' ja eller nei til bunkring i Longyearbyen (R7)
+  - «kjør på» for R1
