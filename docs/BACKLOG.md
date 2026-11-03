@@ -161,7 +161,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 ## 10.7 Små ryddejobber
 
-- **M7 står igjen** (02.11.2026): skilt ved verftene og mottakene, sponsorflagg, og `anchors.sign` i `tools/harbour/butikk.py` og `steder.py` (plassen står nå i `SIGNF` i `view3d/07-harbour-unit.js`; flytt den til modellens ankre neste gang byggene eksporteres med Blender). Tersklene (1,5 %, 55°, 1 s) sjekkes mot IABs fulle tekst før vi selger på tallene.
+- **M7 og M8 står igjen** (02.11.2026): sponsede design i Malerverkstedet, et flagg som vaier (nå en stiv plate), CSV-import av meglerens oppføringer (`tools/broker/import.py`), og at byggene eksporteres med `anchors.sign` (står i skriptene; bpy 4.5.4 finnes ikke for Python 3.13 her). IAB-tersklene er sjekket mot IAB UK og AdExchanger, men selve retningslinjen er ikke lest (iab.com og mediaratingcouncil.org er stengt herfra); Jonas laster ned PDF-en og sjekker før vi selger på tallene.
 - **M5 står igjen** (02.11.2026): navnet malt og flagget heist i selve 3D-modellen (nå et kort over bildet), innbyttebåten liggende ved verftets kai med «Til salgs» til neste uke.
 - **M4 står igjen** (02.11.2026, etter andre del): prøvetur ved kaia, bilder fra showroomet, og V3 B (felles telling av visninger og at en oppføring trekkes for alle når én spiller kjøper; nå forsvinner hun bare for kjøperen). `docs/planer/butikker-og-sponsorer.md`.
 - **fleet2test ventet fast 1,8 s etter reload** og ble rød da oppstarten ble tregere (lasteskjermen); venter nå på `S.fleet` (02.11.2026).

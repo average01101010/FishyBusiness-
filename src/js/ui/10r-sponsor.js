@@ -6,9 +6,19 @@ var SPUI = (() => {
   let tm = 0;
   // the list: the test sponsor with #sptest (tests, demo), else the cloud's sp_now() now and every hour; quietly nothing without it
   function load(){
-    if (/sptest/.test(location.hash || '')){ spSet(SP_TEST); return; }
+    if (/sptest/.test(location.hash || '')){ spSet(SP_TEST); gifts(); return; }
     if (typeof cloudRpc !== 'function' || typeof CLOUD_CFG === 'undefined' || !CLOUD_CFG || !CLOUD_CFG.supabaseUrl) return;
-    cloudRpc('sp_now', {}, {anon:true}).then(r => { spSet(r); }).catch(() => {});
+    cloudRpc('sp_now', {}, {anon:true}).then(r => { spSet(r); gifts(); }).catch(() => {});
+  }
+  // a partner's gift (M8, F7): something that is sold for game money anyway (a garment, CLOTHES), once per gift and player, with the
+  // sender's name; 'welcome' to every player while it is active. Never haill, never Skippertak (they are sold)
+  function gifts(){
+    if (typeof S === 'undefined' || !S || !S.clothes) return; S.spGift = S.spGift || {};
+    for (const r of SPN.list) if (r.kind === 'gift' && r.target === 'welcome' && !(r.id in S.spGift)){ const D = r.data || {}, C = typeof CLOTHES !== 'undefined' && CLOTHES[D.item]; if (!C) continue;
+      S.spGift[r.id] = S.t; S.clothes[D.item] = (S.clothes[D.item] || 0) + 1;
+      if (typeof msg === 'function') msg(r.sponsor.name, (D.text ? String(D.text).slice(0, 200) + ' ' : '') + 'Gaven ligger i Beholdning: ' + C.no.toLowerCase() + '. (Samarbeid)', (D.text_en ? String(D.text_en).slice(0, 200) + ' ' : '') + 'The gift is in the Inventory: ' + C.en.toLowerCase() + '. (Partnership)');
+      log('Gave fra ' + r.sponsor.name + ': ' + C.no.toLowerCase() + '.', 'A gift from ' + r.sponsor.name + ': ' + C.en.toLowerCase() + '.');
+      if (typeof cloudEv === 'function') cloudEv('sp_gift', {pl:r.id}); }
   }
   function start(){ load(); clearInterval(tm); tm = setInterval(load, 3600 * 1000); }
   // the brand bought on a vessel's item: S.brand['v1:garnhaler'] = {n, m}
@@ -37,5 +47,5 @@ var SPUI = (() => {
   function sendViews(){ if (typeof G3 === 'undefined' || !G3.signTake || typeof cloudEv !== 'function') return; for (const v of G3.signTake()) cloudEv('sp_view', v); }
   setInterval(sendViews, 600000); addEventListener('pagehide', sendViews, true); document.addEventListener('visibilitychange', () => { if (document.hidden) sendViews(); }, true);   // (capture: before the cloud sends its batch)
   setTimeout(start, 1500);
-  return {load, card, hb, brandOf, setBrand, sendViews};
+  return {load, card, hb, brandOf, setBrand, sendViews, gifts};
 })();

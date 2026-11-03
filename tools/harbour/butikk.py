@@ -401,7 +401,9 @@ def anchors():
                        [(hx0 + hx1) / 2, -(hy0 + hy1) / 2, hx1 - hx0 + 0.8, hy1 - hy0 + 0.9, -3.0, HRIDGE + 0.3]],
             'clear': [[ax0, -ay0, ax1, -ay1]],
             'lamps': [G(x, y, QTOP + 4.95) for x, y in LAMPS] + [G(DOOR, SHOP[2] - 0.75, QTOP + 2.9), G(ROLL[0], HALL[2] - 0.35, QTOP + ROLL[2] + 1.45)],
-            'door': G(DOOR, SHOP[2] - 1.5), 'roller': G(ROLL[0], HALL[2] - 0.5)}
+            'door': G(DOOR, SHOP[2] - 1.5), 'roller': G(ROLL[0], HALL[2] - 0.5),
+            # a partner's banner (M7, view3d drawSigns): [x0, x1, y0, y1, z] in the game's frame, on two posts 2.5 m in front of the shop's west end
+            'sign': [-16.2, -12.4, QTOP + 2.7, QTOP + 4.6, -(SHOP[2] - 2.5)]}
 
 SHOTS = [('sea', (-2.0, -46.0, 7.5), (-1.0, 12.0, 6.0), 32), ('sea3q', (30.0, -34.0, 14.0), (-1.0, 12.0, 4.0), 30),
          ('quay', (-22.0, 2.0, QTOP + 1.7), (-2.0, 12.0, QTOP + 3.2), 28), ('entrance', (-3.0, 1.5, QTOP + 1.6), (-8.0, 11.5, QTOP + 2.4), 26),

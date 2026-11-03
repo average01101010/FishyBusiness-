@@ -501,6 +501,7 @@ def anchors():
     return {'face': {'hl': HL + 0.4, 'depth': DEPTH + 0.4, 'kerb': KERB, 'deckY': QTOP, 'bottom': WALL_BOT},
             'deck': [G(-HL - 0.4, 0.0), G(HL + 0.4, 0.0), G(HL + 0.4, DEPTH + 0.4), G(-HL - 0.4, DEPTH + 0.4)],
             'basin': {'x': HL + 6, 'z': 26.0, 'depth': -6.6},
+            'sign': [-24.0, -20.2, QTOP + 3.4, QTOP + 5.3, -(BLDG[2] - 0.08)],   # a partner's banner (M7, view3d drawSigns): high on the building's front, west end
             'berths': {'main': {'x': BERTH, 'len': 24.0}, 'bunker': {'x': 16.5, 'len': 23.0}},
             'bollards': [G(-24.5 + 7 * k, 0.5, QTOP + 0.55) for k in range(8)],
             'crane': {'base': G(CRANE[0], CRANE[1], QTOP + 1.1), 'heel': G(CRANE[0], CRANE[1], CR_PIV), 'boom1': 4.95, 'ext': 4.6},
