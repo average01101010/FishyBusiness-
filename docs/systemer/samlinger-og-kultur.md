@@ -48,6 +48,21 @@ Jonas' avgjørelser står i `docs/engasjement.md`, arbeidslista punkt 1.5 og 3. 
   - `sqltest`: trakten.
   - `towtest`: slepet med betaling (`S.free` satt).
 
+## 5.58 Kystkartet (03.11.2026, Oppdrag 2 fase K2; Jonas 30.10.2026: «Ja, dette er intressante stats for enkelte, og vil bygge geografisk lærdom»)
+
+Samlingen for hele kysten, punkt 7 i arbeidslista i `docs/engasjement.md`. Fire lister på ett kart, fylt av det spilleren alt gjør; ingenting nytt å gjøre.
+
+- **Listene** (`core/09m-kystkart.js` `kkCount`):
+  - *Mottak du har levert til*, av alle havnene med mottak (`PORTS` med `mottak`, 161: de sju på Senja og de 154 fra kjøperregisteret). Leses av salgene og `S.tat.plant`, som merket «Mottak langs kysten»; Finnsnes (ikke mottak) teller ikke.
+  - *Fyr du har fotografert* for Kystposten, av de 134 i `src/data/fyr.json`. `turFotoTake` kaller `kkFyr` med fyrets plass i `FYR`. Lagres i `S.kk.fyr`.
+  - *Statistikkområder fisket i*, av Fiskeridirektoratets 60 statistiske hovedområder (`RU.hom`, de samme som sesongene og reglene bruker, `ruHom`). Et område teller når båten fisker der (`kkMinute` fra `achMinute`, hvert femte spillminutt med `status === 'fishing'`) eller et fangstmerke (`S.marks`: juksing og dregne garn, line og teiner) ligger der. Lagres i `S.kk.hom`.
+  - *Arter du har levert*, av artene kystflåten kan lande (`SPECIES` uten `npc`, 10). Leses av `S.ach.sp`.
+- **Et spill fra før** starter med det det har gjort (endowed progress): mottakene og artene fra salgene, fyrbildene som står i egne saker i Kystposten (`S.press.own`, de siste), og områdene til fangstmerkene som er lagret. Fyrbilder fra før som avisa ikke lenger har, og fiske uten fangstmerke, kan ikke hentes tilbake.
+- **Milepæler-appen**, fanen «Kystkartet» (`ui/05h-kystkart.js` `kkTab`): et lite kart av hele kysten (områdene tynnet til et punkt per 2 km, fylt grønt der du har fisket; mottakene som prikker, blå der du har levert; fyrene som små trekanter, gule der du har tatt bildet; båten som en ring), de fire tallene med stolpe, artene som brikker, og listene over mottakene, fyrene og områdene du har.
+- **«Vis i sjøkartet»** (`kkChart`, `kkSvg` i den statiske runden i `ui/03-map.js`): kartplotteren fra hele kysten, med en ring rundt mottakene du har levert til, en stjerne ved fyrene du har fotografert, områdene du har fisket i fylt, og områdenes nummer når kartet er langt ute. Bare det du har, tegnes, fordi kartet alt har sine egne havneikoner. Linja nede til venstre viser tallene og lukker laget. Laget er av som standard, lagres ikke, og slås av av seg selv når en rute legges eller 3D-visningen åpnes (Jonas 03.11.2026: «Jeg vil i allefall ikke at det skal vises i kartplotteren hele tiden når man skal navigere. Det blir bare støy.»).
+- **Trinnene (K2 del 2, 03.11.2026):** hver liste har et merke i `ACHL` med en gave per trinn, i samme skala som de andre merkene (`achGive(..., 3)`): «Mottak langs kysten» 3, 5, 10, 25, 50 og nå 100; nye «Kystkartet: fyr fotografert» 1, 5, 10, 25, 50, 100 og «Kystkartet: statistikkområder fisket i» 3, 5, 10, 20, 40; «Arter levert» 3, 5, 8 og nå 10 (før 12, som ikke kunne nås med ti arter). Et spill som har tatt trinn før merket kom, får dem stille uten gave (`S.ach.lk`). Fanen viser neste trinn under hver liste.
+- **Tester:** `kystkarttest` (fanen, kartet og laget i begge formater, `tests/out/kk-*.png`), `tests/unit/kystkart.test.mjs` (tallene, områdene etter punkt, spill fra før).
+
 ## 5.25d Fars notatbok og drømmefisken (05.10.2026) – TATT UT 09.10.2026, se 5.56
 
 Jonas valgte dem fra lista over det som får folk til å spille videre (nr. 2 og 3). Reglene ligger i `core/09b-dream.js`, og appen, kartmerkene og kampen i `ui/06c-notebook.js`. Testen er `tests/dreamtest.py`.

@@ -55,7 +55,10 @@ const ACHL = [
   {id:'lev', n:['Største levering', 'Biggest landing'], tiers:[100000, 250000, 500000, 1000000], unit:'kr', v:() => achBest()},
   {id:'tonn', n:['Levert i alt', 'Landed in all'], tiers:[10, 25, 50, 100, 250, 500, 1000], unit:'t', v:() => achKg() / 1000},
   {id:'fs', n:['Fartstid', 'Sea time'], tiers:[10, 20, 30, 40], unit:'år', v:() => fsOf(fsState().p).y},
-  {id:'mottak', n:['Mottak langs kysten', 'Plants along the coast'], tiers:[3, 5, 10, 25, 50], unit:'', v:() => achPorts()},
+  {id:'mottak', n:['Mottak langs kysten', 'Plants along the coast'], tiers:[3, 5, 10, 25, 50, 100], unit:'', v:() => achPorts()},
+  // Kystkartet's steps (core/09m-kystkart.js, docs/planer/oppdrag-2.md K2): the lighthouses photographed and the statistical areas fished in
+  {id:'fyr', n:['Kystkartet: fyr fotografert', 'The coast map: lighthouses photographed'], tiers:[1, 5, 10, 25, 50, 100], unit:'', v:() => typeof kkCount === 'function' ? kkCount().fyr[0] : 0},
+  {id:'omr', n:['Kystkartet: statistikkområder fisket i', 'The coast map: statistical areas fished in'], tiers:[3, 5, 10, 20, 40], unit:'', v:() => typeof kkCount === 'function' ? kkCount().omr[0] : 0},
   {id:'fisk', n:['Fisk tatt', 'Fish caught'], tiers:[100, 1000, 5000, 10000, 50000, 100000], unit:'', v:() => achFish()},
   {id:'turer', n:['Turer fullført', 'Trips completed'], tiers:[10, 50, 100, 250, 500], unit:'', v:() => (S.stats && S.stats.trips) || 0},
   {id:'lete', n:['Letefisker: leteoppdrag', 'Searcher: search missions'], tiers:[1, 5, 10, 25], unit:'', v:() => achC('lete')},
@@ -70,7 +73,7 @@ const ACHL = [
   {id:'ptow', n:['Slept andre spillere', 'Towed other players'], tiers:[1, 5, 20], unit:'', v:() => achC('ptow')},
   {id:'tut', n:['Tutet på andre båter', 'Horns sounded at other boats'], tiers:[1, 10, 50, 200], unit:'', v:() => achC('horn')},
   {id:'venner', n:['Venner', 'Friends'], tiers:[1, 5, 10, 25], unit:'', v:() => typeof FRIENDS !== 'undefined' ? FRIENDS.count() : 0},
-  {id:'arter', n:['Arter levert', 'Species landed'], tiers:[3, 5, 8, 12], unit:'', v:() => Object.keys((S.ach && S.ach.sp) || {}).length},
+  {id:'arter', n:['Arter levert', 'Species landed'], tiers:[3, 5, 8, 10], unit:'', v:() => Object.keys((S.ach && S.ach.sp) || {}).length},   // (10 species a coastal boat can land: the last step is all of them, Kystkartet K2)
   {id:'nm', n:['Nautiske mil om bord', 'Nautical miles aboard'], tiers:[250, 1000, 2500, 5000, 10000], unit:'nm', v:() => (S.tat && S.tat.nm) || 0},
   {id:'natt', n:['Nattfiske', 'Night fishing'], tiers:[1, 10, 50], unit:'', v:() => achC('night')},
   {id:'peer', n:['Andre spillere møtt på sjøen', 'Other players met at sea'], tiers:[1, 10, 50], unit:'', v:() => Object.keys((S.ach && S.ach.peers) || {}).length},
@@ -102,6 +105,7 @@ function achCatch(sp, cls){ achFish(); achAdd('fishn'); if (sp === 'torsk' && cl
 // each game minute: rough weather with you aboard (a gale, Beaufort 6 and up), night fishing, and another player's boat near
 function achMinute(){
   if (S.t % 10 === 0) achCheck();
+  if (typeof kkMinute === 'function') kkMinute();   // Kystkartet: the statistical areas fished in (09m-kystkart.js)
   const b = S.boat; if (!meAboard() || b.status === 'port') return;
   const A = achState(), H = S.t / 60;
   if (!A.stormT && beaufort(windAt(H)) >= 6) A.stormT = 1;

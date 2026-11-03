@@ -378,7 +378,8 @@ function applyLang(){
 }
 $('view3d').onclick = () => G3.toggle();
 // ---------- screens: full-screen 3D, or the chart plotter for route planning ----------
-function setBodyView(v3d){ document.body.classList.remove('drawer'); if (v3d) plotSetOpen(false); document.body.classList.toggle('v3d', v3d); document.body.classList.toggle('vplot', !v3d); }
+function setBodyView(v3d){ if (v3d && typeof KK !== 'undefined' && KK.on) kkChart(false);   // Kystkartet off with the chart (ui/05h-kystkart.js)
+  document.body.classList.remove('drawer'); if (v3d) plotSetOpen(false); document.body.classList.toggle('v3d', v3d); document.body.classList.toggle('vplot', !v3d); }
 // the chart plotter opens on the boat, PLOT_KM km of chart from top to bottom (the user's wish 02.10.2026); it is opened from the
 // little chart in 3D (#miniPlot, ui/03e-miniplot.js), the dock's Auto-nav and the tutorial
 const PLOT_KM = 6;
