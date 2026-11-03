@@ -153,6 +153,7 @@ const HB = [
   {id:'lex_montering', ch:8, lex:true, t:['Montering', 'Fitting'], when:() => false,
     no:'Utstyr monteres i havn og tar en halvtime på verftet eller i butikken, og flere jobber går samtidig. Utstyret følger med om du bytter båt, bortsett fra motoren og utstyr som ikke passer den nye båten; det blir igjen på den gamle og betales ikke.',
     en:'Equipment is fitted in port and takes half an hour at the yard or the shop, and several jobs run side by side. The equipment moves with you if you change vessel, except the engine and equipment that does not suit the new vessel; that stays with the old one and is not paid for.'},
+  {id:'lex_sponsor', ch:8, lex:true, t:['Sponsorer', 'Sponsors'], when:() => false, get no(){ return SPUI.hb('no'); }, get en(){ return SPUI.hb('en'); }},
   {id:'lex_klaer', ch:8, lex:true, t:['Klær og kulde', 'Clothes and the cold'], when:() => false,
     no:'Kalde og våte hender fisker dårligere: under null går sløying, egning og fisket saktere, og kulda står i statusboksen. Alle om bord trenger sine egne klær. Oljehyre holder deg tørr, varmedressen holder varmen.',
     en:'Cold, wet hands fish worse: below zero gutting, baiting and the fishing go slower, and the cold stands in the status box. Everyone aboard needs their own clothes. Oilskins keep you dry, the thermal suit keeps you warm.'},

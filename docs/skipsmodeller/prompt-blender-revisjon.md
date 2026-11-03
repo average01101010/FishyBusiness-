@@ -2,7 +2,7 @@ Revider båtmodellen: [BÅTENS NAVN]
 
 Dette er en eksisterende Blender-modell i spillet som ikke ble bygd etter noen plan. Løft den til samme nivå og arbeidsmåte som pilotbåten ringnot38 og de reviderte båtene trebat, skiff, snekke, plastsjark, sjark (havsjarken) hurtigsjark og den nye hurtigsjarken sjarkny (F5 i docs/planer/grafikk-batmodeller.md). Finn selv ut hvilken type i VESSELS og hvilket skript i tools/boats/ navnet gjelder.
 
-GRENEN: main er tom; spillet ligger på arbeidsgrenene. Bygg på den nyeste grenen med spillet (nå ccr-d78d62c5-6euqj9 med breisjarken; før ccr-70d301a0-y5jgev, som har trebåten, skiffen, plastsnekka, plastsjarken, havsjarken, hurtigsjarken, den nye hurtigsjarken, verktøyene i tools/boats/qa og lærdommene; den er også rullet ut til ccr-5e1ba2f4-pusvyd) og commit underveis.
+GRENEN: main er tom; spillet ligger på arbeidsgrenene. Bygg på den nyeste grenen med spillet (nå ccr-e5ebc237-pm3432 med kystbåten, før ccr-d78d62c5-6euqj9 med breisjarken; før ccr-70d301a0-y5jgev, som har trebåten, skiffen, plastsnekka, plastsjarken, havsjarken, hurtigsjarken, den nye hurtigsjarken, verktøyene i tools/boats/qa og lærdommene; den er også rullet ut til ccr-5e1ba2f4-pusvyd) og commit underveis.
 
 LESING ER ET ABSOLUTT KRAV FØR NOE ARBEID BEGYNNER. Ingen rendring, ingen eksport og ingen endring i noe skript før alt under er lest i sin helhet, ikke i utdrag; store filer leses i flere biter til de er lest helt. Når du er ferdig, skriv en kort liste til meg over hver fil med én setning om det viktigste du tok med deg fra den, og si ærlig fra om noe ikke er lest helt, og hvorfor. (Plastsjarken fikk 66/100, blant annet fordi økta leste spillets kode for modellen først da testene feilet, sulebas-bygging.md kap. 15. Havsjarken fikk 64/100: Jonas fant bulene i baugen og de svarte klaffene foran spygattene før økta, i bilder som alt var tatt, kap. 16. Hurtigsjarken fikk 62/100: Jonas måtte spørre etter lensportene, og økta brukte timer på tester som ikke kunne si noe nytt, kap. 17.)
   0. **Leselista** (`docs/skipsmodeller/leseliste.md`, Jonas 02.11.2026): del 1 leses helt i hver økt uten unntak: pilotbåten (`sulebas-bygging.md`, `sulebas-pilot-grunnlag.md` med alle 22 rundene i kap. 7.1, `ringnot38.py`), planlisten, /blender og denne fila. Punktene under utdyper hva som gjelder denne båten.
@@ -47,6 +47,17 @@ FERDIG BETYR:
 Kjør på.
 
 ---
+
+Det neste økt bør vite (etter kystbåten 02.11.2026):
+
+- Grenen med alt er nå `ccr-e5ebc237-pm3432` (bygd på utrullingsgrenen `ccr-5e1ba2f4-pusvyd`, rullet ut dit når testene er grønne).
+- Les `sulebas-bygging.md` kap. 20: se hva et vedlagt bilde viser (det kan være spillets eget sidebilde), render den gamle modellen før
+  skriptet skrives over, og kjør `qa/deckpoints.py` rett etter første eksport (en leider med foten i en sperret celle tok shelterdekket ut).
+- `kyst15.py` er malen for en shelterdekker (halestasjon, leider, styrhus i full bredde med vindusbånd, seil satt og beslått).
+- `disp` i `VESSELS` er den tomme båten (spillet legger lasten oppå; Jonas 02.11.2026 for kystbåten); spør for hver båt om modellens vannlinje
+  skal være den tomme eller en lastet.
+- Før-bildene i SwiftShader kan ta en time eller dø; Jonas kan ta dem på nettbrettet.
+- Selvvurderingen står i `kyst15-grunnlag.md` kap. 8. Neste i rekkefølgen etter `docs/batplan.md` del 10: `kyst21.py`.
 
 Det neste økt bør vite (etter breisjarken 02.11.2026):
 

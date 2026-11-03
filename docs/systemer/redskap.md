@@ -4,10 +4,11 @@
 
 ## 5.31 De andres redskap i havet (tilbakemelding #35, 07.10.2026)
 
-- **Hva:** garn, liner og teiner som andre spillere har stående, vises uten eier: grå streker med bøyer i kartplotteren (`gearSvg`, `10-gear-ui.js`) og bøyene i 3D (`drawGearSea`). Det er bare visning: de kan ikke trykkes på, og de stopper ikke setting eller ruter.
+- **Hva:** garn, liner og teiner som andre spillere har stående, vises uten navn i kartet: grå streker med bøyer i kartplotteren (`gearSvg`, `10-gear-ui.js`), i 3D-plotteren og som bøyene i 3D (`drawGearSea`). De stopper ikke setting eller ruter.
 - **Server** (`supabase/migrations/20261007200000_gear.sql`): tabellen `gear_sets` (spiller, id, slag og de to bøyene), uten policy. `gear_put(sets)` skriver over spillerens egne (høyst 60), `gear_near(x, y, r)` gir de andres innenfor r km (høyst 60) som `[slag, x1, y1, x2, y2]`, nærmest først, høyst 300, uten gjester og uten noe om eieren (ingen id, ingen navn). Sett som ikke er fornyet på 14 døgn, hoppes over.
 - **Klient** (`gearSync` i `10h-world.js`, kalt fra `worldTick` hvert 15. sekund): egne sett går opp når de endrer seg og hvert 5. minutt, de andres hentes én gang i minuttet eller når båten har gått 5 km. `PEERGEAR` (`05-vessels.js`) er listen. En database uten funksjonene (404) lar spillet være i fred.
-- **Å gjøre:** migrasjonen må kjøres (Supabase-MCP-en ble avbrutt da den skulle legges inn). Til da vises ingenting av de andres redskap.
+- **Kjørt:** `gear_near` og `gear_put` finnes i databasen (sjekket 02.11.2026).
+- **Hvem som eier det (02.11.2026, Jonas: «Trenger ikke å vises navn i kartet, men at man eventuelt kan trykke på fiskeredskapet for mer å få opp info om hvem som eier redskapet»):** et trykk på en bøye i kartet til en annen spiller (eller en NPC-båt, 4.16d i `npc-trafikk.md`) åpner et kort med redskapet, eierens spillernavn, båten, lengden og avstanden. Kartet viser fortsatt ingen navn. `gear_near2` (`20261102130000_gear_owner.sql`) gir `[slag, x1, y1, x2, y2, spillernavn, båt]`: navnet bare der admin ikke har tatt det bort, og båten fra `presence`. Jonas må kjøre migreringen. Til da bruker spillet `gear_near` (404 → `GEARP.old`), og kortet viser «–» som eier.
 - **Test:** `peergear.py` (en etterligning av databasen står i stedet for den).
 
 ## Redskap i sjøen: garn, line og teiner (R1–R7, ferdig 30.09.2026)

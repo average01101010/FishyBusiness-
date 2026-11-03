@@ -30,7 +30,7 @@
   function mgCard(Q){
     const V = VESSELS[Q.type], d = mktDays(Q), cut = mktCut(Q);
     return '<button class="ph-card vcard mg-card" data-pa="mgsel" data-id="' + Q.id + '"><span class="vpic">' + vesselSVG(Q.type) + '</span><span class="vtx"><b>«' + Q.name + '» <small class="mg-nr">' + Q.id + '</small></b><small>' + V.name[S.lang] + ' · ' + Q.year + ' · ' + fmt(Q.engH, 0) + L(' motortimer', ' engine hours') + '</small>' +
-      '<span class="vpr">' + kr(mktPrice(Q)) + (cut ? ' <i class="mg-cut">' + L('satt ned', 'reduced') + '</i>' : '') + '</span>' + mgGoal(Q) + '<small>' + L('Ligger i ', 'Lies at ') + portById(Q.port).name + ' · ' + fmt(mgNm(Q), 0) + ' nm · ' + (d ? L('lagt ut for ' + d + ' dager siden', 'listed ' + d + ' days ago') : L('lagt ut i dag', 'listed today')) + '</small></span></button>';
+      (Q.broker ? '<small class="mg-br"><span class="ic-sp-tag">' + L('Samarbeid', 'Partnership') + '</span> ' + L('formidlet av ', 'listed by ') + turEsc(Q.broker.name) + '</small>' : '') + '<span class="vpr">' + kr(mktPrice(Q)) + (cut ? ' <i class="mg-cut">' + L('satt ned', 'reduced') + '</i>' : '') + '</span>' + mgGoal(Q) + '<small>' + L('Ligger i ', 'Lies at ') + portById(Q.port).name + ' · ' + fmt(mgNm(Q), 0) + ' nm · ' + (d ? L('lagt ut for ' + d + ' dager siden', 'listed ' + d + ' days ago') : L('lagt ut i dag', 'listed today')) + '</small></span></button>';
   }
   const mgFits = Q => deal(mktPrice(Q), tradeIn()).ok;
   // «Neste mål» on the card: how far the equity is from what the bank wants for her (with the boat you have traded in)
@@ -56,6 +56,7 @@
     let A = mktListings().filter(x => tab === 'alle' || VESSELS[x.type].cls === tab);
     if (so === 'fit') A = A.filter(mgFits);
     A.sort(so === 'cheap' ? (a, b) => mktPrice(a) - mktPrice(b) : so === 'new' ? (a, b) => b.H0 - a.H0 : (a, b) => mgNm(a) - mgNm(b));
+    { const F = A.filter(x => x.broker && x.broker.featured).slice(0, 2); A = F.concat(A.filter(x => !F.includes(x))); }   // a broker's featured ones first, at most two (M8, F6)
     h.push('<p class="ph-note">' + L(A.length + ' båter til salgs langs kysten. Bud kan gis herfra; takst og kjøp der båten ligger.', A.length + ' boats for sale along the coast. Bids can be made from here; survey and purchase where the boat lies.') + '</p>');
     h.push(mgWishCard());
     const mine = S.fleet.filter(v => v.id !== S.me);
@@ -82,6 +83,9 @@
     h.push('<p class="mg-strip">' + mgStrip(Q) + '</p><p class="ph-note">' + (mktDays(Q) ? L('Lagt ut for ' + mktDays(Q) + ' dager siden', 'Listed ' + mktDays(Q) + ' days ago') : L('Lagt ut i dag', 'Listed today')) + ' · ' + L('sett av ' + mktSeen(Q) + ' skippere', 'seen by ' + mktSeen(Q) + ' skippers') + (mktCut(Q) ? ' · <b>' + L('Prisen satt ned', 'Price reduced') + '</b>' : '') + '</p>');
     h.push(sec(L('Pris', 'Price'), [kv(L('Prisantydning', 'Asking price'), kr(ask)), D && D.kr < ask ? kv(L('Ditt bud er godtatt', 'Your bid is accepted'), kr(D.kr) + L(' i ei uke', ' for a week')) : '', kv(L('Markedsverdi', 'Market value'), L('ca. ', 'about ') + kr(Q.fair))]));
     // the seller
+    if (Q.broker) h.push('<div class="ph-card mg-broker"><h4><span class="ic-sp-tag">' + L('Samarbeid', 'Partnership') + '</span> ' + L('Formidlet av ', 'Listed by ') + turEsc(Q.broker.name) + '</h4>' + (Q.broker.line ? '<p>' + turEsc(Q.broker.line) + '</p>' : '') +
+      '<p class="ph-note">' + L('En ekte båt til salgs, vist som nærmeste båttype i spillet, med pris i spillets skala.', 'A real boat for sale, shown as the nearest boat type in the game, with the price in the game\'s scale.') + '</p>' +
+      (Q.broker.url ? '<p class="ic-sp-out"><a class="ic-sp-link" href="' + turEsc(Q.broker.url) + '" target="_blank" rel="noopener sponsored" data-pl="' + Q.broker.pl + '">' + L('Se den ekte båten ↗', 'See the real boat ↗') + '</a> <small>' + L('åpner utenfor spillet', 'opens outside the game') + '</small></p>' : '') + '</div>');
     h.push('<div class="ph-card mg-seller"><h4>' + Q.seller.name + ' <small>' + L(MG_KIND[Q.seller.kind][0], MG_KIND[Q.seller.kind][1]) + ', ' + Q.seller.home + '</small></h4><p>«' + mgSays(Q) + '»</p><p class="ph-note">' + L('Alle opplysninger er gitt så korrekt som mulig, men uten ansvar for feil og mangler.', 'All details are given as correctly as possible, but without liability for errors and omissions.') + '</p></div>');
     // the state, and what the takst found
     h.push(sec(L('Tilstand', 'Condition'), [kv(L('Skrog', 'Hull'), mgPct(Q.cond.hull)), mgBar(Q.cond.hull), kv(L('Motor', 'Engine'), tk ? mgPct(Q.motorT) + (Q.flaw ? ' · <b class="r2">' + L('dårligere enn oppgitt', 'worse than stated') + '</b>' : ' · ' + L('som oppgitt', 'as stated')) : mgPct(Q.cond.motor) + L(' (oppgitt)', ' (stated)')), mgBar(tk ? Q.motorT : Q.cond.motor),

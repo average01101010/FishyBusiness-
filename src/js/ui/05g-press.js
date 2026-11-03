@@ -1,7 +1,7 @@
 // ---------- Kystposten on the phone (core/09h-press.js): the front page and the local tab, a story to read on, the unread count on
 // the app, a word in the game when one comes, and the stories to and from the cloud (supabase/migrations/20261007170000_news.sql) ----------
 const PRESS_KIND = {boat:['Båtkjøp', 'Boats'], name:['Båtdåp', 'Christening'], aground:['Ulykke', 'Accident'], rescue:['Redning', 'Rescue'], salv:['Berging', 'Salvage'],
-  foto:['Fyr', 'Lighthouses'], fish:['Fangst', 'Catch'], fs:['Folk', 'People'], ach:['Folk', 'People'], as:['Næring', 'Business'], tur:['Fiske', 'Fishing'], kvote:['Næring', 'Business'], top:['Toppliste', 'Leaderboard'], land:['Landing', 'Landings'], pris:['Marked', 'Market'], skrei:['Fangst', 'Catch'], gen:['Nyheter', 'News']};
+  foto:['Fyr', 'Lighthouses'], fish:['Fangst', 'Catch'], fs:['Folk', 'People'], ach:['Folk', 'People'], as:['Næring', 'Business'], tur:['Fiske', 'Fishing'], kvote:['Næring', 'Business'], top:['Toppliste', 'Leaderboard'], land:['Landing', 'Landings'], pris:['Marked', 'Market'], skrei:['Fangst', 'Catch'], gen:['Nyheter', 'News'], annonse:['Annonse', 'Advertisement']};
 const pressL = (s, k) => s[k][S.lang === 'en' ? 1 : 0];
 function pressImg(s, small){
   if (!s.img) return '';
@@ -26,7 +26,8 @@ function pressPage(local){
 function pressArticle(s){
   const L0 = (no, en) => S.lang === 'en' ? en : no;
   return '<div class="pa-art"><button class="ph-btn pa-back" data-pa="artback">‹ ' + L0('Tilbake', 'Back') + '</button><span class="pa-kick">' + pressL(PRESS_KIND, s.kind) + ' · ' + dayStr(s.t / 60) + '</span>' +
-    '<h3>' + turEsc(pressL(s, 'h')) + '</h3>' + pressImg(s, false) + '<p class="pa-ing">' + turEsc(pressL(s, 'ing')) + '</p>' + s.body.map(b => '<p>' + turEsc(b[S.lang === 'en' ? 1 : 0]) + '</p>').join('') + '</div>';
+    '<h3>' + turEsc(pressL(s, 'h')) + '</h3>' + pressImg(s, false) + '<p class="pa-ing">' + turEsc(pressL(s, 'ing')) + '</p>' + s.body.map(b => '<p>' + turEsc(b[S.lang === 'en' ? 1 : 0]) + '</p>').join('') +
+    (s.ad ? '<p class="pa-ad">' + L0('Annonse fra ', 'Advertisement from ') + turEsc(s.ad.name) + (s.ad.url ? ' · <a class="ic-sp-link" href="' + turEsc(s.ad.url) + '" target="_blank" rel="noopener sponsored" data-pl="' + s.ad.pl + '">' + L0('Se hos ', 'See at ') + turEsc(s.ad.name) + ' ↗</a> <small>' + L0('åpner utenfor spillet', 'opens outside the game') + '</small>' : '') + '</p>' : '') + '</div>';
 }
 function pressFind(key){ return pressList(false).concat(pressList(true)).find(x => x.key === key) || null; }
 // a word in the game: one's own story as it is printed, and now and then one of the others' (a big one, or one near home)

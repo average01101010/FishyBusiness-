@@ -216,6 +216,11 @@ function pressList(local){
   const top = local ? [] : pressTop(); for (const s of top) out.push(s);
   for (const s of pressBygde()) if (!local || near(s)) out.push(s);
   const day = Math.floor(S.t / 1440);
+  // a partner's advertisement (M8, F4; docs/planer/butikker-og-sponsorer.md): one in each day's paper at the most, on the front page,
+  // marked «Annonse» (mfl. § 3), from the sponsors' data (core/09l-sponsor.js spOf('press', 'kystposten')); never a push, never unread
+  if (!local && typeof spOf === 'function'){ const A = spOf('press', 'kystposten'), D = A && A.data;
+    if (D && D.h && D.text) out.push({key:'ad' + day + '_' + A.id, t:Math.min(day * 1440 + 7 * 60, S.t), kind:'annonse', x:null, y:null, me:false, big:false, img:null,
+      h:[String(D.h).slice(0, 90), String(D.h_en || D.h).slice(0, 90)], ing:[String(D.text).slice(0, 400), String(D.text_en || D.text).slice(0, 400)], body:[], ad:{name:A.sponsor.name, url:spUrl(A.sponsor.site), pl:A.id}}); }
   if (!local) for (let dd = day; dd >= Math.max(0, day - 6); dd--) for (const sp of pressRecords(dd)){ const s = pressPrice(sp, dd); if (s) out.push(s); }
   for (let dd = day; dd >= Math.max(0, day - 6); dd--) newsForDay(dd).forEach((a, i) => { if (top.length && /^Ukas toppfisker/.test(a.h.no)) return;   // the shared leaderboard's, not the local fleet's
     if (!!a.nat === !local || (!local && dd === day && !a.nat && i < 2))
@@ -223,5 +228,5 @@ function pressList(local){
   return out.sort((a, b) => Math.floor(b.t / 1440) - Math.floor(a.t / 1440) || (b.kind !== 'gen') - (a.kind !== 'gen') || b.t - a.t);
 }
 // unread: stories newer than when the paper was last opened (the day's general news counts once a day)
-function pressUnread(){ const P = pressState(); return pressList(false).concat(pressList(true)).filter((s, i, a) => s.kind !== 'gen' && s.t > P.seen && a.findIndex(x => x.key === s.key) === i).length; }
+function pressUnread(){ const P = pressState(); return pressList(false).concat(pressList(true)).filter((s, i, a) => s.kind !== 'gen' && s.kind !== 'annonse' && s.t > P.seen && a.findIndex(x => x.key === s.key) === i).length; }
 function pressSeen(){ pressState().seen = S.t; }

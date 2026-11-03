@@ -351,19 +351,20 @@ function updateMapButtons(){
 }
 const MARK_LIFE = 12 * 60, markLive = mk => S.t - mk.t < MARK_LIFE;
 let markEnd = Infinity;
+// a tap on an icon whose name the chart left out (E2): its name for a moment; the tap goes on to do what it did (the route)
+function tapName(mp, rr){ let best = null, bd = rr; for (const q of LBLHID){ const d = dist(q, mp); if (d < bd){ bd = d; best = q; } }
+  if (!best) return false; TAPNAME = {x:best.x, y:best.y, n:best.n, until:performance.now() + 2500}; renderDyn(); setTimeout(() => { if (TAPNAME && performance.now() >= TAPNAME.until) renderDyn(); }, 2600); return true; }
+// the labels the static layer placed (boxes, map km) and the icons it left without a name (E2 of docs/planer/kart-etiketter.md)
+const LBLBOX = [], LBLHID = [];
+let TAPNAME = null;
 function renderStatic(){
   if (document.body.classList.contains('vplot')) scheduleChart();
-  const u = 1 / view.px, g = [];
-  // grounds: the name only, no circle (Jonas 28.10.2026: a ground is not a defined circle on the sea)
-  if (view.z >= 0.5) for (const gr of GROUNDS) g.push(txt({x:gr.p.x, y:gr.p.y + 3.6 * u}, gr.name[S.lang], 'lbl-ground', 11 * u, 'text-anchor="middle" stroke-width="' + (3 * u) + '"'));
+  const u = 1 / view.px, g = [], LB = [], havnSeen = [];
+  // a label to be placed in the order of its priority (pri), with the box it takes (its icon of half size s too) and the icon it names
+  const lbl = (pri, p, nm, cls, size, extra, at, s = 0) => { const w = String(nm).length * size * 0.56; LB.push({pri, at, svg:txt(p, nm, cls, size, extra), box:[p.x - s - 2 * u, p.y - size * 0.8, p.x + w, p.y + size * 0.3]}); };
+  LBLHID.length = 0;
   // what is inside the view (with a margin)
   const vr = svg.getBoundingClientRect(), vhh = MAP_H / view.z / 2 + 0.5, vww = vhh * (vr.width / (vr.height || 1)) + 0.5, vx0 = view.cx - vww, vx1 = view.cx + vww, vy0 = view.cy - vhh, vy1 = view.cy + vhh, inV = (x, y) => x > vx0 && x < vx1 && y > vy0 && y < vy1;
-  // the named grounds along the whole coast (Fiskeridirektoratet's «Fiskeplasser – redskap», 01e-marks.js feltIn), the same way: the
-  // largest first, and none where a name already stands (cells of 110 × 22 pixels), so a close view shows more of them
-  if (view.z >= 1){ const taken = new Set(), cw = 110 * u, ch = 22 * u; for (const gr of GROUNDS) taken.add(Math.floor(gr.p.x / cw) + ':' + Math.floor(gr.p.y / ch));
-    let n = 0; for (const f of feltIn(vx0, vy0, vx1, vy1)){ const k = Math.floor(f.x / cw) + ':' + Math.floor(f.y / ch), k2 = Math.floor((f.x + cw / 2) / cw) + ':' + Math.floor(f.y / ch);
-      if (taken.has(k) || taken.has(k2)) continue; taken.add(k); taken.add(k2);
-      g.push(txt({x:f.x, y:f.y + 3.4 * u}, f.n.replace(/[&<>]/g, c => c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;'), 'lbl-ground lbl-felt', 10 * u, 'text-anchor="middle" stroke-width="' + (3 * u) + '"')); if (++n >= 80) break; } }
   // roads and bridges: Senja's and those of the coast's packs (01c-vec.js), asked for when the view is near enough to show them
   if (view.z > 2.5){ vecWant(vx0, vy0, vx1, vy1, () => scheduleStatic()); vecPrune([{x:view.cx, y:view.cy}, S.boat.pos]); }
   if (view.z > 3){ const d = []; for (const r of roadsIn(vx0 * 1000, vy0 * 1000, vx1 * 1000, vy1 * 1000)){ if (r.c > 3 && view.z < 6) continue; d.push('M' + Array.from(r.xs, (x, j) => (x / 1000).toFixed(3) + ',' + (r.zs[j] / 1000).toFixed(3)).join('L')); } if (d.length) g.push('<path d="' + d.join('') + '" class="road" stroke-width="' + (1.1 * u) + '"/>'); }
@@ -386,11 +387,12 @@ function renderStatic(){
   for (const mk of S.marks){ if (!markLive(mk)) continue; markEnd = Math.min(markEnd, mk.t + MARK_LIFE); const gu = mk.g && mk.kgu != null && GU[mk.g];
     const col = mk.q != null ? (mk.q >= 1.4 ? '#d7301f' : mk.q >= 1 ? '#f08a24' : mk.q >= 0.6 ? '#e5c12b' : '#5b8db8') : mk.kgph >= 40 ? '#d7301f' : mk.kgph >= 20 ? '#f08a24' : mk.kgph >= 8 ? '#e5c12b' : '#5b8db8';
     g.push('<circle cx="' + mk.x + '" cy="' + mk.y + '" r="' + (4.2 * u) + '" fill="' + col + '" stroke="#fff" stroke-width="' + (1.2 * u) + '"/>');
-    if (view.z > 3.5) g.push(txt({x:mk.x + 6 * u, y:mk.y + 3.5 * u}, gu ? fmt(mk.kgu, mk.kgu < 10 ? 1 : 0) + ' kg/' + gu[S.lang === 'en' ? 1 : 0] + (mk.soak ? ' · ' + mk.soak + (S.lang === 'en' ? ' h' : ' t') : '') : mk.kgph + (S.lang === 'en' ? ' kg/h' : ' kg/t'), 'lbl-ground', 9.5 * u, 'stroke-width="' + (2.5 * u) + '"')); }
+    if (view.z > 3.5){ const nm = gu ? fmt(mk.kgu, mk.kgu < 10 ? 1 : 0) + ' kg/' + gu[S.lang === 'en' ? 1 : 0] + (mk.soak ? ' · ' + mk.soak + (S.lang === 'en' ? ' h' : ' t') : '') : mk.kgph + (S.lang === 'en' ? ' kg/h' : ' kg/t');
+      lbl(3, {x:mk.x + 6 * u, y:mk.y + 3.5 * u}, nm, 'lbl-ground', 9.5 * u, 'stroke-width="' + (2.5 * u) + '"'); } }
   // your own marks: a flag with its name, set by holding a finger on the chart (Jonas 06.10.2026); they stay until you delete them
   for (const pn of S.pins || []){ if (!inV(pn.x, pn.y) || (pn.until && pn.until <= S.t)) continue; const s = 6 * u;
     g.push('<path d="M' + pn.x + ',' + pn.y + 'v' + (-2.2 * s) + 'l' + (1.3 * s) + ',' + (0.45 * s) + 'l' + (-1.3 * s) + ',' + (0.45 * s) + '" class="pinflag' + (pn.id === PINSEL ? ' sel' : '') + '" stroke-width="' + (1.4 * u) + '"/><circle cx="' + pn.x + '" cy="' + pn.y + '" r="' + (1.8 * u) + '" class="pinfoot"/>');
-    if (view.z > 1.2 && pn.name) g.push(txt({x:pn.x + 4 * u, y:pn.y + 4 * u}, pinEsc(pn.name), 'lbl-pin', 11 * u, 'stroke-width="' + (2.5 * u) + '"')); }
+    if (view.z > 1.2 && pn.name) lbl(3, {x:pn.x + 4 * u, y:pn.y + 4 * u}, pinEsc(pn.name), 'lbl-pin', 11 * u, 'stroke-width="' + (2.5 * u) + '"', {x:pn.x, y:pn.y, n:pn.name}); }
   if (typeof srchSvg === 'function') g.push(srchSvg(u));   // the place found by search (ui/03f-search.js)
   // Father's naust (ui/06c-notebook.js)
   g.push(NOTEBOOK.svg(u, inV));
@@ -399,25 +401,51 @@ function renderStatic(){
   // view is closer than the whole region, each label kept only where it does not cover a rank-0 name (the icon stands anyway); the other
   // place names keep clear of the labels
   const taken = [], pl = view.z >= 0.5, over = b => taken.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
-  g.push(chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, 'first'));
   for (const p of PORTS){
-    const s = (pl ? 5 : 3) * u; if (!inV(p.p.x, p.p.y)) continue;
-    g.push(portIcon(p, s * 1.25, u));
-    if (pl){ const nm = portLabel(p), bx = [p.p.x - s, p.p.y - 9 * u, p.p.x + 10 * u + nm.length * 7.5 * u, p.p.y + 6 * u]; if (over(bx)) continue; g.push(txt({x:p.p.x + 10 * u, y:p.p.y + 4 * u}, nm, 'lbl-port', 13 * u, 'stroke-width="' + (3 * u) + '"')); taken.push(bx); }
+    // (Jonas 02.11.2026: «Kan du gjøre iconer litt større slik at de er lettere å se»: half as big again, 19 px across close in)
+    const s = (pl ? 9.5 : 5) * u; if (!inV(p.p.x, p.p.y)) continue;
+    g.push(portIcon(p, s, u));
+    if (pl) lbl(2, {x:p.p.x + s + 5 * u, y:p.p.y + 4.5 * u}, portLabel(p), 'lbl-port', 13 * u, 'stroke-width="' + (3 * u) + '"', {x:p.p.x, y:p.p.y, n:portLabel(p)}, s);
   }
   // the rorbuer (07d-rorbu.js): a little red house, the name when near
   if (view.z >= 0.5) for (const R of rorbuIn(vx0 - 1, vy0 - 1, vx1 + 1, vy1 + 1)){
     if (R.site === null) continue;   // no straight shore there: no rorbu
-    const q = R.site ? R.p : R.cand, s = (view.z >= 2 ? 5.5 : 4) * u;
-    g.push('<path d="M' + (q.x - s) + ',' + (q.y + s) + 'v' + (-s) + 'l' + s + ',' + (-s) + 'l' + s + ',' + s + 'v' + s + 'z" class="rorbu" stroke-width="' + (1.3 * u) + '"/>');
-    if (view.z >= 2){ const nm = 'Rorbu ' + R.name; g.push(txt({x:q.x + 8 * u, y:q.y + 4 * u}, nm, 'lbl-ground', 11 * u, 'stroke-width="' + (2.5 * u) + '"')); taken.push([q.x - s, q.y - 8 * u, q.x + 8 * u + nm.length * 6.5 * u, q.y + 6 * u]); }
+    const q = R.site ? R.p : R.cand, s = (view.z >= 2 ? 8 : 5.5) * u;
+    // a red cabin on its piles over the water (the rorbu's own shape: gable, door, the piles under)
+    g.push('<path d="M' + (q.x - s) + ',' + (q.y + s * 0.35) + 'v' + (-s * 0.75) + 'l' + s + ',' + (-s * 0.8) + 'l' + s + ',' + (s * 0.8) + 'v' + (s * 0.75) + 'z" class="rorbu" stroke-width="' + (1.3 * u) + '"/>' +
+      '<path d="M' + (q.x - s * 0.7) + ',' + (q.y + s * 0.35) + 'v' + (s * 0.6) + 'M' + q.x + ',' + (q.y + s * 0.35) + 'v' + (s * 0.6) + 'M' + (q.x + s * 0.7) + ',' + (q.y + s * 0.35) + 'v' + (s * 0.6) + '" class="rorbu-p" stroke-width="' + (1.6 * u) + '"/>' +
+      '<rect x="' + (q.x - s * 0.18) + '" y="' + (q.y - s * 0.15) + '" width="' + (s * 0.36) + '" height="' + (s * 0.5) + '" class="rorbu-d"/>');
+    if (view.z >= 2){ const nm = 'Rorbu ' + R.name; lbl(4, {x:q.x + s + 5 * u, y:q.y + 4 * u}, nm, 'lbl-ground', 11 * u, 'stroke-width="' + (2.5 * u) + '"', {x:q.x, y:q.y, n:nm}, s); }
   }
   // the coast's harbours (07e-havn.js), where a boat can lie at a quay or a floating dock: a teal ring with a hull, the name when near
   if (view.z >= 2.5) for (const H of havnsNear({x:mX, y:mY}, mR)){
-    if (!inV(H.x, H.y)) continue; const s = (view.z >= 4 ? 5 : 4) * u;
-    g.push('<circle cx="' + H.x + '" cy="' + H.y + '" r="' + s + '" class="havn" stroke-width="' + (1.3 * u) + '"/><path d="M' + (H.x - s * 0.6) + ',' + (H.y - s * 0.05) + 'h' + (s * 1.2) + 'l' + (-s * 0.25) + ',' + (s * 0.45) + 'h' + (-s * 0.7) + 'z" class="havn-h"/>');
-    if (view.z >= 4){ const nm = havnNm(H); g.push(txt({x:H.x + 8 * u, y:H.y + 4 * u}, nm, 'lbl-ground', 11 * u, 'stroke-width="' + (2.5 * u) + '"')); taken.push([H.x - s, H.y - 8 * u, H.x + 8 * u + nm.length * 6.5 * u, H.y + 6 * u]); }
+    if (!inV(H.x, H.y)) continue; const s = (view.z >= 4 ? 7.5 : 6) * u;
+    // the harbour's sign: an anchor on a teal disc (where a boat can lie: a quay or a floating dock)
+    g.push('<circle cx="' + H.x + '" cy="' + H.y + '" r="' + s + '" class="havn" stroke-width="' + (1.3 * u) + '"/>' + anchorPath(H.x, H.y, s, u));
+    if (view.z >= 4){ const nm = havnNm(H), w0 = String(nm).split(' ')[0];
+      // (3A: no name that repeats a trading place or another harbour of the same place near by: the icon stands, a tap gives the name)
+      const rep = PORTS.some(p => dist(p.p, H) < 1 && String(portLabel(p)).split(' ')[0] === w0) || havnSeen.some(o => o.n === nm && dist(o, H) < 1.5);
+      havnSeen.push({x:H.x, y:H.y, n:nm});
+      if (rep) LBLHID.push({x:H.x, y:H.y, n:nm}); else lbl(5, {x:H.x + s + 5 * u, y:H.y + 4 * u}, nm, 'lbl-ground', 11 * u, 'stroke-width="' + (2.5 * u) + '"', {x:H.x, y:H.y, n:nm}, s); }
   }
+  // the labels in their order (Jonas 02.11.2026, choice 2A: the trading places, then your own marks, the rorbuer, the harbours; the
+  // place and ground names and the soundings after them keep clear): each only where it covers none before it, else its icon stands
+  // alone and a tap on it gives the name (LBLHID, E2)
+  // (the rank-0 names, the largest islands, towns and fjords, go first as before: few, and what one finds one's way by; charttest)
+  g.push(chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, 'first'));
+  LB.sort((a, b) => a.pri - b.pri);
+  for (const e of LB){ if (over(e.box)){ if (e.at) LBLHID.push(e.at); continue; } taken.push(e.box); g.push(e.svg); }
+  // grounds: the name only, no circle (Jonas 28.10.2026: a ground is not a defined circle on the sea); clear of the labels before
+  if (view.z >= 0.5) for (const gr of GROUNDS){ const nm = gr.name[S.lang], w = nm.length * 6.2 * u, bx = [gr.p.x - w / 2, gr.p.y - 6 * u, gr.p.x + w / 2, gr.p.y + 5 * u]; if (over(bx)) continue; taken.push(bx); g.push(txt({x:gr.p.x, y:gr.p.y + 3.6 * u}, nm, 'lbl-ground', 11 * u, 'text-anchor="middle" stroke-width="' + (3 * u) + '"')); }
+  // the named grounds along the whole coast (Fiskeridirektoratet's «Fiskeplasser – redskap», 01e-marks.js feltIn), the same way: the
+  // largest first, and none where a name already stands (cells of 110 × 22 pixels), so a close view shows more of them
+  if (view.z >= 1){ const cells = new Set(), cw = 110 * u, ch = 22 * u; for (const gr of GROUNDS) cells.add(Math.floor(gr.p.x / cw) + ':' + Math.floor(gr.p.y / ch));
+    let n = 0; for (const f of feltIn(vx0, vy0, vx1, vy1)){ const k = Math.floor(f.x / cw) + ':' + Math.floor(f.y / ch), k2 = Math.floor((f.x + cw / 2) / cw) + ':' + Math.floor(f.y / ch);
+      const fw = f.n.length * 5.6 * u, fb = [f.x - fw / 2, f.y - 5 * u, f.x + fw / 2, f.y + 5 * u];
+      if (cells.has(k) || cells.has(k2) || over(fb)) continue; cells.add(k); cells.add(k2); taken.push(fb);
+      g.push(txt({x:f.x, y:f.y + 3.4 * u}, f.n.replace(/[&<>]/g, c => c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;'), 'lbl-ground lbl-felt', 10 * u, 'text-anchor="middle" stroke-width="' + (3 * u) + '"')); if (++n >= 80) break; } }
+
+  LBLBOX.length = 0; for (const b of taken) LBLBOX.push(b);   // what the AIS names keep clear of (renderDyn)
   g.push(soundingsSvg(vx0, vy0, vx1, vy1, u, taken));
   g.push(chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, 'rest'));
   gStatic.innerHTML = g.join('');
@@ -425,17 +453,34 @@ function renderStatic(){
 // each kind of place its own sign on the chart (Jonas 08.10.2026: «forskjellige ikoner på kartene for de forskjellige forhandlerne»):
 // the plant a fish in a round blue sign, the tackle shop a hook in an orange square, the yard a hull on a lift in a green sign, Father's
 // naust a little house; any other harbour the old diamond. s is the sign's half width (chart units)
+// the trading places' signs (Jonas 08.10.2026: each kind its own; 02.11.2026: «større ... relevante for hva de står for»): the plant a
+// fish on a blue disc, the shop a hook on an orange square, the yard a boat on its slipway on a green disc, Father's naust a brown
+// boathouse with its doors; anything else the old diamond
 function portIcon(p, s, u){
-  const k = portKind(p), x = p.p.x, y = p.p.y, sw = 'stroke-width="' + (1.3 * u) + '"', f = v => v.toFixed(2);
+  const k = portKind(p), x = p.p.x, y = p.p.y, sw = 'stroke-width="' + (1.4 * u) + '"', f = v => v.toFixed(3);
   if (k === 'mottak') return '<circle cx="' + f(x) + '" cy="' + f(y) + '" r="' + f(s) + '" class="pi pi-m" ' + sw + '/>' +
-    '<path d="M' + f(x - s * 0.62) + ',' + f(y) + 'q' + f(s * 0.55) + ',' + f(-s * 0.5) + ' ' + f(s * 1.05) + ',0q' + f(-s * 0.5) + ',' + f(s * 0.5) + ' ' + f(-s * 1.05) + ',0zM' + f(x + s * 0.4) + ',' + f(y) + 'l' + f(s * 0.32) + ',' + f(-s * 0.3) + 'v' + f(s * 0.6) + 'z" class="pi-g"/>';
+    // a fish: the body, the tail and the eye
+    '<path d="M' + f(x - s * 0.62) + ',' + f(y) + 'q' + f(s * 0.5) + ',' + f(-s * 0.48) + ' ' + f(s * 1.0) + ',0q' + f(-s * 0.5) + ',' + f(s * 0.48) + ' ' + f(-s * 1.0) + ',0zM' + f(x + s * 0.34) + ',' + f(y) + 'l' + f(s * 0.36) + ',' + f(-s * 0.32) + 'v' + f(s * 0.64) + 'z" class="pi-g"/>' +
+    '<circle cx="' + f(x - s * 0.36) + '" cy="' + f(y - s * 0.06) + '" r="' + f(s * 0.07) + '" class="pi-e"/>';
   if (k === 'butikk') return '<rect x="' + f(x - s) + '" y="' + f(y - s) + '" width="' + f(2 * s) + '" height="' + f(2 * s) + '" rx="' + f(s * 0.3) + '" class="pi pi-b" ' + sw + '/>' +
-    '<path d="M' + f(x + s * 0.1) + ',' + f(y - s * 0.6) + 'v' + f(s * 0.9) + 'a' + f(s * 0.32) + ',' + f(s * 0.32) + ' 0 0 1 ' + f(-s * 0.64) + ',0v' + f(-s * 0.2) + '" class="pi-l" stroke-width="' + f(s * 0.2) + '"/>';
+    // a hook with its eye and barb
+    '<circle cx="' + f(x + s * 0.12) + '" cy="' + f(y - s * 0.62) + '" r="' + f(s * 0.12) + '" class="pi-l" stroke-width="' + f(s * 0.13) + '"/>' +
+    '<path d="M' + f(x + s * 0.12) + ',' + f(y - s * 0.5) + 'v' + f(s * 0.85) + 'a' + f(s * 0.34) + ',' + f(s * 0.34) + ' 0 0 1 ' + f(-s * 0.68) + ',0v' + f(-s * 0.22) + 'l' + f(s * 0.16) + ',' + f(s * 0.12) + '" class="pi-l" stroke-width="' + f(s * 0.17) + '"/>';
   if (k === 'verft') return '<circle cx="' + f(x) + '" cy="' + f(y) + '" r="' + f(s) + '" class="pi pi-v" ' + sw + '/>' +
-    '<path d="M' + f(x - s * 0.62) + ',' + f(y - s * 0.12) + 'h' + f(s * 1.24) + 'l' + f(-s * 0.26) + ',' + f(s * 0.36) + 'h' + f(-s * 0.72) + 'z" class="pi-g"/>' +
-    '<path d="M' + f(x - s * 0.72) + ',' + f(y + s * 0.5) + 'h' + f(s * 1.44) + 'M' + f(x - s * 0.5) + ',' + f(y + s * 0.5) + 'v' + f(-s * 0.3) + 'M' + f(x + s * 0.5) + ',' + f(y + s * 0.5) + 'v' + f(-s * 0.3) + '" class="pi-l" stroke-width="' + f(s * 0.14) + '"/>';
-  if (k === 'naust') return '<path d="M' + f(x - s) + ',' + f(y + s * 0.8) + 'v' + f(-s * 0.9) + 'l' + f(s) + ',' + f(-s * 0.9) + 'l' + f(s) + ',' + f(s * 0.9) + 'v' + f(s * 0.9) + 'z" class="pi pi-n" ' + sw + '/>';
+    // a hull up on the slipway's rails
+    '<path d="M' + f(x - s * 0.62) + ',' + f(y - s * 0.2) + 'h' + f(s * 1.24) + 'l' + f(-s * 0.26) + ',' + f(s * 0.38) + 'h' + f(-s * 0.72) + 'z" class="pi-g"/>' +
+    '<path d="M' + f(x - s * 0.08) + ',' + f(y - s * 0.2) + 'v' + f(-s * 0.36) + 'h' + f(s * 0.26) + '" class="pi-l" stroke-width="' + f(s * 0.1) + '"/>' +
+    '<path d="M' + f(x - s * 0.72) + ',' + f(y + s * 0.48) + 'h' + f(s * 1.44) + 'M' + f(x - s * 0.5) + ',' + f(y + s * 0.48) + 'v' + f(-s * 0.3) + 'M' + f(x + s * 0.5) + ',' + f(y + s * 0.48) + 'v' + f(-s * 0.3) + '" class="pi-l" stroke-width="' + f(s * 0.13) + '"/>';
+  if (k === 'naust') return '<path d="M' + f(x - s) + ',' + f(y + s * 0.8) + 'v' + f(-s * 0.9) + 'l' + f(s) + ',' + f(-s * 0.9) + 'l' + f(s) + ',' + f(s * 0.9) + 'v' + f(s * 0.9) + 'z" class="pi pi-n" ' + sw + '/>' +
+    // the boathouse's wide doors to the sea
+    '<path d="M' + f(x - s * 0.42) + ',' + f(y + s * 0.8) + 'v' + f(-s * 0.72) + 'h' + f(s * 0.84) + 'v' + f(s * 0.72) + 'M' + f(x) + ',' + f(y + s * 0.08) + 'v' + f(s * 0.72) + '" class="pi-l" stroke-width="' + f(s * 0.11) + '"/>';
   return '<rect x="' + f(x - s * 0.8) + '" y="' + f(y - s * 0.8) + '" width="' + f(1.6 * s) + '" height="' + f(1.6 * s) + '" class="port' + (p.home ? ' home' : '') + '" stroke-width="' + (1.5 * u) + '" transform="rotate(45 ' + x + ' ' + y + ')"/>';
+}
+// an anchor in white on a disc of radius s at (x, y): the ring, the stock, the shank and the arms with their flukes
+function anchorPath(x, y, s, u){
+  const f = v => v.toFixed(3), w = f(s * 0.14);
+  return '<circle cx="' + f(x) + '" cy="' + f(y - s * 0.52) + '" r="' + f(s * 0.13) + '" class="havn-l" stroke-width="' + w + '"/>' +
+    '<path d="M' + f(x) + ',' + f(y - s * 0.38) + 'v' + f(s * 0.92) + 'M' + f(x - s * 0.3) + ',' + f(y - s * 0.22) + 'h' + f(s * 0.6) + 'M' + f(x - s * 0.55) + ',' + f(y + s * 0.12) + 'q' + f(s * 0.1) + ',' + f(s * 0.45) + ' ' + f(s * 0.55) + ',' + f(s * 0.42) + 'q' + f(s * 0.45) + ',' + f(s * 0.03) + ' ' + f(s * 0.55) + ',' + f(-s * 0.42) + '" class="havn-l" stroke-width="' + w + '"/>';
 }
 // the depth in figures here and there (Jonas 08.10.2026, #43: «det skal stå tall noen steder så man kan se i kartet hvor dypt der er»): the
 // water at the points of a grid that stays put as the view is dragged, about every 150 px, in whole metres (one decimal under 10), where
@@ -467,18 +512,21 @@ let trackCache = {k:'', v:[]};
 function aisTrack(id, H){ const ck = id + '|' + Math.floor(H * 30); if (trackCache.k === ck) return trackCache.v; const out = []; trackCache = {k:ck, v:out}; const fi = id[0] === 'f' ? +id.slice(1) : -1; if (id === 'rs') return out;   // the rescue boat's way is in the moment only
   for (let k = 1440; k >= 0; k--){ const t = H - k / 60; let p; if (fi >= 0) p = fleetState(fi, t).p; else if (k % 2 === 0){ const q = npcStates(t, id)[0]; p = q && q.p; } if (p) out.push(p); }
   return out; }
+// the ocean fleet's gear on the AIS card (05d-hav.js)
+const HAVGN = {tral:['Trål', 'Trawl'], not:['Ringnot', 'Purse seine'], snurrevad:['Snurrevad', 'Danish seine'], line:['Autoline', 'Autoline'], teine:['Teiner (snøkrabbe)', 'Pots (snow crab)'], garn:['Garn', 'Nets']};
 function aisInfo(n){
   const L = (no, en) => S.lang === 'no' ? no : en, f = n.fleet ? FLEET[n.fi] : null;
-  const st = n.rs ? (n.st === 'port' ? L('Mønstrer på stasjonen', 'Mustering at the station') : n.st === 'come' ? L('På vei til deg', 'On the way to you') : n.st === 'hook' ? L('Setter slepet', 'Making the tow fast') : L('Sleper deg til ', 'Towing you to ') + ((portById(n.to) || {}).name || '')) : n.st === 'port' || n.v === 0 ? L('Fortøyd', 'Moored') : n.st === 'fishing' ? (n.v > 2.5 ? L('Fisker, går opp for ny drift', 'Fishing, steaming back for a new drift') : L('Fisker, driver over grunnen', 'Fishing, drifting over the bank')) : n.st === 'out' ? L('På vei til feltet', 'Heading to the grounds') : n.st === 'in' ? L('På vei hjem', 'Heading home') : L('Underveis', 'Under way');
+  const st = n.rs ? (n.st === 'port' ? L('Mønstrer på stasjonen', 'Mustering at the station') : n.st === 'come' ? L('På vei til deg', 'On the way to you') : n.st === 'hook' ? L('Setter slepet', 'Making the tow fast') : L('Sleper deg til ', 'Towing you to ') + ((portById(n.to) || {}).name || '')) : n.st === 'port' || n.v === 0 ? L('Fortøyd', 'Moored') : n.st === 'fishing' && n.hav ? (n.trawl ? L('Tråler', 'Trawling') : n.seine ? L('Kaster nota', 'Setting the seine') : n.hav === 'line' ? L('Setter og drar line', 'Setting and hauling line') : n.hav === 'not' || n.hav === 'snurrevad' ? L('Leter etter fisk', 'Searching for fish') : L('Drar og setter redskapet', 'Hauling and setting the gear')) : n.st === 'fishing' ? (n.v > 2.5 ? L('Fisker, går opp for ny drift', 'Fishing, steaming back for a new drift') : L('Fisker, driver over grunnen', 'Fishing, drifting over the bank')) : n.st === 'out' ? L('På vei til feltet', 'Heading to the grounds') : n.st === 'in' ? L('På vei hjem', 'Heading home') : L('Underveis', 'Under way');
   // another player's boat (the shared world V3): the owner's player name and sea time (Jonas 07.10.2026), the type and size
   const VP = n.player ? VESSELS[n.vtype] : null;
   const rows = n.rs ? [[L('Rederi', 'Owner'), 'Redningsselskapet'], [L('Stasjon', 'Station'), n.base]] : VP ? [[L('Eier', 'Owner'), n.user || '–'], [L('Fartstid', 'Sea time'), n.fs ? fsText(n.fs, true).replace(/ (fartstid|at sea)$/, '') : '–'],
       [L('Båttype', 'Boat type'), String(L(VP.name.no, VP.name.en)).split(' (')[0]], [L('Størrelse', 'Size'), fmt(VP.len, 1) + ' × ' + fmt(VP.beam || VP.len / 3, 1) + ' m']] : f ? [[L('Kallesignal', 'Call sign'), f.cs], [L('Fiskerimerke', 'Registration'), f.reg], [L('Rederi', 'Owner'), f.own], [L('Størrelse', 'Size'), fmt(f.L, 2) + ' × ' + fmt(f.B, 1) + ' m'], [L('Dypgående', 'Draught'), fmt(f.T, 1) + ' m'], [L('Hjemmehavn', 'Home port'), f.homeName]]
+    : n.hav ? [[L('Båttype', 'Boat type'), String(L(VESSELS[n.vtype].name.no, VESSELS[n.vtype].name.en)).split(' (')[0]], [L('Redskap', 'Gear'), L(HAVGN[n.hav][0], HAVGN[n.hav][1])], [L('Størrelse', 'Size'), fmt(n.L, 1) + ' × ' + fmt(n.B, 1) + ' m'], [L('Dypgående', 'Draught'), fmt(n.T, 1) + ' m']]
     : n.coast ? [[L('Størrelse', 'Size'), fmt(n.L, 1) + ' × ' + fmt(n.B, 1) + ' m'], [L('Dypgående', 'Draught'), fmt(n.T, 1) + ' m']]
     : n.type === 'coastal' ? [[L('Kallesignal', 'Call sign'), 'LAKY'], [L('Rederi', 'Owner'), 'Kystruta AS'], [L('Størrelse', 'Size'), '121,8 × 21,0 m'], [L('Dypgående', 'Draught'), '4,9 m']] : [[L('Kallesignal', 'Call sign'), 'LMSB'], [L('Rederi', 'Owner'), 'Senja Ferjedrift AS'], [L('Størrelse', 'Size'), '49,9 × 12,4 m'], [L('Dypgående', 'Draught'), '3,1 m']];
   const dg = r => String(Math.round(((r * 180 / Math.PI) % 360 + 360) % 360) % 360).padStart(3, '0') + '°';
   rows.push([L('Status', 'Status'), st], [L('Fart (SOG)', 'Speed (SOG)'), fmt(n.v, 1) + ' kn'], [L('Kurs (COG)', 'Course (COG)'), n.v > 0.15 ? dg(n.cog !== undefined ? n.cog : n.hd) : '–'], [L('Styrekurs (HDG)', 'Heading (HDG)'), dg(n.hd)]);
-  return '<div class="ai-h"><b>' + n.name + '</b><button type="button" id="aisX" aria-label="Lukk">✕</button></div><div class="ai-t">' + (n.player ? L('Spiller', 'Player') : n.rs ? L('Redningsfartøy', 'Rescue vessel') : n.fleet || n.coast ? L('Fiskefartøy', 'Fishing vessel') : n.type === 'coastal' ? L('Passasjerskip', 'Passenger ship') : L('Ferje', 'Ferry')) + '</div>' + rows.map(r => '<div class="ai-r"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>').join('') + (n.player && typeof FRIENDS !== 'undefined' ? FRIENDS.chip(String(n.id).slice(1)) : '') + (n.player && typeof HAIL !== 'undefined' ? HAIL.card(n) : '') + (n.player ? '' : '<div class="ai-n">' + L('Stiplet linje: sporet siste 24 timer', 'Dashed line: track over the last 24 hours') + '</div>');
+  return '<div class="ai-h"><b>' + n.name + '</b><button type="button" id="aisX" aria-label="Lukk">✕</button></div><div class="ai-t">' + (n.player ? L('Spiller', 'Player') : n.rs ? L('Redningsfartøy', 'Rescue vessel') : n.fleet || n.coast || n.hav ? L('Fiskefartøy', 'Fishing vessel') : n.type === 'coastal' ? L('Passasjerskip', 'Passenger ship') : L('Ferje', 'Ferry')) + '</div>' + rows.map(r => '<div class="ai-r"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>').join('') + (n.player && typeof FRIENDS !== 'undefined' ? FRIENDS.chip(String(n.id).slice(1)) : '') + (n.player && typeof HAIL !== 'undefined' ? HAIL.card(n) : '') + (n.player ? '' : '<div class="ai-n">' + L('Stiplet linje: sporet siste 24 timer', 'Dashed line: track over the last 24 hours') + '</div>');
 }
 function renderAisCard(){ const el = $('aisCard'); if (!AISSEL){ el.hidden = true; return; } const n = AISNOW.find(q => q.id === AISSEL); if (!n){ el.hidden = true; return; } el.innerHTML = aisInfo(n); el.hidden = false; $('aisX').onclick = () => { AISSEL = null; renderAisCard(); renderDyn(); }; }
 function renderDyn(){
@@ -523,8 +571,9 @@ function renderDyn(){
   const Hn = (S.t + liveFrac()) / 60;
   AISNOW = npcStates(Hn).filter(aisShown);
   if (AISSEL){ const tr = aisTrack(AISSEL, Hn); if (tr.length > 1) g.push('<polyline points="' + tr.map(q => q.x.toFixed(3) + ',' + q.y.toFixed(3)).join(' ') + '" class="aistrack" stroke-width="' + (1.6 * u) + '" stroke-dasharray="' + (4 * u) + ' ' + (3 * u) + '"/>'); }
-  // names: the coast's boats only when the chart is under 4 km tall, and none on top of another (a grid of label cells)
-  const lblAt = new Set(), lw = 70 * u, lh = 14 * u, coastLbl = MAP_H / view.z < 4;
+  // names (Jonas 02.11.2026, choice 1A): the fishing boats' only while they are out, not in port, and only when the chart is under 4 km
+  // tall; the other players' always; none on top of another or of the static layer's labels (LBLBOX), the players' first
+  const lblBox = [], coastLbl = MAP_H / view.z < 4, lblOver = b => LBLBOX.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]) || lblBox.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
   // the other players last, on top, with a ring, a larger mark and their names from further out (they come first among the names)
   const aisOrd = AISNOW.filter(n => !n.player).concat(AISNOW.filter(n => n.player)), plLbl = [], aisLbl = [];
   for (const n of aisOrd){
@@ -534,13 +583,18 @@ function renderDyn(){
     if (moored) g.push('<circle cx="' + n.p.x + '" cy="' + n.p.y + '" r="' + ((pl ? 4.4 : 3.2) * u) + '" class="' + cls + sel + ' moor" stroke-width="' + sw + '"/>');
     else { const k = (n.type === 'coastal' ? 10 : n.type === 'ferry' ? 8.5 : pl ? 8.2 : n.fleet || n.coast ? 5.2 + n.L * 0.13 : 6.5) * u, dg = (n.cog !== undefined ? n.cog : n.hd) * 180 / Math.PI;
       g.push('<g transform="translate(' + n.p.x + ' ' + n.p.y + ') rotate(' + dg.toFixed(1) + ')"><path d="M0,' + (-k * 1.25) + ' L' + (0.55 * k) + ',' + (k * 0.8) + ' L0,' + (k * 0.45) + ' L' + (-0.55 * k) + ',' + (k * 0.8) + ' Z" class="' + cls + sel + '" stroke-width="' + sw + '"/></g>'); }
-    if (pl || n.rs ? sel || view.z > 1.5 || n.rs : sel || (view.z > 5 && (!n.coast || coastLbl))) (pl || n.rs ? plLbl : aisLbl).push(n);
+    if (pl || n.rs ? sel || view.z > 1.5 || n.rs : sel || (view.z > 5 && !moored && coastLbl)) (pl || n.rs ? plLbl : aisLbl).push(n);
   }
   for (const n of plLbl.concat(aisLbl)){
-    const sel = AISSEL === n.id, kx = Math.floor(n.p.x / lw), ky = Math.floor(n.p.y / lh);
-    if (!sel && [-1, 0, 1].some(d => lblAt.has((kx + d) + ',' + ky))) continue;
-    lblAt.add(kx + ',' + ky); g.push(txt({x:n.p.x + (n.player ? 11 : 8) * u, y:n.p.y - (n.player ? 9 : 6) * u}, n.name, 'lbl-ais' + (n.player ? ' pl' : ''), (n.player ? 11 : 10) * u, 'stroke-width="' + (3 * u) + '"'));
+    const sel = AISSEL === n.id, sz = (n.player ? 11 : 10) * u, p = {x:n.p.x + (n.player ? 11 : 8) * u, y:n.p.y - (n.player ? 9 : 6) * u}, bx = [p.x - 2 * u, p.y - sz * 0.8, p.x + String(n.name).length * sz * 0.56, p.y + sz * 0.3];
+    // (the players and the one picked always, over what stands; the fishing boats only where nothing is)
+    if (!sel && !n.player && !n.rs && lblOver(bx)) continue;
+    lblBox.push(bx); g.push(txt(p, n.name, 'lbl-ais' + (n.player ? ' pl' : ''), sz, 'stroke-width="' + (3 * u) + '"'));
   }
+  // the name of an icon tapped that stands without one (E2): two and a half seconds, in a box over everything
+  if (TAPNAME && performance.now() < TAPNAME.until){ const q = TAPNAME, sz = 12 * u, w = String(q.n).length * sz * 0.56 + 10 * u;
+    g.push('<rect x="' + (q.x + 8 * u) + '" y="' + (q.y - 20 * u) + '" width="' + w + '" height="' + (sz + 8 * u) + '" rx="' + (4 * u) + '" class="tapname" stroke-width="' + u + '"/>' + txt({x:q.x + 13 * u, y:q.y - 20 * u + sz + 1 * u}, pinEsc(q.n), 'lbl-tapname', sz)); }
+  else if (TAPNAME){ TAPNAME = null; }
   if (typeof FRIENDS !== 'undefined') g.push(FRIENDS.svg(u, AISNOW));
   if (typeof SHARE !== 'undefined') g.push(SHARE.svg(u));
   if (typeof PTOW !== 'undefined') g.push(PTOW.svg(u));   // players who need a tow (ui/10o-ptow.js)   // catch marks shared with you (ui/10l-share.js)   // friends whose game is closed, where they were last (ui/10k-friends.js)
@@ -624,7 +678,7 @@ function ptrUp(e){
   if (tap && typeof PLANMAP !== 'undefined' && PLANMAP.isOn()){ PLANMAP.tap(toMap(e.clientX, e.clientY), 16 / view.px); if (ptrs.size === 0) drag = null; return; }   // plan mode: every tap is a place or a pin (ui/03g-planmap.js)
   if (tap && drag.pin && e.timeStamp - drag.t0 >= PIN_HOLD){ pinAdd(toMap(e.clientX, e.clientY)); if (ptrs.size === 0) drag = null; return; }
   if (tap && SETM){ setAim(toMap(e.clientX, e.clientY)); if (ptrs.size === 0) drag = null; return; }
-  if (tap){ const mp = toMap(e.clientX, e.clientY), rr = 16 / view.px; const ph = (S.pins || []).find(q => dist(q, mp) < rr && !(q.until && q.until <= S.t)); if (ph){ pinOpen(ph.id); return; } if (typeof SHARE !== 'undefined' && SHARE.tap(mp, rr)) return; if (typeof PTOW !== 'undefined' && PTOW.tap(mp, rr)) return; const gh = gearHit(mp, rr * 0.8); if (gh){ gearTap(gh); renderDyn(); return; } let hit = null, bd = 1e9; for (const n of AISNOW){ const d = dist(n.p, mp); if (d < rr && d < bd){ bd = d; hit = n; } } if (hit && (hit.st === 'port' || hit.v === 0) && PORTS.some(q => dist(q.p, mp) < rr * 1.6)) hit = null; if (hit){ AISSEL = hit.id; renderDyn(); renderAisCard(); return; } addWaypoint(mp); }
+  if (tap){ const mp = toMap(e.clientX, e.clientY), rr = 16 / view.px; const ph = (S.pins || []).find(q => dist(q, mp) < rr && !(q.until && q.until <= S.t)); if (ph){ pinOpen(ph.id); return; } if (typeof SHARE !== 'undefined' && SHARE.tap(mp, rr)) return; if (typeof PTOW !== 'undefined' && PTOW.tap(mp, rr)) return; const gh = gearHit(mp, rr * 0.8); if (gh){ gearTap(gh); renderDyn(); return; } let hit = null, bd = 1e9; for (const n of AISNOW){ const d = dist(n.p, mp); if (d < rr && d < bd){ bd = d; hit = n; } } if (hit && (hit.st === 'port' || hit.v === 0) && PORTS.some(q => dist(q.p, mp) < rr * 1.6)) hit = null; if (hit){ AISSEL = hit.id; renderDyn(); renderAisCard(); return; } const og = otherGearHit(mp, rr * 0.8); if (og){ otherGearCard(og); return; } tapName(mp, rr); addWaypoint(mp); }
   if (ptrs.size === 0) drag = null;
   else { const [p] = [...ptrs.values()]; drag = {sx:p.x, sy:p.y, cx:view.cx, cy:view.cy, moved:true}; }
 }

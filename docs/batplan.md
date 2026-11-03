@@ -200,7 +200,7 @@ Oppdragsøkonomien fra 17.10.2026 (`docs/OVERLEVERING.md` 4.26) gjør at fisket 
 3. `hs11.py` (sjarkny, det dyreste kjøpet under 11 m, tynnest skript): hele lista; bygd på nytt etter tegningen 01.–02.11.2026 (F7, `docs/skipsmodeller/sjarkny-grunnlag.md`)
 4. `hurtig11.py`: B5, B6, B8, B12; revidert etter pilotens arbeidsmåte 01.11.2026 (F6, `docs/skipsmodeller/hurtigsjark-grunnlag.md`)
 5. `malo36.py`: B6, B8, B12, B16; revidert etter pilotens arbeidsmåte 02.11.2026 (F5, `docs/skipsmodeller/breisjark-grunnlag.md`)
-6. `kyst15.py`: hele lista, med shelterdekket og trappa som dekkskartet savner
+6. `kyst15.py`: hele lista, med shelterdekket og trappa som dekkskartet savner; revidert etter pilotens arbeidsmåte 02.11.2026 (F5, `docs/skipsmodeller/kyst15-grunnlag.md`)
 7. `kyst21.py`: hele lista, med galgen og rusten
 8. **ny plastsjark 9 m** (del 3): fra bunnen etter malen; revidert etter pilotens arbeidsmåte 01.11.2026 (F5, `docs/skipsmodeller/plastsjark-grunnlag.md`)
 9. `havsjark35.py`: B8 (typede lanterner), B12, B14 (overbygg-sone)

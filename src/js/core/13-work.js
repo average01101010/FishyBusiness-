@@ -257,7 +257,7 @@ function workAssign(as){
 const IDLE_ACTS = {
   lean:['Lener seg på rekka', 'Leaning on the rail'], back:['Står med ryggen mot rekka', 'Back to the rail'], look:['Ser utover sjøen', 'Looking out over the sea'],
   coffee:['Drikker kaffe fra termosen', 'Coffee from the flask'], sit:['Sitter og hviler', 'Sitting down for a rest'], chat:['Prater med {b}', 'Chatting with {b}'],
-  sweep:['Skrubber dekket', 'Scrubbing the deck'], hose:['Spyler dekket', 'Hosing down the deck'], coil:['Kveiler tau', 'Coiling rope'], knife:['Sliper kniven', 'Sharpening the knife'],
+  sweep:['Skrubber dekket', 'Scrubbing the deck'], hose:['Spyler dekket', 'Hosing down the deck'], knife:['Sliper kniven', 'Sharpening the knife'],
   lunch:['Spiser matpakka', 'Eating a packed lunch'], phone:['Ser på telefonen', 'On the phone'], binoc:['Speider med kikkerten', 'Scanning with the binoculars'],
   aurora:['Ser på nordlyset', 'Watching the northern lights'], seasick:['Er sjøsyk over rekka', 'Seasick over the rail'], gear:['Ser over redskapen', 'Looking over the gear'],
   smoke:['Tar seg en røyk', 'Having a smoke'], snus:['Legger inn en snus', 'Taking a snus'], inside:['Er inne og varmer seg', 'Inside, warming up'], sleep:['Sover i køya', 'Asleep in the bunk'],
@@ -284,8 +284,8 @@ function idleWeights(p, ctx, E, mates){
   if (port && c && E.bunks && closed && c.fatigue > 30) add('sleep', 2 + 8 * f);
   if (under){ add('sit', 4 + 4 * f); add('look', 2); add('coffee', 1.5 + 3 * E.cold); }
   else { add('lean', 3); add('back', 2); add('look', 2); add('coffee', 2 + 3 * E.cold + (E.hr >= 5 && E.hr < 9 ? 1.5 : 0)); add('sit', 1 + 4 * f);
-    add('coil', 1 + (has('arbeidsjern') || has('perfeksjonist') ? 1.5 : 0)); add('knife', 0.6 + (E.mess ? 1.5 : 0));
-    add('sweep', 0.4 + (E.mess ? 3 : 0) + (has('perfeksjonist') ? 1.5 : 0) - (has('makelig') ? 0.3 : 0)); if (closed) add('hose', E.mess ? 2 : 0);
+    add('knife', 0.6 + (E.mess ? 1.5 : 0));
+    add('sweep', 0.4 + (E.mess ? 3 : 0) + (has('perfeksjonist') || has('arbeidsjern') ? 1.5 : 0) - (has('makelig') ? 0.3 : 0)); if (closed) add('hose', E.mess ? 2 : 0);
     if (E.gear) add('gear', 1 + (has('perfeksjonist') ? 1 : 0));
     if (!port && !E.dark) add('binoc', 0.6); if (E.aur > 0.25) add('aurora', 10 * E.aur); }
   add('lunch', E.hungry ? 5 : 0.3); add('phone', 0.8 + (c && c.age < 35 ? 1.5 : 0));

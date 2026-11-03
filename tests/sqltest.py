@@ -373,6 +373,21 @@ def main():
         # the company logo (20261007110000_logos.sql): only an account that owns it puts up a picture; the others get it by the id the world
         # gives; the admin takes it away with a reason, then nobody gets it, the player is told why and may put up another at no cost
         import hashlib; hidA = hashlib.md5(b'dsbuser_01AAA').hexdigest()[:10]; LIMG = 'data:image/png;base64,iVBORw0KGgo='
+        # sponsors (M6): nobody but the admin with aal2 adds one or reads the tables; sp_now gives only what is active, to anyone
+        R['spPl'] = sql("select public.sp_admin_put(null, 'Testmerke', 'vare', null, 'https://example.no', 'Avtale 1')", A, 'authenticated', expect_err=True)
+        R['spAd1'] = sql("select public.sp_admin_put(null, 'Testmerke', 'vare', null, 'https://example.no', 'Avtale 1')", AD1, 'authenticated', expect_err=True)
+        R['spNoAgr'] = sql("select public.sp_admin_put(null, 'Testmerke', 'vare', null, null, '')", AD2, 'authenticated', expect_err=True)
+        R['spBadUrl'] = sql("select public.sp_admin_put(null, 'Testmerke', 'vare', null, 'javascript:alert(1)', 'Avtale 1')", AD2, 'authenticated', expect_err=True)
+        spid = sql("select public.sp_admin_put(null, 'Testmerke', 'vare', null, 'https://example.no', 'Avtale 1')", AD2, 'authenticated')
+        plid = sql("select public.sp_admin_place(%s, 'item', 'garnhaler', '{\"model\": \"GH-200\"}')" % spid, AD2, 'authenticated')
+        R['spNow'] = json.loads(sql("select public.sp_now()", {'role': 'anon'}, 'anon'))
+        sql("select public.sp_admin_on('p', %s, false)" % plid, AD2, 'authenticated'); R['spOff'] = json.loads(sql("select public.sp_now()", A, 'authenticated'))
+        sql("select public.sp_admin_on('p', %s, true)" % plid, AD2, 'authenticated'); sql("select public.sp_admin_on('s', %s, false)" % spid, AD2, 'authenticated'); R['spOffS'] = json.loads(sql("select public.sp_now()", A, 'authenticated'))
+        R['spList'] = json.loads(sql("select public.sp_admin_list()", AD2, 'authenticated')); R['spListPl'] = sql("select public.sp_admin_list()", A, 'authenticated', expect_err=True)
+        sql("insert into public.events (player_id, kind, data) values ('user_01AAA', 'sp_view', '{\"pl\": %s, \"imp\": 3, \"sec\": 40}'), ('user_01BBB', 'sp_view', '{\"pl\": %s, \"imp\": 1, \"sec\": 9000}'), ('user_01AAA', 'sp_click', '{\"pl\": %s}')" % (plid, plid, plid))
+        R['spRep'] = json.loads(sql("select public.admin_sp_report(30)", AD2, 'authenticated')); R['spRepPl'] = sql("select public.admin_sp_report(30)", A, 'authenticated', expect_err=True)
+        sql("delete from public.events where kind in ('sp_view', 'sp_click')")   # (the deletion check further down counts every event)
+        R['spRead'] = sql("select count(*) from public.sponsors", A, 'authenticated'); R['spReadAnon'] = sql("select count(*) from public.sponsor_placements", {'role': 'anon'}, 'anon')
         R['lgNo'] = sql("select public.logo_put('%s')" % LIMG, A, 'authenticated', expect_err=True)
         sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_l1', 'user_01AAA', 'des_logo', 49, 'open', '{}')"); sql("select public.shop_paid('cs_l1', 'pi_l1')")
         R['lgV'] = [sql("select public.logo_put('%s')" % LIMG, A, 'authenticated'), sql("select public.logo_put('%s')" % LIMG, A, 'authenticated')]
@@ -519,6 +534,11 @@ def main():
                  and R['sPlPaid'][0] and R['sPlRead'][0] and R['sAfter'] == '0/refunded/1/1' and R['sEnd'] == []),
               'the shop: a quote only for a real product and a signed-in player, one grant per paid purchase however often Stripe tells it, given and done once, a refund takes back what is not given, and no player books a payment or reads the grants',
               {'quote': q, 'paid': (R['sPaid1'], R['sPaid2']), 'pending': pd, 'after': R['sAfter'], 'end': R['sEnd']})
+        sn = R['spNow']
+        print(ok(R['spPl'][0] and R['spAd1'][0] and R['spNoAgr'][0] and R['spBadUrl'][0] and len(sn) == 1 and sn[0]['target'] == 'garnhaler' and sn[0]['sponsor']['name'] == 'Testmerke' and sn[0]['data'].get('model') == 'GH-200'
+                 and R['spOff'] == [] and R['spOffS'] == [] and len(R['spList']) == 1 and len(R['spList'][0]['placements']) == 1 and R['spListPl'][0] and R['spRead'] == '0' and R['spReadAnon'] == '0' and R['spRepPl'][0] and len(R['spRep']) == 1 and R['spRep'][0]['imp'] == 4 and R['spRep'][0]['sec'] == 640 and R['spRep'][0]['clicks'] == 1 and R['spRep'][0]['sponsor'] == 'Testmerke'),
+              'sponsors: only the admin with the second factor adds one, and only with an agreement and an https site; sp_now gives anyone what is active and nothing switched off; no player reads the tables; the report per placement and week (views, seconds capped at 600 a send, clicks) only for the admin',
+              {k: R[k] for k in ('spPl', 'spAd1', 'spNoAgr', 'spBadUrl', 'spOff', 'spOffS', 'spListPl', 'spRead', 'spReadAnon')})
         print(ok(R['lgNo'][0] and R['lgV'] == ['1', '2'] and R['lgBad'][0] and R['lgGet'] and R['lgGet'].get('img', '').startswith('data:image/png') and R['lgRead'][0] and R['lgAdmPl'][0] and R['lgRmPl'][0]
                  and len(R['lgAdm']) == 1 and R['lgAdm'][0]['who'] == hidA and R['lgRm'] == 't' and R['lgGone'] == 'null' and R['lgMine'].get('removed') is True and R['lgMine'].get('reason') == 'Støtende innhold'
                  and R['lgAgain'] == '3' and R['lgMine2'].get('removed') is False),
@@ -798,7 +818,16 @@ def main():
               'the world brings the register, the open group\'s active players and the others\' catch per group; the stock only when the admin has turned it on')
         print(ok(G['cfgA'] and G['cfg1'] and G['cfgBad'] and G['shareA'] and G['share'] == ['cfg', 'grp', 'open_boats', 'reg', 'reg_total', 'stock'] and G['tables']),
               'only the admin with the second factor turns the switches and sees the share; no player reads the tables')
-        # the admin told at once (20261102130000_err_alert.sql): the first look starts the cursor; a new message and three crashes give one
+        # whose gear it is (02.11.2026, 20261102130000_gear_owner.sql): gear_near2 gives B's sets to A with B's player name and boat, never
+        # A's own, and gear_near still gives them with nothing of the owner
+        sql("select public.gear_put('[[\"g1\", \"garn\", 900.1, 300.1, 900.3, 300.1]]'::jsonb)", B, 'authenticated')
+        sql("delete from public.presence where player_id = '%s'; insert into public.presence (player_id, boat, vtype, x, y, st) values ('%s', 'Havbris', 'trebat', 900, 300, 'port')" % (B['sub'], B['sub']))
+        g2 = json.loads(sql("select public.gear_near2(900, 300, 5)", A, 'authenticated')); g1 = json.loads(sql("select public.gear_near(900, 300, 5)", A, 'authenticated'))
+        own = json.loads(sql("select public.gear_near2(900, 300, 5)", B, 'authenticated'))
+        mine = [q for q in g2 if q[0] == 'garn' and abs(q[1] - 900.1) < 1e-3]; nmB = sql("select coalesce((select name from public.names where player_id = '%s' and removed_at is null), '')" % B['sub']).strip()
+        print(ok(len(mine) == 1 and mine[0][5] == nmB and mine[0][6] == 'Havbris' and all(len(q) == 5 for q in g1) and not any(abs(q[1] - 900.1) < 1e-3 for q in own)),
+              'gear_near2 gives the others\' sets with the owner\'s player name and boat, never your own; gear_near still has nothing of the owner', (mine, nmB, len(g1), len(own)))
+        # the admin told at once (20261102150000_err_alert.sql): the first look starts the cursor; a new message and three crashes give one
         # push to the admin with a subscription; within half an hour no other, and the cursor waits; then the next; no player runs it
         E = {}
         adm = sql("select id from public.players order by id limit 1")

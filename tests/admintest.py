@@ -21,9 +21,9 @@ async def main():
         for t in tabs:
             await pg.click('nav button[data-t="%s"]' % t); await pg.wait_for_timeout(150)
             seen[t] = await pg.evaluate("document.querySelector('main').innerText.length")
-            if t in ('oversikt', 'tid', 'penger'): await pg.screenshot(path='admin_%s.png' % t, full_page=True)
+            if t in ('oversikt', 'tid', 'penger', 'mediekort'): await pg.wait_for_timeout(300 if t == 'mediekort' else 0); await pg.screenshot(path='admin_%s.png' % t, full_page=True)
         demo = await pg.evaluate("!!document.querySelector('.demo') && !document.getElementById('login')")
-        check(len(tabs) == 16 and all(v > 40 for v in seen.values()), 'every tab of the dashboard draws in the demo', seen)
+        check(len(tabs) == 18 and all(v > 40 for v in seen.values()), 'every tab of the dashboard draws in the demo', seen)
         # the feedback agent: its report in the Agent tab, and under a feedback its suggestion, which «Bruk forslaget» only fills in
         await pg.click('nav button[data-t="agent"]'); await pg.wait_for_timeout(150); ag = await pg.evaluate("document.querySelector('main').innerText")
         await pg.click('nav button[data-t="tilbake"]'); await pg.wait_for_selector('[data-fbai]', timeout=5000)

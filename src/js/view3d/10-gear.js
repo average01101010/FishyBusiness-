@@ -30,6 +30,7 @@
   function drawGearSea(eye, t, VP, H){
     const L = []; for (const s of S.sets || []) if (!s.lost){ L.push(s.a); L.push(s.b); }
     for (const s of PEERGEAR){ L.push(s.a); L.push(s.b); }   // the other players' buoys (tilbakemelding #35)
+    for (const s of NPCGEAR){ L.push(s.a); L.push(s.b); }    // the coast boats' nets, lines and pots (05-vessels.js)
     // setting, the first buoy goes over the stern and lies astern of her until she has run clear of it (tilbakemelding #25: «bøya skal
     // ligge på siden eller bak båten når settingen starter»)
     const g = S.boat.gop; if (g && g.op === 'set' && g.done >= 0){ const back = ((GEO(vtype()).stern || 3) + 5) / 1000, d = Math.hypot(bv.x / 1000 - g.a.x, bv.z / 1000 - g.a.y);
@@ -297,7 +298,7 @@
     // those on «Haling» in the work chains (the skipper too when it is his job; he then leaves the wheel, gopMe): the first at the
     // hauler taking the gear in, the next clearing it at the end of the tray, a third stacking it aft (the skiff's fisher is drawn with
     // the boat)
-    if (!skiff && !(typeof CREW3D !== 'undefined' && CREW3D.on())){ const n = clamp(gopHands(), 0, 3), spots = [[HP[0] - 0.55, HP[2] + 0.2, 'coil', Math.PI / 2], [HP[0] - 1.25, HP[2] + 0.75, 'tend', Math.PI * 0.6], [sx * 0.3 + 0.5, DZ + 0.2, 'tend', Math.PI]];
+    if (!skiff && !(typeof CREW3D !== 'undefined' && CREW3D.on())){ const n = clamp(gopHands(), 0, 3), spots = [[HP[0] - 0.55, HP[2] + 0.2, 'haul', Math.PI / 2], [HP[0] - 1.25, HP[2] + 0.75, 'tend', Math.PI * 0.6], [sx * 0.3 + 0.5, DZ + 0.2, 'tend', Math.PI]];
       for (let k = 0; k < n; k++){ const [x, z, task, a] = spots[k], wl = xf(BMrel, [x, d.y, z]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:k === 0 && gopMe() ? 'skipper' : null, look:k === 0 && gopMe() ? lookMe() : lookCrew(k - (gopMe() ? 1 : 0))};
         const ev = dkFor('h' + k, [x, d.y, z], task);
         drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + a, task:ev ? ev.kind : task, ev:ev ? dkEv(ev, BMrel, G) : null, walk:false, s:0}, eye, t, 9 + k); }

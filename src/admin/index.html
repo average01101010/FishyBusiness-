@@ -30,6 +30,9 @@ svg text{fill:var(--dim);font-size:10px}
 .demo{background:#3a2a07;color:var(--acc);padding:6px 16px;font-size:13px}
 .lggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}.lgimg{display:block;width:128px;height:128px;object-fit:contain;background:repeating-conic-gradient(#8884 0 25%,transparent 0 50%) 0 0/16px 16px;border-radius:6px}.lgoff .lgimg{opacity:.35}.lgrow textarea{width:100%;box-sizing:border-box}
 .fbbody{white-space:pre-wrap;word-break:break-word;margin:6px 0}.fbimg{display:block;max-width:100%;max-height:70vh;border-radius:8px;margin:6px 0}.fbai{border-left:3px solid var(--acc);padding:4px 10px;margin:6px 0;font-size:13px}.fbset{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-top:6px}.fbset textarea{flex:1 1 260px;min-height:38px;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+.sprow{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.sprow input,.sprow select{min-width:140px}
+@media print{header,nav,#mkPrint,.demo{display:none!important}.mk .card{break-inside:avoid}}
+.mk-l{margin:4px 0 0 18px;padding:0}.mk-l li{margin:3px 0}
 </style>
 </head>
 <body>
@@ -81,7 +84,7 @@ async function load(){
   try { DATA = DEMO ? demo() : await rpc('admin_dashboard', {days:DAYS}); render(); }
   catch (e){ if (SES) $('#app').innerHTML = '<main><div class="card warn">' + esc(e.message) + '</div><button onclick="SES=null;sessionStorage.clear();render()">Logg inn på nytt</button></main>'; }
 }
-const TABS = [['oversikt', 'Oversikt'], ['trakt', 'Trakt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['agent', 'Agent'], ['logoer', 'Logoer'], ['navn', 'Brukernavn'], ['avis', 'Kystposten'], ['merker', 'Merker'], ['kommer', 'Kommer']];
+const TABS = [['oversikt', 'Oversikt'], ['trakt', 'Trakt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['agent', 'Agent'], ['logoer', 'Logoer'], ['navn', 'Brukernavn'], ['avis', 'Kystposten'], ['merker', 'Merker'], ['kommer', 'Kommer'], ['sponsorer', 'Sponsorer'], ['mediekort', 'Mediekort']];
 function render(){
   if (!DEMO && !SES) return loginView();
   if (!DATA) { $('#app').innerHTML = '<main class="note">Henter …</main>'; return load(); }
@@ -95,6 +98,8 @@ function render(){
   if (TAB === 'tilbake') fbWire();
   if (TAB === 'agent') agWire();
   if (TAB === 'logoer') lgWire();
+  if (TAB === 'sponsorer') spWire();
+  if (TAB === 'mediekort' && $('#mkPrint')) $('#mkPrint').onclick = () => window.print();
   if (TAB === 'navn') nmWire();
   if (TAB === 'avis') nwWire();
   if (TAB === 'merker' && $('#acR')) $('#acR').onclick = () => { AC = null; render(); };
@@ -311,6 +316,73 @@ function lgWire(){
 function lgDemo(){
   const cv = document.createElement('canvas'); cv.width = cv.height = 64; const g = cv.getContext('2d'); g.fillStyle = '#1d3b6b'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#fff'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.fillText('JH', 32, 42);
   return [{who:'a1b2c3d4e5', img:cv.toDataURL('image/png'), ver:2, at:new Date(Date.now() - 36e5).toISOString(), removed:null, reason:null}];
+}
+// ---------- the media card (M9, docs/planer/butikker-og-sponsorer.md 4.6 and docs/sponsor/mediekort.md): one page with what a
+// prospective partner asks for, from the dashboard's own numbers (the chosen period at the top), the funnel and the sponsors' report;
+// printed or saved as PDF from the browser. The home ports by part of the coast come from src/data/port-regions.json (build.mjs)
+const REGIONS = /*@regions*/null;
+const LDN = {nord:'Nord-Norge', midt:'Midt-Norge', vest:'Vestlandet', sor:'Sørlandet og Oslofjorden'};
+VIEW.mediekort = D => {
+  if (!FN){ fnLoad(); } if (!SPR){ sprLoad(); }
+  const o = D.overview || {}, daily = D.daily || [], days = daily.length || 1, sess = daily.reduce((a, d) => a + (d.sessions || 0), 0) / days, hrs = daily.reduce((a, d) => a + (d.hours || 0), 0) / days;
+  const homes = (D.geo && D.geo.homes) || {}, reg = {}; let homeN = 0;
+  for (const [id, n] of Object.entries(homes)){ const r = REGIONS && REGIONS[id]; const k = r ? LDN[r[1]] : 'Ukjent'; reg[k] = (reg[k] || 0) + n; homeN += n; }
+  const top = Object.entries(homes).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([id, n]) => [(REGIONS && REGIONS[id] ? REGIONS[id][0] : id), n]);
+  const fa = FN && !FN.err && FN.all, land = fa && fa.start ? fa.land1 / fa.start : null, reg3 = fa && fa.start ? fa.land3 / fa.start : null;
+  const sp = Array.isArray(SPR) ? SPR : [], spImp = sp.reduce((a, r) => a + (+r.imp || 0), 0), spSec = sp.reduce((a, r) => a + (+r.sec || 0), 0), spCl = sp.reduce((a, r) => a + (+r.clicks || 0), 0);
+  const pct = v => v == null ? '–' : nf(v * 100, 0) + ' %';
+  return '<div class="mk"><div class="card mk-head"><h2>Det Store Blå · mediekort</h2><p class="note">Et kystfiskespill langs hele norskekysten, med én felles verden og én felles klokke. Tallene gjelder ' + (DAYS === 1 ? 'siste døgn' : 'siste ' + DAYS + ' dager') + ', hentet ' + new Date().toLocaleDateString('nb-NO') + '. Bare spillere som deler statistikk, telles.</p><button id="mkPrint">Skriv ut eller lagre som PDF</button></div>' +
+    '<div class="grid">' + kpi('Spillere i alt', nf(o.players, 0)) + kpi('Aktive siste 30 dager', nf(o.mau, 0)) + kpi('Aktive per dag (snitt)', nf(o.dau, 0)) + kpi('Økter per dag', nf(sess, 0)) + kpi('Snitt økt', nf(o.avg_min, 0) + ' min') + kpi('Spilletimer per dag', nf(hrs, 0) + ' t') + '</div>' +
+    card('Hjemhavn etter landsdel', bars(reg), homeN ? nf(homeN, 0) + ' spillere med hjemhavn. Mest brukte: ' + top.map(([n, k]) => esc(n) + ' (' + nf(k, 0) + ')').join(', ') + '.' : 'Ingen hjemhavner ennå.') +
+    card('Flåten i spillet', bars(D.boats || {}), 'Båter per type blant spillerne.') +
+    card('Hva spillerne gjør', '<div class="grid">' + kpi('Har levert fisk', pct(land)) + kpi('Har levert tre ganger', pct(reg3)) + kpi('Turer i perioden', nf((D.trips || {}).count, 0)) + '</div>', 'Andelen av dem som åpnet spillet de siste åtte ukene (trakten).') +
+    card('Sponsede plasseringer', sp.length ? '<div class="grid">' + kpi('Synlige visninger', nf(spImp, 0)) + kpi('Sekunder synlig', nf(spSec, 0)) + kpi('Klikk ut', nf(spCl, 0)) + '</div>' : '<p class="note">Ingen sponsede plasseringer ennå. Formatene kan vises i demobygget (KYST_DEMO=1).</p>',
+      'En synlig visning: minst 1,5 % av skjermen, under 55°, minst halvparten synlig, i ett sekund i strekk (IABs retningslinjer for intrinsisk måling i spill, startverdier).') +
+    card('Formatene', '<ul class="mk-l"><li>Merkevare på utstyr i butikken: samme pris og virkning som det usponsede, merket «Samarbeid».</li><li>Banner og flagg ved butikker, mottak og verft langs hele kysten.</li><li>Annonse i Kystposten, høyst én per utgave, merket «Annonse».</li><li>Ekstra premie på sesonghendelser som Lofotfisket.</li><li>Arbeidsklær i Garderoben, gratis for spillerne.</li><li>Meglerens egne båter i bruktmarkedet, med lenke til den ekte båten.</li><li>Gave til nye spillere.</li></ul>',
+      'Aldri noe sponset på sjøen, i kartplotteren, i HUD eller i varsler. Ingen reklame for belønning, ingen annonsenettverk, ingen sporing fra andre.') + '</div>';
+};
+// ---------- sponsors (M6, supabase/migrations/20261102130000_sponsors.sql; docs/planer/butikker-og-sponsorer.md) ----------
+// A partner comes in only with a written agreement (CLAUDE.md): the reference to it is required. A placement says where it shows: kind
+// 'item' with an equipment key (garnhaler, jukse, radar …) and the model's name; the game shows it marked «Samarbeid», beside the generic
+// item at the same price and with the same numbers. Switching off takes it out of the game within the hour (sp_now).
+let SPN = null;
+let SPR = null;
+async function sprLoad(){ await null; try { SPR = DEMO ? [{week:'2026-W45', pl:1, sponsor:'Nordlys Utstyr', kind:'sign:all', players:12, imp:41, sec:388, clicks:3, buys:1}] : await rpc('admin_sp_report', {days:DAYS}); } catch (e){ SPR = {err:e.message}; } if (TAB === 'sponsorer') render(); }
+async function spLoad(){ await null; try { SPN = DEMO ? [{id:1, name:'Nordlys Utstyr', kind:'founding', site:'https://example.org/nordlys', agreement:'Demo', active:true, placements:[{id:1, kind:'item', target:'garnhaler', data:{model:'Nordlys GH-200'}, active:true}]}] : await rpc('sp_admin_list', {}); } catch (e){ SPN = {err:e.message}; } if (TAB === 'sponsorer') render(); }
+VIEW.sponsorer = () => {
+  if (!SPN){ spLoad(); return '<p class="note">Henter …</p>'; }
+  if (SPN.err) return card('Sponsorer', '<p class="warn">' + esc(SPN.err) + '</p>', 'Er migreringen supabase/migrations/20261102130000_sponsors.sql kjørt?');
+  const on = SPN.filter(s => s.active), pl = SPN.reduce((a, s) => a + s.placements.filter(p => p.active).length, 0);
+  const row = s => '<div class="card"><h3>' + esc(s.name) + ' <span class="note">' + esc(s.kind) + (s.active ? '' : ' · av') + '</span></h3>' +
+    '<p class="note">Avtale: ' + esc(s.agreement) + (s.site ? ' · <a href="' + esc(s.site) + '" target="_blank" rel="noopener">' + esc(s.site) + '</a>' : '') + (s.to ? ' · til ' + new Date(s.to).toLocaleDateString('nb-NO') : '') + '</p>' +
+    (s.placements.length ? '<table><tr><th>Plassering</th><th>Mål</th><th>Data</th><th></th></tr>' + s.placements.map(p => '<tr><td>' + esc(p.kind) + '</td><td>' + esc(p.target) + '</td><td>' + esc(JSON.stringify(p.data)) + '</td><td><button data-spon="p" data-id="' + p.id + '" data-v="' + (p.active ? 0 : 1) + '">' + (p.active ? 'Slå av' : 'Slå på') + '</button></td></tr>').join('') + '</table>' : '<p class="note">Ingen plasseringer.</p>') +
+    '<div class="sprow"><select data-spk><option value="item">Utstyr (item)</option><option value="sign">Skilt (sign)</option><option value="event">Hendelse (event)</option><option value="press">Kystposten (press)</option><option value="look">Klær (look)</option><option value="broker">Megler (broker)</option><option value="gift">Gave (gift)</option><option value="link">Lenke (link)</option></select>' +
+    '<input data-spt placeholder="mål, f.eks. garnhaler" maxlength="40"><input data-spm placeholder="modellnavn" maxlength="60"><button data-spadd="' + s.id + '">Legg til plassering</button></div>' +
+    '<button data-spon="s" data-id="' + s.id + '" data-v="' + (s.active ? 0 : 1) + '">' + (s.active ? 'Slå av sponsoren' : 'Slå på sponsoren') + '</button></div>';
+  return '<div class="grid">' + kpi('Aktive sponsorer', nf(on.length, 0)) + kpi('Aktive plasseringer', nf(pl, 0)) + '</div>' +
+    '<div class="card"><h3>Ny sponsor</h3><p class="note">Bare med skriftlig avtale. Navnet vises i spillet merket «Samarbeid». Forhåndsvis i spillet med #sptest (testsponsoren) før en ekte legges inn.</p>' +
+    '<div class="sprow"><input id="spN" placeholder="Navn" maxlength="60"><select id="spK"><option value="founding">Founding partner</option><option value="vare">Vare</option><option value="sted">Sted</option><option value="sesong">Sesong</option><option value="megler">Megler</option></select>' +
+    '<input id="spS" placeholder="https://… (nettsiden)" maxlength="200"><input id="spA" placeholder="Avtalen (hvor den ligger)" maxlength="200"><button id="spNew">Legg til</button></div></div>' +
+    (SPN.length ? SPN.map(row).join('') : '<p class="note">Ingen sponsorer ennå.</p>') + spReport() + '<p class="note"><a href="../#sptest" target="_blank" rel="noopener">Forhåndsvis spillet med testsponsoren ›</a></p>';
+};
+// the report per placement and week (4.4): what we sell on, with the CSV for the partner
+function spReport(){
+  if (!SPR){ sprLoad(); return card('Rekkevidde', '<p class="note">Henter …</p>'); }
+  if (SPR.err) return card('Rekkevidde', '<p class="warn">' + esc(SPR.err) + '</p>', 'Er migreringen supabase/migrations/20261102140000_sp_report.sql kjørt?');
+  return card('Rekkevidde per uke', (SPR.length ? table(SPR.map(r => ({...r, sec:nf(r.sec, 0)})), [['week', 'Uke'], ['sponsor', 'Sponsor'], ['kind', 'Plassering'], ['players', 'Unike spillere'], ['imp', 'Synlige visninger'], ['sec', 'Sekunder synlig'], ['clicks', 'Klikk ut'], ['buys', 'Kjøp']]) : '<p class="note">Ingen målinger ennå.</p>') +
+    '<button id="spCsv"' + (SPR.length ? '' : ' disabled') + '>Last ned CSV</button>',
+    'En synlig visning er et skilt som dekker minst 1,5 % av skjermen innenfor 55° i minst ett sekund (startverdier etter IABs retningslinjer for intrinsisk måling i spill; sjekkes mot den fulle teksten før vi selger på dem). Bare fra spillere som deler statistikk, og ingenting mens spillet står urørt i to minutter eller siden er skjult.');
+}
+function spWire(){
+  if ($('#spCsv')) $('#spCsv').onclick = () => { const cols = ['week', 'sponsor', 'kind', 'players', 'imp', 'sec', 'clicks', 'buys'], q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const csv = [cols.join(';')].concat(SPR.map(r => cols.map(c => q(r[c])).join(';'))).join('\n'), a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], {type:'text/csv'})); a.download = 'sponsorer-rekkevidde.csv'; a.click(); };
+  const go = async (fn, args) => { try { if (!DEMO) await rpc(fn, args); SPN = null; render(); } catch (e){ alert(e.message); } };
+  if ($('#spNew')) $('#spNew').onclick = () => { const n = $('#spN').value.trim(), a = $('#spA').value.trim(); if (!n || a.length < 3){ alert('Navn og avtale må fylles inn.'); return; }
+    go('sp_admin_put', {id:null, name:n, kind:$('#spK').value, logo:null, site:$('#spS').value.trim() || null, agreement:a}); };
+  document.querySelectorAll('[data-spon]').forEach(b => b.onclick = () => go('sp_admin_on', {what:b.dataset.spon, id:+b.dataset.id, on_:b.dataset.v === '1'}));
+  document.querySelectorAll('[data-spadd]').forEach(b => b.onclick = () => { const r = b.closest('.sprow'), t = r.querySelector('[data-spt]').value.trim(), m = r.querySelector('[data-spm]').value.trim();
+    if (!/^[A-Za-z0-9_:-]{1,40}$/.test(t)){ alert('Målet må være en nøkkel som garnhaler eller jukse.'); return; } go('sp_admin_place', {sponsor:+b.dataset.spadd, kind:r.querySelector('[data-spk]').value, target:t, data:m ? {model:m} : {}}); });
 }
 // ---------- the players' names (supabase/migrations/20261007120000_names.sql): shown to others beside the boat ----------
 // Taken away with a reason the player reads; that name cannot be had again, and choosing a new one costs nothing.
