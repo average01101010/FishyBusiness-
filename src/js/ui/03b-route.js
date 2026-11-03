@@ -144,6 +144,8 @@ async function leiaTo(pt, buoy, act){   // buoy: to a set's buoy, to haul it (th
   // a harbour of the coast's packs: Autonav goes to a free berth there (07e-havn.js), when no place of the game is nearer
   if (view.z >= 2 && !tutOn() && !near && !buoy){ const B = havnTapNear(pt, r); if (B) near = B; }
   if (!near && !buoy) near = portByLabel(pt);
+  // an ocean vessel only to a plant whose quay fits her and that takes her catch (06b-coastports.js portWhy, havsteget H0)
+  if (near && (near.mottak || near.havOnly)){ const why = portWhy(near, b.type); if (why){ toast(S.lang === 'en' ? why[1] : why[0]); return; } }
   // from Father's naust the way starts at its berth, not by the harbour's way out from the plant (tilbakemelding #20)
   const atN = !S.draft.length && b.status === 'port' && berthKind(b) === 'naust';
   const start = S.draft.length ? S.draft[S.draft.length - 1] : draftOrigin(), aPort = !S.draft.length && !atN ? draftPort() : null;

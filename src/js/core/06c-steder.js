@@ -5,7 +5,7 @@
 // (0 shop, 1 yard), postal town] on a quay face of the vector packs, set down as the coast's plants are (06b-coastports.js): a quay in
 // COASTQ, a harbour unit in UNITS (the looks 's' shop and 'y' yard, harbour-unit-s/y; the plant's look until they are drawn) and a harbour
 // in PORTS. They carry no firm's name: a place is its town. What each place offers is portServices below.
-const STEDER_D = /*@include(data/steder.json)*/null;
+// (STEDER_D, the places' data, is read in 06b-coastports.js, so the ocean fleet's plants can keep their distance to them)
 (() => {
   if (!STEDER_D || !STEDER_D.r) return;
   const used = {};
@@ -31,7 +31,8 @@ const STEDER_D = /*@include(data/steder.json)*/null;
 // (berth 'naust') and the rorbuer sell nothing, they are homes (Jonas 07.10.2026).
 function portServices(pt, berth){
   if (!pt || pt.rorbu || berth === 'naust') return {};
-  const s = pt.sted || '', v = {mottak:!!pt.mottak, butikk:/butikk/.test(s), verft:/verft/.test(s)};
+  // (an ocean fleet's plant is a plant only for an ocean vessel: havOnly, 06b-coastports.js, havsteget H0)
+  const s = pt.sted || '', v = {mottak:!!pt.mottak || (!!pt.havOnly && (VESSELS[S && S.boat && S.boat.type] || {}).cls === 'hav'), butikk:/butikk/.test(s), verft:/verft/.test(s)};
   v.bunker = !!pt.fuel && (v.mottak || v.verft);
   return v;
 }

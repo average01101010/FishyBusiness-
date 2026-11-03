@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['havmottak-031126', '03.11.2026', 'Mottakene for havflåten', 'The ocean fleet\'s plants', [
+       ['Tretten store mottak for havfiskeflåten er kommet på kartet, blant annet i Måløy, Selje, Florø, Egersund og Rypefjord ved Hammerfest. Der legger trålere og ringnotbåter til for å levere.', 'Thirteen large plants for the ocean fleet are on the chart, among them Måløy, Selje, Florø, Egersund and Rypefjord by Hammerfest. Trawlers and purse seiners land their catch there.'],
+       ['Utstyrsbutikken i Rypefjord og verftet ved Fiskarstrand har flyttet til nye kaier like ved.', 'The tackle shop in Rypefjord and the yard by Fiskarstrand have moved to new quays close by.'],
+       ['Fisk som er fryst om bord, betales etter prisen for sjøfryst fisk.', 'Fish frozen at sea is paid at the price of sea-frozen fish.'],
+    ]],
     ['jevnt3d-031126', '03.11.2026', 'Jevnere 3D på raske skjermer', 'Smoother 3D on fast screens', [
        ['Båten og verden beveger seg jevnere i 3D på skjermer med høy oppdateringsfrekvens, også i Firefox.', 'The boat and the world move more smoothly in 3D on high refresh rate screens, in Firefox too.'],
        ['Spiller du i Firefox eller Opera på Android, viser innlastingen et lite kort om at spillet går jevnest i Chrome.', 'If you play in Firefox or Opera on Android, the loading screen shows a small card saying the game runs smoothest in Chrome.'],

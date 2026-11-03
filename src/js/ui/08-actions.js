@@ -127,7 +127,8 @@ function landConf(H, q, acc){
   return {saleKg, codKg, confBy, codFF, codQ, codConf, byCod, bkOk};
 }
 function sell(){
-  const b = S.boat, port = portById(b.port); if (!port || !port.mottak) return;
+  const b = S.boat, port = portById(b.port); if (!port || !(port.mottak || port.havOnly)) return;
+  { const why = portWhy(port, b.type); if (why){ toast(S.lang === 'en' ? why[1] : why[0]); return; } }   // an ocean vessel: a plant that takes her (havsteget H0)
   const H = S.t / 60, q = quotaState(), lines = {}, extra = [], acc = access(), kgOf = sp => S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0);
   let kg = 0;
   const wk = weekOfH(H); if (q.ffW !== wk){ q.ffW = wk; q.ffTot = 0; q.ffCod = 0; }
@@ -139,7 +140,7 @@ function sell(){
     const sp = x.sp, sd = SPECIES[sp], c = x.cls != null ? x.cls : sd.ref, g = grade(x.fresh);
     // king crab is paid by class while it lives (no grades), and nothing once dead (Råfisklaget: dead crab 0 kr)
     const deadKC = sp === 'krabbe' && (x.fresh || 0) < KC.dead;
-    let ppk = sp === 'krabbe' ? (deadKC ? 0 : clsPrice(port, sp, c, H, false)) : g === 'V' ? 1 : clsPrice(port, sp, c, H, x.hook) * GM[g];
+    let ppk = sp === 'krabbe' ? (deadKC ? 0 : clsPrice(port, sp, c, H, false)) : g === 'V' ? 1 : clsPrice(port, sp, c, H, x.hook, x.frozen) * GM[g];   // (a frozen lot at the price of fish frozen at sea, pmF)
     if (x.gut && (sp === 'hyse' || sp === 'sei')) ppk += 0.30;           // no gutting fee deducted
     let v = x.kg * ppk, gross = v;
     if (deadKC) crabDead += x.kg;

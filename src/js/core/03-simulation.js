@@ -719,12 +719,12 @@ function weekDev(sp, H){
   for (let k = w - 16; k <= w; k++) dv = 0.7 * dv + sg * gauss(h2(k * 13 + i * 7 + 5000, 811), h2(k * 17 + i * 3 + 5000, 812));
   return WDC[key] = clamp(dv, -0.25, 0.25);
 }
-function marketPrice(sp, H){ return seasonal(SPECIES[sp].pm, H) * (1 + weekDev(sp, H)); }
+function marketPrice(sp, H, fz){ const s = SPECIES[sp]; return seasonal(fz && s.pmF ? s.pmF : s.pm, H) * (1 + weekDev(sp, H)); }   // fz: frozen at sea (pmF)
 // price per kg round weight for one size class at one buyer; the minimum price (with the hook-caught premium) is the floor
-function clsPrice(port, sp, c, H, hook){
+function clsPrice(port, sp, c, H, hook, fz){
   const s = SPECIES[sp], cl = s.cls[c], ref = s.cls[s.ref];
   const sat = ((S && S.market && S.market[port.id] && S.market[port.id][sp]) || 0) + wshSat(port.id, sp, H);   // the other players' too
-  const mk = marketPrice(sp, H) * port.pf * folkPf(port.id) * supplyFactor(H) * (cl[1] / ref[1]) * Math.max(0.9, 1 - sat / 40000);
+  const mk = marketPrice(sp, H, fz) * port.pf * folkPf(port.id) * supplyFactor(H) * (cl[1] / ref[1]) * Math.max(0.9, 1 - sat / 40000);
   return Math.round(Math.max(cl[1] * (hook !== false && cl[3] ? cl[3] : 1), mk) * 100) / 100;
 }
 function price(port, sp, H){ return clsPrice(port, sp, SPECIES[sp].ref, H, true); }

@@ -5,13 +5,13 @@
 // uh: kg round weight per kg gutted without head; size: [median kg, log-spread]; minKg: minimum legal size (released below).
 const SPECIES = {
   torsk:{no:'Torsk', en:'Cod', k:0.376, base:1.0, prod:0.6, dep:[70, 1.0], av:[1,1,1,1,1,1,1,1,1,1.1,1.1,1], skrei:[0.6,2.0,2.5,0.8,0,0,0,0,0,0,0,0.1],
-    pm:[52.6,55.0,54.5,52.9,43.7,42.4,39.9,42.0,43.3,51.5,51.7,50.9], sig:0.04, size:[2.0, 0.55], skreiSize:[5.0, 0.4], minKg:0.8, uh:1.5, liver:6.5, roe:10,
+    pmF:[54.3,54.5,53.8,53.5,52.4,52.8,52.9,55.3,58.9,64.1,66.5,60.4], pm:[52.6,55.0,54.5,52.9,43.7,42.4,39.9,42.0,43.3,51.5,51.7,50.9], sig:0.04, size:[2.0, 0.55], skreiSize:[5.0, 0.4], minKg:0.8, uh:1.5, liver:6.5, roe:10,
     cls:[[9, 45.33, 'Over 9 kg'], [6, 43.67, '6–9 kg'], [3.7, 42.00, '3,7–6 kg'], [1.5, 40.33, '1,5–3,7 kg'], [0, 38.67, 'Under 1,5 kg']], ref:2},
   hyse:{no:'Hyse', en:'Haddock', k:0.297, base:0.55, prod:0.62, dep:[110, 0.9], av:[1.7,2.0,1.4,0.7,0.6,0.6,0.8,0.6,0.8,1.0,0.9,0.8],
-    pm:[26.4,26.8,25.4,26.8,27.4,26.6,22.9,23.7,28.9,30.1,32.3,32.6], sig:0.03, size:[1.3, 0.4], minKg:0.5, uh:1.4, liver:3.5, roe:7,
+    pmF:[43.5,41.9,40.5,39.2,36.9,37.8,37.6,38.0,42.0,47.8,45.7,44.6], pm:[26.4,26.8,25.4,26.8,27.4,26.6,22.9,23.7,28.9,30.1,32.3,32.6], sig:0.03, size:[1.3, 0.4], minKg:0.5, uh:1.4, liver:3.5, roe:7,
     cls:[[1.1, 20.95, 'Over 1,1 kg', 1.128], [0.8, 18.09, '0,8–1,1 kg'], [0, 3.51, 'Under 0,8 kg']], ref:0},
   sei:{no:'Sei', en:'Saithe', k:0.9, base:0.8, prod:0.5, dep:[45, 1.2], av:[2.1,0.9,0.5,0.6,2.1,1.0,0.6,0.6,0.8,0.7,1.1,1.0],
-    pm:[21.2,22.4,21.9,20.7,17.6,18.0,17.0,19.1,22.7,24.4,26.2,26.9], sig:0.07, size:[2.0, 0.55], minKg:0.35, uh:1.35, liver:3.5, roe:7,
+    pmF:[21.8,22.8,22.2,21.5,22.5,23.2,24.2,23.9,24.9,25.2,23.1,22.5], pm:[21.2,22.4,21.9,20.7,17.6,18.0,17.0,19.1,22.7,24.4,26.2,26.9], sig:0.07, size:[2.0, 0.55], minKg:0.35, uh:1.35, liver:3.5, roe:7,
     cls:[[3.1, 20.51, 'Over 3,1 kg'], [1.6, 19.77, '1,6–3,1 kg'], [0.7, 18.22, '0,7–1,6 kg'], [0, 11.00, 'Under 0,7 kg']], ref:1},
   lyr:{no:'Lyr', en:'Pollack', k:0.136, base:0.12, prod:0.35, dep:[40, 0.9], av:[1.4,1.2,1.6,2.0,1.1,0.6,0.5,0.6,0.9,0.7,0.7,0.7],
     pm:[21.4,21.4,20.7,21.4,23.6,24.3,25.0,25.0,25.0,27.9,27.9,27.1], sig:0.03, size:[2.2, 0.4], minKg:0.5, uh:1.4,
@@ -55,15 +55,20 @@ const SPECIES = {
   // mackerel and snow crab, for the fleet's pressure and AIS (B3, H1) only. npc: the player cannot fish, buy or sell them, and they are
   // not in the Fish guide, SP or SHELL until the ocean step; they come last in ALLSP, after the late ones, so no other species' seeds
   // move. Where and when they are is areaF and MIG in 03f-fiske.js (the landing notes and HI); av is flat for that reason. The prices
-  // are rough first-hand means for 2025 (Norges Sildesalgslag: herring about 9, mackerel about 24 kr/kg; snow crab about 110 kr/kg),
-  // estimates that nothing reads yet; size and dep are HI's typical figures.
+  // are the landing notes' means by month for 2025 from vessels of 28 m and over (Fiskeridirektoratet, fangstdata 2025, NLOD: Norwegian
+  // spring-spawning herring and mackerel in RSW, snow crab frozen; H0 of docs/planer/havsteget.md, 03.11.2026), the months with no
+  // landings filled between their neighbours; the class price is the lowest month's, the floor. size and dep are HI's typical figures.
   sild:{no:'Sild', en:'Herring', npc:true, k:1, base:1, prod:0.5, dep:[80, 1.4], av:[1,1,1,1,1,1,1,1,1,1,1,1],
-    pm:[9,9,9,9,9,9,9,9,9,9,9,9], sig:0.05, size:[0.35, 0.2], minKg:0.1, uh:1, cls:[[0, 9, 'Sild']], ref:0},
+    pm:[11.6,12.4,12.8,12.6,12.4,12.2,12.0,11.6,11.5,11.5,11.6,11.6], sig:0.05, size:[0.35, 0.2], minKg:0.1, uh:1, cls:[[0, 11.5, 'Sild']], ref:0},
   makrell:{no:'Makrell', en:'Mackerel', npc:true, k:1, base:1, prod:0.5, dep:[40, 1.4], av:[1,1,1,1,1,1,1,1,1,1,1,1],
-    pm:[24,24,24,24,24,24,24,24,24,24,24,24], sig:0.05, size:[0.45, 0.25], minKg:0.1, uh:1, cls:[[0, 24, 'Makrell']], ref:0},
+    pm:[27.7,27.5,23.2,18.9,14.5,14.7,14.4,37.4,42.1,48.2,41.4,34.5], sig:0.05, size:[0.45, 0.25], minKg:0.1, uh:1, cls:[[0, 14.4, 'Makrell']], ref:0},
   snokrabbe:{no:'Snøkrabbe', en:'Snow crab', npc:true, shell:true, k:1, base:1, prod:0.3, dep:[250, 0.6], av:[1,1,1,1,1,1,1,1,1,1,1,1],
-    pm:[110,110,110,110,110,110,110,110,110,110,110,110], sig:0.05, size:[0.6, 0.3], minKg:0, uh:1, cls:[[0, 110, 'Snøkrabbe']], ref:0}
+    pm:[133.3,133.0,136.8,118.5,94.5,123,123,123,123,123,123,128], sig:0.05, size:[0.6, 0.3], minKg:0, uh:1, cls:[[0, 94.5, 'Snøkrabbe']], ref:0}
 };
+// pmF (cod, haddock, saithe): the price of fish frozen at sea, by month, from the landing notes for 2025 from vessels of 28 m and over
+// (Fiskeridirektoratet, fangstdata 2025, NLOD; kroner a kilo round weight, the frozen lots only; November and December filled between
+// their neighbours). A frozen lot sells at it instead of pm (clsPrice, 03-simulation.js). Jonas 03.11.2026: «Prisene skal reflektere
+// virkeligheten» (until then frozen fish was paid as fresh, by Råfisklaget's minimum prices, which are the same for both).
 // fish are caught by jig, line and net; shellfish only in pots. Everything that loops over fish uses SP; ALLSP adds the shellfish after
 // the first fish, the late ones (added after the crab) and last the ocean fleet's (npc), so the per-species seeds (ALLSP.indexOf) keep
 // their values. PLAYSP is ALLSP without the ocean fleet's: what the player can fish and the Fish guide and the records show.
@@ -76,6 +81,7 @@ const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell && !SPECIES[sp].
 //  accel (kn a minute), turnR (m, 3D), planing, outboard, diesel, fuelK, risk [hs warn, hs danger, wind warn, wind danger], sea (speed
 //  lost per m of wave), crewMax (besides you), berths (bunks where the crew can rest at sea; none means only the quay counts as rest),
 //  tubCap (bleeding tub, kg), land ('box' or 'tub'), std (equipment it comes with), rigs (the kinds of fishing it can be rigged for),
+//  mottak (an ocean vessel's gear groups a plant must take in, mottak.json gear: Trål, Not, Konvensjonelle; 06b-coastports.js portWhy),
 //  jukseMax, gearMax, svcH (engine hours between services), svcCost, svcJobH (yard hours until 05.10.2026; every yard job takes YARD_H now, core/06-services.js), cls ('open', 'kyst' or 'hav': the market
 //  tab), price, isNew (built to order), year, desc.
 // Schema v2 (docs/batplan.md del 4, Jonas 17.10.2026; vesseltest.py refuses a boat without every field): hullMat (tre, alu, glassfiber,
@@ -146,25 +152,25 @@ const VESSELS = {
   // the ocean fleet: shown in the market with the full spec, bought when the ocean grounds open (west of today's chart)
   snokrabbe:{name:{no:'Snøkrabbefartøy 50 m med fryseri', en:'50 m snow crab vessel with a freezing plant'}, len:50, beam:11, draft:6, disp:1800, holdCap:500000, iceCap:0, fuelCap:350000, hp:3600, engine:{no:'3 600 hk diesel', en:'3,600 hp diesel'},
     vmax:13.5, vcruise:11, accel:1, turnR:300, planing:false, outboard:false, diesel:true, risk:[6, 9, 24, 30], sea:0.04, crewMax:14, berths:18, tubCap:2000, land:'tub', std:['plotter', 'vhf', 'ais', 'chirp', 'sonar'],
-    rigs:['teiner'], jukseMax:0, gearMax:{garn:0, stamp:0, teine:7000}, svcH:600, svcCost:400000, svcJobH:72, cls:'hav', price:60000000, year:2001, lock:true,
+    rigs:['teiner'], jukseMax:0, gearMax:{garn:0, stamp:0, teine:7000}, svcH:600, svcCost:400000, svcJobH:72, mottak:['Konvensjonelle'], cls:'hav', price:60000000, year:2001, lock:true,
     crew:{key:['skipper', 'styrmann', 'maskinsjef', '2. maskinist', 'kokk', 'bas'], teams:[{role:'dekk', n:4}, {role:'fabrikk', n:4}], rot:2},
     hullMat:'stål', hold:{kind:'frys', m3:900}, deckCargo:40000, iceMaker:0, gutMachine:0, lph:400, cabins:9, fac:{house:'hus', shelter:true, galley:'bysse', wc:true, dry:true, mess:true}, stations:{table:4, hauler:2}, crane:5,
     desc:{no:'Teinefartøy for snøkrabbe i Barentshavet, med fryseri om bord. Krever snøkrabbetillatelse.', en:'Pot vessel for snow crab in the Barents Sea, with a freezing plant aboard. Needs a snow crab licence.'}},
   autoliner:{name:{no:'Autoliner 45 m med frysing', en:'45 m autoliner with freezing'}, len:45.4, beam:10.45, draft:3.8, disp:1050, holdCap:400000, iceCap:0, fuelCap:300000, hp:3000, engine:{no:'3 000 hk diesel', en:'3,000 hp diesel'},
     vmax:13, vcruise:11, accel:1, turnR:280, planing:false, outboard:false, diesel:true, risk:[6, 9, 24, 30], sea:0.04, crewMax:14, berths:16, tubCap:2000, land:'tub', std:['plotter', 'vhf', 'ais', 'chirp', 'sonar'],
-    rigs:['line'], jukseMax:0, gearMax:{garn:0, stamp:0, teine:4}, autoHooks:40000, svcH:600, svcCost:350000, svcJobH:72, cls:'hav', price:70000000, priceNew:300000000, year:1999, lock:true,
+    rigs:['line'], jukseMax:0, gearMax:{garn:0, stamp:0, teine:4}, autoHooks:40000, svcH:600, svcCost:350000, svcJobH:72, mottak:['Konvensjonelle'], cls:'hav', price:70000000, priceNew:300000000, year:1999, lock:true,
     crew:{key:['skipper', 'styrmann', 'maskinsjef', '2. maskinist', 'kokk', 'bas'], teams:[{role:'dekk', n:4}, {role:'fabrikk', n:4}], rot:2},
     hullMat:'stål', hold:{kind:'frys', m3:700}, deckCargo:30000, iceMaker:0, gutMachine:2500, lph:350, cabins:8, fac:{house:'hus', shelter:true, galley:'bysse', wc:true, dry:true, mess:true}, stations:{table:4, hauler:1}, crane:3,
     desc:{no:'Linebåt med egnemaskin som setter og trekker 40 000 kroker i døgnet, og fryser fisken om bord. Krever konsesjon for konvensjonelle havfiskefartøy.', en:'Longliner with a baiting machine that sets and hauls 40,000 hooks a day and freezes the catch aboard. Needs a licence for conventional ocean vessels.'}},
   bunntral:{name:{no:'Frysetråler 60 m med akterslipp', en:'60 m freezer trawler with a stern ramp'}, len:60.3, beam:12.5, draft:5.1, disp:2200, holdCap:800000, iceCap:0, fuelCap:700000, hp:8000, engine:{no:'8 000 hk diesel', en:'8,000 hp diesel'},
     vmax:15, vcruise:12, accel:0.8, turnR:400, planing:false, outboard:false, diesel:true, risk:[7, 10, 26, 33], sea:0.03, crewMax:25, berths:30, tubCap:3000, land:'tub', std:['plotter', 'vhf', 'ais', 'chirp', 'sonar'],
-    rigs:[], jukseMax:0, gearMax:{garn:0, stamp:0, teine:4}, svcH:800, svcCost:900000, svcJobH:120, cls:'hav', price:150000000, priceNew:500000000, year:2004, lock:true,
+    rigs:[], jukseMax:0, gearMax:{garn:0, stamp:0, teine:4}, svcH:800, svcCost:900000, svcJobH:120, mottak:['Trål'], cls:'hav', price:150000000, priceNew:500000000, year:2004, lock:true,
     crew:{key:['skipper', 'styrmann', '2. styrmann', 'maskinsjef', '2. maskinist', 'elektriker', 'kokk', 'stuert', 'fabrikksjef'], teams:[{role:'dekk', n:4}, {role:'fabrikk', n:6}, {role:'fabrikk', n:6}], rot:2},
     hullMat:'stål', hold:{kind:'frys', m3:1400}, deckCargo:60000, iceMaker:0, gutMachine:4000, lph:900, cabins:15, fac:{house:'hus', shelter:true, galley:'bysse', wc:true, dry:true, mess:true}, stations:{table:6, hauler:2}, crane:5,
     desc:{no:'Bunntråler for torsk, hyse, sei og uer, med fabrikk og fryselager. Krever torsketrålkonsesjon.', en:'Bottom trawler for cod, haddock, saithe and redfish, with a factory and a freezer hold. Needs a cod trawl licence.'}},
   pelagisk:{name:{no:'Ringnot- og pelagisk tråler 75 m', en:'75 m purse seiner and pelagic trawler'}, len:75, beam:15.5, draft:7.5, disp:5000, holdCap:2000000, iceCap:0, fuelCap:650000, hp:9000, engine:{no:'9 000 hk diesel', en:'9,000 hp diesel'},
     vmax:17, vcruise:14, accel:0.8, turnR:450, planing:false, outboard:false, diesel:true, risk:[7, 10, 26, 33], sea:0.03, crewMax:12, berths:16, tubCap:3000, land:'tub', std:['plotter', 'vhf', 'ais', 'chirp', 'sonar'],
-    rigs:[], jukseMax:0, gearMax:{garn:0, stamp:0, teine:4}, svcH:800, svcCost:900000, svcJobH:120, cls:'hav', price:250000000, priceNew:800000000, year:2010, lock:true,
+    rigs:[], jukseMax:0, gearMax:{garn:0, stamp:0, teine:4}, svcH:800, svcCost:900000, svcJobH:120, mottak:['Not', 'Trål'], cls:'hav', price:250000000, priceNew:800000000, year:2010, lock:true,
     crew:{key:['skipper', 'styrmann', 'maskinsjef', '2. maskinist', 'kokk'], teams:[{role:'dekk', n:7}], rot:1},
     hullMat:'stål', hold:{kind:'rsw', m3:2800}, deckCargo:80000, iceMaker:0, gutMachine:0, lph:1000, cabins:8, fac:{house:'hus', shelter:true, galley:'bysse', wc:true, dry:true, mess:true}, stations:{table:2, hauler:2}, crane:5,
     desc:{no:'Ringnotsnurper og pelagisk tråler for sild, makrell og kolmule, med kjølte sjøvannstanker (RSW). Krever ringnotkonsesjon.', en:'Purse seiner and pelagic trawler for herring, mackerel and blue whiting, with refrigerated sea water tanks (RSW). Needs a purse seine licence.'}},
@@ -174,7 +180,7 @@ const VESSELS = {
   // 499 GT, fuel 78.6 m3, RSW 419.5 m3, 749 kW (1,018 hp) main engine
   ringnot38:{name:{no:'Kystnotbåt 38,55 m, ringnot og snurrevad', en:'38.55 m coastal purse seiner and fly-shooter'}, len:38.55, beam:9.5, draft:3.85, disp:800, holdCap:400000, iceCap:0, fuelCap:78600, hp:1018, engine:{no:'1 018 hk diesel', en:'1,018 hp diesel'},
     vmax:13, vcruise:11, accel:1.2, turnR:200, planing:false, outboard:false, diesel:true, risk:[5, 8, 22, 28], sea:0.05, crewMax:8, berths:10, tubCap:1200, land:'tub', std:['plotter', 'vhf', 'ais', 'chirp', 'sonar'],
-    rigs:[], jukseMax:0, gearMax:{garn:0, stamp:0, teine:4}, svcH:600, svcCost:450000, svcJobH:80, cls:'hav', price:95000000, priceNew:180000000, year:2014, lock:true,
+    rigs:[], jukseMax:0, gearMax:{garn:0, stamp:0, teine:4}, svcH:600, svcCost:450000, svcJobH:80, mottak:['Not', 'Konvensjonelle'], cls:'hav', price:95000000, priceNew:180000000, year:2014, lock:true,
     crew:{key:['skipper', 'styrmann', 'maskinsjef', 'kokk'], teams:[{role:'dekk', n:4}], rot:1},
     hullMat:'stål', hold:{kind:'rsw', m3:420}, deckCargo:30000, iceMaker:0, gutMachine:0, lph:220, cabins:6, fac:{house:'hus', shelter:true, galley:'bysse', wc:true, dry:true, mess:true}, stations:{table:2, hauler:2}, crane:3,
     desc:{no:'Kystnotbåt med ringnot og snurrevad, kjølte sjøvannstanker (RSW) og fiskepumpe. Åpent arbeidsdekk på styrbord side.', en:'Coastal purse seiner and fly-shooter with refrigerated sea water tanks (RSW) and a fish pump. An open working deck on the starboard side.'}}

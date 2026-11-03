@@ -73,6 +73,43 @@ Jonas 04.10.2026: «alle nye brukere skal få bestemme selv hvor i landet de øn
 - `tests/starttest.py` sjekker havnene, Salgslaget, hele veien fra brevet til båtnavnet med start i nord, feltet og tipsene der, et salg ved kystmottaket og flyttingen.
 - **Svakheter:** Bestillingene (`CUSTOMERS`), mannskapets hjemsteder, NPC-flåten og avisa er fortsatt Senja. Kysthavnene får ikke kaiutstyr i 3D når båten kommer dit etter at 3D er bygget, før siden lastes på nytt. Naustet er ikke plassert ennå.
 
+## 4.18c Mottakene for havfiskeflåten (H0 av `docs/planer/havsteget.md`, 03.11.2026)
+
+Jonas 03.11.2026: «Start H0 - Grunnmuren». Grunnmuren gjør at havbåtene får havner og priser før de låses opp i H1. Spillerne merker bare de nye mottakene på kartet.
+
+- **Dataene (`tools/mottak/mottak.py hav`):** henter sluttsedlene 2024–2025 (Fiskeridirektoratet, NLOD) og føyer to ting inn i `src/data/mottak.json` slik den er. Flyttingene for bruer og land, som ble gjort etter at fila ble laget, står derfor.
+  - Sild (NVG), makrell og snøkrabbe blant artene per mottak.
+  - `big`: andelen av alt mottaket tar imot, som kommer fra fartøy på 28 m og over. 88 mottak får en femdel eller mer.
+  - Den vanlige kjøringen av verktøyet teller det samme.
+- **Havnene (`core/06b-coastports.js`):**
+  - **Hva hver havn kjenner:** redskapsgruppene den tar imot (`mk.gear`), andelen fra 28 m og over (`mk.big`), havartene (`mk.hsp`), og kaia (`mk.q`: lengde og dybde fra registerets kaifront, den lengste i havna).
+  - **Havflåtens mottak:** et mottak som tar minst 500 t i året av spillets arter og havartene, med en femdel eller mer fra 28 m og over.
+    - Ligger det innen 1,5 km av en havn, hører det til den havna (`mk.hav`).
+    - Ellers blir det en egen havn bare for havfiskefartøy (`havOnly`, `havMottak`, `mottak:false`). Kystbåtene kan ikke legge til der, det kommer ingen bestillinger derfra, og driftsplanen og Kystkartet ser det ikke.
+    - Mottaket må ligge 1,5 km fra butikker, verft og rorbuer (`docs/handelssteder.md`).
+    - 13 slike havner: Ellingsøy vest, Florø, Selje, Hjørungavåg, Fiskarstrand, Fiskarstrand øst, Lødingen, Longva, Måløy, Rypefjord (Hammerfest), Bulandet, Egersund sør og Avaldsnes.
+    - Butikken i Rypefjord og verftet ved Fiskarstrand sto under 1,5 km fra havflåtens mottak. De er flyttet med `tools/steder/havflytt.py` (Jonas 03.11.2026: «Rypefjord og fiskarstrand øst må også ha mottak for havflåten. Flytt om så butikken eller verftet»): butikken 559 m til en kai på 96 m i Rypefjord, og verftet 1,2 km til en kai på 36 m. Flyttingen følger reglene i `landflytt.py`: land bak, ingen bro, 1,5 km til alle andre steder og 5 km mellom verft.
+  - **`portWhy(pt, type)`:** et havfiskefartøy (`cls:'hav'`) kan legge til og levere bare der kaia er lang og dyp nok (som `quayFit`: 90 % av kaia minst lengden og 2 m, dybden minst dypgangen og 0,5 m). I tillegg må mottaket ta minst 5 % fra en av båtens redskapsgrupper (`VESSELS.mottak`: Trål, Not, Konvensjonelle), eller få en femdel fra 28 m og over. Grunnen gis på norsk og engelsk. Kystbåtene kan bruke alle mottakene som før.
+  - **Ukjent dybde:** 0 i registeret (57 av 293 kaier) betyr at dybden ikke er kjent. Den regnes som 3 m (`QUAY_DEPTH_UNKNOWN`, som `quayFit`), og meldingen sier at den ikke er kjent.
+  - **Stikkprøve 03.11.2026:** Båtsfjord, Tromsdalen, Selje og Skudeneshavn tar alle havbåtene. Melbu (84 m) nekter den pelagiske (75 m). Måløy (46 m) tar bare kystnotbåten. Kristiansand har ukjent dybde. En sjark kan ikke legge til ved et havmottak. Skjermbilder av Måløy i begge formater.
+  - **Hvor regelen gjelder:** «Fortøy» (`moorAll`), Autonav til en havn (`leiaTo`), salget (`sell`) og «Lever» (`portServices`).
+  - **Målt:**
+
+    | Fartøy | Mottak som tar det |
+    |---|---|
+    | autoliner | 30 |
+    | snøkrabbe | 17 |
+    | ringnot38 | 35 |
+    | bunntral | 7 |
+    | pelagisk | 4 |
+
+    Det er av 161 kystmottak med kai. I tillegg kommer de 13 havnene som bare er for havflåten.
+- **Prisene (`core/02-species-gear.js`):**
+  - **Fisk fryst om bord** får sin egen pris etter sedlene (`pmF`, Jonas 03.11.2026: «Prisene skal reflektere virkeligheten»), se 5.4 i `priser-og-salg.md`.
+  - Sild, makrell og snøkrabbe har prisene per måned fra de samme sedlene: sild i RSW 11,5–12,8 kr, makrell i RSW 14–48 kr (lavest om sommeren, høyest i oktober) og fryst snøkrabbe 94–137 kr.
+  - Månedene uten landinger er fylt mellom naboene, og laveste måned er gulvet.
+- **Tester:** `tests/unit/havsteg.test.mjs` (havnene, regelen, grunnen, prisene for havartene) og `regions` (landsdelene til de nye havnene, `port-regions.json` skrevet på nytt).
+
 ## 5.25f Fars naust og butikken på kaia i 3D (05.10.2026)
 
 - Modellene kommer fra `tools/harbour/naust.py` og `butikk.py`, og hvor de står, regner `core/07c-naust.js` ut. De ligger i siden som `glb-naust` og `glb-shop`.

@@ -68,8 +68,8 @@ async def main():
         print(ok(fz['kgF'] >= 390 and fz['kgF'] == fz['all'] and fz['ice'] == 0 and fz['kept']), 'a freezer hold: the crew freeze the catch with no ice, and frozen fish keep its grade', fz)
         print(ok(r['rsw'] == [True] and r['noRsw'] == [False]), 'an RSW hold chills the catch as it comes aboard (and a sjark\'s does not)', [r['rsw'], r['noRsw']])
         s = r['sale']
-        print(ok(r['acc'] != 'none' and s['frozenKpk'] and s['frozenKpk'] == s['freshKpk'] and s['pct'] > 0 and s['ffKg'] <= 100 and s['ffTot'] == 600 + 100 and len(s['fz']) == 2),
-              'frozen cod is paid as fresh at its grade, and only fresh fish counts on the fresh-fish scheme', s)
+        print(ok(r['acc'] != 'none' and s['frozenKpk'] and s['frozenKpk'] > s['freshKpk'] and s['pct'] > 0 and s['ffKg'] <= 100 and s['ffTot'] == 600 + 100 and len(s['fz']) == 2),
+              'frozen cod is paid the price of fish frozen at sea (pmF, above fresh in July), and only fresh fish counts on the fresh-fish scheme', s)
         print(ok(any(len(l) == 8 and l[7] == 1 for n in r['note'] if n for l in n)) if r['note'] else 'LES ', 'the landing note marks the frozen lot', r['note'])
         print('sidefeil:', errs[:5])
         await b.close()
