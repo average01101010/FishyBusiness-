@@ -1,3 +1,6 @@
+// the logo (src/brand/logo.svg, the user's anchor of 03.11.2026), filled with currentColor: the sign-in's gate (ui/10f-cloud.js) and the
+// week's catch picture (ui/05i-ukas.js) put it in; the loading screen has it in the page (index.html)
+const DSB_LOGO = /*@text(brand/logo.svg)*/null;
 // ---------- i18n ----------
 const T = {
 no:{title:'Det Store Blå', proto:'Prototype, steg 1', pace:'Tempo', pace1:'6× (normalt)',

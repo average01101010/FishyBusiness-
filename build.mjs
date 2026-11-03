@@ -85,7 +85,7 @@ if (!ONE){
 }
 if (PWA){
   // the manifest and the icon in the head; the service worker registered once the page has loaded, and the storage asked to be kept
-  const head = '<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b1622"><link rel="apple-touch-icon" href="icon-192.png"><meta name="mobile-web-app-capable" content="yes">';
+  const head = '<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b1622"><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="icon" href="icon-192.png" sizes="192x192"><link rel="apple-touch-icon" href="icon-192.png"><meta name="mobile-web-app-capable" content="yes">';
   const reg = '<script>if (\'serviceWorker\' in navigator) addEventListener(\'load\', () => navigator.serviceWorker.register(\'sw.js\').catch(e => console.warn(\'sw\', e)));' +
     'if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});</script>';
   const h = page.indexOf('</head>'), b = page.lastIndexOf('</body>');
@@ -131,6 +131,7 @@ if (PWA){
     writeFileSync(join(DIST, 'admin', 'index.html'), readFileSync(join(A, 'index.html'), 'utf8').replace('/*@cloud*/null', cfg).replace('/*@regions*/null', reg)); } }
 // the privacy and terms pages (docs/lansering.md D) next to the game, as the sign-in and the consent link them (personvern.html,
 // vilkar.html), each with the shared style put in
+// and the logo (src/brand/logo.svg, in the ink's colour) in the header
 { const L = join(SRC, 'legal');
-  if (existsSync(L)){ const css = '<style>\n' + readFileSync(join(L, 'legal.css'), 'utf8') + '</style>';
-    for (const f of readdirSync(L).filter(f => f.endsWith('.html'))) writeFileSync(join(DIST, f), readFileSync(join(L, f), 'utf8').replace('<!--@css-->', css)); } }
+  if (existsSync(L)){ const css = '<style>\n' + readFileSync(join(L, 'legal.css'), 'utf8') + '</style>', logo = readFileSync(join(SRC, 'brand', 'logo.svg'), 'utf8').trim();
+    for (const f of readdirSync(L).filter(f => f.endsWith('.html'))) writeFileSync(join(DIST, f), readFileSync(join(L, f), 'utf8').replace('<!--@css-->', css).replace('<!--@logo-->', logo)); } }

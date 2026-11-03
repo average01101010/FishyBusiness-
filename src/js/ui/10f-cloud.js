@@ -102,7 +102,7 @@ function cloudGateShow(html){
   let g = document.getElementById('cloudGate');
   if (!g){ g = document.createElement('div'); g.id = 'cloudGate'; g.className = 'dsb-bg'; document.body.appendChild(g); }
   if (typeof bootGate === 'function') bootGate(true);   // the time at the gate is the player's, not the start's (11-boot.js)
-  g.innerHTML = '<div class="ld-top"><span class="ld-k">' + cloudL('Kystfiske langs norskekysten', 'Coastal fishing in Norway') + '</span><h1 class="ld-t">Det Store Blå</h1></div><div class="cg-card">' + html + '</div>';
+  g.innerHTML = '<div class="ld-top"><span class="ld-k">' + cloudL('Kystfiske langs norskekysten', 'Coastal fishing in Norway') + '</span><h1 class="ld-t">' + DSB_LOGO + '</h1></div><div class="cg-card">' + html + '</div>';
   return g;
 }
 function cloudGateHide(){ const g = document.getElementById('cloudGate'); if (g) g.remove(); if (typeof bootGate === 'function') bootGate(false); }
