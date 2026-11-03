@@ -310,7 +310,7 @@ function dynLive(){ const b = S.boat; return DYN.on && b === DYN.b && !!b.dyn &&
 // where she is now, a little on from the last tick (km, radians, m/s): for the chart plotter and the 3D view
 // (waiting for the map, she stands where the last frame had her: the way on from the tick is frozen at the hold, never taken back)
 function dynPose(){
-  const d = S.boat.dyn, s = clamp(((DYN.hold ? DYN.holdAt : Date.now()) - d.wall) / 1000, 0, 0.5) * simRate(), c = Math.cos(d.psi), sn = Math.sin(d.psi);
+  const d = S.boat.dyn, s = clamp(((DYN.hold ? DYN.holdAt : wallNow()) - d.wall) / 1000, -0.02, 0.5) * simRate(), c = Math.cos(d.psi), sn = Math.sin(d.psi);
   const X = d.X + (d.u * sn + d.v * c) * s, Y = d.Y - (d.u * c - d.v * sn) * s, psi = d.psi + d.r * s;
   return {x:X / 1000, y:Y / 1000, hd:psi, cog:Math.abs(d.u) > 0.3 ? psi + Math.atan2(d.v, Math.abs(d.u)) : psi, u:d.u, v:d.v, r:d.r, spd:Math.abs(d.u)};
 }

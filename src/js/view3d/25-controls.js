@@ -63,7 +63,7 @@
     }
     active = !!on; canvas.hidden = !active; labelsEl.hidden = !active;
     document.getElementById('map').style.visibility = active ? 'hidden' : 'visible';
-    if (active){ bv.init = false; lastF = performance.now(); if (!raf) raf = requestAnimationFrame(frame); }
+    if (active){ bv.init = false; lastF = 0; if (!raf) raf = requestAnimationFrame(frame); }
     if (hooks.onView) hooks.onView(active);
     return true;
   }
@@ -170,7 +170,7 @@
     bench, prof,
     // the quality: with a setting ('auto', 'low', 'mid', 'high') it applies it; returns the level now and the frame rate
     quality(v){ if (v){ S.settings.q3d = v; QUAL.bad = QUAL.good = 0; QUAL.cap = 2; qualSet(); } return {lvl:QUAL.lvl, set:S.settings.q3d || 'auto', fps:FPS.v, ultra:UINT}; },
-    show, toggle(){ return show(!active); }, hold(on){ HOLD = !!on; if (!on) lastF = performance.now(); }, isActive:() => active, say:say3d, crewFx:crewFx3d, sayWorker, sayBoat, anchorAlarm:anchorAlarm3d, haltNeed:() => dynLive() ? dynHaltNeed() : active ? trkHaltNeed() : 0, get failWhy(){ return failWhy; },
+    show, toggle(){ return show(!active); }, hold(on){ HOLD = !!on; if (!on) lastF = 0; }, isActive:() => active, say:say3d, crewFx:crewFx3d, sayWorker, sayBoat, anchorAlarm:anchorAlarm3d, haltNeed:() => dynLive() ? dynHaltNeed() : active ? trkHaltNeed() : 0, get failWhy(){ return failWhy; },
     // the next frame as a JPEG data URL (or null when no frame comes within 2 s)
     // whether a point (km, and metres above the ground) is in the picture the camera shows now: in front within the picture's width,
     // and no ground between (Kystposten's lighthouse pictures, ui/05f-turer.js)
