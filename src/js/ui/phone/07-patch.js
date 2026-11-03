@@ -4,6 +4,7 @@
        ['Ringnotbåtene kaster nota rundt stimen, snurper og pumper, og snurrevadbåtene setter og drar snurrevaden. Du ser det i 3D.', 'The purse seiners shoot the seine round the school, purse it and pump, and the Danish seiners set and haul their seine. You see it in 3D.'],
        ['Havflåten leverer fangsten ved det nærmeste mottaket som tar imot den og har kai stor nok, ligger der noen timer og går så hjem. AIS viser når et skip er på vei for å levere og når det leverer.', 'The ocean fleet lands its catch at the nearest plant that takes it and has a quay big enough, lies there a few hours and then goes home. The AIS shows when a ship is on its way to land and when it is landing.'],
        ['Tauet fra blåsene synes et stykke ned i sjøen, og på grunt vann ser du garnet og lina langs bunnen.', 'The rope from the buoys shows a little way down into the sea, and in shallow water you see the net and the line along the bottom.'],
+       ['Havfiskefartøyene fisker ikke med juksa.', 'The ocean vessels do not fish with the jig.'],
     ]],
     ['hav-021126', '02.11.2026', 'Havflåten', 'The ocean fleet', [
        ['Trålere, ringnotbåter, autolinere, snurrevadbåter og snøkrabbefartøy er ute på havet langs hele kysten. De følger sesongene og ligger ved kaier som er store nok for dem.', 'Trawlers, purse seiners, autoliners, Danish seiners and snow crab vessels are out at sea along the whole coast. They follow the seasons and lie at quays big enough for them.'],

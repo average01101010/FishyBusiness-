@@ -116,6 +116,9 @@ function rigGuess(){
 function rigOf(){ const b = S.boat; if (!RIGS[b.rig]) b.rig = rigGuess(); return b.rig; }
 const rigKindOk = kind => RIGS[rigOf()].kind === kind;
 const rigJig = () => rigOf() === 'juksa';
+// whether a boat can fish with the jig at all (Jonas 03.11.2026: «En havfiskebåt skal ikke kunne fiske med juksa»): only a boat whose
+// VESSELS rigs has juksa; the ocean vessels (trawl, seine, autoline, snow crab) have none. The dock, the start and the minute ask it.
+const vesselJigs = t => ((VESSELS[t || (S.boat && S.boat.type)] || {}).rigs || []).includes('juksa');
 // room kept free in the hold for what my gear in the sea is likely to bring up: what it has caught so far, at least a typical haul per unit
 // (kg: line a tub, net a net, pots a pot). Jigging stops when the hold is full but for this.
 const TYPKG = {line:70, garn:40, teine:7};
