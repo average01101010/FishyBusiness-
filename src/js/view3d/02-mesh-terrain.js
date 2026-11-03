@@ -89,5 +89,10 @@ const grassNow = () => typeof seasonAt === 'function' ? Math.round(seasonAt(S.t 
     }
     h = siteTerr(x, z, h);   // Father's naust and the Finnsnes shop (SITES)
     if (BPIT.l.length || (NPIT.l.length && !NPIT.off)) h = berthPit(x, z, h);
-    return h > -3 && harbourNear(x, z) && inHarbourPocket({x:x / 1000, y:z / 1000}) ? -3 : h;   // the water in front of a quay (01-world.js)
+    // the water in front of a quay (01-world.js): only the sea bed already under water goes down (03.11.2026, Jonas: «Jeg vil ikke ha
+    // noe graving i landmasse»; the berth there lies out where the shore is under water, berthPose quayOut, the quay built out to her)
+    // A harbour unit's basin is inside its own model, walled by its block and fill: that one stays as it was.
+    if (h <= -3 || !harbourNear(x, z)) return h;
+    const c = HCELL.get(Math.floor(x / 200) * 65536 + Math.floor(z / 200)); if (!c) return h;
+    return pocketHit(c.U, h < NPIT.wet ? c.Q : [], x, z) ? -3 : h;
   }

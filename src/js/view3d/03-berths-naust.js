@@ -11,8 +11,9 @@
     if (k === BPIT.k) return;
     const was = BPIT.l; BPIT.k = k; BPIT.l = [];
     if (st) for (const id in st.s){ const s = st.s[id], f = s.face; if (!s.vid || !f) continue;
-      const B = s.B || 3, a1 = s.L / 2 + 1 + 3, w = B + 6, r = Math.hypot(a1, w + 4) + 1, T = (VESSELS[s.vtype] || {}).draft || 1.5;
-      BPIT.l.push({x:f.x, z:f.z, ux:f.ux, uz:f.uz, nx:f.nx, nz:f.nz, a1, a0:s.L / 2 + 2, w, d:Math.max(3, T + 1), x0:f.x - r, x1:f.x + r, z0:f.z - r, z1:f.z + r}); }
+      const bp = f.out === undefined && !f.dock ? berthPose(id, s.vtype) : null, o = f.dock ? 0 : bp ? bp.face.out : f.out || 0;
+      const B = s.B || 3, T = (VESSELS[s.vtype] || {}).draft || 1.5, d = Math.max(3, T + 1), a1 = s.L / 2 + 1 + 3, w = o + B + 6, tp = d / NPIT.slope, r = Math.hypot(a1 + tp, w + tp) + 1;
+      BPIT.l.push({x:f.x, z:f.z, ux:f.ux, uz:f.uz, nx:f.nx, nz:f.nz, a1, o, w, tp, d, x0:f.x - r, x1:f.x + r, z0:f.z - r, z1:f.z + r}); }
     // (the ground round the berths that came or went is made again: the terrain chunks within 700 m and the near and fine meshes)
     const moved = was.filter(q => !BPIT.l.some(p => p.x === q.x && p.z === q.z)).concat(BPIT.l.filter(q => !was.some(p => p.x === q.x && p.z === q.z)));
     if (!moved.length) return;
@@ -52,7 +53,10 @@
     const pit = q => { if (x < q.x0 || x > q.x1 || z < q.z0 || z > q.z1) return false;
       const dx = x - q.x, dz = z - q.z, a = Math.abs(dx * q.ux + dz * q.uz), n = dx * q.nx + dz * q.nz;
       return n <= q.w && (n >= 0 ? a <= q.a1 : n >= -(q.inl || 4) && a <= q.a0); };
-    for (const q of BPIT.l) if (pit(q)) return Math.min(h, -q.d);
+    // (the held berths as the coast's boats, 03.11.2026: only the sea bed under water, from the front of the quay built out to her)
+    if (h < NPIT.wet) for (const q of BPIT.l){ if (x < q.x0 || x > q.x1 || z < q.z0 || z > q.z1) continue;
+      const dx = x - q.x, dz = z - q.z, a = Math.abs(dx * q.ux + dz * q.uz), n = dx * q.nx + dz * q.nz;
+      if (n < q.o) continue; const e = Math.max(0, a - q.a1, n - q.w); if (e >= q.tp) continue; h = Math.min(h, -q.d + e * NPIT.slope); }
     if (!NPIT.off && h < NPIT.wet){ const L = NPIT.g.get(Math.floor(x / 64) * 65536 + Math.floor(z / 64)); if (L) for (const q of L){ if (x < q.x0 || x > q.x1 || z < q.z0 || z > q.z1) continue;
       const dx = x - q.x, dz = z - q.z, a = Math.abs(dx * q.ux + dz * q.uz), n = dx * q.nx + dz * q.nz;
       if (n < q.o) continue;   // under the quay: its wall stands down to 3 m under the sea there
@@ -134,7 +138,7 @@
       if (Math.abs(x - s.o[0]) > 70 || Math.abs(z - s.o[1]) > 70) continue;
       const [lx, y] = siteL(s, x, z), ax = Math.abs(lx);
       if (s.pit){   // the naust and the rorbuer: on the map's ground as it is (lifted over it: s.lift); only the sea bed in front of the quay goes down
-        if (y >= 0.4) continue; const P = s.pit, d = Math.hypot(Math.max(0, ax - P.a + Math.min(0, y) * 10 / (P.w + 6)), Math.max(0, -P.w - y)); if (d >= 8) continue;
+        if (y >= 0.4 || h >= NPIT.wet) continue; const P = s.pit, d = Math.hypot(Math.max(0, ax - P.a + Math.min(0, y) * 10 / (P.w + 6)), Math.max(0, -P.w - y)); if (d >= 8) continue;
         const cap = y <= -1 ? -P.d : -P.d + (y + 1) * (P.d - 0.5) / 1.4;
         return h <= cap ? h : cap + (h - cap) * sstep(0, 8, d);
       }

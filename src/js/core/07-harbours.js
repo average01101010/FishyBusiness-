@@ -119,19 +119,21 @@ const faceAt = (f, a, L, out) => ({id:f.id, x:f.x + f.ux * a, z:f.z + f.uz * a, 
 // 1 in 3 (1 in 1.5 at a breakwater), and a face of the packs lies on that line or near it, so a boat laid at the face sat on the bank and
 // the ground was dug out under her in a pit with walls over the water (npcPits). Now the bank is left as it is: quayOut gives how far
 // out from the face (m) the quay's front must stand for the bank to be QOUT.clear under the sea along her whole side, she lies there,
-// and the 3D view draws a concrete quay (or a timber pier) from the shore out to her (drawDocks quayMod). -1: more than QOUT.max out.
+// and the 3D view draws a concrete quay (or a timber pier) from the shore out to her (drawDocks quayMod). -1: more than QOUT.max out;
+// NaN: the fine coast is not in there yet (taken as 0 where the berth is fixed again when it comes). The players' berths the same
+// (Jonas 03.11.2026: «Jeg vil ikke ha noe graving i landmasse for hverken npcer eller brukere»): berthPose, havnBerths.
 const QOUT = {top:2.0, g:3, gMole:1.5, clear:0.6, max:16};
 function quayOut(f, a, L){
   if (typeof coastSdIf !== 'function') return 0;
-  let g = 0;
+  let g = 0, seen = false;
   for (let it = 0; it < 6; it++){
     let need = 0;
     for (const fa of [-0.5, -0.25, 0, 0.25, 0.5]){
       const s = a + fa * (L + 2), x = f.x + f.ux * s + f.nx * (g + 0.4), z = f.z + f.uz * s + f.nz * (g + 0.4);
-      if (harbourNear(x, z) && inHarbourPocket({x:x / 1000, y:z / 1000})) continue;   // a designed quay's pocket: deep already
-      const sd = coastSdIf({x:x / 1000, y:z / 1000}, 30); if (sd !== sd) continue;
+      const sd = coastSdIf({x:x / 1000, y:z / 1000}, 30); if (sd !== sd) continue; seen = true;
       need = Math.max(need, sd + (QOUT.top + QOUT.clear) * (COAST.mole ? QOUT.gMole : QOUT.g));
     }
+    if (!seen) return NaN;   // the fine coast is not in here yet
     if (need <= 0.05) return g;
     g += need + 0.2; if (g > QOUT.max) return -1;
   }
@@ -164,7 +166,7 @@ function npcBerths(group, p, boats, R = 0.6){
       if (at === null) continue;
       // off the face by her half beam and 0.4 m and as far as the quay must be built out over the shore (quayOut), or up to 8 m further
       // out where the face and the fine coast disagree; else the next face
-      const g0 = quayOut(f, at, b.L); if (g0 < 0) continue;
+      let g0 = quayOut(f, at, b.L); if (g0 < 0) continue; if (!(g0 >= 0)) g0 = 0;
       const hd0 = Math.atan2(f.ux, -f.uz); let q = null, gq = 0;
       for (let k = 0; k <= 8 && !q; k += 2){ const off = b.B / 2 + 0.4 + g0 + k, cp = {x:(f.x + f.ux * at + f.nx * off) / 1000, y:(f.z + f.uz * at + f.nz * off) / 1000}; if (hullDry(cp, hd0, b.L, b.B)){ q = cp; gq = g0 + k; } }
       if (!q) continue;
@@ -240,8 +242,11 @@ function berthPose(pid, type, kind = 'main'){
   const key = pid + '|' + type + '|' + kind + (kind === 'naust' && S.naust && S.naust.o ? '|' + S.naust.o.join(',') : '') + (RBID.has(pid) && RBID.get(pid).site ? '|' + RBID.get(pid).site.o.join(',') : ''); if (key in BERTHPOSE) return BERTHPOSE[key];
   const pt = portById(pid), px = pt.p.x * 1000, pz = pt.p.y * 1000, Lb = VESSELS[type].len, Bb = BEAM[type] || 3, qf = quayFace(pid, kind);
   if ((kind === 'naust' || RBID.has(pid) || isBerth(pid)) && !qf) return null;   // not cached: the naust and a rorbu are found once their map is in
-  let best = null;
-  if (qf) best = {d:0, cx:qf.x + qf.nx * (Bb / 2 + 0.4), cz:qf.z + qf.nz * (Bb / 2 + 0.4), fx:qf.x, fz:qf.z, ux:qf.ux, uz:qf.uz, Nx:qf.nx, Nz:qf.nz, hl:qf.hl, a:0, depth:qf.depth, unit:qf.unit};
+  let best = null, nocache = false;
+  // (out: the quay built out over the 3D shore to her, quayOut; a harbour unit is its own quay with its basin. A face that does not
+  // carry it, the naust's, a rorbu's, a berth held before 03.11.2026, gets it here, and is not kept until the coast is in)
+  let qo = 0; if (qf && !qf.unit){ qo = qf.out; if (qo === undefined){ qo = quayOut(qf, 0, Lb); if (qo !== qo){ qo = 0; nocache = true; } else if (qo < 0) qo = QOUT.max; } }
+  if (qf) best = {d:0, cx:qf.x + qf.nx * (Bb / 2 + 0.4 + qo), cz:qf.z + qf.nz * (Bb / 2 + 0.4 + qo), fx:qf.x, fz:qf.z, ux:qf.ux, uz:qf.uz, Nx:qf.nx, Nz:qf.nz, hl:qf.hl, a:0, depth:qf.depth, unit:qf.unit, out:qo, kind:qf.kind, tre:!!(qf.naust || qf.rorbu)};
   else if (kind !== 'main'){ BERTHPOSE[key] = null; return null; }
   if (!qf) for (const q of PIERBOX){
     if (q.bw || Math.hypot(q.x - px, q.z - pz) > (q.l + q.w) / 2 + 150) continue;
@@ -262,7 +267,8 @@ function berthPose(pid, type, kind = 'main'){
   // starboard of a boat heading hd is (cos hd, sin hd); the quay must be on that side
   let hd = Math.atan2(best.ux, -best.uz); if (Math.cos(hd) * -best.Nx + Math.sin(hd) * -best.Nz < 0) hd += Math.PI;
   const f = {x:Math.sin(hd), z:-Math.cos(hd)};
-  return BERTHPOSE[key] = {x:best.cx / 1000, y:best.cz / 1000, hd, fwd:f, face:{x:best.fx, z:best.fz, ux:best.ux, uz:best.uz, nx:best.Nx, nz:best.Nz, hl:best.hl, depth:best.depth, unit:best.unit || null}, a:best.a, Lb, Bb};
+  const R = {x:best.cx / 1000, y:best.cz / 1000, hd, fwd:f, face:{x:best.fx, z:best.fz, ux:best.ux, uz:best.uz, nx:best.Nx, nz:best.Nz, hl:best.hl, depth:best.depth, unit:best.unit || null, out:best.out || 0, kind:best.kind, tre:!!best.tre}, a:best.a, Lb, Bb};
+  return nocache ? R : (BERTHPOSE[key] = R);
 }
 // ---- the way in to a berth and out of it (the user's list 04.10.2026: «legge til og fra kai uten å gå gjennom landmasse og
 // bygninger»). A point is blocked when it is land on the 25 m mask, or within half the beam of a pier's box (PIERBOX) or of a harbour

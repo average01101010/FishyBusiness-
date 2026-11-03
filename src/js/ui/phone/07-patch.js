@@ -2,6 +2,7 @@
   const PATCH = [
     ['kai-031126', '03.11.2026', 'Ekte kaier for båtene i havn', 'Real quays for the boats in port', [
        ['Båtene langs kysten ligger ikke lenger i hull gravd ut i land. Der stranda er for grunn, er kaia bygd ut i sjøen til båten, i betong eller som trebrygge på påler, og går rett inn i land. Sjøbunnen senkes bare under vann.', 'The boats along the coast no longer lie in holes dug out of the land. Where the shore is too shallow, the quay is built out into the sea to the boat, in concrete or as a timber pier on piles, and runs straight into the land. The sea bed is lowered only under water.'],
+       ['Det samme gjelder din egen båt: ved kaiplassen i havna, ved naustet og ved rorbuene ligger hun ved en kai som er bygd ut til henne, og landet rundt står som det er.', 'The same goes for your own boat: at her berth in the harbour, at the naust and at the rorbuer she lies at a quay built out to her, and the land round it stays as it is.'],
     ]],
     ['jevn-021126', '03.11.2026', 'Jevnere båter rundt deg', 'Smoother boats around you', [
        ['Båtene til de andre spillerne glir videre mellom posisjonsmeldingene, følger svingen de er i, og legger seg mykt inn på den nye posisjonen i stedet for å hoppe. Posisjonen som sendes, er der båten faktisk er, ikke der den var ved forrige spillminutt.', 'The other players\' boats glide on between their position reports, follow the turn they are in, and ease onto the new position instead of jumping. The position sent is where the boat actually is, not where she was at the last game minute.'],

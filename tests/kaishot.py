@@ -1,6 +1,6 @@
 """The coast's boats at their quays (03.11.2026, Jonas: «NPC båtene langs hele kysten ligger ved utgravd landmasse, ikke ekte modellerte
 kaier som glir sømløst inn i miljøet»): at Tromsø, Bergen, Bodø, Båtsfjord and Finnsnes at night, the boats in port that lie at a quay
-face are looked at in 3D. Checks: each hull floats (the 3D ground under its 9 points under the sea; the quay is built out to her where
+face are looked at in 3D, and the player's boat at Father's naust. Checks: each hull floats (the 3D ground under its 9 points under the sea; the quay is built out to her where
 the shore was in the way, face.out, quayOut, and nothing over the sea is dug any more), no GL errors and no page errors. Pictures of the nearest such boat in tests/out/kai_*.png.
 KYST_DIST=<dir> takes another build (for a picture of before)."""
 import asyncio, json, os
@@ -20,6 +20,13 @@ PROBE = """(() => { const H = S.t / 60, b = S.boat.pos, out = [];
     for (const bt of h.boats){ const m = bt.moored; if (m && !m.none && m.face) add(m, bt.L, bt.B, bt.T, bt.id); } }
   FLEET.forEach((f, i) => { if (dist({x:f.hp[0], y:f.hp[1]}, b) > 1.6) return; const m = fleetBerth(i); if (m) add(m, f.L, f.B, f.T, 'f' + i); });
   return out; })()"""
+
+NAUST_GO = """() => { const b = S.boat; b.port = S.home || HOME0; b.status = 'port'; b.berth = 'naust'; b.v = 0; S.plan = null;
+  S.t = Math.round((Date.UTC(2027, 5, 15, 13) - EPOCH) / 6e4); WX_FORCE = {w:3, d:200}; if (!G3.isActive()) G3.show(true); }"""
+NAUST_LOOK = """() => { const bp = berthPose(S.boat.port, S.boat.type, 'naust'); if (!bp) return null; const c = G3._debug.cam; c.helm = false; c.dist = 26; c.pitch = 0.42; c.yaw = 2.4;
+  const tr = G3._debug.terrRaw, s = Math.sin(bp.hd), cs = Math.cos(bp.hd); let mx = -99;
+  for (const fa of [-0.4, 0, 0.4]) for (const ab of [-0.45, 0, 0.45]){ const x = bp.x * 1000 + s * fa * bp.Lb + cs * ab * bp.Bb, z = bp.y * 1000 - cs * fa * bp.Lb + s * ab * bp.Bb; mx = Math.max(mx, tr(x, z)); }
+  return {out:+bp.face.out.toFixed(1), worst:+mx.toFixed(2)}; }"""
 
 
 async def main():
@@ -63,7 +70,18 @@ async def main():
             R[name] = r; print(name, json.dumps(r))
             R['gl'] = R['gl'] or await pg.evaluate("G3._debug.glErr()"); R['glFirst'] = R['glFirst'] or await pg.evaluate("G3._debug.glFirst")
             await ctx.close()
+        # the player's own boat at Father's naust (the players' places the same since 03.11.2026: nothing dug on land, the quay built
+        # out to her where the shore is in the way, timber to meet the naust's pile quay)
+        ctx = await b.new_context(viewport={'width': 1000, 'height': 700}); pg = await ctx.new_page(); pg.on('pageerror', lambda e: errs.append(str(e)))
+        await boot(pg, GAME + '#qfix#glchk')
+        await pg.evaluate(NAUST_GO)
+        await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(20000)
+        await pg.evaluate("() => { for (const b of document.querySelectorAll('button[data-close]')) if (/Til sjøs|To sea/.test(b.textContent)) b.click(); }")
+        nb = await pg.evaluate(NAUST_LOOK)
+        await pg.wait_for_timeout(8000); await pg.screenshot(path=os.path.join(OUT, f'kai_naust{TAG}.png'), timeout=300000)
+        R['naust'] = nb; print('naust', json.dumps(nb)); await ctx.close()
         print(json.dumps(R))
+        check(bool(nb) and nb['worst'] <= -0.3, 'the boat at Father\'s naust floats (the 3D ground under her hull under the sea)', nb)
         for name, *_ in SHOTS:
             q = R.get(name, {})
             if q.get('n'): check(q['dry'] == 0, f'{name}: every boat at a quay floats (the 3D ground under her hull under the sea)', q)
