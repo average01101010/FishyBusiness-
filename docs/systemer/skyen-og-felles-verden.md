@@ -266,7 +266,8 @@ Jonas valgte dem fra lista (nr. 5 og 7).
 
 ## 5.25g Innlastingen og innloggingen (05.10.2026)
 
-- **Bildet** (`tools/brand/loader.py`, `src/data/loader-land.b64` og `loader-port.b64`):
+- **Bildet nå** (`tools/brand/loader_sjark.py`, fra 08.10.2026): havsjarken (`tools/boats/havsjark35.py`) i blåtimen med styrhuset tent og Senja-tinder bak. Rendret på nytt 03.11.2026 med den reviderte havsjarken (Jonas: «bruk den oppdaterte versjonen av båten så den ser mer realistisk ut»), med kameraet litt nærmere så båten synes bedre. Kjøres med `bpy 4.5.4`, som krever Python 3.11 (`python3.11 -m venv` og `pip install bpy==4.5.4 pillow`). `quick` gir en rask prøve på sekunder; et fullt bilde tar noen minutter på fire kjerner. Delingsbildets fotohalvdel (`tools/brand/og-photo.jpg`) er klippet fra det liggende bildet.
+- **Det første bildet** (`tools/brand/loader.py`, beholdt):
   - Fars naust på pålekaia i blåtimen, laget av de samme modellene som i spillet (`tools/harbour/naust.py` og `tools/boats/snekke23.py`).
   - Lampa over loftsdøra og vinduene lyser varmt, og trebåten ligger fortøyd med to tau.
   - Bak står Senja-tinder med snø i skyggeleggeren: høyt og ikke for bratt, brutt opp av støy. Fjellene er laget av ridged-støy.
