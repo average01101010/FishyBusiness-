@@ -8,6 +8,10 @@
 // Without the database function (before the migration) or offline, nothing goes, and the boats heard last go after a minute.
 const WORLDP = {last:0, busy:false, err:0, off:false};
 const WORLD_R = 25;   // km round the boat: about the AIS range
+// what the others' prediction of this boat rests on: her state, her route and the leg she is on, rounded speed. When it changes (she sets
+// off, stops, gets a new route, changes speed), the position goes up at once instead of at the next 15 s tick (at most every 3 s), so
+// the others' games are told of a turn or a stop as soon as it is made, not up to 15 s later (worldStart checks it every second)
+function worldSig(){ const b = S && S.boat; if (!b) return ''; const pl = S.plan; return [b.status, Math.round((b.v || 0) * 2), pl ? pl.wps.length + ':' + pl.idx : '-', b.anch ? 'a' : ''].join('|'); }
 async function worldTick(){
   if (!CLOUD.on || !CLOUD.user || WORLDP.busy || WORLDP.off || TAB.held || TAB.lost || TAB.wait || (typeof document !== 'undefined' && document.hidden)) return;   // (only the page that has the game shows the boat)
   WORLDP.busy = true;
@@ -26,8 +30,12 @@ async function worldTick(){
     // the figures: the skipper's look and the first four hands' (core/09i-look.js; supabase/migrations/20261010140000_look.sql)
     if (!WORLDP.noLk && typeof lookKey === 'function'){ a.lk = lookKey(lookMe()); a.ck = crewAboard().slice(0, 4).map(c => lookKey(lookOf(c))).join(';'); }
     if (!WORLDP.noFs && typeof fsState === 'function') a.fs = Math.round(fsState().p);
-    for (;;){ try { await cloudRpc('pos_put', a); break; } catch (e){ if (!/ 404$/.test(e.message)) throw e;
-      if ('lk' in a){ WORLDP.noLk = true; delete a.lk; delete a.ck; } else if ('fs' in a){ WORLDP.noFs = true; delete a.fs; } else if ('liv' in a){ WORLDP.noLiv = true; delete a.liv; } else throw e; } }
+    // the route ahead of her on the chart plotter, up to the first stop (core/05-vessels.js peerRouteStr), so the others work out where
+    // she is from it (supabase/migrations/20261103120000_route.sql; a database without it, 404, gets the rest as before)
+    if (!WORLDP.noRt) a.rt = b.status === 'sailing' && S.plan && a.v > 0.2 ? peerRouteStr(lp, S.plan.wps, L && L.idx != null ? L.idx : S.plan.idx) : '';
+    WORLDP.sig = worldSig();
+    for (;;){ try { await cloudRpc('pos_put', a); WORLDP.put = Date.now(); break; } catch (e){ if (!/ 404$/.test(e.message)) throw e;
+      if ('rt' in a){ WORLDP.noRt = true; delete a.rt; } else if ('lk' in a){ WORLDP.noLk = true; delete a.lk; delete a.ck; } else if ('fs' in a){ WORLDP.noFs = true; delete a.fs; } else if ('liv' in a){ WORLDP.noLiv = true; delete a.liv; } else throw e; } }
     // every active player, whatever the distance (pos_world, supabase/migrations/20261008120000_pos_world.sql); the boats within WORLD_R
     // come with their paint. A database without it (404) gives the boats near by, as before.
     let list; if (!WORLDP.noAll){ try { list = await cloudRpc('pos_world', {x:b.pos.x, y:b.pos.y, r:WORLD_R}); } catch (e){ if (!/ 404$/.test(e.message)) throw e; WORLDP.noAll = true; } }
@@ -157,6 +165,7 @@ function worldStart(){
   if (!CLOUD.on) return;
   WSH.rec = true; setTimeout(worldShare, 20000); setInterval(worldShare, 600000);
   setTimeout(worldTick, 3000); setInterval(worldTick, 15000);
+  setInterval(() => { if (WORLDP.put && !WORLDP.busy && Date.now() - WORLDP.put > 3000 && worldSig() !== WORLDP.sig) worldTick(); }, 1000);
   setInterval(() => { try { evCloseTick(); } catch (e){ console.warn('evClose', e); } }, 20000);
   if (typeof pressStart === 'function') pressStart();   // Kystposten's stories to and from the cloud (ui/05g-press.js)
   document.addEventListener('visibilitychange', () => { if (!document.hidden) worldTick(); });

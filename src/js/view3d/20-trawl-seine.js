@@ -244,6 +244,25 @@
     if (NPCH.size > 400) for (const [id, e] of NPCH) if (t - e.t > 30) NPCH.delete(id);
     return E.hd;
   }
+  // the boats of the coast, the local fleet, the coastal ship and the ferry move like boats (Jonas 03.11.2026: «NPC-båter også må oppføre
+  // seg realistiske»): where the clock puts them (core/05-vessels.js) is a line with corners and a speed that is there at once; drawn,
+  // each boat's velocity follows that line's over NPCV_T s, so she gathers way and loses it gradually and turns on an arc (a few tens of
+  // metres at the screen's pace) instead of on the spot, and is pulled back onto her place over NPCP_T s, so she never strays from it
+  // (more than NPCF_SNAP m, a new boat or one out of sight a while: put there). She heads where she goes once she has way on (a drifting
+  // boat lies as the clock has her), and heels out of a turn. The chart and the AIS keep the exact place.
+  const NPCF = new Map(), NPCV_T = 0.6, NPCP_T = 2, NPCF_SNAP = 80;
+  function npcFollow(n, t){
+    const X = n.p.x * 1000, Z = n.p.y * 1000; let E = NPCF.get(n.id);
+    const dt = E ? t - E.t : 0;
+    if (!E || dt > 1 || dt < 0 || Math.hypot(X - E.x, Z - E.z) > NPCF_SNAP){ E = {x:X, z:Z, vx:0, vz:0, px:X, pz:Z, t, w:0}; NPCF.set(n.id, E); if (NPCF.size > 400) for (const [id, e] of NPCF) if (t - e.t > 30) NPCF.delete(id); return E; }
+    if (dt < 1e-4) return E;
+    const tvx = (X - E.px) / dt, tvz = (Z - E.pz) / dt, kv = 1 - Math.exp(-dt / NPCV_T), kp = 1 - Math.exp(-dt / NPCP_T);
+    const h0 = Math.atan2(E.vx, -E.vz), s0 = Math.hypot(E.vx, E.vz);
+    E.vx += (tvx - E.vx) * kv; E.vz += (tvz - E.vz) * kv;
+    E.x += E.vx * dt; E.z += E.vz * dt; E.x += (X - E.x) * kp; E.z += (Z - E.z) * kp;
+    const s1 = Math.hypot(E.vx, E.vz); E.w = s0 > 1 && s1 > 1 ? angDiff(h0, Math.atan2(E.vx, -E.vz)) / dt : 0;   // her turn rate (rad/s)
+    E.px = X; E.pz = Z; E.t = t; return E;
+  }
   function drawNPC(eye, t, H, VP){
     if (!NPCM) return;
     H = npcClock(H);
@@ -257,8 +276,15 @@
       n.ptow = null;
       if (n.player && bv.init && S.ptowH && S.ptowH.st === 'tow' && n.id === S.ptowH.pid){ const back = (GEO(vtype()).stern || 3) + 30 + (n.L || 8) / 2; n.p = {x:(bv.x - Math.sin(bv.head) * back) / 1000, y:(bv.z + Math.cos(bv.head) * back) / 1000}; n.hd = n.cog = bv.head; n.ptow = 'tail'; }
       else if (n.player && bv.init && S.ptow && S.ptow.st === 'tow' && n.id === S.ptow.pid){ const fwd = -(GEO(vtype()).bow || -3) + 30 + (n.L || 8) / 2; n.p = {x:(bv.x + Math.sin(bv.head) * fwd) / 1000, y:(bv.z - Math.cos(bv.head) * fwd) / 1000}; n.hd = n.cog = bv.head; n.ptow = 'head'; }
+      let heel = 0;
+      if (!n.player && !n.ptow && !(n.tur && n.st === 'tow')){
+        const F = npcFollow(n, t), sp = Math.hypot(F.vx, F.vz), k = clamp((sp - 1) / 2, 0, 1);   // (m/s on the screen)
+        n.p = {x:F.x / 1000, y:F.z / 1000};
+        if (k > 0) n.hd = n.hd + angDiff(n.hd, Math.atan2(F.vx, -F.vz)) * k;
+        heel = clamp(-F.w * sp * 0.012, -0.12, 0.12) * (n.type === 'coastal' || n.type === 'ferry' ? 0.3 : 1);
+      }
       if (!n.ptow && !(n.tur && n.st === 'tow')) n.hd = npcHead(n, t);
-      const x = n.p.x * 1000, z = n.p.y * 1000, big = n.type === 'coastal' || n.type === 'ferry', y = big ? (env.tide || 0) : (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8, roll = big ? Math.sin(t * 0.4 + x) * 0.01 : Math.sin(t * 1.1 + x) * 0.05 * (0.3 + WV.hs);
+      const x = n.p.x * 1000, z = n.p.y * 1000, big = n.type === 'coastal' || n.type === 'ferry', y = big ? (env.tide || 0) : (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8, roll = heel + (big ? Math.sin(t * 0.4 + x) * 0.01 : Math.sin(t * 1.1 + x) * 0.05 * (0.3 + WV.hs));
       n.M = model(x - eye[0], y - eye[1], z - eye[2], -n.hd, big ? 0 : Math.sin(t * 0.9 + z) * 0.03, roll);
       const d = Math.hypot(x - eye[0], z - eye[2]); n.K = (n.fleet || n.coast || n.player) && d / ZF() < 1500 * QUAL.lodK[QUAL.lvl] ? npcMesh(n, d / ZF() < npcNear(n) * QUAL.lodK[QUAL.lvl] ? 1 : 0.3) : null;
       if (n.K) kit.push(n); else drawLit(NPCM[n.type], n.M);

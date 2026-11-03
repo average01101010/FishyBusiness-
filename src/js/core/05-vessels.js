@@ -434,11 +434,39 @@ const PT_MAX = 35;   // s at full speed with no new report
 const PT_STOP = 10;   // s to slow to a stop after that
 const PT_SNAP = 1.5;   // km: a bigger gap to a new report is jumped
 const ptAng = (a, b) => { let d = (b - a) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return d; };
+// the route a player's boat sends with her position (ui/10h-world.js worldTick): the chart plotter's waypoints from the leg she is on up to
+// and with the first stop (wpStop: a port, a fishing ground, a set), at most 24 points and 40 km, as «x,y;x,y» in km with four decimals
+function peerRouteStr(p, wps, idx){
+  const out = []; let d = 0, q = p;
+  for (let i = Math.max(0, idx | 0); i < (wps || []).length && out.length < 24; i++){
+    const w = wps[i]; if (!w || !isFinite(w.x) || !isFinite(w.y)) break;
+    d += dist(q, w); q = w; out.push(w.x.toFixed(4) + ',' + w.y.toFixed(4));
+    if (wpStop(w) || d > 40) break;
+  }
+  return out.join(';').slice(0, 640);
+}
+// the route as points (null when there is none or it is not well formed)
+function peerRoute(s){
+  if (!s || typeof s !== 'string') return null; const out = [];
+  for (const pr of s.split(';')){ const [x, y] = pr.split(',').map(Number); if (!isFinite(x) || !isFinite(y)) return null; out.push({x, y}); }
+  return out.length ? out : null;
+}
+// along the route R from p by d km: {x, y, hd}, standing at its end (where she stops)
+function routeWalk(p, R, d, hd0){
+  let x = p.x, y = p.y, hd = hd0;
+  for (const w of R){ const dx = w.x - x, dy = w.y - y, L = Math.hypot(dx, dy); if (L < 1e-7) continue;
+    hd = Math.atan2(dx, -dy); if (d <= L){ return {x:x + dx / L * d, y:y + dy / L * d, hd}; } d -= L; x = w.x; y = w.y; }
+  return {x, y, hd};
+}
 // where the report q puts her t real seconds after it: {x, y, hd}
 function ptPred(q, w, t){
   const moving = q.st === 'sailing' && q.v > 0.2; if (!moving || t <= 0) return {x:q.x, y:q.y, hd:q.hd};
   // the time she has gone at full speed: all of it up to PT_MAX, then slowing to a stop over PT_STOP
-  const te = t <= PT_MAX ? t : PT_MAX + PT_STOP * (1 - Math.exp(-(t - PT_MAX) / PT_STOP)), spd = q.v * NM * GAME_RATE / 3600;   // km per real second
+  const spd = q.v * NM * GAME_RATE / 3600;   // km per real second
+  // on her route: where the route puts her, for as long as the server keeps her report (two minutes); no guessing
+  const R = q.R === undefined ? (q.R = peerRoute(q.rt)) : q.R;
+  if (R) return routeWalk(q, R, spd * Math.min(t, 120), q.hd);
+  const te = t <= PT_MAX ? t : PT_MAX + PT_STOP * (1 - Math.exp(-(t - PT_MAX) / PT_STOP));
   const hdAt = u => q.hd + w * PT_TURN * (1 - Math.exp(-u / PT_TURN));
   if (Math.abs(w) < 1e-4) return {x:q.x + Math.sin(q.hd) * spd * te, y:q.y - Math.cos(q.hd) * spd * te, hd:q.hd};
   const n = Math.min(24, 4 + Math.ceil(te / 2)), du = te / n; let x = q.x, y = q.y;
@@ -462,7 +490,7 @@ function ptTake(q, now){
   if (!T){ T = {q, w:0, off:null}; PTRK.set(q.id, T); return T; }
   const shown = ptPose(T, now), old = T.q, dt = (q.at - old.at) / 1000;
   // her turn rate from the last two reports (both under way, and not too far apart in time), as far as a boat turns
-  T.w = q.st === 'sailing' && old.st === 'sailing' && dt > 2 && dt < 45 ? clamp(ptAng(old.hd, q.hd) / dt, -0.25, 0.25) : 0;
+  T.w = !q.rt && q.st === 'sailing' && old.st === 'sailing' && dt > 2 && dt < 45 ? clamp(ptAng(old.hd, q.hd) / dt, -0.25, 0.25) : 0;
   T.q = q; T.off = null;
   const P = ptPred(q, T.w, (now - q.at) / 1000), gx = shown.x - P.x, gy = shown.y - P.y, gd = Math.hypot(gx, gy), gh = ptAng(P.hd, shown.hd);
   if (gd < PT_SNAP && (gd > 1e-5 || Math.abs(gh) > 1e-3)) T.off = {x:gx, y:gy, hd:gh, t0:now, dur:1000 * clamp(1 + gd * 1000 / 70, 1.2, 6)};
@@ -473,7 +501,7 @@ function peerStates(){
   for (const q of PEERS){
     const V = VESSELS[q.vtype] || VESSELS.trebat, moving = q.st === 'sailing' && q.v > 0.2;
     const T = ptTake(q, now), P = ptPose(T, now), p = {x:P.x, y:P.y}, age = (now - q.at) / 1000;
-    const v = moving ? (age <= PT_MAX ? q.v : q.v * Math.exp(-(age - PT_MAX) / PT_STOP)) : 0;
+    const v = moving ? (q.rt || age <= PT_MAX ? q.v : q.v * Math.exp(-(age - PT_MAX) / PT_STOP)) : 0;
     out.push({id:'p' + q.id, name:peerName(q.boat), type:V.len >= 11 ? 'kyst' : 'sjark', p, hd:P.hd, cog:P.hd, v:Math.round(v * 10) / 10, st:q.st === 'fishing' ? 'fishing' : q.st === 'port' ? 'port' : 'out', player:true, vtype:q.vtype, L:V.len, B:V.beam || V.len / 3, liv:String(q.liv || '').slice(0, 160), lk:String(q.lk || '').slice(0, 64), ck:String(q.ck || '').slice(0, 300),
       user:q.user ? peerName(q.user).slice(0, 20) : '', fs:Math.max(0, +q.fs || 0)});
   }

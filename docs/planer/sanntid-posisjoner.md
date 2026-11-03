@@ -81,3 +81,4 @@
 ## Status
 
 - 02.11.2026: forløperen er bygd og pushet (sporet, `livePose`, NPC-klokka). S1–S4 venter på valgene.
+- 03.11.2026: Jonas valgte den billigste veien («kjør på»): først rutedeling og sending ved endring over databasen (0 kr), så reléet på Hetzner. **Steg 1 er bygd:** `rt` i `pos_put`/`pos_world` (migreringen kjørt av Jonas), `peerRouteStr`, `routeWalk`, `worldSig`, og NPC-båtene i 3D med fart, bue og krengning (`npcFollow`). Neste: reléet (S2) med sending bare når mottakernes gjetning blir feil.

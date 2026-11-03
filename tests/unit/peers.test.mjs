@@ -2,7 +2,7 @@
 // the heading at the reported speed, turning as between the last two reports, slowing to a stop when no report comes, and eased onto a
 // new report with no jump (a big gap is jumped).
 export default function (t){
-  const {ptPred, ptTake, ptPose, PTRK, NM, GAME_RATE, PT_MAX, PT_SNAP, newState} = t.K;
+  const {ptPred, ptTake, ptPose, PTRK, NM, GAME_RATE, PT_MAX, PT_SNAP, newState, peerRouteStr, peerRoute, routeWalk} = t.K;
   t.K.set('S', newState());
   const spd = 8 * NM * GAME_RATE / 3600;   // km per real second at 8 kn
   const q0 = {id:'a', x:10, y:20, hd:Math.PI / 2, v:8, st:'sailing', at:0};
@@ -32,5 +32,15 @@ export default function (t){
   PTRK.clear(); ptTake(q0, 0); const T3 = ptTake({...q0, x:10 + PT_SNAP + 1, at:15000}, 15000); t.eq(T3.off, null, 'stort sprang (slept, ny start): hopper');
   // the turn rate from two reports
   PTRK.clear(); ptTake(q0, 0); const T4 = ptTake({...q0, hd:q0.hd + 0.3, at:10000}, 10000); t.near(T4.w, 0.03, 1e-9, 'svingraten fra to rapporter');
+  // the route (03.11.2026): sent from the leg she is on up to the first stop, and where it puts her is where she is drawn
+  const wps = [{x:11, y:20}, {x:11, y:21}, {x:12, y:21, fish:1}, {x:13, y:21}];
+  t.eq(peerRouteStr({x:10, y:20}, wps, 1), '11.0000,21.0000;12.0000,21.0000', 'ruta fra etappen hun er på til første stopp (fiskeplassen)');
+  t.eq(peerRoute('11,20;<b>'), null, 'en rute som ikke er tall, blir ikke brukt');
+  const R = peerRoute(peerRouteStr({x:10, y:20}, wps, 0));
+  let W = routeWalk({x:10, y:20}, R, 1.5, 0); t.near(W.x, 11, 1e-9, 'langs ruta: rundt hjørnet (x)'); t.near(W.y, 20.5, 1e-9, 'langs ruta: rundt hjørnet (y)'); t.near(W.hd, Math.PI, 1e-9, 'langs ruta: kursen er etappens (sør)');
+  W = routeWalk({x:10, y:20}, R, 99, 0); t.eq([W.x, W.y], [12, 21], 'langs ruta: stopper ved første stopp');
+  const qr = {id:'r', x:10, y:20, hd:Math.PI / 2, v:8, st:'sailing', at:0, rt:'11,20;11,21'}, d60 = spd * 60;
+  P = ptPred(qr, 0, 60); t.near(P.x, 11, 1e-9, 'med rute: følger ruta etter hjørnet, ikke kursen (x)'); t.near(P.y, 20 + d60 - 1, 1e-9, 'med rute: følger ruta etter hjørnet (y)');
+  P = ptPred(qr, 0, 100); t.ok(P.y > 20 + d60 - 1, 'med rute: ingen oppbremsing etter ' + PT_MAX + ' s (ruta er kjent)');
   PTRK.clear();
 }
