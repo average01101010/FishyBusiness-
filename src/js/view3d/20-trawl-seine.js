@@ -8,9 +8,15 @@
   function trawlKit(t){
     if (t in TRM) return TRM[t];
     const door = upA(glbPart(t, 'door')); if (!door) return TRM[t] = null;
+    return TRM[t] = Object.assign({door, roll:upA(glbPart(t, 'netroll')), cod:upA(glbPart(t, 'codend'))}, ropeKit());
+  }
+  // the warp and the net as unit tubes (limbM stretches them), for every model: a ship without trawl doors still shoots a seine
+  let ROPE = null;
+  function ropeKit(){
+    if (ROPE) return ROPE;
     const w = NB(); w.tube([[0, 0, 0], [0, 0, 1]], 1, [0.16, 0.17, 0.18, 0.6], 6);
     const n = NB(); n.tube([[0, 0, 0], [0, 0, 1]], 1, [0.16, 0.30, 0.20, 0.1], 8);
-    return TRM[t] = {door, roll:upA(glbPart(t, 'netroll')), cod:upA(glbPart(t, 'codend')), warp:w.mesh(), net:n.mesh()};
+    return ROPE = {warp:w.mesh(), net:n.mesh()};
   }
   // a frame at A whose z runs along the unit d, its y as near up as it goes
   function alongM(A, d){
@@ -66,14 +72,18 @@
     while (SEINE.mode && SEINE.hold == null && u > SEINE_S[SEINE.mode]){ SEINE.t0 += SEINE_S[SEINE.mode]; u -= SEINE_S[SEINE.mode]; SEINE.mode = SEINE_NEXT[SEINE.mode]; }
     return SEINE.mode ? {mode:SEINE.mode, k:clamp(u / SEINE_S[SEINE.mode], 0, 1), u} : null;
   }
-  function drawSeine(t, A, BMrel, VP, now){
-    const st = seineState(now); if (!st) return;
-    const K = trawlKit(t); if (!K) return;
-    const at = (p, M) => drawN(p, chain(BMrel, M)), R0 = 62, Rb = 9;
+  // stO: a stage given from outside instead of the debug player's ({m, k, R, purse}: the ocean fleet's seiners, 05d-hav.js havFish,
+  // by the clock). Their ring has its centre R metres to starboard abeam, as the ship circles the school with it there; the corks
+  // shot so far lie on her own way behind her, so the ring drawn in her frame stays put on the sea while she goes round. A Danish
+  // seine (purse false) lays warps, not corks: a rope floating on the sea, the bunt without the pump.
+  function drawSeine(t, A, BMrel, VP, now, stO){
+    const st = stO ? {mode:stO.m, k:stO.k} : seineState(now); if (!st) return;
+    const K = ropeKit(), purse = !stO || stO.purse !== false;
+    const at = (p, M) => drawN(p, chain(BMrel, M)), R0 = stO ? stO.R : 62, Rb = stO ? Math.min(9, R0 * 0.2) : 9;
     // the ring in the boat's level frame (x to starboard, z aft): through the stern and the starboard side amidships, the long way round
     const S = [A.stern[0], 0, A.stern[2]], P = [A.side[0] + 1.5, 0, A.side[2]], M = [(S[0] + P[0]) / 2, 0, (S[2] + P[2]) / 2], dx = P[0] - S[0], dz = P[2] - S[2], d = Math.hypot(dx, dz);
     let nx = dz / d, nz = -dx / d; if (nx < 0){ nx = -nx; nz = -nz; }
-    const h = Math.sqrt(Math.max(1, R0 * R0 - d * d / 4)), C0 = [M[0] + nx * h, 0, M[2] + nz * h];
+    const h = Math.sqrt(Math.max(1, R0 * R0 - d * d / 4)), C0 = stO ? [R0, 0, 0] : [M[0] + nx * h, 0, M[2] + nz * h];
     // the ring now: shooting it grows from the stern; hauling it shrinks to the bunt, always through the side point
     let R = R0, Cn = C0, f = 1, from = S;
     if (st.mode === 'shoot') f = sstep(0, 1, st.k);
@@ -83,19 +93,21 @@
     }
     const aS = Math.atan2(from[2] - Cn[2], from[0] - Cn[0]), aP = Math.atan2(P[2] - Cn[2], P[0] - Cn[0]);
     let sweep = st.mode === 'shoot' || st.mode === 'purse' ? ((aP - aS) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) : 2 * Math.PI - 0.12;
-    if (st.mode === 'shoot' || st.mode === 'purse'){ const mid = aS + sweep / 2, mx = Cn[0] + Math.cos(mid) * R, mz = Cn[2] + Math.sin(mid) * R; if (Math.hypot(mx - M[0], mz - M[2]) < R) sweep -= 2 * Math.PI; }
+    if (stO && (st.mode === 'shoot' || st.mode === 'purse')) sweep = -(2 * Math.PI - 0.12);   // back along her own way round
+    else if (st.mode === 'shoot' || st.mode === 'purse'){ const mid = aS + sweep / 2, mx = Cn[0] + Math.cos(mid) * R, mz = Cn[2] + Math.sin(mid) * R; if (Math.hypot(mx - M[0], mz - M[2]) < R) sweep -= 2 * Math.PI; }
     // the net over the stern roller, the purse line, the net in through the power block, the pump hose
     if (st.mode === 'shoot'){ at(K.net, limbM(A.bin, A.stern, 0.3)); at(K.net, limbM(A.stern, [S[0], -0.5, S[2] + 1.5], 0.3)); }
     if (st.mode === 'purse') at(K.warp, limbM(A.purse, [A.purse[0] + 4, -10, A.purse[2]], 0.035));
-    if (st.mode === 'haul'){ at(K.net, limbM([P[0] + 0.5, -0.3, P[2]], A.block, 0.35)); at(K.net, limbM(A.block, A.bin, 0.35)); }
+    if (st.mode === 'haul' && purse){ at(K.net, limbM([P[0] + 0.5, -0.3, P[2]], A.block, 0.35)); at(K.net, limbM(A.block, A.bin, 0.35)); }
+    if (st.mode === 'haul' && !purse) for (const z of [-3, 3]) at(K.warp, limbM([A.side[0], A.purse[1], A.side[2] + z], [P[0] + 3, -6, P[2] + z * 4], 0.04));   // the warps in over the side
     if (st.mode === 'pump') at(K.warp, limbM(A.block, [Cn[0], -0.8, Cn[2]], 0.18));
     // the corks (and the fish in the bunt) as points on the sea, in the boat's level frame
     const ex = [BMrel[0], BMrel[2]], el = Math.hypot(ex[0], ex[1]) || 1, ux = ex[0] / el, uz = ex[1] / el, T0 = [BMrel[12], BMrel[13], BMrel[14]];
     const W = (x, y, z) => [T0[0] + ux * x - uz * z, T0[1] + y, T0[2] + uz * x + ux * z];
     let n = 0; const L = Math.abs(sweep) * R * f, N = Math.min(600, Math.max(2, Math.round(L / 2.4)));
     for (let i = 0; i <= N; i++){ const a = aS + sweep * f * i / N, q = W(Cn[0] + Math.cos(a) * R, 0.12, Cn[2] + Math.sin(a) * R); PB[n * 3] = q[0]; PB[n * 3 + 1] = q[1]; PB[n * 3 + 2] = q[2]; PA[n] = 1; n++; }
-    drawPts(n, gl.POINTS, VP, [0.96, 0.46, 0.10], 520, true);
-    if (st.mode === 'pump' || (st.mode === 'haul' && st.k > 0.75)){
+    drawPts(n, gl.POINTS, VP, purse ? [0.96, 0.46, 0.10] : [0.66, 0.6, 0.46], purse ? 520 : 340, true);
+    if (purse && (st.mode === 'pump' || (st.mode === 'haul' && st.k > 0.75))){
       n = 0; for (let i = 0; i < 160; i++){ const a = hash(i) * 6.283, r = Math.sqrt(hash(i + 999)) * (R - 1.2), b = Math.abs(Math.sin(now * (3 + hash(i + 7) * 4) + i));
         const q = W(Cn[0] + Math.cos(a) * r, 0.05 + 0.35 * b, Cn[2] + Math.sin(a) * r); PB[n * 3] = q[0]; PB[n * 3 + 1] = q[1]; PB[n * 3 + 2] = q[2]; PA[n] = 0.5 + 0.5 * b; n++; }
       drawPts(n, gl.POINTS, VP, [0.82, 0.86, 0.9], 300, true);
@@ -224,6 +236,14 @@
     return NKM[kk] = Object.assign({}, B, {sv:[sx, sy, sz], S:new Float32Array([sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1])});
   }
   let npcNow = [];
+  // the seine's places on a model (its own from the GLB, not75.py; else made from the hull's: the stern, the starboard side amidships,
+  // the hauler or power block, as on the 38 m seiner, ringnot38.py, which has none of its own)
+  const SANCH = new WeakMap();
+  function seineAnch(G){
+    if (G.seine) return G.seine; let A = SANCH.get(G); if (A) return A;
+    const gw = G.gw != null ? G.gw : 2, hb = typeof G.side === 'number' ? G.side : (G.beam || 8) / 2, z0 = G.deck && G.deck.z != null ? G.deck.z : 0, bl = Array.isArray(G.hauler) ? G.hauler : [hb - 1, gw + 6, z0];
+    A = {stern:[0, gw, G.stern || 15], side:[hb, 0, z0], block:bl, bin:[hb - 2.5, gw + 0.5, bl[2] + 2], purse:[hb, gw + 1.5, z0 - 3]}; SANCH.set(G, A); return A;
+  }
   const NPCTOW = {lo:1, ro:1, net:1, cod:1, full:false, tow:true};
   function drawNPC(eye, t, H, VP){
     if (!NPCM) return;
@@ -248,6 +268,8 @@
       drawN(K.hull, chain(n.M, K.S)); drawSail(K.t, chain(n.M, K.S), n.st !== 'port');
       // an ocean trawler towing (05d-hav.js): her trawl out astern as yours is when towing
       if (n.trawl && G && G.trawl) drawTrawl(K.t, G.trawl, chain(n.M, K.S), performance.now() / 1000, NPCTOW);
+      // a purse seiner or Danish seiner setting or hauling (05d-hav.js havFish): her seine on the sea by the clock's stage
+      if (n.seine && G) drawSeine(K.t, seineAnch(G), chain(n.M, K.S), VP, performance.now() / 1000, n.seine);
       if (!K.glass) continue;
       drawNPCAnchor(n, K);   // her anchors stowed in their roller or hawse, as on your own boat
       if (npcCrewDraw(n, K, eye, t)) continue;   // her people walk her deck like yours (deckcrew.js crewSim)

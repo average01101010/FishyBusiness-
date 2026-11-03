@@ -36,6 +36,11 @@ export default function (t){
   const al = D.ships.find(q => q.g === 'line'), fl = K.havFish(al, 1, 30, g0), pt = D.ships.find(q => q.g === 'teine'), fp = K.havFish(pt, 1, 7, g0);
   t.ok(fl.set.length >= 1 && fl.set.every(q => q.k === 'line' && Math.hypot(q.a.x - q.b.x, q.a.y - q.b.y) <= 10.1), `autolineren har ${fl.set.length} liner i sjøen (høyst 10 km)`);
   t.ok(fp.set.length === 6 && fp.set.every(q => q.k === 'teine'), `snøkrabbefartøyet har ${fp.set.length} teinelenker i sjøen`);
+  // the seines by the clock (drawn in 3D by view3d drawSeine): the purse seine shot, pursed, hauled and pumped; the Danish seine shot and hauled
+  const ns0 = D.ships.find(q => q.g === 'not'), sv0 = D.ships.find(q => q.g === 'snurrevad'), seq = (q, C) => { const m = []; for (let u = 0; u < C; u += 0.05){ const f = K.havFish(q, 1, u, g0); const x = f.seine ? f.seine.m : '-'; if (m[m.length - 1] !== x) m.push(x); } return m.join(','); };
+  const sp = seq(ns0, 6), sd = seq(sv0, 3), f1 = K.havFish(ns0, 1, 3.2, g0).seine, f2 = K.havFish(sv0, 1, 2, g0).seine;
+  t.ok(sp === '-,shoot,purse,haul,pump' && sd === '-,shoot,haul', `notkastet etter klokka: ringnot ${sp}; snurrevad ${sd}`);
+  t.ok(f1.purse && f1.R === 120 && f1.k > 0.5 && f1.k < 0.7 && !f2.purse && f2.R === 500, `ringen: ringnot ${f1.R} m (k ${f1.k.toFixed(2)}), snurrevad ${f2.R} m`);
   // the clock alone: the same hour gives the same place
   const a = K.havState(s, H0 + 30), b = K.havState(s, H0 + 30); t.ok(a.p.x === b.p.x && a.p.y === b.p.y, 'samme tid gir samme sted');
 }

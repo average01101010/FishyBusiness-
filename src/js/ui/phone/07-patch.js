@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['hav-031126', '03.11.2026', 'Nota og snurrevaden i 3D', 'The seine in 3D', [
+       ['Ringnotbåtene kaster nota rundt stimen, snurper og pumper, og snurrevadbåtene setter og drar snurrevaden. Du ser det i 3D.', 'The purse seiners shoot the seine round the school, purse it and pump, and the Danish seiners set and haul their seine. You see it in 3D.'],
+    ]],
     ['hav-021126', '02.11.2026', 'Havflåten', 'The ocean fleet', [
        ['Trålere, ringnotbåter, autolinere, snurrevadbåter og snøkrabbefartøy er ute på havet langs hele kysten. De følger sesongene og ligger ved kaier som er store nok for dem.', 'Trawlers, purse seiners, autoliners, Danish seiners and snow crab vessels are out at sea along the whole coast. They follow the seasons and lie at quays big enough for them.'],
        ['Trålerne tråler på feltene, autolinerne setter og drar line, og snøkrabbefartøyene har teinelenkene sine i sjøen. Du ser dem på AIS og i kartplotteren.', 'The trawlers trawl on the grounds, the autoliners set and haul their lines, and the snow crab vessels have their pots in the sea. You see them on the AIS and the chart plotter.'],

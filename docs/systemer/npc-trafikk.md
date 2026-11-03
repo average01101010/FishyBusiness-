@@ -152,6 +152,7 @@ Registerets aktive fartøy på 28 m og over seiler etter klokka, som kystflåten
   - **På feltet** fisker skipet som redskapet sitt (`havFish`):
     - Trålen tauer i 5 timer med 4 knop fram og tilbake gjennom feltet, og trålen står ute i 3D (`drawTrawl` med slepetilstanden).
     - Ringnota leter i 3 timer, kaster rundt stimen og snurper. Snurrevaden tar et kast hver 3. time.
+    - **Nota og snurrevaden i 3D (03.11.2026):** `havFish` gir fasen og hvor langt den har kommet (`seine:{m, k, R, purse}`), etter klokka. Ringnota: kast 20 min (`shoot`), snurping 0,6 t, innhaling 1,4 t, pumping 0,67 t; ringen er 120 m i radius. Snurrevaden: kast 30 min og innhaling resten av de 3 timene; ringen er 500 m. `drawSeine` i `view3d/20-trawl-seine.js` tegner det for NPC-ene med denne tilstanden i stedet for spillerens `SEINE` (som trålen med `NPCTOW`). Ringens sentrum ligger rett til styrbord for skipet, som går rundt stimen med det der, så korkene som er kastet ligger på hennes egen vei bak henne og blir liggende på sjøen mens hun går rundt. Snurrevaden er tau, ikke kork, og har ingen pumpe. Modellene uten egne notankre (`ringnot38` for snurrevad) får dem fra skroget (`seineAnch`: hekken, styrbord side midtskips, haleren som kraftblokk).
     - Autolineren setter en line på 10 km på 1,2 timer og drar den forrige på 10,8 timer.
     - Snøkrabbe- og garnfartøyet har seks lenker side om side og drar og setter dem etter tur.
     - Linene og lenkene går i `NPCGEAR`.
@@ -159,7 +160,6 @@ Registerets aktive fartøy på 28 m og over seiler etter klokka, som kystflåten
   - **Borte:** et skip med felt utenfor rammen vises ikke på turen.
 - **Forenklet, og sagt rett ut:**
   - Leveringen er alltid ved hjemmemottaket.
-  - Nota og snurrevaden vises ikke i 3D; trålen gjør det.
   - Feltpunktene innenfor et hovedområde er trukket, ikke målt.
   - Fartøyene tar ikke fisk av spillets bestand. Den delen er med i flåtetrykket (B3, `03g-trykk.js`).
 - **Tester:**

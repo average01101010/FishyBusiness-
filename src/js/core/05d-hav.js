@@ -68,8 +68,13 @@ function havFish(s, k, u, g){
     const rad = G.fish === 'purse' ? 0.12 : 0.5, srch = G.fish === 'purse' ? 3 : 0.4, setT = G.fish === 'purse' ? 0.33 : 0.5;
     if (v < srch){ const prev = at((hash(k * 11 + (j - 1) * 5 + s.i) - 0.5) * 2 * G.r * 0.7, (hash(k * 13 + (j - 1) * 7 + s.i) - 0.5) * 2 * G.r * 0.7), q = v / srch;
       return Object.assign(out, {p:{x:prev.x + (c.x - prev.x) * q, y:prev.y + (c.y - prev.y) * q}, hd:Math.atan2(c.x - prev.x, -(c.y - prev.y))}); }
-    if (v < srch + setT){ const an = (v - srch) / setT * 2 * Math.PI; return Object.assign(out, {p:{x:c.x + Math.sin(an) * rad, y:c.y - Math.cos(an) * rad}, hd:an + Math.PI / 2, seine:true}); }
-    return Object.assign(out, {p:{x:c.x, y:c.y - rad}, hd:Math.PI / 2, seine:true});
+    // (the seine in 3D, view3d drawSeine: the stage and how far through it, and the ring's radius in metres, its centre to starboard
+    // abeam as the ship circles the school; a purse seine is pursed, hauled and pumped, a Danish seine's warps hauled in)
+    const R = rad * 1000;
+    if (v < srch + setT){ const an = (v - srch) / setT * 2 * Math.PI; return Object.assign(out, {p:{x:c.x + Math.sin(an) * rad, y:c.y - Math.cos(an) * rad}, hd:an + Math.PI / 2, seine:{m:'shoot', k:(v - srch) / setT, R, purse:G.fish === 'purse'}}); }
+    const w = v - srch - setT, ST = G.fish === 'purse' ? [['purse', 0.6], ['haul', 1.4], ['pump', 0.67]] : [['haul', C - srch - setT]];
+    let m = ST[ST.length - 1][0], kk = 1, w0 = 0; for (const [nm, d] of ST){ if (w < w0 + d){ m = nm; kk = (w - w0) / d; break; } w0 += d; }
+    return Object.assign(out, {p:{x:c.x, y:c.y - rad}, hd:Math.PI / 2, seine:{m, k:Math.min(1, kk), R, purse:G.fish === 'purse'}});
   }
   if (G.fish === 'line'){
     // the autoline: a line of 10 km set in 1.2 h, the one set before hauled in 10.8 h; the lines side by side 2 km apart, turn about
@@ -117,7 +122,7 @@ function havNear(H, only){
     if (A.set) for (const q of A.set) if (q.a !== q.b && Math.min(dist(q.a, b.pos), dist(q.b, b.pos)) <= R) gear.push({k:q.k, a:q.a, b:q.b, id:s.id, name:s.name});
     if (dist(A.p, b.pos) > R) continue;
     const P = A.st === 'port' ? A : havState(s, H - 1 / 60), dx = A.p.x - P.p.x, dy = A.p.y - P.p.y, sog = P.hidden ? 0 : Math.hypot(dx, dy) / NM * 60;
-    out.push({id:s.id, name:s.name, type:'kyst', hav:s.g, vtype:s.vtype, p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, L:s.L, B:s.B, T:s.T, liv:s.i % 4, trawl:!!A.trawl, seine:!!A.seine});
+    out.push({id:s.id, name:s.name, type:'kyst', hav:s.g, vtype:s.vtype, p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, L:s.L, B:s.B, T:s.T, liv:s.i % 4, trawl:!!A.trawl, seine:A.seine || null});
   }
   if (!only){ HAV.k = k; HAV.v = out; HAV.gear = gear; }
   return out;
