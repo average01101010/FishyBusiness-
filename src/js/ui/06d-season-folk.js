@@ -19,6 +19,7 @@ const SEASONAPP = (() => {
   }
   function page(){
     const H = S.t / 60, e = seasonNow(H), y = yearH(H), F = festDays(y), h = ['<div class="ph-c">'], mon = gDate(H).getUTCMonth();
+    if (typeof ukeSesongCard === 'function') h.push(ukeSesongCard(H));   // the week so far and the Sunday card (ui/05i-ukas.js)
     // the shared events (core/09c-seasons.js EVENTS): the board for everyone, from a week before to two weeks after
     for (const ev of EVENTS){ const D = evDays(ev, y); if (!(H > D.H0 - 24 * 7 && H < D.H1 + 24 * 14)) continue;
       const on = H >= D.H0 && H < D.H1, over = H >= D.H1, t = typeof evTop === 'function' ? evTop(ev.id, y) : null, d = t && t.data, B = evBadges()[ev.id + y];

@@ -94,3 +94,14 @@ Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sit
   - Migrasjonen (`20261009120000_pub.sql`) ble kjørt av Jonas i Supabase sin SQL Editor 09.10.2026. Tabellene har RLS uten policy, og funksjonene kan bare kalles av innloggede (ikke anon).
   - Disken har sprekker mellom bordene foran som slipper litt lys gjennom når man ser ned.
   - Modellen gjør siden 2,8 MB større (base64 3,7 MB).
+
+## 5.59 Ukas fangst: søndagskortet (03.11.2026, Oppdrag 2 fase U1; Jonas 30.10.2026: «10. Ja.»)
+
+Punkt 6 i arbeidslista i `docs/engasjement.md`. Et kort som ser tilbake på uka. Ikke en daily og ingen FOMO: en uke uten levering får ikke kort, og en uke som ikke ble sett, vises når spillet åpnes neste gang (bare den siste).
+
+- **Uka** er spilluka som topplista og fiskarlaget teller (`weekOf`: 168 spilletimer fra mandag 06:00). Kortet kan komme fra søndag 18:00 spilltid (`ukeAt(w)`), én gang (`S.uke.seen`), når skjermen er ledig (ikke i «Første tur», ikke over en annen dialog; `ukeTick` hvert 15. sekund, `ui/05i-ukas.js`). I testene (`#notut`) bare med `window.__ukeOn`.
+- **Innholdet** (`core/09n-ukas.js` `ukeSum`, `ui/05i-ukas.js` `ukeLines`): kilo levert, kroner og antall leveringer (alle båtene i rederiet, fra `S.sales`); beste dag; største fisk (`ukeBig` fra `recCatch`, `S.uke.big`); de tre største artene; mottakene; de nye prikkene på Kystkartet (nye mottak, områder og fyr). Fra skyen når spilleren er logget inn: plassen på topplista i egen gruppe (`world_top`), fiskarlagets uke med målet og naboene (de tre andre medlemmene som leverte mest, `lag_get` med uka), og plassen på sesongtavla for hendelser som gikk den uka (`ev_top`). Linjene fra skyen kommer når svaret er der.
+- **Del som bilde:** kortet tegnes på et bilde (1080 × 1350, `ukeCanvas`) og gis til telefonens delemeny (`navigator.share` med fil), ellers lagres det. Hendelsene `uke_card` og `uke_share`.
+- **Sesong-appen** har «Ukas fangst» øverst: uka så langt og knappen til kortet (denne ukas fra søndag kveld, ellers forrige ukes).
+- **Pushen:** verdens ene varsel i uka (`docs/push-plan.md`) er nå «Ukas fangst», søndag fra 19:00 norsk tid (ekte uke, de siste sju ekte dagene av landingene): egne tonn og plass i egen gruppe, så ukas beste fisker. Den som ikke leverte, får bare ukas beste fisker som før. `push_week` i `supabase/migrations/20261103120000_push_ukas.sql` (må kjøres). Bryteren «Ukas beste fisker» slår det av.
+- **Tester:** `uketest` (kortet, én gang, bildet, Sesong-appen, begge formater, `tests/out/uke-*.png`), `tests/unit/ukas.test.mjs` (summene, beste dag, når kortet kommer), `sqltest` (pushen søndag 19:00 med egen uke).

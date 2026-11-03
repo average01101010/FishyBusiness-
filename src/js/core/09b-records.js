@@ -21,6 +21,7 @@ function recPlace(p){
 }
 function recCatch(sp, kg, how){
   if (!SPECIES[sp] || !(kg > 0)) return;
+  if (typeof ukeBig === 'function') ukeBig(sp, kg);   // the week's biggest, for the Sunday card (09n-ukas.js)
   const R = recState(), o = R[sp]; kg = Math.round(kg * 10) / 10; if (o && kg <= o.kg) return;
   R[sp] = {sp, kg, t:S.t, at:recPlace(S.boat.pos), boat:S.boatName || '', how:how || 'juksa'};
   const nm = SPECIES[sp], quiet = typeof tutOn === 'function' && tutOn();

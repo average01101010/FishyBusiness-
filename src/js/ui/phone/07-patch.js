@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['ukas-031126', '03.11.2026', 'Ukas fangst', 'The week\'s catch', [
+       ['Søndag kveld kommer et kort som ser tilbake på uka: hvor mye du leverte, beste dag, største fisk, fangsten, mottakene og de nye prikkene på Kystkartet. Logget inn ser du også plassen på topplista, fiskarlagets uke og naboene i havna.', 'On Sunday evening a card looks back on the week: how much you landed, the best day, the biggest fish, the catch, the plants and the new dots on the coast map. Signed in, you also see your place on the leaderboard, the fishing club\'s week and the neighbours in the harbour.'],
+       ['Kortet kan deles som bilde, og Sesong-appen viser uka så langt.', 'The card can be shared as a picture, and the Sesong app shows the week so far.'],
+       ['Ukas varsel kommer nå søndag kveld, med din egen uke og ukas beste fisker.', 'The weekly notification now comes on Sunday evening, with your own week and the week\'s best fisher.'],
+    ]],
     ['kystkart-031126', '03.11.2026', 'Kystkartet', 'The coast map', [
        ['Milepæler har fått fanen Kystkartet: et kart over hele kysten med mottakene du har levert til, fyrene du har fotografert for Kystposten, statistikkområdene du har fisket i og artene du har levert.', 'Milestones has a new tab, The coast map: a chart of the whole coast with the plants you have landed at, the lighthouses you have photographed for Kystposten, the statistical areas you have fished in and the species you have landed.'],
        ['Det du alt har gjort, står der fra før. Hver levering, hvert fyrbilde og hver time med fiske setter en ny prikk.', 'What you have already done is there from the start. Every landing, every lighthouse picture and every hour of fishing sets a new dot.'],

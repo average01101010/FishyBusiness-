@@ -1117,29 +1117,29 @@ Fartstid: years at sea, 0 to 40 (Jonas 07.10.2026; docs/engasjement.md, arbeidsl
   - 51 `fsLand(total)`
   - 53 `fsRested(realMs)`
 
-## `src/js/core/09f-merker.js` (211 linjer)
+## `src/js/core/09f-merker.js` (214 linjer)
 
 Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1.5 and 3)
 
 - **1** Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1.5 and 3)
   - 22 `achVisits()`
   - 23 `achVisitPort(pid)`
-  - 83 `achState()`
-  - 99 `achAdd(k, n)`
-  - 100 `achSale(total, sps)`
-  - 101 `achCatch(sp, cls)`
-  - 103 `achMinute()`
-  - 113 `achTripEnd(bad)`
-- **115** the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters
-  - 117 `achPool(scale)`
-  - 141 `achDraw(key, scale)`
-  - 149 `achGive(key, scale, title)`
-- **158** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
-  - 160 `achCheck(quiet)`
-  - 188 `achChapter(ch)`
-  - 198 `achSeed()`
-- **209** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
-  - 210 `freeFirst(k)`
+  - 86 `achState()`
+  - 102 `achAdd(k, n)`
+  - 103 `achSale(total, sps)`
+  - 104 `achCatch(sp, cls)`
+  - 106 `achMinute()`
+  - 116 `achTripEnd(bad)`
+- **118** the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters
+  - 120 `achPool(scale)`
+  - 144 `achDraw(key, scale)`
+  - 152 `achGive(key, scale, title)`
+- **161** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
+  - 163 `achCheck(quiet)`
+  - 191 `achChapter(ch)`
+  - 201 `achSeed()`
+- **212** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
+  - 213 `freeFirst(k)`
 
 ## `src/js/core/09g-turer.js` (985 linjer)
 
@@ -1483,6 +1483,17 @@ Kystkartet: the collection for the whole coast (docs/planer/oppdrag-2.md K2, doc
   - 26 `kkPlantsHad()`
   - 31 `kkCount()`
   - 37 `kkMinute()`
+
+## `src/js/core/09n-ukas.js` (41 linjer)
+
+Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md arbeidslista 6; Jonas 30.10.2026: «10. Ja.»)
+
+- **1** Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md arbeidslista 6; Jonas 30.10.2026: «10. Ja.»)
+  - 10 `ukeState()`
+  - 12 `ukeBig(sp, kg)`
+  - 15 `ukeSum(w)`
+  - 34 `ukeDue()`
+  - 40 `ukeLast()`
 
 ## `src/js/core/11-route.js` (496 linjer)
 
@@ -2081,12 +2092,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (942 linjer)
+## `src/js/ui/phone/07-patch.js` (947 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 935 `patch()`
+  - 940 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (94 linjer)
 
@@ -2207,7 +2218,7 @@ Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/pla
   - 115 `mgHere()`
   - 122 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (277 linjer)
+## `src/js/ui/phone/14-act.js` (278 linjer)
 
   - 2 `act(a, d)`
   - 8 `act0(a, d)`
@@ -2305,7 +2316,7 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 67 `pressSkreiFetch()`
   - 75 `pressStart()`
 
-## `src/js/ui/05h-kystkart.js` (89 linjer)
+## `src/js/ui/05h-kystkart.js` (91 linjer)
 
 ---------- Kystkartet: the collection on one chart (core/09m-kystkart.js; docs/planer/oppdrag-2.md K2) ----------
 
@@ -2313,11 +2324,30 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 10 `kkGeo()`
   - 24 `kkChartSvg()`
   - 37 `kkRows(c)`
-  - 43 `kkTab()`
-- **58** the same marks over the chart plotter (03-map.js renderStatic)
-  - 59 `kkSvg(u, inV)`
-  - 73 `kkBar()`
-  - 82 `kkChart(on)`
+  - 45 `kkTab()`
+- **60** the same marks over the chart plotter (03-map.js renderStatic)
+  - 61 `kkSvg(u, inV)`
+  - 75 `kkBar()`
+  - 84 `kkChart(on)`
+
+## `src/js/ui/05i-ukas.js` (114 linjer)
+
+---------- Ukas fangst: the Sunday card (core/09n-ukas.js; docs/planer/oppdrag-2.md U1) ----------
+
+- **1** Ukas fangst: the Sunday card (core/09n-ukas.js; docs/planer/oppdrag-2.md U1)
+  - 13 `ukeLag(w)`
+  - 21 `ukeEvents(w)`
+  - 29 `ukeLines(w)`
+  - 51 `ukeDates(w)`
+  - 53 `ukeHtml(w)`
+  - 60 `ukeShow(w)`
+  - 64 `ukeBind(w)`
+  - 65 `ukeRedraw()`
+  - 70 `ukeTick()`
+  - 79 `ukeSesongCard(H)`
+- **85** the picture: the card drawn on a canvas, 1080 x 1350, shared as a file or saved
+  - 86 `ukeCanvas(w)`
+  - 104 `ukeShare(w)`
 
 ## `src/js/ui/06-logbook.js` (115 linjer)
 

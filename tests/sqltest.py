@@ -336,10 +336,13 @@ def main():
         R['pWeekOffQ'] = sql("select count(*) from public.push_queue where tag = 'top-week' and player_id = 'user_01BBB'")
         sql("delete from public.push_queue where tag = 'top-week'"); sql("select public.push_prefs(true)", B, 'authenticated')
         R['pWeek'] = sql("select public.push_week(true)", None, 'service_role') + '/' + sql("select string_agg(body, ' | ' order by body) from public.push_queue where tag = 'top-week'")
+        R['pWeekMe'] = sql("select body from public.push_queue where tag = 'top-week' and player_id = 'user_01BBB'")
         sql("delete from public.push_queue where tag = 'top-week'")
         # the day gate: Monday 08:00 once, not on Tuesday, not twice in a week
         R['pWeekTue'] = sql("set dsb.clock = '2026-10-06 09:00:00+02'; select public.push_week()", None, 'service_role')
-        R['pWeekMon'] = sql("set dsb.clock = '2026-10-12 09:00:00+02'; select public.push_week()", None, 'service_role') + '/' + sql("set dsb.clock = '2026-10-12 10:00:00+02'; select public.push_week()", None, 'service_role')
+        R['pWeekSun18'] = sql("set dsb.clock = '2026-10-11 18:30:00+02'; select public.push_week()", None, 'service_role')
+        R['pWeekMon'] = sql("set dsb.clock = '2026-10-11 19:30:00+02'; select public.push_week()", None, 'service_role') + '/' + sql("set dsb.clock = '2026-10-11 20:30:00+02'; select public.push_week()", None, 'service_role')
+        R['pWeekTitle'] = sql("select string_agg(distinct title, '|') from public.push_queue where tag = 'top-week'")
         R['pWeekPl'] = sql("select public.push_week(true)", A, 'authenticated', expect_err=True)
         R['pPaper'] = sql("select public.push_paper()", None, 'service_role')   # Kystposten sends no push (20261008000000_push_ops.sql)
         R['wBadT'] = sql("select public.land_put('NaN', 2027, 'x', 'open', '[]')", A, 'authenticated', expect_err=True)
@@ -526,8 +529,9 @@ def main():
               'push: what is due at once goes as one message, the most important first; six a day for a new player (but five unanswered ones in a row cut it to two until she opens the app), 12 and 24 with more sessions; no quiet night; what has stopped mattering is dropped',
               {'merge': pm, 'cap': R['pCap'], '12': R['pCap12'], '24': R['pCap24'], '2': R['pCap2'], 'night': R['pNight'], 'stale': R['pStale']})
         print(ok(R['pPass'] == '0' and R['pWeekOff'] == '1' and R['pWeekOffQ'] == '0' and R['pWeek'].startswith('2/') and 'Ukas beste fisker i åpen gruppe er «Havbris» med ' in R['pWeek'] and ' I lukket gruppe: «' in R['pWeek']
-                 and R['pWeekTue'] == '0' and R['pWeekMon'] == '2/0' and R['pWeekPl'][0] and R['pPaper'] == '0'),
-              "push from the server: no leaderboard message; once a week (Monday from 08:00) the best fisher of the last seven days to each who has it on (not with it turned off); players cannot call it", {'pass': R['pPass'], 'off': [R['pWeekOff'], R['pWeekOffQ']], 'week': R['pWeek'], 'tue': R['pWeekTue'], 'mon': R['pWeekMon']})
+                 and R['pWeekTue'] == '0' and R['pWeekSun18'] == '0' and R['pWeekMon'] == '2/0' and R['pWeekPl'][0] and R['pPaper'] == '0'
+                 and R['pWeekMe'].startswith('Du leverte ') and ' i åpen gruppe. Ukas beste fisker i åpen gruppe er «Havbris»' in R['pWeekMe'] and R['pWeekTitle'] == 'Ukas fangst'),
+              "push from the server: no leaderboard message; once a week (Sunday from 19:00) «Ukas fangst»: her own kilos and place in her group over the last seven days, and the best fisher, to each who has it on (not with it turned off); players cannot call it", {'pass': R['pPass'], 'off': [R['pWeekOff'], R['pWeekOffQ']], 'week': R['pWeek'], 'me': R['pWeekMe'], 'tue': R['pWeekTue'], 'sun18': R['pWeekSun18'], 'mon': R['pWeekMon'], 'title': R['pWeekTitle']})
         q, pd = R['sQuote'], R['sPend']
         print(ok(q.get('price_nok') == 49 and q.get('data', {}).get('k') == 'turbo' and R['sNoProd'][0] and R['sAnon'][0] and R['sPaid1'] == 't' and R['sPaid2'] == 'f'
                  and len(pd) == 1 and pd[0]['product'] == 'trim_turbo' and pd[0]['data'].get('give') == 'trim' and pd[0]['data'].get('boat') == 'v1' and R['sPendB'] == []
