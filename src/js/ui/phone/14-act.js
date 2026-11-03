@@ -210,6 +210,7 @@
       for (const c of S.crew) c.morale = clamp(c.morale, 0, 100); S.cevt = null; }
     else if (a === 'turtake'){ const e = turTake(+d.id); if (e) toast(e); }
     else if (a === 'turdrop'){ turDrop(+d.id); }
+    else if (a === 'kkmap'){ show(false); kkChart(true); return false; }   // Kystkartet over the chart (ui/05h-kystkart.js)
     else if (a === 'turgo'){ turGo(+d.id); show(false); return false; }
     else if (a === 'turmeas'){ show(false); turMeasure(+d.id); return false; }
     else if (a === 'turans'){ turLeteAnswer(+d.id, +d.q, d.o); }

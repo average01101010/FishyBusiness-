@@ -102,6 +102,7 @@ function achCatch(sp, cls){ achFish(); achAdd('fishn'); if (sp === 'torsk' && cl
 // each game minute: rough weather with you aboard (a gale, Beaufort 6 and up), night fishing, and another player's boat near
 function achMinute(){
   if (S.t % 10 === 0) achCheck();
+  if (typeof kkMinute === 'function') kkMinute();   // Kystkartet: the statistical areas fished in (09m-kystkart.js)
   const b = S.boat; if (!meAboard() || b.status === 'port') return;
   const A = achState(), H = S.t / 60;
   if (!A.stormT && beaufort(windAt(H)) >= 6) A.stormT = 1;

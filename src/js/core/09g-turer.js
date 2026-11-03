@@ -713,6 +713,7 @@ function turFotoTake(m, seen, img){
   // in the paper (09h-press.js): the others read of it, the picture is only in one's own
   const fi = FYR.findIndex(f => f[3] === m.fyr.name && Math.abs(f[0] - m.fyr.x) < 0.01 && Math.abs(f[1] - m.fyr.y) < 0.01);
   pressPut('foto', m.lys ? {fyr:fi, lys:m.lys} : {fyr:fi}, img ? {img:m.id} : null);
+  if (typeof kkFyr === 'function') kkFyr(fi);   // Kystkartet (09m-kystkart.js)
   turPayOut(m, 'Kystposten', 'Takk for bildet av ' + name + how[0] + '. Det står i avisa i dag.', 'Thank you for the picture of ' + name + how[1] + '. It is in the paper today.');
   return null;
 }

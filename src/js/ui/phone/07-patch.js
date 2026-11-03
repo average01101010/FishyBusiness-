@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['kystkart-031126', '03.11.2026', 'Kystkartet', 'The coast map', [
+       ['Milepæler har fått fanen Kystkartet: et kart over hele kysten med mottakene du har levert til, fyrene du har fotografert for Kystposten, statistikkområdene du har fisket i og artene du har levert.', 'Milestones has a new tab, The coast map: a chart of the whole coast with the plants you have landed at, the lighthouses you have photographed for Kystposten, the statistical areas you have fished in and the species you have landed.'],
+       ['Det du alt har gjort, står der fra før. Hver levering, hvert fyrbilde og hver time med fiske setter en ny prikk.', 'What you have already done is there from the start. Every landing, every lighthouse picture and every hour of fishing sets a new dot.'],
+       ['«Vis i sjøkartet» legger det samme over kartplotteren, med en ring rundt mottakene du har levert til.', '«Show on the chart» lays the same over the chart plotter, with a ring round the plants you have landed at.'],
+    ]],
     ['hav-021126', '02.11.2026', 'Havflåten', 'The ocean fleet', [
        ['Trålere, ringnotbåter, autolinere, snurrevadbåter og snøkrabbefartøy er ute på havet langs hele kysten. De følger sesongene og ligger ved kaier som er store nok for dem.', 'Trawlers, purse seiners, autoliners, Danish seiners and snow crab vessels are out at sea along the whole coast. They follow the seasons and lie at quays big enough for them.'],
        ['Trålerne tråler på feltene, autolinerne setter og drar line, og snøkrabbefartøyene har teinelenkene sine i sjøen. Du ser dem på AIS og i kartplotteren.', 'The trawlers trawl on the grounds, the autoliners set and haul their lines, and the snow crab vessels have their pots in the sea. You see them on the AIS and the chart plotter.'],

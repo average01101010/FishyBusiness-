@@ -1058,7 +1058,7 @@ sailors' tattoos: rewards that come by themselves
   - 36 `tatLanding(pid)`
   - 38 `checkTattoos()`
 
-## `src/js/core/09b-records.js` (40 linjer)
+## `src/js/core/09b-records.js` (41 linjer)
 
 Personal records: the biggest fish you have landed of each species (Jonas 09.10.2026: «Nå kjører vi kun på største fisk man har
 
@@ -1117,7 +1117,7 @@ Fartstid: years at sea, 0 to 40 (Jonas 07.10.2026; docs/engasjement.md, arbeidsl
   - 51 `fsLand(total)`
   - 53 `fsRested(realMs)`
 
-## `src/js/core/09f-merker.js` (210 linjer)
+## `src/js/core/09f-merker.js` (211 linjer)
 
 Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1.5 and 3)
 
@@ -1129,19 +1129,19 @@ Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/e
   - 100 `achSale(total, sps)`
   - 101 `achCatch(sp, cls)`
   - 103 `achMinute()`
-  - 112 `achTripEnd(bad)`
-- **114** the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters
-  - 116 `achPool(scale)`
-  - 140 `achDraw(key, scale)`
-  - 148 `achGive(key, scale, title)`
-- **157** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
-  - 159 `achCheck(quiet)`
-  - 187 `achChapter(ch)`
-  - 197 `achSeed()`
-- **208** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
-  - 209 `freeFirst(k)`
+  - 113 `achTripEnd(bad)`
+- **115** the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters
+  - 117 `achPool(scale)`
+  - 141 `achDraw(key, scale)`
+  - 149 `achGive(key, scale, title)`
+- **158** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
+  - 160 `achCheck(quiet)`
+  - 188 `achChapter(ch)`
+  - 198 `achSeed()`
+- **209** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
+  - 210 `freeFirst(k)`
 
-## `src/js/core/09g-turer.js` (984 linjer)
+## `src/js/core/09g-turer.js` (985 linjer)
 
 Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md point 4)
 
@@ -1210,27 +1210,27 @@ Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md poi
   - 679 `turFoto(o, cls, near = null)`
   - 700 `turFotoAt()`
   - 703 `turFotoTake(m, seen, img)`
-  - 722 `turMake()`
-  - 748 `turEnsure(force)`
-  - 769 `turWay()`
-  - 776 `turDetour(m, way = turWay()`
-- **788** taking, doing and finishing
-  - 789 `turTake(id)`
-  - 817 `turDrop(id)`
-  - 822 `cargoJob(kg, no, en)`
-  - 823 `turLoad(m)`
-  - 832 `turSpawn(m)`
-  - 851 `turEnd(m, ok, why, how)`
-  - 869 `turPayOut(m, from, no, en, part)`
-  - 877 `turDock(pid)`
-  - 891 `turSale(pid, bySp)`
-  - 904 `turHauled(s)`
-  - 908 `turHour()`
-  - 927 `turWhat(m)`
-- **939** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
-  - 953 `turSay(who, no, en, k)`
-  - 958 `turDepart()`
-  - 978 `turMechanic()`
+  - 723 `turMake()`
+  - 749 `turEnsure(force)`
+  - 770 `turWay()`
+  - 777 `turDetour(m, way = turWay()`
+- **789** taking, doing and finishing
+  - 790 `turTake(id)`
+  - 818 `turDrop(id)`
+  - 823 `cargoJob(kg, no, en)`
+  - 824 `turLoad(m)`
+  - 833 `turSpawn(m)`
+  - 852 `turEnd(m, ok, why, how)`
+  - 870 `turPayOut(m, from, no, en, part)`
+  - 878 `turDock(pid)`
+  - 892 `turSale(pid, bySp)`
+  - 905 `turHauled(s)`
+  - 909 `turHour()`
+  - 928 `turWhat(m)`
+- **940** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
+  - 954 `turSay(who, no, en, k)`
+  - 959 `turDepart()`
+  - 979 `turMechanic()`
 
 ## `src/js/core/09h-press.js` (233 linjer)
 
@@ -1469,6 +1469,20 @@ Sponsorer (M6 in docs/planer/butikker-og-sponsorer.md 4 and 5; CLAUDE.md: a real
   - 16 `spOf(kind, target)`
   - 18 `spSponsors()`
   - 20 `spUrl(site)`
+
+## `src/js/core/09m-kystkart.js` (38 linjer)
+
+Kystkartet: the collection for the whole coast (docs/planer/oppdrag-2.md K2, docs/engasjement.md arbeidslista 7)
+
+- **1** Kystkartet: the collection for the whole coast (docs/planer/oppdrag-2.md K2, docs/engasjement.md arbeidslista 7)
+  - 9 `kkState()`
+  - 18 `kkHomAt(p)`
+  - 20 `kkFish(p)`
+  - 21 `kkMarks(K)`
+  - 23 `kkFyr(fi)`
+  - 26 `kkPlantsHad()`
+  - 31 `kkCount()`
+  - 37 `kkMinute()`
 
 ## `src/js/core/11-route.js` (496 linjer)
 
@@ -1803,7 +1817,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 111 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 124 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (763 linjer)
+## `src/js/ui/03-map.js` (764 linjer)
 
 ---------- map ----------
 
@@ -1837,21 +1851,21 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 343 `updateMapButtons()`
   - 355 `tapName(mp, rr)`
   - 360 `renderStatic()`
-  - 459 `portIcon(p, s, u)`
-  - 480 `anchorPath(x, y, s, u)`
-  - 488 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 507 `scheduleStatic()`
-  - 512 `aisTrack(id, H)`
-  - 517 `aisInfo(n)`
-  - 531 `renderAisCard()`
-  - 532 `renderDyn()`
-  - 616 `pinAdd(mp)`
-  - 621 `pinOpen(id, fresh)`
-  - 641 `pinKb()`
-  - 672 `ptrUp(e)`
-  - 702 `unzoom()`
-  - 709 `portByLabel(pt)`
-  - 714 `addWaypoint(pt)`
+  - 460 `portIcon(p, s, u)`
+  - 481 `anchorPath(x, y, s, u)`
+  - 489 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 508 `scheduleStatic()`
+  - 513 `aisTrack(id, H)`
+  - 518 `aisInfo(n)`
+  - 532 `renderAisCard()`
+  - 533 `renderDyn()`
+  - 617 `pinAdd(mp)`
+  - 622 `pinOpen(id, fresh)`
+  - 642 `pinKb()`
+  - 673 `ptrUp(e)`
+  - 703 `unzoom()`
+  - 710 `portByLabel(pt)`
+  - 715 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (219 linjer)
 
@@ -2067,14 +2081,14 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (937 linjer)
+## `src/js/ui/phone/07-patch.js` (942 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 930 `patch()`
+  - 935 `patch()`
 
-## `src/js/ui/phone/08-home-papers-merker.js` (93 linjer)
+## `src/js/ui/phone/08-home-papers-merker.js` (94 linjer)
 
   - 1 `home()`
   - 20 `nearHint(kind)`
@@ -2087,7 +2101,7 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 65 `fsChip()`
   - 67 `fsCard()`
   - 74 `merker()`
-  - 85 `lore()`
+  - 86 `lore()`
 
 ## `src/js/ui/phone/09-vaer-post-salg-redning.js` (139 linjer)
 
@@ -2193,7 +2207,7 @@ Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/pla
   - 115 `mgHere()`
   - 122 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (276 linjer)
+## `src/js/ui/phone/14-act.js` (277 linjer)
 
   - 2 `act(a, d)`
   - 8 `act0(a, d)`
@@ -2291,6 +2305,20 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 67 `pressSkreiFetch()`
   - 75 `pressStart()`
 
+## `src/js/ui/05h-kystkart.js` (89 linjer)
+
+---------- Kystkartet: the collection on one chart (core/09m-kystkart.js; docs/planer/oppdrag-2.md K2) ----------
+
+- **1** Kystkartet: the collection on one chart (core/09m-kystkart.js; docs/planer/oppdrag-2.md K2)
+  - 10 `kkGeo()`
+  - 24 `kkChartSvg()`
+  - 37 `kkRows(c)`
+  - 43 `kkTab()`
+- **58** the same marks over the chart plotter (03-map.js renderStatic)
+  - 59 `kkSvg(u, inV)`
+  - 73 `kkBar()`
+  - 82 `kkChart(on)`
+
 ## `src/js/ui/06-logbook.js` (115 linjer)
 
 ---------- deck log ----------
@@ -2321,7 +2349,7 @@ Father's naust: setting it to rights and the trophy wall (core/07c-naust.js, cor
 
 - **1** Father's naust: setting it to rights and the trophy wall (core/07c-naust.js, core/09b-records.js)
 
-## `src/js/ui/06d-season-folk.js` (77 linjer)
+## `src/js/ui/06d-season-folk.js` (78 linjer)
 
 the phone's Sesong and Folk apps (05.10.2026; the rules are in core/09c-seasons.js and core/09d-folk.js)
 
@@ -2423,7 +2451,7 @@ Garderoben: the player changes how his figure looks (Jonas 10.10.2026)
 - **14** the right-hand side: what the current tab offers
 - **50** the little renderer
 
-## `src/js/ui/08-actions.js` (415 linjer)
+## `src/js/ui/08-actions.js` (416 linjer)
 
 actions
 
@@ -2450,10 +2478,10 @@ actions
   - 367 `applyLang()`
 - **380** screens: full-screen 3D, or the chart plotter for route planning
   - 381 `setBodyView(v3d)`
-  - 385 `openPlotter()`
-  - 390 `plotSetRender()`
-  - 394 `plotSetOpen(on)`
-  - 407 `kinoUi()`
+  - 386 `openPlotter()`
+  - 391 `plotSetRender()`
+  - 395 `plotSetOpen(on)`
+  - 408 `kinoUi()`
 
 ## `src/js/ui/08b-letter.js` (127 linjer)
 
