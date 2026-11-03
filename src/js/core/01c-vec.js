@@ -130,6 +130,7 @@ function vecFinish(r){
   const T = MAPD.man.tile * 1000, k = r.tx + ':' + r.ty, t = {k, tx:r.tx, ty:r.ty, x0:r.tx * T, z0:r.ty * T, bld:null, roads:[], rcell:new Map(), bridges:r.bridges, piers:r.piers, molos:r.molos, slabs:r.slabs, quays:r.quays, npc:r.npc, npcRaw:r.npcRaw || 0};
   if (r.bld){ const B = t.bld = Object.assign(r.bld, {cells:new Map(), seed:(r.tx * 131 + r.ty * 977) * 1000003 % 2147483647}); for (let i = 0; i < B.ck.length; i++) B.cells.set(B.ck[i], B.order.subarray(B.cs[i], B.cs[i + 1])); }
   if (r.roads){ const R = r.roads; for (let i = 0; i < R.n; i++) t.roads.push({c:R.c[i], xs:R.x.subarray(R.o[i], R.o[i + 1]), zs:R.z.subarray(R.o[i], R.o[i + 1]), bb:[R.bb[4 * i], R.bb[4 * i + 1], R.bb[4 * i + 2], R.bb[4 * i + 3]]}); for (let i = 0; i < R.ck.length; i++) t.rcell.set(R.ck[i], R.ri.subarray(R.cs[i], R.cs[i + 1])); }
+  if (typeof flaateApply === 'function') flaateApply(t);   // the register's boats in the harbours (L2/N1, 05-vessels.js)
   VEC.tiles.set(k, t); VEC.ver++; for (const f of VEC.came) f(t);
   return t;
 }

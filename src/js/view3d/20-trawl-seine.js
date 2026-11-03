@@ -29,9 +29,9 @@
     if (TRAWL.mode === 'haul') return {lo:1 - sstep(20, 30, u), ro:1 - sstep(0, 22, u), net:1 - sstep(30, HAUL_S, u), cod:u > HAUL_S + 2 ? -1 : 1 - 0.85 * sstep(28, HAUL_S, u), full:true};
     return {lo:0, ro:0, net:0, cod:-1, full:false};
   }
-  function drawTrawl(t, A, BMrel, now){
+  function drawTrawl(t, A, BMrel, now, stO){
     const K = trawlKit(t); if (!K) return;
-    const st = trawlState(now), at = (p, M) => drawN(p, chain(BMrel, M));
+    const st = stO || trawlState(now), at = (p, M) => drawN(p, chain(BMrel, M));
     // the net's way: off the drum, down the ramp, into the sea astern and away down; the codend's place on it by stages
     const W = [[A.drum[0], A.drum[1] - 0.9, A.drum[2] + 1.0], [A.rampTop[0], A.rampTop[1] + 0.3, A.rampTop[2]], [A.rampFoot[0], A.rampFoot[1] + 0.2, A.rampFoot[2]],
       [A.rampFoot[0], -1.5, A.rampFoot[2] + 9], [A.rampFoot[0], -12, A.rampFoot[2] + 60]], WT = [0, 0.15, 0.5, 0.7, 1];
@@ -212,7 +212,7 @@
   // a fishing NPC's model by her length and beam (FLEET's, and the coast's from tools/map/npc.py): the buffers by model, lod and livery,
   // the scale by boat
   // another player's boat is her own type's model (Jonas 05.10.2026: a friend in the same old wooden boat showed as a white box boat)
-  const npcType = n => n.player && SPEC3D[n.vtype] ? n.vtype : npcKit(n.L, n.B);
+  const npcType = n => (n.player || n.hav) && SPEC3D[n.vtype] ? n.vtype : npcKit(n.L, n.B);   // the ocean fleet (05d-hav.js) as their own kind too
   const NKN = {}; function npcNear(n){ const k = n.player ? 'p|' + n.vtype : n.L + '|' + n.B; if (!(k in NKN)) NKN[k] = glbHas(npcType(n)) ? 150 : 300; return NKN[k]; }
   const NKB = {};
   function npcMesh(n, lod){
@@ -224,6 +224,7 @@
     return NKM[kk] = Object.assign({}, B, {sv:[sx, sy, sz], S:new Float32Array([sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1])});
   }
   let npcNow = [];
+  const NPCTOW = {lo:1, ro:1, net:1, cod:1, full:false, tow:true};
   function drawNPC(eye, t, H, VP){
     if (!NPCM) return;
     npcNow = npcStates(H).filter(n => !n.rs && Math.hypot(n.p.x * 1000 - eye[0], n.p.y * 1000 - eye[2]) < 16000);   // the rescue boat has her own model (RB)
@@ -238,13 +239,15 @@
       else if (n.player && bv.init && S.ptow && S.ptow.st === 'tow' && n.id === S.ptow.pid){ const fwd = -(GEO(vtype()).bow || -3) + 30 + (n.L || 8) / 2; n.p = {x:(bv.x + Math.sin(bv.head) * fwd) / 1000, y:(bv.z - Math.cos(bv.head) * fwd) / 1000}; n.hd = n.cog = bv.head; n.ptow = 'head'; }
       const x = n.p.x * 1000, z = n.p.y * 1000, big = n.type === 'coastal' || n.type === 'ferry', y = big ? (env.tide || 0) : (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8, roll = big ? Math.sin(t * 0.4 + x) * 0.01 : Math.sin(t * 1.1 + x) * 0.05 * (0.3 + WV.hs);
       n.M = model(x - eye[0], y - eye[1], z - eye[2], -n.hd, big ? 0 : Math.sin(t * 0.9 + z) * 0.03, roll);
-      const d = Math.hypot(x - eye[0], z - eye[2]); n.K = (n.fleet || n.coast || n.player) && d / ZF() < 1500 * QUAL.lodK[QUAL.lvl] ? npcMesh(n, d / ZF() < npcNear(n) * QUAL.lodK[QUAL.lvl] ? 1 : 0.3) : null;
+      const d = Math.hypot(x - eye[0], z - eye[2]); n.K = (n.fleet || n.coast || n.player || n.hav) && d / ZF() < 1500 * QUAL.lodK[QUAL.lvl] ? npcMesh(n, d / ZF() < npcNear(n) * QUAL.lodK[QUAL.lvl] ? 1 : 0.3) : null;
       if (n.K) kit.push(n); else drawLit(NPCM[n.type], n.M);
     }
     if (!kit.length) return;
     const P = people(); nSetup(VP);
     for (const n of kit){ const K = n.K, G = K.geo, at = (p, r) => chain(n.M, M4.T(p[0] * K.sv[0], p[1] * K.sv[1], p[2] * K.sv[2]), M4.RY(r || 0));
       drawN(K.hull, chain(n.M, K.S)); drawSail(K.t, chain(n.M, K.S), n.st !== 'port');
+      // an ocean trawler towing (05d-hav.js): her trawl out astern as yours is when towing
+      if (n.trawl && G && G.trawl) drawTrawl(K.t, G.trawl, chain(n.M, K.S), performance.now() / 1000, NPCTOW);
       if (!K.glass) continue;
       drawNPCAnchor(n, K);   // her anchors stowed in their roller or hawse, as on your own boat
       if (npcCrewDraw(n, K, eye, t)) continue;   // her people walk her deck like yours (deckcrew.js crewSim)

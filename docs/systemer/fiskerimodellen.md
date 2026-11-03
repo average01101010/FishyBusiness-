@@ -22,7 +22,9 @@
 
 | Torsk | Hyse | Sei | Lyr | Lange | Brosme | Uer | Kveite | Blåkveite |
 |---|---|---|---|---|---|---|---|---|
-| 0,345 | 0,245 | 0,49 | 0,145 | 0,215 | 0,22 | 0,44 | 0,26 | 0,6 |
+| 0,376 | 0,297 | 0,9 | 0,136 | 0,342 | 0,306 | 0,337 | 0,56 | 0,6 |
+
+  Kalibrert på nytt 02.11.2026 etter fasit-testen (5.3e), da sesongen begynte å komme fra sedlene; kveita mot kveitefisket om høsten. Før det (B3):  0,345 / 0,245 / 0,49 / 0,145 / 0,215 / 0,22 / 0,44 / 0,26 / 0,6.
 
   Kalibrert på nytt i B3 (02.11.2026, se 5.3d), da grunnlinja tok over for det håndlagde utgangspunktet rundt Senja. I B2 (01.11.2026, 5.3c) var det 0,405 / 0,3 / 0,65 / 0,2 / 0,3 / 0,32 / 0,65 / 0,35 / 0,6, og før det 0,37 / 0,3 / 0,6 / 0,3 / 0,3 / 0,35 / 0,5 / 0,35 / 0,6.
 
@@ -285,6 +287,60 @@
   - Fordelingen av fisken mellom kyst og hav etter fangsten antar at flåten fisker der fisken er.
   - Trål og havfiske er lagt jevnt over hele hovedområdet utenfor grunnlinja.
   - Kysttorsken sør for 62° N er ikke en egen bestand.
+
+## 5.3e Fasit-testen: modellen mot et år den ikke har sett (02.11.2026)
+
+`tests/fasit.py` og `tests/fasit_ref.py`. Testen måler hele modellen (`density`: feltet fra sedlene, vandringene, skreifronten, grunnlinja, dybden og temperaturen) mot det flåten faktisk fisket per landing, lokasjon for lokasjon og måned for måned.
+
+- **Utenfor dataene:**
+  - Spillet bygges med sedlene for 2024 alene (`KYST_FISKE=<fil> python3 tools/npc/fiske.py 2024`, lagt i `src/data/fiske.json` bare for bygget til `dist-oos`) og sammenlignes med sedlene for 2025.
+  - **Taket** er hvor godt 2024-sedlene alene forutsier 2025, altså hvor mye fisket flytter seg fra år til år.
+  - **Gulvet** er spillet fra før B2, med én tabell for hele kysten.
+- **Fasiten:**
+  - Den er fangst per landing mot snittet nasjonalt for samme redskap og lengdegruppe, ganget med andelen av lokasjonens landinger som hadde arten.
+  - Bare celler der minst 5 landinger hadde arten, er med.
+- **Modellen:**
+  - Den er snittet av `density` i opptil 6 punkter på 20–300 m i lokasjonen, kl. 08, 12 og 16 den 5., 15. og 25. i måneden, med urørt avvik.
+  - Punktene trekkes likt i hvert bygg.
+  - I alt 109 lokasjoner og 1 204 punkter. En kjøring tar rundt 27 minutter, mest for å laste kartet.
+- **Målet:** Spearmans rangkorrelasjon (1 er samme rekkefølge, 0 ingen sammenheng), regnet tre ganger:
+  - **alle:** over hver lokasjon × måned
+  - **steder:** årets snitt per lokasjon
+  - **sesong:** kystens snitt per måned
+- **Varianter** (`FASIT_VARIANTS`) slår av en del av modellen om gangen på de samme punktene: grunnlinja, `av`, skreifronten, lodda, og sesongen fra sedlene.
+
+**Resultatet, mot 2025** (alle / steder / sesong):
+
+| Art | Gulvet (før B2) | B2–B4 | Endelig (sesongen fra sedlene) | Taket |
+|---|---|---|---|---|
+| Torsk | 0,03 / −0,15 / 0,78 | 0,44 / 0,59 / 0,59 | **0,54 / 0,72 / 0,84** | 0,66 / 0,86 / 0,93 |
+| Hyse | −0,01 / −0,42 / 0,46 | 0,44 / 0,40 / 0,57 | **0,47 / 0,51 / −0,15** | 0,63 / 0,78 / 0,15 |
+| Sei | 0,05 / −0,06 / 0,55 | 0,32 / 0,61 / −0,25 | **0,54 / 0,57 / 0,84** | 0,64 / 0,80 / 0,75 |
+| Lyr | 0,18 / −0,10 / 0,76 | 0,45 / 0,46 / 0,71 | **0,62 / 0,69 / 0,80** | 0,78 / 0,88 / 0,91 |
+| Lange | 0,11 / 0,09 / 0,69 | 0,59 / 0,73 / 0,47 | **0,67 / 0,77 / 0,52** | 0,72 / 0,89 / 0,76 |
+| Brosme | 0,08 / 0,20 / 0,38 | 0,39 / 0,61 / −0,04 | **0,57 / 0,67 / 0,94** | 0,61 / 0,71 / 0,87 |
+| Uer | 0,15 / 0,04 / 0,71 | 0,48 / 0,68 / 0,30 | **0,54 / 0,62 / 0,89** | 0,73 / 0,79 / 0,90 |
+| Kveite | 0,55 / 0,30 / 0,87 | 0,68 / 0,82 / 0,85 | **0,80 / 0,81 / 0,98** | 0,82 / 0,86 / 0,99 |
+
+- **Som andel av taket (alle celler):** gulvet ligger på rundt 16 % i snitt over de åtte artene. Den endelige modellen ligger på rundt 85 %: torsk 81, hyse 76, sei 86, lyr 80, lange 93, brosme 93, uer 73 og kveite 98 %.
+- **Det testen fant:**
+  - B2–B4 ga mye bedre treff på *hvor* fisken står, men dårligere treff på *når* for torsk, sei, lange, brosme og uer.
+  - Årsaken var at forholdet til Senja i samme måned ble ganget med den gamle håndlagde `av`-tabellen. Det flyttet hele kystens sesong der `av` avvek fra det Senja faktisk fisket.
+  - Grunnlinja, skreifronten og lodda flyttet tallene lite på månedsnivå. Lodda hjelper torsken litt (0,57 uten, 0,59 med).
+- **Rettingen (`FK.season = 'data'`, `FK.torsk = 'data'` i `03f-fiske.js`):**
+  - Lokasjonen måles mot Senjas snitt over året, ikke mot Senja i samme måned, så sesongen kommer fra sedlene overalt, også på Senja.
+  - For torsken setter sedlene nivået per lokasjon og måned. Innenfor måneden deles det på kysttorsk (lokasjonens sommernivå, `kystF`) og skrei (resten). Skreidelen følger fronten og lodda dag for dag (pulsen mot snittet for måneden), skreiplassene (`skreiSpot` mot rundt 0,6), det som er igjen (`skreiLeft`) og gytebestanden.
+  - Den gamle løsningen ligger igjen bak `'av'` og `'split'`.
+- **Kalibreringen etter rettingen:**
+  - `k` er delt på forholdet, så summen på de fire Senja-stedene er som før B2 (tabellen i 5.3).
+  - Kveita er kalibrert mot kveitefisket om høsten i stedet. De fire stedene er fra mars, mai og juli, og kveita er en høstart. `kvtest` gir 4–5 kveiter og 939–1 116 kr per dag, som før B2.
+  - **simday:** 350 / 350 / 350 / 350 kg.
+  - **progweek:** blad B dag 15, inngangen dag 22.
+  - **Fordelingen endret seg slik sedlene sier:** seien på Husøy i juli 14,5 → 36 kg i timen, Malangsgapet i mai 43 → 25. Sedlene viser ingen seistim i mai på Malangsgapet-lokasjonen. Det var et kalibreringsmål i spillet, ikke en måling.
+- **Svakheter:**
+  - Én test med ett år. 2023 eller 2022 mot 2024 kan gi et annet tall.
+  - Hysas sesong er nesten tilfeldig fra år til år (taket 0,15), så den kan ikke treffes.
+  - Testen måler månedssnitt. Fronten og lodda virker innenfor måneden og synes ikke her; for det trengs sedlene uke for uke.
 
 ## 5.33 Fiskeguiden (Jonas 08.10.2026)
 
