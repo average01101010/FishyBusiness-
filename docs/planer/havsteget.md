@@ -279,3 +279,14 @@ Hvert valg har en anbefaling og én setning om hvorfor.
 ## 7. Status
 
 - 03.11.2026: planen er skrevet etter Jonas' bestilling. Den venter på valgene V1–V6 og «kjør på».
+- 03.11.2026: **H0 bygd** (Jonas: «Start H0 - Grunnmuren»; gren `ccr-6829f3d4-kl3gp4`).
+  - **Mottakene:** mottaksdataene har sild, makrell, snøkrabbe og andelen fra 28 m og over. Havnene kjenner redskap, andel og kai.
+  - **Havmottak:** 11 nye havner bare for havflåten.
+  - **Regelen:** et havfiskefartøy legger til og leverer bare der kaia passer og mottaket tar redskapet.
+  - **Prisene:** sild, makrell og snøkrabbe har fått prisene fra sedlene for 2025.
+  - **Ikke gjort:**
+    - Egen pris for fryst fisk er et spørsmål til Jonas, fordi det brøt en avtale.
+    - Mannskapet som lag er flyttet til H7 (valg V5).
+    - Kystvaktas havsjekker er flyttet til H1.
+    - Rypefjord og Fiskarstrand øst venter på at butikken og verftet flyttes.
+  - Se 4.18c i `havner-og-mottak.md`. Neste: H1, som venter på valgene V1–V6.

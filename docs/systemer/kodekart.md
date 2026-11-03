@@ -144,18 +144,18 @@ THE SEA MARKS ALONG THE WHOLE COAST (05.10.2026; Jonas: «Sjømerker må ordnes 
   - 43 `feltData()`
   - 56 `feltIn(x0, y0, x1, y1)`
 
-## `src/js/core/02-species-gear.js` (244 linjer)
+## `src/js/core/02-species-gear.js` (246 linjer)
 
 Placeholder prices (NOK/kg, grade A) – to be tuned
 
-- **73** vessels, equipment, crew
-  - 189 `fuelWeek(w)`
-  - 191 `fuelPrice(H = S.t / 60, pid = S.boat && S.boat.port, diesel = BOAT.die…)`
-  - 218 `equipFits(k, type)`
-  - 221 `fuelBase(v, vmax, planing)`
-  - 222 `fuelKOf(V)`
-  - 224 `vesselDerive(V)`
-  - 238 `lsaOf(V)`
+- **74** vessels, equipment, crew
+  - 191 `fuelWeek(w)`
+  - 193 `fuelPrice(H = S.t / 60, pid = S.boat && S.boat.port, diesel = BOAT.die…)`
+  - 220 `equipFits(k, type)`
+  - 223 `fuelBase(v, vmax, planing)`
+  - 224 `fuelKOf(V)`
+  - 226 `vesselDerive(V)`
+  - 240 `lsaOf(V)`
 
 ## `src/js/core/03-simulation.js` (1217 linjer)
 
@@ -752,24 +752,26 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 230 `startReturn(auto, W, home, hsOver, opsKeep)`
 - **250** CORE END
 
-## `src/js/core/06b-coastports.js` (100 linjer)
+## `src/js/core/06b-coastports.js` (140 linjer)
 
 the fish receivers along the whole coast as harbours (05.10.2026, M2 of the coast plan)
 
 - **1** the fish receivers along the whole coast as harbours (05.10.2026, M2 of the coast plan)
-- **18** the registration mark (Malerverkstedet, 07.10.2026): the county's letters, a serial number and the municipality's letters,
-  - 27 `regLetters(pt)`
-  - 33 `regUsed(f, k, n)`
-  - 34 `regOf(b)`
-  - 94 `plantsNear(p, n = 10)`
+- **19** the registration mark (Malerverkstedet, 07.10.2026): the county's letters, a serial number and the municipality's letters,
+  - 28 `regLetters(pt)`
+  - 34 `regUsed(f, k, n)`
+  - 35 `regOf(b)`
+  - 115 `plantsNear(p, n = 10)`
+- **121** the ocean vessels at the plants (H0 of docs/planer/havsteget.md, 03.11.2026)
+  - 128 `portWhy(pt, type)`
 
-## `src/js/core/06c-steder.js` (43 linjer)
+## `src/js/core/06c-steder.js` (44 linjer)
 
 the tackle shops and the yards along the coast: the other two places of trade (07.10.2026)
 
 - **1** the tackle shops and the yards along the coast: the other two places of trade (07.10.2026)
   - 32 `portServices(pt, berth)`
-  - 39 `placesNear(p, kind, n = 3)`
+  - 40 `placesNear(p, kind, n = 3)`
 
 ## `src/js/core/06d-drift.js` (563 linjer)
 
@@ -1896,7 +1898,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 710 `portByLabel(pt)`
   - 715 `addWaypoint(pt)`
 
-## `src/js/ui/03b-route.js` (219 linjer)
+## `src/js/ui/03b-route.js` (221 linjer)
 
 ---------- the route editor: waypoint names, a timeline for the list, undo and redo, moving and inserting points ----------
 
@@ -1927,9 +1929,9 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
 - **126** «Autonav» (the button in the chart plotter, and the dock's Auto-nav): the next tap on the chart is where to go, and the route
   - 129 `leiaArm(on)`
   - 135 `leiaTo(pt, buoy, act)`
-  - 188 `deepNear(p, maxKm)`
-  - 198 `leiaStops()`
-  - 203 `leiaCompare()`
+  - 190 `deepNear(p, maxKm)`
+  - 200 `leiaStops()`
+  - 205 `leiaCompare()`
 
 ## `src/js/ui/03g-planmap.js` (113 linjer)
 
@@ -2110,12 +2112,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (963 linjer)
+## `src/js/ui/phone/07-patch.js` (967 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 956 `patch()`
+  - 960 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (94 linjer)
 
@@ -2499,7 +2501,7 @@ Garderoben: the player changes how his figure looks (Jonas 10.10.2026)
 - **14** the right-hand side: what the current tab offers
 - **50** the little renderer
 
-## `src/js/ui/08-actions.js` (417 linjer)
+## `src/js/ui/08-actions.js` (418 linjer)
 
 actions
 
@@ -2508,28 +2510,28 @@ actions
   - 78 `panelChange(e)`
   - 101 `landConf(H, q, acc)`
   - 129 `sell()`
-- **236** modal
-  - 238 `modal(html)`
-  - 247 `boatUnnamed()`
-  - 248 `boatChristen(nm)`
-  - 250 `showIntro(namesOnly)`
-- **265** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
-  - 270 `awayStart(mins, realMs)`
-  - 271 `awayEnd()`
-  - 272 `showAway(A)`
-- **299** time
-  - 305 `playMinutes(n, away)`
-  - 309 `catchUp(realMs)`
-  - 320 `tick()`
-  - 357 `deliverOrder()`
-- **367** chrome
-  - 368 `applyLang()`
-- **381** screens: full-screen 3D, or the chart plotter for route planning
-  - 382 `setBodyView(v3d)`
-  - 387 `openPlotter()`
-  - 392 `plotSetRender()`
-  - 396 `plotSetOpen(on)`
-  - 409 `kinoUi()`
+- **237** modal
+  - 239 `modal(html)`
+  - 248 `boatUnnamed()`
+  - 249 `boatChristen(nm)`
+  - 251 `showIntro(namesOnly)`
+- **266** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
+  - 271 `awayStart(mins, realMs)`
+  - 272 `awayEnd()`
+  - 273 `showAway(A)`
+- **300** time
+  - 306 `playMinutes(n, away)`
+  - 310 `catchUp(realMs)`
+  - 321 `tick()`
+  - 358 `deliverOrder()`
+- **368** chrome
+  - 369 `applyLang()`
+- **382** screens: full-screen 3D, or the chart plotter for route planning
+  - 383 `setBodyView(v3d)`
+  - 388 `openPlotter()`
+  - 393 `plotSetRender()`
+  - 397 `plotSetOpen(on)`
+  - 410 `kinoUi()`
 
 ## `src/js/ui/08b-letter.js` (127 linjer)
 
