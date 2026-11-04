@@ -105,8 +105,10 @@
     if (v < 0.8){ WK.u3[3] = 0; WK.pf = 0; return; }
     const fx = Math.sin(bv.head), fz = -Math.cos(bv.head), k0 = 9.81 / (v * v), lam = 2 * Math.PI / k0;
     const A = Math.min(0.6, 0.045 * Lb * sstep(0.12, 0.38, Fr) * (1 - 0.55 * sstep(0.6, 1.5, Fr)));
-    // in a turn the straight pattern reaches only as far as it stays within a few metres of the curved track; the foam trail goes on
-    const R = bv.spd / Math.max(Math.abs(bv.yr || 0), 1e-3), smax = Math.min(clamp(10 * Lb, 40, 120), Math.sqrt(6 * R) + 8);
+    // how far astern the pattern is drawn: some 18 lengths, 60 to 350 m (a Kelvin wake is seen hundreds of metres astern; it was 40 to
+    // 120 m); it follows the track (wakeTrack), so a turn shortens it less than when it was straight (then it ended where it left the
+    // track by a few metres)
+    const R = bv.spd / Math.max(Math.abs(bv.yr || 0), 1e-3), smax = Math.min(clamp(18 * Lb, 60, 350), 3 * Math.sqrt(6 * R) + 20);
     // on the plane the forebody is out of the water and the bow wave with it: the spray sheet from the root amidships takes over (the
     // foam map's wings, the spray in drawEffects). WK.pf: how far up on the plane, 0 for a displacement hull at any speed
     const pf = BOAT.planing ? sstep(0.6, 1.2, Fr) : 0; WK.pf = pf;
@@ -126,8 +128,12 @@
     if (WK.u3[3] < 0.5 || WK.u3[2] <= 0) return 0;
     const rx = x - WK.u0[0], rz = z - WK.u0[1], s = -(rx * WK.u0[2] + rz * WK.u0[3]), q = Math.abs(rx * WK.u0[3] - rz * WK.u0[2]), L = WK.u2[0], k = WK.u1[0];
     if (s <= 0 || s > WK.u1[3] || q > s * 0.42 + L * 0.6 + 4) return 0;
-    const e = s * Math.min(0.3536, Math.tan(0.2 / Math.max(WK.u2[3], 0.2))), a = WK.u1[1] * (1 - sstep(WK.u1[3] * 0.55, WK.u1[3], s)) * sstep(0, 1.2, s);   // as wakeH: no step at the stern
-    return (WK.u1[2] * a / Math.sqrt(1 + s / L) * Math.cos(k * s) * (1 - sstep(e * 0.75, e * 1.02, q)) * 0.75 + a * Math.pow(1 + s / L, -0.333) * Math.sin(1.5 * k * (0.816 * s + 0.577 * q)) * Math.exp(-(((q - e) / (0.1 * s + 1.2)) ** 2))) * WK.u3[2];
+    // as wakeH (01-shaders.js): the Kelvin pattern by stationary phase, the two waves and the cusp, along a straight line astern
+    const far = 1 - sstep(WK.u1[3] * 0.55, WK.u1[3], s), a = WK.u1[1] * far * sstep(0, 1.2, s);   // (no step at the stern)
+    const qn = q * 0.3536 / Math.min(0.3536, Math.tan(0.2 / Math.max(WK.u2[3], 0.2))), d2 = s * s - 8 * qn * qn, sq = Math.sqrt(Math.max(d2, 0)), qq = Math.max(qn, 1e-3);
+    const tt = (s - sq) / (4 * qq), td = (s + sq) / (4 * qq), pt = k * Math.sqrt(1 + tt * tt) * (s + qn * tt), pd = k * Math.sqrt(1 + td * td) * (s + qn * td);
+    const cb = Math.pow(s * s / (Math.max(d2, 0) + 0.15 * s * s), 0.25), ow = d2 < 0 ? Math.exp(d2 / (0.05 * s * s + 4)) : 1;
+    return (WK.u1[2] * a / Math.sqrt(1 + s / L) * Math.cos(pt) * cb * ow * 0.5 + a * Math.pow(1 + s / L, -0.333) * Math.cos(pd) * cb * ow * (1 - sstep(1, 1.5, td)) * 0.5) * WK.u3[2];
   }
 
 
