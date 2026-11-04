@@ -14,6 +14,11 @@
        ['Rutepanelet har − og + ved fartsglideren, én knop per trykk.', 'The route panel has − and + by the speed slider, one knot a tap.'],
        ['Sluttseddelen skrives ut rad for rad når fisken er levert.', 'The landing note prints row by row when the catch is landed.'],
        ['Fagord som sluttseddel, bløgging, lott og minstemål har prikket strek i teksten. Trykk på ordet, så står det hva det betyr.', 'Trade words like landing note, bleeding, share and minimum size have a dotted line in the text. Tap the word to see what it means.'],
+       ['Det lille kartet forklarer fargene på fisken, fra lite til mye.', 'The little chart explains the fish colours, from little to much.'],
+       ['Trykk på et instrument øverst i kartplotteren, så står det hva det viser.', 'Tap an instrument along the top of the chart plotter to see what it shows.'],
+       ['I dagboka står det som er over i Sesonger og Hendelser på venstre side, og det som gjelder nå på høyre.', 'In the deck log, what is over in Seasons and Events stands on the left page, and what holds now on the right.'],
+       ['Ved første fisk går kameraet ned over dekket, så du ser bløggekaret.', 'At the first fish the camera comes down over the deck, so you see the bleeding tub.'],
+       ['Første levering får et stempel med hva den ga.', 'The first landing gets a stamp with what it paid.'],
     ]],
     ['logo-031126', '03.11.2026', 'Ny logo', 'A new logo', [
        ['Det Store Blå har fått ny logo: et anker laget av ordene. Du ser den når spillet laster, når du logger inn, på app-ikonet og på bildet når du deler Ukas fangst.', 'Det Store Blå has a new logo: an anchor made of the words. You see it while the game loads, when you sign in, on the app icon and on the picture when you share the week\'s catch.'],
