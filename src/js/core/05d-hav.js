@@ -186,7 +186,9 @@ function havNear(H, only){
     const A = havState(s, H, b.pos); if (A.hidden) continue;
     if (A.set) for (const q of A.set) if (q.a !== q.b && Math.min(dist(q.a, b.pos), dist(q.b, b.pos)) <= R) gear.push({k:q.k, a:q.a, b:q.b, id:s.id, name:s.name});
     if (dist(A.p, b.pos) > R) continue;
-    const P = A.st === 'port' ? A : havState(s, H - 1 / 60, b.pos), dx = A.p.x - P.p.x, dy = A.p.y - P.p.y, sog = P.hidden ? 0 : Math.hypot(dx, dy) / NM * 60;
+    // (a minute ago she may have been hidden, in a port whose berth is not known: then she has just come out and no speed is read,
+    // where P.p was read before P.hidden was asked and threw in npcStates, UI review 04.11.2026)
+    const P0 = A.st === 'port' ? A : havState(s, H - 1 / 60, b.pos), P = P0.hidden ? A : P0, dx = A.p.x - P.p.x, dy = A.p.y - P.p.y, sog = Math.hypot(dx, dy) / NM * 60;
     out.push({id:s.id, name:s.name, type:'kyst', hav:s.g, vtype:s.vtype, p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, L:s.L, B:s.B, T:s.T, liv:s.i % 4, trawl:!!A.trawl, seine:A.seine || null, lev:A.lev || null});
   }
   if (!only){ HAV.k = k; HAV.v = out; HAV.gear = gear; }

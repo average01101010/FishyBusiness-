@@ -340,6 +340,8 @@ body.vplot #logbook{display:none}
 .bk-stage{position:relative;perspective:1800px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .bk-stage.spread{width:min(calc(96vw - 48px),920px);height:min(80vh,620px)}
 .bk-stage.single{width:min(calc(94vw - 44px),440px);height:min(78vh,640px)}
+/* the deck log's hand is Caveat, which the page carries (Segoe Print and Comic Sans are not embedded and fell to whatever cursive
+   the tablet had, UI review 04.11.2026); the sizes are a step up from the old ones, as Caveat runs smaller */
 /* the tabs down the left edge of the book, as in a real log book; the open one sticks out */
 .bk-body{position:relative;margin-left:42px}
 .bk-tabs{position:absolute;right:100%;top:14px;bottom:14px;display:flex;flex-direction:column;gap:5px;margin-right:6px;z-index:0}
@@ -348,7 +350,7 @@ body.vplot #logbook{display:none}
 .bk-tab.on{width:42px;margin-left:0;filter:none;box-shadow:-3px 3px 6px rgba(0,0,0,.35)}
 /* entries in the tabs: seasons and events (crossed out when over), gear cards, landing notes */
 .bk-e{position:relative;margin:4px 0 10px;padding:2px 2px 4px}
-.bk-et{display:flex;justify-content:space-between;gap:8px;align-items:baseline;border-bottom:1px solid rgba(80,110,150,.35);font-family:'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',cursive;color:#1f2f6e;font-size:14px}
+.bk-et{display:flex;justify-content:space-between;gap:8px;align-items:baseline;border-bottom:1px solid rgba(80,110,150,.35);font-family:'Caveat',cursive;color:#1f2f6e;font-size:17px}
 .bk-ed{color:#b0434f;font-size:12px;white-space:nowrap}
 .bk-e.over{opacity:.55}
 .bk-e.over::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(to top right,transparent calc(50% - 1.5px),rgba(222,96,120,.7) 50%,transparent calc(50% + 1.5px)),linear-gradient(to bottom right,transparent calc(50% - 1.5px),rgba(222,96,120,.7) 50%,transparent calc(50% + 1.5px))}
@@ -357,12 +359,12 @@ body.vplot #logbook{display:none}
 .bk-g{display:flex;gap:8px;margin:6px 0 12px;padding-bottom:6px;border-bottom:1px solid rgba(80,110,150,.3)}
 .bk-gi svg{width:46px;height:36px}
 .bk-gb{flex:1;min-width:0}
-.bk-gt{font-family:'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',cursive;color:#b0434f;font-size:15px;line-height:22px}
+.bk-gt{font-family:'Caveat',cursive;color:#b0434f;font-size:18px;line-height:22px}
 .bk-gr{display:flex;gap:6px;align-items:center;font:11.5px var(--serif);color:#3b3020;min-height:22px;flex-wrap:wrap} .bk-gr .hw{font-size:12px;line-height:20px}
 .bk-tl{vertical-align:middle;margin-right:4px} .bk-tl path{stroke:#1f2f6e;stroke-width:1.6;stroke-linecap:round;fill:none}
 .bk-red{color:#b0434f}
 .bk-sp{display:flex;justify-content:space-between;align-items:center;margin:8px 0 0}
-.bk-sn{font-family:'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',cursive;color:#1f2f6e;font-size:15px}
+.bk-sn{font-family:'Caveat',cursive;color:#1f2f6e;font-size:18px}
 .bk-fish svg{width:64px;height:28px}
 .bk-st td,.bk-st th{text-align:right} .bk-st td:first-child,.bk-st th:first-child{text-align:left}
 .bk-tot{margin-top:8px;border-top:2px solid #5a4a30;padding-top:4px}
@@ -385,10 +387,10 @@ body.vplot #logbook{display:none}
 .pg-t{font:700 13px var(--serif);letter-spacing:.16em;text-transform:uppercase}
 .pg-d{font:italic 13px var(--serif);color:#4a3d28;text-align:right}
 .pg-v{font:11px var(--serif);color:#5a4a30;margin:-2px 0 6px}
-.hw{font-family:'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',cursive;color:#1f2f6e;font-size:13px;line-height:24px;margin:0}
+.hw{font-family:'Caveat',cursive;color:#1f2f6e;font-size:16px;line-height:24px;margin:0}
 .lg{width:100%;border-collapse:collapse;font-size:11px}
 .lg th{font:600 9.5px var(--serif);letter-spacing:.06em;text-transform:uppercase;color:#5a4a30;border-bottom:1px solid #8a7654;padding:3px 3px;text-align:left}
-.lg td{border-bottom:1px solid rgba(138,118,84,.35);border-right:1px solid rgba(138,118,84,.25);padding:2px 3px;vertical-align:top;font-family:'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',cursive;color:#1f2f6e;font-size:11.5px;line-height:18px}
+.lg td{border-bottom:1px solid rgba(138,118,84,.35);border-right:1px solid rgba(138,118,84,.25);padding:2px 3px;vertical-align:top;font-family:'Caveat',cursive;color:#1f2f6e;font-size:14px;line-height:18px}
 .lg td:last-child{border-right:0} .lg tr.ev td{color:#6e1f1f} .lg td.pos{font-size:10px;line-height:14px}
 .dr p{border-left:2px solid rgba(190,60,60,.45);padding-left:8px}
 .dr b{font-family:var(--serif);font-weight:600;color:#4a3d28;font-size:11.5px;margin-right:6px}
@@ -778,7 +780,7 @@ button.ph-art.pa-btn:active{background:#efe8d8}
 .lt-env:focus-visible{outline:2px solid rgba(242,214,160,.5);outline-offset:8px;border-radius:4px}
 .lt-front{position:absolute;inset:0;background-size:100% 100%;animation:ltFloat 5.5s ease-in-out infinite;box-shadow:0 20px 34px -6px rgba(0,0,0,.75)}
 .lt-env.still .lt-front{animation:none}
-.lt-to{position:absolute;left:17%;top:38%;font-family:'Rock Salt','Segoe Print','Bradley Hand',cursive;font-size:calc(var(--EW) * .047);color:rgba(24,30,46,.86);transform:rotate(-4deg);white-space:nowrap;letter-spacing:.01em}
+.lt-to{position:absolute;left:17%;top:38%;font-family:'Rock Salt','Caveat',cursive;font-size:calc(var(--EW) * .047);color:rgba(24,30,46,.86);transform:rotate(-4deg);white-space:nowrap;letter-spacing:.01em}
 .lt-ul{position:absolute;left:21%;top:56%;width:54%;height:calc(var(--EW) * .03);transform:rotate(-4deg);fill:none;stroke:rgba(24,30,46,.75);stroke-width:2.4;stroke-linecap:round}
 .lt-back{position:absolute;inset:0}
 .lt-inside,.lt-pocket{position:absolute;inset:0;background-size:100% 100%}
@@ -799,7 +801,7 @@ button.ph-art.pa-btn:active{background:#efe8d8}
 .lt-face{position:absolute;inset:0;background-size:100% 300%;overflow:hidden;-webkit-backface-visibility:hidden;backface-visibility:hidden;box-shadow:0 14px 30px -8px rgba(0,0,0,.6)}
 .lt-face.lt-bk{transform:rotateX(180deg);filter:brightness(.88) sepia(.12)}
 .lt-bk .lt-txt{display:none}
-.lt-txt{position:absolute;left:0;width:100%;height:var(--H);box-sizing:border-box;padding:calc(var(--H) * .075) calc(var(--W) * .1) calc(var(--H) * .05) calc(var(--W) * .115);font-family:'Caveat','Segoe Print','Bradley Hand',cursive;font-weight:500;line-height:1.2;color:rgba(26,32,50,.88);text-align:left}
+.lt-txt{position:absolute;left:0;width:100%;height:var(--H);box-sizing:border-box;padding:calc(var(--H) * .075) calc(var(--W) * .1) calc(var(--H) * .05) calc(var(--W) * .115);font-family:'Caveat',cursive;font-weight:500;line-height:1.2;color:rgba(26,32,50,.88);text-align:left}
 .lt-txt p{margin:0}
 .lt-txt .lt-hi{font-weight:700}
 .lt-txt .lt-sign{text-align:right;font-weight:700;font-size:1.3em;margin-top:.55em;padding-right:6%;transform:rotate(-3deg)}
@@ -911,7 +913,7 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 @media (max-width:640px){.st-main{grid-template-columns:1fr} .st-mapw{position:static} .st-map{max-height:42vh;margin:0 auto} .stp h2{font-size:22px}}
 /* Father's notebook and the trophy wall (ui/06c-notebook.js) */
 .nb-paper{padding:6px 14px 16px 30px;background:linear-gradient(90deg,transparent 20px,#e3a9a4 20px 21px,transparent 21px)}
-.nb-hand{font-family:'Caveat','Segoe Print','Bradley Hand',cursive;font-size:20px;line-height:1.25;color:#22314f;margin:0}
+.nb-hand{font-family:'Caveat',cursive;font-size:20px;line-height:1.25;color:#22314f;margin:0}
 .nb-h{font-size:28px;margin:12px 0 2px;color:#1c2a48;font-weight:700}
 .nb-lead{font:13px/1.45 var(--serif);color:#3d372c;margin:4px 0 10px}
 .nb-mark{border-bottom:1px dashed #b9ab8f;padding:8px 0}

@@ -180,6 +180,13 @@ const TUTSM = {txt:'', t0:0, hid:false};
 function tutTip(st){
   const drift = tutAdrift(), T0 = drift ? tutDriftTip(drift) : st.tip() || {};
   if (PHONE.isOpen() && ((T0.el && !T0.el.closest('#phone')) || T0.map)) return {el:vis('#phone .ph-nav [data-pa=close]'), no:'Lukk telefonen først.', en:'Close the phone first.'};
+  // the drawer left open from an earlier step (the inventory from the fishing) lay over «Autonav» on the way in, and the ring pointed at
+  // the drawer's text under it: the guide hung for good (UI review 04.11.2026, docs/planer/ui-redesign.md F1). A target the open drawer
+  // covers closes the drawer first
+  if (DOCK.page && T0.el && !T0.el.closest('#drawer')){ const d = $('drawer'), a = d && !d.hidden ? d.getBoundingClientRect() : null, q = T0.el.getBoundingClientRect();
+    if (a && a.width && Math.min(a.right, q.right) - Math.max(a.left, q.left) > 2 && Math.min(a.bottom, q.bottom) - Math.max(a.top, q.top) > 2) DOCK.close(); }
+  if (DOCK.page && T0.map && inPlot()){ const d = $('drawer'), a = d && !d.hidden ? d.getBoundingClientRect() : null, c = mapToClient(T0.map.p);
+    if (a && a.width && c.x >= a.left && c.x <= a.right && c.y >= a.top && c.y <= a.bottom) DOCK.close(); }
   return T0;
 }
 // where the guide points: the hole in the dimmed layer and the ring, round a button or round a place on the chart

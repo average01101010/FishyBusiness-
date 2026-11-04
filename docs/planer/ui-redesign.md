@@ -1,6 +1,6 @@
 # UI-redesign: «Kystlys» (plan 04.11.2026)
 
-> Venter på valgene V1–V6 og «kjør på». Ingenting er bygd ennå.
+> Vedtatt 04.11.2026: Jonas valgte A på alle seks (V1–V6) og sa «kjør på». U0 er i gang.
 
 ## Hva Jonas ba om
 
@@ -56,9 +56,9 @@ Undersøkelsene kjøres bare i liggende format inntil videre (Jonas 04.11.2026).
 - **F1 Veiledningen låser seg** (H): på steget `route2` peker ringen på «Autonav», men skuffen «Beholdning» står åpen fra fiskesteget og dekker knappen. Skriptet trykket i ringen 900 ganger, og spilletiden gikk rundt 30 timer med fisk om bord. Runde 2 slapp unna fordi skuffen var lukket. Etterpå sto «Lukk telefonen først» fast over telefonen i alle 45 bildene av appene. Retting: et steg lukker panelene som dekker målet (`ui/07b-first-trip.js`).
 - **F2 Sidefeil i `havNear`** fra `npcStates`, `renderDyn`, `tick`, to ganger under seilingen til Botnhamn: «Cannot read properties of undefined (reading 'x')».
 - **F3 Håndskriften er ikke innebygd**: `.bk-et`, `.bk-gt`, `.bk-sn`, `.hw` og `.lg td` ber om Segoe Print, Bradley Hand og Comic Sans, og faller til en ukjent `cursive` på Android. Caveat er innebygd. Rock Salt brukes to steder.
-- **F4 «Start på nytt»** står uten varsel rett under Regnskap på havnesiden (50).
+- **F4 «Start på nytt»** står rett under Regnskap på havnesiden (50). (Den har et `confirm`-varsel; testen trykket det bort. Feilen er plassen: den står også i rødt under Innstillinger.)
 - **F5 Lever-siden** sier «Prislisten under», men ingenting står under (52).
-- **F6 «Kjøp (test, ingen betaling)»** står i Kaiboden (82–84) og må bort før lansering, eller bak admin.
+- **F6 «Kjøp (test, ingen betaling)»** sto i Kaiboden (82–84). Ikke en feil: `shopMode` (`ui/10i-shop.js`) gir «test» bare når skyen er av (utvikling og tester) eller for admin; spillerne ser «Kjøp · kr» eller «Snart i salg».
 - **F7 Prisene spriker**: torsk 59,52 kr i Kystposten, 60 kr i lokalsaken og 56,98 kr i Salgslaget samme dag (63, 64, 67). Det kan være riktig (ulike mottak eller tider), men det står ikke.
 
 ## Designsystemet «Kystlys»
@@ -214,4 +214,13 @@ Rekkefølgen U0 → U1 → U2 er fundamentet. Etter det kan U3–U10 tas i den r
 
 ## Status
 
-- 04.11.2026: undersøkelsen gjort (`tests/uiplay.py`, tre runder, liggende), planen skrevet. Venter på valgene.
+- 04.11.2026: undersøkelsen gjort (`tests/uiplay.py`, tre runder, liggende), planen skrevet.
+- 04.11.2026: valgene V1–V6 er A (Jonas: «Kjør på»).
+- 04.11.2026 **U0**:
+  - F1: `tutTip` lukker skuffen når den dekker målet, både en knapp og et sted i kartet (`ui/07b-first-trip.js`).
+  - F2: `havNear` leser ikke `P.p` når skipet var skjult ett minutt før (`core/05d-hav.js`).
+  - F3: dagbokas håndskrift er Caveat, ett trinn større (`styles.css`).
+  - F4: «Start på nytt» er tatt bort fra havnesiden (`ui/07-guide.js`).
+  - F5: Lever-siden til sjøs sier hvor fisken leveres, med nærmeste mottak og Autonav (`landPage`, `lever`).
+  - F6 og F7 er ikke feil, eller ikke avgjort.
+  - Patchnotatet heter `ui-u0-041126`.

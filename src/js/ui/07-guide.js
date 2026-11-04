@@ -274,7 +274,7 @@ function panelPort(){
   h.push('<div class="kv"><span>' + t('net') + '</span><span>' + kr(S.stats.revenue - S.stats.costs) + '</span></div>');
   h.push('<div class="kv"><span>' + t('landed') + '</span><span>' + fmt(S.stats.kg, 0) + ' kg</span></div>');
   h.push('<div class="kv"><span>' + t('trips') + '</span><span>' + S.stats.trips + '</span></div>');
-  h.push('<div class="btns"><button class="btn" data-act="reset">' + t('reset') + '</button></div>');
+  // («Start på nytt» stood here under the accounts; it is in Innstillinger, in red, UI review 04.11.2026)
   return h.join('');
 }
 // the landing note of the last landing here, for a few hours after it
@@ -355,7 +355,9 @@ function landWarn(p){
 }
 function landPage(){
   const b = S.boat, h = [], LN = (no, en) => S.lang === 'no' ? no : en;
-  if (b.status !== 'port') return '<p class="note">' + t('not_port') + '</p>';
+  // (at sea the page said «the price list below» with no list under it, UI review 04.11.2026: it says where the catch goes instead, and
+  // the phone's page puts the nearest plant with Autonav under it, ui/phone/02-havn-last-agn-ordre.js lever)
+  if (b.status !== 'port') return '<p class="note">' + LN('Du er ikke i havn. Fisken leveres på et fiskemottak.', 'You are not in harbour. The catch is landed at a fish plant.') + '</p>';
   const p = portById(b.port), tot = holdTotal();
   if (b.land) h.push('<p class="note"><b>' + LN('Lossing: ', 'Landing: ') + '</b>' + landText(false) + ' ' + LN('Sluttseddelen kommer ca. kl. ', 'The landing note comes at about ') + whenTxt(b.land.until) + '.</p>');
   else if (b.shift || b.fueling) h.push('<p class="note">' + quayText(false) + '</p>');
