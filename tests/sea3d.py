@@ -111,8 +111,13 @@ async def main():
         tiles, lee = [], {}
         for key, name, setup in [('wind', 'Husøy-feltet, NV 17 m/s', "const g = GROUNDS[0].p; S.boat.pos = {x:g.x, y:g.y};"), ('lee', 'Husøy-feltet, S 17 m/s', "const g = GROUNDS[0].p; S.boat.pos = {x:g.x, y:g.y}; WX_FORCE.d = 180;"),
                                  ('harbour', 'Ved Botnhamn, NV 17 m/s', "S.boat.pos = LG(53.30, 23.20);"), ('sound', 'Gisundet, NV 17 m/s', "S.boat.pos = LG(57.25, 44.35);")]:
+            kb = await pg.evaluate("G3._debug.SSL.n.k.join()")
             await pg.evaluate("WX_FORCE = {w:17, d:315}; " + setup + " G3._debug.WV.init = false;")
-            await pg.wait_for_function("G3._debug.SSL.n.on && Math.abs(G3._debug.bv.x / 1000 - S.boat.pos.x) < 0.05", timeout=180000); await pg.wait_for_timeout(5000)
+            # (the boat does not move between the windward and the lee picture, so wait for the fetch of the new wind's sectors too: both
+            # textures done and showing the same sectors, and for the lee other sectors than before; 04.11.2026, the rays now run on over
+            # the wide frame and a fixed 5 s was too short under SwiftShader)
+            await pg.wait_for_function("G3._debug.SSL.n.on && Math.abs(G3._debug.bv.x / 1000 - S.boat.pos.x) < 0.05", timeout=180000); await pg.wait_for_timeout(1500)
+            await pg.wait_for_function("(([kb, lee]) => { const N = G3._debug.SSL.n, W = G3._debug.SSL.w; return !N.job && !W.job && !N.fresh && N.k.join() === W.k.join() && (!lee || N.k.join() !== kb); })", arg=[kb, key == 'lee'], timeout=600000); await pg.wait_for_timeout(3000)
             s = await pg.evaluate("(()=>{ const D = G3._debug; return D.ssAt(D.bv.x, D.bv.z).map(v => +v.toFixed(2)); })()"); lee[key] = s
             f = f'sea3d_{key}.png'; await pg.screenshot(path=f); tiles.append((f, f'{name} · vindsjø {s[0]:.1f} m, dønning {s[1]:.1f} m'))
         await sheet(tiles, 'sea3d_lee.png', 2); stage('lee pictures done')

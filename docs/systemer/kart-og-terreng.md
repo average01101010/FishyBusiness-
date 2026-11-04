@@ -301,6 +301,7 @@ Jonas: «kjør på» for hele H1b (03.11.2026). R2 gir rammen fra R1 data, slik 
   - `land200x`: landet på 200 m
 
   `landFracM` (3D-bakken) leser `land200x` der blokkene til alle fire cellene er inne, ellers `land1k`. Det gjelder Svalbard, Jan Mayen, Island, Færøyane, Shetland og Nord-Skottland, Øst-Grønland, Kola, Kanin og Novaja Semlja.
+- **Vindsjøens strekning (`fetchRay`, `core/03b-sea.js`) går nå over hele rammen** på de grove lagene (`land1k`, `dc1k`) til taket `FETCH.open` (600 km) eller til land. Før la den 600 km åpent hav til der strålen gikk ut av den gamle rammen, så strekningen mot nord og vest kunne bli opptil rundt 1 200 km. Ved Husøy fra nord er den nå 454 km mot 668 km før (to av de sju strålene stopper på øyene mot nordøst, som før; de fem andre stopper ved taket i stedet for å få 600 km lagt til ved kanten). Fra sør er den uendret (7,2 km). I kuling er bølgehøyden uansett begrenset av taket (`WV.cap`). `sea3d` venter nå på at bølgekartet er regnet ut for den nye vindretningen før le-bildet tas, i stedet for å vente fast 5 sekunder (04.11.2026).
 - **Rørledningen** (`kart.yml`, jobben `ramme` side om side med flisene):
   1. `ov.py wide`: en egen Overture-indeks for den vide rammen, så kystens indeks og det den henter, er som før.
   2. `national.py wide`: landet på 200 m over `WIDE`. Inne i den gamle rammen er det `land200` slik den er.
