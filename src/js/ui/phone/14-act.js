@@ -68,6 +68,7 @@
     else if (a === 'ledmore') ledN += 50;             // more of the bank's statement
     else if (a === 'art'){ sub.postArt = d.k; }
     else if (a === 'artback'){ sub.postArt = null; }
+    else if (a === 'zlic'){ if (zoneLicApply(d.k)) toast(L('Lisensen er gitt.', 'The licence is granted.')); }   // H1b R4: a licence for a foreign zone (03e-rules.js)
     else if (a === 'ruchk'){ const c = ruChk(); c[d.k] = /^-?\d+(\.\d+)?$/.test(d.v) ? +d.v : d.v === 'null' ? null : d.v; S.ruChk = c; sub.regler = 'sjekk'; }
     else if (a === 'salgW'){ sub.salgW = d.s; }
     else if (a === 'salgG'){ sub.salgG = d.s; }

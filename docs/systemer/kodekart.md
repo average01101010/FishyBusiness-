@@ -494,35 +494,41 @@ Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood f
   - 362 `bkLanded(H, bk, all)`
   - 364 `bkNews(H)`
 
-## `src/js/core/03e-rules.js` (271 linjer)
+## `src/js/core/03e-rules.js` (426 linjer)
 
 The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a place, a time, the boat's length, the gear and the
 
-  - 28 `ruPip(rings, x, y)`
-  - 29 `ruIn(P, x, y)`
-  - 34 `ruBlock(bx, by)`
-  - 52 `ruBits(p)`
-  - 55 `insideFjord(p)`
-  - 56 `insideBaseline(p)`
-  - 58 `blDist(p)`
-  - 64 `ruHom(p)`
-  - 70 `landsdel(p)`
-  - 71 `ruLok(p)`
-  - 73 `ruZone(p)`
-  - 74 `ruAt(id, p)`
-  - 76 `ruLineName(ref)`
-  - 90 `kcQuota(ll)`
-  - 94 `rulesAt(q)`
-  - 190 `ruBlockMsg(q)`
-  - 192 `ruMinSize(sp, p)`
-  - 205 `fjordLimits(p, H)`
-  - 219 `ruCtx()`
-  - 223 `ruNow()`
-  - 229 `ruLayerBlock(bx, by, q, budget)`
-  - 241 `ruWpQ(w)`
-  - 246 `ruWpMsg(w)`
-  - 253 `ruOpenNear(p, q, maxKm)`
-  - 262 `ruTips()`
+  - 29 `ruPip(rings, x, y)`
+  - 30 `ruIn(P, x, y)`
+  - 35 `ruBlock(bx, by)`
+  - 53 `ruBits(p)`
+  - 70 `ruSeaBlock(bx, by)`
+  - 84 `ruSea(p)`
+  - 88 `ruShelf(p)`
+  - 94 `zoneLic(c)`
+  - 95 `zoneLicApply(c)`
+  - 99 `insideFjord(p)`
+  - 100 `insideBaseline(p)`
+  - 102 `blDist(p)`
+  - 108 `ruHom(p)`
+  - 114 `landsdel(p)`
+  - 115 `ruLok(p)`
+  - 117 `ruZone(p)`
+  - 118 `ruAt(id, p)`
+  - 120 `ruLineName(ref)`
+  - 134 `kcQuota(ll)`
+  - 151 `ruSeaRules(c, q, ll, md, add)`
+  - 224 `rulesAt(q)`
+  - 335 `ruBlockMsg(q)`
+  - 337 `ruMinSize(sp, p)`
+  - 350 `fjordLimits(p, H)`
+  - 374 `ruCtx()`
+  - 378 `ruNow()`
+  - 384 `ruLayerBlock(bx, by, q, budget)`
+  - 396 `ruWpQ(w)`
+  - 401 `ruWpMsg(w)`
+  - 408 `ruOpenNear(p, q, maxKm)`
+  - 417 `ruTips()`
 
 ## `src/js/core/03f-fiske.js` (356 linjer)
 
@@ -2101,18 +2107,18 @@ the old tabs live on as phone apps
   - 31 `ordl()`
   - 36 `ordlBest(tabs)`
 
-## `src/js/ui/phone/03-regler.js` (60 linjer)
+## `src/js/ui/phone/03-regler.js` (63 linjer)
 
 the Regler app (R3 of the rules plan, 05.10.2026): «Her og nå» answers «can I fish here?» for your boat, gear and target where she is,
 
   - 8 `ruList(r)`
   - 11 `ruWhere(p)`
-  - 17 `ruGrid(p, len, H, hand)`
-  - 21 `ruChk()`
-  - 23 `ruHere()`
-  - 29 `ruCheck()`
-  - 44 `ruLearn()`
-  - 54 `regler()`
+  - 19 `ruGrid(p, len, H, hand)`
+  - 23 `ruChk()`
+  - 25 `ruHere()`
+  - 31 `ruCheck()`
+  - 46 `ruLearn()`
+  - 57 `regler()`
 
 ## `src/js/ui/phone/04-kvote.js` (71 linjer)
 
@@ -2147,14 +2153,14 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1021 linjer)
+## `src/js/ui/phone/07-patch.js` (1028 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1014 `patch()`
+  - 1021 `patch()`
 
-## `src/js/ui/phone/08-home-papers-merker.js` (94 linjer)
+## `src/js/ui/phone/08-home-papers-merker.js` (100 linjer)
 
   - 1 `home()`
   - 20 `nearHint(kind)`
@@ -2162,12 +2168,13 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 25 `tattoos()`
   - 43 `papBladB()`
   - 48 `papPermit()`
-  - 53 `papKv()`
-  - 59 `papBiz()`
-  - 65 `fsChip()`
-  - 67 `fsCard()`
-  - 74 `merker()`
-  - 86 `lore()`
+  - 54 `papZlic()`
+  - 59 `papKv()`
+  - 65 `papBiz()`
+  - 71 `fsChip()`
+  - 73 `fsCard()`
+  - 80 `merker()`
+  - 92 `lore()`
 
 ## `src/js/ui/phone/09-vaer-post-salg-redning.js` (140 linjer)
 
@@ -2273,7 +2280,7 @@ Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/pla
   - 115 `mgHere()`
   - 122 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (283 linjer)
+## `src/js/ui/phone/14-act.js` (284 linjer)
 
   - 2 `act(a, d)`
   - 8 `act0(a, d)`
@@ -3644,7 +3651,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (361 linjer)
+## `src/js/view3d/20-trawl-seine.js` (366 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -3669,8 +3676,9 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 257 `npcClock(Hf)`
   - 265 `npcHead(n, t)`
   - 280 `npcFollow(n, t)`
-  - 292 `drawNPC(eye, t, H, VP)`
-  - 340 `npcCrewDraw(n, K, eye, t)`
+  - 294 `npcPhase(id)`
+  - 295 `drawNPC(eye, t, H, VP)`
+  - 345 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (165 linjer)
 

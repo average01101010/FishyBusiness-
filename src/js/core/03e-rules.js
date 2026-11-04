@@ -23,7 +23,8 @@ const RU = (() => {
     return {a:f.a || {}, P, ls, pts, bb:bbOf(P.length ? P.map(p => p.rings[0]) : ls.length ? ls : pts)}; })}; }
   const zones = (D.zones || []).map(z => ({f:z.f || '', l:z.l || [], km2:z.km2, P:polys(z.r)}));
   return {D, ok:!!D.bl, made:D.made || '', bl:D.bl ? dec(D.bl) : new Float64Array(0), blin:polys(D.blin), zones, L,
-    hom:(D.hom || []).map(h => ({c:h.c, P:polys(h.r)})), lok:(D.lok || []).map(h => ({c:h.c, P:polys(h.r)})), nm:D.nm || {}, dec};
+    hom:(D.hom || []).map(h => ({c:h.c, P:polys(h.r)})), lok:(D.lok || []).map(h => ({c:h.c, P:polys(h.r)})), nm:D.nm || {}, dec,
+    sea:(D.sea || []).map(z => ({c:z.c, P:polys(z.r)})), shelf:polys(D.shelf)};
 })();
 function ruPip(rings, x, y){ let c = false; for (const r of rings){ const n = r.length; for (let i = 0, j = n - 2; i < n; j = i, i += 2){ const yi = r[i + 1], yj = r[j + 1]; if ((yi > y) !== (yj > y) && x < (r[j] - r[i]) * (y - yi) / (yj - yi) + r[i]) c = !c; } } return c; }
 function ruIn(P, x, y){ for (const p of P){ const b = p.bb; if (x < b[0] || x > b[2] || y < b[1] || y > b[3]) continue; if (ruPip(p.rings, x, y)) return true; } return false; }
@@ -51,6 +52,49 @@ function ruBlock(bx, by){
 }
 function ruBits(p){ if (!RU.ok) return 0; const bx = Math.floor(p.x / RU_B), by = Math.floor(p.y / RU_B), A = ruBlock(bx, by);
   return A[Math.min(RU_N - 1, Math.floor((p.y - by * RU_B) / RU_C)) * RU_N + Math.min(RU_N - 1, Math.floor((p.x - bx * RU_B) / RU_C))]; }
+// H1b R4 (04.11.2026): the zone of the sea a point is in, beyond the mainland's own baseline zones (tools/rules/regler.py seas()):
+// Norway's zones exactly as Kartverket draws them (NØS, the fisheries protection zone at Svalbard and the territorial waters there,
+// the fishery zone at Jan Mayen and its territorial waters), the neighbours' zones and the international waters between them from
+// the sea split by the 200 nm lines and the agreed lines (Fiskeridirektoratet's Sjøgrenser and Kartverket's). Looked up in the same
+// 100 m cells as the zones, a 10 km block at a time, Norway's exact zones over the neighbours'. '' is the mainland's territorial sea
+// and inner waters (and the land): the coast's rules hold there.
+const RU_SEA = {
+  no:['Norges økonomiske sone', 'Norway\'s economic zone'], sv:['Fiskevernsonen ved Svalbard', 'The fisheries protection zone at Svalbard'],
+  svt:['Svalbards territorialfarvann', 'Svalbard\'s territorial waters'], jm:['Fiskerisonen ved Jan Mayen', 'The fishery zone at Jan Mayen'],
+  jmt:['Jan Mayens territorialfarvann', 'Jan Mayen\'s territorial waters'], smh:['Smutthullet (internasjonalt farvann)', 'The Loophole (international waters)'],
+  smt:['Smottet (internasjonalt farvann)', 'The Banana Hole (international waters)'], int:['Internasjonalt farvann', 'International waters'],
+  ru:['Russlands økonomiske sone', 'Russia\'s economic zone'], is:['Islands økonomiske sone', 'Iceland\'s economic zone'],
+  gl:['Grønlands økonomiske sone', 'Greenland\'s economic zone'], fo:['Færøyenes fiskerisone', 'The Faroese fishery zone'], gb:['Britisk sone', 'The British zone'],
+  dk:['Danmarks økonomiske sone', 'Denmark\'s economic zone'], se:['Sveriges økonomiske sone', 'Sweden\'s economic zone'], xx:['Utenfor spillets farvann', 'Off the game\'s waters']};
+const RU_SEAC = ['', ...Object.keys(RU_SEA)], RUZ = new Map();
+function ruSeaBlock(bx, by){
+  const key = bx * 8192 + by; let A = RUZ.get(key); if (A) return A;
+  A = new Uint8Array(RU_N * RU_N); const x0 = bx * RU_B, y0 = by * RU_B, y1 = y0 + RU_B, xs = [], E = [];
+  for (const z of RU.sea){ const v = RU_SEAC.indexOf(z.c); if (v < 0) continue;
+    for (const p of z.P){ const b = p.bb; if (b[2] < x0 || b[0] > x0 + RU_B || b[3] < y0 || b[1] > y1) continue;
+      E.length = 0;
+      for (const r of p.rings){ const n = r.length; for (let i = 0, k = n - 2; i < n; k = i, i += 2){ const yi = r[i + 1], yk = r[k + 1]; if ((yi < y0 && yk < y0) || (yi > y1 && yk > y1) || yi === yk) continue; E.push(r[i], yi, r[k], yk); } }
+      for (let j = 0; j < RU_N; j++){ const y = y0 + (j + 0.5) * RU_C; xs.length = 0;
+        for (let e = 0; e < E.length; e += 4){ const yi = E[e + 1], yk = E[e + 3]; if ((yi > y) !== (yk > y)) xs.push(E[e] + (y - yi) * (E[e + 2] - E[e]) / (yk - yi)); }
+        if (xs.length < 2) continue; xs.sort((a, b) => a - b);
+        for (let q = 0; q + 1 < xs.length; q += 2){ const i0 = Math.max(0, Math.ceil((xs[q] - x0) / RU_C - 0.5)), i1 = Math.min(RU_N - 1, Math.floor((xs[q + 1] - x0) / RU_C - 0.5)); for (let i = i0; i <= i1; i++) A[j * RU_N + i] = v; } } } }
+  if (RUZ.size > 600) RUZ.delete(RUZ.keys().next().value);
+  RUZ.set(key, A); return A;
+}
+function ruSea(p){ if (!RU.ok || !RU.sea.length) return ''; const bx = Math.floor(p.x / RU_B), by = Math.floor(p.y / RU_B), A = ruSeaBlock(bx, by);
+  return RU_SEAC[A[Math.min(RU_N - 1, Math.floor((p.y - by * RU_B) / RU_C)) * RU_N + Math.min(RU_N - 1, Math.floor((p.x - bx * RU_B) / RU_C))]]; }
+const ruSeaName = c => c && RU_SEA[c] ? gL(...RU_SEA[c]) : '';
+// on Norway's continental shelf (Kartverket), where snow crab may be taken outside the territorial sea (J-237-2025 § 1)
+function ruShelf(p){ return ruIn(RU.shelf, p.x, p.y); }
+// the licence for a foreign zone (Fiskeridirektoratet: «Alle norske fartøy må søke om lisens for å kunne fiske i andre lands farvann»,
+// skjema FD-54 for the Russian zone, where the permit is issued by the Russian authorities). No source gives the time it takes, so the
+// game gives it at once when you apply in the Papirer app (none made up: CLAUDE.md, «Friction for Flow»); an ocean permit brings the
+// Russian licence with it (the plan's proposal, havsteget-h1b-rammen.md R4)
+const ZLIC = ['ru', 'gb', 'fo', 'gl'], ruZlicKey = () => ZLIC.filter(zoneLic).join('');
+function zoneLic(c){ return !!((S.zlic && S.zlic[c]) || (c === 'ru' && S.lic && S.lic.hav)); }
+function zoneLicApply(c){ if (!ZLIC.includes(c) || zoneLic(c)) return false; (S.zlic || (S.zlic = {}))[c] = S.t || 1;
+  if (typeof msg === 'function') msg('Fiskeridirektoratet', 'Lisensen for ' + RU_SEA[c][0].toLowerCase() + ' er gitt. Den gjelder for alle båtene dine.', 'The licence for ' + RU_SEA[c][1].replace(/^The /, 'the ') + ' is granted. It holds for all your boats.');
+  return true; }
 // inside the fjord lines for coastal cod (høstingsforskriften vedlegg 4), along the whole coast
 function insideFjord(p){ return !!(ruBits(p) & 2); }
 function insideBaseline(p){ return !!(ruBits(p) & 1); }
@@ -88,10 +132,97 @@ const RU_BK = 'https://www.fiskeridir.no/yrkesfiske/j-meldinger/j-241-2025', RU_
 // the king crab's quota area (J-136-2026 § 2), by an approximation of its lines in lat/lon: east of 26° E up to 71°30′ N, and west of
 // it the sea south of Magerøya (Porsangerfjorden, and Kamøyfjorden and Magerøysundet east of 25°32′ E)
 function kcQuota(ll){ const {lat, lon} = ll; return (lon >= 26 && lat <= 71.5) || (lon >= 25.53 && lon < 26 && lat < 71.02) || (lon >= 24.85 && lon < 26 && lat < 70.93); }
+// H1b R4: the rules in the zones off the coast, read in the sources 04.11.2026 (docs/systemer/kvoter-og-regler.md 5.28b). What could
+// not be confirmed is closed rather than guessed: a species the zone's regulation does not give Norwegian vessels is stopped there.
+// Norway's quota in a foreign zone (ZQ) is a ceiling for the whole group, shared by the players and the NPC fleet, like the group quotas.
+const RU_FD = 'https://www.fiskeridir.no/yrkesfiske/j-meldinger/', RU_FD54 = 'https://www.fiskeridir.no/skjema/russisk-sone', RU_FD55 = 'https://www.fiskeridir.no/skjema/internasjonal-sone';
+const RU_BOTTOM = ['line', 'garn', 'teiner', 'tral', 'snurrevad'];
+// the quotas in the foreign zones in 2026 (tonnes): the group's ceiling and the vessel quota, by the ocean permit
+const ZQ = {
+  gl:{ref:'J-94-2026 §§ 2–4', url:RU_FD + 'j-94-2026', q:{konv:{torsk:[720, 360], blakveite:[430, 215]}, tral:{blakveite:[470, 235], uer:[1300, 650]}}},
+  fo:{ref:'J-133-2026 § 2', url:RU_FD + 'j-133-2026', q:{konv:{lange:[2100, null], brosme:[1800, null]}}},
+  gb:{ref:'J-177-2026 §§ 2–4', url:RU_FD + 'j-177-2026'},
+  jm:{ref:'J-61-2026 § 2', url:RU_FD + 'j-61-2026', q:{konv:{torsk:[181, null]}}}
+};
+// the part of the British zone by ICES area (J-177-2026): 2.a north of 62° N, 5.b and 6.a west of 4° W, the North Sea (4) otherwise
+const ruF1 = v => typeof fmt === 'function' ? fmt(v, 1) : (Math.round(v * 10) / 10).toFixed(1);   // fmt is the UI's; the unit tests run the core alone
+const ruT = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const ruGbArea = ll => ll.lat >= 62 ? '2a' : ll.lon < -4 ? '6a' : '4';
+function ruSeaRules(c, q, ll, md, add){
+  const sp = q.sp || null, gear = q.gear || null, hav = q.hav || null, nm = ruSeaName(c), spN = s => SPECIES[s] ? SPECIES[s].no.toLowerCase() : s, spE = s => SPECIES[s] ? SPECIES[s].en.toLowerCase() : s;
+  const notRead = (k, ref, url) => add('no', k, 'Reglene for ' + spN(sp) + ' i ' + nm[0].toLowerCase() + nm.slice(1) + ' er ikke funnet i kildene ennå, så spillet stenger det her.', 'The rules for ' + spE(sp) + ' in ' + RU_SEA[c][1].replace(/^The /, 'the ') + ' are not found in the sources yet, so the game closes it here.', ref, url, true);
+  const lic = (k, src) => { if (zoneLic(c)) return true;
+    add('no', k, 'Fiske i ' + RU_SEA[c][0].toLowerCase().replace(/^britisk/, 'britisk') + ' krever lisens. Den søkes gjennom Fiskeridirektoratet' + (c === 'ru' ? ' og utstedes av russiske myndigheter' : '') + '. Søk i Papirer-appen (Kvote → Papirer).', 'Fishing in ' + RU_SEA[c][1].replace(/^The /, 'the ') + ' needs a licence, applied for through the Directorate of Fisheries' + (c === 'ru' ? ' and issued by the Russian authorities' : '') + '. Apply in the Papirer app (Kvote → Papers).', src || 'Fiskeridirektoratet, lisens for fiske i andre lands farvann', RU_FD54, true); return false; };
+  if (sp === 'snokrabbe') return;   // the snow crab's own rules (below) hold in every zone
+  switch (c){
+    case 'sv': case 'svt': {
+      const svt = c === 'svt';
+      if (sp === 'torsk' || sp === 'hyse') add('ok', 'sv1', 'I ' + (svt ? 'territorialfarvannet ved Svalbard' : 'fiskevernsonen ved Svalbard') + ' fisker norske fartøy torsk og hyse på kvotene sine, og fangsten trekkes fra dem.', 'In ' + (svt ? 'the territorial waters at Svalbard' : 'the fisheries protection zone at Svalbard') + ' Norwegian vessels fish cod and haddock on their quotas, and the catch counts against them.', 'J-248-2025 §§ 3–4, J-247-2025 § 3', RU_FD + (sp === 'torsk' ? 'j-248-2025' : 'j-247-2025'));
+      else if (sp === 'sei') add('no', 'sv2', 'Seikvoten gjelder i Norges territorialfarvann og økonomiske sone (J-161-2026 § 2). Om den gjelder ved Svalbard, er ikke bekreftet, så spillet stenger sei her.', 'The saithe quota holds in Norway\'s territorial waters and economic zone (J-161-2026 § 2). Whether it holds at Svalbard is not confirmed, so the game closes saithe here.', 'J-161-2026 § 2', RU_J161, true);
+      else if (sp) notRead('sv3', 'Forskrift om fiskevernsone ved Svalbard', 'https://lovdata.no/dokument/SF/forskrift/1977-06-03-6');
+      else add('warn', 'sv0', nm + ': torsk og hyse på kvotene dine (J-248-2025, J-247-2025). Sei og andre arter er stengt i spillet til reglene er funnet.', RU_SEA[c][1] + ': cod and haddock on your quotas (J-248-2025, J-247-2025). Saithe and other species are closed in the game until the rules are found.', 'J-248-2025, J-247-2025', RU_FD + 'j-248-2025');
+      break; }
+    case 'jm': case 'jmt': {
+      const line = hav === 'konv' && (!gear || gear === 'line');
+      if ((!sp || sp === 'torsk') && line) add('warn', 'jm1', 'Kartleggingsfiske etter torsk: 181 tonn i alt for konvensjonelle havfiskefartøy, bare med line, ett fartøy om gangen (det som kom først inn i sonen). Meld fra til Fiskeridirektoratet før du starter.', 'Survey fishery for cod: 181 tonnes in all for ocean-going conventional vessels, by line only, one vessel at a time (the first one into the zone). Tell the Directorate of Fisheries before you start.', 'J-61-2026 §§ 2–5', RU_FD + 'j-61-2026');
+      else if (!sp || sp === 'torsk' || sp === 'hyse') add('no', 'jm0', 'Torsk og hyse er forbudt i fiskerisonen ved Jan Mayen. Unntaket er kartleggingsfisket etter torsk med line for konvensjonelle havfiskefartøy.', 'Cod and haddock are banned in the fishery zone at Jan Mayen. The exception is the survey fishery for cod by line for ocean-going conventional vessels.', 'J-161-2026 § 1, J-61-2026', RU_FD + 'j-61-2026', true);
+      else if (sp === 'sei') add('no', 'jm3', 'Seikvoten gjelder bare i Norges territorialfarvann og økonomiske sone, ikke ved Jan Mayen.', 'The saithe quota holds only in Norway\'s territorial waters and economic zone, not at Jan Mayen.', 'J-161-2026 § 2', RU_J161, true);
+      else notRead('jm4', 'J-161-2026', RU_J161);
+      break; }
+    case 'smh': case 'smt': case 'int': {
+      if (ll.lat >= 62 && (!sp || sp === 'torsk' || sp === 'hyse')) add('warn', 'int1', nm + ': torsk og hyse på kvoten din nord for 62° N (forbudet og kvotene i J-161-2026 §§ 1–2 gjelder hele området nord for 62° N; farvannet er ikke nevnt særskilt). Fartøyet skal være meldt til Fiskeridirektoratet for fiske i internasjonalt farvann (NEAFC, før 1. januar).', RU_SEA[c][1] + ': cod and haddock on your quota north of 62° N (the ban and the quotas of J-161-2026 §§ 1–2 hold in the whole area north of 62° N; these waters are not named). The vessel must be registered with the Directorate of Fisheries for fishing in international waters (NEAFC, before 1 January).', 'J-161-2026 §§ 1–2, NEAFC (FD-55)', RU_FD55);
+      else notRead('int2', 'J-161-2026', RU_J161);
+      break; }
+    case 'ru': {
+      if (!lic('ru0', 'Fiskeridirektoratet, skjema FD-54')) break;
+      if (!sp || sp === 'torsk' || sp === 'hyse') add('warn', 'ru1', 'Russisk sone med lisens: torsk og hyse på kvoten din nord for 62° N.', 'The Russian zone with a licence: cod and haddock on your quota north of 62° N.', 'J-161-2026 § 2, FD-54', RU_FD54);
+      else if (sp === 'sei') add('no', 'ru2', 'Seikvoten gjelder bare i Norges territorialfarvann og økonomiske sone.', 'The saithe quota holds only in Norway\'s territorial waters and economic zone.', 'J-161-2026 § 2', RU_J161, true);
+      else notRead('ru3', 'J-161-2026', RU_J161);
+      break; }
+    case 'is':
+      add('no', 'is0', 'Ingen adgang for norske fartøy til å fiske i islandsk sone i 2026 er funnet i Fiskeridirektoratets J-meldinger. Sist var det 500 tonn brosme, lange og blålange for konvensjonelle havfiskefartøy i 2023.', 'No access for Norwegian vessels to fish in the Icelandic zone in 2026 is found in the Directorate of Fisheries\' regulations. The last was 500 tonnes of tusk, ling and blue ling for ocean-going conventional vessels in 2023.', 'FOR-2023-01-12-35 (opphevet)', 'https://lovdata.no/dokument/SFO/forskrift/2023-01-12-35', true);
+      break;
+    case 'gl': {
+      if (!lic('gl0', 'J-94-2026 § 6')) break;
+      const Q = (ZQ.gl.q[hav] || {}), list = Object.keys(Q).map(s => spN(s) + ' ' + ruT(Q[s][1]) + ' t').join(', '), listE = Object.keys(Q).map(s => spE(s) + ' ' + ruT(Q[s][1]) + ' t').join(', ');
+      if (sp ? Q[sp] : list) add('warn', 'gl1', 'Grønlandsk sone: fartøykvote ' + (sp ? spN(sp) + ' ' + ruT(Q[sp][1]) + ' t' : list) + ' (gruppas kvote i sonen er et felles tak). Andre arter bare som bifangst, høyst 10 % av hver.', 'The Greenland zone: vessel quota ' + (sp ? spE(sp) + ' ' + ruT(Q[sp][1]) + ' t' : listE) + ' (the group\'s quota in the zone is a shared ceiling). Other species only as bycatch, at most 10% each.', ZQ.gl.ref, ZQ.gl.url);
+      else add('no', 'gl2', 'I grønlandsk sone har bare konvensjonelle havfiskefartøy (torsk og blåkveite) og torsketrålere (blåkveite og uer) kvoter' + (sp ? ', og ' + spN(sp) + ' er bare bifangst' : '') + '.', 'In the Greenland zone only ocean-going conventional vessels (cod and Greenland halibut) and cod trawlers (Greenland halibut and redfish) have quotas' + (sp ? ', and ' + spE(sp) + ' is only bycatch' : '') + '.', ZQ.gl.ref, ZQ.gl.url, true);
+      break; }
+    case 'fo': {
+      if (!lic('fo0', 'J-133-2026')) break;
+      if (hav !== 'konv') add('no', 'fo1', 'I færøysk sone kan bare konvensjonelle havfiskefartøy (og kystfartøy i lukket gruppe for lange og brosme, som spillet ikke har) fiske, og bare lange og brosme.', 'In the Faroese zone only ocean-going conventional vessels (and coastal vessels in the closed group for ling and tusk, which the game does not have) may fish, and only ling and tusk.', ZQ.fo.ref, ZQ.fo.url, true);
+      else if (sp === 'lange' && ruIn2(md, 825, 1231)) add('no', 'fo2', 'Fisket etter lange i færøysk sone er stoppet fra 25. august.', 'The ling fishery in the Faroese zone is stopped from 25 August.', 'J-133-2026', ZQ.fo.url, true);
+      else if (!sp || sp === 'lange' || sp === 'brosme') add('warn', 'fo3', 'Færøysk sone: lange (2 100 t) og brosme (1 800 t) i alt for gruppa, høyst 12 fartøy samtidig. Bifangst av andre arter høyst 25 % av fangsten om bord.', 'The Faroese zone: ling (2,100 t) and tusk (1,800 t) in all for the group, at most 12 vessels at once. Bycatch of other species at most 25% of the catch aboard.', 'J-133-2026 §§ 2–4', ZQ.fo.url);
+      else add('no', 'fo4', SPECIES[sp].no + ' er bare bifangst i færøysk sone.', SPECIES[sp].en + ' is only bycatch in the Faroese zone.', 'J-133-2026 § 3', ZQ.fo.url, true);
+      break; }
+    case 'gb': {
+      if (!lic('gb0', 'J-177-2026')) break;
+      const a = ruGbArea(ll), bunn = ['torsk', 'hyse', 'sei', 'lyr', 'lange', 'brosme', 'uer', 'blakveite', 'kveite'];
+      if (a === '2a'){
+        if ((!sp || sp === 'blakveite') && !ruIn2(md, 701, 1231)) add('warn', 'gb2', 'Britisk sone i område 2.a: blåkveite, 400 tonn i alt (stoppes 1. juli). Andre arter bare som bifangst.', 'The British zone in area 2.a: Greenland halibut, 400 tonnes in all (stopped on 1 July). Other species only as bycatch.', 'J-177-2026 § 4', ZQ.gb.url);
+        else add('no', 'gb2x', 'I britisk sone i område 2.a er bare blåkveite lov (stoppet fra 1. juli), andre arter bare som bifangst.', 'In the British zone in area 2.a only Greenland halibut is allowed (stopped from 1 July), other species only as bycatch.', 'J-177-2026 § 4', ZQ.gb.url, true);
+      } else if (a === '6a'){
+        const ok = (gear === 'line' || !gear) && (!sp || sp === 'lange' || (sp === 'brosme' && !ruIn2(md, 1009, 1231)));
+        if (ok) add('warn', 'gb6', 'Britisk sone vest for 4° V (område 6.a og 5.b): lange og brosme, 250 tonn hver i alt, bare med line (brosme stoppes 8. oktober). Torsk bare som bifangst.', 'The British zone west of 4° W (areas 6.a and 5.b): ling and tusk, 250 tonnes each in all, by line only (tusk stopped on 8 October). Cod only as bycatch.', 'J-177-2026 § 4', ZQ.gb.url);
+        else add('no', 'gb6x', 'I britisk sone vest for 4° V er bare lange og brosme med line lov (brosme stoppet fra 8. oktober), andre arter bare som bifangst.', 'In the British zone west of 4° W only ling and tusk by line are allowed (tusk stopped from 8 October), other species only as bycatch.', 'J-177-2026 § 4', ZQ.gb.url, true);
+      } else {
+        if (!sp || bunn.includes(sp)) add('warn', 'gb4', 'Britisk sone i Nordsjøen: norske fartøy kan fiske inntil 30 000 tonn av Norges bunnfiskkvoter her (lange 5 000, brosme 1 500, blåkveite 600 t), torsk, hyse og sei på vilkårene i reguleringene for Nordsjøen.', 'The British zone in the North Sea: Norwegian vessels may fish up to 30,000 tonnes of Norway\'s groundfish quotas here (ling 5,000, tusk 1,500, Greenland halibut 600 t), cod, haddock and saithe on the terms of the North Sea regulations.', 'J-177-2026 §§ 2–3', ZQ.gb.url);
+        else notRead('gb4x', 'J-177-2026', ZQ.gb.url);
+      }
+      break; }
+    case 'dk': case 'se':
+      add('no', 'dk0', nm + ': reglene for norske fartøy her er ikke funnet i kildene ennå, så spillet stenger det.', RU_SEA[c][1] + ': the rules for Norwegian vessels here are not found in the sources yet, so the game closes it.', 'Ikke sjekket', null, true);
+      break;
+    case 'xx':
+      add('no', 'xx0', 'Dette havet er utenfor farvannene spillet har regler for.', 'This sea is off the waters the game has rules for.', 'Ikke sjekket', null, true);
+      break;
+  }
+}
 // The rules at a place. q: {p, H, len (m), gear ('juksa' | 'line' | 'garn' | 'teiner' | null), sp (a species key or null for any),
 // hand (a hand jig, which counts as a hand line)}. Each reason: {v:'no' | 'warn' | 'ok' | 'info', k, no, en, ref, url, block}, where
 // block marks what the game stops you doing today; the answer is the worst of them.
 function rulesAt(q){
+  if (q.hav === undefined) q = {...q, hav:S.lic && S.lic.hav ? S.lic.id : null};   // the boat's ocean permit when the caller does not say
   const p = q.p, H = q.H == null ? S.t / 60 : q.H, len = q.len || 0, gear = q.gear || null, sp = q.sp || null, out = [], md = ruMD(H);
   const ll = LL(p), n62 = ll.lat >= 62, bits = ruBits(p), F = !!(bits & 2), inBL = !!(bits & 1), nm = blNm(p), hom = n62 ? ruHom(p) : null;
   const add = (v, k, no, en, ref, url, block) => out.push({v, k, no, en, ref, url, block:!!block});
@@ -165,10 +296,10 @@ function rulesAt(q){
     if (dep != null && dep > 1000 && gear !== 'juksa') add('no', 'bk1000', 'Dypere enn 1000 m er nye fiskeområder: bunnredskap, også garn og line, krever egen tillatelse.', 'Deeper than 1000 m is new fishing ground: bottom gear, nets and line too, needs a permit of its own.', 'Forskrift om bunnredskap', RU_BUNN, true);
     else if (n62 && (sp === 'blakveite' || (dep != null && dep >= 400))){
       const ss = bkSeason(yearH(H)), open = H >= ss.open && H < ss.stop;
-      if (len >= 28) add('warn', 'bk7', 'Fartøy på 28 m og over kan bare ta blåkveite som bifangst, høyst ' + fmt(bkMax(len, yearH(H)) / 1000, 1) + ' tonn i året.', 'Vessels of 28 m and over may only take Greenland halibut as bycatch, at most ' + fmt(bkMax(len, yearH(H)) / 1000, 1) + ' tonnes a year.', 'J-241-2025 § 7', RU_BK);
+      if (len >= 28) add('warn', 'bk7', 'Fartøy på 28 m og over kan bare ta blåkveite som bifangst, høyst ' + ruF1(bkMax(len, yearH(H)) / 1000) + ' tonn i året.', 'Vessels of 28 m and over may only take Greenland halibut as bycatch, at most ' + ruF1(bkMax(len, yearH(H)) / 1000) + ' tonnes a year.', 'J-241-2025 § 7', RU_BK);
       else if (!open) add('warn', 'bk5c', 'Direktefisket etter blåkveite er stengt (det åpner 25. mai). Blåkveite er bare lov som bifangst, høyst 7 % av ukas landinger.', 'The direct fishery for Greenland halibut is closed (it opens on 25 May). It is only allowed as bycatch, at most 7% of the week\'s landings.', 'J-241-2025 §§ 5, 7', RU_BK);
       else if (!bladB()) add('warn', 'bkB', 'Direktefisket etter blåkveite er åpent, men du må stå på blad B. Uten det er blåkveite bare bifangst (høyst 7 %).', 'The direct fishery for Greenland halibut is open, but you must be on blad B. Without it, it is only bycatch (at most 7%).', 'J-241-2025, deltakerforskriften', RU_BK);
-      else add('ok', 'bk5o', 'Direktefisket etter blåkveite er åpent til ' + dayStr(ss.stop) + '. Maksimalkvoten for båten er ' + fmt(bkMax(len, yearH(H)) / 1000, 1) + ' tonn. Minstemål 45 cm, og redskapen røktes annenhver dag.', 'The direct fishery for Greenland halibut is open until ' + dayStr(ss.stop) + '. The boat\'s maximum quota is ' + fmt(bkMax(len, yearH(H)) / 1000, 1) + ' tonnes. Minimum size 45 cm, and the gear is tended every other day.', 'J-241-2025 §§ 5, 6', RU_BK);
+      else add('ok', 'bk5o', 'Direktefisket etter blåkveite er åpent til ' + dayStr(ss.stop) + '. Maksimalkvoten for båten er ' + ruF1(bkMax(len, yearH(H)) / 1000) + ' tonn. Minstemål 45 cm, og redskapen røktes annenhver dag.', 'The direct fishery for Greenland halibut is open until ' + dayStr(ss.stop) + '. The boat\'s maximum quota is ' + ruF1(bkMax(len, yearH(H)) / 1000) + ' tonnes. Minimum size 45 cm, and the gear is tended every other day.', 'J-241-2025 §§ 5, 6', RU_BK);
     }
   }
   if (sp === 'uer' && n62 && !(len < 15 && gear === 'juksa' && ruIn2(md, 601, 831))) add('no', 'uer39', 'Uer kan bare fiskes med juksa fra båt under 15 m, 1. juni–31. august, nord for 62° N.', 'Redfish may only be fished by jig from a boat under 15 m, 1 June–31 August, north of 62° N.', 'Høstingsforskriften § 39', RU_HF);
@@ -183,8 +314,22 @@ function rulesAt(q){
       add('ok', 'kc5', 'Fritt fiske etter kongekrabbe vest for 26° Ø: ingen kvote og intet minstemål, men all kongekrabbe skal landes, og teinene skal være uten fluktåpning.', 'Free king crab fishing west of 26° E: no quota and no minimum size, but all king crab must be landed, and the pots must be without escape vents.', 'J-138-2026 § 5', RU_KC2);
     }
   }
+  // H1b R4: the zones off the coast, Svalbard's closed areas (høstingsforskriften § 58, the vulnerable ecosystems) and the snow crab
+  const sea = ruSea(p);
+  if (sea && sea !== 'no') ruSeaRules(sea, q, ll, md, add);
+  if (ruAt(26, p).length) add('no', 'sv58', 'Her er all høsting forbudt, unntatt reketrål og skjellskraping (20 nm rundt Bjørnøya, 15 og 20 nm på vestsiden av Spitsbergen).', 'All harvesting is banned here, except shrimp trawling and scallop dredging (20 nm round Bjørnøya, 15 and 20 nm on the west side of Spitsbergen).', 'Høstingsforskriften § 58', RU_HF, true);
+  if (!gear || RU_BOTTOM.includes(gear)) for (const f of ruAt(25, p)){ const nyt = /nytt/i.test(f.a.omraadetyp || '');
+    add('no', nyt ? 'vmen' : 'vme', (nyt ? 'Nytt fiskeområde ved Svalbard: bunnredskap, også line, garn og teiner, krever egen tillatelse.' : 'Stengt område ved Svalbard for å verne sårbare økosystemer: ikke bunnredskap, også line, garn og teiner.'), (nyt ? 'New fishing area at Svalbard: bottom gear, line, nets and pots too, needs a permit of its own.' : 'A closed area at Svalbard to protect vulnerable ecosystems: no bottom gear, line, nets and pots too.'), 'Forskrift om sårbare marine økosystemer', RU_BUNN, !!gear); }
+  if (sp === 'snokrabbe'){
+    const terr = sea === 'svt' || sea === 'jmt' || ((sea === '' || sea === 'no') && (inBL || nm < 12)), U = 'https://www.fiskeridir.no/yrkesfiske/j-meldinger/j-237-2025';
+    if (q.hav !== 'krab') add('no', 'sk0', 'Snøkrabbe kan bare fangstes med snøkrabbetillatelse.', 'Snow crab may only be taken with a snow crab permit.', 'J-237-2025 § 2', U, true);
+    if (terr) add('no', 'sk1', 'Snøkrabbe er forbudt i norsk sjøterritorium og indre farvann (innenfor 12 nm).', 'Snow crab is banned in Norway\'s territorial sea and inner waters (within 12 nm).', 'J-237-2025 § 1', U, true);
+    else if (!ruShelf(p)) add('no', 'sk2', 'Norske fartøy kan ikke fangste snøkrabbe på andre lands kontinentalsokkel.', 'Norwegian vessels may not take snow crab on another country\'s continental shelf.', 'J-237-2025 § 1', U, true);
+    if (ruIn2(md, 701, 1130)) add('no', 'sk3', 'Snøkrabbefangsten er stengt fra 1. juli til 30. november, og teinene skal være på land.', 'The snow crab fishery is closed from 1 July to 30 November, and the pots must be ashore.', 'J-237-2025 § 5', U, true);
+    else if (q.hav === 'krab' && !terr && ruShelf(p)) add('ok', 'sk4', 'Snøkrabbe på norsk kontinentalsokkel: fartøykvote 351 tonn (pluss 82 tonn til levende levering), høyst 20 % bløtkrabbe.', 'Snow crab on Norway\'s continental shelf: vessel quota 351 tonnes (plus 82 tonnes for live delivery), at most 20% soft crab.', 'J-237-2025 §§ 3–5', U);
+  }
   const rank = {no:3, warn:2, ok:1, info:0}, v = out.reduce((a, r) => rank[r.v] > rank[a] ? r.v : a, 'ok');
-  return {v:v === 'info' ? 'ok' : v, items:out, bits, inBL, F, nm, hom, lat:ll.lat, n62};
+  return {v:v === 'info' ? 'ok' : v, items:out, bits, inBL, F, nm, hom, lat:ll.lat, n62, sea};
 }
 // what the game stops you doing (the reasons with block): null when you may, else the first reason's text
 function ruBlockMsg(q){ const r = rulesAt(q), b = r.items.find(x => x.block && x.v === 'no'); return b ? gL(b.no, b.en) : null; }
@@ -215,37 +360,47 @@ const RU_SHORT = {f31:['Ikke torsk her', 'No cod here'], j32b:['Ikke innenfor gr
   kc2:['Kvoteområde for kongekrabbe', 'King crab quota area'], kc10:['Stengt for kongekrabbe', 'Closed to king crab'], kc5:['Fritt fiske: alt landes', 'Free fishing: land all'],
   bk1000:['Over 1000 m: egen tillatelse', 'Over 1000 m: permit needed'], bk5o:['Blåkveite: direktefiske åpent', 'Greenland halibut: open'], bk5c:['Blåkveite: bare bifangst', 'Greenland halibut: bycatch only'],
   bkB:['Blåkveite: krever blad B', 'Greenland halibut: needs blad B'], bk7:['Blåkveite: bare bifangst over 28 m', 'Greenland halibut: bycatch only over 28 m'],
-  f31h:['Andre arter enn torsk er lov', 'Species other than cod allowed'], f31a:['Andre arter enn torsk er lov', 'Species other than cod allowed'], f33b:['Ingen krokgrense nå', 'No hook limit now']};
-function ruCtx(){ const b = S.boat; return {p:b.status === 'port' && typeof portById === 'function' && b.port ? portById(b.port).p : b.pos, len:BOAT.len, gear:b.rig || 'juksa',
+  f31h:['Andre arter enn torsk er lov', 'Species other than cod allowed'], f31a:['Andre arter enn torsk er lov', 'Species other than cod allowed'], f33b:['Ingen krokgrense nå', 'No hook limit now'],
+  sv0:['Svalbard: torsk og hyse', 'Svalbard: cod and haddock'], sv1:['Svalbard: på kvoten', 'Svalbard: on your quota'], sv2:['Ikke sei ved Svalbard', 'No saithe at Svalbard'], sv3:['Ikke denne arten her', 'Not this species here'],
+  sv58:['Forbudt område ved Svalbard', 'Closed area at Svalbard'], vme:['Stengt for bunnredskap', 'Closed to bottom gear'], vmen:['Nytt fiskeområde: tillatelse', 'New fishing area: permit'],
+  jm0:['Jan Mayen: torsk og hyse forbudt', 'Jan Mayen: cod and haddock banned'], jm1:['Jan Mayen: kartleggingsfiske', 'Jan Mayen: survey fishery'], jm3:['Ikke sei her', 'No saithe here'], jm4:['Ikke denne arten her', 'Not this species here'],
+  int1:['Internasjonalt farvann', 'International waters'], int2:['Ikke denne arten her', 'Not this species here'], ru0:['Russisk sone: krever lisens', 'Russian zone: licence needed'],
+  ru1:['Russisk sone: på kvoten', 'Russian zone: on your quota'], ru2:['Ikke sei her', 'No saithe here'], ru3:['Ikke denne arten her', 'Not this species here'], is0:['Islandsk sone er stengt', 'The Icelandic zone is closed'],
+  gl0:['Grønlandsk sone: krever lisens', 'Greenland zone: licence needed'], gl1:['Grønlandsk sone: fartøykvote', 'Greenland zone: vessel quota'], gl2:['Grønlandsk sone: ingen kvote', 'Greenland zone: no quota'],
+  fo0:['Færøysk sone: krever lisens', 'Faroese zone: licence needed'], fo1:['Færøysk sone: ikke for deg', 'Faroese zone: not for you'], fo2:['Lange stoppet', 'Ling stopped'], fo3:['Færøysk sone: lange og brosme', 'Faroese zone: ling and tusk'], fo4:['Bare bifangst her', 'Bycatch only here'],
+  gb0:['Britisk sone: krever lisens', 'British zone: licence needed'], gb2:['Britisk sone: blåkveite', 'British zone: Greenland halibut'], gb2x:['Bare bifangst her', 'Bycatch only here'], gb6:['Britisk sone: lange og brosme', 'British zone: ling and tusk'],
+  gb6x:['Bare bifangst her', 'Bycatch only here'], gb4:['Britisk sone: Nordsjøen', 'British zone: North Sea'], gb4x:['Ikke denne arten her', 'Not this species here'], dk0:['Ikke sjekket: stengt', 'Not checked: closed'], xx0:['Utenfor spillets farvann', 'Off the game\'s waters'],
+  sk0:['Krever snøkrabbetillatelse', 'Snow crab permit needed'], sk1:['Ikke snøkrabbe innenfor 12 nm', 'No snow crab within 12 nm'], sk2:['Annet lands sokkel', 'Another country\'s shelf'], sk3:['Snøkrabbe stengt', 'Snow crab closed'], sk4:['Snøkrabbe: lov', 'Snow crab: allowed']};
+function ruCtx(){ const b = S.boat; return {p:b.status === 'port' && typeof portById === 'function' && b.port ? portById(b.port).p : b.pos, len:BOAT.len, gear:b.rig || 'juksa', hav:S.lic && S.lic.hav ? S.lic.id : null,
   sp:b.rig === 'teiner' ? 'krabbe' : S.target === 'kveite' ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)}; }
 // the answer for your boat now, kept for 10 game minutes and 50 m
 let RU_NOW = null;
-function ruNow(){ const q = ruCtx(), k = [q.len, q.gear, q.sp, q.hand].join('|');
+function ruNow(){ const q = ruCtx(), k = [q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey()].join('|');
   if (RU_NOW && RU_NOW.k === k && Math.abs(RU_NOW.t - S.t) < 10 && Math.hypot(RU_NOW.p.x - q.p.x, RU_NOW.p.y - q.p.y) < 0.05) return RU_NOW.r;
   const r = rulesAt(q); RU_NOW = {k, t:S.t, p:{x:q.p.x, y:q.p.y}, r}; return r; }
 const ruShort = it => it ? gL(...(RU_SHORT[it.k] || [it.no, it.en])) : '';
 // the chart's rule layer: the answer for your boat on a 250 m grid, a 10 km block at a time (40 x 40), 0 ok, 1 warn, 2 no; only at sea
 const RU_LAYER = new Map();
 function ruLayerBlock(bx, by, q, budget){
-  const key = bx + ',' + by + '|' + [q.len, q.gear, q.sp, q.hand, ruMD(S.t / 60)].join('|'); let A = RU_LAYER.get(key); if (A) return A;
+  const key = bx + ',' + by + '|' + [q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey(), ruMD(S.t / 60)].join('|'); let A = RU_LAYER.get(key); if (A) return A;
   if (budget && performance.now() > budget) return null;
   A = new Uint8Array(1600); const rank = {no:2, warn:1, ok:0};
   for (let j = 0; j < 40; j++) for (let i = 0; i < 40; i++){ const p = {x:bx * 10 + (i + 0.5) * 0.25, y:by * 10 + (j + 0.5) * 0.25};
     if (isLandFar(p)){ A[j * 40 + i] = 3; continue; }
-    const r = rulesAt({p, H:S.t / 60, len:q.len, gear:q.gear, sp:q.sp, hand:q.hand}); A[j * 40 + i] = rank[r.v] || 0; }
+    const r = rulesAt({p, H:S.t / 60, len:q.len, gear:q.gear, sp:q.sp, hand:q.hand, hav:q.hav}); A[j * 40 + i] = rank[r.v] || 0; }
   if (RU_LAYER.size > 400) RU_LAYER.delete(RU_LAYER.keys().next().value);
   RU_LAYER.set(key, A); return A;
 }
 // R4 (05.10.2026, Jonas: «Ja, kjør på»): a warning before the mistake, not after it. The question for a planned stop: a fishing point
 // asks for the jig (the boat jigs on its fishing hours), a point that sets gear asks for that gear
 function ruWpQ(w){ const c = ruCtx(), p = {x:w.x, y:w.y};
-  if (w.act && (w.act.op === 'set' || w.act.op === 'cycle') && w.act.kind){ const k = w.act.kind; return {p, len:c.len, gear:k === 'teine' ? 'teiner' : k, sp:k === 'teine' ? 'krabbe' : null, hand:c.hand}; }
-  return {p, len:c.len, gear:'juksa', sp:S.target === 'kveite' ? 'kveite' : null, hand:c.hand}; }
+  if (w.act && (w.act.op === 'set' || w.act.op === 'cycle') && w.act.kind){ const k = w.act.kind; return {p, len:c.len, gear:k === 'teine' ? 'teiner' : k, sp:k === 'teine' ? 'krabbe' : null, hand:c.hand, hav:c.hav}; }
+  return {p, len:c.len, gear:'juksa', sp:S.target === 'kveite' ? 'kveite' : null, hand:c.hand, hav:c.hav}; }
 // what stops the boat at a planned stop (null when it may fish or set there), kept per point, boat and day
 const RU_WP = new Map();
 function ruWpMsg(w){
   if (!RU.ok || !w || w.port || !((w.fish || 0) > 0 || (w.act && (w.act.op === 'set' || w.act.op === 'cycle')))) return null;
-  const q = ruWpQ(w), k = [q.p.x.toFixed(3), q.p.y.toFixed(3), q.len, q.gear, q.sp, q.hand, S.lang, ruMD(S.t / 60)].join('|');
+  const q = ruWpQ(w), k = [q.p.x.toFixed(3), q.p.y.toFixed(3), q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey(), S.lang, ruMD(S.t / 60)].join('|');
   if (RU_WP.has(k)) return RU_WP.get(k);
   const m = ruBlockMsg(q); if (RU_WP.size > 300) RU_WP.delete(RU_WP.keys().next().value); RU_WP.set(k, m); return m;
 }

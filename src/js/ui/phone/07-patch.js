@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['soner-041126', '04.11.2026', 'Reglene ute på havet', 'The rules out at sea', [
+       ['Regler-appen og regellaget kjenner nå sonene utenfor kysten: fiskevernsonen ved Svalbard, de stengte områdene rundt Bjørnøya og på vestsiden av Spitsbergen, Jan Mayen, Smutthullet og Smottet, og russisk, islandsk, grønlandsk, færøysk og britisk sone. Hver regel har kilden sin.', 'The Regler app and the rule layer now know the zones off the coast: the fisheries protection zone at Svalbard, the closed areas round Bjørnøya and on the west side of Spitsbergen, Jan Mayen, the Loophole and the Banana Hole, and the Russian, Icelandic, Greenland, Faroese and British zones. Each rule has its source.'],
+       ['Lisens for russisk, grønlandsk, færøysk og britisk sone søkes under Kvote → Papirer.', 'A licence for the Russian, Greenland, Faroese and British zones is applied for under Kvote → Papers.'],
+    ]],
     ['npcrist-041126', '04.11.2026', 'Rolig gange for de andre båtene', 'The other boats ride steadily', [
        ['De andre båtene ristet når de gikk med fart, fordi gyngingen fulgte plassen deres. Nå gynger hver båt i sitt eget rolige tempo.', 'The other boats shuddered when under way, because their rocking followed where they were. Each boat now rocks at her own calm pace.'],
     ]],
