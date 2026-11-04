@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['innseiling-051126', '05.11.2026', 'Autonav inn til havna', 'Autonav into harbour', [
+       ['Autonav går ikke lenger tett langs stranda på vei inn til havna, så båten ikke ser ut til å seile på land. Veien inn holder seg ut fra land der det er plass, også inn til Tufjord.', 'Autonav no longer runs close along the beach on the way into a harbour, so the boat does not look as if it sails on land. The way in keeps off the shore where there is room, into Tufjord too.'],
+    ]],
     ['skum-051126', '05.11.2026', 'Kjølvannet til de andre båtene', 'The other boats\' wake', [
        ['På noen telefoner la de andre båtene igjen store hvite firkanter på sjøen i stedet for kjølvann. Nå får de kjølvannet slik det skal se ut.', 'On some phones the other boats left large white squares on the sea instead of a wake. They now leave the wake as it should look.'],
     ]],

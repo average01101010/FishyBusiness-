@@ -219,6 +219,7 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 ## 10.5 Må måles eller ses i spillet
 
 - **Skyggene på alt og skyskyggene (04.11.2026, `3d-verden.md` 4.11m):** kontrollert bare i SwiftShader, der en tegning tar sekunder og sola flytter seg mellom bildene. Dette står igjen: (1) Mål med `#prof` på Pad 3 hva `sunV` koster i sjøskyggeleggeren, som fyller skjermen: én teksturlesing og tre støyoppslag, men bare når det er spredt skydekke (ellers gir `uCS.z` = 0 en tidlig retur). Mål også rutenettet (`SGW.ms` 2 ms per bilde på Høy, rundt 65 000 stråler, anslått 2–4 s på nettbrettet). (2) Se om styrken på skyskyggene er riktig (en femdel av sola under en sky, inntil 1,3 i glipene) og om de driver i riktig fart. (3) Sjøen lenger ute enn rutenettet (2–3 km) har ikke fjellskygge og glitrer fortsatt; et grovere rutenett til 15 km kan legges på om det synes. (4) Adreno 642L og Direct3D: sjøskyggeleggeren har fått én sampler til (enhet 5). `#sun0` slår alt av uten ny kompilering, men en enhet som ikke klarer å lenke sjøen, faller til en lettere sjø. Se `dsb_sea` i tilbakemeldingene etter utrullingen.
+- **Land inne i havnene** (04.11.2026, etter Tufjord): grunnsjekken (`groundCheck`) ser ikke land innenfor 600 m av et havnepunkt (`inHarbour`), så en tegnet rute eller manøvreringsmodellens svinger der fanges ikke. Fosnavåg, Mandal verft og Bøvågen har fortsatt veier inn under 5 m fra land, der vannet er så trangt, og leinettets egne etapper og lanene inn i havnene brukes som de er (Honningsvåg–Hammerfest 2 m, Seløy–Brønnøysund 3 m, Gjesvær–Tufjord 4 m). Bør ses i 3D.
 
 - **Garnet under vann på nettbrettet (03.11.2026):** `drawGearUnder` er målt under SwiftShader (JS 0,1–0,4 ms med to sett, 1,1–1,3 ms med 60 sett på grunt vann), ikke bildetakten. Mål på Pad 3 med `#prof` («uten redskap under vann») i en full havn (Honningsvåg) før det regnes som ferdig.
 - **Sikten under vann (03.11.2026, Jonas: «Man kan jo ikke se så dypt i havet som 12 meter»):** `VIS` 2,5 m er et anslag. Se i spillet om tauet fra blåsa og garnet på grunt vann ser riktig ut, og om sikten bør følge årstida (klart om vinteren, alger om våren).
@@ -383,6 +384,12 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - `vesseltest` rød på `03d-quota.js:301`: `sp === 'snokrabbe'` sammenlignet en art med samme navn som en båttype. Det er nå et oppslag i tabellen `HAVF_SP` (6e116a2).
 - `sidetab` rød i liggende format: lista ble målt mens den fortsatt gled ut. Testen venter nå til den står stille (943aa46).
 - `autonavtest`, `npctest` og `havflaate` er grønne med hele kysten (kart-28). De er bare røde uten den, som `testing.md` sier.
+
+## Strøket 04.11.2026 (Autonav gjennom land ved Tufjord)
+
+- Båten seilte i 3D oppå fjæra på vei inn til Tufjord (video fra Jonas): havnas vei inn (`approachPath`) gikk 1 m fra kystlinja. Nå holder veien inn seg ut fra land der det er plass, og utrettingen og strammingen holder 20 m fra land inne i havnene (`docs/systemer/autonav.md` 4.12k). Over alle 372 havnene: under 5 m fra land 111 → 3 havner, 0,95 % lengre veier inn, ingen havn mistet veien.
+- Tidevannskreditten (og frisonene for hindringene) ble liggende igjen etter to Autonav-ruter som overlappet (`LEIA_RUN`, `autonavtest` 9a).
+- `harbourtest` er rød på «every coastal vessel type lies alongside each quay face» (Finnsnes-kaia, båtene 15–18 m ut fra kaia), også på bygget før denne endringen.
 
 ## Strøket 03.11.2026 (havflåten og havsteget H0, ccr-6829f3d4-kl3gp4, rullet ut 595de50)
 
