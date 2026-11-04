@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['svalbard-041126', '04.11.2026', 'Svalbard og Jan Mayen i detalj', 'Svalbard and Jan Mayen in detail', [
+       ['Svalbard, Bjørnøya, Hopen og Jan Mayen har nå like detaljert kyst som fastlandet: fjæra, skjærene, dybden, sjømerkene og fyrlyktene, og husene, veiene og kaiene i Longyearbyen, Ny-Ålesund, Barentsburg og Sveagruva.', 'Svalbard, Bjørnøya, Hopen and Jan Mayen now have a coast as detailed as the mainland: the shore, the skerries, the depth, the sea marks and the lights, and the houses, roads and quays of Longyearbyen, Ny-Ålesund, Barentsburg and Sveagruva.'],
+       ['Bakken der har sommerfargen fra satellittbildene: tundra, grus og stein, og breene helt ned mot sjøen.', 'The ground there has the summer colour from the satellite pictures: tundra, gravel and stone, and the glaciers right down to the sea.'],
+       ['Posisjonen vest for Greenwich vises nå som V, ikke Ø.', 'A position west of Greenwich now shows as W, not E.'],
+    ]],
     ['ramme-041126', '04.11.2026', 'Havet utenfor kysten', 'The sea off the coast', [
        ['Kartet går nå til Svalbard, Bjørnøya, Jan Mayen, Island, Færøyane, Grønlands østkyst og russisk sone til Novaja Semlja. Landet der vises i sjøkartet og i 3D.', 'The chart now reaches Svalbard, Bear Island, Jan Mayen, Iceland, the Faroes, East Greenland and the Russian zone to Novaya Zemlya. The land there shows on the chart and in 3D.'],
        ['Dybden til havs er ny, fra GEBCO, så bankene og eggakanten ligger der de skal.', 'The depth offshore is new, from GEBCO, so the banks and the shelf edge lie where they should.'],
