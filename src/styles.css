@@ -510,6 +510,10 @@ body.vplot .attr{display:block!important;left:6px;right:auto}
 .x{border-color:transparent;color:var(--muted)}
 .range{display:flex;align-items:center;gap:10px;margin:8px 0}
 .range input{flex:1;accent-color:var(--mag);touch-action:pan-y}
+.range.step2{gap:6px}
+.range.step2 output{min-width:0;flex:0 1 96px;line-height:1.25}
+.range .sb{flex:none;width:var(--h-btn,44px);height:var(--h-btn,44px);border-radius:50%;border:1px solid var(--line,rgba(255,255,255,.25));background:transparent;color:inherit;font:600 22px/1 inherit;padding:0}
+.range .sb:active{background:rgba(255,255,255,.12)}
 .range output{min-width:120px;text-align:right;font-variant-numeric:tabular-nums;font-size:14px}
 .tog{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer}
 .tog input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--mag);flex:none}
