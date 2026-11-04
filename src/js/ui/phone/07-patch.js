@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['q3d-ned-041126', '04.11.2026', 'Stødigere 3D på flere telefoner', 'Steadier 3D on more phones', [
+       ['Har 3D-visningen stoppet, hengt seg opp eller krasjet på en enhet, går «Auto» ett grafikknivå ned der og husker det en uke, så det samme ikke skjer igjen. Et nivå du har valgt selv, endres ikke.', 'If the 3D view has stopped, hung or crashed on a device, «Auto» goes one graphics level down there and remembers it for a week, so the same does not happen again. A level you chose yourself is not changed.']]],
     ['ui-u0-041126', '04.11.2026', 'Nytt utseende: statusboksen, knappene og fangsten', 'A new look: the status box, the buttons and the catch', [
        ['«Første tur» står ikke lenger fast når et panel ligger over knappen den peker på: panelet lukkes først.', '«First trip» no longer gets stuck when a panel lies over the button it points at: the panel closes first.'],
        ['Dagboka er skrevet for hånd på alle skjermer, også nettbrett der håndskriften før ble en tilfeldig skrift.', 'The deck log is handwritten on every screen, also tablets where the hand used to become a random font.'],

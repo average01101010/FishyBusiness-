@@ -8,7 +8,7 @@ const G3 = (() => {
   const GLN = {b:0, t:0, t0:0, hid:0, vis:0};   // the GPU's buffers and textures alive, when the view began, when the page was last hidden and shown
   const glDiag = () => { const now = Date.now(), m = performance.memory;
     return (document.hidden ? 'skjult' : 'synlig') + (GLN.hid ? ', sist skjult for ' + Math.round((now - GLN.hid) / 1000) + ' s siden' + (GLN.vis > GLN.hid ? ' i ' + Math.round((GLN.vis - GLN.hid) / 1000) + ' s' : '') : ', ikke skjult') +
-      ', 3D i ' + Math.round((performance.now() - GLN.t0) / 60000) + ' min, buffere ' + GLN.b + ', teksturer ' + GLN.t + ', nivå ' + QUAL.lvl + ', biter ' + CH.size + (m ? ', JS ' + Math.round(m.usedJSHeapSize / 1048576) + ' MB' : ''); };
+      ', 3D i ' + Math.round((performance.now() - GLN.t0) / 60000) + ' min, buffere ' + GLN.b + ', teksturer ' + GLN.t + ', nivå ' + QUAL.lvl + (QM.cap < 3 ? ' (tak ' + QM.cap + ' etter ' + QM.last + ')' : '') + ', biter ' + CH.size + (m ? ', JS ' + Math.round(m.usedJSHeapSize / 1048576) + ' MB' : ''); };
   let HG = null, NEARM = null, MIDM = null, FINEM = null, loading = false, LIGHTS = [], snowNow = null, grassAt = null;   // the snow line in use (m; below 0 in winter), null before the first frame
   // Quality (phase K8 of the coast plan): 0 low, 1 medium, 2 high, 3 ultra (Jonas 05.10.2026: «en ultra grafikk setting ... finne ut
   // hvor grensa ligger for flagship-modeller»; only where 32-bit indices are there: UINT; when chosen, and since F1 of the boat models
@@ -52,18 +52,56 @@ const G3 = (() => {
   const ultraSt = () => { if (QU.st === null){ QU.st = ''; try { const v = localStorage.getItem(ULTRA_KEY) || ''; if (v.endsWith(':' + ULTRA_VER)) QU.st = v.split(':')[0]; } catch (e){} } return QU.st; };
   const ultraSet = v => { QU.st = v; try { localStorage.setItem(ULTRA_KEY, v + ':' + ULTRA_VER); } catch (e){} };
   QUAL.autoU = true;
+  // The level a device has shown it cannot hold (Jonas 04.11.2026: «3d nivå skal senkes automatisk om det må det»). The frame rate
+  // alone did not see it: the lost contexts, the crash and the hangs in 3D on Adreno 642L and 830 that week came at level 2 with good
+  // frames and the JS memory anywhere from 176 to 817 MB, so it goes by what the device did, not by a memory line. A context lost in
+  // play, a page that stopped while it drew 3D on the screen (QM_ALIVE: a beat every 5 s while it does, taken away when it stops), or
+  // two hangs of 5 s or more within ten minutes take auto one level down, and the device remembers the level it fell to (QM_KEY) for
+  // QM_DAYS, so the reload after a lost context does not start where it fell; after that auto may try higher again. Auto only: a level
+  // chosen by hand and «#qfix» stay as they are.
+  const QM_KEY = 'dsb_qdown', QM_ALIVE = 'dsb_q3d_alive', QM_DAYS = 7, QM = {cap:3, hang:[], beat:0, chk:false, id:'q' + Math.random().toString(36).slice(2, 10), last:''};
+  try { const v = JSON.parse(localStorage.getItem(QM_KEY) || 'null'); if (v && Date.now() - v.t < QM_DAYS * 864e5 && v.lvl >= 0 && v.lvl < 3){ QM.cap = v.lvl; QM.last = v.why || ''; } } catch (e){}
+  function qmDown(why){
+    if (QUAL.fix || qualSet() !== 'auto') return false;
+    const lvl = Math.max(0, Math.min(QM.cap, QUAL.lvl) - 1);
+    QM.cap = lvl; QM.last = why; QUAL.lvl = Math.min(QUAL.lvl, lvl); QUAL.cap = Math.min(QUAL.cap, lvl); QUAL.capT = performance.now(); QUAL.bad = QUAL.good = 0; QU.good = QU.bad = 0;
+    try { localStorage.setItem(QM_KEY, JSON.stringify({lvl, t:Date.now(), why})); } catch (e){}
+    return true;
+  }
+  const qmAliveRead = () => { try { const a = JSON.parse(localStorage.getItem(QM_ALIVE) || '{}'); return a && typeof a === 'object' ? a : {}; } catch (e){ return {}; } };
+  function qmAlive(on){
+    try { const a = qmAliveRead(); if (on) a[QM.id] = Date.now(); else if (!(QM.id in a)) return; else delete a[QM.id]; localStorage.setItem(QM_ALIVE, JSON.stringify(a)); } catch (e){}
+    QM.beat = on ? performance.now() : 0;
+  }
+  // another page's beat 25 s old or more: it stopped while it drew 3D on the screen (a page hidden, left for the map or closed takes its beat away)
+  function qmCrashCheck(){
+    const a = qmAliveRead(), now = Date.now(); let crash = false, changed = false;
+    for (const id of Object.keys(a)){ if (id === QM.id || now - a[id] < 25000) continue; if (now - a[id] < QM_DAYS * 864e5) crash = true; delete a[id]; changed = true; }
+    if (changed) try { localStorage.setItem(QM_ALIVE, JSON.stringify(a)); } catch (e){}
+    if (crash) qmDown('krasj');
+  }
+  if (typeof document !== 'undefined'){ document.addEventListener('visibilitychange', () => { if (document.hidden) qmAlive(false); }); addEventListener('pagehide', () => qmAlive(false)); }
+  // each frame drawn on the screen (rdt s since the one before): the beat, and a hang when the frames stopped 5-120 s with the page in sight
+  function qmFrame(rdt, now){
+    if (!QM.beat || now - QM.beat > 5000) qmAlive(true);
+    if (rdt < 5 || rdt > 120 || document.hidden || Date.now() - (GLN.vis || 0) < rdt * 1000 + 500) return;
+    QM.hang = QM.hang.filter(t => now - t < 600000); QM.hang.push(now);
+    if (QM.hang.length >= 2 && qmDown('heng')) QM.hang = [];
+  }
   function qualTick(dt, fps, now){
+    if (!QM.chk){ QM.chk = true; qmCrashCheck(); }
     if (qualSet() !== 'auto' || QUAL.fix || !fps) return QUAL.lvl;
+    if (QUAL.lvl > QM.cap){ QUAL.lvl = QM.cap; QUAL.cap = Math.min(QUAL.cap, QM.cap); }
     if (QUAL.lvl === 3){
       if (fps < 45){ QU.bad += dt; QU.held = 0; if (QU.bad > 3){ if (ultraSt() !== 'ok') ultraSet('no'); QUAL.lvl = 2; QUAL.cap = 2; QUAL.capT = now; QU.bad = QU.good = 0; } }
       else { QU.bad = 0; if (fps >= 55){ QU.held += dt; if (QU.held > 15 && ultraSt() !== 'ok') ultraSet('ok'); } }
       return QUAL.lvl;
     }
-    if (QUAL.lvl === 2 && QUAL.autoU && UINT && ultraSt() !== 'no' && now - QUAL.capT > 120000){
+    if (QUAL.lvl === 2 && QM.cap >= 3 && QUAL.autoU && UINT && ultraSt() !== 'no' && now - QUAL.capT > 120000){
       if (fps > (ultraSt() === 'ok' ? 55 : 80)){ QU.good += dt; if (QU.good > 20){ QUAL.lvl = 3; QU.good = QU.bad = QU.held = 0; QUAL.good = QUAL.bad = 0; return 3; } } else QU.good = 0; }
     // down after 4 s under 28 frames a second; up again after 8 s over 40, but not within 30 s of a step down (it went up after 12 s
     // over 50 and not within two minutes, which on the tablet never came, 03.10.2026)
-    if (now - QUAL.capT > 30000) QUAL.cap = 2;
+    if (now - QUAL.capT > 30000) QUAL.cap = Math.min(2, QM.cap);
     if (fps < 28){ QUAL.bad += dt; QUAL.good = 0; if (QUAL.bad > 4 && QUAL.lvl > 0){ QUAL.cap = QUAL.lvl - 1; QUAL.capT = now; QUAL.lvl--; QUAL.bad = 0; } }
     else if (fps > 40){ QUAL.good += dt; QUAL.bad = 0; if (QUAL.good > 8){ if (QUAL.lvl < QUAL.cap) QUAL.lvl++; QUAL.good = 0; } }
     else QUAL.bad = QUAL.good = 0;
