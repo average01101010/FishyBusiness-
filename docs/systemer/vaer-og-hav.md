@@ -257,7 +257,10 @@ Alt styres av Froude-tallet Fr = v/√(gL) (lengden fra `VESSELS`, farten gjenno
 
 Kontrollbilder ovenfra: `docs/pr/ccr-d8829db0-ldggvz/` (`foer_etter_planing.png`: den nye hurtigsjarken i 25 knop før og etter; `sakte_baater.png`: hurtigsjarken i 12 knop, kyst15 i 10 og trebåten i 6, som ikke får noe av det nye). Bildene er tatt i SwiftShader, der et bilde varer sekunder og sveipet legger igjen lange strekk av gangen; falmingen og formen nær båten må ses på nettbrettet.
 
-**Ikke gjort:** tvillingpropeller som to egne striper (typene sier ikke hvor mange propeller de har); renna som en forsenkning i geometrien (sjøens rutenett er 2–4 m og for grovt); sprøyten fra NPC-båtene.
+- **De andre båtene får kjølvann** (04.11.2026, `foamNPC` i `14-sea.js`, `hullFoam` i `FOAM_FS`): før seilte flåten, kystruta, ferja og de andre spillerne uten kjølvann i det hele tatt. Nå legger de seks nærmeste med fart (over 1,5 knop, ikke i havn eller under fiske, innenfor skumkartet) skum i kartet etter samme regnestykke som din båt: lengde og bredde fra `n.L`/`n.B` (kystruta 35 m og ferja 70 m når de mangler), farten gjennom vannet fra `n.v`, og `planing` fra typen modellen deres tegnes som (`npcType`). Origo regnes midtskips. Hver sveipes fra der den var forrige bilde (`NPF`). Kelvin-armene og sprøyten i lufta får de ikke. Skyggeren regner seks skrog til per texel, men hopper over alt lenger unna enn skrogets rekkevidde.
+- **Tynnere vask bak en deplasementsbåt** (04.11.2026): med våt hekk og uten planing er båndet bak hekken 0,45 sterkt i stedet for 0,7, og skummet under akterskipet 0,3 i stedet for 0,5. Det falmer tidligere og blir flekkete i stedet for jevnt hvitt (kyst15 i 10 knop la et jevnt felt på flere hundre meter).
+
+**Ikke gjort:** tvillingpropeller som to egne striper (nesten alle båtene i spillet har én propell, så de to stripene fra hekkens hjørner er det som synes); renna som en forsenkning i geometrien (sjøens rutenett er 2–4 m og for grovt); sprøyten i lufta og Kelvin-armene fra de andre båtene.
 
 ## 5.20c Skumkartet: skummet som blir liggende i sjøen (Fysikk 4, F1, 27.10.2026)
 
