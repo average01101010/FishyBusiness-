@@ -278,7 +278,7 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
     let left = NaN;
     for (let i = 0; i < PW; i++){
       const x = x0 + (i + 0.5) * pkx, o = (j * PW + i) * 4;
-      if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1){ put(o, OFF); prev[i] = NaN; left = NaN; continue; }
+      if (!inFrame({x, y})){ put(o, OFF); prev[i] = NaN; left = NaN; continue; }
       const gx = clamp(x / c - 0.5, X0, X1 - 0.001), ix = Math.floor(gx), fx = gx - ix;
       let v, land = 0, sv = 0;   // sv: the depth is the tiles' (1) or the offshore layer's (0): no line where they meet (their floors differ)
       if (!simAt(x, y) || !(x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c)){
@@ -626,7 +626,7 @@ function pinOpen(id, fresh){
   const no = S.lang === 'no', ll = natLL(pn), deg = (v, h) => { const a = Math.abs(v), d = Math.floor(a); return d + '\u00b0' + ((a - d) * 60).toFixed(3).replace('.', no ? ',' : '.') + '\u2032' + h; };
   pinCard.innerHTML = '<div class="ai-h"><b>' + (no ? 'Eget merke' : 'Your mark') + '</b><button type="button" data-p="x" aria-label="' + (no ? 'Lukk' : 'Close') + '">\u00d7</button></div>' +
     '<input type="text" maxlength="28" value="' + pinEsc(pn.name) + '" aria-label="' + (no ? 'Navn' : 'Name') + '">' +
-    '<div class="ai-t">' + deg(ll.lat, 'N') + ' ' + deg(ll.lon, ll.lon < 0 ? 'V' : no ? '\u00d8' : 'E') + ' \u00b7 ' + (dist(S.boat.pos, pn) / 1.852).toFixed(1).replace('.', no ? ',' : '.') + ' nm</div>' +
+    '<div class="ai-t">' + deg(ll.lat, 'N') + ' ' + deg(ll.lon, ll.lon < 0 ? 'V' : no ? '\u00d8' : 'E') + ' \u00b7 ' + (kmTrue(S.boat.pos, pn) / NM).toFixed(1).replace('.', no ? ',' : '.') + ' nm</div>' +
     '<div class="pin-b"><button type="button" data-p="go">' + (no ? 'Rute hit' : 'Route here') + '</button><button type="button" data-p="del">' + (no ? 'Slett' : 'Delete') + '</button></div>';
   pinCard.hidden = false; const inp = pinCard.querySelector('input');
   inp.oninput = () => { pn.name = inp.value.slice(0, 28); scheduleStatic(); }; inp.onchange = () => save();

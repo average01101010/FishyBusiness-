@@ -94,7 +94,10 @@ function applyVessel(){
   const b = S.boat; Object.assign(BOAT, VESSELS[b.type || 'skiff']);
   for (const k in EQUIP) if (EQUIP[k].boost && S.equip && S.equip[k] && equipFits(k, b.type || 'skiff')) Object.assign(BOAT, EQUIP[k].boost);
   BOAT.fuelK = fuelKOf(BOAT);   // the boat burns BOAT.lph at cruising speed, with the engine the boosts gave her
-  const hx = holdX(b); BOAT.holdCap = Math.round(BOAT.holdCap * hx); BOAT.iceCap = Math.round(BOAT.iceCap * hx);
+  // the hold: an open boat's is her tubs (core/07f-kar.js, TUB_KG each, one more for each of the yard's steps), the rest grow by HOLDUP
+  const V0k = VESSELS[b.type || 'skiff'];
+  if (V0k.kar){ const n = karN(b.type || 'skiff', b.holdLv); BOAT.karN = n; BOAT.holdCap = n * TUB_KG; BOAT.iceCap = Math.round(V0k.iceCap * n / V0k.kar.n); }
+  else { const hx = holdX(b); BOAT.karN = 0; BOAT.holdCap = Math.round(BOAT.holdCap * hx); BOAT.iceCap = Math.round(BOAT.iceCap * hx); }
   // the yard's other upgrades (UPGS): what they change for the crew and the boat
   const fx = {}; for (const k in UPGS){ const lv = upgLv(b, k); if (lv && UPGS[k].fit(VESSELS[b.type || 'skiff'])) Object.assign(fx, UPGS[k].steps[lv - 1]); }
   BOAT.fx = fx; if (fx.x) BOAT.fuelCap = Math.round(BOAT.fuelCap * fx.x); if (fx.sea) BOAT.sea *= fx.sea; BOAT.svcCost = svcCostOf(b);
@@ -218,7 +221,7 @@ function windDir(H, p){
   const f = clamp(sa / windAt(H, p), 0, 1), b = base * Math.PI / 180, x = (1 - f) * Math.sin(b) + f * sx / sa, y = (1 - f) * Math.cos(b) + f * sy / sa;
   return ((Math.atan2(x, y) * 180 / Math.PI) % 360 + 360) % 360;
 }
-function exposure(p){ return 0.2 + 0.8 * rbil(MAPD.L.expo, p) / 255; }
+function exposure(p){ return 0.2 + 0.8 * expoFar(p) / 255; }
 // the waves (hsAt, hsOpen) are in 03b-sea.js
 function fcErr(H, now, seed){ const ahead = Math.max(0, H - now), issue = Math.floor(now / 6); return (vn(H / 10, seed + issue) - 0.5) * 0.7 * Math.min(1, ahead / 48); }
 function fcWind(H, now, p){ return windAt(H, p) * (1 + fcErr(H - wxPlace(p).dt, now - wxPlace(p).dt, 900)); }
@@ -659,7 +662,7 @@ function depthHas(p){
 // about 260 m
 function deepAt(p){
   const L = MAPD.L.deep; if (!L || !MAPD.core || !MAPD.core.buf) return 0;
-  const gx = p.x / L.c - 0.5, gy = p.y / L.c - 0.5; if (gx < 0 || gy < 0 || gx > L.nx - 1 || gy > L.ny - 1) return 0;
+  const gx = p.x / L.c - 0.5, gy = p.y / L.c - 0.5; if (gx < L.ix0 || gy < L.iy0 || gx > L.ix0 + L.nx - 1 || gy > L.iy0 + L.ny - 1) return 0;
   return rbil(L, p);
 }
 function offDepth(p){ const z = deepAt(p); return z > 5 ? z : depthModel(p); }

@@ -5,6 +5,19 @@ import numpy as np
 from pyproj import Transformer
 E0, N1 = -250000.0, 8050000.0
 BLOCK, TILE = 10, 50
+# The frames, in km (x0, y0, x1, y1), the one place the pipeline takes them from (H1b R2 of the ocean step, 03.11.2026):
+#   FRAME  the game's frame (MAPB in src/js/core/01-world.js): from H1b R1 East Greenland and the Denmark Strait, Iceland, Jan Mayen,
+#          all Svalbard and the Russian zone to Novaya Zemlya. The origin stays where it was (the saves keep their places).
+#   OLD    the frame of the coast (phase K6), which the national core's fine layers (land200, dc200, expo) and the coast's tiles keep:
+#          their cells are numbered from it, and the 100 m layer's cell numbers are baked into the route data (DC, 01-world.js), so
+#          it does not move. Its layers run to OLD_Y1 (whole 50 km tiles).
+#   WIDE   FRAME padded to whole 100 km blocks: the wide frame's coarse layers (land1k, dc1k, expo2k, deep) cover it.
+FRAME = (-1100, -1250, 2500, 1720)
+OLD = (0, 0, 1450, 1720); OLD_Y1 = 1750
+WIDE = (-1100, -1300, 2500, 1800)
+# the 50 km tiles of the frame (tx0, ty0, tx1, ty1 exclusive), and whether a tile lies inside the old frame's layers
+FRAME_TILES = (FRAME[0] // TILE, FRAME[1] // TILE, -(-FRAME[2] // TILE), -(-FRAME[3] // TILE))
+def in_old(tx, ty): return 0 <= tx * TILE and (tx + 1) * TILE <= OLD[2] and 0 <= ty * TILE and (ty + 1) * TILE <= OLD_Y1
 _F = Transformer.from_crs(4326, 25833, always_xy=True)
 _I = Transformer.from_crs(25833, 4326, always_xy=True)
 def to_nat(lon, lat):

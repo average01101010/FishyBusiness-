@@ -105,6 +105,8 @@ async function bootMapLoad(){
     catch (e){ if (t >= 8) throw e; if (e && e.pk) await mapLoad(e.pk); else await new Promise(res => setTimeout(res, 1000)); }
   }
   DEPTH = true;
+  // the chart's coast over the whole frame (H1b R2) comes after the start, so the start waits no longer for it
+  if (MAPD.chart0) setTimeout(() => mapLoad(MAPD.chart0).catch(e => console.error(e)), 4000);
 }
 function bootGame(){
 S = load(); tabMark();   // this page has the game now (an older page left open stops: tabMine, 02-format-state.js)
@@ -146,7 +148,7 @@ if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
   if (!S.boat.type) S.boat.type = 'trebat'; if (S.boat.engH === undefined){ S.boat.engH = 0; S.boat.svcAt = 0; }
   delete S.settings.bleed;   // never used; the fish is always bled at the rail
   if (typeof S.tut === 'number') S.tut = 0;   // saves from before «Første tur» are not sent through it
-  applyVessel(); if (!S.settings.chart) S.settings.chart = S.settings.plotter && S.equip.plotter ? 'fish' : 'nav'; if (S.settings.heatSp && !HEAT.sp.includes(S.settings.heatSp)) delete S.settings.heatSp;
+  karRefund(); applyVessel(); if (!S.settings.chart) S.settings.chart = S.settings.plotter && S.equip.plotter ? 'fish' : 'nav'; if (S.settings.heatSp && !HEAT.sp.includes(S.settings.heatSp)) delete S.settings.heatSp;
   if (S.boat.status === 'port' && portById(S.boat.port)){ const pp = portById(S.boat.port).p; S.boat.pos = {x:pp.x, y:pp.y}; }
   if (S.fleet && S.fleet.length){ ensureFleet(); for (const v of S.fleet) withVessel(v, () => { if (S.boat.status === 'port' && portById(S.boat.port)){ const pp = portById(S.boat.port).p; S.boat.pos = {x:pp.x, y:pp.y}; } }); } else ensureFleet(); }
 // every vessel gets its gear locker (saves from before passive gear have none, also on vessels that are not bound)

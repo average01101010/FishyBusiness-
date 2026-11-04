@@ -266,7 +266,8 @@ Jonas valgte dem fra lista (nr. 5 og 7).
 
 ## 5.25g Innlastingen og innloggingen (05.10.2026)
 
-- **Bildet** (`tools/brand/loader.py`, `src/data/loader-land.b64` og `loader-port.b64`):
+- **Bildet nå** (`tools/brand/loader_sjark.py`, fra 08.10.2026): havsjarken (`tools/boats/havsjark35.py`) i blåtimen med styrhuset tent og Senja-tinder bak. Rendret på nytt 03.11.2026 med den reviderte havsjarken (Jonas: «bruk den oppdaterte versjonen av båten så den ser mer realistisk ut»), med kameraet litt nærmere så båten synes bedre. Kjøres med `bpy 4.5.4`, som krever Python 3.11 (`python3.11 -m venv` og `pip install bpy==4.5.4 pillow`). `quick` gir en rask prøve på sekunder; et fullt bilde tar noen minutter på fire kjerner. Delingsbildets fotohalvdel (`tools/brand/og-photo.jpg`) er klippet fra det liggende bildet.
+- **Det første bildet** (`tools/brand/loader.py`, beholdt):
   - Fars naust på pålekaia i blåtimen, laget av de samme modellene som i spillet (`tools/harbour/naust.py` og `tools/boats/snekke23.py`).
   - Lampa over loftsdøra og vinduene lyser varmt, og trebåten ligger fortøyd med to tau.
   - Bak står Senja-tinder med snø i skyggeleggeren: høyt og ikke for bratt, brutt opp av støy. Fjellene er laget av ridged-støy.
@@ -278,7 +279,7 @@ Jonas valgte dem fra lista (nr. 5 og 7).
   - `python3 tools/brand/loader.py quick` gir en rask prøve. `land` eller `port` renderer bare det ene bildet, på rundt to minutter.
 - **Innlastingen** (`#loader`):
   - Bildet er mørkere øverst og nederst.
-  - Øverst står «Kystfiske langs norskekysten» i sperrede versaler mellom to streker, og navnet stort i Source Serif 4.
+  - Øverst står «Kystfiske langs norskekysten» i sperrede versaler mellom to streker, og under den logoen i hvitt (Jonas 03.11.2026, se «Logoen» under). Navnet var satt i Source Serif 4 før det.
   - Nederst løper en tynn lysstripe, med «Laster kysten …» under.
   - `.gone` toner den ut og skjuler den etterpå (`visibility`), og da stopper stripa.
   - **Ingenting legger seg oppå den** (Jonas 02.11.2026: «Ingenting skal komme opp på skjermen mens spillet står å laster»). `<body>` har klassen `booting` til `loaderGone()` (`ui/02-format-state.js`) tar bort lasteskjermen; alle tre stedene som gjør det (3D er oppe, 3D feilet, `bootFail`) går gjennom den.
@@ -289,6 +290,12 @@ Jonas valgte dem fra lista (nr. 5 og 7).
   - Den har samme bilde og tittel.
   - Teksten og knappene står i et halvgjennomsiktig kort med uskarp bakgrunn. På telefon og nettbrett ligger kortet nederst. På brede skjermer (minst 900 × 600, liggende) står det til venstre, så naustet synes.
   - Klassene ligger i `styles.css` (`.cg-card`, `.cg-btn`), ikke inline.
+- **Logoen** (Jonas 03.11.2026: «Bruk logoen slik den er nå, så kan vi eventuelt endre den senere»):
+  - Ankeret der «DET», «STORE» og «BLÅ» danner ankeret, tegnet av Jonas. Den ligger i `src/brand/logo.svg` som én sti med `fill="currentColor"`, sporet fra bildet hans med potrace. Fargen kommer fra CSS-ens `color`, så samme fil er hvit på mørkt og marineblå på lyst.
+  - Den står i innlastingen (`@include` i `src/index.html`), i innloggingen (`DSB_LOGO` i `ui/01-i18n.js`, `@text`), på bildet for Ukas fangst (`ukeLogo` i `ui/05i-ukas.js`, lastet når kortet åpnes) og øverst på de juridiske sidene (`<!--@logo-->`, satt inn av `build.mjs`). Høyden følger skjermen (`.ld-t svg` i `styles.css`), lavere i liggende format så båten i bildet synes.
+  - App-ikonene, `favicon.svg` og delingsbildet (`og-image.jpg`) lages av `node tools/brand/logo-assets.mjs`: hvitt anker på logoens marineblå (`#16314c`). Det maskerbare ikonet har ankeret innenfor den trygge sirkelen. Delingsbildet har sjarken fra det gamle bildet til høyre (`tools/brand/og-photo.jpg`). `tools/brand/logo.py` (Blender-sjarken) lager ikke ikonene lenger.
+  - Byttes logoen, erstattes `src/brand/logo.svg`, og `logo-assets.mjs` kjøres på nytt.
+  - Hele UI-et skal redesignes før lansering (Jonas 03.11.2026). Fargene og skriftene i spillet er derfor ikke endret her.
 - **Ikke gjort ennå:** innlastingsteksten er alltid norsk. Spillets språk er ikke lest inn ennå når den vises.
 
 ## 5.25h Push-varsler (05.10.2026)

@@ -1,4 +1,7 @@
-"""The logo and the app icons of Det Store Blå, built and rendered in Blender (the user's wish 04.10.2026: «Lag gjerne ny logo i blender
+"""(03.11.2026: the app icons and the sharing picture now come from the user's anchor logo, tools/brand/logo-assets.mjs; running this
+overwrites them with the sjark. Kept for the scene, which tools/brand/loader_sjark.py uses.)
+
+The logo and the app icons of Det Store Blå, built and rendered in Blender (the user's wish 04.10.2026: «Lag gjerne ny logo i blender
 som er litt penere»). A sjark (the Havsjark 35 from tools/boats/havsjark35.py) on the deep blue sea at the blue hour, her wheelhouse
 lit, Senja's jagged peaks with snow behind her and the low sun's glow and glitter over the water.
 

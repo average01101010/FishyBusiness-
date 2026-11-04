@@ -18,7 +18,7 @@
     const sg = plotSmall.getContext('2d'), img = sg.createImageData(sw, sh), d = img.data, dok = mapViewReady(p.x - sw * kpp / 2, p.y - sh * kpp / 2, p.x + sw * kpp / 2, p.y + sh * kpp / 2);
     for (let j = 0; j < sh; j++) for (let i = 0; i < sw; i++){
       const q = {x:p.x + (i + 0.5 - sw / 2) * kpp, y:p.y + (j + 0.5 - sh / 2) * kpp}, o = (j * sw + i) * 4; let c;
-      if (q.x < MAPB.x0 || q.y < MAPB.y0 || q.x > MAPB.x1 || q.y > MAPB.y1) c = [60, 66, 70]; else if (isLand(q)) c = [224, 206, 150]; else { const dd = dok ? depthF(q) : 50; c = dd < Math.min(2, sd / 2) ? [128, 176, 222] : dd < sd ? [165, 202, 234] : dd < 30 ? [236, 243, 248] : [250, 252, 253]; }
+      if (!inFrame(q)) c = [60, 66, 70]; else if (isLand(q)) c = [224, 206, 150]; else { const dd = dok ? depthF(q) : 50; c = dd < Math.min(2, sd / 2) ? [128, 176, 222] : dd < sd ? [165, 202, 234] : dd < 30 ? [236, 243, 248] : [250, 252, 253]; }
       d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255;
     }
     sg.putImageData(img, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(plotSmall, 0, top, cw, ch);
@@ -203,9 +203,10 @@
     const airKg = Q.reduce((a, f) => a + f.kg, 0) + A.fish.reduce((a, f) => a + f.kg, 0) + A.fly.reduce((a, f) => a + f.kg, 0) + A.mc.reduce((a, m) => a + (m.fish || []).reduce((c, f) => c + f.kg, 0), 0);
     // the catch in the tub: one fish per ~5 kg, species in proportion to the hold; fish still in the air are not in it yet
     // (in the kit's 300 l tub where the model has its place, tools/deck/fisk.py; else in the model's own box)
-    const KTq = ((GEO(vtype()) || {}).kit || {}).tubs, KTp = KTq && KTq[0], KTm = KTp && kit('fish', 'kar' + (KTp[4] || 300)), tb = KTm ? 0.14 : 0.05;
+    // (an open boat with her fish tubs, core/07f-kar.js: drawDeck draws them with the catch, and the round fish in the bleeding tub)
+    const KTq = ((GEO(vtype()) || {}).kit || {}).tubs, karB = !!(VESSELS[vtype()] || {}).kar && KTq && KTq.length, KTp = !karB && KTq && KTq[0], KTm = KTp && kit('fish', 'kar' + (KTp[4] || 300)), tb = KTm ? 0.14 : 0.05;
     KST.htub = 0; if (KTm){ drawN(KTm, chain(BMrel, M4.T(KTp[0], KTp[1], KTp[2]), M4.RY(KTp[3] || 0))); KST.htub = 1; }
-    { const all = S.hold.reduce((a, x) => a + x.kg, 0), tot = Math.max(0, all - airKg), n = Math.min(40, Math.ceil(tot / 5)); if (n > 0){ const cum = []; let acc = 0; for (const sp of ALLSP){ acc += S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0); cum.push([sp, acc / all]); }
+    if (!karB){ const all = S.hold.reduce((a, x) => a + x.kg, 0), tot = Math.max(0, all - airKg), n = Math.min(40, Math.ceil(tot / 5)); if (n > 0){ const cum = []; let acc = 0; for (const sp of ALLSP){ acc += S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0); cum.push([sp, acc / all]); }
       for (let i = 0; i < n; i++){ const r = hash(i * 7 + 3), sp = (cum.find(c => r <= c[1] + 1e-9) || cum[0])[0], rz = M4.RZ(sp === 'krabbe' ? 0 : Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), sc = M4.S((0.42 + hash(i * 13) * 0.12) * (sp === 'krabbe' ? 1.7 : 1));
         // in the kit's tub lengthwise, two across and two along, ten layers to the rim; in the model's own box across it as before
         if (KTm){ const lay = Math.floor(i / 4), k = i % 4; drawN(fishOf(sp), chain(BMrel, M4.T(KTp[0], KTp[1], KTp[2]), M4.RY(KTp[3] || 0), M4.T(-0.14 + (k % 2) * 0.28 + (hash(i * 3 + 1) - 0.5) * 0.04, tb + lay * 0.05, -0.22 + Math.floor(k / 2) * 0.44), M4.RY((k % 2 ? Math.PI : 0) + (hash(i * 5) - 0.5) * 0.3), rz, sc)); continue; }
@@ -216,7 +217,7 @@
       if (S.haill.type === 'luksus') drawN(SK.shoe, CM); else drawN(SK.fishM.torsk, chain(CM, M4.T(0, -0.17, 0), M4.RX(Math.PI / 2), M4.S(0.16))); }
     const L2R = q => xf(BMrel, q), fsc = kg => clamp(0.42 * Math.cbrt(kg), 0.28, 1.2);
     const hang = (sp, kg, P, w) => drawN(fishOf(sp), chain(BMrel, M4.T(P[0], P[1] - fsc(kg) * 0.45, P[2]), M4.RX(Math.PI / 2), M4.RZ(Math.sin(T * 9 + w) * 0.45), M4.S(fsc(kg))));
-    const TUB = [SKA.tub[0], SKA.tub[1] + 0.42, SKA.tub[2] - 0.05], F = SKA.fisher;
+    const WT = karB && GEO(vtype()).work ? GEO(vtype()).work.tub : null, TUB = WT ? [WT[0], WT[1] + 0.42, WT[2]] : [SKA.tub[0], SKA.tub[1] + 0.42, SKA.tub[2] - 0.05], F = SKA.fisher;   // (an open boat with tubs: into the bleeding tub, where the one who guts takes them)
     // fish swung from the rail into the tub
     for (let i = A.fly.length - 1; i >= 0; i--){ const f = A.fly[i]; f.u += dt / 0.75; if (f.u >= 1){ A.fly.splice(i, 1); continue; }
       const u = f.u; hang(f.sp, f.kg, [f.a[0] + (TUB[0] - f.a[0]) * u, f.a[1] + (TUB[1] - f.a[1]) * u + Math.sin(Math.PI * u) * 0.45, f.a[2] + (TUB[2] - f.a[2]) * u], i); }

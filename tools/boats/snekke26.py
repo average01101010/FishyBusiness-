@@ -850,16 +850,20 @@ def name_strips(G):
 def kit_places(G):
     """the places where the game sets the deck kit (nothing that can be bought is modelled in, only its place, 19.10.2026): the liferaft
     in its cradle on the starboard side of the hard top, the radome on the port side of it; the ring buoys on the stern rail's side runs,
-    facing out (the first, with the light and the line, to starboard); the 300 l catch tub aft on the centre line, where the gutted and
-    iced fish go; the net tub, the line tubs and the freight forward in the cockpit to port (the net and the line rig never stand
-    together), clear of the skipper, the seat and the bleeding tub to starboard"""
+    facing out (the first, with the light and the line, to starboard); the fish tubs (Jonas 04.11.2026, docs/planer/fiskekar-dekk.md: no
+    hold, the catch in white 500 kg tubs on deck, as many as her capacity): two 460 l tubs aft in the cockpit, the first along the
+    port side against the transom, the second athwart in the starboard quarter aft of the bleeding tub; no room for a third (a tub
+    stacked on a full one would have to be carried there first) ([x, y, z, ry, litres, the place it stands on, -1: the deck]); the ice box under the gutting board ([x, y, z, ry, scale]); the net
+    tub, the line tubs and the freight forward in the cockpit to port (the net and the line rig never stand together), clear of the
+    skipper, the seat and the bleeding tub to starboard"""
     r = lambda a: round(a, 3); zt = zh(2.75, 0.55)
     yr = lambda x: gunwale_y(x)
     zb = (zs(1.40) + zs(0.75)) / 2 + 0.60; yb_ = (yr(1.40) + yr(0.75)) / 2 + 0.02; a = math.atan2(yr(1.40) - yr(0.75), 0.65)
     return {'raft': [G(2.72, -0.55, zt) + [r(math.pi / 2)]],
             'buoys': [G(1.07, -yb_, zb) + [r(math.pi / 2 - a)], G(1.07, yb_, zb) + [r(-(math.pi / 2 - a))]],
             'radar': G(2.72, 0.60, zt),
-            'tubs': [G(0.74, 0.0, ZC) + [0.0, 300]],
+            'tubs': [G(0.72, 0.58, ZC) + [0.0, 460, -1], G(0.62, -0.60, ZC) + [r(math.pi / 2), 460, -1]],
+            'iskasse': G(1.70, 0.95, ZC) + [0.0, 0.6],
             'garn': {'at': G(2.72, 0.68, ZC), 'ry': 0.0},
             'stamps': {'at': G(2.50, 0.90, ZC), 'ry': r(math.pi / 2)},
             'cargo': [G(2.72, 0.66, ZC) + [0.0]]}
@@ -873,7 +877,7 @@ def anchors():
     hx = 2.05; hy = -(ysh(hx) - 0.12); px, py = POLE
     return {'bower': bower(G), 'eye': G(SKIP[0], SKIP[1], ZC + 1.65), 'skipperAt': G(SKIP[0], SKIP[1], ZC), 'hp': -0.32, 'fov': 62,
             # the hands: the fisher at the hauler on the starboard gunwale, the one who guts at the board to port, one aft by the catch tub
-            'crewSpots': [G(1.98, -0.62, ZC) + [1.57], G(1.84, 0.42, ZC) + [-1.57], G(1.05, -0.05, ZC) + [3.14]],
+            'crewSpots': [G(1.98, -0.62, ZC) + [1.57], G(1.84, 0.42, ZC) + [-1.57], G(1.35, -0.45, ZC) + [3.14]],
             # typed lights (B8; rule 23 (d)(i), under 12 m): the all-round white on the mast on the hard top, 2 m over the side lights
             # (annex I 2(d)); the side lights on the trunk's sides; the stern light on the flag staff's head; the work light under the hard top
             'lights': [[G(MASTX, 0, white_z()), [1, 0.95, 0.85], 'allround'],
@@ -892,7 +896,7 @@ def anchors():
             # the work at sea, in its order (snekke-grunnlag kap. 6.2): the fisher at the starboard gunwale by the hauler; the bleeding tub
             # on the sole just aft of him; the gutting board is the boat's own, over the port gunwale abreast of him (own: the game draws
             # no table; top: where the fish lie), the one who guts on the sole inboard of it; the iced catch in the 300 l tub aft (kit.tubs)
-            'work': {'table': G(sum(GUT) / 2, 1.08, ZC), 'tub': G(1.50, -0.80, ZC), 's': 0.75, 'own': True, 'top': round(gut_top() - WL, 3)},
+            'work': {'table': G(sum(GUT) / 2, 1.08, ZC), 'tub': G(1.75, 0.0, ZC), 's': 0.75, 'pack': G(1.35, -0.45, ZC) + [3.14], 'own': True, 'top': round(gut_top() - WL, 3)},
             'kit': kit_places(G)}
 
 

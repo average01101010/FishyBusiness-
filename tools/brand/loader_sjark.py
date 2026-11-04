@@ -48,8 +48,8 @@ def main():
     land = os.path.join(OUT, 'loader-land.png'); port = os.path.join(OUT, 'loader-port.png')
     only = [a for a in ('land', 'port') if a in sys.argv] or ['land', 'port']
     look = (0.4, 0.0, 3.0)
-    if 'land' in only: shot(land, 1600, 1000, (0.0, -30.0, 2.6), look, 40, shift_x=-0.12, shift_y=-0.02)
-    if 'port' in only: shot(port, 960, 1600, (0.0, -24.0, 2.6), look, 34, shift_y=0.0)
+    if 'land' in only: shot(land, 1600, 1000, (0.0, -24.0, 2.4), look, 40, shift_x=-0.12, shift_y=-0.02)
+    if 'port' in only: shot(port, 960, 1600, (0.0, -20.0, 2.4), look, 34, shift_y=0.0)
     if QUICK: return
     if 'land' in only: webp_b64(land, 'loader-land', 84)
     if 'port' in only: webp_b64(port, 'loader-port', 84)

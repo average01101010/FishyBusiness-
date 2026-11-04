@@ -19,9 +19,11 @@ async def main():
             await pg.wait_for_timeout(700)
             a = json.loads(json.dumps(await pg.evaluate(JS)))
             tab = await pg.evaluate("!!document.getElementById('sideTab')")
-            await pg.click('#sideTab'); await pg.wait_for_timeout(600)
+            # (the list slides in .25 s; in the testing browser without a GPU the frames can be slow, so wait till it stands still)
+            settle = "new Promise(r => { const el = document.getElementById('side'); let last = null, n = 0; const t0 = performance.now(); (function f(){ const x = el.getBoundingClientRect().x; n = x === last ? n + 1 : 0; last = x; if (n >= 5 || performance.now() - t0 > 4000) r(); else requestAnimationFrame(f); })(); })"
+            await pg.click('#sideTab'); await pg.wait_for_timeout(300); await pg.evaluate(settle)
             c = await pg.evaluate(JS); await pg.screenshot(path='tests/out/sidetab_%s_1.png' % tag)
-            await pg.click('#sideTab'); await pg.wait_for_timeout(600)
+            await pg.click('#sideTab'); await pg.wait_for_timeout(300); await pg.evaluate(settle)
             d = await pg.evaluate(JS)
             print(tag, json.dumps({'a': a, 'c': c, 'd': d}))
             if tag == 'land':

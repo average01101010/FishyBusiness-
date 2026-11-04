@@ -1,12 +1,13 @@
 # Norway on a 200 m UTM33 grid: land, territorial sea, the coastal band (land within 3 km of the sea) and the sea within reach
-import pickle, numpy as np, json
+import os, sys, pickle, numpy as np, json
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__)))); import frame   # (K1's sketch of the old frame, frame.OLD)
 from pyproj import Transformer
 from PIL import Image, ImageDraw
 from scipy import ndimage
 land, mar = pickle.load(open('norway.pkl', 'rb'))[::-1] if False else None, None
 geo = pickle.load(open('norway.pkl', 'rb')); mar, land = geo[0], geo[1]
 T = Transformer.from_crs(4326, 25833, always_xy=True)
-C = 200.0; E0, N1 = -250000.0, 8050000.0; NX, NY = int(1450e3 / C), int(1720e3 / C)
+C = 200.0; E0, N1 = frame.E0, frame.N1; NX, NY = int(frame.OLD[2] * 1e3 / C), int(frame.OLD[3] * 1e3 / C)
 def draw(g, val, im):
     dr = ImageDraw.Draw(im)
     for q in getattr(g, 'geoms', [g]):

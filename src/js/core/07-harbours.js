@@ -312,20 +312,31 @@ function berthPath(from, bp){
 }
 
 // ===== landing the catch =====
-// The catch goes up with the quay crane: boxes of about 40 kg fish, nine to a pallet, from skiffs and snekker; tubs of about 300 kg
-// from the sjarks. The forklift takes two loads at a time into the plant, and the landing note comes when the catch is weighed in.
+// The catch goes up with the quay crane in white tubs of TUB_KG (core/07f-kar.js; before 04.11.2026 the open boats landed in boxes of
+// 40 kg on pallets and the sjarks in tubs of 300 kg): an open boat's own tubs from where they stand on deck, one a lift, and her empty
+// tubs back washed after (K3), one a lift to its own place (a stack of empties in one sling would have the straps through the upper
+// tubs); a boat with a hold fills the plant's tubs from the hold, one a lift. The forklift takes two at
+// a time into the plant, and the landing note comes when the catch is weighed in.
 // Game minutes; the 3D view plays the same timeline, so what you see is what the clock says. The times are guesses, to be tuned.
 // prep: the crane swings straight over to the boat for the first load (Jonas 07.10.2026, tilbakemelding #22: no rigging first)
-const LANDING = {prep:1, lift:2.5, note:5, boxKg:40, perLift:9, tubKg:300, hooked:0.86};
-function landPlan(type, kg){
-  const tub = (VESSELS[type] || {}).land === 'tub', n = Math.max(1, Math.ceil(kg / (tub ? LANDING.tubKg : LANDING.boxKg))), lifts = tub ? n : Math.ceil(n / LANDING.perLift);
-  return {kind:tub ? 'tub' : 'box', n, lifts, dur:LANDING.prep + lifts * LANDING.lift + LANDING.note};
+// wash: an open boat's full tubs go in with the forklift, are emptied and washed, and come out again on it before the crane takes them
+// back aboard (game minutes between the last full lift and the first back)
+const LANDING = {prep:1, lift:2.5, note:5, tubKg:TUB_KG, hooked:0.86, wash:6};
+// own: the boat's own tubs (an open boat; the per-tub kilos in kgs, the empties come back), else the plant's tubs from the hold
+function landPlan(type, kg, hold){
+  const V = VESSELS[type] || {};
+  if (V.kar){ const nk = karN(type, S.boat && S.boat.type === type ? S.boat.holdLv : 0), T = tubLoads(hold || S.hold, nk), kgs = T.map(t => Math.round(t.kg)), n = clamp(Math.max(tubsFull(T), Math.ceil((kg || 0) / TUB_KG)), 1, nk);
+    return {kind:'tub', own:true, n, kgs, lifts:2 * n, wash:LANDING.wash, dur:LANDING.prep + 2 * n * LANDING.lift + LANDING.wash + LANDING.note}; }
+  const n = Math.max(1, Math.ceil(kg / LANDING.tubKg));
+  return {kind:'tub', own:false, n, lifts:n, wash:0, dur:LANDING.prep + n * LANDING.lift + LANDING.note};
 }
+// when lift j of a landing starts (game minutes after L.t0): the lifts follow each other, the tubs back after the wash
+const landLiftT = (L, j) => LANDING.prep + j * LANDING.lift + (L.own && j >= L.n ? (L.wash || 0) : 0);
 // how far a landing has come at game minute t: loads up on the quay, units (boxes or tubs) landed, and the phase
 function landState(L, t){
-  const e = t - L.t0, up = clamp(Math.floor((e - LANDING.prep) / LANDING.lift - LANDING.hooked) + 1, 0, L.lifts);
-  const units = L.kind === 'tub' ? up : Math.min(L.n, up * LANDING.perLift);
-  return {e, up, units, phase:e < LANDING.prep ? 'prep' : e < LANDING.prep + L.lifts * LANDING.lift ? 'lift' : 'note'};
+  const e = t - L.t0; let up = 0; for (let j = 0; j < L.lifts; j++) if (e >= landLiftT(L, j) + LANDING.hooked * LANDING.lift) up = j + 1;
+  const units = Math.min(L.n, L.kind === 'box' ? up * 9 : up);   // ('box': a landing saved before 04.11.2026, nine boxes a lift)
+  return {e, up, units, phase:e < LANDING.prep ? 'prep' : e < landLiftT(L, L.lifts - 1) + LANDING.lift ? 'lift' : 'note'};
 }
 // The plants' opening hours (the user's list 04.10.2026). The plants publish none (looked up 04.10.2026: the plant in Senjahopen gives
 // a phone number, Råfisklaget lists the plants without hours), so these are typical ones: weekdays 06-18 and Saturday 08-14, closed
@@ -346,8 +357,8 @@ function startLanding(ops){
   if (b.status !== 'port' || !pt || !pt.mottak || b.land || b.shift || kg < 0.5 || !mottakOpen(S.t / 60)) return false;
   if (berthKind(b) === 'naust'){ log(NAUST_SAIL[0], NAUST_SAIL[1]); return false; }
   if (berthKind(b) !== 'main') return startShift('main', ops ? 'landops' : 'land');   // the crane is at the plant's quay
-  const lp = landPlan(b.type, kg), unit = lp.kind === 'tub' ? ['kar', 'tubs'] : ['kasser', 'boxes'];
-  b.land = {pid:pt.id, t0:S.t, until:S.t + lp.dur, kind:lp.kind, n:lp.n, lifts:lp.lifts, kg:Math.round(kg), ops:!!ops};
+  const lp = landPlan(b.type, kg), unit = ['kar', 'tubs'];
+  b.land = {pid:pt.id, t0:S.t, until:S.t + lp.dur, kind:lp.kind, n:lp.n, lifts:lp.lifts, kg:Math.round(kg), ops:!!ops, own:lp.own, kgs:lp.kgs, wash:lp.wash};
   log('Losser ' + fmt(kg, 0) + ' kg i ' + pt.name + ', ' + lp.n + ' ' + unit[0] + '. Sluttseddelen kommer ca. kl. ' + hm(b.land.until / 60) + '.', 'Landing ' + fmt(kg, 0) + ' kg at ' + pt.name + ', ' + lp.n + ' ' + unit[1] + '. The landing note comes at about ' + hm(b.land.until / 60) + '.');
   return true;
 }
