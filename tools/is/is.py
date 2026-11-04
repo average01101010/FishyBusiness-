@@ -12,8 +12,8 @@ files; when no monthly file is found, the daily files every 3rd day are averaged
 
 The result, src/data/is.json, is the game's frame (tools/map/frame.py FRAME) in cells of cell_km (25 km, the source's own), the value
 of a cell the concentration in steps of step_pct (10 %, so 0-10), run-length coded per month (pairs of value and count, 1-255) and
-base64. Land and the source's missing cells get the nearest sea cells' value (inverse distance over the 4 nearest), so a fjord or a
-sound has the ice of the sea outside it; the game decides itself what is land. Only the seas the plan names and their neighbours keep
+base64. Land and the source's missing cells and its sea cells next to land (part land at 25 km, with too much ice in the summer) get
+the nearest open sea cells' value (inverse distance over the 4 nearest), so a fjord or a sound has the ice of the sea outside it; the game decides itself what is land. Only the seas the plan names and their neighbours keep
 ice: the Baltic and the Gulf of Bothnia (inside the frame, out of reach from the Norwegian coast) are set to 0.
 
     python3 tools/is/is.py probe            what the server has (the catalogs, a file's variables and attributes)
@@ -133,6 +133,10 @@ def regrid(slat, slon, conc, lat, lon):
     """the 12 months' concentration at the frame's cells: the inverse distance over the 4 nearest sea cells of the source"""
     from scipy.spatial import cKDTree
     ok = np.isfinite(slat) & np.isfinite(slon) & np.all(np.isfinite(conc), 0)
+    # the sea cells next to land are left out (a 25 km cell by the shore is part land, and its concentration is too high in the
+    # summer: Isfjorden had 30-40 % in July and August); the fjords and sounds take the open sea's outside them
+    from scipy.ndimage import binary_erosion
+    ok = binary_erosion(ok, structure=np.ones((3, 3), bool), border_value=1) & ok
     tree = cKDTree(xyz(slat[ok], slon[ok])); d, i = tree.query(xyz(lat.ravel(), lon.ravel()), k=4)
     w = 1 / np.maximum(d, 1e-6) ** 2; w /= w.sum(1, keepdims=True)
     src = conc[:, ok]

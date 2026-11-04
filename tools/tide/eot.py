@@ -44,18 +44,22 @@ def model():
                 with open(f + '.part', 'wb') as o:
                     for b in r.iter_content(1 << 22): o.write(b)
             os.replace(f + '.part', f)
-        z = zipfile.ZipFile(f); names = z.namelist()
+        z = zipfile.ZipFile(f); names = z.namelist(); print('in the zip:', names[:40], file=sys.stderr, flush=True)
+        # the ocean tides may lie in a zip of their own inside the record's zip
+        zs = [z] + [zipfile.ZipFile(io.BytesIO(z.read(n))) for n in names if n.lower().endswith('.zip') and 'ocean' in n.lower()]
+        for zz in zs[1:]: print('inner zip:', zz.namelist()[:40], file=sys.stderr, flush=True)
         for c in CONS:
-            m = [n for n in names if re.search(rf'(^|/){c}_ocean[^/]*\.nc$', n, re.I)]
-            if not m or c in out: continue
-            with netCDF4.Dataset('x', memory=z.read(m[0])) as d:
+            if c in out: continue
+            m = [(zz, n) for zz in zs for n in zz.namelist() if re.search(rf'(^|/){c}_ocean[^/]*\.nc$', n, re.I)]
+            if not m: continue
+            with netCDF4.Dataset('x', memory=m[0][0].read(m[0][1])) as d:
                 V = list(d.variables); a = next(v for v in ('amplitude', 'amp', 'Amplitude') if v in V); g = next(v for v in ('phase', 'pha', 'Phase') if v in V)
                 A = np.ma.filled(d.variables[a][:].astype('f8'), np.nan); G = np.ma.filled(d.variables[g][:].astype('f8'), np.nan)
                 units = getattr(d.variables[a], 'units', '')
                 lat = d.variables['lat'][:].astype('f8'); lon = d.variables['lon'][:].astype('f8')
                 if A.shape != (len(lat), len(lon)): A, G = A.T, G.T
                 if 'cm' in units or np.nanmax(A) > 20: A = A / 100
-                out[c] = (lat, lon, A, G); print(c, m[0], A.shape, units, file=sys.stderr, flush=True)
+                out[c] = (lat, lon, A, G); print(c, m[0][1], A.shape, units, file=sys.stderr, flush=True)
         if len(out) == len(CONS): break
     if len(out) < len(CONS): sys.exit('EOT20: only ' + ','.join(out) + ' found')
     return out

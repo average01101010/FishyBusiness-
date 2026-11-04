@@ -1,11 +1,14 @@
 {
   "what": "the sea ice by month (H1b R5, V3 A): tools/is/is.py makes src/data/is.json from OSI SAF's sea ice concentration climate data record (OSI-450-a, EUMETSAT, CC BY 4.0), the mean of each month 1991-2020. Changing this file starts .github/workflows/is.yml, which keeps the result as a release is-<run number>.",
-  "period": [1991, 2020],
+  "period": [
+    1991,
+    2020
+  ],
   "cell_km": 25,
   "step_pct": 10,
   "roots": [
     "https://thredds.met.no/thredds/catalog/osisaf/met.no/reprocessed/ice/conc_450a_files/monthly/catalog.xml",
     "https://thredds.met.no/thredds/catalog/osisaf/met.no/reprocessed/ice/catalog.xml"
   ],
-  "run": 1
+  "run": 2
 }
