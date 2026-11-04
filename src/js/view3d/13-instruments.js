@@ -97,12 +97,18 @@
     g.fillText('CH ▲  CH ▼', 150, 130);
     upTex(SK.tVhf, SK.cvV);
   }
-  // the name on the hull: light on a dark hull, dark on a light one (vessel3d.js hullRGB), so it reads on every boat and every paint
-  function paintName(t, liv){
-    const nm = S.boatName || 'Havbris', c = hullRGB(t || vtype(), liv !== undefined ? liv : hullLiv(S.boat)), light = isLight(c), key = nm + (light ? '|l' : '|d');
-    if (SK.nameKey === key) return; SK.nameKey = key;
-    nameCanvas(SK.cvN, nm, light); upTex(SK.tName, SK.cvN);
+  // the boat's name where boats carry it (vessel3d.js namePlaces): across the wheelhouse roof's front edge and on the transom with the home
+  // port under it, or along the bows on an open boat; in block capitals, white or black by the paint under each line (nameInkLight)
+  const PLACEQ = {};
+  function placeQ(t){ if (!(t in PLACEQ)){ const pl = namePlaces(t); PLACEQ[t] = pl.map(p => ({q:texStrip(p.B, p.T), p})); } return PLACEQ[t]; }
+  function drawNames(t, M, VP, liv, nm, port){
+    const Q = nm ? placeQ(t) : null; if (!Q || !Q.length) return; gl.disableVertexAttribArray(2);
+    for (const {q, p} of Q){ const txt = p.line === 'port' ? port : nm; if (!txt) continue;
+      drawTexQuad(q, nameTex(txt, nameInkLight(placeRGB(t, p, liv)), p.aspect), M, VP, true, [0, 0.2, 0]); }
   }
+  // the home port the stern carries: the player's own, a boat of the local fleet's (core/05-vessels.js FLEET), else none
+  const ownPort = () => { const hp = portById(S.home || HOME0); return hp ? hp.name : ''; };
+  const npcPort = n => { const f = n.fleet && FLEET[n.fi], h = f && f.home; if (!h) return ''; const q = portById(h); return q ? q.name : h; };
   // the registration mark: block letters, white on dark paint and black on light (§ 23: white on black or black on white), by the paint
   // under the letters (vessel3d.js markRGB: the hull's, or a stripe's where the mark could find no place off it)
   function markCanvas(cv, txt, light){
@@ -135,20 +141,28 @@
   const MARKQ = {};
   function markQ(t){ if (!(t in MARKQ)){ const st = markStrips(t); MARKQ[t] = st ? st.map(([B, T]) => texStrip(B, T)) : null; } return MARKQ[t]; }
   function drawMark(t, M, VP, liv){ const q = markQ(t), tex = q && markTex(t, liv); if (!tex) return; gl.disableVertexAttribArray(2); for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]); }
+  // the name in block capitals (the game's own Archivo, bold and a little narrow, in the page so it is the same on every device), as tall
+  // as the strip allows (caps at 0.74 of it, room for the ring over Å) and narrower where the name is long, centred
   function nameCanvas(cv, nm, light){
-    const g = cv.getContext('2d'); g.clearRect(0, 0, 512, 128); g.fillStyle = light ? '#f3f1e8' : '#14233d'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.shadowColor = light ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.3)'; g.shadowBlur = 3;
-    let fs = 78; g.font = 'italic 700 ' + fs + 'px Georgia, serif'; while (g.measureText(nm).width > 480 && fs > 30){ fs -= 4; g.font = 'italic 700 ' + fs + 'px Georgia, serif'; }
-    g.fillText(nm, 256, 66); g.shadowBlur = 0;
+    const g = cv.getContext('2d'), W = cv.width, H = cv.height, txt = String(nm).toUpperCase(); g.clearRect(0, 0, W, H);
+    g.fillStyle = light ? '#f7f7f4' : '#111214'; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; if ('fontStretch' in g) g.fontStretch = 'semi-condensed';
+    if ('letterSpacing' in g) g.letterSpacing = Math.round(H * 0.03) + 'px';
+    let fs = Math.round(H * 0.74 / 0.72); const f = () => { g.font = '700 ' + fs + 'px Archivo, "Arial Narrow", Arial, sans-serif'; }; f();
+    const sc = Math.min(1, W * 0.97 / Math.max(1, g.measureText(txt).width));
+    g.save(); g.translate(W / 2, H * 0.5 + H * 0.37); g.scale(sc, 1); g.fillText(txt, 0, 0); g.restore();
   }
+  // the font is in the page as data, but may not be decoded the first time a name is painted: then the names are painted again once it is
+  let FONTOK = typeof document === 'undefined' || !document.fonts || document.fonts.check('700 20px Archivo');
+  if (!FONTOK) document.fonts.load('700 20px Archivo').then(() => { FONTOK = true; for (const [, e] of NTX) gl.deleteTexture(e.tex); NTX.clear(); }).catch(() => { FONTOK = true; });
   const isLight = c => 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2] < 0.5;
-  // the names of the other boats: a small pool of textures by name and shade (the boats near you change seldom), the oldest let go
-  const NTX = new Map(); let NCV = null;
-  function nameTex(nm, light, mark){
-    const k = (mark ? 'M:' : '') + nm + (light ? '|l' : '|d'); let e = NTX.get(k);
-    if (!e){ if (NTX.size >= 14){ let old = null; for (const [kk, v] of NTX) if (!old || v.used < old[1].used) old = [kk, v]; gl.deleteTexture(old[1].tex); NTX.delete(old[0]); }
-      if (!NCV){ NCV = document.createElement('canvas'); NCV.width = 512; NCV.height = 128; }
-      (mark ? markCanvas : nameCanvas)(NCV, nm, light); e = {tex:mkTex()}; upTex(e.tex, NCV); NTX.set(k, e); }
+  // the names: a small pool of textures by text, shade and the strip's shape (the own boat's two or three and those of the boats near you,
+  // which change seldom), the oldest let go
+  const NTX = new Map(), NCV = {};
+  function nameTex(nm, light, aspect, mark){
+    const H = mark ? 128 : Math.max(32, Math.min(256, Math.round(1024 / (aspect || 4) / 16) * 16)), k = (mark ? 'M:' : H + ':') + nm + (light ? '|l' : '|d'); let e = NTX.get(k);
+    if (!e){ if (NTX.size >= 28){ let old = null; for (const [kk, v] of NTX) if (!old || v.used < old[1].used) old = [kk, v]; gl.deleteTexture(old[1].tex); NTX.delete(old[0]); }
+      const W = mark ? 512 : 1024, cv = NCV[W + 'x' + H] || (NCV[W + 'x' + H] = document.createElement('canvas')); cv.width = W; cv.height = H;
+      (mark ? markCanvas : nameCanvas)(cv, nm, light); e = {tex:mkTex()}; upTex(e.tex, cv); NTX.set(k, e); }
     e.used = performance.now(); return e.tex;
   }
   // the six nearest boats within 250 m that are drawn near (their glass is in) carry their names on the hull, light or dark by her paint
@@ -156,18 +170,13 @@
     const near = []; for (const n of kit){ if (!n.name || !n.K || !n.K.glass) continue; n.dd = Math.hypot(n.M[12], n.M[14]); if (n.dd < 250) near.push(n); }
     if (!near.length) return; near.sort((a, b) => a.dd - b.dd); gl.disableVertexAttribArray(2);
     for (const n of near.slice(0, 6)){
-      const t = npcType(n), q = nameQ(t); if (!q) continue;
-      const lv = n.player ? livParse(n.liv) : LIVERY[(n.liv || 0) % LIVERY.length], c = lv && lv.hull ? lv.hull : hullRGB(t);
-      const tex = nameTex(String(n.name).slice(0, 24), isLight(c)), M = chain(n.M, n.K.S);
-      for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]);
-      const mk = n.player && livMark(n.liv), mq = mk && markQ(t); if (mq){ const mt = nameTex(mk, isLight(markRGB(t, lv)), true); for (const s of mq) drawTexQuad(s, mt, M, VP, true, [0, 0.2, 0]); }
+      const t = npcType(n), lv = n.player ? livParse(n.liv) : LIVERY[(n.liv || 0) % LIVERY.length], M = chain(n.M, n.K.S);
+      drawNames(t, M, VP, lv, String(n.name).slice(0, 24), npcPort(n));
+      const mk = n.player && livMark(n.liv), mq = mk && markQ(t); if (mq){ const mt = nameTex(mk, isLight(markRGB(t, lv)), 4, true); for (const s of mq) drawTexQuad(s, mt, M, VP, true, [0, 0.2, 0]); }
       const lg = n.player && logoParse(n.liv); if (lg) drawLogo(t, M, VP, lg, lg.kind === 'u' && typeof peerLogo === 'function' ? peerLogo(String(n.id).slice(1), lg.ver) : null);
       const pn = n.player && livPen(n.liv), mt = pn && mastTop(geoOf(t)); if (mt){ gl.disableVertexAttribArray(2); drawTexQuad(FLAGM, penTex(), chain(M, chain(model(mt[0], mt[1], mt[2], Math.PI / 2, 0, 0), PEN_S[Math.min(3, pn) - 1])), VP, true, [0, 0.6, 0]); }   // the week's pennants
     }
   }
-  // the name strips of a type that is not steered by hand (vessel3d.js nameStrips), built once
-  const NAMEQ = {};
-  function nameQ(t){ if (!(t in NAMEQ)){ const st = nameStrips(t); NAMEQ[t] = st ? st.map(([B, T]) => texStrip(B, T)) : null; } return NAMEQ[t]; }
   // the hand-steered boat's paint (vessel3d.js hullLiv): the hull's colours uploaded again when it changes
   function paintHand(){
     const lv = hullLiv(S.boat), k = livKey(lv); if ((SK.livK || '') === k || !SK.hullT) return; SK.livK = k;
@@ -310,7 +319,7 @@
     gl.disableVertexAttribArray(2);
     // screens and name boards up close
     const near = Math.hypot(BMrel[12], BMrel[13], BMrel[14]) < 45, now = performance.now();
-    if (!S.unnamed){ paintName(); for (const q of SK.qName) drawTexQuad(q, SK.tName, BMrel, VP, true, [0, 0.2, 0]); }   // an unnamed boat has her mark only
+    if (!S.unnamed) drawNames(SK.hullT || vtype(), BMrel, VP, hullLiv(S.boat), S.boatName, ownPort());   // an unnamed boat has her mark only
     drawMark(SK.hullT || vtype(), BMrel, VP); drawLogo(SK.hullT || vtype(), BMrel, VP, ...ownLogo());
     if (near && SK.live !== false){
       if (now - SK.tP > 500){ SK.tP = now; paintPlotter(); if (S.equip.vhf) paintVhf(); }

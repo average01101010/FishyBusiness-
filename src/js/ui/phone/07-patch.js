@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['batnavn-041126', '04.11.2026', 'Båtnavnet i blokkbokstaver', 'The boat\'s name in block capitals', [
+       ['Navnet står i blokkbokstaver på kanten av styrhustaket foran og på hekken, med hjemmehavnen under i mindre skrift.', 'The name is painted in block capitals on the front edge of the wheelhouse roof and on the transom, with the home port under it in smaller letters.'],
+       ['De åpne båtene uten styrhus har navnet på baugen, aldri over registreringsmerket.', 'The open boats without a wheelhouse carry the name on the bows, never over the registration mark.'],
+       ['Skriften er hvit eller svart, alt etter hva som synes best mot fargen den står på. Maler du båten, følger skriften med.', 'The letters are white or black, whichever shows best against the paint under them. Repaint the boat and the letters follow.']]],
     ['fiskekar-041126', '04.11.2026', 'Fiskekar på dekk', 'Fish tubs on deck', [
        ['Båtene uten lasterom har fisken i hvite kar på 500 kg på dekk. Skiffen og trebåten har ett kar, snekka to.', 'The boats without a hold keep the fish in white 500 kg tubs on deck. The skiff and the wooden boat have one tub, the snekke two.'],
        ['Karene fylles fisk for fisk nedenfra, med is på fisken som er iset og knust is over et fullt kar. Det blir blod og slim på karene etter hvert som de fylles.', 'The tubs fill fish by fish from the bottom, with ice on the iced fish and crushed ice over a full tub. Blood and slime gather on the tubs as they fill.'],
