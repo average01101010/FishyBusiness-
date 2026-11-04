@@ -1522,3 +1522,6 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 .ph-now b{font:700 var(--fs-sm)/1.25 var(--sans);overflow-wrap:anywhere}
 .ph-now.r0 b{color:#9fe6bd} .ph-now.r1 b{color:#ffcf7a} .ph-now.r2 b{color:#ff9b91}
 .ph-now:only-child,.ph-now:last-child:nth-child(odd){grid-column:1 / -1}
+/* the deck log's entries that are over (U8): greyed with one thin pen line through the text, not a red X across the entry, which made
+   it hard to read */
+.bk-e.over{opacity:.5} .bk-e.over::after{content:none} .bk-e.over .bk-et,.bk-e.over p,.bk-e.over .hw{text-decoration:line-through;text-decoration-color:rgba(31,47,110,.55);text-decoration-thickness:1px}
