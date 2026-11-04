@@ -42,18 +42,31 @@ def ls(prefix):
         tok = m.group(1)
 
 SQC = {}
+# the scenes of a square: the month listings and every scene's json side by side (north of 74° N a square has hundreds of scenes a
+# summer from the overlapping orbits; one at a time took over an hour a tile on Svalbard, H1b R3)
 def scenes(sq):
     if sq in SQC: return SQC[sq]
+    import concurrent.futures as cf
     z, b, s = sq[:2], sq[2], sq[3:]; got = []
-    for y in YEARS:
-        for mo in (6, 7, 8):
-            for p in ls(f'{ROOT}{int(z)}/{b}/{s}/{y}/{mo}/'):
-                name = p.rstrip('/').split('/')[-1]; d = int(name.split('_')[2][6:8])
-                if mo == 6 and d < 15: continue
-                try: j = json.load(urllib.request.urlopen(S3 + p + name + '.json', timeout=60))
-                except Exception: continue
-                cc = j['properties'].get('eo:cloud_cover', 100); nd = j['properties'].get('s2:nodata_pixel_percentage', 0)
-                if cc < 60 and nd < 90: got.append((cc + nd * 0.3, p))
+    months = [(y, mo) for y in YEARS for mo in (6, 7, 8)]
+    with cf.ThreadPoolExecutor(16) as ex: lists = list(ex.map(lambda m: ls(f'{ROOT}{int(z)}/{b}/{s}/{m[0]}/{m[1]}/'), months))
+    ps = []
+    for (y, mo), L in zip(months, lists):
+        for p in L:
+            name = p.rstrip('/').split('/')[-1]; d = int(name.split('_')[2][6:8])
+            if mo == 6 and d < 15: continue
+            ps.append((p, name))
+    def meta(pn):
+        p, name = pn
+        for k in range(3):
+            try: return p, json.load(urllib.request.urlopen(S3 + p + name + '.json', timeout=60))
+            except Exception: time.sleep(1 + k)
+        return p, None
+    with cf.ThreadPoolExecutor(32) as ex:
+        for p, j in ex.map(meta, ps):
+            if not j: continue
+            cc = j['properties'].get('eo:cloud_cover', 100); nd = j['properties'].get('s2:nodata_pixel_percentage', 0)
+            if cc < 60 and nd < 90: got.append((cc + nd * 0.3, p))
     got.sort(); SQC[sq] = [p for _, p in got[:MAXS]]; return SQC[sq]
 
 # the MGRS squares over a tile: its 50 m grid sampled every 5 km
@@ -104,5 +117,7 @@ if __name__ == '__main__':
         # Svalbard, Bjørnøya, Hopen and Jan Mayen, H1b R3)
         k, K = int(sys.argv[2]), int(sys.argv[3]); which = json.load(open(os.path.join(HERE, 's2.json'))).get('tiles', 'coast')
         T = json.load(open(os.path.join(HERE, '..', 'map', 'xtiles.json'))) if which == 'islands' else json.load(open(os.path.join(HERE, '..', 'map', 'dybde.json')))['tiles']
-        for i, (tx, ty) in enumerate(T):
-            if i % K == k and not os.path.exists(os.path.join(OUT, f'{tx}_{ty}.npz')): tile(tx, ty)
+        # the islands in runs of neighbours (sorted by row), so a runner lists a square's scenes once for several tiles
+        sel = [t for i, t in enumerate(sorted(T, key=lambda t: (t[1], t[0]))) if i * K // len(T) == k] if which == 'islands' else [t for i, t in enumerate(T) if i % K == k]
+        for tx, ty in sel:
+            if not os.path.exists(os.path.join(OUT, f'{tx}_{ty}.npz')): tile(tx, ty)

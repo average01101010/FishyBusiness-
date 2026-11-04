@@ -131,7 +131,7 @@ const INSTR = (() => {
   const deg3 = (r, p) => String(Math.round(trueDeg(r, p || S.boat.pos)) % 360).padStart(3, '0') + '°';
   function gpsLL(p){
     const {lat, lon} = LL(p), f = (v, w, hh) => { const a = Math.abs(v), dd = Math.floor(a); let m = ((a - dd) * 60).toFixed(3).padStart(6, '0'); if (S.lang === 'no') m = m.replace('.', ','); return String(dd).padStart(w, '0') + '°' + m + "'" + hh; };
-    return [f(lat, 2, 'N'), f(lon, 3, S.lang === 'no' ? 'Ø' : 'E')];
+    return [f(lat, 2, 'N'), f(lon, 3, (lon < 0 ? (S.lang === 'no' ? 'V' : 'W') : (S.lang === 'no' ? 'Ø' : 'E')))];
   }
   // the route's numbers: the next point (number, distance, bearing, time), the cross-track error and the time at the end
   function navOf(pose, H, sog){

@@ -15,7 +15,7 @@ const BOOK = (() => {
   const today = () => dayOf(S.t);
   function first(){ let t0 = S.t; if (S.log.length) t0 = Math.min(t0, S.log[0].t); if (S.navrows.length) t0 = Math.min(t0, S.navrows[0].t); return Math.max(dayOf(t0), today() - 59); }
   const vessel = () => '«' + (S.boatName || 'Havbris') + '» · ' + L('hjemmehavn Finnsnes', 'home port Finnsnes');
-  const ll = (x, y) => { const q = LL({x, y}), f = (v, w) => { const a = Math.abs(v), d = Math.floor(a); return String(d).padStart(w, '0') + '°' + ((a - d) * 60).toFixed(1).replace('.', S.lang === 'no' ? ',' : '.') + "'"; }; return f(q.lat, 2) + 'N<br>' + f(q.lon, 3) + (S.lang === 'no' ? 'Ø' : 'E'); };
+  const ll = (x, y) => { const q = LL({x, y}), f = (v, w) => { const a = Math.abs(v), d = Math.floor(a); return String(d).padStart(w, '0') + '°' + ((a - d) * 60).toFixed(1).replace('.', S.lang === 'no' ? ',' : '.') + "'"; }; return f(q.lat, 2) + 'N<br>' + f(q.lon, 3) + (q.lon < 0 ? (S.lang === 'no' ? 'V' : 'W') : (S.lang === 'no' ? 'Ø' : 'E')); };
   function navPage(day){
     const rows = S.navrows.filter(r => dayOf(r.t) === day).map(r => ({t:r.t, r})), ev = S.log.filter(e => dayOf(e.t) === day && logKind(e) === 'nav').map(e => ({t:e.t, e}));
     const wx = (S.radio || []).concat(S.msgs.filter(m => m.from === 'Værvarsel')).filter(m => dayOf(m.t) === day).map(m => ({t:m.t, e:{no:m.from + ': ' + m.no, en:m.from + ': ' + m.en}}));

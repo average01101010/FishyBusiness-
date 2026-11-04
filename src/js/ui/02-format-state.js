@@ -53,7 +53,7 @@ function clockStr(H){ return dayStr(H) + ' ' + gDate(H).getUTCFullYear() + ', ' 
 function coordStr(p){
   const {lat, lon} = LL(p);
   const f = (v, w) => { const tm = Math.round(Math.abs(v) * 600), d = Math.floor(tm / 600); let m = ((tm % 600) / 10).toFixed(1).padStart(4, '0'); if (S.lang === 'no') m = m.replace('.', ','); return String(d).padStart(w, '0') + '°' + m + "'"; };
-  return f(lat, 2) + 'N ' + f(lon, 3) + (S.lang === 'no' ? 'Ø' : 'E');
+  return f(lat, 2) + 'N ' + f(lon, 3) + (lon < 0 ? (S.lang === 'no' ? 'V' : 'W') : (S.lang === 'no' ? 'Ø' : 'E'));   // (west of Greenwich at Jan Mayen and Iceland, H1b)
 }
 const DIRS = {no:['N','NØ','Ø','SØ','S','SV','V','NV'], en:['N','NE','E','SE','S','SW','W','NW']};
 function dirName(deg){ return DIRS[S.lang][Math.round(deg / 45) % 8]; }
