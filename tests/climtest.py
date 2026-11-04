@@ -31,7 +31,7 @@ async def main():
         pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
         r = await pg.evaluate(PROBE)
-        check(r['pts'] == 19 and r['ref'] == 'Senja' and r['sMax'] < 1e-9, 'the 19 points are in, and at Senja the air, sea, cloud and rain are exactly as before in every month', r)
+        check(r['pts'] == 32 and r['ref'] == 'Senja' and r['sMax'] < 1e-9, 'the 32 points are in (19 along the coast, 13 out at sea from H1b R5), and at Senja the air, sea, cloud and rain are exactly as before in every month', r)
         check(3 < r['dT'] < 6.5 and r['rP'] > 1.4, 'in January Færder is 3-6.5 °C milder than Senja, and Lindesnes gets far more precipitation', r)
         check(-4.5 < r['dSea'] < -1.5, 'in August the sea off Vardø is 1.5-4.5 °C colder than off Senja', r)
         check(r['here'] == 0, 'without a place given, the weather is where the boat is', r)
