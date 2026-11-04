@@ -1541,3 +1541,10 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 #ordTip{position:fixed;z-index:var(--z-tip,72);max-width:min(320px,calc(100vw - 16px));background:#12303d;color:#eef5f8;border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.35)}
 #ordTip b{display:block;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#9fd3e6;margin-bottom:3px}
 #ecdisTop .ec-f:not(.ec-echo){cursor:help} #ecdisTop .ec-f:not(.ec-echo) small{text-decoration:underline dotted;text-underline-offset:2px}
+/* the first landing (07-guide.js portSlip, UI-redesign U9): a stamp over the landing note */
+.slip-first{position:relative;margin:10px 0 4px;padding:14px 16px 12px;border-radius:14px;background:linear-gradient(135deg,#fff6dc,#fbe7b4);color:#3a2a0c;border:1px solid #e5c777;text-align:center;animation:sfIn .6s cubic-bezier(.2,1.4,.4,1) both}
+.slip-first .sf-st{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9a5b00;border:2px solid #c98a1c;border-radius:6px;padding:2px 8px;transform:rotate(-3deg)}
+.slip-first b{display:block;font-size:30px;font-weight:700;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.slip-first small{display:block;font-size:13px;color:#6b5320}
+@keyframes sfIn{from{opacity:0;transform:scale(.92)}}
+@media (prefers-reduced-motion:reduce){.slip-first{animation:none}}

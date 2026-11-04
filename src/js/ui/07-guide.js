@@ -286,6 +286,10 @@ function portSlip(){
   // in the first trip it stays until the guide has shown it: a player who slept after landing was stuck on «Vis sluttseddelen»
   if (ls && ls.port === b.port && (S.t - ls.t < 240 || (tutOn() && !S.tut.m.slip))){
     const LN = (no, en) => S.lang === 'no' ? no : en;
+    // the first landing is a moment, not a form (UI-redesign U9, grep 8): a stamp over the note with what came in and what it gave
+    if (tutOn()){ const kg = ls.lines.reduce((a, r) => a + r.kg, 0), net = ls.total - ((ls.tk || {}).sum || 0) - (ls.lott || 0) - (ls.coopKr || 0);
+      const k0 = SLIP_OUT[ls.port + ':' + ls.t], e0 = k0 ? Date.now() - k0 : 0;
+      h.push('<div class="slip-first"' + (e0 ? ' style="animation-delay:-' + Math.min(e0, 5000) + 'ms"' : '') + '><span class="sf-st">' + LN('Første levering', 'First landing') + '</span><b>' + kr(Math.round(net)) + '</b><small>' + fmt(kg, 0) + ' kg ' + LN('levert i ', 'landed at ') + portById(ls.port).name + LN('. Pengene står på kontoen.', '. The money is in the account.') + '</small></div>'); }
     h.push('<h3>' + t('slip', portById(ls.port).name) + (ls.field ? ' · ' + LN('fangstfelt', 'field') + ' ' + ls.field : '') + (ls.gear && ls.gear.length ? ' · ' + ls.gear.map(k => k === 'juksa' ? LN('juksa', 'jig') : GEAR[k][S.lang].toLowerCase()).join(', ') : '') + '</h3><div style="overflow-x:auto"><table class="tbl slipt"><thead><tr><th>' + t('species') + '</th><th>' + LN('Størrelse', 'Size') + '</th><th>' + t('quality') + '</th><th>' + t('kg') + '</th><th>kr/kg</th><th>kr</th></tr></thead><tbody>');
     // every row is whole kilos and kroner, and the sums are the sums of the rows as shown
     const pkOf = r => Math.round(r.gut ? r.kg / SPECIES[r.sp].uh : r.kg), row = (a, kgc, sum, cls) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td colspan="3">' + a + '</td><td>' + kgc + '</td><td></td><td>' + sum + '</td></tr>';
