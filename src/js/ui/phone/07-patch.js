@@ -2,6 +2,10 @@
   const PATCH = [
     ['raskstart-041126', '04.11.2026', 'Raskere første start', 'A faster first start', [
        ['Første gang spillet åpnes, kommer brevet fra far mye raskere. Båtene og havnene lastes ned mens du leser.', 'The first time the game opens, Father\'s letter comes much sooner. The boats and harbours download while you read.']]],
+    ['batnavn-041126', '04.11.2026', 'Båtnavnet i blokkbokstaver', 'The boat\'s name in block capitals', [
+       ['Navnet står i blokkbokstaver på kanten av styrhustaket foran og på hekken, med hjemmehavnen under i mindre skrift.', 'The name is painted in block capitals on the front edge of the wheelhouse roof and on the transom, with the home port under it in smaller letters.'],
+       ['Båtene uten styrhus har navnet på hekken, og skiffen og trebåten har det lite akter på sidene. Navnet står ikke lenger i baugen.', 'The boats without a wheelhouse carry the name on the transom, and the skiff and the wooden boat carry it small aft on the sides. The name is no longer on the bows.'],
+       ['Skriften er hvit eller svart, alt etter hva som synes best mot fargen den står på. Maler du båten, følger skriften med.', 'The letters are white or black, whichever shows best against the paint under them. Repaint the boat and the letters follow.']]],
     ['ramme-041126', '04.11.2026', 'Havet utenfor kysten', 'The sea off the coast', [
        ['Kartet går nå til Svalbard, Bjørnøya, Jan Mayen, Island, Færøyane, Grønlands østkyst og russisk sone til Novaja Semlja. Landet der vises i sjøkartet og i 3D.', 'The chart now reaches Svalbard, Bear Island, Jan Mayen, Iceland, the Faroes, East Greenland and the Russian zone to Novaya Zemlya. The land there shows on the chart and in 3D.'],
        ['Dybden til havs er ny, fra GEBCO, så bankene og eggakanten ligger der de skal.', 'The depth offshore is new, from GEBCO, so the banks and the shelf edge lie where they should.'],
