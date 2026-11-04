@@ -63,24 +63,35 @@ function renderHud(){
     setHtml(hud, '<div class="hstrip"><span class="ht">' + hm(S.t / 60) + '</span><i class="dot ' + dot + '"></i><span class="hs">' + statusText() + '</span>' + warn +
       '<b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(cashShown()) + '</b><button type="button" class="hmin" data-hmin="hud" aria-label="' + (no ? 'Vis alt' : 'Show all') + '">+</button></div>');
   } else {
-  const nx = nextEvent();
-  setHtml(hud, '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(cashShown()) + '</b><button type="button" class="hmin" data-hmin="hud" aria-label="' + (S.lang === 'no' ? 'Minimer' : 'Minimise') + '">–</button></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + (nx ? '<div class="st nx">⏱ ' + nx.txt + ' ' + inReal(nx.t - S.t) + ' <small>(' + hm(nx.t / 60) + ')</small></div>' : '') +
-    (S.fleet && S.fleet.length > 1 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Båt' : 'Vessel') + '</span><b>' + S.boatName + (meAboard() ? ' ⚓' : '') + '</b></div>' : '') +
+  const nx = nextEvent(), no = S.lang === 'no', L = (a, c) => no ? a : c;
+  // «Kystlys» U3 (docs/planer/ui-redesign.md, V5 A, 04.11.2026): the status box is instruments, not a table of eleven rows. Four gauges
+  // on one row (diesel, hold, energy, sea), under them only what matters now (the rules at sea, a roll, the cold, the luck, the fleet),
+  // and a tap on the gauges gives the whole table as before (S.settings.hudFull)
+  const fuelP = b.fuel / BOAT.fuelCap, holdP = holdTotal() / Math.max(1, capHold()), e = S.energy == null ? 100 : S.energy;
+  const gauge = (k, lbl, v, txt, cls) => '<span class="g g-' + k + (cls ? ' ' + cls : '') + '"><span class="gl">' + lbl + '</span><i style="--v:' + Math.round(clamp(v, 0, 1) * 100) + '%"></i><b>' + txt + '</b></span>';
+  const gauges = '<button type="button" class="gauges' + (S.settings.hudFull ? ' open' : '') + '" data-hfull aria-label="' + L('Vis alle tallene', 'Show all the figures') + '">' +
+    gauge('fuel', 'Diesel', fuelP, fmt(b.fuel, 0) + ' L', fuelP < 0.1 ? 'r2' : fuelP < 0.25 ? 'r1' : '') +
+    gauge('hold', L('Last', 'Hold'), holdP, fmt(holdTotal(), 0) + ' kg', holdP >= 0.95 ? 'full' : '') +
+    gauge('en', L('Energi', 'Energy'), energyOff() ? 1 : e / 100, energyOff() ? L('av', 'off') : asleep() ? L('sover', 'asleep') : Math.round(e) + ' %', asleep() || (!energyOff() && e < ENERGY.dim) ? 'r2' : !energyOff() && e < ENERGY.warn ? 'r1' : '') +
+    gauge('sea', L('Sjø', 'Sea'), atSea ? (lvl + 1) / 3 : 0.15, fmt(hs, 1) + ' m', atSea ? 'r' + lvl : '') + '</button>';
+  // what matters now, as rows with what to do
+  const now = [];
+  if (S.fleet && S.fleet.length > 1) now.push('<div class="row"><span>' + L('Båt', 'Vessel') + '</span><b>' + S.boatName + (meAboard() ? ' ⚓' : '') + '</b></div>');
+  if (atSea){ const z = motionHere(H, b).state; if (z.lvl) now.push('<div class="row warn"><span>' + L('Stabilitet', 'Stability') + '</span><b class="r' + z.lvl + '">' + {gm:L('rank', 'tender'), res:L('synkronrulling · endre kurs eller fart', 'synchronous roll · change course or speed'), roll:L('kraftig rulling · ta det rolig', 'heavy rolling · ease off')}[z.why] + '</b></div>'); }
+  // the rules where you are (03e-rules.js ruNow): a tap opens the Regler app
+  if (atSea && RU.ok){ const r = ruNow(), it = r.items.find(i => i.v === r.v && i.v !== 'ok'); now.push('<div class="row rlink"><span>' + L('Regler', 'Rules') + '</span><b class="' + (r.v === 'no' ? 'r2' : r.v === 'warn' ? 'r1' : 'r0') + '">' + (r.v === 'no' ? '✕ ' : r.v === 'warn' ? '! ' : '✓ ') + (it ? ruShort(it) : L('Lov her', 'Allowed here')) + ' ›</b></div>'); }
+  { const cp = coldPen(S.t / 60); if (cp > 0.03) now.push('<div class="row"><span>' + L('Kulde', 'Cold') + '</span><b class="cold">−' + Math.round(cp * 100) + ' % · ' + Math.round(effTemp(S.t / 60)) + ' °C</b></div>'); }
+  if (haillStage()) now.push('<div class="row"><span>' + L('Haill', 'Luck') + '</span><b class="haill">' + haillStage()[S.lang] + ' +' + Math.round(haillBoost() * 100) + ' %</b></div>');
+  // the whole table behind the tap: the figures the gauges round off, the wind, the bonus and the bank's other accounts
+  const full = !S.settings.hudFull ? '' : '<div class="hfull">' +
     '<div class="row"><span>' + t('wind') + '</span><b>' + dirName(windDir(H)) + ' ' + fmt(W, 1) + ' m/s</b></div>' +
     '<div class="row"><span>' + t('waves') + '</span><b>' + fmt(hs, 1) + ' m' + (atSea ? ' <span class="r' + lvl + '">' + t('risk' + lvl) + '</span>' : '') + '</b></div>' +
-    (() => { if (!atSea) return ''; const z = motionHere(H, b).state; if (!z.lvl) return ''; const L = (no, en) => S.lang === 'no' ? no : en;
-      return '<div class="row"><span>' + L('Stabilitet', 'Stability') + '</span><b class="r' + z.lvl + '">' + {gm:L('rank', 'tender'), res:L('synkronrulling', 'synchronous roll'), roll:L('kraftig rulling', 'heavy rolling')}[z.why] + '</b></div>'; })() +
-    // the rules where you are (03e-rules.js ruNow): a tap opens the Regler app
-    (() => { if (!atSea || !RU.ok) return ''; const r = ruNow(), it = r.items.find(i => i.v === r.v && i.v !== 'ok'); const L = (no, en) => S.lang === 'no' ? no : en;
-      return '<div class="row rlink"><span>' + L('Regler', 'Rules') + '</span><b class="' + (r.v === 'no' ? 'r2' : r.v === 'warn' ? 'r1' : 'r0') + '">' + (r.v === 'no' ? '✕ ' : r.v === 'warn' ? '! ' : '✓ ') + (it ? ruShort(it) : L('Lov her', 'Allowed here')) + ' ›</b></div>'; })() +
     '<div class="row"><span>' + t('fuel') + '</span><b>' + fmt(b.fuel, 0) + ' / ' + BOAT.fuelCap + ' L</b></div>' +
     '<div class="row"><span>' + t('hold') + '</span><b>' + fmt(holdTotal(), 0) + ' / ' + capHold() + ' kg</b></div>' +
-    (() => { const e = S.energy == null ? 100 : S.energy; return '<div class="row"><span>' + (S.lang === 'no' ? 'Energi' : 'Energy') + '</span><b class="' + (asleep() ? 'r2' : e < ENERGY.dim ? 'r2' : e < ENERGY.warn ? 'r1' : '') + '">' + (energyOff() ? (S.lang === 'no' ? 'av' : 'off') : asleep() ? (S.lang === 'no' ? 'sover' : 'asleep') : Math.round(e) + ' %') + '</b></div>'; })() +
-    (streakPct() > 0 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Bonus' : 'Bonus') + '</span><b>+' + fmt(streakPct(), 0) + ' %</b></div>' : '') +
-    // the bank's other accounts (Økonomi 2, Ø3): set aside for the tax and saved, beside the current account in the bar's top line
-    (S.bank && (S.bank.skatt >= 1 || S.bank.spare >= 1) ? '<div class="row"><span>' + (S.lang === 'no' ? 'Skatt · spart' : 'Tax · saved') + '</span><b>' + kr(Math.round(S.bank.skatt)) + ' · ' + kr(Math.round(S.bank.spare)) + '</b></div>' : '') +
-    (() => { const cp = coldPen(S.t / 60); return cp > 0.03 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Kulde' : 'Cold') + '</span><b class="cold">−' + Math.round(cp * 100) + ' % · ' + Math.round(effTemp(S.t / 60)) + ' °C</b></div>' : ''; })() +
-    (haillStage() ? '<div class="row"><span>' + (S.lang === 'no' ? 'Haill' : 'Luck') + '</span><b class="haill">' + haillStage()[S.lang] + ' +' + Math.round(haillBoost() * 100) + ' %</b></div>' : ''));
+    (streakPct() > 0 ? '<div class="row"><span>Bonus</span><b>+' + fmt(streakPct(), 0) + ' %</b></div>' : '') +
+    (S.bank && (S.bank.skatt >= 1 || S.bank.spare >= 1) ? '<div class="row"><span>' + L('Skatt · spart', 'Tax · saved') + '</span><b>' + kr(Math.round(S.bank.skatt)) + ' · ' + kr(Math.round(S.bank.spare)) + '</b></div>' : '') + '</div>';
+  setHtml(hud, '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(cashShown()) + '</b><button type="button" class="hmin" data-hmin="hud" aria-label="' + L('Minimer', 'Minimise') + '">–</button></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + (nx ? '<div class="st nx">⏱ ' + nx.txt + ' ' + inReal(nx.t - S.t) + ' <small>(' + hm(nx.t / 60) + ')</small></div>' : '') +
+    gauges + (now.length ? '<div class="hnow">' + now.join('') + '</div>' : '') + full);
   }
   // the boxes under the status box in 3D take their place and width from it: measured when its content has changed and every 2 s (setting
   // them on the chart's parent every tick restyled the whole chart)
@@ -178,7 +189,7 @@ const INSTR = (() => {
   return {show, renderGPS, echoOn};
 })();
 // a tap on the rules line in the status box opens the Regler app
-hud.addEventListener('click', e => { const m = e.target.closest('[data-hmin]'); if (m){ e.stopPropagation(); hudFold('hud'); return; } if (e.target.closest('.rlink')) PHONE.open('regler'); });
+hud.addEventListener('click', e => { const m = e.target.closest('[data-hmin]'); if (m){ e.stopPropagation(); hudFold('hud'); return; } if (e.target.closest('[data-hfull]')){ e.stopPropagation(); S.settings.hudFull = !S.settings.hudFull; save(); renderHud(); return; } if (e.target.closest('.rlink')) PHONE.open('regler'); });
 // the status box and the little chart each fold to a strip (S.settings.hudMin, plotMin), and «Vis HUD» in the settings takes them all
 // away (hudOff): the status box, the little chart, its GPS strip and the compass
 function hudClasses(){

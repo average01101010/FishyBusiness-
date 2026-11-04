@@ -1468,3 +1468,24 @@ body.pm #hud,body.pm #pinCard{visibility:hidden}
 .ph-note{font-size:var(--fs-sm);line-height:1.45;color:var(--t-muted)}
 /* an empty state says what comes here and gives the way there (U6 fills them in): a quiet card with one line and one button */
 .ph-empty{text-align:center;padding:18px 14px;color:var(--t-muted);font-size:var(--fs-sm)} .ph-empty b{display:block;color:var(--t-ink);font-size:var(--fs-body);margin-bottom:4px} .ph-empty .ph-btn{margin:10px auto 0}
+/* ---------- «Kystlys» U3: the status box as instruments (ui/04-panels-instruments.js renderHud, V5 A) ----------
+   four gauges on one row, each a label, a bar and the figure; the colours say low, full or rough sea; a tap gives the whole table */
+#hud{min-width:212px!important;border-radius:var(--r-card)!important;padding:8px 10px 9px!important}
+#hud .gauges{pointer-events:auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%;margin:7px 0 1px;padding:7px 0 0;border:0;border-top:1px solid rgba(238,244,247,.12);background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#hud .g{display:flex;flex-direction:column;gap:3px;min-width:0}
+#hud .g .gl{font:600 var(--fs-cap)/1 var(--sans);letter-spacing:.04em;text-transform:uppercase;color:var(--t-on-dark-2)}
+#hud .g i{position:relative;display:block;height:4px;border-radius:2px;background:rgba(238,244,247,.16);overflow:hidden}
+#hud .g i::after{content:'';position:absolute;left:0;top:0;bottom:0;width:var(--v);border-radius:2px;background:#8fd3ff}
+#hud .g b{font:700 13px/1.1 var(--sans);font-variant-numeric:tabular-nums;color:var(--t-on-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hud .g.r1 i::after,#hud .g-sea.r1 i::after{background:#e0a43a} #hud .g.r1 b{color:#ffcf7a}
+#hud .g.r2 i::after{background:#ef6a5f} #hud .g.r2 b{color:#ff9b91}
+#hud .g-sea.r0 i::after{background:#5cbf8a} #hud .g.full i::after{background:#5cbf8a} #hud .g.full b{color:#9fe6bd}
+#hud .hnow{margin-top:6px;padding-top:5px;border-top:1px solid rgba(238,244,247,.12)}
+#hud .hnow .row b{text-align:right}
+#hud .hfull{margin-top:5px;padding-top:5px;border-top:1px dashed rgba(238,244,247,.18)}
+#hud .gauges.open{border-top-color:rgba(232,201,106,.45)}
+/* the dock (ui/10c-dock.js, V6 A): the hero is the one thing to do now, bigger and lit; a button that cannot be used has a dashed ring
+   and a faded icon (a tap still says why), so it does not read as one of the others */
+.dk-b.hero{width:78px} .dk-b.hero .dk-i{width:60px;height:60px;box-shadow:0 0 0 4px rgba(181,34,122,.28),0 4px 14px rgba(0,0,0,.35)} .dk-b.hero .dk-i svg{width:29px;height:29px} .dk-b.hero .dk-l{font-weight:700}
+.dk-b.off .dk-i{border-style:dashed;border-color:rgba(255,255,255,.32);background:rgba(6,16,24,.34)} .dk-b.off .dk-i svg{opacity:.45} .dk-b.off .dk-l{opacity:.7}
+.dk-b.off{opacity:.9}

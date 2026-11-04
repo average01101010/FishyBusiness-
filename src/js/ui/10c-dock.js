@@ -41,6 +41,8 @@ const DOCK = (() => {
     arbeid:SVG('<circle cx="7" cy="6" r="2.5"/><path d="M3 20v-3a4 4 0 0 1 8 0v3"/><path d="M14 7h7"/><path d="M18 4l3 3-3 3"/><path d="M14 15h7"/><path d="M18 12l3 3-3 3"/>'),
     rigg:SVG('<path d="M12 3v18"/><path d="M5 21h14"/><path d="M12 4l7 11h-7"/><path d="M12 7L6 15h6"/>'),
     vedlikehold:SVG('<path d="M4 20l7-7"/><path d="M13.5 4.5l6 6-3 3-6-6z"/><path d="M10.5 7.5l6 6"/>'),
+    hvil:SVG('<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/><path d="M15 3.5h3l-3 3.5h3"/>'),
+    mer:SVG('<circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/>'),
     naust:SVG('<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/><path d="M2 21h20"/>'),
     butikk:SVG('<path d="M4 9l1.5-5h13L20 9"/><path d="M4 9v11h16V9"/><path d="M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0A2.7 2.7 0 0 0 20 9"/><path d="M10 20v-5h4v5"/>'),
     bunker:SVG('<path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16"/><path d="M3 21h14"/><path d="M7.5 8h5"/><path d="M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/>')};
@@ -60,9 +62,9 @@ const DOCK = (() => {
   // resting ashore (15-energy.js): in Father's naust in the home harbour, or in a rorbu; the button goes in, and aboard again
   function restItem(){
     const b = S.boat, w = restWhere(b); if (!w) return null;
-    if (resting()) return w === 'koye' ? I('rest', 'naust', 'Opp av køya', 'Up from the bunk', {act:'restend'}) : I('rest', 'naust', 'Om bord', 'Aboard', {act:'restend'});
+    if (resting()) return w === 'koye' ? I('rest', 'hvil', 'Opp av køya', 'Up from the bunk', {act:'restend'}) : I('rest', 'hvil', 'Om bord', 'Aboard', {act:'restend'});
     // the bunk aboard (#70, 17.10.2026): at anchor, or at sea with a watch, on a boat with berths
-    return w === 'koye' ? I('rest', 'naust', 'Hvil i køya', 'Rest in the bunk', {act:'rest', pri:S.energy < 30}) : I('rest', 'naust', 'Hvil', 'Rest', {act:'rest', pri:S.energy < (w === 'rorbu' ? 60 : 40)});
+    return w === 'koye' ? I('rest', 'hvil', 'Hvil i køya', 'Rest in the bunk', {act:'rest', pri:S.energy < 30}) : I('rest', 'hvil', 'Hvil', 'Rest', {act:'rest', pri:S.energy < (w === 'rorbu' ? 60 : 40)});
   }
   // the operations plan wants you: it has stopped, or waits until you give the boat back (the Crew page has its line, ui/05c-drift.js)
   const opsDot = () => { const o = S.ops; return !!(o && (o.v === DRV || o.v === DRV2) && ((!o.on && o.stop) || (o.on && o.held))); };
@@ -194,7 +196,7 @@ const DOCK = (() => {
     if (b.status === 'port') return portItems();
     return seaItems();
   }
-  const btn = (x, small) => '<button type="button" class="dk-b' + (small ? ' sm' : '') + (x.pri ? ' pri' : '') + (x.warn ? ' warn' : '') + (x.on ? ' on' : '') + (x.off ? ' off' : '') + (x.ghost ? ' ghost' : '') + (x.wide ? ' wide' : '') + (menu === x.menu && x.menu ? ' open' : '') + '" data-dk="' + x.id + '"' + (x.act ? ' data-act="' + x.act + '"' : '') + (x.off ? ' aria-disabled="true"' : '') + '><span class="dk-i">' + IC[x.ic] + (x.dot ? '<i class="dk-dot"></i>' : '') + (x.bc ? '<i class="dk-bait' + (x.bc === 'none' ? ' e' : '') + '"' + (x.bc === 'none' ? '' : ' style="--bc:' + x.bc + '"') + '></i>' : '') + '</span><span class="dk-l">' + L(x.lbl[0], x.lbl[1]) + '</span></button>';
+  const btn = (x, small) => '<button type="button" class="dk-b' + (small ? ' sm' : '') + (x.pri ? ' pri' : '') + (x.hero && !small ? ' hero' : '') + (x.warn ? ' warn' : '') + (x.on ? ' on' : '') + (x.off ? ' off' : '') + (x.ghost ? ' ghost' : '') + (x.wide ? ' wide' : '') + (menu === x.menu && x.menu ? ' open' : '') + '" data-dk="' + x.id + '"' + (x.act ? ' data-act="' + x.act + '"' : '') + (x.off ? ' aria-disabled="true"' : '') + '><span class="dk-i">' + IC[x.ic] + (x.dot ? '<i class="dk-dot"></i>' : '') + (x.bc ? '<i class="dk-bait' + (x.bc === 'none' ? ' e' : '') + '"' + (x.bc === 'none' ? '' : ' style="--bc:' + x.bc + '"') + '></i>' : '') + '</span><span class="dk-l">' + L(x.lbl[0], x.lbl[1]) + '</span></button>';
   // the jig's fan is a small card: hours, the tackle aboard as the choices it really has (Jonas 20.10.2026: what each takes, as species chips,
   // from the model, jigSets in ui/10-gear-ui.js; the halibut pilk only with the halibut gear aboard, and closed in its season), and start
   function jigCard(){
@@ -204,14 +206,25 @@ const DOCK = (() => {
     return '<div class="dk-card"><div class="dk-step"><button type="button" data-dk="fh-" aria-label="−">−</button><b>' + S.fishPlanH + ' t</b><button type="button" data-dk="fh+" aria-label="+">+</button></div>' +
       (tk ? '<div class="dk-tks">' + tk + '</div>' : '') + '<button type="button" class="dk-go" data-dk="startfish">' + L('Start jukse', 'Start jigging') + '</button></div>';
   }
+  // «Kystlys» U3 (docs/planer/ui-redesign.md, V6 A, 04.11.2026): the row is never more than six: the first ones as they come, then «⋯ Mer»
+  // with the rest in a fan, and Beholdning last; the first thing marked as what to do now (pri) is the hero, a bigger button the eye goes to
+  const MAXV = 6; let more = [];
+  function rowOf(all){
+    more = [];
+    if (all.length <= MAXV) return all;
+    const beh = all.find(x => x.id === 'beh'), rest = all.filter(x => x !== beh), keep = rest.slice(0, MAXV - 2 - (beh ? 0 : -1));
+    more = rest.slice(keep.length);
+    return keep.concat([I('mer', 'mer', 'Mer', 'More', {menu:'mer', dot:more.some(x => x.dot)})], beh ? [beh] : []);
+  }
   function render(){
     if (!bar) return;
-    items = items0();
-    if (menu && !items.some(x => x.menu === menu)) menu = null;
+    items = rowOf(items0());
+    { const hero = items.find(x => x.pri && !x.off); items.forEach(x => { x.hero = x === hero; }); }
+    if (menu && !items.some(x => x.menu === menu) && !more.some(x => x.menu === menu)) menu = null;
     const h = items.map(x => btn(x)).join(''), it = infoText();
     if (h !== html){ html = h; bar.innerHTML = h; rowsUp(); } else if (rowsDue) rowsUp();
     if (info.textContent !== it){ info.textContent = it; info.hidden = !it; }
-    fanItems = menu && menu !== 'jukse' ? menuItems(menu).filter(Boolean) : [];
+    fanItems = menu === 'mer' ? more : menu && menu !== 'jukse' ? menuItems(menu).filter(Boolean) : [];
     const fh = !menu ? '' : menu === 'jukse' ? jigCard() : fanItems.map(x => btn(x, true)).join('');
     if (fh !== fanHtml){ fanHtml = fh; fan.innerHTML = fh; }
     fan.hidden = !menu; if (menu) placeFan();
@@ -223,7 +236,7 @@ const DOCK = (() => {
   window.addEventListener('resize', () => { if (bar) rowsUp(); });
   // the fan stands centred over its button, inside the screen
   function placeFan(){
-    const pb = bar.querySelector('[data-dk="' + (items.find(x => x.menu === menu) || {}).id + '"]'); if (!pb) return;
+    const pb = bar.querySelector('[data-dk="' + (items.find(x => x.menu === menu) || {}).id + '"]') || bar.querySelector('[data-dk="mer"]'); if (!pb) return;
     const r = pb.getBoundingClientRect(), wr = fan.parentNode.getBoundingClientRect(), w = fan.offsetWidth;
     fan.style.left = clamp(r.left + r.width / 2 - w / 2 - wr.left, 8, wr.width - w - 8) + 'px';
   }
