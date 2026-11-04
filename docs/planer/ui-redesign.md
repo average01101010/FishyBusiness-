@@ -224,3 +224,19 @@ Rekkefølgen U0 → U1 → U2 er fundamentet. Etter det kan U3–U10 tas i den r
   - F5: Lever-siden til sjøs sier hvor fisken leveres, med nærmeste mottak og Autonav (`landPage`, `lever`).
   - F6 og F7 er ikke feil, eller ikke avgjort.
   - Patchnotatet heter `ui-u0-041126`.
+  - Testene: `run.py changed` 12 OK. `tut` gikk gjennom i begge formater (28 OK). `havflaate` og `npctest` trenger hele kysten, som ikke finnes i containeren, så `havNear`-rettingen er ikke prøvd i en test.
+- 04.11.2026 **U1**:
+  - Tokenene står i `:root`: flater, tekst, aksent, `--fish`, typografiskalaen, avstand, radier og høyder.
+  - Lagskalaen `--z-*` gjelder 17 lag. Dialogen ligger nå over telefonen og boka, toast over boka, og effektene under sperrene. Det lave innenfor HUD-en og lasteskjermen står som før.
+- 04.11.2026 **U2**:
+  - Fire knapper. `ph-btn p` hadde ingen stil på 47 primærknapper. En knapp som ikke kan brukes, er stiplet og viser `data-why` når siden gir grunnen.
+  - Fanene i telefonen og skuffen har én stil, på én rad som ruller. Kortene har felles radius og kant, og `.ph-empty` er klar for tomme tilstander.
+- 04.11.2026 **U3**:
+  - Statusboksen har fire målere og det som gjelder nå under dem. Hele tabellen kommer ved trykk (`S.settings.hudFull`).
+  - Knappelinja har høyst seks knapper, med resten under «Mer» (`rowOf`), en hovedknapp (`hero`), stiplet ring på knapper som ikke kan brukes, og eget ikon for Hvil.
+  - `rowsUp` måler løftet fra der radene starter.
+  - Testene er grønne: hudtest 7, docktest 96, dockrow 16, uishots 45, rulestest 21, timetest 9.
+- 04.11.2026 **U4**:
+  - Fangstkortene (`ui/05j-catchfeed.js`, kroken `catchFeed` i `addCatch`) viser art, vekt og verdi ved nærmeste mottak, og over dem kg og kg/t for plassen.
+  - **Fiskekartets farger beholdes**: paletten hvit, blå, grønn, gul, rød er Jonas' valg fra 05.10.2026 og er slik ekte ekkolodd viser fisk. `--fish` brukes ikke på kartet.
+  - Gjenstår av U4: en forklaring av fargene i minikartet, og kameraet ned på dekk ved første fisk.

@@ -1,10 +1,14 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
-    ['ui-u0-041126', '04.11.2026', 'Rettelser i veiledningen og dagboka', 'Fixes in the guide and the deck log', [
+    ['ui-u0-041126', '04.11.2026', 'Nytt utseende: statusboksen, knappene og fangsten', 'A new look: the status box, the buttons and the catch', [
        ['«Første tur» står ikke lenger fast når et panel ligger over knappen den peker på: panelet lukkes først.', '«First trip» no longer gets stuck when a panel lies over the button it points at: the panel closes first.'],
        ['Dagboka er skrevet for hånd på alle skjermer, også nettbrett der håndskriften før ble en tilfeldig skrift.', 'The deck log is handwritten on every screen, also tablets where the hand used to become a random font.'],
        ['Lever-siden til sjøs viser nærmeste fiskemottak med Autonav dit.', 'The Land page at sea shows the nearest fish plant with Autonav there.'],
-       ['«Start på nytt» står bare i Innstillinger.', '«Restart» is only in Settings.']
+       ['«Start på nytt» står bare i Innstillinger.', '«Restart» is only in Settings.'],
+       ['Statusboksen er fire målere: diesel, last, energi og sjø. Under dem står bare det som gjelder nå, og et trykk på målerne viser alle tallene.', 'The status box is four gauges: diesel, hold, energy and sea. Under them only what matters now, and a tap on the gauges shows all the figures.'],
+       ['Knappelinja løfter fram det du bør gjøre nå, viser knapper som ikke kan brukes med stiplet ring, og samler resten under «Mer».', 'The button row lifts up what to do now, shows buttons that cannot be used with a dashed ring, and gathers the rest under «More».'],
+       ['Fisken som kommer over ripa, vises som kort til høyre med art, vekt og hva den er verdt, og over dem hvor mye plassen gir i timen.', 'The fish coming over the rail shows as cards at the right with species, weight and worth, and above them what the spot gives an hour.'],
+       ['Knapper, faner og kort har fått ett felles utseende i telefonen og skuffen.', 'Buttons, tabs and cards share one look in the phone and the drawer.']
     ]],
     ['logo-031126', '03.11.2026', 'Ny logo', 'A new logo', [
        ['Det Store Blå har fått ny logo: et anker laget av ordene. Du ser den når spillet laster, når du logger inn, på app-ikonet og på bildet når du deler Ukas fangst.', 'Det Store Blå has a new logo: an anchor made of the words. You see it while the game loads, when you sign in, on the app icon and on the picture when you share the week\'s catch.'],

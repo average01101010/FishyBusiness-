@@ -1002,6 +1002,7 @@ function addCatch(sp, kg, cls, hook, opt){
   festCatch(sp, kg);   // the skrei festival's biggest cod (09c-seasons.js)
   achCatch(sp, cls);   // «Storfisken» (09f-merker.js)
   recCatch(sp, kg, opt && opt.how);   // the personal records (09b-records.js)
+  if (typeof catchFeed === 'function') catchFeed(sp, kg);   // the card over the sea as it comes aboard (ui/05j-catchfeed.js, U4)
   for (const c of crewAboard(null, true)) c.trip = 1;   // aboard for this catch: a share of it at the landing, or when let go before it (crewSettle)
   // (into chilled sea water the catch is chilled as it comes aboard: an RSW hold)
   const bled = true, iced = holdRSW() && !SPECIES[sp].live, gut = false, hr = Math.floor(S.t / 60), start = opt && opt.fresh != null ? opt.fresh : 100; hook = hook !== false;

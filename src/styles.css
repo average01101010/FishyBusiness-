@@ -1489,3 +1489,17 @@ body.pm #hud,body.pm #pinCard{visibility:hidden}
 .dk-b.hero{width:78px} .dk-b.hero .dk-i{width:60px;height:60px;box-shadow:0 0 0 4px rgba(181,34,122,.28),0 4px 14px rgba(0,0,0,.35)} .dk-b.hero .dk-i svg{width:29px;height:29px} .dk-b.hero .dk-l{font-weight:700}
 .dk-b.off .dk-i{border-style:dashed;border-color:rgba(255,255,255,.32);background:rgba(6,16,24,.34)} .dk-b.off .dk-i svg{opacity:.45} .dk-b.off .dk-l{opacity:.7}
 .dk-b.off{opacity:.9}
+/* the catch as it comes aboard (ui/05j-catchfeed.js, U4): instrument cards at the right over the sea, the spot's kg an hour above them */
+#catchFeed{position:absolute;z-index:5;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none;max-width:min(260px,46vw)}
+#catchFeed[hidden]{display:none}
+#catchFeed .cf-rate{display:flex;gap:6px;align-items:baseline;padding:6px 12px;border-radius:var(--r-pill);background:var(--s-glass);border:1px solid rgba(238,244,247,.14);color:var(--t-on-dark);font:600 var(--fs-sm) var(--sans);font-variant-numeric:tabular-nums}
+#catchFeed .cf-rate span{color:var(--t-on-dark-2);font-weight:500} #catchFeed .cf-rate b{font-weight:700}
+#catchFeed .cf-c{display:grid;grid-template-columns:10px auto;column-gap:9px;align-items:center;padding:8px 12px 8px 10px;border-radius:12px;background:var(--s-glass);border:1px solid rgba(238,244,247,.12);color:var(--t-on-dark);box-shadow:0 4px 14px rgba(0,0,0,.25);animation:cfIn .28s ease-out}
+#catchFeed .cf-c i{grid-row:span 2;width:10px;height:10px;border-radius:50%}
+#catchFeed .cf-c b{font:700 var(--fs-sm)/1.2 var(--sans)} #catchFeed .cf-c span{font:500 12px/1.25 var(--sans);color:var(--t-on-dark-2);font-variant-numeric:tabular-nums}
+@keyframes cfIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#catchFeed .cf-c{animation:none}}
+body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
+@media (orientation:portrait){#catchFeed{bottom:calc(env(safe-area-inset-bottom,0px) + 104px)}}
+@media (max-width:560px){#hud .gauges{gap:5px} #hud .g b{font-size:11.5px} #hud .g .gl{letter-spacing:0}}
+@media (max-width:560px){.dk-b.hero{width:66px} .dk-b.hero .dk-i{width:52px;height:52px} .dk-b.hero .dk-i svg{width:26px;height:26px}}

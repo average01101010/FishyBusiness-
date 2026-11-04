@@ -232,7 +232,8 @@ const DOCK = (() => {
   }
   // the rows above the first one when the buttons wrap (a narrow phone upright): what stands over the row is lifted that much
   // (measured when the row is shown: a change made while the chart plotter hides it is measured on the next render it is seen)
-  function rowsUp(){ if (!bar.offsetParent){ rowsDue = true; return; } rowsDue = false; const b0 = bar.firstElementChild, x = b0 ? Math.max(0, bar.offsetHeight - b0.offsetHeight) : 0; document.body.style.setProperty('--dkx', x + 'px'); }
+  // (the lift is the rows over the last one, from where the rows begin: the hero is taller than the others, U3)
+  function rowsUp(){ if (!bar.offsetParent){ rowsDue = true; return; } rowsDue = false; const ks = [...bar.children], x = ks.length ? Math.max(0, Math.max(...ks.map(k => k.offsetTop)) - Math.min(...ks.map(k => k.offsetTop))) : 0; document.body.style.setProperty('--dkx', x + 'px'); }
   window.addEventListener('resize', () => { if (bar) rowsUp(); });
   // the fan stands centred over its button, inside the screen
   function placeFan(){
