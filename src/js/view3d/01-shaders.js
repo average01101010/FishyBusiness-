@@ -97,8 +97,13 @@
   // wavelength is 2 pi v^2 / g), the wake's height, the share of transverse waves (they fade as the hull starts to plane), how far back
   // it reaches; uWk2: the hull's length, the bow wave's height, half the beam, the Froude number; uWk3: the bow and stern waves breaking,
   // the share drawn as geometry (only waves long enough for the 4 m grid), on. s: metres behind the stern, q: metres to the side.
-  // Transverse waves fill the wedge and decay as 1/sqrt(s); the divergent waves (wave fronts at 35 degrees to the course, k = 1.5 k0) ride
-  // the cusp lines and decay as s^-1/3; the bow wave climbs the stem and runs aft along each side at 25 degrees.
+  // The Kelvin pattern by stationary phase (Jonas 04.11.2026: «jeg synes ikke det virker så bra»; before, straight transverse crests and
+  // straight divergent crests at a fixed 35 degrees in a band along each arm, made apart, so they never built the cusps): at a point s
+  // behind the source and q off the track, inside the wedge (s^2 > 8 q^2), two waves arrive, a transverse and a divergent one, their
+  // directions theta from the course given by tan(theta) = (s -/+ sqrt(s^2 - 8 q^2)) / 4q, their phase k0 sec(theta) (s + q tan(theta)).
+  // The crests curve as in the water, the transverse arcs bending back to meet the divergent ones, and along the cusp lines at 19.47
+  // degrees the two merge and build up (cb, the cusp's r^-1/3 rise kept finite); outside it the pattern dies out. Transverse waves decay
+  // as 1/sqrt(s), divergent as s^-1/3. The bow wave climbs the stem and runs aft along each side at 25 degrees.
   // The cusp lines lie at 19.47 degrees up to Fr about 0.55 and close in above it as 0.2 / Fr (Rabaud and Moisy 2013, alpha = 1 / (2 sqrt(2 pi) Fr)):
   // a planing hull's wake is a narrow V, some 9 degrees at Fr 1.25 (the reference video Jonas showed 04.11.2026). uWk2.w is Fr.
   // Both rise from nothing over the first 1.2 m behind the stern: starting at full height they made a step across the stern, drawn as a
@@ -109,13 +114,20 @@
   // the first piece reaches on forward (the bow wave), the last on back. uWkS.y 0: a straight line, as before. Written out with fixed
   // indices (no loop over a uniform array: Adreno 642L, Direct3D 11).
   const WAKE_GLSL = 'uniform vec4 uWk0;uniform vec4 uWk1;uniform vec4 uWk2;uniform vec4 uWk3;uniform vec4 uWkT[4];uniform vec2 uWkS;' +
-    'float wakeH(vec2 P,float bow){if(uWk3.w<0.5)return 0.0;vec2 r=P-uWk0.xy;float s=-dot(r,uWk0.zw);float q=abs(r.x*uWk0.w-r.y*uWk0.z);float L=uWk2.x;' +
+    'float wakeH(vec2 P,float bow){if(uWk3.w<0.5)return 0.0;vec2 r=P-uWk0.xy;float s=-dot(r,uWk0.zw);float q=abs(r.x*uWk0.w-r.y*uWk0.z);float L=uWk2.x;float s0=s;float q0=q;' +
     'if(uWkS.y>0.5&&dot(r,r)<pow(uWk1.w+L+20.0,2.0)){float bd=1e9;' + '{vec2 A=uWk0.xy;vec2 B=uWkT[0].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=min(t,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=0.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[0].xy;vec2 B=uWkT[0].zw;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=1.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[0].zw;vec2 B=uWkT[1].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=2.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[1].xy;vec2 B=uWkT[1].zw;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=3.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[1].zw;vec2 B=uWkT[2].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=4.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[2].xy;vec2 B=uWkT[2].zw;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=5.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[2].zw;vec2 B=uWkT[3].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=max(t,0.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=6.0*uWkS.x+t*l;q=d;}}' + '}' +
-    'if(s<-L-2.0||s>uWk1.w||q>max(s,0.0)*0.42+L*0.6+4.0)return 0.0;float h=0.0;' +
-    'if(s>0.0){float e=s*min(0.3536,tan(0.2/max(uWk2.w,0.2)));float far=1.0-smoothstep(uWk1.w*0.55,uWk1.w,s);float a=uWk1.y*far*smoothstep(0.0,1.2,s);' +
-    'h+=uWk1.z*a*inversesqrt(1.0+s/L)*cos(uWk1.x*s)*(1.0-smoothstep(e*0.75,e*1.02,q))*0.75;' +
-    'h+=a*pow(1.0+s/L,-0.333)*sin(1.5*uWk1.x*(0.816*s+0.577*q))*exp(-pow((q-e)/(0.1*s+1.2),2.0));}' +
-    'if(bow>0.5){float u=s+L;if(u>-0.5&&u<L*1.5){float lw=0.2+max(u,0.0)*0.466;h+=uWk2.y*exp(-pow((q-lw)/(0.35+max(u,0.0)*0.06),2.0))*exp(-max(u,0.0)/(0.6*L))*smoothstep(-0.5,0.3,u);}}' +
+    // by the hull the pattern lies in her own frame (her heading now), going over to the track from half a length to two lengths
+    // and 10 m astern (Jonas 04.11.2026: in a turn the V sat off to the side of the boat: the stern swings out, and the track's first
+    // piece, which the bow wave was carried forward along, pointed elsewhere than her bow)
+    'float wb=smoothstep(0.5*L,2.0*L+10.0,s0);s=mix(s0,s,wb);q=mix(q0,q,wb);' +
+    'if(s0<-L-2.0||s>uWk1.w||q>max(s,0.0)*0.42+L*0.6+4.0)return 0.0;float h=0.0;' +
+    'if(s>0.0){float far=1.0-smoothstep(uWk1.w*0.55,uWk1.w,s);float a=uWk1.y*far*smoothstep(0.0,1.2,s);' +
+    'float qn=q*0.3536/min(0.3536,tan(0.2/max(uWk2.w,0.2)));float d2=s*s-8.0*qn*qn;float sq=sqrt(max(d2,0.0));float qq=max(qn,1e-3);' +
+    'float tt=(s-sq)/(4.0*qq);float td=(s+sq)/(4.0*qq);float pt=uWk1.x*sqrt(1.0+tt*tt)*(s+qn*tt);float pd=uWk1.x*sqrt(1.0+td*td)*(s+qn*td);' +
+    'float cb=pow(s*s/(max(d2,0.0)+0.35*s*s),0.25);float ow=d2<0.0?exp(d2/(0.18*s*s+30.0)):1.0;' +
+    'h+=uWk1.z*a*inversesqrt(1.0+s/L)*cos(pt)*cb*ow*0.6;' +
+    'h+=a*pow(1.0+s/L,-0.333)*cos(pd)*cb*ow*(1.0-smoothstep(1.0,1.5,td))*0.5;}' +
+    'if(bow>0.5){float u=s0+L;if(u>-0.5&&u<L*1.5){float lw=0.2+max(u,0.0)*0.466;h+=uWk2.y*exp(-pow((q0-lw)/(0.35+max(u,0.0)*0.06),2.0))*exp(-max(u,0.0)/(0.6*L))*smoothstep(-0.5,0.3,u);}}' +
     'return h;}';
   // 13 waves: 0-9 the wind sea (longest first), 10-12 the swell. The loops over them are written out with fixed indices, here and in the
   // fragment shader: a phone's driver (Adreno 642L) and Direct3D 11's compiler would link no sea program, and the vertex shader alone
