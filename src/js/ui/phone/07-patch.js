@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['npcrist-041126', '04.11.2026', 'Rolig gange for de andre båtene', 'The other boats ride steadily', [
+       ['De andre båtene ristet når de gikk med fart, fordi gyngingen fulgte plassen deres. Nå gynger hver båt i sitt eget rolige tempo.', 'The other boats shuddered when under way, because their rocking followed where they were. Each boat now rocks at her own calm pace.'],
+    ]],
     ['svalbard-041126', '04.11.2026', 'Svalbard og Jan Mayen i detalj', 'Svalbard and Jan Mayen in detail', [
        ['Svalbard, Bjørnøya, Hopen og Jan Mayen har nå like detaljert kyst som fastlandet: fjæra, skjærene, dybden, sjømerkene og fyrlyktene, og husene, veiene og kaiene i Longyearbyen, Ny-Ålesund, Barentsburg og Sveagruva.', 'Svalbard, Bjørnøya, Hopen and Jan Mayen now have a coast as detailed as the mainland: the shore, the skerries, the depth, the sea marks and the lights, and the houses, roads and quays of Longyearbyen, Ny-Ålesund, Barentsburg and Sveagruva.'],
        ['Bakken der har sommerfargen fra satellittbildene: tundra, grus og stein, og breene helt ned mot sjøen.', 'The ground there has the summer colour from the satellite pictures: tundra, gravel and stone, and the glaciers right down to the sea.'],
