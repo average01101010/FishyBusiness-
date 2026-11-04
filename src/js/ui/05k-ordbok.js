@@ -43,18 +43,31 @@ function ordbok(root){
 }
 // the explanation: one card by the word, gone at the next tap anywhere
 let ORD_TIP = null;
-function ordTip(el){
+function ordTip(el, head, text){
   if (!ORD_TIP){ ORD_TIP = document.createElement('div'); ORD_TIP.id = 'ordTip'; ORD_TIP.setAttribute('role', 'tooltip'); document.body.appendChild(ORD_TIP); }
-  const w = ORDBOK[+el.dataset.gl]; if (!w) return;
-  ORD_TIP.innerHTML = '<b>' + el.textContent + '</b>' + (S.lang === 'en' ? w[3] : w[2]);
+  if (text == null){ const w = ORDBOK[+el.dataset.gl]; if (!w) return; head = el.textContent; text = S.lang === 'en' ? w[3] : w[2]; }
+  ORD_TIP.innerHTML = '<b>' + head + '</b>' + text;
   ORD_TIP.hidden = false; ORD_TIP.style.left = '0px'; ORD_TIP.style.top = '0px';
   const r = el.getBoundingClientRect(), tr = ORD_TIP.getBoundingClientRect(), W = innerWidth, H = innerHeight;
   const x = Math.max(8, Math.min(W - tr.width - 8, r.left + r.width / 2 - tr.width / 2)), y = r.bottom + 8 + tr.height < H - 8 ? r.bottom + 8 : Math.max(8, r.top - 8 - tr.height);
   ORD_TIP.style.left = Math.round(x) + 'px'; ORD_TIP.style.top = Math.round(y) + 'px';
 }
+// the chart plotter's instruments along the top (UI-redesign U8): a tap on one says what it shows
+const ECDIS_EXPL = {
+  ecHdg:['Styrekursen: retningen baugen peker, i grader fra nord.', 'The heading: the way the bow points, in degrees from north.'],
+  ecSog:['Farten over grunnen i knop, det båten faktisk går med strøm og vind.', 'The speed over the ground in knots, what the boat really makes with current and wind.'],
+  ecPos:['Posisjonen fra GPS-en, i breddegrad (N) og lengdegrad (Ø).', 'The position from the GPS, in latitude (N) and longitude (E).'],
+  ecWpt:['Neste veipunkt på ruta: kursen og avstanden dit.', 'The next waypoint of the route: the course and the distance there.'],
+  ecEta:['Når båten er framme ved neste veipunkt med farten nå.', 'When the boat reaches the next waypoint at the speed now.'],
+  ecDep:['Dybden under båten fra ekkoloddet.', 'The depth under the boat from the echo sounder.'],
+  ecTide:['Vannstanden over sjøkartets null, og når neste flo eller fjære kommer.', 'The water level above the chart datum, and when the next high or low water comes.'],
+  ecSun:['Når sola står opp og går ned i dag.', 'When the sun rises and sets today.'],
+};
 document.addEventListener('click', e => {
   const g = e.target.closest && e.target.closest('.ordw');
   if (g){ e.stopPropagation(); e.preventDefault(); ordTip(g); return; }
+  const f = e.target.closest && e.target.closest('#ecdisTop .ec-f'), b = f && f.querySelector('b[id]'), x = b && ECDIS_EXPL[b.id];
+  if (x){ const sm = f.querySelector('small'); ordTip(f, sm ? sm.textContent : '', S.lang === 'en' ? x[1] : x[0]); return; }
   if (ORD_TIP && !ORD_TIP.hidden) ORD_TIP.hidden = true;
 }, true);
 document.addEventListener('scroll', () => { if (ORD_TIP) ORD_TIP.hidden = true; }, true);

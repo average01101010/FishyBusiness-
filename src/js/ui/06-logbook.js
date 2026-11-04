@@ -48,7 +48,7 @@ const BOOK = (() => {
   }
   const lastIdx = () => tab === 'dag' ? (spread ? today() - first() : (today() - first()) * 2) : nPages() - 1;
   function setTab(t, page){
-    tab = t; list = t === 'dag' ? [] : bookTabPages(t);
+    tab = t; list = t === 'dag' ? [] : bookTabPages(t, spread);
     idx = page != null && t !== 'dag' ? (spread ? Math.floor(page / 2) : page) : lastIdx();
     idx = clamp(idx, 0, nPages() - 1);
   }

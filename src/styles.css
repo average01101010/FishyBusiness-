@@ -1540,3 +1540,4 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 .ordw{text-decoration:underline dotted;text-decoration-thickness:1.5px;text-underline-offset:3px;text-decoration-color:currentColor;cursor:help}
 #ordTip{position:fixed;z-index:var(--z-tip,72);max-width:min(320px,calc(100vw - 16px));background:#12303d;color:#eef5f8;border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.35)}
 #ordTip b{display:block;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#9fd3e6;margin-bottom:3px}
+#ecdisTop .ec-f:not(.ec-echo){cursor:help} #ecdisTop .ec-f:not(.ec-echo) small{text-decoration:underline dotted;text-underline-offset:2px}

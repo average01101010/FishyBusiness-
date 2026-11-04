@@ -150,8 +150,20 @@ function gearLogEntry(s){
   const m = setMid(s), lbl = s.kind === 'garn' ? [s.n + ' garn ' + netNo(s), s.n + ' nets ' + netEn(s)] : s.kind === 'line' ? [s.n + ' ' + (s.n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[s.lk].no.toLowerCase(), s.n + ' ' + (s.n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[s.lk].en.toLowerCase()] : [s.n + ' ' + POTS[s.pot].no.toLowerCase(), s.n + ' ' + POTS[s.pot].en.toLowerCase()];
   return {id:s.id, vid:s.vid, kind:s.kind, lbl, n:s.n, tSet:s.tSet, x:m.x, y:m.y, depth:s.depth, tHaul:null, kg:null, lost:null};
 }
-function bookTabPages(t){
+// On a spread (UI-redesign U8) the seasons and the events put what is over on the left page and what holds now and is coming on the
+// right, so the right page is never left empty; the over part is padded to an odd number of pages so «now» always opens on the right
+function bkSplit(items, now, per, head, headNow, emptyOver, emptyNow){
+  const over = items.filter(e => e.b < now), cur = items.filter(e => e.b >= now);
+  const po = over.length ? bkPages(over.map(e => bkEntry(e, now)), per, head, '') : [head + '<p class="hw">' + emptyOver + '</p>'];
+  if (po.length % 2 === 0) po.push(head);
+  return po.concat(bkPages(cur.map(e => bkEntry(e, now)), per, headNow, emptyNow));
+}
+function bookTabPages(t, spread){
   const now = S.t;
+  if (spread && (t === 'ses' || t === 'hen')){ const y = gDate(now / 60).getUTCFullYear(), ses = t === 'ses';
+    return bkSplit(ses ? bookSeasons() : bookEvents(), now, 5, ses ? bkHead('Sesonger', 'Seasons', BKL('over i ' + y, 'over in ' + y)) : bkHead('Hendelser', 'Events', BKL('over', 'over')),
+      ses ? bkHead('Nå', 'Now', BKL('og framover', 'and coming')) : bkHead('Nå', 'Now', BKL('siste fire uker', 'last four weeks')),
+      BKL('Ingenting er over ennå i år.', 'Nothing is over yet this year.'), ses ? BKL('Ingen sesonger nå.', 'No seasons now.') : BKL('Ingen hendelser nå. Prisene ligger som vanlig for årstida.', 'No events now. The prices are as usual for the season.')); }
   if (t === 'ses'){ const y = gDate(now / 60).getUTCFullYear(); return bkPages(bookSeasons().map(e => bkEntry(e, now)), 5, bkHead('Sesonger', 'Seasons', y), BKL('Ingen sesonger.', 'No seasons.')); }
   if (t === 'hen') return bkPages(bookEvents().map(e => bkEntry(e, now)), 5, bkHead('Hendelser', 'Events', BKL('siste fire uker', 'last four weeks')), BKL('Ingen hendelser de siste fire ukene. Prisene har ligget som vanlig for årstida.', 'No events these last four weeks. Prices have been as usual for the season.'));
   if (t === 'uts') return bkPages(bookGear(), 3, bkHead('Utstyr', 'Gear', BKL('redskap i sjøen', 'gear in the sea')), BKL('Ingen redskap er satt ennå.', 'No gear has been set yet.'));

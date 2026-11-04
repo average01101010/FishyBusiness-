@@ -74,6 +74,14 @@ function miniPaint(){
   ctx.fillStyle = '#d02878'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5 * dpr; ctx.fill(); ctx.stroke(); ctx.restore();
   // north
   ctx.fillStyle = chartNight() ? 'rgba(200,215,225,.85)' : 'rgba(20,40,55,.8)'; ctx.font = '600 ' + Math.round(10 * dpr) + 'px sans-serif'; ctx.textAlign = 'right'; ctx.fillText('N ↑', W - 6 * dpr, 13 * dpr);
+  // what the fish colours mean (UI-redesign U4): the big chart's legend, small, under «N ↑», while the sounder paints fish here
+  if (typeof heatTier === 'function' && heatTier() && typeof HEAT_STEPS !== 'undefined'){
+    const n = HEAT_STEPS.length + 1, sw = Math.round(9 * dpr), sh = Math.round(6 * dpr), bx = W - 6 * dpr - n * sw, by = 18 * dpr;
+    ctx.fillStyle = 'rgba(6,16,24,.55)'; ctx.fillRect(bx - 2 * dpr, by - 2 * dpr, n * sw + 4 * dpr, sh + 4 * dpr + 11 * dpr);
+    for (let i = 0; i < n; i++){ const j = i ? heatIndex(HEAT_STEPS[i - 1], true) * 4 : -1; ctx.fillStyle = j < 0 ? '#ffffff' : 'rgb(' + HEATPAL[j] + ',' + HEATPAL[j + 1] + ',' + HEATPAL[j + 2] + ')'; ctx.fillRect(bx + i * sw, by, sw, sh); }
+    ctx.fillStyle = '#eef4f7'; ctx.font = '600 ' + Math.round(8.5 * dpr) + 'px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(S.lang === 'en' ? 'little' : 'lite', bx, by + sh + 9 * dpr);
+    ctx.textAlign = 'right'; ctx.fillText(S.lang === 'en' ? 'much' : 'mye', bx + n * sw, by + sh + 9 * dpr);
+  }
   // the GPS along the foot: speed and course with how far across, the position (on two lines when it is too wide), the next waypoint
   const G = GPS3D, fs = Math.round(10.5 * dpr), lh = Math.round(12.5 * dpr), pad = 5 * dpr, L = [];
   ctx.font = '600 ' + fs + 'px sans-serif';
