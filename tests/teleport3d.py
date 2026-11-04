@@ -20,10 +20,14 @@ PLACES = [('kirkenes', 69.727, 30.06, 200), ('honningsvag', 70.975, 25.985, 250)
           ('bjornoya', 74.42, 18.85, 200), ('longyearbyen', 78.24, 15.50, 400), ('janmayen', 70.94, -8.75, 300), ('nordisland', 66.15, -17.45, 300), ('sentralbanken', 76.0, 35.0, None), ('petsjora', 69.5, 52.0, None)]
 # KYST_TP=bjornoya,petsjora: only those places
 if os.environ.get('KYST_TP'): PLACES = [q for q in PLACES if q[0] in os.environ['KYST_TP'].split(',')]
-# a sea point near (lat, lon): the nearest 100 m cell that the national core has as sea at least 300 m from the land
-SEA = """([la, lo]) => { const c = P(la, lo); for (let r = 0; r <= 60; r++) for (let a = 0; a < Math.max(1, r * 6); a++){
+# a sea point near (lat, lon): the nearest 100 m cell that is sea at least 300 m from the land, by the tiles' fine coast where a tile
+# has detail (its packs fetched first: from H1b R3 Svalbard and Jan Mayen have tiles, and the core's 1 km land misses their shore),
+# else by the national core
+SEA = """async ([la, lo]) => { const c = P(la, lo); if (mapSimAt(c)) await mapNeed(c, MAPD.simR + 1);
+  const sea = q => mapSimAt(q) && mapReadyAt(q, 0) ? !isLand(q) && coastDist(q) >= 0.3 : !isLandFar(q) && coastDistFar(q) >= 0.3;
+  for (let r = 0; r <= 60; r++) for (let a = 0; a < Math.max(1, r * 6); a++){
   const t = a / Math.max(1, r * 6) * 2 * Math.PI, q = {x:c.x + Math.cos(t) * r * 0.1, y:c.y + Math.sin(t) * r * 0.1};
-  if (!isLandFar(q) && coastDistFar(q) >= 0.3) return q; } return null; }"""
+  if (sea(q)) return q; } return null; }"""
 
 
 async def main():

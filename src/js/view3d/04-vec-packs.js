@@ -257,7 +257,10 @@
           wood = (F * 0.95 + SHn * 0.12) * sstep(440, 260, y) * (1 - rs);
           R = Math.max(R, BA * 0.95, MOn * 0.45, SC * 0.85, SG * 0.5);   // the rock above the vegetation (280-420 m) and on the steep faces as before
           gl0 = SN * sstep(glLo, glHi, y);   // snow fields and glaciers that lie through the summer (ESA's 'snow', seen in August)
-          if (cov){ cov[i * 4] = WE; cov[i * 4 + 1] = CR; cov[i * 4 + 2] = SHn; cov[i * 4 + 3] = 1 + MOn; }
+          // the high Arctic where the satellites see the ground (H1b R3): the mainland's pale lichen carpet is laid on less (Svalbard's
+          // 'moss' is dark moss and gravel tundra; with the carpet in full the flats at Longyearbyen read as frost-white). Less of the
+          // shader's grey rock as well was tried and made the fells whiter, not more natural (the gravel is light in the satellites' colour)
+          if (cov){ cov[i * 4] = WE; cov[i * 4 + 1] = CR; cov[i * 4 + 2] = SHn; cov[i * 4 + 3] = 1 + MOn * (1 - 0.8 * fA * satHere); }
         } else if (cov){ cov[i * 4] = cov[i * 4 + 1] = cov[i * 4 + 2] = cov[i * 4 + 3] = 0; }
         p = pv ? pv[i] : 0; sn = Math.max(sstep(snow - 60, snow + 60, y + n * 90) * (1 - rs * 0.85) * (1 - wood * 0.55), gl0 * (1 - rs * 0.6)) * (1 - p * 0.6) * sstep(1.5, 2.3, y);   // no snow where the tide comes
         R *= 1 - p;
