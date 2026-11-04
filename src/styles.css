@@ -1503,3 +1503,4 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 @media (orientation:portrait){#catchFeed{bottom:calc(env(safe-area-inset-bottom,0px) + 104px)}}
 @media (max-width:560px){#hud .gauges{gap:5px} #hud .g b{font-size:11.5px} #hud .g .gl{letter-spacing:0}}
 @media (max-width:560px){.dk-b.hero{width:66px} .dk-b.hero .dk-i{width:52px;height:52px} .dk-b.hero .dk-i svg{width:26px;height:26px}}
+#toast.up{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 64px)}
