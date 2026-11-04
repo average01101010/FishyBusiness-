@@ -179,10 +179,16 @@ function npcBerths(group, p, boats, R = 0.6){
   if (NPCB.size > 2000) NPCB.clear();   // (the ocean fleet's visitors make a group per set of ships at a plant, 05d-hav.js havBerth)
   NPCB.set(group, {ver, v}); return v;
 }
-// The way in: waypoints from open water to the harbour point, outermost first. Found breadth-first through the water cells of the
-// chart (no cutting across the corner of a land cell), then straightened wherever the line is clear. A harbour behind a breakwater,
-// like Husøy, needs more than one.
+// The way in: waypoints from open water to the harbour point, outermost first. Found through the water cells of the chart (no
+// cutting across the corner of a land cell), keeping off the shore where there is room (04.11.2026), then straightened wherever the
+// line is clear and no nearer the shore. A harbour behind a breakwater, like Husøy, needs more than one.
 const APPROACH = {};
+// how the way in keeps off the shore (approachPath): the cost of a step rises inside R km of the coast, up to 1 + K times at the line;
+// a straightened leg keeps up to `keep` km off it, as the cells did; within `near` km of the harbour point the boat lies at the quay;
+// a step over a sliver of land costs `cut` cells more
+const APPR = {R:0.04, K:6, keep:0.025, near:0.06, cut:20};
+// the distance to the coast (the chart's fine coast, 01d-coast.js) up to APPR.R, in km; APPR.R where no coast is indexed
+function apprClr(q){ const d = coastDistM(q, APPR.R * 1000); return d < 0 ? APPR.R : d / 1000; }
 function clearLine(a, b){ const n = Math.max(1, Math.ceil(dist(a, b) / 0.008)); for (let i = 1; i < n; i++) if (isLand({x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n})) return false; return !coastSegHit(a, b); }
 // the land a sealed harbour's way out may cross (approachPath's pt.free): within pt.free km of its point
 let QUAYF = null;
@@ -195,18 +201,30 @@ function approachPath(pt){
   // a harbour sealed in by its own quay and fill (6 of 359 along the coast, 08.10.2026: Ålesund, Fosnavåg, Laukvik, Vengsøy and
   // two shops; their boats could not get out at all): the land within free km of the harbour point is passable, 80 m, then 150, 250 and 400 m
   // (pt.free, quayLand: the routes may cross it; the simulation leaves the harbours to their way in anyway, groundCheck)
+  // The way keeps off the shore where the water lets it (Jonas 04.11.2026, Tufjord: the way in ran along the beach 1 m from the line,
+  // and in 3D the boat sailed on the foreshore): a shortest-path search where a step costs more the nearer its cell lies to the coast
+  // (APPR.K, inside APPR.R), so the way goes down the middle of a basin or a sound, and hugs the shore only where the water is that
+  // narrow. The same cells are open as before (land, the cut corners, the breakwaters), so every harbour that had a way in has one.
+  // (not within APPR.near of the harbour point, where she goes alongside: there the way goes straight to it, and did not go round the
+  // quay to come at it from its open side, Leknes verft)
+  const pen = new Map(), cost = k => { let v = pen.get(k); if (v === undefined){ const q = cell(k), d = dist(q, pt.p) < APPR.near ? APPR.R : apprClr(q), u = Math.max(0, 1 - d / APPR.R); v = 1 + APPR.K * u * u; pen.set(k, v); } return v; };
+  // a step between two wet cells' middles over a sliver of the fine coast's land costs APPR.cut more (kept where there is no other way,
+  // as before; the straightening keeps such a step as it is); only asked by the shore, where the step's cell is within APPR.R of it)
+  const sliver = (a, b) => { for (let i = 1; i < 6; i++) if (isLand({x:a.x + (b.x - a.x) * i / 6, y:a.y + (b.y - a.y) * i / 6})) return APPR.cut; return 0; };
   let prev, end = -1;
   for (const free of [0, 0.08, 0.15, 0.25, 0.4]){
     const LM = new Map(), mk = (x, y) => { const k = y * nx + x; let v = LM.get(k); if (v === undefined){ const q = cell(k); v = isLand(q) && !(free && dist(q, pt.p) < free); LM.set(k, v); } return v; };
-    prev = new Map([[s0, -1]]); const Q = [s0];
-    for (let h = 0; h < Q.length && h < 300000; h++){
-      const k = Q[h], x = k % nx, y = (k - x) / nx, p = cell(k);
+    prev = new Map([[s0, -1]]); const G = new Map([[s0, 0]]), done = new Set(), H = leiaHeap(); H.push(s0, 0);
+    for (let h = 0; H.size() && h < 300000;){
+      const k = H.pop(); if (done.has(k)) continue; done.add(k); h++;
+      const x = k % nx, y = (k - x) / nx, p = cell(k), g = G.get(k);
       if (dist(p, pt.p) > 0.4 && coastDist(p) > 0.25){ end = k; break; }
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){
-        const X = x + dx, Y = y + dy, kk = Y * nx + X; if (X < 0 || Y < 0 || X >= nx || Y >= M.ny || prev.has(kk) || mk(X, Y)) continue;
+        const X = x + dx, Y = y + dy, kk = Y * nx + X; if (X < 0 || Y < 0 || X >= nx || Y >= M.ny || done.has(kk) || mk(X, Y)) continue;
         if (dx && dy && (mk(X, y) || mk(x, Y))) continue;
         if (!(free && dist(p, pt.p) < free) && coastSegHit(p, cell(kk))) continue;   // a breakwater thinner than a cell between them
-        prev.set(kk, k); Q.push(kk);
+        const ck = cost(kk), q = cell(kk), ng = g + (dx && dy ? Math.SQRT2 : 1) * ck + (ck > 1 || dist(q, pt.p) < APPR.near ? sliver(p, q) : 0), og = G.get(kk);
+        if (og === undefined || ng < og){ G.set(kk, ng); prev.set(kk, k); H.push(kk, ng); }
       }
     }
     if (end >= 0){ if (free){ pt.free = free; QUAYF = null; } break; }
@@ -219,7 +237,12 @@ function approachPath(pt){
   // 8 m check first, as it turns most lines down cheaply)
   const fine = (a, b, quay) => { const n = Math.max(1, Math.ceil(dist(a, b) / 0.002)); for (let i = 1; i < n; i++){ const q = {x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n}; if (isLand(q) && !(quay && quayLand(q))) return false; } return !coastSegHit(a, b); };
   const clear = (a, b) => pt.free ? (clearLine(a, b) ? fine(a, b, false) || fine(a, b, true) : quayLandLine(a, b) && fine(a, b, true)) : clearLine(a, b) && fine(a, b, false);
-  for (let i = 0; i < cells.length - 1;){ let j = cells.length - 1; while (j > i + 1 && !clear(cells[i], cells[j])) j--; if (j === cells.length - 1) break; path.push(cells[j]); i = j; }
+  // and no nearer the coast than the cells it replaces (up to APPR.keep; 4 m for the line between the cells' middles), outside
+  // APPR.near of the harbour point and the land a sealed harbour may cross: a straight leg along a beach is what the search kept off
+  const exempt = q => dist(q, pt.p) < Math.max(APPR.near, pt.free || 0), dk = cells.map(q => exempt(q) ? Infinity : apprClr(q));
+  const off = (i, j) => { let need = APPR.keep; for (let k = i; k <= j; k++) if (dk[k] < need) need = dk[k]; need -= 0.004; if (need <= 0) return true;
+    const a = cells[i], b = cells[j], n = Math.max(1, Math.ceil(dist(a, b) / 0.004)); for (let k = 1; k < n; k++){ const q = {x:a.x + (b.x - a.x) * k / n, y:a.y + (b.y - a.y) * k / n}; if (!exempt(q) && apprClr(q) < need) return false; } return true; };
+  for (let i = 0; i < cells.length - 1;){ let j = cells.length - 1; while (j > i + 1 && !(clear(cells[i], cells[j]) && off(i, j))) j--; if (j === cells.length - 1) break; path.push(cells[j]); i = j; }
   APPROACH[pt.id] = path.map(q => ({x:Math.round(q.x * 1000) / 1000, y:Math.round(q.y * 1000) / 1000}));
   pt.app = APPROACH[pt.id][0]; PCELL = null;   // the harbour's safe zone reaches out to the start of the way in (inHarbour)
   return APPROACH[pt.id];

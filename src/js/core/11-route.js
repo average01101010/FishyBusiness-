@@ -16,9 +16,10 @@
 // fineC: the 50 m grid (the 25 m mask decides what is land) tried on a short way whose 100 m grid found none, or one more than
 // `detour` times the straight line plus 0.5 km, for boats up to fineLen m (12.10.2026: Havøysund to its rorbu went 7.5 nm round Havøya for 1.1 nm through the
 // 175 m wide sound, which no 100 m cell is clear of land in). pullW, pullKm: how far ahead the final pull (leiaPull) looks. shoreMin:
-// the least distance from the shore a leg the pull makes keeps (km), outside harbours. tideMargin: what is kept back of the lowest
+// the least distance from the shore a leg the pull makes keeps (km), outside harbours; harbourMin: inside them, away from their points
+// (leiaHarbourClr, against the fine coast). tideMargin: what is kept back of the lowest
 // water over the trip before it counts as depth (leiaTideCredit)
-const LEIA = {shore:0.2, shoreK:2, shallowK:8, dryK:30, minOver:0.5, rockR:0.05, margins:[0.15, 0.1, 0.06, 0.03, 0], maxWp:12, slice:8, pad:5, padK:0.35, maxCells:600000, corr:3, fineC:0.05, fineKm:25, fineLen:15, detour:1.45, pullW:64, pullKm:30, shoreMin:0.1, tideMargin:0.3};
+const LEIA = {shore:0.2, shoreK:2, shallowK:8, dryK:30, minOver:0.5, rockR:0.05, margins:[0.15, 0.1, 0.06, 0.03, 0], maxWp:12, slice:8, pad:5, padK:0.35, maxCells:600000, corr:3, fineC:0.05, fineKm:25, fineLen:15, detour:1.45, pullW:64, pullKm:30, shoreMin:0.1, harbourMin:0.02, tideMargin:0.3};
 const LEIA_ST = {gen:0};
 // The tide in the route (Jonas 12.10.2026: «ta høyde for fartøyets dypgående samt tidevann»). The charted depths (depthF) are below
 // chart datum, near the lowest astronomical tide; the water stands tideCD(H, p) above it, from a little under 0 to about 3.5 m in
@@ -204,6 +205,16 @@ async function leiaCorridor1(pp, bb, R, c, sd, st, first, last){
   const cells = await leiaSearch(G, s, t, sd, st);
   return cells ? cells.map(v => leiaCell(G, v)) : null;
 }
+// Inside a harbour (600 m round its point, inHarbour) the shore's 100 m is not asked, but a straight leg keeps LEIA.harbourMin off the
+// fine coast (coastDistM) away from the harbour points (`ports`, APPR.near + 20 m: the boat goes alongside there), as the harbour's own
+// way in does (approachPath, 04.11.2026: at Tufjord the boat sailed on the foreshore in 3D); true where no coast is indexed
+function leiaHarbourClr(pt, ports){
+  if (!inHarbour(pt)) return true;
+  for (const h of ports) if (dist(pt, h.p) < APPR.near + 0.02) return true;
+  const d = coastDistM(pt, LEIA.harbourMin * 1000); return d < 0 || d >= LEIA.harbourMin * 1000;
+}
+// the harbours whose point lies within 100 m of the leg p–q
+function leiaPortsBy(p, q){ const dx = q.x - p.x, dy = q.y - p.y, L2 = dx * dx + dy * dy || 1e-9; return PORTS.filter(h => { const u = clamp(((h.p.x - p.x) * dx + (h.p.y - p.y) * dy) / L2, 0, 1); return Math.hypot(p.x + dx * u - h.p.x, p.y + dy * u - h.p.y) < 0.1; }); }
 // can a straight leg be sailed: no land, and away from harbours at least `margin` km from the shore, deep enough and clear of rocks
 function leiaLegOk(p, q, sd, margin){
   // (land every 2 m like leiaLegFail, the rest every 24 m: a sliver of land between samples 8 m apart passed here and failed in the mend,
@@ -211,9 +222,13 @@ function leiaLegOk(p, q, sd, margin){
   const L = dist(p, q), n = Math.max(1, Math.ceil(L / 0.002));
   // the depth is checked up to the ends too, unless an end itself lies in shallow water (a set's buoy, the naust's berth): there the
   // boat goes anyway, and the 50 m round it are hers (before 08.10.2026 the 50 m by every end went unchecked)
-  const sp = inHarbour(p) || depthF(p) < sd + 1, sq = inHarbour(q) || depthF(q) < sd + 1;
+  const sp = inHarbour(p) || depthF(p) < sd + 1, sq = inHarbour(q) || depthF(q) < sd + 1; let hp = null;
   for (let i = 1; i < n; i++){
     const u = i / n, pt = {x:p.x + (q.x - p.x) * u, y:p.y + (q.y - p.y) * u}; if (isLand(pt)) return false;
+    // inside a harbour: LEIA.harbourMin off the fine coast every 6 m, away from the harbour points and the leg's own ends, at every
+    // margin (the straightening keeps the way with the fewest points, the one at margin 0 too); not for opt.tight (LEIA.shoreK 0). The
+    // straightening falls back on the points it has, so no way is lost (04.11.2026, Engenes: a leg out of the harbour ran 1 m from the beach)
+    if (LEIA.shoreK > 0 && i % 3 === 0 && L * Math.min(u, 1 - u) >= 0.03 && inHarbour(pt) && !leiaHarbourClr(pt, hp || (hp = leiaPortsBy(p, q)))) return false;
     if (i % 12 || inHarbour(pt)) continue;
     if (margin > 0 && coastDist(pt) < margin && Math.min(dist(pt, p), dist(pt, q)) > margin) return false;
     if (depthF(pt) < sd + 1 && !((sp && dist(pt, p) <= 0.05) || (sq && dist(pt, q) <= 0.05))) return false;
@@ -321,7 +336,12 @@ async function leiaPull(P, sd, st){
   const out = [P[0]]; let i = 0, t0 = performance.now(), checks = 0, full = 0; const T0 = t0;
   const tick = async () => { if (performance.now() - t0 > LEIA.slice){ leiaSlice(st, t0, 'pull2'); await leiaYield(); t0 = performance.now(); } };
   const landAt = (a, b, step) => { const n = Math.max(1, Math.ceil(dist(a, b) / step)); for (let k = 1; k < n; k++) if (isLand({x:a.x + (b.x - a.x) * k / n, y:a.y + (b.y - a.y) * k / n})) return true; return false; };
-  const shoreOk = (a, b) => { const L = dist(a, b), n = Math.max(1, Math.ceil(L / 0.024)); for (let k = 1; k < n; k++){ const u = k / n, pt = {x:a.x + (b.x - a.x) * u, y:a.y + (b.y - a.y) * u}; if (L * Math.min(u, 1 - u) < 0.06 || inHarbour(pt)) continue; if (coastDist(pt) < LEIA.shoreMin) return false; } return true; };
+  // (inside a harbour the shore's 100 m is not asked, but a pulled leg keeps LEIA.harbourMin off the fine coast away from the harbour
+  // points and the route's ends (leiaHarbourClr, 04.11.2026); where the way in itself runs nearer, its own points stay)
+  const ends = [P[0], P[P.length - 1]].map(p => ({p}));
+  const shoreOk = (a, b) => { const L = dist(a, b), n = Math.max(1, Math.ceil(L / 0.024)); for (let k = 1; k < n; k++){ const u = k / n, pt = {x:a.x + (b.x - a.x) * u, y:a.y + (b.y - a.y) * u}; if (L * Math.min(u, 1 - u) < 0.06 || inHarbour(pt)) continue; if (coastDist(pt) < LEIA.shoreMin) return false; }
+    const m = Math.ceil(L / 0.006); let hp = null; for (let k = 1; k < m; k++){ const u = k / m, pt = {x:a.x + (b.x - a.x) * u, y:a.y + (b.y - a.y) * u}; if (L * Math.min(u, 1 - u) >= 0.03 && inHarbour(pt) && !leiaHarbourClr(pt, hp || (hp = ends.concat(leiaPortsBy(a, b))))) return false; }
+    return true; };
   const ok = async (a, b, eA, eB) => { checks++; try { if (landAt(a, b, 0.2) || landAt(a, b, 0.008) || !shoreOk(a, b) || !obsClear(a, b)) return false; full++; return !(await leiaLegFail(a, b, tick, eA, eB, true)); } catch (e){ return false; } };
   const last = P.length - 1;
   while (i < last){
@@ -337,15 +357,23 @@ async function leiaPull(P, sd, st){
 // the way from a (the boat, a waypoint or a harbour id's point) to b (a point at sea or a harbour): the waypoints after a, ending at b.
 // {wps, nm, st} or {why:[no, en]}
 // opt.tight: no keeping off the shore at all, the shortest way a hand-drawn route could take (for comparison in the tests)
+// the routes being worked out (two can be under way at once: the comparison in the chart plotter, the sailing's way round beside the
+// player's, a return in a gale); `base` is what the things in the water and the tide's credit were before the first of them began
+const LEIA_RUN = [];
 async function leiaRoute(a, b, aPort, bPort, opt){
   const tight = opt && opt.tight, shoreK = LEIA.shoreK, margins = LEIA.margins; if (tight){ LEIA.shoreK = 0; LEIA.margins = [0]; }
+  if (!LEIA_RUN.length) LEIA_RUN.base = {ctx:HIND.ctx, credit:LEIA_TIDE.credit};
   // the things in the water (11b-obstacles.js) count everywhere but by the route's ends: a boat lying by a pier, a route to the naust
-  const ctx = HIND.ctx; HIND.ctx = {free:[a, b].map(p => [p.x * 1000, p.y * 1000]), freeR:40};
   // the lowest water of the trip counts as depth (leiaTideCredit); not when the chart and the tide are not to be trusted (opt.noTide)
-  // (two routes can be under way at once, the comparison in the chart plotter or the sailing's way round beside the player's: each
-  // puts back what it found, not 0, and both are from the same boat at the same time, so their credits are all but the same)
-  const credit0 = LEIA_TIDE.credit, credit = opt && opt.noTide ? 0 : leiaTideCredit(a, b); LEIA_TIDE.credit = credit;
-  try { const r = await leiaRoute0(a, b, aPort, bPort, false, opt); if (r && r.st) r.st.tide = +credit.toFixed(2); return r; } finally { LEIA.shoreK = shoreK; LEIA.margins = margins; HIND.ctx = ctx; LEIA_TIDE.credit = credit0; }
+  // (both are from the same boat at the same time, so the credits of two routes under way at once are all but the same. When one ends,
+  // the newest one still under way has its own back, and when the last ends, what was there before the first: before 04.11.2026 each
+  // put back what it found, so two that overlapped and ended in the order they began left the first one's credit behind for good, and
+  // the chart plotter's moving of a tap off a shoal and the lanes went on counting it outside any route; autonavtest 9a)
+  const credit = opt && opt.noTide ? 0 : leiaTideCredit(a, b), run = {ctx:{free:[a, b].map(p => [p.x * 1000, p.y * 1000]), freeR:40}, credit};
+  LEIA_RUN.push(run); HIND.ctx = run.ctx; LEIA_TIDE.credit = credit;
+  try { const r = await leiaRoute0(a, b, aPort, bPort, false, opt); if (r && r.st) r.st.tide = +credit.toFixed(2); return r; }
+  finally { if (tight){ LEIA.shoreK = shoreK; LEIA.margins = margins; }
+    LEIA_RUN.splice(LEIA_RUN.indexOf(run), 1); const top = LEIA_RUN.length ? LEIA_RUN[LEIA_RUN.length - 1] : LEIA_RUN.base; HIND.ctx = top.ctx; LEIA_TIDE.credit = top.credit; }
 }
 // Step 1 of the coast-wide Autonav (08.10.2026): the way from a point by the shore, in a narrow basin or among islets, out to
 // water where the 100 m search can take over (or to where goal(q) says, within km), found on the 25 m mask (the fine coast decides what is land): breadth-first through

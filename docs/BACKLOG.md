@@ -119,6 +119,8 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 
 ## 10.5 Må måles eller ses i spillet
 
+- **Land inne i havnene** (04.11.2026, etter Tufjord): grunnsjekken (`groundCheck`) ser ikke land innenfor 600 m av et havnepunkt (`inHarbour`), så en tegnet rute eller manøvreringsmodellens svinger der fanges ikke. Fosnavåg, Mandal verft og Bøvågen har fortsatt veier inn under 5 m fra land, der vannet er så trangt, og leinettets egne etapper og lanene inn i havnene brukes som de er (Honningsvåg–Hammerfest 2 m, Seløy–Brønnøysund 3 m, Gjesvær–Tufjord 4 m). Bør ses i 3D.
+
 - **Garnet under vann på nettbrettet (03.11.2026):** `drawGearUnder` er målt under SwiftShader (JS 0,1–0,4 ms med to sett, 1,1–1,3 ms med 60 sett på grunt vann), ikke bildetakten. Mål på Pad 3 med `#prof` («uten redskap under vann») i en full havn (Honningsvåg) før det regnes som ferdig.
 - **Sikten under vann (03.11.2026, Jonas: «Man kan jo ikke se så dypt i havet som 12 meter»):** `VIS` 2,5 m er et anslag. Se i spillet om tauet fra blåsa og garnet på grunt vann ser riktig ut, og om sikten bør følge årstida (klart om vinteren, alger om våren).
 - **Hjemmeskipene holder av kaiplassen også når de er på havet (H1, sett 03.11.2026):** i Tromsø (T316) har mottaket én kai som passer (144 m), og de fem trålerne som hører hjemme der, holder den av hele tida, så et skip som kommer for å levere, vises ikke. Hjemmeskipene kunne fått plass bare når de er i havn, som de besøkende (`havVisitors`), men da flytter et skip seg langs kaia når et annet går.
@@ -193,6 +195,12 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - `S.owned` skrives fortsatt (`03-simulation.js`, `05-phone.js`, `05-vessels.js`), men leses bare av en lagringsmigrering i `11-boot.js`.
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
+
+## Strøket 04.11.2026 (Autonav gjennom land ved Tufjord)
+
+- Båten seilte i 3D oppå fjæra på vei inn til Tufjord (video fra Jonas): havnas vei inn (`approachPath`) gikk 1 m fra kystlinja. Nå holder veien inn seg ut fra land der det er plass, og utrettingen og strammingen holder 20 m fra land inne i havnene (`docs/systemer/autonav.md` 4.12g). Over alle 372 havnene: under 5 m fra land 111 → 3 havner, 0,95 % lengre veier inn, ingen havn mistet veien.
+- Tidevannskreditten (og frisonene for hindringene) ble liggende igjen etter to Autonav-ruter som overlappet (`LEIA_RUN`, `autonavtest` 9a).
+- `harbourtest` er rød på «every coastal vessel type lies alongside each quay face» (Finnsnes-kaia, båtene 15–18 m ut fra kaia), også på bygget før denne endringen.
 
 ## Strøket 03.11.2026 (havflåten og havsteget H0, ccr-6829f3d4-kl3gp4, rullet ut 595de50)
 

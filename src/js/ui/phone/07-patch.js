@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['innseiling-041126', '04.11.2026', 'Autonav inn til havna', 'Autonav into harbour', [
+       ['Autonav går ikke lenger tett langs stranda på vei inn til havna, så båten ikke ser ut til å seile på land. Veien inn holder seg ut fra land der det er plass, også inn til Tufjord.', 'Autonav no longer runs close along the beach on the way into a harbour, so the boat does not look as if it sails on land. The way in keeps off the shore where there is room, into Tufjord too.'],
+    ]],
     ['havmottak-031126', '03.11.2026', 'Mottakene for havflåten', 'The ocean fleet\'s plants', [
        ['Tretten store mottak for havfiskeflåten er kommet på kartet, blant annet i Måløy, Selje, Florø, Egersund og Rypefjord ved Hammerfest. Der legger trålere og ringnotbåter til for å levere.', 'Thirteen large plants for the ocean fleet are on the chart, among them Måløy, Selje, Florø, Egersund and Rypefjord by Hammerfest. Trawlers and purse seiners land their catch there.'],
        ['Utstyrsbutikken i Rypefjord og verftet ved Fiskarstrand har flyttet til nye kaier like ved.', 'The tackle shop in Rypefjord and the yard by Fiskarstrand have moved to new quays close by.'],

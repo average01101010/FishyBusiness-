@@ -945,7 +945,7 @@ Anchor (Jonas 08.10.2026: «alle båter skal ha mulighet til å ligge på anker 
   - 142 `anchorTick(H, W, hs)`
   - 171 `driftAnchorage(pid)`
 
-## `src/js/core/07-harbours.js` (470 linjer)
+## `src/js/core/07-harbours.js` (493 linjer)
 
 harbours: quays, berths and mooring
 
@@ -960,35 +960,36 @@ harbours: quays, berths and mooring
   - 126 `quayOut(f, a, L)`
   - 146 `hullDry(p, hd, L, B)`
   - 151 `npcBerths(group, p, boats, R = 0.6)`
-  - 186 `clearLine(a, b)`
-  - 189 `quayLand(q)`
-  - 190 `quayLandLine(a, b)`
-  - 191 `approachPath(pt)`
-  - 231 `exitWps(pt, to)`
-  - 232 `entryWps(pt, from)`
-  - 242 `berthPose(pid, type, kind = 'main')`
-- **274** the way in to a berth and out of it (the user's list 04.10.2026: «legge til og fra kai uten å gå gjennom landmasse og
-  - 279 `berthBlocked(p, m = 2)`
-  - 288 `berthClear(a, b, m)`
-  - 289 `berthPath(from, bp)`
-- **314** landing the catch
-  - 320 `landPlan(type, kg)`
-  - 325 `landState(L, t)`
-  - 334 `mottakOpen(H)`
-  - 336 `mottakNext(H)`
-  - 338 `mottakWhen(H, no)`
-  - 344 `startLanding(ops)`
-  - 355 `finishLanding()`
-  - 362 `iceChute(kg)`
-- **364** the bunker quay: moving along the harbour and filling fuel
-  - 374 `quayPos(b)`
-  - 383 `portBusy(b)`
-  - 384 `startShift(to, after)`
-  - 394 `startFueling(ops)`
-  - 407 `quayMinute()`
-  - 423 `buyIce(kg, free)`
-- **433** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
-  - 439 `shopBuy(k, kg, free)`
+  - 191 `apprClr(q)`
+  - 192 `clearLine(a, b)`
+  - 195 `quayLand(q)`
+  - 196 `quayLandLine(a, b)`
+  - 197 `approachPath(pt)`
+  - 254 `exitWps(pt, to)`
+  - 255 `entryWps(pt, from)`
+  - 265 `berthPose(pid, type, kind = 'main')`
+- **297** the way in to a berth and out of it (the user's list 04.10.2026: «legge til og fra kai uten å gå gjennom landmasse og
+  - 302 `berthBlocked(p, m = 2)`
+  - 311 `berthClear(a, b, m)`
+  - 312 `berthPath(from, bp)`
+- **337** landing the catch
+  - 343 `landPlan(type, kg)`
+  - 348 `landState(L, t)`
+  - 357 `mottakOpen(H)`
+  - 359 `mottakNext(H)`
+  - 361 `mottakWhen(H, no)`
+  - 367 `startLanding(ops)`
+  - 378 `finishLanding()`
+  - 385 `iceChute(kg)`
+- **387** the bunker quay: moving along the harbour and filling fuel
+  - 397 `quayPos(b)`
+  - 406 `portBusy(b)`
+  - 407 `startShift(to, after)`
+  - 417 `startFueling(ops)`
+  - 430 `quayMinute()`
+  - 446 `buyIce(kg, free)`
+- **456** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
+  - 462 `shopBuy(k, kg, free)`
 
 ## `src/js/core/07c-naust.js` (168 linjer)
 
@@ -1524,35 +1525,37 @@ Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md a
   - 34 `ukeDue()`
   - 40 `ukeLast()`
 
-## `src/js/core/11-route.js` (496 linjer)
+## `src/js/core/11-route.js` (524 linjer)
 
 ---------- Autonav (once «Følg leia»): a route along the fairway ----------
 
 - **1** Autonav (once «Følg leia»): a route along the fairway
-  - 34 `leiaTideCredit(a, b)`
-  - 47 `leiaGrid(x0, y0, x1, y1, c, mask)`
-  - 54 `leiaRocks(G)`
-  - 63 `leiaShore(G, p)`
-  - 73 `leiaCost(G, v, sd)`
-  - 89 `leiaNearCell(G, p, sd, km = 1, free)`
-  - 96 `leiaHeap()`
-  - 104 `leiaSlice(st, t0, at)`
-  - 107 `leiaSearch(G, s, t, sd, st)`
-  - 136 `leiaFind(from, to, sd, st)`
-  - 150 `leiaFind1(from, to, sd, st, pad, c0)`
-  - 177 `leiaCorridor(pp, R, c, sd, st)`
-  - 193 `leiaCorridor1(pp, bb, R, c, sd, st, first, last)`
-  - 208 `leiaLegOk(p, q, sd, margin)`
-  - 227 `leiaLegFail(p, q, tick, endP, endQ, strict)`
-  - 242 `rockOnLeg(a, b, r)`
-  - 251 `leiaMend(P, sd, st, strict)`
-  - 292 `leiaStraighten(P, sd, margin, st)`
-  - 319 `leiaPull(P, sd, st)`
-  - 340 `leiaRoute(a, b, aPort, bPort, opt)`
-  - 355 `leiaLane(p, goal, km)`
-  - 386 `leiaPocket(p, sd)`
-  - 403 `leiaPocketOut(e, sd, st)`
-  - 413 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
+  - 35 `leiaTideCredit(a, b)`
+  - 48 `leiaGrid(x0, y0, x1, y1, c, mask)`
+  - 55 `leiaRocks(G)`
+  - 64 `leiaShore(G, p)`
+  - 74 `leiaCost(G, v, sd)`
+  - 90 `leiaNearCell(G, p, sd, km = 1, free)`
+  - 97 `leiaHeap()`
+  - 105 `leiaSlice(st, t0, at)`
+  - 108 `leiaSearch(G, s, t, sd, st)`
+  - 137 `leiaFind(from, to, sd, st)`
+  - 151 `leiaFind1(from, to, sd, st, pad, c0)`
+  - 178 `leiaCorridor(pp, R, c, sd, st)`
+  - 194 `leiaCorridor1(pp, bb, R, c, sd, st, first, last)`
+  - 211 `leiaHarbourClr(pt, ports)`
+  - 217 `leiaPortsBy(p, q)`
+  - 219 `leiaLegOk(p, q, sd, margin)`
+  - 242 `leiaLegFail(p, q, tick, endP, endQ, strict)`
+  - 257 `rockOnLeg(a, b, r)`
+  - 266 `leiaMend(P, sd, st, strict)`
+  - 307 `leiaStraighten(P, sd, margin, st)`
+  - 334 `leiaPull(P, sd, st)`
+  - 363 `leiaRoute(a, b, aPort, bPort, opt)`
+  - 383 `leiaLane(p, goal, km)`
+  - 414 `leiaPocket(p, sd)`
+  - 431 `leiaPocketOut(e, sd, st)`
+  - 441 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
 
 ## `src/js/core/11b-obstacles.js` (226 linjer)
 
@@ -2123,12 +2126,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (982 linjer)
+## `src/js/ui/phone/07-patch.js` (985 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 975 `patch()`
+  - 978 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (94 linjer)
 
