@@ -1797,12 +1797,12 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 125 `hullOrder(auto, b = S.boat)`
   - 140 `hullMended(j, b = S.boat)`
 
-## `src/js/ui/01-i18n.js` (113 linjer)
+## `src/js/ui/01-i18n.js` (116 linjer)
 
----------- i18n ----------
+the logo (src/brand/logo.svg, the user's anchor of 03.11.2026), filled with currentColor: the sign-in's gate (ui/10f-cloud.js) and the
 
-- **1** i18n
-  - 110 `t(k, ...a)`
+- **4** i18n
+  - 113 `t(k, ...a)`
 
 ## `src/js/ui/02-format-state.js` (207 linjer)
 
@@ -2123,12 +2123,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (982 linjer)
+## `src/js/ui/phone/07-patch.js` (985 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 975 `patch()`
+  - 978 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (94 linjer)
 
@@ -2361,7 +2361,7 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 75 `kkBar()`
   - 84 `kkChart(on)`
 
-## `src/js/ui/05i-ukas.js` (114 linjer)
+## `src/js/ui/05i-ukas.js` (122 linjer)
 
 ---------- Ukas fangst: the Sunday card (core/09n-ukas.js; docs/planer/oppdrag-2.md U1) ----------
 
@@ -2378,7 +2378,8 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 79 `ukeSesongCard(H)`
 - **85** the picture: the card drawn on a canvas, 1080 x 1350, shared as a file or saved
   - 86 `ukeCanvas(w)`
-  - 104 `ukeShare(w)`
+  - 108 `ukeLogo()`
+  - 112 `ukeShare(w)`
 
 ## `src/js/ui/06-logbook.js` (115 linjer)
 
