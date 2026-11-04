@@ -398,4 +398,5 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
     - `quotatest` feiler bare på den kjente «paid False» (BACKLOG 10.6).
   - **Ikke gjort:** tellingen mot Norges kvote i utenlandske soner. Taket står som data (`ZQ`) og telles når det kan fiskes der (R6, H2). Se BACKLOG.
   - **Neste:** Jonas sier ja til utrulling, så R5 (hav, vær og is).
-
+- 04.11.2026: **R4 rullet ut** (Jonas: «Rull ut»). Arbeidsgrenen med kjølvannet til de andre båtene er flettet inn først. Etter flettingen er enhetstestene (965 OK), `sonetest` og `rulestest` grønne.
+  - **Neste:** R5 (hav, vær og is) i en ny økt.
