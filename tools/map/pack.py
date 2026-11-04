@@ -88,8 +88,12 @@ def write_tiles(tiles, spec, out, extra=None):
     if os.path.exists(out): shutil.rmtree(out)
     os.makedirs(out)
     man = dict(v=2, frame='utm33', block=BLOCK, tile=TILE, layers={}, packs=[], tiles=[[t[0], t[1]] for t in tiles], **(extra or {}))
+    # (from H1b R3 the islands' tiles off the old frame, Svalbard and Jan Mayen, widen the extents to negative cells; the old frame's
+    # cells keep their numbers, which count from the frame's origin, not from the extent's corner)
+    tx0 = min([0] + [t[0] for t in tiles]); ty0 = min([0] + [t[1] for t in tiles]); X1 = max([frame.OLD[2]] + [(t[0] + 1) * TILE for t in tiles]); Y1 = max([frame.OLD[3]] + [(t[1] + 1) * TILE for t in tiles])
     for name, (c, typ, kind, dec) in spec.items():
-        n = round(BLOCK / c); man['layers'][name] = dict(c=c, ix0=0, iy0=0, nx=round(frame.OLD[2] / c), ny=round(frame.OLD[3] / c), n=n, type=typ, kind=kind, dec=dec)
+        n = round(BLOCK / c); ix0, iy0 = round(tx0 * TILE / c), round(ty0 * TILE / c)
+        man['layers'][name] = dict(c=c, ix0=ix0, iy0=iy0, nx=round(X1 / c) - ix0, ny=round(Y1 / c) - iy0, n=n, type=typ, kind=kind, dec=dec)
     total = 0; T = TILE // BLOCK
     for tx, ty, L, *V in tiles:
         groups = {}

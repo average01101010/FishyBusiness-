@@ -81,7 +81,10 @@ def fetch(out):
     man = {'source': 'Kartverket, Dybdedata - terrengmodeller 50 meters grid (CC BY 4.0), ' + CFG['wcs'] + ' ' + CFG['coverage'],
            'cell': 50, 'unit': 'dm', 'nodata': -32768, 'tiles': {}}
     t0 = time.time()
-    for k, (tx, ty) in enumerate(CFG['tiles']):
+    # 'only': 'islands' fetches the islands' tiles off the old frame (tools/map/xtiles.json: Svalbard, Bjørnøya, Hopen, Jan Mayen; H1b R3)
+    # into a release of their own, which kart.json's 'depth' lists after the coast's
+    T = json.load(open(os.path.join(HERE, 'xtiles.json'))) if CFG.get('only') == 'islands' else CFG['tiles']
+    for k, (tx, ty) in enumerate(T):
         try: A = tile_tif(tx, ty, D, k < 2)
         except Exception as e: print('  failed', tx, ty, repr(e)[:300], flush=True); A = None
         if A is None: continue
@@ -90,7 +93,7 @@ def fetch(out):
         st = {'n': int(ok.sum()), 'shape': list(A.shape)}
         if ok.any(): st.update(lo=round(float(np.nanmin(A)), 1), hi=round(float(np.nanmax(A)), 1), neg=int((A[ok] < 0).sum()))
         man['tiles'][f'{tx},{ty}'] = st
-        print(f'{k + 1}/{len(CFG["tiles"])}', tx, ty, st, f'{time.time() - t0:.0f}s', flush=True)
+        print(f'{k + 1}/{len(T)}', tx, ty, st, f'{time.time() - t0:.0f}s', flush=True)
     if man['tiles']: json.dump(man, open(os.path.join(out, 'manifest.json'), 'w'), indent=0)
     print('done', len(man['tiles']), 'tiles', flush=True)
 

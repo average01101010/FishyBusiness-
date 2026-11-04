@@ -16,6 +16,7 @@ Fra `CLAUDE.md` 26.10.2026 (Jonas 07.10.2026, «Spør før hver test»: «Dekker
 | `trackfollow` | 30 min | styringen, Autonav, rutene eller manøvreringsmodellen (`16b-dyn.js`) |
 | `tral3d` | 12 min | trål eller not |
 | `vectest` | 11 min | vec-pakkene (bygg, veier, bruer, kaier) |
+| `svalbardtest` | 10 min | øyene utenfor den gamle rammen (Svalbard, Bjørnøya, Jan Mayen): flisene, landet, dybden, byggene og bakken; trenger hele kysten med øyene og `dist-vec` (H1b R3) |
 | `teleport3d` | 8 min | kartlasteren eller 3D-terrenget |
 | `kinotest` | 6 min | kameraet |
 | `unittest` | 5 min | havner og mottak (kai, kran, truck, tidevann) |

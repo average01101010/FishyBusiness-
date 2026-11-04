@@ -58,7 +58,7 @@
     g.fillStyle = '#9fe3c6'; g.font = '600 15px ui-monospace, monospace'; const sog = b.status === 'port' ? 0 : b.v;
     g.fillText('SOG ' + fmt(sog, 1) + ' kn', 10, 18);
     g.textAlign = 'right'; g.fillText(hm(Hn), W - 10, 18); g.textAlign = 'left';
-    g.fillStyle = '#7fa5b6'; g.font = '12px ui-monospace, monospace'; const ll = LL(p); g.fillText(ll.lat.toFixed(4) + '°N  ' + ll.lon.toFixed(4) + '°E', 10, Hc - 5);
+    g.fillStyle = '#7fa5b6'; g.font = '12px ui-monospace, monospace'; const ll = LL(p); g.fillText(ll.lat.toFixed(4) + '°N  ' + Math.abs(ll.lon).toFixed(4) + (ll.lon < 0 ? '°W' : '°E'), 10, Hc - 5);
     upTex(SK.tPlot, SK.cvP);
   }
   function dial(g, cx, cy, r, v0, v1, v, a0, a1, ticks, labels, title, redFrom){

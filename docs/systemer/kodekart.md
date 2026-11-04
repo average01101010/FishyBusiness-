@@ -1828,7 +1828,7 @@ the logo (src/brand/logo.svg, the user's anchor of 03.11.2026), filled with curr
 - **4** i18n
   - 113 `t(k, ...a)`
 
-## `src/js/ui/02-format-state.js` (207 linjer)
+## `src/js/ui/02-format-state.js` (208 linjer)
 
 ---------- formatting ----------
 
@@ -1860,10 +1860,10 @@ the logo (src/brand/logo.svg, the user's anchor of 03.11.2026), filled with curr
 - **153** UI state
   - 164 `booting()`
   - 165 `loaderGone()`
-  - 172 `toast(msg, ms)`
-  - 185 `saveCode()`
-  - 193 `codeRead(code)`
-  - 201 `loadCode(code)`
+  - 173 `toast(msg, ms)`
+  - 186 `saveCode()`
+  - 194 `codeRead(code)`
+  - 202 `loadCode(code)`
 
 ## `src/js/ui/03a-chart.js` (157 linjer)
 
@@ -2147,12 +2147,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1002 linjer)
+## `src/js/ui/phone/07-patch.js` (1021 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 995 `patch()`
+  - 1014 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (94 linjer)
 
@@ -2356,20 +2356,20 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 170 `turFotoUi()`
   - 174 `turFotoShoot(id)`
 
-## `src/js/ui/05g-press.js` (76 linjer)
+## `src/js/ui/05g-press.js` (78 linjer)
 
 ---------- Kystposten on the phone (core/09h-press.js): the front page and the local tab, a story to read on, the unread count on
 
 - **1** Kystposten on the phone (core/09h-press.js): the front page and the local tab, a story to read on, the unread count on
-  - 6 `pressImg(s, small)`
-  - 13 `pressPage(local)`
-  - 26 `pressArticle(s)`
-  - 32 `pressFind(key)`
-  - 34 `pressNotify(s)`
-  - 41 `pressFlush()`
-  - 52 `pressFetch(force)`
-  - 67 `pressSkreiFetch()`
-  - 75 `pressStart()`
+  - 8 `pressImg(s, small)`
+  - 15 `pressPage(local)`
+  - 28 `pressArticle(s)`
+  - 34 `pressFind(key)`
+  - 36 `pressNotify(s)`
+  - 43 `pressFlush()`
+  - 54 `pressFetch(force)`
+  - 69 `pressSkreiFetch()`
+  - 77 `pressStart()`
 
 ## `src/js/ui/05h-kystkart.js` (91 linjer)
 
@@ -2598,34 +2598,34 @@ actions
 
 - **1** fishing by hand: jig, strike on the bite, reel without snapping the line
 
-## `src/js/ui/09b-pub.js` (366 linjer)
+## `src/js/ui/09b-pub.js` (367 linjer)
 
 ---------- the pub in 3D: a stool at the bar, seen in first person (Jonas 08.10.2026) ----------
 
 - **1** the pub in 3D: a stool at the bar, seen in first person (Jonas 08.10.2026)
 - **15** the model: the GLB as it is (positions as 16-bit, colours as bytes), straight into the GPU
-- **89** matrices (column-major)
-- **101** a frame
-- **145** what can be tapped
-- **171** the panels
-- **221** the bartender: the evening's talk in the place's dialect, and a round for the crew
-- **246** the old hand at the bar with the echo sounder's news (tilbakemelding #58; Jonas 09.10.2026: «i puben 1 gang per spilldøgn»)
-- **294** the notice board: Kystposten, the week's best, the trips
-- **305** the round table: the hands looking for a berth (the crew exchange)
-- **312** the top bar
-- **325** open and close
+- **90** matrices (column-major)
+- **102** a frame
+- **146** what can be tapped
+- **172** the panels
+- **222** the bartender: the evening's talk in the place's dialect, and a round for the crew
+- **247** the old hand at the bar with the echo sounder's news (tilbakemelding #58; Jonas 09.10.2026: «i puben 1 gang per spilldøgn»)
+- **295** the notice board: Kystposten, the week's best, the trips
+- **306** the round table: the hands looking for a berth (the crew exchange)
+- **313** the top bar
+- **326** open and close
 
-## `src/js/ui/09c-naust3d.js` (303 linjer)
+## `src/js/ui/09c-naust3d.js` (304 linjer)
 
 ---------- Father's naust in 3D: the trophy wall with the biggest fish of each species (Jonas 09.10.2026) ----------
 
 - **1** Father's naust in 3D: the trophy wall with the biggest fish of each species (Jonas 09.10.2026)
 - **18** the model, as the pub reads it
-- **91** matrices (column-major)
-- **104** a frame
-- **162** what can be tapped
-- **198** the panels
-- **250** the top bar, open and close
+- **92** matrices (column-major)
+- **105** a frame
+- **163** what can be tapped
+- **199** the panels
+- **251** the top bar, open and close
 
 ## `src/js/ui/09c-pubsoc.js` (243 linjer)
 
@@ -2697,7 +2697,7 @@ SOUND (the user's wish 03.10.2026)
 - **82** inside Father's naust (Jonas 09.10.2026: «Kjør på med lyd i naustet»; ui/09c-naust3d.js)
 - **141** the music (Jonas 05.10.2026: «rolig ambient instrumentaler som svak stemning i bakgrunnen. Må kunne skrus av i innstillinger»)
 
-## `src/js/ui/10f-cloud.js` (933 linjer)
+## `src/js/ui/10f-cloud.js` (934 linjer)
 
 THE CLOUD (04.10.2026; docs/lansering.md E and F)
 
@@ -2726,73 +2726,73 @@ THE CLOUD (04.10.2026; docs/lansering.md E and F)
   - 211 `cloudAsk()`
   - 221 `cloudConsent(yes, by)`
   - 227 `cloudBegin()`
-  - 236 `cloudEv(k, d)`
-  - 237 `cloudFlush(end)`
-- **246** the errors (04.10.2026; caught everywhere since 02.11.2026, js/errtrap.js)
-  - 257 `srcMapStr(s)`
-  - 270 `errNoise(msg)`
-  - 275 `cloudErr(msg, src, stack, kind)`
-  - 286 `errSend(e)`
-  - 290 `errQueue()`
-  - 291 `errKeep(list)`
-  - 295 `errFlush()`
-  - 319 `errStart()`
-- **328** a page that stops or stands still while it is on the screen
-  - 335 `aliveRead()`
-  - 336 `aliveBeat(gone)`
-  - 347 `aliveCheck()`
-  - 371 `hangWatch()`
-- **385** the save between devices (05.10.2026; supabase/migrations/20261005200000_save_sync.sql)
-  - 392 `syncGet()`
-  - 393 `syncSet(rev, at, rv, sq)`
-  - 399 `deviceId()`
-  - 403 `deviceName()`
-  - 408 `cloudStatus(s)`
-  - 409 `cloudStatusText()`
-  - 418 `saveSum(o)`
-  - 422 `sumText(m)`
-  - 429 `cloudChoose(here, cloud, when, box)`
-  - 444 `cloudKeptNote(where)`
-  - 449 `cloudTake(cs)`
-  - 455 `cloudSync(cs)`
-  - 479 `cloudSaveSoon(closing, manual)`
-  - 518 `cloudSoon(ms)`
-- **519** one device at a time (13.10.2026, supabase/migrations/20261013120000_active.sql)
-  - 529 `cloudFp()`
-  - 530 `cloudClaim(wait)`
-  - 543 `cloudBeat()`
-  - 559 `cloudWake()`
-  - 565 `cloudPassed(h)`
-  - 580 `cloudHeldShow(h)`
-  - 589 `cloudPlayHere()`
-  - 599 `cloudCheckHead()`
-  - 608 `cloudConflict(cl, moved)`
-  - 638 `cloudHist()`
-  - 643 `cloudRestore(id)`
-- **654** what is measured: the game's own functions, wrapped once they are all defined
-  - 655 `cloudHooks()`
-- **678** the account card in Settings
-  - 679 `cloudCard()`
-  - 703 `histRows()`
-  - 715 `cloudAccountDel()`
-  - 726 `cloudMediaDel()`
-  - 732 `cloudAct(a, d)`
-- **766** registering, for a guest: in the game's own words, never a wall before the third landing
-  - 775 `guestHave()`
-  - 781 `guestAsk(why)`
-  - 805 `namesKept()`
-  - 806 `namesKeep(o)`
-  - 808 `namesApply()`
-  - 816 `nameTake(n, quiet)`
-  - 826 `nameCheck()`
-  - 841 `nameSuggest()`
-  - 850 `nameAsk(why, reason)`
-  - 875 `guestOpenAsk()`
-  - 883 `nameNudge(force)`
-  - 896 `guestNudge(step)`
-  - 908 `guestLogin(src)`
-  - 914 `guestRegister(signIn)`
-  - 926 `guestGift()`
+  - 237 `cloudEv(k, d)`
+  - 238 `cloudFlush(end)`
+- **247** the errors (04.10.2026; caught everywhere since 02.11.2026, js/errtrap.js)
+  - 258 `srcMapStr(s)`
+  - 271 `errNoise(msg)`
+  - 276 `cloudErr(msg, src, stack, kind)`
+  - 287 `errSend(e)`
+  - 291 `errQueue()`
+  - 292 `errKeep(list)`
+  - 296 `errFlush()`
+  - 320 `errStart()`
+- **329** a page that stops or stands still while it is on the screen
+  - 336 `aliveRead()`
+  - 337 `aliveBeat(gone)`
+  - 348 `aliveCheck()`
+  - 372 `hangWatch()`
+- **386** the save between devices (05.10.2026; supabase/migrations/20261005200000_save_sync.sql)
+  - 393 `syncGet()`
+  - 394 `syncSet(rev, at, rv, sq)`
+  - 400 `deviceId()`
+  - 404 `deviceName()`
+  - 409 `cloudStatus(s)`
+  - 410 `cloudStatusText()`
+  - 419 `saveSum(o)`
+  - 423 `sumText(m)`
+  - 430 `cloudChoose(here, cloud, when, box)`
+  - 445 `cloudKeptNote(where)`
+  - 450 `cloudTake(cs)`
+  - 456 `cloudSync(cs)`
+  - 480 `cloudSaveSoon(closing, manual)`
+  - 519 `cloudSoon(ms)`
+- **520** one device at a time (13.10.2026, supabase/migrations/20261013120000_active.sql)
+  - 530 `cloudFp()`
+  - 531 `cloudClaim(wait)`
+  - 544 `cloudBeat()`
+  - 560 `cloudWake()`
+  - 566 `cloudPassed(h)`
+  - 581 `cloudHeldShow(h)`
+  - 590 `cloudPlayHere()`
+  - 600 `cloudCheckHead()`
+  - 609 `cloudConflict(cl, moved)`
+  - 639 `cloudHist()`
+  - 644 `cloudRestore(id)`
+- **655** what is measured: the game's own functions, wrapped once they are all defined
+  - 656 `cloudHooks()`
+- **679** the account card in Settings
+  - 680 `cloudCard()`
+  - 704 `histRows()`
+  - 716 `cloudAccountDel()`
+  - 727 `cloudMediaDel()`
+  - 733 `cloudAct(a, d)`
+- **767** registering, for a guest: in the game's own words, never a wall before the third landing
+  - 776 `guestHave()`
+  - 782 `guestAsk(why)`
+  - 806 `namesKept()`
+  - 807 `namesKeep(o)`
+  - 809 `namesApply()`
+  - 817 `nameTake(n, quiet)`
+  - 827 `nameCheck()`
+  - 842 `nameSuggest()`
+  - 851 `nameAsk(why, reason)`
+  - 876 `guestOpenAsk()`
+  - 884 `nameNudge(force)`
+  - 897 `guestNudge(step)`
+  - 909 `guestLogin(src)`
+  - 915 `guestRegister(signIn)`
+  - 927 `guestGift()`
 
 ## `src/js/ui/10g-push.js` (206 linjer)
 
@@ -2912,7 +2912,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 - **70** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (194 linjer)
+## `src/js/ui/11-boot.js` (250 linjer)
 
 ---------- boot ----------
 
@@ -2923,12 +2923,21 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 17 `bootInfo()`
   - 19 `bootDone()`
   - 30 `bootMap()`
-  - 37 `bootData()`
-  - 51 `bootMapLoad()`
-  - 72 `bootGame()`
-  - 177 `bootFail(e)`
+  - 50 `boot3dAsk()`
+  - 51 `boot3dShown()`
+  - 60 `boot3dSend()`
+  - 61 `modelsReady()`
+  - 62 `dataEls()`
+  - 63 `dataEarly()`
+  - 68 `dataGet(el, opt)`
+  - 78 `bootData()`
+  - 85 `bootDataLate()`
+  - 100 `modelsLabel()`
+  - 107 `bootMapLoad()`
+  - 128 `bootGame()`
+  - 233 `bootFail(e)`
 
-## `src/js/vessel3d.js` (1467 linjer)
+## `src/js/vessel3d.js` (1471 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -2968,79 +2977,79 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **272** one spec per type: the hull and the fittings. The skiff is hand-built in view3d.js
 - **361** detailed models from GLB files (tools/boats, built in Blender from the yards' drawings)
   - 372 `glbParse(b64)`
-  - 393 `glbLoad(type)`
-  - 398 `glbPart(type, name)`
-  - 401 `glbPaint(part, liv)`
-  - 409 `glbZones(type)`
-  - 416 `glbModel(type, lod, liv)`
-  - 441 `vesselSpec(type)`
-  - 442 `buildVesselModel(type, lod, liv)`
-  - 483 `vesselGeo(type, hs, sp, house, anch)`
-  - 495 `vesselModel(type)`
-  - 496 `geoOf(type)`
-- **500** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
-  - 519 `modelLiv(L)`
-  - 526 `hullLiv(b)`
-  - 527 `livKey(liv)`
-  - 529 `livGeo(liv)`
-  - 534 `livStr(b)`
-  - 546 `livPen(s)`
-  - 548 `livMark(s)`
-  - 549 `livParse(s)`
-- **554** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
-  - 558 `topsides(type)`
-  - 576 `designLines(TS, liv)`
-  - 585 `glbDesign(type, part, liv)`
-  - 619 `designFits(type, k)`
-  - 626 `kitLiv(liv)`
-- **628** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
-- **677** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
-  - 688 `logoCanvas(cv, L, img)`
-  - 699 `logoStrips(type)`
-  - 701 `logoStr(L)`
-  - 702 `logoParse(s)`
-  - 706 `flagCanvas(cv, code, shape, logo)`
-  - 718 `flagOf(L)`
-- **719** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
-  - 728 `hullTris(type)`
-  - 742 `sideStrip(type, frac, hMax, aspect, drop)`
-  - 774 `nameStrips(type)`
-  - 810 `stripProud(type, st)`
-  - 833 `stripPaint(type, st)`
-  - 854 `markStrips(type)`
-  - 876 `anchorLen(bw)`
-  - 879 `markRGB(type, liv)`
-  - 887 `hullRGB(type, liv)`
-- **897** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
-  - 908 `facingTris(P, dir, keep)`
-  - 923 `rayZ(T, x, y, dir, za, zb)`
-  - 934 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
-  - 945 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
-  - 956 `halfWidth(T, y, z0, zw, dir, wmax)`
-  - 967 `houseFront(type, P, Gl, V)`
-  - 1000 `transom(type, P, V)`
-  - 1031 `namePlaces(type)`
-  - 1049 `placeRGB(type, p, liv)`
-  - 1057 `nameInkLight(rgb)`
-  - 1061 `npcKit(L, B)`
-  - 1064 `npcModel(type, lod, liv)`
-  - 1066 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **1078** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 1091 `wkPart(name, kit)`
-  - 1101 `wkPut(B, o, ax, s, at)`
-  - 1111 `wkLimb(B, o, A, E, r)`
-  - 1118 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 1140 `vesselSVG(type, w, h)`
-- **1178** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1185 `deckMap(type)`
-  - 1330 `deckPass(M, k, q)`
-  - 1335 `passLine(M, A, B)`
-  - 1337 `linkPass(M, k, q)`
-  - 1341 `deckComp(M)`
-  - 1350 `deckPath(M, a, b)`
-- **1381** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1394 `lanterns(G, V, st)`
-  - 1428 `deckPoints(type)`
+  - 397 `glbLoad(type)`
+  - 402 `glbPart(type, name)`
+  - 405 `glbPaint(part, liv)`
+  - 413 `glbZones(type)`
+  - 420 `glbModel(type, lod, liv)`
+  - 445 `vesselSpec(type)`
+  - 446 `buildVesselModel(type, lod, liv)`
+  - 487 `vesselGeo(type, hs, sp, house, anch)`
+  - 499 `vesselModel(type)`
+  - 500 `geoOf(type)`
+- **504** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
+  - 523 `modelLiv(L)`
+  - 530 `hullLiv(b)`
+  - 531 `livKey(liv)`
+  - 533 `livGeo(liv)`
+  - 538 `livStr(b)`
+  - 550 `livPen(s)`
+  - 552 `livMark(s)`
+  - 553 `livParse(s)`
+- **558** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
+  - 562 `topsides(type)`
+  - 580 `designLines(TS, liv)`
+  - 589 `glbDesign(type, part, liv)`
+  - 623 `designFits(type, k)`
+  - 630 `kitLiv(liv)`
+- **632** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
+- **681** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
+  - 692 `logoCanvas(cv, L, img)`
+  - 703 `logoStrips(type)`
+  - 705 `logoStr(L)`
+  - 706 `logoParse(s)`
+  - 710 `flagCanvas(cv, code, shape, logo)`
+  - 722 `flagOf(L)`
+- **723** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
+  - 732 `hullTris(type)`
+  - 746 `sideStrip(type, frac, hMax, aspect, drop)`
+  - 778 `nameStrips(type)`
+  - 814 `stripProud(type, st)`
+  - 837 `stripPaint(type, st)`
+  - 858 `markStrips(type)`
+  - 880 `anchorLen(bw)`
+  - 883 `markRGB(type, liv)`
+  - 891 `hullRGB(type, liv)`
+- **901** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
+  - 912 `facingTris(P, dir, keep)`
+  - 927 `rayZ(T, x, y, dir, za, zb)`
+  - 938 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
+  - 949 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
+  - 960 `halfWidth(T, y, z0, zw, dir, wmax)`
+  - 971 `houseFront(type, P, Gl, V)`
+  - 1004 `transom(type, P, V)`
+  - 1035 `namePlaces(type)`
+  - 1053 `placeRGB(type, p, liv)`
+  - 1061 `nameInkLight(rgb)`
+  - 1065 `npcKit(L, B)`
+  - 1068 `npcModel(type, lod, liv)`
+  - 1070 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **1082** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 1095 `wkPart(name, kit)`
+  - 1105 `wkPut(B, o, ax, s, at)`
+  - 1115 `wkLimb(B, o, A, E, r)`
+  - 1122 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 1144 `vesselSVG(type, w, h)`
+- **1182** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1189 `deckMap(type)`
+  - 1334 `deckPass(M, k, q)`
+  - 1339 `passLine(M, A, B)`
+  - 1341 `linkPass(M, k, q)`
+  - 1345 `deckComp(M)`
+  - 1354 `deckPath(M, a, b)`
+- **1385** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1398 `lanterns(G, V, st)`
+  - 1432 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (473 linjer)
 
@@ -3074,24 +3083,24 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 118 `ridged(x, y)`
   - 119 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (552 linjer)
+## `src/js/view3d/01-shaders.js` (571 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
-- **142** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **174** the boat's own foam, when she has way on
-- **192** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
-  - 462 `cloudStep(dt)`
-  - 469 `skyFrame(u, Hh, tn, bv)`
-  - 484 `glsl3(src, fs)`
-  - 492 `compile(type, src, nm)`
-  - 499 `program(vs, fs, attrs, nm = '?')`
-  - 507 `buf(data, target, usage)`
-  - 512 `airSet(u, terr)`
-  - 527 `sunT0()`
-  - 534 `attr(loc, b, size)`
-  - 550 `upload(pos, col, idx)`
+- **144** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
+- **176** the boat's own foam, when she has way on
+- **207** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
+  - 481 `cloudStep(dt)`
+  - 488 `skyFrame(u, Hh, tn, bv)`
+  - 503 `glsl3(src, fs)`
+  - 511 `compile(type, src, nm)`
+  - 518 `program(vs, fs, attrs, nm = '?')`
+  - 526 `buf(data, target, usage)`
+  - 531 `airSet(u, terr)`
+  - 546 `sunT0()`
+  - 553 `attr(loc, b, size)`
+  - 569 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (99 linjer)
 
@@ -3139,7 +3148,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 373 `buildTerrain()`
   - 382 `stream3d()`
 
-## `src/js/view3d/04-vec-packs.js` (334 linjer)
+## `src/js/view3d/04-vec-packs.js` (341 linjer)
 
 ---------- the coast's packs (01c-vec.js, part 4 of the coast-wide plan): buildings, roads, bridges, piers and breakwaters ----------
 
@@ -3163,9 +3172,9 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 210 `nearWanted()`
   - 220 `fineWanted()`
   - 239 `recolor(m, snow)`
-- **322** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
-  - 326 `stonesOf(list, build)`
-  - 331 `drawStones(list, TM, eye)`
+- **329** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
+  - 333 `stonesOf(list, build)`
+  - 338 `drawStones(list, TM, eye)`
 
 ## `src/js/view3d/05-quays-breakwaters.js` (337 linjer)
 
@@ -3193,7 +3202,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 307 `obox(nb, c, u, n, len, wid, y0, h, k)`
   - 313 `buildHarbourFittings()`
 
-## `src/js/view3d/06-buildings-lights.js` (393 linjer)
+## `src/js/view3d/06-buildings-lights.js` (405 linjer)
 
 ---------- real buildings (OpenStreetMap), streamed in 1 km chunks inside the terrain corridor ----------
 
@@ -3202,25 +3211,26 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 14 `vecBldIn(t, key)`
   - 18 `loadBuildings()`
   - 39 `onQuayStrip(x, z)`
-  - 44 `bldOnUnit(B, i)`
-  - 55 `buildChunk(key, detail)`
-- **92** details: chimney, windows, doors (only close to the boat)
-  - 136 `addTrees(m, key, srcs, snowy, c)`
-  - 171 `addRoads(m, key, snowy)`
-  - 192 `freeChunk(c)`
-  - 193 `updateChunks(maxBuilds)`
-  - 210 `drawBuildings(TM)`
-  - 229 `lightY(L, x, z)`
-  - 230 `lightOn(L, t)`
-  - 231 `drawSeaLights(VP, eye, t, near)`
-- **246** lights that light up round them at night (the user's wish 03.10.2026)
-  - 251 `pickLights(eye, t)`
-  - 276 `plSet(u)`
-  - 281 `drawBeams(VP, eye, t)`
-  - 332 `workLights(type, G)`
-  - 349 `airGlow()`
-  - 350 `drawWorkCones(VP, eye, t, BMrel, VG)`
-  - 386 `drawChunkLights(VP, eye)`
+  - 48 `bldNear(x, z, r)`
+  - 55 `bldOnUnit(B, i)`
+  - 67 `buildChunk(key, detail)`
+- **104** details: chimney, windows, doors (only close to the boat)
+  - 148 `addTrees(m, key, srcs, snowy, c)`
+  - 183 `addRoads(m, key, snowy)`
+  - 204 `freeChunk(c)`
+  - 205 `updateChunks(maxBuilds)`
+  - 222 `drawBuildings(TM)`
+  - 241 `lightY(L, x, z)`
+  - 242 `lightOn(L, t)`
+  - 243 `drawSeaLights(VP, eye, t, near)`
+- **258** lights that light up round them at night (the user's wish 03.10.2026)
+  - 263 `pickLights(eye, t)`
+  - 288 `plSet(u)`
+  - 293 `drawBeams(VP, eye, t)`
+  - 344 `workLights(type, G)`
+  - 361 `airGlow()`
+  - 362 `drawWorkCones(VP, eye, t, BMrel, VG)`
+  - 398 `drawChunkLights(VP, eye)`
 
 ## `src/js/view3d/07-harbour-unit.js` (223 linjer)
 
@@ -3428,7 +3438,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 490 `mastTop(G)`
   - 494 `updateFlag(t, appW)`
 
-## `src/js/view3d/14-sea.js` (300 linjer)
+## `src/js/view3d/14-sea.js` (303 linjer)
 
 ---------- sea ----------
 
@@ -3444,25 +3454,25 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 81 `wakeTrack(x, z, fx, fz, ds)`
   - 100 `wakeTU(u, ox, oz)`
   - 101 `updateWake()`
-  - 122 `wakeHFast(x, z)`
-- **131** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
-  - 144 `foamFree()`
-  - 145 `foamInit()`
-  - 161 `wavePh()`
-  - 168 `foamStep(dt, t)`
-  - 220 `foamBind(u)`
-- **227** the sea state over the near terrain and the whole map
-  - 234 `ssLevel(n, unit)`
-  - 236 `ssRect(L)`
-  - 237 `ssWork(L, until)`
-  - 260 `ssStep(rdt)`
-  - 262 `ssBlend(L)`
-  - 264 `ssTex(L, x, z, out)`
-  - 271 `ssAt(x, z)`
-  - 280 `seaDisp(x, z, t, S, fade)`
-  - 291 `seaFade(x, z)`
-  - 292 `seaH(x, z, t)`
-  - 298 `seaHFast(x, z, t)`
+  - 125 `wakeHFast(x, z)`
+- **134** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
+  - 147 `foamFree()`
+  - 148 `foamInit()`
+  - 164 `wavePh()`
+  - 171 `foamStep(dt, t)`
+  - 223 `foamBind(u)`
+- **230** the sea state over the near terrain and the whole map
+  - 237 `ssLevel(n, unit)`
+  - 239 `ssRect(L)`
+  - 240 `ssWork(L, until)`
+  - 263 `ssStep(rdt)`
+  - 265 `ssBlend(L)`
+  - 267 `ssTex(L, x, z, out)`
+  - 274 `ssAt(x, z)`
+  - 283 `seaDisp(x, z, t, S, fade)`
+  - 294 `seaFade(x, z)`
+  - 295 `seaH(x, z, t)`
+  - 301 `seaHFast(x, z, t)`
 
 ## `src/js/view3d/15-env-mooring.js` (158 linjer)
 
@@ -3482,7 +3492,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 103 `moorStep(dt, bp, at = dt)`
   - 135 `drawMooring(BMrel, eye, VP, t)`
 
-## `src/js/view3d/16-motion.js` (227 linjer)
+## `src/js/view3d/16-motion.js` (233 linjer)
 
 ---------- boat motion ----------
 
@@ -3498,9 +3508,9 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 88 `trkStep(dt, pr)`
   - 124 `dynFollow(dt)`
   - 132 `updateBoat(dt, t, frac, rdt)`
-- **212** particles
-  - 216 `spawn(x, y, z, vx, vy, vz, life, g)`
-  - 218 `drawPts(n, mode, VP, col, size, round, off, mx)`
+- **218** particles
+  - 222 `spawn(x, y, z, vx, vy, vz, life, g)`
+  - 224 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
 ## `src/js/view3d/17-draw.js` (190 linjer)
 
@@ -3717,7 +3727,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **91** frame
   - 95 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (687 linjer)
+## `src/js/view3d/24-cinema.js` (694 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -3748,9 +3758,9 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 507 `drawSmoke(VP, eye, BM, dt)`
   - 540 `scupperWater(VP, eye, BM, dt, t, col)`
   - 566 `drawEffects(VP, eye, BM, dt, t)`
-  - 669 `updateLabels(VP, eye, W, Hh)`
+  - 676 `updateLabels(VP, eye, W, Hh)`
 
-## `src/js/view3d/25-controls.js` (218 linjer)
+## `src/js/view3d/25-controls.js` (219 linjer)
 
 ---------- controls ----------
 
@@ -3763,11 +3773,11 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 44 `liftY(k)`
   - 48 `showroom(type)`
   - 57 `show(on, auto)`
-  - 72 `bench(ks, ns)`
-- **90** the profile (#prof, F1)
-  - 100 `pqInit()`
-  - 108 `pqPoll()`
-  - 117 `profBegin(rdt, j0)`
-  - 120 `profMark(k)`
-  - 124 `profEnd()`
-  - 134 `prof(sets)`
+  - 73 `bench(ks, ns)`
+- **91** the profile (#prof, F1)
+  - 101 `pqInit()`
+  - 109 `pqPoll()`
+  - 118 `profBegin(rdt, j0)`
+  - 121 `profMark(k)`
+  - 125 `profEnd()`
+  - 135 `prof(sets)`
