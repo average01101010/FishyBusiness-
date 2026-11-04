@@ -2147,12 +2147,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (998 linjer)
+## `src/js/ui/phone/07-patch.js` (1003 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 991 `patch()`
+  - 996 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (94 linjer)
 
@@ -3127,7 +3127,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 373 `buildTerrain()`
   - 382 `stream3d()`
 
-## `src/js/view3d/04-vec-packs.js` (283 linjer)
+## `src/js/view3d/04-vec-packs.js` (290 linjer)
 
 ---------- the coast's packs (01c-vec.js, part 4 of the coast-wide plan): buildings, roads, bridges, piers and breakwaters ----------
 
@@ -3149,9 +3149,9 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 159 `nearWanted()`
   - 169 `fineWanted()`
   - 188 `recolor(m, snow)`
-- **271** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
-  - 275 `stonesOf(list, build)`
-  - 280 `drawStones(list, TM, eye)`
+- **278** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
+  - 282 `stonesOf(list, build)`
+  - 287 `drawStones(list, TM, eye)`
 
 ## `src/js/view3d/05-quays-breakwaters.js` (337 linjer)
 
