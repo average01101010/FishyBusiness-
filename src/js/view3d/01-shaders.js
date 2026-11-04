@@ -166,11 +166,12 @@
     'if(a>st-1.0&&a<bo+1.5){float al=clamp((bo-a)/(bo-st),0.0,1.0);float wo=w+0.15+al*(0.3+0.1*v+pl*(0.4+0.08*v));float wd=0.35+0.05*v+al*0.4+pl*0.4;' +
     'float band=exp(-pow(max(q-wo,0.0)/wd,2.0));float str=smoothstep(1.2,3.5,v)*(0.5+0.5*smoothstep(0.0,0.3,al))*(1.0-0.3*smoothstep(0.6,1.0,al));' +
     'float inside=step(q,w)*smoothstep(0.0,0.4,al)*0.5*(1.0-0.8*tv);iw=max(iw,max(band*str,inside)*clump*dry);}' +
-    // the spray sheet on the plane: from the root the chine and the spray rails throw it flat out to both sides, and it lands as two
-    // white wings that open at some 18 degrees from the hull, filled between the hull and their ragged outer edge, on past the transom
-    'if(pf>0.01&&a<ar&&a>st-Lh){float d=ar-a;float ql=(hullW(ar)+0.3+d*(0.32+0.01*v))*(0.8+0.4*ns(Pb*0.35+vec2(7.0,3.0)));float wd2=0.4+0.1*d;' +
-    'float edge=exp(-pow((q-ql)/wd2,2.0));float fill=step(hullW(max(a,st))*0.95,q)*(1.0-smoothstep(ql,ql+wd2,q))*0.75;' +
-    'iw=max(iw,max(edge,fill)*pf*smoothstep(3.0,8.0,v)*(1.0-smoothstep(0.0,Lh,st-a))*clump);}' +
+    // the spray sheet on the plane: from the root the chine and the spray rails throw it flat out to both sides (the sheet in the air is
+    // drawEffects' spray); it lands about a beam out from the hull, so the water keeps two white wings with darker water between them and
+    // the wash behind the transom (the reference video). Laid where the sheet has reached its landing line, ragged at the edge
+    'if(pf>0.01&&a<ar&&a>st-Lh){float d=ar-a;float qw=(hullW(ar)+hb*(0.9+0.03*v))*(0.85+0.3*ns(Pb*0.3+vec2(7.0,3.0)));float ql=hullW(ar)+0.3+d*0.32;' +
+    'float wing=exp(-pow((q-qw)/(0.3*hb+0.3),2.0))*smoothstep(qw*0.7,qw,ql);' +
+    'iw=max(iw,wing*pf*smoothstep(3.0,8.0,v)*(0.7+0.3*ns(Pb*1.3+vec2(1.0,6.0)))*clump);}' +
     // the water the transom leaves and the screw churns: a band behind the stern, a beam wide, going on with her way
     // A dry transom (tv) leaves a hollow behind it that the water closes from both sides: a dark channel down the middle between the
     // white of the transom's corners and the screws, which closes into a white rooster tail some 3 beams aft (lc)
