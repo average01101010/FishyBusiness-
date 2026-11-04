@@ -959,8 +959,9 @@ function halfWidth(T, y, z0, zw, dir, wmax){
 }
 // the letters' cap height by the boat's length: 20 cm on a 7 m boat, 30 cm at 15 m, 60 cm on the big ones
 const nameCap = len => Math.max(0.15, Math.min(0.6, 0.0125 * len + 0.11));
-// on the transom smaller (Jonas 04.11.2026: «Lager du de voldsomt store?»): 12 cm on a 7 m boat, 15 cm at 11 m, 18 cm at 15 m, at most 40 cm
-const sternCap = len => Math.max(0.1, Math.min(0.4, 0.008 * len + 0.06));
+// on the transom smaller (Jonas 04.11.2026: «Lager du de voldsomt store?», and again: «Gjør teksten enda mindre … På mange båter dekker
+// det jo nesten hele hekkens bredde»): 8.5 cm on a 7 m boat, 10 cm at 10 m, 12.5 cm at 15 m, at most 30 cm
+const sternCap = len => Math.max(0.08, Math.min(0.3, 0.005 * len + 0.05));
 // a strip is as tall as the caps over 0.74 (nameCanvas: room for the ring over Å)
 const CAPK = 0.74;
 function houseFront(type, P, Gl, V){
@@ -1012,7 +1013,8 @@ function transom(type, P, V){
       const ln = [[top - nh, top, 'name']]; if (two) ln.push([top - nh - gap - ph, top - nh - gap, 'port']);
       const out = [];
       for (const [a, b, line] of ln){ const zm = rayZ(T, 0, (a + b) / 2, 1); if (!zm) break;
-        const w = Math.min(halfWidth(T, a + 0.01, zm.z, 0.4, 1, V.beam), halfWidth(T, b - 0.01, zm.z, 0.4, 1, V.beam)) * 0.9; if (w < (line === 'name' ? 2.6 : 2) * cap) break;
+        // (the text never wider than half the transom there: a long name is drawn narrower)
+        const w = Math.min(halfWidth(T, a + 0.01, zm.z, 0.4, 1, V.beam), halfWidth(T, b - 0.01, zm.z, 0.4, 1, V.beam)) * 0.5; if (w < (line === 'name' ? Math.max(0.3, 2.6 * cap) : 2 * cap)) break;
         const st = crossStrip(T, -w, w, a, b, zm.z, 0.5, 1, 0.012); if (!st) break;
         out.push({kind:'stern', line, B:st[0], T:st[1], aspect:2 * w / (b - a), paint:crossPaint(T, -w, w, a, b, 1, zm.z - 0.5, zm.z + 0.5)}); }
       if (out.length < ln.length) continue;
@@ -1030,12 +1032,16 @@ function namePlaces(type){
   if (type in NAMEPLC) return NAMEPLC[type];
   const V = VESSELS[type] || {len:10, beam:3}, G = glbHas(type) ? glbLoad(type) : null, P = G && G.parts.lod0; let out = [];
   if (P && P.zone){ out = (houseFront(type, P, G.parts.glass, V) || []).concat(transom(type, P, V) || []); }
-  // without a wheelhouse front (the open boats, a kit model): the name along the bows as before, clear of the registration mark
-  if (!out.some(p => p.kind === 'house')){ const st = nameStrips(type);
-    if (st) for (const s of st){ const b = s[0], t = s[1], len = Math.hypot(b[0][0] - b[b.length - 1][0], b[0][1] - b[b.length - 1][1], b[0][2] - b[b.length - 1][2]), h = Math.hypot(t[0][0] - b[0][0], t[0][1] - b[0][1], t[0][2] - b[0][2]);
-      // (a board of the model's own across the transom or the house front: the places above take the name there)
-      if (len < 0.05 || h < 0.03 || Math.abs(b[0][0] - b[b.length - 1][0]) > Math.abs(b[0][2] - b[b.length - 1][2])) continue;
-      out.push({kind:'side', line:'name', B:b, T:t, aspect:len / h, paint:P ? stripPaint(type, s) : null}); }
+  // no name on the bows any more (Jonas 04.11.2026: «Fjern også navnet som står i baugen, det ser malplassert ut»): a boat with neither a
+  // wheelhouse front nor a transom for it (the skiff with her outboard in the middle of it, the double-ended wooden boat) carries it small
+  // on her quarters, aft on each side under the sheer, as the small open boats do
+  if (!out.length){
+    const cap = sternCap(V.len), h = cap / CAPK;
+    // (where nothing stands proud of the hull under it if such a place is there; the wooden boat's strakes run her whole length)
+    const F = [0.8, 0.76, 0.84, 0.72].map(f => sideStrip(type, f, h, 5.5)).filter(Boolean), st = F.find(q => !stripProud(type, q[0]) && !stripProud(type, q[1])) || F[0];
+    // (lifted 3 cm more off the hull, so a clinker boat's laps do not cover the letters)
+    const out3 = r => r.map(q => [q[0] + Math.sign(q[0]) * 0.03, q[1], q[2]]);
+    if (st) for (const sd of st) out.push({kind:'quarter', line:'name', B:out3(sd[0]), T:out3(sd[1]), aspect:5.5, paint:P ? stripPaint(type, sd) : null});
   }
   return NAMEPLC[type] = out;
 }
