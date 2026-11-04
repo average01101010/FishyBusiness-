@@ -227,9 +227,9 @@
   // into the map just written, over a quad round her way (NPCF_VS/FS, MAX blending), so a sea with no boats near costs nothing: in the
   // map's own pass six more hulls per texel made SwiftShader's frames slow enough to time wakeshot out. Off with «#npcfoam0», and where
   // MAX blending is missing (WebGL 1 without EXT_blend_minmax).
-  const NPCFOAM_OFF = /npcfoam0/.test(location.hash), NPF = new Map(), NPCF = {prog:null, buf:null, max:0, why:'', last:[]};
+  const NPCFOAM_OFF = /npcfoam0/.test(location.hash), NPF = new Map(), NFO = {prog:null, buf:null, max:0, why:'', last:[]};
   function foamNPC(qx, qz, Dx, Dz, gx, gz){
-    if (NPCFOAM_OFF || NPCF.why) return;
+    if (NPCFOAM_OFF || NFO.why) return;
     let L0 = []; try { L0 = typeof npcNow !== 'undefined' ? npcNow : []; } catch (e){ L0 = []; }
     const R = FOAM.M / 2 - 40, cand = [];
     for (const n of L0){
@@ -237,7 +237,7 @@
       const x = n.p.x * 1000 - Dx, z = n.p.y * 1000 - Dz, d = Math.hypot(x - qx, z - qz); if (d > R) continue;
       cand.push([d, n, x, z]); }
     cand.sort((a, b) => a[0] - b[0]);
-    const now = performance.now(), seen = new Set(), todo = []; NPCF.last = [];
+    const now = performance.now(), seen = new Set(), todo = []; NFO.last = [];
     for (let i = 0; i < Math.min(6, cand.length); i++){
       const [, n, x, z] = cand[i], fx = Math.sin(n.hd || 0), fz = -Math.cos(n.hd || 0), Ln = n.L || (n.type === 'ferry' ? 70 : n.type === 'coastal' ? 35 : 10), Bn = n.B || Ln * 0.3;
       let t = null; try { t = npcType(n); } catch (e){ t = null; }
@@ -245,16 +245,16 @@
       const pp = NPF.get(n.id), ok = pp && Math.hypot(pp[0] - x, pp[1] - z) < 300; seen.add(n.id);
       const ox = FOAM.ox, oz = FOAM.oz, B = [(ok ? pp[0] : x) - ox, (ok ? pp[1] : z) - oz, x - ox, z - oz];
       todo.push({B, H:[ok ? pp[2] : fx, ok ? pp[3] : fz, fx, fz], G:[Ln, Bn / 2, Ln / 2, Ln / 2], V:[v, Fr, pl, 1]});
-      NPF.set(n.id, [x, z, fx, fz, now]); NPCF.last.push({id:n.id, B, L:Ln, v:+n.v.toFixed(1), Fr:+Fr.toFixed(2), pl}); }
+      NPF.set(n.id, [x, z, fx, fz, now]); NFO.last.push({id:n.id, B, L:Ln, v:+n.v.toFixed(1), Fr:+Fr.toFixed(2), pl}); }
     for (const [id, e] of NPF) if (!seen.has(id) && now - e[4] > 5000) NPF.delete(id);
     if (!todo.length) return;
     try {
-      if (!NPCF.prog){
-        NPCF.max = GL2 ? gl.MAX : ((gl.getExtension('EXT_blend_minmax') || {}).MAX_EXT || 0); if (!NPCF.max){ NPCF.why = 'ingen MAX-blanding'; return; }
-        NPCF.prog = program(NPCF_VS, NPCF_FS, ['aXZ'], 'skumkart-baater'); NPCF.buf = gl.createBuffer(); }
-    } catch (e){ NPCF.why = String(e.message || e).slice(0, 120); return; }
-    const P = NPCF.prog, u = P.u, M = FOAM.M, set4 = (k, a) => { if (u[k] != null) gl.uniform4fv(u[k], a); };
-    gl.useProgram(P.p); gl.enable(gl.BLEND); gl.blendEquation(NPCF.max); gl.blendFunc(gl.ONE, gl.ONE);
+      if (!NFO.prog){
+        NFO.max = GL2 ? gl.MAX : ((gl.getExtension('EXT_blend_minmax') || {}).MAX_EXT || 0); if (!NFO.max){ NFO.why = 'ingen MAX-blanding'; return; }
+        NFO.prog = program(NPCF_VS, NPCF_FS, ['aXZ'], 'skumkart-baater'); NFO.buf = gl.createBuffer(); }
+    } catch (e){ NFO.why = String(e.message || e).slice(0, 120); return; }
+    const P = NFO.prog, u = P.u, M = FOAM.M, set4 = (k, a) => { if (u[k] != null) gl.uniform4fv(u[k], a); };
+    gl.useProgram(P.p); gl.enable(gl.BLEND); gl.blendEquation(NFO.max); gl.blendFunc(gl.ONE, gl.ONE);
     if (u.uMm != null) gl.uniform1f(u.uMm, M); if (u.uFoamG != null) gl.uniform2f(u.uFoamG, gx, gz);
     set4('uFoamRect', [FOAM.ox - RO.x, FOAM.oz - RO.z, 1 / M, M]); set4('uFoamT', [FOAM.now[0], FOAM.win[0], FOAM.tau[0], 0]);
     const Q = new Float32Array(12);
@@ -262,9 +262,9 @@
       // the quad: her way since the last frame and her reach round it (the transom band, the wings a hull length aft), in the map's metres
       const r = 2 * o.G[3] + o.G[2] + 9 * o.G[1] + 12, x0 = Math.max(0, Math.min(o.B[0], o.B[2]) - r + gx), x1 = Math.min(M, Math.max(o.B[0], o.B[2]) + r + gx), z0 = Math.max(0, Math.min(o.B[1], o.B[3]) - r + gz), z1 = Math.min(M, Math.max(o.B[1], o.B[3]) + r + gz);
       if (x1 <= x0 || z1 <= z0) continue;
-      Q.set([x0, z0, x1, z0, x1, z1, x0, z0, x1, z1, x0, z1]); gl.bindBuffer(gl.ARRAY_BUFFER, NPCF.buf); gl.bufferData(gl.ARRAY_BUFFER, Q, gl.DYNAMIC_DRAW);
+      Q.set([x0, z0, x1, z0, x1, z1, x0, z0, x1, z1, x0, z1]); gl.bindBuffer(gl.ARRAY_BUFFER, NFO.buf); gl.bufferData(gl.ARRAY_BUFFER, Q, gl.DYNAMIC_DRAW);
       set4('uNB', o.B); set4('uNH', o.H); set4('uNG', o.G); set4('uNV', o.V);
-      attr(0, NPCF.buf, 2); gl.drawArrays(gl.TRIANGLES, 0, 6); }
+      attr(0, NFO.buf, 2); gl.drawArrays(gl.TRIANGLES, 0, 6); }
     gl.blendEquation(gl.FUNC_ADD); gl.disable(gl.BLEND);
   }
   // the sea shader reads the map (unit 7) where it is on
