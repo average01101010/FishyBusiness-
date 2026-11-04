@@ -1515,3 +1515,10 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 :root[lang=en] #drawerBody .fold::after{content:'More ▾'}
 #drawerBody .fold.open{display:block;-webkit-line-clamp:unset}
 #drawerBody .fold.open::after{content:none}
+/* «Nå» on the phone's home screen (ui/phone/08-home-papers-merker.js nowCards, U7): answers that open their app */
+.ph-nowc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:-6px 0 16px}
+.ph-now{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;padding:9px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;text-align:left;font:inherit;cursor:pointer}
+.ph-now span{font:600 var(--fs-cap)/1.2 var(--sans);letter-spacing:.04em;text-transform:uppercase;color:rgba(238,244,247,.7)}
+.ph-now b{font:700 var(--fs-sm)/1.25 var(--sans);overflow-wrap:anywhere}
+.ph-now.r0 b{color:#9fe6bd} .ph-now.r1 b{color:#ffcf7a} .ph-now.r2 b{color:#ff9b91}
+.ph-now:only-child,.ph-now:last-child:nth-child(odd){grid-column:1 / -1}

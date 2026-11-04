@@ -3,8 +3,20 @@
     return '<div class="ph-homescr"><div class="ph-clock">' + hm(H) + '</div><div class="ph-date">' + dayStr(H) + '</div>' +
       '<div class="ph-widget"><span class="w1">' + dirName(windDir(H)) + ' ' + fmt(W, 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C</span><span class="w2">' + kr(S.cash) + '</span></div>' +
       ((g => g ? '<button class="ph-goal" data-pa="open" data-a="fartoy"><span>' + L('Neste mål: ', 'Next goal: ') + '<b>' + g.n + '</b></span><small>' + (g.txt || kr(Math.min(Math.max(0, S.cash), g.need)) + ' / ' + kr(g.need)) + '</small><span class="gb"><i style="width:' + (g.pc * 100).toFixed(1) + '%"></i></span></button>' : '')(goals()[0])) +
-      (typeof achChip === 'function' ? achChip() : '') + fsChip() +
+      (typeof achChip === 'function' ? achChip() : '') + fsChip() + nowCards(na) +
       '<div class="ph-grid">' + APPS.filter(a => (a[0] !== 'admin' || adminOk()) && (a[0] !== 'rederi' || rederiOpen()) && !KBT.includes(a[0]) && appShown(a[0])).map(a => '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic" style="background:linear-gradient(160deg,' + a[3] + ',' + a[3] + 'cc)">' + IC[a[0]] + '</span>' + L(a[1], a[2]) + (a[0] === 'meld' && n ? '<span class="bd">' + n + '</span>' : '') + (a[0] === 'ordl' && ordState().active.length ? '<span class="bd">' + ordState().active.length + '</span>' : '') + (a[0] === 'rederi' && na ? '<span class="bd">' + na + '</span>' : '') + (a[0] === 'patch' && np ? '<span class="bd">' + np + '</span>' : '') + (a[0] === 'handbok' && nhb ? '<span class="bd">' + nhb + '</span>' : '') + (a[0] === 'post' && npost ? '<span class="bd">' + npost + '</span>' : '') + (appNew(a[0]) ? '<span class="bd ny">' + L('ny', 'new') + '</span>' : '') + '</button>').join('') + '</div></div>';
+  }
+  // «Nå» on the home screen (U7, docs/planer/ui-redesign.md, V4 A): the phone answers before it is asked. Each card opens the app that has
+  // the rest: the rules where the boat is (Regler), the best price for cod among the nearest plants (Salgslaget), and the company when it
+  // needs you (Rederi). Spilltest 2: the Regler and Kvote apps were never opened, though their content was what the player needed
+  function nowCards(na){
+    const out = [], b = S.boat;
+    try { if (b.status !== 'port' && typeof RU !== 'undefined' && RU.ok){ const r = ruNow(), it = r.items.find(i => i.v === r.v && i.v !== 'ok');
+      out.push('<button class="ph-now ' + (r.v === 'no' ? 'r2' : r.v === 'warn' ? 'r1' : 'r0') + '" data-pa="open" data-a="regler"><span>' + L('Regler her', 'Rules here') + '</span><b>' + (r.v === 'no' ? '✕ ' : r.v === 'warn' ? '! ' : '✓ ') + (it ? ruShort(it) : L('Du kan fiske her', 'You may fish here')) + '</b></button>'); } } catch (e){}
+    try { const H = S.t / 60, best = plantsNear(b.pos, 4).map(x => ({pt:x.pt, v:price(x.pt, 'torsk', H)})).sort((a, c) => c.v - a.v)[0];
+      if (best) out.push('<button class="ph-now" data-pa="open" data-a="salg"><span>' + L('Best betalt torsk', 'Best price for cod') + '</span><b>' + fmt(best.v, 2) + ' kr/kg · ' + best.pt.name + '</b></button>'); } catch (e){}
+    if (na > 0 && rederiOpen()) out.push('<button class="ph-now r1" data-pa="open" data-a="rederi"><span>' + L('Rederiet', 'The company') + '</span><b>' + L('Trenger deg (' + na + ')', 'Needs you (' + na + ')') + '</b></button>');
+    return out.length ? '<div class="ph-nowc">' + out.join('') + '</div>' : '';
   }
   const kv = (a, b) => '<div class="ph-kv"><span>' + a + '</span><span>' + b + '</span></div>';
   const tq = (kg, d) => isFinite(kg) ? fmt(kg / 1000, d) + ' t' : L('ingen grense', 'no limit');   // a quota in tonnes, or no limit
