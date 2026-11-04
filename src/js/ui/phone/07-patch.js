@@ -23,6 +23,7 @@
        ['En planende båt ligger nå høyere med baugen tørr, og sprøyten kastes flatt ut fra midtskips og legger seg som to hvite vinger i kjølvannet.', 'A planing boat now rides higher with her bow dry, and the spray is thrown flat out from amidships and lies as two white wings in the wake.'],
        ['Bak en tørr hekk står en mørk renne midt i skummet før vannet slår sammen bak båten, og kjølvannet blir smalere jo fortere hun går.', 'Behind a dry transom a dark channel runs down the middle of the foam before the water closes behind her, and the wake narrows the faster she goes.'],
        ['Boblene i kjølvannet lyser turkist under overflaten. Sakte båter går som før: baugbølge ved stevnen og lite trim.', 'The bubbles in the wake glow turquoise under the surface. Slow boats go as before: a bow wave at the stem and little trim.'],
+       ['De andre båtene på sjøen legger nå også kjølvann etter seg, etter størrelse og fart.', 'The other boats at sea now leave a wake too, by their size and speed.'],
     ]],
     ['raskstart-041126', '04.11.2026', 'Raskere første start', 'A faster first start', [
        ['Første gang spillet åpnes, kommer brevet fra far mye raskere. Båtene og havnene lastes ned mens du leser.', 'The first time the game opens, Father\'s letter comes much sooner. The boats and harbours download while you read.']]],
