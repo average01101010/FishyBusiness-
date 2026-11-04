@@ -350,7 +350,8 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
     - avstandene som vises (plotteren, ruta, navigasjonen)
     - tidene i driftsplanen og turoppdragene
   - **Tester:** ny `tests/unit/rammen.test.mjs` (51 sjekker), med PROJ-punkter ute i havfeltene i `tests/proj_ref.json` (`projref.py`). 670 OK i alle enhetstestene.
-  - **Neste:** R2 (kjernen og releasen) i en ny økt.- 04.11.2026: **R2 bygd** (samme gren, ikke rullet ut). Se 4.9c i `docs/systemer/kart-og-terreng.md`.
+  - **Neste:** R2 (kjernen og releasen) i en ny økt.
+- 04.11.2026: **R2 bygd** (samme gren). Se 4.9c i `docs/systemer/kart-og-terreng.md`.
   - **Rammene** står ett sted, i `tools/map/frame.py` (`FRAME`, `OLD`, `WIDE`).
   - **Kjernen** har `land1k`, `dc1k`, `expo2k` og `deep` over hele rammen.
     - `deep` kommer fra GEBCO 2025, gjennom en ny workflow `gebco.yml` og releasen `gebco-3`, med Kartverkets 50 m der den finnes.
@@ -362,3 +363,5 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
     - Kjernen er 4,70 MB (3,62 før). Målet på 3,5 MB er ikke nådd, og tiltakene står i backloggen.
     - Den vide rammen tar rundt 5 minutter lokalt og fjernhøydene rundt 3 minutter. Tida i Actions står i 4.9c.
   - **Neste:** full regresjon med hele kysten, så utrulling av R1 og R2 når Jonas sier ja. Deretter R3.
+- 04.11.2026: **R1 og R2 rullet ut** (Jonas: «Rull ut nå»; sammenslått i arbeidsgrenen 792e679, Hetzner og Pages grønne). Full regresjon med hele kysten først (BACKLOG 10.6). Pushen startet også `gebco.yml` (lagde `gebco-4`, som ikke brukes; `kart.json` peker på `gebco-3`) og `kart.yml` (stoppet, `kart-release.json` peker på `kart-29`).
+  - **Neste:** R3 (Svalbard og øyene: satellittfargen eller arealdekket, så bakken ikke er grønn) eller R4 (sonene og reglene utenfor kysten), i en ny økt.
