@@ -158,11 +158,45 @@
   const FETCHG = 'float fetchW(vec2 P,vec2 up,float sw){if(uLSOn<0.5)return sw;float f=-1.0;' +
     [30, 60, 120, 240, 480, 960].map(d => '{vec2 lu=(P+up*' + d.toFixed(1) + '-uLRect.xy)*uLRect.zw;if(f<0.0){if(lu.x<0.0||lu.y<0.0||lu.x>1.0||lu.y>1.0)f=9.0;else if(texture2D(uLandS,lu).r*8.0-4.0>uTideL)f=' + (d / 1000).toFixed(3) + ';}}').join('') +
     'return f<0.0||f>8.0?sw:min(sw,sqrt(f));}';
+  // the foam a hull makes this frame, shared by the foam map's pass (your boat) and the other boats' pass (NPCF_FS, 04.11.2026)
+  const HULLFOAM = '' +
+    'float hullWh(float a,vec4 H){float hb=H.y;if(a>0.0){float t=clamp(a/H.z,0.0,1.0);return hb*sqrt(max(1.0-pow(t,2.6),0.0));}float t=clamp(-a/H.w,0.0,1.0);return hb*(1.0-0.25*t*t);}' +
+    // the foam a hull makes this frame where she is in the water (yours and, from 04.11.2026, the nearest boats of the fleet, foamStep):
+    // FB the way she came since the last frame (from, to), FH her heading then and now, H as uHull (length, half beam, stem and transom
+    // from her origin), V her speed through the water (m/s), Froude number and whether she can plane
+    'float hullFoam(vec2 Mg,vec2 Pb,vec4 FB,vec4 FH,vec4 H,vec3 V){float iw=0.0;' +
+    // the hull swept along the way she came this frame: the nearest point of that way, with her heading there
+    'vec2 B0=FB.xy;vec2 B1=FB.zw;vec2 dB=B1-B0;float l2=max(dot(dB,dB),1e-4);float tt=clamp(dot(Mg-B0,dB)/l2,0.0,1.0);vec2 C=mix(B0,B1,tt);vec2 f=normalize(mix(FH.xy,FH.zw,tt));vec2 rt=vec2(-f.y,f.x);' +
+    'vec2 r=Mg-C;if(dot(r,r)>pow(2.0*H.w+H.z+9.0*H.y+12.0,2.0))return 0.0;float a=dot(r,f);float q=abs(dot(r,rt));float v=V.x;float Fr=V.y;float pl=V.z;float w=hullWh(a,H);float st=-H.w;float bo=H.z;' +
+    // the wash along the side: a band outside the hull from the stem aft, widening aft as the bow wave runs out, thickest where the bow
+    // wave breaks on the shoulder; a planing hull throws it further out; the water under the after body is churned too
+    'float clump=0.6+0.4*ns(Pb*0.55+vec2(2.0,5.0));' +
+    // how far she is up on the plane (pf: a planing hull from Fr 0.6 to 1.2; a displacement hull never) and how dry the transom runs
+    // (tv: the water leaves the transom clean from Fr 0.45, any hull). On the plane the forebody is out of the water: the wash starts at
+    // the spray root ar, 6 % of the length aft of the stem at rest and 40 % on the plane (the reference video, 04.11.2026)
+    'float pf=pl*smoothstep(0.6,1.2,Fr);float tv=smoothstep(0.45,0.9,Fr);float Lh=bo-st;float hb=H.y;float ar=bo-Lh*mix(0.06,0.4,pf);float dry=1.0-pf*smoothstep(ar-0.5,ar+1.0,a);' +
+    'if(a>st-1.0&&a<bo+1.5){float al=clamp((bo-a)/(bo-st),0.0,1.0);float pw=pl*(1.0-0.8*pf);float wo=w+0.15+al*(0.3+0.06*v+pw*(0.4+0.08*v));float wd=0.35+0.03*v+al*0.4+pw*0.4;' +
+    'float band=exp(-pow(max(q-wo,0.0)/wd,2.0));float str=smoothstep(1.2,3.5,v)*(0.5+0.5*smoothstep(0.0,0.3,al))*(1.0-0.3*smoothstep(0.6,1.0,al));' +
+    'float inside=step(q,w)*smoothstep(0.0,0.4,al)*mix(0.3,0.5,pl)*(1.0-0.8*tv);iw=max(iw,max(band*str,inside)*clump*dry);}' +
+    // the spray sheet on the plane: from the root the chine and the spray rails throw it flat out to both sides (the sheet in the air is
+    // drawEffects' spray); it lands about a beam out from the hull, so the water keeps two white wings with darker water between them and
+    // the wash behind the transom (the reference video). Laid where the sheet has reached its landing line, ragged at the edge
+    'if(pf>0.01&&a<ar&&a>st-Lh){float d=ar-a;float qw=(hullWh(ar,H)+hb*(0.9+0.03*v))*(0.85+0.3*ns(Pb*0.3+vec2(7.0,3.0)));float ql=hullWh(ar,H)+0.3+d*0.32;' +
+    'float wing=exp(-pow((q-qw)/(0.3*hb+0.3),2.0))*smoothstep(qw*0.7,qw,ql);' +
+    'iw=max(iw,wing*pf*smoothstep(3.0,8.0,v)*(0.7+0.3*ns(Pb*1.3+vec2(1.0,6.0)))*clump);}' +
+    // the water the transom leaves and the screw churns: a band behind the stern, a beam wide, going on with her way; a displacement
+    // hull with her transom wet (tv 0, no planing) entrains less air than one with it dry, so her band is thinner and fades sooner (kyst15
+    // at 10 knots left an even white field some hundreds of metres long, 04.11.2026)
+    // A dry transom (tv) leaves a hollow behind it that the water closes from both sides: a dark channel down the middle between the
+    // white of the transom's corners and the screws, which closes into a white rooster tail some 3 beams aft (lc)
+    'if(a<st+0.5&&a>st-6.0-tv*hb*5.0){float back=st+0.5-a;float lc=tv*hb*(3.0+0.1*v);float ch=tv*(1.0-smoothstep(lc*0.7,lc,back))*(1.0-smoothstep(hb*0.25,hb*0.6,q));' +
+    'float rst=tv*exp(-pow((back-lc)/(0.8+0.3*hb),2.0))*(1.0-smoothstep(hb*0.3,hb*0.9,q));float wb=(hullWh(st,H)+0.15+0.3+0.1*v*(1.0-0.6*pf)+pl*(1.0-0.8*pf)*(0.4+0.08*v))*(1.0+0.03*back)*(0.85+0.3*ns(Pb*0.45+vec2(4.0,9.0)));float band=1.0-smoothstep(wb*0.75,wb*1.1,q);float core=1.0-smoothstep(wb*0.2,wb*0.5,q);iw=max(iw,max((mix(0.45,0.7,max(tv,pl))*band+0.3*core)*(1.0-0.85*ch),rst)*clump*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
+    'return iw;}';
   const FOAM_VS = 'attribute vec2 aXZ;varying vec2 vUV;void main(){vUV=aXZ*0.5+0.5;gl_Position=vec4(aXZ,0.0,1.0);}';
   const FOAM_FS = 'precision highp float;uniform sampler2D uPrev;uniform vec2 uShift;uniform vec2 uShiftG;uniform vec2 uFoamG;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform float uN;uniform vec2 uRebase;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uTime;uniform vec2 uNFD;uniform float uWind;uniform vec2 uWindDir;' +
     'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;varying vec2 vUV;' + NOISE + SEA_STATE + WAKE_GLSL + FETCHG +
     // the hull's half width a metres forward of her origin: full in the body, drawn in over the forebody to the stem, a little to the transom
-    'float hullW(float a){float hb=uHull.y;if(a>0.0){float t=clamp(a/uHull.z,0.0,1.0);return hb*sqrt(max(1.0-pow(t,2.6),0.0));}float t=clamp(-a/uHull.w,0.0,1.0);return hb*(1.0-0.25*t*t);}' +
+    HULLFOAM + 'float hullW(float a){return hullWh(a,uHull);}' +
     'void main(){' +
     // this texel in the map's own metres, in the sea shader's frame P (from the render origin) and the water's Pb
     'vec2 M=vUV*uFoamRect.w;vec2 P=M+uFoamRect.xy+uNFD;vec2 Pb=M+uFoamRect.xy;' +
@@ -175,30 +209,7 @@
     'float iw=0.0;float ic=0.0;' +
     // --- the boat's own foam, when she has way on ---
     'if(uWk3.w>0.5){' +
-    // the hull swept along the way she came this frame: the nearest point of that way, with her heading there
-    'vec2 B0=uFB.xy;vec2 B1=uFB.zw;vec2 dB=B1-B0;float l2=max(dot(dB,dB),1e-4);float tt=clamp(dot(Mg-B0,dB)/l2,0.0,1.0);vec2 C=mix(B0,B1,tt);vec2 f=normalize(mix(uFH.xy,uFH.zw,tt));vec2 rt=vec2(-f.y,f.x);' +
-    'vec2 r=Mg-C;float a=dot(r,f);float q=abs(dot(r,rt));float v=uFSp.x;float Fr=uFSp.y;float pl=uFSp.z;float w=hullW(a);float st=-uHull.w;float bo=uHull.z;' +
-    // the wash along the side: a band outside the hull from the stem aft, widening aft as the bow wave runs out, thickest where the bow
-    // wave breaks on the shoulder; a planing hull throws it further out; the water under the after body is churned too
-    'float clump=0.6+0.4*ns(Pb*0.55+vec2(2.0,5.0));' +
-    // how far she is up on the plane (pf: a planing hull from Fr 0.6 to 1.2; a displacement hull never) and how dry the transom runs
-    // (tv: the water leaves the transom clean from Fr 0.45, any hull). On the plane the forebody is out of the water: the wash starts at
-    // the spray root ar, 6 % of the length aft of the stem at rest and 40 % on the plane (the reference video, 04.11.2026)
-    'float pf=pl*smoothstep(0.6,1.2,Fr);float tv=smoothstep(0.45,0.9,Fr);float Lh=bo-st;float hb=uHull.y;float ar=bo-Lh*mix(0.06,0.4,pf);float dry=1.0-pf*smoothstep(ar-0.5,ar+1.0,a);' +
-    'if(a>st-1.0&&a<bo+1.5){float al=clamp((bo-a)/(bo-st),0.0,1.0);float pw=pl*(1.0-0.8*pf);float wo=w+0.15+al*(0.3+0.06*v+pw*(0.4+0.08*v));float wd=0.35+0.03*v+al*0.4+pw*0.4;' +
-    'float band=exp(-pow(max(q-wo,0.0)/wd,2.0));float str=smoothstep(1.2,3.5,v)*(0.5+0.5*smoothstep(0.0,0.3,al))*(1.0-0.3*smoothstep(0.6,1.0,al));' +
-    'float inside=step(q,w)*smoothstep(0.0,0.4,al)*0.5*(1.0-0.8*tv);iw=max(iw,max(band*str,inside)*clump*dry);}' +
-    // the spray sheet on the plane: from the root the chine and the spray rails throw it flat out to both sides (the sheet in the air is
-    // drawEffects' spray); it lands about a beam out from the hull, so the water keeps two white wings with darker water between them and
-    // the wash behind the transom (the reference video). Laid where the sheet has reached its landing line, ragged at the edge
-    'if(pf>0.01&&a<ar&&a>st-Lh){float d=ar-a;float qw=(hullW(ar)+hb*(0.9+0.03*v))*(0.85+0.3*ns(Pb*0.3+vec2(7.0,3.0)));float ql=hullW(ar)+0.3+d*0.32;' +
-    'float wing=exp(-pow((q-qw)/(0.3*hb+0.3),2.0))*smoothstep(qw*0.7,qw,ql);' +
-    'iw=max(iw,wing*pf*smoothstep(3.0,8.0,v)*(0.7+0.3*ns(Pb*1.3+vec2(1.0,6.0)))*clump);}' +
-    // the water the transom leaves and the screw churns: a band behind the stern, a beam wide, going on with her way
-    // A dry transom (tv) leaves a hollow behind it that the water closes from both sides: a dark channel down the middle between the
-    // white of the transom's corners and the screws, which closes into a white rooster tail some 3 beams aft (lc)
-    'if(a<st+0.5&&a>st-6.0-tv*hb*5.0){float back=st+0.5-a;float lc=tv*hb*(3.0+0.1*v);float ch=tv*(1.0-smoothstep(lc*0.7,lc,back))*(1.0-smoothstep(hb*0.25,hb*0.6,q));' +
-    'float rst=tv*exp(-pow((back-lc)/(0.8+0.3*hb),2.0))*(1.0-smoothstep(hb*0.3,hb*0.9,q));float wb=(hullW(st)+0.15+0.3+0.1*v*(1.0-0.6*pf)+pl*(1.0-0.8*pf)*(0.4+0.08*v))*(1.0+0.03*back)*(0.85+0.3*ns(Pb*0.45+vec2(4.0,9.0)));float band=1.0-smoothstep(wb*0.75,wb*1.1,q);float core=1.0-smoothstep(wb*0.2,wb*0.5,q);iw=max(iw,max((0.7*band+0.3*core)*(1.0-0.85*ch),rst)*clump*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
+    'iw=hullFoam(Mg,Pb,uFB,uFH,uHull,uFSp.xyz);' +
     // the stern wave breaking along the Kelvin arms and the bow wave, as the sea shader breaks them (uWk0 is given in the map's metres)
     'float wh=wakeH(Mg,1.0);if(wh>0.0){vec2 rr=Mg-uWk0.xy;float s=-dot(rr,uWk0.zw);float br=ns(Pb*1.4+vec2(uTime*1.3,0.0))*0.5+0.5;float lam=6.2832/uWk1.x;' +
     'float arm=uWk3.y*smoothstep(0.45,0.9,wh/max(uWk1.y,0.02))*(1.0-smoothstep(0.0,lam,s))*step(0.0,s)*br;' +
@@ -216,6 +227,12 @@
     // none of the wake's foam on land (what the water carries onto a breakwater or a shore is gone)
     'if(uLSOn>0.5){vec2 lu=(P-uFoamG-uLRect.xy)*uLRect.zw;if(lu.x>0.0&&lu.y>0.0&&lu.x<1.0&&lu.y<1.0&&texture2D(uLandS,lu).r*8.0-4.0>uTideL-0.1){aw=0.0;bw=0.0;}}' +
     'gl_FragColor=vec4(aw,bw*aw,ac,bc*ac);}';
+  // The other boats' foam (04.11.2026), drawn after the map's pass over a small quad round each boat's way since the last frame, with
+  // MAX blending, so it costs nothing where no boat is: aXZ in the map's metres, the same hull as yours (HULLFOAM), born now.
+  // (With MAX the amount and the birth times amount each keep the larger; the rule in FOAM_FS, the stronger now wins, is near it.)
+  const NPCF_VS = 'attribute vec2 aXZ;uniform float uMm;varying vec2 vM;void main(){vM=aXZ;gl_Position=vec4(aXZ/uMm*2.0-1.0,0.0,1.0);}';
+  const NPCF_FS = 'precision highp float;uniform vec4 uFoamRect;uniform vec2 uFoamG;uniform vec4 uFoamT;uniform vec4 uNB;uniform vec4 uNH;uniform vec4 uNG;uniform vec4 uNV;varying vec2 vM;' + NOISE + HULLFOAM +
+    'void main(){vec2 Pb=vM+uFoamRect.xy;vec2 Mg=vM-uFoamG;float iw=hullFoam(Mg,Pb,uNB,uNH,uNG,uNV.xyz);gl_FragColor=vec4(iw,uFoamT.x*iw,0.0,0.0);}';
   // the last resort when no sea program links: a flat sea with a little ripple, the sky in it and the sun's glitter
   const BASIC_VS = 'precision highp float;attribute vec2 aXZ;uniform mat4 uVP;uniform vec2 uOrigin;uniform vec3 uOriginRel;uniform vec2 uScale;varying vec3 vW;varying vec2 vXZ;' +
     'void main(){vec2 lxz=aXZ*uScale;vec3 rel=uOriginRel+vec3(lxz.x,0.0,lxz.y);vW=rel;vXZ=uOrigin+lxz;gl_Position=uVP*vec4(rel,1.0);}';

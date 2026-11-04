@@ -20,6 +20,10 @@
        ['Ved første fisk går kameraet ned over dekket, så du ser bløggekaret.', 'At the first fish the camera comes down over the deck, so you see the bleeding tub.'],
        ['Første levering får et stempel med hva den ga.', 'The first landing gets a stamp with what it paid.'],
     ]],
+    ['soner-041126', '04.11.2026', 'Reglene ute på havet', 'The rules out at sea', [
+       ['Regler-appen og regellaget kjenner nå sonene utenfor kysten: fiskevernsonen ved Svalbard, de stengte områdene rundt Bjørnøya og på vestsiden av Spitsbergen, Jan Mayen, Smutthullet og Smottet, og russisk, islandsk, grønlandsk, færøysk og britisk sone. Hver regel har kilden sin.', 'The Regler app and the rule layer now know the zones off the coast: the fisheries protection zone at Svalbard, the closed areas round Bjørnøya and on the west side of Spitsbergen, Jan Mayen, the Loophole and the Banana Hole, and the Russian, Icelandic, Greenland, Faroese and British zones. Each rule has its source.'],
+       ['Lisens for russisk, grønlandsk, færøysk og britisk sone søkes under Kvote → Papirer.', 'A licence for the Russian, Greenland, Faroese and British zones is applied for under Kvote → Papers.'],
+    ]],
     ['npcrist-041126', '04.11.2026', 'Rolig gange for de andre båtene', 'The other boats ride steadily', [
        ['De andre båtene ristet når de gikk med fart, fordi gyngingen fulgte plassen deres. Nå gynger hver båt i sitt eget rolige tempo.', 'The other boats shuddered when under way, because their rocking followed where they were. Each boat now rocks at her own calm pace.'],
     ]],
@@ -39,6 +43,7 @@
        ['En planende båt ligger nå høyere med baugen tørr, og sprøyten kastes flatt ut fra midtskips og legger seg som to hvite vinger i kjølvannet.', 'A planing boat now rides higher with her bow dry, and the spray is thrown flat out from amidships and lies as two white wings in the wake.'],
        ['Bak en tørr hekk står en mørk renne midt i skummet før vannet slår sammen bak båten, og kjølvannet blir smalere jo fortere hun går.', 'Behind a dry transom a dark channel runs down the middle of the foam before the water closes behind her, and the wake narrows the faster she goes.'],
        ['Boblene i kjølvannet lyser turkist under overflaten. Sakte båter går som før: baugbølge ved stevnen og lite trim.', 'The bubbles in the wake glow turquoise under the surface. Slow boats go as before: a bow wave at the stem and little trim.'],
+       ['De andre båtene på sjøen legger nå også kjølvann etter seg, etter størrelse og fart.', 'The other boats at sea now leave a wake too, by their size and speed.'],
     ]],
     ['raskstart-041126', '04.11.2026', 'Raskere første start', 'A faster first start', [
        ['Første gang spillet åpnes, kommer brevet fra far mye raskere. Båtene og havnene lastes ned mens du leser.', 'The first time the game opens, Father\'s letter comes much sooner. The boats and harbours download while you read.']]],

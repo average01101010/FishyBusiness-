@@ -39,7 +39,7 @@ Jonas: «Det neste vi må finne ut da er hvor grunnlinjen går langs hele kysten
   - **Utelatt etter Jonas' ønske:**
     - hummer (9, 10), flatøsters, leppefisk, snabeluer, rødspette og steinbit
     - trål, snurrevad og seinot (4, 11, 13, 14, 32, 33, 35, 36)
-    - Svalbard og havbeite
+    - havbeite (Svalbard er med fra H1b R4, 5.28b)
   - **Med:** Kongekrabbe (12, 30) er med, fordi arten skal inn. Av de stengte feltene (lag 0) er bare de for konvensjonelle redskap med.
 - `python3 tools/rules/look.py` tegner kontrollbilder til `tools/rules/out/`. De viser grunnlinja, sonene og linjene over spillets land for nord, Senja, Vesterålen, Lofoten, Finnmark, Midt-Norge og Oslofjorden.
 
@@ -240,6 +240,82 @@ Jonas 03.11.2026: «Start H1». Valgene samme dag: «Ja, du kan gjerne lage auto
 
 `tests/rulestest.py` sjekker punkter langs kysten (sonene, områdene og avstanden til grunnlinja) og svarene for hver regel, med datoer og lengder.
 
+## 5.28b Sonene utenfor kysten (H1b R4 av `docs/planer/havsteget-h1b-rammen.md`, 04.11.2026)
+
+Jonas 03.11.2026: «kjør på» for hele H1b. Bestillingen: `rules.json` får sonene utenfor kysten, og `rulesAt` sier hva som gjelder i hver av dem. Det som ikke kan bekreftes i kilden, stenges heller enn å gjettes.
+
+**Kartdataene** (`seas()` i `tools/rules/regler.py`, `sea` og `shelf` i `rules.json`):
+- **Norges soner** står slik Kartverket tegner dem i «Norges maritime grenser» (`nmg-25833.gml`): Norges økonomiske sone (`no`), fiskevernsonen ved Svalbard (`sv`), fiskerisonen ved Jan Mayen (`jm`), territorialfarvannet ved Svalbard (`svt`) og ved Jan Mayen (`jmt`), og Norges kontinentalsokkel (`shelf`, for snøkrabben).
+- **Nabolandenes soner og det internasjonale farvannet** finnes ikke som flater i den fila. Den har bare de avtalte linjene mellom Norge og nabolandene. Derfor deles havet langs alle linjene som finnes:
+  - Kartverkets avtalte linjer og 200 nm-linjer
+  - Fiskeridirektoratets «Sjøgrenser» (`Yggdrasil/Sjøgrenser_linje`, hentet av `fetch.py`), som har 200 nm-linjene til Russland, Island, Grønland, Færøyane og Storbritannia og linjene mellom dem
+  - spillets land på 1 km (`land1k`, og `land200` i den gamle rammen) som vegg
+- Hver del av havet får sonen sin fra et frøpunkt (`SEA_SEEDS`). En stor del uten frø er internasjonalt farvann, og en liten del går til naboen. Delene tegnes på 1 km, og hjørnene innen 1,5 km av en linje legges på linja. Kantene ute på havet ligger derfor på linjene, med en usikkerhet på rundt 0,3 km. Flatene er utvidet 0,3 km, så ingen glipe står uten sone. Norges egne soner slås opp foran nabolandenes.
+- **Sonene:** russisk (`ru`), islandsk (`is`), grønlandsk (`gl`), færøysk (`fo`), britisk (`gb`), dansk (`dk`) og svensk (`se`). Smutthullet (`smh`) og Smottet (`smt`, mellom NØS, Jan Mayen-sonen, Færøyane og Island) er internasjonalt farvann, og det er også lomma mellom Jan Mayen-sonen, NØS, fiskevernsonen og Grønland (`int`). `xx` er hav langt utenfor spillets farvann (Østersjøen, Irland og Rockall, det færøysk-britiske særområdet), og det er stengt.
+- **Smutthullet** når øst for 2010-linja fram til Russlands 200 nm. Den delen av stripa som ligger mer enn 200 nm fra både Svalbards og fastlandets grunnlinjer, er Smutthullet. Resten er traktatens særområde, der Russland har sonens rettigheter. Smutthullet blir 68 700 km² (oppgitt rundt 67 000).
+- **Svalbards forbud:** Fiskeridirektoratets lag 26 (høstingsforskriften § 58) og lag 25 (sårbare økosystemer) er tatt med i `L`.
+- **Statistikkområdene:** lokasjonene i hele rammen er med (`lok`), ikke bare i den gamle rammen.
+- **Størrelsen:** `rules.json` er 0,59 MB (0,32 før). Sonene utgjør 0,11 MB og lokasjonene utenfor den gamle rammen 0,09 MB.
+
+**Regelmotoren** (`core/03e-rules.js`):
+- `ruSea(p)` gir sonekoden i de samme cellene på 100 m som fjordsonene, og `ruSeaName(c)` gir navnet. `''` er fastlandets sjøterritorium og indre farvann, der kystens regler gjelder som før.
+- `ruSeaRules` gir reglene for hver sone. `rulesAt` tar havtillatelsen fra `q.hav` (`tral`, `konv`, `rnot`, `krab`), eller fra båten når den som spør ikke oppgir den.
+- **Svalbard** (`sv`, `svt`):
+  - Torsk og hyse er lov på kvotene (`sv1`).
+  - Sei er stengt (`sv2`). Seikvoten gjelder «i Norges territorialfarvann og Norges økonomiske sone», og om territorialfarvannet ved Svalbard regnes med, er ikke bekreftet.
+  - Andre arter er stengt til reglene er funnet (`sv3`).
+  - § 58 stopper alt fiske i 20 nm rundt Bjørnøya og 15–20 nm på vestsiden av Spitsbergen (`sv58`). Unntatt er reketrål og skjellskraping, som spillet ikke har.
+  - I områdene for sårbare økosystemer er bunnredskap stengt, også line, garn og teiner (`vme`), og de nye fiskeområdene krever egen tillatelse (`vmen`).
+- **Jan Mayen** (`jm`, `jmt`): torsk og hyse er forbudt (`jm0`), og sei er stengt (`jm3`). Unntaket er kartleggingsfisket etter torsk (`jm1`): 181 t for konvensjonelle havfiskefartøy, bare line, ett fartøy om gangen, og fartøyet melder fra før det starter.
+- **Smutthullet, Smottet og annet internasjonalt farvann** (`int1`): torsk og hyse på kvoten nord for 62° N, med en advarsel om NEAFC-registreringen. Andre arter er stengt (`int2`).
+- **Russisk sone:** uten lisens er sonen stengt (`ru0`). Med lisens er torsk og hyse lov på kvoten (`ru1`), og sei og andre arter er stengt.
+- **Islandsk sone** er stengt (`is0`). Ingen adgang for 2026 er funnet.
+- **Grønlandsk sone:**
+  - Lisens trengs.
+  - Konvensjonelt hav har fartøykvote på 360 t torsk og 215 t blåkveite. Tråleren har 235 t blåkveite og 650 t uer (`gl1`).
+  - Andre arter og andre båter er stengt (`gl2`).
+- **Færøysk sone:**
+  - Lisens trengs, og bare konvensjonelt hav kan fiske der.
+  - Lange og brosme er lov (`fo3`), lange bare til 25. august (`fo2`).
+  - Andre arter er bare bifangst (`fo4`).
+- **Britisk sone** (lisens), etter ICES-området (`ruGbArea`, en tilnærming):
+  - I Nordsjøen er bunnfisk lov på vilkårene for Nordsjøen (`gb4`).
+  - Nord for 62° N (2.a) er bare blåkveite lov, til 1. juli (`gb2`).
+  - Vest for 4° V (5.b og 6.a) er lange og brosme lov, bare med line, og brosme bare til 8. oktober (`gb6`).
+- **Dansk og svensk sone** er ikke sjekket og derfor stengt (`dk0`).
+- **Snøkrabbe** gjelder i alle soner:
+  - Den krever snøkrabbetillatelse (`sk0`).
+  - Den er forbudt innenfor 12 nm, også ved Svalbard og Jan Mayen (`sk1`).
+  - Den er forbudt på andre lands sokkel (`sk2`).
+  - Den er stengt 1.7–30.11 (`sk3`).
+- **Lisensene** (`zoneLic`, `zoneLicApply`, `S.zlic`):
+  - Lisensen for russisk, grønlandsk, færøysk og britisk sone søkes i Kvote → Papirer (`papZlic`) og gis med en gang. Ingen kilde oppgir behandlingstida, så spillet legger ikke inn en oppdiktet ventetid.
+  - Havtillatelsen gir lisensen for russisk sone.
+  - Lisensen gjelder alle båtene.
+- **Kvotene i utenlandske soner** står som data i `ZQ`, med gruppas tak og fartøykvoten. Tellingen mot taket kommer når det kan fiskes der (fisken i R6, havbåtene fra H2), se BACKLOG.
+- Regler-appen viser sonen under «Hvor du er» og har kortet «Havet utenfor kysten» under «Lær mer». Regellaget, varselet før feil og Kystvakta spør `rulesAt` og får sonene med.
+
+**Kildene** (lest 04.11.2026, J-meldingene direkte på fiskeridir.no):
+- J-248-2025 og J-247-2025 (torsk og hyse i fiskevernsonen)
+- J-161-2026 §§ 1–2 (sei bare i territorialfarvannet og NØS, Jan Mayen unntatt)
+- J-61-2026 (kartleggingsfisket ved Jan Mayen)
+- J-133-2026 (færøysk sone)
+- J-94-2026 (grønlandsk sone)
+- J-177-2026 (britisk sone)
+- J-237-2025 (snøkrabbe: territorialfarvannet, andre lands sokkel, stengt 1.7–30.11)
+- J-193-2026 (et stengt område for snurrevad og torsketrål på Spitsbergenbanken, ikke i spillet før trålen kommer)
+- Høstingsforskriften § 58, lest på Lovdata. Fiskeridirektoratets kartlag og Havforskningsinstituttet oppgir den gamle paragrafen § 56.
+- Fiskeridirektoratets skjema FD-54 (russisk sone) og FD-55 (NEAFC)
+- FOR-2023-01-12-35, den siste islandske adgangen, som er opphevet
+
+**Ikke lest, eller usikkert:**
+- Protokollen fra den norsk-russiske fiskerikommisjonen for 2026: regjeringen.no var stengt.
+- Smutthullavtalen.
+- Om sei i territorialfarvannet ved Svalbard regnes som «Norges territorialfarvann».
+- At kvoten nord for 62° N gjelder i internasjonalt farvann, er lest ut av J-161-2026 §§ 1–2. Farvannet er ikke nevnt særskilt.
+- Reglene for blåkveite, lange, brosme, uer og kveite i fiskevernsonen og i internasjonalt farvann. De er stengt.
+- Skagerrakavtalen (dansk og svensk sone). Den er stengt.
+
 ## 5.29 Regler-appen, statuslinja og regellaget (R3 av regelplanen, 05.10.2026)
 
 Jonas: «mange som skal spille dette har kanskje ikke så mye erfaring med fiskeri fra før, så vi blir nødt til å lage en intuitiv løsning der hvordan vi skal vise og lære dem hvilke regelverk som gjelder».
@@ -309,6 +385,11 @@ Jonas: «Ja, få inn kystvakta.» Kystvakta kommer langs siden for kontroll, ved
 | Fjordlinja og redskap | Høstingsforskriften kap. VI (§ 31, 33, 33a, lest 04.10.2026) | Innenfor: høyst 80 torskegarn og 5 000 kroker (yttersidene av kroklinjene i Finnmark unntatt 1.11–30.4), ikke snurrevad. 15 m eller mer: ikke torsk; under 21 m andre arter, sør for 68° 15,6′ N annet enn torsk. Se 5.28 |
 | Kysttorsk etter lengde | J-161-2026 § 32 (lest 04.10.2026) | 21–27,99 m ikke innenfor grunnlinja, 28 m og over ikke innenfor 4 nm, med unntak etter område og dato. Henningsværboksen og Borgundfjorden. Se 5.28 |
 | Grunnlinja og sonene | Kartverket, Norges maritime grenser (Geonorge, 25833) | Grunnlinja, 1, 4, 6, 10, 12 og 24 nm. Se 4.17 |
+| Sonene utenfor kysten | Kartverket, Norges maritime grenser; Fiskeridirektoratet, Yggdrasil/Sjøgrenser_linje (hentet 04.11.2026) | NØS, fiskevernsonen, Jan Mayen, territorialfarvannet ved Svalbard og Jan Mayen, sokkelen; nabolandenes 200 nm og linjene mellom dem. Se 5.28b |
+| Svalbard | J-248-2025, J-247-2025, høstingsforskriften § 58 (Lovdata, lest 04.11.2026), forskriften om sårbare marine økosystemer (lag 25) | Torsk og hyse på kvotene, ikke sei (J-161-2026 § 2). Bjørnøya 20 nm og vestsiden av Spitsbergen 15–20 nm stengt, unntatt reketrål og skjellskraping |
+| Jan Mayen | J-161-2026 § 1, J-61-2026 | Torsk og hyse forbudt. Kartleggingsfiske 181 t torsk med line for konvensjonelle havfiskefartøy, ett fartøy om gangen |
+| Utenlandske soner | J-94-2026 (Grønland), J-133-2026 (Færøyane), J-177-2026 (Storbritannia), skjema FD-54 (Russland), FOR-2023-01-12-35 (Island, opphevet) | Lisens for andre lands farvann. Kvoter per gruppe og fartøy, se 5.28b. Ingen islandsk adgang funnet for 2026 |
+| Snøkrabbe | J-237-2025 | Bare utenfor territorialfarvannet, på norsk sokkel, stengt 1.7–30.11, fartøykvote 351 t (+82 t levende) |
 | Reguleringskartet | Fiskeridirektoratet, Yggdrasil/Fiskerireguleringer (38 lag) og Statistikområder | Fjordlinjer, kroklinjer, stengte felt, gytefelt, Oslofjorden, Lofoten, kongekrabbe. Se 4.17 |
 | Røkting | Høstingsforskriften kap. V | Garn og line for kveite og breiflabb minst hver 4. dag. Hvert fartøy røkter egne teiner |
 | Trål | Høstingsforskriften kap. XIII | Forbudt innenfor 12 nm, med unntak. Ikke i spillet ennå |

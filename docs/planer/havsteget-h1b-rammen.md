@@ -373,4 +373,30 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
   - **Testene:** Jonas 04.11.2026: «Ta kun de testene du mener er relevante». De som dekker kartet er grønne (svalbardtest, teleport3d, vectest, coast3d, landtest, routetest, marktest, boottest, trip2 og flere; BACKLOG 10.6).
 - 04.11.2026: **R3 rullet ut** (Jonas: «Rull ut nå»; sammenslått i arbeidsgrenen d75e7b4, `kart-release.json` peker på `kart-31`, Hetzner og Pages grønne). Datajobbene startet ikke på nytt ved sammenslåingen (`seen.py`).
   - **Neste:** R4 (sonene og reglene) i en ny økt.
-
+- 04.11.2026: **R4 bygd** (gren `ccr-h1b-r4-soner`, ikke rullet ut). Se 5.28b i `docs/systemer/kvoter-og-regler.md`.
+  - **Sonene** i `rules.json`:
+    - Norges egne er lest rett fra Kartverket.
+    - Nabolandenes og det internasjonale farvannet er lagd ved å dele havet langs Kartverkets linjer og Fiskeridirektoratets «Sjøgrenser», som har 200 nm-linjene til Russland, Island, Grønland, Færøyane og Storbritannia.
+    - Smutthullet er beregnet til 68 700 km², mot oppgitte rundt 67 000.
+    - Svalbards forbud er med: § 58 og de sårbare økosystemene.
+    - Det samme gjelder lokasjonene i hele rammen.
+  - **Kildene:**
+    - J-meldingene er lest direkte på fiskeridir.no: J-248-2025, J-247-2025, J-161-2026, J-61-2026, J-133-2026, J-94-2026, J-177-2026, J-237-2025 og J-193-2026.
+    - § 58 er lest på Lovdata, og der står Bjørnøya. Den gamle paragrafen § 56 står fortsatt hos Fiskeridirektoratet og HI.
+    - Ikke lest: protokollen med Russland for 2026 og Smutthullavtalen, fordi regjeringen.no var stengt.
+  - **Svarene på kap. 5:**
+    - Paragrafen for Bjørnøya er § 58.
+    - Snøkrabben er stengt 1.7–30.11 i 2026 (J-237-2025 § 5).
+    - Britisk sone har en egen forskrift for 2026 (J-225-2025, endret ved J-69, J-118 og J-177).
+    - Ingen islandsk adgang er funnet for 2026, så sonen er stengt.
+    - Den russiske lisensen søkes på Fiskeridirektoratets skjema FD-54, uten oppgitt behandlingstid. Den gis derfor med en gang i Papirer-appen og følger havtillatelsen.
+  - **Regelmotoren:** `ruSea` og `ruSeaRules`, lisensene (`zoneLic`, Kvote → Papirer), Regler-appen (sonen og «Havet utenfor kysten») og snøkrabben (`sk0`–`sk4`).
+  - **Tester:**
+    - `tests/unit/soner.test.mjs` har 101 sjekker: et punkt i hver sone, 21 grenser med 2 km på hver side, alle 372 havnene og reglene.
+    - `sonetest` (nettleseren og skjermbildene) er ny.
+    - Disse er grønne: `rulestest`, `r4test`, `kystvakttest`, `trip2`, `bktest` og `geartest`.
+    - `quotatest` feiler bare på den kjente «paid False» (BACKLOG 10.6).
+  - **Ikke gjort:** tellingen mot Norges kvote i utenlandske soner. Taket står som data (`ZQ`) og telles når det kan fiskes der (R6, H2). Se BACKLOG.
+  - **Neste:** Jonas sier ja til utrulling, så R5 (hav, vær og is).
+- 04.11.2026: **R4 rullet ut** (Jonas: «Rull ut»). Arbeidsgrenen med kjølvannet til de andre båtene er flettet inn først. Etter flettingen er enhetstestene (965 OK), `sonetest` og `rulestest` grønne.
+  - **Neste:** R5 (hav, vær og is) i en ny økt.

@@ -2,6 +2,8 @@
 #  - Fiskeridirektoratet's map of the fishing regulations (Yggdrasil/Fiskerireguleringer, ArcGIS REST, 38 layers), as GeoJSON in
 #    EPSG:25833, paged (maxRecordCount 2000). Layer 0 (closed fields by J-melding) and 30 (king crab closures) change from week to week.
 #  - Fiskeridirektoratet's statistics areas (Yggdrasil/Statistikområder): main areas (layer 6) and locations (layer 8) from 2018.
+#  - Fiskeridirektoratet's sea boundaries (Yggdrasil/Sjøgrenser_linje, H1b R4, 04.11.2026): the 200 nm lines of Russia, Iceland,
+#    Greenland, the Faroes and the United Kingdom and the agreed lines between them, which Kartverket's file does not have.
 #  - Kartverket's «Norges maritime grenser» (Geonorge, CC BY 4.0) as GML in EPSG:25833, ordered through Geonorge's download API
 #    (the WFS answers 500): the baseline, the 1, 4, 6 and 10 nm lines, the territorial limit (12 nm), the contiguous zone (24 nm).
 #   python3 tools/rules/fetch.py [--force]
@@ -43,7 +45,7 @@ def wfs(t):
     return None
 def fd_all(force):
     meta = {'fetched': time.strftime('%Y-%m-%d'), 'layers': []}
-    for service, ids in (('Fiskerireguleringer', None), ('Statistikområder', (6, 8))):
+    for service, ids in (('Fiskerireguleringer', None), ('Statistikområder', (6, 8)), ('Sjøgrenser_linje', (0,))):
         for L in layers(service):
             if ids and L['id'] not in ids: continue
             f = os.path.join(CACHE, f'fd-{service[:5].lower()}-{L["id"]}.geojson')
