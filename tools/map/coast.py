@@ -7,7 +7,8 @@
 #                                                 the core and the far heights come from src/data/map (tools/map/game.py joins them)
 #   python3 tools/map/coast.py [lite] [tx,ty ...] the K5 packs in out/national/lite/ (a pack per kind and tile, the core per tile too)
 #   python3 tools/map/coast.py cache k n          part k of n of the tiles into the caches only (the workflow's parts)
-#   ground  Terrarium z13 (Kartverket's 10 m) in the 10 km blocks within 3 km of the sea, z11 (about 30 m) in the others
+#   ground  Terrarium z13 (Kartverket's 10 m) in the 10 km blocks within 3 km of the sea, z11 (about 30 m) in the others; on the
+#           islands off the old frame (Svalbard, Jan Mayen) Copernicus GLO-30 (terrain.sample_cop), Terrarium where it has none
 #   depth   Kartverket's (the legacy Senja raster) inside the legacy square; elsewhere Kartverket's 50 m depth models (the release
 #           dybde-N that .github/workflows/dybde.yml fetches from Geonorge, unpacked in out/depth/), and where they have no data the
 #           game's own depth model (depthModel in 03-simulation.js: openness, distance to the shore and a little noise), blended over
@@ -57,7 +58,8 @@ def kartverket(tx, ty):
 def cover_tile(tx, ty):
     R = frame.Region(f't{tx}_{ty}', tx * 5, ty * 5, tx * 5 + 5, ty * 5 + 5); fx0, fy0, fnx, fny = R.grid(0.05)
     C = cover_box(R.lonlat_box(1), 0.05, fx0, fy0, fnx, fny)
-    NL = national.norway200()[0][ty * 250:(ty + 1) * 250, tx * 250:(tx + 1) * 250]
+    xa = national.xarea(tx, ty)   # (Svalbard and Jan Mayen, H1b R3: the islands' own land)
+    NL = national.xown(xa, tx * 250, ty * 250, 250, 250) if xa else national.norway200()[0][ty * 250:(ty + 1) * 250, tx * 250:(tx + 1) * 250]
     return np.where(np.kron(NL, np.ones((4, 4), bool))[:fny, :fnx], C, 0).astype(np.uint8)
 
 # the summer colour of the ground from Sentinel-2 (G3, tools/s2/s2.py: the median of the clear scenes from mid June to August 2021-2025
@@ -73,7 +75,7 @@ S2D = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 's2')
 def sat_tile(tx, ty, L):
     f = os.path.join(S2D, f'{tx}_{ty}.npz'); z = dict(sy=np.zeros((1000, 1000), np.int16), sco=np.zeros((500, 500), np.int16), scg=np.zeros((500, 500), np.int16))
     if not os.path.exists(f): return z
-    S = np.load(f); rgb = S['rgb'].astype(np.float32); n = S['n']
+    S = np.load(f); rgb = S['rgb'].astype(np.float32); n = S['n'] + (S['snow'] if 'snow' in S else 0)   # (a glacier's snow, s2.py SNOWN)
     a = np.abs(L['hgt'].astype(np.float32)); h = np.sign(L['hgt']) * np.where(a < 20, a / 2, 10 + (a - 20) * 2)
     h = h.reshape(1000, 2, 1000, 2).mean(axis=(1, 3)); h = np.maximum(h, 0)
     gy, gx = np.gradient(h, 50.0)   # rows run south, columns east: gx = dh/dx east, gy = dh/dy south
@@ -113,6 +115,20 @@ def trees_tile(tx, ty, L):
     out = np.where(land & (c4 > 0), v, 0).astype(np.uint8)
     return {'trees': out}
 
+# The sea floor off the old frame (Svalbard and Jan Mayen, H1b R3), where Kartverket's 50 m has no data: GEBCO 2025 on 1 km cells (the
+# release kart.json's 'gebco' names, out/gebco/gebco1k.npz over frame.WIDE, as deep.py takes it), bilinear at the 50 m cells, and the
+# game's model (from the openness and the distance to the shore) within a kilometre or so of the land, where the 1 km mean has the
+# land in it. Without the file the model alone, as the coast's tiles have it.
+GEBCO = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'gebco', 'gebco1k.npz')
+_GB = {}
+def gebco_blend(X, Y, d, dcv):
+    if not os.path.exists(GEBCO): return d
+    if 'd' not in _GB: _GB['d'] = np.load(GEBCO)['d'].astype(np.float32)
+    D = _GB['d']; g = ndimage.map_coordinates(D, [Y - frame.WIDE[1] - 0.5, X - frame.WIDE[0] - 0.5], order=1, mode='nearest')
+    have = ndimage.map_coordinates((D > 0).astype(np.float32), [Y - frame.WIDE[1] - 0.5, X - frame.WIDE[0] - 0.5], order=1, mode='nearest')
+    w = sstep(0.4, 2.0, dcv) * (have >= 0.99)
+    return d * (1 - w) + np.maximum(g, 2) * w
+
 def tile(tx, ty):
     f = os.path.join(TD, f'{tx}_{ty}.npz')
     if os.path.exists(f):
@@ -126,10 +142,13 @@ def tile(tx, ty):
     if bw: M = np.maximum(M, fill(bw, 0.025, ix0, iy0, nx, ny))
     out['mask'] = M
     # distance to land at 100 m: this tile's land at 25 m, and 20 km round it the national 200 m mask
-    M2 = national.mask200(); P = 100   # 20 km of padding at 200 m
-    gy0, gx0 = iy0 // 8 - P, ix0 // 8 - P; win = np.ones((250 + 2 * P, 250 + 2 * P), bool)
-    sy0, sx0 = max(gy0, 0), max(gx0, 0); sy1, sx1 = min(gy0 + 250 + 2 * P, national.NY), min(gx0 + 250 + 2 * P, national.NX)
-    win[sy0 - gy0:sy1 - gy0, sx0 - gx0:sx1 - gx0] = M2[sy0:sy1, sx0:sx1] > 0
+    P = 100   # 20 km of padding at 200 m
+    gy0, gx0 = iy0 // 8 - P, ix0 // 8 - P; xa = national.xarea(tx, ty)
+    if xa: win = national.xland_box(xa, gx0, gy0, 250 + 2 * P, 250 + 2 * P, 1) > 0   # the islands' window (H1b R3)
+    else:
+        M2 = national.mask200(); win = np.ones((250 + 2 * P, 250 + 2 * P), bool)
+        sy0, sx0 = max(gy0, 0), max(gx0, 0); sy1, sx1 = min(gy0 + 250 + 2 * P, national.NY), min(gx0 + 250 + 2 * P, national.NX)
+        win[sy0 - gy0:sy1 - gy0, sx0 - gx0:sx1 - gx0] = M2[sy0:sy1, sx0:sx1] > 0
     big = np.kron(win, np.ones((2, 2), bool)); own = M.reshape(ny // 4, 4, nx // 4, 4).max(axis=(1, 3)) > 0
     big[2 * P:2 * P + 500, 2 * P:2 * P + 500] = own
     out['dc'] = (ndimage.distance_transform_edt(~big)[2 * P:2 * P + 500, 2 * P:2 * P + 500] * 0.1).astype(np.float32)
@@ -141,12 +160,13 @@ def tile(tx, ty):
             z = 13 if dsea[j * 100:(j + 1) * 100, i * 100:(i + 1) * 100].min() <= 3 else 11
             X, Y = np.meshgrid((ix0 + i * n + np.arange(n) + 0.5) * 0.025, (iy0 + j * n + np.arange(n) + 0.5) * 0.025)
             lon, lat = frame.to_ll(X.ravel(), Y.ravel()); h = terrain.sample(lon, lat, z).reshape(n, n); m = M[j * n:(j + 1) * n, i * n:(i + 1) * n] > 0
+            if xa: c = terrain.sample_cop(lon, lat).reshape(n, n); h = np.where(np.isfinite(c), c, h)   # the islands: Copernicus GLO-30 (H1b R3)
             H[j * n:(j + 1) * n, i * n:(i + 1) * n] = hgtEnc(np.where(m, np.maximum(h, 0.5), np.minimum(h, -0.5)))
     out['hgt'] = H
     fx0, fy0, fnx, fny = R.grid(0.05); lc = features('base/land_cover', box, ['geometry', 'subtype'])
     out['forest'] = fill(polys_of(lc, lambda s: s == 'forest'), 0.05, fx0, fy0, fnx, fny) if lc is not None else np.zeros((fny, fnx), np.uint8)
     out['cover'] = cover_tile(tx, ty)
-    E = national.expo(); out['expo'] = E[ty * 100:(ty + 1) * 100, tx * 100:(tx + 1) * 100].copy()
+    out['expo'] = national.xexpo()[(tx, ty)].copy() if xa else national.expo()[ty * 100:(ty + 1) * 100, tx * 100:(tx + 1) * 100].copy()
     # depth (half metres): the model from openness and the distance to the shore; Kartverket's inside the legacy square
     X, Y = np.meshgrid((fx0 + np.arange(fnx) + 0.5) * 0.05, (fy0 + np.arange(fny) + 0.5) * 0.05)
     Ev = 0.2 + 0.8 * ndimage.zoom(out['expo'].astype(np.float32) / 255, 10, order=1)[:fny, :fnx]
@@ -154,6 +174,7 @@ def tile(tx, ty):
     d = 2 + (13 + 220 * Ev ** 1.6 + 25 * vn(X / 4 + Y / 7, 5)) * sstep(0, 1.5, dcv) ** 0.6
     lon, lat = frame.to_ll(X, Y); lx, ly = frame.ll_to_leg(lon, lat); W, Hh = 2 * frame.LEG['KX'], 0.74 * frame.LEG['KY']
     ins = (lx >= 0) & (ly >= 0) & (lx <= W) & (ly <= Hh)
+    if xa: d = gebco_blend(X, Y, d, dcv)   # off the old frame the model only near the shore, GEBCO farther out (H1b R3)
     kv = kartverket(tx, ty)
     if kv is not None:
         ok = np.isfinite(kv)
@@ -213,13 +234,13 @@ LAYERS = dict(mask=(0.025, 'u8', 'core', None), dc=(0.1, 'f32', 'core', None), e
 if __name__ == '__main__':
     # part k of n of the coast's tiles, only into the caches (out/national/tiles, vec): the workflow runs the parts side by side
     if sys.argv[1:2] == ['cache']:
-        k, n = int(sys.argv[2]), int(sys.argv[3]); T = [tuple(t) for t in national.tiles()][k::n]; t0 = time.time()
+        k, n = int(sys.argv[2]), int(sys.argv[3]); T = national.all_tiles()[k::n]; t0 = time.time()
         for i, (tx, ty) in enumerate(T):
             L = tile(tx, ty); vec(tx, ty, L); chart_tile(tx, ty)
             print(f'part {k}/{n}: {i + 1}/{len(T)} tile {tx},{ty} {float(L["sec"]):.0f} s, total {time.time() - t0:.0f} s', file=sys.stderr, flush=True)
         sys.exit(0)
     if sys.argv[1:2] == ['game']:
-        T = [tuple(map(int, a.split(','))) for a in sys.argv[2:]] or [tuple(t) for t in national.tiles()]; t0 = time.time(); per = []; vsz = {}; vct = {}
+        T = [tuple(map(int, a.split(','))) for a in sys.argv[2:]] or national.all_tiles(); t0 = time.time(); per = []; vsz = {}; vct = {}
         import multiprocessing
         with multiprocessing.Pool(os.cpu_count()) as pool: NPC = dict(zip(T, pool.map(npc_tile, T)))
         print(f'npc: {sum(v[1] for v in NPC.values())} boats, {time.time() - t0:.0f} s', file=sys.stderr, flush=True)

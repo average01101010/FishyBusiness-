@@ -18,7 +18,7 @@
 // The layers are in the national frame (phase K4): a layer's cell (ix, iy) of size c covers x in [ix c, (ix + 1) c) km, the cells are
 // numbered from the frame's origin, and a layer has cells from (ix0, iy0) for nx by ny; blocks (bx, by) of n cells and tiles of
 // 50 km line up with the frame, so the packs of the whole coast fit together.
-const MAPD = {man:null, L:{}, packs:[], byTile:new Map(), core:null, blk:new Map(), bytes:0, budget:96e6, simR:4, base:'map/', db:undefined, miss:0, fetched:0, cached:0};
+const MAPD = {man:null, L:{}, packs:[], byTile:new Map(), core:null, chart0:null, blk:new Map(), bytes:0, budget:96e6, simR:4, base:'map/', db:undefined, miss:0, fetched:0, cached:0};
 function mapOnReady(f){ if (typeof document === 'undefined' || document.readyState !== 'loading') f(); else document.addEventListener('DOMContentLoaded', f); }
 // ---------- IndexedDB, by content ----------
 function mapIdb(){
@@ -57,6 +57,7 @@ async function mapStart(base){
   for (const pk of man.packs){
     pk.buf = null; pk.idx = null; pk.load = null; MAPD.packs.push(pk);
     if (pk.kind === 'core'){ MAPD.core = pk; continue; }
+    if (pk.kind === 'chart0'){ MAPD.chart0 = pk; continue; }   // coast0 for the whole frame (H1b R2): loaded after the start
     for (const t of pk.tiles || [pk.tile]) MAPD.byTile.set(pk.kind + ':' + t[0] + ':' + t[1], pk.tiles ? {file:pk.file, hash:pk.hash, kind:pk.kind, tile:t, bytes:pk.bytes, of:pk, buf:null, idx:null, load:null} : pk);
   }
   return man;
@@ -120,9 +121,16 @@ function med16(raw, n){
   for (let r = 0; r < n; r++) for (let c = 0; c < n; c++){ const i = r * n + c, z = raw[i] | (raw[N + i] << 8), a = c ? q[i - 1] : 0, b = r ? q[i - n] : 0, cc = r && c ? q[i - n - 1] : 0, pr = cc >= Math.max(a, b) ? Math.min(a, b) : cc <= Math.min(a, b) ? Math.max(a, b) : a + b - cc; q[i] = pr + ((z >>> 1) ^ -(z & 1)); }
   return q;
 }
+// 'u8p' (H1b R2): u8 through the median predictor, the residual modulo 256 in one byte (tools/map/pack.py med8)
+function med8(raw, n){
+  const q = new Uint8Array(n * n);
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++){ const i = r * n + c, a = c ? q[i - 1] : 0, b = r ? q[i - n] : 0, cc = r && c ? q[i - n - 1] : 0, pr = cc >= Math.max(a, b) ? Math.min(a, b) : cc <= Math.min(a, b) ? Math.max(a, b) : a + b - cc; q[i] = pr + raw[i]; }
+  return q;
+}
 function mapDecode(L, raw){
   const n = L.n, N = n * n;
   if (L.type === 'u8') return raw;
+  if (L.type === 'u8p') return med8(raw, n);
   if (L.type === 'f32') return new Float32Array(raw.byteOffset % 4 ? raw.slice().buffer : raw.buffer, raw.byteOffset % 4 ? 0 : raw.byteOffset, N);
   const q = med16(raw, n);
   // depth in half metres; the ground's height in half metres to 10 m and then 2 m steps (the page's own packing of hgt), kept as

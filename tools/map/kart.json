@@ -1,10 +1,17 @@
 {
-  "what": "the national map data for the whole coast in the game's format (tools/map/coast.py game, national.py), built by .github/workflows/kart.yml when this file changes and kept as a release kart-<run number>",
+  "what": "the national map data for the whole coast in the game's format (tools/map/coast.py game, national.py), built by .github/workflows/kart.yml when this file changes and kept as a release kart-<run number>; 'depth' and 's2' may list several releases (from H1b R3: the coast's and the islands', Svalbard and Jan Mayen)",
   "overture": "2026-09-23.1",
   "profile": "game",
   "parts": 12,
-  "run": 15,
-  "depth": "dybde-2",
-  "s2": "s2-2",
-  "trees": "trees-1"
+  "run": 17,
+  "depth": [
+    "dybde-2",
+    "dybde-7"
+  ],
+  "s2": [
+    "s2-2",
+    "s2-12"
+  ],
+  "trees": "trees-1",
+  "gebco": "gebco-3"
 }

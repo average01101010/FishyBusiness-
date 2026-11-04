@@ -749,17 +749,23 @@ def to_game_n(n): return (-n[1], n[2], -n[0])
 def rel_game(c):
     g = to_game(c); return lambda p: tuple(a - b for a, b in zip(to_game(p), g))
 
-TUB = (3.30, 0.55)          # the catch tub's place on the sole forward of the console, port side
+TUB = (3.47, 0.52)          # the catch tub's place on the sole forward of the console, port side (a 460 l tub, 04.11.2026)
+ICEBOX = (2.60, 0.82)       # the ice box under the gutting board (a 300 l tub at 0.5, 04.11.2026)
+BLEED = (1.92, 0.75)        # the bleeding tub on the sole just aft of the gutting board, by the one who guts (04.11.2026)
 def kit_places(G):
     """the places where the game sets the deck kit (tools/deck; nothing that can be bought is modelled in, only its place, 19.10.2026):
     the ring buoy on the inside of the starboard side aft by the skipper's seat, its bracket under the gunwale's edge (a spare place
-    on the port side); the 300 l catch tub on the sole forward of the console to port, where the catch is drawn (TUB); the net tub and
-    the freight on the casting deck, the line tubs on the sole forward of the fisher's place, by the hauler"""
+    on the port side); the fish tubs (Jonas 04.11.2026: the boat has no hold, so the catch lies in white 500 kg tubs on deck, as many
+    as her capacity; docs/planer/fiskekar-dekk.md): the first on the sole forward of the console to port (TUB), clear of the casting
+    deck forward and of the gutting board aft; there is no room for a second ([x, y, z, ry, litres, the place it stands on, -1: the deck]);
+    the ice box under the gutting board (ICEBOX: [x, y, z, ry, scale]); the net tub and the freight on the casting deck, the line tubs
+    on the sole forward of the fisher's place, by the hauler"""
     r = lambda a: round(a, 3)
     return {'buoys': [G(1.63, -(yi(1.63) + 0.004), zs(1.63) - 0.04) + [r(-math.pi / 2)], G(2.42, yi(2.42) + 0.004, zs(2.42) - 0.04) + [r(math.pi / 2)]],
-            'tubs': [G(TUB[0], TUB[1], Z_SOLE) + [0.0, 300]],
+            'tubs': [G(TUB[0], TUB[1], Z_SOLE) + [0.0, 460, -1]],
+            'iskasse': G(ICEBOX[0], ICEBOX[1], Z_SOLE) + [0.0, 0.5],
             'garn': {'at': G(4.58, 0.0, Z_CAST), 'ry': r(math.pi / 2)},
-            'stamps': {'at': G(3.78, -0.10, Z_SOLE), 'ry': 0.0},
+            'stamps': {'at': G(3.78, -0.20, Z_SOLE), 'ry': 0.0},
             'cargo': [G(4.70, 0.0, Z_CAST) + [0.0]]}
 
 # the boat's own anchor (tools/deck/anker.py, drawn and let go by the game): its kind and mass, the fairlead (the bow roller's top)
@@ -803,11 +809,12 @@ def anchors():
             'deck': {'y': sole, 'z': round(-(1.2 - XM), 3)}, 'gw': round(gwz(3.0), 3), 'stern': round(XM + 0.1, 3), 'bow': -2.2, 'side': 0.83,
             'beam': 2.45, 'pl': 2.4, 'rl': 1.0, 'open': True, 'hand': True, 'skiff': sk,
             # the work at sea, in its order (Jonas 31.10.2026: «logisk og realistisk»): the fisher at the starboard rail forward of the
-            # console by the hauler; the bleeding tub on the sole just forward of him, so the fish go from the rail straight into it (it
-            # stood by the skipper's seat aft); the gutting board is the boat's own, across the port gunwale abreast the console (own:
+            # console by the hauler; the bleeding tub on the sole just aft of the gutting board (Jonas 04.11.2026: «Bløggekaret må stå
+            # rett ved sløyebord/benk»; it stood forward of the fisher, who stood in it), the fisher tosses the bled fish over to it; the
+            # gutting board is the boat's own, across the port gunwale abreast the console (own:
             # the game draws no table; top: where the fish lie), the one who guts on the sole between it and the console; the iced
-            # catch in the 300 l tub forward of the board (kit.tubs, TUB)
-            'work': {'table': G(sum(GUT) / 2, 0.92, Z_SOLE), 'tub': G(3.25, -0.60, Z_SOLE), 's': 0.75, 'own': True, 'top': round(gut_top() - WL, 3)}, 'kit': kit_places(G)}
+            # catch in the 460 l tubs forward of the board (kit.tubs, TUB)
+            'work': {'table': G(sum(GUT) / 2, 0.92, Z_SOLE), 'tub': G(BLEED[0], BLEED[1], Z_SOLE), 's': 0.75, 'own': True, 'top': round(gut_top() - WL, 3)}, 'kit': kit_places(G)}
 
 
 # ---------- the checks against the tables, the data and the rules ----------

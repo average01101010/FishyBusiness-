@@ -80,7 +80,7 @@ const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell && !SPECIES[sp].
 //  len, beam, draft (m), disp (displacement loaded, tonnes; an estimate), holdCap, iceCap (kg), fuelCap (L), hp, vmax, vcruise (kn),
 //  accel (kn a minute), turnR (m, 3D), planing, outboard, diesel, fuelK, risk [hs warn, hs danger, wind warn, wind danger], sea (speed
 //  lost per m of wave), crewMax (besides you), berths (bunks where the crew can rest at sea; none means only the quay counts as rest),
-//  tubCap (bleeding tub, kg), land ('box' or 'tub'), std (equipment it comes with), rigs (the kinds of fishing it can be rigged for),
+//  tubCap (bleeding tub, kg), land ('tub'; 'box' was the open boats' boxes before 04.11.2026), kar (an open boat's fish tubs on deck, core/07f-kar.js: n her own, max the places), std (equipment it comes with), rigs (the kinds of fishing it can be rigged for),
 //  mottak (an ocean vessel's gear groups a plant must take in, mottak.json gear: Trål, Not, Konvensjonelle; 06b-coastports.js portWhy),
 //  jukseMax, gearMax, svcH (engine hours between services), svcCost, svcJobH (yard hours until 05.10.2026; every yard job takes YARD_H now, core/06-services.js), cls ('open', 'kyst' or 'hav': the market
 //  tab), price, isNew (built to order), year, desc.
@@ -91,23 +91,23 @@ const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell && !SPECIES[sp].
 // hus; shelter over the working deck; galley: none, plate or bysse; wc; dry (drying room); mess}, stations {table, hauler: how many work
 // there at once}, crane (tonnes, 0 without). vesselDerive adds fuelK, range (nm), watch (a 2+2 watch is possible), haulers and openOk.
 const VESSELS = {
-  skiff:{name:{no:'Aluminiumsbåt 19 fot (5,9 m), 60 hk påhengs', en:'19 ft aluminium boat (5.9 m), 60 hp outboard'}, len:5.9, beam:2.45, draft:0.6, disp:1.0, holdCap:350, iceCap:150, fuelCap:90, hp:60, engine:{no:'60 hk påhengsmotor, bensin', en:'60 hp petrol outboard'},
-    vmax:24, vcruise:18, accel:10, turnR:35, planing:true, outboard:true, diesel:false, risk:[1.0, 1.8, 10.8, 13.9], sea:0.45, crewMax:1, berths:0, tubCap:60, land:'box', std:[],
+  skiff:{name:{no:'Aluminiumsbåt 19 fot (5,9 m), 60 hk påhengs', en:'19 ft aluminium boat (5.9 m), 60 hp outboard'}, len:5.9, beam:2.45, draft:0.6, disp:1.0, holdCap:500, iceCap:150, fuelCap:90, hp:60, engine:{no:'60 hk påhengsmotor, bensin', en:'60 hp petrol outboard'},
+    vmax:24, vcruise:18, accel:10, turnR:35, planing:true, outboard:true, diesel:false, risk:[1.0, 1.8, 10.8, 13.9], sea:0.45, crewMax:1, berths:0, tubCap:60, land:'tub', std:[],
     rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:2, gearMax:{garn:6, stamp:4, teine:4}, svcH:100, svcCost:3500, svcJobH:3, cls:'open', price:95000, year:2008,
-    hullMat:'alu', hold:{kind:'dekk', m3:0.8}, deckCargo:150, iceMaker:0, gutMachine:0, lph:11, cabins:0, fac:{house:'open', shelter:false, galley:'none', wc:false, dry:false, mess:false}, stations:{table:1, hauler:1}, crane:0,
+    hullMat:'alu', kar:{n:1, max:1}, hold:{kind:'dekk', m3:0.8}, deckCargo:150, iceMaker:0, gutMachine:0, lph:11, cabins:0, fac:{house:'open', shelter:false, galley:'none', wc:false, dry:false, mess:false}, stations:{table:1, hauler:1}, crane:0,
     desc:{no:'Åpen aluminiumsbåt med midtkonsoll, sete og fordekk, og påhengsmotor. Rask og billig, men liten og våt i sjøgang.', en:'Open aluminium boat with a centre console, a seat, a casting deck and an outboard. Fast and cheap, but small and wet in a sea.'}},
   // Father's old boat, the first one (Jonas 05.10.2026: «en 23fot trebåt med innenbords semidiesel ... topphastigheten skal være 7
   // knop», the rest made up from the skiff's): hold, ice, crew and gear as the skiff, a semi-diesel single that sips diesel (semi: the
   // engine's own sound and its black puffs, ui/10e-sound.js and view3d.js; rpm 340 idle as in Jonas's video, 850 at most, his word), heavier and kinder in a sea than the aluminium boat
-  trebat:{name:{no:'Trebåt 23 fot (7,0 m), 8 hk semidiesel', en:'23 ft wooden boat (7.0 m), 8 hp semi-diesel'}, len:7.0, beam:2.26, draft:0.62, disp:1.9, holdCap:350, iceCap:150, fuelCap:60, hp:8, engine:{no:'8 hk semidiesel, én sylinder', en:'8 hp semi-diesel, single cylinder'},
-    vmax:7, vcruise:6, accel:2, turnR:28, planing:false, outboard:false, diesel:true, semi:true, rpm:[340, 850], risk:[1.2, 2.0, 11, 14.5], sea:0.3, crewMax:1, berths:0, tubCap:60, land:'box', std:[],
+  trebat:{name:{no:'Trebåt 23 fot (7,0 m), 8 hk semidiesel', en:'23 ft wooden boat (7.0 m), 8 hp semi-diesel'}, len:7.0, beam:2.26, draft:0.62, disp:1.9, holdCap:500, iceCap:150, fuelCap:60, hp:8, engine:{no:'8 hk semidiesel, én sylinder', en:'8 hp semi-diesel, single cylinder'},
+    vmax:7, vcruise:6, accel:2, turnR:28, planing:false, outboard:false, diesel:true, semi:true, rpm:[340, 850], risk:[1.2, 2.0, 11, 14.5], sea:0.3, crewMax:1, berths:0, tubCap:60, land:'tub', std:[],
     rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:2, gearMax:{garn:6, stamp:4, teine:6}, svcH:120, svcCost:2000, svcJobH:4, cls:'open', price:45000, year:1956,
-    hullMat:'tre', hold:{kind:'dekk', m3:0.8}, deckCargo:200, iceMaker:0, gutMachine:0, lph:1.0, cabins:0, fac:{house:'open', shelter:false, galley:'none', wc:false, dry:false, mess:false}, stations:{table:1, hauler:1}, crane:0,
+    hullMat:'tre', kar:{n:1, max:1}, hold:{kind:'dekk', m3:0.8}, deckCargo:200, iceMaker:0, gutMachine:0, lph:1.0, cabins:0, fac:{house:'open', shelter:false, galley:'none', wc:false, dry:false, mess:false}, stations:{table:1, hauler:1}, crane:0,
     desc:{no:'Gammel, klinkbygd og spissgattet trebåt med motorkasse midtskips og rorkult. Treverket er grått og slitt, men skroget er tett. Hun går i 7 knop og bruker nesten ikke diesel.', en:'An old clinker-built double-ended wooden boat with the engine box amidships and a tiller. The wood is grey and worn, but the hull is tight. She makes 7 knots and hardly uses any diesel.'}},
-  snekke:{name:{no:'Plastsnekke 26 fot, 30 hk diesel', en:'26 ft fibreglass snekke, 30 hp diesel'}, len:7.9, beam:2.7, draft:1.2, disp:3.0, holdCap:900, iceCap:400, fuelCap:220, hp:30, engine:{no:'30 hk innenbords diesel', en:'30 hp inboard diesel'},
-    vmax:8, vcruise:7, accel:3, turnR:45, planing:false, outboard:false, diesel:true, risk:[1.5, 2.5, 12.5, 16], sea:0.22, crewMax:2, berths:0, tubCap:150, land:'box', std:['plotter', 'vhf'],
+  snekke:{name:{no:'Plastsnekke 26 fot, 30 hk diesel', en:'26 ft fibreglass snekke, 30 hp diesel'}, len:7.9, beam:2.7, draft:1.2, disp:3.0, holdCap:1000, iceCap:400, fuelCap:220, hp:30, engine:{no:'30 hk innenbords diesel', en:'30 hp inboard diesel'},
+    vmax:8, vcruise:7, accel:3, turnR:45, planing:false, outboard:false, diesel:true, risk:[1.5, 2.5, 12.5, 16], sea:0.22, crewMax:2, berths:0, tubCap:150, land:'tub', std:['plotter', 'vhf'],
     rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:3, gearMax:{garn:15, stamp:10, teine:9}, svcH:250, svcCost:6000, svcJobH:5, cls:'open', price:245000, year:1994,
-    hullMat:'glassfiber', hold:{kind:'dekk', m3:1.8}, deckCargo:300, iceMaker:0, gutMachine:0, lph:3.0, cabins:0, fac:{house:'hardtop', shelter:false, galley:'none', wc:false, dry:false, mess:false}, stations:{table:1, hauler:1}, crane:0,
+    hullMat:'glassfiber', kar:{n:2, max:2}, hold:{kind:'dekk', m3:1.8}, deckCargo:300, iceMaker:0, gutMachine:0, lph:3.0, cabins:0, fac:{house:'hardtop', shelter:false, galley:'none', wc:false, dry:false, mess:false}, stations:{table:1, hauler:1}, crane:0,
     desc:{no:'Plastsnekke med klinkmønster i skroget, ruff forut, vindskjerm med hardtopp over styreplassen og åpen cockpit akter til redskapen. Sparsommelig og sjøsterk for størrelsen.', en:'Fibreglass snekke with a clinker-look hull, a cabin forward, a windscreen with a hard top over the helm and an open cockpit aft for the gear. Economical and seaworthy for her size.'}},
   // the 31 ft fibreglass sjark that became the standard Norwegian sjark from the late 1970s (the Viksund 31 Sjark; the make is only named
   // here). Measures from the registers and used-boat listings read 17.10.2026: 9.26–9.45 x 3.05–3.30 m, draft 1.2–1.5 m by the load, 5–6 t

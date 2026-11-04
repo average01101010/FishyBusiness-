@@ -78,6 +78,10 @@ function havBerth(s, pi, H){
   // (the land round the quays not loaded yet, a moment after a jump: no berth this time, she is not shown until it is)
   try { return npcBerths(grp, {x:pl[1], y:pl[2]}, mates, 1.5)[s.id] || null; } catch (e){ if (/not loaded/.test(e.message)) return null; throw e; }
 }
+// her speed on the grid (km/h) on a trip: true knots times the grid's scale (gridScale, H1b), the mean of home's and the ground's
+// (k is 1.00-1.04 between them; the trip's hours are a function of the clock, so one number per trip)
+function havV(s, tr){ const h = havData().p[s.pi], g = tr && tr.e && tr.e[1] != null ? {x:tr.e[1], y:tr.e[2]} : null;
+  return s.kn * NM * (g ? (gridScale({x:h[1], y:h[2]}) + gridScale(g)) / 2 : gridScale({x:h[1], y:h[2]})); }
 // the ships lying at plant pi at hour H to land their catch, the first come first (kept per plant and minute)
 const HAVVIS = new Map();
 function havVisitors(pi, H){
@@ -85,7 +89,7 @@ function havVisitors(pi, H){
   for (const s of D.visit.get(pi) || []){
     const t = H / 24 + s.ph, k = Math.floor(t / s.C), e = t - k * s.C; if (e < s.port) continue;
     const tr = havTrip(s, k); if (!tr || tr.e[1] == null || tr.e[5] !== pi) continue; const Ld = havLand(s, tr); if (!Ld) continue;
-    const v = s.kn * NM, steam = havWay(s, tr.gi).R.len / v, F = s.trip * 24 - steam - Ld.back - s.land - Ld.home, arr = (e - s.port) * 24 - steam - F - Ld.back;
+    const v = havV(s, tr), steam = havWay(s, tr.gi).R.len / v, F = s.trip * 24 - steam - Ld.back - s.land - Ld.home, arr = (e - s.port) * 24 - steam - F - Ld.back;
     if (arr >= 0 && arr < s.land) out.push([arr, s]); }
   out = out.sort((a, b) => b[0] - a[0] || a[1].i - b[1].i).map(q => q[1]);   // (longest there first)
   if (HAVVIS.size > 200) HAVVIS.clear(); HAVVIS.set(key, out); return out;
@@ -96,7 +100,7 @@ function havVisitors(pi, H){
 function havLand(s, tr){
   const D = havData(), dp = tr.e[5]; if (dp == null || dp === s.pi) return null;
   const a = D.p[dp], h = D.p[s.pi]; if (Math.hypot(a[1] - h[1], a[2] - h[2]) < 5) return null;   // (the same harbour: she lands at home)
-  const v = s.kn * NM, W = havWay(s, tr.gi), Wd = havWay(s, tr.gi, dp), Wh = havLeg(dp, s.pi); if (!Wh) return null;
+  const v = havV(s, tr), W = havWay(s, tr.gi), Wd = havWay(s, tr.gi, dp), Wh = havLeg(dp, s.pi); if (!Wh) return null;
   const out = W.R.len / v, back = Wd.R.len / v, home = Wh.R.len / v, Th = s.trip * 24;
   return out + back + s.land + home > Th * 0.75 ? null : {pi:dp, Wd, Wh, back, home};
 }
@@ -149,7 +153,7 @@ function havState(s, H, near){
   if (e < s.port) return port();
   const tr = havTrip(s, k); if (!tr) return port();
   if (tr.e[1] == null) return {hidden:true, st:'away'};
-  const W = havWay(s, tr.gi), v = s.kn * NM, steam = W.R.len / v, h = (e - s.port) * 24, Th = s.trip * 24, Ld = havLand(s, tr);
+  const W = havWay(s, tr.gi), v = havV(s, tr), steam = W.R.len / v, h = (e - s.port) * 24, Th = s.trip * 24, Ld = havLand(s, tr);
   if (Ld){
     // to the ground, fish, to the plant that takes the catch, lie there some hours, and home along the fairways
     const F = Th - steam - Ld.back - s.land - Ld.home;
@@ -188,7 +192,7 @@ function havNear(H, only){
     if (dist(A.p, b.pos) > R) continue;
     // (a minute ago she may have been hidden, in a port whose berth is not known: then she has just come out and no speed is read,
     // where P.p was read before P.hidden was asked and threw in npcStates, UI review 04.11.2026)
-    const P0 = A.st === 'port' ? A : havState(s, H - 1 / 60, b.pos), P = P0.hidden ? A : P0, dx = A.p.x - P.p.x, dy = A.p.y - P.p.y, sog = Math.hypot(dx, dy) / NM * 60;
+    const P0 = A.st === 'port' ? A : havState(s, H - 1 / 60, b.pos), P = P0.hidden ? A : P0, dx = A.p.x - P.p.x, dy = A.p.y - P.p.y, sog = Math.hypot(dx, dy) / gridScale(A.p) / NM * 60;
     out.push({id:s.id, name:s.name, type:'kyst', hav:s.g, vtype:s.vtype, p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, L:s.L, B:s.B, T:s.T, liv:s.i % 4, trawl:!!A.trawl, seine:A.seine || null, lev:A.lev || null});
   }
   if (!only){ HAV.k = k; HAV.v = out; HAV.gear = gear; }

@@ -146,7 +146,7 @@
     const q = S.boat.status === 'tow' && typeof towPose === 'function' ? towPose(liveFrac()) : null; if (!q || !RB.hull) return;
     const x = q.r.p.x * 1000, z = q.r.p.y * 1000; if (Math.hypot(x - eye[0], z - eye[2]) > 12000) return;
     const y = (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.7;
-    RB.q = q; RB.M = model(x - eye[0], y - eye[1], z - eye[2], -q.r.hd, Math.sin(t * 0.8 + z) * 0.02, Math.sin(t * 1.0 + x) * 0.03 * (0.3 + WV.hs));
+    RB.q = q; RB.M = model(x - eye[0], y - eye[1], z - eye[2], -q.r.hd, Math.sin(t * 0.8 + 1.3) * 0.02, Math.sin(t * 1.0) * 0.03 * (0.3 + WV.hs));   // (a fixed phase: her place in metres made her shudder under way)
     nSetup(VP); drawN(RB.hull, RB.M); if (RB.blue && Math.floor(t * 2.5) % 2 === 0) drawN(RB.blue, RB.M);
     // the tow line from the hook to your bow: slack while it is made fast, near taut under tow
     if ((q.ph === 'hook' && q.slack < 0.7) || q.ph === 'tow'){

@@ -1,6 +1,7 @@
 # The ground's summer colour from Sentinel-2 along the whole coast (G3, tools/s2/s2.py): the open L2A scenes on AWS (s3://sentinel-cogs),
 # the median of the clear days from mid June to August 2021-2025 per game tile, in parts side by side, kept as a release s2-<run number>.
-# Started by a push that changes tools/s2/s2.json (on any branch), or by hand. Contains modified Copernicus Sentinel data 2021-2025.
+# Started by a push that changes tools/s2/s2.json (on any branch), or by hand. s2.json's 'tiles' says which tiles: 'coast' (s2-1, s2-2)
+# or 'islands' (Svalbard, Bjørnøya, Hopen and Jan Mayen, tools/map/xtiles.json, from s2-3); kart.json's 's2' lists the releases kart.yml takes. Contains modified Copernicus Sentinel data 2021-2025.
 name: Satellittfarge langs kysten
 on:
   push:
@@ -11,7 +12,21 @@ permissions:
 env:
   PYTHONUNBUFFERED: '1'
 jobs:
+  # a push that only brings an s2.json a release was already made from (a merge into the working branch) stops here (tools/ci/seen.py)
+  seen:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.s.outputs.skip }}
+      mark: ${{ steps.s.outputs.mark }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: s
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/ci/seen.py s2 tools/s2/s2.json
   part:
+    needs: seen
+    if: needs.seen.outputs.skip != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 340
     strategy:
@@ -32,8 +47,8 @@ jobs:
           path: tools/s2/out/tiles/
           retention-days: 3
   release:
-    needs: part
-    if: always()
+    needs: [seen, part]
+    if: always() && needs.seen.outputs.skip != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,4 +65,4 @@ jobs:
           TAG=s2-${{ github.run_number }}
           tar czf s2.tgz s2
           gh release create "$TAG" s2.tgz --target "${{ github.sha }}" --title "Satellittfarge $TAG" \
-            --notes "Sentinel-2 summer median per coastal tile (tools/s2/s2.py, commit ${{ github.sha }}). Contains modified Copernicus Sentinel data 2021-2025."
+            --notes "Sentinel-2 summer median per coastal tile (tools/s2/s2.py, commit ${{ github.sha }}). Contains modified Copernicus Sentinel data 2021-2025. ${{ needs.seen.outputs.mark }}"

@@ -570,7 +570,7 @@ def floorboards(A, fine=True):
         for bx in (1.0, 5.5):
             w = min(inner_y(bx - 0.03, Z_FLOOR - 0.05), inner_y(bx + 0.03, Z_FLOOR - 0.05)) - 0.006; abox(A, bx - 0.03, bx + 0.03, -w, w, Z_FLOOR - 0.05, Z_FLOOR - 0.026, C['wood_dk'])
 
-THWARTS = ((1.12, SEAT, 0.30), (4.25, 1.04, 0.25), (5.45, 1.08, 0.25))
+THWARTS = ((1.12, SEAT, 0.30), (4.25, 1.04, 0.25), (5.56, 1.08, 0.25))   # (the forward one moved 0.11 m forward 04.11.2026: the fish tub between)
 def thwarts(A, fine=True):
     """the three thwarts (the aft one the skipper's) on the risers along each side, a hanging knee at each end up to the inwale"""
     for tx, tz, wd in THWARTS:
@@ -949,14 +949,18 @@ def kit_places(G):
     """the places where the game sets the deck kit (tools/deck; nothing that can be bought is modelled in, only its place, 19.10.2026):
     the ring buoy under the forward edge of the stern seat, facing forward behind the skipper's thwart, clear of the tiller (and a
     spare place on the starboard side abreast of the engine); the net tub, the line tubs and the freight on the floorboards between
-    the middle and the forward thwart, clear of the oars to port. No catch tub: the catch is drawn at the 'tub' anchor, in the
-    bleeding tub the game sets at work.tub. (Jonas 31.10.2026: no life raft and no lifebuoy in the model; the places stay for kit
-    the player buys.)"""
+    the middle and the forward thwart, clear of the oars to port. (Jonas 31.10.2026: no life raft and no lifebuoy in the model; the
+    places stay for kit the player buys.) The fish tub (Jonas 04.11.2026, docs/planer/fiskekar-dekk.md: no hold, the catch in a white
+    500 kg tub on deck): one 460 l tub athwartships on the floorboards between the middle and the forward thwart (the forward thwart
+    moved 0.11 m forward for it); no second, there is no room for one ([x, y, z, ry, litres, the place it stands on]). The net tub, the
+    line tubs and the freight stand on top of the fish tub. The ice box under the gutting board ([x, y, z, ry, scale])."""
     r = lambda a: round(a, 3); xs_ = 0.62
     return {'buoys': [G(xs_, 0.0, zs(xs_) - 0.05) + [r(math.pi)], G(2.6, -(hb(2.6) - 0.095), zs(2.6) - 0.06) + [r(-math.pi / 2)]],
-            'garn': {'at': G(4.85, -0.15, Z_FLOOR), 'ry': r(math.pi / 2)},
-            'stamps': {'at': G(5.08, 0.16, Z_FLOOR), 'ry': 0.0},
-            'cargo': [G(4.85, -0.15, Z_FLOOR) + [r(math.pi / 2)]]}
+            'tubs': [G(4.90, 0.0, Z_FLOOR) + [r(math.pi / 2), 460, -1]],
+            'iskasse': G(3.75, 0.75, Z_FLOOR) + [0.0, 0.45],
+            'garn': {'at': G(4.90, 0.0, Z_FLOOR + 0.74), 'ry': r(math.pi / 2)},
+            'stamps': {'at': G(5.12, 0.24, Z_FLOOR + 0.74), 'ry': 0.0},
+            'cargo': [G(4.90, 0.0, Z_FLOOR + 0.74) + [r(math.pi / 2)]]}
 
 # the boat's own anchor (tools/deck/anker.py, drawn and let go by the game, view3d.js drawAnchor; Jonas 21.10.2026): a grapnel of 5 kg,
 # the rode over the stem head, stowed on the floor forward
@@ -987,7 +991,7 @@ def anchors():
             'lights': lantern_anchors(G),
             'deck': {'y': round(Z_FLOOR - WL, 3), 'z': round(-(1.2 - XM), 3)}, 'gw': gw(3.4), 'stern': round(XM + 0.1, 3), 'bow': round(-(L - XM), 3), 'side': 1.0,
             'beam': BEAM, 'pl': 2.6, 'rl': 1.2, 'open': True, 'hand': True, 'inboard': True,
-            'work': {'table': G(3.75, 0.62, Z_FLOOR), 'tub': G(3.8, -0.6, Z_FLOOR), 's': 0.75, 'own': True, 'top': round(zs(3.75) + 0.07 - WL, 3)},
+            'work': {'table': G(3.75, 0.62, Z_FLOOR), 'tub': G(3.90, -0.52, Z_FLOOR), 's': 0.6, 'ry': 1.571, 'own': True, 'top': round(zs(3.75) + 0.07 - WL, 3)},
             'kit': kit_places(G)}
 
 

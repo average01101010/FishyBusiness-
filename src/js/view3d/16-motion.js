@@ -182,10 +182,16 @@
     for (const a of [-0.5, 0, 0.5]) for (const c of [-0.5, 0, 0.5]){ const h = seaH(bv.x + fx * a * Ls + rx * c * Bs, bv.z + fz * a * Ls + rz * c * Bs, t), hn = SEA_D[3]; hm += h; sl += h * a; st += h * c; hmN += hn; slN += hn * a; stN += hn * c; }
     hm /= 9; sl /= 1.5 * Ls; st /= 1.5 * Bs; hmN /= 9; slN /= 1.5 * Ls; stN /= 1.5 * Bs;
     const v = b.status === 'sailing' ? bv.spd / KNV() : 0;
-    const trim = 0.07 * sstep(9, 17, v) - 0.02 * sstep(3, 9, v) * (1 - sstep(9, 13, v));
+    // trim and lift from the Froude number (14-sea.js updateWake: WK.Fr, WK.pf), not from the knots, since a 5 m skiff and a 60 m
+    // trawler in 12 knots are not alike: a planing hull climbs her own bow wave to some 6 degrees at the hump (Fr 0.5-0.7), then comes
+    // up on the plane, lifts and settles to some 3 degrees with the forebody dry (the reference video 04.11.2026); a displacement hull
+    // squats, the stern down and the bow up a degree, near her hull speed (Fr 0.35-0.45)
+    const Fr = WK.Fr || 0, Lb = (G.stern - G.bow) || 6;
+    const trim = BOAT.planing ? 0.1 * sstep(0.25, 0.6, Fr) - 0.045 * sstep(0.7, 1.3, Fr) : 0.018 * sstep(0.2, 0.45, Fr);
+    const lift = BOAT.planing ? 0.015 * Lb * (WK.pf || 0) : -0.004 * Lb * sstep(0.3, 0.45, Fr);
     // planing hulls bank into a turn, displacement hulls heel a little outwards
     const bank = (BOAT.planing ? -0.18 : 0.06) * clamp(bv.yr, -1.2, 1.2) * sstep(4, 18, v);
-    let tp = Math.atan(sl - slN) + trim, tr = Math.atan(st - stN) + bank + (bv.heel || 0), ty = hm - hmN + 0.06;
+    let tp = Math.atan(sl - slN) + trim, tr = Math.atan(st - stN) + bank + (bv.heel || 0), ty = hm - hmN + 0.06 + lift;
     // on the yard's lift she is raised with the platform and lies still: no sea to rock her (liftStep)
     const lf = liftStep(dt, b);
     if (lf.off > 0 || lf.d){ ty = hm * (1 - lf.dry) + (env.tide || 0) * lf.dry + 0.06 + lf.off; tp *= 1 - lf.dry; tr *= 1 - lf.dry; if (bv.osc && lf.d) bv.y += lf.d; if (bv.fy !== undefined && lf.d) bv.fy += lf.d; }

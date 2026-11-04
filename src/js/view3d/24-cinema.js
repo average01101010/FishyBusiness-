@@ -582,6 +582,13 @@
       const wv = (env.wind || 0) * 0.35, wx = env.windDir[0] * wv, wz = env.windDir[1] * wv, Lb = VG.stern - VG.bow, fx = Math.sin(bv.head), fz = -Math.cos(bv.head), way = (bv.spd || 0) * 0.9;
       if (v > 3 && sink < -0.5 && imm < 0.6) wk.sacc += Math.min(100, -sink * v * 1.25);
       if (WK.Fr > 0.9) wk.sacc += dt * v * WV.hs * 2;
+      // the spray sheet on the plane, in calm water too (the reference video Jonas showed 04.11.2026): where the hull meets the water, from
+      // 6 % of the length aft of the stem at the hump to 40 % on the plane (WK.pf, as the foam map's spray root), the chine and the spray
+      // rails throw a thin sheet flat out to both sides, low, at some third of her speed through the water; it falls within half a second
+      // and lies as the white wings in the foam map. A displacement hull has none at any speed (WK.pf 0)
+      if ((WK.pf || 0) > 0.05 && v > 3){ const vr = (WK.kn || 0) * 0.5144; wk.pacc = (wk.pacc || 0) + dt * 90 * WK.pf * sstep(3, 10, vr);
+        while (wk.pacc >= 1){ wk.pacc -= 1; const side = Math.random() < 0.5 ? -1 : 1, rf = 0.06 + 0.34 * WK.pf + Math.random() * 0.1, p = xf(BM, [side * VG.side * 1.05, 0.05, VG.bow + rf * Lb]), out = Math.min(7, vr * (0.2 + Math.random() * 0.15));
+          spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, 0.4 + Math.random() * 0.9, Math.sin(bv.head) * side * out + fz * way + wz, 0.35 + Math.random() * 0.35, 9.8); } }
       while (wk.sacc >= 1){ wk.sacc -= 1; const side = Math.random() < 0.5 ? -1 : 1, a = 0.08 + Math.random() * 0.22, p = xf(BM, [side * VG.side * (0.45 + a * 1.6), 0.1, VG.bow + a * Lb]), up = 0.9 + Math.random() * (1.4 + Math.min(4, -sink)), out = 1.6 + Math.random() * 2.6;
         spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, up, Math.sin(bv.head) * side * out + fz * way + wz, 0.6 + Math.random() * 0.7, 9.8); }
       // the rooster tail: a planing outboard throws a plume of water up behind the leg

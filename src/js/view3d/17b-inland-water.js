@@ -7,7 +7,7 @@
   const WATER = new Map(), WATER_R = 3500, WATER_W = [2.4, 9, 3];   // the lines' widths: stream, river, canal
   const WATER_VS = 'attribute vec3 aPos;attribute vec3 aT;uniform mat4 uVP;uniform mat4 uM;varying vec3 vW;varying vec3 vT;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vT=aT;gl_Position=uVP*w;}';
   // vT: x 0 standing water, 1 running; y the distance along a river (m); z how white (a steep reach, a fall)
-  const WATER_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform float uT;uniform float uIce;uniform float uSnowY;uniform float uDbgI;uniform float uDbgT;uniform vec2 uWind;varying vec3 vW;varying vec3 vT;' + NOISE + AIR +
+  const WATER_FS = SUNV('precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform float uT;uniform float uIce;uniform float uSnowY;uniform float uDbgI;uniform float uDbgT;uniform vec2 uWind;varying vec3 vW;varying vec3 vT;' + NOISE + AIR +
     'void main(){float d=length(vW);vec3 V=-vW/max(d,0.01);vec2 wq=mod(vW.xz+uEye.xy,4096.0);' +
     // the ripples: two noises drifting with the wind on the lakes, the flow along a river (its across-direction unknown here, so the
     // streaks run with the noise of the distance along it)
@@ -20,7 +20,7 @@
     'float wh=clamp(vT.z+smoothstep(0.62,0.8,ns(vec2(vT.y*0.35-uT*3.0,wq.y*0.3)))*vT.z*0.5,0.0,1.0);c=mix(c,vec3(0.86,0.9,0.92)*(uAmb+uSunCol*0.8),wh);' +
     // ice and snow on it in winter
     'float ice=uIce*smoothstep(uSnowY-80.0,uSnowY+40.0,vW.y+uEye.z);c=mix(c,vec3(0.9,0.92,0.95)*(uAmb+uSunCol*0.75)*(0.94+0.06*ns(wq*0.2)),ice*(1.0-step(0.5,vT.x)*0.3));' +
-    'gl_FragColor=vec4(fin(c,vW),1.0);if(uDbgI>0.5)gl_FragColor=vec4(mod(vT.y,256.0)/255.0,floor(vT.y/256.0)/255.0,uDbgT/255.0,1.0);}';
+    'gl_FragColor=vec4(fin(c,vW),1.0);if(uDbgI>0.5)gl_FragColor=vec4(mod(vT.y,256.0)/255.0,floor(vT.y/256.0)/255.0,uDbgT/255.0,1.0);}');
   let PW = null;
   // the entry of a tile's vec pack, read on the main thread (a few thousand items); null when the pack has none
   function waterData(tx, ty){

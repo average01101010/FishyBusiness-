@@ -20,6 +20,45 @@
        ['Ved første fisk går kameraet ned over dekket, så du ser bløggekaret.', 'At the first fish the camera comes down over the deck, so you see the bleeding tub.'],
        ['Første levering får et stempel med hva den ga.', 'The first landing gets a stamp with what it paid.'],
     ]],
+    ['npcrist-041126', '04.11.2026', 'Rolig gange for de andre båtene', 'The other boats ride steadily', [
+       ['De andre båtene ristet når de gikk med fart, fordi gyngingen fulgte plassen deres. Nå gynger hver båt i sitt eget rolige tempo.', 'The other boats shuddered when under way, because their rocking followed where they were. Each boat now rocks at her own calm pace.'],
+    ]],
+    ['svalbard-041126', '04.11.2026', 'Svalbard og Jan Mayen i detalj', 'Svalbard and Jan Mayen in detail', [
+       ['Svalbard, Bjørnøya, Hopen og Jan Mayen har nå like detaljert kyst som fastlandet: fjæra, skjærene, dybden, sjømerkene og fyrlyktene, og husene, veiene og kaiene i Longyearbyen, Ny-Ålesund, Barentsburg og Sveagruva.', 'Svalbard, Bjørnøya, Hopen and Jan Mayen now have a coast as detailed as the mainland: the shore, the skerries, the depth, the sea marks and the lights, and the houses, roads and quays of Longyearbyen, Ny-Ålesund, Barentsburg and Sveagruva.'],
+       ['Bakken der har sommerfargen fra satellittbildene: tundra, grus og stein, og breene helt ned mot sjøen.', 'The ground there has the summer colour from the satellite pictures: tundra, gravel and stone, and the glaciers right down to the sea.'],
+       ['Posisjonen vest for Greenwich vises nå som V, ikke Ø.', 'A position west of Greenwich now shows as W, not E.'],
+    ]],
+    ['skygger-041126', '04.11.2026', 'Skygger på alt', 'Shadows on everything', [
+       ['Fjellets skygge faller nå også på båtene, husene, kaiene, trærne og sjøen. En fjord i kveldsskygge blir mørk helt ned til vannet, og solglitteret forsvinner der sola ikke når.', 'The fells now cast their shadow on the boats, houses, quays, trees and the sea as well. A fjord in evening shadow goes dark right down to the water, and the sun\'s glitter goes where the sun does not reach.'],
+       ['Skyene kaster skygge over land og sjø og driver med vinden, så lys og skygge vandrer over fjellsidene på dager med spredte skyer.', 'The clouds cast shadows over land and sea and drift with the wind, so light and shade wander over the hillsides on days with broken cloud.'],
+    ]],
+    ['kystposten-041126', '04.11.2026', 'Kystposten åpner igjen', 'Kystposten opens again', [
+       ['Kystposten stoppet når avisa hadde en sak om bygdekampen, fiskarlaget eller kystvakta. Nå vises sakene med riktig merke.', 'Kystposten stopped when the paper had a story about the village contest, the fishing club or the coast guard. The stories now show with the right label.'],
+    ]],
+    ['kjolvann-041126', '04.11.2026', 'Båten i sjøen etter farten', 'The boat in the water by her speed', [
+       ['En planende båt ligger nå høyere med baugen tørr, og sprøyten kastes flatt ut fra midtskips og legger seg som to hvite vinger i kjølvannet.', 'A planing boat now rides higher with her bow dry, and the spray is thrown flat out from amidships and lies as two white wings in the wake.'],
+       ['Bak en tørr hekk står en mørk renne midt i skummet før vannet slår sammen bak båten, og kjølvannet blir smalere jo fortere hun går.', 'Behind a dry transom a dark channel runs down the middle of the foam before the water closes behind her, and the wake narrows the faster she goes.'],
+       ['Boblene i kjølvannet lyser turkist under overflaten. Sakte båter går som før: baugbølge ved stevnen og lite trim.', 'The bubbles in the wake glow turquoise under the surface. Slow boats go as before: a bow wave at the stem and little trim.'],
+    ]],
+    ['raskstart-041126', '04.11.2026', 'Raskere første start', 'A faster first start', [
+       ['Første gang spillet åpnes, kommer brevet fra far mye raskere. Båtene og havnene lastes ned mens du leser.', 'The first time the game opens, Father\'s letter comes much sooner. The boats and harbours download while you read.']]],
+    ['batnavn-041126', '04.11.2026', 'Båtnavnet i blokkbokstaver', 'The boat\'s name in block capitals', [
+       ['Navnet står i blokkbokstaver på kanten av styrhustaket foran og på hekken, med hjemmehavnen under i mindre skrift.', 'The name is painted in block capitals on the front edge of the wheelhouse roof and on the transom, with the home port under it in smaller letters.'],
+       ['Båtene uten styrhus har navnet på hekken, og skiffen og trebåten har det lite akter på sidene. Navnet står ikke lenger i baugen.', 'The boats without a wheelhouse carry the name on the transom, and the skiff and the wooden boat carry it small aft on the sides. The name is no longer on the bows.'],
+       ['Skriften er hvit eller svart, alt etter hva som synes best mot fargen den står på. Maler du båten, følger skriften med.', 'The letters are white or black, whichever shows best against the paint under them. Repaint the boat and the letters follow.']]],
+    ['ramme-041126', '04.11.2026', 'Havet utenfor kysten', 'The sea off the coast', [
+       ['Kartet går nå til Svalbard, Bjørnøya, Jan Mayen, Island, Færøyane, Grønlands østkyst og russisk sone til Novaja Semlja. Landet der vises i sjøkartet og i 3D.', 'The chart now reaches Svalbard, Bear Island, Jan Mayen, Iceland, the Faroes, East Greenland and the Russian zone to Novaya Zemlya. The land there shows on the chart and in 3D.'],
+       ['Dybden til havs er ny, fra GEBCO, så bankene og eggakanten ligger der de skal.', 'The depth offshore is new, from GEBCO, so the banks and the shelf edge lie where they should.'],
+       ['Fart og avstand regnes etter sann avstand på jordkula. Langs kysten merkes det ikke, langt ute i havet er det riktigere enn før.', 'Speed and distance are worked out by the true distance on the globe. Along the coast you will not notice; far out at sea it is truer than before.'],
+    ]],
+    ['fiskekar-041126', '04.11.2026', 'Fiskekar på dekk', 'Fish tubs on deck', [
+       ['Båtene uten lasterom har fisken i hvite kar på 500 kg på dekk. Skiffen og trebåten har ett kar, snekka to.', 'The boats without a hold keep the fish in white 500 kg tubs on deck. The skiff and the wooden boat have one tub, the snekke two.'],
+       ['Karene fylles fisk for fisk nedenfra, med is på fisken som er iset og knust is over et fullt kar. Det blir blod og slim på karene etter hvert som de fylles.', 'The tubs fill fish by fish from the bottom, with ice on the iced fish and crushed ice over a full tub. Blood and slime gather on the tubs as they fill.'],
+       ['Isen står i en blå iskasse på dekk. Spaden står i kassa når ingen iser, og isen øses over fisken i karet.', 'The ice is kept in a blue ice box on deck. The shovel stands in the box when nobody is icing, and the ice is shovelled over the fish in the tub.'],
+       ['Ved levering løfter kranen karene i land med en stropp fra hvert hjørne. Trucken tar dem inn, og de kommer spylt tilbake om bord, ett og ett.', 'At the plant the crane lifts the tubs ashore with a strap from each corner. The forklift takes them in, and they come back washed and aboard, one by one.'],
+       ['Båtene med lasterom leverer i mottakets kar på 500 kg.', 'The boats with a hold land in the plant\'s 500 kg tubs.'],
+       ['Har du bygd om lasterommet på en båt uten lasterom, får du det du betalte tilbake. Båten har ikke plass til flere kar.', 'If you rebuilt the hold of a boat without a hold, you get back what you paid. The boat has no room for more tubs.']
+    ]],
     ['logo-031126', '03.11.2026', 'Ny logo', 'A new logo', [
        ['Det Store Blå har fått ny logo: et anker laget av ordene. Du ser den når spillet laster, når du logger inn, på app-ikonet og på bildet når du deler Ukas fangst.', 'Det Store Blå has a new logo: an anchor made of the words. You see it while the game loads, when you sign in, on the app icon and on the picture when you share the week\'s catch.'],
     ]],

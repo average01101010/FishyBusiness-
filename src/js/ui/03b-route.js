@@ -15,7 +15,7 @@ function draftTimeline(){
   const b = S.boat, e = estimate(), v = Math.max(1, e.v), out = [];
   let a = draftOrigin(), T = S.draftDep && S.draftDep > S.t ? S.draftDep : S.t;
   const T0 = T;
-  S.draft.forEach(w => { const km = dist(a, w); T += km / (v * NM) * 60; const arrive = T; T += (w.fish || 0) * 60; out.push({nm:km / NM, crs:courseDeg(a, w), arrive, leave:T}); a = w; });
+  S.draft.forEach(w => { const km = kmTrue(a, w); T += km / (v * NM) * 60; const arrive = T; T += (w.fish || 0) * 60; out.push({nm:km / NM, crs:courseDeg(a, w), arrive, leave:T}); a = w; });
   return {dep:T0, legs:out, end:T};
 }
 

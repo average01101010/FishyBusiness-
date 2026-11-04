@@ -108,6 +108,18 @@
     if (st.task === 'pack' && st.Cr && st.lay != null && st.lay >= 0 && st.lay < 1.5) return to(st.Cr) * 0.6 * Math.sin(st.lay / 1.5 * Math.PI);
     return 0;
   }
+  // the ice shovel in the hands (tools/deck/fisk.py spade, spade_skaft, spade_is; the old block where the kit is not in the page): the
+  // shaft from the grip G to the blade at B, the blade along it, tipped by tip, with a scoop of ice on it while full; as it tips, lumps of
+  // ice (isbit) fall from it onto the heap in the box or tub at box (eye-relative, its base; top: the heap's height over it)
+  function drawShovel(G, B, tip, full, c, box, top){
+    const SP = kit('fish', 'spade'), SH = kit('fish', 'spade_skaft'), SI = kit('fish', 'spade_is'), BIT = kit('fish', 'isbit'), dx = B[0] - G[0], dz = B[2] - G[2], yaw = Math.atan2(dx, -dz);
+    const BM = chain(M4.T(B[0], B[1], B[2]), M4.RY(-yaw), M4.RZ(tip * 1.1));
+    if (SP && SH){ drawN(SH, shaftM(G, B)); drawN(SP, BM); if (full && SI) drawN(SI, BM); }
+    else { drawN(PM.broom, limbM(G, B, 0.018)); drawN(PM.shovel, BM); if (full) drawN(PM.scoop, chain(BM, M4.T(0, 0.01, 0))); }
+    if (tip > 0.05) for (let i = 0; i < 10; i++){ const q = (c - 0.55) / 0.2 * 1.4 - hash(i) * 0.4; if (q < 0 || q > 1) continue;
+      const P0 = [B[0] + (box[0] - B[0]) * q * 0.4 + (hash(i + 3) - 0.5) * 0.16, B[1] - q * q * Math.max(0, B[1] - box[1] - top), B[2] + (box[2] - B[2]) * q * 0.4 + (hash(i + 9) - 0.5) * 0.16];
+      if (BIT) drawN(BIT, chain(M4.T(P0[0], P0[1], P0[2]), M4.RY(hash(i * 7) * 6.28 + q * 3), M4.S(0.55))); else drawN(PM.icebit, M4.T(P0[0], P0[1], P0[2])); }
+  }
   function drawWorker(P, st, eye, T, idx){
     const y = P.gy([st.x, st.z]), h = st.h + workTurn(st, eye, T, idx); (P.wpos || (P.wpos = {}))[idx] = {x:st.x, y, z:st.z};   // where he stands, for his words (sayWorker)
     const F = [Math.sin(h), -Math.cos(h)], R = [Math.cos(h), Math.sin(h)], rel = (x, yy, z) => [x - eye[0], yy - eye[1], z - eye[2]];
@@ -224,9 +236,12 @@
       case 'pack': { const L = st.lay, Cr = st.Cr || W(0.15, 0, 0.62), cr = [Cr[0], Cr[1] + (st.crTop || 0.28), Cr[2]]; st.blade = null; st.tip = 0;
         if (L != null && L >= 0 && L < 1.5){ const u = Math.sin(Math.min(1, L / 1.5) * Math.PI), k = Math.sin(L * 9) * 0.03;
           hands = [[cr[0] + R[0] * 0.13 + F[0] * k, cr[1] + 0.06 + 0.2 * (1 - u), cr[2] + R[1] * 0.13 + F[1] * k], [cr[0] - R[0] * 0.13, cr[1] + 0.06 + 0.2 * (1 - u), cr[2] - R[1] * 0.13]]; break; }
-        const dx = Cr[0] + eye[0] - st.x, dz = Cr[2] + eye[2] - st.z, aT = clamp(dx * F[0] + dz * F[1], 0.3, 0.85), rT = clamp(dx * R[0] + dz * R[1], -0.8, 0.8), rB = st.binR || -0.5;
+        const dx = Cr[0] + eye[0] - st.x, dz = Cr[2] + eye[2] - st.z, aT = clamp(dx * F[0] + dz * F[1], 0.3, 0.85), rT = clamp(dx * R[0] + dz * R[1], -0.8, 0.8);
+        // the ice from the ice box where it stands on deck (st.Bin, its ice's top; drawIceBox), else from the bin at his side (st.binR)
+        const Bn = st.Bin, bx = Bn ? Bn[0] + eye[0] - st.x : 0, bz = Bn ? Bn[2] + eye[2] - st.z : 0, rB = Bn ? clamp(bx * R[0] + bz * R[1], -1.0, 1.0) : st.binR || -0.5, aB = Bn ? clamp(bx * F[0] + bz * F[1], 0.15, 0.9) : 0.4;
+        const hB = Bn ? Bn[1] + eye[1] - y : 0.5, hT = Math.max(0.62, (st.crTop || 0.28) + (Cr[1] + eye[1] - y) + 0.12);
         const c = ((T + idx * 1.7) % 2.6) / 2.6, sw0 = c < 0.3 ? 0 : c < 0.55 ? ease((c - 0.3) / 0.25) : c < 0.75 ? 1 : 1 - ease((c - 0.75) / 0.25);
-        const lo = c < 0.3 ? Math.sin(c / 0.3 * Math.PI) : 0, r = rB + sw0 * (rT - rB), a = 0.4 + sw0 * (aT - 0.4), up = 0.62 - lo * 0.12 + Math.sin(sw0 * Math.PI) * 0.3;
+        const lo = c < 0.3 ? Math.sin(c / 0.3 * Math.PI) : 0, r = rB + sw0 * (rT - rB), a = aB + sw0 * (aT - aB), up = (hB + 0.17) + sw0 * (hT - hB - 0.17) - lo * 0.15 + Math.sin(sw0 * Math.PI) * 0.25;
         st.blade = W(a, up, r); st.tip = c >= 0.55 && c < 0.75 ? Math.sin((c - 0.55) / 0.2 * Math.PI) : 0; st.full = c >= 0.22 && c < 0.62; st.c = c;
         const G = W(0.08, 1.02, r * 0.35); hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
       // a full box of fish carried to the hatch and lowered into the hold (st.s: seconds there; 2.2 in all)
@@ -411,16 +426,12 @@
       if (st.slo) drawN(PM.slo, M4.T(st.slo.at[0], st.slo.at[1], st.slo.at[2]));
       if (HD && st.hd) drawN(HD, chain(M4.T(st.hd.at[0], st.hd.at[1], st.hd.at[2]), M4.RY(yaw + st.hd.spin), M4.RZ(Math.PI / 2 + st.hd.spin * 0.7), M4.S(sc)));
       if (st.gt){ const u = st.gt.u, A0 = st.gt.A, B0 = st.gt.B; lieCut([A0[0] + (B0[0] - A0[0]) * u, A0[1] + (B0[1] - A0[1]) * u + 0.3 * 4 * u * (1 - u), A0[2] + (B0[2] - A0[2]) * u], yaw + u * 0.6); } }
-    if (st.task === 'pack'){ const bin = W(0.15, 0, (st.binR || -0.5) * 1.15); drawN(PM.icebin, chain(M4.T(bin[0], bin[1], bin[2]), M4.RY(-h)));
+    if (st.task === 'pack'){ if (!st.Bin){ const bin = W(0.15, 0, (st.binR || -0.5) * 1.15); drawN(PM.icebin, chain(M4.T(bin[0], bin[1], bin[2]), M4.RY(-h))); }
       // the crate on his right with the fish packed in it so far, in layers of three (st.fill); on an open boat the fish go in her tub
       if (!st.crTub){ const C = st.Cr || W(0.58, 0, 0), CM = chain(M4.T(C[0], C[1], C[2]), M4.RY(-st.h)); drawN(PM.fbox, CM); const n = fishy ? Math.round((st.fill || 0) * 9) : 0;
         for (let i = 0; i < n; i++) drawN(fishOf(st.csp ? st.csp(i) : 'torsk'), chain(CM, M4.T(-0.24 + (i % 3) * 0.24, 0.07 + Math.floor(i / 3) * 0.06, (hash(i * 5) - 0.5) * 0.06), M4.RY(Math.PI / 2 + (i % 2 ? Math.PI : 0)), M4.RZ(Math.PI / 2), M4.S(0.4)));
         if (n > 0) drawN(PM.icebit, chain(CM, M4.T(0, 0.1 + Math.floor((n - 1) / 3) * 0.06, 0), M4.S(14, 1.2, 7))); }
-      if (st.blade){ const G = hands[1], B = st.blade, dx = B[0] - G[0], dz = B[2] - G[2], yaw = Math.atan2(dx, -dz); drawN(PM.broom, limbM(G, B, 0.018));
-        const BM = chain(M4.T(B[0], B[1], B[2]), M4.RY(-yaw), M4.RZ(st.tip * 1.1)); drawN(PM.shovel, BM); if (st.full) drawN(PM.scoop, chain(BM, M4.T(0, 0.01, 0)));
-        const box = st.Cr || W(0.15, 0, 0.62);
-        if (st.tip > 0.05) for (let i = 0; i < 10; i++){ const q = (st.c - 0.55) / 0.2 * 1.4 - hash(i) * 0.4; if (q < 0 || q > 1) continue;
-          drawN(PM.icebit, M4.T(B[0] + (box[0] - B[0]) * q * 0.4 + (hash(i + 3) - 0.5) * 0.18, B[1] - q * q * Math.max(0, B[1] - box[1] - 0.3), B[2] + (box[2] - B[2]) * q * 0.4 + (hash(i + 9) - 0.5) * 0.18)); } } }
+      if (st.blade) drawShovel(hands[1], st.blade, st.tip, st.full, st.c, st.Cr || W(0.15, 0, 0.62), st.crTub ? st.crTop : 0.3); }
     // the full box in his arms on the way to the hatch, and lowered into the hold there
     if ((st.task === 'carry' && st.crate) || st.task === 'stow'){ const s2 = st.s || 0, down = st.task === 'stow' ? clamp((s2 - 1.3) / 0.8, 0, 1) : 0;
       if (s2 < 2.15 || st.task === 'carry'){ const c = [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2 - 0.12 - down * 0.8, (hands[0][2] + hands[1][2]) / 2], CM = chain(M4.T(c[0], c[1], c[2]), M4.RY(-h + Math.PI / 2));
@@ -437,13 +448,8 @@
       if (st.hook) drawN(PM.wire, limbM(st.hook, [st.hook[0] + F[0] * 0.03, st.hook[1] - 0.03, st.hook[2] + F[1] * 0.03], 0.003)); }
     if (st.task === 'mend' && st.needle && PM.needle) drawN(PM.needle, toolM(st.needle.at, st.needle.dir));
     if (st.task === 'tally' || st.task === 'remote'){ const c = [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2, (hands[0][2] + hands[1][2]) / 2]; drawN(st.task === 'tally' ? PM.board : PM.remote, chain(M4.T(c[0], c[1] - 0.05, c[2]), M4.RY(-h), M4.RX(st.task === 'tally' ? -0.5 : 0))); }
-    if (st.task === 'ice'){ const G = hands[1], B = st.blade, dx = B[0] - G[0], dz = B[2] - G[2], yaw = Math.atan2(dx, -dz);
-      drawN(PM.broom, limbM(G, B, 0.018));
-      const BM = chain(M4.T(B[0], B[1], B[2]), M4.RY(-yaw), M4.RZ(st.tip * 1.1)); drawN(PM.shovel, BM); if (st.full) drawN(PM.scoop, chain(BM, M4.T(0, 0.01, 0)));
-      const bin = W(0.15, 0, -0.62), box = W(0.15, 0, 0.62); drawN(PM.icebin, chain(M4.T(bin[0], bin[1], bin[2]), M4.RY(-h))); drawN(PM.icebox, chain(M4.T(box[0], box[1], box[2]), M4.RY(-h)));
-      // the ice falls from the shovel into the box as it tips
-      if (st.tip > 0.05) for (let i = 0; i < 10; i++){ const q = (st.c - 0.55) / 0.2 * 1.4 - hash(i) * 0.4; if (q < 0 || q > 1) continue;
-        drawN(PM.icebit, M4.T(B[0] + (box[0] - B[0]) * q * 0.4 + (hash(i + 3) - 0.5) * 0.18, B[1] - q * q * Math.max(0, B[1] - box[1] - 0.3), B[2] + (box[2] - B[2]) * q * 0.4 + (hash(i + 9) - 0.5) * 0.18)); } }
+    if (st.task === 'ice'){ const bin = W(0.15, 0, -0.62), box = W(0.15, 0, 0.62); drawN(PM.icebin, chain(M4.T(bin[0], bin[1], bin[2]), M4.RY(-h))); drawN(PM.icebox, chain(M4.T(box[0], box[1], box[2]), M4.RY(-h)));
+      drawShovel(hands[1], st.blade, st.tip, st.full, st.c, box, 0.3); }
     if (st.task === 'carry' || st.task === 'stack'){ const c = [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2 - 0.1, (hands[0][2] + hands[1][2]) / 2]; drawN(PM.fbox, chain(M4.T(c[0], c[1], c[2]), M4.RY(-h + Math.PI / 2))); }
     if (st.task === 'sweep'){ const top = hands[0], KH = pz('kosthode'), foot = [top[0] + F[0] * 0.55, y - eye[1] + (KH ? 0.108 : 0.02), top[2] + F[1] * 0.55]; drawN(PM.broom, limbM(top, foot, 0.02));
       if (KH) drawN(KH, chain(M4.T(foot[0], foot[1], foot[2]), M4.RY(-h))); else drawN(PM.fbox, chain(M4.T(foot[0], foot[1], foot[2]), M4.RY(-h), M4.S(0.5))); }

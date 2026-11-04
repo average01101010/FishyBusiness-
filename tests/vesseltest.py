@@ -82,7 +82,7 @@ async def main():
                  and 'sonar' in f['sjark'] and 'sonar' not in f['snekke'] and 'motor90' in f['skiff'] and 'motor90' not in f['snekke']), 'equipment fits by size and engine')
         print(ok(r['boost'][:2] == [30, 15] and r['plain'][:2] == [24, 11] and r['boost'][2] > r['plain'][2]), 'the 90 hp outboard gives the skiff 30 kn and a thirstier engine (15 l/h against 11)', r['boost'], r['plain'])
         print('burn (l/h at cruise, nm range, 2+2 watch, haulers):', json.dumps(r['burn']))
-        print(ok(r['same'] == [['skiff', 60, 'box', 3, 10], ['snekke', 150, 'box', 5, 3], ['sjark', 300, 'tub', 8, 3], ['sjarkny', 400, 'tub', 10, 10]]), 'the old type tables (tub, landing, yard hours, acceleration) are now fields with the same values')
+        print(ok(r['same'] == [['skiff', 60, 'tub', 3, 10], ['snekke', 150, 'tub', 5, 3], ['sjark', 300, 'tub', 8, 3], ['sjarkny', 400, 'tub', 10, 10]]), 'the old type tables (tub, landing, yard hours, acceleration) are now fields with the same values')
         # the ladder: prices rise with what you get, the closed-group offers sit on the right boats, the ocean fleet is locked, big boats keep out of the fjords
         r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat;
           R.ladder = Object.entries(VESSELS).map(([k, V]) => [k, V.len, V.cls, !!V.lock]);
@@ -94,10 +94,10 @@ async def main():
           b.type = t0; applyVessel(); b.status = 'idle'; return R; })()""")
         print('ladder:', json.dumps(r, ensure_ascii=False))
         # the hold rebuilt at the yard in three steps (04.10.2026, tuned down 08.10.2026): +20 %, +40 %, +70 %; the ice room grows with it, and a type's own numbers stay
-        hd = await pg.evaluate("""(()=>{ const b = S.boat, t0 = b.type, l0 = b.holdLv; b.type = 'skiff'; const out = [];
+        hd = await pg.evaluate("""(()=>{ const b = S.boat, t0 = b.type, l0 = b.holdLv; b.type = 'sjark'; const out = [];
           for (const lv of [0, 1, 2, 3]){ b.holdLv = lv; applyVessel(); out.push([BOAT.holdCap, BOAT.iceCap, capHold()]); }
           b.holdLv = 0; finishJob({kind:'hold', lv:1, no:'', en:''}); const job = b.holdLv; b.holdLv = l0; b.type = t0; applyVessel();
-          return {out, spec:VESSELS.skiff.holdCap, ice:VESSELS.skiff.iceCap, job}; })()""")
+          return {out, spec:VESSELS.sjark.holdCap, ice:VESSELS.sjark.iceCap, job, kar:(() => { b.type = 'skiff'; const o = []; for (const lv of [0, 3]){ b.holdLv = lv; applyVessel(); o.push(BOAT.holdCap); } b.holdLv = l0; b.type = t0; applyVessel(); return o; })()}; })()""")
         # weight, the engine, the boosts and fouling (04.10.2026): a full hold costs 5-15 % top speed, a bigger engine and the boosts help a
         # displacement boat at most 12 % and a planing one more, the outboard skiff takes none of the diesel boosts, fouling costs 15 % and 25 % fuel
         wt = await pg.evaluate("""(()=>{ const b = S.boat, keep = {type:b.type, hold:S.hold, eng:b.engLv, trim:b.trim, foul:b.foul, fuel:b.fuel}, R = {};
@@ -110,7 +110,7 @@ async def main():
         print(ok(0.80 <= sk['full'] / sk['empty'] <= 0.95 and 0.85 <= sj['full'] / sj['empty'] <= 0.95), 'a full hold costs top speed, more on the planing skiff than on the sjark', {k: (v['empty'], v['full']) for k, v in wt.items()})
         print(ok(sj['eng'] <= sj['spec'] * 1.12 + 1e-6 and sj['eng'] > sj['spec'] and abs(sj['boost'] - sj['spec'] * 2) < 0.02 and sj['gone'] == sj['spec'] and sk['eng'] == sk['spec'] and sk['boost'] == sk['spec']), 'a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither', {k: (v['spec'], v['eng'], v['boost'], v['gone']) for k, v in wt.items()})
         print(ok(all(abs(v['foul'][0] - 0.85) < 0.01 and abs(v['foul'][1] - 1.25) < 0.01 for v in wt.values())), 'a fully fouled hull costs 15 % speed and 25 % fuel', {k: v['foul'] for k, v in wt.items()})
-        print(ok([x[0] for x in hd['out']] == [hd['spec'], round(hd['spec'] * 1.2), round(hd['spec'] * 1.4), round(hd['spec'] * 1.7)] and hd['out'][3][1] == round(hd['ice'] * 1.7) and all(x[0] == x[2] for x in hd['out']) and hd['job'] == 1), 'the hold rebuilt in three steps: +20 %, +40 %, +70 %, the ice room with it', hd)
+        print(ok([x[0] for x in hd['out']] == [hd['spec'], round(hd['spec'] * 1.2), round(hd['spec'] * 1.4), round(hd['spec'] * 1.7)] and hd['out'][3][1] == round(hd['ice'] * 1.7) and all(x[0] == x[2] for x in hd['out']) and hd['job'] == 1 and hd['kar'] == [500, 500]), 'the hold rebuilt in three steps: +20 %, +40 %, +70 %, the ice room with it (a boat with a hold); an open boat\'s hold is her tubs, 500 kg each, no steps', hd)
         lens = [x[1] for x in r['ladder'] if x[2] != 'hav']
         print(ok(len(r['ladder']) >= 13 and all(x[3] for x in r['ladder'] if x[2] == 'hav') and not any(x[3] for x in r['ladder'] if x[2] != 'hav')), 'the ladder runs from the open boat to the ocean fleet, and only the ocean fleet is locked')
         print(ok([o[0] for o in r['offers']] == ['u7', 'h7', 'h8', 'h9', 'h10', 'h10', 'h10', 'h14', 'h20'] and all(r['offers'][i][3] < r['offers'][i + 1][3] for i in range(8))), 'nine closed-group offers (h8 with the 31 ft fibreglass sjark, h10 with all three 10.99 m boats) by quota length (the coastal vessels with 14–14.9 and 20–20.9 m), dearer the longer')

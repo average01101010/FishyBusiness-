@@ -1,0 +1,1 @@
+{"what": "GEBCO 2025 (15 arc-seconds) on the wide frame's 1 km cells (tools/map/deep.py gebco), fetched by .github/workflows/gebco.yml when this file changes and kept as a release gebco-<run number>; kart.json's 'gebco' names the one kart.yml takes", "run": 3}

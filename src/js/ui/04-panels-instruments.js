@@ -2,7 +2,7 @@
 function estimate(){
   const b = S.boat, H = S.t / 60, W = windAt(H);
   let km = 0, fishH = 0, bad = -1, a = quayPos(b);   // from where she lies (at Father's naust its berth, not the plant's harbour point)
-  S.draft.forEach((w, i) => { km += dist(a, w); if (bad < 0 && !legClear(a, w)) bad = i; fishH += w.fish || 0; a = w; });
+  S.draft.forEach((w, i) => { km += kmTrue(a, w); if (bad < 0 && !legClear(a, w)) bad = i; fishH += w.fish || 0; a = w; });
   const v = Math.min(S.draftSpeed, speedCap(hsAt(b.pos, H)));
   const nm = km / NM, hours = nm / v, fuel = fuelLph(v, W) * hours;
   return {nm, hours, fishH, fuel, bad, v};
@@ -40,7 +40,7 @@ function nextEvent(){
   if (b.status === 'port' && jobsDone()) add(jobsDone(), jobsCrewOnly() ? L('Mannskapet er ferdig', 'The crew is done') : L('Verkstedet er ferdig', 'The yard is done'));
   if (b.status === 'sailing' && S.plan && S.plan.idx < S.plan.wps.length){
     const wps = S.plan.wps; let a = b.pos, km = 0, stop = null;
-    for (let i = S.plan.idx; i < wps.length; i++){ km += dist(a, wps[i]); a = wps[i]; if (wpStop(wps[i]) || i === wps.length - 1){ stop = wps[i]; break; } }
+    for (let i = S.plan.idx; i < wps.length; i++){ km += kmTrue(a, wps[i]); a = wps[i]; if (wpStop(wps[i]) || i === wps.length - 1){ stop = wps[i]; break; } }
     const kn = Math.max(4, b.v || S.plan.speed || 10);
     if (stop) add(T + km / (kn * NM) * 60, stop.port ? L('Fremme i ', 'Arriving at ') + portById(stop.port).name : stop.fish > 0 ? L('Fremme på feltet', 'On the grounds') : L('Fremme ved neste stopp', 'At the next stop'));
   }
@@ -142,13 +142,13 @@ const INSTR = (() => {
   const deg3 = (r, p) => String(Math.round(trueDeg(r, p || S.boat.pos)) % 360).padStart(3, '0') + '°';
   function gpsLL(p){
     const {lat, lon} = LL(p), f = (v, w, hh) => { const a = Math.abs(v), dd = Math.floor(a); let m = ((a - dd) * 60).toFixed(3).padStart(6, '0'); if (S.lang === 'no') m = m.replace('.', ','); return String(dd).padStart(w, '0') + '°' + m + "'" + hh; };
-    return [f(lat, 2, 'N'), f(lon, 3, S.lang === 'no' ? 'Ø' : 'E')];
+    return [f(lat, 2, 'N'), f(lon, 3, (lon < 0 ? (S.lang === 'no' ? 'V' : 'W') : (S.lang === 'no' ? 'Ø' : 'E')))];
   }
   // the route's numbers: the next point (number, distance, bearing, time), the cross-track error and the time at the end
   function navOf(pose, H, sog){
     const b = S.boat; if (!(S.plan && S.plan.idx < S.plan.wps.length && b.status !== 'port')) return null;
-    const wps = S.plan.wps.slice(S.plan.idx), w = wps[0], dw = dist(pose.p, w), brg = Math.atan2(w.x - pose.p.x, -(w.y - pose.p.y));
-    let tot = 0, a = pose.p, fishH = 0; wps.forEach((q, i) => { tot += dist(a, q); a = q; if (i && q.fish > 0) fishH += q.fish; });
+    const wps = S.plan.wps.slice(S.plan.idx), w = wps[0], dw = kmTrue(pose.p, w), brg = Math.atan2(w.x - pose.p.x, -(w.y - pose.p.y));
+    let tot = 0, a = pose.p, fishH = 0; wps.forEach((q, i) => { tot += kmTrue(a, q); a = q; if (i && q.fish > 0) fishH += q.fish; });
     const v = (sog || S.plan.speed || 10) * NM, last = wps[wps.length - 1], H0 = S.plan.depAt ? Math.max(H, S.plan.depAt / 60) : H;
     return {n:S.plan.idx + 1, wpt:fmt(dw / NM, 2) + ' nm ' + deg3(brg), at:hm(H0 + dw / v),
       dest:last.port ? portById(last.port).name : 'WPT ' + S.plan.wps.length, eta:hm(H0 + tot / v + fishH)};

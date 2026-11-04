@@ -28,9 +28,9 @@
     'else p*=vec3(aJ.z,aI.w,aJ.z);' +
     'float c=cos(yaw),s=sin(yaw);p=vec3(c*p.x-s*p.z,p.y,s*p.x+c*p.z);n=vec3(c*n.x-s*n.z,n.y,s*n.x+c*n.z);' +
     'vC=aC;vN=n;vW=p+aI.xyz+uO;gl_Position=uVP*vec4(vW,1.0);}';
-  const VD_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;varying vec3 vW;varying vec3 vN;varying vec3 vC;' + NOISE + AIR +
+  const VD_FS = SUNV('precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;varying vec3 vW;varying vec3 vN;varying vec3 vC;' + NOISE + AIR +
     'void main(){vec3 n=normalize(vN);float d=max(dot(n,uSun),0.0);vec3 v=normalize(-vW);vec3 h=normalize(uSun+v);float sp=pow(max(dot(n,h),0.0),24.0)*0.25*d;' +
-    'vec3 c=vC*(uAmb*(0.7+0.3*n.y)+uSunCol*d)+uSunCol*sp;gl_FragColor=vec4(fin(c,vW),1.0);}';
+    'vec3 c=vC*(uAmb*(0.7+0.3*n.y)+uSunCol*d)+uSunCol*sp;gl_FragColor=vec4(fin(c,vW),1.0);}');
   const VD_LVS = 'precision highp float;attribute vec3 aP;uniform mat4 uVP;uniform vec3 uO;varying vec3 vW;void main(){vW=aP+uO;gl_Position=uVP*vec4(vW,1.0);}';
   const VD_LFS = 'precision highp float;uniform vec3 uCol;uniform vec3 uFog;uniform float uFogD;varying vec3 vW;' + NOISE + AIR + 'void main(){gl_FragColor=vec4(fin(uCol,vW),1.0);}';
   // the ground under a turbine or a mast, kept a while (the ground's blocks come in as the boat goes; looked at again every 20 s)

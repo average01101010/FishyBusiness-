@@ -63,8 +63,10 @@ def names(tx, ty):
     import national
     from scipy import ndimage
     R = frame.Region('n', tx * 5, ty * 5, tx * 5 + 5, ty * 5 + 5); box = R.lonlat_box(0); ox, oy = tx * 50000.0, ty * 50000.0; out = []
-    M = national.mask200(); j0, i0 = max(0, ty * 250 - 100), max(0, tx * 250 - 100)
-    W = M[j0:ty * 250 + 350, i0:tx * 250 + 350]; DL = ndimage.distance_transform_edt(W == 0) * 0.2
+    xa = national.xarea(tx, ty)
+    if xa: j0, i0 = ty * 250 - 100, tx * 250 - 100; W = national.xland_box(xa, i0, j0, 450, 450)   # Svalbard, Jan Mayen (H1b R3)
+    else: M = national.mask200(); j0, i0 = max(0, ty * 250 - 100), max(0, tx * 250 - 100); W = M[j0:ty * 250 + 350, i0:tx * 250 + 350]
+    DL = ndimage.distance_transform_edt(W == 0) * 0.2
     def dland(x, y):   # km from the land at a point (km, national)
         j, i = int(y / 0.2) - j0, int(x / 0.2) - i0
         return float(DL[j, i]) if 0 <= j < DL.shape[0] and 0 <= i < DL.shape[1] else 0.0
@@ -152,8 +154,8 @@ def names0():
     M = national.mask200(); NO = national.norway200()[0]; out, seen = [], set()
     def put(x, y, kind, nm, imp=0):
         k = (nm, round(x / 30), round(y / 30))
-        if nm and k not in seen and 0 <= x < 1450 and 0 <= y < 1720: seen.add(k); out.append((-imp, [int(round(x * 100)), int(round(y * 100)), kind, 0, nm]))
-    box = frame.Region('n', 0, 0, 145, 172).lonlat_box(0)
+        if nm and k not in seen and 0 <= x < frame.OLD[2] and 0 <= y < frame.OLD[3]: seen.add(k); out.append((-imp, [int(round(x * 100)), int(round(y * 100)), kind, 0, nm]))
+    box = frame.Region('n', 0, 0, frame.OLD[2] // 10, frame.OLD[3] // 10).lonlat_box(0)
     d = features('divisions/division', box, ['geometry', 'subtype', 'class', 'names', 'population'])
     for g, s, c, n, pop in zip(from_wkb(d.column('geometry').to_numpy(zero_copy_only=False)), d.column('subtype').to_pylist(), d.column('class').to_pylist(), d.column('names').to_pylist(), d.column('population').to_pylist()):
         if s != 'locality' or not n or not n.get('primary'): continue
@@ -177,13 +179,15 @@ def names0():
             if q and q[2] >= 1: put(q[0], q[1], kind, pname(n), span(b))
     out.sort(key=lambda q: q[0]); return [q[1] for q in out]
 
-# coast0: the whole frame, 100 km at a time, simplified to 300 m in units of 10 m from the frame's origin
+# coast0: the whole frame (frame.FRAME, from H1b R2 also East Greenland, Iceland, Svalbard and Russia), 100 km at a time, simplified
+# to 300 m in units of 10 m from the frame's origin. The old frame's chunks read the coast's index, the rest the wide one (ov.py)
 def coast0():
-    seen = set(); polys = []
-    for cy in range(0, 1750, 100):
-        for cx in range(0, 1450, 100):
-            R = frame.Region('c', cx // 10, cy // 10, min(cx + 100, 1450) // 10, min(cy + 100, 1750) // 10)
-            t = features('base/land', R.lonlat_box(1), ['geometry', 'subtype'])   # the columns national.py has fetched already
+    seen = set(); polys = []; X0, Y0, X1, Y1 = frame.FRAME; OX, OY = frame.OLD[2], frame.OLD_Y1
+    for cy in range(Y0, OY, 100):
+        for cx in range(X0, X1, 100):
+            old = 0 <= cx < OX and 0 <= cy < OY
+            R = frame.Region('c', cx // 10, cy // 10, (min(cx + 100, OX) if old else cx + 100) // 10, min(cy + 100, OY) // 10)
+            t = features('base/land', R.lonlat_box(1), ['geometry', 'subtype'], wide=not old)   # the columns national.py has fetched already
             if t is None: continue
             wk = t.column('geometry').to_numpy(zero_copy_only=False)
             for w, g, s in zip(wk, from_wkb(wk), t.column('subtype').to_pylist()):
@@ -191,7 +195,7 @@ def coast0():
                 if s != 'land' or h in seen or g is None or g.geom_type not in ('Polygon', 'MultiPolygon'): continue
                 seen.add(h); polys.append(g)
         print('coast0 row', cy, len(polys), file=sys.stderr, flush=True)
-    frame_box = sbox(-50, -50, 1500, 1800); rings = []
+    frame_box = sbox(X0 - 50, Y0 - 50, X1 + 50, OY + 50); rings = []
     for g in polys:
         m = intersection(make_valid(nat(g)), frame_box).simplify(0.3)
         for q in getattr(m, 'geoms', [m]):

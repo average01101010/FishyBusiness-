@@ -219,6 +219,10 @@ function panelWx(){
 function landText(short){
   const L0 = S.boat.land; if (!L0) return '';
   const st = landState(L0, S.t), L = (no, en) => S.lang === 'no' ? no : en, u = L0.kind === 'tub' ? L('kar', 'tubs') : L('kasser', 'boxes'), at = hm(L0.until / 60);
+  // an open boat's own tubs: when the full ones are ashore, they are emptied, washed and set back aboard one by one
+  if (L0.own && st.phase === 'lift' && st.up >= L0.n){ const k = st.up - L0.n;
+    if (short) return [L('Kar om bord ', 'Tubs aboard ') + k + '/' + L0.n, k + '/' + L0.n + ' ' + u];
+    return k ? L(k + ' av ' + L0.n + ' tomme kar er satt om bord igjen.', k + ' of ' + L0.n + ' empty tubs are back aboard.') : L('Karene tømmes og spyles, så kommer de om bord igjen.', 'The tubs are emptied and washed, then they come back aboard.'); }
   // the action bar: a line for wide screens and a short one for narrow
   if (short) return st.phase === 'prep' ? [L('Kranen svinger inn', 'The crane swings in'), L('Kran', 'Crane')] : st.phase === 'note' ? [L('Veier inn · seddel ', 'Weighing · note ') + at, L('Seddel ', 'Note ') + at] : [L('Losser ', 'Landing ') + st.units + '/' + L0.n + ' ' + u, st.units + '/' + L0.n + ' ' + u];
   return st.phase === 'prep' ? L('Mottaket gjør klar kranen og trucken.', 'The plant is getting the crane and the forklift ready.') : st.phase === 'note' ? L('Alt er på kaia. Fangsten veies inn.', 'Everything is ashore. The catch is being weighed in.')
