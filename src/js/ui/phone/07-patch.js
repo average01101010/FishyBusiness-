@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['ramme-041126', '04.11.2026', 'Havet utenfor kysten', 'The sea off the coast', [
+       ['Kartet går nå til Svalbard, Bjørnøya, Jan Mayen, Island, Færøyane, Grønlands østkyst og russisk sone til Novaja Semlja. Landet der vises i sjøkartet og i 3D.', 'The chart now reaches Svalbard, Bear Island, Jan Mayen, Iceland, the Faroes, East Greenland and the Russian zone to Novaya Zemlya. The land there shows on the chart and in 3D.'],
+       ['Dybden til havs er ny, fra GEBCO, så bankene og eggakanten ligger der de skal.', 'The depth offshore is new, from GEBCO, so the banks and the shelf edge lie where they should.'],
+       ['Fart og avstand regnes etter sann avstand på jordkula. Langs kysten merkes det ikke, langt ute i havet er det riktigere enn før.', 'Speed and distance are worked out by the true distance on the globe. Along the coast you will not notice; far out at sea it is truer than before.'],
+    ]],
     ['fiskekar-041126', '04.11.2026', 'Fiskekar på dekk', 'Fish tubs on deck', [
        ['Båtene uten lasterom har fisken i hvite kar på 500 kg på dekk. Skiffen og trebåten har ett kar, snekka to.', 'The boats without a hold keep the fish in white 500 kg tubs on deck. The skiff and the wooden boat have one tub, the snekke two.'],
        ['Karene fylles fisk for fisk nedenfra, med is på fisken som er iset og knust is over et fullt kar. Det blir blod og slim på karene etter hvert som de fylles.', 'The tubs fill fish by fish from the bottom, with ice on the iced fish and crushed ice over a full tub. Blood and slime gather on the tubs as they fill.'],

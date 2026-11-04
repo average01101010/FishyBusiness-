@@ -12,7 +12,7 @@
 const ANCH = {maxDepth:40, minDepth:4, clear:0.15, hold:0.9, gale:1.4, rate:0.6, reset:0.15, fall:90, pay:30, plan:{ring:[0.4, 0.9, 1.6, 2.6, 4, 6, 9, 13], bearings:16}};
 // how the place lies: depth and shelter, and what the boat's own limits make of the weather there. Level: 0 sheltered, 1 some, 2 exposed.
 function anchorSpot(p, boatType){
-  let depth = 0, expo = 1, cd = 0; try { if (isLand(p)) return {ok:false, why:'land'}; depth = depthF(p); expo = rbil(MAPD.L.expo, p) / 255; cd = coastDist(p); } catch (e){ return {ok:false, why:'nomap'}; }
+  let depth = 0, expo = 1, cd = 0; try { if (isLand(p)) return {ok:false, why:'land'}; depth = depthF(p); expo = expoFar(p) / 255; cd = coastDist(p); } catch (e){ return {ok:false, why:'nomap'}; }
   if (depth < ANCH.minDepth) return {ok:false, why:'shallow', depth};
   if (depth > ANCH.maxDepth) return {ok:false, why:'deep', depth};
   if (cd < ANCH.clear) return {ok:false, why:'near', depth};
@@ -47,7 +47,7 @@ function curAt(p, H){
   // the way the flood runs: true north, turned in toward the shelter where the land gives it, along the shore near land
   let fx = Math.sin(-g), fy = -Math.cos(-g), depth = 20;
   try {
-    const d = CUR.d, e = q => rbil(MAPD.L.expo, q) / 255, ex = (e({x:p.x + d, y:p.y}) - e({x:p.x - d, y:p.y})) / (2 * d), ey = (e({x:p.x, y:p.y + d}) - e({x:p.x, y:p.y - d})) / (2 * d), eg = Math.hypot(ex, ey);
+    const d = CUR.d, e = q => expoFar(q) / 255, ex = (e({x:p.x + d, y:p.y}) - e({x:p.x - d, y:p.y})) / (2 * d), ey = (e({x:p.x, y:p.y + d}) - e({x:p.x, y:p.y - d})) / (2 * d), eg = Math.hypot(ex, ey);
     if (eg > 1e-3){ const w = Math.min(2, eg / 0.2) / eg; fx -= ex * w; fy -= ey * w; }
     let n = Math.hypot(fx, fy); fx /= n; fy /= n;
     const cd = coastDist(p), cx = (coastDist({x:p.x + d, y:p.y}) - coastDist({x:p.x - d, y:p.y})) / (2 * d), cy = (coastDist({x:p.x, y:p.y + d}) - coastDist({x:p.x, y:p.y - d})) / (2 * d), cg = Math.hypot(cx, cy);

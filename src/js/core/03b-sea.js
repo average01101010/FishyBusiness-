@@ -11,7 +11,7 @@ const FETCH_C = new Map();
 function fetchRay(x, y, dx, dy){
   let s = 0;
   for (let i = 0; i < 3000; i++){
-    if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1) return s + FETCH.open;
+    if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1 || !farL('land', {x, y})) return s + FETCH.open;
     if (s >= FETCH.open) return s;
     const d = coastDistFar({x, y});
     let st = 0.1;
@@ -105,7 +105,7 @@ function swellOpen(H, p){
   const v = {hs, dir:300 + 50 * (vn(Hl / 60, 313) - 0.5), tp:clamp(8.5 + 1.1 * hs, 9, 14)};
   SW_MEMO = {H, k:K, v}; return v;
 }
-function swellFactor(p){ return Math.pow(rbil(MAPD.L.expo, p) / 255, 1.5); }
+function swellFactor(p){ return Math.pow(expoFar(p) / 255, 1.5); }
 // the sea at p: wind sea w and swell sw (significant heights, m), the wind sea's peak period and fetch, and where each comes from
 function hsParts(p, H){
   const U = weAt(H, p), d = wdAt(H, p), F = fetchHere(p, d - gridGamma(p)), S = swellOpen(H, p);

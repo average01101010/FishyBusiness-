@@ -80,7 +80,7 @@ const grassNow = () => typeof seasonAt === 'function' ? Math.round(seasonAt(S.t 
     // a flat stand-in from that land until the far pack comes
     let h;
     h = HG ? tileH(MAPD.L.hgt, 'view', x, z) : NaN;
-    if (h !== h){ const m = rbilM(MAPD.L.land200, x, z); h = HG ? tileH(MAPD.L.far, 'far', x, z) : NaN; if (h !== h) h = m >= 0.5 ? 2 : -4; h = m >= 0.5 ? Math.max(h, 0.3 + (m - 0.5) * 6) : Math.min(h, -0.5 - (0.5 - m) * 8); }
+    if (h !== h){ const m = landFracM(x, z); h = HG ? tileH(MAPD.L.far, 'far', x, z) : NaN; if (h !== h) h = m >= 0.5 ? 2 : -4; h = m >= 0.5 ? Math.max(h, 0.3 + (m - 0.5) * 6) : Math.min(h, -0.5 - (0.5 - m) * 8); }
     const fl = dil > 6 ? dil : 0;
     const sd = coastSdIf({x:x / 1000, y:z / 1000}, (COAST3.top - COAST3.deep) / COAST3.g + fl + 2);
     if (sd === sd){

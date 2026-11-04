@@ -307,4 +307,5 @@ Hvert valg har en anbefaling og én setning om hvorfor.
   - Migreringen `20261103180000_havkonsesjon.sql` er kjørt 03.11.2026 (Jonas: «SQL success»).
   - Valgene V4 C, V5 A og V6 A er tatt 03.11.2026.
   - **Neste:** H1b. Rammen utvides til feltene utenfor dagens kart (Bjørnøya, Svalbard-sonen, snøkrabbefeltene øst og Nordsjøen vest) med kart, dybde, regler og leier. Den må planlegges først (`/planlegg`), fordi det er en ny kartrelease. Deretter H2 autolineren (V1 A).
+- 03.11.2026: **H1b planlagt** i `docs/planer/havsteget-h1b-rammen.md`: fasene R1–R8 og valgene V1–V4. Valgt samme dag: V1 B (hele havet havflåten fisker i, løst som i planens kap. 3a), V2 B (hele Svalbard i detalj), V3 A (iskanten etter måned) og V4 B (Longyearbyen som havn uten mottak). Venter på «kjør på».
 

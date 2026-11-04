@@ -139,6 +139,9 @@
     for (const [B, idx] of srcs) for (const i of idx) mark(B.x[i], B.z[i], Math.max(B.l[i], B.w[i]) > 30 ? 2 : 1);
     for (const r of roadsIn(x0 - 30, z0 - 30, x0 + 1030, z0 + 1030)){ for (let j = 1; j < r.xs.length; j++){ const L = Math.hypot(r.xs[j] - r.xs[j - 1], r.zs[j] - r.zs[j - 1]), n = Math.ceil(L / 12); for (let q = 0; q <= n; q++) mark(r.xs[j - 1] + (r.xs[j] - r.xs[j - 1]) * q / n, r.zs[j - 1] + (r.zs[j] - r.zs[j - 1]) * q / n, 0); } }
     if (c && treeChunk(c, key, occ, snowy)) return;   // the trees from the map (G4, 17c-trees.js), where it has them
+    // off the old frame (H1b R2: Svalbard, Bear Island, Jan Mayen, Iceland, the Faroes, Shetland, Greenland, Novaya Zemlya, the tundra)
+    // the land is treeless, but for the Russian taiga south of 67.5° N
+    if (x0 < 0 || z0 < 0 || x0 >= 1450e3 || z0 >= 1750e3){ const ll = natLL({x:x0 / 1000 + 0.5, y:z0 / 1000 + 0.5}); if (!(ll.lat < 67.5 && ll.lon > 30)) return; }
     const ses = treeSeason(), leaf = ses === 1 ? [0.15, 0.29, 0.11] : ses === 2 ? [0.7, 0.48, 0.12] : [0.55, 0.5, 0.47], pine = [0.06, 0.15, 0.08], trunk = [0.78, 0.76, 0.7];
     let count = 0;
     // the 900 places in a stride over the square (397 is prime to 900), so the cap of 260 does not fill the northern rows first

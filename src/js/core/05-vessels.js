@@ -473,7 +473,7 @@ function coastNear(H, only){
       bt.h = h; const A = coastState(bt, H, hod);
       if (!only && A.set && A.set.a !== A.set.b && Math.min(dist(A.set.a, b.pos), dist(A.set.b, b.pos)) <= R) gear.push({k:A.set.k, a:A.set.a, b:A.set.b, id:bt.id, name:bt.name});
       if (A.hidden || dist(A.p, b.pos) > R) continue;
-      const P = A.st === 'port' ? A : coastState(bt, H - 1 / 60, hod1), dx = A.p.x - P.p.x, dy = A.p.y - P.p.y, sog = Math.hypot(dx, dy) / NM * 60;
+      const P = A.st === 'port' ? A : coastState(bt, H - 1 / 60, hod1), dx = A.p.x - P.p.x, dy = A.p.y - P.p.y, sog = Math.hypot(dx, dy) / gridScale(A.p) / NM * 60;
       out.push({id:bt.id, name:bt.name, type:bt.L >= 14 ? 'kyst' : 'sjark', p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, coast:true, L:bt.L, B:bt.B, T:bt.T, liv:bt.liv});
     }
   }
@@ -501,7 +501,7 @@ function npcStates(H, only){
   // the local fleet: out early, fish on their banks, home in the afternoon; bigger boats go out in worse weather
   FLEET.forEach((f, i) => {
     if (only && only !== 'f' + i) return;
-    const A = fleetState(i, H); if (A.hidden) return; const B = fleetState(i, H - 1 / 60), dx = A.p.x - B.p.x, dy = A.p.y - B.p.y, sog = Math.hypot(dx, dy) / NM * 60;
+    const A = fleetState(i, H); if (A.hidden) return; const B = fleetState(i, H - 1 / 60), dx = A.p.x - B.p.x, dy = A.p.y - B.p.y, sog = Math.hypot(dx, dy) / gridScale(A.p) / NM * 60;
     out.push({id:'f' + i, name:f.n, type:f.L >= 14 ? 'kyst' : 'sjark', p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, fleet:true, fi:i, L:f.L, B:f.B, liv:i % 4});
   });
   // the coast's boats within AIS range of the boat you follow (part 5)
@@ -733,7 +733,7 @@ function vesselStep(H){
   }
   if (b.status === 'sailing' || b.status === 'fishing') b.engH = (b.engH || 0) + (b.status === 'sailing' ? 1 : 0.25) / 60;
   if (b.status === 'sailing' && b.anch) b.v = 0;   // the anchor is coming up: the route or the helm waits for it (06e-anchor.js)
-  else if (b.status === 'sailing'){ if (!helmOn()){ const p0 = b.pos; sail(H, W, hs); if (meAboard()) tatAdd('nm', dist(p0, b.pos) / NM); } }   // by hand she moves every tick (helmStep)
+  else if (b.status === 'sailing'){ if (!helmOn()){ const p0 = b.pos; sail(H, W, hs); if (meAboard()) tatAdd('nm', kmTrue(p0, b.pos) / NM); } }   // by hand she moves every tick (helmStep)
   else if (b.status === 'fishing') fish(H, W, hs);
   else b.v = 0;
   if (typeof lieDrift === 'function') lieDrift(H);   // with no way on she drifts with the wind and the sea (Fysikk 2, 16b-dyn.js)
@@ -762,7 +762,7 @@ function sail(H, W, hs){
   if (typeof dynLive === 'function' && dynLive()){ dynMinute(H, W); return; }   // the manoeuvring model has her on the tick (16b-dyn.js): the minute only books
   if (pl.replan){ b.v = 0; return; }   // a way round shallow water ahead is being found (sailReplan)
   const v = sailV(H, hs); b.v = v;
-  let left = v * NM / 60;
+  let left = v * NM / 60 * gridScale(b.pos);   // (true km on the grid: gridScale, H1b)
   fuelUse(b, fuelLph(v, W) / 60);
   obsSail(pl, b);   // round a bridge's pier, a pier or a mark on the leg ahead (11b-obstacles.js)
   while (left > 1e-9 && pl.idx < pl.wps.length){

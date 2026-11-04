@@ -30,7 +30,7 @@ Forberedelser til hele kysten (planen står i `docs/kart/`). Fra K4 er spillets 
 
 ## 4.6 Kartdataene i pakker (kystplanen, fase K3, 02.10.2026)
 
-- **Dyp til havs (07.10.2026, for blåkveita):** kjernelaget `deep` er havbunnen fra Terrarium (ETOPO1 til havs) på 1 km celler over hele rammen, i 10 m steg (u8, `dec:'x10'`, opp til 2550 m, 0 = land eller ingen data). `tools/map/deep.py` skriver det inn i kjernepakken i `src/data/map` (navnet og manifestet endres), og `tools/map/game.py` tar den nye kjernen for hele kysten. Kjør `deep.py` på nytt etter at `region.py` har skrevet en ny kjerne. `depthF` bruker laget utenfor kystflisene (`offDepth`), og inne i flisene der flisa har modellens fyllverdi i stedet for Kartverkets dyp og er dypere enn 150 m (`tileDepth`). Blokkbufferen har plass til 16 lag (`gridKey * 16 + id`).
+- **Dyp til havs (07.10.2026, for blåkveita; fra H1b R2 GEBCO 2025 over hele rammen, 4.9c):** kjernelaget `deep` var havbunnen fra Terrarium (ETOPO1 til havs) på 1 km celler over hele rammen, i 10 m steg (u8, `dec:'x10'`, opp til 2550 m, 0 = land eller ingen data). `tools/map/deep.py` skriver det inn i kjernepakken i `src/data/map` (navnet og manifestet endres), og `tools/map/game.py` tar den nye kjernen for hele kysten. Kjør `deep.py` på nytt etter at `region.py` har skrevet en ny kjerne. `depthF` bruker laget utenfor kystflisene (`offDepth`), og inne i flisene der flisa har modellens fyllverdi i stedet for Kartverkets dyp og er dypere enn 150 m (`tileDepth`). Blokkbufferen har plass til 16 lag (`gridKey * 16 + id`).
 
 Rasterkartene ligger ikke lenger i siden. Siden gikk fra 9,3 til 6,2 MB, og kartpakkene er 3,3 MB (2,8 MB i K3, før rammen ble 90 × 90 km i K4).
 
@@ -221,6 +221,140 @@ Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Gi
 - **Ikke ennå:**
   - Autoruta («Følg leia», nå Autonav) leste 100 m-avstanden over hele `dc`-laget. Det er løst med vinduet i K9 (4.12).
   - Detaljflisene for hele kysten (`out/national/lite`) er ikke i git, og bygget bruker dem ikke ennå.
+
+## 4.9b Rammen for havflåten (H1b R1 i havsteget, 03.11.2026)
+
+Jonas valgte V1 B 03.11.2026 (`docs/planer/havsteget-h1b-rammen.md`): rammen skal ta med alt havet havflåten fisker i.
+
+- **`MAPB`** (`core/01-world.js`) er x −1 100 til 2 500 og y −1 250 til 1 720 km. Den tar med:
+  - Øst-Grønland og Danmarkstredet
+  - Island, Færøyane og Jan Mayen
+  - hele Svalbard med Kvitøya
+  - russisk sone til Novaja Semlja
+
+  Origo er der det var, så lagringene og serverens posisjoner er uendret.
+- **Lagene for det som ser langt** (`farL(kind, p)`):
+  - **Inne i den gamle rammen** (0–1 450 × 0–1 750) gjelder kjernens `land200`, `dc200` og `expo`.
+  - **Utenfor** gjelder de grove lagene over hele rammen: `land1k` (land på 1 km), `dc1k` (avstand til land på 1 km, u8 i steg på 0,5 km, høyst 127,5 km) og `expo2k` (eksponering på 2 km). De lages i R2 og ligger i kjernen, så de er alltid lastet.
+  - Hvilket lag som leses, følger av p alene, så simuleringen er lik uansett hva som er lastet (4.6).
+  - Leserne: `isLandFar`, `coastDistFar`, `expoFar` (`exposure`, `swellFactor`, ankringen, 3D-terrengets eksponering), `landFracM` (3D-bakken utenfor flisene) og `dcCellFar` (ruteplanleggerens grove celler).
+- **Uten data** (før R2, eller i et hjørne ingen lag dekker):
+  - land for båtene (`isLandFar`)
+  - åpent hav for strøklengdestrålene (`fetchRay` legger til `FETCH.open`)
+  - sjø i 3D
+  - «utenfor kartet» på skjermene (`inFrame`: sjøkartet, miniplotteren og den lille plotteren)
+
+  Det er slik utenfor rammen var før, så spillet er likt til de grove lagene kommer.
+- **Skalafaktoren** (`gridScale(p)`, k per km-rute, med siste rute ved hånden fordi manøvreringsmodellen spør hvert steg):
+  - **Hvorfor:** spillet regner i rutenett-km. På kysten er k 0,9996–1,0042, men ved Island 1,036 og i Petsjorahavet 1,023, så avstand og fart må regnes om.
+  - **Det som beveger seg,** går sann fart × k i rutenettet:
+    - seilasen (`sail`)
+    - rorstyringen (`helmPose`)
+    - manøvreringsmodellen (`dynMove`, der modellens meter er sanne)
+    - havflåten (`havV`: snittet av k hjemme og på feltet, ett tall per tur fordi turen er en funksjon av klokka)
+    - driften uten motor
+  - **Det som vises,** er sann avstand, `kmTrue(a, b)` = rutenettets avstand / k i midten:
+    - nm i plotteren, ruta og navigasjonen
+    - AIS-farten
+    - nm-telleren i tatoveringene
+    - tidene i driftsplanen (`roughH`, `plan2LegH`, `legMin`) og turoppdragene (`turNm`)
+  - **På kysten** endres tidene med 0,03 % på Senja og høyst 0,4 % ved Grense Jakobselv.
+  - **Ikke regnet om:**
+    - Små radier på under 2 nm (fangstmerkene og turoppdragenes ringer) står i rutenett-km. Der er feilen høyst 4 % av en radius, ved Island. Ekkoloddets og sonarens rekkevidde (`12-heat.js`) er regnet om.
+    - NPC-kystflåten, ferjene og hurtigbåtene, som bare går der k er 0,9996–1,0042.
+- **Projeksjonen** er sjekket mot PROJ ut til 43° fra midtmeridianen: 17 punkter i havfeltene i `tests/proj_ref.json` (`tools/map/projref.py`), innen 0,006 mm, γ innen 1e-9° og k innen 1e-10. `kmTrue` er innen 0,05 % av Vincenty på ellipsoiden i Danmarkstredet, Petsjorahavet og på Senja (`tests/unit/rammen.test.mjs`).
+- **Ikke ennå:**
+  - R2: de grove lagene, `deep` og `coast0` over hele rammen
+  - R3: Svalbard og Jan Mayen i detalj
+  - R4: sonene
+  - R5: hav og is
+  - R6: havflåten på de nye feltene
+  - R7: Longyearbyen
+  - R8: stikkprøvene
+
+## 4.9c Kjernen for den nye rammen (H1b R2 i havsteget, 03.–04.11.2026)
+
+Jonas: «kjør på» for hele H1b (03.11.2026). R2 gir rammen fra R1 data, slik at havet utenfor kysten er sjø og landet er land.
+
+- **Rammene står ett sted:** `tools/map/frame.py` har tre:
+  - `FRAME` er spillets ramme (`MAPB`), x −1 100 til 2 500 og y −1 250 til 1 720 km.
+  - `OLD` er kystens ramme (0–1 450 × 0–1 720, lagene til 1 750), som kjernens fine lag og kystflisene beholder. Cellenumrene til 100 m-laget er bakt inn i rutedataene (`DC`), så den flyttes ikke.
+  - `WIDE` er `FRAME` rundet ut til hele 100 km-blokker (y −1 300 til 1 800), som de grove lagene dekker.
+  - `national.py`, `pack.py`, `chart.py`, `deep.py` og `k1/national.py` leser dem. `tools/rules/regler.py` og `tools/npc/havflaate.py` følger i R4 og R6.
+- **Kjernen** (`src/data/map`, lastes alltid, 4,70 MB):
+
+  | Lag | Celle | Blokk | Innhold |
+  |---|---|---|---|
+  | `land200`, `dc200`, `expo` | 200 m, 200 m, 500 m | 50 km | som før, over den gamle rammen. Verdiene er de samme, men `dc200` og `expo` er kodet `u8p` (under). |
+  | `land1k` | 1 km | 100 km | land når de fleste av de 25 cellene på 200 m er land |
+  | `dc1k` | 1 km | 100 km | avstanden til `land1k` i steg på 0,5 km, høyst 127,5 km (`u8p`) |
+  | `expo2k` | 2 km | 100 km | åpenheten: de 48 strålene til `expo()` på 1 km-landet, til 150 km (`u8p`) |
+  | `deep` | 1 km | 100 km | havbunnen fra GEBCO 2025 og Kartverkets 50 m, i 10 m-steg til 2 550 m (`u8p`, `x10`) |
+  | `names0` | | | som før |
+
+  - Utenfor den gamle rammen står det ingen reservetrær i 3D (`addTrees`), unntatt i taigaen i Russland sør for 67,5° N. Den gamle regelen satte trær på Bjørnøya.
+  - De grove lagene har ingen blokker som ligger 100 km eller mer inne i den gamle rammen, fordi `farL` leser de fine lagene der. `deep` dekker alt.
+  - **`u8p`** (`pack.py med8`, `01b-mapdata.js med8`) er u8 gjennom den samme medianprediktoren som i16-lagene, med resten modulo 256 i én byte. Det er tapsfritt. `ramme.py inject` tar SHA-256 av de gamle bytene, og `tests/unit/kjernen.test.mjs` dekoder med spillets egen `med8` og sammenligner.
+  - **`coast0`** (sjøkartets kyst for hele rammen, 0,58 MB, før 0,30) ligger i en egen pakke `chart0`. Den lastes fire sekunder etter starten, eller når sjøkartet trenger den. Før den er inne, tegner kartet kjernens land og flisene, og så tegnes det på nytt (`chartPath0`).
+- **Utenfor den gamle rammen,** i `far`-pakkene (lastes etter behov for 3D og skjermene, aldri for simuleringen), for de 724 flisene med land nær sjøen:
+  - `far`: fjernhøydene (Terrarium z9 tilpasset landet, opptil 3 700 m for Grønlandsisen)
+  - `land200x`: landet på 200 m
+
+  `landFracM` (3D-bakken) leser `land200x` der blokkene til alle fire cellene er inne, ellers `land1k`. Det gjelder Svalbard, Jan Mayen, Island, Færøyane, Shetland og Nord-Skottland, Øst-Grønland, Kola, Kanin og Novaja Semlja.
+- **Vindsjøens strekning (`fetchRay`, `core/03b-sea.js`) går nå over hele rammen** på de grove lagene (`land1k`, `dc1k`) til taket `FETCH.open` (600 km) eller til land. Før la den 600 km åpent hav til der strålen gikk ut av den gamle rammen, så strekningen mot nord og vest kunne bli opptil rundt 1 200 km. Ved Husøy fra nord er den nå 454 km mot 668 km før (to av de sju strålene stopper på øyene mot nordøst, som før; de fem andre stopper ved taket i stedet for å få 600 km lagt til ved kanten). Fra sør er den uendret (7,2 km). I kuling er bølgehøyden uansett begrenset av taket (`WV.cap`). `sea3d` venter nå på at bølgekartet er regnet ut for den nye vindretningen før le-bildet tas, i stedet for å vente fast 5 sekunder (04.11.2026).
+- **Rørledningen** (`kart.yml`, jobben `ramme` side om side med flisene):
+  1. `ov.py wide`: en egen Overture-indeks for den vide rammen, så kystens indeks og det den henter, er som før.
+  2. `national.py wide`: landet på 200 m over `WIDE`. Inne i den gamle rammen er det `land200` slik den er.
+  3. `national.py coarse`, `national.py farx`.
+  4. `ramme.py build`: `out/national/ramme/` med `core.npz`, `coast0.bin`, far-pakkene og et manifest.
+
+  Releasen får `kart-ramme.tar.gz` ved siden av `kart-game.tar.gz`.
+  - **Lokalt:** `python3 tools/map/ramme.py inject [tag|mappe]` skriver kjernen og `chart0` i `src/data/map`. `game.py` tar far-pakkene fra releasens `ramme/`, og far-lagene dekker da hele `WIDE`.
+  - **Determinismen:** `land200` laget på nytt lokalt er lik den i kjernen i alle 62 millioner celler.
+- **GEBCO 2025** (15″, GEBCO Compilation Group, fri bruk med kilden oppgitt, doi:10.5285/37c52e96-24ea-67ce-e063-7086abc05f29) er stengt fra skymiljøet. Derfor:
+  - `.github/workflows/gebco.yml` (`tools/map/gebco.json`) henter den og lager releasen `gebco-N` med 1 km-cellene, et middel over 3 × 3 punkter i hver celle. `kart.json`s `gebco` peker på den (`gebco-3`).
+  - `deep.py` finner lenkene selv fra GEBCOs sider og Source Cooperatives katalog. `gebco-3` kom fra den skyoptimaliserte kopien på Source Cooperative (`data.source.coop/cboettig/high-seas/gebco-2025-cog.tif`), lest vindu for vindu. GEBCOs egne nedlastinger ligger nå hos CEDA (`data.ceda.ac.uk/bodc/gebco/global/gebco_2025/`).
+  - Kartverkets 50 m-modell (`dybde-2`) gjelder i 1 km-cellene der den dekker minst halvparten.
+  - Uten `gebco`-releasen tar `deep.py` Terrarium z8 og sier fra.
+- **Releasen og utrullingen:**
+  - `release.py` tar den releasen `tools/map/kart-release.json` peker på, ellers den nyeste. Den står ikke i `kart.json`, fordi hver endring der starter `kart.yml`. `deploy.yml` og `pwa.yml` følger fila.
+  - `kart-game.tar.gz` har samme format og samme lag som før (flislagene har den gamle utstrekningen), så en gren som ikke kjenner `ramme/`, tar releasen som før.
+- **Målt:**
+  - Kjernen er 4,70 MB mot 3,62 MB før R2. Målet var 3,5 MB (planen sa 2,9 i dag, men `deep` og `coast0` var kommet til). Det er ikke nådd.
+
+    | Lag | Størrelse |
+    |---|---|
+    | `deep` | 1,52 MB |
+    | `dc200` | 1,62 MB (2,11 før `u8p`) |
+    | `dc1k` | 0,43 MB |
+    | `land200` | 0,36 MB |
+    | `expo` | 0,38 MB |
+    | `expo2k` | 0,14 MB |
+    | `land1k` | 0,07 MB |
+    | hodet | 0,13 MB |
+
+  - **Det som ble prøvd:**
+    - prediktor og blokkstørrelse: −0,5 MB
+    - grovere dybdetrinn under 600–1 000 m: bare 5–10 %, fordi det meste ligger på bankene
+    - `coast0` ut av kjernen: −0,3 MB
+  - **Det som gjenstår,** står i backloggen.
+  - **Første oppstart** (frisk profil, 20 Mbit/s og 40 ms, CPU strupet 4×, tida til `SIMREADY`, fire kjøringer hver), med bygget før R2 (a135b4f og `kart-28`) mot R2 (`kart-29`):
+
+    | | Tid | Kartet | Alt |
+    |---|---|---|---|
+    | Før R2 | 37,2–38,1 s, snitt 37,7 | 5,74 MB | 79,1 MB |
+    | Med R2 | 37,6–38,7 s, snitt 38,2 | 6,88 MB | 80,3 MB |
+
+    Det er 0,5 s og 1,5 % mer. Modellene (65 MB) tar det meste av oppstarten, og `chart0` kommer etter. Ikke målt på selve nettbrettet.
+  - **Actions** (`kart-29`, 04.11.2026): 32 minutter i alt. Jobben `ramme` tok 11,8 minutter (682 s for trinnene), men gikk side om side med flisene (opptil 14 minutter), så kjøringen ble ikke lengre. `gebco.yml` tok rundt 10 minutter.
+  - **`kart-29` mot `kart-28`:** lagene i manifestet er like, og 664 av 672 pakker er byte-like. I 8 sim- og view-pakker avviker 2–9 celler i dybden og høyden, høyst 4 m (den ubestemtheten er i flisrørledningen fra før, `coast.py` er ikke endret). Utrullingsgrenens egen `game.py`, bygg og `boottest` går med `kart-29` (4 OK).
+  - Far-pakkene er 13 MB for 724 fliser. Hele kysten i bygget er 337,6 MB (321,8 før).
+- **Ikke ennå:**
+  - Svalbard og Jan Mayen i detalj (R3)
+  - sonene (R4)
+  - isen og været (R5)
+  - havflåten på de nye feltene og navigasjonen over åpent hav (R6)
+  - Longyearbyen (R7)
 
 ## 4.12c Sjømerker langs hele kysten (05.10.2026)
 
