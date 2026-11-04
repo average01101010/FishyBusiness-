@@ -14,8 +14,7 @@ const PUB3 = (() => {
 
   // ---------- the model: the GLB as it is (positions as 16-bit, colours as bytes), straight into the GPU ----------
   function parse(b64){
-    const bin = atob(b64), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-    const dv = new DataView(u8.buffer); if (dv.getUint32(0, true) !== 0x46546C67) return null;
+    const u8 = glbBytes(b64), dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength); if (dv.getUint32(0, true) !== 0x46546C67) return null;   // (bytes or base64: vessel3d.js glbBytes)
     const jl = dv.getUint32(12, true), J = JSON.parse(new TextDecoder().decode(u8.subarray(20, 20 + jl))), bo = 20 + jl + 8, bl = dv.getUint32(20 + jl, true);
     return {J, bin:u8.subarray(bo, bo + bl)};
   }

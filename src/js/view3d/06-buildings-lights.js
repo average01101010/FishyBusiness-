@@ -18,7 +18,7 @@
   async function loadBuildings(){
     const el = document.getElementById('bld');
     if (!el || typeof DecompressionStream === 'undefined') return null;
-    const n = +el.dataset.n, U = +el.dataset.u, bytes = b64bytes(el.textContent.trim());
+    const n = +el.dataset.n, U = +el.dataset.u, bytes = (typeof DATAB !== 'undefined' && DATAB.get('bld')) || b64bytes(el.textContent.trim());   // (the bytes from bootData, 04.11.2026)
     const raw = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer());
     const X = new Uint16Array(raw.buffer, 0, n), Y = new Uint16Array(raw.buffer, 2 * n, n), Lq = raw.subarray(4 * n, 5 * n), Wq = raw.subarray(5 * n, 6 * n), Aq = raw.subarray(6 * n, 7 * n), Tq = raw.subarray(7 * n, 8 * n);
     const dec = q => q <= 160 ? q * 0.5 : 80 + (q - 160) * 2;

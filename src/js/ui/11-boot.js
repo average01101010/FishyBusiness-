@@ -30,7 +30,7 @@ const BOOT_WATCH = setInterval(() => {
 async function bootMap(){ await Promise.all([(async () => { await mapStart(); await bootMapLoad(); })(), bootData()]); }
 // The data elements (the boat models, the pictures, Senja's buildings: src/data/*.b64) are out of the page from 29.10.2026 (build.mjs,
 // Jonas: the page need not be one file when that is better for the players): each empty <script type="application/octet-stream"
-// data-src="data/<id>-<hash>.bin"> gets its bytes fetched here beside the map and put back as base64 in textContent, so the readers
+// data-src="data/<id>-<hash>.bin"> gets its bytes fetched here beside the map and kept (DATAB below, bytes from 04.11.2026; the pictures as base64 in textContent), so the readers
 // (vessel3d.js glbData, 08b-letter.js letterPic, view3d/06 bld) see what they always saw. The files are named by their hash, so the
 // browser and the service worker keep them, and a build changes only what changed. A file that does not come in four tries stops the
 // boot, like a pack. A one-file build (KYST_ONE=1) has no data-src and nothing to do here.
@@ -68,14 +68,22 @@ function dataEarly(){
   try { const s = load(); for (const v of s && s.fleet && s.fleet.length ? s.fleet : s ? [s] : []) if (v.boat && v.boat.type) ty.add(v.boat.type); } catch (e){}
   return el => /^pic-/.test(el.id) || el.id === 'glb-worker' || [...ty].some(t => el.id === 'glb-' + t);
 }
+// The models' bytes as they came (04.11.2026, the memory: two crashes on Android that day with 462 and 647 MB of JS heap): kept here as
+// a Uint8Array per element id and read by glbData (vessel3d.js), the pub's and the naust's parse and the buildings' loader, instead of
+// base64 in the element's text (88 MB of strings, each turned back to bytes when read). The pictures (pic-*) stay base64: the letter
+// and the yard's cards put them in a data: URL.
+const DATAB = new Map();
 async function dataGet(el, opt){
   const src = el.dataset.src; let r;
   for (let t = 0; ; t++){
     try { r = await fetch(src, Object.assign(t ? {cache:'reload'} : {}, opt)); if (!r.ok) throw new Error('HTTP ' + r.status); break; }
     catch (e){ if (t >= 3) throw new Error('data ' + src + ': ' + (e && e.message || e)); await new Promise(res => setTimeout(res, 700 * (t + 1))); }
   }
-  const b = await r.blob(), s = await new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(String(f.result)); f.onerror = () => rej(f.error); f.readAsDataURL(b); });
-  el.textContent = s.slice(s.indexOf(',') + 1); el.removeAttribute('data-src');
+  const b = await r.blob();
+  if (/^pic-/.test(el.id)){ const s = await new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(String(f.result)); f.onerror = () => rej(f.error); f.readAsDataURL(b); });
+    el.textContent = s.slice(s.indexOf(',') + 1); }
+  else DATAB.set(el.id, new Uint8Array(await b.arrayBuffer()));
+  el.removeAttribute('data-src');
   return b.size;
 }
 async function bootData(){

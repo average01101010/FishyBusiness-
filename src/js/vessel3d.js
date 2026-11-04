@@ -365,13 +365,15 @@ const SPEC3D = {
 // places the 3D view needs (helm, eye, crew, lights, hauler, flag). Read the first time a type is shown.
 // The data sits in non-running <script id="glb-TYPE"> and <script id="pic-TYPE"> elements in the page (src/index.html), so the big
 // strings never pass through the script parser and the clock's first ticks are not held up by them.
-const GLBM = {}, glbData = (k, type) => { const el = typeof document !== 'undefined' && document.getElementById(k + '-' + type), s = el ? el.textContent.trim() : ''; return s.length > 100 ? s : null; };
+// (the bytes from bootData's DATAB first, 04.11.2026; base64 in the element in a one-file build and for the pictures)
+const glbBytes = b64 => { if (typeof b64 !== 'string') return b64; const bin = atob(b64), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return u8; };
+const GLBM = {}, glbData = (k, type) => { const id = k + '-' + type; if (typeof DATAB !== 'undefined' && DATAB.has(id)){ const u = DATAB.get(id); return u.length > 100 ? u : null; }
+  const el = typeof document !== 'undefined' && document.getElementById(id), s = el ? el.textContent.trim() : ''; return s.length > 100 ? s : null; };
 // (only a yes is kept: the models are fetched at boot (ui/11-boot.js bootData), and a no asked before they came in was kept for good, so
 // the player's own skiff was drawn with the old hand-made kit and never with its Blender model, 31.10.2026)
 const GLBHAS = {}; function glbHas(type){ if (!GLBHAS[type]) GLBHAS[type] = !!glbData('glb', type); return GLBHAS[type]; }
 function glbParse(b64){
-  const bin = atob(b64), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-  const dv = new DataView(u8.buffer); if (dv.getUint32(0, true) !== 0x46546C67) return null;
+  const u8 = glbBytes(b64), dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength); if (dv.getUint32(0, true) !== 0x46546C67) return null;
   const jl = dv.getUint32(12, true), J = JSON.parse(new TextDecoder().decode(u8.subarray(20, 20 + jl))), bo = 20 + jl + 8;
   const NC = {SCALAR:1, VEC2:2, VEC3:3, VEC4:4}, SZ = {5120:1, 5121:1, 5122:2, 5123:2, 5125:4, 5126:4};
   const acc = i => { const A = J.accessors[i], BV = J.bufferViews[A.bufferView], n = NC[A.type], ct = A.componentType, sz = SZ[ct], st = BV.byteStride || n * sz, off = bo + (BV.byteOffset || 0) + (A.byteOffset || 0), out = new Float32Array(A.count * n);
@@ -395,7 +397,9 @@ function glbParse(b64){
   return {parts, ex:(J.scenes[0] && J.scenes[0].extras) || {}};
 }
 function glbLoad(type){
-  if (!(type in GLBM)){ const src = glbData('glb', type); if (!src) return null; try { GLBM[type] = glbParse(src); } catch (e){ GLBM[type] = null; } }
+  if (!(type in GLBM)){ const src = glbData('glb', type); if (!src) return null; try { GLBM[type] = glbParse(src); } catch (e){ GLBM[type] = null; }
+    // (read once and kept in GLBM, so its bytes are not wanted again: let them go, the yes for glbHas kept, 04.11.2026)
+    if (GLBM[type]){ GLBHAS[type] = true; if (typeof DATAB !== 'undefined') DATAB.delete('glb-' + type); } }
   return GLBM[type];
 }
 // one part of a type's GLB ({p, n, c}): the starter boat's hull, glass, lid, outboard and propeller are drawn by view3d.js one by one
