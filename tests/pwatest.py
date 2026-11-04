@@ -26,7 +26,12 @@ async def main():
         man = await pg.evaluate("fetch('manifest.webmanifest').then(r => r.json()).then(m => ({name:m.name, icons:m.icons.length, display:m.display, link:!!document.querySelector('link[rel=manifest]')}))")
         check(man['link'] and man['icons'] == 3 and man['name'] == 'Det Store Blå', 'siden har manifestet med navn og tre ikoner', man)
         await pg.evaluate("navigator.serviceWorker.ready.then(() => true)")
-        await pg.reload(); await pg.wait_for_function("typeof SIMREADY !== 'undefined' && SIMREADY", timeout=90000); await pg.wait_for_timeout(3000)
+        await pg.reload(); await pg.wait_for_function("typeof SIMREADY !== 'undefined' && SIMREADY", timeout=90000)
+        # (the packs are put in the cache beside the models that come behind the letter, ui/11-boot.js bootDataLate, 04.11.2026: a few
+        # seconds after the start, so the check waits for them, at most 20 s, instead of a fixed 3 s)
+        for _ in range(40):
+            if await pg.evaluate("caches.open('kyst-map').then(c => c.keys()).then(k => k.length)"): break
+            await pg.wait_for_timeout(500)
         sw = await pg.evaluate("(async () => ({ctl:!!navigator.serviceWorker.controller, packs:(await (await caches.open('kyst-map')).keys()).length, page:(await caches.keys()).filter(k => k.startsWith('kyst-page-')).length}))()")
         check(sw['ctl'] and sw['packs'] > 0 and sw['page'] == 1, 'service workeren tar over ved neste last, og kartpakkene ligger i mellomlageret', sw)
         await ctx.set_offline(True)
@@ -42,8 +47,10 @@ async def main():
         code = await pg.evaluate("document.getElementById('saveCode').value")
         await pg.evaluate("(() => { S.cash = 1; save(); document.querySelector('[data-pa=saveIn]').click(); })()")
         await pg.fill('#saveCode', code)
+        # (waits for the page loaded again, not a fixed 2.5 s: the 3D view may be building then, 04.11.2026, and hold the reload up)
+        to = await pg.evaluate("performance.timeOrigin")
         await pg.evaluate("document.querySelector('[data-pa=saveLoad]').click()")
-        await pg.wait_for_timeout(2500); await pg.wait_for_function("typeof SIMREADY !== 'undefined' && SIMREADY", timeout=90000)
+        await pg.wait_for_function("t => performance.timeOrigin !== t && typeof SIMREADY !== 'undefined' && SIMREADY", arg=to, timeout=90000)
         cash = await pg.evaluate("S.cash")
         check(code.startswith('KYST2:') and cash == 123456, 'lagringen går ut som en kode fra Innstillinger og kommer tilbake fra den', (len(code), cash))
         bad = await pg.evaluate("loadCode('KYST2:tull').then(() => 'ok', () => 'avvist')")

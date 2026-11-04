@@ -58,7 +58,8 @@
     if (on && !ready){
       const no3d = () => toast(t('no3d') + (failWhy ? ' (' + failWhy + ')' : ''));
       if (failed){ if (!auto) no3d(); return false; }
-      if (!loading){ loading = true; toast(t('loading3d')); init().then(ok => { loading = false; if (ok) show(true, auto); else { if (hooks.on3dFail) hooks.on3dFail(); if (!auto) no3d(); } }); }
+      // (the models that come behind the letter first, ui/11-boot.js bootDataLate: every reader below sees them as it always did)
+      if (!loading){ loading = true; toast(t('loading3d')); (typeof modelsReady === 'function' ? modelsReady() : Promise.resolve()).then(init).then(ok => { loading = false; if (ok) show(true, auto); else { if (hooks.on3dFail) hooks.on3dFail(); if (!auto) no3d(); } }); }
       return false;
     }
     active = !!on; canvas.hidden = !active; labelsEl.hidden = !active;

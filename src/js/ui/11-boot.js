@@ -34,17 +34,56 @@ async function bootMap(){ await Promise.all([(async () => { await mapStart(); aw
 // (vessel3d.js glbData, 08b-letter.js letterPic, view3d/06 bld) see what they always saw. The files are named by their hash, so the
 // browser and the service worker keep them, and a build changes only what changed. A file that does not come in four tries stops the
 // boot, like a pack. A one-file build (KYST_ONE=1) has no data-src and nothing to do here.
+// Two parts from 04.11.2026 (Jonas: the first minutes decide whether a new player stays): the boot waits only for what the game needs
+// before the 3D view (the pictures: the letter and the yard's side views; the worker for the wardrobe; the boat types of the saved
+// fleet, or Father's wooden boat for a new game, for the paint shop), about 8 MB of the 66. The rest (the other boat types, the
+// harbours, the pub, Senja's buildings) comes in the background behind the letter (bootDataLate, a few at a time, low priority, so
+// the map's packs go first), and the 3D view waits for it (MODELS, view3d/25-controls.js show): every reader there sees the models
+// as before, and none keeps a «no model» for good. A first start on 20 Mbit/s had the letter after 35 s; now it is the page and the map.
+const MODELS = {done:false, wait:[], total:0, got:0, failed:[]};
+function modelsReady(){ if (!MODELS.done) bootDataLate(); return MODELS.done ? Promise.resolve() : new Promise(r => { MODELS.wait.push(r); modelsLabel(); }); }
+function dataEls(){ return [...document.querySelectorAll('script[type="application/octet-stream"][data-src]')]; }
+function dataEarly(){
+  const ty = new Set(['trebat']);
+  try { const s = load(); for (const v of s && s.fleet && s.fleet.length ? s.fleet : s ? [s] : []) if (v.boat && v.boat.type) ty.add(v.boat.type); } catch (e){}
+  return el => /^pic-/.test(el.id) || el.id === 'glb-worker' || [...ty].some(t => el.id === 'glb-' + t);
+}
+async function dataGet(el, opt){
+  const src = el.dataset.src; let r;
+  for (let t = 0; ; t++){
+    try { r = await fetch(src, Object.assign(t ? {cache:'reload'} : {}, opt)); if (!r.ok) throw new Error('HTTP ' + r.status); break; }
+    catch (e){ if (t >= 3) throw new Error('data ' + src + ': ' + (e && e.message || e)); await new Promise(res => setTimeout(res, 700 * (t + 1))); }
+  }
+  const b = await r.blob(), s = await new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(String(f.result)); f.onerror = () => rej(f.error); f.readAsDataURL(b); });
+  el.textContent = s.slice(s.indexOf(',') + 1); el.removeAttribute('data-src');
+  return b.size;
+}
 async function bootData(){
-  const els = [...document.querySelectorAll('script[type="application/octet-stream"][data-src]')]; if (!els.length) return;
-  const b64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => { const s = String(r.result); res(s.slice(s.indexOf(',') + 1)); }; r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
-  await Promise.all(els.map(async el => {
-    const src = el.dataset.src; let r;
-    for (let t = 0; ; t++){
-      try { r = await fetch(src, t ? {cache:'reload'} : undefined); if (!r.ok) throw new Error('HTTP ' + r.status); break; }
-      catch (e){ if (t >= 3) throw new Error('data ' + src + ': ' + (e && e.message || e)); await new Promise(res => setTimeout(res, 700 * (t + 1))); }
+  const early = dataEarly(), els = dataEls().filter(early);
+  if (!dataEls().length){ MODELS.done = true; return; }   // (a one-file build: everything is in the page)
+  await Promise.all(els.map(el => dataGet(el)));
+}
+// the rest, after the map's first packs: three at a time; a file that does not come in four tries is told to the error list and left
+// out (its readers draw what they drew without it), so a bad connection never keeps the 3D view from coming
+function bootDataLate(){
+  if (MODELS.done || MODELS.started) return; MODELS.started = true;
+  const els = dataEls(); let man = null;
+  MODELS.total = els.reduce((a, el) => a + (+el.dataset.b || 1), 0);
+  const next = async () => {
+    for (let el; (el = els.shift()); ){
+      const n = +el.dataset.b || 1;
+      try { await dataGet(el, {priority:'low'}); }
+      catch (e){ MODELS.failed.push(el.id); try { if (typeof cloudErr === 'function') cloudErr('data: ' + (e && e.message || e), 'boot', '', 'slow'); } catch (e2){} }
+      MODELS.got += n; modelsLabel();
     }
-    el.textContent = await b64(await r.blob()); el.removeAttribute('data-src');
-  }));
+  };
+  Promise.all([next(), next(), next()]).then(() => { MODELS.done = true; modelsLabel(); for (const r of MODELS.wait.splice(0)) r(); });
+}
+// the loading screen says how far the models are once the 3D view waits for them (the letter and the start place are off it)
+function modelsLabel(){
+  const el = document.querySelector('#loader .ld-s'); if (!el || !MODELS.wait.length || MODELS.done) return;
+  const p = MODELS.total ? Math.min(100, Math.round(100 * MODELS.got / MODELS.total)) : 0, no = typeof S === 'undefined' || !S || S.lang !== 'en';
+  el.textContent = (no ? 'Laster båter og havner … ' : 'Loading boats and harbours … ') + p + ' %';
 }
 // The packs round everything the saved game holds. It runs again after the cloud gate (08.10.2026, a player on a new PC: the cloud save
 // is put in place only then, and its boat may lie in a tile the first round never asked for: «mask block 105,20 is not loaded»).
@@ -168,7 +207,7 @@ if (AWAY){ catchUp(AWAY + Date.now() - BOOT_T); AWAY = 0; refreshAll(); } lastWa
 loadRoads().then(r => { ROADS = r; scheduleStatic(); if (g3Live()) G3.roadsReady(); }).catch(e => console.error(e));
 loadFine().then(f => { FINE = f; if (g3Live()) G3.fineReady(); }).catch(e => console.error(e));
 }
-bootMap().then(() => { bootStep('innlogging og skyen'); return cloudGate(); }).then(() => { bootStep('kartet rundt lagringen'); return bootMapLoad(); }).then(() => { bootStep('spillet bygges'); bootGame(); bootDone(); cloudHooks(); cloudStart(); try { INSTALL.start(); } catch (e){} try { sessionStorage.removeItem('dsb_needpk'); } catch (e){} }).catch(e => { console.error(e);
+bootMap().then(() => { bootDataLate(); bootStep('innlogging og skyen'); return cloudGate(); }).then(() => { bootStep('kartet rundt lagringen'); return bootMapLoad(); }).then(() => { bootStep('spillet bygges'); bootGame(); bootDone(); cloudHooks(); cloudStart(); try { INSTALL.start(); } catch (e){} try { sessionStorage.removeItem('dsb_needpk'); } catch (e){} }).catch(e => { console.error(e);
   // a read in a pack that is not in: remember the pack and start again with it, a few times at most, before the player sees the error
   try { if (e && e.pk && e.pk.file){ const L = JSON.parse(sessionStorage.getItem('dsb_needpk') || '[]'); if (L.length < 8 && !L.includes(e.pk.file)){ L.push(e.pk.file); sessionStorage.setItem('dsb_needpk', JSON.stringify(L)); location.reload(); return; } } } catch (e2){} bootFail(e); });
 // A start that fails never leaves the player stuck (Jonas 08.10.2026): what went wrong goes to the admin's error list, and the player can try
