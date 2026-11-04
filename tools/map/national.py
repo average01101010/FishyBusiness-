@@ -191,6 +191,12 @@ def farx_tiles():
             t = W[ty * 250 + oy:(ty + 1) * 250 + oy, tx * 250 + ox:(tx + 1) * 250 + ox]; land[ty - ty0, tx - tx0] = t.any(); sea[ty - ty0, tx - tx0] = not t.all()
     near = ndimage.binary_dilation(sea, iterations=1) & land
     return [(tx, ty) for ty in range(ty0, ty1) for tx in range(tx0, tx1) if near[ty - ty0, tx - tx0] and not frame.in_old(tx, ty)]
+# GLO-30 at the 200 m cells: the mean of 4 x 4 points in each (a point alone would alias the 30 m ridges)
+def far_cop(lon, lat):
+    import terrain
+    x, y = frame.to_nat(lon, lat); o = (np.arange(4) + 0.5) / 4 * C200 - C200 / 2
+    X = (np.asarray(x)[:, None, None] + o[None, :, None] + 0 * o[None, None, :]).ravel(); Y = (np.asarray(y)[:, None, None] + 0 * o[None, :, None] + o[None, None, :]).ravel()
+    lo, la = frame.to_ll(X, Y); return terrain.sample_cop(lo, la).reshape(-1, 16).mean(1)
 def farx():
     f = os.path.join(OUT, 'farx.npz')
     if os.path.exists(f): z = np.load(f); return {tuple(map(int, k.split('_'))): z[k] for k in z.files}
@@ -200,6 +206,8 @@ def farx():
     for k, (tx, ty) in enumerate(farx_tiles()):
         X, Y = np.meshgrid((tx * 250 + np.arange(250) + 0.5) * C200, (ty * 250 + np.arange(250) + 0.5) * C200)
         lon, lat = frame.to_ll(X.ravel(), Y.ravel()); h = terrain.sample(lon, lat, 9).reshape(250, 250)
+        if xarea(tx, ty):   # Svalbard and Jan Mayen: Copernicus GLO-30, as their tiles' ground (H1b R3; Terrarium is coarse there)
+            c = far_cop(lon, lat).reshape(250, 250); h = np.where(np.isfinite(c), c, h)
         md = ndimage.median_filter(h, 3); h = np.minimum(np.where(h > md + 400, md, h), 3700)   # (Greenland's ice sheet reaches 3 700 m)
         m = W[ty * 250 + oy:(ty + 1) * 250 + oy, tx * 250 + ox:(tx + 1) * 250 + ox] > 0
         out[(tx, ty)] = hgtEnc(np.where(m, np.maximum(h, 1), np.minimum(h, -2))).astype(np.int16)

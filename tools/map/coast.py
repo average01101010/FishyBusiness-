@@ -7,7 +7,8 @@
 #                                                 the core and the far heights come from src/data/map (tools/map/game.py joins them)
 #   python3 tools/map/coast.py [lite] [tx,ty ...] the K5 packs in out/national/lite/ (a pack per kind and tile, the core per tile too)
 #   python3 tools/map/coast.py cache k n          part k of n of the tiles into the caches only (the workflow's parts)
-#   ground  Terrarium z13 (Kartverket's 10 m) in the 10 km blocks within 3 km of the sea, z11 (about 30 m) in the others
+#   ground  Terrarium z13 (Kartverket's 10 m) in the 10 km blocks within 3 km of the sea, z11 (about 30 m) in the others; on the
+#           islands off the old frame (Svalbard, Jan Mayen) Copernicus GLO-30 (terrain.sample_cop), Terrarium where it has none
 #   depth   Kartverket's (the legacy Senja raster) inside the legacy square; elsewhere Kartverket's 50 m depth models (the release
 #           dybde-N that .github/workflows/dybde.yml fetches from Geonorge, unpacked in out/depth/), and where they have no data the
 #           game's own depth model (depthModel in 03-simulation.js: openness, distance to the shore and a little noise), blended over
@@ -159,6 +160,7 @@ def tile(tx, ty):
             z = 13 if dsea[j * 100:(j + 1) * 100, i * 100:(i + 1) * 100].min() <= 3 else 11
             X, Y = np.meshgrid((ix0 + i * n + np.arange(n) + 0.5) * 0.025, (iy0 + j * n + np.arange(n) + 0.5) * 0.025)
             lon, lat = frame.to_ll(X.ravel(), Y.ravel()); h = terrain.sample(lon, lat, z).reshape(n, n); m = M[j * n:(j + 1) * n, i * n:(i + 1) * n] > 0
+            if xa: c = terrain.sample_cop(lon, lat).reshape(n, n); h = np.where(np.isfinite(c), c, h)   # the islands: Copernicus GLO-30 (H1b R3)
             H[j * n:(j + 1) * n, i * n:(i + 1) * n] = hgtEnc(np.where(m, np.maximum(h, 0.5), np.minimum(h, -0.5)))
     out['hgt'] = H
     fx0, fy0, fnx, fny = R.grid(0.05); lc = features('base/land_cover', box, ['geometry', 'subtype'])

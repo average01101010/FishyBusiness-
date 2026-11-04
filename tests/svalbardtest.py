@@ -22,9 +22,11 @@ def check(ok, what, extra=''):
 GO = """async ([la, lo]) => { const c = P(la, lo); await mapNeed(c, MAPD.simR + 2);
   const find = (dmin, rmax) => { for (let r = 0; r <= rmax; r++) for (let a = 0; a < Math.max(1, r * 6); a++){ const t = a / Math.max(1, r * 6) * 2 * Math.PI, p = {x:c.x + Math.cos(t) * r * 0.05, y:c.y + Math.sin(t) * r * 0.05}; if (mapSimAt(p) && mapReadyAt(p, 0) && !isLand(p) && coastDist(p) >= dmin) return p; } return null; };
   const q = find(0.25, 120), w = find(1.5, 160); await mapNeed(q, MAPD.simR); const b = S.boat; b.status = 'idle'; b.port = null; b.pos = {x:q.x, y:q.y}; S.plan = null; S.draft = []; b.v = 0; return [q, w]; }"""
-# the ground's mean colour in the near terrain's land points over 5 m (r, g, b), and the share of them that read as green
-GROUND = """() => { const M = G3._debug.NEARM; if (!M || !M.col) return null; let r = 0, g = 0, b = 0, n = 0, gr = 0;
-  for (let i = 0; i < M.h.length; i++){ if (M.h[i] < 5) continue; const R = M.col[i * 3], G = M.col[i * 3 + 1], B = M.col[i * 3 + 2]; r += R; g += G; b += B; n++; if (G > R * 1.12 && G > B * 1.12) gr++; }
+# the ground's mean colour (r, g, b) in the far terrain's land points over 5 m within 8 km of the boat, and the share of them that read
+# as green (the near mesh is a few hundred metres round the boat, often all sea)
+GROUND = """(q) => { const M = G3._debug.TERR; if (!M || !M.col) return null; let r = 0, g = 0, b = 0, n = 0, gr = 0;
+  for (let i = 0; i < M.h.length; i++){ if (M.h[i] < 5) continue; const x = M.pos[i * 3] + M.o[0], z = M.pos[i * 3 + 2] + M.o[1]; if (Math.hypot(x - q.x * 1000, z - q.y * 1000) > 8000) continue;
+    const R = M.col[i * 3], G = M.col[i * 3 + 1], B = M.col[i * 3 + 2]; r += R; g += G; b += B; n++; if (G > R * 1.12 && G > B * 1.12) gr++; }
   return n ? {r:+(r / n).toFixed(3), g:+(g / n).toFixed(3), b:+(b / n).toFixed(3), n, green:+(gr / n).toFixed(3)} : null; }"""
 # (name, lat, lon of the sea by the place, lat, lon of a point on land)
 PLACES = [('longyearbyen', 78.236, 15.56, (78.2232, 15.6267)), ('bjornoya', 74.47, 19.20, (74.43, 19.0)), ('janmayen', 70.93, -8.68, (71.0, -8.4))]
@@ -61,10 +63,11 @@ async def main():
                 check(t['bld'] > 500 and t['roads'] > 100 and t['quays'] > 20 and t['gl'] == 0, 'Longyearbyen har byggene, veiene og kaiene fra Overture i 3D, uten GL-feil', t)
                 mk = await pg.evaluate("(q) => ({lights:marksNear('lights', q.x, q.y, 30).length, marks:marksNear('marks', q.x, q.y, 30).length, src:MARKS && MARKS.ver})", q)
                 print('   sjømerker innen 30 km:', mk)
-            try: await pg.wait_for_function("(q) => { const M = G3._debug.NEARM; return M && Math.abs(M.cx - q.x * 1000) < 3000 && Math.abs(M.cz - q.y * 1000) < 3000; }", arg=q, timeout=240000)
-            except Exception as e: print('   (nærterrenget kom ikke:', str(e)[:80], ')')
+            # the far terrain built round the boat with the tile's cover in (as teleport3d waits for it)
+            try: await pg.wait_for_function("(q) => { const T = G3._debug.TERR; return T && !T.stale && Math.abs(T.cx - q.x * 1000) <= 10000 && Math.abs(T.cz - q.y * 1000) <= 10000 && mapViewIn(q); }", arg=q, timeout=300000)
+            except Exception as e: print('   (fjernterrenget kom ikke:', str(e)[:80], ')')
             await pg.wait_for_timeout(3000)
-            g = await pg.evaluate(GROUND)
+            g = await pg.evaluate(GROUND, q)
             check(bool(g) and g['green'] < 0.25, name + ': bakken er ikke fastlandets grønne (tundra, bar mark og bre)', g)
             await pg.evaluate("() => { const c = G3._debug.cam; c.helm = false; c.yaw = 2.3; c.pitch = 0.22; c.dist = 700; }")
             for w, h in ((1280, 800), (800, 1280)):
@@ -75,4 +78,4 @@ async def main():
         check(not errs, 'ingen sidefeil', errs[:3])
         await b.close()
 
-asyncio.run(main())
+if __name__ == "__main__": asyncio.run(main())
