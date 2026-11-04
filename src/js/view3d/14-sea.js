@@ -132,8 +132,8 @@
     const far = 1 - sstep(WK.u1[3] * 0.55, WK.u1[3], s), a = WK.u1[1] * far * sstep(0, 1.2, s);   // (no step at the stern)
     const qn = q * 0.3536 / Math.min(0.3536, Math.tan(0.2 / Math.max(WK.u2[3], 0.2))), d2 = s * s - 8 * qn * qn, sq = Math.sqrt(Math.max(d2, 0)), qq = Math.max(qn, 1e-3);
     const tt = (s - sq) / (4 * qq), td = (s + sq) / (4 * qq), pt = k * Math.sqrt(1 + tt * tt) * (s + qn * tt), pd = k * Math.sqrt(1 + td * td) * (s + qn * td);
-    const cb = Math.pow(s * s / (Math.max(d2, 0) + 0.15 * s * s), 0.25), ow = d2 < 0 ? Math.exp(d2 / (0.05 * s * s + 4)) : 1;
-    return (WK.u1[2] * a / Math.sqrt(1 + s / L) * Math.cos(pt) * cb * ow * 0.5 + a * Math.pow(1 + s / L, -0.333) * Math.cos(pd) * cb * ow * (1 - sstep(1, 1.5, td)) * 0.5) * WK.u3[2];
+    const cb = Math.pow(s * s / (Math.max(d2, 0) + 0.35 * s * s), 0.25), ow = d2 < 0 ? Math.exp(d2 / (0.18 * s * s + 30)) : 1;
+    return (WK.u1[2] * a / Math.sqrt(1 + s / L) * Math.cos(pt) * cb * ow * 0.6 + a * Math.pow(1 + s / L, -0.333) * Math.cos(pd) * cb * ow * (1 - sstep(1, 1.5, td)) * 0.5) * WK.u3[2];
   }
 
 

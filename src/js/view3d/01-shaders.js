@@ -124,8 +124,8 @@
     'if(s>0.0){float far=1.0-smoothstep(uWk1.w*0.55,uWk1.w,s);float a=uWk1.y*far*smoothstep(0.0,1.2,s);' +
     'float qn=q*0.3536/min(0.3536,tan(0.2/max(uWk2.w,0.2)));float d2=s*s-8.0*qn*qn;float sq=sqrt(max(d2,0.0));float qq=max(qn,1e-3);' +
     'float tt=(s-sq)/(4.0*qq);float td=(s+sq)/(4.0*qq);float pt=uWk1.x*sqrt(1.0+tt*tt)*(s+qn*tt);float pd=uWk1.x*sqrt(1.0+td*td)*(s+qn*td);' +
-    'float cb=pow(s*s/(max(d2,0.0)+0.15*s*s),0.25);float ow=d2<0.0?exp(d2/(0.05*s*s+4.0)):1.0;' +
-    'h+=uWk1.z*a*inversesqrt(1.0+s/L)*cos(pt)*cb*ow*0.5;' +
+    'float cb=pow(s*s/(max(d2,0.0)+0.35*s*s),0.25);float ow=d2<0.0?exp(d2/(0.18*s*s+30.0)):1.0;' +
+    'h+=uWk1.z*a*inversesqrt(1.0+s/L)*cos(pt)*cb*ow*0.6;' +
     'h+=a*pow(1.0+s/L,-0.333)*cos(pd)*cb*ow*(1.0-smoothstep(1.0,1.5,td))*0.5;}' +
     'if(bow>0.5){float u=s0+L;if(u>-0.5&&u<L*1.5){float lw=0.2+max(u,0.0)*0.466;h+=uWk2.y*exp(-pow((q0-lw)/(0.35+max(u,0.0)*0.06),2.0))*exp(-max(u,0.0)/(0.6*L))*smoothstep(-0.5,0.3,u);}}' +
     'return h;}';
