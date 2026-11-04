@@ -522,6 +522,12 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nume
 .tbl th{text-align:right;font-weight:600;color:var(--muted);padding:5px 4px;border-bottom:1px solid var(--line)}
 .tbl td{text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}
 .tbl th:first-child,.tbl td:first-child{text-align:left}
+/* the landing note comes out of the printer (07-guide.js portSlip, UI-redesign U9) */
+.slipt.print tr{animation:slipFeed .34s cubic-bezier(.2,.7,.3,1) backwards;animation-delay:calc(var(--i,0) * 70ms + 150ms - var(--el,0ms))}
+.slipt.print tr.sum:last-child{animation-name:slipFeed,slipStamp;animation-duration:.34s,.9s}
+@keyframes slipFeed{from{opacity:0;transform:translateY(-6px)}}
+@keyframes slipStamp{0%,40%{background:transparent}60%{background:rgba(255,214,102,.35)}100%{background:transparent}}
+@media (prefers-reduced-motion:reduce){.slipt.print tr{animation:none}}
 .tbl tr.here td{font-weight:650}
 .tbl tr.sum td{font-weight:650;border-bottom:0}
 .bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin:4px 0 2px}

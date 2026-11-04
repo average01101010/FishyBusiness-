@@ -277,7 +277,9 @@ function panelPort(){
   // («Start på nytt» stood here under the accounts; it is in Innstillinger, in red, UI review 04.11.2026)
   return h.join('');
 }
-// the landing note of the last landing here, for a few hours after it
+// the landing note of the last landing here, for a few hours after it. The first time it is shown it comes out of the printer row by
+// row (UI-redesign U9, grep 8); a redraw in the meantime carries on where it was (--el is the time it has been out), so it never restarts
+const SLIP_OUT = {};
 function portSlip(){
   const b = S.boat, h = [];
   const ls = S.lastSale;
@@ -325,6 +327,10 @@ function portSlip(){
     if (ls.coopKr > 0) h.push(row(LN('Kvotesamarbeid', 'Quota cooperation'), '', '−' + fmt(ls.coopKr, 0)));
     if (tk.sum > 0 || ls.lott > 0) h.push(row('<b>' + LN('Til kassa', 'To the cash box') + '</b>', '', '<b>' + fmt(ls.total - tk.sum - ls.lott - (ls.coopKr || 0), 0) + '</b>', 'sum'));
     h.push('</tbody></table></div>');
+    { const key = ls.port + ':' + ls.t, now = Date.now(), t0 = SLIP_OUT[key] || (SLIP_OUT[key] = now), el = now - t0;
+      if (el < 4000){ const i0 = h.findIndex(x => x.indexOf('class="tbl slipt"') >= 0); let n = 0;
+        for (let k = i0; k < h.length; k++) h[k] = h[k].replace(/<tr(?=[ >])/g, () => '<tr style="--i:' + Math.min(n++, 24) + '"');
+        h[i0] = h[i0].replace('class="tbl slipt"', 'class="tbl slipt print" style="--el:' + el + 'ms"'); } }
     // the first landing (Onboarding 2, O4, backlog 10.2): the trip was better than usual, and what the jig gives here now; and that others
     // land here too (the shared world's last day at this plant, WSH.mkt, 10h-world.js), only when there are any: no number is made up
     if (tutOn() && S.tut.fk && S.tut.fk.d > 0){ const F = S.tut.fk, kg = ls.lines.reduce((a, r) => a + r.kg, 0), n = Math.round(kg * Math.max(0, (F.d - F.t) / F.d) / TUT_FISH_H / 10) * 10;
