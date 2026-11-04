@@ -211,6 +211,7 @@
     gl.uniform4fv(u.uWk0, [WK.u0[0] - Dx - FOAM.ox, WK.u0[1] - Dz - FOAM.oz, WK.u0[2], WK.u0[3]]); gl.uniform4fv(u.uWk1, WK.u1); gl.uniform4fv(u.uWk2, WK.u2); gl.uniform4fv(u.uWk3, WK.u3); wakeTU(u, Dx + FOAM.ox, Dz + FOAM.oz);
     gl.uniform4f(u.uFB, pb[0] - FOAM.ox, pb[1] - FOAM.oz, qx - FOAM.ox, qz - FOAM.oz); gl.uniform4f(u.uFH, pb[2], pb[3], fx, fz);
     gl.uniform4f(u.uHull, (VG.stern - VG.bow) || 6, (VG.beam || 2.4) / 2, -(VG.bow || -2.2), VG.stern || 3.1); gl.uniform4f(u.uFSp, (WK.kn || 0) * 0.5144, WK.Fr || 0, BOAT.planing ? 1 : 0, dt);
+    foamNPC(u, qx, qz, Dx, Dz);
     attr(0, SKYQ, 2); gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null); FOAM.r = w; FOAM.pB = [qx, qz, fx, fz]; FOAM.ms = FOAM.ms * 0.9 + (performance.now() - t1) * 0.1; FOAM.sh = [sx, sz]; FOAM.n++;
     if (FOAM.log && FOAM.log.length < 400){   // (a trace for the tests: G3._debug.foam.log = []; counts the foam in a 64 x 64 block round the boat and its distinct births)
@@ -218,6 +219,32 @@
       gl.bindFramebuffer(gl.FRAMEBUFFER, FOAM.fb[FOAM.r]); gl.readPixels(i, j, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, b4); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       let cnt = 0; const g = new Set(); for (let k = 0; k < 64 * 64; k++) if (b4[k * 4] > 64){ cnt++; g.add(Math.round(b4[k * 4 + 1] / b4[k * 4] * 255)); }
       FOAM.log.push([+t.toFixed(2), sx, sz, +reb[0].toFixed(3), +FOAM.now[0].toFixed(3), cnt, g.size, Math.min(...g), Math.max(...g)]); }
+  }
+  // The other boats' foam (04.11.2026: the fleet sailed with no wake at all): the six nearest with way on within the map, each swept
+  // from where she was last frame as your own hull is (FOAM_FS hullFoam), by her length, beam and speed through the water (n.v, knots)
+  // and whether her kind planes, so a sjark at 7 knots leaves a small wash and a fast boat on the plane her wings and her channel. Her
+  // origin is taken as amidships. The coastal route and the ferry, with no length in their state, are given 35 and 70 m.
+  const NB4 = new Float32Array(24), NH4 = new Float32Array(24), NG4 = new Float32Array(24), NV4 = new Float32Array(24), NPF = new Map();
+  function foamNPC(u, qx, qz, Dx, Dz){
+    if (u.uNV == null) return; NV4.fill(0);
+    let L0 = []; try { L0 = typeof npcNow !== 'undefined' ? npcNow : []; } catch (e){ L0 = []; }
+    const R = FOAM.M / 2 - 40, cand = [];
+    for (const n of L0){
+      if (!n || !n.p || n.st === 'port' || n.st === 'fishing' || !(n.v > 1.5) || (n.tur && n.st === 'tow') || n.ptow) continue;
+      const x = n.p.x * 1000 - Dx, z = n.p.y * 1000 - Dz, d = Math.hypot(x - qx, z - qz); if (d > R) continue;
+      cand.push([d, n, x, z]); }
+    cand.sort((a, b) => a[0] - b[0]);
+    const now = performance.now(), seen = new Set();
+    for (let i = 0; i < Math.min(6, cand.length); i++){
+      const [, n, x, z] = cand[i], fx = Math.sin(n.hd || 0), fz = -Math.cos(n.hd || 0), Ln = n.L || (n.type === 'ferry' ? 70 : n.type === 'coastal' ? 35 : 10), Bn = n.B || Ln * 0.3;
+      let t = null; try { t = npcType(n); } catch (e){ t = null; }
+      const V = (t && VESSELS[t]) || {}, v = n.v * 0.5144, Fr = v / Math.sqrt(9.81 * Ln), pl = V.planing ? 1 : 0;
+      const pp = NPF.get(n.id), ok = pp && Math.hypot(pp[0] - x, pp[1] - z) < 300; seen.add(n.id);
+      const ox = FOAM.ox, oz = FOAM.oz, k = i * 4;
+      NB4.set([(ok ? pp[0] : x) - ox, (ok ? pp[1] : z) - oz, x - ox, z - oz], k); NH4.set([ok ? pp[2] : fx, ok ? pp[3] : fz, fx, fz], k);
+      NG4.set([Ln, Bn / 2, Ln / 2, Ln / 2], k); NV4.set([v, Fr, pl, 1], k); NPF.set(n.id, [x, z, fx, fz, now]); }
+    for (const [id, e] of NPF) if (!seen.has(id) && now - e[4] > 5000) NPF.delete(id);
+    gl.uniform4fv(u.uNB, NB4); gl.uniform4fv(u.uNH, NH4); gl.uniform4fv(u.uNG, NG4); gl.uniform4fv(u.uNV, NV4);
   }
   // the sea shader reads the map (unit 7) where it is on
   function foamBind(u){
