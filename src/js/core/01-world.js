@@ -81,7 +81,17 @@ const inFrame = p => p.x >= MAPB.x0 && p.y >= MAPB.y0 && p.x < MAPB.x1 && p.y < 
 function expoFar(p){ const L = farL('expo', p); return L ? rbil(L, p) : 0; }
 // the land at x, z (metres) between the four nearest cells (0-1), for the 3D view's ground off the tiles; 0 where there is none (the 3D
 // view drew the sea off the frame, and still does where the map has no data)
-function landFracM(x, z){ const L = farL('land', {x:x / 1000, y:z / 1000}); return L ? rbilM(L, x, z) : 0; }
+// Off the old frame the far packs carry the land at 200 m (land200x, H1b R2: Svalbard, Iceland, Greenland, Russia), which the view
+// reads where the blocks of all four cells are in, else the coarse 1 km (the 3D view only; the simulation reads farL alone)
+function landFracM(x, z){
+  const p = {x:x / 1000, y:z / 1000}, X = MAPD.L.land200x, L = farL('land', p);
+  if (X && L && L.name !== 'land200' && landXIn(X, x, z)) return rbilM(X, x, z);
+  return L ? rbilM(L, x, z) : 0;
+}
+function landXIn(X, x, z){
+  const cm = X.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, n = X.n, bx0 = Math.floor(Math.floor(gx) / n), bx1 = Math.floor((Math.floor(gx) + 1) / n), by0 = Math.floor(Math.floor(gz) / n), by1 = Math.floor((Math.floor(gz) + 1) / n);
+  return mapHasBlock(X, bx0, by0) && (bx1 === bx0 || mapHasBlock(X, bx1, by0)) && (by1 === by0 || mapHasBlock(X, bx0, by1)) && (bx1 === bx0 || by1 === by0 || mapHasBlock(X, bx1, by1));
+}
 // the far distance to the shore of p's own cell (km), as the route's coarse grids read it
 function dcCellFar(p){ const L = farL('dc', p); return L ? rcell(L, Math.floor(p.x / L.c), Math.floor(p.y / L.c)) * DCSTEP[L.name] : 0; }
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));

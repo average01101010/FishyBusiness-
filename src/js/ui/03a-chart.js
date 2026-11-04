@@ -31,7 +31,11 @@ function vecPath(v, sc, tol){
 }
 // the step (a power of two of the data's own, 0 for all of it) that suits a pixel of px km
 const pathStep = (px, base) => Math.max(0, Math.floor(Math.log2(0.7 * px / base)));
-function chartPath0(px){ const b = pathStep(px || 0, 0.3), k = 'p0:' + b; if (!CHARTV.paths.has(k)){ const v = mapVec(MAPD.core, 'coast0'); if (!v) return null; CHARTV.paths.set(k, vecPath(v, 0.01, b ? 30 * 2 ** b : 0)); } return CHARTV.paths.get(k); }
+// coast0 is in its own pack from H1b R2 (chart0, the whole frame), which comes after the start; until it is in, the chart has the land
+// of the core and the tiles, and is painted again when it comes (an older build has it in the core)
+function chartPath0(px){ const b = pathStep(px || 0, 0.3), k = 'p0:' + b; if (!CHARTV.paths.has(k)){ const pk = MAPD.chart0 || MAPD.core;
+  if (pk && !pk.buf){ if (!pk.load) mapLoad(pk).then(() => { if (typeof chartCame === 'function') chartCame(null); }, e => console.error(e)); return null; }
+  const v = mapVec(pk, 'coast0'); if (!v) return null; CHARTV.paths.set(k, vecPath(v, 0.01, b ? 30 * 2 ** b : 0)); } return CHARTV.paths.get(k); }
 // the rings that touch the rectangle r [x0, y0, x1, y1] (m from the tile's corner), as paths in km: land (class 0 and 1), mole (the
 // breakwaters, 2 and 3) and all, each null when none. The shore in 3D (view3d buildLandMask) strokes the land's and the breakwaters' rings
 // with their own slopes and fills all of them, over its own window alone: a tile's whole coast ran to 184 000 points (Frøya). A ring

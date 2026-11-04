@@ -66,6 +66,8 @@ async function bootMapLoad(){
     catch (e){ if (t >= 8) throw e; if (e && e.pk) await mapLoad(e.pk); else await new Promise(res => setTimeout(res, 1000)); }
   }
   DEPTH = true;
+  // the chart's coast over the whole frame (H1b R2) comes after the start, so the start waits no longer for it
+  if (MAPD.chart0) setTimeout(() => mapLoad(MAPD.chart0).catch(e => console.error(e)), 4000);
 }
 function bootGame(){
 S = load(); tabMark();   // this page has the game now (an older page left open stops: tabMine, 02-format-state.js)
