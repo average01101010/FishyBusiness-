@@ -240,6 +240,25 @@ Jonas sendte bilder fra Bleik: propellskummet drev som en rett strek rett gjenno
 - **Det turkise uten kant:** der strandteksturen slutter, gikk dybden brått over til nettets; nå glir den over mellom -4 og -1,5 m.
 - `tests/wakeshot.py` kjører båten for hånd utenfor Bleik (forover, hard sving, revers) og tar bilder ovenfra; kvaliteten holdes på Høy (`#qfix`), fordi skumkartet er av på Lav.
 
+## 5.20e Båten i sjøen etter farten: planing, sprøytevinger, tørr hekk og turkis kjølvann (Jonas 04.11.2026, referansevideo)
+
+Jonas sendte en video ovenfra av en sportsfiskebåt i planingsfart (rundt 25 knop) og ba om at den ble brukt til å gjøre spillet bedre, med at «ikke alle båtene er kjappe, så hvor fort båten går må tas i betraktning». Analysen av videoen: baugen er tørr; sprøyten starter midtskips og kastes flatt ut av knekken og sprutlistene som to hvite vinger; vannet slipper rent fra hekken og etterlater en mørk renne midt bak, mellom de hvite stripene fra hjørnene og propellene, som slår sammen til en hanekam noen bredder bak; kjølvannet er smalt; og boblene lyser turkist under overflaten der skummet på toppen er tynt.
+
+Alt styres av Froude-tallet Fr = v/√(gL) (lengden fra `VESSELS`, farten gjennom vannet) og av `planing`, så en sjark i 7 knop og en tråler i 13 er som før:
+
+- **Hvor langt hun er oppe på planet** (`WK.pf` i `updateWake`, `pf` i `FOAM_FS`): 0 under Fr 0,6 og 1 over 1,2, bare for typer med `planing`. En deplasementsbåt får 0 i alle farter.
+- **Kjølvannets vinkel** (`WAKE_GLSL`, `wakeHFast`): skråbølgenes kam ligger i 19,47° til Fr ≈ 0,55 og trekker seg inn som 0,2/Fr over det (Rabaud og Moisy 2013, α = 1/(2√(2π)·Fr)): rundt 9° ved Fr 1,25. Sakte båter er som før.
+- **Tørr baug og sprøyterot** (`FOAM_FS`): vasken langs skutesida starter ved roten, 6 % av lengden akter for stevnen i ro og 40 % på planet. Baugbølgen (`Ab`, `uWk3.x`) tones ned med 85 % av `pf`.
+- **Sprøytevingene** (`FOAM_FS`): hinnen lander rundt en båtbredde ut fra skroget, så skummet ligger som to hvite vinger med mørkere vann mellom dem og vasken bak hekken (ujevn kant, lagt der hinnen har nådd landingslinja). Et første forsøk med skum fra skroget helt ut til en kant som åpnet seg 18° ble ett bredt, hvitt felt, fordi skumkartet holder på alt det sveipet legger igjen. `drawEffects` (`24-cinema.js`) kaster samtidig en tynn, flat sprøytehinne fra roten (90 punkter i sekundet ved full planing, en tredel av farten ut til sidene, borte på et halvt sekund), også i stille vann. Før kom sprøyten på planet bare i krapp sjø.
+- **Smalere vask på planet:** vasken langs skutesida og bak hekken var flere meter bred for planende skrog (`pl`), og i skumkartet ble det ett bredt, hvitt felt bak båten (også før denne endringen). Bredden for planing tones ned med 80 % av `pf`, så vingene og renna synes.
+- **Tørr hekk** (`tv`, Fr 0,45–0,9, alle skrog): en mørk renne en halv båtbredde bred midt bak hekken, rundt tre bredder lang, som lukker seg i en hvit hanekam. Skummet under akterskipet tones ned, så renna ikke fylles av det som lå der. En deplasementsbåt når knapt Fr 0,45 og får nesten ingenting.
+- **Trim og løft** (`16-motion.js`): fra Fr, ikke knop. Planende: opp mot 6° ved puklen (Fr 0,5–0,7), ned mot 3° på planet, løftet 1,5 % av lengden. Deplasement: 1° baug opp og litt nedsynking (squat) nær skrogfart (Fr 0,35–0,45). Før fikk en 60 m tråler i 13 knop 2–3° trim.
+- **Turkis under skummet** (`SEA_FS`): der kjølvannets skum er tynnet (eldre enn et halvt til fire sekunder og ikke hvitt på toppen), blandes vannet mot turkis med styrke etter mengden; det melkehvite er svakere enn før.
+
+Kontrollbilder ovenfra: `docs/pr/ccr-d8829db0-ldggvz/` (`foer_etter_planing.png`: den nye hurtigsjarken i 25 knop før og etter; `sakte_baater.png`: hurtigsjarken i 12 knop, kyst15 i 10 og trebåten i 6, som ikke får noe av det nye). Bildene er tatt i SwiftShader, der et bilde varer sekunder og sveipet legger igjen lange strekk av gangen; falmingen og formen nær båten må ses på nettbrettet.
+
+**Ikke gjort:** tvillingpropeller som to egne striper (typene sier ikke hvor mange propeller de har); renna som en forsenkning i geometrien (sjøens rutenett er 2–4 m og for grovt); sprøyten fra NPC-båtene.
+
 ## 5.20c Skumkartet: skummet som blir liggende i sjøen (Fysikk 4, F1, 27.10.2026)
 
 Jonas 27.10.2026 (`docs/planer/fysikk-4-sjo-og-skrog.md`, valg 3A og 7A): kjølvannet og skummet først. Før var skummet bare det hvert bilde selv laget: skumtoppene over terskelen og kjølvannets brytning ved skroget, og sporet to tynne striper (`TRAIL`) som var borte etter 10 s. I sjøen blir skum liggende: vasken et skrog legger fra seg er hvit i titalls sekunder og hundrevis av meter, og skummet fra en kam ligger igjen og drar ut i striper med vinden (videoene fra chillboats.game).

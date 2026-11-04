@@ -2928,7 +2928,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 72 `bootGame()`
   - 177 `bootFail(e)`
 
-## `src/js/vessel3d.js` (1303 linjer)
+## `src/js/vessel3d.js` (1467 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -3011,25 +3011,36 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 876 `anchorLen(bw)`
   - 879 `markRGB(type, liv)`
   - 887 `hullRGB(type, liv)`
-  - 897 `npcKit(L, B)`
-  - 900 `npcModel(type, lod, liv)`
-  - 902 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **914** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 927 `wkPart(name, kit)`
-  - 937 `wkPut(B, o, ax, s, at)`
-  - 947 `wkLimb(B, o, A, E, r)`
-  - 954 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 976 `vesselSVG(type, w, h)`
-- **1014** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1021 `deckMap(type)`
-  - 1166 `deckPass(M, k, q)`
-  - 1171 `passLine(M, A, B)`
-  - 1173 `linkPass(M, k, q)`
-  - 1177 `deckComp(M)`
-  - 1186 `deckPath(M, a, b)`
-- **1217** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1230 `lanterns(G, V, st)`
-  - 1264 `deckPoints(type)`
+- **897** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
+  - 908 `facingTris(P, dir, keep)`
+  - 923 `rayZ(T, x, y, dir, za, zb)`
+  - 934 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
+  - 945 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
+  - 956 `halfWidth(T, y, z0, zw, dir, wmax)`
+  - 967 `houseFront(type, P, Gl, V)`
+  - 1000 `transom(type, P, V)`
+  - 1031 `namePlaces(type)`
+  - 1049 `placeRGB(type, p, liv)`
+  - 1057 `nameInkLight(rgb)`
+  - 1061 `npcKit(L, B)`
+  - 1064 `npcModel(type, lod, liv)`
+  - 1066 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **1078** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 1091 `wkPart(name, kit)`
+  - 1101 `wkPut(B, o, ax, s, at)`
+  - 1111 `wkLimb(B, o, A, E, r)`
+  - 1118 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 1140 `vesselSVG(type, w, h)`
+- **1178** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1185 `deckMap(type)`
+  - 1330 `deckPass(M, k, q)`
+  - 1335 `passLine(M, A, B)`
+  - 1337 `linkPass(M, k, q)`
+  - 1341 `deckComp(M)`
+  - 1350 `deckPath(M, a, b)`
+- **1381** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1394 `lanterns(G, V, st)`
+  - 1428 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (473 linjer)
 
@@ -3378,7 +3389,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 177 `handKit(t)`
   - 198 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (497 linjer)
+## `src/js/view3d/13-instruments.js` (506 linjer)
 
 ---------- the skiff's live instruments ----------
 
@@ -3388,34 +3399,34 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 64 `dial(g, cx, cy, r, v0, v1, v, a0, a1, ticks, labels, title, redFr…)`
   - 75 `paintGauges(dt)`
   - 91 `paintVhf()`
-  - 101 `paintName(t, liv)`
-  - 108 `markCanvas(cv, txt, light)`
-  - 114 `markTex(t, liv)`
-  - 122 `imgOf(src)`
-  - 123 `curLogo()`
-  - 124 `logoTexOf(L, img)`
-  - 132 `logoQ(t)`
-  - 133 `drawLogo(t, M, VP, L, img)`
-  - 136 `markQ(t)`
-  - 137 `drawMark(t, M, VP, liv)`
-  - 138 `nameCanvas(cv, nm, light)`
-  - 147 `nameTex(nm, light, mark)`
-  - 155 `drawNPCNames(kit, VP)`
-  - 170 `nameQ(t)`
-  - 172 `paintHand()`
-  - 181 `limbM(A, B, r)`
-  - 184 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
-  - 321 `drawSkiffGlass(BMrel, VP)`
-  - 331 `jigRail(t, G)`
-  - 352 `drawJigRail(BMrel, VP, t, G, dt)`
-  - 385 `drawGlass(m, BMrel, VP)`
-  - 404 `drawDrops(m, BMrel, VP, t)`
-  - 415 `buildBoat()`
-  - 441 `buildFlag()`
-  - 453 `flagTex()`
-  - 468 `penTex()`
-  - 481 `mastTop(G)`
-  - 485 `updateFlag(t, appW)`
+  - 103 `placeQ(t)`
+  - 104 `drawNames(t, M, VP, liv, nm, port)`
+  - 114 `markCanvas(cv, txt, light)`
+  - 120 `markTex(t, liv)`
+  - 128 `imgOf(src)`
+  - 129 `curLogo()`
+  - 130 `logoTexOf(L, img)`
+  - 138 `logoQ(t)`
+  - 139 `drawLogo(t, M, VP, L, img)`
+  - 142 `markQ(t)`
+  - 143 `drawMark(t, M, VP, liv)`
+  - 146 `nameCanvas(cv, nm, light)`
+  - 161 `nameTex(nm, light, aspect, mark)`
+  - 169 `drawNPCNames(kit, VP)`
+  - 181 `paintHand()`
+  - 190 `limbM(A, B, r)`
+  - 193 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
+  - 330 `drawSkiffGlass(BMrel, VP)`
+  - 340 `jigRail(t, G)`
+  - 361 `drawJigRail(BMrel, VP, t, G, dt)`
+  - 394 `drawGlass(m, BMrel, VP)`
+  - 413 `drawDrops(m, BMrel, VP, t)`
+  - 424 `buildBoat()`
+  - 450 `buildFlag()`
+  - 462 `flagTex()`
+  - 477 `penTex()`
+  - 490 `mastTop(G)`
+  - 494 `updateFlag(t, appW)`
 
 ## `src/js/view3d/14-sea.js` (300 linjer)
 

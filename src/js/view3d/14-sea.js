@@ -102,12 +102,15 @@
     // the boat's speed through the water from the simulation (the drawn speed also catches up on lag, which is not the hull's speed)
     // (under the manoeuvring model, by hand: its speed through the water, ahead or astern)
     const VG = GEO(vtype()), kn = typeof dynLive === 'function' && dynLive() ? Math.abs(S.boat.dyn.u || 0) / 0.5144 : S.boat.status === 'sailing' ? Math.abs(S.boat.v || 0) : 0, v = kn * 0.5144, Lb = BOAT.len || 6, Fr = v / Math.sqrt(9.81 * Lb); WK.Fr = Fr; WK.kn = kn;
-    if (v < 0.8){ WK.u3[3] = 0; return; }
+    if (v < 0.8){ WK.u3[3] = 0; WK.pf = 0; return; }
     const fx = Math.sin(bv.head), fz = -Math.cos(bv.head), k0 = 9.81 / (v * v), lam = 2 * Math.PI / k0;
     const A = Math.min(0.6, 0.045 * Lb * sstep(0.12, 0.38, Fr) * (1 - 0.55 * sstep(0.6, 1.5, Fr)));
     // in a turn the straight pattern reaches only as far as it stays within a few metres of the curved track; the foam trail goes on
     const R = bv.spd / Math.max(Math.abs(bv.yr || 0), 1e-3), smax = Math.min(clamp(10 * Lb, 40, 120), Math.sqrt(6 * R) + 8);
-    const Ab = Math.min(0.6, 0.12 * v * v / (2 * 9.81)) * sstep(0.1, 0.35, Fr) * (1 - 0.5 * sstep(0.9, 1.6, Fr));
+    // on the plane the forebody is out of the water and the bow wave with it: the spray sheet from the root amidships takes over (the
+    // foam map's wings, the spray in drawEffects). WK.pf: how far up on the plane, 0 for a displacement hull at any speed
+    const pf = BOAT.planing ? sstep(0.6, 1.2, Fr) : 0; WK.pf = pf;
+    const Ab = Math.min(0.6, 0.12 * v * v / (2 * 9.81)) * sstep(0.1, 0.35, Fr) * (1 - 0.5 * sstep(0.9, 1.6, Fr)) * (1 - 0.85 * pf);
     // going astern (the way over the ground against the heading) the pattern comes off the bow and lies ahead of her, along the way she backed
     // (from her own way over the ground between frames: under the manoeuvring model the course is drawn as the heading)
     const lp = WK.lp || [bv.x, bv.z], mx = bv.x - lp[0], mz = bv.z - lp[1]; WK.lp = [bv.x, bv.z];
@@ -116,14 +119,14 @@
     const ux = ast ? -fx : fx, uz = ast ? -fz : fz, sx0 = ast ? bv.x - fx * VG.bow : bv.x - fx * VG.stern, sz0 = ast ? bv.z - fz * VG.bow : bv.z - fz * VG.stern;
     WK.u0.set([sx0, sz0, ux, uz]); WK.u1.set([k0, A, 1 - sstep(0.55, 1.0, Fr), smax]); WK.u2.set([VG.stern - VG.bow, Ab, (VG.beam || 2.4) / 2, Fr]);
     wakeTrack(sx0, sz0, ux, uz, Math.max(2, (smax + 10) / 7));
-    WK.u3.set([sstep(0.28, 0.5, Fr), sstep(0.3, 0.45, Fr) * (1 - sstep(0.9, 1.2, Fr)), sstep(2.5, 5, lam / (2 * HALF / NP)), 1]);
+    WK.u3.set([sstep(0.28, 0.5, Fr) * (1 - pf), sstep(0.3, 0.45, Fr) * (1 - sstep(0.9, 1.2, Fr)), sstep(2.5, 5, lam / (2 * HALF / NP)), 1]);
   }
   // the long wake waves as the vertex shader lifts them (for what lies on the water, like the foam trail)
   function wakeHFast(x, z){
     if (WK.u3[3] < 0.5 || WK.u3[2] <= 0) return 0;
     const rx = x - WK.u0[0], rz = z - WK.u0[1], s = -(rx * WK.u0[2] + rz * WK.u0[3]), q = Math.abs(rx * WK.u0[3] - rz * WK.u0[2]), L = WK.u2[0], k = WK.u1[0];
     if (s <= 0 || s > WK.u1[3] || q > s * 0.42 + L * 0.6 + 4) return 0;
-    const e = s * 0.3536, a = WK.u1[1] * (1 - sstep(WK.u1[3] * 0.55, WK.u1[3], s)) * sstep(0, 1.2, s);   // as wakeH: no step at the stern
+    const e = s * Math.min(0.3536, Math.tan(0.2 / Math.max(WK.u2[3], 0.2))), a = WK.u1[1] * (1 - sstep(WK.u1[3] * 0.55, WK.u1[3], s)) * sstep(0, 1.2, s);   // as wakeH: no step at the stern
     return (WK.u1[2] * a / Math.sqrt(1 + s / L) * Math.cos(k * s) * (1 - sstep(e * 0.75, e * 1.02, q)) * 0.75 + a * Math.pow(1 + s / L, -0.333) * Math.sin(1.5 * k * (0.816 * s + 0.577 * q)) * Math.exp(-(((q - e) / (0.1 * s + 1.2)) ** 2))) * WK.u3[2];
   }
 

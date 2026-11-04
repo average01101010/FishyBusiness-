@@ -232,6 +232,7 @@ function cloudBegin(){
   setInterval(() => cloudFlush(false), 60000);
   cloudEv('start', {});
   if (typeof BOOTW !== 'undefined' && BOOTW.res) cloudEv('boot', BOOTW.res);   // how long the start took, step by step (11-boot.js bootDone)
+  if (typeof boot3dSend === 'function') boot3dSend();   // and the 3D view's first picture, if it came before the cloud (11-boot.js)
 }
 function cloudEv(k, d){ if (!CLOUD.sid) return; if (CLOUD.q.length < 500) CLOUD.q.push({k, t:Date.now(), d:d || {}}); }
 async function cloudFlush(end){

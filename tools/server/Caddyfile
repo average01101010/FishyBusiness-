@@ -6,7 +6,11 @@
 	encode zstd gzip
 	# /personvern and /vilkar (the links on Google's sign-in screen) are personvern.html and vilkar.html
 	try_files {path} {path}.html
-	file_server
+	# the data files have their compressed copies beside them (build.mjs, 04.11.2026): X.bin.br or X.bin.gz for X.bin, as the
+	# browser takes it; encode above leaves an octet-stream as it is
+	file_server {
+		precompressed br gzip
+	}
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"

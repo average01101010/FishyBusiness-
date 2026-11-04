@@ -78,6 +78,7 @@ const NAUST3D = (() => {
   function init(){
     if (gl) return true; if (failed) return false;
     if (/no3d/.test(location.hash)){ failed = true; return false; }      // the tests without 3D (KYST_LITE): the page as before
+    if (typeof MODELS !== 'undefined' && !MODELS.done) return false;      // the model is still on its way (ui/11-boot.js bootDataLate): the flat picture this time, not for good
     try {
       gl = cv.getContext('webgl', {antialias:true, alpha:false, powerPreference:'high-performance'}) || cv.getContext('experimental-webgl');
       if (!gl) throw new Error('no webgl');

@@ -383,9 +383,13 @@ function glbParse(b64){
   const parts = {};
   for (const nd of J.nodes){
     const pr = J.meshes[nd.mesh].primitives[0], P = acc(pr.attributes.POSITION), N = acc(pr.attributes.NORMAL), Cc = acc(pr.attributes.COLOR_0), Q = pr.attributes._PAINT != null ? acc(pr.attributes._PAINT) : null, I = acc(pr.indices);
-    const t = nd.translation || [0, 0, 0], s = nd.scale || [1, 1, 1], o = {p:[], n:[], c:[], zone:[], ao:[]};
-    for (const i of I){ o.p.push(P[i * 3] * s[0] + t[0], P[i * 3 + 1] * s[1] + t[1], P[i * 3 + 2] * s[2] + t[2]); o.n.push(N[i * 3], N[i * 3 + 1], N[i * 3 + 2]); o.c.push(Cc[i * 4], Cc[i * 4 + 1], Cc[i * 4 + 2], Cc[i * 4 + 3]);
-      if (Q){ o.zone.push(Q[i * 4]); o.ao.push(Q[i * 4 + 1] / 255); } }
+    const t = nd.translation || [0, 0, 0], s = nd.scale || [1, 1, 1], nI = I.length, o = {p:new Array(nI * 3), n:new Array(nI * 3), c:new Array(nI * 4), zone:Q ? new Array(nI) : [], ao:Q ? new Array(nI) : []};
+    // (filled by index into arrays of the right length, 04.11.2026: half the time of the pushes, the same plain arrays for the readers)
+    for (let k = 0; k < nI; k++){ const i = I[k], k3 = k * 3, k4 = k * 4, i3 = i * 3, i4 = i * 4;
+      o.p[k3] = P[i3] * s[0] + t[0]; o.p[k3 + 1] = P[i3 + 1] * s[1] + t[1]; o.p[k3 + 2] = P[i3 + 2] * s[2] + t[2];
+      o.n[k3] = N[i3]; o.n[k3 + 1] = N[i3 + 1]; o.n[k3 + 2] = N[i3 + 2];
+      o.c[k4] = Cc[i4]; o.c[k4 + 1] = Cc[i4 + 1]; o.c[k4 + 2] = Cc[i4 + 2]; o.c[k4 + 3] = Cc[i4 + 3];
+      if (Q){ o.zone[k] = Q[i4]; o.ao[k] = Q[i4 + 1] / 255; } }
     parts[nd.name] = o;
   }
   return {parts, ex:(J.scenes[0] && J.scenes[0].extras) || {}};
@@ -893,6 +897,170 @@ function hullRGB(type, liv){
     if (n) c = a.map(v => v / n); }
   else { const sp = vesselSpec(type); if (sp && sp.hull && sp.hull.col && sp.hull.col.hull) c = sp.hull.col.hull.slice(0, 3); }
   return HULLRGB[type] = c;
+}
+// ---- where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
+// styrhustaket foran, men også på hekken. På hekken står som regel også hjemmehavnen til båten under navnet, men med litt mindre størrelse»):
+// the places are found from the model's own surface by casting rays at it, one strip per line of text:
+// - 'house': across the front of the wheelhouse roof's edge, the band of the house front over the windows (the glass part's top);
+// - 'name' and 'port': across the transom, the name with the home port under it at six tenths of its height, moved up or down until each
+//   line sits on one even paint (a white upper transom over a dark lower one gets the name on the white and the port on the dark);
+// - 'side': the old strips along the bows (nameStrips), only on a boat where no wheelhouse front was found (the open boats).
+// Each place carries the paint under it (its mean colour and how much of it is the hull's or the house's paint, which the player can
+// repaint), and the letters are black or white by which reads best against it (nameInk). Built once a type. ----
+const NAMEPLC = {};
+// the model's triangles that face one way (dir: -1 forward, +1 aft), as flat arrays for the ray casts, with their paint
+function facingTris(P, dir, keep){
+  const T = [], C = 0.2, grid = new Map();
+  for (let v = 0; v * 3 + 9 <= P.p.length; v += 3){
+    const q = v * 3, nz = (P.n[q + 2] + P.n[q + 5] + P.n[q + 8]) / 3; if (nz * dir < 0.45) continue;
+    if (keep && !keep(v, q)) continue;
+    const ao = P.ao && P.ao.length ? Math.max(0.05, P.ao[v]) : 1, c = P.c ? [0, 1, 2].map(k => P.c[v * 4 + k] / ao) : [0.5, 0.5, 0.5];
+    const t = {p:P.p.slice(q, q + 9), zone:P.zone && P.zone.length ? P.zone[v] : 1, c}; T.push(t);
+    // (in a grid over x and y, so a ray asks only the triangles in its cell)
+    const p = t.p, i0 = Math.floor(Math.min(p[0], p[3], p[6]) / C), i1 = Math.floor(Math.max(p[0], p[3], p[6]) / C), j0 = Math.floor(Math.min(p[1], p[4], p[7]) / C), j1 = Math.floor(Math.max(p[1], p[4], p[7]) / C);
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++){ const k = i * 4096 + j; let a = grid.get(k); if (!a) grid.set(k, a = []); a.push(t); }
+  }
+  T.grid = grid; T.C = C; return T;
+}
+// the first surface a ray along z meets at (x, y), coming from ahead (dir -1) or from astern (dir +1), only between za and zb if they are
+// given (a mast or a winch in front of the house front is passed by): {z, t} or null
+function rayZ(T, x, y, dir, za, zb){
+  let best = null; const cell = T.grid.get(Math.floor(x / T.C) * 4096 + Math.floor(y / T.C)); if (!cell) return null;
+  for (const t of cell){ const p = t.p;
+    const x0 = p[0], y0 = p[1], x1 = p[3], y1 = p[4], x2 = p[6], y2 = p[7], d = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2); if (Math.abs(d) < 1e-9) continue;
+    const a = ((y1 - y2) * (x - x2) + (x2 - x1) * (y - y2)) / d, b = ((y2 - y0) * (x - x2) + (x0 - x2) * (y - y2)) / d, c = 1 - a - b; if (a < -1e-4 || b < -1e-4 || c < -1e-4) continue;
+    const z = a * p[2] + b * p[5] + c * p[8]; if (za !== undefined && (z < za || z > zb)) continue; if (!best || (dir < 0 ? z < best.z : z > best.z)) best = {z, t};
+  }
+  return best;
+}
+// a strip across the boat at heights y0..y1 over x from xa to xb (the text's left to right as seen), on the surface the rays meet within
+// zw of z0, lifted off it by off towards the viewer; null where a station finds no surface
+function crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off){
+  const N = 12, B = [], Tp = [];
+  for (let i = 0; i <= N; i++){
+    const x = xa + (xb - xa) * i / N, row = [];
+    for (const y of [y0, y1]){ const h = rayZ(T, x, y, dir, z0 - zw, z0 + zw) || rayZ(T, x * 0.97, y, dir, z0 - zw, z0 + zw); if (!h) return null; row.push([x, y, h.z + dir * off]); }
+    B.push(row[0]); Tp.push(row[1]);
+  }
+  return [B, Tp];
+}
+// the paint under a strip: the colours the rays meet on a grid over it, the share on the hull's paint (zone 1) and the house's (3), and
+// how even it is (the share on the same side of mid-grey as the mean)
+function crossPaint(T, xa, xb, y0, y1, dir, za, zb){
+  const L = [], a = [0, 0, 0], zc = {};
+  for (let i = 0; i <= 10; i++) for (let j = 0; j <= 3; j++){
+    const h = rayZ(T, xa + (xb - xa) * i / 10, y0 + (y1 - y0) * (0.1 + 0.8 * j / 3), dir, za, zb); if (!h) continue;
+    const c = h.t.c, lum = 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2]; for (let k = 0; k < 3; k++) a[k] += c[k]; L.push(lum); zc[h.t.zone] = (zc[h.t.zone] || 0) + 1;
+  }
+  if (L.length < 6) return null;
+  const rgb = a.map(v => v / L.length), m = 0.3 * rgb[0] + 0.59 * rgb[1] + 0.11 * rgb[2];
+  return {rgb, zone1:(zc[1] || 0) / L.length, zone3:(zc[3] || 0) / L.length, even:L.filter(l => (l < 0.5) === (m < 0.5)).length / L.length};
+}
+// how far out from the middle the surface goes at height y (the half width), staying within zw of the middle's z
+function halfWidth(T, y, z0, zw, dir, wmax){
+  let w = 0; for (let x = 0.05; x < wmax; x += 0.05){ const h = rayZ(T, x, y, dir, z0 - zw, z0 + zw), g = rayZ(T, -x, y, dir, z0 - zw, z0 + zw); if (!h || !g) break; w = x; }
+  return w;
+}
+// the letters' cap height by the boat's length: 20 cm on a 7 m boat, 30 cm at 15 m, 60 cm on the big ones
+const nameCap = len => Math.max(0.15, Math.min(0.6, 0.0125 * len + 0.11));
+// on the transom smaller (Jonas 04.11.2026: «Lager du de voldsomt store?», and again: «Gjør teksten enda mindre … På mange båter dekker
+// det jo nesten hele hekkens bredde»): 8.5 cm on a 7 m boat, 10 cm at 10 m, 12.5 cm at 15 m, at most 30 cm
+const sternCap = len => Math.max(0.08, Math.min(0.3, 0.005 * len + 0.05));
+// a strip is as tall as the caps over 0.74 (nameCanvas: room for the ring over Å)
+const CAPK = 0.74;
+function houseFront(type, P, Gl, V){
+  const m = vesselModel(type), e = m && m.geo && m.geo.eye; if (!e || !Gl) return null;
+  // the wheelhouse's front windows: the glass facing forward ahead of the skipper's eye, their top and their front
+  let gy1 = -Infinity, gz = Infinity, gw = 0;
+  for (let v = 0; v * 3 + 9 <= Gl.p.length; v += 3){ const q = v * 3, nz = (Gl.n[q + 2] + Gl.n[q + 5] + Gl.n[q + 8]) / 3; if (nz > -0.45) continue;
+    const y = (Gl.p[q + 1] + Gl.p[q + 4] + Gl.p[q + 7]) / 3, z = (Gl.p[q + 2] + Gl.p[q + 5] + Gl.p[q + 8]) / 3, x = (Gl.p[q] + Gl.p[q + 3] + Gl.p[q + 6]) / 3;
+    if (z > e[2] + 0.2 || z < e[2] - 5 || Math.abs(y - e[1]) > 1.6) continue;
+    gy1 = Math.max(gy1, Gl.p[q + 1], Gl.p[q + 4], Gl.p[q + 7]); gz = Math.min(gz, z); gw = Math.max(gw, Math.abs(x)); }
+  if (!isFinite(gy1) || gw < 0.3) return null;
+  // the band over the windows: what faces forward near the windows' front, up from their top as long as the rays at the middle meet it
+  const T = facingTris(P, -1, (v, q) => { const y = (P.p[q + 1] + P.p[q + 4] + P.p[q + 7]) / 3, z = (P.p[q + 2] + P.p[q + 5] + P.p[q + 8]) / 3; return y > gy1 - 0.3 && y < gy1 + 2 && Math.abs(z - gz) < 1.5; });
+  // the band over the windows: heights where rays across the front (nine, out to six tenths of the windows' breadth) meet one surface near
+  // the windows' front, without a step; the lowest such band at least 10 cm tall (or the tallest of 7), up from the windows' top
+  const runs = []; let run = null;
+  for (let y = gy1 - 0.03; y < gy1 + 1.4; y += 0.01){
+    const zs = []; for (let i = 0; i <= 8; i++){ const h = rayZ(T, gw * 0.6 * (i / 4 - 1), y, -1, gz - 0.8, gz + 0.6); if (h) zs.push(h.z); }
+    const zm = zs.length >= 7 ? zs.sort((p, q) => p - q)[zs.length >> 1] : null;
+    if (zm !== null && run && Math.abs(zm - run.zl) < 0.03 && run.y1 > y - 0.015){ run.y1 = y; run.zl = zm; continue; }
+    if (run) runs.push(run); run = zm === null ? null : {y0:y, y1:y, z0:zm, zl:zm};
+    if (runs.length && runs[runs.length - 1].y0 > gy1 + 0.6) break;
+  }
+  if (run) runs.push(run);
+  const R = runs.filter(r => r.y0 < gy1 + 0.25).find(r => r.y1 - r.y0 >= 0.1) || runs.filter(r => r.y0 < gy1 + 0.25 && r.y1 - r.y0 >= 0.07).sort((p, q) => (q.y1 - q.y0) - (p.y1 - p.y0))[0];
+  if (!R) return null;
+  const ya = R.y0, band = R.y1 - R.y0, z0 = (R.z0 + R.zl) / 2;
+  // the caps as the length asks, but within the band (a roof edge of 20 cm gets letters of 13), and the strip in its middle
+  const cap = Math.min(nameCap(V.len) * 0.85, band * CAPK * 0.88), sh = cap / CAPK, ym = ya + band * (band > 2.2 * sh ? 0.35 : 0.5), y0 = ym - sh / 2, y1 = ym + sh / 2;
+  // (a roof edge too thin for letters of 8 cm leaves the name on the bows, as on the small boats that have one)
+  if (cap < 0.08) return null;
+  const w = Math.min(halfWidth(T, ym, z0, 0.1 + Math.abs(R.zl - R.z0), -1, gw + 1), gw + 0.3) * 0.94; if (w < 4 * cap) return null;
+  const st = crossStrip(T, w, -w, y0, y1, z0, 0.15 + Math.abs(R.zl - R.z0), -1, 0.012); if (!st) return null;
+  return [{kind:'house', line:'name', B:st[0], T:st[1], aspect:2 * w / sh, paint:crossPaint(T, w, -w, y0, y1, -1, z0 - 0.15 - Math.abs(R.zl - R.z0), z0 + 0.15 + Math.abs(R.zl - R.z0))}];
+}
+function transom(type, P, V){
+  // the aft-facing surface near the stern on the hull's, the stripe's and the house's paint (not the fittings, the ladder, the rails)
+  // (the hull's own aft end: a rail or a gantry further aft is not the stern)
+  let zA = -Infinity; for (let v = 0; v < P.zone.length; v++) if (P.zone[v] === 1) zA = Math.max(zA, P.p[v * 3 + 2]);
+  const T = facingTris(P, 1, (v, q) => { const z = (P.p[q + 2] + P.p[q + 5] + P.p[q + 8]) / 3; return z > zA - Math.max(1.5, 0.08 * V.len) && P.zone && [1, 2, 3].includes(P.zone[v]); });
+  if (T.length < 4) return null;
+  // up the middle from the waterline: the transom's top and bottom
+  let yt = null, yb = null, z0 = null;
+  for (let y = 0.1; y < 0.5 * V.len; y += 0.02){ const h = rayZ(T, 0, y, 1); if (h && (z0 === null || Math.abs(h.z - z0) < 0.6)){ if (yb === null) yb = y; yt = y; z0 = h.z; } else if (yb !== null) break; }
+  if (yb === null || yt - yb < 0.2) return null; yb = Math.max(yb, 0.12 + 0.012 * V.len);
+  const fit = (cap, two) => {
+    const nh = cap / CAPK, ph = 0.55 * nh, gap = 0.12 * nh, H = nh + (two ? gap + ph : 0), mg = Math.max(0.04, 0.2 * cap); let first = null;
+    for (let top = yt - mg; top - H >= yb; top -= 0.04){
+      const ln = [[top - nh, top, 'name']]; if (two) ln.push([top - nh - gap - ph, top - nh - gap, 'port']);
+      const out = [];
+      for (const [a, b, line] of ln){ const zm = rayZ(T, 0, (a + b) / 2, 1); if (!zm) break;
+        // (the text never wider than half the transom there: a long name is drawn narrower)
+        const w = Math.min(halfWidth(T, a + 0.01, zm.z, 0.4, 1, V.beam), halfWidth(T, b - 0.01, zm.z, 0.4, 1, V.beam)) * 0.5; if (w < (line === 'name' ? Math.max(0.3, 2.6 * cap) : 2 * cap)) break;
+        const st = crossStrip(T, -w, w, a, b, zm.z, 0.5, 1, 0.012); if (!st) break;
+        out.push({kind:'stern', line, B:st[0], T:st[1], aspect:2 * w / (b - a), paint:crossPaint(T, -w, w, a, b, 1, zm.z - 0.5, zm.z + 0.5)}); }
+      if (out.length < ln.length) continue;
+      if (!first) first = out;
+      if (out.every(o => o.paint && o.paint.even >= 0.88)) return out;
+    }
+    return first;
+  };
+  const cap = sternCap(V.len);
+  for (const k of [1, 0.8, 0.65]){ const r = fit(cap * k, true); if (r) return r; }
+  for (const k of [1, 0.8, 0.65]){ const r = fit(cap * k, false); if (r) return r; }
+  return null;
+}
+function namePlaces(type){
+  if (type in NAMEPLC) return NAMEPLC[type];
+  const V = VESSELS[type] || {len:10, beam:3}, G = glbHas(type) ? glbLoad(type) : null, P = G && G.parts.lod0; let out = [];
+  if (P && P.zone){ out = (houseFront(type, P, G.parts.glass, V) || []).concat(transom(type, P, V) || []); }
+  // no name on the bows any more (Jonas 04.11.2026: «Fjern også navnet som står i baugen, det ser malplassert ut»): a boat with neither a
+  // wheelhouse front nor a transom for it (the skiff with her outboard in the middle of it, the double-ended wooden boat) carries it small
+  // on her quarters, aft on each side under the sheer, as the small open boats do
+  if (!out.length){
+    const cap = sternCap(V.len), h = cap / CAPK;
+    // (where nothing stands proud of the hull under it if such a place is there; the wooden boat's strakes run her whole length)
+    const F = [0.8, 0.76, 0.84, 0.72].map(f => sideStrip(type, f, h, 5.5)).filter(Boolean), st = F.find(q => !stripProud(type, q[0]) && !stripProud(type, q[1])) || F[0];
+    // (lifted 3 cm more off the hull, so a clinker boat's laps do not cover the letters)
+    const out3 = r => r.map(q => [q[0] + Math.sign(q[0]) * 0.03, q[1], q[2]]);
+    if (st) for (const sd of st) out.push({kind:'quarter', line:'name', B:out3(sd[0]), T:out3(sd[1]), aspect:5.5, paint:P ? stripPaint(type, sd) : null});
+  }
+  return NAMEPLC[type] = out;
+}
+// the paint under a place as she is painted (liv): the hull's or the house's colour where the place lies on it, else what is there
+function placeRGB(type, p, liv){
+  const pt = p.paint;
+  if (!pt) return hullRGB(type, liv);
+  if (pt.zone1 >= 0.6) return hullRGB(type, liv);
+  if (pt.zone3 >= 0.6 && liv && liv.house) return liv.house.slice(0, 3);
+  return pt.rgb;
+}
+// white or black letters, whichever has the higher contrast against the paint (WCAG's relative luminance; the colours are sRGB)
+function nameInkLight(rgb){
+  const lin = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4), L = 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
+  return 1.05 / (L + 0.05) >= (L + 0.05) / 0.05;
 }
 function npcKit(L, B){ let best = null, bd = 1e9; for (const t in SPEC3D){ const V = VESSELS[t], sp = SPEC3D[t]; if (!V || sp.hand || sp.open || V.cls === 'hav') continue; const d = Math.abs(Math.log(V.len / L)) + 0.7 * Math.abs(Math.log(V.beam / B)); if (d < bd){ bd = d; best = t; } } return best; }
 const NPCMOD = {};
