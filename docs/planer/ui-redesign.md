@@ -255,5 +255,10 @@ Rekkefølgen U0 → U1 → U2 er fundamentet. Etter det kan U3–U10 tas i den r
   - «Nå» på hjemskjermen (`nowCards`): reglene her, best betalt torsk blant de fire nærmeste mottakene, og rederiet når det trenger deg.
   - Telefonen åpnet allerede på hjem etter lukking, og Kaiboden var allerede ett ikon. Testen hadde åpnet Haill og Trim direkte.
   - Testene: kystkarttest 5, merketest 12 og kystvakttest 11.
-- 04.11.2026 **U8** (påbegynt): det som er over i dagboka, er grått med én strek. Gjenstår: rutepanelet (+/− for fart), høyre side i dagbokfanene, startsted med kart, og instrumentforklaringer i kartplotteren.
-- **Gjenstår:** U8 resten, U9 (feiringen) og U10 (ordboka).
+- 04.11.2026 **U8** (delvis):
+  - Det som er over i dagboka, er grått med én strek.
+  - Rutepanelet har − og + ved fartsglideren (begge glidere: utkastet og ruta under seiling), én knop per trykk, gjennom `panelInput`/`panelChange` som glideren. Glideren står, så `slidertest` (6 OK) gjelder fortsatt. Fartsteksten bryter i stedet for å klippes.
+  - Testene: slidertest 6 OK; routetest 41 OK og 2 FEIL, begge utenfor endringen (tidsmåling under last mens `tut` gikk, og hele kysten, som mangler i containeren).
+- 04.11.2026 **U9** (delvis): sluttseddelen skrives ut rad for rad første gang den vises (`SLIP_OUT` i `07-guide.js`, `--el` lar en ny tegning fortsette der den var), og «Til kassa» lyser opp til slutt. Kassa telte allerede opp (`cashFx`), og merkene kom allerede én og én (`achPump`).
+- 04.11.2026 **U10**: ordboka (`ui/05k-ordbok.js`). 18 fagord får prikket strek første gang de står i skuffen eller en telefonapp (ikke på hjemskjermen), aldri i knapper, lenker, faner, overskrifter eller det som reagerer på trykk. Trykk gir én setning (`#ordTip`). `uishots` 45 OK.
+- **Gjenstår:** U8: høyre side i dagbokfanene, startsted med kystkart, instrumentforklaringer i kartplotteren. U9: første levering som en scene. U4: forklaringen av fargene i minikartet og kameraet ned på dekk ved første fisk. Ordboka kan få flere ord og et lite bilde per ord.

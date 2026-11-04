@@ -11,6 +11,9 @@
        ['Knapper, faner og kort har fått ett felles utseende i telefonen og skuffen.', 'Buttons, tabs and cards share one look in the phone and the drawer.'],
        ['Butikken, mottaket og verftet sier øverst om du er der, eller hvor nærmeste er, med Autonav dit. En knapp du ikke kan trykke på, sier hvorfor.', 'The shop, the plant and the yard say at the top whether you are there, or where the nearest is, with Autonav there. A button you cannot press says why.'],
        ['Telefonens hjemskjerm viser reglene der du er og hvor torsken er best betalt, og et trykk tar deg rett til appen.', 'The phone\'s home screen shows the rules where you are and where cod pays best, and a tap takes you straight to the app.']
+       ['Rutepanelet har − og + ved fartsglideren, én knop per trykk.', 'The route panel has − and + by the speed slider, one knot a tap.'],
+       ['Sluttseddelen skrives ut rad for rad når fisken er levert.', 'The landing note prints row by row when the catch is landed.'],
+       ['Fagord som sluttseddel, bløgging, lott og minstemål har prikket strek i teksten. Trykk på ordet, så står det hva det betyr.', 'Trade words like landing note, bleeding, share and minimum size have a dotted line in the text. Tap the word to see what it means.'],
     ]],
     ['logo-031126', '03.11.2026', 'Ny logo', 'A new logo', [
        ['Det Store Blå har fått ny logo: et anker laget av ordene. Du ser den når spillet laster, når du logger inn, på app-ikonet og på bildet når du deler Ukas fangst.', 'Det Store Blå has a new logo: an anchor made of the words. You see it while the game loads, when you sign in, on the app icon and on the picture when you share the week\'s catch.'],
