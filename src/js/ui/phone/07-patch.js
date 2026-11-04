@@ -10,7 +10,7 @@
        ['Fisken som kommer over ripa, vises som kort til høyre med art, vekt og hva den er verdt, og over dem hvor mye plassen gir i timen.', 'The fish coming over the rail shows as cards at the right with species, weight and worth, and above them what the spot gives an hour.'],
        ['Knapper, faner og kort har fått ett felles utseende i telefonen og skuffen.', 'Buttons, tabs and cards share one look in the phone and the drawer.'],
        ['Butikken, mottaket og verftet sier øverst om du er der, eller hvor nærmeste er, med Autonav dit. En knapp du ikke kan trykke på, sier hvorfor.', 'The shop, the plant and the yard say at the top whether you are there, or where the nearest is, with Autonav there. A button you cannot press says why.'],
-       ['Telefonens hjemskjerm viser reglene der du er og hvor torsken er best betalt, og et trykk tar deg rett til appen.', 'The phone\'s home screen shows the rules where you are and where cod pays best, and a tap takes you straight to the app.']
+       ['Telefonens hjemskjerm viser reglene der du er og hvor torsken er best betalt, og et trykk tar deg rett til appen.', 'The phone\'s home screen shows the rules where you are and where cod pays best, and a tap takes you straight to the app.'],
        ['Rutepanelet har − og + ved fartsglideren, én knop per trykk.', 'The route panel has − and + by the speed slider, one knot a tap.'],
        ['Sluttseddelen skrives ut rad for rad når fisken er levert.', 'The landing note prints row by row when the catch is landed.'],
        ['Fagord som sluttseddel, bløgging, lott og minstemål har prikket strek i teksten. Trykk på ordet, så står det hva det betyr.', 'Trade words like landing note, bleeding, share and minimum size have a dotted line in the text. Tap the word to see what it means.'],
@@ -19,6 +19,7 @@
        ['I dagboka står det som er over i Sesonger og Hendelser på venstre side, og det som gjelder nå på høyre.', 'In the deck log, what is over in Seasons and Events stands on the left page, and what holds now on the right.'],
        ['Ved første fisk går kameraet ned over dekket, så du ser bløggekaret.', 'At the first fish the camera comes down over the deck, so you see the bleeding tub.'],
        ['Første levering får et stempel med hva den ga.', 'The first landing gets a stamp with what it paid.'],
+       ['Patchnotes-appen åpner igjen: en linje i notatene stoppet den.', 'The Patch notes app opens again: a line in the notes stopped it.'],
     ]],
     ['soner-041126', '04.11.2026', 'Reglene ute på havet', 'The rules out at sea', [
        ['Regler-appen og regellaget kjenner nå sonene utenfor kysten: fiskevernsonen ved Svalbard, de stengte områdene rundt Bjørnøya og på vestsiden av Spitsbergen, Jan Mayen, Smutthullet og Smottet, og russisk, islandsk, grønlandsk, færøysk og britisk sone. Hver regel har kilden sin.', 'The Regler app and the rule layer now know the zones off the coast: the fisheries protection zone at Svalbard, the closed areas round Bjørnøya and on the west side of Spitsbergen, Jan Mayen, the Loophole and the Banana Hole, and the Russian, Icelandic, Greenland, Faroese and British zones. Each rule has its source.'],
