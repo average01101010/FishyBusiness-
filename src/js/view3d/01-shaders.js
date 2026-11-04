@@ -163,7 +163,7 @@
     // (tv: the water leaves the transom clean from Fr 0.45, any hull). On the plane the forebody is out of the water: the wash starts at
     // the spray root ar, 6 % of the length aft of the stem at rest and 40 % on the plane (the reference video, 04.11.2026)
     'float pf=pl*smoothstep(0.6,1.2,Fr);float tv=smoothstep(0.45,0.9,Fr);float Lh=bo-st;float hb=uHull.y;float ar=bo-Lh*mix(0.06,0.4,pf);float dry=1.0-pf*smoothstep(ar-0.5,ar+1.0,a);' +
-    'if(a>st-1.0&&a<bo+1.5){float al=clamp((bo-a)/(bo-st),0.0,1.0);float wo=w+0.15+al*(0.3+0.1*v+pl*(0.4+0.08*v));float wd=0.35+0.05*v+al*0.4+pl*0.4;' +
+    'if(a>st-1.0&&a<bo+1.5){float al=clamp((bo-a)/(bo-st),0.0,1.0);float pw=pl*(1.0-0.8*pf);float wo=w+0.15+al*(0.3+0.06*v+pw*(0.4+0.08*v));float wd=0.35+0.03*v+al*0.4+pw*0.4;' +
     'float band=exp(-pow(max(q-wo,0.0)/wd,2.0));float str=smoothstep(1.2,3.5,v)*(0.5+0.5*smoothstep(0.0,0.3,al))*(1.0-0.3*smoothstep(0.6,1.0,al));' +
     'float inside=step(q,w)*smoothstep(0.0,0.4,al)*0.5*(1.0-0.8*tv);iw=max(iw,max(band*str,inside)*clump*dry);}' +
     // the spray sheet on the plane: from the root the chine and the spray rails throw it flat out to both sides (the sheet in the air is
@@ -176,7 +176,7 @@
     // A dry transom (tv) leaves a hollow behind it that the water closes from both sides: a dark channel down the middle between the
     // white of the transom's corners and the screws, which closes into a white rooster tail some 3 beams aft (lc)
     'if(a<st+0.5&&a>st-6.0-tv*hb*5.0){float back=st+0.5-a;float lc=tv*hb*(3.0+0.1*v);float ch=tv*(1.0-smoothstep(lc*0.7,lc,back))*(1.0-smoothstep(hb*0.25,hb*0.6,q));' +
-    'float rst=tv*exp(-pow((back-lc)/(0.8+0.3*hb),2.0))*(1.0-smoothstep(hb*0.3,hb*0.9,q));float wb=(hullW(st)+0.15+0.3+0.1*v+pl*(0.4+0.08*v))*(1.0+0.03*back)*(0.85+0.3*ns(Pb*0.45+vec2(4.0,9.0)));float band=1.0-smoothstep(wb*0.75,wb*1.1,q);float core=1.0-smoothstep(wb*0.2,wb*0.5,q);iw=max(iw,max((0.7*band+0.3*core)*(1.0-0.85*ch),rst)*clump*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
+    'float rst=tv*exp(-pow((back-lc)/(0.8+0.3*hb),2.0))*(1.0-smoothstep(hb*0.3,hb*0.9,q));float wb=(hullW(st)+0.15+0.3+0.1*v*(1.0-0.6*pf)+pl*(1.0-0.8*pf)*(0.4+0.08*v))*(1.0+0.03*back)*(0.85+0.3*ns(Pb*0.45+vec2(4.0,9.0)));float band=1.0-smoothstep(wb*0.75,wb*1.1,q);float core=1.0-smoothstep(wb*0.2,wb*0.5,q);iw=max(iw,max((0.7*band+0.3*core)*(1.0-0.85*ch),rst)*clump*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
     // the stern wave breaking along the Kelvin arms and the bow wave, as the sea shader breaks them (uWk0 is given in the map's metres)
     'float wh=wakeH(Mg,1.0);if(wh>0.0){vec2 rr=Mg-uWk0.xy;float s=-dot(rr,uWk0.zw);float br=ns(Pb*1.4+vec2(uTime*1.3,0.0))*0.5+0.5;float lam=6.2832/uWk1.x;' +
     'float arm=uWk3.y*smoothstep(0.45,0.9,wh/max(uWk1.y,0.02))*(1.0-smoothstep(0.0,lam,s))*step(0.0,s)*br;' +
