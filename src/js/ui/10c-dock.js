@@ -41,6 +41,8 @@ const DOCK = (() => {
     arbeid:SVG('<circle cx="7" cy="6" r="2.5"/><path d="M3 20v-3a4 4 0 0 1 8 0v3"/><path d="M14 7h7"/><path d="M18 4l3 3-3 3"/><path d="M14 15h7"/><path d="M18 12l3 3-3 3"/>'),
     rigg:SVG('<path d="M12 3v18"/><path d="M5 21h14"/><path d="M12 4l7 11h-7"/><path d="M12 7L6 15h6"/>'),
     vedlikehold:SVG('<path d="M4 20l7-7"/><path d="M13.5 4.5l6 6-3 3-6-6z"/><path d="M10.5 7.5l6 6"/>'),
+    hvil:SVG('<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/><path d="M15 3.5h3l-3 3.5h3"/>'),
+    mer:SVG('<circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/>'),
     naust:SVG('<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/><path d="M2 21h20"/>'),
     butikk:SVG('<path d="M4 9l1.5-5h13L20 9"/><path d="M4 9v11h16V9"/><path d="M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0A2.7 2.7 0 0 0 20 9"/><path d="M10 20v-5h4v5"/>'),
     bunker:SVG('<path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16"/><path d="M3 21h14"/><path d="M7.5 8h5"/><path d="M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/>')};
@@ -60,9 +62,9 @@ const DOCK = (() => {
   // resting ashore (15-energy.js): in Father's naust in the home harbour, or in a rorbu; the button goes in, and aboard again
   function restItem(){
     const b = S.boat, w = restWhere(b); if (!w) return null;
-    if (resting()) return w === 'koye' ? I('rest', 'naust', 'Opp av køya', 'Up from the bunk', {act:'restend'}) : I('rest', 'naust', 'Om bord', 'Aboard', {act:'restend'});
+    if (resting()) return w === 'koye' ? I('rest', 'hvil', 'Opp av køya', 'Up from the bunk', {act:'restend'}) : I('rest', 'hvil', 'Om bord', 'Aboard', {act:'restend'});
     // the bunk aboard (#70, 17.10.2026): at anchor, or at sea with a watch, on a boat with berths
-    return w === 'koye' ? I('rest', 'naust', 'Hvil i køya', 'Rest in the bunk', {act:'rest', pri:S.energy < 30}) : I('rest', 'naust', 'Hvil', 'Rest', {act:'rest', pri:S.energy < (w === 'rorbu' ? 60 : 40)});
+    return w === 'koye' ? I('rest', 'hvil', 'Hvil i køya', 'Rest in the bunk', {act:'rest', pri:S.energy < 30}) : I('rest', 'hvil', 'Hvil', 'Rest', {act:'rest', pri:S.energy < (w === 'rorbu' ? 60 : 40)});
   }
   // the operations plan wants you: it has stopped, or waits until you give the boat back (the Crew page has its line, ui/05c-drift.js)
   const opsDot = () => { const o = S.ops; return !!(o && (o.v === DRV || o.v === DRV2) && ((!o.on && o.stop) || (o.on && o.held))); };
@@ -194,7 +196,7 @@ const DOCK = (() => {
     if (b.status === 'port') return portItems();
     return seaItems();
   }
-  const btn = (x, small) => '<button type="button" class="dk-b' + (small ? ' sm' : '') + (x.pri ? ' pri' : '') + (x.warn ? ' warn' : '') + (x.on ? ' on' : '') + (x.off ? ' off' : '') + (x.ghost ? ' ghost' : '') + (x.wide ? ' wide' : '') + (menu === x.menu && x.menu ? ' open' : '') + '" data-dk="' + x.id + '"' + (x.act ? ' data-act="' + x.act + '"' : '') + (x.off ? ' aria-disabled="true"' : '') + '><span class="dk-i">' + IC[x.ic] + (x.dot ? '<i class="dk-dot"></i>' : '') + (x.bc ? '<i class="dk-bait' + (x.bc === 'none' ? ' e' : '') + '"' + (x.bc === 'none' ? '' : ' style="--bc:' + x.bc + '"') + '></i>' : '') + '</span><span class="dk-l">' + L(x.lbl[0], x.lbl[1]) + '</span></button>';
+  const btn = (x, small) => '<button type="button" class="dk-b' + (small ? ' sm' : '') + (x.pri ? ' pri' : '') + (x.hero && !small ? ' hero' : '') + (x.warn ? ' warn' : '') + (x.on ? ' on' : '') + (x.off ? ' off' : '') + (x.ghost ? ' ghost' : '') + (x.wide ? ' wide' : '') + (menu === x.menu && x.menu ? ' open' : '') + '" data-dk="' + x.id + '"' + (x.act ? ' data-act="' + x.act + '"' : '') + (x.off ? ' aria-disabled="true"' : '') + '><span class="dk-i">' + IC[x.ic] + (x.dot ? '<i class="dk-dot"></i>' : '') + (x.bc ? '<i class="dk-bait' + (x.bc === 'none' ? ' e' : '') + '"' + (x.bc === 'none' ? '' : ' style="--bc:' + x.bc + '"') + '></i>' : '') + '</span><span class="dk-l">' + L(x.lbl[0], x.lbl[1]) + '</span></button>';
   // the jig's fan is a small card: hours, the tackle aboard as the choices it really has (Jonas 20.10.2026: what each takes, as species chips,
   // from the model, jigSets in ui/10-gear-ui.js; the halibut pilk only with the halibut gear aboard, and closed in its season), and start
   function jigCard(){
@@ -204,14 +206,25 @@ const DOCK = (() => {
     return '<div class="dk-card"><div class="dk-step"><button type="button" data-dk="fh-" aria-label="−">−</button><b>' + S.fishPlanH + ' t</b><button type="button" data-dk="fh+" aria-label="+">+</button></div>' +
       (tk ? '<div class="dk-tks">' + tk + '</div>' : '') + '<button type="button" class="dk-go" data-dk="startfish">' + L('Start jukse', 'Start jigging') + '</button></div>';
   }
+  // «Kystlys» U3 (docs/planer/ui-redesign.md, V6 A, 04.11.2026): the row is never more than six: the first ones as they come, then «⋯ Mer»
+  // with the rest in a fan, and Beholdning last; the first thing marked as what to do now (pri) is the hero, a bigger button the eye goes to
+  const MAXV = 6; let more = [];
+  function rowOf(all){
+    more = [];
+    if (all.length <= MAXV) return all;
+    const beh = all.find(x => x.id === 'beh'), rest = all.filter(x => x !== beh), keep = rest.slice(0, MAXV - 2 - (beh ? 0 : -1));
+    more = rest.slice(keep.length);
+    return keep.concat([I('mer', 'mer', 'Mer', 'More', {menu:'mer', dot:more.some(x => x.dot)})], beh ? [beh] : []);
+  }
   function render(){
     if (!bar) return;
-    items = items0();
-    if (menu && !items.some(x => x.menu === menu)) menu = null;
+    items = rowOf(items0());
+    { const hero = items.find(x => x.pri && !x.off); items.forEach(x => { x.hero = x === hero; }); }
+    if (menu && !items.some(x => x.menu === menu) && !more.some(x => x.menu === menu)) menu = null;
     const h = items.map(x => btn(x)).join(''), it = infoText();
     if (h !== html){ html = h; bar.innerHTML = h; rowsUp(); } else if (rowsDue) rowsUp();
     if (info.textContent !== it){ info.textContent = it; info.hidden = !it; }
-    fanItems = menu && menu !== 'jukse' ? menuItems(menu).filter(Boolean) : [];
+    fanItems = menu === 'mer' ? more : menu && menu !== 'jukse' ? menuItems(menu).filter(Boolean) : [];
     const fh = !menu ? '' : menu === 'jukse' ? jigCard() : fanItems.map(x => btn(x, true)).join('');
     if (fh !== fanHtml){ fanHtml = fh; fan.innerHTML = fh; }
     fan.hidden = !menu; if (menu) placeFan();
@@ -219,11 +232,12 @@ const DOCK = (() => {
   }
   // the rows above the first one when the buttons wrap (a narrow phone upright): what stands over the row is lifted that much
   // (measured when the row is shown: a change made while the chart plotter hides it is measured on the next render it is seen)
-  function rowsUp(){ if (!bar.offsetParent){ rowsDue = true; return; } rowsDue = false; const b0 = bar.firstElementChild, x = b0 ? Math.max(0, bar.offsetHeight - b0.offsetHeight) : 0; document.body.style.setProperty('--dkx', x + 'px'); }
+  // (the lift is the rows over the last one, from where the rows begin: the hero is taller than the others, U3)
+  function rowsUp(){ if (!bar.offsetParent){ rowsDue = true; return; } rowsDue = false; const ks = [...bar.children], x = ks.length ? Math.max(0, Math.max(...ks.map(k => k.offsetTop)) - Math.min(...ks.map(k => k.offsetTop))) : 0; document.body.style.setProperty('--dkx', x + 'px'); }
   window.addEventListener('resize', () => { if (bar) rowsUp(); });
   // the fan stands centred over its button, inside the screen
   function placeFan(){
-    const pb = bar.querySelector('[data-dk="' + (items.find(x => x.menu === menu) || {}).id + '"]'); if (!pb) return;
+    const pb = bar.querySelector('[data-dk="' + (items.find(x => x.menu === menu) || {}).id + '"]') || bar.querySelector('[data-dk="mer"]'); if (!pb) return;
     const r = pb.getBoundingClientRect(), wr = fan.parentNode.getBoundingClientRect(), w = fan.offsetWidth;
     fan.style.left = clamp(r.left + r.width / 2 - w / 2 - wr.left, 8, wr.width - w - 8) + 'px';
   }
@@ -291,8 +305,27 @@ const DOCK = (() => {
     if (!page) return;
     const y = keep ? dBody.scrollTop : 0, t0 = TITLE[page] || [page, page];
     dTitle.textContent = L(t0[0], t0[1]); drawTabs();
-    const h = PHONE.page(page); if (h !== shown){ shown = h; dBody.innerHTML = h; } dBody.scrollTop = y;
+    const h = dress(page, PHONE.page(page)); if (h !== shown){ shown = h; dBody.innerHTML = h; fold(); ordbok(dBody); } dBody.scrollTop = y;
   }
+  // «Kystlys» U6 (docs/planer/ui-redesign.md, V3 A, 04.11.2026): the trade pages belong to a place (the plant, the shop, the yard), and
+  // each says first where that place is: «Du er her», or the nearest with its distance and Autonav there, one header in place of the
+  // «Nærmeste …» card that stood at the top, the middle or the foot of the page. Away from the place, a button that cannot be pressed
+  // says why in itself (data-why, styles.css U2) instead of a grey button and a note somewhere else on the page.
+  const PLACE = {lever:'mottak', is:'mottak', agn:'mottak', fiske:'butikk', utstyrb:'butikk', service:'butikk', fartoy:'verft', utstyr:'verft', verksted:'verft', maler:'verft'};
+  const PLACEN = {mottak:['fiskemottaket', 'the fish plant', 'Mottak', 'Plant'], butikk:['utstyrsbutikken', 'the tackle shop', 'Butikk', 'Shop'], verft:['verftet', 'the yard', 'Verft', 'Yard']};
+  const NEARCARD = /<div class="ph-card"><p class="ph-note">(?:Nærmeste|Nearest) [^<]*<b>[^<]*<\/b>[^<]*<\/p><button class="ph-btn" data-pa="goplace" data-id="[^"]*">[^<]*<\/button><\/div>/g;
+  function dress(pg, h){
+    const k = PLACE[pg]; if (!k || typeof portServices !== 'function') return h;
+    const b = S.boat, here = b.status === 'port' && !!portServices(portById(b.port), berthKind(b))[k], N = PLACEN[k];
+    if (here) return '<div class="pl-head here"><span>' + L('Du er her', 'You are here') + '</span><b>' + portById(b.port).name + '</b></div>' + h.replace(NEARCARD, '');
+    const n = placesNear(b.pos, k, 1)[0];
+    const head = '<div class="pl-head"><span>' + L('Nærmeste ' + N[0], 'Nearest ' + N[1]) + '</span><b>' + (n ? n.pt.name + ' · ' + fmt(n.d / NM, 1) + ' nm' : '–') + '</b>' + (n ? '<button class="ph-btn p" data-pa="goplace" data-id="' + n.pt.id + '">' + L('Autonav dit', 'Autonav there') + '</button>' : '') + '</div>';
+    const why = n ? L('Kjøpes ved ' + N[0] + ' i ' + n.pt.name, 'Bought at ' + N[1] + ' in ' + n.pt.name) : L('Kjøpes ved ' + N[0], 'Bought at ' + N[1]);
+    return head + h.replace(NEARCARD, '').replace(/<button((?:(?!data-why)[^>])*?)\sdisabled(?=[\s>=])/g, (m, a) => '<button' + a + ' data-why="' + why + '" disabled');
+  }
+  // a long explanation folds to three lines with «Mer» (the rules and the reasons stood as walls of text over what was to be done)
+  function fold(){ for (const e of dBody.querySelectorAll('.ph-note, p.note')){ if (e.textContent.length > 260 && !e.closest('.pl-head')) e.classList.add('fold'); } }
+  dBody.addEventListener('click', e => { const f = e.target.closest('.fold'); if (f){ f.classList.toggle('open'); } }, true);
   function open(a){
     const [pg, sb] = String(a).split(':'); if (!PHONE.DRAWER.has(pg)) return;
     const was = page; page = pg; menu = null; html = '';

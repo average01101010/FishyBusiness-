@@ -46,14 +46,17 @@ const MODELS = {done:false, wait:[], total:0, got:0, failed:[]};
 // and the start place are off the screen), shown: two frames after it came up (loaderGone). Sent once as the event 'first3d' with the seconds from
 // the ask (wait_s, of it the models' part models_s), from the navigation less the gate and the background (total_s), and whether this
 // device had the app's worker already (warm: false is a first visit or a browser without it)
-const B3D = {ask:0, models:0, sent:false, res:null, warm:!!(navigator.serviceWorker && navigator.serviceWorker.controller)};
-function boot3dAsk(){ if (!B3D.ask) B3D.ask = performance.now(); }
+const B3D = {ask:0, models:0, sent:false, res:null, warm:!!(navigator.serviceWorker && navigator.serviceWorker.controller), hid:0, hidAt:0};
+// (the time in the background between the ask and the picture is left out, as the boot's is: a player who put the tablet away on
+// the start place gave «wait_s» 984 and «total_s» -968, 04.11.2026; BOOTW stops counting the background once the game is built)
+function boot3dAsk(){ if (!B3D.ask){ B3D.ask = performance.now(); if (document.hidden) B3D.hidAt = B3D.ask; } }
+document.addEventListener('visibilitychange', () => { if (!B3D.ask || B3D.res) return; const n = performance.now(); if (document.hidden){ if (!B3D.hidAt) B3D.hidAt = n; } else if (B3D.hidAt){ B3D.hid += n - B3D.hidAt; B3D.hidAt = 0; } });
 function boot3dShown(){
   if (B3D.res || B3D.wait3 || !B3D.ask || !BOOTW.done) return; B3D.wait3 = true;
   // (two frames on: the 3D view's own first frame, the heavy one, has been drawn by then)
   requestAnimationFrame(() => requestAnimationFrame(() => {
-  const n = performance.now();
-  B3D.res = {wait_s:Math.round((n - B3D.ask) / 100) / 10, models_s:Math.round(B3D.models / 100) / 10, total_s:Math.round((n - bootAway()) / 100) / 10, warm:B3D.warm,
+  const n = performance.now(), away = B3D.hid + (B3D.hidAt ? n - B3D.hidAt : 0);
+  B3D.res = {wait_s:Math.round((n - B3D.ask - away) / 100) / 10, models_s:Math.round(B3D.models / 100) / 10, total_s:Math.round((n - bootAway() - away) / 100) / 10, hid_s:Math.round(away / 1000), warm:B3D.warm,
     net:(navigator.connection && navigator.connection.effectiveType) || null, mem:navigator.deviceMemory || null};
   boot3dSend(); }));
 }

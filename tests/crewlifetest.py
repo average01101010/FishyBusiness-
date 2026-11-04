@@ -23,7 +23,7 @@ async def main():
         br = await p.chromium.launch(); pg = await br.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e))); await boot(pg)
         r = await pg.evaluate(SETUP)
         check(all(x['life'] and x['life']['fam'] and x['life']['goal'] in ('egenbat', 'skipper', 'ro') and x['life']['target'] >= 600000 and x['life']['story'] for x in r), 'everyone aboard has a family, a dream, a target and the first line of a story', r)
-        check(all(0 < x['life']['saved'] <= 0.7 * x['life']['target'] for x in r), 'the savings start above nought and below 70 % of the target (endowed progress)', [x['life']['saved'] for x in r])
+        check(all(0 < x['life']['saved'] <= round(0.7 * x['life']['target']) for x in r), 'the savings start above nought and below 70 % of the target (endowed progress)', [x['life']['saved'] for x in r])
         # earnings go to the savings; the best settlement is a line in the story
         r2 = await pg.evaluate("(() => { const c = S.crew[0], s0 = c.life.saved; lifeEarn(c, 20000); return {d:c.life.saved - s0, kids:c.life.fam === 'kids', story:c.life.story.map(q => q[1])}; })()")
         check(r2['d'] in (5000, 8000) and (r2['d'] == 5000) == r2['kids'] and any('Beste' in q for q in r2['story']), 'a settlement of 20 000 kr puts 40 % (25 % with children) in the savings, and the best one is in the story', r2)

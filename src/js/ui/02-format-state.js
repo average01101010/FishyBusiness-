@@ -172,7 +172,7 @@ function loaderGone(){
 }
 function toast(msg, ms){
   if (booting()){ (toast._q = toast._q || []).push([msg, ms]); if (toast._q.length > 12) toast._q.shift(); return; }
-  const el = $('toast'); if (ms) toast._keep = {msg, until:Date.now() + ms};
+  const el = $('toast'); toast._at = Date.now(); if (ms) toast._keep = {msg, until:Date.now() + ms};
   el.textContent = msg; el.classList.add('on'); clearTimeout(toast._t);
   const back = () => { const k = toast._keep; if (k && k.msg !== msg && k.until > Date.now() + 500){ msg = k.msg; el.textContent = msg; toast._t = setTimeout(back, k.until - Date.now()); return; }
     toast._keep = null; el.classList.remove('on'); };
