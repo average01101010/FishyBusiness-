@@ -255,7 +255,7 @@ Alt styres av Froude-tallet Fr = v/√(gL) (lengden fra `VESSELS`, farten gjenno
 - **Trim og løft** (`16-motion.js`): fra Fr, ikke knop. Planende: opp mot 6° ved puklen (Fr 0,5–0,7), ned mot 3° på planet, løftet 1,5 % av lengden. Deplasement: 1° baug opp og litt nedsynking (squat) nær skrogfart (Fr 0,35–0,45). Før fikk en 60 m tråler i 13 knop 2–3° trim.
 - **Turkis under skummet** (`SEA_FS`): der kjølvannets skum er tynnet (eldre enn et halvt til fire sekunder og ikke hvitt på toppen), blandes vannet mot turkis med styrke etter mengden; det melkehvite er svakere enn før.
 
-Kontrollbilder ovenfra: `docs/pr/ccr-d8829db0-ldggvz/` (den nye hurtigsjarken i full og halv fart, kyst15 i full fart).
+Kontrollbilder ovenfra: `docs/pr/ccr-d8829db0-ldggvz/` (`foer_etter_planing.png`: den nye hurtigsjarken i 25 knop før og etter; `sakte_baater.png`: hurtigsjarken i 12 knop, kyst15 i 10 og trebåten i 6, som ikke får noe av det nye). Bildene er tatt i SwiftShader, der et bilde varer sekunder og sveipet legger igjen lange strekk av gangen; falmingen og formen nær båten må ses på nettbrettet.
 
 **Ikke gjort:** tvillingpropeller som to egne striper (typene sier ikke hvor mange propeller de har); renna som en forsenkning i geometrien (sjøens rutenett er 2–4 m og for grovt); sprøyten fra NPC-båtene.
 
