@@ -50,7 +50,9 @@ async def main():
         pg = await b.new_page(viewport={'width': 800, 'height': 500})
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg); await pg.evaluate(SETUP)
-        await pg.wait_for_function("G3.isActive() && G3._debug.SSL.w.on && G3._debug.SSL.n.on", timeout=300000); await pg.wait_for_timeout(1500)
+        # (600 s: under SwiftShader the wide sea field's two sectors took 225 s before H1b R2 and up to about 450 s after, the rays now
+        # running on over the wide frame; fetchAt itself costs the same warm, about 25 % more in the 3D page, 04.11.2026)
+        await pg.wait_for_function("G3.isActive() && G3._debug.SSL.w.on && G3._debug.SSL.n.on", timeout=600000); await pg.wait_for_timeout(1500)
         stage('the sea is up'); R = {}
         calm = await pg.evaluate("({drift:G3._debug.drift, fog:G3._debug.env.fogD})")   # 5 m/s since the start: no spindrift, no haze
         # 1. the wind from calm to hurricane in steps of 0.1 m/s, the waves snapped to each: no wave may jump
