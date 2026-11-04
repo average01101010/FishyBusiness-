@@ -78,6 +78,8 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 
 ## 10.1 Feil som skal rettes
 
+- **Funnet i UI-gjennomgangen 04.11.2026 (`docs/planer/ui-redesign.md`, U0):** (1) veiledningen låser seg på `route2` når skuffen «Beholdning» fra fiskesteget dekker «Autonav» (ringen trykket 900 ganger, rundt 30 spilltimer med fisk om bord); «Lukk telefonen først» sto fast etterpå; (2) sidefeil i `havNear` fra `npcStates`/`renderDyn` under seilingen til Botnhamn («reading 'x'»); (3) dagbokas håndskrift (`.bk-et`, `.bk-gt`, `.bk-sn`, `.hw`, `.lg td`) ber om Segoe Print/Comic Sans, som ikke er innebygd: bruk Caveat; (4) «Start på nytt» uten varsel på havnesiden; (5) Lever-siden sier «Prislisten under» uten noe under; (6) «Kjøp (test, ingen betaling)» synes i Kaiboden.
+
 - **Noen få leibiter i NPC-rutene skjærer et hjørne av land** (`gr.pts` fra `npc.py` brukes som de er). Målt mot vektorkysten 24.10.2026: 5 av 119 leibiter rundt Tromsø, hver med rundt 10 m (ett målepunkt). Rettes best i `npc.py`.
 - **3D på Galaxy A52s (Adreno 642L, oppgave #171):** 3D starter nå med en enklere sjø (6ce4f50, 2c349cd), men konteksten mistes under spill (feilloggen: fire ganger, 11–17 minutter ut i økta og én gang etter 83, på alle kvalitetsnivåer, sist 23.10.2026). Spillet lagrer og laster siden på nytt da. Fra 24.10.2026 skriver feilloggen også om siden var skjult og hvor lenge, hvor lenge 3D har gått, levende buffere og teksturer, kvalitetsnivå, terrengbiter og JS-minne (`glDiag`, `GLN` i `view3d.js`). En seiling på 30 km i testmiljøet ga ingen lekkasje (1 000–1 076 buffere og 15 teksturer hele veien), men JS-minnet var 347 MB.
 
