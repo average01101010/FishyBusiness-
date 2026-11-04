@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['logo-031126', '03.11.2026', 'Ny logo', 'A new logo', [
+       ['Det Store Blå har fått ny logo: et anker laget av ordene. Du ser den når spillet laster, når du logger inn, på app-ikonet og på bildet når du deler Ukas fangst.', 'Det Store Blå has a new logo: an anchor made of the words. You see it while the game loads, when you sign in, on the app icon and on the picture when you share the week\'s catch.'],
+    ]],
     ['havmottak-031126', '03.11.2026', 'Mottakene for havflåten', 'The ocean fleet\'s plants', [
        ['Tretten store mottak for havfiskeflåten er kommet på kartet, blant annet i Måløy, Selje, Florø, Egersund og Rypefjord ved Hammerfest. Der legger trålere og ringnotbåter til for å levere.', 'Thirteen large plants for the ocean fleet are on the chart, among them Måløy, Selje, Florø, Egersund and Rypefjord by Hammerfest. Trawlers and purse seiners land their catch there.'],
        ['Utstyrsbutikken i Rypefjord og verftet ved Fiskarstrand har flyttet til nye kaier like ved.', 'The tackle shop in Rypefjord and the yard by Fiskarstrand have moved to new quays close by.'],

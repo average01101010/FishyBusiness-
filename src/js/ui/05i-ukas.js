@@ -61,7 +61,7 @@ function ukeShow(w){
   UKC.open = w; modal(ukeHtml(w)); ukeBind(w);
   if (typeof cloudEv === 'function') cloudEv('uke_card', {w, kg:ukeSum(w).kg});
 }
-function ukeBind(w){ const b = document.getElementById('ukeShare'); if (b) b.onclick = () => ukeShare(w); }
+function ukeBind(w){ const b = document.getElementById('ukeShare'); if (b) b.onclick = () => ukeShare(w); ukeLogo(); }
 function ukeRedraw(){
   const el = document.getElementById('ukeCard'), m = $('modal'); if (el && m && !m.hidden && UKC.open != null){ el.outerHTML = ukeHtml(UKC.open); m.querySelectorAll('[data-close]').forEach(b => { b.onclick = () => { m.hidden = true; }; }); ukeBind(UKC.open); }
   if (typeof PHONE !== 'undefined' && PHONE.isOpen() && PHONE.app === 'sesong') PHONE.render();
@@ -98,8 +98,16 @@ function ukeCanvas(w){
     g.fillStyle = '#8fc7e4'; g.font = font(600, 30); g.fillText(strip(k).toUpperCase(), 80, y); y += 44;
     g.fillStyle = '#e7f4ee'; g.font = font(500, 40); y = wrap(strip(v), 80, y, W - 160, 50) + 22;
   }
-  g.fillStyle = 'rgba(255,255,255,.55)'; g.font = font(600, 30); g.fillText('Det Store Blå · detstorebla.no', 80, H - 70);
+  // the logo (src/brand/logo.svg) small and white by the address, once its picture has loaded (ukeLogo, when the card opened)
+  const lg = ukeLogo(), lh = 104, lw = lg.complete && lg.naturalWidth ? lh * lg.naturalWidth / lg.naturalHeight : 0;
+  if (lw) g.drawImage(lg, 80, H - 60 - lh, lw, lh);
+  g.fillStyle = 'rgba(255,255,255,.55)'; g.font = font(600, 30); g.fillText(lw ? 'detstorebla.no' : 'Det Store Blå · detstorebla.no', lw ? 80 + lw + 24 : 80, lw ? H - 60 - lh / 2 + 11 : H - 70);
   return cv;
+}
+let UKE_LOGO = null;
+function ukeLogo(){
+  if (!UKE_LOGO){ UKE_LOGO = new Image(); UKE_LOGO.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(DSB_LOGO.replace('<svg ', '<svg width="1376" height="1620" style="color:#ffffff;opacity:.85" ')); }
+  return UKE_LOGO;
 }
 function ukeShare(w){
   const cv = ukeCanvas(w), name = 'ukas-fangst-' + w + '.png';
