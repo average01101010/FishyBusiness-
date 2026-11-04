@@ -67,9 +67,9 @@ async def main():
             except Exception as e: print('   (fjernterrenget kom ikke:', str(e)[:80], ')')
             await pg.wait_for_timeout(3000)
             g = await pg.evaluate(GROUND, q)
-            if name in ('longyearbyen', 'bjornoya'):
+            if name == 'longyearbyen':   # (OpenStreetMap has no sea marks within 30 km of Bjørnøya or Jan Mayen: BACKLOG 10.3)
                 # the sea marks of the tile's chart pack (as marktest at Tromsø), and the lights in 3D at night (as coast3d)
-                mk = await pg.evaluate("""(q) => { const L = marksNear('lights', q.x, q.y, 30), M = marksNear('marks', q.x, q.y, 30), rk = rocksIn(q.x - 15, q.y - 15, q.x + 15, q.y + 15);
+                mk = await pg.evaluate("""(q) => { const L = marksNear('lights', q.x, q.y, 30).filter(l => !inSenja(l[0], l[1])), M = marksNear('marks', q.x, q.y, 30).filter(l => !inSenja(l[0], l[1])), rk = rocksIn(q.x - 15, q.y - 15, q.x + 15, q.y + 15);
                   return {lights:L.length, marks:M.length, rocks:rk.length, sect:L.filter(l => l[5].length > 1).length}; }""", q)
                 check(mk['lights'] > 3 and mk['marks'] > 3, name + ': sjømerkene og lyktene fra flisas kartpakke er inne', mk)
                 t0 = await pg.evaluate("S.t")
