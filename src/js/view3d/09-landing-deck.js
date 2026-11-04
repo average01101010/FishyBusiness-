@@ -66,6 +66,10 @@
   function landOff(L){ if (!L || !L.own) return null; const e = S.t + currentFrac() - L.t0, lf = LANDING.lift, out = new Set();
     for (let i = 0; i < L.n; i++) if (e >= landLiftT(L, i) + 0.42 * lf && e < landLiftT(L, L.n + i) + LANDING.hooked * lf) out.add(i);
     return out; }
+  // the tubs back aboard washed at a landing now
+  function landBack(L){ if (!L || !L.own) return null; const e = S.t + currentFrac() - L.t0, out = new Set();
+    for (let i = 0; i < L.n; i++) if (e >= landLiftT(L, L.n + i) + LANDING.hooked * LANDING.lift) out.add(i);
+    return out; }
   // everything a landing shows at game minute gt: the crane's pose and what hangs from it, the loads on deck and on the quay,
   // the forklift, and where the people stand and what they do. null when this plant is not landing the boat you are on.
   function landScene(P, T, BMrel, eye){
@@ -548,9 +552,10 @@
   function karPlaces(vt){ const G = GEO(vt), K = G && G.kit && G.kit.tubs; if (!K || !(VESSELS[vt] || {}).kar) return [];
     const n = vt === S.boat.type && BOAT.karN ? BOAT.karN : karN(vt, 0); return K.slice(0, n).map(q => ({at:[q[0], q[1], q[2]], ry:q[3] || 0})); }
   // the tubs on deck with what is in them (skip: the places whose tub is off the deck now, at a landing)
-  function drawCatchTubs(BMrel, vt, skip){
+  // (washed: the tubs set back aboard washed at a landing; the catch is in the hold until the landing note, but not in them)
+  function drawCatchTubs(BMrel, vt, skip, washed){
     const P = karPlaces(vt); if (!P.length) return 0; const T = tubLoads(S.hold, P.length); let n = 0;
-    P.forEach((q, i) => { if (skip && skip.has(i)) return; if (drawKarLoad(chain(BMrel, M4.T(q.at[0], q.at[1], q.at[2]), M4.RY(q.ry)), T[i], vt + ':' + i, false)) n++; });
+    P.forEach((q, i) => { if (skip && skip.has(i)) return; const w = !!(washed && washed.has(i)); if (drawKarLoad(chain(BMrel, M4.T(q.at[0], q.at[1], q.at[2]), M4.RY(q.ry)), w ? null : T[i], vt + ':' + i, w)) n++; });
     return n;
   }
   // the heap's top in a tub (the tub's frame), where a packed fish lands
@@ -631,7 +636,7 @@
   function drawDeck(BMrel, eye, VP, t, DK){
     const vt = vtype(), G = GEO(vt), d = G.deck || {y:G.gw, z:2}, Bm = G.beam, b = S.boat; DK.pt = null;
     // the fish tubs and the ice box stand on deck through a landing too (the tubs on the crane's hook or ashore are the landing's)
-    nSetup(VP); KST.tubs = drawCatchTubs(BMrel, vt, b.land && PLANTS.length ? landOff(b.land) : null); KST.icebox = !!drawIceBox(BMrel, vt, !packingNow()) ? 1 : 0;
+    nSetup(VP); KST.tubs = drawCatchTubs(BMrel, vt, b.land && PLANTS.length ? landOff(b.land) : null, b.land ? landBack(b.land) : null); KST.icebox = !!drawIceBox(BMrel, vt, !packingNow()) ? 1 : 0;
     if (b.land || b.status === 'aground') return;
     // where they stand: by the beam on the after deck, or where a detailed model says (the starter boat has a seat and a bench aft)
     const W = G.work || null, tx = W ? W.table[0] : -(Bm / 2 - 0.42), ux = W ? W.tub[0] : Bm / 2 - 0.62, tz = W ? W.table[2] : d.z, uz = W ? W.tub[2] : d.z + 0.35;

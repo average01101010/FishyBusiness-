@@ -325,7 +325,7 @@ const LANDING = {prep:1, lift:2.5, note:5, tubKg:TUB_KG, hooked:0.86, wash:6};
 // own: the boat's own tubs (an open boat; the per-tub kilos in kgs, the empties come back), else the plant's tubs from the hold
 function landPlan(type, kg, hold){
   const V = VESSELS[type] || {};
-  if (V.kar){ const T = tubLoads(hold || S.hold, karN(type, S.boat && S.boat.type === type ? S.boat.holdLv : 0)), kgs = T.map(t => Math.round(t.kg)), n = Math.max(1, tubsFull(T));
+  if (V.kar){ const nk = karN(type, S.boat && S.boat.type === type ? S.boat.holdLv : 0), T = tubLoads(hold || S.hold, nk), kgs = T.map(t => Math.round(t.kg)), n = clamp(Math.max(tubsFull(T), Math.ceil((kg || 0) / TUB_KG)), 1, nk);
     return {kind:'tub', own:true, n, kgs, lifts:2 * n, wash:LANDING.wash, dur:LANDING.prep + 2 * n * LANDING.lift + LANDING.wash + LANDING.note}; }
   const n = Math.max(1, Math.ceil(kg / LANDING.tubKg));
   return {kind:'tub', own:false, n, lifts:n, wash:0, dur:LANDING.prep + n * LANDING.lift + LANDING.note};
