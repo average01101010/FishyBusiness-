@@ -2,7 +2,8 @@
 have the coast's tiles with detail (sim, view, chart, vec), so at Longyearbyen, Bjørnøya and Jan Mayen the tile's packs come, the land
 and the sea are the 25 m mask's and the fine coast's, the depth is GEBCO's (or Kartverket's) and not the model's 2 m, Longyearbyen has its
 buildings, roads and quays from Overture, the 3D view builds the tile without a GL error, the ground is not the mainland's green (the
-summer colour and the land cover: tundra, bare ground, glaciers), the sea marks are there once a sjomerker- release has them, and pictures
+summer colour and the land cover: tundra, bare ground, glaciers), the sea marks and lights are there (as marktest and coast3d check
+them off Tromsø), and pictures
 are taken at Longyearbyen in both formats (tests/out/sval_<place>_<w>x<h>.png). Needs the whole coast with the islands in
 tools/map/out/game and dist-vec/ (the vec packs), as vectest. Prints OK or FEIL per check."""
 import asyncio, json, os, subprocess
@@ -61,13 +62,23 @@ async def main():
                 await pg.wait_for_function("(q) => { const v = G3._debug.vec, tx = Math.floor(q.x / 50), ty = Math.floor(q.y / 50); return v.statics.some(s => s.k === tx + ':' + ty) && v.chunks > 10; }", arg=q, timeout=300000)
                 t = await pg.evaluate("(q) => { const t = vecTile(Math.floor(q.x / 50), Math.floor(q.y / 50)); return {bld:t.bld.n, roads:t.roads.length, quays:t.quays.length, gl:G3._debug.glErr()}; }", q)
                 check(t['bld'] > 500 and t['roads'] > 100 and t['quays'] > 20 and t['gl'] == 0, 'Longyearbyen har byggene, veiene og kaiene fra Overture i 3D, uten GL-feil', t)
-                mk = await pg.evaluate("(q) => ({lights:marksNear('lights', q.x, q.y, 30).length, marks:marksNear('marks', q.x, q.y, 30).length, src:MARKS && MARKS.ver})", q)
-                print('   sjømerker innen 30 km:', mk)
             # the far terrain built round the boat with the tile's cover in (as teleport3d waits for it)
             try: await pg.wait_for_function("(q) => { const T = G3._debug.TERR; return T && !T.stale && Math.abs(T.cx - q.x * 1000) <= 10000 && Math.abs(T.cz - q.y * 1000) <= 10000 && mapViewIn(q); }", arg=q, timeout=300000)
             except Exception as e: print('   (fjernterrenget kom ikke:', str(e)[:80], ')')
             await pg.wait_for_timeout(3000)
             g = await pg.evaluate(GROUND, q)
+            if name in ('longyearbyen', 'bjornoya'):
+                # the sea marks of the tile's chart pack (as marktest at Tromsø), and the lights in 3D at night (as coast3d)
+                mk = await pg.evaluate("""(q) => { const L = marksNear('lights', q.x, q.y, 30), M = marksNear('marks', q.x, q.y, 30), rk = rocksIn(q.x - 15, q.y - 15, q.x + 15, q.y + 15);
+                  return {lights:L.length, marks:M.length, rocks:rk.length, sect:L.filter(l => l[5].length > 1).length}; }""", q)
+                check(mk['lights'] > 3 and mk['marks'] > 3, name + ': sjømerkene og lyktene fra flisas kartpakke er inne', mk)
+                t0 = await pg.evaluate("S.t")
+                await pg.evaluate("() => { S.t = Math.round((Date.UTC(2027, 0, 12, 22) - EPOCH) / 6e4); S.mult = 0; const c = G3._debug.cam; c.helm = false; c.dist = 40; c.pitch = 0.1; c.yaw = 0; }")
+                await pg.wait_for_timeout(15000)
+                seen = await pg.evaluate("G3._debug.lightsSeen(performance.now() / 1000)")
+                check(seen['inR'] > 0, name + ': lyktene står i 3D om natta', seen)
+                await pg.screenshot(path=f'sval_{name}_natt.png', timeout=120000)
+                await pg.evaluate("(t) => { S.t = t; }", t0)
             check(bool(g) and g['green'] < 0.25, name + ': bakken er ikke fastlandets grønne (tundra, bar mark og bre)', g)
             await pg.evaluate("() => { const c = G3._debug.cam; c.helm = false; c.yaw = 2.3; c.pitch = 0.22; c.dist = 700; }")
             for w, h in ((1280, 800), (800, 1280)):
