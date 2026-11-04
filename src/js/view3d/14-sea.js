@@ -224,9 +224,10 @@
   // from where she was last frame as your own hull is (FOAM_FS hullFoam), by her length, beam and speed through the water (n.v, knots)
   // and whether her kind planes, so a sjark at 7 knots leaves a small wash and a fast boat on the plane her wings and her channel. Her
   // origin is taken as amidships. The coastal route and the ferry, with no length in their state, are given 35 and 70 m.
-  const NB4 = new Float32Array(24), NH4 = new Float32Array(24), NG4 = new Float32Array(24), NV4 = new Float32Array(24), NPF = new Map();
+  const NPCFOAM_OFF = /npcfoam0/.test(location.hash), NB4 = new Float32Array(24), NH4 = new Float32Array(24), NG4 = new Float32Array(24), NV4 = new Float32Array(24), NPF = new Map();
   function foamNPC(u, qx, qz, Dx, Dz){
     if (u.uNV == null) return; NV4.fill(0);
+    if (NPCFOAM_OFF){ gl.uniform4fv(u.uNV, NV4); return; }   // («#npcfoam0» in the address: none of the other boats' foam, for the comparison)
     let L0 = []; try { L0 = typeof npcNow !== 'undefined' ? npcNow : []; } catch (e){ L0 = []; }
     const R = FOAM.M / 2 - 40, cand = [];
     for (const n of L0){
