@@ -11,6 +11,19 @@ STATE = """JSON.stringify((() => { const st = tutOn() ? tutStep() : null, q = st
   return {id:st ? st.id : null, ring:q && {x:q.x + q.w / 2, y:q.y + q.h / 2}, ok:!$('tipOk').hidden && !$('tip').hidden, okText:$('tipOk').textContent,
     tip:$('tip').hidden ? '' : $('tipText').textContent, rod:!!window.jigActive, book:BOOK.isOpen(), st:S.boat.status,
     sleep:!$('sleep').hidden, wake:!$('sleep').hidden && !$('slSkip').hidden && !$('slSkip').disabled, ack:!$('slAck').hidden}; })())"""
+# the design census of one picture: the type sizes, families, colours, corner radii and button looks on the screen
+CENSUS = """(() => {
+      const vis = e => { if (!e.getClientRects().length) return false; const s = getComputedStyle(e); return s.visibility !== 'hidden' && s.display !== 'none'; };
+      const C = {size:{}, fam:{}, color:{}, bg:{}, radius:{}, btn:{}};
+      const add = (o, k) => o[k] = (o[k] || 0) + 1;
+      for (const e of document.querySelectorAll('body *')){ if (!vis(e)) continue;
+        const own = [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()); const s = getComputedStyle(e);
+        if (own){ add(C.size, s.fontSize); add(C.fam, s.fontFamily.split(',')[0]); add(C.color, s.color); }
+        if (s.backgroundColor !== 'rgba(0, 0, 0, 0)') add(C.bg, s.backgroundColor);
+        if (s.borderRadius !== '0px') add(C.radius, s.borderRadius);
+        if (e.tagName === 'BUTTON') add(C.btn, [s.fontSize, s.fontWeight, s.borderRadius, s.backgroundColor].join(' '));
+      }
+      return C; })()"""
 OK_RING = ('deck', 'chip', 'slip', 'goal', 'hud', 'apps', 'vaer', 'salg', 'regler', 'redning', 'legs', 'beh', 'intro', 'n1')
 
 
@@ -18,14 +31,19 @@ async def play(b, W, H, tag):
     out = os.path.join('uiplay', tag); os.makedirs(out, exist_ok=True)
     ctx = await b.new_context(viewport={'width': W, 'height': H}, has_touch=True)
     pg = await ctx.new_page(); cdp = await ctx.new_cdp_session(pg); pg.set_default_timeout(120000)
-    errs, steps, n = [], [], [0]
-    pg.on('pageerror', lambda e: errs.append(str(e)[:300]))
+    errs, steps, n, census = [], [], [0], {}
+    pg.on('pageerror', lambda e: errs.append({'at': steps[-1]['f'] if steps else '', 'err': (getattr(e, 'stack', '') or str(e))[:600]}))
     pg.on('dialog', lambda d: asyncio.ensure_future(d.dismiss()))
 
     async def shot(name, note=''):
         n[0] += 1; f = '%02d_%s.png' % (n[0], name)
         try: await pg.screenshot(path=os.path.join(out, f), timeout=90000)
         except Exception as e: print('   shot failed', name, e); return
+        try:
+            c = await pg.evaluate(CENSUS)
+            for k, o in c.items():
+                for v, m in o.items(): census.setdefault(k, {}).setdefault(v, {'n': 0, 'shots': 0}); census[k][v]['n'] += m; census[k][v]['shots'] += 1
+        except Exception as e: print('   census failed', e)
         steps.append({'f': f, 'note': note}); print('   ', tag, f, note[:90], flush=True)
 
     async def tap(x, y):
@@ -71,36 +89,70 @@ async def play(b, W, H, tag):
             await tap(s['ring']['x'], s['ring']['y']); await pg.wait_for_timeout(350); continue
         await pg.wait_for_timeout(500)
     await pg.wait_for_timeout(800); await shot('etter-tur', 'after the first trip, in harbour')
-    # the dock fans in harbour
+
+    # ---------- the walk: every surface a player meets, with a design census of each picture ----------
+    async def clear():
+        await pg.evaluate("""(() => { try { PHONE.show(false) } catch (e) {} try { DOCK.close() } catch (e) {} try { BOOK.isOpen() && BOOK.close() } catch (e) {}
+          try { PUB3.isOpen() && PUB3.close() } catch (e) {} try { NAUST3D.isOpen() && NAUST3D.close() } catch (e) {}
+          for (let i = 0; i < 4; i++){ const m = document.getElementById('modal'); if (!m || m.hidden) break; const b = [...m.querySelectorAll('button')].filter(e => e.offsetParent); (b[0] || {click(){}}).click(); } })()""")
+        await pg.wait_for_timeout(350)
+
+    async def tabs(sel, name):
+        """Click each tab under `sel` (the drawer's tab row, an app's sub tabs) and take a picture of each but the first."""
+        k = await pg.evaluate("s => [...document.querySelectorAll(s)].filter(e => e.offsetParent).length", sel)
+        for i in range(1, min(k, 7)):
+            lab = await pg.evaluate("([s, i]) => { const e = [...document.querySelectorAll(s)].filter(e => e.offsetParent)[i]; if (!e) return ''; e.click(); return e.textContent.trim().slice(0, 20); }", [sel, i])
+            await pg.wait_for_timeout(500); await shot(name + '-fane%d' % i, name + ' tab ' + lab)
+
+    async def scrolled(box, name):
+        """A second picture at the foot of a box that scrolls, when there is more below the first screen."""
+        more = await pg.evaluate("s => { const e = document.querySelector(s); if (!e || e.scrollHeight <= e.clientHeight + 40) return false; e.scrollTop = e.scrollHeight; return true; }", box)
+        if more: await pg.wait_for_timeout(300); await shot(name + '-bunn', name + ' scrolled to the foot')
+
+    await clear(); await shot('havn-ren', 'in harbour, nothing open')
+    # the dock and its fans: each button, and each small button in a fan
     items = json.loads(await pg.evaluate("JSON.stringify([...document.querySelectorAll('#dock .dk-b')].map(e => e.dataset.dk))"))
     print('   dock', items)
-    for i in range(len(items)):
-        await pg.evaluate("i => { const e = [...document.querySelectorAll('#dock .dk-b')][i]; e && e.click(); }", i)
-        await pg.wait_for_timeout(700); await shot('dock-%d' % i, 'dock button ' + str(items[i]))
-        await pg.evaluate("(() => { if (typeof DOCK !== 'undefined' && DOCK.close) DOCK.close(); document.querySelectorAll('#drawer .x, #dockFan').forEach(() => 0); })()")
-        await pg.keyboard.press('Escape'); await pg.wait_for_timeout(300)
+    for d in items:
+        await clear()
+        await pg.evaluate("d => { const e = document.querySelector('#dock .dk-b[data-dk=\"' + d + '\"]'); e && e.click(); }", d)
+        await pg.wait_for_timeout(700); await shot('dock-' + d, 'dock button ' + d)
+        fan = json.loads(await pg.evaluate("JSON.stringify([...document.querySelectorAll('#dockFan .dk-b')].filter(e => e.offsetParent).map(e => e.dataset.dk))"))
+        for f in fan:
+            await clear()
+            await pg.evaluate("d => { const e = document.querySelector('#dock .dk-b[data-dk=\"' + d + '\"]'); e && e.click(); }", d); await pg.wait_for_timeout(400)
+            await pg.evaluate("f => { const e = document.querySelector('#dockFan .dk-b[data-dk=\"' + f + '\"]'); e && e.click(); }", f)
+            await pg.wait_for_timeout(800); await shot('vifte-%s-%s' % (d, f), 'fan ' + d + ' > ' + f)
+            await tabs('#drawerTabs button', 'vifte-%s-%s' % (d, f)); await scrolled('#drawerBody', 'vifte-%s-%s' % (d, f))
     # every drawer page
-    pages = json.loads(await pg.evaluate("JSON.stringify(Object.keys(typeof DRAWER !== 'undefined' ? DRAWER : {}))"))
+    pages = json.loads(await pg.evaluate("JSON.stringify([...PHONE.DRAWER])"))
     for p in pages:
+        await clear()
         try:
             await pg.evaluate("p => DOCK.open(p)", p); await pg.wait_for_timeout(700); await shot('skuff-' + p, 'drawer ' + p)
+            await tabs('#drawerTabs button', 'skuff-' + p); await scrolled('#drawerBody', 'skuff-' + p)
         except Exception as e: print('   drawer', p, e)
-    await pg.evaluate("try { DOCK.close() } catch (e) {}")
-    # the phone and its apps
-    await pg.evaluate("PHONE.show(false); try { DOCK.close() } catch (e) {}"); await pg.wait_for_timeout(300)
-    await pg.evaluate("PHONE.show(true, 'home')"); await pg.wait_for_timeout(700); await shot('telefon', 'phone home')
-    apps = json.loads(await pg.evaluate("JSON.stringify([...new Set([...document.querySelectorAll('#phone .ph-app[data-a]')].map(e => e.dataset.a))])"))
-    print('   apps', apps)
-    for a in apps:
+    # every phone app (all of them, also those a new player does not see yet)
+    await clear(); await pg.evaluate("PHONE.show(true, 'home')"); await pg.wait_for_timeout(700); await shot('telefon', 'phone home')
+    for a in ['vaer', 'post', 'meld', 'rederi', 'salg', 'kvote', 'regler', 'drift', 'ordl', 'nett', 'kaiboden', 'haill', 'sesong', 'guide', 'folk', 'merker', 'redning', 'trim', 'handbok', 'garderobe', 'patch', 'tilbake', 'innst']:
+        await clear()
         try:
             await pg.evaluate("a => PHONE.show(true, a)", a); await pg.wait_for_timeout(700); await shot('app-' + a, 'phone app ' + a)
+            await tabs('#phone [data-pa="sub"], #phone [data-pa$="tab"], #phone .kb-tab', 'app-' + a)
         except Exception as e: print('   app', a, e)
-    await pg.evaluate("PHONE.show(false)"); await pg.wait_for_timeout(300)
-    # the chart plotter, the deck log
-    await pg.evaluate("setBodyView(false); refreshAll()"); await pg.wait_for_timeout(1200); await shot('kartplotter', 'chart plotter')
+    # the deck log and its tabs, the chart plotter, the pub in 3D
+    await clear(); await pg.evaluate("BOOK.open()"); await pg.wait_for_timeout(900); await shot('dagbok', 'deck log')
+    await tabs('.bk-tab', 'dagbok')
+    await clear(); await pg.evaluate("setBodyView(false); refreshAll()"); await pg.wait_for_timeout(1200); await shot('kartplotter', 'chart plotter')
+    await pg.evaluate("(() => { const r = document.getElementById('ecRoute'); if (r && r.offsetParent) r.click(); })()"); await pg.wait_for_timeout(800); await shot('kartplotter-rute', 'chart plotter, route')
     await pg.evaluate("setBodyView(true); refreshAll()"); await pg.wait_for_timeout(800)
-    await pg.evaluate("BOOK.open()"); await pg.wait_for_timeout(900); await shot('dagbok', 'deck log')
-    await pg.evaluate("BOOK.close()"); await pg.wait_for_timeout(300)
+    await clear()
+    try:
+        await pg.evaluate("PUB3.open()"); await pg.wait_for_timeout(4000); await shot('pub', 'the pub in 3D')
+    except Exception as e: print('   pub', e)
+    await clear()
+
+    json.dump(census, open(os.path.join(out, 'census.json'), 'w'), indent=1)
     json.dump({'steps': steps, 'tut': seen, 'errs': errs}, open(os.path.join(out, 'steps.json'), 'w'), ensure_ascii=False, indent=1)
     print('   ', tag, 'errors', errs[:5])
     await ctx.close()
