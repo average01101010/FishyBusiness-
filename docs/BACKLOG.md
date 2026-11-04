@@ -162,6 +162,8 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 - **B3 må ses i spillet (02.11.2026):** juli på Husøy fyller lasterommet (simday 350 mot 297 før B2), fordi flåten nesten ikke fisker der om sommeren; mars er litt tynnere. Skreien er 25 % tynnere i slutten av mai enn i januar. Beskatningsratene for artene uten bestand, tilveksten 0,4 % i timen og trykket ×3 på de navngitte feltene er anslag (5.3d); totalbestanden mot gytebestanden er fra JRN-AFWG og ICES 2026. Spillernes fangst i lukket gruppe trekkes fra flåtens trykk fra B4.
 - **B2 må ses i spillet (01.11.2026):** Lofoten i mars har mindre skrei enn før (Henningsvær 29,6 → 13,5 kg torsk i timen med håndjuksa), fordi sedlene per landing sier det (se 5.3c). Planen antok mer. Seien er mye høyere i februar–mars fra Lofoten til Møre. Feltet på første tur i Gisundet er 85 kg i timen etter garantien (før 22). Spilltest før B3: holder dette, eller skal taket eller glattingen skrus?
 - **Feltnavnene (B2):** lite tekst rundt Båtsfjord og deler av Øst-Finnmark, der WFS-en har få felt. Om navnene er for tette i stående format på nettbrettet, er ikke sett på Pad 3. Skjermbildene i SwiftShader (Bergen, Bodø, Båtsfjord, Senja, begge formater) så rene ut.
+- **Båtnavnet (04.11.2026, `namePlaces`, `baater.md` 4.23):** plassene regnes første gang en båttype tegnes (0,1–0,25 s i Chromium på PC); hakket er ikke målt på Pad 3. Kan flyttes til ledig tid ved oppstart om det merkes. Frysetråleren (akterslipp) har navnet bare på styrhuset. Andre spillere sender ikke hjemmehavna, så hekken deres viser bare navnet.
+
 ## 10.6 Tester som feiler (regresjonen 24.10.2026, gjennomgått i E4 26.10.2026)
 
 - **Regresjonen 04.11.2026 (H1b R1+R2, hele kysten med `kart-29`):** alle 134 uten 3D ble kjørt. Kjent: dyntest (ringnot38), drifttest (scenario 6), quotatest (paid False), maptest (kappløpet). Ustabile under last, grønne alene: sleeptest (9 OK), obstest (8 OK). **Røde også på grunnbygget a135b4f** (altså ikke R2): cloudtest (3 linjer: porten klar, innlogget, utseende), kjoptest («en avbrutt betaling sier at kjøpet ble avbrutt»), gfxtest (sidefeil: `setTargetAtTime` får et tall som ikke er endelig etter at testen gir kameraet NaN, lyden i `ui/10e-sound.js` sjekker ikke verdien). Med 3D rakk 9 av 49 å gå før tidsgrensen. Deretter ble de som dekker R2 kjørt alene, og disse er grønne: treeshot, coast3d, landtest, vectest, dbg23o, heattest, routetest, teleport3d, charttest. **Går ut på tid under SwiftShader uten at en sjekk feiler:** trytest, unittest (`Page.screenshot` over 120 s). kaishot er ustabil (5 OK mot 3 på grunnbygget, kysten ved Bergen, Bodø og Båtsfjord kom ikke inn innen 2 min). sea3d: le-sjekken ved Husøy var testens feil (den ventet ikke på bølgekartet for den nye vindretningen), og det første bølgekartet tar lenger tid etter R2 (10.3). Begge er rettet i testen, og sea3d er grønn etterpå (14 OK, le 0,73 m mot 4,65 m på vindsiden, 2 895 s).
@@ -210,6 +212,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - `S.owned` skrives fortsatt (`03-simulation.js`, `05-phone.js`, `05-vessels.js`), men leses bare av en lagringsmigrering i `11-boot.js`.
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
+
+## Strøket 04.11.2026 (båtnavnet, ccr-bf5ccf26-rci1bj)
+
+- Båtnavnet i en stygg skrift og tilsynelatende tilfeldig plassert, over registreringsmerket på trebåten: nå i blokkbokstaver på styrhustakets kant foran og på hekken med hjemmehavnen under, svart eller hvitt etter kontrasten, aldri i baugen (`baater.md` 4.23, `tests/unit/navn.test.mjs`).
 
 ## Strøket 04.11.2026 (fiskekar på dekk, `docs/planer/fiskekar-dekk.md`)
 
