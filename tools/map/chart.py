@@ -63,8 +63,10 @@ def names(tx, ty):
     import national
     from scipy import ndimage
     R = frame.Region('n', tx * 5, ty * 5, tx * 5 + 5, ty * 5 + 5); box = R.lonlat_box(0); ox, oy = tx * 50000.0, ty * 50000.0; out = []
-    M = national.mask200(); j0, i0 = max(0, ty * 250 - 100), max(0, tx * 250 - 100)
-    W = M[j0:ty * 250 + 350, i0:tx * 250 + 350]; DL = ndimage.distance_transform_edt(W == 0) * 0.2
+    xa = national.xarea(tx, ty)
+    if xa: j0, i0 = ty * 250 - 100, tx * 250 - 100; W = national.xland_box(xa, i0, j0, 450, 450)   # Svalbard, Jan Mayen (H1b R3)
+    else: M = national.mask200(); j0, i0 = max(0, ty * 250 - 100), max(0, tx * 250 - 100); W = M[j0:ty * 250 + 350, i0:tx * 250 + 350]
+    DL = ndimage.distance_transform_edt(W == 0) * 0.2
     def dland(x, y):   # km from the land at a point (km, national)
         j, i = int(y / 0.2) - j0, int(x / 0.2) - i0
         return float(DL[j, i]) if 0 <= j < DL.shape[0] and 0 <= i < DL.shape[1] else 0.0

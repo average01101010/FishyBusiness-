@@ -10,7 +10,10 @@
 #   The colour is the median of the scenes that count (n of them); a cell none counts is 0. nir: the near infrared's median (B08,
 #   reflectance x 10 000 / 32), for the trees' leaf type (G4: broad leaves reflect it about twice as much as needles in summer).
 #   python3 tools/s2/s2.py tile tx,ty [...]     an .npz per tile in tools/s2/out/tiles (rgb 1000 x 1000 x 3 u8, rows north to south; n)
-#   python3 tools/s2/s2.py part k K             the k-th of K shares of the tiles in tools/map/dybde.json (the coast's 168), for s2.yml
+#   python3 tools/s2/s2.py part k K             the k-th of K shares of the tiles s2.json names (the coast's 168 in tools/map/dybde.json,
+#                                               or the islands' in tools/map/xtiles.json), for s2.yml
+#   a cell no scene sees clear of snow but SNOWN or more see as snow (SCL 11) takes the snow's median ('snow': how many; Svalbard's
+#   glaciers, H1b R3), so the ice is white rather than without a colour
 import os, sys, json, time, re, urllib.request, urllib.parse, numpy as np
 os.environ.setdefault('GDAL_DISABLE_READDIR_ON_OPEN', 'EMPTY_DIR'); os.environ.setdefault('GDAL_HTTP_MAX_RETRY', '4'); os.environ.setdefault('GDAL_HTTP_RETRY_DELAY', '2')
 os.environ.setdefault('VSI_CACHE', 'TRUE')
@@ -22,7 +25,7 @@ from rasterio.transform import from_origin
 from pyproj import Transformer
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.join(HERE, 'out', 'tiles'); os.makedirs(OUT, exist_ok=True)
 S3 = 'https://sentinel-cogs.s3.us-west-2.amazonaws.com/'; ROOT = 'sentinel-s2-l2a-cogs/'
-YEARS = (2021, 2022, 2023, 2024, 2025); MAXS = 14; GOOD = np.array([4, 5, 6, 7]); TILE = 50000; CELL = 50
+YEARS = (2021, 2022, 2023, 2024, 2025); MAXS = 14; GOOD = np.array([4, 5, 6, 7]); TILE = 50000; CELL = 50; SNOW = 11; SNOWN = 3
 
 def ls(prefix):
     out, tok = [], None
@@ -66,7 +69,7 @@ def tile(tx, ty):
     t0 = time.time(); E0, N1 = tx * TILE - 250000, 8050000 - ty * TILE; n = TILE // CELL
     tr = from_origin(E0, N1, CELL, CELL); S = []
     for sq in squares(tx, ty): S += scenes(sq)
-    rgbs, oks = [], []
+    rgbs, oks, sns = [], [], []
     for p in S:
         try:
             with rasterio.open('/vsicurl/' + S3 + p + 'TCI.tif') as src, WarpedVRT(src, crs='EPSG:32633', transform=tr, width=n, height=n, resampling=Resampling.average) as v:
@@ -78,22 +81,28 @@ def tile(tx, ty):
                 nir = v.read(1)
         except Exception as e:
             print('  skip', p[-30:], str(e)[:80], flush=True); continue
-        ok = np.isin(c, GOOD) & (a.sum(0) > 0)
-        if ok.any(): rgbs.append(np.concatenate([a.transpose(1, 2, 0), np.clip(nir / 32, 0, 255).astype(np.uint8)[..., None]], axis=2)); oks.append(ok)
-    rgb = np.zeros((n, n, 4), np.uint8); cnt = np.zeros((n, n), np.uint8)
+        ok = np.isin(c, GOOD) & (a.sum(0) > 0); sn = (c == SNOW) & (a.sum(0) > 0)
+        if ok.any() or sn.any(): rgbs.append(np.concatenate([a.transpose(1, 2, 0), np.clip(nir / 32, 0, 255).astype(np.uint8)[..., None]], axis=2)); oks.append(ok); sns.append(sn)
+    rgb = np.zeros((n, n, 4), np.uint8); cnt = np.zeros((n, n), np.uint8); scnt = np.zeros((n, n), np.uint8)
     if rgbs:
         for r0 in range(0, n, 100):   # the median in strips (14 scenes per square, up to 4 squares)
-            st = np.stack([q[r0:r0 + 100] for q in rgbs]).astype(np.float32); ok = np.stack([q[r0:r0 + 100] for q in oks])
-            st[~ok] = np.nan
+            st = np.stack([q[r0:r0 + 100] for q in rgbs]).astype(np.float32); ok = np.stack([q[r0:r0 + 100] for q in oks]); sn = np.stack([q[r0:r0 + 100] for q in sns])
+            # a cell no scene sees clear of snow, but SNOWN or more see as snow, takes the snow's median: a glacier or a lasting snowfield
+            # (Svalbard's glaciers reach the sea; 04.11.2026, H1b R3). Elsewhere the snow stays out, as before
+            use = ok | ((ok.sum(0) == 0) & (sn.sum(0) >= SNOWN))[None] & sn
+            st[~use] = np.nan
             with np.errstate(all='ignore'): m = np.nanmedian(st, axis=0)
-            rgb[r0:r0 + 100] = np.nan_to_num(m).clip(0, 255).astype(np.uint8); cnt[r0:r0 + 100] = ok.sum(0)
-    np.savez_compressed(os.path.join(OUT, f'{tx}_{ty}.npz'), rgb=rgb[..., :3], nir=rgb[..., 3], n=cnt)
-    print(json.dumps({'tile': [tx, ty], 'squares': squares(tx, ty), 'scenes': len(rgbs), 'covered': round(float((cnt > 0).mean()), 3), 's': round(time.time() - t0)}), flush=True)
+            rgb[r0:r0 + 100] = np.nan_to_num(m).clip(0, 255).astype(np.uint8); cnt[r0:r0 + 100] = ok.sum(0); scnt[r0:r0 + 100] = np.where(ok.sum(0) == 0, use.sum(0), 0)
+    np.savez_compressed(os.path.join(OUT, f'{tx}_{ty}.npz'), rgb=rgb[..., :3], nir=rgb[..., 3], n=cnt, snow=scnt)
+    print(json.dumps({'tile': [tx, ty], 'squares': squares(tx, ty), 'scenes': len(rgbs), 'covered': round(float((cnt > 0).mean()), 3), 'snow': round(float((scnt > 0).mean()), 3), 's': round(time.time() - t0)}), flush=True)
 
 if __name__ == '__main__':
     if sys.argv[1] == 'tile':
         for a in sys.argv[2:]: tile(*map(int, a.split(',')))
     elif sys.argv[1] == 'part':
-        k, K = int(sys.argv[2]), int(sys.argv[3]); T = json.load(open(os.path.join(HERE, '..', 'map', 'dybde.json')))['tiles']
+        # the tiles s2.json's 'tiles' names: 'coast' (tools/map/dybde.json's 168, s2-1 and s2-2) or 'islands' (tools/map/xtiles.json:
+        # Svalbard, Bjørnøya, Hopen and Jan Mayen, H1b R3)
+        k, K = int(sys.argv[2]), int(sys.argv[3]); which = json.load(open(os.path.join(HERE, 's2.json'))).get('tiles', 'coast')
+        T = json.load(open(os.path.join(HERE, '..', 'map', 'xtiles.json'))) if which == 'islands' else json.load(open(os.path.join(HERE, '..', 'map', 'dybde.json')))['tiles']
         for i, (tx, ty) in enumerate(T):
             if i % K == k and not os.path.exists(os.path.join(OUT, f'{tx}_{ty}.npz')): tile(tx, ty)

@@ -20,6 +20,9 @@ OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.sy
 # the coast of the frame in bands of latitude (south to north), each a query of its own so none is too big
 BANDS = [(57.8, 59.5, 4.4, 12.0), (59.5, 61.5, 4.4, 11.0), (61.5, 63.5, 4.4, 12.0), (63.5, 65.5, 8.0, 15.0), (65.5, 67.5, 10.5, 17.5),
          (67.5, 69.0, 11.5, 19.0), (69.0, 70.2, 14.5, 25.0), (70.2, 71.4, 18.0, 31.5), (69.0, 70.2, 25.0, 31.5)]
+# the islands off the old frame (H1b R3): Svalbard with Bjørnøya and Hopen, and Jan Mayen (s, n, w, e). Geofabrik's Norway extract may
+# leave them out; then they come from Overpass, which takes boxes this small
+ISLANDS = [(74.0, 81.0, 9.0, 35.0), (70.5, 71.5, -9.5, -7.5)]
 TYPES = 'light_major|light_minor|light_vessel|light_float|beacon_lateral|beacon_cardinal|beacon_isolated_danger|beacon_special_purpose|beacon_safe_water|buoy_lateral|buoy_cardinal|buoy_isolated_danger|buoy_special_purpose|buoy_safe_water|landmark|pile|rock'
 
 def query(s, w, n, e):
@@ -140,8 +143,20 @@ def from_pbf(pbf):
 
 if __name__ == '__main__':
     if len(sys.argv) >= 4 and sys.argv[1] == 'pbf':
-        out = sys.argv[3]; els = from_pbf(sys.argv[2]); print('extract', len(els), flush=True)
-        d = convert(els); d['src'] = 'OpenStreetMap (ODbL) seamark tags from Geofabrik\'s Norway extract, ' + time.strftime('%Y-%m-%d')
+        out = sys.argv[3]; els = from_pbf(sys.argv[2]); print('extract', len(els), flush=True); src = 'Geofabrik\'s Norway extract'
+        isl = lambda e: any(b[0] <= e['lat'] <= b[1] and b[2] <= e['lon'] <= b[3] for b in ISLANDS)
+        n = sum(1 for e in els if isl(e)); print('on the islands in the extract', n, flush=True)
+        if n < 20:   # the extract has not got Svalbard and Jan Mayen: Overpass for them
+            seen = {(e['type'], str(e['id'])) for e in els}; got = 0
+            for b in ISLANDS:
+                try: q = query(b[0], b[2], b[1], b[3])
+                except BaseException as ex: print('overpass failed', b, repr(ex)[:200], flush=True); continue
+                for e in q:
+                    if 'lat' not in e and 'center' in e: e = dict(e, lat=e['center']['lat'], lon=e['center']['lon'])
+                    if (e.get('type'), str(e.get('id'))) not in seen and 'lat' in e: els.append(e); got += 1
+                print('island box', b, len(q), flush=True); time.sleep(10)
+            if got: src += ' and Overpass for Svalbard and Jan Mayen'
+        d = convert(els); d['src'] = 'OpenStreetMap (ODbL) seamark tags from ' + src + ', ' + time.strftime('%Y-%m-%d')
     elif len(sys.argv) >= 3 and sys.argv[1] == 'fetch':
         out = sys.argv[2]; els = []
         for b in BANDS:

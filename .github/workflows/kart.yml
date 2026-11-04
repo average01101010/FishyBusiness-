@@ -25,7 +25,22 @@ concurrency:
 env:
   PYTHONUNBUFFERED: '1'
 jobs:
+  # a push that only brings a kart.json a release was already made from (a merge into the working branch) stops here (tools/ci/seen.py)
+  seen:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.s.outputs.skip }}
+      mark: ${{ steps.s.outputs.mark }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: s
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/ci/seen.py kart tools/map/kart.json
+
   national:
+    needs: seen
+    if: needs.seen.outputs.skip != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -44,6 +59,8 @@ jobs:
           python3 national.py tiles
           python3 national.py expo
           python3 national.py far
+          python3 ov.py polar
+          python3 national.py xtiles
       - uses: actions/upload-artifact@v4
         with:
           name: national
@@ -52,6 +69,7 @@ jobs:
             tools/map/out/national/*.npy
             tools/map/out/national/*.npz
             tools/map/out/national/tiles.json
+            tools/map/out/national/xtiles.json
             tools/map/cache/index-*.json
             tools/map/cache/files-*.json
 
@@ -77,8 +95,8 @@ jobs:
         run: |
           G=$(python3 -c "import json; print(json.load(open('tools/map/kart.json')).get('gebco', ''))")
           if [ -n "$G" ]; then mkdir -p tools/map/out/gebco && gh release download "$G" -p gebco1k.npz -D tools/map/out/gebco; fi
-          TAG=$(python3 -c "import json; print(json.load(open('tools/map/kart.json')).get('depth', ''))")
-          if [ -n "$TAG" ]; then mkdir -p tools/map/out && gh release download "$TAG" -p depth.tgz -D /tmp && tar xzf /tmp/depth.tgz -C tools/map/out; fi
+          for TAG in $(python3 -c "import json; d = json.load(open('tools/map/kart.json')).get('depth', ''); print(' '.join(d if isinstance(d, list) else [d]))"); do
+            mkdir -p tools/map/out && gh release download "$TAG" -p depth.tgz -D /tmp/$TAG && tar xzf /tmp/$TAG/depth.tgz -C tools/map/out; done
       - name: The wide frame
         working-directory: tools/map
         run: |
@@ -115,12 +133,15 @@ jobs:
         with:
           name: national
           path: tools/map
-      - name: Kartverket's depth (the release kart.json names, from .github/workflows/dybde.yml)
+      - name: Kartverket's depth (the releases kart.json's 'depth' names, from .github/workflows/dybde.yml), and GEBCO for the islands off the old frame
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG=$(python3 -c "import json; print(json.load(open('tools/map/kart.json')).get('depth', ''))")
-          if [ -n "$TAG" ]; then mkdir -p tools/map/out && gh release download "$TAG" -p depth.tgz -D /tmp && tar xzf /tmp/depth.tgz -C tools/map/out && ls tools/map/out/depth | wc -l; fi
+          for TAG in $(python3 -c "import json; d = json.load(open('tools/map/kart.json')).get('depth', ''); print(' '.join(d if isinstance(d, list) else [d]))"); do
+            mkdir -p tools/map/out && gh release download "$TAG" -p depth.tgz -D /tmp/$TAG && tar xzf /tmp/$TAG/depth.tgz -C tools/map/out; done
+          ls tools/map/out/depth | wc -l || true
+          G=$(python3 -c "import json; print(json.load(open('tools/map/kart.json')).get('gebco', ''))")
+          if [ -n "$G" ]; then mkdir -p tools/map/out/gebco && gh release download "$G" -p gebco1k.npz -D tools/map/out/gebco; fi
       - name: The tiles of part ${{ matrix.part }}
         working-directory: tools/map
         run: python3 coast.py cache ${{ matrix.part }} $(python3 -c "import json; print(json.load(open('kart.json'))['parts'])")
@@ -134,7 +155,7 @@ jobs:
             tools/map/out/national/chart/*.pkl
 
   pack:
-    needs: [tiles, ramme]
+    needs: [seen, tiles, ramme]
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -162,8 +183,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG=$(python3 -c "import json; print(json.load(open('tools/map/kart.json')).get('s2', ''))")
-          if [ -n "$TAG" ]; then mkdir -p tools/map/out && gh release download "$TAG" -p s2.tgz -D /tmp && tar xzf /tmp/s2.tgz -C tools/map/out && ls tools/map/out/s2 | wc -l; fi
+          for TAG in $(python3 -c "import json; d = json.load(open('tools/map/kart.json')).get('s2', ''); print(' '.join(d if isinstance(d, list) else [d]))"); do
+            mkdir -p tools/map/out && gh release download "$TAG" -p s2.tgz -D /tmp/$TAG && tar xzf /tmp/$TAG/s2.tgz -C tools/map/out; done
+          ls tools/map/out/s2 | wc -l || true
       - name: The trees (the release kart.json names, from .github/workflows/trees.yml)
         env:
           GH_TOKEN: ${{ github.token }}
@@ -185,4 +207,4 @@ jobs:
         run: |
           TAG=kart-${{ github.run_number }}
           gh release create "$TAG" kart-game.tar.gz kart-ramme.tar.gz manifest.json --target "${{ github.sha }}" --title "Kartdata $TAG" \
-            --notes "Kartdata for hele kysten i spillets format (sim, view, chart og vec per flis) fra tools/map, Overture $(python3 -c "import json; print(json.load(open('tools/map/kart.json'))['overture'])"), commit ${{ github.sha }}. $(cat tools/map/out/national/game.json) kart-ramme.tar.gz: rammen for havsteget (tools/map/ramme.py), med dybden fra $(python3 -c "import json; print(json.load(open('ramme/manifest.json'))['deep'])")."
+            --notes "Kartdata for hele kysten i spillets format (sim, view, chart og vec per flis) fra tools/map, Overture $(python3 -c "import json; print(json.load(open('tools/map/kart.json'))['overture'])"), commit ${{ github.sha }}. $(cat tools/map/out/national/game.json) kart-ramme.tar.gz: rammen for havsteget (tools/map/ramme.py), med dybden fra $(python3 -c "import json; print(json.load(open('ramme/manifest.json'))['deep'])"). ${{ needs.seen.outputs.mark }}"

@@ -12,6 +12,9 @@ NOR = (4.0, 57.7, 32.0, 71.5)   # lon/lat box round Norway with Jutland and Kola
 # so the coast's index and what it fetches stay as they were
 WIDE = (-57.0, 52.5, 86.0, 85.0)
 WIDE_TYPES = ['base/land']
+# the islands with detail off the old frame (H1b R3, 04.11.2026): Svalbard with Bjørnøya and Hopen, and Jan Mayen, every type the
+# coast's tiles read, in an index of their own (NOR stops at 71.5 N); features() takes it for a box whose centre is off the old frame
+POLAR = (-12.0, 70.3, 40.0, 81.6)
 TYPES = ['base/land', 'base/water', 'base/land_cover', 'base/land_use', 'base/infrastructure', 'base/bathymetry', 'buildings/building', 'transportation/segment', 'divisions/division_area', 'divisions/division']
 CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cache')
 os.makedirs(CACHE, exist_ok=True)
@@ -66,8 +69,8 @@ def files():
     return json.load(open(f))
 
 def index(wide=False):
-    box, types = (WIDE, WIDE_TYPES) if wide else (NOR, TYPES)
-    f = os.path.join(CACHE, f'index-{RELEASE}' + ('-wide' if wide else '') + '.json')
+    box, types = (WIDE, WIDE_TYPES) if wide is True else (POLAR, TYPES) if wide == 'polar' else (NOR, TYPES)
+    f = os.path.join(CACHE, f'index-{RELEASE}' + ('-wide' if wide is True else '-polar' if wide == 'polar' else '') + '.json')
     idx = json.load(open(f)) if os.path.exists(f) else {}
     if all(t in idx for t in types): return idx
     def rgs(key, size):
@@ -102,8 +105,16 @@ def fetch_rg(key, size, g, cols):
     os.makedirs(os.path.dirname(cf_), exist_ok=True); pq.write_table(t, cf_)
     return t
 
-# the features of a type whose bbox touches a lon/lat box (the row groups are cached, so a second region costs nothing)
-def features(typ, box, cols, workers=8, wide=False):
+# the features of a type whose bbox touches a lon/lat box (the row groups are cached, so a second region costs nothing). The index:
+# wide=True the wide frame's (base/land only), False the coast's; None (the default) the polar one when the box's centre lies off the
+# old frame (x or y below 0 in the national frame: Svalbard, Bjørnøya, Hopen, Jan Mayen), else the coast's, so the coast's tiles and
+# the national stages read what they read before
+def features(typ, box, cols, workers=8, wide=None):
+    if wide is None:
+        from pyproj import Transformer
+        global _TN
+        if '_TN' not in globals(): _TN = Transformer.from_crs(4326, 25833, always_xy=True)
+        e, n = _TN.transform((box[0] + box[2]) / 2, (box[1] + box[3]) / 2); wide = 'polar' if e < -250000 or n > 8050000 else False
     idx = index(wide)[typ]
     jobs = [(k, size, r[0]) for k, (size, rs) in idx.items() for r in rs if r[5] >= box[0] and r[3] <= box[2] and r[6] >= box[1] and r[4] <= box[3]]
     cols = list(dict.fromkeys(cols + ['bbox']))
@@ -118,5 +129,7 @@ def features(typ, box, cols, workers=8, wide=False):
 
 if __name__ == '__main__' and sys.argv[1:2] == ['index']:
     idx = index(); print(json.dumps({t: [len(v), sum(len(x[1]) for x in v.values())] for t, v in idx.items()}))
+if __name__ == '__main__' and sys.argv[1:2] == ['polar']:
+    idx = index('polar'); print(json.dumps({t: [len(v), sum(len(x[1]) for x in v.values())] for t, v in idx.items()}))
 if __name__ == '__main__' and sys.argv[1:2] == ['wide']:
     idx = index(True); print(json.dumps({t: [len(v), sum(len(x[1]) for x in v.values())] for t, v in idx.items()}))

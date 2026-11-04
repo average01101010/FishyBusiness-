@@ -17,20 +17,28 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - id: seen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/ci/seen.py gebco tools/map/gebco.json
+      - if: steps.seen.outputs.skip != 'true'
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install numpy==1.26.4 requests pyproj==3.7.2 rasterio
-      - name: GEBCO on the wide frame
+      - if: steps.seen.outputs.skip != 'true'
+        run: pip install numpy==1.26.4 requests pyproj==3.7.2 rasterio
+      - if: steps.seen.outputs.skip != 'true'
+        name: GEBCO on the wide frame
         run: |
           df -h . | tail -1
           set -o pipefail
           python3 tools/map/deep.py gebco | tee gebco.json
-      - name: The release
+      - if: steps.seen.outputs.skip != 'true'
+        name: The release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG=gebco-${{ github.run_number }}
           cp tools/map/out/gebco/gebco1k.npz gebco1k.npz
           gh release create "$TAG" gebco1k.npz --target "${{ github.sha }}" --title "GEBCO $TAG" \
-            --notes "GEBCO 2025 Grid (GEBCO Compilation Group (2025) GEBCO 2025 Grid, doi:10.5285/37c52e96-24ea-67ce-e063-7086abc05f29) på rammens 1 km-celler (frame.WIDE), tools/map/deep.py gebco, commit ${{ github.sha }}. $(tail -1 gebco.json)"
+            --notes "GEBCO 2025 Grid (GEBCO Compilation Group (2025) GEBCO 2025 Grid, doi:10.5285/37c52e96-24ea-67ce-e063-7086abc05f29) på rammens 1 km-celler (frame.WIDE), tools/map/deep.py gebco, commit ${{ github.sha }}. ${{ steps.seen.outputs.mark }} $(tail -1 gebco.json)"
