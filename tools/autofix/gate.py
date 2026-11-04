@@ -7,7 +7,8 @@ plain; .github/workflows/autofix.yml runs this on it, and merges and deploys whe
 1. Every file is one a fix may touch (ALLOW) and none that must not be touched without Jonas (DENY): the cloud, the shop and payments,
    the consent, the error trap, the privacy and terms pages, the data, the app's worker, the server, the workflows, the database, the
    routines themselves. A fix that needs those goes to Jonas.
-2. It is small: at most MAX_LINES lines added and removed together, MAX_FILES files.
+2. It is small: at most MAX_LINES lines added and removed together, MAX_FILES files. The fix's own new screenshots in docs/pr/<branch>/
+   (JPEG or PNG, each under SHOT_MAX, at most SHOT_N) are not counted as lines (04.11.2026).
 3. No added code line does what a fix to the game never needs and an attack would: talk to another host (an address that is not
    detstorebla.no), run text as code (eval, new Function, import()), read cookies, beacons, sockets, new workers, write the document.
    The error list and the feedback that the routine reads come from anyone; this is the guard against a «fix» written by them.
@@ -23,6 +24,11 @@ ALLOW = re.compile(r'^(src/js/|src/styles\.css$|tests/|docs/)')
 DENY = re.compile(r'^(src/js/errtrap\.js|src/js/ui/10f-cloud\.js|src/js/ui/10i-shop\.js|src/js/ui/10q-buymoment\.js|src/js/ui/10g-push\.js|'
                   r'src/js/ui/06e-feedback\.js|src/js/lib/|tests/_env\.py|tests/run\.py|tests/unit/run\.mjs|docs/systemer/tilbakemelding-og-admin\.md)')
 MAX_LINES, MAX_FILES = 400, 15
+# the fix's own screenshots (tools/feedback/RUTINE.md, D4 26.10.2026: docs/pr/<branch>/staaende.jpg and liggende.jpg) are not lines of code:
+# Jonas 04.11.2026 «porten for automatiske rettinger skal slippe gjennom skjermbilder». Only new pictures there, each a real JPEG or PNG
+# under SHOT_MAX bytes and at most SHOT_N of them; any other binary file still counts as 1998 lines
+SHOT = re.compile(r'^docs/pr/[^/]+/[^/]+\.(jpe?g|png)$', re.I)
+SHOT_MAX, SHOT_N = 200 * 1024, 4
 RETRY = 2   # how many times a test red with the fix, green without, is run again alone before it stops the fix
 BAD = [(re.compile(r'https?://(?!(www\.)?detstorebla\.no\b)', re.I), 'en adresse til en annen vert'),
        (re.compile(r'\beval\s*\(|\bnew\s+Function\b|\bFunction\s*\(\s*[\'"`]|\bimport\s*\('), 'tekst som kjøres som kode'),
@@ -32,6 +38,15 @@ BAD = [(re.compile(r'https?://(?!(www\.)?detstorebla\.no\b)', re.I), 'en adresse
 
 def git(*a):
     return subprocess.run(['git'] + list(a), cwd=ROOT, capture_output=True, text=True, check=True).stdout
+
+
+def shot_ok(f):
+    """'' when f in HEAD is a JPEG or PNG under SHOT_MAX bytes, else why not."""
+    size = int(git('cat-file', '-s', 'HEAD:' + f).strip())
+    if size > SHOT_MAX: return '%d kB, grensen er %d kB' % (size // 1024, SHOT_MAX // 1024)
+    head = subprocess.run(['git', 'cat-file', 'blob', 'HEAD:' + f], cwd=ROOT, capture_output=True, check=True).stdout[:8]
+    if not (head[:3] == b'\xff\xd8\xff' or head == b'\x89PNG\r\n\x1a\n'): return 'ikke et JPEG- eller PNG-bilde'
+    return ''
 
 
 def results(text):
@@ -61,10 +76,19 @@ def main():
     for f in files:
         if not ALLOW.match(f) or DENY.match(f): R['why'].append('filen %s er ikke en automatisk retting får endre' % f)
     if not files: R['why'].append('ingen endringer')
-    # 2. the size
+    # 2. the size (the screenshots apart, shot_ok)
+    added = set(f for f in git('diff', '--name-only', '--diff-filter=A', mb, 'HEAD').split('\n') if f)
+    R['shots'] = []
     for l in git('diff', '--numstat', mb, 'HEAD').split('\n'):
         p = l.split('\t')
-        if len(p) == 3: R['lines'] += (int(p[0]) if p[0].isdigit() else 999) + (int(p[1]) if p[1].isdigit() else 999)
+        if len(p) != 3: continue
+        if p[0] == '-' and p[1] == '-' and p[2] in added and SHOT.match(p[2]):
+            why = shot_ok(p[2])
+            if why: R['why'].append('skjermbildet %s: %s' % (p[2], why))
+            else: R['shots'].append(p[2])
+            continue
+        R['lines'] += (int(p[0]) if p[0].isdigit() else 999) + (int(p[1]) if p[1].isdigit() else 999)
+    if len(R['shots']) > SHOT_N: R['why'].append('%d skjermbilder, grensen er %d' % (len(R['shots']), SHOT_N))
     # (a test may be added to, never cut: a fix that makes a test green by taking a check out is not a fix)
     for l in git('diff', '--numstat', '--diff-filter=M', mb, 'HEAD', '--', 'tests/').split('\n'):
         p = l.split('\t')
