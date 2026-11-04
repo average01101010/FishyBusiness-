@@ -400,3 +400,12 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
   - **Neste:** Jonas sier ja til utrulling, så R5 (hav, vær og is).
 - 04.11.2026: **R4 rullet ut** (Jonas: «Rull ut»). Arbeidsgrenen med kjølvannet til de andre båtene er flettet inn først. Etter flettingen er enhetstestene (965 OK), `sonetest` og `rulestest` grønne.
   - **Neste:** R5 (hav, vær og is) i en ny økt.
+- 04.11.2026: **R5 bygd** (gren `ccr-h1b-r5-is`, ikke rullet ut). Se 5.20f i `docs/systemer/vaer-og-hav.md`.
+  - **Isen:** OSI SAF OSI-450-a, månedsmidlene 1991–2020, i `src/data/is.json` (releasen `is-3`, `tools/is/is.py`, `is.yml`), 25 km og 1 %-trinn. Grensen er 40 % (nedre kant av åpen drivis hos WMO). Kanten glir dag for dag. Autonav, seilasen og rorstyringen stopper ved isen; kartplotteren og Vær-appen viser den. Ingen båt har isklasse ennå.
+  - **Lisensen:** produktsiden sier CC BY 4.0, filene sier gratis bruk med «Copyright EUMETSAT». Det siste står i Vær-appen.
+  - **Klimaet:** 13 nye punkter på havet (`klima.yml`).
+  - **Tidevannet:** Kartverket svarte for Longyearbyen, Ny-Ålesund og Jan Mayen; resten av Svalbard, Bjørnøya, Hopen, det åpne havet og de utenlandske kystene kommer fra EOT20 (CC BY), 306 punkter (`tide-8`). EOT20 stemmer med Kartverket der de møtes.
+  - **Lyset ved 80° N** er sjekket i `tests/unit/sol.test.mjs`. Rettet: nordlyset leste skyene der båten er.
+  - **Dekningen** på Svalbard og Jan Mayen følger bosetningene.
+  - **Svarene på kap. 5:** isen og lisensen er lest i dataene selv; grensen på 40 % er funnet hos WMO via Canadian Ice Service. `api.sehavniva.no` og Kartverket gir bare tre steder på Svalbard og Jan Mayen, og EOT20 er den frie globale modellen.
+  - **Neste:** Jonas sier ja til utrulling, så R6 (fisken og havflåten på de nye feltene).

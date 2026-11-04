@@ -356,7 +356,10 @@ function dynHelm(d, dtG){
     for (let i = 1; i <= n; i++){ const q = {x:a.x + (to.x - a.x) * i / n, y:a.y + (to.y - a.y) * i / n};
       if (isLand(q)){ if (Math.abs(d.u) > 3 * KN_MS){ dynWrite(b, d); runAground(last); helmOff(); } else { d.X = last.x * 1000; d.Y = last.y * 1000; d.u = 0; d.v = 0; dynWrite(b, d); h.v = 0; } return; } last = q; }
     if (coastSegHit(a, to)){ if (Math.abs(d.u) > 3 * KN_MS){ dynWrite(b, d); runAground(a); helmOff(); } else { d.X = X0; d.Y = Y0; d.u = 0; d.v = 0; dynWrite(b, d); h.v = 0; } return; }
-    const gp = groundCheck(a, to); if (gp){ dynWrite(b, d); runAground(gp); helmOff(); return; } }
+    const gp = groundCheck(a, to);
+    // the sea ice (H1b R5): she stops at the edge, she does not run aground on it; said once a minute at most
+    if (gp && gp.ice){ d.X = X0; d.Y = Y0; d.u = 0; d.v = 0; dynWrite(b, d); h.v = 0; if (!(HELM.iceT > S.t - 1)){ HELM.iceT = S.t; const w = seaIceWords(gp); log(w.no, w.en, 'nav'); if (typeof toast === 'function') toast(S.lang === 'en' ? w.en : w.no); } return; }
+    if (gp){ dynWrite(b, d); runAground(gp); helmOff(); return; } }
   dynWrite(b, d); h.v = d.u / KN_MS; h.yaw = d.r;
   fuelUse(b, fuelLph(Math.abs(h.v), windAt(H)) / 3600 * dtG);
   HELM.nm += dd / gridScale(a) / NM; if (HELM.nm > 0.05 && meAboard()){ tatAdd('nm', HELM.nm); HELM.nm = 0; }
@@ -528,9 +531,9 @@ function dynAuto(d, dtG){
   // the shallows seen on the line ahead (sailReplan, 05-vessels.js); only the player's own unsafe leg puts her aground. Before, a
   // corner cut on her radius or a drift off the line at speed ran her aground on an Autonav route, tilbakemelding #96, 26.10.2026)
   const a = {x:X0 / 1000, y:Y0 / 1000}, to = {x:d.X / 1000, y:d.Y / 1000}; let gp = null; try { gp = Math.hypot(d.X - X0, d.Y - Y0) > 0.01 ? groundCheck(a, to) : null; } catch (e){}
-  if (gp){ if (pl.unsafe && pl.unsafe[pl.idx]){ dynWrite(b, d); runAground(gp); return; }
+  if (gp){ if (pl.unsafe && pl.unsafe[pl.idx] && !gp.ice){ dynWrite(b, d); runAground(gp); return; }
     const fast = Math.abs(d.u) > 1.5; d.X = X0; d.Y = Y0; d.u = 0; d.v = 0;
-    if (fast && !pl.replan){ d.r = 0; dynWrite(b, d); if (!sailReplan(pl, b, gp)) runAground(gp); return; } }
+    if ((fast || gp.ice) && !pl.replan){ d.r = 0; dynWrite(b, d); if (!sailReplan(pl, b, gp)){ if (gp.ice) sailStop(pl, b, iceWhy(gp)); else runAground(gp); } return; } }
   DYN.nm += Math.hypot(d.X - X0, d.Y - Y0) / 1000 / gridScale(a) / NM;
   dynWrite(b, d);
 }

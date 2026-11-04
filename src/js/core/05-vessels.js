@@ -769,7 +769,7 @@ function sail(H, W, hs){
     const w = pl.wps[pl.idx], d = dist(b.pos, w);
     if (d > 1e-6) b.heading = Math.atan2(w.x - b.pos.x, -(w.y - b.pos.y));
     const to = d <= left ? {x:w.x, y:w.y} : {x:b.pos.x + (w.x - b.pos.x) / d * left, y:b.pos.y + (w.y - b.pos.y) / d * left}, gp = groundCheck(b.pos, to);
-    if (gp){ if (!sailReplan(pl, b, gp)) runAground(gp); return; }
+    if (gp){ if (!sailReplan(pl, b, gp)){ if (gp.ice) sailStop(pl, b, iceWhy(gp)); else runAground(gp); } return; }
     if (d <= left){ b.pos = to; left -= d; if (arrive(w)) return; }
     else { b.pos = to; left = 0; }
   }
@@ -791,10 +791,11 @@ function sailReplan(pl, b, gp){
   if (d > 0.03){ const f = (d - 0.025) / d, q = {x:b.pos.x + (gp.x - b.pos.x) * f, y:b.pos.y + (gp.y - b.pos.y) * f}; if (!groundCheck(b.pos, q)) b.pos = q; }
   b.v = 0;
   const key = pl.idx + '|' + pl.wps.length; if (SAIL_RP.at !== key){ SAIL_RP.at = key; SAIL_RP.n = 0; }
-  const none = ['Grunt vann forut, og Autonav fant ingen trygg vei rundt. Båten ligger stille. Legg en ny rute.', 'Shallow water ahead, and Autonav found no safe way round. The boat lies still. Set a new route.'];
+  const none = gp.ice ? iceWhy(gp, true) : ['Grunt vann forut, og Autonav fant ingen trygg vei rundt. Båten ligger stille. Legg en ny rute.', 'Shallow water ahead, and Autonav found no safe way round. The boat lies still. Set a new route.'];
   if (++SAIL_RP.n > 3){ sailStop(pl, b, none); return true; }
   pl.replan = {t:S.t};
-  log('Grunt vann forut. Autonav stopper og finner en vei rundt.', 'Shallow water ahead. Autonav stops and finds a way round.', 'nav');
+  if (gp.ice){ const w = seaIceWords(gp); log(w.no + ' Autonav stopper og finner en vei rundt.', w.en + ' Autonav stops and finds a way round.', 'nav'); }
+  else log('Grunt vann forut. Autonav stopper og finner en vei rundt.', 'Shallow water ahead. Autonav stops and finds a way round.', 'nav');
   const from = {x:b.pos.x, y:b.pos.y}, to = {x:w.x, y:w.y}, PL = pl, vid = S.cur;
   // on this vessel's state when the way is found (the player may be aboard another by then)
   const bound = fn => { const v = typeof vesselById === 'function' ? vesselById(vid) : null; if (v && v.id !== S.cur) onVessel(v, fn); else fn(); };
@@ -811,6 +812,8 @@ function sailReplan(pl, b, gp){
   })).catch(e => { done(); console.error(e); bound(() => { if (S.plan === PL && PL.replan){ PL.replan = null; sailStop(PL, S.boat, none); } }); });
   return true;
 }
+// the ice ahead (H1b R5): why she stops, with or without a try at a way round
+function iceWhy(p, tried){ const w = seaIceWords(p); return tried ? [w.no + ' Autonav fant ingen vei rundt. Båten ligger stille. Legg en ny rute.', w.en + ' Autonav found no way round. The boat lies still. Set a new route.'] : [w.no + ' Båten ligger stille. Legg en ny rute.', w.en + ' The boat lies still. Set a new route.']; }
 // the boat stops where she is, and what is left of the route goes back to the draft (as «pause» does, ui/03b-route.js routePause)
 function sailStop(pl, b, why){
   S.draft = pl.wps.slice(pl.idx).map(w => ({...w})); S.draftSpeed = pl.speed || S.draftSpeed; if (typeof draftForget === 'function') draftForget();

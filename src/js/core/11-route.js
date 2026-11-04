@@ -38,6 +38,21 @@ function leiaTideCredit(a, b){
   for (const p of [a, b]) for (let h = 0; h <= hrs; h += 0.25){ const z = tideCD(H0 + h, p); if (z < lo) lo = z; }
   return isFinite(lo) ? clamp(lo - LEIA.tideMargin, -0.5, 1) : 0;
 }
+// The sea ice in the route (H1b R5, 03h-is.js): water with SEA_ICE_LIM % ice or more is shut to a boat without an ice class, at the
+// time the route is made and at the trip's end (the straight line at cruising speed and a third more, 4 h on top, 10 days at most;
+// the edge moves a few km a day), and the water by the edge is a little dear (up to 2 more a km), so the way keeps off it. A boat
+// that is in the ice already (it came over her at anchor or at the quay) may go through ice up to what she lies in, so she can get out;
+// the sailing then lets her go only towards thinner ice (groundCheck). Set by leiaRoute; off outside a route (the bake, the tests).
+const LEIA_ICE = {on:false, H0:0, H1:0, cap:0};
+function leiaIceSet(a, b){
+  if (typeof SEA_ICE === 'undefined' || !SEA_ICE || !S || S.t == null || BOAT.iceClass) return {on:false, H0:0, H1:0, cap:0};
+  const H0 = S.t / 60, kn = Math.min(S.draftSpeed || 99, BOAT.cruise || 6), hrs = Math.min(240, dist(a, b) * 1.3 / (kn * 1.852) + 4), c = seaIceAt(a, H0);
+  return {on:true, H0, H1:H0 + hrs, cap:c >= SEA_ICE_LIM ? c + 1 : 0};
+}
+const leiaIceC = p => LEIA_ICE.on ? Math.max(seaIceAt(p, LEIA_ICE.H0), seaIceAt(p, LEIA_ICE.H1)) : 0;
+const leiaIce = p => { const c = leiaIceC(p); return c >= SEA_ICE_LIM && c > LEIA_ICE.cap; };
+// the first point on a leg the ice shuts (every 250 m), or null
+function leiaIceLeg(p, q){ if (!LEIA_ICE.on) return null; const n = Math.max(1, Math.ceil(dist(p, q) / 0.25)); for (let i = 1; i <= n; i++){ const pt = {x:p.x + (q.x - p.x) * i / n, y:p.y + (q.y - p.y) * i / n}; if (leiaIce(pt)) return pt; } return null; }
 // points (km) whose cells are shut while the mend's local search runs (leiaCost): where a leg between two open cells fails
 const LEIA_AVOID = [];
 // the most waypoints for a way of km kilometres (cells): 12 up to 40 km, then one more every 8 km, at most 40
@@ -75,9 +90,10 @@ function leiaCost(G, v, sd){
   if (G.mask && !G.mask[v]) k = Infinity;
   else {
     const p = leiaCell(G, v), d = leiaShore(G, p);
-    if (!(d > 0) || (LEIA_AVOID.length && LEIA_AVOID.some(a => Math.abs(a.x - p.x) < 0.075 && Math.abs(a.y - p.y) < 0.075))) k = Infinity;
+    const ic = leiaIceC(p);
+    if (!(d > 0) || (LEIA_AVOID.length && LEIA_AVOID.some(a => Math.abs(a.x - p.x) < 0.075 && Math.abs(a.y - p.y) < 0.075)) || ic >= SEA_ICE_LIM && ic > LEIA_ICE.cap) k = Infinity;
     else {
-      const hb = inHarbour(p); k = 1;
+      const hb = inHarbour(p); k = 1 + 2 * Math.min(1, ic / SEA_ICE_LIM);
       if (d < LEIA.shore) k += LEIA.shoreK * (LEIA.shore - d) / LEIA.shore;
       if (!hb){ if (leiaRocks(G)[v]) k += LEIA.dryK; const z = depthF(p); if (z < leiaLim()) k = Infinity; else if (z < sd) k += LEIA.dryK; else if (z < sd + 1) k += LEIA.shallowK; }
     }
@@ -211,6 +227,7 @@ function leiaLegOk(p, q, sd, margin){
   const L = dist(p, q), n = Math.max(1, Math.ceil(L / 0.002));
   // the depth is checked up to the ends too, unless an end itself lies in shallow water (a set's buoy, the naust's berth): there the
   // boat goes anyway, and the 50 m round it are hers (before 08.10.2026 the 50 m by every end went unchecked)
+  if (leiaIceLeg(p, q)) return false;
   const sp = inHarbour(p) || depthF(p) < sd + 1, sq = inHarbour(q) || depthF(q) < sd + 1;
   for (let i = 1; i < n; i++){
     const u = i / n, pt = {x:p.x + (q.x - p.x) * u, y:p.y + (q.y - p.y) * u}; if (isLand(pt)) return false;
@@ -230,7 +247,7 @@ async function leiaLegFail(p, q, tick, endP, endQ, strict){
   const L = dist(p, q), n = Math.max(1, Math.ceil(L / 0.002)), lim = strict ? Math.max(safeDepth(), leiaLim()) : leiaLim();   // (the strict rule is the chart's, as the route list's warnings: no tide)
   // land anywhere, a harbour's quay too, except the 20 m by the route's own end when it lies in a harbour (a boat at her berth has
   // the quay's land cells beside her; endP, endQ); the depth only outside harbours, which are dredged
-  const hp = endP && inHarbour(p) ? 0.02 : 0, hq = endQ && inHarbour(q) ? 0.02 : 0;
+  const hp = endP && inHarbour(p) ? 0.02 : 0, hq = endQ && inHarbour(q) ? 0.02 : 0, ice = leiaIceLeg(p, q); if (ice) return ice;
   for (let i = 1; i <= n; i++){ const pt = i === n ? q : {x:p.x + (q.x - p.x) * i / n, y:p.y + (q.y - p.y) * i / n}, s = L * i / n;
     if (isLand(pt) ? !(s < hp || L - s < hq || quayLand(pt)) : ((i & 1) === 0 && !inHarbour(pt) && depthF(pt) < lim)) return pt; if ((i & 63) === 0 && tick) await tick(); }
   if (inHarbour(q)) return null;
@@ -320,7 +337,7 @@ async function leiaPull(P, sd, st){
   if (P.length < 3) return P;
   const out = [P[0]]; let i = 0, t0 = performance.now(), checks = 0, full = 0; const T0 = t0;
   const tick = async () => { if (performance.now() - t0 > LEIA.slice){ leiaSlice(st, t0, 'pull2'); await leiaYield(); t0 = performance.now(); } };
-  const landAt = (a, b, step) => { const n = Math.max(1, Math.ceil(dist(a, b) / step)); for (let k = 1; k < n; k++) if (isLand({x:a.x + (b.x - a.x) * k / n, y:a.y + (b.y - a.y) * k / n})) return true; return false; };
+  const landAt = (a, b, step) => { const n = Math.max(1, Math.ceil(dist(a, b) / step)); if (step > 0.1 && leiaIceLeg(a, b)) return true; for (let k = 1; k < n; k++) if (isLand({x:a.x + (b.x - a.x) * k / n, y:a.y + (b.y - a.y) * k / n})) return true; return false; };
   const shoreOk = (a, b) => { const L = dist(a, b), n = Math.max(1, Math.ceil(L / 0.024)); for (let k = 1; k < n; k++){ const u = k / n, pt = {x:a.x + (b.x - a.x) * u, y:a.y + (b.y - a.y) * u}; if (L * Math.min(u, 1 - u) < 0.06 || inHarbour(pt)) continue; if (coastDist(pt) < LEIA.shoreMin) return false; } return true; };
   const ok = async (a, b, eA, eB) => { checks++; try { if (landAt(a, b, 0.2) || landAt(a, b, 0.008) || !shoreOk(a, b) || !obsClear(a, b)) return false; full++; return !(await leiaLegFail(a, b, tick, eA, eB, true)); } catch (e){ return false; } };
   const last = P.length - 1;
@@ -345,7 +362,11 @@ async function leiaRoute(a, b, aPort, bPort, opt){
   // (two routes can be under way at once, the comparison in the chart plotter or the sailing's way round beside the player's: each
   // puts back what it found, not 0, and both are from the same boat at the same time, so their credits are all but the same)
   const credit0 = LEIA_TIDE.credit, credit = opt && opt.noTide ? 0 : leiaTideCredit(a, b); LEIA_TIDE.credit = credit;
-  try { const r = await leiaRoute0(a, b, aPort, bPort, false, opt); if (r && r.st) r.st.tide = +credit.toFixed(2); return r; } finally { LEIA.shoreK = shoreK; LEIA.margins = margins; HIND.ctx = ctx; LEIA_TIDE.credit = credit0; }
+  const ice0 = Object.assign({}, LEIA_ICE); Object.assign(LEIA_ICE, leiaIceSet(a, b));
+  // the end itself in the ice: said so, not searched for
+  if (!bPort && leiaIce(b)){ const w = seaIceWords(b); Object.assign(LEIA_ICE, ice0); LEIA.shoreK = shoreK; LEIA.margins = margins; HIND.ctx = ctx; LEIA_TIDE.credit = credit0;
+    return {why:['Målet ligger i drivisen (' + Math.round(seaIceAt(b) / 10) + '/10). Båten har ikke isklasse.', 'The goal lies in the drift ice (' + Math.round(seaIceAt(b) / 10) + '/10). The boat has no ice class.']}; }
+  try { const r = await leiaRoute0(a, b, aPort, bPort, false, opt); if (r && r.st){ r.st.tide = +credit.toFixed(2); if (LEIA_ICE.on) r.st.ice = {cap:Math.round(LEIA_ICE.cap)}; } return r; } finally { LEIA.shoreK = shoreK; LEIA.margins = margins; HIND.ctx = ctx; LEIA_TIDE.credit = credit0; Object.assign(LEIA_ICE, ice0); }
 }
 // Step 1 of the coast-wide Autonav (08.10.2026): the way from a point by the shore, in a narrow basin or among islets, out to
 // water where the 100 m search can take over (or to where goal(q) says, within km), found on the 25 m mask (the fine coast decides what is land): breadth-first through
@@ -356,7 +377,7 @@ function leiaLane(p, goal, km){
   const M = MAPD.L.mask, c = M.c, nx = M.nx, ny = M.ny, lim = leiaLim();
   const cell = k => { const x = k % nx; return {x:(M.ix0 + x + 0.5) * c, y:(M.iy0 + (k - x) / nx + 0.5) * c}; };
   const X0 = Math.floor(p.x / c) - M.ix0, Y0 = Math.floor(p.y / c) - M.iy0; if (X0 < 0 || Y0 < 0 || X0 >= nx || Y0 >= ny) return null;
-  const W = new Map(), wet = (x, y) => { const k = y * nx + x; let v = W.get(k); if (v === undefined){ const q = cell(k); try { v = !isLand(q) && (inHarbour(q) || depthF(q) >= lim && !rockOnLeg(q, q, 0.0135)); } catch (e){ v = false; } W.set(k, v); } return v; };
+  const W = new Map(), wet = (x, y) => { const k = y * nx + x; let v = W.get(k); if (v === undefined){ const q = cell(k); try { v = !isLand(q) && !leiaIce(q) && (inHarbour(q) || depthF(q) >= lim && !rockOnLeg(q, q, 0.0135)); } catch (e){ v = false; } W.set(k, v); } return v; };
   const open = q => { try { if (!mapSimAt(q)) return coastDistFar(q) >= LANE.clear; const L = MAPD.L.dc; return rcell(L, Math.floor(q.x / 0.1), Math.floor(q.y / 0.1)) > 0 && coastDist(q) >= LANE.clear; } catch (e){ return false; } };
   const s0 = Y0 * nx + X0, prev = new Map([[s0, -1]]), Q = [s0]; let end = -1;
   for (let h = 0; h < Q.length && h < LANE.max; h++){

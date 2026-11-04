@@ -1,6 +1,17 @@
 // ---------- services behind the phone ----------
-// the phone's bars by the distance to land: kilometres, so the national core's (it looks far, and never waits for a tile's pack)
-function coverage(p){ const d = coastDistFar(p); return d < 3 ? 4 : d < 8 ? 3 : d < 14 ? 2 : d < 20 ? 1 : 0; }
+// the phone's bars by the distance to land: kilometres, so the national core's (it looks far, and never waits for a tile's pack). Far
+// out at sea there are none (20 km or more from any land).
+// Svalbard, Bjørnøya, Hopen and Jan Mayen (H1b R5): the masts stand only by the settlements, so the bars go by the distance to them
+// and not to the shore (most of the archipelago's coast has no mobile net; an estimate after the settlements that have one, the
+// operators' coverage maps not read, BACKLOG): Longyearbyen, Barentsburg, Ny-Ålesund and Svea, and the station on Jan Mayen
+const COV_ARCTIC = [[78.223, 15.65, 1], [78.065, 14.21, 1], [78.925, 11.93, 1], [77.895, 16.72, 1], [70.94, -8.67, 0.4]];
+let COV_AP = null;
+function coverage(p){
+  const l = LL(p);
+  if (l.lat >= 73.8 && l.lon > -5 && l.lon < 40 || l.lat > 70.4 && l.lat < 71.5 && l.lon > -10 && l.lon < -7){
+    COV_AP = COV_AP || COV_ARCTIC.map(([la, lo, k]) => ({p:P(la, lo), k}));
+    let b = 0; for (const s of COV_AP){ const d = dist(p, s.p) / s.k; b = Math.max(b, d < 8 ? 4 : d < 16 ? 3 : d < 24 ? 2 : d < 32 ? 1 : 0); } return b; }
+  const d = coastDistFar(p); return d < 3 ? 4 : d < 8 ? 3 : d < 14 ? 2 : d < 20 ? 1 : 0; }
 function msg(from, no, en){ S.msgs.push({t:S.t, from, no, en, read:false}); if (S.msgs.length > 80) S.msgs.shift(); if (hooks.onMsg) hooks.onMsg(); }
 // the coast radio on VHF is heard as it is sent: on the screen for 15 seconds and never kept among the messages (Jonas 21.10.2026: «De
 // fyller innboksen totalt»); the deck log keeps the day's weather from it (S.radio, the last forty)

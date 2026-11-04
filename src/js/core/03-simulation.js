@@ -396,7 +396,7 @@ function tideEvents(H0, hours, p){
 // the sky, weaker and low in the north (view3d.js draws the curtains further north the weaker it is); p is where it is seen
 function auroraAt(H, p){ const q = p || herePos(); if (sunAt(H, q).el > -7) return 0;
   const act = clamp(vn(H / 5, 111) * 1.6 - 0.3, 0, 1), lat = obsAt(q).lat / RAD, need = clamp((67 - lat) / 7.5, 0, 1) * 0.9;
-  return clamp((0.5 - cloudAt(H)) / 0.5, 0, 1) * (act > need ? (act - need) / (1 - need) : 0); }
+  return clamp((0.5 - cloudAt(H, q)) / 0.5, 0, 1) * (act > need ? (act - need) / (1 - need) : 0); }
 function riskLevel(W, hs){ const r = BOAT.risk; if (hs >= r[1] || W >= r[3]) return 2; if (hs >= r[0] || W >= r[2]) return 1; return 0; }
 
 // boat
