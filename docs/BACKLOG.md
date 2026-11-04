@@ -87,7 +87,7 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 - **Fire verft i Sverige** (funnet 04.11.2026 av `tests/unit/soner.test.mjs`): `steder.json` har fire verft ved Strømstad (58,6–58,9° N 11,2° Ø) med navnet «Verft verft» («nord», «sør», «sør 2»). Ifølge `docs/handelssteder.md` skal verftene ligge i Norge og hete etter stedet. Testene i R4 hopper over dem.
 
 - **Noen få leibiter i NPC-rutene skjærer et hjørne av land** (`gr.pts` fra `npc.py` brukes som de er). Målt mot vektorkysten 24.10.2026: 5 av 119 leibiter rundt Tromsø, hver med rundt 10 m (ett målepunkt). Rettes best i `npc.py`.
-- **3D på Galaxy A52s (Adreno 642L, oppgave #171):** 3D starter nå med en enklere sjø (6ce4f50, 2c349cd), men konteksten mistes under spill (feilloggen: fire ganger, 11–17 minutter ut i økta og én gang etter 83, på alle kvalitetsnivåer, sist 23.10.2026). Spillet lagrer og laster siden på nytt da. Fra 24.10.2026 skriver feilloggen også om siden var skjult og hvor lenge, hvor lenge 3D har gått, levende buffere og teksturer, kvalitetsnivå, terrengbiter og JS-minne (`glDiag`, `GLN` i `view3d.js`). En seiling på 30 km i testmiljøet ga ingen lekkasje (1 000–1 076 buffere og 15 teksturer hele veien), men JS-minnet var 347 MB.
+- **3D på Galaxy A52s (Adreno 642L, oppgave #171):** 3D starter nå med en enklere sjø (6ce4f50, 2c349cd), men konteksten mistes under spill (feilloggen: fire ganger, 11–17 minutter ut i økta og én gang etter 83, på alle kvalitetsnivåer, sist 23.10.2026). Spillet lagrer og laster siden på nytt da. Fra 24.10.2026 skriver feilloggen også om siden var skjult og hvor lenge, hvor lenge 3D har gått, levende buffere og teksturer, kvalitetsnivå, terrengbiter og JS-minne (`glDiag`, `GLN` i `view3d.js`). En seiling på 30 km i testmiljøet ga ingen lekkasje (1 000–1 076 buffere og 15 teksturer hele veien), men JS-minnet var 347 MB. Fra 04.11.2026 går Auto ett nivå ned på en enhet der konteksten er tapt under spill, siden har krasjet i 3D eller spillet har hengt to ganger, og husker det i sju dager (PR #45, `QM` i `view3d/00-head.js`); omlastingen starter da ikke lenger på samme nivå. Følg med i feillista om de tapte kontekstene og hengene på 642L og 830 blir færre (loggen sier `tak N etter …`). Ikke prøvd på ekte Adreno.
 - Frys- og RSW-fartøyene lander i kar på 300 kg, ett kranløft (2,5 spillminutter) per kar (`landPlan`, `07-harbours.js`). Et fullt snøkrabbefartøy (500 t) gir 1 667 løft, rundt 69 timer spilltid. Hører til havsteget. (Funnet 04.11.2026 under `docs/planer/fiskekar-dekk.md`.)
 
 ## 10.2 Spillbarhet (fra spilltestene og egne notater)
@@ -242,6 +242,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - `S.owned` skrives fortsatt (`03-simulation.js`, `05-phone.js`, `05-vessels.js`), men leses bare av en lagringsmigrering i `11-boot.js`.
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
+
+## Strøket 04.11.2026 (3D-nivået og porten, PR #44 og #45)
+- Auto senker 3D-nivået på en enhet som har tapt konteksten, krasjet eller hengt i 3D (Jonas: «3d nivå skal senkes automatisk om det må det»), PR #45, `qdowntest`.
+- Porten for automatiske rettinger (`tools/autofix/gate.py`) teller ikke lenger rettingens egne skjermbilder i `docs/pr/<gren>/` som 1998 linjer (Jonas: «porten for automatiske rettinger skal slippe gjennom skjermbilder»), PR #44.
 
 ## Strøket 04.11.2026 (båtnavnet, ccr-bf5ccf26-rci1bj)
 

@@ -2153,12 +2153,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1050 linjer)
+## `src/js/ui/phone/07-patch.js` (1053 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1043 `patch()`
+  - 1046 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -3092,21 +3092,25 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **437** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
   - 467 `npcCrewCtx(n, G)`
 
-## `src/js/view3d/00-head.js` (121 linjer)
+## `src/js/view3d/00-head.js` (159 linjer)
 
 - **2** 3D VIEW (plain WebGL, no dependencies)
   - 45 `qualSet()`
-  - 55 `qualTick(dt, fps, now)`
-- **93** math
-  - 94 `persp(fovy, asp, n, f)`
-  - 95 `viewDir(f, up)`
-  - 102 `mul(a, b)`
-  - 103 `model(px, py, pz, yaw, pitch, roll)`
-- **111** noise
-  - 112 `vn2(x, y, s)`
-  - 117 `fbm(x, y, o, s)`
-  - 118 `ridged(x, y)`
-  - 119 `rng(seed)`
+  - 64 `qmDown(why)`
+  - 72 `qmAlive(on)`
+  - 77 `qmCrashCheck()`
+  - 85 `qmFrame(rdt, now)`
+  - 91 `qualTick(dt, fps, now)`
+- **131** math
+  - 132 `persp(fovy, asp, n, f)`
+  - 133 `viewDir(f, up)`
+  - 140 `mul(a, b)`
+  - 141 `model(px, py, pz, yaw, pitch, roll)`
+- **149** noise
+  - 150 `vn2(x, y, s)`
+  - 155 `fbm(x, y, o, s)`
+  - 156 `ridged(x, y)`
+  - 157 `rng(seed)`
 
 ## `src/js/view3d/01-shaders.js` (600 linjer)
 
