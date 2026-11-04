@@ -187,6 +187,11 @@
       const AN = airNow.length ? airNow.reduce((a, c) => Math.hypot(c.w[0] - bv.x, c.w[1], c.w[2] - bv.z) < Math.hypot(a.w[0] - bv.x, a.w[1], a.w[2] - bv.z) ? c : a) : null;
       return {air:AN ? [AN.w[0], AN.w[1], AN.w[2], AN.kind === 'heli'] : null, boat:[bv.x, (bv.y || 0) + 1, bv.z], crane:P ? [P.crane[0], 9, P.crane[1]] : null, chute:P ? [P.drop[0], 4, P.drop[1]] : null, pump:B ? [B.pump[0], 2, B.pump[1]] : null,
         npc:npcNow.map(n => ({x:n.p.x * 1000, z:n.p.y * 1000, v:n.v || 0, st:n.st, big:n.type === 'coastal' || n.type === 'ferry'})).concat(RB && RB.q ? [{x:RB.q.r.p.x * 1000, z:RB.q.r.p.y * 1000, v:RB.q.r.v * 1.4, st:'sailing', big:true}] : [])}; },
+    // down over the deck, so the bleeding tub shows (UI-redesign U4, the first fish): from above and closer, in a short glide; not
+    // from the bridge or in the cinema, where the player has chosen the view
+    lookDeck(){ if (cam.helm || KINO.on) return false; const V = VESSELS[S.boat.type] || {}, d1 = clamp((V.len || 7) * 1.3 + 3, 9, 40), p1 = 0.62, d0 = cam.dist, p0 = cam.pitch, t0 = performance.now();
+      const step = now => { const u = Math.min(1, (now - t0) / 1100), e = u * u * (3 - 2 * u); cam.dist = d0 + (d1 - d0) * e; cam.pitch = p0 + (p1 - p0) * e; if (u < 1) requestAnimationFrame(step); };
+      requestAnimationFrame(step); return true; },
     zoom(f){ if (cam.helm) cam.fov = clamp(cam.fov * f, 12, 75); else cam.dist = clamp(cam.dist * f, 7, 8000); }, reset(){ if (cam.helm){ cam.hy = 0; cam.hp = -0.07; cam.fov = 55; } else { cam.yaw = 0.55; cam.pitch = 0.26; cam.dist = 21; } },
     vesselChanged(){ bv.init = false; bv.st = null; TRAIL.length = 0; },
     showroom, get showing(){ return SHOW ? SHOW.t : null; }, paintView, get painting(){ return !!PAINTV; }, signUnits(){ const o = {s:[], y:[], p:[]}; for (const U of UNITA) (U.v === 's' ? o.s : U.v === 'y' ? o.y : o.p).push(U.id); return o; },
