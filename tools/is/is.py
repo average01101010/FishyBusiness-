@@ -11,7 +11,8 @@ files; when no monthly file is found, the daily files every 3rd day are averaged
 .github/workflows/is.yml runs this and keeps the result as a release is-<run number>.
 
 The result, src/data/is.json, is the game's frame (tools/map/frame.py FRAME) in cells of cell_km (25 km, the source's own), the value
-of a cell the concentration in steps of step_pct (10 %, so 0-10), run-length coded per month (pairs of value and count, 1-255) and
+of a cell the concentration in steps of step_pct (1 %: with 10 % whole fields stood at exactly the limit and crossed it
+on the same day), run-length coded per month (pairs of value and count, 1-255) and
 base64. Land and the source's missing cells and its sea cells next to land (part land at 25 km, with too much ice in the summer) get
 the nearest open sea cells' value (inverse distance over the 4 nearest), so a fjord or a sound has the ice of the sea outside it; the game decides itself what is land. Only the seas the plan names and their neighbours keep
 ice: the Baltic and the Gulf of Bothnia (inside the frame, out of reach from the Norwegian coast) are set to 0.
