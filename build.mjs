@@ -10,6 +10,7 @@ import { dirname, join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import { createHash } from 'node:crypto';
+import { brotliCompressSync, gzipSync, constants as ZC } from 'node:zlib';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SRC = join(ROOT, 'src');
@@ -79,7 +80,12 @@ if (!ONE){
   page = page.replace(/<script id="([^"]+)" type="application\/octet-stream"([^>]*)>([^<]*)<\/script>/g, (m, id, attrs, b64) => {
     const bytes = Buffer.from(b64.trim(), 'base64'), file = id + '-' + createHash('sha256').update(bytes).digest('hex').slice(0, 12) + '.bin';
     writeFileSync(join(DATAOUT, file), bytes); dataFiles.push({id, file, bytes:bytes.length}); dataBytes += bytes.length;
-    return `<script id="${id}" type="application/octet-stream"${attrs} data-src="data/${file}"></script>`;
+    // the app's files also compressed beside them (04.11.2026): Caddy serves an octet-stream as it is (its encode compresses only text,
+    // JSON, wasm and the like), so the 66 MB went over the net uncompressed; with «file_server { precompressed br gzip }»
+    // (tools/server/Caddyfile) the browser gets X.bin.br (19 MB in all) or X.bin.gz (24 MB) and sees X.bin. About 9 s in a build.
+    if (PWA){ writeFileSync(join(DATAOUT, file + '.br'), brotliCompressSync(bytes, {params:{[ZC.BROTLI_PARAM_QUALITY]:9, [ZC.BROTLI_PARAM_SIZE_HINT]:bytes.length}}));
+      writeFileSync(join(DATAOUT, file + '.gz'), gzipSync(bytes, {level:9})); }
+    return `<script id="${id}" type="application/octet-stream"${attrs} data-src="data/${file}" data-b="${bytes.length}"></script>`;
   });
   writeFileSync(join(DATAOUT, 'manifest.json'), JSON.stringify({v:1, files:dataFiles}));
 }
