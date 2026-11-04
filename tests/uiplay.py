@@ -52,7 +52,9 @@ async def play(b, W, H, tag):
         s = json.loads(await pg.evaluate(STATE)); sid = s['id']
         if not seen or seen[-1] != sid:
             seen.append(sid); stuck = 0; await pg.wait_for_timeout(500); await shot('tut-' + str(sid), s['tip'])
-        if sid is None: break
+        if sid is None:
+            if await pg.evaluate("S.tut === 0"): break
+            await pg.wait_for_timeout(500); continue
         stuck += 1
         if s['sleep']:
             if s['ack']: await tap_el('#slAck')
@@ -70,10 +72,10 @@ async def play(b, W, H, tag):
         await pg.wait_for_timeout(500)
     await pg.wait_for_timeout(800); await shot('etter-tur', 'after the first trip, in harbour')
     # the dock fans in harbour
-    items = json.loads(await pg.evaluate("JSON.stringify([...document.querySelectorAll('#dock button')].filter(e => e.offsetParent).map(e => e.id || e.dataset.k || e.textContent.trim()))"))
+    items = json.loads(await pg.evaluate("JSON.stringify([...document.querySelectorAll('#dock .dk-b')].map(e => e.dataset.dk))"))
     print('   dock', items)
     for i in range(len(items)):
-        await pg.evaluate("i => { const e = [...document.querySelectorAll('#dock button')].filter(e => e.offsetParent)[i]; e && e.click(); }", i)
+        await pg.evaluate("i => { const e = [...document.querySelectorAll('#dock .dk-b')][i]; e && e.click(); }", i)
         await pg.wait_for_timeout(700); await shot('dock-%d' % i, 'dock button ' + str(items[i]))
         await pg.evaluate("(() => { if (typeof DOCK !== 'undefined' && DOCK.close) DOCK.close(); document.querySelectorAll('#drawer .x, #dockFan').forEach(() => 0); })()")
         await pg.keyboard.press('Escape'); await pg.wait_for_timeout(300)
@@ -85,8 +87,9 @@ async def play(b, W, H, tag):
         except Exception as e: print('   drawer', p, e)
     await pg.evaluate("try { DOCK.close() } catch (e) {}")
     # the phone and its apps
+    await pg.evaluate("PHONE.show(false); try { DOCK.close() } catch (e) {}"); await pg.wait_for_timeout(300)
     await pg.evaluate("PHONE.show(true, 'home')"); await pg.wait_for_timeout(700); await shot('telefon', 'phone home')
-    apps = json.loads(await pg.evaluate("JSON.stringify([...new Set([...document.querySelectorAll('#phone [data-app]')].map(e => e.dataset.app))])"))
+    apps = json.loads(await pg.evaluate("JSON.stringify([...new Set([...document.querySelectorAll('#phone .ph-app[data-a]')].map(e => e.dataset.a))])"))
     print('   apps', apps)
     for a in apps:
         try:
@@ -98,9 +101,6 @@ async def play(b, W, H, tag):
     await pg.evaluate("setBodyView(true); refreshAll()"); await pg.wait_for_timeout(800)
     await pg.evaluate("BOOK.open()"); await pg.wait_for_timeout(900); await shot('dagbok', 'deck log')
     await pg.evaluate("BOOK.close()"); await pg.wait_for_timeout(300)
-    # at sea, idle on the grounds
-    await pg.evaluate("(() => { const b = S.boat, g = GROUNDS[0].p; b.status = 'idle'; b.port = null; b.pos = {x:g.x, y:g.y}; b.v = 0; refreshAll(); })()")
-    await pg.wait_for_timeout(2500); await shot('sjo', 'at sea, idle')
     json.dump({'steps': steps, 'tut': seen, 'errs': errs}, open(os.path.join(out, 'steps.json'), 'w'), ensure_ascii=False, indent=1)
     print('   ', tag, 'errors', errs[:5])
     await ctx.close()
