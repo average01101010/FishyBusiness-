@@ -77,6 +77,8 @@
   // the share drawn as geometry (only waves long enough for the 4 m grid), on. s: metres behind the stern, q: metres to the side.
   // Transverse waves fill the wedge and decay as 1/sqrt(s); the divergent waves (wave fronts at 35 degrees to the course, k = 1.5 k0) ride
   // the cusp lines and decay as s^-1/3; the bow wave climbs the stem and runs aft along each side at 25 degrees.
+  // The cusp lines lie at 19.47 degrees up to Fr about 0.55 and close in above it as 0.2 / Fr (Rabaud and Moisy 2013, alpha = 1 / (2 sqrt(2 pi) Fr)):
+  // a planing hull's wake is a narrow V, some 9 degrees at Fr 1.25 (the reference video Jonas showed 04.11.2026). uWk2.w is Fr.
   // Both rise from nothing over the first 1.2 m behind the stern: starting at full height they made a step across the stern, drawn as a
   // white line on the water at the transom (feedback 08.10.2026).
   // The pattern follows the way the boat came (Jonas 29.10.2026: «Se på propellbølgene til båten slik at disse svinger på lik linje som
@@ -88,7 +90,7 @@
     'float wakeH(vec2 P,float bow){if(uWk3.w<0.5)return 0.0;vec2 r=P-uWk0.xy;float s=-dot(r,uWk0.zw);float q=abs(r.x*uWk0.w-r.y*uWk0.z);float L=uWk2.x;' +
     'if(uWkS.y>0.5&&dot(r,r)<pow(uWk1.w+L+20.0,2.0)){float bd=1e9;' + '{vec2 A=uWk0.xy;vec2 B=uWkT[0].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=min(t,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=0.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[0].xy;vec2 B=uWkT[0].zw;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=1.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[0].zw;vec2 B=uWkT[1].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=2.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[1].xy;vec2 B=uWkT[1].zw;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=3.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[1].zw;vec2 B=uWkT[2].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=4.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[2].xy;vec2 B=uWkT[2].zw;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=5.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[2].zw;vec2 B=uWkT[3].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=max(t,0.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=6.0*uWkS.x+t*l;q=d;}}' + '}' +
     'if(s<-L-2.0||s>uWk1.w||q>max(s,0.0)*0.42+L*0.6+4.0)return 0.0;float h=0.0;' +
-    'if(s>0.0){float e=s*0.3536;float far=1.0-smoothstep(uWk1.w*0.55,uWk1.w,s);float a=uWk1.y*far*smoothstep(0.0,1.2,s);' +
+    'if(s>0.0){float e=s*min(0.3536,tan(0.2/max(uWk2.w,0.2)));float far=1.0-smoothstep(uWk1.w*0.55,uWk1.w,s);float a=uWk1.y*far*smoothstep(0.0,1.2,s);' +
     'h+=uWk1.z*a*inversesqrt(1.0+s/L)*cos(uWk1.x*s)*(1.0-smoothstep(e*0.75,e*1.02,q))*0.75;' +
     'h+=a*pow(1.0+s/L,-0.333)*sin(1.5*uWk1.x*(0.816*s+0.577*q))*exp(-pow((q-e)/(0.1*s+1.2),2.0));}' +
     'if(bow>0.5){float u=s+L;if(u>-0.5&&u<L*1.5){float lw=0.2+max(u,0.0)*0.466;h+=uWk2.y*exp(-pow((q-lw)/(0.35+max(u,0.0)*0.06),2.0))*exp(-max(u,0.0)/(0.6*L))*smoothstep(-0.5,0.3,u);}}' +
@@ -157,11 +159,23 @@
     // the wash along the side: a band outside the hull from the stem aft, widening aft as the bow wave runs out, thickest where the bow
     // wave breaks on the shoulder; a planing hull throws it further out; the water under the after body is churned too
     'float clump=0.6+0.4*ns(Pb*0.55+vec2(2.0,5.0));' +
+    // how far she is up on the plane (pf: a planing hull from Fr 0.6 to 1.2; a displacement hull never) and how dry the transom runs
+    // (tv: the water leaves the transom clean from Fr 0.45, any hull). On the plane the forebody is out of the water: the wash starts at
+    // the spray root ar, 6 % of the length aft of the stem at rest and 40 % on the plane (the reference video, 04.11.2026)
+    'float pf=pl*smoothstep(0.6,1.2,Fr);float tv=smoothstep(0.45,0.9,Fr);float Lh=bo-st;float hb=uHull.y;float ar=bo-Lh*mix(0.06,0.4,pf);float dry=1.0-pf*smoothstep(ar-0.5,ar+1.0,a);' +
     'if(a>st-1.0&&a<bo+1.5){float al=clamp((bo-a)/(bo-st),0.0,1.0);float wo=w+0.15+al*(0.3+0.1*v+pl*(0.4+0.08*v));float wd=0.35+0.05*v+al*0.4+pl*0.4;' +
     'float band=exp(-pow(max(q-wo,0.0)/wd,2.0));float str=smoothstep(1.2,3.5,v)*(0.5+0.5*smoothstep(0.0,0.3,al))*(1.0-0.3*smoothstep(0.6,1.0,al));' +
-    'float inside=step(q,w)*smoothstep(0.0,0.4,al)*0.5;iw=max(iw,max(band*str,inside)*clump);}' +
+    'float inside=step(q,w)*smoothstep(0.0,0.4,al)*0.5*(1.0-0.8*tv);iw=max(iw,max(band*str,inside)*clump*dry);}' +
+    // the spray sheet on the plane: from the root the chine and the spray rails throw it flat out to both sides, and it lands as two
+    // white wings that open at some 18 degrees from the hull, filled between the hull and their ragged outer edge, on past the transom
+    'if(pf>0.01&&a<ar&&a>st-Lh){float d=ar-a;float ql=(hullW(ar)+0.3+d*(0.32+0.01*v))*(0.8+0.4*ns(Pb*0.35+vec2(7.0,3.0)));float wd2=0.4+0.1*d;' +
+    'float edge=exp(-pow((q-ql)/wd2,2.0));float fill=step(hullW(max(a,st))*0.95,q)*(1.0-smoothstep(ql,ql+wd2,q))*0.75;' +
+    'iw=max(iw,max(edge,fill)*pf*smoothstep(3.0,8.0,v)*(1.0-smoothstep(0.0,Lh,st-a))*clump);}' +
     // the water the transom leaves and the screw churns: a band behind the stern, a beam wide, going on with her way
-    'if(a<st+0.5&&a>st-6.0){float back=st+0.5-a;float wb=(hullW(st)+0.15+0.3+0.1*v+pl*(0.4+0.08*v))*(1.0+0.03*back)*(0.85+0.3*ns(Pb*0.45+vec2(4.0,9.0)));float band=1.0-smoothstep(wb*0.75,wb*1.1,q);float core=1.0-smoothstep(wb*0.2,wb*0.5,q);iw=max(iw,(0.7*band+0.3*core)*clump*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
+    // A dry transom (tv) leaves a hollow behind it that the water closes from both sides: a dark channel down the middle between the
+    // white of the transom's corners and the screws, which closes into a white rooster tail some 3 beams aft (lc)
+    'if(a<st+0.5&&a>st-6.0-tv*hb*5.0){float back=st+0.5-a;float lc=tv*hb*(3.0+0.1*v);float ch=tv*(1.0-smoothstep(lc*0.7,lc,back))*(1.0-smoothstep(hb*0.25,hb*0.6,q));' +
+    'float rst=tv*exp(-pow((back-lc)/(0.8+0.3*hb),2.0))*(1.0-smoothstep(hb*0.3,hb*0.9,q));float wb=(hullW(st)+0.15+0.3+0.1*v+pl*(0.4+0.08*v))*(1.0+0.03*back)*(0.85+0.3*ns(Pb*0.45+vec2(4.0,9.0)));float band=1.0-smoothstep(wb*0.75,wb*1.1,q);float core=1.0-smoothstep(wb*0.2,wb*0.5,q);iw=max(iw,max((0.7*band+0.3*core)*(1.0-0.85*ch),rst)*clump*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
     // the stern wave breaking along the Kelvin arms and the bow wave, as the sea shader breaks them (uWk0 is given in the map's metres)
     'float wh=wakeH(Mg,1.0);if(wh>0.0){vec2 rr=Mg-uWk0.xy;float s=-dot(rr,uWk0.zw);float br=ns(Pb*1.4+vec2(uTime*1.3,0.0))*0.5+0.5;float lam=6.2832/uWk1.x;' +
     'float arm=uWk3.y*smoothstep(0.45,0.9,wh/max(uWk1.y,0.02))*(1.0-smoothstep(0.0,lam,s))*step(0.0,s)*br;' +
@@ -247,7 +261,11 @@
     'float n1=ns(Pw*1.1+vec2(3.1,7.7));float n2=ns(Pw*2.9+vec2(1.3,9.2));float n3=ns(vec2(dot(Pb,w)*0.16,dot(Pb,wp)*1.2)+vec2(5.0,2.0));float n4=ns(Pw*0.4+vec2(8.0,1.0));' +
     'float dens=aw*(0.55+0.45*n4)*(0.6+0.4*n1);float fw=smoothstep(0.06,0.45,dens*(0.75+0.25*n2))*(0.6+0.4*min(aw*1.5,1.0))*lod;' +
     'float agc=max(uFoamTc.x-c0,0.0)*uFoamTc.y;float acv=ac*smoothstep(0.2,1.2,agc);float fcp=smoothstep(0.55,0.9,acv*(0.25+0.75*n3)*(0.6+0.4*n2))*lod*0.6;' +
-    'foam=max(foam,max(fw,fcp));col=mix(col,fc*0.6+col*0.4,clamp(aw*0.35,0.0,0.4)*lod);}}\n#endif\n' +
+    'foam=max(foam,max(fw,fcp));' +
+    // the bubbles the wake drives down glow turquoise under the surface once the white on top has thinned (sunlight scattered by the
+    // bubbles through a few decimetres of water that takes the red), then the milky water as before
+    'float agw=max(uFoamT.x-b0,0.0)*uFoamT.y;vec3 tq=min(vec3(0.16,0.62,0.6)*(uAmb*1.4+uSunCol*0.7),vec3(0.8));col=mix(col,tq,clamp(aw*1.4,0.0,0.6)*smoothstep(0.5,4.0,agw)*(1.0-fw)*lod);' +
+    'col=mix(col,fc*0.6+col*0.4,clamp(aw*0.25,0.0,0.3)*lod);}}\n#endif\n' +
     // shallows and surf, the surf from the sea that reaches this shore
     'if(uSOn>0.5&&uHOn>0.5){vec2 su=(vW.xz-uSRect.xy)*uSRect.zw;if(su.x>0.0&&su.y>0.0&&su.x<1.0&&su.y<1.0){float ef=smoothstep(0.0,0.06,min(min(su.x,su.y),min(1.0-su.x,1.0-su.y)));' +
     'float hb=texture2D(uHgt,su*(255.0/256.0)+0.5/256.0).r*16.0-8.0;float dep=uTideL-hb;float hl=length(S.xy);' +
