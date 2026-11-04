@@ -1,8 +1,10 @@
 // ---------- Kystposten on the phone (core/09h-press.js): the front page and the local tab, a story to read on, the unread count on
 // the app, a word in the game when one comes, and the stories to and from the cloud (supabase/migrations/20261007170000_news.sql) ----------
 const PRESS_KIND = {boat:['Båtkjøp', 'Boats'], name:['Båtdåp', 'Christening'], aground:['Ulykke', 'Accident'], rescue:['Redning', 'Rescue'], salv:['Berging', 'Salvage'],
-  foto:['Fyr', 'Lighthouses'], fish:['Fangst', 'Catch'], fs:['Folk', 'People'], ach:['Folk', 'People'], as:['Næring', 'Business'], tur:['Fiske', 'Fishing'], kvote:['Næring', 'Business'], top:['Toppliste', 'Leaderboard'], land:['Landing', 'Landings'], pris:['Marked', 'Market'], skrei:['Fangst', 'Catch'], gen:['Nyheter', 'News'], annonse:['Annonse', 'Advertisement']};
-const pressL = (s, k) => s[k][S.lang === 'en' ? 1 : 0];
+  foto:['Fyr', 'Lighthouses'], fish:['Fangst', 'Catch'], fs:['Folk', 'People'], ach:['Folk', 'People'], as:['Næring', 'Business'], tur:['Fiske', 'Fishing'], kvote:['Næring', 'Business'], top:['Toppliste', 'Leaderboard'], land:['Landing', 'Landings'], pris:['Marked', 'Market'], skrei:['Fangst', 'Catch'], gen:['Nyheter', 'News'], annonse:['Annonse', 'Advertisement'],
+  bygde:['Bygdekamp', 'Village contest'], lag:['Fiskarlag', 'Fishing club'], kv:['Kystvakt', 'Coast guard']};
+// a kind or field the table does not have falls back to the news label, so one unknown story never stops the paper
+const pressL = (s, k) => (s[k] || PRESS_KIND.gen)[S.lang === 'en' ? 1 : 0];
 function pressImg(s, small){
   if (!s.img) return '';
   if (s.img.foto != null){ const src = typeof turFotoSrc === 'function' ? turFotoSrc(s.img.foto) : null; return src ? '<img class="ph-foto" alt="" src="' + src + '">' : ''; }

@@ -116,6 +116,12 @@ async def main():
         check(rs['d'] > 0 and rs['rec'] and rs['rec'].startswith('Rekordpris på') and rs['recBody'] >= 3 and not rs['loc'] and rs['toldRec'] == 1 and not rs['hole']
               and rs['first'] == 'Nordbaten' and rs['sk'] and 'Nordbaten' in rs['skIng'] and rs['skMe'] and rs['skl'] and rs['toldSk'] == 1 and rs['asked'] == 1,
               "a record price on the front page (not the local tab), told once; the year's first skrei is the first landing north of Stad, in the paper and told once, not asked for again", rs)
+        # every kind the paper can print has its label, so one story never stops the front page (ui/05g-press.js PRESS_KIND)
+        kd = await pg.evaluate("""(() => { const pl0 = window.pressList, kinds = PRESS_KINDS.concat(['top', 'bygde', 'land', 'pris', 'skrei', 'annonse', 'gen', 'ukjent']), bad = [];
+          for (const k of kinds){ window.pressList = () => [{key:'x' + k, t:S.t, kind:k, h:['H', 'H'], ing:['I', 'I'], body:[], me:false, big:false, img:null}];
+            try { const h = pressPage(false); if (!/pa-kick">[^<]+</.test(h)) bad.push(k + ': no label'); } catch (e){ bad.push(k + ': ' + e.message); } }
+          window.pressList = pl0; return {n:kinds.length, bad}; })()""")
+        check(kd['bad'] == [], 'every story kind (also the village contest, the fishing club, the coast guard and an unknown one) gets a label on the front page', kd)
         check(errs == [], 'sidefeil', errs[:3])
         await br.close()
 
