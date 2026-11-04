@@ -365,3 +365,12 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
   - **Neste:** full regresjon med hele kysten, så utrulling av R1 og R2 når Jonas sier ja. Deretter R3.
 - 04.11.2026: **R1 og R2 rullet ut** (Jonas: «Rull ut nå»; sammenslått i arbeidsgrenen 792e679, Hetzner og Pages grønne). Full regresjon med hele kysten først (BACKLOG 10.6). Pushen startet også `gebco.yml` (lagde `gebco-4`, som ikke brukes; `kart.json` peker på `gebco-3`) og `kart.yml` (stoppet, `kart-release.json` peker på `kart-29`).
   - **Neste:** R3 (Svalbard og øyene: satellittfargen eller arealdekket, så bakken ikke er grønn) eller R4 (sonene og reglene utenfor kysten), i en ny økt.
+- 04.11.2026: **R3 bygd** (gren `ccr-h1b-r3-svalbard`). Se 4.9d i `docs/systemer/kart-og-terreng.md`.
+  - **Flisene:** 98 (92 for Svalbard med Bjørnøya og Hopen, 6 for Jan Mayen) gjennom den samme `coast.py`, med Overtures bygg, veier og kaier og sjømerkene fra Geofabriks Norge-uttrekk (det har Svalbard med).
+  - **Bakken** fra Copernicus GLO-30 (Terrarium er grov der), satellittfargen fra Sentinel-2 (`s2-12`) med breene fra snøen, ingen trær. Bakken er ikke grønn lenger.
+  - **Dybden:** Kartverkets 50 m dekker 77 av 98 fliser (`dybde-7`), ellers GEBCO.
+  - **Vakten** mot gjentatte datareleaser ved sammenslåing (`tools/ci/seen.py`).
+  - **Testene:** Jonas 04.11.2026: «Ta kun de testene du mener er relevante». De som dekker kartet er grønne (svalbardtest, teleport3d, vectest, coast3d, landtest, routetest, marktest, boottest, trip2 og flere; BACKLOG 10.6).
+- 04.11.2026: **R3 rullet ut** (Jonas: «Rull ut nå»; sammenslått i arbeidsgrenen d75e7b4, `kart-release.json` peker på `kart-31`, Hetzner og Pages grønne). Datajobbene startet ikke på nytt ved sammenslåingen (`seen.py`).
+  - **Neste:** R4 (sonene og reglene) i en ny økt.
+

@@ -1,5 +1,17 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['npcrist-041126', '04.11.2026', 'Rolig gange for de andre båtene', 'The other boats ride steadily', [
+       ['De andre båtene ristet når de gikk med fart, fordi gyngingen fulgte plassen deres. Nå gynger hver båt i sitt eget rolige tempo.', 'The other boats shuddered when under way, because their rocking followed where they were. Each boat now rocks at her own calm pace.'],
+    ]],
+    ['svalbard-041126', '04.11.2026', 'Svalbard og Jan Mayen i detalj', 'Svalbard and Jan Mayen in detail', [
+       ['Svalbard, Bjørnøya, Hopen og Jan Mayen har nå like detaljert kyst som fastlandet: fjæra, skjærene, dybden, sjømerkene og fyrlyktene, og husene, veiene og kaiene i Longyearbyen, Ny-Ålesund, Barentsburg og Sveagruva.', 'Svalbard, Bjørnøya, Hopen and Jan Mayen now have a coast as detailed as the mainland: the shore, the skerries, the depth, the sea marks and the lights, and the houses, roads and quays of Longyearbyen, Ny-Ålesund, Barentsburg and Sveagruva.'],
+       ['Bakken der har sommerfargen fra satellittbildene: tundra, grus og stein, og breene helt ned mot sjøen.', 'The ground there has the summer colour from the satellite pictures: tundra, gravel and stone, and the glaciers right down to the sea.'],
+       ['Posisjonen vest for Greenwich vises nå som V, ikke Ø.', 'A position west of Greenwich now shows as W, not E.'],
+    ]],
+    ['skygger-041126', '04.11.2026', 'Skygger på alt', 'Shadows on everything', [
+       ['Fjellets skygge faller nå også på båtene, husene, kaiene, trærne og sjøen. En fjord i kveldsskygge blir mørk helt ned til vannet, og solglitteret forsvinner der sola ikke når.', 'The fells now cast their shadow on the boats, houses, quays, trees and the sea as well. A fjord in evening shadow goes dark right down to the water, and the sun\'s glitter goes where the sun does not reach.'],
+       ['Skyene kaster skygge over land og sjø og driver med vinden, så lys og skygge vandrer over fjellsidene på dager med spredte skyer.', 'The clouds cast shadows over land and sea and drift with the wind, so light and shade wander over the hillsides on days with broken cloud.'],
+    ]],
     ['kystposten-041126', '04.11.2026', 'Kystposten åpner igjen', 'Kystposten opens again', [
        ['Kystposten stoppet når avisa hadde en sak om bygdekampen, fiskarlaget eller kystvakta. Nå vises sakene med riktig merke.', 'Kystposten stopped when the paper had a story about the village contest, the fishing club or the coast guard. The stories now show with the right label.'],
     ]],

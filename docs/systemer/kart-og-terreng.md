@@ -350,11 +350,36 @@ Jonas: «kjør på» for hele H1b (03.11.2026). R2 gir rammen fra R1 data, slik 
   - **`kart-29` mot `kart-28`:** lagene i manifestet er like, og 664 av 672 pakker er byte-like. I 8 sim- og view-pakker avviker 2–9 celler i dybden og høyden, høyst 4 m (den ubestemtheten er i flisrørledningen fra før, `coast.py` er ikke endret). Utrullingsgrenens egen `game.py`, bygg og `boottest` går med `kart-29` (4 OK).
   - Far-pakkene er 13 MB for 724 fliser. Hele kysten i bygget er 337,6 MB (321,8 før).
 - **Ikke ennå:**
-  - Svalbard og Jan Mayen i detalj (R3)
+  - Svalbard og Jan Mayen i detalj (R3, 4.9d)
   - sonene (R4)
   - isen og været (R5)
   - havflåten på de nye feltene og navigasjonen over åpent hav (R6)
   - Longyearbyen (R7)
+
+## 4.9d Svalbard og Jan Mayen i detalj (H1b R3 i havsteget, 04.11.2026)
+
+Jonas valgte V2 B 03.11.2026: hele Svalbard i detalj, sammen med Jan Mayen, Bjørnøya og Hopen. Rullet ut 04.11.2026 (Jonas: «Rull ut nå», d75e7b4). Øyene har nå de samme flisene som kysten (`sim`, `view`, `chart`, `vec`), laget av den samme `coast.py`.
+
+- **Flisene** (`national.py xtiles`, `tools/map/xtiles.json`): 98 fliser, 92 for Svalbard med Bjørnøya og Hopen og 6 for Jan Mayen (anslaget var 60–70). Regelen er den samme som for kysten: øyas land innen 3 km fra sjøen, eller sjø innen 20 km fra øyas land. Øyas land er landet innenfor en lengde- og breddeboks per øygruppe (`XAREAS`), så Kvitøya er med og den russiske Victoriaøya ikke.
+  - **Landet på 200 m** for øyene ligger i et vindu per øygruppe, flisene pluss 170 km (`xland200.npz`), så strålene for eksponeringen (150 km) og avstandens polstring (20 km) ser alt de trenger. Eksponeringen på 500 m regnes på samme måte som for kysten (`xexpo`).
+  - **Overture:** kystens indeks stopper ved 71,5° N. Øyene har sin egen indeks (`ov.py polar`, `POLAR`) med alle typene. `features()` tar den selv når boksens midtpunkt ligger utenfor den gamle rammen (x eller y under 0), så kystens fliser og de nasjonale trinnene leser det samme som før.
+  - **Arealdekket** (`cover`) gjelder hele øyas land (Svalbard er norsk), ikke bare `norway200`.
+- **Bakken** kommer fra Copernicus DEM GLO-30 (`terrain.sample_cop`, 30 m fra TanDEM-X, åpen på AWS i `s3://copernicus-dem-30m`, fri bruk, også kommersiell, med kilden oppgitt: «© DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA»). Terrarium har ingen fin kilde nord for fastlandet: z11 og z13 ga det samme ved Longyearbyen, og sjørutene langs fjæra var 7,6 m høye i medianen (90-persentilen 27 m). Fjæra sto derfor som en vegg i 3D. Med GLO-30 er sjøen 0 m. Fjernhøydene (`far`) for øyene tar også GLO-30, et middel av 4 × 4 punkter per 200 m-rute (`national.far_cop`), ellers lå det grove fjernterrenget som en vegg over de nye høydene. GLO-30 er en overflatemodell, så takene og breenes overflate er med.
+- **Dybden:** Kartverkets 50 m-modell dekker Svalbard og Jan Mayen også. `dybde.yml` hentet øyenes fliser (`dybde.json` `only: islands`) til releasen `dybde-7`, og 77 av 98 fliser har data. Der den mangler, tar flisa GEBCO 2025 (`gebco_blend`): modellen innen rundt en kilometer fra land, der 1 km-middelet har landet i seg, og GEBCO lenger ut. `kart.json` lister nå flere releaser for `depth` og `s2` (kystens og øyenes).
+- **Satellittfargen:** Sentinel-2 finnes så langt nord. `s2.yml` tok øyenes fliser (`s2.json` `tiles: islands`) til `s2-12`: i snitt 88 % av hver flis er sett uten snø (minst 28 %), og 9,8 % får fargen fra snøen. En rute som ingen scene ser uten snø, men tre eller flere ser som snø (SCL 11), tar snøens median (`SNOWN`), så breene blir hvite og ikke uten farge. På Svalbard har en MGRS-rute hundrevis av scener hver sommer fra de overlappende banene, så oppslagene går nå side om side (270 s per flis mot over en time), og øyenes fliser fordeles i sammenhengende rekker, så naboene deler rutene.
+- **Trærne:** ingen. Uten fil fra `trees.yml` er `trees`-laget 0, og arealdekket har ingen skog, så det står ingen trær og ingen reservekjegler. `trees.yml` er ikke kjørt for øyene.
+- **I 3D** (`view3d/04-vec-packs.js recolor`): nord for 71,5° N kommer breene ned mot sjøen og det bare berget begynner lavere (`fA`: breene fra 2–12 m ved 74,5° N mot 120–220 m på fastlandet, berget fra 100–200 m mot 280–420 m). Fastlandet er som før.
+- **Bygg, kaier og sjømerker:** `vec`-pakkene får byggene, veiene og kaiene fra Overture som langs kysten (Longyearbyen-flisa: 1 249 bygg, 523 veier, 143 kaifronter). Geofabriks Norge-uttrekk har Svalbard og Jan Mayen med, så sjømerkene kom alt i `sjomerker-6` (175 lykter og 513 merker innen 30 km av Longyearbyen). `sjomerker.py` henter øyene fra Overpass hvis uttrekket en gang mangler dem, og `sjomerker.yml` ga `sjomerker-7` med det. `fyr.py` tar fortsatt ikke med fyrene nord for rammen (turoppdragene); det er ikke endret.
+- **Flislagene** (`pack.write_tiles`) går nå fra flisene lengst nord og vest: `mask` fra celle (−4 000, −30 000). Den gamle rammens celler har de samme numrene, fordi de telles fra origo. `dcCell`, som tallene i rutedataene var regnet for, brukes ikke lenger.
+- **Lengdegraden vest for Greenwich** (Jan Mayen, Island) ble vist som Ø/E. Nå V/W i GPS-en, posisjonen, dagboka og 3D-instrumentet.
+- **Vakten mot gjentatte releaser** (BACKLOG 10.7): `tools/ci/seen.py` legger hashen av filene som starter en workflow inn i releasens notater som `[src …]`. En push med en fil det alt er laget en release fra (en sammenslåing i arbeidsgrenen), stopper ved første jobb. Gjelder `kart.yml`, `gebco.yml`, `s2.yml`, `dybde.yml` og `sjomerker.yml`. En kjøring for hånd går alltid.
+- **Releasen `kart-31`** (04.11.2026, `kart.json` run 17), pinnet i `kart-release.json`:
+  - `kart-game.tar.gz` er 500 MB mot 386 MB i `kart-29` (+30 %, som anslått), med 1 064 pakker mot 672 (98 fliser × 4). `kart-ramme.tar.gz` er 16,7 MB.
+  - Bygget med hele kysten: 266 fliser, `dist/map` 455 MB og hele `dist` 507 MB; med vec-pakkene (appen) 535 MB kart og 583 MB i alt. Pages tar 1 GB.
+  - Kjernen er 4,70 MB som før (`deep` +0,9 kB fra Kartverkets 50 m ved Svalbard).
+  - **Actions:** 45 minutter i alt mot 32 for `kart-29`. `national` 8,5 minutter, flisjobbene rundt 16 minutter, `ramme` 13,4 minutter side om side, og `pack` 19,4 minutter. Satellittfargen for øyene (`s2.yml`) tok rundt 20 minutter og dybden (`dybde.yml`) noen få.
+- **Lavteppet** (`aCov`, det lyse teppet fastlandets vidde får på høy kvalitet) dempes nord for 71,5° N der satellittfargen finnes, ellers så flatene ved Longyearbyen rimfrosne ut. Mindre av skyggerens grå berg ble prøvd og gjorde fjellene hvitere, så det står som før. Satellittens farge for grusen der er lys (rundt 11 % refleksjon, dobbelt så lyst som skogen på fastlandet), så bakken er lysere enn langs kysten.
+- **Testen** er `tests/svalbardtest.py` (3D, trenger hele kysten og `dist-vec`): ved Longyearbyen, Bjørnøya og Jan Mayen kommer flisas pakker, land er land og sjø er sjø, dybden er fra dataene, Longyearbyen har byggene og kaiene i 3D, bakken er ikke grønn, og bildene tas i begge formater. `teleport3d` har fått Longyearbyen og Jan Mayen.
 
 ## 4.12c Sjømerker langs hele kysten (05.10.2026)
 

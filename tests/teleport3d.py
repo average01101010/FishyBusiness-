@@ -1,6 +1,6 @@
 """3D for the whole coast (phase K8 of the coast plan, view3d.js): the boat is moved to Kirkenes, Honningsvåg, Reine, Bergen, Hvaler
 and Senja, and from H1b R2 of the ocean step to Bjørnøya, North Iceland, the Central Bank and the Pechora Sea (the open sea: no far
-heights there, only the sea), and at each the far terrain's window follows it, the far heights' pack (200 m) comes, the mountains stand where they
+heights there, only the sea), and from R3 Longyearbyen and Jan Mayen, which have the coast's tiles with detail, and at each the far terrain's window follows it, the far heights' pack (200 m) comes, the mountains stand where they
 should, there is no GL error and no page error, and a picture is taken (tests/out/tp_<place>.png). The frame rate is printed, but
 SwiftShader's says nothing about a tablet. Then the quality: 'low' shortens the near terrain and draws fewer pixels, and 'auto'
 steps down when the frames are slow and back up when there is room, but not at once to the level it left. Prints OK or FEIL per check."""
@@ -17,13 +17,17 @@ def check(ok, what, extra=''):
 # 200 m cells, so the tops come out lower than on the map)
 PLACES = [('kirkenes', 69.727, 30.06, 200), ('honningsvag', 70.975, 25.985, 250), ('reine', 67.93, 13.095, 600),
           ('bergen', 60.40, 5.29, 450), ('hvaler', 59.03, 11.0, 40), ('senja', 69.36, 17.40, 600),
-          ('bjornoya', 74.42, 18.85, 200), ('nordisland', 66.15, -17.45, 300), ('sentralbanken', 76.0, 35.0, None), ('petsjora', 69.5, 52.0, None)]
+          ('bjornoya', 74.42, 18.85, 200), ('longyearbyen', 78.24, 15.50, 400), ('janmayen', 70.94, -8.75, 300), ('nordisland', 66.15, -17.45, 300), ('sentralbanken', 76.0, 35.0, None), ('petsjora', 69.5, 52.0, None)]
 # KYST_TP=bjornoya,petsjora: only those places
 if os.environ.get('KYST_TP'): PLACES = [q for q in PLACES if q[0] in os.environ['KYST_TP'].split(',')]
-# a sea point near (lat, lon): the nearest 100 m cell that the national core has as sea at least 300 m from the land
-SEA = """([la, lo]) => { const c = P(la, lo); for (let r = 0; r <= 60; r++) for (let a = 0; a < Math.max(1, r * 6); a++){
+# a sea point near (lat, lon): the nearest 100 m cell that is sea at least 300 m from the land, by the tiles' fine coast where a tile
+# has detail (its packs fetched first: from H1b R3 Svalbard and Jan Mayen have tiles, and the core's 1 km land misses their shore),
+# else by the national core
+SEA = """async ([la, lo]) => { const c = P(la, lo); if (mapSimAt(c)) await mapNeed(c, MAPD.simR + 1);
+  const sea = q => mapSimAt(q) && mapReadyAt(q, 0) ? !isLand(q) && coastDist(q) >= 0.3 : !isLandFar(q) && coastDistFar(q) >= 0.3;
+  for (let r = 0; r <= 60; r++) for (let a = 0; a < Math.max(1, r * 6); a++){
   const t = a / Math.max(1, r * 6) * 2 * Math.PI, q = {x:c.x + Math.cos(t) * r * 0.1, y:c.y + Math.sin(t) * r * 0.1};
-  if (!isLandFar(q) && coastDistFar(q) >= 0.3) return q; } return null; }"""
+  if (sea(q)) return q; } return null; }"""
 
 
 async def main():
@@ -62,7 +66,7 @@ async def main():
             else:
                 check(r['far'] and not r['land'] and r['gl'] == 0 and r['hmax'] >= hmin and r['spread'] > 4, name + ': fjernhøydene er inne, fjellene når %d m eller mer, ingen GL-feil, og bildet har innhold' % hmin, r['hmax'])
         check(all(abs(v['win'][0] - v['boat'][0]) <= 10 and abs(v['win'][1] - v['boat'][1]) <= 10 for v in R.values()), 'fjernterrenget følger båten (vinduet innen 10 km)')
-        check(max(v['mb'] for v in R.values()) <= 97, 'minnet til kartblokkene holder seg innenfor budsjettet (96 MB, det eldste går ut) etter ti steder', max(v['mb'] for v in R.values()))
+        check(max(v['mb'] for v in R.values()) <= 97, 'minnet til kartblokkene holder seg innenfor budsjettet (96 MB, det eldste går ut) etter tolv steder', max(v['mb'] for v in R.values()))
         print('bilder/s i SwiftShader (sier lite om et nettbrett):', {k: v['fps'] for k, v in R.items()})
         # quality: low draws fewer pixels and a shorter near terrain
         q0 = await pg.evaluate("(() => ({w:document.getElementById('gl').width, near:G3._debug.NEARM && G3._debug.NEARM.sx}))()")

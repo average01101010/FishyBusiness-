@@ -122,6 +122,7 @@
   function updateShadows(){
     // the sun's direction in steps of 0.03 (it moved 0.01 every 20 s of play at 6x time, and each step started all the meshes again)
     const d = QUAL.lvl ? env.shadowDir : null, key = d ? d.map(v => (Math.round(v / 0.03) * 0.03).toFixed(2)).join(',') : 'flat';   // no shadows on low quality
+    sunGridStep(key, d);
     const until = performance.now() + SHMS[QUAL.lvl];
     for (const m of [NEARM, FINEM, ...UPATCH, MIDM, TERR]){
       if (!m) continue;
@@ -147,6 +148,56 @@
       if (J.i >= N){ gl.bindBuffer(gl.ARRAY_BUFFER, m.sb); gl.bufferData(gl.ARRAY_BUFFER, m.sh, gl.DYNAMIC_DRAW); m.shKey = J.key; m.shJob = null; }
       break;   // one mesh per frame
     }
+  }
+  // The land's shadow for everything that is not the terrain's mesh (04.11.2026, Jonas: «Kjør på»): a boat, a house, a quay, the trees and
+  // the sea in a fell's shadow were lit as in full sun, because only the terrain's own vertices had the shadow. SG is a grid round the
+  // boat (256 x 256 over 3-6 km, about 12-16 m a cell) marched towards the light as the meshes are, from 2 m over the ground or the sea,
+  // into a texture the lit shaders read (sunV in AIR, airSet). Each cell keeps the least clearance of its ray over the land (the tangent
+  // of the angle), so the edge of the shadow is soft over about the sun's own width and the texture's own blend, not the meshes' three
+  // steps. Worked out in time slices (SGW.ms a frame) into a new array while the last one is used, and done again when the light has
+  // moved a step (the meshes' key) or the boat a quarter of the span; off on low quality, as the terrain's shadows are.
+  const SG = {tex:null, on:false, x0:0, z0:0, span:1, cx:0, cz:0, key:'', lvl:-1, job:null, t:0};
+  const SGW = {span:[0, 3072, 4096, 6144], n:[0, 256, 256, 384], ms:[0, 1.5, 2, 4], top:2300};
+  function sunGridStep(key, d){
+    const L = QUAL.lvl;
+    if (!L || !d){ SG.on = false; SG.job = null; SG.key = ''; return; }
+    if (!SG.job){
+      const span = SGW.span[L], moved = Math.abs(bv.x - SG.cx) > span / 4 || Math.abs(bv.z - SG.cz) > span / 4;
+      if (SG.key === key && SG.lvl === L && !moved) return;
+      const now = performance.now(); if (now < SG.t) return; SG.t = now + 1000;
+      const n = SGW.n[L], snap = span / 8, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
+      SG.job = {key, d, L, n, span, cx, cz, x0:cx - span / 2, z0:cz - span / 2, a:new Uint8Array(n * n), i:0};
+    }
+    const J = SG.job, N = J.n * J.n, until = performance.now() + SGW.ms[L];
+    if (J.d[1] <= 0.005){ J.a.fill(0); J.i = N; }
+    else {
+      const hl = Math.hypot(J.d[0], J.d[2]) || 1e-6, dx = J.d[0] / hl, dz = J.d[2] / hl, tE = J.d[1] / hl, cell = J.span / J.n;
+      let k = J.i;
+      try {
+        while (k < N){
+          const end = Math.min(N, k + 32);
+          for (; k < end; k++){
+            const x = J.x0 + (k % J.n + 0.5) * cell, z = J.z0 + (((k / J.n) | 0) + 0.5) * cell, y = Math.max(terrH(x, z), 0) + 2;
+            let m = 1, dd = 20;
+            while (dd < 16000 && y + dd * tE < SGW.top){ const c = (y + dd * tE - shadeH(x + dx * dd, z + dz * dd, dd)) / dd; if (c < m){ m = c; if (m < -0.006) break; } dd += 20 + dd * 0.07; }
+            J.a[k] = Math.round(255 * clamp(0.5 + m / 0.012, 0, 1));
+          }
+          if (performance.now() > until) break;
+        }
+      } catch (e){ SG.job = null; SG.t = performance.now() + 4000; return; }   // a block of the map not in yet: again in a while
+      J.i = k;
+    }
+    if (J.i < N) return;
+    sgUpload(J);
+  }
+  // the grid J into the texture and into use (also G3._debug.sunSet: a made-up grid for the tests)
+  function sgUpload(J){
+    if (!SG.tex) SG.tex = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, SG.tex); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, J.n, J.n, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, J.a);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.activeTexture(gl.TEXTURE0);
+    Object.assign(SG, {on:true, a:J.a, x0:J.x0, z0:J.z0, span:J.span, cx:J.cx, cz:J.cz, key:J.key, lvl:J.L, job:null});
   }
   function updateMid(){
     const span = 22000, snap = 2000, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
@@ -201,13 +252,17 @@
     const ccS = k => COVC[k][1], CPS = [birch0S(), ccS('heath'), ccS('meadow'), ccS('field'), ccS('bog'), ccS('lichen'), COVC.gravel, ccS('lichen'), mix3(COVC.town, ccS('meadow'), 0.5), COVC.sand, COVC.scree, COVC.shingle], PTS = new Float32Array(36);
     for (let k = 0; k < 12; k++){ PTS[k * 3] = CPS[k][0]; PTS[k * 3 + 1] = CPS[k][1]; PTS[k * 3 + 2] = CPS[k][2]; }
     const asph = [0.3, 0.31, 0.32], gravel = [0.47, 0.45, 0.41], pv = m.pv;   // a harbour unit's fill and the flat land by it (unitPatch)
+    // the high Arctic (H1b R3, 04.11.2026): north of 71.5° N the glaciers come down towards the sea (on Svalbard they calve into it) and
+    // the bare rock starts lower; the mainland (f = 0) is as before
+    const llA = m.o ? natLL({x:m.o[0] / 1000, y:m.o[1] / 1000}) : null, fA = llA ? sstep(71.5, 74.5, llA.lat) : 0;
+    const glLo = 120 - 118 * fA, glHi = 220 - 208 * fA, rkLo = 280 - 180 * fA, rkHi = 420 - 220 * fA;
     // the rock (0.33, 0.35, 0.37) and the snow (0.9, 0.92, 0.95) are laid on in the fragment shader (terFS) by the weights in mat, so their
     // edges can be sharpened per pixel; the colour here is the ground under them
     for (let i = 0; i < h.length; i++){
       const y = h[i], n = nz[i]; let c, R = 0, wood = 0, sn = 0, p = 0, satHere = 0;
       if (y < 0) c = bed;
       else {
-        const alt = y < 280 ? 1 : sstep(420, 280, y);   // bare rock above the vegetation
+        const alt = y < rkLo ? 1 : sstep(rkHi, rkLo, y);   // bare rock above the vegetation
         c = mix3(grass, birch, n);
         if (y < 3.5) c = mix3(shore, c, y / 3.5);
         // the tidal zone along the whole coast, as under Father's naust (Jonas 07.10.2026: «det ser litt dumt ut når den eneste plassen det
@@ -252,8 +307,11 @@
           if (tw > 0 || tb > 0){ c = mix3(c, mix3(WEED, WEED2, sstep(0.4, 0.7, n)), tw * (1 - sstep(0.5, 0.85, slope[i]) * 0.5)); c = mix3(c, BARN, tb * 0.55); }
           wood = (F * 0.95 + SHn * 0.12) * sstep(440, 260, y) * (1 - rs);
           R = Math.max(R, BA * 0.95, MOn * 0.45, SC * 0.85, SG * 0.5);   // the rock above the vegetation (280-420 m) and on the steep faces as before
-          gl0 = SN * sstep(120, 220, y);   // snow fields and glaciers that lie through the summer (ESA's 'snow', seen in August)
-          if (cov){ cov[i * 4] = WE; cov[i * 4 + 1] = CR; cov[i * 4 + 2] = SHn; cov[i * 4 + 3] = 1 + MOn; }
+          gl0 = SN * sstep(glLo, glHi, y);   // snow fields and glaciers that lie through the summer (ESA's 'snow', seen in August)
+          // the high Arctic where the satellites see the ground (H1b R3): the mainland's pale lichen carpet is laid on less (Svalbard's
+          // 'moss' is dark moss and gravel tundra; with the carpet in full the flats at Longyearbyen read as frost-white). Less of the
+          // shader's grey rock as well was tried and made the fells whiter, not more natural (the gravel is light in the satellites' colour)
+          if (cov){ cov[i * 4] = WE; cov[i * 4 + 1] = CR; cov[i * 4 + 2] = SHn; cov[i * 4 + 3] = 1 + MOn * (1 - 0.8 * fA * satHere); }
         } else if (cov){ cov[i * 4] = cov[i * 4 + 1] = cov[i * 4 + 2] = cov[i * 4 + 3] = 0; }
         p = pv ? pv[i] : 0; sn = Math.max(sstep(snow - 60, snow + 60, y + n * 90) * (1 - rs * 0.85) * (1 - wood * 0.55), gl0 * (1 - rs * 0.6)) * (1 - p * 0.6) * sstep(1.5, 2.3, y);   // no snow where the tide comes
         R *= 1 - p;

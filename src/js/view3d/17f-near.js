@@ -25,10 +25,10 @@
     // the grass's blades sway a little in the wind, the more the higher up the blade
     'float z=aC.w;if(z>0.5){p.x+=sin(uT*1.7+aI.x*0.7+aI.z*0.3)*0.06*aP.y*aI.w;}' +
     'vC=(z>0.5?aC.rgb*uTint:aC.rgb)*aJ.y;vZ=z;vN=n;vW=p+aI.xyz+uO;gl_Position=uVP*vec4(vW,1.0);}';
-  const NEAR_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform float uWet;varying vec3 vW;varying vec3 vN;varying vec3 vC;varying float vZ;' + NOISE + AIR +
+  const NEAR_FS = SUNV('precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform float uWet;varying vec3 vW;varying vec3 vN;varying vec3 vC;varying float vZ;' + NOISE + AIR +
     'void main(){vec3 n=normalize(vN);float d=dot(n,uSun);float wl=vZ>0.5?clamp((d+0.4)/1.4,0.0,1.0):max(d,0.0);vec3 c=vC*(1.0-0.28*uWet*(vZ>0.5?0.4:1.0));' +
     'vec3 V=normalize(-vW);vec3 col=c*(uAmb*(0.75+0.25*n.y)+uSunCol*wl)+uSunCol*pow(max(dot(reflect(-uSun,n),V),0.0),40.0)*uWet*0.35*(vZ>0.5?0.2:1.0);' +
-    'gl_FragColor=vec4(fin(col,vW),1.0);}';
+    'gl_FragColor=vec4(fin(col,vW),1.0);}');
   // one 32 m square's instances per model (x, y, z from the square's origin, scale; turn, tint)
   function nearSquare(i, j){
     const C = NEAR_C[QUAL.lvl], x0 = i * NEAR_SQ, z0 = j * NEAR_SQ, out = NEAR_K.map(() => []), sn = snowNow == null ? 3000 : snowNow;

@@ -28,13 +28,13 @@
     // a birch is bare in winter: its leaves fold away, its twigs show; in summer the twigs are hidden inside the crown
     'float z=aC.w;float hide=uBirch>0.5?(z>0.5&&z<1.5?uBare:(z>1.5?1.0-uBare:0.0)):(z>1.5?1.0:0.0);if(hide>0.5)p=vec3(0.0,-0.01,0.0);' +
     'vec3 col=z>0.5&&z<1.5?aC.rgb*uLeaf:aC.rgb;vC=col*aJ.y;vZ=z;vN=n;vW=p+aI.xyz+uO;gl_Position=uVP*vec4(vW,1.0);}';
-  const TREE_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform float uSnow;varying vec3 vW;varying vec3 vN;varying vec3 vC;varying float vZ;' + NOISE + AIR +
+  const TREE_FS = SUNV('precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform float uSnow;varying vec3 vW;varying vec3 vN;varying vec3 vC;varying float vZ;' + NOISE + AIR +
     'void main(){vec3 n=normalize(vN);float d=dot(n,uSun);' +
     // foliage lets light through: a wrapped diffuse for the needles and leaves, plain for the bark
     'float wl=vZ>0.5?clamp((d+0.35)/1.35,0.0,1.0):max(d,0.0);vec3 c=vC*(uAmb*(0.75+0.25*n.y)+uSunCol*wl);' +
     // snow lies on the upward faces of the crowns in winter
     'c=mix(c,vec3(0.9,0.92,0.95)*(uAmb+uSunCol*max(d,0.0)*0.8),uSnow*smoothstep(0.35,0.8,n.y)*(vZ>0.5?1.0:0.4));' +
-    'gl_FragColor=vec4(fin(c,vW),1.0);}';
+    'gl_FragColor=vec4(fin(c,vW),1.0);}');
   // the species of a cell with trees: needles are spruce in the south below 450 m and on good ground (tall), pine else; leaves are birch
   function treeSpecies(needle, x, z, y, h, r){
     if (!needle) return 2;

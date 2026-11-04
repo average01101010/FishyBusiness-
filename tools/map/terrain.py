@@ -35,3 +35,35 @@ def sample(lon, lat, z=13):
     gx = np.clip(X - tx0 * 256, 0, g.shape[1] - 1.001); gy = np.clip(Y - ty0 * 256, 0, g.shape[0] - 1.001)
     ix = gx.astype(int); iy = gy.astype(int); fx = gx - ix; fy = gy - iy
     return (g[iy, ix] * (1 - fx) + g[iy, ix + 1] * fx) * (1 - fy) + (g[iy + 1, ix] * (1 - fx) + g[iy + 1, ix + 1] * fx) * fy
+
+# Copernicus DEM GLO-30 (30 m, from TanDEM-X; open on AWS as Cloud-Optimised GeoTIFFs, s3://copernicus-dem-30m, read over HTTPS without
+# an account), for the islands off the old frame (H1b R3, 04.11.2026): Terrarium has no fine source north of Norway's mainland (z11 and
+# z13 gave the same at Longyearbyen, and the shore's sea cells were 7.6 m high in the median, so the 3D shore stood as a wall). Heights
+# over the sea level (EGM2008), a surface model (the roofs and the glaciers' tops are in it). Free for any use, commercial too, with
+# the source given: «© DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union
+# and ESA». One file per degree, cached in cache/cop30/; NaN where there is none (the open sea has no file).
+COP = 'https://copernicus-dem-30m.s3.amazonaws.com/{n}/{n}.tif'
+CD = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cache', 'cop30'); os.makedirs(CD, exist_ok=True)
+def cop_file(la, lo):
+    n = f'Copernicus_DSM_COG_10_{"N" if la >= 0 else "S"}{abs(la):02d}_00_{"E" if lo >= 0 else "W"}{abs(lo):03d}_00_DEM'; p = f'{CD}/{n}.tif'
+    if not os.path.exists(p):
+        for k in range(5):
+            try:
+                r = S.get(COP.format(n=n), timeout=300)
+                if r.status_code in (403, 404): open(p, 'wb').close(); break
+                r.raise_for_status(); open(p + '.part', 'wb').write(r.content); os.replace(p + '.part', p); break
+            except Exception:
+                if k == 4: raise
+    return p
+def sample_cop(lon, lat):
+    import rasterio
+    lon = np.asarray(lon, float); lat = np.asarray(lat, float); out = np.full(lon.shape, np.nan, np.float32)
+    LA, LO = np.floor(lat).astype(int), np.floor(lon).astype(int)
+    for la, lo in sorted(set(zip(LA.ravel().tolist(), LO.ravel().tolist()))):
+        p = cop_file(la, lo)
+        if os.path.getsize(p) == 0: continue
+        with rasterio.open(p) as src: g = src.read(1).astype(np.float32); T = ~src.transform
+        m = (LA == la) & (LO == lo); c, r = T * (lon[m], lat[m]); c = np.clip(c - 0.5, 0, g.shape[1] - 1.001); r = np.clip(r - 0.5, 0, g.shape[0] - 1.001)
+        ix = c.astype(int); iy = r.astype(int); fx = c - ix; fy = r - iy
+        out[m] = (g[iy, ix] * (1 - fx) + g[iy, ix + 1] * fx) * (1 - fy) + (g[iy + 1, ix] * (1 - fx) + g[iy + 1, ix + 1] * fx) * fy
+    return out

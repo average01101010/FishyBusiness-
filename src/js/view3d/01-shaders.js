@@ -40,10 +40,32 @@
     'float e=(aNp(qa*6.0,6.0)-0.5)*150.0+(aNp(qb*5.0,5.0)-0.5)*110.0+(aNp(qa*14.0+3.0,14.0)-0.5)*60.0+(aNp(qb*11.0+7.0,11.0)-0.5)*45.0+(aNp(qa*32.0+5.0,32.0)-0.5)*30.0;' +
     'float b=v.y+uEye.z+e-uCB.x,a=uEye.z+e-uCB.x,D=smoothstep(-90.0,260.0,b)-smoothstep(uCB.z-150.0,uCB.z+150.0,b);float m=abs(b-a)>2.0?(aG(b)-aG(a))/(b-a):D;' +
     'c=mix(c,uCC,(1.0-exp(-d*m/110.0))*sqrt(max(D,0.0))*uCB.y);}' +
-    'vec3 T=exp(-k*vec3(0.8,0.95,1.2));float mu=max(dot(v/max(d,1.0),uAirSun),0.0);vec3 s=uFog+uAirMie*pow(mu,12.0);return tone(c*T+s*(1.0-T));}';
+    'vec3 T=exp(-k*vec3(0.8,0.95,1.2));float mu=max(dot(v/max(d,1.0),uAirSun),0.0);vec3 s=uFog+uAirMie*pow(mu,12.0);return tone(c*T+s*(1.0-T));}' +
+    // The sun's light at a point (04.11.2026, Jonas: «Kjør på» on the shadows): how much of the direct sun (or moon) reaches the point v
+    // from the eye, for everything that is not the terrain's own mesh. Two parts:
+    // - cloudV: the shadows of the clouds, drifting over land and sea with the wind at their height as the clouds in the sky do (CLD.m,
+    //   cloudStep). The point is carried up along the light (uCS2.xyz, the real direction, not lightDir's raised one) to the cloud base
+    //   (uCS.w), and the cover there is the sky's own rule (the same threshold on noise of 1.4 km, 590 m and 260 m, period 32 km so the
+    //   fold never shows). The sky's uniform dimming of the sun by the cloud (1 - 0.72 cloud, computeEnv) is spread out instead: under a
+    //   cloud a fifth of the sun, in a gap a little more than the mean (up to 1.3), so the scene's mean light is about as before. uCS.z is
+    //   the strength: none under a clear or a full grey sky, none on low quality or with #sun0.
+    // - the shadow of the land (sunGrid, 04-vec-packs.js): a texture of 256 x 256 round the boat with the fells' shadow marched towards the
+    //   light (uShR: its corner from the eye, 1 / its span, on), so a boat, a house, a quay, the trees and the sea in a fjord's evening
+    //   shadow are in shadow with the ground under them; it fades to lit at its edge. Read always (no texture lookup inside a branch).
+    'uniform sampler2D uSunT;uniform vec4 uShR;uniform vec4 uCS;uniform vec4 uCS2;' +
+    'float cloudV(vec3 v){if(uCS.z<=0.0)return 1.0;float y=v.y+uEye.z;vec2 o=uCS2.xz/max(uCS2.y,0.08)*max(uCS.w-y,0.0);' +
+    'vec2 q=mod(v.xz+o+uCS.xy,32768.0)/32768.0;float c=0.6*aNp(q*24.0,24.0)+0.3*aNp(q*56.0+vec2(3.1,7.7),56.0)+0.1*aNp(q*128.0+vec2(5.3,1.9),128.0);' +
+    'float cl=uCS2.w;float cov=smoothstep(1.0-cl-0.05,1.0-cl+0.35,c);return mix(1.0,clamp((1.0-0.8*cov)/max(1.0-0.72*cl,0.3),0.2,1.3),uCS.z);}' +
+    'float sunV(vec3 v){vec2 t=(v.xz-uShR.xy)*uShR.z;float g=texture2D(uSunT,clamp(t,0.0,1.0)).r;' +
+    'float e=uShR.w*smoothstep(0.0,0.08,min(min(t.x,t.y),min(1.0-t.x,1.0-t.y)));return cloudV(v)*mix(1.0,g,e);}';
+  // A lit fragment shader with the sun's light at its point: every uSunCol in main() becomes sunC, uSunCol times sunV (the land's shadow
+  // and the clouds') or, for the terrain, which has the land's shadow in its own vertices (vS), times cloudV alone. Every shader so
+  // made has vW, the point from the eye, as fin() does.
+  const SUNV = (fs, cloudOnly) => { const i = fs.indexOf('void main(){') + 12;
+    return fs.slice(0, i) + 'vec3 sunC=uSunCol*' + (cloudOnly ? 'cloudV(vW)' : 'sunV(vW)') + ';' + fs.slice(i).replace(/\buSunCol\b/g, 'sunC'); };
   const LIT_VS = 'attribute vec3 aPos;attribute vec3 aCol;uniform mat4 uVP;uniform mat4 uM;varying vec3 vW;varying vec3 vC;' +
     'void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vC=aCol;gl_Position=uVP*w;}';
-  const LIT_FS = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;' +
+  const LIT_FS = SUNV('#extension GL_OES_standard_derivatives : enable\nprecision highp float;' +
     'uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uEmis;uniform vec4 uHole;uniform vec4 uOver;uniform vec2 uWet;varying vec3 vW;varying vec3 vC;' + PLG + AIR +
     'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec3 n=normalize(cross(dFdx(vW),dFdy(vW)));if(dot(n,vW)>0.0)n=-n;float dif=max(dot(n,uSun),0.0);' +
     'vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 bc=mix(vC,uOver.rgb,uOver.a);' +
@@ -51,7 +73,7 @@
     // and the sky, most on the flat (a quay's deck, a roof, a road on a bridge)
     'float up=smoothstep(0.55,0.9,n.y);bc=mix(bc,vec3(0.88,0.9,0.93),uWet.y*up*0.92);float wf=uWet.x*(1.0-uWet.y*up);bc*=1.0-0.3*wf;' +
     'vec3 V=normalize(-vW);float wsp=pow(max(dot(reflect(-uSun,n),V),0.0),60.0)*wf*(0.25+0.75*up);float wfr=pow(1.0-max(dot(n,V),0.0),4.0)*wf*0.35*up;' +
-    'vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))+bc*uEmis+uSunCol*wsp*0.7+uAmb*wfr;gl_FragColor=vec4(fin(c,vW),1.0);}';
+    'vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))+bc*uEmis+uSunCol*wsp*0.7+uAmb*wfr;gl_FragColor=vec4(fin(c,vW),1.0);}');
   const TER_VS = 'attribute vec3 aPos;attribute vec3 aCol;attribute vec3 aNor;attribute float aShd;attribute vec4 aMat;attribute vec4 aCov;uniform mat4 uVP;uniform mat4 uM;uniform vec3 uPO;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;varying vec4 vV;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vC=aCol;vN=aNor;vP=aPos+uPO;vS=aShd;vM=aMat;vV=aCov;gl_Position=uVP*w;}';
   const NOISE = 'float hs(vec2 p){vec3 q=fract(vec3(p.xyx)*0.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}' +
     'float ns(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.0-2.0*f);return mix(mix(hs(i),hs(i+vec2(1.0,0.0)),u.x),mix(hs(i+vec2(0.0,1.0)),hs(i+vec2(1.0,1.0)),u.x),u.y);}';
@@ -214,14 +236,14 @@
   // the last resort when no sea program links: a flat sea with a little ripple, the sky in it and the sun's glitter
   const BASIC_VS = 'precision highp float;attribute vec2 aXZ;uniform mat4 uVP;uniform vec2 uOrigin;uniform vec3 uOriginRel;uniform vec2 uScale;varying vec3 vW;varying vec2 vXZ;' +
     'void main(){vec2 lxz=aXZ*uScale;vec3 rel=uOriginRel+vec3(lxz.x,0.0,lxz.y);vW=rel;vXZ=uOrigin+lxz;gl_Position=uVP*vec4(rel,1.0);}';
-  const BASIC_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;uniform float uTime;varying vec3 vW;varying vec2 vXZ;' +
+  const BASIC_FS = SUNV('precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;uniform float uTime;varying vec3 vW;varying vec2 vXZ;' +
     AIR + 'void main(){float d=length(vW);vec3 V=normalize(-vW);vec2 p=vXZ;' +
     'vec3 N=normalize(vec3(0.05*sin(p.x*0.35+uTime*1.1)+0.03*sin(p.y*0.52-uTime*0.9)+0.02*sin((p.x+p.y)*1.7+uTime*2.3),1.0,0.05*cos(p.y*0.31+uTime*1.3)+0.03*cos(p.x*0.47+uTime*0.7)+0.02*cos((p.x-p.y)*1.9-uTime*2.1)));' +
     'float fr=0.02+0.98*pow(1.0-max(dot(N,V),0.0),5.0);vec3 R=reflect(-V,N);vec3 sky=mix(uHor,uZen,clamp(R.y*1.5,0.0,1.0));' +
     'vec3 body=uDeep*(uAmb*1.7+uSunCol*0.3*max(dot(N,uSun),0.0));vec3 col=mix(body,sky,fr)+uSunCol*pow(max(dot(R,uSun),0.0),220.0)*0.9;' +
-    'gl_FragColor=vec4(fin(col,vW),1.0);}';
+    'gl_FragColor=vec4(fin(col,vW),1.0);}');
   // FAR (the far pass beyond the near terrain): the four longest wind waves and the swell, the rest of the wind sea only as roughness, no ripples
-  const SEA_FS = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;' +
+  const SEA_FS = SUNV('#extension GL_OES_standard_derivatives : enable\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;' +
     'uniform float uTime;uniform float uWind;uniform vec2 uWindDir;uniform float uFlat;uniform float uSpec;uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec2 uNFD;uniform sampler2D uHgt;uniform float uHOn;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform vec4 uSRect;uniform float uSOn;uniform float uPx;uniform float uDbg;uniform sampler2D uFoam;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uFoamOn;uniform vec2 uFoamG;uniform vec2 uFoamW;' + PLG +
     'varying vec3 vW;varying vec2 vXZ;' + NOISE + SEA_STATE + WAKE_GLSL + FETCHG +
     AIR + 'void main(){float d=length(vW);vec2 P=vXZ;vec4 S=seaAt(P);' +
@@ -303,8 +325,8 @@
     'float ln=ns(P*0.32+vec2(uTime*0.35,-uTime*0.25))*0.6+ns(P*0.95-uTime*0.45)*0.4;' +
     'foam=max(foam,band*smoothstep(0.35,0.72,ln+band*0.2)*(0.3+0.7*clamp(hl*1.6,0.0,1.0))*(0.7+0.3*sw)*ef);}}' +
     'if(uDbg>0.5){gl_FragColor=vec4(vec3(clamp(foam,0.0,1.0)),1.0);return;}' +
-    'col=mix(col,fc,clamp(foam,0.0,1.0)*0.85);gl_FragColor=vec4(fin(col,vW),1.0);}';
-  const terFS = q => '#extension GL_OES_standard_derivatives : enable\n#define MATQ ' + q + '\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec4 uHole;' +
+    'col=mix(col,fc,clamp(foam,0.0,1.0)*0.85);gl_FragColor=vec4(fin(col,vW),1.0);}');
+  const terFS = q => SUNV('#extension GL_OES_standard_derivatives : enable\n#define MATQ ' + q + '\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec4 uHole;' +
     'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uTideY;uniform float uSwash;uniform vec3 uSand;uniform vec2 uWet;uniform float uExpo;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;varying vec4 vV;uniform vec4 uMP;uniform vec4 uMQ;' + NOISE + PLG + AIR +
     // the ground near the water is cut where the shore texture (buildLandMask: the foreshore's own height, h = r * 8 - 4) lies under
     // the tide, so the waterline is the coast's own line at high water and the foreshore's at ebb, whatever the mesh's cells
@@ -375,7 +397,7 @@
     'float wf=uWet.x*(1.0-S)*(0.3+0.7*max(R,1.0-smoothstep(1.0,2.5,h)));c*=1.0-0.3*wf;' +
     'float dif=max(dot(n,uSun),0.0)*mix(0.08,1.0,smoothstep(0.15,0.85,vS));vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 col=c*(amb+uSunCol*dif+pLit(vW,n));' +
     'vec3 V=normalize(-vW);col+=uSunCol*pow(max(dot(reflect(-uSun,n),V),0.0),40.0)*wf*0.45*smoothstep(0.15,0.85,vS)*(1.0-smoothstep(300.0,1500.0,d));' +
-    'gl_FragColor=vec4(fin(col,vW),1.0);}';
+    'gl_FragColor=vec4(fin(col,vW),1.0);}', true);
   const SKY_VS = 'attribute vec2 aP;varying vec2 vP;void main(){vP=aP;gl_Position=vec4(aP,0.9999,1.0);}';
   const SKY_FS = 'precision highp float;uniform vec3 uF;uniform vec3 uR;uniform vec3 uU;uniform vec2 uTan;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uSunD;uniform vec3 uSunCol;' +
     'uniform vec3 uCX;uniform vec3 uCY;uniform vec3 uCP;uniform float uPx;uniform float uCloud;uniform vec2 uCloudOff;uniform float uTime;uniform float uStars;uniform float uAur;uniform float uDay;uniform vec2 uWindDir;uniform vec3 uMoonD;uniform float uMoonA;uniform float uAirOn;varying vec2 vP;' + NOISE +
@@ -471,10 +493,12 @@
   // frame and taken off the sample (the pattern then moves downwind), so a turn or a change of the wind never makes the sky jump.
   // (Before 19.10.2026 the offset was the wind's direction times the time since the start: the clouds drifted upwind at a fixed pace,
   // and a few degrees of veer moved the whole sky.)
-  const CLD = {off:new Float32Array([0, 0]), veer:15 * Math.PI / 180, h:1500};
+  // m: the same drift in metres for the clouds' shadows on the ground (cloudV in AIR), folded at 32 768 m as the shader's noise repeats
+  const CLD = {off:new Float32Array([0, 0]), m:[0, 0], veer:15 * Math.PI / 180, h:1500};
   function cloudStep(dt){
     const w = env.windDir || [0, -1], U = clamp(1.5 * (env.wind || 0), 2, 40), r = 1.2 * U / CLD.h * dt, c = Math.cos(CLD.veer), s = Math.sin(CLD.veer);
     CLD.off[0] -= (w[0] * c - w[1] * s) * r; CLD.off[1] -= (w[1] * c + w[0] * s) * r;
+    CLD.m[0] = (CLD.m[0] - (w[0] * c - w[1] * s) * U * dt) % 32768; CLD.m[1] = (CLD.m[1] - (w[1] * c + w[0] * s) * U * dt) % 32768;
     for (let i = 0; i < 2; i++) if (Math.abs(CLD.off[i]) > 4096) CLD.off[i] -= Math.sign(CLD.off[i]) * 4096;   // (after days of play: a single jump)
   }
   // the celestial frame for the night sky: the pole at the boat's latitude, turned by the local sidereal time (GMST from the game's date)
@@ -525,6 +549,23 @@
     if (u.uAirOn) gl.uniform1f(u.uAirOn, AIRON);
     if (u.uCB){ gl.uniform3fv(u.uCB, [env.cbase || 3000, env.cstr || 0, env.cthick || 1e5]); gl.uniform3fv(u.uCC, env.ccol || env.fog); gl.uniform3fv(u.uEye, AIRE); if (u.uCD) gl.uniform4fv(u.uCD, env.cdrift || [0, 0, 0, 0]); }
     if (u.uAirSun){ gl.uniform3fv(u.uAirSun, env.sunDir || [0, 1, 0]); const k = 0.35 * (1 - 0.9 * (env.cloud || 0)); gl.uniform3fv(u.uAirMie, (env.sunCol || [0, 0, 0]).map(v => v * k)); }
+    // the sun's light at a point (sunV and cloudV in AIR): the clouds' shadows and the land's shadow round the boat (SG, sunGridStep)
+    if (u.uCS){ const d = env.shadowDir, cl = env.cloud || 0, on = SUNON && AIRON && QUAL.lvl > 0 && d && d[1] > 0.005, P = 32768, md = v => ((v % P) + P) % P;
+      gl.uniform4f(u.uCS, md(EYE[0] + CLD.m[0]), md(EYE[2] + CLD.m[1]), on ? sstep(0.08, 0.25, cl) * (1 - sstep(0.8, 0.95, cl)) : 0, clamp(env.cbase || 1500, 400, 2500));
+      gl.uniform4f(u.uCS2, d ? d[0] : 0, d ? d[1] : 1, d ? d[2] : 0, cl); }
+    if (u.uSunT){ const on = SUNON && SG.on && SG.tex;
+      gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, on ? SG.tex : sunT0()); gl.uniform1i(u.uSunT, 5); gl.activeTexture(gl.TEXTURE0);
+      gl.uniform4f(u.uShR, on ? SG.x0 - EYE[0] : 0, on ? SG.z0 - EYE[2] : 0, on ? 1 / SG.span : 0, on ? 1 : 0); }
+  }
+  // #sun0 in the address: no clouds' shadows and no land's shadow on what stands on it (the terrain keeps its own)
+  const SUNON = !/sun0/.test(location.hash);
+  let SUNT0 = null;   // a white texel for the shaders while there is no shadow grid (an unbound unit reads black: all in shadow)
+  function sunT0(){
+    if (SUNT0) return SUNT0;
+    SUNT0 = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, SUNT0); gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, 1, 1, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, new Uint8Array([255]));
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    return SUNT0;
   }
   function attr(loc, b, size){ gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0); }
   // World meshes keep their vertices relative to their own origin m.o ([x, z], metres), so Float32 holds them to the millimetre

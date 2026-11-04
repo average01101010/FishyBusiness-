@@ -9,6 +9,11 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+# one run at a time: two branches pushed seconds apart with the same gebco.json started two at once (04.11.2026), and the second's
+# release got GitHub's 502; the next waits instead
+concurrency:
+  group: gebco
+  cancel-in-progress: false
 env:
   PYTHONUNBUFFERED: '1'
 jobs:
@@ -17,20 +22,35 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - id: seen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/ci/seen.py gebco tools/map/gebco.json
+      - if: steps.seen.outputs.skip != 'true'
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install numpy==1.26.4 requests pyproj==3.7.2 rasterio
-      - name: GEBCO on the wide frame
+      - if: steps.seen.outputs.skip != 'true'
+        run: pip install numpy==1.26.4 requests pyproj==3.7.2 rasterio
+      - if: steps.seen.outputs.skip != 'true'
+        name: GEBCO on the wide frame
         run: |
           df -h . | tail -1
           set -o pipefail
           python3 tools/map/deep.py gebco | tee gebco.json
-      - name: The release
+      - if: steps.seen.outputs.skip != 'true'
+        name: The release
         env:
           GH_TOKEN: ${{ github.token }}
+        # (GitHub's API answers 5xx now and then, 04.11.2026: «HTTP 502: Server Error» after the grid was made. The release is tried four
+        # times; a release a failed try made after all gets the file uploaded instead of a second one)
         run: |
           TAG=gebco-${{ github.run_number }}
           cp tools/map/out/gebco/gebco1k.npz gebco1k.npz
-          gh release create "$TAG" gebco1k.npz --target "${{ github.sha }}" --title "GEBCO $TAG" \
-            --notes "GEBCO 2025 Grid (GEBCO Compilation Group (2025) GEBCO 2025 Grid, doi:10.5285/37c52e96-24ea-67ce-e063-7086abc05f29) på rammens 1 km-celler (frame.WIDE), tools/map/deep.py gebco, commit ${{ github.sha }}. $(tail -1 gebco.json)"
+          NOTES="GEBCO 2025 Grid (GEBCO Compilation Group (2025) GEBCO 2025 Grid, doi:10.5285/37c52e96-24ea-67ce-e063-7086abc05f29) på rammens 1 km-celler (frame.WIDE), tools/map/deep.py gebco, commit ${{ github.sha }}. ${{ steps.seen.outputs.mark }} $(tail -1 gebco.json)"
+          for i in 1 2 3 4; do
+            if gh release view "$TAG" >/dev/null 2>&1; then gh release upload "$TAG" gebco1k.npz --clobber && exit 0
+            elif gh release create "$TAG" gebco1k.npz --target "${{ github.sha }}" --title "GEBCO $TAG" --notes "$NOTES"; then exit 0; fi
+            echo "try $i failed, again in $((i * 20)) s"; sleep $((i * 20))
+          done
+          exit 1

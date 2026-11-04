@@ -16,19 +16,27 @@ jobs:
     timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - id: seen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/ci/seen.py sjomerker tools/map/sjomerker.json tools/map/sjomerker.py
+      - if: steps.seen.outputs.skip != 'true'
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install numpy requests pyproj && sudo apt-get update -qq && sudo apt-get install -y -qq osmium-tool
-      - name: Fetch
+      - if: steps.seen.outputs.skip != 'true'
+        run: pip install numpy requests pyproj && sudo apt-get update -qq && sudo apt-get install -y -qq osmium-tool
+      - if: steps.seen.outputs.skip != 'true'
+        name: Fetch
         run: |
           curl -sSL --retry 3 -o norway.osm.pbf https://download.geofabrik.de/europe/norway-latest.osm.pbf
           ls -la norway.osm.pbf
           python3 tools/map/sjomerker.py pbf norway.osm.pbf out/sjomerker.json
-      - name: The release
+      - if: steps.seen.outputs.skip != 'true'
+        name: The release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG=sjomerker-${{ github.run_number }}
           gh release create "$TAG" out/sjomerker.json.gz --target "${{ github.sha }}" --title "Sjømerker $TAG" \
-            --notes "Sjømerker, lykter og skjær langs kysten fra OpenStreetMap (ODbL, © OpenStreetMap-bidragsytere), Geofabriks Norge-utdrag, tools/map/sjomerker.py, commit ${{ github.sha }}."
+            --notes "Sjømerker, lykter og skjær langs kysten fra OpenStreetMap (ODbL, © OpenStreetMap-bidragsytere), Geofabriks Norge-utdrag (og Overpass for Svalbard og Jan Mayen om utdraget ikke har dem), tools/map/sjomerker.py, commit ${{ github.sha }}. ${{ steps.seen.outputs.mark }}"
