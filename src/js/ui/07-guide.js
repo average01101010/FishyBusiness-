@@ -66,7 +66,7 @@ function panelRoute(){
     const rest = S.plan.wps.slice(S.plan.idx);
     h.push('<h3>' + (S.plan.returning ? t('ret_active') : t('active')) + '</h3>');
     h.push('<ul class="wps">' + rest.map((w, i) => '<li' + (w.auto ? ' class="auto"' : '') + '><span class="n' + (w.fish > 0 ? ' f' : '') + '">' + wpName(S.plan.idx + i + 1) + '</span><span class="lbl">' + (w.port ? portById(w.port).name : coordStr(w)) + '<small>' + (w.port ? '' : w.auto && !w.act && !(w.fish > 0) ? wpTag(w) : (w.act ? wpActLabel(w.act) + (w.fish > 0 ? ', ' : '') : '') + (w.fish > 0 ? t('fish_h', w.fish) : w.act ? '' : t('no_fish'))) + '</small></span></li>').join('') + '</ul>');
-    h.push('<div class="range"><input type="range" min="2" max="' + BOAT.vmax + '" step="1" value="' + Math.min(S.plan.speed, BOAT.vmax) + '" id="spdLive" aria-label="' + t('speed') + '"><output id="spdLiveOut">' + S.plan.speed + ' kn</output></div>');
+    h.push('<div class="range step2"><button class="sb" data-act="spdstep" data-id="spdLive" data-d="-1" aria-label="−">−</button><input type="range" min="2" max="' + BOAT.vmax + '" step="1" value="' + Math.min(S.plan.speed, BOAT.vmax) + '" id="spdLive" aria-label="' + t('speed') + '"><button class="sb" data-act="spdstep" data-id="spdLive" data-d="1" aria-label="+">+</button><output id="spdLiveOut">' + S.plan.speed + ' kn</output></div>');
     if (b.status === 'sailing' && b.v < S.plan.speed - 0.5) h.push('<p class="note">' + t('speed_live') + ': ' + fmt(b.v, 0) + ' kn (' + t('waves').toLowerCase() + ')</p>');
     h.push('<div class="btns">' + (S.plan.returning || tutOn() ? '' : '<button class="btn" data-act="retrace">' + t('retrace') + '</button>') + (b.status === 'sailing' ? '<button class="btn" data-act="stop">' + t('stop') + '</button>' : '') + '</div>');
     return h.join('');
@@ -87,7 +87,7 @@ function panelRoute(){
       (w.port ? '' : '<div class="wf">' + ctl + gch + '</div>') + ((rb => rb ? '<p class="bad wrule">✕ ' + rb + '</p>' : '')(ruWpMsg(w))) + '</li>';
   }).join('') + '</ul>');
   const e = estimate();
-  h.push('<div class="range"><input type="range" min="2" max="' + BOAT.vmax + '" step="1" value="' + Math.min(S.draftSpeed, BOAT.vmax) + '" id="spd" aria-label="' + t('speed') + '"><output id="spdOut">' + S.draftSpeed + ' kn, ' + t('lpnm', fmt(fuelLph(S.draftSpeed, windAt(S.t / 60)) / S.draftSpeed, 2)) + '</output></div>');
+  h.push('<div class="range step2"><button class="sb" data-act="spdstep" data-id="spd" data-d="-1" aria-label="−">−</button><input type="range" min="2" max="' + BOAT.vmax + '" step="1" value="' + Math.min(S.draftSpeed, BOAT.vmax) + '" id="spd" aria-label="' + t('speed') + '"><button class="sb" data-act="spdstep" data-id="spd" data-d="1" aria-label="+">+</button><output id="spdOut">' + S.draftSpeed + ' kn, ' + t('lpnm', fmt(fuelLph(S.draftSpeed, windAt(S.t / 60)) / S.draftSpeed, 2)) + '</output></div>');
   { const H0 = S.t / 60, opts = ['<option value="">' + t('dep_now') + '</option>'];
     for (let k = 1; k <= 36; k++){ const m = (Math.floor(H0) + k) * 60, H1 = m / 60; opts.push('<option value="' + m + '"' + (S.draftDep === m ? ' selected' : '') + '>' + (gDate(H1).getUTCDate() !== gDate(H0).getUTCDate() ? dayStr(H1).split(' ')[0] + ' ' : '') + hm(H1) + ' · ' + dirName(windDir(H1)) + ' ' + fmt(fcWind(H1, H0), 0) + ' m/s</option>'); }
     h.push('<div class="kv"><span>' + t('departure') + '</span><span><select id="dep" class="depsel">' + opts.join('') + '</select></span></div>'); }
@@ -278,16 +278,22 @@ function panelPort(){
   h.push('<div class="kv"><span>' + t('net') + '</span><span>' + kr(S.stats.revenue - S.stats.costs) + '</span></div>');
   h.push('<div class="kv"><span>' + t('landed') + '</span><span>' + fmt(S.stats.kg, 0) + ' kg</span></div>');
   h.push('<div class="kv"><span>' + t('trips') + '</span><span>' + S.stats.trips + '</span></div>');
-  h.push('<div class="btns"><button class="btn" data-act="reset">' + t('reset') + '</button></div>');
+  // («Start på nytt» stood here under the accounts; it is in Innstillinger, in red, UI review 04.11.2026)
   return h.join('');
 }
-// the landing note of the last landing here, for a few hours after it
+// the landing note of the last landing here, for a few hours after it. The first time it is shown it comes out of the printer row by
+// row (UI-redesign U9, grep 8); a redraw in the meantime carries on where it was (--el is the time it has been out), so it never restarts
+const SLIP_OUT = {};
 function portSlip(){
   const b = S.boat, h = [];
   const ls = S.lastSale;
   // in the first trip it stays until the guide has shown it: a player who slept after landing was stuck on «Vis sluttseddelen»
   if (ls && ls.port === b.port && (S.t - ls.t < 240 || (tutOn() && !S.tut.m.slip))){
     const LN = (no, en) => S.lang === 'no' ? no : en;
+    // the first landing is a moment, not a form (UI-redesign U9, grep 8): a stamp over the note with what came in and what it gave
+    if (tutOn()){ const kg = ls.lines.reduce((a, r) => a + r.kg, 0), net = ls.total - ((ls.tk || {}).sum || 0) - (ls.lott || 0) - (ls.coopKr || 0);
+      const k0 = SLIP_OUT[ls.port + ':' + ls.t], e0 = k0 ? Date.now() - k0 : 0;
+      h.push('<div class="slip-first"' + (e0 ? ' style="animation-delay:-' + Math.min(e0, 5000) + 'ms"' : '') + '><span class="sf-st">' + LN('Første levering', 'First landing') + '</span><b>' + kr(Math.round(net)) + '</b><small>' + fmt(kg, 0) + ' kg ' + LN('levert i ', 'landed at ') + portById(ls.port).name + LN('. Pengene står på kontoen.', '. The money is in the account.') + '</small></div>'); }
     h.push('<h3>' + t('slip', portById(ls.port).name) + (ls.field ? ' · ' + LN('fangstfelt', 'field') + ' ' + ls.field : '') + (ls.gear && ls.gear.length ? ' · ' + ls.gear.map(k => k === 'juksa' ? LN('juksa', 'jig') : GEAR[k][S.lang].toLowerCase()).join(', ') : '') + '</h3><div style="overflow-x:auto"><table class="tbl slipt"><thead><tr><th>' + t('species') + '</th><th>' + LN('Størrelse', 'Size') + '</th><th>' + t('quality') + '</th><th>' + t('kg') + '</th><th>kr/kg</th><th>kr</th></tr></thead><tbody>');
     // every row is whole kilos and kroner, and the sums are the sums of the rows as shown
     const pkOf = r => Math.round(r.gut ? r.kg / SPECIES[r.sp].uh : r.kg), row = (a, kgc, sum, cls) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td colspan="3">' + a + '</td><td>' + kgc + '</td><td></td><td>' + sum + '</td></tr>';
@@ -329,6 +335,10 @@ function portSlip(){
     if (ls.coopKr > 0) h.push(row(LN('Kvotesamarbeid', 'Quota cooperation'), '', '−' + fmt(ls.coopKr, 0)));
     if (tk.sum > 0 || ls.lott > 0) h.push(row('<b>' + LN('Til kassa', 'To the cash box') + '</b>', '', '<b>' + fmt(ls.total - tk.sum - ls.lott - (ls.coopKr || 0), 0) + '</b>', 'sum'));
     h.push('</tbody></table></div>');
+    { const key = ls.port + ':' + ls.t, now = Date.now(), t0 = SLIP_OUT[key] || (SLIP_OUT[key] = now), el = now - t0;
+      if (el < 4000){ const i0 = h.findIndex(x => x.indexOf('class="tbl slipt"') >= 0); let n = 0;
+        for (let k = i0; k < h.length; k++) h[k] = h[k].replace(/<tr(?=[ >])/g, () => '<tr style="--i:' + Math.min(n++, 24) + '"');
+        h[i0] = h[i0].replace('class="tbl slipt"', 'class="tbl slipt print" style="--el:' + el + 'ms"'); } }
     // the first landing (Onboarding 2, O4, backlog 10.2): the trip was better than usual, and what the jig gives here now; and that others
     // land here too (the shared world's last day at this plant, WSH.mkt, 10h-world.js), only when there are any: no number is made up
     if (tutOn() && S.tut.fk && S.tut.fk.d > 0){ const F = S.tut.fk, kg = ls.lines.reduce((a, r) => a + r.kg, 0), n = Math.round(kg * Math.max(0, (F.d - F.t) / F.d) / TUT_FISH_H / 10) * 10;
@@ -359,7 +369,9 @@ function landWarn(p){
 }
 function landPage(){
   const b = S.boat, h = [], LN = (no, en) => S.lang === 'no' ? no : en;
-  if (b.status !== 'port') return '<p class="note">' + t('not_port') + '</p>';
+  // (at sea the page said «the price list below» with no list under it, UI review 04.11.2026: it says where the catch goes instead, and
+  // the phone's page puts the nearest plant with Autonav under it, ui/phone/02-havn-last-agn-ordre.js lever)
+  if (b.status !== 'port') return '<p class="note">' + LN('Du er ikke i havn. Fisken leveres på et fiskemottak.', 'You are not in harbour. The catch is landed at a fish plant.') + '</p>';
   const p = portById(b.port), tot = holdTotal();
   if (b.land) h.push('<p class="note"><b>' + LN('Lossing: ', 'Landing: ') + '</b>' + landText(false) + ' ' + LN('Sluttseddelen kommer ca. kl. ', 'The landing note comes at about ') + whenTxt(b.land.until) + '.</p>');
   else if (b.shift || b.fueling) h.push('<p class="note">' + quayText(false) + '</p>');

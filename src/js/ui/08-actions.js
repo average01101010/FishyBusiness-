@@ -8,6 +8,8 @@ function doAct(el){
   if (act === 'gset' || act === 'ghaul' || act === 'gstop') gearDoAct(act, el);
   // every change to the draft is a step in the route history (03b-route.js)
   else if (act === 'gwp'){ draftEdit(() => gearDoAct(act, el)); const rb = ruWpMsg(S.draft[i]); if (rb) toast(rb); }
+  // − and + beside the speed slider: one knot a tap, the same path as dragging it
+  else if (act === 'spdstep'){ const r = $(el.dataset.id); if (r){ r.value = clamp(+r.value + +el.dataset.d, +r.min, +r.max); panelInput({target:r}); panelChange({target:r}); } return; }
   else if (act === 'fp' || act === 'fm'){ const w = S.draft[i], f0 = w ? w.fish || 0 : 0; draftEdit(() => { if (w) w.fish = clamp((w.fish || 0) + (act === 'fp' ? 1 : -1), 0, 12); });
     if (w && !f0 && w.fish > 0){ const rb = ruWpMsg(w); if (rb) toast(rb + L(' Båten vil vente der uten å fiske.', ' The boat will wait there without fishing.')); } }
   else if (act === 'rm') draftEdit(() => S.draft.splice(i, 1));

@@ -4,6 +4,24 @@
   --mag:#B5227A; --magSoft:rgba(181,34,122,.10);
   --ok:#2E7D57; --warn:#A96C07; --bad:#BF2F2A;
   --grid:rgba(22,50,63,.09); --water:#2F6D86;
+  /* ---- «Kystlys» (docs/planer/ui-redesign.md, U1 04.11.2026): the design tokens. Each of the four looks has one role:
+     instrument (dark glass over the sea), card (where you work), ECDIS (only in the chart), paper (what is written); cream is only the guide.
+     The old names above stay as they are and are mapped to these in time, component by component (U2 onwards). ---- */
+  --s-deep:#0B1720; --s-glass:rgba(11,23,32,.78); --s-raised:#15252F; --s-card:#FBFCF8; --s-card-2:#EEF2F0; --s-paper:#F2E8D2; --s-guide:#FFFBE9;
+  --t-on-dark:#EEF4F7; --t-on-dark-2:rgba(238,244,247,.68); --t-ink:#16323F; --t-muted:#5B727C; --t-pen:#1F2F6E;
+  --a-primary:#B5227A; --a-focus:#E8C96A; --fish:#2FA0A0;
+  /* type: cap 11, sm 13, body 15, lg 17, h3 20, h2 26 (serif italic), num 18 (mono), hand 20 (Caveat); nothing under 11 px */
+  --fs-cap:11px; --fs-sm:13px; --fs-body:15px; --fs-lg:17px; --fs-h3:20px; --fs-h2:26px; --fs-num:18px; --fs-hand:20px;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace; --hand:"Caveat",cursive;
+  /* space, corners, heights */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px;
+  --r-tag:4px; --r-btn:8px; --r-card:14px; --r-pill:999px;
+  --h-btn:44px; --h-act:56px;
+  /* the layers, low to high, and over each other only in this order: one of drawer, book and phone open at a time, a dialog dims what is
+     under it, the guide never covers what it points at, effects never over the gates (sleep, start, wardrobe, letter, sign-in). The small
+     numbers inside the HUD and the chart (0-10) and the loading screen (20, nothing shows over it while body.booting) stay as they are */
+  --z-drawer:9; --z-fan:10; --z-book:55; --z-phone:60; --z-modal:65; --z-tut-dim:70; --z-tut-ring:71; --z-tip:72;
+  --z-toast:80; --z-fx:81; --z-cash:82; --z-vign:85; --z-sleep:90; --z-start:91; --z-wardrobe:93; --z-letter:94; --z-gate:95;
   --sans:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
   color-scheme:light;
@@ -84,7 +102,7 @@ body.vplot #gps::after{display:none}
 /* the status above the buttons is text, not a button: a dashed edge, no pointer */
 #dockInfo{position:absolute;z-index:5;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 86px + var(--dkx, 0px));max-width:calc(100% - 240px);padding:5px 12px;border-radius:8px;border:1px dashed rgba(255,255,255,.3);background:rgba(6,16,24,.42);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#dfe9ef;font:500 12.5px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 #dockInfo[hidden],#dockFan[hidden]{display:none}
-#dockFan{position:absolute;z-index:10;width:max-content;bottom:calc(env(safe-area-inset-bottom,0px) + 86px + var(--dkx, 0px));display:flex;flex-wrap:wrap;justify-content:center;gap:6px;padding:10px 10px 8px;border-radius:18px;background:rgba(6,16,24,.74);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18);box-shadow:0 6px 20px rgba(0,0,0,.35);max-width:calc(100% - 16px)}
+#dockFan{position:absolute;z-index:var(--z-fan);width:max-content;bottom:calc(env(safe-area-inset-bottom,0px) + 86px + var(--dkx, 0px));display:flex;flex-wrap:wrap;justify-content:center;gap:6px;padding:10px 10px 8px;border-radius:18px;background:rgba(6,16,24,.74);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18);box-shadow:0 6px 20px rgba(0,0,0,.35);max-width:calc(100% - 16px)}
 #dockFan .dk-b.sm .dk-i{width:46px;height:46px} #dockFan .dk-b.sm .dk-i svg{width:22px;height:22px}
 #dockFan .dk-b.sm{width:84px;font-size:11.5px} #dockFan .dk-b.sm .dk-l{max-width:84px}
 #dockFan .dk-b.wide{width:auto;min-width:66px;max-width:124px} #dockFan .dk-b.wide .dk-l{max-width:124px;white-space:normal;text-align:center}
@@ -94,7 +112,7 @@ body.vplot #gps::after{display:none}
 .dk-go,.dk-tg{height:44px;border-radius:22px;border:0;background:var(--mag);color:#fff;font:700 14px var(--sans);cursor:pointer}
 .dk-tg{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);font-weight:600} .dk-tg.on{background:#f2f5f7;color:#0d1b24} .dk-tg:disabled{opacity:.5}
 /* the drawer: at the side when the screen lies, a sheet above the buttons when it stands; the sea stays in view */
-#drawer{position:absolute;z-index:9;top:0;right:0;bottom:0;width:min(380px,92vw);display:flex;flex-direction:column;background:#f3f6f8;color:#15252f;box-shadow:-8px 0 26px rgba(0,0,0,.28)}
+#drawer{position:absolute;z-index:var(--z-drawer);top:0;right:0;bottom:0;width:min(380px,92vw);display:flex;flex-direction:column;background:#f3f6f8;color:#15252f;box-shadow:-8px 0 26px rgba(0,0,0,.28)}
 #drawer[hidden]{display:none}
 .dr-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 8px) 8px 8px 16px;background:#15252f;color:#fff;font:700 16px var(--sans)}
 .dr-head button{width:44px;height:44px;flex:none;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;font-size:18px;cursor:pointer}
@@ -126,7 +144,7 @@ body.booting :is(#modal,#toast,#tip,#tutDim,#tutRing,#phone,#book,#showChip,#tur
 .ld-bar::after{content:'';position:absolute;top:0;bottom:0;left:-40%;width:40%;background:linear-gradient(90deg,transparent,#f3cd85,transparent);animation:ldrun 1.7s ease-in-out infinite}
 @keyframes ldrun{to{left:100%}}
 .ld-s{font:400 13px/1.3 var(--sans);letter-spacing:.04em;color:rgba(228,238,250,.8);text-shadow:0 1px 6px rgba(0,8,24,.7)}
-#cloudGate{position:fixed;inset:0;z-index:99999;height:auto;font:15px/1.5 var(--sans);overflow:auto}
+#cloudGate{position:fixed;inset:0;z-index:var(--z-gate);height:auto;font:15px/1.5 var(--sans);overflow:auto}
 .cg-card{width:min(420px,100%);box-sizing:border-box;padding:18px 20px 16px;border-radius:18px;background:rgba(6,14,28,.58);border:1px solid rgba(255,255,255,.12);
   -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 10px 40px rgba(0,6,18,.35)}
 .cg-card p{margin:0 0 8px} .cg-card .cg-lead{font:italic 400 18px/1.4 var(--serif);color:#f5f8fc} .cg-card .cg-small{opacity:.8;font-size:13.5px} .cg-card .cg-fine{opacity:.7;font-size:12px;margin:14px 0 0}
@@ -232,7 +250,7 @@ body.v3d #aisCard{display:none} .lbl-ais{font-family:var(--sans);font-weight:600
 #map.plot .port{fill:#0b1a2a;stroke:#fff} #map.plot .port.home{fill:#fff} #map.plot .rorbu{fill:#c23a2b;stroke:#fff} #map.plot .havn{fill:#17807d;stroke:#fff} #map.plot .havn-h{fill:#fff} #map.plot .rorbu-p{stroke:#fff} #map.plot .trail{stroke:#fff}
 .phonebtn{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:40px}
 .phonebtn i{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:9px;background:#e0412f;color:#fff;font:700 10px/17px var(--sans);font-style:normal;padding:0 4px}
-#phone{position:fixed;right:18px;bottom:14px;z-index:60;width:min(330px,94vw);height:min(660px,88vh);transform:translateY(0);transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s;filter:drop-shadow(0 18px 40px rgba(0,0,0,.45))}
+#phone{position:fixed;right:18px;bottom:14px;z-index:var(--z-phone);width:min(330px,94vw);height:min(660px,88vh);transform:translateY(0);transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s;filter:drop-shadow(0 18px 40px rgba(0,0,0,.45))}
 #phone.off{transform:translateY(110%);opacity:0}
 @media (max-width:520px){#phone{right:3vw;bottom:8px}}
 .ph-body{position:relative;height:100%;background:linear-gradient(145deg,#2a2f36,#0c0f13);border-radius:40px;padding:12px;border:1px solid #3a414a}
@@ -331,7 +349,7 @@ body.v3d #gps{background:rgba(6,16,24,.38);-webkit-backdrop-filter:blur(8px);bac
 #logbook:active{transform:rotate(-4deg) translateX(6px)}
 #logbook .lbk-tab{position:absolute;right:5px;top:10px;bottom:10px;width:22px;background:#efe6cf;border:1px solid #6b5e44;writing-mode:vertical-rl;transform:rotate(180deg);font:700 8.5px/22px var(--serif);letter-spacing:.14em;color:#2a2418;text-align:center}
 body.vplot #logbook{display:none}
-#book{position:fixed;inset:0;z-index:55;display:flex;align-items:center;justify-content:center}
+#book{position:fixed;inset:0;z-index:var(--z-book);display:flex;align-items:center;justify-content:center}
 #book[hidden],#tip[hidden]{display:none}
 #book .bk-back{position:absolute;inset:0;background:rgba(4,10,16,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);opacity:0;transition:opacity .3s}
 #book.on .bk-back{opacity:1}
@@ -340,6 +358,8 @@ body.vplot #logbook{display:none}
 .bk-stage{position:relative;perspective:1800px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .bk-stage.spread{width:min(calc(96vw - 48px),920px);height:min(80vh,620px)}
 .bk-stage.single{width:min(calc(94vw - 44px),440px);height:min(78vh,640px)}
+/* the deck log's hand is Caveat, which the page carries (Segoe Print and Comic Sans are not embedded and fell to whatever cursive
+   the tablet had, UI review 04.11.2026); the sizes are a step up from the old ones, as Caveat runs smaller */
 /* the tabs down the left edge of the book, as in a real log book; the open one sticks out */
 .bk-body{position:relative;margin-left:42px}
 .bk-tabs{position:absolute;right:100%;top:14px;bottom:14px;display:flex;flex-direction:column;gap:5px;margin-right:6px;z-index:0}
@@ -348,7 +368,7 @@ body.vplot #logbook{display:none}
 .bk-tab.on{width:42px;margin-left:0;filter:none;box-shadow:-3px 3px 6px rgba(0,0,0,.35)}
 /* entries in the tabs: seasons and events (crossed out when over), gear cards, landing notes */
 .bk-e{position:relative;margin:4px 0 10px;padding:2px 2px 4px}
-.bk-et{display:flex;justify-content:space-between;gap:8px;align-items:baseline;border-bottom:1px solid rgba(80,110,150,.35);font-family:'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',cursive;color:#1f2f6e;font-size:14px}
+.bk-et{display:flex;justify-content:space-between;gap:8px;align-items:baseline;border-bottom:1px solid rgba(80,110,150,.35);font-family:'Caveat',cursive;color:#1f2f6e;font-size:17px}
 .bk-ed{color:#b0434f;font-size:12px;white-space:nowrap}
 .bk-e.over{opacity:.55}
 .bk-e.over::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(to top right,transparent calc(50% - 1.5px),rgba(222,96,120,.7) 50%,transparent calc(50% + 1.5px)),linear-gradient(to bottom right,transparent calc(50% - 1.5px),rgba(222,96,120,.7) 50%,transparent calc(50% + 1.5px))}
@@ -357,12 +377,12 @@ body.vplot #logbook{display:none}
 .bk-g{display:flex;gap:8px;margin:6px 0 12px;padding-bottom:6px;border-bottom:1px solid rgba(80,110,150,.3)}
 .bk-gi svg{width:46px;height:36px}
 .bk-gb{flex:1;min-width:0}
-.bk-gt{font-family:'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',cursive;color:#b0434f;font-size:15px;line-height:22px}
+.bk-gt{font-family:'Caveat',cursive;color:#b0434f;font-size:18px;line-height:22px}
 .bk-gr{display:flex;gap:6px;align-items:center;font:11.5px var(--serif);color:#3b3020;min-height:22px;flex-wrap:wrap} .bk-gr .hw{font-size:12px;line-height:20px}
 .bk-tl{vertical-align:middle;margin-right:4px} .bk-tl path{stroke:#1f2f6e;stroke-width:1.6;stroke-linecap:round;fill:none}
 .bk-red{color:#b0434f}
 .bk-sp{display:flex;justify-content:space-between;align-items:center;margin:8px 0 0}
-.bk-sn{font-family:'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',cursive;color:#1f2f6e;font-size:15px}
+.bk-sn{font-family:'Caveat',cursive;color:#1f2f6e;font-size:18px}
 .bk-fish svg{width:64px;height:28px}
 .bk-st td,.bk-st th{text-align:right} .bk-st td:first-child,.bk-st th:first-child{text-align:left}
 .bk-tot{margin-top:8px;border-top:2px solid #5a4a30;padding-top:4px}
@@ -385,10 +405,10 @@ body.vplot #logbook{display:none}
 .pg-t{font:700 13px var(--serif);letter-spacing:.16em;text-transform:uppercase}
 .pg-d{font:italic 13px var(--serif);color:#4a3d28;text-align:right}
 .pg-v{font:11px var(--serif);color:#5a4a30;margin:-2px 0 6px}
-.hw{font-family:'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',cursive;color:#1f2f6e;font-size:13px;line-height:24px;margin:0}
+.hw{font-family:'Caveat',cursive;color:#1f2f6e;font-size:16px;line-height:24px;margin:0}
 .lg{width:100%;border-collapse:collapse;font-size:11px}
 .lg th{font:600 9.5px var(--serif);letter-spacing:.06em;text-transform:uppercase;color:#5a4a30;border-bottom:1px solid #8a7654;padding:3px 3px;text-align:left}
-.lg td{border-bottom:1px solid rgba(138,118,84,.35);border-right:1px solid rgba(138,118,84,.25);padding:2px 3px;vertical-align:top;font-family:'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',cursive;color:#1f2f6e;font-size:11.5px;line-height:18px}
+.lg td{border-bottom:1px solid rgba(138,118,84,.35);border-right:1px solid rgba(138,118,84,.25);padding:2px 3px;vertical-align:top;font-family:'Caveat',cursive;color:#1f2f6e;font-size:14px;line-height:18px}
 .lg td:last-child{border-right:0} .lg tr.ev td{color:#6e1f1f} .lg td.pos{font-size:10px;line-height:14px}
 .dr p{border-left:2px solid rgba(190,60,60,.45);padding-left:8px}
 .dr b{font-family:var(--serif);font-weight:600;color:#4a3d28;font-size:11.5px;margin-right:6px}
@@ -397,7 +417,7 @@ body.vplot #logbook{display:none}
 .bk-ctrl{display:flex;gap:8px;align-items:center;background:rgba(6,16,24,.7);border-radius:14px;padding:5px 8px;color:#fff;font:600 13px var(--sans)}
 .bk-ctrl button{background:rgba(255,255,255,.12);border:0;border-radius:9px;color:#fff;min-width:34px;height:32px;font:600 14px var(--sans);cursor:pointer;padding:0 10px}
 #bkDate{min-width:130px;text-align:center}
-#tip{position:fixed;z-index:63;max-width:280px;background:#fffbe9;color:#1c2a33;border-radius:12px;padding:11px 13px 9px;box-shadow:0 10px 30px rgba(0,0,0,.35);font:14px/1.4 var(--sans)}
+#tip{position:fixed;z-index:var(--z-tip);max-width:280px;background:#fffbe9;color:#1c2a33;border-radius:12px;padding:11px 13px 9px;box-shadow:0 10px 30px rgba(0,0,0,.35);font:14px/1.4 var(--sans)}
 #tip p{margin:0 0 8px} .tip-b{display:flex;gap:8px;justify-content:flex-end} #tipAlt{background:transparent!important;color:#5b6a73!important} .tip-b button{border:0;border-radius:8px;padding:5px 10px;font:600 12.5px var(--sans);cursor:pointer;background:#e7e1cc;color:#1c2a33} .tip-b #tipOk{background:var(--mag);color:#fff}
 .tip-arrow{position:absolute;width:14px;height:14px;background:#fffbe9;transform:rotate(45deg)}
 .ob label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px} .ob input{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:15px;background:var(--paper);color:var(--ink)}
@@ -490,6 +510,10 @@ body.vplot .attr{display:block!important;left:6px;right:auto}
 .x{border-color:transparent;color:var(--muted)}
 .range{display:flex;align-items:center;gap:10px;margin:8px 0}
 .range input{flex:1;accent-color:var(--mag);touch-action:pan-y}
+.range.step2{gap:6px}
+.range.step2 output{min-width:0;flex:0 1 96px;line-height:1.25}
+.range .sb{flex:none;width:var(--h-btn,44px);height:var(--h-btn,44px);border-radius:50%;border:1px solid var(--line,rgba(255,255,255,.25));background:transparent;color:inherit;font:600 22px/1 inherit;padding:0}
+.range .sb:active{background:rgba(255,255,255,.12)}
 .range output{min-width:120px;text-align:right;font-variant-numeric:tabular-nums;font-size:14px}
 .tog{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer}
 .tog input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--mag);flex:none}
@@ -498,6 +522,12 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nume
 .tbl th{text-align:right;font-weight:600;color:var(--muted);padding:5px 4px;border-bottom:1px solid var(--line)}
 .tbl td{text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}
 .tbl th:first-child,.tbl td:first-child{text-align:left}
+/* the landing note comes out of the printer (07-guide.js portSlip, UI-redesign U9) */
+.slipt.print tr{animation:slipFeed .34s cubic-bezier(.2,.7,.3,1) backwards;animation-delay:calc(var(--i,0) * 70ms + 150ms - var(--el,0ms))}
+.slipt.print tr.sum:last-child{animation-name:slipFeed,slipStamp;animation-duration:.34s,.9s}
+@keyframes slipFeed{from{opacity:0;transform:translateY(-6px)}}
+@keyframes slipStamp{0%,40%{background:transparent}60%{background:rgba(255,214,102,.35)}100%{background:transparent}}
+@media (prefers-reduced-motion:reduce){.slipt.print tr{animation:none}}
 .tbl tr.here td{font-weight:650}
 .tbl tr.sum td{font-weight:650;border-bottom:0}
 .bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin:4px 0 2px}
@@ -508,9 +538,9 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nume
 .log li{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px}
 .log time{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 
-#toast{position:fixed;left:50%;bottom:calc(128px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 14px;border-radius:8px;font-size:14px;max-width:90vw;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+#toast{position:fixed;left:50%;bottom:calc(128px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 14px;border-radius:8px;font-size:14px;max-width:90vw;opacity:0;pointer-events:none;transition:opacity .2s;z-index:var(--z-toast)}
 #toast.on{opacity:1}
-#modal{position:fixed;inset:0;background:rgba(5,15,20,.55);display:grid;place-items:center;padding:20px;z-index:30}
+#modal{position:fixed;inset:0;background:rgba(5,15,20,.55);display:grid;place-items:center;padding:20px;z-index:var(--z-modal)}
 #modal[hidden]{display:none}
 #modal .box{background:var(--paper);border-radius:12px;max-width:440px;width:100%;padding:18px 20px;max-height:80vh;overflow:auto;border:1px solid var(--line)}
 #modal h2{font-family:var(--serif);font-style:italic;font-weight:600;font-size:22px;margin:0 0 8px}
@@ -551,8 +581,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nume
 .leiacmp{font-variant-numeric:tabular-nums}
 
 /* «Første tur»: the dimmed layer with a hole where to tap, and a pulsing ring round it */
-#tutDim{position:fixed;z-index:61;pointer-events:none;border-radius:14px;box-shadow:0 0 0 200vmax rgba(3,10,16,.5);transition:left .2s,top .2s,width .2s,height .2s}
-#tutRing{position:fixed;z-index:62;pointer-events:none;border:3px solid #ffcf3a;border-radius:14px;box-shadow:0 0 16px rgba(255,207,58,.7);animation:tutpulse 1.3s ease-in-out infinite;transition:left .2s,top .2s,width .2s,height .2s}
+#tutDim{position:fixed;z-index:var(--z-tut-dim);pointer-events:none;border-radius:14px;box-shadow:0 0 0 200vmax rgba(3,10,16,.5);transition:left .2s,top .2s,width .2s,height .2s}
+#tutRing{position:fixed;z-index:var(--z-tut-ring);pointer-events:none;border:3px solid #ffcf3a;border-radius:14px;box-shadow:0 0 16px rgba(255,207,58,.7);animation:tutpulse 1.3s ease-in-out infinite;transition:left .2s,top .2s,width .2s,height .2s}
 #tutDim.round,#tutRing.round{border-radius:50%}
 #tutDim[hidden],#tutRing[hidden]{display:none}
 @keyframes tutpulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.06);opacity:.65}}
@@ -635,8 +665,8 @@ body.setmode #rAuto{display:none!important}
 .wk-team{margin:0 0 6px;padding:6px 10px;border-radius:8px;font:600 13px var(--sans);background:rgba(127,127,127,.12);border-left:4px solid #8a94a0}
 .wk-team.t0{border-left-color:#1e8c6e}.wk-team.t1{border-left-color:#5aa889}.wk-team.t2{border-left-color:#d1a43a}.wk-team.t3{border-left-color:#d64545}
 /* your energy: the edges darken under 15 %, and at 0 the screen goes black while you sleep */
-#vign{position:fixed;inset:0;pointer-events:none;z-index:63;opacity:0;transition:opacity 2s;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.92) 100%)}
-#sleep{position:fixed;inset:0;z-index:64;background:#000;color:#cfd6dd;display:flex;align-items:center;justify-content:center;text-align:center;opacity:0;transition:opacity 3s;padding:16px}
+#vign{position:fixed;inset:0;pointer-events:none;z-index:var(--z-vign);opacity:0;transition:opacity 2s;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.92) 100%)}
+#sleep{position:fixed;inset:0;z-index:var(--z-sleep);background:#000;color:#cfd6dd;display:flex;align-items:center;justify-content:center;text-align:center;opacity:0;transition:opacity 3s;padding:16px}
 #sleep[hidden]{display:none}#sleep.on{opacity:1}.sl-in b{font:700 22px var(--sans);display:block;margin-bottom:10px}.sl-in p{margin:6px 0;font-size:15px;opacity:.85}#slTime{font-size:18px;opacity:1}
 /* the boat market: cards with the side view, the spec sheet, and the showroom chip */
 .ph-sub.mk{flex-wrap:wrap}.ph-sub.mk button{min-height:44px}
@@ -767,7 +797,7 @@ button.ph-art.pa-btn:active{background:#efe8d8}
 .ru-chips button.on{background:#2d6a4f;color:#fff;border-color:#2d6a4f}
 
 /* ---------- the opening: the letter from Father (ui/08b-letter.js) ---------- */
-.lt{position:fixed;inset:0;z-index:20000;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+.lt{position:fixed;inset:0;z-index:var(--z-letter);background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 .lt::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 75% 70% at 50% 45%,transparent 45%,rgba(0,0,0,.75));pointer-events:none;z-index:4}
 .lt::after{content:'';position:absolute;inset:0;background-size:160px 160px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.6'/></svg>");opacity:.06;pointer-events:none;z-index:5}
 .lt-light{position:absolute;inset:0;background:radial-gradient(ellipse 55% 50% at 50% 42%,rgba(255,206,145,.17),rgba(255,186,120,.05) 48%,transparent 72%);animation:ltFlicker 7s ease-in-out infinite;pointer-events:none}
@@ -778,7 +808,7 @@ button.ph-art.pa-btn:active{background:#efe8d8}
 .lt-env:focus-visible{outline:2px solid rgba(242,214,160,.5);outline-offset:8px;border-radius:4px}
 .lt-front{position:absolute;inset:0;background-size:100% 100%;animation:ltFloat 5.5s ease-in-out infinite;box-shadow:0 20px 34px -6px rgba(0,0,0,.75)}
 .lt-env.still .lt-front{animation:none}
-.lt-to{position:absolute;left:17%;top:38%;font-family:'Rock Salt','Segoe Print','Bradley Hand',cursive;font-size:calc(var(--EW) * .047);color:rgba(24,30,46,.86);transform:rotate(-4deg);white-space:nowrap;letter-spacing:.01em}
+.lt-to{position:absolute;left:17%;top:38%;font-family:'Rock Salt','Caveat',cursive;font-size:calc(var(--EW) * .047);color:rgba(24,30,46,.86);transform:rotate(-4deg);white-space:nowrap;letter-spacing:.01em}
 .lt-ul{position:absolute;left:21%;top:56%;width:54%;height:calc(var(--EW) * .03);transform:rotate(-4deg);fill:none;stroke:rgba(24,30,46,.75);stroke-width:2.4;stroke-linecap:round}
 .lt-back{position:absolute;inset:0}
 .lt-inside,.lt-pocket{position:absolute;inset:0;background-size:100% 100%}
@@ -799,7 +829,7 @@ button.ph-art.pa-btn:active{background:#efe8d8}
 .lt-face{position:absolute;inset:0;background-size:100% 300%;overflow:hidden;-webkit-backface-visibility:hidden;backface-visibility:hidden;box-shadow:0 14px 30px -8px rgba(0,0,0,.6)}
 .lt-face.lt-bk{transform:rotateX(180deg);filter:brightness(.88) sepia(.12)}
 .lt-bk .lt-txt{display:none}
-.lt-txt{position:absolute;left:0;width:100%;height:var(--H);box-sizing:border-box;padding:calc(var(--H) * .075) calc(var(--W) * .1) calc(var(--H) * .05) calc(var(--W) * .115);font-family:'Caveat','Segoe Print','Bradley Hand',cursive;font-weight:500;line-height:1.2;color:rgba(26,32,50,.88);text-align:left}
+.lt-txt{position:absolute;left:0;width:100%;height:var(--H);box-sizing:border-box;padding:calc(var(--H) * .075) calc(var(--W) * .1) calc(var(--H) * .05) calc(var(--W) * .115);font-family:'Caveat',cursive;font-weight:500;line-height:1.2;color:rgba(26,32,50,.88);text-align:left}
 .lt-txt p{margin:0}
 .lt-txt .lt-hi{font-weight:700}
 .lt-txt .lt-sign{text-align:right;font-weight:700;font-size:1.3em;margin-top:.55em;padding-right:6%;transform:rotate(-3deg)}
@@ -887,7 +917,7 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 }
 
 /* ---------- «Hvor står fars naust?»: where a new game starts (ui/08c-start.js) ---------- */
-.stp{position:fixed;inset:0;z-index:70;background:radial-gradient(ellipse at 50% 30%,#13283a,#070d14 75%);color:#e6eef3;display:flex;justify-content:center;align-items:flex-start;overflow:auto;-webkit-overflow-scrolling:touch;font:14px/1.45 var(--sans)}
+.stp{position:fixed;inset:0;z-index:var(--z-start);background:radial-gradient(ellipse at 50% 30%,#13283a,#070d14 75%);color:#e6eef3;display:flex;justify-content:center;align-items:flex-start;overflow:auto;-webkit-overflow-scrolling:touch;font:14px/1.45 var(--sans)}
 .st-box{width:min(980px,100%);padding:calc(env(safe-area-inset-top,0px) + 18px) 16px calc(env(safe-area-inset-bottom,0px) + 92px);box-sizing:border-box}
 .stp h2{margin:0 0 6px;font:600 26px var(--serif,Georgia,serif);letter-spacing:.01em}
 .st-lead{margin:0 0 14px;color:#a9bfcc;max-width:62ch}
@@ -911,7 +941,7 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 @media (max-width:640px){.st-main{grid-template-columns:1fr} .st-mapw{position:static} .st-map{max-height:42vh;margin:0 auto} .stp h2{font-size:22px}}
 /* Father's notebook and the trophy wall (ui/06c-notebook.js) */
 .nb-paper{padding:6px 14px 16px 30px;background:linear-gradient(90deg,transparent 20px,#e3a9a4 20px 21px,transparent 21px)}
-.nb-hand{font-family:'Caveat','Segoe Print','Bradley Hand',cursive;font-size:20px;line-height:1.25;color:#22314f;margin:0}
+.nb-hand{font-family:'Caveat',cursive;font-size:20px;line-height:1.25;color:#22314f;margin:0}
 .nb-h{font-size:28px;margin:12px 0 2px;color:#1c2a48;font-weight:700}
 .nb-lead{font:13px/1.45 var(--serif);color:#3d372c;margin:4px 0 10px}
 .nb-mark{border-bottom:1px dashed #b9ab8f;padding:8px 0}
@@ -1035,7 +1065,7 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 .acc-name{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;margin:8px 0}
 .acc-name label{grid-column:1/-1;font-size:13.5px}
 /* Merker (ui/05e-merker.js): the banner for a milestone (it takes no taps), the week's chip, the app's chapters, rows and badges */
-.achpop{position:fixed;left:50%;top:calc(58px + env(safe-area-inset-top,0px));transform:translate(-50%,-12px);z-index:60;max-width:min(92vw,420px);padding:10px 16px;border-radius:14px;
+.achpop{position:fixed;left:50%;top:calc(58px + env(safe-area-inset-top,0px));transform:translate(-50%,-12px);z-index:var(--z-fx);max-width:min(92vw,420px);padding:10px 16px;border-radius:14px;
   background:rgba(14,32,46,.94);color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:3px;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;border:1px solid rgba(255,255,255,.12)}
 .achpop.on{opacity:1;transform:translate(-50%,0)}
 .achpop b{font:700 15px/1.25 var(--sans)}
@@ -1128,7 +1158,7 @@ body.vplot .depc{display:none}
 .say3d::after{content:'';position:absolute;left:50%;bottom:-5px;margin-left:-5px;border:5px solid transparent;border-bottom:0;border-top-color:rgba(7,18,28,.82)}
 
 /* a landing note paid: the amount rises in green from the cash bar, and the cash counts up in green (ui/02-format-state.js cashFx) */
-.cashfx{position:fixed;z-index:99999;transform:translate(-50%,0);pointer-events:none;font-weight:800;font-size:22px;letter-spacing:.2px;color:#3ddc84;text-shadow:0 1px 3px rgba(0,0,0,.55),0 0 12px rgba(61,220,132,.45);white-space:nowrap;animation:cashUp 2.2s ease-out forwards}
+.cashfx{position:fixed;z-index:var(--z-cash);transform:translate(-50%,0);pointer-events:none;font-weight:800;font-size:22px;letter-spacing:.2px;color:#3ddc84;text-shadow:0 1px 3px rgba(0,0,0,.55),0 0 12px rgba(61,220,132,.45);white-space:nowrap;animation:cashUp 2.2s ease-out forwards}
 @keyframes cashUp{0%{opacity:0;transform:translate(-50%,8px) scale(.7)}10%{opacity:1;transform:translate(-50%,0) scale(1.18)}22%{transform:translate(-50%,-4px) scale(1)}72%{opacity:1;transform:translate(-50%,-30px) scale(1)}100%{opacity:0;transform:translate(-50%,-52px) scale(1)}}
 #cash.cashup{color:#3ddc84;text-shadow:0 0 10px rgba(61,220,132,.55);transition:color .2s}
 @media (prefers-reduced-motion:reduce){.cashfx{animation:cashFade 2.2s linear forwards}@keyframes cashFade{0%,70%{opacity:1}100%{opacity:0}}}
@@ -1252,7 +1282,7 @@ body.in-naust #dock,body.in-naust #dockFan,body.in-naust #dockInfo,body.in-naust
 #hbQ{width:100%;box-sizing:border-box;padding:9px 11px;border-radius:10px;border:1px solid #cfd8dd;font:14px var(--sans);margin:4px 0 8px;background:#fff}
 
 /* the wardrobe (ui/10g-wardrobe.js): the figure turning on the left (above, in portrait), the choices on the right (below) */
-.wd{position:fixed;inset:0;z-index:9000;display:flex;background:linear-gradient(#27394a,#0f1a24);color:#e8eef3;font:15px/1.35 system-ui,sans-serif;touch-action:manipulation}
+.wd{position:fixed;inset:0;z-index:var(--z-wardrobe);display:flex;background:linear-gradient(#27394a,#0f1a24);color:#e8eef3;font:15px/1.35 system-ui,sans-serif;touch-action:manipulation}
 .wd-view{position:relative;flex:1 1 auto;min-width:0}
 .wd-cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
 .wd-vb{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:10px}
@@ -1374,7 +1404,7 @@ body.pm #hud,body.pm #pinCard{visibility:hidden}
 .net-tile .net-ic{background:#eef3f6;border-radius:10px;aspect-ratio:8/5;display:flex;align-items:center;justify-content:center;padding:4px}.net-tile .net-ic svg{width:100%;height:100%}
 .net-tile small{color:#5b6c76;font-size:12px}
 /* the moment a boat is bought (M5, ui/10q-buymoment.js) */
-.bm{position:fixed;left:0;right:0;bottom:calc(96px + env(safe-area-inset-bottom));display:flex;justify-content:center;z-index:60;pointer-events:none;padding:0 16px}
+.bm{position:fixed;left:0;right:0;bottom:calc(96px + env(safe-area-inset-bottom));display:flex;justify-content:center;z-index:var(--z-fx);pointer-events:none;padding:0 16px}
 .bm-card{pointer-events:auto;background:#0e1a24;color:#fff;border-radius:16px;padding:16px 20px;max-width:520px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.35);animation:bmIn .6s ease-out both}
 .bm-k{margin:0 0 6px;font-size:13px;opacity:.75;letter-spacing:.04em;text-transform:uppercase}
 .bm-row{display:flex;align-items:flex-end;gap:14px}
@@ -1424,3 +1454,97 @@ body.pm #hud,body.pm #pinCard{visibility:hidden}
 #brwTip .bt-b{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
 #brwTip button,#brwTip a{font:600 14px/1 var(--sans);padding:10px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#eef4fb;text-decoration:none;min-height:40px;box-sizing:border-box;display:inline-flex;align-items:center}
 #brwTip a{background:#f3cd85;border-color:#f3cd85;color:#0b1a2e}
+
+/* ---------- «Kystlys» U2 (docs/planer/ui-redesign.md, 04.11.2026): the components, on the tokens in :root ----------
+   Four buttons: primary (magenta, the one thing to do here), standard (dark ink), quiet (.alt) and danger (.red). A button that cannot be
+   used is not just faded, which read as the quiet button: it is dashed and says why when the code gives the reason in data-why (filled in
+   page by page from U6). «ph-btn p» marked 47 primary buttons that had no look of their own. */
+.ph-btn,.btn{border-radius:var(--r-btn);font:600 var(--fs-sm)/1.25 var(--sans);padding:10px 16px;transition:background-color .15s,transform .08s}
+.ph-btn:active:not(:disabled),.btn:active:not(:disabled){transform:scale(.97)}
+.ph-btn.p,.btn.primary{background:var(--a-primary);border-color:var(--a-primary);color:#fff;box-shadow:0 2px 8px rgba(181,34,122,.25)}
+.ph-btn.alt{background:var(--s-card-2);color:var(--t-ink)}
+.ph-btn:disabled,.btn:disabled{opacity:1;background:transparent;color:var(--t-muted);border:1.5px dashed rgba(91,114,124,.55);box-shadow:none;cursor:not-allowed}
+.ph-btn:disabled[data-why]::after,.btn:disabled[data-why]::after{content:attr(data-why);display:block;margin-top:3px;font:500 var(--fs-cap)/1.3 var(--sans)}
+@media (pointer:coarse){.ph-btn,.btn{min-height:var(--h-btn)}}
+/* tabs: one look in the phone and the drawer, on one row that scrolls sideways instead of breaking into two to four rows; the open tab is
+   ink, never the primary magenta, so a chosen tab does not read as the thing to press */
+.ph-sub,#drawerTabs{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.ph-sub::-webkit-scrollbar,#drawerTabs::-webkit-scrollbar{display:none}
+.ph-sub button,#drawerTabs button{flex:0 0 auto;white-space:nowrap;border:1px solid rgba(22,50,63,.16);background:var(--s-card);color:var(--t-ink);border-radius:var(--r-pill);padding:7px 14px;font:600 var(--fs-sm) var(--sans);cursor:pointer}
+.ph-sub button.on,#drawerTabs button.on{background:var(--t-ink);border-color:var(--t-ink);color:#fff}
+#drawerTabs[hidden]{display:none}
+/* cards: one radius, one padding, a hairline instead of a shadow that changed from page to page */
+.ph-card{border-radius:var(--r-card);padding:12px 14px;border:1px solid rgba(22,50,63,.07);box-shadow:0 1px 2px rgba(11,23,32,.05)}
+.ph-note{font-size:var(--fs-sm);line-height:1.45;color:var(--t-muted)}
+/* an empty state says what comes here and gives the way there (U6 fills them in): a quiet card with one line and one button */
+.ph-empty{text-align:center;padding:18px 14px;color:var(--t-muted);font-size:var(--fs-sm)} .ph-empty b{display:block;color:var(--t-ink);font-size:var(--fs-body);margin-bottom:4px} .ph-empty .ph-btn{margin:10px auto 0}
+/* ---------- «Kystlys» U3: the status box as instruments (ui/04-panels-instruments.js renderHud, V5 A) ----------
+   four gauges on one row, each a label, a bar and the figure; the colours say low, full or rough sea; a tap gives the whole table */
+#hud{min-width:212px!important;border-radius:var(--r-card)!important;padding:8px 10px 9px!important}
+#hud .gauges{pointer-events:auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%;margin:7px 0 1px;padding:7px 0 0;border:0;border-top:1px solid rgba(238,244,247,.12);background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#hud .g{display:flex;flex-direction:column;gap:3px;min-width:0}
+#hud .g .gl{font:600 var(--fs-cap)/1 var(--sans);letter-spacing:.04em;text-transform:uppercase;color:var(--t-on-dark-2)}
+#hud .g i{position:relative;display:block;height:4px;border-radius:2px;background:rgba(238,244,247,.16);overflow:hidden}
+#hud .g i::after{content:'';position:absolute;left:0;top:0;bottom:0;width:var(--v);border-radius:2px;background:#8fd3ff}
+#hud .g b{font:700 13px/1.1 var(--sans);font-variant-numeric:tabular-nums;color:var(--t-on-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hud .g.r1 i::after,#hud .g-sea.r1 i::after{background:#e0a43a} #hud .g.r1 b{color:#ffcf7a}
+#hud .g.r2 i::after{background:#ef6a5f} #hud .g.r2 b{color:#ff9b91}
+#hud .g-sea.r0 i::after{background:#5cbf8a} #hud .g.full i::after{background:#5cbf8a} #hud .g.full b{color:#9fe6bd}
+#hud .hnow{margin-top:6px;padding-top:5px;border-top:1px solid rgba(238,244,247,.12)}
+#hud .hnow .row b{text-align:right}
+#hud .hfull{margin-top:5px;padding-top:5px;border-top:1px dashed rgba(238,244,247,.18)}
+#hud .gauges.open{border-top-color:rgba(232,201,106,.45)}
+/* the dock (ui/10c-dock.js, V6 A): the hero is the one thing to do now, bigger and lit; a button that cannot be used has a dashed ring
+   and a faded icon (a tap still says why), so it does not read as one of the others */
+.dk-b.hero{width:78px} .dk-b.hero .dk-i{width:60px;height:60px;box-shadow:0 0 0 4px rgba(181,34,122,.28),0 4px 14px rgba(0,0,0,.35)} .dk-b.hero .dk-i svg{width:29px;height:29px} .dk-b.hero .dk-l{font-weight:700}
+.dk-b.off .dk-i{border-style:dashed;border-color:rgba(255,255,255,.32);background:rgba(6,16,24,.34)} .dk-b.off .dk-i svg{opacity:.45} .dk-b.off .dk-l{opacity:.7}
+.dk-b.off{opacity:.9}
+/* the catch as it comes aboard (ui/05j-catchfeed.js, U4): instrument cards at the right over the sea, the spot's kg an hour above them */
+#catchFeed{position:absolute;z-index:5;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none;max-width:min(260px,46vw)}
+#catchFeed[hidden]{display:none}
+#catchFeed .cf-rate{display:flex;gap:6px;align-items:baseline;padding:6px 12px;border-radius:var(--r-pill);background:var(--s-glass);border:1px solid rgba(238,244,247,.14);color:var(--t-on-dark);font:600 var(--fs-sm) var(--sans);font-variant-numeric:tabular-nums}
+#catchFeed .cf-rate span{color:var(--t-on-dark-2);font-weight:500} #catchFeed .cf-rate b{font-weight:700}
+#catchFeed .cf-c{display:grid;grid-template-columns:10px auto;column-gap:9px;align-items:center;padding:8px 12px 8px 10px;border-radius:12px;background:var(--s-glass);border:1px solid rgba(238,244,247,.12);color:var(--t-on-dark);box-shadow:0 4px 14px rgba(0,0,0,.25);animation:cfIn .28s ease-out}
+#catchFeed .cf-c i{grid-row:span 2;width:10px;height:10px;border-radius:50%}
+#catchFeed .cf-c b{font:700 var(--fs-sm)/1.2 var(--sans)} #catchFeed .cf-c span{font:500 12px/1.25 var(--sans);color:var(--t-on-dark-2);font-variant-numeric:tabular-nums}
+@keyframes cfIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#catchFeed .cf-c{animation:none}}
+body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
+@media (orientation:portrait){#catchFeed{bottom:calc(env(safe-area-inset-bottom,0px) + 104px)}}
+@media (max-width:560px){#hud .gauges{gap:5px} #hud .g b{font-size:11.5px} #hud .g .gl{letter-spacing:0}}
+@media (max-width:560px){.dk-b.hero{width:66px} .dk-b.hero .dk-i{width:52px;height:52px} .dk-b.hero .dk-i svg{width:26px;height:26px}}
+#toast.up{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 64px)}
+/* the place a trade page belongs to (ui/10c-dock.js dress, U6): where you are, or the nearest with Autonav there */
+.pl-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:12px 12px 4px;padding:10px 14px;border-radius:var(--r-card);background:var(--s-raised);color:var(--t-on-dark)}
+.pl-head span{flex:1 0 100%;font:600 var(--fs-cap)/1.2 var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--t-on-dark-2)}
+.pl-head b{flex:1 1 auto;font:700 var(--fs-body)/1.25 var(--sans)} .pl-head .ph-btn{margin:0}
+.pl-head.here{background:rgba(46,125,87,.12);color:var(--t-ink)} .pl-head.here span{color:var(--ok)}
+/* a long explanation folded to three lines; a tap opens it */
+#drawerBody .fold{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer;position:relative}
+#drawerBody .fold::after{content:'Mer ▾';position:absolute;right:0;bottom:0;padding-left:24px;background:linear-gradient(90deg,transparent,var(--s-card,#fff) 30%);font-weight:700;color:var(--t-ink)}
+:root[lang=en] #drawerBody .fold::after{content:'More ▾'}
+#drawerBody .fold.open{display:block;-webkit-line-clamp:unset}
+#drawerBody .fold.open::after{content:none}
+/* «Nå» on the phone's home screen (ui/phone/08-home-papers-merker.js nowCards, U7): answers that open their app */
+.ph-nowc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:-6px 0 16px}
+.ph-now{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;padding:9px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;text-align:left;font:inherit;cursor:pointer}
+.ph-now span{font:600 var(--fs-cap)/1.2 var(--sans);letter-spacing:.04em;text-transform:uppercase;color:rgba(238,244,247,.7)}
+.ph-now b{font:700 var(--fs-sm)/1.25 var(--sans);overflow-wrap:anywhere}
+.ph-now.r0 b{color:#9fe6bd} .ph-now.r1 b{color:#ffcf7a} .ph-now.r2 b{color:#ff9b91}
+.ph-now:only-child,.ph-now:last-child:nth-child(odd){grid-column:1 / -1}
+/* the deck log's entries that are over (U8): greyed with one thin pen line through the text, not a red X across the entry, which made
+   it hard to read */
+.bk-e.over{opacity:.5} .bk-e.over::after{content:none} .bk-e.over .bk-et,.bk-e.over p,.bk-e.over .hw{text-decoration:line-through;text-decoration-color:rgba(31,47,110,.55);text-decoration-thickness:1px}
+
+/* Ordboka (ui/05k-ordbok.js, UI-redesign U10): the trade's word with a dotted line, and one sentence by it on a tap */
+.ordw{text-decoration:underline dotted;text-decoration-thickness:1.5px;text-underline-offset:3px;text-decoration-color:currentColor;cursor:help}
+#ordTip{position:fixed;z-index:var(--z-tip,72);max-width:min(320px,calc(100vw - 16px));background:#12303d;color:#eef5f8;border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+#ordTip b{display:block;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#9fd3e6;margin-bottom:3px}
+#ecdisTop .ec-f:not(.ec-echo){cursor:help} #ecdisTop .ec-f:not(.ec-echo) small{text-decoration:underline dotted;text-underline-offset:2px}
+/* the first landing (07-guide.js portSlip, UI-redesign U9): a stamp over the landing note */
+.slip-first{position:relative;margin:10px 0 4px;padding:14px 16px 12px;border-radius:14px;background:linear-gradient(135deg,#fff6dc,#fbe7b4);color:#3a2a0c;border:1px solid #e5c777;text-align:center;animation:sfIn .6s cubic-bezier(.2,1.4,.4,1) both}
+.slip-first .sf-st{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9a5b00;border:2px solid #c98a1c;border-radius:6px;padding:2px 8px;transform:rotate(-3deg)}
+.slip-first b{display:block;font-size:30px;font-weight:700;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.slip-first small{display:block;font-size:13px;color:#6b5320}
+@keyframes sfIn{from{opacity:0;transform:scale(.92)}}
+@media (prefers-reduced-motion:reduce){.slip-first{animation:none}}

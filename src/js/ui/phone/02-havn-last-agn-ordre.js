@@ -2,7 +2,7 @@
   function havn(){ return '<div class="ph-panel">' + panelPort() + '</div>'; }
   function last(){ return '<div class="ph-panel">' + panelHold() + '</div>'; }
   // --- the pages of the dock's drawer (ui/10c-dock.js): the market, the village and the yard in port, the inventory everywhere
-  function lever(){ return '<div class="ph-panel">' + landPage() + '</div>'; }
+  function lever(){ return '<div class="ph-panel">' + landPage() + (S.boat.status !== 'port' ? nearHint('mottak') : '') + '</div>'; }
   function isApp(){ return '<div class="ph-c">' + iceCard() + '</div>'; }
   // bait for line and pots, and the baiting of the tubs
   function agn(){

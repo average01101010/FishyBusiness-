@@ -78,7 +78,7 @@ const TSTEPS = [
   {id:'intro', ok:true, done:() => false,
     tip:() => { tutIntroGo(); return {no:'Der ligger hun, fars gamle båt. Sliten, men hun flyter, og juksa ligger om bord.', en:'There she lies, Father’s old boat. Worn, but she floats, and the jig is aboard.'}; }},
   {id:'gps', done:() => inPlot() || !!S.plan || S.boat.status !== 'port',
-    tip:() => PHONE.isOpen() ? {el:vis('#phone .ph-nav [data-pa=close]'), no:'Lukk telefonen. Nå skal du planlegge turen.', en:'Close the phone. Now you plan the trip.'} : DOCK.page ? {el:vis('#drawerClose'), no:'Lukk Fiskeutstyr. Nå skal du planlegge turen.', en:'Close the tackle shop. Now you plan the trip.'} : {el:vis('#miniPlot'), no:'Trykk på GPS-en for å åpne kartplotteren.', en:'Tap the GPS to open the chart plotter.'}},
+    tip:() => PHONE.isOpen() ? {el:vis('#phone .ph-nav [data-pa=close]'), no:'Lukk telefonen. Nå skal du planlegge turen.', en:'Close the phone. Now you plan the trip.'} : DOCK.page ? {el:vis('#drawerClose'), no:'Lukk Fiskeutstyr. Nå skal du planlegge turen.', en:'Close the tackle shop. Now you plan the trip.'} : {el:vis('#miniPlot'), no:'Trykk på det lille kartet for å åpne kartplotteren.', en:'Tap the little chart to open the chart plotter.'}},
   {id:'route1', live:true, view:() => [tutHome().p, tutField().p], done:() => tutFieldWp(S.draft) >= 0 || (S.plan && tutFieldWp(S.plan.wps) >= 0) || S.boat.status === 'fishing',
     tip:() => { if (!inPlot()) return {el:vis('#miniPlot'), no:'Åpne kartplotteren igjen.', en:'Open the chart plotter again.'};
       const g = tutField();
@@ -106,7 +106,7 @@ const TSTEPS = [
       if (inPlot()) return {el:vis('#ecClose'), no:'Nå fisker juksa. Trykk «Lukk» for å se fisket i 3D.', en:'The jig is fishing now. Tap «Close» to watch in 3D.'};
       return {el:vis('#dock [data-act=jigg]'), no:'Nå fisker juksa for deg. Trykk «Jukse selv» for å jukse selv: når det napper, trykk «Rykk» mens nåla er midt på. Knappen blir rød når det napper, og midt på gir to fisk på kroken.', en:'The jig fishes for you now. Tap «Jig yourself» to jig yourself: when it bites, tap «Strike» as the needle is in the middle. The button turns red when it bites, and the middle gives two fish on the hooks.'}; }},
   {id:'deck', ok:true, done:() => false,
-    tip:() => holdTotal() <= 0 ? {el:vis('#dock [data-act=jigg]'), small:true, noOk:true, no:'Rykk når det napper.', en:'Strike when it bites.'} : ({el:vis(['#dockInfo', '#hud']), no:'Fisken blør i bløggekaret idet den kommer over ripa. Så blir den sløyd og lagt i lasterommet. Godt bløgget og sløyd fisk gir bedre pris.', en:'The fish is bled in the tub as it comes over the rail. Then it is gutted and put in the hold. Well bled and gutted fish fetches a better price.'})},
+    tip:() => { if (holdTotal() > 0 && !S.tut.deckCam && G3.isActive()){ S.tut.deckCam = true; G3.lookDeck(); } return holdTotal() <= 0 ? {el:vis('#dock [data-act=jigg]'), small:true, noOk:true, no:'Rykk når det napper.', en:'Strike when it bites.'} : ({el:vis(['#dockInfo', '#hud']), no:'Fisken blør i bløggekaret idet den kommer over ripa. Så blir den sløyd og lagt i lasterommet. Godt bløgget og sløyd fisk gir bedre pris.', en:'The fish is bled in the tub as it comes over the rail. Then it is gutted and put in the hold. Well bled and gutted fish fetches a better price.'}); }},
   {id:'full', done:() => (S.boat.status === 'idle' && holdTotal() > 1 && !S.boat.fishUntil) || !!S.lastSale,
     tip:() => ({el:vis('#hud .st.nx'), no:'Båten fisker en time. Så går du til ' + tutLandN() + ' og leverer.', en:'The boat fishes for an hour. Then you go to ' + tutLandN() + ' and land the catch.', small:true})},
   {id:'route2', live:true, view:() => [S.boat.pos, portById(tutLand()).p], done:() => draftEnds(tutLand()) || planEnds(tutLand()) || (S.boat.status === 'port' && S.boat.port === tutLand()),
@@ -180,6 +180,13 @@ const TUTSM = {txt:'', t0:0, hid:false};
 function tutTip(st){
   const drift = tutAdrift(), T0 = drift ? tutDriftTip(drift) : st.tip() || {};
   if (PHONE.isOpen() && ((T0.el && !T0.el.closest('#phone')) || T0.map)) return {el:vis('#phone .ph-nav [data-pa=close]'), no:'Lukk telefonen først.', en:'Close the phone first.'};
+  // the drawer left open from an earlier step (the inventory from the fishing) lay over «Autonav» on the way in, and the ring pointed at
+  // the drawer's text under it: the guide hung for good (UI review 04.11.2026, docs/planer/ui-redesign.md F1). A target the open drawer
+  // covers closes the drawer first
+  if (DOCK.page && T0.el && !T0.el.closest('#drawer')){ const d = $('drawer'), a = d && !d.hidden ? d.getBoundingClientRect() : null, q = T0.el.getBoundingClientRect();
+    if (a && a.width && Math.min(a.right, q.right) - Math.max(a.left, q.left) > 2 && Math.min(a.bottom, q.bottom) - Math.max(a.top, q.top) > 2) DOCK.close(); }
+  if (DOCK.page && T0.map && inPlot()){ const d = $('drawer'), a = d && !d.hidden ? d.getBoundingClientRect() : null, c = mapToClient(T0.map.p);
+    if (a && a.width && c.x >= a.left && c.x <= a.right && c.y >= a.top && c.y <= a.bottom) DOCK.close(); }
   return T0;
 }
 // where the guide points: the hole in the dimmed layer and the ring, round a button or round a place on the chart
@@ -257,7 +264,9 @@ function tutUpdate(){
 // target when the target is low on the screen, else below; in the middle of the screen without a target). Shared with the handbook.
 function tipPlace(txt, T0, o){
   const tip = $('tip'), dim = $('tutDim'), ring = $('tutRing');
-  if ($('tipText').textContent !== txt) $('tipText').textContent = txt || '';
+  // one voice at a time (U5, docs/planer/ui-redesign.md): a new tip takes away a toast left from the step before (one raised by the tap
+  // that brought this tip, under 1.2 s old, stays: it is the answer to that tap)
+  if ($('tipText').textContent !== txt){ $('tipText').textContent = txt || ''; if (Date.now() - (toast._at || 0) > 1200){ clearTimeout(toast._t); toast._keep = null; $('toast').classList.remove('on'); } }
   $('tipOk').hidden = !o.ok;
   const okText = o.okText || T0.okText; $('tipOk').textContent = okText ? (S.lang === 'no' ? okText[0] : okText[1]) : (S.lang === 'no' ? 'Skjønner' : 'Got it');
   $('tipSkip').hidden = true;   // no skipping: every step is done (Jonas 05.10.2026)
@@ -269,9 +278,16 @@ function tipPlace(txt, T0, o){
   const tw = tip.offsetWidth, th = tip.offsetHeight, ar = tip.querySelector('.tip-arrow'), vw = window.innerWidth, vh = window.innerHeight;
   if (!R){ tip.style.left = Math.max(8, (vw - tw) / 2) + 'px'; tip.style.top = '72px'; ar.style.display = 'none'; return; }
   const above = R.y > th + 24 && (R.y + R.h > vh * 0.45), x = clamp(R.x + R.w / 2 - tw / 2, 8, vw - tw - 8), y = above ? R.y - th - 12 : Math.min(vh - th - 8, R.y + R.h + 12);
+  // a target in the status box: the box beside it, to the right, so the tip never lies over the rows it is about (U5; the tip below the
+  // next-event line covered the status box's rows)
+  const hb = T0.el && T0.el.closest && T0.el.closest('#hud') ? $('hud').getBoundingClientRect() : null;
+  if (hb && hb.right + tw + 16 <= vw){ tip.style.left = (hb.right + 12) + 'px'; tip.style.top = clamp(R.y + R.h / 2 - th / 2, 8, vh - th - 8) + 'px'; ar.style.display = 'none'; tipToast(); return; }
   tip.style.left = x + 'px'; tip.style.top = y + 'px'; ar.style.display = '';
   ar.style.left = clamp(R.x + R.w / 2 - x - 7, 12, tw - 26) + 'px'; ar.style.top = above ? (th - 7) + 'px' : '-7px';
+  tipToast();
 }
+// a toast that would lie on the tip goes to the top of the screen while the tip stands (U5)
+function tipToast(){ const t = $('toast'), a = $('tip').getBoundingClientRect(); t.classList.remove('up'); if (!t.classList.contains('on') || $('tip').hidden) return; const b = t.getBoundingClientRect(); if (a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) t.classList.add('up'); }
 const JIG_OPEN = () => !!window.jigActive && !$('jigUI').hidden;
 $('tip').addEventListener('click', e => { if (!e.target.closest('#tipOk') && tutCur && tutCur.T0.small){ TUTSM.hid = true; tutUpdate(); } });
 $('tipAlt').onclick = () => { if (!tutCur || !tutCur.T0.altAct) return; tutCur.T0.altAct(); tutUpdate(); };

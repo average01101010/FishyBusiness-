@@ -409,3 +409,5 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
   - **Dekningen** på Svalbard og Jan Mayen følger bosetningene.
   - **Svarene på kap. 5:** isen og lisensen er lest i dataene selv; grensen på 40 % er funnet hos WMO via Canadian Ice Service. `api.sehavniva.no` og Kartverket gir bare tre steder på Svalbard og Jan Mayen, og EOT20 er den frie globale modellen.
   - **Neste:** Jonas sier ja til utrulling, så R6 (fisken og havflåten på de nye feltene).
+- 04.11.2026: **R5 rullet ut** (Jonas: «Ja»). Arbeidsgrenen med UI-redesignet, Kelvin-mønsteret og 3D-nivået er flettet inn først; etter flettingen er enhetstestene (1 019 OK), `trip2` og `istest` grønne.
+  - **Neste:** R6 (fisken og havflåten på de nye feltene, og Autonav over åpent hav, som er for treg i dag).
