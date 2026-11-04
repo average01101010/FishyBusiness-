@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['skygger-041126', '04.11.2026', 'Skygger på alt', 'Shadows on everything', [
+       ['Fjellets skygge faller nå også på båtene, husene, kaiene, trærne og sjøen. En fjord i kveldsskygge blir mørk helt ned til vannet, og solglitteret forsvinner der sola ikke når.', 'The fells now cast their shadow on the boats, houses, quays, trees and the sea as well. A fjord in evening shadow goes dark right down to the water, and the sun\'s glitter goes where the sun does not reach.'],
+       ['Skyene kaster skygge over land og sjø og driver med vinden, så lys og skygge vandrer over fjellsidene på dager med spredte skyer.', 'The clouds cast shadows over land and sea and drift with the wind, so light and shade wander over the hillsides on days with broken cloud.'],
+    ]],
     ['ramme-041126', '04.11.2026', 'Havet utenfor kysten', 'The sea off the coast', [
        ['Kartet går nå til Svalbard, Bjørnøya, Jan Mayen, Island, Færøyane, Grønlands østkyst og russisk sone til Novaja Semlja. Landet der vises i sjøkartet og i 3D.', 'The chart now reaches Svalbard, Bear Island, Jan Mayen, Iceland, the Faroes, East Greenland and the Russian zone to Novaya Zemlya. The land there shows on the chart and in 3D.'],
        ['Dybden til havs er ny, fra GEBCO, så bankene og eggakanten ligger der de skal.', 'The depth offshore is new, from GEBCO, so the banks and the shelf edge lie where they should.'],

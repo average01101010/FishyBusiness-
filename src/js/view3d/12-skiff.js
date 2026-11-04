@@ -44,7 +44,7 @@
     'vec4 wl=uWL;float hp=mix(wl.z,wl.x,u),hs=mix(wl.w,wl.y,u),hw2=mix(hp,hs,step(0.0,vP.x));' +
     'if(hw2>0.005){float e=hw2*(0.85+0.3*wn(vec2(vP.z*3.1,0.5)))-0.05*pow(wn(vec2(vP.z*7.0,1.7)),2.0),wet=(1.0-smoothstep(e-0.04,e+0.02,vP.y))*sd;' +
     'bc*=1.0-0.3*wet;gs=mix(gs,max(gs,0.85),wet);}}';
-  const LITN_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uAlpha;uniform float uEmis;uniform vec2 uWet;uniform vec3 uZen;uniform vec3 uHor;varying vec3 vW;varying vec3 vN;varying vec4 vC;' + PLG + AIR + WEAR_GL + LIFE_GL +
+  const LITN_FS = SUNV('precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uAlpha;uniform float uEmis;uniform vec2 uWet;uniform vec3 uZen;uniform vec3 uHor;varying vec3 vW;varying vec3 vN;varying vec4 vC;' + PLG + AIR + WEAR_GL + LIFE_GL +
     'void main(){vec3 n=normalize(vN);vec3 V=normalize(-vW);if(dot(n,V)<0.0)n=-n;float dif=max(dot(n,uSun),0.0);vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 bc=vC.rgb;float gs=vC.a;if(uWear.x+uWear.y>0.0)wearHull(bc,gs);' +
     'if(uAge.x+uWL.x+uWL.y+uWL.z+uWL.w>0.0)lifeHull(bc,gs);' +
     // G6: in the wet (uWet.x) the rough surfaces darken and everything gets glossier, the flat the most (a wet deck or quay shines)
@@ -57,7 +57,7 @@
     'vec3 R=reflect(-V,n);float hw=mix(0.45,0.015,gs*gs);vec3 up=mix(uHor,uZen,pow(clamp(R.y,0.0,1.0),0.55)),lo=uHor*vec3(0.2,0.3,0.33)+vec3(0.006,0.02,0.026)*dot(uAmb,vec3(1.0));' +
     'vec3 sky=mix(lo,up,smoothstep(-hw,hw,R.y+0.01))+uAirMie*1.5*pow(max(dot(R,uAirSun),0.0),mix(3.0,24.0,gs));' +
     'float fr=(0.04+0.96*pow(1.0-max(dot(n,V),0.0),5.0))*gs*0.85;' +
-    'vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))*(1.0-0.5*fr)+uSunCol*sp*0.55+sky*fr+bc*uEmis;gl_FragColor=vec4(fin(c,vW),uAlpha);}';
+    'vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))*(1.0-0.5*fr)+uSunCol*sp*0.55+sky*fr+bc*uEmis;gl_FragColor=vec4(fin(c,vW),uAlpha);}');
   const TEX_VS = 'attribute vec3 aPos;attribute vec2 aUV;uniform mat4 uVP;uniform mat4 uM;varying vec2 vUV;varying vec3 vW;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vUV=aUV;gl_Position=uVP*w;}';
   const TEX_FS = 'precision mediump float;uniform sampler2D uTex;uniform float uLit;uniform vec3 uN;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;varying vec2 vUV;varying vec3 vW;' + AIR +
     'void main(){vec4 t=texture2D(uTex,vUV);if(t.a<0.05)discard;vec3 c=uLit>0.5?t.rgb*(uAmb+uSunCol*max(dot(uN,uSun),0.0)):t.rgb;gl_FragColor=vec4(fin(c,vW),t.a);}';

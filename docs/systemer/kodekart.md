@@ -2147,12 +2147,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (998 linjer)
+## `src/js/ui/phone/07-patch.js` (1002 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 991 `patch()`
+  - 995 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (94 linjer)
 
@@ -3063,23 +3063,24 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 118 `ridged(x, y)`
   - 119 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (511 linjer)
+## `src/js/view3d/01-shaders.js` (552 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
-- **120** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **152** the boat's own foam, when she has way on
-- **170** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
-  - 439 `cloudStep(dt)`
-  - 445 `skyFrame(u, Hh, tn, bv)`
-  - 460 `glsl3(src, fs)`
-  - 468 `compile(type, src, nm)`
-  - 475 `program(vs, fs, attrs, nm = '?')`
-  - 483 `buf(data, target, usage)`
-  - 488 `airSet(u, terr)`
-  - 493 `attr(loc, b, size)`
-  - 509 `upload(pos, col, idx)`
+- **142** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
+- **174** the boat's own foam, when she has way on
+- **192** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
+  - 462 `cloudStep(dt)`
+  - 469 `skyFrame(u, Hh, tn, bv)`
+  - 484 `glsl3(src, fs)`
+  - 492 `compile(type, src, nm)`
+  - 499 `program(vs, fs, attrs, nm = '?')`
+  - 507 `buf(data, target, usage)`
+  - 512 `airSet(u, terr)`
+  - 527 `sunT0()`
+  - 534 `attr(loc, b, size)`
+  - 550 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (99 linjer)
 
@@ -3127,7 +3128,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 373 `buildTerrain()`
   - 382 `stream3d()`
 
-## `src/js/view3d/04-vec-packs.js` (283 linjer)
+## `src/js/view3d/04-vec-packs.js` (334 linjer)
 
 ---------- the coast's packs (01c-vec.js, part 4 of the coast-wide plan): buildings, roads, bridges, piers and breakwaters ----------
 
@@ -3144,14 +3145,16 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 111 `shadeH(x, z, dd)`
   - 113 `shSeed(m, old)`
   - 122 `updateShadows()`
-  - 151 `updateMid()`
-  - 156 `updateNear()`
-  - 159 `nearWanted()`
-  - 169 `fineWanted()`
-  - 188 `recolor(m, snow)`
-- **271** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
-  - 275 `stonesOf(list, build)`
-  - 280 `drawStones(list, TM, eye)`
+  - 161 `sunGridStep(key, d)`
+  - 194 `sgUpload(J)`
+  - 202 `updateMid()`
+  - 207 `updateNear()`
+  - 210 `nearWanted()`
+  - 220 `fineWanted()`
+  - 239 `recolor(m, snow)`
+- **322** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
+  - 326 `stonesOf(list, build)`
+  - 331 `drawStones(list, TM, eye)`
 
 ## `src/js/view3d/05-quays-breakwaters.js` (337 linjer)
 
