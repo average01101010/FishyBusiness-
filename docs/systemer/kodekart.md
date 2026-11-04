@@ -17,50 +17,51 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 60 `natP(lat, lon)`
   - 61 `natLL(p)`
 
-## `src/js/core/01-world.js` (424 linjer)
+## `src/js/core/01-world.js` (434 linjer)
 
 - **10** one clock for everyone (05.10.2026, the shared world V1)
   - 54 `gridScale(p)`
   - 58 `gridGamma(p)`
   - 76 `farL(kind, p)`
   - 81 `expoFar(p)`
-  - 84 `landFracM(x, z)`
-  - 86 `dcCellFar(p)`
-  - 93 `b64bytes(s)`
-  - 94 `varints(b)`
-  - 102 `loadFine()`
-  - 110 `loadRoads()`
-  - 126 `inHarbour(p)`
-  - 133 `legHazard(a, c, sd)`
-  - 143 `legHazardMemo(a, c, sd)`
-  - 148 `draftHazards()`
-  - 158 `legReady(a, c)`
-  - 165 `nearestPlace(p)`
-  - 169 `groundCheck(a, c)`
-  - 180 `runAground(p)`
-  - 195 `rocksNear(a, b, r)`
-  - 205 `rocksIn(x0, y0, x1, y1)`
-  - 218 `coastDist(p)`
-  - 219 `coastDistFar(p)`
-  - 225 `decodeContours()`
-  - 234 `isLand(p)`
-  - 242 `isLandFar(p)`
-  - 248 `isLandUI(p)`
-  - 254 `inHarbourPocket(p)`
-  - 260 `harbourNear(x, z)`
-  - 266 `qPockets()`
-  - 267 `pocketHit(US, QS, x, z)`
-  - 274 `pocketsIn(x0, y0, x1, y1)`
-  - 283 `legClear(a, b)`
-  - 314 `portLabel(p)`
-- **330** the harbour unit (02.10.2026)
-  - 371 `fillOut(U, lx, lz)`
-  - 384 `onUnitGround(p)`
-  - 391 `unitCovers(x, z, m)`
-  - 399 `bridgeUnderUnit(br, extra)`
-  - 404 `portApproach(pt)`
+  - 86 `landFracM(x, z)`
+  - 91 `landXIn(X, x, z)`
+  - 96 `dcCellFar(p)`
+  - 103 `b64bytes(s)`
+  - 104 `varints(b)`
+  - 112 `loadFine()`
+  - 120 `loadRoads()`
+  - 136 `inHarbour(p)`
+  - 143 `legHazard(a, c, sd)`
+  - 153 `legHazardMemo(a, c, sd)`
+  - 158 `draftHazards()`
+  - 168 `legReady(a, c)`
+  - 175 `nearestPlace(p)`
+  - 179 `groundCheck(a, c)`
+  - 190 `runAground(p)`
+  - 205 `rocksNear(a, b, r)`
+  - 215 `rocksIn(x0, y0, x1, y1)`
+  - 228 `coastDist(p)`
+  - 229 `coastDistFar(p)`
+  - 235 `decodeContours()`
+  - 244 `isLand(p)`
+  - 252 `isLandFar(p)`
+  - 258 `isLandUI(p)`
+  - 264 `inHarbourPocket(p)`
+  - 270 `harbourNear(x, z)`
+  - 276 `qPockets()`
+  - 277 `pocketHit(US, QS, x, z)`
+  - 284 `pocketsIn(x0, y0, x1, y1)`
+  - 293 `legClear(a, b)`
+  - 324 `portLabel(p)`
+- **340** the harbour unit (02.10.2026)
+  - 381 `fillOut(U, lx, lz)`
+  - 394 `onUnitGround(p)`
+  - 401 `unitCovers(x, z, m)`
+  - 409 `bridgeUnderUnit(br, extra)`
+  - 414 `portApproach(pt)`
 
-## `src/js/core/01b-mapdata.js` (202 linjer)
+## `src/js/core/01b-mapdata.js` (210 linjer)
 
 MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in packs from map/
 
@@ -72,31 +73,32 @@ MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in p
   - 29 `mapFetch(pk)`
 - **47** the manifest and the packs
   - 48 `mapStart(base)`
-  - 64 `mapLoad(pk)`
-  - 75 `mapPackOf(L, bx, by)`
-  - 76 `mapPacksIn(kind, x0, y0, x1, y1)`
-  - 84 `mapSimPacks(p, r)`
-  - 85 `mapReadyAt(p, r)`
-  - 87 `mapSimAt(p)`
-  - 88 `mapViewAt(p)`
-  - 91 `mapKindIn(kind, p, memo)`
-  - 93 `mapNeed(p, r)`
-  - 99 `mapPreload(pts, kinds, onProgress)`
-  - 116 `mapLoadKind(kind)`
-- **117** blocks
-  - 118 `med16(raw, n)`
-  - 123 `mapDecode(L, raw)`
-  - 135 `mapBlock(L, bx, by)`
-  - 147 `mapHasBlock(L, bx, by)`
-  - 150 `mapBlockKnown(L, bx, by)`
-  - 152 `rcell(L, ix, iy)`
-  - 158 `rbil(L, p)`
-  - 163 `rbilM(L, x, z)`
-  - 168 `mapHasM(L, x0, z0, x1, z1)`
-  - 175 `mapVec(pk, name)`
-  - 182 `mapViewReady(x0, y0, x1, y1, then, kinds)`
-  - 189 `simAreaReady()`
-  - 197 `mapDrop(pk)`
+  - 65 `mapLoad(pk)`
+  - 76 `mapPackOf(L, bx, by)`
+  - 77 `mapPacksIn(kind, x0, y0, x1, y1)`
+  - 85 `mapSimPacks(p, r)`
+  - 86 `mapReadyAt(p, r)`
+  - 88 `mapSimAt(p)`
+  - 89 `mapViewAt(p)`
+  - 92 `mapKindIn(kind, p, memo)`
+  - 94 `mapNeed(p, r)`
+  - 100 `mapPreload(pts, kinds, onProgress)`
+  - 117 `mapLoadKind(kind)`
+- **118** blocks
+  - 119 `med16(raw, n)`
+  - 125 `med8(raw, n)`
+  - 130 `mapDecode(L, raw)`
+  - 143 `mapBlock(L, bx, by)`
+  - 155 `mapHasBlock(L, bx, by)`
+  - 158 `mapBlockKnown(L, bx, by)`
+  - 160 `rcell(L, ix, iy)`
+  - 166 `rbil(L, p)`
+  - 171 `rbilM(L, x, z)`
+  - 176 `mapHasM(L, x0, z0, x1, z1)`
+  - 183 `mapVec(pk, name)`
+  - 190 `mapViewReady(x0, y0, x1, y1, then, kinds)`
+  - 197 `simAreaReady()`
+  - 205 `mapDrop(pk)`
 
 ## `src/js/core/01c-vec.js` (215 linjer)
 
@@ -1847,23 +1849,23 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 193 `codeRead(code)`
   - 201 `loadCode(code)`
 
-## `src/js/ui/03a-chart.js` (147 linjer)
+## `src/js/ui/03a-chart.js` (157 linjer)
 
 THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, the graticule and the place names
 
 - **1** THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, the graticule and the place names
   - 12 `vReader(b)`
-  - 20 `vecPath(v, sc, tol)`
-  - 34 `chartPath0(px)`
-  - 39 `vecPathsIn(v, sc, r)`
-  - 51 `chartPathsIn(pk, r)`
-  - 52 `chartPath(pk, lv, px)`
-  - 55 `chartCoast(ctx, x0, y0, kx, ky, W, H, dpr, fish)`
-  - 83 `fmtDM(v, pos, neg)`
-  - 87 `chartGrid(ctx, x0, y0, kx, ky, W, H, dpr, fish)`
-- **108** the place names
-  - 111 `chartNamesOf(pk, entry, sc, ox, oy)`
-  - 124 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
+  - 21 `vecPath(v, sc, tol, keep)`
+  - 41 `chartPath0(px, out)`
+  - 48 `vecPathsIn(v, sc, r)`
+  - 60 `chartPathsIn(pk, r)`
+  - 61 `chartPath(pk, lv, px)`
+  - 64 `chartCoast(ctx, x0, y0, kx, ky, W, H, dpr, fish)`
+  - 93 `fmtDM(v, pos, neg)`
+  - 97 `chartGrid(ctx, x0, y0, kx, ky, W, H, dpr, fish)`
+- **118** the place names
+  - 121 `chartNamesOf(pk, entry, sc, ox, oy)`
+  - 134 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
 ## `src/js/ui/03-map.js` (764 linjer)
 
@@ -2129,12 +2131,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (982 linjer)
+## `src/js/ui/phone/07-patch.js` (987 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 975 `patch()`
+  - 980 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (94 linjer)
 
@@ -2893,7 +2895,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 - **70** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (192 linjer)
+## `src/js/ui/11-boot.js` (194 linjer)
 
 ---------- boot ----------
 
@@ -2906,8 +2908,8 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 30 `bootMap()`
   - 37 `bootData()`
   - 51 `bootMapLoad()`
-  - 70 `bootGame()`
-  - 175 `bootFail(e)`
+  - 72 `bootGame()`
+  - 177 `bootFail(e)`
 
 ## `src/js/vessel3d.js` (1303 linjer)
 
@@ -3160,7 +3162,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 307 `obox(nb, c, u, n, len, wid, y0, h, k)`
   - 313 `buildHarbourFittings()`
 
-## `src/js/view3d/06-buildings-lights.js` (390 linjer)
+## `src/js/view3d/06-buildings-lights.js` (393 linjer)
 
 ---------- real buildings (OpenStreetMap), streamed in 1 km chunks inside the terrain corridor ----------
 
@@ -3173,21 +3175,21 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 55 `buildChunk(key, detail)`
 - **92** details: chimney, windows, doors (only close to the boat)
   - 136 `addTrees(m, key, srcs, snowy, c)`
-  - 168 `addRoads(m, key, snowy)`
-  - 189 `freeChunk(c)`
-  - 190 `updateChunks(maxBuilds)`
-  - 207 `drawBuildings(TM)`
-  - 226 `lightY(L, x, z)`
-  - 227 `lightOn(L, t)`
-  - 228 `drawSeaLights(VP, eye, t, near)`
-- **243** lights that light up round them at night (the user's wish 03.10.2026)
-  - 248 `pickLights(eye, t)`
-  - 273 `plSet(u)`
-  - 278 `drawBeams(VP, eye, t)`
-  - 329 `workLights(type, G)`
-  - 346 `airGlow()`
-  - 347 `drawWorkCones(VP, eye, t, BMrel, VG)`
-  - 383 `drawChunkLights(VP, eye)`
+  - 171 `addRoads(m, key, snowy)`
+  - 192 `freeChunk(c)`
+  - 193 `updateChunks(maxBuilds)`
+  - 210 `drawBuildings(TM)`
+  - 229 `lightY(L, x, z)`
+  - 230 `lightOn(L, t)`
+  - 231 `drawSeaLights(VP, eye, t, near)`
+- **246** lights that light up round them at night (the user's wish 03.10.2026)
+  - 251 `pickLights(eye, t)`
+  - 276 `plSet(u)`
+  - 281 `drawBeams(VP, eye, t)`
+  - 332 `workLights(type, G)`
+  - 349 `airGlow()`
+  - 350 `drawWorkCones(VP, eye, t, BMrel, VG)`
+  - 386 `drawChunkLights(VP, eye)`
 
 ## `src/js/view3d/07-harbour-unit.js` (223 linjer)
 

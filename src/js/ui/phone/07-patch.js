@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['ramme-041126', '04.11.2026', 'Havet utenfor kysten', 'The sea off the coast', [
+       ['Kartet går nå til Svalbard, Bjørnøya, Jan Mayen, Island, Færøyane, Grønlands østkyst og russisk sone til Novaja Semlja. Landet der vises i sjøkartet og i 3D.', 'The chart now reaches Svalbard, Bear Island, Jan Mayen, Iceland, the Faroes, East Greenland and the Russian zone to Novaya Zemlya. The land there shows on the chart and in 3D.'],
+       ['Dybden til havs er ny, fra GEBCO, så bankene og eggakanten ligger der de skal.', 'The depth offshore is new, from GEBCO, so the banks and the shelf edge lie where they should.'],
+       ['Fart og avstand regnes etter sann avstand på jordkula. Langs kysten merkes det ikke, langt ute i havet er det riktigere enn før.', 'Speed and distance are worked out by the true distance on the globe. Along the coast you will not notice; far out at sea it is truer than before.'],
+    ]],
     ['havmottak-031126', '03.11.2026', 'Mottakene for havflåten', 'The ocean fleet\'s plants', [
        ['Tretten store mottak for havfiskeflåten er kommet på kartet, blant annet i Måløy, Selje, Florø, Egersund og Rypefjord ved Hammerfest. Der legger trålere og ringnotbåter til for å levere.', 'Thirteen large plants for the ocean fleet are on the chart, among them Måløy, Selje, Florø, Egersund and Rypefjord by Hammerfest. Trawlers and purse seiners land their catch there.'],
        ['Utstyrsbutikken i Rypefjord og verftet ved Fiskarstrand har flyttet til nye kaier like ved.', 'The tackle shop in Rypefjord and the yard by Fiskarstrand have moved to new quays close by.'],

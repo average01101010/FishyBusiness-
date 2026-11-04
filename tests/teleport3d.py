@@ -5,7 +5,7 @@ should, there is no GL error and no page error, and a picture is taken (tests/ou
 SwiftShader's says nothing about a tablet. Then the quality: 'low' shortens the near terrain and draws fewer pixels, and 'auto'
 steps down when the frames are slow and back up when there is room, but not at once to the level it left. Prints OK or FEIL per check."""
 from _env import GAME, boot
-import asyncio, json
+import asyncio, json, os
 from playwright.async_api import async_playwright
 
 
@@ -18,6 +18,8 @@ def check(ok, what, extra=''):
 PLACES = [('kirkenes', 69.727, 30.06, 200), ('honningsvag', 70.975, 25.985, 250), ('reine', 67.93, 13.095, 600),
           ('bergen', 60.40, 5.29, 450), ('hvaler', 59.03, 11.0, 40), ('senja', 69.36, 17.40, 600),
           ('bjornoya', 74.42, 18.85, 200), ('nordisland', 66.15, -17.45, 300), ('sentralbanken', 76.0, 35.0, None), ('petsjora', 69.5, 52.0, None)]
+# KYST_TP=bjornoya,petsjora: only those places
+if os.environ.get('KYST_TP'): PLACES = [q for q in PLACES if q[0] in os.environ['KYST_TP'].split(',')]
 # a sea point near (lat, lon): the nearest 100 m cell that the national core has as sea at least 300 m from the land
 SEA = """([la, lo]) => { const c = P(la, lo); for (let r = 0; r <= 60; r++) for (let a = 0; a < Math.max(1, r * 6); a++){
   const t = a / Math.max(1, r * 6) * 2 * Math.PI, q = {x:c.x + Math.cos(t) * r * 0.1, y:c.y + Math.sin(t) * r * 0.1};

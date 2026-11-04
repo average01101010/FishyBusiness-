@@ -350,4 +350,15 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
     - avstandene som vises (plotteren, ruta, navigasjonen)
     - tidene i driftsplanen og turoppdragene
   - **Tester:** ny `tests/unit/rammen.test.mjs` (51 sjekker), med PROJ-punkter ute i havfeltene i `tests/proj_ref.json` (`projref.py`). 670 OK i alle enhetstestene.
-  - **Neste:** R2 (kjernen og releasen) i en ny økt.
+  - **Neste:** R2 (kjernen og releasen) i en ny økt.- 04.11.2026: **R2 bygd** (samme gren, ikke rullet ut). Se 4.9c i `docs/systemer/kart-og-terreng.md`.
+  - **Rammene** står ett sted, i `tools/map/frame.py` (`FRAME`, `OLD`, `WIDE`).
+  - **Kjernen** har `land1k`, `dc1k`, `expo2k` og `deep` over hele rammen.
+    - `deep` kommer fra GEBCO 2025, gjennom en ny workflow `gebco.yml` og releasen `gebco-3`, med Kartverkets 50 m der den finnes.
+    - Den gamle kjernen har de samme verdiene. `dc200` og `expo` er kodet `u8p` og sjekket mot SHA-256 av de gamle bytene.
+    - `coast0` over hele rammen ligger i en egen pakke (`chart0`), som lastes etter starten.
+  - **Landet på 200 m og fjernhøydene** for 724 fliser utenfor den gamle rammen ligger i releasens `kart-ramme.tar.gz` og lastes etter behov.
+  - **Releasen:** `kart-game.tar.gz` har samme format, så arbeidsgrenen tåler den nye releasen. `release.py` pinnes med `tools/map/kart-release.json`.
+  - **Målt:**
+    - Kjernen er 4,70 MB (3,62 før). Målet på 3,5 MB er ikke nådd, og tiltakene står i backloggen.
+    - Den vide rammen tar rundt 5 minutter lokalt og fjernhøydene rundt 3 minutter. Tida i Actions står i 4.9c.
+  - **Neste:** full regresjon med hele kysten, så utrulling av R1 og R2 når Jonas sier ja. Deretter R3.

@@ -17,14 +17,16 @@ function vReader(b){
 // the rings of a vector entry (vectors.py's lines: n, then per ring its class, point count and zigzag steps) as one Path2D, sc km per unit;
 // with tol (units) for a view whose pixel is coarser than the data: a point nearer than tol to the last one kept is left out, and so is
 // a ring smaller than tol (the vertices made the coast seconds to draw at the whole country and the region, 03.10.2026)
-function vecPath(v, sc, tol){
+// keep (optional): a ring is taken only when keep(its box in units) says so
+function vecPath(v, sc, tol, keep){
   const r = vReader(v.b), n = r.u(), p = new Path2D(), q = [];
+  if (keep && !tol) tol = 1e-9;
   for (let k = 0; k < n; k++){
     r.u(); const m = r.u(); let x = 0, y = 0;
     if (!tol){ for (let j = 0; j < m; j++){ x += r.z(); y += r.z(); j ? p.lineTo(x * sc, y * sc) : p.moveTo(x * sc, y * sc); } p.closePath(); continue; }
     q.length = 0; let lx = 0, ly = 0, ax = Infinity, ay = Infinity, bx = -Infinity, by = -Infinity;
     for (let j = 0; j < m; j++){ x += r.z(); y += r.z(); if (x < ax) ax = x; if (x > bx) bx = x; if (y < ay) ay = y; if (y > by) by = y; if (!j || Math.abs(x - lx) + Math.abs(y - ly) >= tol){ q.push(x, y); lx = x; ly = y; } }
-    if (bx - ax < tol && by - ay < tol) continue;
+    if (bx - ax < tol && by - ay < tol || keep && !keep(ax, ay, bx, by)) continue;
     for (let j = 0; j < q.length; j += 2) j ? p.lineTo(q[j] * sc, q[j + 1] * sc) : p.moveTo(q[j] * sc, q[j + 1] * sc); p.closePath();
   }
   return p;
@@ -32,10 +34,13 @@ function vecPath(v, sc, tol){
 // the step (a power of two of the data's own, 0 for all of it) that suits a pixel of px km
 const pathStep = (px, base) => Math.max(0, Math.floor(Math.log2(0.7 * px / base)));
 // coast0 is in its own pack from H1b R2 (chart0, the whole frame), which comes after the start; until it is in, the chart has the land
-// of the core and the tiles, and is painted again when it comes (an older build has it in the core)
-function chartPath0(px){ const b = pathStep(px || 0, 0.3), k = 'p0:' + b; if (!CHARTV.paths.has(k)){ const pk = MAPD.chart0 || MAPD.core;
+// of the core and the tiles, and is painted again when it comes (an older build has it in the core). It is two paths: the rings that
+// touch the old frame (the coast, 0-1450 x 0-1750 km) and the rest (Greenland, Iceland, Svalbard, Russia: as many rings again), which
+// is drawn only when the view reaches past the old frame (charttest: the whole country's first picture in 0.6 s with the CPU slowed)
+const C0IN = (ax, ay, bx, by) => bx >= 0 && by >= 0 && ax <= 145000 && ay <= 175000;
+function chartPath0(px, out){ const b = pathStep(px || 0, 0.3), k = 'p0:' + b + (out ? 'o' : ''); if (!CHARTV.paths.has(k)){ const pk = MAPD.chart0 || MAPD.core;
   if (pk && !pk.buf){ if (!pk.load) mapLoad(pk).then(() => { if (typeof chartCame === 'function') chartCame(null); }, e => console.error(e)); return null; }
-  const v = mapVec(pk, 'coast0'); if (!v) return null; CHARTV.paths.set(k, vecPath(v, 0.01, b ? 30 * 2 ** b : 0)); } return CHARTV.paths.get(k); }
+  const v = mapVec(pk, 'coast0'); if (!v) return null; CHARTV.paths.set(k, vecPath(v, 0.01, b ? 30 * 2 ** b : 0, out ? (ax, ay, bx, by) => !C0IN(ax, ay, bx, by) : C0IN)); } return CHARTV.paths.get(k); }
 // the rings that touch the rectangle r [x0, y0, x1, y1] (m from the tile's corner), as paths in km: land (class 0 and 1), mole (the
 // breakwaters, 2 and 3) and all, each null when none. The shore in 3D (view3d buildLandMask) strokes the land's and the breakwaters' rings
 // with their own slopes and fills all of them, over its own window alone: a tile's whole coast ran to 184 000 points (Frøya). A ring
@@ -69,11 +74,12 @@ function chartCoast(ctx, x0, y0, kx, ky, W, H, dpr, fish){
   };
   // the national coast only where a tile in the view has no chart pack of its own (it was stroked over the whole country each time)
   const nT = (Math.floor((x0 + W * kx) / T) - Math.floor(x0 / T) + 1) * (Math.floor((y0 + hh) / T) - Math.floor(y0 / T) + 1);
-  const p0 = tiles.length < nT ? chartPath0(kx) : null;
-  if (p0){
+  const x1 = x0 + W * kx, y1 = y0 + hh, inOld = x1 > 0 && y1 > 0 && x0 < 1450 && y0 < 1750, past = x0 < 0 || y0 < 0 || x1 > 1450 || y1 > 1750;
+  const p0 = tiles.length < nT && inOld ? chartPath0(kx) : null, p0o = tiles.length < nT && past ? chartPath0(kx, true) : null;
+  if (p0 || p0o){
     ctx.save();
     if (tiles.length){ ctx.beginPath(); ctx.rect(0, 0, W, H); for (const pk of tiles) ctx.rect((pk.tile[0] * T - x0) / kx, (pk.tile[1] * T - y0) / ky, T / kx, T / ky); ctx.clip('evenodd'); }
-    draw(p0, 0, 0); ctx.restore();
+    if (p0) draw(p0, 0, 0); if (p0o) draw(p0o, 0, 0); ctx.restore();
   }
   for (const pk of tiles){
     const ox = pk.tile[0] * T, oy = pk.tile[1] * T;
