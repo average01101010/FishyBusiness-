@@ -305,7 +305,7 @@ const DOCK = (() => {
     if (!page) return;
     const y = keep ? dBody.scrollTop : 0, t0 = TITLE[page] || [page, page];
     dTitle.textContent = L(t0[0], t0[1]); drawTabs();
-    const h = dress(page, PHONE.page(page)); if (h !== shown){ shown = h; dBody.innerHTML = h; fold(); } dBody.scrollTop = y;
+    const h = dress(page, PHONE.page(page)); if (h !== shown){ shown = h; dBody.innerHTML = h; fold(); ordbok(dBody); } dBody.scrollTop = y;
   }
   // «Kystlys» U6 (docs/planer/ui-redesign.md, V3 A, 04.11.2026): the trade pages belong to a place (the plant, the shop, the yard), and
   // each says first where that place is: «Du er her», or the nearest with its distance and Autonav there, one header in place of the
