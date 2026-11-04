@@ -136,12 +136,9 @@
   const FETCHG = 'float fetchW(vec2 P,vec2 up,float sw){if(uLSOn<0.5)return sw;float f=-1.0;' +
     [30, 60, 120, 240, 480, 960].map(d => '{vec2 lu=(P+up*' + d.toFixed(1) + '-uLRect.xy)*uLRect.zw;if(f<0.0){if(lu.x<0.0||lu.y<0.0||lu.x>1.0||lu.y>1.0)f=9.0;else if(texture2D(uLandS,lu).r*8.0-4.0>uTideL)f=' + (d / 1000).toFixed(3) + ';}}').join('') +
     'return f<0.0||f>8.0?sw:min(sw,sqrt(f));}';
-  const FOAM_VS = 'attribute vec2 aXZ;varying vec2 vUV;void main(){vUV=aXZ*0.5+0.5;gl_Position=vec4(aXZ,0.0,1.0);}';
-  const FOAM_FS = 'precision highp float;uniform sampler2D uPrev;uniform vec2 uShift;uniform vec2 uShiftG;uniform vec2 uFoamG;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform float uN;uniform vec2 uRebase;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uTime;uniform vec2 uNFD;uniform float uWind;uniform vec2 uWindDir;' +
-    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;uniform vec4 uNB[6];uniform vec4 uNH[6];uniform vec4 uNG[6];uniform vec4 uNV[6];varying vec2 vUV;' + NOISE + SEA_STATE + WAKE_GLSL + FETCHG +
-    // the hull's half width a metres forward of her origin: full in the body, drawn in over the forebody to the stem, a little to the transom
+  // the foam a hull makes this frame, shared by the foam map's pass (your boat) and the other boats' pass (NPCF_FS, 04.11.2026)
+  const HULLFOAM = '' +
     'float hullWh(float a,vec4 H){float hb=H.y;if(a>0.0){float t=clamp(a/H.z,0.0,1.0);return hb*sqrt(max(1.0-pow(t,2.6),0.0));}float t=clamp(-a/H.w,0.0,1.0);return hb*(1.0-0.25*t*t);}' +
-    'float hullW(float a){return hullWh(a,uHull);}' +
     // the foam a hull makes this frame where she is in the water (yours and, from 04.11.2026, the nearest boats of the fleet, foamStep):
     // FB the way she came since the last frame (from, to), FH her heading then and now, H as uHull (length, half beam, stem and transom
     // from her origin), V her speed through the water (m/s), Froude number and whether she can plane
@@ -172,7 +169,12 @@
     // white of the transom's corners and the screws, which closes into a white rooster tail some 3 beams aft (lc)
     'if(a<st+0.5&&a>st-6.0-tv*hb*5.0){float back=st+0.5-a;float lc=tv*hb*(3.0+0.1*v);float ch=tv*(1.0-smoothstep(lc*0.7,lc,back))*(1.0-smoothstep(hb*0.25,hb*0.6,q));' +
     'float rst=tv*exp(-pow((back-lc)/(0.8+0.3*hb),2.0))*(1.0-smoothstep(hb*0.3,hb*0.9,q));float wb=(hullWh(st,H)+0.15+0.3+0.1*v*(1.0-0.6*pf)+pl*(1.0-0.8*pf)*(0.4+0.08*v))*(1.0+0.03*back)*(0.85+0.3*ns(Pb*0.45+vec2(4.0,9.0)));float band=1.0-smoothstep(wb*0.75,wb*1.1,q);float core=1.0-smoothstep(wb*0.2,wb*0.5,q);iw=max(iw,max((mix(0.45,0.7,max(tv,pl))*band+0.3*core)*(1.0-0.85*ch),rst)*clump*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
-    'return iw;}' +
+    'return iw;}';
+  const FOAM_VS = 'attribute vec2 aXZ;varying vec2 vUV;void main(){vUV=aXZ*0.5+0.5;gl_Position=vec4(aXZ,0.0,1.0);}';
+  const FOAM_FS = 'precision highp float;uniform sampler2D uPrev;uniform vec2 uShift;uniform vec2 uShiftG;uniform vec2 uFoamG;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform float uN;uniform vec2 uRebase;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uTime;uniform vec2 uNFD;uniform float uWind;uniform vec2 uWindDir;' +
+    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;varying vec2 vUV;' + NOISE + SEA_STATE + WAKE_GLSL + FETCHG +
+    // the hull's half width a metres forward of her origin: full in the body, drawn in over the forebody to the stem, a little to the transom
+    HULLFOAM + 'float hullW(float a){return hullWh(a,uHull);}' +
     'void main(){' +
     // this texel in the map's own metres, in the sea shader's frame P (from the render origin) and the water's Pb
     'vec2 M=vUV*uFoamRect.w;vec2 P=M+uFoamRect.xy+uNFD;vec2 Pb=M+uFoamRect.xy;' +
@@ -191,13 +193,6 @@
     'float arm=uWk3.y*smoothstep(0.45,0.9,wh/max(uWk1.y,0.02))*(1.0-smoothstep(0.0,lam,s))*step(0.0,s)*br;' +
     'float bow=uWk3.x*smoothstep(0.35,0.85,wh/max(uWk2.y,0.02))*step(-uWk2.x-0.5,s)*step(s,0.2)*br;iw=max(iw,max(arm,bow)*0.9);}' +
     '}' +
-    // --- the other boats near you (foamStep, up to six with way on): their hulls' foam, as yours, with no Kelvin arms ---
-    'if(uNV[0].w>0.0)iw=max(iw,hullFoam(Mg,Pb,uNB[0],uNH[0],uNG[0],uNV[0].xyz)*uNV[0].w);' +
-    'if(uNV[1].w>0.0)iw=max(iw,hullFoam(Mg,Pb,uNB[1],uNH[1],uNG[1],uNV[1].xyz)*uNV[1].w);' +
-    'if(uNV[2].w>0.0)iw=max(iw,hullFoam(Mg,Pb,uNB[2],uNH[2],uNG[2],uNV[2].xyz)*uNV[2].w);' +
-    'if(uNV[3].w>0.0)iw=max(iw,hullFoam(Mg,Pb,uNB[3],uNH[3],uNG[3],uNV[3].xyz)*uNV[3].w);' +
-    'if(uNV[4].w>0.0)iw=max(iw,hullFoam(Mg,Pb,uNB[4],uNH[4],uNG[4],uNV[4].xyz)*uNV[4].w);' +
-    'if(uNV[5].w>0.0)iw=max(iw,hullFoam(Mg,Pb,uNB[5],uNH[5],uNG[5],uNV[5].xyz)*uNV[5].w);' +
     // --- the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold ---
     'if(uWind>6.0){vec4 S=seaAt(P);float px=uFoamRect.w/uN;vec3 N=vec3(0.0,1.0,0.0);float y=0.0;float sa=1e-6;float lost=0.0;vec2 w2=uWindDir;vec2 wp=vec2(-w2.y,w2.x);' +
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => SEA_WAVE(true, i)).join('') +
@@ -210,6 +205,12 @@
     // none of the wake's foam on land (what the water carries onto a breakwater or a shore is gone)
     'if(uLSOn>0.5){vec2 lu=(P-uFoamG-uLRect.xy)*uLRect.zw;if(lu.x>0.0&&lu.y>0.0&&lu.x<1.0&&lu.y<1.0&&texture2D(uLandS,lu).r*8.0-4.0>uTideL-0.1){aw=0.0;bw=0.0;}}' +
     'gl_FragColor=vec4(aw,bw*aw,ac,bc*ac);}';
+  // The other boats' foam (04.11.2026), drawn after the map's pass over a small quad round each boat's way since the last frame, with
+  // MAX blending, so it costs nothing where no boat is: aXZ in the map's metres, the same hull as yours (HULLFOAM), born now.
+  // (With MAX the amount and the birth times amount each keep the larger; the rule in FOAM_FS, the stronger now wins, is near it.)
+  const NPCF_VS = 'attribute vec2 aXZ;uniform float uMm;varying vec2 vM;void main(){vM=aXZ;gl_Position=vec4(aXZ/uMm*2.0-1.0,0.0,1.0);}';
+  const NPCF_FS = 'precision highp float;uniform vec4 uFoamRect;uniform vec2 uFoamG;uniform vec4 uFoamT;uniform vec4 uNB;uniform vec4 uNH;uniform vec4 uNG;uniform vec4 uNV;varying vec2 vM;' + NOISE + HULLFOAM +
+    'void main(){vec2 Pb=vM+uFoamRect.xy;vec2 Mg=vM-uFoamG;float iw=hullFoam(Mg,Pb,uNB,uNH,uNG,uNV.xyz);gl_FragColor=vec4(iw,uFoamT.x*iw,0.0,0.0);}';
   // the last resort when no sea program links: a flat sea with a little ripple, the sky in it and the sun's glitter
   const BASIC_VS = 'precision highp float;attribute vec2 aXZ;uniform mat4 uVP;uniform vec2 uOrigin;uniform vec3 uOriginRel;uniform vec2 uScale;varying vec3 vW;varying vec2 vXZ;' +
     'void main(){vec2 lxz=aXZ*uScale;vec3 rel=uOriginRel+vec3(lxz.x,0.0,lxz.y);vW=rel;vXZ=uOrigin+lxz;gl_Position=uVP*vec4(rel,1.0);}';

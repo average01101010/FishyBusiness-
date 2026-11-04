@@ -211,8 +211,8 @@
     gl.uniform4fv(u.uWk0, [WK.u0[0] - Dx - FOAM.ox, WK.u0[1] - Dz - FOAM.oz, WK.u0[2], WK.u0[3]]); gl.uniform4fv(u.uWk1, WK.u1); gl.uniform4fv(u.uWk2, WK.u2); gl.uniform4fv(u.uWk3, WK.u3); wakeTU(u, Dx + FOAM.ox, Dz + FOAM.oz);
     gl.uniform4f(u.uFB, pb[0] - FOAM.ox, pb[1] - FOAM.oz, qx - FOAM.ox, qz - FOAM.oz); gl.uniform4f(u.uFH, pb[2], pb[3], fx, fz);
     gl.uniform4f(u.uHull, (VG.stern - VG.bow) || 6, (VG.beam || 2.4) / 2, -(VG.bow || -2.2), VG.stern || 3.1); gl.uniform4f(u.uFSp, (WK.kn || 0) * 0.5144, WK.Fr || 0, BOAT.planing ? 1 : 0, dt);
-    foamNPC(u, qx, qz, Dx, Dz);
     attr(0, SKYQ, 2); gl.drawArrays(gl.TRIANGLES, 0, 6);
+    foamNPC(qx, qz, Dx, Dz, Dx - FOAM.G[0], Dz - FOAM.G[1]);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null); FOAM.r = w; FOAM.pB = [qx, qz, fx, fz]; FOAM.ms = FOAM.ms * 0.9 + (performance.now() - t1) * 0.1; FOAM.sh = [sx, sz]; FOAM.n++;
     if (FOAM.log && FOAM.log.length < 400){   // (a trace for the tests: G3._debug.foam.log = []; counts the foam in a 64 x 64 block round the boat and its distinct births)
       const i = Math.max(0, Math.min(N - 64, Math.floor((qx - FOAM.ox) / px) - 32)), j = Math.max(0, Math.min(N - 64, Math.floor((qz - FOAM.oz) / px) - 32)), b4 = new Uint8Array(64 * 64 * 4);
@@ -221,13 +221,15 @@
       FOAM.log.push([+t.toFixed(2), sx, sz, +reb[0].toFixed(3), +FOAM.now[0].toFixed(3), cnt, g.size, Math.min(...g), Math.max(...g)]); }
   }
   // The other boats' foam (04.11.2026: the fleet sailed with no wake at all): the six nearest with way on within the map, each swept
-  // from where she was last frame as your own hull is (FOAM_FS hullFoam), by her length, beam and speed through the water (n.v, knots)
-  // and whether her kind planes, so a sjark at 7 knots leaves a small wash and a fast boat on the plane her wings and her channel. Her
-  // origin is taken as amidships. The coastal route and the ferry, with no length in their state, are given 35 and 70 m.
-  const NPCFOAM_OFF = /npcfoam0/.test(location.hash), NB4 = new Float32Array(24), NH4 = new Float32Array(24), NG4 = new Float32Array(24), NV4 = new Float32Array(24), NPF = new Map();
-  function foamNPC(u, qx, qz, Dx, Dz){
-    if (u.uNV == null) return; NV4.fill(0);
-    if (NPCFOAM_OFF){ gl.uniform4fv(u.uNV, NV4); return; }   // («#npcfoam0» in the address: none of the other boats' foam, for the comparison)
+  // from where she was last frame as your own hull is (HULLFOAM), by her length, beam and speed through the water (n.v, knots) and
+  // whether her kind planes, so a sjark at 7 knots leaves a small wash and a fast boat on the plane her wings and her channel. Her
+  // origin is taken as amidships; the coastal route and the ferry, with no length in their state, are given 35 and 70 m. Each is drawn
+  // into the map just written, over a quad round her way (NPCF_VS/FS, MAX blending), so a sea with no boats near costs nothing: in the
+  // map's own pass six more hulls per texel made SwiftShader's frames slow enough to time wakeshot out. Off with «#npcfoam0», and where
+  // MAX blending is missing (WebGL 1 without EXT_blend_minmax).
+  const NPCFOAM_OFF = /npcfoam0/.test(location.hash), NPF = new Map(), NPCF = {prog:null, buf:null, max:0, why:'', last:[]};
+  function foamNPC(qx, qz, Dx, Dz, gx, gz){
+    if (NPCFOAM_OFF || NPCF.why) return;
     let L0 = []; try { L0 = typeof npcNow !== 'undefined' ? npcNow : []; } catch (e){ L0 = []; }
     const R = FOAM.M / 2 - 40, cand = [];
     for (const n of L0){
@@ -235,17 +237,35 @@
       const x = n.p.x * 1000 - Dx, z = n.p.y * 1000 - Dz, d = Math.hypot(x - qx, z - qz); if (d > R) continue;
       cand.push([d, n, x, z]); }
     cand.sort((a, b) => a[0] - b[0]);
-    const now = performance.now(), seen = new Set();
+    const now = performance.now(), seen = new Set(), todo = []; NPCF.last = [];
     for (let i = 0; i < Math.min(6, cand.length); i++){
       const [, n, x, z] = cand[i], fx = Math.sin(n.hd || 0), fz = -Math.cos(n.hd || 0), Ln = n.L || (n.type === 'ferry' ? 70 : n.type === 'coastal' ? 35 : 10), Bn = n.B || Ln * 0.3;
       let t = null; try { t = npcType(n); } catch (e){ t = null; }
       const V = (t && VESSELS[t]) || {}, v = n.v * 0.5144, Fr = v / Math.sqrt(9.81 * Ln), pl = V.planing ? 1 : 0;
       const pp = NPF.get(n.id), ok = pp && Math.hypot(pp[0] - x, pp[1] - z) < 300; seen.add(n.id);
-      const ox = FOAM.ox, oz = FOAM.oz, k = i * 4;
-      NB4.set([(ok ? pp[0] : x) - ox, (ok ? pp[1] : z) - oz, x - ox, z - oz], k); NH4.set([ok ? pp[2] : fx, ok ? pp[3] : fz, fx, fz], k);
-      NG4.set([Ln, Bn / 2, Ln / 2, Ln / 2], k); NV4.set([v, Fr, pl, 1], k); NPF.set(n.id, [x, z, fx, fz, now]); }
+      const ox = FOAM.ox, oz = FOAM.oz, B = [(ok ? pp[0] : x) - ox, (ok ? pp[1] : z) - oz, x - ox, z - oz];
+      todo.push({B, H:[ok ? pp[2] : fx, ok ? pp[3] : fz, fx, fz], G:[Ln, Bn / 2, Ln / 2, Ln / 2], V:[v, Fr, pl, 1]});
+      NPF.set(n.id, [x, z, fx, fz, now]); NPCF.last.push({id:n.id, B, L:Ln, v:+n.v.toFixed(1), Fr:+Fr.toFixed(2), pl}); }
     for (const [id, e] of NPF) if (!seen.has(id) && now - e[4] > 5000) NPF.delete(id);
-    gl.uniform4fv(u.uNB, NB4); gl.uniform4fv(u.uNH, NH4); gl.uniform4fv(u.uNG, NG4); gl.uniform4fv(u.uNV, NV4);
+    if (!todo.length) return;
+    try {
+      if (!NPCF.prog){
+        NPCF.max = GL2 ? gl.MAX : ((gl.getExtension('EXT_blend_minmax') || {}).MAX_EXT || 0); if (!NPCF.max){ NPCF.why = 'ingen MAX-blanding'; return; }
+        NPCF.prog = program(NPCF_VS, NPCF_FS, ['aXZ'], 'skumkart-baater'); NPCF.buf = gl.createBuffer(); }
+    } catch (e){ NPCF.why = String(e.message || e).slice(0, 120); return; }
+    const P = NPCF.prog, u = P.u, M = FOAM.M, set4 = (k, a) => { if (u[k] != null) gl.uniform4fv(u[k], a); };
+    gl.useProgram(P.p); gl.enable(gl.BLEND); gl.blendEquation(NPCF.max); gl.blendFunc(gl.ONE, gl.ONE);
+    if (u.uMm != null) gl.uniform1f(u.uMm, M); if (u.uFoamG != null) gl.uniform2f(u.uFoamG, gx, gz);
+    set4('uFoamRect', [FOAM.ox - RO.x, FOAM.oz - RO.z, 1 / M, M]); set4('uFoamT', [FOAM.now[0], FOAM.win[0], FOAM.tau[0], 0]);
+    const Q = new Float32Array(12);
+    for (const o of todo){
+      // the quad: her way since the last frame and her reach round it (the transom band, the wings a hull length aft), in the map's metres
+      const r = 2 * o.G[3] + o.G[2] + 9 * o.G[1] + 12, x0 = Math.max(0, Math.min(o.B[0], o.B[2]) - r + gx), x1 = Math.min(M, Math.max(o.B[0], o.B[2]) + r + gx), z0 = Math.max(0, Math.min(o.B[1], o.B[3]) - r + gz), z1 = Math.min(M, Math.max(o.B[1], o.B[3]) + r + gz);
+      if (x1 <= x0 || z1 <= z0) continue;
+      Q.set([x0, z0, x1, z0, x1, z1, x0, z0, x1, z1, x0, z1]); gl.bindBuffer(gl.ARRAY_BUFFER, NPCF.buf); gl.bufferData(gl.ARRAY_BUFFER, Q, gl.DYNAMIC_DRAW);
+      set4('uNB', o.B); set4('uNH', o.H); set4('uNG', o.G); set4('uNV', o.V);
+      attr(0, NPCF.buf, 2); gl.drawArrays(gl.TRIANGLES, 0, 6); }
+    gl.blendEquation(gl.FUNC_ADD); gl.disable(gl.BLEND);
   }
   // the sea shader reads the map (unit 7) where it is on
   function foamBind(u){
