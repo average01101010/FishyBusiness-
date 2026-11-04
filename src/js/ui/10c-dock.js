@@ -305,8 +305,27 @@ const DOCK = (() => {
     if (!page) return;
     const y = keep ? dBody.scrollTop : 0, t0 = TITLE[page] || [page, page];
     dTitle.textContent = L(t0[0], t0[1]); drawTabs();
-    const h = PHONE.page(page); if (h !== shown){ shown = h; dBody.innerHTML = h; } dBody.scrollTop = y;
+    const h = dress(page, PHONE.page(page)); if (h !== shown){ shown = h; dBody.innerHTML = h; fold(); } dBody.scrollTop = y;
   }
+  // «Kystlys» U6 (docs/planer/ui-redesign.md, V3 A, 04.11.2026): the trade pages belong to a place (the plant, the shop, the yard), and
+  // each says first where that place is: «Du er her», or the nearest with its distance and Autonav there, one header in place of the
+  // «Nærmeste …» card that stood at the top, the middle or the foot of the page. Away from the place, a button that cannot be pressed
+  // says why in itself (data-why, styles.css U2) instead of a grey button and a note somewhere else on the page.
+  const PLACE = {lever:'mottak', is:'mottak', agn:'mottak', fiske:'butikk', utstyrb:'butikk', service:'butikk', fartoy:'verft', utstyr:'verft', verksted:'verft', maler:'verft'};
+  const PLACEN = {mottak:['fiskemottaket', 'the fish plant', 'Mottak', 'Plant'], butikk:['utstyrsbutikken', 'the tackle shop', 'Butikk', 'Shop'], verft:['verftet', 'the yard', 'Verft', 'Yard']};
+  const NEARCARD = /<div class="ph-card"><p class="ph-note">(?:Nærmeste|Nearest) [^<]*<b>[^<]*<\/b>[^<]*<\/p><button class="ph-btn" data-pa="goplace" data-id="[^"]*">[^<]*<\/button><\/div>/g;
+  function dress(pg, h){
+    const k = PLACE[pg]; if (!k || typeof portServices !== 'function') return h;
+    const b = S.boat, here = b.status === 'port' && !!portServices(portById(b.port), berthKind(b))[k], N = PLACEN[k];
+    if (here) return '<div class="pl-head here"><span>' + L('Du er her', 'You are here') + '</span><b>' + portById(b.port).name + '</b></div>' + h.replace(NEARCARD, '');
+    const n = placesNear(b.pos, k, 1)[0];
+    const head = '<div class="pl-head"><span>' + L('Nærmeste ' + N[0], 'Nearest ' + N[1]) + '</span><b>' + (n ? n.pt.name + ' · ' + fmt(n.d / NM, 1) + ' nm' : '–') + '</b>' + (n ? '<button class="ph-btn p" data-pa="goplace" data-id="' + n.pt.id + '">' + L('Autonav dit', 'Autonav there') + '</button>' : '') + '</div>';
+    const why = n ? L('Kjøpes ved ' + N[0] + ' i ' + n.pt.name, 'Bought at ' + N[1] + ' in ' + n.pt.name) : L('Kjøpes ved ' + N[0], 'Bought at ' + N[1]);
+    return head + h.replace(NEARCARD, '').replace(/<button((?:(?!data-why)[^>])*?)\sdisabled(?=[\s>=])/g, (m, a) => '<button' + a + ' data-why="' + why + '" disabled');
+  }
+  // a long explanation folds to three lines with «Mer» (the rules and the reasons stood as walls of text over what was to be done)
+  function fold(){ for (const e of dBody.querySelectorAll('.ph-note, p.note')){ if (e.textContent.length > 260 && !e.closest('.pl-head')) e.classList.add('fold'); } }
+  dBody.addEventListener('click', e => { const f = e.target.closest('.fold'); if (f){ f.classList.toggle('open'); } }, true);
   function open(a){
     const [pg, sb] = String(a).split(':'); if (!PHONE.DRAWER.has(pg)) return;
     const was = page; page = pg; menu = null; html = '';

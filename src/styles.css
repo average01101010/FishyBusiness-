@@ -1504,3 +1504,14 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 @media (max-width:560px){#hud .gauges{gap:5px} #hud .g b{font-size:11.5px} #hud .g .gl{letter-spacing:0}}
 @media (max-width:560px){.dk-b.hero{width:66px} .dk-b.hero .dk-i{width:52px;height:52px} .dk-b.hero .dk-i svg{width:26px;height:26px}}
 #toast.up{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 64px)}
+/* the place a trade page belongs to (ui/10c-dock.js dress, U6): where you are, or the nearest with Autonav there */
+.pl-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:12px 12px 4px;padding:10px 14px;border-radius:var(--r-card);background:var(--s-raised);color:var(--t-on-dark)}
+.pl-head span{flex:1 0 100%;font:600 var(--fs-cap)/1.2 var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--t-on-dark-2)}
+.pl-head b{flex:1 1 auto;font:700 var(--fs-body)/1.25 var(--sans)} .pl-head .ph-btn{margin:0}
+.pl-head.here{background:rgba(46,125,87,.12);color:var(--t-ink)} .pl-head.here span{color:var(--ok)}
+/* a long explanation folded to three lines; a tap opens it */
+#drawerBody .fold{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer;position:relative}
+#drawerBody .fold::after{content:'Mer ▾';position:absolute;right:0;bottom:0;padding-left:24px;background:linear-gradient(90deg,transparent,var(--s-card,#fff) 30%);font-weight:700;color:var(--t-ink)}
+:root[lang=en] #drawerBody .fold::after{content:'More ▾'}
+#drawerBody .fold.open{display:block;-webkit-line-clamp:unset}
+#drawerBody .fold.open::after{content:none}
