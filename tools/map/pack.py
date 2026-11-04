@@ -2,9 +2,12 @@
 # ({kind, tile, blocks:[[layer, bx, by, offset, length], ...]}), and the blocks, each deflated (raw) on its own. 16-bit blocks go as
 # the residual of the median predictor (left, up, up-left), zigzagged, low bytes then high bytes. The file name carries the first
 # 12 hex of the pack's SHA-256 (.wasm, which the artifact takes). manifest.json lists the layers and the packs.
+# 'u8p' (H1b R2) is u8 through the same median predictor, the residual kept modulo 256 in one byte: the smooth layers (the distance to
+# land, the openness, the sea floor) come out a quarter to two fifths smaller, and the values are the same.
 import os, json, zlib, hashlib, shutil, numpy as np
+import frame
 from frame import BLOCK, TILE
-DT = {'u8': np.uint8, 'i16': np.int16, 'f32': np.float32}
+DT = {'u8': np.uint8, 'u8p': np.uint8, 'i16': np.int16, 'f32': np.float32}
 def med16(q):
     q = q.astype(np.int32); n = q.shape[0]
     a = np.zeros_like(q); a[:, 1:] = q[:, :-1]
@@ -13,6 +16,18 @@ def med16(q):
     pr = np.where(c >= np.maximum(a, b), np.minimum(a, b), np.where(c <= np.minimum(a, b), np.maximum(a, b), a + b - c))
     d = q - pr; z = ((d << 1) ^ (d >> 31)) & 0xffff
     return np.concatenate([(z & 255).astype(np.uint8).ravel(), (z >> 8).astype(np.uint8).ravel()]).tobytes()
+def med_pred(q):
+    q = q.astype(np.int32); a = np.zeros_like(q); a[:, 1:] = q[:, :-1]; b = np.zeros_like(q); b[1:, :] = q[:-1, :]; c = np.zeros_like(q); c[1:, 1:] = q[:-1, :-1]
+    return np.where(c >= np.maximum(a, b), np.minimum(a, b), np.where(c <= np.minimum(a, b), np.maximum(a, b), a + b - c))
+def med8(q): return ((q.astype(np.int32) - med_pred(q)) & 255).astype(np.uint8).tobytes()
+def unmed8(b, n):
+    r = np.frombuffer(b, np.uint8).reshape(n, n).astype(np.int32); q = np.zeros((n, n), np.int32)
+    for i in range(n):
+        for j in range(n):
+            a = q[i, j - 1] if j else 0; bb = q[i - 1, j] if i else 0; cc = q[i - 1, j - 1] if i and j else 0
+            q[i, j] = ((min(a, bb) if cc >= max(a, bb) else max(a, bb) if cc <= min(a, bb) else a + bb - cc) + r[i, j]) & 255
+    return q
+def encode(blk, typ): return med16(blk) if typ == 'i16' else med8(blk) if typ == 'u8p' else np.ascontiguousarray(blk).tobytes()
 def raw_deflate(b): co = zlib.compressobj(9, zlib.DEFLATED, -15); return co.compress(b) + co.flush()
 # layers: {name: {c, ix0, iy0, nx, ny, type, kind, dec, arr (ny x nx)}}, all over whole blocks; vec: [(kind, (tx, ty), name, bytes, count)],
 # vector entries (vectors.py, chart.py) at the tile's first block, with the count as a sixth field
@@ -29,7 +44,7 @@ def write(layers, out, extra=None, vec=()):
             for i in range(L['nx'] // n):
                 bx, by = L['ix0'] // n + i, L['iy0'] // n + j; blk = arr[j * n:(j + 1) * n, i * n:(i + 1) * n]
                 if L.get('keep') is not None and (bx, by) not in L['keep']: continue   # a layer with blocks only where it has data (far)
-                raw = med16(blk) if L['type'] == 'i16' else np.ascontiguousarray(blk).tobytes()
+                raw = encode(blk, L['type'])
                 bk = round(n * L['c'])   # the block's size in km (10, or 50 for the far heights): the tile is where the block lies
                 tile = (0, 0) if L['kind'] == 'core' else (bx * bk // TILE, by * bk // TILE); k = (L['kind'], tile)
                 groups.setdefault(k, []).append([name, bx, by, raw_deflate(raw)])
@@ -64,17 +79,17 @@ def read_layer(d, name):
         for l, bx, by, off, ln, *_ in head['blocks']:
             if l != name: continue
             raw = zlib.decompress(data[at + off:at + off + ln], -15)
-            blk = unmed16(raw, n) if L['type'] == 'i16' else np.frombuffer(raw, DT[L['type']]).reshape(n, n)
+            blk = unmed16(raw, n) if L['type'] == 'i16' else unmed8(raw, n) if L['type'] == 'u8p' else np.frombuffer(raw, DT[L['type']]).reshape(n, n)
             j, i = by * n - L['iy0'], bx * n - L['ix0']; out[j:j + n, i:i + n] = blk
     return out, L
 # the coast's tiles: [(tx, ty, {layer: array over the 50 km tile})], every kind a pack per tile (the core too); the layers' extents
-# are the whole frame, and the manifest lists the tiles there are (a block outside them has no pack)
+# are the old frame (frame.OLD: the coast's cells keep their numbers), and the manifest lists the tiles there are (a block outside them has no pack)
 def write_tiles(tiles, spec, out, extra=None):
     if os.path.exists(out): shutil.rmtree(out)
     os.makedirs(out)
     man = dict(v=2, frame='utm33', block=BLOCK, tile=TILE, layers={}, packs=[], tiles=[[t[0], t[1]] for t in tiles], **(extra or {}))
     for name, (c, typ, kind, dec) in spec.items():
-        n = round(BLOCK / c); man['layers'][name] = dict(c=c, ix0=0, iy0=0, nx=round(1450 / c), ny=round(1720 / c), n=n, type=typ, kind=kind, dec=dec)
+        n = round(BLOCK / c); man['layers'][name] = dict(c=c, ix0=0, iy0=0, nx=round(frame.OLD[2] / c), ny=round(frame.OLD[3] / c), n=n, type=typ, kind=kind, dec=dec)
     total = 0; T = TILE // BLOCK
     for tx, ty, L, *V in tiles:
         groups = {}
@@ -85,7 +100,7 @@ def write_tiles(tiles, spec, out, extra=None):
             n = round(BLOCK / c); arr = np.asarray(L[name]).astype(DT[typ])
             for j in range(T):
                 for i in range(T):
-                    blk = arr[j * n:(j + 1) * n, i * n:(i + 1) * n]; raw = med16(blk) if typ == 'i16' else np.ascontiguousarray(blk).tobytes()
+                    blk = arr[j * n:(j + 1) * n, i * n:(i + 1) * n]; raw = encode(blk, typ)
                     groups.setdefault(kind, []).append([name, tx * T + i, ty * T + j, raw_deflate(raw)])
         for kind, blocks in sorted(groups.items()):
             off = 0; head = {'kind': kind, 'tile': [tx, ty], 'blocks': []}

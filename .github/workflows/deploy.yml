@@ -7,7 +7,7 @@ name: Appen på Hetzner
 on:
   push:
     branches: [main, ccr-5e1ba2f4-pusvyd]
-    paths: ['src/**', 'build.mjs', 'tools/map/kart.json', 'tools/map/game.py', 'tools/server/**', '.github/workflows/deploy.yml']
+    paths: ['src/**', 'build.mjs', 'tools/map/kart.json', 'tools/map/kart-release.json', 'tools/map/game.py', 'tools/server/**', '.github/workflows/deploy.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -29,7 +29,7 @@ jobs:
       # the unit tests of the core (tests/unit/run.mjs, 29.10.2026): seconds, no browser; a red one stops the roll-out before the map is fetched
       - name: Unit tests of the core
         run: node tests/unit/run.mjs
-      - name: The whole coast's map packs (the newest kart- release, joined with Senja's)
+      - name: The whole coast's map packs (the kart- release tools/map/kart-release.json names, else the newest, joined with src/data/map)
         run: |
           pip install requests
           python3 tools/map/game.py

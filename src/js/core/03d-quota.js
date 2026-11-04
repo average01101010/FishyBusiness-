@@ -298,9 +298,11 @@ function havF(id, sp, y){
   const tr = R < 130000 ? 0.28 : R > 330000 ? 0.33 : 0.28 + 0.05 * (R - 130000) / 200000;
   if (sp === 'torsk') return id === 'tral' ? R * tr / 32535.29 : R * (1 - tr) * 0.1281 / 10717.12;
   if (sp === 'hyse') return Y.fh; if (sp === 'sei') return Y.fs;
-  if (sp === 'snokrabbe') return 16594 / 12336;
-  return 1;
+  return HAVF_SP[sp] || 1;
 }
+// the species whose quota for the coming year is set already (snow crab: 16 594 t for 2027 against 12 336 t for 2026, regjeringen.no);
+// a table, not a test on the name, since a species shares its name with a vessel type (vesseltest)
+const HAVF_SP = {snokrabbe:16594 / 12336};
 // a group's quota in tonnes for the year (§ 5 for cod, haddock and saithe; the purse seiners' herring; the snow crab total)
 function havGroup(id, y){ const P = HAVLIC[id], o = {}; for (const sp in P.grp26) o[sp] = Math.round(P.grp26[sp] * havF(id, sp, y)); return o; }
 // a permit's vessel quota in kg for the year of H, in the shape licQ gives (haddock and saithe as [maximum, guaranteed], Infinity for

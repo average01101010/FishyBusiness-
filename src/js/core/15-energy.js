@@ -151,7 +151,7 @@ function wakeEarly(back){
 // the player could do nothing about it). On a route the autopilot steers instead (05-vessels.js vesselStep).
 const sleepAlone = () => asleep() && meAboard() && !crewAboard().length;
 function sleepDrift(H){
-  const b = S.boat, W = windAt(H), kn = 0.3 + 0.5 * clamp(W / 15, 0, 1), h = (windDir(H) - gridGamma(b.pos) + 180) * Math.PI / 180, d = kn * NM / 60;
+  const b = S.boat, W = windAt(H), kn = 0.3 + 0.5 * clamp(W / 15, 0, 1), h = (windDir(H) - gridGamma(b.pos) + 180) * Math.PI / 180, d = kn * NM / 60 * gridScale(b.pos);
   const to = {x:b.pos.x + Math.sin(h) * d, y:b.pos.y - Math.cos(h) * d}; b.v = 0;
   let held = true; try { held = isLand(to) || !!groundCheck(b.pos, to); } catch (e){}   // (a tile not in yet: she waits)
   if (held){ if (S.sleep && !S.sleep.held){ S.sleep.held = true; log('Båten drev inn mot land og ble liggende der.', 'The boat drifted in toward the land and lies there.', 'nav'); } return; }

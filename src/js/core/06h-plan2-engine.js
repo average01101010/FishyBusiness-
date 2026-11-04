@@ -305,7 +305,7 @@ function plan2Sea(o, H){
   if (pl.opsK === 'fish' && !pl.cut && !pl.returning && o.rhythm !== 'watch'){ if (meAboard() && S.energy != null && S.energy <= DRP2.enMin) plan2Cut(o, 'energy'); else if (drTired()) plan2Cut(o, 'tired'); }   // (round the clock: the watches rest, you in the bunk, plan2WatchTick)
   const nx = pl.wps[pl.idx];
   // (the jig before a haul ends when the soak is up, whether she came to the grounds early or late: the haul starts at its hour)
-  if (nx && nx.act && nx.act.due && b.status === 'fishing' && b.fishUntil != null && !b.gop && !b.deckStop){ const legMin = dist(b.pos, nx) / (Math.max(1, BOAT.vcruise || 7) * NM) * 60; const at = Math.max(S.t, Math.round(nx.act.due * 60 - legMin + 6)); if (Math.abs(b.fishUntil - at) > 2) b.fishUntil = at; }   // (six minutes to spare: she is never early)
+  if (nx && nx.act && nx.act.due && b.status === 'fishing' && b.fishUntil != null && !b.gop && !b.deckStop){ const legMin = kmTrue(b.pos, nx) / (Math.max(1, BOAT.vcruise || 7) * NM) * 60; const at = Math.max(S.t, Math.round(nx.act.due * 60 - legMin + 6)); if (Math.abs(b.fishUntil - at) > 2) b.fishUntil = at; }   // (six minutes to spare: she is never early)
   // the hold over the limit on a trip that would not land: the rest of the trip is the way to the plant
   if (!pl.full && pl.opsK === 'fish' && o.land && o.land.when !== 'trip' && holdTotal() >= DRP2.full * capHold() && !pl.wps.slice(pl.idx).some(w => w.port === o.M)){
     const M = plan2P(o, 'M'); if (!M) return;

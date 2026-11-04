@@ -35,7 +35,7 @@ function helmStep(dt){
 // where she is between ticks: on along her course at her speed, turning at her rate
 function helmPose(frac){
   if (dynLive()) return dynLivePose(frac);
-  const b = S.boat, h = S.helm, s = Math.min(0.5, (Date.now() - HELM.t) / 1000) * simRate(), hd = b.heading + h.yaw * s, d = h.v * NM / 3600 * s;
+  const b = S.boat, h = S.helm, s = Math.min(0.5, (Date.now() - HELM.t) / 1000) * simRate(), hd = b.heading + h.yaw * s, d = h.v * NM / 3600 * s * gridScale(b.pos);
   return {p:{x:b.pos.x + Math.sin(hd) * d, y:b.pos.y - Math.cos(hd) * d}, hd, frac};
 }
 // the places to lie within r km of p, nearest first: a harbour (its berth or its harbour point), Father's naust or a rorbu's quay

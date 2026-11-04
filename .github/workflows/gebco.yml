@@ -1,0 +1,36 @@
+# GEBCO 2025 (the GEBCO Compilation Group's global grid, 15 arc-seconds, free to use with the source named) on the wide frame's 1 km
+# cells (tools/map/deep.py gebco; H1b R2 of the ocean step). GEBCO's servers are closed to the cloud session and the grid is 4 GB, so
+# it is fetched here once and kept as a release gebco-<run number>; tools/map/kart.json's 'gebco' names the one kart.yml takes.
+# Started by a push that changes tools/map/gebco.json (on any branch).
+name: GEBCO-dybden for rammen
+on:
+  push:
+    paths: ['tools/map/gebco.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: '1'
+jobs:
+  gebco:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy==1.26.4 requests pyproj==3.7.2 rasterio
+      - name: GEBCO on the wide frame
+        run: |
+          df -h . | tail -1
+          set -o pipefail
+          python3 tools/map/deep.py gebco | tee gebco.json
+      - name: The release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=gebco-${{ github.run_number }}
+          cp tools/map/out/gebco/gebco1k.npz gebco1k.npz
+          gh release create "$TAG" gebco1k.npz --target "${{ github.sha }}" --title "GEBCO $TAG" \
+            --notes "GEBCO 2025 Grid (GEBCO Compilation Group (2025) GEBCO 2025 Grid, doi:10.5285/37c52e96-24ea-67ce-e063-7086abc05f29) på rammens 1 km-celler (frame.WIDE), tools/map/deep.py gebco, commit ${{ github.sha }}. $(tail -1 gebco.json)"

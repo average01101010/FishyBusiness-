@@ -45,7 +45,7 @@ const LEIA_AVOID = [];
 const leiaMaxWp = km => km <= 80 ? LEIA.maxWp : Math.min(40, Math.round(LEIA.maxWp + (km - 80) / 2.5));
 // a grid: cells of c km, numbered from the frame's origin from (ix0, iy0), nx by ny; mask (optional) the cells it may use
 function leiaGrid(x0, y0, x1, y1, c, mask){
-  const ix0 = Math.max(0, Math.floor(x0 / c)), iy0 = Math.max(0, Math.floor(y0 / c)), nx = Math.min(Math.floor(MAPB.x1 / c), Math.ceil(x1 / c)) - ix0, ny = Math.min(Math.floor(MAPB.y1 / c), Math.ceil(y1 / c)) - iy0, N = nx * ny;
+  const ix0 = Math.max(Math.floor(MAPB.x0 / c), Math.floor(x0 / c)), iy0 = Math.max(Math.floor(MAPB.y0 / c), Math.floor(y0 / c)), nx = Math.min(Math.floor(MAPB.x1 / c), Math.ceil(x1 / c)) - ix0, ny = Math.min(Math.floor(MAPB.y1 / c), Math.ceil(y1 / c)) - iy0, N = nx * ny;
   return {c, ix0, iy0, nx, ny, cost:new Float32Array(N).fill(-1), rock:null, mask:mask || null, fine:c < 0.15};
 }
 const leiaCell = (G, v) => ({x:(G.ix0 + v % G.nx + 0.5) * G.c, y:(G.iy0 + Math.floor(v / G.nx) + 0.5) * G.c});
@@ -66,7 +66,7 @@ function leiaShore(G, p){
   if (G.c < 0.075 && mapSimAt(p)){ const h = G.c / 4; try { for (const [dx, dy] of [[-h, -h], [h, -h], [-h, h], [h, h]]) if (isLand({x:p.x + dx, y:p.y + dy})) return 0; return Math.max(0.012, coastDist(p)); } catch (e){ return 0; } }
   // (a cell at a tile's seaward edge can lie in a block no pack covers: the core's word then)
   if (G.fine && mapSimAt(p)){ const L = MAPD.L.dc, ix = Math.floor(p.x / 0.1), iy = Math.floor(p.y / 0.1); if (mapBlockKnown(L, Math.floor(ix / L.n), Math.floor(iy / L.n))) return rcell(L, ix, iy); }
-  const d = rcell(MAPD.L.dc200, Math.floor(p.x / 0.2), Math.floor(p.y / 0.2)) * 0.1;
+  const d = dcCellFar(p);
   return G.c > 0.25 ? d - G.c * 0.35 : d;
 }
 // what it costs to sail through a cell, per km (Infinity: closed); worked out once per cell

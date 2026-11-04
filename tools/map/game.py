@@ -5,6 +5,8 @@
 # in the game's format (coast.py game, fetched by release.py). The small packs are joined so the artifact stays under its 511 files a
 # version: the far heights 4 x 4 tiles a file, the chart 2 x 2. A joined pack lists its tiles ('tiles' in the manifest), and the loader
 # (01b-mapdata.js) files it under each of them.
+# From H1b R2 (03.11.2026) the release's ramme/ (ramme.py build, beside game/) adds the far heights and the land at 200 m of the tiles
+# off the old frame (Svalbard, Jan Mayen, Iceland, the Faroes, East Greenland, Russia), and the far layers then cover the wide frame.
 #   python3 tools/map/game.py [release dir] [out]
 import os, sys, json, hashlib, shutil, zlib
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -46,6 +48,12 @@ def main(rel, out):
         if name in layers:
             a = layers[name]; assert all(a[k] == L[k] for k in ('c', 'n', 'type', 'kind', 'dec')), name
         layers[name] = L
+    rdir = os.path.join(os.path.dirname(rel), 'ramme'); ram = json.load(open(os.path.join(rdir, 'manifest.json'))) if os.path.exists(os.path.join(rdir, 'manifest.json')) else None
+    if ram:
+        for name, L in ram['layers'].items():
+            if name in layers:
+                a = layers[name]; assert all(a.get(k) == L.get(k) for k in ('c', 'n', 'type', 'kind', 'dec')), name
+            layers[name] = L
     # per kind and tile: Senja's own (src) first, then the release's for the tiles src does not have. Senja's region does not cover
     # its tiles whole (y from 310 km, the tiles from 300), so a tile both have is joined block by block, Senja's blocks first
     have = {}
@@ -53,6 +61,8 @@ def main(rel, out):
         for pk in man['packs']:
             if pk['kind'] == 'core' and d != SRC: continue
             have.setdefault((pk['kind'], tuple(pk['tile'])), []).append((d, pk))
+    if ram:   # the tiles off the old frame: none of them is in src or the release's game/
+        for pk in ram['packs']: assert (pk['kind'], tuple(pk['tile'])) not in have, pk['file']; have[(pk['kind'], tuple(pk['tile']))] = [(rdir, pk)]
     packs, groups = [], {}
     for (kind, t), srcs in sorted(have.items()):
         g = GROUP.get(kind)
@@ -89,5 +99,5 @@ def main(rel, out):
 if __name__ == '__main__':
     rel = sys.argv[1] if len(sys.argv) > 1 else None
     if not rel:
-        sys.path.insert(0, HERE); import release; rel = release.fetch(release.newest())
+        sys.path.insert(0, HERE); import release; tag = release.pinned(); rel = release.fetch(tag); release.fetch_ramme(tag)
     main(rel, sys.argv[2] if len(sys.argv) > 2 else os.path.join(HERE, 'out', 'game'))

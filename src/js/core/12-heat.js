@@ -79,8 +79,9 @@ function heatTick(){
   // a jump in time (catch-up after being away) makes every cell old news
   if (HEATC.t >= 0 && Math.abs(S.t - HEATC.t) > HEAT.glow){ HEATC.cells.clear(); HEATC.rev++; }
   HEATC.t = S.t;
-  const cs = T.cs, p = b.pos, hr = Math.floor(S.t / 60), ahead = b.status === 'sailing' ? (b.v || 0) * NM / 60 * 2 : 0;
-  const hx = Math.sin(b.heading || 0) * ahead, hy = -Math.cos(b.heading || 0) * ahead, R = T.r + cs, R2 = R * R, r2 = T.r * T.r, want = [];
+  // (the sounder's reach and what lies ahead are true km, k of them on the grid: gridScale, H1b of the ocean step)
+  const cs = T.cs, p = b.pos, hr = Math.floor(S.t / 60), gk = gridScale(p), ahead = b.status === 'sailing' ? (b.v || 0) * NM / 60 * 2 * gk : 0, Tr = T.r * gk;
+  const hx = Math.sin(b.heading || 0) * ahead, hy = -Math.cos(b.heading || 0) * ahead, R = Tr + cs, R2 = R * R, r2 = Tr * Tr, want = [];
   for (let ix = Math.floor((p.x - R - Math.abs(hx)) / cs); ix <= Math.ceil((p.x + R + Math.abs(hx)) / cs); ix++)
     for (let iy = Math.floor((p.y - R - Math.abs(hy)) / cs); iy <= Math.ceil((p.y + R + Math.abs(hy)) / cs); iy++){
       const x = (ix + 0.5) * cs, y = (iy + 0.5) * cs, d2 = (x - p.x) ** 2 + (y - p.y) ** 2, d2a = (x - p.x - hx) ** 2 + (y - p.y - hy) ** 2;
@@ -89,7 +90,7 @@ function heatTick(){
       if (!c){ c = {x, y, v:null, t:-1e9, h:-1, seen:-1e9, near:1}; HEATC.cells.set(k, c); }
       // near: the closest the cell has come to the boat (a share of the radius) while it has stayed lit, so the picture can fade towards
       // the ring's edge (03c-heat.js heatImage)
-      if (d2 <= r2){ const n = Math.sqrt(d2) / T.r; c.near = S.t - c.seen > HEAT.glow ? n : Math.min(c.near, n); c.seen = S.t; }
+      if (d2 <= r2){ const n = Math.sqrt(d2) / Tr; c.near = S.t - c.seen > HEAT.glow ? n : Math.min(c.near, n); c.seen = S.t; }
       if (!c.v || S.t - c.t >= T.every || c.h !== hr) want.push([Math.min(d2, d2a), c]);
     }
   // the afterglow fades, and old cells are let go

@@ -65,8 +65,8 @@ function plan2LegH(o, a, ap, b, bp, v){
   if (!a || !b) return 0; v = Math.max(1, v || BOAT.vcruise || 7);
   if (drCK(a, ap) === drCK(b, bp) || dist(a, b) < 0.005) return 0;
   const L = o.legs && o.legs[drLK(a, ap, b, bp)];
-  if (L && !L.none && L.d != null) return L.d / (v * NM);
-  return dist(a, b) * DRP2.legF / (v * NM);
+  if (L && !L.none && L.d != null) return L.d / gridScale({x:(a.x + b.x) / 2, y:(a.y + b.y) / 2}) / (v * NM);   // (the way's grid km as true ones, H1b)
+  return kmTrue(a, b) * DRP2.legF / (v * NM);
 }
 // ---- the state the day is reckoned from: where she lies, the hold, the gear in the sea and aboard, the crew, you. Tests pass their own
 function plan2State(o){
