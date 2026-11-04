@@ -240,6 +240,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 ## 10.7 Små ryddejobber
 
+
 - **M9 står igjen** (03.11.2026): hjemhavn per fylke i mediekortet (nå per landsdel), og bilder av formatene i mediekortet (tas nå for hånd fra demobygget).
 - **M7 og M8 står igjen** (02.11.2026): sponsede design i Malerverkstedet, et flagg som vaier (nå en stiv plate), CSV-import av meglerens oppføringer (`tools/broker/import.py`), og at byggene eksporteres med `anchors.sign` (står i skriptene; bpy 4.5.4 finnes ikke for Python 3.13 her). IAB-tersklene er sjekket mot IAB UK og AdExchanger, men selve retningslinjen er ikke lest (iab.com og mediaratingcouncil.org er stengt herfra); Jonas laster ned PDF-en og sjekker før vi selger på tallene.
 - **M5 står igjen** (02.11.2026): navnet malt og flagget heist i selve 3D-modellen (nå et kort over bildet), innbyttebåten liggende ved verftets kai med «Til salgs» til neste uke.
@@ -256,6 +257,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 ## Strøket 04.11.2026 (3D-nivået og porten, PR #44 og #45)
 - Auto senker 3D-nivået på en enhet som har tapt konteksten, krasjet eller hengt i 3D (Jonas: «3d nivå skal senkes automatisk om det må det»), PR #45, `qdowntest`.
 - Porten for automatiske rettinger (`tools/autofix/gate.py`) teller ikke lenger rettingens egne skjermbilder i `docs/pr/<gren>/` som 1998 linjer (Jonas: «porten for automatiske rettinger skal slippe gjennom skjermbilder»), PR #44.
+
+## Strøket 04.11.2026 (havsteget H1b R5, ccr-h1b-r5-is, rullet ut d008df9)
+
+- `klima.yml` og `tidevann.yml` har fått vakten mot gjentatte releaser (`tools/ci/seen.py`), som `is.yml` og `dybde.yml`. Utrullingen av R5 startet dem på nytt og lager `klima-9` og `tide-9`, som ikke brukes (`src/data` har `klima-8` og `tide-8`); den neste kjøringen lager én release med merket, og deretter stopper de.
 
 ## Strøket 04.11.2026 (båtnavnet, ccr-bf5ccf26-rci1bj)
 

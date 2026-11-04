@@ -18,16 +18,24 @@ jobs:
     timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - id: seen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/ci/seen.py klima tools/climate/klima.json tools/climate/fetch.py
+      - if: steps.seen.outputs.skip != 'true'
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install requests
-      - name: Open-Meteo's monthly means
+      - if: steps.seen.outputs.skip != 'true'
+        run: pip install requests
+      - if: steps.seen.outputs.skip != 'true'
+        name: Open-Meteo's monthly means
         run: python3 tools/climate/fetch.py climate.json
-      - name: The release
+      - if: steps.seen.outputs.skip != 'true'
+        name: The release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG=klima-${{ github.run_number }}
           gh release create "$TAG" climate.json --target "${{ github.sha }}" --title "Klima $TAG" \
-            --notes "Klimaet langs kysten, månedsmidler fra Open-Meteo (CC BY 4.0): ERA5-reanalysen (Copernicus/ECMWF) og marine-API-et (tools/climate/fetch.py), commit ${{ github.sha }}."
+            --notes "Klimaet langs kysten, månedsmidler fra Open-Meteo (CC BY 4.0): ERA5-reanalysen (Copernicus/ECMWF) og marine-API-et (tools/climate/fetch.py), commit ${{ github.sha }}. ${{ steps.seen.outputs.mark }}"
