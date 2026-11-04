@@ -41,7 +41,24 @@ async function bootMap(){ await Promise.all([(async () => { await mapStart(); aw
 // the map's packs go first), and the 3D view waits for it (MODELS, view3d/25-controls.js show): every reader there sees the models
 // as before, and none keeps a «no model» for good. A first start on 20 Mbit/s had the letter after 35 s; now it is the page and the map.
 const MODELS = {done:false, wait:[], total:0, got:0, failed:[]};
-function modelsReady(){ if (!MODELS.done) bootDataLate(); return MODELS.done ? Promise.resolve() : new Promise(r => { MODELS.wait.push(r); modelsLabel(); }); }
+// The 3D view's first picture timed (04.11.2026, the first start): the boot event above ends when the game is built, before the
+// letter and the 3D view, so the wait after «Start» never reached the error list. ask: when the 3D view was first asked for (the letter
+// and the start place are off the screen), shown: two frames after it came up (loaderGone). Sent once as the event 'first3d' with the seconds from
+// the ask (wait_s, of it the models' part models_s), from the navigation less the gate and the background (total_s), and whether this
+// device had the app's worker already (warm: false is a first visit or a browser without it)
+const B3D = {ask:0, models:0, sent:false, res:null, warm:!!(navigator.serviceWorker && navigator.serviceWorker.controller)};
+function boot3dAsk(){ if (!B3D.ask) B3D.ask = performance.now(); }
+function boot3dShown(){
+  if (B3D.res || B3D.wait3 || !B3D.ask || !BOOTW.done) return; B3D.wait3 = true;
+  // (two frames on: the 3D view's own first frame, the heavy one, has been drawn by then)
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+  const n = performance.now();
+  B3D.res = {wait_s:Math.round((n - B3D.ask) / 100) / 10, models_s:Math.round(B3D.models / 100) / 10, total_s:Math.round((n - bootAway()) / 100) / 10, warm:B3D.warm,
+    net:(navigator.connection && navigator.connection.effectiveType) || null, mem:navigator.deviceMemory || null};
+  boot3dSend(); }));
+}
+function boot3dSend(){ if (!B3D.res || B3D.sent || typeof CLOUD === 'undefined' || !CLOUD.sid) return; B3D.sent = true; cloudEv('first3d', B3D.res); }
+function modelsReady(){ boot3dAsk(); if (!MODELS.done){ bootDataLate(); const t = performance.now(); MODELS.wait.push(() => { B3D.models = performance.now() - t; }); } return MODELS.done ? Promise.resolve() : new Promise(r => { MODELS.wait.push(r); modelsLabel(); }); }
 function dataEls(){ return [...document.querySelectorAll('script[type="application/octet-stream"][data-src]')]; }
 function dataEarly(){
   const ty = new Set(['trebat']);

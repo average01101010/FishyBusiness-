@@ -164,6 +164,7 @@ hooks.onLog = () => { panelDirty = true; };
 function booting(){ return document.body.classList.contains('booting'); }
 function loaderGone(){
   const ld = document.getElementById('loader'); if (ld) ld.classList.add('gone');
+  if (typeof boot3dShown === 'function' && typeof G3 !== 'undefined' && G3.isActive()) boot3dShown();   // the first 3D picture timed (11-boot.js)
   if (!booting()) return; document.body.classList.remove('booting');
   const q = (toast._q || []).filter(([m]) => m !== t('loading3d')); toast._q = null;
   let at = 700;   // after the fade

@@ -41,7 +41,19 @@
     for (const f of QSTRIP){ const dx = x - f.x, dz = z - f.z, u = dx * f.ux + dz * f.uz, v = dx * f.nx + dz * f.nz; if (Math.abs(u) <= f.hl + 8 && v >= -(f.depth + 8) && v <= 30) return true; }
     return false;
   }
-  function bldOnUnit(B, i){ const ca = Math.cos(B.a[i]), sa = Math.sin(B.a[i]), nu = Math.ceil(B.l[i] / 3), nv = Math.ceil(B.w[i] / 3);
+  // a quick test first (04.11.2026, the first start: the grid below ran ~40 points of every one of Senja's 32 724 buildings through every
+  // harbour unit on the coast, 3-4 s of the start): a point of the building is within its half diagonal of the middle, and each test
+  // below is true only within a box round its unit (R), site (60 m) or quay face (its reach), so a building with none of those boxes
+  // within reach has no point that could be true, and the answer is the same false
+  function bldNear(x, z, r){
+    for (const U of UNITA){ const R = (U.y ? 200 : 120) + r; if (Math.abs(x - U.o[0]) <= R && Math.abs(z - U.o[1]) <= R) return true; }
+    for (const s of SITES || sitesNow()) if (Math.abs(x - s.o[0]) <= 60 + r && Math.abs(z - s.o[1]) <= 60 + r) return true;
+    if (!QSTRIP) onQuayStrip(0, 0);
+    for (const f of QSTRIP){ const R = Math.hypot(f.hl + 8, Math.max(f.depth + 8, 30)) + r; if (Math.abs(x - f.x) <= R && Math.abs(z - f.z) <= R) return true; }
+    return false;
+  }
+  function bldOnUnit(B, i){ if (!bldNear(B.x[i], B.z[i], 0.5 * Math.hypot(B.l[i], B.w[i]) + 1)) return false;
+    const ca = Math.cos(B.a[i]), sa = Math.sin(B.a[i]), nu = Math.ceil(B.l[i] / 3), nv = Math.ceil(B.w[i] / 3);
     for (let p = 0; p <= nu; p++) for (let q = 0; q <= nv; q++){ const u = p / nu - 0.5, v = q / nv - 0.5; if (onQuayStrip(B.x[i] + ca * u * B.l[i] - sa * v * B.w[i], B.z[i] + sa * u * B.l[i] + ca * v * B.w[i]) || onSite(B.x[i] + ca * u * B.l[i] - sa * v * B.w[i], B.z[i] + sa * u * B.l[i] + ca * v * B.w[i])) return true; if (onUnit(B.x[i] + ca * u * B.l[i] - sa * v * B.w[i], B.z[i] + sa * u * B.l[i] + ca * v * B.w[i], 3)) return true; } return false; }
   const PAL_HOUSE = [[0.9,0.9,0.87],[0.9,0.9,0.87],[0.62,0.18,0.14],[0.87,0.72,0.35],[0.78,0.52,0.25],[0.72,0.74,0.73],[0.6,0.7,0.78],[0.55,0.62,0.52],[0.9,0.9,0.87]];
   const PAL_CABIN = [[0.33,0.25,0.19],[0.55,0.17,0.13],[0.36,0.3,0.24],[0.78,0.52,0.25],[0.2,0.18,0.16]];
