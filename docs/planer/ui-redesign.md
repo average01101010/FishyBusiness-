@@ -240,3 +240,20 @@ Rekkefølgen U0 → U1 → U2 er fundamentet. Etter det kan U3–U10 tas i den r
   - Fangstkortene (`ui/05j-catchfeed.js`, kroken `catchFeed` i `addCatch`) viser art, vekt og verdi ved nærmeste mottak, og over dem kg og kg/t for plassen.
   - **Fiskekartets farger beholdes**: paletten hvit, blå, grønn, gul, rød er Jonas' valg fra 05.10.2026 og er slik ekte ekkolodd viser fisk. `--fish` brukes ikke på kartet.
   - Gjenstår av U4: en forklaring av fargene i minikartet, og kameraet ned på dekk ved første fisk.
+- 04.11.2026 **U5**:
+  - Et nytt tips tar bort toast-meldingen fra steget før. En toast under 1,2 s gamle står, fordi den er svaret på trykket.
+  - En toast som ville dekket tipset, flytter seg til toppen (`tipToast`). Tips om statusboksen står til høyre for den.
+  - «Det lille kartet» står i stedet for «GPS-en».
+  - Testene: tutdrift 5, hbtest 16 og cashfxtest 4.
+- 04.11.2026 **U6**:
+  - Stedshodet `dress` i `ui/10c-dock.js` står på handelssidene. Det viser «Du er her», eller nærmeste sted med Autonav, og erstatter kortet `nearHint`.
+  - Borte fra stedet får knapper som ikke kan trykkes `data-why` («Kjøpes ved … i …»).
+  - Lange forklaringer foldes til tre linjer med «Mer».
+  - Grepet om fem steder ble mindre enn planlagt: knappelinja var allerede delt etter Mottak, Butikk, Verft, Bygd og Beholdning, så sidene står, men hvert sted sier nå hvor det er.
+  - Testene: shoptest 21, itemcardtest 20, geartest 46 og docktest 96. Én kjøring av docktest under last var rød på viftene og grønn alene.
+- 04.11.2026 **U7**:
+  - «Nå» på hjemskjermen (`nowCards`): reglene her, best betalt torsk blant de fire nærmeste mottakene, og rederiet når det trenger deg.
+  - Telefonen åpnet allerede på hjem etter lukking, og Kaiboden var allerede ett ikon. Testen hadde åpnet Haill og Trim direkte.
+  - Testene: kystkarttest 5, merketest 12 og kystvakttest 11.
+- 04.11.2026 **U8** (påbegynt): det som er over i dagboka, er grått med én strek. Gjenstår: rutepanelet (+/− for fart), høyre side i dagbokfanene, startsted med kart, og instrumentforklaringer i kartplotteren.
+- **Gjenstår:** U8 resten, U9 (feiringen) og U10 (ordboka).

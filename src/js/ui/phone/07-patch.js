@@ -8,7 +8,9 @@
        ['Statusboksen er fire målere: diesel, last, energi og sjø. Under dem står bare det som gjelder nå, og et trykk på målerne viser alle tallene.', 'The status box is four gauges: diesel, hold, energy and sea. Under them only what matters now, and a tap on the gauges shows all the figures.'],
        ['Knappelinja løfter fram det du bør gjøre nå, viser knapper som ikke kan brukes med stiplet ring, og samler resten under «Mer».', 'The button row lifts up what to do now, shows buttons that cannot be used with a dashed ring, and gathers the rest under «More».'],
        ['Fisken som kommer over ripa, vises som kort til høyre med art, vekt og hva den er verdt, og over dem hvor mye plassen gir i timen.', 'The fish coming over the rail shows as cards at the right with species, weight and worth, and above them what the spot gives an hour.'],
-       ['Knapper, faner og kort har fått ett felles utseende i telefonen og skuffen.', 'Buttons, tabs and cards share one look in the phone and the drawer.']
+       ['Knapper, faner og kort har fått ett felles utseende i telefonen og skuffen.', 'Buttons, tabs and cards share one look in the phone and the drawer.'],
+       ['Butikken, mottaket og verftet sier øverst om du er der, eller hvor nærmeste er, med Autonav dit. En knapp du ikke kan trykke på, sier hvorfor.', 'The shop, the plant and the yard say at the top whether you are there, or where the nearest is, with Autonav there. A button you cannot press says why.'],
+       ['Telefonens hjemskjerm viser reglene der du er og hvor torsken er best betalt, og et trykk tar deg rett til appen.', 'The phone\'s home screen shows the rules where you are and where cod pays best, and a tap takes you straight to the app.']
     ]],
     ['logo-031126', '03.11.2026', 'Ny logo', 'A new logo', [
        ['Det Store Blå har fått ny logo: et anker laget av ordene. Du ser den når spillet laster, når du logger inn, på app-ikonet og på bildet når du deler Ukas fangst.', 'Det Store Blå has a new logo: an anchor made of the words. You see it while the game loads, when you sign in, on the app icon and on the picture when you share the week\'s catch.'],
