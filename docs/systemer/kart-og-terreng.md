@@ -373,6 +373,12 @@ Jonas valgte V2 B 03.11.2026: hele Svalbard i detalj, sammen med Jan Mayen, Bjø
 - **Flislagene** (`pack.write_tiles`) går nå fra flisene lengst nord og vest: `mask` fra celle (−4 000, −30 000). Den gamle rammens celler har de samme numrene, fordi de telles fra origo. `dcCell`, som tallene i rutedataene var regnet for, brukes ikke lenger.
 - **Lengdegraden vest for Greenwich** (Jan Mayen, Island) ble vist som Ø/E. Nå V/W i GPS-en, posisjonen, dagboka og 3D-instrumentet.
 - **Vakten mot gjentatte releaser** (BACKLOG 10.7): `tools/ci/seen.py` legger hashen av filene som starter en workflow inn i releasens notater som `[src …]`. En push med en fil det alt er laget en release fra (en sammenslåing i arbeidsgrenen), stopper ved første jobb. Gjelder `kart.yml`, `gebco.yml`, `s2.yml`, `dybde.yml` og `sjomerker.yml`. En kjøring for hånd går alltid.
+- **Releasen `kart-31`** (04.11.2026, `kart.json` run 17), pinnet i `kart-release.json`:
+  - `kart-game.tar.gz` er 500 MB mot 386 MB i `kart-29` (+30 %, som anslått), med 1 064 pakker mot 672 (98 fliser × 4). `kart-ramme.tar.gz` er 16,7 MB.
+  - Bygget med hele kysten: 266 fliser, `dist/map` 455 MB og hele `dist` 507 MB; med vec-pakkene (appen) 535 MB kart og 583 MB i alt. Pages tar 1 GB.
+  - Kjernen er 4,70 MB som før (`deep` +0,9 kB fra Kartverkets 50 m ved Svalbard).
+  - **Actions:** 45 minutter i alt mot 32 for `kart-29`. `national` 8,5 minutter, flisjobbene rundt 16 minutter, `ramme` 13,4 minutter side om side, og `pack` 19,4 minutter. Satellittfargen for øyene (`s2.yml`) tok rundt 20 minutter og dybden (`dybde.yml`) noen få.
+- **Lavteppet** (`aCov`, det lyse teppet fastlandets vidde får på høy kvalitet) dempes nord for 71,5° N der satellittfargen finnes, ellers så flatene ved Longyearbyen rimfrosne ut. Mindre av skyggerens grå berg ble prøvd og gjorde fjellene hvitere, så det står som før. Satellittens farge for grusen der er lys (rundt 11 % refleksjon, dobbelt så lyst som skogen på fastlandet), så bakken er lysere enn langs kysten.
 - **Testen** er `tests/svalbardtest.py` (3D, trenger hele kysten og `dist-vec`): ved Longyearbyen, Bjørnøya og Jan Mayen kommer flisas pakker, land er land og sjø er sjø, dybden er fra dataene, Longyearbyen har byggene og kaiene i 3D, bakken er ikke grønn, og bildene tas i begge formater. `teleport3d` har fått Longyearbyen og Jan Mayen.
 
 ## 4.12c Sjømerker langs hele kysten (05.10.2026)
