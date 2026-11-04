@@ -494,35 +494,41 @@ Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood f
   - 362 `bkLanded(H, bk, all)`
   - 364 `bkNews(H)`
 
-## `src/js/core/03e-rules.js` (271 linjer)
+## `src/js/core/03e-rules.js` (426 linjer)
 
 The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a place, a time, the boat's length, the gear and the
 
-  - 28 `ruPip(rings, x, y)`
-  - 29 `ruIn(P, x, y)`
-  - 34 `ruBlock(bx, by)`
-  - 52 `ruBits(p)`
-  - 55 `insideFjord(p)`
-  - 56 `insideBaseline(p)`
-  - 58 `blDist(p)`
-  - 64 `ruHom(p)`
-  - 70 `landsdel(p)`
-  - 71 `ruLok(p)`
-  - 73 `ruZone(p)`
-  - 74 `ruAt(id, p)`
-  - 76 `ruLineName(ref)`
-  - 90 `kcQuota(ll)`
-  - 94 `rulesAt(q)`
-  - 190 `ruBlockMsg(q)`
-  - 192 `ruMinSize(sp, p)`
-  - 205 `fjordLimits(p, H)`
-  - 219 `ruCtx()`
-  - 223 `ruNow()`
-  - 229 `ruLayerBlock(bx, by, q, budget)`
-  - 241 `ruWpQ(w)`
-  - 246 `ruWpMsg(w)`
-  - 253 `ruOpenNear(p, q, maxKm)`
-  - 262 `ruTips()`
+  - 29 `ruPip(rings, x, y)`
+  - 30 `ruIn(P, x, y)`
+  - 35 `ruBlock(bx, by)`
+  - 53 `ruBits(p)`
+  - 70 `ruSeaBlock(bx, by)`
+  - 84 `ruSea(p)`
+  - 88 `ruShelf(p)`
+  - 94 `zoneLic(c)`
+  - 95 `zoneLicApply(c)`
+  - 99 `insideFjord(p)`
+  - 100 `insideBaseline(p)`
+  - 102 `blDist(p)`
+  - 108 `ruHom(p)`
+  - 114 `landsdel(p)`
+  - 115 `ruLok(p)`
+  - 117 `ruZone(p)`
+  - 118 `ruAt(id, p)`
+  - 120 `ruLineName(ref)`
+  - 134 `kcQuota(ll)`
+  - 151 `ruSeaRules(c, q, ll, md, add)`
+  - 224 `rulesAt(q)`
+  - 335 `ruBlockMsg(q)`
+  - 337 `ruMinSize(sp, p)`
+  - 350 `fjordLimits(p, H)`
+  - 374 `ruCtx()`
+  - 378 `ruNow()`
+  - 384 `ruLayerBlock(bx, by, q, budget)`
+  - 396 `ruWpQ(w)`
+  - 401 `ruWpMsg(w)`
+  - 408 `ruOpenNear(p, q, maxKm)`
+  - 417 `ruTips()`
 
 ## `src/js/core/03f-fiske.js` (356 linjer)
 
@@ -2101,18 +2107,18 @@ the old tabs live on as phone apps
   - 31 `ordl()`
   - 36 `ordlBest(tabs)`
 
-## `src/js/ui/phone/03-regler.js` (60 linjer)
+## `src/js/ui/phone/03-regler.js` (63 linjer)
 
 the Regler app (R3 of the rules plan, 05.10.2026): «Her og nå» answers «can I fish here?» for your boat, gear and target where she is,
 
   - 8 `ruList(r)`
   - 11 `ruWhere(p)`
-  - 17 `ruGrid(p, len, H, hand)`
-  - 21 `ruChk()`
-  - 23 `ruHere()`
-  - 29 `ruCheck()`
-  - 44 `ruLearn()`
-  - 54 `regler()`
+  - 19 `ruGrid(p, len, H, hand)`
+  - 23 `ruChk()`
+  - 25 `ruHere()`
+  - 31 `ruCheck()`
+  - 46 `ruLearn()`
+  - 57 `regler()`
 
 ## `src/js/ui/phone/04-kvote.js` (71 linjer)
 
@@ -2147,14 +2153,14 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1021 linjer)
+## `src/js/ui/phone/07-patch.js` (1029 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1014 `patch()`
+  - 1022 `patch()`
 
-## `src/js/ui/phone/08-home-papers-merker.js` (94 linjer)
+## `src/js/ui/phone/08-home-papers-merker.js` (100 linjer)
 
   - 1 `home()`
   - 20 `nearHint(kind)`
@@ -2162,12 +2168,13 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 25 `tattoos()`
   - 43 `papBladB()`
   - 48 `papPermit()`
-  - 53 `papKv()`
-  - 59 `papBiz()`
-  - 65 `fsChip()`
-  - 67 `fsCard()`
-  - 74 `merker()`
-  - 86 `lore()`
+  - 54 `papZlic()`
+  - 59 `papKv()`
+  - 65 `papBiz()`
+  - 71 `fsChip()`
+  - 73 `fsCard()`
+  - 80 `merker()`
+  - 92 `lore()`
 
 ## `src/js/ui/phone/09-vaer-post-salg-redning.js` (140 linjer)
 
@@ -2273,7 +2280,7 @@ Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/pla
   - 115 `mgHere()`
   - 122 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (283 linjer)
+## `src/js/ui/phone/14-act.js` (284 linjer)
 
   - 2 `act(a, d)`
   - 8 `act0(a, d)`
@@ -3083,24 +3090,24 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 118 `ridged(x, y)`
   - 119 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (571 linjer)
+## `src/js/view3d/01-shaders.js` (588 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
 - **144** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **176** the boat's own foam, when she has way on
-- **207** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
-  - 481 `cloudStep(dt)`
-  - 488 `skyFrame(u, Hh, tn, bv)`
-  - 503 `glsl3(src, fs)`
-  - 511 `compile(type, src, nm)`
-  - 518 `program(vs, fs, attrs, nm = '?')`
-  - 526 `buf(data, target, usage)`
-  - 531 `airSet(u, terr)`
-  - 546 `sunT0()`
-  - 553 `attr(loc, b, size)`
-  - 569 `upload(pos, col, idx)`
+- **210** the boat's own foam, when she has way on
+- **218** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
+  - 498 `cloudStep(dt)`
+  - 505 `skyFrame(u, Hh, tn, bv)`
+  - 520 `glsl3(src, fs)`
+  - 528 `compile(type, src, nm)`
+  - 535 `program(vs, fs, attrs, nm = '?')`
+  - 543 `buf(data, target, usage)`
+  - 548 `airSet(u, terr)`
+  - 563 `sunT0()`
+  - 570 `attr(loc, b, size)`
+  - 586 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (99 linjer)
 
@@ -3438,7 +3445,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 490 `mastTop(G)`
   - 494 `updateFlag(t, appW)`
 
-## `src/js/view3d/14-sea.js` (303 linjer)
+## `src/js/view3d/14-sea.js` (351 linjer)
 
 ---------- sea ----------
 
@@ -3460,19 +3467,20 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 148 `foamInit()`
   - 164 `wavePh()`
   - 171 `foamStep(dt, t)`
-  - 223 `foamBind(u)`
-- **230** the sea state over the near terrain and the whole map
-  - 237 `ssLevel(n, unit)`
-  - 239 `ssRect(L)`
-  - 240 `ssWork(L, until)`
-  - 263 `ssStep(rdt)`
-  - 265 `ssBlend(L)`
-  - 267 `ssTex(L, x, z, out)`
-  - 274 `ssAt(x, z)`
-  - 283 `seaDisp(x, z, t, S, fade)`
-  - 294 `seaFade(x, z)`
-  - 295 `seaH(x, z, t)`
-  - 301 `seaHFast(x, z, t)`
+  - 231 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
+  - 271 `foamBind(u)`
+- **278** the sea state over the near terrain and the whole map
+  - 285 `ssLevel(n, unit)`
+  - 287 `ssRect(L)`
+  - 288 `ssWork(L, until)`
+  - 311 `ssStep(rdt)`
+  - 313 `ssBlend(L)`
+  - 315 `ssTex(L, x, z, out)`
+  - 322 `ssAt(x, z)`
+  - 331 `seaDisp(x, z, t, S, fade)`
+  - 342 `seaFade(x, z)`
+  - 343 `seaH(x, z, t)`
+  - 349 `seaHFast(x, z, t)`
 
 ## `src/js/view3d/15-env-mooring.js` (158 linjer)
 
@@ -3644,7 +3652,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (361 linjer)
+## `src/js/view3d/20-trawl-seine.js` (366 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -3669,8 +3677,9 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 257 `npcClock(Hf)`
   - 265 `npcHead(n, t)`
   - 280 `npcFollow(n, t)`
-  - 292 `drawNPC(eye, t, H, VP)`
-  - 340 `npcCrewDraw(n, K, eye, t)`
+  - 294 `npcPhase(id)`
+  - 295 `drawNPC(eye, t, H, VP)`
+  - 345 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (165 linjer)
 

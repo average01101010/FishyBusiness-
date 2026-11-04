@@ -12,6 +12,8 @@
 #  - L: the regulation layers that concern the game (KEEP below), with their texts. Areas that follow the shore in detail are drawn the same way
 #    through the land (from the game's 25 m land, at 50 m), so they keep their edges across the sea and lose the shore's detail.
 #  - hom, lok: the main statistics areas and the locations (from 2018), for the landing notes.
+#  - sea, shelf (H1b R4, 04.11.2026): the zones off the coast (Norway's, the neighbours', the international waters) and Norway's
+#    continental shelf, see seas() below.
 # Coordinates: in units of 10 m, every ring or line as [x0, y0, dx1, dy1, ...].
 #   python3 tools/rules/regler.py [map dir]      (default tools/map/out/game, else the newest kart- release through game.py)
 import os, re, sys, json, time, math, datetime, numpy as np, shapely, contourpy
@@ -331,8 +333,10 @@ BIG = 400   # an area with more corners than this, near the coast, is drawn thro
 # the layers the game uses: only what concerns its species (cod, haddock, saithe, pollack, ling, tusk, redfish, halibut, brown crab)
 # and its gear (jig, line, net, pot), and king crab, which is coming (Jonas 04.10.2026: «Kongekrabbe skal kunne fiskes i spillet»). Left
 # out (Jonas 04.10.2026: no lobster, nothing for species the game does not have): lobster (9, 10), oysters (15), the fjord lines' points (3, the lines carry the names), wrasse (17), beaked redfish (20), plaice (40), wolffish (34), sea ranching (27), trawl and
-# seine (4, 11, 13, 14, 32, 33, 35, 36), Svalbard (25, 26). Of 0 the closed fields for conventional gear, of 7 the halibut area (§ 40).
-KEEP = {0, 1, 2, 5, 6, 7, 8, 12, 16, 18, 19, 24, 28, 29, 30, 31, 37, 38, 39}
+# seine (4, 11, 13, 14, 32, 33, 35, 36). Of 0 the closed fields for conventional gear, of 7 the halibut area (§ 40). From H1b R4
+# (04.11.2026) Svalbard's are in: 26 the areas closed by høstingsforskriften § 58 (Bjørnøya 20 nm, the west of Spitsbergen 15 and 20 nm)
+# and 25 the vulnerable ecosystems round Svalbard (bottom gear: closed areas and new fishing areas).
+KEEP = {0, 1, 2, 5, 6, 7, 8, 12, 16, 18, 19, 24, 25, 26, 28, 29, 30, 31, 37, 38, 39}
 def keep_feat(lid, a):
     if lid == 0: return re.search(r'line|garn|konvensjonell|alle', (a.get('type_text') or '') + ' ' + (a.get('kat_ordning_text') or ''), re.I) is not None
     if lid == 7: return 'kveite' in (a.get('navn') or '').lower()
@@ -348,12 +352,14 @@ def layers(land):
             if not keep_feat(lid, a): continue
             poly = g.geom_type in ('Polygon', 'MultiPolygon')
             n0 = shapely.get_num_coordinates(g); how = ''
-            far = g.bounds[1] < 0 or g.bounds[3] > 1800 or g.bounds[0] < 0 or g.bounds[2] > 1450   # Svalbard, Bouvet, the open sea
-            coast = poly and not far and land.L200[int(max(0, g.bounds[1]) / 0.2):int(g.bounds[3] / 0.2) + 1, int(max(0, g.bounds[0]) / 0.2):int(g.bounds[2] / 0.2) + 1].any()
+            far = g.bounds[0] > FRAME[2] or g.bounds[2] < FRAME[0] or g.bounds[1] > FRAME[3] or g.bounds[3] < FRAME[1]   # Bouvet
+            if far: continue
+            old = g.bounds[1] >= 0 and g.bounds[3] <= 1750 and g.bounds[0] >= 0 and g.bounds[2] <= 1450   # land200 is the old frame's
+            coast = poly and old and land.L200[int(max(0, g.bounds[1]) / 0.2):int(g.bounds[3] / 0.2) + 1, int(max(0, g.bounds[0]) / 0.2):int(g.bounds[2] / 0.2) + 1].any()
             if coast and n0 > BIG:
                 g2, bad = through_land(land, g); how = f'gjennom land, {bad * 100:.2f} % av sjøcellene bytter side'
             else:
-                g2 = g.simplify(0.2 if far else 0.05 if poly and not coast else 0.02, preserve_topology=True)
+                g2 = g.simplify(0.2 if not old else 0.05 if poly and not coast else 0.02, preserve_topology=True)   # off the old frame: the open sea
             f = {'a': a}
             if poly: f['r'] = rings(g2)
             elif g.geom_type in ('LineString', 'MultiLineString'): f['l'] = lines(g2)
@@ -361,12 +367,128 @@ def layers(land):
             feats.append(f); log.append(f'{lid:>2} {n0:>7} -> {shapely.get_num_coordinates(g2):>6} {how}')
         out[str(lid)] = dict(n=m['name'], d=m['desc'][:400], f=feats)
     return out, log
+# ---------- the seas off the coast (H1b R4, 04.11.2026) ----------
+# The zones the rules tell apart beyond the mainland's baseline zones: Norway's own (NØS, the fisheries protection zone at Svalbard,
+# the fishery zone at Jan Mayen, the territorial waters of Svalbard and Jan Mayen, the continental shelf) exactly as Kartverket draws
+# them; the neighbours' zones (Russia, Iceland, Greenland, the Faroes, the United Kingdom, Denmark and Sweden in the south) and the
+# international waters between them (Smutthullet in the Barents Sea, Smottet in the Norwegian Sea) from the sea split by every line
+# there is: Kartverket's boundaries and Fiskeridirektoratet's sea boundaries (the 200 nm lines of the neighbours and the agreed lines
+# between them), with the game's land at 1 km (land1k) as the walls the lines end on. Each part of the sea takes its zone from a seed
+# point (SEA_SEEDS); a large part no seed is in is international waters, a small one (a pocket between two lines that nearly meet) goes
+# to its neighbour. The parts are traced at 1 km and their corners put on the lines within 1.5 km, so the edges at sea lie on them.
+# The game looks Norway's exact zones up before these (03e-rules.js), so the neighbours' polygons only need to be right at sea.
+FRAME = (-1100, -1250, 2500, 1720)
+SEA_SEEDS = {
+    # (74.9, 39.7): east of the 2010 line beyond Russia's 200 nm from the mainland, the treaty's special area where Russia has the zone's rights
+    'ru': [(70.5, 40), (69.5, 52), (75, 45), (73, 62), (80, 45), (74.86, 39.74)],
+    'smh': [(73.8, 36.5)],
+    'is': [(67.2, -18), (64, -26), (66.5, -12)],
+    'gl': [(70, -19), (66, -30), (78, -8), (75, -12)],
+    'fo': [(63, -6)],
+    'gb': [(59.5, -0.5), (60.5, -3)],
+    'dk': [(57.25, 8.8)],
+    'se': [(58.4, 10.9)],
+    'smt': [(66.4, -3.3)],     # Smottet: the hole between NØS, the Jan Mayen zone, the Faroes and Iceland
+    # far off the game's waters, not looked into (the Baltic, Ireland and Rockall, the Faroese-British special area): closed in the game
+    'xx': [(60.65, 19.18), (61.5, 19.5), (63.5, 21.5), (60.04, 28.07), (58.79, 22.97), (57.5, 23.5), (58.81, -16), (55.42, -11.55), (60.05, -7.55)],
+    'no': [(70, 20), (66, 5), (60, 3)],
+    'sv': [(76, 20), (75.5, 30), (79, 5), (78.25, 14.5), (77.5, 19.5), (79.3, 19), (78.85, 27.2), (78.6, 26.5)],
+    'jm': [(71, -5)],
+}
+def ll2frame(lat, lon):
+    from pyproj import Transformer
+    E, N = Transformer.from_crs(4326, 25833, always_xy=True).transform(lon, lat); return (E - E0) / 1000, (N1 - N) / 1000
+def frame2ll(x, y):
+    from pyproj import Transformer
+    lon, lat = Transformer.from_crs(25833, 4326, always_xy=True).transform(x * 1000 + E0, N1 - y * 1000); return round(lat, 2), round(lon, 2)
+# Kartverket's polygons (Surface > PolygonPatch > exterior/interior, each a LinearRing or a Ring of curve members) by type and land
+def gml_polys(path, ty, land=None, name=None):
+    t = open(path, encoding='utf8').read(); out = []
+    for m in re.finditer(r'<gml:featureMember>\s*<app:%s .*?</gml:featureMember>' % ty, t, re.S):
+        b = m.group(0)
+        if land and f'<app:land>{land}<' not in b: continue
+        if name and name not in b: continue
+        for pp in re.finditer(r'<gml:PolygonPatch>(.*?)</gml:PolygonPatch>', b, re.S):
+            ring = lambda r: np.vstack([np.array(q.split(), float).reshape(-1, 2) for q in re.findall(r'<gml:posList[^>]*>([^<]*)', r)])
+            ext = re.search(r'<gml:exterior>(.*?)</gml:exterior>', pp.group(1), re.S).group(1)
+            ints = re.findall(r'<gml:interior>(.*?)</gml:interior>', pp.group(1), re.S)
+            out.append(Polygon(ring(ext), [ring(i) for i in ints]).buffer(0))
+    return to_frame(shapely.union_all(out)) if out else Polygon()
+def seas(md):
+    nmg = os.path.join(CACHE, 'nmg-25833.gml')
+    exact = {'no': gml_polys(nmg, 'NorgesØkonomiskeSone'), 'sv': gml_polys(nmg, 'Fiskevernsone'), 'jm': gml_polys(nmg, 'Fiskerisone'),
+             'svt': gml_polys(nmg, 'Territorialfarvann', 'SJ', 'Svalbard'), 'jmt': gml_polys(nmg, 'Territorialfarvann', 'SJ', 'Jan Mayen'),
+             'ks': gml_polys(nmg, 'Kontinentalsokkel', 'NO')}
+    # every line: the exact zones' edges, Kartverket's agreed and 200 nm lines, and Fiskeridirektoratet's sea boundaries
+    L = [exact[k].boundary for k in ('no', 'sv', 'jm')]
+    for f in gml(nmg):
+        if f['type'] in ('AvtaltAvgrensningslinje', 'Grense200NautiskeMil', 'AvtaltAvgrensningslinjeSokkel'):
+            L += [to_frame(LineString(q)) for q in f['parts'] if len(q) > 1]
+    for g, p in fd(0, 'sjøgr'): L.append(g)
+    box = shapely.box(*FRAME); lines_ = shapely.intersection(shapely.union_all(L), box)
+    land1k, LL = pack.read_layer(md, 'land1k'); c = 1.0
+    ox, oy = FRAME[0], FRAME[1]; nx, ny = int((FRAME[2] - ox) / c), int((FRAME[3] - oy) / c)
+    land = land1k[oy - LL['iy0']:oy - LL['iy0'] + ny, ox - LL['ix0']:ox - LL['ix0'] + nx] > 0
+    # land1k is empty over the old frame, where the core's land200 has the land: at 1 km, land where most of the 25 cells are
+    L200, L2 = pack.read_layer(md, 'land200'); k = 5; a = (L200[:L2['ny'] // k * k, :L2['nx'] // k * k] > 0)
+    a = a.reshape(L2['ny'] // k, k, L2['nx'] // k, k).mean(axis=(1, 3)) > 0.5; j0, i0 = -oy, -ox
+    land[j0:j0 + a.shape[0], i0:i0 + a.shape[1]] |= a[:ny - j0, :nx - i0]
+    im = Image.new('1', (nx, ny), 0); d = ImageDraw.Draw(im)
+    for l in getattr(lines_, 'geoms', [lines_]):
+        if l.geom_type != 'LineString' or l.is_empty: continue
+        d.line([((x - ox) / c - 0.5, (y - oy) / c - 0.5) for x, y in l.coords], fill=1, width=1)
+    wall = np.array(im, bool); wall[[0, -1], :] = True; wall[:, [0, -1]] = True   # the frame's edge closes the lines that run off it
+    W = ~land & ~wall
+    lab, nl = ndimage.label(W); size = np.bincount(lab.ravel()) * c * c; size[0] = 0
+    code = {}; names = list(SEA_SEEDS) + ['int']
+    for k, pts in SEA_SEEDS.items():
+        for lat, lon in pts:
+            x, y = ll2frame(lat, lon); i, j = int((x - ox) / c), int((y - oy) / c)
+            if not (0 <= i < nx and 0 <= j < ny): continue
+            r = lab[j, i]
+            if r == 0: print('  seed on land or a line', k, lat, lon); continue
+            if code.get(r, k) != k:
+                if os.environ.get('KYST_SEADBG'): np.save(os.environ['KYST_SEADBG'], np.stack([lab == r, wall, land]))
+                raise SystemExit(f'one part of the sea seeded {code[r]} and {k} ({lat}, {lon}): a line is missing')
+            code[r] = k
+    for r in np.flatnonzero(size >= 5000):
+        if r and r not in code:
+            js, is_ = np.nonzero(lab == r); print('  international', frame2ll(ox + is_.mean() * c, oy + js.mean() * c), int(size[r]), 'km2'); code[r] = 'int'
+    cls = np.zeros(nl + 1, np.int32)
+    for r, k in code.items(): cls[r] = names.index(k) + 1
+    # Smutthullet reaches east of the 2010 line to Russia's 200 nm: the part of the strip between them that lies beyond 200 nm of both
+    # Svalbard's and the mainland's baselines is the Loophole, the rest of the strip is the treaty's special area (Russia's rights)
+    x, y = ll2frame(74.86, 39.74); r = lab[int((y - oy) / c), int((x - ox) / c)]
+    js, is_ = np.nonzero(lab == r); P = shapely.points(ox + (is_ + 0.5) * c, oy + (js + 0.5) * c)
+    bls = shapely.union_all([to_frame(LineString(q)) for f in gml(nmg) if f['type'] == 'Grunnlinje' and f['land'] in ('NO', 'SJ')
+                             for q in f['parts'] if len(q) > 1 and q[:, 1].mean() > 6000e3])
+    far = shapely.distance(P, bls) > 200 * NM * 1.0046   # the grid's scale factor there (pyproj, 74.5° N 37° E)
+    C = cls[lab]; C[js[far], is_[far]] = names.index('smh') + 1; known = C > 0
+    C = spread(known, C)
+    out, info = [], {}
+    for k in ['no', 'sv', 'jm', 'xx', 'int', 'smt', 'smh', 'dk', 'se', 'gb', 'fo', 'is', 'gl', 'ru']:   # Norway's raster parts first, under all: they fill the slivers where two copies of a line differ
+        m = C == names.index(k) + 1
+        if not m.any(): continue
+        # widened by 0.3 km so no sliver of sea between two zones is left without one (Norway's exact zones are looked up over these,
+        # and between two neighbours the later in this list wins the 0.3 km)
+        g = snap(trace(m, ox, oy, c, 0.02), lines_, 1.5).simplify(0.1, preserve_topology=True).buffer(0.3, join_style='mitre').simplify(0.05)
+        out.append(dict(c=k, r=rings(g))); info[k + ('~' if k in ('no', 'sv', 'jm') else '')] = (round(g.area), int(shapely.get_num_coordinates(g)))
+    for k in ['no', 'jm', 'sv', 'jmt', 'svt']:
+        # NØS and the zones at Svalbard and Jan Mayen share their edges, so they are kept as Kartverket has them (simplified on their
+        # own they would leave slivers between them); the territorial waters lie inside a zone and are simplified
+        g = shapely.intersection(exact[k], box)
+        if k in ('svt', 'jmt'): g = g.simplify(0.1, preserve_topology=True).buffer(0.2, join_style='mitre').simplify(0.05)   # over the zone's hole
+        out.append(dict(c=k, r=rings(g))); info[k] = (round(g.area), int(shapely.get_num_coordinates(g)))
+    shelf = shapely.intersection(exact['ks'], box).simplify(0.1, preserve_topology=True)
+    print('seas', json.dumps(info))
+    return out, rings(shelf), (C, ox, oy, c, names, lines_)
 def stats():
     hom = [dict(c=p.get('havomr'), r=rings(g.simplify(0.3, preserve_topology=True))) for g, p in fd(6, 'stati')]
     lok = []
     for g, p in fd(8, 'stati'):
-        if g.bounds[2] < 0 or g.bounds[0] > 1450 or g.bounds[3] < 0 or g.bounds[1] > 1750: continue   # outside the game's frame
-        lok.append(dict(c=p.get('lokref') or f"{p.get('havomr')}-{p.get('lokasjon')}", r=rings(g.simplify(0.4, preserve_topology=True))))
+        if g.bounds[2] < FRAME[0] or g.bounds[0] > FRAME[2] or g.bounds[3] < FRAME[1] or g.bounds[1] > FRAME[3]: continue   # outside the game's frame
+        old = g.bounds[0] >= 0 and g.bounds[2] <= 1450 and g.bounds[1] >= 0 and g.bounds[3] <= 1750
+        lok.append(dict(c=p.get('lokref') or f"{p.get('havomr')}-{p.get('lokasjon')}", r=rings(g.simplify(0.4 if old else 1.0, preserve_topology=True))))
     return hom, lok
 def main():
     t0 = time.time(); md = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'tools', 'map', 'out', 'game')
@@ -391,11 +513,13 @@ def main():
     Lyr, llog = layers(land)
     for l in llog: print(l)
     hom, lok = stats()
+    sea, shelf, _ = seas(md)
     meta = json.load(open(os.path.join(CACHE, 'fd-meta.json')))
     R = dict(v=1, made=meta['fetched'], unit=U,
              src=dict(fd='Fiskeridirektoratet, Yggdrasil/Fiskerireguleringer og Statistikområder (NLOD), hentet ' + meta['fetched'],
-                      nmg='Kartverket, Norges maritime grenser (CC BY 4.0, Geonorge)'),
-             bl=enc(bl.coords), blin=rings(blin.simplify(0.05)), nm=nm_lines(bl, blin, off), zones=Z, L=Lyr, hom=hom, lok=lok)
+                      nmg='Kartverket, Norges maritime grenser (CC BY 4.0, Geonorge)',
+                      sjo='Fiskeridirektoratet, Yggdrasil/Sjøgrenser_linje (NLOD): nabolandenes 200 nm og grenselinjene mellom dem'),
+             bl=enc(bl.coords), blin=rings(blin.simplify(0.05)), nm=nm_lines(bl, blin, off), zones=Z, L=Lyr, hom=hom, lok=lok, sea=sea, shelf=shelf)
     s = json.dumps(R, separators=(',', ':'), ensure_ascii=False)
     open(OUT, 'w').write(s)
     print(f'{OUT}: {len(s) / 1e6:.2f} MB, {time.time() - t0:.0f} s')
