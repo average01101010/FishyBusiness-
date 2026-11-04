@@ -56,7 +56,16 @@ def monthly(times, vals, how='mean'):
 
 def main(dst):
     y0, y1 = CFG['period']; s0, s1 = CFG['sst_years']; pts = []
+    # the points src/data/climate.json already has, with the same place and period, are kept as they are (H1b R5: a run for new points
+    # does not fetch the old ones again)
+    old = {}
+    try:
+        O = json.load(open(os.path.join(HERE, '..', '..', 'src', 'data', 'climate.json'), encoding='utf-8'))
+        if O.get('period') == [y0, y1] and O.get('sstYears') == [s0, s1]: old = {(q['n'], q['lat'], q['lon']): q for q in O['pts']}
+    except (OSError, ValueError, KeyError): pass
     for name, lat, lon in CFG['points']:
+        if (name, lat, lon) in old:
+            print(name, 'kept from src/data/climate.json', flush=True); pts.append(old[(name, lat, lon)]); continue
         print(name, lat, lon, flush=True)
         d = get(ARCHIVE, {'latitude': lat, 'longitude': lon, 'start_date': f'{y0}-01-01', 'end_date': f'{y1}-12-31', 'daily': ','.join(DAILY),
                           'wind_speed_unit': 'ms', 'timezone': 'UTC'})['daily']
@@ -74,7 +83,15 @@ def main(dst):
             vals = h.get('sea_surface_temperature') or []
             if sum(v is not None for v in vals) > len(vals) * 0.8:
                 sst = monthly([t[:10] for t in h['time']], vals); rec['sstLon'] = round(lon + dl, 2); break
+            # out in the sea ice (Bjørnøya to Kvitøya, the Denmark Strait): the marine API has no sea temperature under the ice, so
+            # the months with ice are missing; a point at sea with a part of the year open keeps it, and the months under the ice
+            # get the freezing point of sea water (-1.8 °C)
+            if lat > 65 and sum(v is not None for v in vals) > len(vals) * 0.15:
+                sst = [(-1.8 if v is None else max(-1.8, v)) for v in monthly([t[:10] for t in h['time']], vals)]
+                rec['sstLon'] = round(lon + dl, 2); rec['sstIce'] = True; break
             time.sleep(20)
+        if sst is None and lat > 74:   # all the year under the ice (no value at all): the freezing point
+            sst = [-1.8] * 12; rec['sstIce'] = True
         rec['sst'] = sst
         print('  t', rec['t'], '\n  p', rec['p'], '\n  sst', sst, flush=True)
         pts.append(rec)

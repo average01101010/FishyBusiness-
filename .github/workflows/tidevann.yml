@@ -14,19 +14,23 @@ env:
 jobs:
   tide:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install numpy requests
+      - run: pip install numpy requests netCDF4 pyproj
       - name: Kartverket's prediction and the fit
         run: python3 tools/tide/fetch.py tide.json
+      # the open sea and the foreign coasts from the global model EOT20 (H1b R5); without it the game takes the nearest points
+      - name: EOT20 in the open sea
+        continue-on-error: true
+        run: python3 tools/tide/eot.py tide.json
       - name: The release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG=tide-${{ github.run_number }}
           gh release create "$TAG" tide.json --target "${{ github.sha }}" --title "Tidevann $TAG" \
-            --notes "Tidevannet langs kysten fra Kartverkets Se havnivå (CC BY 4.0), tilpasset spillets harmoniske konstanter (tools/tide/fetch.py), commit ${{ github.sha }}."
+            --notes "Tidevannet langs kysten fra Kartverkets Se havnivå (CC BY 4.0) og i åpent hav fra EOT20 (DGFI-TUM, CC BY), tilpasset spillets harmoniske konstanter (tools/tide/fetch.py), commit ${{ github.sha }}."

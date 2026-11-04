@@ -56,7 +56,14 @@ if __name__ == '__main__':
         print('probe', u, len(s), name, repr(head), file=sys.stderr, flush=True)
         if s: break
     else: sys.exit('no address of the tide service answered with values')
+    # the points src/data/tide.json already has (the same year from Kartverket) are kept as they are; only the new ones are fetched
+    # (H1b R5: Svalbard and Jan Mayen)
+    try:
+        O = json.load(open(os.path.join(HERE, '..', '..', 'src', 'data', 'tide.json')))
+        old = {(r[2], r[3]): r[:len(O['cols'])] for r in O['points']} if YEAR0.date().isoformat() in O.get('src', '') else {}
+    except (OSError, ValueError, KeyError): old = {}
     for k, (tx, ty, lat, lon, x, y) in enumerate(pts):
+        if (lat, lon) in old: res.append(old[(lat, lon)]); continue
         ser = []; name = ''; head = ''
         for q in range(4):   # a quarter a request
             a = YEAR0 + dt.timedelta(days=91.25 * q); b = YEAR0 + dt.timedelta(days=91.25 * (q + 1)) - dt.timedelta(hours=1)
