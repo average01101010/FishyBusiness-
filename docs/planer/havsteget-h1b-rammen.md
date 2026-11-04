@@ -370,5 +370,7 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
   - **Bakken** fra Copernicus GLO-30 (Terrarium er grov der), satellittfargen fra Sentinel-2 (`s2-12`) med breene fra snøen, ingen trær. Bakken er ikke grønn lenger.
   - **Dybden:** Kartverkets 50 m dekker 77 av 98 fliser (`dybde-7`), ellers GEBCO.
   - **Vakten** mot gjentatte datareleaser ved sammenslåing (`tools/ci/seen.py`).
-  - **Neste:** full regresjon med hele kysten, så utrulling når Jonas sier ja. Deretter R4 (sonene og reglene).
+  - **Testene:** Jonas 04.11.2026: «Ta kun de testene du mener er relevante». De som dekker kartet er grønne (svalbardtest, teleport3d, vectest, coast3d, landtest, routetest, marktest, boottest, trip2 og flere; BACKLOG 10.6).
+- 04.11.2026: **R3 rullet ut** (Jonas: «Rull ut nå»; sammenslått i arbeidsgrenen d75e7b4, `kart-release.json` peker på `kart-31`, Hetzner og Pages grønne). Datajobbene startet ikke på nytt ved sammenslåingen (`seen.py`).
+  - **Neste:** R4 (sonene og reglene) i en ny økt.
 

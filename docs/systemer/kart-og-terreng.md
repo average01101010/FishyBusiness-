@@ -358,7 +358,7 @@ Jonas: «kjør på» for hele H1b (03.11.2026). R2 gir rammen fra R1 data, slik 
 
 ## 4.9d Svalbard og Jan Mayen i detalj (H1b R3 i havsteget, 04.11.2026)
 
-Jonas valgte V2 B 03.11.2026: hele Svalbard i detalj, sammen med Jan Mayen, Bjørnøya og Hopen. Øyene har nå de samme flisene som kysten (`sim`, `view`, `chart`, `vec`), laget av den samme `coast.py`.
+Jonas valgte V2 B 03.11.2026: hele Svalbard i detalj, sammen med Jan Mayen, Bjørnøya og Hopen. Rullet ut 04.11.2026 (Jonas: «Rull ut nå», d75e7b4). Øyene har nå de samme flisene som kysten (`sim`, `view`, `chart`, `vec`), laget av den samme `coast.py`.
 
 - **Flisene** (`national.py xtiles`, `tools/map/xtiles.json`): 98 fliser, 92 for Svalbard med Bjørnøya og Hopen og 6 for Jan Mayen (anslaget var 60–70). Regelen er den samme som for kysten: øyas land innen 3 km fra sjøen, eller sjø innen 20 km fra øyas land. Øyas land er landet innenfor en lengde- og breddeboks per øygruppe (`XAREAS`), så Kvitøya er med og den russiske Victoriaøya ikke.
   - **Landet på 200 m** for øyene ligger i et vindu per øygruppe, flisene pluss 170 km (`xland200.npz`), så strålene for eksponeringen (150 km) og avstandens polstring (20 km) ser alt de trenger. Eksponeringen på 500 m regnes på samme måte som for kysten (`xexpo`).
