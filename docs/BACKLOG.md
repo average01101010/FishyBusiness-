@@ -81,6 +81,7 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 
 - **Noen få leibiter i NPC-rutene skjærer et hjørne av land** (`gr.pts` fra `npc.py` brukes som de er). Målt mot vektorkysten 24.10.2026: 5 av 119 leibiter rundt Tromsø, hver med rundt 10 m (ett målepunkt). Rettes best i `npc.py`.
 - **3D på Galaxy A52s (Adreno 642L, oppgave #171):** 3D starter nå med en enklere sjø (6ce4f50, 2c349cd), men konteksten mistes under spill (feilloggen: fire ganger, 11–17 minutter ut i økta og én gang etter 83, på alle kvalitetsnivåer, sist 23.10.2026). Spillet lagrer og laster siden på nytt da. Fra 24.10.2026 skriver feilloggen også om siden var skjult og hvor lenge, hvor lenge 3D har gått, levende buffere og teksturer, kvalitetsnivå, terrengbiter og JS-minne (`glDiag`, `GLN` i `view3d.js`). En seiling på 30 km i testmiljøet ga ingen lekkasje (1 000–1 076 buffere og 15 teksturer hele veien), men JS-minnet var 347 MB.
+- Frys- og RSW-fartøyene lander i kar på 300 kg, ett kranløft (2,5 spillminutter) per kar (`landPlan`, `07-harbours.js`). Et fullt snøkrabbefartøy (500 t) gir 1 667 løft, rundt 69 timer spilltid. Hører til havsteget. (Funnet 04.11.2026 under `docs/planer/fiskekar-dekk.md`.)
 
 ## 10.2 Spillbarhet (fra spilltestene og egne notater)
 
@@ -194,6 +195,16 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - `S.owned` skrives fortsatt (`03-simulation.js`, `05-phone.js`, `05-vessels.js`), men leses bare av en lagringsmigrering i `11-boot.js`.
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
+
+## Strøket 04.11.2026 (fiskekar på dekk, `docs/planer/fiskekar-dekk.md`)
+
+- Båtene uten lasterom hadde ett lite kar for hele kapasiteten (snekka) eller ingen (trebåten). Fyllingen hoppet i lag på seks, isen gikk gjennom karveggen nede, og fisken var like lang uansett art. Karene forsvant fra dekk når lossingen startet. Nå: hvite kar på 500 kg etter kapasiteten, fisk for fisk uten clipping, og karene løftes i land med stropp.
+- Iskassa dukket opp ved pakkeren når han begynte å ise. Nå står den fast på dekk.
+- Bløggekaret sto tvers over båten fra sløyebordet, og på skiffen og trebåten sto fiskeren inne i det. Fisken i det lå utenfor karveggen. Nå står det ved bordet, og fisken ligger i blodvannet i karets mål.
+
+### Nytt 04.11.2026
+- Ingen figur om bord hekter stroppen på karet ved lossing (krokene trekkes ut til hjørnene mens kroken senkes). Ikke målt at folkene aldri kommer borti karene i alle stillinger.
+- `turtest` (rutetavla på liten tank) var rød én gang og grønn ved ny kjøring. Den avhenger trolig av klokka.
 
 ## Strøket 03.11.2026 (havflåten og havsteget H0, ccr-6829f3d4-kl3gp4, rullet ut 595de50)
 

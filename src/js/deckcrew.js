@@ -40,10 +40,13 @@ function crewSim(src){
   function kitBoxes(){
     const G = ST.G, d = G.deck || {y:G.gw, z:0}, W = G.work, K = G.kit || {}, Bm = G.beam || 3, V = VESSELS[ST.type] || {}, out = [];
     const box = (x, z, w, l, ry) => out.push([x, z, w / 2 + 0.06, l / 2 + 0.06, ry || 0]);
-    const tu = W ? W.tub : [Bm / 2 - 0.62, d.y, d.z + 0.35], s = (W && W.s) || 1; box(tu[0], tu[2], 0.72 * s, 1.08 * s);
+    const tu = W ? W.tub : [Bm / 2 - 0.62, d.y, d.z + 0.35], s = (W && W.s) || 1; box(tu[0], tu[2], 0.72 * s, 1.08 * s, W && W.ry || 0);
     if (!(W && W.own)){ const tb = W ? W.table : [-(Bm / 2 - 0.42), d.y, d.z]; box(tb[0], tb[2], 0.62, V.len >= 10 ? 1.6 : 1.15); }
     if (G.hauler) box(Bm / 2 - 0.2, G.hauler[2], 0.35, 0.4);
-    for (const q of K.tubs || []){ const big = (q[4] || 460) > 300; box(q[0], q[2], big ? 1.0 : 0.72, big ? 1.2 : 1.08, q[3]); }
+    // (the fish tubs an open boat has now, core/07f-kar.js, and her ice box, view3d.js iceBoxAt)
+    const nK = V.kar ? (ST.type === S.boat.type && BOAT.karN ? BOAT.karN : karN(ST.type, 0)) : (K.tubs || []).length;
+    for (const q of (K.tubs || []).slice(0, nK)){ if (q[5] >= 0) continue; const big = (q[4] || 460) > 300; box(q[0], q[2], big ? 1.0 : 0.72, big ? 1.2 : 1.08, q[3]); }
+    if (K.iskasse){ const k = K.iskasse[4] || 1; box(K.iskasse[0], K.iskasse[2], 0.72 * k, 1.08 * k, K.iskasse[3]); }
     if (K.crane && K.crane.at) box(K.crane.at[0], K.crane.at[2], 0.9, 0.9);
     if (!src && S.pgear){ const g = rigGear();
       if (g.tubs > 0 && K.stamps){ const rows = Math.ceil(Math.min(V.len < 8 ? 4 : 8, g.tubs) / 2), ry = K.stamps.ry || 0, c = Math.cos(ry), sn = Math.sin(ry), lx = 0.26, lz = (rows - 1) * 0.25;

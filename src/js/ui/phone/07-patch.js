@@ -1,5 +1,13 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['fiskekar-041126', '04.11.2026', 'Fiskekar på dekk', 'Fish tubs on deck', [
+       ['Båtene uten lasterom har fisken i hvite kar på 500 kg på dekk. Skiffen og trebåten har ett kar, snekka to.', 'The boats without a hold keep the fish in white 500 kg tubs on deck. The skiff and the wooden boat have one tub, the snekke two.'],
+       ['Karene fylles fisk for fisk nedenfra, med is på fisken som er iset og knust is over et fullt kar. Det blir blod og slim på karene etter hvert som de fylles.', 'The tubs fill fish by fish from the bottom, with ice on the iced fish and crushed ice over a full tub. Blood and slime gather on the tubs as they fill.'],
+       ['Isen står i en blå iskasse på dekk. Spaden står i kassa når ingen iser, og isen øses over fisken i karet.', 'The ice is kept in a blue ice box on deck. The shovel stands in the box when nobody is icing, and the ice is shovelled over the fish in the tub.'],
+       ['Ved levering løfter kranen karene i land med en stropp fra hvert hjørne. Trucken tar dem inn, og de kommer spylt tilbake om bord, ett og ett.', 'At the plant the crane lifts the tubs ashore with a strap from each corner. The forklift takes them in, and they come back washed and aboard, one by one.'],
+       ['Båtene med lasterom leverer i mottakets kar på 500 kg.', 'The boats with a hold land in the plant\'s 500 kg tubs.'],
+       ['Har du bygd om lasterommet på en båt uten lasterom, får du det du betalte tilbake. Båten har ikke plass til flere kar.', 'If you rebuilt the hold of a boat without a hold, you get back what you paid. The boat has no room for more tubs.']
+    ]],
     ['logo-031126', '03.11.2026', 'Ny logo', 'A new logo', [
        ['Det Store Blå har fått ny logo: et anker laget av ordene. Du ser den når spillet laster, når du logger inn, på app-ikonet og på bildet når du deler Ukas fangst.', 'Det Store Blå has a new logo: an anchor made of the words. You see it while the game loads, when you sign in, on the app icon and on the picture when you share the week\'s catch.'],
     ]],

@@ -5,33 +5,43 @@
   // is ashore when the landing note comes.
   const HOOK_UP = QTOP + 3.9;
   const ease = u => u * u * (3 - 2 * u), seg = (u, a, b) => clamp((u - a) / (b - a), 0, 1);
-  const loadH = (kind, nb) => kind === 'tub' ? 0.85 : 0.13 + Math.ceil(nb / 3) * 0.29;
+  // the loads (core/07f-kar.js, 04.11.2026): white 460 l tubs of TUB_KG, lifted in a four-leg sling (drawSling) from where they stand: an
+  // open boat's own from their places on deck, and the same tubs back washed after (lifts n .. 2n-1, after the wash); a boat with a hold
+  // fills the plant's tubs from the hold, set out on deck (deckSlots) one by one. A landing saved before then ('box') keeps its pallets.
+  const SLH = 1.793;   // the hook's level over the base of the tub hanging in the sling (the ring 0.95 m over the rim)
+  const TUBH = 0.74;   // a tub's height, for stacking two on the quay and on the forks
+  const loadH = (kind, nb) => kind === 'tub' ? TUBH : 0.13 + Math.ceil(nb / 3) * 0.29;
   const craneIdle = (P, T) => ({a:Math.atan2(P.u[0], P.u[1]) + Math.sin(T * 0.05) * 0.25, r:5.5, hook:QTOP + 3.2});
   // the forklift at rest: at its spot east of the drop spot, forks towards it
   const fkRest = P => { const R = fkRun(P); return {x:R.Wp[0], z:R.Wp[1], h:R.waitH, fl:0, loads:[]}; };
   const poseTo = (P, x, z, hook) => ({a:Math.atan2(x - P.crane[0], z - P.crane[1]), r:Math.max(1.5, Math.hypot(x - P.crane[0], z - P.crane[1])), hook});
   const poseMix = (A, B, k) => ({a:A.a + angDiff(A.a, B.a) * k, r:A.r + (B.r - A.r) * k, hook:A.hook + (B.hook - A.hook) * k});
   const tipOf = (P, q) => craneGeo(P, q).tip;
-  // where the loads stand on deck, in the boat's frame (x to starboard, z aft); the first slot is the next to go up
+  // where the plant's tubs stand on deck on a boat with a hold, in the boat's frame (x to starboard, z aft); the first is the next to go up
   function deckSlots(kind){
     const G = GEO(vtype()), d = G.deck || {y:G.gw, z:(G.stern || 3) * 0.5};
     return kind === 'tub' ? [[0.65, d.y, d.z - 0.55], [-0.65, d.y, d.z - 0.55], [0.65, d.y, d.z + 0.55], [-0.65, d.y, d.z + 0.55]] : [[0, d.y, d.z - 0.45], [0, d.y, d.z + 0.45]];
   }
   // the forklift's run on the unit's route: from its spot east of the drop spot forward to the loads, lift, on round a quarter turn to
-  // the door's line and in through the door, set down, and back the same way in reverse. The route keeps the truck's corners well
-  // inside the deck (unittest.py checks it). Its speed is set so a run takes at most two lifts.
-  function fkRun(P){
-    if (P.run) return P.run;
+  // the door's line and in through the door, set down, and back the same way in reverse. With back (an open boat's own tubs) it takes
+  // the washed empties up inside and brings them out to the drop spot before it goes back to its spot. The route keeps the truck's
+  // corners well inside the deck (unittest.py checks it). Its speed is set so a run takes at most two lifts (with back: the wash).
+  function fkRun(P, back){
+    const ck = back ? 'runB' : 'run'; if (P[ck]) return P[ck];
     const T = unitModel(P.unit.v).A.truck, W = q => unitW(P.unit, q[0], q[2]), c = T.arc, r = T.r;
     const arc = []; for (let k = 0; k <= 8; k++){ const a = Math.PI / 2 * k / 8; arc.push(W([c[0] - r * Math.sin(a), 0, c[2] + r * Math.cos(a)])); }
     const wait = W(T.wait), pick = W(T.pick), inn = W(T.in), inPath = [pick, ...arc, inn], outPath = [...inPath].reverse().concat([wait]);
     const hd = (a, b) => Math.atan2(b[0] - a[0], -(b[1] - a[1])), plen = pts => pts.reduce((s, q, i) => i ? s + Math.hypot(q[0] - pts[i - 1][0], q[1] - pts[i - 1][1]) : 0, 0);
     const legs = [{kind:'go', pts:[wait, pick], rev:false}, {kind:'pick', pts:[pick], h:hd(wait, pick), dur:0.35}, {kind:'go', pts:inPath, rev:false},
-      {kind:'drop', pts:[inn], h:hd(arc[8], inn), dur:0.3}, {kind:'go', pts:outPath, rev:true}];
+      {kind:'drop', pts:[inn], h:hd(arc[8], inn), dur:0.3}];
+    if (back) legs.push({kind:'pick', pts:[inn], h:hd(arc[8], inn), dur:0.6, empties:true}, {kind:'go', pts:[...inPath].reverse(), rev:true, empties:true},
+      {kind:'drop', pts:[pick], h:hd(wait, pick), dur:0.3, empties:true}, {kind:'go', pts:[pick, wait], rev:true});
+    else legs.push({kind:'go', pts:outPath, rev:true});
     for (const g of legs) g.len = plen(g.pts);
-    const dist = legs.reduce((s, g) => s + g.len, 0), vG = Math.max(20, dist / 3.95);   // metres per game minute
+    const dist = legs.reduce((s, g) => s + g.len, 0), fixed = legs.reduce((s, g) => s + (g.dur || 0), 0), room = back ? LANDING.wash + (1 - LANDING.hooked) * LANDING.lift - 0.4 - fixed : 3.95;
+    const vG = Math.max(20, dist / Math.max(1, room));   // metres per game minute
     let t = 0; for (const g of legs){ g.t0 = t; g.dur = g.dur || g.len / vG; t += g.dur; }
-    return P.run = {legs, T:t, Wp:wait, waitH:hd(wait, pick), inn};
+    return P[ck] = {legs, T:t, Wp:wait, waitH:hd(wait, pick), inn};
   }
   // where a leg of the run puts the truck at w (0-1): moving off and pulling up gently, facing the way it drives (or the other way
   // when it reverses)
@@ -42,49 +52,87 @@
       const k = L ? clamp(s / L, 0, 1) : 0, dx = b[0] - a[0], dz = b[1] - a[1]; return {x:a[0] + dx * k, z:a[1] + dz * k, h:g.rev ? Math.atan2(-dx, dz) : Math.atan2(dx, -dz)}; }
     const q = g.pts[g.pts.length - 1]; return {x:q[0], z:q[1], h:0};
   }
+  // what lift j of a landing carries: an open boat's tub i (out with its catch, or back washed), a plant's tub with its share of the catch,
+  // or an old landing's pallet; draw(M) draws it with M at its base, h its height on the quay and the forks, sl its hook height in the sling
+  function landLoad(L, j){
+    if (L.kind === 'box'){ const nb = Math.min(9, L.n - 9 * j), m = PM.palN[Math.max(0, nb)]; return {draw:M => drawN(m, M), h:loadH('box', nb), sl:loadH('box', nb), box:true}; }
+    if (L.own){ const vt = vtype(), i = j < L.n ? j : j - L.n, back = j >= L.n, T = tubLoads(S.hold, karPlaces(vt).length)[i];
+      return {draw:M => drawKarLoad(M, back ? null : T, vt + ':' + i, back), h:TUBH, sl:SLH, tub:true, place:i, back}; }
+    const ic = (() => { let a = 0, b = 0; for (const x of S.hold || []) if (inTub(x)){ a += x.kg; if (x.iced) b += x.kg; } return a > 0 ? b / a : 1; })();
+    const kg = Math.max(0, Math.min(TUB_KG, (L.kg || 0) - TUB_KG * j));
+    return {draw:M => drawKarLoad(M, {kg, iced:kg * ic}, 'pl:' + L.t0 + ':' + j, false), h:TUBH, sl:SLH, tub:true};
+  }
+  // the tubs of an open boat off her deck at a landing now (on the hook, on the quay, in the plant)
+  function landOff(L){ if (!L || !L.own) return null; const e = S.t + currentFrac() - L.t0, lf = LANDING.lift, out = new Set();
+    for (let i = 0; i < L.n; i++) if (e >= landLiftT(L, i) + 0.42 * lf && e < landLiftT(L, L.n + i) + LANDING.hooked * lf) out.add(i);
+    return out; }
+  // the tubs back aboard washed at a landing now
+  function landBack(L){ if (!L || !L.own) return null; const e = S.t + currentFrac() - L.t0, out = new Set();
+    for (let i = 0; i < L.n; i++) if (e >= landLiftT(L, L.n + i) + LANDING.hooked * LANDING.lift) out.add(i);
+    return out; }
   // everything a landing shows at game minute gt: the crane's pose and what hangs from it, the loads on deck and on the quay,
   // the forklift, and where the people stand and what they do. null when this plant is not landing the boat you are on.
   function landScene(P, T, BMrel, eye){
     const b = S.boat, L = b.land; if (!L || L.pid !== P.id || b.status !== 'port' || b.port !== P.id || !BMrel) return null;
-    const Lg = LANDING, pr = Lg.prep, lf = Lg.lift, n = L.lifts, e = S.t + currentFrac() - L.t0, hk = Lg.hooked;
-    const nb = j => L.kind === 'tub' ? 1 : Math.min(Lg.perLift, L.n - Lg.perLift * j), hh = j => loadH(L.kind, nb(j)), mesh = j => L.kind === 'tub' ? PM.tub : PM.palN[nb(j)];
-    const slots = deckSlots(L.kind), wpos = q => { const r = xf(BMrel, q); return [r[0] + eye[0], r[1] + eye[1], r[2] + eye[2]]; }, K = wpos(slots[0]), D = P.drop;
-    const pd = poseTo(P, D[0], D[1], HOOK_UP), pk = poseTo(P, K[0], K[2], HOOK_UP), idle = craneIdle(P, T), tR = j => pr + (j + hk) * lf;
-    let pose, hang = null, i = -1, u = 0;
-    if (e < pr) pose = poseMix(idle, pk, ease(seg(e, 0, pr)));   // straight over to the first load
-    else if (e < pr + n * lf){
-      i = Math.min(n - 1, Math.floor((e - pr) / lf)); u = (e - pr) / lf - i;
-      const yk = K[1] + hh(i) + 0.1, yd = QTOP + (i % 2 ? hh(i - 1) : 0) + hh(i) + 0.1;
-      if (u < 0.18) pose = i === 0 ? pk : poseMix(pd, pk, ease(seg(u, 0, 0.18)));
-      else if (u < 0.32) pose = {...pk, hook:HOOK_UP + (yk - HOOK_UP) * ease(seg(u, 0.18, 0.32))};
-      else if (u < 0.42) pose = {...pk, hook:yk};
-      else if (u < 0.56) pose = {...pk, hook:yk + (HOOK_UP - yk) * ease(seg(u, 0.42, 0.56))};
-      else if (u < 0.74) pose = poseMix(pk, pd, ease(seg(u, 0.56, 0.74)));
-      else if (u < hk) pose = {...pd, hook:HOOK_UP + (yd - HOOK_UP) * ease(seg(u, 0.74, hk))};
-      else if (u < 0.93) pose = {...pd, hook:yd};
-      else pose = {...pd, hook:yd + (HOOK_UP - yd) * ease(seg(u, 0.93, 1))};
-      if (u >= 0.37 && u < hk) hang = {mesh:mesh(i), h:hh(i)};
-    } else pose = poseMix(pd, idle, ease(seg(e, pr + n * lf, pr + n * lf + 1.5)));
-    // on deck: the loads not yet hooked on, as many as there are slots (the rest are below in the hold)
-    const onHook = clamp(Math.floor((e - pr) / lf - 0.37) + 1, 0, n), deck = [];
-    for (let s = 0; s < slots.length && onHook + s < n; s++) deck.push({mesh:mesh(onHook + s), at:slots[s]});
-    // the forklift takes lifts 2k and 2k+1 on run k, after the second is down; loads wait on the quay until it picks them up
-    const R = fkRun(P), runs = Math.ceil(n / 2), start = k => tR(Math.min(2 * k + 1, n - 1)) + 0.1, pickAt = k => start(k) + R.legs[1].t0;
+    const Lg = LANDING, pr = Lg.prep, lf = Lg.lift, n = L.lifts, nOut = L.own ? L.n : n, e = S.t + currentFrac() - L.t0, hk = Lg.hooked, t0 = j => landLiftT(L, j);
+    const LD = []; for (let j = 0; j < n; j++) LD.push(landLoad(L, j));
+    const wpos = q => { const r = xf(BMrel, q); return [r[0] + eye[0], r[1] + eye[1], r[2] + eye[2]]; }, D = P.drop, slots = deckSlots(L.kind), places = L.own ? karPlaces(vtype()) : null;
+    // where lift j is picked up and set down (world): an own tub from its place to the drop spot and back; the plant's from the deck slots
+    const deckOf = j => L.own ? places[LD[j].place] || {at:slots[0], ry:0} : {at:slots[Math.min(slots.length - 1, 0)], ry:0}, slewD = Math.atan2(D[0] - P.crane[0], D[1] - P.crane[1]);
+    // (yaw: the tub's turn in the world, so the one on the hook turns smoothly from where it stood to where it goes; M: its frame resting)
+    const onDeck = j => { const q = deckOf(j), M = chain(BMrel, M4.T(q.at[0], q.at[1], q.at[2]), M4.RY(q.ry)); return {w:wpos(q.at), yaw:Math.atan2(-M[2], M[0]), M}; };
+    const onQuay = j => { const y = quayY(j), c = [D[0] - eye[0], y - eye[1], D[1] - eye[2]]; return {w:[D[0], y, D[1]], yaw:slewD, M:chain(M4.T(c[0], c[1], c[2]), M4.RY(slewD))}; };
+    const quayY = j => { if (L.own && LD[j].back) return QTOP + (j - nOut === 0 && nOut > 1 ? TUBH : 0); return QTOP + (j % 2 ? LD[j - 1].h : 0); };   // (the empties stand stacked, the first on top)
+    const from = j => L.own && LD[j].back ? onQuay(j) : onDeck(j), to = j => L.own && LD[j].back ? onDeck(j) : onQuay(j);
+    const idle = craneIdle(P, T);
+    let pose, hang = null, i = -1, u = 0, att = null;
+    const pk = j => { const f = from(j); return poseTo(P, f.w[0], f.w[2], HOOK_UP); }, pd = j => { const q = to(j); return poseTo(P, q.w[0], q.w[2], HOOK_UP); };
+    for (let j = 0; j < n; j++) if (e >= t0(j)) i = j;
+    if (e < pr) pose = poseMix(idle, pk(0), ease(seg(e, 0, pr)));   // straight over to the first load
+    else if (i >= 0 && e < t0(i) + lf){
+      u = (e - t0(i)) / lf; const F = from(i), Q = to(i), sl = LD[i].sl, yk = F.w[1] + sl + (LD[i].box ? 0.1 : 0), yd = Q.w[1] + sl + (LD[i].box ? 0.1 : 0);
+      const prev = i === 0 ? pk(0) : e - t0(i - 1) < lf + 0.01 ? pd(i - 1) : poseMix(idle, pk(i), 1);
+      if (u < 0.18) pose = poseMix(prev, pk(i), ease(seg(u, 0, 0.18)));
+      else if (u < 0.32) pose = {...pk(i), hook:HOOK_UP + (yk - HOOK_UP) * ease(seg(u, 0.18, 0.32))};
+      else if (u < 0.42) pose = {...pk(i), hook:yk};
+      else if (u < 0.56) pose = {...pk(i), hook:yk + (HOOK_UP - yk) * ease(seg(u, 0.42, 0.56))};
+      else if (u < 0.74) pose = poseMix(pk(i), pd(i), ease(seg(u, 0.56, 0.74)));
+      else if (u < hk) pose = {...pd(i), hook:HOOK_UP + (yd - HOOK_UP) * ease(seg(u, 0.74, hk))};
+      else if (u < 0.93) pose = {...pd(i), hook:yd};
+      else pose = {...pd(i), hook:yd + (HOOK_UP - yd) * ease(seg(u, 0.93, 1))};
+      if (u >= 0.42 && u < hk) hang = {L:LD[i], h:sl, yaw:F.yaw + angDiff(F.yaw, Q.yaw) * ease(seg(u, 0.56, 0.74))};
+      // the sling on the tub: put on while the hook is down at it (the hooks drawn out to the corners as it comes down), off at the other end
+      if (LD[i].tub){ if (u >= 0.18 && u < 0.42) att = {M:F.M, k:ease(seg(u, 0.2, 0.34))}; else if (u >= hk && u < 1) att = {M:Q.M, k:1 - ease(seg(u, 0.9, 0.99))}; }
+    } else if (i >= 0 && L.own && i === nOut - 1 && e < t0(nOut)) pose = poseMix(pd(i), poseMix(idle, pk(nOut), 0.5), ease(seg(e, t0(i) + lf, t0(i) + lf + 1.5)));   // waiting for the wash
+    else pose = poseMix(i >= 0 ? pd(i) : idle, idle, ease(seg(e, t0(n - 1) + lf, t0(n - 1) + lf + 1.5)));
+    // on deck: a boat with a hold has the plant's next tubs set out on its slots (the rest below in the hold); an own boat's tubs are drawn
+    // by drawDeck at their places (landOff)
+    const deck = [];
+    if (!L.own){ const onHook = clamp(Math.floor((e - pr) / lf - 0.37) + 1, 0, n); for (let s = 0; s < slots.length && onHook + s < n; s++) deck.push({L:LD[onHook + s], at:slots[s]}); }
+    // the forklift takes lifts 2k and 2k+1 on run k, after the second is down (an own boat's: all of them on one run, and back with the
+    // empties); loads wait on the quay until it picks them up
+    const back = !!L.own, R = fkRun(P, back), runs = back ? 1 : Math.ceil(nOut / 2), last = k => back ? nOut - 1 : Math.min(2 * k + 1, nOut - 1), start = k => t0(last(k)) + hk * lf + 0.1, pickAt = k => start(k) + R.legs[1].t0;
     const quay = []; let fk = {x:R.Wp[0], z:R.Wp[1], h:R.waitH, fl:0, loads:[]};
-    for (let j = 0; j < n; j++){ const k = j >> 1; if (e >= tR(j) && e < pickAt(k)) quay.push({mesh:mesh(j), y:QTOP + (j % 2 ? hh(j - 1) : 0)}); }
+    for (let j = 0; j < nOut; j++){ const k = back ? 0 : j >> 1; if (e >= t0(j) + hk * lf && e < pickAt(k)) quay.push({L:LD[j], y:quayY(j)}); }
+    // the empties: set down at the drop spot by the forklift, until the crane takes each up
+    if (back){ const dropT = start(0) + R.legs[6].t0 + R.legs[6].dur; for (let j = nOut; j < n; j++) if (e >= dropT && e < t0(j) + 0.42 * lf) quay.push({L:LD[j], y:quayY(j)}); }
     for (let k = runs - 1; k >= 0; k--){ const t = e - start(k); if (t < 0) continue; if (t >= R.T) break;
       const g = R.legs.find(q => t < q.t0 + q.dur) || R.legs[R.legs.length - 1], w = clamp((t - g.t0) / g.dur, 0, 1), gi = R.legs.indexOf(g), q = legAt(g, w);
-      const loads = [2 * k, 2 * k + 1].filter(j => j < n).map(j => ({mesh:mesh(j), h:hh(j)}));
-      fk = {x:q.x, z:q.z, h:q.h, fl:g.kind === 'pick' ? w : g.kind === 'drop' ? 1 - w : gi === 2 ? 1 : 0, loads:gi >= 1 && gi <= 3 ? loads : []};
+      const full = (back ? [...Array(nOut).keys()] : [2 * k, 2 * k + 1].filter(j => j < nOut)).map(j => LD[j]), empt = back ? LD.slice(nOut) : [];
+      // loads on the forks: the full ones from the pick to the drop inside, the empties from the pick inside to the drop outside
+      const loads = gi >= 1 && gi <= 3 ? full : g.empties && !(g.kind === 'pick' && w < 0.5) && !(g.kind === 'drop' && w > 0.5) ? empt : [];
+      const lifted = g.kind === 'pick' ? w : g.kind === 'drop' ? 1 - w : loads.length ? 1 : 0;
+      fk = {x:q.x, z:q.z, h:q.h, fl:lifted, loads:loads.map(l => ({mesh:null, draw:l.draw, h:l.h}))};
       break; }
     // the people: stations and jobs
     const hdg = (p, q) => Math.atan2(q[0] - p[0], -(q[1] - p[1])), seaH = Math.atan2(P.n[0], -P.n[1]), tip = tipOf(P, pose);
     // at the unit's stations, clear of the forklift's route: one signals at the edge, one takes the loads, one counts by the door, one
     // works the crane's remote
     const s0 = P.ws.signal, s1 = P.ws.receive, s2 = P.ws.tally, s3 = P.ws.remote;
-    const moving = i >= 0 && (u < 0.18 || (u >= 0.42 && u < 0.74)), recv = i >= 0 && u >= 0.74 && u < hk ? 'guide' : i >= 0 && u >= hk && u < 0.93 ? 'unhook' : 'look';
+    const moving = i >= 0 && u > 0 && (u < 0.18 || (u >= 0.42 && u < 0.74)), atQuay = i >= 0 && L.own && LD[i].back ? u >= 0.18 && u < 0.42 : u >= 0.74 && u < 0.93;
+    const recv = i >= 0 && u > 0 && atQuay ? (L.own && LD[i].back ? (u < 0.32 ? 'guide' : 'unhook') : u < hk ? 'guide' : 'unhook') : 'look';
     const busy = [{x:s0[0], z:s0[1], h:seaH, task:moving ? 'signal' : 'look'}, {x:s1[0], z:s1[1], h:hdg(s1, D), task:recv}, {x:s2[0], z:s2[1], h:hdg(s2, D), task:'tally'}, {x:s3[0], z:s3[1], h:hdg(s3, [tip[0], tip[2]]), task:'remote'}].map(q => ({...q, walk:false, s:0}));
-    return {e, i, u, pose, hang, deck, quay, fk, busy, K, slewD:Math.atan2(D[0] - P.crane[0], D[1] - P.crane[1])};
+    return {e, i, u, pose, hang, att, deck, quay, fk, busy, K:from(Math.max(0, i)).w, slewD};
   }
   // walking over when a job moves: a person or the forklift that has to be somewhere else walks (drives) there instead of jumping
   function follow(P, key, st, T, v){
@@ -111,10 +159,15 @@
       const k = clamp((sw[0] - C[0]) * fw[0] + (sw[1] - C[1]) * fw[1], -Lb / 3, Lb / 3), [tx, tz] = unitL(U, C[0] + fw[0] * k, C[1] + fw[1] * k); chW = Math.atan2(tx - ax[0], tz - ax[2]); }
     P.chA = P.chA === undefined ? P.chRest : P.chA + clamp(angDiff(P.chA, chW), -0.35 * dt, 0.35 * dt);
     const r = drawUnitParts(P, eye, pose, FK, P.doorK, P.chA, LS ? T : null);   // (the driver is on the forklift while it works a landing)
-    if (LS && LS.hang){ const h = LS.hang.h, t = rel(r.tip[0], pose.hook - 0.1 - h, r.tip[2]); drawN(LS.hang.mesh, chain(M4.T(t[0], t[1], t[2]), M4.RY(pose.a))); }
+    // what hangs from the hook (in the sling, swaying a little), the sling itself through the landing, the loads on deck and on the quay
+    const ring = rel(r.tip[0], pose.hook + 0.1, r.tip[2]), sway = Math.sin(T * 1.3) * 0.035;
+    if (LS && LS.hang){ const h = LS.hang.h, t = rel(r.tip[0] + sway * Math.cos(pose.a), pose.hook - 0.1 - h, r.tip[2] - sway * Math.sin(pose.a)), HM = chain(M4.T(t[0], t[1], t[2]), M4.RY(LS.hang.yaw + Math.sin(T * 0.8) * 0.03));
+      LS.hang.L.draw(HM); if (LS.hang.L.tub) drawSling([t[0], ring[1], t[2]], HM, 0, 1); }
+    else if (LS && LS.att) drawSling(ring, LS.att.M, T * 0.3, LS.att.k);
+    else if (LS) drawSling(ring, null, T * 0.3, 0);
     if (LS){
-      for (const q of LS.deck) drawN(q.mesh, chain(BMrel, M4.T(q.at[0], q.at[1], q.at[2])));
-      for (const q of LS.quay){ const c = rel(P.drop[0], q.y, P.drop[1]); drawN(q.mesh, chain(M4.T(c[0], c[1], c[2]), M4.RY(LS.slewD))); }
+      for (const q of LS.deck) q.L.draw(chain(BMrel, M4.T(q.at[0], q.at[1], q.at[2])));
+      for (const q of LS.quay){ const c = rel(P.drop[0], q.y, P.drop[1]); q.L.draw(chain(M4.T(c[0], c[1], c[2]), M4.RY(LS.slewD))); }
     }
     // people: the day shift, or one on watch at night; everyone turns out for a landing
     const R = plantRounds(P); P.spray = 0;
@@ -456,12 +509,135 @@
     if (parked){ const R = kit('crane', 'rest'); if (R) drawN(R, chain(F.M0, M4.T(X.rest_at[0], X.rest_at[1], X.rest_at[2]))); }
     return carry;
   }
+  // ---------- the fish tubs on an open boat's deck (core/07f-kar.js, docs/planer/fiskekar-dekk.md, Jonas 04.11.2026) ----------
+  // The tubs are the boat's hold: each 460 l tub (tools/deck/fisk.py kar460) holds TUB_KG, and the gutted fish fill them in turn, one fish
+  // at a time from the bottom up, laid where tubPack says (lengthwise and crosswise in turn, never through a wall). The fish under the top
+  // two layers are covered by them and not drawn. The iced fish have lumps of crushed ice on them (isbit), and a tub that is all iced has
+  // the crushed ice over its top with the top fish half in it (is). The blood and the slime (kar460_blod1-3) come as the tub fills; a
+  // tub back from the plant is washed. The same drawing serves the tubs on deck, on the crane's hook, on the quay and on the forklift.
+  const KARPLAN = {}, KARIN = 0.022;
+  const karDims = () => (kitX('fish').tubs || {}).kar460 || {rim:0.74, floor:0.14, in_top:[0.86, 1.06], in_floor:[0.8137, 1.0137]};
+  const SCL = (x, y, z) => new Float32Array([x, 0, 0, 0, 0, y, 0, 0, 0, 0, z, 0, 0, 0, 0, 1]);
+  // the plan of a tub (key: its boat and place, or a landing's load): made again when it was emptied or a species of a tenth or more of it
+  // is not in the plan (the shares of the whole catch, so the tubs are alike)
+  function karPlan(key, spec, kg, dims){
+    const P = KARPLAN[key], has = P && Object.keys(spec).every(k => spec[k] < 0.1 * (kg || 1) || P.sps.includes(k));
+    if (P && has && !(kg < 0.5 && P.kg >= 0.5)){ P.kg = kg; return P.plan; }
+    let h = 7; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+    const sps = Object.keys(spec).filter(k => spec[k] > 0), plan = tubPack(dims || karDims(), spec, (h % 997) + 1);
+    KARPLAN[key] = {plan, sps, kg}; return plan;
+  }
+  // the share of each species in the whole catch in the tubs (the spec for a plan)
+  function karSpec(){ const o = {}; for (const x of S.hold || []) if (inTub(x)) o[x.sp] = (o[x.sp] || 0) + x.kg; if (!Object.keys(o).length) o.torsk = 1; return o; }
+  // a tub with its load at M (the tub's frame on deck: the base's centre): load {kg, iced} or null (empty); key: the plan's
+  function drawKarLoad(M, load, key, washed){
+    const T = kit('fish', 'kar460'); if (!T) return false; drawN(T, M);
+    const kg = load ? load.kg : 0, f = kg / TUB_KG;
+    if (!washed) for (const [k, at] of [[1, 0.015], [2, 0.3], [3, 0.65]]){ const B = f > at ? kit('fish', 'kar460_blod' + k) : null; if (B) drawN(B, M); }
+    if (kg < 0.5 || !SK || !SK.fishM) return true;
+    const plan = karPlan(key, karSpec(), kg), n = tubShown(plan, kg); if (!n) return true;
+    const D = karDims(), top = plan[n - 1].y, nIce = Math.round(n * clamp((load.iced || 0) / Math.max(1e-6, kg), 0, 1)), BIT = kit('fish', 'isbit');
+    for (let i = 0; i < n; i++){ const q = plan[i]; if (q.y < top - 0.17) continue;
+      const lie = fishLie(q.sp), up = (q.sp === 'kveite' || q.sp === 'blakveite') ? 1 : (hash(i * 11 + 3) > 0.5 ? 1 : -1);
+      drawN(fishOf(q.sp), chain(M, M4.T(q.x, q.y, q.z), M4.RY(q.yaw + (q.flip ? Math.PI : 0)), M4.RZ(up * Math.PI / 2), M4.S(q.s)));
+      // the lumps of ice on an iced fish, along its back (inside its footprint)
+      if (BIT && i < nIce && q.y > top - 0.09) for (const a of [-0.22, 0.18]){ const c = Math.cos(q.yaw), sn = Math.sin(q.yaw), u = a * q.s;
+        drawN(BIT, chain(M, M4.T(q.x + sn * u, q.y + lie[1] * q.s * 0.5 + 0.004, q.z + c * u), M4.RY(hash(i * 5 + a * 10) * 6.28), M4.S(Math.min(0.85, lie[0] * q.s * 6)))); } }
+    // full and all of it iced: the crushed ice over the top, the top fish lying in it (scaled to the inside at its height, a margin from the wall)
+    const IS = kit('fish', 'is');
+    if (IS && kg >= 0.9 * TUB_KG && nIce >= n){ const y0 = top - 0.075, w = karIn(D, y0); drawN(IS, chain(M, M4.T(0, y0, 0), SCL(2 * w[0] - 2 * KARIN, 1, 2 * w[1] - 2 * KARIN))); }
+    return true;
+  }
+  // the tub places an open boat has now (GEO(vt).kit.tubs, the first BOAT.karN of them): {at, ry}
+  function karPlaces(vt){ const G = GEO(vt), K = G && G.kit && G.kit.tubs; if (!K || !(VESSELS[vt] || {}).kar) return [];
+    const n = vt === S.boat.type && BOAT.karN ? BOAT.karN : karN(vt, 0); return K.slice(0, n).map(q => ({at:[q[0], q[1], q[2]], ry:q[3] || 0})); }
+  // the tubs on deck with what is in them (skip: the places whose tub is off the deck now, at a landing)
+  // (washed: the tubs set back aboard washed at a landing; the catch is in the hold until the landing note, but not in them)
+  function drawCatchTubs(BMrel, vt, skip, washed){
+    const P = karPlaces(vt); if (!P.length) return 0; const T = tubLoads(S.hold, P.length); let n = 0;
+    P.forEach((q, i) => { if (skip && skip.has(i)) return; const w = !!(washed && washed.has(i)); if (drawKarLoad(chain(BMrel, M4.T(q.at[0], q.at[1], q.at[2]), M4.RY(q.ry)), w ? null : T[i], vt + ':' + i, w)) n++; });
+    return n;
+  }
+  // the heap's top in a tub (the tub's frame), where a packed fish lands
+  function karTop(vt, i){ const T = tubLoads(S.hold, karPlaces(vt).length)[i], D = karDims(); if (!T || T.kg < 0.5) return D.floor + 0.05;
+    const plan = karPlan(vt + ':' + i, karSpec(), T.kg), n = tubShown(plan, T.kg); return n ? plan[n - 1].y + 0.06 : D.floor + 0.05; }
+  // the tub being filled now (the first not full), for the packer
+  function karFilling(vt){ const T = tubLoads(S.hold, karPlaces(vt).length); for (let i = 0; i < T.length; i++) if (T[i].kg < TUB_KG - 0.5) return i; return T.length - 1; }
+  // ---- the ice box (tools/deck/fisk.py iskasse, the 300 l tub in blue): it stands on deck at its place (the model's kit.iskasse, under
+  // the gutting board on the open boats; on a boat with a hold by the packer's place), the crushed ice in it as high as the ice aboard,
+  // and the shovel stands in it when nobody is icing (Jonas 04.11.2026: «Det kan ikke bare dukke opp en kasse med is fra løse luften») ----
+  function iceBoxAt(vt){ const G = GEO(vt), K = G && G.kit && G.kit.iskasse; if (K) return {at:[K[0], K[1], K[2]], ry:K[3] || 0, s:K[4] || 1};
+    const PT = typeof deckPoints === 'function' ? deckPoints(vt) : null, M = PT && PT.is && typeof deckMap === 'function' ? deckMap(vt) : null;
+    if (!M) return null; const p = M.at(PT.is.k), h = PT.is.h || 0, F = [Math.sin(h), -Math.cos(h)], R = [Math.cos(h), Math.sin(h)];
+    return {at:[p[0] - R[0] * 0.62 + F[0] * 0.1, p[1], p[2] - R[1] * 0.62 + F[1] * 0.1], ry:-h, s:0.75}; }
+  // the ice's top in the box, in the boat's frame (where the shovel takes it)
+  function iceBoxTop(vt){ const B = iceBoxAt(vt); if (!B) return null; const D = (kitX('fish').tubs || {}).iskasse || {rim:0.66, floor:0.14}, f = clamp((S.boat.ice || 0) / Math.max(1, BOAT.iceCap || 1), 0, 1);
+    return [B.at[0], B.at[1] + (D.floor + f * (D.rim - D.floor - 0.09) + 0.02) * B.s, B.at[2]]; }
+  // someone has the shovel in his hands (packing on the deck), so it is not in the ice box
+  const packingNow = () => !!(typeof CREW3D !== 'undefined' && CREW3D.on() && CREW3D.agents().some(a => a.st === 'is' && a.mode === 'at')) || !!(DECKACT && DECKACT.on && DECKACT.task === 'ice');
+  function drawIceBox(BMrel, vt, shovelIn){
+    const B = iceBoxAt(vt), K = kit('fish', 'iskasse'); if (!B || !K) return null; const M = chain(BMrel, M4.T(B.at[0], B.at[1], B.at[2]), M4.RY(B.ry), M4.S(B.s)); drawN(K, M);
+    const D = (kitX('fish').tubs || {}).iskasse || {rim:0.66, floor:0.14, in_top:[0.6, 0.96], in_floor:[0.5607, 0.9207]}, f = clamp((S.boat.ice || 0) / Math.max(1, BOAT.iceCap || 1), 0, 1), IS = kit('fish', 'is');
+    const y = D.floor + f * (D.rim - D.floor - 0.09), w = karIn(D, y);
+    if (IS && f > 0.01) drawN(IS, chain(M, M4.T(0, y - 0.03, 0), SCL(2 * w[0] - 0.03, 1, 2 * w[1] - 0.03)));
+    // the shovel left in the ice: the blade down in it toward the far end, the shaft leaning on the near rim
+    if (shovelIn){ const SP = kit('fish', 'spade'), SH = kit('fish', 'spade_skaft'); if (SP && SH){ const bl = [0, y + 0.02, -0.18], gr = [0.12, D.rim + 0.62, 0.48];
+      const BM = chain(M, M4.T(bl[0], bl[1], bl[2]), M4.RX(-0.35)); drawN(SP, BM); drawN(SH, chain(M, shaftM(gr, [bl[0], bl[1] + 0.03, bl[2] + 0.02]))); } }
+    return {M, top:[B.at[0], B.at[1] + (y + 0.05) * B.s, B.at[2]]};
+  }
+  // a frame along a line: local -z from A toward B with its length (the shovel's shaft, from the grip to the socket), y as near up as it can be
+  function shaftM(A, B){ const d = [B[0] - A[0], B[1] - A[1], B[2] - A[2]], L = Math.hypot(d[0], d[1], d[2]) || 1e-6, z = d.map(v => -v / L), up = Math.abs(z[1]) > 0.95 ? [1, 0, 0] : [0, 1, 0];
+    let x = [up[1] * z[2] - up[2] * z[1], up[2] * z[0] - up[0] * z[2], up[0] * z[1] - up[1] * z[0]]; const xl = Math.hypot(x[0], x[1], x[2]) || 1; x = x.map(v => v / xl);
+    const y = [z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0]];
+    return new Float32Array([x[0], x[1], x[2], 0, y[0], y[1], y[2], 0, z[0] * L, z[1] * L, z[2] * L, 0, A[0], A[1], A[2], 1]); }
+  // ---- the sling (tools/deck/fisk.py slynge_*): the master link on the crane's hook at H (eye-relative, its top), a strap from the ring
+  // under it to each corner of the tub at M (a tub's frame), a hook under the rim there; with no tub the legs hang from the ring ----
+  function drawSling(H, M, swing, k){
+    const R = kit('fish', 'slynge_ring'), LG = kit('fish', 'slynge_ben'), HK = kit('fish', 'slynge_krok'), X = kitX('fish').sling; if (!R || !LG || !HK || !X) return;
+    drawN(R, M4.T(H[0], H[1], H[2])); const J = [H[0] + X.join[0], H[1] + X.join[1], H[2] + X.join[2]];
+    const leg = (A, B, rad) => { const d = [B[0] - A[0], B[1] - A[1], B[2] - A[2]], L = Math.hypot(d[0], d[1], d[2]) || 1e-6, u = d.map(v => v / L);
+      // the strap's width across the leg and level, its face toward the tub (rad: the corner's way out from the tub's middle)
+      let w = [u[1] * rad[2] - u[2] * rad[1], u[2] * rad[0] - u[0] * rad[2], u[0] * rad[1] - u[1] * rad[0]]; const wl = Math.hypot(w[0], w[1], w[2]) || 1; w = w.map(v => v / wl);
+      const nx = [w[1] * u[2] - w[2] * u[1], w[2] * u[0] - w[0] * u[2], w[0] * u[1] - w[1] * u[0]];
+      drawN(LG, new Float32Array([nx[0], nx[1], nx[2], 0, -u[0] * L, -u[1] * L, -u[2] * L, 0, w[0], w[1], w[2], 0, A[0], A[1], A[2], 1])); };
+    const kk = k == null ? 1 : k;
+    for (let c4 = 0; c4 < 4; c4++){
+      // hanging free from the ring, or on the tub's corner (kk: how far the hand has drawn the hook out to it)
+      const a = c4 * Math.PI / 2 + Math.PI / 4 + (swing || 0); let rad = [Math.cos(a), 0, Math.sin(a)], P = [J[0] + rad[0] * 0.09, J[1] - 1.05, J[2] + rad[2] * 0.09];
+      if (M && kk > 0){ const q = X.lift[c4], C = xf(M, q), c = xf(M, [0, q[1], 0]), rc = [C[0] - c[0], 0, C[2] - c[2]], e2 = ease(kk);
+        P = [P[0] + (C[0] - P[0]) * e2, P[1] + (C[1] - P[1]) * e2 + Math.sin(Math.PI * e2) * 0.12, P[2] + (C[2] - P[2]) * e2]; rad = [rad[0] + (rc[0] - rad[0]) * e2, 0, rad[2] + (rc[2] - rad[2]) * e2]; }
+      leg(J, P, rad); const yaw = Math.atan2(rad[0], rad[2]);
+      // the hook: its throat (X.throat in its frame, facing -z) under the rim at the corner, turned to face the tub's middle
+      const Mh = chain(M4.T(P[0], P[1], P[2]), M4.RY(yaw), M4.T(-X.throat[0], -X.throat[1], -X.throat[2])); drawN(HK, Mh); }
+  }
+  // ---- the bleeding tub (Jonas 04.11.2026: «se at blodet og fisken fyller karet på en ordentlig måte»): the 300 l tub at the model's
+  // work.tub (its scale s and turn ry), sea water reddened by the blood in it, and the bled fish waiting for the knife lying in it as
+  // tubPack lays them (in the tub's inside at its size, so none goes through a wall), as many as the kilos waiting fill it toward
+  // BOAT.tubCap, half under the bloody water that rises with them ----
+  function drawBleedTub(BMrel, W, d, ux, uz, KT, KW){
+    const s = W && W.s || 1, ry = W && W.ry || 0, M0 = chain(BMrel, M4.T(ux, d.y, uz), M4.RY(ry)); drawN(KT, chain(M0, M4.S(s)));
+    const D0 = (kitX('fish').tubs || {}).kar300 || {rim:0.66, floor:0.14, in_top:[0.6, 0.96], in_floor:[0.5607, 0.9207]};
+    const D = {rim:D0.rim * s, floor:D0.floor * s, in_top:D0.in_top.map(v => v * s), in_floor:D0.in_floor.map(v => v * s)};
+    const wait = x => !x.gut && !x.iced && !(SPECIES[x.sp] || {}).live, spec = {}; let kg = 0;
+    for (const x of S.hold || []) if (wait(x)){ spec[x.sp] = (spec[x.sp] || 0) + x.kg; kg += x.kg; }
+    const f = clamp(kg / Math.max(20, BOAT.tubCap || 60), 0, 1);
+    let top = D.floor, n = 0, plan = null;
+    if (kg >= 0.5 && SK && SK.fishM){ plan = karPlan('blod:' + vtype(), Object.keys(spec).length ? spec : {torsk:1}, kg, D); n = Math.max(1, Math.ceil(plan.length * f - 1e-9)); n = Math.min(n, plan.length);
+      for (let i = 0; i < n; i++){ const q = plan[i]; if (q.y < (plan[n - 1].y - 0.14)) continue; const up = hash(i * 11 + 7) > 0.5 ? 1 : -1;
+        drawN(fishOf(q.sp), chain(M0, M4.T(q.x, q.y, q.z), M4.RY(q.yaw + (q.flip ? Math.PI : 0)), M4.RZ(up * Math.PI / 2), M4.S(q.s))); }
+      if (n) top = plan[n - 1].y; }
+    // the water: a third of the tub when it is empty, rising as the fish fill it, but under the top fish so they lie half in it
+    if (KW){ const y = n ? Math.max(D.floor + 0.04, Math.min(D.floor + (D.rim - D.floor) * (0.35 + 0.4 * f), top + 0.005)) : D.floor + (D.rim - D.floor) * 0.35, w = karIn(D, y);
+      drawN(KW, chain(M0, M4.T(0, y, 0), SCL(2 * w[0] - 0.04, 1, 2 * w[1] - 0.04))); }
+    return top;
+  }
   // the bleeding tub's top in the boat frame (where the fish are tossed)
   function dkTub(G){ const W = G.work || null, d = G.deck || {y:G.gw, z:2}, Bm = G.beam; return [W ? W.tub[0] : Bm / 2 - 0.62, d.y + 0.62, W ? W.tub[2] : d.z + 0.35]; }
   function drawDeck(BMrel, eye, VP, t, DK){
     const vt = vtype(), G = GEO(vt), d = G.deck || {y:G.gw, z:2}, Bm = G.beam, b = S.boat; DK.pt = null;
+    // the fish tubs and the ice box stand on deck through a landing too (the tubs on the crane's hook or ashore are the landing's)
+    nSetup(VP); KST.tubs = drawCatchTubs(BMrel, vt, b.land && PLANTS.length ? landOff(b.land) : null, b.land ? landBack(b.land) : null); KST.icebox = !!drawIceBox(BMrel, vt, !packingNow()) ? 1 : 0;
     if (b.land || b.status === 'aground') return;
-    nSetup(VP);
     // where they stand: by the beam on the after deck, or where a detailed model says (the starter boat has a seat and a bench aft)
     const W = G.work || null, tx = W ? W.table[0] : -(Bm / 2 - 0.42), ux = W ? W.tub[0] : Bm / 2 - 0.62, tz = W ? W.table[2] : d.z, uz = W ? W.tub[2] : d.z + 0.35;
     // a model with its own gutting table (work.own, the old wooden boat's across the gunwale) has it drawn already, the fish on its top;
@@ -471,40 +647,32 @@
     const potRig = b.rig === 'teiner' && !(typeof deckPending === 'function' && deckPending() > 0.5);
     KST.tank = null; if (!G.hand){ if (!GB) buildGear(); drawCrabTank(BMrel, G, d, Bm / 2, G.hauler || [Bm / 2 * 0.92, d.y + 1, d.z - 1.3]); nSetup(VP); }
     drawRigRest(BMrel, G, d); drawHaulRest(BMrel, G, d, VP); nSetup(VP);
-    KST.raft = KST.buoys = KST.text = KST.radar = KST.cargo = KST.tubs = 0; KST.crane = null; KST.vt = vt; KST.n++;
+    KST.raft = KST.buoys = KST.text = KST.radar = KST.cargo = 0; KST.crane = null; KST.vt = vt; KST.n++;
     drawSafety(BMrel, G, VP, t); const lifted = drawCrane(BMrel, G, VP, t, d); drawCargo(BMrel, G, lifted ? 1 : 0);
     if (!potRig){
       // the bleeding tub: a 300 l fish tub with the bloody water at its level (the old box where the kit is not in the page)
-      if (KT){ const TM = chain(BMrel, M4.T(ux, d.y, uz), M4.S(W && W.s || 1)); drawN(KT, TM); if (KW) drawN(KW, chain(TM, M4.T(0, 0.44, 0), M4.S(0.58, 1, 0.94))); }
-      else drawN(PM.btub, chain(BMrel, M4.T(ux, d.y, uz), M4.S(W && W.s || 1)));
+      if (KT) drawBleedTub(BMrel, W, d, ux, uz, KT, KW);
+      else drawN(PM.btub, chain(BMrel, M4.T(ux, d.y, uz), M4.RY(W && W.ry || 0), M4.S(W && W.s || 1)));
       // the table by the rail, its long side along the boat and the worker's side inboard
       if (!own){ if (KB) drawN(KB, chain(BMrel, M4.T(tx, d.y, tz), M4.RY(tSide * Math.PI / 2))); else drawN(PM.gtable, chain(BMrel, M4.T(tx, d.y, tz))); } }
-    // an open boat without a hold keeps the catch in 460 l tubs on deck (the model's places, kit.tubs): the gutted and iced fish fill
-    // them in turn, in layers of six under the crushed ice (lengthwise in the tub, three across and two along, heads both ways)
-    if (V && V.hold && V.hold.kind === 'dekk' && G.kit && G.kit.tubs && G.kit.tubs.length && !G.hand){ const IS = kit('fish', 'is'), tubs = G.kit.tubs, vol = tubs.reduce((a, q) => a + (q[4] || 460), 0);
-      const kgIn = S.hold.filter(x => x.gut || x.iced).reduce((a, x) => a + x.kg, 0), all = Math.max(1e-6, S.hold.reduce((a, x) => a + x.kg, 0));
-      const cum = []; let acc = 0; for (const sp of ALLSP){ acc += S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0); cum.push([sp, acc / all]); } const pick = r => (cum.find(c => r <= c[1] + 1e-9) || cum[0])[0];
-      let before = 0; tubs.forEach((q, ti) => { const sz = q[4] || 460, T = kit('fish', 'kar' + sz), per = (V.holdCap || 450) * sz / vol, M = chain(BMrel, M4.T(q[0], q[1], q[2]), M4.RY(q[3] || 0)), f = clamp((kgIn - before) / per, 0, 1); before += per; if (T){ drawN(T, M); KST.tubs++; } if (f <= 0 || !SK || !SK.fishM) return;
-        const layers = Math.ceil(f * 6); for (let L = 0; L < layers; L++) for (let k = 0; k < 6; k++){ const i = ti * 40 + L * 6 + k, sp = pick(hash(i * 7 + 5));
-          drawN(fishOf(sp), chain(M, M4.T(-0.25 + (k % 3) * 0.25 + (hash(i * 3) - 0.5) * 0.05, 0.16 + L * 0.085, -0.24 + Math.floor(k / 3) * 0.48), M4.RY((k % 2 ? Math.PI : 0) + (hash(i * 9) - 0.5) * 0.3), M4.RZ(Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), M4.S(0.46 + hash(i * 13) * 0.08))); }
-        if (IS) drawN(IS, chain(M, M4.T(0, 0.16 + layers * 0.085, 0), M4.S(0.86, 1, 1.05))); }); }
     // the catch on deck (tools/fish): the round fish waiting for the knife lie in the bleeding tub (their species, about one for every 6 kg),
     // the gutted ones waiting for the icer at the end of the gutting table, and one on the table when nobody guts
     { const wait = x => !x.gut && !x.iced && !(SPECIES[x.sp] || {}).live, all = S.hold.reduce((a, x) => a + (wait(x) ? x.kg : 0), 0), n = Math.min(10, Math.ceil(all / 6)), ts = W && W.s || 1;
       const gd = S.hold.reduce((a, x) => a + (x.gut && !x.iced ? x.kg : 0), 0), ng = SK && SK.fishM && !potRig ? Math.min(3, Math.ceil(gd / 4)) : 0;
       for (let i = 0; i < ng; i++) drawN(fishOf(S.hold.find(x => x.gut && !x.iced).sp), chain(BMrel, M4.T(tx, topY, tz + (own ? 0.38 : 0.45) * (tz > d.z ? -1 : 1)), M4.T(0, i * 0.045, (hash(i * 3) - 0.5) * 0.12), M4.RY(0.15 + (i % 2) * Math.PI), M4.RZ(Math.PI / 2), M4.S(0.46)));
-      if (n > 0 && SK && SK.fishM && !potRig){ const cum = []; let acc = 0; for (const sp of ALLSP){ acc += S.hold.filter(x => x.sp === sp && wait(x)).reduce((a, x) => a + x.kg, 0); cum.push([sp, acc / all]); }
-        const pick = r => (cum.find(c => r <= c[1] + 1e-9) || cum[0])[0];
-        for (let i = 0; i < n; i++){ const sp = pick(hash(i * 7 + 5)), z = ((i % 3) - 1) * 0.2, lay = Math.floor(i / 3);
-          drawN(fishOf(sp), chain(BMrel, M4.T(ux, d.y, uz), M4.S(ts), M4.T((hash(i * 3) - 0.5) * 0.12, (KT ? 0.47 : 0.5) + lay * 0.05, z), M4.RY(Math.PI / 2 + (i % 2 ? Math.PI : 0) + (hash(i * 9) - 0.5) * 0.3), M4.RZ(sp === 'krabbe' ? 0 : Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), M4.S((0.48 + hash(i * 13) * 0.1) * (sp === 'krabbe' ? 1.7 : 1)))); }
-        if (!DK.on) drawN(fishOf(pick(0.3)), chain(BMrel, M4.T(tx, topY, tz + (own ? 0 : 0.25)), M4.RY(0.2), M4.RZ(Math.PI / 2), M4.S(0.5))); } }
+      if (n > 0 && SK && SK.fishM && !potRig && !DK.on){ const sp0 = (S.hold.find(wait) || {sp:'torsk'}).sp; drawN(fishOf(sp0), chain(BMrel, M4.T(tx, topY, tz + (own ? 0 : 0.25)), M4.RY(0.2), M4.RZ(Math.PI / 2), M4.S(0.5))); } }
     if (!DK.on) return;
     const agents = !G.hand && typeof CREW3D !== 'undefined' && CREW3D.on();   // (the agents walk to the table and the tub themselves, deckcrew.js)
     const wl = xf(BMrel, [tx + 0.62, d.y, tz]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:DK.me ? 'skipper' : null, look:DK.me ? lookMe() : lookCrew(0)}, head = bv.head - Math.PI / 2;
-    if (!agents) drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:head, task:DK.task === 'gut' ? 'gut' : 'ice', walk:false, s:0}, eye, t, 7);
+    // (icing on an open boat: the shovel from the ice box on deck over the fish in the tub being filled, as the packer does; deckcrew.js)
+    const kp = karPlaces(vt), ki = kp.length ? karFilling(vt) : -1, IB = iceBoxTop(vt), icing = kp.length ? {task:'pack', Cr:xf(BMrel, kp[ki].at), crTop:karTop(vt, ki), crTub:true, Bin:IB ? xf(BMrel, IB) : null} : {task:'ice'};
+    // (gutting: the fish from the bleeding tub onto the table, the guts over the rail, the gutted fish into the fish tub, 08-plants.js gutw)
+    const DW = deckWork(G), gutting = {task:'gutw', Tb:xf(BMrel, DW.table), Ub:xf(BMrel, dkTub(G)), Of:xf(BMrel, DW.offal), Cr:kp.length ? xf(BMrel, kp[ki].at) : null, crTop:kp.length ? karTop(vt, ki) : 0.3,
+      gsp:(S.hold.find(x => !x.gut && !x.iced) || {sp:'torsk'}).sp, gkg:2 + hash(Math.floor(t / 5.6)) * 3};
+    if (!agents) drawWorker(P, Object.assign({x:wl[0] + eye[0], z:wl[2] + eye[2], h:head, walk:false, s:0}, DK.task === 'gut' ? gutting : icing), eye, t, 7);
     // the skipper and a hand both on the deck work: the hand stands inboard of the bleeding tub, facing it
     if (!agents && DK.me && DK.crew && !DK.alone){ const w2 = xf(BMrel, [ux + (ux > tx ? -0.62 : 0.62), d.y, uz]), y2 = w2[1] + eye[1];
-      drawWorker({gy:() => y2, bare:true, spray:0, kit:null, look:lookCrew(0)}, {x:w2[0] + eye[0], z:w2[2] + eye[2], h:bv.head + (ux > tx ? 1 : -1) * Math.PI / 2, task:DK.task === 'gut' ? 'gut' : 'ice', walk:false, s:0}, eye, t, 8); }
+      drawWorker({gy:() => y2, bare:true, spray:0, kit:null, look:lookCrew(0)}, Object.assign({x:w2[0] + eye[0], z:w2[2] + eye[2], h:bv.head + (ux > tx ? 1 : -1) * Math.PI / 2, walk:false, s:0}, icing), eye, t, 8); }
     // the offal goes over the rail on the table's side into the water (down the bench's chute), where the gulls come down for it
     const kDrop = KB && XF[big ? 'benk_drop' : 'bord_drop'], dropP = kDrop ? [tx + tSide * kDrop[2], d.y + Math.max(0.6, kDrop[1]), tz - tSide * kDrop[0]] : [tx - tSide * 0.15, d.y + 1.0, tz];
     const out = [-tSide * Math.cos(bv.head), -tSide * Math.sin(bv.head)], a = xf(BMrel, dropP), wat = (env.tide || 0) - eye[1];
