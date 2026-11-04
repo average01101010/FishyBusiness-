@@ -179,7 +179,7 @@ function finishJob(j){
   else if (j.kind === 'eng'){ b.engLv = j.lv; applyVessel(); log('Ny motor montert: ' + BOAT.hp + ' hk, ' + fmt(BOAT.vmax, 1) + ' knop.', 'New engine fitted: ' + BOAT.hp + ' hp, ' + fmt(BOAT.vmax, 1) + ' knots.'); }
   else if (j.kind === 'hull'){ b.foul = 0; log('Skroget er renset på slipp.', 'The hull is cleaned on the slip.'); }
   else if (j.kind === 'upg'){ b.upg = Object.assign({}, b.upg, {[j.u]:j.lv}); applyVessel(); const st = UPGS[j.u].steps[j.lv - 1]; log('Ombygd: ' + st.no + '.', 'Rebuilt: ' + st.en + '.'); }
-  else if (j.kind === 'hold'){ b.holdLv = j.lv; applyVessel(); log('Lasterommet er bygd om: ' + fmt(BOAT.holdCap, 0) + ' kg.', 'The hold is rebuilt: ' + fmt(BOAT.holdCap, 0) + ' kg.'); }
+  else if (j.kind === 'hold'){ b.holdLv = j.lv; applyVessel(); if (BOAT.karN) log('Plass til ett fiskekar til: ' + BOAT.karN + ' kar, ' + fmt(BOAT.holdCap, 0) + ' kg.', 'Room for one more fish tub: ' + BOAT.karN + ' tubs, ' + fmt(BOAT.holdCap, 0) + ' kg.'); else log('Lasterommet er bygd om: ' + fmt(BOAT.holdCap, 0) + ' kg.', 'The hold is rebuilt: ' + fmt(BOAT.holdCap, 0) + ' kg.'); }
   else if (gearJob(j)){}
   else if (j.kind === 'prep') return;   // a job from an old save: nothing to do
   // the crew works aboard, in port or at sea (tilbakemelding #59)

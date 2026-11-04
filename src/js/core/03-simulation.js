@@ -94,7 +94,10 @@ function applyVessel(){
   const b = S.boat; Object.assign(BOAT, VESSELS[b.type || 'skiff']);
   for (const k in EQUIP) if (EQUIP[k].boost && S.equip && S.equip[k] && equipFits(k, b.type || 'skiff')) Object.assign(BOAT, EQUIP[k].boost);
   BOAT.fuelK = fuelKOf(BOAT);   // the boat burns BOAT.lph at cruising speed, with the engine the boosts gave her
-  const hx = holdX(b); BOAT.holdCap = Math.round(BOAT.holdCap * hx); BOAT.iceCap = Math.round(BOAT.iceCap * hx);
+  // the hold: an open boat's is her tubs (core/07f-kar.js, TUB_KG each, one more for each of the yard's steps), the rest grow by HOLDUP
+  const V0k = VESSELS[b.type || 'skiff'];
+  if (V0k.kar){ const n = karN(b.type || 'skiff', b.holdLv); BOAT.karN = n; BOAT.holdCap = n * TUB_KG; BOAT.iceCap = Math.round(V0k.iceCap * n / V0k.kar.n); }
+  else { const hx = holdX(b); BOAT.karN = 0; BOAT.holdCap = Math.round(BOAT.holdCap * hx); BOAT.iceCap = Math.round(BOAT.iceCap * hx); }
   // the yard's other upgrades (UPGS): what they change for the crew and the boat
   const fx = {}; for (const k in UPGS){ const lv = upgLv(b, k); if (lv && UPGS[k].fit(VESSELS[b.type || 'skiff'])) Object.assign(fx, UPGS[k].steps[lv - 1]); }
   BOAT.fx = fx; if (fx.x) BOAT.fuelCap = Math.round(BOAT.fuelCap * fx.x); if (fx.sea) BOAT.sea *= fx.sea; BOAT.svcCost = svcCostOf(b);

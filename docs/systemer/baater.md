@@ -231,3 +231,12 @@ Bare båten, aldri fiskeutstyr eller haler. Tallene står i `core/03-simulation.
 - **Mannskap, bare på båter med køyer** (`berths` > 0): lugarer (tretthet ×0,92 / ×0,85 / ×0,78 på sjøen), messe og bysse (måltidet 24 / 18 / 12 minutter og humør +2 / +4 / +6), tørkerom og bad (kuldeslitet ×0,85 / ×0,7). Virkningen går gjennom `BOAT.fx` til `crewTick` (`core/04-crew.js`) og `mealMinute`.
 - **Isolert lasterom** (ikke havbåtene): isbruken per kilo ×0,85 / ×0,7. **Drivstofftank** (ikke påhengs- og havbåter): ×1,25 / ×1,5. **Stabilisering** (fra 9 m): slingrekjøl, og gyrostabilisator fra 25 m; `BOAT.sea` ×0,9 / ×0,78 (mindre fartstap i sjø) og mannskapets sjøgang teller mindre.
 - **Ikke gjort:** havbåtene har ingen oppgraderinger for lasterom (tankene er faste); lugarer gir ikke ekstra mannskapsplass; ingen animasjon.
+
+
+## Fiskekar på båtene uten lasterom (04.11.2026)
+
+Jonas 04.11.2026: «båter som ikke har lasterom oppbevarer fisken i de hvite 500 kilos fiskekarrene», antall kar etter kapasiteten, gradvis fylling uten clipping, karene løftes ut ved levering. Planen og valgene står i `docs/planer/fiskekar-dekk.md`.
+
+- `VESSELS.kar {n, max}` på `skiff`, `trebat` og `snekke` (`land:'tub'`). Kapasiteten er karene: `holdCap = karN × TUB_KG` (500 kg). Skiffen og trebåten har ett kar, snekka to. Det er ikke plass til flere på dekk (målt i modellene), og et kar stablet oppå et fullt kar måtte vært båret dit først, så `max = n` og verftet har ingen trinn for dem (`karSteps`). En lagring med `holdLv` på en slik båt får trinnene betalt tilbake én gang (`karRefund`, kalt i `ui/11-boot.js`).
+- Plassene står i modellenes `kit.tubs` (`[x, y, z, ry, liter, under]`): skiffen forut for konsollen om babord, trebåten tvers mellom midttofta og forreste tofte (forreste tofte flyttet 0,11 m forover, `snekke23.py`), snekka langs babord mot speilet og tvers i styrbord hjørne akter (bløggekaret flyttet 0,07 m forover). Iskassa (`kit.iskasse`, et blått 300 l-kar i 0,6) står under sløyebordet på alle tre.
+- Fordelingen (`tubLoads`): det sløyde og isede fyller karene etter tur, det isede nederst; fisken som venter på kniven, ligger i bløggekaret. Pakkingen (`tubPack`, ren funksjon med enhetstest `tests/unit/kar.test.mjs`): lag på langs og tvers etter tur, hver fisk sjekket mot karets indre profil i sin høyde (2,5° vegger, hjørneradius 80 mm, 18 mm klaring), lengden etter vekten (`fishLen`), høyst 12 % kortere. Fisken vises én om gangen etter kiloene (`tubShown`), bare de to øverste lagene tegnes.

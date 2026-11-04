@@ -92,6 +92,12 @@ def colours():
     C['bucket'] = mat('bucket', (0.06, 0.06, 0.065), 0.35)
     C['wire'] = mat('wire', (0.70, 0.72, 0.74), 0.6, metal=0.8)
     C['grip'] = mat('grip', (0.12, 0.12, 0.13), 0.3)
+    C['sling'] = mat('sling', (0.42, 0.20, 0.62), 0.25)
+    C['sling2'] = mat('sling2', (0.34, 0.15, 0.50), 0.25)
+    C['label'] = mat('label', (0.85, 0.82, 0.30), 0.3)
+    C['blood2'] = mat('blood2', (0.42, 0.10, 0.08), 0.8)
+    C['alu'] = mat('alu', (0.74, 0.76, 0.78), 0.6, metal=0.8)
+    C['ash'] = mat('ash', (0.72, 0.60, 0.42), 0.3)
 
 # ---------- helpers ----------
 def loft(name, rings, mats, cap0=None, cap1=None, angle=35):
@@ -635,6 +641,143 @@ def bucket():
     p.append(ttube('grip', gp, [0.0105] * len(gp), C['grip'], seg=10, angle=60))
     return join(p, 'botte')
 
+# ---------- the lifting sling, the ice box, the ice shovel, the ice and the blood (Jonas 04.11.2026, docs/planer/fiskekar-dekk.md) ----------
+# «Kar skal løftes med en stropp fra hvert hjørne ja som samles i kroken på kranen»: a four-leg sling of violet polyester webbing (the
+# colour for 1 t), the legs gathered in a steel master link on the crane's hook and each ending in a tub hook that takes under the rolled
+# rim at a corner. The game draws the link at the crane's hook, a leg from the link down to each corner (slynge_ben, 1 m long, stretched
+# to the length), and a hook at each corner (kar460 extras lift). «Det kan ikke bare dukke opp en kasse med is fra løse luften»: the ice
+# box is a blue 300 l tub that stands on deck with crushed ice in it (iskasse; the ice in it is «is» scaled to its level), and the
+# shovel (spade: the aluminium scoop, spade_skaft: the shaft with its D grip, spade_is: the ice on the blade) is fetched from it.
+# isbit: a few lumps of crushed ice, falling from the shovel and lying on the iced fish. kar460_blod1-3: the blood and the slime on a
+# tub as it fills (the game shows more of them the fuller it is), thin patches a millimetre or two off the tub's surfaces.
+SLING = {}
+def sling_link():
+    """the master link: an oval of 16 mm steel, 135 x 75 mm inside, hanging from its top (the origin, where the crane's hook bears) in
+    the y-z plane; a small round ring under it gathers the four legs (SLING['join'] below the origin)"""
+    r = 0.008; a, b = 0.0375 + r, 0.0675 + r; pts = []
+    for k in range(25):
+        t = 2 * math.pi * k / 24; pts.append((0.0, a * math.sin(t), -b - b * math.cos(t)))
+    o1 = tube('link', pts, r, C['galv'], seg=10, caps=False)
+    zj = -2 * b - 0.02
+    o2 = torus('ring', (0, 0, zj - 0.022), (1, 0, 0), 0.024, 0.0065, C['galv'], seg=20, rseg=8)
+    SLING['join'] = [0.0, round(zj - 0.044, 4), 0.0]
+    return shade(join([o1, o2], 'slynge_ring'), 40)
+
+
+def sling_leg():
+    """one leg: a flat webbing strap 50 mm wide and 6 mm thick from the origin (the ring) straight down 1 m (the game stretches it), with
+    the sewn eye at each end turned over a little thicker and the strength label sewn on near the top"""
+    w, t = 0.025, 0.003; parts = []
+    parts.append(box('web', -t, t, -w, w, -1.0, 0.0, C['sling']))
+    parts.append(box('eye0', -t - 0.002, t + 0.002, -w - 0.001, w + 0.001, -0.07, -0.0, C['sling2']))
+    parts.append(box('eye1', -t - 0.002, t + 0.002, -w - 0.001, w + 0.001, -1.0, -0.93, C['sling2']))
+    parts.append(box('label', t, t + 0.0015, -0.018, 0.018, -0.16, -0.10, C['label']))
+    return shade(join(parts, 'slynge_ben'), 30)
+
+
+def tub_hook():
+    """the tub hook: a forged steel J 45 mm wide, from the strap's eye (the origin, at the top) down the outside of the rim and in under
+    the rolled lip, its throat at SLING['throat'] (in the game's frame: the hook faces -z, toward the tub's corner)"""
+    W = 0.0225; S = C['hook']; parts = []
+    prof = [(0.0, 0.0), (0.0, -0.035), (0.004, -0.07), (0.010, -0.105), (0.020, -0.122), (0.034, -0.126), (0.044, -0.118), (0.046, -0.104)]
+    poly = [(y, z) for y, z in prof]; inner = [(y + 0.0, z) for y, z in prof]
+    for i in range(len(prof) - 1):
+        (y0, z0), (y1, z1) = prof[i], prof[i + 1]
+        dy, dz = y1 - y0, z1 - z0; L = math.hypot(dy, dz); ny, nz = -dz / L * 0.006, dy / L * 0.006
+        q = [(y0 - ny, z0 - nz), (y1 - ny, z1 - nz), (y1 + ny, z1 + nz), (y0 + ny, z0 + nz)]
+        parts.append(extrude_x('h%d' % i, q, -W, W, S))
+    parts.append(cyl('eye', (-W - 0.003, 0, 0.006), (W + 0.003, 0, 0.006), 0.009, S, seg=12))
+    SLING['throat'] = G((0.0, 0.040, -0.118))
+    return shade(join(parts, 'slynge_krok'), 40)
+
+
+def ice_box(k300):
+    """the ice box: the 300 l tub in blue, as the open boats keep their crushed ice in (the ice in it is «is», scaled by the game)"""
+    o = recolour(k300, 'iskasse', C['tub'], C['tubb']); TUBS['iskasse'] = TUBS['kar300']; return o
+
+
+def shovel():
+    """the ice shovel: an aluminium scoop 0.28 m wide and 0.34 m long with sides 55 mm high and a back rising to the socket; in the game's
+    frame the blade runs forward (-z) from the socket at the origin, its floor 25 mm under it. spade_skaft: a 0.95 m ash shaft with a
+    black D grip, from the grip (origin) forward along -z to the socket at z = -1 (the game stretches it from the hand to the blade)"""
+    A = C['alu']; hw, L, hs = 0.14, 0.34, 0.055; z0 = -0.025; parts = []
+    # the floor, a little dished, and the sides and the back (thin plates)
+    parts.append(box('floor', -hw, hw, 0.0, L, z0 - 0.002, z0 + 0.002, A))
+    for sg in (-1, 1): parts.append(extrude_x('side', [(0.02, z0), (L, z0), (L - 0.02, z0 + hs * 0.6), (0.03, z0 + hs)], sg * hw - 0.002, sg * hw + 0.002, A))
+    parts.append(box('back', -hw, hw, -0.002, 0.002, z0, z0 + hs + 0.01, A))
+    parts.append(cyl('sock', (0, -0.09, 0.012), (0, 0.02, 0.0), 0.017, A, seg=12))
+    blade = shade(join(parts, 'spade'), 35)
+    q = []
+    q.append(cyl('shaft', (0, 0.09, 0.0), (0, 0.95, 0.0), 0.016, C['ash'], seg=10))
+    q.append(cyl('ferr', (0, 0.94, 0.0), (0, 1.0, 0.0), 0.018, A, seg=10))
+    # the D grip behind the hand: its cross bar (where the hand holds) at the origin, the two arms forward into the shaft's head
+    D = [(0.0, 0.11, 0.0), (-0.05, 0.07, 0.0), (-0.055, 0.02, 0.0), (-0.035, 0.0, 0.0), (0.035, 0.0, 0.0), (0.055, 0.02, 0.0), (0.05, 0.07, 0.0), (0.0, 0.11, 0.0)]
+    q.append(tube('dgrip', D, 0.011, C['grip'], seg=8))
+    shaft = shade(join(q, 'spade_skaft'), 40)
+    # the scoop of ice on the blade: a lumpy heap inside the sides
+    rnd = random.Random(11); bm = bmesh.new(); N = 8; Vg = {}
+    for i in range(N + 1):
+        for j in range(N + 1):
+            u = -hw + 0.012 + (2 * hw - 0.024) * i / N; v = 0.02 + (L - 0.05) * j / N; e = i in (0, N) or j in (0, N)
+            h = 0.0 if e else 0.05 * math.sin(math.pi * i / N) * math.sin(math.pi * j / N) ** 0.7 + rnd.uniform(-0.006, 0.008)
+            Vg[i, j] = bm.verts.new((u, v, z0 + 0.004 + max(0.0, h)))
+    for i in range(N):
+        for j in range(N): bm.faces.new([Vg[i, j], Vg[i + 1, j], Vg[i + 1, j + 1], Vg[i, j + 1]])
+    heap = shade(obj_from_bm('spade_is', bm, [C['ice']]), 25)
+    # in the game's frame the blade runs to -z: Blender +y forward is the game's -z, so the blade's y (0 .. L) is already forward
+    return blade, shaft, heap
+
+
+def ice_bits():
+    """lumps of crushed ice: five irregular lumps of 2-4 cm round the origin within 6 cm (one part; the game scatters copies)"""
+    rnd = random.Random(5); parts = []
+    for k in range(5):
+        c = (rnd.uniform(-0.04, 0.04), rnd.uniform(-0.04, 0.04), rnd.uniform(0.0, 0.015)); r = rnd.uniform(0.010, 0.018)
+        bm = bmesh.new(); bmesh.ops.create_icosphere(bm, subdivisions=1, radius=r)
+        for v in bm.verts: v.co = Vector((c[0] + v.co.x * rnd.uniform(0.7, 1.3), c[1] + v.co.y * rnd.uniform(0.7, 1.3), c[2] + v.co.z * rnd.uniform(0.6, 1.1)))
+        parts.append(shade(obj_from_bm('bit%d' % k, bm, [C['ice']]), 10))
+    return join(parts, 'isbit')
+
+
+def tub_blood(k460):
+    """three stages of blood and slime on the 460 l tub, each a part in the tub's own frame: irregular thin patches on the rim's top,
+    runs down the inner walls toward the fish and down the outside from the rim (the drips longer than wide), a few smears on the
+    outer walls. Each patch lies 1.5 mm off the surface it is on (the walls lean 2.5 degrees), so it neither fights the tub nor floats."""
+    t = TUBS['kar460']; H = t['rim']; hx, hy = 0.5, 0.6; Wi, Li = t['in_top']; tg = math.tan(math.radians(2.5)); zf = t['floor']
+    out = []
+    for stage, (seed, nrim, nin, nout) in enumerate(((21, 6, 4, 3), (22, 10, 8, 6), (23, 15, 12, 9))):
+        rnd = random.Random(seed); bm = bmesh.new(); mats = [C['blood'], C['blood2']]
+        def blob(c, u, v, nrm, ru, rv, mi, n=11):
+            c = Vector(c); u = Vector(u).normalized(); v = Vector(v).normalized(); nrm = Vector(nrm).normalized(); vs = [bm.verts.new(c + nrm * 0.0015)]
+            ring = []
+            for k in range(n):
+                a = 2 * math.pi * k / n; f = rnd.uniform(0.6, 1.15)
+                ring.append(bm.verts.new(c + (u * math.cos(a) * ru + v * math.sin(a) * rv) * f + nrm * 0.0015))
+            for k in range(n):
+                f = bm.faces.new([vs[0], ring[k], ring[(k + 1) % n]]); f.material_index = mi
+        # on the rim's top (the flat band between the inner and outer edge), the long sides mostly
+        for k in range(nrim):
+            side = rnd.choice((0, 1, 2, 3)); sg = 1 if side in (0, 1) else -1
+            if side in (0, 2): c = (rnd.uniform(-0.3, 0.3), sg * (Li / 2 + 0.035), H + 0.0); u, v = (1, 0, 0), (0, 1, 0)
+            else: c = (sg * (Wi / 2 + 0.035), rnd.uniform(-0.4, 0.4), H + 0.0); u, v = (0, 1, 0), (1, 0, 0)
+            blob(c, u, v, (0, 0, 1), rnd.uniform(0.03, 0.08), rnd.uniform(0.005, 0.008), k % 2)
+        # runs down the inner walls from the rim (the walls lean out: the normal points in and a little up)
+        for k in range(nin):
+            side = rnd.choice((0, 1, 2, 3)); z = H - 0.04 - rnd.uniform(0.0, 0.18) * (stage + 1) / 2
+            d = (H - 0.03 - z) * tg
+            if side in (0, 2): sg = 1 if side == 0 else -1; c = (rnd.uniform(-0.32, 0.32), sg * (Li / 2 - d - 0.0005), z); nrm = (0, -sg, tg); u = (0, sg * tg, 1); v = (1, 0, 0)
+            else: sg = 1 if side == 1 else -1; c = (sg * (Wi / 2 - d - 0.0005), rnd.uniform(-0.42, 0.42), z); nrm = (-sg, 0, tg); u = (sg * tg, 0, 1); v = (0, 1, 0)
+            blob(c, u, v, nrm, rnd.uniform(0.05, 0.12), rnd.uniform(0.012, 0.03), k % 2)
+        # drips down the outside from the rim's face (on the rim band, 85 mm high, the face plumb, LIP out from the wall)
+        for k in range(nout):
+            side = rnd.choice((0, 1, 2, 3)); z = H - 0.0455
+            if side in (0, 2): sg = 1 if side == 0 else -1; c = (rnd.uniform(-0.3, 0.3), sg * (hy + LIP * 0.0 + 0.0005), z); nrm = (0, sg, 0); u = (0, 0, 1); v = (1, 0, 0)
+            else: sg = 1 if side == 1 else -1; c = (sg * (hx + 0.0005), rnd.uniform(-0.4, 0.4), z); nrm = (sg, 0, 0); u = (0, 0, 1); v = (0, 1, 0)
+            blob(c, u, v, nrm, rnd.uniform(0.009, 0.012), rnd.uniform(0.010, 0.022), 1)
+        out.append(shade(obj_from_bm('kar460_blod%d' % (stage + 1), bm, mats), 20))
+    return out
+
+
 # ---------- measuring, export and renders ----------
 def measure(name, A):
     P = A['pos']; lo = [min(q[k] for q in P) for k in range(3)]; hi = [max(q[k] for q in P) for k in range(3)]
@@ -653,13 +796,18 @@ def main():
     TUBS['kar460o'] = TUBS['kar460']; TUBS['kar460b'] = TUBS['kar460']
     vann = water(); isl = ice(); hott = gaff(); kniv = knife(); bord = table(); benk = bench(); botte = bucket()
     bake_alone(botte, samples=32, distance=0.3)
+    ring = sling_link(); leg = sling_leg(); krok = tub_hook(); iskasse = ice_box(k300); spade, skaft, spis = shovel(); isbit = ice_bits(); blod = tub_blood(k460)
     parts = []
     for o, ao in ((k460, True), (k460o, True), (k460b, True), (k300, True), (k1000, True), (vann, False), (isl, False), (hott, False), (kniv, False),
-                  (bord, False), (benk, False), (botte, True)):
+                  (bord, False), (benk, False), (botte, True), (ring, False), (leg, False), (krok, False), (iskasse, True), (spade, False), (skaft, False),
+                  (spis, False), (isbit, False)) + tuple((b, False) for b in blod):
         parts.append((o.name, mesh_arrays(o, to_game, to_game_n, ao=ao), 1.0))
+    # where the sling's hooks take the 460 l tub: under the rolled rim on the diagonals of its rounded corners (the game's frame)
+    t = TUBS['kar460']; R = 0.07 + 0.08; cx, cy = 0.5 - R + R * math.cos(math.pi / 4) + LIP * 0.7, 0.6 - R + R * math.sin(math.pi / 4) + LIP * 0.7
+    SLING['lift'] = [G((sx * cx, sy * cy, t['rim'] - 0.012)) for sx, sy in ((1, 1), (-1, 1), (-1, -1), (1, -1))]
     ex = {'frame': 'kystfiske deck gear for the catch: x right, y up, z aft (the long axis of a tub aft, a table\'s or bench\'s along x with the worker at +z); '
                    'every part from its own origin (tools/deck/fisk.py)',
-          'tubs': TUBS, 'hott_tip': G(HOTT_TIP), 'hott_len': 0.90, 'kniv_tip': G(KNIV_TIP)}
+          'tubs': TUBS, 'hott_tip': G(HOTT_TIP), 'hott_len': 0.90, 'kniv_tip': G(KNIV_TIP), 'sling': SLING}
     ex.update(BORD); ex.update(BENK)
     glb = os.path.join(OUT, 'deck-fish.glb'); n = write_glb(glb, parts, ex)
     open(os.path.join(ROOT, 'src', 'data', 'deck-fish.b64'), 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())
@@ -671,7 +819,8 @@ def main():
         if k != 'frame': print('  %s = %s' % (k, v))
     if FAST: return
     renders({'kar460': k460, 'kar460o': k460o, 'kar460b': k460b, 'kar300': k300, 'kar1000': k1000, 'vann': vann, 'is': isl, 'hott': hott,
-             'kniv': kniv, 'bord': bord, 'benk': benk, 'botte': botte})
+             'kniv': kniv, 'bord': bord, 'benk': benk, 'botte': botte, 'iskasse': iskasse, 'spade': spade, 'spade_skaft': skaft, 'spade_is': spis,
+             'isbit': isbit, 'slynge_ring': ring, 'slynge_ben': leg, 'slynge_krok': krok, **{b.name: b for b in blod}})
 
 
 def renders(O):
@@ -715,6 +864,22 @@ def renders(O):
     show([O['bord'], O['botte']], {O['botte']: (-0.75, 0.15, 0)}); shot('bord_3q', (1.55, -1.85, 1.75), (0.0, 0.0, 0.70), 35)
     shot('bord_front', (0.0, -2.6, 1.30), (0.0, 0.0, 0.62), 35)
     show([O['benk']], {}); shot('benk_3q', (1.9, -2.1, 1.85), (-0.1, 0.1, 0.65), 35)
+    # the blood on the tub, stage 3 (all three stages are drawn together in the game when the tub is nearly full)
+    show([O['kar460'], O['kar460_blod1'], O['kar460_blod2'], O['kar460_blod3']], {}); shot('kar_blod', (1.45, -1.6, 1.55), (0.0, 0.0, 0.40), 38)
+    # the ice box with ice, the shovel with its scoop of ice beside it, and a few lumps on the deck
+    show([O['iskasse'], O['is'], O['spade'], O['spade_skaft'], O['spade_is'], O['isbit']], {O['iskasse']: (0, 0, 0), O['spade']: (0.75, 0.0, 0.05), O['spade_skaft']: (0.75, 0.0, 0.05), O['spade_is']: (0.75, 0.0, 0.05), O['isbit']: (0.5, -0.6, 0.0)})
+    t3 = TUBS['kar300']; O['is'].location = (0, 0, 0.45); O['is'].scale = (t3['in_top'][0] - 0.03, t3['in_top'][1] - 0.03, 1)
+    shot('iskasse', (1.6, -1.9, 1.5), (0.35, 0.0, 0.25), 35)
+    # the sling on a tub: the master link 1.2 m over the rim, a leg to each corner and the hook under the rim
+    lift = [(q[0], -q[2], q[1]) for q in SLING['lift']]; top = Vector((0, 0, 0.74 + 1.2)); objs = [O['kar460'], O['slynge_ring']]; placed = {O['slynge_ring']: tuple(top)}
+    show([O['kar460'], O['slynge_ring']], placed)
+    jn = top + Vector((0, 0, SLING['join'][1]))
+    for i, L in enumerate(lift):
+        L = Vector(L); d = L - jn; leg = O['slynge_ben'].copy(); leg.data = O['slynge_ben'].data; link(leg); leg.hide_render = False
+        leg.location = jn; leg.rotation_mode = 'QUATERNION'; leg.rotation_quaternion = Vector((0, 0, -1)).rotation_difference(d.normalized()); leg.scale = (1, 1, d.length)
+        hk = O['slynge_krok'].copy(); hk.data = O['slynge_krok'].data; link(hk); hk.hide_render = False; hk.rotation_euler = (0, 0, math.atan2(-L.x, L.y) + math.pi)
+        hk.location = L + Vector((0, 0, 0.0))
+    shot('slynge', (2.4, -2.6, 1.6), (0.0, 0.0, 0.85), 35)
     shot('benk_back', (-1.4, 2.4, 1.7), (-0.3, 0.1, 0.70), 35)
 
 

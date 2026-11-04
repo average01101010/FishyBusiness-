@@ -1,6 +1,6 @@
 # Fiskekar på dekk for båtene uten lasterom (plan 04.11.2026)
 
-Status: **venter på valgene K1–K4 og «kjør på».** Ingenting er bygd.
+Status: **bygd 04.11.2026** (K-A–K-E, se «Status» nederst). Jonas' valg står under «Valgene».
 
 ## Hva Jonas ba om (04.11.2026)
 
@@ -127,6 +127,27 @@ Sjarkene og kystbåtene løfter `kar460` med stroppen i stedet for de blå kloss
 - Ikke kassene i rommet på sjarkene (de blir som i dag til K-E).
 - Ikke kjøp av kar som eget utstyr. Karene hører til båten (skrog og innredning, ikke redskap).
 
+## Jonas' svar (04.11.2026)
+
+> «K1, la oss bare si at ett fullt kar er 500kg for enkelthetsskyld. Isen trenger ikke ta ekte plass i karet, så lenge det vises at fisken er iset, om mannskapet har kastet is på den. Sørg forresten også for at dette med ising ser bra ut. Det kan ikke bare dukke opp en kasse med is fra løse luften hver gang mannskapet skal ise fisken, og vi må ha blenderanimasjoner for iskasse, spade og selve isbitene, samt animasjoner for handlingen. Sørg gjerne for at det er litt blod og griseri på karene etterhvert som de fylles.
+> K2, antall kar må samsvare med lastekapasitet for båter uten lasterom. Om du ser at det blir dårlig plass på dekk kan sikkert karene stables. [...] K3, Enig. K4, Ja. Kar skal løftes med en stropp fra hvert hjørne ja som samles i kroken på kranen. Kjør på»
+
+> «Pass også på at mannskap eller bruker aldri Clipper med bløggekaret. [...] Bløggekaret må stå rett ved sløyebord/benk slik at den som sløyer bare kan plukke fisken opp fra karet, sløye den, så hive den i fiskekarene. De som fisker og bløgger fisken kaster den opp i bløggekaret når den er bløgget.»
+
 ## Status
 
-- 04.11.2026: planen skrevet, venter på K1–K4.
+- 04.11.2026: planen skrevet; samme dag valgene og bygd.
+- **K1:** `kar460` er 500 kg (`TUB_KG`). Isen tar ingen plass: isbitene ligger på den isede fisken, og et fullt, iset kar har knust is over toppen.
+- **K2 (avvik fra planen):** Ingen stabling. Et kar stablet oppå et annet kan ikke fylles før det under er fullt, og da må det tomme bæres over. Det blir ikke realistisk uten en egen bæreanimasjon. Båtene har derfor det dekket har plass til, målt i modellene: skiffen 1 kar (500 kg, før 350), trebåten 1 kar (500 kg, før 350; forreste tofte flyttet 0,11 m), snekka 2 kar (1 000 kg, før 900). Verftet har ingen trinn for disse båtene. Kjøpte trinn betales tilbake én gang (`karRefund`). Plassen for flere kar finnes ikke uten å flytte haleren, bordet eller rorplassen.
+- **K3 (justert):** De tomme karene kommer spylt tilbake ett og ett, hvert til sin plass, etter vasken (6 spillminutter). Trucken tar de fulle inn og bringer de spylte ut. Én stropp rundt en stabel tomme kar ville gått gjennom de øverste karene.
+- **K4:** Båtene med lasterom lander i mottakets hvite kar på 500 kg med stroppen, satt ut på dekk fra rommet (ikke opp gjennom luka).
+- **Isingen:** iskassa (blått 300 l-kar) står fast under sløyebordet på de åpne båtene og ved pakkerens plass på de andre, med isen i så høyt som det er is om bord. Spaden står i den når ingen iser. Spade, skaft, is på bladet og isbiter er Blender-deler (`fisk.py`).
+- **Blod:** tre trinn med blod og slim på karet (over 1,5 %, 30 % og 65 % fullt). Spylte kar er rene.
+- **Bløggekaret:** flyttet rett ved sløyebordet på skiffen (akter for bordet) og snekka (innenbords for den som sløyer, pakkeren på egen plass `work.pack`); på trebåten tvers og mindre (0,6), fri av den som jukser. Fisken i det legges med samme pakker som i karene, i karets mål, halvt i blodvannet som stiger med den. Sløyeren tar fisken fra bløggekaret, sløyer den på bordet og kaster den i karet som fylles (`gutw`), også når han er alene om bord.
+
+### Det som ikke er gjort eller er svakt
+
+- Ingen egen figur om bord som hekter stroppen på karet. Krokene trekkes ut til hjørnene mens kroken senkes.
+- Det er ikke målt i modellene at ingen del av folkene kommer borti karene i alle stillinger. Gangkartet tar karene og iskassa ut (`kitBoxes`), og plassene er regnet med 0,2 m kroppsradius.
+- Frys- og RSW-fartøyenes lossing er som før (backloggen).
+

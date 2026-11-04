@@ -131,9 +131,10 @@
     // the fish lying on the deck where they were shaken off the hook or let fall from the net, until the bleeder takes them up
     if (SK && SK.fishM) for (const f of DKDECK) drawN(fishOf(f.sp), chain(BMrel, M4.T(f.at[0], f.at[1] + 0.05, f.at[2]), M4.RY(f.yaw), M4.RZ(Math.PI / 2), M4.S(clamp(0.42 * Math.cbrt(f.kg || 2), 0.28, 1.2))));
     // where the gutted fish go: the packer's crate on his right (a hold boat), else the open boat's tub nearest him (kit.tubs)
-    const pk = A.find(a => a.st === 'is' && a.mode === 'at'), tubs = V.hold && V.hold.kind === 'dekk' ? K.tubs : null;
+    const pk = A.find(a => a.st === 'is' && a.mode === 'at'), tubs = V.kar ? karPlaces(vtype()) : null;
+    // (an open boat: the tub being filled now, the fish landing on its heap, core/07f-kar.js)
     const crateOf = a => { const F0 = [Math.sin(a.h), -Math.cos(a.h)], R0 = [Math.cos(a.h), Math.sin(a.h)];
-      if (tubs && tubs.length){ let best = tubs[0], bd = 1e9; for (const q of tubs){ const dd = Math.hypot(q[0] - a.x, q[2] - a.z); if (dd < bd){ bd = dd; best = q; } } return {p:[best[0], best[1], best[2]], top:(best[4] || 460) > 300 ? 0.62 : 0.55, tub:true}; }
+      if (tubs && tubs.length){ const ti = karFilling(vtype()), q = tubs[ti]; return {p:q.at.slice(), top:karTop(vtype(), ti), tub:true}; }
       return {p:[a.x + F0[0] * 0.58, a.y, a.z + F0[1] * 0.58], top:0.28, tub:false}; };
     const pkC = pk ? crateOf(pk) : null, held = spHold(x => !x.gut && !x.iced), packed = spHold(x => x.iced), table = rel(DW.table), tubTop = rel(dkTub(G)), offal = rel(DW.offal);
     for (const a of A){ if (cam.helm && (a.me || a.mode === 'helm')) continue;
@@ -161,10 +162,14 @@
       if (a.mode === 'at' && !ev && !st.fx){
         // gutting at the table: the fish from the bleeding tub, the guts over the rail, the gutted fish to the packer
         if (a.task === 'gut'){ st.task = 'gutw'; st.Tb = table; st.Ub = tubTop; st.Of = offal; const n = Math.floor((ta + idx * 1.7) / 5.6); st.gsp = held(hash(n * 3 + idx)); st.gkg = 2 + hash(n * 5) * 3;
-          if (pkC){ st.Cr = rel(pkC.p); st.crTop = pkC.top; st.packId = pk.id; } }
+          if (pkC){ st.Cr = rel(pkC.p); st.crTop = pkC.top; st.packId = pk.id; }
+          // no packer on an open boat: he throws the gutted fish into the fish tub being filled himself (Jonas 04.11.2026)
+          else if (tubs && tubs.length){ const ti = karFilling(vtype()); st.Cr = rel(tubs[ti].at); st.crTop = karTop(vtype(), ti); } }
         else if (a.task === 'pack'){ const C = crateOf(a); st.Cr = rel(C.p); st.crTop = C.top; st.crTub = C.tub; st.fill = ST.crateFill || 0; st.csp = i => packed(hash(i * 7 + 1)); const L = DKLAY[a.id]; st.lay = L ? now - L.t : -1;
           // the ice bin on the side away from the gutter
-          const gt = A.find(q => q.st === 'sloy' && q !== a); st.binR = gt && (gt.x - a.x) * R0[0] + (gt.z - a.z) * R0[1] < 0 ? 0.55 : -0.55; }
+          const gt = A.find(q => q.st === 'sloy' && q !== a); st.binR = gt && (gt.x - a.x) * R0[0] + (gt.z - a.z) * R0[1] < 0 ? 0.55 : -0.55;
+          // the ice from the ice box that stands on deck (its ice's top), when it is within his reach
+          const IB = iceBoxTop(vtype()); st.Bin = IB && Math.hypot(IB[0] - a.x, IB[2] - a.z) < 1.35 ? rel(IB) : null; }
         else if (a.task === 'egn' || a.task === 'strip'){ const PLs = CREW3D.places() || {tubs:[]}, T0 = PLs.tubs[(a.goal && a.goal.tub || 0) % 8]; if (T0) st.Tu = rel([T0[0], (PLs.tubY != null ? PLs.tubY : a.y) + 0.38, T0[1]]); st.Bk = rel([a.x + R0[0] * 0.38 - F0[0] * 0.12, a.y, a.z + R0[1] * 0.38 - F0[1] * 0.12]);
           st.Of = rel([sg * ((G.beam || 3) / 2 + 1.4), -0.1, a.z]); if (a.task === 'strip' && ((t + idx * 3.1) % 25) < 2.2) DKGULL = [st.Of[0] + eye[0], (env.tide || 0), st.Of[2] + eye[2]]; }
         else if (a.task === 'mend') st.Nt = rel([a.x + F0[0] * 0.42, a.y + railH - 0.02, a.z + F0[1] * 0.42]);

@@ -16,7 +16,7 @@ async def main():
           S.tut = 0; S.cash = 1e6; S.t = Math.round((Date.UTC(2027, 2, 9, 10) - EPOCH) / 6e4); const R = {};
           const fish = kg => [{sp:'sei', cls:1, kg, n:Math.round(kg / 4), bled:true, iced:true, hr:0, fresh:95, gut:false, hook:true}];
           const b = S.boat, q = portById('husoy'); b.status = 'port'; b.port = 'husoy'; b.pos = {...q.p}; S.plan = null; S.hold = fish(300);
-          // the player lands 300 kg from the skiff: 8 boxes, one lift
+          // the player lands 300 kg from the open boat: her one tub up, and back washed (two lifts and the wash)
           renderActs(); R.btn = DOCK.items('marked').some(x => x.id === 'lever' && !x.off);
           doAct({dataset:{act:'sell'}, disabled:false}); const L = b.land;
           R.plan = L && {kind:L.kind, n:L.n, lifts:L.lifts, dur:L.until - L.t0}; renderActs(); R.bar = DOCK.text();
@@ -32,10 +32,10 @@ async def main():
           b.status = 'port'; b.port = 'husoy'; b.pos = {...q.p}; S.plan = null; b.ice = 0; b.iceUntil = 0; doAct({dataset:{act:'ice'}, disabled:false}); R.ice = {kg:b.ice, run:b.iceUntil - S.t};
           return R; })()""")
         print(json.dumps(r, ensure_ascii=False))
-        print(ok(r['btn'] and r['plan'] == {'kind':'box', 'n':8, 'lifts':1, 'dur':await pg.evaluate('LANDING.prep + LANDING.lift + LANDING.note')} and r['stillHold'] == 300 and 'kranen' in r['bar'].lower()), 'the Land button starts a landing: 8 boxes in one lift (the crane swings straight over, one lift, the note), the fish stays aboard until then')
+        print(ok(r['btn'] and r['plan'] == {'kind':'tub', 'n':1, 'lifts':2, 'dur':await pg.evaluate('LANDING.prep + 2 * LANDING.lift + LANDING.wash + LANDING.note')} and r['stillHold'] == 300 and 'kranen' in r['bar'].lower()), 'the Land button starts a landing: the open boat\'s one tub up and back (the crane swings straight over, one lift, the note), the fish stays aboard until then')
         print(ok(r['depAt'] == 1 and r['midPort'] and r['holdBefore'] == 300), 'a route set during the landing leaves the minute after it is done')
         print(ok(r['landed'] and r['after'] in ('unmooring', 'sailing')), 'the landing note comes at the end, then she casts off (one minute for the lines)')
-        print(ok(r['sjark']['kind'] == 'tub' and r['sjark']['lifts'] == 9 and r['sjarkny']['lifts'] == 20 and r['snekke']['lifts'] == 3), 'sjarks land in tubs of 300 kg, skiffs and snekker in boxes of 40 kg, nine to a lift')
+        print(ok(r['sjark']['kind'] == 'tub' and r['sjark']['lifts'] == 5 and r['sjarkny']['lifts'] == 12 and r['snekke']['lifts'] == 4 and r['snekke']['own']), 'sjarks land in the plant\'s tubs of 500 kg, one a lift; the snekke\'s two own tubs go up and come back (4 lifts)')
         print(ok(r['ice']['kg'] == 50 and r['ice']['run'] == 1), 'ice runs down the chute')
         # in 3D: the hook is over the deck when a load is hooked on and over the drop spot when it is let go, and every plant's
         # forklift run fits in two lifts, so the last loads are inside before the landing note
@@ -48,19 +48,20 @@ async def main():
         await pg.wait_for_function("!!G3._debug.PLANTS.find(q => q.id === 'torsken').scene", timeout=120000)
         S3 = []
         pr = await pg.evaluate('LANDING.prep')
-        for e in [pr + 0.40 * 2.5, pr + 0.90 * 2.5, pr + 1.40 * 2.5, pr + 1.90 * 2.5]:
+        for e in [pr + 0.38 * 2.5, pr + 0.90 * 2.5, pr + 1.38 * 2.5, pr + 1.90 * 2.5]:
             # set the landing's clock, and wait for a frame that shows it (a fixed pause was too short when the frames are slow)
             await pg.evaluate(f"S.boat.land.t0 = S.t + liveFrac() - {e}")
             # read the frame that shows it, in the same check (a later frame can be a minute on)
             h = await pg.wait_for_function("""(e) => { const P = G3._debug.PLANTS.find(q => q.id === 'torsken'), s = P.scene; if (!s || Math.abs(s.e - e) >= 0.3) return null;
               const tip = [P.crane[0] + Math.sin(s.pose.a) * s.pose.r, P.crane[1] + Math.cos(s.pose.a) * s.pose.r];
-              return {e:Math.round(s.e * 100) / 100, i:s.i, u:Math.round(s.u * 100) / 100, hang:!!s.hang, deck:s.deck.length, quay:s.quay.length, toK:Math.round(Math.hypot(tip[0] - s.K[0], tip[1] - s.K[2]) * 100) / 100, hookOverDeck:Math.round((s.pose.hook - s.K[1]) * 100) / 100,
+              return {e:Math.round(s.e * 100) / 100, i:s.i, u:Math.round(s.u * 100) / 100, hang:!!s.hang, att:!!s.att, deck:s.deck.length, quay:s.quay.length, toK:Math.round(Math.hypot(tip[0] - s.K[0], tip[1] - s.K[2]) * 100) / 100, hookOverDeck:Math.round((s.pose.hook - s.K[1]) * 100) / 100,
                 toD:Math.round(Math.hypot(tip[0] - P.drop[0], tip[1] - P.drop[1]) * 100) / 100, busy:s.busy.map(q => q.task)}; }""", arg=e, timeout=180000)
             S3.append(await h.json_value())
         print('runs:', runs); print('scenes:', json.dumps(S3))
         hooked = [S3[0], S3[2]]; down = [S3[1], S3[3]]
-        print(ok(all(s and s['hang'] and s['toK'] < 0.3 and abs(s['hookOverDeck'] - 0.95) < 0.05 for s in hooked)), 'in 3D the hook is over the tub on deck when it is hooked on')
-        print(ok(all(s and s['toD'] < 0.3 and not s['hang'] for s in down) and down[0]['quay'] == 1 and down[1]['quay'] == 2), 'and over the drop spot when it is let go; two tubs wait on the quay for the forklift')
+        sl = await pg.evaluate('1.793')
+        print(ok(all(s and s['att'] and not s['hang'] and s['toK'] < 0.3 and abs(s['hookOverDeck'] - sl) < 0.05 for s in hooked)), 'in 3D the hook is over the tub on deck, the sling on its corners, when it is hooked on')
+        print(ok(all(s and s['toD'] < 0.3 and not s['hang'] and s['att'] for s in down) and down[0]['quay'] == 1 and down[1]['quay'] == 2), 'and over the drop spot when it is let go; two tubs wait on the quay for the forklift')
         print(ok(all(t <= 4.6 for _, t in json.loads(runs))), 'every plant\'s forklift run takes at most two lifts, so the last loads are in before the landing note')
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())
