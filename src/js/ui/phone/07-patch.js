@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['kystposten-041126', '04.11.2026', 'Kystposten åpner igjen', 'Kystposten opens again', [
+       ['Kystposten stoppet når avisa hadde en sak om bygdekampen, fiskarlaget eller kystvakta. Nå vises sakene med riktig merke.', 'Kystposten stopped when the paper had a story about the village contest, the fishing club or the coast guard. The stories now show with the right label.'],
+    ]],
     ['kjolvann-041126', '04.11.2026', 'Båten i sjøen etter farten', 'The boat in the water by her speed', [
        ['En planende båt ligger nå høyere med baugen tørr, og sprøyten kastes flatt ut fra midtskips og legger seg som to hvite vinger i kjølvannet.', 'A planing boat now rides higher with her bow dry, and the spray is thrown flat out from amidships and lies as two white wings in the wake.'],
        ['Bak en tørr hekk står en mørk renne midt i skummet før vannet slår sammen bak båten, og kjølvannet blir smalere jo fortere hun går.', 'Behind a dry transom a dark channel runs down the middle of the foam before the water closes behind her, and the wake narrows the faster she goes.'],
