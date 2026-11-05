@@ -425,3 +425,12 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
   - **Neste:** Jonas sier ja til utrulling (R6 og R7 sammen), så R8 (stikkprøvene, spilltesten og utrullingen).
 - 05.11.2026: **R6 og R7 rullet ut sammen** (Jonas: «Rull ut»). Arbeidsgrenen hadde ingenting nytt etter R6, så grenen ble skjøvet rett på.
   - **Neste:** R8 (stikkprøvene, spilltesten og utrullingen) i en ny økt.
+- 05.11.2026: **R8 bygd** (gren `h1b-r8`, ikke rullet ut). Se 4.12h og 4.12i i `docs/systemer/autonav.md` og 4.11n i `3d-verden.md`.
+  - **Seilasene** (`tests/havtur.py`, ny, 68 OK): Båtsfjord–Sentralbanken, Båtsfjord–Petsjorahavet, Hammerfest–Bjørnøya, Tromsø–Isfjorden, Ålesund–Nord-Island, Ålesund–Færøyane, Måløy–Vikingbanken og Måløy–Shetland, planlagt og seilt i juli med kyst15 på den felles klokka uten påfylling. Kartet (sjø med dybde, ingen etappe på grunn eller i isen), sonen og lisensen, klimapunktene og været i januar og juli, isen i mars og september, rekkevidden for alle båttypene og forbruket (innenfor 3 % av overslaget i rutepanelet).
+  - **Rettet:**
+    - Autonav fant ingen rute fra Tromsø til Isfjorden utenom mars–mai, og ingen fra Bergen til havet vest for Shetland hele året (`lnetExit`, 4.12h). Stikkprøvene: Tromsø, Bodø, Bergen, Trondheim, Kristiansand, Hammerfest og Vadsø mot havet i januar, juli og oktober.
+    - Rutepanelet varsler når dieselen rekker ut, men ikke tilbake til nærmeste bunkring (en sjark til Sentralbanken).
+    - I kuling langt ute tok Autonav den første kaia etter luftlinja som hadde en rute (Sentralbanken: Longyearbyen 481 nm); nå tas den korteste (Gamvik 319 nm).
+    - Kompasslinja over 3D-bildet i stående format: tallene løp inn i hverandre (hele kysten).
+  - **3D ved store γ** (`tests/havshot.py`, ny): kompasset viser solas og vindens sanne retning innen 0,6° ved Petsjorahavet (γ +31°) og Nord-Island (γ −31°, k 1,024), og ved Bjørnøya i stående format; bildene i begge formater viser sola under kompasset. Målestokken ved Island (k opptil 1,037): ingen endring, begrunnet i 4.11n.
+  - **Ikke løst:** flybilletten for tolv måneder (SAS stenger Actions, BACKLOG 10.3); havbåtene ligger ikke bi i kuling langt ute, men går til nærmeste kai 167–676 nm unna (et valg for Jonas, BACKLOG 10.2).

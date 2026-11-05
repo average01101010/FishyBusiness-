@@ -1113,27 +1113,33 @@ const RSTATIONS = [['Hvaler', 59.06, 11.02], ['Horten', 59.42, 10.48], ['Stavern
   ['Sandnessjøen', 66.02, 12.63], ['Ørnes', 66.87, 13.70], ['Bodø', 67.28, 14.40], ['Værøy', 67.67, 12.69], ['Ballstad', 68.07, 13.54], ['Svolvær', 68.23, 14.57],
   ['Andenes', 69.32, 16.12], ['Harstad', 68.80, 16.54], ['Finnsnes', 'finnsnes'], ['Gryllefjord', 'gryllefjord'], ['Tromsø', 69.65, 18.96],
   ['Skjervøy', 70.03, 20.97], ['Øksfjord', 70.24, 22.35], ['Hammerfest', 70.66, 23.68], ['Havøysund', 70.99, 24.66], ['Honningsvåg', 70.98, 25.97],
-  ['Mehamn', 71.04, 27.85], ['Berlevåg', 70.86, 29.09], ['Båtsfjord', 70.63, 29.72], ['Vardø', 70.37, 31.11], ['Kirkenes', 69.73, 30.05]];
+  ['Mehamn', 71.04, 27.85], ['Berlevåg', 70.86, 29.09], ['Båtsfjord', 70.63, 29.72], ['Vardø', 70.37, 31.11], ['Kirkenes', 69.73, 30.05],
+  ['Longyearbyen', 78.23, 15.60, 'kv']];
+// Who tows from a station: Redningsselskapet along the mainland coast, the Coast Guard at Svalbard (Jonas 05.11.2026, H1b R8: «Kystvakten
+// skal slepe båter ved svalbard»; Redningsselskapet has no station there, and the tow came 850 km from Tromsø). The Coast Guard's
+// ship sails from Longyearbyen in the game; the 3D view and the price are the rescue boat's for now (BACKLOG 10.3).
+const RSORG = {rs:{org:['Redningsselskapet', 'The Sea Rescue Society'], boat:['Redningsskøyta', 'The rescue boat']}, kv:{org:['Kystvakten', 'The Coast Guard'], boat:['Kystvaktskipet', 'The Coast Guard ship']}};
+const rsOrg = o => RSORG[o] || RSORG.rs;
 let RSBASES = null;
 function rescueBases(){
   if (RSBASES) return RSBASES; RSBASES = [];
-  for (const [n, a, b] of RSTATIONS){
+  for (const [n, a, b, org] of RSTATIONS){
     let q = typeof a === 'string' ? portById(a) : null;
     if (!q && typeof a === 'number'){ const c = natP(a, b); let bd = 35; for (const pt of PORTS){ const d = dist(pt.p, c); if (d < bd){ bd = d; q = pt; } } }
-    if (q && !RSBASES.some(r => r.id === q.id)) RSBASES.push({n:q.name, id:q.id, p:q.p, st:n});
+    if (q && !RSBASES.some(r => r.id === q.id)) RSBASES.push({n:org ? n : q.name, id:q.id, p:q.p, st:n, org:org || 'rs'});   // (the Coast Guard's ship goes by the town, not the shop it lies by)
   }
   return RSBASES;
 }
 function rescueBase(p){
   let best = null;
-  for (const r of rescueBases()){ const d = dist(r.p, p); if (!best || d < best.d) best = {n:r.n, id:r.id, p:r.p, d}; }
-  if (!best || best.d > 100){ const q = nearestPort(p); best = {n:q.name, id:q.id, p:q.p, d:dist(q.p, p)}; }
+  for (const r of rescueBases()){ const d = dist(r.p, p); if (!best || d < best.d) best = {n:r.n, id:r.id, p:r.p, d, org:r.org}; }
+  if (!best || best.d > 100){ const q = nearestPort(p); best = {n:q.name, id:q.id, p:q.p, d:dist(q.p, p), org:flyPort(q) ? 'kv' : 'rs'}; }
   return best;
 }
 // the rescue boat on the AIS while she is out for you, from the call to the quay (not at her station otherwise)
 function rescueAis(H){
   const t = S.boat && S.boat.tow, q = t && towPose(clamp(H * 60 - S.t, 0, 0.999)); if (!q) return null;
-  return {id:'rs', name:'Redningsskøyta ' + t.base, type:'rescue', p:q.r.p, hd:q.r.hd, cog:q.r.hd, v:q.r.v, st:t.ph === 'muster' ? 'port' : t.ph, rs:true, base:t.base, to:t.port};
+  return {id:'rs', name:gL(...rsOrg(t.org).boat) + ' ' + t.base, type:'rescue', p:q.r.p, hd:q.r.hd, cog:q.r.hd, v:q.r.v, st:t.ph === 'muster' ? 'port' : t.ph, rs:true, base:t.base, org:t.org || 'rs', to:t.port};
 }
 function rescue(keepCatch){
   if (S.boat.gop) gopAbort('return');
@@ -1142,12 +1148,12 @@ function rescue(keepCatch){
   // the tow goes to the nearest yard, where the hull is mended (Jonas 08.10.2026: a tow to a plant left a player stuck there, #48);
   // the nearest harbour of any kind only where there is no yard
   const b = S.boat, port = nearestYard(b.pos) || nearestPort(b.pos), base = rescueBase(b.pos), fee = S.member || first ? 0 : keepCatch ? PRICE.tow : PRICE.rescue;
-  if (first) msg('Redningsselskapet', 'Det første slepet er gratis, og fangsten får du beholde. Neste gang koster et slep ' + kr(PRICE.tow) + ', og et nødanrop i farlig sjø ' + kr(PRICE.rescue) + ' og fangsten. Hold øye med dieselen og værmeldingen. Som medlem slipper du å betale.',
+  if (first) msg(rsOrg(base.org).org[0], 'Det første slepet er gratis, og fangsten får du beholde. Neste gang koster et slep ' + kr(PRICE.tow) + ', og et nødanrop i farlig sjø ' + kr(PRICE.rescue) + ' og fangsten. Hold øye med dieselen og værmeldingen. Som medlem slipper du å betale.',
     'The first tow is free, and you keep the catch. Next time a tow costs ' + kr(PRICE.tow) + ', and a distress call in dangerous seas ' + kr(PRICE.rescue) + ' and the catch. Keep an eye on the diesel and the forecast. Members pay nothing.');
   book('forsikring', -fee, 'Slep til havn', 'Tow to harbour');
   let lost = 0; if (!keepCatch){ lost = Math.round(holdTotal()); S.hold = []; }
   b.prev = null; b.tripBad = true; if (meAboard()){ tatAdd('rescued', 1); checkTattoos(); }
-  const t = {ph:'muster', t0:S.t, keep:keepCatch, fee, lost, port:port.id, base:base.n, baseId:base.id, bp:{x:base.p.x, y:base.p.y}, at:{x:b.pos.x, y:b.pos.y}, P1:null, P2:null, r:0, s:0};
+  const t = {ph:'muster', t0:S.t, keep:keepCatch, fee, lost, port:port.id, base:base.n, org:base.org || 'rs', baseId:base.id, bp:{x:base.p.x, y:base.p.y}, at:{x:b.pos.x, y:b.pos.y}, P1:null, P2:null, r:0, s:0};
   if (b.status === 'port' || b.status === 'unmooring'){ t.port = b.port || port.id; towDone(t); return; }
   if (helmOn()) helmOff();
   S.plan = null; b.v = 0; b.status = 'tow'; b.tow = t;

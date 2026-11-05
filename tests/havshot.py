@@ -22,14 +22,17 @@ AT = """async ([la, lo, hr]) => { const b = S.boat, p = P(la, lo); S.tut = 0; S.
   const s = sunAt(S.t / 60, p);
   return {gamma:+gridGamma(p).toFixed(2), k:+gridScale(p).toFixed(4), sunAz:+(s.az * 180 / Math.PI).toFixed(1), sunEl:+s.el.toFixed(1), wind:+windAt(S.t / 60, p).toFixed(1), windDir:+windDir(S.t / 60, p).toFixed(1)}; }"""
 
-# turn the camera until it looks along the grid bearing g (degrees): the yaw read back from what the camera really does (G3.ear)
+# turn the camera until it looks along the grid bearing g (degrees): the yaw read back from what the camera really does (G3._debug.look)
 LOOK = """async ([trueDegWanted]) => { const c = G3._debug.cam; c.helm = false; c.dist = 60; c.pitch = 0.06;
   const p = S.boat.pos, want = ((trueDegWanted - gridGamma(p)) % 360 + 360) % 360;
-  const read = () => { const e = G3.ear(); if (!e) return null; return ((Math.atan2(e.fx, -e.fz) * 180 / Math.PI) % 360 + 360) % 360; };
-  // (a frame under SwiftShader by the land can take seconds: G3.ear is null when the last is more than 2 s old, so it is waited for)
-  const readW = async () => { for (let k = 0; k < 40; k++){ await new Promise(r => setTimeout(r, 750)); const g = read(); if (g != null) return g; } return null; };
-  for (let i = 0; i < 16; i++){ const g = await readW(); if (g == null) break; let d = want - g; d = ((d + 540) % 360) - 180; if (Math.abs(d) < 0.3) break; c.yaw += d * Math.PI / 180; }
-  const g = await readW(), e = G3.ear();
+  const read = () => { const e = G3._debug.look; if (!e || (!e.fx && !e.fz)) return null; return ((Math.atan2(e.fx, -e.fz) * 180 / Math.PI) % 360 + 360) % 360; };
+  // (G3._debug.look, not G3.ear: by Bjørnøya a frame under SwiftShader takes more than the 2 s G3.ear allows)
+  // after a turn, wait for a frame that shows it (the camera's forward vector changes), up to 40 s
+  const fw = () => { const e = G3._debug.look; return e ? e.fx.toFixed(4) + ',' + e.fz.toFixed(4) : ''; };
+  const readW = async (prev) => { for (let k = 0; k < 80; k++){ await new Promise(r => setTimeout(r, 500)); if (prev == null || fw() !== prev){ await new Promise(r => setTimeout(r, 500)); return read(); } } return read(); };
+  let prev = null;
+  for (let i = 0; i < 16; i++){ const g = await readW(prev); if (g == null) break; let d = want - g; d = ((d + 540) % 360) - 180; if (Math.abs(d) < 0.3) break; prev = fw(); c.yaw += d * Math.PI / 180; }
+  const g = await readW(null), e = G3._debug.look;
   return {grid:g == null ? null : +g.toFixed(1), want:+want.toFixed(1), shown:g == null || !e ? null : +((trueDeg(g * Math.PI / 180, {x:e.x / 1000, y:e.z / 1000}) % 360 + 360) % 360).toFixed(1)}; }"""
 
 def adiff(a, b): return abs(((a - b + 540) % 360) - 180)

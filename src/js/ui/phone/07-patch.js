@@ -4,6 +4,7 @@
        ['Autonav finner veien ut av fjordene til punkter langt til havs hele året. Fra Tromsø til Isfjorden og fra Bergen mot Shetland fant den før ingen rute i flere måneder.', 'Autonav finds the way out of the fjords to points far out at sea all year round. From Tromsø to Isfjorden and from Bergen towards Shetland it found no route in several months before.'],
        ['Rutepanelet sier fra når dieselen rekker ut til en rute som slutter til havs, men ikke tilbake til nærmeste bunkring.', 'The route panel tells you when the fuel reaches a route that ends at sea, but not back to the nearest bunker.'],
        ['I kuling langt til havs tar Autonav den kaia som har kortest vei, ikke bare den som ligger nærmest i luftlinje.', 'In a gale far out at sea, Autonav takes the quay with the shortest way, not just the one nearest as the crow flies.'],
+       ['Ved Svalbard sleper Kystvakten, med skip fra Longyearbyen.', 'At Svalbard the Coast Guard tows, with a ship from Longyearbyen.'],
        ['Kompasset over 3D-bildet viser bare himmelretningene når det er for smalt til tallene.', 'The compass over the 3D view shows only the points of the compass when it is too narrow for the numbers.'],
     ]],
     ['lyb-051126', '05.11.2026', 'Longyearbyen som havn', 'Longyearbyen as a harbour', [
