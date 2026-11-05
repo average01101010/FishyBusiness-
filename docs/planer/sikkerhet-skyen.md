@@ -71,7 +71,7 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
   - `shopMode()` gir `'off'` på spillets egne verter når skyen er av: `pubHost()`, altså vertene i `cloud.json` og GitHub Pages, med `#nocloud`, uten nett og på Pages. Artifacten og testserveren har testkjøpene som før.
   - `pos_put` deler de betalte delene av malingen bare når kontoen eier dem (`supabase/migrations/20261105140000_liv_owned.sql`). Det gjelder ripe, totone, vann, stripe, lakk, flagg og rederilogo. Fargene, registreringsmerket og vimplene deles alltid. Spilleren ser selv det som står i lagringen; bare de andre ser båten uten det som ikke er kjøpt.
   - **Prøvd:** `kjoptest` har en ny sjekk med `#nocloud` på spillets vert, `sqltest` en ny sjekk av designene. I Chromium med detstorebla.no pekt til testserveren er butikken av; skjermbilder i begge formater.
-  - **Venter:** migreringen må kjøres i SQL Editor.
+  - Migreringen ble kjørt av Jonas i SQL Editor 05.11.2026 og bekreftet i databasen; den er ikke prøvd mot en ekte spillers posisjon ennå (ingen på sjøen da).
 
 ### 6. MIDDELS: lagringen, pengene og haillen er klientens
 
@@ -148,7 +148,7 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 
 1. ~~**Funn 1** (XSS i admin)~~: rettet 05.11.2026 i admin (b5289877, med funn 13) og i databasen (`20261105120000_fb_meta.sql`, kjørt av Jonas).
 2. ~~**Funn 2a, 3 og 4**~~: gjort 05.11.2026 (`20261105130000_guest_world.sql`, med 2c). Turnstile (funn 4) og 2b er ikke bygd, se funnene.
-3. ~~**Funn 5 og 14**~~: rettet 05.11.2026 (acdaf0db; migreringen `20261105140000_liv_owned.sql` venter på SQL Editor). 2c og 13 er gjort tidligere; 2b står.
+3. ~~**Funn 5 og 14**~~: rettet 05.11.2026 (acdaf0db; migreringen `20261105140000_liv_owned.sql` kjørt av Jonas). 2c og 13 er gjort tidligere; 2b står.
 4. **Funn 7** (innloggingsdomenet) når Jonas setter opp `auth.detstorebla.no` hos WorkOS.
 5. **Funn 8, 9, 10, 11, 12 og 15** som ryddejobber.
 6. **Funn 6** (haill på serveren) hører til en større plan for økonomien; den rammer bare jukseren selv.
