@@ -33,8 +33,10 @@ const PLANMAP = (() => {
     openPlotter(); fit(o); render(); renderDyn(); return true;
   }
   // «Ferdig»: back to the page, where the day is reckoned anew from the places
-  function close(){ if (!on) return; on = false; sel = null; bar.hidden = card.hidden = true; document.body.classList.remove('pm'); if (typeof save === 'function') save(); renderDyn(); if (typeof DOCK !== 'undefined' && DOCK.open) DOCK.open('drift'); else if (typeof PHONE !== 'undefined' && PHONE.open) PHONE.open('drift'); }
-  function changed(){ if (typeof save === 'function') save(); render(); renderDyn(); }
+  function close(){ if (!on) return; on = false; sel = null; bar.hidden = card.hidden = true; document.body.classList.remove('pm'); if (typeof save === 'function') save(); renderDyn(); scheduleStatic(); if (typeof DOCK !== 'undefined' && DOCK.open) DOCK.open('drift'); else if (typeof PHONE !== 'undefined' && PHONE.open) PHONE.open('drift'); }
+  function changed(){ if (typeof save === 'function') save(); render(); renderDyn(); scheduleStatic(); }   // (the catch marks' labels under the pins, P2)
+  // a pin of the plan within r of p (the chart's catch marks hide their label under a pin, GUI review P2)
+  const covers = (p, r) => { const o = ops(); return !!(on && o && o.places.some(q => dist(q, p) < r)); };
   function render(){
     const o = ops(); if (!on || !o){ bar.hidden = card.hidden = true; return; }
     const kind = p2Kind(o), lb = labels(o), full = o.places.length >= DRP2.placesMax;
@@ -108,5 +110,5 @@ const PLANMAP = (() => {
     for (const q of o.places) pin(q, lb[q.id], q.k === 'felt' ? '#d9822b' : '#b05ad6', q.id === sel);
     return '<g class="pm">' + g.join('') + '</g>';
   }
-  return {open, close, tap, grab, dragMove, dragEnd, dragCancel, svg, render, isOn:() => on, tool:k => { if (k) { tool = k; render(); } return tool; }, sel:() => sel};
+  return {open, close, tap, grab, dragMove, dragEnd, dragCancel, svg, render, covers, isOn:() => on, tool:k => { if (k) { tool = k; render(); } return tool; }, sel:() => sel};
 })();
