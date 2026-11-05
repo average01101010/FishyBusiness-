@@ -1,5 +1,8 @@
 // ===== passive gear on screen: the action bar, the fish panel, the chart and the route =====
 const GL = (no, en) => S.lang === 'no' ? no : en;
+// where the king crab is, as Fiskeguiden says it (HI's surveys, core/02-species-gear.js): stated on the pot cards in the shops as a fact,
+// like the net card's meshes, not a tip (spilltest 3, U8; Jonas 05.11.2026, V4 A; 20.10.2026: «Ikke vis hint»)
+const KC_WHERE = () => GL('Kongekrabbe · Finnmark: litt fra Sørøya, mest fra Nordkapp og østover. Ingen i Troms og sørover.', 'King crab · Finnmark: a little from Sørøya, most from the North Cape eastwards. None in Troms and south.');
 const SETCOL = {garn:'#e8792b', line:'#e3b52b', teine:'#d2453a'};
 // how a set is doing: pots want 20 hours, line is best within a day, nets should come up daily
 function setState(s){

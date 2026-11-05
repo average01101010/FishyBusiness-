@@ -169,7 +169,7 @@
         btns:NETOPT.map(o => buy('net', netKey(o[0], o[1]), 10, n => L(NETTY[o[0]].no, NETTY[o[0]].en) + ' ' + o[1] + ' mm × ' + n, NETTY[o[0]].price)).join('')}));
       h.push(itemCard({k:'line', name:L('Line', 'Line'), price:kr(LINE_KINDS.bank.price) + '–' + kr(LINE_KINDS.hyse.price) + L(' per stamp', ' a tub'), have:own('line', pg.lines.hyse.n + pg.lines.bank.n, 'stamper', 'tubs'), body:roomTxt(room('line'), 'stamper', 'tubs'),
         btns:['hyse', 'bank'].map(lk => buy('stamp', lk, 4, n => n + (n === 1 ? L(' stamp ', ' tub of ') : L(' stamper ', ' tubs of ')) + LINE_KINDS[lk][S.lang].toLowerCase(), LINE_KINDS[lk].price)).join('')}));
-      h.push(itemCard({k:'pot', name:L('Krabbeteiner', 'Crab pots'), price:POTS.big.price, have:own('pot', pg.pots.big, 'teiner', 'pots'), body:roomTxt(room('teine'), 'teiner', 'pots'),
+      h.push(itemCard({k:'pot', name:L('Krabbeteiner', 'Crab pots'), price:POTS.big.price, have:own('pot', pg.pots.big, 'teiner', 'pots'), body:'<p class="ic-have">' + KC_WHERE() + '</p>' + roomTxt(room('teine'), 'teiner', 'pots'),
         btns:buy('pot', 'big', 20, potsN, POTS.big.price)}));
       // bait is sold at the fish plant, not here (docs/handelssteder.md; buyGear refuses it at the shop)
       h.push(itemCard({k:'kit', name:L('Blåser og dregg', 'Buoys and anchors'), price:GPRICE.kit, anchor:L('tung dregg ', 'heavy anchor ') + kr(GPRICE.heavy), have:own('kit', pg.kits.n, 'sett', 'sets'),
