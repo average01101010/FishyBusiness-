@@ -43,7 +43,8 @@ function jigWear(){ const pg = S.pgear; if (!pg || !pg.jig) return; const k = ji
 // ---- wear in one haul (what the string looks like when it comes back): used by finishHaul and a stopped haul
 function wearOf(s, g){
   if (s.kind === 'garn') return {cond:wearNets(s, g)};
-  const mid = setMid(s), hs = hsAt(mid, S.t / 60), kgu = (g.kg || 0) / Math.max(1, g.done || s.n), rnd = () => 0.7 + 0.6 * Math.random();
+  // the catch per unit as the wear counts it: a lenke of autoline (5,000 hooks) as tubs of 400 hooks, so a good day wears it as it wears a tub
+  const mid = setMid(s), hs = hsAt(mid, S.t / 60), kgu = (g.kg || 0) / Math.max(1, g.done || s.n) * (s.kind === 'line' && isAuto(s.lk) ? 400 / LINE_KINDS.auto.hooks : 1), rnd = () => 0.7 + 0.6 * Math.random();
   const f = (1 + kgu / 60) * (hs > 2 ? 1.4 : 1) * ((g.soak || 0) > 48 ? 1.3 : 1) * ((s.depth || 0) > 300 ? 1.25 : 1);
   if (s.kind === 'line'){
     const miss = clamp((s.miss || 0) + 0.004 * f * rnd(), 0, 0.85), bent = clamp((s.bent || 0) + 0.006 * f * rnd(), 0, 0.9 - miss), cond = Math.max(0, careRound((s.cond == null ? 1 : s.cond) - 0.012 * f * rnd()));
@@ -57,9 +58,9 @@ function wearOf(s, g){
 // the returned units join the ones aboard, the conditions averaged by how many there are
 function careBack(s, n, W){
   const pg = careG(); if (n <= 0) return;
-  if (s.kind === 'line'){ const L = pg.lines[s.lk], w = W || {cond:s.cond == null ? 1 : s.cond, miss:s.miss || 0, bent:s.bent || 0}, tot = L.n + n;
+  if (s.kind === 'line'){ if (isAuto(s.lk) && !pg.lines.auto) pg.lines.auto = {n:0, baited:0, bt:{}, cond:1, max:1, bent:0, miss:0, sharp:0}; const L = pg.lines[s.lk], w = W || {cond:s.cond == null ? 1 : s.cond, miss:s.miss || 0, bent:s.bent || 0}, tot = L.n + n;
     L.cond = careRound((L.cond * L.n + w.cond * n) / tot); L.miss = careRound((L.miss * L.n + (w.miss || 0) * n) / tot); L.bent = careRound((L.bent * L.n + (w.bent || 0) * n) / tot);
-    if (s.sharp) L.sharp = Math.max(0, (L.sharp || 0) - 1); L.n = tot; }
+    if (s.sharp) L.sharp = Math.max(0, (L.sharp || 0) - 1); L.n = tot; if (isAuto(s.lk)) L.baited = tot; }
   else if (s.kind === 'teine'){ const c = pg.potc, w = W ? W.cond : (s.cond == null ? 1 : s.cond), tot = (pg.pots[s.pot] || 0) + n;
     c.cond = careRound((c.cond * (pg.pots[s.pot] || 0) + w * n) / tot); pg.pots[s.pot] = tot; }
 }

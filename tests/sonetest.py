@@ -18,7 +18,7 @@ JS = r"""(async () => { const out = {}, Z = __Z__, H = (Date.UTC(2027, 0, 15, 12
   const q = (c, o) => rulesAt({p:P(...Z[c]), H, len:o.len || 45, gear:o.gear || 'juksa', sp:o.sp || null, hav:o.hav || null});
   const ks = r => r.items.map(i => i.v + ':' + i.k);
   out.r = {svCod:ks(q('sv', {sp:'torsk'})), bj:ks(rulesAt({p:P(74.3, 18.6), H, len:12, gear:'juksa', sp:'torsk'})), jm:ks(q('jm', {sp:'torsk'})), ru:ks(q('ru', {sp:'torsk'})), is:ks(q('is', {sp:'torsk'}))};
-  out.coast = PORTS.filter(q => !['', 'no', 'sv', 'svt'].includes(ruSea(q.p)) && !/^Verft verft/.test(q.name)).map(q => q.name);   // the four at Strømstad lie in Sweden (BACKLOG 10.1)
+  out.coast = PORTS.filter(q => !['', 'no', 'sv', 'svt'].includes(ruSea(q.p))).map(q => q.name);
   // the speed: 400 points spread over the wide frame, each in a new 10 km block, then 300 full answers in the Barents Sea
   let t0 = performance.now(); for (let i = 0; i < 400; i++) ruSea({x:-1000 + (i * 7919 % 3400), y:-1200 + (i * 104729 % 2800)}); out.tSea = Math.round(performance.now() - t0);
   t0 = performance.now(); for (let i = 0; i < 300; i++) rulesAt({p:{x:1300 + i * 0.05, y:-200}, len:40, sp:'torsk', gear:'line'}); out.tRules = Math.round(performance.now() - t0);

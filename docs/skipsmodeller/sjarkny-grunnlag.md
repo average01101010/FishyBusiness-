@@ -124,4 +124,6 @@ Det som må til for 75: Jonas ser på bildene uten å finne noe nytt, overlegg o
 1. **Farten og «planende»**: tegningen sier 12 kn og en deplasementsbåt med dyse; `VESSELS.sjarkny` har `vmax` 25, `vcruise` 20,
    `planing: true`, og butikkteksten sier «Planende skrog og stor motor». Modellen følger tegningen. Skal dataene følge (for eksempel 13–14
    kn med 650 hk, ikke planende, og en ny tekst), eller skal båten fortsatt gå 25 kn i spillet?
+   **Jonas valgte 05.11.2026: 12 kn, som tegningen.** Hun er en deplasementsbåt med dyse: `vmax` 12, `planing` av, og ny butikktekst.
+   Det tas i Ø7 (`docs/planer/okter-etter-backloggen.md`), etter H2, fordi `core/02-species-gear.js` og `ui/phone/10-fartoy.js` er H2s.
 2. **Vekta**: `disp` 15 t er tegningens lettvekt (16 t). Skal den være 16?

@@ -160,7 +160,7 @@ function mktBrokerListings(H){
   for (const r of SPN.list) if (r.kind === 'broker'){ const D = r.data || {}, V = VESSELS[D.type], p0 = portById(D.port);
     // (at the yard nearest the place the broker gives, if that is not a yard itself)
     const pt = p0 && (portServices(p0).verft ? p0 : mktYards().slice().sort((a, b) => dist(a.p, p0.p) - dist(b.p, p0.p))[0]);
-    if (!V || V.lock || !pt) continue; const year = Math.max(1950, Math.min(yearH(H) - 1, Math.round(+D.year || V.year))), c = 0.8;
+    if (!V || V.lock || V.cls === 'hav' || !pt) continue; const year = Math.max(1950, Math.min(yearH(H) - 1, Math.round(+D.year || V.year))), c = 0.8;
     const fair = mktFair(D.type, year, c, {}), price = mktRound(+D.price > 0 ? +D.price : fair);
     out.push({id:'DSB-M' + r.id, w:-2, i:r.id, type:D.type, name:String(D.name || V.name.no).slice(0, 28), year, age:Math.max(1, yearH(H) - year), engH:Math.max(0, Math.round(+D.hours || 0)),
       cond:{hull:c, motor:c, elek:c}, motorT:c, flaw:false, ex:{}, price, fair:mktRound(fair), port:pt.id,

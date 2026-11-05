@@ -121,3 +121,5 @@ Ingen ekte fartøynavn, rederier eller merkenavn brukes i spillet («Jeg orker i
 ## 7. Status
 
 - 28.10.2026: planen skrevet. Venter på valgene og klarsignal.
+- 01.11.–02.11.2026: N1 og N2 er erstattet av `docs/planer/bestand-og-flaate.md` (L2/N1: én nasjonal kystflåte etter registeret per kommune, bygd 02.11.2026). Valg 1 er dermed tatt. Valg 3 ble **B**: Jonas sa 01.11.2026 at «hele kystflåten skal ta av den verdens felles bestand av fisk» (B3, flåtetrykket).
+- 05.11.2026: **Jonas' valg** for resten (spurt ett og ett): **2 A** oppdiktede navn på alle fartøy, også kystruta og ferjene. **4 A** båtene viker bare i spillerens egen visning og innen rundt 1 km fra spillerens båt, og går tilbake til den felles banen etterpå. **5**: N3, N4, N7, så N8 planlagt sammen med `docs/planer/lover-og-regler.md` (L1 vikeplikt og L3 lys og lyd, Ø11a i `docs/planer/okter-etter-backloggen.md`), så N5 og N6. Bygges som Ø15 når Jonas gir klarsignal.

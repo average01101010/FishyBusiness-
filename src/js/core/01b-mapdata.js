@@ -197,8 +197,10 @@ function mapViewReady(x0, y0, x1, y1, then, kinds){
 function simAreaReady(){
   let ok = true;
   const need = (p, r) => { if (!mapReadyAt(p, r)){ ok = false; mapNeed(p, r).catch(e => console.error(e)); } };
-  for (const v of (S && S.fleet && S.fleet.length ? S.fleet : [null])){ const b = v ? vget(v, 'boat') : S.boat; if (b && b.pos) need(b.pos, MAPD.simR); }
-  for (const s of (S && S.sets) || []) if (!s.lost) need(setMid(s), 1);
+  // (the end of the string the boat is working towards too: an autoline of two lenker is 13 km, H2a 05.11.2026)
+  for (const v of (S && S.fleet && S.fleet.length ? S.fleet : [null])){ const b = v ? vget(v, 'boat') : S.boat; if (b && b.pos) need(b.pos, MAPD.simR); if (b && b.gop && b.gop.b) need(b.gop.b, 1); }
+  // both ends of a long string as well as its middle (an autoline lenke is 6.5 km; the coast's strings are within the middle's tiles)
+  for (const s of (S && S.sets) || []) if (!s.lost){ need(setMid(s), 1); if (s.a && s.b && dist(s.a, s.b) > 2){ need(s.a, 1); need(s.b, 1); } }
   return ok;
 }
 // for the tests (maptest.py): forget a pack, also in IndexedDB, as if it had never come; the decoded blocks go too

@@ -16,7 +16,7 @@ function pickKr(o){
   if (o.w === 'equip') return EQUIP[o.k] ? EQUIP[o.k].price : 0;
   if (o.w === 'cloth') return CLOTHES[o.k] ? CLOTHES[o.k].price : 0;
   if (o.w === 'net'){ const x = NETOPT.find(q => netKey(q[0], q[1]) === String(o.s)); return x ? n * NETTY[x[0]].price : 0; }
-  if (o.w === 'stamp') return LINE_KINDS[o.s] ? n * LINE_KINDS[o.s].price : 0;
+  if (o.w === 'stamp') return isAuto(o.s) ? n * AUTOLENKE_KR : LINE_KINDS[o.s] ? n * LINE_KINDS[o.s].price : 0;
   if (o.w === 'pot') return POTS[o.s] ? n * POTS[o.s].price : 0;
   if (o.w === 'kit') return n * GPRICE.kit;
   if (o.w === 'heavy') return n * GPRICE.heavy;
@@ -31,6 +31,7 @@ function pickName(o){
   if (o.w === 'equip') return EQUIP[o.k] ? [EQUIP[o.k].name.no, EQUIP[o.k].name.en] : [o.k, o.k];
   if (o.w === 'cloth') return CLOTHES[o.k] ? [CLOTHES[o.k].no, CLOTHES[o.k].en] : [o.k, o.k];
   if (o.w === 'net'){ const x = NETOPT.find(q => netKey(q[0], q[1]) === String(o.s)) || ['bunn', o.s]; return [n + ' ' + NETTY[x[0]].no.toLowerCase() + ' ' + x[1] + ' mm', n + ' ' + NETTY[x[0]].en.toLowerCase() + 's ' + x[1] + ' mm']; }
+  if (o.w === 'stamp' && isAuto(o.s)) return [n + ' ' + (n === 1 ? 'lenke' : 'lenker') + ' autoline', n + ' ' + (n === 1 ? 'lenke' : 'lenker') + ' of autoline'];
   if (o.w === 'stamp') return [n + ' ' + (n === 1 ? 'stamp ' : 'stamper ') + LINE_KINDS[o.s].no.toLowerCase(), n + ' ' + (n === 1 ? 'tub of ' : 'tubs of ') + LINE_KINDS[o.s].en.toLowerCase()];
   if (o.w === 'pot') return [n + ' ' + POTS[o.s].no.toLowerCase(), n + ' ' + POTS[o.s].en.toLowerCase()];
   if (o.w === 'kit') return [n === 1 ? 'Blåsesett' : n + ' blåsesett', n === 1 ? 'Buoy set' : n + ' buoy sets'];

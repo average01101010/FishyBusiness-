@@ -84,12 +84,42 @@ def build(tx, ty, L, quay):
     cand = [(r, c) for r in range(2, 500, 5) for c in range(2, 500, 5) if W[r, c] and 20 <= D100[r, c] <= 150 and D2L[r, c] >= 600]
     taken = []   # the grounds the tile's harbours took so far: the next harbours keep off them
     smax = max(1e-6, float(np.percentile(slope[W], 95)))
-    def clear(a, c):   # the straight line on the 25 m mask, every 10 m
-        k = max(1, int(math.hypot(c[0] - a[0], c[1] - a[1]) / 10))
+    def clear(a, c):   # the straight line on the 25 m mask, every 5 m (10 m until 05.11.2026 let a corner of a cell through)
+        k = max(1, int(math.hypot(c[0] - a[0], c[1] - a[1]) / 5))
         for s in range(1, k):
             x, y = a[0] + (c[0] - a[0]) * s / k, a[1] + (c[1] - a[1]) * s / k
             if M[min(1999, max(0, int(y // 25))), min(1999, max(0, int(x // 25)))]: return False
         return True
+    # A leg between two neighbouring cells of the 100 m grid can cross land: the loose grid lets 4 of a cell's 16 be land, and nothing
+    # checked a step the straightening could not lengthen (BACKLOG 10.1, 24.10.2026: a few legs round Tromsø cut a corner of the land).
+    # Such a leg is found again on the 25 m mask (8 neighbours, no corner cut, in a window 300 m round it) and straightened there; where
+    # the mask has no way either, the leg stays as it was
+    def mend(a, c):
+        pad = 300; x0, y0 = max(0, int((min(a[0], c[0]) - pad) // 25)), max(0, int((min(a[1], c[1]) - pad) // 25))
+        x1, y1 = min(1999, int((max(a[0], c[0]) + pad) // 25)), min(1999, int((max(a[1], c[1]) + pad) // 25))
+        Wm = ~M[y0:y1 + 1, x0:x1 + 1]; h, w = Wm.shape
+        cl = lambda p: (min(h - 1, max(0, int(p[1] // 25) - y0)), min(w - 1, max(0, int(p[0] // 25) - x0)))
+        s0, t0 = cl(a), cl(c); Wm[s0] = True; Wm[t0] = True   # the ends are where they are (a cell's middle of the 100 m grid)
+        from collections import deque
+        prev = {s0: None}; dq = deque([s0])
+        while dq:
+            r, q = dq.popleft()
+            if (r, q) == t0: break
+            for dr, dq_ in ((0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)):
+                R2, Q2 = r + dr, q + dq_
+                if not (0 <= R2 < h and 0 <= Q2 < w) or (R2, Q2) in prev or not Wm[R2, Q2]: continue
+                if dr and dq_ and not (Wm[r, Q2] and Wm[R2, q]): continue
+                prev[(R2, Q2)] = (r, q); dq.append((R2, Q2))
+        if t0 not in prev: return None
+        cells = []; v = t0
+        while v is not None: cells.append(v); v = prev[v]
+        pts = [a] + [((x0 + q + 0.5) * 25, (y0 + r + 0.5) * 25) for r, q in cells[::-1][1:-1]] + [c]
+        out = [a]; j = 0
+        while j < len(pts) - 1:
+            k2 = len(pts) - 1
+            while k2 > j + 1 and not clear(pts[j], pts[k2]): k2 -= 1
+            out.append(pts[k2]); j = k2
+        return out[1:]
     out = []
     # the boats a harbour gets: one for every 45 m of face, 1 to 8, at most CAP a tile (a city's many quays are not a fishing fleet),
     # the bigger harbours first when there are more harbours than that
@@ -159,6 +189,11 @@ def build(tx, ty, L, quay):
                     k2 = len(pts) - 1
                     while k2 > j + 1 and not clear(pts[j], pts[k2]): k2 -= 1
                     st.append(pts[k2]); j = k2
+                fx = [st[0]]
+                for p in st[1:]:
+                    m = None if clear(fx[-1], p) else mend(fx[-1], p)
+                    fx += m if m else [p]
+                st = fx
                 route = [v for p in st for v in (round(p[0]), round(p[1]))]
                 grounds.append(((c + 0.5) * 100, (r + 0.5) * 100, route))
             if grounds: break

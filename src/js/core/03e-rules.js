@@ -6,7 +6,7 @@
 //  - høstingsforskriften (FOR-2021-12-23-3910) § 31 (15 m and over inside the fjord lines, with its exceptions), § 33 (5 000 hooks;
 //    in six Finnmark fjords inside their own lines 1.11-30.4), § 33a (80 cod nets), § 39 (halibut and redfish), § 40 (the halibut
 //    area), § 47 (minimum sizes)
-//  - J-161-2026 § 32 (coastal cod: 21-27.99 m inside the baseline, 28 m and over within 4 nm, the exceptions by statistics area and
+//  - J-187-2026 § 32 (coastal cod: 21-27.99 m inside the baseline, 28 m and over within 4 nm, the exceptions by statistics area and
 //    date, Henningsvær, Borgundfjorden)
 //  - the layers' own texts: closed fields (J-meldinger), the spawning areas south of 62° N, the Oslo fjord, Lopphavet, Lofoten
 // Only what concerns the game's species and gear (Jonas 04.10.2026: no lobster, nothing for species the game does not have).
@@ -122,8 +122,8 @@ function ruLineName(ref){ const k = ref[0], i = +ref.slice(1), id = {F:2, K:5, O
 // month and day as a number (MMDD) and the span test, both inclusive and across new year
 const ruMD = H => { const g = gDate(H); return (g.getUTCMonth() + 1) * 100 + g.getUTCDate(); };
 const ruIn2 = (md, a, b) => a <= b ? md >= a && md <= b : md >= a || md <= b;
-const RU_HF = 'https://lovdata.no/forskrift/2021-12-23-3910', RU_J161 = 'https://www.fiskeridir.no/yrkesfiske/j-meldinger/j-161-2026';
-// the line in Vestfjorden (J-161-2026 § 32 tredje ledd): 28 m and over may fish haddock and saithe in area 00 on the outer side of it
+const RU_HF = 'https://lovdata.no/forskrift/2021-12-23-3910', RU_J187 = 'https://www.fiskeridir.no/yrkesfiske/j-meldinger/j-187-2026';
+// the line in Vestfjorden (J-187-2026 § 32 tredje ledd): 28 m and over may fish haddock and saithe in area 00 on the outer side of it
 const RU_VF = [P(67 + 49.61 / 60, 12 + 49.25 / 60), P(67 + 15.20 / 60, 14 + 18.90 / 60)], RU_SVV = P(68.234, 14.568);
 const ruVfIn = p => { const [a, b] = RU_VF, s = q => Math.sign((b.x - a.x) * (q.y - a.y) - (b.y - a.y) * (q.x - a.x)); return s(p) === s(RU_SVV); };
 const RU_COD = ['torsk', 'hyse', 'sei'], RU_CONV = ['juksa', 'line', 'garn', 'teiner'];
@@ -158,26 +158,26 @@ function ruSeaRules(c, q, ll, md, add){
     case 'sv': case 'svt': {
       const svt = c === 'svt';
       if (sp === 'torsk' || sp === 'hyse') add('ok', 'sv1', 'I ' + (svt ? 'territorialfarvannet ved Svalbard' : 'fiskevernsonen ved Svalbard') + ' fisker norske fartøy torsk og hyse på kvotene sine, og fangsten trekkes fra dem.', 'In ' + (svt ? 'the territorial waters at Svalbard' : 'the fisheries protection zone at Svalbard') + ' Norwegian vessels fish cod and haddock on their quotas, and the catch counts against them.', 'J-248-2025 §§ 3–4, J-247-2025 § 3', RU_FD + (sp === 'torsk' ? 'j-248-2025' : 'j-247-2025'));
-      else if (sp === 'sei') add('no', 'sv2', 'Seikvoten gjelder i Norges territorialfarvann og økonomiske sone (J-161-2026 § 2). Om den gjelder ved Svalbard, er ikke bekreftet, så spillet stenger sei her.', 'The saithe quota holds in Norway\'s territorial waters and economic zone (J-161-2026 § 2). Whether it holds at Svalbard is not confirmed, so the game closes saithe here.', 'J-161-2026 § 2', RU_J161, true);
+      else if (sp === 'sei') add('no', 'sv2', 'Seikvoten gjelder i Norges territorialfarvann og økonomiske sone (J-187-2026 § 2). Om den gjelder ved Svalbard, er ikke bekreftet, så spillet stenger sei her.', 'The saithe quota holds in Norway\'s territorial waters and economic zone (J-187-2026 § 2). Whether it holds at Svalbard is not confirmed, so the game closes saithe here.', 'J-187-2026 § 2', RU_J187, true);
       else if (sp) notRead('sv3', 'Forskrift om fiskevernsone ved Svalbard', 'https://lovdata.no/dokument/SF/forskrift/1977-06-03-6');
       else add('warn', 'sv0', nm + ': torsk og hyse på kvotene dine (J-248-2025, J-247-2025). Sei og andre arter er stengt i spillet til reglene er funnet.', RU_SEA[c][1] + ': cod and haddock on your quotas (J-248-2025, J-247-2025). Saithe and other species are closed in the game until the rules are found.', 'J-248-2025, J-247-2025', RU_FD + 'j-248-2025');
       break; }
     case 'jm': case 'jmt': {
       const line = hav === 'konv' && (!gear || gear === 'line');
       if ((!sp || sp === 'torsk') && line) add('warn', 'jm1', 'Kartleggingsfiske etter torsk: 181 tonn i alt for konvensjonelle havfiskefartøy, bare med line, ett fartøy om gangen (det som kom først inn i sonen). Meld fra til Fiskeridirektoratet før du starter.', 'Survey fishery for cod: 181 tonnes in all for ocean-going conventional vessels, by line only, one vessel at a time (the first one into the zone). Tell the Directorate of Fisheries before you start.', 'J-61-2026 §§ 2–5', RU_FD + 'j-61-2026');
-      else if (!sp || sp === 'torsk' || sp === 'hyse') add('no', 'jm0', 'Torsk og hyse er forbudt i fiskerisonen ved Jan Mayen. Unntaket er kartleggingsfisket etter torsk med line for konvensjonelle havfiskefartøy.', 'Cod and haddock are banned in the fishery zone at Jan Mayen. The exception is the survey fishery for cod by line for ocean-going conventional vessels.', 'J-161-2026 § 1, J-61-2026', RU_FD + 'j-61-2026', true);
-      else if (sp === 'sei') add('no', 'jm3', 'Seikvoten gjelder bare i Norges territorialfarvann og økonomiske sone, ikke ved Jan Mayen.', 'The saithe quota holds only in Norway\'s territorial waters and economic zone, not at Jan Mayen.', 'J-161-2026 § 2', RU_J161, true);
-      else notRead('jm4', 'J-161-2026', RU_J161);
+      else if (!sp || sp === 'torsk' || sp === 'hyse') add('no', 'jm0', 'Torsk og hyse er forbudt i fiskerisonen ved Jan Mayen. Unntaket er kartleggingsfisket etter torsk med line for konvensjonelle havfiskefartøy.', 'Cod and haddock are banned in the fishery zone at Jan Mayen. The exception is the survey fishery for cod by line for ocean-going conventional vessels.', 'J-187-2026 § 1, J-61-2026', RU_FD + 'j-61-2026', true);
+      else if (sp === 'sei') add('no', 'jm3', 'Seikvoten gjelder bare i Norges territorialfarvann og økonomiske sone, ikke ved Jan Mayen.', 'The saithe quota holds only in Norway\'s territorial waters and economic zone, not at Jan Mayen.', 'J-187-2026 § 2', RU_J187, true);
+      else notRead('jm4', 'J-187-2026', RU_J187);
       break; }
     case 'smh': case 'smt': case 'int': {
-      if (ll.lat >= 62 && (!sp || sp === 'torsk' || sp === 'hyse')) add('warn', 'int1', nm + ': torsk og hyse på kvoten din nord for 62° N (forbudet og kvotene i J-161-2026 §§ 1–2 gjelder hele området nord for 62° N; farvannet er ikke nevnt særskilt). Fartøyet skal være meldt til Fiskeridirektoratet for fiske i internasjonalt farvann (NEAFC, før 1. januar).', RU_SEA[c][1] + ': cod and haddock on your quota north of 62° N (the ban and the quotas of J-161-2026 §§ 1–2 hold in the whole area north of 62° N; these waters are not named). The vessel must be registered with the Directorate of Fisheries for fishing in international waters (NEAFC, before 1 January).', 'J-161-2026 §§ 1–2, NEAFC (FD-55)', RU_FD55);
-      else notRead('int2', 'J-161-2026', RU_J161);
+      if (ll.lat >= 62 && (!sp || sp === 'torsk' || sp === 'hyse')) add('warn', 'int1', nm + ': torsk og hyse på kvoten din nord for 62° N (forbudet og kvotene i J-187-2026 §§ 1–2 gjelder hele området nord for 62° N; farvannet er ikke nevnt særskilt). Fartøyet skal være meldt til Fiskeridirektoratet for fiske i internasjonalt farvann (NEAFC, før 1. januar).', RU_SEA[c][1] + ': cod and haddock on your quota north of 62° N (the ban and the quotas of J-187-2026 §§ 1–2 hold in the whole area north of 62° N; these waters are not named). The vessel must be registered with the Directorate of Fisheries for fishing in international waters (NEAFC, before 1 January).', 'J-187-2026 §§ 1–2, NEAFC (FD-55)', RU_FD55);
+      else notRead('int2', 'J-187-2026', RU_J187);
       break; }
     case 'ru': {
       if (!lic('ru0', 'Fiskeridirektoratet, skjema FD-54')) break;
-      if (!sp || sp === 'torsk' || sp === 'hyse') add('warn', 'ru1', 'Russisk sone med lisens: torsk og hyse på kvoten din nord for 62° N.', 'The Russian zone with a licence: cod and haddock on your quota north of 62° N.', 'J-161-2026 § 2, FD-54', RU_FD54);
-      else if (sp === 'sei') add('no', 'ru2', 'Seikvoten gjelder bare i Norges territorialfarvann og økonomiske sone.', 'The saithe quota holds only in Norway\'s territorial waters and economic zone.', 'J-161-2026 § 2', RU_J161, true);
-      else notRead('ru3', 'J-161-2026', RU_J161);
+      if (!sp || sp === 'torsk' || sp === 'hyse') add('warn', 'ru1', 'Russisk sone med lisens: torsk og hyse på kvoten din nord for 62° N.', 'The Russian zone with a licence: cod and haddock on your quota north of 62° N.', 'J-187-2026 § 2, FD-54', RU_FD54);
+      else if (sp === 'sei') add('no', 'ru2', 'Seikvoten gjelder bare i Norges territorialfarvann og økonomiske sone.', 'The saithe quota holds only in Norway\'s territorial waters and economic zone.', 'J-187-2026 § 2', RU_J187, true);
+      else notRead('ru3', 'J-187-2026', RU_J187);
       break; }
     case 'is':
       add('no', 'is0', 'Ingen adgang for norske fartøy til å fiske i islandsk sone i 2026 er funnet i Fiskeridirektoratets J-meldinger. Sist var det 500 tonn brosme, lange og blålange for konvensjonelle havfiskefartøy i 2023.', 'No access for Norwegian vessels to fish in the Icelandic zone in 2026 is found in the Directorate of Fisheries\' regulations. The last was 500 tonnes of tusk, ling and blue ling for ocean-going conventional vessels in 2023.', 'FOR-2023-01-12-35 (opphevet)', 'https://lovdata.no/dokument/SFO/forskrift/2023-01-12-35', true);
@@ -223,6 +223,7 @@ function ruSeaRules(c, q, ll, md, add){
 // block marks what the game stops you doing today; the answer is the worst of them.
 function rulesAt(q){
   if (q.hav === undefined) q = {...q, hav:S.lic && S.lic.hav ? S.lic.id : null};   // the boat's ocean permit when the caller does not say
+  if (q.egn === undefined) q = {...q, egn:!!(typeof BOAT !== 'undefined' && BOAT && BOAT.autoHooks > 0)};   // a baiting machine aboard (§ 26)
   const p = q.p, H = q.H == null ? S.t / 60 : q.H, len = q.len || 0, gear = q.gear || null, sp = q.sp || null, out = [], md = ruMD(H);
   const ll = LL(p), n62 = ll.lat >= 62, bits = ruBits(p), F = !!(bits & 2), inBL = !!(bits & 1), nm = blNm(p), hom = n62 ? ruHom(p) : null;
   const add = (v, k, no, en, ref, url, block) => out.push({v, k, no, en, ref, url, block:!!block});
@@ -231,7 +232,7 @@ function rulesAt(q){
   if (F && len >= 15){
     if (isSp('torsk')) add('no', 'f31', 'Fartøy på 15 m eller mer kan ikke fiske torsk innenfor fjordlinjene.', 'Vessels of 15 m or more may not fish cod inside the fjord lines.', 'Høstingsforskriften § 31', RU_HF, true);
     if (sp && sp !== 'torsk'){
-      if (len < 21) add('ok', 'f31h', 'Under 21 m kan du fiske andre arter enn torsk med konvensjonelle redskap innenfor fjordlinjene, med høyst 5 % torsk som bifangst.', 'Under 21 m you may fish species other than cod with conventional gear inside the fjord lines, with at most 5% cod as bycatch.', 'Høstingsforskriften § 31 h, J-161-2026 § 32', RU_HF);
+      if (len < 21) add('ok', 'f31h', 'Under 21 m kan du fiske andre arter enn torsk med konvensjonelle redskap innenfor fjordlinjene, med høyst 5 % torsk som bifangst.', 'Under 21 m you may fish species other than cod with conventional gear inside the fjord lines, with at most 5% cod as bycatch.', 'Høstingsforskriften § 31 h, J-187-2026 § 32', RU_HF);
       else if (ll.lat < 68.26) add('ok', 'f31a', 'Sør for Tysfjorden (68° 15,6′ N) kan fartøy på 15 m eller mer fiske andre arter enn torsk innenfor fjordlinjene.', 'South of Tysfjorden (68° 15.6′ N) vessels of 15 m or more may fish species other than cod inside the fjord lines.', 'Høstingsforskriften § 31 a', RU_HF);
       else add('no', 'f31', 'Fartøy på 21 m eller mer kan ikke fiske innenfor fjordlinjene her.', 'Vessels of 21 m or more may not fish inside the fjord lines here.', 'Høstingsforskriften § 31', RU_HF, true);
     }
@@ -241,7 +242,7 @@ function rulesAt(q){
   if (hookZ && (!gear || gear === 'line')) add('warn', 'f33', 'Høyst 5 000 kroker per døgn på bunnline innenfor fjordlinjene.', 'At most 5,000 hooks a day on bottom line inside the fjord lines.', 'Høstingsforskriften § 33', RU_HF);
   else if (F && winter && (!gear || gear === 'line')) add('ok', 'f33b', 'Her, utenfor krokgrensa i Finnmark, er det ingen grense på kroker fra 1. november til 30. april.', 'Here, outside the Finnmark hook line, there is no limit on hooks from 1 November to 30 April.', 'Høstingsforskriften § 33 andre ledd', RU_HF);
   if (F && (!gear || gear === 'garn') && isSp('torsk')) add('warn', 'f33a', 'Høyst 80 garn i fisket etter torsk innenfor fjordlinjene.', 'At most 80 nets when fishing cod inside the fjord lines.', 'Høstingsforskriften § 33a', RU_HF);
-  // J-161-2026 § 32: cod, haddock and saithe with conventional gear north of 62° N, by length
+  // J-187-2026 § 32: cod, haddock and saithe with conventional gear north of 62° N, by length
   if (n62 && cod3 && conv && len >= 21){
     const a00 = hom === '00', a67 = hom === '06' || hom === '07', a05r = ['03', '04', '05'].includes(hom);
     const forSp = s => {
@@ -261,14 +262,27 @@ function rulesAt(q){
     const bad = (sp ? [sp] : RU_COD).filter(s => forSp(s));
     if (bad.length){
       const names = bad.map(s => SPECIES[s].no.toLowerCase()).join(', '), en = bad.map(s => SPECIES[s].en.toLowerCase()).join(', ');
-      if (len < 28) add('no', 'j32b', 'Fartøy på 21–27,99 m kan ikke fiske ' + names + ' innenfor grunnlinjen her.', 'Vessels of 21–27.99 m may not fish ' + en + ' inside the baseline here.', 'J-161-2026 § 32 andre ledd', RU_J161, true);
-      else add('no', 'j32c', 'Fartøy på 28 m eller mer kan ikke fiske ' + names + ' innenfor 4 nm av grunnlinjen her.', 'Vessels of 28 m or more may not fish ' + en + ' within 4 nm of the baseline here.', 'J-161-2026 § 32 tredje ledd', RU_J161, true);
+      if (len < 28) add('no', 'j32b', 'Fartøy på 21–27,99 m kan ikke fiske ' + names + ' innenfor grunnlinjen her.', 'Vessels of 21–27.99 m may not fish ' + en + ' inside the baseline here.', 'J-187-2026 § 32 andre ledd', RU_J187, true);
+      else add('no', 'j32c', 'Fartøy på 28 m eller mer kan ikke fiske ' + names + ' innenfor 4 nm av grunnlinjen her.', 'Vessels of 28 m or more may not fish ' + en + ' within 4 nm of the baseline here.', 'J-187-2026 § 32 tredje ledd', RU_J187, true);
     }
   } else if (n62 && sp && !RU_COD.includes(sp) && len >= 21 && (len < 28 ? inBL : nm < 4))
-    add('warn', 'j32by', 'Du fisker andre arter der fartøyet ikke kan fiske torsk, hyse og sei: høyst 20 % av dem som bifangst.', 'You fish other species where the vessel may not fish cod, haddock and saithe: at most 20% of them as bycatch.', 'J-161-2026 § 32 ellevte ledd', RU_J161);
+    add('warn', 'j32by', 'Du fisker andre arter der fartøyet ikke kan fiske torsk, hyse og sei: høyst 20 % av dem som bifangst.', 'You fish other species where the vessel may not fish cod, haddock and saithe: at most 20% of them as bycatch.', 'J-187-2026 § 32 ellevte ledd', RU_J187);
+  // høstingsforskriften § 26 (the ocean longliners, H2a of docs/planer/havsteget-h2-autoline.md): a vessel over 21.35 m fishing with line and
+  // with a baiting machine aboard may not set line within 4 nm of the baselines along the mainland coast (Sweden to Russia), and within
+  // 10 nm in the three areas off Finnmark/Troms, Troms and Nordland in their periods. The exception for floating line for haddock is not in
+  // the game (no floating line)
+  if (gear === 'line' && q.egn && len > 21.35 && ll.lat < 72 && ll.lon > 4){
+    if (nm < 4) add('no', 'f26', 'Fartøy over 21,35 m med egnemaskin om bord kan ikke sette line innenfor 4 nm av grunnlinjen langs norskekysten.', 'Vessels over 21.35 m with a baiting machine aboard may not set line within 4 nm of the baseline along the Norwegian coast.', 'Høstingsforskriften § 26', RU_HF, true);
+    else if (nm < 10){ const A = F26.find(f => ruIn2(md, f.per[0], f.per[1]) && f26In(f, ll)); if (A) add('no', 'f26b', 'Utenfor ' + A.no + ' kan fartøy over 21,35 m med egnemaskin ikke sette line innenfor 10 nm av grunnlinjen ' + A.when + '.', 'Off ' + A.en + ' vessels over 21.35 m with a baiting machine may not set line within 10 nm of the baseline ' + A.whenEn + '.', 'Høstingsforskriften § 26', RU_HF, true); }
+  }
+  // ling and tusk north of 62° N for 28 m and over (J-128-2026 and the proposal for 2027; 03d-quota.js lbShare)
+  if (n62 && len >= 28 && (!sp || sp === 'lange' || sp === 'brosme') && typeof lbShare === 'function'){
+    const bs = lbShare('brosme', H) < 1;
+    add('warn', 'lb28', 'Fartøy på 28 m og over: lange bare som bifangst, inntil 35 % av hver fangst og landing. Brosme ' + (bs ? 'er stoppet for i år: inntil 15 % som bifangst.' : 'er fritt til gruppekvoten er tatt, så inntil 15 %.'), 'Vessels of 28 m and over: ling only as bycatch, up to 35 % of each catch and landing. Tusk ' + (bs ? 'is stopped for this year: up to 15 % as bycatch.' : 'is free until the group quota is taken, then up to 15 %.'), 'J-128-2026 §§ 6 og 9', 'https://www.fiskeridir.no/yrkesfiske/j-meldinger/j-128-2026');
+  }
   // the areas: Henningsvær, Borgundfjorden, Lofoten's common grounds, the closed fields, the spawning areas in the south, the Oslo fjord, Lopphavet
-  if (ruIn2(md, 101, 630) && len > 11 && ruAt(6, p).length) add('no', 'henn', 'Henningsværboksen er stengt for alt fiske 1.1–30.6 for fartøy over 11 m.', 'The Henningsvær box is closed to all fishing 1.1–30.6 for vessels over 11 m.', 'J-161-2026 § 32 fjerde ledd', RU_J161, true);
-  if (ruIn2(md, 301, 531) && ruAt(24, p).length && !(gear === 'juksa' && q.hand)) add('no', 'borg', 'Alt fiske er forbudt i Borgundfjorden 1.3–31.5, unntatt med håndsnøre og fiskestang.', 'All fishing is banned in Borgundfjorden 1.3–31.5, except with hand line and rod.', 'J-161-2026 § 32 sjuende ledd', RU_J161, true);
+  if (ruIn2(md, 101, 630) && len > 11 && ruAt(6, p).length) add('no', 'henn', 'Henningsværboksen er stengt for alt fiske 1.1–30.6 for fartøy over 11 m.', 'The Henningsvær box is closed to all fishing 1.1–30.6 for vessels over 11 m.', 'J-187-2026 § 32 fjerde ledd', RU_J187, true);
+  if (ruIn2(md, 301, 531) && ruAt(24, p).length && !(gear === 'juksa' && q.hand)) add('no', 'borg', 'Alt fiske er forbudt i Borgundfjorden 1.3–31.5, unntatt med håndsnøre og fiskestang.', 'All fishing is banned in Borgundfjorden 1.3–31.5, except with hand line and rod.', 'J-187-2026 § 32 sjuende ledd', RU_J187, true);
   if (ruIn2(md, 301, 414) && (!gear || gear === 'garn' || gear === 'line')) for (const f of ruAt(1, p)) add('warn', 'lofot', (f.a.navn || 'Fleksibelt felleshav') + ': faststående redskap skal være om bord fra kl. 10 til 17.', (f.a.navn || 'Flexible common ground') + ': fixed gear must be aboard from 10:00 to 17:00.', f.a.jmelding || 'J-236-2025', f.a.url);
   for (const f of ruAt(0, p)){ const t = (f.a.type_text || '').toLowerCase(), hit = gear && ((gear === 'line' && /line/.test(t)) || (gear === 'garn' && /garn/.test(t)) || /konvensjonell|alle redskap/.test(t));
     add(hit ? 'no' : 'info', 'stengt', (f.a.navn || 'Stengt felt') + ': stengt for ' + (f.a.type_text || 'fiske') + (f.a.jmelding_navn ? ' (' + f.a.jmelding_navn + ')' : '') + '.', (f.a.navn || 'Closed field') + ': closed to ' + (f.a.type_text || 'fishing') + (f.a.jmelding_navn ? ' (' + f.a.jmelding_navn + ')' : '') + '.', f.a.jmelding_navn || 'J-melding', f.a.url, hit); }
@@ -332,6 +346,19 @@ function rulesAt(q){
   return {v:v === 'info' ? 'ok' : v, items:out, bits, inBL, F, nm, hom, lat:ll.lat, n62, sea};
 }
 // what the game stops you doing (the reasons with block): null when you may, else the first reason's text
+// § 26's three areas within 10 nm (lat, lon in degrees from the regulation's points): each lies between two lines across the coast (its points
+// 1-2 and 3-4, the other sides running along 4 and 10 nm), and is in force in its period (month-day, from-to as ruIn2 takes it)
+const f26dm = (d, m) => d + m / 60;
+const F26 = [
+  {no:'Finnmark og Troms', en:'Finnmark and Troms', when:'fra 1. september til 31. desember', whenEn:'from 1 September to 31 December', per:[901, 1231], l1:[[f26dm(70, 41.16), 21.5], [f26dm(70, 47.52), 21.5]], l2:[[f26dm(70, 36.32), 20], [f26dm(70, 29.90), 20]]},
+  {no:'Troms', en:'Troms', when:'fra 1. september til 31. desember', whenEn:'from 1 September to 31 December', per:[901, 1231], l1:[[f26dm(70, 5.47), f26dm(18, 7.43)], [f26dm(70, 8.98), f26dm(17, 52.98)]], l2:[[f26dm(69, 35.50), f26dm(16, 27.45)], [f26dm(69, 29.99), f26dm(16, 34.76)]]},
+  {no:'Nordland', en:'Nordland', when:'fra 1. september til 30. april', whenEn:'from 1 September to 30 April', per:[901, 430], l1:[[f26dm(69, 20), f26dm(15, 44.71)], [f26dm(69, 20), f26dm(15, 16.59)]], l2:[[f26dm(67, 30), f26dm(11, 25.33)], [f26dm(67, 30), f26dm(11, 41.75)]]}];
+// whether a point (lat, lon) lies between an area's two end lines, on the same side of each as the area's middle (lon scaled by cos lat)
+function f26In(f, ll){
+  const c = Math.cos(ll.lat * Math.PI / 180), mid = [0, 1].map(k => (f.l1[0][k] + f.l1[1][k] + f.l2[0][k] + f.l2[1][k]) / 4);
+  const side = (L, P) => Math.sign((L[1][1] - L[0][1]) * c * (P[0] - L[0][0]) - (L[1][0] - L[0][0]) * (P[1] - L[0][1]) * c);
+  const P = [ll.lat, ll.lon]; return side(f.l1, P) === side(f.l1, mid) && side(f.l2, P) === side(f.l2, mid);
+}
 function ruBlockMsg(q){ const r = rulesAt(q), b = r.items.find(x => x.block && x.v === 'no'); return b ? gL(b.no, b.en) : null; }
 // § 47 minimum sizes (cm) where you are, for the species the game has
 function ruMinSize(sp, p){
@@ -351,7 +378,7 @@ function fjordLimits(p, H){ const b = ruBits(p); if (!(b & 2)) return null; cons
   return {nets:80, hooks:winter && (b & 32) ? null : 5000}; }
 // R3: what the HUD, the Regler app and the chart's rule layer show. The short label of each reason, and the question asked for your
 // boat where she is: her length, the gear she is rigged with, and halibut when you fish for it (otherwise any species)
-const RU_SHORT = {f31:['Ikke torsk her', 'No cod here'], j32b:['Ikke innenfor grunnlinja', 'Not inside the baseline'], j32c:['Ikke innenfor 4 nm', 'Not within 4 nm'],
+const RU_SHORT = {lb28:['Lange og brosme over 28 m', 'Ling and tusk over 28 m'], f26:['Ikke autoline innenfor 4 nm', 'No autoline within 4 nm'], f26b:['Ikke autoline innenfor 10 nm nå', 'No autoline within 10 nm now'], f31:['Ikke torsk her', 'No cod here'], j32b:['Ikke innenfor grunnlinja', 'Not inside the baseline'], j32c:['Ikke innenfor 4 nm', 'Not within 4 nm'],
   henn:['Henningsværboksen er stengt', 'The Henningsvær box is closed'], borg:['Borgundfjorden er stengt', 'Borgundfjorden is closed'], stengt:['Stengt felt', 'Closed field'],
   gyte:['Gytefeltet er stengt', 'The spawning area is closed'], null:['Nullfiskeområde', 'No-fishing area'], oslo:['Ikke torsk i Oslofjorden', 'No cod in the Oslo fjord'],
   oslog:['Bare håndredskap her', 'Hand gear only here'], lopp:['Verneområde', 'Protected area'], kv39:['Kveita er fredet', 'Halibut is protected'], kv40:['Forbudsområde for kveite', 'No-fishing area for halibut'],

@@ -60,7 +60,7 @@ function setBaitTxt(s){
   return ks.map(k => (ks.length > 1 ? w[k] + ' ' : '') + baitLc(k)).join(', ');
 }
 function setWhat(s){
-  const n = s.n + ' ' + unitName(s.kind, s.n);
+  const n = s.n + ' ' + unitName(s.kind, s.n, s.lk);
   if (s.kind === 'line' && LINE_KINDS[s.lk]) return GL(LINE_KINDS[s.lk].no, LINE_KINDS[s.lk].en) + ', ' + n + ' · ' + setBaitTxt(s);
   if (s.kind === 'teine') return GEAR.teine[S.lang] + ', ' + n + ' · ' + setBaitTxt(s);
   if (s.kind === 'garn') return GEAR.garn[S.lang] + ', ' + n + ' · ' + GL(netNo(s), netEn(s));
@@ -76,6 +76,13 @@ function setLabel(s, short){
 function setChoices(all){
   const pg = S.pgear, out = [], r = RIGS[rigOf()].kind; if (!pg || !r) return out;
   for (const l of pg.nets) out.push({kind:'garn', spec:{nid:l.id}, n:l.n, lbl:netN(l, l.n)});
+  // the autoline (H2a): two lenker (10,000 hooks, 13 km) a string with each bait in the freezer that is enough for them, and one lenke with
+  // the first; the baiting machine takes the bait as the line runs out
+  { const A = autoL(pg); if (A && A.n){ const B = baitOf(pg), per = LINE_KINDS.auto.baitKg, lb = (n, k) => [n + ' ' + unitName('line', n, 'auto') + ' autoline · ' + BAITS[k].no.toLowerCase(), n + ' ' + unitName('line', n, 'auto') + ' of autoline · ' + BAITS[k].en.toLowerCase()];
+    const ks = Object.keys(B).filter(k => BAITS[k] && B[k] >= per - 1e-9).sort((a, b) => B[b] - B[a]);
+    for (const k of ks){ const n = Math.min(2, A.n, Math.floor(B[k] / per + 1e-9)); out.push({kind:'line', spec:{lk:'auto', n, bait:k}, n, bait:k, lbl:lb(n, k)}); }
+    if (ks.length && Math.min(A.n, Math.floor(B[ks[0]] / per + 1e-9)) >= 2) out.push({kind:'line', spec:{lk:'auto', n:1, bait:ks[0]}, n:1, bait:ks[0], lbl:lb(1, ks[0])});
+    if (all && !ks.length) out.push({kind:'line', off:true, lk:'auto', n:A.n, lbl:[A.n + ' lenker autoline · ikke agn i frysen', A.n + ' lenker of autoline · no bait in the freezer']}); } }
   for (const lk of ['hyse', 'bank']){ const L0 = pg.lines[lk]; if (!L0 || !L0.n) continue; const bt = btOf(L0), K = LINE_KINDS[lk];
     const lbl = (n, no, en) => [n + ' ' + (n === 1 ? 'stamp' : 'stamper') + ' ' + K.no.toLowerCase() + ' · ' + no, n + ' ' + (n === 1 ? 'tub' : 'tubs') + ' of ' + K.en.toLowerCase() + ' · ' + en];
     for (const k of Object.keys(bt).filter(k => bt[k] > 0).sort((a, b) => bt[b] - bt[a])) out.push({kind:'line', spec:{lk, n:bt[k], bait:k}, n:bt[k], bait:k, lbl:lbl(bt[k], BAITS[k] ? BAITS[k].no.toLowerCase() : k, BAITS[k] ? BAITS[k].en.toLowerCase() : k)});
@@ -89,7 +96,7 @@ function setChoices(all){
 // what the boat is doing with gear, for the status line and the action bar
 function gopText(){
   const g = S.boat.gop; if (!g) return null;
-  const k = GEAR[g.kind], left = Math.max(0, (g.n - g.done - g.prog) * gopUnitMin(g, S.t / 60, hsAt(S.boat.pos, S.t / 60)) / haulSlow(g)) + (g.lead || 0);
+  const k = g.auto ? {no:'Autoline', en:'Autoline'} : GEAR[g.kind], left = Math.max(0, (g.n - g.done - g.prog) * gopUnitMin(g, S.t / 60, hsAt(S.boat.pos, S.t / 60)) / haulSlow(g)) + (g.lead || 0);
   const slow = haulSlow(g) < 0.95;   // the bleeding tub is filling: the haul goes slower
   return [(g.op === 'set' ? 'Setter ' : 'Trekker ') + k.no.toLowerCase() + ' ' + g.done + '/' + g.n + ' · ' + (isFinite(left) ? dur(left / 60) : GL('ingen haler', 'nobody hauling')) + (slow ? ' · saktere, karet fylles' : ''), (g.op === 'set' ? 'Setting ' : 'Hauling ') + k.en.toLowerCase() + ' ' + g.done + '/' + g.n + ' · ' + (isFinite(left) ? dur(left / 60) : GL('ingen haler', 'nobody hauling')) + (slow ? ' · slower, the tub is filling' : ''),
     (g.op === 'set' ? 'Setter ' : 'Trekker ') + g.done + '/' + g.n, (g.op === 'set' ? 'Setting ' : 'Hauling ') + g.done + '/' + g.n];
@@ -106,7 +113,7 @@ function gearActs(LS){
   if (b.status !== 'idle') return '';
   const s = nearSet(b.pos, 0.3);
   if (s){ h.push('<button class="pri" data-act="ghaul" data-id="' + s.id + '">' + LS('Trekk ' + setLabel(s, true).toLowerCase(), 'Haul ' + setLabel(s, true).toLowerCase(), 'Trekk', 'Haul') + '</button>');
-    if (s.kind !== 'line') h.push('<button data-act="ghaul" data-id="' + s.id + '" data-r="1">' + LS('Trekk og sett ut igjen', 'Haul and set again', 'Trekk og sett', 'Haul, set') + '</button>'); }
+    if (s.kind !== 'line' || isAuto(s.lk)) h.push('<button data-act="ghaul" data-id="' + s.id + '" data-r="1">' + LS('Trekk og sett ut igjen', 'Haul and set again', 'Trekk og sett', 'Haul, set') + '</button>'); }
   const ch = setChoices();
   ch.slice(0, 3).forEach((c, i) => h.push('<button data-act="gset" data-c="' + i + '">' + LS('Sett ' + c.lbl[0], 'Set ' + c.lbl[1], 'Sett ' + c.n, 'Set ' + c.n) + '</button>'));
   if (ch.length > 3 || mySets().length) h.push('<button data-ui="redskap">' + LS('Redskap', 'Gear', 'Redskap', 'Gear') + '</button>');
@@ -131,6 +138,8 @@ function gearPanel(){
   h.push('<h3>' + GL('Redskap', 'Gear') + '</h3>');
   for (const lk of ['hyse', 'bank']){ const L0 = pg.lines[lk], all = L0.n + tubState(lk).work.reduce((a, w) => a + w.n, 0); if (!all) continue;
     h.push('<div class="kv"><span>' + GL(LINE_KINDS[lk].no, LINE_KINDS[lk].en) + '</span><span>' + all + ' ' + GL(all === 1 ? 'stamp' : 'stamper', all === 1 ? 'tub' : 'tubs') + '</span></div>' + tubsHtml(lk) + tubLegend(lk)); }
+  { const A = autoL(pg), sea = mySets().filter(x => x.kind === 'line' && isAuto(x.lk)).reduce((a, x) => a + x.n, 0);
+    if (A && (A.n || sea)) h.push('<div class="kv"><span>' + GL('Autoline på magasinene', 'Autoline on the magazines') + '</span><span>' + A.n + ' ' + unitName('line', A.n, 'auto') + (sea ? ' · ' + sea + GL(' i sjøen', ' in the sea') : '') + ' · ' + Math.round(lineQ(A) * 100) + ' %</span></div>'); }
   for (const l of pg.nets) h.push('<div class="kv"><span>' + GL(...netN(l, l.n)) + '</span><span>' + Math.round(l.cond * 100) + ' %</span></div>');
   for (const pot of ['big']) if (pg.pots[pot]) h.push('<div class="kv"><span>' + GL(POTS[pot].no, POTS[pot].en) + '</span><span>' + pg.pots[pot] + ' · ' + Math.round(((pg.potc || {}).cond || 1) * 100) + ' %</span></div>');
   for (const j of jigSets()) h.push('<div class="kv"><span>' + GL(CARE.jig[j.k].no, CARE.jig[j.k].en) + (j.on ? ' · ' + GL('i bruk', 'in use') : '') + '</span><span>' + (j.k === 'kveite' && j.closed ? GL('kveita er fredet', 'halibut closed') : Math.round(((pg.jig || {})[j.k] || {c:1}).c * 100) + ' %') + '</span></div>' + (j.sp.length ? spChips(j.sp) : ''));

@@ -21,8 +21,8 @@ export default function (t){
   const coast = [['Vadsø', 70.07, 29.75], ['Kirkenes', 69.73, 30.05], ['Bøkfjorden', 69.80, 30.10], ['Varangerfjorden', 70.0, 30.8], ['Vardø', 70.37, 31.2],
     ['Hvaler', 59.05, 10.95], ['Svinesund', 59.10, 11.24], ['Tromsø', 69.65, 18.95], ['Bodø', 67.28, 14.37], ['Bergen', 60.40, 5.30], ['Hammerfest', 70.66, 23.68], ['Båtsfjord', 70.63, 29.72]];
   for (const [n, la, lo] of coast){ const c = ruSea(at(la, lo)); t.ok(c === '' || c === 'no', n + ': kystens regler gjelder (' + (c || 'innenfor 12 nm') + ')'); }
-  // the four yards named «Verft verft» at Strømstad lie in Sweden (an old fault in steder.json, BACKLOG 10.1): Swedish waters is right
-  const off = PORTS.filter(q => !['', 'no', 'sv', 'svt'].includes(ruSea(q.p)) && !(/^Verft verft/.test(q.name) && ruSea(q.p) === 'se')).map(q => q.name + ' ' + ruSea(q.p));
+  // (the four yards at Strømstad, in Sweden, were taken out of steder.json 05.11.2026)
+  const off = PORTS.filter(q => !['', 'no', 'sv', 'svt'].includes(ruSea(q.p))).map(q => q.name + ' ' + ruSea(q.p));
   t.ok(PORTS.length > 300 && !off.length, 'alle ' + PORTS.length + ' havnene ligger under kystens regler (eller ved Svalbard)' + (off.length ? ': ' + off.join(', ') : ''));
 
   // each border: walk from one zone's point to the other's, find the change, and look 2 km to each side

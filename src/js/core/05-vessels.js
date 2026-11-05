@@ -667,7 +667,7 @@ function step(){
   if (S.t % 60 === 0) for (const pid in S.market) for (const sp in S.market[pid]) S.market[pid][sp] *= 0.97;
   if (S.t % 60 === 0 && S.stock) stockHour(H);
   if (S.t % 60 === 0) gearHour(H);
-  if (S.t % 60 === 0){ seasonDay(H); pressDay(H); bkNews(H); }   // ... and the Greenland halibut's opening and stop (03d-quota.js)   // the seasons' news and the skrei festival (09c-seasons.js), a record price (09h-press.js)
+  if (S.t % 60 === 0){ seasonDay(H); pressDay(H); bkNews(H); lbNews(H); }   // ... and the Greenland halibut's opening and stop (03d-quota.js)   // the seasons' news and the skrei festival (09c-seasons.js), a record price (09h-press.js)
   folkPort(H);                        // Edvard on the quay in the home harbour (09d-folk.js)
   eachVessel(() => vesselStep(H));
   achMinute();                        // the badges: rough weather, night fishing, players met (09f-merker.js)
@@ -957,7 +957,7 @@ function fish(H, W, hs){
   // jigging is always possible while the boat lies still, also with line, nets or pots in the sea (Jonas 09.10.2026): the dead time between
   // setting and hauling is spent on the jig. What the gear in the sea is likely to bring is kept free in the hold (gearReserve), so the haul is not left standing
   { const res = gearReserve(); if (res > 0 && tot >= capHold() - res){ if ((S.resTold || -1e9) < S.t - 720){ S.resTold = S.t; log('Resten av lasterommet er satt av til redskapet i sjøen. Jukser ikke mer nå.', 'The rest of the hold is kept for the gear in the sea. No more jigging now.'); } return; } }
-  // where the rules stop the boat (03e-rules.js: the fjord lines by length, the baseline zones of J-161-2026 § 32, closed areas): it waits
+  // where the rules stop the boat (03e-rules.js: the fjord lines by length, the baseline zones of J-187-2026 § 32, closed areas): it waits
   { const rq = {p:b.pos, len:BOAT.len, gear:'juksa', sp:S.target === 'kveite' ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)}, rb = (S.ruAt && S.ruAt.t > S.t - 10 && dist(S.ruAt.p, b.pos) < 0.05) ? S.ruAt.m : ruBlockMsg(rq);
     S.ruAt = {t:S.t, p:{x:b.pos.x, y:b.pos.y}, m:rb};
     if (rb){ if ((S.fjordWarn || -1e9) < S.t - 720){ S.fjordWarn = S.t; log(rb + ' Båten venter.', rb + ' The boat waits.'); } return; } }
