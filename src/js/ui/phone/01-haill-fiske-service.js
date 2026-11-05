@@ -53,7 +53,7 @@
       h.push('<div class="ph-card"><h4>' + l.n + ' ' + L('garn', 'nets') + ' ' + netNo(l) + '</h4>' + kv(L('Stand', 'Condition'), pctOf(l.cond) + ' · ' + L('tak ', 'ceiling ') + pctOf(nMax(l))) + cbar(l.cond) + '<div class="ph-btncol">' +
         (q ? cbtn('grmend', 'data-id="' + l.id + '" data-m="shop"', L('Bøt garna', 'Mend the nets') + qTxt(q), here && q.fee <= spendable()) : '') + sell('net', l.id, 1, L('garna', 'the nets')) + '</div></div>'); }
     if (pg.pots.big){ const q = careQuote('pot', 0, true);
-      h.push('<div class="ph-card"><h4>' + pg.pots.big + ' ' + POTS.big[S.lang].toLowerCase() + '</h4>' + kv(L('Stand', 'Condition'), pctOf(pg.potc.cond) + ' · ' + L('tak ', 'ceiling ') + pctOf(pg.potc.max)) + cbar(pg.potc.cond) + '<div class="ph-btncol">' +
+      h.push('<div class="ph-card"><h4>' + potsN(pg.pots.big) + '</h4>' + kv(L('Stand', 'Condition'), pctOf(pg.potc.cond) + ' · ' + L('tak ', 'ceiling ') + pctOf(pg.potc.max)) + cbar(pg.potc.cond) + '<div class="ph-btncol">' +
         (q ? cbtn('carepot', 'data-m="shop"', L('Reparer teinene', 'Mend the pots') + qTxt(q), here && q.fee <= spendable()) : '') + sell('pot', 0, 1, L('1 teine', '1 pot')) + (pg.pots.big > 1 ? sell('pot', 0, pg.pots.big, pg.pots.big + ' ' + L('teiner', 'pots')) : '') + '</div></div>'); }
     const rest = [];
     for (const k of ['mark', 'kveite']) if (pg.jig[k].n > 0) rest.push(sell('jig', k, 1, L('reservesett: ', 'spare set: ') + CARE.jig[k][S.lang].toLowerCase()));
