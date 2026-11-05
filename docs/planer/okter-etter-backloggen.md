@@ -169,7 +169,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 |---|---|---|---|
 | Spilltest 3 | Kjører | `ccr-9c21028c-lptg24` | 05.11.2026 |
 | H2 autolineren | H2a rullet ut (c9e651d1); H2b–H2e gjenstår | `h2-autoline` | 05.11.2026 |
-| Ø1 Det som ikke kom med | PR #42 flettet, #18, #19 og #33 lukket; Tufjord, verftene og leibitene gjenstår | `ccr-834c604f-xxnqoy` | 05.11.2026 |
+| Ø1 Det som ikke kom med | Ferdig: PR #42 flettet, #18, #19 og #33 lukket, Tufjord flettet inn (8f503066), verftene i Sverige tatt ut (ce056730), leibitene rettet i `npc.py` (eb669fe7, ute med neste kartrelease) | `ccr-834c604f-xxnqoy`, `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
 | Ø2 Testriggen | Ikke begynt | | |
 | Ø3 Ytelse | Ikke begynt | | |
 | Ø4 Båtmodellene | Ikke begynt | | |
@@ -190,3 +190,4 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 
 - 05.11.2026: planen skrevet etter gjennomgangen av backloggen, planene og grenene. Grenene sjekket samme dag: `ccr-664fd66b-ftggff` og PR #42 har rettinger som ikke er i arbeidsgrenen.
 - 05.11.2026: PR #42 flettet inn og PR #18, #19 og #33 lukket (Jonas: «Ja, flett PR #42 og lukk #18, #19 og #33»). `vesseltest` (snøkrabbe) ble rettet i H2a og er tatt ut av Ø2.
+- 05.11.2026: Ø1 ferdig. Tufjord-rettingen fra `ccr-664fd66b-ftggff` flettet inn (konflikt med isen i `leiaRoute` løst: isen følger `LEIA_RUN`), prøvd i Tufjord, Kristiansand, Bergen, Bodø, Hammerfest og Båtsfjord. «Land inne i havnene» (grunnsjekken inne i havnene, Fosnavåg, Mandal verft og Bøvågen) står i backloggen 10.5.

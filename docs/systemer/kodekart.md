@@ -1018,7 +1018,7 @@ the fish tubs (docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
   - 58 `tubPack(dims, spec, seed)`
   - 91 `karRefund()`
 
-## `src/js/core/07-harbours.js` (489 linjer)
+## `src/js/core/07-harbours.js` (512 linjer)
 
 harbours: quays, berths and mooring
 
@@ -1034,35 +1034,36 @@ harbours: quays, berths and mooring
   - 134 `quayOut(f, a, L)`
   - 154 `hullDry(p, hd, L, B)`
   - 159 `npcBerths(group, p, boats, R = 0.6)`
-  - 194 `clearLine(a, b)`
-  - 197 `quayLand(q)`
-  - 198 `quayLandLine(a, b)`
-  - 199 `approachPath(pt)`
-  - 239 `exitWps(pt, to)`
-  - 240 `entryWps(pt, from)`
-  - 250 `berthPose(pid, type, kind = 'main')`
-- **282** the way in to a berth and out of it (the user's list 04.10.2026: «legge til og fra kai uten å gå gjennom landmasse og
-  - 287 `berthBlocked(p, m = 2)`
-  - 296 `berthClear(a, b, m)`
-  - 297 `berthPath(from, bp)`
-- **322** landing the catch
-  - 334 `landPlan(type, kg, hold)`
-  - 344 `landState(L, t)`
-  - 353 `mottakOpen(H)`
-  - 355 `mottakNext(H)`
-  - 357 `mottakWhen(H, no)`
-  - 363 `startLanding(ops)`
-  - 374 `finishLanding()`
-  - 381 `iceChute(kg)`
-- **383** the bunker quay: moving along the harbour and filling fuel
-  - 393 `quayPos(b)`
-  - 402 `portBusy(b)`
-  - 403 `startShift(to, after)`
-  - 413 `startFueling(ops)`
-  - 426 `quayMinute()`
-  - 442 `buyIce(kg, free)`
-- **452** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
-  - 458 `shopBuy(k, kg, free)`
+  - 199 `apprClr(q)`
+  - 200 `clearLine(a, b)`
+  - 203 `quayLand(q)`
+  - 204 `quayLandLine(a, b)`
+  - 205 `approachPath(pt)`
+  - 262 `exitWps(pt, to)`
+  - 263 `entryWps(pt, from)`
+  - 273 `berthPose(pid, type, kind = 'main')`
+- **305** the way in to a berth and out of it (the user's list 04.10.2026: «legge til og fra kai uten å gå gjennom landmasse og
+  - 310 `berthBlocked(p, m = 2)`
+  - 319 `berthClear(a, b, m)`
+  - 320 `berthPath(from, bp)`
+- **345** landing the catch
+  - 357 `landPlan(type, kg, hold)`
+  - 367 `landState(L, t)`
+  - 376 `mottakOpen(H)`
+  - 378 `mottakNext(H)`
+  - 380 `mottakWhen(H, no)`
+  - 386 `startLanding(ops)`
+  - 397 `finishLanding()`
+  - 404 `iceChute(kg)`
+- **406** the bunker quay: moving along the harbour and filling fuel
+  - 416 `quayPos(b)`
+  - 425 `portBusy(b)`
+  - 426 `startShift(to, after)`
+  - 436 `startFueling(ops)`
+  - 449 `quayMinute()`
+  - 465 `buyIce(kg, free)`
+- **475** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
+  - 481 `shopBuy(k, kg, free)`
 
 ## `src/js/core/07c-naust.js` (168 linjer)
 
@@ -1601,45 +1602,47 @@ Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md a
   - 34 `ukeDue()`
   - 40 `ukeLast()`
 
-## `src/js/core/11-route.js` (626 linjer)
+## `src/js/core/11-route.js` (654 linjer)
 
 ---------- Autonav (once «Følg leia»): a route along the fairway ----------
 
 - **1** Autonav (once «Følg leia»): a route along the fairway
-  - 34 `leiaTideCredit(a, b)`
-  - 47 `leiaIceSet(a, b)`
-  - 55 `leiaIceLeg(p, q)`
-  - 69 `legLandIn(p, q, L, s0, s1)`
-  - 73 `legNearPt(pt, z)`
-  - 85 `legRunsWalk(W, ms)`
-  - 93 `legRunsW(p, q, z)`
-  - 95 `legRuns(p, q, z)`
-  - 101 `legRunsAsync(p, q, z)`
-  - 107 `legIdx(runs, L, n, last)`
-  - 117 `leiaGrid(x0, y0, x1, y1, c, mask)`
-  - 124 `leiaRocks(G)`
-  - 133 `leiaShore(G, p)`
-  - 143 `leiaCost(G, v, sd)`
-  - 161 `leiaNearCell(G, p, sd, km = 1, free)`
-  - 168 `leiaHeap()`
-  - 176 `leiaSlice(st, t0, at)`
-  - 179 `leiaSearch(G, s, t, sd, st)`
-  - 210 `leiaFind(from, to, sd, st)`
-  - 224 `leiaFind1(from, to, sd, st, pad, c0)`
-  - 277 `leiaCorridor(pp, R, c, sd, st)`
-  - 293 `leiaCorridor1(pp, bb, R, c, sd, st, first, last)`
-  - 312 `leiaLegOk(p, q, sd, margin)`
-  - 335 `leiaLegOkL(p, q, sd, margin, tick)`
-  - 343 `leiaLegFail(p, q, tick, endP, endQ, strict)`
-  - 360 `rockOnLeg(a, b, r)`
-  - 369 `leiaMend(P, sd, st, strict)`
-  - 410 `leiaStraighten(P, sd, margin, st)`
-  - 438 `leiaPull(P, sd, st)`
-  - 464 `leiaRoute(a, b, aPort, bPort, opt)`
-  - 483 `leiaLane(p, goal, km)`
-  - 514 `leiaPocket(p, sd)`
-  - 531 `leiaPocketOut(e, sd, st)`
-  - 541 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
+  - 35 `leiaTideCredit(a, b)`
+  - 48 `leiaIceSet(a, b)`
+  - 56 `leiaIceLeg(p, q)`
+  - 70 `legLandIn(p, q, L, s0, s1)`
+  - 74 `legNearPt(pt, z)`
+  - 86 `legRunsWalk(W, ms)`
+  - 94 `legRunsW(p, q, z)`
+  - 96 `legRuns(p, q, z)`
+  - 102 `legRunsAsync(p, q, z)`
+  - 108 `legIdx(runs, L, n, last)`
+  - 118 `leiaGrid(x0, y0, x1, y1, c, mask)`
+  - 125 `leiaRocks(G)`
+  - 134 `leiaShore(G, p)`
+  - 144 `leiaCost(G, v, sd)`
+  - 162 `leiaNearCell(G, p, sd, km = 1, free)`
+  - 169 `leiaHeap()`
+  - 177 `leiaSlice(st, t0, at)`
+  - 180 `leiaSearch(G, s, t, sd, st)`
+  - 211 `leiaFind(from, to, sd, st)`
+  - 225 `leiaFind1(from, to, sd, st, pad, c0)`
+  - 278 `leiaCorridor(pp, R, c, sd, st)`
+  - 294 `leiaCorridor1(pp, bb, R, c, sd, st, first, last)`
+  - 313 `leiaHarbourClr(pt, ports)`
+  - 319 `leiaPortsBy(p, q)`
+  - 323 `leiaLegOk(p, q, sd, margin)`
+  - 350 `leiaLegOkL(p, q, sd, margin, tick)`
+  - 358 `leiaLegFail(p, q, tick, endP, endQ, strict)`
+  - 375 `rockOnLeg(a, b, r)`
+  - 384 `leiaMend(P, sd, st, strict)`
+  - 425 `leiaStraighten(P, sd, margin, st)`
+  - 453 `leiaPull(P, sd, st)`
+  - 487 `leiaRoute(a, b, aPort, bPort, opt)`
+  - 511 `leiaLane(p, goal, km)`
+  - 542 `leiaPocket(p, sd)`
+  - 559 `leiaPocketOut(e, sd, st)`
+  - 569 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
 
 ## `src/js/core/11b-obstacles.js` (226 linjer)
 
@@ -2215,12 +2218,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1112 linjer)
+## `src/js/ui/phone/07-patch.js` (1118 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1105 `patch()`
+  - 1111 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -3177,24 +3180,24 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (600 linjer)
+## `src/js/view3d/01-shaders.js` (602 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
 - **156** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **222** the boat's own foam, when she has way on
-- **230** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
-  - 510 `cloudStep(dt)`
-  - 517 `skyFrame(u, Hh, tn, bv)`
-  - 532 `glsl3(src, fs)`
-  - 540 `compile(type, src, nm)`
-  - 547 `program(vs, fs, attrs, nm = '?')`
-  - 555 `buf(data, target, usage)`
-  - 560 `airSet(u, terr)`
-  - 575 `sunT0()`
-  - 582 `attr(loc, b, size)`
-  - 598 `upload(pos, col, idx)`
+- **224** the boat's own foam, when she has way on
+- **232** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
+  - 512 `cloudStep(dt)`
+  - 519 `skyFrame(u, Hh, tn, bv)`
+  - 534 `glsl3(src, fs)`
+  - 542 `compile(type, src, nm)`
+  - 549 `program(vs, fs, attrs, nm = '?')`
+  - 557 `buf(data, target, usage)`
+  - 562 `airSet(u, terr)`
+  - 577 `sunT0()`
+  - 584 `attr(loc, b, size)`
+  - 600 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (99 linjer)
 
