@@ -81,9 +81,9 @@
   const meshSlice = () => Math.max(MESHMS[QUAL.lvl], Math.min(60, 0.3 * FRAMEMS));
   // one slice a frame for all the terrain's jobs (SLICE_END, set in updateNear): the shore layer of the near mesh that is done
   // (groundStep: it is begun again with every new near mesh, so it must get done), then the meshes, the season's colours, the shore's and the fresh water's tiles (17h-shore.js, 17b-inland-water.js) get what is left, each at least a
-  // little so it gets on (they each had a slice of their own, and a frame with three of them was over 100 ms)
+  // little so it gets on (half of MESHMS, a tenth of a slow frame up to 20 ms) (they each had a slice of their own, and a frame with three of them was over 100 ms)
   let SLICE_END = 0;
-  const sliceEnd = () => Math.max(SLICE_END, performance.now() + MESHMS[QUAL.lvl] / 4);
+  const sliceEnd = () => Math.max(SLICE_END, performance.now() + Math.max(MESHMS[QUAL.lvl] / 2, Math.min(20, 0.1 * FRAMEMS)));   // (a quarter of MESHMS left a beach tile undone after half a minute at SwiftShader's frame a second, havnshot)
   function meshStep(){
     // the job whose mesh has its edge nearest the boat (the fine mesh's is a few hundred metres off, the far one's tens of kilometres)
     // every other frame the oldest instead, unless one is urgent: the far mesh waited for ever behind the others while new tiles kept
