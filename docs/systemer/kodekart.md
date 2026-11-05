@@ -2215,12 +2215,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1111 linjer)
+## `src/js/ui/phone/07-patch.js` (1112 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1104 `patch()`
+  - 1105 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -3709,19 +3709,20 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 86 `staleShore(pk)`
   - 87 `drawShore(VP)`
 
-## `src/js/view3d/18-setup.js` (191 linjer)
+## `src/js/view3d/18-setup.js` (213 linjer)
 
 ---------- setup ----------
 
 - **1** setup
-  - 49 `init()`
-  - 169 `anchorAlarm3d(kind)`
-  - 172 `sayBoat(id, txt)`
-  - 174 `sayWorker(pid, idx, nm, no, en)`
-  - 178 `crewFx3d(c, kind, o)`
-  - 180 `say3d(c, no, en)`
-  - 184 `buildLabels()`
-  - 185 `resize()`
+  - 30 `seaMarksSettle()`
+  - 71 `init()`
+  - 191 `anchorAlarm3d(kind)`
+  - 194 `sayBoat(id, txt)`
+  - 196 `sayWorker(pid, idx, nm, no, en)`
+  - 200 `crewFx3d(c, kind, o)`
+  - 202 `say3d(c, no, en)`
+  - 206 `buildLabels()`
+  - 207 `resize()`
 
 ## `src/js/view3d/19-wildlife-npc.js` (200 linjer)
 
