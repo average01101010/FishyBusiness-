@@ -163,7 +163,7 @@ Spilleren fikk ingenting på juksa selv om ekkoloddet viste mye blåkveite, og f
 
 ## 5.64 Autolina på havbåten (H2a av `docs/planer/havsteget-h2-autoline.md`, 05.11.2026)
 
-Jonas 05.11.2026: «Start neste steg, H2 i en ny økt», og valgene V1–V5 samme dag. H2a gjør autolineren spillbar for hånd; fabrikken, vaktene og lossingen kommer i H2b, Driftsplan 2 i H2c, Blender-modellene og animasjonene i H2d.
+Jonas 05.11.2026: «Start neste steg, H2 i en ny økt». Valgene samme dag (kap. 4 i planen): V1 A, fryst fisk losses på paller, «men husk at vi må ha blendermodeller og animasjoner for hele operasjonen»; V2 A, produktvekt i rommet og rund vekt på kvoten; V3 A, lagene som anonyme lag i to vakter; V4 A, fasene H2a–H2e som egne økter; V5 «det som er mest realistisk», lange og brosme etter forslaget for 2027. Og: «Finn ut det du er usikker på» (kap. 2b i planen). H2a gjør autolineren spillbar for hånd; fabrikken, vaktene og lossingen kommer i H2b, Driftsplan 2 i H2c, Blender-modellene og animasjonene i H2d.
 
 - **Lina** (`LINE_KINDS.auto`, `autoL`, `core/10-gear.js`): ingen stamper. Lina ligger på magasin under dekk: båtens `autoHooks` (40 000) som 8 **lenker** à 5 000 krok, 1,3 m mellom krokene, 6,5 km. Den lages første gang den trengs (også i en gammel lagring), med en bøyestang og tung dregg per lenke (`kits`). En lenke er alltid «egnet»: egnemaskinen egner hver krok når lina går ut over hekken, med agn fra frysen.
 - **Agnet:** 85 kg per lenke (om lag 17 g per krok, regnet ut av HI-rapport 24-2013: 4–6 000 t akkar og saury i året til om lag 30 autolinere). Nytt agn `saury` (24 kr/kg, antatt); akkar er `blekksprut`. Autolineren kjøper agn i tonn på mottaket (1 000 og 5 000 kg).
