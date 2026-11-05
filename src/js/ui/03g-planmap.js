@@ -13,7 +13,7 @@ const PLANMAP = (() => {
   const labels = o => { const fi = {felt:0, juks:0}, out = {}; for (const q of o.places){ fi[q.k]++; out[q.id] = q.k === 'felt' ? L('Felt ', 'Field ') + fi[q.k] : L('Juksplass ', 'Jig place ') + fi[q.k]; } return out; };
   const find = (o, id) => o ? o.places.find(p => p.id === id) : null;
   // the string of a field: its length from the units (startSet: the line by hooks, nets and pots by the unit), and where it ends for a heading
-  const stringKm = (o, q) => { const kind = p2Kind(o); if (!kind) return 0; return kind === 'line' ? q.n * LINE_KINDS[q.lk || 'hyse'].hooks * GEAR.line.kmHook : q.n * GEAR[kind].km; };
+  const stringKm = (o, q) => { const kind = p2Kind(o); if (!kind) return 0; return kind === 'line' ? lineKm(q.lk || 'hyse', q.n * LINE_KINDS[q.lk || 'hyse'].hooks) : q.n * GEAR[kind].km; };
   const stringEnd = (q, hdg, km) => ({x:q.x + Math.sin(hdg) * km, y:q.y - Math.cos(hdg) * km});
   const roomOf = (o, q) => { try { const km = stringKm(o, q); return !!(q.hdg != null ? setGeomExact(q, q.hdg, km) : setGeom(q, 0, km)); } catch (e){ return true; } };
   const degOf = (q, hdg) => Math.round(((typeof trueDeg === 'function' ? trueDeg(hdg, q) : hdg * 180 / Math.PI) % 360 + 360) % 360);

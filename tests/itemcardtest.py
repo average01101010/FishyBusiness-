@@ -83,7 +83,7 @@ async def main():
         await pg.screenshot(path='itemcard_is_liggende.png')
         await pg.evaluate("S.pgear.lines.hyse.n = 2; DOCK.open('agn')"); await pg.wait_for_timeout(300)
         cs = json.loads(await J(CARDS))
-        check(cs and cs[0]['k'] == 'bait' and cs[0]['btns'] == 0 and await pg.evaluate("document.querySelectorAll('#baitStore [data-pa=grbuy][data-w=bait]').length") == 14, 'Agn er et varekort med de sju slagene og 20 og 100 kg', cs[:1])
+        check(cs and cs[0]['k'] == 'bait' and cs[0]['btns'] == 0 and await pg.evaluate("document.querySelectorAll('#baitStore [data-pa=grbuy][data-w=bait]').length === 2 * Object.keys(BAITS).length"), 'Agn er et varekort med alle slagene (BAITS: saury kom til 05.11.2026) og 20 og 100 kg', cs[:1])
 
         # standing: the same pages, nothing outside the drawer
         await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(300)

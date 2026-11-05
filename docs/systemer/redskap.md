@@ -160,3 +160,21 @@ Spilleren fikk ingenting på juksa selv om ekkoloddet viste mye blåkveite, og f
 
 
 **Isingen og karene (04.11.2026, Jonas: «Det kan ikke bare dukke opp en kasse med is fra løse luften»):** iskassa står fast på dekk (`iceBoxAt`, `drawIceBox`: modellens `kit.iskasse`, ellers ved pakkerens plass på båtene med lasterom), med isen så høyt som det er is om bord, og spaden står i den når ingen iser (`packingNow`). Pakkeren og den som iser på de åpne båtene øser fra kassa (`st.Bin`) over fisken i karet som fylles (`karFilling`, `karTop`), og isbitene faller fra spaden (`drawShovel`). Karene blir blodige etter hvert som de fylles (`kar460_blod1`–`3` over 1,5 %, 30 % og 65 %), og kommer spylt tilbake fra mottaket.
+
+## 5.64 Autolina på havbåten (H2a av `docs/planer/havsteget-h2-autoline.md`, 05.11.2026)
+
+Jonas 05.11.2026: «Start neste steg, H2 i en ny økt», og valgene V1–V5 samme dag. H2a gjør autolineren spillbar for hånd; fabrikken, vaktene og lossingen kommer i H2b, Driftsplan 2 i H2c, Blender-modellene og animasjonene i H2d.
+
+- **Lina** (`LINE_KINDS.auto`, `autoL`, `core/10-gear.js`): ingen stamper. Lina ligger på magasin under dekk: båtens `autoHooks` (40 000) som 8 **lenker** à 5 000 krok, 1,3 m mellom krokene, 6,5 km. Den lages første gang den trengs (også i en gammel lagring), med en bøyestang og tung dregg per lenke (`kits`). En lenke er alltid «egnet»: egnemaskinen egner hver krok når lina går ut over hekken, med agn fra frysen.
+- **Agnet:** 85 kg per lenke (om lag 17 g per krok, regnet ut av HI-rapport 24-2013: 4–6 000 t akkar og saury i året til om lag 30 autolinere). Nytt agn `saury` (24 kr/kg, antatt); akkar er `blekksprut`. Autolineren kjøper agn i tonn på mottaket (1 000 og 5 000 kg).
+- **Farten** (`gopUnitMin` med `g.auto`): setting om lag 3 krok i sekundet (28 min per lenke), draget om lag 2 500 krok i timen (2 t per lenke), etter Mustad og National Fisherman. Flere folk ved haleporten drar ikke fortere; en trøtt eller kald gjeng går saktere. Hele lina (8 lenker) settes og dras på om lag 19 timer, altså døgnet rundt.
+- **Haleren:** autolinesystemet (haler, krokrenser, egnemaskin) følger båten (`hasHauler('line')` når `BOAT.autoHooks`), uten kjøp. Riggen er `line`, fordi autolineren ikke kan rigges for noe annet (`rigOf` velger fartøyets første rigg når den ikke kan jukse).
+- **«Trekk og sett ut igjen»** finnes også for autolina: lina er egnet av maskinen, så den kan settes igjen der den sto (`finishHaul` med `reset`).
+- **Fangsten** (`soakHour` med `SELQ['line:auto']`, `AUTOQ`), kalibrert 05.11.2026 mot sedlene for line 28 m og over (`fiske.json`, 2024–2025: 40 000 t i året på 21 båter, om lag 200 kg rund vekt per 1 000 krok): en lenke med 8 timers ståtid på NPC-autolinernes 36 felt, hver måned, vektet etter landingene der, gir **197 kg per 1 000 krok**: torsk 36 %, hyse 20 %, brosme 20 %, lange 16 % og blåkveite 5 % (sedlene: 36, 21, 21, 16, 5). Krokene slipper fisk under om lag 0,5 kg (`retain`).
+- **Slitasjen** (`wearOf`): en lenke slites som en stamp på 400 krok med samme fangst per krok. Krokbytte om bord (HI 2024-11: om lag 5 % av bruket i døgnet) er ikke laget; det kommer i H2b.
+- **Tapt eller utslitt lenke:** 75 000 kr ny i utstyrsbutikken (`AUTOLENKE_KR`, antatt), til magasinene er fulle (`autoRoom`).
+- **Stoppet setting** (`gopAbort`, `gearUnset`, rettet 05.11.2026 for alt redskap): det som er satt, blir stående som en kortere lenke, og det som ikke er satt, kommer om bord igjen med agnet. Før forsvant det.
+- **UI:** «Sett ut» tilbyr «2 lenker autoline · saury» per agn i frysen og «1 lenke»; Redskap › Om bord og Agn har kortet «Autoline» (magasinene, i sjøen, krokene, agnet i frysen, ny lenke). Kortene for garn, teiner og juksa vises ikke på en båt som ikke kan rigges for dem.
+- **Kartet langs lina** (`simAreaReady`, `core/01b-mapdata.js`): simuleringens sperre laster også enden båten jobber mot (`b.gop.b`) og begge endene av en streng over 2 km, ikke bare midten. Ellers venter autolina på kartet ved den andre enden når båten kommer dit (`MAPD.simR` er 4 km).
+- **Tester:** `tests/unit/autoline.test.mjs` (lina, farten, § 26, lange og brosme) og `tests/autolinetest.py` (kalibreringen på alle feltene, en hel setting og et drag, § 26 på stedet, landingsreglene, skjermbilder i begge formater).
+

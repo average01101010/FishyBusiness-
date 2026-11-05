@@ -9,6 +9,10 @@ ok = lambda c: 'OK  ' if c else 'FEIL'
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+# the ocean vessels that can be bought (havsteget: the autoliner from H2a, 05.11.2026); the others stay locked until their phase
+HAV_OPEN = ['autoliner']
+
+
 def guard():
     """No code may branch on a vessel type name: `=== 'sjark'` and the like. The keys live in VESSELS and the data tables only."""
     src = open(os.path.join(ROOT, 'src/js/core/02-species-gear.js')).read()
@@ -20,7 +24,8 @@ def guard():
             if not f.endswith('.js'): continue
             for i, line in enumerate(open(os.path.join(ROOT, d, f)), 1):
                 for k in keys:
-                    if re.search(r"[!=]==\s*'" + k + r"'|'" + k + r"'\s*[!=]==", line): hits.append('%s/%s:%d' % (d, f, i))
+                    # (a species with the same key as a vessel type, the snow crab: `sp === 'snokrabbe'` is the species, 05.11.2026)
+                    if re.search(r"[!=]==\s*'" + k + r"'|'" + k + r"'\s*[!=]==", line) and not re.search(r"\bsp\s*[!=]==\s*'" + k + r"'", line): hits.append('%s/%s:%d' % (d, f, i))
     return keys, sorted(set(hits))
 
 
@@ -112,7 +117,7 @@ async def main():
         print(ok(all(abs(v['foul'][0] - 0.85) < 0.01 and abs(v['foul'][1] - 1.25) < 0.01 for v in wt.values())), 'a fully fouled hull costs 15 % speed and 25 % fuel', {k: v['foul'] for k, v in wt.items()})
         print(ok([x[0] for x in hd['out']] == [hd['spec'], round(hd['spec'] * 1.2), round(hd['spec'] * 1.4), round(hd['spec'] * 1.7)] and hd['out'][3][1] == round(hd['ice'] * 1.7) and all(x[0] == x[2] for x in hd['out']) and hd['job'] == 1 and hd['kar'] == [500, 500]), 'the hold rebuilt in three steps: +20 %, +40 %, +70 %, the ice room with it (a boat with a hold); an open boat\'s hold is her tubs, 500 kg each, no steps', hd)
         lens = [x[1] for x in r['ladder'] if x[2] != 'hav']
-        print(ok(len(r['ladder']) >= 13 and all(x[3] for x in r['ladder'] if x[2] == 'hav') and not any(x[3] for x in r['ladder'] if x[2] != 'hav')), 'the ladder runs from the open boat to the ocean fleet, and only the ocean fleet is locked')
+        print(ok(len(r['ladder']) >= 13 and all(x[3] for x in r['ladder'] if x[2] == 'hav' and x[0] not in HAV_OPEN) and not any(x[3] for x in r['ladder'] if x[2] != 'hav' or x[0] in HAV_OPEN)), 'the ladder runs from the open boat to the ocean fleet, and only the ocean fleet not yet built is locked (open: %s)' % ', '.join(HAV_OPEN))
         print(ok([o[0] for o in r['offers']] == ['u7', 'h7', 'h8', 'h9', 'h10', 'h10', 'h10', 'h14', 'h20'] and all(r['offers'][i][3] < r['offers'][i + 1][3] for i in range(8))), 'nine closed-group offers (h8 with the 31 ft fibreglass sjark, h10 with all three 10.99 m boats) by quota length (the coastal vessels with 14–14.9 and 20–20.9 m), dearer the longer')
         print(ok(r['grp'][0] == 0 and r['grp'][1] == r['grp'][2]), 'the 7.9 m snekke fishes in the open group under 8 m, with the year\'s maximum quota for that group', r['grp'])
         print(ok(r['fjord']['kg'] == 0 and r['fjord']['warn']), 'a 21 m vessel may not jig inside the fjord line')

@@ -211,3 +211,11 @@ Etter søket 05.11.2026 (kap. 2b) står dette igjen:
 
 - 05.11.2026: planen skrevet på grenen `h2-autoline`. Venter på valgene V1–V5 og «kjør på».
 - 05.11.2026: **valgene tatt** (Jonas): V1 A («men husk at vi må ha blendermodeller og animasjoner for hele operasjonen»), V2 A, V3 A, V4 A, V5 «det som er mest realistisk» (A, etter forslaget for 2027), og «Finn ut det du er usikker på». Søket står i kap. 2b; H2d er nå Blender-modellene og animasjonene, og Kystvakta, hele turen og stikkprøvene er H2e.
+- 05.11.2026: **H2a bygd** på grenen `h2-autoline` (5.64 i `docs/systemer/redskap.md`, 5.5c i `docs/systemer/kvoter-og-regler.md`):
+  - Autolineren kan kjøpes. Lina ligger på magasin (8 lenker à 5 000 krok), egnes av maskinen med agn fra frysen (85 kg per lenke; ny agnsort saury), settes på om lag 28 min og dras på om lag 2 t per lenke, og kan settes ut igjen med én gang etter draget.
+  - Fangsten er kalibrert mot sedlene for line 28+: 197 kg per 1 000 krok, artsmiks som sedlene (`tests/autolinetest.py`).
+  - § 26 (4 nm og de tre 10 nm-feltene), J-187-2026 i stedet for J-161-2026 (leddet sjekket), sei 25 % uten garnseitillatelse, lange 35 % og brosme fritt til stoppen, så 15 %.
+  - Havlandingene går som egen gruppe til den felles verden.
+  - Rettet for alt redskap: en setting som stoppes halvveis, gir resten tilbake.
+  - **Står igjen til H2b:** krokbytte om bord, fabrikken og frysingen i produktvekt (V2 A), vaktene, turen og lossingen på paller.
+

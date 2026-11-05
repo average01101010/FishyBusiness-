@@ -3,7 +3,7 @@
 // lengths startSet uses (core/10-gear.js). Drag its end, or tap the chart, to turn it; − and + change how much goes out where that
 // can change (a net string is set whole). The line turns red with the reason when its end is on land or in under 5 m of water, when
 // it crosses land, or when the rules say no. «Sett ut» sets it exactly where it is drawn. SETM itself is declared in 03-map.js.
-const setUnitKm = c => c.kind === 'garn' ? GEAR.garn.km : c.kind === 'line' ? LINE_KINDS[c.spec.lk].hooks * GEAR.line.kmHook : GEAR.teine.km;
+const setUnitKm = c => c.kind === 'garn' ? GEAR.garn.km : c.kind === 'line' ? lineKm(c.spec.lk, LINE_KINDS[c.spec.lk].hooks) : GEAR.teine.km;
 const setKm = () => SETM.n * setUnitKm(SETM);
 const setSpec = () => SETM.kind === 'garn' ? SETM.spec : Object.assign({}, SETM.spec, {n:SETM.n});
 function setEnd(){ const p = S.boat.pos, km = setKm(); return {x:p.x + Math.sin(SETM.hdg) * km, y:p.y - Math.cos(SETM.hdg) * km}; }

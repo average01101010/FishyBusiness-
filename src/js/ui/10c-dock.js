@@ -122,7 +122,7 @@ const DOCK = (() => {
       bunkerItem()];
     // what is aboard by line kind and bait (Jonas 20.10.2026); tubs that are not baited stand greyed with their state, and open their line
     // card in the inventory, where they are baited
-    if (m === 'settut') return setChoices(true).map((c, i) => I('set' + i, 'settut', c.lbl[0], c.lbl[1], c.off ? {run:() => openGear(c.kind === 'line' ? 'lc-' + c.lk : 'baitCard'), wide:true, ghost:true, bc:'none'} : {act:'gset', data:{c:i, all:'1'}, wide:true, bc:c.bait ? BAITCOL[c.bait] : null}));
+    if (m === 'settut') return setChoices(true).map((c, i) => I('set' + i, 'settut', c.lbl[0], c.lbl[1], c.off ? {run:() => openGear(c.kind === 'line' && c.lk !== 'auto' ? 'lc-' + c.lk : 'baitCard'), wide:true, ghost:true, bc:'none'} : {act:'gset', data:{c:i, all:'1'}, wide:true, bc:c.bait ? BAITCOL[c.bait] : null}));
     if (m === 'fortoy') return moorAll(b.pos, 0.4).map((q, i) => I('fortoy' + i, 'naust', q.name.charAt(0).toUpperCase() + q.name.slice(1), q.name.charAt(0).toUpperCase() + q.name.slice(1), {run:() => moorGo(q), wide:true}));
     if (m === 'taopp'){ const s = nearSet(b.pos, 0.3); if (!s) return [];
       return [I('haul', 'taopp', 'Trekk', 'Haul', {act:'ghaul', data:{id:s.id}, pri:true}), I('haulset', 'settut', 'Trekk og sett igjen', 'Haul and set again', {act:'ghaul', data:{id:s.id, r:'1'}, wide:true})]; }

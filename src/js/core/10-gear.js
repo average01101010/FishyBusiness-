@@ -132,7 +132,8 @@ function baitFromHold(sp, kg){
 }
 const gid = p => p + (S.gseq = (S.gseq || 0) + 1);
 const gL = (no, en) => S.lang === 'no' ? no : en;
-const unitName = (kind, n) => { const u = GEAR[kind].u; return S.lang === 'no' ? (n === 1 ? u[0] : u[1]) : (n === 1 ? u[2] : u[3]); };
+// lk: the line's kind, so the autoline is counted in lenker (a lenke in both languages, as the word is used aboard)
+const unitName = (kind, n, lk) => { if (kind === 'line' && isAuto(lk)) return n === 1 ? 'lenke' : 'lenker'; const u = GEAR[kind].u; return S.lang === 'no' ? (n === 1 ? u[0] : u[1]) : (n === 1 ? u[2] : u[3]); };
 // the vessel that owns a set, and a log line in that vessel's deck log
 const setVessel = s => (S.fleet || []).find(v => v.id === s.vid);
 function setLog(s, no, en, k){ const v = setVessel(s); if (v) onVessel(v, () => log(no, en, k)); else log(no, en, k); }
@@ -151,7 +152,8 @@ function rigGuess(){
   const o = S.ops; if (o && RIGS[o.rig]) return o.rig;
   return 'juksa';
 }
-function rigOf(){ const b = S.boat; if (!RIGS[b.rig]) b.rig = rigGuess(); return b.rig; }
+// (H2a) a rig the vessel cannot have (an ocean vessel has only her own: the autoliner line, the snow crab vessel pots) gives way to her first
+function rigOf(){ const b = S.boat, R = (VESSELS[b.type] || {}).rigs; if (!RIGS[b.rig] || (R && R.length && !R.includes(b.rig) && !mySets().length)) b.rig = R && R.length && !R.includes('juksa') ? R[0] : rigGuess(); return b.rig; }
 const rigKindOk = kind => RIGS[rigOf()].kind === kind;
 const rigJig = () => rigOf() === 'juksa';
 // whether a boat can fish with the jig at all (Jonas 03.11.2026: «En havfiskebåt skal ikke kunne fiske med juksa»): only a boat whose
@@ -326,7 +328,7 @@ function startSet(kind, spec, fishAfter, hdg){
   if (hdg != null) b.heading = hdg;
   b.status = 'fishing'; b.fishUntil = null; b.deckStop = false; b.deckEnd = null;
   b.gop = {op:'set', kind, s, n, done:0, prog:0, a:geo.a, b:geo.b, fishAfter:fishAfter || 0, hooksPer:kind === 'line' ? LINE_KINDS[spec.lk].hooks : 0, auto:kind === 'line' && isAuto(spec.lk), lead:endLines('set', kind, depthF(geo.a))};
-  log('Setter ' + n + ' ' + unitName(kind, n) + '.', 'Setting ' + n + ' ' + unitName(kind, n) + '.');
+  log('Setter ' + n + ' ' + unitName(kind, n, spec.lk) + '.', 'Setting ' + n + ' ' + unitName(kind, n, spec.lk) + '.');
   return null;
 }
 function startHaul(sid, reset, fishAfter){
@@ -343,7 +345,7 @@ function startHaul(sid, reset, fishAfter){
   b.status = 'fishing'; b.fishUntil = null; b.deckStop = false; b.deckEnd = null;
   b.gop = {op:'haul', kind:s.kind, sid, n:s.n, done:0, prog:0, auto:s.kind === 'line' && isAuto(s.lk), a:{...from}, b:{...to}, reset:!!reset, fishAfter:fishAfter || 0, kg:0, rel:0, dead:0, hooksPer:s.kind === 'line' ? s.hooks / s.n : 0, soak:(S.t - s.tSet) / 60, sub:0, sl:HAUL_SLICES(s.kind, s.kind === 'line' ? s.hooks / s.n : 0), lead:endLines('haul', s.kind, s.depth || depthF(from)), thief:thiefOf(s)};
   S.gacc = {}; S.gnext = {};
-  log('Trekker ' + GEAR[s.kind].no.toLowerCase() + ': ' + s.n + ' ' + unitName(s.kind, s.n) + ', sto ' + fmt(b.gop.soak, 0) + ' t.', 'Hauling ' + GEAR[s.kind].en.toLowerCase() + ': ' + s.n + ' ' + unitName(s.kind, s.n) + ', soaked ' + fmt(b.gop.soak, 0) + ' h.');
+  log('Trekker ' + GEAR[s.kind].no.toLowerCase() + ': ' + s.n + ' ' + unitName(s.kind, s.n, s.lk) + ', sto ' + fmt(b.gop.soak, 0) + ' t.', 'Hauling ' + GEAR[s.kind].en.toLowerCase() + ': ' + s.n + ' ' + unitName(s.kind, s.n, s.lk) + ', soaked ' + fmt(b.gop.soak, 0) + ' h.');
   return null;
 }
 // the end lines on deep water (07.10.2026, for the Greenland halibut on 500-1000 m): before the first unit the dregg and the buoy line go
@@ -392,8 +394,8 @@ function finishSet(g, H){
   S.sets = S.sets || []; S.sets.push(s);
   // the deck log's gear tab keeps every set, also after it is hauled (ui/06b-book-tabs.js)
   S.gearLog = S.gearLog || []; S.gearLog.push(gearLogEntry(s)); if (S.gearLog.length > 60) S.gearLog.shift();
-  const what = s.kind === 'garn' ? s.n + ' garn (' + netNo(s) + ')' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[s.lk].no.toLowerCase() : s.n + ' ' + POTS[s.pot].no.toLowerCase();
-  const whatEn = s.kind === 'garn' ? s.n + ' nets (' + netEn(s) + ')' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[s.lk].en.toLowerCase() : s.n + ' ' + POTS[s.pot].en.toLowerCase();
+  const auto = s.kind === 'line' && isAuto(s.lk), what = s.kind === 'garn' ? s.n + ' garn (' + netNo(s) + ')' : auto ? s.n + ' ' + unitName('line', s.n, 'auto') + ' autoline (' + fmt(s.hooks, 0) + ' krok)' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[s.lk].no.toLowerCase() : s.n + ' ' + POTS[s.pot].no.toLowerCase();
+  const whatEn = s.kind === 'garn' ? s.n + ' nets (' + netEn(s) + ')' : auto ? s.n + ' ' + unitName('line', s.n, 'auto') + ' of autoline (' + fmt(s.hooks, 0) + ' hooks)' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[s.lk].en.toLowerCase() : s.n + ' ' + POTS[s.pot].en.toLowerCase();
   log('Satte ' + what + ' på ' + s.depth + ' m, ' + coordStr(setMid(s)) + '.', 'Set ' + whatEn + ' at ' + s.depth + ' m, ' + coordStr(setMid(s)) + '.', 'nav');
   gopEnd(g);
 }
@@ -423,7 +425,7 @@ function gopAbort(why){
     const s = S.sets.find(x => x.id === g.sid);
     if (s && g.done > 0 && g.done < s.n){ gearBack(s, g.done, wearNets(s, g), wearOf(s, g)); s.n -= g.done; if (s.kind === 'line') s.hooks = s.n * g.hooksPer; s.a = {x:b.pos.x, y:b.pos.y}; s.b = {...g.b}; }
     if (s) s.hauling = false;
-    log('Trekkingen stoppet. ' + (s ? s.n + ' ' + unitName(s.kind, s.n) + ' står igjen i sjøen.' : ''), 'Hauling stopped. ' + (s ? s.n + ' ' + unitName(s.kind, s.n) + ' remain in the sea.' : ''));
+    log('Trekkingen stoppet. ' + (s ? s.n + ' ' + unitName(s.kind, s.n, s.lk) + ' står igjen i sjøen.' : ''), 'Hauling stopped. ' + (s ? s.n + ' ' + unitName(s.kind, s.n, s.lk) + ' remain in the sea.' : ''));
     b.gop = null;
   }
   b.v = 0; S.gacc = null; S.gnext = null;
@@ -514,7 +516,7 @@ function finishHaul(g, H){
     'Hauled ' + whatEn + ': ' + fmt(g.kg, 0) + ' kg, soaked ' + fmt(g.soak, 0) + ' h' + (g.rel ? ', ' + g.rel + (s.kind === 'teine' ? ' crabs put back' : ' fish released') : '') + (g.dead >= 1 ? ', ' + Math.round(g.dead) + ' dead crabs thrown' : '') + '.');
   // the crew remarks on a good or a poor haul (kg per unit against a fair haul for the gear)
   { const per = g.kg / Math.max(1, g.n), fair = (HEATG.fair[s.kind] || 1) * heatSoakShare(s.kind, g.soak || HEATG.T); crewSay(null, per > fair * 1.4 ? 'haulGood' : per < fair * 0.35 ? 'haulBad' : null); }
-  if (tore) log(tore + ' ' + unitName(s.kind, tore) + (s.kind === 'garn' ? ' gikk i filler' : s.kind === 'line' ? ' gikk av' : ' gikk tapt') + '. ' + (tore === 1 ? 'Den' : 'De') + ' var for slitt.', tore + ' ' + unitName(s.kind, tore) + (s.kind === 'garn' ? ' went to pieces' : s.kind === 'line' ? ' parted' : ' were lost') + '. ' + (tore === 1 ? 'It' : 'They') + ' was too worn.');
+  if (tore) log(tore + ' ' + unitName(s.kind, tore, s.lk) + (s.kind === 'garn' ? ' gikk i filler' : s.kind === 'line' ? ' gikk av' : ' gikk tapt') + '. ' + (tore === 1 ? 'Den' : 'De') + ' var for slitt.', tore + ' ' + unitName(s.kind, tore, s.lk) + (s.kind === 'garn' ? ' went to pieces' : s.kind === 'line' ? ' parted' : ' were lost') + '. ' + (tore === 1 ? 'It' : 'They') + ' was too worn.');
   else if (s.kind === 'garn' && cond < 0.35) log('Garna er slitt (' + Math.round(cond * 100) + ' %). Bøt dem før de går i filler.', 'The nets are worn (' + Math.round(cond * 100) + ' %). Mend them before they go to pieces.');
   // the catch mark: kilos per line, per net and per pot (tilbakemelding #33). Nets joined into a string fish as one net, and a line of
   // several tubs as one line, so those count the string; each pot is its own. Its colour is the haul per unit against a fair one
@@ -625,7 +627,7 @@ function gearHour(H){
       s.lost = S.t; { const e = (S.gearLog || []).find(x => x.id === s.id); if (e) e.lost = S.t; }
       { const v = vesselById(s.vid), cf = 0.2 + 0.8 * (s.cond != null ? s.cond : 1), val = (s.kind === 'garn' ? (NETTY[netTy(s)] || NETTY.bunn).price : s.kind === 'line' ? (isAuto(s.lk) ? AUTOLENKE_KR : (LINE_KINDS[s.lk] || LINE_KINDS.hyse).price) : POTS.big.price) * s.n * cf + GPRICE.kit + (s.heavy ? GPRICE.heavy : 0);
         if (v) tripAdd(vget(v, 'boat'), 'lostKr', Math.round(val)); }   // the gear lost is a common cost of nets, lines and pots (oppgjørsavtalene §§ 1, 3, 19)
-      setLog(s, 'Mistet ' + what + ' (' + s.n + ' ' + unitName(s.kind, s.n) + ') i været. Tapt redskap skal meldes til Kystvakten.', 'Lost ' + whatEn + ' (' + s.n + ' ' + unitName(s.kind, s.n) + ') in the weather. Lost gear must be reported to the Coast Guard.');
+      setLog(s, 'Mistet ' + what + ' (' + s.n + ' ' + unitName(s.kind, s.n, s.lk) + ') i været. Tapt redskap skal meldes til Kystvakten.', 'Lost ' + whatEn + ' (' + s.n + ' ' + unitName(s.kind, s.n, s.lk) + ') in the weather. Lost gear must be reported to the Coast Guard.');
       msg(gL('Redskap', 'Gear'), 'Blåsene er borte, og ' + what + ' er tapt. Meld tapt redskap til Kystvakten under Beholdning.', 'The buoys are gone and the ' + whatEn + ' is lost. Report the lost gear to the Coast Guard under Inventory.');
       continue;
     }
@@ -646,7 +648,7 @@ function gearHour(H){
 function reportLost(sid){
   const s = (S.sets || []).find(x => x.id === sid); if (!s || !s.lost) return false;
   S.sets.splice(S.sets.indexOf(s), 1);
-  msg('Kystvakten', 'Takk. Tapt redskap er registrert: ' + GEAR[s.kind].no.toLowerCase() + ', ' + s.n + ' ' + unitName(s.kind, s.n) + ', sist ved ' + coordStr(setMid(s)) + '. Det tas med i Fiskeridirektoratets opprenskning.', 'Thank you. Lost gear registered: ' + GEAR[s.kind].en.toLowerCase() + ', ' + s.n + ' ' + unitName(s.kind, s.n) + ', last at ' + coordStr(setMid(s)) + '. It goes into the Directorate of Fisheries’ clean-up.');
+  msg('Kystvakten', 'Takk. Tapt redskap er registrert: ' + GEAR[s.kind].no.toLowerCase() + ', ' + s.n + ' ' + unitName(s.kind, s.n, s.lk) + ', sist ved ' + coordStr(setMid(s)) + '. Det tas med i Fiskeridirektoratets opprenskning.', 'Thank you. Lost gear registered: ' + GEAR[s.kind].en.toLowerCase() + ', ' + s.n + ' ' + unitName(s.kind, s.n, s.lk) + ', last at ' + coordStr(setMid(s)) + '. It goes into the Directorate of Fisheries’ clean-up.');
   return true;
 }
 

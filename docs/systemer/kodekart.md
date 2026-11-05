@@ -62,7 +62,7 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 426 `bridgeUnderUnit(br, extra)`
   - 431 `portApproach(pt)`
 
-## `src/js/core/01b-mapdata.js` (210 linjer)
+## `src/js/core/01b-mapdata.js` (212 linjer)
 
 MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in packs from map/
 
@@ -99,7 +99,7 @@ MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in p
   - 183 `mapVec(pk, name)`
   - 190 `mapViewReady(x0, y0, x1, y1, then, kinds)`
   - 197 `simAreaReady()`
-  - 205 `mapDrop(pk)`
+  - 207 `mapDrop(pk)`
 
 ## `src/js/core/01c-vec.js` (223 linjer)
 
@@ -427,16 +427,16 @@ STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the wo
   - 76 `hsWork(p, H)`
   - 78 `stabTick(H)`
 
-## `src/js/core/03d-quota.js` (370 linjer)
+## `src/js/core/03d-quota.js` (390 linjer)
 
-Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood from 1 October 2026 (J-161-2026, fiskeridir.no)
+Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood from 1 October 2026 (J-187-2026, fiskeridir.no)
 
-- **1** Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood from 1 October 2026 (J-161-2026, fiskeridir.no)
+- **1** Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood from 1 October 2026 (J-187-2026, fiskeridir.no)
   - 20 `norQuota(sp, tac)`
   - 30 `codChain(N)`
   - 37 `tacOf(sp, y)`
   - 40 `yearQuota(y)`
-- **54** the closed group: quota lengths the game sells, with J-161-2026's quota factors and quantities (§§ 16, 18, 19). Cod is a fixed
+- **54** the closed group: quota lengths the game sells, with J-187-2026's quota factors and quantities (§§ 16, 18, 19). Cod is a fixed
   - 71 `licQ(l, H, len)`
   - 83 `sellerCod(id, H)`
   - 89 `openUsedSave(q)`
@@ -473,7 +473,7 @@ Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood f
   - 252 `structExpire(l, y)`
 - **253** the special scheme for quota lengths under 11 m (kap. 2, from 2025): an owner with two such boats, both owned since the year
   - 255 `twoOK(la, lb, y)`
-- **256** quota cooperation (J-161-2026 § 31): two closed-group boats under 11 m with different owners; both owners aboard, the passive
+- **256** quota cooperation (J-187-2026 § 31): two closed-group boats under 11 m with different owners; both owners aboard, the passive
   - 260 `coopOffer(H)`
   - 261 `coopOK(l, y)`
 - **263** the ocean permits (H1 of docs/planer/havsteget.md, 03.11.2026). Jonas' choices the same day: V1 A (the autoliner first), V2 B
@@ -486,16 +486,20 @@ Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood f
   - 327 `havValue(l, H)`
   - 329 `havPrice(type, H)`
   - 331 `havLicTake(type, H)`
-- **335** Greenland halibut (blåkveite) for vessels under 28 m (J-241-2025, the regulation for 2026; docs/blakveite.md 2-3, 07.10.2026)
-  - 343 `bkSeason(y)`
-  - 346 `bkOpen(H)`
-  - 352 `bkDirect(H, len)`
-  - 354 `bkState(H)`
-  - 357 `bkAllow(H, bk, all)`
-  - 362 `bkLanded(H, bk, all)`
-  - 364 `bkNews(H)`
+- **335** ling and tusk for vessels of 28 m and over (H2a of docs/planer/havsteget-h2-autoline.md, 05.11.2026). J-128-2026 (2026) and the
+  - 343 `lbStop(y)`
+  - 347 `lbShare(sp, H)`
+  - 349 `lbNews(H)`
+- **355** Greenland halibut (blåkveite) for vessels under 28 m (J-241-2025, the regulation for 2026; docs/blakveite.md 2-3, 07.10.2026)
+  - 363 `bkSeason(y)`
+  - 366 `bkOpen(H)`
+  - 372 `bkDirect(H, len)`
+  - 374 `bkState(H)`
+  - 377 `bkAllow(H, bk, all)`
+  - 382 `bkLanded(H, bk, all)`
+  - 384 `bkNews(H)`
 
-## `src/js/core/03e-rules.js` (426 linjer)
+## `src/js/core/03e-rules.js` (453 linjer)
 
 The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a place, a time, the boat's length, the gear and the
 
@@ -520,16 +524,17 @@ The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a 
   - 134 `kcQuota(ll)`
   - 151 `ruSeaRules(c, q, ll, md, add)`
   - 224 `rulesAt(q)`
-  - 335 `ruBlockMsg(q)`
-  - 337 `ruMinSize(sp, p)`
-  - 350 `fjordLimits(p, H)`
-  - 374 `ruCtx()`
-  - 378 `ruNow()`
-  - 384 `ruLayerBlock(bx, by, q, budget)`
-  - 396 `ruWpQ(w)`
-  - 401 `ruWpMsg(w)`
-  - 408 `ruOpenNear(p, q, maxKm)`
-  - 417 `ruTips()`
+  - 357 `f26In(f, ll)`
+  - 362 `ruBlockMsg(q)`
+  - 364 `ruMinSize(sp, p)`
+  - 377 `fjordLimits(p, H)`
+  - 401 `ruCtx()`
+  - 405 `ruNow()`
+  - 411 `ruLayerBlock(bx, by, q, budget)`
+  - 423 `ruWpQ(w)`
+  - 428 `ruWpMsg(w)`
+  - 435 `ruOpenNear(p, q, maxKm)`
+  - 444 `ruTips()`
 
 ## `src/js/core/03f-fiske.js` (380 linjer)
 
@@ -1392,87 +1397,90 @@ Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026;
   - 75 `kvWhat(r)`
   - 85 `kvFinish()`
 
-## `src/js/core/10-gear.js` (705 linjer)
+## `src/js/core/10-gear.js` (773 linjer)
 
 passive gear: nets, line and pots that stand in the sea while the boat is away
 
 - **1** passive gear: nets, line and pots that stand in the sea while the boat is away
-  - 49 `kingArea(p)`
-  - 55 `newPGear()`
-- **56** bait (the user's list 04.10.2026): five kinds, each good for its own. Krabbe is the cheapest and fair on everything; reke is for
-  - 76 `jigTake(sp, H, tackle)`
-  - 81 `baitMixF(w, sp)`
-  - 83 `baitOf(pg)`
-  - 85 `btOf(L0)`
-  - 87 `baitPick(pg, kg)`
-  - 89 `baitFromHold(sp, kg)`
-  - 101 `setLog(s, no, en, k)`
-  - 102 `mySets(vid)`
-  - 103 `hasHauler(kind)`
-- **105** the rig: a boat is rigged for one kind of fishing at a time. Jigging needs a hand jig or reels; line and pots
-  - 111 `rigGuess()`
-  - 116 `rigOf()`
-  - 125 `gearReserve()`
-  - 129 `rigHas(r)`
-  - 132 `rigWrong(kind)`
-  - 134 `rigBlock(r)`
-  - 145 `rigSet(r)`
-- **147** what the vessel owns: aboard, ashore (baiting, mending) and in the sea
-  - 148 `ownedUnits(kind)`
-  - 155 `gearRoom(kind)`
-- **157** buying (in port)
-  - 160 `buyGate(what, spec)`
-  - 172 `buyGear(what, spec, n)`
-  - 202 `joinNets(id1, id2)`
-  - 203 `splitNets(id, n)`
-- **205** rules for setting at a place
-  - 207 `segDist(p, a, b)`
-  - 208 `nearSet(p, km)`
-  - 209 `gearRules(kind, spec, p)`
-  - 237 `setGeom(p, hdg, km)`
-  - 244 `setGeomExact(p, hdg, km)`
-- **246** the work at sea: status stays 'fishing' with b.gop, so deck work, rest rules, auto-return and the tub pause work as before
-  - 247 `gopUnitMin(g, H, hs)`
-  - 261 `startSet(kind, spec, fishAfter, hdg)`
-  - 282 `startHaul(sid, reset, fishAfter)`
-  - 301 `endLines(op, kind, d)`
-  - 304 `thiefOf(s)`
-  - 314 `haulSlow(g)`
-  - 319 `gearOpMinute(H, W, hs)`
-  - 340 `finishSet(g, H)`
-  - 350 `gopEnd(g)`
-  - 352 `gopAbort(why)`
-  - 370 `gearBack(s, n, cond, W)`
-  - 377 `wearNets(s, g)`
-  - 386 `haulUnit(g, H, SL)`
-  - 403 `landFish(sp, kg, key, mesh, p, H, hook, fresh, g)`
-  - 417 `netLen(w)`
-  - 418 `retain(sp, key, mesh, w)`
-  - 424 `sampleSel(sp, key, mesh, p, H)`
-  - 427 `landCrabs(g, n, kg)`
-  - 438 `finishHaul(g, H)`
-- **472** a station on a route or the standing plan: haul what stands here and set it again, or set new gear if nothing stands here.
-  - 475 `cycleSpec(kind, want, n)`
-  - 488 `gearCycle(w, fishAfter)`
-  - 504 `opsGearNeeds(o)`
-  - 514 `opsGearAfter()`
-- **520** in the sea, every hour: catch, losses, weather and deadlines (company level)
-  - 521 `soakHour(s, H)`
-  - 549 `gearHour(H)`
-  - 580 `reportLost(sid)`
-  - 588 `netMended(l)`
-- **589** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
-  - 595 `egnOrder(lk, n, bait)`
-  - 609 `egnHands()`
-  - 618 `egnSelf(lk, n, bait)`
-  - 639 `stripSelf(lk, bait, n, then)`
-  - 653 `mendSelf(nid)`
-  - 664 `botOrder(nid)`
-  - 675 `gearJob(j)`
-  - 687 `gearJobCancel(j)`
-  - 694 `shoreTick()`
+  - 23 `autoL(pg)`
+  - 35 `autoRoom()`
+  - 82 `kingArea(p)`
+  - 88 `newPGear()`
+- **89** bait (the user's list 04.10.2026): five kinds, each good for its own. Krabbe is the cheapest and fair on everything; reke is for
+  - 113 `jigTake(sp, H, tackle)`
+  - 118 `baitMixF(w, sp)`
+  - 120 `baitOf(pg)`
+  - 122 `btOf(L0)`
+  - 124 `baitPick(pg, kg)`
+  - 126 `baitFromHold(sp, kg)`
+  - 139 `setLog(s, no, en, k)`
+  - 140 `mySets(vid)`
+  - 142 `hasHauler(kind)`
+- **144** the rig: a boat is rigged for one kind of fishing at a time. Jigging needs a hand jig or reels; line and pots
+  - 150 `rigGuess()`
+  - 156 `rigOf()`
+  - 165 `gearReserve()`
+  - 169 `rigHas(r)`
+  - 172 `rigWrong(kind)`
+  - 174 `rigBlock(r)`
+  - 185 `rigSet(r)`
+- **187** what the vessel owns: aboard, ashore (baiting, mending) and in the sea
+  - 188 `ownedUnits(kind)`
+  - 195 `gearRoom(kind)`
+- **197** buying (in port)
+  - 200 `buyGate(what, spec)`
+  - 212 `buyGear(what, spec, n)`
+  - 245 `joinNets(id1, id2)`
+  - 246 `splitNets(id, n)`
+- **248** rules for setting at a place
+  - 250 `segDist(p, a, b)`
+  - 251 `nearSet(p, km)`
+  - 252 `gearRules(kind, spec, p)`
+  - 284 `setGeom(p, hdg, km)`
+  - 291 `setGeomExact(p, hdg, km)`
+- **293** the work at sea: status stays 'fishing' with b.gop, so deck work, rest rules, auto-return and the tub pause work as before
+  - 294 `gopUnitMin(g, H, hs)`
+  - 311 `startSet(kind, spec, fishAfter, hdg)`
+  - 334 `startHaul(sid, reset, fishAfter)`
+  - 353 `endLines(op, kind, d)`
+  - 356 `thiefOf(s)`
+  - 366 `haulSlow(g)`
+  - 371 `gearOpMinute(H, W, hs)`
+  - 392 `finishSet(g, H)`
+  - 402 `gopEnd(g)`
+  - 406 `gearUnset(s, n)`
+  - 416 `gopAbort(why)`
+  - 435 `gearBack(s, n, cond, W)`
+  - 442 `wearNets(s, g)`
+  - 451 `haulUnit(g, H, SL)`
+  - 468 `landFish(sp, kg, key, mesh, p, H, hook, fresh, g)`
+  - 482 `netLen(w)`
+  - 483 `retain(sp, key, mesh, w)`
+  - 490 `sampleSel(sp, key, mesh, p, H)`
+  - 493 `landCrabs(g, n, kg)`
+  - 504 `finishHaul(g, H)`
+- **538** a station on a route or the standing plan: haul what stands here and set it again, or set new gear if nothing stands here.
+  - 541 `cycleSpec(kind, want, n)`
+  - 555 `gearCycle(w, fishAfter)`
+  - 571 `opsGearNeeds(o)`
+  - 581 `opsGearAfter()`
+- **587** in the sea, every hour: catch, losses, weather and deadlines (company level)
+  - 588 `soakHour(s, H)`
+  - 617 `gearHour(H)`
+  - 648 `reportLost(sid)`
+  - 656 `netMended(l)`
+- **657** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
+  - 663 `egnOrder(lk, n, bait)`
+  - 677 `egnHands()`
+  - 686 `egnSelf(lk, n, bait)`
+  - 707 `stripSelf(lk, bait, n, then)`
+  - 721 `mendSelf(nid)`
+  - 732 `botOrder(nid)`
+  - 743 `gearJob(j)`
+  - 755 `gearJobCancel(j)`
+  - 762 `shoreTick()`
 
-## `src/js/core/10b-gearcare.js` (244 linjer)
+## `src/js/core/10b-gearcare.js` (245 linjer)
 
 gear care: wear, mending, hooks, jig tackle, and the tackle shop's service and buy-back (Jonas 08.10.2026)
 
@@ -1485,34 +1493,34 @@ gear care: wear, mending, hooks, jig tackle, and the tackle shop's service and b
   - 41 `jigWear()`
 - **43** wear in one haul (what the string looks like when it comes back): used by finishHaul and a stopped haul
   - 44 `wearOf(s, g)`
-  - 58 `careBack(s, n, W)`
-- **67** buying (the tackle shop): hooks in packs and spare jig sets
-  - 68 `careBuy(what, spec, n)`
-- **85** the crew's work in port (and the shop's, in half the time for a fee): hooks, line, pots, jig tackle, nets
-  - 86 `hooksNeed(lk)`
-  - 91 `seaWork()`
-  - 95 `careWhy()`
-  - 96 `careShopWhy()`
-  - 99 `careQuote(what, key, shop)`
-  - 112 `careGate(shop)`
-  - 114 `careQueue(j, fee)`
-  - 115 `hooksJob(lk, shop)`
-  - 125 `lineFix(lk, shop)`
-  - 133 `potFix(shop)`
-  - 142 `netShop(nid)`
-  - 152 `jigJob(k)`
-  - 160 `jigChoose(k)`
-  - 162 `careJobDone(j)`
-  - 171 `careJobCancel(j)`
-- **179** the shop buys gear back: a quarter of the new price times the condition (never above it)
-  - 180 `sellValue(what, key, n)`
-  - 191 `sellGear(what, key, n)`
-- **205** upkeep by the crew when the boat lies in port with nothing else to do: once an hour, one job at a time, from what is in the store
-  - 207 `careTick()`
-- **229** what the crew says about the gear (Jonas 09.10.2026: «Tidvis kan mannskapet komme med kommentarer tilknyttet dette som feks å kommentere
-  - 232 `gearTalk()`
+  - 59 `careBack(s, n, W)`
+- **68** buying (the tackle shop): hooks in packs and spare jig sets
+  - 69 `careBuy(what, spec, n)`
+- **86** the crew's work in port (and the shop's, in half the time for a fee): hooks, line, pots, jig tackle, nets
+  - 87 `hooksNeed(lk)`
+  - 92 `seaWork()`
+  - 96 `careWhy()`
+  - 97 `careShopWhy()`
+  - 100 `careQuote(what, key, shop)`
+  - 113 `careGate(shop)`
+  - 115 `careQueue(j, fee)`
+  - 116 `hooksJob(lk, shop)`
+  - 126 `lineFix(lk, shop)`
+  - 134 `potFix(shop)`
+  - 143 `netShop(nid)`
+  - 153 `jigJob(k)`
+  - 161 `jigChoose(k)`
+  - 163 `careJobDone(j)`
+  - 172 `careJobCancel(j)`
+- **180** the shop buys gear back: a quarter of the new price times the condition (never above it)
+  - 181 `sellValue(what, key, n)`
+  - 192 `sellGear(what, key, n)`
+- **206** upkeep by the crew when the boat lies in port with nothing else to do: once an hour, one job at a time, from what is in the store
+  - 208 `careTick()`
+- **230** what the crew says about the gear (Jonas 09.10.2026: «Tidvis kan mannskapet komme med kommentarer tilknyttet dette som feks å kommentere
+  - 233 `gearTalk()`
 
-## `src/js/core/10c-pick.js` (61 linjer)
+## `src/js/core/10c-pick.js` (62 linjer)
 
 Bestilt til henting (M2 in docs/planer/butikker-og-sponsorer.md, 10.2b, V12 A; Jonas 30.10.2026)
 
@@ -1520,8 +1528,8 @@ Bestilt til henting (M2 in docs/planer/butikker-og-sponsorer.md, 10.2b, V12 A; J
   - 11 `pickState()`
   - 13 `pickKr(o)`
   - 28 `pickName(o)`
-  - 45 `pickAdd(port, w, k, s, n)`
-  - 58 `pickDrop(id)`
+  - 46 `pickAdd(port, w, k, s, n)`
+  - 59 `pickDrop(id)`
 
 ## `src/js/core/09k-market.js` (173 linjer)
 
@@ -2147,7 +2155,7 @@ The item card (M1 in docs/planer/butikker-og-sponsorer.md, 30.10.2026)
   - 64 `iceCard()`
   - 72 `verksted()`
 
-## `src/js/ui/phone/02-havn-last-agn-ordre.js` (47 linjer)
+## `src/js/ui/phone/02-havn-last-agn-ordre.js` (50 linjer)
 
 the old tabs live on as phone apps
 
@@ -2157,9 +2165,9 @@ the old tabs live on as phone apps
   - 5 `lever()`
   - 6 `isApp()`
   - 8 `agn()`
-  - 30 `oppdrag()`
-  - 31 `ordl()`
-  - 36 `ordlBest(tabs)`
+  - 33 `oppdrag()`
+  - 34 `ordl()`
+  - 39 `ordlBest(tabs)`
 
 ## `src/js/ui/phone/03-regler.js` (63 linjer)
 
@@ -2207,12 +2215,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1105 linjer)
+## `src/js/ui/phone/07-patch.js` (1111 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1098 `patch()`
+  - 1104 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2265,7 +2273,7 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 32 `rederi()`
 - **69** equipment
 
-## `src/js/ui/phone/12-utstyr-redskap.js` (183 linjer)
+## `src/js/ui/phone/12-utstyr-redskap.js` (201 linjer)
 
 the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the shop's (electronics, haulers, the jigging machine and the clothes)
 
@@ -2275,8 +2283,9 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
 - **58** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
   - 62 `lineCard(lk, o)`
   - 87 `egnChooser(lk, o)`
-  - 111 `careAboard(inPort, p)`
-  - 135 `redskap(tab0)`
+  - 113 `autoCard()`
+  - 125 `careAboard(inPort, p)`
+  - 151 `redskap(tab0)`
 
 ## `src/js/ui/phone/13-mannskap-bank-meld.js` (177 linjer)
 
@@ -2616,7 +2625,7 @@ Garderoben: the player changes how his figure looks (Jonas 10.10.2026)
 - **14** the right-hand side: what the current tab offers
 - **50** the little renderer
 
-## `src/js/ui/08-actions.js` (420 linjer)
+## `src/js/ui/08-actions.js` (427 linjer)
 
 actions
 
@@ -2624,29 +2633,29 @@ actions
   - 75 `panelInput(e)`
   - 80 `panelChange(e)`
   - 103 `landConf(H, q, acc)`
-  - 131 `sell()`
-- **239** modal
-  - 241 `modal(html)`
-  - 250 `boatUnnamed()`
-  - 251 `boatChristen(nm)`
-  - 253 `showIntro(namesOnly)`
-- **268** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
-  - 273 `awayStart(mins, realMs)`
-  - 274 `awayEnd()`
-  - 275 `showAway(A)`
-- **302** time
-  - 308 `playMinutes(n, away)`
-  - 312 `catchUp(realMs)`
-  - 323 `tick()`
-  - 360 `deliverOrder()`
-- **370** chrome
-  - 371 `applyLang()`
-- **384** screens: full-screen 3D, or the chart plotter for route planning
-  - 385 `setBodyView(v3d)`
-  - 390 `openPlotter()`
-  - 395 `plotSetRender()`
-  - 399 `plotSetOpen(on)`
-  - 412 `kinoUi()`
+  - 138 `sell()`
+- **246** modal
+  - 248 `modal(html)`
+  - 257 `boatUnnamed()`
+  - 258 `boatChristen(nm)`
+  - 260 `showIntro(namesOnly)`
+- **275** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
+  - 280 `awayStart(mins, realMs)`
+  - 281 `awayEnd()`
+  - 282 `showAway(A)`
+- **309** time
+  - 315 `playMinutes(n, away)`
+  - 319 `catchUp(realMs)`
+  - 330 `tick()`
+  - 367 `deliverOrder()`
+- **377** chrome
+  - 378 `applyLang()`
+- **391** screens: full-screen 3D, or the chart plotter for route planning
+  - 392 `setBodyView(v3d)`
+  - 397 `openPlotter()`
+  - 402 `plotSetRender()`
+  - 406 `plotSetOpen(on)`
+  - 419 `kinoUi()`
 
 ## `src/js/ui/08b-letter.js` (127 linjer)
 
@@ -2723,7 +2732,7 @@ actions
 - **1** the jig game: jigging by hand yourself, and the buttons and hooks around it
   - 86 `refreshAll()`
 
-## `src/js/ui/10-gear-ui.js` (227 linjer)
+## `src/js/ui/10-gear-ui.js` (236 linjer)
 
 passive gear on screen: the action bar, the fish panel, the chart and the route
 
@@ -2738,20 +2747,20 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 59 `setWhat(s)`
   - 66 `setLabel(s, short)`
   - 73 `setChoices(all)`
-  - 87 `gopText()`
-  - 95 `gearActs(LS)`
-  - 116 `jigSets()`
-  - 126 `gearPanel()`
-  - 145 `gearSvg(u)`
-  - 171 `otherGearHit(p, r)`
-  - 172 `otherGearCard(s)`
-  - 180 `gearHit(p, r)`
-  - 182 `buoyStandoff(s, e)`
-  - 187 `gearTap(hit)`
-  - 199 `wpActOptions(w)`
-  - 205 `wpActLabel(a)`
-  - 211 `wpActCycle(w)`
-  - 216 `gearDoAct(act, el)`
+  - 94 `gopText()`
+  - 102 `gearActs(LS)`
+  - 123 `jigSets()`
+  - 133 `gearPanel()`
+  - 154 `gearSvg(u)`
+  - 180 `otherGearHit(p, r)`
+  - 181 `otherGearCard(s)`
+  - 189 `gearHit(p, r)`
+  - 191 `buoyStandoff(s, e)`
+  - 196 `gearTap(hit)`
+  - 208 `wpActOptions(w)`
+  - 214 `wpActLabel(a)`
+  - 220 `wpActCycle(w)`
+  - 225 `gearDoAct(act, el)`
 
 ## `src/js/ui/10c-dock.js` (390 linjer)
 
