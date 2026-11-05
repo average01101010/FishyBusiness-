@@ -37,22 +37,31 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 
 - **Fil:** `land_put` (`20261030170000_bygde.sql:29`) tar `kg` og `kgq` (opptil 100 t per rad, 24 rader, 400 rader i timen), `gh` (hvilken som helst spilltime innenfor ±10⁷), `port` (fri tekst, 40 tegn), `acc` og `ev` fra klienten. Den eneste sjekken er at spilleren finnes, så **gjester** kan også levere. Klienten sender fra `ui/10h-world.js:98`.
 - **Hva det treffer for andre:**
-  - **Kvoten i åpen gruppe:** triggeren `world_year_add` summerer `kgq` per spiller (tak 60 t per spiller og år, også gjester), `world_agg_get` (`20261102120000_register.sql:132`) legger det sammen, og spillet stopper torskefisket i åpen gruppe for alle når summen når kvoten (`core/03d-quota.js:183`, `wshOpen`). Med noen få anonyme kontoer à 60 t kan én person stenge åpen gruppe for hele landet resten av året.
+  - **Kvoten i åpen gruppe:** triggeren `world_year_add` summerer `kgq` per spiller (tak 60 t per spiller og år, også gjester), `world_agg_get` (`20261102120000_register.sql:132`) legger det sammen, og spillet stopper torskefisket i åpen gruppe for alle når summen når kvoten (`core/03d-quota.js:183`, `wshOpen`). **Rettet 05.11.2026 (for sterkt sagt i gjennomgangen):** kvoten for åpen gruppe er 9 257 t torsk minus 865 t ferskfisk, altså 8 392 t (`REG26.open`), og hver konto teller høyst 60 t i året. Det trengs derfor rundt 140 kontoer for å fylle hele kvoten. Stoppet i `03d-quota.js` regner med den simulerte flåtens fangst og en margin på sju dager, så langt færre kontoer flytter stoppet fram. Med gjester kunne et skript lage nye kontoer i det tempoet Supabase slipper gjennom (standard 30 i timen per IP, ikke lest i innstillingene) og stenge gruppa på noen timer.
   - **Topplistene:** `world_top`, `ev_top`, `bygde_top`, fiskarlagets mål (`lag_get`, som også skriver en nyhet) og «Ukas beste fisker» som push til alle (`push_week`). Taket per landing (10 t åpen, 60 t lukket) hjelper lite når det kan sendes 400 i timen.
   - **Prisene i mottakene:** `world_get` `mkt` trekker prisen ned etter andres landinger siste døgn (tak 40 t per spiller, havn og art). Falske landinger kan presse prisen i en havn for alle.
   - `ev_top` tar med gjester, ulikt `world_top` og `bygde_top`.
 - **Retting (forslag, i rekkefølge):** (a) gjester teller ikke i `world_year`, `mkt` og topplistene før de er registrert; (b) et tak i ekte tid per spiller og båt i `land_put`: kg per time etter båttypens last (`presence.vtype`) og høyst én landing per havn per N minutter; (c) `gh` må ligge nær den felles klokka (`WCLOCK`) og `port` være en kjent havne-ID (`^[A-Za-z0-9_-]+$`); (d) på sikt: landingen sjekkes mot fangsten som er meldt med `catch_put` og mot posisjonen (båten må ha vært ved havna). Dokumentet i `kvoter-og-regler.md` må si at kvoten for åpen gruppe kan påvirkes av andre spillere.
+- **Status 05.11.2026 (Jonas: «Kjør på funn 2–4»):** (a) og (c) er gjort i `supabase/migrations/20261105130000_guest_world.sql`. **Venter:** Jonas kjører migreringen i SQL Editor (sperren i skymiljøet stopper `apply_migration`).
+  - En gjests landinger teller ikke i `world_year` (kvoten, båtene og gruppenes fangst), i mottakenes marked (`world_get` `mkt`) eller i sesongtoppen (`ev_top`), før kontoen er registrert. Da tar `guest_merge` dem med; før gikk de tapt med gjestens rad (`ON DELETE CASCADE`).
+  - De 11 gjesteradene som alt lå i `world_year`, slettes av migreringen.
+  - `land_put` tar ingen landing foran den felles klokka (`world_gh()` + 24 spilltimer; ingen av de 706 landingene i databasen lå foran), regner året ut av `gh` selv og renser havn og art. Mønsteret for havn har ÆØÅ, fordi mottakene i Østfold har «Ø» i ID-en (`ØF50`, `ØF55`, `ØF56`); alle 310 havne-ID-ene i dataene er sjekket.
+  - `sqltest` er grønn: 129 OK, og en ny sjekk dekker alt over.
+  - **Ikke gjort:** (b) et tak i ekte tid etter båttypens last er ikke bygd. Ett tak per time ville stoppet ekte landinger når spillet tar igjen flåtens drift etter flere dager borte, og når havfartøyene (H2–H6) lander hundrevis av tonn. Taket på 60 t per konto og år for åpen gruppe står, og (d) står for seg.
+  - **Det som gjenstår:** en registrert konto kan fortsatt sende falske landinger, og dermed toppe topplistene, flytte prisene i en havn og telle opptil 60 t i åpen gruppe. Det krever en WorkOS-konto per konto, og kan ikke lenger gjøres med gjester i hopetall.
 
 ### 3. MIDDELS: falsk fangst tømmer feltene for andre
 
 - **Fil:** `catch_put` (`20261006000000_world_v2.sql:65`): 600 celler per kall, opptil 50 t per celle, 6 000 rader i timen, også gjester. `world_get` gir de andres fangst per celle (tak 5 t per spiller og celle) og klienten trekker den fra bestanden (`wshTake`, `ui/10h-world.js:111`).
 - **Angrep:** én konto kan merke hvert felt i en region som tomt i dager; flere anonyme kontoer gjør det verre.
 - **Retting:** cellene må ligge nær spillerens siste posisjon i `presence`, kg per time etter båttypen, og gjester holdes utenfor `cells` til de er registrert.
+- **Status 05.11.2026:** gjestenes fangst er holdt utenfor `cells` (`world_get`, `20261105130000_guest_world.sql`), og `catch_put` merker gjesten. Kravet om at cellene skal ligge nær spillerens posisjon er ikke bygd, fordi flåten fisker langt fra der spilleren er (driftsplanen). En registrert konto kan fortsatt merke celler, med 5 t per spiller og celle som før.
 
 ### 4. MIDDELS: anonyme kontoer uten grense
 
 - Gjestene er anonyme Supabase-innlogginger (`ui/10f-cloud.js:66–83`). Alle tak i funksjonene er per spiller, så den som lager mange gjester, ganger opp funn 2, 3, 10 og 9. Supabases egen grense for anonyme innlogginger (standard 30 i timen per IP) er ikke lest i prosjektinnstillingene.
 - **Retting:** Turnstile eller CAPTCHA på anonym innlogging (Supabase støtter det), og funn 2a og 3 (gjester påvirker ikke andre før de er registrert).
+- **Status 05.11.2026:** 2a og 3 er gjort, så mange gjester tømmer ikke lenger kvoten, markedet, feltene eller topplistene. Det gjester fortsatt kan, er det funn 9 og 10 sier: fylle feil-, bildetakt- og tilbakemeldingstabellene, og holde kaiplasser. Turnstile er ikke bygd: det krever en Cloudflare-konto, et skript fra Cloudflare på siden og en linje i personvernerklæringen, og det er Jonas' valg. **Jonas kan selv** se på grensen for anonyme innlogginger i Supabase (Authentication → Rate limits) og sette den lavere enn standarden.
 
 ### 5. MIDDELS: `#nocloud` på detstorebla.no gir det som koster ekte penger gratis
 
@@ -132,7 +141,7 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 ## Forslag til rekkefølge
 
 1. ~~**Funn 1** (XSS i admin)~~: rettet 05.11.2026 i admin (b5289877, med funn 13) og i databasen (`20261105120000_fb_meta.sql`, kjørt av Jonas).
-2. **Funn 2a, 3 og 4** (gjester og anonyme kontoer påvirker ikke andre) i én økt med en migrering og `sqltest`.
+2. ~~**Funn 2a, 3 og 4**~~: gjort 05.11.2026 (`20261105130000_guest_world.sql`, med 2c). Turnstile (funn 4) og 2b er ikke bygd, se funnene.
 3. **Funn 2b–c, 5, 13 og 14** i én økt.
 4. **Funn 7** (innloggingsdomenet) når Jonas setter opp `auth.detstorebla.no` hos WorkOS.
 5. **Funn 8, 9, 10, 11, 12 og 15** som ryddejobber.

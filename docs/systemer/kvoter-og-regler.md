@@ -101,6 +101,7 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
   - **Økning:** Maksimalkvotene økes 1. mai og 1. juni når båtene ikke kan ta gruppekvoten.
   - **Fritt fiske** kan komme om høsten.
   - **Din fangst** teller med.
+  - **De andre spillernes fangst** teller også med (`wshOpen`, fra `world_get` i `ui/10h-world.js`). Den kommer fra landingene de melder, og serveren kan ikke sjekke mot fangsten. Derfor teller hver konto høyst 60 t i året (`world_agg_get`), og gjester teller ikke før kontoen er registrert (05.11.2026, `supabase/migrations/20261105130000_guest_world.sql`, funn 2 i `docs/planer/sikkerhet-skyen.md`). Mange registrerte kontoer med falske landinger kan fortsatt flytte stoppen fram.
   - **Trykket i sjøen** (B3, 02.11.2026): gruppas fangst dag for dag er også åpen gruppes trykk på bestanden langs kysten (`trykkOpenScale` i `03g-trykk.js`), og de andre gruppene i kvotekjeden fisker sin kvote etter sedlene. Se 5.3d i `fiskerimodellen.md`.
   - **Kalibrering mot 2019–2026** (`k = 0,02`):
     - Med 2026-kvotene kommer stoppen i snitt 20. april (16. april i virkeligheten).

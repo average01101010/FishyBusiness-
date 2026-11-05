@@ -149,6 +149,17 @@ Jonas: «det er viktig at alle har en delt klokke fordi dette er et online-spill
   - **Ikke felles ennå:** krabbebestanden. Gytebestanden og totalkvoten er felles fra serveren når admin slår på bryteren (B4); til da er de frøets.
   - **Test:** `sqltest` (summer, tak, markør, lås, sletting; registeret med to kontoer, 90 dager, bryteren, og lasten med `KYST_LAST=5000`), `cloudtest` (salg og celler opp, kvote, pris og bestand ned, markøren) og `tests/unit/trykk.test.mjs` (spillernes andel, åpen gruppes båter, registeret og bestanden fra serveren).
 
+## Gjestene og den felles verdenen (05.11.2026, Ø6 funn 2–4)
+
+- **Jonas: «Kjør på funn 2–4».** En gjest (anonym innlogging) kan lages igjen og igjen, så det en gjest lander og fisker, teller bare for gjesten til kontoen er registrert (`supabase/migrations/20261105130000_guest_world.sql`):
+  - `world_year_add` holder gjestens landinger utenfor årets summer, som er kvoten for åpen gruppe, båtene og gruppenes fangst.
+  - `world_get` holder gjestene utenfor mottakenes marked (`mkt`) og cellene (`cells`).
+  - `ev_top` holder dem utenfor sesongtoppen, som `world_top`, `bygde_top` og `push_week` alt gjorde. Gjesten ser sine egne.
+  - `guest_merge` tar gjestens landinger med i `world_year` for kontoen. Før forsvant de med gjestens rad.
+  - `catch_put` merker gjesten slik `land_put`, `pos_put` og `gear_put` gjør.
+- **For alle:** `land_put` tar ingen landing mer enn 24 spilltimer foran den felles klokka (`world_gh()`), regner spillåret ut av `gh` (som `yearH`) i stedet for å ta `y` fra kallet, og renser havn (`[A-Za-z0-9ÆØÅæøå_-]`, fordi mottakene i Østfold heter `mØF50` osv.) og art (`[a-z0-9_]`). En landing som avvises (400), dropper klienten (`worldShare`).
+- **Igjen:** en registrert konto kan fortsatt melde falske landinger. Taket er 60 t i åpen gruppe per konto og år (`world_agg_get`) og 10 t åpen og 60 t lukket per landing på topplistene. Det står i `docs/planer/sikkerhet-skyen.md`.
+
 ## 4.24 Fartstid og «Mens du var borte» (07.10.2026)
 
 Jonas' avgjørelser står i `docs/engasjement.md`, arbeidslista punkt 1. Dette er del 1 av 4.
