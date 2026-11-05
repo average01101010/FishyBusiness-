@@ -94,14 +94,6 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 
 ## 10.1 Feil som skal rettes
 
-- **Funnet i spilltest 3, alle redskapene (05.11.2026, `docs/playtest/rapport-3-redskap.md`, `tests/fiskeplay.py`):**
-  - F1: sluttseddelen kaller inndratt blåkveite over 7 %-grensen «Inndratt torsk over kvote» (`ui/07-guide.js:304`).
-  - F2: Rigg-fanen sier «Monter den under Oppgrader», men halerne selges i Butikk › Elektronikk og haler (`rigBlock` i `core/10-gear.js:142`, innledningen i `ui/phone/05-rigg-innst-admin.js`).
-  - F3: butikken sier «Plass til 6 garn til» på trebåten, som ikke kan få garnhaler (`VESSELS.trebat` `rigs`/`gearMax.garn`).
-  - F4: «Jukser, stopper om under 1 min» og «Jukse selv» i ett spillminutt etter setting og trekk av line, garn og teiner (`gopEnd` i `core/10-gear.js:350`).
-  - F5: fangstkortet kaller kongekrabbe «fisk», og trekk viser ingen art.
-  - F6: «1 krabbeteiner», «Ved mottakskaia» i Finnsnes uten mottak, og like navn på mottakssjefene.
-  - F7: med mannskap på biyrke på en fridag sier «Sett ut» bare «Garn krever minst to om bord».
 - **Funnet i UI-gjennomgangen 04.11.2026 (`docs/planer/ui-redesign.md`, U0):** (1) veiledningen låser seg på `route2` når skuffen «Beholdning» fra fiskesteget dekker «Autonav» (ringen trykket 900 ganger, rundt 30 spilltimer med fisk om bord); «Lukk telefonen først» sto fast etterpå; (2) sidefeil i `havNear` fra `npcStates`/`renderDyn` under seilingen til Botnhamn («reading 'x'»); (3) dagbokas håndskrift (`.bk-et`, `.bk-gt`, `.bk-sn`, `.hw`, `.lg td`) ber om Segoe Print/Comic Sans, som ikke er innebygd: bruk Caveat; (4) «Start på nytt» uten varsel på havnesiden; (5) Lever-siden sier «Prislisten under» uten noe under; (6) «Kjøp (test, ingen betaling)» synes i Kaiboden.
 - **Fire verft i Sverige** (funnet 04.11.2026 av `tests/unit/soner.test.mjs`): `steder.json` har fire verft ved Strømstad (58,6–58,9° N 11,2° Ø) med navnet «Verft verft» («nord», «sør», «sør 2»). Ifølge `docs/handelssteder.md` skal verftene ligge i Norge og hete etter stedet. Testene i R4 hopper over dem.
 
@@ -111,15 +103,7 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 
 ## 10.2 Spillbarhet (fra spilltestene og egne notater)
 
-- **Spilltest 3, alle redskapene (05.11.2026, `docs/playtest/rapport-3-redskap.md` U1–U12):**
-  - U1: to klokker uten merking: varighetene står i ekte tid («Kjøp og monter · 30 min», «Egn … · 2 t 51 min») mens klokka går i spilltid (3 t og 17 t).
-  - U2: båten driver 6–29 km fra redskapet mens det står, uten varsel, og «Kast anker» er grå over 40 m.
-  - U3: etter «Kjør dit» må spilleren finne «Lukk» i plotteren for å få «Ta opp».
-  - U4: 74 trofé- og 51 fartstidsmeldinger i løpet av testen; toasten ligger over juksekortet.
-  - U5: full last er grønn i HUD-en, og «Jukse» er fortsatt hovedknappen.
-  - U6: «synkronrulling · endre kurs eller fart» i rødt mens båten trekker.
-  - U8: teiner selges i Senja uten at butikkortet sier at kongekrabben er i Finnmark.
-  - U11: blåkveitegarn kan settes i stengt periode uten advarsel i settelinja.
+- **Spilltest 3, det som venter på Jonas' valg** (`docs/planer/spilltest3-valg.md`, V1–V6): U1 to klokker uten merking, U2 båten driver fra redskapet uten varsel, U4 varslene drukner, U8 kongekrabbens område på butikkortet, U12 ventetida i juksespillet.
 - **Fangsten er uforklart, og den garanterte første turen gir feil forventning** (spilltest 2): full last på første tur (`03-simulation.js`, påfyllingen i `05-vessels.js`), nå også med luksushaill. Etter første levering sier ingenting at turen var ekstra god eller hva vanlig fiske gir. Varmekartet, ekkoloddet, fangstmerkene og Fiskeguiden viser nå hvor fisken er.
 - **Planleggeren viser ikke bølger langs ruta**, bare «her» og på åpent hav i Vær-fanen.
 - **Innloggingsbonusen** sier «Hver dag du åpner spillet gir 1 % til», men ikke at det er ekte dager eller når neste prosent kommer (kjernen regner riktig med kalenderdager).
@@ -211,7 +195,7 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 
 ## 10.5 Må måles eller ses i spillet
 
-- **Lina fisker under kalibreringen (spilltest 3, 05.11.2026, K2):** `docs/systemer/redskap.md` sier om lag 110 kg per stamp hyseline etter 12 t i februar. Modellen gir 42–76 kg per stamp på de beste hysestedene ved Senja (tørr ståtid), og i spill fikk agenten 15 kg per stamp hyseline og 18 kg per stamp bankline (23–28 % av vanlig). Garna ga 36–44 kg per garn (kalibreringen sier 30), og teinene i Vest-Finnmark 20 kg per teine (anslaget sier 2–12). Lina er dermed det dårligste kjøpet av de tre. Jonas avgjør.
+- **Lina fisker under kalibreringen (spilltest 3, 05.11.2026, K2; valget V6 i `docs/planer/spilltest3-valg.md`):** `docs/systemer/redskap.md` sier om lag 110 kg per stamp hyseline etter 12 t i februar. Modellen gir 42–76 kg per stamp på de beste hysestedene ved Senja (tørr ståtid), og i spill fikk agenten 15 kg per stamp hyseline og 18 kg per stamp bankline (23–28 % av vanlig). Garna ga 36–44 kg per garn (kalibreringen sier 30), og teinene i Vest-Finnmark 20 kg per teine (anslaget sier 2–12). Lina er dermed det dårligste kjøpet av de tre. Jonas avgjør.
 - **Skyggene på alt og skyskyggene (04.11.2026, `3d-verden.md` 4.11m):** kontrollert bare i SwiftShader, der en tegning tar sekunder og sola flytter seg mellom bildene. Dette står igjen: (1) Mål med `#prof` på Pad 3 hva `sunV` koster i sjøskyggeleggeren, som fyller skjermen: én teksturlesing og tre støyoppslag, men bare når det er spredt skydekke (ellers gir `uCS.z` = 0 en tidlig retur). Mål også rutenettet (`SGW.ms` 2 ms per bilde på Høy, rundt 65 000 stråler, anslått 2–4 s på nettbrettet). (2) Se om styrken på skyskyggene er riktig (en femdel av sola under en sky, inntil 1,3 i glipene) og om de driver i riktig fart. (3) Sjøen lenger ute enn rutenettet (2–3 km) har ikke fjellskygge og glitrer fortsatt; et grovere rutenett til 15 km kan legges på om det synes. (4) Adreno 642L og Direct3D: sjøskyggeleggeren har fått én sampler til (enhet 5). `#sun0` slår alt av uten ny kompilering, men en enhet som ikke klarer å lenke sjøen, faller til en lettere sjø. Se `dsb_sea` i tilbakemeldingene etter utrullingen.
 
 - **Garnet under vann på nettbrettet (03.11.2026):** `drawGearUnder` er målt under SwiftShader (JS 0,1–0,4 ms med to sett, 1,1–1,3 ms med 60 sett på grunt vann), ikke bildetakten. Mål på Pad 3 med `#prof` («uten redskap under vann») i en full havn (Honningsvåg) før det regnes som ferdig.
@@ -296,6 +280,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - `S.owned` skrives fortsatt (`03-simulation.js`, `05-phone.js`, `05-vessels.js`), men leses bare av en lagringsmigrering i `11-boot.js`.
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
+
+## Strøket 05.11.2026 (spilltest 3: F1–F7, U3, U5–U7, U9–U11, gren `ccr-9c21028c-lptg24`)
+
+- F1–F7 og U3, U5, U6, U7, U9, U10, U11 fra `docs/playtest/rapport-3-redskap.md` er rettet; hva og hvor står i `docs/systemer/rettelser.md`. U1, U2, U4, U8, U12 og K1–K3 venter på valgene i `docs/planer/spilltest3-valg.md`.
 
 ## Strøket 05.11.2026 (Driftsplan 2: U11 og U4, gren `ccr-3d7eb5bf-vgz41n`)
 - U11: din egen hvile på planen startet ikke av seg selv ved rorbu eller naust, og avgangen ventet på «Hvil i naustet …» også mens spillet var lukket (0ff92d4). U4: Pause lot båten fiske videre og viste «I dag ←» (71d32f0). Testet med `driftsplan2test` (S1–S19 og S9 grønne), `driftsplan2ui`, `driftsplan2gui` (95 OK; de 4 røde er U6 og U7) og enhetstestene (1031 OK), bare rundt Senja.
