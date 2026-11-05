@@ -596,7 +596,7 @@ The fleet's pressure and the stock's baseline (B3 of docs/planer/bestand-og-flaa
   - 46 `seaIceShut(p, H, V)`
   - 51 `seaIceOnLeg(a, b, H, V)`
 
-## `src/js/core/04-crew.js` (368 linjer)
+## `src/js/core/04-crew.js` (405 linjer)
 
 crew: people with skills, habits and moods
 
@@ -640,7 +640,11 @@ crew: people with skills, habits and moods
   - 290 `borsTick(H)`
   - 298 `crewRumour()`
   - 300 `crewTick(H)`
-  - 366 `codRoom(H)`
+  - 367 `codRoom(H)`
+- **369** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
+  - 383 `flyIn(c)`
+  - 392 `flyOut(c)`
+  - 400 `flyTick()`
 
 ## `src/js/core/05-vessels.js` (1207 linjer)
 
@@ -2184,12 +2188,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1064 linjer)
+## `src/js/ui/phone/07-patch.js` (1069 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1057 `patch()`
+  - 1062 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
