@@ -289,6 +289,14 @@ const SND = (() => {
     for (const hz of [147, 220]){ const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = hz; o.connect(f); o.start(t); o.stop(t + 1.7); }
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(a, t + 0.08); g.gain.setValueAtTime(a, t + 1.35); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.65);
   }
+  // a nudge on the jig line before a bite, and now and then without one (spilltest 3, U12; Jonas 05.11.2026, V5 A): a soft low knock
+  // and the line's faint creak, quiet enough to be felt more than heard
+  function nudge(){
+    if (!ac || ac.state !== 'running' || !vol()) return;
+    const t = ac.currentTime, o = ac.createOscillator(), g = gain(0, master); o.type = 'sine'; o.frequency.setValueAtTime(190, t); o.frequency.exponentialRampToValueAtTime(95, t + 0.12); o.connect(g);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18); o.start(t); o.stop(t + 0.2);
+    burst('bandpass', 1800, 6, 0.02, 0.09, 0.005);
+  }
   function coin(u){
     if (!ac || ac.state !== 'running' || !vol()) return;
     const t = ac.currentTime, o = ac.createOscillator(), g = gain(0, master); o.type = 'sine'; o.frequency.value = 1500 + 1500 * Math.min(1, Math.max(0, u)); o.connect(g);
@@ -306,5 +314,5 @@ const SND = (() => {
   document.addEventListener('pointerdown', () => { if (!started){ if (S && S.settings) start(); } else if (ac && ac.state !== 'running' && ac.state !== 'closed' && !document.hidden) quiet(ac.resume()); }, true);
   document.addEventListener('visibilitychange', () => { if (!ac || ac.state === 'closed') return; quiet(document.hidden ? ac.suspend() : ac.resume()); });
   // testEar / testSrc (for the tests): an ear and the places, as G3.ear and G3.sndSrc give them in 3D
-  return {start, cash, coin, horn, room, anchorAlarm, FIRES, MUS, get started(){ return started; }, get state(){ return ac ? ac.state : 'none'; }, LV, tick, at:(q, ref, e) => { const k = EAR; EAR = e; const r = at(q, ref); EAR = k; return r; }, testEar:null, testSrc:null};
+  return {start, cash, coin, nudge, horn, room, anchorAlarm, FIRES, MUS, get started(){ return started; }, get state(){ return ac ? ac.state : 'none'; }, LV, tick, at:(q, ref, e) => { const k = EAR; EAR = e; const r = at(q, ref); EAR = k; return r; }, testEar:null, testSrc:null};
 })();

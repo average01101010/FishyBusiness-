@@ -4,7 +4,7 @@
 // with it in the middle sets the hook. The hit gives 2×, 1.5×, 1× or 0.5× what the bite is worth: the pilk and a fly hook both took,
 // half the time one more on a fly, one fish, or it slipped half the time (no tap at all is a slip too).
 window.JIGG = (() => {
-  let on = false, st = 'jig', tNext = 0, t0 = 0, last = 0, raf = 0, due = 0, debt = 0, mult = 1, got = null, miss = 0;
+  let on = false, st = 'jig', tNext = 0, t0 = 0, last = 0, raf = 0, due = 0, debt = 0, mult = 1, got = null, miss = 0, pre = 0, fNext = 0, dupT = -1e9;
   const SWEEP = 1.4, GR = [[0.06, 2], [0.15, 1.5], [0.3, 1]];   // seconds off the middle, and what the hit is worth
   const el = document.createElement('div'); el.id = 'jigUI'; el.hidden = true;
   el.innerHTML = '<div class="jig-msg"></div><div class="jig-bar"><i class="z1"></i><i class="z15"></i><i class="z2"></i><b class="jn"></b></div><button type="button" class="jig-btn"></button>';
@@ -18,7 +18,11 @@ window.JIGG = (() => {
     return 30 * f.eff * sh * d * f.wpen * (1 - f.cold) / 3600 * simRate();
   }
   // the next bite: about one fish a bite, 5 to 40 real seconds apart (4 to 8 on the first trip)
-  function schedule(now){ if (S.tut && S.tut.catch){ tNext = now + (4 + Math.random() * 4) * 1000; return; } const k = kgps(), mean = clamp(3 / Math.max(1e-6, k), 5, 40); tNext = now + mean * (0.6 + Math.random() * 0.8) * 1000; }
+  function schedule(now){ if (S.tut && S.tut.catch) tNext = now + (4 + Math.random() * 4) * 1000; else { const k = kgps(), mean = clamp(3 / Math.max(1e-6, k), 5, 40); tNext = now + mean * (0.6 + Math.random() * 0.8) * 1000; }
+    // the wait has life (spilltest 3, U12; Jonas 05.11.2026, V5 A): a nudge on the line 1–3 s before the bite, and now and then one with
+    // no bite after it, so a nudge is a sign and not a promise. The catch and the bites' timing are as before
+    pre = tNext - (1 + Math.random() * 2) * 1000; if (pre < now + 400) pre = 0; fNext = now + (5 + Math.random() * 9) * 1000; }
+  function dupp(ts){ dupT = ts; el.classList.remove('dupp'); void el.offsetWidth; el.classList.add('dupp'); try { SND.nudge(); } catch (e){} if (navigator.vibrate) try { navigator.vibrate(25); } catch (e){} }
   function pick(){ const H = S.t / 60, w = SP.map(sp => [sp, density(sp, S.boat.pos, H) * luck(sp) * jigTake(sp, H)]), tot = w.reduce((a, x) => a + x[1], 0) || 1; let r = Math.random() * tot, sp = w[0][0]; for (const [k, v] of w){ r -= v; if (r <= 0){ sp = k; break; } } return {sp, kg:sampleFish(sp, S.boat.pos, H)}; }
   function grade(off){ if (off == null) return 0.5; for (const [s, m] of GR) if (Math.abs(off) <= s) return m; return 0.5; }
   // the bite worth what came due since the last one, times the hit: whole fish until it is used up (the rest carries to the next)
@@ -41,6 +45,8 @@ window.JIGG = (() => {
     raf = 0; if (!on) return; raf = requestAnimationFrame(loop); const dt = last ? Math.min(0.1, (ts - last) / 1000) : 0; last = ts;
     if (!ok()){ stop(); return; }
     if (st === 'jig' || st === 'res') due += kgps() * dt;
+    if (st === 'jig' && pre && ts >= pre){ pre = 0; dupp(ts); }
+    if (st === 'jig' && fNext && ts >= fNext){ fNext = ts + (5 + Math.random() * 9) * 1000; if (ts < tNext - 3500 && Math.random() < 0.6) dupp(ts); }
     if (st === 'jig' && ts >= tNext) set('bite', ts);
     else if (st === 'bite' && (ts - t0) / 1000 > SWEEP){ mult = grade(null); land(mult); set('res', ts);
       // two bites in a row without a strike: you have put it down, so the jig fishes on its own again (Adrian 05.10.2026: «får ingenting
@@ -53,7 +59,7 @@ window.JIGG = (() => {
     const u = st === 'bite' ? clamp((ts - t0) / 1000 / SWEEP, 0, 1) : 0.5;
     needle.style.left = (u * 100).toFixed(1) + '%';
     const res = got ? (got.n ? (got.m === 2 ? L('2× · to på kroken!', '2× · two on the hooks!') : got.m === 1.5 ? L('1,5× · godt rykk', '1.5× · a good strike') : got.m === 1 ? L('1× · fisk', '1× · a fish') : L('0,5× · tidlig eller seint', '0.5× · early or late')) + ' · ' + fmt(got.kg || 0, 1) + ' kg' : L('Fisken slapp', 'It got away')) : '';
-    msgEl.textContent = st === 'bite' ? L('NAPP! Rykk når nåla er midt på', 'BITE! Strike as the needle is in the middle') : st === 'res' ? res : L('Vent på napp …', 'Wait for a bite …');
+    msgEl.textContent = st === 'bite' ? L('NAPP! Rykk når nåla er midt på', 'BITE! Strike as the needle is in the middle') : st === 'res' ? res : ts - dupT < 1100 ? L('Det dupper i snøret …', 'A nudge on the line …') : L('Vent på napp …', 'Wait for a bite …');
     el.dataset.st = st; el.querySelector('.jig-bar').style.visibility = st === 'bite' ? 'visible' : 'hidden';
     // always «Rykk»; red when it bites (Jonas 05.10.2026)
     btn.textContent = L('Rykk', 'Strike'); btn.disabled = st === 'res';

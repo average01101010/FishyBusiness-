@@ -226,6 +226,7 @@ body.in-pub #dock,body.in-pub #dockFan,body.in-pub #dockInfo,body.in-pub .ov,bod
 #jigUI{position:absolute;z-index:6;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 132px);display:flex;flex-direction:column;align-items:center;gap:10px;width:min(92vw,380px);pointer-events:none}
 #jigUI[hidden]{display:none} #jigUI .jig-msg{background:rgba(6,16,24,.72);color:#fff;border-radius:12px;padding:7px 12px;font:600 14px var(--sans);text-align:center}
 #jigUI[data-st=bite] .jig-msg{background:#d6336c;animation:jigp .25s ease-in-out infinite alternate} @keyframes jigp{from{transform:scale(1)}to{transform:scale(1.06)}}
+#jigUI.dupp .jig-msg{animation:jigd .5s ease-out} @keyframes jigd{0%{transform:translateY(0)}25%{transform:translateY(5px)}55%{transform:translateY(-2px)}100%{transform:none}}   /* the nudge before a bite (spilltest 3, U12) */
 #jigUI .jig-bar{position:relative;width:100%;height:26px;border-radius:13px;background:rgba(6,16,24,.6);border:2px solid rgba(255,255,255,.7);overflow:hidden}
 #jigUI .jig-bar i{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%)} #jigUI .jig-bar .z1{width:42.9%;background:rgba(242,183,5,.45)} #jigUI .jig-bar .z15{width:21.4%;background:rgba(53,179,126,.6)} #jigUI .jig-bar .z2{width:8.6%;background:#35b37e;box-shadow:0 0 8px #7ff0b9}
 #jigUI .jig-bar .jn{position:absolute;top:-2px;bottom:-2px;width:4px;margin-left:-2px;background:#fff;border-radius:2px;box-shadow:0 0 6px #fff}
