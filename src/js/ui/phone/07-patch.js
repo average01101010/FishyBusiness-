@@ -1,5 +1,13 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['redskap-051126', '05.11.2026', 'Redskapene', 'The gear', [
+       ['Sluttseddelen sier per art hva som er inndratt og hvorfor, for eksempel blåkveite over 7 % bifangst.', 'The landing note says for each species what was confiscated and why, for example Greenland halibut over 7 % bycatch.'],
+       ['Butikken og Rigg-fanen sier det samme når en haler ikke passer båten, og Rigg-fanen viser til Butikk › Elektronikk og haler.', 'The shop and the Rig tab say the same when a hauler does not fit the boat, and the Rig tab points to Shop › Electronics and haulers.'],
+       ['Etter setting og trekk står det ikke lenger «Jukser» i et minutt, og fangstkortet viser arten også når et trekk gir mange på én gang.', 'After setting and hauling, «Jigging» no longer shows for a minute, and the catch card names the species also when a haul brings many at once.'],
+       ['«Sett ut» sier hvem som har biyrke og er på land i dag, og settelinja advarer om blåkveitegarn når direktefisket er stengt.', '«Set» says who has a second job and is ashore today, and the set line warns about Greenland halibut nets while the direct fishery is closed.'],
+       ['Full last står i rødt med «Full», og Auto-nav blir hovedknappen. Kartet lukkes når du er framme ved blåsa.', 'A full hold shows in red with «Full», and Auto-nav becomes the main button. The chart closes when you reach the buoy.'],
+       ['Garna heter det samme overalt («Torskegarn 180 mm»), mottakssjefene har ulike navn, og knappetekstene går ikke lenger i hverandre.', 'The nets have the same name everywhere («Cod net 180 mm»), the plant managers have different names, and the button labels no longer run into each other.'],
+    ]],
     ['drift-051126b', '05.11.2026', 'Driftsplanen, del 2', 'The operations plan, part 2', [
        ['Pause på driftsplanen kaster anker der dybden og plassen tillater det. Ellers driver båten som før, og planen sier hvorfor. Ankeret lettes når båten går igjen.', 'Pause on the plan drops the anchor where the depth and the room allow it. Else the boat drifts as before, and the plan says why. The anchor comes up when she goes again.'],
        ['Uten blåsesett kan planen ikke startes med redskap i feltene. Planen viser veien til nærmeste utstyrsbutikk.', 'Without buoy sets the plan cannot start with gear in the fields. The plan shows the way to the nearest tackle shop.'],
