@@ -74,7 +74,7 @@ $('modeBtn').onclick = () => {
 $('phoneBtn').onclick = () => PHONE.toggle();
 // the tub is full: the jig stops while you gut, and starts again after (a toast says so, with how long in real time)
 hooks.onDeck = k => { const L = (no, en) => S.lang === 'no' ? no : en;
-  if (k === 'stop'){ const e = deckEta(deckHands()); toast(L('Bløggekaret er fullt. Du sløyer og iser fangsten' + (e < Infinity ? ' (ca. ' + realDur(e) + ')' : '') + ', så fisker du videre.', 'The bleeding tub is full. You gut and ice the catch' + (e < Infinity ? ' (about ' + realDur(e) + ')' : '') + ', then you fish on.')); }
+  if (k === 'stop'){ const e = deckEta(deckHands()); toast(L('Bløggekaret er fullt. Du sløyer og iser fangsten' + (e < Infinity ? ' (ca. ' + durBoth(e) + ')' : '') + ', så fisker du videre.', 'The bleeding tub is full. You gut and ice the catch' + (e < Infinity ? ' (about ' + durBoth(e) + ')' : '') + ', then you fish on.')); }
   else toast(L('Ferdig på dekk. Du fisker videre.', 'Deck work done. You fish on.')); };
 hooks.onEquip = () => { updateMapButtons(); INSTR.show(); heatReset(); };
 hooks.onRadio = (no, en) => toast('📻 Kystradio: ' + (S.lang === 'no' ? no : en), 15000);

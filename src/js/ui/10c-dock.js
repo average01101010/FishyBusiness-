@@ -189,8 +189,8 @@ const DOCK = (() => {
       // how many jigging reels are working (tilbakemelding #64), short enough for a phone: the hands at the rail tend three each, as in
       // fishEffort (core/03-simulation.js), so «3 av 5» means too few hands for the rest
       const own = S.equip ? S.equip.jukse || 0 : 0, jk = own > 0 && !(S.target === 'kveite' && b.kgear && !kveiteClosed(S.t / 60)) ? Math.min(own, workTeam('fiske', 'juksa', 'fishing').n * JIG.perPerson) : 0;
-      out.push(jk > 0 ? (jk < own ? L('Jukser med ' + jk + ' av ' + own + ' maskiner', 'Jigging with ' + jk + ' of ' + own + ' reels') : L('Jukser med ' + jk + (jk === 1 ? ' maskin' : ' maskiner'), 'Jigging with ' + jk + (jk === 1 ? ' reel' : ' reels'))) + L(', stopper ', ', stops ') + inReal(b.fishUntil - S.t)
-        : L('Jukser, stopper ', 'Jigging, stops ') + inReal(b.fishUntil - S.t)); }
+      out.push(jk > 0 ? (jk < own ? L('Jukser med ' + jk + ' av ' + own + ' maskiner', 'Jigging with ' + jk + ' of ' + own + ' reels') : L('Jukser med ' + jk + (jk === 1 ? ' maskin' : ' maskiner'), 'Jigging with ' + jk + (jk === 1 ? ' reel' : ' reels'))) + L(' til ', ' until ') + whenTxt(b.fishUntil)
+        : L('Jukser til ', 'Jigging until ') + whenTxt(b.fishUntil)); }
     const dk = b.status !== 'port' && deckText(true); if (dk) out.push(dk[0]);
     return out.join(' · ');
   }
@@ -207,7 +207,7 @@ const DOCK = (() => {
     const js = jigSets(), pick = js.length > 1;
     const tk = js.map(j => { const nm = L(CARE.jig[j.k].no, CARE.jig[j.k].en), body = '<b>' + nm + '</b>' + (j.k === 'kveite' && j.closed ? '<span class="dk-x">' + L('Kveita er fredet til 21. april', 'Halibut closed until 21 April') + '</span>' : spChips(j.sp));
       return pick ? '<button type="button" class="dk-tk' + (j.on ? ' on' : '') + '" data-dk="tk-' + j.k + '"' + (j.k === 'kveite' && j.closed ? ' disabled' : '') + ' aria-pressed="' + !!j.on + '">' + body + '</button>' : '<div class="dk-tk on">' + body + '</div>'; }).join('');
-    return '<div class="dk-card"><div class="dk-step"><button type="button" data-dk="fh-" aria-label="−">−</button><b>' + S.fishPlanH + ' t</b><button type="button" data-dk="fh+" aria-label="+">+</button></div>' +
+    return '<div class="dk-card"><div class="dk-step"><button type="button" data-dk="fh-" aria-label="−">−</button><b>' + S.fishPlanH + L(' t', ' h') + '<small>' + L('til ', 'until ') + whenTxt(S.t + S.fishPlanH * 60) + '</small></b><button type="button" data-dk="fh+" aria-label="+">+</button></div>' +   // the game hours, and when on the clock and in real time (U1)
       (tk ? '<div class="dk-tks">' + tk + '</div>' : '') + '<button type="button" class="dk-go" data-dk="startfish">' + L('Start jukse', 'Start jigging') + '</button></div>';
   }
   // «Kystlys» U3 (docs/planer/ui-redesign.md, V6 A, 04.11.2026): the row is never more than six: the first ones as they come, then «⋯ Mer»

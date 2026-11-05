@@ -91,7 +91,7 @@ function renderHud(){
     '<div class="row"><span>' + t('hold') + '</span><b>' + fmt(holdTotal(), 0) + ' / ' + capHold() + ' kg</b></div>' +
     (streakPct() > 0 ? '<div class="row"><span>Bonus</span><b>+' + fmt(streakPct(), 0) + ' %</b></div>' : '') +
     (S.bank && (S.bank.skatt >= 1 || S.bank.spare >= 1) ? '<div class="row"><span>' + L('Skatt · spart', 'Tax · saved') + '</span><b>' + kr(Math.round(S.bank.skatt)) + ' · ' + kr(Math.round(S.bank.spare)) + '</b></div>' : '') + '</div>';
-  setHtml(hud, '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(cashShown()) + '</b><button type="button" class="hmin" data-hmin="hud" aria-label="' + L('Minimer', 'Minimise') + '">–</button></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + (nx ? '<div class="st nx">⏱ ' + nx.txt + ' ' + inReal(nx.t - S.t) + ' <small>(' + hm(nx.t / 60) + ')</small></div>' : '') +
+  setHtml(hud, '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(cashShown()) + '</b><button type="button" class="hmin" data-hmin="hud" aria-label="' + L('Minimer', 'Minimise') + '">–</button></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + (nx ? '<div class="st nx">⏱ ' + nx.txt + L(' kl. ', ' at ') + hm(nx.t / 60) + ' <small>· ' + inReal(nx.t - S.t) + '</small></div>' : '') +
     gauges + (now.length ? '<div class="hnow">' + now.join('') + '</div>' : '') + full);
   }
   // the boxes under the status box in 3D take their place and width from it: measured when its content has changed and every 2 s (setting

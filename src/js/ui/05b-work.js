@@ -115,10 +115,10 @@ function energyUi(){
     if (sl.hidden){ sl.hidden = false; requestAnimationFrame(() => sl.classList.add('on')); }
     const al = S.sleep.alarmAt != null, ring = alarmOn();
     $('slHead').textContent = ring ? L('BROVAKTSALARM', 'BRIDGE WATCH ALARM') : al ? L('Du døser av …', 'You are dozing off …') : L('Du sover', 'You are asleep');
-    $('slTime').textContent = ring ? L('Trykk ACK for å kvittere', 'Press ACK to acknowledge') : al ? L('Brovaktsalarmen går ', 'The bridge watch alarm goes off ') + inReal(S.sleep.alarmAt - S.t) : L('Du våkner ', 'You wake ') + inReal(S.sleep.until - S.t);
+    $('slTime').textContent = ring ? L('Trykk ACK for å kvittere', 'Press ACK to acknowledge') : al ? L('Brovaktsalarmen går kl. ', 'The bridge watch alarm goes off at ') + whenTxt(S.sleep.alarmAt) : L('Du våkner kl. ', 'You wake at ') + whenTxt(S.sleep.until);
     $('slAck').hidden = !ring; sl.classList.toggle('alarm', ring);
     const canW = S.t - S.sleep.t0 >= WAKE_MIN; $('slSkip').disabled = !canW; $('slSkip').hidden = al;
-    $('slSkip').textContent = canW ? L('Våkn opp (energi ' + Math.round(sleepGain()) + ' %)', 'Wake up (energy ' + Math.round(sleepGain()) + ' %)') : L('Du kan vekke deg ', 'You can wake ') + inReal(S.sleep.t0 + WAKE_MIN - S.t);
+    $('slSkip').textContent = canW ? L('Våkn opp (energi ' + Math.round(sleepGain()) + ' %)', 'Wake up (energy ' + Math.round(sleepGain()) + ' %)') : L('Du kan vekke deg kl. ', 'You can wake at ') + whenTxt(S.sleep.t0 + WAKE_MIN);
     $('slNote').textContent = S.sleep.alone ? L('Båten ligger og driver med vinden.', 'The boat is drifting with the wind.') : L('Mannskapet har roret og fortsetter turen.', 'The crew has the helm and carries on with the trip.');
   } else if (!sl.hidden){ sl.classList.remove('on', 'alarm'); sl.hidden = true; }
 }

@@ -40,7 +40,14 @@ function realDur(gameMin){ const m = realMin(Math.max(0, gameMin)), no = S.lang 
   const tm = Math.round(m), hh = Math.floor(tm / 60), mm = tm % 60;
   if (hh < 24) return hh + (no ? ' t' : ' h') + (mm ? ' ' + mm + ' min' : '');
   const d = Math.floor(hh / 24), h2 = hh % 24; return d + ' d' + (h2 ? ' ' + h2 + (no ? ' t' : ' h') : ''); }
-function inReal(gameMin){ return (S.lang === 'no' ? 'om ' : 'in ') + realDur(gameMin); }
+// real time is always said to be real time (spilltest 3, U1; Jonas 05.11.2026, V1 A: the game clock first, the real time after)
+const realW = () => S.lang === 'no' ? ' i ekte tid' : ' real time';
+function inReal(gameMin){ return (S.lang === 'no' ? 'om ' : 'in ') + realDur(gameMin) + realW(); }
+// a stretch of game time as the game clock counts it: «3 t», «4 t 20 min», «45 min»
+function gameDur(gameMin){ const m = Math.max(0, Math.round(gameMin)), hh = Math.floor(m / 60), mm = m % 60, u = S.lang === 'no' ? ' t' : ' h';
+  return hh ? hh + u + (mm ? ' ' + mm + ' min' : '') : mm + ' min'; }
+// how long something takes: the game's own time first, the real time after (V1 A): «3 t (30 min i ekte tid)»
+function durBoth(gameMin){ return gameDur(gameMin) + ' (' + realDur(gameMin) + realW() + ')'; }
 // «ferdig 14:20 · om 12 min»: the game clock and how long that is to wait in real time
 function whenTxt(T){ return hm(T / 60) + ' · ' + inReal(T - S.t); }
 function dur(h){ const m = Math.max(0, Math.round(h * 60)), hh = Math.floor(m / 60), mm = m % 60; const u = S.lang === 'no' ? ' t' : ' h'; return (hh ? hh + u + ' ' : '') + mm + ' min'; }
