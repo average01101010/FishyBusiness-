@@ -641,7 +641,7 @@ crew: people with skills, habits and moods
   - 300 `crewTick(H)`
   - 366 `codRoom(H)`
 
-## `src/js/core/05-vessels.js` (1207 linjer)
+## `src/js/core/05-vessels.js` (1209 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -710,30 +710,30 @@ crew: people with skills, habits and moods
   - 860 `unstuckSpot()`
   - 867 `unstuck()`
   - 881 `dock(pid, berth)`
-  - 906 `catchFactors(H, W, hs)`
-  - 916 `fish(H, W, hs)`
-  - 988 `endFishing(why)`
-  - 1003 `addCatch(sp, kg, cls, hook, opt)`
-- **1017** work on deck: gutting and icing take hands and time
-  - 1030 `deckHands()`
-  - 1033 `deckPending()`
-  - 1034 `deckEta(hands)`
-  - 1039 `moveKg(x, kg, patch)`
-  - 1047 `iceMinute()`
-  - 1049 `deckMinute()`
-  - 1067 `risk(W, hs)`
-  - 1094 `hullRepair()`
-  - 1097 `svcOverdue()`
-- **1098** the rescue boat (plan E3, 05.10.2026)
-  - 1118 `rescueBases()`
-  - 1127 `rescueBase(p)`
-  - 1134 `rescueAis(H)`
-  - 1138 `rescue(keepCatch)`
-  - 1162 `towSea(p)`
-  - 1167 `towRoutes(b)`
-  - 1178 `towStep(H)`
-  - 1190 `towDone(t)`
-  - 1196 `towPose(frac)`
+  - 908 `catchFactors(H, W, hs)`
+  - 918 `fish(H, W, hs)`
+  - 990 `endFishing(why)`
+  - 1005 `addCatch(sp, kg, cls, hook, opt)`
+- **1019** work on deck: gutting and icing take hands and time
+  - 1032 `deckHands()`
+  - 1035 `deckPending()`
+  - 1036 `deckEta(hands)`
+  - 1041 `moveKg(x, kg, patch)`
+  - 1049 `iceMinute()`
+  - 1051 `deckMinute()`
+  - 1069 `risk(W, hs)`
+  - 1096 `hullRepair()`
+  - 1099 `svcOverdue()`
+- **1100** the rescue boat (plan E3, 05.10.2026)
+  - 1120 `rescueBases()`
+  - 1129 `rescueBase(p)`
+  - 1136 `rescueAis(H)`
+  - 1140 `rescue(keepCatch)`
+  - 1164 `towSea(p)`
+  - 1169 `towRoutes(b)`
+  - 1180 `towStep(H)`
+  - 1192 `towDone(t)`
+  - 1198 `towPose(frac)`
 
 ## `src/js/core/05c-air.js` (64 linjer)
 
@@ -876,34 +876,35 @@ Drift: the standing operations plan, per vessel. Made anew 23.10.2026 (Jonas: «
 - **556** the plan to another vessel of the company: the answers, made again there
   - 557 `driftCopy(vid)`
 
-## `src/js/core/06g-plan2.js` (279 linjer)
+## `src/js/core/06g-plan2.js` (288 linjer)
 
 Driftsplan 2: the day is the plan (26.10.2026, docs/planer/driftsplan-2/02-design.md). Part 1: the model, the day and the check.
 
 - **1** Driftsplan 2: the day is the plan (26.10.2026, docs/planer/driftsplan-2/02-design.md). Part 1: the model, the day and the check.
-  - 24 `p2Units(kind, lk)`
-  - 30 `p2Left(o, q)`
-  - 32 `p2LineKind(o)`
-  - 38 `plan2New(over)`
-  - 46 `plan2Ops()`
-- **54** the places: a point, a port, or a key ('H' home, 'Q' the home quay, 'M' the plant, 'A' the rest anchorage)
-  - 55 `plan2P(o, k)`
-  - 64 `plan2LegH(o, a, ap, b, bp, v)`
-- **71** the state the day is reckoned from: where she lies, the hold, the gear in the sea and aboard, the crew, you. Tests pass their own
-  - 72 `plan2State(o)`
-  - 85 `plan2RestOk(pid)`
-  - 87 `plan2Ready(kind, st, lk)`
-  - 89 `plan2NextDep(o, H, from)`
-  - 97 `plan2Watch(H)`
-  - 98 `plan2Roles(st)`
-- **104** the day. H0: the hour the day begins (the departure). Returns {t0, steps:[{t, k, …}], end, why:[no, en], skipped:[{id, no, en}]}.
-  - 107 `planDay(o, H0, st)`
-- **215** the day as text: [[clock, no, en], …], one line a step, the skipped places and the reason last
-  - 216 `planDayText(o, day)`
-- **241** the check: errors keep the plan from being switched on, warnings only inform (as driftCheck; the rhythm's rules from Jonas 26.10.2026)
-  - 242 `plan2Check(o, st)`
+  - 20 `p2When(H, H0)`
+  - 31 `p2Units(kind, lk)`
+  - 37 `p2Left(o, q)`
+  - 39 `p2LineKind(o)`
+  - 45 `plan2New(over)`
+  - 53 `plan2Ops()`
+- **61** the places: a point, a port, or a key ('H' home, 'Q' the home quay, 'M' the plant, 'A' the rest anchorage)
+  - 62 `plan2P(o, k)`
+  - 71 `plan2LegH(o, a, ap, b, bp, v)`
+- **78** the state the day is reckoned from: where she lies, the hold, the gear in the sea and aboard, the crew, you. Tests pass their own
+  - 79 `plan2State(o)`
+  - 92 `plan2RestOk(pid)`
+  - 94 `plan2Ready(kind, st, lk)`
+  - 96 `plan2NextDep(o, H, from)`
+  - 104 `plan2Watch(H)`
+  - 105 `plan2Roles(st)`
+- **111** the day. H0: the hour the day begins (the departure). Returns {t0, steps:[{t, k, …}], end, why:[no, en], skipped:[{id, no, en}]}.
+  - 114 `planDay(o, H0, st)`
+- **224** the day as text: [[clock, no, en], …], one line a step, the skipped places and the reason last
+  - 225 `planDayText(o, day)`
+- **250** the check: errors keep the plan from being switched on, warnings only inform (as driftCheck; the rhythm's rules from Jonas 26.10.2026)
+  - 251 `plan2Check(o, st)`
 
-## `src/js/core/06h-plan2-engine.js` (375 linjer)
+## `src/js/core/06h-plan2-engine.js` (389 linjer)
 
 Driftsplan 2, part 2: the engine (26.10.2026, docs/planer/driftsplan-2/02-design.md chapter 2). It follows the day that planDay
 
@@ -934,19 +935,20 @@ Driftsplan 2, part 2: the engine (26.10.2026, docs/planer/driftsplan-2/02-design
   - 165 `plan2Step(H)`
   - 179 `plan2Decide(o, H)`
   - 204 `plan2Boundary(o, H)`
-  - 217 `plan2NewDay(o, H)`
-  - 229 `plan2CostDay(o, r)`
-  - 232 `plan2Caught(o, tr)`
-  - 233 `plan2StatDay(o, d)`
-- **234** a trip: the steps from i0 to the next port call, as waypoints on the kept legs
-  - 235 `plan2Trip(o, D, i0)`
-  - 263 `plan2Go(o, H, i0)`
-  - 303 `plan2Sea(o, H)`
-  - 323 `plan2Landed(pid, k)`
-  - 332 `plan2Report(pid, kg, total, landed)`
-  - 344 `plan2Bait(o)`
-  - 355 `plan2Egn(o, s)`
-  - 362 `plan2WatchTick(H)`
+  - 223 `plan2Spent(o, H)`
+  - 231 `plan2NewDay(o, H)`
+  - 243 `plan2CostDay(o, r)`
+  - 246 `plan2Caught(o, tr)`
+  - 247 `plan2StatDay(o, d)`
+- **248** a trip: the steps from i0 to the next port call, as waypoints on the kept legs
+  - 249 `plan2Trip(o, D, i0)`
+  - 277 `plan2Go(o, H, i0)`
+  - 317 `plan2Sea(o, H)`
+  - 337 `plan2Landed(pid, k)`
+  - 346 `plan2Report(pid, kg, total, landed)`
+  - 358 `plan2Bait(o)`
+  - 369 `plan2Egn(o, s)`
+  - 376 `plan2WatchTick(H)`
 
 ## `src/js/core/06e-anchor.js` (180 linjer)
 
@@ -2167,12 +2169,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1059 linjer)
+## `src/js/ui/phone/07-patch.js` (1067 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1052 `patch()`
+  - 1060 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2326,7 +2328,7 @@ the Drift app: the operations plan of a vessel (core/06d-drift.js) on one screen
 - **221** actions (data-pa="dr-…"); true when something changed
   - 257 `driftSvg(u)`
 
-## `src/js/ui/05d-plan2.js` (306 linjer)
+## `src/js/ui/05d-plan2.js` (308 linjer)
 
 Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The day first («I dag» with where she is now, or the
 
@@ -2338,12 +2340,12 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
 - **93** Plasser: the list in the order she works them
 - **133** Levering
 - **148** Vær
-- **157** Rytme
-- **168** Mannskap
-- **180** the top: Start or Pause, Nå, and the button that fixes a stop
-- **198** the statistics (R9): today, the last seven days, and all
-- **215** the page
-  - 300 `plan2Copy(vid)`
+- **159** Rytme
+- **170** Mannskap
+- **182** the top: Start or Pause, Nå, and the button that fixes a stop
+- **200** the statistics (R9): today, the last seven days, and all
+- **217** the page
+  - 302 `plan2Copy(vid)`
 
 ## `src/js/ui/05e-merker.js` (86 linjer)
 
@@ -2637,34 +2639,34 @@ actions
 
 - **1** fishing by hand: jig, strike on the bite, reel without snapping the line
 
-## `src/js/ui/09b-pub.js` (367 linjer)
+## `src/js/ui/09b-pub.js` (366 linjer)
 
 ---------- the pub in 3D: a stool at the bar, seen in first person (Jonas 08.10.2026) ----------
 
 - **1** the pub in 3D: a stool at the bar, seen in first person (Jonas 08.10.2026)
 - **15** the model: the GLB as it is (positions as 16-bit, colours as bytes), straight into the GPU
-- **90** matrices (column-major)
-- **102** a frame
-- **146** what can be tapped
-- **172** the panels
-- **222** the bartender: the evening's talk in the place's dialect, and a round for the crew
-- **247** the old hand at the bar with the echo sounder's news (tilbakemelding #58; Jonas 09.10.2026: «i puben 1 gang per spilldøgn»)
-- **295** the notice board: Kystposten, the week's best, the trips
-- **306** the round table: the hands looking for a berth (the crew exchange)
-- **313** the top bar
-- **326** open and close
+- **89** matrices (column-major)
+- **101** a frame
+- **145** what can be tapped
+- **171** the panels
+- **221** the bartender: the evening's talk in the place's dialect, and a round for the crew
+- **246** the old hand at the bar with the echo sounder's news (tilbakemelding #58; Jonas 09.10.2026: «i puben 1 gang per spilldøgn»)
+- **294** the notice board: Kystposten, the week's best, the trips
+- **305** the round table: the hands looking for a berth (the crew exchange)
+- **312** the top bar
+- **325** open and close
 
-## `src/js/ui/09c-naust3d.js` (304 linjer)
+## `src/js/ui/09c-naust3d.js` (303 linjer)
 
 ---------- Father's naust in 3D: the trophy wall with the biggest fish of each species (Jonas 09.10.2026) ----------
 
 - **1** Father's naust in 3D: the trophy wall with the biggest fish of each species (Jonas 09.10.2026)
 - **18** the model, as the pub reads it
-- **92** matrices (column-major)
-- **105** a frame
-- **163** what can be tapped
-- **199** the panels
-- **251** the top bar, open and close
+- **91** matrices (column-major)
+- **104** a frame
+- **162** what can be tapped
+- **198** the panels
+- **250** the top bar, open and close
 
 ## `src/js/ui/09c-pubsoc.js` (243 linjer)
 
@@ -2713,14 +2715,14 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 211 `wpActCycle(w)`
   - 216 `gearDoAct(act, el)`
 
-## `src/js/ui/10c-dock.js` (377 linjer)
+## `src/js/ui/10c-dock.js` (384 linjer)
 
 ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 
 - **1** the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side
-- **296** the drawer
-  - 359 `renderActs()`
-  - 372 `showroomTick()`
+- **300** the drawer
+  - 366 `renderActs()`
+  - 379 `showroomTick()`
 
 ## `src/js/ui/10d-helm.js` (51 linjer)
 
@@ -2951,7 +2953,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 - **70** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (253 linjer)
+## `src/js/ui/11-boot.js` (261 linjer)
 
 ---------- boot ----------
 
@@ -2968,15 +2970,15 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 64 `modelsReady()`
   - 65 `dataEls()`
   - 66 `dataEarly()`
-  - 71 `dataGet(el, opt)`
-  - 81 `bootData()`
-  - 88 `bootDataLate()`
-  - 103 `modelsLabel()`
-  - 110 `bootMapLoad()`
-  - 131 `bootGame()`
-  - 236 `bootFail(e)`
+  - 76 `dataGet(el, opt)`
+  - 89 `bootData()`
+  - 96 `bootDataLate()`
+  - 111 `modelsLabel()`
+  - 118 `bootMapLoad()`
+  - 139 `bootGame()`
+  - 244 `bootFail(e)`
 
-## `src/js/vessel3d.js` (1471 linjer)
+## `src/js/vessel3d.js` (1475 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -3015,80 +3017,80 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 270 `partNetBin(o, hs, p)`
 - **272** one spec per type: the hull and the fittings. The skiff is hand-built in view3d.js
 - **361** detailed models from GLB files (tools/boats, built in Blender from the yards' drawings)
-  - 372 `glbParse(b64)`
-  - 397 `glbLoad(type)`
-  - 402 `glbPart(type, name)`
-  - 405 `glbPaint(part, liv)`
-  - 413 `glbZones(type)`
-  - 420 `glbModel(type, lod, liv)`
-  - 445 `vesselSpec(type)`
-  - 446 `buildVesselModel(type, lod, liv)`
-  - 487 `vesselGeo(type, hs, sp, house, anch)`
-  - 499 `vesselModel(type)`
-  - 500 `geoOf(type)`
-- **504** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
-  - 523 `modelLiv(L)`
-  - 530 `hullLiv(b)`
-  - 531 `livKey(liv)`
-  - 533 `livGeo(liv)`
-  - 538 `livStr(b)`
-  - 550 `livPen(s)`
-  - 552 `livMark(s)`
-  - 553 `livParse(s)`
-- **558** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
-  - 562 `topsides(type)`
-  - 580 `designLines(TS, liv)`
-  - 589 `glbDesign(type, part, liv)`
-  - 623 `designFits(type, k)`
-  - 630 `kitLiv(liv)`
-- **632** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
-- **681** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
-  - 692 `logoCanvas(cv, L, img)`
-  - 703 `logoStrips(type)`
-  - 705 `logoStr(L)`
-  - 706 `logoParse(s)`
-  - 710 `flagCanvas(cv, code, shape, logo)`
-  - 722 `flagOf(L)`
-- **723** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
-  - 732 `hullTris(type)`
-  - 746 `sideStrip(type, frac, hMax, aspect, drop)`
-  - 778 `nameStrips(type)`
-  - 814 `stripProud(type, st)`
-  - 837 `stripPaint(type, st)`
-  - 858 `markStrips(type)`
-  - 880 `anchorLen(bw)`
-  - 883 `markRGB(type, liv)`
-  - 891 `hullRGB(type, liv)`
-- **901** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
-  - 912 `facingTris(P, dir, keep)`
-  - 927 `rayZ(T, x, y, dir, za, zb)`
-  - 938 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
-  - 949 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
-  - 960 `halfWidth(T, y, z0, zw, dir, wmax)`
-  - 971 `houseFront(type, P, Gl, V)`
-  - 1004 `transom(type, P, V)`
-  - 1035 `namePlaces(type)`
-  - 1053 `placeRGB(type, p, liv)`
-  - 1061 `nameInkLight(rgb)`
-  - 1065 `npcKit(L, B)`
-  - 1068 `npcModel(type, lod, liv)`
-  - 1070 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **1082** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 1095 `wkPart(name, kit)`
-  - 1105 `wkPut(B, o, ax, s, at)`
-  - 1115 `wkLimb(B, o, A, E, r)`
-  - 1122 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 1144 `vesselSVG(type, w, h)`
-- **1182** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1189 `deckMap(type)`
-  - 1334 `deckPass(M, k, q)`
-  - 1339 `passLine(M, A, B)`
-  - 1341 `linkPass(M, k, q)`
-  - 1345 `deckComp(M)`
-  - 1354 `deckPath(M, a, b)`
-- **1385** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1398 `lanterns(G, V, st)`
-  - 1432 `deckPoints(type)`
+  - 375 `glbParse(b64)`
+  - 399 `glbLoad(type)`
+  - 406 `glbPart(type, name)`
+  - 409 `glbPaint(part, liv)`
+  - 417 `glbZones(type)`
+  - 424 `glbModel(type, lod, liv)`
+  - 449 `vesselSpec(type)`
+  - 450 `buildVesselModel(type, lod, liv)`
+  - 491 `vesselGeo(type, hs, sp, house, anch)`
+  - 503 `vesselModel(type)`
+  - 504 `geoOf(type)`
+- **508** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
+  - 527 `modelLiv(L)`
+  - 534 `hullLiv(b)`
+  - 535 `livKey(liv)`
+  - 537 `livGeo(liv)`
+  - 542 `livStr(b)`
+  - 554 `livPen(s)`
+  - 556 `livMark(s)`
+  - 557 `livParse(s)`
+- **562** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
+  - 566 `topsides(type)`
+  - 584 `designLines(TS, liv)`
+  - 593 `glbDesign(type, part, liv)`
+  - 627 `designFits(type, k)`
+  - 634 `kitLiv(liv)`
+- **636** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
+- **685** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
+  - 696 `logoCanvas(cv, L, img)`
+  - 707 `logoStrips(type)`
+  - 709 `logoStr(L)`
+  - 710 `logoParse(s)`
+  - 714 `flagCanvas(cv, code, shape, logo)`
+  - 726 `flagOf(L)`
+- **727** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
+  - 736 `hullTris(type)`
+  - 750 `sideStrip(type, frac, hMax, aspect, drop)`
+  - 782 `nameStrips(type)`
+  - 818 `stripProud(type, st)`
+  - 841 `stripPaint(type, st)`
+  - 862 `markStrips(type)`
+  - 884 `anchorLen(bw)`
+  - 887 `markRGB(type, liv)`
+  - 895 `hullRGB(type, liv)`
+- **905** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
+  - 916 `facingTris(P, dir, keep)`
+  - 931 `rayZ(T, x, y, dir, za, zb)`
+  - 942 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
+  - 953 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
+  - 964 `halfWidth(T, y, z0, zw, dir, wmax)`
+  - 975 `houseFront(type, P, Gl, V)`
+  - 1008 `transom(type, P, V)`
+  - 1039 `namePlaces(type)`
+  - 1057 `placeRGB(type, p, liv)`
+  - 1065 `nameInkLight(rgb)`
+  - 1069 `npcKit(L, B)`
+  - 1072 `npcModel(type, lod, liv)`
+  - 1074 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **1086** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 1099 `wkPart(name, kit)`
+  - 1109 `wkPut(B, o, ax, s, at)`
+  - 1119 `wkLimb(B, o, A, E, r)`
+  - 1126 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 1148 `vesselSVG(type, w, h)`
+- **1186** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1193 `deckMap(type)`
+  - 1338 `deckPass(M, k, q)`
+  - 1343 `passLine(M, A, B)`
+  - 1345 `linkPass(M, k, q)`
+  - 1349 `deckComp(M)`
+  - 1358 `deckPath(M, a, b)`
+- **1389** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1402 `lanterns(G, V, st)`
+  - 1436 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (473 linjer)
 

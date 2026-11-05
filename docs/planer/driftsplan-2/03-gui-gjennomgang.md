@@ -4,6 +4,8 @@ Dette er en gjennomgang av driftsplanen slik en spiller bruker den på nettbrett
 
 Alt her er målt eller sett på skjermbilder 05.11.2026 på grenen `ccr-3d7eb5bf-vgz41n` (siste commit 4bbef7f4). Ingenting i `src/` er endret. Testen er `tests/driftsplan2gui.py`; den skriver bildene og målingene til `tests/out/driftsplan2gui/` (`maalinger.json`). Bildene som er lenket her, ligger i `03-gui/`, med de tre formatene side om side: 800×1280, 1280×800 og 384×853.
 
+> **Status 05.11.2026:** F1–F7 er rettet samme dag (Jonas: «Kjør på med F1–F7 først, så tar vi resten i en ny økt»); hva som ble gjort, står i `docs/systemer/driftsplan.md` under «Rettingene F1–F7». Jonas' svar: U11 «Ja, så lenge mannskapet og brukeren får den søvnen de trenger», U4 «Ja, pause stopper båten der den er». Resten, og det som ikke kunne testes (kapittel 5), står i `docs/BACKLOG.md`.
+
 ## Sammendrag
 
 - 20 scenarier (pluss tellingene i to andre formater) er spilt med ekte berøring: telefonen, Driftsplan-appen, radene, −/+, forhåndsvalgene, kartet (trykk, dra, kortet), Start, Pause, «Hent redskapet», kopier og slett. 50 tilstander er tatt og målt i hvert av de tre formatene. Testen gir 86 OK og 11 FEIL på 7,5 minutter, uten sidefeil. En kontrollkjøring gjennom `run.py` samme dag ga 86 OK og 12 FEIL: den tolvte er sideveis overflyt i 1280×800 mens fangstlista står over skuffen (se F3).

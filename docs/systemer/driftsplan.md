@@ -99,6 +99,18 @@ Den nye planen ble bygd del for del bak bryteren `DRIFT2` (`core/06g-plan2.js`),
 
 - **GUI-gjennomgangen (05.11.2026):** `docs/planer/driftsplan-2/03-gui-gjennomgang.md`. Planen spilt med ekte berøring i 20 scenarier og tre formater; funnene F1–F7, U1–U14 og P1–P7 venter på Jonas' valg (backloggen). Testen `tests/driftsplan2gui.py` (LITE) trykker på siden og i kartet slik en spiller gjør, teller trykk til en plan som går, og måler overflyt, overlapp og trykkflater; den er rød på funnene til de er rettet.
 
+- **Rettingene F1–F7 etter GUI-gjennomgangen (05.11.2026, Jonas: «Kjør på med F1–F7 først, så tar vi resten i en ny økt»):**
+  - **F2, rorbu som hjem:** `dock` (`core/05-vessels.js`) melder nå planens anløp ved en rorbu til planen (`opsLanded` → `plan2Landed`) når `DRIFT2` er på; den gamle planen landet aldri ved en rorbu, så unntaket står for den. Før ble turen regnet som avsluttet utenfor planen, dagen ble lagt på nytt med en gang, og båten gikk ut igjen hvert kvarter hele kvelden og natta. I tillegg venter en dag som må legges på nytt (ly, overtakelse, feil havn) på hvilen og avgangstida når mannskapet eller du ikke har `DRP2.minDay` (2 t) arbeid igjen (`plan2Spent` i `06h-plan2-engine.js`; «Mannskapet hviler. Neste tur går kl. 05:00 i morgen.»); har de det, legges dagen fra der båten er som før.
+  - **F7, dagens ord:** en grense som alt er nådd, sies som den er («Per er sliten nå (78) og må hvile først»), aldri som negative timer. Et felt som står over dagen, sier når ståtida er ute etter klokka og datoen (`p2When`: «står til ståtida er ute i natt kl. 01:45», «i morgen kl. 05:51», «om 3 døgn, kl. 07:00»), ikke «trekkes i kveld» om en trekking neste morgen. Enhetstesten `tests/unit/plan2.test.mjs`.
+  - **F1:** skuffens klikk (`ui/10c-dock.js`) lar en handling som selv åpnet en annen side, beholde den («Til Mannskap-siden», og knappen på en stoppet plan).
+  - **F3:** fangstlista står til venstre for skuffen i liggende format og er skjult mens skuffen er åpen i stående; den glir inn 12 px i stedet for 16, så den ikke gir sideveis overflyt.
+  - **F4:** `rowsUp` måler hvor høyt dokkas øverste knapp står (`--dkh`), og skuffen i stående format står minst så høyt. De faste 84 px var 1–20 px for lite på telefon til sjøs.
+  - **F5:** værvalgene (Forsiktig/Vanlig/Tøff) klemmes til båtens grenser og viser tallene som blir satt (`wxOf`).
+  - **F6:** linetypene og timene på siden og kartkortet er på engelsk i den engelske utgaven.
+- **Jonas' svar på to spørsmål fra gjennomgangen (05.11.2026), bygges i neste økt:**
+  - **U11, sen avgang:** «Ja, så lenge mannskapet og brukeren får den søvnen de trenger.» En dagdrift kan altså vare til langt på natt etter en sen avgang, men hvilen før neste dag må holde for både mannskapet og deg. Mannskapets hvile er med i dagen (`hvile`-steget); din egen søvn er det ikke helt: med planen og deg om bord ved en rorbu eller naustet starter ikke hvilen din av seg selv (`dock` hopper over `restStart` for planens turer), og avgangen venter da på «Hvil i naustet, på en rorbu eller i køya først».
+  - **U4, Pause:** «Ja, pause stopper båten der den er.» Pause skal stoppe båten der den er (ikke fullføre turen), og siden skal vise det.
+
 ## 5.39 Planleggeren med fem spørsmål (09.10.2026, erstattet 23.10.2026)
 
 Erstattet av den nye driftsplanen, se 5.7. Ideene derfra lever videre: plassene er ferdigheten, planen viser ingen forventet fangst, opptil flere juksplasser etter tur som mannskapet flytter mellom når fangsten faller, og tre værvalg.
