@@ -7,7 +7,7 @@
 // Gear aboard each vessel is S.pgear (a VKEY); gear in the sea is S.sets for the whole company, so the map and 3D can draw every buoy.
 const GEAR = {
   garn:{no:'Garn', en:'Nets', u:['garn', 'garn', 'net', 'nets'], km:0.028, set:0.8, haul:4, hand:2.5, crewMin:2, haulers:['garnhaler'], q:0.07, skill:'garn'},
-  line:{no:'Line', en:'Line', u:['stamp', 'stamper', 'tub', 'tubs'], kmHook:0.0015, set:5, haul:25 / 700, hand:2.0, crewMin:1, haulers:['linehaler'], q:0.032, skill:'line'},
+  line:{no:'Line', en:'Line', u:['stamp', 'stamper', 'tub', 'tubs'], kmHook:0.0015, set:5, haul:25 / 700, hand:2.0, crewMin:1, haulers:['linehaler'], q:0.045, skill:'line'},   // (q 0.032 → 0.045 05.11.2026, K2 in spilltest 3: ERS 2024–2026 gives a median of 185 kg haddock per 1000 hooks, 111 kg a 600-hook tub; redskap.md, Kalibrering)
   teine:{no:'Teiner', en:'Pots', u:['teine', 'teiner', 'pot', 'pots'], km:0.025, set:0.9, haul:1.2, hand:2.5, crewMin:1, haulers:['teinehaler'], q:0.12, skill:'teiner'}
 };
 const LINE_KINDS = {hyse:{no:'Hyseline', en:'Haddock line', hooks:600, price:2100, egn:500, baitKg:5}, bank:{no:'Bankline', en:'Bank line', hooks:300, price:1700, egn:300, baitKg:3}};
