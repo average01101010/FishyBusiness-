@@ -40,18 +40,30 @@ NAMES = ['Havglimt', 'Kvitbris', 'Stormvær', 'Nordglimt', 'Havsula', 'Sølvbøl
          'Havbør', 'Djuphavet', 'Fjordglimt', 'Stormsvale', 'Kvitøy', 'Hopen', 'Isranda', 'Vestbanken', 'Djupbanken', 'Polarbris']   # made up: no real vessel's name (CLAUDE.md)
 H01 = lambda *a: int(hashlib.sha256(repr(a).encode()).hexdigest()[:12], 16) / 16 ** 12
 
+# the core's layers as arrays with their extents (H1b R6, 05.11.2026): the old frame's 200 m land, and over the whole wide frame the 1 km
+# land and the sea floor (GEBCO with Kartverket's 50 m, 'u8p' since R2: read through tools/map/pack.py, which undoes the predictor; the
+# old reader took the bytes as they were, and from R2 its depths were the predictor's residuals)
 def core(game):
-    man = json.load(open(os.path.join(game, 'manifest.json'))); out = {}
-    for name in ('land200', 'deep'):
-        L = man['layers'][name]; n = L['n']; A = np.zeros((L['ny'], L['nx']), np.uint8)
-        for p in man['packs']:
-            if p['kind'] != 'core': continue
-            data = open(os.path.join(game, p['file']), 'rb').read(); hl = int.from_bytes(data[4:8], 'little'); head = json.loads(data[8:8 + hl]); at = 8 + hl
-            for l, bx, by, off, ln, *_ in head['blocks']:
-                if l != name: continue
-                A[by * n:(by + 1) * n, bx * n:(bx + 1) * n] = np.frombuffer(zlib.decompress(data[at + off:at + off + ln], -15), np.uint8).reshape(n, n)
-        out[name] = (A, L['c'])
+    sys.path.insert(0, os.path.join(ROOT, 'tools', 'map')); import pack
+    out = {}
+    for name in ('land200', 'land1k', 'deep'):
+        A, L = pack.read_layer(game, name); out[name] = (A, L)
     return out
+
+# the sea ice by month (src/data/is.json, H1b R5): 12 arrays of % on the 25 km grid, and the reader at a point (bilinear like 03h-is.js)
+def ice_months():
+    import base64
+    D = json.load(open(os.path.join(ROOT, 'src', 'data', 'is.json'))); N = D['nx'] * D['ny']; out = []
+    for s64 in D['m']:
+        b = base64.b64decode(s64); a = np.zeros(N, np.float32); k = 0
+        for i in range(0, len(b) - 1, 2): a[k:k + b[i + 1]] = b[i] * D['step']; k += b[i + 1]
+        out.append(a.reshape(D['ny'], D['nx']))
+    def at(m, x, y):
+        u = x / D['c'] - D['ix0'] - 0.5; v = y / D['c'] - D['iy0'] - 0.5; i = math.floor(u); j = math.floor(v); fu = u - i; fv = v - j; A = out[m]
+        g = lambda a, b: 0.0 if a < 0 or b < 0 or a >= D['nx'] or b >= D['ny'] else float(A[b, a])
+        return (g(i, j) * (1 - fu) + g(i + 1, j) * fu) * (1 - fv) + (g(i, j + 1) * (1 - fu) + g(i + 1, j + 1) * fu) * fv
+    return at
+ICE_LIM = 40   # SEA_ICE_LIM in 03h-is.js
 
 def rules_polys():
     R = json.load(open(os.path.join(ROOT, 'src', 'data', 'rules.json'))); U = R.get('unit', 0.01)
@@ -89,13 +101,21 @@ def kommunepunkt(knr):
 def main(game):
     F = json.load(open(os.path.join(ROOT, 'src', 'data', 'fiske.json'))); M = F['meta']; G = M['gear']; ny = M.get('ny', 1)
     MO = [m for m in json.load(open(os.path.join(ROOT, 'src', 'data', 'mottak.json')))['m'] if m.get('q') and m.get('p')]
-    C = core(game); LAND, lc = C['land200']; DEEP, dc = C['deep']
-    land = lambda x, y: not (0 <= x < 1450 and 0 <= y < 1720) or LAND[min(LAND.shape[0] - 1, int(y / lc)), min(LAND.shape[1] - 1, int(x / lc))] == 1
-    depth = lambda x, y: float(DEEP[min(DEEP.shape[0] - 1, int(y / dc)), min(DEEP.shape[1] - 1, int(x / dc))]) * 10 if 0 <= x < 1450 and 0 <= y < 1720 else 0
+    C = core(game); LAND, L2 = C['land200']; lc = L2['c']; LAND1, L1 = C['land1k']; DEEP, LD = C['deep']; ICE = ice_months()
+    def cell(A, L, x, y):
+        i, j = math.floor(x / L['c']) - L['ix0'], math.floor(y / L['c']) - L['iy0']
+        return A[j, i] if 0 <= i < L['nx'] and 0 <= j < L['ny'] else None
+    # the old frame's 200 m land where it is, else the wide frame's 1 km (as isLandFar in the game); off both: land
+    def land(x, y):
+        v = cell(LAND, L2, x, y) if 0 <= x < 1450 and 0 <= y < 1720 else None
+        if v is None: v = cell(LAND1, L1, x, y)
+        return v is None or v == 1
+    depth = lambda x, y: float(cell(DEEP, LD, x, y) or 0) * 10
     # (skip: the first stretch from a left out, the plant's own cell that may be land on this map; at b only when both)
     def clear(a, b, skip=0.0, both=True):
         d = math.hypot(b[0] - a[0], b[1] - a[1]); n = max(1, int(d / 0.05))   # (every 50 m: a leg grazing a cell's corner is caught)
-        return all(not land(a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n) for k in range(n + 1) if d * k / n >= skip and (not both or d * (n - k) / n >= skip))
+        # (from b's end: the land, when there is any, is mostly by the fairway node or the plant, so a long leg over the sea fails at once)
+        return all(not land(a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n) for k in range(n, -1, -1) if d * k / n >= skip and (not both or d * (n - k) / n >= skip))
     P = rules_polys(); KN = kommunenavn()
     # the vessels by kommune and gear
     ves = []
@@ -127,6 +147,9 @@ def main(game):
                         d = depth(x, y)
                         if relax == 1 and not (lo <= d <= hi): continue
                         if d < 20 or any(math.hypot(x - a, y - b) < 4 for a, b in pts): continue
+                        # (H1b R6) not in the drift ice in the months the area has its landings (the mean, weighted by the kilos, under ICE_LIM)
+                        tot = sum(kg) or 1
+                        if sum(kg[m] * ICE(m, x, y) for m in range(12)) / tot >= ICE_LIM: continue
                         # off the land: 6 km for trawl, line and pots (28 m and over fish outside 4 nm, J-161-2026 § 32), 2 km for the rest
                         R0 = 6 if g in ('tral', 'line', 'teine') else 2
                         if all(not land(x + math.sin(a) * r, y + math.cos(a) * r) for r in (R0 / 2, R0) for a in [k2 * math.pi / 4 for k2 in range(8)]): pts.append((round(x, 2), round(y, 2)))
@@ -222,7 +245,8 @@ def main(game):
     for g, out in grounds.items():
         for e in out:
             if e[1] is None: e.append([]); continue
-            a = access((e[1], e[2]), 250, 40, 0) or access((e[1], e[2]), 600, 80, 0)
+            # (H1b R6: the grounds off Svalbard, Iceland and in the Russian zone lie 600-1 800 km from the mainland's fairways)
+            a = access((e[1], e[2]), 250, 40, 0) or access((e[1], e[2]), 600, 80, 0) or access((e[1], e[2]), 2000, 400, 0)
             if not a: noWay += 1
             e.append([[i, round(d, 2)] for i, d in a[:6]])
     # the plant each ground's catch is landed at (task 2, 03.11.2026): the nearest along the fairways that takes the gear and has a quay
