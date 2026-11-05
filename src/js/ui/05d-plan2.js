@@ -187,8 +187,9 @@ const PLAN2UI = (() => {
   // only there, docs/handelssteder.md): Autonav, as the trade pages have it, or the page itself when the boat lies there
   const PLACEPG = {butikk:['fiske', 'utstyrsbutikken', 'the tackle shop'], verft:['utstyr', 'verftet', 'the yard']};
   function placeWay(k){ const n = placesNear(S.boat.pos, k, 1)[0], P = PLACEPG[k]; if (!n) return ''; const here = S.boat.status === 'port' && S.boat.port === n.pt.id;
-    return here ? B('open', L('Til ' + P[1] + ' her i ' + n.pt.name, 'To ' + P[2] + ' here at ' + n.pt.name), 'data-a="' + P[0] + '"', 'p')
-      : B('goplace', L('Autonav til ' + P[1] + ' i ' + n.pt.name + ' · ' + fmt(n.d / NM, 1) + ' nm', 'Autonav to ' + P[2] + ' at ' + n.pt.name + ' · ' + fmt(n.d / NM, 1) + ' nm'), 'data-id="' + n.pt.id + '"', 'p'); }
+    // (the place's name says what it is: «Skaland utstyrsbutikk»)
+    return here ? B('open', L('Til ' + P[1] + ' her', 'To ' + P[2] + ' here'), 'data-a="' + P[0] + '"', 'p')
+      : B('goplace', L('Autonav til ', 'Autonav to ') + n.pt.name + ' · ' + fmt(n.d / NM, 1) + ' nm', 'data-id="' + n.pt.id + '"', 'p'); }
   // a reason the plan is not ready, as the way to what mends it (GUI review U13): the row, the Crew page or the quota; the shop and the yard by their way
   const why = (e, go) => PLACEPG[go] ? '<p class="bad">' + e + '</p>' + placeWay(go) : go ? '<button class="dr-why" data-pa="p2-go" data-go="' + go + '"><span>' + e + '</span><b>›</b></button>' : '<p class="bad">' + e + '</p>';
   // ---- the top: Start or Pause, Nå, and the button that fixes a stop
