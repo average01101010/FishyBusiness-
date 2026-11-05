@@ -6,8 +6,8 @@ Alt her er målt eller sett på skjermbilder 05.11.2026 på grenen `ccr-3d7eb5bf
 
 ## Sammendrag
 
-- 20 scenarier (pluss tellingene i to andre formater) er spilt med ekte berøring: telefonen, Driftsplan-appen, radene, −/+, forhåndsvalgene, kartet (trykk, dra, kortet), Start, Pause, «Hent redskapet», kopier og slett. 50 tilstander er tatt og målt i hvert av de tre formatene. Testen gir 86 OK og 11 FEIL på 7,5 minutter, uten sidefeil.
-- **Det beste:** en ny plan er klar med to trykk fra «Lag driftsplan» (fire fra lukket telefon). Ingen sideveis overflyt, ingen kuttet tekst, ingen knapper utenfor skjermen. Planlista og kortet i kartet dekker aldri hverandre eller den valgte nåla. «Nå» stemte med det båten gjorde hver time i 26 timer. Låste valg sier hvorfor på selve knappen.
+- 20 scenarier (pluss tellingene i to andre formater) er spilt med ekte berøring: telefonen, Driftsplan-appen, radene, −/+, forhåndsvalgene, kartet (trykk, dra, kortet), Start, Pause, «Hent redskapet», kopier og slett. 50 tilstander er tatt og målt i hvert av de tre formatene. Testen gir 86 OK og 11 FEIL på 7,5 minutter, uten sidefeil. En kontrollkjøring gjennom `run.py` samme dag ga 86 OK og 12 FEIL: den tolvte er sideveis overflyt i 1280×800 mens fangstlista står over skuffen (se F3).
+- **Det beste:** en ny plan er klar med to trykk fra «Lag driftsplan» (fire fra lukket telefon). Ingen sideveis overflyt (med ett unntak under F3), ingen kuttet tekst, ingen knapper utenfor skjermen. Planlista og kortet i kartet dekker aldri hverandre eller den valgte nåla. «Nå» stemte med det båten gjorde hver time i 26 timer. Låste valg sier hvorfor på selve knappen.
 - **Det verste (F2):** med en rorbu som hjem, som en ny plan velger i en mottakshavn, går dagdriften ut igjen hvert kvarter hele kvelden og natta. Mannskapet kommer over 90 i slitenhet (grensen er 72), og du ned i 14 % energi. Årsaken er funnet: et anløp ved rorbu meldes ikke til planen (`05-vessels.js:902`).
 - **Feil i grensesnittet:** «Til Mannskap-siden» blir stående på Driftsplan (F1). Fangstlista ligger over skuffen (F3), og dokka dekker bunnen av skuffen på telefon til sjøs (F4). «Tøff» setter vinden over båtens grense (F5). Den engelske utgaven har norske ord (F6), og dagens forklaringer viser negative timer (F7).
 - **Friksjon:** skuffen er bare 55 % av høyden i stående format (U1). 49 ulike trykkflater er under 44 px (U7). Pause lar båten fortsette turen uten «Nå» (U4). Grunnen for låst døgndrift på en båt som aldri kan gå døgndrift, er misvisende (U2).
@@ -78,6 +78,7 @@ Hvert funn har en ID som Jonas kan velge fra. «Sett» betyr på skjermbildet; �
 - **Hvor:** `styles.css:1503` (`#catchFeed` med z-index 5 i `#app`, skuffen ligger i `#mapwrap`).
 - **Formater:** alle.
 - **Bilder:** [s17-i-drift-naa-idag.jpg](03-gui/s17-i-drift-naa-idag.jpg), [s11-dogndrift-kveld.jpg](03-gui/s11-dogndrift-kveld.jpg)
+- **Overflyt (målt i kontrollkjøringen):** i 1280×800 ga tilstanden `s17-i-drift/naa-idag` sideveis overflyt på dokumentet samtidig med overlappen `drawer×div.cf-rate`. Ingenting stikker ut på skjermbildet, og den første kjøringen målte ingen overflyt. Antatt: en fangstflis som glir inn fra høyre, er utenfor kanten et øyeblikk. Den forsvinner trolig med samme retting.
 - **Forslag:** skjul fangstlista mens skuffen er åpen (`body.dk-open #catchFeed{display:none}`), eller flytt den til venstre for skuffen i liggende format og over den i stående.
 
 **F4 – Dokka dekker bunnen av skuffen på telefon til sjøs.**
