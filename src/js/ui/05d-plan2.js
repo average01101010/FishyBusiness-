@@ -69,20 +69,32 @@ const PLAN2UI = (() => {
     h.push('</div><p class="ph-note">' + L('Tidene er anslag fra planen selv. Blir lasten full, leverer mannskapet tidligere. Været avgjør resten.', 'The times are the plan\'s own estimates. If the hold fills, the crew land sooner. The weather decides the rest.') + '</p></div>');
     return h.join('');
   }
-  // ---- Hjem
+  // ---- Hjem (GUI review U14 A, 05.11.2026): the naust first, then the rorbuer nearest the places, then the rest; no yard (it is no home);
+  // each line says what sets it apart: the baiting shed (a plant), the rest for you and for the crew, and the way to the places
   function homeOpts(o){
     const b = S.boat, here = b.status === 'port' ? b.port : nearestPort(b.pos).id, p0 = portById(here).p, home = S.home || HOME0, out = [];
-    const add = id => { const p = portById(id); if (!p || out.some(q => q.id === id)) return; out.push({id, d:dist(p.p, p0)}); };
-    add(here); if (portById(home) && dist(portById(home).p, p0) < 80) add(home); if (o.home) add(o.home);
-    try { for (const R of rorbuSites(p0, 40).slice(0, 3)) add(R.id); } catch (e){}
+    const add = id => { const p = portById(id); if (!p || out.some(q => q.id === id)) return; if (id !== o.home && portServices(p).verft) return; out.push({id}); };
+    if (portById(home) && dist(portById(home).p, p0) < 80) add(home); add(here); if (o.home) add(o.home);
+    try { for (const R of rorbuSites(p0, 40).slice(0, 4)) add(R.id); } catch (e){}
     const hids = new Set(out.map(q => isBerth(q.id) && portById(q.id).hid).filter(Boolean));
     for (const q of havnOptions(p0, 25).filter(q => !hids.has(q.place.hid)).slice(0, 3)) add(q.place.id);
-    for (const q of PORTS.filter(q => !q.rorbu && dist(q.p, p0) < 30).sort((a, c) => dist(a.p, p0) - dist(c.p, p0)).slice(0, 4)) add(q.id);
-    const rank = id => plan2RestOk(id) && !portServices(portById(id)).mottak && !portServices(portById(id)).verft && !portServices(portById(id)).butikk ? 0 : isBerth(id) ? 1 : 2;
+    for (const q of PORTS.filter(q => !q.rorbu && dist(q.p, p0) < 30).sort((a, c) => dist(a.p, p0) - dist(c.p, p0)).slice(0, 5)) add(q.id);
+    const mid = placesMid(o) || p0; for (const q of out) q.d = dist(portById(q.id).p, mid);
+    const rank = id => id === home ? 0 : isRorbu(id) ? 1 : 2;
     return out.sort((a, c) => rank(a.id) - rank(c.id) || a.d - c.d).slice(0, 8);
   }
+  const placesMid = o => { const P = o.places; return P.length ? {x:P.reduce((a, q) => a + q.x, 0) / P.length, y:P.reduce((a, q) => a + q.y, 0) / P.length} : null; };
+  // what one home gives: the baiting shed (with line), your rest, the crew's rest, and how far the places are
+  function homeSub(o, q){
+    const id = q.id, P = portById(id), crewOk = plan2RestOk(id), me = id === (S.home || HOME0) ? L('du sover i naustet', 'you sleep in the naust') : isRorbu(id) ? L('du sover på rorbua (' + kr(RORBU.kr) + ' natta)', 'you sleep at the rorbu (' + kr(RORBU.kr) + ' a night)') : (VESSELS[S.boat.type].berths || 0) > 0 ? L('du sover i køya', 'you sleep in the bunk') : L('ingen hvile for deg', 'no rest for you');
+    const out = [];
+    if (p2Kind(o) === 'line') out.push(P.mottak ? L('egnebu', 'baiting shed') : L('ingen egnebu', 'no baiting shed'));
+    out.push(me, crewOk ? L('mannskapet sover godt', 'the crew sleep well') : L('mannskapet hviler dårlig', 'the crew rest poorly'));
+    out.push(fmt(q.d / NM, 1) + ' nm ' + (o.places.length ? L('til plassene', 'to the places') : L('unna', 'away')));
+    const s = out.join(' · '); return s.charAt(0).toUpperCase() + s.slice(1);
+  }
   function homeBody(o){
-    const h = homeOpts(o).map(q => BIG('p2-home', nm(q.id) + ' <span class="dr-k">(' + kindName(q.id) + ')</span>', (plan2RestOk(q.id) ? L('Mannskapet sover godt her', 'The crew sleep well here') : L('Ingen køyer: mannskapet hviler dårlig', 'No bunks: the crew rest poorly')) + (q.d > 0.2 ? ' · ' + km(portById(q.id).p, portById(S.boat.status === 'port' ? S.boat.port : nearestPort(S.boat.pos).id).p) + L(' unna', ' away') : ''), o.home === q.id, 'data-p="' + q.id + '"')).join('');
+    const h = homeOpts(o).map(q => BIG('p2-home', nm(q.id) + ' <span class="dr-k">(' + kindName(q.id) + ')</span>', homeSub(o, q), o.home === q.id, 'data-p="' + q.id + '"')).join('');
     const big = (BOAT.len || 0) >= DRP.bigLen ? '<h4 style="margin-top:12px">' + L('Om natta', 'At night') + '</h4>' + BIG('p2-anchor', L('Ved kai', 'At the quay'), L('Båten ligger fortøyd hjemme', 'The boat lies moored at home'), !o.anchor, 'data-v="0"') + BIG('p2-anchor', L('Til ankers nær havna', 'At anchor near the harbour'), L('Vanlig for store båter. Blir natta for hard for ankerplassen, ligger hun ved kai.', 'Usual for big boats. When the night is too hard for the anchorage, she lies at the quay.'), !!o.anchor, 'data-v="1"') : '';
     return '<p class="ph-note">' + L('Her ligger båten mellom dagene, og her sover mannskapet og egner lina.', 'Here the boat lies between the days, and here the crew sleep and bait the line.') + '</p>' + h + big;
   }
