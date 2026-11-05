@@ -59,7 +59,8 @@ const WORK = (() => {
     if (last) h += '<p class="wk-last">«' + last[S.lang] + '» <span class="ph-note">' + hm(last.t / 60) + '</span></p>';
     if (role) h += '<p class="ph-note">' + L('Fast på ', 'Regular at ') + sn(role).toLowerCase() + '</p>';
     // the skipper runs the boat and the operations plan when you are not aboard, the mate is at the helm when you sleep (13-work.js)
-    if (c && (!c.mate || !c.sk)) h += '<div class="ph-row2">' + (c.sk ? '' : '<button class="ph-btn wk-edit" data-pa="wk-sk" data-id="' + id + '">' + L('Gjør til skipper', 'Make skipper') + '</button>') + (c.mate ? '' : '<button class="ph-btn wk-edit" data-pa="wk-mate" data-id="' + id + '">' + L('Gjør til styrmann', 'Make mate') + '</button>') + '</div>';
+    // (the skipper's card offers no «Gjør til styrmann»: a tap there took the skipper away and the plan went «Ikke klar ennå», GUI review U10)
+    if (c && !c.sk) h += '<div class="ph-row2">' + '<button class="ph-btn wk-edit" data-pa="wk-sk" data-id="' + id + '">' + L('Gjør til skipper', 'Make skipper') + '</button>' + (c.mate ? '' : '<button class="ph-btn wk-edit" data-pa="wk-mate" data-id="' + id + '">' + L('Gjør til styrmann', 'Make mate') + '</button>') + '</div>';
     if (c && card === id) h += personCard(c);
     return h + '</div>';
   }

@@ -342,7 +342,7 @@ async def s02_ikke_klar(c):
     back = await c.wait("DOCK.page === 'drift'", 5)
     st2 = await c.where('.dr-onoff')
     c.check(roles == {'sk': 'Ole Mikalsen', 'mate': 'Per Hansen'} and back and st2 and not st2['dis'], 'skipper og styrmann utnevnt med trykk, og tilbake på Driftsplan er Start klar', {'roller': roles, 'trykk': c.since(m), 'knapp': st2 and st2['txt']})
-    c.note('skipperens eget kort tilbyr fortsatt «Gjør til styrmann»', sk_mate_btn)
+    c.check(not sk_mate_btn, 'U10: skipperens kort tilbyr ikke «Gjør til styrmann»', sk_mate_btn)
     await c.press('[data-pa="p2-start"]', name='Start planen')
     c.check(await c.wait("S.ops && S.ops.on", 30), 'planen går uten deg om bord', c.since(m))
 
