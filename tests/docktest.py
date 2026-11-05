@@ -1,7 +1,7 @@
 """The dock (ui/10c-dock.js): round buttons along the bottom that follow what the boat is doing, the fans for Marked, Bygd and Verft,
 the drawer at the side (a sheet from below when the screen stands), and the phone with only the apps that are left. Lying and
 standing like a tablet, with touch. Prints OK or FEIL per check, and screenshots to tests/out/dock_*.png."""
-from _env import GAME
+from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
 
@@ -27,7 +27,9 @@ async def run(p, w, h, tag):
         else: print('     (finner ikke ' + sel + ')')
         return r
 
-    await pg.goto(GAME); await pg.wait_for_timeout(1500); await tap_el('#obGo'); await pg.wait_for_timeout(600)
+    # boot() waits for «Båten etter far» and closes it: a fixed 1.5 s and a tap on #obGo left the modal over the dock now and then
+    # (13 FEIL 05.11.2026, all the fans; Ø2)
+    await boot(pg)
     await pg.wait_for_function("G3.isActive() || document.body.classList.contains('vplot')", timeout=90000); await pg.wait_for_timeout(800)
     J = lambda js: pg.evaluate("JSON.stringify(" + js + ")")
     ids = lambda: pg.evaluate("[...document.querySelectorAll('#dock [data-dk]')].map(x => x.dataset.dk)")

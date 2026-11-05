@@ -384,7 +384,7 @@ function haulSlow(g){
 function gearOpMinute(H, W, hs){
   const b = S.boat, g = b.gop;
   if (handsAboard() < GEAR[g.kind].crewMin){ gopAbort('crew'); return; }
-  if (g.op === 'haul' && holdTotal() >= capHold() - 0.01){ log('Lasten er full. Resten av redskapet står igjen.', 'The hold is full. The rest of the gear stays in the sea.'); gopAbort('full'); return; }
+  if (g.op === 'haul' && holdLoad() >= capHold() - 0.01){ log('Lasten er full. Resten av redskapet står igjen.', 'The hold is full. The rest of the gear stays in the sea.'); gopAbort('full'); return; }
   // the catch of one unit comes aboard in slices as the string comes over the rail, not all at the end (tilbakemelding #30: «fisken
   // kommer om bord etter hvert, så man kan sløye underveis»): per 100 hooks on a line, in thirds on a net, a pot at once
   if (g.lead > 0){ g.lead--; b.v = 0.3; g.mv = null; return; }   // the end lines first
@@ -400,6 +400,9 @@ function gearOpMinute(H, W, hs){
   const df = Math.min(1, f + (step > 0 && isFinite(step) ? step / g.n : 0)) - f; g.mv = {x:(g.b.x - g.a.x) * df, y:(g.b.y - g.a.y) * df, t:S.t};
   if (Math.hypot(g.b.x - g.a.x, g.b.y - g.a.y) > 1e-6) b.heading = Math.atan2(g.b.x - g.a.x, -(g.b.y - g.a.y));
   b.v = 2.5;
+  // an ocean vessel's main engine along the string at the gear's pace (the autoline set at about 8 knots, hauled at under 2), on top of
+  // her generators (05-vessels.js plantFuel; H2b 05.11.2026). The coast boats' gear work burns nothing, as before
+  if (BOAT.plantLph) fuelUse(b, fuelLph(Math.hypot(g.mv.x, g.mv.y) / gridScale(b.pos) * 60 / NM, W) / 60);
   if (g.done >= g.n) (g.op === 'set' ? finishSet : finishHaul)(g, H);
 }
 function finishSet(g, H){
@@ -483,7 +486,7 @@ function haulUnit(g, H, SL){
 }
 // kg of one species from the gear becomes single fish of the sizes this gear takes; undersized and closed-season fish go back
 function landFish(sp, kg, key, mesh, p, H, hook, fresh, g){
-  const acc = S.gacc || (S.gacc = {}), nx = S.gnext || (S.gnext = {}); let got = 0, room = capHold() - holdTotal();
+  const acc = S.gacc || (S.gacc = {}), nx = S.gnext || (S.gnext = {}); let got = 0, room = capHold() - holdLoad();
   acc[sp] = (acc[sp] || 0) + kg;
   while (room > 0.01){
     if (!nx[sp]) nx[sp] = sampleSel(sp, key, mesh, p, H);
@@ -508,7 +511,7 @@ function sampleSel(sp, key, mesh, p, H){ let w = 0; for (let i = 0; i < 24; i++)
 // king crab: sex, weight and damage are drawn as each comes up, and all of it is kept (west of 26° E it is forbidden to put king crab
 // back, J-138-2026 § 5), in Råfisklaget's classes (SPECIES.krabbe.cls)
 function landCrabs(g, n, kg){
-  S.gacc = S.gacc || {}; S.gacc.crabN = (S.gacc.crabN || 0) + n; let room = capHold() - holdTotal();
+  S.gacc = S.gacc || {}; S.gacc.crabN = (S.gacc.crabN || 0) + n; let room = capHold() - holdLoad();
   while (S.gacc.crabN >= 1 && room > 0.05){
     S.gacc.crabN -= 1;
     const fem = Math.random() < KC.fem, W = fem ? KC.wf : KC.wm, w = Math.max(0.3, Math.round(W[0] * Math.exp(W[1] * gauss(Math.random(), Math.random())) * 100) / 100);
@@ -539,7 +542,7 @@ function finishHaul(g, H){
   // several tubs as one line, so those count the string; each pot is its own. Its colour is the haul per unit against a fair one
   // (08.10.2026: per unit for all three, a tub, a net and a pot, with the soak; the colour is the haul against a usual one for that soak, HEATG)
   { const kgu = g.kg / Math.max(1, s.n), soak = Math.round(g.soak || 0), fair = (HEATG.fair[s.kind] || 1) * heatSoakShare(s.kind, soak || HEATG.T);
-    S.marks.push({x:setMid(s).x, y:setMid(s).y, t:S.t, kgph:0, g:s.kind, kgu:Math.round(kgu * 10) / 10, soak, q:Math.round(kgu / fair * 100) / 100}); if (S.marks.length > 80) S.marks.shift(); }
+    S.marks.push({x:setMid(s).x, y:setMid(s).y, t:S.t, kgph:0, g:s.kind, kgu:Math.round(kgu * 10) / 10, soak, q:Math.round(kgu / fair * 100) / 100, lf:luck()}); if (S.marks.length > 80) S.marks.shift(); }
   // set the same gear again where it stood (line has to be baited in port first)
   if (g.reset && back > 0 && (s.kind !== 'line' || isAuto(s.lk))){
     const spec = s.kind === 'garn' ? {nid:S.pgear.nets[S.pgear.nets.length - 1].id} : s.kind === 'line' ? {lk:s.lk, n:back, bait:s.bait} : {pot:s.pot, n:back}; if (s.fid) spec.fid = s.fid;

@@ -23,7 +23,10 @@ async def run(p, hold):
     pg = await (await p.new_context(viewport={'width': 900, 'height': 700})).new_page()
     errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
     await boot(pg)
-    await pg.evaluate('S.mult = 0')
+    # the game's own tick is held for the whole trip (TAB.held): it played minutes of wall-clock time between the test's steps, and
+    # after the pack came it played the rest itself, so the trip ended a minute late or with another catch now and then (68.4 against
+    # 61.69 kg; docs/BACKLOG.md 10.6, Ø2 05.11.2026). The test plays what is left the way tick() does (playMinutes(n, true))
+    await pg.evaluate('S.mult = 0; TAB.held = true')
     pk = await pg.evaluate("(([e, f]) => { const at = q => mapPacksIn('sim', q.x, q.y, q.x, q.y)[0].file; return {file:at(e), other:at(f)}; })", [R[-1], R[0]])
     R0 = {'pack': pk}
     gate = asyncio.Event()
@@ -40,7 +43,11 @@ async def run(p, hold):
         R0['held'] = await pg.evaluate(OUT)   # the clock stands while the pack is held back
         R0['ready'] = await pg.evaluate("mapReadyAt(S.boat.pos, MAPD.simR)")
         gate.set()
-        await pg.wait_for_function("CATCH_LEFT === 0", timeout=60000)
+        await pg.wait_for_function("mapReadyAt(S.boat.pos, MAPD.simR)", timeout=60000)
+        for _ in range(100):
+            left = await pg.evaluate("(() => { if (CATCH_LEFT > 0 && simAreaReady()){ DYN.on = false; const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n, true); } return CATCH_LEFT; })()")
+            if not left: break
+            await pg.wait_for_timeout(300)
     R0['end'] = await pg.evaluate(OUT)
     R0['errs'] = errs
     return R0

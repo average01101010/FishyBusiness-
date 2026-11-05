@@ -82,7 +82,8 @@ async function mfa(){
 // ---------- the numbers ----------
 async function load(){
   try { DATA = DEMO ? demo() : await rpc('admin_dashboard', {days:DAYS}); render(); }
-  catch (e){ if (SES) $('#app').innerHTML = '<main><div class="card warn">' + esc(e.message) + '</div><button onclick="SES=null;sessionStorage.clear();render()">Logg inn på nytt</button></main>'; }
+  catch (e){ if (SES){ $('#app').innerHTML = '<main><div class="card warn">' + esc(e.message) + '</div><button id="reLogin">Logg inn på nytt</button></main>';
+    $('#reLogin').onclick = () => { SES = null; sessionStorage.clear(); render(); }; } }   // (no onclick in the HTML: the page's CSP allows only its own script)
 }
 const TABS = [['oversikt', 'Oversikt'], ['trakt', 'Trakt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['agent', 'Agent'], ['logoer', 'Logoer'], ['navn', 'Brukernavn'], ['avis', 'Kystposten'], ['merker', 'Merker'], ['kommer', 'Kommer'], ['sponsorer', 'Sponsorer'], ['mediekort', 'Mediekort']];
 function render(){
@@ -114,7 +115,7 @@ function bars(obj, fmt){ const e = Object.entries(obj || {}).sort((a, b) => b[1]
 function table(rows, cols){ if (!rows || !rows.length) return '<p class="note">Ingen data ennå.</p>'; return '<table><tr>' + cols.map(c => '<th>' + c[1] + '</th>').join('') + '</tr>' + rows.map(r => '<tr>' + cols.map(c => '<td>' + (c[2] ? c[2](r[c[0]], r) : esc(r[c[0]])) + '</td>').join('') + '</tr>').join('') + '</table>'; }
 function daily(d){ const W = 900, H = 200, n = Math.max(1, d.length), bw = W / n, mh = Math.max(0.1, ...d.map(x => x.hours)), ms = Math.max(1, ...d.map(x => x.sessions));
   let s = '<svg viewBox="0 0 ' + W + ' ' + (H + 30) + '" width="100%">';
-  d.forEach((x, i) => { const h = H * x.hours / mh, y = H - h; s += '<rect x="' + (i * bw + 1) + '" y="' + y + '" width="' + Math.max(1, bw - 2) + '" height="' + h + '" fill="#4b9be0"><title>' + x.day + ': ' + nf(x.hours) + ' t, ' + x.sessions + ' økter, ' + x.players + ' spillere, ' + Object.entries(x.browsers || {}).map(e => e.join(' ')).join(', ') + '</title></rect>';
+  d.forEach((x, i) => { const h = H * x.hours / mh, y = H - h; s += '<rect x="' + (i * bw + 1) + '" y="' + y + '" width="' + Math.max(1, bw - 2) + '" height="' + h + '" fill="#4b9be0"><title>' + esc(x.day + ': ' + nf(x.hours) + ' t, ' + x.sessions + ' økter, ' + x.players + ' spillere, ' + Object.entries(x.browsers || {}).map(e => e.join(' ')).join(', ')) + '</title></rect>';
     s += '<circle cx="' + (i * bw + bw / 2) + '" cy="' + (H - H * x.sessions / ms) + '" r="2.5" fill="#f2b33d"/>'; if (n <= 31 || i % Math.ceil(n / 15) === 0) s += '<text x="' + (i * bw + bw / 2) + '" y="' + (H + 14) + '" text-anchor="middle">' + x.day.slice(5) + '</text>'; });
   return s + '</svg><p class="note">Søyler: timer spilt. Prikker: økter. Hold over en søyle for nettleserne.</p>'; }
 function heat(hm){ const g = {}; let m = 0; (hm || []).forEach(x => { g[x.dow + ':' + x.hour] = x.hours; m = Math.max(m, x.hours); }); const days = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
@@ -224,7 +225,9 @@ async function fbLoad(){
 }
 const opts = (o, cur, all) => '<option value="">' + all + '</option>' + Object.entries(o).map(([k, v]) => '<option value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + esc(v) + '</option>').join('');
 function fbMeta(m){
-  m = m || {}; const pos = m.pos ? '<a href="https://www.norgeskart.no/#!?zoom=12&lat=' + m.pos[0] + '&lon=' + m.pos[1] + '&project=norgeskart&layers=1002&sok=' + m.pos[0] + ',' + m.pos[1] + '" target="_blank" rel="noopener">' + m.pos[0] + ', ' + m.pos[1] + '</a>' : '–';
+  // the place only as two numbers: meta comes from the player, and text here would run with the admin session (Ø6 funn 1, 05.11.2026)
+  m = m || {}; const la = Array.isArray(m.pos) ? Number(m.pos[0]) : NaN, lo = Array.isArray(m.pos) ? Number(m.pos[1]) : NaN;
+  const pos = Number.isFinite(la) && Number.isFinite(lo) ? '<a href="https://www.norgeskart.no/#!?zoom=12&lat=' + la + '&lon=' + lo + '&project=norgeskart&layers=1002&sok=' + la + ',' + lo + '" target="_blank" rel="noopener">' + la + ', ' + lo + '</a>' : '–';
   return esc([m.version, m.platform + '/' + m.browser + (m.pwa ? ' (app)' : ''), m.w + '×' + m.h + ' @' + m.dpr, m.view + (m.lvl != null ? ' nivå ' + m.lvl : '') + (m.fps ? ' · ' + m.fps + ' fps' : '') + ' · ' + m.quality].join(' · ')) +
     '<br>' + esc([m.boat, m.st, m.port, 'dag ' + Math.floor((m.t || 0) / 1440), m.tut ? 'veiledning: ' + m.tut : null].filter(Boolean).join(' · ')) + ' · ' + pos;
 }
@@ -285,7 +288,7 @@ VIEW.agent = () => {
     kpi('Kjøringer med noe nytt', nf(AG.length, 0), 'de siste 30') + kpi('PR-er åpnet', nf(AG.reduce((a, r) => a + (r.prs || []).length, 0), 0), '<a href="' + PRS + '" target="_blank" rel="noopener">Åpne PR-er i GitHub</a>') + '</div>' +
     '<div class="card"><button id="agR">Oppdater</button> <span class="note">Agenten leser de nye tilbakemeldingene kl. 05.58, 11.58, 17.58 og 23.58, uten å vite hvem som skrev dem. Den svarer aldri spillerne selv: forslagene står under hver tilbakemelding.</span></div>' +
     (AG.length ? AG.map(r => '<div class="card"><h3>' + new Date(r.ts).toLocaleString('nb-NO') + ' · ' + nf(r.n, 0) + ' nye</h3><div class="fbbody">' + md(r.report) + '</div>' +
-      ((r.prs || []).length ? '<p>' + r.prs.map(x => '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.title || x.url) + '</a>').join('<br>') + '</p>' : '') + '</div>').join('')
+      ((r.prs || []).length ? '<p>' + r.prs.map(x => /^https:\/\/github\.com\//.test(String(x.url)) ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.title || x.url) + '</a>' : esc(x.title || x.url)).join('<br>') + '</p>' : '') + '</div>').join('')
       : '<p class="note">Ingen rapporter ennå.</p>');
 };
 // ---------- the players' logos (Malerverkstedet; supabase/migrations/20261007110000_logos.sql) ----------

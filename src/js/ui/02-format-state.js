@@ -2,6 +2,13 @@
 // real calendar days on this device (local date), for the daily login bonus
 function dayKey(d){ d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function dayNum(k){ const [y, m, dd] = k.split('-').map(Number); return Math.round(Date.UTC(y, m - 1, dd) / 864e5); }
+// the hold as the player reads it (H2b, V2 A, 05.11.2026): a freezer vessel's in tonnes of product, what fills the room, with the round
+// weight the quota and the price go by beside it; the other boats in kg of round weight as before
+function holdFmt(){
+  const fz = typeof holdFreezes === 'function' && holdFreezes(), rd = holdTotal(), cap = capHold();
+  if (!fz) return {fz, load:rd, round:rd, cap, txt:fmt(rd, 0) + ' / ' + cap + ' kg', short:fmt(rd, 0) + ' kg'};
+  const ld = holdLoad(); return {fz, load:ld, round:rd, cap, txt:fmt(ld / 1000, 1) + ' / ' + fmt(cap / 1000, 0) + ' t', short:fmt(ld / 1000, 1) + ' t', rnd:fmt(rd / 1000, 1) + ' t'};
+}
 function fmt(n, d = 0){ return new Intl.NumberFormat(S.lang === 'no' ? 'nb-NO' : 'en-GB', {minimumFractionDigits:d, maximumFractionDigits:d}).format(n); }
 function kr(n){ return S.lang === 'no' ? fmt(Math.round(n)) + ' kr' : 'NOK ' + fmt(Math.round(n)); }
 // A landing note paid (ui/08-actions.js sell, Jonas 08.10.2026: «ka-ching», «+(inntekt)» in green, counted over to the account): the amount

@@ -2,6 +2,8 @@
 
 > Flyttet ordrett fra `docs/OVERLEVERING.md` 26.10.2026 (`docs/utviklingsplan.md`, fase A). Tallene i overskriftene er de gamle kapittelnumrene; `docs/systemer/gamle-numre.md` viser hvor hvert nummer havnet. Nytt skrives inn her, under det systemet det gjelder.
 
+> **Sikkerhetsgjennomgangen 05.11.2026 (Ø6):** `docs/planer/sikkerhet-skyen.md` sier hva serveren stoler på fra klienten (landingene, fangsten, posisjonen, lagringen), hva gjester og kall uten innlogging kan gjøre, og 15 funn med rettinger. Les den før noe nytt skal deles mellom spillerne.
+
 ## 4.20 Skyen: innlogging, skylagring, måling og admin-dashbordet (04.10.2026)
 
 Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med WorkOS, Supabase, samtykke til statistikk og bare han som admin. Hele lista står i `docs/lansering.md`.
@@ -146,6 +148,23 @@ Jonas: «det er viktig at alle har en delt klokke fordi dette er et online-spill
     - **Migreringen må Jonas kjøre i SQL Editor**, etter de fire fra 30.10. Til den er kjørt, svarer `world_get` som før, og spillet bruker sitt eget register (`npcReg` faller tilbake til lagringen).
   - **Ikke felles ennå:** krabbebestanden. Gytebestanden og totalkvoten er felles fra serveren når admin slår på bryteren (B4); til da er de frøets.
   - **Test:** `sqltest` (summer, tak, markør, lås, sletting; registeret med to kontoer, 90 dager, bryteren, og lasten med `KYST_LAST=5000`), `cloudtest` (salg og celler opp, kvote, pris og bestand ned, markøren) og `tests/unit/trykk.test.mjs` (spillernes andel, åpen gruppes båter, registeret og bestanden fra serveren).
+
+## Gjestene og den felles verdenen (05.11.2026, Ø6 funn 2–4)
+
+- **Jonas: «Kjør på funn 2–4».** Migreringen ble kjørt av Jonas i SQL Editor 05.11.2026. En gjest (anonym innlogging) kan lages igjen og igjen, så det en gjest lander og fisker, teller bare for gjesten til kontoen er registrert (`supabase/migrations/20261105130000_guest_world.sql`):
+  - `world_year_add` holder gjestens landinger utenfor årets summer, som er kvoten for åpen gruppe, båtene og gruppenes fangst.
+  - `world_get` holder gjestene utenfor mottakenes marked (`mkt`) og cellene (`cells`).
+  - `ev_top` holder dem utenfor sesongtoppen, som `world_top`, `bygde_top` og `push_week` alt gjorde. Gjesten ser sine egne.
+  - `guest_merge` tar gjestens landinger med i `world_year` for kontoen. Før forsvant de med gjestens rad.
+  - `catch_put` merker gjesten slik `land_put`, `pos_put` og `gear_put` gjør.
+- **For alle:** `land_put` tar ingen landing mer enn 24 spilltimer foran den felles klokka (`world_gh()`), regner spillåret ut av `gh` (som `yearH`) i stedet for å ta `y` fra kallet, og renser havn (`[A-Za-z0-9ÆØÅæøå_-]`, fordi mottakene i Østfold heter `mØF50` osv.) og art (`[a-z0-9_]`). En landing som avvises (400), dropper klienten (`worldShare`).
+- **Tak og rettigheter** (05.11.2026, Ø6 funn 9, 10 og 12, `supabase/migrations/20261105150000_rydd.sql`):
+  - `tm_error` og `tm_perf` har tak som vokser med de aktive spillerne siste time (`tm_active()`), og en hendelses data i `tm_batch` er høyst 4 000 byte.
+  - En gjests kaiplass viker for en konto og vises ikke for kontoene.
+  - Bare `tm_error`, `tm_perf` og `sp_now` kan kalles uten innlogging, og nye funksjoner får ikke den retten av seg selv. En ny funksjon for `anon` trenger derfor `grant execute … to anon`.
+  - Delte fangstmerker deles uten haillen om bord (`lf`, `ui/10l-share.js`).
+- **Malingen som deles** (05.11.2026, Ø6 funn 5, `supabase/migrations/20261105140000_liv_owned.sql`): `pos_put` tar med de betalte delene av `liv` (ripe, totone, vann, stripe, lakk, flagg og rederilogo) bare når kontoen eier designet (`entitlements`, skrevet av `shop_paid`, tatt bort av `shop_refund`). Fargene, registreringsmerket og vimplene deles alltid. Butikken gir aldri noe gratis på spillets egne sider (`shopMode()`, `pubHost()` i `ui/10f-cloud.js`).
+- **Igjen:** en registrert konto kan fortsatt melde falske landinger. Taket er 60 t i åpen gruppe per konto og år (`world_agg_get`) og 10 t åpen og 60 t lukket per landing på topplistene. Det står i `docs/planer/sikkerhet-skyen.md`.
 
 ## 4.24 Fartstid og «Mens du var borte» (07.10.2026)
 

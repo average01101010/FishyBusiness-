@@ -162,13 +162,14 @@ function depart(){
   // the lines stay on until the catch is landed; the plan leaves when it is done
   if (b.status === 'port' && portBusy(b)){ if (S.plan){ S.plan.depAt = portBusy(b) + 1; log('Går når arbeidet på kaia er ferdig, kl. ' + hm(S.plan.depAt / 60) + '.', 'Leaving when the work at the quay is done, at ' + hm(S.plan.depAt / 60) + '.'); } return false; }
   // without you aboard, the vessel needs crew of its own
-  if (!meAboard() && !crewAboard().length){ S.plan = null; log('Båten har ikke mannskap og kan ikke gå ut uten deg om bord.', 'The boat has no crew and cannot go out without you aboard.'); return false; }
+  if (!meAboard() && !crewAboard().length && !lagOf()){ S.plan = null; log('Båten har ikke mannskap og kan ikke gå ut uten deg om bord.', 'The boat has no crew and cannot go out without you aboard.'); return false; }
   // in the open group the owner must be the master aboard: with you aboard the trip is yours, also when it follows the standing plan,
   // and the hired skipper is ordinary crew on it
   S.tripOwner = meAboard();
   if (b.status === 'port' && S.rest) restEnd();   // down from the naust or the rorbu and aboard (15-energy.js)
   // those given time off sit this trip out: the landing after it brings them back (ui/08-actions.js sell)
   if (b.status === 'port') for (const c of S.crew) if (c.off) c.offTrip = true;
+  if (b.status === 'port') provFill();   // an ocean vessel's stores filled by the chandler as she casts off (04-crew.js, H2b)
   if (b.status === 'port'){ S.stats.trips++; log('Kastet loss fra ' + portById(b.port).name + '.', 'Cast off from ' + portById(b.port).name + '.'); if (S.tripOwner) loreDepart(); tatTripStart(); }
   if (access() === 'none' && !(S.plan && S.plan.ops && !S.tripOwner) && !(S.target === 'kveite' && b.kgear)) log('Båten har ikke adgang til å fiske torsk, hyse og sei. De kan bare være bifangst, høyst 10 % av landingen.', 'The boat has no access to fish cod, haddock and saithe. They can only be bycatch, at most 10% of the landing.');
   S.tripBuff = null; S.prep = {};

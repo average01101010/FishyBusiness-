@@ -149,7 +149,7 @@ function wakeEarly(back){
 // asleep and alone aboard: nobody fishes, and the boat drifts downwind at 0.3–0.8 kn. Toward land or shallow water she stops where
 // she is and lies there: she never runs aground in your sleep (tilbakemelding #47, 08.10.2026: a night's drift put a boat on land, and
 // the player could do nothing about it). On a route the autopilot steers instead (05-vessels.js vesselStep).
-const sleepAlone = () => asleep() && meAboard() && !crewAboard().length;
+const sleepAlone = () => asleep() && meAboard() && !crewAboard().length && !lagOf();
 function sleepDrift(H){
   const b = S.boat, W = windAt(H), kn = 0.3 + 0.5 * clamp(W / 15, 0, 1), h = (windDir(H) - gridGamma(b.pos) + 180) * Math.PI / 180, d = kn * NM / 60 * gridScale(b.pos);
   const to = {x:b.pos.x + Math.sin(h) * d, y:b.pos.y - Math.cos(h) * d}; b.v = 0;

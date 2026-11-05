@@ -92,7 +92,7 @@ function plan2LegH(o, a, ap, b, bp, v){
 }
 // ---- the state the day is reckoned from: where she lies, the hold, the gear in the sea and aboard, the crew, you. Tests pass their own
 function plan2State(o){
-  const b = S.boat, pg = S.pgear || newPGear(), hold = holdTotal();
+  const b = S.boat, pg = S.pgear || newPGear(), hold = holdLoad();   // (as it fills the room: product weight for frozen fish, H2b)
   const at = b.status === 'port' || b.status === 'unmooring' ? {p:{x:portById(b.port).p.x, y:portById(b.port).p.y}, port:b.port}
     : o.homeA && dist(b.pos, o.homeA) < 0.4 ? {p:o.homeA, port:null} : o.restA && dist(b.pos, o.restA) < 0.4 ? {p:o.restA, port:null} : {p:{x:b.pos.x, y:b.pos.y}, port:null};
   const V = VESSELS[b.type] || {};

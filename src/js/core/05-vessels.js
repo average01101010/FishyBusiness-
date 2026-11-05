@@ -652,6 +652,11 @@ function navHour(){
   while (S.navrows.length && S.navrows[0].t < S.t - KEEP_MIN) S.navrows.shift();
 }
 const holdTotal = () => S.hold.reduce((a, x) => a + x.kg, 0);
+// the hold in product weight (H2b, V2 A of docs/planer/havsteget-h2-autoline.md, 05.11.2026): what is frozen gutted and headed weighs its
+// round weight over the species' conversion factor (SPECIES uh), the rest as it lies. The catch's kilos stay round weight everywhere
+// else (the quota, the price, the landing rules); this is what fills the room (capHold), weighs on the boat and goes up on the pallets
+const prodKg = x => x.frozen && x.gut ? x.kg / ((SPECIES[x.sp] || {}).uh || 1) : x.kg;
+const holdLoad = () => S.hold.reduce((a, x) => a + prodKg(x), 0);
 function nearestPort(p){ let best = null, bd = 1e9; for (const q of PORTS){ const d = dist(p, q.p); if (d < bd){ bd = d; best = q; } } return best; }
 // the nearest yard (portKind 'verft', 01-world.js): where a tow ends, since the hull wants mending after (Jonas 08.10.2026)
 function nearestYard(p){ let best = null, bd = 1e9; for (const q of PORTS){ if (portKind(q) !== 'verft') continue; const d = dist(p, q.p); if (d < bd){ bd = d; best = q; } } return best; }
@@ -703,6 +708,8 @@ function vesselStep(H){
   if (b.land && S.t >= b.land.until) finishLanding();
   if (b.status === 'port'){ quayMinute(); shoreTick(); havnMinute(); }
   else if (typeof careTick === 'function' && S.pgear) careTick();   // the crew's upkeep and gear talk at sea (10b-gearcare.js seaWork)
+  provMinute();   // an ocean vessel's provisions (04-crew.js, H2b)
+  if (S.t % 60 === 0 && b.status !== 'port'){ autoFixHour(); tripHour(); }   // the autoline's hooks changed aboard (10b-gearcare.js) and the trip's limits (04-crew.js), H2b
   opsStep(H);
   // planned departure
   if (S.plan && S.plan.depAt && S.t >= S.plan.depAt && (b.status === 'port' || b.status === 'idle')){
@@ -757,8 +764,14 @@ function vesselStep(H){
   if (typeof gearWatch === 'function') gearWatch(b);   // a mile off her own gear: the alarm (U2)
   if (b.anch) anchorSwing(H);   // she lies to the anchor and swings round it with the wind and the current, or it comes up (06e-anchor.js)
   if (b.anch) anchorTick(H, W, hs);   // the anchor holds or drags
+  plantFuel(b);
   risk(W, hs);
 }
+// the ocean vessel's own load at sea while she is not under way (H2b, 05.11.2026): the generators for the plate freezers, the factory's
+// machines, the hydraulics and the hotel burn BOAT.plantLph litres an hour (under way the main engine's lph has them in). Calibrated so
+// a trip of fishing and steaming burns about 3,700 litres a day (the profitability survey 2024, table G 14: 1.08 million litres a year
+// for the conventional ocean vessels, 290 days in operation)
+function plantFuel(b){ if (BOAT.plantLph && b.status !== 'sailing' && b.status !== 'adrift' && b.fuel > 0) fuelUse(b, BOAT.plantLph / 60); }
 // speed for the coming minute: the boat speeds up and slows down gradually, and keeps to 5 knots within 250 m of a harbour
 // (it starts slowing before it gets there)
 function sailV(H, hs){
@@ -941,7 +954,7 @@ function fish(H, W, hs){
     b.deckStop = false; if (b.deckEnd){ const why = b.deckEnd; b.deckEnd = null; endFishing(why); return; }
     log('Ferdig på dekk. Fisker videre.', 'Deck work done. Fishing on.'); if (hooks.onDeck && !VTAG) hooks.onDeck('go');
   }
-  const tot = holdTotal(), done = !b.gop && b.fishUntil != null && S.t >= b.fishUntil, full = !b.gop && tot >= capHold() - 0.01;
+  const tot = holdLoad(), done = !b.gop && b.fishUntil != null && S.t >= b.fishUntil, full = !b.gop && tot >= capHold() - 0.01;
   if (done || full){
     // alone, nobody can gut on the way: see to the catch before leaving the grounds
     if (S.settings.deckFirst !== false && handsAboard() < 2 && deckPending() > 0.5){ b.deckStop = true; b.deckEnd = full ? 'full' : 'done'; log('Tar unna fangsten før vi går videre.', 'Seeing to the catch before we move on.'); return; }
@@ -1007,7 +1020,8 @@ function fish(H, W, hs){
 }
 function endFishing(why){
   const b = S.boat; b.fishUntil = null; b.deckStop = false; b.deckEnd = null;
-  const fs = S.fsess; if (fs && S.t - fs.t0 >= 15){ { const kgph = Math.round(fs.kg / ((S.t - fs.t0) / 60)); S.marks.push({x:fs.x, y:fs.y, t:S.t, kgph, q:Math.round(kgph / (HEATG.fair.jig * heatRigFactor()) * 100) / 100}); } if (S.marks.length > 80) S.marks.shift(); } S.fsess = null;
+  // lf: the luck aboard when the mark is made; ui/10l-share.js takes it out when the mark is shared (Ø6 funn 11)
+  const fs = S.fsess; if (fs && S.t - fs.t0 >= 15){ { const kgph = Math.round(fs.kg / ((S.t - fs.t0) / 60)); S.marks.push({x:fs.x, y:fs.y, t:S.t, kgph, q:Math.round(kgph / (HEATG.fair.jig * heatRigFactor()) * 100) / 100, lf:luck()}); } if (S.marks.length > 80) S.marks.shift(); } S.fsess = null;
   if (b.gopQuiet){ b.gopQuiet = false; if (why === 'full') log('Lasten er full.', 'The hold is full.'); }
   else if (why === 'full') log('Lasten er full.', 'The hold is full.');
   else if (why === 'move'){}
@@ -1045,7 +1059,7 @@ const holdFreezes = () => !!(BOAT.hold && BOAT.hold.kind === 'frys');
 const holdRSW = () => !!(BOAT.hold && BOAT.hold.kind === 'rsw');
 const iceReady = () => catchIce() && (holdFreezes() || S.boat.ice > 0.5);
 const tubCap = () => BOAT.tubCap || 150;
-const handsAboard = () => (meAboard() ? 1 : 0) + crewAboard().length;
+const handsAboard = () => (meAboard() ? 1 : 0) + crewAboard().length + (lagOf() ? lagN() : 0);   // (an ocean vessel's teams, 04-crew.js)
 // the hands at the gutting and icing stations (core/13-work.js): under way one steers, fishing they follow their chains
 function deckHands(){ return workAssign().filter(p => p.st === 'sloy' || p.st === 'is').length; }
 // what is still to be done: gutting (when the catch is gutted on board) and icing (when there is ice)
@@ -1074,15 +1088,20 @@ function deckMinute(){
   if (cg) for (const x of S.hold.filter(x => !x.gut && !x.iced && !SPECIES[x.sp].live)){ if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.gut); moveKg(x, kg, {gut:true}); pm -= kg / DECK.gut; worked += kg; }
   pm = Math.min(pm, G.sum) + I.sum;   // the gutters ice what they have gutted once the gutting is done
   const fz = holdFreezes();
+  // the plate freezers (BOAT.freezeT, kg of product a day; H2b of docs/planer/havsteget-h2-autoline.md, 05.11.2026): the crew packs the
+  // frames at their pace, but no more goes in than the freezers take in a minute; the rest waits in the bleeding tub, and the haul slows
+  // (haulSlow). They run on the generators: with the tanks dry nothing is frozen
+  let fzLeft = fz && BOAT.freezeT ? (b.fuel > 0 ? BOAT.freezeT / 1440 : 0) : Infinity;
   if (catchIce()) for (const x of S.hold.filter(x => !x.iced && (x.gut || !cg) && !SPECIES[x.sp].live)){
-    if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.ice, fz ? Infinity : b.ice / (0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)));
+    if (pm <= 0.001 || fzLeft <= 1e-6) break; const ux = x.gut ? SPECIES[x.sp].uh || 1 : 1;
+    const kg = Math.min(x.kg, pm * DECK.ice, fz ? fzLeft * ux : b.ice / (0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)));
     if (kg <= 0.01){ if (S.t - (S.lastIceWarn || -1e9) > 120){ log('Tom for is. Fangsten ises ikke.', 'Out of ice. The catch is not being iced.'); S.lastIceWarn = S.t; } break; }
-    if (fz) moveKg(x, kg, {iced:true, frozen:true}); else { moveKg(x, kg, {iced:true}); const ik = Math.min(b.ice, kg * 0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)); b.ice -= ik; tripOf(b).iceKg += ik; }
+    if (fz){ moveKg(x, kg, {iced:true, frozen:true}); fzLeft -= kg / ux; } else { moveKg(x, kg, {iced:true}); const ik = Math.min(b.ice, kg * 0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)); b.ice -= ik; tripOf(b).iceKg += ik; }
     pm -= kg / DECK.ice; worked += kg;
   }
   // your own minutes on deck; when the deck was last worked (the crew's break: a deck to scrub, 13-work.js idleEnv); now and then a mistake (14-crewlife.js crewSlip)
   if (worked > 0 && (G.me || I.me)) S.deckMe = (S.deckMe || 0) + 1;
-  if (worked > 0){ b.deckT = S.t; if (typeof crewSlip === 'function') crewSlip(G.crew.concat(I.crew)); }
+  if (worked > 0){ b.deckT = S.t; if (typeof crewSlip === 'function') crewSlip(G.crew.concat(I.crew).filter(c => !c.anon)); }
 }
 // ---------- lying to in a storm (H1b R8, 05.11.2026) ----------
 // Jonas 05.11.2026: «Mange av de større havfiskebåtene er laget for å kunne være ute i orkan. Nå vet ikke jeg hva det verste været som

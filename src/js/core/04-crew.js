@@ -145,13 +145,123 @@ function tripAdd(b, k, kr0){ if (!b || !(kr0 > 0)) return; const T = tripOf(b); 
 function tripCost(b = S.boat){ const T = tripOf(b), fuelKr = Math.round(T.fuelL * (b.fuelKrL || fuelPrice())), iceKr = Math.round(T.iceKg * PRICE.ice), baitKr = Math.round((T.baitKr || 0) + (T.egnKr || 0)),
   havnKr = Math.round(T.havnKr || 0), gearKr = Math.round((T.jigKr || 0) + (T.lostKr || 0));
   return {fuelL:T.fuelL, fuelKr, iceKg:T.iceKg, iceKr, baitKr, havnKr, gearKr, sum:fuelKr + iceKr + baitKr + havnKr + gearKr}; }
+// ---- the trip's limits on an ocean vessel (H2b of docs/planer/havsteget-h2-autoline.md, 05.11.2026). The fuel, the bait, the hooks for
+// the hook change (10b-gearcare.js autoFixHour) and the room in the hold each last so many days at the trip's pace so far (until half a
+// day at sea has gone, and for the hold until a tonne is in, the vessel's own: her generators and a day of gear work, 5.5 t of product a
+// day); the fuel keeps what she needs to steam to the nearest plant that takes her (straight line and a fifth, at her cruising speed).
+// 6-7 weeks is usual for an autoliner (HI report 2024-11). Each is said once every 12 hours when it lasts under TRIPX.warn days more.
+const TRIPX = {warn:2, every:720, gearL:1300, prodDay:5500, way:1.2};
+function tripHome(b = S.boat){
+  let best = null, bd = Infinity;
+  for (const q of PORTS){ if (!(q.mottak || q.havOnly) || portWhy(q, b.type)) continue; const d = kmTrue(q.p, b.pos); if (d < bd){ bd = d; best = q; } }
+  return best ? {pt:best, km:bd * TRIPX.way, days:bd * TRIPX.way / NM / Math.max(4, BOAT.vcruise || 8) / 24} : null;
+}
+function tripLeft(b = S.boat){
+  const T = tripOf(b), d = (T.seaM || 0) / 1440, pg = S.pgear, home = b.status === 'port' ? null : tripHome(b);
+  const fuelDay = d < 0.5 ? (BOAT.plantLph || 0) * 24 + TRIPX.gearL : T.fuelL / d, homeL = home ? home.days * 24 * (BOAT.lph || 0) : 0;
+  const prod = holdLoad(), prodDay = d < 0.5 || prod < 1000 ? TRIPX.prodDay : prod / d, L = BOAT.autoHooks && pg ? autoL(pg) : null, R = {d, home};
+  R.fuel = Math.max(0, b.fuel - homeL) / Math.max(1, fuelDay);
+  if (L){ const lenker = BOAT.autoHooks / LINE_KINDS.auto.hooks; R.bait = baitKg(pg) / (lenker * LINE_KINDS.auto.baitKg); R.hooks = (pg.hooks || 0) / (BOAT.autoHooks * AUTOFIX.day); }
+  R.hold = Math.max(0, capHold() - prod) / prodDay; if (lagOf()) R.prov = provOf(b) / Math.max(1, provMen());
+  R.min = Math.min(R.fuel, R.hold, R.bait == null ? Infinity : R.bait, R.hooks == null ? Infinity : R.hooks, R.prov == null ? Infinity : R.prov);
+  return R;
+}
+const TRIPW = {prov:['Provianten', 'The provisions'], fuel:['Drivstoffet', 'The fuel'], bait:['Agnet', 'The bait'], hooks:['Krokene til krokbyttet', 'The hooks for the hook change'], hold:['Plassen i lasterommet', 'The room in the hold']};
+// once an hour at sea on an ocean vessel: the days at sea, and a word when the trip is running out of something
+function tripHour(){
+  const b = S.boat; if (BOAT.cls !== 'hav' || b.status === 'port') return;
+  const T = tripOf(b); T.seaM = (T.seaM || 0) + 60;
+  const R = tripLeft(b), W = b.tripWarn || (b.tripWarn = {}), home = R.home ? R.home.pt.name : '', hd = R.home ? fmtC(R.home.days, 1) : '';
+  for (const k of ['prov', 'fuel', 'bait', 'hooks', 'hold']){ const v = R[k]; if (v == null || v >= TRIPX.warn || S.t - (W[k] || -1e9) < TRIPX.every) continue; W[k] = S.t;
+    const days = v < 0.5 ? ['under et halvt døgn', 'under half a day'] : ['om lag ' + fmtC(v, 1) + ' døgn', 'about ' + fmtC(v, 1) + ' days'];
+    const no = TRIPW[k][0] + ' rekker ' + days[0] + ' til' + (k === 'fuel' && home ? ', og så trengs resten for å gå til ' + home + ' (' + hd + ' døgn)' : '') + '.',
+      en = TRIPW[k][1] + ' lasts ' + days[1] + ' more' + (k === 'fuel' && home ? ', and the rest is needed to steam to ' + home + ' (' + hd + ' days)' : '') + '.';
+    log(no, en); msg(gL('Turen', 'The trip'), no + (k === 'hold' || k === 'prov' ? ' Det er tid for å gå til mottaket.' : home ? ' Nærmeste mottak som tar båten, er ' + home + '.' : ''), en + (k === 'hold' || k === 'prov' ? ' It is time to head for the plant.' : home ? ' The nearest plant that takes her is ' + home + '.' : '')); }
+}
+// ===== the ocean vessel's crew as anonymous teams (H2b of docs/planer/havsteget-h2-autoline.md, V3 A; Jonas 05.11.2026: the teams
+// «Følger båten») =====
+// VESSELS crew: the key people (skipper, mate, engineers, cook, bosun), the deck team and the factory team, and rot crews that take turns
+// a trip each (the profitability survey 2024, table G 14: 30.1 men a vessel and 15.5 man-years, so two crews of 15 with you). The teams
+// come with the vessel, a number and a skill (3 of 5 at the start, a tenth more each trip, up to 4.5); nobody is hired from the exchange
+// for them. At sea the deck and factory teams go six and six: two watches, the first 00-06 and 12-18, the second 06-12 and 18-24, half
+// of each team on each; the bosun works the first watch with them; the skipper and the mate have the bridge one watch each and take the
+// helm when she is under way and you are not at it; the engineers keep the engine room and the cook the galley (a meal every six hours,
+// 4 of 5), so none of them is on deck. The crew aboard changes at each landing (lagLanded). They are not in S.crew: no names, moods,
+// quarrels or exchange (named key people with lives come in H7); the work (core/13-work.js workAssign) has them as people at the stations.
+const LAG = {skill0:3, step:0.1, max:4.5, watch:6, cook:4};
+const fmtC = (v, d = 0) => typeof fmt === 'function' ? fmt(v, d) : v.toFixed(d);   // (the UI's number format; plain in the unit tests)
+const lagSpec = () => (VESSELS[S.boat && S.boat.type] || {}).crew || null;
+function lagOf(){
+  const V = lagSpec(); if (!V) return null;
+  if (!S.lag || S.lag.type !== S.boat.type) S.lag = {type:S.boat.type, on:0, sh:Array.from({length:V.rot || 1}, (_, i) => ({i, skill:LAG.skill0, trips:0}))};
+  return S.lag;
+}
+const lagN = () => { const V = lagSpec(); return V ? V.key.length + V.teams.reduce((a, t) => a + t.n, 0) : 0; };
+const lagShName = i => String.fromCharCode(65 + i);   // skift A, B
+const lagWatch = H => Math.floor(gDate(H).getUTCHours() / LAG.watch) % 2;   // 0: 00-06 and 12-18, 1: 06-12 and 18-24
+// the people of the crew aboard (made once per crew, skill and language; not saved: the save keeps the number and the skill)
+let LAGC = {k:'', P:[]};
+function lagPeople(){
+  const G = lagOf(); if (!G) return [];
+  const V = lagSpec(), s = G.sh[G.on].skill, k = G.type + ':' + G.on + ':' + s.toFixed(2) + ':' + S.lang; if (LAGC.k === k) return LAGC.P;
+  const no = S.lang === 'no', sh = lagShName(G.on), P = [], hi = Math.min(5, s + 0.5), lo = Math.max(1, s - 0.5);
+  const mk = (id, role, w, nm, gear, hab, x) => P.push(Object.assign({id:'lag-' + sh + '-' + id, anon:true, role, w, name:nm, sex:'m', age:24 + hashStr(sh + id) % 34, traits:[], fatigue:15, morale:65,
+    attr:{erf:s, styrke:s, uth:s, tek:s, kokk:2, sjo:s}, gear:Object.assign({juksa:s, line:s, garn:s, teiner:s, sloy:s, is:s, sort:s}, gear), hab:Object.assign({}, hab), said:[], known:[true, true], grudge:{}, earn:[]}, x || {}));
+  // the bridge: the skipper the first watch and the mate the second (at the helm under way, mate:true for workAssign)
+  if (V.key.includes('skipper')) mk('sk', 'bro', 0, no ? 'Skipperen' : 'The skipper', {}, {ror:600}, {mate:true});
+  if (V.key.includes('styrmann')) mk('st', 'bro', 1, no ? 'Styrmannen' : 'The mate', {}, {ror:600}, {mate:true});
+  if (V.key.includes('bas')) mk('bas', 'dekk', 0, no ? 'Basen' : 'The bosun', {line:hi, sloy:s, is:s}, {haling:400, sloy:300});
+  for (const t of V.teams){ const dk = t.role === 'dekk';
+    for (let i = 0; i < t.n; i++) mk(t.role + (i + 1), t.role, i % 2, (dk ? (no ? 'Dekk ' : 'Deck ') : (no ? 'Fabrikk ' : 'Factory ')) + (i + 1),
+      dk ? {line:hi, sloy:lo, is:lo} : {line:lo, sloy:hi, is:hi}, dk ? {haling:900, blogg:600} : {sloy:900, is:800}); }
+  LAGC = {k, P}; return P;
+}
+// those of the crew at the deck's stations this minute: the watch on (half of each team, the bosun with the first) and, when she is
+// under way, the bridge's man of the watch; nobody at all while the vessel lies at a plant with her catch being landed by the plant's gang
+function lagOnDeck(H, under){
+  if (!lagOf()) return []; const w = lagWatch(H == null ? S.t / 60 : H);
+  return lagPeople().filter(c => c.w === w && (c.role !== 'bro' || under));
+}
+// a meal from the vessel's cook when it is due (core/14-crewlife.js mealMinute): no word in the log, the crew eat in the mess
+function lagMeal(){ const M = mealState(), q = provOf() > 0 ? LAG.cook : 1; M.hist.push(q); if (M.hist.length > 8) M.hist.shift(); M.due = S.t + MEAL.every; M.cook = null; M.last = {t:S.t, q, by:'lag'}; }
+// the crew aboard has landed: it signs off with its share, a tenth more skill for the trip, and the other crew signs on. Hands from the
+// exchange aboard an ocean vessel (hired on one before H2b) go ashore here with this landing's share paid: the teams are her crew now
+function lagLanded(kr){
+  const G = lagOf(); if (!G) return;
+  if ((S.crew || []).length){ const nm = S.crew.map(c => c.name.split(' ')[0]); for (const c of S.crew.slice()){ crewSettle(c); if (typeof flyOut === 'function') flyOut(c); } S.crew = [];
+    log(nm.join(', ') + ' har gått i land. Havbåten har sine egne lag.', nm.join(', ') + ' went ashore. The ocean vessel has her own teams.'); }
+  if (G.sh.length < 2) return; const a = G.sh[G.on]; a.trips++; a.skill = Math.min(LAG.max, Math.round((a.skill + LAG.step) * 100) / 100);
+  G.on = (G.on + 1) % G.sh.length; const b = G.sh[G.on];
+  log('Skift ' + lagShName(a.i) + ' går i land' + (kr > 0 ? ' med ' + fmtC(kr, 0) + ' kr i lott' : '') + ', og skift ' + lagShName(b.i) + ' mønstrer på (' + lagN() + ' mann, ferdighet ' + fmtC(b.skill, 1) + ').',
+    'Crew ' + lagShName(a.i) + ' signs off' + (kr > 0 ? ' with NOK ' + fmtC(kr, 0) + ' in shares' : '') + ', and crew ' + lagShName(b.i) + ' signs on (' + lagN() + ' men, skill ' + fmtC(b.skill, 1) + ').');
+}
+// ---- the provisions of an ocean vessel (H2b; Jonas 05.11.2026: «Fylles ved avgang»): the ship's chandler fills the stores aboard when she
+// casts off, for PROV.days days for all a crew aboard and you (15 on the autoliner), at PROV.kr a man-day (the profitability survey 2024,
+// table G 14: 1.05 MNOK a year for provisions, about 250 kr a man a day at sea), booked as the company's own cost. At sea those aboard
+// eat a day's share a day; the stores are a limit of the trip (tripLeft), and with them empty the meals are dry bread
+const PROV = {days:60, kr:250};
+const provMen = () => lagN() + (meAboard() ? 1 : 0) + crewAboard().length;
+const provCap = () => PROV.days * (lagN() + 1);
+function provOf(b = S.boat){ if (b.prov == null) b.prov = provCap(); return b.prov; }
+function provFill(){
+  const b = S.boat; if (!lagOf()) return 0; const cap = provCap(), add = Math.max(0, cap - provOf(b)); if (add < 1) return 0;
+  const kr0 = Math.round(add * PROV.kr); book('proviant', -kr0, 'Proviant for turen', 'Provisions for the trip'); b.prov = cap;
+  log('Skipshandelen har levert proviant om bord for ' + PROV.days + ' døgn til ' + (lagN() + 1) + ' mann: ' + fmtC(kr0, 0) + ' kr.', 'The ship\'s chandler has delivered provisions for ' + PROV.days + ' days for ' + (lagN() + 1) + ' men: NOK ' + fmtC(kr0, 0) + '.');
+  return kr0;
+}
+function provMinute(){ const b = S.boat; if (!lagOf() || b.status === 'port') return; b.prov = Math.max(0, provOf(b) - provMen() / 1440); }
+// a vessel with teams takes no one from the exchange (the teams are her crew)
+function crewHireWhy(){ return lagSpec() ? [gL('Havbåten har sine egne lag, to skift som følger båten. Mannskapsbørsen er for kystbåtene.', 'The ocean vessel has her own teams, two crews that come with her. The crew exchange is for the coastal boats.')] : null; }
 // who shares: the crew aboard (those asleep in their bunks too) or aboard when fish now in the hold was caught (c.trip); with you ashore
 // the one who skippers (the skipper you named, else the most seasoned)
 function lottParty(){
   const onIds = new Set(crewAboard(null, true).map(c => c.id)), me = meAboard(), C = (S.crew || []).filter(c => c.trip || onIds.has(c.id)).map(lotMigrate), len = BOAT.len || 0;
   const sk = me ? null : (crewSkipper() && C.includes(crewSkipper()) ? crewSkipper() : C.slice().sort((a, b) => (b.attr ? b.attr.erf + b.attr.sjo : 0) - (a.attr ? a.attr.erf + a.attr.sjo : 0))[0]);
-  const P = C.map(c => ({c, lots:lotOf(c), sk:sk === c, appr:isAppr(c)})), own = me ? LOTT.hand : 0, n = P.reduce((a, p) => a + (p.appr ? LOTT.half : 1), 0) + (me ? 1 : 0), f = lottFishery();
-  return {P, n, own, tot:P.reduce((a, p) => a + p.lots, 0) + own, M:lottM(n, len, f), f, ref:(OPPG[f === 'teine' ? 'garn' : f] || {}).ref, skX:sk ? skipExtra(len) : 0};
+  const P = C.map(c => ({c, lots:lotOf(c), sk:sk === c, appr:isAppr(c)})), own = me ? LOTT.hand : 0, f = lottFishery();
+  // the ocean vessel's crew aboard shares as one, a share a man; with you ashore their skipper has the skipper's extra (H2b)
+  const G = lagOf(); if (G){ const sh = G.sh[G.on], m = lagN(); P.push({c:{id:'lag-' + lagShName(G.on), name:gL('Skift ', 'Crew ') + lagShName(G.on) + ' (' + m + gL(' mann)', ' men)'), lag:true}, lots:m, sk:!me && !sk, appr:false, lag:m}); }
+  const n = P.reduce((a, p) => a + (p.lag ? p.lag : p.appr ? LOTT.half : 1), 0) + (me ? 1 : 0);
+  return {P, n, own, tot:P.reduce((a, p) => a + p.lots, 0) + own, M:lottM(n, len, f), f, ref:(OPPG[f === 'teine' ? 'garn' : f] || {}).ref, skX:P.some(p => p.sk) ? skipExtra(len) : 0};
 }
 // the shares of a shared catch D: {M, n, tot, f, per:[{c, lots, kr, sk, x (the skipper's extra share, paid by the company)}], crew}
 function lottSplit(D){ const Q = lottParty(), pot = Math.max(0, D) * Q.M, one = Q.tot > 0 ? pot / Q.tot : 0;

@@ -45,12 +45,13 @@ function mealDue(){ const M = mealState(); return M.due != null && S.t >= M.due 
 function mealMinute(A){
   const M = mealState();
   // in port they eat ashore, and alone you eat as you go
-  if (S.boat.status === 'port' || !crewAboard().length){ M.due = null; M.cook = null; return; }
+  if (S.boat.status === 'port' || (!crewAboard().length && !lagOf())){ M.due = null; M.cook = null; return; }
   if (M.due == null){ M.due = S.t + MEAL.every; return; }
   if (S.t < M.due) return;
   // no galley aboard (schema v2 fac.galley): a packed lunch and coffee from the flask when the meal is due, nobody cooks; a hotplate caps the dish at 4
   const gal = (BOAT.fac && BOAT.fac.galley) || 'bysse';
   if (gal === 'none'){ serveMeal(2, null, false, ['matpakke og kaffe fra termosen', 'a packed lunch and coffee from the flask']); return; }
+  if (lagOf() && lagSpec().key.includes('kokk')){ lagMeal(); return; }   // an ocean vessel's own cook (04-crew.js, H2b)
   const ck = A.find(p => p.st === 'kokk');
   if (ck){ const id = ck.c ? ck.c.id : 'me'; if (!M.cook || M.cook.id !== id) M.cook = {id, m:0}; M.cook.m++;
     if (M.cook.m >= ((BOAT.fx && BOAT.fx.cook) || MEAL.cook)) serveMeal(Math.min(gal === 'plate' ? 4 : 5, ck.c ? clamp(Math.round(ck.c.attr.kokk), 1, 5) : 3), ck.c, !ck.c); return; }

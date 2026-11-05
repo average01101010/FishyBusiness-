@@ -353,21 +353,41 @@ function berthPath(from, bp){
 // wash: an open boat's full tubs go in with the forklift, are emptied and washed, and come out again on it before the crane takes them
 // back aboard (game minutes between the last full lift and the first back)
 const LANDING = {prep:1, lift:2.5, note:5, tubKg:TUB_KG, hooked:0.86, wash:6};
+// A freezer vessel lands her frozen catch on pallets (H2b, V1 A of docs/planer/havsteget-h2-autoline.md, 05.11.2026): the landing gang
+// stacks the cartons on pallets of about a tonne down in the hold, and the crane lifts them ashore one a lift. About 10 t an hour with
+// the gang and the crane (FAO, «Handling sea-frozen fish»: 1-1.5 t a man-hour with mechanical gear and a practised crew, a gang of 8),
+// so a lift every 6 game minutes and 300 t in about 30 hours. The pallets carry the product weight (05-vessels.js holdLoad). The coast
+// boats and the tubs are as before.
+const PALL = {kg:1000, lift:6};
+const liftMin = L => L.lf || LANDING.lift;
+// the product weight of a lot at the landing: frozen as it lies (prodKg), or as it will be once gutted (as the deck guts) and frozen at the quay
+const landProd = x => x.frozen || (SPECIES[x.sp] || {}).live ? prodKg(x) : x.kg / ((x.gut || catchGut()) ? (SPECIES[x.sp] || {}).uh || 1 : 1);
+// at the weighing: what was still unfrozen aboard a freezer vessel is frozen now, gutted as the deck guts it (landPlan gave the time)
+function landFreeze(){
+  if (!holdFreezes()) return 0; let kg = 0;
+  for (const x of S.hold.slice()) if (!x.frozen && !(SPECIES[x.sp] || {}).live){ kg += x.kg; moveKg(x, x.kg, {gut:!!(x.gut || catchGut()), iced:true, frozen:true}); }
+  return kg;
+}
 // own: the boat's own tubs (an open boat; the per-tub kilos in kgs, the empties come back), else the plant's tubs from the hold
 function landPlan(type, kg, hold){
   const V = VESSELS[type] || {};
+  // (what still lies unfrozen is frozen at the quay before the weighing, Jonas 05.11.2026: «Fryses ved kaia»: its product weight goes on
+  // the pallets, and the freezers' time for it comes before the landing note when it is longer than the lifts after it: landFreeze)
+  if (V.hold && V.hold.kind === 'frys'){ const H0 = hold || S.hold, pk = H0.reduce((a, x) => a + landProd(x), 0), n = Math.max(1, Math.ceil(pk / PALL.kg));
+    const fz = Math.ceil(H0.reduce((a, x) => a + (x.frozen || (SPECIES[x.sp] || {}).live ? 0 : landProd(x)), 0) / Math.max(1, (V.freezeT || 15000) / 1440)), lifts = n * PALL.lift;
+    return {kind:'pall', own:false, n, lifts:n, wash:0, lf:PALL.lift, pk:Math.round(pk), fz, dur:LANDING.prep + Math.max(lifts, fz) + LANDING.note}; }
   if (V.kar){ const nk = karN(type, S.boat && S.boat.type === type ? S.boat.holdLv : 0), T = tubLoads(hold || S.hold, nk), kgs = T.map(t => Math.round(t.kg)), n = clamp(Math.max(tubsFull(T), Math.ceil((kg || 0) / TUB_KG)), 1, nk);
     return {kind:'tub', own:true, n, kgs, lifts:2 * n, wash:LANDING.wash, dur:LANDING.prep + 2 * n * LANDING.lift + LANDING.wash + LANDING.note}; }
   const n = Math.max(1, Math.ceil(kg / LANDING.tubKg));
   return {kind:'tub', own:false, n, lifts:n, wash:0, dur:LANDING.prep + n * LANDING.lift + LANDING.note};
 }
 // when lift j of a landing starts (game minutes after L.t0): the lifts follow each other, the tubs back after the wash
-const landLiftT = (L, j) => LANDING.prep + j * LANDING.lift + (L.own && j >= L.n ? (L.wash || 0) : 0);
+const landLiftT = (L, j) => LANDING.prep + j * liftMin(L) + (L.own && j >= L.n ? (L.wash || 0) : 0);
 // how far a landing has come at game minute t: loads up on the quay, units (boxes or tubs) landed, and the phase
 function landState(L, t){
-  const e = t - L.t0; let up = 0; for (let j = 0; j < L.lifts; j++) if (e >= landLiftT(L, j) + LANDING.hooked * LANDING.lift) up = j + 1;
+  const e = t - L.t0, lf = liftMin(L); let up = 0; for (let j = 0; j < L.lifts; j++) if (e >= landLiftT(L, j) + LANDING.hooked * lf) up = j + 1;
   const units = Math.min(L.n, L.kind === 'box' ? up * 9 : up);   // ('box': a landing saved before 04.11.2026, nine boxes a lift)
-  return {e, up, units, phase:e < LANDING.prep ? 'prep' : e < landLiftT(L, L.lifts - 1) + LANDING.lift ? 'lift' : 'note'};
+  return {e, up, units, phase:e < LANDING.prep ? 'prep' : e < landLiftT(L, L.lifts - 1) + lf ? 'lift' : 'note'};
 }
 // The plants' opening hours (the user's list 04.10.2026). The plants publish none (looked up 04.10.2026: the plant in Senjahopen gives
 // a phone number, Råfisklaget lists the plants without hours), so these are typical ones: weekdays 06-18 and Saturday 08-14, closed
@@ -388,15 +408,20 @@ function startLanding(ops){
   if (b.status !== 'port' || !pt || !pt.mottak || b.land || b.shift || kg < 0.5 || !mottakOpen(S.t / 60)) return false;
   if (berthKind(b) === 'naust'){ log(NAUST_SAIL[0], NAUST_SAIL[1]); return false; }
   if (berthKind(b) !== 'main') return startShift('main', ops ? 'landops' : 'land');   // the crane is at the plant's quay
-  const lp = landPlan(b.type, kg), unit = ['kar', 'tubs'];
+  const lp = landPlan(b.type, kg), pall = lp.kind === 'pall', unit = pall ? ['paller', 'pallets'] : ['kar', 'tubs'];
   b.land = {pid:pt.id, t0:S.t, until:S.t + lp.dur, kind:lp.kind, n:lp.n, lifts:lp.lifts, kg:Math.round(kg), ops:!!ops, own:lp.own, kgs:lp.kgs, wash:lp.wash};
-  log('Losser ' + fmt(kg, 0) + ' kg i ' + pt.name + ', ' + lp.n + ' ' + unit[0] + '. Sluttseddelen kommer ca. kl. ' + hm(b.land.until / 60) + '.', 'Landing ' + fmt(kg, 0) + ' kg at ' + pt.name + ', ' + lp.n + ' ' + unit[1] + '. The landing note comes at about ' + hm(b.land.until / 60) + '.');
+  if (pall){ b.land.lf = lp.lf; b.land.pk = lp.pk; }
+  // (on pallets the weight is the product's, and the round weight the quota and the price go by beside it)
+  const what = pall ? [fmt(lp.pk / 1000, 1) + ' t fryst (' + fmt(kg / 1000, 1) + ' t rund vekt)', fmt(lp.pk / 1000, 1) + ' t frozen (' + fmt(kg / 1000, 1) + ' t round weight)'] : [fmt(kg, 0) + ' kg', fmt(kg, 0) + ' kg'];
+  const at = pall ? [mottakWhen(b.land.until / 60, true), mottakWhen(b.land.until / 60, false)] : ['ca. kl. ' + hm(b.land.until / 60), 'at about ' + hm(b.land.until / 60)];   // (a landing of a day or more: the day too)
+  log('Losser ' + what[0] + ' i ' + pt.name + ', ' + lp.n + ' ' + unit[0] + '. Sluttseddelen kommer ' + at[0] + '.', 'Landing ' + what[1] + ' at ' + pt.name + ', ' + lp.n + ' ' + unit[1] + '. The landing note comes ' + at[1] + '.');
   return true;
 }
 // the catch is weighed in: the sale is settled on what is in the hold now, and a standing plan gets its report
 function finishLanding(){
   const b = S.boat, L = b.land; b.land = null;
   if (b.status !== 'port' || b.port !== L.pid) return;
+  const fz = landFreeze(); if (fz > 0.5) log(fmt(fz, 0) + ' kg som lå ufryst, er fryst ved kaia før innveiingen.', fmt(fz, 0) + ' kg that lay unfrozen was frozen at the quay before the weighing.');
   const c0 = S.cash; sell(); const total = S.cash - c0;
   if (L.ops) opsReport(L.pid, L.kg, total, true);
 }

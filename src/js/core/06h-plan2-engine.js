@@ -355,7 +355,7 @@ function plan2Sea(o, H){
   // (the jig before a haul ends when the soak is up, whether she came to the grounds early or late: the haul starts at its hour)
   if (nx && nx.act && nx.act.due && b.status === 'fishing' && b.fishUntil != null && !b.gop && !b.deckStop){ const legMin = kmTrue(b.pos, nx) / (Math.max(1, BOAT.vcruise || 7) * NM) * 60; const at = Math.max(S.t, Math.round(nx.act.due * 60 - legMin + 6)); if (Math.abs(b.fishUntil - at) > 2) b.fishUntil = at; }   // (six minutes to spare: she is never early)
   // the hold over the limit on a trip that would not land: the rest of the trip is the way to the plant
-  if (!pl.full && pl.opsK === 'fish' && o.land && o.land.when !== 'trip' && holdTotal() >= DRP2.full * capHold() && !pl.wps.slice(pl.idx).some(w => w.port === o.M)){
+  if (!pl.full && pl.opsK === 'fish' && o.land && o.land.when !== 'trip' && holdLoad() >= DRP2.full * capHold() && !pl.wps.slice(pl.idx).some(w => w.port === o.M)){
     const M = plan2P(o, 'M'); if (!M) return;
     let from = null, fp = null; for (let i = pl.idx - 1; i >= 0; i--){ const w = pl.wps[i]; if (w.act || w.fish > 0 || w.jc){ from = {x:w.x, y:w.y}; break; } }
     const L = from ? drLeg(o, from, null, M, o.M) : null; if (!L) return;
@@ -364,7 +364,7 @@ function plan2Sea(o, H){
     if (dist(b.pos, from) > 0.05) pl.wps.push({x:from.x, y:from.y, port:null, fish:0, leia:true});
     for (const q of L.w) pl.wps.push({x:q[0], y:q[1], port:null, fish:0, leia:true});
     pl.wps.push({x:M.x, y:M.y, port:o.M, fish:0}); pl.opsK = 'fish';
-    log('Lasten er ' + Math.round(100 * holdTotal() / capHold()) + ' % full. Går til ' + (portById(o.M) || {name:'mottaket'}).name + ' for å levere.', 'The hold is ' + Math.round(100 * holdTotal() / capHold()) + ' % full. Going to ' + (portById(o.M) || {name:'the plant'}).name + ' to land.');
+    log('Lasten er ' + Math.round(100 * holdLoad() / capHold()) + ' % full. Går til ' + (portById(o.M) || {name:'mottaket'}).name + ' for å levere.', 'The hold is ' + Math.round(100 * holdLoad() / capHold()) + ' % full. Going to ' + (portById(o.M) || {name:'the plant'}).name + ' to land.');
   }
 }
 // she has come in (05-vessels.js dock, through opsLanded): the port call's own step runs next, and a port that is not the step's means the day is made again from here

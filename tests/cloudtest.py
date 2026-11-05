@@ -46,6 +46,8 @@ async def main():
         calls = []; ctx, pg, errs = await page(br, calls, {}, no_user=True)
         await pg.goto(GAME); await pg.wait_for_selector('#cloudGate #cgIn', timeout=90000); await pg.wait_for_timeout(1500)
         g = await pg.evaluate("(() => { document.getElementById('cgIn').click(); return {gate:!!document.getElementById('cloudGate'), signIn:window.__signIn === 1, ready:typeof SIMREADY !== 'undefined' && SIMREADY}; })()")
+        # (sp_now is the list of active sponsors, public and asked for without an account, ui/10r-sponsor.js, M7 02.11.2026; Ø2)
+        calls[:] = [c for c in calls if c[0] != 'sp_now']
         check(g['gate'] and g['signIn'] and not g['ready'] and not calls, 'not signed in, the gate stops the game, «Logg inn» goes to WorkOS, and nothing is sent', g)
         # the gate's links to the terms and the privacy page lead to the pages next to the game, with their style put in
         legal = await pg.evaluate("""async () => { const out = {};
@@ -81,7 +83,7 @@ async def main():
         apps = [e['d'].get('app') for b in batches for e in b.get('evs', []) if e['k'] == 'app']
         errc = [c[1] for c in calls if c[0] == 'tm_error']; puts = [c[1] for c in calls if c[0] == 'save_put2']
         last = batches[-1] if batches else {}
-        check(first == ['tm_hello', 'save_get'] and all(c[2] == 'Bearer tok_test' for c in calls if c[0] != 'tm_perf' and not c[0].startswith('push-send') and not (c[0].startswith('shop-checkout') and not c[1])), 'signed in, the game starts after hello and the save check, with the WorkOS token', first)
+        check(first == ['tm_hello', 'save_get'] and all(c[2] == 'Bearer tok_test' for c in calls if c[0] not in ('tm_perf', 'sp_now') and not c[0].startswith('push-send') and not (c[0].startswith('shop-checkout') and not c[1])), 'signed in, the game starts after hello and the save check, with the WorkOS token', first)
         check(cons == [{'yes': True, 'birth_year': 1990}] and r['consent'] and closed, 'the consent is asked once with the year of birth, the yes is sent and «Ja, del» closes the dialog', {'calls': cons, 'closed': closed})
         check('start' in ev and 'redskap' in apps and 'aground' in ev and len(batches) >= 2 and last.get('active_s', -1) >= 0 and last.get('meta', {}).get('boat'), 'the events go up in batches with the session and the game state', {'ev': ev[:12], 'meta': last.get('meta')})
         check(last.get('ended') is True and last.get('reason') == 'rage' and 'rage' in ev, 'a session that ends within a minute of grounding counts as a rage quit', {'ended': last.get('ended'), 'reason': last.get('reason')})
@@ -132,6 +134,8 @@ async def main():
         replies['pos_put'] = lambda b: 404 if 'lk' in b else 'null'; n0 = len(calls)
         nolk = await pg.evaluate("async () => { WORLDP.last = 0; await worldTick(); return {noLk:!!WORLDP.noLk, noFs:!!WORLDP.noFs}; }")
         wk = [('lk' in c[1], 'fs' in c[1], 'liv' in c[1]) for c in calls[n0:] if c[0] == 'pos_put']
+        # (the game's own worldTick may be on its way with lk too when the test's goes: one or more with lk, then without, Ø2 05.11.2026)
+        wk = wk[:1] + [x for x in wk[1:] if x != wk[0]] if wk and wk[0] == (True, True, True) else wk
         check(wk == [(True, True, True), (False, True, True)] and nolk['noLk'] and not nolk['noFs'], 'a server without the looks yet gets the position, the sea time and the paint without them', {'calls':wk, 'flags':nolk})
         # a server without the sea time yet (404 for a call with fs) gets the place and the paint without it; one without the paint
         # either gets the place alone, and the shared world stays on

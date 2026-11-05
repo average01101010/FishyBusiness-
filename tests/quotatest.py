@@ -60,7 +60,7 @@ TRADE = """(async () => { const R = {}, y = yearH(S.t / 60), tap = q => { const 
   // quota cooperation: the NPC owner signs on, his quota comes aboard, he takes half the value of the cod on it, and leaves at new year
   S.lic = {id:'h9', since:y - 1}; freshQuota(); S.crew = []; const own = licQ(S.lic).torsk; PHONE.dact('kvote', 'coop', {}); const co = S.lic.coop;
   R.coop = {on:!!co, crew:S.crew.length, coopCrew:S.crew.some(c => c.coop), quota:[own, licQ(S.lic).torsk]};
-  quotaState().torsk = own - 100; const cash0 = S.cash; S.hold = [{sp:'torsk', kg:400, fresh:90, bled:true, iced:true, c:1, g:'A'}]; sell(); R.coop.paid = /fikk .* for torsken på kvoten hans/.test(S.log.slice(-3).map(e => e.no).join(' '));
+  quotaState().torsk = own - 100; const cash0 = S.cash, lt0 = S.t; S.hold = [{sp:'torsk', kg:400, fresh:90, bled:true, iced:true, c:1, g:'A'}]; sell(); R.coop.paid = /fikk .* for torsken på kvoten hans/.test(S.log.filter(e => e.t >= lt0).map(e => e.no).join(' '));   // (every line of the landing: the lot, the crew's word and the fresh-fish line come after it now, Ø2 05.11.2026)
   S.qyY = y - 1; S.lic.coop.y = y - 1; quotaNewYear(y); R.coop.after = {coop:S.lic.coop, crew:S.crew.length};
   // the app: four tabs, each rendered
   PHONE.open('kvote'); const txt = s => { PHONE.dact('kvote', 'sub', {s}); PHONE.render(); return document.querySelector('#phone').textContent; };

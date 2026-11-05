@@ -12,6 +12,12 @@
        ['Rekordfisk vises på fangstkortet og i dagboka, og fartstiden står i dagboka.', 'Record fish show on the catch card and in the deck log, and sea time is in the deck log.'],
        ['Teinekortet sier hvor kongekrabben er, og i juksespillet dupper snøret før nappet.', 'The pot card says where the king crab is, and in the jig game the line nudges before a bite.'],
     ]],
+    ['fabrikk-051126', '05.11.2026', 'Drift om bord på autolineren', 'Work aboard the autoliner', [
+       ['Autolineren har to skift som følger båten, 14 mann hver. Dekkslaget og fabrikklaget går seks og seks, kokken lager maten, og skiftene bytter ved hver levering. Lotten går til skiftet om bord etter havfiskeavtalen.', 'The autoliner has two crews that come with her, 14 men each. The deck and factory teams go six on, six off, the cook makes the food, and the crews change at each landing. The share goes to the crew aboard by the ocean fishing agreement.'],
+       ['Fabrikken sløyer, kapper hodet og fryser fisken i platefrysere, om lag 15 tonn i døgnet. Lasterommet regnes i produktvekt, og kvoten og prisen i rund vekt.', 'The factory guts, heads and freezes the catch in plate freezers, about 15 tonnes a day. The hold counts the product weight, and the quota and the price the round weight.'],
+       ['Turen: proviant for 60 døgn kommer om bord når båten går, mannskapet bytter kroker på lina underveis, og kortet Turen under Beholdning › Båten viser hvor mange døgn drivstoffet, provianten, agnet, krokene og lasterommet rekker.', 'The trip: provisions for 60 days come aboard when she leaves, the crew changes hooks on the line as she goes, and the card The trip under Inventory › The boat shows how many days the fuel, the provisions, the bait, the hooks and the hold last.'],
+       ['Den frosne fisken losses på paller, om lag 10 tonn i timen.', 'The frozen catch is landed on pallets, about 10 tonnes an hour.'],
+    ]],
     ['innseiling-051126', '05.11.2026', 'Autonav inn til havna', 'Autonav into harbour', [
        ['Autonav går ikke lenger tett langs stranda på vei inn til havna, så båten ikke ser ut til å seile på land. Veien inn holder seg ut fra land der det er plass, også inn til Tufjord.', 'Autonav no longer runs close along the beach on the way into a harbour, so the boat does not look as if it sails on land. The way in keeps off the shore where there is room, into Tufjord too.'],
     ]],

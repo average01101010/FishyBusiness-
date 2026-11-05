@@ -31,6 +31,11 @@ async def main():
           c.querySelector('[data-s="f"]').click(); await wait(80); R.sent = (calls.find(x => x[0] === 'mark_share') || [0, null])[1];
           R.done = mk.sh === 'f' && /Delt/.test(c.querySelector('[data-s="f"]').textContent);
           reply = 'nolag'; calls.length = 0; c.querySelector('[data-s="l"]').click(); await wait(80); R.nolag = !mk.sh.includes('l') && !c.querySelector('[data-s="l"]').disabled;
+          // a mark made with luck aboard (lf) goes out as it would have been without it: haill is never shown to the others (Ø6 funn 11)
+          const mk2 = {x:g.x + 1.6, y:g.y - 1.6, t:S.t - 60, kgph:40, q:1.2, lf:2}, mk3 = {x:g.x + 2.2, y:g.y - 2.2, t:S.t - 60, kgph:0, g:'garn', kgu:10, soak:12, q:1.4, lf:2};
+          S.marks.push(mk2, mk3); reply = 'ok'; R.luck = [];
+          for (const m of [mk2, mk3]){ calls.length = 0; SHARE.tap({x:m.x + 0.01, y:m.y}, 0.2); c.querySelector('[data-s="f"]').click(); await wait(80); R.luck.push((calls.find(x => x[0] === 'mark_share') || [0, null])[1]); }
+          S.marks = S.marks.filter(m => m !== mk2 && m !== mk3);
           // the marks shared with you
           const m0 = S.msgs.length; SHARE._M.at = 0; SHARE.fetch(true); await wait(120); view.cx = g.x; view.cy = g.y; view.z = 6; applyView(); renderDyn(); const svg = document.getElementById('map').innerHTML;
           R.drawn = (svg.match(/class="shmark/g) || []).length; R.names = /Ola · 34 kg\\/t/.test(svg) && /Kari · 13 kg\\/garn · 14 t/.test(svg) && !/Utgått9/.test(svg); R.nm3 = [/Ola · 34 kg\\/t/.test(svg), /Kari · 13 kg\\/garn · 14 t/.test(svg), /Utgått9/.test(svg)];
@@ -47,6 +52,9 @@ async def main():
         print(ok(r['drawn'] == 2 and r['names'] and r['msgs'] == ['Venner', 'Fiskarlaget'] and r['msgsOnce'] == 2), 'the marks shared with you are on the chart with the name and the catch, the old one is gone, and a message comes once each', [r['drawn'], r['names'], r['msgs'], r['msgsOnce']])
         print(ok(r['tapShared'] and r['card2'] and r['route'] and r['closed'] and r['miss']), 'a tap on a shared mark gives the sharer and «Rute hit», which puts it in the route', [r['tapShared'], r['card2'], r['route'], r['closed']])
         print(ok(r['off']), 'a database without the functions is left alone')
+        lk = r.get('luck') or [{}, {}]
+        print(ok(lk[0] and lk[0].get('kgph') == 20 and lk[0].get('q') == 0.6 and lk[1] and lk[1].get('kgu') == 5 and lk[1].get('q') == 0.7 and lk[1].get('soak') == 12),
+              'a mark made with luck aboard is shared as it would have been without it, so no one sees that haill was used (Ø6 funn 11)', lk)
         print('errors:', errs[:3]); await br.close()
 
 asyncio.run(main())

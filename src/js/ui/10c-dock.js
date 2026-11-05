@@ -145,7 +145,7 @@ const DOCK = (() => {
     const work = (S.crew.length || S.ops) && I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid', dot:opsDot()});
     const b = S.boat, beh = I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'});   // no «Hjem» (the user's wish 02.10.2026: Autonav to the harbour, or «Returner samme vei» in the plotter)
     // a full hold: Auto-nav is the main button, not «Jukse» (spilltest 3, U5)
-    const full = holdTotal() >= capHold() - 0.5, nav = I('nav', 'nav', 'Auto-nav', 'Auto-nav', {run:autoNav, pri:full && b.status === 'idle'});
+    const full = (typeof holdFmt === 'function' ? holdFmt().load : holdTotal()) >= capHold() - 0.5, nav = I('nav', 'nav', 'Auto-nav', 'Auto-nav', {run:autoNav, pri:full && b.status === 'idle'});
     const tut = typeof HAIL !== 'undefined' ? HAIL.dockItem(I) : null;
     const ptow = typeof PTOW !== 'undefined' ? PTOW.dockItem(I) : null;   // «Ta slep» by a player's broken-down boat (ui/10o-ptow.js)   // another player's boat within 1 nm (ui/10n-hail.js)
     if (b.status === 'idle'){

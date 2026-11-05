@@ -1,6 +1,6 @@
 // ===== fleet: each vessel keeps its own state; the company holds the rest. The simulation steps through the vessels one at a
 // time and binds S.boat, S.hold, S.crew and the others to the vessel it is working on, so the rest of the code is unchanged. =====
-const VKEYS = ['meal', 'sayT', 'boat', 'plan', 'hold', 'crew', 'equip', 'jobs', 'cevt', 'ops', 'lic', 'quota', 'draft', 'draftSpeed', 'draftDep', 'marks', 'target', 'trail', 'fsess', 'facc', 'fnext', 'fishPlanH', 'workLog', 'clothes', 'tripBuff', 'prep', 'svcTold', 'boatName', 'lastSale', 'restWarn', 'kvRel', 'codWarn', 'lastIceWarn', 'navrows', 'tripOwner', 'pgear', 'cargo', 'team'];
+const VKEYS = ['meal', 'sayT', 'boat', 'plan', 'hold', 'crew', 'equip', 'jobs', 'cevt', 'ops', 'lic', 'quota', 'draft', 'draftSpeed', 'draftDep', 'marks', 'target', 'trail', 'fsess', 'facc', 'fnext', 'fishPlanH', 'workLog', 'clothes', 'tripBuff', 'prep', 'svcTold', 'boatName', 'lastSale', 'restWarn', 'kvRel', 'codWarn', 'lastIceWarn', 'navrows', 'tripOwner', 'pgear', 'cargo', 'team', 'lag'];
 function curVessel(){ return S.fleet.find(v => v.id === S.cur) || S.fleet[0]; }
 function storeVessel(v){ for (const k of VKEYS) v[k] = S[k]; }
 function bindVessel(v){ for (const k of VKEYS) S[k] = v[k]; S.cur = v.id; applyVessel(); }
@@ -405,7 +405,7 @@ function riskLevel(W, hs){ const r = BOAT.risk; if (hs >= r[1] || W >= r[3]) ret
 // hull's resistance at a speed goes with the weight to the 2/3, so at the same power the speed goes with (D0/D)^(2/9), about ^0.22
 // (+50 % weight: −9 %); a planing hull feels it more, ^0.5. The fuel at a speed goes with (D/D0)^(2/3)
 const FUEL_KG = d => d ? 0.84 : 0.74;   // kg a litre, diesel and petrol
-function boatTons(){ const b = S.boat, V = VESSELS[b.type] || VESSELS.skiff; return V.disp + (holdTotal() + (typeof cargoKg === 'function' ? cargoKg() : 0) + (b.ice || 0) + (b.fuel || 0) * FUEL_KG(V.diesel) + 90 * Math.max(1, handsAboard()) + (typeof hullWaterKg === 'function' ? hullWaterKg(b) : 0)) / 1000; }
+function boatTons(){ const b = S.boat, V = VESSELS[b.type] || VESSELS.skiff; return V.disp + (holdLoad() + (typeof cargoKg === 'function' ? cargoKg() : 0) + (b.ice || 0) + (b.fuel || 0) * FUEL_KG(V.diesel) + 90 * Math.max(1, handsAboard()) + (typeof hullWaterKg === 'function' ? hullWaterKg(b) : 0)) / 1000; }
 function boatTons0(){ const V = VESSELS[S.boat.type] || VESSELS.skiff; return V.disp + (V.holdCap * 0.25 + V.fuelCap * 0.5 * FUEL_KG(V.diesel) + 90) / 1000; }
 function loadF(){ return clamp(Math.pow(boatTons0() / Math.max(0.1, boatTons()), BOAT.planing ? 0.5 : 0.22), 0.55, 1.08); }
 // ---- fouling: weed and barnacles on the hull (S.boat.foul, 0 to 1) slow her up to 15 % and cost up to 25 % more fuel; it grows in
@@ -782,7 +782,7 @@ const ACCT = {
   rente:{s:'in', no:'Renteinntekter', en:'Interest earned'}, annet:{s:'in', no:'Andre inntekter', en:'Other income'},
   trekk:{s:'out', no:'Trekk til Råfisklaget og staten', en:'Sales organisation and state levies'}, mannskap:{s:'out', no:'Mannskap (lott)', en:'Crew (shares)'},
   kvote:{s:'out', no:'Kvotesamarbeid', en:'Quota cooperation'}, diesel:{s:'out', no:'Drivstoff', en:'Fuel'}, is:{s:'out', no:'Is', en:'Ice'}, agn:{s:'out', no:'Agn og egning', en:'Bait and baiting'},
-  redskap:{s:'out', no:'Redskap og utstyr', en:'Gear and equipment'}, verft:{s:'out', no:'Verft og verksted', en:'Yard and workshop'}, havn:{s:'out', no:'Havneavgift', en:'Harbour dues'},
+  redskap:{s:'out', no:'Redskap og utstyr', en:'Gear and equipment'}, verft:{s:'out', no:'Verft og verksted', en:'Yard and workshop'}, havn:{s:'out', no:'Havneavgift', en:'Harbour dues'}, proviant:{s:'out', no:'Proviant', en:'Provisions'},
   forsikring:{s:'out', no:'Forsikring og slep', en:'Insurance and towing'}, renter:{s:'out', no:'Rentekostnader', en:'Interest paid'}, regnskap:{s:'out', no:'Regnskap og gebyrer', en:'Books and fees'},
   land:{s:'out', no:'Naust, rorbu, pub og klær', en:'Boathouse, rorbu, pub and clothes'},
   eldre_inn:{s:'in', no:'Inntekter før regnskapet fikk poster', en:'Income before the accounts had categories'}, eldre_ut:{s:'out', no:'Kostnader før regnskapet fikk poster', en:'Costs before the accounts had categories'},
@@ -1130,7 +1130,7 @@ function pubOpen(H){ const hr = gDate(H).getUTCHours(); return hr >= 15 || hr < 
 // the room for fish: freight for a mission goes on deck first (schema v2 deckCargo, docs/batplan.md del 8) and takes hold room only beyond that (09g-turer.js)
 function capHold(){ const c = typeof cargoKg === 'function' ? cargoKg() : 0; return Math.max(0, BOAT.holdCap - Math.max(0, c - (BOAT.deckCargo || 0))); }
 // the room for more freight: what is left on deck, and what is left beside the catch
-function cargoRoom(){ const c = typeof cargoKg === 'function' ? cargoKg() : 0; return Math.max(0, (BOAT.deckCargo || 0) - c) + Math.max(0, capHold() - holdTotal()); }
+function cargoRoom(){ const c = typeof cargoKg === 'function' ? cargoKg() : 0; return Math.max(0, (BOAT.deckCargo || 0) - c) + Math.max(0, capHold() - holdLoad()); }
 // loading or landing freight takes its time (Jonas 17.10.2026): a crane lifts 200 kg a minute a tonne of lift; by hand it is pieces under 60 kg, 60 kg a minute a person
 function cargoMin(kg){ const hands = Math.max(1, handsAboard()); return Math.max(5, Math.ceil(kg / (BOAT.crane ? 200 * BOAT.crane : 60 * hands))); }
 // ---- the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
