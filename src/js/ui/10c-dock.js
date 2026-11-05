@@ -387,3 +387,12 @@ function showroomTick(){
   const st = S.boat.status; if (!(st === 'aground' && SHOWST !== 'aground') && !(SHOWST === 'port' && st !== 'port')) return;
   G3.showroom(null); toast(S.lang === 'no' ? 'Visningen er lukket. Kameraet er tilbake på båten din.' : 'The showroom is closed. The camera is back on your boat.');
 }
+// framme ved egen blåse etter «Kjør dit» eller Auto-nav (spilltest 3, U3): the chart plotter closes by itself, so the dock bar and «Ta opp»
+// are there; only when the boat came sailing and now lies still within 300 m of one of her own buoys
+{ let was = null;
+  setInterval(() => { try {
+    const b = S.boat, st = b && b.status; if (!st) return; const arrived = was === 'sailing' && st === 'idle' && !S.plan; was = st; if (!arrived) return;
+    if (!document.body.classList.contains('vplot') || !mySets().some(s => Math.min(dist(b.pos, s.a), dist(b.pos, s.b)) < 0.3)) return;
+    const c = document.getElementById('plotClose'); if (c && !c.hidden) c.click();
+    toast(S.lang === 'no' ? 'Framme ved blåsa. «Ta opp» står i knappelinja.' : 'At the buoy. «Haul» is in the dock bar.');
+  } catch (e){ console.error(e); } }, 500); }
