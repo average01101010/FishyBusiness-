@@ -1,6 +1,6 @@
 # Driftsplan 2: valgene etter GUI-gjennomgangen (05.11.2026)
 
-Bakgrunn: `03-gui-gjennomgang.md` (funnene, med mål, bilder og filer). F1–F7 er rettet. U4 (Pause stopper båten) og U11 (din egen hvile når planen er hjemme) er bygd 05.11.2026 etter Jonas' svar. Dette er resten: U1–U3, U5–U10, U12–U14 og P1–P7. **Ingenting her er bygd; det venter på Jonas' svar.**
+Bakgrunn: `03-gui-gjennomgang.md` (funnene, med mål, bilder og filer). F1–F7 er rettet. U4 (Pause stopper båten) og U11 (din egen hvile når planen er hjemme) er bygd 05.11.2026 etter Jonas' svar. Dette er resten: U1–U3, U5–U10, U12–U14 og P1–P7. **Jonas har svart (05.11.2026, under «Status»); ingenting er bygd ennå.**
 
 Jonas' ord som gjelder: «Kjør på med F1–F7 først, så tar vi resten i en ny økt» (05.11.2026). Reglene: grafikken og opplevelsen på nettbrettet (berøring, stående og liggende), handelsstedene (kjøp bare i butikken, på mottaket og på verftet), og ingen grunner til hvorfor noe er laget slik i patchnotes.
 
@@ -72,4 +72,4 @@ Ingen endring i motoren utover grunnene (U13), dagens ord (P4) og blåsesettet (
 
 ## Status
 
-- 05.11.2026: planen skrevet; venter på Jonas' svar.
+- 05.11.2026: planen skrevet. Jonas svarte samme dag: gruppe 1 ja til alle, A på U1, U6, U7, U8, U9, U14 og P7. I tillegg: Pause skal ankre der det går (driver ellers), og en rorbu uten penger lar planen vente og si fra. Bygges i neste økt.

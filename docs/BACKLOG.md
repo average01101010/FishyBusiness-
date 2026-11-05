@@ -55,8 +55,8 @@
 - **Økonomi 2 er bygd og rullet ut (Ø1–Ø5 og lotten etter fiskerioverenskomsten, 27.10.2026):** flettet inn i arbeidsgrenen `ccr-5e1ba2f4-pusvyd` og publisert på detstorebla.no (Jonas: «Commit og push ut på detstorebla.no når du er klar»). Planen og statusen står i `docs/planer/okonomi/02-design.md`, systemet i `docs/systemer/priser-og-salg.md` (5.4: hovedboka, lotten, bankkontoene, skatten).
 - **Økonomi 2 må spilltestes:** lottabellen, avsetningen til skatt og kassekreditten er nye for spillerne. Følg med på om trivselen (`lotWeek`, `WEEKKR`) passer båtstørrelsene; `WEEKKR` er satt etter skiffens tall i `progweek` (rundt 14 000 kr per tur i skreisesongen) og et anslag for de større båtene.
 - **Driftsplan 2: GUI-gjennomgangen, det som står igjen** (05.11.2026, `docs/planer/driftsplan-2/03-gui-gjennomgang.md`, gren `ccr-3d7eb5bf-vgz41n`). F1–F7 er rettet samme dag (systemdokumentet, «Rettingene F1–F7»). Neste økt:
-  - **U4 og U11 er bygd 05.11.2026** (systemdokumentet, «U11 og U4 bygd»). Pause lar båten ligge stille og drive med vinden (holdt fra land); om den heller skal ankre der det går, er ikke spurt.
-  - **Venter på Jonas' valg:** U1–U3, U5–U10, U12–U14 og P1–P7, lagt fram i `docs/planer/driftsplan-2/04-valg-etter-gui.md` (gruppe 1: rettinger uten reelt valg; gruppe 2: U1, U6, U7, U8, U9, U14 og P7 med A/B/C).
+  - **U4 og U11 er bygd 05.11.2026** (systemdokumentet, «U11 og U4 bygd»). Pause lar båten ligge stille og drive med vinden (holdt fra land); Jonas vil at den ankrer der det går (under).
+  - **Bygges neste økt, Jonas har svart 05.11.2026:** gruppe 1 (U2, U3, U5, U10, U12, U13, P1–P6) og A på U1, U6, U7, U8, U9, U14 og P7 (`docs/planer/driftsplan-2/04-valg-etter-gui.md`, rekkefølgen står der), pluss **Pause ankrer der det går** (`plan2Pause`, `dropAnchor`; driver ellers som nå).
   - **Kunne ikke testes i testmiljøet, må tas senere:**
     - havneplass som hjem (`havnOptions` er tom rundt Senja uten hele kysten);
     - planer utenfor Senja, og stikkprøvene for F2 i Bergen, Bodø og Hammerfest (bare Senja-kartet i miljøet; i appen eller i et miljø med `tools/map/out/game`);
