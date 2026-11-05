@@ -309,6 +309,12 @@ function skreiPulse(c, H, T){
 }
 // What density() puts where av was: the species' availability at a place (q from denPlace, q.c the cell) in the hour T (denTime), with
 // the spawning stock (T[sp].av and .skrei carry stockF). The cell's location is looked up once per 2 km cell, the month once per hour.
+// The cod by main area against the landing notes per vessel-day (05.11.2026, Jonas: «Ta finnmark først»): the location index from the
+// notes (kilos per landing for its gear and length) gave Finnmark too little against Senja. The landing notes 2025-2026, cod with jig on
+// boats under 11 m, median kilos per vessel-day against Senja (05, locations 20-39): West Finnmark (04) 1.74 / 2.07 / 2.03 in
+// February / March / April, 1.81 in June-August and 1.12 in October-November; East Finnmark (03) 1.23 / 1.54 / 1.79, 2.55 and 2.48.
+// The game gave 1.12 / 1.16 and 0.62 / 0.76 in February and March. [the resident cod, the skrei] per main area; elsewhere 1
+const COD_AREA = {'04':[1.1, 1.9], '03':[1.4, 2.2]};
 function fkAvail(sp, q, T){
   const t = T[sp], c = q.c, l = c.l, F = FK.af ? FK.af[sp] : fkBuild() && FK.af[sp];
   if (sp === 'torsk' && FK.torsk === 'data' && F && F.m && l >= 0){
@@ -326,7 +332,8 @@ function fkAvail(sp, q, T){
         for (const day of [3, 10, 17, 24]) mean += skreiPulse(c, (Date.UTC(y, mo, day, 12) - EPOCH) / 3.6e6) / 4; pm[kl] = mean; }
       rel = clamp(skreiPulse(c, T.H, T) / Math.max(0.05, mean), 0, 3); }
     const f = t.av / (t.sf || 1);   // the table av is flat for cod, the stock is put on below
-    return f * (res * kf + sk * rel * clamp((0.4 + q.skr) / 1.0, 0, 1.6) * T.skl * (t.sf || 1));
+    const ca = COD_AREA[RU.lok[l].c.slice(0, 2)];
+    return f * (res * kf * (ca ? ca[0] : 1) + sk * rel * clamp((0.4 + q.skr) / 1.0, 0, 1.6) * T.skl * (t.sf || 1) * (ca ? ca[1] : 1));
   }
   if (sp === 'torsk'){
     if (q.skr < 0) q.skr = skreiSpot(q.p, q.d, q.E);
