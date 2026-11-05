@@ -1571,3 +1571,9 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 #pmCard .ai-h button{width:44px;height:44px;margin:-6px -8px -6px 0;padding:0;font-size:24px;line-height:1;border-radius:8px}
 #pmCard .pm-kv button,#pmCard .pin-b button{min-width:44px;min-height:44px}
 #pmCard .pin-b button{flex:1}
+/* GUI review U8 A (05.11.2026): on the plan's page one colour says «go on» (Start, Lag driftsplan, Velg i kartet, the way to the shop),
+   green and filled as the plan's own «På»; a running plan reads as its state with the pause in it; Slett is a red outline, never the heaviest */
+.dr-page .ph-btn.p{background:#1e8c6e;border-color:#1e8c6e;box-shadow:0 2px 8px rgba(30,140,110,.25)}
+.dr-onoff:not(:disabled){background:#1e8c6e;color:#fff;box-shadow:0 2px 10px rgba(30,140,110,.3);cursor:pointer}
+.dr-onoff.on{background:#e6f3ee;color:#13684f;border:2px solid #1e8c6e;box-shadow:none}
+.dr-page .ph-btn.dr-del{background:transparent;color:#b3261e;border:1.5px solid #b3261e;box-shadow:none}

@@ -244,8 +244,8 @@ const PLAN2UI = (() => {
   }
   function page(){
     const o = plan2Ops();
-    if (!o) return '<div class="ph-c"><div class="ph-card"><h4>' + L('Driftsplan for «', 'Operations plan for «') + S.boatName + '»</h4><p class="ph-note">' + L('Med en driftsplan fisker, leverer og hviler båten på egen hånd, hver dag, også når spillet er lukket. Du velger hvor båten hører hjemme, hva og hvor den fisker, hvor den leverer, hvilket vær den går i og hvilken rytme mannskapet har. Planen legger dagen selv og viser den her.', 'With an operations plan the boat fishes, lands and rests on her own, every day, also while the game is closed. You choose where she belongs, what and where she fishes, where she lands, what weather she goes out in and the crew\'s rhythm. The plan lays the day itself and shows it here.') + '</p>' + B('p2-new', L('Lag driftsplan', 'Make a plan'), '', 'p') + '</div></div>';
-    const C = plan2Check(o), h = ['<div class="ph-c">', top(o, C)];
+    if (!o) return '<div class="ph-c dr-page"><div class="ph-card"><h4>' + L('Driftsplan for «', 'Operations plan for «') + S.boatName + '»</h4><p class="ph-note">' + L('Med en driftsplan fisker, leverer og hviler båten på egen hånd, hver dag, også når spillet er lukket. Du velger hvor båten hører hjemme, hva og hvor den fisker, hvor den leverer, hvilket vær den går i og hvilken rytme mannskapet har. Planen legger dagen selv og viser den her.', 'With an operations plan the boat fishes, lands and rests on her own, every day, also while the game is closed. You choose where she belongs, what and where she fishes, where she lands, what weather she goes out in and the crew\'s rhythm. The plan lays the day itself and shows it here.') + '</p>' + B('p2-new', L('Lag driftsplan', 'Make a plan'), '', 'p') + '</div></div>';
+    const C = plan2Check(o), h = ['<div class="ph-c dr-page">', top(o, C)];
     h.push(dayCard(o));
     h.push('<div class="ph-card dr-rows">' +
       row('home', L('Hjem', 'Home'), o.home ? nm(o.home) + (o.anchor && (BOAT.len || 0) >= DRP.bigLen ? L(', til ankers', ', at anchor') : '') : L('ikke valgt', 'not chosen'), () => homeBody(o), !o.home) +
@@ -257,7 +257,7 @@ const PLAN2UI = (() => {
       row('crew', L('Mannskap', 'Crew'), crewVal(o), () => crewBody(o), !meAboard() && (VESSELS[S.boat.type].crewMax || 0) >= 2 && !(crewSkipper() && crewMate() && crewSkipper() !== crewMate())) + '</div>');
     h.push(stats(o));
     const others = (S.fleet || []).filter(v => v.id !== S.cur);
-    h.push('<div class="ph-card">' + (others.length ? '<h4>' + L('Kopier planen til en annen båt', 'Copy the plan to another vessel') + '</h4><div class="ops-days">' + others.map(v => T('p2-copy', vget(v, 'boatName'), false, 'data-id="' + v.id + '"')).join('') + '</div>' : '') + B('p2-reset', L('Slett driftsplanen', 'Delete the plan') + '</div></div>');
+    h.push('<div class="ph-card">' + (others.length ? '<h4>' + L('Kopier planen til en annen båt', 'Copy the plan to another vessel') + '</h4><div class="ops-days">' + others.map(v => T('p2-copy', vget(v, 'boatName'), false, 'data-id="' + v.id + '"')).join('') + '</div>' : '') + B('p2-reset', L('Slett driftsplanen', 'Delete the plan'), '', 'dr-del') + '</div></div>');
     return h.join('');
   }
   function start(o){
