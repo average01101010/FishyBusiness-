@@ -233,7 +233,11 @@ const DOCK = (() => {
   // the rows above the first one when the buttons wrap (a narrow phone upright): what stands over the row is lifted that much
   // (measured when the row is shown: a change made while the chart plotter hides it is measured on the next render it is seen)
   // (the lift is the rows over the last one, from where the rows begin: the hero is taller than the others, U3)
-  function rowsUp(){ if (!bar.offsetParent){ rowsDue = true; return; } rowsDue = false; const ks = [...bar.children], x = ks.length ? Math.max(0, Math.max(...ks.map(k => k.offsetTop)) - Math.min(...ks.map(k => k.offsetTop))) : 0; document.body.style.setProperty('--dkx', x + 'px'); }
+  // (and --dkh: how high the dock's top button stands over the bottom of #mapwrap, which holds both; the drawer in portrait stands at
+  // least that high, so the dock never covers its foot: the 84 px it assumed were 1–20 px short on a phone at sea, where the buttons
+  // stand higher, the active one has a ring and a label can take two lines, GUI review F4 05.11.2026)
+  function rowsUp(){ if (!bar.offsetParent){ rowsDue = true; document.body.style.setProperty('--dkh', '0px'); return; } rowsDue = false; const ks = [...bar.children], x = ks.length ? Math.max(0, Math.max(...ks.map(k => k.offsetTop)) - Math.min(...ks.map(k => k.offsetTop))) : 0; document.body.style.setProperty('--dkx', x + 'px');
+    const top = ks.length ? Math.min(...ks.map(k => k.getBoundingClientRect().top)) : null; document.body.style.setProperty('--dkh', top == null ? '0px' : Math.max(0, Math.round(bar.offsetParent.getBoundingClientRect().bottom - top + 6)) + 'px'); }
   window.addEventListener('resize', () => { if (bar) rowsUp(); });
   // the fan stands centred over its button, inside the screen
   function placeFan(){
@@ -339,8 +343,11 @@ const DOCK = (() => {
   dBody.addEventListener('click', e => {
     const el = e.target.closest('[data-pa],[data-act]'); if (!el || el.disabled) return;
     if (el.dataset.pa){
-      const next = PHONE.dact(page, el.dataset.pa, el.dataset);
-      if (next !== page){ const pg = String(next).split(':')[0]; if (PHONE.DRAWER.has(pg)){ page = pg; draw(false); } else if (next !== 'home') PHONE.open(next); }
+      // (an act that opened another page itself, as the plan's «Til Mannskap-siden», keeps it: before, the drawer was set back to the page
+      // the act came from, GUI review F1 05.11.2026)
+      const pg0 = page, next = PHONE.dact(page, el.dataset.pa, el.dataset);
+      if (page !== pg0){ /* the act went to another page */ }
+      else if (next !== page){ const pg = String(next).split(':')[0]; if (PHONE.DRAWER.has(pg)){ page = pg; draw(false); } else if (next !== 'home') PHONE.open(next); }
     } else doAct(el);
     draw(true); render();
   });

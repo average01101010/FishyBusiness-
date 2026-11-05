@@ -893,13 +893,15 @@ function dock(pid, berth){
   else if (port.rorbu) log('Fortøyd ved rorbua i ' + port.name + '.', 'Moored at the rorbu in ' + port.name + '.');   // 07d-rorbu.js
   else log('Fortøyd i ' + port.name + '.', 'Moored in ' + port.name + '.');
   // by Autonav (or any route) to a rorbu: the rest starts by itself on arrival when you are aboard and not rested (Jonas 08.10.2026);
-  // the plan's trips are the crew's, who sleep at a rorbu on their own
+  // the plan's trips are the crew's, who sleep at a rorbu on their own; with you aboard, Driftsplan 2 takes you in when she lies a while (plan2MeRest)
   if (port.rorbu && !wasOps && meAboard() && !(S.tut) && typeof S.energy === 'number' && S.energy < 98 && typeof restStart === 'function' && !resting()){
     const why = restStart(); if (why && typeof toast === 'function') toast(S.lang === 'no' ? why[0] : why[1]); }
   tatTripEnd(pid);
   turDock(pid);   // freight picked up or delivered (09g-turer.js)
   // the skipper starts landing and restocks straight away, on this vessel (a deferred call would act on whichever vessel is bound then)
-  if (wasOps && !port.rorbu){ opsLanded(pid, opsK); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
+  // (Driftsplan 2 is told at a rorbu too: a rorbu is often the plan's home, and a call it was not told of made the day again at once,
+  // out again every quarter of an hour all night (GUI review F2, 05.11.2026); the old plan never landed at a rorbu)
+  if (wasOps && (!port.rorbu || DRIFT2)){ opsLanded(pid, opsK); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
 }
 // What the boat makes of the fish where it is, besides the fish itself: effort (people, jigs, machines, the team), weather and
 // sea, cold, hands busy on deck, and your own share while you play the jig game. fish() uses it, and so does the heat map's «Her nå» line.

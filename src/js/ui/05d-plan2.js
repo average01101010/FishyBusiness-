@@ -21,6 +21,8 @@ const PLAN2UI = (() => {
     const k = portKind(p); return k === 'mottak' ? L('fiskemottak', 'fish plant') : k === 'verft' ? L('verft', 'yard') : k === 'butikk' ? L('butikk', 'shop') : L('kai', 'quay'); };
   // ---- Nå: the step she is on and when it ends, what she waits for and until when, or why she stopped
   function nowOf(o){
+    if (!o.on && o.paused && !o.stop){ const b = S.boat, at = ck(o.paused.t / 60);   // (U4: the boat lies still where Pause found her)
+      return [b.status === 'port' ? L('På pause siden kl. ' + at + '. Båten ligger i ' + nm(b.port) + '.', 'Paused since ' + at + '. The boat lies at ' + nm(b.port) + '.') : b.anch ? L('På pause siden kl. ' + at + '. Båten ligger til ankers der den var.', 'Paused since ' + at + '. The boat lies at anchor where she was.') : L('På pause siden kl. ' + at + '. Båten ligger stille der den var, og mannskapet venter på deg.', 'Paused since ' + at + '. The boat lies still where she was, and the crew wait for you.'), 'wait']; }
     if (!o.on) return o.stop ? [L('Stoppet: ', 'Stopped: ') + L(o.stop.no, o.stop.en), 'bad'] : [L('Av', 'Off'), ''];
     if (o.held) return [L('Venter: du har tatt over båten', 'Waiting: you have taken the boat over'), 'wait'];
     const b = S.boat, pl = S.plan, r = o.run, M = nm(o.M), stepTxt = s => { const t = planDayText(o, {steps:[s], skipped:[], why:['', '']})[0]; return L(t[1], t[2]); };
@@ -44,15 +46,17 @@ const PLAN2UI = (() => {
   function preview(o){
     const r = o.run, H = S.t / 60;
     // (on a trip the arrow follows the clock: the step pointer moves at the harbour calls)
-    if (r && r.day && r.i < r.day.steps.length && !r.replan){ let now = r.i; if (r.trip && S.plan && S.plan.ops){ for (let i = r.i; i < r.day.steps.length; i++){ const s = r.day.steps[i]; if (s.t != null && s.t <= H) now = i; } } return {day:r.day, now, label:L('I dag', 'Today')}; }
+    // (off, paused or stopped: the next day, never «I dag ←» as if she went, U4)
+    if (o.on && r && r.day && r.i < r.day.steps.length && !r.replan){ let now = r.i; if (r.trip && S.plan && S.plan.ops){ for (let i = r.i; i < r.day.steps.length; i++){ const s = r.day.steps[i]; if (s.t != null && s.t <= H) now = i; } } return {day:r.day, now, label:L('I dag', 'Today')}; }
     // a plan not made yet has no plant: the nearest one to the places stands in, so the day can be read before Start
     let oo = o; if (!o.M){ const P = o.places, mid = P.length ? {x:P.reduce((a, q) => a + q.x, 0) / P.length, y:P.reduce((a, q) => a + q.y, 0) / P.length} : (portById(o.home) || {p:S.boat.pos}).p, M = o.land.mode === 'port' && o.land.port ? portById(o.land.port) : PORTS.filter(q => q.mottak).sort((x, y) => dist(x.p, mid) - dist(y.p, mid))[0]; if (M) oo = Object.assign({}, o, {M:M.id}); }
     // the next day is reckoned from the state at its departure, not now: the crew's fatigue and your energy fall and rise with the rest until then
     // (the engine lays the day anew at the departure; this is the page's estimate, as the note under the day says)
-    try { const from = r && r.day ? r.day.end : H, dep = plan2NextDep(oo, H, from), st = plan2State(oo), hrs = Math.max(0, dep - H);
+    const atSea = !o.on && S.boat.status !== 'port' && !S.boat.anch;   // (started at sea, the day is laid from where she lies, now: plan2Start)
+    try { const from = o.on && r && r.day ? r.day.end : H, dep = atSea ? H : plan2NextDep(oo, H, from), st = plan2State(oo), hrs = Math.max(0, dep - H);
       if (hrs > 0){ const b = S.boat, atRest = b.status === 'port' && (b.port === oo.home ? st.homeRest : plan2RestOk(b.port)), rate = atRest ? p2RestRate('bunks') : b.status === 'port' ? p2RestRate('quay') : 0;
-        for (const c of st.crew) c.fat = Math.max(0, c.fat - rate * hrs); if (st.me.aboard && b.status === 'port' && typeof restRate === 'function') st.me.energy = Math.min(100, st.me.energy + Math.max(0, restRate(b)) * 60 * hrs); }
-      const day = planDay(oo, dep, st); return {day, now:-1, label:dep - H > 20 ? L('I morgen', 'Tomorrow') : L('Neste dag', 'Next day'), dep}; } catch (e){ return null; }
+        for (const c of st.crew) c.fat = Math.max(0, c.fat - rate * hrs); if (st.me.aboard && (b.status === 'port' || b.anch)) st.me.energy = Math.min(100, st.me.energy + Math.max(restRate(b) * 60, resting() ? 0 : b.anch ? p2MeRate(null, true) : p2MeRate(b.port)) * hrs); }   // (you go in to rest by yourself, plan2MeRest)
+      const day = planDay(oo, dep, st); return {day, now:-1, label:o.paused && !o.on ? L('Når du starter igjen', 'When you start again') : dep - H > 20 ? L('I morgen', 'Tomorrow') : L('Neste dag', 'Next day'), dep}; } catch (e){ return null; }
   }
   function dayCard(o){
     const P = preview(o); if (!P) return '';
@@ -84,7 +88,7 @@ const PLAN2UI = (() => {
   function gearWhy(g){ if (g === 'juksa') return null; const k = PLAN2_KIND[g]; if (!rigHas(g)) return L('Båten mangler ' + GEAR[k].no.toLowerCase().replace(/r$/, '') + 'haler', 'The boat has no hauler for ' + GEAR[k].en.toLowerCase()); if (ownedUnits(k) < 1) return L('Ingen ' + GEAR[k].no.toLowerCase() + ' om bord', 'No ' + GEAR[k].en.toLowerCase() + ' aboard'); return null; }
   const lineOwn = () => ['hyse', 'bank'].map(lk => [lk, p2Units('line', lk)]).filter(x => x[1] > 0);
   const jigTxt = () => L(' · og juksa (' + p2JigGear()[0] + ')', ' · and the jig (' + p2JigGear()[1] + ')');
-  const rigVal = o => o.rig === 'juksa' ? L('Juksa (' + p2JigGear()[0] + ')', 'Jigging (' + p2JigGear()[1] + ')') : o.rig === 'line' ? L('Line: ', 'Line: ') + (lineOwn().map(x => x[1] + ' ' + LINE_KINDS[x[0]].no.toLowerCase()).join(', ') || L('ingen stamper', 'no tubs')) + (o.jig ? jigTxt() : '') : rigName(o.rig) + ', ' + ownedUnits(PLAN2_KIND[o.rig]) + ' ' + unitName(PLAN2_KIND[o.rig], ownedUnits(PLAN2_KIND[o.rig])) + (o.jig ? jigTxt() : '');
+  const rigVal = o => o.rig === 'juksa' ? L('Juksa (' + p2JigGear()[0] + ')', 'Jigging (' + p2JigGear()[1] + ')') : o.rig === 'line' ? L('Line: ', 'Line: ') + (lineOwn().map(x => x[1] + ' ' + L(LINE_KINDS[x[0]].no, LINE_KINDS[x[0]].en).toLowerCase()).join(', ') || L('ingen stamper', 'no tubs')) + (o.jig ? jigTxt() : '') : rigName(o.rig) + ', ' + ownedUnits(PLAN2_KIND[o.rig]) + ' ' + unitName(PLAN2_KIND[o.rig], ownedUnits(PLAN2_KIND[o.rig])) + (o.jig ? jigTxt() : '');
   function rigBody(o){
     const h = ['juksa', 'line', 'garn', 'teiner'].map(g => { const why = gearWhy(g), k = PLAN2_KIND[g]; return BIG('p2-rig', g === 'juksa' ? L('Bare juksa', 'Jigging only') : rigName(g), why || (g === 'juksa' ? L('Ut, fyll lasten, lever, og ut igjen', 'Out, fill the hold, land, and out again') : ownedUnits(k) + ' ' + unitName(k, ownedUnits(k)) + L(' eies', ' owned')), o.rig === g, 'data-g="' + g + '"', !!why); }).join('');
     const jig = p2Kind(o) ? '<h4 style="margin-top:12px">' + L('Jukse i tillegg mens redskapet står?', 'Jig as well while the gear stands?') + '</h4>' + BIG('p2-jig', L('Ja', 'Yes'), L('Juksa får timene til ståtida er ute, og resten av dagen.', 'The jig gets the hours until the soak is up, and the rest of the day.'), o.jig, 'data-v="1"') + BIG('p2-jig', L('Nei, bare redskapet', 'No, only the gear'), L('Båten venter ved redskapet', 'The boat waits by the gear'), !o.jig, 'data-v="0"') : '';
@@ -99,7 +103,7 @@ const PLAN2UI = (() => {
     h.push('<p class="ph-note">' + L('Plassene i den rekkefølgen båten går dem. Tallene er dine egne fra de siste to ukene.', 'The places in the order the boat works them. The numbers are your own from the last two weeks.') + '</p>');
     o.places.forEach((q, i) => { fi[q.k]++; const isF = q.k === 'felt';
       h.push('<div class="dr-pl"><div class="dr-plh"><b>' + (isF ? L('Felt ', 'Field ') : L('Juksplass ', 'Jig place ')) + fi[q.k] + '</b><small>' + (home ? km(home.p, q) + L(' fra hjem · ', ' from home · ') : '') + own(q, isF ? kind : null) + '</small></div>' +
-        '<div class="dr-plc">' + (isF ? (kind === 'line' && lineOwn().length > 1 ? '<span>' + T('p2-plk', LINE_KINDS[q.lk || 'hyse'].no, false, 'data-id="' + q.id + '"') + '</span>' : '') + '<span>' + STEP('p2-pn', q.n + ' ' + unitName(kind, q.n) + (kind === 'line' && lineOwn().length > 1 ? '' : '') + ' <small>' + L('av ', 'of ') + Math.max(0, p2Left(o, q)) + '</small>', ' data-id="' + q.id + '"') + '</span><span>' + STEP('p2-ps', q.soak + L(' t ståtid', ' h soak'), ' data-id="' + q.id + '"') + '</span>' : '') +
+        '<div class="dr-plc">' + (isF ? (kind === 'line' && lineOwn().length > 1 ? '<span>' + T('p2-plk', L(LINE_KINDS[q.lk || 'hyse'].no, LINE_KINDS[q.lk || 'hyse'].en), false, 'data-id="' + q.id + '"') + '</span>' : '') + '<span>' + STEP('p2-pn', q.n + ' ' + unitName(kind, q.n) + (kind === 'line' && lineOwn().length > 1 ? '' : '') + ' <small>' + L('av ', 'of ') + Math.max(0, p2Left(o, q)) + '</small>', ' data-id="' + q.id + '"') + '</span><span>' + STEP('p2-ps', q.soak + L(' t ståtid', ' h soak'), ' data-id="' + q.id + '"') + '</span>' : '') +
         '<span>' + T('p2-pup', '↑', false, 'data-i="' + i + '"' + (i ? '' : ' disabled')) + T('p2-pdn', '↓', false, 'data-i="' + i + '"' + (i < o.places.length - 1 ? '' : ' disabled')) + T('p2-pdel', L('Fjern', 'Remove'), false, 'data-id="' + q.id + '"') + '</span></div></div>'); });
     if (o.places.length < DRP2.placesMax){ if (kind) h.push(B('p2-add', L('+ Felt for ', '+ Field for ') + GEAR[kind].no.toLowerCase(), 'data-k="felt"', adding === 'felt' ? 'p' : '')); if (p2Jig(o)) h.push(B('p2-add', L('+ Juksplass', '+ Jig place'), 'data-k="juks"', adding === 'juks' ? 'p' : '')); }
     if (adding) h.push(addBody(o, adding));
@@ -147,11 +151,13 @@ const PLAN2UI = (() => {
   }
   // ---- Vær
   const WXP = {safe:{wind:10, hs:1.5, no:'Forsiktig', en:'Careful'}, normal:{wind:13, hs:2.5, no:'Vanlig', en:'Normal'}, tough:{wind:16, hs:3.5, no:'Tøff', en:'Rough'}};
-  const hsMax = () => Math.round(BOAT.risk[1] * 0.95 * 10) / 10;
+  const hsMax = () => Math.round(BOAT.risk[1] * 0.95 * 10) / 10, windMax = () => Math.round(BOAT.risk[2] || 20);
+  // a preset as this boat takes it: never over her own limits, as + stops there (GUI review F5: «Tøff» gave 16 m/s on a boat that takes 15)
+  const wxOf = k => ({wind:Math.min(WXP[k].wind, windMax()), hs:Math.min(WXP[k].hs, hsMax())});
   const wxVal = o => L('Inntil ', 'Up to ') + o.wx.wind + ' m/s ' + L('og', 'and') + ' ' + fmt(Math.min(o.wx.hs, hsMax()), 1) + ' m';
   function wxBody(o){
     return '<div class="ph-kv dr-kv"><span>' + L('Vind', 'Wind') + '</span><span>' + STEP('p2-wx-w', o.wx.wind + ' m/s') + '</span></div><div class="ph-kv dr-kv"><span>' + L('Sjø', 'Sea') + '</span><span>' + STEP('p2-wx-h', fmt(o.wx.hs, 1) + ' m') + '</span></div>' +
-      '<div class="ops-days">' + Object.keys(WXP).map(k => T('p2-wx-preset', L(WXP[k].no, WXP[k].en) + ' ' + WXP[k].wind + '/' + fmt(WXP[k].hs, 1), o.wx.wind === WXP[k].wind && o.wx.hs === WXP[k].hs, 'data-v="' + k + '"')).join('') + '</div>' +
+      '<div class="ops-days">' + Object.keys(WXP).map(k => { const P = wxOf(k); return T('p2-wx-preset', L(WXP[k].no, WXP[k].en) + ' ' + P.wind + '/' + fmt(P.hs, 1), o.wx.wind === P.wind && o.wx.hs === P.hs, 'data-v="' + k + '"'); }).join('') + '</div>' +
       '<p class="ph-note">' + L('Over grensene venter båten hjemme til varselet for de neste timene er under. Blir det verre ute, går den i ly samme vei tilbake. Båten tåler ' + fmt(hsMax(), 1) + ' m sjø, og den grensen gjelder uansett.', 'Over the limits the boat waits at home until the next hours\' forecast is under. If it gets worse out there, she goes to shelter back the way she came. The boat takes ' + fmt(hsMax(), 1) + ' m of sea, and that limit holds regardless.') + '</p>';
   }
   // ---- Rytme
@@ -184,7 +190,7 @@ const PLAN2UI = (() => {
     if (busy || o.building) h.push('<button class="dr-onoff" disabled>' + L('Lager planen …', 'Making the plan …') + '</button>');
     else if (o.on) h.push('<button class="dr-onoff on" data-pa="p2-pause">' + L('På · trykk for pause', 'On · tap to pause') + '</button>');
     else h.push('<button class="dr-onoff" data-pa="p2-start"' + (C.ok ? '' : ' disabled') + '>' + (C.ok ? L('Start planen', 'Start the plan') : L('Ikke klar ennå', 'Not ready yet')) + '</button>');
-    if (o.on || stopped) h.push('<div class="dr-now' + (now[1] === 'bad' || stopped ? ' bad' : now[1] === 'wait' ? ' wait' : '') + '"><b>' + L('Nå: ', 'Now: ') + '</b>' + now[0] + '</div>');
+    if (o.on || stopped || o.paused) h.push('<div class="dr-now' + (now[1] === 'bad' || stopped ? ' bad' : now[1] === 'wait' ? ' wait' : '') + '"><b>' + L('Nå: ', 'Now: ') + '</b>' + now[0] + '</div>');
     if (o.on && o.run && o.run.fail && S.t - o.run.fail.t < 1440) h.push('<p class="warn">' + L('Kunne ikke sette eller trekke: ', 'Could not set or haul: ') + L(o.run.fail.no, o.run.fail.en) + '</p>');
     if (o.on && o.held) h.push(B('p2-resume', L('Gi båten tilbake til planen', 'Give the boat back to the plan'), '', 'p'));
     if (stopped && o.stop.fix) h.push(B('p2-fix', {places:L('Endre plassene', 'Change the places'), mannskap:L('Til Mannskap-siden', 'To the Crew page'), quota:L('Se kvoten', 'See the quota'), rig:L('Endre redskapet', 'Change the gear')}[o.stop.fix] || L('Se planen', 'See the plan'), '', 'p'));
@@ -245,14 +251,14 @@ const PLAN2UI = (() => {
   }
   function start(o){
     const C = plan2Check(o); if (!C.ok){ toast(C.errors[0]); return; }
-    const go = () => { o.on = true; o.stop = null; o.held = null; o.hold = 0; o.run = null; if (o.t0 == null) o.t0 = S.t; toast(L('Driftsplanen er på.', 'The plan is on.')); };
+    const go = () => { plan2Start(o); toast(L('Driftsplanen er på.', 'The plan is on.')); };
     if (plan2Made(o)){ go(); return; }
     busy = true; plan2Make(o, err => { busy = false; if (err) toast(err); else go(); rerender(); });
   }
   // the gear in the sea is fetched on one trip while the plan is off (choice 2 A): a day of hauls without setting again, then home
   function fetch(o){
     if (!plan2Made(o)){ busy = true; plan2Make(o, err => { busy = false; if (err) toast(err); else fetch(o); rerender(); }); return; }
-    plan2Abort(o); o.fetch = true; o.on = true; o.stop = null; o.held = null; o.hold = 0; o.run = null; toast(L('Båten går ut og henter redskapet.', 'The boat goes out to fetch the gear.'));
+    plan2Abort(o); o.fetch = true; o.on = true; o.stop = null; o.held = null; o.hold = 0; o.run = null; o.paused = null; toast(L('Båten går ut og henter redskapet.', 'The boat goes out to fetch the gear.'));
   }
   function act(a, d){
     if (a === 'p2-new'){ S.ops = fresh(); open = null; return true; }
@@ -260,7 +266,7 @@ const PLAN2UI = (() => {
     const pl = id => o.places.find(q => q.id === id), kind = p2Kind(o);
     if (a === 'p2-row'){ open = open === d.k ? null : d.k; adding = null; return true; }
     if (a === 'p2-start'){ start(o); return true; }
-    if (a === 'p2-pause'){ o.on = false; o.stop = null; o.held = null; o.hold = 0; o.fetch = null; toast(L('Driftsplanen står på pause. Redskapet i sjøen står der det står.', 'The plan is paused. The gear in the sea stays where it is.')); return true; }
+    if (a === 'p2-pause'){ plan2Pause(o); toast(o.paused.sea ? L('Driftsplanen står på pause. Båten ligger stille der den er, og redskapet i sjøen står der det står.', 'The plan is paused. The boat lies still where she is, and the gear in the sea stays where it is.') : L('Driftsplanen står på pause. Redskapet i sjøen står der det står.', 'The plan is paused. The gear in the sea stays where it is.')); return true; }
     if (a === 'p2-resume'){ plan2Resume(o); return true; }
     if (a === 'p2-fetch'){ fetch(o); return true; }
     if (a === 'p2-fix'){ const f = o.stop && o.stop.fix; if (f === 'mannskap'){ PHONE.open('arbeid'); return false; } if (f === 'quota'){ PHONE.open('kvote'); return false; } open = f === 'rig' ? 'rig' : 'places'; return true; }
@@ -282,9 +288,9 @@ const PLAN2UI = (() => {
     if (a === 'p2-land-port'){ o.land.mode = 'port'; o.land.port = d.p; return true; }
     if (a === 'p2-land-when'){ o.land.when = d.v; return true; }
     if (a === 'p2-land-days'){ o.land.days = clamp((o.land.days || 2) + (+d.d), 2, 7); return true; }
-    if (a === 'p2-wx-w'){ o.wx.wind = clamp(o.wx.wind + (+d.d), 5, Math.round(BOAT.risk[2] || 20)); return true; }
+    if (a === 'p2-wx-w'){ o.wx.wind = clamp(o.wx.wind + (+d.d), 5, windMax()); return true; }
     if (a === 'p2-wx-h'){ o.wx.hs = clamp(Math.round((o.wx.hs + 0.5 * (+d.d)) * 10) / 10, 0.5, hsMax()); return true; }
-    if (a === 'p2-wx-preset'){ const P = WXP[d.v]; if (!P) return false; o.wx = {wind:P.wind, hs:Math.min(P.hs, hsMax())}; return true; }
+    if (a === 'p2-wx-preset'){ if (!WXP[d.v]) return false; o.wx = wxOf(d.v); return true; }
     if (a === 'p2-rhythm'){ o.rhythm = d.v; return true; }
     if (a === 'p2-dep'){ o.dep = clamp(o.dep + 0.5 * (+d.d), 0, 23.5); return true; }
     if (a === 'p2-days'){ o.days = clamp(o.days + (+d.d), 2, 7); return true; }
