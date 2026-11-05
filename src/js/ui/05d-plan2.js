@@ -59,7 +59,7 @@ const PLAN2UI = (() => {
     let oo = o; if (!o.M){ const P = o.places, mid = P.length ? {x:P.reduce((a, q) => a + q.x, 0) / P.length, y:P.reduce((a, q) => a + q.y, 0) / P.length} : (portById(o.home) || {p:S.boat.pos}).p, M = o.land.mode === 'port' && o.land.port ? portById(o.land.port) : PORTS.filter(q => q.mottak).sort((x, y) => dist(x.p, mid) - dist(y.p, mid))[0]; if (M) oo = Object.assign({}, o, {M:M.id}); }
     // the next day is reckoned from the state at its departure, not now: the crew's fatigue and your energy fall and rise with the rest until then
     // (the engine lays the day anew at the departure; this is the page's estimate, as the note under the day says)
-    const atSea = !o.on && S.boat.status !== 'port' && !(o.homeA && dist(S.boat.pos, o.homeA) < 0.4);   // (started at sea or at anchor there, the day is laid from where she lies, now: plan2Start)
+    const atSea = !o.on && S.boat.status !== 'port' && (!S.boat.anch || !!(o.paused && o.paused.sea));   // (started at sea, or paused at anchor there, the day is laid from where she lies, now: plan2Start)
     try { const from = o.on && r && r.day ? r.day.end : H, dep = atSea ? H : plan2NextDep(oo, H, from), st = plan2State(oo), hrs = Math.max(0, dep - H);
       if (hrs > 0){ const b = S.boat, atRest = b.status === 'port' && (b.port === oo.home ? st.homeRest : plan2RestOk(b.port)), rate = atRest ? p2RestRate('bunks') : b.status === 'port' ? p2RestRate('quay') : 0;
         for (const c of st.crew) c.fat = Math.max(0, c.fat - rate * hrs); if (st.me.aboard && (b.status === 'port' || b.anch)) st.me.energy = Math.min(100, st.me.energy + Math.max(restRate(b) * 60, resting() ? 0 : b.anch ? p2MeRate(null, true) : p2MeRate(b.port)) * hrs); }   // (you go in to rest by yourself, plan2MeRest)
