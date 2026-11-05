@@ -1,0 +1,10 @@
+{
+  "name": "dsb-rt",
+  "private": true,
+  "description": "Det Store Blå: the real-time relay (server.mjs, docs/planer/sanntid-posisjoner.md S2)",
+  "type": "module",
+  "engines": {"node": ">=18"},
+  "dependencies": {
+    "ws": "8.22.0"
+  }
+}
