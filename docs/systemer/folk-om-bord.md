@@ -39,7 +39,7 @@ Det går ingen vei fra Longyearbyen til fastlandet, så mannskapsbytte på Svalb
 
 - **Påmønstring** i en havn på Svalbard (`flyPort`: breddegrad 76° N eller mer): `flyIn(c)` fra Mannskapsbørsen. Personen er ansatt, men ikke om bord (`c.off`, `c.fly = {arr, kr}`) før flyet er inne og hun er på kaia, `FLY.min` = 205 min senere. `flyTick` i `crewTick` (hver time) tar henne om bord neste gang båten ligger til kai; har båten gått før flyet landet, venter hun til neste havn.
 - **Avmønstring** på Svalbard (sagt opp, krangel, `crewQuit`): `flyOut(c)` bokfører billetten hjem.
-- **Billetten** betales av rederiet (antakelse, BACKLOG 10.3) og bokføres som mannskapskostnad («Flybillett Tromsø–Longyearbyen, navn»). Prisen er SAS' laveste enveispris i måneden (`FLY.kr`: juli 2 392, november 950, desember 895 kr; resten trukket rett mellom dem).
+- **Billetten** betales av rederiet (antakelse, BACKLOG 10.3) og bokføres som mannskapskostnad («Flybillett Tromsø–Longyearbyen, navn»). Prisen er SAS' laveste enveispris i måneden (`FLY.kr`: juli 2 392, november 950, desember 895 kr; resten trukket rett mellom dem). Jonas 05.11.2026: anslaget står (de ni andre månedene leses ikke).
 - **Reisetida:** SAS' flytid 1 t 55 min, en time på flyplassen og en halvtime til kaia.
 - **Mannskap-appen:** Mannskapsbørsen sier at den som ansettes, flyr fra Tromsø, hvor lang tid det tar og hva billetten koster denne måneden; Mannskap viser «flyr fra Tromsø, på kaia kl. HH:MM».
 - **Tester:** `tests/unit/fly.test.mjs` (flyhavnene, prisene, reisetida) og `tests/lybtest.py` (byttet i Longyearbyen etter turen fra Tromsø).

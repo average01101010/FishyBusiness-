@@ -20,18 +20,18 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 ### Ø1 Det som ikke kom med, og småfeil i data
 
 - **Tufjord** (`ccr-664fd66b-ftggff`, 4c1c9379, 04.11.2026: «Autonav: havnas vei inn og etappene inne i havna holder seg ut fra land»). Backloggen på den grenen har rettingen under «Strøket 04.11.2026 (Autonav gjennom land ved Tufjord)», men den er aldri flettet inn: `leiaHarbourClr` finnes ikke i arbeidsgrenens `core/11-route.js`. Samme gren nevner at `harbourtest` er rød på Finnsnes-kaia, og at Fosnavåg, Mandal verft og Bøvågen fortsatt har veier inn under 5 m fra land.
-- **PR #42** (`fb/auto-2026-11-04-skum-nan`, tilbakemelding #110 og #111): skummet fra de andre båtene ga store hvite firkanter på sjøen (`pow()` med negativt grunntall i `HULLFOAM`). PR-en er åpen og ikke flettet. Flettes når Jonas sier ja.
+- ~~**PR #42**~~ (skummet fra de andre båtene ga hvite firkanter på Adreno): flettet 05.11.2026 etter Jonas' ja (BACKLOG «Strøket 05.11.2026 (PR #42 og de gamle PR-ene …)»).
 - 10.1 «Fire verft i Sverige».
 - 10.1 «Noen få leibiter i NPC-rutene skjærer et hjørne av land» (rettes i `tools/map/npc.py`).
-- **De gamle PR-ene:** innholdet i #33 er alt i arbeidsgrenen, så den kan lukkes. #18 (lav grafikk, 17.10) og #19 (tredje og fjerde mann ved linehaleren, 20.10) endrer `view3d.js` og `05-phone.js`, som ble delt 26.10. De skrives om mot delene eller lukkes, etter Jonas' svar.
+- ~~**De gamle PR-ene**~~ #18, #19 og #33: lukket 05.11.2026 etter Jonas' valg.
 - Rettingene i `ccr-6ad35290-gwaj0v` (NPC-båtene rister) og `ccr-33fdcb4a-3yrchx` (GEBCO-jobben) er alt i arbeidsgrenen som 9f064dfc og 168e8a93. Der er det ingenting å gjøre.
-- **Filer:** `core/11-route.js`, `core/07-harbours.js` (også i spilltest 3 og H2: endringen er liten, så flett forsiktig), `view3d/01-shaders.js`, `src/data/steder.json`, `tools/steder/`, `tools/map/npc.py`.
-- **Ferdig når:** Tufjord og skummet er ute på detstorebla.no, Autonav er prøvd i havn sør, midt og nord (`/stikkprove`), og sjekken i `/okt-slutt` bare viser grener som andre økter jobber på.
+- **Filer:** `core/11-route.js`, `core/07-harbours.js` (også i spilltest 3 og H2: endringen er liten, så flett forsiktig), `src/data/steder.json`, `tools/steder/`, `tools/map/npc.py`.
+- **Ferdig når:** Tufjord er ute på detstorebla.no, Autonav er prøvd i havn sør, midt og nord (`/stikkprove`), og sjekken i `/okt-slutt` bare viser grener som andre økter jobber på.
 - **Startmelding:** «Les `CLAUDE.md`, `docs/INDEKS.md`, `docs/BACKLOG.md` og Ø1 i `docs/planer/okter-etter-backloggen.md`. Oppgave: Ø1. Spilltest 3 og H2 kjører i andre økter; rør ikke filene deres utover det flettingen krever. Avslutt med `/lever` og `/okt-slutt`.»
 
 ### Ø2 Testriggen
 
-- Alt i 10.6, og fra «Spillarbeid som venter»: «`vesseltest` rød etter havsteget H1b R4», «`vessel3d` for alle typer går ut på tid i `run.py`», «`deckshot` rød på kranen», «`drifttest` scenario 6 er ustabil», «`quotatest` er rød på kvotesamarbeidet» (bare finne årsaken: `03d-quota.js` hører til H2), «`turtest`, `selfcrew` og `driftsplan2test` S9», «`cloudtest` og `pwatest` røde på grunnbygget», «`cloudtest` var rød én gang», «`teleport3d` og `deckshot` i SwiftShader», «`penshot` rød 28.10.2026», «`driftsplan2ui` er ustabil» og «`anchortest` og `fleet2test` er ustabile».
+- Alt i 10.6, og fra «Spillarbeid som venter»: «`vessel3d` for alle typer går ut på tid i `run.py`», «`deckshot` rød på kranen», «`drifttest` scenario 6 er ustabil», «`quotatest` er rød på kvotesamarbeidet» (bare finne årsaken: `03d-quota.js` hører til H2), «`turtest`, `selfcrew` og `driftsplan2test` S9», «`cloudtest` og `pwatest` røde på grunnbygget», «`cloudtest` var rød én gang», «`teleport3d` og `deckshot` i SwiftShader», «`penshot` rød 28.10.2026», «`driftsplan2ui` er ustabil» og «`anchortest` og `fleet2test` er ustabile».
 - Fra 10.7: «`docktest` er rød også alene», «`docktest` kan feile ved siden av en annen test» og «`ordtest` er utdatert».
 - Regresjonsloggene fra 03.–05.11 i 10.6 gås gjennom: hver rød får en årsak.
 - A5 i `docs/planer/verktoy-fra-game-studios.md`: historikk for ustabile tester i `run.py`.
@@ -55,8 +55,8 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 
 - «Godkjenningsgrensen for båtmodellene (Jonas 01.11.2026): ingenting under 75/100», og det som står igjen under hver «… revidert» i «Spillarbeid som venter».
 - «Skrogenes volum mot `disp`», «Rattet dreier bare på håndbåtene», «Skipsmodellene etter kartleggingen» (D3 og resten av `docs/batplan.md` del 10), 10.5 «Båtmodellene».
-- **Rekkefølge:** Jonas velger. Uten valg tas trebåten først, fordi den er startbåten og den flest ser, og så den som er nærmest 75 (plastsjarken, 66).
-- **Trenger:** bildene eller tegningene som står under hver båt, og svaret om farten til hurtigsjarken (`sjarkny`) og tegningen bak breisjarken.
+- **Venter** (Jonas 05.11.2026: «Vent med båtene»): Ø4 tas når Jonas har bilder eller ber om det. Breisjarken revideres senere (Jonas 05.11.2026: «Denne skal revideres på et senere tidspunkt. La vente»).
+- **Trenger:** bildene eller tegningene som står under hver båt.
 - **Filer:** `tools/boats/`, `src/data/*.b64`, `docs/skipsmodeller/`. **Holder seg unna:** `tools/boats/al45.py` (H2). `tools/boats/fittings.py` er felles med H2d, så endringer der trenger varsomhet.
 
 ### Ø5 Butikkene, restene
@@ -68,12 +68,12 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 ### Ø6 Sikkerhetsgjennomgangen av skyen (A7)
 
 - A7 i `docs/planer/verktoy-fra-game-studios.md`: én gjennomgang av `supabase/` (tabellene, RLS, funksjonene), `ui/10f-cloud.js`, `ui/10g-push.js`, `ui/10l-share.js`, `ui/10h-world.js` og `src/admin/`. Økta bare leser.
-- **Venter på Jonas' «kjør på»** (verktøyplanen, 28.10.2026).
+- **«Kjør på» 05.11.2026** (Jonas valgte begge, A7 og hookene).
 - Funnene skrives i backloggen 10.1 eller i en egen plan.
 
 ### Ø11a Planen for lover, regler og sikkerhet (bare plan)
 
-- `docs/planer/lover-og-regler.md` (L0–L6) og «Sikkerhet SK1–SK6» (oppgave #164) blir én plan med `/planlegg`, fordi L6 (vesten, MOB-båten med davit, MOB-lys med røyk) og SK1 (vest, drakt, leider, livbøye, PLB) er de samme modellene. Byggingen er Ø11 i bølge 3.
+- `docs/planer/lover-og-regler.md` (L0–L6) og «Sikkerhet SK1–SK6» (oppgave #164) og N8 i `docs/planer/npc-flaaten.md` (sjømannskap: vikeplikt, lys og signaler for NPC-båtene; Jonas 05.11.2026) blir én plan med `/planlegg`, fordi L1 og L3 (vikeplikt, lys og lyd) gjelder både spilleren og NPC-ene, og fordi L6 (vesten, MOB-båten med davit, MOB-lys med røyk) og SK1 (vest, drakt, leider, livbøye, PLB) er de samme modellene. Byggingen er Ø11 i bølge 3.
 
 ## Bølge 2: etter at spilltest 3 er flettet inn
 
@@ -83,6 +83,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 - «`paintPlotter` kaster «reading '0'» i `drawSkiff`».
 - 10.7: `S.owned`, ikonet `sjomann`, og sløyebordet og konsollskjermene på skiffen (`buildSkiff`).
 - «U10, rest», hvis spilltest 3 ikke tok den.
+- **Farten til den nye hurtigsjarken** (Jonas 05.11.2026: 12 kn som tegningen): `VESSELS.sjarkny` får `vmax` 12 og `planing` av, og butikkteksten skrives om (`docs/skipsmodeller/sjarkny-grunnlag.md` kap. 9). Venter også på H2, fordi `core/02-species-gear.js` og `ui/phone/10-fartoy.js` er H2s.
 - **Filer:** `ui/07b-first-trip.js`, `ui/07-guide.js`, `core/05-vessels.js` (`npcStates`), `ui/06-logbook.js`, `view3d/12-skiff.js`, `ui/phone/`.
 
 ### Ø8 Spillbarhet
@@ -120,7 +121,8 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 ### Ø12 Driftsplan 2, resten
 
 - «Driftsplan 2: GUI-gjennomgangen, det som står igjen», «Driftsplan 2: stikkprøver langs kysten mangler», «Driftsplan 2, del 8 (rydding)» og «`drifttest` scenario 6» (som forsvinner med del 8).
-- **Trenger:** hele kysten i testmiljøet (`tools/map/out/game`), og at Jonas har prøvd den nye planen. Kommer etter H2c (autolineren i Driftsplan 2).
+- Del 8: Jonas 05.11.2026: «Ja, rydd bort den gamle».
+- **Trenger:** hele kysten i testmiljøet (`tools/map/out/game`). Kommer etter H2c (autolineren i Driftsplan 2).
 
 ## Bølge 4: store løp, ett om gangen
 
@@ -139,25 +141,25 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 ### Ø15 NPC-flåten
 
 - «NPC-flåten for hele landet» (N1–N8, `docs/planer/npc-flaaten.md`, fem valg), L3 i «NPC-båtene ved ekte kaier», «Liggeplassene etter L1», «Brygger uten `floating=yes`», «NPC-båter ved flytebrygger tegnet som linje» og 10.3 «NPC-kystflåten ved Longyearbyen».
-- **Venter på** Jonas' valg og klarsignal.
+- **Valgene tatt 05.11.2026** (`npc-flaaten.md` kap. 7): 2 A, 4 A og rekkefølgen N3, N4, N7, N8 sammen med Ø11a, N5, N6. Valg 1 og 3 var alt avgjort av `bestand-og-flaate.md`. **Venter på** klarsignal.
 
 ### Ø17 Hooks og regler fra Game Studios
 
 - A1, A2, A4 og A6 i `docs/planer/verktoy-fra-game-studios.md`.
-- Kommer etter Ø2, fordi begge endrer `run.py`. **Venter på** «kjør på».
+- Kommer etter Ø2, fordi begge endrer `run.py`. «Kjør på» 05.11.2026.
 
 ## Ikke økter
 
-### Spørsmål til Jonas
+### Spørsmål til Jonas (besvart 05.11.2026)
 
-- Den nye hurtigsjarken (`sjarkny`): 25 kn og planende som i dataene, eller 12 kn som på tegningen?
-- Breisjarken: tegningen bak skriptet ligger ikke i repoet.
-- Bildene av båtene som står under hver «… revidert».
-- Tallene til flybillettene (H1b R8).
-- De fem valgene i NPC-flåten (`docs/planer/npc-flaaten.md`).
-- «Kjør på» for verktøyplanen (A7, og så A1, A2, A4 og A6).
-- Har du prøvd Driftsplan 2 nok til at del 8 kan tas?
-- PR #42: skal den flettes? PR #18 og #19: skrives om, eller lukkes?
+- Den nye hurtigsjarken (`sjarkny`): **12 kn som tegningen** (Ø7).
+- Breisjarken: «Denne skal revideres på et senere tidspunkt. La vente.»
+- Båtmodellene og bildene: «Vent med båtene» (Ø4).
+- Flybillettene: **behold anslaget** (tre måneder lest, resten trukket mellom dem).
+- NPC-flåten: valg 2 A, 4 A og rekkefølgen N3, N4, N7, N8 sammen med Ø11a, N5, N6 (Ø15, venter på klarsignal).
+- Verktøyplanen: **«kjør på»** for A7 (Ø6) og A1, A2, A4 og A6 (Ø17).
+- Driftsplan 2, del 8: **«Ja, rydd bort den gamle»** (Ø12).
+- Ikke spurt: om `disp` for den nye hurtigsjarken skal være 16 t (tegningens lettvekt) i stedet for 15 t (kap. 9 punkt 2 i `sjarkny-grunnlag.md`). Jonas' regel fra kyst15 er at `disp` er den tomme båten.
 
 ### Det Jonas måler
 
@@ -170,23 +172,29 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 |---|---|---|---|
 | Spilltest 3 | Kjører | `ccr-9c21028c-lptg24` | 05.11.2026 |
 | H2 autolineren | H2a rullet ut (c9e651d1); H2b–H2e gjenstår | `h2-autoline` | 05.11.2026 |
-| Ø1 Det som ikke kom med | Ikke begynt | | |
-| Ø2 Testriggen | Ikke begynt | | |
+| Ø1 Det som ikke kom med | Ferdig: PR #42 flettet, #18, #19 og #33 lukket, Tufjord flettet inn (8f503066), verftene i Sverige tatt ut (ce056730), leibitene rettet i `npc.py` (eb669fe7, ute med neste kartrelease) | `ccr-834c604f-xxnqoy`, `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
+| Ø2 Testriggen | Pågår | `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
 | Ø3 Ytelse | Ikke begynt | | |
-| Ø4 Båtmodellene | Ikke begynt | | |
+| Ø4 Båtmodellene | Venter (Jonas: «Vent med båtene») | | |
 | Ø5 Butikkene, restene | Ikke begynt | | |
-| Ø6 Sikkerhetsgjennomgangen (A7) | Venter på «kjør på» | | |
+| Ø6 Sikkerhetsgjennomgangen (A7) | Ferdig: 15 funn i `docs/planer/sikkerhet-skyen.md` (2 høy, 6 middels, 7 lav), backloggen 10.1; ingen kode endret | `o6-sikkerhet` | 05.11.2026 |
 | Ø11a Planen for lover, regler og sikkerhet | Ikke begynt | | |
 | Ø7 Småfeil | Venter på spilltest 3 | | |
 | Ø8 Spillbarhet | Venter på spilltest 3 | | |
 | Ø9 Fysikk 4 | Venter på spilltest 3 | | |
-| Ø16 Sanntid S2 | Venter på Ø6 | | |
+| Ø16 Sanntid S2 | Kan starte (Ø6 ferdig) | | |
 | Ø10 Regelmotoren | Venter på H2 | | |
 | Ø11 Lover, regler og sikkerhet | Venter på Ø11a og H2 | | |
 | Ø12 Driftsplan 2, resten | Venter på H2 | | |
 | Ø13 Ny kartrelease | Ikke begynt | | |
 | Ø14 Fangstfelt med navn | Venter på H2 | | |
-| Ø15 NPC-flåten | Venter på valgene | | |
-| Ø17 Hooks og regler | Venter på Ø2 og «kjør på» | | |
+| Ø15 NPC-flåten | Valgene tatt; venter på klarsignal | | |
+| Ø17 Hooks og regler | Venter på Ø2 | | |
 
 - 05.11.2026: planen skrevet etter gjennomgangen av backloggen, planene og grenene. Grenene sjekket samme dag: `ccr-664fd66b-ftggff` og PR #42 har rettinger som ikke er i arbeidsgrenen.
+- 05.11.2026: PR #42 flettet inn og PR #18, #19 og #33 lukket (Jonas: «Ja, flett PR #42 og lukk #18, #19 og #33»). `vesseltest` (snøkrabbe) ble rettet i H2a og er tatt ut av Ø2.
+- 05.11.2026: Ø1 ferdig. Tufjord-rettingen fra `ccr-664fd66b-ftggff` flettet inn (konflikt med isen i `leiaRoute` løst: isen følger `LEIA_RUN`), prøvd i Tufjord, Kristiansand, Bergen, Bodø, Hammerfest og Båtsfjord. «Land inne i havnene» (grunnsjekken inne i havnene, Fosnavåg, Mandal verft og Bøvågen) står i backloggen 10.5.
+- 05.11.2026: Jonas svarte på spørsmålene (over, «Spørsmål til Jonas»). Ø6 startet.
+- 05.11.2026: Ø6 ferdig (bare lesing). Funnene i `docs/planer/sikkerhet-skyen.md`. Det alvorligste er en lagret XSS i admin (funn 1) og at landingene stoles på fra klienten (funn 2, kvoten i åpen gruppe kan stenges for alle). Ø16 kan starte; reléet må ikke stole på posisjonen fra klienten mer enn `pos_put` gjør (funn 11).
+- 05.11.2026: Ø6 funn 1 (lagret XSS i admin) og 13 rettet etter Jonas' «Rett funn 1 nå» (b5289877). Migreringen `20261105120000_fb_meta.sql` venter på SQL Editor.
+- 05.11.2026: migreringen `20261105120000_fb_meta.sql` kjørt av Jonas i SQL Editor og bekreftet. Funn 1 er helt ferdig.

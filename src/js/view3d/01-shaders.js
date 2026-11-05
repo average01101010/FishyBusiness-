@@ -171,7 +171,9 @@
     [30, 60, 120, 240, 480, 960].map(d => '{vec2 lu=(P+up*' + d.toFixed(1) + '-uLRect.xy)*uLRect.zw;if(f<0.0){if(lu.x<0.0||lu.y<0.0||lu.x>1.0||lu.y>1.0)f=9.0;else if(texture2D(uLandS,lu).r*8.0-4.0>uTideL)f=' + (d / 1000).toFixed(3) + ';}}').join('') +
     'return f<0.0||f>8.0?sw:min(sw,sqrt(f));}';
   // the foam a hull makes this frame, shared by the foam map's pass (your boat) and the other boats' pass (NPCF_FS, 04.11.2026)
-  const HULLFOAM = '' +
+  // (pow(x, 2.0) is undefined in GLSL for x < 0: Adreno gives NaN, which the other boats' pass wrote straight into the map as white
+  // squares over their way, 04.11.2026; the squares that may go negative are hfSq)
+  const HULLFOAM = 'float hfSq(float x){return x*x;}' +
     'float hullWh(float a,vec4 H){float hb=H.y;if(a>0.0){float t=clamp(a/H.z,0.0,1.0);return hb*sqrt(max(1.0-pow(t,2.6),0.0));}float t=clamp(-a/H.w,0.0,1.0);return hb*(1.0-0.25*t*t);}' +
     // the foam a hull makes this frame where she is in the water (yours and, from 04.11.2026, the nearest boats of the fleet, foamStep):
     // FB the way she came since the last frame (from, to), FH her heading then and now, H as uHull (length, half beam, stem and transom
@@ -194,7 +196,7 @@
     // drawEffects' spray); it lands about a beam out from the hull, so the water keeps two white wings with darker water between them and
     // the wash behind the transom (the reference video). Laid where the sheet has reached its landing line, ragged at the edge
     'if(pf>0.01&&a<ar&&a>st-Lh){float d=ar-a;float qw=(hullWh(ar,H)+hb*(0.9+0.03*v))*(0.85+0.3*ns(Pb*0.3+vec2(7.0,3.0)));float ql=hullWh(ar,H)+0.3+d*0.32;' +
-    'float wing=exp(-pow((q-qw)/(0.3*hb+0.3),2.0))*smoothstep(qw*0.7,qw,ql);' +
+    'float wing=exp(-hfSq((q-qw)/(0.3*hb+0.3)))*smoothstep(qw*0.7,qw,ql);' +
     'iw=max(iw,wing*pf*smoothstep(3.0,8.0,v)*(0.7+0.3*ns(Pb*1.3+vec2(1.0,6.0)))*clump);}' +
     // the water the transom leaves and the screw churns: a band behind the stern, a beam wide, going on with her way; a displacement
     // hull with her transom wet (tv 0, no planing) entrains less air than one with it dry, so her band is thinner and fades sooner (kyst15
@@ -202,7 +204,7 @@
     // A dry transom (tv) leaves a hollow behind it that the water closes from both sides: a dark channel down the middle between the
     // white of the transom's corners and the screws, which closes into a white rooster tail some 3 beams aft (lc)
     'if(a<st+0.5&&a>st-6.0-tv*hb*5.0){float back=st+0.5-a;float lc=tv*hb*(3.0+0.1*v);float ch=tv*(1.0-smoothstep(lc*0.7,lc,back))*(1.0-smoothstep(hb*0.25,hb*0.6,q));' +
-    'float rst=tv*exp(-pow((back-lc)/(0.8+0.3*hb),2.0))*(1.0-smoothstep(hb*0.3,hb*0.9,q));float wb=(hullWh(st,H)+0.15+0.3+0.1*v*(1.0-0.6*pf)+pl*(1.0-0.8*pf)*(0.4+0.08*v))*(1.0+0.03*back)*(0.85+0.3*ns(Pb*0.45+vec2(4.0,9.0)));float band=1.0-smoothstep(wb*0.75,wb*1.1,q);float core=1.0-smoothstep(wb*0.2,wb*0.5,q);iw=max(iw,max((mix(0.45,0.7,max(tv,pl))*band+0.3*core)*(1.0-0.85*ch),rst)*clump*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
+    'float rst=tv*exp(-hfSq((back-lc)/(0.8+0.3*hb)))*(1.0-smoothstep(hb*0.3,hb*0.9,q));float wb=(hullWh(st,H)+0.15+0.3+0.1*v*(1.0-0.6*pf)+pl*(1.0-0.8*pf)*(0.4+0.08*v))*(1.0+0.03*back)*(0.85+0.3*ns(Pb*0.45+vec2(4.0,9.0)));float band=1.0-smoothstep(wb*0.75,wb*1.1,q);float core=1.0-smoothstep(wb*0.2,wb*0.5,q);iw=max(iw,max((mix(0.45,0.7,max(tv,pl))*band+0.3*core)*(1.0-0.85*ch),rst)*clump*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
     'return iw;}';
   const FOAM_VS = 'attribute vec2 aXZ;varying vec2 vUV;void main(){vUV=aXZ*0.5+0.5;gl_Position=vec4(aXZ,0.0,1.0);}';
   const FOAM_FS = 'precision highp float;uniform sampler2D uPrev;uniform vec2 uShift;uniform vec2 uShiftG;uniform vec2 uFoamG;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform float uN;uniform vec2 uRebase;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uTime;uniform vec2 uNFD;uniform float uWind;uniform vec2 uWindDir;' +
@@ -244,7 +246,7 @@
   // (With MAX the amount and the birth times amount each keep the larger; the rule in FOAM_FS, the stronger now wins, is near it.)
   const NPCF_VS = 'attribute vec2 aXZ;uniform float uMm;varying vec2 vM;void main(){vM=aXZ;gl_Position=vec4(aXZ/uMm*2.0-1.0,0.0,1.0);}';
   const NPCF_FS = 'precision highp float;uniform vec4 uFoamRect;uniform vec2 uFoamG;uniform vec4 uFoamT;uniform vec4 uNB;uniform vec4 uNH;uniform vec4 uNG;uniform vec4 uNV;varying vec2 vM;' + NOISE + HULLFOAM +
-    'void main(){vec2 Pb=vM+uFoamRect.xy;vec2 Mg=vM-uFoamG;float iw=hullFoam(Mg,Pb,uNB,uNH,uNG,uNV.xyz);gl_FragColor=vec4(iw,uFoamT.x*iw,0.0,0.0);}';
+    'void main(){vec2 Pb=vM+uFoamRect.xy;vec2 Mg=vM-uFoamG;float iw=hullFoam(Mg,Pb,uNB,uNH,uNG,uNV.xyz);iw=iw>0.0?min(iw,1.0):0.0;gl_FragColor=vec4(iw,uFoamT.x*iw,0.0,0.0);}';
   // the last resort when no sea program links: a flat sea with a little ripple, the sky in it and the sun's glitter
   const BASIC_VS = 'precision highp float;attribute vec2 aXZ;uniform mat4 uVP;uniform vec2 uOrigin;uniform vec3 uOriginRel;uniform vec2 uScale;varying vec3 vW;varying vec2 vXZ;' +
     'void main(){vec2 lxz=aXZ*uScale;vec3 rel=uOriginRel+vec3(lxz.x,0.0,lxz.y);vW=rel;vXZ=uOrigin+lxz;gl_Position=uVP*vec4(rel,1.0);}';

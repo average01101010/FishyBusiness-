@@ -110,6 +110,11 @@ def main():
     for o in out:
         lo, la = frame.to_ll(o[0], o[1]); rows.append({'ll': [round(float(la), 4), round(float(lo), 4)], 'o': o})
     mottak.places(rows)
+    # Norway only: Overture's box (ov.NOR) reaches into Sweden at Strømstad, and four yards there came along until 05.11.2026 («Verft
+    # verft», BACKLOG 10.1). Kartverket's address register knows only Norway, so a place south of 59.2 N with no postal town lies in Sweden
+    sw = [r for r in rows if not r.get('v') and r['ll'][0] < 59.2]
+    if sw: print('dropped in Sweden:', len(sw), flush=True)
+    rows = [r for r in rows if r not in sw]
     res = []
     for r in rows:
         o = r['o']; res.append([round(o[0], 4), round(o[1], 4), round(o[2], 3), round(o[3], 1), round(o[4], 2), o[5], r.get('v', '')])

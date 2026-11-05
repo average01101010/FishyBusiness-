@@ -440,3 +440,4 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
   - **Neste:** Jonas sier ja til utrulling. Deretter H2 i havsteget (`docs/planer/havsteget.md`).
 - 05.11.2026: **R8 rullet ut** (Jonas: «Kjør ut når du er klar», etter vurderingen av å ligge bi i uvær). Arbeidsgrenen med Driftsplan 2 del 2 er flettet inn først; etter flettingen er enhetstestene (1 063 OK), trip2, havtur, docktest, autonavtest, lybtest, towtest og driftsplan2test (alene) grønne. H1b er ferdig.
   - **Neste:** H2 i havsteget (`docs/planer/havsteget.md`) i en ny økt, og flybillettene når Jonas har tallene.
+- 05.11.2026: flybilletten: Jonas valgte å beholde anslaget (tre måneder lest, resten trukket mellom dem; BACKLOG 10.3).

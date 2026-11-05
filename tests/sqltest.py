@@ -165,6 +165,11 @@ def main():
         F2 = json.loads(sql("select public.admin_feedback(50, null, null)", AD2, 'authenticated')); R['admRow2'] = [r for r in F2['rows'] if r['id'] == f2]; R['admVmb'] = F2.get('vmb'); R['admOrph'] = F2.get('orphans')
         sql("select public.admin_media_gone('%s')" % R['slot2'], AD2, 'authenticated'); R['mediaAfterGone'] = json.loads(sql("select public.fb_media_list()", A, 'authenticated'))
         R['mediaRead'] = sql("select count(*) from public.feedback_media", A, 'authenticated', expect_err=True)
+        # Ø6 funn 1 (20261105120000_fb_meta.sql): meta.pos is kept only as two numbers, so no HTML reaches the admin page that way
+        PX = {'sub': 'user_01XSS', 'role': 'authenticated'}; sql("select public.tm_hello('{}')", PX, 'authenticated')
+        fbp = lambda m: sql("select public.fb_send('bug', 'Pos', null, null, '%s')" % m, PX, 'authenticated')
+        R['fbPos'] = [sql("select coalesce((meta -> 'pos')::text, '-') || '|' || coalesce(meta ->> 'version', '-') from public.feedback where id = %s" % fbp(m))
+                      for m in ('{"version":"t3","pos":[69.5,17.6]}', '{"version":"t3","pos":["\\"><img src=x onerror=alert(1)>",0]}', '{"pos":[1e400,5]}', '{"pos":"69,17"}', '{"pos":null}')]
         # the feedback agent (20261006120000_feedback_agent.sql): only service_role (the Edge Function feedback-agent) reads, without who wrote it
         R['agMail'] = sql("select public.fb_send('ui', 'Skriv til ola.nordmann@example.no eller 912 34 567, knappen virker ikke', 2, null, '{\"version\":\"t2\",\"boat\":\"skiff\",\"email\":\"x@y.no\"}')", A, 'authenticated')
         AG = json.loads(sql("select public.agent_feedback(50)", None, 'service_role')); agm = [r for r in AG['rows'] if r['id'] == int(R['agMail'])]
@@ -457,6 +462,7 @@ def main():
         print(ok(all(R[k][0] for k in ('fbRead', 'fbAdmPl', 'fbAdm1')) and F['rows'] and F['rows'][0]['meta'].get('version') == 't1' and F['topics'].get('bug') == 1 and R['fbImg'] == str(len(IMG)) and R['fbMine2'][0]['status'] == 'fixed' and R['fbMine2'][0]['reply'] == 'Takk, rettet!'),
               'feedback: no player reads the table or the list, nor the admin without the second factor; the admin lists them, opens the picture, sets the status and answers, and the player sees it', {'topics': F.get('topics'), 'img': R['fbImg'], 'mine': R['fbMine2'][0] if R['fbMine2'] else None})
         print(ok(R['fbLimit'][0] and R['fbGone'] == '0'), 'feedback: at most 20 a day, and they go with the account', [R['fbLimit'][1][:40], R['fbGone']])
+        print(ok(R['fbPos'] == ['[69.5, 17.6]|t3', '-|t3', '-|-', '-|-', '-|-']), 'feedback: meta.pos is kept only as two numbers within latitude and longitude, anything else is dropped (Ø6 funn 1)', R['fbPos'])
         dt = R['devTech']; de = dt['err'][0] if dt['err'] else {}; df = dt['fps'][0] if dt['fps'] else {}
         print(ok(R['devPerf'] == 'Adreno (TM) 642L|8|6|412x915@2.6|1|3d ; Adreno (TM) 642L|-|6|412x915@2.6|1|3d' and de.get('n') == 1 and de.get('gpus') == ['Adreno (TM) 642L'] and de.get('platforms') == {'android': 1}
                  and df.get('n') == 2 and df.get('fps') == 48.3 and 'user_' not in json.dumps(dt) and R['devPl'][0] and R['devAdm1'][0] and R['devAdm'] == dt['keys']),

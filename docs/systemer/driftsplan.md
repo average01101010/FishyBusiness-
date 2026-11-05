@@ -76,7 +76,7 @@ Jonas 23.10.2026: «en fullstendig redesign av driftsplan-systemet … forenkles
 
 ## Driftsplan 2 (fra 26.10.2026, `docs/planer/driftsplan-2/`)
 
-Planen i spillet fra 27.10.2026. Delene under er bygd i rekkefølge og er det som gjelder; 5.7 over beskriver forgjengeren til del 8 fjerner den.
+Planen i spillet fra 27.10.2026. Delene under er bygd i rekkefølge og er det som gjelder; 5.7 over beskriver forgjengeren til del 8 fjerner den. **Del 8: Jonas 05.11.2026: «Ja, rydd bort den gamle».** Ryddingen tas i Ø12 (`docs/planer/okter-etter-backloggen.md`) etter H2c, når autolineren er i Driftsplan 2.
 
 **Jonas' valg (26.10.2026, `02-design.md` kapittel 5):** 1 A (dagen som plan, lagt av planen selv), 2 «ta det du mener er mest riktig» → A (planen av: redskapet står, hentes med «Hent redskapet»), 3 A, 4 A (plassene i kartplotteren), 5 C (gamle planer slås av med melding), 6 A (ett redskap om gangen, «siden alle båter må rigges om for å fiske med de ulike passive redskapene»), 7 → leveringsregelen er spillerens valg i Levering-raden, standard A, og alle tre testes. To regler, ordrett: «Om båten går dagdrift på driftsplanen skal ikke skipperen bare kunne gå å legge seg for å sove mens mannskapet jobber, det vil være uansvarlig. Skipper går alltid dagvakt, styrmann natt.» og «Ved døgndrift jobber mannskapet 12 timer hver og mannskap som har frivakt sover ombord. Båten må ha køyer nok til mannskapet for å kunne gå døgndrift.»
 

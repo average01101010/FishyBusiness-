@@ -19,7 +19,7 @@ Jonas valgte «Full trafikk langs kysten», men «NPC båtene skal kun dukke opp
 - **Leia:** korteste vei på et 100 m rutenett av flisas 25 m-maske, rettet ut der masken er fri.
   - Først prøves et strengt rutenett der høyst én av 16 småruter er land, så et romsligere med fire.
   - Havner hvis munning ligger i samme 500 m-rute, deler beregningen.
-  - Noen få leibiter skjærer et hjørne av 25 m-masken: 23 av 680 rundt Tromsø.
+  - Fra 05.11.2026 (Ø1) skjærer leibitene ikke lenger hjørner av 25 m-masken: rettlinjene sjekkes hver 5. m (før 10 m), og en etappe som likevel krysser land (et steg mellom to naboceller i det romslige rutenettet, som utrettingen aldri sjekket), søkes på nytt på 25 m-masken i et vindu 300 m rundt den og rettes ut der (`mend`). Målt ved å bygge flisene på nytt fra spillpakkene (kart-31), etapper over masken før → etter: Tromsø 13 → 0, Bergen 32 → 0, Bodø 29 → 1 (masken har ingen annen vei), Hammerfest 6 → 0; rundt 5 % flere punkter. Endringen kommer med neste kartrelease (Ø13); pakkene som er ute, har de gamle leiene (Tromsø 21 av 347 over masken).
 - Alt legges som JSON i flisas vec-pakke (`npc`). Det beregnes i parallell før pakkene skrives. Tromsø tar 5 s og Bergen 30 s.
 
 **Spillet** (`core/05-vessels.js`):
