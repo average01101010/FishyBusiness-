@@ -50,7 +50,7 @@
         (qh ? cbtn('carehk', 'data-lk="' + lk + '" data-m="shop"', L('Bytt ', 'Change ') + qh.n + L(' kroker', ' hooks') + qTxt(qh), here && qh.fee <= spendable()) : '') + (ql ? cbtn('carelr', 'data-lk="' + lk + '" data-m="shop"', L('Reparer lina', 'Mend the line') + qTxt(ql), here && ql.fee <= spendable()) : '') +
         (un > 0 ? sell('line', lk, 1, L('1 stamp', '1 tub')) : '') + (un > 1 ? sell('line', lk, un, un + ' ' + L('stamper', 'tubs')) : '') + '</div>' + (un < L0.n ? '<p class="ph-note">' + L('Egnede stamper selges ikke.', 'Baited tubs are not bought back.') + '</p>' : '') + '</div>'); }
     for (const l of pg.nets){ const q = careQuote('net', l.id, true);
-      h.push('<div class="ph-card"><h4>' + l.n + ' ' + L('garn', 'nets') + ' ' + netNo(l) + '</h4>' + kv(L('Stand', 'Condition'), pctOf(l.cond) + ' · ' + L('tak ', 'ceiling ') + pctOf(nMax(l))) + cbar(l.cond) + '<div class="ph-btncol">' +
+      h.push('<div class="ph-card"><h4>' + L(...netN(l, l.n)) + '</h4>' + kv(L('Stand', 'Condition'), pctOf(l.cond) + ' · ' + L('tak ', 'ceiling ') + pctOf(nMax(l))) + cbar(l.cond) + '<div class="ph-btncol">' +
         (q ? cbtn('grmend', 'data-id="' + l.id + '" data-m="shop"', L('Bøt garna', 'Mend the nets') + qTxt(q), here && q.fee <= spendable()) : '') + sell('net', l.id, 1, L('garna', 'the nets')) + '</div></div>'); }
     if (pg.pots.big){ const q = careQuote('pot', 0, true);
       h.push('<div class="ph-card"><h4>' + potsN(pg.pots.big) + '</h4>' + kv(L('Stand', 'Condition'), pctOf(pg.potc.cond) + ' · ' + L('tak ', 'ceiling ') + pctOf(pg.potc.max)) + cbar(pg.potc.cond) + '<div class="ph-btncol">' +

@@ -72,7 +72,7 @@ function setLabel(s, short){
 // (off: «2 stamper bankline · ikke egnet», pots without bait), for the «Sett ut» fan; the plan and the route take only the settable ones
 function setChoices(all){
   const pg = S.pgear, out = [], r = RIGS[rigOf()].kind; if (!pg || !r) return out;
-  for (const l of pg.nets) out.push({kind:'garn', spec:{nid:l.id}, n:l.n, lbl:[l.n + ' garn ' + netNo(l), l.n + ' nets ' + netEn(l)]});
+  for (const l of pg.nets) out.push({kind:'garn', spec:{nid:l.id}, n:l.n, lbl:netN(l, l.n)});
   for (const lk of ['hyse', 'bank']){ const L0 = pg.lines[lk]; if (!L0 || !L0.n) continue; const bt = btOf(L0), K = LINE_KINDS[lk];
     const lbl = (n, no, en) => [n + ' ' + (n === 1 ? 'stamp' : 'stamper') + ' ' + K.no.toLowerCase() + ' · ' + no, n + ' ' + (n === 1 ? 'tub' : 'tubs') + ' of ' + K.en.toLowerCase() + ' · ' + en];
     for (const k of Object.keys(bt).filter(k => bt[k] > 0).sort((a, b) => bt[b] - bt[a])) out.push({kind:'line', spec:{lk, n:bt[k], bait:k}, n:bt[k], bait:k, lbl:lbl(bt[k], BAITS[k] ? BAITS[k].no.toLowerCase() : k, BAITS[k] ? BAITS[k].en.toLowerCase() : k)});
@@ -128,7 +128,7 @@ function gearPanel(){
   h.push('<h3>' + GL('Redskap', 'Gear') + '</h3>');
   for (const lk of ['hyse', 'bank']){ const L0 = pg.lines[lk], all = L0.n + tubState(lk).work.reduce((a, w) => a + w.n, 0); if (!all) continue;
     h.push('<div class="kv"><span>' + GL(LINE_KINDS[lk].no, LINE_KINDS[lk].en) + '</span><span>' + all + ' ' + GL(all === 1 ? 'stamp' : 'stamper', all === 1 ? 'tub' : 'tubs') + '</span></div>' + tubsHtml(lk) + tubLegend(lk)); }
-  for (const l of pg.nets) h.push('<div class="kv"><span>' + l.n + ' garn ' + GL(netNo(l), netEn(l)) + '</span><span>' + Math.round(l.cond * 100) + ' %</span></div>');
+  for (const l of pg.nets) h.push('<div class="kv"><span>' + GL(...netN(l, l.n)) + '</span><span>' + Math.round(l.cond * 100) + ' %</span></div>');
   for (const pot of ['big']) if (pg.pots[pot]) h.push('<div class="kv"><span>' + GL(POTS[pot].no, POTS[pot].en) + '</span><span>' + pg.pots[pot] + ' · ' + Math.round(((pg.potc || {}).cond || 1) * 100) + ' %</span></div>');
   for (const j of jigSets()) h.push('<div class="kv"><span>' + GL(CARE.jig[j.k].no, CARE.jig[j.k].en) + (j.on ? ' · ' + GL('i bruk', 'in use') : '') + '</span><span>' + (j.k === 'kveite' && j.closed ? GL('kveita er fredet', 'halibut closed') : Math.round(((pg.jig || {})[j.k] || {c:1}).c * 100) + ' %') + '</span></div>' + (j.sp.length ? spChips(j.sp) : ''));
   const bk = Object.entries(baitOf(pg)).filter(e => e[1] > 0.05 && BAITS[e[0]]);

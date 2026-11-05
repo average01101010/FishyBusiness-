@@ -491,7 +491,7 @@ async def garn(pl):
     await shop_haulers(pl, ['Garnhaler'])
     await rig(pl, 'Garn')
     await pl.dock('butikk'); await pl.fan('Fiskeutstyr'); await pl.shot('fiskeutstyr-garn', 'the shop with a net hauler aboard', drawer=True); await buttons(pl)
-    await buy_card(pl, 'Garn', 'Torsk 180'); await buy_card(pl, 'Garn', 'Flyt 156'); await buy_card(pl, 'Garn', 'Blåkveite 360')
+    await buy_card(pl, 'Garn', 'Torskegarn 180'); await buy_card(pl, 'Garn', 'Flytegarn 156'); await buy_card(pl, 'Garn', 'Blåkveitegarn 360')
     for _ in range(3): await buy_card(pl, 'Blåser', 'blåsesett')
     await pl.shot('kjopt-garn', 'nets and buoy sets bought', drawer=True)
     pl.note('nets', await pl.js("JSON.stringify(S.pgear.nets.map(l => [l.ty || 'bunn', l.mesh, l.n]))")); await pl.js("DOCK.close()")
@@ -566,7 +566,7 @@ async def kanter(pl):
     await pl.shot('bathandel-hav', 'the ocean vessels in the market', drawer=True); await pl.js("DOCK.close()")
     # the storm: a sjark with nets in the sea in a gale, the loss forced as geartest does, then what the player is told
     await pl.js("FP.vessel('sjark')"); await shop_haulers(pl, ['Garnhaler']); await rig(pl, 'Garn')
-    await pl.dock('butikk'); await pl.fan('Fiskeutstyr'); await buy_card(pl, 'Garn', 'Torsk 156'); await buy_card(pl, 'Blåser', 'blåsesett'); await pl.js("DOCK.close()")
+    await pl.dock('butikk'); await pl.fan('Fiskeutstyr'); await buy_card(pl, 'Garn', 'Torskegarn 156'); await buy_card(pl, 'Blåser', 'blåsesett'); await pl.js("DOCK.close()")
     # a hand with fishing as a side job (biyrke) hired on a day he does not work: what does «Sett ut» say?
     pl.note('crew', 'the exchange: %s' % await pl.js("JSON.stringify(PHONE.candidates().map(x => [x.name, !!x.bi, x.biDays || null]))"))
     bi = await pl.js("JSON.stringify((() => { const wd = (gDate(S.t / 60).getUTCDay() + 6) % 7; const c = PHONE.candidates().find(x => x.bi && x.biDays && !x.biDays[wd]); return c ? {name:c.name, days:c.biDays} : null; })())")

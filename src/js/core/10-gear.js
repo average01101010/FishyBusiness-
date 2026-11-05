@@ -23,7 +23,10 @@ const NETTY = {bunn:{no:'Torskegarn', en:'Cod net', price:1500}, flyt:{no:'Flyte
 const NETOPT = [['bunn', 156], ['bunn', 180], ['bunn', 200], ['flyt', 156], ['flyt', 180], ['kveite', 360]];
 const netKey = (ty, mesh) => (ty && ty !== 'bunn' ? ty + ':' : '') + mesh;   // the shop's spec, and the key a string is joined by
 const netTy = l => (l && l.ty) || 'bunn';
-const netNo = l => (netTy(l) === 'bunn' ? '' : NETTY[netTy(l)].no.toLowerCase() + ' ') + l.mesh + ' mm', netEn = l => (netTy(l) === 'bunn' ? '' : NETTY[netTy(l)].en.replace(/^(?!Greenland)./, c => c.toLowerCase()) + ' ') + l.mesh + ' mm';
+// one name for each kind of net everywhere: «torskegarn 180 mm» in the shop, the fan, the inventory and the log (spilltest 3, U9)
+const netNo = l => NETTY[netTy(l)].no.toLowerCase() + ' ' + l.mesh + ' mm', netEn = l => NETTY[netTy(l)].en.replace(/^(?!Greenland)./, c => c.toLowerCase()) + ' ' + l.mesh + ' mm';
+// with the count: «10 torskegarn 180 mm», «10 cod nets 180 mm»
+const netN = (l, n) => [n + ' ' + netNo(l), n + ' ' + NETTY[netTy(l)].en.replace(/^(?!Greenland)./, c => c.toLowerCase()).replace(/net$/, n === 1 ? 'net' : 'nets') + ' ' + l.mesh + ' mm'];
 const MESHES = [156, 180, 200];                                  // legal cod nets north of 62° N; bigger mesh, bigger fish
 const GPRICE = {net:1500, kit:2500, heavy:1500, bait:18, potBait:0.6, bot:180, egnRate:560};   // kr, kg bait per pot, bøteri kr per net per 0.1, hooks baited per hour
 // how well each gear takes each species, relative to the jig (1 for every fish); pots take crab and a little cod and tusk
@@ -352,8 +355,8 @@ function finishSet(g, H){
   S.sets = S.sets || []; S.sets.push(s);
   // the deck log's gear tab keeps every set, also after it is hauled (ui/06b-book-tabs.js)
   S.gearLog = S.gearLog || []; S.gearLog.push(gearLogEntry(s)); if (S.gearLog.length > 60) S.gearLog.shift();
-  const what = s.kind === 'garn' ? s.n + ' garn (' + netNo(s) + ')' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[s.lk].no.toLowerCase() : s.n + ' ' + POTS[s.pot].no.toLowerCase();
-  const whatEn = s.kind === 'garn' ? s.n + ' nets (' + netEn(s) + ')' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[s.lk].en.toLowerCase() : s.n + ' ' + POTS[s.pot].en.toLowerCase();
+  const what = s.kind === 'garn' ? netN(s, s.n)[0] : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[s.lk].no.toLowerCase() : s.n + ' ' + POTS[s.pot].no.toLowerCase();
+  const whatEn = s.kind === 'garn' ? netN(s, s.n)[1] : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[s.lk].en.toLowerCase() : s.n + ' ' + POTS[s.pot].en.toLowerCase();
   log('Satte ' + what + ' på ' + s.depth + ' m, ' + coordStr(setMid(s)) + '.', 'Set ' + whatEn + ' at ' + s.depth + ' m, ' + coordStr(setMid(s)) + '.', 'nav');
   gopEnd(g);
 }
