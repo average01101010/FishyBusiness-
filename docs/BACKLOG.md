@@ -329,6 +329,12 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **Hvite firkanter på sjøen bak de andre båtene på Adreno** (tilbakemelding #110 og #111): PR #42 (`fb/auto-2026-11-04-skum-nan`) er flettet inn etter Jonas' ja (5.20e i `vaer-og-hav.md`). Porten stoppet den 04.11.2026 fordi `f1test` og `gfxtest` var røde med rettingen. På arbeidsgrenen 05.11.2026 var `f1test` grønn med rettingen. `gfxtest` var rød én gang med rettingen og grønn én gang uten, og så grønn i begge byggene: meldingen «3D NaN i kameraet» kom etter et halvt sekund i begge. Sjekken er tidsavhengig (se 10.6). Skyggeleggerfila var ikke endret i arbeidsgrenen siden PR-økta kjørte `skytest`, `sea3d`, `lighttest`, `dbg23o`, `wetshot` og `sunshot`, så de er ikke kjørt på nytt. **Må ses:** kjølvannet bak de andre båtene på et Adreno-nettbrett; PR-økta så et lyst, rett avgrenset bånd bak båten i SwiftShader i stående format.
 - PR #18 (lav grafikk høyst rundt full HD) og #19 (tredje og fjerde mann ved linehaleren) er lukket etter Jonas' valg 05.11.2026. De endret `view3d.js` og `05-phone.js`, som ble delt 26.10.2026. PR #33 er lukket fordi innholdet alt var i arbeidsgrenen.
 
+## Strøket 05.11.2026 (havsteget H2b, gren `ccr-99204901-f1vpx2`, ikke rullet ut)
+
+- Krokbytte om bord (fra H2a-lista): mannskapet bytter om lag 5 % av bruket i døgnet idet lina kommer inn (4d67201, 0f1e8ee).
+- Frysebåtene landet i kar på 300 kg (10.1, over 1 300 løft for en full båt): de lander nå på paller på om lag 1 t, 10 t i timen (4d67201). RSW-båtene står igjen i 10.1.
+- Havlandingene i lukket gruppes lotteoppgjør med enkeltfolk: havbåten har nå to anonyme skift som deler etter § 6 (640bd64).
+
 ## Strøket 05.11.2026 (havsteget H2a, h2-autoline)
 
 - En setting som ble stoppet halvveis (`gopAbort`), mistet det som ikke var satt ennå: stamper, garn eller teiner og agnet. Nå kommer det om bord igjen (`gearUnset`).
