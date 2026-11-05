@@ -207,12 +207,26 @@ function plan2Boundary(o, H){
   if (r && !r.day && !r.replan && r.wait && r.wait.k === 'wx' && H < (r.wait.until || 0) - 1 / 60) return;
   // the gear fetched (o.fetch, the page): the plan is off when nothing stands in the sea, else another day of hauls, from now
   if (o.fetch){ if (!mySets().length && holdTotal() < 0.5){ o.on = false; o.fetch = null; o.run = null; plan2Say(o, 'Redskapet er hentet. Driftsplanen er av.', 'The gear is fetched. The plan is off.'); return; } return plan2NewDay(o, H); }
-  if (o.rhythm === 'watch' || (r && r.replan)) return plan2NewDay(o, H);
-  const from = r && r.day ? r.day.end : H, dep = plan2NextDep(o, H, from);
+  if (o.rhythm === 'watch') return plan2NewDay(o, H);
+  // a day made again from where she lies (a shelter, a takeover, a port that was not the step's): at once while the crew and you have
+  // a day's work left, else after the rest and at the hour, like any day (GUI review F2: a day made again late at night went out again)
+  const spent = r && r.replan ? plan2Spent(o, H) : 0;
+  if (r && r.replan && !spent) return plan2NewDay(o, H);
+  const from = spent ? H + spent : r && r.day ? r.day.end : H, dep = plan2NextDep(o, H, from);
   // the rules at the next departure: a closed place waits for its date, a used-up quota stops the plan now, not tomorrow morning
   { const st = plan2RulesWhy(o, dep); if (st){ if (st.k === 'closed'){ const at = plan2RulesOpenAt(o, dep); if (at != null){ const d = gDate(at); plan2Wait(o, 'closed', st.no + ' Planen venter til ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', st.en + ' The plan waits until ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', Math.min(at, H + 24)); return; } } plan2Stop(o, st.k, st.no, st.en, st.fix); return; } }
-  if (H < dep - 1 / 60){ plan2Wait(o, 'dep', 'Neste tur går kl. ' + driftClock(driftHod(dep)) + (dep - H > 20 ? ' i morgen' : '') + '.', 'The next trip goes at ' + driftClock(driftHod(dep)) + (dep - H > 20 ? ' tomorrow' : '') + '.', dep); return; }
+  if (H < dep - 1 / 60){ plan2Wait(o, 'dep', (spent ? 'Mannskapet hviler. ' : '') + 'Neste tur går kl. ' + driftClock(driftHod(dep)) + (dep - H > 20 ? ' i morgen' : '') + '.', (spent ? 'The crew rest. ' : '') + 'The next trip goes at ' + driftClock(driftHod(dep)) + (dep - H > 20 ? ' tomorrow' : '') + '.', dep); if (spent) r.replan = true; return; }
   plan2NewDay(o, H);
+}
+// the rest a day made again needs first (day rhythm): 0 while the crew and you have DRP2.minDay of work left, else the hours until the
+// crew are rested (DRP2.rested) where she lies; your own energy is the departure's (plan2Go)
+function plan2Spent(o, H){
+  if (o.rhythm === 'watch' || skipOn()) return 0;
+  const st = plan2State(o), here = plan2Here(o);
+  const left = Math.min(...st.crew.map(c => (DRP2.tired - c.fat) / Math.max(1, c.rate || DRP2.fatH)), st.me.aboard ? (st.me.energy - DRP2.enMin) / DRP2.enH : Infinity);
+  if (!(left < DRP2.minDay)) return 0;
+  const fat = st.crew.length ? Math.max(...st.crew.map(c => c.fat)) : 0, where = S.boat.anch ? 'anker' : here.port && plan2RestOk(here.port) ? 'bunks' : 'quay';
+  return Math.max(0.5, (fat - DRP2.rested) / p2RestRate(where));
 }
 function plan2NewDay(o, H){
   const st = plan2State(o), day = planDay(o, H, st), r0 = o.run;

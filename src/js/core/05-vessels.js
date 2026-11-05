@@ -899,7 +899,9 @@ function dock(pid, berth){
   tatTripEnd(pid);
   turDock(pid);   // freight picked up or delivered (09g-turer.js)
   // the skipper starts landing and restocks straight away, on this vessel (a deferred call would act on whichever vessel is bound then)
-  if (wasOps && !port.rorbu){ opsLanded(pid, opsK); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
+  // (Driftsplan 2 is told at a rorbu too: a rorbu is often the plan's home, and a call it was not told of made the day again at once,
+  // out again every quarter of an hour all night (GUI review F2, 05.11.2026); the old plan never landed at a rorbu)
+  if (wasOps && (!port.rorbu || DRIFT2)){ opsLanded(pid, opsK); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
 }
 // What the boat makes of the fish where it is, besides the fish itself: effort (people, jigs, machines, the team), weather and
 // sea, cold, hands busy on deck, and your own share while you play the jig game. fish() uses it, and so does the heat map's «Her nå» line.
