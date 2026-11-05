@@ -19,10 +19,12 @@ const PLAN2UI = (() => {
   const kindName = id => { const p = portById(id); if (!p) return ''; if (id === (S.home || HOME0)) return L('naustet', 'the naust'); if (isRorbu(id)) return L('rorbu', 'rorbu');
     if (isBerth(id)) return p.kind === 'dock' ? L('flytebrygge', 'floating dock') : L('kai', 'quay');
     const k = portKind(p); return k === 'mottak' ? L('fiskemottak', 'fish plant') : k === 'verft' ? L('verft', 'yard') : k === 'butikk' ? L('butikk', 'shop') : L('kai', 'quay'); };
+  // why a paused boat drifts instead of lying at anchor (Pause anchors where it can, plan2Pause): «: for dypt til å ankre», lower case
+  const driftWhy = o => { const w = o.paused && o.paused.drift && anchorWhy[o.paused.drift]; return w ? [': ' + w[0].charAt(0).toLowerCase() + w[0].slice(1).replace(/\.$/, ''), ': ' + w[1].charAt(0).toLowerCase() + w[1].slice(1).replace(/\.$/, '')] : ['', '']; };
   // ---- Nå: the step she is on and when it ends, what she waits for and until when, or why she stopped
   function nowOf(o){
     if (!o.on && o.paused && !o.stop){ const b = S.boat, at = ck(o.paused.t / 60);   // (U4: the boat lies still where Pause found her)
-      return [b.status === 'port' ? L('På pause siden kl. ' + at + '. Båten ligger i ' + nm(b.port) + '.', 'Paused since ' + at + '. The boat lies at ' + nm(b.port) + '.') : b.anch ? L('På pause siden kl. ' + at + '. Båten ligger til ankers der den var.', 'Paused since ' + at + '. The boat lies at anchor where she was.') : L('På pause siden kl. ' + at + '. Båten ligger stille der den var, og mannskapet venter på deg.', 'Paused since ' + at + '. The boat lies still where she was, and the crew wait for you.'), 'wait']; }
+      return [b.status === 'port' ? L('På pause siden kl. ' + at + '. Båten ligger i ' + nm(b.port) + '.', 'Paused since ' + at + '. The boat lies at ' + nm(b.port) + '.') : b.anch ? L('På pause siden kl. ' + at + '. Båten ligger til ankers der den var, og mannskapet venter på deg.', 'Paused since ' + at + '. The boat lies at anchor where she was, and the crew wait for you.') : L('På pause siden kl. ' + at + '. Båten driver med vinden der den var' + driftWhy(o)[0] + ', og mannskapet venter på deg.', 'Paused since ' + at + '. The boat drifts with the wind where she was' + driftWhy(o)[1] + ', and the crew wait for you.'), 'wait']; }
     if (!o.on) return o.stop ? [L('Stoppet: ', 'Stopped: ') + L(o.stop.no, o.stop.en), 'bad'] : [L('Av', 'Off'), ''];
     if (o.held) return [L('Venter: du har tatt over båten', 'Waiting: you have taken the boat over'), 'wait'];
     const b = S.boat, pl = S.plan, r = o.run, M = nm(o.M), stepTxt = s => { const t = planDayText(o, {steps:[s], skipped:[], why:['', '']})[0]; return L(t[1], t[2]); };
@@ -52,7 +54,7 @@ const PLAN2UI = (() => {
     let oo = o; if (!o.M){ const P = o.places, mid = P.length ? {x:P.reduce((a, q) => a + q.x, 0) / P.length, y:P.reduce((a, q) => a + q.y, 0) / P.length} : (portById(o.home) || {p:S.boat.pos}).p, M = o.land.mode === 'port' && o.land.port ? portById(o.land.port) : PORTS.filter(q => q.mottak).sort((x, y) => dist(x.p, mid) - dist(y.p, mid))[0]; if (M) oo = Object.assign({}, o, {M:M.id}); }
     // the next day is reckoned from the state at its departure, not now: the crew's fatigue and your energy fall and rise with the rest until then
     // (the engine lays the day anew at the departure; this is the page's estimate, as the note under the day says)
-    const atSea = !o.on && S.boat.status !== 'port' && !S.boat.anch;   // (started at sea, the day is laid from where she lies, now: plan2Start)
+    const atSea = !o.on && S.boat.status !== 'port' && !(o.homeA && dist(S.boat.pos, o.homeA) < 0.4);   // (started at sea or at anchor there, the day is laid from where she lies, now: plan2Start)
     try { const from = o.on && r && r.day ? r.day.end : H, dep = atSea ? H : plan2NextDep(oo, H, from), st = plan2State(oo), hrs = Math.max(0, dep - H);
       if (hrs > 0){ const b = S.boat, atRest = b.status === 'port' && (b.port === oo.home ? st.homeRest : plan2RestOk(b.port)), rate = atRest ? p2RestRate('bunks') : b.status === 'port' ? p2RestRate('quay') : 0;
         for (const c of st.crew) c.fat = Math.max(0, c.fat - rate * hrs); if (st.me.aboard && (b.status === 'port' || b.anch)) st.me.energy = Math.min(100, st.me.energy + Math.max(restRate(b) * 60, resting() ? 0 : b.anch ? p2MeRate(null, true) : p2MeRate(b.port)) * hrs); }   // (you go in to rest by yourself, plan2MeRest)
@@ -255,7 +257,7 @@ const PLAN2UI = (() => {
       row('crew', L('Mannskap', 'Crew'), crewVal(o), () => crewBody(o), !meAboard() && (VESSELS[S.boat.type].crewMax || 0) >= 2 && !(crewSkipper() && crewMate() && crewSkipper() !== crewMate())) + '</div>');
     h.push(stats(o));
     const others = (S.fleet || []).filter(v => v.id !== S.cur);
-    h.push('<div class="ph-card">' + (others.length ? '<h4>' + L('Kopier planen til en annen båt', 'Copy the plan to another vessel') + '</h4><div class="ops-days">' + others.map(v => T('p2-copy', vget(v, 'boatName'), false, 'data-id="' + v.id + '"')).join('') + '</div>' : '') + B('p2-reset', L('Slett driftsplanen', 'Delete the plan')) + '</div></div>');
+    h.push('<div class="ph-card">' + (others.length ? '<h4>' + L('Kopier planen til en annen båt', 'Copy the plan to another vessel') + '</h4><div class="ops-days">' + others.map(v => T('p2-copy', vget(v, 'boatName'), false, 'data-id="' + v.id + '"')).join('') + '</div>' : '') + B('p2-reset', L('Slett driftsplanen', 'Delete the plan') + '</div></div>');
     return h.join('');
   }
   function start(o){
@@ -275,7 +277,7 @@ const PLAN2UI = (() => {
     const pl = id => o.places.find(q => q.id === id), kind = p2Kind(o);
     if (a === 'p2-row'){ open = open === d.k ? null : d.k; adding = null; return true; }
     if (a === 'p2-start'){ start(o); return true; }
-    if (a === 'p2-pause'){ plan2Pause(o); toast(o.paused.sea ? L('Driftsplanen står på pause. Båten ligger stille der den er, og redskapet i sjøen står der det står.', 'The plan is paused. The boat lies still where she is, and the gear in the sea stays where it is.') : L('Driftsplanen står på pause. Redskapet i sjøen står der det står.', 'The plan is paused. The gear in the sea stays where it is.')); return true; }
+    if (a === 'p2-pause'){ plan2Pause(o); toast(!o.paused.sea ? L('Driftsplanen står på pause. Redskapet i sjøen står der det står.', 'The plan is paused. The gear in the sea stays where it is.') : S.boat.anch ? L('Driftsplanen står på pause. Båten ankrer der den er, og redskapet i sjøen står der det står.', 'The plan is paused. The boat anchors where she is, and the gear in the sea stays where it is.') : L('Driftsplanen står på pause. Båten driver der den er' + driftWhy(o)[0] + '. Redskapet i sjøen står der det står.', 'The plan is paused. The boat drifts where she is' + driftWhy(o)[1] + '. The gear in the sea stays where it is.')); return true; }
     if (a === 'p2-resume'){ plan2Resume(o); return true; }
     if (a === 'p2-fetch'){ fetch(o); return true; }
     if (a === 'p2-fix'){ const f = o.stop && o.stop.fix; if (f === 'mannskap'){ PHONE.open('arbeid'); return false; } if (f === 'quota'){ PHONE.open('kvote'); return false; } open = f === 'rig' ? 'rig' : 'places'; return true; }
