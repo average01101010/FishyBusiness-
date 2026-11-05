@@ -55,8 +55,8 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 
 - «Godkjenningsgrensen for båtmodellene (Jonas 01.11.2026): ingenting under 75/100», og det som står igjen under hver «… revidert» i «Spillarbeid som venter».
 - «Skrogenes volum mot `disp`», «Rattet dreier bare på håndbåtene», «Skipsmodellene etter kartleggingen» (D3 og resten av `docs/batplan.md` del 10), 10.5 «Båtmodellene».
-- **Rekkefølge:** Jonas velger. Uten valg tas trebåten først, fordi den er startbåten og den flest ser, og så den som er nærmest 75 (plastsjarken, 66).
-- **Trenger:** bildene eller tegningene som står under hver båt, og svaret om farten til hurtigsjarken (`sjarkny`) og tegningen bak breisjarken.
+- **Venter** (Jonas 05.11.2026: «Vent med båtene»): Ø4 tas når Jonas har bilder eller ber om det. Breisjarken revideres senere (Jonas 05.11.2026: «Denne skal revideres på et senere tidspunkt. La vente»).
+- **Trenger:** bildene eller tegningene som står under hver båt.
 - **Filer:** `tools/boats/`, `src/data/*.b64`, `docs/skipsmodeller/`. **Holder seg unna:** `tools/boats/al45.py` (H2). `tools/boats/fittings.py` er felles med H2d, så endringer der trenger varsomhet.
 
 ### Ø5 Butikkene, restene
@@ -68,12 +68,12 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 ### Ø6 Sikkerhetsgjennomgangen av skyen (A7)
 
 - A7 i `docs/planer/verktoy-fra-game-studios.md`: én gjennomgang av `supabase/` (tabellene, RLS, funksjonene), `ui/10f-cloud.js`, `ui/10g-push.js`, `ui/10l-share.js`, `ui/10h-world.js` og `src/admin/`. Økta bare leser.
-- **Venter på Jonas' «kjør på»** (verktøyplanen, 28.10.2026).
+- **«Kjør på» 05.11.2026** (Jonas valgte begge, A7 og hookene).
 - Funnene skrives i backloggen 10.1 eller i en egen plan.
 
 ### Ø11a Planen for lover, regler og sikkerhet (bare plan)
 
-- `docs/planer/lover-og-regler.md` (L0–L6) og «Sikkerhet SK1–SK6» (oppgave #164) blir én plan med `/planlegg`, fordi L6 (vesten, MOB-båten med davit, MOB-lys med røyk) og SK1 (vest, drakt, leider, livbøye, PLB) er de samme modellene. Byggingen er Ø11 i bølge 3.
+- `docs/planer/lover-og-regler.md` (L0–L6) og «Sikkerhet SK1–SK6» (oppgave #164) og N8 i `docs/planer/npc-flaaten.md` (sjømannskap: vikeplikt, lys og signaler for NPC-båtene; Jonas 05.11.2026) blir én plan med `/planlegg`, fordi L1 og L3 (vikeplikt, lys og lyd) gjelder både spilleren og NPC-ene, og fordi L6 (vesten, MOB-båten med davit, MOB-lys med røyk) og SK1 (vest, drakt, leider, livbøye, PLB) er de samme modellene. Byggingen er Ø11 i bølge 3.
 
 ## Bølge 2: etter at spilltest 3 er flettet inn
 
@@ -83,6 +83,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 - «`paintPlotter` kaster «reading '0'» i `drawSkiff`».
 - 10.7: `S.owned`, ikonet `sjomann`, og sløyebordet og konsollskjermene på skiffen (`buildSkiff`).
 - «U10, rest», hvis spilltest 3 ikke tok den.
+- **Farten til den nye hurtigsjarken** (Jonas 05.11.2026: 12 kn som tegningen): `VESSELS.sjarkny` får `vmax` 12 og `planing` av, og butikkteksten skrives om (`docs/skipsmodeller/sjarkny-grunnlag.md` kap. 9). Venter også på H2, fordi `core/02-species-gear.js` og `ui/phone/10-fartoy.js` er H2s.
 - **Filer:** `ui/07b-first-trip.js`, `ui/07-guide.js`, `core/05-vessels.js` (`npcStates`), `ui/06-logbook.js`, `view3d/12-skiff.js`, `ui/phone/`.
 
 ### Ø8 Spillbarhet
@@ -120,7 +121,8 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 ### Ø12 Driftsplan 2, resten
 
 - «Driftsplan 2: GUI-gjennomgangen, det som står igjen», «Driftsplan 2: stikkprøver langs kysten mangler», «Driftsplan 2, del 8 (rydding)» og «`drifttest` scenario 6» (som forsvinner med del 8).
-- **Trenger:** hele kysten i testmiljøet (`tools/map/out/game`), og at Jonas har prøvd den nye planen. Kommer etter H2c (autolineren i Driftsplan 2).
+- Del 8: Jonas 05.11.2026: «Ja, rydd bort den gamle».
+- **Trenger:** hele kysten i testmiljøet (`tools/map/out/game`). Kommer etter H2c (autolineren i Driftsplan 2).
 
 ## Bølge 4: store løp, ett om gangen
 
@@ -139,24 +141,25 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 ### Ø15 NPC-flåten
 
 - «NPC-flåten for hele landet» (N1–N8, `docs/planer/npc-flaaten.md`, fem valg), L3 i «NPC-båtene ved ekte kaier», «Liggeplassene etter L1», «Brygger uten `floating=yes`», «NPC-båter ved flytebrygger tegnet som linje» og 10.3 «NPC-kystflåten ved Longyearbyen».
-- **Venter på** Jonas' valg og klarsignal.
+- **Valgene tatt 05.11.2026** (`npc-flaaten.md` kap. 7): 2 A, 4 A og rekkefølgen N3, N4, N7, N8 sammen med Ø11a, N5, N6. Valg 1 og 3 var alt avgjort av `bestand-og-flaate.md`. **Venter på** klarsignal.
 
 ### Ø17 Hooks og regler fra Game Studios
 
 - A1, A2, A4 og A6 i `docs/planer/verktoy-fra-game-studios.md`.
-- Kommer etter Ø2, fordi begge endrer `run.py`. **Venter på** «kjør på».
+- Kommer etter Ø2, fordi begge endrer `run.py`. «Kjør på» 05.11.2026.
 
 ## Ikke økter
 
-### Spørsmål til Jonas
+### Spørsmål til Jonas (besvart 05.11.2026)
 
-- Den nye hurtigsjarken (`sjarkny`): 25 kn og planende som i dataene, eller 12 kn som på tegningen?
-- Breisjarken: tegningen bak skriptet ligger ikke i repoet.
-- Bildene av båtene som står under hver «… revidert».
-- Tallene til flybillettene (H1b R8).
-- De fem valgene i NPC-flåten (`docs/planer/npc-flaaten.md`).
-- «Kjør på» for verktøyplanen (A7, og så A1, A2, A4 og A6).
-- Har du prøvd Driftsplan 2 nok til at del 8 kan tas?
+- Den nye hurtigsjarken (`sjarkny`): **12 kn som tegningen** (Ø7).
+- Breisjarken: «Denne skal revideres på et senere tidspunkt. La vente.»
+- Båtmodellene og bildene: «Vent med båtene» (Ø4).
+- Flybillettene: **behold anslaget** (tre måneder lest, resten trukket mellom dem).
+- NPC-flåten: valg 2 A, 4 A og rekkefølgen N3, N4, N7, N8 sammen med Ø11a, N5, N6 (Ø15, venter på klarsignal).
+- Verktøyplanen: **«kjør på»** for A7 (Ø6) og A1, A2, A4 og A6 (Ø17).
+- Driftsplan 2, del 8: **«Ja, rydd bort den gamle»** (Ø12).
+- Ikke spurt: om `disp` for den nye hurtigsjarken skal være 16 t (tegningens lettvekt) i stedet for 15 t (kap. 9 punkt 2 i `sjarkny-grunnlag.md`). Jonas' regel fra kyst15 er at `disp` er den tomme båten.
 
 ### Det Jonas måler
 
@@ -172,9 +175,9 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 | Ø1 Det som ikke kom med | Ferdig: PR #42 flettet, #18, #19 og #33 lukket, Tufjord flettet inn (8f503066), verftene i Sverige tatt ut (ce056730), leibitene rettet i `npc.py` (eb669fe7, ute med neste kartrelease) | `ccr-834c604f-xxnqoy`, `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
 | Ø2 Testriggen | Ikke begynt | | |
 | Ø3 Ytelse | Ikke begynt | | |
-| Ø4 Båtmodellene | Ikke begynt | | |
+| Ø4 Båtmodellene | Venter (Jonas: «Vent med båtene») | | |
 | Ø5 Butikkene, restene | Ikke begynt | | |
-| Ø6 Sikkerhetsgjennomgangen (A7) | Venter på «kjør på» | | |
+| Ø6 Sikkerhetsgjennomgangen (A7) | Kjører (startet 05.11.2026) | | 05.11.2026 |
 | Ø11a Planen for lover, regler og sikkerhet | Ikke begynt | | |
 | Ø7 Småfeil | Venter på spilltest 3 | | |
 | Ø8 Spillbarhet | Venter på spilltest 3 | | |
@@ -185,9 +188,10 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 | Ø12 Driftsplan 2, resten | Venter på H2 | | |
 | Ø13 Ny kartrelease | Ikke begynt | | |
 | Ø14 Fangstfelt med navn | Venter på H2 | | |
-| Ø15 NPC-flåten | Venter på valgene | | |
-| Ø17 Hooks og regler | Venter på Ø2 og «kjør på» | | |
+| Ø15 NPC-flåten | Valgene tatt; venter på klarsignal | | |
+| Ø17 Hooks og regler | Venter på Ø2 | | |
 
 - 05.11.2026: planen skrevet etter gjennomgangen av backloggen, planene og grenene. Grenene sjekket samme dag: `ccr-664fd66b-ftggff` og PR #42 har rettinger som ikke er i arbeidsgrenen.
 - 05.11.2026: PR #42 flettet inn og PR #18, #19 og #33 lukket (Jonas: «Ja, flett PR #42 og lukk #18, #19 og #33»). `vesseltest` (snøkrabbe) ble rettet i H2a og er tatt ut av Ø2.
 - 05.11.2026: Ø1 ferdig. Tufjord-rettingen fra `ccr-664fd66b-ftggff` flettet inn (konflikt med isen i `leiaRoute` løst: isen følger `LEIA_RUN`), prøvd i Tufjord, Kristiansand, Bergen, Bodø, Hammerfest og Båtsfjord. «Land inne i havnene» (grunnsjekken inne i havnene, Fosnavåg, Mandal verft og Bøvågen) står i backloggen 10.5.
+- 05.11.2026: Jonas svarte på spørsmålene (over, «Spørsmål til Jonas»). Ø6 startet.
