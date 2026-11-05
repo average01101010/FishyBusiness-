@@ -218,22 +218,29 @@ function jobsDone(){ if (!S.jobs || !S.jobs.length) return null; let m = null; f
 // in a wind over the turn-back limit the boat goes by Autonav to the nearest quay (S.settings.autoTo 'near', the default; Jonas
 // 08.10.2026: «båten går til nærmeste kai om været blir for dårlig i stedet for å returnere»), or home the way she came ('home').
 // She lies still while the way is found; the three nearest places are tried, and found none, she goes home the way she came.
-const SHELTER = {tries:3, n:0};
+const SHELTER = {tries:5, n:0};
 function shelterReturn(W, hsOver){
   const b = S.boat, from = {x:b.pos.x, y:b.pos.y}, vid = S.cur, tok = ++SHELTER.n, speed = S.plan ? S.plan.speed : S.draftSpeed, ops = !!(S.plan && S.plan.ops);
   const why = hsOver ? ['Sjøen økte til ' + hsOver.toFixed(1).replace('.', ',') + ' m', 'The sea rose to ' + hsOver.toFixed(1) + ' m'] : ['Vinden økte til ' + W.toFixed(1).replace('.', ',') + ' m/s', 'Wind rose to ' + W.toFixed(1) + ' m/s'];
   if (b.gop) gopAbort('return');
   S.plan = null; b.status = 'idle'; b.v = 0; b.fishUntil = null; S.shelter = {tok, W};
-  const cand = PORTS.filter(q => !q.rorbu).map(q => [q, dist(q.p, from)]).sort((x, y) => x[1] - y[1]).slice(0, SHELTER.tries).map(x => x[0]);
+  const cand = PORTS.filter(q => !q.rorbu).map(q => [q, dist(q.p, from)]).sort((x, y) => x[1] - y[1]).slice(0, SHELTER.tries);
   const bound = fn => { const v = typeof vesselById === 'function' ? vesselById(vid) : null; if (v && v.id !== S.cur) onVessel(v, fn); else fn(); };
   const still = () => S.shelter && S.shelter.tok === tok && !S.plan && S.boat.status === 'idle';
   (async () => {
-    for (const q of cand){
+    // the shortest way, not the first found (H1b R8, 05.11.2026: from Sentralbanken the nearest quay by the straight line was Longyearbyen,
+    // 481 nm round Sørkapp, and Vardø about 340): the next candidates are tried while their straight line is shorter than the best way
+    let best = null;
+    for (const [q, d] of cand){
+      if (best && d >= best.km) break;
       let res = null; try { res = await leiaRoute(from, {x:q.p.x, y:q.p.y}, null, q.id); } catch (e){ console.error(e); }
-      if (res && !res.why && res.wps && res.wps.length){ bound(() => { if (!still()) return; S.shelter = null;
+      if (res && !res.why && res.wps && res.wps.length){ let km = 0, a = from; for (const w of res.wps){ km += dist(a, w); a = w; } if (!best || km < best.km) best = {q, res, km}; }
+    }
+    if (best){ const {q, res} = best;
+      bound(() => { if (!still()) return; S.shelter = null;
         const wps = res.wps.map((w, i) => i === res.wps.length - 1 ? {x:q.p.x, y:q.p.y, port:q.id, fish:0} : {x:w.x, y:w.y, port:null, fish:0, leia:true});
         S.plan = {wps, idx:0, speed, returning:true, unsafe:wps.map(() => false), ops}; S.boat.status = 'sailing';
-        log(why[0] + '. Autonav tar båten til nærmeste kai, ' + q.name + '.', why[1] + '. Autonav takes the boat to the nearest quay, ' + q.name + '.'); }); return; }
+        log(why[0] + '. Autonav tar båten til nærmeste kai, ' + q.name + '.', why[1] + '. Autonav takes the boat to the nearest quay, ' + q.name + '.'); }); return;
     }
     bound(() => { if (!still()) return; S.shelter = null; startReturn(true, W, true, hsOver, ops); });
   })();

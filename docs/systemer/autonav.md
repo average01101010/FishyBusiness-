@@ -143,6 +143,36 @@ Jonas 05.11.2026: «Start r6 i en ny økt». Målet i planen (R6 i `docs/planer/
 
 **Rettet 05.11.2026, etter utrullingen av R6 og R7:** CI-sjekken av alle mottaksparene («Autonav langs hele kysten», `tests/allpairs.py`) ble rød på ett par (mM416 → mM2187 på Sunnmøre): en etappe på 8,6 km gikk over en holme på rundt 20 m ved 62,396° N 5,830° E. Avstandslaget (`coastDist`, flisenes 100 m-lag) kjenner ikke holmen og sier 0,5 km til land der den står, så `legRuns` kalte stykket åpent hav og den fine sjekken gikk ikke der. Nå leses også strekningen et åpent punkt står inne for, med `isLand` hver 5. m (`LEGOPEN.land`, `legLandIn`); land der gjør punktet nært, og stykket sjekkes fint som før R6. Det koster lite (20 000 oppslag i masken tar rundt 10 ms her). Holmer tynnere enn 5 m som avstandslaget heller ikke kjenner, kan fortsatt gli mellom punktene på åpent hav (BACKLOG 10.3).
 
+## 4.12h Ut av fjordene til havet hele året (havsteget H1b R8, 05.11.2026)
+
+Funnet av `tests/havtur.py` (R8): **Tromsø → Isfjorden fant ingen rute** i januar og juni–november, bare i mars–mai. Årsaken var ikke isen, men at den virket bare *på grunn av* isen: `lnetExit` prøver i andre runde rutenettet fra en node bare når den rette linja derfra mot målet er fri minst en tredjedel av veien (`leiaLegFail`). Fra Tromsø krysser alle de rette linjene øyer like utenfor, så ingen node slapp gjennom. I månedene med is ved Svalbard var isen 790 km ute det første linja traff (`leiaLegFail` sjekker isen før land), og da slapp en node gjennom ved et tilfelle. Tabellen i 4.12g (2,2 s) ble målt i mars.
+
+Stikkprøven langs kysten fant det samme fra **Bergen** (verftet) mot Shetland og mot et punkt 100 km til havs (61° N 1° Ø), hele året: nodene ved byen ligger i skjærgården, der grovsøket blir stengt inne (298 utvidelser og stopp).
+
+**Rettet** (`core/11c-leinett.js` `lnetExit`, tredje runde): finnes ingen node etter de to første rundene, prøves rutenettet (`leiaFind`) uten filteret fra de `LNET.exitGrid / 2` billigste nodene og fra de `LNET.exitGrid` (4) billigste nodene som ligger i åpent farvann (`dcCellFar` ≥ `LNET.exitOpen` = 1,5 km). `st.exit.any` sier at det var denne runden.
+
+**Målt etter rettingen** (Chromium her, juli 2027, kyst15): Tromsø → Isfjorden 559–565 nm (luftlinje 523) på 1,9–3,2 s, Tromsø → Sørkapp 421 nm på 0,9–1,3 s, Bergen → Shetland 200 nm (190) på 1,2–2,0 s, Trondheim → 66° N 2° Ø 272 nm (265), Bodø → Jan Mayen-feltet 529 nm (526), Kristiansand → Nordsjøen, Hammerfest → Bjørnøya og Vadsø → 72,5° N 40° Ø uendret; i januar, juli og oktober, alle uten etappe på grunn eller i isen (`groundCheck`, `seaIceOnLeg`). `routes.json` «hav» har fått Bergen–Shetland (`autonavtest` 10, 25 OK).
+
+## 4.12i Seilasene i R8 (05.11.2026)
+
+`tests/havtur.py` (LITE, trenger hele kysten og `dist-vec`) planlegger og seiler åtte turer i juli med kyst15 på den felles klokka (`step()`), uten å fylle på tanken: Båtsfjord–Sentralbanken, Båtsfjord–Petsjorahavet, Hammerfest–Bjørnøya, Tromsø–Isfjorden, Ålesund–Nord-Island, Ålesund–Færøyane, Måløy–Vikingbanken og Måløy–Shetland. På hver: målet er sjø med dybde, sonen (`ruSea`) og lisensen, klimapunktene og månedsmiddelet av vinden, bølgene og temperaturen i januar og juli, isen i mars og september og ruta i mars, rekkevidden for hver båttype og forbruket mot overslaget i rutepanelet. 68 OK.
+
+| Tur | nm (luftlinje) | Timer, kyst15 10 kn | Diesel brukt / overslag (L) | Sone | γ | k |
+|---|---|---|---|---|---|---|
+| Båtsfjord–Sentralbanken | 338 (336) | 33,8 | 2 137 / 2 126 | fiskevernsonen | 19,5° | 1,003 |
+| Båtsfjord–Petsjorahavet | 383 (373) | 38 | 2 412 / 2 404 | russisk | 31,4° | 1,018 |
+| Hammerfest–Bjørnøya | 235 (234) | 23,6 | 1 497 / 1 505 | Svalbards territorialfarvann | 4,4° | 1,000 |
+| Tromsø–Isfjorden | 563 (523) | 56,4 | 3 595 / 3 595 | Svalbards territorialfarvann | 0,3° | 1,000 |
+| Ålesund–Nord-Island | 692 (682) | 68,6 | 4 381 / 4 520 | islandsk | −31,3° | 1,024 |
+| Ålesund–Færøyane | 347 (342) | 34,5 | 2 229 / 2 295 | færøysk | −18,7° | 1,014 |
+| Måløy–Vikingbanken (60° N 2,6° Ø) | 142 (137) | 14,3 | 929 / 946 | norsk | −11,3° | 1,006 |
+| Måløy–Shetland | 188 (185) | 18,8 | 1 224 / 1 248 | britisk | −14,1° | 1,009 |
+
+- **Drivstoffet:** forbruket ligger innenfor 3 % av overslaget i rutepanelet. Kyst15 (9 000 L) rekker alle turene og tilbake; kyst21 og havbåtene likeså. Sjarken (900 L) rekker Nord-Island bare 108 % én vei og blir stoppet av panelet («Ikke nok drivstoff»); til Sentralbanken bruker den 52 % én vei og kommer ikke hjem. Panelet sjekket bare veien ut, så det sier nå fra når tanken ikke rekker tilbake til nærmeste bunkring (`placesNear(end, 'bunker')`, luftlinja og en tidel til, samme fart og vind; varsel, ikke stopp; `noback` i `ui/01-i18n.js`, `panelRoute` i `ui/07-guide.js`). Nærmeste bunkring fra Sentralbanken er Longyearbyen verft, 322 nm.
+- **Ingen kuling i juli** på noen av turene (andelen 3-timers verdier over 14 m/s er 0 % i juli og 12–16 % i januar på feltene). Hva kuling langt til havs gjør, er målt for seg (januar, 20 m/s, `shelterReturn`): nærmeste kai er 167–676 nm unna, se BACKLOG 10.2.
+- **Kuling langt ute** (`shelterReturn`, `core/06-services.js`): kandidatene (de `SHELTER.tries` = 5 nærmeste kaiene etter luftlinja, før 3) prøves nå til luftlinja til neste er lengre enn den beste ruta så langt, og den korteste ruta tas, ikke den første som finnes. Fra Sentralbanken: Longyearbyen 481 nm (rundt Sørkapp) → Gamvik 319 nm. Langs kysten er valget det samme som før (Bergen, Bodø, Hammerfest, Kristiansand og Senja: kaia 5–18 nm unna).
+- **Sonen ved Vikingbanken:** 60° N 2,0° Ø ligger i britisk sone; banken er på norsk side lenger øst, så testen bruker 2,6° Ø.
+
 ## 5.15 Ruteplanleggeren og Autonav (01.10.2026, Autonav fra 02.10.2026)
 
 - **WP-navn** (`ui/03b-route.js`): WP0 er starten (havna eller båten), så WP1, WP2 … i den rekkefølgen de seiles. Navnene brukes i kartet, lista, varslene («Etappe WP2→WP3 krysser land»), GPS-boksen og loggen («WP3 passert»). Punkter havna legger til på vei ut og inn (`w.auto` `'out'` eller `'in'`), vises dempet og merket «utseiling» eller «innseiling».

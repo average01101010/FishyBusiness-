@@ -1,5 +1,11 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['hav8-051126', '05.11.2026', 'Seilas til havs', 'Sailing to the open sea', [
+       ['Autonav finner veien ut av fjordene til punkter langt til havs hele året. Fra Tromsø til Isfjorden og fra Bergen mot Shetland fant den før ingen rute i flere måneder.', 'Autonav finds the way out of the fjords to points far out at sea all year round. From Tromsø to Isfjorden and from Bergen towards Shetland it found no route in several months before.'],
+       ['Rutepanelet sier fra når dieselen rekker ut til en rute som slutter til havs, men ikke tilbake til nærmeste bunkring.', 'The route panel tells you when the fuel reaches a route that ends at sea, but not back to the nearest bunker.'],
+       ['I kuling langt til havs tar Autonav den kaia som har kortest vei, ikke bare den som ligger nærmest i luftlinje.', 'In a gale far out at sea, Autonav takes the quay with the shortest way, not just the one nearest as the crow flies.'],
+       ['Kompasset over 3D-bildet viser bare himmelretningene når det er for smalt til tallene.', 'The compass over the 3D view shows only the points of the compass when it is too narrow for the numbers.'],
+    ]],
     ['lyb-051126', '05.11.2026', 'Longyearbyen som havn', 'Longyearbyen as a harbour', [
        ['Longyearbyen er havn for båtene dine: ledige kaiplasser i havna, Longyearbyen verft med diesel og Longyearbyen utstyrsbutikk. Fisk kan ikke leveres der; nærmeste mottak er på fastlandet.', 'Longyearbyen is a harbour for your boats: free berths in the harbour, Longyearbyen verft with diesel and Longyearbyen utstyrsbutikk. Fish cannot be landed there; the nearest plant is on the mainland.'],
        ['Mannskap som mønstrer på eller av på Svalbard, flyr mellom Tromsø og Longyearbyen. Den nye er på kaia etter rundt 3½ time, og rederiet betaler billetten.', 'Crew who sign on or off on Svalbard fly between Tromsø and Longyearbyen. The new hand is at the quay after about 3½ hours, and the company pays the ticket.'],
