@@ -17,7 +17,7 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 60 `natP(lat, lon)`
   - 61 `natLL(p)`
 
-## `src/js/core/01-world.js` (439 linjer)
+## `src/js/core/01-world.js` (451 linjer)
 
 - **10** one clock for everyone (05.10.2026, the shared world V1)
   - 54 `gridScale(p)`
@@ -33,33 +33,34 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 120 `loadRoads()`
   - 136 `inHarbour(p)`
   - 143 `legHazard(a, c, sd)`
-  - 153 `legHazardMemo(a, c, sd)`
-  - 158 `draftHazards()`
-  - 168 `legReady(a, c)`
-  - 175 `nearestPlace(p)`
-  - 179 `groundCheck(a, c)`
-  - 195 `runAground(p)`
-  - 210 `rocksNear(a, b, r)`
-  - 220 `rocksIn(x0, y0, x1, y1)`
-  - 233 `coastDist(p)`
-  - 234 `coastDistFar(p)`
-  - 240 `decodeContours()`
-  - 249 `isLand(p)`
-  - 257 `isLandFar(p)`
-  - 263 `isLandUI(p)`
-  - 269 `inHarbourPocket(p)`
-  - 275 `harbourNear(x, z)`
-  - 281 `qPockets()`
-  - 282 `pocketHit(US, QS, x, z)`
-  - 289 `pocketsIn(x0, y0, x1, y1)`
-  - 298 `legClear(a, b)`
-  - 329 `portLabel(p)`
-- **345** the harbour unit (02.10.2026)
-  - 386 `fillOut(U, lx, lz)`
-  - 399 `onUnitGround(p)`
-  - 406 `unitCovers(x, z, m)`
-  - 414 `bridgeUnderUnit(br, extra)`
-  - 419 `portApproach(pt)`
+  - 156 `legHazardMemo(a, c, sd)`
+  - 161 `draftHazards()`
+  - 171 `legReady(a, c)`
+  - 178 `nearestPlace(p)`
+  - 182 `groundCheck(a, c)`
+  - 198 `runAground(p)`
+  - 213 `rocksNear(a, b, r)`
+  - 223 `rocksIn(x0, y0, x1, y1)`
+  - 231 `rocksAlong(a, b, r)`
+  - 245 `coastDist(p)`
+  - 246 `coastDistFar(p)`
+  - 252 `decodeContours()`
+  - 261 `isLand(p)`
+  - 269 `isLandFar(p)`
+  - 275 `isLandUI(p)`
+  - 281 `inHarbourPocket(p)`
+  - 287 `harbourNear(x, z)`
+  - 293 `qPockets()`
+  - 294 `pocketHit(US, QS, x, z)`
+  - 301 `pocketsIn(x0, y0, x1, y1)`
+  - 310 `legClear(a, b)`
+  - 341 `portLabel(p)`
+- **357** the harbour unit (02.10.2026)
+  - 398 `fillOut(U, lx, lz)`
+  - 411 `onUnitGround(p)`
+  - 418 `unitCovers(x, z, m)`
+  - 426 `bridgeUnderUnit(br, extra)`
+  - 431 `portApproach(pt)`
 
 ## `src/js/core/01b-mapdata.js` (210 linjer)
 
@@ -530,7 +531,7 @@ The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a 
   - 408 `ruOpenNear(p, q, maxKm)`
   - 417 `ruTips()`
 
-## `src/js/core/03f-fiske.js` (356 linjer)
+## `src/js/core/03f-fiske.js` (380 linjer)
 
 The fishing along the coast as it really was, and where the fish is from it (B2 of docs/planer/bestand-og-flaate.md, 01.11.2026).
 
@@ -541,30 +542,30 @@ The fishing along the coast as it really was, and where the fish is from it (B2 
   - 56 `lokCands(bx, by)`
   - 63 `lokOfCell(p)`
 - **71** the migrations (MIG): HI's descriptions, as curves of time and place
-- **116** where the fish swim: the heading of the schools and of the good patches, by species, season and place
-  - 125 `migOffshore(lat, lon)`
-  - 133 `migHeading(sp, lat, lon, mf)`
-  - 149 `migNode(si, sp, ix, iy, k, T, mw, kind)`
-  - 157 `migDir(sp, p, k, T, mw, kind)`
-  - 164 `mfOfH(H)`
-- **166** the fish up and down in the water: by night most species rise from the bottom (HI; the diel vertical migration)
-  - 172 `cellNight(c, H)`
-  - 176 `vertZ(sp, night)`
-  - 183 `gearVertF(sp, key, p, H)`
-  - 191 `biteF(sp, p, H)`
-- **197** the field from the notes: per species a Float32Array of locations × 12 months against Senja (NaN: no figure)
-  - 199 `fkNeighbours()`
-  - 207 `fkBuild()`
-  - 272 `fkMonth(H)`
-  - 274 `fkAt(a, l, T)`
-  - 276 `skreiFront(lat, H, T)`
-  - 282 `skreiPulse(c, H, T)`
-  - 288 `fkAvail(sp, q, T)`
-  - 324 `areaF(sp, p, H)`
-  - 330 `skreiShare(p, H)`
-  - 337 `skreiFlow(K, H)`
-- **344** the sea's warmth: the fish go deeper when the surface is warmer than they like (B4, 02.11.2026)
-  - 351 `tempDepthK(sp, c, H)`
+- **122** where the fish swim: the heading of the schools and of the good patches, by species, season and place
+  - 131 `migOffshore(lat, lon)`
+  - 139 `migHeading(sp, lat, lon, mf)`
+  - 155 `migNode(si, sp, ix, iy, k, T, mw, kind)`
+  - 163 `migDir(sp, p, k, T, mw, kind)`
+  - 170 `mfOfH(H)`
+- **172** the fish up and down in the water: by night most species rise from the bottom (HI; the diel vertical migration)
+  - 178 `cellNight(c, H)`
+  - 182 `vertZ(sp, night)`
+  - 189 `gearVertF(sp, key, p, H)`
+  - 197 `biteF(sp, p, H)`
+- **203** the field from the notes: per species a Float32Array of locations × 12 months against Senja (NaN: no figure)
+  - 205 `fkNeighbours()`
+  - 213 `fkBuild()`
+  - 296 `fkMonth(H)`
+  - 298 `fkAt(a, l, T)`
+  - 300 `skreiFront(lat, H, T)`
+  - 306 `skreiPulse(c, H, T)`
+  - 312 `fkAvail(sp, q, T)`
+  - 348 `areaF(sp, p, H)`
+  - 354 `skreiShare(p, H)`
+  - 361 `skreiFlow(K, H)`
+- **368** the sea's warmth: the fish go deeper when the surface is warmer than they like (B4, 02.11.2026)
+  - 375 `tempDepthK(sp, c, H)`
 
 ## `src/js/core/03g-trykk.js` (206 linjer)
 
@@ -743,23 +744,29 @@ crew: people with skills, habits and moods
   - 35 `airLegs()`
   - 47 `airStates(H, p, km)`
 
-## `src/js/core/05d-hav.js` (201 linjer)
+## `src/js/core/05d-hav.js` (265 linjer)
 
 The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
 
 - **1** The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
-  - 22 `havHeld(s)`
-  - 23 `havData()`
-  - 40 `havTrip(s, k)`
-  - 48 `havWay(s, gi, pi)`
-  - 60 `havLeg(a, b)`
-  - 74 `havBerth(s, pi, H)`
-  - 83 `havV(s, tr)`
-  - 87 `havVisitors(pi, H)`
-  - 100 `havLand(s, tr)`
-  - 109 `havFish(s, k, u, g)`
-  - 150 `havState(s, H, near)`
-  - 175 `havNear(H, only)`
+  - 25 `havHeld(s)`
+  - 26 `havData()`
+  - 46 `havTrip(s, k)`
+  - 47 `havTrip0(s, k)`
+  - 56 `havOpen(g, d)`
+  - 69 `havIceClear(a, b, H)`
+  - 70 `havIceWay(a, b, H)`
+  - 91 `havWay(s, gi, pi, H0)`
+  - 104 `havWay0(s, gi, pi, key)`
+  - 120 `havLeg(a, b)`
+  - 134 `havBerth(s, pi, H)`
+  - 143 `havV(s, tr)`
+  - 147 `havVisitors(pi, H)`
+  - 161 `havLand(s, tr)`
+  - 162 `havLand0(s, tr)`
+  - 171 `havFish(s, k, u, g)`
+  - 212 `havState(s, H, near)`
+  - 237 `havNear(H, only)`
 
 ## `src/js/core/06-services.js` (263 linjer)
 
@@ -987,50 +994,51 @@ the fish tubs (docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
   - 58 `tubPack(dims, spec, seed)`
   - 91 `karRefund()`
 
-## `src/js/core/07-harbours.js` (481 linjer)
+## `src/js/core/07-harbours.js` (489 linjer)
 
 harbours: quays, berths and mooring
 
 - **1** harbours: quays, berths and mooring
-  - 24 `unitDredge(p, d)`
-  - 34 `quayFace(pid, kind)`
-- **65** the NPC boats' berths at the quays of the map data (part 4 of the coast-wide plan; the user's wish 03.10.2026: the quays made
-- **74** L1 (01.11.2026; Jonas: «Båtene skal benytte seg av de ekte kaiene vi har laget modeller av og som vi har plassert rundt om i
-  - 82 `quayReal(f)`
-  - 97 `faceReserved(f)`
-  - 111 `quayFree(f)`
-  - 126 `quayOut(f, a, L)`
-  - 146 `hullDry(p, hd, L, B)`
-  - 151 `npcBerths(group, p, boats, R = 0.6)`
-  - 186 `clearLine(a, b)`
-  - 189 `quayLand(q)`
-  - 190 `quayLandLine(a, b)`
-  - 191 `approachPath(pt)`
-  - 231 `exitWps(pt, to)`
-  - 232 `entryWps(pt, from)`
-  - 242 `berthPose(pid, type, kind = 'main')`
-- **274** the way in to a berth and out of it (the user's list 04.10.2026: «legge til og fra kai uten å gå gjennom landmasse og
-  - 279 `berthBlocked(p, m = 2)`
-  - 288 `berthClear(a, b, m)`
-  - 289 `berthPath(from, bp)`
-- **314** landing the catch
-  - 326 `landPlan(type, kg, hold)`
-  - 336 `landState(L, t)`
-  - 345 `mottakOpen(H)`
-  - 347 `mottakNext(H)`
-  - 349 `mottakWhen(H, no)`
-  - 355 `startLanding(ops)`
-  - 366 `finishLanding()`
-  - 373 `iceChute(kg)`
-- **375** the bunker quay: moving along the harbour and filling fuel
-  - 385 `quayPos(b)`
-  - 394 `portBusy(b)`
-  - 395 `startShift(to, after)`
-  - 405 `startFueling(ops)`
-  - 418 `quayMinute()`
-  - 434 `buyIce(kg, free)`
-- **444** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
-  - 450 `shopBuy(k, kg, free)`
+  - 27 `unitsAt(x, z)`
+  - 32 `unitDredge(p, d)`
+  - 42 `quayFace(pid, kind)`
+- **73** the NPC boats' berths at the quays of the map data (part 4 of the coast-wide plan; the user's wish 03.10.2026: the quays made
+- **82** L1 (01.11.2026; Jonas: «Båtene skal benytte seg av de ekte kaiene vi har laget modeller av og som vi har plassert rundt om i
+  - 90 `quayReal(f)`
+  - 105 `faceReserved(f)`
+  - 119 `quayFree(f)`
+  - 134 `quayOut(f, a, L)`
+  - 154 `hullDry(p, hd, L, B)`
+  - 159 `npcBerths(group, p, boats, R = 0.6)`
+  - 194 `clearLine(a, b)`
+  - 197 `quayLand(q)`
+  - 198 `quayLandLine(a, b)`
+  - 199 `approachPath(pt)`
+  - 239 `exitWps(pt, to)`
+  - 240 `entryWps(pt, from)`
+  - 250 `berthPose(pid, type, kind = 'main')`
+- **282** the way in to a berth and out of it (the user's list 04.10.2026: «legge til og fra kai uten å gå gjennom landmasse og
+  - 287 `berthBlocked(p, m = 2)`
+  - 296 `berthClear(a, b, m)`
+  - 297 `berthPath(from, bp)`
+- **322** landing the catch
+  - 334 `landPlan(type, kg, hold)`
+  - 344 `landState(L, t)`
+  - 353 `mottakOpen(H)`
+  - 355 `mottakNext(H)`
+  - 357 `mottakWhen(H, no)`
+  - 363 `startLanding(ops)`
+  - 374 `finishLanding()`
+  - 381 `iceChute(kg)`
+- **383** the bunker quay: moving along the harbour and filling fuel
+  - 393 `quayPos(b)`
+  - 402 `portBusy(b)`
+  - 403 `startShift(to, after)`
+  - 413 `startFueling(ops)`
+  - 426 `quayMinute()`
+  - 442 `buyIce(kg, free)`
+- **452** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
+  - 458 `shopBuy(k, kg, free)`
 
 ## `src/js/core/07c-naust.js` (168 linjer)
 
@@ -1566,7 +1574,7 @@ Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md a
   - 34 `ukeDue()`
   - 40 `ukeLast()`
 
-## `src/js/core/11-route.js` (517 linjer)
+## `src/js/core/11-route.js` (620 linjer)
 
 ---------- Autonav (once «Følg leia»): a route along the fairway ----------
 
@@ -1574,29 +1582,36 @@ Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md a
   - 34 `leiaTideCredit(a, b)`
   - 47 `leiaIceSet(a, b)`
   - 55 `leiaIceLeg(p, q)`
-  - 62 `leiaGrid(x0, y0, x1, y1, c, mask)`
-  - 69 `leiaRocks(G)`
-  - 78 `leiaShore(G, p)`
-  - 88 `leiaCost(G, v, sd)`
-  - 105 `leiaNearCell(G, p, sd, km = 1, free)`
-  - 112 `leiaHeap()`
-  - 120 `leiaSlice(st, t0, at)`
-  - 123 `leiaSearch(G, s, t, sd, st)`
-  - 152 `leiaFind(from, to, sd, st)`
-  - 166 `leiaFind1(from, to, sd, st, pad, c0)`
-  - 193 `leiaCorridor(pp, R, c, sd, st)`
-  - 209 `leiaCorridor1(pp, bb, R, c, sd, st, first, last)`
-  - 224 `leiaLegOk(p, q, sd, margin)`
-  - 244 `leiaLegFail(p, q, tick, endP, endQ, strict)`
-  - 259 `rockOnLeg(a, b, r)`
-  - 268 `leiaMend(P, sd, st, strict)`
-  - 309 `leiaStraighten(P, sd, margin, st)`
-  - 336 `leiaPull(P, sd, st)`
-  - 357 `leiaRoute(a, b, aPort, bPort, opt)`
-  - 376 `leiaLane(p, goal, km)`
-  - 407 `leiaPocket(p, sd)`
-  - 424 `leiaPocketOut(e, sd, st)`
-  - 434 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
+  - 67 `legNearPt(pt, z)`
+  - 79 `legRunsWalk(W, ms)`
+  - 87 `legRunsW(p, q, z)`
+  - 89 `legRuns(p, q, z)`
+  - 95 `legRunsAsync(p, q, z)`
+  - 101 `legIdx(runs, L, n, last)`
+  - 111 `leiaGrid(x0, y0, x1, y1, c, mask)`
+  - 118 `leiaRocks(G)`
+  - 127 `leiaShore(G, p)`
+  - 137 `leiaCost(G, v, sd)`
+  - 155 `leiaNearCell(G, p, sd, km = 1, free)`
+  - 162 `leiaHeap()`
+  - 170 `leiaSlice(st, t0, at)`
+  - 173 `leiaSearch(G, s, t, sd, st)`
+  - 204 `leiaFind(from, to, sd, st)`
+  - 218 `leiaFind1(from, to, sd, st, pad, c0)`
+  - 271 `leiaCorridor(pp, R, c, sd, st)`
+  - 287 `leiaCorridor1(pp, bb, R, c, sd, st, first, last)`
+  - 306 `leiaLegOk(p, q, sd, margin)`
+  - 329 `leiaLegOkL(p, q, sd, margin, tick)`
+  - 337 `leiaLegFail(p, q, tick, endP, endQ, strict)`
+  - 354 `rockOnLeg(a, b, r)`
+  - 363 `leiaMend(P, sd, st, strict)`
+  - 404 `leiaStraighten(P, sd, margin, st)`
+  - 432 `leiaPull(P, sd, st)`
+  - 458 `leiaRoute(a, b, aPort, bPort, opt)`
+  - 477 `leiaLane(p, goal, km)`
+  - 508 `leiaPocket(p, sd)`
+  - 525 `leiaPocketOut(e, sd, st)`
+  - 535 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
 
 ## `src/js/core/11b-obstacles.js` (226 linjer)
 
@@ -1616,7 +1631,7 @@ WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå
   - 200 `obsLoad(pts, ms = 4000)`
   - 215 `obsSail(pl, b)`
 
-## `src/js/core/11c-leinett.js` (98 linjer)
+## `src/js/core/11c-leinett.js` (147 linjer)
 
 ---------- The fairway network (step 2 of the coast-wide Autonav, 08.10.2026) ----------
 
@@ -1625,8 +1640,10 @@ WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå
   - 32 `lnetAhead(p, q, km, max, skip)`
   - 38 `lnetPath(srcs, dsts)`
   - 53 `lnetLoad(P)`
-  - 61 `lnetAccess(p, i, sd, st, straight)`
-  - 76 `lnetRoute(from, to, sd, st)`
+  - 64 `lnetAccess(p, i, sd, st, straight)`
+  - 84 `lnetDists(srcs)`
+  - 90 `lnetExit(A, end, sd, st)`
+  - 109 `lnetRoute(from, to, sd, st)`
 
 ## `src/js/core/12-heat.js` (128 linjer)
 
@@ -2167,12 +2184,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1059 linjer)
+## `src/js/ui/phone/07-patch.js` (1064 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1052 `patch()`
+  - 1057 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2637,34 +2654,34 @@ actions
 
 - **1** fishing by hand: jig, strike on the bite, reel without snapping the line
 
-## `src/js/ui/09b-pub.js` (367 linjer)
+## `src/js/ui/09b-pub.js` (366 linjer)
 
 ---------- the pub in 3D: a stool at the bar, seen in first person (Jonas 08.10.2026) ----------
 
 - **1** the pub in 3D: a stool at the bar, seen in first person (Jonas 08.10.2026)
 - **15** the model: the GLB as it is (positions as 16-bit, colours as bytes), straight into the GPU
-- **90** matrices (column-major)
-- **102** a frame
-- **146** what can be tapped
-- **172** the panels
-- **222** the bartender: the evening's talk in the place's dialect, and a round for the crew
-- **247** the old hand at the bar with the echo sounder's news (tilbakemelding #58; Jonas 09.10.2026: «i puben 1 gang per spilldøgn»)
-- **295** the notice board: Kystposten, the week's best, the trips
-- **306** the round table: the hands looking for a berth (the crew exchange)
-- **313** the top bar
-- **326** open and close
+- **89** matrices (column-major)
+- **101** a frame
+- **145** what can be tapped
+- **171** the panels
+- **221** the bartender: the evening's talk in the place's dialect, and a round for the crew
+- **246** the old hand at the bar with the echo sounder's news (tilbakemelding #58; Jonas 09.10.2026: «i puben 1 gang per spilldøgn»)
+- **294** the notice board: Kystposten, the week's best, the trips
+- **305** the round table: the hands looking for a berth (the crew exchange)
+- **312** the top bar
+- **325** open and close
 
-## `src/js/ui/09c-naust3d.js` (304 linjer)
+## `src/js/ui/09c-naust3d.js` (303 linjer)
 
 ---------- Father's naust in 3D: the trophy wall with the biggest fish of each species (Jonas 09.10.2026) ----------
 
 - **1** Father's naust in 3D: the trophy wall with the biggest fish of each species (Jonas 09.10.2026)
 - **18** the model, as the pub reads it
-- **92** matrices (column-major)
-- **105** a frame
-- **163** what can be tapped
-- **199** the panels
-- **251** the top bar, open and close
+- **91** matrices (column-major)
+- **104** a frame
+- **162** what can be tapped
+- **198** the panels
+- **250** the top bar, open and close
 
 ## `src/js/ui/09c-pubsoc.js` (243 linjer)
 
@@ -2951,7 +2968,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 - **70** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (253 linjer)
+## `src/js/ui/11-boot.js` (261 linjer)
 
 ---------- boot ----------
 
@@ -2968,15 +2985,15 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 64 `modelsReady()`
   - 65 `dataEls()`
   - 66 `dataEarly()`
-  - 71 `dataGet(el, opt)`
-  - 81 `bootData()`
-  - 88 `bootDataLate()`
-  - 103 `modelsLabel()`
-  - 110 `bootMapLoad()`
-  - 131 `bootGame()`
-  - 236 `bootFail(e)`
+  - 76 `dataGet(el, opt)`
+  - 89 `bootData()`
+  - 96 `bootDataLate()`
+  - 111 `modelsLabel()`
+  - 118 `bootMapLoad()`
+  - 139 `bootGame()`
+  - 244 `bootFail(e)`
 
-## `src/js/vessel3d.js` (1471 linjer)
+## `src/js/vessel3d.js` (1475 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -3015,80 +3032,80 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 270 `partNetBin(o, hs, p)`
 - **272** one spec per type: the hull and the fittings. The skiff is hand-built in view3d.js
 - **361** detailed models from GLB files (tools/boats, built in Blender from the yards' drawings)
-  - 372 `glbParse(b64)`
-  - 397 `glbLoad(type)`
-  - 402 `glbPart(type, name)`
-  - 405 `glbPaint(part, liv)`
-  - 413 `glbZones(type)`
-  - 420 `glbModel(type, lod, liv)`
-  - 445 `vesselSpec(type)`
-  - 446 `buildVesselModel(type, lod, liv)`
-  - 487 `vesselGeo(type, hs, sp, house, anch)`
-  - 499 `vesselModel(type)`
-  - 500 `geoOf(type)`
-- **504** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
-  - 523 `modelLiv(L)`
-  - 530 `hullLiv(b)`
-  - 531 `livKey(liv)`
-  - 533 `livGeo(liv)`
-  - 538 `livStr(b)`
-  - 550 `livPen(s)`
-  - 552 `livMark(s)`
-  - 553 `livParse(s)`
-- **558** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
-  - 562 `topsides(type)`
-  - 580 `designLines(TS, liv)`
-  - 589 `glbDesign(type, part, liv)`
-  - 623 `designFits(type, k)`
-  - 630 `kitLiv(liv)`
-- **632** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
-- **681** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
-  - 692 `logoCanvas(cv, L, img)`
-  - 703 `logoStrips(type)`
-  - 705 `logoStr(L)`
-  - 706 `logoParse(s)`
-  - 710 `flagCanvas(cv, code, shape, logo)`
-  - 722 `flagOf(L)`
-- **723** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
-  - 732 `hullTris(type)`
-  - 746 `sideStrip(type, frac, hMax, aspect, drop)`
-  - 778 `nameStrips(type)`
-  - 814 `stripProud(type, st)`
-  - 837 `stripPaint(type, st)`
-  - 858 `markStrips(type)`
-  - 880 `anchorLen(bw)`
-  - 883 `markRGB(type, liv)`
-  - 891 `hullRGB(type, liv)`
-- **901** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
-  - 912 `facingTris(P, dir, keep)`
-  - 927 `rayZ(T, x, y, dir, za, zb)`
-  - 938 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
-  - 949 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
-  - 960 `halfWidth(T, y, z0, zw, dir, wmax)`
-  - 971 `houseFront(type, P, Gl, V)`
-  - 1004 `transom(type, P, V)`
-  - 1035 `namePlaces(type)`
-  - 1053 `placeRGB(type, p, liv)`
-  - 1061 `nameInkLight(rgb)`
-  - 1065 `npcKit(L, B)`
-  - 1068 `npcModel(type, lod, liv)`
-  - 1070 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **1082** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 1095 `wkPart(name, kit)`
-  - 1105 `wkPut(B, o, ax, s, at)`
-  - 1115 `wkLimb(B, o, A, E, r)`
-  - 1122 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 1144 `vesselSVG(type, w, h)`
-- **1182** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1189 `deckMap(type)`
-  - 1334 `deckPass(M, k, q)`
-  - 1339 `passLine(M, A, B)`
-  - 1341 `linkPass(M, k, q)`
-  - 1345 `deckComp(M)`
-  - 1354 `deckPath(M, a, b)`
-- **1385** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1398 `lanterns(G, V, st)`
-  - 1432 `deckPoints(type)`
+  - 375 `glbParse(b64)`
+  - 399 `glbLoad(type)`
+  - 406 `glbPart(type, name)`
+  - 409 `glbPaint(part, liv)`
+  - 417 `glbZones(type)`
+  - 424 `glbModel(type, lod, liv)`
+  - 449 `vesselSpec(type)`
+  - 450 `buildVesselModel(type, lod, liv)`
+  - 491 `vesselGeo(type, hs, sp, house, anch)`
+  - 503 `vesselModel(type)`
+  - 504 `geoOf(type)`
+- **508** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
+  - 527 `modelLiv(L)`
+  - 534 `hullLiv(b)`
+  - 535 `livKey(liv)`
+  - 537 `livGeo(liv)`
+  - 542 `livStr(b)`
+  - 554 `livPen(s)`
+  - 556 `livMark(s)`
+  - 557 `livParse(s)`
+- **562** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
+  - 566 `topsides(type)`
+  - 584 `designLines(TS, liv)`
+  - 593 `glbDesign(type, part, liv)`
+  - 627 `designFits(type, k)`
+  - 634 `kitLiv(liv)`
+- **636** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
+- **685** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
+  - 696 `logoCanvas(cv, L, img)`
+  - 707 `logoStrips(type)`
+  - 709 `logoStr(L)`
+  - 710 `logoParse(s)`
+  - 714 `flagCanvas(cv, code, shape, logo)`
+  - 726 `flagOf(L)`
+- **727** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
+  - 736 `hullTris(type)`
+  - 750 `sideStrip(type, frac, hMax, aspect, drop)`
+  - 782 `nameStrips(type)`
+  - 818 `stripProud(type, st)`
+  - 841 `stripPaint(type, st)`
+  - 862 `markStrips(type)`
+  - 884 `anchorLen(bw)`
+  - 887 `markRGB(type, liv)`
+  - 895 `hullRGB(type, liv)`
+- **905** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
+  - 916 `facingTris(P, dir, keep)`
+  - 931 `rayZ(T, x, y, dir, za, zb)`
+  - 942 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
+  - 953 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
+  - 964 `halfWidth(T, y, z0, zw, dir, wmax)`
+  - 975 `houseFront(type, P, Gl, V)`
+  - 1008 `transom(type, P, V)`
+  - 1039 `namePlaces(type)`
+  - 1057 `placeRGB(type, p, liv)`
+  - 1065 `nameInkLight(rgb)`
+  - 1069 `npcKit(L, B)`
+  - 1072 `npcModel(type, lod, liv)`
+  - 1074 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **1086** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 1099 `wkPart(name, kit)`
+  - 1109 `wkPut(B, o, ax, s, at)`
+  - 1119 `wkLimb(B, o, A, E, r)`
+  - 1126 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 1148 `vesselSVG(type, w, h)`
+- **1186** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1193 `deckMap(type)`
+  - 1338 `deckPass(M, k, q)`
+  - 1343 `passLine(M, A, B)`
+  - 1345 `linkPass(M, k, q)`
+  - 1349 `deckComp(M)`
+  - 1358 `deckPath(M, a, b)`
+- **1389** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1402 `lanterns(G, V, st)`
+  - 1436 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (473 linjer)
 
