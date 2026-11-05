@@ -1370,6 +1370,8 @@ body.in-naust #dock,body.in-naust #dockFan,body.in-naust #dockInfo,body.in-naust
 body.pm #hud,body.pm #pinCard{visibility:hidden}
 /* GUI review U6 A: Autonav, Søk and Vis båten are not needed in plan mode (Ferdig takes you back), and the card stood over them on a phone */
 body.pm :is(#rAuto,#zsearch,#zboat){display:none!important}
+/* P1: the ECDIS line under the plan bar shone through it */
+body.pm #ecdisTop{visibility:hidden}
 #pmBar .pm-day{margin-top:6px;color:#ffd95e;font-size:13px} #pmCard .pm-w{min-width:0;padding:0 10px;font-size:13px} #pmCard .pm-kv small{color:#8fc7e4;font-weight:400}
 /* the item card (M1, ui/05a-itemcard.js): a picture, the name, one line with numbers, the price with its anchor, the state and the buttons */
 .ph-card.ic{display:grid;grid-template-columns:clamp(72px,30%,150px) 1fr;gap:10px;align-items:start}
