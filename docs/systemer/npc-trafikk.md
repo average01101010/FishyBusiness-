@@ -194,7 +194,8 @@ Registerets aktive fartøy på 28 m og over seiler etter klokka, som kystflåten
   - **Felt i isen stenges** (`havOpen`): et felt der isen er over grensa (`SEA_ICE_LIM`) klokka 12 den dagen turen begynner, trekkes ikke; turen trekkes blant de åpne, og er alle stengt, ligger skipet i havn.
   - **Leia går rundt isen** (`havIceWay`): når det rette strekket fra siste node til feltet møter isen den dagen turen begynner, går leia rundt med A* på ruter på 20 km (åpne der isen er under grensa minus 5 og kjernen sier sjø), rettet ut der et strekk holder seg ute av isen og av land (hvert 2. km). Strekk der isen aldri kan nå (`iceMay`, det meste av kysten), sjekkes ikke. Leia lagres per dag. Alt er fortsatt en funksjon av klokka.
   - Finnes ingen vei rundt, går skipet rett (BACKLOG).
-  - `havNear` ser 400 km lenger ut for felt i nord og vest, der leia kan gå rundt isen.
+  - `havNear` ser 400 km lenger ut for en tur der leia går rundt isen.
+- **`havNear` er ikke tyngre** (målt varmt, 300 timer to ganger, median av fem, Chromium her): Tromsø 0,18 ms per kall (før R6 0,28), Hammerfest 0,15 (0,23), Båtsfjord 0,20 (0,21), Ålesund 0,15 (0,23), Bjørnøya 0,09 (0,08), med de samme skipene på AIS. Først ble det 30–40 % tyngre (flere skip på tur forbi, og leiene ble regnet om fordi lageret på 600 ble tømt); nå huskes turen og leveringen på skipet (`havTrip`, `havLand`), lageret har plass til 4 000 leier, og dagene rundt isen ligger i leia selv. `npcStates` med havflåten: 1,5 ms per kall i `tests/havflaate.py` (grensa er 8).
 - **Tester:** `tests/unit/hav.test.mjs`: ingen felt borte, hvert felt har vei til leinettet, snøkrabbefartøyene øst og nordøst i Barentshavet i mars, ingen av 21 915 turer går til et felt i isen, og en tur der leia går rundt isen (h61 i mai). `tests/havflaate.py`: leiene holder seg av land.
 
 #### 4.16c Liggeplass for spillerens båt i havnene (D2 av driftsplanen, Jonas 23.10.2026)
