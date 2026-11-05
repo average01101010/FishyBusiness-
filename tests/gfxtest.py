@@ -48,7 +48,10 @@ async def main():
         check(g0['black'] == 0 and g0['flat'] == 0 and not any('svart' in e['msg'] or 'én farge' in e['msg'] for e in gfx()), "the game's own picture is read back and is not taken for black or one colour", g0)
         # a GL error between two frames
         await pg.evaluate("""(() => { const c = document.getElementById('gl'), g = c.getContext('webgl2') || c.getContext('webgl'); g.bindTexture(0x1234, null); G3._debug.gfx.probeAt = 0; })()""")
-        await pg.wait_for_timeout(4000)
+        # (the report goes up with the next batch: it was sent by the end of the test, but not within a fixed 4 s, Ø2 05.11.2026)
+        for _ in range(60):
+            if any(e['msg'].startswith('3D GL-feil INVALID_ENUM mellom rammene') for e in gfx()): break
+            await pg.wait_for_timeout(500)
         gl = [e for e in gfx() if e['msg'].startswith('3D GL-feil INVALID_ENUM mellom rammene')]
         gj = json.loads(gl[0]['stack']) if gl else {}
         check(gl and ' · ' in gl[0]['msg'] and gj.get('code') == 1280 and 'lvl' in gj and 'gl2' in gj, 'a GL error is sent with the step it came after, the graphics chip, the quality and the view', gl[:1])
