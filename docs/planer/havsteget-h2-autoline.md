@@ -206,6 +206,14 @@ Fra H2b (05.11.2026):
 - **Proviant:** 250 kr per manndøgn er regnet av undersøkelsen (1,05 MNOK, 277 døgn, 15 mann); 60 døgn om bord er antatt. Om proviant er rederiets kostnad eller en felleskostnad etter oppgjørsavtalen, er ikke sjekket (tariffen er ikke lest); spillet fører den som rederiets.
 - **Lagene:** veksten i ferdighet (en tidel per tur), vaktene (00–06 og 12–18 mot 06–12 og 18–24), at basen går første vakt og at broa bare står ved roret under fart, er antatt. Lagene blir ikke slitne og har ikke humør. Reisen hjem for skiftet som går i land, koster ingenting.
 
+Fra H2c (05.11.2026):
+
+- **Arbeidsgrensen i vær** er ikke funnet som tall (søket 05.11.2026 nådde hi.no, fiskeridir.no og rafisklaget.no, ikke Fiskeribladet, SINTEF, Nofima, Mustad eller havarikommisjonene). Forhåndsvalgene 15/4, 18/5 og 21/6 (m/s og m) er en vurdering etter HIs toktrapporter fra «Vonar» (2003) og «Kamaro» (2005), som fisket gjennom det meste av kuling og storm, islandske ulykkesrapporter om linebåter som dro i 15–20 m/s, og «Kambur» som sank under draget i 6–7 m sjø (2024). Grensen for å ligge bi er den fra 4.12j. At fisk faller av krokene i grov sjø («betydelige mengder fisk faller sannsynligvis av når det blir mye rykking», Vonar), er ikke i spillet.
+- **Turens slutt:** 95 % fullt rom, agnet for mindre enn en runde, drivstoff under et døgn etter veien inn, og proviant for veien inn og et døgn til er valgt i økta.
+- **Agnet for turen:** rundene i døgnet lenkene gir, ganger turens døgn (standard 42), halvt blekksprut og halvt saury; om lag 31 t for 42 døgn med åtte lenker. Det stemmer med om lag 180 t i året (HI-rapport 24-2013), men er regnet, ikke lest.
+- **Draget i dagens anslag** er maskinens 2 t per lenke; en ny og kald gjeng går saktere (målt om lag 2,7 t i mars). Planens klokkeslett er derfor anslag; motoren følger det som skjer.
+- **Ståtida:** planen trekker aldri før ståtida (3–12 t, standard 6), men med to felt à fire lenker står lina i praksis 10–20 t, fordi draget av fire lenker tar åtte timer. Hvor lenge autolinerne lar lina stå, er ikke funnet.
+
 ## 6. Hva planen ikke gjør
 
 - Ikke garn eller snurrevad på konvensjonell havfisketillatelse (de hører til tillatelsen, men kommer med egne båter senere).
@@ -235,3 +243,9 @@ Fra H2b (05.11.2026):
   - Lossing på paller, om lag 10 t i timen, med frysing ved kaia; enkel pall med kartonger i 3D (Blender-pallen er H2d).
   - Tester: `tests/unit/fabrikk.test.mjs` (47 sjekker) og `tests/fabrikktest.py` (26, to døgn der lagene fisker uten deg om bord og en lossing i Vannareid). Stikkprøve av lossingen sør, midt og nord: Egersund, Valderøya (Ålesund) og Båtsfjord, 63 paller på 6,4 timer hvert sted, sluttseddel, lott og skiftbytte, ingen sidefeil. **Venter på Jonas før utrulling.**
 - 05.11.2026: **H2b rullet ut** (Jonas: «Rull ut h2b, Start h2c i en ny økt»), flettet med arbeidsgrenen i d5d6b4c (det nye der var dokumenter, en migrering og `sqltest`, ikke `src/`). **Neste:** H2c (autoline i Driftsplan 2, havfartøyenes værgrenser og ligge bi) i en ny økt. H2c må også få Driftsplan 2 til å gå med lagene (`lagOf`, `lagOnDeck` i `04-crew.js`) uten deg om bord, fordi planens rytme, skipper og styrmann leser `S.crew`.
+- 05.11.2026: **H2c bygd** på grenen `ccr-94300c4c-ssnrxm` (fra arbeidsgrenen etter d5d6b4c; «Havbåten i Driftsplan 2» i `docs/systemer/driftsplan.md`). Jonas: «Neste økt i havsteget: H2c, autoline i Driftsplan 2, været og ligge bi … spør Jonas før noe rulles ut.»
+  - Autolina som driftsform: feltene i lenker, settes, står ståtida, trekkes og settes ut igjen med én gang, døgnet rundt i lagenes vakter, uten deg om bord (lagene har skipper og styrmann), til lasten (95 %), agnet, drivstoffet, provianten eller turens døgn sier stopp; så inn med lenkene, lossing på paller, skiftbytte, bunkring, agn for turen og ut igjen.
+  - Været: planens grenser gjelder arbeidet (forhåndsvalg 15/4, 18/5, 21/6); over dem venter skipet ved lina, over grensene for å ligge bi (4.12j) ligger det bi, også når planen venter ute; aldri i havn for været. BACKLOG 10.2 om havbåtene som gikk til kai, er rettet.
+  - Målt: en uke på planen 32,5 t mot 34,3 t for hånd på de samme feltene (5 %), og uka spilt som `catchUp` 0,0 % fra åpent. Arbeidsgrensen Vanlig holder igjen 2 % av året ved feltet nord for Loppa, ligge bi 0,5 %.
+  - Rettet underveis: leia «mellom Vannareid og Vannareid» (hjem er mottaket) stoppet planen, og lossemeldingen sa «i dag» om en seddel to døgn fram.
+  - Prøvd bare nord for Loppa med Vannareid som mottak (hele kysten i testmiljøet); stikkprøvene langs kysten og havturen hele veien er H2e. **Venter på Jonas før utrulling.**
