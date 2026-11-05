@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['lyb-051126', '05.11.2026', 'Longyearbyen som havn', 'Longyearbyen as a harbour', [
+       ['Longyearbyen er havn for båtene dine: ledige kaiplasser i havna, Longyearbyen verft med diesel og Longyearbyen utstyrsbutikk. Fisk kan ikke leveres der; nærmeste mottak er på fastlandet.', 'Longyearbyen is a harbour for your boats: free berths in the harbour, Longyearbyen verft with diesel and Longyearbyen utstyrsbutikk. Fish cannot be landed there; the nearest plant is on the mainland.'],
+       ['Mannskap som mønstrer på eller av på Svalbard, flyr mellom Tromsø og Longyearbyen. Den nye er på kaia etter rundt 3½ time, og rederiet betaler billetten.', 'Crew who sign on or off on Svalbard fly between Tromsø and Longyearbyen. The new hand is at the quay after about 3½ hours, and the company pays the ticket.'],
+       ['Blåser det opp ved Svalbard, går Autonav inn til nærmeste kai i Longyearbyen.', 'When it blows up off Svalbard, Autonav goes in to the nearest quay in Longyearbyen.'],
+    ]],
     ['hav-051126', '05.11.2026', 'Havflåten på feltene utenfor kysten', 'The ocean fleet on the grounds off the coast', [
        ['Trålerne, autolinerne og snøkrabbefartøyene fisker nå også ved Bjørnøya, rundt Svalbard, på Sentralbanken og øst i Barentshavet, ved Shetland og Færøyane, i Danmarkstredet og i russisk sone, der de fisker i virkeligheten. Før forsvant de fra kartet på de turene.', 'The trawlers, autoliners and snow crab vessels now also fish by Bjørnøya, round Svalbard, on the Central Bank and in the east of the Barents Sea, by Shetland and the Faroes, in the Denmark Strait and in the Russian zone, where they fish in life. Before, they vanished from the chart on those trips.'],
        ['Drivisen stenger feltene for havflåten også, og skipene går rundt isen.', 'The drift ice shuts the grounds for the ocean fleet too, and the ships go round the ice.'],
