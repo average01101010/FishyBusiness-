@@ -85,6 +85,20 @@ function plan2Stop(o, k, no, en, fix){
   msg(gL('Driftsplan', 'Operations plan'), 'Driftsplanen for «' + S.boatName + '» har stoppet: ' + no, 'The plan for «' + S.boatName + '» has stopped: ' + en);
   if (hooks.onOpsStop) hooks.onOpsStop(S.cur, k, no, en);
 }
+// Pause (U4, Jonas 05.11.2026: «Ja, pause stopper båten der den er»): the trip is cut where she is (a set or a haul in hand stops with what
+// is over the side, as gopAbort does), she lies still, and the gear in the sea stays; o.paused says so on the page until Start, which lays
+// the day again from where she lies (plan2Start)
+function plan2Pause(o){
+  const sea = !!(S.plan && S.plan.ops); plan2Abort(o);
+  o.on = false; o.stop = null; o.held = null; o.hold = 0; o.fetch = null; if (o.run) o.run.wait = null;
+  o.paused = {t:S.t, sea:S.boat.status !== 'port', cut:sea};
+}
+// Start: a plan paused at sea (or started there) lays the day from where she lies, after the rest if the day's work is spent (plan2Spent)
+function plan2Start(o){
+  const sea = S.boat.status !== 'port' && !(o.homeA && dist(S.boat.pos, o.homeA) < 0.4);
+  o.on = true; o.stop = null; o.held = null; o.hold = 0; o.paused = null; if (o.t0 == null) o.t0 = S.t;
+  o.run = sea ? {day:null, i:0, trip:null, wait:null, replan:true, dayN:(o.run && o.run.dayN) || 0} : null;
+}
 function plan2Resume(o){ o.held = null; o.hold = 0; if (o.run){ o.run.wait = null; o.run.trip = null; o.run.replan = true; } }
 // who sails her: null when she can go; {wait} when she waits; else what is missing. The watch asleep in the bunks counts as aboard
 function plan2CrewWhy(o){

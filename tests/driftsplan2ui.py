@@ -61,6 +61,8 @@ JS = """(async () => {
   R.line = PLAN2UI.line().includes('Driftsplan');
   // pause; the gear in the sea while the plan is off gets «Hent redskapet»
   act('p2-pause'); R.paused = !o.on && !o.stop;
+  // U4 (Jonas 05.11.2026: «Ja, pause stopper båten der den er»): she lies still where she was, and the page says so, not «I dag ←»
+  { const st0 = S.boat.status, p0 = {...S.boat.pos}, pp = page(); for (let i = 0; i < 30; i++){ DYN.on = false; step(); } R.pauseStill = {before:st0, status:S.boat.status, plan:!!S.plan, moved:Math.round(dist(p0, S.boat.pos) * 1000), now:/Nå: <\\/b>På pause/.test(pp), arrow:pp.includes(' ←'), next:pp.includes('Når du starter igjen')}; }
   // the line stands in the sea (set at 06:15): «Hent redskapet» goes out, hauls it whatever the soak, lands and switches the plan off
   const p7 = page(); R.fetchBtn = mySets().length >= 1 && p7.includes('p2-fetch') && /har stått/.test(p7);
   const gl0 = (S.gearLog || []).length; act('p2-fetch'); R.fetchOn = o.on && !!o.fetch; let fm = 0; const tr = [], stt = () => { const r = o.run, pl = S.plan; return (pl ? (pl.ops ? pl.opsK : 'own') : '-') + ':' + S.boat.status + (S.boat.port ? '@' + S.boat.port : '') + (S.boat.gop ? '/' + S.boat.gop.op : '') + (S.boat.land ? '/land' : '') + (r && r.day ? '#' + r.i + (r.day.steps[r.i] ? r.day.steps[r.i].k : '') : '') + (r && r.wait ? '?' + r.wait.k : '') + (S.boat.landWait ? '/lw' : ''); }; let was = null;
@@ -96,6 +98,7 @@ async def main():
         print(ok(r['notReady'] and r['ready']), 'without you aboard the plan waits for a skipper and a mate', [r['notReady'], r['ready']])
         print(ok(r['on'] and r['made'] and r['M'] and r['now'] and r['today'] and r['landVal'] and r['line']), 'Start makes the plan and switches it on; «Nå», «I dag» with the step she is on, and the plant are shown', [r['on'], r['M'], r['err'], r['now'], r['today'], r['landVal']])
         print(ok(r['paused'] and r['fetchBtn'] and r['stopShown'] and r['fixOpens']), 'pause; the gear in the sea gets «Hent redskapet»; a stopped plan shows the reason and the button that fixes it', [r['paused'], r['fetchBtn'], r['stopShown'], r['fixOpens']])
+        q = r['pauseStill']; print(ok(q['status'] in ('idle', 'port') and not q['plan'] and q['moved'] < 1500 and q['now'] and not q['arrow'] and q['next']), 'Pause stops the boat where she is (U4): no trip, she lies still and drifts with the wind (lieDrift, held off the land; under 1.5 km in 30 min, at cruise she would make 3.5), «Nå» says the plan is paused, and the day is the next one when you start again, not «I dag ←»', q)
         f = r['fetched']; fok = r['after60']['sets'] >= 1 and r['fetchOn'] and f['sets'] == 0 and not f['on'] and not f['fetch'] and f['trips'] >= 1 and f['newSets'] == 0 and 'hentet' in f['said']
         print(ok(fok), '«Hent redskapet» hauls the line whatever the soak, lands, sets nothing again and switches the plan off', f)
         if not fok: print('  dagen:', r.get('fetchDay')); [print('  ', x) for x in r.get('fetchTrace', [])]

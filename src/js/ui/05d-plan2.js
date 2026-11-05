@@ -21,6 +21,8 @@ const PLAN2UI = (() => {
     const k = portKind(p); return k === 'mottak' ? L('fiskemottak', 'fish plant') : k === 'verft' ? L('verft', 'yard') : k === 'butikk' ? L('butikk', 'shop') : L('kai', 'quay'); };
   // ---- Nå: the step she is on and when it ends, what she waits for and until when, or why she stopped
   function nowOf(o){
+    if (!o.on && o.paused && !o.stop){ const b = S.boat, at = ck(o.paused.t / 60);   // (U4: the boat lies still where Pause found her)
+      return [b.status === 'port' ? L('På pause siden kl. ' + at + '. Båten ligger i ' + nm(b.port) + '.', 'Paused since ' + at + '. The boat lies at ' + nm(b.port) + '.') : b.anch ? L('På pause siden kl. ' + at + '. Båten ligger til ankers der den var.', 'Paused since ' + at + '. The boat lies at anchor where she was.') : L('På pause siden kl. ' + at + '. Båten ligger stille der den var, og mannskapet venter på deg.', 'Paused since ' + at + '. The boat lies still where she was, and the crew wait for you.'), 'wait']; }
     if (!o.on) return o.stop ? [L('Stoppet: ', 'Stopped: ') + L(o.stop.no, o.stop.en), 'bad'] : [L('Av', 'Off'), ''];
     if (o.held) return [L('Venter: du har tatt over båten', 'Waiting: you have taken the boat over'), 'wait'];
     const b = S.boat, pl = S.plan, r = o.run, M = nm(o.M), stepTxt = s => { const t = planDayText(o, {steps:[s], skipped:[], why:['', '']})[0]; return L(t[1], t[2]); };
@@ -44,15 +46,17 @@ const PLAN2UI = (() => {
   function preview(o){
     const r = o.run, H = S.t / 60;
     // (on a trip the arrow follows the clock: the step pointer moves at the harbour calls)
-    if (r && r.day && r.i < r.day.steps.length && !r.replan){ let now = r.i; if (r.trip && S.plan && S.plan.ops){ for (let i = r.i; i < r.day.steps.length; i++){ const s = r.day.steps[i]; if (s.t != null && s.t <= H) now = i; } } return {day:r.day, now, label:L('I dag', 'Today')}; }
+    // (off, paused or stopped: the next day, never «I dag ←» as if she went, U4)
+    if (o.on && r && r.day && r.i < r.day.steps.length && !r.replan){ let now = r.i; if (r.trip && S.plan && S.plan.ops){ for (let i = r.i; i < r.day.steps.length; i++){ const s = r.day.steps[i]; if (s.t != null && s.t <= H) now = i; } } return {day:r.day, now, label:L('I dag', 'Today')}; }
     // a plan not made yet has no plant: the nearest one to the places stands in, so the day can be read before Start
     let oo = o; if (!o.M){ const P = o.places, mid = P.length ? {x:P.reduce((a, q) => a + q.x, 0) / P.length, y:P.reduce((a, q) => a + q.y, 0) / P.length} : (portById(o.home) || {p:S.boat.pos}).p, M = o.land.mode === 'port' && o.land.port ? portById(o.land.port) : PORTS.filter(q => q.mottak).sort((x, y) => dist(x.p, mid) - dist(y.p, mid))[0]; if (M) oo = Object.assign({}, o, {M:M.id}); }
     // the next day is reckoned from the state at its departure, not now: the crew's fatigue and your energy fall and rise with the rest until then
     // (the engine lays the day anew at the departure; this is the page's estimate, as the note under the day says)
-    try { const from = r && r.day ? r.day.end : H, dep = plan2NextDep(oo, H, from), st = plan2State(oo), hrs = Math.max(0, dep - H);
+    const atSea = !o.on && S.boat.status !== 'port' && !S.boat.anch;   // (started at sea, the day is laid from where she lies, now: plan2Start)
+    try { const from = o.on && r && r.day ? r.day.end : H, dep = atSea ? H : plan2NextDep(oo, H, from), st = plan2State(oo), hrs = Math.max(0, dep - H);
       if (hrs > 0){ const b = S.boat, atRest = b.status === 'port' && (b.port === oo.home ? st.homeRest : plan2RestOk(b.port)), rate = atRest ? p2RestRate('bunks') : b.status === 'port' ? p2RestRate('quay') : 0;
         for (const c of st.crew) c.fat = Math.max(0, c.fat - rate * hrs); if (st.me.aboard && (b.status === 'port' || b.anch)) st.me.energy = Math.min(100, st.me.energy + Math.max(restRate(b) * 60, resting() ? 0 : b.anch ? p2MeRate(null, true) : p2MeRate(b.port)) * hrs); }   // (you go in to rest by yourself, plan2MeRest)
-      const day = planDay(oo, dep, st); return {day, now:-1, label:dep - H > 20 ? L('I morgen', 'Tomorrow') : L('Neste dag', 'Next day'), dep}; } catch (e){ return null; }
+      const day = planDay(oo, dep, st); return {day, now:-1, label:o.paused && !o.on ? L('Når du starter igjen', 'When you start again') : dep - H > 20 ? L('I morgen', 'Tomorrow') : L('Neste dag', 'Next day'), dep}; } catch (e){ return null; }
   }
   function dayCard(o){
     const P = preview(o); if (!P) return '';
@@ -186,7 +190,7 @@ const PLAN2UI = (() => {
     if (busy || o.building) h.push('<button class="dr-onoff" disabled>' + L('Lager planen …', 'Making the plan …') + '</button>');
     else if (o.on) h.push('<button class="dr-onoff on" data-pa="p2-pause">' + L('På · trykk for pause', 'On · tap to pause') + '</button>');
     else h.push('<button class="dr-onoff" data-pa="p2-start"' + (C.ok ? '' : ' disabled') + '>' + (C.ok ? L('Start planen', 'Start the plan') : L('Ikke klar ennå', 'Not ready yet')) + '</button>');
-    if (o.on || stopped) h.push('<div class="dr-now' + (now[1] === 'bad' || stopped ? ' bad' : now[1] === 'wait' ? ' wait' : '') + '"><b>' + L('Nå: ', 'Now: ') + '</b>' + now[0] + '</div>');
+    if (o.on || stopped || o.paused) h.push('<div class="dr-now' + (now[1] === 'bad' || stopped ? ' bad' : now[1] === 'wait' ? ' wait' : '') + '"><b>' + L('Nå: ', 'Now: ') + '</b>' + now[0] + '</div>');
     if (o.on && o.run && o.run.fail && S.t - o.run.fail.t < 1440) h.push('<p class="warn">' + L('Kunne ikke sette eller trekke: ', 'Could not set or haul: ') + L(o.run.fail.no, o.run.fail.en) + '</p>');
     if (o.on && o.held) h.push(B('p2-resume', L('Gi båten tilbake til planen', 'Give the boat back to the plan'), '', 'p'));
     if (stopped && o.stop.fix) h.push(B('p2-fix', {places:L('Endre plassene', 'Change the places'), mannskap:L('Til Mannskap-siden', 'To the Crew page'), quota:L('Se kvoten', 'See the quota'), rig:L('Endre redskapet', 'Change the gear')}[o.stop.fix] || L('Se planen', 'See the plan'), '', 'p'));
@@ -247,14 +251,14 @@ const PLAN2UI = (() => {
   }
   function start(o){
     const C = plan2Check(o); if (!C.ok){ toast(C.errors[0]); return; }
-    const go = () => { o.on = true; o.stop = null; o.held = null; o.hold = 0; o.run = null; if (o.t0 == null) o.t0 = S.t; toast(L('Driftsplanen er på.', 'The plan is on.')); };
+    const go = () => { plan2Start(o); toast(L('Driftsplanen er på.', 'The plan is on.')); };
     if (plan2Made(o)){ go(); return; }
     busy = true; plan2Make(o, err => { busy = false; if (err) toast(err); else go(); rerender(); });
   }
   // the gear in the sea is fetched on one trip while the plan is off (choice 2 A): a day of hauls without setting again, then home
   function fetch(o){
     if (!plan2Made(o)){ busy = true; plan2Make(o, err => { busy = false; if (err) toast(err); else fetch(o); rerender(); }); return; }
-    plan2Abort(o); o.fetch = true; o.on = true; o.stop = null; o.held = null; o.hold = 0; o.run = null; toast(L('Båten går ut og henter redskapet.', 'The boat goes out to fetch the gear.'));
+    plan2Abort(o); o.fetch = true; o.on = true; o.stop = null; o.held = null; o.hold = 0; o.run = null; o.paused = null; toast(L('Båten går ut og henter redskapet.', 'The boat goes out to fetch the gear.'));
   }
   function act(a, d){
     if (a === 'p2-new'){ S.ops = fresh(); open = null; return true; }
@@ -262,7 +266,7 @@ const PLAN2UI = (() => {
     const pl = id => o.places.find(q => q.id === id), kind = p2Kind(o);
     if (a === 'p2-row'){ open = open === d.k ? null : d.k; adding = null; return true; }
     if (a === 'p2-start'){ start(o); return true; }
-    if (a === 'p2-pause'){ o.on = false; o.stop = null; o.held = null; o.hold = 0; o.fetch = null; toast(L('Driftsplanen står på pause. Redskapet i sjøen står der det står.', 'The plan is paused. The gear in the sea stays where it is.')); return true; }
+    if (a === 'p2-pause'){ plan2Pause(o); toast(o.paused.sea ? L('Driftsplanen står på pause. Båten ligger stille der den er, og redskapet i sjøen står der det står.', 'The plan is paused. The boat lies still where she is, and the gear in the sea stays where it is.') : L('Driftsplanen står på pause. Redskapet i sjøen står der det står.', 'The plan is paused. The gear in the sea stays where it is.')); return true; }
     if (a === 'p2-resume'){ plan2Resume(o); return true; }
     if (a === 'p2-fetch'){ fetch(o); return true; }
     if (a === 'p2-fix'){ const f = o.stop && o.stop.fix; if (f === 'mannskap'){ PHONE.open('arbeid'); return false; } if (f === 'quota'){ PHONE.open('kvote'); return false; } open = f === 'rig' ? 'rig' : 'places'; return true; }

@@ -771,6 +771,7 @@ async def s17b_hent(c):
     await asyncio.sleep(0.9)
     ps = await c.js(NOWSTATE)
     c.note('etter Pause: hva båten gjør og hva siden viser', {'status': ps['status'], 'tur': ps['opsK'], 'nå-linja': ps['nowTxt'], 'pila': ps['arrow'], 'overskrift': ps['label']})
+    c.check(ps['status'] in ('idle', 'port') and not ps['opsK'] and 'pause' in (ps['nowTxt'] or '').lower() and not ps['arrow'], 'U4: Pause stopper båten der den er, og siden sier det (ikke «I dag ←»)', {'status': ps['status'], 'tur': ps['opsK'], 'nå-linja': ps['nowTxt'], 'pila': ps['arrow'], 'overskrift': ps['label']})
     await c.shots('pause', frame=('.dr-onoff',))
     if fb:
         await c.press('[data-pa="p2-fetch"]', name='Hent redskapet')
