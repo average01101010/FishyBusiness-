@@ -18,7 +18,7 @@
 // 175 m wide sound, which no 100 m cell is clear of land in). pullW, pullKm: how far ahead the final pull (leiaPull) looks. shoreMin:
 // the least distance from the shore a leg the pull makes keeps (km), outside harbours. tideMargin: what is kept back of the lowest
 // water over the trip before it counts as depth (leiaTideCredit)
-const LEIA = {shore:0.2, shoreK:2, shallowK:8, dryK:30, minOver:0.5, rockR:0.05, margins:[0.15, 0.1, 0.06, 0.03, 0], maxWp:12, slice:8, pad:5, padK:0.35, maxCells:600000, corr:3, fineC:0.05, fineKm:25, fineLen:15, detour:1.45, pullW:64, pullKm:30, shoreMin:0.1, tideMargin:0.3};
+const LEIA = {shore:0.2, shoreK:2, shallowK:8, dryK:30, minOver:0.5, rockR:0.05, margins:[0.15, 0.1, 0.06, 0.03, 0], maxWp:12, slice:8, pad:5, padK:0.35, maxCells:600000, corr:3, fineC:0.05, fineKm:25, fineLen:15, detour:1.45, pullW:64, pullKm:30, pullOpen:10, oceanC:1, shoreMin:0.1, tideMargin:0.3};
 const LEIA_ST = {gen:0};
 // The tide in the route (Jonas 12.10.2026: «ta høyde for fartøyets dypgående samt tidevann»). The charted depths (depthF) are below
 // chart datum, near the lowest astronomical tide; the water stands tideCD(H, p) above it, from a little under 0 to about 3.5 m in
@@ -144,8 +144,8 @@ function leiaCost(G, v, sd){
     else {
       const hb = inHarbour(p); k = 1 + 2 * Math.min(1, ic / SEA_ICE_LIM);
       if (d < LEIA.shore) k += LEIA.shoreK * (LEIA.shore - d) / LEIA.shore;
-      // (a coarse cell reads the core's sea floor, offDepth: no pack is wanted for the coarse search, H1b R6)
-      if (!hb){ if (leiaRocks(G)[v]) k += LEIA.dryK; const z = G.c > 0.25 ? offDepth(p) : depthF(p); if (z < leiaLim()) k = Infinity; else if (z < sd) k += LEIA.dryK; else if (z < sd + 1) k += LEIA.shallowK; }
+      // (a coarse cell of LEIA.oceanC km and more reads the core's sea floor, offDepth: no pack is wanted for that search, H1b R6)
+      if (!hb){ if (leiaRocks(G)[v]) k += LEIA.dryK; const z = G.c >= LEIA.oceanC ? offDepth(p) : depthF(p); if (z < leiaLim()) k = Infinity; else if (z < sd) k += LEIA.dryK; else if (z < sd + 1) k += LEIA.shallowK; }
     }
   }
   G.cost[v] = k; return k;
@@ -221,8 +221,10 @@ async function leiaFind1(from, to, sd, st, pad, c0){
   let c = sim && area / 0.01 <= LEIA.maxCells ? 0.1 : 0.2, mask = null, wx = [x0, y0, x1, y1];
   // the packs under the window, but not for the coarse search (it reads the core alone; the corridor loads its own, H1b R6: a long way
   // loaded every pack within hundreds of km before)
-  const coarse = !c0 && (area / (c * c) > LEIA.maxCells || (sim && c > 0.1));
-  if (!coarse) await Promise.all(mapPacksIn('sim', x0, y0, x1, y1).map(mapLoad).concat(mapPacksIn('chart', x0, y0, x1, y1).map(coastEnsure)));
+  // (a way along the coast, coarse cells under LEIA.oceanC km, is searched as before: the window loaded and the tiles' depth read; only a
+  // way over the sea, coarse cells of LEIA.oceanC km and more, reads the core alone and skips it)
+  const coarse = !c0 && (area / (c * c) > LEIA.maxCells || (sim && c > 0.1)), ccOf = Math.ceil(Math.sqrt(area / LEIA.maxCells) / 0.2) * 0.2;
+  if (!coarse || ccOf < LEIA.oceanC) await Promise.all(mapPacksIn('sim', x0, y0, x1, y1).map(mapLoad).concat(mapPacksIn('chart', x0, y0, x1, y1).map(coastEnsure)));
   if (c0){ if (!sim || area / (c0 * c0) > LEIA.maxCells) return null; c = c0; }
   else if (coarse){
     // coarse first, then the fine grid in a corridor round its way
@@ -237,9 +239,10 @@ async function leiaFind1(from, to, sd, st, pad, c0){
     // middle, not land-free, and a step between two of them was never checked as a line), in pieces that fit; 200 m on the core alone
     const fc = sim ? 0.1 : 0.2; st.cell = fc;
     const pp = [from].concat(way.map(v => leiaCell(CG, v)), [to]);
-    // (H1b R6) a coarse step that is a clean straight leg already (over open sea most are, legRuns) needs no corridor: the fine search
-    // runs only over the runs of steps that are not, one step either side, and the clean steps are kept as they are
-    if (leiaLen(pp) < 60) return leiaCorridor(pp, LEIA.corr * cc + 1, fc, sd, st);
+    // (H1b R6) on a way over the sea (coarse cells of LEIA.oceanC km and more) a coarse step that is a clean straight leg already (most
+    // are, legRuns) needs no corridor: the fine search runs only over the runs of steps that are not, one step either side, and the clean
+    // steps are kept as they are; a way along the coast has the corridor all the way as before
+    if (cc < LEIA.oceanC) return leiaCorridor(pp, LEIA.corr * cc + 1, fc, sd, st);
     await lnetLoad(pp);
     const okStep = []; let tq = performance.now();
     for (let i = 1; i < pp.length; i++){ let ok = false; try { ok = leiaLegOk(pp[i - 1], pp[i], sd, 0); } catch (e){} okStep.push(ok); if (performance.now() - tq > LEIA.slice){ leiaSlice(st, tq, 'steps'); await leiaYield(); tq = performance.now(); } }
@@ -283,6 +286,8 @@ async function leiaCorridor(pp, R, c, sd, st){
 }
 async function leiaCorridor1(pp, bb, R, c, sd, st, first, last){
   const wx = [Math.max(MAPB.x0, bb[0] - R), Math.max(MAPB.y0, bb[1] - R), Math.min(MAPB.x1, bb[2] + R), Math.min(MAPB.y1, bb[3] + R)];
+  // the packs under the corridor's box (the coarse search before it loads none, H1b R6)
+  await Promise.all(mapPacksIn('sim', wx[0], wx[1], wx[2], wx[3]).map(mapLoad).concat(mapPacksIn('chart', wx[0], wx[1], wx[2], wx[3]).map(coastEnsure)));
   const F0 = leiaGrid(wx[0], wx[1], wx[2], wx[3], c), mask = new Uint8Array(F0.nx * F0.ny), rc = Math.ceil(R / c);
   // along each step of the coarse way, not only at its cells, so the corridor has no gaps
   for (let n = 1; n < pp.length; n++){ const a = pp[n - 1], q2 = pp[n], m = Math.max(1, Math.ceil(dist(a, q2) / (c * rc)));
@@ -434,8 +439,9 @@ async function leiaPull(P, sd, st){
   const lim = Math.max(safeDepth(), leiaLim());
   const ok = async (a, b, eA, eB, again) => { checks++; try { await legRunsAsync(a, b, lim); if (landAt(a, b, 0.2) || (dist(a, b) <= LEGOPEN.min && landAt(a, b, 0.008)) || !shoreOk(a, b) || !obsClear(a, b)) return false; full++; return !(await leiaLegFail(a, b, tick, eA, eB, true)); } catch (e){ if (again || !packMiss(e)) return false; await lnetLoad([a, b]); return ok(a, b, eA, eB, true); } };
   const last = P.length - 1;
-  // how far ahead a leg may reach: LEIA.pullKm, or any length when no more than that of it lies near the shore (legRuns: over open sea)
-  const reach = (a, b) => dist(a, b) <= LEIA.pullKm || legNearKm(legRuns(a, b, lim)) <= LEIA.pullKm;
+  // how far ahead a leg may reach: LEIA.pullKm, or any length over the open sea: its middle LEIA.pullOpen km or more from the shore and
+  // no more than LEIA.pullKm of it near the shore (legRuns). A way along the coast keeps to the leads (Bergen to Florø inside the skerries)
+  const reach = (a, b) => { if (dist(a, b) <= LEIA.pullKm) return true; let m = 0; try { m = coastDistFar({x:(a.x + b.x) / 2, y:(a.y + b.y) / 2}); } catch (e){} return m >= LEIA.pullOpen && legNearKm(legRuns(a, b, lim)) <= LEIA.pullKm; };
   while (i < last){
     const wn = Math.min(last, i + LEIA.pullW); let hi = i + 1, step = 1;
     while (hi + step <= wn && reach(P[i], P[hi + step]) && await ok(P[i], P[hi + step], i === 0, hi + step === last)){ hi += step; step *= 2; }

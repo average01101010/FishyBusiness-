@@ -153,7 +153,7 @@ Registerets aktive fartøy på 28 m og over seiler etter klokka, som kystflåten
   - **Modellene:** hvert fartøy er spillets egen modell av sitt slag, i modellens lengde: `bunntral`, `pelagisk`, `ringnot38` (snurrevad og garn), `autoliner` og `snokrabbe`. Registeret gir bare lengdegruppen.
   - **Hjemmehavn:** et mottak i kommunen som tar imot redskapet (`Trål`, `Not` eller `Konvensjonelle` i `mottak.json`), med lengst kai. Har kommunen ikke noe, brukes det nærmeste innen 250 km fra kommunens punkt (Austevoll, Herøy). Kommunenavnene og -punktene kommer fra Geonorge.
   - **Felt og sesong:** sluttsedlene for 28 m og over per redskap (`sp` `k` og `h`, idx redskap*6+4) som kilo per måned og hovedområde. For hvert redskap tas de 12 tyngste områdene, med opptil tre punkter med vann i redskapets dybde. Punktene ligger 6 km fra land for trål, line og teine (28 m og over fisker utenfor 4 nm, J-161-2026 § 32) og 2 km for resten.
-  - **Borte:** områder utenfor rammen eller uten slikt vann er «borte» (14 av 164; Bjørnøya, Svalbardsonen, Nordsjøen vest og snøkrabbefeltene øst).
+  - **Borte:** områder utenfor rammen eller uten slikt vann var «borte» (14 av 164; Bjørnøya, Svalbardsonen, Nordsjøen vest og snøkrabbefeltene øst). Fra H1b R6 er ingen borte (4.17b).
   - **Leiene:** fra farledsnodene mottaket når med et rent rett strekk, til nodene feltet når (`pa` og feltets siste felt). Spillet finner veien gjennom nettet (`lnetPath`).
 - **I spillet (`core/05d-hav.js`):**
   - **Syklusen:** havnedager og en tur. Lengden avhenger av redskapet: trål 5–12 døgn, ringnot 2–5, snurrevad 3–6, autoline og snøkrabbe 14–28, garn 4–8.
@@ -181,6 +181,21 @@ Registerets aktive fartøy på 28 m og over seiler etter klokka, som kystflåten
   - `tests/unit/hav.test.mjs`: sesongene (trålerne på Tromsøflaket, Finnmarkskysten og i Lofoten i februar; ringnot på makrellen i september og på silda utenfor Troms i november; ringnot mest i havn i juni), snøkrabbe for det meste borte, leia, en tur ut–fiske–inn, trålen innen feltet, linene og teinelenkene.
   - `tests/havflaate.py` (med vec-pakkene): leiene holder seg av land (også inn til leveringsmottaket og hjem derfra), skipene ved Tromsø i februar, kai som passer, egne modeller, tiden, en tråler som tråler, og et skip som leverer ved et annet mottak, ved kai som passer, med «Leverer fangsten» på AIS.
   - `tests/unit/hav.test.mjs` (03.11.2026): hvert leveringsmottak tar redskapet og har kai for skipet, en tur med levering borte (ut, fiske, inn til mottaket, ved kai, hjem), og andelen turer som leverer borte.
+
+#### 4.17b Havflåten på feltene utenfor kysten, og isen (havsteget H1b R6, 05.11.2026)
+
+- **`havflaate.py` med den vide rammen:**
+  - Landet er kjernens 200 m i den gamle rammen og 1 km-laget (`land1k`) ellers, som `isLandFar` i spillet; utenfor `MAPB` er det land.
+  - **Dybden var feil fra R2:** laget `deep` er kodet `u8p` (predikator) siden R2, og verktøyet leste bytene rett, så dybdene var predikatorens rester. Nå leses lagene gjennom `tools/map/pack.py` (`read_layer`), med utstrekningen (`ix0`, `iy0`).
+  - **Isen ved feltpunktene:** et punkt der middelet av isen (`is.json`) over månedene med landinger, vektet med kiloene, er 40 % eller mer, velges ikke.
+  - **Veien til leinettet:** et felt langt ute prøver noder innen 250, 600 og så 2 000 km (de 400 nærmeste). Danmarkstredet (h61) ligger 1 700 km fra de nærmeste nodene ved Bergen.
+  - **Resultatet:** 192 feltpunkter, **ingen borte** (før 14 av 164), alle med vei til leinettet og et leveringsmottak (37 mottak, median 248 km langs leia). Kjøringen tar rundt 5 minutter (laget `deep` pakkes ut i ren Python).
+- **Isen i spillet (`core/05d-hav.js`):**
+  - **Felt i isen stenges** (`havOpen`): et felt der isen er over grensa (`SEA_ICE_LIM`) klokka 12 den dagen turen begynner, trekkes ikke; turen trekkes blant de åpne, og er alle stengt, ligger skipet i havn.
+  - **Leia går rundt isen** (`havIceWay`): når det rette strekket fra siste node til feltet møter isen den dagen turen begynner, går leia rundt med A* på ruter på 20 km (åpne der isen er under grensa minus 5 og kjernen sier sjø), rettet ut der et strekk holder seg ute av isen og av land (hvert 2. km). Strekk der isen aldri kan nå (`iceMay`, det meste av kysten), sjekkes ikke. Leia lagres per dag. Alt er fortsatt en funksjon av klokka.
+  - Finnes ingen vei rundt, går skipet rett (BACKLOG).
+  - `havNear` ser 400 km lenger ut for felt i nord og vest, der leia kan gå rundt isen.
+- **Tester:** `tests/unit/hav.test.mjs`: ingen felt borte, hvert felt har vei til leinettet, snøkrabbefartøyene øst og nordøst i Barentshavet i mars, ingen av 21 915 turer går til et felt i isen, og en tur der leia går rundt isen (h61 i mai). `tests/havflaate.py`: leiene holder seg av land.
 
 #### 4.16c Liggeplass for spillerens båt i havnene (D2 av driftsplanen, Jonas 23.10.2026)
 

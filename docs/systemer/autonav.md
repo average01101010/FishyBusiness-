@@ -102,6 +102,42 @@ Jonas: «Den er i dag ganske bra, men den tar noen rare avgjørelser som forleng
 - **Test:** `autonavtest.py` 9a–9d (kreditten, Havøysund–rorbua gjennom sundet, det grunneste på veien som mål nektes uten tidevann og nås med, Honningsvåg–Hammerfest strammet). Kjørt 12.10.2026: autonavtest (20 OK), routetest (43 OK), obstest, r4test, naustleia, teleport3d grønne; docktest, vesseltest og fleet3test feiler likt på HEAD-bygget før endringen (telefonens appliste, lasterommet, en null-knapp) og hører til neste finpuss. `routetest` feilet én gang i en samlekjøring som gikk parallelt med en annen testkjøring, og gikk grønt tre ganger alene. Alle mottakspar (`autonav.yml`) kjøres i Actions ved pushen.
 - **Ikke gjort:** havnenes egne veier ut (`approachPath`) har fortsatt punkter 13–50 m fra hverandre rundt moloene; de ligger i havna og strammes ikke, fordi en rett etappe der krysser kailand.
 
+## 4.12g Autonav over åpent hav (havsteget H1b R6, 05.11.2026)
+
+Jonas 05.11.2026: «Start r6 i en ny økt». Målet i planen (R6 i `docs/planer/havsteget-h1b-rammen.md`): 1 500 km planlegges på under 1 s på nettbrettet, rette strekk over åpent hav sjekket mot 1 km-laget, og den fine sjekken nær land.
+
+**Hvorfor det var tregt** (målt med Chromiums profiler, hele kysten, `kart-31`):
+- En rute på 80 km fra 71,2° N 24° Ø til 71,6° N 26° Ø tok **2,3 s** her, og 300 km fra Finnmark mot Bjørnøya **8,8 s**, begge for ett eneste rett strekk. De 400 s fra R5 er ikke gjenskapt; der var trolig flere ruter og testens egen venting med.
+- **`unitDredge`** (havneenhetenes mudrede basseng i `depthF`) gikk gjennom alle havneenhetene for hver dybdeavlesning: 30–50 % av tida. Nå slås enhetene opp etter km-ruta (`unitsAt`, `07-harbours.js`), og svaret er det samme.
+- **Ingen snarvei for rette strekk over 30 km.** Søket i rutenettet ble kjørt uansett.
+- **Hver sjekk gikk langs hele etappen** hver 2.–30. m (`leiaLegOk`, `leiaLegFail`, `legHazard`, `leiaPull`): et strekk på 900 km er 450 000 punkter, flere ganger.
+- **`rocksIn` med boksen rundt hele etappen**: et skrått strekk på 1 000 km spurte om en million tomme km-ruter (`rocksAlong` i `01-world.js` tar det nå i biter på 2 km).
+- **Vinduet lastet alle pakkene** innenfor hundrevis av km før grovsøket, og `lnetLoad` lastet alle pakkene i boksen rundt hvert strekk.
+
+**Slik det er nå** (`core/11-route.js`, `core/11c-leinett.js`):
+- **Stykkene som trenger den fine sjekken** (`legRuns`): langs etappen hvert 100. m, eller lenger der det er plass. Et punkt minst 0,5 km fra land (laget `isLand` selv leser der: flisenes 100 m-avstand i detaljen, ellers kjernens; 1,5 km på den vide rammens 1 km-lag), utenfor havnene og 4 m dypere enn det sjekken spør om, er åpent hav, og vannet halvveis til neste punkt også, fordi avstanden til land ikke kan falle fortere enn veien går. Steget vokser med avstanden til land, høyst 1 km, og er 100 m der dybden er under 30 m over grensa. Resten, med 150 m på hver side, sjekkes som før (land hvert 2. m, dybden, skjær, moloer, broer). Etapper opptil 1 km er ett stykke, så sjekkene nær kysten er som før. Stykkene huskes per etappe, med dybdegrensa løftet til sikker dybde + 1 m, så alle sjekkene av én etappe deler dem. `legRunsAsync` regner dem i skiver på 8 ms.
+- **Rett strekk over 30 km**: lastes langs strekket og sjekkes med `leiaLegOk` (stykkene nær land fint). Holder det, er ruta ett strekk (`st.by = 'open'`).
+- **Ut fra leinettet** (`lnetExit`): har den ene enden leinettet og den andre ikke (Svalbard, Petsjorahavet, Nord-Island), og ruta er over 40 km, regnes avstandene gjennom hele nettet fra den nære enden (`lnetDists`), og noden der veien langs nettet pluss det rette strekket ut er kortest, av dem med et rent strekk, blir utgangen (de 30 beste prøves). Ligger enden bak land (en fjord på Svalbard), tas den beste noden med et rent strekk minst en tredel ut, og rutenettet søker resten.
+- **Grovsøket** laster ingen pakker (det leser kjernens sjøbunn, `offDepth`), og estimatet veier 1,5 på ruter på 1 km og mer, så søket går mot målet rundt en øy i stedet for å fylle havet bak den. Korridoren søkes bare der grovstegene ikke er rene strekk (`okStep`), med ett steg på hver side. En ende som er lenger enn 8 km fra en åpen grovrute (Tromsø), får 25 km.
+- **Pakkene lastes når de mangler** (`leiaLegOkL`, `fail` i `leiaMend`, `ok` i `leiaPull`), og `lnetLoad` laster langs strekket i biter på 5 km.
+- **Utrettingen** tar et langt strekk så lenge høyst 30 km av det ligger nær land (`reach`), og `leiaLegOkG` er en generator som slipper skjermen hver 512. punkt.
+
+**Målt** (Chromium her, hele kysten; `tests/istest.py` og et skript i økta):
+
+| Rute | Før | Nå | Lengde |
+|---|---|---|---|
+| 71,2° N 24° Ø → 71,6° N 26° Ø (80 km) | 2,3 s | 0,1 s | rett strekk |
+| 71,0° N 23° Ø → 74,3° N 18,2° Ø (400 km) | 8,8 s | 0,3 s | rett strekk |
+| Hammerfest → Bjørnøya (74,35° N 19,6° Ø) | | 0,75 s | 235 nm (luftlinje 234) |
+| Båtsfjord → Petsjorahavet (69,9° N 48° Ø) | | 0,13 s | 383 nm (373) |
+| Ålesund → Nord-Island (66,8° N 18,5° V, 1 270 km) | | 0,3 s | 692 nm (682) |
+| Tromsø → Isfjorden (78,25° N 15,3° Ø) | ingen rute | 2,2 s | 563 nm (522) |
+| Barentshavet → vest av Spitsbergen rundt isen i mars | | 0,86 s | 342 nm (330), største is langs ruta 11 % |
+
+- Alle etappene er sjekket med `groundCheck`: ingen grunnstøter.
+- **Tromsø–Isfjorden** bruker rundt 1 s på veien ut av Tromsø selv (den fine leia i `lnetAccess`, som Tromsø–Hammerfest også bruker: 0,9–1,5 s). Den lengste skiva er 90–130 ms, i utrettingen nær land (første lesing av blokkene). Se BACKLOG.
+- **Nettbrettet er ikke målt.** Tallene er fra skymaskinen.
+
 ## 5.15 Ruteplanleggeren og Autonav (01.10.2026, Autonav fra 02.10.2026)
 
 - **WP-navn** (`ui/03b-route.js`): WP0 er starten (havna eller båten), så WP1, WP2 … i den rekkefølgen de seiles. Navnene brukes i kartet, lista, varslene («Etappe WP2→WP3 krysser land»), GPS-boksen og loggen («WP3 passert»). Punkter havna legger til på vei ut og inn (`w.auto` `'out'` eller `'in'`), vises dempet og merket «utseiling» eller «innseiling».

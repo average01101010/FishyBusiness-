@@ -11,9 +11,12 @@ ran aground; the route went on 200 m cells and a raw step between two of them cr
    checked the way the simulation sails it (groundCheck, isLand at 5 m): none grounds.
 9. Autonav 2 (12.10.2026): the tide's credit (the lowest water over the trip less the margin), Havøysund to its rorbu through the
    sound on the 50 m grid, a shallow end refused without the tide and taken with it, and the net's way pulled tight.
+10. Over the open sea (H1b R6, 05.11.2026): the routes in routes.json «hav» (Hammerfest–Bjørnøya, Tromsø–Isfjorden, Båtsfjord–
+   Petsjorahavet, Ålesund–Nord-Island) are found, no leg grounds, the way is at most 1.15 times the straight line, and the time each takes
+   (the aim is under 1 s for 1 500 km on the tablet; the test machine's time is printed, and must be under 10 s).
 Prints OK or FEIL per check."""
-from _env import GAME, boot
-import asyncio, json
+from _env import GAME, ROUTES, boot
+import asyncio, json, time
 from playwright.async_api import async_playwright
 
 
@@ -194,6 +197,20 @@ async def main():
                 ok = isinstance(r['withTide'], (int, float)) and r['withTide'] < 2 * r['lineq'] and isinstance(r['noTide'], str) and 'grunt' in r['noTide']
                 check(ok or (r['tide2'] or 0) < 0.4, '9c. det grunneste på veien som mål, med dypgangen like over: nektet uten tidevann, nådd med vannstanden over turen', {k: r.get(k) for k in ('zmin', 'draftSet', 'lineq', 'noTide', 'withTide', 'tide2')})
             check(r['pull'] and r['pull']['to'] < r['pull']['from'] and r['n2'] <= 24 and r['bad2'] == 0, '9d. Honningsvåg → Hammerfest: leinettets vei er rettet ut (færre punkter), ingen etappe grunnstøter', {k: r[k] for k in ('n2', 'nm2', 'pull', 'by2', 'bad2')})
+        # 10. over the open sea (H1b R6): each started without returning its promise and polled (a long route outlives evaluate's wait)
+        for an, la, lo, name in json.load(open(ROUTES))['hav']['routes']:
+            await J("""(([an, la, lo]) => { window.__hav = null; const A = PORTS.find(p => p.name === an) || PORTS.find(p => p.name.startsWith(an)), B = P(la, lo);
+              S.boat.status = 'port'; S.boat.port = A.id; S.boat.pos = {...A.p}; S.plan = null; const t0 = performance.now();
+              leiaRoute({...A.p}, B, A.id, null).then(async r => { const ms = Math.round(performance.now() - t0); if (r.why){ window.__hav = {why:r.why[0], ms}; return; }
+                let bad = 0, p0 = {...A.p}; for (const w of r.wps){ await lnetLoad([p0, w]); if (groundCheck(p0, w) || seaIceOnLeg(p0, w, S.t / 60, {})) bad++; p0 = w; }
+                window.__hav = {ms, n:r.wps.length, nm:+r.nm.toFixed(1), crow:+(kmTrue(A.p, B) / NM).toFixed(1), by:r.st.by, slice:+r.st.maxSlice.toFixed(0), bad}; }, e => { window.__hav = {err:String(e).slice(0, 200)}; });
+              return 1; })""", [an, la, lo])
+            r = None; t0 = time.time()
+            while time.time() - t0 < 120:
+                r = await J("window.__hav")
+                if r: break
+                await asyncio.sleep(0.5)
+            check(r and not r.get('why') and not r.get('err') and r['bad'] == 0 and r['nm'] <= r['crow'] * 1.15 and r['ms'] < 10000, '10. over åpent hav: ' + name + ' (tida her, ingen etappe på grunn eller i isen, høyst 1,15 ganger luftlinja)', r)
         print('sidefeil', errs[:5])
         await br.close()
 

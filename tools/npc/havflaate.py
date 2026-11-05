@@ -64,6 +64,7 @@ def ice_months():
         return (g(i, j) * (1 - fu) + g(i + 1, j) * fu) * (1 - fv) + (g(i, j + 1) * (1 - fu) + g(i + 1, j + 1) * fu) * fv
     return at
 ICE_LIM = 40   # SEA_ICE_LIM in 03h-is.js
+MAPB = (-1100, -1250, 2500, 1720)   # the game's frame (x0, y0, x1, y1), MAPB in core/01-world.js
 
 def rules_polys():
     R = json.load(open(os.path.join(ROOT, 'src', 'data', 'rules.json'))); U = R.get('unit', 0.01)
@@ -105,8 +106,10 @@ def main(game):
     def cell(A, L, x, y):
         i, j = math.floor(x / L['c']) - L['ix0'], math.floor(y / L['c']) - L['iy0']
         return A[j, i] if 0 <= i < L['nx'] and 0 <= j < L['ny'] else None
-    # the old frame's 200 m land where it is, else the wide frame's 1 km (as isLandFar in the game); off both: land
+    # the old frame's 200 m land where it is, else the wide frame's 1 km (as isLandFar in the game); off both, and off the game's frame
+    # (MAPB in 01-world.js: the 1 km layer reaches a little further south than the frame), land
     def land(x, y):
+        if not (MAPB[0] <= x < MAPB[2] and MAPB[1] <= y < MAPB[3]): return True
         v = cell(LAND, L2, x, y) if 0 <= x < 1450 and 0 <= y < 1720 else None
         if v is None: v = cell(LAND1, L1, x, y)
         return v is None or v == 1

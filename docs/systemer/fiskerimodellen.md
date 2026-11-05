@@ -197,6 +197,18 @@
     - Grønne: `heattest`, `geartest`, `jigalongtest`, `bktest` og `r4test`.
 - **Tester:** `tests/unit/vandring.test.mjs` (33 sjekker), `bktest` (frøene: blåkveita er sist av spillerens arter), `guidetest` (ti arter: `PLAYSP`), `heattest`.
 
+### 5.3c-R6 Fisken på feltene utenfor kysten (havsteget H1b R6, 05.11.2026)
+
+- **Havflåtens sedler der kystflåten ikke har tall** (`fkBuild`): et hovedområde der ingen lokasjon har landinger fra båtene under 28 m (Bjørnøya 20, snøkrabbens 24, 15 og 23, øst i Barentshavet 13, Shetland og Færøyane 31, Island og Grønland 61, vest av Spitsbergen 21, russisk sone 01, Norskehavet), får tallet fra `h`-tabellen (28 m og over, og landingene uten lokasjon), målt på samme måte: kilo per landing mot det samme redskapet og den samme lengdegruppa tar nasjonalt, ganger andelen av områdets landinger som hadde arten, glattet over månedene. Det fyller bare det kysten lot stå tomt, så ingen tall langs kysten endres; snittet for artene uten Senja-tall (sild, makrell, snøkrabbe) regnes også bare over kysten.
+- **Målt:** torsk ved Bjørnøya (20-10) 2,99 / 1,13 / 2,62 / 2,73 i januar, april, juli og oktober (mot Senjas snitt over året), vest av Spitsbergen (21-25) 3,22 i juli; snøkrabbe på Sentralbanken (15-10) 0,97 i februar.
+- **Vandringen på de nye feltene:**
+  - **Silda** beiter i Norskehavet om sommeren (april–august, topp i juni–juli), 64–74° N vest for 8° Ø og ut mot Jan Mayen og Island (HI). Før var Norskehavet utenfor rammen.
+  - **Snøkrabben** er nord for 72° N og øst for rundt 25° Ø (hovedområde 13, 15, 23 og 24); før var kurven rammens hjørne øst for 30° Ø.
+  - **Loddetorsken** (`MIG.loddeW`) gjelder bare langs kysten, ikke nord for 72° N: lodda gyter ved land.
+  - Skreien, seien og makrellen er som før: skreifronten er klemt til 66–71,2° N, og nivået per måned kommer fra sedlene.
+- **Tester:** `tests/unit/vandring.test.mjs` (fire nye sjekker).
+- **Antatt:** kilo per landing for trålerne mot det nasjonale snittet for trål over 28 m sier noe om tettheten, men en tur til Bjørnøya er lengre og større enn en tur på kysten. Tallet 3 ved Bjørnøya kan derfor være turen like mye som fisken. Spilleren fisker ikke der ennå (H2).
+
 ## 5.3d Flåtetrykket og grunnlinja (B3 i `docs/planer/bestand-og-flaate.md`, 02.11.2026)
 
 `core/03g-trykk.js`. Hele den norske flåten tar av den felles bestanden. Det spilleren møter på et sted, er likevekten mellom flåtens trykk der og hvor fort fisken kommer tilbake, ganget med det spillerne selv har gjort. Alt er en ren funksjon av den felles klokka og dataene i appen. Det er likt for alle, uten at noen må ha sett båtene, og serveren spørres ikke om noe nytt (5b).
