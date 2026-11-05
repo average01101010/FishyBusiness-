@@ -12,11 +12,13 @@
     // seven kinds (core BAITS): what is aboard, what each takes best, and buying more of it. The kind is chosen when the tubs are baited
     // and when the pots are set (Jonas 20.10.2026), so there is no «chosen kind» here
     const B = baitOf(pg), good = k => { const best = baitGood(k).map(spLc); return best.length ? L('best på ', 'best for ') + best.join(', ') : L('helt ok på alt', 'fair on everything'); };
+    // the reason first, and no grey buttons under it (spilltest 3, U7): the kinds stay, with what each is best for
+    const gate = buyGate('bait');
     const rows = Object.entries(BAITS).map(([k, X]) => { const c20 = 20 * X.kr, c100 = 100 * X.kr;
-      return '<div class="ph-kv"><span>' + baitDot(k) + '<b>' + X[S.lang] + '</b> · ' + good(k) + '</span><span>' + fmt(B[k] || 0, 0) + ' kg</span></div><div class="ph-row2">' +
-        '<button class="ph-btn"' + (here && c20 <= spendable() && !buyGate('bait') ? '' : ' disabled') + ' data-pa="grbuy" data-w="bait" data-s="' + k + '" data-n="20">20 kg · ' + kr(c20) + '</button><button class="ph-btn"' + (here && c100 <= spendable() && !buyGate('bait') ? '' : ' disabled') + ' data-pa="grbuy" data-w="bait" data-s="' + k + '" data-n="100">100 kg · ' + kr(c100) + '</button></div>'; }).join('');
+      return '<div class="ph-kv"><span>' + baitDot(k) + '<b>' + X[S.lang] + '</b> · ' + good(k) + '</span><span>' + fmt(B[k] || 0, 0) + ' kg</span></div>' + (gate ? '' : '<div class="ph-row2">' +
+        '<button class="ph-btn"' + (here && c20 <= spendable() && !buyGate('bait') ? '' : ' disabled') + ' data-pa="grbuy" data-w="bait" data-s="' + k + '" data-n="20">20 kg · ' + kr(c20) + '</button><button class="ph-btn"' + (here && c100 <= spendable() && !buyGate('bait') ? '' : ' disabled') + ' data-pa="grbuy" data-w="bait" data-s="' + k + '" data-n="100">100 kg · ' + kr(c100) + '</button></div>'); }).join('');
     const kr0 = Math.min(...Object.values(BAITS).map(X => X.kr)), kr1 = Math.max(...Object.values(BAITS).map(X => X.kr));
-    h.push(itemCard({k:'bait', id:'baitStore', name:L('Agn', 'Bait'), price:fmt(kr0, 0) + '–' + fmt(kr1, 0) + ' kr/kg', body:'<div class="ic-rows">' + rows + '</div>', note:buyGate('bait') ? '<b>' + buyGate('bait')[0] + '</b>' : ''}));
+    h.push(itemCard({k:'bait', id:'baitStore', name:L('Agn', 'Bait'), price:fmt(kr0, 0) + '–' + fmt(kr1, 0) + ' kr/kg', body:(gate ? '<p class="ph-note"><b>' + gate[0] + '</b></p>' : '') + '<div class="ic-rows">' + rows + '</div>'}));
     // own catch as bait, before it is landed
     { const own = BAIT_OWN.map(sp => [sp, S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0)]).filter(x => x[1] >= 1);
       if (here && !b.land && own.length) h.push('<div class="ph-card"><h4>' + L('Egen fangst som agn', 'Own catch as bait') + '</h4><p class="ph-note">' + L('Sei fra lasten kan bli agn i stedet for å selges, men da før du leverer. Seien føres som eget bruk og teller på kvoten.', 'Saithe from the hold can be bait instead of being sold, but before you land. The saithe is entered as own use and counts on the quota.') + '</p>' +
