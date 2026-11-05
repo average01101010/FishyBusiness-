@@ -16,6 +16,13 @@ const DRP2 = {
   rest:{quay:8, night:12},                                                             // the crew's fatigue an hour of rest without bunks (04-crew.js crewTick); with bunks or a rorbu RORBU.rate (p2RestRate)
   egn:{selfH:1 / 3, coop:[0, 1, 2, 2.5, 3, 3.5, 4], shedH:3, shedPer:1 / 3},           // baiting: a third of an hour a tub by one hand, the shed 3 h plus 20 min a tub
   soak:{line:[4, 6, 20, 30], garn:[8, 12, 36, 60], teine:[18, 24, 60, 96]}, soakDef:{line:8, garn:24, teine:48}};
+// an hour said from another: «i kveld kl. 21:00», «i natt kl. 01:45», «i morgen kl. 05:51», «om 3 døgn, kl. 07:00» (by the date, not by 24 hours)
+function p2When(H, H0){
+  const c = driftClock(driftHod(H)), h = driftHod(H), dd = Math.round((H - h - (H0 - driftHod(H0))) / 24);
+  if (dd <= 0) return h >= 17 ? ['i kveld kl. ' + c, 'tonight at ' + c] : ['i dag kl. ' + c, 'today at ' + c];
+  if (dd === 1) return h < 5 ? ['i natt kl. ' + c, 'in the night at ' + c] : ['i morgen kl. ' + c, 'tomorrow at ' + c];
+  return ['om ' + dd + ' døgn, kl. ' + c, 'in ' + dd + ' days, at ' + c];
+}
 const p2RestRate = where => where === 'anker' ? RORBU.rate * 60 * 0.85 : where === 'bunks' ? RORBU.rate * 60 : DRP2.rest.quay;   // (RORBU is defined later in the build, so it is read when used)
 const PLAN2_KIND = {line:'line', garn:'garn', teiner:'teine'};
 const p2Kind = o => PLAN2_KIND[o.rig] || null;
@@ -114,8 +121,9 @@ function planDay(o, H0, st){
   if (!watch){
     // (each hand tires at their own rate, by their stamina: the one who reaches 72 first sets the day)
     const cF = st.crew.map(c => ({c, h:(DRP2.tired - c.fat) / Math.max(1, c.rate || DRP2.fatH)})).sort((a, b) => a.h - b.h)[0], bF = cF ? cF.h : Infinity, bE = st.me.aboard ? (st.me.energy - DRP2.enMin) / DRP2.enH : Infinity;
-    if (bF < dayMax){ dayMax = bF; const c = cF.c; why = [c.name.split(' ')[0] + ' blir sliten (' + DRP2.tired + ') etter ' + fmt(bF, 1) + ' t', c.name.split(' ')[0] + ' is tired (' + DRP2.tired + ') after ' + fmt(bF, 1) + ' h']; }
-    if (bE < dayMax){ dayMax = bE; why = ['energien din holder ' + fmt(bE, 1) + ' t', 'your energy lasts ' + fmt(bE, 1) + ' h']; }
+    // (already past the limit: said as it is, never as negative hours; the engine rests first, plan2Spent, GUI review F7)
+    if (bF < dayMax){ dayMax = bF; const c = cF.c, n = c.name.split(' ')[0]; why = bF > 0.05 ? [n + ' blir sliten (' + DRP2.tired + ') etter ' + fmt(bF, 1) + ' t', n + ' is tired (' + DRP2.tired + ') after ' + fmt(bF, 1) + ' h'] : [n + ' er sliten nå (' + Math.round(c.fat) + ') og må hvile først', n + ' is tired now (' + Math.round(c.fat) + ') and must rest first']; }
+    if (bE < dayMax){ dayMax = bE; why = bE > 0.05 ? ['energien din holder ' + fmt(bE, 1) + ' t', 'your energy lasts ' + fmt(bE, 1) + ' h'] : ['energien din er nesten brukt opp (' + Math.round(st.me.energy) + ' %): du må hvile først', 'your energy is nearly spent (' + Math.round(st.me.energy) + ' %): you must rest first']; }
     dayMax = Math.max(DRP2.minDay, dayMax);
   }
   if (fetch) why = ['henter redskapet, så er planen av', 'fetches the gear, then the plan is off'];
@@ -184,7 +192,8 @@ function planDay(o, H0, st){
     if (reset){ steps.push({t, k:'sett', pid:p.q.id, n, kind, lk:p.q.lk || null, h:n * W.sett[kind]}); t += n * W.sett[kind]; if (kind === 'line'){ setToday += n; setTodayK[p.q.lk || 'hyse'] = (setTodayK[p.q.lk || 'hyse'] || 0) + n; } }
     p.done = true;
   }
-  for (const p of pending) if (p.due != null && p.due > endBy) skipped.push({id:p.q.id, no:'trekkes ' + (p.due - H0 < 24 ? 'i kveld etter dagen' : p.due - H0 < 48 ? 'i morgen' : 'om ' + Math.ceil((p.due - H0) / 24) + ' døgn') + ' (ståtida er ute kl. ' + driftClock(driftHod(p.due)) + ')', en:'hauled ' + (p.due - H0 < 48 ? 'tomorrow' : 'in ' + Math.ceil((p.due - H0) / 24) + ' days') + ' (the soak is up at ' + driftClock(driftHod(p.due)) + ')'});
+  // (when the soak is up, by the clock and the date: «i kveld», «i natt», «i morgen»; before, a haul the next morning was «i kveld», F7)
+  for (const p of pending) if (p.due != null && p.due > endBy){ const w = p2When(p.due, H0); skipped.push({id:p.q.id, no:'står til ståtida er ute ' + w[0], en:'stays until the soak is up ' + w[1]}); }
   // the rest of the day by the gear, with the jig
   if (!watch && jig && dueToday.length){ const left = endBy - tailH() - t; if (left >= DRP2.jigMin){ const j = jigs.length ? jigs[jigs.length - 1] : null; if (j) go(j); steps.push({t, k:'juks', pid:j ? j.id : null, h:left, until:t + left}); t += left; } }
   // the landing: every trip, when the hold is full or the fish must go, or every N days (the engine lands sooner when the hold fills)
