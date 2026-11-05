@@ -12,6 +12,7 @@
        ['Rekordfisk vises på fangstkortet og i dagboka, og fartstiden står i dagboka.', 'Record fish show on the catch card and in the deck log, and sea time is in the deck log.'],
        ['Teinekortet sier hvor kongekrabben er, og i juksespillet dupper snøret før nappet.', 'The pot card says where the king crab is, and in the jig game the line nudges before a bite.'],
        ['Torskegarna fisker som i virkeligheten i skreisesongen: om lag 70 kg torsk per garn på et godt skreifelt i mars. Utenfor sesongen er de som før.', 'Cod nets fish as in reality in the skrei season: about 70 kg of cod a net on a good skrei ground in March. Outside the season they are as before.'],
+       ['Finnmark har mer torsk, mest skrei: Vest-Finnmark gir om lag dobbelt så mye som Senja i mars, som i landingene de siste årene.', 'Finnmark has more cod, mostly skrei: West Finnmark gives about twice what Senja does in March, as in the landings of recent years.'],
     ]],
     ['fabrikk-051126', '05.11.2026', 'Drift om bord på autolineren', 'Work aboard the autoliner', [
        ['Autolineren har to skift som følger båten, 14 mann hver. Dekkslaget og fabrikklaget går seks og seks, kokken lager maten, og skiftene bytter ved hver levering. Lotten går til skiftet om bord etter havfiskeavtalen.', 'The autoliner has two crews that come with her, 14 men each. The deck and factory teams go six on, six off, the cook makes the food, and the crews change at each landing. The share goes to the crew aboard by the ocean fishing agreement.'],

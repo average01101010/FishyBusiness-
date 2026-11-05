@@ -142,7 +142,7 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 
 ## 10.3 Anslag og antakelser (tall uten sikker kilde)
 
-- **Vest-Finnmark har for lite skrei i spillet (funnet 05.11.2026 under kalibreringen av garna):** de beste stedene innen 4 km fra Gjesvær gir 6–10 kg torsk per garn i mars og håndjuksa 12 kg i timen, mens ERS gir 73 kg per garn (15–28 m) og sluttsedlene 1 030 kg per sjarkdag med juksa i Vest-Finnmark i mars 2025 (median, den høyeste langs kysten; 30 % av kystfangsten av torsk i mars). Lofoten og Senja stemmer. Det er tettheten i fiskerimodellen (`core/03f-fiske.js`, sedlene per lokasjon og skreifronten) og ikke redskapet. Må ses på med samme metode som K1; Jonas avgjør.
+- **Vest-Finnmark utenom skreien:** etter `COD_AREA` (05.11.2026) stemmer skreisesongen, men den stedegne torsken i Vest-Finnmark mangler den ekte årstidsformen (spillet 1,23 / 1,69 av Senja i juli / oktober, sedlene 1,81 / 1,12). Hvorfor lokasjonsindeksen per landing gir Finnmark mindre enn kilo per fartøydag, er ikke funnet (`fiskerimodellen.md`).
 - **Kongekrabben stemmer omtrent:** fartøy under 15 m i Finnmark landet median 120–166 kg per fartøydag i 2025, som er 4–6 kg per teine med 30 teiner (grensen er bare lest i søkeutdrag). Spillet sier 2–12 kg.
 
 - **Avstandslaget (`coastDist`) kjenner ikke alle holmer** (funnet 05.11.2026 av CI-sjekken av mottaksparene, 4.12g i `autonav.md`): en holme på rundt 20 m ved 62,396° N 5,830° E sto 0,5 km fra land i laget. `legRuns` leser nå `isLand` hver 5. m på det åpne havet, så ruta ser den; en holme tynnere enn 5 m som bare finnes i den fine kystlinja, kan gli mellom. Hvorfor laget mangler holmen (trolig små øyer som faller ut av masken det regnes fra), er ikke undersøkt; det kan rettes i kartrørledningen ved neste release.
@@ -317,6 +317,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - `S.owned` skrives fortsatt (`03-simulation.js`, `05-phone.js`, `05-vessels.js`), men leses bare av en lagringsmigrering i `11-boot.js`.
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
+
+## Strøket 05.11.2026 (Finnmark kalibrert mot sluttsedlene)
+
+- **Vest- og Øst-Finnmark hadde for lite torsk, mest skrei:** `COD_AREA` i `core/03f-fiske.js` etter kilo per sjarkdag i sedlene 2025–2026 (`fiskerimodellen.md`).
 
 ## Strøket 05.11.2026 (garna kalibrert etter ERS)
 
