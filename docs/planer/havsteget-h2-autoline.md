@@ -218,4 +218,4 @@ Etter søket 05.11.2026 (kap. 2b) står dette igjen:
   - Havlandingene går som egen gruppe til den felles verden.
   - Rettet for alt redskap: en setting som stoppes halvveis, gir resten tilbake.
   - **Står igjen til H2b:** krokbytte om bord, fabrikken og frysingen i produktvekt (V2 A), vaktene, turen og lossingen på paller.
-
+- 05.11.2026: **H2a rullet ut** (Jonas: «Rull ut H2a, Start H2b i en ny økt»), flettet med arbeidsgrenen i 3cc5009. **Neste:** H2b i en ny økt.
