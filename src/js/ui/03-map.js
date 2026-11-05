@@ -409,7 +409,8 @@ function renderStatic(){
   for (const mk of S.marks){ if (!markLive(mk)) continue; markEnd = Math.min(markEnd, mk.t + MARK_LIFE); const gu = mk.g && mk.kgu != null && GU[mk.g];
     const col = mk.q != null ? (mk.q >= 1.4 ? '#d7301f' : mk.q >= 1 ? '#f08a24' : mk.q >= 0.6 ? '#e5c12b' : '#5b8db8') : mk.kgph >= 40 ? '#d7301f' : mk.kgph >= 20 ? '#f08a24' : mk.kgph >= 8 ? '#e5c12b' : '#5b8db8';
     g.push('<circle cx="' + mk.x + '" cy="' + mk.y + '" r="' + (4.2 * u) + '" fill="' + col + '" stroke="#fff" stroke-width="' + (1.2 * u) + '"/>');
-    if (view.z > 3.5){ const nm = gu ? fmt(mk.kgu, mk.kgu < 10 ? 1 : 0) + ' kg/' + gu[S.lang === 'en' ? 1 : 0] + (mk.soak ? ' · ' + mk.soak + (S.lang === 'en' ? ' h' : ' t') : '') : mk.kgph + (S.lang === 'en' ? ' kg/h' : ' kg/t');
+    // (a pin of the plan on the mark has its own name there: the mark's label gives way, GUI review P2)
+    if (view.z > 3.5 && !(typeof PLANMAP !== 'undefined' && PLANMAP.covers(mk, 14 * u))){ const nm = gu ? fmt(mk.kgu, mk.kgu < 10 ? 1 : 0) + ' kg/' + gu[S.lang === 'en' ? 1 : 0] + (mk.soak ? ' · ' + mk.soak + (S.lang === 'en' ? ' h' : ' t') : '') : mk.kgph + (S.lang === 'en' ? ' kg/h' : ' kg/t');
       lbl(3, {x:mk.x + 6 * u, y:mk.y + 3.5 * u}, nm, 'lbl-ground', 9.5 * u, 'stroke-width="' + (2.5 * u) + '"'); } }
   // your own marks: a flag with its name, set by holding a finger on the chart (Jonas 06.10.2026); they stay until you delete them
   for (const pn of S.pins || []){ if (!inV(pn.x, pn.y) || (pn.until && pn.until <= S.t)) continue; const s = 6 * u;

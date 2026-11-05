@@ -33,8 +33,10 @@ const PLANMAP = (() => {
     openPlotter(); fit(o); render(); renderDyn(); return true;
   }
   // «Ferdig»: back to the page, where the day is reckoned anew from the places
-  function close(){ if (!on) return; on = false; sel = null; bar.hidden = card.hidden = true; document.body.classList.remove('pm'); if (typeof save === 'function') save(); renderDyn(); if (typeof DOCK !== 'undefined' && DOCK.open) DOCK.open('drift'); else if (typeof PHONE !== 'undefined' && PHONE.open) PHONE.open('drift'); }
-  function changed(){ if (typeof save === 'function') save(); render(); renderDyn(); }
+  function close(){ if (!on) return; on = false; sel = null; bar.hidden = card.hidden = true; document.body.classList.remove('pm'); if (typeof save === 'function') save(); renderDyn(); scheduleStatic(); if (typeof DOCK !== 'undefined' && DOCK.open) DOCK.open('drift'); else if (typeof PHONE !== 'undefined' && PHONE.open) PHONE.open('drift'); }
+  function changed(){ if (typeof save === 'function') save(); render(); renderDyn(); scheduleStatic(); }   // (the catch marks' labels under the pins, P2)
+  // a pin of the plan within r of p (the chart's catch marks hide their label under a pin, GUI review P2)
+  const covers = (p, r) => { const o = ops(); return !!(on && o && o.places.some(q => dist(q, p) < r)); };
   function render(){
     const o = ops(); if (!on || !o){ bar.hidden = card.hidden = true; return; }
     const kind = p2Kind(o), lb = labels(o), full = o.places.length >= DRP2.placesMax;
@@ -47,12 +49,14 @@ const PLANMAP = (() => {
     const i = o.places.indexOf(q), isF = q.k === 'felt', hp = portById(o.home), m = typeof planMark === 'function' ? planMark(q, isF ? kind : null) : null;
     const dkm = hp ? fmt(dist(hp.p, q) / NM, 1) + L(' nm fra hjem', ' nm from home') : '';
     const own = m ? (isF ? L(' · sist ' + fmt(m.kgu, 1) + ' kg per ' + GEAR[kind].u[0] + ' etter ' + Math.round(m.soak || 0) + ' t', ' · last ' + fmt(m.kgu, 1) + ' kg a ' + GEAR[kind].u[2] + ' after ' + Math.round(m.soak || 0) + ' h') : L(' · sist ' + m.kgph + ' kg/t', ' · last ' + m.kgph + ' kg/h')) : L(' · ikke fisket her ennå', ' · not fished here yet');
+    const two = isF && kind === 'line' && ['hyse', 'bank'].filter(lk => p2Units('line', lk) > 0).length > 1;   // both kinds of line aboard: a row to choose
     card.hidden = false;
     card.innerHTML = '<div class="ai-h"><b>' + lb[q.id] + '</b><button type="button" data-pm="x" aria-label="' + L('Lukk', 'Close') + '">×</button></div>' +
-      (isF ? (kind === 'line' && ['hyse', 'bank'].filter(lk => p2Units('line', lk) > 0).length > 1 ? '<div class="pm-kv"><span>' + L('Line', 'Line') + '</span><span><button type="button" data-pm="lk" class="pm-w">' + LINE_KINDS[q.lk || 'hyse'].no + ' ⇄</button></span></div>' : '') +
-        '<div class="pm-kv"><span>' + (kind === 'line' ? LINE_KINDS[q.lk || 'hyse'].no : L(GEAR[kind].no, GEAR[kind].en)) + '</span><span><button type="button" data-pm="n" data-d="-1" aria-label="−">−</button><b>' + q.n + ' ' + unitName(kind, q.n) + ' <small>' + L('av ', 'of ') + Math.max(0, p2Left(o, q)) + '</small></b><button type="button" data-pm="n" data-d="1" aria-label="+">+</button></span></div>' +
-        '<div class="pm-kv"><span>' + L('Ståtid', 'Soak') + '</span><span><button type="button" data-pm="s" data-d="-1" aria-label="−">−</button><b>' + q.soak + ' t</b><button type="button" data-pm="s" data-d="1" aria-label="+">+</button></span></div>' +
-        '<div class="pm-kv"><span>' + L('Lenka', 'The string') + ' <small>' + fmt(stringKm(o, q), 1) + ' km' + (roomOf(o, q) ? '' : L(' · får ikke plass her', ' · no room here')) + '</small></span><span><button type="button" data-pm="h" data-d="-15" aria-label="↶">↶</button><b>' + (q.hdg == null ? L('etter kursen', 'by the course') : degOf(q, q.hdg) + '°') + '</b><button type="button" data-pm="h" data-d="15" aria-label="↷">↷</button>' + (q.hdg != null ? '<button type="button" data-pm="h0" class="pm-w">' + L('fri', 'free') + '</button>' : '') + '</span></div>' : '') +
+      (isF ? (two ? '<div class="pm-kv"><span>' + L('Line', 'Longline') + '</span><span><button type="button" data-pm="lk" class="pm-w">' + L(LINE_KINDS[q.lk || 'hyse'].no, LINE_KINDS[q.lk || 'hyse'].en) + ' ⇄</button></span></div>' : '') +
+        // (with the line's kind on its own row above, this row is the tubs: the card said «Hyseline» twice, GUI review P3)
+        '<div class="pm-kv"><span>' + (kind === 'line' ? (two ? L('Stamper', 'Tubs') : L(LINE_KINDS[q.lk || 'hyse'].no, LINE_KINDS[q.lk || 'hyse'].en)) : L(GEAR[kind].no, GEAR[kind].en)) + '</span><span><button type="button" data-pm="n" data-d="-1" aria-label="−">−</button><b>' + q.n + ' ' + unitName(kind, q.n) + ' <small>' + L('av ', 'of ') + Math.max(0, p2Left(o, q)) + '</small></b><button type="button" data-pm="n" data-d="1" aria-label="+">+</button></span></div>' +
+        '<div class="pm-kv"><span>' + L('Ståtid', 'Soak') + '</span><span><button type="button" data-pm="s" data-d="-1" aria-label="−">−</button><b>' + q.soak + L(' t', ' h') + '</b><button type="button" data-pm="s" data-d="1" aria-label="+">+</button></span></div>' +
+        '<div class="pm-kv"><span>' + L('Lenka', 'String') + ' <small>' + fmt(stringKm(o, q), 1) + ' km' + (roomOf(o, q) ? '' : L(' · får ikke plass her', ' · no room here')) + '</small></span><span><button type="button" data-pm="h" data-d="-15" aria-label="↶">↶</button><b>' + (q.hdg == null ? L('etter kursen', 'by course') : degOf(q, q.hdg) + '°') + '</b><button type="button" data-pm="h" data-d="15" aria-label="↷">↷</button>' + (q.hdg != null ? '<button type="button" data-pm="h0" class="pm-w">' + L('fri', 'free') + '</button>' : '') + '</span></div>' : '') +
       '<div class="ai-t">' + dkm + own + '</div>' +
       '<div class="pin-b"><button type="button" data-pm="up"' + (i ? '' : ' disabled') + ' aria-label="' + L('Før', 'Earlier') + '">↑</button><button type="button" data-pm="dn"' + (i < o.places.length - 1 ? '' : ' disabled') + ' aria-label="' + L('Etter', 'Later') + '">↓</button><button type="button" data-pm="del">' + L('Fjern', 'Remove') + '</button></div>';
   }
@@ -108,5 +112,5 @@ const PLANMAP = (() => {
     for (const q of o.places) pin(q, lb[q.id], q.k === 'felt' ? '#d9822b' : '#b05ad6', q.id === sel);
     return '<g class="pm">' + g.join('') + '</g>';
   }
-  return {open, close, tap, grab, dragMove, dragEnd, dragCancel, svg, render, isOn:() => on, tool:k => { if (k) { tool = k; render(); } return tool; }, sel:() => sel};
+  return {open, close, tap, grab, dragMove, dragEnd, dragCancel, svg, render, covers, isOn:() => on, tool:k => { if (k) { tool = k; render(); } return tool; }, sel:() => sel};
 })();
