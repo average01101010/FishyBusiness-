@@ -139,7 +139,7 @@ function rigBlock(r){
   if (b.gop) return [gL('Redskapsarbeidet er i gang.', 'Gear work is going on.')];
   if (!rigHas(r)){ const k = RIGS[r].kind, hs = GEAR[k].haulers.filter(h => equipFits(h, b.type || 'skiff'));
     if (!hs.length) return [gL('Denne båten kan ikke rigges for ' + rigName(r).toLowerCase() + ': ' + GEAR[k].haulers.map(h => lc1(EQUIP[h].name.no)).join(' eller ') + ' passer ikke om bord.', 'This boat cannot be rigged for ' + rigName(r).toLowerCase() + ': ' + GEAR[k].haulers.map(h => lc1(EQUIP[h].name.en)).join(' or ') + ' does not fit aboard.')];
-    return [gL('Båten mangler ' + hs.map(h => lc1(EQUIP[h].name.no)).join(' eller ') + '. Monter den under Oppgrader.', 'The boat has no ' + hs.map(h => lc1(EQUIP[h].name.en)).join(' or ') + '. Fit one under Upgrade.')]; }
+    return [gL('Båten mangler ' + hs.map(h => lc1(EQUIP[h].name.no)).join(' eller ') + '. Den kjøpes og monteres i Butikk › Elektronikk og haler.', 'The boat has no ' + hs.map(h => lc1(EQUIP[h].name.en)).join(' or ') + '. Buy and fit one at Shop › Electronics and haulers.')]; }
   return null;
 }
 function rigSet(r){ const why = rigBlock(r); if (why) return why; S.boat.rig = r; log('Båten er rigget for ' + rigName(r).toLowerCase() + '.', 'The boat is rigged for ' + rigName(r).toLowerCase() + '.'); return null; }
