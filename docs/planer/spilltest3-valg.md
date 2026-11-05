@@ -59,6 +59,20 @@ Bestillingen: økta etter spilltest 3 skulle rette F1–F7 og de enkle UX-funnen
 - Ingen nye varsler for ekte penger eller fravær (`docs/push-plan.md` står).
 - Ingen endring i reglene for blåkveite eller kongekrabbe; bare hvordan de vises.
 
+## Jonas' valg (05.11.2026)
+
+- **V1 A:** klokkeslett i spilltid først, ekte tid etter med «i ekte tid».
+- **V2 B:** avstanden og alarmen som i A, og båten ligger på været ved redskapet: motoren holder henne innen 0,5 nm, og det koster diesel.
+- **V3 A:** rekordene i fangstkortet, fartstiden i dagboka, toasten over viften.
+- **V4 A:** utbredelsen som opplysning på teinekortet.
+- **V5 A:** dupp og lyd før nappet, også falske dupp.
+- **V6a A:** heve skreien i Vestfjorden, «så lenge tallene blir realistiske i henhold til den ekte verden».
+- **V6b:** «Gjør det som blir mest realistisk i henhold til den ekte verden» (modellen eller dokumentet, etter kildene).
+- **V6c A:** årene står, men i dagboka og ikke som toast.
+- **V7 B:** rettingene fra økta rulles ikke ut alene; alt rulles ut samlet når valgene over er bygd.
+- **V8 A:** mottakssjefene kan skifte navn én gang i gamle lagringer.
+- Jonas: «Om du har flere spørsmål underveis må du bare spørre.»
+
 ## Status
 
-- 05.11.2026: planen skrevet. Venter på Jonas' valg V1–V6.
+- 05.11.2026: planen skrevet, valgene tatt samme dag. Bygges i rekkefølgen P1, P3 (med V6c), P4, P5, P2, så K1–K2 når kildene er lest.
