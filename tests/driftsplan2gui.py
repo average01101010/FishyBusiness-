@@ -639,7 +639,7 @@ async def s13_uten_koyer(c):
     await c.open_drift(); await c.press('[data-pa="p2-new"]', name='Lag driftsplan')
     await c.press('.dr-rh[data-k="rhythm"]', name='Rytme-raden')
     w = await c.where('[data-pa="p2-rhythm"][data-v="watch"]'); mu = await c.where('[data-pa="p2-rhythm"][data-v="multi"]')
-    c.check(w and w['dis'] and mu and mu['dis'] and 'køyer' in mu['txt'], 'snekke uten køyer: døgndrift og flerdøgnstur låst', {'døgn': w and w['txt'], 'fler': mu and mu['txt']})
+    c.check(w and w['dis'] and 'Båten har' in w['txt'] and 'køyer' in w['txt'] and mu and mu['dis'] and 'køyer' in mu['txt'], 'U2: snekke uten køyer: døgndrift låst med båtens grense først («Båten har … køyer»), og flerdøgnstur låst', {'døgn': w and w['txt'], 'fler': mu and mu['txt']})
     c.note('grunnen på døgndrift for en båt som verken har køyer eller plass til fire', w and w['txt'])
     await c.shots('rytme', frame=('.dr-row.on',))
     await c.press('.dr-rh[data-k="home"]', name='Hjem-raden')

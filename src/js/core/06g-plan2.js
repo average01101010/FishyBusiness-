@@ -265,6 +265,18 @@ function planDayText(o, day){
   return out;
 }
 // ---- the check: errors keep the plan from being switched on, warnings only inform (as driftCheck; the rhythm's rules from Jonas 26.10.2026)
+// why round the clock cannot be (GUI review U2): the boat's own limits first (no bunks or wheelhouse, too few places or bunks for four), so a
+// boat that can never do it says so; then what is missing aboard (four hands, you included; a bunk each). short: the button's words.
+// A String with .k ('boat' or 'crew'), or null
+function plan2WatchWhy(st, aboard, short){
+  const no = gL, cap = (st.crewMax || 0) + 1, w = (k, a, b) => Object.assign(new String(no(a, b)), {k});
+  if (!st.house || !(st.bunks > 0)) return w('boat', short ? (st.house ? 'Båten har ingen køyer' : 'Båten har verken styrhus eller køyer') : 'Døgndrift krever styrhus og køyer om bord, og båten har ' + (st.house ? 'ingen køyer.' : 'verken styrhus eller køyer.'), short ? (st.house ? 'The boat has no bunks' : 'The boat has neither a wheelhouse nor bunks') : 'Round the clock needs a wheelhouse and bunks aboard, and the boat has ' + (st.house ? 'no bunks.' : 'neither.'));
+  if (cap < 4) return w('boat', short ? 'Båten har plass til bare ' + cap + ' om bord' : 'Døgndrift krever fire om bord, og båten har plass til bare ' + cap + ', deg medregnet.', short ? 'The boat has room for only ' + cap + ' aboard' : 'Round the clock needs four aboard, and the boat has room for only ' + cap + ', you included.');
+  if (st.bunks < 4) return w('boat', short ? 'Båten har bare ' + st.bunks + ' køyer' : 'Døgndrift krever fire om bord med hver sin køye, og båten har bare ' + st.bunks + '.', short ? 'The boat has only ' + st.bunks + ' bunks' : 'Round the clock needs four aboard with a bunk each, and the boat has only ' + st.bunks + '.');
+  if (aboard < 4) return w('crew', short ? 'Krever fire om bord, deg medregnet (dere er ' + aboard + '): ansett ' + (4 - aboard) + ' til' : 'Døgndrift krever fire om bord, deg medregnet: skipper, styrmann og to på dekk. Dere er ' + aboard + '; ansett ' + (4 - aboard) + ' til på Mannskap-siden.', short ? 'Needs four aboard, you included (you are ' + aboard + '): hire ' + (4 - aboard) + ' more' : 'Round the clock needs four aboard, you included: a skipper, a mate and two on deck. You are ' + aboard + '; hire ' + (4 - aboard) + ' more on the Crew page.');
+  if (st.bunks < aboard) return w('boat', short ? 'Krever køyer til alle om bord (' + st.bunks + ' av ' + aboard + ')' : 'Døgndrift krever køyer til alle om bord: båten har ' + st.bunks + ', dere er ' + aboard + '.', short ? 'Needs bunks for everyone aboard (' + st.bunks + ' of ' + aboard + ')' : 'Round the clock needs bunks for everyone aboard: the boat has ' + st.bunks + ', you are ' + aboard + '.');
+  return null;
+}
 // the buoy sets the plan has: those aboard and those on the gear in the sea (they come back aboard with the haul)
 function p2Kits(){ const pg = S.pgear; return ((pg && pg.kits ? pg.kits.n : 0) || 0) + (typeof mySets === 'function' ? mySets().length : 0); }
 function plan2Check(o, st){
@@ -297,10 +309,7 @@ function plan2Check(o, st){
   if (!st.me.aboard){ if (st.crewMax < 2) Wn.push(no('Båten har plass til bare én i mannskapet, så planen går bare når du er om bord.', 'The boat has room for only one crew, so the plan runs only when you are aboard.'));
     else if (!st.crew.some(c => c.sk) || !st.crew.some(c => c.mate && !c.sk)) ER(no('Når du ikke er om bord, må både en skipper og en styrmann være utnevnt. Gjør det på Mannskap-siden.', 'When you are not aboard, both a skipper and a mate must be appointed. Do it on the Crew page.'), 'mannskap'); }
   const aboard = st.crew.length + (st.me.aboard ? 1 : 0);
-  if (o.rhythm === 'watch'){
-    if (aboard < 4) ER(no('Døgndrift krever fire om bord, deg medregnet: skipper, styrmann og to på dekk. Dere er ' + aboard + '.', 'Round the clock needs four aboard, you included: a skipper, a mate and two on deck. You are ' + aboard + '.'), 'rhythm');
-    if (!st.house) ER(no('Døgndrift krever styrhus og køyer om bord.', 'Round the clock needs a wheelhouse and bunks aboard.'), 'rhythm');
-    else if (st.bunks < aboard) ER(no('Døgndrift krever køyer til alle om bord: båten har ' + st.bunks + ', dere er ' + aboard + '.', 'Round the clock needs bunks for everyone aboard: the boat has ' + st.bunks + ', you are ' + aboard + '.'), 'rhythm'); }
+  if (o.rhythm === 'watch'){ const w = plan2WatchWhy(st, aboard); if (w) ER(String(w), w.k === 'crew' ? 'mannskap' : 'rhythm'); }
   if (o.rhythm === 'multi' && !(st.bunks > 0)) ER(no('Turer over flere døgn krever køyer om bord.', 'Trips of several days need bunks aboard.'), 'rhythm');
   if (hp && o.rhythm !== 'watch' && st.crew.length && !st.homeRest) Wn.push(no('Båten har ingen køyer, og ' + hp.name + ' er en vanlig kai. Mannskapet hviler dårlig der.', 'The boat has no bunks, and ' + hp.name + ' is an ordinary quay. The crew rest poorly there.'));
   if (o.anchor && (BOAT.len || 0) < DRP.bigLen) ER(no('Bare båter fra ' + DRP.bigLen + ' m kan ligge til ankers hjemme.', 'Only boats from ' + DRP.bigLen + ' m can lie at anchor at home.'), 'home');
