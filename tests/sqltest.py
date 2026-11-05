@@ -562,6 +562,17 @@ def main():
         G = {'sub': '9a1c2a3e-0000-4000-8000-0000000000aa', 'role': 'authenticated', 'is_anonymous': True}; C = {'sub': 'user_01GGG', 'role': 'authenticated'}
         sql("select public.tm_hello('{}')", G, 'authenticated'); sql("select public.tm_consent(true, 1990)", G, 'authenticated')
         sql("select public.save_put2('KYST2:guest', '2026-10-06T10:00:00Z', 100, null, false, '{\"day\":3}')", G, 'authenticated')
+        # Ø6 funn 2 og 3 (20261105130000_guest_world.sql): what a guest lands and catches is the guest's alone until the account is made:
+        # not in the open group's quota or the boats, the plants' market, the cells or the season's event list (the guest sees its own)
+        wgA = lambda since=0: (sql("delete from public.world_agg"), json.loads(sql("select public.world_get(%d, 2027, 1500)" % since, A, 'authenticated')))[1]
+        wA0 = wgA()
+        sql("""select public.land_put(1500, 2027, 'finnsnes', 'open', '[{"sp":"torsk","kg":700,"kgq":700}]', 'Gjest', '', 'skrei')""", G, 'authenticated')
+        sql("select public.catch_put(1500, '[[549755813999, 400]]')", G, 'authenticated')
+        wA1 = wgA(wA0['cur'])
+        GW = {'open': wA1['open'] - wA0['open'], 'boats': wA1['boats'] - wA0['boats'], 'mkt': sorted(map(tuple, wA1['mkt'])) == sorted(map(tuple, wA0['mkt'])),
+              'cells': [c for c in wA1['cells'] if c[0] == 549755813999], 'wy': sql("select count(*) from public.world_year where player_id = '%s'" % G['sub']),
+              'evA': [r['boat'] for r in json.loads(sql("select public.ev_top('skrei', 2027)", A, 'authenticated'))['rows']],
+              'evG': [r['boat'] for r in json.loads(sql("select public.ev_top('skrei', 2027)", G, 'authenticated'))['rows'] if r['me']]}
         gNoShop = sql("select public.shop_quote('trim_turbo')", G, 'authenticated', expect_err=True)
         gNotGuest = sql("select public.guest_claim()", A, 'authenticated', expect_err=True)
         code = sql("select public.guest_claim()", G, 'authenticated')
@@ -569,11 +580,22 @@ def main():
         gMerge = json.loads(sql("select public.guest_merge('%s')" % code, C, 'authenticated'))
         gAfter = sql("select (select count(*) from public.players where id = '%s') || '/' || (select data from public.saves where player_id = 'user_01GGG') || '/' || (select consent from public.players where id = 'user_01GGG')" % G['sub'])
         gAgain = json.loads(sql("select public.guest_merge('%s')" % code, C, 'authenticated'))
+        # with the account the guest's landings count (guest_merge), and for everyone: no landing ahead of the shared clock, the year from
+        # the game hour and not from the call, the plant and the species cleaned (Ø6 funn 2c)
+        GW['wyC'] = sql("select coalesce(sum(kgq), 0) from public.world_year where player_id = 'user_01GGG' and y = 2027 and acc = 'open' and sp = 'torsk'")
+        GW['openAfter'] = wgA()['open'] - wA0['open']
+        GW['ahead'] = sql("""select public.land_put(%s, 2027, 'finnsnes', 'none', '[{"sp":"torsk","kg":1}]')""" % sql("select public.world_gh() + 100"), C, 'authenticated', expect_err=True)
+        sql("""select public.land_put(1600, 2031, '<b>mØF50</b>', 'none', '[{"sp":"<i>torsk","kg":1}]')""", C, 'authenticated')
+        GW['clean'] = sql("select y || '/' || port || '/' || sp from public.landings where player_id = 'user_01GGG' order by id desc limit 1")
         gRead = sql("select count(*) from public.guest_links", A, 'authenticated', expect_err=True)
         print(ok(gNoShop[0] and 'guest' in gNoShop[1] and gNotGuest[0] and len(code) >= 32 and gSelf[0] and gMerge == {'merged': True, 'save': True} and gAfter == '0/KYST2:guest/true'
                  and gAgain.get('merged') is False and gRead[0]),
               'guests: an anonymous sign-in plays and saves, cannot buy; registering with its one-time code moves the save and the consent to the account and the guest is gone; the code works once and no player reads the codes',
               {'shop': gNoShop, 'merge': gMerge, 'after': gAfter, 'again': gAgain})
+        print(ok(abs(GW['open']) < 0.01 and GW['boats'] == 0 and GW['mkt'] and GW['cells'] == [] and GW['wy'] == '0' and 'Gjest' not in GW['evA'] and GW['evG'] == ['Gjest']
+                 and GW['wyC'] == '700' and abs(GW['openAfter'] - 700) < 0.01 and GW['ahead'][0] and 'ahead' in GW['ahead'][1] and GW['clean'] == '2027/bmØF50b/itorsk'),
+              "a guest's landings and catch are the guest's alone (not in the open group's quota, the boats, the market, the cells or the event list) until the account is made, and then they count; no landing ahead of the shared clock, the year from the game hour, the plant and species cleaned (Ø6 funn 2 og 3)",
+              {k: (v[1][:60] if isinstance(v, tuple) else v) for k, v in GW.items()})
         # the player's name (20261007120000_names.sql): an account takes one, unique whatever the case; a guest cannot; the admin takes an
         # offensive one away with a reason, it is barred for good, and a new one is free
         G2 = {'sub': '9a1c2a3e-0000-4000-8000-0000000000bb', 'role': 'authenticated', 'is_anonymous': True}; sql("select public.tm_hello('{}')", G2, 'authenticated')
