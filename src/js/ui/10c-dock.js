@@ -411,7 +411,7 @@ function showroomTick(){
 // are there; only when the boat came sailing and now lies still within 300 m of one of her own buoys
 { let was = null;
   setInterval(() => { try {
-    const b = S.boat, st = b && b.status; if (!st) return; const arrived = was === 'sailing' && st === 'idle' && !S.plan; was = st; if (!arrived) return;
+    const b = S && S.boat, st = b && b.status; if (!st) return; const arrived = was === 'sailing' && st === 'idle' && !S.plan; was = st; if (!arrived) return;
     if (!document.body.classList.contains('vplot') || !mySets().some(s => Math.min(dist(b.pos, s.a), dist(b.pos, s.b)) < 0.3)) return;
     const c = document.getElementById('plotClose'); if (c && !c.hidden) c.click();
     toast(S.lang === 'no' ? 'Framme ved blåsa. «Ta opp» står i knappelinja.' : 'At the buoy. «Haul» is in the dock bar.');

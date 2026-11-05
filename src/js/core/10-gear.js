@@ -574,7 +574,9 @@ function cycleSpec(kind, want, n){
 }
 function gearCycle(w, fishAfter){
   const a = w.act, b = S.boat, H = S.t / 60;
-  let gale = false; for (let k = 0; k <= 36; k += 3) if (windAt(H + k) > 17) gale = true;
+  // (an ocean vessel's autoline stands hours, not days, and she works it in a gale: only a storm over her lying-to limit in the coming
+  // twelve hours where she is keeps her from setting again, 05-vessels.js windLim; H2c)
+  let gale = false; if (BOAT.cls === 'hav'){ for (let k = 0; k <= 12; k += 3) if (windAt(H + k, w) > windLim()) gale = true; } else for (let k = 0; k <= 36; k += 3) if (windAt(H + k) > 17) gale = true;
   // the standing plan names its field (a.fid) and what the visit is for (a.only: 'haul' or 'set'); a visit with nothing to do says so and goes on
   const s = (a.fid && mySets().find(x => x.fid === a.fid)) || mySets().find(x => x.kind === a.kind && segDist(w, x.a, x.b) < 0.5 && (!a.fid || !x.fid));
   if (s && a.only === 'set') return [gL('Redskapet står allerede på plassen.', 'The gear already stands at the place.')];

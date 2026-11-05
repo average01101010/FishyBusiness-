@@ -39,8 +39,11 @@ async def run(p, hold):
     await pg.evaluate("DYN.on = false; catchUp(10 * 3600e3 / GAME_RATE)")   # ten game hours: out, two hours of fishing, home (caught up as the tick does it, the manoeuvring model off)
     R0['first'] = await pg.evaluate(OUT)
     if hold:
+        # (the game's own loop is let go only here, where the check is that tick() itself plays nothing while the pack is away; held
+        # the whole time, the check would hold by itself. Ø2 05.11.2026)
+        await pg.evaluate("TAB.held = false; lastWall = Date.now()")
         await pg.wait_for_timeout(1500)
-        R0['held'] = await pg.evaluate(OUT)   # the clock stands while the pack is held back
+        R0['held'] = await pg.evaluate("(() => { TAB.held = true; return " + OUT + "; })()")   # the clock stands while the pack is held back
         R0['ready'] = await pg.evaluate("mapReadyAt(S.boat.pos, MAPD.simR)")
         gate.set()
         await pg.wait_for_function("mapReadyAt(S.boat.pos, MAPD.simR)", timeout=60000)

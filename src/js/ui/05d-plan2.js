@@ -31,6 +31,7 @@ const PLAN2UI = (() => {
     if (o.held) return [L('Venter: du har tatt over båten', 'Waiting: you have taken the boat over'), 'wait'];
     const b = S.boat, pl = S.plan, r = o.run, M = nm(o.M), stepTxt = s => { const t = planDayText(o, {steps:[s], skipped:[], why:['', '']})[0]; return L(t[1], t[2]); };
     if (b.land) return [L('Leverer i ', 'Landing at ') + nm(b.land.pid), ''];
+    if (b.hove) return [L('Ligger bi i uværet siden kl. ', 'Lying to in the storm since ') + ck(b.hove.since / 60) + L('. Planen går videre når det løyer.', '. The plan goes on when it eases.'), 'wait'];   // (an ocean vessel, H2c)
     if (b.status === 'port' && (b.shift || b.fueling || portBusy(b))) return [L('Gjør båten klar: is, drivstoff og agn', 'Getting the boat ready: ice, fuel and bait'), ''];
     if (b.status === 'unmooring') return [L('Kaster loss', 'Casting off'), ''];
     if (pl && pl.ops){
@@ -38,7 +39,7 @@ const PLAN2UI = (() => {
       if (pl.opsK === 'home') return [L('På vei hjem til ', 'On the way home to ') + nm(o.home), ''];
       if (pl.opsK === 'land') return [L('På vei til ', 'On the way to ') + M + L(' for å levere', ' to land'), ''];
       if (pl.opsK === 'rest') return [L('På vei for å hvile om bord', 'On the way to rest aboard'), ''];
-      if (b.gop) return [(b.gop.op === 'set' ? L('Setter ', 'Setting ') : L('Trekker ', 'Hauling ')) + GEAR[b.gop.kind][S.lang === 'no' ? 'no' : 'en'].toLowerCase(), ''];
+      if (b.gop) return [(b.gop.op === 'set' ? L('Setter ', 'Setting ') : L('Trekker ', 'Hauling ')) + (b.gop.auto ? b.gop.n + ' ' + unitName('line', b.gop.n, 'auto') + L(' autoline', ' of autoline') : GEAR[b.gop.kind][S.lang === 'no' ? 'no' : 'en'].toLowerCase()), ''];
       if (b.status === 'fishing'){ const w = pl.wps[pl.idx - 1], i = w && w.jc ? w.jc : null, until = b.fishUntil != null ? ck(b.fishUntil / 60) : null; return [(pl.noJig ? L('Venter ved redskapet', 'Waiting by the gear') : L('Jukser', 'Jigging') + (i ? L(' på plass ', ' at place ') + i : '')) + (until ? L(' til kl. ', ' until ') + until : ''), '']; }
       const left = pl.wps.slice(pl.idx).some(w => w.act || w.fish > 0); return left ? [L('På vei ut', 'On the way out'), ''] : [L('På vei til ', 'On the way to ') + (pl.wps[pl.wps.length - 1].port ? nm(pl.wps[pl.wps.length - 1].port) : L('ankerplassen', 'the anchorage')), ''];
     }
@@ -57,7 +58,7 @@ const PLAN2UI = (() => {
       if (cs && cs.k === 'juks' && b.status === 'fishing' && b.fishUntil != null && S.plan && S.plan.ops){ const u = b.fishUntil / 60; day = Object.assign({}, r.day, {steps:r.day.steps.map((s, i) => i === now ? Object.assign({}, s, {until:u, h:Math.max(0, u - s.t)}) : s)}); }
       return {day, now, label:L('I dag', 'Today')}; }
     // a plan not made yet has no plant: the nearest one to the places stands in, so the day can be read before Start
-    let oo = o; if (!o.M){ const P = o.places, mid = P.length ? {x:P.reduce((a, q) => a + q.x, 0) / P.length, y:P.reduce((a, q) => a + q.y, 0) / P.length} : (portById(o.home) || {p:S.boat.pos}).p, M = o.land.mode === 'port' && o.land.port ? portById(o.land.port) : PORTS.filter(q => q.mottak).sort((x, y) => dist(x.p, mid) - dist(y.p, mid))[0]; if (M) oo = Object.assign({}, o, {M:M.id}); }
+    let oo = o; if (!o.M){ const P = o.places, mid = P.length ? {x:P.reduce((a, q) => a + q.x, 0) / P.length, y:P.reduce((a, q) => a + q.y, 0) / P.length} : (portById(o.home) || {p:S.boat.pos}).p, M = o.land.mode === 'port' && o.land.port ? portById(o.land.port) : p2Plants().sort((x, y) => dist(x.p, mid) - dist(y.p, mid))[0]; if (M) oo = Object.assign({}, o, {M:M.id}); }
     // the next day is reckoned from the state at its departure, not now: the crew's fatigue and your energy fall and rise with the rest until then
     // (the engine lays the day anew at the departure; this is the page's estimate, as the note under the day says)
     const atSea = !o.on && S.boat.status !== 'port' && (!S.boat.anch || !!(o.paused && o.paused.sea));   // (started at sea, or paused at anchor there, the day is laid from where she lies, now: plan2Start)
@@ -79,6 +80,10 @@ const PLAN2UI = (() => {
   // each line says what sets it apart: the baiting shed (a plant), the rest for you and for the crew, and the way to the places
   function homeOpts(o){
     const b = S.boat, here = b.status === 'port' ? b.port : nearestPort(b.pos).id, p0 = portById(here).p, home = S.home || HOME0, out = [];
+    // (an ocean vessel lies between trips at a plant whose quay takes her, H2c: no naust, rorbu or small harbour)
+    if (BOAT.cls === 'hav'){ const mid = placesMid(o) || p0, ok = id => p2PlantOk(portById(id)); if (ok(here)) out.push({id:here}); if (o.home && ok(o.home) && o.home !== here) out.push({id:o.home});
+      for (const q of p2Plants().sort((a, c) => dist(a.p, mid) - dist(c.p, mid)).slice(0, 6)) if (!out.some(x => x.id === q.id)) out.push({id:q.id});
+      for (const q of out) q.d = dist(portById(q.id).p, mid); return out.sort((a, c) => a.d - c.d).slice(0, 6); }
     // (the naust is a home even where its harbour has a yard)
     const add = id => { const p = portById(id); if (!p || out.some(q => q.id === id)) return; if (id !== o.home && id !== home && portServices(p).verft) return; out.push({id}); };
     if (portById(home) && dist(portById(home).p, p0) < 80) add(home); add(here); if (o.home) add(o.home);
@@ -109,10 +114,12 @@ const PLAN2UI = (() => {
   function gearWhy(g){ if (g === 'juksa') return null; const k = PLAN2_KIND[g]; if (!rigHas(g)) return L('Båten mangler ' + GEAR[k].no.toLowerCase().replace(/r$/, '') + 'haler', 'The boat has no hauler for ' + GEAR[k].en.toLowerCase()); if (ownedUnits(k) < 1) return L('Ingen ' + GEAR[k].no.toLowerCase() + ' om bord', 'No ' + GEAR[k].en.toLowerCase() + ' aboard'); return null; }
   const lineOwn = () => ['hyse', 'bank'].map(lk => [lk, p2Units('line', lk)]).filter(x => x[1] > 0);
   const jigTxt = () => L(' · og juksa (' + p2JigGear()[0] + ')', ' · and the jig (' + p2JigGear()[1] + ')');
-  const rigVal = o => o.rig === 'juksa' ? L('Juksa (' + p2JigGear()[0] + ')', 'Jigging (' + p2JigGear()[1] + ')') : o.rig === 'line' ? L('Line: ', 'Longline: ') + (lineOwn().map(x => x[1] + ' ' + L(LINE_KINDS[x[0]].no, LINE_KINDS[x[0]].en).toLowerCase()).join(', ') || L('ingen stamper', 'no tubs')) + (o.jig ? jigTxt() : '') : rigName(o.rig) + ', ' + ownedUnits(PLAN2_KIND[o.rig]) + ' ' + unitName(PLAN2_KIND[o.rig], ownedUnits(PLAN2_KIND[o.rig])) + (o.jig ? jigTxt() : '');
+  const rigVal = o => p2Auto(o) ? L('Autoline: ', 'Autoline: ') + p2Units('line', 'auto') + ' ' + unitName('line', p2Units('line', 'auto'), 'auto') + L(' på magasinene', ' on the magazines') : o.rig === 'juksa' ? L('Juksa (' + p2JigGear()[0] + ')', 'Jigging (' + p2JigGear()[1] + ')') : o.rig === 'line' ? L('Line: ', 'Longline: ') + (lineOwn().map(x => x[1] + ' ' + L(LINE_KINDS[x[0]].no, LINE_KINDS[x[0]].en).toLowerCase()).join(', ') || L('ingen stamper', 'no tubs')) + (o.jig ? jigTxt() : '') : rigName(o.rig) + ', ' + ownedUnits(PLAN2_KIND[o.rig]) + ' ' + unitName(PLAN2_KIND[o.rig], ownedUnits(PLAN2_KIND[o.rig])) + (o.jig ? jigTxt() : '');
   function rigBody(o){
-    const h = ['juksa', 'line', 'garn', 'teiner'].map(g => { const why = gearWhy(g), k = PLAN2_KIND[g]; return BIG('p2-rig', g === 'juksa' ? L('Bare juksa', 'Jigging only') : rigName(g), why || (g === 'juksa' ? L('Ut, fyll lasten, lever, og ut igjen', 'Out, fill the hold, land, and out again') : ownedUnits(k) + ' ' + unitName(k, ownedUnits(k)) + L(' eies', ' owned')), o.rig === g, 'data-g="' + g + '"', !!why); }).join('');
-    const jig = p2Kind(o) ? '<h4 style="margin-top:12px">' + L('Jukse i tillegg mens redskapet står?', 'Jig as well while the gear stands?') + '</h4>' + BIG('p2-jig', L('Ja', 'Yes'), L('Juksa får timene til ståtida er ute, og resten av dagen.', 'The jig gets the hours until the soak is up, and the rest of the day.'), o.jig, 'data-v="1"') + BIG('p2-jig', L('Nei, bare redskapet', 'No, only the gear'), L('Båten venter ved redskapet', 'The boat waits by the gear'), !o.jig, 'data-v="0"') : '';
+    // (an ocean vessel has only her own gear, H2a: the autoliner her autoline, with the lenker on the magazines)
+    const rigs = BOAT.cls === 'hav' ? ['juksa', 'line', 'garn', 'teiner'].filter(g => (VESSELS[S.boat.type].rigs || []).includes(g)) : ['juksa', 'line', 'garn', 'teiner'];
+    const h = rigs.map(g => { const why = gearWhy(g), k = PLAN2_KIND[g], au = g === 'line' && !!(BOAT.autoHooks && autoL()); return BIG('p2-rig', g === 'juksa' ? L('Bare juksa', 'Jigging only') : au ? L('Autoline', 'Autoline') : rigName(g), why || (g === 'juksa' ? L('Ut, fyll lasten, lever, og ut igjen', 'Out, fill the hold, land, and out again') : au ? p2Units('line', 'auto') + ' ' + unitName('line', 2, 'auto') + L(' à 5 000 krok, egnet av maskinen når de går ut', ' of 5,000 hooks, baited by the machine as they go out') : ownedUnits(k) + ' ' + unitName(k, ownedUnits(k)) + L(' eies', ' owned')), o.rig === g, 'data-g="' + g + '"', !!why); }).join('');
+    const jig = p2Kind(o) && p2Jig(Object.assign({}, o, {jig:true})) ? '<h4 style="margin-top:12px">' + L('Jukse i tillegg mens redskapet står?', 'Jig as well while the gear stands?') + '</h4>' + BIG('p2-jig', L('Ja', 'Yes'), L('Juksa får timene til ståtida er ute, og resten av dagen.', 'The jig gets the hours until the soak is up, and the rest of the day.'), o.jig, 'data-v="1"') + BIG('p2-jig', L('Nei, bare redskapet', 'No, only the gear'), L('Båten venter ved redskapet', 'The boat waits by the gear'), !o.jig, 'data-v="0"') : '';
     return '<p class="ph-note">' + L('Ett redskap om gangen, fordelt i lenker på plassene, og juksa ved siden av. Alt redskap i sjøen må være trukket før båten rigges om. Juksa fisker med det som er valgt under Beholdning (nå ' + p2JigGear()[0] + '); lina settes med den typen hvert felt har, og agnet er det stampene er egnet med.', 'One kind of gear at a time, in strings at the places, and the jig beside it. All gear in the sea must be hauled before the boat is re-rigged. The jig fishes with what is chosen under Inventory (now ' + p2JigGear()[1] + '); the line goes out in the kind each field has, with the bait its tubs were baited with.') + '</p>' + h + jig;
   }
   // ---- Plasser: the list in the order she works them
@@ -121,14 +128,16 @@ const PLAN2UI = (() => {
   // what the places lack for the plan to go, said on the row (U3): a field for the gear, or a jig place
   const placesMiss = o => p2Kind(o) ? (o.places.some(q => q.k === 'felt') ? '' : L('mangler felt', 'no field yet')) : (o.places.some(q => q.k === 'juks') ? '' : L('mangler juksplass', 'no jig place yet'));
   const SOAKSTEP = {line:1, garn:6, teine:12};
+  // the autoline's note on the Plasser row (H2c): each field's lenker as one string, the soak, and the loop round the clock
+  const autoNote = () => '<p class="ph-note">' + L('Hvert felt får lenkene sine som én streng (5 000 krok og 6,5 km per lenke). Lagene setter, lar dem stå ståtida, trekker dem og setter dem ut igjen med én gang, døgnet rundt, til lasten, agnet, drivstoffet eller provianten sier stopp. Feltene må ligge minst 4 nm fra grunnlinjen (høstingsforskriften § 26).', 'Each field gets its lenker as one string (5,000 hooks and 6.5 km a lenke). The teams set them, let them stand the soak, haul them and set them out again at once, round the clock, until the hold, the bait, the fuel or the provisions say stop. The fields must lie at least 4 nm from the baseline (the harvesting regulations § 26).') + '</p>';
   function placesBody(o){
     const kind = p2Kind(o), h = [], home = portById(o.home), fi = {felt:0, juks:0};
-    h.push('<p class="ph-note">' + L('Plassene i den rekkefølgen båten går dem. Tallene er dine egne fra de siste to ukene.', 'The places in the order the boat works them. The numbers are your own from the last two weeks.') + '</p>');
+    h.push('<p class="ph-note">' + L('Plassene i den rekkefølgen båten går dem. Tallene er dine egne fra de siste to ukene.', 'The places in the order the boat works them. The numbers are your own from the last two weeks.') + '</p>'); if (p2Auto(o)) h.push(autoNote());
     o.places.forEach((q, i) => { fi[q.k]++; const isF = q.k === 'felt';
       h.push('<div class="dr-pl"><div class="dr-plh"><b>' + (isF ? L('Felt ', 'Field ') : L('Juksplass ', 'Jig place ')) + fi[q.k] + '</b><small>' + (home ? km(home.p, q) + L(' fra hjem · ', ' from home · ') : '') + own(q, isF ? kind : null) + '</small></div>' +
-        '<div class="dr-plc">' + (isF ? (kind === 'line' && lineOwn().length > 1 ? '<span>' + T('p2-plk', L(LINE_KINDS[q.lk || 'hyse'].no, LINE_KINDS[q.lk || 'hyse'].en), false, 'data-id="' + q.id + '"') + '</span>' : '') + '<span>' + STEP('p2-pn', q.n + ' ' + unitName(kind, q.n) + (kind === 'line' && lineOwn().length > 1 ? '' : '') + ' <small>' + L('av ', 'of ') + Math.max(0, p2Left(o, q)) + '</small>', ' data-id="' + q.id + '"') + '</span><span>' + STEP('p2-ps', q.soak + L(' t ståtid', ' h soak'), ' data-id="' + q.id + '"') + '</span>' : '') +
+        '<div class="dr-plc">' + (isF ? (kind === 'line' && lineOwn().length > 1 ? '<span>' + T('p2-plk', L(LINE_KINDS[q.lk || 'hyse'].no, LINE_KINDS[q.lk || 'hyse'].en), false, 'data-id="' + q.id + '"') + '</span>' : '') + '<span>' + STEP('p2-pn', q.n + ' ' + unitName(kind, q.n, q.lk) + ' <small>' + L('av ', 'of ') + Math.max(0, p2Left(o, q)) + '</small>', ' data-id="' + q.id + '"') + '</span><span>' + STEP('p2-ps', q.soak + L(' t ståtid', ' h soak'), ' data-id="' + q.id + '"') + '</span>' : '') +
         '<span>' + T('p2-pup', '↑', false, 'data-i="' + i + '"' + (i ? '' : ' disabled')) + T('p2-pdn', '↓', false, 'data-i="' + i + '"' + (i < o.places.length - 1 ? '' : ' disabled')) + T('p2-pdel', L('Fjern', 'Remove'), false, 'data-id="' + q.id + '"') + '</span></div></div>'); });
-    if (o.places.length < DRP2.placesMax){ if (kind) h.push(B('p2-add', L('+ Felt for ', '+ Field for ') + GEAR[kind].no.toLowerCase(), 'data-k="felt"', adding === 'felt' ? 'p' : '')); if (p2Jig(o)) h.push(B('p2-add', L('+ Juksplass', '+ Jig place'), 'data-k="juks"', adding === 'juks' ? 'p' : '')); }
+    if (o.places.length < DRP2.placesMax){ if (kind) h.push(B('p2-add', L('+ Felt for ', '+ Field for ') + (p2Auto(o) ? L('autoline', 'the autoline') : L(GEAR[kind].no.toLowerCase(), GEAR[kind].en.toLowerCase())), 'data-k="felt"', adding === 'felt' ? 'p' : '')); if (p2Jig(o)) h.push(B('p2-add', L('+ Juksplass', '+ Jig place'), 'data-k="juks"', adding === 'juks' ? 'p' : '')); }
     if (adding) h.push(addBody(o, adding));
     if (typeof PLANMAP !== 'undefined') h.push(B('p2-map', L('Velg i kartet …', 'Choose in the chart …'), '', 'p'));
     return h.join('');
@@ -153,16 +162,26 @@ const PLAN2UI = (() => {
     if (k === 'felt'){ const lk = kind === 'line' ? p2LineKind(o) : null, probe = {k:'felt', lk, n:0}, left = p2Left(o, probe);
       if (left < 1){ toast(L('Alle ' + unitName(kind, 2) + (kind === 'line' ? ' ' + LINE_KINDS[lk].no.toLowerCase() : '') + ' er alt fordelt på feltene. Ta fra et annet felt først.', 'All the ' + unitName(kind, 2) + (kind === 'line' ? ' of ' + LINE_KINDS[lk].en.toLowerCase() : '') + ' are already on the fields. Take from another field first.')); return false; }
       const n = kind === 'garn' ? Math.min(left, (S.pgear.nets[0] || {n:6}).n) : kind === 'line' ? Math.min(left, Math.max(2, Math.round(left / 2))) : Math.min(left, 10);
-      o.places.push({id:plan2Sid(), k:'felt', x:q.x, y:q.y, n, soak:DRP2.soakDef[kind], hdg:null, lk}); }
+      o.places.push({id:plan2Sid(), k:'felt', x:q.x, y:q.y, n, soak:p2SoakDef(o), hdg:null, lk}); }
     else o.places.push({id:plan2Sid(), k:'juks', x:q.x, y:q.y});
     return true;
   }
   // ---- Levering
   const whenName = w => w === 'trip' ? L('hver tur', 'every trip') : w === 'days' ? L('hvert ' + (o => o)(2) + '. døgn', 'every 2nd day') : L('når lasten er full', 'when the hold is full');
-  const landVal = o => (o.land.mode === 'port' && o.land.port ? nm(o.land.port) : L('Nærmeste mottak', 'The nearest plant') + (o.M && plan2Made(o) ? ' (' + nm(o.M) + ')' : '')) + ' · ' + (o.land.when === 'days' ? L('hvert ' + o.land.days + '. døgn', 'every ' + o.land.days + ' days') : whenName(o.land.when));
+  // the ocean vessel's landing (H2c): the plant (one that takes her), and how long a trip lasts: until something is spent, or N days at most
+  const landHav = (o, near) => { const h = ['<h4>' + L('Hvor', 'Where') + '</h4>', BIG('p2-land-mode', L('Nærmeste mottak', 'The nearest plant'), L('Det av mottakene som tar imot havbåten, som skipet når raskest fra feltene', 'The one of the plants that take the ocean vessel the ship reaches soonest from the grounds'), o.land.mode === 'near', 'data-v="near"')];
+    for (const x of near) h.push(BIG('p2-land-port', x.q.name, fmt(x.d / NM, 0) + L(' nm fra plassene', ' nm from the grounds'), o.land.mode === 'port' && o.land.port === x.q.id, 'data-p="' + x.q.id + '"'));
+    h.push('<h4 style="margin-top:12px">' + L('Turen varer', 'The trip lasts') + '</h4>');
+    h.push(BIG('p2-land-when', L('Til noe tar slutt', 'Until something is spent'), L('Lasten ' + Math.round(DRP2.hav.full * 100) + ' % full, eller agnet, drivstoffet eller provianten slutt. Så trekkes lenkene inn, og skipet går til mottaket.', 'The hold ' + Math.round(DRP2.hav.full * 100) + ' % full, or the bait, the fuel or the provisions spent. Then the lenker are hauled home, and the ship goes to the plant.'), o.land.when !== 'days', 'data-v="full"'));
+    h.push(BIG('p2-land-when', L('Høyst ' + o.land.days + ' døgn', 'At most ' + o.land.days + ' days'), L('Eller når noe tar slutt før. 6–7 uker er vanlig.', 'Or when something is spent before. 6-7 weeks is usual.'), o.land.when === 'days', 'data-v="days"'));
+    if (o.land.when === 'days') h.push('<div class="ph-kv dr-kv"><span>' + L('Høyst', 'At most') + '</span><span>' + STEP('p2-land-days', o.land.days + L(' døgn', ' days')) + '</span></div>');
+    h.push('<p class="ph-note">' + L('Ved mottaket losses fangsten på paller, skiftet går i land med lotten og det andre mønstrer på, skipet bunkrer og får proviant og agn for neste tur, og går ut igjen.', 'At the plant the catch is landed on pallets, the crew signs off with the share and the other signs on, the ship bunkers and takes provisions and bait for the next trip, and goes out again.') + '</p>');
+    return h.join(''); };
+  const landVal = o => p2Lag() ? (o.land.mode === 'port' && o.land.port ? nm(o.land.port) : L('Nærmeste mottak', 'The nearest plant') + (o.M && plan2Made(o) ? ' (' + nm(o.M) + ')' : '')) + ' · ' + (o.land.when === 'days' ? L('turer på høyst ' + o.land.days + ' døgn', 'trips of at most ' + o.land.days + ' days') : L('til noe tar slutt', 'until something is spent')) : (o.land.mode === 'port' && o.land.port ? nm(o.land.port) : L('Nærmeste mottak', 'The nearest plant') + (o.M && plan2Made(o) ? ' (' + nm(o.M) + ')' : '')) + ' · ' + (o.land.when === 'days' ? L('hvert ' + o.land.days + '. døgn', 'every ' + o.land.days + ' days') : whenName(o.land.when));
   function landBody(o){
     const P = o.places, mid = P.length ? {x:P.reduce((a, q) => a + q.x, 0) / P.length, y:P.reduce((a, q) => a + q.y, 0) / P.length} : (portById(o.home) || {p:S.boat.pos}).p;
-    const near = PORTS.filter(q => q.mottak).map(q => ({q, d:dist(q.p, mid)})).sort((x, y) => x.d - y.d).slice(0, 4);
+    const near = p2Plants().map(q => ({q, d:dist(q.p, mid)})).sort((x, y) => x.d - y.d).slice(0, 4);
+    if (p2Lag()) return landHav(o, near);
     const h = ['<h4>' + L('Hvor', 'Where') + '</h4>', BIG('p2-land-mode', L('Nærmeste mottak', 'The nearest plant'), L('Det av de nærmeste plassene båten når raskest', 'The one of the nearest the grounds the boat reaches soonest'), o.land.mode === 'near', 'data-v="near"')];
     for (const x of near) h.push(BIG('p2-land-port', x.q.name, fmt(x.d / NM, 0) + L(' nm fra plassene', ' nm from the grounds'), o.land.mode === 'port' && o.land.port === x.q.id, 'data-p="' + x.q.id + '"'));
     h.push('<h4 style="margin-top:12px">' + L('Når', 'When') + '</h4>');
@@ -174,18 +193,23 @@ const PLAN2UI = (() => {
   }
   // ---- Vær
   const WXP = {safe:{wind:10, hs:1.5, no:'Forsiktig', en:'Careful'}, normal:{wind:13, hs:2.5, no:'Vanlig', en:'Normal'}, tough:{wind:16, hs:3.5, no:'Tøff', en:'Rough'}};
-  const hsMax = () => Math.round(BOAT.risk[1] * 0.95 * 10) / 10, windMax = () => Math.round(BOAT.risk[2] || 20);
+  // (an ocean vessel, H2c: the gear's working limit up to her lying-to limit, 05-vessels.js windLim and seaLim; the presets for the ocean,
+  // after HI's cruise reports on autoliners fishing on through gale and storm and the accident reports of longliners hauling in 15-20 m/s)
+  const hav = () => BOAT.cls === 'hav', WXN = () => hav() ? DRP2.hav.wx : WXP;
+  const hsMax = () => hav() ? Math.round(seaLim() * 10) / 10 : Math.round(BOAT.risk[1] * 0.95 * 10) / 10, windMax = () => hav() ? Math.round(windLim()) : Math.round(BOAT.risk[2] || 20);
   // a preset as this boat takes it: never over her own limits, as + stops there (GUI review F5: «Tøff» gave 16 m/s on a boat that takes 15)
-  const wxOf = k => ({wind:Math.min(WXP[k].wind, windMax()), hs:Math.min(WXP[k].hs, hsMax())});
+  const wxOf = k => ({wind:Math.min(WXN()[k].wind, windMax()), hs:Math.min(WXN()[k].hs, hsMax())});
   const wxVal = o => L('Inntil ', 'Up to ') + o.wx.wind + ' m/s ' + L('og', 'and') + ' ' + fmt(Math.min(o.wx.hs, hsMax()), 1) + ' m';
   function wxBody(o){
     return '<div class="ph-kv dr-kv"><span>' + L('Vind', 'Wind') + '</span><span>' + STEP('p2-wx-w', o.wx.wind + ' m/s') + '</span></div><div class="ph-kv dr-kv"><span>' + L('Sjø', 'Sea') + '</span><span>' + STEP('p2-wx-h', fmt(o.wx.hs, 1) + ' m') + '</span></div>' +
       '<div class="ops-days">' + Object.keys(WXP).map(k => { const P = wxOf(k); return T('p2-wx-preset', L(WXP[k].no, WXP[k].en) + ' ' + P.wind + '/' + fmt(P.hs, 1), o.wx.wind === P.wind && o.wx.hs === P.hs, 'data-v="' + k + '"'); }).join('') + '</div>' +
-      '<p class="ph-note">' + L('Over grensene venter båten hjemme til varselet for de neste timene er under. Blir det verre ute, går den i ly samme vei tilbake. Båten tåler ' + fmt(hsMax(), 1) + ' m sjø, og den grensen gjelder uansett.', 'Over the limits the boat waits at home until the next hours\' forecast is under. If it gets worse out there, she goes to shelter back the way she came. The boat takes ' + fmt(hsMax(), 1) + ' m of sea, and that limit holds regardless.') + '</p>';
+      (hav() ? '<p class="ph-note">' + L('Grensene gjelder arbeidet med redskapet. Over dem stopper lagene settingen og draget, og skipet venter ved lina. Over ' + windMax() + ' m/s eller ' + fmt(hsMax(), 1) + ' m sjø ligger skipet bi med baugen mot sjøen til det løyer. Det går ikke i havn for været.', 'The limits are for working the gear. Over them the teams stop setting and hauling, and the ship waits by the line. Over ' + windMax() + ' m/s or ' + fmt(hsMax(), 1) + ' m of sea the ship lies to, head to the sea, until it eases. She does not run for port for the weather.') + '</p>' :
+      '<p class="ph-note">' + L('Over grensene venter båten hjemme til varselet for de neste timene er under. Blir det verre ute, går den i ly samme vei tilbake. Båten tåler ' + fmt(hsMax(), 1) + ' m sjø, og den grensen gjelder uansett.', 'Over the limits the boat waits at home until the next hours\' forecast is under. If it gets worse out there, she goes to shelter back the way she came. The boat takes ' + fmt(hsMax(), 1) + ' m of sea, and that limit holds regardless.') + '</p>');
   }
   // ---- Rytme
-  const rhythmVal = o => o.rhythm === 'watch' ? L('Døgndrift, to vakter à 12 t', 'Round the clock, two watches of 12 h') : o.rhythm === 'multi' ? L('Turer på ' + o.days + ' døgn, ut kl. ', 'Trips of ' + o.days + ' days, out at ') + driftClock(o.dep) : L('Dagdrift, ut kl. ', 'Day trips, out at ') + driftClock(o.dep);
+  const rhythmVal = o => p2Lag() ? L('Døgndrift med lagene, seks og seks', 'Round the clock with the teams, six and six') : o.rhythm === 'watch' ? L('Døgndrift, to vakter à 12 t', 'Round the clock, two watches of 12 h') : o.rhythm === 'multi' ? L('Turer på ' + o.days + ' døgn, ut kl. ', 'Trips of ' + o.days + ' days, out at ') + driftClock(o.dep) : L('Dagdrift, ut kl. ', 'Day trips, out at ') + driftClock(o.dep);
   function rhythmBody(o){
+    if (p2Lag()) return BIG('p2-rhythm', L('Døgndrift med lagene', 'Round the clock with the teams'), L('Dekkslaget og fabrikklaget går seks og seks: 1. vakt 00–06 og 12–18, 2. vakt 06–12 og 18–24. Skipperen og styrmannen har broa hver sin vakt. Er du om bord, går du dagvakta og sover i køya om natta.', 'The deck and factory teams go six and six: 1st watch 00–06 and 12–18, 2nd watch 06–12 and 18–24. The skipper and the mate have the bridge a watch each. When you are aboard, you keep the day watch and sleep in the bunk at night.'), true, 'data-v="watch"');
     const st = plan2State(o), aboard = st.crew.length + (st.me.aboard ? 1 : 0);
     // (the boat's own limits first, GUI review U2: a boat that can never go round the clock says so, not «you are three»)
     const wWhy = plan2WatchWhy(st, aboard, true), mWhy = st.bunks > 0 ? null : L('Krever køyer om bord', 'Needs bunks aboard');
@@ -197,12 +221,14 @@ const PLAN2UI = (() => {
   }
   // ---- Mannskap
   function crewVal(o){
+    const G = p2Lag() ? lagOf() : null; if (G) return L('Skift ' + lagShName(G.on) + ' om bord, ' + lagN() + ' mann', 'Crew ' + lagShName(G.on) + ' aboard, ' + lagN() + ' men') + (meAboard() ? L(', og du', ', and you') : '');
     const sk = crewSkipper(), mt = crewMate(), f = c => c.name.split(' ')[0];
     if (meAboard()) return L('Du er skipper', 'You are the skipper') + (mt ? L(', ' + f(mt) + ' er styrmann', ', ' + f(mt) + ' is the mate') : '');
     if ((VESSELS[S.boat.type].crewMax || 0) < 2) return L('Går bare med deg om bord', 'Runs only with you aboard');
     return (sk ? L('Skipper ', 'Skipper ') + f(sk) : L('Ingen skipper', 'No skipper')) + ' · ' + (mt && mt !== sk ? L('styrmann ', 'mate ') + f(mt) : L('ingen styrmann', 'no mate'));
   }
   function crewBody(o){
+    if (p2Lag()) return '<p class="ph-note">' + L('Havbåten har sine egne lag: to skift som bytter ved hver levering, med skipper, styrmann, maskinister, kokk, bas, dekkslag og fabrikklag. Planen går med dem, med eller uten deg om bord.', 'The ocean vessel has her own teams: two crews that change at each landing, with a skipper, a mate, engineers, a cook, a bosun, a deck team and a factory team. The plan runs with them, with or without you aboard.') + '</p>' + B('p2-crew', L('Til Mannskap-siden', 'To the Crew page'));
     const one = (VESSELS[S.boat.type].crewMax || 0) < 2;
     return '<p class="ph-note">' + (one ? L('Båten har plass til bare én i mannskapet. Planen går derfor bare når du er om bord, og venter mens du er i land.', 'The boat has room for only one crew. So the plan runs only when you are aboard, and waits while you are ashore.')
       : L('Når du er om bord, er du skipper og går dagvakta. Når du ikke er det, må både en skipper og en styrmann være utnevnt. Det gjør du på Mannskap-siden.', 'When you are aboard, you are the skipper and keep the day watch. When you are not, both a skipper and a mate must be appointed. You do that on the Crew page.')) + '</p>' + (one ? '' : B('p2-crew', L('Til Mannskap-siden', 'To the Crew page')));
@@ -249,7 +275,7 @@ const PLAN2UI = (() => {
       '<div class="ph-kv"><span>' + L('Arter, 7 døgn', 'Species, 7 days') + '</span><span>' + top(W) + '</span></div><div class="ph-kv"><span>' + L('Mottak, 7 døgn', 'Plants, 7 days') + '</span><span>' + ports(W) + '</span></div>' +
       '<div class="dr-w7">' + days7.map(d => { const k = dkg(St.days.find(y => y.d === d)); return '<i style="height:' + Math.max(2, Math.round(k / mx * 100)) + '%" title="' + fmt(k, 0) + ' kg"></i>'; }).join('') + '</div><div class="dr-w7l">' + days7.map(d => '<span>' + d.slice(8) + '.</span>').join('') + '</div>' +
       (A.trips ? '' : '<p class="ph-note">' + L('Ingen leveringer på planen ennå.', 'No landings on the plan yet.') + '</p>') +
-      (hold >= 1 && (o.land || {}).when !== 'trip' ? '<p class="ph-note">' + L('Fangsten holdes i is om bord til den leveres etter Levering-raden: ' + ((o.land || {}).when === 'days' ? 'hvert ' + o.land.days + '. døgn, ' : '') + 'når lasten er ' + Math.round(DRP2.full * 100) + ' % full, eller når fisken må leveres for ferskhetens skyld.', 'The catch is kept in ice aboard until it is landed by the Landing row: ' + ((o.land || {}).when === 'days' ? 'every ' + o.land.days + ' days, ' : '') + 'when the hold is ' + Math.round(DRP2.full * 100) + ' % full, or when the fish must go for the sake of freshness.') + '</p>' : '') + '</div>';
+      (hold >= 1 && p2Lag() ? '<p class="ph-note">' + L('Fangsten sløyes og fryses om bord og leveres når turen er over (Levering-raden).', 'The catch is gutted and frozen aboard and landed when the trip is over (the Landing row).') + '</p>' : '') + (hold >= 1 && !p2Lag() && (o.land || {}).when !== 'trip' ? '<p class="ph-note">' + L('Fangsten holdes i is om bord til den leveres etter Levering-raden: ' + ((o.land || {}).when === 'days' ? 'hvert ' + o.land.days + '. døgn, ' : '') + 'når lasten er ' + Math.round(DRP2.full * 100) + ' % full, eller når fisken må leveres for ferskhetens skyld.', 'The catch is kept in ice aboard until it is landed by the Landing row: ' + ((o.land || {}).when === 'days' ? 'every ' + o.land.days + ' days, ' : '') + 'when the hold is ' + Math.round(DRP2.full * 100) + ' % full, or when the fish must go for the sake of freshness.') + '</p>' : '') + '</div>';
   }
   // ---- the page
   function fresh(){
@@ -257,11 +283,13 @@ const PLAN2UI = (() => {
     let home = plan2RestOk(here) && (isRorbu(here) || here === (S.home || HOME0) || isBerth(here)) ? here : bunk && hv ? hv.place.id : null;
     if (!home){ try { const r = rorbuSites(portById(here).p, 40)[0]; if (r) home = r.id; } catch (e){} }
     if (!home && hv) home = hv.place.id; if (!home && plan2RestOk(here)) home = here;
+    // (an ocean vessel: here when the quay takes her, else the nearest plant that does, H2c)
+    if (BOAT.cls === 'hav'){ const P0 = portById(here).p; home = p2PlantOk(portById(here)) ? here : ((p2Plants().sort((a, c) => dist(a.p, P0) - dist(c.p, P0))[0]) || {id:here}).id; }
     const rig = RIGS[b.rig] && rigHas(b.rig) ? b.rig : 'juksa', kind = PLAN2_KIND[rig] || null, o = plan2New({home:home || here, rig});
     if (isBerth(o.home)) havnHold(o.home);
-    if (kind) for (const s of mySets().filter(s => s.kind === kind).slice(0, DRP2.placesMax - 1)){ const m = setMid(s); o.places.push({id:plan2Sid(), k:'felt', x:m.x, y:m.y, n:s.n, soak:DRP2.soakDef[kind], hdg:null}); }
+    if (kind) for (const s of mySets().filter(s => s.kind === kind).slice(0, DRP2.placesMax - 1)){ const m = setMid(s); o.places.push({id:plan2Sid(), k:'felt', x:m.x, y:m.y, n:s.n, soak:p2SoakDef(o), hdg:null, lk:kind === 'line' ? s.lk || null : null}); }
     const p0 = portById(o.home).p, m = (S.marks || []).filter(x => !x.g && S.t - x.t < PLAN_MEMO && dist(x, p0) < 30).sort((a, c) => (c.kgph || 0) - (a.kgph || 0))[0];
-    if (m) o.places.push({id:plan2Sid(), k:'juks', x:m.x, y:m.y});
+    if (m && p2Jig(o)) o.places.push({id:plan2Sid(), k:'juks', x:m.x, y:m.y});
     return o;
   }
   function page(){
@@ -276,7 +304,7 @@ const PLAN2UI = (() => {
       row('land', L('Levering', 'Landing'), landVal(o), () => landBody(o)) +
       row('wx', L('Vær', 'Weather'), wxVal(o), () => wxBody(o)) +
       row('rhythm', L('Rytme', 'Rhythm'), rhythmVal(o), () => rhythmBody(o)) +
-      row('crew', L('Mannskap', 'Crew'), crewVal(o), () => crewBody(o), !meAboard() && (VESSELS[S.boat.type].crewMax || 0) >= 2 && !(crewSkipper() && crewMate() && crewSkipper() !== crewMate())) + '</div>');
+      row('crew', L('Mannskap', 'Crew'), crewVal(o), () => crewBody(o), !meAboard() && !p2Lag() && (VESSELS[S.boat.type].crewMax || 0) >= 2 && !(crewSkipper() && crewMate() && crewSkipper() !== crewMate())) + '</div>');
     h.push(stats(o));
     const others = (S.fleet || []).filter(v => v.id !== S.cur);
     h.push('<div class="ph-card">' + (others.length ? '<h4>' + L('Kopier planen til en annen båt', 'Copy the plan to another vessel') + '</h4><div class="ops-days">' + others.map(v => T('p2-copy', vget(v, 'boatName'), false, 'data-id="' + v.id + '"')).join('') + '</div>' : '') + B('p2-reset', L('Slett driftsplanen', 'Delete the plan'), '', 'dr-del') + '</div></div>');
@@ -316,15 +344,15 @@ const PLAN2UI = (() => {
     if (a === 'p2-add'){ adding = adding === d.k ? null : d.k; return true; }
     if (a === 'p2-addp'){ const q = (sugg || [])[+d.i]; if (!q) return false; if (put(o, adding, q)) adding = null; return true; }
     if (a === 'p2-map'){ if (typeof PLANMAP !== 'undefined') PLANMAP.open(S.cur); return true; }
-    if (a === 'p2-pn'){ const q = pl(d.id); if (!q) return false; const mx = Math.max(1, Math.min(p2Left(o, q), (BOAT.gearMax || {})[kind === 'line' ? 'stamp' : kind] || 99)); const n = clamp(q.n + (+d.d), 1, mx); if (n === q.n && +d.d > 0) toast(L('Båten har ikke flere ' + unitName(kind, 2) + (kind === 'line' ? ' ' + LINE_KINDS[q.lk || 'hyse'].no.toLowerCase() : '') + ' til dette feltet.', 'The boat has no more ' + unitName(kind, 2) + ' for this field.')); q.n = n; return true; }
+    if (a === 'p2-pn'){ const q = pl(d.id); if (!q) return false; const mx = Math.max(1, Math.min(p2Left(o, q), (q.lk === 'auto' ? 0 : (BOAT.gearMax || {})[kind === 'line' ? 'stamp' : kind]) || 99)); const n = clamp(q.n + (+d.d), 1, mx); if (n === q.n && +d.d > 0) toast(L('Båten har ikke flere ' + unitName(kind, 2, q.lk) + (kind === 'line' && q.lk !== 'auto' ? ' ' + LINE_KINDS[q.lk || 'hyse'].no.toLowerCase() : '') + ' til dette feltet.', 'The boat has no more ' + unitName(kind, 2, q.lk) + ' for this field.')); q.n = n; return true; }
     if (a === 'p2-plk'){ const q = pl(d.id); if (!q || kind !== 'line') return false; q.lk = (q.lk || 'hyse') === 'hyse' ? 'bank' : 'hyse'; q.n = clamp(q.n, 1, Math.max(1, p2Left(o, q))); return true; }
-    if (a === 'p2-ps'){ const q = pl(d.id); if (!q) return false; const st = SOAKSTEP[kind] || 1; q.soak = clamp(q.soak + st * (+d.d), st, DRP2.soak[kind][3]); return true; }
+    if (a === 'p2-ps'){ const q = pl(d.id); if (!q) return false; const st = SOAKSTEP[kind] || 1, sk = p2Soak(o); q.soak = clamp(q.soak + st * (+d.d), p2Auto(o) ? sk[0] : st, sk[3]); return true; }
     if (a === 'p2-pdel'){ const i = o.places.findIndex(q => q.id === d.id); if (i >= 0) o.places.splice(i, 1); return true; }
     if (a === 'p2-pup' || a === 'p2-pdn'){ const i = +d.i, j = a === 'p2-pup' ? i - 1 : i + 1; if (j < 0 || j >= o.places.length) return false; const t = o.places[i]; o.places[i] = o.places[j]; o.places[j] = t; return true; }
     if (a === 'p2-land-mode'){ o.land.mode = 'near'; o.land.port = null; return true; }
     if (a === 'p2-land-port'){ o.land.mode = 'port'; o.land.port = d.p; return true; }
     if (a === 'p2-land-when'){ o.land.when = d.v; return true; }
-    if (a === 'p2-land-days'){ o.land.days = clamp((o.land.days || 2) + (+d.d), 2, 7); return true; }
+    if (a === 'p2-land-days'){ o.land.days = p2Lag() ? clamp((o.land.days || DRP2.hav.days) + 7 * (+d.d), 7, 63) : clamp((o.land.days || 2) + (+d.d), 2, 7); return true; }
     if (a === 'p2-wx-w'){ o.wx.wind = clamp(o.wx.wind + (+d.d), 5, windMax()); return true; }
     if (a === 'p2-wx-h'){ o.wx.hs = clamp(Math.round((o.wx.hs + 0.5 * (+d.d)) * 10) / 10, 0.5, hsMax()); return true; }
     if (a === 'p2-wx-preset'){ if (!WXP[d.v]) return false; o.wx = wxOf(d.v); return true; }

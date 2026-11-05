@@ -71,6 +71,14 @@ async def main():
           SND.room(true, {ovn:true, tak:false}); SND.tick(); r.on = {room:SND.LV.room, fire:SND.LV.fire}; SND.room(true, {ovn:false, tak:true}); SND.tick(); r.cold = {fire:SND.LV.fire};
           SND.room(false); SND.tick(); r.off = SND.LV.room; return r; })()""")
         check(ro['on']['room'] == 1 and ro['on']['fire'] == 1 and ro['cold']['fire'] == 0 and ro['off'] == 0, 'i naustet har ovnen og taket egne lyder, og de er borte utenfor', ro)
+        # an ear that is not a number (a 3D camera gone NaN, as gfxtest makes it): the layers must not get a value that is not finite.
+        # Found by gfxtest as page errors from setTargetAtTime (04.11 and 05.11.2026); checked here on purpose, since gfxtest now puts
+        # the camera back within a second and no longer shows it (Ø2 05.11.2026). Red until ui/10e-sound.js set/place skip such a value
+        nn = await pg.evaluate("""(() => { S.settings.sound = true; S.settings.vol = 0.6; const out = [];
+          SND.testEar = {x:NaN, y:6, z:NaN, fx:NaN, fz:-1}; SND.testSrc = {boat:[0, 1, 0], npc:[{x:120, z:0, v:8, st:'out', big:false}]};
+          for (let i = 0; i < 3; i++){ try { SND.tick(); } catch (e){ out.push(String(e.message || e).slice(0, 120)); } }
+          SND.testEar = null; SND.testSrc = null; return out; })()""")
+        check(not nn, 'et øre som ikke er et tall (kameraet NaN) gir ingen feil i lyden (ui/10e-sound.js set og place)', nn[:2])
         print('errors:', errs[:5])
         await b.close()
 

@@ -53,6 +53,10 @@ async def main():
           for (const [f, ns] of Object.entries(need)) for (const n of ns) if (!P(f, n)) miss.push(f + ':' + n); return miss; })()""")
         check(not parts, 'alle delene i dekksutstyret fra Blender er med', parts)
         boats = await pg.evaluate("Object.keys(VESSELS).filter(t => VESSELS[t].cls !== 'hav')")
+        # KYST_DECK=kyst15,kyst21,hurtigsjark,sjarkny: only those boats (the crane's check alone; all the coastal boats take over 40 min
+        # under SwiftShader, and the run timed out before the crane, Ø2 05.11.2026). The checks that need every boat say so and are skipped
+        if os.environ.get('KYST_DECK'): boats = [t for t in boats if t in os.environ['KYST_DECK'].split(',')]
+        print('båter:', len(boats), boats, flush=True)
         # every coastal boat has the places its data asks for: rafts and buoys by the rules, the radar where it fits, tubs on the open
         # boats that keep the catch on deck, the crane on the boats rated for one, the rig's tubs and room for freight
         miss = await pg.evaluate("""((boats) => { const out = {}; for (const t of boats){ const V = VESSELS[t], K = geoOf(t).kit || {}, m = [], L = V.lsa;
@@ -73,6 +77,7 @@ async def main():
                     pose[(t, scene)] = False
                 st = await pg.evaluate("JSON.parse(JSON.stringify(G3._debug.kitStat))")
                 seen[(t, scene)] = st
+                print('  ', t, scene, 'kran ' + ('ja' if pose[(t, scene)] else 'NEI'), flush=True)
                 await pg.screenshot(path=os.path.join(OUT, f'deck_{t}_{scene}.png'))
         lsa = await pg.evaluate("((boats) => Object.fromEntries(boats.map(t => [t, VESSELS[t].lsa])))", boats)
         bad = {t: [seen[(t, 'fiske')]['raft'], seen[(t, 'fiske')]['buoys']] for t in boats if seen[(t, 'fiske')]['raft'] != lsa[t]['rafts'] or seen[(t, 'fiske')]['buoys'] != lsa[t]['buoys']}

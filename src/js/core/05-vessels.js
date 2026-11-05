@@ -748,9 +748,11 @@ function vesselStep(H){
   // nearest quay is far: lieTo)
   const wl = driftWx(), limW = wl ? wl.wind : windLim(), seaOver = wl ? hs > wl.hs : hs > seaLim();
   if (W <= limW && !seaOver) b.windArm = true;
-  if ((wl ? wl.shelter : S.settings.autoOn) && (W > limW || seaOver) && b.windArm && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !S.tut && !helmOn() && !b.hove){
+  // (an ocean vessel on the operations plan, on a trip or waiting at sea, lies to over her own limits too, whatever the coast setting:
+  // the plan's limits are for the gear, 06h-plan2-engine.js plan2Wx, H2c)
+  if ((wl ? wl.shelter || wl.hav : S.settings.autoOn) && (W > limW || seaOver) && b.windArm && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !S.tut && !helmOn() && !b.hove){
     b.windArm = false;
-    if (!wl && (oceanBoat() || quayFar(b))){ lieTo(W, hs); if (hooks.onLieTo) hooks.onLieTo(W, hs, limW); return; }
+    if (wl ? wl.hav : (oceanBoat() || quayFar(b))){ lieTo(W, hs); if (hooks.onLieTo) hooks.onLieTo(W, hs, limW); return; }
     startReturn(true, W, false, seaOver && W <= limW ? hs : 0);
     // say it on the screen too, with where the limit is set (Vannareid 08.10.2026: the player did not know why the boat turned)
     if (hooks.onTurnBack) hooks.onTurnBack(!!wl, seaOver && W <= limW, W, hs, limW, wl ? wl.hs : 0);

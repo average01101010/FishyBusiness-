@@ -20,6 +20,7 @@ function plan2Here(o){
 let P2_TLMIN = {t:-1e9, v:0};
 function plan2TideMin(){ if (S.t - P2_TLMIN.t < 1440) return P2_TLMIN.v; let v = Infinity; for (let k = 0; k < 15 * 24; k++) v = Math.min(v, tideCD(S.t / 60 + k)); P2_TLMIN = {t:S.t, v}; return v; }
 function plan2LegOk(o, a, ap, b, bp){
+  if (drCK(a, ap) === drCK(b, bp) || dist(a, b) < 0.005) return true;   // (no way to sail: home is the plant, H2c)
   const L = o.legs[drLK(a, ap, b, bp)]; if (!L || L.none) return false;
   const pts = [a].concat((L.w || []).map(q => ({x:q[0], y:q[1]})), [b]), tl = plan2TideMin();
   for (let i = 1; i < pts.length; i++){ const p0 = pts[i - 1], p1 = pts[i], d = dist(p0, p1), n = Math.max(1, Math.ceil(d / 0.005));
@@ -35,9 +36,9 @@ async function plan2Make(o, cb){
     try { await mapNeed(mid, 14); await mapNeed(home.p, 6); for (const q of P) await mapNeed(q, 2); } catch (e){}
     // the plant: the chosen one, or of the three nearest the grounds the one reached soonest from the nearest place
     const first = P.slice().sort((x, y) => dist(x, mid) - dist(y, mid))[0];
-    if (o.land && o.land.mode === 'port' && (portById(o.land.port) || {}).mottak) o.M = o.land.port;
+    if (o.land && o.land.mode === 'port' && p2PlantOk(portById(o.land.port))) o.M = o.land.port;
     else {
-      const near = PORTS.filter(q => q.mottak).map(q => ({q, d:dist(q.p, mid)})).sort((x, y) => x.d - y.d).slice(0, 3).map(x => x.q);
+      const near = p2Plants().map(q => ({q, d:dist(q.p, mid)})).sort((x, y) => x.d - y.d).slice(0, 3).map(x => x.q);   // (an ocean vessel: the plants whose quay takes her, H2c)
       if (!near.length) throw gL('Fant ikke noe fiskemottak.', 'Found no fish plant.');
       let M = null, mh = 1e9;
       for (const q of near){ const k = drLK(first, null, q.p, q.id); if (!o.legs[k] || o.legs[k].none){ let r = null; try { r = await leiaRoute(first, q.p, null, q.id); } catch (e){} drLegPut(o, k, r, first, q.p); }
@@ -50,7 +51,8 @@ async function plan2Make(o, cb){
     if (o.rhythm === 'multi' && big){ const np = nearestPort(mid); try { await mapNeed(np.p, 14); } catch (e){} const a = driftAnchorage(np.id); if (a) o.restA = {x:a.x, y:a.y}; }
     // the shelter port of each place: the nearest quays that are not rorbuer (the first with a way to it is kept in o.ly)
     o.ly = {}; const lyC = {};
-    for (const q of P) lyC[q.id] = PORTS.filter(p => !p.rorbu).map(p => ({p, d:dist(p.p, q)})).sort((x, y) => x.d - y.d).slice(0, 2).map(x => x.p);
+    // (an ocean vessel has none: over her limits she lies to where she is, 05-vessels.js lieTo, H2c)
+    for (const q of P) lyC[q.id] = BOAT.cls === 'hav' ? [] : PORTS.filter(p => !p.rorbu).map(p => ({p, d:dist(p.p, q)})).sort((x, y) => x.d - y.d).slice(0, 2).map(x => x.p);
     // the legs: from home and the plant to each place and back, between the places, home from the plant, and each place to its shelter
     const ks = P.map(q => q.id), ends = ['H', 'M'].concat(o.homeA ? ['Q'] : [], o.restA ? ['A'] : []), pairs = [];
     const add = (x, y) => { const a = plan2P(o, x), b = plan2P(o, y), ap = plan2Port(o, x), bp = plan2Port(o, y); if (!a || !b) return; const L = drLeg(o, a, ap, b, bp), k = drLK(a, ap, b, bp);
@@ -69,7 +71,9 @@ async function plan2Make(o, cb){
   } catch (e){ o.err = typeof e === 'string' ? e : String(e && e.message || e); o.made = null; o.building = false; console.warn('plan2Make', vid, o.err); if (cb) cb(o.err); }
 }
 // ---- what the plan says, waits for and stops at
-const plan2Say = (o, no, en) => { const sk = meAboard() ? null : crewSkipper(); msg(sk ? sk.name : gL('Driftsplan', 'Operations plan'), no, en); };
+// (who says it: the skipper you named, the ocean vessel's own skipper of the teams (H2c), or the plan)
+const p2SkName = () => { if (meAboard()) return null; const sk = crewSkipper(); return sk ? sk.name : p2Lag() ? gL('Skipperen', 'The skipper') : null; };
+const plan2Say = (o, no, en) => { msg(p2SkName() || gL('Driftsplan', 'Operations plan'), no, en); };
 // a set or haul the boat could not do at the place (05-vessels.js, the waypoint's act refused: no buoy set, no bait, a hauler missing): said once, kept for the page, and the day goes on
 function plan2ActWhy(w, why){ const o = plan2Ops(); if (!o || !o.run) return; const what = w.act && w.act.only === 'set' ? ['sette', 'set'] : ['trekke', 'haul']; if (o.run.fail && o.run.fail.no === why[0]) return; o.run.fail = {t:S.t, no:why[0], en:why[1] || why[0]}; plan2Say(o, 'Kunne ikke ' + what[0] + ' redskapet: ' + why[0], 'Could not ' + what[1] + ' the gear: ' + (why[1] || why[0])); }
 // the trip she is on cut short where she is (the page's «Hent redskapet» at sea): the boat stops, and the engine lays the day again from here
@@ -107,7 +111,7 @@ function plan2Start(o){
 function plan2Resume(o){ o.held = null; o.hold = 0; if (o.run){ o.run.wait = null; o.run.trip = null; o.run.replan = true; } }
 // who sails her: null when she can go; {wait} when she waits; else what is missing. The watch asleep in the bunks counts as aboard
 function plan2CrewWhy(o){
-  if (meAboard()) return null;
+  if (meAboard() || p2Lag()) return null;   // (the ocean vessel's teams have a skipper and a mate on the bridge, a watch each, H2b)
   const V = VESSELS[S.boat.type];
   if ((V.crewMax || 0) < 2) return {wait:true, k:'one', no:'Båten har plass til bare én i mannskapet, så planen går bare når du er om bord. Mens du er i land, venter den.', en:'The boat has room for only one crew, so the plan runs only when you are aboard. While you are ashore, it waits.'};
   const sk = crewSkipper(), mt = crewMate();
@@ -116,14 +120,19 @@ function plan2CrewWhy(o){
   return null;
 }
 // the weather the trip allows (05-vessels.js turns back over it), and the most wind and sea over the hours ahead at the trip's places
-function plan2Wx(){ const o = plan2Ops(); if (!o || !S.plan || !S.plan.ops) return null; return {wind:o.wx.wind, hs:Math.min(o.wx.hs, BOAT.risk[1] * 0.95), shelter:true}; }
-function plan2WxAhead(o, H, dur, pts){
+function plan2Wx(){ const o = plan2Ops(); if (!o) return null;
+  // (an ocean vessel on the plan, at sea on a trip or waiting there: her own lying-to limits, 4.12j, not a shelter quay; the gear's
+  // working limit is the plan's o.wx, kept by plan2Sea and plan2Go, H2c)
+  if (BOAT.cls === 'hav' && o.on && !o.held && S.boat.status !== 'port' && (S.plan ? S.plan.ops : true)) return {wind:windLim(), hs:seaLim(), shelter:false, hav:true};
+  if (!S.plan || !S.plan.ops) return null; return {wind:o.wx.wind, hs:Math.min(o.wx.hs, BOAT.risk[1] * 0.95), shelter:true}; }
+function plan2WxAhead(o, H, dur, pts, L){
   const P = (pts || []).filter(Boolean);
   const seaAt = Hk => { if (!P.length) return hsOpen(Hk); let m = 0; for (const p of P){ let v; try { v = hsAt(p, Hk); } catch (e){ v = hsOpen(Hk); } m = Math.max(m, v); } return m; };
   const windOn = Hk => { if (!P.length) return windAt(Hk); let m = 0; for (const p of P) m = Math.max(m, windAt(Hk, p)); return m; };
   let w = 0, h = 0; for (let k = 0; k <= Math.ceil(dur); k++){ w = Math.max(w, windOn(H + k)); h = Math.max(h, seaAt(H + k)); }
-  const lim = Math.min(o.wx.hs, BOAT.risk[1] * 0.95);
-  return {w, h, lim, wind:o.wx.wind, boatLim:BOAT.risk[1] * 0.95 < o.wx.hs, ok:w <= o.wx.wind && h <= lim};
+  // (L: other limits than the plan's, as the ocean vessel's lying-to limits on the way out, H2c)
+  const wind = L ? L.wind : o.wx.wind, lim = L ? L.hs : Math.min(o.wx.hs, BOAT.risk[1] * 0.95);
+  return {w, h, lim, wind, boatLim:!L && BOAT.risk[1] * 0.95 < o.wx.hs, ok:w <= wind && h <= lim};
 }
 function plan2WxWait(o, wx, H){
   const why = wx.w > wx.wind ? ['vinden blir ' + fmt(wx.w, 0) + ' m/s, og grensen er ' + wx.wind + ' m/s', 'the wind gets to ' + fmt(wx.w, 0) + ' m/s, and the limit is ' + wx.wind + ' m/s']
@@ -185,6 +194,7 @@ function plan2Step(H){
   const o = plan2Ops(), b = S.boat; if (!o || !o.on) return;
   if (!o.held && drTook()){ o.held = {t:S.t}; if (o.run) o.run.wait = null; log('Du har tatt over båten. Driftsplanen venter til du gir den tilbake.', 'You have taken the boat over. The plan waits until you give her back.'); }
   if (o.held) return;
+  if (b.hove) return;   // lying to in the storm (05-vessels.js lieTo): the plan waits until it eases and she goes on (H2c)
   if (S.plan && S.plan.ops){ plan2Sea(o, H); return; }
   if (!['port', 'idle'].includes(b.status) || S.shelter || S.plan || b.land || b.shift || (b.status === 'port' && portBusy(b))) return;
   if (b.status === 'port' && b.landWait && b.port === b.landWait) return;
@@ -210,9 +220,10 @@ function plan2Decide(o, H){
       if (holdTotal() < 0.5) return next();
       if (!mottakOpen(H)){ plan2Wait(o, 'open', 'Venter på at mottaket åpner.', 'Waiting for the plant to open.', H + 1); return; }
       if (startLanding(true)) return;   // the landing note comes with plan2Report, which steps on
+      if (holdTotal() >= 0.5) o.landFail = S.t;   // (refused: the ocean vessel's day does not try again at once, planDayAuto)
       return next();
-    case 'agn': if (!atM) return plan2Go(o, H, r.i); plan2Bait(o); return next();
-    case 'behold': case 'vakt': return next();
+    case 'agn': if (!atM) return plan2Go(o, H, r.i); plan2Bait(o, s); return next();
+    case 'behold': case 'vakt': case 'lagvakt': return next();
     case 'hjem': if (atH) return next(); return plan2Go(o, H, r.i);
     case 'egning': plan2Egn(o, s); return next();
     case 'hvile': { const until = s.until == null ? H : s.until; if (H < until - 1 / 60 || !drRested()){ const at = Math.max(until, H); const me = meAboard(); plan2Wait(o, 'rest', (me ? 'Mannskapet og du hviler til kl. ' : 'Mannskapet hviler til kl. ') + driftClock(driftHod(at)) + '.', (me ? 'The crew and you rest until ' : 'The crew rest until ') + driftClock(driftHod(at)) + '.', H < until ? until : H + 0.5); return; } return next(); }
@@ -262,7 +273,7 @@ function plan2Spent(o, H){
 }
 function plan2NewDay(o, H){
   const st = plan2State(o), day = planDay(o, H, st), r0 = o.run;
-  o.run = {day, i:0, t0:H, dayN:(r0 && r0.dayN || 0) + 1, cost0:S.stats.costs, trip:null, wait:null, closed:null};
+  o.run = {day, i:0, t0:H, dayN:(r0 && r0.dayN || 0) + 1, cost0:S.stats.costs, trip:null, wait:day.auto && r0 && r0.wait && r0.wait.k === 'wx' ? r0.wait : null, closed:null};   // (the ocean vessel's wait for the weather is said once while it lasts, H2c)
   if (o.t0 == null) o.t0 = S.t;
   // a day with nothing to sail waits for the next: the reasons are the day's own
   if (!day.steps.some(s => ['sett', 'trekk', 'juks', 'vent', 'lever', 'agn'].includes(s.k) || (s.k === 'hjem' && !plan2Here(o).port))){
@@ -279,17 +290,23 @@ function plan2Caught(o, tr){ if (!tr || tr.kg0 == null) return; const kg = Math.
 function plan2StatDay(o, d){ let D = o.stats.days.find(x => x.d === d); if (!D){ D = {d, trips:0, kg:0, kr:0, lott:0, cost:0, conf:0, sp:{}, port:{}}; o.stats.days.push(D); while (o.stats.days.length > 60) o.stats.days.shift(); } return D; }
 // ---- a trip: the steps from i0 to the next port call, as waypoints on the kept legs
 function plan2Trip(o, D, i0){
-  const here = plan2Here(o), kind = p2Kind(o), wps = [], need = [], pts = [here.p]; let prev = here.p, prevPort = here.port, h = 0, to = i0, kindK = 'fish', noJig = false, ended = false;
+  const here = plan2Here(o), kind = p2Kind(o), auto = !!D.auto, wps = [], need = [], pts = [here.p]; let prev = here.p, prevPort = here.port, h = 0, to = i0, kindK = 'fish', noJig = false, ended = false;
   // (a leg from a place at sea begins at the place itself: she has drifted off it while fishing, and the kept leg is safe from the place, not from wherever she lies)
-  const leg = (p, port) => { const L = drLeg(o, prev, prevPort, p, port); if (!L){ need.push({a:prev, ap:prevPort, b:p, bp:port || null}); prev = p; prevPort = port || null; return 0; } if (!prevPort && wps.length) wps.push({x:prev.x, y:prev.y, port:null, fish:0, leia:true}); for (const q of L.w) wps.push({x:q[0], y:q[1], port:null, fish:0, leia:true}); prev = p; prevPort = port || null; return L.h; };
+  const leg = (p, port) => { let L = drLeg(o, prev, prevPort, p, port);
+    // (from where she lies at sea with no kept leg (the ocean vessel's day is laid where her last string ended, kilometres off the place,
+    // H2c): straight over open water to the nearest place with a kept leg on, rather than a search out there)
+    if (!L && !prevPort && auto){ const via = o.places.map(q => ({q, d:dist(q, prev)})).sort((x, y) => x.d - y.d).find(x => { if (!drLeg(o, x.q, null, p, port)) return false; try { return !groundCheck(prev, x.q); } catch (e){ return false; } });
+      if (via){ if (wps.length) wps.push({x:prev.x, y:prev.y, port:null, fish:0, leia:true}); const h0 = drH(dist(prev, via.q)); prev = {x:via.q.x, y:via.q.y}; prevPort = null; L = drLeg(o, prev, null, p, port);
+        wps.push({x:prev.x, y:prev.y, port:null, fish:0, leia:true}); for (const q of L.w) wps.push({x:q[0], y:q[1], port:null, fish:0, leia:true}); prev = p; prevPort = port || null; return h0 + L.h; } }
+    if (!L){ need.push({a:prev, ap:prevPort, b:p, bp:port || null}); prev = p; prevPort = port || null; return 0; } if (!prevPort && wps.length) wps.push({x:prev.x, y:prev.y, port:null, fish:0, leia:true}); for (const q of L.w) wps.push({x:q[0], y:q[1], port:null, fish:0, leia:true}); prev = p; prevPort = port || null; return L.h; };
   const P = id => o.places.find(q => q.id === id), jn = new Set(D.steps.slice(i0).filter(s => s.k === 'juks' && s.pid).map(s => s.pid)).size; let jc = 0;
   for (let i = i0; i < D.steps.length && !ended; i++){
     const s = D.steps[i]; to = i;
-    if (s.k === 'sett'){ const q = P(s.pid), pv = D.steps[i - 1]; if (pv && pv.k === 'trekk' && pv.pid === s.pid && kind !== 'line') continue;   // nets and pots are set again by the haul
+    if (s.k === 'sett'){ const q = P(s.pid), pv = D.steps[i - 1]; if (pv && pv.k === 'trekk' && pv.pid === s.pid && (kind !== 'line' || s.again)) continue;   // nets, pots and the autoline are set again by the haul
       h += leg(q); pts.push(q); wps.push({x:q.x, y:q.y, port:null, fish:0, act:{op:'cycle', kind, n:s.n, fid:s.pid, final:true, only:'set', spec:kind === 'line' ? {lk:s.lk || q.lk || 'hyse'} : null, hdg:q.hdg != null ? q.hdg : null}}); h += s.h; }
     else if (s.k === 'trekk'){ const q = P(s.pid); h += leg(q); pts.push(q);
       if (s.wait > 1 / 60){ wps.push({x:q.x, y:q.y, port:null, fish:Math.max(0.1, Math.round(s.wait * 10) / 10)}); if (!p2Jig(o)) noJig = true; h += s.wait; }   // she is there before the soak is up: jigs (or waits) by the gear until then
-      wps.push({x:q.x, y:q.y, port:null, fish:0, act:{op:'cycle', kind, n:s.n, fid:s.pid, final:!(s.reset && kind !== 'line'), only:'haul', due:s.due != null ? s.due : s.t}}); h += s.h; }
+      wps.push({x:q.x, y:q.y, port:null, fish:0, act:{op:'cycle', kind, n:s.n, fid:s.pid, final:!(s.reset && (kind !== 'line' || s.lk === 'auto')), only:'haul', due:s.due != null ? s.due : s.t}}); h += s.h; }
     else if (s.k === 'juks'){ const q = s.pid ? P(s.pid) : null; if (q){ h += leg(q); pts.push(q); } const w = {x:prev.x, y:prev.y, port:null, fish:Math.max(0.1, Math.round(s.h * 10) / 10)}; if (jn > 1 && q){ w.jc = ++jc; w.jn = jn; } wps.push(w); h += s.h; }
     else if (s.k === 'vent'){ const q = P(s.pid); h += leg(q); pts.push(q); wps.push({x:q.x, y:q.y, port:null, fish:Math.max(0.1, Math.round((s.until - s.t) * 10) / 10)}); noJig = true; h += s.until - s.t; }
     else if (s.k === 'lever' || s.k === 'agn'){ const M = plan2P(o, 'M'); if (!M) continue; h += leg(M, o.M); pts.push(M); wps.push({x:M.x, y:M.y, port:o.M, fish:0}); kindK = wps.some(w => w.act || w.fish > 0) ? 'fish' : 'land'; ended = true; }
@@ -302,7 +319,8 @@ function plan2Trip(o, D, i0){
   if (need.length) return {need};
   // a trip with no port call after the fishing (the day ends at sea): home, or the plant round the clock
   const last = wps[wps.length - 1];
-  if (!last.port && !last.anchor){ if (o.rhythm === 'watch'){ const M = plan2P(o, 'M'); h += leg(M, o.M); wps.push({x:M.x, y:M.y, port:o.M, fish:0}); } else { const Hp = plan2P(o, 'H'), hp = plan2Port(o, 'H'); h += leg(Hp, hp); wps.push(hp ? {x:Hp.x, y:Hp.y, port:hp, fish:0} : {x:Hp.x, y:Hp.y, port:null, fish:0, anchor:true}); } if (need.length) return {need}; }
+  // (the ocean vessel's day ends at sea, by her gear: the next is laid from there, planDayAuto)
+  if (!last.port && !last.anchor && !auto){ if (o.rhythm === 'watch'){ const M = plan2P(o, 'M'); h += leg(M, o.M); wps.push({x:M.x, y:M.y, port:o.M, fish:0}); } else { const Hp = plan2P(o, 'H'), hp = plan2Port(o, 'H'); h += leg(Hp, hp); wps.push(hp ? {x:Hp.x, y:Hp.y, port:hp, fish:0} : {x:Hp.x, y:Hp.y, port:null, fish:0, anchor:true}); } if (need.length) return {need}; }
   return {wps, h, pts, to, kind:kindK, noJig};
 }
 // she is free and the step is a trip: the crew, the yard, the rules, the rig, the way and the weather, then off
@@ -325,8 +343,12 @@ function plan2Go(o, H, i0){
   const T = plan2Trip(o, D, i0);
   if (!T){ r.i = D.steps.length; return plan2Boundary(o, H); }
   if (T.need){ plan2Wait(o, 'route', 'Finner veien …', 'Finding the way …', H + 10 / 60); drFetch(o, T.need); return; }
+  // the ocean vessel (H2c): out of port in anything under her lying-to limits (the grounds are many hours off); at sea the gear is worked
+  // only under the plan's working limits at the places of the coming hours, else she waits by the gear, hour by hour
+  if (D.auto){ const h0 = plan2Here(o), atSea = !h0.port, wx = atSea ? plan2WxAhead(o, H, Math.min(Math.max(1, T.h), 3), T.pts) : plan2WxAhead(o, H, 2, [h0.p], {wind:windLim(), hs:seaLim()});
+    if (!wx.ok){ plan2WorkWait(o, H, wx, atSea ? T.pts : [h0.p], !atSea); return; } }
   // (she goes out on the next hours' forecast, DRP2.fcH; a gale later in the day sends her to shelter when it comes, plan2Shelter)
-  const wx = plan2WxAhead(o, H, Math.min(Math.max(1, T.h), DRP2.fcH), T.pts);
+  const wx = D.auto ? {ok:true} : plan2WxAhead(o, H, Math.min(Math.max(1, T.h), DRP2.fcH), T.pts);
   if (!wx.ok){
     const at = plan2WxFirstOk(o, H, Math.max(1, T.h), T.pts), why = wx.w > wx.wind ? ['vinden blir ' + fmt(wx.w, 0) + ' m/s, og grensen er ' + wx.wind + ' m/s', 'the wind gets to ' + fmt(wx.w, 0) + ' m/s, and the limit is ' + wx.wind + ' m/s'] : ['sjøen blir ' + fmt(wx.h, 1) + ' m, og grensen er ' + fmt(wx.lim, 1) + ' m', 'the sea gets to ' + fmt(wx.h, 1) + ' m, and the limit is ' + fmt(wx.lim, 1) + ' m'];
     if (at != null){ plan2Wait(o, 'wx', 'Venter på været: ' + why[0] + '. Går kl. ' + driftClock(driftHod(at)) + '.', 'Waiting for the weather: ' + why[1] + '. Leaving at ' + driftClock(driftHod(at)) + '.', at); return; }
@@ -343,7 +365,7 @@ function plan2Go(o, H, i0){
   if (T.kind === 'home') log('Går hjem til ' + (portById(o.home) || {name:'?'}).name + (o.homeA && T.wps[T.wps.length - 1].anchor ? ' og legger seg til ankers' : '') + '.', 'Going home to ' + (portById(o.home) || {name:'?'}).name + (o.homeA && T.wps[T.wps.length - 1].anchor ? ' to lie at anchor' : '') + '.');
   else if (T.kind === 'land') log('Går til ' + (portById(o.M) || {name:'mottaket'}).name + ' for å levere.', 'Going to ' + (portById(o.M) || {name:'the plant'}).name + ' to land.');
   else if (T.kind === 'rest') log('Går for å hvile om bord.', 'Going to rest aboard.');
-  else log(meAboard() ? 'Gikk ut på driftsplanen med deg som skipper.' : crewSkipper().name + ' gikk ut på driftsplanen.', meAboard() ? 'Went out on the plan with you as skipper.' : crewSkipper().name + ' went out on the plan.');
+  else if (!(D.auto && !here.port)) log(meAboard() ? 'Gikk ut på driftsplanen med deg som skipper.' : (p2SkName() || '?') + ' gikk ut på driftsplanen.', meAboard() ? 'Went out on the plan with you as skipper.' : (p2SkName() || '?') + ' went out on the plan.');
   // (depart defers the departure itself while the quay is busy, S.plan.depAt; 05-vessels.js casts off then)
   if (!depart() && !(S.plan && S.plan.depAt)){ S.plan = null; r.trip = null; plan2Wait(o, 'cant', 'Båten kom ikke av sted. Prøver igjen om en halv time.', 'The boat could not leave. Trying again in half an hour.', H + 0.5); }
 }
@@ -354,6 +376,23 @@ function plan2Sea(o, H){
   const nx = pl.wps[pl.idx];
   // (the jig before a haul ends when the soak is up, whether she came to the grounds early or late: the haul starts at its hour)
   if (nx && nx.act && nx.act.due && b.status === 'fishing' && b.fishUntil != null && !b.gop && !b.deckStop){ const legMin = kmTrue(b.pos, nx) / (Math.max(1, BOAT.vcruise || 7) * NM) * 60; const at = Math.max(S.t, Math.round(nx.act.due * 60 - legMin + 6)); if (Math.abs(b.fishUntil - at) > 2) b.fishUntil = at; }   // (six minutes to spare: she is never early)
+  const auto = !!(o.run && o.run.day && o.run.day.auto);
+  if (auto && !pl.returning){
+    // the ocean vessel's gear in the weather (H2c): over the plan's working limit where she is, the haul or the set in hand stops with what
+    // is over the side (the rest stands, gopAbort) and she waits by the gear; the way to the plant goes on (over her own limits she lies to)
+    const W = windAt(H, b.pos), hs = hsAt(b.pos, H), over = W > o.wx.wind || hs > Math.min(o.wx.hs, seaLim());
+    const work = !!b.gop || (nx && nx.act && dist(b.pos, nx) < 1) || (b.status === 'fishing' && pl.wps.slice(pl.idx).some(w => w.act));
+    if (over && work){ plan2WorkStop(o, H, W, hs); return; }
+    // the hold at DRP2.hav.full: nothing more is set, the lenker standing are hauled home to the magazines, and the next day is the way to
+    // the plant (planDayAuto). A haul in hand finishes without setting again
+    if (!pl.full && holdLoad() >= DRP2.hav.full * capHold() && (b.gop || pl.wps.slice(pl.idx).some(w => w.act))){
+      pl.full = true; if (b.gop && b.gop.op === 'haul') b.gop.reset = false;
+      const rest = pl.wps.slice(pl.idx).filter(w => !(w.act && w.act.only === 'set')).map(w => w.act ? Object.assign({}, w, {act:Object.assign({}, w.act, {final:true})}) : w);
+      pl.wps = pl.wps.slice(0, pl.idx).concat(rest); if (pl.unsafe) pl.unsafe = pl.unsafe.slice(0, pl.idx).concat(rest.map(() => false));
+      log('Lasten er ' + Math.round(100 * holdLoad() / capHold()) + ' % full. Trekker det som står inn på magasinene, så går skipet til ' + (portById(o.M) || {name:'mottaket'}).name + '.', 'The hold is ' + Math.round(100 * holdLoad() / capHold()) + ' % full. Hauling what stands back to the magazines, then the ship goes to ' + (portById(o.M) || {name:'the plant'}).name + '.');
+    }
+    return;
+  }
   // the hold over the limit on a trip that would not land: the rest of the trip is the way to the plant
   if (!pl.full && pl.opsK === 'fish' && o.land && o.land.when !== 'trip' && holdLoad() >= DRP2.full * capHold() && !pl.wps.slice(pl.idx).some(w => w.port === o.M)){
     const M = plan2P(o, 'M'); if (!M) return;
@@ -366,6 +405,29 @@ function plan2Sea(o, H){
     pl.wps.push({x:M.x, y:M.y, port:o.M, fish:0}); pl.opsK = 'fish';
     log('Lasten er ' + Math.round(100 * holdLoad() / capHold()) + ' % full. Går til ' + (portById(o.M) || {name:'mottaket'}).name + ' for å levere.', 'The hold is ' + Math.round(100 * holdLoad() / capHold()) + ' % full. Going to ' + (portById(o.M) || {name:'the plant'}).name + ' to land.');
   }
+}
+// the ocean vessel stops working the gear in the weather (H2c, plan2Sea): what the trip caught is counted, the haul or set in hand stops
+// (gopAbort: the rest stands in the sea), the trip is cut where she is, and she waits by the gear for the weather (plan2WorkWait)
+function plan2WorkStop(o, H, W, hs){
+  const b = S.boat, tr = o.run && o.run.trip, g = b.gop; if (tr) plan2Caught(o, tr);
+  const what = g ? (g.op === 'haul' ? ['Stopper draget, og resten av lenka står i sjøen', 'Stops the haul, and the rest of the string stands in the sea'] : ['Stopper settingen', 'Stops the set']) : ['Venter med redskapet', 'Holds off the gear'];
+  plan2Abort(o); b.status = 'idle'; b.v = 0;
+  const why = W > o.wx.wind ? ['Vinden er ' + fmt(W, 0) + ' m/s, over grensen for arbeidet (' + o.wx.wind + ' m/s)', 'The wind is ' + fmt(W, 0) + ' m/s, over the working limit (' + o.wx.wind + ' m/s)'] : ['Sjøen er ' + fmt(hs, 1) + ' m, over grensen for arbeidet (' + fmt(o.wx.hs, 1) + ' m)', 'The sea is ' + fmt(hs, 1) + ' m, over the working limit (' + fmt(o.wx.hs, 1) + ' m)'];
+  log(why[0] + '. ' + what[0] + '.', why[1] + '. ' + what[1] + '.');
+  plan2WorkWait(o, H, plan2WxAhead(o, H, 2, [{x:b.pos.x, y:b.pos.y}]), [{x:b.pos.x, y:b.pos.y}], false);
+}
+// the ocean vessel waits for the weather (H2c): at sea by her gear (lying to over her own limits, 05-vessels.js), or in port over those
+// limits; tried again at the first hour within DRP2.hav.look the forecast allows, else in three hours. The day is laid anew then, from
+// where she lies, so the soak and the hauls are right
+function plan2WorkWait(o, H, wx, pts, port){
+  const L = port ? {wind:windLim(), hs:seaLim()} : null; let at = null;
+  for (let k = 1; k <= DRP2.hav.look; k++) if (plan2WxAhead(o, H + k, 2, pts, L).ok){ at = H + k; break; }
+  const until = at != null ? at : H + 3, lim = port ? ['for å gå ut', 'for going out'] : ['for arbeidet', 'for the work'];
+  const why = wx.w > wx.wind ? ['vinden er ' + fmt(wx.w, 0) + ' m/s, og grensen ' + lim[0] + ' er ' + fmt(wx.wind, 0) + ' m/s', 'the wind is ' + fmt(wx.w, 0) + ' m/s, and the limit ' + lim[1] + ' is ' + fmt(wx.wind, 0) + ' m/s']
+    : ['sjøen er ' + fmt(wx.h, 1) + ' m, og grensen ' + lim[0] + ' er ' + fmt(wx.lim, 1) + ' m', 'the sea is ' + fmt(wx.h, 1) + ' m, and the limit ' + lim[1] + ' is ' + fmt(wx.lim, 1) + ' m'];
+  const c = driftClock(driftHod(until)), more = until - H > 20 ? [' i morgen', ' tomorrow'] : ['', ''];
+  plan2Wait(o, 'wx', (port ? 'Venter i havn på været: ' : 'Venter ved redskapet på været: ') + why[0] + '. ' + (at != null ? 'Går igjen kl. ' : 'Ser på det igjen kl. ') + c + more[0] + '.', (port ? 'Waiting in port for the weather: ' : 'Waiting by the gear for the weather: ') + why[1] + '. ' + (at != null ? 'Going again at ' : 'Looking again at ') + c + more[1] + '.', until);
+  if (o.run) o.run.replan = true;
 }
 // she has come in (05-vessels.js dock, through opsLanded): the port call's own step runs next, and a port that is not the step's means the day is made again from here
 function plan2Landed(pid, k){
@@ -380,17 +442,21 @@ function plan2Landed(pid, k){
 function plan2Report(pid, kg, total, landed){
   const o = plan2Ops(); if (!o) return; const port = portById(pid), sale = (S.sales || [])[S.sales.length - 1], L = S.lastSale || {};
   autoRestock();
-  const sk = meAboard() ? null : crewSkipper();
+  const sk = p2SkName();
   if (landed){
     const d = gDate(S.t / 60).toISOString().slice(0, 10), D = plan2StatDay(o, d), M = o.stats.sum, lott = L.t === S.t ? (L.lott || 0) : 0, conf = L.t === S.t ? Math.round(L.confKg || 0) : 0;
     for (const X of [D, M]){ X.trips++; X.kg += Math.round(kg); X.kr += Math.round(total); X.lott += Math.round(lott); X.conf += conf; X.port[pid] = (X.port[pid] || 0) + Math.round(kg); if (sale && sale.t === S.t) for (const [sp, k] of sale.sp || []) X.sp[sp] = (X.sp[sp] || 0) + k; }
-    msg(sk ? sk.name : gL('Driftsplan', 'Operations plan'), 'Driftsrapport: ' + fmt(kg, 0) + ' kg levert i ' + port.name + ', ' + kr(Math.round(total)) + ' etter lott' + (conf ? ', ' + conf + ' kg inndratt' : '') + '.', 'Operations report: ' + fmt(kg, 0) + ' kg landed at ' + port.name + ', ' + kr(Math.round(total)) + ' after shares' + (conf ? ', ' + conf + ' kg confiscated' : '') + '.');
+    msg(sk || gL('Driftsplan', 'Operations plan'), 'Driftsrapport: ' + fmt(kg, 0) + ' kg levert i ' + port.name + ', ' + kr(Math.round(total)) + ' etter lott' + (conf ? ', ' + conf + ' kg inndratt' : '') + '.', 'Operations report: ' + fmt(kg, 0) + ' kg landed at ' + port.name + ', ' + kr(Math.round(total)) + ' after shares' + (conf ? ', ' + conf + ' kg confiscated' : '') + '.');
   }
   const r = o.run; if (r && r.day && r.day.steps[r.i] && r.day.steps[r.i].k === 'lever'){ r.i++; r.wait = null; o.hold = 0; }
 }
 // bait at the plant: for the pots aboard, and for the tubs the crew bait at home (buyGear asks buyGate and the plant)
-function plan2Bait(o){
+function plan2Bait(o, s){
   const pg = S.pgear, kind = p2Kind(o); if (!pg || !kind) return;
+  // the autoline (H2c): the trip's bait, as the autoline fleet baits, half squid (akkar, blekksprut) and half saury (HI report 24-2013)
+  if (p2Auto(o)){ const kg = Math.ceil((s && s.kg) || 0); if (kg < 1) return; const c0 = S.cash, half = Math.ceil(kg / 2), got = [];
+    for (const [k, n] of [['blekksprut', half], ['saury', kg - half]]){ if (n < 1) continue; const why = buyGear('bait', k, n); if (why) log('Fikk ikke kjøpt agn: ' + why[0], 'Could not buy bait: ' + why[0]); else got.push(n + ' kg ' + BAITS[k].no.toLowerCase()); }
+    if (got.length) log('Kjøpte agn for turen: ' + got.join(' og ') + ' for ' + kr(Math.round(c0 - S.cash)) + '.', 'Bought bait for the trip: ' + kg + ' kg for ' + kr(Math.round(c0 - S.cash)) + '.'); return; }
   const k = BAITS[pg.baitPref] ? pg.baitPref : 'makrell', have = baitOf(pg)[k] || 0;
   const potsSea = mySets().filter(x => x.kind === 'teine').reduce((a, x) => a + x.n, 0);
   const need = kind === 'teine' ? (pg.pots.big + potsSea) * GPRICE.potBait * 2 - have : kind === 'line' ? ((pg.lines.hyse.n - pg.lines.hyse.baited) * LINE_KINDS.hyse.baitKg + (pg.lines.bank.n - pg.lines.bank.baited) * LINE_KINDS.bank.baitKg) - have : 0;
@@ -408,7 +474,7 @@ function plan2Egn(o, s){
 }
 // round the clock: who sleeps this hour (04-crew.js crewTick through driftWatch): the watch off sleeps in the bunks
 function plan2WatchTick(H){
-  const o = plan2Ops(), me = meAboard(), on = !!o && o.on && o.rhythm === 'watch' && S.crew.length + (me ? 1 : 0) >= 4;
+  const o = plan2Ops(), me = meAboard(), on = !!o && o.on && o.rhythm === 'watch' && (S.crew.length + (me ? 1 : 0) >= 4 || p2Lag());   // (an ocean vessel's teams, H2c)
   if (!on){ for (const c of S.crew) if (c.sleepW) delete c.sleepW; return; }
   // you keep the day watch (06-18) and sleep in the bunk the night watch (Jonas 26.10.2026); the bunk is the game's own (15-energy.js restStart)
   if (me && S.boat.status !== 'port' && S.plan && S.plan.ops){ const mine = plan2Watch(H).w === 'A', r = o.run || (o.run = {});
