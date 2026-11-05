@@ -1515,6 +1515,7 @@ body.pm #ecdisTop{visibility:hidden}
 #catchFeed .cf-c{display:grid;grid-template-columns:10px auto;column-gap:9px;align-items:center;padding:8px 12px 8px 10px;border-radius:12px;background:var(--s-glass);border:1px solid rgba(238,244,247,.12);color:var(--t-on-dark);box-shadow:0 4px 14px rgba(0,0,0,.25);animation:cfIn .28s ease-out}
 #catchFeed .cf-c i{grid-row:span 2;width:10px;height:10px;border-radius:50%}
 #catchFeed .cf-c b{font:700 var(--fs-sm)/1.2 var(--sans)} #catchFeed .cf-c span{font:500 12px/1.25 var(--sans);color:var(--t-on-dark-2);font-variant-numeric:tabular-nums}
+#catchFeed .cf-c .cf-rec{grid-column:2;font:700 12px/1.25 var(--sans);font-style:normal;color:#ffd27a}   /* a new record on the card (spilltest 3, U4) */
 @keyframes cfIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}   /* (12 px: inside the list's 14 px from the edge; 16 px gave the page a sideways overflow while a tile came in, GUI review F3) */
 @media (prefers-reduced-motion:reduce){#catchFeed .cf-c{animation:none}}
 body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}

@@ -177,10 +177,18 @@ function loaderGone(){
   let at = 700;   // after the fade
   for (const [m, ms] of q){ setTimeout(() => toast(m, ms), at); at += Math.min(ms || 2600, 6000); }
 }
+// the toast stands over the dock's fan or card and the set line, never on top of them (spilltest 3, U4; Jonas 05.11.2026, V3 A)
+function toastPlace(el){
+  el.style.bottom = ''; if (el.classList.contains('up') || document.body.classList.contains('dk-open')) return;
+  let top = Infinity; for (const id of ['dockFan', 'setBar']){ const e = document.getElementById(id); if (!e || e.hidden || !e.innerHTML.trim()) continue; const r = e.getBoundingClientRect(); if (r.height > 8 && getComputedStyle(e).visibility !== 'hidden') top = Math.min(top, r.top); }
+  if (top < Infinity) el.style.bottom = Math.max(0, window.innerHeight - top + 8) + 'px';
+}
+// a toast that still stands when the player opens something new in the dock goes (an old «Du har ikke redskap i sjøen.» stayed over the card)
+function toastClear(){ const el = document.getElementById('toast'); if (el){ clearTimeout(toast._t); toast._keep = null; el.classList.remove('on'); } }
 function toast(msg, ms){
   if (booting()){ (toast._q = toast._q || []).push([msg, ms]); if (toast._q.length > 12) toast._q.shift(); return; }
   const el = $('toast'); toast._at = Date.now(); if (ms) toast._keep = {msg, until:Date.now() + ms};
-  el.textContent = msg; el.classList.add('on'); clearTimeout(toast._t);
+  el.textContent = msg; toastPlace(el); el.classList.add('on'); clearTimeout(toast._t);
   const back = () => { const k = toast._keep; if (k && k.msg !== msg && k.until > Date.now() + 500){ msg = k.msg; el.textContent = msg; toast._t = setTimeout(back, k.until - Date.now()); return; }
     toast._keep = null; el.classList.remove('on'); };
   toast._t = setTimeout(back, ms || 2600);

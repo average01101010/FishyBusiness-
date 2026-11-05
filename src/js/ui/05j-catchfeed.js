@@ -19,6 +19,8 @@ const CFEED = (() => {
   }
   function worth(sp, kg){ try { const q = plantsNear(S.boat.pos, 1)[0]; return q ? Math.round(price(q.pt, sp, S.t / 60) * kg) : null; } catch (e){ return null; } }
   function add(sp, kg){ buf.push({sp, kg, t:performance.now()}); }
+  // a new record (core/09b-records.js recCatch): marked on the species' card, which stays a little longer (spilltest 3, U4)
+  function rec(sp, kg){ tick(); const now = performance.now(); let c = cards.find(z => z.sp === sp && now - z.t < 4200); if (!c){ c = {sp, n:0, kg:0, t:now}; cards.push(c); } c.rec = kg; c.t = now + 2500; }
   function rate(){
     const fs = S.fsess, b = S.boat; if (!fs || b.status !== 'fishing') return '';
     const h = (S.t - fs.t0) / 60; if (h < 0.08) return '';
@@ -41,11 +43,12 @@ const CFEED = (() => {
     const on = shown(), h = !on ? '' : rate() + cards.map(c => {
       if (!c.sp) return '<div class="cf-c"><i style="background:#8fd3ff"></i><b>' + c.n + ' ' + L('av ' + c.m + ' andre arter', 'of ' + c.m + ' other species') + '</b><span>' + fmt(c.kg, 1) + ' kg</span></div>';
       const v = worth(c.sp, c.kg), nm = spName(c.sp);
-      return '<div class="cf-c' + (now - c.t < 400 ? ' new' : '') + '"><i style="background:' + (SPC[c.sp] || '#8fd3ff') + '"></i><b>' + (c.n > 1 ? c.n + ' × ' : '') + nm + '</b><span>' + fmt(c.kg, 1) + ' kg' + (v ? ' · ' + L('ca. ', 'c. ') + kr(v) : '') + '</span></div>';
+      return '<div class="cf-c' + (now - c.t < 400 ? ' new' : '') + '"><i style="background:' + (SPC[c.sp] || '#8fd3ff') + '"></i><b>' + (c.n > 1 ? c.n + ' × ' : '') + nm + '</b><span>' + (c.n ? fmt(c.kg, 1) + ' kg' + (v ? ' · ' + L('ca. ', 'c. ') + kr(v) : '') : '') + '</span>' + (c.rec ? '<em class="cf-rec">' + L('Ny rekord · ', 'New record · ') + fmt(c.rec, 1) + ' kg</em>' : '') + '</div>';
     }).join('');
     if (h !== last){ last = h; el.innerHTML = h; el.hidden = !h; }
   }
   setInterval(tick, 400);
-  return {add, get cards(){ return cards.slice(); }};
+  return {add, rec, get cards(){ return cards.slice(); }};
 })();
 function catchFeed(sp, kg){ CFEED.add(sp, kg); }
+function catchRec(sp, kg){ CFEED.rec(sp, kg); }

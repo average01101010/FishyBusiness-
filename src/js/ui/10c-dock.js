@@ -249,7 +249,7 @@ const DOCK = (() => {
     const r = pb.getBoundingClientRect(), wr = fan.parentNode.getBoundingClientRect(), w = fan.offsetWidth;
     fan.style.left = clamp(r.left + r.width / 2 - w / 2 - wr.left, 8, wr.width - w - 8) + 'px';
   }
-  function setMenu(m){ menu = menu === m ? null : m; html = ''; render(); }
+  function setMenu(m){ menu = menu === m ? null : m; html = ''; if (menu) toastClear(); render(); }
   // «Kjør dit» in the inventory: the way to a point just off the nearer buoy, and away
   function goTo(s){
     const b = S.boat; menu = null;
