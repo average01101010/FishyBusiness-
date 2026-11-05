@@ -221,7 +221,7 @@ function gearRules(kind, spec, p){
   if (!rigKindOk(kind)) return rigWrong(kind);
   if (b.gop) return [gL('Redskapsarbeidet er allerede i gang.', 'Gear work is already going on.')];
   if (b.status !== 'idle' && b.status !== 'fishing') return [gL('Båten må ligge stille på feltet.', 'The boat must lie still on the grounds.')];
-  if (handsAboard() < GEAR[kind].crewMin) return [gL('Garn krever minst to om bord: deg og én til, eller to fra mannskapet.', 'Nets need at least two aboard: you and one more, or two of the crew.')];
+  if (handsAboard() < GEAR[kind].crewMin) return [gL('Garn krever minst to om bord: deg og én til, eller to fra mannskapet.', 'Nets need at least two aboard: you and one more, or two of the crew.') + crewBiOff()];
   if (depthF(p) < 5) return [gL('For grunt til å sette her.', 'Too shallow to set here.')];
   if (pg.kits.n < 1) return [gL('Du trenger et blåsesett: to blåser med stake, flagg og dregg.', 'You need a buoy set: two buoys with pole, flag and anchor.')];
   let nets = 0, hooks = 0;
@@ -296,7 +296,7 @@ function startHaul(sid, reset, fishAfter){
   if (b.gop) return [gL('Redskapsarbeidet er allerede i gang.', 'Gear work is already going on.')];
   if (b.status !== 'idle' && b.status !== 'fishing') return [gL('Båten må ligge stille ved blåsa.', 'The boat must lie still at the buoy.')];
   const da = dist(b.pos, s.a), db = dist(b.pos, s.b); if (Math.min(da, db) > 0.3) return [gL('Gå helt inn til blåsa først.', 'Go right up to the buoy first.')];
-  if (handsAboard() < GEAR[s.kind].crewMin) return [gL('Garn krever minst to om bord: deg og én til, eller to fra mannskapet.', 'Nets need at least two aboard: you and one more, or two of the crew.')];
+  if (handsAboard() < GEAR[s.kind].crewMin) return [gL('Garn krever minst to om bord: deg og én til, eller to fra mannskapet.', 'Nets need at least two aboard: you and one more, or two of the crew.') + crewBiOff()];
   if (s.kind === 'teine' && !hasHauler('teine')) return [gL('Teiner kan ikke trekkes for hånd. Du trenger en teinehaler.', 'Pots cannot be hauled by hand. You need a pot hauler.')];
   s.hauling = true;
   const from = da <= db ? s.a : s.b, to = da <= db ? s.b : s.a;
