@@ -295,7 +295,7 @@ Anslag for en spiller med 1,5 s per trykk og 1 s per sveip: rundt 3 s fra «Lag 
 | Måling (antall tilstander) | 800×1280 | 1280×800 | 384×853 |
 |---|---|---|---|
 | Tilstander målt | 50 | 50 | 50 |
-| Sideveis overflyt, siden eller panelene | 0 | 0 | 0 |
+| Sideveis overflyt, siden eller panelene | 0 | 0 (1 i kontrollkjøringen, F3) | 0 |
 | Kuttet tekst | 0 | 0 | 0 |
 | Knapper utenfor skjermen | 0 | 0 | 0 |
 | Planlista × kortet | 0 | 0 | 0 |
@@ -326,6 +326,6 @@ Hver kjøring gir én `console.error` fra skyen («401 Unauthorized»), fordi te
 
 ## 6. Filene
 
-- `tests/driftsplan2gui.py`: testen. Den kjøres med `python3 tests/driftsplan2gui.py` (LITE settes selv) på rundt 7,5 minutter; `KYST_GUI_ONLY=S03,S04` kjører bare de scenariene. Den er ikke lagt i `run.py`.
+- `tests/driftsplan2gui.py`: testen. Den kjøres med `python3 tests/driftsplan2gui.py` (LITE settes selv) på rundt 7,5 minutter; `KYST_GUI_ONLY=S03,S04` kjører bare de scenariene. Den ligger i `LITE` i `run.py` (`python3 tests/run.py smoke driftsplan2gui`), men ikke i `COVER`, fordi den er for lang til hver endring.
 - `tests/out/driftsplan2gui/`: alle skjermbildene (`<scenario>-<tilstand>-<format>.png`) og `maalinger.json` med målingene, tellingene, notatene og tekstene per tilstand.
 - `docs/planer/driftsplan-2/03-gui/`: de 27 bildene som er lenket her, med de tre formatene side om side.
