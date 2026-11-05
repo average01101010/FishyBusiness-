@@ -536,7 +536,7 @@ The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a 
   - 435 `ruOpenNear(p, q, maxKm)`
   - 444 `ruTips()`
 
-## `src/js/core/03f-fiske.js` (380 linjer)
+## `src/js/core/03f-fiske.js` (387 linjer)
 
 The fishing along the coast as it really was, and where the fish is from it (B2 of docs/planer/bestand-og-flaate.md, 01.11.2026).
 
@@ -565,12 +565,12 @@ The fishing along the coast as it really was, and where the fish is from it (B2 
   - 298 `fkAt(a, l, T)`
   - 300 `skreiFront(lat, H, T)`
   - 306 `skreiPulse(c, H, T)`
-  - 312 `fkAvail(sp, q, T)`
-  - 348 `areaF(sp, p, H)`
-  - 354 `skreiShare(p, H)`
-  - 361 `skreiFlow(K, H)`
-- **368** the sea's warmth: the fish go deeper when the surface is warmer than they like (B4, 02.11.2026)
-  - 375 `tempDepthK(sp, c, H)`
+  - 318 `fkAvail(sp, q, T)`
+  - 355 `areaF(sp, p, H)`
+  - 361 `skreiShare(p, H)`
+  - 368 `skreiFlow(K, H)`
+- **375** the sea's warmth: the fish go deeper when the surface is warmer than they like (B4, 02.11.2026)
+  - 382 `tempDepthK(sp, c, H)`
 
 ## `src/js/core/03g-trykk.js` (206 linjer)
 
@@ -2251,12 +2251,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1137 linjer)
+## `src/js/ui/phone/07-patch.js` (1138 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1130 `patch()`
+  - 1131 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
