@@ -178,7 +178,7 @@ const DOCK = (() => {
     if (b.status === 'port'){ if (S.jobs && S.jobs.length) out.push(L(jobsCrewOnly() ? 'Mannskapet jobber til ' : 'Verksted til ', jobsCrewOnly() ? 'Crew working until ' : 'Yard until ') + hm((jobsDone() || S.t) / 60)); if (b.land) out.push(landText(true)[0]); if (b.shift || b.fueling) out.push(quayText(true)[0]); }
     if (b.status === 'port' && !resting() && restWhere(b) === 'rorbu') out.push(L('Rorbu: ' + kr(RORBU.kr) + ' natta', 'Rorbu: ' + kr(RORBU.kr) + ' a night'));
     // in the home harbour, which of the two berths she lies at: Father's naust or the plant's quay (07-harbours.js berthKind)
-    if (b.status === 'port' && !resting() && atHome(b) && quayFace(b.port, 'naust')){ const k = BERTHN[berthKind(b)] || BERTHN.main; out.push(L('Ved ' + k[0], 'At ' + k[1])); }
+    if (b.status === 'port' && !resting() && atHome(b) && quayFace(b.port, 'naust')){ const k = berthName(berthKind(b), b.port); out.push(L('Ved ' + k[0], 'At ' + k[1])); }
     if (b.status === 'port' && resting()){ const r = restRate(b), m = r > 0 ? Math.ceil((100 - S.energy) / r) : 0, up = S.rest.w === 'naust' ? Math.round((naustRest(b) - 1) * 100) : 0;
       out.push((S.rest.w === 'rorbu' ? L('Hviler på rorbua', 'Resting at the rorbu') : L('Hviler i naustet', 'Resting in the boathouse')) + ' · ' + Math.round(S.energy) + ' %' + (up > 0 ? L(' · ' + up + ' % raskere', ' · ' + up + ' % faster') : '') + (m > 0 ? L(', uthvilt kl. ', ', rested at ') + hm((S.t + m) / 60) : '')); }
     if (b.status !== 'port' && resting()) out.push(L('Hviler i køya', 'Resting in the bunk') + ' · ' + Math.round(S.energy) + ' %');

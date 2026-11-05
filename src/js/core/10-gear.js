@@ -13,7 +13,9 @@ const GEAR = {
 const LINE_KINDS = {hyse:{no:'Hyseline', en:'Haddock line', hooks:600, price:2100, egn:500, baitKg:5}, bank:{no:'Bankline', en:'Bank line', hooks:300, price:1700, egn:300, baitKg:3}};
 // king crab pots (a frame of steel and netting, 1.5-2 m across; the prices are estimates): cap is the crabs a pot holds
 // one pot only (Jonas 08.10.2026): the big king crab pot, 1.55 x 1.45 x 1.07 m. The key stays 'big' so saves carry over; old small pots become big ones (potsFix)
-const POTS = {big:{no:'Krabbeteiner', en:'Crab pots', price:2200, cap:40, f:1.4, big:true}};
+const POTS = {big:{no:'Krabbeteiner', en:'Crab pots', one:['krabbeteine', 'crab pot'], price:2200, cap:40, f:1.4, big:true}};
+// «1 krabbeteine», «2 krabbeteiner» (spilltest 3, F6)
+const potsN = n => n + ' ' + (n === 1 ? POTS.big.one[S.lang === 'no' ? 0 : 1] : POTS.big[S.lang].toLowerCase());
 // three kinds of net (Jonas 08.10.2026; Fiskeridirektoratet's Redskapshefte 2.2): the bottom net for cod (the default), the floating net (flytegarn,
 // fished higher in the water for saithe) and the Greenland halibut net (big mesh). A net string carries `ty` ('bunn' when missing).
 // The 360 mm mesh and the selectivity are our estimates; the game's flytegarn takes the same mesh sizes as the cod net and ignores depth.

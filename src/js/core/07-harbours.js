@@ -397,6 +397,8 @@ function quayPos(b){
 const NAUST_NOSHOP = ['Naustet er et hjem, ikke en butikk. Seil til mottaket for is og agn, til utstyrsbutikken for utstyr og til verftet for båt og vedlikehold.', 'The boathouse is a home, not a shop. Sail to the plant for ice and bait, to the tackle shop for gear and to the yard for boats and upkeep.'];
 const NAUST_SAIL = ['Båten ligger ved naustet. Seil bort til mottakskaia først: trykk på havna i kartplotteren og kast loss.', 'The boat lies at the boathouse. Sail over to the plant\'s quay first: tap the harbour on the chart plotter and cast off.'];
 const BERTHN = {main:['mottakskaia', 'the plant\'s quay'], bunker:['bunkerskaia', 'the bunker quay'], naust:['naustet', 'the boathouse']};
+// the berth's name in this harbour: a harbour without a fish plant has a quay, not the plant's quay (spilltest 3, F6: Finnsnes)
+const berthName = (k, pid) => { const pt = portById(pid); return k === 'main' && pt && !pt.mottak ? ['kaia', 'the quay'] : BERTHN[k] || BERTHN.main; };
 const hasBunker = pid => !!quayFace(pid, 'bunker');
 // busy at the quay: landing, moving or filling; a departure waits for it
 function portBusy(b){ const u = Math.max(b.land ? b.land.until : 0, b.shift ? b.shift.until : 0, b.fueling ? b.fueling.until : 0); return u > 0 || b.after ? Math.max(u, S.t) : 0; }
@@ -407,7 +409,7 @@ function startShift(to, after){
   const A = berthPose(pt.id, b.type, from), B = berthPose(pt.id, b.type, to); if (!A || !B) return false;
   const move = Math.max(1.5, Math.hypot(A.x - B.x, A.y - B.y) * 1000 * 1.3 / SHIFT_MPM);
   b.shift = {from, to, t0:S.t, castUntil:S.t + CAST_MIN, arriveAt:S.t + CAST_MIN + move, until:S.t + CAST_MIN * 2 + move}; b.after = after || null;
-  log('Kaster loss og går ' + (to === 'main' ? 'tilbake ' : 'bort ') + 'til ' + BERTHN[to][0] + '.', 'Casting off for ' + BERTHN[to][1] + '.');
+  log('Kaster loss og går ' + (to === 'main' ? 'tilbake ' : 'bort ') + 'til ' + berthName(to, pt.id)[0] + '.', 'Casting off for ' + berthName(to, pt.id)[1] + '.');
   return true;
 }
 function startFueling(ops){
@@ -432,7 +434,7 @@ function quayMinute(){
   const s = b.shift;
   if (s && S.t >= s.until){
     b.shift = null; b.berth = s.to; const pt = portById(b.port), a = b.after; b.after = null;
-    log('Fortøyd ved ' + BERTHN[s.to][0] + ' i ' + pt.name + '.', 'Made fast at ' + BERTHN[s.to][1] + ' in ' + pt.name + '.');
+    log('Fortøyd ved ' + berthName(s.to, pt.id)[0] + ' i ' + pt.name + '.', 'Made fast at ' + berthName(s.to, pt.id)[1] + ' in ' + pt.name + '.');
     if (a === 'fuel' || a === 'fuelops') startFueling(a === 'fuelops');
     else if (a === 'land' || a === 'landops') startLanding(a === 'landops');
     else if (a === 'ice'){ buyIce(b.iceKg || 50, b.iceFree); b.iceKg = b.iceFree = null; }
@@ -446,7 +448,7 @@ function buyIce(kg, free){
   b.ice += kg; book('is', -c, 'Is fra isrenna', 'Ice from the chute'); iceChute(kg);
   log('Kjøpte ' + kg + ' kg is fra isrenna for ' + kr(c) + '.', 'Bought ' + kg + ' kg of ice from the chute for ' + kr(c) + '.');
   // the first fill is on the plant (Jonas 07.10.2026): a new customer, and they know the old boat
-  if (free) msg(FOLK_NAMES.plant[0] + ' på mottaket', 'Så det er du som har tatt over naustet! Faren din var innom her i fjor høst og snakket om deg. Første fylling is er på huset: vi kjenner igjen den gamle båten.', 'So you’re the one who has taken over the boathouse! Your father dropped in last autumn and talked about you. The first fill of ice is on the house: we know the old boat.');
+  if (free) msg(folkPlantName(pt.id) + ' på mottaket', 'Så det er du som har tatt over naustet! Faren din var innom her i fjor høst og snakket om deg. Første fylling is er på huset: vi kjenner igjen den gamle båten.', 'So you’re the one who has taken over the boathouse! Your father dropped in last autumn and talked about you. The first fill of ice is on the house: we know the old boat.');
   return true;
 }
 // ---------- the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear ----------

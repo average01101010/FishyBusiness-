@@ -23,7 +23,15 @@ const EDVARD = {
   big:t => ['Jeg hørte om ' + SPECIES[t.sp].no.toLowerCase() + 'a på ' + fmt(t.kg, 0) + ' kilo. Far din hadde vært stolt.', 'I heard about the ' + SPECIES[t.sp].en.toLowerCase() + ' of ' + fmt(t.kg, 0) + ' kilos. Your father would have been proud.']
 };
 function folkState(){ const F = S.folk || (S.folk = {}); F.edvard = F.edvard || {met:0, last:-1, seen:[], said:null}; F.plants = F.plants || {}; F.shop = F.shop || {n:0}; return F; }
-const folkPlantName = id => FOLK_NAMES.plant[Math.abs([...String(id)].reduce((a, c) => a * 31 + c.charCodeAt(0), 7)) % FOLK_NAMES.plant.length];
+// the plant's manager: the plants along the coast from south to north take the names in turn, so a name comes back only 36 plants
+// further on (spilltest 3, F6: six names for the whole coast gave Grete in both Husøy and Henningsvær). A harbour that is not a plant
+// keeps the old hash
+const FOLK_PLANT_POOL = ['Randi', 'Bente', 'Tove', 'Hilde', 'Marit', 'Grete', 'Kjell', 'Åse', 'Arvid', 'Wenche', 'Sverre', 'Unni', 'Torbjørn', 'Gunn', 'Reidar', 'Elin', 'Oddvar', 'Berit',
+  'Harald', 'Laila', 'Geir', 'Turid', 'Ragnar', 'Solfrid', 'Svein', 'Eva', 'Jostein', 'Inger', 'Rolf', 'Kirsten', 'Terje', 'Heidi', 'Leif', 'Astrid', 'Asbjørn', 'Gerd'];
+let FOLK_PLANT_IX = null, FOLK_PLANT_N = -1;
+const folkPlantName = id => {
+  if (FOLK_PLANT_N !== PORTS.length){ FOLK_PLANT_N = PORTS.length; FOLK_PLANT_IX = {}; PORTS.filter(p => p.mottak).sort((a, c) => c.xy[1] - a.xy[1] || (a.id < c.id ? -1 : 1)).forEach((p, i) => { FOLK_PLANT_IX[p.id] = i; }); }
+  const i = FOLK_PLANT_IX[id]; return i != null ? FOLK_PLANT_POOL[i % FOLK_PLANT_POOL.length] : FOLK_NAMES.plant[Math.abs([...String(id)].reduce((a, c) => a * 31 + c.charCodeAt(0), 7)) % FOLK_NAMES.plant.length]; };
 const folkLevel = kg => FOLK_LV.filter(v => kg >= v).length;
 // the price a plant pays a regular supplier on top (clsPrice)
 function folkPf(id){ const P = S && S.folk && S.folk.plants && S.folk.plants[id]; return P ? 1 + 0.01 * folkLevel(P.kg) : 1; }
