@@ -37,7 +37,7 @@ function berthSlot(q, key, big){
   used.push(out); return BERTHS[ck] = out;
 }
 function berthShift(p, key, big){
-  let best = null, bd = 0.15; for (const q of PORTS){ const d = dist(p, q.p); if (d < bd){ bd = d; best = q; } }
+  let best = null, bd = 0.15; for (const q of PORTS){ if (Math.abs(p.x - q.p.x) >= bd || Math.abs(p.y - q.p.y) >= bd) continue; const d = dist(p, q.p); if (d < bd){ bd = d; best = q; } }   // (the box first: a distance to every port for every boat a frame was garbage, 05.11.2026)
   if (!best) return p; const f = 1 - bd / 0.15, o = berthSlot(best, key, big); return {x:p.x + o.x * f, y:p.y + o.y * f};
 }
 // at home the boat lies at a quay face of the map data that stands in 3D and fits her (npcBerths, 07-harbours.js), and goes from

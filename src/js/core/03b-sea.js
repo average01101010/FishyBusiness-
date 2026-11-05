@@ -9,13 +9,14 @@ const FETCH = {open:600, cell:0.2, sec:10, max:80000, near:1, fine:1.5};
 const FETCH_A = [-45, -30, -15, 0, 15, 30, 45].map(a => ({a:a * Math.PI / 180, c:Math.cos(a * Math.PI / 180)}));
 const FETCH_C = new Map();
 function fetchRay(x, y, dx, dy){
-  let s = 0;
+  let s = 0; const q = {x, y};   // (one point along the ray: an object a step was the most garbage the sea state left, 05.11.2026)
   for (let i = 0; i < 3000; i++){
-    if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1 || !farL('land', {x, y})) return s + FETCH.open;
+    q.x = x; q.y = y;
+    if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1 || !farL('land', q)) return s + FETCH.open;
     if (s >= FETCH.open) return s;
-    const d = coastDistFar({x, y});
+    const d = coastDistFar(q);
     let st = 0.1;
-    if (d < 0.2){ if (isLandFar({x, y})) return s; } else st = Math.max(0.1, 0.92 * d - 0.15);
+    if (d < 0.2){ if (isLandFar(q)) return s; } else st = Math.max(0.1, 0.92 * d - 0.15);
     x += dx * st; y += dy * st; s += st;
   }
   return s;

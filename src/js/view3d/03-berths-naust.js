@@ -219,10 +219,11 @@
     const one = tx === Math.floor((ix + 2) / ct) && tz === Math.floor((iz + 2) / ct) && mapIn(LF, ix - 1, iz - 1) && mapIn(LF, ix + 2, iz + 2);
     if (one && !tileIn('view', tx, tz)) return 0;
     if (!one && !mapViewIn({x:x / 1000, y:z / 1000})) return 0;
-    const F = one ? (c, r) => rcell(LF, c, r) : (c, r) => (!mapIn(LF, c, r) || !tileIn('view', Math.floor(c / ct), Math.floor(r / ct))) ? 0 : rcell(LF, c, r);
-    for (let dz = -1; dz <= 2; dz++) for (let dx = -1; dx <= 2; dx++){ const wx = dx <= 0 ? (dx === 0 ? 1 - fx * 0.5 : 0.5 - fx * 0.5) : (dx === 1 ? 0.5 + fx * 0.5 : fx * 0.5), wz = dz <= 0 ? (dz === 0 ? 1 - fz * 0.5 : 0.5 - fz * 0.5) : (dz === 1 ? 0.5 + fz * 0.5 : fz * 0.5); s += F(ix + dx, iz + dz) * wx * wz; }
+    for (let dz = -1; dz <= 2; dz++) for (let dx = -1; dx <= 2; dx++){ const wx = dx <= 0 ? (dx === 0 ? 1 - fx * 0.5 : 0.5 - fx * 0.5) : (dx === 1 ? 0.5 + fx * 0.5 : fx * 0.5), wz = dz <= 0 ? (dz === 0 ? 1 - fz * 0.5 : 0.5 - fz * 0.5) : (dz === 1 ? 0.5 + fz * 0.5 : fz * 0.5); s += forestCell(one, LF, ct, ix + dx, iz + dz) * wx * wz; }
     return clamp(s / 2.25, 0, 1);
   }
+  // (a function, not a closure made for every point: those were a good part of the garbage while the meshes were built, 05.11.2026)
+  function forestCell(one, LF, ct, c, r){ return one ? rcell(LF, c, r) : (!mapIn(LF, c, r) || !tileIn('view', Math.floor(c / ct), Math.floor(r / ct))) ? 0 : rcell(LF, c, r); }
   // The land cover round a point (the 'cover' layer, G1 of docs/planer/grafikk-natur-og-miljo.md: Overture's detailed land cover from
   // ESA WorldCover with OpenStreetMap's natural areas and land use over it, tools/map/region.py cover; a class per 50 m cell, 1 forest ... 12 shingle): the share of each class among the land cells of the 4 x 4 cells
   // forestAt reads, weighted as it weighs them, into cv at k * 9 (0-255), and ck[k] = 1. Where the layer has no block (a tile from a

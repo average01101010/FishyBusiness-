@@ -286,7 +286,7 @@ function* chartRasterG(d, PW, PH, x0, y0, pkx, pky, V, st, scr){
   const bw = (t, o) => { const t2 = t * t, t3 = t2 * t; o[0] = (1 - t) * (1 - t) * (1 - t) / 6; o[1] = (3 * t3 - 6 * t2 + 4) / 6; o[2] = (-3 * t3 + 3 * t2 + 3 * t + 1) / 6; o[3] = t3 / 6; };
   const CX = R ? R.CX : new Int32Array(PW * 4), CW = R ? R.CW : new Float32Array(PW * 4), tmp = [0, 0, 0, 0];
   if (smooth) for (let i = 0; i < PW; i++){ const x = x0 + (i + 0.5) * pkx, gx = x / c - 0.5, ix = Math.floor(gx); bw(gx - ix, tmp); for (let k = 0; k < 4; k++){ CX[i * 4 + k] = clamp(ix - 1 + k, X0, X1); CW[i * 4 + k] = tmp[k]; } }
-  const RW = [0, 0, 0, 0], RO = [0, 0, 0, 0], col = [0, 0, 0], put = (o, k) => { d[o] = k[0]; d[o + 1] = k[1]; d[o + 2] = k[2]; d[o + 3] = 255; };
+  const RW = [0, 0, 0, 0], RO = [0, 0, 0, 0], col = [0, 0, 0], pt = {x:0, y:0}, put = (o, k) => { d[o] = k[0]; d[o + 1] = k[1]; d[o + 2] = k[2]; d[o + 3] = 255; };
   // near in (a sample under an eighth of a cell) the B-spline every GS samples and between them bilinear: the depth is smooth there,
   // and the 16 cells a sample made the harbour's tiles slow; NaN where a corner is off the packs (the sample is then its own)
   const GS = 4, GN = (Math.ceil(PW / GS) + 1) * (Math.ceil(PH / GS) + 1), G = smooth && pkx < c / 8 ? (R ? (R.G && R.G.length === GN ? R.G : (R.G = new Float32Array(GN))) : new Float32Array(GN)) : null, GW = Math.ceil(PW / GS) + 1;
@@ -307,14 +307,15 @@ function* chartRasterG(d, PW, PH, x0, y0, pkx, pky, V, st, scr){
     let left = NaN;
     for (let i = 0; i < PW; i++){
       const x = x0 + (i + 0.5) * pkx, o = (j * PW + i) * 4;
-      if (!inFrame({x, y})){ put(o, OFF); prev[i] = NaN; left = NaN; continue; }
+      pt.x = x; pt.y = y;   // (one point for every sample: an object a sample was most of the garbage it left)
+      if (!inFrame(pt)){ put(o, OFF); prev[i] = NaN; left = NaN; continue; }
       const gx = clamp(x / c - 0.5, X0, X1 - 0.001), ix = Math.floor(gx), fx = gx - ix;
       let v, land = 0, sv = 0;   // sv: the depth is the tiles' (1) or the offshore layer's (0): no line where they meet (their floors differ)
       if (!simAt(x, y) || !(x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c)){
-        const q = {x, y}; if (lv && isLandFar(q)){ put(o, FAR); prev[i] = NaN; left = NaN; continue; }
+        const q = pt; if (lv && isLandFar(q)){ put(o, FAR); prev[i] = NaN; left = NaN; continue; }
         v = offDepth(q); }
       else try {
-        sv = 1; { const pk = pocket ? pocket(x, y) : 0; if (pk === 2 || (!pk && lv && (deep(x, y) || coastAtIf({x, y}) > 0))) land = 1; }   // (the coast's index where it is in: 01d-coast.js)
+        sv = 1; { const pk = pocket ? pocket(x, y) : 0; if (pk === 2 || (!pk && lv && (deep(x, y) || coastAtIf(pt) > 0))) land = 1; }   // (the coast's index where it is in: 01d-coast.js)
         if (land >= 1){ put(o, UG); prev[i] = NaN; left = NaN; continue; }
         const gi = Math.floor(i / GS), gj = Math.floor(j / GS), go = gj * GW + gi;
         if (G && !isNaN(v = ((G[go] * (GS - i % GS) + G[go + 1] * (i % GS)) * (GS - j % GS) + (G[go + GW] * (GS - i % GS) + G[go + GW + 1] * (i % GS)) * (j % GS)) / (GS * GS))){ }
@@ -322,7 +323,7 @@ function* chartRasterG(d, PW, PH, x0, y0, pkx, pky, V, st, scr){
         else v = (D(ix, iy) * (1 - fx) + D(ix + 1, iy) * fx) * (1 - fy) + (D(ix, iy + 1) * (1 - fx) + D(ix + 1, iy + 1) * fx) * fy;
       } catch (e){
         // a cell across the edge of a tile whose pack has not come (or has none): the depth model here, painted again when it comes
-        if (st) st.prov = true; land = 0; sv = 0; const q = {x, y}; if (isLandFar(q)){ put(o, FAR); prev[i] = NaN; left = NaN; continue; } v = offDepth(q);
+        if (st) st.prov = true; land = 0; sv = 0; const q = pt; if (isLandFar(q)){ put(o, FAR); prev[i] = NaN; left = NaN; continue; } v = offDepth(q);
       }
       if (fish){
         const dxv = isNaN(left) ? 0 : v - left, dyv = isNaN(prev[i]) ? 0 : v - prev[i], hs = clamp(0.8 + (dxv + dyv) * sh * 0.004, 0.45, 1.25), pc = plotCol(Math.max(v, 0.5));
