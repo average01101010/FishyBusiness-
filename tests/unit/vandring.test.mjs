@@ -99,4 +99,19 @@ export default function (t){
   const Hy = yy => (Date.UTC(yy, 6, 1) - K.EPOCH) / 3.6e6;
   t.ok(K.kystF(69.5, Hy(2023)) < 0.92 && Math.abs(K.kystF(69.5, Hy(2025)) - 1) < 0.08 && K.kystF(69.5, Hy(2014)) > 1.1, `kysttorsken nord for 67° N følger ICES: ${[2014, 2023, 2025, 2030].map(yy => K.kystF(69.5, Hy(yy)).toFixed(2)).join(' / ')} (2014, 2023, 2025, 2030)`);
   t.ok(Math.abs(K.kystF(64, Hy(2030)) - 1) < 0.08 && K.kystF(64, Hy(2012)) > 1.25 && K.kystF(60.4, Hy(2014)) === 1, `62-67° N var sterkere i 2012 (${K.kystF(64, Hy(2012)).toFixed(2)}) og holder nivået; sør for 62° N har spillet ingen serie`);
+
+  // H1b R6: the fields off the coast. Where the coastal fleet has no figure, the ocean fleet's notes (the h table) give one: cod at
+  // Bjørnøya (main area 20) and west of Spitsbergen (21), snow crab on the Central Bank (15) and north-east of Svalbard (24); the
+  // coast's figures are the same as before (they are filled only where the coast left nothing)
+  const cell = (sp, lat, lon, m) => { const c = K.lokOfCell(P(lat, lon)), F = K.FK.af[sp]; return c.l >= 0 ? K.fkAt(F.m, c.l, K.fkMonth(H(m, 15))) : NaN; };
+  const BJ = [74.3, 22.0], SPV = [77.5, 10.5], SENT = [75.5, 35.0], NE = [79.0, 34.0];
+  const bj = [0, 3, 6, 9].map(m => cell('torsk', ...BJ, m)), sv = [6, 9].map(m => cell('torsk', ...SPV, m));
+  t.ok(bj.every(v => v > 0) && sv.some(v => v > 0), `torsken har tall ved Bjørnøya (${lok(...BJ)}: ${bj.map(v => v.toFixed(2)).join(' ')}) og vest av Spitsbergen (${lok(...SPV)}: ${sv.map(v => v.toFixed(2)).join(' ')})`);
+  const sk = [1, 3].map(m => at('snokrabbe', ...SENT, H(m, 15))), skn = at('snokrabbe', ...NE, H(2, 15));
+  t.ok(sk.every(v => v > 0.05) && skn > 0.05 && at('snokrabbe', ...BAT, H(2, 15)) === 0, `snøkrabben er på Sentralbanken (${lok(...SENT)}: ${sk.map(v => v.toFixed(2)).join(' ')}) og nordøst for Svalbard (${lok(...NE)}: ${skn.toFixed(2)}), ikke i Båtsfjord`);
+  // the herring feeds in the Norwegian Sea in summer (out there, nothing in winter)
+  const nh = at('sild', 68.5, 0, H(6, 15)), nw = at('sild', 68.5, 0, H(0, 15));
+  t.ok(nh > 3 * nw, `silda beiter i Norskehavet om sommeren (juli ${nh.toFixed(2)}, januar ${nw.toFixed(2)})`);
+  // the capelin's spring is the coast's: not out in the Barents Sea at Bjørnøya
+  t.ok(K.MIG.loddeW(...BAT) > 0.4 && K.MIG.loddeW(...BJ) === 0, 'loddetorsken er langs kysten av Finnmark, ikke ute ved Bjørnøya');
 }
