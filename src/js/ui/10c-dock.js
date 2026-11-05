@@ -332,8 +332,10 @@ const DOCK = (() => {
     return head + h.replace(NEARCARD, '').replace(/<button((?:(?!data-why)[^>])*?)\sdisabled(?=[\s>=])/g, (m, a) => '<button' + a + ' data-why="' + why + '" disabled');
   }
   // a long explanation folds to three lines with «Mer» (the rules and the reasons stood as walls of text over what was to be done)
-  function fold(){ for (const e of dBody.querySelectorAll('.ph-note, p.note')){ if (e.textContent.length > 260 && !e.closest('.pl-head')) e.classList.add('fold'); } }
-  dBody.addEventListener('click', e => { const f = e.target.closest('.fold'); if (f){ f.classList.toggle('open'); } }, true);
+  // (a «Mer» opened stays open when the page is drawn anew with new content, per page and by the text's beginning: GUI review U12)
+  const folds = {}, foldKey = e => e.textContent.slice(0, 80);
+  function fold(){ const op = folds[page]; for (const e of dBody.querySelectorAll('.ph-note, p.note')){ if (e.textContent.length > 260 && !e.closest('.pl-head')){ e.classList.add('fold'); if (op && op.has(foldKey(e))) e.classList.add('open'); } } }
+  dBody.addEventListener('click', e => { const f = e.target.closest('.fold'); if (f){ const on = f.classList.toggle('open'), op = folds[page] || (folds[page] = new Set()); if (on) op.add(foldKey(f)); else op.delete(foldKey(f)); } }, true);
   function open(a){
     const [pg, sb] = String(a).split(':'); if (!PHONE.DRAWER.has(pg)) return;
     const was = page; page = pg; menu = null; html = '';
