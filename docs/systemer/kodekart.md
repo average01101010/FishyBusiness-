@@ -648,7 +648,7 @@ crew: people with skills, habits and moods
   - 399 `flyOut(c)`
   - 407 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1209 linjer)
+## `src/js/core/05-vessels.js` (1210 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -705,42 +705,42 @@ crew: people with skills, habits and moods
   - 646 `nearestYard(p)`
   - 648 `step()`
   - 666 `vesselStep(H)`
-  - 746 `sailV(H, hs)`
-  - 758 `sail(H, W, hs)`
-  - 787 `sailWaiting()`
-  - 788 `sailReplan(pl, b, gp)`
-  - 816 `iceWhy(p, tried)`
-  - 818 `sailStop(pl, b, why)`
-  - 826 `haltPlan(need)`
-  - 836 `arrive(w)`
-  - 854 `unstuckWhy()`
-  - 860 `unstuckSpot()`
-  - 867 `unstuck()`
-  - 881 `dock(pid, berth)`
-  - 908 `catchFactors(H, W, hs)`
-  - 918 `fish(H, W, hs)`
-  - 990 `endFishing(why)`
-  - 1005 `addCatch(sp, kg, cls, hook, opt)`
-- **1019** work on deck: gutting and icing take hands and time
-  - 1032 `deckHands()`
-  - 1035 `deckPending()`
-  - 1036 `deckEta(hands)`
-  - 1041 `moveKg(x, kg, patch)`
-  - 1049 `iceMinute()`
-  - 1051 `deckMinute()`
-  - 1069 `risk(W, hs)`
-  - 1096 `hullRepair()`
-  - 1099 `svcOverdue()`
-- **1100** the rescue boat (plan E3, 05.10.2026)
-  - 1120 `rescueBases()`
-  - 1129 `rescueBase(p)`
-  - 1136 `rescueAis(H)`
-  - 1140 `rescue(keepCatch)`
-  - 1164 `towSea(p)`
-  - 1169 `towRoutes(b)`
-  - 1180 `towStep(H)`
-  - 1192 `towDone(t)`
-  - 1198 `towPose(frac)`
+  - 747 `sailV(H, hs)`
+  - 759 `sail(H, W, hs)`
+  - 788 `sailWaiting()`
+  - 789 `sailReplan(pl, b, gp)`
+  - 817 `iceWhy(p, tried)`
+  - 819 `sailStop(pl, b, why)`
+  - 827 `haltPlan(need)`
+  - 837 `arrive(w)`
+  - 855 `unstuckWhy()`
+  - 861 `unstuckSpot()`
+  - 868 `unstuck()`
+  - 882 `dock(pid, berth)`
+  - 909 `catchFactors(H, W, hs)`
+  - 919 `fish(H, W, hs)`
+  - 991 `endFishing(why)`
+  - 1006 `addCatch(sp, kg, cls, hook, opt)`
+- **1020** work on deck: gutting and icing take hands and time
+  - 1033 `deckHands()`
+  - 1036 `deckPending()`
+  - 1037 `deckEta(hands)`
+  - 1042 `moveKg(x, kg, patch)`
+  - 1050 `iceMinute()`
+  - 1052 `deckMinute()`
+  - 1070 `risk(W, hs)`
+  - 1097 `hullRepair()`
+  - 1100 `svcOverdue()`
+- **1101** the rescue boat (plan E3, 05.10.2026)
+  - 1121 `rescueBases()`
+  - 1130 `rescueBase(p)`
+  - 1137 `rescueAis(H)`
+  - 1141 `rescue(keepCatch)`
+  - 1165 `towSea(p)`
+  - 1170 `towRoutes(b)`
+  - 1181 `towStep(H)`
+  - 1193 `towDone(t)`
+  - 1199 `towPose(frac)`
 
 ## `src/js/core/05c-air.js` (64 linjer)
 
@@ -1152,7 +1152,7 @@ sailors' tattoos: rewards that come by themselves
   - 36 `tatLanding(pid)`
   - 38 `checkTattoos()`
 
-## `src/js/core/09b-records.js` (41 linjer)
+## `src/js/core/09b-records.js` (44 linjer)
 
 Personal records: the biggest fish you have landed of each species (Jonas 09.10.2026: «Nå kjører vi kun på største fisk man har
 
@@ -1195,7 +1195,7 @@ the people on the quay (05.10.2026; Jonas chose it from the list of what makes p
   - 134 `folkShop()`
   - 141 `folkPort(H)`
 
-## `src/js/core/09e-fartstid.js` (54 linjer)
+## `src/js/core/09e-fartstid.js` (56 linjer)
 
 Fartstid: years at sea, 0 to 40 (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1)
 
@@ -1207,9 +1207,9 @@ Fartstid: years at sea, 0 to 40 (Jonas 07.10.2026; docs/engasjement.md, arbeidsl
   - 25 `fsText(p, long)`
   - 29 `fsAdd(pts, aboard)`
   - 37 `fsYear(y)`
-  - 44 `fsMinute()`
-  - 51 `fsLand(total)`
-  - 53 `fsRested(realMs)`
+  - 46 `fsMinute()`
+  - 53 `fsLand(total)`
+  - 55 `fsRested(realMs)`
 
 ## `src/js/core/09f-merker.js` (214 linjer)
 
@@ -1801,7 +1801,7 @@ MANUAL HELM (the user's wish 03.10.2026)
   - 63 `helmCast()`
   - 69 `helmCastDone(pid, kind)`
 
-## `src/js/core/16b-dyn.js` (542 linjer)
+## `src/js/core/16b-dyn.js` (574 linjer)
 
 HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
 
@@ -1825,32 +1825,35 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 213 `dynContact(b, d, P, O)`
 - **239** with no way on: she drifts (Fysikk 2)
   - 245 `dynDrift(type, p, H)`
-  - 263 `lieDrift(H)`
-- **286** the state, in step with the boat the rest of the game reads
-  - 287 `dynState(b)`
-  - 298 `dynWrite(b, d)`
-  - 303 `dynCan()`
-  - 308 `dynLive()`
-  - 313 `dynPose()`
-  - 320 `dynRest()`
-  - 321 `dynLivePose(frac)`
-  - 323 `dynHaltNeed()`
-- **324** the tick
-  - 325 `dynTick(dt)`
-  - 338 `dynMinute(H, W)`
-- **345** by hand (16-helm.js): the throttle and the rudder into the model
-  - 346 `dynHelm(d, dtG)`
-- **367** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
-  - 369 `dynLineBuild(pl, dep)`
-  - 389 `dynLineAt(T, s)`
-  - 395 `dynSeg(T, s)`
-  - 396 `dynSegHd(T, i)`
-  - 397 `dynLineProj(T, x, z, s0, back = 30)`
-  - 407 `dynLineHd(T, s, r0)`
-  - 414 `dynGroundAhead(T, s, look)`
-- **423** the autopilot
-  - 424 `dynAuto(d, dtG)`
-  - 541 `dynTrackView()`
+  - 267 `gearBuoyNear(p)`
+  - 269 `gearLieCrew()`
+  - 271 `gearWatch(b)`
+  - 279 `lieDrift(H)`
+- **318** the state, in step with the boat the rest of the game reads
+  - 319 `dynState(b)`
+  - 330 `dynWrite(b, d)`
+  - 335 `dynCan()`
+  - 340 `dynLive()`
+  - 345 `dynPose()`
+  - 352 `dynRest()`
+  - 353 `dynLivePose(frac)`
+  - 355 `dynHaltNeed()`
+- **356** the tick
+  - 357 `dynTick(dt)`
+  - 370 `dynMinute(H, W)`
+- **377** by hand (16-helm.js): the throttle and the rudder into the model
+  - 378 `dynHelm(d, dtG)`
+- **399** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
+  - 401 `dynLineBuild(pl, dep)`
+  - 421 `dynLineAt(T, s)`
+  - 427 `dynSeg(T, s)`
+  - 428 `dynSegHd(T, i)`
+  - 429 `dynLineProj(T, x, z, s0, back = 30)`
+  - 439 `dynLineHd(T, s, r0)`
+  - 446 `dynGroundAhead(T, s, look)`
+- **455** the autopilot
+  - 456 `dynAuto(d, dtG)`
+  - 573 `dynTrackView()`
 
 ## `src/js/core/16c-hull.js` (146 linjer)
 
@@ -1883,7 +1886,7 @@ the logo (src/brand/logo.svg, the user's anchor of 03.11.2026), filled with curr
 - **4** i18n
   - 113 `t(k, ...a)`
 
-## `src/js/ui/02-format-state.js` (208 linjer)
+## `src/js/ui/02-format-state.js` (223 linjer)
 
 ---------- formatting ----------
 
@@ -1895,30 +1898,34 @@ the logo (src/brand/logo.svg, the user's anchor of 03.11.2026), filled with curr
   - 13 `cashFx(delta)`
   - 36 `realMin(gameMin)`
   - 37 `realDur(gameMin)`
-  - 43 `inReal(gameMin)`
-  - 45 `whenTxt(T)`
-  - 46 `dur(h)`
-  - 50 `hm(H)`
-  - 51 `dayStr(H)`
-  - 52 `clockStr(H)`
-  - 53 `coordStr(p)`
-  - 59 `dirName(deg)`
-- **62** persistence
-  - 74 `tabMark()`
-  - 75 `tabMine()`
-  - 81 `tabLose()`
-  - 97 `saveJson(o)`
-  - 115 `save()`
-  - 118 `saveStoreKb()`
-  - 121 `migrateV2(o)`
-  - 133 `load()`
-- **153** UI state
-  - 164 `booting()`
-  - 165 `loaderGone()`
-  - 173 `toast(msg, ms)`
-  - 186 `saveCode()`
-  - 194 `codeRead(code)`
-  - 202 `loadCode(code)`
+  - 45 `inReal(gameMin)`
+  - 47 `gameDur(gameMin)`
+  - 50 `durBoth(gameMin)`
+  - 52 `whenTxt(T)`
+  - 53 `dur(h)`
+  - 57 `hm(H)`
+  - 58 `dayStr(H)`
+  - 59 `clockStr(H)`
+  - 60 `coordStr(p)`
+  - 66 `dirName(deg)`
+- **69** persistence
+  - 81 `tabMark()`
+  - 82 `tabMine()`
+  - 88 `tabLose()`
+  - 104 `saveJson(o)`
+  - 122 `save()`
+  - 125 `saveStoreKb()`
+  - 128 `migrateV2(o)`
+  - 140 `load()`
+- **160** UI state
+  - 171 `booting()`
+  - 172 `loaderGone()`
+  - 181 `toastPlace(el)`
+  - 187 `toastClear()`
+  - 188 `toast(msg, ms)`
+  - 201 `saveCode()`
+  - 209 `codeRead(code)`
+  - 217 `loadCode(code)`
 
 ## `src/js/ui/03a-chart.js` (157 linjer)
 
@@ -2088,7 +2095,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 89 `srchCard()`
   - 113 `srchSvg(u)`
 
-## `src/js/ui/04-panels-instruments.js` (207 linjer)
+## `src/js/ui/04-panels-instruments.js` (214 linjer)
 
 ---------- estimates ----------
 
@@ -2101,13 +2108,13 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 33 `nextEvent()`
   - 51 `setHtml(el, h)`
   - 53 `renderHud()`
-  - 102 `liveFrac()`
-  - 103 `livePose(frac)`
-  - 126 `vnoise2(x, y, s)`
-  - 132 `microBottom(p, d)`
-- **134** instruments: GPS and echo sounder
-  - 196 `hudClasses()`
-  - 202 `hudFold(which)`
+  - 109 `liveFrac()`
+  - 110 `livePose(frac)`
+  - 133 `vnoise2(x, y, s)`
+  - 139 `microBottom(p, d)`
+- **141** instruments: GPS and echo sounder
+  - 203 `hudClasses()`
+  - 209 `hudFold(which)`
 
 ## `src/js/ui/05-tattoo-art.js` (169 linjer)
 
@@ -2203,12 +2210,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1099 linjer)
+## `src/js/ui/phone/07-patch.js` (1103 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1092 `patch()`
+  - 1096 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2463,12 +2470,13 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 108 `ukeLogo()`
   - 112 `ukeShare(w)`
 
-## `src/js/ui/05j-catchfeed.js` (52 linjer)
+## `src/js/ui/05j-catchfeed.js` (55 linjer)
 
 ---------- «Kystlys» U4: the catch as it comes over the rail (docs/planer/ui-redesign.md, 04.11.2026) ----------
 
 - **1** «Kystlys» U4: the catch as it comes over the rail (docs/planer/ui-redesign.md, 04.11.2026)
-  - 51 `catchFeed(sp, kg)`
+  - 53 `catchFeed(sp, kg)`
+  - 54 `catchRec(sp, kg)`
 
 ## `src/js/ui/05k-ordbok.js` (74 linjer)
 
@@ -2712,51 +2720,51 @@ actions
 - **73** the club's notice board: fixed lines, never free text (F2, 20261030160000_lag_board.sql)
 - **155** the week's quiz: five questions from the bank, the same for everyone in a game week
 
-## `src/js/ui/10-rod-acts.js` (88 linjer)
+## `src/js/ui/10-rod-acts.js` (96 linjer)
 
 ---------- the jig game: jigging by hand yourself, and the buttons and hooks around it ----------
 
 - **1** the jig game: jigging by hand yourself, and the buttons and hooks around it
-  - 86 `refreshAll()`
+  - 94 `refreshAll()`
 
-## `src/js/ui/10-gear-ui.js` (227 linjer)
+## `src/js/ui/10-gear-ui.js` (230 linjer)
 
 passive gear on screen: the action bar, the fish panel, the chart and the route
 
 - **1** passive gear on screen: the action bar, the fish panel, the chart and the route
-  - 5 `setState(s)`
-- **12** the bait as the player sees it (Jonas 20.10.2026, after tilbakemelding #74: «det må gjøres mer intuitivt hva båten har slags
-  - 24 `tubState(lk)`
-  - 33 `tubsHtml(lk)`
-  - 41 `tubWords(st)`
-  - 46 `tubLegend(lk)`
-  - 53 `setBaitTxt(s)`
-  - 59 `setWhat(s)`
-  - 66 `setLabel(s, short)`
-  - 73 `setChoices(all)`
-  - 87 `gopText()`
-  - 95 `gearActs(LS)`
-  - 116 `jigSets()`
-  - 126 `gearPanel()`
-  - 145 `gearSvg(u)`
-  - 171 `otherGearHit(p, r)`
-  - 172 `otherGearCard(s)`
-  - 180 `gearHit(p, r)`
-  - 182 `buoyStandoff(s, e)`
-  - 187 `gearTap(hit)`
-  - 199 `wpActOptions(w)`
-  - 205 `wpActLabel(a)`
-  - 211 `wpActCycle(w)`
-  - 216 `gearDoAct(act, el)`
+  - 8 `setState(s)`
+- **15** the bait as the player sees it (Jonas 20.10.2026, after tilbakemelding #74: «det må gjøres mer intuitivt hva båten har slags
+  - 27 `tubState(lk)`
+  - 36 `tubsHtml(lk)`
+  - 44 `tubWords(st)`
+  - 49 `tubLegend(lk)`
+  - 56 `setBaitTxt(s)`
+  - 62 `setWhat(s)`
+  - 69 `setLabel(s, short)`
+  - 76 `setChoices(all)`
+  - 90 `gopText()`
+  - 98 `gearActs(LS)`
+  - 119 `jigSets()`
+  - 129 `gearPanel()`
+  - 148 `gearSvg(u)`
+  - 174 `otherGearHit(p, r)`
+  - 175 `otherGearCard(s)`
+  - 183 `gearHit(p, r)`
+  - 185 `buoyStandoff(s, e)`
+  - 190 `gearTap(hit)`
+  - 202 `wpActOptions(w)`
+  - 208 `wpActLabel(a)`
+  - 214 `wpActCycle(w)`
+  - 219 `gearDoAct(act, el)`
 
-## `src/js/ui/10c-dock.js` (400 linjer)
+## `src/js/ui/10c-dock.js` (402 linjer)
 
 ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 
 - **1** the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side
-- **304** the drawer
-  - 373 `renderActs()`
-  - 386 `showroomTick()`
+- **306** the drawer
+  - 375 `renderActs()`
+  - 388 `showroomTick()`
 
 ## `src/js/ui/10d-helm.js` (51 linjer)
 
@@ -2764,7 +2772,7 @@ THE HELM ON THE SCREEN (core/16-helm.js; the user's wish 03.10.2026)
 
 - **1** THE HELM ON THE SCREEN (core/16-helm.js; the user's wish 03.10.2026)
 
-## `src/js/ui/10e-sound.js` (311 linjer)
+## `src/js/ui/10e-sound.js` (319 linjer)
 
 SOUND (the user's wish 03.10.2026)
 

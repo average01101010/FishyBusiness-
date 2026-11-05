@@ -167,4 +167,5 @@ Spilleren fikk ingenting på juksa selv om ekkoloddet viste mye blåkveite, og f
 - **Alarmen:** `gearWatch` piper (ankeralarmen) og sier fra én gang når båten går fra under til over 1 nm fra redskapet mens hun ligger, driver eller jukser. Seiler hun bort med vilje, er det ingen alarm.
 - **På skjermen:** HUD-en viser «Blåsa 0,3 nm · driver 0,8 kn SØ» (eller «kjører opp»), rød med «Kjør dit» over 1 nm. Knappelinja har «Til blåsa» innen en halv mil, som lager ruta opp; kartet lukkes når båten er framme (U3).
 - **Målt:** `fiskeplay.py line teiner garn` (seed 1): 0,2–0,4 nm fra blåsa etter 12–60 t, mot 6–25 km før.
+- **Stikkprøve langs kysten** (sjark, garn satt 3–9 km ut, 3. mars, vind rundt 10 m/s, 12 t med skipperen våken): Bøvågen lengst 0,43 nm og Bodø 0,39 nm uten at motoren trengtes; Båtsfjord 0,52 nm med 128 minutter motor og 12 L diesel; Husøy 0,51 nm med 108 minutter og 10 L. Sovende alene drev hun 0,30–0,66 nm på 6 t, som før.
 - **Kongekrabben på teinekortet** (V4 A): kortene i butikken og på nettet sier utbredelsen med Fiskeguidens ord (`KC_WHERE` i `ui/10-gear-ui.js`), som en opplysning, ikke et tips (Jonas 20.10.2026: «Ikke vis hint»).
