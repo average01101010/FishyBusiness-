@@ -5,7 +5,8 @@ const PLAN2UI = (() => {
   const L = (no, en) => S.lang === 'no' ? no : en;
   const nm = id => (portById(id) || {name:'?'}).name;
   let open = null, adding = null, busy = false, sugg = null, dayTab = 0;
-  const rerender = () => { if (typeof refreshAll === 'function') refreshAll(); else if (typeof PHONE !== 'undefined') PHONE.render(); };
+  // (and the drawer at once: «Lager planen …» stood up to 0.7 s after the plan was on, until the drawer's own tick, GUI review P5)
+  const rerender = () => { if (typeof refreshAll === 'function') refreshAll(); else if (typeof PHONE !== 'undefined') PHONE.render(); if (typeof DOCK !== 'undefined' && DOCK.redraw) DOCK.redraw(); };
   const B = (a, label, extra, cls) => '<button class="ph-btn' + (cls ? ' ' + cls : '') + '" data-pa="' + a + '"' + (extra ? ' ' + extra : '') + '>' + label + '</button>';
   const T = (a, label, on, extra) => '<button data-pa="' + a + '" class="' + (on ? 'on' : '') + '"' + (extra ? ' ' + extra : '') + '>' + label + '</button>';
   const BIG = (a, label, sub, on, extra, off) => '<button class="dr-big' + (on ? ' on' : '') + '" data-pa="' + a + '"' + (extra ? ' ' + extra : '') + (off ? ' disabled' : '') + '><b>' + label + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</button>';

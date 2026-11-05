@@ -1579,3 +1579,7 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 .dr-page .ph-btn.dr-del{background:transparent;color:#b3261e;border:1.5px solid #b3261e;box-shadow:none}
 /* P7: the plan's own «Slett» dialog: the button that deletes is a red outline beside «Behold planen» */
 #modal .btn.dr-danger{background:transparent;color:#b3261e;border:1.5px solid #b3261e}
+/* P5 (GUI review): with the drawer open the toast stands clear of it: at the top in a standing screen (over the tall form pages too,
+   which begin at 12 %), in the free part beside it in a lying one */
+@media (orientation:portrait){body.dk-open #toast{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 8px)}}
+@media (orientation:landscape){body.dk-open #toast{left:calc((100% - min(380px,92vw)) / 2);max-width:calc(100% - min(380px,92vw) - 24px)}}
