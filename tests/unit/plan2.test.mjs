@@ -25,4 +25,12 @@ export default function (t){
     S.pgear.kits.n = 2; t.ok(p2Kits() === 2, 'to om bord: 2');
     S.sets = [{vid:S.cur, kind:'line'}, {vid:S.cur, kind:'line', lost:true}, {vid:'annen', kind:'line'}];
     t.ok(p2Kits() === 3, 'to om bord og ett på lina i sjøen (en tapt lenke og en annen båts teller ikke): 3 (' + p2Kits() + ')'); }
+  // round the clock (U2): the boat's own limits before the number aboard
+  { const {plan2WatchWhy} = K, st = (house, bunks, crewMax) => ({house, bunks, crewMax});
+    t.ok(String(plan2WatchWhy(st(false, 0, 2), 3, true)) === 'Båten har verken styrhus eller køyer', 'snekke (ingen styrhus, ingen køyer), tre om bord: båtens grense, ikke «dere er 3»');
+    t.ok(plan2WatchWhy(st(true, 2, 2), 3, true).k === 'boat' && /plass til bare 3/.test(plan2WatchWhy(st(true, 2, 2), 3, true)), 'plass til to i mannskapet: «plass til bare 3 om bord»');
+    t.ok(/bare 2 køyer/.test(plan2WatchWhy(st(true, 2, 4), 4, true)), 'plass til fem, men to køyer: «bare 2 køyer»');
+    const c = plan2WatchWhy(st(true, 4, 3), 3); t.ok(c.k === 'crew' && /ansett 1 til/.test(c), 'båten kan, tre om bord: «ansett 1 til» (' + c + ')');
+    t.ok(/køyer til alle/.test(plan2WatchWhy(st(true, 4, 4), 5)), 'fem om bord og fire køyer: køyer til alle');
+    t.ok(plan2WatchWhy(st(true, 6, 5), 4) === null, 'fire om bord, seks køyer: døgndrift går'); }
 }
