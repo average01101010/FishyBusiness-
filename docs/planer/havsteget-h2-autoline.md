@@ -249,3 +249,4 @@ Fra H2c (05.11.2026):
   - Målt: en uke på planen 32,5 t mot 34,3 t for hånd på de samme feltene (5 %), og uka spilt som `catchUp` 0,0 % fra åpent. Arbeidsgrensen Vanlig holder igjen 2 % av året ved feltet nord for Loppa, ligge bi 0,5 %.
   - Rettet underveis: leia «mellom Vannareid og Vannareid» (hjem er mottaket) stoppet planen, og lossemeldingen sa «i dag» om en seddel to døgn fram.
   - Prøvd bare nord for Loppa med Vannareid som mottak (hele kysten i testmiljøet); stikkprøvene langs kysten og havturen hele veien er H2e. **Venter på Jonas før utrulling.**
+- 05.11.2026: **H2c rullet ut** (Jonas: «Rull ut. Gi meg promptet for å starte h2d i en ny økt»), flettet med arbeidsgrenen i 493c636 (det nye der var Spilltest 3, Ø2 og Ø6; etter flettingen enhetstestene 1195 OK, `havplantest` 18 OK, `driftsplan2test` 62 OK, `driftsplan2ui` 22 OK). **Neste:** H2d (Blender-modellene og animasjonene) i en ny økt.

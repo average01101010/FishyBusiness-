@@ -13,7 +13,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 ## Øktene som kjører (05.11.2026)
 
 - **Spilltest 3** (`ccr-9c21028c-lptg24`, `docs/planer/spilltest3-valg.md`). Den eier backlogpunktene «Spilltest 3, rettingene og Jonas' valg», «U10, rest», «Garna fisker trolig for lite» og «Kongekrabben stemmer omtrent». Endrede filer: `core/03c-stability.js`, `04-crew.js`, `05-vessels.js`, `06d-drift.js`, `06g-plan2.js`, `07-harbours.js`, `09b-records.js`, `09d-folk.js`, `09e-fartstid.js`, `10-gear.js`, `12-heat.js`, `16b-dyn.js`, `16c-hull.js`, `ui/02-format-state.js`, `03d-setmode.js`, `04-panels-instruments.js`, `05b-work.js`, `05j-catchfeed.js`, `06b-book-tabs.js`, `07-guide.js`, `07c-handbook.js`, `08-actions.js`, `10-gear-ui.js`, `10-rod-acts.js`, `10c-dock.js`, `10e-sound.js`, telefondelene `01`, `02`, `05`, `07`, `12`, `13` og `13b`, og `styles.css`.
-- **Havsteget H2, autolineren** (`h2-autoline`, `docs/planer/havsteget-h2-autoline.md`). H2a ble rullet ut 05.11.2026 (c9e651d1); H2b ble rullet ut 05.11.2026 (d5d6b4c); H2c er bygd 05.11.2026 på `ccr-94300c4c-ssnrxm` og venter på Jonas før utrulling, så H2d–H2e. Inntil H2e er ute, eier H2 «Havsteget», «Ligge bi i uvær», «Diesel tilbake fra havet», 10.1 «Frys- og RSW-fartøyene lander i kar på 300 kg» (lossingen i H2b) og 10.3 «Fisken, havflåten og Autonav på havet». Planen skal endre `core/02-species-gear.js`, `03-simulation.js`, `03d-quota.js`, `03e-rules.js`, `04-crew.js`, `05-vessels.js`, `06g-plan2.js`, `06h-plan2-engine.js`, `07-harbours.js`, `07f-kar.js`, `09j-kystvakt.js`, `10-gear.js`, `13-work.js`, `ui/05d-plan2.js`, `08-actions.js`, `phone/10-fartoy.js`, `phone/14-act.js`, `view3d/09-landing-deck.js`, `view3d/10-gear.js`, `src/data/fiske.json`, `src/data/rules.json` og Blender-skriptene `tools/boats/al45.py`, `tools/deck/`, `tools/gear/` og `tools/harbour/`.
+- **Havsteget H2, autolineren** (`h2-autoline`, `docs/planer/havsteget-h2-autoline.md`). H2a ble rullet ut 05.11.2026 (c9e651d1); H2b ble rullet ut 05.11.2026 (d5d6b4c); H2c ble rullet ut 05.11.2026 (493c636); H2d startes i en ny økt, så H2e. Inntil H2e er ute, eier H2 «Havsteget», «Ligge bi i uvær», «Diesel tilbake fra havet», 10.1 «Frys- og RSW-fartøyene lander i kar på 300 kg» (lossingen i H2b) og 10.3 «Fisken, havflåten og Autonav på havet». Planen skal endre `core/02-species-gear.js`, `03-simulation.js`, `03d-quota.js`, `03e-rules.js`, `04-crew.js`, `05-vessels.js`, `06g-plan2.js`, `06h-plan2-engine.js`, `07-harbours.js`, `07f-kar.js`, `09j-kystvakt.js`, `10-gear.js`, `13-work.js`, `ui/05d-plan2.js`, `08-actions.js`, `phone/10-fartoy.js`, `phone/14-act.js`, `view3d/09-landing-deck.js`, `view3d/10-gear.js`, `src/data/fiske.json`, `src/data/rules.json` og Blender-skriptene `tools/boats/al45.py`, `tools/deck/`, `tools/gear/` og `tools/harbour/`.
 
 ## Bølge 1: kan starte nå
 
@@ -122,7 +122,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 
 - «Driftsplan 2: GUI-gjennomgangen, det som står igjen», «Driftsplan 2: stikkprøver langs kysten mangler», «Driftsplan 2, del 8 (rydding)» og «`drifttest` scenario 6» (som forsvinner med del 8).
 - Del 8: Jonas 05.11.2026: «Ja, rydd bort den gamle».
-- **Trenger:** hele kysten i testmiljøet (`tools/map/out/game`; `python3 tools/map/release.py` og `game.py` henter den på om lag ti minutter, prøvd 05.11.2026). Kommer etter H2c (autolineren i Driftsplan 2, bygd 05.11.2026), når den er rullet ut.
+- **Trenger:** hele kysten i testmiljøet (`tools/map/out/game`; `python3 tools/map/release.py` og `game.py` henter den på om lag ti minutter, prøvd 05.11.2026). H2c (autolineren i Driftsplan 2) er rullet ut 05.11.2026 (493c636), så Ø12 kan tas.
 
 ## Bølge 4: store løp, ett om gangen
 
@@ -171,7 +171,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 | Økt | Status | Gren | Dato |
 |---|---|---|---|
 | Spilltest 3 | Kjører | `ccr-9c21028c-lptg24` | 05.11.2026 |
-| H2 autolineren | H2a rullet ut (c9e651d1), H2b rullet ut (d5d6b4c), H2c bygd og venter på utrulling; så H2d–H2e | `ccr-94300c4c-ssnrxm` (H2c) | 05.11.2026 |
+| H2 autolineren | H2a rullet ut (c9e651d1), H2b rullet ut (d5d6b4c), H2c rullet ut (493c636); H2d startes i en ny økt, så H2e | `ccr-94300c4c-ssnrxm` (H2c) | 05.11.2026 |
 | Ø1 Det som ikke kom med | Ferdig: PR #42 flettet, #18, #19 og #33 lukket, Tufjord flettet inn (8f503066), verftene i Sverige tatt ut (ce056730), leibitene rettet i `npc.py` (eb669fe7, ute med neste kartrelease) | `ccr-834c604f-xxnqoy`, `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
 | Ø2 Testriggen | Ferdig: alle punktene grønne eller med årsak og eier i backloggen (10.6 «Ø2 05.11.2026», «Strøket 05.11.2026 (Ø2)»); de 11 rettede uten 3D grønne på d663638a; A5 historikk i `run.py`; grensjekken i `/okt-slutt` ser på koden; tillegget fra den andre Ø2-økta (`ccr-o2-tillegg`) tatt inn som d663638a. Røde med eier: gfxtest (lyden, Ø7), deckshot (kranen, H2), crewclip/dyntest (H6) | `ccr-5e1ba2f4-pusvyd`, `ccr-o2-tillegg` | 05.11.2026 |
 | Ø3 Ytelse | Ikke begynt | | |
