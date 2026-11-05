@@ -24,6 +24,7 @@ function statusText(){
   if (b.anch && b.anch.up != null) return GL('Hiver anker', 'Weighing anchor');   // (a route waits for it: 06e-anchor.js)
   if (b.status === 'sailing') return t(S.plan && S.plan.returning ? 'st_returning' : 'st_sailing', fmt(b.v, 0));
   if (b.gop){ const g = gopText(); return GL(g[2], g[3]); }
+  if (b.status === 'fishing' && b.deckEnd) return GL('Tar unna fangsten', 'Seeing to the catch');   // after the gear work, not «Fisker» (F4)
   if (b.anch && b.status === 'idle') return GL(b.anch.out != null && b.anch.out < b.anch.rode ? 'Kaster anker' : 'Ligger til ankers', b.anch.out != null && b.anch.out < b.anch.rode ? 'Anchoring' : 'At anchor');
   if (b.status === 'tow' && b.tow) return t('st_tow_' + b.tow.ph, fmt(b.v, 0));
   return t('st_' + b.status);
@@ -36,7 +37,7 @@ function nextEvent(){
   if (b.land) add(b.land.until, L('Sluttseddelen', 'The landing note'));
   if (b.fueling) add(b.fueling.until, L('Bunkringen er ferdig', 'Fuelling done'));
   if (b.shift) add(b.shift.until, L('Forhalingen er ferdig', 'Shifting done'));
-  if (b.status === 'fishing' && b.fishUntil != null) add(b.fishUntil, L('Fisket er ferdig', 'Fishing done'));
+  if (b.status === 'fishing' && b.fishUntil != null && !b.deckEnd) add(b.fishUntil, L('Fisket er ferdig', 'Fishing done'));
   if (b.status === 'port' && jobsDone()) add(jobsDone(), jobsCrewOnly() ? L('Mannskapet er ferdig', 'The crew is done') : L('Verkstedet er ferdig', 'The yard is done'));
   if (b.status === 'sailing' && S.plan && S.plan.idx < S.plan.wps.length){
     const wps = S.plan.wps; let a = b.pos, km = 0, stop = null;

@@ -185,7 +185,7 @@ const DOCK = (() => {
     if (b.status !== 'port' && resting()) out.push(L('Hviler i køya', 'Resting in the bunk') + ' · ' + Math.round(S.energy) + ' %');
     if (b.status === 'unmooring') out.push(L('Kaster loss …', 'Casting off …'));
     if (b.gop){ const g = gopText(); if (g) out.push(L(g[0], g[1])); }
-    else if (b.status === 'fishing' && b.fishUntil != null){
+    else if (b.status === 'fishing' && b.fishUntil != null && !b.deckEnd){   // (seeing to the catch before leaving: no jigging, F4)
       // how many jigging reels are working (tilbakemelding #64), short enough for a phone: the hands at the rail tend three each, as in
       // fishEffort (core/03-simulation.js), so «3 av 5» means too few hands for the rest
       const own = S.equip ? S.equip.jukse || 0 : 0, jk = own > 0 && !(S.target === 'kveite' && b.kgear && !kveiteClosed(S.t / 60)) ? Math.min(own, workTeam('fiske', 'juksa', 'fishing').n * JIG.perPerson) : 0;
