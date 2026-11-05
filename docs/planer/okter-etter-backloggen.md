@@ -74,7 +74,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 ### Ø11a Planen for lover, regler og sikkerhet (bare plan)
 
 - `docs/planer/lover-og-regler.md` (L0–L6) og «Sikkerhet SK1–SK6» (oppgave #164) og N8 i `docs/planer/npc-flaaten.md` (sjømannskap: vikeplikt, lys og signaler for NPC-båtene; Jonas 05.11.2026) blir én plan med `/planlegg`, fordi L1 og L3 (vikeplikt, lys og lyd) gjelder både spilleren og NPC-ene, og fordi L6 (vesten, MOB-båten med davit, MOB-lys med røyk) og SK1 (vest, drakt, leider, livbøye, PLB) er de samme modellene. Byggingen er Ø11 i bølge 3.
-- **Ferdig 05.11.2026:** `docs/planer/lover-regler-sikkerhet.md`. Øktene Ø11.1–Ø11.9, regelverket sjekket mot Lovdata med paragraf per krav, filene per økt og hvem de ikke kan gå samtidig med (kap. 6), og de nye valgene V7–V11 (kap. 7). **Venter på** V7–V11.
+- **Ferdig 05.11.2026:** `docs/planer/lover-regler-sikkerhet.md`. Øktene Ø11.1–Ø11.9, regelverket sjekket mot Lovdata med paragraf per krav, filene per økt og hvem de ikke kan gå samtidig med (kap. 6), og de nye valgene V7–V11 (kap. 7). **Jonas svarte 05.11.2026:** V7 ingen dagsignaler («Stort sett ingen bruker det på ekte»), V8 A, V9 B, V10 C, V11 C.
 
 ## Bølge 2: etter at spilltest 3 er flettet inn
 
@@ -116,9 +116,9 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 
 ### Ø11 Lover, regler og sikkerhet, byggingen
 
-- Ni økter Ø11.1–Ø11.9 etter `docs/planer/lover-regler-sikkerhet.md` (Ø11a): Ø11.1 vikeplikten (L1, N8), Ø11.2 sikt, lys, lyd og dagsignaler (L3, N8), Ø11.3 sammenstøt (L2), Ø11.4 utstyrsmodellene i Blender (L6a, SK1), Ø11.5 utstyret og merkingen på båtene (L6b, L4, V6 A), Ø11.6 mann over bord (SK2, SK3, SK5), Ø11.7 nødstopp, nestenulykker og havsnød (SK4, SK6, L8), Ø11.8 farvannet (L5), Ø11.9 arbeidsavtalen (L7). Det som overlapper, er de seks første.
+- Ni økter Ø11.1–Ø11.9 etter `docs/planer/lover-regler-sikkerhet.md` (Ø11a): Ø11.1 vikeplikten (L1, N8), Ø11.2 sikt, lys og lyd (L3, N8), Ø11.3 sammenstøt (L2), Ø11.4 utstyrsmodellene i Blender (L6a, SK1), Ø11.5 utstyret og merkingen på båtene (L6b, L4, V6 A), Ø11.6 mann over bord (SK2, SK3), Ø11.7 nødstopp, nestenulykker og havsnød (SK4, SK6, L8), Ø11.8 farvannet (L5), Ø11.9 arbeidsavtalen (L7). Det som overlapper, er de seks første.
 - **Filer:** står per økt i planen (kap. 6). De nye reglene ligger i nye filer (`core/05e-sjovei.js`, `core/14b-sikkerhet.js`, `ui/10s-mob.js`), med ett kall i `core/05-vessels.js`, `core/05d-hav.js` og `core/16b-dyn.js`. Ø11 trenger verken `core/03e-rules.js` eller `core/09j-kystvakt.js` (Kystvakta ser ikke på sjøfarten, V1 A), så **Ø11 og Ø10 kan gå samtidig**. Ø11.1–Ø11.3 og Ø11.5 går ikke samtidig med Ø15, Ø9 eller Ø7. Ø11.4 (bare Blender) kan tas før H2 er ferdig hvis Jonas vil.
-- **Venter på** V7–V11 i planen (kap. 7) og «kjør på» etter H2e.
+- **Valgene V7–V11 tatt 05.11.2026** (planen kap. 7). **Venter på** «kjør på» etter H2e.
 
 ### Ø12 Driftsplan 2, resten
 
@@ -181,13 +181,13 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 | Ø4 Båtmodellene | Venter (Jonas: «Vent med båtene») | | |
 | Ø5 Butikkene, restene | Ikke begynt | | |
 | Ø6 Sikkerhetsgjennomgangen (A7) | Ferdig: 15 funn i `docs/planer/sikkerhet-skyen.md`; rettet samme dag etter Jonas' «kjør på»: 1, 2–4, 5, 8–15 (fire migreringer kjørt av Jonas og bekreftet). Igjen: 6 (haill og penger på serveren) og 7 (innloggingsdomenet hos WorkOS) | `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
-| Ø11a Planen for lover, regler og sikkerhet | Ferdig: `docs/planer/lover-regler-sikkerhet.md` (Ø11.1–Ø11.9, regelverket sjekket mot Lovdata, filene per økt). Venter på valgene V7–V11 | `claude/plan-lover-regler-sikkerhet-8wr8hy`, `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
+| Ø11a Planen for lover, regler og sikkerhet | Ferdig: `docs/planer/lover-regler-sikkerhet.md` (Ø11.1–Ø11.9, regelverket sjekket mot Lovdata, filene per økt). Valgene V7–V11 tatt samme dag | `claude/plan-lover-regler-sikkerhet-8wr8hy`, `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
 | Ø7 Småfeil | Kan starte (spilltest 3 er ute) | | |
 | Ø8 Spillbarhet | Kan starte (spilltest 3 er ute) | | |
 | Ø9 Fysikk 4 | Kan starte (spilltest 3 er ute) | | |
 | Ø16 Sanntid S2 | Kan starte (Ø6 ferdig) | | |
 | Ø10 Regelmotoren | Venter på H2 | | |
-| Ø11 Lover, regler og sikkerhet | Venter på V7–V11 og H2 (ni økter Ø11.1–Ø11.9) | | |
+| Ø11 Lover, regler og sikkerhet | Venter på H2 og «kjør på» (ni økter Ø11.1–Ø11.9; valgene tatt) | | |
 | Ø12 Driftsplan 2, resten | Venter på H2 | | |
 | Ø13 Ny kartrelease | Ikke begynt | | |
 | Ø14 Fangstfelt med navn | Venter på H2 | | |
@@ -213,3 +213,4 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
   - Regelverket er sjekket mot Lovdata: sjøveisreglene, sjøloven, skipssikkerhetsloven, skipsarbeidsloven, forskriftene for fiskefartøy under og over 15 m, kvalifikasjonsforskriften, merkeforskriften, havne- og farvannsloven og fartsforskriftene.
   - Funnet: kommunene regulerer bare fritidsbåter. Næringsfartøy følger de statlige fartsgrensene, som finnes som datasett hos Geonorge. `lsaOf` har feil antall livbøyer for kyst21 og pelagisk.
   - Venter på V7–V11.
+- 05.11.2026: Jonas svarte på Ø11a-valgene: «V7: Vi trenger ikke tenke på dagsignaler i spillet. Stort sett ingen bruker det på ekte. V8: A. V9: B. V10: C. V11: C.» Planen er rettet. Ø11 venter på H2 og «kjør på».

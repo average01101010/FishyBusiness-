@@ -1,6 +1,6 @@
 # Lover, regler og sikkerhet på sjøen (Ø11a, plan 05.11.2026)
 
-> Plan etter `/planlegg`. Bare dokument; ingenting er bygd. Planen slår sammen `docs/planer/lover-og-regler.md` (L0–L8), «Sikkerhet SK1–SK6» (oppgave #164) og N8 i `docs/planer/npc-flaaten.md` til én rekke økter, Ø11.1–Ø11.9. Valgene Jonas alt har tatt, står i kap. 2 og spørres ikke om igjen. De nye valgene er V7–V11 i kap. 7. Byggingen er Ø11 i `docs/planer/okter-etter-backloggen.md` og starter etter H2. **Venter på V7–V11, og på «kjør på» for Ø11.1 når H2 er ute.**
+> Plan etter `/planlegg`. Bare dokument; ingenting er bygd. Planen slår sammen `docs/planer/lover-og-regler.md` (L0–L8), «Sikkerhet SK1–SK6» (oppgave #164) og N8 i `docs/planer/npc-flaaten.md` til én rekke økter, Ø11.1–Ø11.9. Valgene Jonas alt har tatt, står i kap. 2 og spørres ikke om igjen. De nye valgene V7–V11 besvarte Jonas 05.11.2026 (kap. 7). Byggingen er Ø11 i `docs/planer/okter-etter-backloggen.md` og starter etter H2. **Venter på «kjør på» for Ø11.1 når H2 er ute.**
 
 ## 1. Hva Jonas ba om
 
@@ -34,11 +34,11 @@ Prinsippene 1–7 i `lover-og-regler.md` gjelder videre. Særlig prinsipp 4: den
 |---|---|---|
 | L0 Kildene | Kap. 5 her (sjekket 05.11.2026); resten først i Ø11.1 | Planen trengte kildene for å bli riktig. Det som mangler, står i kap. 8. |
 | L1 vikeplikt og varsel, N8 vikeplikt og AIS-status | **Ø11.1** | Samme regel (`colregSit`) gjelder spilleren, Autonav og NPC-ene. |
-| L3 sikt, lyd og dagsignaler, N8 lys og lydsignaler | **Ø11.2** | `lanterns` tegner allerede både egen båt og NPC-ene. Lyden og dagsignalene kommer på begge samtidig. |
+| L3 sikt og lyd, N8 lys og lydsignaler | **Ø11.2** | `lanterns` tegner allerede både egen båt og NPC-ene. Lyden kommer på begge samtidig. Dagsignalene er ikke med (V7). |
 | L2 sammenstøt | **Ø11.3** | Skylda leses fra vikeplikten i Ø11.1 og sikten i Ø11.2. |
-| L6a modellene, SK1 (vest, livbøye, PLB) | **Ø11.4** | Samme modeller. Drakten oppbevares inne. Leideren finnes alt (Ø11.5). PLB står i V10. |
+| L6a modellene, SK1 (vest, livbøye), nødstoppen på haleren (V9 B) | **Ø11.4** | Samme modeller. Drakten oppbevares inne. Leideren finnes alt (Ø11.5). PLB er ikke med (V10 C). |
 | L6b utstyret på båtene, L4 merking, SK1 og SK5 (utstyret), V6 A | **Ø11.5** | Alt som synes på skroget og på folkene, i én økt i `vessel3d.js` og `view3d/09-landing-deck.js`. |
-| SK2 risiko, SK3 mann over bord, SK5 kurs og øvelse | **Ø11.6** | Risikoen sier når det skjer, hendelsen er det spilleren gjør, og øvelsen lærer henne det. |
+| SK2 risiko, SK3 mann over bord | **Ø11.6** | Risikoen sier når det skjer, og hendelsen er det spilleren gjør. Kurs og øvelser er ikke med (V11 C); utstyret i SK5 er Ø11.5. |
 | SK4 nødstopp, SK6 nestenulykker, L8 havsnød | **Ø11.7** | Nestenulykkene samler det de andre fasene finner. Havsnød hos andre bruker maskineriet fra Ø11.6. |
 | L5 farvannet | **Ø11.8** | Står for seg (data, kartlag, Autonav). |
 | L7 arbeidsavtalen | **Ø11.9** | Står for seg (mannskapet). |
@@ -77,8 +77,8 @@ Lovdata ble lest gjennom en leseagent. Der den bare ga et sammendrag og ikke tek
 | 16, 17 | Den vikepliktige gjør noe tidlig og tydelig. Den andre holder kurs og fart, kan gjøre noe når det er klart at den andre ikke viker, og må gjøre noe når sammenstøt ikke kan unngås ellers; ikke sving babord for et fartøy om babord | NPC-ene og Autonav | Ø11.1 |
 | 18 | Maskindrevet viker for ikke under kommando, begrenset manøvreringsevne, fiske og seil. Den som fisker, viker for de to første | Rangen i `colregSit` | Ø11.1 |
 | 19 | Nedsatt sikt: sikker fart, maskinen klar, ikke sving babord for et fartøy forut for tvers, ned til minste styrefart når tåkesignal høres forut | Autonav i tåke | Ø11.2 |
-| 26 | Trål grønt over hvitt, annet fiske rødt over hvitt, to kjegler spiss mot spiss om dagen [sammendrag]. COLREG tillater en kurv under 20 m, men det ble ikke funnet i Lovdatas tekst | Lanternene finnes; dagsignalene etter V7 | Ø11.2 |
-| 27, 30 | Ikke under kommando: to røde og to kuler. Anker: kule forut. På grunn: tre kuler [sammendrag] | Dagsignalene etter V7 | Ø11.2 |
+| 26 | Trål grønt over hvitt, annet fiske rødt over hvitt, to kjegler spiss mot spiss om dagen [sammendrag] | Lanternene finnes. Dagsignalene er ikke med (V7) | Ø11.2 (lanternene) |
+| 27, 30 | Ikke under kommando: to røde og to kuler. Anker: kule forut. På grunn: tre kuler [sammendrag] | Lanternene finnes. Kulene er ikke med (V7) | Ø11.2 (lanternene) |
 | 32, 33 | Kort støt om lag 1 s, langt 4–6 s. Fløyte fra 12 m, klokke fra 20 m. Under 12 m et annet middel som gir kraftig lyd [sammendrag] | Hornet finnes for alle båtene | Ø11.2 |
 | 34 | 1 kort styrbord, 2 korte babord, 3 korte bakk. Minst 5 korte ved tvil. Ett langt ved sving og hindret sikt [sammendrag] | NPC-ene og spillerens horn | Ø11.2 |
 | 35 | Nedsatt sikt: ett langt minst hvert 2. minutt underveis, to lange når fartøyet ligger stille, ett langt og to korte for fiske og ikke under kommando, klokke ved anker [sammendrag] | Tåkesignalene | Ø11.2 |
@@ -136,7 +136,7 @@ Lovdata ble lest gjennom en leseagent. Der den bare ga et sammendrag og ikke tek
 | 38 | Dekket fartøy over 6 m: flåte til alle. Høyst tre om bord: 4-mannsflåte etter ISO 9650-1 | Finnes |
 | 43 | Én livbøye per tre personer, minst halvparten med lys, merket med navn og hjemsted. Under 10,67 m minst én med 30 m line. 10,67–15 m minst to, én med line på hver side | Finnes; sjekkes i Ø11.5 |
 | 44 | To røyksignaler. Fjord- og kystfiske 3 fallskjermlys og 3 håndbluss; bankfiske 6 og 4 | Oppbevares inne |
-| 45 (6) | Rednings- og brannøvelse minst hver tredje måned, og når over en tredjedel av mannskapet er byttet | Ø11.6 (V11) |
+| 45 (6) | Rednings- og brannøvelse minst hver tredje måned, og når over en tredjedel av mannskapet er byttet | Ikke med (V11 C) |
 | 60, 61 | Radarreflektor; refleksstriper | Lages ikke |
 | 63 | Fast leider akter med håndrekker, nederste trinn minst 300 mm under vannlinja | Ø11.5, Ø11.6 |
 | 64, 68 | Radio på dekkede og åpne med styrhus: VHF-DSC overalt; fra kystfiske EPIRB, SART og håndholdt VHF (tabellen er flatet ut på Lovdata; kolonnene er tolket) | VHF følger båten (V6 A); resten inne |
@@ -144,7 +144,7 @@ Lovdata ble lest gjennom en leseagent. Der den bare ga et sammendrag og ikke tek
 | 77 | Brovaktalarm på 10,67–15 m med selvstyring og fartsområde over fjordfiske | Følger båten (V6 A) |
 | 79 | Plasseringen av radaren når den finnes. Radar er **ikke** påbudt her (lista i `lover-og-regler.md` L6 sa det) | Rettet her |
 | 84 | Prismekikkert 7 × 50 eller 8 × 35 | Finnes |
-| 86, 87 | Lanterner; «ett sett signalfigurer» på alle fartøy | Ø11.2 (V7) |
+| 86, 87 | Lanterner; «ett sett signalfigurer» på alle fartøy | Lanternene i Ø11.2; signalfigurene ikke med (V7) |
 | 88 | Fast horn eller fløyte på 12–15 m. Under 12 m ikke krav her | Ø11.2 |
 | 89 | Lyskaster på 12–15 m bygd etter 1.7.1997 med fartsområde over fjordfiske | Finnes |
 | 92, 95–97 | Fartøyinstruks fra 8 m. Kontroll hver 30. måned | Ikke med (papirene) |
@@ -166,13 +166,13 @@ Lovdata ble lest gjennom en leseagent. Der den bare ga et sammendrag og ikke tek
 | 10-4a | AIS fra 15 m [sammendrag] | Følger båten (V6 A) |
 | 10-5, 10-7 | Lyskaster på alle; brovaktalarm med autopilot og fartsområde kystfiske eller større [sammendrag] | Finnes; følger båten |
 | 5-55, 5-56 | Minst tre bærbare brannslukkere (under 24 m); 50 % flere for fartøy bygd etter 2003 [sammendrag] | Oppbevares inne |
-| 8-3 | Båt- og brannøvelse hver måned (under 24 m hver tredje). MOB-båten sjøsettes hver måned, minst hver tredje [sammendrag] | Ø11.6 (V11) |
+| 8-3 | Båt- og brannøvelse hver måned (under 24 m hver tredje). MOB-båten sjøsettes hver måned, minst hver tredje [sammendrag] | Ikke med (V11 C) |
 
 **Avvik i spillet i dag:** `lsaOf` gir kyst21 (21 m) fire livbøyer (§ 7-10: tre) og pelagisk (75 m) seks (§ 7-10: åtte), og vet ikke om røyk. Rettes i Ø11.5.
 
 ### 5.7 Sikkerhetsopplæringen, FOR-2011-12-22-1523
 
-<https://lovdata.no/dokument/SF/forskrift/2011-12-22-1523>, §§ 5–16 ordrett. **§ 8 (4):** den som ikke har sertifikatplikt på fiskefartøy, skal ha bestått sikkerhetsopplæring for fiskere. **§ 7 (b):** opplæringen dekker hva man gjør når «en person faller over bord». Lengden står ikke der: 40 timer grunnkurs (Store norske leksikon, «fisker», <https://snl.no/fisker>) og 20 timer oppdatering innen åtte år (Sjøfartsdirektoratets emneplan fra 2015). Ingen av delene er sjekket mot en gjeldende side hos direktoratet.
+<https://lovdata.no/dokument/SF/forskrift/2011-12-22-1523>, §§ 5–16 ordrett. **§ 8 (4):** den som ikke har sertifikatplikt på fiskefartøy, skal ha bestått sikkerhetsopplæring for fiskere. **§ 7 (b):** opplæringen dekker hva man gjør når «en person faller over bord». Lengden står ikke der: 40 timer grunnkurs (Store norske leksikon, «fisker», <https://snl.no/fisker>) og 20 timer oppdatering innen åtte år (Sjøfartsdirektoratets emneplan fra 2015). Ingen av delene er sjekket mot en gjeldende side hos direktoratet. Kurset og øvelsene er ikke med i spillet (V11 C).
 
 ### 5.8 Merking og kjenningssignal, FOR-2002-06-27-754
 
@@ -214,7 +214,7 @@ Hver økt er én fase, ferdig, testet og rullet ut før den neste. Alle kommer e
 
 ### Ø11.1 Vikeplikten for spilleren og NPC-ene (L1, N8)
 
-- **Først:** `docs/systemer/sjofart-og-lover.md` skrives ut fra kap. 5 og legges i `docs/INDEKS.md` (det som var L0).
+- **Først:** `docs/systemer/sjofart-og-lover.md` skrives ut fra kap. 5, med valgene V1–V11, og legges i `docs/INDEKS.md` (det som var L0).
 - **Kjernen** (`core/05e-sjovei.js`, ny):
   - `colregCls(v)` gir klassen etter regel 3 og 18: maskindrevet, fisker (bare med redskap som begrenser manøvreringen, 3 d), ikke under kommando (motorstopp, drift) og hemmet av dypgående (de store skipene fra Ø15).
   - `colregSit(a, b)` gir situasjonen (13, 14 eller 15), hvem som viker (16, 17, rangen i 18, og 9 b–c i trange leier), CPA og TCPA. Den gjelder egen båt mot NPC-ene, Kystvakta og de andre spillernes båter.
@@ -236,7 +236,7 @@ Hver økt er én fase, ferdig, testet og rullet ut før den neste. Alle kommer e
   - Fra før: `npctest` (samme tid gir samme posisjon utenfor 1 km), `autonavtest` og `routetest`.
 - **Måles:** hvor ofte varselet kommer på en tur ut og hjem, og tiden i avviksfunksjonen i Lofoten i mars.
 
-### Ø11.2 Sikt, lys, lyd og dagsignaler (L3, N8)
+### Ø11.2 Sikt, lys og lyd (L3, N8)
 
 - **Sikt** (regel 6 og 19):
   - `visibility` gir hvor langt unna en båt ses. I tåke og mørke kommer varselet fra Ø11.1 tidligere.
@@ -247,18 +247,17 @@ Hver økt er én fase, ferdig, testet og rullet ut før den neste. Alle kommer e
   - Manøversignalene høres når en NPC viker innen synsvidde: 1, 2 eller 3 korte. Minst 5 korte når spilleren har vikeplikt og ikke gjør noe (34 d).
   - Spillerens horn (`SND.horn`) får korte og lange støt: 1, 2, 3 og 5 korte og ett langt. Egen båt gir tåkesignal selv i tåke.
   - Lyden blir svakere med avstanden.
-- **Dagsignalene** (etter V7): kjeglene når båten fisker, kula ved anker, to kuler ved motorstopp og drift. Det gjelder egen båt og NPC-ene. De legges ved mastetoppens lanterne.
+- **Dagsignalene** er ikke med (V7, Jonas 05.11.2026). Om dagen sier AIS-kortet hva båten gjør (Ø11.1).
 - **NPC-enes lanterner etter det de gjør** (N8): `drawNPCLights` får den virkelige farten, ankeret og «ikke under kommando» fra NPC-en, ikke fast 5 kn. Kystvaktas skip får blått rundtlys (kap. II, 53 d).
 - **Vedlegg I og III og regel 20–37** leses ordrett før byggingen.
 - **Filer:**
   - `core/05e-sjovei.js`.
-  - `vessel3d.js`: `lanterns` gir også dagsignalene.
   - `view3d/22-docks-air.js` (`drawNPCLights`) og `view3d/24-cinema.js` (egen båt).
   - Lyden: `ui/10e-sound.js` (mønstrene) og `ui/10n-hail.js` (hornknappene).
   - Sikker fart: `core/05-vessels.js` (`sail`) og `core/16b-dyn.js`.
   - `docs/systemer/lyd.md`.
 - **Tester:**
-  - `lanterntest`, utvidet med dagsignalene.
+  - `lanterntest`, utvidet med NPC-enes lanterner etter farten og ankeret.
   - `colregtest` i tåke.
   - `soundtest`.
   - `anchorlight3d`, kjørt alene.
@@ -287,19 +286,20 @@ Hver økt er én fase, ferdig, testet og rullet ut før den neste. Alle kommer e
 
 Etter `/blender` og `docs/skipsmodeller/leseliste.md`. Ingen merkenavn eller logoer.
 
-- **Vesten:** oppblåsbar redningsvest (150–165 N) etter Jonas' referanser (L6). Den er et plagg i garderoben og legges på mannskapet og skipperen. Vesten tegnes ikke over flytedressen, som teller som flyteplagg. Med V10 A har den en liten sender på brystet.
+- **Vesten:** oppblåsbar redningsvest (150–165 N) etter Jonas' referanser (L6). Den er et plagg i garderoben og legges på mannskapet og skipperen. Vesten tegnes ikke over flytedressen, som teller som flyteplagg. Ingen sender på vesten (V10 C).
 - **MOB-båten** med davit og vugge, ny `tools/deck/mob.py`. Målene tas fra LSA-koden i fasen. Davitet står stille; å svinge det ut kommer i Ø11.6.
 - **MOB-lys med røyk** på brakett, i `tools/deck/sikker.py`. `mob_profile` finnes alt i `boyelys`.
-- **Lages ikke:** drakten og det andre som oppbevares inne. Dagsignalene lages i koden (V7). Leideren finnes alt (Ø11.5).
+- **Nødstoppen** (V9 B): en rød nødstoppknapp på halerne, bare som en detalj på modellen (`tools/gear/haler.py`, og autolinehaleren fra H2d).
+- **Lages ikke:** drakten og det andre som oppbevares inne, og dagsignalene (V7). Leideren finnes alt (Ø11.5).
 - **Filer:**
-  - Skriptene: `tools/harbour/garderobe.py`, `arbeider.py` og `garderobe_bilder.py`, `tools/deck/sikker.py` og `tools/deck/mob.py` (ny).
-  - Dataene: `src/data/worker.b64`, `src/data/deck-safety.b64` og en ny `src/data/deck-mob.b64` med dataelementet i malen.
+  - Skriptene: `tools/harbour/garderobe.py`, `arbeider.py` og `garderobe_bilder.py`, `tools/deck/sikker.py`, `tools/deck/mob.py` (ny) og `tools/gear/haler.py`.
+  - Dataene: `src/data/worker.b64`, `src/data/deck-safety.b64`, `src/data/haul-garn.b64`, `src/data/haul-line.b64` og en ny `src/data/deck-mob.b64` med dataelementet i malen.
   - Holder seg unna `tools/boats/fittings.py` og `tools/deck/pall.py` (H2d, Ø4).
 - **Tester:**
   - Kontrollbildene og kritikksløyfen.
   - `garderobe_bilder.py` skal gi 0 kryss med vesten.
   - `crewclip`.
-- **Merk:** Ø11.4 rører bare Blender-skript og egne `.b64`-filer. Den kan tas før H2 er ferdig hvis Jonas vil, med varsom fletting av malen.
+- **Merk:** Ø11.4 rører bare Blender-skript og egne `.b64`-filer. Vesten, MOB-båten og MOB-lyset kan tas før H2 er ferdig hvis Jonas vil, med varsom fletting av malen. Nødstoppen på halerne venter til H2d er ute (`tools/gear/`).
 
 ### Ø11.5 Utstyret og merkingen på båtene (L6b, L4, SK1, V6 A)
 
@@ -327,7 +327,7 @@ Etter `/blender` og `docs/skipsmodeller/leseliste.md`. Ingen merkenavn eller log
   - `deckshot` og `shoptest`.
   - Skjermbilder i begge formater, og stikkprøver av båtene langs kysten.
 
-### Ø11.6 Mann over bord (SK2, SK3, SK5)
+### Ø11.6 Mann over bord (SK2, SK3)
 
 - **SK2 Risikoen:**
   - Sjansen for at noen går over bord, per time arbeid på dekk. Den øker med bølgehøyden, vinden, mørket og isingen, med setting og draging, og på åpne båter.
@@ -341,13 +341,14 @@ Etter `/blender` og `docs/skipsmodeller/leseliste.md`. Ingen merkenavn eller log
   3. Båten snur med Williamson-svingen. Spilleren styrer selv, eller trykker «Autonav: MOB».
   4. Livbøya kastes. Fra 15 m viser røyken fra MOB-lyset stedet.
   5. Personen tas opp med leideren akter (§ 63), løftestroppen, eller MOB-båten fra 45 m, som svinges ut med davitet.
-  - Hvor lenge personen klarer seg i vannet, avhenger av sjøtemperaturen. Vesten holder personen oppe. Utfallet følger V8.
-- **SK5 Kurs og øvelse** etter V11. Med V11 A har alle i spillet kurset, slik de hadde papirene.
+  - Hvor lenge personen klarer seg i vannet, avhenger av sjøtemperaturen. Vesten holder personen oppe.
+  - **Ingen dør** (V8 A): kommer båten ikke tilbake i tide, henter redningsskøyta eller helikopteret personen, som er sykmeldt noen dager og kommer tilbake.
+- **Kurs og øvelser** er ikke med (V11 C).
 - **Meldingen** etter § 475 og skipssikkerhetsloven § 47: spillet melder for deg og skriver det i dagboka.
 - **Ellers:** tips i håndboka med kilden, og et merke.
 - **Filer:**
-  - Nye: `core/14b-sikkerhet.js` (risikoen, hendelsen og øvelsen) og `ui/10s-mob.js` (skjermen under hendelsen), begge med en linje i malen.
-  - Ett kall hver: `core/05-vessels.js` (`risk`), `core/13-work.js` (hvem som er på dekk), `core/04-crew.js` (sykmeldt etter V8).
+  - Nye: `core/14b-sikkerhet.js` (risikoen og hendelsen) og `ui/10s-mob.js` (skjermen under hendelsen), begge med en linje i malen.
+  - Ett kall hver: `core/05-vessels.js` (`risk`), `core/13-work.js` (hvem som er på dekk), `core/04-crew.js` (sykmeldt, V8 A).
   - UI: `ui/03-map.js` (MOB-merket), `ui/10e-sound.js` (alarmen), `ui/07c-handbook.js`.
   - 3D: `deckcrew.js` (personen i vannet), `view3d/21-rescue-anchor.js` (livbøya, røyken og MOB-båten).
   - `core/09f-merker.js` og `ui/phone/07-patch.js`.
@@ -358,7 +359,7 @@ Etter `/blender` og `docs/skipsmodeller/leseliste.md`. Ingen merkenavn eller log
 
 ### Ø11.7 Nødstopp, nestenulykker og havsnød (SK4, SK6, L8)
 
-- **SK4 Nødstoppen** på haleren, etter V9. Ingen forskrift krever den for halere. Den er god praksis.
+- **SK4 Nødstoppen** (V9 B): en sjelden gang henger et mannskap seg fast i lina eller garnet under draget, og mannskapet stopper haleren selv med nødstoppen. Det står som nestenulykke i loggen, aldri som skade, og spilleren trykker ingenting. Ingen forskrift krever nødstopp på halere; den er god praksis.
 - **SK6 Nestenulykkene:**
   - Kortet «Sikkerhet» i Redning-appen samler dem i én liste: passeringer under grensa (Ø11.1), nesten grunnstøting (`groundCheck`), mann over bord som endte godt, nødstopp i tide og sjø over ripa (`risk`).
   - Hver har dato, sted og én setning om hva den lærer, med kilde.
@@ -371,7 +372,7 @@ Etter `/blender` og `docs/skipsmodeller/leseliste.md`. Ingen merkenavn eller log
   - Lar spilleren være, tar en annen båt eller redningsskøyta det. Det får ingen følger (V1 A).
 - **Filer:**
   - `core/14b-sikkerhet.js`.
-  - Knappen under draget: `ui/09-hand-fishing.js` og `ui/10-rod-acts.js`.
+  - Hendelsen under draget: ett kall fra draget i `core/10-gear.js`.
   - Sikkerhet-kortet: `ui/phone/09-vaer-post-salg-redning.js`.
   - Anropet: `core/09g-turer.js`. Kystposten: `core/09h-press.js`. Merket: `core/09f-merker.js`.
 - **Tester:** `mobtest` (utvidet) og `towtest`.
@@ -406,12 +407,12 @@ Etter `/blender` og `docs/skipsmodeller/leseliste.md`. Ingen merkenavn eller log
 | Økt | Når | Kan ikke gå samtidig med | Grunnen |
 |---|---|---|---|
 | Ø11.1 | Først, etter H2e | Ø15, Ø9, Ø12, Ø7 | `05-vessels.js` (Ø15, Ø7 `npcStates`), `16b-dyn.js` (Ø9), `03-map.js` (Ø12 tar bort `DRIFTCTX`) |
-| Ø11.2 | Etter Ø11.1 | Ø15, Ø9, Ø7 | `vessel3d.js` og `view3d/22-docks-air.js` (Ø15 N7), `16b-dyn.js` (Ø9), `10e-sound.js` (Ø7 har lyden i `gfxtest`) |
+| Ø11.2 | Etter Ø11.1 | Ø15, Ø9, Ø7 | `view3d/22-docks-air.js` (Ø15 N7, lanternene til de nye typene), `16b-dyn.js` (Ø9), `10e-sound.js` (Ø7 har lyden i `gfxtest`) |
 | Ø11.3 | Etter Ø11.2 | Ø9, Ø7 | `16b-dyn.js` og `16c-hull.js` (Ø9), `06-logbook.js` (Ø7) |
-| Ø11.4 | Når som helst etter H2d (før, hvis Jonas vil) | Ø4 | Blender-skriptene og malen |
+| Ø11.4 | Når som helst etter H2d (vesten, MOB-båten og lyset før, hvis Jonas vil) | Ø4 | Blender-skriptene og malen |
 | Ø11.5 | Etter Ø11.4 | Ø5, Ø15, Ø4 | `10i-shop.js` (Ø5), `vessel3d.js` (Ø15), modellenes ankerplasser (Ø4) |
 | Ø11.6 | Etter Ø11.5 | Ø12, Ø7 | `03-map.js`, `08-actions.js` (Ø12), `10e-sound.js` (Ø7) |
-| Ø11.7 | Etter Ø11.6 | Ø7, Ø8 | `ui/phone/` (Ø7), dragingen (Ø8) |
+| Ø11.7 | Etter Ø11.6 | Ø7 | `ui/phone/` (Ø7) |
 | Ø11.8 | Etter Ø11.1 | Ø13, Ø12 | Sjømerkene og kartet (Ø13), `03-map.js` (Ø12) |
 | Ø11.9 | Til slutt | | Bare mannskapsfilene |
 
@@ -423,27 +424,29 @@ Etter `/blender` og `docs/skipsmodeller/leseliste.md`. Ingen merkenavn eller log
   - Ø15 og Ø11.1–Ø11.3 og Ø11.5 går ikke samtidig. Den som kommer sist, fletter.
 - **Ø17:** hver fase legger nye tester i `COVER` i `tests/run.py`. Det er små endringer, men de flettes forsiktig mens Ø17 kjører.
 
-## 7. De nye valgene (V7–V11)
+## 7. De nye valgene (V7–V11), besvart 05.11.2026
 
-**V7 Dagsignalene i 3D.** Jonas sa 28.10.2026 at signalfigurene ikke lages som utstyr, og at L3 skulle avgjøre om dagsignalene skal synes likevel.
+Jonas 05.11.2026: «V7: Vi trenger ikke tenke på dagsignaler i spillet. Stort sett ingen bruker det på ekte. V8: A. V9: B. V10: C. V11: C.» Alternativene står under som de ble lagt fram.
+
+**V7 Dagsignalene i 3D.** Jonas sa 28.10.2026 at signalfigurene ikke lages som utstyr, og at L3 skulle avgjøre om dagsignalene skal synes likevel. Jonas: **ikke med** («Vi trenger ikke tenke på dagsignaler i spillet. Stort sett ingen bruker det på ekte»), altså B.
 - **A (anbefalt):** de vises på alle båter når de gjelder. Det er kjeglene ved fiske, kula ved anker og to kuler ved motorstopp og drift, laget i koden som enkle svarte former i riggen, uten Blender-modell. *Om dagen er kjeglene det eneste som viser at en båt fisker og har forrang etter regel 18, så spilleren kan lære vikeplikten av det hun ser.*
 - B: de vises ikke. AIS-kortet sier hva båten gjør.
 
-**V8 Det verste som kan skje ved mann over bord.**
+**V8 Det verste som kan skje ved mann over bord.** Jonas: **A**.
 - **A (anbefalt):** ingen dør. Vesten holder personen oppe. Kommer ikke båten tilbake i tide, henter redningsskøyta eller helikopteret personen. Vedkommende er sykmeldt noen dager og kommer tilbake. *Spilleren får spenningen og handlingene (alarm, merke, sving, livbøye, leider) uten et tap som føles som straff.*
 - B: som i livet. Den som ikke blir funnet i tide, omkommer, og navnet kommer på en minnetavle ved mottaket (`docs/forslag.md`).
 - C: ingen mann over bord i spillet, bare nestenulykker i dagboka.
 
-**V9 Nødstoppen på haleren (SK4).** Ingen forskrift krever den.
+**V9 Nødstoppen på haleren (SK4).** Ingen forskrift krever den. Jonas: **B**.
 - **A (anbefalt):** en sjelden hendelse under draget. Et mannskap henger seg fast i lina eller garnet, den røde knappen lyser, og spilleren har noen sekunder. Trykker hun i tide, blir det en nestenulykke i loggen. Kommer hun for sent, blir personen skadet (etter V8). Det skjer aldri i Første tur. *Det gir spilleren noe å gjøre midt i draget, og det er sjelden nok til ikke å mase.*
 - B: nødstoppen er bare en detalj på haleren. Mannskapet bruker den selv, og det står som nestenulykke i loggen.
 
-**V10 Senderen på vesten (PLB eller AIS-MOB, SK1).** Den er ikke påbudt.
+**V10 Senderen på vesten (PLB eller AIS-MOB, SK1).** Den er ikke påbudt. Jonas: **C**.
 - **A (anbefalt):** valgfritt utstyr i utstyrsbutikken (redning), festet på vesten. Ved mann over bord viser plotteren personen med en gang. *Det er ekte utstyr som letter en ekte friksjon, kjøpt for spillpenger, og etter V6 A selger butikken det som er valgfritt.*
 - B: alle vestene har den, og den følger med båten.
 - C: ikke med.
 
-**V11 Kurset og øvelsene (SK5).** § 45 (6) i FOR-2013-11-22-1404 krever øvelse hver tredje måned og når over en tredjedel av mannskapet er byttet. Kurset står i kvalifikasjonsforskriften § 8 (4).
+**V11 Kurset og øvelsene (SK5).** § 45 (6) i FOR-2013-11-22-1404 krever øvelse hver tredje måned og når over en tredjedel av mannskapet er byttet. Kurset står i kvalifikasjonsforskriften § 8 (4). Jonas: **C**.
 - **A (anbefalt):** kurset tas for gitt (alle har det, slik de hadde papirene). MOB-øvelsen er en kort ting spilleren kan gjøre i havna eller på feltet: kast dukken, sving og ta den opp. Mannskapet som var med, tar et ekte mann over bord raskere. Øvelsen gjelder til mannskapet byttes, ikke etter klokka. *Spilleren lærer hendelsen før den kommer, og ingenting tærer mens hun er borte.*
 - B: som forskriften. Øvelse hver tredje måned med påminnelse i telefonen, og uten øvelse går det tregere.
 - C: ingen kurs eller øvelser i spillet.
@@ -452,7 +455,6 @@ Etter `/blender` og `docs/skipsmodeller/leseliste.md`. Ingen merkenavn eller log
 
 - **SK1–SK6** er tolket fra én linje i backloggen. Det finnes ikke noe mer.
 - **Lovdata:** sjøveisreglene 20–37 med vedleggene, sjøloven, skipssikkerhetsloven fra § 28 og kapittel 7–10 i FOR-2000-06-13-660 er lest bare som sammendrag. De leses ordrett i fasen som bygger dem. Sjøloven §§ 131 og 445 er ikke lest. Radiotabellen i § 68 er flatet ut på Lovdata, så kolonnene er tolket.
-- **Kurven** under 20 m (regel 26) er ikke bekreftet i den norske teksten.
 - **Nådde vi ikke:** `sdir.no`, `kystverket.no`, `geonorge.no` og `nkom.no`. Ulykkestallene og kurslengden kommer fra søk, ikke fra sidene selv. Datasettet med fartsgrensene er funnet i Geonorges testkatalog, og lisensen er ikke sjekket. Formen på kjenningssignalet er fra Store norske leksikon. Ø11.8 trenger `geonorge.no` åpnet i nettverksinnstillingene, eller en arbeidsflyt som henter datasettet.
 - **FOR-2021-12-16-3622** (de statlige fartsgrensene) er ikke lest, og den endres om lag to ganger i året.
 - **Fartsområdene:** antatt som før. Kystfiske under 15 m, bankfiske I for kyst21 og havfiske for havbåtene.
@@ -474,8 +476,10 @@ Etter `/blender` og `docs/skipsmodeller/leseliste.md`. Ingen merkenavn eller log
 - Ikke trafikkseparering, losplikt eller navigasjonsforskriften for spillerens båter.
 - Ingenting som stopper tiden eller driften, og ingen følger når spillet er lukket (prinsipp 4).
 - Andre spilleres båter skades aldri.
-- Ingen død ved mann over bord, med mindre Jonas velger V8 B.
+- Ingen død ved mann over bord (V8 A).
+- Ingen dagsignaler (V7), ingen nødstoppknapp for spilleren (V9 B), ingen sender på vesten (V10 C), og ingen kurs eller øvelser (V11 C).
 
 ## 10. Status
 
 - 05.11.2026: planen skrevet i Ø11a. Kildene er sjekket på Lovdata (kap. 5). `lover-og-regler.md`, SK1–SK6 og N8 er slått sammen i Ø11.1–Ø11.9. Venter på V7–V11 og «kjør på» for Ø11.1 når H2 er ute.
+- 05.11.2026: Jonas svarte på V7–V11: ingen dagsignaler (V7), ingen dør ved mann over bord (V8 A), nødstoppen er en detalj på haleren som mannskapet bruker selv (V9 B), ingen sender på vesten (V10 C), ingen kurs eller øvelser (V11 C). Øktene er rettet etter det. Venter på «kjør på» for Ø11.1 når H2e er ute.
