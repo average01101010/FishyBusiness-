@@ -50,7 +50,11 @@ const PLAN2UI = (() => {
     const r = o.run, H = S.t / 60;
     // (on a trip the arrow follows the clock: the step pointer moves at the harbour calls)
     // (off, paused or stopped: the next day, never «I dag ←» as if she went, U4)
-    if (o.on && r && r.day && r.i < r.day.steps.length && !r.replan){ let now = r.i; if (r.trip && S.plan && S.plan.ops){ for (let i = r.i; i < r.day.steps.length; i++){ const s = r.day.steps[i]; if (s.t != null && s.t <= H) now = i; } } return {day:r.day, now, label:L('I dag', 'Today')}; }
+    if (o.on && r && r.day && r.i < r.day.steps.length && !r.replan){ let now = r.i; if (r.trip && S.plan && S.plan.ops){ for (let i = r.i; i < r.day.steps.length; i++){ const s = r.day.steps[i]; if (s.t != null && s.t <= H) now = i; } }
+      // the step she is on says the engine's own end (GUI review U5: «Nå» had b.fishUntil, the day the plan's estimate, minutes to hours apart)
+      const b = S.boat, cs = r.day.steps[now]; let day = r.day;
+      if (cs && cs.k === 'juks' && b.status === 'fishing' && b.fishUntil != null && S.plan && S.plan.ops){ const u = b.fishUntil / 60; day = Object.assign({}, r.day, {steps:r.day.steps.map((s, i) => i === now ? Object.assign({}, s, {until:u, h:Math.max(0, u - s.t)}) : s)}); }
+      return {day, now, label:L('I dag', 'Today')}; }
     // a plan not made yet has no plant: the nearest one to the places stands in, so the day can be read before Start
     let oo = o; if (!o.M){ const P = o.places, mid = P.length ? {x:P.reduce((a, q) => a + q.x, 0) / P.length, y:P.reduce((a, q) => a + q.y, 0) / P.length} : (portById(o.home) || {p:S.boat.pos}).p, M = o.land.mode === 'port' && o.land.port ? portById(o.land.port) : PORTS.filter(q => q.mottak).sort((x, y) => dist(x.p, mid) - dist(y.p, mid))[0]; if (M) oo = Object.assign({}, o, {M:M.id}); }
     // the next day is reckoned from the state at its departure, not now: the crew's fatigue and your energy fall and rise with the rest until then
