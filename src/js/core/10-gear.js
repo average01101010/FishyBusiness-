@@ -137,7 +137,7 @@ const lc1 = x => x[0].toLowerCase() + x.slice(1);
 function rigWrong(kind){ return [gL('Båten er rigget for ' + rigName(rigOf()).toLowerCase() + '. Rigg om til ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Beholdning.', 'The boat is rigged for ' + rigName(rigOf()).toLowerCase() + '. Re-rig for ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Inventory.')]; }
 // no hauler for this kind of gear fits the boat: the reason, said the same in the Rig tab and the shop (spilltest 3, F3), or null
 function haulerNoFit(kind){
-  const b = S.boat || {}, hs = GEAR[kind].haulers; if (hs.some(h => equipFits(h, b.type || 'skiff'))) return null;
+  const b = S.boat || {}, hs = GEAR[kind].haulers; if (hasHauler(kind) || hs.some(h => equipFits(h, b.type || 'skiff'))) return null;   // (a hauler already aboard, as in an old save, is never refused)
   const r = rigOfKind(kind), fl = hs.map(h => (EQUIP[h].fit || {}).minLen).filter(Boolean), mn = fl.length ? Math.min(...fl) : 0;
   return [gL('Denne båten kan ikke rigges for ' + rigName(r).toLowerCase() + ': ' + hs.map(h => lc1(EQUIP[h].name.no)).join(' eller ') + ' passer ikke om bord' + (mn > (BOAT.len || 0) ? ' (krever minst ' + fmt1(mn) + ' m)' : '') + '.',
     'This boat cannot be rigged for ' + rigName(r).toLowerCase() + ': ' + hs.map(h => lc1(EQUIP[h].name.en)).join(' or ') + ' does not fit aboard' + (mn > (BOAT.len || 0) ? ' (needs at least ' + fmt1(mn) + ' m)' : '') + '.')];
