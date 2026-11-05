@@ -66,10 +66,11 @@ function miniStep(until){
   try { do { if (J.g.next().done){ MINIP.job = null; const b = MINIP.bg; MINIP.bg = MINIP.bg2; MINIP.bg2 = b; MINIP.key = J.key; MINIP.c = J.c; MINIP.n2++; return; } } while (performance.now() < until); }
   catch (e){ MINIP.job = null; MINIP.at = performance.now() - 15000; }
 }
-// a slice every frame while one is on its way: 15 % of the frame, 4-20 ms (as the terrain's jobs, view3d meshSlice)
+// a slice every frame while one is on its way: 15 % of the frame, 4-20 ms; one that has waited over 4 s (slow frames: a frame every few
+// seconds in SwiftShader) up to 30 % of the frame and 60 ms, as the terrain's jobs (view3d meshSlice)
 function miniFrame(t){
-  MINIP.raf = 0; const dt = MINIP.ft ? Math.min(400, t - MINIP.ft) : 16; MINIP.ft = t; if (!MINIP.job){ MINIP.ft = 0; return; }
-  miniStep(performance.now() + Math.max(4, Math.min(20, 0.15 * dt)));
+  MINIP.raf = 0; const J = MINIP.job, dt = MINIP.ft ? Math.min(400, t - MINIP.ft) : 16; MINIP.ft = t; if (!J){ MINIP.ft = 0; return; }
+  const now = performance.now(), ms = Math.max(4, Math.min(20, 0.15 * dt)); miniStep(now + (now - J.t0 > 4000 ? Math.max(ms, Math.min(60, 0.3 * dt)) : ms));
   if (MINIP.job) MINIP.raf = requestAnimationFrame(miniFrame); else MINIP.ft = 0;
 }
 // the depth in whole metres at the points of a grid fixed to the map, about every 70 CSS px, as the big chart writes them (soundingsSvg)
