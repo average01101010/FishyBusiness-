@@ -423,3 +423,5 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
   - **Tester:** enhetstestene (med `fly.test.mjs`; `port-regions.json` skrevet på nytt med de to nye stedene), `lybtest` (ny: stedene, havna, turen fra Tromsø på 63 timer med kuling ved Isfjorden, mannskapsbyttet), `lybshot` (ny: bildene i begge formater), `stedertest`, `placetest`, `crewlifetest`, `lotttest`, `docktest` og `havntest`.
   - **3D ved store γ (kap. 3a):** ikke sett på særskilt i R7; bildene ved Longyearbyen viser byggene og kaiene. Det står for R8.
   - **Neste:** Jonas sier ja til utrulling (R6 og R7 sammen), så R8 (stikkprøvene, spilltesten og utrullingen).
+- 05.11.2026: **R6 og R7 rullet ut sammen** (Jonas: «Rull ut»). Arbeidsgrenen hadde ingenting nytt etter R6, så grenen ble skjøvet rett på.
+  - **Neste:** R8 (stikkprøvene, spilltesten og utrullingen) i en ny økt.
