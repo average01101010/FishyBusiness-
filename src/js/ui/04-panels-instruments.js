@@ -71,7 +71,7 @@ function renderHud(){
   const gauge = (k, lbl, v, txt, cls) => '<span class="g g-' + k + (cls ? ' ' + cls : '') + '"><span class="gl">' + lbl + '</span><i style="--v:' + Math.round(clamp(v, 0, 1) * 100) + '%"></i><b>' + txt + '</b></span>';
   const gauges = '<button type="button" class="gauges' + (S.settings.hudFull ? ' open' : '') + '" data-hfull aria-label="' + L('Vis alle tallene', 'Show all the figures') + '">' +
     gauge('fuel', 'Diesel', fuelP, fmt(b.fuel, 0) + ' L', fuelP < 0.1 ? 'r2' : fuelP < 0.25 ? 'r1' : '') +
-    gauge('hold', L('Last', 'Hold'), holdP, fmt(holdTotal(), 0) + ' kg', holdP >= 0.95 ? 'full' : '') +
+    gauge('hold', L('Last', 'Hold'), holdP, holdP >= 0.995 ? L('Full', 'Full') + ' · ' + fmt(holdTotal(), 0) + ' kg' : fmt(holdTotal(), 0) + ' kg', holdP >= 0.995 ? 'r2' : holdP >= 0.9 ? 'r1' : '') +   // full is red with «Full», nearly full yellow (spilltest 3, U5)
     gauge('en', L('Energi', 'Energy'), energyOff() ? 1 : e / 100, energyOff() ? L('av', 'off') : asleep() ? L('sover', 'asleep') : Math.round(e) + ' %', asleep() || (!energyOff() && e < ENERGY.dim) ? 'r2' : !energyOff() && e < ENERGY.warn ? 'r1' : '') +
     gauge('sea', L('Sjø', 'Sea'), atSea ? (lvl + 1) / 3 : 0.15, fmt(hs, 1) + ' m', atSea ? 'r' + lvl : '') + '</button>';
   // what matters now, as rows with what to do

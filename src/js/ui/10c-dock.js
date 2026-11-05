@@ -144,7 +144,8 @@ const DOCK = (() => {
     const crew = S.cevt && I('mannskap', 'mannskap', 'Ansatte', 'Employees', {page:'mannskap', dot:true});
     const work = (S.crew.length || S.ops) && I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid', dot:opsDot()});
     const b = S.boat, beh = I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'});   // no «Hjem» (the user's wish 02.10.2026: Autonav to the harbour, or «Returner samme vei» in the plotter)
-    const nav = I('nav', 'nav', 'Auto-nav', 'Auto-nav', {run:autoNav});
+    // a full hold: Auto-nav is the main button, not «Jukse» (spilltest 3, U5)
+    const full = holdTotal() >= capHold() - 0.5, nav = I('nav', 'nav', 'Auto-nav', 'Auto-nav', {run:autoNav, pri:full && b.status === 'idle'});
     const tut = typeof HAIL !== 'undefined' ? HAIL.dockItem(I) : null;
     const ptow = typeof PTOW !== 'undefined' ? PTOW.dockItem(I) : null;   // «Ta slep» by a player's broken-down boat (ui/10o-ptow.js)   // another player's boat within 1 nm (ui/10n-hail.js)
     if (b.status === 'idle'){
@@ -157,7 +158,7 @@ const DOCK = (() => {
       const ml = moorAll(b.pos, 0.4), mo = ml[0], moor = mo && I('fortoy', 'naust', 'Fortøy', 'Moor', Object.assign(ml.length > 1 ? {menu:'fortoy'} : {run:() => moorGo(mo)}, {pri:mo.kind === 'rorbu' || mo.kind === 'naust' || S.energy < 40}));
       // anchor: the boat keeps her place and the crew rests; the anchor can drag in weather the boat does not hold (06e-anchor.js)
       const sp = !b.anch && anchorSpot(b.pos), anc = b.anch && b.anch.up != null ? I('anker', 'anker', 'Hiver anker', 'Weighing', {off:[L('Ankeret er oppe om ' + anchorUpIn() + ' min.', 'The anchor is up in ' + anchorUpIn() + ' min.')], on:true}) : b.anch ? I('anker', 'anker', 'Hiv anker', 'Weigh anchor', {run:() => { weighAnchor(); refreshAll(); }, on:true}) : !moor ? I('anker', 'anker', 'Kast anker', 'Drop anchor', sp && sp.ok ? {run:() => { dropAnchor(); refreshAll(); }} : {off:[sp && anchorWhy[sp.why] ? L(anchorWhy[sp.why][0], anchorWhy[sp.why][1]) : L('Ikke her.', 'Not here.')]}) : null;
-      return [vesselJigs() ? I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s}) : I('jukse', 'jukse', 'Jukse', 'Jig', {off:[L('Et havfiskefartøy fisker ikke med juksa.', 'An ocean vessel does not fish with the jig.')]}),
+      return [vesselJigs() ? I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s && !full}) : I('jukse', 'jukse', 'Jukse', 'Jig', {off:[L('Et havfiskefartøy fisker ikke med juksa.', 'An ocean vessel does not fish with the jig.')]}),
         I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:rigJig() ? [L('Båten er rigget for juksa. Rigg om til line, garn eller teiner under Beholdning.', 'The boat is rigged for jigging. Re-rig for line, nets or pots under Inventory.')] : !ch.length && [setOff()]}),
         // by a quay with no buoy near, «Fortøy» takes the place of the greyed «Ta opp», so the row stays five wide on a phone
         ptow, s || !moor ? haul : null, moor, nav, tut, anc, restItem(), crew, work, beh].filter(Boolean);   // (the bunk, #70)
