@@ -182,7 +182,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 | Ø7 Småfeil | Kan starte (spilltest 3 er ute) | | |
 | Ø8 Spillbarhet | Kan starte (spilltest 3 er ute) | | |
 | Ø9 Fysikk 4 | Kan starte (spilltest 3 er ute) | | |
-| Ø16 Sanntid S2 | Kan starte (Ø6 ferdig) | | |
+| Ø16 Sanntid S2 | Bygd, ikke rullet ut: reléet (`tools/server/rt`), `rt_ticket()` (HMAC i Postgres, hemmeligheten i Vault), klienten med 5 Hz/1 Hz og interpolasjon 0,5 s bak, `setup.sh`, `Caddyfile`, `deploy.yml`; `rttest` 12 OK, `sqltest` 135 OK. Venter på Jonas: migreringen, `setup.sh` på serveren, linjen til Vault og ja. Igjen: S3 (lasten) og «Lasten med 5 000 spillere» mot Supabase | `ccr-529a099b-0o66nk` | 05.11.2026 |
 | Ø10 Regelmotoren | Venter på H2 | | |
 | Ø11 Lover, regler og sikkerhet | Venter på Ø11a og H2 | | |
 | Ø12 Driftsplan 2, resten | Venter på H2 | | |
@@ -205,3 +205,4 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 - 05.11.2026: Ø6 ryddejobbene 8–12 og 15 gjort etter Jonas' «Kjør på ryddejobbene 8–12 og 15» (656da4d2). Migreringen `20261105150000_rydd.sql` venter på SQL Editor; Caddyfile-endringen trer i kraft når `setup.sh` kjøres på serveren.
 - 05.11.2026: migreringen `20261105150000_rydd.sql` kjørt av Jonas og bekreftet. Ø6 er ferdig; igjen er funn 6 og 7, og det som står under hvert funn som ikke gjort.
 - 05.11.2026: spilltest 3 ferdig og rullet ut (F1–F7, Jonas' valg V1–V8, garna og Finnmark kalibrert). Ø7, Ø8 og Ø9 kan starte.
+- 05.11.2026: Ø16 bygd (S2 og S1 sammen, i `ui/10h-world.js`). Billetten er HMAC i Postgres med hemmeligheten i Vault, ikke JWT-sjekk i reléet (grunnene i `docs/planer/sanntid-posisjoner.md`). Ikke rullet ut: Jonas kjører migreringen `20261105160000_rt_ticket.sql`, `setup.sh` fra grenen og linjen til Vault, og sier ja.
