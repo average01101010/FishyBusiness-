@@ -337,11 +337,22 @@ const LANDING = {prep:1, lift:2.5, note:5, tubKg:TUB_KG, hooked:0.86, wash:6};
 // boats and the tubs are as before.
 const PALL = {kg:1000, lift:6};
 const liftMin = L => L.lf || LANDING.lift;
+// the product weight of a lot at the landing: frozen as it lies (prodKg), or as it will be once gutted (as the deck guts) and frozen at the quay
+const landProd = x => x.frozen || (SPECIES[x.sp] || {}).live ? prodKg(x) : x.kg / ((x.gut || catchGut()) ? (SPECIES[x.sp] || {}).uh || 1 : 1);
+// at the weighing: what was still unfrozen aboard a freezer vessel is frozen now, gutted as the deck guts it (landPlan gave the time)
+function landFreeze(){
+  if (!holdFreezes()) return 0; let kg = 0;
+  for (const x of S.hold.slice()) if (!x.frozen && !(SPECIES[x.sp] || {}).live){ kg += x.kg; moveKg(x, x.kg, {gut:!!(x.gut || catchGut()), iced:true, frozen:true}); }
+  return kg;
+}
 // own: the boat's own tubs (an open boat; the per-tub kilos in kgs, the empties come back), else the plant's tubs from the hold
 function landPlan(type, kg, hold){
   const V = VESSELS[type] || {};
-  if (V.hold && V.hold.kind === 'frys'){ const pk = (hold || S.hold).reduce((a, x) => a + prodKg(x), 0), n = Math.max(1, Math.ceil(pk / PALL.kg));
-    return {kind:'pall', own:false, n, lifts:n, wash:0, lf:PALL.lift, pk:Math.round(pk), dur:LANDING.prep + n * PALL.lift + LANDING.note}; }
+  // (what still lies unfrozen is frozen at the quay before the weighing, Jonas 05.11.2026: «Fryses ved kaia»: its product weight goes on
+  // the pallets, and the freezers' time for it comes before the landing note when it is longer than the lifts after it: landFreeze)
+  if (V.hold && V.hold.kind === 'frys'){ const H0 = hold || S.hold, pk = H0.reduce((a, x) => a + landProd(x), 0), n = Math.max(1, Math.ceil(pk / PALL.kg));
+    const fz = Math.ceil(H0.reduce((a, x) => a + (x.frozen || (SPECIES[x.sp] || {}).live ? 0 : landProd(x)), 0) / Math.max(1, (V.freezeT || 15000) / 1440)), lifts = n * PALL.lift;
+    return {kind:'pall', own:false, n, lifts:n, wash:0, lf:PALL.lift, pk:Math.round(pk), fz, dur:LANDING.prep + Math.max(lifts, fz) + LANDING.note}; }
   if (V.kar){ const nk = karN(type, S.boat && S.boat.type === type ? S.boat.holdLv : 0), T = tubLoads(hold || S.hold, nk), kgs = T.map(t => Math.round(t.kg)), n = clamp(Math.max(tubsFull(T), Math.ceil((kg || 0) / TUB_KG)), 1, nk);
     return {kind:'tub', own:true, n, kgs, lifts:2 * n, wash:LANDING.wash, dur:LANDING.prep + 2 * n * LANDING.lift + LANDING.wash + LANDING.note}; }
   const n = Math.max(1, Math.ceil(kg / LANDING.tubKg));
@@ -387,6 +398,7 @@ function startLanding(ops){
 function finishLanding(){
   const b = S.boat, L = b.land; b.land = null;
   if (b.status !== 'port' || b.port !== L.pid) return;
+  const fz = landFreeze(); if (fz > 0.5) log(fmt(fz, 0) + ' kg som lå ufryst, er fryst ved kaia før innveiingen.', fmt(fz, 0) + ' kg that lay unfrozen was frozen at the quay before the weighing.');
   const c0 = S.cash; sell(); const total = S.cash - c0;
   if (L.ops) opsReport(L.pid, L.kg, total, true);
 }

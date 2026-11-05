@@ -708,6 +708,7 @@ function vesselStep(H){
   if (b.land && S.t >= b.land.until) finishLanding();
   if (b.status === 'port'){ quayMinute(); shoreTick(); havnMinute(); }
   else if (typeof careTick === 'function' && S.pgear) careTick();   // the crew's upkeep and gear talk at sea (10b-gearcare.js seaWork)
+  provMinute();   // an ocean vessel's provisions (04-crew.js, H2b)
   if (S.t % 60 === 0 && b.status !== 'port'){ autoFixHour(); tripHour(); }   // the autoline's hooks changed aboard (10b-gearcare.js) and the trip's limits (04-crew.js), H2b
   opsStep(H);
   // planned departure
@@ -1056,7 +1057,7 @@ const holdFreezes = () => !!(BOAT.hold && BOAT.hold.kind === 'frys');
 const holdRSW = () => !!(BOAT.hold && BOAT.hold.kind === 'rsw');
 const iceReady = () => catchIce() && (holdFreezes() || S.boat.ice > 0.5);
 const tubCap = () => BOAT.tubCap || 150;
-const handsAboard = () => (meAboard() ? 1 : 0) + crewAboard().length;
+const handsAboard = () => (meAboard() ? 1 : 0) + crewAboard().length + (lagOf() ? lagN() : 0);   // (an ocean vessel's teams, 04-crew.js)
 // the hands at the gutting and icing stations (core/13-work.js): under way one steers, fishing they follow their chains
 function deckHands(){ return workAssign().filter(p => p.st === 'sloy' || p.st === 'is').length; }
 // what is still to be done: gutting (when the catch is gutted on board) and icing (when there is ice)
@@ -1098,7 +1099,7 @@ function deckMinute(){
   }
   // your own minutes on deck; when the deck was last worked (the crew's break: a deck to scrub, 13-work.js idleEnv); now and then a mistake (14-crewlife.js crewSlip)
   if (worked > 0 && (G.me || I.me)) S.deckMe = (S.deckMe || 0) + 1;
-  if (worked > 0){ b.deckT = S.t; if (typeof crewSlip === 'function') crewSlip(G.crew.concat(I.crew)); }
+  if (worked > 0){ b.deckT = S.t; if (typeof crewSlip === 'function') crewSlip(G.crew.concat(I.crew).filter(c => !c.anon)); }
 }
 // ---------- lying to in a storm (H1b R8, 05.11.2026) ----------
 // Jonas 05.11.2026: «Mange av de større havfiskebåtene er laget for å kunne være ute i orkan. Nå vet ikke jeg hva det verste været som

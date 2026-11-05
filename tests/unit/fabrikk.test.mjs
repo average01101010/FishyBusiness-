@@ -79,6 +79,31 @@ export default function (t){
   t.ok(lp.kind === 'pall' && lp.n === 300 && lp.lifts === 300 && lp.pk === 300000, `300 t produkt (${K.holdTotal() / 1000} t rund vekt) er ${lp.n} paller`);
   t.ok(lp.dur / 60 > 29 && lp.dur / 60 < 31.5, `lossingen tar ${(lp.dur / 60).toFixed(1)} timer (om lag 10 t i timen)`);
   t.ok(Math.abs(K.landLiftT(lp, 10) - K.landLiftT(lp, 9) - 6) < 1e-9, 'ett løft hvert sjette minutt');
+  // what lies unfrozen is frozen at the quay before the weighing (Jonas: «Fryses ved kaia»): its product weight on the pallets, and the
+  // freezers' time before the note when it is longer than the lifts
+  S.hold = [{sp:'torsk', kg:30000, n:1, cls:0, fresh:100, gut:false, iced:false}];
+  const lz = K.landPlan('autoliner', 30000);
+  t.ok(lz.pk === 20000 && lz.n === 20 && lz.fz === Math.ceil(20000 / (15000 / 1440)) && lz.dur === 1 + lz.fz + 5, `30 t rund fisk ufryst: ${lz.n} paller, fryses på ${(lz.fz / 60).toFixed(0)} t før innveiingen`);
+  const fzk = K.landFreeze(); t.ok(fzk === 30000 && S.hold.every(x => x.frozen && x.gut) && Math.abs(K.holdLoad() - 20000) < 1e-6, 'ved innveiingen er alt sløyd og fryst');
+
+  // the teams (V3 A, «Følger båten»): two crews of 14 come with the vessel; at sea half of each team is on watch, six and six
+  S.lag = null; S.crew = []; const G = K.lagOf();
+  t.ok(G && G.sh.length === 2 && K.lagN() === 14 && G.sh[0].skill === 3, 'to skift à 14 følger båten, ferdighet 3 av 5');
+  const H3 = (Date.UTC(2027, 2, 1, 3) - K.EPOCH) / 36e5, w0 = K.lagOnDeck(H3, false), w1 = K.lagOnDeck(H3 + 6, false), w0u = K.lagOnDeck(H3, true);
+  t.ok(w0.length === 5 && w1.length === 4 && w0u.length === 6 && !w0.some(c => w1.includes(c)), `første vakt ${w0.length} på dekk (med basen), andre ${w1.length}; under fart også broa`);
+  t.ok(w0.filter(c => c.role === 'dekk').length === 3 && w0.filter(c => c.role === 'fabrikk').length === 2 && w1.filter(c => c.role === 'fabrikk').length === 2, 'halve dekkslaget og halve fabrikklaget på hver vakt');
+  t.eq(K.handsAboard(), 15, 'hendene om bord: lagene og deg');
+  t.ok(!!K.crewHireWhy(), 'mannskapsbørsen er stengt for havbåten');
+  // the share: the crew aboard and you are 15 by § 6 (47.5 % at 45.4 m), 14 shares to the crew and 1 to you
+  S.boat.tripGear = {line:S.t}; const Q = K.lottSplit(1000000);
+  t.ok(Q.n === 15 && Math.abs(Q.M - 0.475) < 1e-9 && Q.per.length === 1 && Q.per[0].lots === 14 && Math.abs(Q.per[0].kr - 1000000 * 0.475 * 14 / 15) < 1, `lotten: ${Q.n} mann, ${(Q.M * 100).toFixed(1)} %, skiftet får ${Q.per[0].kr} kr av 1 MNOK`);
+  K.lagLanded(Q.per[0].kr);
+  t.ok(G.on === 1 && G.sh[0].trips === 1 && Math.abs(G.sh[0].skill - 3.1) < 1e-9 && G.sh[1].skill === 3, 'ved levering går skift A i land med 3,1 i ferdighet, og skift B mønstrer på');
+  // the provisions: filled for 60 days for 15 at 250 kr a man-day when she casts off, eaten at sea
+  S.boat.prov = 0; S.boat.status = 'port'; const c0 = S.cash, pk0 = K.provFill();
+  t.ok(S.boat.prov === 900 && pk0 === 225000 && Math.abs(c0 - S.cash - 225000) < 1, `proviant for 60 døgn til 15 mann: ${pk0} kr`);
+  S.boat.status = 'fishing'; for (let m = 0; m < 1440; m++) K.provMinute();
+  t.near(S.boat.prov, 885, 1e-6, 'et døgn på sjøen spiser 15 manndøgn'); t.near(K.tripLeft(S.boat).prov, 59, 1e-6, 'og provianten rekker 59 døgn til');
   // the coast boats and the tubs are as before
   for (const k in B) delete B[k]; Object.assign(B, VESSELS.sjark); S.boat.type = 'sjark';
   S.hold = [{sp:'torsk', kg:2500, n:1, cls:0, fresh:100, gut:true, iced:true}];

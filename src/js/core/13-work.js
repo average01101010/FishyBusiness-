@@ -184,6 +184,7 @@ function workAssign(as){
   const team = crewAboard(), ctx = workCtx(as), P = [];
   if (meAboard() && !asleep() && !(typeof resting === 'function' && resting())) P.push({c:null});   // (in the bunk, #70: the crew work on without you)
   team.forEach(c => P.push({c}));
+  lagOnDeck(S.t / 60, ctx.ror).forEach(c => P.push({c}));   // an ocean vessel's teams: the watch on (04-crew.js, H2b)
   if (!P.length) return P;
   for (const p of P){ p.st = null; p.why = null; }
   if (ctx.s === 'aground'){ for (const p of P){ p.st = 'pause'; p.why = 'aground'; } return P; }

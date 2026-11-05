@@ -1,6 +1,6 @@
 // ===== fleet: each vessel keeps its own state; the company holds the rest. The simulation steps through the vessels one at a
 // time and binds S.boat, S.hold, S.crew and the others to the vessel it is working on, so the rest of the code is unchanged. =====
-const VKEYS = ['meal', 'sayT', 'boat', 'plan', 'hold', 'crew', 'equip', 'jobs', 'cevt', 'ops', 'lic', 'quota', 'draft', 'draftSpeed', 'draftDep', 'marks', 'target', 'trail', 'fsess', 'facc', 'fnext', 'fishPlanH', 'workLog', 'clothes', 'tripBuff', 'prep', 'svcTold', 'boatName', 'lastSale', 'restWarn', 'kvRel', 'codWarn', 'lastIceWarn', 'navrows', 'tripOwner', 'pgear', 'cargo', 'team'];
+const VKEYS = ['meal', 'sayT', 'boat', 'plan', 'hold', 'crew', 'equip', 'jobs', 'cevt', 'ops', 'lic', 'quota', 'draft', 'draftSpeed', 'draftDep', 'marks', 'target', 'trail', 'fsess', 'facc', 'fnext', 'fishPlanH', 'workLog', 'clothes', 'tripBuff', 'prep', 'svcTold', 'boatName', 'lastSale', 'restWarn', 'kvRel', 'codWarn', 'lastIceWarn', 'navrows', 'tripOwner', 'pgear', 'cargo', 'team', 'lag'];
 function curVessel(){ return S.fleet.find(v => v.id === S.cur) || S.fleet[0]; }
 function storeVessel(v){ for (const k of VKEYS) v[k] = S[k]; }
 function bindVessel(v){ for (const k of VKEYS) S[k] = v[k]; S.cur = v.id; applyVessel(); }
@@ -782,7 +782,7 @@ const ACCT = {
   rente:{s:'in', no:'Renteinntekter', en:'Interest earned'}, annet:{s:'in', no:'Andre inntekter', en:'Other income'},
   trekk:{s:'out', no:'Trekk til Råfisklaget og staten', en:'Sales organisation and state levies'}, mannskap:{s:'out', no:'Mannskap (lott)', en:'Crew (shares)'},
   kvote:{s:'out', no:'Kvotesamarbeid', en:'Quota cooperation'}, diesel:{s:'out', no:'Drivstoff', en:'Fuel'}, is:{s:'out', no:'Is', en:'Ice'}, agn:{s:'out', no:'Agn og egning', en:'Bait and baiting'},
-  redskap:{s:'out', no:'Redskap og utstyr', en:'Gear and equipment'}, verft:{s:'out', no:'Verft og verksted', en:'Yard and workshop'}, havn:{s:'out', no:'Havneavgift', en:'Harbour dues'},
+  redskap:{s:'out', no:'Redskap og utstyr', en:'Gear and equipment'}, verft:{s:'out', no:'Verft og verksted', en:'Yard and workshop'}, havn:{s:'out', no:'Havneavgift', en:'Harbour dues'}, proviant:{s:'out', no:'Proviant', en:'Provisions'},
   forsikring:{s:'out', no:'Forsikring og slep', en:'Insurance and towing'}, renter:{s:'out', no:'Rentekostnader', en:'Interest paid'}, regnskap:{s:'out', no:'Regnskap og gebyrer', en:'Books and fees'},
   land:{s:'out', no:'Naust, rorbu, pub og klær', en:'Boathouse, rorbu, pub and clothes'},
   eldre_inn:{s:'in', no:'Inntekter før regnskapet fikk poster', en:'Income before the accounts had categories'}, eldre_ut:{s:'out', no:'Kostnader før regnskapet fikk poster', en:'Costs before the accounts had categories'},

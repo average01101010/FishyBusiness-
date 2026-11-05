@@ -2,13 +2,13 @@
 // person aboard with what they do and why, how they work, energy and mood, the last thing said and the regular place (Jonas 23.10.2026).
 // The crew share the work themselves (core/13-work.js workAssign); you choose the mate. Tap the name for skills, traits and more lines. =====
 const WORK = (() => {
-  const L = (no, en) => S.lang === 'no' ? no : en;
+  const L = (no, en) => S.lang === 'no' ? no : en, kv = (a, b) => '<div class="ph-kv"><span>' + a + '</span><span>' + b + '</span></div>';
   let card = null;   // the person whose card is open
   const SHORT = {ror:['Ror', 'Helm'], fiske:['Fiske', 'Fish'], haling:['Haling', 'Haul'], blogg:['Bløgging', 'Bleed'], sort:['Krabbe', 'Crab'], sloy:['Sløying', 'Gut'], is:['Ising', 'Ice'], kokk:['Kokk', 'Cook'],
     egn:['Egning', 'Bait'], strip:['Rensing', 'Strip'], mend:['Bøting', 'Mend'], stell:['Vedlikehold', 'Upkeep'], last:['Last', 'Cargo'], pause:['Pause', 'Break']};
   const sn = k => k === 'is' && holdFreezes() ? L('Frysing', 'Freeze') : L(SHORT[k][0], SHORT[k][1]);
   // the first name, with the surname's initial when two aboard share it
-  const first = p => { if (!p.c) return L('Du', 'You'); const n = p.c.name.split(' '); return S.crew.some(c => c !== p.c && c.name.split(' ')[0] === n[0]) ? n[0] + ' ' + n[n.length - 1][0] + '.' : n[0]; };
+  const first = p => { if (!p.c) return L('Du', 'You'); if (p.c.anon) return p.c.name; const n = p.c.name.split(' '); return S.crew.some(c => c !== p.c && c.name.split(' ')[0] === n[0]) ? n[0] + ' ' + n[n.length - 1][0] + '.' : n[0]; };
   const pid = c => c ? c.id : 'me';
   // the stations the gear being worked (else the rig) goes through, in the order the fish goes
   function flowOf(){ const g = S.boat.gop, r = g && g.kind ? (g.kind === 'teine' ? 'teiner' : g.kind) : rigOf(); return r === 'juksa' ? ['ror', 'fiske', 'sloy', 'is'] : r === 'teiner' ? ['ror', 'haling', 'sort', 'sloy', 'is'] : ['ror', 'haling', 'blogg', 'sloy', 'is']; }
@@ -72,17 +72,27 @@ const WORK = (() => {
     const tl = on.size ? teamLine() : null;
     return '<div class="ph-card"><h4>' + L('Mannskapet', 'The crew') + '</h4>' + (tl ? '<p class="wk-team t' + tl.lvl + '">' + tl.text + '</p>' : '') +
       '<p class="ph-note">' + (on.size ? L(on.size === 1 ? '1 mønstret på ' : on.size + ' mønstret på ', on.size + ' signed on ') + bn + ' · ' : '') + where + (meAboard() ? '' : ' · ' + L('du er ikke om bord', 'you are not aboard')) + '</p>' +
-      (S.crew.length ? '' : '<p class="ph-note">' + L('Ingen mannskap ennå. Finn folk under Bygd, Ansatte.', 'No crew yet. Find people under Village, Employees.') + '</p>') + '</div>';
+      (S.crew.length || lagOf() ? '' : '<p class="ph-note">' + L('Ingen mannskap ennå. Finn folk under Bygd, Ansatte.', 'No crew yet. Find people under Village, Employees.') + '</p>') + '</div>';
+  }
+  // an ocean vessel's teams (core/04-crew.js, H2b): the crew aboard, its skill, the watch on now and the crew ashore
+  function lagCard(){
+    const G = lagOf(), V = lagSpec(), sh = G.sh[G.on], w = lagWatch(S.t / 60), off = G.sh.filter(x => x !== sh);
+    return '<div class="ph-card"><h4>' + L('Lagene', 'The teams') + '</h4>' + kv(L('Om bord', 'Aboard'), L('skift ', 'crew ') + lagShName(G.on) + ' · ' + lagN() + L(' mann', ' men') + (meAboard() ? L(' og deg', ' and you') : '')) +
+      kv(L('Nøkkelfolk', 'Key people'), V.key.join(', ')) + kv(L('Lag', 'Teams'), V.teams.map(t => (t.role === 'dekk' ? L('dekk ', 'deck ') : L('fabrikk ', 'factory ')) + t.n).join(' · ')) +
+      kv(L('Ferdighet', 'Skill'), fmt(sh.skill, 1) + ' / 5' + (sh.trips ? ' · ' + sh.trips + L(sh.trips === 1 ? ' tur' : ' turer', sh.trips === 1 ? ' trip' : ' trips') : '')) +
+      kv(L('Vakt nå', 'Watch now'), w ? L('2. vakt (06–12 og 18–24)', '2nd watch (06–12 and 18–24)') : L('1. vakt (00–06 og 12–18)', '1st watch (00–06 and 12–18)')) +
+      off.map(x => kv(L('I land', 'Ashore'), L('skift ', 'crew ') + lagShName(x.i) + ' · ' + fmt(x.skill, 1) + ' / 5')).join('') +
+      '<p class="ph-note">' + L('Dekkslaget og fabrikklaget går seks og seks, halvparten av hvert lag på hver vakt. Skipperen og styrmannen har broa hver sin vakt, maskinistene maskinen og kokken byssa. Skiftene bytter ved hver levering, og lotten går til skiftet om bord etter § 6.', 'The deck and factory teams go six on, six off, half of each team on each watch. The skipper and the mate have the bridge a watch each, the engineers the engine room and the cook the galley. The crews change at each landing, and the share goes to the crew aboard by § 6.') + '</p></div>';
   }
   function offLines(){
     const on = new Set(crewAboard().map(c => c.id)), off = S.crew.filter(c => !on.has(c.id)); if (!off.length) return '';
     return '<div class="ph-card"><h4>' + L('Fri', 'Off') + '</h4>' + off.map(c => '<div class="ph-kv"><span><b>' + c.name.split(' ')[0] + '</b></span><span>' + (c.off ? L('Fri denne turen', 'Off this trip') : L('Fri i dag (biyrke)', 'Off today (part-time)')) + '</span></div>').join('') + '</div>';
   }
   function page(){
-    const team = crewAboard(), h = ['<div class="ph-c wk">', head()];
-    if (team.length){ const A = workAssign(); h.push(deckNow(A));
+    const team = crewAboard(), G = lagOf(), h = ['<div class="ph-c wk">', head()];
+    if (team.length || G){ const A = workAssign(); h.push(deckNow(A)); if (G) h.push(lagCard());
       if (meAboard() && asleep()) h.push('<div class="ph-card wk-p"><div class="wk-top"><b class="wk-name">' + L('Du', 'You') + '</b><span class="wk-bs">' + badge('mate', L('Skipper', 'Skipper')) + '</span></div><p class="wk-now r2">' + L('Sover', 'Asleep') + '</p></div>');
-      for (const p of A) h.push(row(p));
+      for (const p of A) if (!(p.c && p.c.anon)) h.push(row(p));   // (the teams are in their card)
       h.push('<p class="ph-note">' + L('Mannskapet fordeler arbeidet selv, etter hva de kan, hva de er vant med, hvor slitne de er og hva som hoper seg opp. Når båten går, står du til rors. Ellers er du på dekk sammen med de andre. Styrmannen tar roret når du sover eller ikke er om bord.', 'The crew share the work themselves, by what they can do, what they are used to, how tired they are and what is piling up. Under way you are at the helm; otherwise you are on deck with the others. The mate takes the helm when you sleep or are not aboard.') + '</p>'); }
     h.push(offLines());
     return h.join('') + '</div>';

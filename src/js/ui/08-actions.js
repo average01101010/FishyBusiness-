@@ -198,7 +198,7 @@ function sell(){
   // the shared catch; the crew's part of it is split in their shares. Those aboard when the fish was caught share, though given time off
   // since (c.trip, set by addCatch). The common costs were paid when bought; they only come off before the sharing.
   const fk = tripCost(b), LS = lottSplit(net - fk.sum), lott = LS.crew;
-  for (const p of LS.per){ const c = p.c; c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, p.kr]]); if (typeof lifeEarn === 'function') lifeEarn(c, p.kr); }
+  for (const p of LS.per){ const c = p.c; if (c.lag) continue; c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, p.kr]]); if (typeof lifeEarn === 'function') lifeEarn(c, p.kr); }
   b.trip = null;   // the next trip's common costs start now
   // back aboard after the trip they sat out; not at a landing that was still going when they were given time off, which put them
   // straight back aboard for the next trip (tilbakemelding #32)
@@ -223,6 +223,7 @@ function sell(){
   // older notes keep their sums only, so the save stays small
   for (let i = 0; i < S.sales.length - 60; i++) delete S.sales[i].d;
   if (lott > 0){ log('Mannskapet fikk ' + kr(lott) + ' i lott.', 'The crew received ' + kr(lott) + ' as their share.'); crewSay(null, 'payday'); }
+  { const lp = LS.per.find(p => p.c.lag); if (lagOf()) lagLanded(lp ? lp.kr : 0); }   // an ocean vessel's crews change at the landing (core/04-crew.js, H2b)
   if (codFF > 0.5) log(Math.round(codFF) + ' kg torsk gikk på ferskfisktillegget.', Math.round(codFF) + ' kg of cod went on the fresh-fish allowance.');
   const vt = S.fleet && S.fleet.length > 1 ? '«' + S.boatName + '»: ' : '';
   if (acc === 'none' && confKg > 0.5) msg('Norges Råfisklag', vt + 'Båten har ikke adgang til å fiske torsk, hyse og sei. Av disse kan bare 10 % av landingen være bifangst, og høyst ' + fmt(BYCATCH.cod / 1000, 0) + ' tonn torsk i året. ' + Math.round(confKg) + ' kg er inndratt, verdi ' + kr(confKr) + '.', vt + 'The boat has no access to fish cod, haddock and saithe. Only 10% of the landing may be bycatch of these, and at most ' + fmt(BYCATCH.cod / 1000, 0) + ' t of cod a year. ' + Math.round(confKg) + ' kg has been confiscated, worth ' + kr(confKr) + '.');
