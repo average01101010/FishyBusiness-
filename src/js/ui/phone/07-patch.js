@@ -1,5 +1,13 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['drift-051126', '05.11.2026', 'Driftsplanen', 'The operations plan', [
+       ['En båt på dagdrift med rorbua som hjem hviler nå om natta og går ut igjen om morgenen. Før gikk den ut igjen hele kvelden og natta.', 'A boat on a day plan with the rorbu as home now rests at night and goes out again in the morning. Before, it went out again all evening and night.'],
+       ['«Til Mannskap-siden» på driftsplanen åpner Mannskap-siden.', '«To the Crew page» on the plan opens the Crew page.'],
+       ['Fangstlista ligger ikke lenger over driftsplanen: i liggende format står den til venstre for den, i stående venter den til planen er lukket. Dokka dekker ikke lenger bunnen av planen på telefon.', 'The catch list no longer lies over the plan: in landscape it stands to the left of it, in portrait it waits until the plan is closed. The dock no longer covers the foot of the plan on a phone.'],
+       ['Værvalgene på planen går aldri over det båten tåler, og knappene viser tallene som blir satt.', 'The weather presets on the plan never go past what the boat takes, and the buttons show the numbers that are set.'],
+       ['Den engelske utgaven av planen har engelske navn på linetypene og «h» for timene.', 'The English plan has English names for the line kinds and «h» for the hours.'],
+       ['Dagen på planen sier «i natt», «i morgen» eller «om 3 døgn» om når ståtida er ute, og aldri negative timer.', 'The plan\'s day says «tonight», «tomorrow» or «in 3 days» for when the soak is up, and never negative hours.'],
+    ]],
     ['is-041126', '04.11.2026', 'Isen i Barentshavet', 'The ice in the Barents Sea', [
        ['Drivisen ligger nå der den ligger i snitt for måneden, og iskanten flytter seg litt hver dag: langt sør i Barentshavet og rundt Svalbard om vinteren, langt nord om høsten. Den vises hvit i kartplotteren.', 'The drift ice now lies where it lies on average for the month, and the ice edge moves a little every day: far south in the Barents Sea and round Svalbard in winter, far north in the autumn. It shows white in the chart plotter.'],
        ['Fra 4/10 drivis går ikke en båt uten isklasse inn. Autonav seiler rundt isen, og båten stopper ved kanten i stedet for å gå inn. Vær-appen viser isen der du er.', 'From 4/10 drift ice a boat without an ice class does not go in. Autonav sails round the ice, and the boat stops at the edge instead of going in. The Weather app shows the ice where you are.'],
