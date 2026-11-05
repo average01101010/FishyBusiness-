@@ -260,7 +260,8 @@ function planDayText(o, day){
     else if (s.k === 'ut'){ no = 'Ut igjen'; en = 'Out again'; }
     out.push([c, no, en]);
   }
-  for (const x of day.skipped) out.push(['', pl(x.id)[0] + ': ' + x.no, pl(x.id)[1] + ': ' + x.en]);
+  const cap = x => x.charAt(0).toUpperCase() + x.slice(1);   // («Field 1: …», not «field 1: …», GUI review P6)
+  for (const x of day.skipped) out.push(['', cap(pl(x.id)[0]) + ': ' + x.no, cap(pl(x.id)[1]) + ': ' + x.en]);
   out.push(['', 'Dagen: ' + day.why[0] + '.', 'The day: ' + day.why[1] + '.']);
   return out;
 }
