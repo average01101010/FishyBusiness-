@@ -646,7 +646,7 @@ crew: people with skills, habits and moods
   - 392 `flyOut(c)`
   - 400 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1213 linjer)
+## `src/js/core/05-vessels.js` (1257 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -703,42 +703,46 @@ crew: people with skills, habits and moods
   - 646 `nearestYard(p)`
   - 648 `step()`
   - 666 `vesselStep(H)`
-  - 746 `sailV(H, hs)`
-  - 758 `sail(H, W, hs)`
-  - 787 `sailWaiting()`
-  - 788 `sailReplan(pl, b, gp)`
-  - 816 `iceWhy(p, tried)`
-  - 818 `sailStop(pl, b, why)`
-  - 826 `haltPlan(need)`
-  - 836 `arrive(w)`
-  - 854 `unstuckWhy()`
-  - 860 `unstuckSpot()`
-  - 867 `unstuck()`
-  - 881 `dock(pid, berth)`
-  - 906 `catchFactors(H, W, hs)`
-  - 916 `fish(H, W, hs)`
-  - 988 `endFishing(why)`
-  - 1003 `addCatch(sp, kg, cls, hook, opt)`
-- **1017** work on deck: gutting and icing take hands and time
-  - 1030 `deckHands()`
-  - 1033 `deckPending()`
-  - 1034 `deckEta(hands)`
-  - 1039 `moveKg(x, kg, patch)`
-  - 1047 `iceMinute()`
-  - 1049 `deckMinute()`
-  - 1067 `risk(W, hs)`
-  - 1094 `hullRepair()`
-  - 1097 `svcOverdue()`
-- **1098** the rescue boat (plan E3, 05.10.2026)
-  - 1124 `rescueBases()`
-  - 1133 `rescueBase(p)`
-  - 1140 `rescueAis(H)`
-  - 1144 `rescue(keepCatch)`
-  - 1168 `towSea(p)`
-  - 1173 `towRoutes(b)`
-  - 1184 `towStep(H)`
-  - 1196 `towDone(t)`
-  - 1202 `towPose(frac)`
+  - 752 `sailV(H, hs)`
+  - 764 `sail(H, W, hs)`
+  - 793 `sailWaiting()`
+  - 794 `sailReplan(pl, b, gp)`
+  - 822 `iceWhy(p, tried)`
+  - 824 `sailStop(pl, b, why)`
+  - 832 `haltPlan(need)`
+  - 842 `arrive(w)`
+  - 860 `unstuckWhy()`
+  - 866 `unstuckSpot()`
+  - 873 `unstuck()`
+  - 887 `dock(pid, berth)`
+  - 912 `catchFactors(H, W, hs)`
+  - 922 `fish(H, W, hs)`
+  - 994 `endFishing(why)`
+  - 1009 `addCatch(sp, kg, cls, hook, opt)`
+- **1023** work on deck: gutting and icing take hands and time
+  - 1036 `deckHands()`
+  - 1039 `deckPending()`
+  - 1040 `deckEta(hands)`
+  - 1045 `moveKg(x, kg, patch)`
+  - 1053 `iceMinute()`
+  - 1055 `deckMinute()`
+- **1073** lying to in a storm (H1b R8, 05.11.2026)
+  - 1090 `quayFar(b)`
+  - 1094 `lieTo(W, hs)`
+  - 1101 `lieToStep(W, hs)`
+  - 1111 `risk(W, hs)`
+  - 1138 `hullRepair()`
+  - 1141 `svcOverdue()`
+- **1142** the rescue boat (plan E3, 05.10.2026)
+  - 1168 `rescueBases()`
+  - 1177 `rescueBase(p)`
+  - 1184 `rescueAis(H)`
+  - 1188 `rescue(keepCatch)`
+  - 1212 `towSea(p)`
+  - 1217 `towRoutes(b)`
+  - 1228 `towStep(H)`
+  - 1240 `towDone(t)`
+  - 1246 `towPose(frac)`
 
 ## `src/js/core/05c-air.js` (64 linjer)
 
@@ -2074,7 +2078,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 89 `srchCard()`
   - 113 `srchSvg(u)`
 
-## `src/js/ui/04-panels-instruments.js` (206 linjer)
+## `src/js/ui/04-panels-instruments.js` (207 linjer)
 
 ---------- estimates ----------
 
@@ -2084,16 +2088,16 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 13 `renderTabs()`
   - 16 `setTab(k)`
   - 19 `statusText()`
-  - 32 `nextEvent()`
-  - 50 `setHtml(el, h)`
-  - 52 `renderHud()`
-  - 101 `liveFrac()`
-  - 102 `livePose(frac)`
-  - 125 `vnoise2(x, y, s)`
-  - 131 `microBottom(p, d)`
-- **133** instruments: GPS and echo sounder
-  - 195 `hudClasses()`
-  - 201 `hudFold(which)`
+  - 33 `nextEvent()`
+  - 51 `setHtml(el, h)`
+  - 53 `renderHud()`
+  - 102 `liveFrac()`
+  - 103 `livePose(frac)`
+  - 126 `vnoise2(x, y, s)`
+  - 132 `microBottom(p, d)`
+- **134** instruments: GPS and echo sounder
+  - 196 `hudClasses()`
+  - 202 `hudFold(which)`
 
 ## `src/js/ui/05-tattoo-art.js` (169 linjer)
 
@@ -2189,12 +2193,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1076 linjer)
+## `src/js/ui/phone/07-patch.js` (1077 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1069 `patch()`
+  - 1070 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2322,7 +2326,7 @@ Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/pla
   - 2 `act(a, d)`
   - 8 `act0(a, d)`
 
-## `src/js/ui/05b-work.js` (136 linjer)
+## `src/js/ui/05b-work.js` (138 linjer)
 
 the Mannskap page in the drawer (once «Arbeid»): the samhold on top, «På dekk nå» as chips of who stands where, and one card per
 
