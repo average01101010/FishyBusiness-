@@ -170,7 +170,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 
 | Økt | Status | Gren | Dato |
 |---|---|---|---|
-| Spilltest 3 | Kjører | `ccr-9c21028c-lptg24` | 05.11.2026 |
+| Spilltest 3 | Ferdig og rullet ut 05.11.2026: F1–F7, U1–U12, K1–K3, garna kalibrert etter ERS og Finnmark etter sluttsedlene (10bc93d1). Igjen i backloggen: «U10, rest», «Vest-Finnmark utenom skreien» | `ccr-9c21028c-lptg24` | 05.11.2026 |
 | H2 autolineren | H2a rullet ut (c9e651d1), H2b rullet ut (d5d6b4c), H2c rullet ut (493c636); H2d startes i en ny økt, så H2e | `ccr-94300c4c-ssnrxm` (H2c) | 05.11.2026 |
 | Ø1 Det som ikke kom med | Ferdig: PR #42 flettet, #18, #19 og #33 lukket, Tufjord flettet inn (8f503066), verftene i Sverige tatt ut (ce056730), leibitene rettet i `npc.py` (eb669fe7, ute med neste kartrelease) | `ccr-834c604f-xxnqoy`, `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
 | Ø2 Testriggen | Ferdig: alle punktene grønne eller med årsak og eier i backloggen (10.6 «Ø2 05.11.2026», «Strøket 05.11.2026 (Ø2)»); de 11 rettede uten 3D grønne på d663638a; A5 historikk i `run.py`; grensjekken i `/okt-slutt` ser på koden; tillegget fra den andre Ø2-økta (`ccr-o2-tillegg`) tatt inn som d663638a. Røde med eier: gfxtest (lyden, Ø7), deckshot (kranen, H2), crewclip/dyntest (H6) | `ccr-5e1ba2f4-pusvyd`, `ccr-o2-tillegg` | 05.11.2026 |
@@ -179,9 +179,9 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 | Ø5 Butikkene, restene | Ikke begynt | | |
 | Ø6 Sikkerhetsgjennomgangen (A7) | Ferdig: 15 funn i `docs/planer/sikkerhet-skyen.md`; rettet samme dag etter Jonas' «kjør på»: 1, 2–4, 5, 8–15 (fire migreringer kjørt av Jonas og bekreftet). Igjen: 6 (haill og penger på serveren) og 7 (innloggingsdomenet hos WorkOS) | `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
 | Ø11a Planen for lover, regler og sikkerhet | Ikke begynt | | |
-| Ø7 Småfeil | Venter på spilltest 3 | | |
-| Ø8 Spillbarhet | Venter på spilltest 3 | | |
-| Ø9 Fysikk 4 | Venter på spilltest 3 | | |
+| Ø7 Småfeil | Kan starte (spilltest 3 er ute) | | |
+| Ø8 Spillbarhet | Kan starte (spilltest 3 er ute) | | |
+| Ø9 Fysikk 4 | Kan starte (spilltest 3 er ute) | | |
 | Ø16 Sanntid S2 | Kan starte (Ø6 ferdig) | | |
 | Ø10 Regelmotoren | Venter på H2 | | |
 | Ø11 Lover, regler og sikkerhet | Venter på Ø11a og H2 | | |
@@ -204,3 +204,4 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 - 05.11.2026: migreringen `20261105140000_liv_owned.sql` kjørt av Jonas i SQL Editor og bekreftet. Funn 5 og 14 er ute. Igjen av Ø6: funn 7 (innloggingsdomenet) og ryddejobbene 8–12 og 15.
 - 05.11.2026: Ø6 ryddejobbene 8–12 og 15 gjort etter Jonas' «Kjør på ryddejobbene 8–12 og 15» (656da4d2). Migreringen `20261105150000_rydd.sql` venter på SQL Editor; Caddyfile-endringen trer i kraft når `setup.sh` kjøres på serveren.
 - 05.11.2026: migreringen `20261105150000_rydd.sql` kjørt av Jonas og bekreftet. Ø6 er ferdig; igjen er funn 6 og 7, og det som står under hvert funn som ikke gjort.
+- 05.11.2026: spilltest 3 ferdig og rullet ut (F1–F7, Jonas' valg V1–V8, garna og Finnmark kalibrert). Ø7, Ø8 og Ø9 kan starte.
