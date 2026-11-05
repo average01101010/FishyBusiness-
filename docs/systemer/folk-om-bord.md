@@ -33,6 +33,17 @@
 - **Rettet 01.10.2026:** `crewQuit` avbrøt resten av `crewTick` den timen, og juksing trente feil redskap etter garn (`lastGear`). Begge er borte.
 - **Testet:** Vanlig drift med 10 timers fiske og klær ga trivsel 60–70. Hardkjøring med 20 timer per døgn fikk alle tre til å si opp innen fire døgn.
 
+## 5.6b Mannskapet flyr til og fra Svalbard (H1b R7, 05.11.2026)
+
+Det går ingen vei fra Longyearbyen til fastlandet, så mannskapsbytte på Svalbard skjer med fly fra og til Tromsø (`FLY` i `core/04-crew.js`).
+
+- **Påmønstring** i en havn på Svalbard (`flyPort`: breddegrad 76° N eller mer): `flyIn(c)` fra Mannskapsbørsen. Personen er ansatt, men ikke om bord (`c.off`, `c.fly = {arr, kr}`) før flyet er inne og hun er på kaia, `FLY.min` = 205 min senere. `flyTick` i `crewTick` (hver time) tar henne om bord neste gang båten ligger til kai; har båten gått før flyet landet, venter hun til neste havn.
+- **Avmønstring** på Svalbard (sagt opp, krangel, `crewQuit`): `flyOut(c)` bokfører billetten hjem.
+- **Billetten** betales av rederiet (antakelse, BACKLOG 10.3) og bokføres som mannskapskostnad («Flybillett Tromsø–Longyearbyen, navn»). Prisen er SAS' laveste enveispris i måneden (`FLY.kr`: juli 2 392, november 950, desember 895 kr; resten trukket rett mellom dem).
+- **Reisetida:** SAS' flytid 1 t 55 min, en time på flyplassen og en halvtime til kaia.
+- **Mannskap-appen:** Mannskapsbørsen sier at den som ansettes, flyr fra Tromsø, hvor lang tid det tar og hva billetten koster denne måneden; Mannskap viser «flyr fra Tromsø, på kaia kl. HH:MM».
+- **Tester:** `tests/unit/fly.test.mjs` (flyhavnene, prisene, reisetida) og `tests/lybtest.py` (byttet i Longyearbyen etter turen fra Tromsø).
+
 ## 5.11 Kulde og klær
 
 - **Effektiv temperatur** (`effTemp`): Vindavkjølingsformelen. `coldPen` gir opptil 35 % kuldestraff og 15 % våtstraff.

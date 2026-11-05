@@ -76,6 +76,16 @@ Regelen står i `docs/handelssteder.md`. Spillet har tre steder man handler: **f
 - **3D:** stedene bruker harbour-unit-utseendene `s` og `y` (`harbour-unit-s/y.b64`); til de er laget tegnes mottaksutseendet `a`. Stedene er ikke mottak (`U.sted`), så kran, truck og folk legges ikke ut der.
 - **Tester:** `stedertest.py` (stedene, tjenestene, knappene, kjøp og nærmeste), `docktest.py`, `shoptest.py` og `icestep.py`.
 
+## 5.32b Longyearbyen: verft og utstyrsbutikk på Svalbard (H1b R7, 05.11.2026)
+
+V4 B i `docs/planer/havsteget-h1b-rammen.md` (Jonas 03.11.2026: «Ja, longyearbyen må ha verft og utstyrsbutikk, på denne måten er spillerne dekket mot det meste»). Longyearbyen er havn uten mottak: fisk leveres ikke der.
+
+- **Stedene** (`tools/steder/svalbard.py`, idempotent, `--dry`): to rader i `src/data/steder.json` med byen «Longyearbyen», så spillet gir navnene «Longyearbyen verft» og «Longyearbyen utstyrsbutikk» (`06c-steder.js`, ingen firmanavn). Verktøyet bruker kriteriene fra `steder.py`, `landflytt.py` og `havflytt.py`: kaifronter innen 5 km fra sentrum, de strenge først, land bak enheten (6 m), ingen bro eller fast hinder i liggeplassen (`fotavtrykk.measure`), minst 1,5 km til alle andre steder og 5 km mellom verft. Ly måles på stedet (fri strekning over vann i 24 retninger), fordi `national.expo()` bare dekker den gamle rammen; gangavstanden til sentrum teller, og verftet velges først.
+- **Resultatet:** verftet på 78,2378° N 15,5477° E (kaifront 26 m, 6 m dypt, ly 0,05, 2,8 km nordvest for sentrum), butikken på 78,2255° N 15,6342° E (25 m, 4,5 m, ly 0,11, 0,4 km fra sentrum), 2,4 km fra hverandre. Begge står på en rett kystkant med enhetens egen kai.
+- **Tjenestene** som langs kysten (`portServices`): verftet har båter, vedlikehold og diesel (bunkring), butikken redskap og elektronikk, ingen tar imot fangst. Redningsskøyta sleper til nærmeste verft, og ved Svalbard er det nå Longyearbyen.
+- **Havna:** vec-pakkene gir tre havner (Longyearbyen havn, Longyearbyen nordvest havn og Adventfjorden havn) med ledige plasser etter `quayFit` (4.16c i `npc-trafikk.md`), og i kuling går Autonav til nærmeste kai (`shelterReturn`), som ved Svalbard nå er i Longyearbyen.
+- **Test:** `tests/lybtest.py` (LITE, `dist-vec/`): stedene, avstandene, tjenestene, havna, turen fra Tromsø med Autonav og mannskapsbyttet. `tests/lybshot.py` (3D): bildene `tests/out/lyb_{verft,butikk,bors}_{1280x800,800x1280}.png`.
+
 ## 5.34 Verftet og utstyrsbutikken som havneenheter (Jonas 08.10.2026)
 
 `tools/harbour/steder.py s|y` lager `harbour-unit-s` (butikken: toetasjes butikk fra Finnsnes-modellen, uten is og drivstoff, på plantenes kai) og `harbour-unit-y` (verftet). Verftet står på en **stor enhet** (`UNIT_Y` i `01-world.js`, `ugeo(U)`, `U.y`): kai på 120 m, dekk 34 m, basseng mudret til 13 m (ca. 11,5 m ved lavvann), hovedliggeplass x = -20 (90 m), bunkersliggeplass x = 30. Alt som før leste `UNIT.*` leser nå `ugeo(U)` (kjerne, 3D-terreng, 2D-kart). Det gjør at den største båten, den pelagiske tråleren (75 m, 15,5 m bred, 7,5 m dypgang), får plass og vann under kjølen. `BEAM` har nå også havbåtene, så de ligger en bredde ut fra kaia.

@@ -110,6 +110,10 @@ Jonas 03.11.2026: «Start H0 - Grunnmuren». Grunnmuren gjør at havbåtene får
   - Månedene uten landinger er fylt mellom naboene, og laveste måned er gulvet.
 - **Tester:** `tests/unit/havsteg.test.mjs` (havnene, regelen, grunnen, prisene for havartene) og `regions` (landsdelene til de nye havnene, `port-regions.json` skrevet på nytt).
 
+## 4.18d Longyearbyen: havn uten mottak (H1b R7, 05.11.2026)
+
+Longyearbyen er havn for spillerens båter, men ikke mottak (V4 B). Havneplassene kommer fra vec-pakkene som langs kysten (4.16c i `npc-trafikk.md`: Longyearbyen havn, Longyearbyen nordvest havn, Adventfjorden havn), og verftet og utstyrsbutikken står i 5.32b i `handel-og-steder.md`. Nærmeste mottak er på fastlandet (Tufjord, rundt 840 km). Mannskapet flyr til og fra Tromsø (5.6b i `folk-om-bord.md`).
+
 ## 5.25f Fars naust og butikken på kaia i 3D (05.10.2026)
 
 - Modellene kommer fra `tools/harbour/naust.py` og `butikk.py`, og hvor de står, regner `core/07c-naust.js` ut. De ligger i siden som `glb-naust` og `glb-shop`.
