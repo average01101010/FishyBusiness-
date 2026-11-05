@@ -339,8 +339,11 @@ const DOCK = (() => {
   dBody.addEventListener('click', e => {
     const el = e.target.closest('[data-pa],[data-act]'); if (!el || el.disabled) return;
     if (el.dataset.pa){
-      const next = PHONE.dact(page, el.dataset.pa, el.dataset);
-      if (next !== page){ const pg = String(next).split(':')[0]; if (PHONE.DRAWER.has(pg)){ page = pg; draw(false); } else if (next !== 'home') PHONE.open(next); }
+      // (an act that opened another page itself, as the plan's «Til Mannskap-siden», keeps it: before, the drawer was set back to the page
+      // the act came from, GUI review F1 05.11.2026)
+      const pg0 = page, next = PHONE.dact(page, el.dataset.pa, el.dataset);
+      if (page !== pg0){ /* the act went to another page */ }
+      else if (next !== page){ const pg = String(next).split(':')[0]; if (PHONE.DRAWER.has(pg)){ page = pg; draw(false); } else if (next !== 'home') PHONE.open(next); }
     } else doAct(el);
     draw(true); render();
   });
