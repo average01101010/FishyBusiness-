@@ -379,36 +379,36 @@ fleet: each vessel keeps its own state; the company holds the rest. The simulati
   - 1194 `spCatchable(sp, H)`
   - 1196 `ordersTick(H)`
 
-## `src/js/core/03b-sea.js` (156 linjer)
+## `src/js/core/03b-sea.js` (157 linjer)
 
 SEA: fetch, wind sea, swell
 
 - **1** SEA: fetch, wind sea, swell
   - 11 `fetchRay(x, y, dx, dy)`
-  - 24 `fetchAt(p, from)`
-  - 31 `fetchCell(ix, iy, k)`
-  - 42 `fetchSector(p, k)`
-  - 56 `fetchFine(p, from)`
-  - 66 `fetchHere(p, from)`
-  - 67 `fetchField(p, from)`
-  - 77 `hsWMO(U)`
-  - 82 `hsWind(U, F)`
-  - 84 `fetchCap(U)`
-  - 85 `tpWind(U, F)`
-  - 89 `wdAt(H, p)`
-  - 90 `weAt(H, p)`
-  - 99 `swellOpen(H, p)`
-  - 108 `swellFactor(p)`
-  - 110 `hsParts(p, H)`
-  - 115 `hsAt(p, H)`
-  - 120 `hsOpen(H, p)`
-  - 122 `fcHsOpen(H, now, p)`
-  - 123 `hsAtFc(p, H, now)`
-  - 129 `seaState(hs)`
-  - 132 `seaHere(p, H)`
-  - 142 `seaDirOf(rel)`
-  - 149 `seaPartsNear(p, H)`
-  - 151 `seaDirF(p, H, head)`
+  - 25 `fetchAt(p, from)`
+  - 32 `fetchCell(ix, iy, k)`
+  - 43 `fetchSector(p, k)`
+  - 57 `fetchFine(p, from)`
+  - 67 `fetchHere(p, from)`
+  - 68 `fetchField(p, from)`
+  - 78 `hsWMO(U)`
+  - 83 `hsWind(U, F)`
+  - 85 `fetchCap(U)`
+  - 86 `tpWind(U, F)`
+  - 90 `wdAt(H, p)`
+  - 91 `weAt(H, p)`
+  - 100 `swellOpen(H, p)`
+  - 109 `swellFactor(p)`
+  - 111 `hsParts(p, H)`
+  - 116 `hsAt(p, H)`
+  - 121 `hsOpen(H, p)`
+  - 123 `fcHsOpen(H, now, p)`
+  - 124 `hsAtFc(p, H, now)`
+  - 130 `seaState(hs)`
+  - 133 `seaHere(p, H)`
+  - 143 `seaDirOf(rel)`
+  - 150 `seaPartsNear(p, H)`
+  - 152 `seaDirF(p, H, head)`
 
 ## `src/js/core/03c-stability.js` (90 linjer)
 
@@ -1905,7 +1905,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 121 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 134 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (786 linjer)
+## `src/js/ui/03-map.js` (802 linjer)
 
 ---------- map ----------
 
@@ -1934,26 +1934,27 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 194 `ruLayerCanvas(A)`
   - 203 `chartVectors(V, again)`
   - 261 `chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st)`
-  - 348 `scheduleChart()`
-  - 351 `renderBase()`
-  - 365 `updateMapButtons()`
-  - 377 `tapName(mp, rr)`
-  - 382 `renderStatic()`
-  - 482 `portIcon(p, s, u)`
-  - 503 `anchorPath(x, y, s, u)`
-  - 511 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 530 `scheduleStatic()`
-  - 535 `aisTrack(id, H)`
-  - 540 `aisInfo(n)`
-  - 554 `renderAisCard()`
-  - 555 `renderDyn()`
-  - 639 `pinAdd(mp)`
-  - 644 `pinOpen(id, fresh)`
-  - 664 `pinKb()`
-  - 695 `ptrUp(e)`
-  - 725 `unzoom()`
-  - 732 `portByLabel(pt)`
-  - 737 `addWaypoint(pt)`
+  - 267 `chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr)`
+  - 364 `scheduleChart()`
+  - 367 `renderBase()`
+  - 381 `updateMapButtons()`
+  - 393 `tapName(mp, rr)`
+  - 398 `renderStatic()`
+  - 498 `portIcon(p, s, u)`
+  - 519 `anchorPath(x, y, s, u)`
+  - 527 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 546 `scheduleStatic()`
+  - 551 `aisTrack(id, H)`
+  - 556 `aisInfo(n)`
+  - 570 `renderAisCard()`
+  - 571 `renderDyn()`
+  - 655 `pinAdd(mp)`
+  - 660 `pinOpen(id, fresh)`
+  - 680 `pinKb()`
+  - 711 `ptrUp(e)`
+  - 741 `unzoom()`
+  - 748 `portByLabel(pt)`
+  - 753 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (221 linjer)
 
@@ -2027,15 +2028,17 @@ Driftsplan 2, part 6: the chart plotter in plan mode (docs/planer/driftsplan-2/0
   - 59 `renderSetBar()`
   - 73 `setModeEnd(go, stay)`
 
-## `src/js/ui/03e-miniplot.js` (100 linjer)
+## `src/js/ui/03e-miniplot.js` (133 linjer)
 
 ---------- the little chart in 3D (the user's wish 02.10.2026) ----------
 
 - **1** the little chart in 3D (the user's wish 02.10.2026)
   - 11 `miniRadius()`
-  - 14 `miniBg(c, R, k, W, H, dpr)`
-  - 44 `miniSoundings(g, x0, y0, k, BW, BH, dpr, night)`
-  - 58 `miniPaint()`
+  - 18 `miniBg(c, R, k, W, H, dpr)`
+  - 64 `miniStep(until)`
+  - 71 `miniFrame(t)`
+  - 77 `miniSoundings(g, x0, y0, k, BW, BH, dpr, night)`
+  - 91 `miniPaint()`
 
 ## `src/js/ui/03f-search.js` (118 linjer)
 
@@ -2169,12 +2172,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1064 linjer)
+## `src/js/ui/phone/07-patch.js` (1065 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1057 `patch()`
+  - 1058 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -3125,6 +3128,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 141 `model(px, py, pz, yaw, pitch, roll)`
 - **149** noise
   - 150 `vn2(x, y, s)`
+  - 154 `vnh(a, b, s)`
   - 155 `fbm(x, y, o, s)`
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
@@ -3157,7 +3161,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **45** terrain
   - 76 `terrRaw(x, z, dil)`
 
-## `src/js/view3d/03-berths-naust.js` (419 linjer)
+## `src/js/view3d/03-berths-naust.js` (420 linjer)
 
 ---------- The water at the berths the company holds in the coast's harbours (core/07e-havn.js) ----------
 
@@ -3177,25 +3181,26 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 179 `unitTerr(x, z, h0)`
   - 204 `terrCoarse(x, z, dil)`
   - 214 `forestAt(x, z)`
-  - 232 `coverAt(x, z, cv, ck, k)`
-  - 257 `satRead(L, x, z)`
-  - 266 `satAt(x, z, cv, o)`
-  - 274 `covBlk(LC, bx, by)`
-  - 278 `coverRing(LC, ix, iz)`
-  - 288 `coverClass(x, z)`
-  - 303 `runAll(g)`
-  - 305 `sliceRun(J, end)`
-  - 306 `meshBegin(x0, z0, sx, sz, n, hf)`
-  - 310 `meshRows(B, until)`
-  - 326 `gridIdx(n)`
-  - 349 `meshEnd(B)`
-  - 350 `makeMesh(x0, z0, sx, sz, n, hf)`
-  - 351 `freeMesh(m)`
-  - 353 `nearSurf(M, x, z)`
-  - 363 `unitPatch(U, M)`
-  - 388 `buildPatches()`
-  - 397 `buildTerrain()`
-  - 406 `stream3d()`
+  - 226 `forestCell(one, LF, ct, c, r)`
+  - 233 `coverAt(x, z, cv, ck, k)`
+  - 258 `satRead(L, x, z)`
+  - 267 `satAt(x, z, cv, o)`
+  - 275 `covBlk(LC, bx, by)`
+  - 279 `coverRing(LC, ix, iz)`
+  - 289 `coverClass(x, z)`
+  - 304 `runAll(g)`
+  - 306 `sliceRun(J, end)`
+  - 307 `meshBegin(x0, z0, sx, sz, n, hf)`
+  - 311 `meshRows(B, until)`
+  - 327 `gridIdx(n)`
+  - 350 `meshEnd(B)`
+  - 351 `makeMesh(x0, z0, sx, sz, n, hf)`
+  - 352 `freeMesh(m)`
+  - 354 `nearSurf(M, x, z)`
+  - 364 `unitPatch(U, M)`
+  - 389 `buildPatches()`
+  - 398 `buildTerrain()`
+  - 407 `stream3d()`
 
 ## `src/js/view3d/04-vec-packs.js` (378 linjer)
 
