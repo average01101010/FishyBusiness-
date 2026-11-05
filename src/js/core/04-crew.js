@@ -224,9 +224,13 @@ function lagOnDeck(H, under){
 }
 // a meal from the vessel's cook when it is due (core/14-crewlife.js mealMinute): no word in the log, the crew eat in the mess
 function lagMeal(){ const M = mealState(), q = provOf() > 0 ? LAG.cook : 1; M.hist.push(q); if (M.hist.length > 8) M.hist.shift(); M.due = S.t + MEAL.every; M.cook = null; M.last = {t:S.t, q, by:'lag'}; }
-// the crew aboard has landed: it signs off with its share, a tenth more skill for the trip, and the other crew signs on
+// the crew aboard has landed: it signs off with its share, a tenth more skill for the trip, and the other crew signs on. Hands from the
+// exchange aboard an ocean vessel (hired on one before H2b) go ashore here with this landing's share paid: the teams are her crew now
 function lagLanded(kr){
-  const G = lagOf(); if (!G || G.sh.length < 2) return; const a = G.sh[G.on]; a.trips++; a.skill = Math.min(LAG.max, Math.round((a.skill + LAG.step) * 100) / 100);
+  const G = lagOf(); if (!G) return;
+  if ((S.crew || []).length){ const nm = S.crew.map(c => c.name.split(' ')[0]); for (const c of S.crew.slice()){ crewSettle(c); if (typeof flyOut === 'function') flyOut(c); } S.crew = [];
+    log(nm.join(', ') + ' har gått i land. Havbåten har sine egne lag.', nm.join(', ') + ' went ashore. The ocean vessel has her own teams.'); }
+  if (G.sh.length < 2) return; const a = G.sh[G.on]; a.trips++; a.skill = Math.min(LAG.max, Math.round((a.skill + LAG.step) * 100) / 100);
   G.on = (G.on + 1) % G.sh.length; const b = G.sh[G.on];
   log('Skift ' + lagShName(a.i) + ' går i land' + (kr > 0 ? ' med ' + fmtC(kr, 0) + ' kr i lott' : '') + ', og skift ' + lagShName(b.i) + ' mønstrer på (' + lagN() + ' mann, ferdighet ' + fmtC(b.skill, 1) + ').',
     'Crew ' + lagShName(a.i) + ' signs off' + (kr > 0 ? ' with NOK ' + fmtC(kr, 0) + ' in shares' : '') + ', and crew ' + lagShName(b.i) + ' signs on (' + lagN() + ' men, skill ' + fmtC(b.skill, 1) + ').');

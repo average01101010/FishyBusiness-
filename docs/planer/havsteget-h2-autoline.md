@@ -199,6 +199,13 @@ Etter søket 05.11.2026 (kap. 2b) står dette igjen:
 - **Reguleringen for 2027** er et forslag (sak 15/2026); den endelige J-meldingen kommer i desember.
 - Sedlene sier ikke hvor mye som er tatt i hvilken sone utenfor norsk økonomisk sone; fordelingen på felt følger hovedområdene i `fiske.json`.
 
+Fra H2b (05.11.2026):
+
+- **Generatorene** (95 l i timen når båten ligger eller fisker) er kalibrert så et snittdøgn på sjøen med om lag 10 % gange blir 3 900 l; andelen gange er antatt. Et fiskedøgn uten gange måles til om lag 3 500 l. Drivstoff per kg fisk blir om lag 0,5 l, over undersøkelsens 0,40, fordi den regner med garnseien.
+- **Krokbyttet:** 5 % av bruket i døgnet er HI-rapport 2024-11; at de verste delene byttes først (så lina holder seg på om lag 0,65 med god fangst på dypt vann), og prisen på en eske med 10 000 kroker (22 000 kr), er antatt.
+- **Proviant:** 250 kr per manndøgn er regnet av undersøkelsen (1,05 MNOK, 277 døgn, 15 mann); 60 døgn om bord er antatt. Om proviant er rederiets kostnad eller en felleskostnad etter oppgjørsavtalen, er ikke sjekket (tariffen er ikke lest); spillet fører den som rederiets.
+- **Lagene:** veksten i ferdighet (en tidel per tur), vaktene (00–06 og 12–18 mot 06–12 og 18–24), at basen går første vakt og at broa bare står ved roret under fart, er antatt. Lagene blir ikke slitne og har ikke humør. Reisen hjem for skiftet som går i land, koster ingenting.
+
 ## 6. Hva planen ikke gjør
 
 - Ikke garn eller snurrevad på konvensjonell havfisketillatelse (de hører til tillatelsen, men kommer med egne båter senere).
@@ -219,3 +226,11 @@ Etter søket 05.11.2026 (kap. 2b) står dette igjen:
   - Rettet for alt redskap: en setting som stoppes halvveis, gir resten tilbake.
   - **Står igjen til H2b:** krokbytte om bord, fabrikken og frysingen i produktvekt (V2 A), vaktene, turen og lossingen på paller.
 - 05.11.2026: **H2a rullet ut** (Jonas: «Rull ut H2a, Start H2b i en ny økt»), flettet med arbeidsgrenen i 3cc5009. **Neste:** H2b i en ny økt.
+- 05.11.2026: **H2b bygd** på grenen `ccr-99204901-f1vpx2` (5.65 i `docs/systemer/redskap.md`). Valgene i detaljene samme dag (Jonas, alle de anbefalte): lasten vises i produktvekt med rund vekt under, fisk som ligger ufryst ved levering fryses ved kaia, lagene følger båten, og provianten fylles ved avgang.
+  - Omregningsfaktorene rettet (uer 1,70, kveite 1,35, blåkveite 1,32); rommet fylles av produktvekten, kvoten og prisen går på rund vekt.
+  - Fryseriet tar 15 t produkt i døgnet; det som venter, gjør draget saktere. Generatorene og hovedmotoren langs lina bruker drivstoff (om lag 3 500 l et fiskedøgn).
+  - Krokbytte om bord, 5 % av bruket i døgnet, idet lina kommer inn; eske med 10 000 kroker i butikken.
+  - To skift à 14 følger båten, seks og seks på dekk og i fabrikken, kokken lager maten, lotten etter § 6 til skiftet, skiftbytte ved levering; mannskapsbørsen er stengt for havbåten.
+  - Proviant for 60 døgn ved avgang; turens grenser (proviant, drivstoff, agn, kroker, rom) med varsler og kortet Turen.
+  - Lossing på paller, om lag 10 t i timen, med frysing ved kaia; enkel pall med kartonger i 3D (Blender-pallen er H2d).
+  - Tester: `tests/unit/fabrikk.test.mjs` (47 sjekker) og `tests/fabrikktest.py` (26, to døgn der lagene fisker uten deg om bord og en lossing). **Venter på Jonas før utrulling.**

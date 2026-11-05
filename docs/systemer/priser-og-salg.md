@@ -94,7 +94,7 @@
   - **Banken** har to faner (`bank()` i `ui/phone/13-mannskap-bank-meld.js`): Kontoer (brukskonto, lån, skattekortet, kontoutskriften med «Vis flere») og Regnskap (året med inntekter og kostnader per kategori, avskrivning, resultat før og etter skatt, pengene utenom resultatet, balansen; tidligere år som knapper). Rederi-appen viser årets tall og «Hele regnskapet».
   - **Rederi-appen** åpnes av flåten: AS, mer enn én båt, eller mannskap om bord (`rederiOpen`). «Stift Rederi AS» står i Neste mål til selskapet finnes, med hva AS betyr for skatten.
   - Test: `boktest.py` (kassa, kontoutskriften, årssummene og de gamle summene stemmer på krona; migreringen; bankens to faner i begge formater).
-- Alle priser i spillet er per kilo **rund vekt**.
+- Alle priser i spillet er per kilo **rund vekt**. På frysebåtene fyller produktvekten rommet (fryst sløyd uten hode delt på omregningsfaktoren `uh`, rettet 05.11.2026 for uer, kveite og blåkveite), men fangsten, kvoten, prisen og sluttseddelens oppgjør står i rund vekt (H2b, V2 A; 5.65 i `redskap.md`).
 
 ## 5.8 Bestillinger (`CUSTOMERS`, `ordersTick`)
 

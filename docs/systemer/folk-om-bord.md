@@ -44,6 +44,10 @@ Det går ingen vei fra Longyearbyen til fastlandet, så mannskapsbytte på Svalb
 - **Mannskap-appen:** Mannskapsbørsen sier at den som ansettes, flyr fra Tromsø, hvor lang tid det tar og hva billetten koster denne måneden; Mannskap viser «flyr fra Tromsø, på kaia kl. HH:MM».
 - **Tester:** `tests/unit/fly.test.mjs` (flyhavnene, prisene, reisetida) og `tests/lybtest.py` (byttet i Longyearbyen etter turen fra Tromsø).
 
+## 5.6c Havbåtens mannskap som anonyme lag (H2b, 05.11.2026)
+
+Havbåtene med `VESSELS.crew` (autolineren) har to skift à 14 som følger båten, anonyme med antall og ferdighet, i stedet for folk fra mannskapsbørsen (Jonas 05.11.2026: V3 A og «Følger båten»). Dekkslaget og fabrikklaget går seks og seks, skiftene bytter ved hver levering, kokken lager maten, og lotten etter § 6 går til skiftet om bord. Alt står i 5.65 i `docs/systemer/redskap.md`. Mannskapsbørsen er stengt for havbåten (`crewHireWhy`), og Mannskap-siden og -appen viser kortet «Lagene». Navngitte nøkkelfolk med liv kommer i H7.
+
 ## 5.11 Kulde og klær
 
 - **Effektiv temperatur** (`effTemp`): Vindavkjølingsformelen. `coldPen` gir opptil 35 % kuldestraff og 15 % våtstraff.

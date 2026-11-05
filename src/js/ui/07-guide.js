@@ -160,7 +160,7 @@ function panelFish(){
 }
 function valueEst(sp, g){ const H = S.t / 60, ps = plantsNear(S.boat.pos, 8).map(x => price(x.pt, sp, H)); return ps.reduce((a, c) => a + c, 0) / ps.length * GM[g]; }
 function panelHold(){
-  const b = S.boat, HF = holdFmt(), h = [], L = (no, en) => S.lang === 'no' ? no : en;
+  const b = S.boat, HF = holdFmt(), tot = HF.round, h = [], L = (no, en) => S.lang === 'no' ? no : en;
   h.push('<div class="kv"><span>' + t('load') + '</span><span>' + HF.txt + (HF.fz ? ' ' + L('produkt', 'product') : '') + '</span></div><div class="bar"><i style="width:' + (100 * HF.load / BOAT.holdCap).toFixed(1) + '%"></i></div>');
   if (HF.fz) h.push('<div class="kv"><span>' + L('Rund vekt', 'Round weight') + '</span><span>' + HF.rnd + '</span></div>');
   if (BOAT.iceCap > 0) h.push('<div class="kv"><span>' + t('ice') + '</span><span>' + fmt(b.ice, 0) + ' / ' + BOAT.iceCap + ' kg</span></div>');

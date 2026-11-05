@@ -97,7 +97,7 @@ export default function (t){
   // the share: the crew aboard and you are 15 by § 6 (47.5 % at 45.4 m), 14 shares to the crew and 1 to you
   S.boat.tripGear = {line:S.t}; const Q = K.lottSplit(1000000);
   t.ok(Q.n === 15 && Math.abs(Q.M - 0.475) < 1e-9 && Q.per.length === 1 && Q.per[0].lots === 14 && Math.abs(Q.per[0].kr - 1000000 * 0.475 * 14 / 15) < 1, `lotten: ${Q.n} mann, ${(Q.M * 100).toFixed(1)} %, skiftet får ${Q.per[0].kr} kr av 1 MNOK`);
-  K.lagLanded(Q.per[0].kr);
+  S.crew = [K.genCrew()]; K.lagLanded(Q.per[0].kr); t.eq(S.crew.length, 0, 'folk fra børsen på en havbåt går i land ved første levering');
   t.ok(G.on === 1 && G.sh[0].trips === 1 && Math.abs(G.sh[0].skill - 3.1) < 1e-9 && G.sh[1].skill === 3, 'ved levering går skift A i land med 3,1 i ferdighet, og skift B mønstrer på');
   // the provisions: filled for 60 days for 15 at 250 kr a man-day when she casts off, eaten at sea
   S.boat.prov = 0; S.boat.status = 'port'; const c0 = S.cash, pk0 = K.provFill();
