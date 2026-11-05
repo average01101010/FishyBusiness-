@@ -30,4 +30,10 @@ export default function (t){
   const pl = K.PORTS.filter(p => p.mottak).sort((a, c) => c.xy[1] - a.xy[1]);
   let same = 0; for (let i = 1; i < pl.length; i++) if (K.folkPlantName(pl[i].id) === K.folkPlantName(pl[i - 1].id)) same++;
   t.eq(same, 0, 'nabomottakene langs kysten har ulike sjefer (' + pl.length + ' mottak)');
+  // U2 (V2 B): the nearest of her own buoys, and the limits she lies by
+  S.sets = [{id:'g1', vid:S.cur, kind:'garn', n:10, a:{x:10, y:10}, b:{x:10.3, y:10}}, {id:'g2', vid:S.cur, kind:'line', n:4, a:{x:20, y:20}, b:{x:21, y:20}}, {id:'g3', vid:S.cur, lost:true, kind:'garn', n:5, a:{x:10.5, y:10}, b:{x:10.6, y:10}}];
+  const nb = K.gearBuoyNear({x:10.5, y:10.1});
+  t.ok(nb && nb.s.id === 'g1' && Math.abs(nb.d - Math.hypot(0.2, 0.1)) < 1e-9, 'nærmeste blåse er enden av garnlenka, ikke den tapte: ' + (nb && nb.s.id));
+  t.ok(K.GEARLIE.back < K.GEARLIE.r && K.GEARLIE.r < K.GEARLIE.alarm && Math.abs(K.GEARLIE.r - 0.5 * K.NM) < 1e-9 && Math.abs(K.GEARLIE.alarm - K.NM) < 1e-9, 'båten holdes innen 0,5 nm, kjøres opp til 0,25 nm, alarmen går ved 1 nm');
+  S.sets = []; t.eq(K.gearBuoyNear({x:0, y:0}), null, 'uten redskap i sjøen er det ingen blåse');
 }

@@ -79,6 +79,8 @@ $('modeBtn').onclick = () => {
 };
 $('phoneBtn').onclick = () => PHONE.toggle();
 // the tub is full: the jig stops while you gut, and starts again after (a toast says so, with how long in real time)
+// a mile off her own gear (core/16b-dyn.js gearWatch; spilltest 3, U2): the anchor alarm's beeps and a word, with «Kjør dit» in the HUD
+hooks.onGearFar = nb => { try { SND.anchorAlarm(); } catch (e){} toast(S.lang === 'no' ? 'Båten har drevet ' + fmt(nb.d / NM, 1) + ' nm fra blåsa. «Kjør dit» står i infoboksen.' : 'The boat has drifted ' + fmt(nb.d / NM, 1) + ' nm from the buoy. «Go there» is in the info box.', 6000); renderHud(); };
 hooks.onDeck = k => { const L = (no, en) => S.lang === 'no' ? no : en;
   if (k === 'stop'){ const e = deckEta(deckHands()); toast(L('Bløggekaret er fullt. Du sløyer og iser fangsten' + (e < Infinity ? ' (ca. ' + durBoth(e) + ')' : '') + ', så fisker du videre.', 'The bleeding tub is full. You gut and ice the catch' + (e < Infinity ? ' (about ' + durBoth(e) + ')' : '') + ', then you fish on.')); }
   else toast(L('Ferdig på dekk. Du fisker videre.', 'Deck work done. You fish on.')); };

@@ -1501,6 +1501,7 @@ body.pm #ecdisTop{visibility:hidden}
 #hud .g-sea.r0 i::after{background:#5cbf8a} #hud .g.full i::after{background:#5cbf8a} #hud .g.full b{color:#9fe6bd}
 #hud .hnow{margin-top:6px;padding-top:5px;border-top:1px solid rgba(238,244,247,.12)}
 #hud .hnow .row b{text-align:right}
+#hud .hnow .row .hgo{pointer-events:auto;margin-left:8px;min-height:32px;padding:4px 10px;border-radius:var(--r-pill,16px);border:0;background:var(--mag);color:#fff;font:700 12px var(--sans);cursor:pointer;white-space:nowrap}   /* «Kjør dit» to the gear a mile off (spilltest 3, U2) */
 #hud .hfull{margin-top:5px;padding-top:5px;border-top:1px dashed rgba(238,244,247,.18)}
 #hud .gauges.open{border-top-color:rgba(232,201,106,.45)}
 /* the dock (ui/10c-dock.js, V6 A): the hero is the one thing to do now, bigger and lit; a button that cannot be used has a dashed ring

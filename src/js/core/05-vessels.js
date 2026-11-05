@@ -737,6 +737,7 @@ function vesselStep(H){
   else if (b.status === 'fishing') fish(H, W, hs);
   else b.v = 0;
   if (typeof lieDrift === 'function') lieDrift(H);   // with no way on she drifts with the wind and the sea (Fysikk 2, 16b-dyn.js)
+  if (typeof gearWatch === 'function') gearWatch(b);   // a mile off her own gear: the alarm (U2)
   if (b.anch) anchorSwing(H);   // she lies to the anchor and swings round it with the wind and the current, or it comes up (06e-anchor.js)
   if (b.anch) anchorTick(H, W, hs);   // the anchor holds or drags
   risk(W, hs);

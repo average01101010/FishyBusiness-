@@ -151,6 +151,8 @@ const DOCK = (() => {
     if (b.status === 'idle'){
       const s = nearSet(b.pos, 0.3), nb = nearestBuoy(), ch = setChoices(true);
       const haul = s ? (s.kind === 'line' ? I('taopp', 'taopp', 'Ta opp', 'Haul', {act:'ghaul', data:{id:s.id}, pri:true}) : I('taopp', 'taopp', 'Ta opp', 'Haul', {menu:'taopp', pri:true}))
+        // lying by her gear (V2 B, within half a mile): one tap makes the way up to the buoy (U2, U3)
+        : nb && nb.d <= GEARLIE.r * 1.2 ? I('taopp', 'taopp', 'Til blåsa', 'To the buoy', {run:() => goTo(nb.s), pri:true})
         : I('taopp', 'taopp', 'Ta opp', 'Haul', {off:[nb ? L('Nærmeste blåse er ' + fmt(nb.d / NM, 1) + ' nm unna. Bruk Auto-nav og trykk på blåsa.', 'The nearest buoy is ' + fmt(nb.d / NM, 1) + ' nm away. Use auto-nav and tap the buoy.') : L('Du har ikke redskap i sjøen.', 'You have no gear in the sea.')]});
       // «Jukse» only on a boat rigged for jigging (the user's wish 02.10.2026)
       // a quay within 400 m: «Fortøy» takes her in (moorGo), to a rorbu's, the naust's or a harbour's (16-helm.js moorAll); with more
