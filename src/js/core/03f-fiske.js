@@ -84,10 +84,14 @@ const MIG = {
   // Norwegian spring-spawning herring (HI, «Norsk vårgytande sild», hi.no, and the herring's migration in the Norwegian Sea): spawns
   // on the banks off Møre and on Haltenbanken (62-65.5° N) in February-March, feeds out in the Norwegian Sea in summer (outside the
   // frame), and winters off Troms and Vesterålen (the fjords and the shelf, 68.5-71° N) from October to January.
+  // From H1b R6 (05.11.2026) the frame has the Norwegian Sea: the summer feeding there (April-August, peak June-July) out to Jan Mayen
+  // and towards Iceland, 64-74° N west of 8° E, is the third part (HI: the herring feeds in the Norwegian Sea in summer, in recent
+  // years far west towards Iceland and Jan Mayen).
   sild(lat, lon, mf){
     const spawn = migBump(mf, 1.9, 1.6) * migBand(lat, 62, 65.5, 0.4) * (lon < 13 ? 1 : 0.2);
     const winter = migBump(mf, 11.5, 2.4) * migBand(lat, 68.3, 71, 0.4) * (lon > 13 && lon < 23 ? 1 : 0.3);
-    return Math.min(1, spawn + winter + 0.04);
+    const feed = migBump(mf, 6, 2.6) * migBand(lat, 64, 74, 0.8) * (1 - sstep(6, 10, lon)) * sstep(-20, -14, lon);
+    return Math.min(1, spawn + winter + feed + 0.04);
   },
   // Mackerel (HI, «Makrell», hi.no): winters and spawns west of the British Isles and comes into the North Sea and up the coast in
   // early summer; along the Norwegian coast north to Lofoten and Vesterålen in July-September, south and out to sea in October-November.
@@ -107,10 +111,12 @@ const MIG = {
   // (the «loddetorsk»). A pulse with the same weight over the season as the skrei pulse (peak 3.7 against 2.5, narrower), on the
   // Finnmark coast from Loppa east (lon > 21.5, lat > 70.2); there the cod's spring comes half with the skrei front and half with it.
   lodde(lat, lon, mf){ return 3.7 * migBump(mf, 3.3, 1.6); },
-  loddeW(lat, lon){ return 0.5 * sstep(70.0, 70.4, lat) * sstep(21.2, 21.8, lon); },
+  // (the coast only: the capelin spawns by the shore, so out in the Barents Sea, north of 72° N, the cod's spring is the skrei front's, H1b R6)
+  loddeW(lat, lon){ return 0.5 * sstep(70.0, 70.4, lat) * sstep(21.2, 21.8, lon) * (1 - sstep(71.6, 72.2, lat)); },
   // Snow crab (HI, «Snøkrabbe», hi.no): a newcomer in the Barents Sea, spreading west from the Russian side; fished in the east of the
-  // Norwegian zone and in the Loophole, north of 72° N and east of 30° E (the corner of the game's frame). None along the coast.
-  snokrabbe(lat, lon){ return sstep(28.5, 31, lon) * sstep(71.6, 72.4, lat); },
+  // Norwegian zone, on the Central Bank, in the Loophole and north-east of Svalbard (main areas 13, 15, 23 and 24), north of 72° N and
+  // east of about 25° E. None along the coast. (Before H1b R6 the frame ended at 72.5° N, and the curve was its corner, east of 30° E.)
+  snokrabbe(lat, lon){ return sstep(23.5, 26.5, lon) * sstep(71.6, 72.4, lat); },
 };
 
 // ---- where the fish swim: the heading of the schools and of the good patches, by species, season and place ----
@@ -223,11 +229,20 @@ function fkBuild(){
   const ref = [...new Set(GROUNDS.slice(0, 4).map(g => lokOfCell(g.p).l).filter(l => l >= 0))];
   MIG.latRef = GROUNDS.slice(0, 4).reduce((a, g) => a + natLL(g.p).lat, 0) / 4;
   const af = {};
+  // the h table by main area (H1b R6): all landings per month (the most of any species, as NALL) and per species kg, landings and what
+  // they would take at the national rate, smoothed with a quarter of each neighbouring month
+  const HH = {}, hmo = a => { const b = new Float64Array(12); for (let m = 0; m < 12; m++) b[m] = a[m] + FK.mo * (a[(m + 11) % 12] + a[(m + 1) % 12]); return b; };
+  for (const fs in D.sp) for (const [a, ms] of D.sp[fs].h){ const code = M.hom[a], hh = HH[code] || (HH[code] = {na:new Float64Array(12), sp:{}});
+    for (let m = 0; m < 12; m++){ const c = ms[m]; let n = 0; for (let i = 2; i < c.length; i += 3) n += c[i]; if (n > hh.na[m]) hh.na[m] = n; } }
+  for (const code in HH) HH[code].na = hmo(HH[code].na);
   for (const sp in FK_SP){
     const o = D.sp[FK_SP[sp]]; if (!o) continue;
     // what a landing of each gear × length group takes nationally (both tables)
     const E = new Float64Array(54 * 2);
     for (const tab of ['k', 'h']) for (const [, ms] of o[tab]) for (const c of ms) for (let i = 0; i < c.length; i += 3){ E[c[i] * 2] += c[i + 1]; E[c[i] * 2 + 1] += c[i + 2]; }
+    for (const [a, ms] of o.h){ const hh = HH[M.hom[a]]; if (!hh) continue; const kg = new Float64Array(12), ex = new Float64Array(12), n = new Float64Array(12);
+      for (let m = 0; m < 12; m++){ const c = ms[m]; for (let i = 0; i < c.length; i += 3){ kg[m] += c[i + 1]; n[m] += c[i + 2]; ex[m] += c[i + 2] * E[c[i] * 2] / Math.max(1, E[c[i] * 2 + 1]); } }
+      hh.sp[sp] = {kg:hmo(kg), ex:hmo(ex), n:hmo(n)}; }
     const KG = new Float64Array(NL * 12), EX = new Float64Array(NL * 12), N = new Float64Array(NL * 12);
     for (const [a, ms] of o.k){ const l = map[a]; if (l < 0) continue; for (let m = 0; m < 12; m++){ const c = ms[m], j = l * 12 + m;
       for (let i = 0; i < c.length; i += 3){ KG[j] += c[i + 1]; N[j] += c[i + 2]; EX[j] += c[i + 2] * E[c[i] * 2] / Math.max(1, E[c[i] * 2 + 1]); } } }
@@ -239,6 +254,15 @@ function fkBuild(){
     const idx = new Float64Array(NL * 12);
     for (let l = 0; l < NL; l++){ const h = H[hom[l]]; for (let m = 0; m < 12; m++){ const j = l * 12 + m, ih = idxOf(h.kg[m], h.ex[m], h.n[m], h.na[m]), il = idxOf(SK[j], SE[j], SN[j], NA[j]);
       const w = SN[j] / (SN[j] + FK.n0); idx[j] = isNaN(il) ? ih : isNaN(ih) ? il : w * il + (1 - w) * ih; } }
+    // the coast's own figures end here: what is NaN now is the open sea, where only the ocean fleet fishes (H1b R6)
+    const coastOnly = idx.slice();
+    // (H1b R6, 05.11.2026) a main area with no figure from the coastal fleet (Bjørnøya 20, the snow crab's 24, 15 and 23, the east of the
+    // Barents Sea 13, Shetland and the Faroes 31, Iceland and Greenland 61, west of Spitsbergen 21, the Russian zone 01, the Norwegian
+    // Sea): the ocean fleet's notes there (the h table: 28 m and over, and the landings with no location), measured the same way, kilos
+    // per landing against what that gear and length take nationally, times the share of the area's landings that had the species,
+    // smoothed over the months only. It fills only what the coast left empty, so no figure along the coast changes.
+    for (let l = 0; l < NL; l++){ const hh = HH[hom[l]]; if (!hh) continue; const g = hh.sp[sp]; if (!g) continue;
+      for (let m = 0; m < 12; m++){ const j = l * 12 + m; if (!isNaN(idx[j])) continue; idx[j] = idxOf(g.kg[m], g.ex[m], g.n[m], hh.na[m]); } }
     // Senja's figure per month (the reference locations pooled)
     const R = new Float64Array(12); for (let m = 0; m < 12; m++){ let kg = 0, ex = 0, n = 0, na = 0; for (const l of ref){ const j = l * 12 + m; kg += SK[j]; ex += SE[j]; n += SN[j]; na += NA[j]; } R[m] = idxOf(kg, ex, n, na); }
     const A = new Float32Array(NL * 12).fill(NaN);
@@ -260,7 +284,7 @@ function fkBuild(){
         if (rm > 0) for (let j = 0; j < NL * 12; j++) if (!isNaN(idx[j])) A[j] = clamp(idx[j] / rm / (av[j % 12] || 1), FK.lo, FK.hi * 2);
       } else for (let j = 0; j < NL * 12; j++){ const r = R[j % 12]; if (!isNaN(idx[j]) && r > 0) A[j] = clamp(idx[j] / r, FK.lo, FK.hi); }
       // no Senja figure for the species (herring, mackerel, snow crab are not fished there): against the coast's mean instead
-      if (!R.some(r => r > 0)){ let s = 0, k = 0; for (let j = 0; j < NL * 12; j++) if (!isNaN(idx[j])){ s += idx[j]; k++; } const mu = k ? s / k : 1;
+      if (!R.some(r => r > 0)){ let s = 0, k = 0; for (let j = 0; j < NL * 12; j++) if (!isNaN(coastOnly[j])){ s += coastOnly[j]; k++; } const mu = k ? s / k : 1;
         for (let j = 0; j < NL * 12; j++) A[j] = isNaN(idx[j]) ? NaN : clamp(idx[j] / mu, 0, FK.hi); }
       af[sp] = {m:A};
     }

@@ -17,6 +17,8 @@ Fra `CLAUDE.md` 26.10.2026 (Jonas 07.10.2026, «Spør før hver test»: «Dekker
 | `tral3d` | 12 min | trål eller not |
 | `vectest` | 11 min | vec-pakkene (bygg, veier, bruer, kaier) |
 | `svalbardtest` | 10 min | øyene utenfor den gamle rammen (Svalbard, Bjørnøya, Jan Mayen): flisene, landet, dybden, byggene og bakken; trenger hele kysten med øyene og `dist-vec` (H1b R3) |
+| `lybtest` | 3–5 min | Longyearbyen som havn (H1b R7): verftet og butikken, havna, Autonav og seilasen fra Tromsø (63 spilltimer), mannskapsbyttet med fly; LITE, trenger hele kysten og `dist-vec` |
+| `lybshot` | 10 min | bildene av verftet, butikken og Mannskapsbørsen i Longyearbyen i begge formater (3D); bare når det som tegnes der, endres |
 | `teleport3d` | 8 min | kartlasteren eller 3D-terrenget |
 | `kinotest` | 6 min | kameraet |
 | `unittest` | 5 min | havner og mottak (kai, kran, truck, tidevann) |

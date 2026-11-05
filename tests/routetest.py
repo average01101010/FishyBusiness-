@@ -146,7 +146,7 @@ async def leia(p):
     await pg.wait_for_function("DEPTH !== null", timeout=90000); await pg.evaluate(SETUP); await pg.wait_for_timeout(800)
     # the algorithm: Finnsnes to each fishing ground (the hand-drawn routes end there) and to Botnhamn
     rows = []
-    for k in sorted(R):
+    for k in sorted(k for k in R if isinstance(R[k], list)):   # ('hav' is autonavtest's ocean routes, H1b R6)
         rows.append(json.loads(await pg.evaluate("""async (rt) => { const F = portById('finnsnes'), g = rt[rt.length - 1], sd = safeDepth(); const res = await leiaRoute(F.p, g, 'finnsnes', null);
           if (res.why) return JSON.stringify({why:res.why}); const ti = await leiaRoute(F.p, g, 'finnsnes', null, {tight:true}); let man = dist(F.p, rt[0]); for (let i = 1; i < rt.length; i++) man += dist(rt[i - 1], rt[i]);
           let a = F.p, bad = 0; res.wps.forEach(w => { if (!clearLine(a, w) || legHazard(a, w, sd).unsafe) bad++; a = w; });

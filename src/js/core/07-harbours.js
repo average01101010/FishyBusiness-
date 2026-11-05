@@ -21,9 +21,17 @@ const QUAY_DEPTH = 10;   // how far the quay deck reaches in from the face (m)
 // The harbour unit (UNIT, UNITS in 01-world.js) is the quay in every harbour with a plant: its berths, its dredged basin.
 // the depth below chart datum at p (km) where a unit stands: 0 on the quay itself and its fill, at least the dredged depth in the basin, rising
 // 1 in 2 outside it; d elsewhere
+// (H1b R6, 05.11.2026: the units by the 1 km square their box touches, so a depth read far from every harbour costs one lookup; before,
+// every read looped over all of UNITA, and that was half the time of a long Autonav route over open sea. Rebuilt when UNITA grows.)
+const UNITG = {n:-1, g:null, none:[]};
+function unitsAt(x, z){
+  if (UNITG.n !== UNITA.length){ const g = UNITG.g = new Map(); UNITG.n = UNITA.length;
+    for (const U of UNITA){ const R = U.y ? 200 : 100; for (let i = Math.floor((U.o[0] - R) / 1000); i <= Math.floor((U.o[0] + R) / 1000); i++) for (let j = Math.floor((U.o[1] - R) / 1000); j <= Math.floor((U.o[1] + R) / 1000); j++){ const k = i * 65536 + j; let l = g.get(k); if (!l) g.set(k, l = []); l.push(U); } } }
+  return UNITG.g.get(Math.floor(x / 1000) * 65536 + Math.floor(z / 1000)) || UNITG.none;
+}
 function unitDredge(p, d){
   const x = p.x * 1000, z = p.y * 1000;
-  for (const U of UNITA){
+  for (const U of unitsAt(x, z)){
     const R = U.y ? 200 : 100; if (Math.abs(x - U.o[0]) > R || Math.abs(z - U.o[1]) > R) continue;
     const [lx, lz] = unitL(U, x, z), g = ugeo(U);
     if (groundOut(U, lx, lz) === 0) return 0;

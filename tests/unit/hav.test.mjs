@@ -20,8 +20,24 @@ export default function (t){
   t.ok((ns.c.h42 || 0) + (ns.c.h30 || 0) + (ns.c.h37 || 0) > 0.5, `ringnot i september mest på makrellen vest i havet (h42, h30, h37): ${JSON.stringify(ns.c)}`);
   t.ok((no.c.h04 || 0) > 0.5, `ringnot i november mest på silda utenfor Troms og Vesterålen (h04): ${JSON.stringify(no.c)}`);
   t.ok(nj.home / Math.max(1, nj.home + nj.n) > no.home / Math.max(1, no.home + no.n), `ringnotflåten ligger mer i havn i juni (${nj.home} av ${nj.home + nj.n}) enn i november (${no.home} av ${no.home + no.n})`);
-  const sk = where('teine', 2), skIn = Object.entries(sk.c).filter(([code]) => D.g.teine.find(e => e[0] === code && e[1] != null)).reduce((a, [, v]) => a + v, 0);
-  t.ok(sk.n > 0 && skIn < 0.5, `snøkrabbefartøyene er det meste borte (øst i Barentshavet, utenfor rammen): ${JSON.stringify(sk.c)}`);
+  // (H1b R6, 05.11.2026: the frame has every ground, Bjørnøya, Svalbard, the snow crab's banks, Shetland, Iceland and the Russian zone)
+  const away = Object.entries(D.g).flatMap(([g, G]) => G.filter(e => e[1] == null).map(e => g + ' ' + e[0]));
+  t.ok(M.away === 0 && !away.length, `ingen felt er borte (${Object.values(D.g).reduce((a, G) => a + G.length, 0)} feltpunkter)`, away.slice(0, 6));
+  const noWay = Object.entries(D.g).flatMap(([g, G]) => G.filter(e => !(e[4] && e[4].length)).map(e => g + ' ' + e[0]));
+  t.ok(!noWay.length, 'hvert felt har en vei til leinettet', noWay.slice(0, 6));
+  const sk = where('teine', 2), skN = (sk.c.h15 || 0) + (sk.c.h24 || 0) + (sk.c.h23 || 0) + (sk.c.h13 || 0) + (sk.c.h01 || 0);
+  t.ok(sk.n > 0 && skN > 0.6, `snøkrabbefartøyene er øst og nordøst i Barentshavet i mars (h13, h15, h23, h24, h01): ${JSON.stringify(sk.c)}`);
+  // the ice (H1b R6): no trip goes to a ground that lies in the drift ice the day it starts, and the way out keeps out of the ice
+  let inIce = 0, trips = 0, round = null; const ice = (p, H) => K.seaIceAt(p, H) >= K.SEA_ICE_LIM;
+  for (const q of D.ships) for (let k = 0; k < 120; k++){ const r = K.havTrip(q, k); if (!r || r.e[1] == null) continue; trips++;
+    if (ice({x:r.e[1], y:r.e[2]}, Math.floor(r.H0 / 24) * 24 + 12)) inIce++;
+    if (!round){ const Wi = K.havWay(q, r.gi, null, r.H0); if (Wi.ice) round = {q, r, Wi}; } }
+  t.ok(trips > 1000 && inIce === 0, `ingen av ${trips} turer går til et felt som ligger i isen den dagen turen begynner`);
+  if (round){ const {r, Wi} = round, Hd = Math.floor(r.H0 / 24) * 24 + 12, P = Wi.R.pts, lastNode = P.length - 2 - Wi.ice; let hit = 0;
+    for (let i = Math.max(1, lastNode + 1); i < P.length; i++) if (K.seaIceOnLeg(P[i - 1], P[i], Hd, {})) hit++;
+    const straight = K.seaIceOnLeg(P[lastNode], P[P.length - 1], Hd, {});
+    t.ok(straight && hit === 0, `leia til feltet ${r.e[0]} går rundt isen med ${Wi.ice} punkter i ${new Date(K.EPOCH + r.H0 * 3.6e6).toISOString().slice(0, 7)} (det rette strekket hadde gått gjennom isen)`); }
+  else t.ok(false, 'en tur som går rundt isen finnes');
 
   // the ways: from the plant along the fairways to the ground, and the trip's states in order
   const s = D.ships.find(q => q.g === 'tral'); let k = 0, tr = null; while (!(tr = K.havTrip(s, k)) || tr.e[1] == null) k++;

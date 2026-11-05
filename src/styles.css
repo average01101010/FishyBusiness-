@@ -119,7 +119,7 @@ body.vplot #gps::after{display:none}
 #drawerTabs{padding:8px 12px 2px} #drawerTabs[hidden]{display:none}
 #drawerBody{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 @media (orientation:landscape){body.dk-open #dock{right:calc(min(380px,92vw) + 8px)} body.dk-open #dockInfo{left:calc((100% - min(380px,92vw)) / 2)} body.dk-open #dockFan{max-width:calc(100% - min(380px,92vw) - 16px)}}
-@media (orientation:portrait){#drawer{top:auto;left:0;width:auto;height:55%;bottom:calc(env(safe-area-inset-bottom,0px) + 84px + var(--dkx, 0px));border-radius:16px 16px 0 0;box-shadow:0 -8px 26px rgba(0,0,0,.28);overflow:hidden} .dr-head{padding-top:8px} body.dk-open #dockInfo{display:none}}
+@media (orientation:portrait){#drawer{top:auto;left:0;width:auto;height:55%;bottom:max(calc(env(safe-area-inset-bottom,0px) + 84px + var(--dkx, 0px)), var(--dkh, 0px));border-radius:16px 16px 0 0;box-shadow:0 -8px 26px rgba(0,0,0,.28);overflow:hidden} .dr-head{padding-top:8px} body.dk-open #dockInfo{display:none}}
 
 @media (max-width:560px){#plotTop .pt-title{display:none} body.vplot #hud{max-width:52vw}}
 /* the loading screen and the sign-in (ui/10f-cloud.js): the picture (.dsb-bg in index.html) darkened at the top and the bottom, the kicker in
@@ -1507,10 +1507,14 @@ body.pm #hud,body.pm #pinCard{visibility:hidden}
 #catchFeed .cf-c{display:grid;grid-template-columns:10px auto;column-gap:9px;align-items:center;padding:8px 12px 8px 10px;border-radius:12px;background:var(--s-glass);border:1px solid rgba(238,244,247,.12);color:var(--t-on-dark);box-shadow:0 4px 14px rgba(0,0,0,.25);animation:cfIn .28s ease-out}
 #catchFeed .cf-c i{grid-row:span 2;width:10px;height:10px;border-radius:50%}
 #catchFeed .cf-c b{font:700 var(--fs-sm)/1.2 var(--sans)} #catchFeed .cf-c span{font:500 12px/1.25 var(--sans);color:var(--t-on-dark-2);font-variant-numeric:tabular-nums}
-@keyframes cfIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+@keyframes cfIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}   /* (12 px: inside the list's 14 px from the edge; 16 px gave the page a sideways overflow while a tile came in, GUI review F3) */
 @media (prefers-reduced-motion:reduce){#catchFeed .cf-c{animation:none}}
 body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 @media (orientation:portrait){#catchFeed{bottom:calc(env(safe-area-inset-bottom,0px) + 104px)}}
+/* the catch list beside the open drawer, never over it (GUI review F3 05.11.2026: it covered the plan's rows and day): left of the drawer
+   in landscape, as the dock goes; in portrait the drawer takes the lower half, and the list waits until it is shut */
+@media (orientation:landscape){body.dk-open #catchFeed{right:calc(min(380px,92vw) + 14px)}}
+@media (orientation:portrait){body.dk-open #catchFeed{display:none}}
 @media (max-width:560px){#hud .gauges{gap:5px} #hud .g b{font-size:11.5px} #hud .g .gl{letter-spacing:0}}
 @media (max-width:560px){.dk-b.hero{width:66px} .dk-b.hero .dk-i{width:52px;height:52px} .dk-b.hero .dk-i svg{width:26px;height:26px}}
 #toast.up{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 64px)}

@@ -35,6 +35,7 @@ Gjelder alle fiskemottak, verft, utstyrsbutikker, rorbuer og fars naust, og alle
 - **Bygningene:** der en Blender-modell settes ut, fjernes kartets egne bygg under den, så ingenting overlapper. Byggene plasseres realistisk (kai mot sjøen, bygg på land).
 - **Navn:** alle mottak heter etter stedet pluss «fiskemottak», «mottak», «fiskebruk» eller en annen vanlig variant, aldri etter et firma (se CLAUDE.md).
 - **Kartikoner:** hver slags sted har sitt eget ikon i kartplotteren (mottak, verft, butikk, rorbu, naust).
+- **Svalbard** (H1b R7, Jonas 03.11.2026): Longyearbyen har verft (diesel) og utstyrsbutikk, men ikke mottak. De er plassert etter de samme reglene av `tools/steder/svalbard.py` (ly målt på stedet, fordi eksponeringskartet ikke når så langt nord). Ingen andre steder på Svalbard eller i utlandet.
 - **Fars naust** står i Vangshamn på Senja (Jonas 08.10.2026), nær Botnhamn, der den første fangsten leveres. Startskjermen viser stedene uten kart, sortert etter hva det er å tjene akkurat nå, med søk.
 
 ## Knappene ved hvert sted (Jonas 07.10.2026, andre melding)

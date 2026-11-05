@@ -6,11 +6,14 @@
 // not shown in port; on a trip to a ground of her gear, drawn by the landings of 28 m and over that month (an area with little landed
 // that month sends fewer ships out: a purse seiner lies at the quay out of season), along Kystverket's fairways (LNET, lnetPath) and
 // straight off the last node to the ground; there she fishes as her gear does (trawl tows back and forth, the purse seine's sets,
-// the autoline set and hauled, the pots and nets in lenker), and steams home to land. A ground outside the game's frame (Bjørnøya,
-// the Svalbard zone, the North Sea west) is «borte»: she is not shown for the trip. Only the ships within AIS_KM of the boat you follow
-// are given out (havNear), and their lines, pots and nets go into NPCGEAR as the coast boats' do.
+// the autoline set and hauled, the pots and nets in lenker), and steams home to land. From H1b R6 (05.11.2026) every ground lies in the
+// game's frame (Bjørnøya, Svalbard, the snow crab's banks, Shetland, Iceland, the Russian zone), and the sea ice (03h-is.js) shuts a
+// ground for a trip that starts while it lies in the drift ice, and the way out goes round the ice (havIceWay). Only the ships within
+// AIS_KM of the boat you follow are given out (havNear), and their lines, pots and nets go into NPCGEAR as the coast boats' do.
 const HAV_T = /*@text(data/havflaate.json)*/null;
-const HAV = {d:null, way:new Map(), k:'', v:[], gear:[]};
+// (wayMax: the ways kept; from H1b R6 the 192 grounds of 248 ships, with the plants they land at, are some 1 500, and at 600 the store
+// was cleared over and over)
+const HAV = {d:null, way:new Map(), wayMax:4000, k:'', v:[], gear:[]};
 // per gear: the trip and the port stay (days), the steaming speed (kn), the fishing, and the radius it keeps within (km)
 const HAVG = {tral:{trip:[5, 12], port:[1, 2.5], kn:12, fish:'tow', r:4}, not:{trip:[2, 5], port:[1, 3], kn:13, fish:'purse', r:1.5},
   snurrevad:{trip:[3, 6], port:[1, 2], kn:11, fish:'seine', r:1.2}, line:{trip:[14, 28], port:[2, 4], kn:11, fish:'line', r:5},
@@ -37,24 +40,81 @@ function havData(){
   return D;
 }
 // the trip k of a ship: whether she goes (the month's weight), the ground (by the month's landings of her gear), and its row
-function havTrip(s, k){
+// (H1b R6) a ground in the drift ice the day the trip starts is shut for it (havOpen), and the draw is among the open ones; all shut, she
+// stays in port. H0: the hour the trip starts, which the way round the ice is made for (havWay)
+// (a function of the ship and k alone: the last trip asked is kept on the ship, as havNear, havState and havLand ask for it in turn)
+function havTrip(s, k){ if (s.tk === k) return s.tr; const tr = havTrip0(s, k); s.tk = k; s.tr = tr; return tr; }
+function havTrip0(s, k){
   const D = havData(), d0 = k * s.C - s.ph + s.port, m = gDate(d0 * 24).getUTCMonth(), w = D.mw[s.g] ? D.mw[s.g][m] : 0;
   if (hash(k * 131 + s.i * 7 + 1) > Math.min(1, w / 0.35)) return null;   // out of season: she stays in port
-  const G = D.g[s.g] || []; let tot = 0; for (const e of G) tot += e[3][m]; if (tot <= 0) return null;
-  let r = hash(k * 151 + s.i * 11 + 2) * tot; for (let j = 0; j < G.length; j++){ r -= G[j][3][m]; if (r <= 0) return {gi:j, e:G[j]}; }
-  return {gi:G.length - 1, e:G[G.length - 1]};
+  const G = D.g[s.g] || [], op = havOpen(s.g, Math.floor(d0)); let tot = 0; for (let j = 0; j < G.length; j++) if (op[j]) tot += G[j][3][m]; if (tot <= 0) return null;
+  let r = hash(k * 151 + s.i * 11 + 2) * tot, last = -1; for (let j = 0; j < G.length; j++){ if (!op[j]) continue; last = j; r -= G[j][3][m]; if (r <= 0) return {gi:j, e:G[j], H0:d0 * 24}; }
+  return {gi:last, e:G[last], H0:d0 * 24};
+}
+// which grounds of a gear are clear of the drift ice at noon on day d (days from the epoch), kept per gear and day
+const HAVOPEN = new Map();
+function havOpen(g, d){
+  const key = g + '|' + d; let o = HAVOPEN.get(key); if (o) return o;
+  const G = havData().g[g] || [], H = d * 24 + 12; o = G.map(e => e[1] == null || typeof SEA_ICE === 'undefined' || !SEA_ICE || seaIceAt({x:e[1], y:e[2]}, H) < SEA_ICE_LIM);
+  if (HAVOPEN.size > 400) HAVOPEN.clear(); HAVOPEN.set(key, o); return o;
+}
+// The way round the ice (H1b R6, Jonas: the ice shuts grounds and makes the NPCs go round too): from a (the last fairway node) to b (the
+// ground) at hour H, when the straight leg meets ice of SEA_ICE_LIM % or more. A* on cells of HAVICE.c km in a box HAVICE.pad km round
+// the leg, open where the ice is under the limit less HAVICE.margin and the core says sea (isLandFar), then pulled straight where a leg
+// keeps out of the ice and off the land (every 2 km). The points between a and b, or null when the straight leg is clear or there is
+// no way round (then she goes straight, an approximation, BACKLOG). A function of the hour alone, so every player sees the same.
+const HAVICE = {c:20, pad:400, margin:5, step:2};
+// (the core's land; none before the core is in, as in the tests of the core without the map)
+const havLandF = p => typeof MAPD !== 'undefined' && MAPD.core && MAPD.core.buf ? isLandFar(p) : false;
+function havIceClear(a, b, H){ const n = Math.max(1, Math.ceil(dist(a, b) / HAVICE.step)); for (let i = 1; i < n; i++){ const p = {x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n}; if (seaIceAt(p, H) >= SEA_ICE_LIM || havLandF(p)) return false; } return true; }
+function havIceWay(a, b, H){
+  if (typeof SEA_ICE === 'undefined' || !SEA_ICE || !seaIceOnLeg(a, b, H, {})) return null;
+  const c = HAVICE.c, x0 = Math.min(a.x, b.x) - HAVICE.pad, y0 = Math.min(a.y, b.y) - HAVICE.pad, nx = Math.ceil((Math.max(a.x, b.x) + HAVICE.pad - x0) / c), ny = Math.ceil((Math.max(a.y, b.y) + HAVICE.pad - y0) / c), N = nx * ny;
+  const ctr = v => ({x:x0 + (v % nx + 0.5) * c, y:y0 + (Math.floor(v / nx) + 0.5) * c}), OPEN = new Int8Array(N).fill(-1);
+  const open = v => { if (OPEN[v] < 0){ const p = ctr(v); OPEN[v] = seaIceAt(p, H) < SEA_ICE_LIM - HAVICE.margin && !havLandF(p) ? 1 : 0; } return OPEN[v] === 1; };
+  const at = p => Math.floor((p.y - y0) / c) * nx + Math.floor((p.x - x0) / c);
+  const near = p => { const v0 = at(p); if (open(v0)) return v0; const i0 = v0 % nx, j0 = Math.floor(v0 / nx); let best = -1, bd = 1e9;
+    for (let j = Math.max(0, j0 - 3); j <= Math.min(ny - 1, j0 + 3); j++) for (let i = Math.max(0, i0 - 3); i <= Math.min(nx - 1, i0 + 3); i++){ const v = j * nx + i; if (!open(v)) continue; const d = dist(ctr(v), p); if (d < bd){ bd = d; best = v; } } return best; };
+  const s0 = near(a), t0 = near(b); if (s0 < 0 || t0 < 0) return null;
+  const G = new Float64Array(N).fill(Infinity), F = new Int32Array(N).fill(-1), H2 = leiaHeap(), tx = t0 % nx, ty = Math.floor(t0 / nx);
+  G[s0] = 0; H2.push(s0, 0); let found = false;
+  while (H2.size()){ const u = H2.pop(); if (u === t0){ found = true; break; } const ux = u % nx, uy = Math.floor(u / nx);
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){ if (!dx && !dy) continue; const x = ux + dx, y = uy + dy; if (x < 0 || y < 0 || x >= nx || y >= ny) continue; const v = y * nx + x; if (!open(v)) continue;
+      const g = G[u] + Math.hypot(dx, dy) * c; if (g < G[v]){ G[v] = g; F[v] = u; H2.push(v, g + Math.hypot(x - tx, y - ty) * c); } } }
+  if (!found) return null;
+  const cells = []; for (let v = t0; v !== -1; v = F[v]) cells.push(ctr(v)); cells.reverse();
+  const P = [a].concat(cells, [b]), out = []; let i = 0;
+  while (i < P.length - 1){ let j = P.length - 1; while (j > i + 1 && !havIceClear(P[i], P[j], H)) j--; if (j < P.length - 1) out.push(P[j]); i = j; }
+  return out;
 }
 // the way from a plant to a ground: the plant, its fairway nodes to the ground's, the ground (kept per plant and ground)
-function havWay(s, gi, pi){
-  const D = havData(); if (pi == null) pi = s.pi; const key = pi + ':' + s.g + ':' + gi; let W = HAV.way.get(key); if (W !== undefined) return W;
+function havWay(s, gi, pi, H0){
+  const D = havData(); if (pi == null) pi = s.pi; const key = pi + ':' + s.g + ':' + gi; let W = HAV.way.get(key);
+  if (W === undefined) W = havWay0(s, gi, pi, key);
+  // (H1b R6) the leg off the last node to the ground round the ice the day the trip starts, when the ice can reach it at all (iceMay:
+  // a cell along it has the limit some month); kept per day
+  // (the days are kept in the way itself, so they do not crowd the ways out of HAV.way)
+  if (H0 == null || !W.iceMay) return W;
+  const day = Math.floor(H0 / 24), dm = W.days || (W.days = new Map()); let Wi = dm.get(day); if (Wi !== undefined) return Wi;
+  const pts = W.pts, a = {x:pts[pts.length - 2][0], y:pts[pts.length - 2][1]}, b = W.to, round = havIceWay(a, b, day * 24 + 12);
+  if (!round){ Wi = W; }
+  else { const q = pts.slice(0, -1).concat(round.map(p => [p.x, p.y]), [pts[pts.length - 1]]); Wi = {R:prepRoute(q), RR:prepRoute(q.slice().reverse()), to:b, pts:q, ice:round.length}; }
+  if (dm.size > 60) dm.clear(); dm.set(day, Wi); return Wi;
+}
+function havWay0(s, gi, pi, key){
+  const D = havData(); let W;
   const pl = D.p[pi], e = D.g[s.g][gi], from = {x:pl[1], y:pl[2]}, to = {x:e[1], y:e[2]}, pts = [[from.x, from.y]];
   const pa = D.pa[pi] || [], ga = e[4] || [];
   const P = typeof LNET !== 'undefined' && LNET && pa.length && ga.length ? lnetPath(pa.map(q => [q[0], q[1]]), ga) : null;
   // (out of the plant through the water to the fairway: the way's bends the tool found for the node the net starts at)
   if (P){ const o = pa.find(q => q[0] === P.nodes[0]); if (o) for (let i = 2; i + 1 < o.length; i += 2) pts.push([o[i], o[i + 1]]); for (const v of P.nodes) pts.push([LNET.X[v], LNET.Y[v]]); }
   pts.push([to.x, to.y]);
-  W = {R:prepRoute(pts), RR:prepRoute(pts.slice().reverse()), to};
-  if (HAV.way.size > 600) HAV.way.clear(); HAV.way.set(key, W); return W;
+  // whether the ice can reach the last leg in any month (the most any month has, along it every 10 km)
+  let iceMay = false; if (typeof SEA_ICE !== 'undefined' && SEA_ICE && pts.length >= 2){ const a = {x:pts[pts.length - 2][0], y:pts[pts.length - 2][1]}, n = Math.max(1, Math.ceil(dist(a, to) / 10)), I = SEA_ICE;
+    for (let i = 0; i <= n && !iceMay; i++){ const p = {x:a.x + (to.x - a.x) * i / n, y:a.y + (to.y - a.y) * i / n}, u = Math.round(p.x / I.c - I.ix0 - 0.5), v = Math.round(p.y / I.c - I.iy0 - 0.5);
+      for (let dv = -1; dv <= 1 && !iceMay; dv++) for (let du = -1; du <= 1; du++){ const uu = u + du, vv = v + dv; if (uu >= 0 && vv >= 0 && uu < I.nx && vv < I.ny && I.any[vv * I.nx + uu] >= SEA_ICE_LIM){ iceMay = true; break; } } } }
+  W = {R:prepRoute(pts), RR:prepRoute(pts.slice().reverse()), to, pts, iceMay};
+  if (HAV.way.size > HAV.wayMax) HAV.way.clear(); HAV.way.set(key, W); return W;
 }
 // the way from one plant to another along the fairways (from the plant she landed at, home): null when the net has none
 function havLeg(a, b){
@@ -66,7 +126,7 @@ function havLeg(a, b){
     const oa = A.find(q => q[0] === P.nodes[0]), ob = B.find(q => q[0] === P.nodes[P.nodes.length - 1]);
     if (oa) pts.push(...bend(oa, true)); for (const v of P.nodes) pts.push([LNET.X[v], LNET.Y[v]]); if (ob) pts.push(...bend(ob, false)); pts.push([pb[1], pb[2]]);
     W = {R:prepRoute(pts)}; }
-  if (HAV.way.size > 600) HAV.way.clear(); HAV.way.set(key, W); return W;
+  if (HAV.way.size > HAV.wayMax) HAV.way.clear(); HAV.way.set(key, W); return W;
 }
 // the berths of a plant's ships (npcBerths: a face that stands in 3D and fits, off the plant's own berths): at home her plant's own
 // ships; at a plant she lands at (H, the hour), its own ships first and then the visitors lying there now, in the order they came, so
@@ -89,7 +149,7 @@ function havVisitors(pi, H){
   for (const s of D.visit.get(pi) || []){
     const t = H / 24 + s.ph, k = Math.floor(t / s.C), e = t - k * s.C; if (e < s.port) continue;
     const tr = havTrip(s, k); if (!tr || tr.e[1] == null || tr.e[5] !== pi) continue; const Ld = havLand(s, tr); if (!Ld) continue;
-    const v = havV(s, tr), steam = havWay(s, tr.gi).R.len / v, F = s.trip * 24 - steam - Ld.back - s.land - Ld.home, arr = (e - s.port) * 24 - steam - F - Ld.back;
+    const v = havV(s, tr), steam = havWay(s, tr.gi, null, tr.H0).R.len / v, F = s.trip * 24 - steam - Ld.back - s.land - Ld.home, arr = (e - s.port) * 24 - steam - F - Ld.back;
     if (arr >= 0 && arr < s.land) out.push([arr, s]); }
   out = out.sort((a, b) => b[0] - a[0] || a[1].i - b[1].i).map(q => q[1]);   // (longest there first)
   if (HAVVIS.size > 200) HAVVIS.clear(); HAVVIS.set(key, out); return out;
@@ -97,10 +157,12 @@ function havVisitors(pi, H){
 // the landing of a trip (task 2, 03.11.2026): the plant the ground's catch goes to (havflaate.py: the nearest along the fairways that
 // takes the gear and has a quay for her), the ways there and home, and the hours at the quay; null when she lands at home, or when the
 // detour would leave less than a quarter of the trip to fish
-function havLand(s, tr){
+// (kept on the trip: the same trip gives the same landing)
+function havLand(s, tr){ if (tr.Ld !== undefined) return tr.Ld; return tr.Ld = havLand0(s, tr); }
+function havLand0(s, tr){
   const D = havData(), dp = tr.e[5]; if (dp == null || dp === s.pi) return null;
   const a = D.p[dp], h = D.p[s.pi]; if (Math.hypot(a[1] - h[1], a[2] - h[2]) < 5) return null;   // (the same harbour: she lands at home)
-  const v = havV(s, tr), W = havWay(s, tr.gi), Wd = havWay(s, tr.gi, dp), Wh = havLeg(dp, s.pi); if (!Wh) return null;
+  const v = havV(s, tr), W = havWay(s, tr.gi, null, tr.H0), Wd = havWay(s, tr.gi, dp, tr.H0), Wh = havLeg(dp, s.pi); if (!Wh) return null;
   const out = W.R.len / v, back = Wd.R.len / v, home = Wh.R.len / v, Th = s.trip * 24;
   return out + back + s.land + home > Th * 0.75 ? null : {pi:dp, Wd, Wh, back, home};
 }
@@ -153,7 +215,7 @@ function havState(s, H, near){
   if (e < s.port) return port();
   const tr = havTrip(s, k); if (!tr) return port();
   if (tr.e[1] == null) return {hidden:true, st:'away'};
-  const W = havWay(s, tr.gi), v = havV(s, tr), steam = W.R.len / v, h = (e - s.port) * 24, Th = s.trip * 24, Ld = havLand(s, tr);
+  const W = havWay(s, tr.gi, null, tr.H0), v = havV(s, tr), steam = W.R.len / v, h = (e - s.port) * 24, Th = s.trip * 24, Ld = havLand(s, tr);
   if (Ld){
     // to the ground, fish, to the plant that takes the catch, lie there some hours, and home along the fairways
     const F = Th - steam - Ld.back - s.land - Ld.home;
@@ -186,7 +248,9 @@ function havNear(H, only){
       if (!tr){ if (dist(P0, b.pos) > R + 2) continue; }
       else if (tr.e[1] == null) continue;
       else { const G0 = {x:tr.e[1], y:tr.e[2]}, dp = tr.e[5], Q = dp != null && dp !== s.pi ? {x:D.p[dp][1], y:D.p[dp][2]} : null;
-        if (!near(P0, G0, R + 200) && !(Q && (near(G0, Q, R + 200) || near(Q, P0, R + 200)))) continue; } }
+        // (a trip whose way goes round the ice, H1b R6: 400 km more)
+        const m = R + 200 + (havWay(s, tr.gi, null, tr.H0).ice ? 400 : 0);
+        if (!near(P0, G0, m) && !(Q && (near(G0, Q, m) || near(Q, P0, m)))) continue; } }
     const A = havState(s, H, b.pos); if (A.hidden) continue;
     if (A.set) for (const q of A.set) if (q.a !== q.b && Math.min(dist(q.a, b.pos), dist(q.b, b.pos)) <= R) gear.push({k:q.k, a:q.a, b:q.b, id:s.id, name:s.name});
     if (dist(A.p, b.pos) > R) continue;

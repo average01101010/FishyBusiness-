@@ -284,7 +284,7 @@ function crewSettle(c){
   log(c.name + ' fikk ' + kr(sum) + ' i lott for fangsten om bord.', c.name + ' was paid ' + kr(sum) + ' as the share of the catch aboard.');
   return sum;
 }
-function crewQuit(c, why, whyEn){ const i = S.crew.indexOf(c); if (i < 0) return; crewSettle(c); S.crew.splice(i, 1); for (const o of S.crew){ if (o.grudge) delete o.grudge[c.id]; }
+function crewQuit(c, why, whyEn){ const i = S.crew.indexOf(c); if (i < 0) return; crewSettle(c); flyOut(c); S.crew.splice(i, 1); for (const o of S.crew){ if (o.grudge) delete o.grudge[c.id]; }
   msg(c.name, why || 'Jeg mønstrer av her. Det er ikke noe for meg lenger.', whyEn || 'I am signing off here. It is not for me any more.'); log(c.name + ' har mønstret av.', c.name + ' has signed off.'); if (S.cevt && (S.cevt.a === c.id || S.cevt.b === c.id)) S.cevt = null; }
 // the job exchange: new people look for a berth every morning; fewer in the skrei season, when every boat is hiring
 function borsTick(H){
@@ -300,6 +300,7 @@ function crewRumour(){ const B = S.bors; if (!B || Math.random() < 0.5) return n
 function crewTick(H){
   const b = S.boat; if (!S.crew || !S.crew.length){ S.workLog = []; return; }
   S.crew = S.crew.map(crewUpgrade);
+  flyTick();   // the crew flying in to Svalbard (H1b R7)
   driftWatch(H);   // 2 + 2: who is on watch this hour (06d-drift.js)
   const hs = hsAt(b.pos, H), atSea = b.status === 'sailing' || b.status === 'fishing', fishing = b.status === 'fishing', hr = gDate(H).getUTCHours(), night = hr >= 22 || hr < 6;
   // the vessel's own log of hours at sea, for the crew page
@@ -365,3 +366,39 @@ function crewTick(H){
 }
 function codRoom(H){ const q = quotaState(); return Math.max(0, codLimitNow(H) - q.torsk); }
 
+// ===== the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B) =====
+// Longyearbyen is a harbour with a yard and a tackle shop but no plant; there is no road to the mainland, so a hand who signs on there flies
+// up from Tromsø and one who signs off there flies home to Tromsø. The flight: SAS flies Tromsø-Longyearbyen direct, 1 h 55 min by its
+// own route page (sas.no «Fly fra Tromsø til Longyearbyen/Svalbard»; Skyscanner's mean 1 h 43 min); with an hour at the airport before
+// and half an hour from Svalbard lufthavn to the quay (5 km) the journey is 3 h 25 min (FLY.min). The ticket, one way, is SAS's lowest
+// fare of the month in its 2026 low-fare calendar where it was read (July 2 392 kr, November 950 kr, December 895 kr, read through a web
+// search 05.11.2026: sas.no is closed to this environment); the months between are drawn straight between those three (an assumption,
+// BACKLOG). The company pays the ticket both ways, booked as a crew cost (an assumption: the agreement's rule on travel is not read, BACKLOG).
+const FLY = {min:205, from:'Tromsø', to:'Longyearbyen', lat:76,
+  kr:[1150, 1400, 1650, 1900, 2150, 2392, 2392, 2100, 1700, 1300, 950, 895], ref:'SAS, lavpriskalender Tromsø-Longyearbyen 2026'};
+// a harbour on Svalbard: the crew come and go by air there
+const flyPort = pt => !!pt && !!pt.p && natLL(pt.p).lat >= FLY.lat;
+const flyKr = (H = S.t / 60) => FLY.kr[gDate(H).getUTCMonth()];
+// a hand signs on in a harbour on Svalbard: off the boat until the plane is in and they are at the quay; the ticket booked now
+function flyIn(c){
+  const pt = portById(S.boat && S.boat.port); if (!flyPort(pt) || !c) return false;
+  const k = flyKr(); book('mannskap', -k, 'Flybillett ' + FLY.from + '–' + FLY.to + ', ' + c.name, 'Air ticket ' + FLY.from + '–' + FLY.to + ', ' + c.name);
+  c.off = true; c.fly = {arr:S.t + FLY.min, kr:k};
+  log(c.name + ' tar flyet fra ' + FLY.from + ' og er på kaia i ' + FLY.to + ' om ' + Math.floor(FLY.min / 60) + ' t ' + FLY.min % 60 + ' min. Billetten kostet ' + kr(k) + '.',
+    c.name + ' takes the plane from ' + FLY.from + ' and is at the quay in ' + FLY.to + ' in ' + Math.floor(FLY.min / 60) + ' h ' + FLY.min % 60 + ' min. The ticket cost ' + kr(k) + '.');
+  return true;
+}
+// a hand leaves the boat in a harbour on Svalbard: the ticket home to Tromsø
+function flyOut(c){
+  const pt = portById(S.boat && S.boat.port); if (!flyPort(pt) || !c || c.fly) return 0;
+  const k = flyKr(); book('mannskap', -k, 'Flybillett ' + FLY.to + '–' + FLY.from + ', ' + c.name, 'Air ticket ' + FLY.to + '–' + FLY.from + ', ' + c.name);
+  log(c.name + ' flyr hjem fra ' + FLY.to + ' til ' + FLY.from + '. Billetten kostet ' + kr(k) + '.', c.name + ' flies home from ' + FLY.to + ' to ' + FLY.from + '. The ticket cost ' + kr(k) + '.');
+  return k;
+}
+// the plane is in: they come aboard (crewTick, each hour) the next time the boat lies at a quay; a boat that sailed before the plane was in
+// picks them up at the next harbour (they travel on there at their own cost)
+function flyTick(){
+  const b = S.boat; if (!b || b.status !== 'port') return;
+  for (const c of S.crew || []) if (c.fly && S.t >= c.fly.arr){ delete c.fly; c.off = false;
+    msg(c.name, typeof crewDialect === 'function' ? crewDialect(c, 'Flyet landet. Jeg er på kaia og kommer om bord.') : 'Flyet landet. Jeg er på kaia og kommer om bord.', 'The plane is in. I am at the quay and coming aboard.'); }
+}

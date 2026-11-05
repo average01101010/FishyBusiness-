@@ -127,7 +127,7 @@ const obsClear = (a, b, clr) => !obsSegHit(a, b, clr);
 // aground within 12 m; trip2's way back under Gisundbrua passed 7 m nearer a rock than the drawn leg and ran onto it, 05.10.2026)
 function obsRock(a, b){
   const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy || 1e-12; let m = Infinity;
-  for (const q of rocksIn(Math.min(a.x, b.x) - 0.03, Math.min(a.y, b.y) - 0.03, Math.max(a.x, b.x) + 0.03, Math.max(a.y, b.y) + 0.03)){
+  for (const q of rocksAlong(a, b, 0.03)){
     const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); m = Math.min(m, Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1])); }
   return m;
 }
