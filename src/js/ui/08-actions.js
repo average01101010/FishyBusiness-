@@ -138,6 +138,7 @@ function sell(){
   // The landing note lists each lot at its full value and takes what is confiscated off in rows of its own; every row is whole
   // kroner and the total is the sum of the rows, so the note adds up and the cash gets exactly the total less the crew's share.
   let confKr = 0, confKg = 0, crabKr = 0, ordKr = 0, crabSmall = 0, crabDead = 0;
+  const confSp = {};   // what is confiscated per species, so the note says which and why (spilltest 3, F1)
   for (const x of S.hold){
     const sp = x.sp, sd = SPECIES[sp], c = x.cls != null ? x.cls : sd.ref, g = grade(x.fresh);
     // king crab is paid by class while it lives (no grades), and nothing once dead (Råfisklaget: dead crab 0 kr)
@@ -146,7 +147,7 @@ function sell(){
     if (x.gut && (sp === 'hyse' || sp === 'sei')) ppk += 0.30;           // no gutting fee deducted
     let v = x.kg * ppk, gross = v;
     if (deadKC) crabDead += x.kg;
-    const cs = confBy[sp] || 0; if (cs > 0){ confKr += v * cs; confKg += x.kg * cs; v *= 1 - cs; }
+    const cs = confBy[sp] || 0; if (cs > 0){ confKr += v * cs; confKg += x.kg * cs; const z = confSp[sp] = confSp[sp] || {kg:0, kr:0}; z.kg += x.kg * cs; z.kr += v * cs; v *= 1 - cs; }
     // orders for this harbour take matching fish first, at their premium (confiscated fish does not count)
     const keptKg = x.kg * (1 - cs);
     if (v > 0) for (const o of ordState().active){ if (o.port !== port.id || o.sp !== sp || o.left <= 0.01 || !gradeOk(g, o.q)) continue; const take = Math.min(keptKg - (x._used || 0), o.left); if (take <= 0.01) continue;
@@ -218,13 +219,22 @@ function sell(){
   if (lott > 0){ log('Mannskapet fikk ' + kr(lott) + ' i lott.', 'The crew received ' + kr(lott) + ' as their share.'); crewSay(null, 'payday'); }
   if (codFF > 0.5) log(Math.round(codFF) + ' kg torsk gikk på ferskfisktillegget.', Math.round(codFF) + ' kg of cod went on the fresh-fish allowance.');
   const vt = S.fleet && S.fleet.length > 1 ? '«' + S.boatName + '»: ' : '';
-  if (acc === 'none' && confKg > 0.5) msg('Norges Råfisklag', vt + 'Båten har ikke adgang til å fiske torsk, hyse og sei. Av disse kan bare 10 % av landingen være bifangst, og høyst ' + fmt(BYCATCH.cod / 1000, 0) + ' tonn torsk i året. ' + Math.round(confKg) + ' kg er inndratt, verdi ' + kr(confKr) + '.', vt + 'The boat has no access to fish cod, haddock and saithe. Only 10% of the landing may be bycatch of these, and at most ' + fmt(BYCATCH.cod / 1000, 0) + ' t of cod a year. ' + Math.round(confKg) + ' kg has been confiscated, worth ' + kr(confKr) + '.');
-  else if (acc === 'lukket' && confKg - codConf > 0.5) msg('Norges Råfisklag', vt + 'Maksimalkvoten for hyse eller sei er fisket, og etter den kan bare 30 % hyse og 20 % sei være bifangst i hver landing. ' + Math.round(confKg) + ' kg er inndratt, verdi ' + kr(confKr) + '.', vt + 'The maximum quota for haddock or saithe is fished, and after it only 30 % haddock and 20 % saithe may be bycatch in each landing. ' + Math.round(confKg) + ' kg is confiscated, worth ' + kr(confKr) + '.');
-  else if (codConf > 0.5) msg('Norges Råfisklag', vt + 'Du hadde ikke torskekvote igjen for ' + Math.round(codConf) + ' kg torsk. Verdien, ' + kr(confKr) + ', er inndratt.', vt + 'You had no cod quota left for ' + Math.round(codConf) + ' kg of cod. Its value, ' + kr(confKr) + ', has been confiscated.');
+  // the Greenland halibut has a message of its own below; these speak of cod, haddock and saithe only (F1)
+  const thsKg = ['torsk', 'hyse', 'sei'].reduce((a, sp) => a + ((confSp[sp] || {}).kg || 0), 0), thsKr = Math.round(['torsk', 'hyse', 'sei'].reduce((a, sp) => a + ((confSp[sp] || {}).kr || 0), 0));
+  if (acc === 'none' && thsKg > 0.5) msg('Norges Råfisklag', vt + 'Båten har ikke adgang til å fiske torsk, hyse og sei. Av disse kan bare 10 % av landingen være bifangst, og høyst ' + fmt(BYCATCH.cod / 1000, 0) + ' tonn torsk i året. ' + Math.round(thsKg) + ' kg er inndratt, verdi ' + kr(thsKr) + '.', vt + 'The boat has no access to fish cod, haddock and saithe. Only 10% of the landing may be bycatch of these, and at most ' + fmt(BYCATCH.cod / 1000, 0) + ' t of cod a year. ' + Math.round(thsKg) + ' kg has been confiscated, worth ' + kr(thsKr) + '.');
+  else if (acc === 'lukket' && thsKg - codConf > 0.5) msg('Norges Råfisklag', vt + 'Maksimalkvoten for hyse eller sei er fisket, og etter den kan bare 30 % hyse og 20 % sei være bifangst i hver landing. ' + Math.round(thsKg - codConf) + ' kg er inndratt, verdi ' + kr(thsKr - Math.round((confSp.torsk || {}).kr || 0)) + '.', vt + 'The maximum quota for haddock or saithe is fished, and after it only 30 % haddock and 20 % saithe may be bycatch in each landing. ' + Math.round(thsKg - codConf) + ' kg is confiscated, worth ' + kr(Math.round(thsKr - ((confSp.torsk || {}).kr || 0))) + '.');
+  else if (codConf > 0.5) msg('Norges Råfisklag', vt + 'Du hadde ikke torskekvote igjen for ' + Math.round(codConf) + ' kg torsk. Verdien, ' + kr(Math.round((confSp.torsk || {}).kr || 0)) + ', er inndratt.', vt + 'You had no cod quota left for ' + Math.round(codConf) + ' kg of cod. Its value, ' + kr(Math.round((confSp.torsk || {}).kr || 0)) + ', has been confiscated.');
+  if ((confSp.blakveite || {}).kg > 0.5){ const z = confSp.blakveite, dir = bkDirect(H, BOAT.len);
+    msg('Norges Råfisklag', vt + (dir ? 'Maksimalkvoten for blåkveite er fisket. ' : 'Direktefisket etter blåkveite er stengt, og da kan blåkveite bare være bifangst, høyst 7 % av ukas landinger. ') + Math.round(z.kg) + ' kg blåkveite er inndratt, verdi ' + kr(Math.round(z.kr)) + '.',
+      vt + (dir ? 'The maximum quota for Greenland halibut is fished. ' : 'The direct fishery for Greenland halibut is closed, and then it can only be bycatch, at most 7 % of the week\'s landings. ') + Math.round(z.kg) + ' kg of Greenland halibut is confiscated, worth ' + kr(Math.round(z.kr)) + '.'); }
+  // the rows of the note: one per species with the reason (spilltest 3, F1: all of it was called «cod over quota»)
+  const confRows = Object.keys(confSp).filter(sp => confSp[sp].kg > 0.5).sort((a, c) => ALLSP.indexOf(a) - ALLSP.indexOf(c)).map(sp => [sp, Math.round(confSp[sp].kg), Math.round(confSp[sp].kr),
+    sp === 'blakveite' ? (bkDirect(H, BOAT.len) ? 'bkmax' : 'bk7') : acc === 'none' ? 'byc10' : sp === 'torsk' ? 'kvote' : 'byclukket']);
+  { const d = confRows.reduce((a, r) => a + r[2], 0) - confKr; if (confRows.length && d) confRows[confRows.length - 1][2] -= d; }   // the rows add up to the total taken off
   const crabFine = 0;
   if (crabDead > 0.05) msg(port.name, vt + fmt(crabDead, 1) + ' kg av kongekrabben var død og er vraket. Død krabbe betales ikke. Et krabbekar med sjøvann holder den levende i flere døgn.', vt + fmt(crabDead, 1) + ' kg of the king crab was dead and has been discarded. Dead crab is not paid for. A live crab tank keeps it alive for days.');
   // confKg and confKr count all that was confiscated (crab too); codKg and codKr are the cod, haddock and saithe rows on the note
-  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg:confKg + crabSmall, confKr:confKr + crabKr, codKg:confKg, codKr:confKr, crabKg:crabSmall, crabKr, crabDead, ordKr, ffKg:codFF, field, lott, tk, mva, fk, ls:{D:LS.D, M:LS.M, n:LS.n, own:LS.own, tot:LS.tot, f:LS.f, ref:LS.ref, pot:LS.pot, mask:(S.equip && S.equip.jukse) || 0, per:LS.per.map(p => ({name:p.c.name, lots:p.lots, kr:p.kr, sk:p.sk, x:p.x, appr:p.appr}))}, coopKr, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {})}; b.tripGear = {};
+  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg:confKg + crabSmall, confKr:confKr + crabKr, codKg:confKg, codKr:confKr, confRows, crabKg:crabSmall, crabKr, crabDead, ordKr, ffKg:codFF, field, lott, tk, mva, fk, ls:{D:LS.D, M:LS.M, n:LS.n, own:LS.own, tot:LS.tot, f:LS.f, ref:LS.ref, pot:LS.pot, mask:(S.equip && S.equip.jukse) || 0, per:LS.per.map(p => ({name:p.c.name, lots:p.lots, kr:p.kr, sk:p.sk, x:p.x, appr:p.appr}))}, coopKr, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {})}; b.tripGear = {};
   tatLanding(port.id); checkTattoos();
   if (S.tut && S.tut.catch) S.tut.catch = false;   // the first-trip guarantee ends with the first landing
   for (const x of S.hold) delete x._used;
