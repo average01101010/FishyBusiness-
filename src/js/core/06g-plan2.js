@@ -265,8 +265,10 @@ function planDayText(o, day){
   return out;
 }
 // ---- the check: errors keep the plan from being switched on, warnings only inform (as driftCheck; the rhythm's rules from Jonas 26.10.2026)
+// the buoy sets the plan has: those aboard and those on the gear in the sea (they come back aboard with the haul)
+function p2Kits(){ const pg = S.pgear; return ((pg && pg.kits ? pg.kits.n : 0) || 0) + (typeof mySets === 'function' ? mySets().length : 0); }
 function plan2Check(o, st){
-  st = st || plan2State(o); const E = [], Wn = [], kind = p2Kind(o), no = gL, hp = portById(o.home);
+  st = st || plan2State(o); const E = [], Wn = [], G = [], kind = p2Kind(o), no = gL, hp = portById(o.home);
   if (!hp) E.push(no('Velg hvor båten skal ligge hjemme.', 'Choose where the boat lies at home.'));
   if (!RIGS[o.rig]) E.push(no('Velg hva båten skal fiske med.', 'Choose what the boat fishes with.'));
   else if (!rigHas(o.rig)) E.push(no('Båten mangler haleren til ' + rigName(o.rig).toLowerCase() + '. Monter den under Oppgrader på verftet.', 'The boat has no hauler for ' + rigName(o.rig).toLowerCase() + '. Fit one under Upgrade at the yard.'));
@@ -275,7 +277,10 @@ function plan2Check(o, st){
   if (!kind && !J.length) E.push(no('Velg minst én juksplass.', 'Choose at least one jig place.'));
   if (o.places.length > DRP2.placesMax) E.push(no('Høyst ' + DRP2.placesMax + ' plasser.', 'At most ' + DRP2.placesMax + ' places.'));
   if (kind){ const own = ownedUnits(kind), want = F.reduce((a, f) => a + f.n, 0), sk = DRP2.soak[kind];
-    { const k = (S.pgear && S.pgear.kits ? S.pgear.kits.n : 0) || 0; if (F.length > k) Wn.push(no('Hver lenke i sjøen trenger et blåsesett, og båten har ' + k + ' til ' + F.length + ' felt. Kjøp i utstyrsbutikken.', 'Every string in the sea needs a buoy set, and the boat has ' + k + ' for ' + F.length + ' fields. Buy them at the gear shop.')); }
+    // the buoy sets: none for a field is an error (the line would stay aboard, GUI review U9 A); fewer than the fields, a warning.
+    // (the sets of the gear standing in the sea come back aboard when it is hauled, and the plan hauls before it sets)
+    { const k = p2Kits(); if (F.length && k < 1){ E.push(no('Hver lenke i sjøen trenger et blåsesett, og båten har ingen. Blåsesett kjøpes i utstyrsbutikken.', 'Every string in the sea needs a buoy set, and the boat has none. Buoy sets are bought at the tackle shop.')); G[E.length - 1] = 'butikk'; }
+      else if (F.length > k) Wn.push(no('Hver lenke i sjøen trenger et blåsesett, og båten har ' + k + ' til ' + F.length + ' felt. Kjøp i utstyrsbutikken.', 'Every string in the sea needs a buoy set, and the boat has ' + k + ' for ' + F.length + ' fields. Buy them at the gear shop.')); }
     if (want > own) Wn.push(no('Feltene vil ha ' + want + ' ' + unitName(kind, want) + ', men båten eier ' + own + '. De første feltene får det som finnes.', 'The fields want ' + want + ' ' + unitName(kind, want) + ', but the boat owns ' + own + '. The first fields get what there is.'));
     for (const [i, f] of F.entries()){ const km = kind === 'line' ? f.n * LINE_KINDS[f.lk || 'hyse'].hooks * GEAR.line.kmHook : f.n * GEAR[kind].km; let room = true; try { room = !!(f.hdg != null ? setGeomExact(f, f.hdg, km) : setGeom(f, 0, km)); } catch (e){}
       if (!room) Wn.push(no('Lenka på felt ' + (i + 1) + ' er ' + fmt(km, 1) + ' km og får ikke plass der' + (f.hdg != null ? ' i den retningen' : ' i noen retning') + '. Flytt feltet lenger ut, gi lenka en annen retning i kartet, eller del stampene på flere felt.', 'The string at field ' + (i + 1) + ' is ' + fmt(km, 1) + ' km and has no room there' + (f.hdg != null ? ' on that heading' : ' in any direction') + '. Move the field further out, give the string another heading in the chart, or split the tubs over more fields.')); }
@@ -300,5 +305,5 @@ function plan2Check(o, st){
   if (o.land && o.land.mode === 'port' && !(portById(o.land.port) || {}).mottak) E.push(no('Velg et fiskemottak å levere på.', 'Choose a fish plant to land at.'));
   if (!E.length && o.rhythm !== 'watch' && o.places.length){ try { const d = planDay(o, plan2NextDep(o, S.t / 60), st), seaH = d.home - d.t0; if (seaH > d.dayMax + 1) Wn.push(no('Dagen blir ' + fmt(seaH, 1) + ' t med disse plassene og mottaket ' + (o.M ? fmt(dist(plan2P(o, 'M'), plan2P(o, 'H')) / NM, 0) + ' nm unna' : 'så langt unna') + '. Mannskapet blir slitne.', 'The day comes to ' + fmt(seaH, 1) + ' h with these places and the plant ' + (o.M ? fmt(dist(plan2P(o, 'M'), plan2P(o, 'H')) / NM, 0) + ' nm away' : 'so far away') + '. The crew get tired.')); } catch (e){} }
   if (o.wx.hs > BOAT.risk[1] * 0.95) Wn.push(no('Båten tåler ikke mer enn ' + fmt(BOAT.risk[1] * 0.95, 1) + ' m sjø, så den grensen gjelder.', 'The boat takes no more than ' + fmt(BOAT.risk[1] * 0.95, 1) + ' m of sea, so that limit holds.'));
-  return {ok:!E.length, errors:E, warnings:Wn};
+  return {ok:!E.length, errors:E, warnings:Wn, go:E.map((e, i) => G[i] || null)};
 }

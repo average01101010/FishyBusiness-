@@ -183,6 +183,10 @@ const PLAN2UI = (() => {
     return '<p class="ph-note">' + (one ? L('Båten har plass til bare én i mannskapet. Planen går derfor bare når du er om bord, og venter mens du er i land.', 'The boat has room for only one crew. So the plan runs only when you are aboard, and waits while you are ashore.')
       : L('Når du er om bord, er du skipper og går dagvakta. Når du ikke er det, må både en skipper og en styrmann være utnevnt. Det gjør du på Mannskap-siden.', 'When you are aboard, you are the skipper and keep the day watch. When you are not, both a skipper and a mate must be appointed. You do that on the Crew page.')) + '</p>' + (one ? '' : B('p2-crew', L('Til Mannskap-siden', 'To the Crew page')));
   }
+  // the way to the nearest tackle shop (U9 A: the buoy sets are bought there and only there, docs/handelssteder.md): Autonav, as the trade pages have it
+  function shopWay(){ const n = placesNear(S.boat.pos, 'butikk', 1)[0]; if (!n) return ''; const here = S.boat.status === 'port' && S.boat.port === n.pt.id;
+    return here ? '<p class="ph-note">' + L('Utstyrsbutikken er her, i ' + n.pt.name + '.', 'The tackle shop is here, at ' + n.pt.name + '.') + '</p>' + B('open', L('Til utstyrsbutikken', 'To the tackle shop'), 'data-a="fiske"', 'p')
+      : B('goplace', L('Autonav til utstyrsbutikken i ' + n.pt.name + ' · ' + fmt(n.d / NM, 1) + ' nm', 'Autonav to the tackle shop at ' + n.pt.name + ' · ' + fmt(n.d / NM, 1) + ' nm'), 'data-id="' + n.pt.id + '"', 'p'); }
   // ---- the top: Start or Pause, Nå, and the button that fixes a stop
   function top(o, C){
     const h = ['<div class="ph-card"><h4>' + L('Driftsplan · «', 'Operations plan · «') + S.boatName + '»</h4>'];
@@ -196,7 +200,7 @@ const PLAN2UI = (() => {
     if (stopped && o.stop.fix) h.push(B('p2-fix', {places:L('Endre plassene', 'Change the places'), mannskap:L('Til Mannskap-siden', 'To the Crew page'), quota:L('Se kvoten', 'See the quota'), rig:L('Endre redskapet', 'Change the gear')}[o.stop.fix] || L('Se planen', 'See the plan'), '', 'p'));
     // the gear in the sea while the plan is off (choice 2 A): said, with the trip that fetches it
     if (!o.on){ const sets = mySets(); if (sets.length){ const H = S.t / 60; h.push('<p class="warn">' + L(sets.map(s => s.n + ' ' + unitName(s.kind, s.n) + ' har stått ' + fmt(H - s.tSet / 60, 0) + ' t').join(', ') + ' i sjøen.', sets.map(s => s.n + ' ' + unitName(s.kind, s.n) + ' has stood ' + fmt(H - s.tSet / 60, 0) + ' h').join(', ') + ' in the sea.') + '</p>' + B('p2-fetch', L('Hent redskapet', 'Fetch the gear'))); } }
-    if (!o.on && !C.ok) h.push(C.errors.map(e => '<p class="bad">' + e + '</p>').join(''));
+    if (!o.on && !C.ok) h.push(C.errors.map((e, i) => '<p class="bad">' + e + '</p>' + (C.go[i] === 'butikk' ? shopWay() : '')).join(''));
     if (o.err && !o.on) h.push('<p class="bad">' + o.err + '</p>');
     h.push(C.warnings.map(e => '<p class="warn">' + e + '</p>').join(''));
     h.push('</div>'); return h.join('');

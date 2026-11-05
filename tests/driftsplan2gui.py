@@ -509,7 +509,8 @@ async def s07_uten_haler(c):
     await c.press('.dr-pl [data-pa="p2-pup"]:not([disabled])', name='↑ (feltet først, så lina settes straks)')
     t = await c.text(); st = await c.where('.dr-onoff')
     kit = 'blåsesett' in t
-    c.check(kit, 'uten blåsesett sier siden at hver lenke trenger et blåsesett', {'start': st and st['txt'], 'start_låst': st and st['dis']})
+    way = await c.where('[data-pa="goplace"], [data-pa="open"][data-a="fiske"]')
+    c.check(kit and st and st['dis'] and bool(way), 'U9: uten blåsesett er Start låst, med grunnen og veien til utstyrsbutikken', {'start': st and st['txt'], 'start_låst': st and st['dis'], 'veien': way and way['txt']})
     c.note('Start uten blåsesett', {'knapp': st and st['txt'], 'låst': st and st['dis']})
     await c.shots('uten-blaasesett', frame=('.dr-onoff',))
     # started anyway: what the page says when the line cannot be set

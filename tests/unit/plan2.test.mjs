@@ -19,4 +19,10 @@ export default function (t){
   t.ok(p2MeRestH(-10, 100 / 6) === p2MeRestH(0, 100 / 6), 'energien under 0 etter et anslag regnes som 0');
   t.ok(p2MeRestH(90, 100 / 6) === 0, 'uthvilt nok: ingen hvile');
   t.ok(p2MeRestH(20, 0) === 0, 'ingen hvile å få (åpen båt ved kai uten køyer, eller ingen penger til rorbua): 0, avgangen sier fra');
+  // the buoy sets the plan has (U9 A): those aboard and those on the gear standing in the sea, which come back aboard with the haul
+  { const {newState, p2Kits} = K; K.set('S', newState()); const S = K.get('S');
+    t.ok(p2Kits() === 0, 'ingen blåsesett om bord og ingenting i sjøen: 0 (Start låst med et felt)');
+    S.pgear.kits.n = 2; t.ok(p2Kits() === 2, 'to om bord: 2');
+    S.sets = [{vid:S.cur, kind:'line'}, {vid:S.cur, kind:'line', lost:true}, {vid:'annen', kind:'line'}];
+    t.ok(p2Kits() === 3, 'to om bord og ett på lina i sjøen (en tapt lenke og en annen båts teller ikke): 3 (' + p2Kits() + ')'); }
 }
