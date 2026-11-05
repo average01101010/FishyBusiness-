@@ -258,7 +258,12 @@ function chartVectors(V, again){
 // than its 50 m cells). The land is the vector coast drawn over it (chartCoast), which is what the route check takes as land since
 // 04.10.2026 (01d-coast.js); the 25 m mask is no longer drawn as foreshore beside it (the user: «Jeg vil ha bort det som er i
 // magenta»). Only a harbour unit's block and fill are painted here, at level 2, as land.
-function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
+function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){ const g = chartRasterG(d, PW, PH, x0, y0, pkx, pky, V, st, null); while (!g.next().done); }
+// The same, a row at a time: it yields after each row (of the coarse grid, of the samples and of the depth lines), so the little chart
+// in 3D (03e-miniplot.js) can paint its background over many frames (05.11.2026: 70-185 ms at once on a PC). A row needs the one above
+// (the edge of the safe depth), so the rows are not split up, only spread out; the picture is the same. scr: arrays kept between calls
+// (the little chart's, so a background leaves no garbage); without it they are new
+function* chartRasterG(d, PW, PH, x0, y0, pkx, pky, V, st, scr){
   const {lv, fish, night, sd} = V, LD = MAPD.L.depth, c = LD.c, X0 = LD.ix0, Y0 = LD.iy0, X1 = LD.ix0 + LD.nx - 1, Y1 = LD.iy0 + LD.ny - 1, D = (ix, iy) => rcell(LD, ix, iy);
   const s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
   // the night colours: dark sea in blues, dim land, as a chart plotter's night mode (the fishing chart is dark already)
@@ -269,7 +274,8 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
   const CL = pkx > 0.6 ? [200, 500, 1000] : pkx > 0.25 ? [50, 100, 200, 500, 1000] : pkx > 0.08 ? [20, 50, 100, 200, 300, 500, 800, 1000] : [5, 10, 20, 30, 50, 100, 150, 200, 300, 500, 800, 1000];
   const LVT = new Uint8Array(1101); for (let z = 0; z < 1101; z++){ let n = 0; for (const l of CL) if (z >= l) n++; LVT[z] = n; }
   const CC = night ? [78, 118, 160] : [112, 150, 188], cls = z => LVT[z < 0 ? 0 : z > 1100 ? 1100 : z | 0];
-  const prev = new Float32Array(PW).fill(NaN), VV = new Float32Array(PW * PH), SV = new Uint8Array(PW * PH), MK = new Uint8Array(PW * PH), CK = new Uint8Array(PW * PH), sh = 1 / (Math.max(pkx, 0.0005) * 10), smooth = lv > 0 && pkx < LD.c;
+  const N = PW * PH, R = scr && scr.N === N && scr.PW === PW ? scr : scr ? Object.assign(scr, {N, PW, prev:new Float32Array(PW), VV:new Float32Array(N), SV:new Uint8Array(N), MK:new Uint8Array(N), CK:new Uint8Array(N), CX:new Int32Array(PW * 4), CW:new Float32Array(PW * 4), G:null}) : null;
+  const prev = R ? R.prev.fill(NaN) : new Float32Array(PW).fill(NaN), VV = R ? R.VV : new Float32Array(N), SV = R ? R.SV : new Uint8Array(N), MK = R ? R.MK.fill(0) : new Uint8Array(N), CK = R ? R.CK : new Uint8Array(N), sh = 1 / (Math.max(pkx, 0.0005) * 10), smooth = lv > 0 && pkx < LD.c;
   const pocket = lv === 2 ? pocketsIn(x0, y0, x0 + PW * pkx, y0 + PH * pky) : null, T = MAPD.man.tile, LM = MAPD.L.mask, lc = LM.c;
   // deep inside the 25 m mask's land (the cell and its four neighbours) the vector coast's fill covers the pixel anyway: it is painted
   // in that fill's colour and its depth is not worked out (the B-spline's 16 cells a pixel for the land made the fjord's view 3x slower);
@@ -278,14 +284,14 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
   let ltx = NaN, lty = NaN, lsim = false;
   const simAt = (x, y) => { const tx = Math.floor(x / T), ty = Math.floor(y / T); if (tx !== ltx || ty !== lty){ ltx = tx; lty = ty; const pk = lv > 0 ? MAPD.byTile.get('sim:' + tx + ':' + ty) : null; lsim = !!(pk && pk.buf); if (pk && !pk.buf && st) st.prov = true; } return lsim; };
   const bw = (t, o) => { const t2 = t * t, t3 = t2 * t; o[0] = (1 - t) * (1 - t) * (1 - t) / 6; o[1] = (3 * t3 - 6 * t2 + 4) / 6; o[2] = (-3 * t3 + 3 * t2 + 3 * t + 1) / 6; o[3] = t3 / 6; };
-  const CX = new Int32Array(PW * 4), CW = new Float32Array(PW * 4), tmp = [0, 0, 0, 0];
+  const CX = R ? R.CX : new Int32Array(PW * 4), CW = R ? R.CW : new Float32Array(PW * 4), tmp = [0, 0, 0, 0];
   if (smooth) for (let i = 0; i < PW; i++){ const x = x0 + (i + 0.5) * pkx, gx = x / c - 0.5, ix = Math.floor(gx); bw(gx - ix, tmp); for (let k = 0; k < 4; k++){ CX[i * 4 + k] = clamp(ix - 1 + k, X0, X1); CW[i * 4 + k] = tmp[k]; } }
   const RW = [0, 0, 0, 0], RO = [0, 0, 0, 0], col = [0, 0, 0], put = (o, k) => { d[o] = k[0]; d[o + 1] = k[1]; d[o + 2] = k[2]; d[o + 3] = 255; };
   // near in (a sample under an eighth of a cell) the B-spline every GS samples and between them bilinear: the depth is smooth there,
   // and the 16 cells a sample made the harbour's tiles slow; NaN where a corner is off the packs (the sample is then its own)
-  const GS = 4, G = smooth && pkx < c / 8 ? new Float32Array((Math.ceil(PW / GS) + 1) * (Math.ceil(PH / GS) + 1)) : null, GW = Math.ceil(PW / GS) + 1;
+  const GS = 4, GN = (Math.ceil(PW / GS) + 1) * (Math.ceil(PH / GS) + 1), G = smooth && pkx < c / 8 ? (R ? (R.G && R.G.length === GN ? R.G : (R.G = new Float32Array(GN))) : new Float32Array(GN)) : null, GW = Math.ceil(PW / GS) + 1;
   if (G){ const w = [0, 0, 0, 0], u = [0, 0, 0, 0];
-    for (let gj = 0; gj * GS < PH + GS; gj++) for (let gi = 0; gi < GW; gi++){
+    for (let gj = 0; gj * GS < PH + GS; gj++){ for (let gi = 0; gi < GW; gi++){
       const x = x0 + (gi * GS + 0.5) * pkx, y = y0 + (gj * GS + 0.5) * pky; let v = NaN;
       if (simAt(x, y) && x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c) try {
         const gx = x / c - 0.5, ix = Math.floor(gx), gy = y / c - 0.5, iy = Math.floor(gy); bw(gx - ix, w); bw(gy - iy, u); v = 0;
@@ -293,6 +299,7 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
       } catch (e){ v = NaN; }
       G[gj * GW + gi] = v;
     }
+    yield; }
     ltx = NaN; }
   for (let j = 0; j < PH; j++){
     const y = y0 + (j + 0.5) * pky, gy = clamp(y / c - 0.5, Y0, Y1 - 0.001), iy = Math.floor(gy), fy = gy - iy;
@@ -328,6 +335,7 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
       if (land > 0){ col[0] += (FS[0] - col[0]) * land; col[1] += (FS[1] - col[1]) * land; col[2] += (FS[2] - col[2]) * land; }
       put(o, col); prev[i] = v; left = v;
     }
+    yield;
   }
   // the depth lines, in a pass over the finished depth (Jonas 08.10.2026, tilbakemelding #43: «samme dybdelinjer som rundt senja langs
   // hele kysten ned til 1000 meter»): a pixel is a line where its depth falls in another class than its left or upper neighbour's, from the
@@ -342,6 +350,7 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
       if (gx > lim || gy > lim) continue;
       const p = o * 4;
       if (fish){ d[p] *= 0.5; d[p + 1] *= 0.5; d[p + 2] *= 0.5; } else { d[p] = CC[0]; d[p + 1] = CC[1]; d[p + 2] = CC[2]; }
+      if (i === PW - 1 && (j & 15) === 0) yield;
     }
   }
 }
