@@ -102,8 +102,9 @@ begin
 end $$;
 
 -- ---------- funn 12 ----------
+-- (from public too: three of them had the right through PUBLIC, not through anon; authenticated has its own grant on each)
 revoke execute on function public.admin_cash_flags(int), public.admin_tur_share(int), public.guest_claim(), public.guest_merge(text),
-  public.push_plan(jsonb) from anon;
+  public.push_plan(jsonb) from public, anon;
 revoke all on function public.saves_cash_check() from public, anon, authenticated;
 alter default privileges in schema public revoke execute on functions from anon;
 revoke all on table public.berths, public.cash_flags, public.sponsors, public.sponsor_placements from anon, authenticated;

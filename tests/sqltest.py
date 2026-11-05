@@ -910,11 +910,14 @@ def main():
         RY['bSeen'] = [len(json.loads(sql("select public.berth_get('h_ry')", who, 'authenticated'))) for who in (G2, PY)]
         RY['bTake'] = sql("select public.berth_put('h_ry:k1:0', 'h_ry', 'v2', 900, 300, 0, 10, 3)", PY, 'authenticated')
         RY['bBack'] = sql("select public.berth_put('h_ry:k1:0', 'h_ry', 'v1', 900, 300, 0, 10, 3)", G2, 'authenticated')
-        RY['anonNo'] = [sql("select public.%s" % f, {}, 'anon', expect_err=True)[0] for f in ("guest_claim()", "push_plan('[]')", "admin_cash_flags(5)", "admin_tur_share(5)")]
+        # the right itself, not only that the call fails (the functions refuse anon by themselves too); and the player's rights stay
+        RY['anonNo'] = [sql("select has_function_privilege('anon', 'public.%s', 'execute')" % f) == 'f' for f in ('guest_claim()', 'guest_merge(text)', 'push_plan(jsonb)', 'admin_cash_flags(int)', 'admin_tur_share(int)', 'saves_cash_check()')]
+        RY['authYes'] = [sql("select has_function_privilege('authenticated', 'public.%s', 'execute')" % f) == 't' for f in ('guest_claim()', 'guest_merge(text)', 'push_plan(jsonb)', 'admin_cash_flags(int)', 'admin_tur_share(int)')]
+        RY['anonList'] = sql("select string_agg(p.proname, ',' order by p.proname) from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.prosecdef and has_function_privilege('anon', p.oid, 'execute')")
         RY['anonTab'] = [sql("select count(*) from public.%s" % tb, {}, 'anon', expect_err=True)[0] for tb in ('berths', 'cash_flags', 'sponsors', 'sponsor_placements')]
         RY['anonYes'] = sql("select jsonb_typeof(public.sp_now())", {}, 'anon')
         print(ok(RY['err'][0] == RY['err'][1] and RY['err'][0] < 400 and RY['perf'][0] == RY['perf'][1] and RY['perf'][0] < NP and RY['ev'] == 'big={} small={"x": 1}'
-                 and RY['bSeen'] == [1, 0] and RY['bTake'] == 'ok' and RY['bBack'] == 'taken' and all(RY['anonNo']) and all(RY['anonTab']) and RY['anonYes'] == 'array'),
+                 and RY['bSeen'] == [1, 0] and RY['bTake'] == 'ok' and RY['bBack'] == 'taken' and all(RY['anonNo']) and all(RY['authYes']) and RY['anonList'] == 'sp_now,tm_error,tm_perf' and all(RY['anonTab']) and RY['anonYes'] == 'array'),
               "without a sign-in the errors and the frame rate stop at a ceiling that grows with the active players; an event's data has a size; a guest's berth gives way to an account and is not shown to it; anon runs only tm_error, tm_perf and sp_now (Ø6 funn 9, 10, 12)", RY)
         # the load of 5 000 players (plan 5b; KYST_LAST=5000): landings and catches for that many players, then what world_get costs
         NL = int(os.environ.get('KYST_LAST') or 0)
