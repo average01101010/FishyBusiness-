@@ -152,7 +152,7 @@ const DOCK = (() => {
       const s = nearSet(b.pos, 0.3), nb = nearestBuoy(), ch = setChoices(true);
       const haul = s ? (s.kind === 'line' ? I('taopp', 'taopp', 'Ta opp', 'Haul', {act:'ghaul', data:{id:s.id}, pri:true}) : I('taopp', 'taopp', 'Ta opp', 'Haul', {menu:'taopp', pri:true}))
         // lying by her gear (V2 B, within half a mile): one tap makes the way up to the buoy (U2, U3)
-        : nb && nb.d <= GEARLIE.r * 1.2 ? I('taopp', 'taopp', 'Til blåsa', 'To the buoy', {run:() => goTo(nb.s), pri:true})
+        : nb && nb.d <= GEARLIE.r * 1.2 ? I('taopp', 'taopp', 'Til blåsa', 'To the buoy', {run:() => buoyGo(nb.s), pri:true})
         : I('taopp', 'taopp', 'Ta opp', 'Haul', {off:[nb ? L('Nærmeste blåse er ' + fmt(nb.d / NM, 1) + ' nm unna. Bruk Auto-nav og trykk på blåsa.', 'The nearest buoy is ' + fmt(nb.d / NM, 1) + ' nm away. Use auto-nav and tap the buoy.') : L('Du har ikke redskap i sjøen.', 'You have no gear in the sea.')]});
       // «Jukse» only on a boat rigged for jigging (the user's wish 02.10.2026)
       // a quay within 400 m: «Fortøy» takes her in (moorGo), to a rorbu's, the naust's or a harbour's (16-helm.js moorAll); with more
@@ -166,6 +166,7 @@ const DOCK = (() => {
         ptow, s || !moor ? haul : null, moor, nav, tut, anc, restItem(), crew, work, beh].filter(Boolean);   // (the bunk, #70)
     }
     if (b.status === 'fishing' && b.gop) return [I('gstop', 'stopp', 'Stopp arbeidet', 'Stop the work', {act:'gstop'}), work, beh].filter(Boolean);
+    if (gopAfter(b)) return [work, beh].filter(Boolean);   // the minute after the gear work (F4)
     if (b.status === 'fishing') return [I('stopfish', 'stopp', 'Stopp', 'Stop', {act:'stopfish'}),
       b.deckStop && !b.deckEnd ? I('deckgo', 'videre', 'Fisk videre', 'Fish on', {act:'deckgo', pri:true}) : !b.deckStop && deckPending() > 0.5 ? I('deckstop', 'sloy', 'Stopp og sløy', 'Stop and gut', {act:'deckstop'}) : null,
       G3.isActive() && window.JIGG && (window.jigActive || window.JIGG.ok()) ? I('jigg', 'juks', window.jigActive ? 'Slutt å jukse' : 'Jukse selv', window.jigActive ? 'Stop jigging' : 'Jig yourself', {act:'jigg', pri:!window.jigActive, on:!!window.jigActive}) : null, restItem(), crew, work, beh].filter(Boolean);
@@ -187,7 +188,7 @@ const DOCK = (() => {
     if (b.status !== 'port' && resting()) out.push(L('Hviler i køya', 'Resting in the bunk') + ' · ' + Math.round(S.energy) + ' %');
     if (b.status === 'unmooring') out.push(L('Kaster loss …', 'Casting off …'));
     if (b.gop){ const g = gopText(); if (g) out.push(L(g[0], g[1])); }
-    else if (b.status === 'fishing' && b.fishUntil != null && !b.deckEnd){   // (seeing to the catch before leaving: no jigging, F4)
+    else if (b.status === 'fishing' && b.fishUntil != null && !b.deckEnd && !gopAfter(b)){   // (seeing to the catch before leaving: no jigging, F4)
       // how many jigging reels are working (tilbakemelding #64), short enough for a phone: the hands at the rail tend three each, as in
       // fishEffort (core/03-simulation.js), so «3 av 5» means too few hands for the rest
       const own = S.equip ? S.equip.jukse || 0 : 0, jk = own > 0 && !(S.target === 'kveite' && b.kgear && !kveiteClosed(S.t / 60)) ? Math.min(own, workTeam('fiske', 'juksa', 'fishing').n * JIG.perPerson) : 0;
@@ -260,6 +261,22 @@ const DOCK = (() => {
     if (S.draft.length) draftEdit(() => { S.draft = []; });
     close(); openPlotter();
     leiaTo(buoyStandoff(s, dist(b.pos, s.a) <= dist(b.pos, s.b) ? s.a : s.b), true);
+  }
+  // «Til blåsa» (spilltest 3, U2): lying within half a mile of her own gear, the way up to just off the nearer buoy as Autonav finds it,
+  // and off she goes without the chart, as «Fortøy» does; there «Ta opp» stands in the dock bar
+  async function buoyGo(s){
+    const b = S.boat; menu = null;
+    if (b.status !== 'idle' || (S.plan && S.plan.depAt)){ toast(L('Båten er opptatt. Stopp det den holder på med først.', 'The boat is busy. Stop what it is doing first.')); return; }
+    if (!meAboard() && !crewAboard().length){ toast(L(...noCrewText())); return; }
+    const to = buoyStandoff(s, dist(b.pos, s.a) <= dist(b.pos, s.b) ? s.a : s.b);
+    // within half a mile on open water the way is straight, when it crosses no land and no shoal; else as Autonav finds it
+    let res = null; try { if (!isLand(to) && !groundCheck(b.pos, to)) res = {wps:[to]}; } catch (e){}
+    if (!res) try { res = await leiaRoute({x:b.pos.x, y:b.pos.y}, to, null, null); } catch (e){ console.error(e); res = {why:['Fant ingen vei til blåsa.', 'Found no way to the buoy.']}; }
+    if (res.why){ toast(L(res.why[0], res.why[1])); return; }
+    if (b.status !== 'idle') return;
+    if (S.draft.length) draftEdit(() => { S.draft = []; });
+    S.plan = {wps:res.wps.map((q, i) => ({x:q.x, y:q.y, port:null, fish:0, leia:i < res.wps.length - 1})), idx:0, speed:Math.min(S.draftSpeed || BOAT.cruise || 6, BOAT.cruise || 6), returning:false}; b.status = 'sailing';
+    toast(L('Kjører opp til blåsa.', 'Running up to the buoy.')); save(); refreshAll();
   }
   // «Fortøy»: the way in to the quay found as Autonav finds it, and off she goes, without the chart
   async function moorGo(mo){

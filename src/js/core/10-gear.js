@@ -360,14 +360,11 @@ function finishSet(g, H){
   log('Satte ' + what + ' på ' + s.depth + ' m, ' + coordStr(setMid(s)) + '.', 'Set ' + whatEn + ' at ' + s.depth + ' m, ' + coordStr(setMid(s)) + '.', 'nav');
   gopEnd(g);
 }
-function gopEnd(g){ const b = S.boat; b.gop = null; b.v = 0; b.gopQuiet = true; S.gacc = null; S.gnext = null;
-  if (g.fishAfter > 0){ b.fishUntil = S.t + g.fishAfter * 60; return; }
-  gopDone(); }
-// the gear work is over and no jigging follows: end now, not a game minute later as «Fisker»/«Jukser» (spilltest 3, F4); alone with
-// fish in the tub, the deck is seen to first, as fish() does at the end of a session
-function gopDone(){ const b = S.boat; if (b.status !== 'fishing') return;
-  if (S.settings.deckFirst !== false && handsAboard() < 2 && deckPending() > 0.5){ b.fishUntil = S.t; b.deckStop = true; b.deckEnd = 'done'; return; }
-  endFishing('done'); }
+// (the minute after the gear work stays: fish() ends it, or a plan turns it into jigging while it waits for the next haul, plan2Sea.
+// Ending it at once sent the plan on too early, driftsplan2test S1. The screen does not call that minute jigging: gopAfter)
+function gopEnd(g){ const b = S.boat; b.gop = null; b.v = 0; b.gopQuiet = true; b.fishUntil = S.t + (g.fishAfter || 0) * 60; S.gacc = null; S.gnext = null; }
+// the minute after setting or hauling, before fish() ends it or a plan makes it jigging: not «Fisker»/«Jukser» (spilltest 3, F4)
+function gopAfter(b = S.boat){ return b.status === 'fishing' && !!b.gopQuiet && !b.gop && b.fishUntil != null && b.fishUntil - S.t <= 1; }
 // stop halfway: what is set stays in the sea as a shorter string, what is hauled is aboard
 function gopAbort(why){
   const b = S.boat, g = b.gop; if (!g) return;
@@ -384,7 +381,7 @@ function gopAbort(why){
     b.gop = null;
   }
   b.v = 0; S.gacc = null; S.gnext = null;
-  if (why !== 'return' && why !== 'dock' && b.status === 'fishing'){ b.gopQuiet = true; gopDone(); }
+  if (why !== 'return' && why !== 'dock' && b.status === 'fishing'){ b.gopQuiet = true; b.fishUntil = S.t; }
 }
 // gear back on deck after hauling (or a stopped set); nets with their condition
 function gearBack(s, n, cond, W){
