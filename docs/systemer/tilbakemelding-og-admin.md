@@ -80,6 +80,8 @@ Jonas ba om det slik: «koble deg opp mot detstorebla.no/admin slik at du kan he
 - Alt i admin-siden som kommer fra spillerne (tilbakemeldingene og `meta`, navn, båtnavn, nettlesere, agentens rapporter), går gjennom `esc()` eller blir gjort om til tall. Sikkerhetsgjennomgangen fant at plasseringen i en tilbakemelding (`meta.pos`) gikk rett inn i HTML-en, så en spiller kunne sende et skript som kjørte med admin-økta (`docs/planer/sikkerhet-skyen.md`, funn 1). `fbMeta` tar nå bare to endelige tall, tittelen i `daily()` escapes, og agentens PR-lenker blir lenker bare til `https://github.com/` (b5289877).
 - `fb_send` beholder `pos` bare som to tall innenfor bredde og lengde (`supabase/migrations/20261105120000_fb_meta.sql`, sjekket i `sqltest`). Kjørt av Jonas i SQL Editor 05.11.2026 (sperren i skymiljøet stopper `apply_migration`).
 - Ny kode i admin som viser noe fra spillerne, skal bruke `esc()` (tekst) eller `Number()` (tall), aldri verdien rett.
+- **CSP i admin** (05.11.2026, Ø6 funn 15): `build.mjs` legger en `Content-Security-Policy` inn i admin-siden, med bare sidens eget skript etter hash, bilder som `data:`, og video og kall bare til Supabase. Siden må derfor ha nøyaktig ett `<script>` og ingen `onclick=` eller andre hendelser i HTML-en; ellers bygges den uten CSP og med en advarsel. `admintest` sjekker det.
+- **Automatisk retting bare fra feillista** (05.11.2026, Ø6 funn 8): en autofix-PR som viser til `tilbakemelding #N`, flettes ikke inn av seg selv, men venter på Jonas (`autofix.yml`, steget «Opphavet»). `RUTINE.md` sier det samme.
 
 ## 5.25c Admin: åpningen på nytt (05.10.2026)
 

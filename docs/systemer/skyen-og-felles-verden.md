@@ -158,6 +158,11 @@ Jonas: «det er viktig at alle har en delt klokke fordi dette er et online-spill
   - `guest_merge` tar gjestens landinger med i `world_year` for kontoen. Før forsvant de med gjestens rad.
   - `catch_put` merker gjesten slik `land_put`, `pos_put` og `gear_put` gjør.
 - **For alle:** `land_put` tar ingen landing mer enn 24 spilltimer foran den felles klokka (`world_gh()`), regner spillåret ut av `gh` (som `yearH`) i stedet for å ta `y` fra kallet, og renser havn (`[A-Za-z0-9ÆØÅæøå_-]`, fordi mottakene i Østfold heter `mØF50` osv.) og art (`[a-z0-9_]`). En landing som avvises (400), dropper klienten (`worldShare`).
+- **Tak og rettigheter** (05.11.2026, Ø6 funn 9, 10 og 12, `supabase/migrations/20261105150000_rydd.sql`):
+  - `tm_error` og `tm_perf` har tak som vokser med de aktive spillerne siste time (`tm_active()`), og en hendelses data i `tm_batch` er høyst 4 000 byte.
+  - En gjests kaiplass viker for en konto og vises ikke for kontoene.
+  - Bare `tm_error`, `tm_perf` og `sp_now` kan kalles uten innlogging, og nye funksjoner får ikke den retten av seg selv. En ny funksjon for `anon` trenger derfor `grant execute … to anon`.
+  - Delte fangstmerker deles uten haillen om bord (`lf`, `ui/10l-share.js`).
 - **Malingen som deles** (05.11.2026, Ø6 funn 5, `supabase/migrations/20261105140000_liv_owned.sql`): `pos_put` tar med de betalte delene av `liv` (ripe, totone, vann, stripe, lakk, flagg og rederilogo) bare når kontoen eier designet (`entitlements`, skrevet av `shop_paid`, tatt bort av `shop_refund`). Fargene, registreringsmerket og vimplene deles alltid. Butikken gir aldri noe gratis på spillets egne sider (`shopMode()`, `pubHost()` i `ui/10f-cloud.js`).
 - **Igjen:** en registrert konto kan fortsatt melde falske landinger. Taket er 60 t i åpen gruppe per konto og år (`world_agg_get`) og 10 t åpen og 60 t lukket per landing på topplistene. Det står i `docs/planer/sikkerhet-skyen.md`.
 
