@@ -1417,7 +1417,7 @@ Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026;
   - 75 `kvWhat(r)`
   - 85 `kvFinish()`
 
-## `src/js/core/10-gear.js` (793 linjer)
+## `src/js/core/10-gear.js` (796 linjer)
 
 passive gear: nets, line and pots that stand in the sea while the boat is away
 
@@ -1488,19 +1488,19 @@ passive gear: nets, line and pots that stand in the sea while the boat is away
   - 601 `opsGearAfter()`
 - **607** in the sea, every hour: catch, losses, weather and deadlines (company level)
   - 608 `soakHour(s, H)`
-  - 637 `gearHour(H)`
-  - 668 `reportLost(sid)`
-  - 676 `netMended(l)`
-- **677** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
-  - 683 `egnOrder(lk, n, bait)`
-  - 697 `egnHands()`
-  - 706 `egnSelf(lk, n, bait)`
-  - 727 `stripSelf(lk, bait, n, then)`
-  - 741 `mendSelf(nid)`
-  - 752 `botOrder(nid)`
-  - 763 `gearJob(j)`
-  - 775 `gearJobCancel(j)`
-  - 782 `shoreTick()`
+  - 640 `gearHour(H)`
+  - 671 `reportLost(sid)`
+  - 679 `netMended(l)`
+- **680** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
+  - 686 `egnOrder(lk, n, bait)`
+  - 700 `egnHands()`
+  - 709 `egnSelf(lk, n, bait)`
+  - 730 `stripSelf(lk, bait, n, then)`
+  - 744 `mendSelf(nid)`
+  - 755 `botOrder(nid)`
+  - 766 `gearJob(j)`
+  - 778 `gearJobCancel(j)`
+  - 785 `shoreTick()`
 
 ## `src/js/core/10b-gearcare.js` (266 linjer)
 
@@ -2251,12 +2251,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1136 linjer)
+## `src/js/ui/phone/07-patch.js` (1137 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1129 `patch()`
+  - 1130 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
