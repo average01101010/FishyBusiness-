@@ -151,7 +151,8 @@ def run(name, lite):
 
 
 # A5 (docs/planer/verktoy-fra-game-studios.md, Ø2 05.11.2026): one line per test per run, so «flaky» becomes a number:
-# date, branch, commit, test, OK/FEIL/LES, seconds, 3D or not. tests/out/ is not in git; the regression routine copies the table
+# date, branch, commit, test, OK/FEIL/LES, seconds, 3D or not. tests/out/ is not in git; the regression copies the file to
+# docs/regresjon/<date>/historikk.tsv (tools/regresjon/RUTINE.md 6), and «historikk» reads those too
 HIST = os.path.join(HERE, 'out', 'historikk.tsv')
 
 
@@ -159,20 +160,27 @@ def history(r):
     git = lambda *a: subprocess.run(['git'] + list(a), cwd=ROOT, capture_output=True, text=True).stdout.strip()
     try:
         with open(HIST, 'a') as f:
-            f.write('\t'.join([time.strftime('%Y-%m-%d %H:%M'), git('rev-parse', '--abbrev-ref', 'HEAD'), git('rev-parse', '--short', 'HEAD'),
+            f.write('\t'.join([time.strftime('%Y-%m-%d %H:%M'), git('rev-parse', '--abbrev-ref', 'HEAD'), git('rev-parse', '--short', 'HEAD') + ('+' if git('status', '--porcelain', '--', 'src', 'tests', 'build.mjs') else ''),   # (+: with changes not committed)
                                r['name'], r['status'], '%.0f' % r['dt'], 'lite' if r['lite'] else '3d']) + '\n')
     except OSError: pass
 
 
 def flaky():
-    rows = [l.rstrip('\n').split('\t') for l in open(HIST)] if os.path.exists(HIST) else []
-    by = {}
+    # this machine's runs, and the regressions' kept in git (docs/regresjon/<date>/historikk.tsv; the containers are thrown away)
+    import glob
+    lines = []
+    for f in sorted(glob.glob(os.path.join(ROOT, 'docs', 'regresjon', '*', 'historikk.tsv'))) + ([HIST] if os.path.exists(HIST) else []):
+        lines += [l for l in open(f) if l not in lines]
+    rows = sorted(l.rstrip('\n').split('\t') for l in lines)
+    by, mix = {}, set()
     for r in rows:
-        if len(r) >= 5: by.setdefault(r[3], []).append(r[4])
-    print('%-16s %6s %5s  %s' % ('test', 'kjørt', 'røde', 'mønster (O grønn, F rød, L les; eldst først)'))
+        if len(r) >= 5: by.setdefault(r[3], []).append(r[4]); mix.add((r[3], r[2], r[4]))
+    # «ustabil» only where the same commit was both green and red: a red that turned green after a change is a fix, not a flake
+    flak = {n for (n, c, st) in mix if st == 'FEIL' and (n, c, 'OK') in mix}
+    print('%-16s %6s %5s  %s' % ('test', 'kjørt', 'røde', 'mønster (O grønn, F rød, L les; eldst først; «ustabil»: grønn og rød på samme commit)'))
     for n, st in sorted(by.items(), key=lambda kv: (-sum(s == 'FEIL' for s in kv[1]) / len(kv[1]), kv[0])):
         print('%-16s %6d %5d  %s%s' % (n, len(st), sum(s == 'FEIL' for s in st), ''.join({'OK': 'O', 'FEIL': 'F'}.get(s, 'L') for s in st[-40:]),
-              '  ustabil' if 'OK' in st and 'FEIL' in st else ''))
+              '  ustabil' if n in flak else ''))
 
 
 def report(r):
