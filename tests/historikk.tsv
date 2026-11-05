@@ -2,3 +2,16 @@
 2026-11-05 21:15	o2-best	d585ce9+	maptest	OK	42	lite	samtidig	
 2026-11-05 21:16	o2-best	d585ce9+	cloudtest	OK	46	lite	samtidig	
 2026-11-05 21:19	o2-best	d585ce9+	gfxtest	OK	182	3d	alene	
+2026-11-05 21:43	ccr-9c21028c-lptg24	6a65b974	geartest	OK	49	lite	samtidig	
+2026-11-05 21:43	ccr-9c21028c-lptg24	6a65b974	autolinetest	OK	13	lite	samtidig	
+2026-11-05 21:43	ccr-9c21028c-lptg24	6a65b974	bktest	OK	10	lite	samtidig	
+2026-11-05 21:43	ccr-9c21028c-lptg24	6a65b974	hudtest	OK	19	lite	samtidig	
+2026-11-05 21:44	ccr-9c21028c-lptg24	6a65b974	dockrow	OK	50	lite	samtidig	
+2026-11-05 21:44	ccr-9c21028c-lptg24	6a65b974	trip2	OK	45	lite	samtidig	
+2026-11-05 21:46	ccr-9c21028c-lptg24	6a65b974	driftsplan2test	FEIL	120	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
+2026-11-05 21:48	ccr-9c21028c-lptg24	6a65b974	driftsplan2test	FEIL	127	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
+2026-11-05 21:50	ccr-9c21028c-lptg24	6a65b974	driftsplan2test	FEIL	91	lite	alene	FEIL boot: Page.wait_for_selector: Timeout 90000ms exceeded.
+2026-11-05 21:52	ccr-9c21028c-lptg24	6a65b974	driftsplan2test	FEIL	122	lite	alene	FEIL S3 the pots are hauled after 48-52 h and set again [('D2 06:08', 48.5)]
+2026-11-05 21:54	ccr-9c21028c-lptg24	6a65b974	driftsplan2test	OK	119	lite	alene	
+2026-11-05 21:56	ccr-9c21028c-lptg24	6a65b974	driftsplan2test	OK	123	lite	alene	
+2026-11-05 22:07	ccr-9c21028c-lptg24	10bc93d1	boottest	OK	25	lite	alene	
