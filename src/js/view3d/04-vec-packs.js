@@ -75,7 +75,7 @@
     if (J){ const B = J.B; if (B.sx === span && (boatIn(B, span * 0.2) || ((J.g || B.j > B.n / 2) && boatIn(B, span * 0.05)))) return; }
     TJN.st[kind]++; MJOBS.set(kind, {kind, cur, t0:performance.now(), B:meshBegin(x0, z0, span, span, n, hf), g:null, done, dirty:false});
   }
-  let FRAMEMS = 16, MTURN = 0;
+  let FRAMEMS = 16;
   // the frame's slice for the terrain's jobs: when the frames are slow anyway the meshes keep pace with the boat (at most 30 % of a
   // frame, 60 ms)
   const meshSlice = () => Math.max(MESHMS[QUAL.lvl], Math.min(60, 0.3 * FRAMEMS));
@@ -86,13 +86,13 @@
   const sliceEnd = () => Math.max(SLICE_END, performance.now() + Math.max(MESHMS[QUAL.lvl] / 2, Math.min(20, 0.1 * FRAMEMS)));   // (a quarter of MESHMS left a beach tile undone after half a minute at SwiftShader's frame a second, havnshot)
   function meshStep(){
     // the job whose mesh has its edge nearest the boat (the fine mesh's is a few hundred metres off, the far one's tens of kilometres)
-    // every other frame the oldest instead, unless one is urgent: the far mesh waited for ever behind the others while new tiles kept
-    // coming round the boat after a jump (teleport3d)
+    // the oldest instead once it has waited 8 s, unless one is urgent: the far mesh waited for ever behind the others while new tiles
+    // kept coming round the boat after a jump (teleport3d; taking turns every other frame was not enough at SwiftShader's slow frames)
     let J = null, best = Infinity, old = null;
     for (const Q of MJOBS.values()){ const o = Q.cur, d = Math.min(bv.x - o.x0, o.x0 + o.sx - bv.x, bv.z - o.z0, o.z0 + o.sz - bv.z); if (d < best){ best = d; J = Q; } if (!old || Q.t0 < old.t0) old = Q; }
     if (!J) return;
     let urgent = best < J.cur.sx * 0.12;
-    if (!urgent && (++MTURN & 1)) J = old;
+    if (!urgent && performance.now() - old.t0 > 8000) J = old;
     const end = urgent ? Math.max(SLICE_END, performance.now() + 2 * MESHMS[QUAL.lvl]) : sliceEnd();
     if (!J.g){ if (!meshRows(J.B, end)) return; J.g = meshEndG(J.B); }
     const M = sliceRun(J, end); if (!J.fin) return;
