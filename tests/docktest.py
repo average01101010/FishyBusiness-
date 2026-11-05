@@ -27,6 +27,11 @@ async def run(p, w, h, tag):
         else: print('     (finner ikke ' + sel + ')')
         return r
 
+    # wait for the fan to be open with its buttons, not a fixed pause: beside another test it came later than 250 ms (M2 30.10.2026, Ø2)
+    async def fan_up():
+        try: await pg.wait_for_function("!document.getElementById('dockFan').hidden && !!document.querySelector('#dockFan [data-dk]')", timeout=4000, polling=50)
+        except Exception: pass
+
     # boot() waits for «Båten etter far» and closes it: a fixed 1.5 s and a tap on #obGo left the modal over the dock now and then
     # (13 FEIL 05.11.2026, all the fans; Ø2)
     await boot(pg)
@@ -45,7 +50,7 @@ async def run(p, w, h, tag):
 
     # the fans (at home Bygd also has «Hvil», the rest in Father's naust: 15-energy.js, 05.10.2026)
     for m, want in (('butikk', ['fiskeutstyr', 'elektronikk']), ('bygd', ['pub', 'gjestebok', 'bank', 'oppdrag', 'mannskap', 'rest']), ('verft', ['batmarked', 'oppgr', 'vedlikehold', 'maler', 'bunker'])):
-        await tap_el('#dock [data-dk=' + m + ']'); await pg.wait_for_timeout(250)
+        await tap_el('#dock [data-dk=' + m + ']'); await fan_up()
         f = await pg.evaluate("[...document.querySelectorAll('#dockFan [data-dk]')].map(x => x.dataset.dk)")
         vis = await pg.evaluate("!document.getElementById('dockFan').hidden")
         check(vis and f == want, 'viften for ' + m, f)
@@ -56,7 +61,7 @@ async def run(p, w, h, tag):
     # pages in the yard and the village
     for m, it, title, sel in (('verft', 'oppgr', 'Oppgraderinger', '[data-pa=equip]'), ('butikk', 'fiskeutstyr', 'Fiskeutstyr', '[data-pa=grbuy]'), ('butikk', 'elektronikk', 'Elektronikk og haler', '[data-pa=equip]'), ('verft', 'batmarked', 'Båthandel', '[data-pa=mksel]'),
                               ('verft', 'vedlikehold', 'Vedlikehold', '[data-pa=svc]'), ('bygd', 'bank', 'Kystbanken', '.ph-big'), ('bygd', 'oppdrag', 'Oppdrag', '.ph-card'), ('bygd', 'mannskap', 'Mannskap', '.ph-card')):
-        await tap_el('#dock [data-dk=' + m + ']'); await pg.wait_for_timeout(200)
+        await tap_el('#dock [data-dk=' + m + ']'); await fan_up()
         await tap_el('#dockFan [data-dk=' + it + ']'); await pg.wait_for_timeout(300)
         ok = await pg.evaluate("document.getElementById('drawerTitle').textContent === '" + title + "' && !!document.querySelector('#drawerBody " + sel + "')")
         check(ok, m + ' → ' + title + ' åpner siden i skuffen')
@@ -72,7 +77,7 @@ async def run(p, w, h, tag):
 
     # bunkering from the yard
     await pg.evaluate("S.boat.fuel = 5; renderActs()")
-    await tap_el('#dock [data-dk=verft]'); await pg.wait_for_timeout(200)
+    await tap_el('#dock [data-dk=verft]'); await fan_up()
     await tap_el('#dockFan [data-dk=bunker]'); await pg.wait_for_timeout(400)
     check(await pg.evaluate("!!S.boat.fueling || !!S.boat.shift || S.boat.fuel > 5"), 'Bunkring fyller tanken')
 
@@ -80,7 +85,7 @@ async def run(p, w, h, tag):
     await pg.evaluate("(() => { const q = portById('botnhamn'), b = S.boat; b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; renderActs(); })()"); await pg.wait_for_timeout(300)
     d2 = await ids()
     check(d2 == ['marked', 'bygd', 'beh'] and await pg.evaluate("document.querySelector('#dock [data-dk=marked] .dk-l').textContent") == 'Mottak', 'ved et mottak: Mottak, Bygd og Beholdning, og ingen Butikk eller Verft', d2)
-    await tap_el('#dock [data-dk=marked]'); await pg.wait_for_timeout(250)
+    await tap_el('#dock [data-dk=marked]'); await fan_up()
     f = await pg.evaluate("[...document.querySelectorAll('#dockFan [data-dk]')].map(x => x.dataset.dk)")
     off = await pg.evaluate("document.querySelector('#dockFan [data-dk=lever]').classList.contains('off')")
     check(f == ['lever', 'is', 'agn', 'bunker'] and not off, 'viften for Mottak: Lever, Is, Agn og Bunkring', [f, off])

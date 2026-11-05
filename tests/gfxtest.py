@@ -59,10 +59,16 @@ async def main():
         st = await pg.evaluate("(() => { const g = G3._debug.gfx; return {tags:g.tags.length, k:g.k}; })()")
         check(st['tags'] >= 6 and st['k'] >= 1, 'the frame\'s steps are learnt and one is asked about each round', st)
         # a camera that is not a number (with the driver's questions and the reads off again: forced on SwiftShader they make each frame long)
+        # (frames with a camera that is not a number all but stop under SwiftShader: one frame in 118 s in one of Ø2's runs, so a fixed
+        # 30 s was not enough. The NaN is set again on every round until the game has seen it (GFX.nan, set in the frame that sends the
+        # report), and the camera is put back at once then, so the frames come again and the report gets out; at most 120 s. Ø2 05.11.2026)
         await pg.evaluate("G3._debug.cam.helm = false; G3._debug.gfx.force = false; window.__yaw = G3._debug.cam.yaw; G3._debug.cam.yaw = NaN")
-        for _ in range(60):   # (SwiftShader may take its time over a frame: wait for the report, at most 30 s)
+        t0 = time.time(); seen = None
+        while time.time() - t0 < 120:
             if any(e['msg'].startswith('3D NaN i kameraet') for e in gfx()): break
+            if await pg.evaluate("(() => { const c = G3._debug.cam; if (G3._debug.gfx.nan){ c.yaw = window.__yaw || 0; return true; } if (isFinite(c.yaw)) c.yaw = NaN; return false; })()"): seen = seen or round(time.time() - t0, 1)
             await pg.wait_for_timeout(500)
+        print('NaN sett av spillet etter %s s, meldingen inne etter %.1f s' % (seen, time.time() - t0))
         await pg.evaluate("G3._debug.cam.yaw = window.__yaw || 0")
         # the report goes up with the next batch, which can come after the camera is back (05.11.2026, PR #42: red once, the message was
         # sent by the end of the test): wait for it after the camera is set back too, at most 30 s more (Ø2)
