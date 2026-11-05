@@ -23,7 +23,9 @@ SETUP = """window.DT = {
     return out; },
   make: o => new Promise(res => driftMake(o, res)),
   // play the minutes as catch-up plays them; f(i) may stop the run by returning true
-  run: async (mins, f) => { for (let i = 0; i < mins; i++){ DYN.on = false; step(); if (f && f(i)) return i; if (i % 120 === 0) await new Promise(r => setTimeout(r, 0)); } return mins; },
+  // the game's own tick() is held while the test steps (TAB.held, docs/systemer/testing.md): it played extra minutes in the yields, so
+  // scenario 6 came out differently from run to run with the same seed (Ø2 05.11.2026)
+  run: async (mins, f) => { TAB.held = true; try { for (let i = 0; i < mins; i++){ DYN.on = false; step(); if (f && f(i)) return i; if (i % 120 === 0) await new Promise(r => setTimeout(r, 0)); } return mins; } finally { TAB.held = false; lastWall = Date.now(); } },
 };"""
 
 async def main():
