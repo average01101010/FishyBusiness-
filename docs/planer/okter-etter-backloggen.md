@@ -20,18 +20,18 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 ### Ø1 Det som ikke kom med, og småfeil i data
 
 - **Tufjord** (`ccr-664fd66b-ftggff`, 4c1c9379, 04.11.2026: «Autonav: havnas vei inn og etappene inne i havna holder seg ut fra land»). Backloggen på den grenen har rettingen under «Strøket 04.11.2026 (Autonav gjennom land ved Tufjord)», men den er aldri flettet inn: `leiaHarbourClr` finnes ikke i arbeidsgrenens `core/11-route.js`. Samme gren nevner at `harbourtest` er rød på Finnsnes-kaia, og at Fosnavåg, Mandal verft og Bøvågen fortsatt har veier inn under 5 m fra land.
-- **PR #42** (`fb/auto-2026-11-04-skum-nan`, tilbakemelding #110 og #111): skummet fra de andre båtene ga store hvite firkanter på sjøen (`pow()` med negativt grunntall i `HULLFOAM`). PR-en er åpen og ikke flettet. Flettes når Jonas sier ja.
+- ~~**PR #42**~~ (skummet fra de andre båtene ga hvite firkanter på Adreno): flettet 05.11.2026 etter Jonas' ja (BACKLOG «Strøket 05.11.2026 (PR #42 og de gamle PR-ene …)»).
 - 10.1 «Fire verft i Sverige».
 - 10.1 «Noen få leibiter i NPC-rutene skjærer et hjørne av land» (rettes i `tools/map/npc.py`).
-- **De gamle PR-ene:** innholdet i #33 er alt i arbeidsgrenen, så den kan lukkes. #18 (lav grafikk, 17.10) og #19 (tredje og fjerde mann ved linehaleren, 20.10) endrer `view3d.js` og `05-phone.js`, som ble delt 26.10. De skrives om mot delene eller lukkes, etter Jonas' svar.
+- ~~**De gamle PR-ene**~~ #18, #19 og #33: lukket 05.11.2026 etter Jonas' valg.
 - Rettingene i `ccr-6ad35290-gwaj0v` (NPC-båtene rister) og `ccr-33fdcb4a-3yrchx` (GEBCO-jobben) er alt i arbeidsgrenen som 9f064dfc og 168e8a93. Der er det ingenting å gjøre.
-- **Filer:** `core/11-route.js`, `core/07-harbours.js` (også i spilltest 3 og H2: endringen er liten, så flett forsiktig), `view3d/01-shaders.js`, `src/data/steder.json`, `tools/steder/`, `tools/map/npc.py`.
-- **Ferdig når:** Tufjord og skummet er ute på detstorebla.no, Autonav er prøvd i havn sør, midt og nord (`/stikkprove`), og sjekken i `/okt-slutt` bare viser grener som andre økter jobber på.
+- **Filer:** `core/11-route.js`, `core/07-harbours.js` (også i spilltest 3 og H2: endringen er liten, så flett forsiktig), `src/data/steder.json`, `tools/steder/`, `tools/map/npc.py`.
+- **Ferdig når:** Tufjord er ute på detstorebla.no, Autonav er prøvd i havn sør, midt og nord (`/stikkprove`), og sjekken i `/okt-slutt` bare viser grener som andre økter jobber på.
 - **Startmelding:** «Les `CLAUDE.md`, `docs/INDEKS.md`, `docs/BACKLOG.md` og Ø1 i `docs/planer/okter-etter-backloggen.md`. Oppgave: Ø1. Spilltest 3 og H2 kjører i andre økter; rør ikke filene deres utover det flettingen krever. Avslutt med `/lever` og `/okt-slutt`.»
 
 ### Ø2 Testriggen
 
-- Alt i 10.6, og fra «Spillarbeid som venter»: «`vesseltest` rød etter havsteget H1b R4», «`vessel3d` for alle typer går ut på tid i `run.py`», «`deckshot` rød på kranen», «`drifttest` scenario 6 er ustabil», «`quotatest` er rød på kvotesamarbeidet» (bare finne årsaken: `03d-quota.js` hører til H2), «`turtest`, `selfcrew` og `driftsplan2test` S9», «`cloudtest` og `pwatest` røde på grunnbygget», «`cloudtest` var rød én gang», «`teleport3d` og `deckshot` i SwiftShader», «`penshot` rød 28.10.2026», «`driftsplan2ui` er ustabil» og «`anchortest` og `fleet2test` er ustabile».
+- Alt i 10.6, og fra «Spillarbeid som venter»: «`vessel3d` for alle typer går ut på tid i `run.py`», «`deckshot` rød på kranen», «`drifttest` scenario 6 er ustabil», «`quotatest` er rød på kvotesamarbeidet» (bare finne årsaken: `03d-quota.js` hører til H2), «`turtest`, `selfcrew` og `driftsplan2test` S9», «`cloudtest` og `pwatest` røde på grunnbygget», «`cloudtest` var rød én gang», «`teleport3d` og `deckshot` i SwiftShader», «`penshot` rød 28.10.2026», «`driftsplan2ui` er ustabil» og «`anchortest` og `fleet2test` er ustabile».
 - Fra 10.7: «`docktest` er rød også alene», «`docktest` kan feile ved siden av en annen test» og «`ordtest` er utdatert».
 - Regresjonsloggene fra 03.–05.11 i 10.6 gås gjennom: hver rød får en årsak.
 - A5 i `docs/planer/verktoy-fra-game-studios.md`: historikk for ustabile tester i `run.py`.
@@ -157,7 +157,6 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 - De fem valgene i NPC-flåten (`docs/planer/npc-flaaten.md`).
 - «Kjør på» for verktøyplanen (A7, og så A1, A2, A4 og A6).
 - Har du prøvd Driftsplan 2 nok til at del 8 kan tas?
-- PR #42: skal den flettes? PR #18 og #19: skrives om, eller lukkes?
 
 ### Det Jonas måler
 
@@ -170,7 +169,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 |---|---|---|---|
 | Spilltest 3 | Kjører | `ccr-9c21028c-lptg24` | 05.11.2026 |
 | H2 autolineren | H2a rullet ut (c9e651d1); H2b–H2e gjenstår | `h2-autoline` | 05.11.2026 |
-| Ø1 Det som ikke kom med | Ikke begynt | | |
+| Ø1 Det som ikke kom med | PR #42 flettet, #18, #19 og #33 lukket; Tufjord, verftene og leibitene gjenstår | `ccr-834c604f-xxnqoy` | 05.11.2026 |
 | Ø2 Testriggen | Ikke begynt | | |
 | Ø3 Ytelse | Ikke begynt | | |
 | Ø4 Båtmodellene | Ikke begynt | | |
@@ -190,3 +189,4 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 | Ø17 Hooks og regler | Venter på Ø2 og «kjør på» | | |
 
 - 05.11.2026: planen skrevet etter gjennomgangen av backloggen, planene og grenene. Grenene sjekket samme dag: `ccr-664fd66b-ftggff` og PR #42 har rettinger som ikke er i arbeidsgrenen.
+- 05.11.2026: PR #42 flettet inn og PR #18, #19 og #33 lukket (Jonas: «Ja, flett PR #42 og lukk #18, #19 og #33»). `vesseltest` (snøkrabbe) ble rettet i H2a og er tatt ut av Ø2.

@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['skum-051126', '05.11.2026', 'Kjølvannet til de andre båtene', 'The other boats\' wake', [
+       ['På noen telefoner la de andre båtene igjen store hvite firkanter på sjøen i stedet for kjølvann. Nå får de kjølvannet slik det skal se ut.', 'On some phones the other boats left large white squares on the sea instead of a wake. They now leave the wake as it should look.'],
+    ]],
     ['autoline-051126', '05.11.2026', 'Autolineren kan kjøpes', 'The autoliner can be bought', [
        ['Autolineren på 45 m kan kjøpes på verftet med konvensjonell havfisketillatelse. Hun har 40 000 krok autoline på magasinene, i lenker på 5 000, og egnemaskinen egner hver krok med agn fra frysen når lina går ut. Akkar og saury er agnet autolineflåten bruker, og det kjøpes i tonn på mottaket.', 'The 45 m autoliner can be bought at the yard with an ocean-going conventional permit. She has 40,000 hooks of autoline on the magazines, in lenker of 5,000, and the baiting machine baits each hook with bait from the freezer as the line runs out. Squid and saury are the bait the autoline fleet uses, and they are bought by the tonne at the fish plant.'],
        ['Fangsten på autolina er som autolinernes i landingene for 2024 og 2025: om lag 200 kg per 1 000 krok, mest torsk, hyse og brosme, så lange og blåkveite.', 'The catch on the autoline is as the autoliners\' in the landings for 2024 and 2025: about 200 kg per 1,000 hooks, mostly cod, haddock and tusk, then ling and Greenland halibut.'],
