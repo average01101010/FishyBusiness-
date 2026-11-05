@@ -1019,7 +1019,8 @@ function fish(H, W, hs){
 }
 function endFishing(why){
   const b = S.boat; b.fishUntil = null; b.deckStop = false; b.deckEnd = null;
-  const fs = S.fsess; if (fs && S.t - fs.t0 >= 15){ { const kgph = Math.round(fs.kg / ((S.t - fs.t0) / 60)); S.marks.push({x:fs.x, y:fs.y, t:S.t, kgph, q:Math.round(kgph / (HEATG.fair.jig * heatRigFactor()) * 100) / 100}); } if (S.marks.length > 80) S.marks.shift(); } S.fsess = null;
+  // lf: the luck aboard when the mark is made; ui/10l-share.js takes it out when the mark is shared (Ø6 funn 11)
+  const fs = S.fsess; if (fs && S.t - fs.t0 >= 15){ { const kgph = Math.round(fs.kg / ((S.t - fs.t0) / 60)); S.marks.push({x:fs.x, y:fs.y, t:S.t, kgph, q:Math.round(kgph / (HEATG.fair.jig * heatRigFactor()) * 100) / 100, lf:luck()}); } if (S.marks.length > 80) S.marks.shift(); } S.fsess = null;
   if (b.gopQuiet){ b.gopQuiet = false; if (why === 'full') log('Lasten er full.', 'The hold is full.'); }
   else if (why === 'full') log('Lasten er full.', 'The hold is full.');
   else if (why === 'move'){}

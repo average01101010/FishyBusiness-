@@ -525,7 +525,7 @@ function finishHaul(g, H){
   // several tubs as one line, so those count the string; each pot is its own. Its colour is the haul per unit against a fair one
   // (08.10.2026: per unit for all three, a tub, a net and a pot, with the soak; the colour is the haul against a usual one for that soak, HEATG)
   { const kgu = g.kg / Math.max(1, s.n), soak = Math.round(g.soak || 0), fair = (HEATG.fair[s.kind] || 1) * heatSoakShare(s.kind, soak || HEATG.T);
-    S.marks.push({x:setMid(s).x, y:setMid(s).y, t:S.t, kgph:0, g:s.kind, kgu:Math.round(kgu * 10) / 10, soak, q:Math.round(kgu / fair * 100) / 100}); if (S.marks.length > 80) S.marks.shift(); }
+    S.marks.push({x:setMid(s).x, y:setMid(s).y, t:S.t, kgph:0, g:s.kind, kgu:Math.round(kgu * 10) / 10, soak, q:Math.round(kgu / fair * 100) / 100, lf:luck()}); if (S.marks.length > 80) S.marks.shift(); }
   // set the same gear again where it stood (line has to be baited in port first)
   if (g.reset && back > 0 && (s.kind !== 'line' || isAuto(s.lk))){
     const spec = s.kind === 'garn' ? {nid:S.pgear.nets[S.pgear.nets.length - 1].id} : s.kind === 'line' ? {lk:s.lk, n:back, bait:s.bait} : {pot:s.pot, n:back}; if (s.fid) spec.fid = s.fid;

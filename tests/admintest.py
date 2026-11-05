@@ -2,7 +2,7 @@
 same shape as admin_dashboard() without page errors, and without the cloud's keys it shows made-up numbers and no sign-in; with keys
 it asks for the sign-in first. Pictures admin_*.png. Prints OK or FEIL."""
 from _env import BASE
-import asyncio, json
+import re, asyncio, json
 from playwright.async_api import async_playwright
 
 
@@ -35,7 +35,13 @@ async def main():
         check(demo, 'without keys (or with ?demo) the numbers are marked made-up and there is no sign-in')
         # with keys: the sign-in comes first, nothing is fetched before it
         await pg.add_init_script("")
-        html = (await (await pg.request.get(BASE + 'admin/')).text()).replace('const CFG = ', 'const CFG = {supabaseUrl:"https://sb.test", supabaseAnon:"anon"} || ')
+        raw = await (await pg.request.get(BASE + 'admin/')).text()
+        # the page's own CSP (build.mjs, Ø6 funn 15): only its script by its hash, only Supabase; the copy below changes the script, so
+        # it goes without it
+        csp = re.search(r'<meta http-equiv="Content-Security-Policy" content="([^"]*)">', raw)
+        check(csp and "script-src 'sha256-" in csp.group(1) and "default-src 'none'" in csp.group(1) and 'unsafe-inline' not in csp.group(1).split('style-src')[0] and not errs,
+              'the admin page has a strict CSP (its own script by hash, nothing else runs) and draws under it', csp.group(1)[:120] if csp else None)
+        html = re.sub(r'<meta http-equiv="Content-Security-Policy"[^>]*>', '', raw).replace('const CFG = ', 'const CFG = {supabaseUrl:"https://sb.test", supabaseAnon:"anon"} || ')
         pg2 = await br.new_page(); reqs = []
         pg2.on('request', lambda r: reqs.append(r.url) if 'sb.test' in r.url else None)
         await pg2.route(BASE + 'admin/x', lambda route: route.fulfill(status=200, content_type='text/html', body=html))
