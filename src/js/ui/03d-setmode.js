@@ -13,7 +13,7 @@ function setLabelNow(){
   // the bait goes with the choice (setChoices: «4 stamper bankline · makrell»)
   const bk = BAITS[SETM.spec.bait], bt = bk ? L(' · ' + bk.no.toLowerCase(), ' · ' + bk.en.toLowerCase()) : '';
   if (SETM.kind === 'line'){ const K = LINE_KINDS[SETM.spec.lk]; return L(n + ' ' + (n === 1 ? 'stamp' : 'stamper') + ' ' + K.no.toLowerCase(), n + ' ' + (n === 1 ? 'tub' : 'tubs') + ' of ' + K.en.toLowerCase()) + bt; }
-  return L(n + ' ' + POTS[SETM.spec.pot].no.toLowerCase(), n + ' ' + POTS[SETM.spec.pot].en.toLowerCase()) + bt;
+  return potsN(n) + bt;
 }
 // why the gear cannot go out as drawn, or null
 function setWhy(){
@@ -23,6 +23,14 @@ function setWhy(){
   if (isLand(e)) return L('Enden av redskapet havner på land.', 'The end of the gear lands on land.');
   if (!legClear(p, e)) return L('Redskapet krysser land.', 'The gear crosses land.');
   if (depthF(e) < 5) return L('For grunt ved enden: under 5 m.', 'Too shallow at the end: under 5 m.');
+  return null;
+}
+// a warning that does not stop the setting (spilltest 3, U11): Greenland halibut nets while the direct fishery is closed, when the halibut can
+// only be bycatch (7 % of the week's landings; the rest is confiscated at the landing, ui/08-actions.js)
+function setWarn(){
+  const L = (no, en) => S.lang === 'no' ? no : en;
+  if (SETM.kind === 'garn'){ const l = ((S.pgear || {}).nets || []).find(x => x.id === (SETM.spec || {}).nid);
+    if (l && netTy(l) === 'kveite' && !bkDirect(S.t / 60, BOAT.len)) return L('Direktefisket etter blåkveite er stengt nå. Blåkveite kan bare være bifangst, høyst 7 % av ukas landinger, og resten blir inndratt.', 'The direct fishery for Greenland halibut is closed now. It can only be bycatch, at most 7 % of the week\'s landings, and the rest is confiscated.'); }
   return null;
 }
 function setModeStart(c){
@@ -63,7 +71,7 @@ function renderSetBar(){
   el.hidden = false;
   el.querySelector('.sb-t').textContent = setLabelNow();
   el.querySelector('.sb-d').textContent = fmt(setKm() * 1000, 0) + ' m · ' + L('kurs ', 'course ') + deg3s(trueDeg(SETM.hdg, S.boat.pos)) + ' · ' + d0 + '–' + d1 + ' m ' + L('dyp', 'deep');
-  const w = el.querySelector('.sb-w'); w.textContent = why || L('Dra i enden av linja, eller trykk i kartet, for å velge retning.', 'Drag the end of the line, or tap the chart, to choose the direction.'); w.classList.toggle('bad', !!why);
+  const warn = !why && setWarn(), w = el.querySelector('.sb-w'); w.textContent = why || warn || L('Dra i enden av linja, eller trykk i kartet, for å velge retning.', 'Drag the end of the line, or tap the chart, to choose the direction.'); w.classList.toggle('bad', !!why); w.classList.toggle('warn', !!warn);
   el.querySelector('.sb-n').hidden = SETM.fix; el.querySelector('.sb-n b').textContent = SETM.n;
   el.querySelector('[data-sb="-"]').disabled = SETM.n <= 1; el.querySelector('[data-sb="+"]').disabled = SETM.n >= SETM.max;
   const go = el.querySelector('[data-sb=go]'); go.textContent = L('Sett ut', 'Set'); go.classList.toggle('off', !!why);
