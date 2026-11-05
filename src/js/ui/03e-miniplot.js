@@ -18,9 +18,9 @@ function miniRadius(){ const tier = typeof heatTier === 'function' ? heatTier() 
 function miniBg(c, R, k, W, H, dpr){
   const night = chartNight(), now = performance.now(), key = [R, W, H, dpr, night].join('|'), C = MINIP.c;
   let J = MINIP.job; if (J && J.key !== key) MINIP.job = J = null;
-  if (J){ if (dist(C, c) > R * 0.9) miniStep(Infinity); return; }   // falling behind the boat (the old one nearly at its edge): done now
+  if (J){ if (dist(C, c) > R) miniStep(Infinity); return; }   // falling behind the boat (the old one no longer covers the box): done now
   if (key === MINIP.key && C && dist(C, c) < R / 5 && now - MINIP.at < 20000) return;
-  const at = key !== MINIP.key || !C || dist(C, c) > R * 0.9;   // nothing (or not enough) to show till it is done
+  const at = key !== MINIP.key || !C || dist(C, c) > R;   // nothing (or not enough) to show till it is done
   MINIP.at = now;
   const BW = W * 2, BH = H * 2, x0 = c.x - BW / 2 / k, y0 = c.y - BH / 2 / k;
   const dok = mapViewReady(x0, y0, x0 + BW / k, y0 + BH / k, () => { MINIP.at = 0; }, ['sim', 'chart']), sd = safeDepth();
