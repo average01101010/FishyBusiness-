@@ -103,6 +103,7 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 
 ## 10.3 Anslag og antakelser (tall uten sikker kilde)
 
+- **Avstandslaget (`coastDist`) kjenner ikke alle holmer** (funnet 05.11.2026 av CI-sjekken av mottaksparene, 4.12g i `autonav.md`): en holme på rundt 20 m ved 62,396° N 5,830° E sto 0,5 km fra land i laget. `legRuns` leser nå `isLand` hver 5. m på det åpne havet, så ruta ser den; en holme tynnere enn 5 m som bare finnes i den fine kystlinja, kan gli mellom. Hvorfor laget mangler holmen (trolig små øyer som faller ut av masken det regnes fra), er ikke undersøkt; det kan rettes i kartrørledningen ved neste release.
 - **Longyearbyen som havn (H1b R7, 05.11.2026; 5.32b i `handel-og-steder.md`, 5.6b i `folk-om-bord.md`):**
   - **Billettprisen er bare lest for tre måneder.** SAS' lavpriskalender Tromsø–Longyearbyen 2026 (laveste enveispris i måneden): juli 2 392 kr, november 950 kr, desember 895 kr, lest gjennom et nettsøk 05.11.2026; sas.no er stengt fra skymiljøet (`ENOTFOUND`). Månedene imellom er trukket rett mellom de tre (`FLY.kr`). Den laveste prisen er ikke det et rederi betaler for en billett kjøpt dagen før; den er brukt fordi den er det eneste tallet med kilde. **Neste steg:** hent kalenderen for alle tolv måneder med en workflow i Actions (som `klima.yml`) og bytt ut tallene.
   - **Rederiet betaler billetten begge veier** (antakelse). Fiskerioverenskomstens regel om reiseutgifter ved påmønstring og avmønstring utenfor hjemhavna er ikke lest. Står det noe annet der, endres `flyIn`/`flyOut` i `core/04-crew.js`.
@@ -268,6 +269,8 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
 
 ## Strøket 05.11.2026 (havsteget H1b R7, h1b-r7, rullet ut 05.11.2026)
+- **Autonav over en holme på Sunnmøre** (CI «Autonav langs hele kysten» rød etter utrullingen av R6 og R7, paret mM416 → mM2187): `legRuns` leser nå `isLand` på det åpne havet (4.12g i `autonav.md`). Alle 301 parene grønne lokalt; Tromsø–Isfjorden 3,4 s mot 2,9 s uten rettingen, her i skyen.
+- **`routetest` rød siden R6:** testen leste havrutene (`hav` i `routes.json`) som en tegnet rute. Rettet i testen; 43 OK.
 - **Ingen havn, verft eller butikk på Svalbard:** Longyearbyen har nå verft (diesel) og utstyrsbutikk etter regelen i `docs/handelssteder.md`, havna har ledige plasser, og mannskapet flyr til og fra Tromsø med billett og reisetid (`lybtest`).
 - **Kuling ved Svalbard sendte båten hele veien tilbake til fastlandet:** nærmeste kai er nå i Longyearbyen.
 

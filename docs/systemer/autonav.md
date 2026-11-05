@@ -141,6 +141,8 @@ Jonas 05.11.2026: «Start r6 i en ny økt». Målet i planen (R6 i `docs/planer/
 - **Tromsø–Isfjorden** bruker rundt 1 s på veien ut av Tromsø selv (den fine leia i `lnetAccess`, som Tromsø–Hammerfest også bruker: 0,9–1,5 s). Den lengste skiva er 90–130 ms, i utrettingen nær land (første lesing av blokkene). Se BACKLOG.
 - **Nettbrettet er ikke målt.** Tallene er fra skymaskinen.
 
+**Rettet 05.11.2026, etter utrullingen av R6 og R7:** CI-sjekken av alle mottaksparene («Autonav langs hele kysten», `tests/allpairs.py`) ble rød på ett par (mM416 → mM2187 på Sunnmøre): en etappe på 8,6 km gikk over en holme på rundt 20 m ved 62,396° N 5,830° E. Avstandslaget (`coastDist`, flisenes 100 m-lag) kjenner ikke holmen og sier 0,5 km til land der den står, så `legRuns` kalte stykket åpent hav og den fine sjekken gikk ikke der. Nå leses også strekningen et åpent punkt står inne for, med `isLand` hver 5. m (`LEGOPEN.land`, `legLandIn`); land der gjør punktet nært, og stykket sjekkes fint som før R6. Det koster lite (20 000 oppslag i masken tar rundt 10 ms her). Holmer tynnere enn 5 m som avstandslaget heller ikke kjenner, kan fortsatt gli mellom punktene på åpent hav (BACKLOG 10.3).
+
 ## 5.15 Ruteplanleggeren og Autonav (01.10.2026, Autonav fra 02.10.2026)
 
 - **WP-navn** (`ui/03b-route.js`): WP0 er starten (havna eller båten), så WP1, WP2 … i den rekkefølgen de seiles. Navnene brukes i kartet, lista, varslene («Etappe WP2→WP3 krysser land»), GPS-boksen og loggen («WP3 passert»). Punkter havna legger til på vei ut og inn (`w.auto` `'out'` eller `'in'`), vises dempet og merket «utseiling» eller «innseiling».

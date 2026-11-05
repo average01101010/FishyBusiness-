@@ -60,7 +60,13 @@ function leiaIceLeg(p, q){ if (!LEIA_ICE.on) return null; const n = Math.max(1, 
 // open sea, and so is the water halfway to the next sample (no land, no shoal can lie 50 m from it). The rest, with LEGOPEN.pad km
 // either side, comes back as [s0, s1] km from p, merged. A leg up to LEGOPEN.min km is one piece, so the checks near the coast are as
 // before. Remembered per leg.
-const LEGOPEN = {min:1, step:0.1, shore:0.5, shore1k:1.5, deep:4, deepFar:30, far:1, pad:0.15}, LEGRUNS = new Map();
+// (the distance layer does not know every islet: a skerry of 20 m off Sunnmøre, 62.396° N 5.830° E, read 0.5 km from the shore while
+// it stood on the leg, and a route of the CI check of all plant pairs crossed it, 05.11.2026. So the stretch an open sample vouches for is
+// also read with isLand every LEGOPEN.land km, which costs little (a lookup in the mask); land there makes the sample near. Only on the
+// tiles' detail: off them the distance and the land are the same far layer)
+const LEGOPEN = {min:1, step:0.1, shore:0.5, shore1k:1.5, deep:4, deepFar:30, far:1, pad:0.15, land:0.005}, LEGRUNS = new Map();
+// land on the leg p→q (L km) between s0 and s1 km from p, by isLand every LEGOPEN.land km
+function legLandIn(p, q, L, s0, s1){ for (let s = s0; s <= s1 + 1e-9; s += LEGOPEN.land){ const u = Math.min(L, s) / L; if (isLand({x:p.x + (q.x - p.x) * u, y:p.y + (q.y - p.y) * u})) return true; } return false; }
 // (the step grows with the room: a sample d km from the shore, well over the depth, lets the next one be up to d less the limit away,
 // at most LEGOPEN.far km, since the distance to the shore cannot fall faster than the way goes; so the open sea costs a sample a km)
 // near: 0 open, else true; the next step in km for an open one
@@ -79,7 +85,7 @@ const legRunsKey = (p, q, z) => z.toFixed(2) + '|' + p.x.toFixed(4) + ',' + p.y.
 function legRunsWalk(W, ms){
   const {p, q, L, z, runs} = W, pad = LEGOPEN.pad, t0 = ms < Infinity ? performance.now() : 0; let n = 0;
   for (;;){ let step = 0;
-    if (W.s >= pad && L - W.s >= pad){ try { step = legNearPt({x:p.x + (q.x - p.x) * W.s / L, y:p.y + (q.y - p.y) * W.s / L}, z); } catch (e){ step = 0; } }
+    if (W.s >= pad && L - W.s >= pad){ try { const pt = {x:p.x + (q.x - p.x) * W.s / L, y:p.y + (q.y - p.y) * W.s / L}; step = legNearPt(pt, z); if (step && mapSimAt(pt) && legLandIn(p, q, L, W.s, Math.min(L, W.s + step))) step = 0; } catch (e){ step = 0; } }
     if (!step){ const a = Math.max(0, W.s - pad), b = Math.min(L, W.s + pad), r = runs[runs.length - 1]; if (r && a <= r[1]) r[1] = b; else runs.push([a, b]); step = LEGOPEN.step; }
     if (W.s >= L) return true; W.s = Math.min(L, W.s + step);
     if ((++n & 63) === 0 && ms < Infinity && performance.now() - t0 > ms) return false; }
