@@ -5,7 +5,7 @@ import asyncio, json, sys
 from playwright.async_api import async_playwright
 from _env import boot
 ok = lambda c: 'OK  ' if c else 'FEIL'
-BUILT = {'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11', 'S12', 'S14', 'S15', 'S16', 'S17', 'S18'}   # the scenarios the parts built so far cover (part 1: dry; part 2: the engine; part 3: weather, energy, watches, rules, takeover; part 4: closed)
+BUILT = {'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11', 'S12', 'S14', 'S15', 'S16', 'S17', 'S18', 'S19'}   # the scenarios the parts built so far cover (part 1: dry; part 2: the engine; part 3: weather, energy, watches, rules, takeover; part 4: closed)
 
 D2 = r"""window.D2 = (() => {
   // the seeded numbers are used only inside step(): the page's own frames between the awaits of an open run draw with the native ones, so two runs draw the same catch
@@ -395,6 +395,32 @@ async def main():
             print('  timer:', L['W'][:30]); print('  køya:', L['bunkHours'], 'energi min', L['enMin'], 'turer', L['trips'], 'på', L['on'], 'venter', L['wait'])
             night = [h for h in L['bunkHours'] if h >= 19 or h < 5]; day = [h for h in L['bunkHours'] if 7 <= h < 17]
             print(ok(L['on'] and not L['stop'] and L['enMin'] >= 15 and len(night) >= 6 and len(day) == 0), 'S18 with you and three crew the plan runs round the clock: you sleep in the bunk at night, are up by day, and never run out of energy', [L['enMin'], L['bunkHours'], L['on'], L['stop'], L['wait']])
+        # S19 (U11, Jonas 05.11.2026: «Ja, så lenge mannskapet og brukeren får den søvnen de trenger»): dagdrift with you aboard an open
+        # boat (no bunks), home at a rorbu or Father's naust, played closed as catchUp plays it: you go in to rest by yourself when she is
+        # home, the rorbu is paid, and the next day goes out rested; without the money for the rorbu the plan waits and says why
+        print('== S19: din egen hvile på rorbua og i naustet når planen er hjemme (U11)')
+        L = await pg.evaluate("""(async () => { const R = {};
+          const H0p = portById(S.home || HOME0).p, rb = RORBUER.slice().sort((a, c) => dist(a.p, H0p) - dist(c.p, H0p));
+          const one = async (tag, port, cash) => { D2.reset(61); const home = D2.boat('snekke', 1, true, port); S.energy = 60; if (cash != null) S.cash = cash - kkLimit();
+            if (portById(home).rorbu) rorbuSite(portById(home)); await mapNeed(portById(home).p, 14); const J = D2.spots(2, 2.5, 6, portById(home).p); if (J.length < 2) return {err:'ingen juksplasser ved ' + home};
+            const o = S.ops = plan2New({home, rig:'juksa', jig:true, places:[D2.juks('j1', J[0]), D2.juks('j2', J[1])], dep:5, land:{mode:'near', port:null, when:'trip'}}); o.M = D2.plant(o);
+            DRIFT2 = true; const err = await D2.make(o); if (err) return {err, home}; o.on = true; const cash0 = S.cash; let enMin = 100, rest = 0, eW = 0;
+            const Lr = await D2.run((cash != null ? 1 : 3) * 1440, 'closed', tag, i => { enMin = Math.min(enMin, S.energy); if (resting()) rest++; if (o.run && o.run.wait && o.run.wait.k === 'energy') eW++; });
+            return {home, days:o.stats.days.map(d => [d.d, d.out || 0, Math.round(d.cost)]), trips:o.stats.sum.trips, enMin:Math.round(enMin), restH:Math.round(rest / 6) / 10, energyWaitH:Math.round(eW / 6) / 10, paid:Lr.log.filter(e => /rorbua/.test(e[1])).map(e => e[0] + ' ' + e[1].slice(0, 60)), cash:Math.round(S.cash - cash0), on:o.on, stop:o.stop, wait:o.run && o.run.wait && o.run.wait.no, ev:Lr.ev.filter(e => /\\?energy|\\?rest|\\?dep/.test(e[1])).slice(0, 10)}; };
+          for (const r of rb.slice(0, 6)){ const x = await one('S19rb', r.id); if (!x.err){ R.rb = x; break; } R.rbErr = x.err; }
+          R.naust = await one('S19naust', S.home || HOME0);
+          if (R.rb) R.poor = await one('S19poor', R.rb.home, 10);
+          return R; })()""")
+        if not L.get('rb'): print('FEIL S19 ingen rorbu ved hjemmet ga en plan:', L.get('rbErr'))
+        else:
+            for k in ('rb', 'naust', 'poor'):
+                x = L.get(k) or {}; print('  ' + k + ':', {q: x.get(q) for q in ('home', 'days', 'trips', 'enMin', 'restH', 'energyWaitH', 'cash', 'wait', 'err')}); print('    ', x.get('paid'), x.get('ev'))
+            rb, na, po = L['rb'], L['naust'], L.get('poor') or {}
+            print(ok(rb['on'] and not rb['stop'] and len([d for d in rb['days'] if d[1] >= 1]) >= 3 and rb['restH'] >= 6 and rb['energyWaitH'] < 1 and rb['enMin'] >= 14), 'S19 home at a rorbu, you aboard an open boat: you go in to rest by yourself each night and the plan goes out every day, played closed', [rb['days'], rb['restH'], rb['energyWaitH'], rb['enMin']])
+            nights = [e for e in rb['paid'] if 'tok inn' in e]
+            print(ok(len(nights) >= 3 and all(d[2] >= 150 for d in rb['days'])), 'S19 the rorbu is paid a night at a time (150 kr) and counted in the plan\'s costs for the day', [len(nights), [d[2] for d in rb['days']]])
+            print(ok(not na.get('err') and na['on'] and len([d for d in na['days'] if d[1] >= 1]) >= 3 and na['restH'] >= 6 and na['energyWaitH'] < 1 and na['enMin'] >= 14), 'S19 home at Father\'s naust: the same, without paying', [na.get('err'), na.get('days'), na.get('restH'), na.get('energyWaitH')])
+            print(ok(po.get('on') and po.get('wait') and 'rorbua' in po['wait'] and 'penge' in po['wait']), 'S19 without the money for the rorbu the plan waits and says why, it does not stop', [po.get('wait'), po.get('on'), po.get('stop')])
         # ---- part 4: the game closed. The same plan with the same seed: open all the way; open, 30 h closed (playMinutes, as catchUp), open;
         # nine days closed with the wall clock on; and «Mens du var borte»
         print('== S9: lukket spill')

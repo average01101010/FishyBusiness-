@@ -51,7 +51,7 @@ const PLAN2UI = (() => {
     // (the engine lays the day anew at the departure; this is the page's estimate, as the note under the day says)
     try { const from = r && r.day ? r.day.end : H, dep = plan2NextDep(oo, H, from), st = plan2State(oo), hrs = Math.max(0, dep - H);
       if (hrs > 0){ const b = S.boat, atRest = b.status === 'port' && (b.port === oo.home ? st.homeRest : plan2RestOk(b.port)), rate = atRest ? p2RestRate('bunks') : b.status === 'port' ? p2RestRate('quay') : 0;
-        for (const c of st.crew) c.fat = Math.max(0, c.fat - rate * hrs); if (st.me.aboard && b.status === 'port' && typeof restRate === 'function') st.me.energy = Math.min(100, st.me.energy + Math.max(0, restRate(b)) * 60 * hrs); }
+        for (const c of st.crew) c.fat = Math.max(0, c.fat - rate * hrs); if (st.me.aboard && (b.status === 'port' || b.anch)) st.me.energy = Math.min(100, st.me.energy + Math.max(restRate(b) * 60, resting() ? 0 : b.anch ? p2MeRate(null, true) : p2MeRate(b.port)) * hrs); }   // (you go in to rest by yourself, plan2MeRest)
       const day = planDay(oo, dep, st); return {day, now:-1, label:dep - H > 20 ? L('I morgen', 'Tomorrow') : L('Neste dag', 'Next day'), dep}; } catch (e){ return null; }
   }
   function dayCard(o){

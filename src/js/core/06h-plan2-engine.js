@@ -169,6 +169,7 @@ function plan2Step(H){
   if (S.plan && S.plan.ops){ plan2Sea(o, H); return; }
   if (!['port', 'idle'].includes(b.status) || S.shelter || S.plan || b.land || b.shift || (b.status === 'port' && portBusy(b))) return;
   if (b.status === 'port' && b.landWait && b.port === b.landWait) return;
+  plan2MeRest(o, H);
   if (o.hold && H < o.hold) return;
   if (!plan2Made(o)){ if (o.building) return; const C = plan2Check(o); if (!C.ok){ plan2Stop(o, 'check', C.errors[0], C.errors[0]); return; }
     plan2Wait(o, 'make', 'Lager planen på nytt …', 'Making the plan again …', H + 1 / 60); plan2Make(o, err => { if (err && o.on) plan2Stop(o, 'make', err, err); }); return; }
@@ -195,10 +196,21 @@ function plan2Decide(o, H){
     case 'behold': case 'vakt': return next();
     case 'hjem': if (atH) return next(); return plan2Go(o, H, r.i);
     case 'egning': plan2Egn(o, s); return next();
-    case 'hvile': { const until = s.until == null ? H : s.until; if (H < until - 1 / 60 || !drRested()){ const at = Math.max(until, H); plan2Wait(o, 'rest', 'Mannskapet hviler til kl. ' + driftClock(driftHod(at)) + '.', 'The crew rest until ' + driftClock(driftHod(at)) + '.', H < until ? until : H + 0.5); return; } return next(); }
+    case 'hvile': { const until = s.until == null ? H : s.until; if (H < until - 1 / 60 || !drRested()){ const at = Math.max(until, H); const me = meAboard(); plan2Wait(o, 'rest', (me ? 'Mannskapet og du hviler til kl. ' : 'Mannskapet hviler til kl. ') + driftClock(driftHod(at)) + '.', (me ? 'The crew and you rest until ' : 'The crew rest until ') + driftClock(driftHod(at)) + '.', H < until ? until : H + 0.5); return; } return next(); }
     case 'ut': r.i = r.day.steps.length; return plan2Boundary(o, H);
   }
   return next();
+}
+// you aboard and the plan lying a while where you can rest (the naust, a rorbu, the bunk at anchor): you go in by yourself, as Autonav
+// does at a rorbu (dock), with the game open or closed (catchUp plays this minute by minute); the rorbu's night is paid as when you go in
+// yourself (restStart, 15-energy.js), and without the money the departure waits and says so (plan2Go). The departure ends the rest.
+// (U11, Jonas 05.11.2026: «så lenge mannskapet og brukeren får den søvnen de trenger»)
+function plan2MeRest(o, H){
+  if (!meAboard() || S.tut || S.energy == null || S.energy >= 98 || resting() || asleep() || energyOff()) return;
+  const r = o.run, w = r && r.wait, b = S.boat, where = restWhere(b);
+  if (!where || (where === 'koye' && (o.rhythm === 'watch' || !b.anch))) return;   // (round the clock the watches have the bunk, plan2WatchTick)
+  if (!w || !(w.k === 'energy' || (w.until != null && w.until - H >= 1))) return;   // (not for a wait of minutes: a rorbu night for nothing)
+  if (!restStart() && w.k === 'energy') o.hold = 0;   // (in: the departure reckons the hour again now, by the rest's rate)
 }
 // the day's end: the next day at the hour (or now, round the clock, or when the day must be made again from where she lies)
 function plan2Boundary(o, H){
@@ -226,7 +238,8 @@ function plan2Spent(o, H){
   const left = Math.min(...st.crew.map(c => (DRP2.tired - c.fat) / Math.max(1, c.rate || DRP2.fatH)), st.me.aboard ? (st.me.energy - DRP2.enMin) / DRP2.enH : Infinity);
   if (!(left < DRP2.minDay)) return 0;
   const fat = st.crew.length ? Math.max(...st.crew.map(c => c.fat)) : 0, where = S.boat.anch ? 'anker' : here.port && plan2RestOk(here.port) ? 'bunks' : 'quay';
-  return Math.max(0.5, (fat - DRP2.rested) / p2RestRate(where));
+  const meH = st.me.aboard ? p2MeRestH(st.me.energy, S.boat.anch ? p2MeRate(null, true) : p2MeRate(here.port)) : 0;   // (and you, U11)
+  return Math.max(0.5, (fat - DRP2.rested) / p2RestRate(where), meH);
 }
 function plan2NewDay(o, H){
   const st = plan2State(o), day = planDay(o, H, st), r0 = o.run;
@@ -285,7 +298,8 @@ function plan2Go(o, H, i0){
   if (i0 === 1 && D.t0 < H - 0.5 && !r.remade){ r.remade = true; return plan2NewDay(o, H); }
   // with you aboard the day needs your energy: 15 % left when she is home, at 4.2 % an hour (15-energy.js ENERGY.sea)
   if (i0 === 1 && meAboard() && S.energy != null){ const seaH = D.home != null ? D.home - D.t0 : DRP2.watch, need = Math.min(100, DRP2.enMin + DRP2.enH * seaH);   // (round the clock: your watch, you sleep in the bunk the other)
-    if (S.energy < need - 0.5){ const rate = (typeof restRate === 'function' ? restRate(b) : 0) * 60, hours = rate > 0 ? (need - S.energy) / rate : null;
+    if (S.energy < need - 0.5){ const here = plan2Here(o), rate = resting() ? restRate(b) * 60 : Math.max(restRate(b) * 60, b.anch ? p2MeRate(null, true) : p2MeRate(here.port)), hours = rate > 0 ? (need - S.energy) / rate : null;   // (you go in to rest by yourself, plan2MeRest)
+      if (hours == null && here.port && isRorbu(here.port) && spendable() < RORBU.kr){ plan2Wait(o, 'energy', 'Du har ' + Math.round(S.energy) + ' % energi og trenger ' + Math.round(need) + ' % til dagen, men ikke ' + kr(RORBU.kr) + ' til en natt på rorbua. Planen venter til du har pengene.', 'You have ' + Math.round(S.energy) + ' % energy and need ' + Math.round(need) + ' % for the day, but not ' + kr(RORBU.kr) + ' for a night at the rorbu. The plan waits until you have the money.', H + 1); return; }
       if (hours == null){ plan2Wait(o, 'energy', 'Du har ' + Math.round(S.energy) + ' % energi og trenger ' + Math.round(need) + ' % til dagen. Hvil i naustet, på en rorbu eller i køya først.', 'You have ' + Math.round(S.energy) + ' % energy and need ' + Math.round(need) + ' % for the day. Rest in the boathouse, at a rorbu or in the bunk first.', H + 1); return; }
       const at = H + hours; plan2Wait(o, 'energy', 'Du må hvile til kl. ' + driftClock(driftHod(at)) + ' før dagen kan begynne (' + Math.round(S.energy) + ' % energi, dagen trenger ' + Math.round(need) + ' %).', 'You must rest until ' + driftClock(driftHod(at)) + ' before the day can begin (' + Math.round(S.energy) + ' % energy, the day needs ' + Math.round(need) + ' %).', at); return; } }
   if (rigOf() !== o.rig){ const why = rigSet(o.rig); if (why){ plan2Stop(o, 'rig', 'kan ikke rigge om til ' + rigName(o.rig).toLowerCase() + ': ' + why[0], 'cannot re-rig for ' + rigName(o.rig).toLowerCase() + ': ' + why[0], 'rig'); return; } }
@@ -304,6 +318,7 @@ function plan2Go(o, H, i0){
   autoRestock();
   if (!meAboard() && !S.lic && b.kgear && !kveiteClosed(H)) S.target = 'kveite';
   const here = plan2Here(o);
+  if (S.rest && S.rest.w === 'koye' && o.rhythm !== 'watch') restEnd();   // up from the bunk at anchor (ashore the departure ends the rest, depart)
   S.plan = {wps:T.wps, idx:0, speed:BOAT.vcruise, returning:false, depAt:null, ops:true, opsK:T.kind, unsafe:[], noJig:!!T.noJig, p2:{from:i0, to:T.to, start:{x:here.p.x, y:here.p.y, port:here.port}}};
   r.trip = {from:i0, to:T.to, t0:S.t, kg0:holdTotal(), anchor:!!T.wps[T.wps.length - 1].anchor}; r.wait = null; o.hold = 0; o.stop = null;
   if (T.kind === 'home') log('Går hjem til ' + (portById(o.home) || {name:'?'}).name + (o.homeA && T.wps[T.wps.length - 1].anchor ? ' og legger seg til ankers' : '') + '.', 'Going home to ' + (portById(o.home) || {name:'?'}).name + (o.homeA && T.wps[T.wps.length - 1].anchor ? ' to lie at anchor' : '') + '.');

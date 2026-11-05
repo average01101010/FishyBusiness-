@@ -893,7 +893,7 @@ function dock(pid, berth){
   else if (port.rorbu) log('Fortøyd ved rorbua i ' + port.name + '.', 'Moored at the rorbu in ' + port.name + '.');   // 07d-rorbu.js
   else log('Fortøyd i ' + port.name + '.', 'Moored in ' + port.name + '.');
   // by Autonav (or any route) to a rorbu: the rest starts by itself on arrival when you are aboard and not rested (Jonas 08.10.2026);
-  // the plan's trips are the crew's, who sleep at a rorbu on their own
+  // the plan's trips are the crew's, who sleep at a rorbu on their own; with you aboard, Driftsplan 2 takes you in when she lies a while (plan2MeRest)
   if (port.rorbu && !wasOps && meAboard() && !(S.tut) && typeof S.energy === 'number' && S.energy < 98 && typeof restStart === 'function' && !resting()){
     const why = restStart(); if (why && typeof toast === 'function') toast(S.lang === 'no' ? why[0] : why[1]); }
   tatTripEnd(pid);
