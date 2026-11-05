@@ -355,7 +355,14 @@ function finishSet(g, H){
   log('Satte ' + what + ' på ' + s.depth + ' m, ' + coordStr(setMid(s)) + '.', 'Set ' + whatEn + ' at ' + s.depth + ' m, ' + coordStr(setMid(s)) + '.', 'nav');
   gopEnd(g);
 }
-function gopEnd(g){ const b = S.boat; b.gop = null; b.v = 0; b.gopQuiet = true; b.fishUntil = S.t + (g.fishAfter || 0) * 60; S.gacc = null; S.gnext = null; }
+function gopEnd(g){ const b = S.boat; b.gop = null; b.v = 0; b.gopQuiet = true; S.gacc = null; S.gnext = null;
+  if (g.fishAfter > 0){ b.fishUntil = S.t + g.fishAfter * 60; return; }
+  gopDone(); }
+// the gear work is over and no jigging follows: end now, not a game minute later as «Fisker»/«Jukser» (spilltest 3, F4); alone with
+// fish in the tub, the deck is seen to first, as fish() does at the end of a session
+function gopDone(){ const b = S.boat; if (b.status !== 'fishing') return;
+  if (S.settings.deckFirst !== false && handsAboard() < 2 && deckPending() > 0.5){ b.fishUntil = S.t; b.deckStop = true; b.deckEnd = 'done'; return; }
+  endFishing('done'); }
 // stop halfway: what is set stays in the sea as a shorter string, what is hauled is aboard
 function gopAbort(why){
   const b = S.boat, g = b.gop; if (!g) return;
@@ -372,7 +379,7 @@ function gopAbort(why){
     b.gop = null;
   }
   b.v = 0; S.gacc = null; S.gnext = null;
-  if (why !== 'return' && why !== 'dock' && b.status === 'fishing'){ b.gopQuiet = true; b.fishUntil = S.t; }
+  if (why !== 'return' && why !== 'dock' && b.status === 'fishing'){ b.gopQuiet = true; gopDone(); }
 }
 // gear back on deck after hauling (or a stopped set); nets with their condition
 function gearBack(s, n, cond, W){
