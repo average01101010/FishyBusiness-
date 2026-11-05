@@ -1,6 +1,6 @@
 # Lover og regler på sjøen (plan 28.10.2026)
 
-> Plan etter `/planlegg`. Ingenting er bygd. Jonas svarte på valgene 28.10.2026: «V1: A, V2: A, V3: Nei, men finn ut listen for påbudt utstyr for relevant skip så kan vi heller lage modeller av utstyret i blender om vi ikke har det fra før. V4: Ja, V5: A». Lista over påbudt utstyr står under L6. Jonas valgte V6 A og sa hvilke ting som oppbevares inne og ikke skal lages (28.10.2026). **Venter på «kjør på» for L0.** Status står nederst.
+> Plan etter `/planlegg`. Ingenting er bygd. Jonas svarte på valgene 28.10.2026: «V1: A, V2: A, V3: Nei, men finn ut listen for påbudt utstyr for relevant skip så kan vi heller lage modeller av utstyret i blender om vi ikke har det fra før. V4: Ja, V5: A». Lista over påbudt utstyr står under L6. Jonas valgte V6 A og sa hvilke ting som oppbevares inne og ikke skal lages (28.10.2026). **Slått sammen 05.11.2026** med SK1–SK6 og N8 i `docs/planer/lover-regler-sikkerhet.md` (Ø11a), som nå er planen som bygges (Ø11.1–Ø11.9). Valgene her gjelder fortsatt. Status står nederst.
 
 ## Hva Jonas ba om
 
@@ -201,3 +201,4 @@ Skriftlig arbeidsavtale når noen mønstrer på (lott eller hyre, stilling, båt
 - 28.10.2026: planen skrevet.
 - 28.10.2026: Jonas svarte på V1–V5. Lista over påbudt utstyr per båt er funnet (L6) fra FOR-2013-11-22-1404 og FOR-2000-06-13-660. 
 - 28.10.2026: Jonas valgte V6 A. Utstyret som oppbevares inne (nødsignaler, linekaster, nødpeilesender, SART, håndholdt VHF, brannslukker) og signalfigurene, radarreflektoren og refleksstripene lages ikke. L6a lager vesten, MOB-båten med davit og MOB-lys med røyk. Referansebildene er beskrevet under L6, ikke lagt i repoet. Venter på «kjør på» for L0.
+- 05.11.2026: slått sammen med SK1–SK6 og N8 i `docs/planer/lover-regler-sikkerhet.md` (Ø11a). Kildene er sjekket på Lovdata der (kap. 5); rettet derfra: radar er ikke påbudt etter § 79 i FOR-2013-11-22-1404, horn er påbudt bare fra 12 m (§ 88), og fartsgrensene for næringsfartøy er statlige, ikke kommunale (havne- og farvannsloven § 8). L0 er gjort i planen; resten av kildene leses i Ø11.1.
