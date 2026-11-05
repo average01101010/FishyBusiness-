@@ -169,9 +169,32 @@ Stikkprøven langs kysten fant det samme fra **Bergen** (verftet) mot Shetland o
 | Måløy–Shetland | 188 (185) | 18,8 | 1 224 / 1 248 | britisk | −14,1° | 1,009 |
 
 - **Drivstoffet:** forbruket ligger innenfor 3 % av overslaget i rutepanelet. Kyst15 (9 000 L) rekker alle turene og tilbake; kyst21 og havbåtene likeså. Sjarken (900 L) rekker Nord-Island bare 108 % én vei og blir stoppet av panelet («Ikke nok drivstoff»); til Sentralbanken bruker den 52 % én vei og kommer ikke hjem. Panelet sjekket bare veien ut, så det sier nå fra når tanken ikke rekker tilbake til nærmeste bunkring (`placesNear(end, 'bunker')`, luftlinja og en tidel til, samme fart og vind; varsel, ikke stopp; `noback` i `ui/01-i18n.js`, `panelRoute` i `ui/07-guide.js`). Nærmeste bunkring fra Sentralbanken er Longyearbyen verft, 322 nm.
-- **Ingen kuling i juli** på noen av turene (andelen 3-timers verdier over 14 m/s er 0 % i juli og 12–16 % i januar på feltene). Hva kuling langt til havs gjør, er målt for seg (januar, 20 m/s, `shelterReturn`): nærmeste kai er 167–676 nm unna, se BACKLOG 10.2.
+- **Ingen kuling i juli** på noen av turene (andelen 3-timers verdier over 14 m/s er 0 % i juli og 12–16 % i januar på feltene). Hva kuling langt til havs gjorde, ble målt for seg (januar, 20 m/s, `shelterReturn`): nærmeste kai var 167–676 nm unna. Nå ligger båtene bi der (4.12j).
 - **Kuling langt ute** (`shelterReturn`, `core/06-services.js`): kandidatene (de `SHELTER.tries` = 5 nærmeste kaiene etter luftlinja, før 3) prøves nå til luftlinja til neste er lengre enn den beste ruta så langt, og den korteste ruta tas, ikke den første som finnes. Fra Sentralbanken: Longyearbyen 481 nm (rundt Sørkapp) → Gamvik 319 nm. Langs kysten er valget det samme som før (Bergen, Bodø, Hammerfest, Kristiansand og Senja: kaia 5–18 nm unna).
 - **Sonen ved Vikingbanken:** 60° N 2,0° Ø ligger i britisk sone; banken er på norsk side lenger øst, så testen bruker 2,6° Ø.
+
+## 4.12j Ligge bi i uvær (havsteget H1b R8, 05.11.2026)
+
+Jonas 05.11.2026: «Mange av de større havfiskebåtene er laget for å kunne være ute i orkan. Nå vet ikke jeg hva det verste været som kan bli i spillet er, så du får ta en vurdering.»
+
+**Det verste været i spillet** (ti år, hver 3. time, `windAt` og `hsAt` på feltet):
+
+| Sted | Mest vind | Mest sjø | Timer i året over 24 m/s | over 8 m sjø |
+|---|---|---|---|---|
+| Vikingbanken | 35,2 m/s | 12,4 m | 35 | 34 |
+| Shetland | 34,6 | 12,3 | 32 | 24 |
+| Utenfor Lofoten | 31,0 | 11,7 | 21 | 20 |
+| Bjørnøya | 29,0 | 10,6 | 19 | 15 |
+| Sentralbanken | 25,8 | 8,9 | 4 | 4 |
+| Petsjorahavet | 25,5 | 8,5 | 2 | 1 |
+| Nord-Island, Danmarkstredet | 24,7 | 8,1 | 0 | 0 |
+
+**Vurderingen:** havfartøyene (`cls: 'hav'`, 38–75 m) er bygd for å ligge ute, og ingen av dem rekker en kai fra feltene uansett. Å løpe hundrevis av nm i kulingen (fra Nord-Island 675 nm, 68 timer) er verre enn å ligge bi. Derfor (`lieTo`, `lieToStep`, `windLim`, `seaLim`, `quayFar` i `core/05-vessels.js`):
+- **Havfartøyene** på egen tur arbeider etter egne grenser, ikke etter kystinnstillingen («Autonav går inn ved», 6–20 m/s): vinden `BOAT.risk[2]` (24–26 m/s) og sjøen midt mellom `risk[0]` og `risk[1]` (6,5–8,5 m; sjøen over `risk[0]` alene er 130 timer i året på Vikingbanken, midtpunktet om lag like ofte som vinden over 24 m/s). Over dem ligger de bi der de er, også nær kysten; de går ikke i havn. Avgangen utsettes også bare etter deres egen grense.
+- **Alle andre båter** ligger bi i stedet for å gå til kai når nærmeste kai er over `RIDE.h` = 8 timer unna i fart (Bjørnøya 213 nm, Nord-Island 682 nm). Langs kysten er det som før: Kristiansand, Bergen, Haltenbanken (40 nm), Bodø, Tromsøflaket, Hammerfest, Båtsfjord og Vikingbanken (76 nm) går inn.
+- **Bi:** baugen mot sjøen i styrefart. Båten holder stedet (ingen avdrift; `lieDrift` står), bruker diesel som ved `RIDE.kn` = 4 knop, faren i sjøen er ett trinn lavere (`risk`), og statusen er «Ligger bi i uværet». Når vinden har vært `RIDE.ease` = 2 m/s under grensen og sjøen under i `RIDE.calm` = 60 minutter, fortsetter ruta («Det har løyet etter N timer»). Tar spilleren båten (ny rute, roret), er det slutt på å ligge bi. Sover skipperen alene, driver båten som før (`sleepDrift`).
+- **Driftsplan 2** har fortsatt sine egne grenser og går til kai (BACKLOG 10.2).
+- **Testen:** `tests/havtur.py storm` (`WX_FORCE`): kyst15 langt ute i 20 m/s ligger bi og fortsetter, kyst15 ved kysten går til kai, havfartøyet går videre i 20 m/s (sjøen 7,2 m) og ligger bi i 28 m/s (11,4 m).
 
 ## 5.15 Ruteplanleggeren og Autonav (01.10.2026, Autonav fra 02.10.2026)
 

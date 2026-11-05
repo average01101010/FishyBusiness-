@@ -698,7 +698,7 @@ function vesselStep(H){
     const W0 = windAt(H);
     if (portBusy(b)){ S.plan.depAt = portBusy(b) + 1; log('Avgangen venter til arbeidet på kaia er ferdig.', 'Departure waits until the work at the quay is done.'); }
     else if (S.jobs && S.jobs.length && b.status === 'port'){ S.plan.depAt = (jobsDone() || S.t) + 1; log(jobsCrewOnly() ? 'Avgangen venter til mannskapet er ferdig.' : 'Avgangen venter til verkstedet er ferdig.', jobsCrewOnly() ? 'Departure waits until the crew is done.' : 'Departure waits until the yard is done.'); }
-    else if (S.settings.autoOn && W0 > S.settings.autoW && (S.plan.delays || 0) < 12){ S.plan.depAt += 60; S.plan.delays = (S.plan.delays || 0) + 1; log('Avgangen er utsatt en time. Vinden er ' + W0.toFixed(0) + ' m/s.', 'Departure postponed an hour. The wind is ' + W0.toFixed(0) + ' m/s.'); }
+    else if (S.settings.autoOn && W0 > windLim() && (S.plan.delays || 0) < 12){ S.plan.depAt += 60; S.plan.delays = (S.plan.delays || 0) + 1; log('Avgangen er utsatt en time. Vinden er ' + W0.toFixed(0) + ' m/s.', 'Departure postponed an hour. The wind is ' + W0.toFixed(0) + ' m/s.'); }
     else depart();
   }
   if (b.status === 'unmooring'){ if (S.t >= b.castUntil){ const pid = b.port, q = quayPos(b), kind = berthKind(b); b.pos = {x:q.x, y:q.y}; b.status = 'sailing'; b.port = null;
@@ -711,6 +711,8 @@ function vesselStep(H){
   if (b.status === 'ptow'){ if (typeof ptowStep === 'function') ptowStep(); return; }   // towed by another player (ui/10o-ptow.js)
   if (b.status === 'tow'){ towStep(H); return; }        // the rescue boat comes and tows (rescue)
   const W = windAt(H), hs = hsAt(b.pos, H);
+  // lying to (lieTo): the player taking her (a route, the helm) ends it; else she holds on till it eases
+  if (b.hove){ if (b.status !== 'idle' || S.plan || helmOn()) b.hove = null; else lieToStep(W, hs); }
   if (['sailing', 'fishing', 'idle'].includes(b.status)) stabTick(H);
   if (b.status === 'engine' && S.t >= b.engineUntil){ b.status = b.prev || 'idle'; b.prev = null; log('Motoren startet igjen.', 'The engine is running again.'); }
   // the first trip waits in port for wind (the departure is put off) but does not turn back once out
@@ -724,10 +726,14 @@ function vesselStep(H){
   // left); not when she casts off in a wind already over it, nor again after the skipper stopped the turn back, until it has dropped
   // (Vannareid 08.10.2026: in a steady gale every start, Stopp and «Sitter båten fast?» was turned straight back to the plant)
   // (a trip on the operations plan has the plan's own limits for wind and sea, 06d-drift.js)
-  const wl = driftWx(), limW = wl ? wl.wind : S.settings.autoW, seaOver = !!wl && hs > wl.hs;
+  // (an ocean vessel on her own trip works to her own limits, windLim and seaLim, and over them lies to at sea, as does any boat whose
+  // nearest quay is far: lieTo)
+  const wl = driftWx(), limW = wl ? wl.wind : windLim(), seaOver = wl ? hs > wl.hs : hs > seaLim();
   if (W <= limW && !seaOver) b.windArm = true;
-  if ((wl ? wl.shelter : S.settings.autoOn) && (W > limW || seaOver) && b.windArm && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !S.tut && !helmOn()){
-    b.windArm = false; startReturn(true, W, false, seaOver && W <= limW ? hs : 0);
+  if ((wl ? wl.shelter : S.settings.autoOn) && (W > limW || seaOver) && b.windArm && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !S.tut && !helmOn() && !b.hove){
+    b.windArm = false;
+    if (!wl && (oceanBoat() || quayFar(b))){ lieTo(W, hs); if (hooks.onLieTo) hooks.onLieTo(W, hs, limW); return; }
+    startReturn(true, W, false, seaOver && W <= limW ? hs : 0);
     // say it on the screen too, with where the limit is set (Vannareid 08.10.2026: the player did not know why the boat turned)
     if (hooks.onTurnBack) hooks.onTurnBack(!!wl, seaOver && W <= limW, W, hs, limW, wl ? wl.hs : 0);
   }
@@ -736,7 +742,7 @@ function vesselStep(H){
   else if (b.status === 'sailing'){ if (!helmOn()){ const p0 = b.pos; sail(H, W, hs); if (meAboard()) tatAdd('nm', kmTrue(p0, b.pos) / NM); } }   // by hand she moves every tick (helmStep)
   else if (b.status === 'fishing') fish(H, W, hs);
   else b.v = 0;
-  if (typeof lieDrift === 'function') lieDrift(H);   // with no way on she drifts with the wind and the sea (Fysikk 2, 16b-dyn.js)
+  if (typeof lieDrift === 'function' && !b.hove) lieDrift(H);   // with no way on she drifts with the wind and the sea (Fysikk 2, 16b-dyn.js)
   if (b.anch) anchorSwing(H);   // she lies to the anchor and swings round it with the wind and the current, or it comes up (06e-anchor.js)
   if (b.anch) anchorTick(H, W, hs);   // the anchor holds or drags
   risk(W, hs);
@@ -1064,11 +1070,49 @@ function deckMinute(){
   if (worked > 0 && (G.me || I.me)) S.deckMe = (S.deckMe || 0) + 1;
   if (worked > 0){ b.deckT = S.t; if (typeof crewSlip === 'function') crewSlip(G.crew.concat(I.crew)); }
 }
+// ---------- lying to in a storm (H1b R8, 05.11.2026) ----------
+// Jonas 05.11.2026: «Mange av de større havfiskebåtene er laget for å kunne være ute i orkan. Nå vet ikke jeg hva det verste været som
+// kan bli i spillet er, så du får ta en vurdering». The worst the game's weather makes on the ocean grounds (ten years every 3 h,
+// 05.11.2026): 35 m/s and 12.4 m at Vikingbanken and Shetland, 29–31 m/s by Bjørnøya and off Lofoten, about 25 m/s by Iceland and in
+// the Barents Sea; at Vikingbanken 35 h a year over 24 m/s. So:
+//  - an ocean vessel (cls 'hav', 38–75 m) on her own trip works to her own limits, the wind at BOAT.risk[2] and the sea halfway between
+//    BOAT.risk[0] and [1] (24–26 m/s and 6,5–8,5 m: at Vikingbanken each about 35 h a year, where the sea over risk[0] alone is 130 h),
+//    not to the coast's setting (autoW, 6–20 m/s); over them she lies to where she is and does not run for a quay
+//  - any boat whose nearest quay is more than RIDE.h hours away does the same, rather than run hundreds of nm in the gale (from North
+//    Iceland to Fosnavåg 675 nm, 68 h)
+// Lying to she keeps her head to the sea at steerage way: she holds her place (no drift), burns the fuel of RIDE.kn knots, the sea's
+// danger is a step lower (risk), and she goes on with her route when it has been under the limits (the wind RIDE.ease m/s under)
+// for RIDE.calm minutes. A trip on the operations plan keeps the plan's own limits and shelter (06d-drift.js, 06h-plan2-engine.js).
+const RIDE = {h:8, kn:4, calm:60, ease:2};
+const oceanBoat = () => BOAT.cls === 'hav';
+const windLim = () => oceanBoat() ? Math.max(S.settings.autoW, BOAT.risk[2]) : S.settings.autoW;
+const seaLim = () => oceanBoat() ? (BOAT.risk[0] + BOAT.risk[1]) / 2 : Infinity;
+function quayFar(b){
+  let d = Infinity; for (const q of PORTS){ if (q.rorbu) continue; const k = dist(q.p, b.pos); if (k < d) d = k; }
+  return d / NM / Math.max(4, (S.plan && S.plan.speed) || BOAT.vcruise || 6) > RIDE.h;
+}
+function lieTo(W, hs){
+  const b = S.boat; if (b.gop) gopAbort('return');
+  b.hove = {plan:S.plan, since:S.t, calm:0}; S.plan = null; b.status = 'idle'; b.v = 0; b.fishUntil = null;
+  const why = W > windLim() ? ['Vinden er ' + W.toFixed(0) + ' m/s', 'The wind is ' + W.toFixed(0) + ' m/s'] : ['Sjøen er ' + hs.toFixed(1).replace('.', ',') + ' m', 'The sea is ' + hs.toFixed(1) + ' m'];
+  log(why[0] + '. ' + (oceanBoat() ? 'Skipet' : 'Båten') + ' legger seg bi med baugen mot sjøen og venter til det løyer' + (oceanBoat() ? '.' : ', for det er langt til nærmeste kai.'),
+    why[1] + '. ' + (oceanBoat() ? 'The ship' : 'The boat') + ' lies to, head to the sea, and waits for it to ease' + (oceanBoat() ? '.' : ', for the nearest quay is far off.'));
+}
+function lieToStep(W, hs){
+  const b = S.boat, h = b.hove;
+  fuelUse(b, fuelLph(Math.min(RIDE.kn, BOAT.vcruise || RIDE.kn), W) / 60); b.v = 0;
+  if (b.fuel <= 0){ b.hove = null; b.status = 'adrift'; log('Tom for drivstoff. Båten driver.', 'Out of fuel. The boat is adrift.'); return; }
+  h.calm = W <= windLim() - RIDE.ease && hs <= seaLim() ? h.calm + 1 : 0;
+  if (h.calm < RIDE.calm) return;
+  b.hove = null; const hrs = Math.round((S.t - h.since) / 60);
+  if (h.plan && h.plan.idx < h.plan.wps.length){ S.plan = h.plan; b.status = 'sailing'; log('Det har løyet etter ' + hrs + ' timer. Fortsetter ruta.', 'It has eased after ' + hrs + ' hours. Going on with the route.'); }
+  else log('Det har løyet etter ' + hrs + ' timer.', 'It has eased after ' + hrs + ' hours.');
+}
 function risk(W, hs){
   const b = S.boat; if (b.status === 'port' || (S.tut && S.tut.catch)) return;
   const over = svcOverdue();
   if (over > 0 && b.status === 'sailing' && Math.random() < over * 0.02 / 60 && b.status !== 'engine'){ b.prev = b.status; b.status = 'engine'; b.engineUntil = S.t + 30 + Math.floor(Math.random() * 60); log('Motorstopp. Motoren trenger service.', 'Engine stopped. The engine needs a service.'); return; }
-  const lvl = riskLevel(W, hs); if (!lvl) return;
+  const lvl = Math.max(0, riskLevel(W, hs) - (b.hove ? 1 : 0)); if (!lvl) return;   // lying to, head to the sea, takes a step off (lieTo)
   if (Math.random() >= [0, 0.05, 0.2][lvl] / 60) return;
   const r = Math.random();
   if (r < 0.4){

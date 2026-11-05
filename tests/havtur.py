@@ -6,7 +6,8 @@
 #  - the ice: March and September at the target, and that Autonav does not go into it in March
 #  - the fuel: which boats have the range for the trip there (the route panel's estimate, estimate() in ui/04-panels-instruments.js),
 #    and what the boat really burnt on the way against the estimate
-#  - what a gale on the way does far out (shelterReturn: the nearest quay)
+#  - a storm (WX_FORCE): far out a boat lies to and goes on when it eases; near the coast a coastal boat runs for the nearest quay as
+#    before; an ocean vessel works on through 20 m/s and lies to over her own limit even near the coast (lieTo, core/05-vessels.js)
 # LITE (no 3D). Needs the whole coast in tools/map/out/game and dist-vec (the harbours in Longyearbyen), as lybtest.
 import asyncio, json, os, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -85,6 +86,22 @@ SAIL = """async ([an, wps, type]) => {
   R.log = S.log.slice(-5).map(l => (l.no || l[1] || String(l)).slice(0, 140));
   return R; }"""
 
+STORM = """async ([type, la, lo, wHi]) => {
+  const R = {}, b = S.boat, p = P(la, lo); await mapNeed(p, 4); S.sleep = null; S.energy = 100; S.drowsy = false;   // (awake and rested: asleep alone she drifts, 15-energy.js sleepDrift)
+  S.settings.autoOn = true; S.settings.autoW = 11; S.settings.autoTo = 'near';
+  b.type = type; applyVessel(); b.fuel = BOAT.fuelCap; b.status = 'idle'; b.port = null; b.pos = {...p}; b.hove = null; b.v = 0;
+  // a route 60 km to the west, out to sea, at cruising speed
+  const to = {x:p.x - 60, y:p.y}; S.plan = {wps:[{x:to.x, y:to.y, port:null, fish:0}], idx:0, speed:BOAT.vcruise}; b.status = 'sailing';
+  const run = async n => { for (let i = 0; i < n; i++){ if (!simAreaReady()){ await mapNeed(b.pos, 4); i--; continue; } DYN.on = false; step(); if (i % 100 === 0) await new Promise(r => setTimeout(r, 0)); } };
+  WX_FORCE = {w:6, d:240}; await run(5);
+  WX_FORCE = {w:wHi, d:240}; const p0 = {...b.pos}, f0 = b.fuel; await run(120);
+  for (let k = 0; k < 100 && (S.shelter || sailWaiting()); k++) await new Promise(r => setTimeout(r, 150));
+  R.hove = !!b.hove; R.status = b.status; R.returning = !!(S.plan && S.plan.returning); R.to = S.plan && S.plan.returning ? (portById(S.plan.wps[S.plan.wps.length - 1].port) || {}).name : null;
+  R.moved = +(dist(p0, b.pos) * 1000).toFixed(0); R.log = S.log.slice(-5).map(l => [l.t, (l.no || String(l)).slice(0, 80)]); R.t = S.t; R.burnt = Math.round(f0 - b.fuel); R.text = statusText(); R.lim = windLim(); R.hs = +hsAt(b.pos, S.t / 60).toFixed(1); R.seaLim = seaLim();
+  if (b.hove){ WX_FORCE = {w:7, d:240}; await run(90); R.after = {status:b.status, plan:!!S.plan, hove:!!b.hove, log:S.log.slice(-1).map(l => l.no || l)[0]}; }
+  WX_FORCE = null; S.plan = null; b.hove = null; b.status = 'idle';
+  return R; }"""
+
 async def main():
     if not os.path.exists(os.path.join(ROOT, 'tools', 'map', 'out', 'game', 'manifest.json')):
         print('FEIL hele kysten mangler i tools/map/out/game (release.py og game.py)'); return
@@ -114,6 +131,16 @@ async def main():
                 print(ok(arrived or s.get('shelter')), name + ' med ' + t + ': fram, eller til nærmeste kai i kuling', [s['h'], s['atEnd'], s.get('shelter'), s.get('port')])
                 print(ok(not s['empty'] or r['fuel'][t]['pct'] > 100), name + ' med ' + t + ': tanken holder der overslaget sier den gjør det', [s['used'], s['est'], s['cap'], s['empty']])
                 if arrived and not s.get('shelter'): print(ok(s['used'] <= s['est'] * 1.25), name + ' med ' + t + ': brukt mot overslaget i rutepanelet (høyst 25 % over)', [s['used'], s['est']])
+        if not ONLY or 'storm' in ONLY:
+            r = await pg.evaluate(STORM, ['kyst15', 66.0, -12.0, 20]); print('uvær kyst15 langt ute', json.dumps(r, ensure_ascii=False))
+            print(ok(r['hove'] and r['moved'] < 50 and r['burnt'] > 0 and 'bi' in r['text']), 'kyst15 langt ute i 20 m/s: ligger bi (holder stedet, bruker diesel), løper ikke hundrevis av nm til kai', [r['moved'], r['burnt'], r['text']])
+            print(ok(r.get('after') and r['after']['status'] == 'sailing' and r['after']['plan'] and not r['after']['hove']), 'kyst15: fortsetter ruta når det har løyet en time', r.get('after'))
+            r = await pg.evaluate(STORM, ['kyst15', 62.55, 5.6, 20]); print('uvær kyst15 ved kysten', json.dumps(r, ensure_ascii=False))
+            print(ok(not r['hove'] and r['returning']), 'kyst15 ved kysten i 20 m/s: til nærmeste kai som før', [r['to'], r['status']])
+            r = await pg.evaluate(STORM, ['snokrabbe', 62.55, 5.6, 20]); print('uvær havfartøy 20 m/s', json.dumps(r, ensure_ascii=False))
+            print(ok(not r['hove'] and not r['returning'] and r['status'] == 'sailing' and r['moved'] > 1000), 'havfartøyet går videre i 20 m/s (grensen er dens egen)', [r['lim'], r['status'], r['moved']])
+            r = await pg.evaluate(STORM, ['snokrabbe', 62.55, 5.6, 28]); print('uvær havfartøy 28 m/s', json.dumps(r, ensure_ascii=False))
+            print(ok(r['hove'] and not r['returning']), 'havfartøyet ligger bi i 28 m/s også nær kysten, og går ikke i havn', [r['lim'], r['text']])
         print('sidefeil:', errs[:5])
         await b.close()
 asyncio.run(main())
