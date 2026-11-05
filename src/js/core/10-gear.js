@@ -10,7 +10,31 @@ const GEAR = {
   line:{no:'Line', en:'Line', u:['stamp', 'stamper', 'tub', 'tubs'], kmHook:0.0015, set:5, haul:25 / 700, hand:2.0, crewMin:1, haulers:['linehaler'], q:0.032, skill:'line'},
   teine:{no:'Teiner', en:'Pots', u:['teine', 'teiner', 'pot', 'pots'], km:0.025, set:0.9, haul:1.2, hand:2.5, crewMin:1, haulers:['teinehaler'], q:0.12, skill:'teiner'}
 };
-const LINE_KINDS = {hyse:{no:'Hyseline', en:'Haddock line', hooks:600, price:2100, egn:500, baitKg:5}, bank:{no:'Bankline', en:'Bank line', hooks:300, price:1700, egn:300, baitKg:3}};
+const LINE_KINDS = {hyse:{no:'Hyseline', en:'Haddock line', hooks:600, price:2100, egn:500, baitKg:5}, bank:{no:'Bankline', en:'Bank line', hooks:300, price:1700, egn:300, baitKg:3},
+  // the autoline (H2a of docs/planer/havsteget-h2-autoline.md, 05.11.2026): an ocean longliner's line on magazines below deck, baited by
+  // the baiting machine as it runs out over the stern, so a lenke is always ready and the bait comes from the freezer at the setting.
+  // A lenke here is 5,000 hooks (8 lenker give the vessel's autoHooks of 40,000 a day; ocean autoliners set 30-50,000 a day, HI report
+  // 2024-11 and SNL); 1.3 m between the hooks (1.2-1.4 m, National Fisherman on the E-Line), so 6.5 km. Set at 8 knots, about 3 hooks a
+  // second (Mustad's catalogue 2023: 3-4); hauled at about 2,500 hooks an hour (the hauler takes up to 60 m of line a minute, Mustad). Bait
+  // about 17 g a hook (worked out from 4-6,000 t of squid and saury a year for some 30 autoliners, HI report 24-2013). The line comes
+  // with the vessel (no price); the hooks wear as on the coast line. auto: no tubs, no baiting shed
+  auto:{no:'Autoline', en:'Autoline', hooks:5000, price:0, egn:0, baitKg:85, auto:true, kmHook:0.0013, setH:1 / (3 * 3600), haulH:1 / 2500}};
+// the autoline aboard (S.pgear.lines.auto), made from the vessel's autoHooks the first time it is asked for; null on a boat without one
+function autoL(pg){
+  pg = pg || S.pgear; if (!pg) return null; const hk = (BOAT && BOAT.autoHooks) || 0;
+  if (!hk) return pg.lines.auto && pg.lines.auto.n ? pg.lines.auto : null;
+  // the vessel comes with her line on the magazines and a marker set (pole buoys, anchors) for each lenke, heavy anchors for the deep edge
+  if (!pg.lines.auto){ const n = Math.round(hk / LINE_KINDS.auto.hooks); pg.lines.auto = {n, baited:n, bt:{}, cond:1, max:1, bent:0, miss:0, sharp:0}; pg.kits.n += n; pg.kits.heavy += n; }
+  const L = pg.lines.auto; L.baited = L.n; return L;
+}
+// what a lenke of autoline costs to replace (5,000 hooks with snoods and the mainline; an estimate, no price list read): for a lost lenke and
+// the tackle shop's new ones
+const AUTOLENKE_KR = 75000;
+// the lenker the magazines hold (the vessel's autoHooks), and the room left for new ones after what is aboard and in the sea
+const autoMax = () => Math.round(((BOAT && BOAT.autoHooks) || 0) / LINE_KINDS.auto.hooks);
+function autoRoom(){ const L = autoL(); return L ? Math.max(0, autoMax() - L.n - mySets().filter(x => x.kind === 'line' && isAuto(x.lk)).reduce((a, x) => a + x.n, 0)) : 0; }
+const isAuto = lk => !!(LINE_KINDS[lk] && LINE_KINDS[lk].auto);
+const lineKm = (lk, hooks) => hooks * (LINE_KINDS[lk] && LINE_KINDS[lk].kmHook || GEAR.line.kmHook);
 // king crab pots (a frame of steel and netting, 1.5-2 m across; the prices are estimates): cap is the crabs a pot holds
 // one pot only (Jonas 08.10.2026): the big king crab pot, 1.55 x 1.45 x 1.07 m. The key stays 'big' so saves carry over; old small pots become big ones (potsFix)
 const POTS = {big:{no:'Krabbeteiner', en:'Crab pots', price:2200, cap:40, f:1.4, big:true}};
@@ -25,6 +49,12 @@ const netNo = l => (netTy(l) === 'bunn' ? '' : NETTY[netTy(l)].no.toLowerCase() 
 const MESHES = [156, 180, 200];                                  // legal cod nets north of 62° N; bigger mesh, bigger fish
 const GPRICE = {net:1500, kit:2500, heavy:1500, bait:18, potBait:0.6, bot:180, egnRate:560};   // kr, kg bait per pot, bøteri kr per net per 0.1, hooks baited per hour
 // how well each gear takes each species, relative to the jig (1 for every fish); pots take crab and a little cod and tusk
+// the autoline's take by species against the jig (H2a), between the bank line and the haddock line, and its catch per hook against the coast
+// line's (AUTOQ), calibrated 05.11.2026 against the landing notes for line 28 m and over (fiske.json, 2024-2025: about 40,000 t a year on 21
+// vessels, some 200 kg round weight per 1,000 hooks over the days at sea): one lenke of 5,000 hooks soaked 8 h on each of the NPC autoliners'
+// 36 grounds (05d-hav.js) in each month, weighed by that ground's landings that month, takes 197 kg per 1,000 hooks, cod 36 %, haddock 20 %,
+// tusk 20 %, ling 16 %, Greenland halibut 5 % (the notes: 36, 21, 21, 16, 5). Checked again by tests/autolinetest.py
+const AUTOSEL = {torsk:1.22, hyse:1.39, sei:0.03, lyr:0.05, lange:1.15, brosme:2.24, uer:0.18, kveite:0.36, blakveite:1.87}, AUTOQ = 9.6;
 const SELQ = {
   garn:{torsk:1.0, hyse:0.45, sei:0.7, lyr:0.6, lange:0.35, brosme:0.25, uer:0.3, kveite:0.35, blakveite:3.2},
   'garn:flyt':{sei:2.4, torsk:0.5, hyse:0.12, lyr:0.1, lange:0, brosme:0, uer:0.1, kveite:0, blakveite:0},
@@ -32,7 +62,10 @@ const SELQ = {
   'line:hyse':{torsk:0.7, hyse:2.6, sei:0.15, lyr:0.2, lange:0.8, brosme:1.0, uer:0.3, kveite:0.6, blakveite:2.5},
   'line:bank':{torsk:0.8, hyse:0.8, sei:0.1, lyr:0.15, lange:2.4, brosme:2.8, uer:0.4, kveite:1.8, blakveite:5.0},   // the Greenland halibut: line 49 %, nets 40 % of the coastal catch in 2026 (Råfisklaget); about 125 kg per
   // 1000 hooks over 20 h on the edge off Andøya, so 30 tubs a day give a boat under 14 m about 7 t in its first week (docs/plan-blakveite.md B7)
-  teine:{torsk:0.012, brosme:0.008}
+  teine:{torsk:0.012, brosme:0.008},
+  // the autoline (H2a): the catch of the ocean longliners, line 28 m and over in the landing notes 2024-2025 (fiske.json: cod 36 %,
+  // haddock 21 %, tusk 21 %, ling 16 %, Greenland halibut 5 %), on the ocean grounds; calibrated in tests/unit/autoline.test.mjs
+  'line:auto':AUTOSEL
 };
 const GK = {torsk:1, hyse:1.05, sei:1, lyr:1, lange:0.8, brosme:0.95, uer:1.15, kveite:0.7, blakveite:0.8};   // body shape in the mesh: optimal length per mm mesh
 // king crab as it comes up in pots without escape vents (west of 26° E they are not allowed): the share of females and of damaged males,
@@ -67,7 +100,11 @@ const BAITS = {
   // 08.10.2026: the bait matters more now that there are two kinds of line (hook size picks the family, the bait the species): herring and
   // capelin for haddock, squid for ling and tusk (our estimates; no source found for bait by species)
   sild:{no:'Sild og lodde', en:'Herring and capelin', kr:14, f:{hyse:1.6, torsk:1.2, sei:0.9}, d:0.7},
-  blekksprut:{no:'Blekksprut', en:'Squid', kr:34, f:{lange:1.8, brosme:1.8, uer:1.2, kveite:1.2}, d:0.6}};
+  blekksprut:{no:'Blekksprut', en:'Squid', kr:34, f:{lange:1.8, brosme:1.8, uer:1.2, kveite:1.2}, d:0.6},
+  // the autoline fleet baits with a 50/50 mix of squid (akkar) and Pacific saury, both imported frozen, some with herring for ling
+  // (Løkkeborg, HI report 24-2013: «I dag bruker autolineflåten vanligvis en 50/50-blanding av akkar og saury»; saury «effektivt for både
+  // torsk og hyse»). The price is an estimate (squid was 14.5-17 kr/kg in 2012; no price list for 2026 read)
+  saury:{no:'Saury', en:'Pacific saury', kr:24, f:{torsk:1.3, hyse:1.3, sei:1.0}, d:0.8}};
 const BAIT_OWN = ['sei'];   // king crab is far too dear for bait (the bait crab is shore crab, bought)
 const baitF = (k, sp) => { const B = BAITS[k]; return !B ? 1 : B.f[sp] != null ? B.f[sp] : B.d; };
 // what the jig takes of a species against the plain jig (1), as fish() counts it (core/05-vessels.js): the species' own jig factor (SPECIES.jig:
@@ -100,7 +137,8 @@ const unitName = (kind, n) => { const u = GEAR[kind].u; return S.lang === 'no' ?
 const setVessel = s => (S.fleet || []).find(v => v.id === s.vid);
 function setLog(s, no, en, k){ const v = setVessel(s); if (v) onVessel(v, () => log(no, en, k)); else log(no, en, k); }
 function mySets(vid){ return (S.sets || []).filter(s => s.vid === (vid || S.cur) && !s.lost); }
-function hasHauler(kind){ return GEAR[kind].haulers.some(k => S.equip && S.equip[k]); }
+// an autoliner's own autoline system (its hauler, hook cleaner and baiting machine, VESSELS autoHooks) hauls her line
+function hasHauler(kind){ return (kind === 'line' && BOAT && BOAT.autoHooks > 0) || GEAR[kind].haulers.some(k => S.equip && S.equip[k]); }
 
 // ---- the rig: a boat is rigged for one kind of fishing at a time. Jigging needs a hand jig or reels; line and pots
 // need a hauler that takes them, nets a net hauler. Fitting a hauler the first time is a yard job; once it is aboard, the rig is
@@ -125,7 +163,7 @@ const TYPKG = {line:70, garn:40, teine:7};
 function gearReserve(){
   // on a plan the room is only kept when the gear is hauled on this trip, before the landing; else the jig may fill the hold
   if (S.plan && S.plan.ops){ const rest = S.plan.wps.slice(S.plan.idx), pi = rest.findIndex(w => w.port); if (!(pi < 0 ? rest : rest.slice(0, pi)).some(w => w.act)) return 0; }
-  let r = 0; for (const s of mySets()){ let got = 0; for (const sp in (s.acc || {})) got += s.acc[sp].kg || 0; r += Math.max(got * 1.2, s.n * (TYPKG[s.kind] || 0)); } return Math.round(r); }
+  let r = 0; for (const s of mySets()){ let got = 0; for (const sp in (s.acc || {})) got += s.acc[sp].kg || 0; r += Math.max(got * 1.2, s.n * (s.kind === 'line' && isAuto(s.lk) ? 1000 : TYPKG[s.kind] || 0)); } return Math.round(r); }
 function rigHas(r){ return !RIGS[r].kind || hasHauler(RIGS[r].kind); }
 const rigName = r => gL(RIGS[r].no, RIGS[r].en);
 const lc1 = x => x[0].toLowerCase() + x.slice(1);
@@ -149,7 +187,7 @@ function ownedUnits(kind){
   const pg = S.pgear || newPGear(), sea = mySets().filter(s => s.kind === kind).reduce((a, s) => a + s.n, 0);
   const shore = (pg.shore || []).reduce((a, j) => a + (kind === 'garn' && (j.kind === 'bot' || j.kind === 'mendself') ? j.lenke.n : kind === 'line' && (j.kind === 'egn' || j.kind === 'egnself' || j.kind === 'stripself') ? j.n : 0), 0);
   if (kind === 'garn') return pg.nets.reduce((a, l) => a + l.n, 0) + sea + shore;
-  if (kind === 'line') return pg.lines.hyse.n + pg.lines.bank.n + sea + shore;
+  if (kind === 'line') return pg.lines.hyse.n + pg.lines.bank.n + ((autoL(pg) || {}).n || 0) + sea + shore;
   return pg.pots.big + sea;
 }
 function gearRoom(kind){ const m = (BOAT.gearMax || {})[kind === 'line' ? 'stamp' : kind] || 0; return Math.max(0, m - ownedUnits(kind)); }
@@ -180,6 +218,8 @@ function buyGear(what, spec, n){
   careInit(pg);
   let cost = 0, kind = null;
   if (what === 'net'){ kind = 'garn'; const o = NETOPT.find(x => netKey(x[0], x[1]) === String(spec)); if (!o) return [gL('Torskegarn nord for 62° N skal ha minst 156 mm maskevidde.', 'Cod nets north of 62° N must have at least 156 mm mesh.')]; cost = n * NETTY[o[0]].price; }
+  else if (what === 'stamp' && isAuto(spec)){ const L0 = autoL(pg); if (!L0) return [gL('Autoline passer bare på en båt med autolinesystem.', 'Autoline only fits a vessel with an autoline system.')];
+    if (autoRoom() < n) return [gL('Magasinene er fulle: ' + autoMax() + ' lenker.', 'The magazines are full: ' + autoMax() + ' lenker.')]; cost = n * AUTOLENKE_KR; }
   else if (what === 'stamp'){ kind = 'line'; cost = n * LINE_KINDS[spec].price; }
   else if (what === 'pot'){ kind = 'teine'; cost = n * POTS[spec].price; }
   else if (what === 'kit') cost = n * GPRICE.kit;
@@ -191,6 +231,7 @@ function buyGear(what, spec, n){
   if (cost > spendable()) return [gL('Ikke nok penger.', 'Not enough money.')];
   book(what === 'bait' ? 'agn' : 'redskap', -cost, what === 'bait' ? 'Agn' : 'Redskap', what === 'bait' ? 'Bait' : 'Gear');
   if (what === 'net'){ const o = NETOPT.find(x => netKey(x[0], x[1]) === String(spec)); pg.nets.push({id:gid('n'), mesh:o[1], ty:o[0], n, cond:1, max:0.95}); }
+  else if (what === 'stamp' && isAuto(spec)){ const L = autoL(pg), tot = L.n + n; L.cond = careRound((L.cond * L.n + n) / tot); L.miss = careRound(L.miss * L.n / tot); L.bent = careRound(L.bent * L.n / tot); L.n = tot; L.baited = tot; }
   else if (what === 'stamp'){ const L = pg.lines[spec], tot = L.n + n; L.cond = careRound((L.cond * L.n + n) / tot); L.miss = careRound(L.miss * L.n / tot); L.bent = careRound(L.bent * L.n / tot); L.max = careRound((L.max * L.n + n) / tot); L.n = tot; }   // new line comes complete with its hooks
   else if (what === 'pot'){ const c = pg.potc, tot = pg.pots[spec] + n; c.cond = careRound((c.cond * pg.pots[spec] + n) / tot); c.max = careRound((c.max * pg.pots[spec] + n) / tot); pg.pots[spec] = tot; }
   else if (what === 'kit') pg.kits.n += n;
@@ -216,6 +257,10 @@ function gearRules(kind, spec, p){
   if (pg.kits.n < 1) return [gL('Du trenger et blåsesett: to blåser med stake, flagg og dregg.', 'You need a buoy set: two buoys with pole, flag and anchor.')];
   let nets = 0, hooks = 0;
   if (kind === 'garn'){ const l = pg.nets.find(x => x.id === spec.nid); if (!l) return [gL('Velg ei garnlenke.', 'Choose a string of nets.')]; nets = l.n; }
+  else if (kind === 'line' && isAuto(spec.lk)){ const L0 = autoL(pg), kg = spec.n * LINE_KINDS.auto.baitKg;
+    if (!L0 || spec.n < 1 || L0.n < spec.n) return [gL('Du har ikke så mange lenker autoline på magasinene.', 'You do not have that many lenker of autoline on the magazines.')];
+    if (spec.bait && BAITS[spec.bait] ? (baitOf(pg)[spec.bait] || 0) < kg - 1e-9 : !baitPick(pg, kg)) return [gL('Egnemaskinen trenger ' + fmt(kg, 0) + ' kg agn' + (spec.bait && BAITS[spec.bait] ? ' ' + BAITS[spec.bait].no.toLowerCase() : '') + ' i frysen. Agn kjøper du på fiskemottaket.', 'The baiting machine needs ' + fmt(kg, 0) + ' kg of bait' + (spec.bait && BAITS[spec.bait] ? ' (' + BAITS[spec.bait].en.toLowerCase() + ')' : '') + ' in the freezer. You buy bait at the fish plant.')];
+    hooks = spec.n * LINE_KINDS.auto.hooks; }
   else if (kind === 'line'){ const L0 = pg.lines[spec.lk]; if (!L0 || spec.n < 1 || L0.baited < spec.n) return [gL('Du har ikke så mange egnede stamper om bord.', 'You do not have that many baited tubs aboard.')];
     // a choice names the bait group (setChoices): that many tubs with that bait
     if (spec.bait && BAITS[spec.bait] && (btOf(L0)[spec.bait] || 0) < spec.n) return [gL('Du har ikke så mange stamper egnet med ' + BAITS[spec.bait].no.toLowerCase() + ' om bord.', 'You do not have that many tubs baited with ' + BAITS[spec.bait].en.toLowerCase() + ' aboard.')];
@@ -224,7 +269,7 @@ function gearRules(kind, spec, p){
     if (spec.bait && BAITS[spec.bait] ? (baitOf(pg)[spec.bait] || 0) < kg - 1e-9 : !baitPick(pg, kg)) return [gL('Teinene trenger agn: ' + fmt(kg, 0) + ' kg' + (spec.bait && BAITS[spec.bait] ? ' ' + BAITS[spec.bait].no.toLowerCase() : '') + '.', 'The pots need bait: ' + fmt(kg, 0) + ' kg' + (spec.bait && BAITS[spec.bait] ? ' of ' + BAITS[spec.bait].en.toLowerCase() : '') + '.')]; }
   // the rules where the gear goes (03e-rules.js): the fjord lines by length, the baseline zones, closed areas; then the limits on gear
   // in the sea inside the fjord lines (§ 33 hooks, in six Finnmark fjords inside their own lines in winter; § 33a cod nets)
-  const rb = ruBlockMsg({p, len:BOAT.len, gear:kind === 'teine' ? 'teiner' : kind, sp:kind === 'teine' ? 'krabbe' : null}); if (rb) return [rb];
+  const rb = ruBlockMsg({p, len:BOAT.len, gear:kind === 'teine' ? 'teiner' : kind, sp:kind === 'teine' ? 'krabbe' : null, egn:kind === 'line' && isAuto(spec.lk)}); if (rb) return [rb];
   const lim = fjordLimits(p);
   if (lim){
     const inside = mySets().filter(s => fjordLimits(setMid(s)));
@@ -253,6 +298,9 @@ function gopUnitMin(g, H, hs){
   const hp = haulPlaces(), pull = g.kind === 'garn' && g.op === 'haul' ? Math.min(hp, Math.max(1, w - 1)) : Math.min(w, hp + (g.kind === 'teine' ? 1 : 0)), crewF = T.eff * (1 + (g.kind === 'garn' ? 0.4 : 0.3) * (pull - 1));
   let base = g.op === 'set' ? G.set : G.haul;
   if (g.kind === 'line') base = g.op === 'set' ? G.set * g.hooksPer / 700 : G.haul * g.hooksPer;
+  // the autoline runs at the machine's pace (LINE_KINDS.auto): the crew at the hauling port gaff the fish and mind the hook cleaner, more of
+  // them do not pull it faster, but a tired or cold crew slows it
+  if (g.auto) return g.hooksPer * 60 * (g.op === 'set' ? LINE_KINDS.auto.setH : LINE_KINDS.auto.haulH) * (1 + coldPen(H, hs)) / Math.min(1, T.eff);
   const hand = g.op === 'haul' && !hasHauler(g.kind) ? G.hand : 1;
   const sort = g.op === 'haul' && g.kind === 'teine' && !workTeam('sort', 'sort').n ? 1.3 : 1;   // the haulers sort the crab by class themselves
   return base * hand * sort * (1 + coldPen(H, hs)) / crewF;
@@ -262,11 +310,13 @@ function startSet(kind, spec, fishAfter, hdg){
   const b = S.boat, pg = S.pgear, why = gearRules(kind, spec, b.pos); if (why) return why;
   let n, km, s = {kind};
   if (kind === 'garn'){ const l = pg.nets.find(x => x.id === spec.nid); n = l.n; km = n * GEAR.garn.km; Object.assign(s, {mesh:l.mesh, ty:l.ty, lid:l.id, cond:l.cond}); }
-  else if (kind === 'line'){ n = spec.n; km = n * LINE_KINDS[spec.lk].hooks * GEAR.line.kmHook; { const L1 = careG().lines[spec.lk]; Object.assign(s, {lk:spec.lk, hooks:n * LINE_KINDS[spec.lk].hooks, cond:L1.cond, miss:L1.miss, bent:L1.bent, sharp:L1.sharp > 0}); } }
+  else if (kind === 'line'){ n = spec.n; km = lineKm(spec.lk, n * LINE_KINDS[spec.lk].hooks); { const L1 = isAuto(spec.lk) ? autoL() : careG().lines[spec.lk]; Object.assign(s, {lk:spec.lk, hooks:n * LINE_KINDS[spec.lk].hooks, cond:L1.cond, miss:L1.miss, bent:L1.bent, sharp:L1.sharp > 0}); } }
   else { n = spec.n; km = n * GEAR.teine.km; Object.assign(s, {pot:spec.pot, cond:careG().potc.cond}); }
   const geo = hdg != null ? setGeomExact(b.pos, hdg, km) : setGeom(b.pos, b.heading || 0, km); if (!geo) return [gL('Det er ikke plass til redskapet her. Prøv lenger ut.', 'There is no room for the gear here. Try further out.')];
   // the gear leaves the deck as it goes over the side; it is reserved now
   if (kind === 'garn') pg.nets.splice(pg.nets.findIndex(x => x.id === spec.nid), 1);
+  else if (kind === 'line' && isAuto(spec.lk)){ const L0 = autoL(pg), kg = n * LINE_KINDS.auto.baitKg, k = spec.bait && BAITS[spec.bait] && (baitOf(pg)[spec.bait] || 0) >= kg - 1e-9 ? spec.bait : baitPick(pg, kg);
+    L0.n -= n; L0.baited = L0.n; baitOf(pg)[k] -= kg; s.bait = k; s.baitW = {[k]:n}; tripOf(b).baitKr += kg * (BAITS[k] || BAITS.makrell).kr; }
   else if (kind === 'line'){ const L0 = pg.lines[spec.lk], bt = btOf(L0), w = {}; let left = n;   // the tubs with the bait chosen first (the choice's bait group, else the remembered one), then the most common
     for (const k of [spec.bait, pg.baitPref].concat(Object.keys(bt).sort((x, y) => bt[y] - bt[x]))){ if (!k || !bt[k] || left <= 0) continue; const t = Math.min(bt[k], left); bt[k] -= t; w[k] = (w[k] || 0) + t; left -= t; }
     L0.n -= n; L0.baited -= n; s.baitW = w; for (const k in w) tripOf(b).baitKr += w[k] * LINE_KINDS[spec.lk].baitKg * (BAITS[k] || BAITS.makrell).kr; }
@@ -275,7 +325,7 @@ function startSet(kind, spec, fishAfter, hdg){
   Object.assign(s, {n, heavy}); if (spec.fid) s.fid = spec.fid;
   if (hdg != null) b.heading = hdg;
   b.status = 'fishing'; b.fishUntil = null; b.deckStop = false; b.deckEnd = null;
-  b.gop = {op:'set', kind, s, n, done:0, prog:0, a:geo.a, b:geo.b, fishAfter:fishAfter || 0, hooksPer:kind === 'line' ? LINE_KINDS[spec.lk].hooks : 0, lead:endLines('set', kind, depthF(geo.a))};
+  b.gop = {op:'set', kind, s, n, done:0, prog:0, a:geo.a, b:geo.b, fishAfter:fishAfter || 0, hooksPer:kind === 'line' ? LINE_KINDS[spec.lk].hooks : 0, auto:kind === 'line' && isAuto(spec.lk), lead:endLines('set', kind, depthF(geo.a))};
   log('Setter ' + n + ' ' + unitName(kind, n) + '.', 'Setting ' + n + ' ' + unitName(kind, n) + '.');
   return null;
 }
@@ -291,7 +341,7 @@ function startHaul(sid, reset, fishAfter){
   s.hauling = true;
   const from = da <= db ? s.a : s.b, to = da <= db ? s.b : s.a;
   b.status = 'fishing'; b.fishUntil = null; b.deckStop = false; b.deckEnd = null;
-  b.gop = {op:'haul', kind:s.kind, sid, n:s.n, done:0, prog:0, a:{...from}, b:{...to}, reset:!!reset, fishAfter:fishAfter || 0, kg:0, rel:0, dead:0, hooksPer:s.kind === 'line' ? s.hooks / s.n : 0, soak:(S.t - s.tSet) / 60, sub:0, sl:HAUL_SLICES(s.kind, s.kind === 'line' ? s.hooks / s.n : 0), lead:endLines('haul', s.kind, s.depth || depthF(from)), thief:thiefOf(s)};
+  b.gop = {op:'haul', kind:s.kind, sid, n:s.n, done:0, prog:0, auto:s.kind === 'line' && isAuto(s.lk), a:{...from}, b:{...to}, reset:!!reset, fishAfter:fishAfter || 0, kg:0, rel:0, dead:0, hooksPer:s.kind === 'line' ? s.hooks / s.n : 0, soak:(S.t - s.tSet) / 60, sub:0, sl:HAUL_SLICES(s.kind, s.kind === 'line' ? s.hooks / s.n : 0), lead:endLines('haul', s.kind, s.depth || depthF(from)), thief:thiefOf(s)};
   S.gacc = {}; S.gnext = {};
   log('Trekker ' + GEAR[s.kind].no.toLowerCase() + ': ' + s.n + ' ' + unitName(s.kind, s.n) + ', sto ' + fmt(b.gop.soak, 0) + ' t.', 'Hauling ' + GEAR[s.kind].en.toLowerCase() + ': ' + s.n + ' ' + unitName(s.kind, s.n) + ', soaked ' + fmt(b.gop.soak, 0) + ' h.');
   return null;
@@ -349,12 +399,25 @@ function finishSet(g, H){
 }
 function gopEnd(g){ const b = S.boat; b.gop = null; b.v = 0; b.gopQuiet = true; b.fishUntil = S.t + (g.fishAfter || 0) * 60; S.gacc = null; S.gnext = null; }
 // stop halfway: what is set stays in the sea as a shorter string, what is hauled is aboard
+// units of a set that never went over the side, back aboard with their bait: tubs baited as they were, the autoline's bait to the freezer,
+// the pots' bait to the store, nets as their own string
+function gearUnset(s, n){
+  const pg = S.pgear, fr = n / Math.max(1, s.n);
+  if (s.kind === 'garn'){ pg.nets.push({id:gid('n'), mesh:s.mesh, ty:s.ty, n, cond:s.cond == null ? 1 : s.cond, max:s.max == null ? 0.95 : s.max}); return; }
+  careBack(s, n);
+  if (s.kind === 'line' && isAuto(s.lk)){ const k = s.bait || 'makrell'; baitOf(pg)[k] = (baitOf(pg)[k] || 0) + n * LINE_KINDS.auto.baitKg; autoL(pg); }
+  else if (s.kind === 'line'){ const L0 = pg.lines[s.lk], bt = btOf(L0), w = s.baitW || {makrell:s.n}; L0.baited += n; let left = n;
+    for (const k of Object.keys(w)){ const t = Math.min(left, Math.round(w[k] * fr)); if (t > 0){ bt[k] = (bt[k] || 0) + t; w[k] -= t; left -= t; } }
+    if (left > 0){ const k = Object.keys(w)[0] || 'makrell'; bt[k] = (bt[k] || 0) + left; if (w[k] != null) w[k] = Math.max(0, w[k] - left); } }
+  else if (s.kind === 'teine'){ const k = s.bait || 'makrell'; baitOf(pg)[k] = (baitOf(pg)[k] || 0) + n * GPRICE.potBait; }
+}
 function gopAbort(why){
   const b = S.boat, g = b.gop; if (!g) return;
   if (g.op === 'set'){
-    if (g.done >= 1){ g.n = g.done; const s = g.s; s.n = g.done; if (s.kind === 'line') s.hooks = g.done * g.hooksPer; g.b = {x:b.pos.x, y:b.pos.y}; finishSet(g, S.t / 60); }
+    // what is set stays as a shorter string; what was not set yet comes back aboard with its bait (05.11.2026: it was lost before)
+    if (g.done >= 1){ const s = g.s, rest = s.n - g.done; if (rest > 0) gearUnset(s, rest); g.n = g.done; s.n = g.done; if (s.kind === 'line') s.hooks = g.done * g.hooksPer; g.b = {x:b.pos.x, y:b.pos.y}; finishSet(g, S.t / 60); }
     // nothing went over the side: the gear, the buoy set, the bait on the hooks and in the pots all come back
-    else { const pg = S.pgear, s = g.s; gearBack(s, s.n, s.cond); pg.kits.n++; if (s.heavy) pg.kits.heavy++; if (s.kind === 'line'){ const L0 = pg.lines[s.lk], bt = btOf(L0); L0.baited += s.n; for (const k in s.baitW || {makrell:s.n}) bt[k] = (bt[k] || 0) + (s.baitW || {makrell:s.n})[k]; } else if (s.kind === 'teine'){ const k = s.bait || 'makrell'; baitOf(pg)[k] = (baitOf(pg)[k] || 0) + s.n * GPRICE.potBait; }
+    else { const pg = S.pgear, s = g.s; gearBack(s, s.n, s.cond); pg.kits.n++; if (s.heavy) pg.kits.heavy++; if (s.kind === 'line' && isAuto(s.lk)){ const k = s.bait || 'makrell'; baitOf(pg)[k] = (baitOf(pg)[k] || 0) + s.n * LINE_KINDS.auto.baitKg; autoL(pg); } else if (s.kind === 'line'){ const L0 = pg.lines[s.lk], bt = btOf(L0); L0.baited += s.n; for (const k in s.baitW || {makrell:s.n}) bt[k] = (bt[k] || 0) + (s.baitW || {makrell:s.n})[k]; } else if (s.kind === 'teine'){ const k = s.bait || 'makrell'; baitOf(pg)[k] = (baitOf(pg)[k] || 0) + s.n * GPRICE.potBait; }
       log('Setting avbrutt. Redskapet er tatt om bord igjen.', 'Setting stopped. The gear is back aboard.'); b.gop = null; }
   } else {
     const s = S.sets.find(x => x.id === g.sid);
@@ -419,6 +482,7 @@ function retain(sp, key, mesh, w){
   if (key === 'garn' || key.startsWith('garn:')){ const L = netLen(w), Lo = 0.40 * mesh * (GK[sp] || 1), r = Math.exp(-0.5 * ((L - Lo) / (0.18 * Lo)) ** 2); return L > Lo ? Math.max(r, 0.35 * Math.exp(-(L - Lo) / (0.5 * Lo))) : r; }
   if (key === 'line:hyse') return sstep(0.35, 0.9, w);
   if (key === 'line:bank') return sstep(0.8, 2.2, w);
+  if (key === 'line:auto') return sstep(0.5, 1.6, w);   // the autoline's hooks (size 12-13 EZ) between the haddock line's and the bank line's
   return 1;
 }
 function sampleSel(sp, key, mesh, p, H){ let w = 0; for (let i = 0; i < 24; i++){ w = sampleFish(sp, p, H); if (Math.random() < retain(sp, key, mesh, w)) return w; } return w; }
@@ -458,8 +522,8 @@ function finishHaul(g, H){
   { const kgu = g.kg / Math.max(1, s.n), soak = Math.round(g.soak || 0), fair = (HEATG.fair[s.kind] || 1) * heatSoakShare(s.kind, soak || HEATG.T);
     S.marks.push({x:setMid(s).x, y:setMid(s).y, t:S.t, kgph:0, g:s.kind, kgu:Math.round(kgu * 10) / 10, soak, q:Math.round(kgu / fair * 100) / 100}); if (S.marks.length > 80) S.marks.shift(); }
   // set the same gear again where it stood (line has to be baited in port first)
-  if (g.reset && back > 0 && s.kind !== 'line'){
-    const spec = s.kind === 'garn' ? {nid:S.pgear.nets[S.pgear.nets.length - 1].id} : {pot:s.pot, n:back}; if (s.fid) spec.fid = s.fid;
+  if (g.reset && back > 0 && (s.kind !== 'line' || isAuto(s.lk))){
+    const spec = s.kind === 'garn' ? {nid:S.pgear.nets[S.pgear.nets.length - 1].id} : s.kind === 'line' ? {lk:s.lk, n:back, bait:s.bait} : {pot:s.pot, n:back}; if (s.fid) spec.fid = s.fid;
     // back to where the string started, and out again along the same line
     b.gop = null; b.pos = {...s.a}; b.heading = Math.atan2(s.b.x - s.a.x, -(s.b.y - s.a.y));
     const why = startSet(s.kind, spec, g.fishAfter);
@@ -479,6 +543,7 @@ function cycleSpec(kind, want, n){
     if (l && n && l.n > n && splitNets(l.id, n)) l = pg.nets[pg.nets.length - 1];
     return l ? {nid:l.id} : null; }
   // all the baited tubs of the kind go out, those with the bait the station named first (startSet)
+  if (kind === 'line' && autoL(pg)){ const L0 = autoL(pg), m = Math.min(n || L0.n, L0.n); if (m < 1) return null; const sp = {lk:'auto', n:m}; if (want && want.bait && BAITS[want.bait]) sp.bait = want.bait; return sp; }
   if (kind === 'line'){ const lk = want && want.lk && pg.lines[want.lk] && pg.lines[want.lk].baited ? want.lk : pg.lines.hyse.baited ? 'hyse' : 'bank'; if (!pg.lines[lk].baited) return null;
     const sp = {lk, n:n ? Math.min(n, pg.lines[lk].baited) : pg.lines[lk].baited}; if (want && want.bait && (btOf(pg.lines[lk])[want.bait] || 0) > 0) sp.bait = want.bait; return sp; }
   const pot = 'big', B = baitOf(pg), bk = want && want.bait && (B[want.bait] || 0) >= GPRICE.potBait ? want.bait : null, k = Math.min(pg.pots[pot], Math.floor((bk ? B[bk] : Math.max(...Object.values(B), 0)) / GPRICE.potBait + 1e-9));
@@ -492,7 +557,7 @@ function gearCycle(w, fishAfter){
   const s = (a.fid && mySets().find(x => x.fid === a.fid)) || mySets().find(x => x.kind === a.kind && segDist(w, x.a, x.b) < 0.5 && (!a.fid || !x.fid));
   if (s && a.only === 'set') return [gL('Redskapet står allerede på plassen.', 'The gear already stands at the place.')];
   if (!s && a.only === 'haul') return [gL('Fant ikke redskapet på plassen.', 'Found no gear at the place.')];
-  if (s){ b.pos = dist(b.pos, s.a) <= dist(b.pos, s.b) ? {...s.a} : {...s.b}; const why = startHaul(s.id, a.kind !== 'line' && !gale && !a.final, fishAfter); if (!why && gale) log('Kuling i varselet. Tar redskapet med hjem.', 'A gale in the forecast. Taking the gear home.'); return why; }
+  if (s){ b.pos = dist(b.pos, s.a) <= dist(b.pos, s.b) ? {...s.a} : {...s.b}; const why = startHaul(s.id, (a.kind !== 'line' || isAuto(s.lk)) && !gale && !a.final, fishAfter); if (!why && gale) log('Kuling i varselet. Tar redskapet med hjem.', 'A gale in the forecast. Taking the gear home.'); return why; }
   if (!s && !rigKindOk(a.kind)) return rigWrong(a.kind);
   if (gale) return [gL('Kuling i varselet. Setter ikke ut redskap nå.', 'A gale in the forecast. Not setting gear now.')];
   const spec = cycleSpec(a.kind, a.spec && (a.kind === 'garn' ? {mesh:(S.pgear.nets.find(l => l.id === a.spec.nid) || {}).mesh, ty:(S.pgear.nets.find(l => l.id === a.spec.nid) || {}).ty} : a.spec), a.n);
@@ -507,7 +572,7 @@ function opsGearNeeds(o){
   if (acts.includes('garn') && handsAboard() < 2) miss.push(gL('garn krever to om bord', 'nets need two aboard'));
   { const n = (o.wps || []).filter(w => w.act && w.act.only === 'set').length; if (n > pg.kits.n) miss.push(gL('for få blåsesett om bord (' + pg.kits.n + ' av ' + n + ')', 'too few buoy sets aboard (' + pg.kits.n + ' of ' + n + ')')); }
   if (acts.includes('teine')){ const k = BAITS[pg.baitPref] ? pg.baitPref : 'makrell', need = pg.pots.big * GPRICE.potBait - (baitOf(pg)[k] || 0); if (need > 0 && p && p.mottak && driftStock().bait){ const kg = Math.ceil(need), c = kg * BAITS[k].kr; if (c <= spendable()){ book('agn', -c, 'Agn til teinene', 'Bait for the pots'); baitOf(pg)[k] = (baitOf(pg)[k] || 0) + kg; } } }
-  if (acts.includes('line') && !pg.lines.hyse.baited && !pg.lines.bank.baited && !mySets().some(s => s.kind === 'line')) miss.push(gL('lina er ikke egnet', 'the line is not baited'));
+  if (acts.includes('line') && !pg.lines.hyse.baited && !pg.lines.bank.baited && !autoL(pg) && !mySets().some(s => s.kind === 'line')) miss.push(gL('lina er ikke egnet', 'the line is not baited'));
   return miss.length ? miss : null;
 }
 // after a standing-plan landing: the hauled line goes to the baiting shed so it is ready for the next trip
@@ -539,7 +604,8 @@ function soakHour(s, H){
   const bw = s.kind === 'line' ? (s.baitW || {makrell:s.n}) : null, bwN = bw ? Object.values(bw).reduce((a, v) => a + v, 0) || 1 : 1, lineB = sp => { if (!bw) return 1; let v = 0; for (const k in bw) v += bw[k] * baitF(k, sp); return v / bwN; };
   let gen = 0;   // a species with its own stock layer (the Greenland halibut, stk) is taken from that, the rest from the common one
   // the fish up and down in the water through the day (gearVertF, 03f-fiske.js): bottom gear takes more by day, the floating net by night
-  for (const sp in sel){ const r = 30 * G.q * units * sel[sp] * density(sp, mid, H) * luck(sp) * lineB(sp) * f * cond * gearVertF(sp, key, mid, H); if (r > 0){ add(sp, r, r / SPECIES[sp].size[0]); tot += r; if (!SPECIES[sp].stk) gen += r; else if (!s.dry) takeStock(mid, r, sp); } }
+  const qA = key === 'line:auto' ? AUTOQ : 1;
+  for (const sp in sel){ const r = 30 * G.q * qA * units * sel[sp] * density(sp, mid, H) * luck(sp) * lineB(sp) * f * cond * gearVertF(sp, key, mid, H); if (r > 0){ add(sp, r, r / SPECIES[sp].size[0]); tot += r; if (!SPECIES[sp].stk) gen += r; else if (!s.dry) takeStock(mid, r, sp); } }
   if (!s.dry) takeStock(mid, gen);
   // amphipods (marflo) and hagfish eat what hangs dead in the gear after the first day
   const loss = (s.kind === 'line' ? 0.07 : 0.03) * sstep(20, 28, a);
@@ -557,7 +623,7 @@ function gearHour(H){
     const r = Math.random(), what = GEAR[s.kind].no.toLowerCase(), whatEn = GEAR[s.kind].en.toLowerCase();
     if (r < p){
       s.lost = S.t; { const e = (S.gearLog || []).find(x => x.id === s.id); if (e) e.lost = S.t; }
-      { const v = vesselById(s.vid), cf = 0.2 + 0.8 * (s.cond != null ? s.cond : 1), val = (s.kind === 'garn' ? (NETTY[netTy(s)] || NETTY.bunn).price : s.kind === 'line' ? (LINE_KINDS[s.lk] || LINE_KINDS.hyse).price : POTS.big.price) * s.n * cf + GPRICE.kit + (s.heavy ? GPRICE.heavy : 0);
+      { const v = vesselById(s.vid), cf = 0.2 + 0.8 * (s.cond != null ? s.cond : 1), val = (s.kind === 'garn' ? (NETTY[netTy(s)] || NETTY.bunn).price : s.kind === 'line' ? (isAuto(s.lk) ? AUTOLENKE_KR : (LINE_KINDS[s.lk] || LINE_KINDS.hyse).price) : POTS.big.price) * s.n * cf + GPRICE.kit + (s.heavy ? GPRICE.heavy : 0);
         if (v) tripAdd(vget(v, 'boat'), 'lostKr', Math.round(val)); }   // the gear lost is a common cost of nets, lines and pots (oppgjørsavtalene §§ 1, 3, 19)
       setLog(s, 'Mistet ' + what + ' (' + s.n + ' ' + unitName(s.kind, s.n) + ') i været. Tapt redskap skal meldes til Kystvakten.', 'Lost ' + whatEn + ' (' + s.n + ' ' + unitName(s.kind, s.n) + ') in the weather. Lost gear must be reported to the Coast Guard.');
       msg(gL('Redskap', 'Gear'), 'Blåsene er borte, og ' + what + ' er tapt. Meld tapt redskap til Kystvakten under Beholdning.', 'The buoys are gone and the ' + whatEn + ' is lost. Report the lost gear to the Coast Guard under Inventory.');

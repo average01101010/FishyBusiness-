@@ -30,7 +30,7 @@
 // (the density) times the area, over all the areas of fiske.json; so u is the effort per area, as it should be when catch per landing
 // follows the density. On the coast (k) the location's pressure is laid more on the mapped grounds (Fiskeridirektoratet's «Fiskeplasser
 // – redskap», felt.json: three times as much within 2 km of a named ground); the ocean fleet's (h) only outside the baseline, where the
-// big boats may fish (J-161-2026 § 32).
+// big boats may fish (J-187-2026 § 32).
 const TRK = {r:0.004, groundW:3, groundR:2, hph:730.5,
   // the stock of age 3+ against the spawners: cod 3.1 (JRN-AFWG 2026, IMR-VNIRO report 2026 nr. 5, 3.6.5 and Table 3.20: TSB 1 102 kt
   // and SSB 352 kt in 2025, 1 069 and 338 kt in 2026), haddock 3.1 (the same report, 4.7: TSB 494 692 t and SSB 157 942 t in 2025),

@@ -1,4 +1,4 @@
-// ===== Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood from 1 October 2026 (J-161-2026, fiskeridir.no)
+// ===== Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood from 1 October 2026 (J-187-2026, fiskeridir.no)
 // is the base; the chain from Norway's quota to the group quotas and the vessel quotas follows the Directorate of Fisheries' case
 // document 5/2025 for the regulation meeting (November 2025), and gives § 5 of the regulation exactly. Tonnes unless said otherwise.
 // Sources and what is uncertain: docs/OVERLEVERING.md 5.5 and chapter 6. =====
@@ -51,7 +51,7 @@ function yearQuota(y){
     open:{Q:ch.open, ff:ch.openFF, ov, max:REG26.openMax.map(v => r1(v * fo * ov)), guar:REG26.openGuar.map((v, i) => r1(Math.min(v * fo, REG26.openMax[i] * fo * ov))), hyseG:REG26.hyseG.map(v => r1(v * fh)), seiG:r1(REG26.seiG * fs)}};
 }
 
-// ---- the closed group: quota lengths the game sells, with J-161-2026's quota factors and quantities (§§ 16, 18, 19). Cod is a fixed
+// ---- the closed group: quota lengths the game sells, with J-187-2026's quota factors and quantities (§§ 16, 18, 19). Cod is a fixed
 // vessel quota: the quota factor times the year's unit for the group. Haddock and saithe: [guaranteed, maximum by the vessel's largest
 // length] in 2026 tonnes, scaled with Norway's quota; null is no maximum (haddock under 11 m from 31 August 2026). Largest length
 // bands: haddock under 11 m / 11 m and over; saithe for quota lengths under 11 m: under 11 / 11–14.99 / 15 m and over, 11–14.99 m:
@@ -196,7 +196,7 @@ function qyAt(H){ const y = yearH(H), now = S.t / 60, ny = yearH(now), Y = qyOf(
   while (Y.d < last) qyStep(Y, y, ++Y.d); if (y === ny) quotaNewYear(y); return Y; }
 function codStopDoy(y){ return qyAt(Math.max(hOfDoy(y, 0), Math.min(S.t / 60, hOfDoy(y, 364)))).stop; }
 function openMaxAdd(H){ const Y = qyAt(H), d = doyH(H); return Y.free != null && d >= Y.free ? Infinity : Y.add; }
-// the fresh-fish scheme (J-161-2026 § 25): 20 % of the week's fresh landings from 29 June; the share was raised in the autumn in
+// the fresh-fish scheme (J-187-2026 § 25): 20 % of the week's fresh landings from 29 June; the share was raised in the autumn in
 // 2017, 2018, 2021, 2022, 2024 and 2025 (to 30–50 %, between 15 September and 25 November), went down in 2023, stopped in late
 // November 2019, and was often cut to 10 % before Christmas. Drawn for each year from that history.
 const FFC = {};
@@ -253,7 +253,7 @@ function structExpire(l, y){ if (!l || !l.st) return 0; const n = l.st.length; l
 // ---- the special scheme for quota lengths under 11 m (kap. 2, from 2025): an owner with two such boats, both owned since the year
 // before, gives up one right and fishes both quotas with the other boat; no reduction (as far as the text reads) ----
 function twoOK(la, lb, y){ return !!(la && lb && la !== lb && HJ[la.id] && HJ[lb.id] && HJ[la.id].grp === 'u11' && HJ[lb.id].grp === 'u11' && !la.two && !lb.two && !la.coop && (la.since || 0) < y && (lb.since || 0) < y); }
-// ---- quota cooperation (J-161-2026 § 31): two closed-group boats under 11 m with different owners; both owners aboard, the passive
+// ---- quota cooperation (J-187-2026 § 31): two closed-group boats under 11 m with different owners; both owners aboard, the passive
 // boat lies still, one cooperation a year. Here with an NPC owner who comes aboard as crew and takes half the first-hand value of
 // what is landed on his quota (the split is an assumption). ----
 const COOP = {share:0.5};
@@ -264,7 +264,7 @@ function coopOK(l, y){ return !!(l && HJ[l.id] && HJ[l.id].grp === 'u11' && !l.t
 // («Prisene må reflektere det virkelige liv»: the quota is paid at its value on top of the hull), V3 A («tillatelsene må også være
 // realistiske»: one permit per group as in life, with the seller's quota factors). The vessel quota is the quota factors (the permit's
 // own plus structure quota, l.extra) times the year's quota per factor 1.00. Sources (kap. 2 of the plan):
-//   tral  torsketråltillatelse, konsesjonsforskriften § 2-1; J-161-2026 §§ 7-9: 372 t cod, 332 t haddock, 422 t saithe per factor 1.00
+//   tral  torsketråltillatelse, konsesjonsforskriften § 2-1; J-187-2026 §§ 7-9: 372 t cod, 332 t haddock, 422 t saithe per factor 1.00
 //   konv  konvensjonell havfisketillatelse (autoline and nets over 28 m; Danish seine over 28 m under it until the rule is found):
 //         118 t cod and 107 t haddock per factor; saithe 272 t only with garnseitillatelse, which the game does not have (kap. 6), so
 //         saithe has no vessel quota here (an assumption: not confirmed what the group fishes without it)
@@ -273,12 +273,12 @@ function coopOK(l, y){ return !!(l && HJ[l.id] && HJ[l.id].grp === 'u11' && !l.t
 //   krab  snow crab permit, the regulation for 2026: a guaranteed vessel quota of 351 t (12 336 t in all, 16 594 t in 2027)
 // A permit for sale carries the factors its NPC owner has: the group's factors over its vessels (trawl 31 785 / 372 = 85.4 over 36,
 // conventional 10 717 / 118 = 90.8 over 26: 2.37 and 3.49 on average, structure quota included), 0.6-1.4 times the mean, the same all week.
-// Each group's quota for cod, haddock and saithe (J-161-2026 § 5, «gruppedeling») follows the year: the trawl and the ocean-going
+// Each group's quota for cod, haddock and saithe (J-187-2026 § 5, «gruppedeling») follows the year: the trawl and the ocean-going
 // conventional vessels' cod from the quota chain (codChain: the trawl ladder and the 12.81 %, which give 32 535 and 10 717 t for 2026
 // exactly), haddock and saithe with Norway's quota (fh, fs); herring as 2026; snow crab with its total quota (2027 known, then held).
 const HAVLIC = {
-  tral:{no:'Torsketråltillatelse', en:'Cod trawl permit', ves:['bunntral'], gear:['tral'], q26:{torsk:372, hyse:332, sei:422}, grp26:{torsk:31785, hyse:28665, sei:43397}, src:'konsesjonsforskriften § 2-1; J-161-2026 §§ 5, 7–9'},
-  konv:{no:'Konvensjonell havfisketillatelse', en:'Ocean-going conventional permit', ves:['autoliner'], gear:['line', 'garn', 'snurrevad'], q26:{torsk:118, hyse:107, sei:null}, grp26:{torsk:10717, hyse:8647, sei:6128}, src:'konsesjonsforskriften; J-161-2026 §§ 5, 13'},
+  tral:{no:'Torsketråltillatelse', en:'Cod trawl permit', ves:['bunntral'], gear:['tral'], q26:{torsk:372, hyse:332, sei:422}, grp26:{torsk:31785, hyse:28665, sei:43397}, src:'konsesjonsforskriften § 2-1; J-187-2026 §§ 5, 7–9'},
+  konv:{no:'Konvensjonell havfisketillatelse', en:'Ocean-going conventional permit', ves:['autoliner'], gear:['line', 'garn', 'snurrevad'], q26:{torsk:118, hyse:107, sei:null}, grp26:{torsk:10717, hyse:8647, sei:6128}, src:'konsesjonsforskriften; J-187-2026 §§ 5, 13'},
   rnot:{no:'Ringnottillatelse', en:'Purse seine permit', ves:['pelagisk', 'ringnot38'], gear:['not'], q26:{sild:342666 * 0.49 / 69}, grp26:{sild:342666 * 0.49}, src:'konsesjonsforskriften § 4-1; NVG-reguleringen 2026'},
   krab:{no:'Snøkrabbetillatelse', en:'Snow crab permit', ves:['snokrabbe'], gear:['teine'], q26:{snokrabbe:351}, grp26:{snokrabbe:12336}, src:'Regulering av fangst av snøkrabbe i 2026'}
 };
@@ -332,6 +332,26 @@ function havLicTake(type, H){
   const id = havLicFor(type); if (!id || havLicWhy(type)) return null; const P = HAVLIC[id], O = havOffer(id, H);
   regTake(id); return {id, hav:true, hl:P.no, kf:O.kf, since:yearH(H), from:O.from};
 }
+// ---- ling and tusk for vessels of 28 m and over (H2a of docs/planer/havsteget-h2-autoline.md, 05.11.2026). J-128-2026 (2026) and the
+// Directorate's proposal for 2027 (reguleringsmøtet 4-5.11.2026, sak 15/2026): the group of 28 m and over (the conventional ocean
+// vessels and the closed coastal group) has 3 202 t of ling and 5 516 t of tusk; «inntil 35 % bifangst av lange i de enkelte fangster
+// og ved landing» all year (no direct fishery for ling), and «fritt fiske etter brosme» until the group quota is taken, when it is
+// stopped (2025: 11 September, 2026: 6 August) and 15 % is allowed as bycatch (J-128-2026 § 6). Each year's stop is drawn between those
+// two dates; the rule is checked at the landing (the share of each haul is not followed)
+const LBQ = {lange:0.35, brosme:0.15, stop:[[8, 6], [9, 11]], notice:3};
+const LBC = {};
+function lbStop(y){ const k = y + ':' + (S.qseed || 0); if (LBC[k] != null) return LBC[k];
+  const a = doyOf(y, LBQ.stop[0][0], LBQ.stop[0][1]), b = doyOf(y, LBQ.stop[1][0], LBQ.stop[1][1]), u = h2(y * 17 + (S.qseed || 0) % 991, 8811);
+  return LBC[k] = hOfDoy(y, Math.round(a + (b - a) * u)); }
+// the share of a landing a species may be for a vessel of 28 m and over (1: free)
+function lbShare(sp, H){ if (sp === 'lange') return LBQ.lange; if (sp === 'brosme') return H >= lbStop(yearH(H)) ? LBQ.brosme : 1; return 1; }
+// Fiskeridirektoratet's notice of the tusk stop, 3 days before (for the vessels of 28 m and over)
+function lbNews(H){
+  if (!(BOAT.len >= 28)) return; const y = yearH(H), st = lbStop(y), Q = quotaState(); Q.lbTold = Q.lbTold || 0;
+  if (!(Q.lbTold & 1) && H >= st - LBQ.notice * 24 && H < st){ Q.lbTold |= 1; msg('Fiskeridirektoratet', 'Fisket etter brosme for fartøy på 28 m og over stoppes ' + dayStr(st) + ', fordi gruppekvoten er tatt. Etter det er inntil 15 % brosme lov som bifangst. Lange er bare lov som bifangst, inntil 35 %, hele året.', 'The tusk fishery for vessels of 28 m and over stops ' + dayStr(st) + ', as the group quota is taken. After that, up to 15 % tusk is allowed as bycatch. Ling is only allowed as bycatch, up to 35 %, all year.'); }
+}
+// the saithe an ocean permit without gillnet-saithe access may land as bycatch (J-187-2026 § 14: 25 %; 50 % while the gillnet-saithe fishery is open)
+const HAVBY = {sei:0.25};
 // ---- Greenland halibut (blåkveite) for vessels under 28 m (J-241-2025, the regulation for 2026; docs/blakveite.md 2-3, 07.10.2026) ----
 // The direct fishery is one period from 25 May 00:00 until Fiskeridirektoratet stops it when the group quota (5 230 t) is reckoned
 // fished, announced 2-3 days before with a time limit for taking up the gear (2026: 30 days, 2025: 97 days; here each year's length is

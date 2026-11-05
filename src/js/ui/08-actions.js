@@ -102,7 +102,7 @@ document.addEventListener('pointercancel', e => { const q = rangeTouch; rangeTou
 // over its limits): the share of each species. Apart from sell() so the quay can show it before you land (R4); q is not changed
 function landConf(H, q, acc){
   const kgOf = sp => S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0), wk = weekOfH(H), ffTot = q.ffW === wk ? q.ffTot : 0, ffCod = q.ffW === wk ? q.ffCod : 0;
-  // the fresh-fish allowance counts fish only (assumed: shellfish do not count), and fresh fish only (J-161-2026 § 25: the fresh landings;
+  // the fresh-fish allowance counts fish only (assumed: shellfish do not count), and fresh fish only (J-187-2026 § 25: the fresh landings;
   // fish frozen aboard is not fresh)
   const saleKg = S.hold.reduce((a, x) => a + (SPECIES[x.sp].shell || x.frozen || (x.sp === 'hyse' && x.cls === 2) ? 0 : grade(x.fresh) === 'V' ? 0 : x.kg), 0);
   const codKg = kgOf('torsk'), confBy = {};   // share of each species that is confiscated
@@ -119,10 +119,17 @@ function landConf(H, q, acc){
     codFF = Math.min(codFresh, ffAllow); codQ = Math.min(codKg - codFF, codRoom(H)); codConf = codKg - codFF - codQ;
     if (codKg > 0 && codConf > 0) confBy.torsk = codConf / codKg;
     // the closed group's haddock and saithe: the maximum quota, then up to 30 % haddock and 20 % saithe as bycatch in each landing
-    // (J-161-2026 §§ 18 and 19); the rest is confiscated
-    if (acc === 'lukket'){ const LQ = licQ(S.lic, H), all = holdTotal();
+    // (J-187-2026 §§ 18 and 19); the rest is confiscated
+    // an ocean permit (H2a): no bycatch of cod or haddock beyond the vessel quota, and saithe without a gillnet-saithe permit only as
+    // bycatch, 25 % of the landing (J-187-2026 § 14; the 50 % while the gillnet-saithe fishery is open is not in the game)
+    if (acc === 'lukket' && S.lic.hav){ const LQ = licQ(S.lic, H), all = holdTotal();
+      for (const [sp, share] of [['hyse', 0], ['sei', HAVBY.sei]]){ const k = kgOf(sp), cap = LQ[sp] && isFinite(LQ[sp][0]) ? Math.max(0, LQ[sp][0] - q[sp]) : 0, ok = Math.min(k, Math.max(cap, share * all)); if (k > 0 && ok < k - 0.01) confBy[sp] = 1 - Math.max(0, ok) / k; } }
+    else if (acc === 'lukket'){ const LQ = licQ(S.lic, H), all = holdTotal();
       for (const [sp, share] of [['hyse', 0.3], ['sei', 0.2]]){ const k = kgOf(sp), ok = Math.min(k, Math.max(LQ[sp][0] - q[sp], share * all)); if (k > 0 && ok < k - 0.01) confBy[sp] = 1 - Math.max(0, ok) / k; } }
   }
+  // ling and tusk for vessels of 28 m and over (J-128-2026 and the proposal for 2027, 03d-quota.js lbShare): ling at most 35 % of the
+  // landing all year, tusk free until the group quota is taken and then at most 15 %
+  if (BOAT.len >= 28 && acc !== 'none') for (const sp of ['lange', 'brosme']){ const k = kgOf(sp), sh = lbShare(sp, H); if (k > 0 && sh < 1){ const ok = Math.min(k, sh * holdTotal()); if (ok < k - 0.01) confBy[sp] = 1 - ok / k; } }
   // Greenland halibut: the maximum quota in the direct fishery, otherwise at most 7 % of the week's landings (03d-quota.js bkAllow)
   const bkKg = kgOf('blakveite'), bkOk = bkKg > 0 ? bkAllow(H, bkKg, holdTotal()) : 0;
   if (bkKg > 0 && bkOk < bkKg - 0.01) confBy.blakveite = 1 - bkOk / bkKg;
@@ -179,7 +186,7 @@ function sell(){
   if (acc !== 'none'){ q.ffTot += saleKg; q.ffCod += codFF; }
   if (acc === 'open') qyAt(H).me += codQ / 1000;   // your landings count in the open group's catch (03d-quota.js)
   bkLanded(H, bkOk || 0, holdTotal());   // the Greenland halibut's maximum quota and the week's 7 %
-  { const ks = {}; for (const x of S.hold) ks[x.sp] = (ks[x.sp] || 0) + x.kg; wshLand(port.id, H, acc, ks, codQ); if (WSH.rec) setTimeout(worldShare, 4000); }   // for the other players
+  { const ks = {}; for (const x of S.hold) ks[x.sp] = (ks[x.sp] || 0) + x.kg; wshLand(port.id, H, acc === 'lukket' && S.lic.hav ? 'hav' : acc, ks, codQ); if (WSH.rec) setTimeout(worldShare, 4000); }   // for the other players
   q.conf += confKg + crabSmall; q.confKr += confKr + crabKr;
   const arr = Object.values(lines).sort((a, c) => ALLSP.indexOf(a.sp) - ALLSP.indexOf(c.sp) || a.c - c.c || 'EABXV'.indexOf(a.g) - 'EABXV'.indexOf(c.g));
   // lott goes to those who were aboard; a crew member given time off gets none for this trip
