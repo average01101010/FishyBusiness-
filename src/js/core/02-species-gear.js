@@ -2,7 +2,8 @@
 // Species data. av: monthly availability (1 = normal month, damped from 2025 landings); pm: market price, NOK per kg round weight,
 // from 2025 fresh landings (Troms for cod/haddock/saithe, national for the rest; cod scaled to the 2026 price level);
 // cls: size classes by round weight [from kg, minimum price NOK/kg round, label, hook premium] from Råfisklaget's minimum prices;
-// uh: kg round weight per kg gutted without head; size: [median kg, log-spread]; minKg: minimum legal size (released below).
+// uh: kg round weight per kg gutted without head (the official conversion factors, docs/planer/havsteget-h2-autoline.md 2b: the
+// Norwegian-Russian table for 2023 for cod, haddock and Greenland halibut, the Norwegian one with J-128-2018 for the rest; H2b 05.11.2026); size: [median kg, log-spread]; minKg: minimum legal size (released below).
 const SPECIES = {
   torsk:{no:'Torsk', en:'Cod', k:0.376, base:1.0, prod:0.6, dep:[70, 1.0], av:[1,1,1,1,1,1,1,1,1,1.1,1.1,1], skrei:[0.6,2.0,2.5,0.8,0,0,0,0,0,0,0,0.1],
     pmF:[54.3,54.5,53.8,53.5,52.4,52.8,52.9,55.3,58.9,64.1,66.5,60.4], pm:[52.6,55.0,54.5,52.9,43.7,42.4,39.9,42.0,43.3,51.5,51.7,50.9], sig:0.04, size:[2.0, 0.55], skreiSize:[5.0, 0.4], minKg:0.8, uh:1.5, liver:6.5, roe:10,
@@ -23,10 +24,10 @@ const SPECIES = {
     pm:[12,12,13,12,13,12,11,12,12,12,13,14], sig:0.03, size:[2.2, 0.4], minKg:0.5, uh:1.4,
     cls:[[1.4, 8.57, 'Over 1,4 kg'], [0, 2.86, 'Under 1,4 kg']], ref:0},
   uer:{no:'Uer', en:'Redfish', k:0.337, base:0.1, prod:0.7, dep:[200, 0.7], av:[0.8,0.7,1.0,0.8,0.9,1.1,0.7,1.1,1.4,1.6,1.1,0.7],
-    pm:[15,14,16,18,19,15,14,17,16,17,18,17], sig:0.03, size:[1.0, 0.35], minKg:0.3, uh:1,
+    pm:[15,14,16,18,19,15,14,17,16,17,18,17], sig:0.03, size:[1.0, 0.35], minKg:0.3, uh:1.7,
     cls:[[0.7, 13.25, 'Over 0,7 kg'], [0, 7.00, 'Under 0,7 kg']], ref:0},
   kveite:{no:'Kveite', en:'Halibut', k:0.56, base:0.05, prod:0.7, dep:[120, 0.9], av:[0.6,0.6,0.6,0.7,0.8,0.8,0.6,0.9,1.5,1.3,1.7,1.8],
-    pm:[64.6,63.7,65.5,77.9,87.6,91.2,90.3,93.8,84.1,91.2,98.2,100.9], sig:0.03, size:[12, 0.8], minKg:7.2, maxKg:100, uh:1.13,
+    pm:[64.6,63.7,65.5,77.9,87.6,91.2,90.3,93.8,84.1,91.2,98.2,100.9], sig:0.03, size:[12, 0.8], minKg:7.2, maxKg:100, uh:1.35,
     cls:[[67.8, 50.4, 'Over 60 kg'], [45.2, 59.3, '40–60 kg'], [22.6, 68.1, '20–40 kg'], [0, 72.6, '5,3–20 kg']], ref:3},
   // Greenland halibut (blåkveite, Reinhardtius hippoglossoides; 07.10.2026, tilbakemelding #10; the research and the plan in
   // docs/blakveite.md and docs/plan-blakveite.md). A fish of the shelf edge at 500-1000 m (HI): area 'egga' gives where it is along
@@ -37,7 +38,7 @@ const SPECIES = {
   // months around it an estimate. 98 % is landed round; uh 1.3 (round per gutted kg without head) is an estimate. late: its seeds come
   // after the crab's, so no other species' hotspots, day noise and prices move
   blakveite:{no:'Blåkveite', en:'Greenland halibut', late:true, area:'egga', stk:'bstk', jig:0.03, k:0.6, base:0.5, prod:0.6, dep:[700, 0.3],
-    av:[0.8,0.8,0.8,0.9,1.1,1.25,1.25,1.15,1.0,0.9,0.85,0.8], pm:[58,58,58,58,60,61,61,62,62,60,58,58], sig:0.04, size:[2.0, 0.4], minKg:0.9, uh:1.3,
+    av:[0.8,0.8,0.8,0.9,1.1,1.25,1.25,1.15,1.0,0.9,0.85,0.8], pm:[58,58,58,58,60,61,61,62,62,60,58,58], sig:0.04, size:[2.0, 0.4], minKg:0.9, uh:1.32,
     cls:[[2.4, 48, 'Over 2,4 kg'], [1.2, 47, '1,2–2,4 kg'], [0, 46, 'Under 1,2 kg']], ref:1},
   // king crab (kongekrabbe, Paralithodes camtschaticus; the key stays 'krabbe' so saves carry over), the user 04.10.2026: «Det er
   // kongekrabbe som gjelder innen fiskerinæringen». Caught in pots and landed alive: Råfisklaget's minimum prices are for live crab
@@ -87,6 +88,8 @@ const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell && !SPECIES[sp].
 // Schema v2 (docs/batplan.md del 4, Jonas 17.10.2026; vesseltest.py refuses a boat without every field): hullMat (tre, alu, glassfiber,
 // stål), hold {kind: dekk (boxes and tubs on deck, no insulation), rom (a hold with ice), frys (freezer), rsw (chilled tanks); m3},
 // deckCargo (kg of freight on deck, not in the hold), iceMaker and gutMachine (kg a day and kg an hour, 0 without; only over 14.99 m),
+// freezeT and plantLph (an ocean vessel's plate freezers, kg of product a day, and her generators' litres an hour at sea while not under
+// way; optional, H2b 05.11.2026: 05-vessels.js deckMinute and plantFuel),
 // lph (litres an hour at cruising speed, the truth the burn curve is scaled to: fuelK is derived), cabins, fac {house: open, hardtop or
 // hus; shelter over the working deck; galley: none, plate or bysse; wc; dry (drying room); mess}, stations {table, hauler: how many work
 // there at once}, crane (tonnes, 0 without). vesselDerive adds fuelK, range (nm), watch (a 2+2 watch is possible), haulers and openOk.
@@ -160,7 +163,7 @@ const VESSELS = {
     vmax:13, vcruise:11, accel:1, turnR:280, planing:false, outboard:false, diesel:true, risk:[6, 9, 24, 30], sea:0.04, crewMax:14, berths:16, tubCap:2000, land:'tub', std:['plotter', 'vhf', 'ais', 'chirp', 'sonar'],
     rigs:['line'], jukseMax:0, gearMax:{garn:0, stamp:0, teine:4}, autoHooks:40000, svcH:600, svcCost:350000, svcJobH:72, mottak:['Konvensjonelle'], cls:'hav', price:70000000, priceNew:300000000, year:1999,
     crew:{key:['skipper', 'styrmann', 'maskinsjef', '2. maskinist', 'kokk', 'bas'], teams:[{role:'dekk', n:4}, {role:'fabrikk', n:4}], rot:2},
-    hullMat:'stål', hold:{kind:'frys', m3:700}, deckCargo:30000, iceMaker:0, gutMachine:2500, lph:350, cabins:8, fac:{house:'hus', shelter:true, galley:'bysse', wc:true, dry:true, mess:true}, stations:{table:4, hauler:1}, crane:3,
+    hullMat:'stål', hold:{kind:'frys', m3:700}, deckCargo:30000, iceMaker:0, gutMachine:2500, freezeT:15000, plantLph:95, lph:350, cabins:8, fac:{house:'hus', shelter:true, galley:'bysse', wc:true, dry:true, mess:true}, stations:{table:4, hauler:1}, crane:3,
     desc:{no:'Linebåt med egnemaskin som setter og trekker 40 000 kroker i døgnet, og fryser fisken om bord. Krever konsesjon for konvensjonelle havfiskefartøy.', en:'Longliner with a baiting machine that sets and hauls 40,000 hooks a day and freezes the catch aboard. Needs a licence for conventional ocean vessels.'}},
   bunntral:{name:{no:'Frysetråler 60 m med akterslipp', en:'60 m freezer trawler with a stern ramp'}, len:60.3, beam:12.5, draft:5.1, disp:2200, holdCap:800000, iceCap:0, fuelCap:700000, hp:8000, engine:{no:'8 000 hk diesel', en:'8,000 hp diesel'},
     vmax:15, vcruise:12, accel:0.8, turnR:400, planing:false, outboard:false, diesel:true, risk:[7, 10, 26, 33], sea:0.03, crewMax:25, berths:30, tubCap:3000, land:'tub', std:['plotter', 'vhf', 'ais', 'chirp', 'sonar'],

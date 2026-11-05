@@ -10,7 +10,8 @@
   // fills the plant's tubs from the hold, set out on deck (deckSlots) one by one. A landing saved before then ('box') keeps its pallets.
   const SLH = 1.793;   // the hook's level over the base of the tub hanging in the sling (the ring 0.95 m over the rim)
   const TUBH = 0.74;   // a tub's height, for stacking two on the quay and on the forks
-  const loadH = (kind, nb) => kind === 'tub' ? TUBH : 0.13 + Math.ceil(nb / 3) * 0.29;
+  const PALLH = 1.9;   // a pallet of frozen cartons (H2b, 08-plants.js palF): about a tonne, 11 layers of four, wrapped
+  const loadH = (kind, nb) => kind === 'tub' ? TUBH : kind === 'pall' ? PALLH : 0.13 + Math.ceil(nb / 3) * 0.29;
   const craneIdle = (P, T) => ({a:Math.atan2(P.u[0], P.u[1]) + Math.sin(T * 0.05) * 0.25, r:5.5, hook:QTOP + 3.2});
   // the forklift at rest: at its spot east of the drop spot, forks towards it
   const fkRest = P => { const R = fkRun(P); return {x:R.Wp[0], z:R.Wp[1], h:R.waitH, fl:0, loads:[]}; };
@@ -56,6 +57,7 @@
   // or an old landing's pallet; draw(M) draws it with M at its base, h its height on the quay and the forks, sl its hook height in the sling
   function landLoad(L, j){
     if (L.kind === 'box'){ const nb = Math.min(9, L.n - 9 * j), m = PM.palN[Math.max(0, nb)]; return {draw:M => drawN(m, M), h:loadH('box', nb), sl:loadH('box', nb), box:true}; }
+    if (L.kind === 'pall') return {draw:M => drawN(PM.palF, M), h:PALLH, sl:PALLH, box:true};   // a freezer vessel's frozen catch (H2b; the Blender pallet is H2d)
     if (L.own){ const vt = vtype(), i = j < L.n ? j : j - L.n, back = j >= L.n, T = tubLoads(S.hold, karPlaces(vt).length)[i];
       return {draw:M => drawKarLoad(M, back ? null : T, vt + ':' + i, back), h:TUBH, sl:SLH, tub:true, place:i, back}; }
     const ic = (() => { let a = 0, b = 0; for (const x of S.hold || []) if (inTub(x)){ a += x.kg; if (x.iced) b += x.kg; } return a > 0 ? b / a : 1; })();
@@ -74,7 +76,7 @@
   // the forklift, and where the people stand and what they do. null when this plant is not landing the boat you are on.
   function landScene(P, T, BMrel, eye){
     const b = S.boat, L = b.land; if (!L || L.pid !== P.id || b.status !== 'port' || b.port !== P.id || !BMrel) return null;
-    const Lg = LANDING, pr = Lg.prep, lf = Lg.lift, n = L.lifts, nOut = L.own ? L.n : n, e = S.t + currentFrac() - L.t0, hk = Lg.hooked, t0 = j => landLiftT(L, j);
+    const Lg = LANDING, pr = Lg.prep, lf = liftMin(L), n = L.lifts, nOut = L.own ? L.n : n, e = S.t + currentFrac() - L.t0, hk = Lg.hooked, t0 = j => landLiftT(L, j);
     const LD = []; for (let j = 0; j < n; j++) LD.push(landLoad(L, j));
     const wpos = q => { const r = xf(BMrel, q); return [r[0] + eye[0], r[1] + eye[1], r[2] + eye[2]]; }, D = P.drop, slots = deckSlots(L.kind), places = L.own ? karPlaces(vtype()) : null;
     // where lift j is picked up and set down (world): an own tub from its place to the drop spot and back; the plant's from the deck slots

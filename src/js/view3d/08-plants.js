@@ -31,6 +31,11 @@
       cup:mk(b => b.box(0, 0, 0, 0.08, 0.1, 0.08, [0.95, 0.95, 0.95, 0.4])), fbox:mk(b => b.box(0, 0, 0, 0.78, 0.28, 0.38, [0.18, 0.4, 0.74, 0.25])),
       // a landing's loads: a pallet with 1 to 9 boxes of fish, or a 460 litre tub with ice on top of the fish
       palN:[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(nb => mk(b => { b.box(0, 0, 0, 1.2, 0.14, 0.8, [0.66, 0.53, 0.36, 0.05]); for (let k = 0; k < nb; k++) b.box((k % 3 - 1) * 0.4, 0.14 + Math.floor(k / 3) * 0.29, 0, 0.38, 0.28, 0.78, [0.18, 0.4, 0.74, 0.25]); })),
+      // a freezer vessel's pallet of frozen fish (H2b, 05.11.2026; the Blender pallet with cartons and film comes in H2d): about a tonne in
+      // cartons of about 23 kg (0.6 × 0.4 × 0.16 m), four to a layer and eleven layers on a 1.2 × 0.8 m pallet, the cartons a shade
+      // apart layer by layer, wrapped in film at the top
+      palF:mk(b => { b.box(0, 0, 0, 1.2, 0.14, 0.8, [0.66, 0.53, 0.36, 0.05]); for (let l = 0; l < 11; l++){ const c = l % 2 ? [0.71, 0.6, 0.45, 0.05] : [0.68, 0.56, 0.41, 0.05];
+        for (let k = 0; k < 4; k++) b.box((k % 2 - 0.5) * 0.6, 0.14 + l * 0.16, (Math.floor(k / 2) - 0.5) * 0.4, 0.59, 0.155, 0.39, c); } b.box(0, 1.82, 0, 1.21, 0.06, 0.81, [0.88, 0.9, 0.92, 0.6]); }),
       tub:mk(b => { b.box(0, 0, 0, 1.2, 0.85, 1.0, [0.2, 0.36, 0.62, 0.25]); b.box(0, 0.84, 0, 1.24, 0.05, 1.04, [0.16, 0.3, 0.52, 0.25]); b.box(0, 0.8, 0, 1.08, 0.06, 0.88, [0.93, 0.96, 0.98, 0.5]); }),
       board:mk(b => b.box(0, 0, 0, 0.24, 0.3, 0.02, [0.92, 0.9, 0.84, 0.1])),
       needle:mk(b => { b.box(0, 0, -0.09, 0.024, 0.006, 0.18, [0.55, 0.78, 0.42, 0.3]); b.box(0, 0.004, -0.06, 0.014, 0.008, 0.08, [0.92, 0.9, 0.8, 0.1]); }),   // a netting needle with its twine (bøtenål)

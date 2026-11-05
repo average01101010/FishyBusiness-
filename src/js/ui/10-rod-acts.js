@@ -27,7 +27,7 @@ window.JIGG = (() => {
     if (m === 0.5 && Math.random() < 0.5){ due = 0; got = {n:0, m}; return; }
     let left = due * (m === 0.5 ? 1 : m) + debt, n = 0, kgSum = 0; const H = S.t / 60; due = 0;
     while (left > 0 && n < 6){
-      const f = pick(), room = capHold() - holdTotal(); if (room <= 0.05) break; left -= f.kg; n++;
+      const f = pick(), room = capHold() - holdLoad(); if (room <= 0.05) break; left -= f.kg; n++;
       if (f.kg < SPECIES[f.sp].minKg || (SPECIES[f.sp].maxKg && f.kg > SPECIES[f.sp].maxKg) || (f.sp === 'kveite' && kveiteClosed(H))){ S.stats.released = (S.stats.released || 0) + 1; continue; }
       const kg = Math.min(f.kg, room); addCatch(f.sp, kg, clsOf(f.sp, f.kg), true); kgSum += kg;
       const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp:f.sp, kg, t:performance.now()});

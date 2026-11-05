@@ -145,6 +145,39 @@ function tripAdd(b, k, kr0){ if (!b || !(kr0 > 0)) return; const T = tripOf(b); 
 function tripCost(b = S.boat){ const T = tripOf(b), fuelKr = Math.round(T.fuelL * (b.fuelKrL || fuelPrice())), iceKr = Math.round(T.iceKg * PRICE.ice), baitKr = Math.round((T.baitKr || 0) + (T.egnKr || 0)),
   havnKr = Math.round(T.havnKr || 0), gearKr = Math.round((T.jigKr || 0) + (T.lostKr || 0));
   return {fuelL:T.fuelL, fuelKr, iceKg:T.iceKg, iceKr, baitKr, havnKr, gearKr, sum:fuelKr + iceKr + baitKr + havnKr + gearKr}; }
+// ---- the trip's limits on an ocean vessel (H2b of docs/planer/havsteget-h2-autoline.md, 05.11.2026). The fuel, the bait, the hooks for
+// the hook change (10b-gearcare.js autoFixHour) and the room in the hold each last so many days at the trip's pace so far (until half a
+// day at sea has gone, and for the hold until a tonne is in, the vessel's own: her generators and a day of gear work, 5.5 t of product a
+// day); the fuel keeps what she needs to steam to the nearest plant that takes her (straight line and a fifth, at her cruising speed).
+// 6-7 weeks is usual for an autoliner (HI report 2024-11). Each is said once every 12 hours when it lasts under TRIPX.warn days more.
+const TRIPX = {warn:2, every:720, gearL:1300, prodDay:5500, way:1.2};
+function tripHome(b = S.boat){
+  let best = null, bd = Infinity;
+  for (const q of PORTS){ if (!(q.mottak || q.havOnly) || portWhy(q, b.type)) continue; const d = kmTrue(q.p, b.pos); if (d < bd){ bd = d; best = q; } }
+  return best ? {pt:best, km:bd * TRIPX.way, days:bd * TRIPX.way / NM / Math.max(4, BOAT.vcruise || 8) / 24} : null;
+}
+function tripLeft(b = S.boat){
+  const T = tripOf(b), d = (T.seaM || 0) / 1440, pg = S.pgear, home = b.status === 'port' ? null : tripHome(b);
+  const fuelDay = d < 0.5 ? (BOAT.plantLph || 0) * 24 + TRIPX.gearL : T.fuelL / d, homeL = home ? home.days * 24 * (BOAT.lph || 0) : 0;
+  const prod = holdLoad(), prodDay = d < 0.5 || prod < 1000 ? TRIPX.prodDay : prod / d, L = BOAT.autoHooks && pg ? autoL(pg) : null, R = {d, home};
+  R.fuel = Math.max(0, b.fuel - homeL) / Math.max(1, fuelDay);
+  if (L){ const lenker = BOAT.autoHooks / LINE_KINDS.auto.hooks; R.bait = baitKg(pg) / (lenker * LINE_KINDS.auto.baitKg); R.hooks = (pg.hooks || 0) / (BOAT.autoHooks * AUTOFIX.day); }
+  R.hold = Math.max(0, capHold() - prod) / prodDay;
+  R.min = Math.min(R.fuel, R.hold, R.bait == null ? Infinity : R.bait, R.hooks == null ? Infinity : R.hooks);
+  return R;
+}
+const TRIPW = {fuel:['Drivstoffet', 'The fuel'], bait:['Agnet', 'The bait'], hooks:['Krokene til krokbyttet', 'The hooks for the hook change'], hold:['Plassen i lasterommet', 'The room in the hold']};
+// once an hour at sea on an ocean vessel: the days at sea, and a word when the trip is running out of something
+function tripHour(){
+  const b = S.boat; if (BOAT.cls !== 'hav' || b.status === 'port') return;
+  const T = tripOf(b); T.seaM = (T.seaM || 0) + 60;
+  const R = tripLeft(b), W = b.tripWarn || (b.tripWarn = {}), home = R.home ? R.home.pt.name : '', hd = R.home ? fmt(R.home.days, 1) : '';
+  for (const k of ['fuel', 'bait', 'hooks', 'hold']){ const v = R[k]; if (v == null || v >= TRIPX.warn || S.t - (W[k] || -1e9) < TRIPX.every) continue; W[k] = S.t;
+    const days = v < 0.5 ? ['under et halvt døgn', 'under half a day'] : ['om lag ' + fmt(v, 1) + ' døgn', 'about ' + fmt(v, 1) + ' days'];
+    const no = TRIPW[k][0] + ' rekker ' + days[0] + ' til' + (k === 'fuel' && home ? ', og så trengs resten for å gå til ' + home + ' (' + hd + ' døgn)' : '') + '.',
+      en = TRIPW[k][1] + ' lasts ' + days[1] + ' more' + (k === 'fuel' && home ? ', and the rest is needed to steam to ' + home + ' (' + hd + ' days)' : '') + '.';
+    log(no, en); msg(gL('Turen', 'The trip'), no + (k === 'hold' ? ' Det er tid for å gå til mottaket.' : home ? ' Nærmeste mottak som tar båten, er ' + home + '.' : ''), en + (k === 'hold' ? ' It is time to head for the plant.' : home ? ' The nearest plant that takes her is ' + home + '.' : '')); }
+}
 // who shares: the crew aboard (those asleep in their bunks too) or aboard when fish now in the hold was caught (c.trip); with you ashore
 // the one who skippers (the skipper you named, else the most seasoned)
 function lottParty(){

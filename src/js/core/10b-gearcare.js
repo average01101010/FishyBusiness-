@@ -12,7 +12,7 @@
 // itself in port when it has nothing else to do (S.settings.careAuto, default on); the shop does the same jobs in half the time for a fee.
 // The shop buys gear back at a quarter of the new price times the condition, so it never pays to buy and sell.
 const CARE = {
-  hookKr:{100:300, 500:1300, 1000:2400},   // kr a pack
+  hookKr:{100:300, 500:1300, 1000:2400, 10000:22000},   // kr a pack (the box of 10,000 for an autoline, H2b: an estimate, no price list read)
   hookRate:300,                            // hooks changed an hour by one hand
   jig:{mark:{no:'Markkroker og pilk', en:'Fly hooks and pilk', kr:350, wear:0.00009}, kveite:{no:'Kveitepilk', en:'Halibut pilk', kr:900, wear:0.00006}},
   ceil:{line:0.07, garn:0.04, pot:0.05}, ceilMin:0.2, sellF:0.25,
@@ -78,6 +78,22 @@ function careBuy(what, spec, n){
   book('redskap', -cost, what === 'hooks' ? 'Kroker' : 'Juksautstyr', what === 'hooks' ? 'Hooks' : 'Jig tackle'); if (what === 'jig') tripAdd(b, 'jigKr', cost);   // the jig's gear is a common cost (§ 8 B 19)
   if (what === 'hooks') pg.hooks += spec * n; else pg.jig[spec].n += n;
   return null;
+}
+// ---- the autoline's hooks changed aboard (H2b of docs/planer/havsteget-h2-autoline.md, 05.11.2026; HI report 2024-11: about 5 % of the
+// gear a day). The crew changes hooks and snoods as the line comes in, from the hooks in store (pg.hooks), an hour's share at a time at
+// sea, the worst first: every missing and bent hook among them, and the worn snoods and stretches of line (the wear lies unevenly, from
+// as worn again as the mean to none, so what is changed gains the line up to twice its mean wear). That keeps the line from wearing down
+// over a trip of weeks (tests/unit/fabrikk.test.mjs: six weeks on deep water with a good catch); with no hooks in store it waits, said
+// once a day
+const AUTOFIX = {day:0.05};
+function autoFixHour(){
+  const b = S.boat, pg = S.pgear; if (!pg || !BOAT.autoHooks || b.status === 'port' || handsAboard() < 2) return;
+  const L = autoL(pg); if (!L || L.n < 1) return; careInit(pg);
+  const tot = L.n * LINE_KINDS.auto.hooks, want = Math.round(BOAT.autoHooks * AUTOFIX.day / 24), n = Math.min(want, Math.floor(pg.hooks || 0));
+  if (n < 1){ if ((L.miss + L.bent > 0.01 || L.cond < 0.9) && (S.autoFixTold || -1e9) < S.t - 1440){ S.autoFixTold = S.t; log('Det er ingen kroker igjen om bord å bytte med. Autolina slites ned til dere får kjøpt nye.', 'There are no hooks left aboard to change with. The autoline wears down until you buy new ones.'); } return; }
+  const def = (L.miss + L.bent) * tot, f = def > 0 ? Math.min(1, n / def) : 0, r = n / tot;
+  L.miss = careRound(L.miss * (1 - f)); L.bent = careRound(L.bent * (1 - f)); L.cond = careRound(Math.min(1, L.cond + r * Math.min(1, 2 * (1 - L.cond)))); L.max = Math.max(L.max, L.cond);
+  pg.hooks -= n; b.autoFix = (b.autoFix || 0) + n;
 }
 // the buoy sets and anchors one can use: a string of one unit at the least, so no more sets than units of line, nets and pots (the sets in the sea count)
 const kitMax = () => ownedUnits('line') + ownedUnits('garn') + ownedUnits('teine');

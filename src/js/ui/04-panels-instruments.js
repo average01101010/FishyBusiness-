@@ -68,11 +68,11 @@ function renderHud(){
   // «Kystlys» U3 (docs/planer/ui-redesign.md, V5 A, 04.11.2026): the status box is instruments, not a table of eleven rows. Four gauges
   // on one row (diesel, hold, energy, sea), under them only what matters now (the rules at sea, a roll, the cold, the luck, the fleet),
   // and a tap on the gauges gives the whole table as before (S.settings.hudFull)
-  const fuelP = b.fuel / BOAT.fuelCap, holdP = holdTotal() / Math.max(1, capHold()), e = S.energy == null ? 100 : S.energy;
+  const fuelP = b.fuel / BOAT.fuelCap, HF = holdFmt(), holdP = HF.load / Math.max(1, capHold()), e = S.energy == null ? 100 : S.energy;
   const gauge = (k, lbl, v, txt, cls) => '<span class="g g-' + k + (cls ? ' ' + cls : '') + '"><span class="gl">' + lbl + '</span><i style="--v:' + Math.round(clamp(v, 0, 1) * 100) + '%"></i><b>' + txt + '</b></span>';
   const gauges = '<button type="button" class="gauges' + (S.settings.hudFull ? ' open' : '') + '" data-hfull aria-label="' + L('Vis alle tallene', 'Show all the figures') + '">' +
     gauge('fuel', 'Diesel', fuelP, fmt(b.fuel, 0) + ' L', fuelP < 0.1 ? 'r2' : fuelP < 0.25 ? 'r1' : '') +
-    gauge('hold', L('Last', 'Hold'), holdP, fmt(holdTotal(), 0) + ' kg', holdP >= 0.95 ? 'full' : '') +
+    gauge('hold', L('Last', 'Hold'), holdP, HF.short, holdP >= 0.95 ? 'full' : '') +
     gauge('en', L('Energi', 'Energy'), energyOff() ? 1 : e / 100, energyOff() ? L('av', 'off') : asleep() ? L('sover', 'asleep') : Math.round(e) + ' %', asleep() || (!energyOff() && e < ENERGY.dim) ? 'r2' : !energyOff() && e < ENERGY.warn ? 'r1' : '') +
     gauge('sea', L('Sjø', 'Sea'), atSea ? (lvl + 1) / 3 : 0.15, fmt(hs, 1) + ' m', atSea ? 'r' + lvl : '') + '</button>';
   // what matters now, as rows with what to do
@@ -88,7 +88,7 @@ function renderHud(){
     '<div class="row"><span>' + t('wind') + '</span><b>' + dirName(windDir(H)) + ' ' + fmt(W, 1) + ' m/s</b></div>' +
     '<div class="row"><span>' + t('waves') + '</span><b>' + fmt(hs, 1) + ' m' + (atSea ? ' <span class="r' + lvl + '">' + t('risk' + lvl) + '</span>' : '') + '</b></div>' +
     '<div class="row"><span>' + t('fuel') + '</span><b>' + fmt(b.fuel, 0) + ' / ' + BOAT.fuelCap + ' L</b></div>' +
-    '<div class="row"><span>' + t('hold') + '</span><b>' + fmt(holdTotal(), 0) + ' / ' + capHold() + ' kg</b></div>' +
+    '<div class="row"><span>' + t('hold') + '</span><b>' + HF.txt + (HF.fz ? ' ' + L('produkt', 'product') : '') + '</b></div>' + (HF.fz ? '<div class="row"><span>' + L('Rund vekt', 'Round weight') + '</span><b>' + HF.rnd + '</b></div>' : '') +
     (streakPct() > 0 ? '<div class="row"><span>Bonus</span><b>+' + fmt(streakPct(), 0) + ' %</b></div>' : '') +
     (S.bank && (S.bank.skatt >= 1 || S.bank.spare >= 1) ? '<div class="row"><span>' + L('Skatt · spart', 'Tax · saved') + '</span><b>' + kr(Math.round(S.bank.skatt)) + ' · ' + kr(Math.round(S.bank.spare)) + '</b></div>' : '') + '</div>';
   setHtml(hud, '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(cashShown()) + '</b><button type="button" class="hmin" data-hmin="hud" aria-label="' + L('Minimer', 'Minimise') + '">–</button></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + (nx ? '<div class="st nx">⏱ ' + nx.txt + ' ' + inReal(nx.t - S.t) + ' <small>(' + hm(nx.t / 60) + ')</small></div>' : '') +
