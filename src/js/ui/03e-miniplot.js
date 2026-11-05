@@ -3,30 +3,39 @@
 // mile either way without one), north up, with the fish the sounder sees (03c-heat.js heatDrawInto), the route and the boat. A tap
 // opens the chart plotter (it replaces the GPS button and the dock's «Planlegg»). Painted once a second while the 3D view shows (as a GPS
 // gives its fix), over a background kept until the boat has moved.
-const MINIP = {el:$('miniPlot'), n:64, img:null, off:document.createElement('canvas'), bg:document.createElement('canvas'), key:'', c:null, at:0};
+const MINIP = {el:$('miniPlot'), n:64, img:null, off:document.createElement('canvas'), bg:document.createElement('canvas'), bg2:document.createElement('canvas'), key:'', c:null, at:0, job:null, raf:0, ft:0, scr:{}, n2:0};   // bg2, job, scr: miniBg
 // the GPS in the little chart's foot (Jonas 05.10.2026, on the phone: «kan gps-data legges inn i den lille kartplotteren for å spare
 // plass?»): speed, course and position, and the next waypoint on a route; INSTR.render3d (04-panels-instruments.js) keeps them here.
 // The GPS box under the chart is then only shown where the little chart is not (a phone on its side, styles.css).
 let GPS3D = null;
 function miniRadius(){ const tier = typeof heatTier === 'function' ? heatTier() : null; return tier ? HEAT.tiers[tier].r : 0.5 * NM; }
 // the background (sea, land and coast) for twice the box round c: drawn again only when the boat has moved a fifth of the radius, the
-// box or the radius has changed, or every 20 s (packs come in); painting the coast twice a second slowed a software GPU a lot
+// box or the radius has changed, or every 20 s (packs come in); painting the coast twice a second slowed a software GPU a lot.
+// (05.11.2026, the lag of 04.11: a background took 70-185 ms at once on a PC, the longest stop left at sea.) Now it is painted a slice a
+// frame (miniStep: chartRasterJob a row a step, then the coast and the soundings) on a canvas of its own, which takes the old one's place
+// when it is done; the old one is drawn shifted after the boat till then (it is twice the box, so it covers the box till she is a
+// radius off). Only the first one, one after a new box, radius or night, or one after a jump is painted at once, as before.
 function miniBg(c, R, k, W, H, dpr){
   const night = chartNight(), now = performance.now(), key = [R, W, H, dpr, night].join('|'), C = MINIP.c;
+  let J = MINIP.job; if (J && J.key !== key) MINIP.job = J = null;
+  if (J){ if (dist(C, c) > R) miniStep(Infinity); return; }   // falling behind the boat (the old one no longer covers the box): done now
   if (key === MINIP.key && C && dist(C, c) < R / 5 && now - MINIP.at < 20000) return;
-  MINIP.key = key; MINIP.c = {x:c.x, y:c.y}; MINIP.at = now;
-  const BW = W * 2, BH = H * 2, bg = MINIP.bg; if (bg.width !== BW) bg.width = BW; if (bg.height !== BH) bg.height = BH;
-  const g = bg.getContext('2d'), x0 = c.x - BW / 2 / k, y0 = c.y - BH / 2 / k;
-  const dok = mapViewReady(x0, y0, x0 + BW / k, y0 + BH / k, () => { MINIP.at = 0; }, ['sim', 'chart']), n = MINIP.n, sd = safeDepth(), s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
+  const at = key !== MINIP.key || !C || dist(C, c) > R;   // nothing (or not enough) to show till it is done
+  MINIP.at = now;
+  const BW = W * 2, BH = H * 2, x0 = c.x - BW / 2 / k, y0 = c.y - BH / 2 / k;
+  const dok = mapViewReady(x0, y0, x0 + BW / k, y0 + BH / k, () => { MINIP.at = 0; }, ['sim', 'chart']), sd = safeDepth();
   // the sea as the big chart paints it (03-map.js chartRaster: the depth in its colours and the depth lines; Jonas 09.10.2026: «Ser så tomt
   // ut når man ikke kan se bunnen i den»), at most 560 samples across and scaled up; before the packs have come, the coarse picture below
   if (dok){
     const PW = Math.min(BW, 560), PH = Math.max(2, Math.round(PW * BH / BW)), off = MINIP.off; if (off.width !== PW || off.height !== PH){ off.width = PW; off.height = PH; MINIP.img = null; }
     const img = MINIP.img || (MINIP.img = off.getContext('2d').createImageData(PW, PH)), V = {lv:Math.max(1, chartLevel(BH / k)), fish:false, night, sd};
-    let ok = true; try { chartRaster(img.data, PW, PH, x0, y0, BW / k / PW, BH / k / PH, V, null); } catch (e){ ok = false; }
-    if (ok){ off.getContext('2d').putImageData(img, 0, 0); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(off, 0, 0, BW, BH);
-      chartCoast(g, x0, y0, 1 / k, 1 / k, BW, BH, dpr, night); miniSoundings(g, x0, y0, k, BW, BH, dpr, night); return; }
+    MINIP.job = {key, c:{x:c.x, y:c.y}, g:miniGen(img, PW, PH, BW, BH, x0, y0, k, dpr, night, V), t0:now};
+    if (at) miniStep(Infinity); else if (!MINIP.raf) MINIP.raf = requestAnimationFrame(miniFrame);
+    if (!at || MINIP.c !== C) return;   // (done; or it failed, and the coarse picture is drawn below)
   }
+  MINIP.job = null; const bg = MINIP.bg; if (bg.width !== BW) bg.width = BW; if (bg.height !== BH) bg.height = BH;
+  MINIP.key = key; MINIP.c = {x:c.x, y:c.y};
+  const g = bg.getContext('2d'), n = MINIP.n, s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
   const off = MINIP.off; if (off.width !== n || off.height !== n){ off.width = off.height = n; MINIP.img = off.getContext('2d').createImageData(n, n); }
   const d = MINIP.img.data, sx = BW / k / n, sy = BH / k / n;
   for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
@@ -39,6 +48,30 @@ function miniBg(c, R, k, W, H, dpr){
   off.getContext('2d').putImageData(MINIP.img, 0, 0);
   g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(off, 0, 0, BW, BH);
   chartCoast(g, x0, y0, 1 / k, 1 / k, BW, BH, dpr, night);
+}
+// one background: the raster a row at a time, then onto the spare canvas, the coast, the soundings; the spare and the shown one swap
+function* miniGen(img, PW, PH, BW, BH, x0, y0, k, dpr, night, V){
+  const step = chartRasterJob(img.data, PW, PH, x0, y0, BW / k / PW, BH / k / PH, V, null, MINIP.scr); while (step()) yield;
+  const off = MINIP.off; off.getContext('2d').putImageData(img, 0, 0);
+  const bg = MINIP.bg2; if (bg.width !== BW) bg.width = BW; if (bg.height !== BH) bg.height = BH;
+  const g = bg.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(off, 0, 0, BW, BH);
+  yield;
+  chartCoast(g, x0, y0, 1 / k, 1 / k, BW, BH, dpr, night);
+  yield;
+  miniSoundings(g, x0, y0, k, BW, BH, dpr, night);
+}
+// the job on its way, until the time is up; done, its canvas is the background (an error leaves the old one, tried again in 5 s)
+function miniStep(until){
+  const J = MINIP.job; if (!J) return;
+  try { do { if (J.g.next().done){ MINIP.job = null; const b = MINIP.bg; MINIP.bg = MINIP.bg2; MINIP.bg2 = b; MINIP.key = J.key; MINIP.c = J.c; MINIP.n2++; return; } } while (performance.now() < until); }
+  catch (e){ MINIP.job = null; MINIP.at = performance.now() - 15000; }
+}
+// a slice every frame while one is on its way: 15 % of the frame, 4-20 ms; one that has waited over 4 s (slow frames: a frame every few
+// seconds in SwiftShader) up to 30 % of the frame and 60 ms, as the terrain's jobs (view3d meshSlice)
+function miniFrame(t){
+  MINIP.raf = 0; const J = MINIP.job, dt = MINIP.ft ? Math.min(400, t - MINIP.ft) : 16; MINIP.ft = t; if (!J){ MINIP.ft = 0; return; }
+  const now = performance.now(), ms = Math.max(4, Math.min(20, 0.15 * dt)); miniStep(now + (now - J.t0 > 4000 ? Math.max(ms, Math.min(60, 0.3 * dt)) : ms));
+  if (MINIP.job) MINIP.raf = requestAnimationFrame(miniFrame); else MINIP.ft = 0;
 }
 // the depth in whole metres at the points of a grid fixed to the map, about every 70 CSS px, as the big chart writes them (soundingsSvg)
 function miniSoundings(g, x0, y0, k, BW, BH, dpr, night){

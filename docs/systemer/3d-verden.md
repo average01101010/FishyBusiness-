@@ -64,12 +64,22 @@
   - Bildetakten er ikke målt på nettbrettet ennå. Testsiden for bildetakt, minne og tid for catch-up er ikke bygget.
 
 - **Ytelsen etter spilltesten 03.10.2026:**
-  - Skyggene regnes med en tidsgrense per bilde (`SHMS`, 2–4 ms). Nettene bygges rad for rad over flere bilder (`meshTask`, `meshStep`), ett om gangen og med nærnettet først.
+  - Skyggene regnes med en tidsgrense per bilde (`SHMS`, 2–4 ms). Nettene bygges rad for rad over flere bilder (`meshTask`, `meshStep`), ett om gangen og med nærnettet først (fra 05.11.2026: én jobb per slag nett, se under).
   - Et nett under bygging som fortsatt dekker båten, får gjøre seg ferdig. Uten det hoppet sjøkartet når båten gikk fort.
   - Pakkene for 3D hentes én gang hver (`stream3d`), og bare nett som en ny pakke dekker, bygges på nytt (`staleOver`).
   - Kompasslinja er en ferdig tegnet stripe. Det er ingen backdrop-filter i 3D.
   - Automatisk kvalitet går opp igjen etter 8 s over 40 bilder/s.
   - «Vis bildetakt» ligger i Innstillinger.
+- **Terrengnettene i tidsbiter, også starten og slutten** (05.11.2026, Jonas: «Terrengnettene bygges delvis i ett strekk»; laggen 04.11 i backloggen). Bare høydene var tidsdelt; resten gikk i ett strekk, 60–300 ms på en PC hver gang båten hadde flyttet seg et stykke, og 3–4 ganger så lenge på telefonen. Nå:
+  - `meshRows` stopper midt i en rad (hvert 32. punkt). En rad i fjernnettet over land var 10–40 ms.
+  - Slutten av nettet (`meshEndG`: normalene, fargene `recolorG`, bufferne) er en generator som gir fra seg tråden når bildets bit er brukt opp (`SLEND`, `sliceDue`, `sliceRun`). `makeMesh`, `meshEnd` og `recolor` kjører den ferdig med én gang (`runAll`). Indeksene er de samme for alle nett av samme størrelse, så det er én indeksbuffer per størrelse (`gridIdx`, `m.ibs`; `freeMesh` sletter den ikke). Fargingen etter nettet var bygd, sto to ganger for finnettet. Den andre er fjernet.
+  - Én jobb per slag nett (`MJOBS`, før bare én jobb om gangen). Jobben som får gå, er den der båten er nærmest kanten av nettet sitt. Er båten nær kanten (12 % av bredden), får den en større bit. En jobb som har ventet over 8 s, går først til den er ferdig, så sant ingen haster. Uten den regelen ble fjernnettet aldri ferdig etter et hopp, fordi nye fliser hele tiden kom foran det (teleport3d, Kirkenes). Før ventet finnettet bak midt- og fjernnettet til båten hadde forlatt det, og ble så bygd i ett strekk (150–300 ms). Bare et nett uten noe nett før seg, eller et nett båten har hoppet langt fra (over en kvart bredde og over 2 km, altså en teleport), bygges i ett strekk. En jobb som er over halvveis, startes ikke på nytt så lenge båten er på den.
+  - Strandlaget og høydeteksturen under nærnettet (`buildGround` → `groundStep`, `GJOB`: `depthF` for 65 536 punkter, 150–300 ms) lages rad for rad. Teksturene i bruk står til de nye er ferdige, og så går begge opp sammen med firkanten sin (`SRECT`). Landmasken tegnes etterpå som før.
+  - Strendene og klippene (`shoreTile`) og innsjøene og elvene (`waterTile`) lages som generatorer, én flis om gangen (`SHJOB`, `WJOB`). Før var det en hel flis på 50 km i ett strekk, opp til 180 og 750 ms.
+  - Ny farge for årstida (snølinja, graset, ruska) går i kø, et nett om gangen (`recolorAll`, `RCQ`, før alle nettene samtidig, rundt 100 ms). Midtnettet er nå med, det ble ikke farget på nytt før. Et nett som er under bygging når årstida skifter, farges på nytt når det er ferdig.
+  - Alle jobbene deler én bit per bilde (`SLICE_END` = `meshSlice()`: `MESHMS`, inntil 30 % av et bilde og høyst 60 ms). Strandlaget går først, fordi det begynner på nytt med hvert nytt nærnett og må bli ferdig. Så kommer nettet, og fargene, strendene og vannet får resten, hver minst halve `MESHMS` eller en tidel av et tregt bilde (høyst 20 ms). En fjerdedel var for lite: strendene ble ikke ferdige på et halvt minutt i havnshot. Tidligere hadde hver jobb sin egen bit, og et bilde med tre av dem tok over 100 ms.
+  - Hvordan terrenget ser ut, er ikke endret: punktene, fargene og teksturene regnes som før, bare fordelt over flere bilder. `G3._debug.tjobs` viser jobbene som står, og hvor mange som er ferdige av hvert slag (`now` er de som ble bygd i ett strekk).
+  - Målt på PC med hele kysten (kart-31), sjarkny med fullt pådrag i 150 s utenfor Skjervøy, CDP-profil. Tallene er bare tiden i terrengarbeidet (`updateNear`, `updateWater`, `updateShore`) per sammenhengende strekk på hovedtråden. Strekk over 50 ms: 11 → 2, over 100 ms: 4 → 0. Det lengste: 295 → 53 ms (bildets bit i SwiftShader er 30 % av et bilde på 100–500 ms, høyst 60 ms). Stikkprøver i Bergen og Bodø: se backloggen.
 
 ## 4.11b Bakkens materialer i skyggeleggeren (Jonas 18.10.2026)
 
@@ -222,6 +232,14 @@ Før dette hadde bare terrengnettene skygge fra fjellene, regnet per punkt (`upd
 - **Skyskyggene (`cloudV`):** punktet føres opp langs lyset (den ekte retningen `env.shadowDir`, ikke den løftede `lightDir`) til skybasen (`env.cbase`, 400–2 500 m). Dekket der følger himmelens regel: samme terskel på støy av 1,4 km, 590 m og 260 m, som gjentar seg hver 32 km, så folden aldri synes. Skyskyggene driver med vinden i skyenes høyde, som skyene på himmelen (`CLD.m` i `cloudStep`, i meter). Himmelens jevne demping av sola (1 − 0,72 × skydekket, `computeEnv`) fordeles i stedet: under en sky når en femdel av sola fram, og i en glipe litt mer enn snittet (inntil 1,3), så bildet i snitt er omtrent like lyst som før. Styrken er null under klar himmel og under helt grått dekke (`sstep(0,08, 0,25)` × `1 − sstep(0,8, 0,95)`).
 - **Av:** på Lav, med `#sun0` i adressen og med lufta av (`#air0`). Terrengets egne skygger står som før.
 - **Test:** `sunshot.py` (Fjordgård i Ørnfjorden en høstkveld med og uten rutenettet, og ved middagstid under spredt skydekke). `G3._debug.sun` er `SG`.
+
+## 4.11n 3D langt ute: γ og målestokken (havsteget H1b R8, 05.11.2026)
+
+Planen (kap. 3a i `docs/planer/havsteget-h1b-rammen.md`) sa at målestokken ved Island «må sees på i R7»; det ble gjort i R8.
+
+- **Retningene ved store γ:** `tests/havshot.py` legger båten ved Petsjorahavet (γ +31,4°), utenfor Nord-Island (γ −31,3°, k 1,024) og ved Bjørnøya (γ 3,7°) en julikveld, dreier kameraet til solas rutenettretning (sann asimut − γ) og deretter mot vinden. Kompasset over 3D-bildet viser sann retning innen 0,6° av `sunAt` og `windDir` begge steder, og bildene viser sola midt under kompasset (306° ved Petsjorahavet). Sola, månen (`computeEnv`), vinden og dønningen (`14-sea.js`, `10-gear.js`, `17d-vind.js`, `24-cinema.js`), lyktsektorene (`06-buildings-lights.js`) og kompasset (`compassDraw`) går alle gjennom γ; ingenting måtte rettes.
+- **Målestokken (k):** 3D tegnes i rutenett-meter. Ved Nord-Island er k 1,024 (1,037 lengst vest ved Island), så land og vec-byggene er 2,4–3,7 % større i rutenettet enn i virkeligheten, mens båtmodellene, havneenhetene og bølgelengdene er tegnet i sanne meter. Båten går k ganger fortere i rutenettet (`gridScale`, R1), så tida langs land og farten mot land er riktige; bare størrelsen på båten og bølgene mot landet er 2–4 % for liten. Det ses ikke (modellene varierer mer enn det seg imellom), og det finnes ingen detaljfliser, kaier eller bygg der k er stor (Island, Færøyane og Grønland har bare land på 200 m). **Ingen endring** (valg med begrunnelse; tas opp igjen om det kommer havner med Blender-modeller utenfor Norge).
+- **Rettet underveis:** kompasslinja i stående format er rundt 150 px for 140°, og tallene hver 15. grad løp inn i hverandre og i himmelretningene («120SØ150165», hele kysten). Nå står bare himmelretningene når det er under 26 px mellom tallene (`compassStrip` i `view3d/23-camera-frame.js`).
 
 ## 5.23 Lys om natta og fyrlykter (03.10.2026)
 

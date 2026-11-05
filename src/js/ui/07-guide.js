@@ -106,6 +106,12 @@ function panelRoute(){
   if (false){ let rk = 0, a0 = b.pos; for (const w of S.draft){ rk += rocksNear(a0, w, 0.03); a0 = w; } if (rk) h.push('<p class="warn">' + (S.lang === 'no' ? 'Ruten går tett forbi ' + rk + (rk === 1 ? ' skjær eller båe' : ' skjær og båer') + '. Sjekk kartet.' : 'The route passes close to ' + rk + (rk === 1 ? ' rock' : ' rocks') + '. Check the chart.') + '</p>'); }
   if (e.fuel > b.fuel){ h.push('<p class="bad">' + t('nofuel') + '</p>'); can = false; }
   else if (e.fuel > b.fuel * 0.8) h.push('<p class="warn">' + t('lowres') + '</p>');
+  // a route that ends out at sea (H1b R8, 05.11.2026): no fuel out there, so the tank must also bring her back to the nearest bunker
+  // (a sjark to Sentralbanken burns half her tank on the way out); the straight line and a tenth more, at the same speed and wind
+  { const end = S.draft[S.draft.length - 1];
+    if (!(e.fuel > b.fuel) && end && !end.port){ const bk = placesNear(end, 'bunker', 1)[0];
+      if (bk){ const nm = kmTrue(end, bk.pt.p) * 1.1 / NM, back = fuelLph(e.v, windAt(S.t / 60)) * nm / e.v;
+        if (nm > 20 && e.fuel + back > b.fuel) h.push('<p class="warn">' + t('noback', bk.pt.name, fmt(nm, 0)) + '</p>'); } } }
   { const why = typeof tutStartWhy === 'function' ? tutStartWhy() : null; if (why){ h.push('<p class="note tutwhy">' + why + '</p>'); can = false; } }   // the first trip: what «Kast loss» waits for
   h.push('<div class="btns rbar"><button class="btn primary" data-act="start"' + (can ? '' : ' disabled') + '>' + t('start') + '</button><button class="btn" data-act="clear">' + t('clear') + '</button></div>');
   return h.join('');

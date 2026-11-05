@@ -19,7 +19,7 @@ const LNET = (() => {
   // ahead, aheadN: nodes up to `ahead` km away in the direction of the other end (within 50°), the nearest aheadN of them, tried as well
   // when a clean straight leg reaches them (12.10.2026: the nearest nodes all lay on the harbour's own side way, so the route went
   // out to its junction and back: Risøyhamn, Honningsvåg)
-  return {n, X, Y, adj, grid, soft, src:D.src, baked, bakedSd:D.sd || 0, bakedDraft:D.draft || 0, min:10, near:12, tries:8, fine:6, ahead:25, aheadN:4, exitKm:40, exitTry:30};
+  return {n, X, Y, adj, grid, soft, src:D.src, baked, bakedSd:D.sd || 0, bakedDraft:D.draft || 0, min:10, near:12, tries:8, fine:6, ahead:25, aheadN:4, exitKm:40, exitTry:30, exitGrid:4, exitOpen:1.5};
 })();
 const lnetPt = i => ({x:LNET.X[i], y:LNET.Y[i]});
 // the nodes within km of p, nearest first (at most max)
@@ -104,6 +104,14 @@ async function lnetExit(A, end, sd, st){
     let f = null; try { f = await leiaLegFail(q, end); } catch (e){ continue; } if (f && dist(q, f) < Math.min(60, L / 3)) continue;
     const cells = await leiaFind(q, end, sd, st); if (!cells || cells.why) continue;
     const nodes = []; for (let v = i; v !== -1; v = F[v]) nodes.push(v); nodes.reverse(); st.exit = {tries, km:+D[i].toFixed(1), grid:true}; return {nodes, cost:D[i], post:[q].concat(cells, [end])}; }
+  // none clean for a third either (H1b R8, 05.11.2026: from Tromsø every straight line to Isfjorden crosses an island within a few km;
+  // it worked only in the months with ice, when the ice off Svalbard was the first thing the line met): the grid's search from the
+  // cheapest few nodes all the same, and from the cheapest few that lie in open water (1.5 km or more from land: from Bergen's skerries
+  // the coarse search was shut in from every node near the town, also to a point 100 km out)
+  tries = 0; const open = cand.filter(([i]) => { try { return dcCellFar(lnetPt(i)) >= LNET.exitOpen; } catch (e){ return false; } }).slice(0, LNET.exitGrid);
+  for (const [i] of cand.slice(0, Math.ceil(LNET.exitGrid / 2)).concat(open)){ if (++tries > LNET.exitGrid * 2) break; const q = lnetPt(i);
+    const cells = await leiaFind(q, end, sd, st); if (!cells || cells.why) continue;
+    const nodes = []; for (let v = i; v !== -1; v = F[v]) nodes.push(v); nodes.reverse(); st.exit = {tries, km:+D[i].toFixed(1), grid:true, any:true}; return {nodes, cost:D[i], post:[q].concat(cells, [end])}; }
   st.exit = {tries, none:true}; return null;
 }
 async function lnetRoute(from, to, sd, st){

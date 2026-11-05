@@ -149,9 +149,9 @@ const G3 = (() => {
   // ---------- noise ----------
   function vn2(x, y, s){
     const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
-    const h = (a, b) => hash(Math.imul(a, 374761393) ^ Math.imul(b, 668265263) ^ Math.imul(s, 1274126177));
-    return (h(ix, iy) * (1 - ux) + h(ix + 1, iy) * ux) * (1 - uy) + (h(ix, iy + 1) * (1 - ux) + h(ix + 1, iy + 1) * ux) * uy;
+    return (vnh(ix, iy, s) * (1 - ux) + vnh(ix + 1, iy, s) * ux) * (1 - uy) + (vnh(ix, iy + 1, s) * (1 - ux) + vnh(ix + 1, iy + 1, s) * ux) * uy;
   }
+  function vnh(a, b, s){ return hash(Math.imul(a, 374761393) ^ Math.imul(b, 668265263) ^ Math.imul(s, 1274126177)); }   // (not a closure a call: garbage, 05.11.2026)
   function fbm(x, y, o, s){ let v = 0, a = 0.5, f = 1, t = 0; for (let i = 0; i < o; i++){ v += a * vn2(x * f, y * f, s + i); t += a; a *= 0.5; f *= 2.03; } return v / t; }
   function ridged(x, y){ let v = 0, a = 0.5, f = 1, t = 0; for (let i = 0; i < 4; i++){ const n = 1 - Math.abs(2 * vn2(x * f, y * f, 40 + i) - 1); v += a * n * n; t += a; a *= 0.5; f *= 2.1; } return v / t; }
   function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }

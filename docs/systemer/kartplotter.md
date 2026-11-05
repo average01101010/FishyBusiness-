@@ -98,6 +98,21 @@ Målt først i Playwright, med CPU-en strupet 4× og nettet strupet til 10 Mbit/
 - Dybdetall (`miniSoundings`) står omtrent hver 70. CSS-piksel i et rutenett som ligger fast i kartet, slik som `soundingsSvg`.
 - Før pakkene har kommet, brukes det gamle grove bildet.
 - Det koster rundt 150 ms per bakgrunn i testmaskinen. Bakgrunnen tegnes bare når båten har flyttet seg en femtedel av radien, eller hvert 20. sekund.
+- **I tidsbiter** (05.11.2026, laggen 04.11 i backloggen; Jonas: «Det største som står igjen er minikartets bakgrunn i 3D»). En bakgrunn var 70–255 ms i ett strekk på en PC hver gang båten hadde flyttet seg en femdel av radien (3–4 ganger så lenge på telefonen). Raden i `chartRaster` trenger raden over (kanten mot sikker dybde, `prev`/`left`), så radene deles ikke opp, men spres over bildene:
+  - `chartRasterJob` (`ui/03-map.js`) setter opp `chartRaster` og gir et steg som gjør én rad i det grove B-spline-gitteret, én bilderad eller 16 rader med dybdelinjer per kall. `chartRaster` kjører stegene ferdig med én gang, så det store kartet (flisene, `chartWhole`) er som før. Med `scr` gjenbrukes tabellene (`VV`, `SV`, `MK`, `CK`, `G` osv.) mellom kallene; minikartet har sine egne (`MINIP.scr`), det store kartet lager nye som før.
+  - `miniBg` lager en jobb (`MINIP.job`, `miniGen`: rastret, så kysten og dybdetallene) som tegner på et eget lerret (`MINIP.bg2`). `miniFrame` gir den en bit hvert bilde (15 % av bildet, 4–20 ms; har den stått over 4 s, inntil 30 % og 60 ms), og når den er ferdig, byttes lerretene (`miniStep`). Til da tegnes den gamle bakgrunnen forskjøvet etter båten; den er dobbelt så stor som boksen, så den dekker boksen til båten er en hel radius fra midten av den. Den første bakgrunnen, en ny størrelse, radius eller natt og et hopp over en radius tegnes med én gang som før. Er båten mer enn en radius fra den gamle mens jobben går, gjøres den ferdig med én gang.
+  - Som generator ble hele `chartRaster` rundt 13 % tregere (målt med 16 bilder, varmet opp: 788–816 → 899–922 ms), fordi løkkene ble dårligere optimert; med radene som vanlige funksjoner er den som før (gammelt 789–898, nytt 831–877 ms, samme støy), og charttest gir de samme tegnetidene i begge byggene. Bare `miniGen` er en generator rundt stegene.
+  - Bildet er det samme: `chartRasterJob` gir de samme bytene som `chartRaster` i det gamle bygget (sjekket med hash for fire steder, dag, natt og fiskekart, også med tabellene gjenbrukt). `MINIP.n2` teller bakgrunnene som er byttet inn.
+  - Målt på PC med hele kysten (kart-31), sjarkny med fullt pådrag i 150 s, 800 × 1280, uten 3D-tegning (`#no3d`: i SwiftShader kom det bare et bilde hvert tredje sekund med 3D, og sidens tidtakere sultet, så båten hoppet et spillminutt om gangen og bakgrunnen ble tegnet med én gang), `tick` og `miniPaint` drevet fra bildene. Tallene er hvert sammenhengende kall i minikartet (`miniPaint` og bitene):
+
+  | Sted | Over 50 ms før → etter | Over 100 ms | Lengste |
+  |---|---|---|---|
+  | Skjervøy (69,96° N 20,02° Ø) | 45 → 1 | 26 → 0 | 235 → 78 ms (fiskeekkoet, `heatDrawInto`; den lengste biten er 45 ms) |
+  | Bodø (67,29° N 14,30° Ø) | 40 → 0 | 18 → 0 | 255 → 23 ms (med den endelige koden; 33 ms med generatoren) |
+  | Stavanger (58,98° N 5,55° Ø) | 23 → 0 | 19 → 0 | 231 → 29 ms |
+  | Kristiansand (58,05° N 8,05° Ø) | 32 → 0 | 24 → 0 | 220 → 24 ms |
+
+  Skjervøy, Stavanger og Kristiansand er målt med `chartRaster` som generator (samme oppdeling og samme bilder, før radene ble vanlige funksjoner). Det som står igjen over 20 ms, er en rad der en kartblokk pakkes ut første gang (`mapBlock`), og fiskeekkoets bilde (`heatDrawInto` → `heatShown`, 78 ms én gang ved Skjervøy).
 
 Rederi-appen har også fått regnskap med lånene (tilbakemelding #9): resultat, hvert lån (restgjeld, rente, terminbeløp, neste trekk, betalte renter i `L.intPaid`, telles fra 09.10.2026) og en balanse med flåtens verdi (`vesselValue`), konto, gjeld og egenkapital.
 

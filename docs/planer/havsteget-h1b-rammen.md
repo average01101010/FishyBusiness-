@@ -425,3 +425,18 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
   - **Neste:** Jonas sier ja til utrulling (R6 og R7 sammen), så R8 (stikkprøvene, spilltesten og utrullingen).
 - 05.11.2026: **R6 og R7 rullet ut sammen** (Jonas: «Rull ut»). Arbeidsgrenen hadde ingenting nytt etter R6, så grenen ble skjøvet rett på.
   - **Neste:** R8 (stikkprøvene, spilltesten og utrullingen) i en ny økt.
+- 05.11.2026: **R8 bygd** (gren `h1b-r8`, ikke rullet ut). Se 4.12h og 4.12i i `docs/systemer/autonav.md` og 4.11n i `3d-verden.md`.
+  - **Seilasene** (`tests/havtur.py`, ny, 68 OK): Båtsfjord–Sentralbanken, Båtsfjord–Petsjorahavet, Hammerfest–Bjørnøya, Tromsø–Isfjorden, Ålesund–Nord-Island, Ålesund–Færøyane, Måløy–Vikingbanken og Måløy–Shetland, planlagt og seilt i juli med kyst15 på den felles klokka uten påfylling. Kartet (sjø med dybde, ingen etappe på grunn eller i isen), sonen og lisensen, klimapunktene og været i januar og juli, isen i mars og september, rekkevidden for alle båttypene og forbruket (innenfor 3 % av overslaget i rutepanelet).
+  - **Rettet:**
+    - Autonav fant ingen rute fra Tromsø til Isfjorden utenom mars–mai, og ingen fra Bergen til havet vest for Shetland hele året (`lnetExit`, 4.12h). Stikkprøvene: Tromsø, Bodø, Bergen, Trondheim, Kristiansand, Hammerfest og Vadsø mot havet i januar, juli og oktober.
+    - Rutepanelet varsler når dieselen rekker ut, men ikke tilbake til nærmeste bunkring (en sjark til Sentralbanken).
+    - I kuling langt ute tok Autonav den første kaia etter luftlinja som hadde en rute (Sentralbanken: Longyearbyen 481 nm); nå tas den korteste (Gamvik 319 nm).
+    - Kompasslinja over 3D-bildet i stående format: tallene løp inn i hverandre (hele kysten).
+    - Slep ved Svalbard kom fra Tromsø, 850 km unna (towtest rød siden R7). Jonas 05.11.2026: «Kystvakten skal slepe båter ved svalbard»; nå fra Longyearbyen.
+  - **3D ved store γ** (`tests/havshot.py`, ny): kompasset viser solas og vindens sanne retning innen 0,6° ved Petsjorahavet (γ +31°) og Nord-Island (γ −31°, k 1,024), og ved Bjørnøya i stående format; bildene i begge formater viser sola under kompasset. Målestokken ved Island (k opptil 1,037): ingen endring, begrunnet i 4.11n.
+  - **Regresjonen:** alle 138 uten 3D (122 grønne; det røde er kjent eller ustabilt, se BACKLOG 10.6), og de 3D-testene som dekker endringene: camtest, dbg23o, havshot, tut (liggende); kinotest gikk ut på tid i rekka og ble kjørt alene.
+  - **Ikke løst:** flybilletten for tolv måneder (SAS stenger Actions, BACKLOG 10.3); flybilletten venter på tallene fra Jonas.
+  - **Ligge bi** (Jonas 05.11.2026: «Mange av de større havfiskebåtene er laget for å kunne være ute i orkan … du får ta en vurdering»): havfartøyene ligger ute til 24–26 m/s og 6,5–8,5 m sjø og ligger bi over det; de andre ligger bi når kaia er over 8 timer unna (4.12j i `autonav.md`).
+  - **Neste:** Jonas sier ja til utrulling. Deretter H2 i havsteget (`docs/planer/havsteget.md`).
+- 05.11.2026: **R8 rullet ut** (Jonas: «Kjør ut når du er klar», etter vurderingen av å ligge bi i uvær). Arbeidsgrenen med Driftsplan 2 del 2 er flettet inn først; etter flettingen er enhetstestene (1 063 OK), trip2, havtur, docktest, autonavtest, lybtest, towtest og driftsplan2test (alene) grønne. H1b er ferdig.
+  - **Neste:** H2 i havsteget (`docs/planer/havsteget.md`) i en ny økt, og flybillettene når Jonas har tallene.

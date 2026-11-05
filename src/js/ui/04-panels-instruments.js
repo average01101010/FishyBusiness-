@@ -26,6 +26,7 @@ function statusText(){
   if (b.gop){ const g = gopText(); return GL(g[2], g[3]); }
   if (b.status === 'fishing' && b.deckEnd) return GL('Tar unna fangsten', 'Seeing to the catch');   // after the gear work, not «Fisker» (F4)
   if (b.anch && b.status === 'idle') return GL(b.anch.out != null && b.anch.out < b.anch.rode ? 'Kaster anker' : 'Ligger til ankers', b.anch.out != null && b.anch.out < b.anch.rode ? 'Anchoring' : 'At anchor');
+  if (b.hove && b.status === 'idle') return GL('Ligger bi i uværet', 'Lying to in the storm');   // (core/05-vessels.js lieTo)
   if (b.status === 'tow' && b.tow) return t('st_tow_' + b.tow.ph, fmt(b.v, 0));
   return t('st_' + b.status);
 }

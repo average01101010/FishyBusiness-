@@ -258,7 +258,13 @@ function chartVectors(V, again){
 // than its 50 m cells). The land is the vector coast drawn over it (chartCoast), which is what the route check takes as land since
 // 04.10.2026 (01d-coast.js); the 25 m mask is no longer drawn as foreshore beside it (the user: «Jeg vil ha bort det som er i
 // magenta»). Only a harbour unit's block and fill are painted here, at level 2, as land.
-function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
+function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){ const step = chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, null); while (step()); }
+// The same, a step at a time: chartRasterJob sets it up and gives a step, which does a row (of the coarse grid, of the samples, or 16 of
+// the depth lines) a call and says whether there is more, so the little chart in 3D (03e-miniplot.js) can paint its background over many
+// frames (05.11.2026: 70-255 ms at once on a PC). A row needs the one above (the edge of the safe depth), so the rows are not split up,
+// only spread out; the picture is the same. (Not a generator: as one the whole chart was 13 % slower, its loops less optimised.)
+// scr: arrays kept between calls (the little chart's, so a background leaves no garbage); without it they are new
+function chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr){
   const {lv, fish, night, sd} = V, LD = MAPD.L.depth, c = LD.c, X0 = LD.ix0, Y0 = LD.iy0, X1 = LD.ix0 + LD.nx - 1, Y1 = LD.iy0 + LD.ny - 1, D = (ix, iy) => rcell(LD, ix, iy);
   const s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
   // the night colours: dark sea in blues, dim land, as a chart plotter's night mode (the fishing chart is dark already)
@@ -269,7 +275,8 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
   const CL = pkx > 0.6 ? [200, 500, 1000] : pkx > 0.25 ? [50, 100, 200, 500, 1000] : pkx > 0.08 ? [20, 50, 100, 200, 300, 500, 800, 1000] : [5, 10, 20, 30, 50, 100, 150, 200, 300, 500, 800, 1000];
   const LVT = new Uint8Array(1101); for (let z = 0; z < 1101; z++){ let n = 0; for (const l of CL) if (z >= l) n++; LVT[z] = n; }
   const CC = night ? [78, 118, 160] : [112, 150, 188], cls = z => LVT[z < 0 ? 0 : z > 1100 ? 1100 : z | 0];
-  const prev = new Float32Array(PW).fill(NaN), VV = new Float32Array(PW * PH), SV = new Uint8Array(PW * PH), MK = new Uint8Array(PW * PH), CK = new Uint8Array(PW * PH), sh = 1 / (Math.max(pkx, 0.0005) * 10), smooth = lv > 0 && pkx < LD.c;
+  const N = PW * PH, R = scr && scr.N === N && scr.PW === PW ? scr : scr ? Object.assign(scr, {N, PW, prev:new Float32Array(PW), VV:new Float32Array(N), SV:new Uint8Array(N), MK:new Uint8Array(N), CK:new Uint8Array(N), CX:new Int32Array(PW * 4), CW:new Float32Array(PW * 4), G:null}) : null;
+  const prev = R ? R.prev.fill(NaN) : new Float32Array(PW).fill(NaN), VV = R ? R.VV : new Float32Array(N), SV = R ? R.SV : new Uint8Array(N), MK = R ? R.MK.fill(0) : new Uint8Array(N), CK = R ? R.CK : new Uint8Array(N), sh = 1 / (Math.max(pkx, 0.0005) * 10), smooth = lv > 0 && pkx < LD.c;
   const pocket = lv === 2 ? pocketsIn(x0, y0, x0 + PW * pkx, y0 + PH * pky) : null, T = MAPD.man.tile, LM = MAPD.L.mask, lc = LM.c;
   // deep inside the 25 m mask's land (the cell and its four neighbours) the vector coast's fill covers the pixel anyway: it is painted
   // in that fill's colour and its depth is not worked out (the B-spline's 16 cells a pixel for the land made the fjord's view 3x slower);
@@ -278,14 +285,15 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
   let ltx = NaN, lty = NaN, lsim = false;
   const simAt = (x, y) => { const tx = Math.floor(x / T), ty = Math.floor(y / T); if (tx !== ltx || ty !== lty){ ltx = tx; lty = ty; const pk = lv > 0 ? MAPD.byTile.get('sim:' + tx + ':' + ty) : null; lsim = !!(pk && pk.buf); if (pk && !pk.buf && st) st.prov = true; } return lsim; };
   const bw = (t, o) => { const t2 = t * t, t3 = t2 * t; o[0] = (1 - t) * (1 - t) * (1 - t) / 6; o[1] = (3 * t3 - 6 * t2 + 4) / 6; o[2] = (-3 * t3 + 3 * t2 + 3 * t + 1) / 6; o[3] = t3 / 6; };
-  const CX = new Int32Array(PW * 4), CW = new Float32Array(PW * 4), tmp = [0, 0, 0, 0];
+  const CX = R ? R.CX : new Int32Array(PW * 4), CW = R ? R.CW : new Float32Array(PW * 4), tmp = [0, 0, 0, 0];
   if (smooth) for (let i = 0; i < PW; i++){ const x = x0 + (i + 0.5) * pkx, gx = x / c - 0.5, ix = Math.floor(gx); bw(gx - ix, tmp); for (let k = 0; k < 4; k++){ CX[i * 4 + k] = clamp(ix - 1 + k, X0, X1); CW[i * 4 + k] = tmp[k]; } }
-  const RW = [0, 0, 0, 0], RO = [0, 0, 0, 0], col = [0, 0, 0], put = (o, k) => { d[o] = k[0]; d[o + 1] = k[1]; d[o + 2] = k[2]; d[o + 3] = 255; };
+  const RW = [0, 0, 0, 0], RO = [0, 0, 0, 0], col = [0, 0, 0], pt = {x:0, y:0}, put = (o, k) => { d[o] = k[0]; d[o + 1] = k[1]; d[o + 2] = k[2]; d[o + 3] = 255; };
   // near in (a sample under an eighth of a cell) the B-spline every GS samples and between them bilinear: the depth is smooth there,
   // and the 16 cells a sample made the harbour's tiles slow; NaN where a corner is off the packs (the sample is then its own)
-  const GS = 4, G = smooth && pkx < c / 8 ? new Float32Array((Math.ceil(PW / GS) + 1) * (Math.ceil(PH / GS) + 1)) : null, GW = Math.ceil(PW / GS) + 1;
-  if (G){ const w = [0, 0, 0, 0], u = [0, 0, 0, 0];
-    for (let gj = 0; gj * GS < PH + GS; gj++) for (let gi = 0; gi < GW; gi++){
+  const GS = 4, GN = (Math.ceil(PW / GS) + 1) * (Math.ceil(PH / GS) + 1), G = smooth && pkx < c / 8 ? (R ? (R.G && R.G.length === GN ? R.G : (R.G = new Float32Array(GN))) : new Float32Array(GN)) : null, GW = Math.ceil(PW / GS) + 1;
+  const w = [0, 0, 0, 0], u = [0, 0, 0, 0];
+  const gridRow = gj => {
+    for (let gi = 0; gi < GW; gi++){
       const x = x0 + (gi * GS + 0.5) * pkx, y = y0 + (gj * GS + 0.5) * pky; let v = NaN;
       if (simAt(x, y) && x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c) try {
         const gx = x / c - 0.5, ix = Math.floor(gx), gy = y / c - 0.5, iy = Math.floor(gy); bw(gx - ix, w); bw(gy - iy, u); v = 0;
@@ -293,21 +301,22 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
       } catch (e){ v = NaN; }
       G[gj * GW + gi] = v;
     }
-    ltx = NaN; }
-  for (let j = 0; j < PH; j++){
+  };
+  const pixRow = j => {
     const y = y0 + (j + 0.5) * pky, gy = clamp(y / c - 0.5, Y0, Y1 - 0.001), iy = Math.floor(gy), fy = gy - iy;
     if (smooth){ const gyr = y / c - 0.5, iyr = Math.floor(gyr); bw(gyr - iyr, RW); for (let k = 0; k < 4; k++) RO[k] = clamp(iyr - 1 + k, Y0, Y1); }
     let left = NaN;
     for (let i = 0; i < PW; i++){
       const x = x0 + (i + 0.5) * pkx, o = (j * PW + i) * 4;
-      if (!inFrame({x, y})){ put(o, OFF); prev[i] = NaN; left = NaN; continue; }
+      pt.x = x; pt.y = y;   // (one point for every sample: an object a sample was most of the garbage it left)
+      if (!inFrame(pt)){ put(o, OFF); prev[i] = NaN; left = NaN; continue; }
       const gx = clamp(x / c - 0.5, X0, X1 - 0.001), ix = Math.floor(gx), fx = gx - ix;
       let v, land = 0, sv = 0;   // sv: the depth is the tiles' (1) or the offshore layer's (0): no line where they meet (their floors differ)
       if (!simAt(x, y) || !(x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c)){
-        const q = {x, y}; if (lv && isLandFar(q)){ put(o, FAR); prev[i] = NaN; left = NaN; continue; }
+        const q = pt; if (lv && isLandFar(q)){ put(o, FAR); prev[i] = NaN; left = NaN; continue; }
         v = offDepth(q); }
       else try {
-        sv = 1; { const pk = pocket ? pocket(x, y) : 0; if (pk === 2 || (!pk && lv && (deep(x, y) || coastAtIf({x, y}) > 0))) land = 1; }   // (the coast's index where it is in: 01d-coast.js)
+        sv = 1; { const pk = pocket ? pocket(x, y) : 0; if (pk === 2 || (!pk && lv && (deep(x, y) || coastAtIf(pt) > 0))) land = 1; }   // (the coast's index where it is in: 01d-coast.js)
         if (land >= 1){ put(o, UG); prev[i] = NaN; left = NaN; continue; }
         const gi = Math.floor(i / GS), gj = Math.floor(j / GS), go = gj * GW + gi;
         if (G && !isNaN(v = ((G[go] * (GS - i % GS) + G[go + 1] * (i % GS)) * (GS - j % GS) + (G[go + GW] * (GS - i % GS) + G[go + GW + 1] * (i % GS)) * (j % GS)) / (GS * GS))){ }
@@ -315,7 +324,7 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
         else v = (D(ix, iy) * (1 - fx) + D(ix + 1, iy) * fx) * (1 - fy) + (D(ix, iy + 1) * (1 - fx) + D(ix + 1, iy + 1) * fx) * fy;
       } catch (e){
         // a cell across the edge of a tile whose pack has not come (or has none): the depth model here, painted again when it comes
-        if (st) st.prov = true; land = 0; sv = 0; const q = {x, y}; if (isLandFar(q)){ put(o, FAR); prev[i] = NaN; left = NaN; continue; } v = offDepth(q);
+        if (st) st.prov = true; land = 0; sv = 0; const q = pt; if (isLandFar(q)){ put(o, FAR); prev[i] = NaN; left = NaN; continue; } v = offDepth(q);
       }
       if (fish){
         const dxv = isNaN(left) ? 0 : v - left, dyv = isNaN(prev[i]) ? 0 : v - prev[i], hs = clamp(0.8 + (dxv + dyv) * sh * 0.004, 0.45, 1.25), pc = plotCol(Math.max(v, 0.5));
@@ -328,14 +337,14 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
       if (land > 0){ col[0] += (FS[0] - col[0]) * land; col[1] += (FS[1] - col[1]) * land; col[2] += (FS[2] - col[2]) * land; }
       put(o, col); prev[i] = v; left = v;
     }
-  }
+  };
   // the depth lines, in a pass over the finished depth (Jonas 08.10.2026, tilbakemelding #43: «samme dybdelinjer som rundt senja langs
   // hele kysten ned til 1000 meter»): a pixel is a line where its depth falls in another class than its left or upper neighbour's, from the
   // same source (the tiles' or the offshore layer's). Not where the stored depth steps steeper than a sea floor can (10 pixels across), as
   // where the sources were joined
-  if (lv){
-    const lim = (3 + 150 * pkx) * 10, at = (i, j) => (i < 0 || j < 0 || i >= PW || j >= PH || !MK[j * PW + i]) ? NaN : VV[j * PW + i];
-    for (let j = 1; j < PH; j++) for (let i = 1; i < PW; i++){
+  const lim = (3 + 150 * pkx) * 10, at = (i, j) => (i < 0 || j < 0 || i >= PW || j >= PH || !MK[j * PW + i]) ? NaN : VV[j * PW + i];
+  const lineRow = j => {
+    for (let i = 1; i < PW; i++){
       const o = j * PW + i; if (!MK[o]) continue; const a = CK[o], l = MK[o - 1] && SV[o - 1] === SV[o] && CK[o - 1] !== a, u = MK[o - PW] && SV[o - PW] === SV[o] && CK[o - PW] !== a;
       if (!l && !u) continue;
       const gx = Math.max(Math.abs(at(i + 5, j) - at(i - 5, j)), Math.abs(at(i + 2, j) - at(i - 2, j)) * 2.5), gy = Math.max(Math.abs(at(i, j + 5) - at(i, j - 5)), Math.abs(at(i, j + 2) - at(i, j - 2)) * 2.5);
@@ -343,7 +352,14 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
       const p = o * 4;
       if (fish){ d[p] *= 0.5; d[p + 1] *= 0.5; d[p + 2] *= 0.5; } else { d[p] = CC[0]; d[p + 1] = CC[1]; d[p + 2] = CC[2]; }
     }
-  }
+  };
+  // the steps: the coarse grid's rows (when there is one), the samples' rows, the depth lines 16 rows a step (at levels over 0)
+  let ph = G ? 0 : 1, k = 0;
+  return () => {
+    if (ph === 0){ if (k * GS < PH + GS){ gridRow(k++); return true; } ltx = NaN; ph = 1; k = 0; }
+    if (ph === 1){ if (k < PH){ pixRow(k++); return true; } ph = 2; k = 1; if (!lv) return false; }
+    const e = Math.min(PH, k + 16); while (k < e) lineRow(k++); return k < PH;
+  };
 }
 function scheduleChart(){ followChart(); clearTimeout(chartTimer); chartTimer = setTimeout(() => paintChart(1), 140); }
 window.addEventListener('resize', () => { if (S && document.body.classList.contains('vplot')) scheduleChart(); });
@@ -543,7 +559,7 @@ function aisInfo(n){
   const st = n.rs ? (n.st === 'port' ? L('Mønstrer på stasjonen', 'Mustering at the station') : n.st === 'come' ? L('På vei til deg', 'On the way to you') : n.st === 'hook' ? L('Setter slepet', 'Making the tow fast') : L('Sleper deg til ', 'Towing you to ') + ((portById(n.to) || {}).name || '')) : n.lev === 'land' ? L('Leverer fangsten', 'Landing the catch') : n.lev === 'go' ? L('På vei til mottaket for å levere', 'Heading to the plant to land') : n.st === 'port' || n.v === 0 ? L('Fortøyd', 'Moored') : n.st === 'fishing' && n.hav ? (n.trawl ? L('Tråler', 'Trawling') : n.seine ? L('Kaster nota', 'Setting the seine') : n.hav === 'line' ? L('Setter og drar line', 'Setting and hauling line') : n.hav === 'not' || n.hav === 'snurrevad' ? L('Leter etter fisk', 'Searching for fish') : L('Drar og setter redskapet', 'Hauling and setting the gear')) : n.st === 'fishing' ? (n.v > 2.5 ? L('Fisker, går opp for ny drift', 'Fishing, steaming back for a new drift') : L('Fisker, driver over grunnen', 'Fishing, drifting over the bank')) : n.st === 'out' ? L('På vei til feltet', 'Heading to the grounds') : n.st === 'in' ? L('På vei hjem', 'Heading home') : L('Underveis', 'Under way');
   // another player's boat (the shared world V3): the owner's player name and sea time (Jonas 07.10.2026), the type and size
   const VP = n.player ? VESSELS[n.vtype] : null;
-  const rows = n.rs ? [[L('Rederi', 'Owner'), 'Redningsselskapet'], [L('Stasjon', 'Station'), n.base]] : VP ? [[L('Eier', 'Owner'), n.user || '–'], [L('Fartstid', 'Sea time'), n.fs ? fsText(n.fs, true).replace(/ (fartstid|at sea)$/, '') : '–'],
+  const rows = n.rs ? [[L('Rederi', 'Owner'), L(...rsOrg(n.org).org)], [L('Stasjon', 'Station'), n.base]] : VP ? [[L('Eier', 'Owner'), n.user || '–'], [L('Fartstid', 'Sea time'), n.fs ? fsText(n.fs, true).replace(/ (fartstid|at sea)$/, '') : '–'],
       [L('Båttype', 'Boat type'), String(L(VP.name.no, VP.name.en)).split(' (')[0]], [L('Størrelse', 'Size'), fmt(VP.len, 1) + ' × ' + fmt(VP.beam || VP.len / 3, 1) + ' m']] : f ? [[L('Kallesignal', 'Call sign'), f.cs], [L('Fiskerimerke', 'Registration'), f.reg], [L('Rederi', 'Owner'), f.own], [L('Størrelse', 'Size'), fmt(f.L, 2) + ' × ' + fmt(f.B, 1) + ' m'], [L('Dypgående', 'Draught'), fmt(f.T, 1) + ' m'], [L('Hjemmehavn', 'Home port'), f.homeName]]
     : n.hav ? [[L('Båttype', 'Boat type'), String(L(VESSELS[n.vtype].name.no, VESSELS[n.vtype].name.en)).split(' (')[0]], [L('Redskap', 'Gear'), L(HAVGN[n.hav][0], HAVGN[n.hav][1])], [L('Størrelse', 'Size'), fmt(n.L, 1) + ' × ' + fmt(n.B, 1) + ' m'], [L('Dypgående', 'Draught'), fmt(n.T, 1) + ' m']]
     : n.coast ? [[L('Størrelse', 'Size'), fmt(n.L, 1) + ' × ' + fmt(n.B, 1) + ' m'], [L('Dypgående', 'Draught'), fmt(n.T, 1) + ' m']]

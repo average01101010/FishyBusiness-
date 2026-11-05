@@ -67,11 +67,14 @@
     const span = 70, k = W / (2 * span), names = S.lang === 'no' ? ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV'] : ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     const c = CMPS.strip || (CMPS.strip = document.createElement('canvas')); c.width = Math.ceil((360 + 2 * span) * k); c.height = H;
     const g = c.getContext('2d'); g.clearRect(0, 0, c.width, H); g.lineCap = 'round'; g.textAlign = 'center'; g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 3 * dpr;
+    // (on a narrow line, a phone or a tablet standing with the status box beside it, ~150 px for 140 degrees, the tens ran into each
+    // other and the names, H1b R8 05.11.2026: then the names alone; a number every 30 degrees would still be 15 from a name)
+    const step = 15 * k / dpr >= 26 ? 15 : 0;
     for (let a = -span; a <= 360 + span; a += 5){
-      const x = (a + span) * k, n = ((a % 360) + 360) % 360, main = n % 45 === 0;
+      const x = (a + span) * k, n = ((a % 360) + 360) % 360, main = n % 45 === 0, num = step && n % step === 0;
       g.strokeStyle = 'rgba(255,255,255,0.85)'; g.lineWidth = (main ? 1.6 : 1) * dpr;
       g.beginPath(); g.moveTo(x, H - 2 * dpr); g.lineTo(x, H - (main ? 9 : n % 15 === 0 ? 6 : 4) * dpr); g.stroke();
-      if (main || n % 15 === 0){ g.fillStyle = '#fff'; g.font = (main ? '600 ' + Math.round(12 * dpr) : Math.round(9.5 * dpr)) + 'px sans-serif'; g.fillText(main ? names[n / 45] : String(n), x, H - 12 * dpr); }
+      if (main || num){ g.fillStyle = '#fff'; g.font = (main ? '600 ' + Math.round(12 * dpr) : Math.round(9.5 * dpr)) + 'px sans-serif'; g.fillText(main ? names[n / 45] : String(n), x, H - 12 * dpr); }
     }
     return k;
   }
