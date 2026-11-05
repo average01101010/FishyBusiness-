@@ -373,7 +373,7 @@ const GLBM = {}, glbData = (k, type) => { const id = k + '-' + type; if (typeof 
 // the player's own skiff was drawn with the old hand-made kit and never with its Blender model, 31.10.2026)
 const GLBHAS = {}; function glbHas(type){ if (!GLBHAS[type]) GLBHAS[type] = !!glbData('glb', type); return GLBHAS[type]; }
 function glbParse(b64){
-  const u8 = glbBytes(b64), dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength); if (dv.getUint32(0, true) !== 0x46546C67) return null;
+  const u8 = glbBytes(b64); let dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength); if (dv.getUint32(0, true) !== 0x46546C67) return null;
   const jl = dv.getUint32(12, true), J = JSON.parse(new TextDecoder().decode(u8.subarray(20, 20 + jl))), bo = 20 + jl + 8;
   const NC = {SCALAR:1, VEC2:2, VEC3:3, VEC4:4}, SZ = {5120:1, 5121:1, 5122:2, 5123:2, 5125:4, 5126:4};
   const acc = i => { const A = J.accessors[i], BV = J.bufferViews[A.bufferView], n = NC[A.type], ct = A.componentType, sz = SZ[ct], st = BV.byteStride || n * sz, off = bo + (BV.byteOffset || 0) + (A.byteOffset || 0), out = new Float32Array(A.count * n);
@@ -382,8 +382,7 @@ function glbParse(b64){
       if (A.normalized) v = ct === 5120 ? Math.max(v / 127, -1) : ct === 5121 ? v / 255 : ct === 5122 ? Math.max(v / 32767, -1) : ct === 5123 ? v / 65535 : v;
       out[k * n + c] = v; }
     return out; };
-  const parts = {};
-  for (const nd of J.nodes){
+  const read = nd => {
     const pr = J.meshes[nd.mesh].primitives[0], P = acc(pr.attributes.POSITION), N = acc(pr.attributes.NORMAL), Cc = acc(pr.attributes.COLOR_0), Q = pr.attributes._PAINT != null ? acc(pr.attributes._PAINT) : null, I = acc(pr.indices);
     const t = nd.translation || [0, 0, 0], s = nd.scale || [1, 1, 1], nI = I.length, o = {p:new Array(nI * 3), n:new Array(nI * 3), c:new Array(nI * 4), zone:Q ? new Array(nI) : [], ao:Q ? new Array(nI) : []};
     // (filled by index into arrays of the right length, 04.11.2026: half the time of the pushes, the same plain arrays for the readers)
@@ -392,8 +391,24 @@ function glbParse(b64){
       o.n[k3] = N[i3]; o.n[k3 + 1] = N[i3 + 1]; o.n[k3 + 2] = N[i3 + 2];
       o.c[k4] = Cc[i4]; o.c[k4 + 1] = Cc[i4 + 1]; o.c[k4 + 2] = Cc[i4 + 2]; o.c[k4 + 3] = Cc[i4 + 3];
       if (Q){ o.zone[k] = Q[i4]; o.ao[k] = Q[i4 + 1] / 255; } }
-    parts[nd.name] = o;
-  }
+    return o;
+  };
+  // Each part is read out the first time it is asked for (05.11.2026, the lag on 04.11: the JS heap was 390 MB after the start against
+  // 240 MB on 30.10 and grew towards 650-820 MB, when Android ended the page). A part read out is plain arrays of 8 bytes a number, a
+  // corner per triangle: a revised boat is 27-47 MB so, its near model (lod0) the most, 17-33 MB. The fleet and the other players' boats
+  // wear only the middle (lodm) and far (lod1) versions, so their lod0 is now never read out; the GLB's own bytes (4-6 MB) are kept until
+  // every part has been read, and then let go. Unread parts are still keys of parts (Object.keys, in), and a part that fails to read is null.
+  // parts.peek(name) (not enumerable) reads a part without keeping it, for what only measures the near model once a type (glbPeek).
+  const parts = {}, node = new Map(), got = new Map();
+  for (const nd of J.nodes) node.set(nd.name, nd);
+  let left = node.size;
+  const take = (nm, keep) => {
+    if (got.has(nm)) return got.get(nm);
+    let v = null; if (dv) try { v = read(node.get(nm)); } catch (e){ v = null; }
+    if (keep){ got.set(nm, v); if (--left <= 0) dv = null; }
+    return v; };
+  for (const nm of node.keys()) Object.defineProperty(parts, nm, {enumerable:true, configurable:true, get:() => take(nm, true)});
+  Object.defineProperty(parts, 'peek', {value:nm => node.has(nm) ? take(nm, false) : undefined});
   return {parts, ex:(J.scenes[0] && J.scenes[0].extras) || {}};
 }
 function glbLoad(type){
@@ -404,6 +419,8 @@ function glbLoad(type){
 }
 // one part of a type's GLB ({p, n, c}): the starter boat's hull, glass, lid, outboard and propeller are drawn by view3d.js one by one
 function glbPart(type, name){ const G = glbLoad(type); return (G && G.parts[name]) || null; }
+// a part read for a measurement only: the one kept if it has been read out, else read now and let go after (glbParse's parts.peek)
+function glbPeek(G, name){ return !G ? null : G.parts.peek ? G.parts.peek(name) : G.parts[name]; }
 // a detailed model's part painted: paint zone 1 (the hull) takes liv.hull, zone 3 (the superstructure) liv.house and zone 4 (the decks)
 // liv.deck, with the shade baked into them (ao) kept
 function glbPaint(part, liv){
@@ -422,7 +439,7 @@ function glbZones(type){
 // lod: 2 near (lod0, your own boat close by: up to some 300 000 triangles), 1 middle (lodm where the model has one, else lod0: the
 // local fleet near by and your boat further off, today's level), under 1 far (lod1); docs/planer/grafikk-batmodeller.md F1
 function glbModel(type, lod, liv){
-  const G = glbLoad(type); if (!G || !G.parts.lod0) return null;
+  const G = glbLoad(type); if (!G || !('lod0' in G.parts)) return null;   // (asked by name, not read: the fleet never reads its lod0)
   const part = lod >= 2 ? G.parts.lod0 : lod >= 1 ? (G.parts.lodm || G.parts.lod0) : (G.parts.lod1 || G.parts.lod0); let o = part;
   if (liv && DESIGNS.some(k => liv[k])) o = glbDesign(type, part, liv); else if (liv && (liv.hull || liv.house || liv.deck)) o = glbPaint(part, liv);
   // an outboard and its propeller are parts of their own, in their own frames (they turn in the game): the whole boat carries them in place
@@ -735,7 +752,8 @@ const NAMESTRIP = {};
 // the hull's triangles that face out to starboard (their normals' sideways part over 0.35; the inside of a bulwark faces the other way)
 function hullTris(type){
   const G = glbHas(type) ? glbLoad(type) : null, out = [], m = G ? null : vesselModel(type);
-  const P = G && G.parts.lod0 ? G.parts.lod0 : m ? m.o : null, n = G ? (P && P.p.length) : m && m.hullN; if (!P || !n || (G && !P.zone)) return out;
+  // (the near model peeked, not kept: the fleet's liveries ask for the topsides of a type it never draws near, glbDesign, 05.11.2026)
+  const P = G ? glbPeek(G, 'lod0') : m ? m.o : null, n = G ? (P && P.p.length) : m && m.hullN; if (!P || !n || (G && !P.zone)) return out;
   for (let v = 0; v * 3 + 9 <= n; v += 3){
     if (G && !(P.zone[v] === 1 && P.zone[v + 1] === 1 && P.zone[v + 2] === 1)) continue;
     const t = P.p.slice(v * 3, v * 3 + 9); if (t[0] + t[3] + t[6] <= 0) continue;

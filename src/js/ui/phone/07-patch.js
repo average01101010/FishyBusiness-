@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['minne-051126', '05.11.2026', 'Mindre minne', 'Less memory', [
+       ['Spillet bruker mindre minne: de andre båtene leser bare inn de enklere modellene de vises med, ikke den detaljerte. Det skal gi mindre hakking og færre stopp på telefoner og nettbrett.', 'The game uses less memory: the other boats read in only the simpler models they are shown with, not the detailed one. That should mean less stutter and fewer stops on phones and tablets.'],
+    ]],
     ['is-041126', '04.11.2026', 'Isen i Barentshavet', 'The ice in the Barents Sea', [
        ['Drivisen ligger nå der den ligger i snitt for måneden, og iskanten flytter seg litt hver dag: langt sør i Barentshavet og rundt Svalbard om vinteren, langt nord om høsten. Den vises hvit i kartplotteren.', 'The drift ice now lies where it lies on average for the month, and the ice edge moves a little every day: far south in the Barents Sea and round Svalbard in winter, far north in the autumn. It shows white in the chart plotter.'],
        ['Fra 4/10 drivis går ikke en båt uten isklasse inn. Autonav seiler rundt isen, og båten stopper ved kanten i stedet for å gå inn. Vær-appen viser isen der du er.', 'From 4/10 drift ice a boat without an ice class does not go in. Autonav sails round the ice, and the boat stops at the edge instead of going in. The Weather app shows the ice where you are.'],
