@@ -76,3 +76,4 @@ Bestillingen: økta etter spilltest 3 skulle rette F1–F7 og de enkle UX-funnen
 ## Status
 
 - 05.11.2026: planen skrevet, valgene tatt samme dag. Bygges i rekkefølgen P1, P3 (med V6c), P4, P5, P2, så K1–K2 når kildene er lest.
+- 05.11.2026: P1–P5 bygd (`docs/systemer/rettelser.md`). K2: lina hevet etter ERS (median 111 kg per stamp; `GEAR.line.q` 0,032 → 0,045). K1: Lofoten **ikke** hevet, fordi kildene (sluttsedlene 2025–2026, Råfisklagets årsberetning 2025) viser at Lofoten nå er tydelig svakere enn Senja for juksa, og spillets tall stemmer med det (`docs/systemer/fiskerimodellen.md`). Garna fisker under ERS-medianen (73–78 kg per garn i mars mot 30 i dokumentet); det var ikke en del av valgene og står i backloggen.

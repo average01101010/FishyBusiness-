@@ -88,7 +88,7 @@ Jonas' valg: alle tre kystredskapene i samme runde, ståtid for line som avveiin
   - Line går til egnebua etter levering.
   - Teiner er en lovlig inntekt for en båt i åpen gruppe med ansatt skipper.
 - **Kalibrering (startverdier):**
-  - Hyseline 12 t i februar på et godt hysested: ca. 110 kg per stamp, 67 % hyse.
+  - Hyseline 12 t i februar på et godt hysested: ca. 110 kg per stamp, 67 % hyse. **Kilde (05.11.2026, K2 i spilltest 3):** Fiskeridirektoratets ERS-fangstmeldinger 2024–2026, fartøy 15–28 m, februar–mars i nord, sett med minst 50 % hyse (n = 59): median 185 kg hyse per 1000 kroker (p25 94, p75 312), median ståtid 16 t, som er 111 kg per stamp på 600 kroker. HIs forsøk i Båtsfjord i oktober (Rapport fra havforskningen 2024-11) gir omregnet rundt 65 kg per 1000 kroker. Fangstevnen `GEAR.line.q` ble hevet fra 0,032 til 0,045 (Jonas: «Gjør det som blir mest realistisk»), så de åtte beste hysestedene gir rundt 95 kg per stamp etter 12 t (før 67); `HEATG.fair.line` fulgte med fra 70 til 100. ERS gjelder fartøy på 15 m og over, som trolig fisker på bedre felt enn sjarkene.
   - Garn 180 mm 20 t i mars vest av Gryllefjord: ca. 30 kg per garn.
   - Store teiner 24 t i september sør på Senja: ca. 1,5 kg per teine.
   - En dag med håndjuksa samme sted: ca. 430 kg for én person.
