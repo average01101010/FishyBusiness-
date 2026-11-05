@@ -438,3 +438,5 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
   - **Ikke løst:** flybilletten for tolv måneder (SAS stenger Actions, BACKLOG 10.3); flybilletten venter på tallene fra Jonas.
   - **Ligge bi** (Jonas 05.11.2026: «Mange av de større havfiskebåtene er laget for å kunne være ute i orkan … du får ta en vurdering»): havfartøyene ligger ute til 24–26 m/s og 6,5–8,5 m sjø og ligger bi over det; de andre ligger bi når kaia er over 8 timer unna (4.12j i `autonav.md`).
   - **Neste:** Jonas sier ja til utrulling. Deretter H2 i havsteget (`docs/planer/havsteget.md`).
+- 05.11.2026: **R8 rullet ut** (Jonas: «Kjør ut når du er klar», etter vurderingen av å ligge bi i uvær). Arbeidsgrenen med Driftsplan 2 del 2 er flettet inn først; etter flettingen er enhetstestene (1 063 OK), trip2, havtur, docktest, autonavtest, lybtest, towtest og driftsplan2test (alene) grønne. H1b er ferdig.
+  - **Neste:** H2 i havsteget (`docs/planer/havsteget.md`) i en ny økt, og flybillettene når Jonas har tallene.
