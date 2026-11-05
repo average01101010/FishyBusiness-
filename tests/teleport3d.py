@@ -41,6 +41,11 @@ async def main():
         await pg.wait_for_function("G3.isActive()", timeout=60000)
         R = {}
         for name, la, lo, hmin in PLACES:
+            # (a place the build has no far pack for cannot get its heights: Bjørnøya and Svalbard are in the far packs only with the
+            # whole coast and the islands in the build, H1b R3; with Senja alone they were red on «hmax 3» and the run went past its
+            # time, Ø2 05.11.2026. Said, not passed: the regression is run with the whole coast)
+            if hmin is not None and not await pg.evaluate("([la, lo]) => { const c = P(la, lo); return mapPacksIn('far', c.x, c.y, c.x, c.y).length > 0; }", [la, lo]):
+                print('HOPP ' + name + ': bygget har ingen fjernpakke her (trenger hele kysten med øyene: release.py, game.py)'); continue
             q = await pg.evaluate(SEA, [la, lo])
             if not q:
                 check(False, name + ': fant sjø nær stedet'); continue
