@@ -1556,3 +1556,14 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 .slip-first small{display:block;font-size:13px;color:#6b5320}
 @keyframes sfIn{from{opacity:0;transform:scale(.92)}}
 @media (prefers-reduced-motion:reduce){.slip-first{animation:none}}
+/* GUI review U7 A (05.11.2026): every tap target on the plan's page and in the chart's card is at least 44 × 44 CSS px
+   (docs/planer/ui-redesign.md), the card's × a button of its own, and more room between one stepper and the next */
+.dr-plc button,.dr-st button{min-width:44px;min-height:44px}
+.dr-plc{gap:8px 18px}.dr-st{gap:8px}
+.dr-kv button,#drawerBody .ops-days button{min-width:44px;min-height:44px;padding:0 10px}
+#drawerBody .ph-sub button,#drawerTabs button{min-height:44px}
+#pmBar .pm-h button,#pmBar .pm-t button{min-height:44px}
+@media (min-width:701px){#pmCard{width:300px}}
+#pmCard .ai-h button{width:44px;height:44px;margin:-6px -8px -6px 0;padding:0;font-size:24px;line-height:1;border-radius:8px}
+#pmCard .pm-kv button,#pmCard .pin-b button{min-width:44px;min-height:44px}
+#pmCard .pin-b button{flex:1}
