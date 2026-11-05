@@ -130,6 +130,13 @@ function rigHas(r){ return !RIGS[r].kind || hasHauler(RIGS[r].kind); }
 const rigName = r => gL(RIGS[r].no, RIGS[r].en);
 const lc1 = x => x[0].toLowerCase() + x.slice(1);
 function rigWrong(kind){ return [gL('Båten er rigget for ' + rigName(rigOf()).toLowerCase() + '. Rigg om til ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Beholdning.', 'The boat is rigged for ' + rigName(rigOf()).toLowerCase() + '. Re-rig for ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Inventory.')]; }
+// no hauler for this kind of gear fits the boat: the reason, said the same in the Rig tab and the shop (spilltest 3, F3), or null
+function haulerNoFit(kind){
+  const b = S.boat || {}, hs = GEAR[kind].haulers; if (hs.some(h => equipFits(h, b.type || 'skiff'))) return null;
+  const r = rigOfKind(kind), fl = hs.map(h => (EQUIP[h].fit || {}).minLen).filter(Boolean), mn = fl.length ? Math.min(...fl) : 0;
+  return [gL('Denne båten kan ikke rigges for ' + rigName(r).toLowerCase() + ': ' + hs.map(h => lc1(EQUIP[h].name.no)).join(' eller ') + ' passer ikke om bord' + (mn > (BOAT.len || 0) ? ' (krever minst ' + fmt1(mn) + ' m)' : '') + '.',
+    'This boat cannot be rigged for ' + rigName(r).toLowerCase() + ': ' + hs.map(h => lc1(EQUIP[h].name.en)).join(' or ') + ' does not fit aboard' + (mn > (BOAT.len || 0) ? ' (needs at least ' + fmt1(mn) + ' m)' : '') + '.')];
+}
 // why the rig cannot be changed to r now, or null
 function rigBlock(r){
   const b = S.boat;
@@ -138,7 +145,7 @@ function rigBlock(r){
   if (mySets().length) return [gL('Trekk alt redskap i sjøen først.', 'Haul all the gear in the sea first.')];
   if (b.gop) return [gL('Redskapsarbeidet er i gang.', 'Gear work is going on.')];
   if (!rigHas(r)){ const k = RIGS[r].kind, hs = GEAR[k].haulers.filter(h => equipFits(h, b.type || 'skiff'));
-    if (!hs.length) return [gL('Denne båten kan ikke rigges for ' + rigName(r).toLowerCase() + ': ' + GEAR[k].haulers.map(h => lc1(EQUIP[h].name.no)).join(' eller ') + ' passer ikke om bord.', 'This boat cannot be rigged for ' + rigName(r).toLowerCase() + ': ' + GEAR[k].haulers.map(h => lc1(EQUIP[h].name.en)).join(' or ') + ' does not fit aboard.')];
+    if (!hs.length) return haulerNoFit(k);
     return [gL('Båten mangler ' + hs.map(h => lc1(EQUIP[h].name.no)).join(' eller ') + '. Den kjøpes og monteres i Butikk › Elektronikk og haler.', 'The boat has no ' + hs.map(h => lc1(EQUIP[h].name.en)).join(' or ') + '. Buy and fit one at Shop › Electronics and haulers.')]; }
   return null;
 }
@@ -152,13 +159,14 @@ function ownedUnits(kind){
   if (kind === 'line') return pg.lines.hyse.n + pg.lines.bank.n + sea + shore;
   return pg.pots.big + sea;
 }
-function gearRoom(kind){ const m = (BOAT.gearMax || {})[kind === 'line' ? 'stamp' : kind] || 0; return Math.max(0, m - ownedUnits(kind)); }
+function gearRoom(kind){ if (haulerNoFit(kind)) return 0; const m = (BOAT.gearMax || {})[kind === 'line' ? 'stamp' : kind] || 0; return Math.max(0, m - ownedUnits(kind)); }
 
 // ---- buying (in port)
 // one rule for everything sold for gear (Jonas 08.10.2026): nothing for line, nets or pots is bought before the boat has the hauler for it,
 // and what goes with them (hooks, buoy sets, anchors, bait) only once the boat owns some of that gear. Every shop button and buyGear ask this.
 function buyGate(what, spec){
   const own = k => ownedUnits(k) > 0, anyGear = own('line') || own('garn') || own('teine');
+  { const k = {stamp:'line', net:'garn', pot:'teine'}[what], nf = k && haulerNoFit(k); if (nf) return nf; }   // no hauler fits: the same words as the Rig tab (F3)
   if (what === 'stamp' && !hasHauler('line')) return [gL('Du trenger en linehaler før du kan kjøpe line.', 'You need a line hauler before you can buy line.')];
   if (what === 'net' && !hasHauler('garn')) return [gL('Du trenger en garnhaler før du kan kjøpe garn.', 'You need a net hauler before you can buy nets.')];
   if (what === 'pot' && !hasHauler('teine')) return [gL('Du trenger en teinehaler før du kan kjøpe teiner.', 'You need a pot hauler before you can buy pots.')];

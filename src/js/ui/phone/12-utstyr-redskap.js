@@ -162,7 +162,8 @@
         const n = Math.max(1, Math.min(n0, cap(w))), price = n * unit, ok = cap(w) >= 1 && price <= spendable() && inPortNow;
         return '<button class="ph-btn' + (ok ? ' p' : '') + '"' + (ok ? '' : ' disabled') + ' data-pa="grbuy" data-w="' + w + '" data-s="' + s + '" data-n="' + n + '">' + lbl(n) + ' · ' + kr(price) + '</button>'; };
       if (!inPortNow) h.push('<div class="ph-card"><p class="ph-note">' + L('Redskap kjøpes i havn.', 'Gear is bought in port.') + '</p></div>');
-      const roomTxt = (n, no, en) => '<p class="ic-have">' + L('Plass til ' + n + ' ' + no + ' til', 'Room for ' + n + ' more ' + en) + '</p>';
+      // no room line where no hauler fits the boat: the gate says why instead (spilltest 3, F3)
+      const roomTxt = (n, no, en) => haulerNoFit({garn:'garn', stamper:'line', teiner:'teine'}[no]) ? '' : '<p class="ic-have">' + L('Plass til ' + n + ' ' + no + ' til', 'Room for ' + n + ' more ' + en) + '</p>';
       const own = (w, n, no, en) => n ? L(n + ' ' + no + ' om bord', n + ' ' + en + ' aboard') : '';
       h.push(itemCard({k:'net', name:L('Garn', 'Nets'), price:L('fra ', 'from ') + kr(NETTY.bunn.price) + L(' per garn', ' a net'), have:own('net', pg.nets.reduce((a, l) => a + l.n, 0), 'garn', 'nets'), body:roomTxt(room('garn'), 'garn', 'nets'),
         btns:NETOPT.map(o => buy('net', netKey(o[0], o[1]), 10, n => (o[0] === 'bunn' ? L('Torsk', 'Cod') : o[0] === 'flyt' ? L('Flyt', 'Float') : L('Blåkveite', 'G. halibut')) + ' ' + o[1] + ' mm × ' + n, NETTY[o[0]].price)).join('')}));
