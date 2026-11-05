@@ -67,6 +67,11 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 
 - **Fil:** `cloudOn()` (`ui/10f-cloud.js:12`) slår skyen av med `#nocloud`, og `shopMode()` (`ui/10i-shop.js:17`) gir da `'test'`, så `payBuy` kaller `give()` uten betaling (`10i-shop.js:42`): haill, trim, Skippertak og malingsdesign. Spillet lastes opp neste gang uten `#nocloud`, og designene vises for alle gjennom `liv` i `pos_put`/`pos_world` (bare logoen sjekkes mot kjøpet, `logo_put`).
 - **Retting:** `shopMode()` gir `'off'` på vertene i `cloud.json` når skyen er av; `pos_put` fjerner design i `liv` som spilleren ikke eier (`entitlements`).
+- **Status 05.11.2026 (Jonas: «Kjør på funn 5 og 14»): rettet** (acdaf0db):
+  - `shopMode()` gir `'off'` på spillets egne verter når skyen er av: `pubHost()`, altså vertene i `cloud.json` og GitHub Pages, med `#nocloud`, uten nett og på Pages. Artifacten og testserveren har testkjøpene som før.
+  - `pos_put` deler de betalte delene av malingen bare når kontoen eier dem (`supabase/migrations/20261105140000_liv_owned.sql`). Det gjelder ripe, totone, vann, stripe, lakk, flagg og rederilogo. Fargene, registreringsmerket og vimplene deles alltid. Spilleren ser selv det som står i lagringen; bare de andre ser båten uten det som ikke er kjøpt.
+  - **Prøvd:** `kjoptest` har en ny sjekk med `#nocloud` på spillets vert, `sqltest` en ny sjekk av designene. I Chromium med detstorebla.no pekt til testserveren er butikken av; skjermbilder i begge formater.
+  - **Venter:** migreringen må kjøres i SQL Editor.
 
 ### 6. MIDDELS: lagringen, pengene og haillen er klientens
 
@@ -118,6 +123,7 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 
 - `core/01-world.js:20–23`: frøet gjør `Math.random` forutsigbart, så en spiller kan se sjeldne hendelser på forhånd.
 - **Retting:** bare når siden ikke ligger på vertene i `cloud.json` (eller når `WCLOCK` er av).
+- **Status 05.11.2026: rettet** (acdaf0db). Frøet virker bare på en lokal testserver (localhost, 127.0.0.1, [::1]), ikke etter om `WCLOCK` er av, fordi `worldtest` bruker `#world` sammen med frøet. Prøvd i Chromium: på detstorebla.no (pekt til testserveren) er `Math.random` den vanlige; på 127.0.0.1 virker frøet.
 
 ### 15. LAV: herding av serveren og funksjonene
 
@@ -142,7 +148,7 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 
 1. ~~**Funn 1** (XSS i admin)~~: rettet 05.11.2026 i admin (b5289877, med funn 13) og i databasen (`20261105120000_fb_meta.sql`, kjørt av Jonas).
 2. ~~**Funn 2a, 3 og 4**~~: gjort 05.11.2026 (`20261105130000_guest_world.sql`, med 2c). Turnstile (funn 4) og 2b er ikke bygd, se funnene.
-3. **Funn 2b–c, 5, 13 og 14** i én økt.
+3. ~~**Funn 5 og 14**~~: rettet 05.11.2026 (acdaf0db; migreringen `20261105140000_liv_owned.sql` venter på SQL Editor). 2c og 13 er gjort tidligere; 2b står.
 4. **Funn 7** (innloggingsdomenet) når Jonas setter opp `auth.detstorebla.no` hos WorkOS.
 5. **Funn 8, 9, 10, 11, 12 og 15** som ryddejobber.
 6. **Funn 6** (haill på serveren) hører til en større plan for økonomien; den rammer bare jukseren selv.
