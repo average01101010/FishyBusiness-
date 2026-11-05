@@ -3,6 +3,7 @@
 > Den ene lista over det som gjenstår. Hver økt oppdaterer den som siste handling (`/okt-slutt`): nytt inn under riktig overskrift, det som er rettet flyttes til «Strøket» nederst med dato og commit. Kapittel 10 i overleveringen flyttet hit ordrett 26.10.2026 (`docs/utviklingsplan.md`, fase A3).
 
 ## Spillarbeid som venter (26.10.2026)
+- **Spilltest 3, rettingene** (gren `ccr-9c21028c-lptg24`, 05.11.2026): F1–F7, U3, U5–U7, U9–U11 er bygd, testet og pushet til egen gren, men ikke flettet inn i `ccr-5e1ba2f4-pusvyd` (som ruller ut) før Jonas sier ja (/lever 9–10). Resten venter på valgene V1–V6 i `docs/planer/spilltest3-valg.md`.
 
 - **`vesseltest` rød etter havsteget H1b R4 (04.11.2026, funnet i førstegangsstart-økta):** «no code branches on a vessel type name» peker på `core/03e-rules.js:156` og `:323` (`sp === 'snokrabbe'`, fra `5a1951c1`). Det er arten snøkrabbe, ikke båttypen med samme navn, så det er trolig testen som tar feil; enten får testen et unntak for artsnøkler (`sp`), eller sjekken skrives om. Ikke rørt.
 - **Båten i sjøen etter farten (04.11.2026, `vaer-og-hav.md` 5.20e):** levert (planing, sprøytevinger, renne, smalere kjølvann, turkis, trim fra Fr), og etterpå kjølvann for de andre båtene og tynnere vask bak deplasementsbåter. Står igjen: (1) Jonas ser formen og falmingen på nettbrettet (bildene er fra SwiftShader); (2) kostnaden i skumkartet (nå sju skrog per texel) og sjøskyggeren er ikke målt på nettbrettet (`#fps`); (3) Kelvin-armene og sprøyten i lufta fra de andre båtene; (4) renna som forsenkning i geometrien (rutenettet er for grovt).
@@ -103,6 +104,7 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 
 ## 10.2 Spillbarhet (fra spilltestene og egne notater)
 
+- **U10, rest (spilltest 3):** når en knappetekst brytes i to linjer, står ikonet i den knappen en linje høyere enn naboene (`.dk-b .dk-l`, `#dock` `align-items:flex-end`). Lesbart, men ujevnt.
 - **Spilltest 3, det som venter på Jonas' valg** (`docs/planer/spilltest3-valg.md`, V1–V6): U1 to klokker uten merking, U2 båten driver fra redskapet uten varsel, U4 varslene drukner, U8 kongekrabbens område på butikkortet, U12 ventetida i juksespillet.
 - **Fangsten er uforklart, og den garanterte første turen gir feil forventning** (spilltest 2): full last på første tur (`03-simulation.js`, påfyllingen i `05-vessels.js`), nå også med luksushaill. Etter første levering sier ingenting at turen var ekstra god eller hva vanlig fiske gir. Varmekartet, ekkoloddet, fangstmerkene og Fiskeguiden viser nå hvor fisken er.
 - **Planleggeren viser ikke bølger langs ruta**, bare «her» og på åpent hav i Vær-fanen.
@@ -283,7 +285,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 ## Strøket 05.11.2026 (spilltest 3: F1–F7, U3, U5–U7, U9–U11, gren `ccr-9c21028c-lptg24`)
 
-- F1–F7 og U3, U5, U6, U7, U9, U10, U11 fra `docs/playtest/rapport-3-redskap.md` er rettet; hva og hvor står i `docs/systemer/rettelser.md`. U1, U2, U4, U8, U12 og K1–K3 venter på valgene i `docs/planer/spilltest3-valg.md`.
+- F1–F7 og U3, U5, U6, U7, U9, U10, U11 fra `docs/playtest/rapport-3-redskap.md` er rettet (658bc77..3031f15, ikke flettet inn i `ccr-5e1ba2f4-pusvyd` ennå: venter på Jonas' ja); hva og hvor står i `docs/systemer/rettelser.md`. U1, U2, U4, U8, U12 og K1–K3 venter på valgene i `docs/planer/spilltest3-valg.md`.
 
 ## Strøket 05.11.2026 (Driftsplan 2: U11 og U4, gren `ccr-3d7eb5bf-vgz41n`)
 - U11: din egen hvile på planen startet ikke av seg selv ved rorbu eller naust, og avgangen ventet på «Hvil i naustet …» også mens spillet var lukket (0ff92d4). U4: Pause lot båten fiske videre og viste «I dag ←» (71d32f0). Testet med `driftsplan2test` (S1–S19 og S9 grønne), `driftsplan2ui`, `driftsplan2gui` (95 OK; de 4 røde er U6 og U7) og enhetstestene (1031 OK), bare rundt Senja.
