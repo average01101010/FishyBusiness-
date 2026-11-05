@@ -22,7 +22,7 @@ Fra `CLAUDE.md` 26.10.2026 (Jonas 07.10.2026, «Spør før hver test»: «Dekker
 | `havshot` | 25–30 min | 3D langt ute ved store γ og k (Petsjorahavet +31°, Nord-Island −31° og k 1,024, Bjørnøya): kompasset mot sola og vinden, bildene i begge formater; bare når kompasset, sola, bølgenes retning eller γ i 3D endres |
 | `lybshot` | 10 min | bildene av verftet, butikken og Mannskapsbørsen i Longyearbyen i begge formater (3D); bare når det som tegnes der, endres |
 | `teleport3d` | 8 min | kartlasteren eller 3D-terrenget |
-| `kinotest` | 6 min | kameraet |
+| `kinotest` | 6 min (15 min i skyen 05.11.2026; 1 500 s i `LONG`) | kameraet |
 | `unittest` | 5 min | havner og mottak (kai, kran, truck, tidevann) |
 | `coast3d`, `sitetest` | 4–5 min | terrenget, kartdataene eller mottaksregisteret |
 | `kjoptest` | 3,5 min | butikken |
