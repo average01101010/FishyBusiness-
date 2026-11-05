@@ -50,7 +50,7 @@ function heatValue(v, sp){ const i = HEATI[sp]; return i !== undefined ? v[i] ||
 // (05-vessels.js, 10-gear.js: kg an hour on the jig, kg a net, tub or pot with its soak, where it was taken) and the plan's «du fikk X
 // her» (06f-plan.js planMark). HEATG.fair is a usual haul (a net, a tub or a pot at a good place after 24 h, a hand jig an hour), the
 // marks' colour and the plan's neutral figure where there is no mark; it never reads the fish.
-const HEATG = {T:24, fair:{garn:30, line:100, teine:20, jig:20}};   // (line 70 → 100 with the line's catchability, K2 05.11.2026)
+const HEATG = {T:24, fair:{garn:40, line:100, teine:20, jig:20}};   // (line 70 → 100 with the line's catchability, K2 05.11.2026; nets 30 → 40 with the nets' calibration the same day: ERS 15-21 m, all species a net, median 65 in February-April, 36 in October-January, 29 in May-September)
 const heatSoakSum = (tau, T) => { let s = 0; for (let a = 1; a <= T; a++) s += Math.exp(-a / tau); return s; };
 const heatPotSum = T => { let s = 0; for (let a = 1; a <= T; a++) s += Math.min(1, a / 6) * Math.exp(-a / 40); return s; };
 // how much of a 24-hour haul a shorter soak gives

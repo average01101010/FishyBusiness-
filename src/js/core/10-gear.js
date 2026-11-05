@@ -6,7 +6,7 @@
 // 3–4 hours and other line overnight (Store norske leksikon, "line"). Catch rates, times, wear and prices are start values for play-testing.
 // Gear aboard each vessel is S.pgear (a VKEY); gear in the sea is S.sets for the whole company, so the map and 3D can draw every buoy.
 const GEAR = {
-  garn:{no:'Garn', en:'Nets', u:['garn', 'garn', 'net', 'nets'], km:0.028, set:0.8, haul:4, hand:2.5, crewMin:2, haulers:['garnhaler'], q:0.07, skill:'garn'},
+  garn:{no:'Garn', en:'Nets', u:['garn', 'garn', 'net', 'nets'], km:0.028, set:0.8, haul:4, hand:2.5, crewMin:2, haulers:['garnhaler'], q:0.07, cap:150, skrei:1.3,   /* (cap 80 → 150 kg a net and the skrei factor 05.11.2026: ERS 2024-2026, cod nets 15-21 m, March median 72 kg of cod a net, p75 107, p90 191; redskap.md, Kalibrering) */ skill:'garn'},
   line:{no:'Line', en:'Line', u:['stamp', 'stamper', 'tub', 'tubs'], kmHook:0.0015, set:5, haul:25 / 700, hand:2.0, crewMin:1, haulers:['linehaler'], q:0.045, skill:'line'},   // (q 0.032 → 0.045 05.11.2026, K2 in spilltest 3: ERS 2024–2026 gives a median of 185 kg haddock per 1000 hooks, 111 kg a 600-hook tub; redskap.md, Kalibrering)
   teine:{no:'Teiner', en:'Pots', u:['teine', 'teiner', 'pot', 'pots'], km:0.025, set:0.9, haul:1.2, hand:2.5, crewMin:1, haulers:['teinehaler'], q:0.12, skill:'teiner'}
 };
@@ -620,14 +620,17 @@ function soakHour(s, H){
   }
   const key = gearKey(s), sel = SELQ[key], G = GEAR[s.kind];
   const nNow = Object.values(acc).reduce((q, x) => q + x.n, 0), kgNow = Object.values(acc).reduce((q, x) => q + x.kg, 0);
-  const f = s.kind === 'line' ? Math.exp(-a / 10) * Math.max(0, 1 - nNow / (s.hooks * 0.35)) : Math.exp(-a / 30) * Math.max(0, 1 - kgNow / (80 * s.n));
+  const f = s.kind === 'line' ? Math.exp(-a / 10) * Math.max(0, 1 - nNow / (s.hooks * 0.35)) : Math.exp(-a / 30) * Math.max(0, 1 - kgNow / ((G.cap || 80) * s.n));
   const units = s.kind === 'line' ? s.hooks / 100 : s.n, cond = s.kind === 'garn' ? 0.5 + 0.5 * (s.cond || 1) : s.kind === 'line' ? lineQ(s) : 1;
   // a line's bait: the tubs' kinds weighed by how many (an old set without them: makrell, as the old bait)
   const bw = s.kind === 'line' ? (s.baitW || {makrell:s.n}) : null, bwN = bw ? Object.values(bw).reduce((a, v) => a + v, 0) || 1 : 1, lineB = sp => { if (!bw) return 1; let v = 0; for (const k in bw) v += bw[k] * baitF(k, sp); return v / bwN; };
   let gen = 0;   // a species with its own stock layer (the Greenland halibut, stk) is taken from that, the rest from the common one
   // the fish up and down in the water through the day (gearVertF, 03f-fiske.js): bottom gear takes more by day, the floating net by night
   const qA = key === 'line:auto' ? AUTOQ : 1;
-  for (const sp in sel){ const r = 30 * G.q * qA * units * sel[sp] * density(sp, mid, H) * luck(sp) * lineB(sp) * f * cond * gearVertF(sp, key, mid, H); if (r > 0){ add(sp, r, r / SPECIES[sp].size[0]); tot += r; if (!SPECIES[sp].stk) gen += r; else if (!s.dry) takeStock(mid, r, sp); } }
+  // the migrating skrei swims and meets a cod net far more often than the resident cod (ERS 2024-2026, cod nets 15-21 m: median 72 kg of cod
+  // a net in March against 4 in October-January); only the cod in a bottom net, by the share of the cod here that is skrei (skreiShare)
+  const skN = key === 'garn' && G.skrei ? 1 + G.skrei * skreiShare(mid, H) : 1;
+  for (const sp in sel){ const r = 30 * G.q * qA * (sp === 'torsk' ? skN : 1) * units * sel[sp] * density(sp, mid, H) * luck(sp) * lineB(sp) * f * cond * gearVertF(sp, key, mid, H); if (r > 0){ add(sp, r, r / SPECIES[sp].size[0]); tot += r; if (!SPECIES[sp].stk) gen += r; else if (!s.dry) takeStock(mid, r, sp); } }
   if (!s.dry) takeStock(mid, gen);
   // amphipods (marflo) and hagfish eat what hangs dead in the gear after the first day
   const loss = (s.kind === 'line' ? 0.07 : 0.03) * sstep(20, 28, a);

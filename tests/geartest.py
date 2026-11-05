@@ -242,7 +242,7 @@ async def main():
           return R; })()""")
         print('calibration:', json.dumps(r))
         print(ok(60 <= r['linePerTub'] <= 115 and r['lineHyse'] >= 50), 'haddock line, 12 hours in February on the eight best haddock spots: 60–115 kg a tub (600 hooks), mostly haddock')
-        print(ok(20 <= r['netPerNet'] <= 45), 'cod nets of 180 mm, 20 hours in March west of Gryllefjord: 20–45 kg a net')
+        print(ok(55 <= r['netPerNet'] <= 95), 'cod nets of 180 mm, 20 hours in March west of Gryllefjord: 55–95 kg a net (ERS 2024-2026, 15-21 m: median 72 kg of cod a net in March, 05.11.2026)')
         print(ok(2.0 <= r['potPerPot'] <= 12), 'big king crab pots, 24 hours in September in West Finnmark: 2–12 kg a pot (an estimate)')
         # bait (04.10.2026): five kinds with their own species, a set line keeps the tubs' bait, and own saithe as bait counts on the quota
         bt = await pg.evaluate("""(()=>{ const R = {f:[baitF('reke', 'torsk'), baitF('krill', 'uer'), baitF('krill', 'torsk'), baitF('krabbe', 'lange'), baitF('sei', 'kveite'), baitF('makrell', 'sei')]};
