@@ -373,7 +373,12 @@ def main():
         sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_d1', 'user_01AAA', 'des_ripe', 29, 'open', '{}')")
         sql("select public.shop_paid('cs_d1', 'pi_d1')"); R['dOwn'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')).get('owned')
         R['dGive'] = [g['data'].get('give') for g in json.loads(sql("select public.shop_pending()", A, 'authenticated')) if g['product'] == 'des_ripe']
+        # Ø6 funn 5 (20261105140000_liv_owned.sql): the others see a paid design on the boat only when the account owns it; the colours,
+        # the registration mark and the pennants are free
+        livA = lambda: (sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul;r:raud;t:blaa;f:SE.rekt;f:LOGO.vimpel;l:abc;m:T.1.LK;p:2')", A, 'authenticated'), sql("select liv from public.presence where player_id = 'user_01AAA'"))[1]
+        R['livOwn'] = livA()
         sql("select public.shop_refund('pi_d1')"); R['dGone'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')).get('owned')
+        R['livGone'] = livA(); sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul')", A, 'authenticated')
         # one's own registration number: one player's per mark
         R['rgA'] = sql("select public.reg_claim('T-777-LK')", A, 'authenticated'); R['rgB'] = sql("select public.reg_claim('T-777-LK')", B, 'authenticated')
         R['rgA2'] = sql("select public.reg_claim('T-777-LK')", A, 'authenticated'); R['rgBad'] = sql("select public.reg_claim('<b>')", A, 'authenticated', expect_err=True)
@@ -555,6 +560,8 @@ def main():
               "the logo: put up only once owned, a bad picture refused, the others get it by the world's id; only the admin lists and takes it away, then nobody gets it, the player is told why and may put up another",
               {k: R[k] for k in ('lgV', 'lgRm', 'lgGone', 'lgMine', 'lgAgain', 'lgMine2')})
         print(ok(R['rgA'] == 't' and R['rgB'] == 'f' and R['rgA2'] == 't' and R['rgBad'][0] and R['rgRead'][0]), "one's own registration number: the first player's, refused to another, kept for the first; a bad mark and reading the claims are refused", {k: R[k] for k in ('rgA', 'rgB', 'rgA2')})
+        print(ok(R['livOwn'] == 'h:gul;r:raud;m:T.1.LK;p:2' and R['livGone'] == 'h:gul;m:T.1.LK;p:2'),
+              "the others see a paid paint design only while the account owns it (bought, not refunded); colours, the registration mark and the pennants always (Ø6 funn 5)", {'own': R['livOwn'], 'gone': R['livGone']})
         print(ok(R['dOwn'] == ['des_ripe'] and R['dGive'] == ['cos'] and R['dGone'] == []), 'a paint design: paid, it is the account\'s on every device (owned) and a grant for the game; a refund takes it away', {'own': R['dOwn'], 'give': R['dGive'], 'gone': R['dGone']})
         print(ok(R['deleted'] == '0/0/0/anon'), 'deleting the account takes the player, the events and the save; the purchase stays without a name for the books', R['deleted'])
         print(ok(R['del2'] == 'user_01DDD/0' and R['del2Anon'] is not None), 'delete_me2 deletes the account and names it (for the sign-in at WorkOS); signed out it is refused', {'del2': R['del2'], 'anon': str(R['del2Anon'])[:60]})

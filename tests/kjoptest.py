@@ -91,6 +91,16 @@ async def main():
         await pg3.wait_for_function("typeof SHOP !== 'undefined' && CLOUD.user && SHOP.ready !== null", timeout=120000); await pg3.wait_for_timeout(300)
         t = await pg3.evaluate("[...document.querySelectorAll('#toast, .toast')].map(e => e.textContent).join(' | ')")
         check('avbrutt' in t, 'a cancelled payment says the purchase was cancelled and nothing was charged', t[:200])
+        # 5. on the game's own site with the cloud off (#nocloud, no network; Ø6 funn 5): the shop is closed, nothing is given free
+        ctx2 = await br.new_context(viewport={'width': 1100, 'height': 800}); await ctx2.add_init_script(STUB); await ctx2.route('https://sb.test/**', handle)
+        pg4 = await ctx2.new_page(); pg4.on('pageerror', lambda e: errs.append(str(e)))
+        await boot(pg4, BASE + '#notut,nocloud'); await pg4.wait_for_timeout(800)
+        r5 = await pg4.evaluate("""(async () => { S.tut = 0; const n0 = (S.haillInv || {}).haill || 0; PHONE.open('haill'); await new Promise(r => setTimeout(r, 300));
+          const b = document.querySelector('#phone [data-pa=haillbuy][data-k=haill]'), lab = b && b.textContent; if (b) b.click(); await new Promise(r => setTimeout(r, 300));
+          const n1 = (S.haillInv || {}).haill || 0; PHONE.show(false); return {on:CLOUD.on, pub:pubHost(), mode:shopMode(), lab, given:n1 - n0}; })()""")
+        check(not r5['on'] and r5['pub'] and r5['mode'] == 'off' and r5['lab'] == 'Snart i salg' and r5['given'] == 0,
+              "#nocloud on the game's own site: the shop is closed («Snart i salg») and a tap gives nothing (Ø6 funn 5)", r5)
+        await ctx2.close()
         print('errors:', errs[:3]); await ctx.close(); await br.close()
 
 asyncio.run(main())

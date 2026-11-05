@@ -20,7 +20,8 @@ const WCLOCK = {off:0, on:typeof location === 'undefined' ? false : !/^(localhos
 // #seed=N in the address (tests/_env.py puts it there, KYST_SEED) swaps Math.random for a seeded generator (mulberry32, the one the tests
 // used inside their own evaluate blocks), so a test run repeats: the weather, the catch, the crew, the orders and S.qseed come out the
 // same every time, and a red test is a bug and not a bad roll (29.10.2026). Nothing in the game sets it; a player's address never has it.
-{ const m = typeof location !== 'undefined' && /(^#|[#,])seed=(\d+)/.exec(location.hash || '');
+// It works only on a local test server: on the game's sites a player could foretell the rare catches and events with it (Ø6 funn 14).
+{ const m = typeof location !== 'undefined' && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) && /(^#|[#,])seed=(\d+)/.exec(location.hash || '');
   if (m){ let a = (+m[2] || 1) | 0; Math.random = () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; } }
 const worldNow = () => Date.now() + WCLOCK.off;
 const worldTf = () => Math.max(0, (worldNow() - WORLD_T0) * GAME_RATE / 60000);
