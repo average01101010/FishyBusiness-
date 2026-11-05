@@ -233,4 +233,4 @@ Fra H2b (05.11.2026):
   - To skift à 14 følger båten, seks og seks på dekk og i fabrikken, kokken lager maten, lotten etter § 6 til skiftet, skiftbytte ved levering; mannskapsbørsen er stengt for havbåten.
   - Proviant for 60 døgn ved avgang; turens grenser (proviant, drivstoff, agn, kroker, rom) med varsler og kortet Turen.
   - Lossing på paller, om lag 10 t i timen, med frysing ved kaia; enkel pall med kartonger i 3D (Blender-pallen er H2d).
-  - Tester: `tests/unit/fabrikk.test.mjs` (47 sjekker) og `tests/fabrikktest.py` (26, to døgn der lagene fisker uten deg om bord og en lossing). **Venter på Jonas før utrulling.**
+  - Tester: `tests/unit/fabrikk.test.mjs` (47 sjekker) og `tests/fabrikktest.py` (26, to døgn der lagene fisker uten deg om bord og en lossing i Vannareid). Stikkprøve av lossingen sør, midt og nord: Egersund, Valderøya (Ålesund) og Båtsfjord, 63 paller på 6,4 timer hvert sted, sluttseddel, lott og skiftbytte, ingen sidefeil. **Venter på Jonas før utrulling.**
