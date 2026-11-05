@@ -9,7 +9,17 @@ class _Quiet(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass
 # (KYST_DIST is made absolute here: the handler resolves its directory on every request, and this module chdirs to tests/out below, so
 # a relative KYST_DIST=dist-pwa served nothing and the game never started, 29.10.2026)
-_SRV = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(_Quiet, directory=os.path.abspath(os.environ.get('KYST_DIST') or os.path.join(os.path.dirname(HERE), 'dist'))))
+class _Srv(http.server.ThreadingHTTPServer):
+    # the page reloads or closes while a map pack is still on its way: the browser drops the connection, and the server's own
+    # traceback (BrokenPipeError, ConnectionResetError) made run.py count a Python error in a test whose checks were all green
+    # (crewwalk, boottest, fleet2test, streaktest, tabtest; Ø2 05.11.2026). Those are the browser's to drop; anything else is printed
+    def handle_error(self, request, client_address):
+        import sys
+        if isinstance(sys.exc_info()[1], (BrokenPipeError, ConnectionResetError, ConnectionAbortedError)): return
+        super().handle_error(request, client_address)
+
+
+_SRV = _Srv(('127.0.0.1', 0), functools.partial(_Quiet, directory=os.path.abspath(os.environ.get('KYST_DIST') or os.path.join(os.path.dirname(HERE), 'dist'))))
 threading.Thread(target=_SRV.serve_forever, daemon=True).start()
 BASE = 'http://127.0.0.1:%d/' % _SRV.server_port
 # «#qfix»: the 3D view keeps its high quality (view3d.js QUAL), so SwiftShader's few frames a second do not step it down.

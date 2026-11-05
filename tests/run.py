@@ -5,6 +5,7 @@ before publishing.
   python3 tests/run.py smoke test ...     just the tests you name
   python3 tests/run.py full               the whole regression (before publishing)
   python3 tests/run.py full --3d          the same with 3D drawn in every test
+  python3 tests/run.py historikk         per test: runs, red, the pattern (OPOOP), from tests/out/historikk.tsv
   node tests/unit/run.mjs                 the unit tests of the core alone (run.py runs them first when src/js/core/ changed)
 
 The tests that do not look at 3D run with KYST_LITE=1: the game runs as before, but no 3D frame is drawn (#no3d), and that is
@@ -26,12 +27,12 @@ os.makedirs(LOGS, exist_ok=True)
 # draw 3D: they look at the 3D view itself (frames, camera, quays, cranes, pumps)
 D3 = ['sunshot', 'havshot', 'kaishot', 'signcoast', 'signtest', 'trytest', 'gfxtest', 'benchshot', 'profshot', 'f1test', 'havnshot', 'lifeshot', 'wetshot', 'vindshot', 'treeshot', 'wakeshot', 'anchor3d', 'skytest', 'jigshot', 'naust3dtest', 'pubtest', 'helmjit', 'anchorlight3d', 'saytest', 'yardtest', 'dbg23o', 'trackfollow', 'tral3d', 'seatrytest', 'sitetest', 'coast3d', 'ultratest', 'camtest', 'moortest', 'landtest', 'bunkertest', 'heattest', 'vessel3d', 'unittest', 'sea3d', 'teleport3d', 'lighttest', 'kinotest', 'haultest', 'vectest', 'potshot', 'aurorashot', 'skoddeshot', 'penshot', 'deckshot', 'workshot', 'brotest', 'svalbardtest', 'qdowntest']
 LITE = ['istest', 'lybtest', 'havtur', 'autolinetest', 'fabrikktest', 'sonetest', 'uketest', 'kystkarttest', 'havflaate', 'etikett', 'sponsor2test', 'sponsortest', 'markettest', 'nettest', 'itemcardtest', 'kystvakttest', 'lagtest', 'eventtest', 'boktest', 'lotttest', 'skattetest', 'driftsplan2test', 'driftsplan2ui', 'driftsplan2map', 'driftsplan2gui', 'slidertest', 'anchorswing', 'selfcrew', 'crewclip', 'regmarktest', 'dockrow', 'hulltest', 'dyntest', 'crewlifetest', 'crewwalk', 'walktest', 'tabtest', 'navbarshot', 'skiptest', 'synctest', 'installtest', 'looktest', 'hbtest', 'naustclear', 'rectest', 'ptowtest', 'seaworktest', 'hailtest', 'gbtest', 'sharetest', 'friendtest', 'searchtest', 'savestest', 'caretest', 'yardupgtest', 'jigalongtest', 'heatgeartest', 'anchortest', 'drifttest', 'driftuitest', 'plantsaytest', 'cashfxtest', 'autonavtest', 'placetest', 'sidetab', 'guidetest', 'stedertest', 'icestep', 'heatpick', 'peergear', 'turtest', 'posttest', 'merketest', 'fartstidtest', 'maletest', 'climtest', 'sqltest', 'cloudtest', 'errtest', 'guesttest', 'kjoptest', 'r4test', 'tutdrift', 'worldtest', 'pushtest', 'feedbacktest', 'hudtest', 'obstest', 'marktest', 'rorbutest', 'admintest', 'tut', 'starttest', 'seasontest', 'uishots', 'quotatest', 'rulestest', 'npctest', 'havntest', 'keeptest', 'tidetest', 'trip2', 'docktest', 'booktest', 'decktest', 'geartest', 'loretest', 'tattest', 'towtest', 'airtest', 'fleet2test', 'fleet3test', 'opsowntest', 'routetest', 'naustleia',
-        'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'adminbuytest', 'fuelcal', 'bunktest', 'lanterntest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest', 'maptest', 'mig2test', 'charttest', 'helmtest', 'soundtest', 'sleeptest', 'pwatest', 'bktest']
+        'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'adminbuytest', 'fuelcal', 'bunktest', 'lanterntest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest', 'maptest', 'mig2test', 'charttest', 'helmtest', 'soundtest', 'sleeptest', 'pwatest', 'bktest', 'ordtest']
 # they measure milliseconds, so they run alone at the end, when nothing else takes the CPU
 SOLO = ['routetest', 'heattest', 'landtest', 'charttest']
 VECB = ['kaishot', 'havshot', 'npctest', 'havntest', 'lybtest', 'havtur', 'vectest', 'svalbardtest', 'lifeshot', 'havnshot', 'havflaate', 'etikett']   # need dist-vec/ with the vec packs; run.py builds it once before them (KYST_VEC_BUILT)
 READ = {'selltest', 'hailltest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest'}
-LONG = {'driftsplan2gui': 1200, 'signcoast': 1800, 'signtest': 1500, 'tut': 3600, 'deckshot': 2400, 'workshot': 1800, 'vessel3d': 2400, 'sea3d': 3000, 'vectest': 1500, 'svalbardtest': 1800, 'havntest': 1500, 'lybtest': 1500, 'havtur': 2400, 'havshot': 3000, 'kinotest': 1500, 'heattest': 3600, 'trackfollow': 3300, 'vindshot': 2400, 'wetshot': 2400, 'treeshot': 1500, 'lifeshot': 2400, 'havnshot': 2400, 'wakeshot': 1500}   # SwiftShader can take ~40 s for one 3D screenshot; sea3d takes 27
+LONG = {'driftsplan2gui': 1200, 'signcoast': 1800, 'signtest': 1500, 'tut': 3600, 'deckshot': 2400, 'workshot': 1800, 'vessel3d': 4500, 'sea3d': 3000, 'vectest': 1500, 'svalbardtest': 1800, 'havntest': 1500, 'lybtest': 1500, 'havtur': 2400, 'havshot': 3000, 'kinotest': 1500, 'heattest': 3600, 'trackfollow': 3300, 'vindshot': 2400, 'wetshot': 2400, 'treeshot': 1500, 'lifeshot': 2400, 'havnshot': 2400, 'wakeshot': 1500}   # SwiftShader can take ~40 s for one 3D screenshot; sea3d takes 27
 # not in D3, but they draw 3D all the same (tut.py plays the first trip with the 3D view), so they run in the 3D lane
 DRAWS3D = {'tut'}
 MUST = {'trip2': ('"st":"port"', 'ender ikke i havn'), 'tut': ('"tut": 0', 'veiledningen er ikke ferdig')}
@@ -147,7 +148,33 @@ def run(name, lite):
     return {'name':name, 'lite':lite, 'dt':dt, 'ok':ok, 'bad':bad, 'why':why, 'status':status, 'tail':lines[-12:]}
 
 
+# A5 (docs/planer/verktoy-fra-game-studios.md, Ø2 05.11.2026): one line per test per run, so «flaky» becomes a number:
+# date, branch, commit, test, OK/FEIL/LES, seconds, 3D or not. tests/out/ is not in git; the regression routine copies the table
+HIST = os.path.join(HERE, 'out', 'historikk.tsv')
+
+
+def history(r):
+    git = lambda *a: subprocess.run(['git'] + list(a), cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    try:
+        with open(HIST, 'a') as f:
+            f.write('\t'.join([time.strftime('%Y-%m-%d %H:%M'), git('rev-parse', '--abbrev-ref', 'HEAD'), git('rev-parse', '--short', 'HEAD'),
+                               r['name'], r['status'], '%.0f' % r['dt'], 'lite' if r['lite'] else '3d']) + '\n')
+    except OSError: pass
+
+
+def flaky():
+    rows = [l.rstrip('\n').split('\t') for l in open(HIST)] if os.path.exists(HIST) else []
+    by = {}
+    for r in rows:
+        if len(r) >= 5: by.setdefault(r[3], []).append(r[4])
+    print('%-16s %6s %5s  %s' % ('test', 'kjørt', 'røde', 'mønster (O grønn, F rød, L les; eldst først)'))
+    for n, st in sorted(by.items(), key=lambda kv: (-sum(s == 'FEIL' for s in kv[1]) / len(kv[1]), kv[0])):
+        print('%-16s %6d %5d  %s%s' % (n, len(st), sum(s == 'FEIL' for s in st), ''.join({'OK': 'O', 'FEIL': 'F'}.get(s, 'L') for s in st[-40:]),
+              '  ustabil' if 'OK' in st and 'FEIL' in st else ''))
+
+
 def report(r):
+    history(r)
     mode = 'uten 3D' if r['lite'] else 'med 3D'
     print('%-4s %-12s %5.0f s  %s%s' % (r['status'], r['name'], r['dt'], mode, ('  · %d OK' % r['ok']) if r['ok'] else ''), flush=True)
     for l in r['bad']: print('       ' + l[:300])
@@ -164,6 +191,7 @@ UNIT_SRC = ('src/js/core/', 'tests/unit/', 'src/js/vessel3d.js', 'src/data/boat-
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     all3d = '--3d' in sys.argv
+    if args[:1] == ['historikk']: flaky(); sys.exit(0)
     if not args or args[0] not in ('changed', 'smoke', 'full'):
         print(__doc__); sys.exit(2)
     if args[0] == 'changed':
