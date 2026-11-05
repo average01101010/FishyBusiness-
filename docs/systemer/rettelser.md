@@ -57,5 +57,11 @@ Rapporten fra den blinde spilltesten ga ti faser. Jonas bestemte: veiledningen e
 - **U9** `netNo`/`netN`: «Torskegarn 180 mm», «10 flytegarn 156 mm» i butikken, viften, beholdningen og dagboka.
 - **U10** Knappetekstene brytes i to linjer inne i knappen (`.dk-b .dk-l`).
 - **U11** `setWarn` i `ui/03d-setmode.js`: gul advarsel (ikke sperre) for blåkveitegarn når direktefisket er stengt.
-- **Venter på valg:** U1, U2, U4, U8, U12 og K1–K3, i `docs/planer/spilltest3-valg.md`.
+- **Jonas' valg 05.11.2026** (`docs/planer/spilltest3-valg.md`, V1–V8), bygd samme dag:
+  - **U1 (V1 A):** klokkeslettet i spilltid først, ekte tid etter med «i ekte tid». `inReal` sier alltid «i ekte tid»; `gameDur` og `durBoth` («3 t (30 min i ekte tid)») på knappene for montering, verksted, egning og reparasjon; HUD-en «Fisket er ferdig kl. 12:12 · om 30 min i ekte tid»; knappelinja «Jukser til 12:12 · om 30 min i ekte tid»; juksekortet viser timene og «til 12:12 · …»; søvnen «Du våkner kl. …».
+  - **U2 (V2 B):** båten ligger på været ved eget redskap (`GEARLIE`, `lieDrift` i `core/16b-dyn.js`): med noen våken om bord og diesel holdes hun innen 0,5 nm fra nærmeste egne blåse, og motoren kjører henne opp til 0,25 nm med fem knop og bruker diesel for det (`fuelUse`, `fuelLph`). Sover du alene, eller er tanken tom, driver hun som før. `gearWatch` gir alarmen (ankeralarmens pip og en toast) når hun går fra under til over 1 nm fra redskapet mens hun ligger eller driver. HUD-en har raden «Blåsa 0,3 nm · driver 0,8 kn SØ» (rød med «Kjør dit» over 1 nm), og knappelinja har «Til blåsa» innen en halv mil.
+  - **U4 og K3 (V3 A, V6c A):** rekordene står i dagboka og på fangstkortet («Ny rekord · 7,1 kg», `catchRec`), ikke som melding; fars torsk er fortsatt en melding. Fartstiden står i dagboka; toast bare for hele år etter de fem første. Toasten legger seg over viften og settelinja (`toastPlace`) og forsvinner når noe nytt åpnes i knappelinja (`toastClear`).
+  - **U8 (V4 A):** teinekortene i butikken og på nettet sier hvor kongekrabben er med Fiskeguidens ord (`KC_WHERE`).
+  - **U12 (V5 A):** snøret dupper 1–3 s før nappet med en svak lyd (`SND.nudge`), et lite rykk i teksten og en kort vibrasjon, og av og til uten napp etter. Tida mellom nappene og fangsten er som før.
+  - **V7 B:** rettingene rulles ut samlet. **V8 A:** mottakssjefene kan skifte navn én gang i gamle lagringer.
 - **Test:** `tests/unit/spilltest3.test.mjs`, `python3 tests/fiskeplay.py garn kanter teiner line butikker` i begge formater.
