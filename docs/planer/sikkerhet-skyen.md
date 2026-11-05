@@ -31,7 +31,7 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 - **Fil:** `src/admin/index.html:227` (`fbMeta`, brukt i linje 243). `m.pos[0]` og `m.pos[1]` settes rett inn i `href` og lenketeksten uten `esc()`. `fb_send` (`supabase/migrations/20261005180000_feedback.sql:81`, levende) sjekker bare at `meta` er et objekt på høyst 4 000 byte.
 - **Angrep:** hvem som helst med en gjestekonto kaller `fb_send2` med `meta:{pos:["\"><img src=x onerror=…>",0]}`. Når Jonas åpner Tilbakemeldinger i admin, kjører skriptet med hans aal2-økt (`sessionStorage.dsbAdmin`, med fornyelsesnøkkelen). Da kan angriperen kalle alle `admin_*` og `sp_admin_*`: endre verdensinnstillinger (`admin_cfg_set`, `admin_stock_set`), sponsorer, navn og logoer, svare spillere, lese alle tilbakemeldinger og hele dashbordet, og ta med seg tokenet.
 - **Retting:** `esc(+m.pos[0])` og `esc(+m.pos[1])` (tall, ellers ingenting), og i SQL: `fb_send` beholder `pos` bare som to tall. Gå samtidig gjennom resten av admin for verdier fra spillerne som ikke går gjennom `esc()` (funn 13). En streng CSP på `/admin` (funn 15) ville stoppet dette.
-- **Status 05.11.2026 (Jonas: «Rett funn 1 nå»): rettet i admin-siden** (b5289877): `fbMeta` tar bare to endelige tall og viser «–» ellers. Angrepet ble prøvd i Chromium mot admin i demo-modus: før rettingen kjørte skriptet, etter rettingen ikke. Databasen hadde ingen tilbakemelding med annet enn tall i `pos` (113 lest), så hullet er ikke brukt. **Venter:** migreringen `supabase/migrations/20261105120000_fb_meta.sql` (`fb_send` beholder `pos` bare som to tall innenfor bredde og lengde, `sqltest` grønn) er ikke lagt inn i databasen: sperren i skymiljøet stoppet `apply_migration` som en utrulling til produksjon. Jonas kjører den i SQL Editor. Admin-siden er trygg uten den; migreringen er et ekstra vern.
+- **Status 05.11.2026 (Jonas: «Rett funn 1 nå»): rettet i admin-siden** (b5289877): `fbMeta` tar bare to endelige tall og viser «–» ellers. Angrepet ble prøvd i Chromium mot admin i demo-modus: før rettingen kjørte skriptet, etter rettingen ikke. Databasen hadde ingen tilbakemelding med annet enn tall i `pos` (113 lest), så hullet er ikke brukt. **Også i databasen:** migreringen `supabase/migrations/20261105120000_fb_meta.sql` (`fb_send` beholder `pos` bare som to tall innenfor bredde og lengde, `sqltest` grønn). Sperren i skymiljøet stoppet `apply_migration` som en utrulling til produksjon, så Jonas kjørte den i SQL Editor 05.11.2026; bekreftet etterpå med en lesende spørring.
 
 ### 2. HØY: landingene stoles på fra klienten, og én spiller kan stenge åpen gruppe for alle
 
@@ -131,7 +131,7 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 
 ## Forslag til rekkefølge
 
-1. ~~**Funn 1** (XSS i admin)~~: rettet i admin 05.11.2026 (b5289877, med funn 13); migreringen `20261105120000_fb_meta.sql` venter på SQL Editor.
+1. ~~**Funn 1** (XSS i admin)~~: rettet 05.11.2026 i admin (b5289877, med funn 13) og i databasen (`20261105120000_fb_meta.sql`, kjørt av Jonas).
 2. **Funn 2a, 3 og 4** (gjester og anonyme kontoer påvirker ikke andre) i én økt med en migrering og `sqltest`.
 3. **Funn 2b–c, 5, 13 og 14** i én økt.
 4. **Funn 7** (innloggingsdomenet) når Jonas setter opp `auth.detstorebla.no` hos WorkOS.
