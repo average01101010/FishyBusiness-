@@ -31,7 +31,7 @@ const WORK = (() => {
   // ---- «På dekk nå» (Jonas 23.10.2026: brikker): who stands where, nothing to tap, and in one line what waits on deck ----
   function deckNow(A){
     const ks = flowOf().concat(jobSt(), ['kokk']).filter((k, i, a) => a.indexOf(k) === i);
-    const chip = k => { const W = A.filter(p => p.st === k).map(first); return '<span class="wk-dk' + (W.length ? ' on' : '') + '"><b>' + sn(k) + '</b>' + (W.join(', ') || '–') + '</span>'; };
+    const chip = k => { const W = A.filter(p => p.st === k).map(first); if (k === 'kokk' && lagOf() && lagSpec().key.includes('kokk')) W.push(L('Kokken i byssa', 'The cook in the galley')); return '<span class="wk-dk' + (W.length ? ' on' : '') + '"><b>' + sn(k) + '</b>' + (W.join(', ') || '–') + '</span>'; };
     const wait = ['haling', 'sloy', 'is', 'kokk'].concat(jobSt()).filter((k, i, a) => a.indexOf(k) === i && (k !== 'haling' || S.boat.gop)).map(k => [k, queue(k)])
       .filter(([k, q]) => q && q !== '–' && !/^0 kg/.test(q) && q !== L('ingen på', 'nobody on it')).map(([k, q]) => sn(k).toLowerCase() + ' ' + q);
     return '<div class="ph-card"><h4>' + L('På dekk nå', 'On deck now') + '</h4><div class="wk-dks">' + ks.map(chip).join('') + '</div>' + (wait.length ? '<p class="ph-note">' + L('Venter: ', 'Waiting: ') + wait.join(' · ') + '</p>' : '') + '</div>';
@@ -74,23 +74,13 @@ const WORK = (() => {
       '<p class="ph-note">' + (on.size ? L(on.size === 1 ? '1 mønstret på ' : on.size + ' mønstret på ', on.size + ' signed on ') + bn + ' · ' : '') + where + (meAboard() ? '' : ' · ' + L('du er ikke om bord', 'you are not aboard')) + '</p>' +
       (S.crew.length || lagOf() ? '' : '<p class="ph-note">' + L('Ingen mannskap ennå. Finn folk under Bygd, Ansatte.', 'No crew yet. Find people under Village, Employees.') + '</p>') + '</div>';
   }
-  // an ocean vessel's teams (core/04-crew.js, H2b): the crew aboard, its skill, the watch on now and the crew ashore
-  function lagCard(){
-    const G = lagOf(), V = lagSpec(), sh = G.sh[G.on], w = lagWatch(S.t / 60), off = G.sh.filter(x => x !== sh);
-    return '<div class="ph-card"><h4>' + L('Lagene', 'The teams') + '</h4>' + kv(L('Om bord', 'Aboard'), L('skift ', 'crew ') + lagShName(G.on) + ' · ' + lagN() + L(' mann', ' men') + (meAboard() ? L(' og deg', ' and you') : '')) +
-      kv(L('Nøkkelfolk', 'Key people'), V.key.join(', ')) + kv(L('Lag', 'Teams'), V.teams.map(t => (t.role === 'dekk' ? L('dekk ', 'deck ') : L('fabrikk ', 'factory ')) + t.n).join(' · ')) +
-      kv(L('Ferdighet', 'Skill'), fmt(sh.skill, 1) + ' / 5' + (sh.trips ? ' · ' + sh.trips + L(sh.trips === 1 ? ' tur' : ' turer', sh.trips === 1 ? ' trip' : ' trips') : '')) +
-      kv(L('Vakt nå', 'Watch now'), w ? L('2. vakt (06–12 og 18–24)', '2nd watch (06–12 and 18–24)') : L('1. vakt (00–06 og 12–18)', '1st watch (00–06 and 12–18)')) +
-      off.map(x => kv(L('I land', 'Ashore'), L('skift ', 'crew ') + lagShName(x.i) + ' · ' + fmt(x.skill, 1) + ' / 5')).join('') +
-      '<p class="ph-note">' + L('Dekkslaget og fabrikklaget går seks og seks, halvparten av hvert lag på hver vakt. Skipperen og styrmannen har broa hver sin vakt, maskinistene maskinen og kokken byssa. Skiftene bytter ved hver levering, og lotten går til skiftet om bord etter § 6.', 'The deck and factory teams go six on, six off, half of each team on each watch. The skipper and the mate have the bridge a watch each, the engineers the engine room and the cook the galley. The crews change at each landing, and the share goes to the crew aboard by § 6.') + '</p></div>';
-  }
   function offLines(){
     const on = new Set(crewAboard().map(c => c.id)), off = S.crew.filter(c => !on.has(c.id)); if (!off.length) return '';
     return '<div class="ph-card"><h4>' + L('Fri', 'Off') + '</h4>' + off.map(c => '<div class="ph-kv"><span><b>' + c.name.split(' ')[0] + '</b></span><span>' + (c.off ? L('Fri denne turen', 'Off this trip') : L('Fri i dag (biyrke)', 'Off today (part-time)')) + '</span></div>').join('') + '</div>';
   }
   function page(){
     const team = crewAboard(), G = lagOf(), h = ['<div class="ph-c wk">', head()];
-    if (team.length || G){ const A = workAssign(); h.push(deckNow(A)); if (G) h.push(lagCard());
+    if (team.length || G){ const A = workAssign(); h.push(deckNow(A)); if (G) h.push(lagCardHtml());
       if (meAboard() && asleep()) h.push('<div class="ph-card wk-p"><div class="wk-top"><b class="wk-name">' + L('Du', 'You') + '</b><span class="wk-bs">' + badge('mate', L('Skipper', 'Skipper')) + '</span></div><p class="wk-now r2">' + L('Sover', 'Asleep') + '</p></div>');
       for (const p of A) if (!(p.c && p.c.anon)) h.push(row(p));   // (the teams are in their card)
       h.push('<p class="ph-note">' + L('Mannskapet fordeler arbeidet selv, etter hva de kan, hva de er vant med, hvor slitne de er og hva som hoper seg opp. Når båten går, står du til rors. Ellers er du på dekk sammen med de andre. Styrmannen tar roret når du sover eller ikke er om bord.', 'The crew share the work themselves, by what they can do, what they are used to, how tired they are and what is piling up. Under way you are at the helm; otherwise you are on deck with the others. The mate takes the helm when you sleep or are not aboard.') + '</p>'); }
@@ -118,6 +108,19 @@ hooks.onPlantSay = (pid, idx, nm, no, en) => { if (typeof G3 !== 'undefined' && 
 hooks.onCrewFx = (c, kind, o) => typeof G3 !== 'undefined' && G3.isActive() && G3.crewFx ? G3.crewFx(c, kind, o) : false;
 hooks.onSay = (c, no, en) => { if (typeof G3 !== 'undefined' && G3.isActive() && G3.say(c, no, en)) return; if (typeof toast === 'function') toast(c.name.split(' ')[0] + ': «' + (S.lang === 'no' ? no : en) + '»'); };
 // your energy on screen: the edges darken under 15 %, and asleep the screen is black with a countdown in real time
+// an ocean vessel's teams (core/04-crew.js, H2b): the crew aboard, its skill, the watch on now and the crew ashore (the Mannskap page and
+// the Mannskap app)
+function lagCardHtml(){
+    const L = (no, en) => S.lang === 'no' ? no : en, kv = (a, b) => '<div class="ph-kv"><span>' + a + '</span><span>' + b + '</span></div>';
+    const G = lagOf(), V = lagSpec(), sh = G.sh[G.on], w = lagWatch(S.t / 60), off = G.sh.filter(x => x !== sh);
+    return '<div class="ph-card"><h4>' + L('Lagene', 'The teams') + '</h4>' + kv(L('Om bord', 'Aboard'), L('skift ', 'crew ') + lagShName(G.on) + ' · ' + lagN() + L(' mann', ' men') + (meAboard() ? L(' og deg', ' and you') : '')) +
+      kv(L('Lag', 'Teams'), L('nøkkelfolk ', 'key people ') + V.key.length + ' · ' + V.teams.map(t => (t.role === 'dekk' ? L('dekk ', 'deck ') : L('fabrikk ', 'factory ')) + t.n).join(' · ')) +
+      '<p class="ph-note">' + L('Nøkkelfolk: ', 'Key people: ') + V.key.join(', ') + '.</p>' +
+      kv(L('Ferdighet', 'Skill'), fmt(sh.skill, 1) + ' / 5' + (sh.trips ? ' · ' + sh.trips + L(sh.trips === 1 ? ' tur' : ' turer', sh.trips === 1 ? ' trip' : ' trips') : '')) +
+      kv(L('Vakt nå', 'Watch now'), w ? L('2. vakt (06–12 og 18–24)', '2nd watch (06–12 and 18–24)') : L('1. vakt (00–06 og 12–18)', '1st watch (00–06 and 12–18)')) +
+      off.map(x => kv(L('I land', 'Ashore'), L('skift ', 'crew ') + lagShName(x.i) + ' · ' + fmt(x.skill, 1) + ' / 5')).join('') +
+      '<p class="ph-note">' + L('Dekkslaget og fabrikklaget går seks og seks, halvparten av hvert lag på hver vakt. Skipperen og styrmannen har broa hver sin vakt, maskinistene maskinen og kokken byssa. Skiftene bytter ved hver levering, og lotten går til skiftet om bord etter § 6.', 'The deck and factory teams go six on, six off, half of each team on each watch. The skipper and the mate have the bridge a watch each, the engineers the engine room and the cook the galley. The crews change at each landing, and the share goes to the crew aboard by § 6.') + '</p></div>';
+  }
 function energyUi(){
   const L = (no, en) => S.lang === 'no' ? no : en, e = S.energy == null ? 100 : S.energy, sl = $('sleep'), vg = $('vign'), zz = asleep();
   vg.style.opacity = zz ? 0 : e < ENERGY.dim ? ((ENERGY.dim - e) / ENERGY.dim * 0.9).toFixed(2) : 0;

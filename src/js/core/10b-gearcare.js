@@ -60,7 +60,7 @@ function careBack(s, n, W){
   const pg = careG(); if (n <= 0) return;
   if (s.kind === 'line'){ if (isAuto(s.lk) && !pg.lines.auto) pg.lines.auto = {n:0, baited:0, bt:{}, cond:1, max:1, bent:0, miss:0, sharp:0}; const L = pg.lines[s.lk], w = W || {cond:s.cond == null ? 1 : s.cond, miss:s.miss || 0, bent:s.bent || 0}, tot = L.n + n;
     L.cond = careRound((L.cond * L.n + w.cond * n) / tot); L.miss = careRound((L.miss * L.n + (w.miss || 0) * n) / tot); L.bent = careRound((L.bent * L.n + (w.bent || 0) * n) / tot);
-    if (s.sharp) L.sharp = Math.max(0, (L.sharp || 0) - 1); L.n = tot; if (isAuto(s.lk)) L.baited = tot; }
+    if (s.sharp) L.sharp = Math.max(0, (L.sharp || 0) - 1); L.n = tot; if (isAuto(s.lk)){ L.baited = tot; autoFixSpend(); } }   // (the hooks changed as it comes in: autoFixSpend)
   else if (s.kind === 'teine'){ const c = pg.potc, w = W ? W.cond : (s.cond == null ? 1 : s.cond), tot = (pg.pots[s.pot] || 0) + n;
     c.cond = careRound((c.cond * (pg.pots[s.pot] || 0) + w * n) / tot); pg.pots[s.pot] = tot; }
 }
@@ -80,20 +80,25 @@ function careBuy(what, spec, n){
   return null;
 }
 // ---- the autoline's hooks changed aboard (H2b of docs/planer/havsteget-h2-autoline.md, 05.11.2026; HI report 2024-11: about 5 % of the
-// gear a day). The crew changes hooks and snoods as the line comes in, from the hooks in store (pg.hooks), an hour's share at a time at
-// sea, the worst first: every missing and bent hook among them, and the worn snoods and stretches of line (the wear lies unevenly, from
+// gear a day). The crew changes hooks and snoods as the line comes in, from the hooks in store (pg.hooks): the day's change gathers an
+// hour's share at a time at sea (b.autoBank, at most a day's) and goes on the lenker on the magazines, and on each lenke as it comes in
+// through the hauling port (careBack), at most a quarter of the hooks aboard at once; the worst first: every missing and bent hook among them, and the worn snoods and stretches of line (the wear lies unevenly, from
 // as worn again as the mean to none, so what is changed gains the line up to twice its mean wear). That keeps the line from wearing down
 // over a trip of weeks (tests/unit/fabrikk.test.mjs: six weeks on deep water with a good catch); with no hooks in store it waits, said
 // once a day
 const AUTOFIX = {day:0.05};
 function autoFixHour(){
   const b = S.boat, pg = S.pgear; if (!pg || !BOAT.autoHooks || b.status === 'port' || handsAboard() < 2) return;
+  const day = BOAT.autoHooks * AUTOFIX.day; b.autoBank = Math.min(day, (b.autoBank || 0) + day / 24); autoFixSpend();
+}
+function autoFixSpend(){
+  const b = S.boat, pg = S.pgear; if (!pg || !BOAT.autoHooks || b.status === 'port' || !(b.autoBank >= 1)) return;
   const L = autoL(pg); if (!L || L.n < 1) return; careInit(pg);
-  const tot = L.n * LINE_KINDS.auto.hooks, want = Math.round(BOAT.autoHooks * AUTOFIX.day / 24), n = Math.min(want, Math.floor(pg.hooks || 0));
+  const tot = L.n * LINE_KINDS.auto.hooks, n = Math.min(Math.floor(b.autoBank), Math.floor(pg.hooks || 0), Math.floor(tot * 0.25));
   if (n < 1){ if ((L.miss + L.bent > 0.01 || L.cond < 0.9) && (S.autoFixTold || -1e9) < S.t - 1440){ S.autoFixTold = S.t; log('Det er ingen kroker igjen om bord å bytte med. Autolina slites ned til dere får kjøpt nye.', 'There are no hooks left aboard to change with. The autoline wears down until you buy new ones.'); } return; }
   const def = (L.miss + L.bent) * tot, f = def > 0 ? Math.min(1, n / def) : 0, r = n / tot;
   L.miss = careRound(L.miss * (1 - f)); L.bent = careRound(L.bent * (1 - f)); L.cond = careRound(Math.min(1, L.cond + r * Math.min(1, 2 * (1 - L.cond)))); L.max = Math.max(L.max, L.cond);
-  pg.hooks -= n; b.autoFix = (b.autoFix || 0) + n;
+  pg.hooks -= n; b.autoBank -= n; b.autoFix = (b.autoFix || 0) + n;
 }
 // the buoy sets and anchors one can use: a string of one unit at the least, so no more sets than units of line, nets and pots (the sets in the sea count)
 const kitMax = () => ownedUnits('line') + ownedUnits('garn') + ownedUnits('teine');
