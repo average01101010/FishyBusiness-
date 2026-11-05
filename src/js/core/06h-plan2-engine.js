@@ -86,14 +86,19 @@ function plan2Stop(o, k, no, en, fix){
   if (hooks.onOpsStop) hooks.onOpsStop(S.cur, k, no, en);
 }
 // Pause (U4, Jonas 05.11.2026: «Ja, pause stopper båten der den er»): the trip is cut where she is (a set or a haul in hand stops with what
-// is over the side, as gopAbort does), she lies still, and the gear in the sea stays; o.paused says so on the page until Start, which lays
-// the day again from where she lies (plan2Start)
+// is over the side, as gopAbort does), and the gear in the sea stays; o.paused says so on the page until Start, which lays the day again
+// from where she lies (plan2Start). At sea she anchors where the depth and the room to swing allow it (Jonas 05.11.2026: «Ankre der det
+// går», anchorSpot: 4-40 m and clear of the land), else she drifts with the wind as before (lieDrift, held off the land when someone is
+// awake aboard); o.paused.drift says why she could not anchor
 function plan2Pause(o){
   const sea = !!(S.plan && S.plan.ops); plan2Abort(o);
   o.on = false; o.stop = null; o.held = null; o.hold = 0; o.fetch = null; if (o.run) o.run.wait = null;
-  o.paused = {t:S.t, sea:S.boat.status !== 'port', cut:sea};
+  const b = S.boat, atSea = b.status !== 'port'; let drift = null;
+  if (atSea && !b.anch){ const sp = anchorSpot(b.pos); if (sp.ok) dropAnchor(true); if (!b.anch) drift = sp.ok ? 'nomap' : sp.why; }
+  o.paused = {t:S.t, sea:atSea, cut:sea, drift};
 }
-// Start: a plan paused at sea (or started there) lays the day from where she lies, after the rest if the day's work is spent (plan2Spent)
+// Start: a plan paused at sea (or started there) lays the day from where she lies, after the rest if the day's work is spent (plan2Spent);
+// an anchor Pause dropped comes up when she goes (depart weighs it), so she lies at anchor through that rest instead of drifting
 function plan2Start(o){
   const sea = S.boat.status !== 'port' && !(o.homeA && dist(S.boat.pos, o.homeA) < 0.4);
   o.on = true; o.stop = null; o.held = null; o.hold = 0; o.paused = null; if (o.t0 == null) o.t0 = S.t;

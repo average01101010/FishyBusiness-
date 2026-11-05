@@ -233,6 +233,14 @@ Før dette hadde bare terrengnettene skygge fra fjellene, regnet per punkt (`upd
 - **Av:** på Lav, med `#sun0` i adressen og med lufta av (`#air0`). Terrengets egne skygger står som før.
 - **Test:** `sunshot.py` (Fjordgård i Ørnfjorden en høstkveld med og uten rutenettet, og ved middagstid under spredt skydekke). `G3._debug.sun` er `SG`.
 
+## 4.11n 3D langt ute: γ og målestokken (havsteget H1b R8, 05.11.2026)
+
+Planen (kap. 3a i `docs/planer/havsteget-h1b-rammen.md`) sa at målestokken ved Island «må sees på i R7»; det ble gjort i R8.
+
+- **Retningene ved store γ:** `tests/havshot.py` legger båten ved Petsjorahavet (γ +31,4°), utenfor Nord-Island (γ −31,3°, k 1,024) og ved Bjørnøya (γ 3,7°) en julikveld, dreier kameraet til solas rutenettretning (sann asimut − γ) og deretter mot vinden. Kompasset over 3D-bildet viser sann retning innen 0,6° av `sunAt` og `windDir` begge steder, og bildene viser sola midt under kompasset (306° ved Petsjorahavet). Sola, månen (`computeEnv`), vinden og dønningen (`14-sea.js`, `10-gear.js`, `17d-vind.js`, `24-cinema.js`), lyktsektorene (`06-buildings-lights.js`) og kompasset (`compassDraw`) går alle gjennom γ; ingenting måtte rettes.
+- **Målestokken (k):** 3D tegnes i rutenett-meter. Ved Nord-Island er k 1,024 (1,037 lengst vest ved Island), så land og vec-byggene er 2,4–3,7 % større i rutenettet enn i virkeligheten, mens båtmodellene, havneenhetene og bølgelengdene er tegnet i sanne meter. Båten går k ganger fortere i rutenettet (`gridScale`, R1), så tida langs land og farten mot land er riktige; bare størrelsen på båten og bølgene mot landet er 2–4 % for liten. Det ses ikke (modellene varierer mer enn det seg imellom), og det finnes ingen detaljfliser, kaier eller bygg der k er stor (Island, Færøyane og Grønland har bare land på 200 m). **Ingen endring** (valg med begrunnelse; tas opp igjen om det kommer havner med Blender-modeller utenfor Norge).
+- **Rettet underveis:** kompasslinja i stående format er rundt 150 px for 140°, og tallene hver 15. grad løp inn i hverandre og i himmelretningene («120SØ150165», hele kysten). Nå står bare himmelretningene når det er under 26 px mellom tallene (`compassStrip` i `view3d/23-camera-frame.js`).
+
 ## 5.23 Lys om natta og fyrlykter (03.10.2026)
 
 - **Lyskildene:** opptil 8 punktlys lyser opp terreng, bygg, havneenheter, båter og sjø (`PLG`, `pLit` i skyggeleggerne, `pickLights` hvert bilde). På «Lav» brukes 2, på «Middels» 4.

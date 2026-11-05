@@ -1,0 +1,11 @@
+{
+  "note": "H1b R8 (05.11.2026): the air ticket Tromsø–Longyearbyen for the crew (core/04-crew.js FLY.kr), SAS's lowest one-way fare per month from its low fare calendar. sas.no is closed to the cloud session (ENOTFOUND); .github/workflows/fly.yml opens the calendar in a browser in Actions, keeps every JSON answer it sees and reads the month's lowest price from them (tools/fly/fly.py). Changing this file starts the workflow.",
+  "from": "TOS",
+  "to": "LYR",
+  "pages": [
+    "https://www.sas.no/lavpriskalender/?from=TOS&to=LYR",
+    "https://www.flysas.com/no-no/low-fare-calendar/?origin=TOS&destination=LYR",
+    "https://www.flysas.com/en/low-fare-calendar/?origin=TOS&destination=LYR",
+    "https://www.flysas.com/no-no/low-fare-calendar/"
+  ]
+}

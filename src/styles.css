@@ -119,7 +119,8 @@ body.vplot #gps::after{display:none}
 #drawerTabs{padding:8px 12px 2px} #drawerTabs[hidden]{display:none}
 #drawerBody{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 @media (orientation:landscape){body.dk-open #dock{right:calc(min(380px,92vw) + 8px)} body.dk-open #dockInfo{left:calc((100% - min(380px,92vw)) / 2)} body.dk-open #dockFan{max-width:calc(100% - min(380px,92vw) - 16px)}}
-@media (orientation:portrait){#drawer{top:auto;left:0;width:auto;height:55%;bottom:max(calc(env(safe-area-inset-bottom,0px) + 84px + var(--dkx, 0px)), var(--dkh, 0px));border-radius:16px 16px 0 0;box-shadow:0 -8px 26px rgba(0,0,0,.28);overflow:hidden} .dr-head{padding-top:8px} body.dk-open #dockInfo{display:none}}
+@media (orientation:portrait){#drawer{top:auto;left:0;width:auto;height:55%;bottom:max(calc(env(safe-area-inset-bottom,0px) + 84px + var(--dkx, 0px)), var(--dkh, 0px));border-radius:16px 16px 0 0;box-shadow:0 -8px 26px rgba(0,0,0,.28);overflow:hidden} .dr-head{padding-top:8px} body.dk-open #dockInfo{display:none}
+  #drawer.tall{height:auto;top:max(12%, calc(env(safe-area-inset-top,0px) + 8px))}}
 
 @media (max-width:560px){#plotTop .pt-title{display:none} body.vplot #hud{max-width:52vw}}
 /* the loading screen and the sign-in (ui/10f-cloud.js): the picture (.dsb-bg in index.html) darkened at the top and the bottom, the kicker in
@@ -1172,7 +1173,7 @@ body.vplot .depc{display:none}
 .dr-rv{flex:1;min-width:0;font-size:14px;line-height:1.3;opacity:.85}
 .dr-rc{flex:0 0 14px;font-weight:700;opacity:.55;text-align:right}
 .dr-row.on .dr-rl,.dr-row.on .dr-rc{color:#1e8c6e;opacity:1}
-.dr-row.bad .dr-rv{color:#b3261e;opacity:1}
+.dr-row.dr-bad .dr-rv{color:#b3261e;opacity:1;font-weight:600}
 .dr-rb{padding:0 0 12px}
 .dr-k{font-weight:400;opacity:.75}
 .dr-now{padding:10px 12px;border-radius:10px;background:rgba(30,140,110,.12);margin:6px 0;font-size:14px;line-height:1.35}
@@ -1213,6 +1214,9 @@ body.vplot .depc{display:none}
 .dr-big:disabled{background:transparent;border-style:dashed;color:#7d8d96;cursor:default}.dr-big:disabled small{color:#8a9aa3}
 .dr-onoff{display:block;width:100%;margin:8px 0;padding:14px;border:0;border-radius:12px;background:#e3eaee;color:#15252f;font:700 15px var(--sans)}
 .dr-onoff.on{background:#1e8c6e;color:#fff}.dr-onoff:disabled{background:transparent;border:1px dashed #9aabb4;color:#6c7d87}
+/* a reason the plan is not ready, as the way to what mends it (GUI review U13): the red reason with an arrow, a finger's height */
+.dr-why{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;margin:6px 0;padding:8px 12px;border:1px solid rgba(179,38,30,.35);border-radius:10px;background:rgba(200,40,30,.07);color:#8c1d18;font:inherit;font-size:13.5px;line-height:1.35;text-align:left;cursor:pointer}
+.dr-why span{flex:1;min-width:0}.dr-why b{flex:0 0 auto;font-size:18px;opacity:.75}
 /* Venner (ui/10k-friends.js): the code, the add field, the friends with a green dot when their game is open; friends' boats on the chart */
 .fr-big{letter-spacing:.18em;font-family:var(--mono,monospace);text-align:center;margin:4px 0 6px}
 .fr-add{display:flex;gap:8px;align-items:center} .fr-add input{flex:1;min-width:0;font:600 18px var(--mono,monospace);letter-spacing:.15em;text-transform:uppercase;padding:9px 10px;border:1px solid #b9c4cc;border-radius:8px}
@@ -1364,6 +1368,10 @@ body.in-naust #dock,body.in-naust #dockFan,body.in-naust #dockInfo,body.in-naust
 #pmCard .pm-kv{display:flex;justify-content:space-between;align-items:center;margin:4px 0} #pmCard .pm-kv span:last-child{display:flex;align-items:center;gap:6px} #pmCard .pm-kv button,#pmCard .pin-b button{background:#0d2230;border:1px solid #2c5870;color:#fff;font:600 15px var(--sans);min-width:36px;min-height:36px;border-radius:8px;cursor:pointer} #pmCard .pin-b{display:flex;gap:6px;margin-top:6px} #pmCard .pin-b button[disabled]{opacity:.5} #pmCard .ai-t{color:#8fc7e4;font-size:12px;margin:4px 0}
 @media (max-width:700px){#pmCard{width:auto;right:8px}}
 body.pm #hud,body.pm #pinCard{visibility:hidden}
+/* GUI review U6 A: Autonav, Søk and Vis båten are not needed in plan mode (Ferdig takes you back), and the card stood over them on a phone */
+body.pm :is(#rAuto,#zsearch,#zboat){display:none!important}
+/* P1: the ECDIS line under the plan bar shone through it */
+body.pm #ecdisTop{visibility:hidden}
 #pmBar .pm-day{margin-top:6px;color:#ffd95e;font-size:13px} #pmCard .pm-w{min-width:0;padding:0 10px;font-size:13px} #pmCard .pm-kv small{color:#8fc7e4;font-weight:400}
 /* the item card (M1, ui/05a-itemcard.js): a picture, the name, one line with numbers, the price with its anchor, the state and the buttons */
 .ph-card.ic{display:grid;grid-template-columns:clamp(72px,30%,150px) 1fr;gap:10px;align-items:start}
@@ -1552,3 +1560,26 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 .slip-first small{display:block;font-size:13px;color:#6b5320}
 @keyframes sfIn{from{opacity:0;transform:scale(.92)}}
 @media (prefers-reduced-motion:reduce){.slip-first{animation:none}}
+/* GUI review U7 A (05.11.2026): every tap target on the plan's page and in the chart's card is at least 44 × 44 CSS px
+   (docs/planer/ui-redesign.md), the card's × a button of its own, and more room between one stepper and the next */
+.dr-plc button,.dr-st button{min-width:44px;min-height:44px}
+.dr-plc{gap:8px 18px}.dr-st{gap:8px}
+.dr-kv button,#drawerBody .ops-days button{min-width:44px;min-height:44px;padding:0 10px}
+#drawerBody .ph-sub button,#drawerTabs button{min-height:44px}
+#pmBar .pm-h button,#pmBar .pm-t button{min-height:44px}
+@media (min-width:701px){#pmCard{width:300px}}
+#pmCard .ai-h button{width:44px;height:44px;margin:-6px -8px -6px 0;padding:0;font-size:24px;line-height:1;border-radius:8px}
+#pmCard .pm-kv button,#pmCard .pin-b button{min-width:44px;min-height:44px}
+#pmCard .pin-b button{flex:1}
+/* GUI review U8 A (05.11.2026): on the plan's page one colour says «go on» (Start, Lag driftsplan, Velg i kartet, the way to the shop),
+   green and filled as the plan's own «På»; a running plan reads as its state with the pause in it; Slett is a red outline, never the heaviest */
+.dr-page .ph-btn.p{background:#1e8c6e;border-color:#1e8c6e;box-shadow:0 2px 8px rgba(30,140,110,.25)}
+.dr-onoff:not(:disabled){background:#1e8c6e;color:#fff;box-shadow:0 2px 10px rgba(30,140,110,.3);cursor:pointer}
+.dr-onoff.on{background:#e6f3ee;color:#13684f;border:2px solid #1e8c6e;box-shadow:none}
+.dr-page .ph-btn.dr-del{background:transparent;color:#b3261e;border:1.5px solid #b3261e;box-shadow:none}
+/* P7: the plan's own «Slett» dialog: the button that deletes is a red outline beside «Behold planen» */
+#modal .btn.dr-danger{background:transparent;color:#b3261e;border:1.5px solid #b3261e}
+/* P5 (GUI review): with the drawer open the toast stands clear of it: at the top in a standing screen (over the tall form pages too,
+   which begin at 12 %), in the free part beside it in a lying one */
+@media (orientation:portrait){body.dk-open #toast{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 8px)}}
+@media (orientation:landscape){body.dk-open #toast{left:calc((100% - min(380px,92vw)) / 2);max-width:calc(100% - min(380px,92vw) - 24px)}}

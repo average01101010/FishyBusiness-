@@ -53,6 +53,9 @@ const DOCK = (() => {
   const TABS = {mannskap:[['mannskap', 'Om bord', 'Aboard'], ['bors', 'Mannskapsbørs', 'Crew exchange']], bors:null, fiske:[['fiske', 'Redskap', 'Gear'], ['utstyrb', 'Elektronikk og haler', 'Electronics and haulers']], utstyrb:null};
   TABS.bors = TABS.mannskap; TABS.utstyrb = TABS.fiske;
   const SHOP_PAGES = ['fiske', 'utstyrb', 'service', 'is', 'agn'];
+  // the form pages (GUI review U1 A, 05.11.2026): in a standing screen they open tall (styles.css #drawer.tall), the sea above is not needed
+  // while the plan or the crew are set; the trade pages keep the sea in view
+  const TALL = new Set(['drift', 'arbeid', 'rigg', 'beholdning']);
   const TRYPAGES = ['utstyrb', 'utstyr'];   // the pages where gear can be tried on the boat in 3D (M3)   // the counters whose visits are measured (M2: shop_view)
   let menu = null, page = null, html = '', fanHtml = '', items = [], fanItems = [];
 
@@ -307,6 +310,7 @@ const DOCK = (() => {
     if (PAINT) PAINT.live(page === 'maler' && !dr.hidden);   // the paint shop's camera and colour go with its page (ui/10j-paint.js)
     if (typeof G3 !== 'undefined' && G3.trying && !(TRYPAGES.includes(page) && !dr.hidden)) G3.tryView(null);   // gear tried on goes off with its page (M3)
     if (!page) return;
+    dr.classList.toggle('tall', TALL.has(page));
     const y = keep ? dBody.scrollTop : 0, t0 = TITLE[page] || [page, page];
     dTitle.textContent = L(t0[0], t0[1]); drawTabs();
     const h = dress(page, PHONE.page(page)); if (h !== shown){ shown = h; dBody.innerHTML = h; fold(); ordbok(dBody); } dBody.scrollTop = y;
@@ -328,8 +332,10 @@ const DOCK = (() => {
     return head + h.replace(NEARCARD, '').replace(/<button((?:(?!data-why)[^>])*?)\sdisabled(?=[\s>=])/g, (m, a) => '<button' + a + ' data-why="' + why + '" disabled');
   }
   // a long explanation folds to three lines with «Mer» (the rules and the reasons stood as walls of text over what was to be done)
-  function fold(){ for (const e of dBody.querySelectorAll('.ph-note, p.note')){ if (e.textContent.length > 260 && !e.closest('.pl-head')) e.classList.add('fold'); } }
-  dBody.addEventListener('click', e => { const f = e.target.closest('.fold'); if (f){ f.classList.toggle('open'); } }, true);
+  // (a «Mer» opened stays open when the page is drawn anew with new content, per page and by the text's beginning: GUI review U12)
+  const folds = {}, foldKey = e => e.textContent.slice(0, 80);
+  function fold(){ const op = folds[page]; for (const e of dBody.querySelectorAll('.ph-note, p.note')){ if (e.textContent.length > 260 && !e.closest('.pl-head')){ e.classList.add('fold'); if (op && op.has(foldKey(e))) e.classList.add('open'); } } }
+  dBody.addEventListener('click', e => { const f = e.target.closest('.fold'); if (f){ const on = f.classList.toggle('open'), op = folds[page] || (folds[page] = new Set()); if (on) op.add(foldKey(f)); else op.delete(foldKey(f)); } }, true);
   function open(a){
     const [pg, sb] = String(a).split(':'); if (!PHONE.DRAWER.has(pg)) return;
     const was = page; page = pg; menu = null; html = '';

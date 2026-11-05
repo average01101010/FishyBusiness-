@@ -318,12 +318,15 @@ async def s02_ikke_klar(c):
     c.note('Mannskap-raden', crew_row and crew_row['txt'])
     await c.shots('ikke-klar')
     m = c.mark()
-    await c.press('.dr-rh[data-k="crew"]', name='Mannskap-raden')
-    await c.shots('mannskap-rad', frame=('.dr-row.on',))
+    # U13: the reason is the way to what mends it, a tap on it opens the Crew page
+    why = await c.where('[data-pa="p2-go"][data-go="mannskap"]')
     await c.js("GUI.opened = []; if (!DOCK.__w){ const o = DOCK.open; DOCK.open = function (a){ GUI.opened.push(a); return o.apply(this, arguments); }; DOCK.__w = true; }")
-    await c.press('[data-pa="p2-crew"]', name='Til Mannskap-siden')
+    if why: await c.press('[data-pa="p2-go"][data-go="mannskap"]', name='grunnen (skipper og styrmann)')
+    else:
+        await c.press('.dr-rh[data-k="crew"]', name='Mannskap-raden')
+        await c.press('[data-pa="p2-crew"]', name='Til Mannskap-siden')
     pg_ok = await c.wait("DOCK.page === 'arbeid'", 3)
-    c.check(pg_ok, '«Til Mannskap-siden» åpner Mannskap-siden i samme skuff', {'skuffen viser': await c.js("DOCK.page"), 'DOCK.open kalt med': await c.js("GUI.opened")})
+    c.check(bool(why) and pg_ok, 'U13: grunnen er en knapp, og et trykk på den åpner Mannskap-siden i samme skuff', {'grunnen': why and why['txt'], 'skuffen viser': await c.js("DOCK.page"), 'DOCK.open kalt med': await c.js("GUI.opened")})
     if not pg_ok:
         # the way a player finds instead: the Crew button in the dock
         await c.shots('til-mannskap-trykket')
@@ -339,7 +342,7 @@ async def s02_ikke_klar(c):
     back = await c.wait("DOCK.page === 'drift'", 5)
     st2 = await c.where('.dr-onoff')
     c.check(roles == {'sk': 'Ole Mikalsen', 'mate': 'Per Hansen'} and back and st2 and not st2['dis'], 'skipper og styrmann utnevnt med trykk, og tilbake på Driftsplan er Start klar', {'roller': roles, 'trykk': c.since(m), 'knapp': st2 and st2['txt']})
-    c.note('skipperens eget kort tilbyr fortsatt «Gjør til styrmann»', sk_mate_btn)
+    c.check(not sk_mate_btn, 'U10: skipperens kort tilbyr ikke «Gjør til styrmann»', sk_mate_btn)
     await c.press('[data-pa="p2-start"]', name='Start planen')
     c.check(await c.wait("S.ops && S.ops.on", 30), 'planen går uten deg om bord', c.since(m))
 
@@ -503,13 +506,17 @@ async def s07_uten_haler(c):
     await c.js("S.equip.linehaler = true")
     await asyncio.sleep(0.9)
     await c.press('[data-pa="p2-rig"][data-g="line"]', name='Line')
-    await c.press('.dr-rh[data-k="places"]', name='Plasser-raden')
+    # U13: «Legg ut minst ett felt» is the way to the Plasser row
+    gp = await c.press('[data-pa="p2-go"][data-go="places"]', name='grunnen (minst ett felt)', must=False)
+    c.check(gp is not None and await c.has('.dr-row.on .dr-rh[data-k="places"]'), 'U13: grunnen «Legg ut minst ett felt» åpner Plasser-raden', None)
+    if not await c.has('.dr-row.on .dr-rh[data-k="places"]'): await c.press('.dr-rh[data-k="places"]', name='Plasser-raden')
     await c.press('[data-pa="p2-add"][data-k="felt"]', name='+ Felt for line')
     await c.press('[data-pa="p2-addp"]', name='forslaget')
     await c.press('.dr-pl [data-pa="p2-pup"]:not([disabled])', name='↑ (feltet først, så lina settes straks)')
     t = await c.text(); st = await c.where('.dr-onoff')
     kit = 'blåsesett' in t
-    c.check(kit, 'uten blåsesett sier siden at hver lenke trenger et blåsesett', {'start': st and st['txt'], 'start_låst': st and st['dis']})
+    way = await c.where('[data-pa="goplace"], [data-pa="open"][data-a="fiske"]')
+    c.check(kit and st and st['dis'] and bool(way), 'U9: uten blåsesett er Start låst, med grunnen og veien til utstyrsbutikken', {'start': st and st['txt'], 'start_låst': st and st['dis'], 'veien': way and way['txt']})
     c.note('Start uten blåsesett', {'knapp': st and st['txt'], 'låst': st and st['dis']})
     await c.shots('uten-blaasesett', frame=('.dr-onoff',))
     # started anyway: what the page says when the line cannot be set
@@ -632,7 +639,7 @@ async def s13_uten_koyer(c):
     await c.open_drift(); await c.press('[data-pa="p2-new"]', name='Lag driftsplan')
     await c.press('.dr-rh[data-k="rhythm"]', name='Rytme-raden')
     w = await c.where('[data-pa="p2-rhythm"][data-v="watch"]'); mu = await c.where('[data-pa="p2-rhythm"][data-v="multi"]')
-    c.check(w and w['dis'] and mu and mu['dis'] and 'køyer' in mu['txt'], 'snekke uten køyer: døgndrift og flerdøgnstur låst', {'døgn': w and w['txt'], 'fler': mu and mu['txt']})
+    c.check(w and w['dis'] and 'Båten har' in w['txt'] and 'køyer' in w['txt'] and mu and mu['dis'] and 'køyer' in mu['txt'], 'U2: snekke uten køyer: døgndrift låst med båtens grense først («Båten har … køyer»), og flerdøgnstur låst', {'døgn': w and w['txt'], 'fler': mu and mu['txt']})
     c.note('grunnen på døgndrift for en båt som verken har køyer eller plass til fire', w and w['txt'])
     await c.shots('rytme', frame=('.dr-row.on',))
     await c.press('.dr-rh[data-k="home"]', name='Hjem-raden')
@@ -796,15 +803,21 @@ async def s18_kopier_slett(c):
     cp = await c.js("(() => { const v = S.fleet.find(v => v.id !== S.cur); const o = v && vget(v, 'ops'); return o ? {v:o.v, on:o.on, places:o.places.length} : null; })()")
     c.check(cp and cp['v'] == 4 and not cp['on'], 'kopier til en annen båt med ett trykk, og toasten sier det', {'kopi': cp, 'toast': ts})
     await c.shots('kopier', frame=('[data-pa="p2-reset"]',))
-    c.accept = False
-    await c.press('[data-pa="p2-reset"]', name='Slett driftsplanen (avbryt)')
-    await asyncio.sleep(0.4)
-    kept = await c.js("!!S.ops")
-    c.accept = True
-    await c.press('[data-pa="p2-reset"]', name='Slett driftsplanen (ja)')
+    # P7: the game's own dialog, with the boat's name and what becomes of the gear in the sea
+    d0 = len(c.dialogs)
+    await c.press('[data-pa="p2-reset"]', name='Slett driftsplanen')
+    await asyncio.sleep(0.3)
+    box = await c.text(root='#modal')
+    await c.shots('slett-dialog', frame=('#modal .box',))
+    await c.press('[data-close]', root='#modal', name='Behold planen')
+    await asyncio.sleep(0.3)
+    kept = await c.js("!!S.ops") and await c.js("document.getElementById('modal').hidden")
+    await c.press('[data-pa="p2-reset"]', name='Slett driftsplanen')
+    await c.press('#p2Del', root='#modal', name='Slett planen')
     await asyncio.sleep(0.4)
     gone = await c.js("!S.ops") and await c.has('[data-pa="p2-new"]')
-    c.check(kept and gone and len(c.dialogs) >= 2, 'Slett spør først: avbryt beholder planen, ja sletter den', {'dialog': c.dialogs[-1:]})
+    named = bool(box) and await c.js("S.boatName") in box and ('i sjøen' in box)
+    c.check(kept and gone and named and len(c.dialogs) == d0, 'P7: Slett spør i spillets egen dialog med båtens navn og redskapet i sjøen: «Behold» beholder planen, «Slett» sletter den', {'dialog': (box or '')[:200], 'nettleserdialoger': len(c.dialogs) - d0})
 
 
 async def s19_rederi(c):

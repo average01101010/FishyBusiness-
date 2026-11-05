@@ -62,17 +62,27 @@ JS = """(async () => {
   // pause; the gear in the sea while the plan is off gets «Hent redskapet»
   act('p2-pause'); R.paused = !o.on && !o.stop;
   // U4 (Jonas 05.11.2026: «Ja, pause stopper båten der den er»): she lies still where she was, and the page says so, not «I dag ←»
-  { const st0 = S.boat.status, p0 = {...S.boat.pos}, pp = page(); for (let i = 0; i < 30; i++){ DYN.on = false; step(); } R.pauseStill = {before:st0, status:S.boat.status, plan:!!S.plan, moved:Math.round(dist(p0, S.boat.pos) * 1000), now:/Nå: <\\/b>På pause/.test(pp), arrow:pp.includes(' ←'), next:pp.includes('Når du starter igjen')}; }
+  { const st0 = S.boat.status, p0 = {...S.boat.pos}, pp = page(); for (let i = 0; i < 30; i++){ DYN.on = false; step(); } R.pauseStill = {before:st0, status:S.boat.status, plan:!!S.plan, moved:Math.round(dist(p0, S.boat.pos) * 1000), now:/Nå: <\\/b>På pause/.test(pp), arrow:pp.includes(' ←'), next:pp.includes('Når du starter igjen'), anch:!!S.boat.anch, drift:o.paused && o.paused.drift, saysAnch:/ligger til ankers der den var/.test(pp), saysDrift:/driver med vinden der den var/.test(pp)}; }
   // the line stands in the sea (set at 06:15): «Hent redskapet» goes out, hauls it whatever the soak, lands and switches the plan off
   const p7 = page(); R.fetchBtn = mySets().length >= 1 && p7.includes('p2-fetch') && /har stått/.test(p7);
   const gl0 = (S.gearLog || []).length; act('p2-fetch'); R.fetchOn = o.on && !!o.fetch; let fm = 0; const tr = [], stt = () => { const r = o.run, pl = S.plan; return (pl ? (pl.ops ? pl.opsK : 'own') : '-') + ':' + S.boat.status + (S.boat.port ? '@' + S.boat.port : '') + (S.boat.gop ? '/' + S.boat.gop.op : '') + (S.boat.land ? '/land' : '') + (r && r.day ? '#' + r.i + (r.day.steps[r.i] ? r.day.steps[r.i].k : '') : '') + (r && r.wait ? '?' + r.wait.k : '') + (S.boat.landWait ? '/lw' : ''); }; let was = null;
   for (; fm < 1440 && o.on; fm++){ DYN.on = false; step(); if (fm % 10 === 9) await new Promise(r => setTimeout(r, 0)); const x = stt(); if (x !== was){ tr.push(driftClock(driftHod(S.t / 60)) + ' ' + x + ' h' + Math.round(holdTotal())); was = x; } } R.fetchTrace = tr.slice(0, 40); R.fetchDay = o.run && o.run.day ? o.run.day.steps.map(s => s.k) : null;
-  R.fetched = {sets:mySets().length, on:o.on, fetch:o.fetch, min:fm, trips:o.stats.sum.trips, kg:o.stats.sum.kg, newSets:(S.gearLog || []).slice(gl0).filter(e => e.tSet > S.t - fm).length, port:S.boat.port, said:S.msgs.slice(-1).map(m => m.no).join('')};
+  R.fetched = {anchUp:!S.boat.anch || S.boat.status === 'port', sets:mySets().length, on:o.on, fetch:o.fetch, min:fm, trips:o.stats.sum.trips, kg:o.stats.sum.kg, newSets:(S.gearLog || []).slice(gl0).filter(e => e.tSet > S.t - fm).length, port:S.boat.port, said:S.msgs.slice(-1).map(m => m.no).join('')};
   // a stopped plan: the reason and the button that fixes it
   o.stop = {t:S.t, k:'closed', no:'Felt 1 er stengt (test).', en:'Field 1 is closed (test).', fix:'places'}; const p4 = page(); R.stopShown = p4.includes('Stoppet: Felt 1 er stengt') && p4.includes('p2-fix');
   act('p2-fix'); R.fixOpens = page().includes('p2-pn'); o.stop = null;
   // the statistics with a landing in it
   o.stats.days.push({d:gDate(S.t / 60).toISOString().slice(0, 10), trips:1, kg:312, kr:5400, lott:1800, cost:600, conf:0, sp:{torsk:280, hyse:32}, port:{[o.M]:312}}); const p8 = page(); R.stats = p8.includes('p2-stat') && /Torsk \\d+ %/.test(p8) && p8.includes(portById(o.M).name + ' ') && p8.includes(fmt(Math.round(o.stats.days.reduce((a, d) => a + d.kg, 0))) + ' kg');
+  // Pause where she can anchor (Jonas 05.11.2026: «Ankre der det går»): she anchors and the page says so; Start lays the day from there,
+  // and the anchor comes up when she goes (depart)
+  { let q = null; for (let r = 0.4; r < 8 && !q; r += 0.1) for (let a = 0; a < 36 && !q; a++){ const z = {x:HP.p.x + r * Math.sin(a * 0.1745), y:HP.p.y - r * Math.cos(a * 0.1745)}; try { if (anchorSpot(z).ok && !inHarbour(z) && depthF(z) > 8) q = z; } catch (e){} }
+    R.anchSpot = !!q;
+    if (q){ const b2 = S.boat; S.plan = null; b2.status = 'idle'; b2.port = null; b2.pos = {...q}; b2.v = 0; o.on = true; o.stop = null; o.paused = null; o.run = null; S.energy = 100; S.crew.forEach(c => { c.fatigue = 0; });
+      act('p2-pause'); const pp = page(); const p0 = {...b2.pos}; for (let i = 0; i < 30; i++){ DYN.on = false; step(); }
+      R.anchPause = {anch:!!b2.anch, says:/ligger til ankers der den var/.test(pp), moved:Math.round(dist(p0, b2.pos) * 1000), drift:o.paused && o.paused.drift};
+      act('p2-start'); for (let k = 0; k < 300 && !o.on; k++) await new Promise(r => setTimeout(r, 100));
+      let m = 0; for (; m < 600 && (b2.anch || b2.status === 'idle'); m++){ DYN.on = false; step(); if (m % 10 === 9) await new Promise(r => setTimeout(r, 0)); }
+      R.anchStart = {on:o.on, min:m, anch:!!b2.anch, status:b2.status, opsK:S.plan && S.plan.opsK, wait:o.run && o.run.wait && o.run.wait.no}; } }
   // copy to another vessel
   const v2 = newVesselObj('sjark', 'husoy'); act('p2-copy', {id:v2.id}); const o2 = vget(v2, 'ops'); R.copy = !!o2 && o2.v === 4 && o2.places.length === o.places.length && !o2.on && o2.places[0].id !== o.places[0].id;
   S.me = S.cur; o.on = true; return R; })()"""
@@ -98,7 +108,10 @@ async def main():
         print(ok(r['notReady'] and r['ready']), 'without you aboard the plan waits for a skipper and a mate', [r['notReady'], r['ready']])
         print(ok(r['on'] and r['made'] and r['M'] and r['now'] and r['today'] and r['landVal'] and r['line']), 'Start makes the plan and switches it on; «Nå», «I dag» with the step she is on, and the plant are shown', [r['on'], r['M'], r['err'], r['now'], r['today'], r['landVal']])
         print(ok(r['paused'] and r['fetchBtn'] and r['stopShown'] and r['fixOpens']), 'pause; the gear in the sea gets «Hent redskapet»; a stopped plan shows the reason and the button that fixes it', [r['paused'], r['fetchBtn'], r['stopShown'], r['fixOpens']])
-        q = r['pauseStill']; print(ok(q['status'] in ('idle', 'port') and not q['plan'] and q['moved'] < 1500 and q['now'] and not q['arrow'] and q['next']), 'Pause stops the boat where she is (U4): no trip, she lies still and drifts with the wind (lieDrift, held off the land; under 1.5 km in 30 min, at cruise she would make 3.5), «Nå» says the plan is paused, and the day is the next one when you start again, not «I dag ←»', q)
+        q = r['pauseStill']; print(ok(q['status'] in ('idle', 'port') and not q['plan'] and q['now'] and not q['arrow'] and q['next'] and ((q['anch'] and q['saysAnch'] and q['moved'] < 300) or (not q['anch'] and q['status'] != 'port' and q['drift'] and q['saysDrift'] and q['moved'] < 1500) or q['before'] == 'port')), 'Pause stops the boat where she is (U4) and anchors where it can (Jonas: «Ankre der det går»): no trip, at anchor she stays put (under 300 m in 30 min) and the page says «til ankers», else she drifts with the wind (lieDrift, held off the land, under 1.5 km) and the page says why; «Nå» says the plan is paused, and the day is the next one when started again', q)
+        a, st = r.get('anchPause') or {}, r.get('anchStart') or {}
+        print(ok(r.get('anchSpot') and a.get('anch') and a.get('says') and a.get('moved', 999) < 300 and st.get('on') and not st.get('anch') and st.get('status') in ('sailing', 'fishing', 'unmooring')), 'Pause where she can anchor: she anchors, lies put and the page says «til ankers»; Start lays the day from there and the anchor comes up when she goes', {'pause': a, 'start': st})
+        print(ok(r['fetched']['anchUp']), '«Hent redskapet» after a Pause at anchor: the anchor is weighed when she goes (depart)', r['fetched'].get('anchUp'))
         f = r['fetched']; fok = r['after60']['sets'] >= 1 and r['fetchOn'] and f['sets'] == 0 and not f['on'] and not f['fetch'] and f['trips'] >= 1 and f['newSets'] == 0 and 'hentet' in f['said']
         print(ok(fok), '«Hent redskapet» hauls the line whatever the soak, lands, sets nothing again and switches the plan off', f)
         if not fok: print('  dagen:', r.get('fetchDay')); [print('  ', x) for x in r.get('fetchTrace', [])]

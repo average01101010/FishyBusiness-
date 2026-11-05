@@ -73,3 +73,4 @@ Ingen endring i motoren utover grunnene (U13), dagens ord (P4) og blåsesettet (
 ## Status
 
 - 05.11.2026: planen skrevet. Jonas svarte samme dag: gruppe 1 ja til alle, A på U1, U6, U7, U8, U9, U14 og P7. I tillegg: Pause skal ankre der det går (driver ellers), og en rorbu uten penger lar planen vente og si fra. Bygges i neste økt.
+- 05.11.2026: alt bygd på `ccr-5e1ba2f4-pusvyd` (U1–U3, U5–U10, U12–U14, P1–P7 og Pause med anker), én commit per retting. Detaljene står i `docs/systemer/driftsplan.md` («Valgene etter GUI-gjennomgangen bygd»).
