@@ -1213,6 +1213,9 @@ body.vplot .depc{display:none}
 .dr-big:disabled{background:transparent;border-style:dashed;color:#7d8d96;cursor:default}.dr-big:disabled small{color:#8a9aa3}
 .dr-onoff{display:block;width:100%;margin:8px 0;padding:14px;border:0;border-radius:12px;background:#e3eaee;color:#15252f;font:700 15px var(--sans)}
 .dr-onoff.on{background:#1e8c6e;color:#fff}.dr-onoff:disabled{background:transparent;border:1px dashed #9aabb4;color:#6c7d87}
+/* a reason the plan is not ready, as the way to what mends it (GUI review U13): the red reason with an arrow, a finger's height */
+.dr-why{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;margin:6px 0;padding:8px 12px;border:1px solid rgba(179,38,30,.35);border-radius:10px;background:rgba(200,40,30,.07);color:#8c1d18;font:inherit;font-size:13.5px;line-height:1.35;text-align:left;cursor:pointer}
+.dr-why span{flex:1;min-width:0}.dr-why b{flex:0 0 auto;font-size:18px;opacity:.75}
 /* Venner (ui/10k-friends.js): the code, the add field, the friends with a green dot when their game is open; friends' boats on the chart */
 .fr-big{letter-spacing:.18em;font-family:var(--mono,monospace);text-align:center;margin:4px 0 6px}
 .fr-add{display:flex;gap:8px;align-items:center} .fr-add input{flex:1;min-width:0;font:600 18px var(--mono,monospace);letter-spacing:.15em;text-transform:uppercase;padding:9px 10px;border:1px solid #b9c4cc;border-radius:8px}

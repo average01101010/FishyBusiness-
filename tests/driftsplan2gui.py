@@ -318,12 +318,15 @@ async def s02_ikke_klar(c):
     c.note('Mannskap-raden', crew_row and crew_row['txt'])
     await c.shots('ikke-klar')
     m = c.mark()
-    await c.press('.dr-rh[data-k="crew"]', name='Mannskap-raden')
-    await c.shots('mannskap-rad', frame=('.dr-row.on',))
+    # U13: the reason is the way to what mends it, a tap on it opens the Crew page
+    why = await c.where('[data-pa="p2-go"][data-go="mannskap"]')
     await c.js("GUI.opened = []; if (!DOCK.__w){ const o = DOCK.open; DOCK.open = function (a){ GUI.opened.push(a); return o.apply(this, arguments); }; DOCK.__w = true; }")
-    await c.press('[data-pa="p2-crew"]', name='Til Mannskap-siden')
+    if why: await c.press('[data-pa="p2-go"][data-go="mannskap"]', name='grunnen (skipper og styrmann)')
+    else:
+        await c.press('.dr-rh[data-k="crew"]', name='Mannskap-raden')
+        await c.press('[data-pa="p2-crew"]', name='Til Mannskap-siden')
     pg_ok = await c.wait("DOCK.page === 'arbeid'", 3)
-    c.check(pg_ok, '«Til Mannskap-siden» åpner Mannskap-siden i samme skuff', {'skuffen viser': await c.js("DOCK.page"), 'DOCK.open kalt med': await c.js("GUI.opened")})
+    c.check(bool(why) and pg_ok, 'U13: grunnen er en knapp, og et trykk på den åpner Mannskap-siden i samme skuff', {'grunnen': why and why['txt'], 'skuffen viser': await c.js("DOCK.page"), 'DOCK.open kalt med': await c.js("GUI.opened")})
     if not pg_ok:
         # the way a player finds instead: the Crew button in the dock
         await c.shots('til-mannskap-trykket')
@@ -503,7 +506,10 @@ async def s07_uten_haler(c):
     await c.js("S.equip.linehaler = true")
     await asyncio.sleep(0.9)
     await c.press('[data-pa="p2-rig"][data-g="line"]', name='Line')
-    await c.press('.dr-rh[data-k="places"]', name='Plasser-raden')
+    # U13: «Legg ut minst ett felt» is the way to the Plasser row
+    gp = await c.press('[data-pa="p2-go"][data-go="places"]', name='grunnen (minst ett felt)', must=False)
+    c.check(gp is not None and await c.has('.dr-row.on .dr-rh[data-k="places"]'), 'U13: grunnen «Legg ut minst ett felt» åpner Plasser-raden', None)
+    if not await c.has('.dr-row.on .dr-rh[data-k="places"]'): await c.press('.dr-rh[data-k="places"]', name='Plasser-raden')
     await c.press('[data-pa="p2-add"][data-k="felt"]', name='+ Felt for line')
     await c.press('[data-pa="p2-addp"]', name='forslaget')
     await c.press('.dr-pl [data-pa="p2-pup"]:not([disabled])', name='↑ (feltet først, så lina settes straks)')

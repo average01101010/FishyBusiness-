@@ -269,41 +269,43 @@ function planDayText(o, day){
 function p2Kits(){ const pg = S.pgear; return ((pg && pg.kits ? pg.kits.n : 0) || 0) + (typeof mySets === 'function' ? mySets().length : 0); }
 function plan2Check(o, st){
   st = st || plan2State(o); const E = [], Wn = [], G = [], kind = p2Kind(o), no = gL, hp = portById(o.home);
-  if (!hp) E.push(no('Velg hvor båten skal ligge hjemme.', 'Choose where the boat lies at home.'));
-  if (!RIGS[o.rig]) E.push(no('Velg hva båten skal fiske med.', 'Choose what the boat fishes with.'));
-  else if (!rigHas(o.rig)) E.push(no('Båten mangler haleren til ' + rigName(o.rig).toLowerCase() + '. Monter den under Oppgrader på verftet.', 'The boat has no hauler for ' + rigName(o.rig).toLowerCase() + '. Fit one under Upgrade at the yard.'));
+  // each reason has the place that mends it (GUI review U13): a row of the page, the Crew page, the quota, or the way to the shop or the yard
+  const ER = (m, go) => { E.push(m); G.push(go || null); };
+  if (!hp) ER(no('Velg hvor båten skal ligge hjemme.', 'Choose where the boat lies at home.'), 'home');
+  if (!RIGS[o.rig]) ER(no('Velg hva båten skal fiske med.', 'Choose what the boat fishes with.'), 'rig');
+  else if (!rigHas(o.rig)) ER(no('Båten mangler haleren til ' + rigName(o.rig).toLowerCase() + '. Monter den under Oppgrader på verftet.', 'The boat has no hauler for ' + rigName(o.rig).toLowerCase() + '. Fit one under Upgrade at the yard.'), 'verft');
   const F = o.places.filter(q => q.k === 'felt'), J = o.places.filter(q => q.k === 'juks');
-  if (kind && !F.length) E.push(no('Legg ut minst ett felt for ' + rigName(o.rig).toLowerCase() + '.', 'Put out at least one field for the ' + rigName(o.rig).toLowerCase() + '.'));
-  if (!kind && !J.length) E.push(no('Velg minst én juksplass.', 'Choose at least one jig place.'));
-  if (o.places.length > DRP2.placesMax) E.push(no('Høyst ' + DRP2.placesMax + ' plasser.', 'At most ' + DRP2.placesMax + ' places.'));
+  if (kind && !F.length) ER(no('Legg ut minst ett felt for ' + rigName(o.rig).toLowerCase() + '.', 'Put out at least one field for the ' + rigName(o.rig).toLowerCase() + '.'), 'places');
+  if (!kind && !J.length) ER(no('Velg minst én juksplass.', 'Choose at least one jig place.'), 'places');
+  if (o.places.length > DRP2.placesMax) ER(no('Høyst ' + DRP2.placesMax + ' plasser.', 'At most ' + DRP2.placesMax + ' places.'), 'places');
   if (kind){ const own = ownedUnits(kind), want = F.reduce((a, f) => a + f.n, 0), sk = DRP2.soak[kind];
     // the buoy sets: none for a field is an error (the line would stay aboard, GUI review U9 A); fewer than the fields, a warning.
     // (the sets of the gear standing in the sea come back aboard when it is hauled, and the plan hauls before it sets)
-    { const k = p2Kits(); if (F.length && k < 1){ E.push(no('Hver lenke i sjøen trenger et blåsesett, og båten har ingen. Blåsesett kjøpes i utstyrsbutikken.', 'Every string in the sea needs a buoy set, and the boat has none. Buoy sets are bought at the tackle shop.')); G[E.length - 1] = 'butikk'; }
+    { const k = p2Kits(); if (F.length && k < 1){ ER(no('Hver lenke i sjøen trenger et blåsesett, og båten har ingen. Blåsesett kjøpes i utstyrsbutikken.', 'Every string in the sea needs a buoy set, and the boat has none. Buoy sets are bought at the tackle shop.'), 'butikk'); }
       else if (F.length > k) Wn.push(no('Hver lenke i sjøen trenger et blåsesett, og båten har ' + k + ' til ' + F.length + ' felt. Kjøp i utstyrsbutikken.', 'Every string in the sea needs a buoy set, and the boat has ' + k + ' for ' + F.length + ' fields. Buy them at the gear shop.')); }
     if (want > own) Wn.push(no('Feltene vil ha ' + want + ' ' + unitName(kind, want) + ', men båten eier ' + own + '. De første feltene får det som finnes.', 'The fields want ' + want + ' ' + unitName(kind, want) + ', but the boat owns ' + own + '. The first fields get what there is.'));
     for (const [i, f] of F.entries()){ const km = kind === 'line' ? f.n * LINE_KINDS[f.lk || 'hyse'].hooks * GEAR.line.kmHook : f.n * GEAR[kind].km; let room = true; try { room = !!(f.hdg != null ? setGeomExact(f, f.hdg, km) : setGeom(f, 0, km)); } catch (e){}
       if (!room) Wn.push(no('Lenka på felt ' + (i + 1) + ' er ' + fmt(km, 1) + ' km og får ikke plass der' + (f.hdg != null ? ' i den retningen' : ' i noen retning') + '. Flytt feltet lenger ut, gi lenka en annen retning i kartet, eller del stampene på flere felt.', 'The string at field ' + (i + 1) + ' is ' + fmt(km, 1) + ' km and has no room there' + (f.hdg != null ? ' on that heading' : ' in any direction') + '. Move the field further out, give the string another heading in the chart, or split the tubs over more fields.')); }
     if (kind === 'line') for (const lk of ['hyse', 'bank']){ const w = F.filter(f => (f.lk || 'hyse') === lk).reduce((a, f) => a + f.n, 0), ow = p2Units('line', lk); if (w > ow) Wn.push(no('Feltene vil ha ' + w + ' stamper ' + LINE_KINDS[lk].no.toLowerCase() + ', men båten eier ' + ow + '.', 'The fields want ' + w + ' tubs of ' + LINE_KINDS[lk].en.toLowerCase() + ', but the boat owns ' + ow + '.')); }
     for (const f of F){ if (f.soak < sk[0]) Wn.push(no('Ståtiden ' + f.soak + ' t er kort for ' + GEAR[kind].no.toLowerCase() + '.', 'A soak of ' + f.soak + ' h is short for ' + GEAR[kind].en.toLowerCase() + '.')); else if (f.soak > sk[3]) Wn.push(no('Ståtiden ' + f.soak + ' t er lang for ' + GEAR[kind].no.toLowerCase() + '. Fangsten forringes og redskapet kan gå tapt.', 'A soak of ' + f.soak + ' h is long for ' + GEAR[kind].en.toLowerCase() + '. The catch spoils and the gear can be lost.')); }
-    if (kind === 'garn' && st.crewMax < 1) E.push(no('Garn krever to om bord, og båten har ikke plass til flere.', 'Nets need two aboard, and the boat has no room for more.')); }
-  { const r = drRulesWhy({fields:F, jigs:J, rig:o.rig, jig:o.jig}, S.t / 60, true); if (r) E.push(gL(r.no, r.en)); }
+    if (kind === 'garn' && st.crewMax < 1) ER(no('Garn krever to om bord, og båten har ikke plass til flere.', 'Nets need two aboard, and the boat has no room for more.'), 'rig'); }
+  { const r = drRulesWhy({fields:F, jigs:J, rig:o.rig, jig:o.jig}, S.t / 60, true); if (r) ER(gL(r.no, r.en), r.fix === 'quota' ? 'quota' : 'places'); }
   // no access to cod, haddock and saithe without you aboard (the open group, J-30-2026 § 35; a second vessel: none): bycatch at most, and with halibut gear the plan fishes halibut
   if (!S.lic && o.rig !== 'teiner' && (S.cur !== openVesselId() || !st.me.aboard) && !(S.boat.kgear && !kveiteClosed(S.t / 60)))
     Wn.push(S.cur !== openVesselId() ? no('Båten har ikke adgang til å fiske torsk, hyse og sei. De kan bare være bifangst, høyst 10 % av landingen, og resten blir inndratt. Med kveiteutstyr fisker planen kveite.', 'The boat has no access to fish cod, haddock and saithe. They can only be bycatch, at most 10% of the landing, and the rest is confiscated. With halibut gear the plan fishes halibut.')
       : no('I åpen gruppe må du være om bord for å fiske torsk, hyse og sei. Uten deg kan de bare være bifangst, høyst 10 % av landingen, og resten blir inndratt. Kjøp kveiteutstyr i butikken, så fisker planen kveite når du ikke er med.', 'In the open group you must be aboard to fish cod, haddock and saithe. Without you they can only be bycatch, at most 10% of the landing, and the rest is confiscated. Buy halibut gear at the shop, and the plan fishes halibut when you are not along.'));
   if (!st.me.aboard){ if (st.crewMax < 2) Wn.push(no('Båten har plass til bare én i mannskapet, så planen går bare når du er om bord.', 'The boat has room for only one crew, so the plan runs only when you are aboard.'));
-    else if (!st.crew.some(c => c.sk) || !st.crew.some(c => c.mate && !c.sk)) E.push(no('Når du ikke er om bord, må både en skipper og en styrmann være utnevnt. Gjør det på Mannskap-siden.', 'When you are not aboard, both a skipper and a mate must be appointed. Do it on the Crew page.')); }
+    else if (!st.crew.some(c => c.sk) || !st.crew.some(c => c.mate && !c.sk)) ER(no('Når du ikke er om bord, må både en skipper og en styrmann være utnevnt. Gjør det på Mannskap-siden.', 'When you are not aboard, both a skipper and a mate must be appointed. Do it on the Crew page.'), 'mannskap'); }
   const aboard = st.crew.length + (st.me.aboard ? 1 : 0);
   if (o.rhythm === 'watch'){
-    if (aboard < 4) E.push(no('Døgndrift krever fire om bord, deg medregnet: skipper, styrmann og to på dekk. Dere er ' + aboard + '.', 'Round the clock needs four aboard, you included: a skipper, a mate and two on deck. You are ' + aboard + '.'));
-    if (!st.house) E.push(no('Døgndrift krever styrhus og køyer om bord.', 'Round the clock needs a wheelhouse and bunks aboard.'));
-    else if (st.bunks < aboard) E.push(no('Døgndrift krever køyer til alle om bord: båten har ' + st.bunks + ', dere er ' + aboard + '.', 'Round the clock needs bunks for everyone aboard: the boat has ' + st.bunks + ', you are ' + aboard + '.')); }
-  if (o.rhythm === 'multi' && !(st.bunks > 0)) E.push(no('Turer over flere døgn krever køyer om bord.', 'Trips of several days need bunks aboard.'));
+    if (aboard < 4) ER(no('Døgndrift krever fire om bord, deg medregnet: skipper, styrmann og to på dekk. Dere er ' + aboard + '.', 'Round the clock needs four aboard, you included: a skipper, a mate and two on deck. You are ' + aboard + '.'), 'rhythm');
+    if (!st.house) ER(no('Døgndrift krever styrhus og køyer om bord.', 'Round the clock needs a wheelhouse and bunks aboard.'), 'rhythm');
+    else if (st.bunks < aboard) ER(no('Døgndrift krever køyer til alle om bord: båten har ' + st.bunks + ', dere er ' + aboard + '.', 'Round the clock needs bunks for everyone aboard: the boat has ' + st.bunks + ', you are ' + aboard + '.'), 'rhythm'); }
+  if (o.rhythm === 'multi' && !(st.bunks > 0)) ER(no('Turer over flere døgn krever køyer om bord.', 'Trips of several days need bunks aboard.'), 'rhythm');
   if (hp && o.rhythm !== 'watch' && st.crew.length && !st.homeRest) Wn.push(no('Båten har ingen køyer, og ' + hp.name + ' er en vanlig kai. Mannskapet hviler dårlig der.', 'The boat has no bunks, and ' + hp.name + ' is an ordinary quay. The crew rest poorly there.'));
-  if (o.anchor && (BOAT.len || 0) < DRP.bigLen) E.push(no('Bare båter fra ' + DRP.bigLen + ' m kan ligge til ankers hjemme.', 'Only boats from ' + DRP.bigLen + ' m can lie at anchor at home.'));
-  if (o.land && o.land.mode === 'port' && !(portById(o.land.port) || {}).mottak) E.push(no('Velg et fiskemottak å levere på.', 'Choose a fish plant to land at.'));
+  if (o.anchor && (BOAT.len || 0) < DRP.bigLen) ER(no('Bare båter fra ' + DRP.bigLen + ' m kan ligge til ankers hjemme.', 'Only boats from ' + DRP.bigLen + ' m can lie at anchor at home.'), 'home');
+  if (o.land && o.land.mode === 'port' && !(portById(o.land.port) || {}).mottak) ER(no('Velg et fiskemottak å levere på.', 'Choose a fish plant to land at.'), 'land');
   if (!E.length && o.rhythm !== 'watch' && o.places.length){ try { const d = planDay(o, plan2NextDep(o, S.t / 60), st), seaH = d.home - d.t0; if (seaH > d.dayMax + 1) Wn.push(no('Dagen blir ' + fmt(seaH, 1) + ' t med disse plassene og mottaket ' + (o.M ? fmt(dist(plan2P(o, 'M'), plan2P(o, 'H')) / NM, 0) + ' nm unna' : 'så langt unna') + '. Mannskapet blir slitne.', 'The day comes to ' + fmt(seaH, 1) + ' h with these places and the plant ' + (o.M ? fmt(dist(plan2P(o, 'M'), plan2P(o, 'H')) / NM, 0) + ' nm away' : 'so far away') + '. The crew get tired.')); } catch (e){} }
   if (o.wx.hs > BOAT.risk[1] * 0.95) Wn.push(no('Båten tåler ikke mer enn ' + fmt(BOAT.risk[1] * 0.95, 1) + ' m sjø, så den grensen gjelder.', 'The boat takes no more than ' + fmt(BOAT.risk[1] * 0.95, 1) + ' m of sea, so that limit holds.'));
-  return {ok:!E.length, errors:E, warnings:Wn, go:E.map((e, i) => G[i] || null)};
+  return {ok:!E.length, errors:E, warnings:Wn, go:G};
 }
