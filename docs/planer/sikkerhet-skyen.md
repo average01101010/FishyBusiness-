@@ -173,5 +173,5 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 2. ~~**Funn 2a, 3 og 4**~~: gjort 05.11.2026 (`20261105130000_guest_world.sql`, med 2c). Turnstile (funn 4) og 2b er ikke bygd, se funnene.
 3. ~~**Funn 5 og 14**~~: rettet 05.11.2026 (acdaf0db; migreringen `20261105140000_liv_owned.sql` kjørt av Jonas). 2c og 13 er gjort tidligere; 2b står.
 4. **Funn 7** (innloggingsdomenet) når Jonas setter opp `auth.detstorebla.no` hos WorkOS.
-5. ~~**Funn 8, 9, 10, 11, 12 og 15**~~: gjort 05.11.2026 (922cb4ca og `supabase/migrations/20261105150000_rydd.sql`, **som venter på SQL Editor**); det som ikke er gjort, står under hvert funn.
+5. ~~**Funn 8, 9, 10, 11, 12 og 15**~~: gjort 05.11.2026 (922cb4ca og `supabase/migrations/20261105150000_rydd.sql`, kjørt av Jonas i SQL Editor 05.11.2026 og bekreftet: `anon` kan bare kjøre `sp_now`, `tm_error` og `tm_perf`, og `authenticated` har rettighetene sine; tre funksjoner hadde retten gjennom `PUBLIC` og trengte en linje til); det som ikke er gjort, står under hvert funn.
 6. **Funn 6** (haill på serveren) hører til en større plan for økonomien; den rammer bare jukseren selv.

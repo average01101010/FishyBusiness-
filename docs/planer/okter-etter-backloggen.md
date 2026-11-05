@@ -177,7 +177,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 | Ø3 Ytelse | Ikke begynt | | |
 | Ø4 Båtmodellene | Venter (Jonas: «Vent med båtene») | | |
 | Ø5 Butikkene, restene | Ikke begynt | | |
-| Ø6 Sikkerhetsgjennomgangen (A7) | Ferdig: 15 funn i `docs/planer/sikkerhet-skyen.md` (2 høy, 6 middels, 7 lav), backloggen 10.1; ingen kode endret | `o6-sikkerhet` | 05.11.2026 |
+| Ø6 Sikkerhetsgjennomgangen (A7) | Ferdig: 15 funn i `docs/planer/sikkerhet-skyen.md`; rettet samme dag etter Jonas' «kjør på»: 1, 2–4, 5, 8–15 (fire migreringer kjørt av Jonas og bekreftet). Igjen: 6 (haill og penger på serveren) og 7 (innloggingsdomenet hos WorkOS) | `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
 | Ø11a Planen for lover, regler og sikkerhet | Ikke begynt | | |
 | Ø7 Småfeil | Venter på spilltest 3 | | |
 | Ø8 Spillbarhet | Venter på spilltest 3 | | |
@@ -203,3 +203,4 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 - 05.11.2026: Ø6 funn 5 og 14 rettet etter Jonas' «Kjør på funn 5 og 14» (acdaf0db). Migreringen `20261105140000_liv_owned.sql` venter på SQL Editor.
 - 05.11.2026: migreringen `20261105140000_liv_owned.sql` kjørt av Jonas i SQL Editor og bekreftet. Funn 5 og 14 er ute. Igjen av Ø6: funn 7 (innloggingsdomenet) og ryddejobbene 8–12 og 15.
 - 05.11.2026: Ø6 ryddejobbene 8–12 og 15 gjort etter Jonas' «Kjør på ryddejobbene 8–12 og 15» (922cb4ca). Migreringen `20261105150000_rydd.sql` venter på SQL Editor; Caddyfile-endringen trer i kraft når `setup.sh` kjøres på serveren.
+- 05.11.2026: migreringen `20261105150000_rydd.sql` kjørt av Jonas og bekreftet. Ø6 er ferdig; igjen er funn 6 og 7, og det som står under hvert funn som ikke gjort.
