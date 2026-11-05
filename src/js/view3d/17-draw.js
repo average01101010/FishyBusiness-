@@ -43,21 +43,35 @@
     gl.disableVertexAttribArray(2); gl.disableVertexAttribArray(3); gl.disableVertexAttribArray(4); gl.disableVertexAttribArray(5); litSetup(VP);
   }
   // ground layer under the corridor: roads and forest, drawn on a canvas and draped on the terrain
+  // The shore layer for the water (STEX) and the near mesh's heights (HTEX) over its square (SRECT) are made a slice a frame (GJOB,
+  // groundStep from updateNear: a depth per sea point, 65 536 of them, was 150-300 ms at once on a PC, 05.11.2026); the textures in use
+  // stand until the new ones are done, then both go up together with their square, and the land mask is drawn after them.
+  let GJOB = null;
   function buildGround(){
     if (!NEARM) return;
-    const size = 2048, x0 = NEARM.x0, z0 = NEARM.z0, sx = NEARM.sx, k = size / sx;
+    const x0 = NEARM.x0, z0 = NEARM.z0, sx = NEARM.sx;
     // the roads on the ground are off (the canvas was a blank 2048 x 2048 uploaded with mipmaps at every rebuild): no ground texture
     GTEX = null;
     GRECT = [x0, z0, 1 / sx, 1 / sx];
     // shore layer for the water: R = land cover (surf band), G = how shallow
-    const S2 = 256, dat = new Uint8Array(S2 * S2 * 4), st = sx / S2, dok = mapViewReady(x0 / 1000, z0 / 1000, (x0 + sx) / 1000, (z0 + sx) / 1000, () => staleMesh('near'));
-    for (let j = 0; j < S2; j++) for (let i = 0; i < S2; i++){ const x = x0 + (i + 0.5) * st, z = z0 + (j + 0.5) * st, m = dok ? (mapSimAt({x:x / 1000, y:z / 1000}) ? rbilM(MAPD.L.mask, x, z) : landFracM(x, z)) : landFracM(x, z), o = (j * S2 + i) * 4, dd = m > 0.5 ? 0 : dok ? depthF({x:x / 1000, y:z / 1000}) : 50; dat[o] = Math.round(m * 255); dat[o + 1] = Math.round(clamp(1 - dd / 14, 0, 1) * 255); dat[o + 3] = 255; }
+    const S2 = 256, dok = mapViewReady(x0 / 1000, z0 / 1000, (x0 + sx) / 1000, (z0 + sx) / 1000, () => staleMesh('near'));
+    GJOB = {M:NEARM, x0, z0, sx, S2, st:sx / S2, dok, j:0, dat:new Uint8Array(S2 * S2 * 4)};   // (stepped from the next frame on)
+  }
+  function groundStep(){
+    const J = GJOB; if (!J) return; if (J.M !== NEARM || J.M.freed){ GJOB = null; return; }   // (a newer near mesh starts its own)
+    const {x0, z0, sx, S2, st, dok, dat} = J, end = sliceEnd();
+    while (J.j < S2){
+      const j = J.j++;
+      for (let i = 0; i < S2; i++){ const x = x0 + (i + 0.5) * st, z = z0 + (j + 0.5) * st, m = dok ? (mapSimAt({x:x / 1000, y:z / 1000}) ? rbilM(MAPD.L.mask, x, z) : landFracM(x, z)) : landFracM(x, z), o = (j * S2 + i) * 4, dd = m > 0.5 ? 0 : dok ? depthF({x:x / 1000, y:z / 1000}) : 50; dat[o] = Math.round(m * 255); dat[o + 1] = Math.round(clamp(1 - dd / 14, 0, 1) * 255); dat[o + 3] = 255; }
+      if (J.j < S2 && performance.now() > end) return;
+    }
+    GJOB = null; TJN.ground++;
     STEX = STEX || gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, STEX);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, S2, S2, 0, gl.RGBA, gl.UNSIGNED_BYTE, dat);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     SRECT = [x0, z0, 1 / sx, 1 / sx];
-    { const n = NEARM.gn, px = new Uint8Array(n * n); for (let k = 0; k < n * n; k++) px[k] = Math.round(clamp((NEARM.h[k] + 8) / 16, 0, 1) * 255);
+    { const M = J.M, n = M.gn, px = new Uint8Array(n * n); for (let k = 0; k < n * n; k++) px[k] = Math.round(clamp((M.h[k] + 8) / 16, 0, 1) * 255);
       HTEX = HTEX || gl.createTexture(); gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, HTEX); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, n, n, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, px); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.activeTexture(gl.TEXTURE0); }

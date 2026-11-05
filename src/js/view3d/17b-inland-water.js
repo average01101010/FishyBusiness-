@@ -41,11 +41,13 @@
   }
   function waterMesh(P, A){ const m = {pb:buf(new Float32Array(P)), tb:buf(new Float32Array(A)), n:P.length / 3}; return m; }
   // a tile's lakes and rivers' areas (one mesh), and its lines and falls near the eye (another, built again as the eye moves)
-  function waterTile(tx, ty){
+  // built a slice at a time (a generator: it yields when the frame's slice is spent, sliceDue; a tile at once was up to 0.75 s on a PC,
+  // 05.11.2026): undefined while its packs are not in, null for none
+  function* waterTile(tx, ty){
     const T = MAPD.man.tile * 1000, ox = tx * T, oz = ty * T, D = waterData(tx, ty); if (D === undefined) return undefined; if (!D) return null;
     const P = [], A = [];
     let ai = -1;
-    for (const a of D.areas){ ai++;
+    for (const a of D.areas){ ai++; if (sliceDue()) yield;
       // standing water never above its shore: the level no higher than the lowest tenth of the ground at its outline (a pond of a
       // cell or two on a slope took the slope's median and lay as a dark plate over the bank, Bergen 28.10.2026)
       let lv = a.level, lvShore = 0;
@@ -72,7 +74,7 @@
         else if (m === l1){ const mx = (x1 + x2) / 2, mz = (z1 + z2) / 2; tri(x0, z0, x1, z1, mx, mz, d + 1); tri(x0, z0, mx, mz, x2, z2, d + 1); }
         else { const mx = (x2 + x0) / 2, mz = (z2 + z0) / 2; tri(x0, z0, x1, z1, mx, mz, d + 1); tri(mx, mz, x1, z1, x2, z2, d + 1); }
       };
-      for (let i = 0; i < a.ix.length; i += 3){ const p = a.ix[i] * 2, q = a.ix[i + 1] * 2, r = a.ix[i + 2] * 2; tri(a.v[p], a.v[p + 1], a.v[q], a.v[q + 1], a.v[r], a.v[r + 1], 0); }
+      for (let i = 0; i < a.ix.length; i += 3){ const p = a.ix[i] * 2, q = a.ix[i + 1] * 2, r = a.ix[i + 2] * 2; tri(a.v[p], a.v[p + 1], a.v[q], a.v[q + 1], a.v[r], a.v[r + 1], 0); if ((i & 63) === 63 && sliceDue()) yield; }
     }
     return {tx, ty, o:[ox, oz], D, mesh:P.length ? Object.assign(waterMesh(P, A), {o:[ox, oz]}) : null, near:null, nearAt:null};
   }
@@ -106,17 +108,19 @@
     return P.length ? Object.assign(waterMesh(P, A), {o:[ox, oz]}) : null;
   }
   function freeWater(m){ if (m){ gl.deleteBuffer(m.pb); gl.deleteBuffer(m.tb); } }
-  // kept up to date from the frame: the tiles within 14 km of the boat whose vec and view packs are in, a couple built a frame
-  let waterT = 0;
+  // kept up to date from the frame: the tiles within 14 km of the boat whose vec and view packs are in, one built at a time a slice a
+  // frame (WJOB)
+  let waterT = 0, WJOB = null;
   function updateWater(eye){
     if (!MAPD.man || !NEARM) return;
+    if (WJOB){ const J = WJOB, W = sliceRun(J, sliceEnd()); if (J.fin){ WJOB = null; TJN.water++; if (W !== undefined) WATER.set(J.k, W || null); } }
     const now = performance.now(); if (now - waterT < 500) return; waterT = now;
-    const T = MAPD.man.tile * 1000, R = 14000, keep = new Set(); let built = 0;
+    const T = MAPD.man.tile * 1000, R = 14000, keep = new Set();
     for (let ty = Math.floor((bv.z - R) / T); ty <= Math.floor((bv.z + R) / T); ty++) for (let tx = Math.floor((bv.x - R) / T); tx <= Math.floor((bv.x + R) / T); tx++){
-      const k = tx + ':' + ty; keep.add(k); let W = WATER.get(k);
+      const k = tx + ':' + ty; keep.add(k); const W = WATER.get(k);
       if (W === undefined || W === false){
         const vp = MAPD.byTile.get('view:' + k); if (vp && !vp.buf) continue;
-        if (built >= 2) continue; W = waterTile(tx, ty); if (W === undefined) continue; built++; WATER.set(k, W || null); if (!W) continue;
+        if (!WJOB) WJOB = {k, g:waterTile(tx, ty)}; continue;
       }
       if (!W) continue;
       if (!W.nearAt || Math.hypot(W.nearAt[0] - eye[0], W.nearAt[1] - eye[2]) > WATER_R / 3){ freeWater(W.near); W.near = waterNear(W, eye[0], eye[2]); W.nearAt = [eye[0], eye[2]]; }
@@ -124,7 +128,7 @@
     for (const [k, W] of WATER) if (!keep.has(k)){ if (W){ freeWater(W.mesh); freeWater(W.near); } WATER.delete(k); }
   }
   // a pack that came over a tile (its ground): its water is built again on the new heights
-  function staleWater(pk){ const k = pk.tile[0] + ':' + pk.tile[1], W = WATER.get(k); if (W){ freeWater(W.mesh); freeWater(W.near); } WATER.delete(k); }
+  function staleWater(pk){ const k = pk.tile[0] + ':' + pk.tile[1], W = WATER.get(k); if (W){ freeWater(W.mesh); freeWater(W.near); } WATER.delete(k); if (WJOB && WJOB.k === k) WJOB = null; }
   const WATER0 = /water0/.test(location.hash);   // #water0 in the address: no fresh water drawn (for comparison)
   const WATERI = /waterI/.test(location.hash);   // #waterI: each standing water drawn in the colour of its index (r + 256 g) and its tile (b = 7 tx + ty mod 256)
   const WATERK = (location.hash.match(/water([AL])/) || [])[1];   // #waterA only the areas, #waterL only the lines and falls (to find a fault)

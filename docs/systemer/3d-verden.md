@@ -64,12 +64,22 @@
   - Bildetakten er ikke målt på nettbrettet ennå. Testsiden for bildetakt, minne og tid for catch-up er ikke bygget.
 
 - **Ytelsen etter spilltesten 03.10.2026:**
-  - Skyggene regnes med en tidsgrense per bilde (`SHMS`, 2–4 ms). Nettene bygges rad for rad over flere bilder (`meshTask`, `meshStep`), ett om gangen og med nærnettet først.
+  - Skyggene regnes med en tidsgrense per bilde (`SHMS`, 2–4 ms). Nettene bygges rad for rad over flere bilder (`meshTask`, `meshStep`), ett om gangen og med nærnettet først (fra 05.11.2026: én jobb per slag nett, se under).
   - Et nett under bygging som fortsatt dekker båten, får gjøre seg ferdig. Uten det hoppet sjøkartet når båten gikk fort.
   - Pakkene for 3D hentes én gang hver (`stream3d`), og bare nett som en ny pakke dekker, bygges på nytt (`staleOver`).
   - Kompasslinja er en ferdig tegnet stripe. Det er ingen backdrop-filter i 3D.
   - Automatisk kvalitet går opp igjen etter 8 s over 40 bilder/s.
   - «Vis bildetakt» ligger i Innstillinger.
+- **Terrengnettene i tidsbiter, også starten og slutten** (05.11.2026, Jonas: «Terrengnettene bygges delvis i ett strekk»; laggen 04.11 i backloggen). Bare høydene var tidsdelt; resten gikk i ett strekk, 60–300 ms på en PC hver gang båten hadde flyttet seg et stykke, og 3–4 ganger så lenge på telefonen. Nå:
+  - `meshRows` stopper midt i en rad (hvert 32. punkt). En rad i fjernnettet over land var 10–40 ms.
+  - Slutten av nettet (`meshEndG`: normalene, fargene `recolorG`, bufferne) er en generator som gir fra seg tråden når bildets bit er brukt opp (`SLEND`, `sliceDue`, `sliceRun`). `makeMesh`, `meshEnd` og `recolor` kjører den ferdig med én gang (`runAll`). Indeksene er de samme for alle nett av samme størrelse, så det er én indeksbuffer per størrelse (`gridIdx`, `m.ibs`; `freeMesh` sletter den ikke). Fargingen etter nettet var bygd, sto to ganger for finnettet. Den andre er fjernet.
+  - Én jobb per slag nett (`MJOBS`, før bare én jobb om gangen). Jobben som får gå, er den der båten er nærmest kanten av nettet sitt. Er båten nær kanten (12 % av bredden), får den en større bit. Før ventet finnettet bak midt- og fjernnettet til båten hadde forlatt det, og ble så bygd i ett strekk (150–300 ms). Bare et nett uten noe nett før seg, eller et nett båten har hoppet langt fra (over en kvart bredde og over 2 km, altså en teleport), bygges i ett strekk. En jobb som er over halvveis, startes ikke på nytt så lenge båten er på den.
+  - Strandlaget og høydeteksturen under nærnettet (`buildGround` → `groundStep`, `GJOB`: `depthF` for 65 536 punkter, 150–300 ms) lages rad for rad. Teksturene i bruk står til de nye er ferdige, og så går begge opp sammen med firkanten sin (`SRECT`). Landmasken tegnes etterpå som før.
+  - Strendene og klippene (`shoreTile`) og innsjøene og elvene (`waterTile`) lages som generatorer, én flis om gangen (`SHJOB`, `WJOB`). Før var det en hel flis på 50 km i ett strekk, opp til 180 og 750 ms.
+  - Ny farge for årstida (snølinja, graset, ruska) går i kø, et nett om gangen (`recolorAll`, `RCQ`, før alle nettene samtidig, rundt 100 ms). Midtnettet er nå med, det ble ikke farget på nytt før. Et nett som er under bygging når årstida skifter, farges på nytt når det er ferdig.
+  - Alle jobbene deler én bit per bilde (`SLICE_END` = `meshSlice()`: `MESHMS`, inntil 30 % av et bilde og høyst 60 ms). Strandlaget går først, fordi det begynner på nytt med hvert nytt nærnett og må bli ferdig. Så kommer nettet, og fargene, strendene og vannet får resten, hver minst en fjerdedel av `MESHMS`. Tidligere hadde hver jobb sin egen bit, og et bilde med tre av dem tok over 100 ms.
+  - Hvordan terrenget ser ut, er ikke endret: punktene, fargene og teksturene regnes som før, bare fordelt over flere bilder. `G3._debug.tjobs` viser jobbene som står, og hvor mange som er ferdige av hvert slag (`now` er de som ble bygd i ett strekk).
+  - Målt på PC med hele kysten (kart-31), sjarkny med fullt pådrag i 150 s utenfor Skjervøy, CDP-profil. Tallene er bare tiden i terrengarbeidet (`updateNear`, `updateWater`, `updateShore`) per sammenhengende strekk på hovedtråden. Strekk over 50 ms: 11 → 0, over 100 ms: 4 → 0. Det lengste: 295 → 42 ms (som er bildets bit i SwiftShader). Stikkprøver i Bergen og Bodø: se backloggen.
 
 ## 4.11b Bakkens materialer i skyggeleggeren (Jonas 18.10.2026)
 

@@ -293,38 +293,62 @@
     // land with no class: the most common class of the nearest ring that has any (coverRing)
     COVW.fill(0); if (!coverRing(LC, ix, iz)) return 0; let b = 0; for (let c = 1; c < COVN; c++) if (COVW[c] > COVW[b]) b = c; return b + 1;
   }
-  // A mesh is built in three parts so it can be done a few rows a frame (meshTask): the heights row by row, then the normals, the
-  // indices and the buffers at once. makeMesh does it all in one go.
+  // A mesh is built in three parts so it can be done a few milliseconds a frame (meshTask): the heights point by point (meshRows stops
+  // within a row when its time is up), then the normals, the indices and the colours (meshEndG, a generator that yields when the
+  // frame's slice is spent). makeMesh does it all in one go. (05.11.2026: the end, the colours and a whole row at once were 60-160 ms
+  // on a PC at a time, 3-4 times that on a phone.)
+  // A time slice for the generators that build in steps: SLEND is when the slice ends; runAll runs one to its end at once.
+  let SLEND = Infinity;
+  const sliceDue = () => performance.now() > SLEND;
+  function runAll(g){ const s = SLEND; SLEND = Infinity; let r; try { while (!(r = g.next()).done); } finally { SLEND = s; } return r.value; }
+  // one step of a generator until the slice ends at 'end': its value when it is done, else undefined (J.done tells)
+  function sliceRun(J, end){ const s = SLEND; SLEND = end; try { const r = J.g.next(); if (r.done){ J.fin = true; return r.value; } } finally { SLEND = s; } }
   function meshBegin(x0, z0, sx, sz, n, hf){
     const N = n * n;
-    return {x0, z0, sx, sz, n, hf:hf || terrH, dx:sx / (n - 1), dz:sz / (n - 1), j:0, pos:new Float32Array(N * 3), h:new Float32Array(N), nz:new Float32Array(N), fo:new Float32Array(N), cv:new Uint8Array(N * COVS), ck:new Uint8Array(N)};
+    return {x0, z0, sx, sz, n, hf:hf || terrH, dx:sx / (n - 1), dz:sz / (n - 1), j:0, i:0, pos:new Float32Array(N * 3), h:new Float32Array(N), nz:new Float32Array(N), fo:new Float32Array(N), cv:new Uint8Array(N * COVS), ck:new Uint8Array(N)};
   }
   function meshRows(B, until){
     const {x0, z0, n, dx, dz, hf, pos, h, nz, fo, cv, ck} = B;
     while (B.j < n){
-      const j = B.j++;
-      for (let i = 0; i < n; i++){
+      const j = B.j; let i = B.i;
+      for (; i < n; i++){
         const k = j * n + i, x = x0 + i * dx, z = z0 + j * dz, y = hf(x, z);
         h[k] = y; pos[k * 3] = i * dx; pos[k * 3 + 1] = y; pos[k * 3 + 2] = j * dz; nz[k] = fbm(x / 600, z / 600, 2, 90); fo[k] = forestAt(x, z); if (y > 0) coverAt(x, z, cv, ck, k); else ck[k] = 0;   // (the sea has no class: its points would search the rings for nothing)
+        if ((i & 31) === 31 && i + 1 < n && performance.now() > until){ B.i = i + 1; return false; }   // (a row of the far mesh over land was 10-40 ms)
       }
+      B.i = 0; B.j++;
       if (performance.now() > until) break;
     }
     return B.j >= n;
   }
-  function meshEnd(B){
-    const {x0, z0, sx, sz, n, dx, dz, pos, h, nz, fo, cv, ck} = B, N = n * n, slope = new Float32Array(N), nor = new Float32Array(N * 3);
-    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
-      const k = j * n + i, hx = (h[j * n + Math.min(n - 1, i + 1)] - h[j * n + Math.max(0, i - 1)]) / (2 * dx), hz = (h[Math.min(n - 1, j + 1) * n + i] - h[Math.max(0, j - 1) * n + i]) / (2 * dz);
-      slope[k] = Math.hypot(hx, hz); const nl = Math.hypot(hx, 1, hz); nor[k * 3] = -hx / nl; nor[k * 3 + 1] = 1 / nl; nor[k * 3 + 2] = -hz / nl;
-    }
-    const big = N > 65536, idx = big ? new Uint32Array((n - 1) * (n - 1) * 6) : new Uint16Array((n - 1) * (n - 1) * 6); let q = 0;   // 32-bit on ultra (UINT)
+  // the triangles of an n x n grid are the same for every mesh of that size: one index buffer per size, shared (m.ibs; freeMesh keeps it)
+  const IDXC = new Map();
+  function gridIdx(n){
+    let c = IDXC.get(n); if (c && c.gl === gl && gl.isBuffer(c.ib)) return c;   // (a context lost before the view was ready takes its buffers)
+    const big = n * n > 65536, idx = big ? new Uint32Array((n - 1) * (n - 1) * 6) : new Uint16Array((n - 1) * (n - 1) * 6); let q = 0;   // 32-bit on ultra (UINT)
     for (let j = 0; j < n - 1; j++) for (let i = 0; i < n - 1; i++){ const a = j * n + i, b = a + 1, c = a + n, d = c + 1; idx[q++] = a; idx[q++] = c; idx[q++] = b; idx[q++] = b; idx[q++] = c; idx[q++] = d; }
-    const col = new Float32Array(N * 3), m = {pb:buf(pos), cb:buf(col, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), nb:buf(nor), ib:buf(idx, gl.ELEMENT_ARRAY_BUFFER), n:idx.length, i32:big, h, nz, slope, fo, cv, ck, col, mat:new Float32Array(N * 4), x0, z0, sx, sz, pos, nor, gn:n, o:[x0, z0], sh:new Float32Array(N).fill(1)}; m.sb = buf(m.sh, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.mb = buf(m.mat, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.shKey = '';
-    recolor(m, snowNow == null ? 0 : snowNow);
+    c = {gl, ib:buf(idx, gl.ELEMENT_ARRAY_BUFFER), n:idx.length, i32:big}; IDXC.set(n, c); return c;
+  }
+  function* meshEndG(B){
+    const {x0, z0, sx, sz, n, dx, dz, pos, h, nz, fo, cv, ck} = B, N = n * n, slope = new Float32Array(N), nor = new Float32Array(N * 3);
+    for (let j = 0; j < n; j++){
+      for (let i = 0; i < n; i++){
+        const k = j * n + i, hx = (h[j * n + Math.min(n - 1, i + 1)] - h[j * n + Math.max(0, i - 1)]) / (2 * dx), hz = (h[Math.min(n - 1, j + 1) * n + i] - h[Math.max(0, j - 1) * n + i]) / (2 * dz);
+        slope[k] = Math.hypot(hx, hz); const nl = Math.hypot(hx, 1, hz); nor[k * 3] = -hx / nl; nor[k * 3 + 1] = 1 / nl; nor[k * 3 + 2] = -hz / nl;
+      }
+      if ((j & 15) === 15 && sliceDue()) yield;
+    }
+    const I = gridIdx(n);
+    const col = new Float32Array(N * 3), m = {pb:null, cb:null, nb:null, ib:I.ib, ibs:true, n:I.n, i32:I.i32, h, nz, slope, fo, cv, ck, col, mat:new Float32Array(N * 4), x0, z0, sx, sz, pos, nor, gn:n, o:[x0, z0], sh:new Float32Array(N).fill(1)}; m.shKey = '';
+    // the colours into the arrays a slice at a time (recolorG), then the buffers in one go: the mesh is not drawn before it is done
+    yield* recolorG(m, snowNow == null ? 0 : snowNow, false);
+    m.pb = buf(pos); m.cb = buf(col, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.nb = buf(nor); m.sb = buf(m.sh, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.mb = buf(m.mat, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
+    if (m.cov) m.vb = buf(m.cov, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
     return m;
   }
+  function meshEnd(B){ return runAll(meshEndG(B)); }
   function makeMesh(x0, z0, sx, sz, n, hf){ const B = meshBegin(x0, z0, sx, sz, n, hf); meshRows(B, Infinity); return meshEnd(B); }
-  function freeMesh(m){ if (m.parts){ m.parts.forEach(freeMesh); return; } gl.deleteBuffer(m.pb); gl.deleteBuffer(m.cb); gl.deleteBuffer(m.ib); if (m.nb) gl.deleteBuffer(m.nb); if (m.sb) gl.deleteBuffer(m.sb); if (m.mb) gl.deleteBuffer(m.mb); if (m.vb) gl.deleteBuffer(m.vb); }
+  function freeMesh(m){ if (m.parts){ m.parts.forEach(freeMesh); return; } m.freed = true; gl.deleteBuffer(m.pb); gl.deleteBuffer(m.cb); if (!m.ibs) gl.deleteBuffer(m.ib); if (m.nb) gl.deleteBuffer(m.nb); if (m.sb) gl.deleteBuffer(m.sb); if (m.mb) gl.deleteBuffer(m.mb); if (m.vb) gl.deleteBuffer(m.vb); }
   // the near terrain's own surface at x, z (its triangles over the ground without the units), so a fine patch meets it exactly
   function nearSurf(M, x, z){
     const n = M.gn, d = M.sx / (n - 1), gx = clamp((x - M.x0) / d, 0, n - 1.001), gz = clamp((z - M.z0) / d, 0, n - 1.001), i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j;

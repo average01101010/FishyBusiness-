@@ -23,7 +23,9 @@
     areas.cliffs = cliffs;
     return areas;
   }
-  function shoreTile(tx, ty){
+  // a tile's mesh, built a slice at a time (a generator: it yields when the frame's slice is spent, sliceDue; a whole tile at once was
+  // up to 180 ms on a PC, 05.11.2026): undefined while its pack is not in, null for none
+  function* shoreTile(tx, ty){
     const T = MAPD.man.tile * 1000, ox = tx * T, oz = ty * T, A = shoreData(tx, ty); if (A === undefined) return undefined; if (!A || (!A.length && !(A.cliffs && A.cliffs.length))) return null;
     const m = MB(), SAND = [0.78, 0.73, 0.6], WETS = [0.5, 0.46, 0.38], SHG = [0.55, 0.54, 0.51];
     for (const a of A){
@@ -41,7 +43,7 @@
         else if (mx === l1){ const qx = (x1 + x2) / 2, qz = (z1 + z2) / 2; tri(x0, z0, x1, z1, qx, qz, d + 1); tri(x0, z0, qx, qz, x2, z2, d + 1); }
         else { const qx = (x2 + x0) / 2, qz = (z2 + z0) / 2; tri(x0, z0, x1, z1, qx, qz, d + 1); tri(qx, qz, x1, z1, x2, z2, d + 1); }
       };
-      for (let i = 0; i < a.ix.length; i += 3){ const p = a.ix[i] * 2, q = a.ix[i + 1] * 2, r = a.ix[i + 2] * 2; tri(a.v[p], a.v[p + 1], a.v[q], a.v[q + 1], a.v[r], a.v[r + 1], 0); }
+      for (let i = 0; i < a.ix.length; i += 3){ const p = a.ix[i] * 2, q = a.ix[i + 1] * 2, r = a.ix[i + 2] * 2; tri(a.v[p], a.v[p + 1], a.v[q], a.v[q + 1], a.v[r], a.v[r + 1], 0); if (sliceDue()) yield; }
     }
     // the cliffs by the sea: a rock face down from the top (1 m to the line's left, OpenStreetMap's cliff falls to its right) to the
     // ground or the low water 12 m out, where it falls 4 m or more, in steps of 4 m; grey rock, darker and wet low down
@@ -59,23 +61,29 @@
             m.quad(A0, B0, Bm, Am, R); m.quad(Am, Bm, B1, A1, pv.foot < 1.5 ? W : R.map(c => c * 0.85)); faces++;
           }
           pv = q; if (L <= 0.5) break; }
+        if (sliceDue()) yield;
       }
     }
     return m.p.length ? {mesh:m.mesh([ox, oz]), cliffs:cl, faces} : null;
   }
-  let shoreT = 0;
+  // one tile's mesh on its way at a time (SHJOB), a slice a frame; the tiles within 6 km are looked over every 0.7 s
+  let shoreT = 0, SHJOB = null;
   function updateShore(eye){
     if (!MAPD.man || SHORE0) return;
+    if (SHJOB){
+      const J = SHJOB, S = sliceRun(J, sliceEnd()); if (!J.fin) return;
+      SHJOB = null; TJN.shore++; if (S !== undefined) SHORE.set(J.k, S);
+    }
     const now = performance.now(); if (now - shoreT < 700) return; shoreT = now;
-    const T = MAPD.man.tile * 1000, R = 6000, keep = new Set(); let built = 0;
+    const T = MAPD.man.tile * 1000, R = 6000, keep = new Set();
     for (let ty = Math.floor((eye[2] - R) / T); ty <= Math.floor((eye[2] + R) / T); ty++) for (let tx = Math.floor((eye[0] - R) / T); tx <= Math.floor((eye[0] + R) / T); tx++){
-      const k = tx + ':' + ty; keep.add(k); if (SHORE.has(k)) continue;
-      const vp = MAPD.byTile.get('view:' + k); if (!vp || !vp.buf || built >= 1) continue;
-      const S = shoreTile(tx, ty); if (S === undefined) continue; built++; SHORE.set(k, S);
+      const k = tx + ':' + ty; keep.add(k); if (SHORE.has(k) || SHJOB) continue;
+      const vp = MAPD.byTile.get('view:' + k); if (!vp || !vp.buf) continue;
+      SHJOB = {k, g:shoreTile(tx, ty)};
     }
     for (const [k, S] of SHORE) if (!keep.has(k)){ if (S && S.mesh) freeMesh(S.mesh); SHORE.delete(k); }
   }
-  function staleShore(pk){ const k = pk.tile[0] + ':' + pk.tile[1], S = SHORE.get(k); if (S && S.mesh) freeMesh(S.mesh); SHORE.delete(k); }
+  function staleShore(pk){ const k = pk.tile[0] + ':' + pk.tile[1], S = SHORE.get(k); if (S && S.mesh) freeMesh(S.mesh); SHORE.delete(k); if (SHJOB && SHJOB.k === k) SHJOB = null; }
   function drawShore(VP){
     if (!SHORE.size || SHORE0) return;
     litSetup(VP); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-1, -3);

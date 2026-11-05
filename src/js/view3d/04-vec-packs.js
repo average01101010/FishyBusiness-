@@ -56,35 +56,64 @@
   });
   function drawTileStatics(TM, eye){ drawStones(STONES, TM, eye); for (const s of TST.values()){ if (s.mesh) drawLit(s.mesh, TM); drawStones(s.stones, TM, eye); } for (const mm of MKM.values()) if (mm) drawLit(mm, TM);
     const tide = env.tide || 0; for (const F of FLT.values()) if (F.mesh){ if (F.mesh.parts) for (const q of F.mesh.parts) q.oy = tide; F.mesh.oy = tide; drawLit(F.mesh, TM); } }
-  // One terrain mesh is rebuilt at a time, a few rows a frame (MESHMS ms; the near, middle and far meshes were each built in one
-  // frame, all three whenever a pack came anywhere, 03.10.2026): the old mesh is drawn until the new one is done. A mesh that does not
-  // cover the boat at all (a jump, the first build) is built at once.
-  let MJOB = null;
+  // The terrain meshes are rebuilt a few milliseconds a frame (MESHMS; the near, middle and far meshes were each built in one frame,
+  // all three whenever a pack came anywhere, 03.10.2026): the old mesh is drawn until the new one is done. One job per kind (MJOBS),
+  // one stepped a frame: the one whose mesh has its edge nearest the boat (a larger slice when she is about to leave it); the others
+  // wait where they are. Only a mesh with none before it, or one the boat has jumped well off (a teleport), is built at once.
+  // (05.11.2026: with one job at a time the fine mesh waited behind the middle or far one until the boat had left it, and was then
+  // built at once, 150-300 ms on a PC.)
+  const MJOBS = new Map(), TJN = {st:{near:0, fine:0, mid:0, far:0}, near:0, fine:0, mid:0, far:0, now:0, ground:0, shore:0, water:0, rc:0};   // TJN: the jobs done (G3._debug.tjobs)
   const MESHMS = [3, 4, 5, 9];
+  const boatIn = (o, m) => bv.x > o.x0 + m && bv.x < o.x0 + o.sx - m && bv.z > o.z0 + m && bv.z < o.z0 + o.sz - m;
   function meshTask(kind, cur, x0, z0, span, n, hf, done){
-    const covers = cur && bv.x > cur.x0 && bv.x < cur.x0 + cur.sx && bv.z > cur.z0 && bv.z < cur.z0 + cur.sz;
-    if (!covers){ if (MJOB && MJOB.kind === kind) MJOB = null; done(makeMesh(x0, z0, span, span, n, hf), false); return; }
-    if (MJOB && MJOB.kind === kind && MJOB.B.x0 === x0 && MJOB.B.z0 === z0 && MJOB.B.sx === span) return;   // on its way
+    const J = MJOBS.get(kind);
+    if (!cur || !boatIn(cur, -Math.max(cur.sx * 0.25, 2000))){ if (J) MJOBS.delete(kind); TJN.now++; done(makeMesh(x0, z0, span, span, n, hf), false); return; }
+    if (J && J.B.x0 === x0 && J.B.z0 === z0 && J.B.sx === span) return;   // on its way
     // one on its way that will still have the boat well inside is let finish (started again at every new spot of a moving boat it
     // never finished, and the mesh then jumped kilometres at once when she left the old one, and the sea map with it)
-    if (MJOB && MJOB.kind === kind){ const B = MJOB.B, m = span * 0.2; if (B.sx === span && bv.x > B.x0 + m && bv.x < B.x0 + span - m && bv.z > B.z0 + m && bv.z < B.z0 + span - m) return; }
-    if (MJOB && MJOB.kind !== kind) return;   // another mesh is being built: this one waits its turn
-    MJOB = {kind, B:meshBegin(x0, z0, span, span, n, hf), done, dirty:false};
+    // (and one past half way while the boat is still on it: started again it lost what it had done, and at slow frames never got done)
+    if (J){ const B = J.B; if (B.sx === span && (boatIn(B, span * 0.2) || ((J.g || B.j > B.n / 2) && boatIn(B, span * 0.05)))) return; }
+    TJN.st[kind]++; MJOBS.set(kind, {kind, cur, t0:performance.now(), B:meshBegin(x0, z0, span, span, n, hf), g:null, done, dirty:false});
   }
-  let FRAMEMS = 16;
+  let FRAMEMS = 16, MTURN = 0;
+  // the frame's slice for the terrain's jobs: when the frames are slow anyway the meshes keep pace with the boat (at most 30 % of a
+  // frame, 60 ms)
+  const meshSlice = () => Math.max(MESHMS[QUAL.lvl], Math.min(60, 0.3 * FRAMEMS));
+  // one slice a frame for all the terrain's jobs (SLICE_END, set in updateNear): the shore layer of the near mesh that is done
+  // (groundStep: it is begun again with every new near mesh, so it must get done), then the meshes, the season's colours, the shore's and the fresh water's tiles (17h-shore.js, 17b-inland-water.js) get what is left, each at least a
+  // little so it gets on (they each had a slice of their own, and a frame with three of them was over 100 ms)
+  let SLICE_END = 0;
+  const sliceEnd = () => Math.max(SLICE_END, performance.now() + MESHMS[QUAL.lvl] / 4);
   function meshStep(){
-    const J = MJOB; if (!J) return;
-    // a share of the frame: when the frames are slow anyway the mesh keeps pace with the boat (at most 30 % of a frame, 60 ms)
-    if (!meshRows(J.B, performance.now() + Math.max(MESHMS[QUAL.lvl], Math.min(60, 0.3 * FRAMEMS)))) return;
-    MJOB = null; J.done(meshEnd(J.B), J.dirty);
+    // the job whose mesh has its edge nearest the boat (the fine mesh's is a few hundred metres off, the far one's tens of kilometres)
+    // every other frame the oldest instead, unless one is urgent: the far mesh waited for ever behind the others while new tiles kept
+    // coming round the boat after a jump (teleport3d)
+    let J = null, best = Infinity, old = null;
+    for (const Q of MJOBS.values()){ const o = Q.cur, d = Math.min(bv.x - o.x0, o.x0 + o.sx - bv.x, bv.z - o.z0, o.z0 + o.sz - bv.z); if (d < best){ best = d; J = Q; } if (!old || Q.t0 < old.t0) old = Q; }
+    if (!J) return;
+    let urgent = best < J.cur.sx * 0.12;
+    if (!urgent && (++MTURN & 1)) J = old;
+    const end = urgent ? Math.max(SLICE_END, performance.now() + 2 * MESHMS[QUAL.lvl]) : sliceEnd();
+    if (!J.g){ if (!meshRows(J.B, end)) return; J.g = meshEndG(J.B); }
+    const M = sliceRun(J, end); if (!J.fin) return;
+    MJOBS.delete(J.kind); TJN[J.kind]++; J.done(M, J.dirty);
+    if (J.reseason && !M.freed) RCQ.push({m:M, g:recolorG(M, snowNow == null ? 0 : snowNow, true)});   // (the season turned while it was built)
+  }
+  // a new colour for the season (the snow line, the grass, ruska: 15-env-mooring.js) on every mesh, a slice a frame (all four meshes and
+  // the units' patches at once were ~100 ms); a mesh being built takes the new season when it is done (meshDone)
+  const RCQ = [];
+  function recolorAll(sn){ RCQ.length = 0; for (const m of [TERR, MIDM, NEARM, FINEM, ...UPATCH]) if (m) RCQ.push({m, g:recolorG(m, sn, true)}); for (const J of MJOBS.values()) J.reseason = true; }
+  function recolorStep(){
+    const end = sliceEnd();
+    while (RCQ.length && performance.now() < end){ const J = RCQ[0]; if (J.m.freed){ RCQ.shift(); continue; } sliceRun(J, end); if (J.fin){ RCQ.shift(); TJN.rc++; } }
   }
   // a pack has come: the meshes over its tile are built again (one being built over it goes again when it is done)
-  function staleMesh(kind){ const m = kind === 'near' ? NEARM : kind === 'fine' ? FINEM : kind === 'mid' ? MIDM : TERR; if (m) m.stale = true; if (MJOB && MJOB.kind === kind) MJOB.dirty = true; }
+  function staleMesh(kind){ const m = kind === 'near' ? NEARM : kind === 'fine' ? FINEM : kind === 'mid' ? MIDM : TERR; if (m) m.stale = true; const J = MJOBS.get(kind); if (J) J.dirty = true; }
   function staleOver(pk){
     if (pk.kind === 'view'){ staleWater(pk); staleShore(pk); }   // the fresh water lies on the tile's ground (17b-inland-water.js)
     const T = MAPD.man.tile * 1000, x0 = pk.tile[0] * T, z0 = pk.tile[1] * T;
     for (const [m, kind] of [[NEARM, 'near'], [FINEM, 'fine'], [MIDM, 'mid'], [TERR, 'far']]){
-      if (MJOB && MJOB.kind === kind){ const B = MJOB.B; if (B.x0 < x0 + T && B.x0 + B.sx > x0 && B.z0 < z0 + T && B.z0 + B.sz > z0) MJOB.dirty = true; }
+      const J = MJOBS.get(kind); if (J){ const B = J.B; if (B.x0 < x0 + T && B.x0 + B.sx > x0 && B.z0 < z0 + T && B.z0 + B.sz > z0) J.dirty = true; }
       if (m && m.x0 < x0 + T && m.x0 + m.sx > x0 && m.z0 < z0 + T && m.z0 + m.sz > z0) m.stale = true;
     }
     // the buildings over the tile stood on the heights there were before: they are built again on the new ground (the houses
@@ -205,7 +234,8 @@
     meshTask('mid', MIDM && MIDM.gn === QUAL.midN[QUAL.lvl] ? MIDM : null, cx - span / 2, cz - span / 2, span, QUAL.midN[QUAL.lvl], null, (M, dirty) => { const old = MIDM; MIDM = M; MIDM.cx = cx; MIDM.cz = cz; MIDM.stale = dirty; shSeed(MIDM, old); if (old) freeMesh(old); });
   }
   function updateNear(){
-    berthPits(); npcPits(); stream3d(); nearWanted(); fineWanted(); updateMid(); updateFar(); meshStep(); tileStep(); if (LMJOB) lmStep();   // the near mesh first when more than one is due
+    SLICE_END = performance.now() + meshSlice();
+    berthPits(); npcPits(); stream3d(); nearWanted(); fineWanted(); updateMid(); updateFar(); if (GJOB) groundStep(); meshStep(); if (RCQ.length) recolorStep(); tileStep(); if (LMJOB) lmStep();   // the near mesh first when more than one is due
   }
   function nearWanted(){
     const span = QUAL.near[QUAL.lvl][cam.dist > 1200 ? 1 : 0], snap = span / 10, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
@@ -221,7 +251,7 @@
     if (!NEARM) return;
     const span = FINEW.span[QUAL.lvl], n = FINEW.n[QUAL.lvl], snap = span / 8, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
     if (FINEM && !FINEM.stale && FINEM.sx === span && FINEM.gn === n && Math.abs(cx - FINEM.cx) < span / 5 && Math.abs(cz - FINEM.cz) < span / 5) return;
-    meshTask('fine', FINEM && FINEM.sx === span && FINEM.gn === n ? FINEM : null, cx - span / 2, cz - span / 2, span, n, (x, z) => terrCoarse(x, z, span / (n - 1)), (M, dirty) => { const old = FINEM; FINEM = M; FINEM.cx = cx; FINEM.cz = cz; FINEM.stale = dirty; shSeed(FINEM, old); if (old) freeMesh(old); if (snowNow != null) recolor(FINEM, snowNow); buildPatches(); });
+    meshTask('fine', FINEM && FINEM.sx === span && FINEM.gn === n ? FINEM : null, cx - span / 2, cz - span / 2, span, n, (x, z) => terrCoarse(x, z, span / (n - 1)), (M, dirty) => { const old = FINEM; FINEM = M; FINEM.cx = cx; FINEM.cz = cz; FINEM.stale = dirty; shSeed(FINEM, old); if (old) freeMesh(old); buildPatches(); });   // (its colours are this season's already: meshEndG)
   }
   const WEED = [0.27, 0.24, 0.13], WEED2 = [0.22, 0.2, 0.12], BARN = [0.66, 0.66, 0.62];   // rockweed and barnacles in the tidal zone
   // the land cover's own ground (G1, coverAt): the heaths of crowberry, heather and dwarf birch (ESA's 'shrub', most of the fells along
@@ -236,9 +266,14 @@
   const SATON = !/sat0/.test(location.hash), SATW = 0.85, SATK = [0.8, 0.8, 1.02], SATG = [0.455, 0.455, 0.667];   // (fitted on the Finnsnes tile 29.10.2026: forest, heath, field, bog, lichen fell, bare ground)
   const satCol = (r, g, b) => [SATK[0] * Math.pow(r / 255, SATG[0]), SATK[1] * Math.pow(g / 255, SATG[1]), SATK[2] * Math.pow(b / 255, SATG[2])];
   const birch0S = () => [0.25, 0.33, 0.22];
-  function recolor(m, snow){
+  // a mesh's colours and materials for the season (snow line, grass, ruska); recolorG does it a slice at a time (it yields when the
+  // frame's slice is spent, sliceDue) and puts the arrays into the mesh's buffers at the end when 'upload' (a mesh being built is given
+  // its buffers by meshEndG); one freed meanwhile is left
+  function recolor(m, snow){ runAll(recolorG(m, snow, true)); }
+  function* recolorG(m, snow, upload){
     const {slope, nz, col, h, fo, mat, cv, ck} = m;
-    if (cv && !m.vb){ m.cov = new Float32Array(h.length * 4); m.vb = buf(m.cov, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); }
+    if (cv && !m.cov) m.cov = new Float32Array(h.length * 4);
+    if (upload && m.cov && !m.vb) m.vb = buf(m.cov, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
     const cov = m.cov, gs = grassNow(), cc = k => mix3(COVC[k][0], COVC[k][1], gs), [ry, rl] = ruskNow();
     // ruska: the heath's bilberry, crowberry and dwarf birch red-brown, the bog's sedge rust, the birch woods yellow while the leaves hang
     const heath = mix3(cc('heath'), [0.5, 0.26, 0.15], ry * 0.85), lichen = cc('lichen'), bogc = mix3(cc('bog'), [0.6, 0.42, 0.22], ry * 0.6), field = cc('field'), meadow = cc('meadow');
@@ -320,7 +355,9 @@
       }
       col[i * 3] = c[0]; col[i * 3 + 1] = c[1]; col[i * 3 + 2] = c[2];
       mat[i * 4] = R; mat[i * 4 + 1] = wood; mat[i * 4 + 2] = sn; mat[i * 4 + 3] = p;
+      if ((i & 511) === 511 && sliceDue()){ yield; if (m.freed) return; }
     }
+    if (!upload || m.freed) return;
     gl.bindBuffer(gl.ARRAY_BUFFER, m.mb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, mat);
     if (m.vb){ gl.bindBuffer(gl.ARRAY_BUFFER, m.vb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, cov); }
     gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, col);
