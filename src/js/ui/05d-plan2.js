@@ -79,7 +79,8 @@ const PLAN2UI = (() => {
   // each line says what sets it apart: the baiting shed (a plant), the rest for you and for the crew, and the way to the places
   function homeOpts(o){
     const b = S.boat, here = b.status === 'port' ? b.port : nearestPort(b.pos).id, p0 = portById(here).p, home = S.home || HOME0, out = [];
-    const add = id => { const p = portById(id); if (!p || out.some(q => q.id === id)) return; if (id !== o.home && id !== home && portServices(p).verft) return;   // (the naust is a home even where its harbour has a yard) out.push({id}); };
+    // (the naust is a home even where its harbour has a yard)
+    const add = id => { const p = portById(id); if (!p || out.some(q => q.id === id)) return; if (id !== o.home && id !== home && portServices(p).verft) return; out.push({id}); };
     if (portById(home) && dist(portById(home).p, p0) < 80) add(home); add(here); if (o.home) add(o.home);
     try { for (const R of rorbuSites(p0, 40).slice(0, 4)) add(R.id); } catch (e){}
     const hids = new Set(out.map(q => isBerth(q.id) && portById(q.id).hid).filter(Boolean));
