@@ -9,7 +9,9 @@ from playwright.async_api import async_playwright
 ok = lambda c: 'OK  ' if c else 'FEIL'
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out')
 
-JS = """(async () => {
+# (the game's own loop is held the whole time, TAB.held as tick() reads it first: the test plays the minutes itself, and tick() playing
+# its own between the rounds made the jig run to a different hour from run to run; Ø2 05.11.2026)
+JS = """(async () => { TAB.held = true;
   const R = {}; S.tut = 0; S.settings.lang = 'no'; S.lang = 'no'; DRIFT2 = true; window.confirm = () => true;
   const b = S.boat, HP = portById('husoy'); b.type = 'sjark'; applyVessel(); b.status = 'port'; b.port = 'husoy'; b.pos = {...HP.p}; S.plan = null; S.ops = null; S.draft = []; S.me = S.cur; S.cash = 500000;
   const ole = Object.assign(genCrew(), {bi:false, off:false, name:'Ole Mikalsen', known:[true, true]}), per = Object.assign(genCrew(), {bi:false, off:false, name:'Per Hansen', known:[true, true]}); S.crew = [ole, per];
@@ -54,8 +56,9 @@ JS = """(async () => {
   // Start: the plan is made (the plant, the legs), then on; «Nå» and «I dag» are shown
   act('p2-start'); for (let k = 0; k < 300 && !o.on; k++) await new Promise(r => setTimeout(r, 100)); R.on = o.on; R.M = o.M; R.made = plan2Made(o); R.err = o.err;
   for (let i = 0; i < 60; i++){ DYN.on = false; step(); }
-  // (the jig place stands first in the list, so the line is set in the afternoon: played on, with the loop let go, until it stands in the sea)
-  for (let i = 0; i < 720 && !mySets().length; i++){ DYN.on = false; step(); if (i % 10 === 9) await new Promise(r => setTimeout(r, 0)); }
+  // (the jig place stands first in the list, so the line is set in the afternoon: played on, with the loop let go, until it stands in the sea;
+  // up to 20 hours, because the jig goes on past its hour while the deck stands still with the tub full, 40 minutes at noon in Ø2's run)
+  for (let i = 0; i < 1200 && !mySets().length; i++){ DYN.on = false; step(); if (i % 10 === 9) await new Promise(r => setTimeout(r, 0)); }
   R.after60 = {t:driftClock(driftHod(S.t / 60)), status:S.boat.status, port:S.boat.port, i:o.run && o.run.i, wait:o.run && o.run.wait && o.run.wait.no, sets:mySets().length, opsK:S.plan && S.plan.opsK, steps:o.run && o.run.day && o.run.day.steps.map(s => s.k + (s.t != null ? '@' + driftClock(driftHod(s.t)) : '')), log:S.log.slice(-6).map(e => e.no)};
   const p3 = page(); R.now = p3.includes('Nå:'); R.today = p3.includes('I dag') && p3.includes(' ←'); R.landVal = p3.includes(portById(o.M).name);
   R.line = PLAN2UI.line().includes('Driftsplan');
@@ -85,7 +88,7 @@ JS = """(async () => {
       R.anchStart = {on:o.on, min:m, anch:!!b2.anch, status:b2.status, opsK:S.plan && S.plan.opsK, wait:o.run && o.run.wait && o.run.wait.no}; } }
   // copy to another vessel
   const v2 = newVesselObj('sjark', 'husoy'); act('p2-copy', {id:v2.id}); const o2 = vget(v2, 'ops'); R.copy = !!o2 && o2.v === 4 && o2.places.length === o.places.length && !o2.on && o2.places[0].id !== o.places[0].id;
-  S.me = S.cur; o.on = true; return R; })()"""
+  S.me = S.cur; o.on = true; TAB.held = false; lastWall = Date.now(); return R; })()"""
 
 async def main():
     async with async_playwright() as p:

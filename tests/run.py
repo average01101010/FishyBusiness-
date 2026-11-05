@@ -6,6 +6,7 @@ before publishing.
   python3 tests/run.py full               the whole regression (before publishing)
   python3 tests/run.py full --3d          the same with 3D drawn in every test
   python3 tests/run.py historikk         per test: runs, red, the pattern (OPOOP), from tests/out/historikk.tsv
+  python3 tests/run.py utenfor            the test scripts in tests/ that are in none of the lists (D3, LITE, SOLO), so never run
   node tests/unit/run.mjs                 the unit tests of the core alone (run.py runs them first when src/js/core/ changed)
 
 The tests that do not look at 3D run with KYST_LITE=1: the game runs as before, but no 3D frame is drawn (#no3d), and that is
@@ -203,6 +204,9 @@ def main():
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     all3d = '--3d' in sys.argv
     if args[:1] == ['historikk']: flaky(); sys.exit(0)
+    if args[:1] == ['utenfor']:   # the test scripts in none of the lists (D3, LITE, SOLO): never run (Ø2 05.11.2026)
+        known = set(D3 + LITE + SOLO)
+        print(' '.join(sorted(f[:-3] for f in os.listdir(HERE) if f.endswith('.py') and not f.startswith('_') and f != 'run.py' and f[:-3] not in known))); sys.exit(0)
     if not args or args[0] not in ('changed', 'smoke', 'full'):
         print(__doc__); sys.exit(2)
     if args[0] == 'changed':
