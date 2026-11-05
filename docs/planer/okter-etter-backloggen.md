@@ -173,7 +173,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 | Spilltest 3 | Kjører | `ccr-9c21028c-lptg24` | 05.11.2026 |
 | H2 autolineren | H2a rullet ut (c9e651d1); H2b–H2e gjenstår | `h2-autoline` | 05.11.2026 |
 | Ø1 Det som ikke kom med | Ferdig: PR #42 flettet, #18, #19 og #33 lukket, Tufjord flettet inn (8f503066), verftene i Sverige tatt ut (ce056730), leibitene rettet i `npc.py` (eb669fe7, ute med neste kartrelease) | `ccr-834c604f-xxnqoy`, `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
-| Ø2 Testriggen | Ikke begynt | | |
+| Ø2 Testriggen | Pågår | `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
 | Ø3 Ytelse | Ikke begynt | | |
 | Ø4 Båtmodellene | Venter (Jonas: «Vent med båtene») | | |
 | Ø5 Butikkene, restene | Ikke begynt | | |
