@@ -397,8 +397,10 @@ function mottakOpen(H){ return true; }
 // the next quarter hour the plants are open (within four days)
 function mottakNext(H){ for (let k = 0; k < 4 * 24 * 4; k++){ const h = (Math.ceil(H * 4) + k) / 4; if (mottakOpen(h)) return h; } return H; }
 // when it opens, in words: «i dag kl. 06:00», «i morgen kl. 06:00» or the weekday
-function mottakWhen(H, no){
-  const n = mottakNext(H), a = gDate(H), b = gDate(n), days = Math.round((Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate()) - Date.UTC(a.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate())) / 864e5);
+// (from: the hour the day is said from, now by default; a landing of a day or more says its end from now, not from that day: before,
+// a landing ending two days on said «i dag kl. 04:00», H2c 05.11.2026)
+function mottakWhen(H, no, from){
+  const n = mottakNext(H), a = gDate(from == null ? Math.min(H, S.t / 60) : from), b = gDate(n), days = Math.round((Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate()) - Date.UTC(a.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate())) / 864e5);
   const t = String(b.getUTCHours()).padStart(2, '0') + ':' + String(b.getUTCMinutes()).padStart(2, '0'), wd = b.getUTCDay();
   const day = days <= 0 ? (no ? 'i dag' : 'today') : days === 1 ? (no ? 'i morgen' : 'tomorrow') : (no ? ['søndag', 'mandag', 'tirsdag', 'onsdag', 'torsdag', 'fredag', 'lørdag'] : ['on Sunday', 'on Monday', 'on Tuesday', 'on Wednesday', 'on Thursday', 'on Friday', 'on Saturday'])[wd];
   return day + (no ? ' kl. ' : ' at ') + t;
