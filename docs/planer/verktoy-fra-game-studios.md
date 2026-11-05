@@ -91,3 +91,4 @@ Jonas ba økta svare selv (28.10.2026). Svarene, med grunnen:
 
 - 28.10.2026: vurderingen skrevet. Jonas spurte hva som ville merkes i ettertid, og ba økta svare på valgene selv. Svar: 1 A1+A2+A4+A6 (A3 venter), 2 B, 3 A, 4 B. Rekkefølge: A7 først, så hook-økta. Venter på «kjør på».
 - 05.11.2026: **«Kjør på»** (Jonas valgte begge): A7 er Ø6 i `docs/planer/okter-etter-backloggen.md` og startes nå (bare lesing). A1, A2, A4 og A6 er Ø17 og kommer etter Ø2, fordi begge endrer `run.py`. A5 tas i Ø2.
+- 05.11.2026: A7 gjort i Ø6. Funnene i `docs/planer/sikkerhet-skyen.md`, svarene på spørsmålene over står øverst der.

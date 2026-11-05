@@ -2,6 +2,8 @@
 
 > Flyttet ordrett fra `docs/OVERLEVERING.md` 26.10.2026 (`docs/utviklingsplan.md`, fase A). Tallene i overskriftene er de gamle kapittelnumrene; `docs/systemer/gamle-numre.md` viser hvor hvert nummer havnet. Nytt skrives inn her, under det systemet det gjelder.
 
+> **Sikkerhetsgjennomgangen 05.11.2026 (Ø6):** `docs/planer/sikkerhet-skyen.md` sier hva serveren stoler på fra klienten (landingene, fangsten, posisjonen, lagringen), hva gjester og kall uten innlogging kan gjøre, og 15 funn med rettinger. Les den før noe nytt skal deles mellom spillerne.
+
 ## 4.20 Skyen: innlogging, skylagring, måling og admin-dashbordet (04.10.2026)
 
 Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med WorkOS, Supabase, samtykke til statistikk og bare han som admin. Hele lista står i `docs/lansering.md`.
