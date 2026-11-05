@@ -47,3 +47,10 @@ Hva som ble gjort (siste blokk i `styles.css`):
 - **Telefon liggende** (`max-height: 520px`): infoboksen er litt mindre (`zoom`), minikartet er borte, GPS-boksen ligger rett under infoboksen, og telefonen i spillet er like høy som skjermen.
 - **Overalt:** kompasset når aldri infoboksen, og knappene i appene (`.ph-sub`) er minst 36 px høye på berøringsskjermer. Ekkoloddfeltet forsvinner når ekkoloddet er av.
 - `--gpsTop` og `--hudW` regnes fra infoboksen slik den er tegnet (`getBoundingClientRect`), så de stemmer med `zoom`.
+
+## Tiden, toasten og juksespillet (spilltest 3, Jonas 05.11.2026, `docs/planer/spilltest3-valg.md`)
+
+- **To klokker med merking (V1 A):** spilltid først, ekte tid etter med «i ekte tid». `inReal` (`ui/02-format-state.js`) sier alltid «om 47 min i ekte tid»; `whenTxt` gir «11:01 · om 47 min i ekte tid»; `gameDur` gir spilltiden («3 t», «4 t 20 min») og `durBoth` begge («3 t (30 min i ekte tid)»), brukt på knappene for montering, verksted, egning og reparasjon. HUD-ens neste hendelse: «Fisket er ferdig kl. 11:01 · om 47 min i ekte tid».
+- **Toasten (V3 A):** `toastPlace` legger den over viften (`#dockFan`) og settelinja (`#setBar`), aldri oppå dem; `toastClear` tar bort en gammel toast når noe nytt åpnes i knappelinja.
+- **Juksespillet (V5 A):** et dupp 1–3 s før nappet (`dupp` i `ui/10-rod-acts.js`, lyden `SND.nudge`, «Det dupper i snøret …»), og av og til uten napp etter, så duppet er et tegn og ikke et løfte.
+- **Knappelinja:** tekstene brytes i to linjer inne i knappen (U10), og ved full last er Auto-nav hovedknappen (U5).

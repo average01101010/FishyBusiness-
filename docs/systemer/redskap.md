@@ -160,3 +160,11 @@ Spilleren fikk ingenting på juksa selv om ekkoloddet viste mye blåkveite, og f
 
 
 **Isingen og karene (04.11.2026, Jonas: «Det kan ikke bare dukke opp en kasse med is fra løse luften»):** iskassa står fast på dekk (`iceBoxAt`, `drawIceBox`: modellens `kit.iskasse`, ellers ved pakkerens plass på båtene med lasterom), med isen så høyt som det er is om bord, og spaden står i den når ingen iser (`packingNow`). Pakkeren og den som iser på de åpne båtene øser fra kassa (`st.Bin`) over fisken i karet som fylles (`karFilling`, `karTop`), og isbitene faller fra spaden (`drawShovel`). Karene blir blodige etter hvert som de fylles (`kar460_blod1`–`3` over 1,5 %, 30 % og 65 %), og kommer spylt tilbake fra mottaket.
+
+## Båten ved eget redskap (spilltest 3, Jonas 05.11.2026, V2 B i `docs/planer/spilltest3-valg.md`)
+
+- **Ligger på været:** med noen våken om bord og diesel holder motoren båten innen 0,5 nm fra nærmeste egne blåse (`GEARLIE.r`), og kjører henne opp til 0,25 nm (`GEARLIE.back`) med fem knop når driften har tatt henne lenger. Det koster diesel som ellers (`fuelUse`, `fuelLph(5)`), og det skjer også mens spillet er lukket (`lieDrift` i minuttsteget, `core/16b-dyn.js`). Sover du alene, eller er tanken tom, driver hun som før.
+- **Alarmen:** `gearWatch` piper (ankeralarmen) og sier fra én gang når båten går fra under til over 1 nm fra redskapet mens hun ligger, driver eller jukser. Seiler hun bort med vilje, er det ingen alarm.
+- **På skjermen:** HUD-en viser «Blåsa 0,3 nm · driver 0,8 kn SØ» (eller «kjører opp»), rød med «Kjør dit» over 1 nm. Knappelinja har «Til blåsa» innen en halv mil, som lager ruta opp; kartet lukkes når båten er framme (U3).
+- **Målt:** `fiskeplay.py line teiner garn` (seed 1): 0,2–0,4 nm fra blåsa etter 12–60 t, mot 6–25 km før.
+- **Kongekrabben på teinekortet** (V4 A): kortene i butikken og på nettet sier utbredelsen med Fiskeguidens ord (`KC_WHERE` i `ui/10-gear-ui.js`), som en opplysning, ikke et tips (Jonas 20.10.2026: «Ikke vis hint»).
