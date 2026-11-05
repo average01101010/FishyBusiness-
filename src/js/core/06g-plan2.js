@@ -243,26 +243,30 @@ function planDayText(o, day){
   const nm = id => (portById(id) || {name:'?'}).name, pl = id => { const q = o.places.find(x => x.id === id), i = q ? o.places.filter(x => x.k === q.k).indexOf(q) + 1 : '?'; return q && q.k === 'juks' ? ['juksplass ' + i, 'jig place ' + i] : ['felt ' + i, 'field ' + i]; };
   const kind = p2Kind(o), U = kind ? GEAR[kind].u : ['', '', '', ''], un = (n, lang) => U[lang === 'no' ? (n === 1 ? 0 : 1) : (n === 1 ? 2 : 3)];
   const ck = t => t == null ? '–' : driftClock(driftHod(t)), out = [];
+  // a time in the text with its day (GUI review P4): «kl. 16:05» the day she went, «i morgen kl. 16:05» after midnight, «om 2 døgn, kl. …» later
+  const dd = t => Math.round(((t - driftHod(t)) - (day.t0 - driftHod(day.t0))) / 24);
+  const kl = t => { const d = t == null ? 0 : dd(t); return d <= 0 ? 'kl. ' + ck(t) : d === 1 ? 'i morgen kl. ' + ck(t) : 'om ' + d + ' døgn, kl. ' + ck(t); };
+  const at = t => { const d = t == null ? 0 : dd(t); return d <= 0 ? ck(t) : d === 1 ? 'tomorrow at ' + ck(t) : 'in ' + d + ' days, at ' + ck(t); };
   for (const s of day.steps){
     const c = ck(s.t); let no = '', en = '';
     if (s.k === 'avgang'){ no = 'Går fra ' + (s.from ? nm(s.from) : 'der båten ligger'); en = 'Leaves ' + (s.from ? nm(s.from) : 'where the boat lies'); }
     else if (s.k === 'sett'){ const lk = s.lk && LINE_KINDS[s.lk] ? ' ' + LINE_KINDS[s.lk].no.toLowerCase() : '', lke = s.lk && LINE_KINDS[s.lk] ? ' ' + LINE_KINDS[s.lk].en.toLowerCase() : ''; no = 'Setter ' + s.n + ' ' + un(s.n, 'no') + lk + ' på ' + pl(s.pid)[0]; en = 'Sets ' + s.n + ' ' + un(s.n, 'en') + lke + ' at ' + pl(s.pid)[1]; }
     else if (s.k === 'trekk'){ no = 'Trekker ' + pl(s.pid)[0] + ' (sto ' + fmt(s.soakH, 1) + ' t)' + (s.reset ? ', setter på nytt' : ''); en = 'Hauls ' + pl(s.pid)[1] + ' (stood ' + fmt(s.soakH, 1) + ' h)' + (s.reset ? ', sets again' : ''); }
-    else if (s.k === 'juks'){ no = 'Jukser ' + (s.pid ? 'på ' + pl(s.pid)[0] : 'ved redskapet') + ' til kl. ' + ck(s.until) + ' (' + fmt(s.h, 1) + ' t)'; en = 'Jigs ' + (s.pid ? 'at ' + pl(s.pid)[1] : 'by the gear') + ' until ' + ck(s.until) + ' (' + fmt(s.h, 1) + ' h)'; }
-    else if (s.k === 'vent'){ no = 'Venter ved ' + pl(s.pid)[0] + ' til ståtida er ute kl. ' + ck(s.until); en = 'Waits by ' + pl(s.pid)[1] + ' until the soak is up at ' + ck(s.until); }
+    else if (s.k === 'juks'){ no = 'Jukser ' + (s.pid ? 'på ' + pl(s.pid)[0] : 'ved redskapet') + ' til ' + kl(s.until) + ' (' + fmt(s.h, 1) + ' t)'; en = 'Jigs ' + (s.pid ? 'at ' + pl(s.pid)[1] : 'by the gear') + ' until ' + at(s.until) + ' (' + fmt(s.h, 1) + ' h)'; }
+    else if (s.k === 'vent'){ no = 'Venter ved ' + pl(s.pid)[0] + ' til ståtida er ute ' + kl(s.until); en = 'Waits by ' + pl(s.pid)[1] + ' until the soak is up at ' + at(s.until).replace(/^tomorrow at /, 'tomorrow, '); }
     else if (s.k === 'lever'){ no = s.full ? 'Leverer i ' + nm(s.port) + ' når lasten er full' : 'Leverer i ' + nm(s.port); en = s.full ? 'Lands at ' + nm(s.port) + ' when the hold is full' : 'Lands at ' + nm(s.port); }
     else if (s.k === 'behold'){ no = 'Beholder ' + s.kg + ' kg om bord til i morgen'; en = 'Keeps ' + s.kg + ' kg aboard until tomorrow'; }
     else if (s.k === 'agn'){ no = 'Kjøper ' + s.kg + ' kg agn i ' + nm(s.port); en = 'Buys ' + s.kg + ' kg of bait at ' + nm(s.port); }
     else if (s.k === 'hjem'){ no = 'Hjem til ' + nm(s.port) + (s.anchor ? ', til ankers' : ''); en = 'Home to ' + nm(s.port) + (s.anchor ? ', at anchor' : ''); }
-    else if (s.k === 'egning'){ no = (s.where === 'egnebu' ? 'Egnebua egner ' + s.n + ' stamper, klar kl. ' + ck(s.ready) : 'Mannskapet egner ' + s.n + ' stamper underveis eller ved kai, klar senest kl. ' + ck(s.ready)); en = (s.where === 'egnebu' ? 'The shed baits ' + s.n + ' tubs, ready at ' + ck(s.ready) : 'The crew bait ' + s.n + ' tubs under way or at the quay, ready by ' + ck(s.ready)); }
-    else if (s.k === 'hvile'){ no = (s.where === 'anker' ? 'Hviler om bord' : s.where === 'kai' ? 'Hviler ved kaia' : 'Hviler') + ' til kl. ' + ck(s.until); en = (s.where === 'anker' ? 'Rests aboard' : s.where === 'kai' ? 'Rests at the quay' : 'Rests') + ' until ' + ck(s.until); }
-    else if (s.k === 'vakt'){ no = 'Vakt ' + s.w + ' til kl. ' + ck(s.until) + ': ' + s.who.join(', '); en = 'Watch ' + s.w + ' until ' + ck(s.until) + ': ' + s.who.join(', '); }
+    else if (s.k === 'egning'){ no = (s.where === 'egnebu' ? 'Egnebua egner ' + s.n + ' stamper, klar ' + kl(s.ready) : 'Mannskapet egner ' + s.n + ' stamper underveis eller ved kai, klar senest ' + kl(s.ready)); en = (s.where === 'egnebu' ? 'The shed baits ' + s.n + ' tubs, ready at ' + at(s.ready) : 'The crew bait ' + s.n + ' tubs under way or at the quay, ready by ' + at(s.ready)); }
+    else if (s.k === 'hvile'){ no = (s.where === 'anker' ? 'Hviler om bord' : s.where === 'kai' ? 'Hviler ved kaia' : 'Hviler') + ' til ' + kl(s.until); en = (s.where === 'anker' ? 'Rests aboard' : s.where === 'kai' ? 'Rests at the quay' : 'Rests') + ' until ' + at(s.until); }
+    else if (s.k === 'vakt'){ no = 'Vakt ' + s.w + ' til ' + kl(s.until) + ': ' + s.who.join(', '); en = 'Watch ' + s.w + ' until ' + at(s.until) + ': ' + s.who.join(', '); }
     else if (s.k === 'ut'){ no = 'Ut igjen'; en = 'Out again'; }
     out.push([c, no, en]);
   }
   const cap = x => x.charAt(0).toUpperCase() + x.slice(1);   // («Field 1: …», not «field 1: …», GUI review P6)
   for (const x of day.skipped) out.push(['', cap(pl(x.id)[0]) + ': ' + x.no, cap(pl(x.id)[1]) + ': ' + x.en]);
-  out.push(['', 'Dagen: ' + day.why[0] + '.', 'The day: ' + day.why[1] + '.']);
+  out.push(['', cap(day.why[0]) + '.', cap(day.why[1]) + '.']);   // («Dagen er 14 t.», not «Dagen: dagen er 14 t.», P4)
   return out;
 }
 // ---- the check: errors keep the plan from being switched on, warnings only inform (as driftCheck; the rhythm's rules from Jonas 26.10.2026)

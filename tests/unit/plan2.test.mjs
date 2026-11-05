@@ -33,4 +33,11 @@ export default function (t){
     const c = plan2WatchWhy(st(true, 4, 3), 3); t.ok(c.k === 'crew' && /ansett 1 til/.test(c), 'båten kan, tre om bord: «ansett 1 til» (' + c + ')');
     t.ok(/køyer til alle/.test(plan2WatchWhy(st(true, 4, 4), 5)), 'fem om bord og fire køyer: køyer til alle');
     t.ok(plan2WatchWhy(st(true, 6, 5), 4) === null, 'fire om bord, seks køyer: døgndrift går'); }
+  // the day's words (P4): «Dagen er 14 t.» without «Dagen:», and «i morgen kl.» on a time after midnight
+  { const {planDayText} = K, o = {places:[], rig:'juksa'}, had = 'fmt' in globalThis; if (!had) globalThis.fmt = (x, d) => x.toFixed(d).replace('.', ',');   // (fmt is the UI's, ui/02-format-state.js)
+    const day = {t0:H(3, 5), steps:[{t:H(3, 6), k:'juks', pid:null, until:H(3, 16), h:10}, {t:H(3, 16), k:'juks', pid:null, until:H(4, 16, 5), h:24}], skipped:[], why:['dagen er 14 t', 'the day is 14 h']};
+    const T = planDayText(o, day);
+    t.ok(/til kl\. 16:00 /.test(T[0][1]), 'samme dag: «til kl. 16:00» (' + T[0][1] + ')');
+    t.ok(/til i morgen kl\. 16:05/.test(T[1][1]) && /until tomorrow at 16:05/.test(T[1][2]), 'etter midnatt: «til i morgen kl. 16:05» (' + T[1][1] + ')');
+    t.ok(T[2][1] === 'Dagen er 14 t.' && T[2][2] === 'The day is 14 h.', 'siste linje: «Dagen er 14 t.» (' + T[2][1] + ')'); if (!had) delete globalThis.fmt; }
 }
