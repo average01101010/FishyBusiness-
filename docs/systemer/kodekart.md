@@ -536,7 +536,7 @@ The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a 
   - 435 `ruOpenNear(p, q, maxKm)`
   - 444 `ruTips()`
 
-## `src/js/core/03f-fiske.js` (380 linjer)
+## `src/js/core/03f-fiske.js` (387 linjer)
 
 The fishing along the coast as it really was, and where the fish is from it (B2 of docs/planer/bestand-og-flaate.md, 01.11.2026).
 
@@ -565,12 +565,12 @@ The fishing along the coast as it really was, and where the fish is from it (B2 
   - 298 `fkAt(a, l, T)`
   - 300 `skreiFront(lat, H, T)`
   - 306 `skreiPulse(c, H, T)`
-  - 312 `fkAvail(sp, q, T)`
-  - 348 `areaF(sp, p, H)`
-  - 354 `skreiShare(p, H)`
-  - 361 `skreiFlow(K, H)`
-- **368** the sea's warmth: the fish go deeper when the surface is warmer than they like (B4, 02.11.2026)
-  - 375 `tempDepthK(sp, c, H)`
+  - 318 `fkAvail(sp, q, T)`
+  - 355 `areaF(sp, p, H)`
+  - 361 `skreiShare(p, H)`
+  - 368 `skreiFlow(K, H)`
+- **375** the sea's warmth: the fish go deeper when the surface is warmer than they like (B4, 02.11.2026)
+  - 382 `tempDepthK(sp, c, H)`
 
 ## `src/js/core/03g-trykk.js` (206 linjer)
 
@@ -1422,7 +1422,7 @@ Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026;
   - 75 `kvWhat(r)`
   - 85 `kvFinish()`
 
-## `src/js/core/10-gear.js` (795 linjer)
+## `src/js/core/10-gear.js` (798 linjer)
 
 passive gear: nets, line and pots that stand in the sea while the boat is away
 
@@ -1493,19 +1493,19 @@ passive gear: nets, line and pots that stand in the sea while the boat is away
   - 603 `opsGearAfter()`
 - **609** in the sea, every hour: catch, losses, weather and deadlines (company level)
   - 610 `soakHour(s, H)`
-  - 639 `gearHour(H)`
-  - 670 `reportLost(sid)`
-  - 678 `netMended(l)`
-- **679** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
-  - 685 `egnOrder(lk, n, bait)`
-  - 699 `egnHands()`
-  - 708 `egnSelf(lk, n, bait)`
-  - 729 `stripSelf(lk, bait, n, then)`
-  - 743 `mendSelf(nid)`
-  - 754 `botOrder(nid)`
-  - 765 `gearJob(j)`
-  - 777 `gearJobCancel(j)`
-  - 784 `shoreTick()`
+  - 642 `gearHour(H)`
+  - 673 `reportLost(sid)`
+  - 681 `netMended(l)`
+- **682** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
+  - 688 `egnOrder(lk, n, bait)`
+  - 702 `egnHands()`
+  - 711 `egnSelf(lk, n, bait)`
+  - 732 `stripSelf(lk, bait, n, then)`
+  - 746 `mendSelf(nid)`
+  - 757 `botOrder(nid)`
+  - 768 `gearJob(j)`
+  - 780 `gearJobCancel(j)`
+  - 787 `shoreTick()`
 
 ## `src/js/core/10b-gearcare.js` (266 linjer)
 
@@ -2256,12 +2256,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1141 linjer)
+## `src/js/ui/phone/07-patch.js` (1143 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1134 `patch()`
+  - 1136 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
