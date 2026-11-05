@@ -14,7 +14,8 @@ const PLAN2UI = (() => {
   const ck = t => t == null ? '–' : driftClock(driftHod(t));
   function row(k, label, value, body, bad){
     const on = open === k && !!body;
-    return '<div class="dr-row' + (on ? ' on' : '') + (bad ? ' bad' : '') + '"><button class="dr-rh" data-pa="p2-row" data-k="' + k + '"><span class="dr-rl">' + label + '</span><span class="dr-rv">' + value + '</span><span class="dr-rc">' + (body ? (on ? '▾' : '›') : '') + '</span></button>' + (on ? '<div class="dr-rb">' + body() + '</div>' : '') + '</div>';
+    // (a row with something missing colours only its value, which says what is missing: GUI review U3; the global .bad made all of it red and small)
+    return '<div class="dr-row' + (on ? ' on' : '') + (bad ? ' dr-bad' : '') + '"><button class="dr-rh" data-pa="p2-row" data-k="' + k + '"><span class="dr-rl">' + label + '</span><span class="dr-rv">' + value + '</span><span class="dr-rc">' + (body ? (on ? '▾' : '›') : '') + '</span></button>' + (on ? '<div class="dr-rb">' + body() + '</div>' : '') + '</div>';
   }
   const kindName = id => { const p = portById(id); if (!p) return ''; if (id === (S.home || HOME0)) return L('naustet', 'the naust'); if (isRorbu(id)) return L('rorbu', 'rorbu');
     if (isBerth(id)) return p.kind === 'dock' ? L('flytebrygge', 'floating dock') : L('kai', 'quay');
@@ -111,6 +112,8 @@ const PLAN2UI = (() => {
   // ---- Plasser: the list in the order she works them
   const own = (p, kind) => { const m = planMark(p, kind || null); return m ? (kind ? L('sist ' + fmt(m.kgu, 1) + ' kg per ' + GEAR[kind].u[0] + ' etter ' + Math.round(m.soak || 0) + ' t', 'last ' + fmt(m.kgu, 1) + ' kg a ' + GEAR[kind].u[2] + ' after ' + Math.round(m.soak || 0) + ' h') : L('sist ' + m.kgph + ' kg/t', 'last ' + m.kgph + ' kg/h')) : L('ikke fisket her ennå', 'not fished here yet'); };
   const placesVal = o => { const F = o.places.filter(q => q.k === 'felt').length, J = o.places.filter(q => q.k === 'juks').length; return (F ? F + ' ' + L('felt', F === 1 ? 'field' : 'fields') : '') + (F && J ? ', ' : '') + (J ? J + ' ' + L(J === 1 ? 'juksplass' : 'juksplasser', J === 1 ? 'jig place' : 'jig places') : '') || L('ingen ennå', 'none yet'); };
+  // what the places lack for the plan to go, said on the row (U3): a field for the gear, or a jig place
+  const placesMiss = o => p2Kind(o) ? (o.places.some(q => q.k === 'felt') ? '' : L('mangler felt', 'no field yet')) : (o.places.some(q => q.k === 'juks') ? '' : L('mangler juksplass', 'no jig place yet'));
   const SOAKSTEP = {line:1, garn:6, teine:12};
   function placesBody(o){
     const kind = p2Kind(o), h = [], home = portById(o.home), fi = {felt:0, juks:0};
@@ -262,8 +265,8 @@ const PLAN2UI = (() => {
     h.push(dayCard(o));
     h.push('<div class="ph-card dr-rows">' +
       row('home', L('Hjem', 'Home'), o.home ? nm(o.home) + (o.anchor && (BOAT.len || 0) >= DRP.bigLen ? L(', til ankers', ', at anchor') : '') : L('ikke valgt', 'not chosen'), () => homeBody(o), !o.home) +
-      row('rig', L('Redskap', 'Gear'), rigVal(o), () => rigBody(o), !!gearWhy(o.rig)) +
-      row('places', L('Plasser', 'Places'), placesVal(o), () => placesBody(o), p2Kind(o) ? !o.places.some(q => q.k === 'felt') : !o.places.some(q => q.k === 'juks')) +
+      row('rig', L('Redskap', 'Gear'), rigVal(o) + (gearWhy(o.rig) ? ' · ' + gearWhy(o.rig).toLowerCase() : ''), () => rigBody(o), !!gearWhy(o.rig)) +
+      row('places', L('Plasser', 'Places'), placesVal(o) + (placesMiss(o) ? ' · ' + placesMiss(o) : ''), () => placesBody(o), !!placesMiss(o)) +
       row('land', L('Levering', 'Landing'), landVal(o), () => landBody(o)) +
       row('wx', L('Vær', 'Weather'), wxVal(o), () => wxBody(o)) +
       row('rhythm', L('Rytme', 'Rhythm'), rhythmVal(o), () => rhythmBody(o)) +
