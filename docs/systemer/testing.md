@@ -46,6 +46,7 @@ Hvilke tester som dekker hvilke filer, står i `COVER` i `tests/run.py`. Funksjo
   - Testene i `D3` ser på selve 3D-bildet og går med 3D, én om gangen og uten andre tester ved siden av. Det gjelder også `tut.py` (`DRAWS3D`), som spiller «Første tur» med 3D. SwiftShaders bilder stopper opp under annen last: 03.10.2026 gikk alle 3D-testene som kjørte ved siden av testene uten 3D, ut på tid ved klikk og skjermbilder, men de gikk alene. `vessel3d` (60 skjermbilder) har 1500 s og `sea3d` 1200 s. `routetest` og `heattest` måler millisekunder, og `landtest` følger kranen i 3D bilde for bilde. De går alene til slutt (`SOLO`), ellers forstyrrer de andre testene dem.
   - Loggene havner i `tests/out/logs/`. `boot(pg)` i `_env.py` starter spillet og venter på startskjermen i stedet for faste pauser.
   - Testene henter spillet over HTTP fra en egen server per test (4.6). `KYST_DIST` peker på et annet bygg.
+- **Gjennomgangsverktøy (ikke i `run.py`, uten OK og FEIL):** `uiplay.py` går gjennom alt UI-et (`docs/planer/ui-redesign.md`), og `fiskeplay.py` (05.11.2026) prøver alle redskapene som en spiller i ni scenarioer (`docs/playtest/rapport-3-redskap.md`). `fiskeplay.py` trenger hele kysten i bygget og tar rundt 10 minutter uten 3D. `KYST_FP_FMT=staaende` gir stående format, og `KYST_FP_3D=1` gir 3D.
 - **Regresjon:**
   - `trip2.py`: hel tur via kartplotter, avgang, 3D, fiske og havn.
   - `tut.py`: veiledningen «Første tur», spilt gjennom med berøring som en spiller, liggende og stående, med tre omlastinger. Skal ende med `"tut": 0`.
