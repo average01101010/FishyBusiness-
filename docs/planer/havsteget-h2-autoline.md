@@ -37,7 +37,9 @@ Lest 05.11.2026 (kilde og hva som ikke ble lest, står ved hvert punkt):
   - Gjelder ikke fløytline etter hyse. Uendret siden 1.3.2022.
   - Merk: grensen er **21,35 m**, ikke 28 m. Den rammer altså også en kystbåt med egnemaskin, men ingen kystbåt i spillet har egnemaskin.
 - **§ 18 røkting**: bunnsatte liner for torsk, hyse og sei minst hver andre dag; liner for blåkveite, lange og brosme minst hver andre dag. Spillet har i dag 2 døgn for blåkveite og 4 døgn for kveite og breiflabb.
-- **§ 66 merking** (minst ett vak med registreringsmerket) er bare lest som sammendrag.
+- **§ 26 feltene på 10 nm** (koordinatene, lest på Lovdata 05.11.2026): a) Finnmark/Troms 70° 41,16′ N 21° 30′ Ø – 70° 47,52′ N 21° 30′ Ø – langs 10 nm – 70° 36,32′ N 20° 00′ Ø – 70° 29,90′ N 20° 00′ Ø; b) Troms 70° 05,47′ N 18° 07,43′ Ø – 70° 08,98′ N 17° 52,98′ Ø – langs 10 nm – 69° 35,50′ N 16° 27,45′ Ø – 69° 29,99′ N 16° 34,76′ Ø (begge 1.9–31.12); c) Nordland 69° 20′ N 15° 44,71′ Ø – 69° 20′ N 15° 16,59′ Ø – langs 10 nm – 67° 30′ N 11° 25,33′ Ø – 67° 30′ N 11° 41,75′ Ø (1.9–30.4).
+- **§ 66 merking:** «Redskap som står i sjøen skal ha minst ett vak (blåse, flyt eller dobbe) som er tydelig merket med fartøyets registreringsmerke.»
+- **§ 68 merking utenfor grunnlinjene** (line og garn): bøyestang minst 2 m over vannet med radarreflektor eller flagg i hver ende; vestre ende to flagg over hverandre, østre ett; om natta gult lys (to i vest, ett i øst), synlig 2 nm, 20–25 blink i minuttet om det blinker; vak minst hver nautiske mil på faststående redskap. Det er dette blåsene og lyktene i 3D skal vise (H2d).
 
 **Kvotene** (J-187-2026, gjeldende fra 26.10.2026, erstatter J-161-2026, lest på fiskeridir.no):
 
@@ -51,93 +53,151 @@ Lest 05.11.2026 (kilde og hva som ikke ble lest, står ved hvert punkt):
 
 - Fartøy på 28 m og over kan lande inntil 5 516 t brosme og 3 202 t lange (§ 3).
 - **Direktefisket er stoppet** for 28 m og over: lange fra 22.1.2026 (§ 9), brosme fra 6.8.2026 (§ 6). Etterpå er bare bifangst lov: inntil **35 % lange** og **15 % brosme** i fangsten og ved landing.
-- Det betyr at sedlene for 2024–2025 (der lange og brosme er 36 % av autolinernes fangst) ikke passer 2026. Spillet starter i 2027, og reguleringen for 2027 finnes ikke ennå. H2a regner med gruppekvoten og stoppen når den er tatt (som et felt som stenges), og med bifangstgrensene etter stoppen.
+- Det betyr at sedlene for 2024–2025 (der lange og brosme er 36 % av autolinernes fangst) ikke passer 2026.
+- **Forslaget for 2027** (Fiskeridirektoratet, reguleringsmøtet 4.–5.11.2026, sak 15/2026, lest 05.11.2026): totalkvotene som 2026 (lange 6 906 t, brosme 8 748 t), fartøy på 28 m og over 46,36 % av langen (3 202 t) og 63,06 % av brosmen (5 516 t). For konvensjonelle havfiskefartøy og lukket kystgruppe: «inntil 35 % bifangst av lange i de enkelte fangster og ved landing» hele året (ikke noe direktefiske), og «fritt fiske etter brosme», som stoppes når gruppekvoten er tatt (2025: 11. september, 2026: 6. august; etter stoppen 15 % bifangst i 2026). 26 konvensjonelle havfiskefartøy og fire kystfartøy over 28 m har adgang (11.9.2026). Fiskebåt ville ha 49 % lange (innspill 25.10.2026).
 - Blåkveitestoppen J-108-2026 gjelder bare under 28 m.
 
-**Ikke lest:** hyreavtalen for konvensjonell havfiskeflåte (fiskebat.no og fiskarlaget.no kan ikke nås fra miljøet her; spillet bruker § 6 i oppgjørsavtalen som før), reglene for lange og brosme i EU- og britisk sone (J-177-2026 ikke åpnet), Fiskeridirektoratets omregningsfaktorer.
+**Andre soner:** J-177-2026 (britisk sone): Nordsjøen inntil 5 000 t lange og 1 500 t brosme; 6.a og 5.b 250 t av hver bare med line, brosmen stoppet 8.10.2026. Dette står alt i spillet fra R4 (5.28b). EU-sonen er ikke funnet.
+
+**Ikke lest:** den reviderte autolinetariffen (vedlegg på fiskarlaget.no, som ikke kan nås herfra). Spillet bruker § 6 i oppgjørsavtalen fra 1.1.2025, som stemmer med lønnsomhetsundersøkelsen (kap. 2b).
+
+## 2b. Driftstallene (funnet 05.11.2026)
+
+Jonas 05.11.2026: «Finn ut det du er usikker på». Det som er lest, med kilde; det som er regnet ut av kildene, er merket.
+
+**Snittbåten** (Fiskeridirektoratet, lønnsomhetsundersøkelsen 2024, tabell G 14, konvensjonelle havfiskefartøy, 14 av 22 båter; arbeidsinnsats og drivstoff 2009–2024):
+- 49,3 m, 17,9 år, 290 driftsdøgn og 277 døgn i sjøen.
+- **30,1 mann per båt, 15,5 årsverk:** to mannskap som bytter, 15 om bord om gangen (spillets `crewMax:14`, `rot:2` stemmer).
+- Inntekt 76,7 MNOK; arbeidsgodtgjørelse til mannskapet 27,8 MNOK (36 %), drivstoff 8,7 MNOK, agn, is, salt og emballasje 5,6 MNOK, proviant 1,05 MNOK, vedlikehold 7,4 MNOK, avgifter om lag 3,5 MNOK.
+- **Drivstoff:** 23,8 mill. liter for 22 båter, **1,08 mill. liter per båt i året, om lag 3 700 liter per driftsdøgn, 0,40 liter per kg fisk.**
+- Gruppa landet 60 107 t rund vekt i 2024 (2 730 t per båt; i dette er sei med garn 12 000 t), snittpris 29,71 kr/kg, torsk 47,06.
+- Kontroll av lotten: inntekt minus drivstoff, agn og avgifter er om lag 59 MNOK; 48 % etter § 6-tabellen (14–15 mann, 44–49 m) er 28 MNOK. Det stemmer med 27,8 MNOK, så § 6 i spillet holder.
+
+**Lina** (søk 05.11.2026):
+- Havgående autolinere setter 30 000–50 000 krok i døgnet, turen er 6–7 uker (HI-rapport 2024-11, SNL «autoline»). Spillets 40 000 står.
+- 1,2 m mellom krokene på bunnline, noen norske båter 1,4 m; setting i 6–10 knop, 3–4 krok i sekundet (National Fisherman om E-Line; Mustad-katalogen 2023). Draget: linehaleren tar 0–60 m line i minuttet (Mustad), altså høyst om lag 2 500–3 000 krok i timen ved 1,3 m (utregnet).
+- Utregnet døgn: 40 000 krok setter seg på om lag 3–4 timer og dras på om lag 15–16; resten er gange mellom lenkene og ståtid. Det stemmer med «døgnet rundt i to vakter».
+
+**Agnet** (Løkkeborg, HI-rapport 24-2013):
+- «I dag bruker autolineflåten vanligvis en 50/50-blanding av akkar og saury», noen bruker sild etter lange. Akkar 14,5–17 kr/kg i 2012.
+- 4–6 000 t akkar og saury importert i året (Måløy 2005–2012), nesten alt til autolineflåten, om lag 30 båter: **om lag 180 t agn per båt i året, rundt 17 g per krok** (utregnet). Spillet får akkar og saury som agn (`BAITS`); blekksprut finnes alt.
+
+**Fangsten per krok** (utregnet): line 28+ i sedlene 2024–2025 er 40 000 t i året på 21 båter, om lag 1 900 t per båt. Med 277 døgn i sjøen og om lag 85 % av dem på feltet blir det rundt 9 mill. krok i året, altså **om lag 200 kg rund vekt per 1 000 krok** i snitt. Med V5 A (lange bare som bifangst) blir det noe mindre de delene av året brosmen er stoppet.
+
+**Fryseriet:** en 44,5 m frysebåt fryser 10 t i døgnet med 250 t rom (SeaBoats), en 59 m 25 t med 500 t (Gandvik-1, Baird Maritime), en 64 m autoliner 11 t med platefrysere (Atlantic, Norwegian Frozen at Sea); platefrysere selges for 25–100 t i døgnet (Optimar). Spillets autoliner får **15 t produkt i døgnet** (om lag 7–8 t rund vekt fangst sløyd og fryst i døgnet trenger 5–6 t, så det er rom for gode døgn).
+
+**Vektene (V2 A):** de offisielle omregningsfaktorene fra produktvekt til rund vekt, sløyd med hode / sløyd uten hode:
+- Felles norsk-russiske for 2023 (fiskeridir.no, «Omregningsfaktorer», vedlegg I): torsk 1,18 / 1,50, hyse 1,14 / 1,40, blåkveite 1,12 / 1,32, snabeluer 1,08 / 1,50.
+- Norske (vedlegg til J-128-2018): brosme 1,20 / 1,40, lange 1,20 / 1,40, sei 1,20 / 1,35 (nord for 62° N), kveite 1,10 / 1,35, uer 1,20 / 1,70 (1,65 i NEAFC-området).
+- Gjeldende forskrift (FOR-2026-07-10-1545) viser til Fiskeridirektoratets tabell, som ligger i Tableau og ikke kan leses herfra; tallene over er de siste som kunne leses.
+- Spillet har alt `uh` per art (rund vekt per kg sløyd uten hode): torsk 1,5, hyse 1,4 og sei 1,35 stemmer; uer (1,0), kveite (1,13) og blåkveite (1,3) rettes etter tabellene.
+- Fryste kartonger tar om lag 1,7 m³ per tonn i rommet (Cargo Handbook), så autolinerens 700 m³ er om lag 400 t produkt, som `holdCap`.
+
+**Lossingen (V1 A):** fryst fisk losses med 1–1,5 t per mannetime med mekanisk utstyr og øvd mannskap (FAO, «Handling sea-frozen fish»). Med et lag på 8 i rommet og kran blir det 8–12 t i timen; 300 t tar 25–35 timer. Norske tall for et kjølelager er ikke funnet (Melbu Fryselager: én båt om gangen, mobilkran på kaia). Spillet bruker 10 t i timen med lossegjengen og kranen, paller på om lag 1 t (antatt).
+
+**Kunne ikke nås fra miljøet her:** fiskebat.no, fiskarlaget.no, rafisklaget.no, Fiskeribladet, Nofima, Mustad, SSB, Tableau hos Fiskeridirektoratet. Søket ga utdrag fra noen av dem.
 
 ## 3. Fasene
 
-H2 er for stor for én økt. Den deles i fire, hver én økt med `/lever`:
+H2 er for stor for én økt. Den deles i fem, hver én økt med `/lever` (V4 A):
 
-### H2a Lina, egnemaskinen og fangsten
+### H2a Lina, egnemaskinen, fangsten og reglene
 
 - **Hva:**
-  - **Linesystemet:** autolineren har ikke stamper. Lina ligger på magasin (stativer) i rommet under dekk, og egnemaskinen egner hver krok når lina går ut. Om bord: `pg.auto = {hooks, cond, bent}` med `autoHooks` krok, satt i **lenker** (for eksempel 6 000–8 000 krok, 1,3 m mellom krokene, 8–10 km) mellom to blåser. Ny `GEAR.auto` (eller `line` med `lk:'auto'`; avgjøres i koden) med egen fart: setting i 7–9 knop, draget 3 000–4 000 krok i timen gjennom haleporten.
-  - **Agnet:** frossent agn (makrell, sild, blekksprut) kjøpt på mottaket, om lag 1 kg per 100 krok (antatt), ført i frysen og trukket fra lasten. Uten agn ingen setting.
-  - **Fangsten:** `soakHour` med en egen faktor for autoline, kalibrert så en snittbåt tar om lag 160 kg per 1 000 krok over året, med artsfordelingen fra sedlene (torsk og hyse på bankene, lange og brosme på kanten, blåkveite på dypet).
-  - **Reglene ved setting:** § 26 (maskinell egning innenfor 4 eller 10 nm), § 32 tredje ledd og sonene; varsel før feil (Regler-appen, `rulesAt` med redskapet `auto`).
-  - **Kvoten:** landingene fra en havbåt går mot fartøyets egen kvote fra tillatelsen (`havQ`), ikke mot kystkvoten; `access()` får `'konv'` for fartøyet. Lange og brosme etter J-128-2026 (gruppekvote for 28 m og over, direktefisket stoppes når den er tatt, så bifangst inntil 35 % lange og 15 % brosme), valg V5.
-  - **Kjøpet:** `lock` tas av autolineren, så den kan kjøpes med tillatelsen (blad B og pengene kreves som før).
-- **Filer:** `core/10-gear.js`, `core/02-species-gear.js`, `core/03-simulation.js` (`access`), `core/03d-quota.js`, `core/03e-rules.js`, `ui/08-actions.js` (Sett ut / Trekk), `ui/phone/10-fartoy.js`.
-- **Tester:** ny `tests/unit/autoline.test.mjs` (kg per 1 000 krok mot sedlene per art og sesong, § 26-linjene, kvoten per fartøy), `geartest`, `rulestest`, `quotatest`, `kjoptest`.
+  - **Linesystemet:** autolineren har ikke stamper. Lina ligger på magasin under dekk, og egnemaskinen egner hver krok når lina går ut. Om bord: `autoHooks` (40 000) krok på magasin med slitasje og tapte kroker; lina settes i **lenker** på om lag 6 000 krok (1,3 m mellom krokene, 7,8 km) mellom to blåser og dregger. Setting i 8 knop (om lag 3 krok i sekundet), draget om lag 2 500 krok i timen gjennom haleporten (kap. 2b).
+  - **Agnet:** akkar og saury (50/50, som autolineflåten bruker) kjøpt fryst på mottaket, om lag 17 g per krok, ført i agnfrysen; uten agn ingen setting. Nye agn i `BAITS`: akkar (blekksprut finnes) og saury.
+  - **Fangsten:** `soakHour` med en egen faktor for autoline, kalibrert så en snittbåt tar om lag **200 kg rund vekt per 1 000 krok** over året, med artsfordelingen fra sedlene for line 28+ (`fiske.json`).
+  - **Reglene ved setting:** § 26 (4 nm hele året for over 21,35 m med egnemaskin, de tre feltene på 10 nm i sine perioder), J-187-2026 § 32 andre ledd og sonene. Varsel før feil i Regler-appen (`rulesAt` med redskapet autoline). Henvisningene til J-161-2026 i koden blir J-187-2026.
+  - **Kvoten:** landingene fra en havbåt går mot fartøyets egen kvote fra tillatelsen (`havQ`, som alt er per fartøy). Sei uten garnseitillatelse er bifangst (§ 14: 25 %, 50 % mens garnseifisket er åpent), ikke ubegrenset som nå. Lange og brosme etter forslaget for 2027 (V5 A): lange inntil 35 % i hver fangst og landing, brosme fritt til gruppekvoten er tatt (stoppdato hvert år mellom august og september, meldt av Fiskeridirektoratet), så 15 %.
+  - **Kjøpet:** `lock` tas av autolineren, så den kan kjøpes med tillatelsen (blad B og pengene som før).
+- **Filer:** `core/10-gear.js`, `core/02-species-gear.js`, `core/03d-quota.js`, `core/03e-rules.js`, `src/data/rules.json` (feltene i § 26), `core/09j-kystvakt.js` (henvisningene), `ui/08-actions.js` (Sett ut / Trekk), `ui/phone/10-fartoy.js`.
+- **Tester:** ny `tests/unit/autoline.test.mjs` (kg per 1 000 krok mot sedlene, § 26-linjene, sei, lange og brosme), `rules.test.mjs`, `havlic.test.mjs`, `geartest`, `rulestest`.
 - **Måles:** kg per 1 000 krok og per døgn på fem felt (Finnmark, Tromsøflaket, Eggakanten, Møre, Nordsjøen) mot sedlene.
 
-### H2b Drift om bord: frysing, vakter og turen på uker
+### H2b Drift om bord: fabrikken, vakter, turen på uker og lossingen
 
 - **Hva:**
-  - **Fabrikken:** sløying, hodekapping og frysing i timen etter båtens utstyr (sløyemaskinen 2,5 t/t, fryseriet 20–30 t produkt i døgnet, antatt) og fabrikklaget. Det som ikke rekker å fryses, venter i bløggekaret, og draget går saktere (`haulSlow`), som på kystbåtene.
-  - **Vektene:** lasten regnes i produktvekt etter Fiskeridirektoratets omregningsfaktorer, kvoten i rund vekt (valg V2).
-  - **To vakter:** dekkslaget og fabrikklaget går seks og seks (`rot:2`) som anonyme lag med antall og ferdighet; nøkkelfolkene som personer kommer i H7 (valg V3).
-  - **Turen:** proviant, drivstoff (300 m³), agn og lastrom setter lengden; varsler når noe går mot slutten. Mannskapet bytter i land (flyr hjem fra havn, slik Longyearbyen gjør).
-  - **Lotten:** § 6 for autoline over 28 m med turoppgjøret som finnes.
-  - **Landingen:** fryst fisk losses på paller (valg V1).
-- **Filer:** `core/05-vessels.js` (`holdFreezes`, arbeidet om bord), `core/13-work.js`, `core/04-crew.js`, `core/07-harbours.js` (`landPlan`), `core/03-simulation.js` (`sell`).
-- **Tester:** enhetstester for omregningen og fabrikkfarten, `selltest`, `crewlifetest`, `trip2`.
-- **Måles:** tonn produkt per døgn og per tur, lotten per uke (`progweek`).
+  - **Fabrikken:** sløying og hodekapping med sløyemaskinen (2,5 t/t) og frysing i platefrysere, **15 t produkt i døgnet**; det som ikke rekker å fryses, venter i bløggekaret, og draget går saktere (`haulSlow`), som på kystbåtene.
+  - **Vektene (V2 A):** lasten regnes i produktvekt (sløyd uten hode, fryst), kvoten og prisen i rund vekt med omregningsfaktorene i kap. 2b. `uh` for uer, kveite og blåkveite rettes etter tabellene.
+  - **To vakter (V3 A):** 15 om bord, dekkslaget og fabrikklaget går seks og seks som anonyme lag; mannskapet bytter i havn hver tur (30 mann på båten). Nøkkelfolkene som personer kommer i H7.
+  - **Turen:** proviant, drivstoff (om lag 3 700 l per døgn i snitt, 0,4 l per kg fisk), agnet og lastrommet setter lengden, med varsler. 6–7 uker er vanlig.
+  - **Lotten:** § 6 for autoline over 28 m med turoppgjøret som finnes (stemmer med lønnsomhetsundersøkelsen).
+  - **Lossingen (V1 A):** fryst fisk på paller, om lag 1 t per løft og 10 t i timen med lossegjengen, så 300 t tar rundt 30 timer. Kystbåtene og karene er som før.
+- **Filer:** `core/05-vessels.js` (`holdFreezes`, arbeidet om bord), `core/13-work.js`, `core/03-simulation.js` (`capHold`, `sell`), `core/04-crew.js`, `core/07-harbours.js` (`landPlan`), `core/07f-kar.js`.
+- **Tester:** enhetstester for omregningen, fabrikkfarten og lossetiden, `selltest`, `crewlifetest`, `trip2`.
+- **Måles:** tonn produkt per døgn og per tur, drivstoff per tur mot 0,4 l/kg, lotten per tur mot lønnsomhetsundersøkelsen.
 
 ### H2c Autoline i Driftsplan 2, været og ligge bi
 
 - **Hva:**
   - **Autoline som driftsform:** feltet får en sløyfe: sett lenkene, la dem stå 3–8 t, dra dem og sett igjen, døgnet rundt i vaktene, til lasten, agnet, drivstoffet eller planen sier stopp; så mottaket.
-  - **Havfartøyenes værgrenser:** arbeidsgrensen for fisket (setting og drag stopper ved vind eller sjø over en grense under `risk`, antatt rundt 18–20 m/s og 5 m) og ligge bi over den (som 4.12j) i stedet for å gå til kai (BACKLOG 10.2).
+  - **Havfartøyenes værgrenser:** arbeidsgrensen for fisket (setting og drag stopper ved vind eller sjø over en grense under `risk`) og ligge bi over den (som 4.12j) i stedet for å gå til kai (BACKLOG 10.2). Grensen settes først etter et søk etter hva autolinere driver i; ellers står den som antakelse.
   - **Den felles klokka:** sløyfen spilles også når appen er lukket (`catchUp`).
 - **Filer:** `core/06g-plan2.js`, `core/06h-plan2-engine.js`, `ui/05d-plan2.js`, `core/05-vessels.js` (`lieTo`).
 - **Tester:** `driftsplan2test` (nytt scenario: en uke med autoline), `driftsplan2ui`, alene.
 - **Måles:** at en uke i planen gir det samme som en uke spilt for hånd (innenfor 15 %).
 
-### H2d 3D, Kystvakta på havet, hele turen og stikkprøvene
+### H2d Blender-modellene og animasjonene for hele operasjonen
+
+Jonas 05.11.2026: «husk at vi må ha blendermodeller og animasjoner for hele operasjonen». Etter `/blender` og leselista for modellene; bare utsiden, ingen rom under dekk (CLAUDE.md). Det som finnes: blåsestaken og dreggen (`tools/gear/blaase.py`), linehaleren for kystbåtene (`tools/gear/haler.py`), kranen (`tools/deck/kran.py`), havneenheten med kaikran og truck (`tools/harbour/kaimottak.py`), folkene (`tools/harbour/arbeider.py`), karene (`tools/deck/fisk.py`), autolineren med haleporten (`tools/boats/al45.py`).
+
+- **Nye modeller:**
+  - **Autolinehaleren** med krokrenseren ved haleporten. Den er en del av autolinesystemet som følger båten (`autoHooks`), men lages som egen del som spillet setter på ankeret `hauler`, slik regelen om redskap i båtene sier.
+  - **Bøyestanga for havet** etter § 68: stang minst 2 m over vannet, radarreflektor, to flagg i vest og ett i øst, gult blinklys om natta; blåsestaken finnes og utvides.
+  - **Lina med krok og agn** som går ut over hekken og inn i haleporten (krok, forsyn og agnbit som enkle deler, mange av dem som instanser).
+  - **Fryste kartonger og pallen** (kartong om lag 20–25 kg, pall på om lag 1 t, med strekkfilm), **lasteluka** som åpnes på dekk og **lossestroppen** eller pallegaflene på kranen.
+- **Animasjonene i 3D:**
+  - **Setting:** dreggen og bøyestanga over hekken, lina med agnede kroker i strekk ut i kjølvannet i båtens fart, ny bøyestang mellom lenkene.
+  - **Draget:** båten ligger mot lina, lina kommer inn gjennom haleporten, fisken løftes inn én og én (`gaff`, som på kystbåtene), krokrenseren og lina tilbake mot magasinet; folkene ved haleporten.
+  - **Lossingen:** luka åpnes, kranen (båtens eller kaiens) løfter pall for pall opp fra rommet og ned på kaia, trucken kjører dem inn i fryselageret, lossegjengen i luka og på kaia.
+- **Filer:** `tools/gear/` (ny `autoline.py`), `tools/gear/blaase.py`, `tools/deck/` (ny `pall.py`), `view3d/10-gear.js`, `view3d/09-landing-deck.js`, `src/data/*.b64`, malen.
+- **Tester:** `vessel3d.test.mjs`, kontrollbildene fra Blender, `haultest`, `landtest` og skjermbilder i begge formater, 3D-testene alene.
+
+### H2e Kystvakta på havet, hele turen og stikkprøvene
 
 - **Hva:**
-  - **3D:** lina går ut over hekken og kommer inn gjennom haleporten på styrbord, med blåsene, slik NPC-autolinerne viser det (`view3d/10-gear.js`, `20-trawl-seine.js`).
-  - **Kystvakta:** havsjekk om bord (posisjon mot § 26 og § 32, fangst og fartøykvote, minstemål og innblanding, bifangst).
+  - **Kystvakta:** havsjekk om bord (posisjon mot § 26 og § 32, merkingen etter §§ 66 og 68, fangst og fartøykvote, minstemål, innblanding, bifangst av sei, lange og brosme).
   - **Hele turen** i `tests/havtur.py`: kjøp med tillatelse, ut fra en havn, sett, dra, frys, lever ved et mottak som tar konvensjonelt.
   - **Stikkprøvene:** turen fra Båtsfjord, Tromsø, Ålesund og Bergen; skjermbilder i begge formater.
   - Patchnotes.
-- **Tester:** `havtur`, `kystvakttest`, `haultest`, og 3D-testen for redskapet alene.
+- **Tester:** `havtur`, `kystvakttest`, `kystvakt.test.mjs`.
 
 ## 4. Valgene
 
-**V1 Hvordan fryst fisk losses**
+**V1 Hvordan fryst fisk losses** (valgt: A, Jonas 05.11.2026: «men husk at vi må ha blendermodeller og animasjoner for hele operasjonen»)
 - **A (anbefalt): på paller,** som fryst fisk losses i virkeligheten: om lag 1 t per løft og 25–40 t i timen (antatt; sjekkes mot et kjølelager), så 300 t tar et døgn. Kystbåtene og karene er som før.
 - **B: kar på 300 kg som i dag.** Over 1 300 løft og to døgn for en full båt.
 - **C: bare tiden,** uten løft i 3D.
 
-**V2 Hva lasten måles i**
+**V2 Hva lasten måles i** (valgt: A)
 - **A (anbefalt): produktvekt i rommet, rund vekt på kvoten,** med Fiskeridirektoratets omregningsfaktorer. Slik regnes det i virkeligheten, og da betyr 400 t lasterom det samme som på båten.
 - **B: rund vekt overalt som i dag.** Enklere, men lastrommet blir fullt for tidlig og prisen per kg passer ikke sedlene for sjøfryst.
 
-**V3 Mannskapet i H2**
+**V3 Mannskapet i H2** (valgt: A)
 - **A (anbefalt): lagene som finnes** (nøkkelfolk, dekk 4 og fabrikk 4, to vakter) som anonyme lag med antall og ferdighet; navngitte nøkkelfolk med liv kommer i H7. Da kommer den første havturen raskere.
 - **B: ta H7 inn i H2,** så nøkkelfolkene er personer fra første tur.
 
-**V4 Rekkefølgen**
-- **A (anbefalt): H2a–H2d som fire økter med utrulling etter hver,** så autolineren kan kjøpes og fiske etter H2a (for hånd), og planen og 3D kommer etter.
-- **B: alt i én utrulling** etter H2d.
+**V4 Rekkefølgen** (valgt: A)
+- **A (anbefalt): fasene som egne økter med utrulling etter hver** (fem etter Jonas' svar på V1: H2a–H2e), så autolineren kan kjøpes og fiske etter H2a (for hånd), og planen og 3D kommer etter.
+- **B: alt i én utrulling** til slutt.
 
-**V5 Lange og brosme i spillets år (fra 2027)**
+**V5 Lange og brosme i spillets år (fra 2027)** (valgt: «det som er mest realistisk», altså A, slik forslaget for 2027 er)
 - **A (anbefalt): som reguleringen for 2026:** gruppekvoten for 28 m og over, direktefisket stoppes når den er tatt (i 2026 i januar for lange og august for brosme), deretter bare bifangst. Autolineren må da leve av torsk, hyse og blåkveite store deler av året, som i virkeligheten nå.
 - **B: som sedlene for 2024–2025,** der lange og brosme er over en tredel av fangsten hele året. Mer å fiske, men ikke slik reglene er i dag.
 
 ## 5. Antatt eller usikkert
 
-- Med V5 A blir fangsten per 1 000 krok lavere enn 160 kg det meste av året, fordi lange og brosme i sedlene ble tatt før stoppene. Kalibreringen gjøres da mot torsk, hyse og blåkveite i sedlene, med lange og brosme som bifangst.
-- Lenkenes lengde, krokavstanden, farten i setting og drag, agnet per krok og fryseriets kapasitet er bransjetall eller antakelser, ikke lest hos et rederi. Fangsten kalibreres mot sedlene, så det er tiden og arbeidet som er usikkert, ikke tonnene i året.
+Etter søket 05.11.2026 (kap. 2b) står dette igjen:
+
+- **Lenkene** (6 000 krok, 7,8 km), **farten i draget** (2,5 krok i sekundet) og **agnet per krok** (17 g) er regnet ut av kildene, ikke lest hos et rederi.
+- **Fryseriet** på 15 t i døgnet er valgt mellom båter på 44–64 m; autolinerens eget tall finnes ikke.
+- **Lossingen:** 10 t i timen er FAOs 1–1,5 t per mannetime med et lag på 8; norske tall for et kjølelager er ikke funnet.
+- **Arbeidsgrensen i vær** for setting og drag er ikke funnet (H2c søker igjen).
+- **Fangsten per krok** er regnet av sedlene og døgnene i sjøen; HI har ingen tall for autoline (rapportene skiller ikke autoline fra annen line).
+- **Den reviderte autolinetariffen** er ikke lest; § 6 fra 2025 stemmer med lønnsomhetsundersøkelsen.
+- **Omregningsfaktorene** er de siste som kunne leses (2018 og 2023); den gjeldende tabellen ligger i Tableau, som ikke kan nås herfra.
+- **Reguleringen for 2027** er et forslag (sak 15/2026); den endelige J-meldingen kommer i desember.
 - Sedlene sier ikke hvor mye som er tatt i hvilken sone utenfor norsk økonomisk sone; fordelingen på felt følger hovedområdene i `fiske.json`.
-- Omregningsfaktorene (V2) må hentes fra Fiskeridirektoratet; ikke lest ennå.
-- Lossefarten for fryst på paller (V1) er ikke lest.
-- Arbeidsgrensene for fisket med havfartøy er en vurdering, som grensene for å ligge bi.
-- Lotten i § 6 står i spillet fra før; om hyreavtalen for 2026 er endret, er ikke sjekket (se kap. 2).
 
 ## 6. Hva planen ikke gjør
 
@@ -150,3 +210,4 @@ H2 er for stor for én økt. Den deles i fire, hver én økt med `/lever`:
 ## 7. Status
 
 - 05.11.2026: planen skrevet på grenen `h2-autoline`. Venter på valgene V1–V5 og «kjør på».
+- 05.11.2026: **valgene tatt** (Jonas): V1 A («men husk at vi må ha blendermodeller og animasjoner for hele operasjonen»), V2 A, V3 A, V4 A, V5 «det som er mest realistisk» (A, etter forslaget for 2027), og «Finn ut det du er usikker på». Søket står i kap. 2b; H2d er nå Blender-modellene og animasjonene, og Kystvakta, hele turen og stikkprøvene er H2e.
