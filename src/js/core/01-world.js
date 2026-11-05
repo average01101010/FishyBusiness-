@@ -142,9 +142,12 @@ function inHarbour(p){
 const safeDepth = () => S.settings.safeDepth || Math.max(2, Math.ceil(BOAT.draft + 1.5));
 function legHazard(a, c, sd){
   const L = dist(a, c), n = Math.max(1, Math.ceil(L / 0.03)); let minD = 1e9;
-  for (let i = 0; i <= n; i++){ const p = {x:a.x + (c.x - a.x) * i / n, y:a.y + (c.y - a.y) * i / n}; if (inHarbour(p) || isLand(p)) continue; const d = depthF(p); if (d < minD) minD = d; }
+  // (a long leg: every 30 m only on its pieces near the shore or over shallow water, 11-route.js legRuns, and every 1 km between them;
+  // the open sea there is LEGOPEN.deep m deeper than sd by its 100 m samples, H1b R6)
+  const runs = L > 1 && typeof legRuns === 'function' ? legRuns(a, c, sd) : null, at = runs ? new Set(legIdx(runs, L, n)) : null, every = Math.max(1, Math.round(1 / 0.03));
+  for (let i = 0; i <= n; i++){ if (at && i && i < n && !at.has(i) && i % every) continue; const p = {x:a.x + (c.x - a.x) * i / n, y:a.y + (c.y - a.y) * i / n}; if (inHarbour(p) || isLand(p)) continue; const d = depthF(p); if (d < minD) minD = d; }
   let rk = 0; if (!(inHarbour(a) && inHarbour(c))){ const x0 = Math.min(a.x, c.x) - 0.03, x1 = Math.max(a.x, c.x) + 0.03, y0 = Math.min(a.y, c.y) - 0.03, y1 = Math.max(a.y, c.y) + 0.03, dx = c.x - a.x, dy = c.y - a.y, L2 = dx * dx + dy * dy || 1e-9;
-    for (const q of rocksIn(x0, y0, x1, y1)){ if (q[0] < x0 || q[0] > x1 || q[1] < y0 || q[1] > y1 || inHarbour({x:q[0], y:q[1]})) continue; const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); if (Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1]) < 0.025) rk++; } }
+    for (const q of rocksAlong(a, c, 0.03)){ if (q[0] < x0 || q[0] > x1 || q[1] < y0 || q[1] > y1 || inHarbour({x:q[0], y:q[1]})) continue; const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); if (Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1]) < 0.025) rk++; } }
   return {minD, rocks:rk, unsafe:minD < sd || rk > 0};
 }
 let hzCache = {k:'', v:[]};
@@ -208,7 +211,7 @@ function runAground(p){
   if (hooks.onAground) hooks.onAground();
 }
 function rocksNear(a, b, r){ let n = 0; const x0 = Math.min(a.x, b.x) - r, x1 = Math.max(a.x, b.x) + r, y0 = Math.min(a.y, b.y) - r, y1 = Math.max(a.y, b.y) + r, dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy || 1e-9;
-  for (const q of rocksIn(x0, y0, x1, y1)){ if (q[0] < x0 || q[0] > x1 || q[1] < y0 || q[1] > y1) continue; const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); if (Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1]) < r) n++; } return n; }
+  for (const q of rocksAlong(a, b, r)){ if (q[0] < x0 || q[0] > x1 || q[1] < y0 || q[1] > y1) continue; const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); if (Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1]) < r) n++; } return n; }
 const PIERS = /*@include(data/piers.json)*/null;
 const SEAMARKS = /*@include(data/seamarks.json)*/null;
 // into the game's frame: piers are [type, x, y, x, y, ...], lights, marks and rocks start with x, y (km); bridges are [class, length, name, type, x, z, x, z, ...] (m)
@@ -222,6 +225,15 @@ function rocksIn(x0, y0, x1, y1){
   for (let gy = Math.floor(y0); gy <= Math.floor(y1); gy++) for (let gx = Math.floor(x0); gx <= Math.floor(x1); gx++){ const a = ROCKIDX.get(gridKey(gx, gy)); if (a) for (const i of a) out.push(i); }
   out.sort((a, b) => a - b); const r = out.map(i => SEAMARKS.rocks[i]), m = marksRocksIn(x0, y0, x1, y1);   // and the coast's (01e-marks.js)
   return m && m.length ? r.concat(m) : r;
+}
+// the rocks within r km of the leg a-b's box, piece by piece along it (2 km pieces): a long leg over open sea asked rocksIn for a box of
+// hundreds of km a side, a million empty cells (H1b R6, 05.11.2026). A leg up to 2 km is one box, as before
+function rocksAlong(a, b, r){
+  const L = dist(a, b); if (L <= 2) return rocksIn(Math.min(a.x, b.x) - r, Math.min(a.y, b.y) - r, Math.max(a.x, b.x) + r, Math.max(a.y, b.y) + r);
+  const m = Math.ceil(L / 2), out = [], seen = new Set();
+  for (let u = 0; u < m; u++){ const x0 = a.x + (b.x - a.x) * u / m, y0 = a.y + (b.y - a.y) * u / m, x1 = a.x + (b.x - a.x) * (u + 1) / m, y1 = a.y + (b.y - a.y) * (u + 1) / m;
+    for (const q of rocksIn(Math.min(x0, x1) - r, Math.min(y0, y1) - r, Math.max(x0, x1) + r, Math.max(y0, y1) + r)) if (!seen.has(q)){ seen.add(q); out.push(q); } }
+  return out;
 }
 for (const q of BRIDGES) for (let i = 4; i + 1 < q.length; i += 2){ const g = LGm([q[i], q[i + 1]]); q[i] = g[0]; q[i + 1] = g[1]; }
 // distance from open water to the nearest shore (km): on the tiles' 100 m grid near the boats, else the national core's 200 m grid
