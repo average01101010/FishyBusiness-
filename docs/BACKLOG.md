@@ -270,6 +270,9 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
 
+## Strøket 05.11.2026 (Driftsplan 2: U11 og U4, gren `ccr-3d7eb5bf-vgz41n`, ikke flettet inn i arbeidsgrenen ennå)
+- U11: din egen hvile på planen startet ikke av seg selv ved rorbu eller naust, og avgangen ventet på «Hvil i naustet …» også mens spillet var lukket (0ff92d4). U4: Pause lot båten fiske videre og viste «I dag ←» (71d32f0). Testet med `driftsplan2test` (S1–S19 og S9 grønne), `driftsplan2ui`, `driftsplan2gui` (95 OK; de 4 røde er U6 og U7) og enhetstestene (1031 OK), bare rundt Senja.
+
 ## Strøket 05.11.2026 (Driftsplan 2: GUI-gjennomgangen, F1–F7, gren `ccr-3d7eb5bf-vgz41n`)
 - F2: dagdrift med rorbu som hjem gikk ut igjen hvert kvarter hele natta (cda7ca73). F7: negative timer og «i kveld» om en trekking neste morgen i dagen (1ab22044). F1: «Til Mannskap-siden» ble stående på Driftsplan (19e5c83e). F3 og F4: fangstlista og dokka over skuffen (3e2985b1). F5 og F6: «Tøff» over båtens grense og norske ord i den engelske utgaven (2163b9ab). Testet med `driftsplan2gui` (94 OK; de 4 røde er U6 og U7), `driftsplan2test` (58 OK), `driftsplan2ui` (19 OK), `driftsplan2map` (10 OK), `dockrow`, `navbarshot`, `uishots` og enhetstestene (1026 OK), bare rundt Senja.
 
