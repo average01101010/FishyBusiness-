@@ -432,5 +432,8 @@ Hver fase er én økt. R1 og R2 rulles ut sammen, fordi en større ramme uten da
     - Rutepanelet varsler når dieselen rekker ut, men ikke tilbake til nærmeste bunkring (en sjark til Sentralbanken).
     - I kuling langt ute tok Autonav den første kaia etter luftlinja som hadde en rute (Sentralbanken: Longyearbyen 481 nm); nå tas den korteste (Gamvik 319 nm).
     - Kompasslinja over 3D-bildet i stående format: tallene løp inn i hverandre (hele kysten).
+    - Slep ved Svalbard kom fra Tromsø, 850 km unna (towtest rød siden R7). Jonas 05.11.2026: «Kystvakten skal slepe båter ved svalbard»; nå fra Longyearbyen.
   - **3D ved store γ** (`tests/havshot.py`, ny): kompasset viser solas og vindens sanne retning innen 0,6° ved Petsjorahavet (γ +31°) og Nord-Island (γ −31°, k 1,024), og ved Bjørnøya i stående format; bildene i begge formater viser sola under kompasset. Målestokken ved Island (k opptil 1,037): ingen endring, begrunnet i 4.11n.
+  - **Regresjonen:** alle 138 uten 3D (122 grønne; det røde er kjent eller ustabilt, se BACKLOG 10.6), og de 3D-testene som dekker endringene: camtest, dbg23o, havshot, tut (liggende); kinotest gikk ut på tid i rekka og ble kjørt alene.
   - **Ikke løst:** flybilletten for tolv måneder (SAS stenger Actions, BACKLOG 10.3); havbåtene ligger ikke bi i kuling langt ute, men går til nærmeste kai 167–676 nm unna (et valg for Jonas, BACKLOG 10.2).
+  - **Neste:** Jonas sier ja til utrulling. Deretter H2 i havsteget (`docs/planer/havsteget.md`).

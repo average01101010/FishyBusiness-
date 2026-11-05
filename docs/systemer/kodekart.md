@@ -646,7 +646,7 @@ crew: people with skills, habits and moods
   - 392 `flyOut(c)`
   - 400 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1207 linjer)
+## `src/js/core/05-vessels.js` (1213 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -730,15 +730,15 @@ crew: people with skills, habits and moods
   - 1094 `hullRepair()`
   - 1097 `svcOverdue()`
 - **1098** the rescue boat (plan E3, 05.10.2026)
-  - 1118 `rescueBases()`
-  - 1127 `rescueBase(p)`
-  - 1134 `rescueAis(H)`
-  - 1138 `rescue(keepCatch)`
-  - 1162 `towSea(p)`
-  - 1167 `towRoutes(b)`
-  - 1178 `towStep(H)`
-  - 1190 `towDone(t)`
-  - 1196 `towPose(frac)`
+  - 1124 `rescueBases()`
+  - 1133 `rescueBase(p)`
+  - 1140 `rescueAis(H)`
+  - 1144 `rescue(keepCatch)`
+  - 1168 `towSea(p)`
+  - 1173 `towRoutes(b)`
+  - 1184 `towStep(H)`
+  - 1196 `towDone(t)`
+  - 1202 `towPose(frac)`
 
 ## `src/js/core/05c-air.js` (64 linjer)
 
@@ -772,7 +772,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 212 `havState(s, H, near)`
   - 237 `havNear(H, only)`
 
-## `src/js/core/06-services.js` (263 linjer)
+## `src/js/core/06-services.js` (270 linjer)
 
 ---------- services behind the phone ----------
 
@@ -797,8 +797,8 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 213 `queueJob(j)`
   - 216 `jobsDone()`
   - 222 `shelterReturn(W, hsOver)`
-  - 241 `startReturn(auto, W, home, hsOver, opsKeep)`
-- **261** CORE END
+  - 248 `startReturn(auto, W, home, hsOver, opsKeep)`
+- **268** CORE END
 
 ## `src/js/core/06b-coastports.js` (140 linjer)
 
@@ -1578,7 +1578,7 @@ Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md a
   - 34 `ukeDue()`
   - 40 `ukeLast()`
 
-## `src/js/core/11-route.js` (620 linjer)
+## `src/js/core/11-route.js` (626 linjer)
 
 ---------- Autonav (once «Følg leia»): a route along the fairway ----------
 
@@ -1586,36 +1586,37 @@ Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md a
   - 34 `leiaTideCredit(a, b)`
   - 47 `leiaIceSet(a, b)`
   - 55 `leiaIceLeg(p, q)`
-  - 67 `legNearPt(pt, z)`
-  - 79 `legRunsWalk(W, ms)`
-  - 87 `legRunsW(p, q, z)`
-  - 89 `legRuns(p, q, z)`
-  - 95 `legRunsAsync(p, q, z)`
-  - 101 `legIdx(runs, L, n, last)`
-  - 111 `leiaGrid(x0, y0, x1, y1, c, mask)`
-  - 118 `leiaRocks(G)`
-  - 127 `leiaShore(G, p)`
-  - 137 `leiaCost(G, v, sd)`
-  - 155 `leiaNearCell(G, p, sd, km = 1, free)`
-  - 162 `leiaHeap()`
-  - 170 `leiaSlice(st, t0, at)`
-  - 173 `leiaSearch(G, s, t, sd, st)`
-  - 204 `leiaFind(from, to, sd, st)`
-  - 218 `leiaFind1(from, to, sd, st, pad, c0)`
-  - 271 `leiaCorridor(pp, R, c, sd, st)`
-  - 287 `leiaCorridor1(pp, bb, R, c, sd, st, first, last)`
-  - 306 `leiaLegOk(p, q, sd, margin)`
-  - 329 `leiaLegOkL(p, q, sd, margin, tick)`
-  - 337 `leiaLegFail(p, q, tick, endP, endQ, strict)`
-  - 354 `rockOnLeg(a, b, r)`
-  - 363 `leiaMend(P, sd, st, strict)`
-  - 404 `leiaStraighten(P, sd, margin, st)`
-  - 432 `leiaPull(P, sd, st)`
-  - 458 `leiaRoute(a, b, aPort, bPort, opt)`
-  - 477 `leiaLane(p, goal, km)`
-  - 508 `leiaPocket(p, sd)`
-  - 525 `leiaPocketOut(e, sd, st)`
-  - 535 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
+  - 69 `legLandIn(p, q, L, s0, s1)`
+  - 73 `legNearPt(pt, z)`
+  - 85 `legRunsWalk(W, ms)`
+  - 93 `legRunsW(p, q, z)`
+  - 95 `legRuns(p, q, z)`
+  - 101 `legRunsAsync(p, q, z)`
+  - 107 `legIdx(runs, L, n, last)`
+  - 117 `leiaGrid(x0, y0, x1, y1, c, mask)`
+  - 124 `leiaRocks(G)`
+  - 133 `leiaShore(G, p)`
+  - 143 `leiaCost(G, v, sd)`
+  - 161 `leiaNearCell(G, p, sd, km = 1, free)`
+  - 168 `leiaHeap()`
+  - 176 `leiaSlice(st, t0, at)`
+  - 179 `leiaSearch(G, s, t, sd, st)`
+  - 210 `leiaFind(from, to, sd, st)`
+  - 224 `leiaFind1(from, to, sd, st, pad, c0)`
+  - 277 `leiaCorridor(pp, R, c, sd, st)`
+  - 293 `leiaCorridor1(pp, bb, R, c, sd, st, first, last)`
+  - 312 `leiaLegOk(p, q, sd, margin)`
+  - 335 `leiaLegOkL(p, q, sd, margin, tick)`
+  - 343 `leiaLegFail(p, q, tick, endP, endQ, strict)`
+  - 360 `rockOnLeg(a, b, r)`
+  - 369 `leiaMend(P, sd, st, strict)`
+  - 410 `leiaStraighten(P, sd, margin, st)`
+  - 438 `leiaPull(P, sd, st)`
+  - 464 `leiaRoute(a, b, aPort, bPort, opt)`
+  - 483 `leiaLane(p, goal, km)`
+  - 514 `leiaPocket(p, sd)`
+  - 531 `leiaPocketOut(e, sd, st)`
+  - 541 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
 
 ## `src/js/core/11b-obstacles.js` (226 linjer)
 
@@ -1635,7 +1636,7 @@ WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå
   - 200 `obsLoad(pts, ms = 4000)`
   - 215 `obsSail(pl, b)`
 
-## `src/js/core/11c-leinett.js` (147 linjer)
+## `src/js/core/11c-leinett.js` (155 linjer)
 
 ---------- The fairway network (step 2 of the coast-wide Autonav, 08.10.2026) ----------
 
@@ -1647,7 +1648,7 @@ WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå
   - 64 `lnetAccess(p, i, sd, st, straight)`
   - 84 `lnetDists(srcs)`
   - 90 `lnetExit(A, end, sd, st)`
-  - 109 `lnetRoute(from, to, sd, st)`
+  - 117 `lnetRoute(from, to, sd, st)`
 
 ## `src/js/core/12-heat.js` (128 linjer)
 
@@ -1862,12 +1863,12 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 125 `hullOrder(auto, b = S.boat)`
   - 140 `hullMended(j, b = S.boat)`
 
-## `src/js/ui/01-i18n.js` (116 linjer)
+## `src/js/ui/01-i18n.js` (118 linjer)
 
 the logo (src/brand/logo.svg, the user's anchor of 03.11.2026), filled with currentColor: the sign-in's gate (ui/10f-cloud.js) and the
 
 - **4** i18n
-  - 113 `t(k, ...a)`
+  - 115 `t(k, ...a)`
 
 ## `src/js/ui/02-format-state.js` (208 linjer)
 
@@ -2188,12 +2189,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1069 linjer)
+## `src/js/ui/phone/07-patch.js` (1076 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1062 `patch()`
+  - 1069 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2516,7 +2517,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
 - **116** the year view
 - **124** the species card
 
-## `src/js/ui/07-guide.js` (396 linjer)
+## `src/js/ui/07-guide.js` (402 linjer)
 
   - 1 `renderClock()`
   - 10 `mottakShut()`
@@ -2525,22 +2526,22 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 15 `echoSettings()`
   - 24 `chartSettings()`
   - 32 `panelRoute()`
-  - 114 `echoSvg()`
-  - 133 `panelFish()`
-  - 155 `valueEst(sp, g)`
-  - 156 `panelHold()`
-  - 172 `fcChart()`
-  - 187 `panelWx()`
-  - 219 `landText(short)`
-  - 232 `deckText(short)`
-  - 247 `quayText(short)`
-  - 253 `panelPort()`
-  - 287 `portSlip()`
-  - 357 `landWarn(p)`
-  - 370 `landPage()`
-  - 385 `panelLog()`
-  - 390 `renderPanel()`
-  - 394 `panelBusy()`
+  - 120 `echoSvg()`
+  - 139 `panelFish()`
+  - 161 `valueEst(sp, g)`
+  - 162 `panelHold()`
+  - 178 `fcChart()`
+  - 193 `panelWx()`
+  - 225 `landText(short)`
+  - 238 `deckText(short)`
+  - 253 `quayText(short)`
+  - 259 `panelPort()`
+  - 293 `portSlip()`
+  - 363 `landWarn(p)`
+  - 376 `landPage()`
+  - 391 `panelLog()`
+  - 396 `renderPanel()`
+  - 400 `panelBusy()`
 
 ## `src/js/ui/07b-first-trip.js` (296 linjer)
 
@@ -3777,7 +3778,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 194 `drawNPCGlass(VP)`
   - 195 `drawNPCLights(VP)`
 
-## `src/js/view3d/23-camera-frame.js` (101 linjer)
+## `src/js/view3d/23-camera-frame.js` (104 linjer)
 
 ---------- the chase camera stays out of solid things ----------
 
@@ -3789,9 +3790,9 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 36 `camFree(o, e)`
   - 59 `camInside(x, y, z)`
   - 66 `compassStrip(W, H, dpr)`
-  - 78 `compassDraw(az, p)`
-- **91** frame
-  - 95 `fpsEl()`
+  - 81 `compassDraw(az, p)`
+- **94** frame
+  - 98 `fpsEl()`
 
 ## `src/js/view3d/24-cinema.js` (694 linjer)
 
