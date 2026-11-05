@@ -258,12 +258,13 @@ function chartVectors(V, again){
 // than its 50 m cells). The land is the vector coast drawn over it (chartCoast), which is what the route check takes as land since
 // 04.10.2026 (01d-coast.js); the 25 m mask is no longer drawn as foreshore beside it (the user: «Jeg vil ha bort det som er i
 // magenta»). Only a harbour unit's block and fill are painted here, at level 2, as land.
-function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){ const g = chartRasterG(d, PW, PH, x0, y0, pkx, pky, V, st, null); while (!g.next().done); }
-// The same, a row at a time: it yields after each row (of the coarse grid, of the samples and of the depth lines), so the little chart
-// in 3D (03e-miniplot.js) can paint its background over many frames (05.11.2026: 70-185 ms at once on a PC). A row needs the one above
-// (the edge of the safe depth), so the rows are not split up, only spread out; the picture is the same. scr: arrays kept between calls
-// (the little chart's, so a background leaves no garbage); without it they are new
-function* chartRasterG(d, PW, PH, x0, y0, pkx, pky, V, st, scr){
+function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){ const step = chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, null); while (step()); }
+// The same, a step at a time: chartRasterJob sets it up and gives a step, which does a row (of the coarse grid, of the samples, or 16 of
+// the depth lines) a call and says whether there is more, so the little chart in 3D (03e-miniplot.js) can paint its background over many
+// frames (05.11.2026: 70-255 ms at once on a PC). A row needs the one above (the edge of the safe depth), so the rows are not split up,
+// only spread out; the picture is the same. (Not a generator: as one the whole chart was 13 % slower, its loops less optimised.)
+// scr: arrays kept between calls (the little chart's, so a background leaves no garbage); without it they are new
+function chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr){
   const {lv, fish, night, sd} = V, LD = MAPD.L.depth, c = LD.c, X0 = LD.ix0, Y0 = LD.iy0, X1 = LD.ix0 + LD.nx - 1, Y1 = LD.iy0 + LD.ny - 1, D = (ix, iy) => rcell(LD, ix, iy);
   const s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
   // the night colours: dark sea in blues, dim land, as a chart plotter's night mode (the fishing chart is dark already)
@@ -290,8 +291,9 @@ function* chartRasterG(d, PW, PH, x0, y0, pkx, pky, V, st, scr){
   // near in (a sample under an eighth of a cell) the B-spline every GS samples and between them bilinear: the depth is smooth there,
   // and the 16 cells a sample made the harbour's tiles slow; NaN where a corner is off the packs (the sample is then its own)
   const GS = 4, GN = (Math.ceil(PW / GS) + 1) * (Math.ceil(PH / GS) + 1), G = smooth && pkx < c / 8 ? (R ? (R.G && R.G.length === GN ? R.G : (R.G = new Float32Array(GN))) : new Float32Array(GN)) : null, GW = Math.ceil(PW / GS) + 1;
-  if (G){ const w = [0, 0, 0, 0], u = [0, 0, 0, 0];
-    for (let gj = 0; gj * GS < PH + GS; gj++){ for (let gi = 0; gi < GW; gi++){
+  const w = [0, 0, 0, 0], u = [0, 0, 0, 0];
+  const gridRow = gj => {
+    for (let gi = 0; gi < GW; gi++){
       const x = x0 + (gi * GS + 0.5) * pkx, y = y0 + (gj * GS + 0.5) * pky; let v = NaN;
       if (simAt(x, y) && x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c) try {
         const gx = x / c - 0.5, ix = Math.floor(gx), gy = y / c - 0.5, iy = Math.floor(gy); bw(gx - ix, w); bw(gy - iy, u); v = 0;
@@ -299,9 +301,8 @@ function* chartRasterG(d, PW, PH, x0, y0, pkx, pky, V, st, scr){
       } catch (e){ v = NaN; }
       G[gj * GW + gi] = v;
     }
-    yield; }
-    ltx = NaN; }
-  for (let j = 0; j < PH; j++){
+  };
+  const pixRow = j => {
     const y = y0 + (j + 0.5) * pky, gy = clamp(y / c - 0.5, Y0, Y1 - 0.001), iy = Math.floor(gy), fy = gy - iy;
     if (smooth){ const gyr = y / c - 0.5, iyr = Math.floor(gyr); bw(gyr - iyr, RW); for (let k = 0; k < 4; k++) RO[k] = clamp(iyr - 1 + k, Y0, Y1); }
     let left = NaN;
@@ -336,24 +337,29 @@ function* chartRasterG(d, PW, PH, x0, y0, pkx, pky, V, st, scr){
       if (land > 0){ col[0] += (FS[0] - col[0]) * land; col[1] += (FS[1] - col[1]) * land; col[2] += (FS[2] - col[2]) * land; }
       put(o, col); prev[i] = v; left = v;
     }
-    yield;
-  }
+  };
   // the depth lines, in a pass over the finished depth (Jonas 08.10.2026, tilbakemelding #43: «samme dybdelinjer som rundt senja langs
   // hele kysten ned til 1000 meter»): a pixel is a line where its depth falls in another class than its left or upper neighbour's, from the
   // same source (the tiles' or the offshore layer's). Not where the stored depth steps steeper than a sea floor can (10 pixels across), as
   // where the sources were joined
-  if (lv){
-    const lim = (3 + 150 * pkx) * 10, at = (i, j) => (i < 0 || j < 0 || i >= PW || j >= PH || !MK[j * PW + i]) ? NaN : VV[j * PW + i];
-    for (let j = 1; j < PH; j++) for (let i = 1; i < PW; i++){
+  const lim = (3 + 150 * pkx) * 10, at = (i, j) => (i < 0 || j < 0 || i >= PW || j >= PH || !MK[j * PW + i]) ? NaN : VV[j * PW + i];
+  const lineRow = j => {
+    for (let i = 1; i < PW; i++){
       const o = j * PW + i; if (!MK[o]) continue; const a = CK[o], l = MK[o - 1] && SV[o - 1] === SV[o] && CK[o - 1] !== a, u = MK[o - PW] && SV[o - PW] === SV[o] && CK[o - PW] !== a;
       if (!l && !u) continue;
       const gx = Math.max(Math.abs(at(i + 5, j) - at(i - 5, j)), Math.abs(at(i + 2, j) - at(i - 2, j)) * 2.5), gy = Math.max(Math.abs(at(i, j + 5) - at(i, j - 5)), Math.abs(at(i, j + 2) - at(i, j - 2)) * 2.5);
       if (gx > lim || gy > lim) continue;
       const p = o * 4;
       if (fish){ d[p] *= 0.5; d[p + 1] *= 0.5; d[p + 2] *= 0.5; } else { d[p] = CC[0]; d[p + 1] = CC[1]; d[p + 2] = CC[2]; }
-      if (i === PW - 1 && (j & 15) === 0) yield;
     }
-  }
+  };
+  // the steps: the coarse grid's rows (when there is one), the samples' rows, the depth lines 16 rows a step (at levels over 0)
+  let ph = G ? 0 : 1, k = 0;
+  return () => {
+    if (ph === 0){ if (k * GS < PH + GS){ gridRow(k++); return true; } ltx = NaN; ph = 1; k = 0; }
+    if (ph === 1){ if (k < PH){ pixRow(k++); return true; } ph = 2; k = 1; if (!lv) return false; }
+    const e = Math.min(PH, k + 16); while (k < e) lineRow(k++); return k < PH;
+  };
 }
 function scheduleChart(){ followChart(); clearTimeout(chartTimer); chartTimer = setTimeout(() => paintChart(1), 140); }
 window.addEventListener('resize', () => { if (S && document.body.classList.contains('vplot')) scheduleChart(); });

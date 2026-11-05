@@ -12,7 +12,7 @@ function miniRadius(){ const tier = typeof heatTier === 'function' ? heatTier() 
 // the background (sea, land and coast) for twice the box round c: drawn again only when the boat has moved a fifth of the radius, the
 // box or the radius has changed, or every 20 s (packs come in); painting the coast twice a second slowed a software GPU a lot.
 // (05.11.2026, the lag of 04.11: a background took 70-185 ms at once on a PC, the longest stop left at sea.) Now it is painted a slice a
-// frame (miniStep: chartRasterG row by row, then the coast and the soundings) on a canvas of its own, which takes the old one's place
+// frame (miniStep: chartRasterJob a row a step, then the coast and the soundings) on a canvas of its own, which takes the old one's place
 // when it is done; the old one is drawn shifted after the boat till then (it is twice the box, so it covers the box till she is a
 // radius off). Only the first one, one after a new box, radius or night, or one after a jump is painted at once, as before.
 function miniBg(c, R, k, W, H, dpr){
@@ -51,7 +51,7 @@ function miniBg(c, R, k, W, H, dpr){
 }
 // one background: the raster a row at a time, then onto the spare canvas, the coast, the soundings; the spare and the shown one swap
 function* miniGen(img, PW, PH, BW, BH, x0, y0, k, dpr, night, V){
-  yield* chartRasterG(img.data, PW, PH, x0, y0, BW / k / PW, BH / k / PH, V, null, MINIP.scr);
+  const step = chartRasterJob(img.data, PW, PH, x0, y0, BW / k / PW, BH / k / PH, V, null, MINIP.scr); while (step()) yield;
   const off = MINIP.off; off.getContext('2d').putImageData(img, 0, 0);
   const bg = MINIP.bg2; if (bg.width !== BW) bg.width = BW; if (bg.height !== BH) bg.height = BH;
   const g = bg.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(off, 0, 0, BW, BH);
