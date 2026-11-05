@@ -46,6 +46,8 @@ async def main():
           const n1 = (S.haillInv || {}).haill || 0; PHONE.show(false); return {mode:shopMode(), lab, given:n1 - n0, fine:!!document.querySelector('#phone .shop-fine')}; })()""")
         check(r['mode'] == 'off' and r['lab'] == 'Snart i salg' and r['given'] == 0 and not r['fine'], 'before Stripe is set up a signed-in player sees «Snart i salg» and gets nothing free', r)
         # 2. set up: the price on the button, the consent line, and a tap goes straight to Stripe with the right product and boat
+        # the start's own shopStart asked too: its answer (not ready) must be in before the test asks, or it can land after it (Ø2)
+        await pg.wait_for_function("SHOP.ready !== null", timeout=60000)
         st['ready'] = True
         await pg.evaluate("shopStart()"); await pg.wait_for_function("SHOP.ready === true", timeout=20000)
         r = await pg.evaluate("""(async () => { PHONE.open('haill'); await new Promise(r => setTimeout(r, 300)); const b = document.querySelector('#phone [data-pa=haillbuy][data-k=haill]');
@@ -87,9 +89,14 @@ async def main():
         # 4. a cancelled payment says so
         st['pending'] = []
         pg3 = await ctx.new_page(); pg3.on('pageerror', lambda e: errs.append(str(e))); await pg2.close()
+        # every text the toast shows, from the start: the cancelled line comes at shopStart, and a later toast (the start, the weather)
+        # took its place before the test looked when the start was slow (Ø2 05.11.2026)
+        await pg3.add_init_script("""window.__toasts = []; document.addEventListener('DOMContentLoaded', () => { const el = document.getElementById('toast'); if (el) new MutationObserver(() => window.__toasts.push(el.textContent)).observe(el, {childList:true, characterData:true, subtree:true}); });""")
         pg3.set_default_timeout(120000); await pg3.goto(url('kjop=avbrutt'))
-        await pg3.wait_for_function("typeof SHOP !== 'undefined' && CLOUD.user && SHOP.ready !== null", timeout=120000); await pg3.wait_for_timeout(300)
-        t = await pg3.evaluate("[...document.querySelectorAll('#toast, .toast')].map(e => e.textContent).join(' | ')")
+        await pg3.wait_for_function("typeof SHOP !== 'undefined' && CLOUD.user && SHOP.ready !== null", timeout=120000)
+        try: await pg3.wait_for_function("window.__toasts.some(t => /avbrutt/.test(t))", timeout=15000)
+        except Exception: pass
+        t = await pg3.evaluate("window.__toasts.join(' | ')")
         check('avbrutt' in t, 'a cancelled payment says the purchase was cancelled and nothing was charged', t[:200])
         # 5. on the game's own site with the cloud off (#nocloud, no network; Ø6 funn 5): the shop is closed, nothing is given free
         ctx2 = await br.new_context(viewport={'width': 1100, 'height': 800}); await ctx2.add_init_script(STUB); await ctx2.route('https://sb.test/**', handle)

@@ -61,6 +61,11 @@ async def main():
             if any(e['msg'].startswith('3D NaN i kameraet') for e in gfx()): break
             await pg.wait_for_timeout(500)
         await pg.evaluate("G3._debug.cam.yaw = window.__yaw || 0")
+        # the report goes up with the next batch, which can come after the camera is back (05.11.2026, PR #42: red once, the message was
+        # sent by the end of the test): wait for it after the camera is set back too, at most 30 s more (Ø2)
+        for _ in range(60):
+            if any(e['msg'].startswith('3D NaN i kameraet') for e in gfx()): break
+            await pg.wait_for_timeout(500)
         nan = [e for e in gfx() if e['msg'].startswith('3D NaN i kameraet')]
         nj = json.loads(nan[0]['stack']) if nan else {}
         check(len(nan) == 1 and nj.get('cam', {}).get('yaw') == 'NaN' and nj.get('bv', {}).get('x') not in (None, 'NaN'), 'a camera that is not a number is sent once, with the eye, the boat and the camera', nan[:1])
