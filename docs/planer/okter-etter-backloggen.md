@@ -199,3 +199,4 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 - 05.11.2026: Ø6 funn 1 (lagret XSS i admin) og 13 rettet etter Jonas' «Rett funn 1 nå» (b5289877). Migreringen `20261105120000_fb_meta.sql` venter på SQL Editor.
 - 05.11.2026: migreringen `20261105120000_fb_meta.sql` kjørt av Jonas i SQL Editor og bekreftet. Funn 1 er helt ferdig.
 - 05.11.2026: Ø6 funn 2–4 bygd etter Jonas' «Kjør på funn 2–4» (`20261105130000_guest_world.sql`, `sqltest` 129 OK). Migreringen venter på SQL Editor. Turnstile og et tak i ekte tid er ikke bygd (se planen).
+- 05.11.2026: migreringen `20261105130000_guest_world.sql` kjørt av Jonas i SQL Editor og bekreftet. Funn 2–4 er ute; det som gjenstår, står i `docs/planer/sikkerhet-skyen.md`.

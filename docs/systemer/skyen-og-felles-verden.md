@@ -151,7 +151,7 @@ Jonas: «det er viktig at alle har en delt klokke fordi dette er et online-spill
 
 ## Gjestene og den felles verdenen (05.11.2026, Ø6 funn 2–4)
 
-- **Jonas: «Kjør på funn 2–4».** En gjest (anonym innlogging) kan lages igjen og igjen, så det en gjest lander og fisker, teller bare for gjesten til kontoen er registrert (`supabase/migrations/20261105130000_guest_world.sql`):
+- **Jonas: «Kjør på funn 2–4».** Migreringen ble kjørt av Jonas i SQL Editor 05.11.2026. En gjest (anonym innlogging) kan lages igjen og igjen, så det en gjest lander og fisker, teller bare for gjesten til kontoen er registrert (`supabase/migrations/20261105130000_guest_world.sql`):
   - `world_year_add` holder gjestens landinger utenfor årets summer, som er kvoten for åpen gruppe, båtene og gruppenes fangst.
   - `world_get` holder gjestene utenfor mottakenes marked (`mkt`) og cellene (`cells`).
   - `ev_top` holder dem utenfor sesongtoppen, som `world_top`, `bygde_top` og `push_week` alt gjorde. Gjesten ser sine egne.
