@@ -1577,3 +1577,5 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 .dr-onoff:not(:disabled){background:#1e8c6e;color:#fff;box-shadow:0 2px 10px rgba(30,140,110,.3);cursor:pointer}
 .dr-onoff.on{background:#e6f3ee;color:#13684f;border:2px solid #1e8c6e;box-shadow:none}
 .dr-page .ph-btn.dr-del{background:transparent;color:#b3261e;border:1.5px solid #b3261e;box-shadow:none}
+/* P7: the plan's own «Slett» dialog: the button that deletes is a red outline beside «Behold planen» */
+#modal .btn.dr-danger{background:transparent;color:#b3261e;border:1.5px solid #b3261e}

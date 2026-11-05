@@ -322,8 +322,15 @@ const PLAN2UI = (() => {
     if (a === 'p2-dep'){ o.dep = clamp(o.dep + 0.5 * (+d.d), 0, 23.5); return true; }
     if (a === 'p2-days'){ o.days = clamp(o.days + (+d.d), 2, 7); return true; }
     if (a === 'p2-copy'){ if (plan2Copy(d.id)) toast(L('Planen er kopiert til «' + vget(vesselById(d.id), 'boatName') + '». Sjekk den og start den der.', 'The plan is copied to «' + vget(vesselById(d.id), 'boatName') + '». Check it and start it there.')); return true; }
-    if (a === 'p2-reset'){ if (!confirm(L('Slette driftsplanen for «' + S.boatName + '»?', 'Delete the plan for «' + S.boatName + '»?'))) return false; const hm = o.home; S.ops = null; open = null; if (S.plan && S.plan.ops) S.plan.ops = false; if (isBerth(hm)) havnFree(hm); return true; }
+    if (a === 'p2-reset'){ askReset(o); return false; }
     return false;
+  }
+  // Slett (GUI review P7 A): the game's own dialog, with the plan by its boat's name and what becomes of the gear in the sea
+  function askReset(o){
+    const sets = mySets(), gear = sets.length ? '<p>' + L(sets.map(s => s.n + ' ' + unitName(s.kind, s.n)).join(', ') + ' står i sjøen. ' + (sets.length > 1 ? 'De' : 'Det') + ' blir stående der når planen er slettet, og må hentes med båten. Vil du ha redskapet om bord først, trykk «Hent redskapet» i stedet.', sets.map(s => s.n + ' ' + unitName(s.kind, s.n)).join(', ') + ' stand' + (sets.length > 1 || sets[0].n > 1 ? '' : 's') + ' in the sea. It stays there when the plan is deleted, and must be fetched with the boat. To have the gear aboard first, tap «Fetch the gear» instead.') + '</p>' : '<p>' + L('Ingen redskap fra planen står i sjøen.', 'No gear of the plan stands in the sea.') + '</p>';
+    modal('<h3>' + L('Slette driftsplanen for «' + S.boatName + '»?', 'Delete the plan for «' + S.boatName + '»?') + '</h3><p>' + L('Hjem, redskap, plassene, levering, vær, rytme og statistikken for planen blir borte.', 'The home, gear, places, landing, weather, rhythm and the plan\'s statistics are gone.') + '</p>' + gear +
+      '<div class="btns"><button class="btn primary" data-close>' + L('Behold planen', 'Keep the plan') + '</button><button class="btn dr-danger" id="p2Del">' + L('Slett planen', 'Delete the plan') + '</button></div>');
+    $('p2Del').onclick = () => { $('modal').hidden = true; if (plan2Ops() !== o) return; const hm = o.home; S.ops = null; open = null; if (S.plan && S.plan.ops) S.plan.ops = false; if (isBerth(hm)) havnFree(hm); if (typeof save === 'function') save(); rerender(); if (typeof DOCK !== 'undefined') DOCK.redraw(); };
   }
   // one line for the Crew page: what the plan does now, and the way to it
   function line(){ const o = plan2Ops(), n = o ? nowOf(o)[0] : L('Ingen driftsplan', 'No operations plan'); return '<div class="ph-card dr-line"><span><b>' + L('Driftsplan', 'Operations plan') + '</b><small>' + n + '</small></span><button class="ph-btn" data-pa="open" data-a="drift">' + L('Åpne', 'Open') + '</button></div>'; }

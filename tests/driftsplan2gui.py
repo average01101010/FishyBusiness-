@@ -803,15 +803,21 @@ async def s18_kopier_slett(c):
     cp = await c.js("(() => { const v = S.fleet.find(v => v.id !== S.cur); const o = v && vget(v, 'ops'); return o ? {v:o.v, on:o.on, places:o.places.length} : null; })()")
     c.check(cp and cp['v'] == 4 and not cp['on'], 'kopier til en annen båt med ett trykk, og toasten sier det', {'kopi': cp, 'toast': ts})
     await c.shots('kopier', frame=('[data-pa="p2-reset"]',))
-    c.accept = False
-    await c.press('[data-pa="p2-reset"]', name='Slett driftsplanen (avbryt)')
-    await asyncio.sleep(0.4)
-    kept = await c.js("!!S.ops")
-    c.accept = True
-    await c.press('[data-pa="p2-reset"]', name='Slett driftsplanen (ja)')
+    # P7: the game's own dialog, with the boat's name and what becomes of the gear in the sea
+    d0 = len(c.dialogs)
+    await c.press('[data-pa="p2-reset"]', name='Slett driftsplanen')
+    await asyncio.sleep(0.3)
+    box = await c.text(root='#modal')
+    await c.shots('slett-dialog', frame=('#modal .box',))
+    await c.press('[data-close]', root='#modal', name='Behold planen')
+    await asyncio.sleep(0.3)
+    kept = await c.js("!!S.ops") and await c.js("document.getElementById('modal').hidden")
+    await c.press('[data-pa="p2-reset"]', name='Slett driftsplanen')
+    await c.press('#p2Del', root='#modal', name='Slett planen')
     await asyncio.sleep(0.4)
     gone = await c.js("!S.ops") and await c.has('[data-pa="p2-new"]')
-    c.check(kept and gone and len(c.dialogs) >= 2, 'Slett spør først: avbryt beholder planen, ja sletter den', {'dialog': c.dialogs[-1:]})
+    named = bool(box) and await c.js("S.boatName") in box and ('i sjøen' in box)
+    c.check(kept and gone and named and len(c.dialogs) == d0, 'P7: Slett spør i spillets egen dialog med båtens navn og redskapet i sjøen: «Behold» beholder planen, «Slett» sletter den', {'dialog': (box or '')[:200], 'nettleserdialoger': len(c.dialogs) - d0})
 
 
 async def s19_rederi(c):
