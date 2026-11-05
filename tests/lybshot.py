@@ -16,7 +16,6 @@ async def main():
     if not os.environ.get('KYST_VEC_BUILT'):
         r = subprocess.run(['node', 'build.mjs'], cwd=ROOT, env=dict(os.environ, KYST_VEC='1'), capture_output=True, text=True)
         print(ok(r.returncode == 0), 'dist-vec/ bygges med vec-pakkene', r.stderr[-200:])
-    os.makedirs('out', exist_ok=True)
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--disable-gpu-compositing'])
         errs = []
@@ -31,11 +30,11 @@ async def main():
                 except Exception as e: print('FEIL vec-pakkene i 3D', str(e)[:80])
                 await pg.evaluate("() => { const c = G3._debug.cam; c.helm = false; c.dist = 140; c.pitch = 0.32; c.yaw = 2.4; }")
                 await pg.wait_for_timeout(12000)
-                await pg.screenshot(path=f'out/lyb_{tag}_{w}x{h}.png', timeout=120000)
+                await pg.screenshot(path=f'lyb_{tag}_{w}x{h}.png', timeout=120000)
                 gl = await pg.evaluate("G3._debug.glErr ? G3._debug.glErr() : 0"); print(ok(not gl), 'ingen GL-feil', gl)
             await pg.evaluate("() => { PHONE.open('bors'); }"); await pg.wait_for_timeout(1500)
             txt = await pg.evaluate("document.body.innerText.includes('flyr hit fra Tromsø')"); print(ok(txt), 'Mannskapsbørsen sier at den som ansettes, flyr fra Tromsø', w, h)
-            await pg.screenshot(path=f'out/lyb_bors_{w}x{h}.png', timeout=120000)
+            await pg.screenshot(path=f'lyb_bors_{w}x{h}.png', timeout=120000)
             await pg.close()
         print('sidefeil:', errs[:5])
         await b.close()
