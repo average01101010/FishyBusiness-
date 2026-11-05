@@ -17,6 +17,8 @@
 //           which 05-vessels.js sails by the clock within AIS range
 // A pier's boxes keep its middle (fm, the mean of its points) so the 3D view knows the floating docks among them (flyteTile).
 const VEC = {tiles:new Map(), want:new Set(), wait:new Map(), came:[], drop:[], ver:0, worker:null, id:0, ms:0};
+// the clock a tile's last read is kept by (t.at), and how long a tile read is safe from vecPrune
+const vecNow = () => typeof performance !== 'undefined' ? performance.now() : Date.now(), VEC_KEEP = 60000;
 // Senja's legacy square as its corners in the national frame (metres): its edges bow by millimetres, so a point is tested against the
 // quadrilateral (inSenja takes km)
 const SENJAQ = [[0, 0], [LEGF.W, 0], [LEGF.W, LEGF.H], [0, LEGF.H]].map(([x, y]) => { const q = LG(x, y); return [q.x * 1000, q.y * 1000]; });
@@ -131,7 +133,7 @@ function vecFinish(r){
   if (r.bld){ const B = t.bld = Object.assign(r.bld, {cells:new Map(), seed:(r.tx * 131 + r.ty * 977) * 1000003 % 2147483647}); for (let i = 0; i < B.ck.length; i++) B.cells.set(B.ck[i], B.order.subarray(B.cs[i], B.cs[i + 1])); }
   if (r.roads){ const R = r.roads; for (let i = 0; i < R.n; i++) t.roads.push({c:R.c[i], xs:R.x.subarray(R.o[i], R.o[i + 1]), zs:R.z.subarray(R.o[i], R.o[i + 1]), bb:[R.bb[4 * i], R.bb[4 * i + 1], R.bb[4 * i + 2], R.bb[4 * i + 3]]}); for (let i = 0; i < R.ck.length; i++) t.rcell.set(R.ck[i], R.ri.subarray(R.cs[i], R.cs[i + 1])); }
   if (typeof flaateApply === 'function') flaateApply(t);   // the register's boats in the harbours (L2/N1, 05-vessels.js)
-  VEC.tiles.set(k, t); VEC.ver++; for (const f of VEC.came) f(t);
+  t.at = vecNow(); VEC.tiles.set(k, t); VEC.ver++; for (const f of VEC.came) f(t);
   return t;
 }
 // the worker, from the source of vecDecode and pierBoxes; null when it cannot start (it is tried once)
@@ -163,7 +165,7 @@ function vecInput(pk, inflate){
 function vecDecodeHere(pk){ pk.vecQ = false; const t0 = performance.now(), t = vecFinish(vecDecode(vecInput(pk, true))); VEC.ms += performance.now() - t0; return t; }
 // a tile decoded, or null while its pack is not in, it is being decoded, or the build has none; asking starts the decoding
 function vecTile(tx, ty){
-  const k = tx + ':' + ty, t = VEC.tiles.get(k); if (t) return t;
+  const k = tx + ':' + ty, t = VEC.tiles.get(k); if (t){ t.at = vecNow(); return t; }
   const pk = MAPD.man && MAPD.byTile.get('vec:' + k); if (!pk || !pk.buf || pk.vecQ) return null;
   const w = VEC.forceMain ? null : vecWorker(); if (!w) return vecDecodeHere(pk);
   const id = ++VEC.id, D = vecInput(pk, false); D.id = id; pk.vecQ = true; VEC.wait.set(id, {pk, t0:performance.now()});
@@ -207,8 +209,14 @@ function vecPrune(pts, R = 60){
   // what the open chart plotter shows is kept too: the boat's own pruning (05-vessels.js, the boat far off on a route) let the chart's
   // roads go and come back again and again, so the streets of Tromsø blinked (Jonas' video 09.10.2026)
   if (typeof document !== 'undefined' && document.body && document.body.classList.contains('vplot') && typeof view !== 'undefined') pts = pts.concat([{x:view.cx, y:view.cy}]);
+  // a tile read in the last VEC_KEEP ms is kept, wherever it lies (05.11.2026, the lag at sea after havsteget): the coastal ship and
+  // the ferry on Senja, the home naust and a route's legs read tiles far from the boat, so the 3D view let them go and the next frame
+  // asked for them again, every 40-50 s (Jonas' boat off Skjervøy: Senja's tiles 16:6, 16:7 and 17:7). Each turn bumped VEC.ver twice,
+  // and everything keyed on it was worked out again at once: every harbour in reach moored again (moorHarbour, 32 of them, 0.2-0.4 s
+  // on a desktop and some seconds on a phone), the obstacles, the ocean fleet. They were back in memory 0.3 s after each drop anyway.
+  const now = vecNow();
   for (const [k, t] of VEC.tiles){
     const far = pts.every(p => Math.max(Math.abs(p.x - (t.tx + 0.5) * T), Math.abs(p.y - (t.ty + 0.5) * T)) > R + T / 2);
-    if (far){ VEC.tiles.delete(k); VEC.ver++; for (const f of VEC.drop) f(t); }
+    if (far && now - (t.at || 0) > VEC_KEEP){ VEC.tiles.delete(k); VEC.ver++; for (const f of VEC.drop) f(t); }
   }
 }

@@ -167,7 +167,7 @@ function havnBerths(H, type, vid, n){
   return out.sort((a, c) => rank(a) - rank(c) || a.d - c.d).slice(0, n || 99);
 }
 // the harbour's own boats placed (05-vessels.js moorHarbour), once the fine coast is in round it
-function havnMoor(h){ MOOR.ver = VEC.ver * 1000 + COAST.built; const p = {x:h.x, y:h.y}; if (h.moorVer !== MOOR.ver && coastFine(p) && coastIndexAt(p, false)) moorHarbour(h); return h.moorVer === MOOR.ver; }
+function havnMoor(h){ MOOR.ver = VEC.ver * 1000 + COAST.built; const p = {x:h.x, y:h.y}; if (h.moorVer !== MOOR.ver && coastFine(p) && coastIndexAt(p, false) && !moorStill(h)) moorHarbour(h); return h.moorVer === MOOR.ver; }
 // a berth as a place: its id from its key (the same for everyone), the harbour point 15 m out from the face (where a route ends and the way
 // in starts), the shore 20 m in; saved so it is there before its pack
 function havnPlaceOf(H, b, type){

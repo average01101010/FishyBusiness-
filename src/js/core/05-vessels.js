@@ -400,11 +400,22 @@ function moorHarbour(h){
     placed.push(m.buoy ? {p:m.buoy, hd:m.hd, L:b.L * 2 + 2 * MOOR.PEN, B:b.L * 2 + 2 * MOOR.PEN, buoy:true} : {p:m.p, hd:m.hd, L:b.L, B:b.B});
   }
   if (need.some(b => b.moored.buoy)) FDOCK.ver++;   // the new buoys into the obstacles
-  h.moorVer = MOOR.ver;
+  h.moorVer = MOOR.ver; h.moorK = moorKey(h);
 }
+// What a harbour's places stand on (05.11.2026, the lag at sea after havsteget): the vec tiles round it (the quays moorHarbour reads
+// within 450 m) and the coast index of its chart pack, each by the object it is. MOOR.ver changes with any tile or coast index anywhere,
+// and every harbour in reach was moored again at once (off Skjervøy 32 harbours, 0.2-0.4 s on a desktop and seconds on a phone, each
+// time a tile 100 km off came or went); now only a harbour whose own data is new is (a tile decoded again gives new harbour objects).
+const MOORT = new WeakMap(); let MOORTN = 0;
+const moorTag = o => { if (!o) return 0; let n = MOORT.get(o); if (!n){ n = ++MOORTN; MOORT.set(o, n); } return n; };
+function moorKey(h){ const cx = h.x * 1000, cz = h.y * 1000;
+  return vecTilesIn(cx - 450, cz - 450, cx + 450, cz + 450).map(moorTag).join(',') + '|' + moorTag(coastIndexAt({x:h.x, y:h.y}, false)); }
+// the places fixed before still stand on the same data: they are taken for the new version as they are
+function moorStill(h){ if (!(h.moorVer > 0) || h.moorK == null || h.moorK !== moorKey(h)) return false; h.moorVer = MOOR.ver; return true; }
 function coastMoor(b){
   const h = b.h; MOOR.ver = VEC.ver * 1000 + COAST.built;   // new packs or coast indexes: the places are fixed again (rarely)
   if (h && h.moorVer === MOOR.ver && b.moored) return b.moored.none ? Object.assign({hidden:true}, b.moored) : b.moored;
+  if (h && b.moored && moorStill(h)) return b.moored.none ? Object.assign({hidden:true}, b.moored) : b.moored;
   // the fine coast must be in round the harbour before the places are fixed; meanwhile the pack's place
   // (and the 25 m mask 500 m round the harbour, which the search for a dock or a buoy reads: a block not yet in would throw)
   if (h && coastFine(b.p) && coastIndexAt(b.p, false) && [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]].every(([dx, dy]) => { const q = {x:h.x + dx, y:h.y + dy}; return !mapSimAt(q) || mapReadyAt(q, 0); })){ moorHarbour(h); return b.moored.none ? Object.assign({hidden:true}, b.moored) : b.moored; }
