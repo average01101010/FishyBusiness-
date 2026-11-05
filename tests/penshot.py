@@ -24,6 +24,10 @@ async def main():
         pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
         await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(3000)
+        # getError gives the first error since the last call, from anything drawn since the start: read it here, so an error before the
+        # pennants (the start, the terrain) is told apart from one while they are drawn (Ø2 05.11.2026; 1282 since 28.10.2026)
+        gerr0 = await pg.evaluate("G3._debug.glErr()")
+        check(gerr0 == 0, 'no GL error from the start up to the pennants', gerr0)
         shots = 0
         # a fresh breeze from the west (the pennant streams out with the apparent wind), seen from the side
         await pg.evaluate("WX_FORCE = {w:10, d:270}")

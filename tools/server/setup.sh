@@ -67,7 +67,9 @@ if [ -z "$KEY" ]; then
 fi
 if [ -n "$KEY" ]; then
   RR=$(command -v rrsync || ls /usr/share/doc/rsync/scripts/rrsync* 2>/dev/null | head -1 || true)
-  if [ -n "$RR" ]; then echo "command=\"$RR $SITE\",restrict $KEY" > /home/deploy/.ssh/authorized_keys; else echo "restrict $KEY" > /home/deploy/.ssh/authorized_keys; fi
+  # without rrsync the deploy key would get a shell on the server (restrict alone does not stop commands): stop instead (Ø6 funn 15)
+  if [ -z "$RR" ]; then echo "rrsync was not found (it comes with rsync; on older Ubuntu: /usr/share/doc/rsync/scripts/rrsync). Install it and run this again." >&2; exit 1; fi
+  echo "command=\"$RR $SITE\",restrict $KEY" > /home/deploy/.ssh/authorized_keys
   chown deploy:deploy /home/deploy/.ssh/authorized_keys; chmod 600 /home/deploy/.ssh/authorized_keys
 fi
 # a page to show until the first upload from GitHub replaces it

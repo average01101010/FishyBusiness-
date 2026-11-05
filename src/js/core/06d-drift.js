@@ -167,7 +167,7 @@ function driftCheck(o){
   const hp = portById(o.home);
   if (!hp) E.push(no('Velg hvor båten skal ligge hjemme.', 'Choose where the boat lies at home.'));
   if (!RIGS[o.rig]) E.push(no('Velg hva båten skal fiske med.', 'Choose what the boat fishes with.'));
-  else if (!rigHas(o.rig)) E.push(no('Båten mangler haleren til ' + rigName(o.rig).toLowerCase() + '. Monter den under Oppgrader på verftet.', 'The boat has no hauler for ' + rigName(o.rig).toLowerCase() + '. Fit one under Upgrade at the yard.'));
+  else if (!rigHas(o.rig)) E.push(no('Båten mangler haleren til ' + rigName(o.rig).toLowerCase() + '. Den kjøpes og monteres i Butikk › Elektronikk og haler.', 'The boat has no hauler for ' + rigName(o.rig).toLowerCase() + '. Buy and fit one at Shop › Electronics and haulers.'));
   if (kind && !o.fields.length) E.push(no('Legg ut minst ett felt for ' + rigName(o.rig).toLowerCase() + '.', 'Put out at least one field for the ' + rigName(o.rig).toLowerCase() + '.'));
   if (drJig(o) && !kind && !o.jigs.length) E.push(no('Velg minst én juksplass.', 'Choose at least one jig place.'));
   if (o.fields.length > DRP.fieldsMax) E.push(no('Høyst ' + DRP.fieldsMax + ' felt.', 'At most ' + DRP.fieldsMax + ' fields.'));

@@ -37,7 +37,9 @@ function fsAdd(pts, aboard){
 function fsYear(y){
   const t = fsText(fsNeed(y));
   log('Du har nå ' + t + '.', 'You now have ' + t + '.');
-  if (!FS_AWAY && typeof toast === 'function') toast((S.lang === 'en' ? 'Sea time: ' : 'Fartstid: ') + t);
+  // the first five years come fast (FS) and stand in the deck log only; after them a whole year is a toast too (spilltest 3, U4 and K3;
+  // Jonas 05.11.2026, V3 A and V6c A)
+  if (!FS_AWAY && y > 5 && typeof toast === 'function') toast((S.lang === 'en' ? 'Sea time: ' : 'Fartstid: ') + t);
   if (y % 10 === 0){ msg('Kystposten', 'Kystposten gratulerer med ' + y + ' år på havet. Det er ikke mange forunt.', 'The Coast Post congratulates you on ' + y + ' years at sea. Not many get there.'); pressPut('fs', {y}); };
 }
 // each game minute: an hour at sea with you aboard counts (rested time is used up only at sea)

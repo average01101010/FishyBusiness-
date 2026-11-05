@@ -110,7 +110,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 ### Ø10 Regelmotoren
 
 - «Regelmotoren mangler Skagerrak» (FOR-2022-12-16-2281 §§ 1 og 4; 2026-forskriften er ikke lest).
-- «`quotatest` er rød på kvotesamarbeidet»: rettes her etter årsaken Ø2 fant.
+- «`quotatest` er rød på kvotesamarbeidet»: Ø2 fant at det var testens feil (den leste bare de tre siste logglinjene etter leveringen); rettet i testen 05.11.2026, ingenting å gjøre her.
 - **Filer:** `core/03e-rules.js`, `core/03d-quota.js`, `src/data/rules.json`, `tools/rules/`.
 
 ### Ø11 Lover, regler og sikkerhet, byggingen
@@ -173,11 +173,11 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 | Spilltest 3 | Kjører | `ccr-9c21028c-lptg24` | 05.11.2026 |
 | H2 autolineren | H2a rullet ut (c9e651d1), H2b rullet ut (d5d6b4c), H2c bygd og venter på utrulling; så H2d–H2e | `ccr-94300c4c-ssnrxm` (H2c) | 05.11.2026 |
 | Ø1 Det som ikke kom med | Ferdig: PR #42 flettet, #18, #19 og #33 lukket, Tufjord flettet inn (8f503066), verftene i Sverige tatt ut (ce056730), leibitene rettet i `npc.py` (eb669fe7, ute med neste kartrelease) | `ccr-834c604f-xxnqoy`, `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
-| Ø2 Testriggen | Pågår | `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
+| Ø2 Testriggen | Ferdig: alle punktene grønne eller med årsak og eier i backloggen (10.6 «Ø2 05.11.2026», «Strøket 05.11.2026 (Ø2)»); de 11 rettede uten 3D grønne på d663638a; A5 historikk i `run.py`; grensjekken i `/okt-slutt` ser på koden; tillegget fra den andre Ø2-økta (`ccr-o2-tillegg`) tatt inn som d663638a. Røde med eier: gfxtest (lyden, Ø7), deckshot (kranen, H2), crewclip/dyntest (H6) | `ccr-5e1ba2f4-pusvyd`, `ccr-o2-tillegg` | 05.11.2026 |
 | Ø3 Ytelse | Ikke begynt | | |
 | Ø4 Båtmodellene | Venter (Jonas: «Vent med båtene») | | |
 | Ø5 Butikkene, restene | Ikke begynt | | |
-| Ø6 Sikkerhetsgjennomgangen (A7) | Ferdig: 15 funn i `docs/planer/sikkerhet-skyen.md` (2 høy, 6 middels, 7 lav), backloggen 10.1; ingen kode endret | `o6-sikkerhet` | 05.11.2026 |
+| Ø6 Sikkerhetsgjennomgangen (A7) | Ferdig: 15 funn i `docs/planer/sikkerhet-skyen.md`; rettet samme dag etter Jonas' «kjør på»: 1, 2–4, 5, 8–15 (fire migreringer kjørt av Jonas og bekreftet). Igjen: 6 (haill og penger på serveren) og 7 (innloggingsdomenet hos WorkOS) | `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
 | Ø11a Planen for lover, regler og sikkerhet | Ikke begynt | | |
 | Ø7 Småfeil | Venter på spilltest 3 | | |
 | Ø8 Spillbarhet | Venter på spilltest 3 | | |
@@ -200,3 +200,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 - 05.11.2026: migreringen `20261105120000_fb_meta.sql` kjørt av Jonas i SQL Editor og bekreftet. Funn 1 er helt ferdig.
 - 05.11.2026: Ø6 funn 2–4 bygd etter Jonas' «Kjør på funn 2–4» (`20261105130000_guest_world.sql`, `sqltest` 129 OK). Migreringen venter på SQL Editor. Turnstile og et tak i ekte tid er ikke bygd (se planen).
 - 05.11.2026: migreringen `20261105130000_guest_world.sql` kjørt av Jonas i SQL Editor og bekreftet. Funn 2–4 er ute; det som gjenstår, står i `docs/planer/sikkerhet-skyen.md`.
+- 05.11.2026: Ø6 funn 5 og 14 rettet etter Jonas' «Kjør på funn 5 og 14» (acdaf0db). Migreringen `20261105140000_liv_owned.sql` venter på SQL Editor.
+- 05.11.2026: migreringen `20261105140000_liv_owned.sql` kjørt av Jonas i SQL Editor og bekreftet. Funn 5 og 14 er ute. Igjen av Ø6: funn 7 (innloggingsdomenet) og ryddejobbene 8–12 og 15.
+- 05.11.2026: Ø6 ryddejobbene 8–12 og 15 gjort etter Jonas' «Kjør på ryddejobbene 8–12 og 15» (656da4d2). Migreringen `20261105150000_rydd.sql` venter på SQL Editor; Caddyfile-endringen trer i kraft når `setup.sh` kjøres på serveren.
+- 05.11.2026: migreringen `20261105150000_rydd.sql` kjørt av Jonas og bekreftet. Ø6 er ferdig; igjen er funn 6 og 7, og det som står under hvert funn som ikke gjort.

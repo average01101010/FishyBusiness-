@@ -28,7 +28,10 @@ function recCatch(sp, kg, how){
   if (sp === FAR_REC.sp && kg > FAR_REC.kg && !S.farBeat){ S.farBeat = S.t; if (!quiet) msg('Trofeveggen', 'Du slo fars torsk: ' + fmt(kg, 1) + ' kg mot hans ' + fmt(FAR_REC.kg, 1) + ' kg. Den henger ved siden av hans i naustet.', 'You beat Father’s cod: ' + fmt(kg, 1) + ' kg against his ' + fmt(FAR_REC.kg, 1) + ' kg. It hangs beside his in the boathouse.'); }
   if (!o){ if (!quiet) log('Første ' + nm.no.toLowerCase() + ' på rekordlista: ' + fmt(kg, 1) + ' kg.', 'First ' + nm.en.toLowerCase() + ' on the record list: ' + fmt(kg, 1) + ' kg.'); return; }
   // a clearly bigger one gets a message; a few grams more only changes the wall
-  if (!quiet && kg >= o.kg * 1.15 && kg >= 1) msg('Trofeveggen', 'Ny rekord: ' + nm.no.toLowerCase() + ' på ' + fmt(kg, 1) + ' kg (før ' + fmt(o.kg, 1) + ' kg).', 'New record: ' + nm.en.toLowerCase() + ' of ' + fmt(kg, 1) + ' kg (was ' + fmt(o.kg, 1) + ' kg).');
+  // (spilltest 3, U4; Jonas 05.11.2026, V3 A: 74 record messages in one test drowned the rest) the record shows on the catch card as
+  // the fish comes over the rail (ui/05j-catchfeed.js) and goes in the deck log, not as a message
+  if (!quiet && kg >= o.kg * 1.15 && kg >= 1){ log('Ny rekord: ' + nm.no.toLowerCase() + ' på ' + fmt(kg, 1) + ' kg (før ' + fmt(o.kg, 1) + ' kg).', 'New record: ' + nm.en.toLowerCase() + ' of ' + fmt(kg, 1) + ' kg (was ' + fmt(o.kg, 1) + ' kg).');
+    if (typeof catchRec === 'function') catchRec(sp, kg); }
 }
 // Father's cod (Jonas 10.10.2026: «en utstoppet torsk der som er fars rekord»): the one fish that hangs in the naust from the start,
 // stuffed and mounted over the trophy wall, his biggest, taken on the jig off the home harbour the winter the boat was new to him.

@@ -41,6 +41,11 @@ async def main():
         await pg.wait_for_function("G3.isActive()", timeout=60000)
         R = {}
         for name, la, lo, hmin in PLACES:
+            # (a place the build has no far pack for cannot get its heights: Bjørnøya and Svalbard are in the far packs only with the
+            # whole coast and the islands in the build, H1b R3; with Senja alone they were red on «hmax 3» and the run went past its
+            # time, Ø2 05.11.2026. Said, not passed: the regression is run with the whole coast)
+            if hmin is not None and not await pg.evaluate("([la, lo]) => { const c = P(la, lo); return mapPacksIn('far', c.x, c.y, c.x, c.y).length > 0; }", [la, lo]):
+                print('HOPP ' + name + ': bygget har ingen fjernpakke her (trenger hele kysten med øyene: release.py, game.py)'); continue
             q = await pg.evaluate(SEA, [la, lo])
             if not q:
                 check(False, name + ': fant sjø nær stedet'); continue
@@ -49,13 +54,13 @@ async def main():
             await pg.evaluate("""(q) => { const b = S.boat; b.status = 'idle'; b.port = null; b.pos = {x:q.x, y:q.y}; S.plan = null; S.draft = []; b.v = 0; }""", q)
             # the window moves and the far pack comes: wait for the far terrain round the boat to be built from it
             try:
-                await pg.wait_for_function("""([q, open]) => { const T = G3._debug.TERR; return T && !T.stale && Math.abs(T.cx - q.x * 1000) <= 10000 && Math.abs(T.cz - q.y * 1000) <= 10000 && (open || mapFarIn(q)); }""", arg=[q, hmin is None], timeout=90000)
+                await pg.wait_for_function("""([q, open]) => { const T = G3._debug.TERR; return T && !T.stale && Math.abs(T.cx - q.x * 1000) <= 10000 && Math.abs(T.cz - q.y * 1000) <= 10000 && (open || mapFarIn(q)); }""", arg=[q, hmin is None], timeout=240000)   # (at 0.3 frames a second in SwiftShader the far mesh is built in slices over minutes: 90 s ran out at Kirkenes, Bergen and Hvaler, Ø2 05.11.2026)
             except Exception as e:
                 print('     (venter fortsatt:', name, str(e)[:80], ')')
             await pg.wait_for_timeout(2500)
             r = await pg.evaluate("""(q) => { const T = G3._debug.TERR, M = G3._debug.MIDM; let hmax = -1e9; for (const v of T.h) hmax = Math.max(hmax, v);
               let mmax = -1e9; if (M) for (const v of M.h) mmax = Math.max(mmax, v);
-              return {far:mapFarIn(q), view:mapViewIn(q), hmax:Math.round(hmax), mid:Math.round(mmax), win:[Math.round(T.cx / 1000), Math.round(T.cz / 1000)], boat:[+q.x.toFixed(1), +q.y.toFixed(1)], gl:G3._debug.glErr(), fps:+G3._debug.fps.toFixed(1), mb:+(MAPD.bytes / 1e6).toFixed(1), land:isLand(q)}; }""", q)
+              return {stale:!!T.stale, far:mapFarIn(q), view:mapViewIn(q), hmax:Math.round(hmax), mid:Math.round(mmax), win:[Math.round(T.cx / 1000), Math.round(T.cz / 1000)], boat:[+q.x.toFixed(1), +q.y.toFixed(1)], gl:G3._debug.glErr(), fps:+G3._debug.fps.toFixed(1), mb:+(MAPD.bytes / 1e6).toFixed(1), land:isLand(q)}; }""", q)
             await pg.screenshot(path='tp_' + name + '.png')
             # the picture is not one colour: the spread of the grey levels
             spread = await pg.evaluate("""() => new Promise(res => { const c = document.getElementById('gl'), w = 64, h = 40, o = document.createElement('canvas'); o.width = w; o.height = h; requestAnimationFrame(() => { const x = o.getContext('2d'); x.drawImage(c, 0, 0, w, h); const d = x.getImageData(0, 0, w, h).data; let s = 0, s2 = 0, n = 0; for (let i = 0; i < d.length; i += 4){ const g = (d[i] + d[i + 1] + d[i + 2]) / 3; s += g; s2 += g * g; n++; } res(Math.sqrt(s2 / n - (s / n) ** 2)); }); })""")

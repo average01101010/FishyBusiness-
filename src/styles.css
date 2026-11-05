@@ -94,7 +94,7 @@ body.vplot #gps::after{display:none}
 .dk-b{pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:3px;width:66px;padding:0;border:0;background:none;color:#fff;cursor:pointer;font:600 11.5px var(--sans);text-shadow:0 1px 2px rgba(0,0,0,.7);-webkit-tap-highlight-color:transparent}
 .dk-b .dk-i{position:relative;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(6,16,24,.6);border:1.5px solid rgba(255,255,255,.3);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .dk-b .dk-i svg{width:26px;height:26px}
-.dk-b .dk-l{white-space:nowrap;max-width:78px;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+.dk-b .dk-l{white-space:normal;max-width:100%;text-align:center;overflow:hidden;line-height:1.1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}   /* two short lines inside the button, never into the next (spilltest 3, U10) */
 .dk-b.pri .dk-i{background:var(--mag);border-color:var(--mag)} .dk-b.warn .dk-i{background:#d63a2a;border-color:#d63a2a}
 .dk-b.on .dk-i,.dk-b.open .dk-i{background:#f2f5f7;color:#0d1b24;border-color:#fff}
 .dk-b.off{opacity:.45} .dk-b:active .dk-i{transform:scale(.94)}
@@ -107,7 +107,7 @@ body.vplot #gps::after{display:none}
 #dockFan .dk-b.sm{width:84px;font-size:11.5px} #dockFan .dk-b.sm .dk-l{max-width:84px}
 #dockFan .dk-b.wide{width:auto;min-width:66px;max-width:124px} #dockFan .dk-b.wide .dk-l{max-width:124px;white-space:normal;text-align:center}
 .dk-card{display:flex;flex-direction:column;gap:8px;min-width:200px;color:#fff;font:600 13px var(--sans)}
-.dk-step{display:flex;align-items:center;justify-content:space-between;gap:10px} .dk-step b{font-size:17px}
+.dk-step{display:flex;align-items:center;justify-content:space-between;gap:10px} .dk-step b{font-size:17px} .dk-step b{text-align:center;line-height:1.15} .dk-step b small{display:block;font-size:11.5px;font-weight:500;opacity:.8}
 .dk-step button{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font:700 20px var(--sans);cursor:pointer}
 .dk-go,.dk-tg{height:44px;border-radius:22px;border:0;background:var(--mag);color:#fff;font:700 14px var(--sans);cursor:pointer}
 .dk-tg{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);font-weight:600} .dk-tg.on{background:#f2f5f7;color:#0d1b24} .dk-tg:disabled{opacity:.5}
@@ -226,6 +226,7 @@ body.in-pub #dock,body.in-pub #dockFan,body.in-pub #dockInfo,body.in-pub .ov,bod
 #jigUI{position:absolute;z-index:6;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 132px);display:flex;flex-direction:column;align-items:center;gap:10px;width:min(92vw,380px);pointer-events:none}
 #jigUI[hidden]{display:none} #jigUI .jig-msg{background:rgba(6,16,24,.72);color:#fff;border-radius:12px;padding:7px 12px;font:600 14px var(--sans);text-align:center}
 #jigUI[data-st=bite] .jig-msg{background:#d6336c;animation:jigp .25s ease-in-out infinite alternate} @keyframes jigp{from{transform:scale(1)}to{transform:scale(1.06)}}
+#jigUI.dupp .jig-msg{animation:jigd .5s ease-out} @keyframes jigd{0%{transform:translateY(0)}25%{transform:translateY(5px)}55%{transform:translateY(-2px)}100%{transform:none}}   /* the nudge before a bite (spilltest 3, U12) */
 #jigUI .jig-bar{position:relative;width:100%;height:26px;border-radius:13px;background:rgba(6,16,24,.6);border:2px solid rgba(255,255,255,.7);overflow:hidden}
 #jigUI .jig-bar i{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%)} #jigUI .jig-bar .z1{width:42.9%;background:rgba(242,183,5,.45)} #jigUI .jig-bar .z15{width:21.4%;background:rgba(53,179,126,.6)} #jigUI .jig-bar .z2{width:8.6%;background:#35b37e;box-shadow:0 0 8px #7ff0b9}
 #jigUI .jig-bar .jn{position:absolute;top:-2px;bottom:-2px;width:4px;margin-left:-2px;background:#fff;border-radius:2px;box-shadow:0 0 6px #fff}
@@ -633,7 +634,7 @@ body.setmode #rAuto{display:none!important}
 }
 #setBar[hidden]{display:none}
 #setBar .sb-d{font-weight:500;font-size:12.5px;opacity:.85;margin-top:2px}
-#setBar .sb-w{font-weight:500;font-size:12.5px;margin-top:6px;color:#cfe3ee} #setBar .sb-w.bad{color:#ff8a80}
+#setBar .sb-w{font-weight:500;font-size:12.5px;margin-top:6px;color:#cfe3ee} #setBar .sb-w.bad{color:#ff8a80} #setBar .sb-w.warn{color:#ffcf7a}   /* a warning, not a stop (U11) */
 #setBar .sb-b{display:flex;gap:8px;align-items:center;margin-top:8px}
 #setBar .sb-n{display:flex;align-items:center;gap:8px;margin-right:auto} #setBar .sb-n[hidden]{display:none} #setBar .sb-n b{min-width:22px;text-align:center}
 #setBar button{height:44px;min-width:44px;padding:0 14px;border-radius:22px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font:700 14px var(--sans);cursor:pointer}
@@ -1500,6 +1501,7 @@ body.pm #ecdisTop{visibility:hidden}
 #hud .g-sea.r0 i::after{background:#5cbf8a} #hud .g.full i::after{background:#5cbf8a} #hud .g.full b{color:#9fe6bd}
 #hud .hnow{margin-top:6px;padding-top:5px;border-top:1px solid rgba(238,244,247,.12)}
 #hud .hnow .row b{text-align:right}
+#hud .hnow .row .hgo{pointer-events:auto;margin-left:8px;min-height:32px;padding:4px 10px;border-radius:var(--r-pill,16px);border:0;background:var(--mag);color:#fff;font:700 12px var(--sans);cursor:pointer;white-space:nowrap}   /* «Kjør dit» to the gear a mile off (spilltest 3, U2) */
 #hud .hfull{margin-top:5px;padding-top:5px;border-top:1px dashed rgba(238,244,247,.18)}
 #hud .gauges.open{border-top-color:rgba(232,201,106,.45)}
 /* the dock (ui/10c-dock.js, V6 A): the hero is the one thing to do now, bigger and lit; a button that cannot be used has a dashed ring
@@ -1515,6 +1517,7 @@ body.pm #ecdisTop{visibility:hidden}
 #catchFeed .cf-c{display:grid;grid-template-columns:10px auto;column-gap:9px;align-items:center;padding:8px 12px 8px 10px;border-radius:12px;background:var(--s-glass);border:1px solid rgba(238,244,247,.12);color:var(--t-on-dark);box-shadow:0 4px 14px rgba(0,0,0,.25);animation:cfIn .28s ease-out}
 #catchFeed .cf-c i{grid-row:span 2;width:10px;height:10px;border-radius:50%}
 #catchFeed .cf-c b{font:700 var(--fs-sm)/1.2 var(--sans)} #catchFeed .cf-c span{font:500 12px/1.25 var(--sans);color:var(--t-on-dark-2);font-variant-numeric:tabular-nums}
+#catchFeed .cf-c .cf-rec{grid-column:2;font:700 12px/1.25 var(--sans);font-style:normal;color:#ffd27a}   /* a new record on the card (spilltest 3, U4) */
 @keyframes cfIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}   /* (12 px: inside the list's 14 px from the edge; 16 px gave the page a sideways overflow while a tile came in, GUI review F3) */
 @media (prefers-reduced-motion:reduce){#catchFeed .cf-c{animation:none}}
 body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}

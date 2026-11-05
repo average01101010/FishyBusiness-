@@ -134,7 +134,19 @@ if (PWA){
     const cfg = readFileSync(join(SRC, 'data', 'cloud.json'), 'utf8').trim();
     // the ports' names and parts of the coast for the media card (src/data/port-regions.json, written by tests/unit/regions.test.mjs)
     const reg = existsSync(join(SRC, 'data', 'port-regions.json')) ? readFileSync(join(SRC, 'data', 'port-regions.json'), 'utf8').trim() : 'null';
-    writeFileSync(join(DIST, 'admin', 'index.html'), readFileSync(join(A, 'index.html'), 'utf8').replace('/*@cloud*/null', cfg).replace('/*@regions*/null', reg)); } }
+    let page = readFileSync(join(A, 'index.html'), 'utf8').replace('/*@cloud*/null', cfg).replace('/*@regions*/null', reg);
+    // a strict CSP for the admin page (Ø6 funn 15, 05.11.2026): only its own script, by its hash, runs; it talks only to Supabase.
+    // Text from the players that slipped past esc() could then not run with the admin's session (funn 1). Images and the TOTP code
+    // are data: URLs, the feedback videos are signed URLs from Supabase's storage. frame-ancestors cannot be set in a meta tag; the
+    // Caddyfile sends it (tools/server/Caddyfile).
+    const js = page.match(/<script>([\s\S]*?)<\/script>/), sb = (() => { try { return new URL(JSON.parse(cfg).supabaseUrl).origin; } catch (e){ return ''; } })();
+    if (js && (page.match(/<script/g) || []).length === 1){
+      const h = createHash('sha256').update(js[1], 'utf8').digest('base64');
+      const csp = "default-src 'none'; script-src 'sha256-" + h + "'; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src blob:" + (sb ? ' ' + sb : '') +
+        "; connect-src" + (sb ? ' ' + sb : " 'none'") + "; base-uri 'none'; form-action 'none'";
+      page = page.replace('<meta name="robots" content="noindex, nofollow">', '<meta name="robots" content="noindex, nofollow">\n<meta http-equiv="Content-Security-Policy" content="' + csp + '">');
+    } else console.warn('admin: not one inline script, so no CSP');
+    writeFileSync(join(DIST, 'admin', 'index.html'), page); } }
 // the privacy and terms pages (docs/lansering.md D) next to the game, as the sign-in and the consent link them (personvern.html,
 // vilkar.html), each with the shared style put in
 // and the logo (src/brand/logo.svg, in the ink's colour) in the header

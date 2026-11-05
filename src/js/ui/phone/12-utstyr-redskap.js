@@ -1,7 +1,7 @@
   // the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the shop's (electronics, haulers, the jigging machine and the clothes)
   function utstyr(mode){
     mode = mode || 'verft'; const yardEq = EQ_YARD;
-    const h = ['<div class="ph-c"><p class="ph-note">' + L('Montering skjer i havn og tar en halvtime.', 'Fitting is done in port and takes half an hour.') + ' <button type="button" class="ic-more" data-pa="open" data-a="handbok" data-hbid="lex_montering">' + L('Mer om montering ›', 'More on fitting ›') + '</button></p>'];
+    const h = ['<div class="ph-c"><p class="ph-note">' + L('Montering skjer i havn og tar ', 'Fitting is done in port and takes ') + durBoth(YARD_H * 60) + '.' + ' <button type="button" class="ic-more" data-pa="open" data-a="handbok" data-hbid="lex_montering">' + L('Mer om montering ›', 'More on fitting ›') + '</button></p>'];
     if (!atKind(mode)) h.push(nearHint(mode));
     // the hold in three steps (core/03-simulation.js HOLDUP); an open boat's hold is her fish tubs, one more a step (core/07f-kar.js)
     if (mode === 'verft' && VESSELS[S.boat.type].cls !== 'hav'){ const b = S.boat, V = VESSELS[b.type], lv = b.holdLv || 0, steps = karSteps(b.type), nx = lv < steps ? HOLDUP[lv] : null, base = V.holdCap, queued = (S.jobs || []).some(j => j.kind === 'hold');
@@ -9,19 +9,19 @@
       h.push('<div class="ph-card"><h4>' + (kar ? L('Fiskekar', 'Fish tubs') + (steps ? ' (' + lv + '/' + steps + ')' : '') : L('Større lasterom', 'A bigger hold') + ' (' + lv + '/' + steps + ')') + '</h4><p>' +
         (kar ? L('Båten har ikke lasterom. Fisken ligger i hvite kar på 500 kg på dekk, og karene løftes i land ved levering. ' + (steps ? 'Verftet gjør plass til ett kar til per trinn. ' : '') + 'Mer last gjør båten tyngre.', 'The boat has no hold. The fish lies in white 500 kg tubs on deck, and the tubs are lifted ashore at the plant. ' + (steps ? 'The yard makes room for one more tub a step. ' : '') + 'More load makes her heavier.')
           : L('Lengre lasterom og flere kasser. Tre trinn: +20 %, +40 % og +70 %. Mer last gjør båten tyngre.', 'A longer hold and more boxes. Three steps: +20%, +40% and +70%. More load makes her heavier.')) + '</p>' +
-        kv(L('Nå', 'Now'), (kar ? BOAT.karN + ' ' + L('kar', BOAT.karN === 1 ? 'tub' : 'tubs') + ' · ' : '') + fmt(BOAT.holdCap, 0) + ' kg') + (nx ? kv(L('Neste trinn', 'Next step'), (kar ? karN(b.type, lv + 1) + ' ' + L('kar', 'tubs') + ' · ' : '') + fmt(next, 0) + ' kg · ' + kr(upPrice(nx.pc, nx.min)) + ' · ' + realDur(YARD_H * 60) + L(' på verftet', ' at the yard')) : '') +
+        kv(L('Nå', 'Now'), (kar ? BOAT.karN + ' ' + L('kar', BOAT.karN === 1 ? 'tub' : 'tubs') + ' · ' : '') + fmt(BOAT.holdCap, 0) + ' kg') + (nx ? kv(L('Neste trinn', 'Next step'), (kar ? karN(b.type, lv + 1) + ' ' + L('kar', 'tubs') + ' · ' : '') + fmt(next, 0) + ' kg · ' + kr(upPrice(nx.pc, nx.min)) + ' · ' + L('på verftet ', 'at the yard ') + durBoth(YARD_H * 60)) : '') +
         (!nx ? '<p><b>' + (kar ? L('Det er ikke plass til flere kar på dekket', 'There is no room for more tubs on deck') : L('Fullt ombygd', 'Fully rebuilt')) + '</b></p>' : queued ? '<p><b>' + L('På verftet', 'At the yard') + '</b></p>' : '<button class="ph-btn p" data-pa="holdup"' + (!atKind('verft') || spendable() < upPrice(nx.pc, nx.min) ? ' disabled' : '') + '>' + (kar ? L('Gjør plass · ', 'Make room · ') : L('Bygg om · ', 'Rebuild · ')) + kr(upPrice(nx.pc, nx.min)) + '</button>') + '</div>'); }
     // a bigger engine in two steps (core ENGUP; not for an outboard, which has the 90 hp outboard among the equipment)
     if (mode === 'verft'){ const b = S.boat, V = VESSELS[b.type], lv = b.engLv || 0, nx = ENGUP[lv], queued = (S.jobs || []).some(j => j.kind === 'eng');
       if (!V.outboard){ const P1 = nx ? powerX(Object.assign({}, b, {engLv:lv + 1})) : 0, v1 = nx ? V.vmax * speedOfPower(P1, V.planing) : 0;
         h.push('<div class="ph-card"><h4>' + L('Større motor', 'A bigger engine') + ' (' + lv + '/2)</h4><p>' + L('Mer kraft: +10 % og så +20 % mot motoren båten kom med. Det gir en jevn, men moderat fartsgevinst (Trim gir mye mer for en stund). Motoren bruker mer diesel, og servicen blir dyrere (+20 % og +50 %).', 'More power: +10% and then +20% over the boat\'s own engine. A steady but modest gain in speed (Trim gives far more for a while). The engine burns more diesel and the service costs more (+20% and +50%).') + '</p>' +
-          kv(L('Nå', 'Now'), BOAT.hp + ' hk · ' + fmt(BOAT.vmax, 1) + ' kn') + (nx ? kv(L('Neste trinn', 'Next step'), Math.round(V.hp * (1 + nx.p)) + ' hk · ' + fmt(v1, 1) + ' kn · ' + kr(upPrice(nx.pc, nx.min)) + ' · ' + realDur(YARD_H * 60)) : '') +
+          kv(L('Nå', 'Now'), BOAT.hp + ' hk · ' + fmt(BOAT.vmax, 1) + ' kn') + (nx ? kv(L('Neste trinn', 'Next step'), Math.round(V.hp * (1 + nx.p)) + ' hk · ' + fmt(v1, 1) + ' kn · ' + kr(upPrice(nx.pc, nx.min)) + ' · ' + durBoth(YARD_H * 60)) : '') +
           (!nx ? '<p><b>' + L('Største motor er montert', 'The biggest engine is fitted') + '</b></p>' : queued ? '<p><b>' + L('På verftet', 'At the yard') + '</b></p>' : '<button class="ph-btn p" data-pa="engup"' + (!atKind('verft') || spendable() < upPrice(nx.pc, nx.min) ? ' disabled' : '') + '>' + L('Bytt motor · ', 'Change the engine · ') + kr(upPrice(nx.pc, nx.min)) + '</button>') + '</div>'); } }
     // the other rebuilds of the boat itself (core UPGS): cabins, galley, drying room, insulated hold, fuel tank, stabilisation. None for gear.
     if (mode === 'verft'){ const b = S.boat, V = VESSELS[b.type];
       for (const k in UPGS){ const U = UPGS[k]; if (!U.fit(V)) continue; const lv = upgLv(b, k), nx = upgNext(b, k), queued = (S.jobs || []).some(j => j.kind === 'upg' && j.u === k), cur = lv ? U.steps[lv - 1] : null;
         h.push('<div class="ph-card"><h4>' + U[S.lang] + ' (' + lv + '/' + U.steps.filter(st => !st.minLen || V.len >= st.minLen).length + ')</h4><p>' + U.d[S.lang === 'no' ? 0 : 1] + '</p>' +
-          (cur ? kv(L('Nå', 'Now'), cur[S.lang]) : '') + (nx ? kv(L('Neste trinn', 'Next step'), nx[S.lang] + ' · ' + kr(upPrice(nx.pc, nx.min)) + ' · ' + realDur(YARD_H * 60)) : '') +
+          (cur ? kv(L('Nå', 'Now'), cur[S.lang]) : '') + (nx ? kv(L('Neste trinn', 'Next step'), nx[S.lang] + ' · ' + kr(upPrice(nx.pc, nx.min)) + ' · ' + durBoth(YARD_H * 60)) : '') +
           (!nx ? '<p><b>' + L('Fullt ombygd', 'Fully rebuilt') + '</b></p>' : queued ? '<p><b>' + L('På verftet', 'At the yard') + '</b></p>' : '<button class="ph-btn p" data-pa="upg" data-u="' + k + '"' + (!atKind('verft') || spendable() < upPrice(nx.pc, nx.min) ? ' disabled' : '') + '>' + L('Bygg om · ', 'Rebuild · ') + kr(upPrice(nx.pc, nx.min)) + '</button>') + '</div>'); } }
     // in the shop: the top (the keeper, what is ordered here, what the boat needs), then what the boat lacks, what is aboard in one card,
     // and what does not suit her folded away (M2). The hauler and the deck first, the electronics after
@@ -34,12 +34,12 @@
       if (have >= max){ const br = SPUI.brandOf(k); aboard.push(E.name[S.lang] + (br && br.m ? ' (' + br.m + ')' : '') + (E.multi ? ' × ' + have : '')); continue; }
       const pend = shopPend && shopPend.k === 'equip:' + k && Date.now() - shopPend.t <= IC_CONFIRM_MS, dis = !(atKind(EQ_YARD(k) ? 'verft' : 'butikk') && spendable() >= E.price);
       const btn = pend ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(E.price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
-        : '<button class="ph-btn p" data-pa="equip" data-k="' + k + '"' + (dis ? ' disabled' : '') + '>' + L('Kjøp og monter', 'Buy and fit') + ' · ' + realDur(fitHours(k) * 60) + '</button>';
+        : '<button class="ph-btn p" data-pa="equip" data-k="' + k + '"' + (dis ? ' disabled' : '') + '>' + L('Kjøp og monter', 'Buy and fit') + ' · ' + durBoth(fitHours(k) * 60) + '</button>';
       h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? (have || 0) + ' / ' + max : '', price:E.price, have:fitting && !E.multi ? L('Til montering', 'Being fitted') : '', note:typeof G3 !== 'undefined' && G3.trying === k ? L('Vises på «' + S.boatName + '» nå, før du har kjøpt. Dra for å se rundt.', 'Shown on the «' + S.boatName + '» now, before you buy. Drag to look round.') : '', btns:fitting && !E.multi ? '' : '<span class="ic-row">' + btn + tryBtn(k) + '</span>'}));
       // the same item from a partner with a written agreement (M6, ui/10r-sponsor.js): same price, same numbers, marked
       if (!(fitting && !E.multi) && typeof spOf === 'function' && spOf('item', k)){ const pend2 = shopPend && shopPend.k === 'equip:' + k + ':sp' && Date.now() - shopPend.t <= IC_CONFIRM_MS;
         h.push(SPUI.card(k, pend2 ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-sp="1" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(E.price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
-          : '<span class="ic-row"><button class="ph-btn p" data-pa="equip" data-sp="1" data-k="' + k + '"' + (dis ? ' disabled' : '') + '>' + L('Kjøp og monter', 'Buy and fit') + ' · ' + realDur(fitHours(k) * 60) + '</button>' + tryBtn(k) + '</span>')); }
+          : '<span class="ic-row"><button class="ph-btn p" data-pa="equip" data-sp="1" data-k="' + k + '"' + (dis ? ' disabled' : '') + '>' + L('Kjøp og monter', 'Buy and fit') + ' · ' + durBoth(fitHours(k) * 60) + '</button>' + tryBtn(k) + '</span>')); }
     }
     if (mode === 'butikk'){ const people = 1 + S.crew.length, c = S.clothes || {}, H = S.t / 60, cp = coldPen(H);
       h.push('<h4 style="margin:12px 2px 6px">' + L('Klær til mannskapet', 'Clothes for the crew') + '</h4><p class="ph-note">' + L('Nå: effektiv temperatur ' + Math.round(effTemp(H)) + ' °C, fisket går ' + Math.round(cp * 100) + ' % tregere. Alle om bord trenger sine egne.', 'Now: effective temperature ' + Math.round(effTemp(H)) + ' °C, fishing ' + Math.round(cp * 100) + '% slower. Everyone aboard needs their own.') + '</p>');
@@ -54,7 +54,7 @@
   const pctOf = v => Math.round(v * 100) + ' %';
   const cbar = v => '<div class="ph-bar"><i style="width:' + Math.round(clamp(v, 0, 1) * 100) + '%"></i></div>';
   const cbtn = (a, attrs, label, ok, cls) => '<button class="ph-btn' + (cls ? ' ' + cls : '') + '" data-pa="' + a + '" ' + attrs + (ok === false ? ' disabled' : '') + '>' + label + '</button>';
-  const qTxt = q => q ? ' · ' + (q.fee ? kr(q.fee) + ' · ' : '') + realDur(q.h * 60) : '';
+  const qTxt = q => q ? ' · ' + (q.fee ? kr(q.fee) + ' · ' : '') + durBoth(q.h * 60) : '';
   // ---- a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
   // egnet med», no hints): the tubs in a row by their state, the bait's colours with names and counts, and baiting and stripping with the bait
   // the player picks (egnUI: the chooser open now, {lk, m:'egn'|'strip', b:bait, n, t:the bait after a strip}). o: {work: the crew can work
@@ -92,7 +92,7 @@
       if (!BAITS[u.b]) u.b = 'makrell';
       const n = u.n = clamp(u.n || un, 1, un), bn = baitLc(u.b), kg = n * K.baitKg;
       h.push('<div class="egc-h">' + L('Egn med', 'Bait with') + '</div><div class="bpick">' + Object.keys(BAITS).map(k => baitPickBtn('egnb', k, u.b === k, fmt(B[k] || 0, 0) + ' kg' + (fit(k) ? ' · ' + fit(k) + ' ' + tubs(fit(k)) : ''), !fit(k) && !o.shed)).join('') + '</div>' + step(n, un, tubs(n)) + '<div class="ph-btncol">');
-      if (o.work) h.push(cbtn('gregn', 'data-lk="' + lk + '" data-n="' + n + '" data-b="' + u.b + '" data-m="self"', L('Egn ' + n + ' med ' + bn + ' selv', 'Bait ' + n + ' with ' + bn + ' yourselves') + ' · ' + fmt(kg, 0) + ' kg · ' + (hs.hands ? realDur(egnHours(lk, n, hs.eff) * 60) : '–'), (B[u.b] || 0) >= kg - 1e-9 && hs.hands > 0, o.shed ? '' : 'p'));
+      if (o.work) h.push(cbtn('gregn', 'data-lk="' + lk + '" data-n="' + n + '" data-b="' + u.b + '" data-m="self"', L('Egn ' + n + ' med ' + bn + ' selv', 'Bait ' + n + ' with ' + bn + ' yourselves') + ' · ' + fmt(kg, 0) + ' kg · ' + (hs.hands ? durBoth(egnHours(lk, n, hs.eff) * 60) : '–'), (B[u.b] || 0) >= kg - 1e-9 && hs.hands > 0, o.shed ? '' : 'p'));
       if (o.work && (B[u.b] || 0) < kg - 1e-9) h.push('<p class="ph-note">' + L('Om bord: ' + fmt(B[u.b] || 0, 0) + ' kg ' + bn + '.', 'Aboard: ' + fmt(B[u.b] || 0, 0) + ' kg of ' + bn + '.') + '</p>');
       if (o.shed){ const fee = egnFee(lk, n, u.b); h.push(cbtn('gregn', 'data-lk="' + lk + '" data-n="' + n + '" data-b="' + u.b + '" data-m="shed"', L('Egnebua egner ' + n + ' med ' + bn, 'The shed baits ' + n + ' with ' + bn) + ' · ' + kr(fee), fee <= spendable(), 'p')); }
     } else {
@@ -102,7 +102,7 @@
         '<div class="egc-h">' + L('Egn etterpå med', 'Then bait with') + '</div><div class="bpick">' + baitPickBtn('egnt', '', !u.t, L('la stå uegnet', 'leave unbaited'), false) +
         Object.keys(BAITS).filter(k => k !== u.b).map(k => baitPickBtn('egnt', k, u.t === k, fmt(B[k] || 0, 0) + ' kg', fit(k) < n)).join('') + '</div><div class="ph-btncol">');
       const hrs = hs.hands ? stripHours(lk, n, hs.eff) + (u.t ? egnHours(lk, n, hs.eff) : 0) : 0;
-      h.push(cbtn('grstrip', 'data-lk="' + lk + '" data-b="' + u.b + '" data-n="' + n + '" data-t="' + (u.t || '') + '"', L('Fjern agnet fra ' + n + ' ' + tubs(n), 'Take the bait off ' + n + ' ' + tubs(n)) + (u.t ? L(' og egn med ' + baitLc(u.t), ' and bait with ' + baitLc(u.t)) : '') + ' · ' + (hs.hands ? realDur(hrs * 60) : '–'), hs.hands > 0, 'p'));
+      h.push(cbtn('grstrip', 'data-lk="' + lk + '" data-b="' + u.b + '" data-n="' + n + '" data-t="' + (u.t || '') + '"', L('Fjern agnet fra ' + n + ' ' + tubs(n), 'Take the bait off ' + n + ' ' + tubs(n)) + (u.t ? L(' og egn med ' + baitLc(u.t), ' and bait with ' + baitLc(u.t)) : '') + ' · ' + (hs.hands ? durBoth(hrs * 60) : '–'), hs.hands > 0, 'p'));
       h.push('<p class="ph-note">' + L('Det gamle agnet kastes.', 'The old bait is thrown away.') + '</p>');
     }
     h.push(cbtn('egnx', '', L('Avbryt', 'Cancel'), true, 'alt') + '</div></div>');
@@ -158,7 +158,7 @@
         const bw = s.kind === 'line' ? s.baitW || {makrell:s.n} : s.kind === 'teine' ? {[s.bait || 'makrell']:s.n} : null;
         h.push('<div class="ph-card' + (st === 'lost' || st === 'late' ? ' conflict' : '') + '"><h4>' + (s.kind === 'line' && LINE_KINDS[s.lk] ? LINE_KINDS[s.lk][S.lang] : GEAR[s.kind][S.lang]) + ', ' + s.n + ' ' + unitName(s.kind, s.n, s.lk) + '</h4>' +
           (bw ? kv(L('Agn', 'Bait'), Object.keys(bw).filter(k => bw[k] > 0).sort((a, c) => bw[c] - bw[a]).map(k => baitDot(k) + (s.kind === 'line' && Object.keys(bw).length > 1 ? bw[k] + ' ' : '') + baitLc(k)).join(' · ')) : '') +
-          kv(L('Satt', 'Set'), dayStr(s.tSet / 60) + ' ' + hm(s.tSet / 60)) + kv(L('Ståtid', 'Soak'), fmt((S.t - s.tSet) / 60, 0) + ' t (' + realDur(S.t - s.tSet) + L(' ekte tid', ' real time') + ') · ' + L(SETST[st][0], SETST[st][1])) + kv(L('Posisjon', 'Position'), coordStr(setMid(s)) + ', ' + s.depth + ' m') +
+          kv(L('Satt', 'Set'), dayStr(s.tSet / 60) + ' ' + hm(s.tSet / 60)) + kv(L('Ståtid', 'Soak'), fmt((S.t - s.tSet) / 60, 0) + ' t (' + realDur(S.t - s.tSet) + L(' i ekte tid', ' real time') + ') · ' + L(SETST[st][0], SETST[st][1])) + kv(L('Posisjon', 'Position'), coordStr(setMid(s)) + ', ' + s.depth + ' m') +
           (s.kind === 'garn' ? kv(L('Maskevidde og stand', 'Mesh and condition'), netNo(s) + ' · ' + Math.round((s.cond || 1) * 100) + ' %') : '') + (s.heavy ? kv(L('Dregg', 'Anchor'), L('tung', 'heavy')) : '') +
           (!s.lost && ['idle', 'port', 'sailing'].includes(b.status) ? '<button class="ph-btn p" data-pa="goset" data-id="' + s.id + '">' + L('Kjør dit', 'Go there') + ' · ' + fmt(Math.min(dist(b.pos, s.a), dist(b.pos, s.b)) / NM, 1) + ' nm</button>' : '') +
           (s.lost ? '<p class="ph-note">' + L('Blåsene er borte. Tapt redskap skal meldes til Kystvakten med type, mengde og siste posisjon.', 'The buoys are gone. Lost gear must be reported to the Coast Guard with type, amount and last position.') + '</p><button class="ph-btn p" data-pa="grrep" data-id="' + s.id + '">' + L('Meld tapt redskap', 'Report lost gear') + '</button>' : '') + '</div>'); }
@@ -167,7 +167,7 @@
       // (H2a) the cards for gear the vessel cannot be rigged for (nets and pots on the autoliner) are left out unless some is aboard
       const rg = (VESSELS[b.type] || {}).rigs || [], showG = rg.includes('garn') || pg.nets.length > 0;
       if (showG) h.push('<div class="ph-card"><h4>' + L('Garn', 'Nets') + '</h4>' + (pg.nets.length ? '' : '<p class="ph-note">' + L('Ingen garn om bord.', 'No nets aboard.') + '</p>'));
-      for (const l of pg.nets){ h.push('<div class="ph-kv"><span>' + l.n + ' garn ' + netNo(l) + '</span><span>' + Math.round(l.cond * 100) + ' % · ' + L('tak ', 'ceiling ') + Math.round(nMax(l) * 100) + ' %</span></div><div class="ph-bar"><i style="width:' + Math.round(l.cond * 100) + '%"></i></div>');
+      for (const l of pg.nets){ h.push('<div class="ph-kv"><span>' + L(...netN(l, l.n)) + '</span><span>' + Math.round(l.cond * 100) + ' % · ' + L('tak ', 'ceiling ') + Math.round(nMax(l) * 100) + ' %</span></div><div class="ph-bar"><i style="width:' + Math.round(l.cond * 100) + '%"></i></div>');
         if ((inPortNow || seaWork()) && l.cond < nMax(l) - 0.05) h.push('<div class="ph-btncol"><button class="ph-btn" data-pa="grmend" data-id="' + l.id + '" data-m="self">' + L('Bøt selv', 'Mend yourselves') + '</button>' + (botPort(p) ? '<button class="ph-btn" data-pa="grmend" data-id="' + l.id + '" data-m="bot">' + L('Lever til bøteriet', 'Leave at the net loft') + ' (' + kr(Math.round(GPRICE.bot * l.n * (nMax(l) - l.cond) / 0.1)) + ')</button>' : '') + '</div>');
         if (l.n >= 2) h.push('<button class="ph-btn alt" data-pa="grsplit" data-id="' + l.id + '">' + L('Del lenka i to', 'Split the string') + '</button>'); }
       if (pg.nets.length >= 2){ const m = {}; for (const l of pg.nets) (m[netKey(l.ty, l.mesh)] = m[netKey(l.ty, l.mesh)] || []).push(l); for (const k in m) if (m[k].length >= 2) h.push('<button class="ph-btn alt" data-pa="grjoin" data-a="' + m[k][0].id + '" data-b="' + m[k][1].id + '">' + L('Slå sammen lenker på ' + k.replace(':', ' ') + ' mm', 'Join strings of ' + k.replace(':', ' ') + ' mm') + '</button>'); }
@@ -180,14 +180,15 @@
         const n = Math.max(1, Math.min(n0, cap(w))), price = n * unit, ok = cap(w) >= 1 && price <= spendable() && inPortNow;
         return '<button class="ph-btn' + (ok ? ' p' : '') + '"' + (ok ? '' : ' disabled') + ' data-pa="grbuy" data-w="' + w + '" data-s="' + s + '" data-n="' + n + '">' + lbl(n) + ' · ' + kr(price) + '</button>'; };
       if (!inPortNow) h.push('<div class="ph-card"><p class="ph-note">' + L('Redskap kjøpes i havn.', 'Gear is bought in port.') + '</p></div>');
-      const roomTxt = (n, no, en) => '<p class="ic-have">' + L('Plass til ' + n + ' ' + no + ' til', 'Room for ' + n + ' more ' + en) + '</p>';
+      // no room line where no hauler fits the boat: the gate says why instead (spilltest 3, F3)
+      const roomTxt = (n, no, en) => haulerNoFit({garn:'garn', stamper:'line', teiner:'teine'}[no]) ? '' : '<p class="ic-have">' + L('Plass til ' + n + ' ' + no + ' til', 'Room for ' + n + ' more ' + en) + '</p>';
       const own = (w, n, no, en) => n ? L(n + ' ' + no + ' om bord', n + ' ' + en + ' aboard') : '';
       h.push(itemCard({k:'net', name:L('Garn', 'Nets'), price:L('fra ', 'from ') + kr(NETTY.bunn.price) + L(' per garn', ' a net'), have:own('net', pg.nets.reduce((a, l) => a + l.n, 0), 'garn', 'nets'), body:roomTxt(room('garn'), 'garn', 'nets'),
-        btns:NETOPT.map(o => buy('net', netKey(o[0], o[1]), 10, n => (o[0] === 'bunn' ? L('Torsk', 'Cod') : o[0] === 'flyt' ? L('Flyt', 'Float') : L('Blåkveite', 'G. halibut')) + ' ' + o[1] + ' mm × ' + n, NETTY[o[0]].price)).join('')}));
+        btns:NETOPT.map(o => buy('net', netKey(o[0], o[1]), 10, n => L(NETTY[o[0]].no, NETTY[o[0]].en) + ' ' + o[1] + ' mm × ' + n, NETTY[o[0]].price)).join('')}));
       h.push(itemCard({k:'line', name:L('Line', 'Line'), price:kr(LINE_KINDS.bank.price) + '–' + kr(LINE_KINDS.hyse.price) + L(' per stamp', ' a tub'), have:own('line', pg.lines.hyse.n + pg.lines.bank.n, 'stamper', 'tubs'), body:roomTxt(room('line'), 'stamper', 'tubs'),
         btns:['hyse', 'bank'].map(lk => buy('stamp', lk, 4, n => n + (n === 1 ? L(' stamp ', ' tub of ') : L(' stamper ', ' tubs of ')) + LINE_KINDS[lk][S.lang].toLowerCase(), LINE_KINDS[lk].price)).join('')}));
-      h.push(itemCard({k:'pot', name:L('Krabbeteiner', 'Crab pots'), price:POTS.big.price, have:own('pot', pg.pots.big, 'teiner', 'pots'), body:roomTxt(room('teine'), 'teiner', 'pots'),
-        btns:buy('pot', 'big', 20, n => n + ' ' + POTS.big[S.lang].toLowerCase(), POTS.big.price)}));
+      h.push(itemCard({k:'pot', name:L('Krabbeteiner', 'Crab pots'), price:POTS.big.price, have:own('pot', pg.pots.big, 'teiner', 'pots'), body:'<p class="ic-have">' + KC_WHERE() + '</p>' + roomTxt(room('teine'), 'teiner', 'pots'),
+        btns:buy('pot', 'big', 20, potsN, POTS.big.price)}));
       // bait is sold at the fish plant, not here (docs/handelssteder.md; buyGear refuses it at the shop)
       h.push(itemCard({k:'kit', name:L('Blåser og dregg', 'Buoys and anchors'), price:GPRICE.kit, anchor:L('tung dregg ', 'heavy anchor ') + kr(GPRICE.heavy), have:own('kit', pg.kits.n, 'sett', 'sets'),
         btns:buy('kit', 0, 1, () => L('Blåsesett', 'Buoy set'), GPRICE.kit) + (pg.kits.heavy < pg.kits.n ? buy('heavy', 0, 1, () => L('Tung dregg', 'Heavy anchor'), GPRICE.heavy) : ''), note:L('Agn selges på fiskemottaket.', 'Bait is sold at the fish plant.')}));

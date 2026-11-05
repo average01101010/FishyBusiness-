@@ -63,7 +63,11 @@ const SHARE = (() => {
   }
   function share(m, sc, b){
     if (!cloudOn()) return; b.disabled = true;
-    cloudRpc('mark_share', {scope:sc, x:+m.x.toFixed(4), y:+m.y.toFixed(4), kgph:Math.round(m.kgph || 0), g:m.g || '', kgu:m.kgu != null ? m.kgu : null, soak:m.soak != null ? Math.round(m.soak) : null, q:m.q != null ? m.q : null})
+    // the catch as it would have been without luck aboard (lf, core/05-vessels.js and 10-gear.js): that someone used haill is never
+    // shown to the others (CLAUDE.md), and a friend gets what the place gives (Ø6 funn 11, 05.11.2026); a mark from before has no lf
+    const lf = m.lf > 1 ? m.lf : 1;
+    cloudRpc('mark_share', {scope:sc, x:+m.x.toFixed(4), y:+m.y.toFixed(4), kgph:Math.round((m.kgph || 0) / lf), g:m.g || '', kgu:m.kgu != null ? Math.round(m.kgu / lf * 10) / 10 : null,
+      soak:m.soak != null ? Math.round(m.soak) : null, q:m.q != null ? Math.round(m.q / lf * 100) / 100 : null})
       .then(r => { if (r === 'ok'){ m.sh = (m.sh || '') + sc; save(); b.textContent = L('Delt', 'Shared');
           toast(sc === 'f' ? L('Delt med vennene dine.', 'Shared with your friends.') : L('Delt med fiskarlaget.', 'Shared with the fishing club.')); return; }
         b.disabled = false;

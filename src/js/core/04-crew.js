@@ -280,6 +280,13 @@ function lotWeek(c, H = S.t / 60){ const Q = lottParty(), tot = Math.max(Q.tot, 
 // (a hand in the old form, as the quay's candidates are hired, is made whole in place once: made again at every call he came out
 // different each time, aboard in one call and ashore in the next, until the hour's crewTick kept one)
 function crewAboard(H, all){ if (H == null) H = S.t / 60; const wd = (gDate(H).getUTCDay() + 6) % 7, C = S.crew || []; for (let i = 0; i < C.length; i++) if (!C[i].attr) C[i] = crewUpgrade(C[i]); return C.filter(c => !c.off && (all || !c.sleepW) && (!c.bi || c.biDays[wd])); }
+// a part-timer's days as words («fredag–søndag»), from biDays (Monday first)
+const WDN = [['mandag', 'Monday'], ['tirsdag', 'Tuesday'], ['onsdag', 'Wednesday'], ['torsdag', 'Thursday'], ['fredag', 'Friday'], ['lørdag', 'Saturday'], ['søndag', 'Sunday']];
+function biDaysTxt(c){ const d = (c.biDays || []).map((v, i) => v ? i : -1).filter(i => i >= 0), en = S.lang === 'en' ? 1 : 0; if (!d.length) return '';
+  const run = d.every((v, i) => !i || v === d[i - 1] + 1); return run && d.length > 2 ? WDN[d[0]][en] + '–' + WDN[d[d.length - 1]][en] : d.map(i => WDN[i][en]).join(en ? ' and ' : ' og '); }
+// who of the crew is ashore today because the job at sea is their second one (spilltest 3, F7): a sentence, or ''
+function crewBiOff(H){ if (H == null) H = S.t / 60; const wd = (gDate(H).getUTCDay() + 6) % 7, off = (S.crew || []).filter(c => !c.off && c.bi && c.biDays && !c.biDays[wd]); if (!off.length) return '';
+  return off.map(c => S.lang === 'en' ? ' ' + c.name + ' only comes along ' + biDaysTxt(c) + ' (a second job) and is ashore today.' : ' ' + c.name + ' er bare med ' + biDaysTxt(c) + ' (biyrke) og er på land i dag.').join(''); }
 function crewEff(c, H, hs, g = 'juksa'){
   const A = c.attr, T = c.traits; let e = 0.55 + 0.08 * A.erf + 0.07 * (c.gear[g] || c.gear.juksa || 1) + 0.04 * A.styrke;
   if (T.includes('arbeidsjern')) e *= 1.12; if (T.includes('makelig')) e *= 0.9; if (T.includes('perfeksjonist')) e *= 0.95;

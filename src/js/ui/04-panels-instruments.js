@@ -24,6 +24,8 @@ function statusText(){
   if (b.anch && b.anch.up != null) return GL('Hiver anker', 'Weighing anchor');   // (a route waits for it: 06e-anchor.js)
   if (b.status === 'sailing') return t(S.plan && S.plan.returning ? 'st_returning' : 'st_sailing', fmt(b.v, 0));
   if (b.gop){ const g = gopText(); return GL(g[2], g[3]); }
+  if (b.status === 'fishing' && b.deckEnd) return GL('Tar unna fangsten', 'Seeing to the catch');   // after the gear work, not «Fisker» (F4)
+  if (gopAfter(b)) return t('st_idle');
   if (b.anch && b.status === 'idle') return GL(b.anch.out != null && b.anch.out < b.anch.rode ? 'Kaster anker' : 'Ligger til ankers', b.anch.out != null && b.anch.out < b.anch.rode ? 'Anchoring' : 'At anchor');
   if (b.hove && b.status === 'idle') return GL('Ligger bi i uværet', 'Lying to in the storm');   // (core/05-vessels.js lieTo)
   if (b.status === 'tow' && b.tow) return t('st_tow_' + b.tow.ph, fmt(b.v, 0));
@@ -37,7 +39,7 @@ function nextEvent(){
   if (b.land) add(b.land.until, L('Sluttseddelen', 'The landing note'));
   if (b.fueling) add(b.fueling.until, L('Bunkringen er ferdig', 'Fuelling done'));
   if (b.shift) add(b.shift.until, L('Forhalingen er ferdig', 'Shifting done'));
-  if (b.status === 'fishing' && b.fishUntil != null) add(b.fishUntil, L('Fisket er ferdig', 'Fishing done'));
+  if (b.status === 'fishing' && b.fishUntil != null && !b.deckEnd && !gopAfter(b)) add(b.fishUntil, L('Fisket er ferdig', 'Fishing done'));
   if (b.status === 'port' && jobsDone()) add(jobsDone(), jobsCrewOnly() ? L('Mannskapet er ferdig', 'The crew is done') : L('Verkstedet er ferdig', 'The yard is done'));
   if (b.status === 'sailing' && S.plan && S.plan.idx < S.plan.wps.length){
     const wps = S.plan.wps; let a = b.pos, km = 0, stop = null;
@@ -72,13 +74,20 @@ function renderHud(){
   const gauge = (k, lbl, v, txt, cls) => '<span class="g g-' + k + (cls ? ' ' + cls : '') + '"><span class="gl">' + lbl + '</span><i style="--v:' + Math.round(clamp(v, 0, 1) * 100) + '%"></i><b>' + txt + '</b></span>';
   const gauges = '<button type="button" class="gauges' + (S.settings.hudFull ? ' open' : '') + '" data-hfull aria-label="' + L('Vis alle tallene', 'Show all the figures') + '">' +
     gauge('fuel', 'Diesel', fuelP, fmt(b.fuel, 0) + ' L', fuelP < 0.1 ? 'r2' : fuelP < 0.25 ? 'r1' : '') +
-    gauge('hold', L('Last', 'Hold'), holdP, HF.short, holdP >= 0.95 ? 'full' : '') +
+    gauge('hold', L('Last', 'Hold'), holdP, holdP >= 0.995 ? L('Full', 'Full') + ' · ' + HF.short : HF.short, holdP >= 0.995 ? 'r2' : holdP >= 0.9 ? 'r1' : '') +   // full is red with «Full», nearly full yellow (spilltest 3, U5); a freezer vessel's in tonnes of product (H2b)
     gauge('en', L('Energi', 'Energy'), energyOff() ? 1 : e / 100, energyOff() ? L('av', 'off') : asleep() ? L('sover', 'asleep') : Math.round(e) + ' %', asleep() || (!energyOff() && e < ENERGY.dim) ? 'r2' : !energyOff() && e < ENERGY.warn ? 'r1' : '') +
     gauge('sea', L('Sjø', 'Sea'), atSea ? (lvl + 1) / 3 : 0.15, fmt(hs, 1) + ' m', atSea ? 'r' + lvl : '') + '</button>';
   // what matters now, as rows with what to do
   const now = [];
   if (S.fleet && S.fleet.length > 1) now.push('<div class="row"><span>' + L('Båt', 'Vessel') + '</span><b>' + S.boatName + (meAboard() ? ' ⚓' : '') + '</b></div>');
-  if (atSea){ const z = motionHere(H, b).state; if (z.lvl) now.push('<div class="row warn"><span>' + L('Stabilitet', 'Stability') + '</span><b class="r' + z.lvl + '">' + {gm:L('rank', 'tender'), res:L('synkronrulling · endre kurs eller fart', 'synchronous roll · change course or speed'), roll:L('kraftig rulling · ta det rolig', 'heavy rolling · ease off')}[z.why] + '</b></div>'); }
+  // her own gear in the sea (spilltest 3, U2; Jonas 05.11.2026, V2 B): how far to the nearest buoy and how she moves; red with «Kjør dit»
+  // a mile off
+  if (atSea && b.status !== 'sailing' && typeof gearBuoyNear === 'function'){ const nb = gearBuoyNear(b.pos);
+    if (nb){ const dv = b.drv, kn = dv ? Math.hypot(dv.x, dv.y) * 60 / NM : 0, far = nb.d > GEARLIE.alarm;
+      const mv = dv && dv.up ? L('kjører opp', 'running up') : kn >= 0.1 ? L('driver ', 'drifting ') + fmt(kn, 1) + ' kn ' + dirName(trueDeg(Math.atan2(dv.x, -dv.y), b.pos)) : '';
+      now.push('<div class="row' + (far ? ' warn' : '') + '"><span>' + L('Blåsa', 'Buoy') + '</span><b class="' + (far ? 'r2' : '') + '">' + fmt(nb.d / NM, 1) + ' nm' + (mv ? ' · ' + mv : '') + '</b>' +
+        (far ? '<button type="button" class="hgo" data-hgo="' + nb.s.id + '">' + L('Kjør dit', 'Go there') + '</button>' : '') + '</div>'); } }
+  if (atSea){ const z = motionHere(H, b).state; if (z.lvl) now.push('<div class="row warn"><span>' + L('Stabilitet', 'Stability') + '</span><b class="r' + z.lvl + '">' + {gm:L('rank', 'tender'), res:stabStill(b) ? L('synkronrulling · rull ', 'synchronous roll · rolls ') + Math.round((motionHere(H, b).M.roll + motionHere(H, b).M.heel) * 180 / Math.PI) + '°' : L('synkronrulling · endre kurs eller fart', 'synchronous roll · change course or speed'), roll:L('kraftig rulling · ta det rolig', 'heavy rolling · ease off')}[z.why] + '</b></div>'); }
   // the rules where you are (03e-rules.js ruNow): a tap opens the Regler app
   if (atSea && RU.ok){ const r = ruNow(), it = r.items.find(i => i.v === r.v && i.v !== 'ok'); now.push('<div class="row rlink"><span>' + L('Regler', 'Rules') + '</span><b class="' + (r.v === 'no' ? 'r2' : r.v === 'warn' ? 'r1' : 'r0') + '">' + (r.v === 'no' ? '✕ ' : r.v === 'warn' ? '! ' : '✓ ') + (it ? ruShort(it) : L('Lov her', 'Allowed here')) + ' ›</b></div>'); }
   { const cp = coldPen(S.t / 60); if (cp > 0.03) now.push('<div class="row"><span>' + L('Kulde', 'Cold') + '</span><b class="cold">−' + Math.round(cp * 100) + ' % · ' + Math.round(effTemp(S.t / 60)) + ' °C</b></div>'); }
@@ -91,7 +100,7 @@ function renderHud(){
     '<div class="row"><span>' + t('hold') + '</span><b>' + HF.txt + (HF.fz ? ' ' + L('produkt', 'product') : '') + '</b></div>' + (HF.fz ? '<div class="row"><span>' + L('Rund vekt', 'Round weight') + '</span><b>' + HF.rnd + '</b></div>' : '') +
     (streakPct() > 0 ? '<div class="row"><span>Bonus</span><b>+' + fmt(streakPct(), 0) + ' %</b></div>' : '') +
     (S.bank && (S.bank.skatt >= 1 || S.bank.spare >= 1) ? '<div class="row"><span>' + L('Skatt · spart', 'Tax · saved') + '</span><b>' + kr(Math.round(S.bank.skatt)) + ' · ' + kr(Math.round(S.bank.spare)) + '</b></div>' : '') + '</div>';
-  setHtml(hud, '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(cashShown()) + '</b><button type="button" class="hmin" data-hmin="hud" aria-label="' + L('Minimer', 'Minimise') + '">–</button></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + (nx ? '<div class="st nx">⏱ ' + nx.txt + ' ' + inReal(nx.t - S.t) + ' <small>(' + hm(nx.t / 60) + ')</small></div>' : '') +
+  setHtml(hud, '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(cashShown()) + '</b><button type="button" class="hmin" data-hmin="hud" aria-label="' + L('Minimer', 'Minimise') + '">–</button></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + (nx ? '<div class="st nx">⏱ ' + nx.txt + L(' kl. ', ' at ') + hm(nx.t / 60) + ' <small>· ' + inReal(nx.t - S.t) + '</small></div>' : '') +
     gauges + (now.length ? '<div class="hnow">' + now.join('') + '</div>' : '') + full);
   }
   // the boxes under the status box in 3D take their place and width from it: measured when its content has changed and every 2 s (setting
@@ -190,7 +199,7 @@ const INSTR = (() => {
   return {show, renderGPS, echoOn};
 })();
 // a tap on the rules line in the status box opens the Regler app
-hud.addEventListener('click', e => { const m = e.target.closest('[data-hmin]'); if (m){ e.stopPropagation(); hudFold('hud'); return; } if (e.target.closest('[data-hfull]')){ e.stopPropagation(); S.settings.hudFull = !S.settings.hudFull; save(); renderHud(); return; } if (e.target.closest('.rlink')) PHONE.open('regler'); });
+hud.addEventListener('click', e => { const go = e.target.closest('[data-hgo]'); if (go){ e.stopPropagation(); const s = mySets().find(x => String(x.id) === go.dataset.hgo); if (s) DOCK.goTo(s); return; } const m = e.target.closest('[data-hmin]'); if (m){ e.stopPropagation(); hudFold('hud'); return; } if (e.target.closest('[data-hfull]')){ e.stopPropagation(); S.settings.hudFull = !S.settings.hudFull; save(); renderHud(); return; } if (e.target.closest('.rlink')) PHONE.open('regler'); });
 // the status box and the little chart each fold to a strip (S.settings.hudMin, plotMin), and «Vis HUD» in the settings takes them all
 // away (hudOff): the status box, the little chart, its GPS strip and the compass
 function hudClasses(){

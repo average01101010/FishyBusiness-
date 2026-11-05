@@ -388,7 +388,7 @@ function plan2Check(o, st){
   const ER = (m, go) => { E.push(m); G.push(go || null); };
   if (!hp) ER(no('Velg hvor båten skal ligge hjemme.', 'Choose where the boat lies at home.'), 'home');
   if (!RIGS[o.rig]) ER(no('Velg hva båten skal fiske med.', 'Choose what the boat fishes with.'), 'rig');
-  else if (!rigHas(o.rig)) ER(no('Båten mangler haleren til ' + rigName(o.rig).toLowerCase() + '. Monter den under Oppgrader på verftet.', 'The boat has no hauler for ' + rigName(o.rig).toLowerCase() + '. Fit one under Upgrade at the yard.'), 'verft');
+  else if (!rigHas(o.rig)) ER(no('Båten mangler haleren til ' + rigName(o.rig).toLowerCase() + '. Den kjøpes og monteres i Butikk › Elektronikk og haler.', 'The boat has no hauler for ' + rigName(o.rig).toLowerCase() + '. Buy and fit one at Shop › Electronics and haulers.'), 'verft');
   const F = o.places.filter(q => q.k === 'felt'), J = o.places.filter(q => q.k === 'juks');
   if (kind && !F.length) ER(no('Legg ut minst ett felt for ' + rigName(o.rig).toLowerCase() + '.', 'Put out at least one field for the ' + rigName(o.rig).toLowerCase() + '.'), 'places');
   if (!kind && !J.length) ER(no('Velg minst én juksplass.', 'Choose at least one jig place.'), 'places');

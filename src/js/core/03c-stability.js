@@ -74,15 +74,20 @@ function motionHere(H, b = S.boat){
   MW_MEMO = {k, v}; return v;
 }
 function hsWork(p, H){ const hs = hsAt(p, H), b = S.boat; return b.status === 'port' || p !== b.pos ? hs : hs * motionHere(H, b).f; }
+// the boat lies still or works gear: no course or speed to change
+const stabStill = b => b.status !== 'sailing' || !!b.gop;
 // once a minute at sea: warn when she becomes rank with gear on deck, rolls in resonance with the sea, or rolls towards the deck edge
 function stabTick(H){
   const b = S.boat, Z = motionHere(H, b), s = Z.state, was = b.stab || 0;
   if (s.lvl > was && S.t >= (b.stabAt || 0)){
     const gm = fmt1(Z.St.GM), tr = fmt1(Z.St.Tr), deg = Math.round((Z.M.roll + Z.M.heel) * 180 / Math.PI);
+    const still = stabStill(b);
     const T = {gm:['Båten er ' + (s.lvl > 1 ? 'farlig ' : '') + 'rank: GM ' + gm + ' m (IMO krever minst 0,35 m for fiskefartøy). For mye på dekk. Sett ut eller lever redskap.', 'The boat is ' + (s.lvl > 1 ? 'dangerously ' : '') + 'tender: GM ' + gm + ' m (IMO asks at least 0.35 m for fishing vessels). Too much on deck. Set or land gear.'],
-      res:['Synkronrulling: sjøen treffer i båtens egen rulleperiode (' + tr + ' s), og hun ruller ' + deg + '°. Endre kurs eller fart.', 'Synchronous rolling: the sea meets her own roll period (' + tr + ' s), and she rolls ' + deg + '°. Change course or speed.'],
+      // lying still or working gear, course and speed are not hers to change (spilltest 3, U6): advice that can be followed
+      res:still ? ['Synkronrulling: sjøen treffer i båtens egen rulleperiode (' + tr + ' s), og hun ruller ' + deg + '°. Vent, eller legg baugen mot sjøen når arbeidet er ferdig.', 'Synchronous rolling: the sea meets her own roll period (' + tr + ' s), and she rolls ' + deg + '°. Wait, or put the bow into the sea once the work is done.']
+        : ['Synkronrulling: sjøen treffer i båtens egen rulleperiode (' + tr + ' s), og hun ruller ' + deg + '°. Endre kurs eller fart.', 'Synchronous rolling: the sea meets her own roll period (' + tr + ' s), and she rolls ' + deg + '°. Change course or speed.'],
       roll:['Kraftig rulling, ' + deg + '°: rekka går mot vannet. Legg baugen mer mot sjøen eller sakk farten.', 'Heavy rolling, ' + deg + '°: the rail goes towards the water. Put the bow more into the sea or slow down.']}[s.why];
-    log(T[0], T[1], 'nav'); b.stabAt = S.t + 30;
+    log(T[0], T[1], 'nav'); b.stabAt = S.t + (still && s.why === 'res' ? 360 : 30);   // lying still: once in six hours, not every hour of the soak
   }
   b.stab = s.lvl;
 }

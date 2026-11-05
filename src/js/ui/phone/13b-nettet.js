@@ -120,9 +120,9 @@
     if (st === 'gear'){
       h.push(itemCard({k:'jig', name:L('Håndjuksa', 'Hand jig'), price:PRICE.gear, have:b.gear ? L('Om bord', 'Aboard') : '', btns:b.gear ? '' : ord('shop', 'jig', null, 1, L('Bestill', 'Order'))}));
       h.push(itemCard({k:'kgear', name:L('Kveiteutstyr', 'Halibut gear'), price:PRICE.kgear, have:b.kgear ? L('Om bord', 'Aboard') : '', btns:b.kgear ? '' : ord('shop', 'kgear', null, 1, L('Bestill', 'Order'))}));
-      h.push(itemCard({k:'net', name:L('Garn', 'Nets'), price:L('fra ', 'from ') + kr(NETTY.bunn.price) + L(' per garn', ' a net'), btns:NETOPT.map(o => ord('net', null, netKey(o[0], o[1]), 10, (o[0] === 'bunn' ? L('Torsk', 'Cod') : o[0] === 'flyt' ? L('Flyt', 'Float') : L('Blåkveite', 'G. halibut')) + ' ' + o[1] + ' mm × 10')).join('')}));
+      h.push(itemCard({k:'net', name:L('Garn', 'Nets'), price:L('fra ', 'from ') + kr(NETTY.bunn.price) + L(' per garn', ' a net'), btns:NETOPT.map(o => ord('net', null, netKey(o[0], o[1]), 10, L(NETTY[o[0]].no, NETTY[o[0]].en) + ' ' + o[1] + ' mm × 10')).join('')}));
       h.push(itemCard({k:'line', name:L('Line', 'Line'), price:kr(LINE_KINDS.bank.price) + '–' + kr(LINE_KINDS.hyse.price) + L(' per stamp', ' a tub'), btns:['hyse', 'bank'].map(lk => ord('stamp', null, lk, 4, '4 ' + L('stamper ', 'tubs of ') + LINE_KINDS[lk][S.lang].toLowerCase())).join('')}));
-      h.push(itemCard({k:'pot', name:L('Krabbeteiner', 'Crab pots'), price:POTS.big.price, btns:ord('pot', null, 'big', 10, '10 ' + POTS.big[S.lang].toLowerCase())}));
+      h.push(itemCard({k:'pot', name:L('Krabbeteiner', 'Crab pots'), price:POTS.big.price, body:'<p class="ic-have">' + KC_WHERE() + '</p>', btns:ord('pot', null, 'big', 10, '10 ' + POTS.big[S.lang].toLowerCase())}));
       h.push(itemCard({k:'kit', name:L('Blåser og dregg', 'Buoys and anchors'), price:GPRICE.kit, anchor:L('tung dregg ', 'heavy anchor ') + kr(GPRICE.heavy), btns:ord('kit', null, null, 1, L('Blåsesett', 'Buoy set')) + ord('heavy', null, null, 1, L('Tung dregg', 'Heavy anchor'))}));
       h.push(itemCard({k:'hooks', name:L('Kroker og juksasett', 'Hooks and jig sets'), price:CARE.hookKr[100], anchor:L('per 100', 'a 100'), btns:ord('hooks', null, 500, 1, L('500 kroker', '500 hooks')) + ord('hooks', null, 1000, 1, L('1000 kroker', '1000 hooks')) + ord('jig', null, 'mark', 1, L('Juksasett', 'Jig set'))}));
     } else {

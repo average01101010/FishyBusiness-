@@ -1,5 +1,8 @@
 // ===== passive gear on screen: the action bar, the fish panel, the chart and the route =====
 const GL = (no, en) => S.lang === 'no' ? no : en;
+// where the king crab is, as Fiskeguiden says it (HI's surveys, core/02-species-gear.js): stated on the pot cards in the shops as a fact,
+// like the net card's meshes, not a tip (spilltest 3, U8; Jonas 05.11.2026, V4 A; 20.10.2026: «Ikke vis hint»)
+const KC_WHERE = () => GL('Kongekrabbe · Finnmark: litt fra Sørøya, mest fra Nordkapp og østover. Ingen i Troms og sørover.', 'King crab · Finnmark: a little from Sørøya, most from the North Cape eastwards. None in Troms and south.');
 const SETCOL = {garn:'#e8792b', line:'#e3b52b', teine:'#d2453a'};
 // how a set is doing: pots want 20 hours, line is best within a day, nets should come up daily
 function setState(s){
@@ -72,7 +75,7 @@ function setLabel(s, short){
 // (off: «2 stamper bankline · ikke egnet», pots without bait), for the «Sett ut» fan; the plan and the route take only the settable ones
 function setChoices(all){
   const pg = S.pgear, out = [], r = RIGS[rigOf()].kind; if (!pg || !r) return out;
-  for (const l of pg.nets) out.push({kind:'garn', spec:{nid:l.id}, n:l.n, lbl:[l.n + ' garn ' + netNo(l), l.n + ' nets ' + netEn(l)]});
+  for (const l of pg.nets) out.push({kind:'garn', spec:{nid:l.id}, n:l.n, lbl:netN(l, l.n)});
   // the autoline (H2a): two lenker (10,000 hooks, 13 km) a string with each bait in the freezer that is enough for them, and one lenke with
   // the first; the baiting machine takes the bait as the line runs out
   { const A = autoL(pg); if (A && A.n){ const B = baitOf(pg), per = LINE_KINDS.auto.baitKg, lb = (n, k) => [n + ' ' + unitName('line', n, 'auto') + ' autoline · ' + BAITS[k].no.toLowerCase(), n + ' ' + unitName('line', n, 'auto') + ' of autoline · ' + BAITS[k].en.toLowerCase()];
@@ -137,7 +140,7 @@ function gearPanel(){
     h.push('<div class="kv"><span>' + GL(LINE_KINDS[lk].no, LINE_KINDS[lk].en) + '</span><span>' + all + ' ' + GL(all === 1 ? 'stamp' : 'stamper', all === 1 ? 'tub' : 'tubs') + '</span></div>' + tubsHtml(lk) + tubLegend(lk)); }
   { const A = autoL(pg), sea = mySets().filter(x => x.kind === 'line' && isAuto(x.lk)).reduce((a, x) => a + x.n, 0);
     if (A && (A.n || sea)) h.push('<div class="kv"><span>' + GL('Autoline på magasinene', 'Autoline on the magazines') + '</span><span>' + A.n + ' ' + unitName('line', A.n, 'auto') + (sea ? ' · ' + sea + GL(' i sjøen', ' in the sea') : '') + ' · ' + Math.round(lineQ(A) * 100) + ' %</span></div>'); }
-  for (const l of pg.nets) h.push('<div class="kv"><span>' + l.n + ' garn ' + GL(netNo(l), netEn(l)) + '</span><span>' + Math.round(l.cond * 100) + ' %</span></div>');
+  for (const l of pg.nets) h.push('<div class="kv"><span>' + GL(...netN(l, l.n)) + '</span><span>' + Math.round(l.cond * 100) + ' %</span></div>');
   for (const pot of ['big']) if (pg.pots[pot]) h.push('<div class="kv"><span>' + GL(POTS[pot].no, POTS[pot].en) + '</span><span>' + pg.pots[pot] + ' · ' + Math.round(((pg.potc || {}).cond || 1) * 100) + ' %</span></div>');
   for (const j of jigSets()) h.push('<div class="kv"><span>' + GL(CARE.jig[j.k].no, CARE.jig[j.k].en) + (j.on ? ' · ' + GL('i bruk', 'in use') : '') + '</span><span>' + (j.k === 'kveite' && j.closed ? GL('kveita er fredet', 'halibut closed') : Math.round(((pg.jig || {})[j.k] || {c:1}).c * 100) + ' %') + '</span></div>' + (j.sp.length ? spChips(j.sp) : ''));
   const bk = Object.entries(baitOf(pg)).filter(e => e[1] > 0.05 && BAITS[e[0]]);

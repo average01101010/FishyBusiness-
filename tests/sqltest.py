@@ -373,7 +373,12 @@ def main():
         sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_d1', 'user_01AAA', 'des_ripe', 29, 'open', '{}')")
         sql("select public.shop_paid('cs_d1', 'pi_d1')"); R['dOwn'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')).get('owned')
         R['dGive'] = [g['data'].get('give') for g in json.loads(sql("select public.shop_pending()", A, 'authenticated')) if g['product'] == 'des_ripe']
+        # Ø6 funn 5 (20261105140000_liv_owned.sql): the others see a paid design on the boat only when the account owns it; the colours,
+        # the registration mark and the pennants are free
+        livA = lambda: (sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul;r:raud;t:blaa;f:SE.rekt;f:LOGO.vimpel;l:abc;m:T.1.LK;p:2')", A, 'authenticated'), sql("select liv from public.presence where player_id = 'user_01AAA'"))[1]
+        R['livOwn'] = livA()
         sql("select public.shop_refund('pi_d1')"); R['dGone'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')).get('owned')
+        R['livGone'] = livA(); sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul')", A, 'authenticated')
         # one's own registration number: one player's per mark
         R['rgA'] = sql("select public.reg_claim('T-777-LK')", A, 'authenticated'); R['rgB'] = sql("select public.reg_claim('T-777-LK')", B, 'authenticated')
         R['rgA2'] = sql("select public.reg_claim('T-777-LK')", A, 'authenticated'); R['rgBad'] = sql("select public.reg_claim('<b>')", A, 'authenticated', expect_err=True)
@@ -395,7 +400,7 @@ def main():
         sql("insert into public.events (player_id, kind, data) values ('user_01AAA', 'sp_view', '{\"pl\": %s, \"imp\": 3, \"sec\": 40}'), ('user_01BBB', 'sp_view', '{\"pl\": %s, \"imp\": 1, \"sec\": 9000}'), ('user_01AAA', 'sp_click', '{\"pl\": %s}')" % (plid, plid, plid))
         R['spRep'] = json.loads(sql("select public.admin_sp_report(30)", AD2, 'authenticated')); R['spRepPl'] = sql("select public.admin_sp_report(30)", A, 'authenticated', expect_err=True)
         sql("delete from public.events where kind in ('sp_view', 'sp_click')")   # (the deletion check further down counts every event)
-        R['spRead'] = sql("select count(*) from public.sponsors", A, 'authenticated'); R['spReadAnon'] = sql("select count(*) from public.sponsor_placements", {'role': 'anon'}, 'anon')
+        R['spRead'] = sql("select count(*) from public.sponsors", A, 'authenticated', expect_err=True); R['spReadAnon'] = sql("select count(*) from public.sponsor_placements", {'role': 'anon'}, 'anon', expect_err=True)   # (Ø6 funn 12: no rights on the table at all, not only no rows)
         R['lgNo'] = sql("select public.logo_put('%s')" % LIMG, A, 'authenticated', expect_err=True)
         sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_l1', 'user_01AAA', 'des_logo', 49, 'open', '{}')"); sql("select public.shop_paid('cs_l1', 'pi_l1')")
         R['lgV'] = [sql("select public.logo_put('%s')" % LIMG, A, 'authenticated'), sql("select public.logo_put('%s')" % LIMG, A, 'authenticated')]
@@ -546,7 +551,7 @@ def main():
               {'quote': q, 'paid': (R['sPaid1'], R['sPaid2']), 'pending': pd, 'after': R['sAfter'], 'end': R['sEnd']})
         sn = R['spNow']
         print(ok(R['spPl'][0] and R['spAd1'][0] and R['spNoAgr'][0] and R['spBadUrl'][0] and len(sn) == 1 and sn[0]['target'] == 'garnhaler' and sn[0]['sponsor']['name'] == 'Testmerke' and sn[0]['data'].get('model') == 'GH-200'
-                 and R['spOff'] == [] and R['spOffS'] == [] and len(R['spList']) == 1 and len(R['spList'][0]['placements']) == 1 and R['spListPl'][0] and R['spRead'] == '0' and R['spReadAnon'] == '0' and R['spRepPl'][0] and len(R['spRep']) == 1 and R['spRep'][0]['imp'] == 4 and R['spRep'][0]['sec'] == 640 and R['spRep'][0]['clicks'] == 1 and R['spRep'][0]['sponsor'] == 'Testmerke'),
+                 and R['spOff'] == [] and R['spOffS'] == [] and len(R['spList']) == 1 and len(R['spList'][0]['placements']) == 1 and R['spListPl'][0] and R['spRead'][0] and R['spReadAnon'][0] and R['spRepPl'][0] and len(R['spRep']) == 1 and R['spRep'][0]['imp'] == 4 and R['spRep'][0]['sec'] == 640 and R['spRep'][0]['clicks'] == 1 and R['spRep'][0]['sponsor'] == 'Testmerke'),
               'sponsors: only the admin with the second factor adds one, and only with an agreement and an https site; sp_now gives anyone what is active and nothing switched off; no player reads the tables; the report per placement and week (views, seconds capped at 600 a send, clicks) only for the admin',
               {k: R[k] for k in ('spPl', 'spAd1', 'spNoAgr', 'spBadUrl', 'spOff', 'spOffS', 'spListPl', 'spRead', 'spReadAnon')})
         print(ok(R['lgNo'][0] and R['lgV'] == ['1', '2'] and R['lgBad'][0] and R['lgGet'] and R['lgGet'].get('img', '').startswith('data:image/png') and R['lgRead'][0] and R['lgAdmPl'][0] and R['lgRmPl'][0]
@@ -555,6 +560,8 @@ def main():
               "the logo: put up only once owned, a bad picture refused, the others get it by the world's id; only the admin lists and takes it away, then nobody gets it, the player is told why and may put up another",
               {k: R[k] for k in ('lgV', 'lgRm', 'lgGone', 'lgMine', 'lgAgain', 'lgMine2')})
         print(ok(R['rgA'] == 't' and R['rgB'] == 'f' and R['rgA2'] == 't' and R['rgBad'][0] and R['rgRead'][0]), "one's own registration number: the first player's, refused to another, kept for the first; a bad mark and reading the claims are refused", {k: R[k] for k in ('rgA', 'rgB', 'rgA2')})
+        print(ok(R['livOwn'] == 'h:gul;r:raud;m:T.1.LK;p:2' and R['livGone'] == 'h:gul;m:T.1.LK;p:2'),
+              "the others see a paid paint design only while the account owns it (bought, not refunded); colours, the registration mark and the pennants always (Ø6 funn 5)", {'own': R['livOwn'], 'gone': R['livGone']})
         print(ok(R['dOwn'] == ['des_ripe'] and R['dGive'] == ['cos'] and R['dGone'] == []), 'a paint design: paid, it is the account\'s on every device (owned) and a grant for the game; a refund takes it away', {'own': R['dOwn'], 'give': R['dGive'], 'gone': R['dGone']})
         print(ok(R['deleted'] == '0/0/0/anon'), 'deleting the account takes the player, the events and the save; the purchase stays without a name for the books', R['deleted'])
         print(ok(R['del2'] == 'user_01DDD/0' and R['del2Anon'] is not None), 'delete_me2 deletes the account and names it (for the sign-in at WorkOS); signed out it is refused', {'del2': R['del2'], 'anon': str(R['del2Anon'])[:60]})
@@ -884,6 +891,34 @@ def main():
         print(ok(E['first'] == '0' and E['one'] == '1' and '«errtest ny 1282 feil»' in E['body'] and 'nye feil' in E['body'] and '3 krasj' in E['body'] and 'TypeError: x' not in E['body']
                  and E['wait'] == '0' and E['next'] == '1' and 'errtest annen' in E['body2'] and E['same'] == '0' and E['anon'] and E['pl']),
               'a new error or three crashes push the admin once, never a known one; half an hour between, nothing lost; numbers do not make a message new; no player runs it', E)
+        # Ø6 ryddejobbene (20261105150000_rydd.sql), last, so the ceilings stop nothing above. Funn 9: without a sign-in the errors and the
+        # frame rate stop at a ceiling that grows with the active players; an event's data is kept to 4 000 bytes. Funn 10: a guest's berth gives way to an account and is not shown to it. Funn 12: anon runs only what it should.
+        PY = {'sub': 'user_01RYD', 'role': 'authenticated'}; sql("select public.tm_hello('{}')", PY, 'authenticated'); sql("select public.tm_consent(true, 1990)", PY, 'authenticated')
+        cnt = lambda q: int(sql("select count(*) from " + q))
+        RY = {'act': int(sql("select public.tm_active()"))}; a_ = RY['act']
+        e0m, e0h = cnt("public.errors where ts > now() - interval '1 minute'"), cnt("public.errors where ts > now() - interval '1 hour'")
+        sql("select count(*) from (select public.tm_error('flood ' || g, 's', '', '{}') from generate_series(1, 400) g) z", {}, 'anon')
+        RY['err'] = [cnt("public.errors where msg like 'flood %'"), max(0, min(30 + a_ - e0m, 200 + 20 * a_ - e0h))]
+        p0 = cnt("public.perf where ts > now() - interval '1 hour'"); NP = 1200 + 60 * a_
+        sql("select count(*) from (select public.tm_perf(30, 20, 0, '{}') from generate_series(1, %d) g) z" % NP, {}, 'anon')
+        RY['perf'] = [cnt("public.perf where ts > now() - interval '1 hour'") - p0, max(0, min(NP, 500 + 60 * a_ - p0))]
+        sid3 = '33333333-3333-4333-8333-333333333333'
+        sql("""select public.tm_batch('%s', '{}', 10, ('[{"k":"big","t":%d,"d":{"x":"' || repeat('y', 5000) || '"}},{"k":"small","t":%d,"d":{"x":1}}]')::jsonb, false, null)"""
+            % (sid3, int(time.time() * 1000), int(time.time() * 1000)), PY, 'authenticated')
+        RY['ev'] = sql("select string_agg(kind || '=' || data::text, ' ' order by kind) from public.events where session_id = '%s'" % sid3)
+        sql("select public.berth_put('h_ry:k1:0', 'h_ry', 'v1', 900, 300, 0, 10, 3)", G2, 'authenticated')
+        RY['bSeen'] = [len(json.loads(sql("select public.berth_get('h_ry')", who, 'authenticated'))) for who in (G2, PY)]
+        RY['bTake'] = sql("select public.berth_put('h_ry:k1:0', 'h_ry', 'v2', 900, 300, 0, 10, 3)", PY, 'authenticated')
+        RY['bBack'] = sql("select public.berth_put('h_ry:k1:0', 'h_ry', 'v1', 900, 300, 0, 10, 3)", G2, 'authenticated')
+        # the right itself, not only that the call fails (the functions refuse anon by themselves too); and the player's rights stay
+        RY['anonNo'] = [sql("select has_function_privilege('anon', 'public.%s', 'execute')" % f) == 'f' for f in ('guest_claim()', 'guest_merge(text)', 'push_plan(jsonb)', 'admin_cash_flags(int)', 'admin_tur_share(int)', 'saves_cash_check()')]
+        RY['authYes'] = [sql("select has_function_privilege('authenticated', 'public.%s', 'execute')" % f) == 't' for f in ('guest_claim()', 'guest_merge(text)', 'push_plan(jsonb)', 'admin_cash_flags(int)', 'admin_tur_share(int)')]
+        RY['anonList'] = sql("select string_agg(p.proname, ',' order by p.proname) from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.prosecdef and has_function_privilege('anon', p.oid, 'execute')")
+        RY['anonTab'] = [sql("select count(*) from public.%s" % tb, {}, 'anon', expect_err=True)[0] for tb in ('berths', 'cash_flags', 'sponsors', 'sponsor_placements')]
+        RY['anonYes'] = sql("select jsonb_typeof(public.sp_now())", {}, 'anon')
+        print(ok(RY['err'][0] == RY['err'][1] and RY['err'][0] < 400 and RY['perf'][0] == RY['perf'][1] and RY['perf'][0] < NP and RY['ev'] == 'big={} small={"x": 1}'
+                 and RY['bSeen'] == [1, 0] and RY['bTake'] == 'ok' and RY['bBack'] == 'taken' and all(RY['anonNo']) and all(RY['authYes']) and RY['anonList'] == 'sp_now,tm_error,tm_perf' and all(RY['anonTab']) and RY['anonYes'] == 'array'),
+              "without a sign-in the errors and the frame rate stop at a ceiling that grows with the active players; an event's data has a size; a guest's berth gives way to an account and is not shown to it; anon runs only tm_error, tm_perf and sp_now (Ø6 funn 9, 10, 12)", RY)
         # the load of 5 000 players (plan 5b; KYST_LAST=5000): landings and catches for that many players, then what world_get costs
         NL = int(os.environ.get('KYST_LAST') or 0)
         if NL:

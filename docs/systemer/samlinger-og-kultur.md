@@ -229,3 +229,8 @@ Gaver av utstyr (`09f-merker.js`) monteres nå med en gang uten verftskø («gav
 - **Tilbakefall:** uten WebGL eller modell åpner knappen Naustet-siden som før; «Liste» i rommet åpner den også. Rommet lukkes når båten legger fra.
 - **Lyd** (`SND.room(on, {ovn, tak})` i `ui/10e-sound.js`, kalt fra `NAUST3D`): utendørslyden (hav, vind, båter) går gjennom et lavpassfilter som lukkes til 1,2 kHz; rommets egne lyder ligger på en egen buss (`RB`) utenom det: ovnen (lav ild, knitring, av og til et smell), drypp fra taket så lenge det lekker (oftere i regn), regn som tromler (hardere og lysere der taket lekker), og at trevirket knirker. Samme volumvalg som resten.
 - Test: `tests/naust3dtest.py` (3D) og lydsjekken i `tests/soundtest.py`.
+
+## Rekordene og fartstiden som varsler (spilltest 3, Jonas 05.11.2026, V3 A og V6c A)
+
+- En ny rekord (15 % over den gamle) står i dagboka og på fangstkortet («Ny rekord · 7,1 kg», `catchRec` i `ui/05j-catchfeed.js`), ikke som melding. Fars torsk slått er fortsatt en melding fra Trofeveggen.
+- Fartstiden står i dagboka; de fem første årene kommer fort og får ingen toast, årene etter gjør (`fsYear` i `core/09e-fartstid.js`). Årene står som før (V6c A).

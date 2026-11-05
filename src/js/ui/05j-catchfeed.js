@@ -19,6 +19,8 @@ const CFEED = (() => {
   }
   function worth(sp, kg){ try { const q = plantsNear(S.boat.pos, 1)[0]; return q ? Math.round(price(q.pt, sp, S.t / 60) * kg) : null; } catch (e){ return null; } }
   function add(sp, kg){ buf.push({sp, kg, t:performance.now()}); }
+  // a new record (core/09b-records.js recCatch): marked on the species' card, which stays a little longer (spilltest 3, U4)
+  function rec(sp, kg){ tick(); const now = performance.now(); let c = cards.find(z => z.sp === sp && now - z.t < 4200); if (!c){ c = {sp, n:0, kg:0, t:now}; cards.push(c); } c.rec = kg; c.t = now + 2500; }
   function rate(){
     const fs = S.fsess, b = S.boat; if (!fs || b.status !== 'fishing') return '';
     const h = (S.t - fs.t0) / 60; if (h < 0.08) return '';
@@ -29,19 +31,24 @@ const CFEED = (() => {
     const now = performance.now();
     if (buf.length){
       // a burst (the time played away, a fast clock) is a summary card, never a stream
-      if (buf.length > 24){ const kg = buf.reduce((a, x) => a + x.kg, 0); cards.push({sp:null, n:buf.length, kg, t:now}); }
+      // by species (spilltest 3, F5: a pot haul said «115 fisk», a net haul named no species): the three largest, the rest in one card
+      if (buf.length > 24){ const by = {}; for (const x of buf){ const z = by[x.sp] = by[x.sp] || {sp:x.sp, n:0, kg:0, t:now}; z.n++; z.kg += x.kg; }
+        const all = Object.values(by).sort((a, c) => c.kg - a.kg), top = all.slice(0, all.length > 4 ? 3 : 4), rest = all.slice(top.length);
+        cards = cards.filter(c => c.sp === null || !by[c.sp]); for (const z of top) cards.push(z);
+        if (rest.length) cards.push({sp:null, n:rest.reduce((a, z) => a + z.n, 0), kg:rest.reduce((a, z) => a + z.kg, 0), m:rest.length, t:now}); }
       else for (const x of buf){ const c = cards.find(c => c.sp === x.sp && now - c.t < 1800); if (c){ c.n++; c.kg += x.kg; c.t = now; } else cards.push({sp:x.sp, n:1, kg:x.kg, t:now}); }
       buf = [];
     }
     cards = cards.filter(c => now - c.t < 4200).slice(-4);
     const on = shown(), h = !on ? '' : rate() + cards.map(c => {
-      if (!c.sp) return '<div class="cf-c"><i style="background:#8fd3ff"></i><b>' + c.n + ' ' + L('fisk', 'fish') + '</b><span>' + fmt(c.kg, 1) + ' kg</span></div>';
+      if (!c.sp) return '<div class="cf-c"><i style="background:#8fd3ff"></i><b>' + c.n + ' ' + L('av ' + c.m + ' andre arter', 'of ' + c.m + ' other species') + '</b><span>' + fmt(c.kg, 1) + ' kg</span></div>';
       const v = worth(c.sp, c.kg), nm = spName(c.sp);
-      return '<div class="cf-c' + (now - c.t < 400 ? ' new' : '') + '"><i style="background:' + (SPC[c.sp] || '#8fd3ff') + '"></i><b>' + (c.n > 1 ? c.n + ' × ' : '') + nm + '</b><span>' + fmt(c.kg, 1) + ' kg' + (v ? ' · ' + L('ca. ', 'c. ') + kr(v) : '') + '</span></div>';
+      return '<div class="cf-c' + (now - c.t < 400 ? ' new' : '') + '"><i style="background:' + (SPC[c.sp] || '#8fd3ff') + '"></i><b>' + (c.n > 1 ? c.n + ' × ' : '') + nm + '</b><span>' + (c.n ? fmt(c.kg, 1) + ' kg' + (v ? ' · ' + L('ca. ', 'c. ') + kr(v) : '') : '') + '</span>' + (c.rec ? '<em class="cf-rec">' + L('Ny rekord · ', 'New record · ') + fmt(c.rec, 1) + ' kg</em>' : '') + '</div>';
     }).join('');
     if (h !== last){ last = h; el.innerHTML = h; el.hidden = !h; }
   }
   setInterval(tick, 400);
-  return {add, get cards(){ return cards.slice(); }};
+  return {add, rec, get cards(){ return cards.slice(); }};
 })();
 function catchFeed(sp, kg){ CFEED.add(sp, kg); }
+function catchRec(sp, kg){ CFEED.rec(sp, kg); }

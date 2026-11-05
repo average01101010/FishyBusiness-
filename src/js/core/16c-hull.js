@@ -130,7 +130,7 @@ function hullOrder(auto, b = S.boat){
   if (B.free) freeFirst('rep');
   book('verft', -B.you, 'Reparasjon av skroget', 'Hull repair');
   if (B.ins > 0){ b.kasko.claims = (b.kasko.claims || []).concat([S.t]); }
-  const dur = realDur(YARD_H * 60);
+  const dur = durBoth(YARD_H * 60);
   if (B.free) msg('Verkstedet', 'Skroget har fått skader. Den første reparasjonen tar vi gratis, den tar ' + dur + '. Neste gang koster en slik reparasjon ' + kr(B.tot) + '. Kasko på verftet dekker det som går over egenandelen.', 'The hull is damaged. The first repair is on us; it takes ' + dur + '. Next time a repair like this costs ' + kr(B.tot) + '. Hull insurance at the yard covers what goes over the deductible.');
   else if (B.ins > 0) msg('Verkstedet', 'Reparasjonen koster ' + kr(B.tot) + '. Kaskoen betaler ' + kr(B.ins) + ', og du betaler egenandelen, ' + kr(B.you) + '. Den tar ' + dur + '.', 'The repair costs ' + kr(B.tot) + '. The insurance pays ' + kr(B.ins) + ', and you pay the deductible, ' + kr(B.you) + '. It takes ' + dur + '.');
   else msg('Verkstedet', 'Reparasjonen av skroget koster ' + kr(B.you) + ' og tar ' + dur + '.', 'The hull repair costs ' + kr(B.you) + ' and takes ' + dur + '.');

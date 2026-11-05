@@ -88,7 +88,7 @@ Jonas' valg: alle tre kystredskapene i samme runde, ståtid for line som avveiin
   - Line går til egnebua etter levering.
   - Teiner er en lovlig inntekt for en båt i åpen gruppe med ansatt skipper.
 - **Kalibrering (startverdier):**
-  - Hyseline 12 t i februar på et godt hysested: ca. 110 kg per stamp, 67 % hyse.
+  - Hyseline 12 t i februar på et godt hysested: ca. 110 kg per stamp, 67 % hyse. **Kilde (05.11.2026, K2 i spilltest 3):** Fiskeridirektoratets ERS-fangstmeldinger 2024–2026, fartøy 15–28 m, februar–mars i nord, sett med minst 50 % hyse (n = 59): median 185 kg hyse per 1000 kroker (p25 94, p75 312), median ståtid 16 t, som er 111 kg per stamp på 600 kroker. HIs forsøk i Båtsfjord i oktober (Rapport fra havforskningen 2024-11) gir omregnet rundt 65 kg per 1000 kroker. Fangstevnen `GEAR.line.q` ble hevet fra 0,032 til 0,045 (Jonas: «Gjør det som blir mest realistisk»), så de åtte beste hysestedene gir rundt 95 kg per stamp etter 12 t (før 67); `HEATG.fair.line` fulgte med fra 70 til 100. ERS gjelder fartøy på 15 m og over, som trolig fisker på bedre felt enn sjarkene.
   - Garn 180 mm 20 t i mars vest av Gryllefjord: ca. 30 kg per garn.
   - Store teiner 24 t i september sør på Senja: ca. 1,5 kg per teine.
   - En dag med håndjuksa samme sted: ca. 430 kg for én person.
@@ -160,6 +160,15 @@ Spilleren fikk ingenting på juksa selv om ekkoloddet viste mye blåkveite, og f
 
 
 **Isingen og karene (04.11.2026, Jonas: «Det kan ikke bare dukke opp en kasse med is fra løse luften»):** iskassa står fast på dekk (`iceBoxAt`, `drawIceBox`: modellens `kit.iskasse`, ellers ved pakkerens plass på båtene med lasterom), med isen så høyt som det er is om bord, og spaden står i den når ingen iser (`packingNow`). Pakkeren og den som iser på de åpne båtene øser fra kassa (`st.Bin`) over fisken i karet som fylles (`karFilling`, `karTop`), og isbitene faller fra spaden (`drawShovel`). Karene blir blodige etter hvert som de fylles (`kar460_blod1`–`3` over 1,5 %, 30 % og 65 %), og kommer spylt tilbake fra mottaket.
+
+## Båten ved eget redskap (spilltest 3, Jonas 05.11.2026, V2 B i `docs/planer/spilltest3-valg.md`)
+
+- **Ligger på været:** med noen våken om bord og diesel holder motoren båten innen 0,5 nm fra nærmeste egne blåse (`GEARLIE.r`), og kjører henne opp til 0,25 nm (`GEARLIE.back`) med fem knop når driften har tatt henne lenger. Det koster diesel som ellers (`fuelUse`, `fuelLph(5)`), og det skjer også mens spillet er lukket (`lieDrift` i minuttsteget, `core/16b-dyn.js`). Sover du alene, eller er tanken tom, driver hun som før.
+- **Alarmen:** `gearWatch` piper (ankeralarmen) og sier fra én gang når båten går fra under til over 1 nm fra redskapet mens hun ligger, driver eller jukser. Seiler hun bort med vilje, er det ingen alarm.
+- **På skjermen:** HUD-en viser «Blåsa 0,3 nm · driver 0,8 kn SØ» (eller «kjører opp»), rød med «Kjør dit» over 1 nm. Knappelinja har «Til blåsa» innen en halv mil, som kjører båten opp med en gang uten kartet (`buoyGo` i `ui/10c-dock.js`: rett linje når den er fri for land og grunner, ellers som Autonav), så «Ta opp» står klar når hun er framme.
+- **Målt:** `fiskeplay.py line teiner garn` (seed 1): 0,2–0,4 nm fra blåsa etter 12–60 t, mot 6–25 km før.
+- **Stikkprøve langs kysten** (sjark, garn satt 3–9 km ut, 3. mars, vind rundt 10 m/s, 12 t med skipperen våken): Bøvågen lengst 0,43 nm og Bodø 0,39 nm uten at motoren trengtes; Båtsfjord 0,52 nm med 128 minutter motor og 12 L diesel; Husøy 0,51 nm med 108 minutter og 10 L. Sovende alene drev hun 0,30–0,66 nm på 6 t, som før.
+- **Kongekrabben på teinekortet** (V4 A): kortene i butikken og på nettet sier utbredelsen med Fiskeguidens ord (`KC_WHERE` i `ui/10-gear-ui.js`), som en opplysning, ikke et tips (Jonas 20.10.2026: «Ikke vis hint»).
 
 ## 5.64 Autolina på havbåten (H2a av `docs/planer/havsteget-h2-autoline.md`, 05.11.2026)
 

@@ -7,14 +7,15 @@
 // (S.shopGiven, so nothing is given twice) and tells the server it is done. The prices the game shows are its own (HAILL, BOOSTS,
 // YARD_NOW_NOK); what is charged is the database's (products), and the two must agree.
 // Where there is no cloud (the artifact, the tests) the buttons give it at once, as a test without payment; so does the Admin's game
-// until the shop is set up. Signed in elsewhere, the shop is «on sale soon» until Stripe is set up.
+// until the shop is set up. Signed in elsewhere, the shop is «on sale soon» until Stripe is set up. On the game's own sites with the
+// cloud off (#nocloud, no network, GitHub Pages) the shop is closed, never free (Ø6 funn 5, 05.11.2026).
 const SHOP = {ready:null, busy:false, ret:null};
 const SHOP_PRODUCT = {haill:'haill', luksus:'luksus', pump:'trim_pump', ic:'trim_ic', turbo:'trim_turbo', yard:'verft_na', sk_light:'skip_light', sk_std:'skip', sk_max:'skip_max',
   des_ripe:'des_ripe', des_totone:'des_totone', des_vann:'des_vann', des_stripe:'des_stripe', des_lakk:'des_lakk', des_flagg:'des_flagg', des_reg:'des_reg'};   // the paint designs (ui/10j-paint.js)
 const shopFn = () => CLOUD_CFG.supabaseUrl.replace(/\/$/, '') + '/functions/v1/shop-checkout';
 const shopL = (no, en) => S.lang === 'en' ? en : no;
 function shopMode(){
-  if (!CLOUD.on) return 'test';
+  if (!CLOUD.on) return pubHost() ? 'off' : 'test';
   if (CLOUD.user && SHOP.ready) return 'live';
   return adminOk() ? 'test' : 'off';
 }

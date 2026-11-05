@@ -47,7 +47,14 @@ function realDur(gameMin){ const m = realMin(Math.max(0, gameMin)), no = S.lang 
   const tm = Math.round(m), hh = Math.floor(tm / 60), mm = tm % 60;
   if (hh < 24) return hh + (no ? ' t' : ' h') + (mm ? ' ' + mm + ' min' : '');
   const d = Math.floor(hh / 24), h2 = hh % 24; return d + ' d' + (h2 ? ' ' + h2 + (no ? ' t' : ' h') : ''); }
-function inReal(gameMin){ return (S.lang === 'no' ? 'om ' : 'in ') + realDur(gameMin); }
+// real time is always said to be real time (spilltest 3, U1; Jonas 05.11.2026, V1 A: the game clock first, the real time after)
+const realW = () => S.lang === 'no' ? ' i ekte tid' : ' real time';
+function inReal(gameMin){ return (S.lang === 'no' ? 'om ' : 'in ') + realDur(gameMin) + realW(); }
+// a stretch of game time as the game clock counts it: «3 t», «4 t 20 min», «45 min»
+function gameDur(gameMin){ const m = Math.max(0, Math.round(gameMin)), hh = Math.floor(m / 60), mm = m % 60, u = S.lang === 'no' ? ' t' : ' h';
+  return hh ? hh + u + (mm ? ' ' + mm + ' min' : '') : mm + ' min'; }
+// how long something takes: the game's own time first, the real time after (V1 A): «3 t (30 min i ekte tid)»
+function durBoth(gameMin){ return gameDur(gameMin) + ' (' + realDur(gameMin) + realW() + ')'; }
 // «ferdig 14:20 · om 12 min»: the game clock and how long that is to wait in real time
 function whenTxt(T){ return hm(T / 60) + ' · ' + inReal(T - S.t); }
 function dur(h){ const m = Math.max(0, Math.round(h * 60)), hh = Math.floor(m / 60), mm = m % 60; const u = S.lang === 'no' ? ' t' : ' h'; return (hh ? hh + u + ' ' : '') + mm + ' min'; }
@@ -177,10 +184,18 @@ function loaderGone(){
   let at = 700;   // after the fade
   for (const [m, ms] of q){ setTimeout(() => toast(m, ms), at); at += Math.min(ms || 2600, 6000); }
 }
+// the toast stands over the dock's fan or card and the set line, never on top of them (spilltest 3, U4; Jonas 05.11.2026, V3 A)
+function toastPlace(el){
+  el.style.bottom = ''; if (el.classList.contains('up') || document.body.classList.contains('dk-open')) return;
+  let top = Infinity; for (const id of ['dockFan', 'setBar']){ const e = document.getElementById(id); if (!e || e.hidden || !e.innerHTML.trim()) continue; const r = e.getBoundingClientRect(); if (r.height > 8 && getComputedStyle(e).visibility !== 'hidden') top = Math.min(top, r.top); }
+  if (top < Infinity) el.style.bottom = Math.max(0, window.innerHeight - top + 8) + 'px';
+}
+// a toast that still stands when the player opens something new in the dock goes (an old «Du har ikke redskap i sjøen.» stayed over the card)
+function toastClear(){ const el = document.getElementById('toast'); if (el){ clearTimeout(toast._t); toast._keep = null; el.classList.remove('on'); } }
 function toast(msg, ms){
   if (booting()){ (toast._q = toast._q || []).push([msg, ms]); if (toast._q.length > 12) toast._q.shift(); return; }
   const el = $('toast'); toast._at = Date.now(); if (ms) toast._keep = {msg, until:Date.now() + ms};
-  el.textContent = msg; el.classList.add('on'); clearTimeout(toast._t);
+  el.textContent = msg; toastPlace(el); el.classList.add('on'); clearTimeout(toast._t);
   const back = () => { const k = toast._keep; if (k && k.msg !== msg && k.until > Date.now() + 500){ msg = k.msg; el.textContent = msg; toast._t = setTimeout(back, k.until - Date.now()); return; }
     toast._keep = null; el.classList.remove('on'); };
   toast._t = setTimeout(back, ms || 2600);

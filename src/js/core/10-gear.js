@@ -7,7 +7,7 @@
 // Gear aboard each vessel is S.pgear (a VKEY); gear in the sea is S.sets for the whole company, so the map and 3D can draw every buoy.
 const GEAR = {
   garn:{no:'Garn', en:'Nets', u:['garn', 'garn', 'net', 'nets'], km:0.028, set:0.8, haul:4, hand:2.5, crewMin:2, haulers:['garnhaler'], q:0.07, skill:'garn'},
-  line:{no:'Line', en:'Line', u:['stamp', 'stamper', 'tub', 'tubs'], kmHook:0.0015, set:5, haul:25 / 700, hand:2.0, crewMin:1, haulers:['linehaler'], q:0.032, skill:'line'},
+  line:{no:'Line', en:'Line', u:['stamp', 'stamper', 'tub', 'tubs'], kmHook:0.0015, set:5, haul:25 / 700, hand:2.0, crewMin:1, haulers:['linehaler'], q:0.045, skill:'line'},   // (q 0.032 → 0.045 05.11.2026, K2 in spilltest 3: ERS 2024–2026 gives a median of 185 kg haddock per 1000 hooks, 111 kg a 600-hook tub; redskap.md, Kalibrering)
   teine:{no:'Teiner', en:'Pots', u:['teine', 'teiner', 'pot', 'pots'], km:0.025, set:0.9, haul:1.2, hand:2.5, crewMin:1, haulers:['teinehaler'], q:0.12, skill:'teiner'}
 };
 const LINE_KINDS = {hyse:{no:'Hyseline', en:'Haddock line', hooks:600, price:2100, egn:500, baitKg:5}, bank:{no:'Bankline', en:'Bank line', hooks:300, price:1700, egn:300, baitKg:3},
@@ -37,7 +37,9 @@ const isAuto = lk => !!(LINE_KINDS[lk] && LINE_KINDS[lk].auto);
 const lineKm = (lk, hooks) => hooks * (LINE_KINDS[lk] && LINE_KINDS[lk].kmHook || GEAR.line.kmHook);
 // king crab pots (a frame of steel and netting, 1.5-2 m across; the prices are estimates): cap is the crabs a pot holds
 // one pot only (Jonas 08.10.2026): the big king crab pot, 1.55 x 1.45 x 1.07 m. The key stays 'big' so saves carry over; old small pots become big ones (potsFix)
-const POTS = {big:{no:'Krabbeteiner', en:'Crab pots', price:2200, cap:40, f:1.4, big:true}};
+const POTS = {big:{no:'Krabbeteiner', en:'Crab pots', one:['krabbeteine', 'crab pot'], price:2200, cap:40, f:1.4, big:true}};
+// «1 krabbeteine», «2 krabbeteiner» (spilltest 3, F6)
+const potsN = n => n + ' ' + (n === 1 ? POTS.big.one[S.lang === 'no' ? 0 : 1] : POTS.big[S.lang].toLowerCase());
 // three kinds of net (Jonas 08.10.2026; Fiskeridirektoratet's Redskapshefte 2.2): the bottom net for cod (the default), the floating net (flytegarn,
 // fished higher in the water for saithe) and the Greenland halibut net (big mesh). A net string carries `ty` ('bunn' when missing).
 // The 360 mm mesh and the selectivity are our estimates; the game's flytegarn takes the same mesh sizes as the cod net and ignores depth.
@@ -45,7 +47,10 @@ const NETTY = {bunn:{no:'Torskegarn', en:'Cod net', price:1500}, flyt:{no:'Flyte
 const NETOPT = [['bunn', 156], ['bunn', 180], ['bunn', 200], ['flyt', 156], ['flyt', 180], ['kveite', 360]];
 const netKey = (ty, mesh) => (ty && ty !== 'bunn' ? ty + ':' : '') + mesh;   // the shop's spec, and the key a string is joined by
 const netTy = l => (l && l.ty) || 'bunn';
-const netNo = l => (netTy(l) === 'bunn' ? '' : NETTY[netTy(l)].no.toLowerCase() + ' ') + l.mesh + ' mm', netEn = l => (netTy(l) === 'bunn' ? '' : NETTY[netTy(l)].en.replace(/^(?!Greenland)./, c => c.toLowerCase()) + ' ') + l.mesh + ' mm';
+// one name for each kind of net everywhere: «torskegarn 180 mm» in the shop, the fan, the inventory and the log (spilltest 3, U9)
+const netNo = l => NETTY[netTy(l)].no.toLowerCase() + ' ' + l.mesh + ' mm', netEn = l => NETTY[netTy(l)].en.replace(/^(?!Greenland)./, c => c.toLowerCase()) + ' ' + l.mesh + ' mm';
+// with the count: «10 torskegarn 180 mm», «10 cod nets 180 mm»
+const netN = (l, n) => [n + ' ' + netNo(l), n + ' ' + NETTY[netTy(l)].en.replace(/^(?!Greenland)./, c => c.toLowerCase()).replace(/net$/, n === 1 ? 'net' : 'nets') + ' ' + l.mesh + ' mm'];
 const MESHES = [156, 180, 200];                                  // legal cod nets north of 62° N; bigger mesh, bigger fish
 const GPRICE = {net:1500, kit:2500, heavy:1500, bait:18, potBait:0.6, bot:180, egnRate:560};   // kr, kg bait per pot, bøteri kr per net per 0.1, hooks baited per hour
 // how well each gear takes each species, relative to the jig (1 for every fish); pots take crab and a little cod and tusk
@@ -54,7 +59,7 @@ const GPRICE = {net:1500, kit:2500, heavy:1500, bait:18, potBait:0.6, bot:180, e
 // vessels, some 200 kg round weight per 1,000 hooks over the days at sea): one lenke of 5,000 hooks soaked 8 h on each of the NPC autoliners'
 // 36 grounds (05d-hav.js) in each month, weighed by that ground's landings that month, takes 197 kg per 1,000 hooks, cod 36 %, haddock 20 %,
 // tusk 20 %, ling 16 %, Greenland halibut 5 % (the notes: 36, 21, 21, 16, 5). Checked again by tests/autolinetest.py
-const AUTOSEL = {torsk:1.22, hyse:1.39, sei:0.03, lyr:0.05, lange:1.15, brosme:2.24, uer:0.18, kveite:0.36, blakveite:1.87}, AUTOQ = 9.6;
+const AUTOSEL = {torsk:1.22, hyse:1.39, sei:0.03, lyr:0.05, lange:1.15, brosme:2.24, uer:0.18, kveite:0.36, blakveite:1.87}, AUTOQ = 9.6 * 0.032 / 0.045;   // (9.6 against the coastal line's q 0.032; the coastal line went to 0.045 the same day, K2 in spilltest 3, and the autoline's catch stays as calibrated)
 const SELQ = {
   garn:{torsk:1.0, hyse:0.45, sei:0.7, lyr:0.6, lange:0.35, brosme:0.25, uer:0.3, kveite:0.35, blakveite:3.2},
   'garn:flyt':{sei:2.4, torsk:0.5, hyse:0.12, lyr:0.1, lange:0, brosme:0, uer:0.1, kveite:0, blakveite:0},
@@ -170,6 +175,13 @@ function rigHas(r){ return !RIGS[r].kind || hasHauler(RIGS[r].kind); }
 const rigName = r => gL(RIGS[r].no, RIGS[r].en);
 const lc1 = x => x[0].toLowerCase() + x.slice(1);
 function rigWrong(kind){ return [gL('Båten er rigget for ' + rigName(rigOf()).toLowerCase() + '. Rigg om til ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Beholdning.', 'The boat is rigged for ' + rigName(rigOf()).toLowerCase() + '. Re-rig for ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Inventory.')]; }
+// no hauler for this kind of gear fits the boat: the reason, said the same in the Rig tab and the shop (spilltest 3, F3), or null
+function haulerNoFit(kind){
+  const b = S.boat || {}, hs = GEAR[kind].haulers; if (hasHauler(kind) || hs.some(h => equipFits(h, b.type || 'skiff'))) return null;   // (a hauler already aboard, as in an old save, is never refused)
+  const r = rigOfKind(kind), fl = hs.map(h => (EQUIP[h].fit || {}).minLen).filter(Boolean), mn = fl.length ? Math.min(...fl) : 0;
+  return [gL('Denne båten kan ikke rigges for ' + rigName(r).toLowerCase() + ': ' + hs.map(h => lc1(EQUIP[h].name.no)).join(' eller ') + ' passer ikke om bord' + (mn > (BOAT.len || 0) ? ' (krever minst ' + fmt1(mn) + ' m)' : '') + '.',
+    'This boat cannot be rigged for ' + rigName(r).toLowerCase() + ': ' + hs.map(h => lc1(EQUIP[h].name.en)).join(' or ') + ' does not fit aboard' + (mn > (BOAT.len || 0) ? ' (needs at least ' + fmt1(mn) + ' m)' : '') + '.')];
+}
 // why the rig cannot be changed to r now, or null
 function rigBlock(r){
   const b = S.boat;
@@ -178,8 +190,8 @@ function rigBlock(r){
   if (mySets().length) return [gL('Trekk alt redskap i sjøen først.', 'Haul all the gear in the sea first.')];
   if (b.gop) return [gL('Redskapsarbeidet er i gang.', 'Gear work is going on.')];
   if (!rigHas(r)){ const k = RIGS[r].kind, hs = GEAR[k].haulers.filter(h => equipFits(h, b.type || 'skiff'));
-    if (!hs.length) return [gL('Denne båten kan ikke rigges for ' + rigName(r).toLowerCase() + ': ' + GEAR[k].haulers.map(h => lc1(EQUIP[h].name.no)).join(' eller ') + ' passer ikke om bord.', 'This boat cannot be rigged for ' + rigName(r).toLowerCase() + ': ' + GEAR[k].haulers.map(h => lc1(EQUIP[h].name.en)).join(' or ') + ' does not fit aboard.')];
-    return [gL('Båten mangler ' + hs.map(h => lc1(EQUIP[h].name.no)).join(' eller ') + '. Monter den under Oppgrader.', 'The boat has no ' + hs.map(h => lc1(EQUIP[h].name.en)).join(' or ') + '. Fit one under Upgrade.')]; }
+    if (!hs.length) return haulerNoFit(k);
+    return [gL('Båten mangler ' + hs.map(h => lc1(EQUIP[h].name.no)).join(' eller ') + '. Den kjøpes og monteres i Butikk › Elektronikk og haler.', 'The boat has no ' + hs.map(h => lc1(EQUIP[h].name.en)).join(' or ') + '. Buy and fit one at Shop › Electronics and haulers.')]; }
   return null;
 }
 function rigSet(r){ const why = rigBlock(r); if (why) return why; S.boat.rig = r; log('Båten er rigget for ' + rigName(r).toLowerCase() + '.', 'The boat is rigged for ' + rigName(r).toLowerCase() + '.'); return null; }
@@ -192,13 +204,14 @@ function ownedUnits(kind){
   if (kind === 'line') return pg.lines.hyse.n + pg.lines.bank.n + ((autoL(pg) || {}).n || 0) + sea + shore;
   return pg.pots.big + sea;
 }
-function gearRoom(kind){ const m = (BOAT.gearMax || {})[kind === 'line' ? 'stamp' : kind] || 0; return Math.max(0, m - ownedUnits(kind)); }
+function gearRoom(kind){ if (haulerNoFit(kind)) return 0; const m = (BOAT.gearMax || {})[kind === 'line' ? 'stamp' : kind] || 0; return Math.max(0, m - ownedUnits(kind)); }
 
 // ---- buying (in port)
 // one rule for everything sold for gear (Jonas 08.10.2026): nothing for line, nets or pots is bought before the boat has the hauler for it,
 // and what goes with them (hooks, buoy sets, anchors, bait) only once the boat owns some of that gear. Every shop button and buyGear ask this.
 function buyGate(what, spec){
   const own = k => ownedUnits(k) > 0, anyGear = own('line') || own('garn') || own('teine');
+  { const k = {stamp:'line', net:'garn', pot:'teine'}[what], nf = k && haulerNoFit(k); if (nf) return nf; }   // no hauler fits: the same words as the Rig tab (F3)
   if (what === 'stamp' && !hasHauler('line')) return [gL('Du trenger en linehaler før du kan kjøpe line.', 'You need a line hauler before you can buy line.')];
   if (what === 'net' && !hasHauler('garn')) return [gL('Du trenger en garnhaler før du kan kjøpe garn.', 'You need a net hauler before you can buy nets.')];
   if (what === 'pot' && !hasHauler('teine')) return [gL('Du trenger en teinehaler før du kan kjøpe teiner.', 'You need a pot hauler before you can buy pots.')];
@@ -254,7 +267,7 @@ function gearRules(kind, spec, p){
   if (!rigKindOk(kind)) return rigWrong(kind);
   if (b.gop) return [gL('Redskapsarbeidet er allerede i gang.', 'Gear work is already going on.')];
   if (b.status !== 'idle' && b.status !== 'fishing') return [gL('Båten må ligge stille på feltet.', 'The boat must lie still on the grounds.')];
-  if (handsAboard() < GEAR[kind].crewMin) return [gL('Garn krever minst to om bord: deg og én til, eller to fra mannskapet.', 'Nets need at least two aboard: you and one more, or two of the crew.')];
+  if (handsAboard() < GEAR[kind].crewMin) return [gL('Garn krever minst to om bord: deg og én til, eller to fra mannskapet.', 'Nets need at least two aboard: you and one more, or two of the crew.') + crewBiOff()];
   if (depthF(p) < 5) return [gL('For grunt til å sette her.', 'Too shallow to set here.')];
   if (pg.kits.n < 1) return [gL('Du trenger et blåsesett: to blåser med stake, flagg og dregg.', 'You need a buoy set: two buoys with pole, flag and anchor.')];
   let nets = 0, hooks = 0;
@@ -338,7 +351,7 @@ function startHaul(sid, reset, fishAfter){
   if (b.gop) return [gL('Redskapsarbeidet er allerede i gang.', 'Gear work is already going on.')];
   if (b.status !== 'idle' && b.status !== 'fishing') return [gL('Båten må ligge stille ved blåsa.', 'The boat must lie still at the buoy.')];
   const da = dist(b.pos, s.a), db = dist(b.pos, s.b); if (Math.min(da, db) > 0.3) return [gL('Gå helt inn til blåsa først.', 'Go right up to the buoy first.')];
-  if (handsAboard() < GEAR[s.kind].crewMin) return [gL('Garn krever minst to om bord: deg og én til, eller to fra mannskapet.', 'Nets need at least two aboard: you and one more, or two of the crew.')];
+  if (handsAboard() < GEAR[s.kind].crewMin) return [gL('Garn krever minst to om bord: deg og én til, eller to fra mannskapet.', 'Nets need at least two aboard: you and one more, or two of the crew.') + crewBiOff()];
   if (s.kind === 'teine' && !hasHauler('teine')) return [gL('Teiner kan ikke trekkes for hånd. Du trenger en teinehaler.', 'Pots cannot be hauled by hand. You need a pot hauler.')];
   s.hauling = true;
   const from = da <= db ? s.a : s.b, to = da <= db ? s.b : s.a;
@@ -397,12 +410,16 @@ function finishSet(g, H){
   S.sets = S.sets || []; S.sets.push(s);
   // the deck log's gear tab keeps every set, also after it is hauled (ui/06b-book-tabs.js)
   S.gearLog = S.gearLog || []; S.gearLog.push(gearLogEntry(s)); if (S.gearLog.length > 60) S.gearLog.shift();
-  const auto = s.kind === 'line' && isAuto(s.lk), what = s.kind === 'garn' ? s.n + ' garn (' + netNo(s) + ')' : auto ? s.n + ' ' + unitName('line', s.n, 'auto') + ' autoline (' + fmt(s.hooks, 0) + ' krok)' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[s.lk].no.toLowerCase() : s.n + ' ' + POTS[s.pot].no.toLowerCase();
-  const whatEn = s.kind === 'garn' ? s.n + ' nets (' + netEn(s) + ')' : auto ? s.n + ' ' + unitName('line', s.n, 'auto') + ' of autoline (' + fmt(s.hooks, 0) + ' hooks)' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[s.lk].en.toLowerCase() : s.n + ' ' + POTS[s.pot].en.toLowerCase();
+  const auto = s.kind === 'line' && isAuto(s.lk), what = s.kind === 'garn' ? netN(s, s.n)[0] : auto ? s.n + ' ' + unitName('line', s.n, 'auto') + ' autoline (' + fmt(s.hooks, 0) + ' krok)' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[s.lk].no.toLowerCase() : s.n + ' ' + POTS[s.pot].no.toLowerCase();
+  const whatEn = s.kind === 'garn' ? netN(s, s.n)[1] : auto ? s.n + ' ' + unitName('line', s.n, 'auto') + ' of autoline (' + fmt(s.hooks, 0) + ' hooks)' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[s.lk].en.toLowerCase() : s.n + ' ' + POTS[s.pot].en.toLowerCase();
   log('Satte ' + what + ' på ' + s.depth + ' m, ' + coordStr(setMid(s)) + '.', 'Set ' + whatEn + ' at ' + s.depth + ' m, ' + coordStr(setMid(s)) + '.', 'nav');
   gopEnd(g);
 }
+// (the minute after the gear work stays: fish() ends it, or a plan turns it into jigging while it waits for the next haul, plan2Sea.
+// Ending it at once sent the plan on too early, driftsplan2test S1. The screen does not call that minute jigging: gopAfter)
 function gopEnd(g){ const b = S.boat; b.gop = null; b.v = 0; b.gopQuiet = true; b.fishUntil = S.t + (g.fishAfter || 0) * 60; S.gacc = null; S.gnext = null; }
+// the minute after setting or hauling, before fish() ends it or a plan makes it jigging: not «Fisker»/«Jukser» (spilltest 3, F4)
+function gopAfter(b = S.boat){ return b.status === 'fishing' && !!b.gopQuiet && !b.gop && b.fishUntil != null && b.fishUntil - S.t <= 1; }
 // stop halfway: what is set stays in the sea as a shorter string, what is hauled is aboard
 // units of a set that never went over the side, back aboard with their bait: tubs baited as they were, the autoline's bait to the freezer,
 // the pots' bait to the store, nets as their own string
@@ -525,7 +542,7 @@ function finishHaul(g, H){
   // several tubs as one line, so those count the string; each pot is its own. Its colour is the haul per unit against a fair one
   // (08.10.2026: per unit for all three, a tub, a net and a pot, with the soak; the colour is the haul against a usual one for that soak, HEATG)
   { const kgu = g.kg / Math.max(1, s.n), soak = Math.round(g.soak || 0), fair = (HEATG.fair[s.kind] || 1) * heatSoakShare(s.kind, soak || HEATG.T);
-    S.marks.push({x:setMid(s).x, y:setMid(s).y, t:S.t, kgph:0, g:s.kind, kgu:Math.round(kgu * 10) / 10, soak, q:Math.round(kgu / fair * 100) / 100}); if (S.marks.length > 80) S.marks.shift(); }
+    S.marks.push({x:setMid(s).x, y:setMid(s).y, t:S.t, kgph:0, g:s.kind, kgu:Math.round(kgu * 10) / 10, soak, q:Math.round(kgu / fair * 100) / 100, lf:luck()}); if (S.marks.length > 80) S.marks.shift(); }
   // set the same gear again where it stood (line has to be baited in port first)
   if (g.reset && back > 0 && (s.kind !== 'line' || isAuto(s.lk))){
     const spec = s.kind === 'garn' ? {nid:S.pgear.nets[S.pgear.nets.length - 1].id} : s.kind === 'line' ? {lk:s.lk, n:back, bait:s.bait} : {pot:s.pot, n:back}; if (s.fid) spec.fid = s.fid;

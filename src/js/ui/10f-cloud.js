@@ -15,9 +15,11 @@ function cloudOn(){
 // min konto»): on the cloud's hosts only for the account flagged in the database (players.game_admin, told by tm_hello; hidden there
 // also with #nocloud and offline), never on the public copy on GitHub Pages; the artifact (his own, private) and local test builds
 // keep it. The game runs in the browser, so this hides the tools from players; what must hold in a shared world is checked on the server.
-function adminOk(){
+function adminOk(){ return !pubHost() || CLOUD.admin === true; }
+// the game's public sites: the cloud's hosts (cloud.json) and the copy on GitHub Pages; not the artifact or a local test server
+function pubHost(){
   const h = typeof location !== 'undefined' ? location.hostname : '';
-  return !(/\.github\.io$/i.test(h) || (CLOUD_CFG && (CLOUD_CFG.hosts || []).includes(h))) || CLOUD.admin === true;
+  return /\.github\.io$/i.test(h) || !!(CLOUD_CFG && (CLOUD_CFG.hosts || []).includes(h));
 }
 function cloudS(){ try { return S; } catch (e){ return null; } }
 const cloudL = (no, en) => { const s = cloudS(); return s && s.lang === 'en' ? en : no; };

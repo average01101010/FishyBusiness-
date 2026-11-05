@@ -260,6 +260,22 @@ function dynDrift(type, p, H){
 // asleep and alone is 15-energy.js sleepDrift), and jigging, driven back up over the ground she started on when she has drifted 400 m
 // off it, as jiggers do (once a stop it is said)
 const LIE = {up:0.4, land:0.06};
+// lying by her own gear (spilltest 3, U2; Jonas 05.11.2026, V2 B): she keeps within half a nautical mile of the nearest of her buoys
+// (r), run back to a quarter mile (back) at five knots on the engine, and the alarm goes when she is a mile off (alarm)
+const GEARLIE = {r:0.5 * NM, back:0.25 * NM, alarm:1 * NM, kn:5};
+// the nearest of the vessel's own buoys: {d (km), p, s}, or null
+function gearBuoyNear(p){ let best = null; for (const s of mySets()) for (const e of [s.a, s.b]){ if (!e) continue; const d = dist(p, e); if (!best || d < best.d) best = {d, p:e, s}; } return best; }
+// someone awake aboard to work the engine: you (not asleep), or a hand not in the bunk
+function gearLieCrew(){ return (meAboard() && !asleep()) || crewAboard(S.t / 60).length > 0; }
+// the alarm: once when she goes from within a mile of her gear to beyond it while lying still or adrift (not when she sails off)
+function gearWatch(b){
+  const nb = gearBuoyNear(b.pos), far = !!(nb && nb.d > GEARLIE.alarm);
+  if (far && !b.gearFar && ['idle', 'adrift', 'fishing'].includes(b.status)){
+    log('Båten har drevet ' + fmt1(nb.d / NM) + ' nm fra blåsa.', 'The boat has drifted ' + fmt1(nb.d / NM) + ' nm from the buoy.', 'nav');
+    if (hooks.onGearFar && !VTAG) hooks.onGearFar(nb);
+  }
+  b.gearFar = far;
+}
 function lieDrift(H){
   const b = S.boat, dv = b.drv, ok = ['fishing', 'idle', 'adrift'].includes(b.status) && !b.anch && !b.port && !b.gop && !helmOn() && !(typeof tutOn === 'function' && tutOn());
   b.drv = null;
@@ -271,6 +287,22 @@ function lieDrift(H){
   const across = [D.a + Math.PI / 2, D.a - Math.PI / 2].reduce((m, c) => Math.abs(dynAng(b.heading || 0, c)) < Math.abs(dynAng(b.heading || 0, m)) ? c : m);
   b.heading = ((b.heading || 0) + dynAng(b.heading || 0, across) * (1 - Math.exp(-1 / 3)) + 2 * Math.PI) % (2 * Math.PI);
   const home = b.driftHome;
+  // lying by her gear: beyond half a mile, the engine runs her back up to within a quarter (V2 B); asleep and alone, or with no diesel,
+  // she drifts as before
+  if (b.status === 'idle'){
+    const nb = gearBuoyNear(b.pos);
+    if (!nb || nb.d <= GEARLIE.back) b.lieRun = false; else if (nb.d > GEARLIE.r) b.lieRun = true;
+    if (nb && b.lieRun && b.fuel > 0 && gearLieCrew()){
+      const st = Math.min(nb.d - GEARLIE.back * 0.8, GEARLIE.kn * NM / 60), to = {x:b.pos.x + (nb.p.x - b.pos.x) / nb.d * st, y:b.pos.y + (nb.p.y - b.pos.y) / nb.d * st};
+      let clear = true; try { clear = !isLand(to) && !groundCheck(b.pos, to); } catch (e){}
+      if (clear){
+        fuelUse(b, fuelLph(GEARLIE.kn, windAt(H)) / 60);
+        if (!home.lieSaid){ home.lieSaid = true; log('Ligger på været ved blåsa: motoren holder båten innen en halv nautisk mil.', 'Lying by the buoy: the engine keeps her within half a nautical mile.', 'nav'); }
+        b.heading = Math.atan2(nb.p.x - b.pos.x, -(nb.p.y - b.pos.y));
+        b.drv = {x:to.x - b.pos.x, y:to.y - b.pos.y, t:S.t, st:b.status, up:true}; return;
+      }
+    }
+  }
   // jigging: back up over the ground (at five knots, the minute it takes)
   if (b.status === 'fishing' && dist(b.pos, home) > LIE.up){
     const d = dist(b.pos, home), st = Math.min(d, 5 * NM / 60);

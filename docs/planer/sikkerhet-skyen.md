@@ -67,6 +67,11 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 
 - **Fil:** `cloudOn()` (`ui/10f-cloud.js:12`) slår skyen av med `#nocloud`, og `shopMode()` (`ui/10i-shop.js:17`) gir da `'test'`, så `payBuy` kaller `give()` uten betaling (`10i-shop.js:42`): haill, trim, Skippertak og malingsdesign. Spillet lastes opp neste gang uten `#nocloud`, og designene vises for alle gjennom `liv` i `pos_put`/`pos_world` (bare logoen sjekkes mot kjøpet, `logo_put`).
 - **Retting:** `shopMode()` gir `'off'` på vertene i `cloud.json` når skyen er av; `pos_put` fjerner design i `liv` som spilleren ikke eier (`entitlements`).
+- **Status 05.11.2026 (Jonas: «Kjør på funn 5 og 14»): rettet** (acdaf0db):
+  - `shopMode()` gir `'off'` på spillets egne verter når skyen er av: `pubHost()`, altså vertene i `cloud.json` og GitHub Pages, med `#nocloud`, uten nett og på Pages. Artifacten og testserveren har testkjøpene som før.
+  - `pos_put` deler de betalte delene av malingen bare når kontoen eier dem (`supabase/migrations/20261105140000_liv_owned.sql`). Det gjelder ripe, totone, vann, stripe, lakk, flagg og rederilogo. Fargene, registreringsmerket og vimplene deles alltid. Spilleren ser selv det som står i lagringen; bare de andre ser båten uten det som ikke er kjøpt.
+  - **Prøvd:** `kjoptest` har en ny sjekk med `#nocloud` på spillets vert, `sqltest` en ny sjekk av designene. I Chromium med detstorebla.no pekt til testserveren er butikken av; skjermbilder i begge formater.
+  - Migreringen ble kjørt av Jonas i SQL Editor 05.11.2026 og bekreftet i databasen; den er ikke prøvd mot en ekte spillers posisjon ennå (ingen på sjøen da).
 
 ### 6. MIDDELS: lagringen, pengene og haillen er klientens
 
@@ -84,28 +89,46 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 
 - Rutinen (`tools/feedback/RUTINE.md`) leser spillernes tekst, åpner PR-er med merket `autofix`, og `autofix.yml` fletter og ruller ut når porten (`tools/autofix/gate.py`) slipper dem gjennom. En spiller kan skrive en tilbakemelding som prøver å styre agenten (prompt injection). Porten (filene, størrelsen, ingen kall til andre verter) er et godt vern, men ikke et fullt.
 - **Retting:** automatisk fletting bare for rettinger fra feillista; PR-er som bygger på en spillers tekst, venter på Jonas. Lenkene til PR-ene i admin skal sjekkes mot `^https://github.com/` (funn 13).
+- **Status 05.11.2026 (Jonas: «Kjør på ryddejobbene 8–12 og 15», 656da4d2):** `autofix.yml` har steget «Opphavet»: en PR som i tittel eller tekst viser til `tilbakemelding #N` (eller `feedback #N`), flettes ikke inn av seg selv, men får `autofix-stoppet` og en kommentar om at den venter på Jonas. Teksten sjekkes igjen rett før fletting. `RUTINE.md` sier at `autofix` bare settes på rettinger fra feillista og bildetakten. **Igjen:** feillista er også tekst fra fremmede (`tm_error` uten innlogging), og en rutine som er lurt av en melding, kan la være å nevne tilbakemeldingen. Porten (filene, størrelsen, koden og testene) er fortsatt vernet mot det.
 
 ### 9. LAV: skriving uten innlogging og uten grenser
 
-- `tm_error` og `tm_perf` kan kalles uten innlogging (rollen `anon`) og har ingen grense; `fb_send` har ingen grense på lengden av `topic` og `body` (20 i døgnet per spiller); `tm_batch` tar `evs[].d` av hvilken som helst størrelse (400 per kall). Det kan fylle databasen (gratisplanen har 500 MB) og gi Jonas push om «nye feil» (`err_alert`, høyst hver halvtime).
+- `tm_error` og `tm_perf` kan kalles uten innlogging (rollen `anon`) og har ingen grense; ~~`fb_send` har ingen grense på lengden av `topic` og `body`~~ (feil i gjennomgangen: tabellen har `char_length(body) between 1 and 4000` og en sjekk på emnet); `tm_batch` tar `evs[].d` av hvilken som helst størrelse (400 per kall). Det kan fylle databasen (gratisplanen har 500 MB) og gi Jonas push om «nye feil» (`err_alert`, høyst hver halvtime).
 - **Retting:** lengdetak (`left(...)`) på `topic`, `body` og `d`, og en grense per minutt i `tm_error`/`tm_perf` (per spiller, eller samlet når `pid()` er tom).
+- **Status 05.11.2026 (Jonas: «Kjør på ryddejobbene 8–12 og 15», 656da4d2):** i `supabase/migrations/20261105150000_rydd.sql`.
+  - `tm_error` tar høyst 30 + de aktive spillerne i minuttet og 200 + 20 per aktiv spiller i timen; over det dropper den stille. Aktive er spillere sett siste time (`tm_active()`).
+  - `tm_perf` tar høyst 500 + 60 per aktiv spiller i timen.
+  - `tm_batch` tar en hendelses data bare opp til 4 000 byte.
+  - Dagens volum var høyst 3 i minuttet og 20 feil og 1 283 målinger i døgnet, og den største hendelsen var 469 byte, så grensene treffer ikke vanlig spill. Et angrep kan fortsatt fylle det som slipper gjennom under taket, men ikke mer.
 
 ### 10. LAV: kaiplassene kan holdes av én spiller
 
 - `berth_put` (`20261023120000_berths.sql:32`): én konto kan holde 30 plasser i 30 dager, også gjester. Med flere gjester kan en havn fylles.
 - **Retting:** høyst 1–2 plasser per spiller (båtene i flåten), gjester ingen, og plassen frigjøres når spilleren ikke har vært der på et døgn.
+- **Status 05.11.2026 (Jonas: «Kjør på ryddejobbene 8–12 og 15», 656da4d2):** en gjests kaiplass viker for en konto (`berth_put`), og kontoene ser ikke gjestenes plasser (`berth_get`), fordi en gjests båt ikke vises for andre. Grensen på 30 per spiller står: den er Jonas' valg fra 23.10.2026 (flåten og driftsplanenes hjemmehavner). En registrert konto kan fortsatt holde 30 plasser i én havn.
 
 ### 11. LAV: posisjonen og fartstiden kan settes fritt; trim og haill kan skimtes
 
 - `pos_put` (`20261103120000_route.sql:64`) tar `x`, `y` og `v` (høyst 60 kn) uten sjekk mot forrige posisjon, så avstandssjekkene i `hail_send` og `tow_hook` kan omgås, og `fs` (fartstid, vist for andre) kan økes med 5 000 i timen.
 - Trim viser seg som `v` over båttypens toppfart, og haill som høyere `kgph` i delte merker. Ingen felt sier haill, men regelen i `CLAUDE.md` er at det aldri skal vises.
 - **Retting:** `v` kappes ved båttypens vanlige toppfart før den deles; `kgph` rundes grovt; `fs` vokser høyst med ekte tid.
+- **Status 05.11.2026 (Jonas: «Kjør på ryddejobbene 8–12 og 15», 656da4d2):**
+  - **Delte merker:** et fangstmerke husker haillen om bord da det ble laget (`lf`, `core/05-vessels.js` og `core/10-gear.js`). Det deles som om det var fisket uten haill (`ui/10l-share.js`, `sharetest`). Merker fra før har ikke `lf` og deles som før.
+  - **Ikke gjort:** farten `v` er ikke kappet. Posisjonene som deles hvert 15. sekund, viser farten uansett, og en kappet `v` ville bare fått de andres båter til å hoppe. Trim er heller ikke haill; regelen i `CLAUDE.md` gjelder haill.
+  - **Fartstida:** taket på 5 000 poeng i timen står, fordi en stor landing alene kan gi flere tusen poeng (3·√verdien).
+  - **Posisjonen:** den kan fortsatt settes fritt, så avstandssjekkene i `hail_send` og `tow_hook` kan omgås. Å sjekke farten mellom to posisjoner ville stoppet ekte hopp når spillet tar igjen tiden borte.
 
 ### 12. LAV: rettighetene i databasen er videre enn migreringene sier
 
 - Migreringene gjør `revoke all … from public` og `grant … to authenticated`, men Supabase gir `anon` rett til å kjøre nye funksjoner direkte. Derfor kan `anon` kjøre ni `security definer`-funksjoner: `admin_cash_flags`, `admin_tur_share`, `guest_claim`, `guest_merge`, `push_plan`, `saves_cash_check` (en triggerfunksjon), `sp_now`, `tm_error` og `tm_perf`. Alle sjekker `is_admin()` eller `pid()` (eller er åpne med vilje), så ingen av dem er et hull i dag.
 - Tabellene `berths`, `cash_flags`, `sponsors` og `sponsor_placements` har alle rettigheter for `anon` og `authenticated` og er bare vernet av RLS uten policy (eller `admin_read`). Det holder, men én `disable row level security` ville åpnet dem.
 - **Retting:** `revoke execute … from anon` der det trengs, `alter default privileges in schema public revoke execute on functions from anon, authenticated` og `revoke all on <tabell> from anon, authenticated` på de fire tabellene. Supabases råd sier det samme (`get_advisors`: 9 + 121 varsler om `security definer`, ett om `search_path` i `world_gh`).
+- **Status 05.11.2026 (Jonas: «Kjør på ryddejobbene 8–12 og 15», 656da4d2):** i `supabase/migrations/20261105150000_rydd.sql`:
+  - `anon` mister retten til `admin_cash_flags`, `admin_tur_share`, `guest_claim`, `guest_merge` og `push_plan`, og alle mister den til triggerfunksjonen `saves_cash_check`. Bare `tm_error`, `tm_perf` og `sp_now` er åpne for `anon`, med vilje.
+  - Nye funksjoner får ikke lenger `anon` som standard (`alter default privileges`, bare for `anon`). Standarden for `authenticated` står, fordi migreringene regner med den.
+  - De fire tabellene mister rettighetene for `anon` og `authenticated`.
+  - `world_gh` får fast `search_path`.
+  - Varslene om `security definer` for `authenticated` (121) står: funksjonene er veien inn med vilje og sjekker `pid()` eller `is_admin()`.
 
 ### 13. LAV: mer i admin som ikke escapes
 
@@ -118,13 +141,19 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 
 - `core/01-world.js:20–23`: frøet gjør `Math.random` forutsigbart, så en spiller kan se sjeldne hendelser på forhånd.
 - **Retting:** bare når siden ikke ligger på vertene i `cloud.json` (eller når `WCLOCK` er av).
+- **Status 05.11.2026: rettet** (acdaf0db). Frøet virker bare på en lokal testserver (localhost, 127.0.0.1, [::1]), ikke etter om `WCLOCK` er av, fordi `worldtest` bruker `#world` sammen med frøet. Prøvd i Chromium: på detstorebla.no (pekt til testserveren) er `Math.random` den vanlige; på 127.0.0.1 virker frøet.
 
 ### 15. LAV: herding av serveren og funksjonene
 
 - **Caddyfile:** ingen `Content-Security-Policy` og ingen `frame-ancestors`/`X-Frame-Options`. Admin bør få en streng CSP (`script-src 'self'`, ingen inline) og `frame-ancestors 'none'`.
 - **`setup.sh:70`:** finnes ikke `rrsync`, får deploy-nøkkelen `restrict` alene, som er et skall for brukeren `deploy`. Skriptet bør stoppe i stedet. Skriptet rører ikke `PasswordAuthentication` i sshd.
-- **`push-send`:** POST uten token sender det som er forfalt litt tidligere. Ufarlig, men kan gis et delt hemmelig hode fra `cron.job`.
-- **Supabase Auth:** vern mot lekkede passord er av (gjelder bare Jonas' admin-passord, som også har TOTP).
+- **`push-send`:** POST uten token sender det som er forfalt litt tidligere. Ufarlig, men kan gis et delt hemmelig hode fra `cron.job`. **Ikke gjort** (ufarlig; det krever en ny hemmelighet og en ny utrulling av funksjonen).
+- **Supabase Auth:** vern mot lekkede passord er av (gjelder bare Jonas' admin-passord, som også har TOTP). **Jonas kan** slå det på under Authentication i Supabase, hvis planen har det.
+- **Status 05.11.2026 (Jonas: «Kjør på ryddejobbene 8–12 og 15», 656da4d2):**
+  - **Admin-siden har en streng CSP**, lagt inn av `build.mjs`: bare sitt eget skript etter hash, bilder som `data:`, video og kall bare til Supabase, ingen `<base>` og ingen skjema. Den ene `onclick` i HTML-en er flyttet inn i skriptet. `admintest` sjekker CSP-en, og alle 18 fanene tegner under den uten brudd.
+  - **Caddyfile** sender `frame-ancestors 'none'` og `X-Frame-Options DENY` for `/admin`. Det trer i kraft først når `setup.sh` kjøres på serveren igjen, fordi utrullingen bare laster opp siden.
+  - **`setup.sh`** stopper når `rrsync` mangler, i stedet for å gi deploy-nøkkelen et skall.
+  - CSP for selve spillet er ikke laget: det har workers, blob-URL-er og WASM og trenger en egen gjennomgang.
 
 ## Det som er sjekket og er i orden
 
@@ -142,7 +171,7 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 
 1. ~~**Funn 1** (XSS i admin)~~: rettet 05.11.2026 i admin (b5289877, med funn 13) og i databasen (`20261105120000_fb_meta.sql`, kjørt av Jonas).
 2. ~~**Funn 2a, 3 og 4**~~: gjort 05.11.2026 (`20261105130000_guest_world.sql`, med 2c). Turnstile (funn 4) og 2b er ikke bygd, se funnene.
-3. **Funn 2b–c, 5, 13 og 14** i én økt.
+3. ~~**Funn 5 og 14**~~: rettet 05.11.2026 (acdaf0db; migreringen `20261105140000_liv_owned.sql` kjørt av Jonas). 2c og 13 er gjort tidligere; 2b står.
 4. **Funn 7** (innloggingsdomenet) når Jonas setter opp `auth.detstorebla.no` hos WorkOS.
-5. **Funn 8, 9, 10, 11, 12 og 15** som ryddejobber.
+5. ~~**Funn 8, 9, 10, 11, 12 og 15**~~: gjort 05.11.2026 (656da4d2 og `supabase/migrations/20261105150000_rydd.sql`, kjørt av Jonas i SQL Editor 05.11.2026 og bekreftet: `anon` kan bare kjøre `sp_now`, `tm_error` og `tm_perf`, og `authenticated` har rettighetene sine; tre funksjoner hadde retten gjennom `PUBLIC` og trengte en linje til); det som ikke er gjort, står under hvert funn.
 6. **Funn 6** (haill på serveren) hører til en større plan for økonomien; den rammer bare jukseren selv.
