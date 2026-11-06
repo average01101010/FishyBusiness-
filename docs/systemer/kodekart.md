@@ -2944,7 +2944,7 @@ PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase
   - 197 `pushCatToggle(k)`
   - 202 `pushToggle()`
 
-## `src/js/ui/10h-world.js` (176 linjer)
+## `src/js/ui/10h-world.js` (320 linjer)
 
 ---------- the shared world V3: the other players' boats (05.10.2026; supabase/migrations/20261005220000_presence.sql) ----------
 
@@ -2960,7 +2960,20 @@ PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase
   - 136 `bygdeTop(w)`
   - 149 `evTop(ev, y)`
   - 160 `evCloseTick()`
-  - 166 `worldStart()`
+- **166** the real-time relay (Ø16, S2 in docs/planer/sanntid-posisjoner.md, 05.11.2026; Jonas «kjør på» 03.11.2026: «like smooth som når
+  - 183 `rtUrl()`
+  - 190 `rtWant()`
+  - 191 `rtTick()`
+  - 199 `rtRetry(ms)`
+  - 200 `rtClose(code, ms)`
+  - 201 `rtOpen()`
+  - 218 `rtSend(now)`
+  - 232 `rtClock(T, p)`
+  - 233 `rtRecv(data)`
+  - 254 `rtVel(B, i)`
+  - 260 `rtPose(id)`
+  - 273 `rtTurn(B)`
+  - 307 `worldStart()`
 
 ## `src/js/ui/10i-shop.js` (114 linjer)
 

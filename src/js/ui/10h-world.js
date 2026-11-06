@@ -163,6 +163,147 @@ function evCloseTick(){
     const t = evTop(e.id, q.y); if (t && t.busy) continue;
     if (!t || t.err || t.data){ evClose(e, q.y, t && t.data ? t.data : null); S.evPending = S.evPending.filter(x => x !== q); } }
 }
+// ---- the real-time relay (Ø16, S2 in docs/planer/sanntid-posisjoner.md, 05.11.2026; Jonas «kjør på» 03.11.2026: «like smooth som når
+// man spiller call of duty»). While the game is open, seen and signed in on detstorebla.no, a WebSocket to the relay on the same server
+// (tools/server/rt/server.mjs behind Caddy, wss://detstorebla.no/rt) carries this boat's position up 5 times a second under way and once
+// a second lying still (rtSend), and brings the other players' boats in the 10 km squares round her down as they come (rtRecv). They are
+// drawn half a second behind the newest report, between two known reports (snapshot interpolation, RT_DELAY, rtPose), so they move as
+// they moved, with no guessing. The way in is a ticket from the database (rt_ticket, supabase/migrations/20261105160000_rt_ticket.sql):
+// 60 s, once, signed with a secret only the database and the relay know; a guest sees the others, but a guest's boat goes to no one, as
+// in pos_world. Up goes the place, heading, speed, the boat's state and the time, 18 bytes: nothing of the player, never haill or money.
+// Without the relay (no ticket, the server down, the page hidden, GitHub Pages, a test) everything is as before: pos_put and pos_world
+// every 15 s and the track (PTRK in core/05-vessels.js) carry the boats, and a boat going from one to the other glides (RT_GLIDE).
+const RT = {ws:null, st:'off', tries:0, next:0, off:null, offAt:0, sent:0, last:null, peers:new Map(), noFn:false, unknown:false, up:0, down:0};
+const RT_DELAY = 500;    // ms: the others are drawn this far behind the newest report
+const RT_STALE = 1500;   // ms past the newest report (at the drawn time) before her track goes back to the 15 s reports
+const RT_MOVE = 200, RT_STILL = 1000;   // ms between reports under way and lying still
+const RT_GLIDE = 2000;   // ms to glide from the 15 s track onto the relay's (half a second behind it: she slows by a quarter for a moment)
+// the boat's state as one byte (tools/server/rt/server.mjs keeps 0–15)
+const RT_ST = ['', 'sailing', 'fishing', 'port', 'idle', 'adrift', 'tow', 'ptow', 'aground', 'engine', 'unmooring'];
+function rtUrl(){
+  if (typeof location === 'undefined' || typeof WebSocket === 'undefined') return null;
+  // a stand-in relay for the tests (tests/rttest.py), only on a local test server (as the seed, Ø6 funn 14)
+  if (typeof window !== 'undefined' && window.DSB_RT && /^(127\.0\.0\.1|localhost|\[::1\])$/.test(location.hostname)) return String(window.DSB_RT);
+  return location.protocol === 'https:' && CLOUD_CFG && (CLOUD_CFG.hosts || []).includes(location.hostname) ? 'wss://' + location.host + '/rt' : null;
+}
+// only the page that has the game, seen and signed in, talks to the relay (as worldTick)
+function rtWant(){ return CLOUD.on && !!CLOUD.user && !RT.noFn && !WORLDP.off && !TAB.held && !TAB.lost && !TAB.wait && !(typeof document !== 'undefined' && document.hidden) && !!S && !!S.boat && !!rtUrl(); }
+function rtTick(){
+  const now = Date.now();
+  if (RT.peers.size){ const p = performance.now(); for (const [id, R] of RT.peers) if (p - R.seen > 10000) RT.peers.delete(id); }
+  if (!rtWant()){ if (RT.ws) rtClose(1000, 1000); return; }
+  if (!RT.ws){ if (RT.st === 'off' && now >= RT.next) rtOpen(); return; }
+  if (RT.st === 'open') rtSend(now);
+}
+// after a failure: 1, 2, 4 … 64 s (a half to one and a half of it, so the games do not all come back at once after a restart)
+function rtRetry(ms){ RT.ws = null; RT.st = 'off'; RT.next = Date.now() + (ms || 1000 * Math.pow(2, Math.min(RT.tries++, 6)) * (0.5 + Math.random())); }
+function rtClose(code, ms){ const ws = RT.ws; rtRetry(ms); try { if (ws) ws.close(code); } catch (e){} }
+async function rtOpen(){
+  RT.st = 'ticket';
+  let t = null;
+  // a database without rt_ticket (404) is not asked again this session; without the secret (400, 'rt off') again in ten minutes
+  try { t = await cloudRpc('rt_ticket', {}); }
+  catch (e){ if (/ 404$/.test(e.message)){ RT.noFn = true; rtRetry(); } else rtRetry(/ 4\d\d$/.test(e.message) ? 600000 : 0); return; }
+  if (typeof t !== 'string' || !rtWant()){ rtRetry(); return; }
+  let ws; try { ws = new WebSocket(rtUrl() + '?t=' + encodeURIComponent(t)); } catch (e){ rtRetry(); return; }
+  ws.binaryType = 'arraybuffer'; RT.ws = ws; RT.st = 'connecting';
+  ws.onopen = () => { if (RT.ws !== ws) return; RT.st = 'open'; RT.tries = 0; RT.last = null; RT.sent = 0; rtSend(Date.now()); };
+  ws.onmessage = ev => { if (RT.ws === ws) rtRecv(ev.data); };
+  // 4001: the same player opened the game on another page, which has it now; 4002: time for a new ticket; 1012: the relay restarts (a
+  // new version), and the games come back spread over ten seconds, so the database is not asked for every ticket in the same second
+  ws.onclose = ev => { if (RT.ws === ws) rtRetry(ev.code === 4001 ? 60000 : ev.code === 4002 ? 500 : ev.code === 1012 ? 1000 + Math.random() * 9000 : 0); };
+  ws.onerror = () => {};
+}
+// this boat's report: where she is now (livePose, as worldTick sends), 5 times a second under way, once a second lying still
+function rtSend(now){
+  const ws = RT.ws, b = S.boat; if (!ws || ws.readyState !== 1 || !b || now - RT.sent < RT_MOVE - 30) return;
+  let L = null; try { L = typeof livePose === 'function' ? livePose() : null; } catch (e){ L = null; }
+  const p = L && L.p && isFinite(L.p.x) && isFinite(L.p.y) && dist(L.p, b.pos) < 2 ? L.p : b.pos, hd = ptAng(0, L && isFinite(L.hd) ? L.hd : b.heading || 0);
+  const st = Math.max(0, RT_ST.indexOf(String(b.status || ''))), v = b.status === 'sailing' ? Math.max(0, Math.min(60, b.v || 0)) : 0;
+  const o = RT.last, moved = !o || o.st !== st || Math.hypot(p.x - o.x, p.y - o.y) > 0.001;
+  if (!(v > 0.2) && !moved && now - RT.sent < RT_STILL) return;
+  const buf = new ArrayBuffer(18), d = new DataView(buf);
+  d.setUint8(0, 1); d.setUint8(1, st); d.setUint16(2, Math.round(v * 100), true);
+  d.setInt32(4, Math.round(p.x * 1e4), true); d.setInt32(8, Math.round(p.y * 1e4), true); d.setInt16(12, Math.round(hd * 1e4), true);
+  d.setUint32(14, Math.floor(performance.now()) >>> 0, true);
+  ws.send(buf); RT.sent = now; RT.last = {x:p.x, y:p.y, st}; RT.up++;
+}
+// the relay's clock against this page's steady clock: the largest offset seen is the report that came quickest, sinking 2 ms a second
+function rtClock(T, p){ const o = T - p; RT.off = RT.off == null || o > RT.off || o < RT.off - 5000 ? o : Math.max(o, RT.off - (p - RT.offAt) * 0.002); RT.offAt = p; }
+function rtRecv(data){
+  if (!(data instanceof ArrayBuffer) || data.byteLength < 3) return;
+  const d = new DataView(data), ty = d.getUint8(0), n = d.getUint16(1, true), p = performance.now();
+  const hid = o => { let s = ''; for (let k = 0; k < 5; k++) s += d.getUint8(o + k).toString(16).padStart(2, '0'); return s; };
+  if (ty === 0 && data.byteLength >= 12){ RT.off = null; rtClock(d.getFloat64(4, true), p); return; }   // (a new connection: the clock afresh)
+  if (ty === 3 && data.byteLength >= 3 + 5 * n){ for (let i = 0; i < n; i++){ const R = RT.peers.get(hid(3 + 5 * i)); if (R) R.gone = true; } return; }
+  if (ty !== 2 || data.byteLength < 11 + 20 * n) return;
+  const T = d.getFloat64(3, true); rtClock(T, p);
+  for (let i = 0; i < n; i++){
+    const o = 11 + 20 * i, id = hid(o);
+    const s = {t:T - d.getUint16(o + 5, true), st:RT_ST[d.getUint8(o + 7)] || '', v:d.getUint16(o + 8, true) / 100, x:d.getInt32(o + 10, true) / 1e4, y:d.getInt32(o + 14, true) / 1e4, hd:d.getInt16(o + 18, true) / 1e4};
+    let R = RT.peers.get(id); if (!R) RT.peers.set(id, R = {buf:[], gone:false, seen:p});
+    const B = R.buf; if (B.length && s.t <= B[B.length - 1].t) continue;   // (late, or the same again)
+    B.push(s); while (B.length > 2 && B[0].t < s.t - 3000) B.shift(); if (B.length > 40) B.shift();
+    R.gone = false; R.seen = p; RT.down++;
+    // what she does and her speed on the AIS card at once; a boat the 15 s list does not have yet is fetched with it (name, type, paint)
+    const q = PEERS.find(e => e.id === id); if (q){ if (s.st) q.st = s.st; q.v = s.v; } else RT.unknown = true;
+  }
+  if (RT.unknown && !WORLDP.busy && Date.now() - WORLDP.last > 5000){ RT.unknown = false; worldTick(); }
+}
+// her motion at report i (km per ms): from the reports either side, or from the one before at the newest; none across a jump or a gap
+function rtVel(B, i){
+  const a = B[i - 1] || B[i], c = B[i + 1] || B[i], dt = c.t - a.t, dx = c.x - a.x, dy = c.y - a.y;
+  return dt > 0 && dt <= 2500 && Math.hypot(dx, dy) < PT_SNAP ? {x:dx / dt, y:dy / dt} : {x:0, y:0};
+}
+// where the relay's reports put her at the drawn time, half a second back: between the two reports either side (Hermite, so the
+// curve is round), on along her motion for a moment when the next is late; null when the relay has not had her for RT_STALE
+function rtPose(id){
+  const R = RT.peers.get(id); if (!R || R.gone || RT.off == null || !R.buf.length) return null;
+  const B = R.buf, n = B.length, L = B[n - 1], t = performance.now() + RT.off - RT_DELAY;
+  if (t - L.t > RT_STALE) return null;
+  if (t >= L.t){ const V = rtVel(B, n - 1), u = t - L.t; return {x:L.x + V.x * u, y:L.y + V.y * u, hd:L.hd}; }
+  if (t <= B[0].t) return {x:B[0].x, y:B[0].y, hd:B[0].hd};
+  let i = n - 2; while (i > 0 && B[i].t > t) i--;
+  const a = B[i], b = B[i + 1], h = b.t - a.t, u = (t - a.t) / h;
+  if (Math.hypot(b.x - a.x, b.y - a.y) >= PT_SNAP) return {x:a.x, y:a.y, hd:a.hd};   // a jump (towed home, a new start) is not drawn across
+  const ma = rtVel(B, i), mb = rtVel(B, i + 1), u2 = u * u, u3 = u2 * u, h00 = 2 * u3 - 3 * u2 + 1, h10 = u3 - 2 * u2 + u, h01 = 3 * u2 - 2 * u3, h11 = u3 - u2;
+  return {x:h00 * a.x + h10 * h * ma.x + h01 * b.x + h11 * h * mb.x, y:h00 * a.y + h10 * h * ma.y + h01 * b.y + h11 * h * mb.y, hd:a.hd + ptAng(a.hd, b.hd) * u};
+}
+// her turn rate from the relay's reports a second or more apart (for the track when the relay goes quiet)
+function rtTurn(B){
+  const L = B[B.length - 1]; if (!L || L.st !== 'sailing') return 0;
+  for (let i = B.length - 2; i >= 0; i--) if (L.t - B[i].t >= 1000) return B[i].st === 'sailing' ? clamp(ptAng(B[i].hd, L.hd) / ((L.t - B[i].t) / 1000), -0.25, 0.25) : 0;
+  return 0;
+}
+// The relay's boats in the track (core/05-vessels.js peerStates → ptTake, ptPose; the chart, the AIS and the 3D view all read it). While
+// the relay has her, her pose is the relay's, glided onto from where the 15 s track showed her; a 15 s report older than the relay's
+// newest does not move her. When the relay goes quiet, her track goes on from the relay's newest report (place, heading, speed, turn)
+// and glides from where she was shown, as it does onto a new 15 s report. Without the relay this changes nothing.
+const ptPoseBase = ptPose, ptTakeBase = ptTake;
+ptPose = function(T, now){
+  const P = RT.peers.size ? rtPose(T.q.id) : null;
+  if (P){
+    if (!T.rt){ const S0 = ptPoseBase(T, now), gx = S0.x - P.x, gy = S0.y - P.y; T.rt = {off:Math.hypot(gx, gy) < PT_SNAP ? {x:gx, y:gy, hd:ptAng(P.hd, S0.hd), t0:now} : null}; }
+    const O = T.rt.off;
+    if (O){ const u = (now - O.t0) / RT_GLIDE; if (u >= 1) T.rt.off = null; else { const k = 1 - u * u * (3 - 2 * u); P.x += O.x * k; P.y += O.y * k; P.hd += O.hd * k; } }
+    T.rt.shown = {x:P.x, y:P.y, hd:P.hd}; T.rtAt = now;
+    return P;
+  }
+  if (T.rt){
+    const R = RT.peers.get(T.q.id), B = R ? R.buf : [], L = B[B.length - 1], sh = T.rt.shown; T.rt = null;
+    if (L && RT.off != null){ const at = Date.now() - performance.now() + L.t - RT.off;   // the report's time on this device's clock, as PEERS' at
+      T.q = Object.assign({}, T.q, {x:L.x, y:L.y, hd:L.hd, v:L.v, st:L.st || T.q.st, rt:'', R:null, at}); T.w = rtTurn(B); T.rtAt = at; }
+    T.off = null;
+    if (sh){ const P0 = ptPoseBase(T, now), gx = sh.x - P0.x, gy = sh.y - P0.y, gd = Math.hypot(gx, gy);
+      if (gd < PT_SNAP) T.off = {x:gx, y:gy, hd:ptAng(P0.hd, sh.hd), t0:now, dur:1000 * clamp(1 + gd * 1000 / 70, 2.5, 6)}; }   // (she catches up the half second over 2.5 s or more)
+  }
+  return ptPoseBase(T, now);
+};
+ptTake = function(q, now){
+  const T = PTRK.get(q.id);
+  if (T && (T.rt || (T.rtAt && q.at <= T.rtAt))) return T;   // the relay has her, or has had her since this report
+  return ptTakeBase(q, now);
+};
 function worldStart(){
   if (!CLOUD.on) return;
   WSH.rec = true; setTimeout(worldShare, 20000); setInterval(worldShare, 600000);
@@ -172,4 +313,7 @@ function worldStart(){
   if (typeof pressStart === 'function') pressStart();   // Kystposten's stories to and from the cloud (ui/05g-press.js)
   document.addEventListener('visibilitychange', () => { if (!document.hidden) worldTick(); });
   setInterval(() => { if (PEERS.length && Date.now() - WORLDP.last > 60000) PEERS.length = 0; }, 10000);   // gone quiet (offline)
+  // the relay (S2): opened, fed and closed from here, five times a second; a hidden page lets go at once
+  setInterval(() => { try { rtTick(); } catch (e){ console.warn('rt', e); } }, RT_MOVE);
+  document.addEventListener('visibilitychange', () => { if (document.hidden && RT.ws) rtClose(1000, 1000); });
 }
