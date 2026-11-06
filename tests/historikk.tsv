@@ -197,3 +197,19 @@
 2026-11-06 12:02	ccr-e5ae7b11-uibmpt	981a4751+	hudtest	OK	24	lite	samtidig	
 2026-11-06 12:02	ccr-e5ae7b11-uibmpt	981a4751+	docktest	OK	60	lite	samtidig	
 2026-11-06 12:02	ccr-e5ae7b11-uibmpt	981a4751+	dockrow	OK	40	lite	samtidig	
+2026-11-06 12:35	claude/u2-3-knappelinja-felp6h	d62153dc	tut	OK	2468	lite	alene	
+2026-11-06 12:36	claude/u2-3-knappelinja-felp6h	d62153dc	rorbutest	OK	14	lite	samtidig	
+2026-11-06 12:36	claude/u2-3-knappelinja-felp6h	d62153dc	bunktest	OK	14	lite	samtidig	
+2026-11-06 12:36	claude/u2-3-knappelinja-felp6h	d62153dc	navbarshot	OK	33	lite	samtidig	
+2026-11-06 12:36	claude/u2-3-knappelinja-felp6h	d62153dc	sponsortest	OK	11	lite	samtidig	
+2026-11-06 12:36	claude/u2-3-knappelinja-felp6h	d62153dc	sponsor2test	OK	13	lite	samtidig	
+2026-11-06 12:37	claude/u2-3-knappelinja-felp6h	d62153dc	driftsplan2ui	OK	32	lite	samtidig	
+2026-11-06 12:40	claude/u2-3-knappelinja-felp6h	d62153dc	havplantest	FEIL	234	lite	samtidig	FEIL spot check Egersund: the plan made, out from Egersund, the lenker set and hauled, fish aboard [[{'lat': 58.249999999999986, 'lon': 4.9}, {'lat': 58.3826273
+2026-11-06 12:40	claude/u2-3-knappelinja-felp6h	d62153dc	autolinetest	OK	10	lite	samtidig	
+2026-11-06 12:40	claude/u2-3-knappelinja-felp6h	d62153dc	turtest	OK	16	lite	samtidig	
+2026-11-06 12:40	claude/u2-3-knappelinja-felp6h	d62153dc	booktest	OK	28	lite	samtidig	
+2026-11-06 12:40	claude/u2-3-knappelinja-felp6h	d62153dc	bktest	OK	6	lite	samtidig	
+2026-11-06 12:40	claude/u2-3-knappelinja-felp6h	d62153dc	caretest	OK	16	lite	samtidig	
+2026-11-06 12:40	claude/u2-3-knappelinja-felp6h	d62153dc	jigalongtest	OK	16	lite	samtidig	
+2026-11-06 12:42	claude/u2-3-knappelinja-felp6h	d62153dc	driftsplan2test	OK	98	lite	alene	
+2026-11-06 12:46	claude/u2-3-knappelinja-felp6h	d62153dc	havplantest	FEIL	229	lite	alene	FEIL spot check Egersund: the plan made, out from Egersund, the lenker set and hauled, fish aboard [[{'lat': 58.249999999999986, 'lon': 4.9}, {'lat': 58.3826273
