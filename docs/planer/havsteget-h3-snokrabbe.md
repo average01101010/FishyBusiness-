@@ -160,11 +160,11 @@ H3 deles som H2, i økter med `/lever` og utrulling etter hver (valg V5). H3d de
   - **Lenkene:** 200 teiner per lenke med 25 m mellom (om lag 5 km), satt over rennen akter og trukket gjennom portalen, med dregg og blåse i hver ende (HI). Taket er 8 000 teiner per fartøy (§ 28), altså 40 lenker; plassen om bord (`gearMax.teine`, 7 000 i dag) settes etter dekket. Trekkingen tar 1 200–1 800 teiner i døgnet (50–75 i timen døgnet rundt, utregnet; farten er ikke funnet).
   - **Fangsten:** `soakHour` for snøkrabbeteina med ståtid i døgn (3–25, snitt 7–11 hos HI), kalibrert mot sedlene og undersøkelsen: om lag 5–7 kg per teine, 8 t i døgnet i sjøen og om lag 100 t rund vekt per tur på om lag 20 døgn for et fryst fartøy. Av det som kommer opp, er om lag en firedel undermåls (HI), og bløtkrabben følger skallskiftet (måneden). Krabben lever i teina (98 % levende etter 1,5 år, HI), i motsetning til kongekrabben i dag; `takeStock` tar av bestanden. Snittvekten per hann (lengde–vekt) er ikke funnet og hentes fra HIs toktrapporter i økta.
   - **Reglene ved setting** (`rulesAt`, varsel før feil): § 1 og § 5 i reguleringen (sokkel, territorialfarvann, andre lands sokkel, fredningen med teinene på land 1.7–30.11) finnes; nytt er taket på 8 000 teiner (§ 28), røkting hver tredje uke (§ 18) og posisjonen hver tredje uke (§ 25) som varsler, og § 27 for kongekrabbeteiner på fartøy over 21,5 m (4 nm) og 21,35 m (6 nm i Finnmark 1.11–31.3), så regelen finnes om en større kystbåt kommer. Henvisningene oppdateres til forskriften for 2027 når den kommer.
-  - **Kvoten:** landingene går mot fartøykvoten fra tillatelsen i rund vekt (valg V4), og den nye J-meldingen for 2027 legges inn når den kommer. Registeret får 30 tillatelser (`HREG.krab`, sak 17/2026). Tilleggskvoten for levende kommer i H3b.
-  - **Kjøpet:** `lock` tas av snøkrabbefartøyet. Tillatelsen følger fartøyet ved salg for fortsatt drift eller utskifting (konsesjonsforskriften kap. 6, høringsnotatet 2023), så spilleren kjøper et brukt fartøy med tillatelsen fra en NPC-eier, som i dag (`havOffer`, men med én tillatelse og ikke en kvotefaktor). Prisen er skroget pluss tillatelsen; hvordan tillatelsen prises, er valg V6.
-  - **Mottakene som tar snøkrabbe:** et mottak tar snøkrabbefartøyets fangst bare når sedlene har snøkrabbe der (`portWhy` med artene, ikke bare `Konvensjonelle`). I H3a landes krabben hel og fryst som i dag (holdene fryser); fabrikken og fryselagrene er H3b.
+  - **Kvoten (V4, «det som blir mest riktig, og passer spillet i et fremtidsperspektiv»):** reglene står per år som data (en tabell med totalkvoten, avsetningen til levende levering, forsknings- og forvaltningskvoten, overreguleringen og kvotefleksen fra hver J-melding), og fartøykvotene regnes av dem med de 30 tillatelsene, ikke skrevet inn som tall: 2026 gir 351 t pluss 82 t (J-237-2025), 2027 etter forslaget om lag 433 t ordinær kvote og 110 t tilleggskvote ((16 594 − 3 300 − 300)/30 og 3 300/30, sak 17/2026), uten overregulering. Forskriften for 2027 legges inn som en ny rad når den kommer i desember. Kvotefleksen på fartøynivå (inntil 10 % av fartøykvoten belastes eller godskrives året etter, fra 2027/2028) føres i lagringen. Etter siste kjente år følger totalkvoten spillets egen bestand, slik torskekvoten gjør (`STOCK`, `stockYear`, `tacOf`): snøkrabben får en bestand med HIs tall (indeksen fra toktene og rådet for 2027, Rapport fra havforskningen 2026-54) og beskatningen fra flåten, så kvoten går opp og ned med bestanden. Landingene går mot kvoten i rund vekt. Registeret får 30 tillatelser (`HREG.krab`), og alle har samme kvote (ingen kvotefaktor i `havOffer`).
+  - **Kjøpet:** `lock` tas av snøkrabbefartøyet. Tillatelsen følger fartøyet ved salg for fortsatt drift eller utskifting (konsesjonsforskriften kap. 6, høringsnotatet 2023), så spilleren kjøper et brukt fartøy med tillatelsen fra en NPC-eier, som i dag (`havOffer`). Prisen er skroget pluss tillatelsen, og tillatelsen prises etter det driften kan bære (V6 B): driftsoverskuddet før avskrivninger for et snittfartøy med årets kvote og prisene (kostnadene fra lønnsomhetsundersøkelsen, gruppe 014; prisene fra sedlene over flere år, så 2024 og 2025 begge teller), ganget med et antall år som settes og begrunnes i økta. Det erstatter `HPK.snokrabbe` (712 kr/kg). Ingen salgspris er funnet, så tallet er et anslag og står som det.
+  - **Mottakene (V2 C):** fangsten landes ved alle mottak der kaia passer etter regelen som finnes (`portWhy`: kaia, dybden og redskapsgruppa eller andelen fra 28 m og over), også der sedlene ikke har snøkrabbe. I dag er det 19: Skarsvåg, Kjøllefjord, Båtsfjord, Havnnes, Tromsdalen, Husøy, Senjahopen, Gryllefjord, Torsken, Andenes, Straumsjøen vest, Melbu, Napp, Nordfold, Selje, Avaldsnes, Ombo, Skudeneshavn og Egersund sør. Ingen nye havner. I H3a landes krabben hel og fryst som i dag (holdene fryser); fabrikken er H3b.
   - **Havflåten:** de tre NPC-feltene som er ulovlige for et norsk fartøy (russisk sone, russisk sokkel i Smutthullet, innenfor 12 nm) flyttes inn på norsk sokkel i sin lokasjon (`tools/npc/havflaate.py`).
-- **Filer:** `core/02-species-gear.js`, `core/10-gear.js`, `core/03f-fiske.js`, `core/03e-rules.js`, `core/03d-quota.js`, `core/06b-coastports.js`, `core/05d-hav.js`, `tools/npc/fiske.py`, `tools/npc/havflaate.py`, `src/data/fiske.json`, `src/data/havflaate.json`, `ui/08-actions.js`, `ui/10-gear-ui.js`, `ui/phone/10-fartoy.js`.
+- **Filer:** `core/02-species-gear.js`, `core/10-gear.js`, `core/03f-fiske.js`, `core/03e-rules.js`, `core/03d-quota.js` (`STOCK.snokrabbe`, reglene per år, kvotefleksen), `core/05d-hav.js`, `tools/npc/fiske.py`, `tools/npc/havflaate.py`, `src/data/fiske.json`, `src/data/havflaate.json`, `ui/08-actions.js`, `ui/10-gear-ui.js`, `ui/phone/10-fartoy.js`.
 - **Tester:** ny `tests/unit/snokrabbe.test.mjs` (fangst per teine mot HI og sedlene, sorteringen, minstemålet, bløtkrabben, reglene, kvoten, registeret med 30), `rules.test.mjs`, `havlic.test.mjs`, `hav.test.mjs` (ingen NPC-felt utenfor norsk sokkel), `havsteg.test.mjs`, ny `tests/snokrabbetest.py` (kalibreringen på feltene, en lenke satt og trukket, reglene på stedet, skjermbilder i begge formater), `geartest`.
 - **Måles:** kg per teine og per fiskedøgn på Storbanken, Sentralbanken og ved Hopen mot HI og sedlene, og andelen undermåls og bløt krabbe per måned.
 
@@ -177,10 +177,10 @@ H3 deles som H2, i økter med `/lever` og utrulling etter hver (valg V5). H3d de
   - **Vaktene og lagene** (V5 A i `havsteget.md`): antallet om bord etter sedlene (kap. 2b: 21–29 på et 50 m fryst fartøy, mot 14 i spillet i dag), anonyme lag på dekk og i fabrikken i to vakter, med nøkkelfolkene fra H2.
   - **Turen:** om lag 20 døgn for fryst og 8–9 for levende (sedlene); drivstoff, agn, proviant og rom setter grensen, med kortet Turen fra H2b.
   - **Lotten:** § 20 for snøkrabbe med turoppgjøret som finnes. Prosenten i oppgjørsavtalen er ikke funnet; spillets 35 % sjekkes mot undersøkelsen (31,5–43,6 % av inntektene i 2022–2024) og mot avtalen om den kan leses.
-  - **Lossingen:** fryste klør på paller (H2b) ved fryselagrene; levende krabbe i kar med kran til levendemottaket.
-  - **Mottakene (valg V2):** fryselagrene og anleggene som tok fryst snøkrabbe i sedlene (Båtsfjord, Tromsø, Ålesund, Kinn) blir havmottak for fryst (`havOnly`), og levendemottakene (Båtsfjord, Vardø, Honningsvåg, Kjøllefjord) tar levende der kaia passer. `tools/mottak/mottak.py` skriver levende og fryst snøkrabbe per anlegg.
-- **Filer:** `core/05-vessels.js` (`holdFreezes`, tankene), `core/13-work.js`, `core/03-simulation.js` (`sell`, `capHold`), `core/02-species-gear.js` (prisene, båten), `core/03d-quota.js` (tilleggskvoten), `core/04-crew.js`, `core/07-harbours.js` (`landPlan` for levende), `core/06b-coastports.js`, `tools/mottak/mottak.py`, `src/data/mottak.json`.
-- **Tester:** ny `tests/unit/krabbefabrikk.test.mjs` (omregningen, fabrikkfarten, tankene, tilleggskvoten, lossetiden, lotten), `selltest`, ny `tests/krabbefabrikktest.py` (to døgn der lagene fisker uten deg om bord, lossing ved et fryselager og levende ved et levendemottak), `trip2`, `havsteg.test.mjs`.
+  - **Lossingen:** fryste klør på paller (H2b); levende krabbe i kar med kran. Begge ved mottakene fra H3a (V2 C).
+  - **Levende og fryst ved samme mottak (V2 C):** alle mottakene som tar båten, tar både levende krabbe og klør, med prisen etter måned og produkt (ingen pris per mottak).
+- **Filer:** `core/05-vessels.js` (`holdFreezes`, tankene), `core/13-work.js`, `core/03-simulation.js` (`sell`, `capHold`), `core/02-species-gear.js` (prisene, båten), `core/03d-quota.js` (tilleggskvoten), `core/04-crew.js`, `core/07-harbours.js` (`landPlan` for levende).
+- **Tester:** ny `tests/unit/krabbefabrikk.test.mjs` (omregningen, fabrikkfarten, tankene, tilleggskvoten, lossetiden, lotten), `selltest`, ny `tests/krabbefabrikktest.py` (to døgn der lagene fisker uten deg om bord, lossing av klør og av levende krabbe ved et mottak), `trip2`, `havsteg.test.mjs`.
 - **Måles:** tonn per døgn og per tur, levende og fryst, mot sedlene; lotten per tur.
 
 ### H3c Snøkrabbe i Driftsplan 2, isen og fredningen
@@ -189,10 +189,10 @@ H3 deles som H2, i økter med `/lever` og utrulling etter hver (valg V5). H3d de
   - **Driftsformen:** feltet er mange lenker med ståtid i døgn; skipet går fra lenke til lenke, trekker den som har stått lengst, setter den ut igjen, døgnet rundt i vaktene, til rommet, kvoten, agnet, drivstoffet, provianten eller turens døgn sier stopp; så til mottaket (fryst eller levende) og ut igjen.
   - **Teinene står ute** mens skipet leverer, som i virkeligheten, men røktes minst hver tredje uke (§ 18) og posisjonen meldes (§ 25).
   - **Fredningen:** alle teiner på land før 1. juli (J-237-2025 § 5); planen tar dem inn i juni, og ingen setting før 1. desember.
-  - **Isen:** drivis over lenkene (`seaIceAt`) stopper trekkingen og kan koste teiner; planen holder seg unna iskanten. Hvilken is som gjelder, er valg V3.
+  - **Isen (V3 B):** snøkrabbefartøyet får isklasse (`VESSELS.snokrabbe.iceClass`), så det kan gå i spredt drivis; isen ellers er som i dag (snittet for 1991–2020). I dag gjør en isklasse at isen aldri stenger (`seaIceShut`); den blir en grense for konsentrasjonen klassen tåler, som settes etter et søk (klassen og grensen er ikke funnet for snøkrabbeflåten). Teinene er ikke tryggere enn før: drivis over en lenke (`seaIceAt` langs lenka) stopper trekkingen, og drivisen kan dra lenka med seg (HI 2023-51), så teiner kan gå tapt eller flyttes. Planen setter ikke lenker i isen og tar dem inn når iskanten nærmer seg.
   - **Været:** havbåtens grenser fra H2c (arbeidsgrensen og ligge bi).
   - **Den felles klokka:** sløyfen spilles også når appen er lukket (`catchUp`).
-- **Filer:** `core/06g-plan2.js`, `core/06h-plan2-engine.js`, `ui/05d-plan2.js`, `core/10-gear.js`, `core/03h-is.js` (og `tools/is/is.py` med V3 A).
+- **Filer:** `core/06g-plan2.js`, `core/06h-plan2-engine.js`, `ui/05d-plan2.js`, `core/10-gear.js`, `core/03h-is.js` (isklassen som grense), `core/02-species-gear.js` (`iceClass`).
 - **Tester:** `havplantest` (nytt scenario: en tur med snøkrabbe), `tests/unit/havplan.test.mjs`, `driftsplan2test`, `driftsplan2ui`, `is.test.mjs`, alene.
 - **Måles:** at en tur på planen gir det samme som en tur for hånd (innenfor 15 %), og sesongen mot sedlene (tonn per fartøy, turer og døgn mellom landingene).
 
@@ -220,38 +220,38 @@ Etter `/blender` og leselista for modellene; bare utsiden, ingen rom under dekk,
 - **Hva:**
   - **Kystvaktas havsjekk for snøkrabbe:** posisjonen langs hver lenke (sokkelen, 12 nm, russisk sokkel, § 58, sårbare økosystemer), fredningen (teiner i sjøen 1.7–30.11), taket på 8 000 teiner (§ 28), merkingen (§ 66) og rømmingshullet (vedlegg 3f), røkting og posisjonsmelding (§§ 18 og 25), fartøykvoten og tilleggskvoten, og en stikkprøve av siste trekk mot minstemålet (§ 47) og bløtkrabben (20 %, J-237-2025 § 5), og at alt over minstemålet og død krabbe er beholdt (§ 51).
   - **Hele turen** i `tests/havtur.py` (`havtur.py krabbe`): kjøp med tillatelsen, ut fra Båtsfjord, sett lenkene, la dem stå, trekk, kok og frys, hjem, lever ved fryselageret; og en levende tur.
-  - **Stikkprøvene:** turer fra Båtsfjord, Vardø eller Honningsvåg (nord), Tromsø (midt) og Ålesund (sør), der sedlene har landinger; skjermbilder i begge formater.
+  - **Stikkprøvene:** turer fra Båtsfjord og Kjøllefjord (nord), Tromsdalen eller Melbu (midt) og Selje eller Avaldsnes (sør), blant mottakene som tar båten (V2 C); skjermbilder i begge formater.
   - Patchnotes.
 - **Tester:** `havtur`, `kystvakttest`, `kystvakt.test.mjs`.
 
 ## 4. Valgene
 
-Hvert valg har en anbefaling og én setning om hvorfor.
+Hvert valg har en anbefaling og én setning om hvorfor. Valgene er tatt 06.11.2026 (Jonas: «V1: A», «V2: C», «V3: B», «V4: Gjør det som blir mest riktig, og passer spillet i et fremtidsperspektiv.», «V5: A», «V6: B»).
 
-**V1 Levende eller fryst krabbe**
+**V1 Levende eller fryst krabbe** (valgt: A, Jonas 06.11.2026)
 - **A (anbefalt): begge, som kombinasjonsfartøy:** fryseriet for klør og tanker for levende krabbe, og spilleren (eller planen) velger per tur. Slik drev 9 av 28 fartøy i 2026, og tilleggskvoten (82 t, om lag 110 t i forslaget for 2027) kan bare tas levende.
 - **B: bare fryst (klør),** slik båten er beskrevet i dag. Da står tilleggskvoten ubrukt, som for ombordprodusentene sak 17/2026 omtaler.
 - **C: bare levende:** turer på 8–9 døgn og ingen fabrikk, men lavere pris (82 mot 131 kr/kg rund vekt i 2025).
 
-**V2 Hvor snøkrabben landes**
+**V2 Hvor snøkrabben landes** (valgt: C, Jonas 06.11.2026)
 - **A (anbefalt): der sedlene viser at den ble landet:** fryselagrene og anleggene for fryst (Båtsfjord, Tromsø, Ålesund, Kinn) blir havmottak, og levende krabbe går til Båtsfjord, Vardø, Honningsvåg og Kjøllefjord der kaia passer. Da går turene til havnene flåten bruker (79 % landet i Finnmark i 2026).
 - **B: bare spillets havner som tar snøkrabbe i dag** og har kai for 50 m (Båtsfjord, Kjøllefjord, Senjahopen).
 - **C: alle mottak der kaia passer** (19 i dag), også de som aldri har tatt imot snøkrabbe.
 
-**V3 Isen på feltene**
+**V3 Isen på feltene** (valgt: B, Jonas 06.11.2026)
 - **A (anbefalt): et nyere snitt for isen** (2011–2020 i det samme datasettet, gjerne med 2021–2025 fra OSI SAFs fortsettelse). Sedlene 2024–2026 viser fangst ved 77–78,5° N der snittet for 1991–2020 stenger i februar–april. Det gjelder hele havet i nord, ikke bare snøkrabben, og kjøres i Actions (`is.yml`).
 - **B: isklasse på snøkrabbefartøyet,** så det kan gå i spredt drivis; isen ellers som i dag. Teinene er like utsatt for drivisen (HI).
 - **C: som i dag:** feltene nord for om lag 77° N er stengt om vinteren (om lag en tidel av fangsten i 2024).
 
-**V4 Kvoten i spillets år (fra 2027)**
+**V4 Kvoten i spillets år (fra 2027)** (valgt: Jonas 06.11.2026: «Gjør det som blir mest riktig, og passer spillet i et fremtidsperspektiv», altså A, med reglene per år som data og kvoten etter 2027 fra spillets egen bestand (H3a))
 - **A (anbefalt): som forslaget for 2027:** ordinær fartøykvote om lag 430 t og tilleggskvote om lag 110 t for levende, uten overregulering, med kvotefleks på 10 % fra 2027/2028. Totalkvoten på 16 594 t er fastsatt, og forskriften legges inn når den kommer i desember. Det er slik reglene blir, og V5 i H2 ble tatt på samme måte.
 - **B: som 2026 skalert med totalkvoten,** slik spillet gjør nå: 472 t per tillatelse og ingen tilleggskvote.
 
-**V5 Rekkefølgen**
+**V5 Rekkefølgen** (valgt: A, Jonas 06.11.2026)
 - **A (anbefalt): seks økter med utrulling etter hver** (H3a, H3b, H3c, H3d1, H3d2, H3e). Snøkrabbefartøyet kan kjøpes og fiske for hånd etter H3a.
 - **B: alt i én utrulling** til slutt.
 
-**V6 Prisen på snøkrabbetillatelsen**
+**V6 Prisen på snøkrabbetillatelsen** (valgt: B, Jonas 06.11.2026)
 - **A: som i dag,** med kvoten i samme forhold til førstehåndsprisen som torskekvoten (712 kr/kg, `HPK`): om lag 385 MNOK for kvoten i 2027 (540 t), om lag 445 MNOK med skroget. Ingen kilde.
 - **B (anbefalt): etter det driften kan bære.** Tillatelsen følger bare et fartøy som selges for fortsatt drift, og det finnes ingen strukturkvoter for snøkrabbe, så verdien er noen års overskudd av driften. Det regnes i H3a av lønnsomhetsundersøkelsen og prisene over flere år (2024 ga underskudd, 2025 det dobbelte av prisen), og blir trolig under 150 MNOK. Det er også et anslag uten salgspris.
 - **C: vent med å åpne kjøpet** til en ekte salgspris er funnet (Fiskeribladet og Kyst.no kunne ikke nås herfra).
@@ -267,13 +267,14 @@ Hvert valg har en anbefaling og én setning om hvorfor.
 - **Hunnkrabben:** ingen hjemmel funnet for å sette ut hunner; minstemålet tar dem i praksis. Egg-bærende hunner settes ut (HI, uten hjemmel).
 - **Reguleringen for 2027** er et forslag (sak 17/2026); totalkvoten er fastsatt.
 - **Kystvaktas kontrollpunkter** for snøkrabbe, ERS og VMS, og om «Kystvakten skal ha melding ved setting og trekking» står i en forskrift, er ikke sjekket.
-- **Isen:** at et nyere snitt (V3 A) passer sedlene bedre, er ikke målt; det sjekkes mot landingene per lokasjon og måned.
-- **Mottakene:** kaiene i registeret (lengde og dybde fra kartet) stenger Vardø og Honningsvåg for et 50 m fartøy med 6 m dypgang, men 45–47 m-fartøy lander der. Om kaiene er målt riktig, er ikke sjekket.
+- **Isen:** isklassen (V3 B) og konsentrasjonen den tåler, er ikke funnet for snøkrabbeflåten; snittet for 1991–2020 stenger fortsatt felt nord for om lag 77° N for andre båter. Hvor fort drivisen drar en lenke, og hvor mange teiner som går tapt, er ikke funnet.
+- **Mottakene (V2 C):** 19 mottak tar båten; Vardø og Honningsvåg, der mye levende krabbe landes, har for kort eller grunn kai for 50 m og 6 m dypgang etter registeret (45–47 m-fartøy lander der). Om kaiene er målt riktig, er ikke sjekket. Fryselagrene der fryst snøkrabbe landes i virkeligheten, er ikke havner (backloggen).
 - **Sedlene for 2026** har ingen beløp ennå, og 2026 har en ny omregningsfaktor (1,49). At faktoren er Fiskeridirektoratets nye, er sett i sedlene og et søkeutdrag, ikke i tabellen (Tableau, utilgjengelig).
 
 ## 6. Hva planen ikke gjør
 
 - Ingen reketrål eller andre fiskerier med snøkrabbefartøyet (gruppa i undersøkelsen tok også 2 000 t reker i 2024), og ingen kongekrabbe med det.
+- Ingen nye havner og ingen fryselagre som havner (V2 C), og ingen ny is for andre båter enn snøkrabbefartøyet (V3 B).
 - Ingen fangst på russisk sokkel (krever russisk samtykke, konsesjonsforskriften § 6-3) og ingen forsknings- og undervisningskvoter.
 - Ingen navngitte nøkkelfolk med liv (H7).
 - Ingen fabrikk, tanker eller rom under dekk i modellen (CLAUDE.md: bare utsiden).
@@ -282,3 +283,4 @@ Hvert valg har en anbefaling og én setning om hvorfor.
 ## 7. Status
 
 - 06.11.2026: planen skrevet på grenen `ccr-016e1586-atu94e` (fra arbeidsgrenen etter H2e, 1df71d75). Regelverket lest samme dag (J-237-2025, sak 17/2026, konsesjonsforskriften kap. 6, høstingsforskriften §§ 18, 25, 27–29, 46, 47, 51, 58 og 66 med vedlegg 3f, HR-2023-491-P), sedlene for 2024–2026 regnet ut, og driftstallene søkt opp (HI, Fiskeridirektoratet, lønnsomhetsundersøkelsen). Venter på valgene V1–V6 og «kjør på».
+- 06.11.2026: **valgene tatt** (Jonas): V1 A (både levende og fryst, som kombinasjonsfartøy), V2 C (alle mottak der kaia passer, ingen nye havner), V3 B (isklasse på snøkrabbefartøyet, isen ellers som i dag), V4 «Gjør det som blir mest riktig, og passer spillet i et fremtidsperspektiv» (A: forslaget for 2027, reglene per år som data, fartøykvotene regnet av totalkvoten og de 30 tillatelsene, kvotefleksen i lagringen, og totalkvoten etter 2027 fra spillets egen bestand), V5 A (seks økter med utrulling etter hver) og V6 B (tillatelsen prises etter det driften kan bære). Fasene over er rettet etter valgene. **Neste:** H3a i en ny økt, når Jonas sier «kjør på».

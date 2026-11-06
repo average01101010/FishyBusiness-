@@ -176,7 +176,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 |---|---|---|---|
 | Spilltest 3 | Ferdig og rullet ut 05.11.2026: F1–F7, U1–U12, K1–K3, garna kalibrert etter ERS og Finnmark etter sluttsedlene (10bc93d1). Igjen i backloggen: «U10, rest», «Vest-Finnmark utenom skreien» | `ccr-9c21028c-lptg24` | 05.11.2026 |
 | H2 autolineren | Ferdig: H2a (c9e651d1), H2b (d5d6b4c), H2c (493c636), H2d1 og H2d2 (b496da28) og H2e (377b6c59) rullet ut. Neste: H3 snøkrabbe | `ccr-4a897f45-dtssey` (H2e) | 06.11.2026 |
-| H3 snøkrabbe | Planlagt 06.11.2026 i `docs/planer/havsteget-h3-snokrabbe.md` (seks økter H3a–H3e). Venter på valgene V1–V6 og «kjør på» | `ccr-016e1586-atu94e` | 06.11.2026 |
+| H3 snøkrabbe | Planlagt 06.11.2026 i `docs/planer/havsteget-h3-snokrabbe.md` (seks økter H3a–H3e). Valgene tatt 06.11.2026 (V1 A, V2 C, V3 B, V4 «det som blir mest riktig», V5 A, V6 B). Neste: H3a | `ccr-016e1586-atu94e` | 06.11.2026 |
 | Ø1 Det som ikke kom med | Ferdig: PR #42 flettet, #18, #19 og #33 lukket, Tufjord flettet inn (8f503066), verftene i Sverige tatt ut (ce056730), leibitene rettet i `npc.py` (eb669fe7, ute med neste kartrelease) | `ccr-834c604f-xxnqoy`, `ccr-5e1ba2f4-pusvyd` | 05.11.2026 |
 | Ø2 Testriggen | Ferdig: alle punktene grønne eller med årsak og eier i backloggen (10.6 «Ø2 05.11.2026», «Strøket 05.11.2026 (Ø2)»); de 11 rettede uten 3D grønne på d663638a; A5 historikk i `run.py`; grensjekken i `/okt-slutt` ser på koden; tillegget fra den andre Ø2-økta (`ccr-o2-tillegg`) tatt inn som d663638a. Røde med eier: gfxtest (lyden, Ø7), deckshot (kranen, H2), crewclip/dyntest (H6) | `ccr-5e1ba2f4-pusvyd`, `ccr-o2-tillegg` | 05.11.2026 |
 | Ø3 Ytelse | Ikke begynt | | |
