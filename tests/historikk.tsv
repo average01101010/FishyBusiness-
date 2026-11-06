@@ -69,3 +69,5 @@
 2026-11-06 03:00	ccr-d0cfc148-iavi2e	110e4b7f+	boottest	OK	34	lite	samtidig	
 2026-11-06 03:01	ccr-d0cfc148-iavi2e	110e4b7f+	looktest	OK	14	lite	samtidig	
 2026-11-06 05:32	ccr-aee4fa08-paslvj	08dc307d	hudtest	OK	32	lite	samtidig	
+2026-11-06 05:33	ccr-aee4fa08-paslvj	16dbffa1	uishots	OK	106	lite	samtidig	
+2026-11-06 05:33	ccr-aee4fa08-paslvj	16dbffa1	docktest	OK	67	lite	samtidig	
