@@ -370,3 +370,4 @@
 2026-11-06 22:18	ccr-a3c53300-9f9ly1	cc8d061	routetest	FEIL	46	lite	alene	FEIL Autonav over hele kysten: Finnsnes–Tromsø, Bodø–Reine og Bergen–Florø gir en vei fri for land, grunner og skjær, med høyst 40 punkter, eller ett per 2 km d
 2026-11-06 22:19	ccr-a3c53300-9f9ly1	9871601	autonavtest	FEIL	0	lite	alene	FEIL 6. Autonav Vannareid → Honningsvåg … (bygget før rettingen, bare Senja: de samme ti røde linjene som på det rettede bygget)
 2026-11-06 22:22	ccr-a3c53300-9f9ly1	4073902	draftlooptest	OK	19	lite	samtidig	
+2026-11-06 22:24	ccr-a3c53300-9f9ly1	7cbe5c7	bootgtest	OK	125	lite	samtidig	
