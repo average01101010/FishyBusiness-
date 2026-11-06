@@ -1723,7 +1723,7 @@ Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md a
   - 34 `ukeDue()`
   - 40 `ukeLast()`
 
-## `src/js/core/11-route.js` (654 linjer)
+## `src/js/core/11-route.js` (657 linjer)
 
 ---------- Autonav (once «Følg leia»): a route along the fairway ----------
 
@@ -1734,36 +1734,36 @@ Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md a
   - 70 `legLandIn(p, q, L, s0, s1)`
   - 74 `legNearPt(pt, z)`
   - 86 `legRunsWalk(W, ms)`
-  - 94 `legRunsW(p, q, z)`
-  - 96 `legRuns(p, q, z)`
-  - 102 `legRunsAsync(p, q, z)`
-  - 108 `legIdx(runs, L, n, last)`
-  - 118 `leiaGrid(x0, y0, x1, y1, c, mask)`
-  - 125 `leiaRocks(G)`
-  - 134 `leiaShore(G, p)`
-  - 144 `leiaCost(G, v, sd)`
-  - 162 `leiaNearCell(G, p, sd, km = 1, free)`
-  - 169 `leiaHeap()`
-  - 177 `leiaSlice(st, t0, at)`
-  - 180 `leiaSearch(G, s, t, sd, st)`
-  - 211 `leiaFind(from, to, sd, st)`
-  - 225 `leiaFind1(from, to, sd, st, pad, c0)`
-  - 278 `leiaCorridor(pp, R, c, sd, st)`
-  - 294 `leiaCorridor1(pp, bb, R, c, sd, st, first, last)`
-  - 313 `leiaHarbourClr(pt, ports)`
-  - 319 `leiaPortsBy(p, q)`
-  - 323 `leiaLegOk(p, q, sd, margin)`
-  - 350 `leiaLegOkL(p, q, sd, margin, tick)`
-  - 358 `leiaLegFail(p, q, tick, endP, endQ, strict)`
-  - 375 `rockOnLeg(a, b, r)`
-  - 384 `leiaMend(P, sd, st, strict)`
-  - 425 `leiaStraighten(P, sd, margin, st)`
-  - 453 `leiaPull(P, sd, st)`
-  - 487 `leiaRoute(a, b, aPort, bPort, opt)`
-  - 511 `leiaLane(p, goal, km)`
-  - 542 `leiaPocket(p, sd)`
-  - 559 `leiaPocketOut(e, sd, st)`
-  - 569 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
+  - 97 `legRunsW(p, q, z)`
+  - 99 `legRuns(p, q, z)`
+  - 105 `legRunsAsync(p, q, z)`
+  - 111 `legIdx(runs, L, n, last)`
+  - 121 `leiaGrid(x0, y0, x1, y1, c, mask)`
+  - 128 `leiaRocks(G)`
+  - 137 `leiaShore(G, p)`
+  - 147 `leiaCost(G, v, sd)`
+  - 165 `leiaNearCell(G, p, sd, km = 1, free)`
+  - 172 `leiaHeap()`
+  - 180 `leiaSlice(st, t0, at)`
+  - 183 `leiaSearch(G, s, t, sd, st)`
+  - 214 `leiaFind(from, to, sd, st)`
+  - 228 `leiaFind1(from, to, sd, st, pad, c0)`
+  - 281 `leiaCorridor(pp, R, c, sd, st)`
+  - 297 `leiaCorridor1(pp, bb, R, c, sd, st, first, last)`
+  - 316 `leiaHarbourClr(pt, ports)`
+  - 322 `leiaPortsBy(p, q)`
+  - 326 `leiaLegOk(p, q, sd, margin)`
+  - 353 `leiaLegOkL(p, q, sd, margin, tick)`
+  - 361 `leiaLegFail(p, q, tick, endP, endQ, strict)`
+  - 378 `rockOnLeg(a, b, r)`
+  - 387 `leiaMend(P, sd, st, strict)`
+  - 428 `leiaStraighten(P, sd, margin, st)`
+  - 456 `leiaPull(P, sd, st)`
+  - 490 `leiaRoute(a, b, aPort, bPort, opt)`
+  - 514 `leiaLane(p, goal, km)`
+  - 545 `leiaPocket(p, sd)`
+  - 562 `leiaPocketOut(e, sd, st)`
+  - 572 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
 
 ## `src/js/core/11b-obstacles.js` (226 linjer)
 
@@ -3164,7 +3164,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 - **70** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (343 linjer)
+## `src/js/ui/11-boot.js` (359 linjer)
 
 ---------- boot ----------
 
@@ -3174,29 +3174,31 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 15 `bootGate(on)`
   - 17 `bootInfo()`
   - 19 `bootDone()`
-  - 57 `bootgWrite()`
-  - 59 `bootgOk()`
-  - 62 `bootgNote(s)`
-  - 71 `bootgIn()`
-  - 77 `bootgOut()`
-  - 78 `bootgClear(over)`
-  - 80 `bootgReport()`
-  - 89 `bootgRescue()`
-  - 91 `bootgSafe()`
-  - 101 `bootMap()`
-  - 123 `boot3dAsk()`
-  - 125 `boot3dShown()`
-  - 134 `boot3dSend()`
-  - 135 `modelsReady()`
-  - 136 `dataEls()`
-  - 137 `dataEarly()`
-  - 147 `dataGet(el, opt)`
-  - 161 `bootData()`
-  - 168 `bootDataLate()`
-  - 183 `modelsLabel()`
-  - 190 `bootMapLoad()`
-  - 211 `bootGame()`
-  - 325 `bootFail(e)`
+  - 58 `bootgWrite()`
+  - 60 `bootgOk()`
+  - 63 `bootgArm()`
+  - 72 `bootgNote(s)`
+  - 81 `bootgIn()`
+  - 88 `bootgOut()`
+  - 91 `bootgClear(over)`
+  - 93 `bootgReport()`
+  - 102 `bootgRescue()`
+  - 104 `bootgSafe()`
+  - 115 `bootgSay()`
+  - 116 `bootMap()`
+  - 138 `boot3dAsk()`
+  - 140 `boot3dShown()`
+  - 149 `boot3dSend()`
+  - 150 `modelsReady()`
+  - 151 `dataEls()`
+  - 152 `dataEarly()`
+  - 162 `dataGet(el, opt)`
+  - 176 `bootData()`
+  - 183 `bootDataLate()`
+  - 198 `modelsLabel()`
+  - 205 `bootMapLoad()`
+  - 226 `bootGame()`
+  - 341 `bootFail(e)`
 
 ## `src/js/vessel3d.js` (1602 linjer)
 

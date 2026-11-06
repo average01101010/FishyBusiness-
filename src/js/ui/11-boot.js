@@ -19,7 +19,7 @@ function bootInfo(){ return {s:Math.round((performance.now() - bootAway()) / 100
 function bootDone(){
   if (BOOTW.done) return; bootStep('ferdig'); BOOTW.done = true;
   const r = BOOTW.res = bootInfo(); delete r.stage;
-  setTimeout(bootgOk, 20000);   // (BOOTG below: 20 s on from here the start got through)
+  bootgArm();   // (BOOTG below: when the start has got through)
   if (r.s > 30 && typeof cloudErr === 'function') cloudErr('Treg oppstart: ' + (r.s < 60 ? '30–60' : r.s < 120 ? '60–120' : 'over 120') + ' s', 'boot', JSON.stringify(r), 'slow');
 }
 const BOOT_WATCH = setInterval(() => {
@@ -32,9 +32,10 @@ const BOOT_WATCH = setInterval(() => {
 // set in Bodø and the app closed). A page caught in an endless loop, or ended by the phone while on the screen, says nothing: no
 // error, no «står fast» (BOOT_WATCH is a timer on the same thread), and the errors wait for a game that never comes (errStart). And the
 // next start reads the same save and locks the same way. So each start writes on the device how far it came (BOOTG_KEY): «in» when the
-// game is built from the save (bootGame with the time away), «ok» once it has run 20 s after that or gone to the background, and whether
-// the page was on the screen. The next start reads it: a start that got into building the game, never got through and was on the screen
-// locked; the locks in a row are counted (fails), and a start that got through counts them from nothing again.
+// game is built from the save (bootGame with the time away), «ok» once it has run 20 s after that with the loading screen gone for 10 s
+// of them, or gone to the background or closed after it (bootgArm), and whether the page was on the screen. The next start reads it:
+// a start that got into building the game, never got through and was on the screen locked; the locks in a row are counted (fails),
+// and a start that got through counts them from nothing again.
 //   1+  «Oppstarten står fast: siden låste seg …» goes to the error list at once, at the sign-in (bootgReport, before the game is built),
 //       with what the save had going (the boats, the routes), and the admin gets the push (err_alert)
 //   2   the account's copy of this device's game, when this device has played past it (ui/10f-cloud.js cloudSync: a minute or so
@@ -57,6 +58,13 @@ const BOOTG = (() => {
 function bootgWrite(){ if (BOOTG.off) return; try { localStorage.setItem(BOOTG_KEY, JSON.stringify(BOOTG.rec)); } catch (e){} }
 bootgWrite();
 function bootgOk(){ const r = BOOTG.rec; if (r.ok || !r.in) return; r.ok = true; r.fails = 0; bootgWrite(); }
+// through: 20 s after the game was built, and the loading screen gone for 10 s of it (the first ticks, the time away left over and the
+// first 3D picture come after bootDone, and a lock there leaves the loading screen standing too: «Står bare å laste»)
+function bootgArm(){
+  const t0 = performance.now(); let up = 0;
+  const iv = setInterval(() => { const n = performance.now(); if (!up && !document.body.classList.contains('booting')) up = n;
+    if (BOOTG.rec.ok){ clearInterval(iv); return; } if (n - t0 >= 20000 && up && n - up >= 10000){ clearInterval(iv); bootgOk(); } }, 1000);
+}
 document.addEventListener('visibilitychange', () => { const r = BOOTG.rec; if (r.ok) return; if (document.hidden && BOOTW.done && r.in){ bootgOk(); return; } r.vis = !document.hidden; bootgWrite(); });
 // (a page closed or left the ordinary way did not lock, also where the browser sends no visibilitychange first)
 addEventListener('pagehide', () => { const r = BOOTG.rec; if (r.ok) return; if (BOOTW.done && r.in){ bootgOk(); return; } r.vis = false; bootgWrite(); });

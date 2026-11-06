@@ -85,6 +85,9 @@ const legRunsKey = (p, q, z) => z.toFixed(2) + '|' + p.x.toFixed(4) + ',' + p.y.
 // the walk along the leg, up to ms milliseconds at a time (true when done): legRuns does it at once, legRunsAsync in slices
 function legRunsWalk(W, ms){
   const {p, q, L, z, runs} = W, pad = LEGOPEN.pad, t0 = ms < Infinity ? performance.now() : 0; let n = 0;
+  // a leg with no length to walk (a NaN or an endless end) is done at once: the walk below never reached W.s >= L then, and legRuns
+  // (ms Infinity) held the page for good; the leg's own checks judge it (06.11.2026, the start that locked, ui/11-boot.js BOOTG)
+  if (!Number.isFinite(L)) return true;
   for (;;){ let step = 0;
     if (W.s >= pad && L - W.s >= pad){ try { const pt = {x:p.x + (q.x - p.x) * W.s / L, y:p.y + (q.y - p.y) * W.s / L}; step = legNearPt(pt, z); if (step && mapSimAt(pt) && legLandIn(p, q, L, W.s, Math.min(L, W.s + step))) step = 0; } catch (e){ step = 0; } }
     if (!step){ const a = Math.max(0, W.s - pad), b = Math.min(L, W.s + pad), r = runs[runs.length - 1]; if (r && a <= r[1]) r[1] = b; else runs.push([a, b]); step = LEGOPEN.step; }

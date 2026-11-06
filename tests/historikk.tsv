@@ -345,3 +345,20 @@
 2026-11-06 18:05	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	anchorlight3d	FEIL	106	3d	alene	avsluttet med kode 1
 2026-11-06 18:07	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	docktest	OK	60	lite	alene	
 2026-11-06 18:12	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	anchorlight3d	OK	286	3d	alene	
+2026-11-06 20:49	ccr-a3c53300-9f9ly1	f56038f	tabtest	FEIL	106	lite	samtidig	FEIL no page errors (app) ["Cannot read properties of undefined (reading 'boat')"]
+2026-11-06 20:49	ccr-a3c53300-9f9ly1	f56038f	synctest	FEIL	66	lite	samtidig	FEIL with the phone silent (screen off), the tablet takes the game back by itself, without a card {"s": {"held": false, "wait": false, "gate": false, "ready": t
+2026-11-06 20:49	ccr-a3c53300-9f9ly1	f56038f	cloudtest	OK	44	lite	samtidig	
+2026-11-06 20:49	ccr-a3c53300-9f9ly1	f56038f+	errtest	OK	33	lite	samtidig	
+2026-11-06 20:50	ccr-a3c53300-9f9ly1	f56038f+	guesttest	OK	54	lite	samtidig	
+2026-11-06 20:50	ccr-a3c53300-9f9ly1	f56038f+	pwatest	OK	30	lite	samtidig	
+2026-11-06 20:50	ccr-a3c53300-9f9ly1	f56038f+	boottest	OK	29	lite	samtidig	
+2026-11-06 20:50	ccr-a3c53300-9f9ly1	f56038f+	pushtest	OK	23	lite	samtidig	
+2026-11-06 20:53	ccr-a3c53300-9f9ly1	f56038f+	starttest	OK	136	lite	samtidig	
+2026-11-06 20:53	ccr-a3c53300-9f9ly1	f56038f+	bootgtest	OK	159	lite	samtidig	
+2026-11-06 20:53	ccr-a3c53300-9f9ly1	f56038f+	savestest	OK	0	lite	samtidig	
+2026-11-06 20:53	ccr-a3c53300-9f9ly1	f56038f+	trip2	OK	38	lite	samtidig	
+2026-11-06 20:53	ccr-a3c53300-9f9ly1	f56038f+	worldtest	OK	19	lite	samtidig	
+2026-11-06 20:54	ccr-a3c53300-9f9ly1	f56038f+	docktest	FEIL	62	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-06 21:13	ccr-a3c53300-9f9ly1	9871601	tabtest	FEIL	0	lite	samtidig	FEIL no page errors (app) ["Cannot read properties of undefined (reading 'boat')"] (bygget før BOOTG: den samme feilen)
+2026-11-06 21:13	ccr-a3c53300-9f9ly1	9871601	synctest	OK	0	lite	samtidig	
+2026-11-06 21:13	ccr-a3c53300-9f9ly1	f56038f+	synctest	OK	0	lite	alene	

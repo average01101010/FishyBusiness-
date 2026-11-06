@@ -100,8 +100,13 @@ async def local(br):
         await pg.wait_for_function("/Spillet stoppet under oppstarten/.test((document.getElementById('toast') || {}).innerText || '')", timeout=10000); toast = 'ok'
     except Exception: pass
     check(toast == 'ok', 'the toast tells the player why the boat lies still')
-    await pg.wait_for_timeout(21000); r2 = await pg.evaluate(REC)
-    check(r2 and r2['ok'] and r2['fails'] == 0, '20 s on, the start has got through and the count is nothing again', r2)
+    # through: 20 s after the game was built and the loading screen gone 10 s of it (in LITE the 3D view gives up when the models are in)
+    t0 = time.time(); r1 = await pg.evaluate("({rec:" + REC + ", booting:document.body.classList.contains('booting')})")
+    try: await pg.wait_for_function(REC + " && " + REC + ".ok", timeout=60000)
+    except Exception: pass
+    r2 = await pg.evaluate(REC); took = round(time.time() - t0)
+    check(not r1['rec']['ok'] and r2 and r2['ok'] and r2['fails'] == 0 and took >= 10,
+          'the start is through once the game has run 20 s and the loading screen has been gone 10 s, and the count is nothing again', {'before': r1, 'after': r2, 's': took})
     await leave(pg)
     # 3. a start the phone ended in the background is not a lock
     await setrec(ctx, {'fails': 1, 'in': True, 'ok': False, 'vis': False, 'at': int(time.time() * 1000)})
