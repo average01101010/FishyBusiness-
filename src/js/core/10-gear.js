@@ -443,6 +443,7 @@ function gopAbort(why){
       log('Setting avbrutt. Redskapet er tatt om bord igjen.', 'Setting stopped. The gear is back aboard.'); b.gop = null; }
   } else {
     const s = S.sets.find(x => x.id === g.sid);
+    if (s && g.done > 0) kvHaulKeep(g, s);   // what came aboard is a catch of its own (the coast guard's sample)
     if (s && g.done > 0 && g.done < s.n){ gearBack(s, g.done, wearNets(s, g), wearOf(s, g)); s.n -= g.done; if (s.kind === 'line') s.hooks = s.n * g.hooksPer; s.a = {x:b.pos.x, y:b.pos.y}; s.b = {...g.b}; }
     if (s) s.hauling = false;
     log('Trekkingen stoppet. ' + (s ? s.n + ' ' + unitName(s.kind, s.n, s.lk) + ' står igjen i sjøen.' : ''), 'Hauling stopped. ' + (s ? s.n + ' ' + unitName(s.kind, s.n, s.lk) + ' remain in the sea.' : ''));
@@ -492,8 +493,10 @@ function landFish(sp, kg, key, mesh, p, H, hook, fresh, g){
     if (!nx[sp]) nx[sp] = sampleSel(sp, key, mesh, p, H);
     if (acc[sp] < nx[sp]) break;
     const w = nx[sp]; acc[sp] -= w; nx[sp] = 0;
+    if (g && KV47[sp]) kvSampleFish(g, sp, w, p);   // the coast guard's sample of the catch as it comes up: every fish, kept or let go (09j-kystvakt.js)
     if (w < SPECIES[sp].minKg || (SPECIES[sp].maxKg && w > SPECIES[sp].maxKg) || (sp === 'kveite' && kveiteClosed(H))){ S.stats.released = (S.stats.released || 0) + 1; if (g) g.rel++; continue; }
     const k = Math.min(w, room); room -= k; addCatch(sp, k, clsOf(sp, w), hook, {fresh, how:String(key).split(':')[0]}); got += k;
+    if (g){ const q = g.spKg || (g.spKg = {}); q[sp] = (q[sp] || 0) + k; }   // the haul's catch by species (the bycatch share in each catch, 09j-kystvakt.js)
     if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp, kg:k, t:performance.now()}); }
   }
   return got;
@@ -526,6 +529,7 @@ function finishHaul(g, H){
   const W = wearOf(s, g), cond = W.cond;
   S.sets.splice(S.sets.indexOf(s), 1);
   { const e = (S.gearLog || []).find(x => x.id === s.id); if (e){ e.tHaul = S.t; e.kg = Math.round(g.kg || 0); } }
+  kvHaulKeep(g, s);
   let tore = W.tore || 0;
   if (s.kind === 'garn' && cond < 0.25){ const p = Math.min(1, 3 * (0.25 - cond) + (cond <= 0 ? 1 : 0)); for (let i = 0; i < s.n; i++) if (Math.random() < p) tore++; }
   const back = s.n - tore;

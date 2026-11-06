@@ -95,3 +95,7 @@
 2026-11-06 07:29	ccr-5e1ba2f4-pusvyd	cb915c57+	boottest	OK	30	lite	samtidig	
 2026-11-06 07:29	ccr-5e1ba2f4-pusvyd	cb915c57+	trip2	OK	37	lite	samtidig	
 2026-11-06 07:30	ccr-5e1ba2f4-pusvyd	cb915c57+	dbg23o	OK	38	3d	alene	
+2026-11-06 07:57	ccr-4a897f45-dtssey	f53e5d20+	kystvakttest	OK	13	lite	alene	
+2026-11-06 07:58	ccr-4a897f45-dtssey	f53e5d20+	autolinetest	OK	12	lite	samtidig	
+2026-11-06 07:59	ccr-4a897f45-dtssey	f53e5d20+	geartest	OK	46	lite	samtidig	
+2026-11-06 07:59	ccr-4a897f45-dtssey	f53e5d20+	trip2	OK	40	lite	samtidig	
