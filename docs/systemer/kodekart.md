@@ -1480,7 +1480,7 @@ Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026;
   - 171 `kvWhatHav(r)`
   - 184 `kvFinish()`
 
-## `src/js/core/10-gear.js` (832 linjer)
+## `src/js/core/10-gear.js` (834 linjer)
 
 passive gear: nets, line and pots that stand in the sea while the boat is away
 
@@ -1552,18 +1552,18 @@ passive gear: nets, line and pots that stand in the sea while the boat is away
 - **641** in the sea, every hour: catch, losses, weather and deadlines (company level)
   - 642 `soakHour(s, H)`
   - 675 `gearHour(H)`
-  - 707 `reportLost(sid)`
-  - 715 `netMended(l)`
-- **716** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
-  - 722 `egnOrder(lk, n, bait)`
-  - 736 `egnHands()`
-  - 745 `egnSelf(lk, n, bait)`
-  - 766 `stripSelf(lk, bait, n, then)`
-  - 780 `mendSelf(nid)`
-  - 791 `botOrder(nid)`
-  - 802 `gearJob(j)`
-  - 814 `gearJobCancel(j)`
-  - 821 `shoreTick()`
+  - 709 `reportLost(sid)`
+  - 717 `netMended(l)`
+- **718** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
+  - 724 `egnOrder(lk, n, bait)`
+  - 738 `egnHands()`
+  - 747 `egnSelf(lk, n, bait)`
+  - 768 `stripSelf(lk, bait, n, then)`
+  - 782 `mendSelf(nid)`
+  - 793 `botOrder(nid)`
+  - 804 `gearJob(j)`
+  - 816 `gearJobCancel(j)`
+  - 823 `shoreTick()`
 
 ## `src/js/core/10b-gearcare.js` (266 linjer)
 
@@ -1619,21 +1619,21 @@ Bestilt til henting (M2 in docs/planer/butikker-og-sponsorer.md, 10.2b, V12 A; J
   - 46 `pickAdd(port, w, k, s, n)`
   - 59 `pickDrop(id)`
 
-## `src/js/core/10d-snokrabbe.js` (150 linjer)
+## `src/js/core/10d-snokrabbe.js` (153 linjer)
 
 the snow crab (H3a of docs/planer/havsteget-h3-snokrabbe.md, 06.11.2026)
 
 - **1** the snow crab (H3a of docs/planer/havsteget-h3-snokrabbe.md, 06.11.2026)
-  - 56 `snoField()`
-  - 77 `snoArea(p, H)`
-  - 86 `snoW(cw, soft)`
-  - 87 `snoCrab(m)`
-  - 96 `snoPts(s)`
-  - 99 `snoSoak(s, H)`
-  - 114 `landSno(g, n)`
-  - 129 `snoHaulDone(g, s)`
-  - 139 `snoSoftAt(p)`
-  - 144 `snoTend(s, a, mid)`
+  - 59 `snoField()`
+  - 80 `snoArea(p, H)`
+  - 89 `snoW(cw, soft)`
+  - 90 `snoCrab(m)`
+  - 99 `snoPts(s)`
+  - 102 `snoSoak(s, H)`
+  - 117 `landSno(g, n)`
+  - 132 `snoHaulDone(g, s)`
+  - 142 `snoSoftAt(p)`
+  - 147 `snoTend(s, a, mid)`
 
 ## `src/js/core/10e-krabbefabrikk.js` (126 linjer)
 

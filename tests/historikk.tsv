@@ -363,3 +363,7 @@
 2026-11-06 17:44	ccr-2f1306ed-u6tdgs	b7d1cfe0	trackfollow	OK	1587	3d	alene	
 2026-11-06 18:03	ccr-2f1306ed-u6tdgs	b7d1cfe0	kinotest	OK	1101	3d	alene	
 2026-11-06 18:15	ccr-2f1306ed-u6tdgs	4a90b072	snokrabbetest	OK	18	lite	samtidig	
+2026-11-06 18:15	ccr-2f1306ed-u6tdgs	ec00fe30	geartest	OK	47	lite	samtidig	
+2026-11-06 18:15	ccr-2f1306ed-u6tdgs	ec00fe30	itemcardtest	FEIL	23	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'jukse', 'krabbekar', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-06 18:21	ccr-2f1306ed-u6tdgs	ec00fe30	heattest	OK	333	3d	alene	
+2026-11-06 18:23	ccr-2f1306ed-u6tdgs	ec00fe30	landtest	OK	100	3d	alene	
