@@ -94,6 +94,9 @@ function giveSkip(k){
   S.skip = {k, t0:S.t, until:from + X.h * 60};
   S.sleep = null; S.energy = 100; S.drowsy = false; S.enWarn = false;
   for (const cr of fleetCrews()) for (const c of cr) c.fatigue = 0;
+  // (no rest on the rorbu, the tab says: you go aboard, and the plans go on at once; Jonas 06.11.2026)
+  if (S.rest) restEnd();
+  if (typeof plan2SkipGiven === 'function') plan2SkipGiven();
   log(X.no + ': du og mannskapet på hele flåten er uthvilt i ' + Math.round(skipLeft()) + ' timer.', X.en + ': you and the crews of the whole fleet are rested for ' + Math.round(skipLeft()) + ' hours.');
   if (hooks.onEnergy) hooks.onEnergy('skip');
   return X[S.lang === 'en' ? 'en' : 'no'];

@@ -64,7 +64,7 @@ function routePlayMode(){
 // changed first)
 function routePause(){
   const b = S.boat; if (!S.plan || b.status !== 'sailing') return;
-  S.draft = S.plan.wps.slice(S.plan.idx).map(w => ({...w})); S.draftSpeed = S.plan.speed || S.draftSpeed; draftForget();
+  S.draft = S.plan.wps.slice(S.plan.idx).map(w => ({...w})); S.draftSpeed = S.plan.speed || S.draftSpeed; if (S.plan.full != null) S.draftFull = !!S.plan.full; draftForget();
   S.plan = null; b.status = 'idle'; b.v = 0;
   log('Pause på ruta. Trykk ▶ for å gå videre.', 'Paused on the route. Tap ▶ to go on.');
 }

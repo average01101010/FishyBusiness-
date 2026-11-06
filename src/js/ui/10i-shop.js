@@ -11,7 +11,7 @@
 // cloud off (#nocloud, no network, GitHub Pages) the shop is closed, never free (Ø6 funn 5, 05.11.2026).
 const SHOP = {ready:null, busy:false, ret:null};
 const SHOP_PRODUCT = {haill:'haill', luksus:'luksus', pump:'trim_pump', ic:'trim_ic', turbo:'trim_turbo', yard:'verft_na', sk_light:'skip_light', sk_std:'skip', sk_max:'skip_max',
-  des_ripe:'des_ripe', des_totone:'des_totone', des_vann:'des_vann', des_stripe:'des_stripe', des_lakk:'des_lakk', des_flagg:'des_flagg', des_reg:'des_reg'};   // the paint designs (ui/10j-paint.js)
+  des_ripe:'des_ripe', des_totone:'des_totone', des_vann:'des_vann', des_stripe:'des_stripe', des_lakk:'des_lakk', des_flagg:'des_flagg', des_reg:'des_reg', des_logo:'des_logo'};   // the paint designs (ui/10j-paint.js)
 const shopFn = () => CLOUD_CFG.supabaseUrl.replace(/\/$/, '') + '/functions/v1/shop-checkout';
 const shopL = (no, en) => S.lang === 'en' ? en : no;
 function shopMode(){
@@ -67,7 +67,7 @@ async function shopGo(k){
 function shopGive(g){
   const d = g.data || {}, v = (S.fleet || []).find(x => x.id === d.boat) || curVessel();
   if (d.give === 'haill' && HAILL[d.type]){ giveHaill(d.type, 'shop'); return HAILL[d.type][S.lang === 'en' ? 'en' : 'no']; }
-  if (d.give === 'trim' && BOOSTS[d.k]) return withVessel(v, () => { const B = BOOSTS[d.k]; S.boat.trim = {k:d.k, t0:S.t}; applyVessel();
+  if (d.give === 'trim' && BOOSTS[d.k]) return withVessel(v, () => { const B = BOOSTS[d.k]; trimSet(d.k);
     log(B.no + ' er på «' + S.boatName + '» i ' + B.h + ' timer. Toppfart nå ' + fmt(BOAT.vmax, 1) + ' knop.', B.en + ' is on the «' + S.boatName + '» for ' + B.h + ' hours. Top speed now ' + fmt(BOAT.vmax, 1) + ' knots.'); return B[S.lang === 'en' ? 'en' : 'no']; });
   if (d.give === 'yard') return withVessel(v, () => { let n = 0; for (const j of S.jobs || []) if (YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t){ j.until = S.t; n++; }
     log('Verftet gjorde ' + (n > 1 ? n + ' jobber' : n ? 'jobben' : 'ingen jobber') + ' på «' + S.boatName + '» ferdig med én gang.', 'The yard finished ' + (n > 1 ? n + ' jobs' : n ? 'the job' : 'no jobs') + ' on the «' + S.boatName + '» straight away.');

@@ -260,7 +260,7 @@ function startReturn(auto, W, home, hsOver, opsKeep){
     if (t.port) break;
   }
   if (!wps.length || !wps[wps.length - 1].port){ const np = nearestPort(b.pos); wps.push({x:np.p.x, y:np.p.y, port:np.id, fish:0}); }
-  S.plan = {wps, idx:0, speed:S.plan ? S.plan.speed : S.draftSpeed, returning:true, ops};
+  S.plan = {wps, idx:0, speed:S.plan ? S.plan.speed : S.draftSpeed, full:S.plan ? S.plan.full : S.draftFull, returning:true, ops};
   b.fishUntil = null;
   if (b.status === 'engine') b.prev = 'sailing'; else b.status = 'sailing';
   if (auto) log(hsOver ? 'Sjøen økte til ' + hsOver.toFixed(1).replace('.', ',') + ' m. Båten går hjem samme vei.' : 'Vinden økte til ' + W.toFixed(1).replace('.', ',') + ' m/s. Båten går hjem samme vei.', hsOver ? 'The sea rose to ' + hsOver.toFixed(1) + ' m. Heading home the same way.' : 'Wind rose to ' + W.toFixed(1) + ' m/s. Heading home the same way.');
