@@ -565,8 +565,23 @@ function aisInfo(n){
     : n.coast ? [[L('Størrelse', 'Size'), fmt(n.L, 1) + ' × ' + fmt(n.B, 1) + ' m'], [L('Dypgående', 'Draught'), fmt(n.T, 1) + ' m']]
     : n.type === 'coastal' ? [[L('Kallesignal', 'Call sign'), 'LAKY'], [L('Rederi', 'Owner'), 'Kystruta AS'], [L('Størrelse', 'Size'), '121,8 × 21,0 m'], [L('Dypgående', 'Draught'), '4,9 m']] : [[L('Kallesignal', 'Call sign'), 'LMSB'], [L('Rederi', 'Owner'), 'Senja Ferjedrift AS'], [L('Størrelse', 'Size'), '49,9 × 12,4 m'], [L('Dypgående', 'Draught'), '3,1 m']];
   const dg = r => String(Math.round(((r * 180 / Math.PI) % 360 + 360) % 360) % 360).padStart(3, '0') + '°';
-  rows.push([L('Status', 'Status'), st], [L('Fart (SOG)', 'Speed (SOG)'), fmt(n.v, 1) + ' kn'], [L('Kurs (COG)', 'Course (COG)'), n.v > 0.15 ? dg(n.cog !== undefined ? n.cog : n.hd) : '–'], [L('Styrekurs (HDG)', 'Heading (HDG)'), dg(n.hd)]);
+  // the navigational status as the AIS has it (N8, core/05e-sjovei.js colregAisSt), and who gives way when she is the one warned for (Ø11.1)
+  const sw = typeof sjvWarn === 'function' ? sjvWarn() : null;
+  if (sw && sw.id === n.id) rows.push([L('Vikeplikt', 'Right of way'), sjvSay(sw, 'strip') + ' · CPA ' + sw.cpa + ' m ' + sjvWhen(sw)]);
+  rows.push([L('Status', 'Status'), st], [L('Navigasjonsstatus', 'Navigational status'), L(...colregAisSt(n))], [L('Fart (SOG)', 'Speed (SOG)'), fmt(n.v, 1) + ' kn'], [L('Kurs (COG)', 'Course (COG)'), n.v > 0.15 ? dg(n.cog !== undefined ? n.cog : n.hd) : '–'], [L('Styrekurs (HDG)', 'Heading (HDG)'), dg(n.hd)]);
   return '<div class="ai-h"><b>' + n.name + '</b><button type="button" id="aisX" aria-label="Lukk">✕</button></div><div class="ai-t">' + (n.player ? L('Spiller', 'Player') : n.rs ? L('Redningsfartøy', 'Rescue vessel') : n.fleet || n.coast || n.hav ? L('Fiskefartøy', 'Fishing vessel') : n.type === 'coastal' ? L('Passasjerskip', 'Passenger ship') : L('Ferje', 'Ferry')) + '</div>' + rows.map(r => '<div class="ai-r"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>').join('') + (n.player && typeof FRIENDS !== 'undefined' ? FRIENDS.chip(String(n.id).slice(1)) : '') + (n.player && typeof HAIL !== 'undefined' ? HAIL.card(n) : '') + (n.player ? '' : '<div class="ai-n">' + L('Stiplet linje: sporet siste 24 timer', 'Dashed line: track over the last 24 hours') + '</div>');
+}
+// the warning of the rules of the road on the chart (Ø11.1, core/05e-sjovei.js): a ring round the other vessel, her vector and yours on to
+// the CPA, the line between the two there, and the CPA with the time to it; red when you give way, yellow when you hold on
+function sjvChartSvg(u, bp){
+  const w = sjvWarn(); if (!w || !w.p) return '';
+  const A = sjvOwn(); if (bp) A.p = bp; const m = clamp(w.tcpa, 0, SJV.TW) / 60, gs = gridScale(w.p), c = w.sev === 'r2' ? '#e5383b' : '#f0a202';
+  const fwd = (p, cg, v) => ({x:p.x + Math.sin(cg) * v * NM * gs * m, y:p.y - Math.cos(cg) * v * NM * gs * m}), ta = fwd(A.p, A.cog, A.v), tb = fwd(w.p, w.cog, w.v);
+  const ln = (a, b, sw, da) => '<line x1="' + a.x + '" y1="' + a.y + '" x2="' + b.x + '" y2="' + b.y + '" stroke="' + c + '" stroke-width="' + sw + '"' + (da ? ' stroke-dasharray="' + da + '"' : '') + ' stroke-linecap="round"/>';
+  return '<g class="sjv" pointer-events="none">' + ln(A.p, ta, 1.6 * u, (5 * u) + ' ' + (3 * u)) + ln(w.p, tb, 2.4 * u) + ln(ta, tb, 1.1 * u, (2 * u) + ' ' + (2 * u)) +
+    '<circle cx="' + w.p.x + '" cy="' + w.p.y + '" r="' + (14 * u) + '" fill="none" stroke="' + c + '" stroke-width="' + (2.4 * u) + '"/>' +
+    '<circle cx="' + w.p.x + '" cy="' + w.p.y + '" r="' + (18 * u) + '" fill="none" stroke="' + c + '" stroke-opacity=".45" stroke-width="' + (1.2 * u) + '"/>' +
+    txt({x:w.p.x + 20 * u, y:w.p.y + 16 * u}, 'CPA ' + w.cpa + ' m · ' + sjvWhen(w), 'lbl-ais pl', 10.5 * u, 'stroke-width="' + (3 * u) + '" style="fill:' + c + '"') + '</g>';
 }
 function renderAisCard(){ const el = $('aisCard'); if (!AISSEL){ el.hidden = true; return; } const n = AISNOW.find(q => q.id === AISSEL); if (!n){ el.hidden = true; return; } el.innerHTML = aisInfo(n); el.hidden = false; $('aisX').onclick = () => { AISSEL = null; renderAisCard(); renderDyn(); }; }
 function renderDyn(){
@@ -625,6 +640,7 @@ function renderDyn(){
       g.push('<g transform="translate(' + n.p.x + ' ' + n.p.y + ') rotate(' + dg.toFixed(1) + ')"><path d="M0,' + (-k * 1.25) + ' L' + (0.55 * k) + ',' + (k * 0.8) + ' L0,' + (k * 0.45) + ' L' + (-0.55 * k) + ',' + (k * 0.8) + ' Z" class="' + cls + sel + '" stroke-width="' + sw + '"/></g>'); }
     if (pl || n.rs ? sel || view.z > 1.5 || n.rs : sel || (view.z > 5 && !moored && coastLbl)) (pl || n.rs ? plLbl : aisLbl).push(n);
   }
+  g.push(sjvChartSvg(u, bp));   // the rules of the road (Ø11.1)
   for (const n of plLbl.concat(aisLbl)){
     const sel = AISSEL === n.id, sz = (n.player ? 11 : 10) * u, p = {x:n.p.x + (n.player ? 11 : 8) * u, y:n.p.y - (n.player ? 9 : 6) * u}, bx = [p.x - 2 * u, p.y - sz * 0.8, p.x + String(n.name).length * sz * 0.56, p.y + sz * 0.3];
     // (the players and the one picked always, over what stands; the fishing boats only where nothing is)

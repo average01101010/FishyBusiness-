@@ -171,3 +171,6 @@ Jonas, med et bilde fra Hammerfest: «Vi må passe på at ikke blir alt for mye 
   - Rorbua: rødt hus med dør på tre pæler.
   - Navnene står ett ikon og 5 px til høyre for ikonet.
 
+## 5.48 Vikeplikten i kartplotteren og det lille kartet (Ø11.1, 06.11.2026)
+
+Ved fare for sammenstøt (CPA under grensa, TCPA under 6 spillminutter) tegner kartplotteren en ring rundt den andre båten, hennes vektor og din fram til CPA, en stiplet linje mellom de to punktene der, og «CPA 80 m · om 40 s» ved ringen (`sjvChartSvg` i `renderDyn`, med farger i SVG-en selv, rødt når du viker og gult når den andre viker). Det lille kartet tegner det samme (`miniSjv`), med ringen på kanten når båten er utenfor kartet, over GPS-feltet nederst. AIS-kortet har raden «Navigasjonsstatus» (underveis med motor, driver fiske, til ankers, fortøyd, ikke under kommando) og «Vikeplikt» øverst for den båten som er varslet. Reglene står i `docs/systemer/sjofart-og-lover.md`.

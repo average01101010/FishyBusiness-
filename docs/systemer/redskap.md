@@ -236,3 +236,15 @@ Jonas 05.11.2026: «husk at vi må ha blendermodeller og animasjoner for hele op
 - **Modellen** (`tools/boats/al45.py`, H2d2): slisken akter, døråpningen og fiskerennas munning i haleplassens bakvegg (mørke åpninger i stålkarm, ingenting bak), ankrene `aline.slide`, `aline.door` og `aline.fish`, og **kranen forut i egne deler** (`crane_parts`: svinghodet fra svingaksen på søyla, bommen fra bompinnen lagt rett forover, krokblokka fra øyet; ankeret `crane` med `axis`, `heel`, `len`, `park`, `hang`, `clear`). Søyla og bomstøtta er skrogets; bommen ligger i støtta når båten ikke losser (`drawShipCrane` uten stilling), og surringen over bommen er tatt bort. Delene tegnes der luka og seilet tegnes (egen båt og havflåten), i alle avstander. 25 119 trekanter nær, 3 713 fjern.
 - **Kranen langs kysten** (H2e, 06.11.2026): `h2dshot` del 8 losser ved mottakene `havtur` lander ved fra Båtsfjord, Tromsø, Ålesund og Bergen (Båtsfjord, Tromsdalen, Valderøya, Avaldsnes); alle fire steder settes pallen på mottakets kai (`P.onQuay`) og trucken står på kaia. Før var det bare sett i Vannareid.
 - **Test:** `tests/h2dshot.py` del 5–7 (3D, alene): stanga og dreggen over slisken, lina med egnede kroker akterover, ny stang mellom lenkene; gafferen og krokrenseren i haleplassen med resten av vakta inne, fisken gaffet inn og inn i renna; båtens egen kran med gaffelen nede i rommet og pallen opp gjennom luka, lossegjengen ved den og i buret. Skjermbilder i begge formater.
+
+## Snøkrabbe på havbåten (H3 av `docs/planer/havsteget-h3-snokrabbe.md`, valgene 06.11.2026)
+
+Planlagt 06.11.2026, ikke bygd. Jonas' valg samme dag: «V1: A», «V2: C», «V3: B», «V4: Gjør det som blir mest riktig, og passer spillet i et fremtidsperspektiv.», «V5: A», «V6: B».
+
+- **V1 A:** snøkrabbefartøyet blir et kombinasjonsfartøy, med fryseri for klør og tanker for levende krabbe; spilleren eller planen velger per tur. Tilleggskvoten gjelder bare levende levert.
+- **V2 C:** krabben landes ved alle mottak der kaia passer etter regelen som finnes (`portWhy`), også der sedlene ikke har snøkrabbe; ingen nye havner (fryselagrene blir ikke havner).
+- **V3 B:** snøkrabbefartøyet får isklasse og kan gå i spredt drivis; isen ellers er som i dag. Isklassen blir en grense for konsentrasjonen, ikke fri gange i all is, og teinene er like utsatt for drivisen som før.
+- **V4:** reglene per år som data, fartøykvotene regnet av totalkvoten og de 30 tillatelsene, kvotefleksen på fartøynivå i lagringen, og totalkvoten etter siste kjente år fra spillets egen bestand (kvoter og regler, 5.5b).
+- **V5 A:** seks økter (H3a, H3b, H3c, H3d1, H3d2, H3e) med utrulling etter hver.
+- **V6 B:** tillatelsen prises etter det driften kan bære (kvoter og regler, 5.5b).
+

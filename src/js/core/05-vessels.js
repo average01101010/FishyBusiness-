@@ -530,7 +530,8 @@ function npcStates(H, only){
   if (!only || only[0] === 'p') for (const n of peerStates()) if (!only || only === n.id) out.push(n);
   // the rescue boat on her way to you and with you on the tow
   if (!only || only === 'rs'){ const r = rescueAis(H); if (r) out.push(r); }
-  return out;
+  // the rules of the road (Ø11.1, 05e-sjovei.js): the classes, and the NPCs near the boat you follow that give way, where they are now
+  return colregNpc(H, out, only);
 }
 // The other players' boats as the server last told them (ui/10h-world.js fills PEERS every 15 s: {id, boat, vtype, x, y, hd, v, st, liv,
 // user, fs, at}: the owner's player name and sea time in points, core/09e-fartstid.js),
@@ -798,6 +799,7 @@ function sail(H, W, hs){
   let left = v * NM / 60 * gridScale(b.pos);   // (true km on the grid: gridScale, H1b)
   fuelUse(b, fuelLph(v, W) / 60);
   obsSail(pl, b);   // round a bridge's pier, a pier or a mark on the leg ahead (11b-obstacles.js)
+  if (sjvSail(pl, b, left)) return;   // giving way for a vessel she must (Ø11.1, 05e-sjovei.js): the minute is the manoeuvre's
   while (left > 1e-9 && pl.idx < pl.wps.length){
     const w = pl.wps[pl.idx], d = dist(b.pos, w);
     if (d > 1e-6) b.heading = Math.atan2(w.x - b.pos.x, -(w.y - b.pos.y));
