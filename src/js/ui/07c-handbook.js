@@ -192,6 +192,9 @@ const APP_ALWAYS = ['vaer', 'meld', 'redning', 'handbok', 'tilbake', 'innst', 'a
 const HB_APP = {nett:'nett', guide:'guide', lykke:'kaiboden', regler:'regler', kystvakt:'regler', sesong:'sesong', post:'post', meld:'meld', drift:'drift', topp:'salg', merker:'merker', patch:'patch', oppdrag:'ordl', venner:'folk', rederi:'rederi', kvote:'kvote', vaer:'vaer', redning:'redning'};
 function appShown(id){
   if (!S.apps || APP_ALWAYS.includes(id) || S.apps[id]) return true;
+  // Venner is out as soon as the player is registered (Tony 06.11.2026: a friend request came with «Svar i Venner-appen», and the app was
+  // not on the phone before the third landing); a guest sees it with the rest from the third landing
+  if (id === 'folk' && !tutOn() && typeof isGuest === 'function' && !isGuest()) return true;
   return !tutOn() && hbLand() >= 3;
 }
 function appUnlock(id){ if (id && S.apps && !S.apps[id]) S.apps[id] = 'ny'; }
