@@ -471,6 +471,7 @@ body.vplot .attr{display:block!important;left:6px;right:auto}
 .ground{fill:rgba(47,109,134,.05);stroke:var(--water);opacity:.7}
 .route{fill:none;stroke:var(--mag);stroke-linecap:round;stroke-linejoin:round}
 .route.bad{stroke:var(--bad)}
+.note.bad,.ph-note.bad{color:var(--bad);font-weight:600}   /* why a player name is not taken (ui/10f-cloud.js nameWhy) */
 .trail{fill:none;stroke:var(--muted);opacity:.7;stroke-linecap:round}
 .wp{fill:var(--sea);stroke:var(--mag)} .wp.fish{fill:var(--mag)}
 .wpn{font-family:var(--sans);font-weight:650;fill:var(--mag);paint-order:stroke;stroke:var(--sea);stroke-linejoin:round}
