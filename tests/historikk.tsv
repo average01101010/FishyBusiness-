@@ -147,3 +147,34 @@
 2026-11-06 11:14	ccr-1c785ad6-0di8o1	abff131c+	r4test	OK	15	lite	samtidig	
 2026-11-06 11:15	ccr-1c785ad6-0di8o1	abff131c+	geartest	OK	48	lite	samtidig	
 2026-11-06 11:15	ccr-1c785ad6-0di8o1	abff131c+	kvtest	LES	15	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	autonavtest	FEIL	900	lite	samtidig	gikk ut på tid
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	turtest	OK	16	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	npctest	OK	8	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	towtest	OK	16	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	tattest	OK	18	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	peergear	OK	5	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	skiptest	OK	15	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	drifttest	FEIL	38	lite	samtidig	FEIL a long trip rests aboard away from home and goes home at its end [False, False, 3, None]
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	driftuitest	OK	16	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	opsowntest	OK	43	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	anchortest	OK	27	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	havplantest	OK	218	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	rectest	OK	5	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	uketest	OK	7	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	booktest	OK	27	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	caretest	OK	15	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	jigalongtest	OK	14	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	seaworktest	OK	6	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	slidertest	OK	15	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	cashfxtest	OK	8	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	sidetab	OK	13	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	fartstidtest	OK	15	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	boottest	OK	28	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	worldtest	OK	19	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	itemcardtest	OK	23	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	icestep	OK	7	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	fleet3test	OK	14	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	adminbuytest	OK	10	lite	samtidig	
+2026-11-06 11:30	ccr-1c785ad6-0di8o1	3bc3b4cb	havtur	FEIL	76	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
+2026-11-06 11:34	ccr-1c785ad6-0di8o1	3bc3b4cb	unittest	FEIL	279	3d	alene	avsluttet med kode 1
+2026-11-06 11:45	ccr-1c785ad6-0di8o1	3bc3b4cb	penshot	OK	648	3d	alene	
