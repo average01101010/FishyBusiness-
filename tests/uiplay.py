@@ -32,7 +32,7 @@ async def play(b, W, H, tag):
     out = os.path.join('uiplay', tag); os.makedirs(out, exist_ok=True)
     ctx = await b.new_context(viewport={'width': W, 'height': H}, has_touch=True)
     pg = await ctx.new_page(); cdp = await ctx.new_cdp_session(pg); pg.set_default_timeout(120000)
-    errs, steps, n, census = [], [], [0], {}
+    errs, steps, n, census, seen = [], [], [0], {}, []
     pg.on('pageerror', lambda e: errs.append({'at': steps[-1]['f'] if steps else '', 'err': (getattr(e, 'stack', '') or str(e))[:600]}))
     pg.on('dialog', lambda d: asyncio.ensure_future(d.dismiss()))
 
@@ -46,6 +46,9 @@ async def play(b, W, H, tag):
                 for v, m in o.items(): census.setdefault(k, {}).setdefault(v, {'n': 0, 'shots': 0}); census[k][v]['n'] += m; census[k][v]['shots'] += 1
         except Exception as e: print('   census failed', e)
         steps.append({'f': f, 'note': note}); print('   ', tag, f, note[:90], flush=True)
+        # written after every picture, so a run that is stopped (the 2 h limit under SwiftShader, 06.11.2026) still leaves its census
+        json.dump(census, open(os.path.join(out, 'census.json'), 'w'), indent=1)
+        json.dump({'steps': steps, 'tut': seen, 'errs': errs, 'done': False}, open(os.path.join(out, 'steps.json'), 'w'), ensure_ascii=False, indent=1)
 
     async def tap(x, y):
         await cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x, 'y': y, 'id': 0}]}); await asyncio.sleep(0.05)
@@ -65,7 +68,7 @@ async def play(b, W, H, tag):
     await tap_el('#obGo'); await pg.wait_for_timeout(600)
     await pg.wait_for_function("G3.isActive() || document.body.classList.contains('vplot')", timeout=90000); await pg.wait_for_timeout(1500)
     await pg.evaluate("S.mult = 30; save()")
-    seen, stuck = [], 0
+    stuck = 0
     for it in range(900):
         await pg.evaluate("if (!asleep() && S.energy < 60) S.energy = 60")
         s = json.loads(await pg.evaluate(STATE)); sid = s['id']
@@ -154,7 +157,7 @@ async def play(b, W, H, tag):
     await clear()
 
     json.dump(census, open(os.path.join(out, 'census.json'), 'w'), indent=1)
-    json.dump({'steps': steps, 'tut': seen, 'errs': errs}, open(os.path.join(out, 'steps.json'), 'w'), ensure_ascii=False, indent=1)
+    json.dump({'steps': steps, 'tut': seen, 'errs': errs, 'done': True}, open(os.path.join(out, 'steps.json'), 'w'), ensure_ascii=False, indent=1)
     print('   ', tag, 'errors', errs[:5])
     await ctx.close()
 
