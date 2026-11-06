@@ -119,6 +119,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 - Ni økter Ø11.1–Ø11.9 etter `docs/planer/lover-regler-sikkerhet.md` (Ø11a): Ø11.1 vikeplikten (L1, N8), Ø11.2 sikt, lys og lyd (L3, N8), Ø11.3 sammenstøt (L2), Ø11.4 utstyrsmodellene i Blender (L6a, SK1), Ø11.5 utstyret og merkingen på båtene (L6b, L4, V6 A), Ø11.6 mann over bord (SK2, SK3), Ø11.7 nødstopp, nestenulykker og havsnød (SK4, SK6, L8), Ø11.8 farvannet (L5), Ø11.9 arbeidsavtalen (L7). Det som overlapper, er de seks første.
 - **Filer:** står per økt i planen (kap. 6). De nye reglene ligger i nye filer (`core/05e-sjovei.js`, `core/14b-sikkerhet.js`, `ui/10s-mob.js`), med ett kall i `core/05-vessels.js`, `core/05d-hav.js` og `core/16b-dyn.js`. Ø11 trenger verken `core/03e-rules.js` eller `core/09j-kystvakt.js` (Kystvakta ser ikke på sjøfarten, V1 A), så **Ø11 og Ø10 kan gå samtidig**. Ø11.1–Ø11.3 og Ø11.5 går ikke samtidig med Ø15, Ø9 eller Ø7. Ø11.4 (bare Blender) kan tas før H2 er ferdig hvis Jonas vil.
 - **Valgene V7–V11 tatt 05.11.2026** (planen kap. 7). **Venter på** «kjør på» etter H2e.
+- **Ø11.4 bygd 06.11.2026** (vesten, MOB-båten med davit og vugge, MOB-lyset med røyk; gren `ccr-d0cfc148-iavi2e`). Igjen: nødstoppen på halerne når H2d er ute (`tools/gear/`). Status i planen kap. 6 og 10.
 
 ### Ø12 Driftsplan 2, resten
 
@@ -187,7 +188,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 | Ø9 Fysikk 4 | Kan starte (spilltest 3 er ute) | | |
 | Ø16 Sanntid S2 | Ferdig og rullet ut 06.11.2026 (01c89b6f): reléet (`tools/server/rt`), `rt_ticket()` (HMAC i Postgres, hemmeligheten i Vault), klienten med 5 Hz/1 Hz og interpolasjon 0,5 s bak, `setup.sh`, `Caddyfile`, `deploy.yml`; `rttest` 12 OK, `sqltest` 135 OK. Migreringen, `setup.sh` og hemmeligheten i Vault gjort av Jonas 06.11.2026. Igjen: S3 (lasten) og «Lasten med 5 000 spillere» mot Supabase | `ccr-529a099b-0o66nk` | 05.11.2026 |
 | Ø10 Regelmotoren | Venter på H2 | | |
-| Ø11 Lover, regler og sikkerhet | Venter på H2 og «kjør på» (ni økter Ø11.1–Ø11.9; valgene tatt) | | |
+| Ø11 Lover, regler og sikkerhet | Ø11.4 bygd 06.11.2026 (2f00d140) uten nødstoppen på halerne (venter på H2d): vesten i garderoben (`worker.b64`), MOB-båten med davit og vugge (`tools/deck/mob.py`, `deck-mob.b64`), MOB-lyset med røyk (`sikker.py`); ikke satt på båtene eller folkene (Ø11.5), ingenting ser annerledes ut. Resten venter på H2 og «kjør på» (valgene tatt) | `ccr-d0cfc148-iavi2e` (Ø11.4), `ccr-5e1ba2f4-pusvyd` | 06.11.2026 |
 | Ø12 Driftsplan 2, resten | Venter på H2 | | |
 | Ø13 Ny kartrelease | Ikke begynt | | |
 | Ø14 Fangstfelt med navn | Venter på H2 | | |
@@ -219,3 +220,4 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 - 06.11.2026: Jonas kjørte `setup.sh` på serveren og la hemmeligheten i Vault (bekreftet). Ø16 venter bare på ja til utrullingen.
 - 06.11.2026: Ø16 rullet ut etter Jonas' «ja, rull ut» (01c89b6f). Igjen: S3 (lasten) og «Lasten med 5 000 spillere» mot Supabase.
 - 06.11.2026: Ø7 ferdig og rullet ut (525da2b2). Det meste av 10.1 fra UI-gjennomgangen var rettet i U0 (18d7c37f) uten at backloggen var strøket; det er sjekket og strøket nå, med en sjekk for `havNear` i `hav.test.mjs`. Nytt: «Lukk telefonen først» står ikke fast på de små tipsene, skiffens levende kartplotter kastet og stoppet bildet for alle med skiff (`inMapFrame`), ikonene i knappelinja på linje. Venter på H2: hurtigsjarken 12 kn, `S.owned.push` i `addVessel` og navnet `inFrame` i `view3d/09-landing-deck.js` (backloggen 10.7). Ikke tatt: lyden med tall som ikke er endelige (10.1, sto ikke i bestillingen).
+- 06.11.2026: Ø11.4 bygd (Jonas: «Oppgave: Ø11.4, utstyrsmodellene i Blender, uten nødstoppen på halerne»): vesten som seks deler i `worker.b64`, `tools/deck/mob.py` og `deck-mob.b64` med dataelementet i malen, `mobroyk` i `sikker.py`. De gamle delene er byte for byte som før (`glbdiff.py`; skyggen som bakes, er ikke lik fra kjøring til kjøring, derfor `add`). Nødstoppen venter på H2d; Ø11.5 setter utstyret på båtene og folkene.

@@ -43,6 +43,16 @@ below are only where the measures come from.
     boyeline    30 m of 8 mm floating line (yellow polypropylene) coiled to 0.28 m across and hung on a small stainless wall hook:
                 a bundle with the turns showing as ridges, one loose turn over it, four turns of the end bound round the top and
                 the end hanging down inside. From the hook's fixing on the wall.
+    mobroyk     the light and smoke marker (Ø11.4, 06.11.2026, Jonas' reference 28.10.2026 in docs/planer/lover-og-regler.md L6): MOB light
+                and smoke in one, 0.442 m long, an orange body 0.090 m across with a float 0.132 m across in the middle (a band of
+                retro-reflective tape round it), two white lamps on its shoulder, a dark top with the smoke outlet, on a stainless
+                bracket (a back plate, a cup over the top, a spring clip round the lower body open to the front) and the white line from
+                the eye at its bottom to the ring buoy beside it, a small snap hook on the buoy's grab line. The LSA Code asks the
+                smoke signal for at least 15 min of smoke and the light for at least 2 cd for at least 2 h (2.1.2, 2.1.3), and a buoy
+                of at least 4 kg to pull them out of their quick release (2.1.1); the sizes are my own (no maker's measures read).
+                From the middle of the back plate on the wall, its axis 0.078 m out. Extras: mobroyk_to, the line's end;
+                mobroyk_holder, where boyeholder's origin goes for the buoy to meet the line; mobroyk_lamps, the lamps' centres and
+                facings (for the light at night).
     flate4      throw-overboard liferaft containers, white GRP: two half-shells meeting at a raised flange with a dark seam round
     flate6      the middle, domed ends, raised ribs (one on each half for 4 and 6, two for 12), a label patch on each half (no
     flate12     text), drain holes under the flange and the painter (red and black cord) out of a grommet low on the +x end. Lying
@@ -71,7 +81,10 @@ depth, ribs and flange, the cradle's design (saddle angle +-55 degrees, 70 mm un
     pip install bpy==4.5.4
     python3 tools/deck/sikker.py          -> src/data/deck-safety.b64, renders tools/deck/out/sikker_*.png
     python3 tools/deck/sikker.py fast     -> without the renders
-    python3 tools/deck/sikker.py boye     -> only the named renders (radome radar boye lys strips flate tak)
+    python3 tools/deck/sikker.py add      -> as fast, but keeps the parts already in src/data/deck-safety.b64 byte for byte and only adds
+                                             the new ones (tools/boats/glbadd.py: the baked shade is not the same from run to run);
+                                             with render names after it (add royk boye) it renders those too
+    python3 tools/deck/sikker.py boye     -> only the named renders (radome radar boye lys royk strips flate tak)
 
 Frames. Here in Blender: x to the right, y forward, z up. The game's: x right, y up, z aft; to_game(p) = (x, z, -y), so Blender
 +y (forward) is the game's -z and Blender -y is the game's +z (the ring buoy's front, out from a wall)."""
@@ -484,6 +497,65 @@ def boyeline():
     atube(A, [(0, -0.003, -0.008), (0, -0.020, -0.010), (0, -0.040, -0.009), (0, -0.056, -0.006), (0, -0.064, 0.004), (0, -0.065, 0.018)], 0.0035, lambda i: S, 8)
     return A.done(50)
 
+# ---------- the light and smoke marker (Ø11.4, 06.11.2026): MOB light and smoke in one, on its bracket by the buoy ----------
+MR_Y = -0.078                      # the marker's axis, out from the wall
+MR_LAMP = (0.0565, 0.060)          # a lamp's base on the shoulder: out from the axis, height
+def mobroyk_profile(D, O, T):
+    """the marker upright, from its middle (bottom -0.230, top 0.212): a dark base with the lanyard eye, the narrow lower body, the
+    wider float in the middle with a band of retro-reflective tape, the shoulder the two lamps sit on, the narrow upper body and the
+    dark top with the smoke outlet"""
+    return [(0.000, -0.230, D), (0.020, -0.230, D), (0.024, -0.226, D), (0.024, -0.214, D), (0.040, -0.212, O), (0.045, -0.206, O),
+            (0.045, -0.150, O), (0.0425, -0.147, O), (0.0425, -0.141, O), (0.045, -0.138, O), (0.045, -0.092, O), (0.050, -0.081, O),
+            (0.061, -0.067, O), (0.066, -0.055, O), (0.066, -0.012, O), (0.0665, -0.010, T), (0.0665, 0.010, T), (0.066, 0.012, O),
+            (0.066, 0.040, O), (0.064, 0.050, O), (0.058, 0.061, O), (0.050, 0.070, O), (0.046, 0.078, O), (0.046, 0.168, O),
+            (0.044, 0.172, D), (0.044, 0.198, D), (0.041, 0.204, D), (0.030, 0.209, D), (0.012, 0.211, D), (0.000, 0.212, D)]
+MR_TO = V((-0.235, -0.050, -0.110))   # where the line ends: on the ring buoy's grab line (the buoy hung as mobroyk_holder says)
+def mobroyk():
+    """the light and smoke marker (MOB light and smoke in one): an orange cylinder with a wider float in the middle, two white
+    lamps on its shoulder, held on a stainless bracket on the wall (a cup over its top, a spring clip round the lower body that opens
+    to the front), and the white line from the eye at its bottom to the ring buoy beside it. When the buoy is thrown, the line pulls
+    the marker out of the clip and it follows the buoy into the sea (the light and the smoke start when it floats upright)."""
+    A = Acc('mobroyk'); S = C['stain']; D = C['dgrey']; t = 0.004
+    revolve(A, mobroyk_profile(D, C['orange'], C['tape']), (0, MR_Y, 0), (0, 0, 1), seg=28)
+    # the smoke outlet: four dark slots round the top cap (a little proud of it)
+    for k in range(4):
+        a = math.pi / 4 + k * math.pi / 2; e = V((math.cos(a), math.sin(a), 0)); s = V((-e.y, e.x, 0))
+        obox(A, V((0, MR_Y, 0.190)) + e * 0.0445, e * 0.0012, s * 0.010, V((0, 0, 0.004)), C['black'])
+    # the two lamps on the shoulder, left and right seen from the front: a dark housing and a white dome
+    for sx in (-1, 1):
+        p0 = V((sx * MR_LAMP[0], MR_Y, MR_LAMP[1])); d = V((sx * 0.75, 0, 0.66)).normalized()
+        acyl(A, p0 - d * 0.006, p0 + d * 0.008, 0.0165, D, seg=16)
+        revolve(A, [(0.0140, 0.000, C['bwhite']), (0.0145, 0.004, C['bwhite']), (0.0125, 0.010, C['bwhite']), (0.0075, 0.0145, C['bwhite']), (0.000, 0.016, C['bwhite'])], p0 + d * 0.008, d, seg=16)
+    # the lanyard eye under the base
+    atorus2(A, (0, MR_Y, -0.240), (1, 0, 0), 0.009, 0.0025, D, seg=10, rseg=5)
+    # the bracket: a back plate with two bolts, a cup over the top, a spring clip round the lower body (open 80 degrees to the front)
+    pl = rrect(0.0, 0.0, 0.050, 0.480, 0.020, 4)
+    vb = [A.v((x, 0.0, z)) for x, z in pl]; vf = [A.v((x, -t, z)) for x, z in pl]; n = len(pl)
+    A.f(vf, S, (0, -1, 0)); A.f(vb, S, (0, 1, 0))
+    for k in range(n):
+        k1 = (k + 1) % n; A.f([vb[k], vb[k1], vf[k1], vf[k]], S, V((pl[k][0], 0, pl[k][1])))
+    for z in (-0.200, 0.120): domebolt(A, (0, -t, z), (0, -1, 0), 0.007, S)
+    revolve(A, [(0.0490, 0.176, S), (0.0510, 0.176, S), (0.0510, 0.224, S), (0.0, 0.224, S)], (0, MR_Y, 0), (0, 0, 1), seg=28)      # the cup, its open bottom rim
+    revolve(A, [(0.0, 0.219, S), (0.0490, 0.219, S), (0.0490, 0.176, S)], (0, MR_Y, 0), (0, 0, 1), seg=28)                               # its inside (faces inwards, seen from below)
+    obox(A, (0, -t - 0.012, 0.200), (0.018, 0, 0), (0, 0.012, 0), (0, 0, 0.022), S)
+    z = -0.170; rr = 0.0465; a0 = math.radians(-50); a1 = math.radians(230); m = 16
+    obox(A, (0, -t - 0.0125, z), (0.012, 0, 0), (0, 0.0125, 0), (0, 0, 0.007), S)
+    ring = lambda R_, zz: [V((R_ * math.cos(a0 + (a1 - a0) * i / m), MR_Y + R_ * math.sin(a0 + (a1 - a0) * i / m), zz)) for i in range(m + 1)]
+    o0, o1, i0, i1 = [[A.v(p) for p in ring(R_, zz)] for R_, zz in ((rr + 0.002, z - 0.008), (rr + 0.002, z + 0.008), (rr, z - 0.008), (rr, z + 0.008))]
+    cm = V((0, MR_Y, z))
+    for i in range(m):
+        A.f([o0[i], o0[i + 1], o1[i + 1], o1[i]], S, (o0[i].co + o1[i + 1].co) / 2 - cm)
+        A.f([i0[i], i0[i + 1], i1[i + 1], i1[i]], S, cm - (i0[i].co + i1[i + 1].co) / 2)
+        A.f([o1[i], o1[i + 1], i1[i + 1], i1[i]], S, (0, 0, 1)); A.f([o0[i], o0[i + 1], i0[i + 1], i0[i]], S, (0, 0, -1))
+    for e in (0, m): A.f([o0[e], o1[e], i1[e], i0[e]], S, (o0[e].co - cm).cross(V((0, 0, 1))) * (-1 if e else 1))
+    # the white line from the eye, hanging slack to the buoy beside it, a small snap hook on the buoy's grab line at its end
+    pts = [V((0, MR_Y, -0.2485)), V((-0.004, MR_Y, -0.290)), V((-0.020, MR_Y + 0.003, -0.345)), V((-0.055, MR_Y + 0.007, -0.378)),
+           V((-0.100, MR_Y + 0.012, -0.384)), V((-0.145, MR_Y + 0.017, -0.360)), V((-0.185, MR_Y + 0.022, -0.300)), V((-0.213, MR_Y + 0.025, -0.220)),
+           V((-0.228, MR_TO.y, -0.150)), MR_TO + V((0, 0, -0.012))]
+    atube(A, pts, 0.0035, lambda i: C['rope'], 6)
+    atorus2(A, MR_TO, (0, 1, 0), 0.011, 0.0022, S, seg=12, rseg=5)
+    return A.done(40)
+
 # ---------- the liferaft container ----------
 FL = {4: (0.990, 0.490), 6: (1.155, 0.561), 12: (1.355, 0.650)}
 FLANGE_H = 0.018; FL_P = 2.2
@@ -664,6 +736,7 @@ def main():
     for n in (4, 6, 12):
         F, stub = flate(n); objs['flate%d' % n] = F
         Vg, fa, h = vugge(n, stub); objs['vugge%d' % n] = Vg; flate_at[str(n)] = G(fa); hw[str(n)] = h
+    objs['mobroyk'] = mobroyk()          # (last, so the parts before it come out as they did)
     # the occlusion baked into the colours, each part alone (the cradle with its container over it)
     setup_render(64, 64, samples=8)
     def bake(o, others, samples, dist):
@@ -677,7 +750,7 @@ def main():
             F = objs['flate' + nm[5:]]; F.location = (0, 0, FL_H0); bpy.context.view_layer.update()
             bake(o, [F], 24, 0.10); bake(F, [o], 16, 0.08); baked[F.name] = True
             F.location = (0, 0, 0); bpy.context.view_layer.update()
-        elif nm in ('livboye', 'livboye_w', 'boyeline', 'boyelys', 'boyeholder'): bake(o, [], 24, 0.04)
+        elif nm in ('livboye', 'livboye_w', 'boyeline', 'boyelys', 'boyeholder', 'mobroyk'): bake(o, [], 24, 0.04)
         else: bake(o, [], 16, 0.06)
         baked[nm] = True
     for p in bpy.context.scene.objects:
@@ -696,16 +769,22 @@ def main():
           'flate_at': flate_at,
           'release': hw,
           'ring': {'ro': B_RO, 'ri': B_RI, 'thick': 2 * B_B},
+          # the light and smoke marker (mobroyk, from the middle of its back plate on the wall): the end of its line (on the buoy's grab
+          # line), where the buoy's bracket (boyeholder's origin) goes for the line to meet the buoy, and the two lamps (centre, facing)
+          'mobroyk_to': G(MR_TO), 'mobroyk_holder': G(V((-0.55, 0.0, -0.15))),
+          'mobroyk_lamps': [[G(V((sx * MR_LAMP[0], MR_Y, MR_LAMP[1])) + V((sx * 0.75, 0, 0.66)).normalized() * 0.016), [round(v, 3) for v in to_game_n(V((sx * 0.75, 0, 0.66)).normalized())]] for sx in (-1, 1)],
           'size': {nm: [r4(hi[k] - lo[k]) for k in range(3)] for nm, (lo, hi) in sz.items()}}
-    glb = os.path.join(OUT, 'deck-safety.glb'); nb = write_glb(glb, parts, ex)
-    open(os.path.join(ROOT, 'src', 'data', 'deck-safety.b64'), 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())
+    glb = os.path.join(OUT, 'deck-safety.glb'); nb = write_glb(glb, parts, ex); b64 = os.path.join(ROOT, 'src', 'data', 'deck-safety.b64')
+    if 'add' in sys.argv:       # keep the parts src/data has byte for byte (the baked shade differs a little from run to run), add the new ones
+        import glbadd; print('added to deck-safety.b64:', glbadd.add_parts(b64, glb, b64))
+    else: open(b64, 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())
     print('deck safety GLB %.1f KB' % (nb / 1024))
     for nm, A, _ in parts:
         lo, hi = sz[nm]
         print('  %-11s %5d tris  x %.3f..%.3f  y %.3f..%.3f  z %.3f..%.3f' % (nm, len(A['idx']) // 3, lo[0], hi[0], lo[1], hi[1], lo[2], hi[2]))
     print('  bar_at %s  boye_at %s  flate_at %s' % (ex['bar_at'], ex['boye_at'], flate_at))
     print('  strips: top %s .. %s, bot %s .. %s; edges float %.1f mm over the face' % (ex['boye_strip_top'][0][0], ex['boye_strip_top'][0][-1], ex['boye_strip_bot'][0][0], ex['boye_strip_bot'][0][-1], strip_crown_gap() * 1000))
-    if 'fast' in sys.argv: return
+    if 'fast' in sys.argv or ('add' in sys.argv and not [x for x in sys.argv[1:] if x not in ('fast', 'add')]): return
     renders(objs, flate_at)
 
 # ---------- renders for checking ----------
@@ -749,7 +828,7 @@ def renders(objs, flate_at):
     sc = setup_render(1000, 700, samples=16)
     try: sc.cycles.use_denoising = True
     except Exception: pass
-    only = [x for x in sys.argv[1:] if x != 'fast']
+    only = [x for x in sys.argv[1:] if x not in ('fast', 'add')]
     want = lambda k: not only or k in only
     deck = slab('deck', -4, 4, -4, 4, -0.02, 0.0, (0.42, 0.43, 0.42))
     if want('radome'):
@@ -766,7 +845,7 @@ def renders(objs, flate_at):
             if nm == 'radar_bar4':
                 camera((0.55, -0.75, 0.55), (0, 0, 0.22), lens=45); render(os.path.join(OUT, 'sikker_ped.png'))
             bpy.data.objects.remove(B, do_unlink=True)
-    if want('boye') or want('strips') or want('lys'):
+    if want('boye') or want('strips') or want('lys') or want('royk'):
         wall = slab('wall', -1.5, 1.5, 0.0, 0.05, -0.3, 2.5, (0.92, 0.92, 0.90), 0.3)
         Z0 = 1.15; Bh = dup(objs['boyeholder'], (0, 0, Z0)); bz = (0, BH_Y, Z0 + BH_ZC)
         Bl = dup(objs['boyelys'], (0.48, 0, Z0 + 0.10)); Ln = dup(objs['boyeline'], (-0.50, 0, Z0 + 0.25))
@@ -783,6 +862,16 @@ def renders(objs, flate_at):
         if want('lys'):
             show(objs, wall, deck, Ln); camera((-0.22, -0.62, Z0 + 0.38), (-0.50, -0.03, Z0 + 0.15), lens=50); render(os.path.join(OUT, 'sikker_line.png'))
             show(objs, wall, deck, Bl); camera((0.72, -0.52, Z0 + 0.26), (0.48, -0.05, Z0 + 0.10), lens=50); render(os.path.join(OUT, 'sikker_lys.png'))
+        if want('royk'):
+            # the marker hung beside the buoy as its extras say (the buoy's bracket at mobroyk_holder from the marker), from the front,
+            # three-quarters and close; and the same from the side, to see it clear of the wall
+            Mo = V((0.55, 0.0, Z0 + 0.15)); Mr = dup(objs['mobroyk'], Mo); Bo = dup(objs['livboye'], bz)
+            show(objs, wall, deck, Bh, Bo, Mr)
+            camera((0.25, -2.4, Z0 + 0.20), (0.25, 0, Z0 + 0.10), lens=40); render(os.path.join(OUT, 'sikker_royk_front.png'))
+            camera((1.35, -1.55, Z0 + 0.55), (0.30, 0, Z0 + 0.10), lens=40); render(os.path.join(OUT, 'sikker_royk_3q.png'))
+            show(objs, wall, deck, Mr); camera((1.20, -0.95, Z0 + 0.45), (0.52, -0.08, Z0 + 0.10), lens=50); render(os.path.join(OUT, 'sikker_royk_close.png'))
+            camera((1.75, -0.30, Z0 + 0.20), (0.55, -0.07, Z0 + 0.10), lens=50); render(os.path.join(OUT, 'sikker_royk_side.png'))
+            for o in (Mr, Bo): bpy.data.objects.remove(o, do_unlink=True)
         if want('strips'):
             Bo = dup(objs['livboye'], bz); st, sb = boye_strips(); off = V(bz)
             st = [[p + off for p in row] for row in st]; sb = [[p + off for p in row] for row in sb]

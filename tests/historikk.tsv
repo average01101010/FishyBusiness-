@@ -65,3 +65,6 @@
 2026-11-06 05:06	ccr-aee4fa08-paslvj	1143a686	starttest	OK	177	lite	samtidig	
 2026-11-06 05:06	ccr-aee4fa08-paslvj	1143a686	tutdrift	OK	11	lite	samtidig	
 2026-11-06 05:30	ccr-aee4fa08-paslvj	6bb259d7	tut	OK	1650	lite	alene	
+2026-11-06 03:00	ccr-d0cfc148-iavi2e	110e4b7f+	trip2	OK	42	lite	samtidig	
+2026-11-06 03:00	ccr-d0cfc148-iavi2e	110e4b7f+	boottest	OK	34	lite	samtidig	
+2026-11-06 03:01	ccr-d0cfc148-iavi2e	110e4b7f+	looktest	OK	14	lite	samtidig	
