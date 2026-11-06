@@ -206,8 +206,9 @@ async def jig(pl):
     await pl.js("DOCK.close()")
     if not await to_sea(pl, 'husoy', 8, 20, 90, 'torsk', 'a cod spot north of Senja'): return
     await pl.shot('til-sjos', 'at sea, lying still')
-    await pl.dock('settut'); await pl.shot('settut-av', 'tapped «Sett ut» rigged for the jig (should say why not)')
-    await pl.dock('taopp'); await pl.shot('taopp-av', 'tapped «Ta opp» with no gear in the sea')
+    # (U2-3: Sett ut and Ta opp are one button «Redskap» with a fan, and it is not in the row on a boat with no set gear aboard or in the sea)
+    r = await pl.dock('redskap', must=False); pl.note('dock', 'rigged for the jig with no set gear: «Redskap» %s' % ('is in the row' if r else 'is not in the row, as planned (nothing to set or haul)'))
+    await pl.shot('redskap-uten', 'the row rigged for the jig with no set gear (no Redskap, no Auto-nav)')
     await pl.dock('jukse'); await pl.shot('jukse-kort', 'the jig card')
     await pl.tap('#dockFan [data-dk="fh+"]'); await pl.tap('#dockFan [data-dk="fh+"]'); await pl.shot('jukse-kort-timer', 'two taps on + for hours')
     await pl.fan('Start jukse'); await pl.shot('jukser', 'jigging has started')
@@ -308,7 +309,7 @@ async def rig(pl, name):
 
 async def set_out(pl, choice, tag, drag_land=False, minus=0):
     """«Sett ut» from the dock: the fan's choice, the chart's line (dragged over land first when asked, to see it go red), − taps, and «Sett ut»."""
-    await pl.dock('settut'); await pl.shot('settut-vifte-' + tag, 'the «Sett ut» fan')
+    await pl.dock('redskap'); await pl.shot('redskap-vifte-' + tag, 'the «Redskap» fan'); await pl.fan('Sett ut'); await pl.shot('settut-vifte-' + tag, 'the «Sett ut» fan')   # (U2-3: Sett ut in the Redskap fan)
     if not await pl.fan(choice, must=False):
         pl.note('missing', 'no «%s» in the Sett ut fan: %s' % (choice, (json.loads(await pl.read()))['fan'])); return False
     await pl.pg.wait_for_timeout(600); await pl.shot('settut-kart-' + tag, 'the line drawn on the chart')
@@ -340,7 +341,7 @@ async def haul(pl, tag, again=False):
     h0 = await pl.js("holdTotal()")
     far = await pl.js("(() => { const s = mySets()[0]; if (!s || nearSet(S.boat.pos, 0.3)) return null; return +(Math.min(dist(S.boat.pos, s.a), dist(S.boat.pos, s.b)) / NM).toFixed(1); })()")
     if far is not None:
-        await pl.dock('taopp'); rd = json.loads(await pl.read()); pl.note('haul', '%.1f nm from the buoy: %s; back to it (the sail is skipped)' % (far, rd['toasts']))
+        await pl.dock('redskap'); await pl.fan('Ta opp', must=False); rd = json.loads(await pl.read()); pl.note('haul', '%.1f nm from the buoy: %s; back to it (the sail is skipped)' % (far, rd['toasts'])); await pl.js("DOCK.menu(null)")   # (U2-3: far off, Ta opp is greyed in the Redskap fan, or Redskap itself is)
         await pl.js("(() => { const s = mySets()[0]; return FP.sea(buoyStandoff(s, dist(S.boat.pos, s.a) < dist(S.boat.pos, s.b) ? s.a : s.b)); })()")
         if not await pl.js("!!nearSet(S.boat.pos, 0.3)"): await pl.js("(() => { const s = mySets()[0]; return FP.sea(s.a); })()")
     r = await pl.dock('taopp'); await pl.shot('taopp-' + tag, 'tapped «Ta opp»')
@@ -409,7 +410,7 @@ async def line(pl):
         # away from the buoys: «Ta opp» says how far, and «Kjør dit» in the inventory finds the way back
         q = await pl.js("async () => { const p = S.boat.pos; return await FP.spot({x:p.x + 2.5, y:p.y + 1.5}, 1.5, 20, 400, null); }")
         await pl.js("p => FP.sea(p)", q); pl.note('setup', 'moved 3 km off the line to lie there (as if away)'); await soak(pl, 12, 'hyse')
-        await pl.dock('taopp'); await pl.shot('taopp-langt', '«Ta opp» 3 km from the buoys')
+        await pl.dock('redskap'); await pl.fan('Ta opp', must=False); await pl.shot('taopp-langt', '«Redskap» and its «Ta opp» 3 km from the buoys'); await pl.js("DOCK.menu(null)")
         await pl.dock('beh'); await pl.drw('Redskap'); await pl.shot('beh-i-sjoen', 'the inventory with the line in the sea', drawer=True); await buttons(pl)
         r = await pl.tap(text='Kjør dit', scope='#drawer', must=False)
         await pl.pg.wait_for_timeout(1500); await pl.shot('kjor-dit', 'after «Kjør dit»: the chart with the way to the buoy')
@@ -496,7 +497,7 @@ async def garn(pl):
     await pl.shot('kjopt-garn', 'nets and buoy sets bought', drawer=True)
     pl.note('nets', await pl.js("JSON.stringify(S.pgear.nets.map(l => [l.ty || 'bunn', l.mesh, l.n]))")); await pl.js("DOCK.close()")
     if not await to_sea(pl, 'gryllefjord', 10, 30, 120, 'torsk', 'a cod spot off Gryllefjord in March'): return
-    await pl.dock('settut'); await pl.shot('settut-vifte-alene', 'the «Sett ut» fan, alone aboard'); await buttons(pl, '#dockFan')
+    await pl.dock('redskap'); await pl.fan('Sett ut'); await pl.shot('settut-vifte-alene', 'the «Sett ut» fan, alone aboard'); await buttons(pl, '#dockFan')
     if await pl.tap(text='180', scope='#dockFan', must=False):
         await pl.pg.wait_for_timeout(500); await pl.shot('settut-alene', 'the chart line, alone aboard'); pl.note('setmode', 'alone: %s' % await pl.js("SETM ? setWhy() : 'no set mode'"))
         await pl.tap('#setBar [data-sb="x"]', must=False)
@@ -578,7 +579,7 @@ async def kanter(pl):
         await card_btn(pl, bi['name'].split(' ')[0], 'Ansett', must=False)
         pl.note('crew', 'hired %s; aboard today: %s' % (bi['name'], await pl.js("JSON.stringify(crewAboard().map(c => c.name))"))); await pl.js("DOCK.close()")
         if await to_sea(pl, 'husoy', 8, 30, 100, 'torsk', 'nets with the side-job hand'):
-            await pl.dock('settut'); await pl.tap(text='156', scope='#dockFan', must=False); await pl.pg.wait_for_timeout(500)
+            await pl.dock('redskap'); await pl.fan('Sett ut', must=False); await pl.tap(text='156', scope='#dockFan', must=False); await pl.pg.wait_for_timeout(500)
             pl.note('crew', 'Sett ut with %s hired but ashore today: %s' % (bi['name'], await pl.js("SETM ? setWhy() : 'no set mode'")))
             await pl.shot('settut-biyrke', 'Sett ut with the side-job hand hired (ashore today)'); await pl.tap('#setBar [data-sb="x"]', must=False)
             await pl.js("id => FP.port(id)", 'finnsnes')
