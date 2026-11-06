@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['h2d2-061126', '06.11.2026', 'Autolineren i arbeid', 'The autoliner at work', [
+       ['Når autolineren setter, går bøyestanga og dreggen over hekken ned slisken, og lina med egnede kroker strekker seg akterover i kjølvannet. Mellom lenkene går en ny stang over, og en blåse hver nautiske mil.', 'When the autoliner sets, the marker pole and the grapnel go over the stern down the slide, and the line with its baited hooks streams astern in the wake. Between the lenker a new pole goes over, and a blåse every nautical mile.'],
+       ['Under draget står gafferen ved haleporten og tar fisken inn én og én, og den sklir inn i fiskerenna. En til passer krokrenseren, og resten av vakta er i fabrikken.', 'While hauling, the gaffer stands at the hauling port and takes the fish in one by one, and they slide into the fish chute. Another minds the hook cleaner, and the rest of the watch is in the factory.'],
+       ['Ved lossingen tar autolinerens egen kran pallene opp fra rommet gjennom luka på pallegaffelen og setter dem på kaia, med lossegjengen i luka og ved den.', 'At the landing the autoliner\'s own crane takes the pallets up from the hold through the hatch on the pallet fork and sets them on the quay, with the landing gang in the hatch and beside it.'],
+    ]],
     ['h2d-051126', '05.11.2026', 'Autolineren i 3D', 'The autoliner in 3D', [
        ['Autolineren har fått autolinehaleren med krokrenseren i haleporten, og porten er åpen, så du ser lina komme inn over skiva med forsyn og kroker.', 'The autoliner has its autoline hauler with the hook cleaner in the hauling port, and the port is open, so you see the line come in over the sheave with its snoods and hooks.'],
        ['Lenkene er merket med bøyestenger som på havet: to flagg i vest og ett i øst, og gule blinklys om natta.', 'The lenker are marked with ocean marker poles: two flags at the west end and one at the east, and yellow flashing lights at night.'],

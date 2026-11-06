@@ -4,6 +4,15 @@ coast, on the autoliners' ground north of Loppa (the one tests/havplantest.py us
   2 hauling: the line comes in through the port over the hauler's sheave, which turns, with its snoods and hooks every 1.3 m
   3 the ends of the set: the ocean marker poles of § 68 (two flags at the west end, one at the east), and their yellow lamps at night
   4 the landing on pallets: the hatch open, the Blender pallet (tools/deck/pall.py) on the pallet fork on the plant's crane
+Havsteget H2d2 (06.11.2026), the animations:
+  5 the setting: the pole and the grapnel go over the stern down the slide from the setting chute (anchors.aline.chute, .slide), the line
+    with its baited hooks streams astern, and a new pole goes over between the lenker
+  6 the haul at the port: the gaffer at the port takes the fish in one at a time and lets them fall at the fish chute, where they slide
+    into its mouth in the back wall; the deck hand on the bleeding at the hook cleaner; the rest of the watch and those on a break inside
+    (deckcrew.js places().port)
+  7 the landing from the hold: her own forward crane (anchors.crane) takes the pallets up from the hold through the hatch on the pallet
+    fork and sets them on the quay abreast of it for the forklift; the landing gang in the hatch, by it (signalling, guiding) and in the
+    crane driver's cage, the plant's gang on the quay as before (the plant's crane idle: it could not reach the hatch)
 Pictures in both formats (h2d_<what>_liggende.png, _staaende.png). 3D: run alone. Needs tools/map/out/game (release.py and game.py).
 Prints OK or FEIL."""
 from _env import GAME, boot
@@ -55,7 +64,31 @@ LAND = """async () => { const R = {}, b = S.boat; b.gop = null; S.sets = [];
 # the landing's clock back to a pallet on the fork in the air (the third lift), before each picture
 HOLD = """() => { const L = window.__L; if (L && S.boat.land === L) S.t = Math.floor(L.t0 + landLiftT(L, 2) + 0.6 * liftMin(L)); }"""
 
-CAM = """([dist, pitch, yaw]) => { const c = G3._debug.cam; c.helm = false; c.dist = dist; c.pitch = pitch; c.yaw = yaw; }"""
+# the setting (H2d2): two lenker of autoline baited with saury, set eastwards from where she is; the end lines first (lead), as on the ground
+SET = """() => { const b = S.boat, p = window.__p; S.sets = []; b.gop = null; b.status = 'idle'; b.v = 0; b.heading = Math.PI / 2; b.pos = {...p}; b.land = null;
+  b.fuel = BOAT.fuelCap; const pg = S.pgear; autoL(pg); baitOf(pg).saury = 4000;
+  const why = startSet('line', {lk:'auto', n:2, bait:'saury'}, 0, Math.PI / 2); const g = b.gop;
+  // (held where it is while the pictures are taken: the clock runs on at six times real time and a lenke would be set in under five
+  // minutes; with this many hooks to the lenke the line hardly moves on, and JUNC puts her where the test wants her)
+  if (g) g.hooksPer = 5e7;
+  return {why, gop:!!g, lead:g && g.lead, auto:g && g.auto, n:g && g.n, bait:g && g.s && g.s.bait}; }"""
+
+# the setting at a point along it in lenker (0.965: a little before the end of the first, 1.006: just over it, where the pole between the
+# lenker goes over)
+JUNC = """(at) => { const b = S.boat, g = b.gop; if (!g) return null; g.lead = 0; g.done = Math.floor(at); g.prog = at - g.done; g.sub = 0; const f = (g.done + g.prog) / g.n;
+  b.pos = {x:g.a.x + (g.b.x - g.a.x) * f, y:g.a.y + (g.b.y - g.a.y) * f}; g.mv = null; return +f.toFixed(4); }"""
+
+# a fish for the gaffer, as the haul's slices bring them aboard (window.CATCHQ)
+FISH = """(n) => { const Q = window.CATCHQ || (window.CATCHQ = []); for (let i = 0; i < n; i++) Q.push({sp:['torsk', 'hyse', 'brosme'][i % 3], kg:3 + i, t:performance.now()}); return Q.length; }"""
+
+# who of the watch is where in the hauling station (the agents of deckcrew.js)
+CREW = """() => { const P = CREW3D.places(), A = CREW3D.visible().filter(a => !(a.goal && a.goal.inside)).map(a => ({st:a.st, role:a.role, task:a.goal && a.goal.task, x:+a.x.toFixed(2), z:+a.z.toFixed(2), mode:a.mode}));
+  const all = CREW3D.agents().map(a => ({st:a.st, inside:!!(a.goal && a.goal.inside), mode:a.mode})); return {port:!!(P && P.port), vis:A, all}; }"""
+
+# the landing held at the fork down in the hold under the hatch (u 0.38 of the third lift), and at the pallet coming up through it (0.49)
+HOLDU = """(u) => G3._debug.landFix(u == null ? null : 2, u)"""   # (the third lift held at u, the scene's own clock; null lets it run)
+
+CAM = """([dist, pitch, yaw, at]) => { const c = G3._debug.cam; c.helm = false; c.dist = dist; c.pitch = pitch; c.yaw = yaw; c.at = at || null; }"""
 
 async def frames(pg, n=3):
     """wait for n frames drawn (SwiftShader can take a second or more for one)"""
@@ -117,6 +150,76 @@ async def main():
             st = await pg.evaluate("({k:G3._debug.hatchK(), fork:G3._debug.kitPart('pall', 'gaffel'), full:G3._debug.kitPart('pall', 'pall_full'), scene:(() => { const P = G3._debug.PLANTS.find(q => q.scene); return P ? {hang:!!P.scene.hang, deck:P.scene.deck.length, quay:P.scene.quay.length} : null; })()})")
             await shots(pg, 'lossing', HOLD)
             check(L.get('kind') == 'pall' and st['k'] > 0.9 and st['fork'] and st['full'] and st['scene'] and st['scene']['hang'], 'lossingen: luka er åpen, pallen fra Blender henger i pallegaffelen på kranen', st)
+        if want('5'):
+            R5 = await pg.evaluate(SET); print('  settingen:', R5)
+            await pg.evaluate(CAM, [20, 0.28, -0.75, [3.4, 0.5, 27.0]]); await pg.wait_for_timeout(1500)
+            # (held the moment both have gone over, in the same call: SwiftShader's frames are slow, and a drop is done in a few seconds)
+            HOLD1 = "(() => { const k = G3._debug.kitStat; if ((k.aDrop_pole || 0) >= 1 && (k.aDrop_dregg || 0) >= 1){ G3._debug.almFix(0.55); return true; } return false; })()"
+            for _ in range(20):
+                await frames(pg, 1)
+                if await pg.evaluate(HOLD1): break
+            st = await pg.evaluate("Object.assign({}, G3._debug.kitStat, {alm:G3._debug.alm})")
+            await shots(pg, 'setting_stang')
+            await pg.evaluate("G3._debug.almFix(1.85)"); await frames(pg, 3); await pg.screenshot(path='h2d_setting_dregg.png')
+            check(R5.get('why') is None and R5.get('auto') and st.get('aDrop_pole', 0) >= 1 and st.get('aDrop_dregg', 0) >= 1 and st['alm']['on'] and st['alm']['drops'] >= 2,
+                  'settingen: bøyestanga og dreggen går over hekken nedover slisken', {k: st.get(k) for k in ('aDrop_pole', 'aDrop_dregg', 'aDrop_vak', 'aFly', 'alm')})
+            await pg.evaluate("G3._debug.almFix(null)")
+            await pg.evaluate("(() => { S.boat.gop.lead = 0; })()"); await pg.evaluate(CAM, [18, 0.22, -0.9, [3.4, 0.3, 30.0]]); await pg.wait_for_timeout(2500); await frames(pg, 4)
+            hk = await pg.evaluate("G3._debug.kitStat.aSet || 0")
+            await shots(pg, 'setting_line')
+            check(hk >= 8, 'settingen: lina med egnede kroker går ut fra slisken og akterover i kjølvannet', {'kroker': hk})
+            await pg.evaluate(SET); f = await pg.evaluate(JUNC, 0.965); await frames(pg, 4); await pg.evaluate("G3._debug.almReset()"); await frames(pg, 3)
+            p0 = await pg.evaluate("G3._debug.kitStat.aDrop_pole || 0"); a0 = await pg.evaluate("G3._debug.alm")
+            f = await pg.evaluate(JUNC, 1.006)   # (her middle 39 m past the end of the first lenke: her slide is just over it)
+            p1 = p0
+            for _ in range(30):
+                await frames(pg, 1); p1 = await pg.evaluate("(p0) => { const n = G3._debug.kitStat.aDrop_pole || 0; if (n > p0) G3._debug.almFix(0.5); return n; }", p0)
+                if p1 > p0: break
+            a1 = await pg.evaluate("G3._debug.alm")
+            await frames(pg, 3); await pg.screenshot(path='h2d_setting_mellomstang.png'); await pg.evaluate("G3._debug.almFix(null)")
+            check(p1 > p0 and a1['out'] > a0['out'], 'settingen: ny bøyestang over hekken mellom lenkene', {'stenger': [p0, p1], 'ute': [a0['out'], a1['out']], 'sC': a1['sC'], 'L': a1['L']})
+            await pg.evaluate("(() => { const b = S.boat; b.gop = null; b.status = 'idle'; S.sets = []; })()"); await pg.evaluate(CAM, [16, 0.12, -1.45])
+        if want('6'):
+            await pg.evaluate(HAUL); await pg.evaluate("(() => { S.boat.gop.prog = 0.1; })()"); await pg.wait_for_timeout(3000)
+            await pg.evaluate(CAM, [7.5, 0.1, -1.6, [4.6, 1.9, -1.2]]); await pg.wait_for_timeout(2500)
+            cr = await pg.evaluate(CREW)
+            g0 = await pg.evaluate("G3._debug.dk.n.gaff"); s0 = await pg.evaluate("G3._debug.kitStat.aSlid || 0")
+            await pg.evaluate(FISH, 4)
+            g1, s1 = g0, s0
+            for _ in range(40):
+                await frames(pg, 1); g1 = await pg.evaluate("G3._debug.dk.n.gaff"); s1 = await pg.evaluate("G3._debug.kitStat.aSlid || 0")
+                if g1 > g0 and s1 > s0: break
+            await shots(pg, 'drag_porten', FISH.replace('(n) =>', '() =>').replace('i < n', 'i < 1'))
+            # (those on their way in through the doorway are not counted: their goal is inside)
+            gaffer = [a for a in cr['vis'] if a['task'] == 'haul' and a['st'] == 'haling']; tender = [a for a in cr['vis'] if a['task'] == 'coil' and a['st'] == 'blogg']
+            check(cr['port'] and len(gaffer) == 1 and len(tender) == 1 and len(cr['vis']) == 2,
+                  'draget: én gaffer ved porten og én ved krokrenseren i haleplassen, resten av vakta inne', cr)
+            check(g1 > g0 and s1 > s0, 'draget: fisken gaffes inn én og én ved porten og sklir inn i fiskerenna', {'gaff': [g0, g1], 'renna': [s0, s1]})
+            await pg.evaluate("(() => { const b = S.boat; b.gop = null; b.status = 'idle'; S.sets = []; })()"); await pg.evaluate(CAM, [16, 0.12, -1.45])
+        if want('7'):
+            # (a landing of her own still going on from part 4, else a new one: parts 5 and 6 take her out to the ground)
+            if not await pg.evaluate("!!(S.boat.land && S.boat.status === 'port' && window.__L === S.boat.land)"):
+                L = await pg.evaluate(LAND); print('  lossingen:', L); await pg.wait_for_timeout(6000)
+            # (from high over her starboard quarter, down into the hatch: the lid opens to port and would hide the opening from that side)
+            # (from over the water on her port side: the plant's silo stands between the quay and her; high, to see down into the hatch)
+            await pg.evaluate(CAM, [16, 1.1, 1.35, [-1.6, 6.0, -0.9]]); await pg.evaluate(HOLDU, 0.38); await pg.wait_for_timeout(3000); await frames(pg, 3)
+            # (her own forward crane lands the pallets, H2d2: its hook's height in her frame; the plant's crane stands idle)
+            scene = """(() => { const P = G3._debug.PLANTS.find(q => q.scene), S0 = P && P.scene; return S0 ? {ship:!!S0.ship, hang:!!S0.hang, u:+S0.u.toFixed(2), hook:S0.spose ? +S0.spose.hook.toFixed(2) : null, deckN:S0.deck.length, gang:G3._debug.landHatch, cr:G3._debug.shipCr} : null; })()"""
+            down = await pg.evaluate(scene)
+            await pg.evaluate(HOLDU, 0.49); await frames(pg, 3); up = await pg.evaluate(scene)
+            dk = await pg.evaluate("(() => { const G = geoOf('autoliner'); return {deck:G.hatch.deck}; })()")
+            # (the hook's level in her frame: down in the hold it is below her weather deck, as the pallet comes up it is over it)
+            check(down and up and down['ship'] and down['cr']['parts'] and down['cr']['tip'] and not down['hang'] and up['hang'] and down['hook'] < dk['deck'] < up['hook'] and down['gang'] and len(down['gang']) == 4,
+                  'lossingen: båtens egen kran tar pallene opp fra rommet gjennom luka på gaffelen, lossegjengen i luka, ved den og i kranførerens bur', {'nede': down, 'oppe': up, 'dekk': dk})
+            # (the pictures last: SwiftShader can take minutes for a frame at a plant, and a picture that times out is not a fault in the game)
+            try:
+                # (all from high over her port side, close: with the plant's quay and buildings in the picture SwiftShader timed out)
+                await pg.evaluate(CAM, [16, 0.95, 1.35, [-1.0, 7.5, -0.9]]); await pg.evaluate(HOLDU, 0.49); await shots(pg, 'lossing_luka')
+                await pg.evaluate(CAM, [16, 1.1, 1.35, [-1.6, 6.0, -0.9]])
+                await pg.evaluate(HOLDU, 0.38); await frames(pg, 3); await pg.screenshot(path='h2d_lossing_rommet.png')
+                await pg.evaluate(CAM, [18, 1.0, 1.2, [5.0, 5.0, -4.0]]); await pg.evaluate(HOLDU, 0.8); await frames(pg, 3); await pg.screenshot(path='h2d_lossing_kaia.png')
+            except Exception as e: print('  (bildet av lossingen gikk ut på tid i SwiftShader:', str(e).split(chr(10))[0][:120] + ')')
+            await pg.evaluate(HOLDU, None)
         gerr = await pg.evaluate("G3._debug.glErr()")
         check(gerr == 0, 'ingen GL-feil', gerr)
         print('sidefeil:', list(dict.fromkeys(errs))[:5])

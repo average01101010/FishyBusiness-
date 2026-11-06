@@ -25,3 +25,10 @@
 2026-11-06 00:30	ccr-87bd2cf3-hnz2ak	5395f788+	deckshot	FEIL	2400	3d	alene	gikk ut på tid
 2026-11-06 00:30	ccr-87bd2cf3-hnz2ak	5395f788+	dbg23o	OK	46	3d	alene	
 2026-11-06 00:32	ccr-87bd2cf3-hnz2ak	5395f788+	landtest	OK	80	3d	alene	
+2026-11-06 05:41	ccr-29346d8a-qz1f9z	2ff5e513+	vesseltest	OK	27	lite	samtidig	
+2026-11-06 05:41	ccr-29346d8a-qz1f9z	2ff5e513+	crewclip	FEIL	20	lite	samtidig	FEIL nor does the work at its places (jigging, gutting, icing, hauling) {'bunntral': {'jig': ['jig:1[0]null'], 'deck': [], 'haul': []}}
+2026-11-06 05:41	ccr-29346d8a-qz1f9z	2ff5e513+	crewwalk	OK	10	lite	samtidig	
+2026-11-06 05:46	ccr-29346d8a-qz1f9z	2ff5e513+	haultest	OK	318	3d	alene	
+2026-11-06 05:47	ccr-29346d8a-qz1f9z	2ff5e513+	dbg23o	OK	41	3d	alene	
+2026-11-06 06:02	ccr-29346d8a-qz1f9z	2ff5e513+	tral3d	FEIL	900	3d	alene	gikk ut på tid
+2026-11-06 06:04	ccr-29346d8a-qz1f9z	2ff5e513+	landtest	OK	110	3d	alene	

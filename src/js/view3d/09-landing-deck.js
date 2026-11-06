@@ -10,6 +10,7 @@
   // fills the plant's tubs from the hold, set out on deck (deckSlots) one by one. A landing saved before then ('box') keeps its pallets.
   const SLH = 1.793;   // the hook's level over the base of the tub hanging in the sling (the ring 0.95 m over the rim)
   const TUBH = 0.74;   // a tub's height, for stacking two on the quay and on the forks
+  const HOLDD = 3.2;   // how far below the weather deck the pallets are taken from in the hold (the hatch's trunk is 1.4 m, al45.py; a pallet 1.68 m)
   const PALLH = 1.9;   // a pallet of frozen cartons (H2b, 08-plants.js palF): about a tonne, 11 layers of four, wrapped (the Blender one, H2d: kitX('pall').h)
   const loadH = (kind, nb) => kind === 'tub' ? TUBH : kind === 'pall' ? PALLH : 0.13 + Math.ceil(nb / 3) * 0.29;
   const craneIdle = (P, T) => ({a:Math.atan2(P.u[0], P.u[1]) + Math.sin(T * 0.05) * 0.25, r:5.5, hook:QTOP + 3.2});
@@ -21,19 +22,22 @@
   // where the plant's tubs stand on deck on a boat with a hold, in the boat's frame (x to starboard, z aft); the first is the next to go up
   function deckSlots(kind){
     const G = GEO(vtype()), d = G.deck || {y:G.gw, z:(G.stern || 3) * 0.5};
-    // (a freezer vessel's pallets come up through her cargo hatch over the hold, anchors.hatch, H2d: the next one stands in the opening)
-    if (kind === 'pall' && G.hatch) return [[G.hatch.at[0], G.hatch.deck, G.hatch.at[2]]];
+    // (a freezer vessel's pallets come up through her cargo hatch over the hold, anchors.hatch, H2d: the next one stands down in the hold
+    // under the opening, HOLDD below the deck, out of sight under the trunk's dark floor, and comes up through it on the fork, H2d2)
+    if (kind === 'pall' && G.hatch) return [[G.hatch.at[0], G.hatch.deck - HOLDD, G.hatch.at[2]]];
     return kind === 'tub' ? [[0.65, d.y, d.z - 0.55], [-0.65, d.y, d.z - 0.55], [0.65, d.y, d.z + 0.55], [-0.65, d.y, d.z + 0.55]] : [[0, d.y, d.z - 0.45], [0, d.y, d.z + 0.45]];
   }
   // the forklift's run on the unit's route: from its spot east of the drop spot forward to the loads, lift, on round a quarter turn to
   // the door's line and in through the door, set down, and back the same way in reverse. With back (an open boat's own tubs) it takes
   // the washed empties up inside and brings them out to the drop spot before it goes back to its spot. The route keeps the truck's
   // corners well inside the deck (unittest.py checks it). Its speed is set so a run takes at most two lifts (with back: the wash).
-  function fkRun(P, back){
-    const ck = back ? 'runB' : 'run'; if (P[ck]) return P[ck];
+  // (Q: where a vessel's own crane set the loads down on the quay, H2d2: the forklift fetches them there and drives on its lane in;
+  // kept while she lies within a metre of where it was made for)
+  function fkRun(P, back, Q){
+    const ck = back ? 'runB' : Q ? 'runQ' : 'run'; if (P[ck] && (!Q || Math.hypot(P[ck].Q[0] - Q[0], P[ck].Q[1] - Q[1]) < 1)) return P[ck];
     const T = unitModel(P.unit.v).A.truck, W = q => unitW(P.unit, q[0], q[2]), c = T.arc, r = T.r;
     const arc = []; for (let k = 0; k <= 8; k++){ const a = Math.PI / 2 * k / 8; arc.push(W([c[0] - r * Math.sin(a), 0, c[2] + r * Math.cos(a)])); }
-    const wait = W(T.wait), pick = W(T.pick), inn = W(T.in), inPath = [pick, ...arc, inn], outPath = [...inPath].reverse().concat([wait]);
+    const wait = W(T.wait), pick = Q ? Q.slice() : W(T.pick), inn = W(T.in), inPath = Q ? [pick, W(T.pick), ...arc, inn] : [pick, ...arc, inn], outPath = [...inPath].reverse().concat([wait]);
     const hd = (a, b) => Math.atan2(b[0] - a[0], -(b[1] - a[1])), plen = pts => pts.reduce((s, q, i) => i ? s + Math.hypot(q[0] - pts[i - 1][0], q[1] - pts[i - 1][1]) : 0, 0);
     const legs = [{kind:'go', pts:[wait, pick], rev:false}, {kind:'pick', pts:[pick], h:hd(wait, pick), dur:0.35}, {kind:'go', pts:inPath, rev:false},
       {kind:'drop', pts:[inn], h:hd(arc[8], inn), dur:0.3}];
@@ -44,7 +48,7 @@
     const dist = legs.reduce((s, g) => s + g.len, 0), fixed = legs.reduce((s, g) => s + (g.dur || 0), 0), room = back ? LANDING.wash + (1 - LANDING.hooked) * LANDING.lift - 0.4 - fixed : 3.95;
     const vG = Math.max(20, dist / Math.max(1, room));   // metres per game minute
     let t = 0; for (const g of legs){ g.t0 = t; g.dur = g.dur || g.len / vG; t += g.dur; }
-    return P[ck] = {legs, T:t, Wp:wait, waitH:hd(wait, pick), inn};
+    return P[ck] = {legs, T:t, Wp:wait, waitH:hd(wait, pick), inn, Q:Q || null};
   }
   // where a leg of the run puts the truck at w (0-1): moving off and pulling up gently, facing the way it drives (or the other way
   // when it reverses)
@@ -81,36 +85,85 @@
   function landBack(L){ if (!L || !L.own) return null; const e = S.t + currentFrac() - L.t0, out = new Set();
     for (let i = 0; i < L.n; i++) if (e >= landLiftT(L, L.n + i) + LANDING.hooked * LANDING.lift) out.add(i);
     return out; }
+  // (H2d2) a vessel with her own deck crane over her cargo hatch (the autoliner's forward crane, anchors.crane) lands her pallets with it:
+  // up from the hold through the hatch and ashore on the quay abreast of the crane, 1.6 m in from the edge (berthPose lays her with the
+  // quay to starboard), along it as near the plant's drop spot as the boom reaches; the forklift fetches them there. The plant's crane
+  // could not do it: the hatch on her far side was 13 m from it (Vannareid, 9.55 m its reach), under a coaming 6.6 m over the sea
+  const LANDFIX = {j:null, u:0};
+  const SBD = 0.5;   // the fork's eye under the top of the ship crane's hook block (tools/boats/al45.py crane_block)
+  function shipQuay(P, BMrel, eye, VG){
+    const C = VG.crane, R = C.len * 0.97 + 0.1, bx = (VG.beam || 10) / 2 + 0.4 + 1.6, lat = bx - C.axis[0], O = xf(BMrel, [0, 0, 0]), fx = Math.sin(bv.head), fz = -Math.cos(bv.head);
+    const zDrop = -((P.drop[0] - (O[0] + eye[0])) * fx + (P.drop[1] - (O[2] + eye[2])) * fz), sm = Math.sqrt(Math.max(0, R * R - lat * lat)) * 0.92;
+    const Qb = [bx, 0, clamp(zDrop, C.axis[2] - sm, C.axis[2] + sm)], w = xf(BMrel, Qb); return {b:Qb, w:[w[0] + eye[0], w[2] + eye[2]]};
+  }
+  // a pose of the ship's crane about its slewing axis (boat frame): the slew, the boom's elevation for its tip over (x, z), the hook's height
+  function shipAim(C, x, z, hook){ const ho = Math.hypot(C.heel[0] - C.axis[0], C.heel[2] - C.axis[2]), r = Math.hypot(x - C.axis[0], z - C.axis[2]);
+    return {a:Math.atan2(x - C.axis[0], z - C.axis[2]), el:Math.acos(clamp((r - ho) / C.len, 0.05, 0.97)), hook}; }
+  function shipPark(C){ const v = [C.park[0] - C.heel[0], C.park[1] - C.heel[1], C.park[2] - C.heel[2]], h = Math.hypot(v[0], v[2]); return {a:Math.atan2(v[0], v[2]), el:Math.atan2(v[1], h), hook:C.park[1] - (C.hang || 1)}; }
+  const shipMix = (A, B, k) => ({a:A.a + angDiff(A.a, B.a) * k, el:A.el + (B.el - A.el) * k, hook:A.hook + (B.hook - A.hook) * k});
   // everything a landing shows at game minute gt: the crane's pose and what hangs from it, the loads on deck and on the quay,
   // the forklift, and where the people stand and what they do. null when this plant is not landing the boat you are on.
   function landScene(P, T, BMrel, eye){
     const b = S.boat, L = b.land; if (!L || L.pid !== P.id || b.status !== 'port' || b.port !== P.id || !BMrel) return null;
-    const Lg = LANDING, pr = Lg.prep, lf = liftMin(L), n = L.lifts, nOut = L.own ? L.n : n, e = S.t + currentFrac() - L.t0, hk = Lg.hooked, t0 = j => landLiftT(L, j);
+    const Lg = LANDING, pr = Lg.prep, lf = liftMin(L), n = L.lifts, nOut = L.own ? L.n : n, hk = Lg.hooked, t0 = j => landLiftT(L, j);
+    const e = LANDFIX.j != null && LANDFIX.j < n ? t0(LANDFIX.j) + LANDFIX.u * lf : S.t + currentFrac() - L.t0;   // (LANDFIX: a moment of a lift held for pictures, G3._debug.landFix)
     const LD = []; for (let j = 0; j < n; j++) LD.push(landLoad(L, j));
-    const wpos = q => { const r = xf(BMrel, q); return [r[0] + eye[0], r[1] + eye[1], r[2] + eye[2]]; }, D = P.drop, slots = deckSlots(L.kind), places = L.own ? karPlaces(vtype()) : null;
+    const VG = GEO(vtype()), SC = L.kind === 'pall' && VG.crane && VG.crane.axis && VG.hatch && typeof shipCraneOf === 'function' && shipCraneOf(vtype()) ? VG.crane : null;   // (her own crane, H2d2)
+    const wpos = q => { const r = xf(BMrel, q); return [r[0] + eye[0], r[1] + eye[1], r[2] + eye[2]]; }, SQ = SC ? shipQuay(P, BMrel, eye, VG) : null, D = SQ ? SQ.w : P.drop, slots = deckSlots(L.kind), places = L.own ? karPlaces(vtype()) : null;
     // where lift j is picked up and set down (world): an own tub from its place to the drop spot and back; the plant's from the deck slots
-    const deckOf = j => L.own ? places[LD[j].place] || {at:slots[0], ry:0} : {at:slots[Math.min(slots.length - 1, 0)], ry:0}, slewD = Math.atan2(D[0] - P.crane[0], D[1] - P.crane[1]);
+    // (the hook's travelling height: over the quay as before, but over a high deck and its hatch coaming with the load under it, as on
+    // the autoliner, whose weather deck is 6.25 m over the sea, H2d2)
+    const GH0 = L.kind === 'pall' ? GEO(vtype()).hatch : null, HU = GH0 && LD.length ? Math.max(HOOK_UP, wpos([GH0.at[0], GH0.at[1], GH0.at[2]])[1] + LD[0].sl + 0.6) : HOOK_UP;
+    // (the ship's crane: over the hold and over the quay at the travelling height, clear of the coaming and the bulwark with the pallet
+    // under it; a pallet set down on the quay is turned as the crane has turned it)
+    // (crane.clear: the highest thing she slews the load over, the crane driver's cage forward of the crane on the autoliner)
+    const sl0 = LD.length ? LD[0].sl : 2, HUb = SC ? Math.max(VG.hatch.at[1], VG.gw || 0, SC.clear || 0) + sl0 + SBD + 0.5 : 0;
+    const pkB = SC ? shipAim(SC, slots[0][0], slots[0][2], HUb) : null, pdB = SC ? shipAim(SC, SQ.b[0], SQ.b[2], HUb) : null;
+    const MQ = SC ? chain(BMrel, M4.RY(angDiff(pkB.a, pdB.a))) : null;
+    const deckOf = j => L.own ? places[LD[j].place] || {at:slots[0], ry:0} : {at:slots[Math.min(slots.length - 1, 0)], ry:0}, slewD = SC ? Math.atan2(-MQ[2], MQ[0]) : Math.atan2(D[0] - P.crane[0], D[1] - P.crane[1]);
     // (yaw: the tub's turn in the world, so the one on the hook turns smoothly from where it stood to where it goes; M: its frame resting)
     const onDeck = j => { const q = deckOf(j), M = chain(BMrel, M4.T(q.at[0], q.at[1], q.at[2]), M4.RY(q.ry)); return {w:wpos(q.at), yaw:Math.atan2(-M[2], M[0]), M}; };
     const onQuay = j => { const y = quayY(j), c = [D[0] - eye[0], y - eye[1], D[1] - eye[2]]; return {w:[D[0], y, D[1]], yaw:slewD, M:chain(M4.T(c[0], c[1], c[2]), M4.RY(slewD))}; };
     const quayY = j => { if (L.own && LD[j].back) return QTOP + (j - nOut === 0 && nOut > 1 ? TUBH : 0); return QTOP + (j % 2 ? LD[j - 1].h : 0); };   // (the empties stand stacked, the first on top)
     const from = j => L.own && LD[j].back ? onQuay(j) : onDeck(j), to = j => L.own && LD[j].back ? onDeck(j) : onQuay(j);
     const idle = craneIdle(P, T);
-    let pose, hang = null, i = -1, u = 0, att = null;
-    const pk = j => { const f = from(j); return poseTo(P, f.w[0], f.w[2], HOOK_UP); }, pd = j => { const q = to(j); return poseTo(P, q.w[0], q.w[2], HOOK_UP); };
+    let pose, hang = null, i = -1, u = 0, att = null, spose = null;
+    const pk = j => { const f = from(j); return poseTo(P, f.w[0], f.w[2], HU); }, pd = j => { const q = to(j); return poseTo(P, q.w[0], q.w[2], HU); };
     for (let j = 0; j < n; j++) if (e >= t0(j)) i = j;
-    if (e < pr) pose = poseMix(idle, pk(0), ease(seg(e, 0, pr)));   // straight over to the first load
+    if (SC){
+      // her own crane (H2d2): the same steps as the plant's crane, in her frame. Over the hatch, down through it into the hold, the fork
+      // under the pallet, up through the hatch over the coaming, slewed out over the quay, down, the fork out, up; the plant's crane idle
+      pose = idle; const park = shipPark(SC), qY = j => quayY(j) - wpos([SQ.b[0], 0, SQ.b[2]])[1], yUp = SC.heel[1] + Math.sin(pdB.el) * SC.len - 1.2;
+      if (e < pr) spose = shipMix(park, pkB, ease(seg(e, 0, pr)));
+      else if (i >= 0 && e < t0(i) + lf){
+        u = (e - t0(i)) / lf; const sl = LD[i].sl, yk = slots[0][1] + sl + SBD, yd = qY(i) + sl + SBD;
+        // (she slews the load over at the hatch's luff, high over the cage and the bulwark, and luffs out over the quay as she lowers it;
+        // the empty fork comes back up under the tip as it lies out over the quay)
+        const hi = {a:pdB.a, el:pkB.el, hook:HUb}, lo = {...pdB, hook:yd};
+        if (u < 0.18) spose = i === 0 ? pkB : shipMix({...pdB, hook:yUp}, pkB, ease(seg(u, 0, 0.18)));   // (back from over the quay)
+        else if (u < 0.32) spose = {...pkB, hook:HUb + (yk - HUb) * ease(seg(u, 0.18, 0.32))};
+        else if (u < 0.42) spose = {...pkB, hook:yk};
+        else if (u < 0.56) spose = {...pkB, hook:yk + (HUb - yk) * ease(seg(u, 0.42, 0.56))};
+        else if (u < 0.74) spose = shipMix(pkB, hi, ease(seg(u, 0.56, 0.74)));
+        else if (u < hk) spose = shipMix(hi, lo, ease(seg(u, 0.74, hk)));
+        else if (u < 0.93) spose = lo;
+        else spose = {...pdB, hook:yd + (yUp - yd) * ease(seg(u, 0.93, 1))};
+        if (u >= 0.42 && u < hk) hang = {L:LD[i], h:sl, yaw:angDiff(pkB.a, spose.a), ship:true};
+      } else spose = shipMix(i >= 0 ? {...pdB, hook:yUp} : park, park, ease(seg(e, t0(n - 1) + lf, t0(n - 1) + lf + 1.5)));
+      SHIPCR.pose = spose; SHIPCR.f = FRAMEN;
+    }
+    else if (e < pr) pose = poseMix(idle, pk(0), ease(seg(e, 0, pr)));   // straight over to the first load
     else if (i >= 0 && e < t0(i) + lf){
       u = (e - t0(i)) / lf; const F = from(i), Q = to(i), sl = LD[i].sl, yk = F.w[1] + sl + (LD[i].box ? 0.1 : 0), yd = Q.w[1] + sl + (LD[i].box ? 0.1 : 0);
       const prev = i === 0 ? pk(0) : e - t0(i - 1) < lf + 0.01 ? pd(i - 1) : poseMix(idle, pk(i), 1);
       if (u < 0.18) pose = poseMix(prev, pk(i), ease(seg(u, 0, 0.18)));
-      else if (u < 0.32) pose = {...pk(i), hook:HOOK_UP + (yk - HOOK_UP) * ease(seg(u, 0.18, 0.32))};
+      else if (u < 0.32) pose = {...pk(i), hook:HU + (yk - HU) * ease(seg(u, 0.18, 0.32))};
       else if (u < 0.42) pose = {...pk(i), hook:yk};
-      else if (u < 0.56) pose = {...pk(i), hook:yk + (HOOK_UP - yk) * ease(seg(u, 0.42, 0.56))};
+      else if (u < 0.56) pose = {...pk(i), hook:yk + (HU - yk) * ease(seg(u, 0.42, 0.56))};
       else if (u < 0.74) pose = poseMix(pk(i), pd(i), ease(seg(u, 0.56, 0.74)));
-      else if (u < hk) pose = {...pd(i), hook:HOOK_UP + (yd - HOOK_UP) * ease(seg(u, 0.74, hk))};
+      else if (u < hk) pose = {...pd(i), hook:HU + (yd - HU) * ease(seg(u, 0.74, hk))};
       else if (u < 0.93) pose = {...pd(i), hook:yd};
-      else pose = {...pd(i), hook:yd + (HOOK_UP - yd) * ease(seg(u, 0.93, 1))};
+      else pose = {...pd(i), hook:yd + (HU - yd) * ease(seg(u, 0.93, 1))};
       if (u >= 0.42 && u < hk) hang = {L:LD[i], h:sl, yaw:F.yaw + angDiff(F.yaw, Q.yaw) * ease(seg(u, 0.56, 0.74))};
       // the sling on the tub: put on while the hook is down at it (the hooks drawn out to the corners as it comes down), off at the other end
       if (LD[i].tub){ if (u >= 0.18 && u < 0.42) att = {M:F.M, k:ease(seg(u, 0.2, 0.34))}; else if (u >= hk && u < 1) att = {M:Q.M, k:1 - ease(seg(u, 0.9, 0.99))}; }
@@ -122,7 +175,7 @@
     if (!L.own){ const onHook = clamp(Math.floor((e - pr) / lf - 0.37) + 1, 0, n); for (let s = 0; s < slots.length && onHook + s < n; s++) deck.push({L:LD[onHook + s], at:slots[s]}); }
     // the forklift takes lifts 2k and 2k+1 on run k, after the second is down (an own boat's: all of them on one run, and back with the
     // empties); loads wait on the quay until it picks them up
-    const back = !!L.own, R = fkRun(P, back), runs = back ? 1 : Math.ceil(nOut / 2), last = k => back ? nOut - 1 : Math.min(2 * k + 1, nOut - 1), start = k => t0(last(k)) + hk * lf + 0.1, pickAt = k => start(k) + R.legs[1].t0;
+    const back = !!L.own, R = fkRun(P, back, SC ? D : null), runs = back ? 1 : Math.ceil(nOut / 2), last = k => back ? nOut - 1 : Math.min(2 * k + 1, nOut - 1), start = k => t0(last(k)) + hk * lf + 0.1, pickAt = k => start(k) + R.legs[1].t0;
     const quay = []; let fk = {x:R.Wp[0], z:R.Wp[1], h:R.waitH, fl:0, loads:[]};
     for (let j = 0; j < nOut; j++){ const k = back ? 0 : j >> 1; if (e >= t0(j) + hk * lf && e < pickAt(k)) quay.push({L:LD[j], y:quayY(j)}); }
     // the empties: set down at the drop spot by the forklift, until the crane takes each up
@@ -143,7 +196,16 @@
     const moving = i >= 0 && u > 0 && (u < 0.18 || (u >= 0.42 && u < 0.74)), atQuay = i >= 0 && L.own && LD[i].back ? u >= 0.18 && u < 0.42 : u >= 0.74 && u < 0.93;
     const recv = i >= 0 && u > 0 && atQuay ? (L.own && LD[i].back ? (u < 0.32 ? 'guide' : 'unhook') : u < hk ? 'guide' : 'unhook') : 'look';
     const busy = [{x:s0[0], z:s0[1], h:seaH, task:moving ? 'signal' : 'look'}, {x:s1[0], z:s1[1], h:hdg(s1, D), task:recv}, {x:s2[0], z:s2[1], h:hdg(s2, D), task:'tally'}, {x:s3[0], z:s3[1], h:hdg(s3, [tip[0], tip[2]]), task:'remote'}].map(q => ({...q, walk:false, s:0}));
-    return {e, i, u, pose, hang, att, deck, quay, fk, busy, K:from(Math.max(0, i)).w, slewD};
+    // the landing gang at the hatch (H2d2, a freezer vessel's pallets): one in the hatch on the hold's stack at a corner of the opening, who
+    // puts the fork under the next pallet and sees it clear of the coaming, one at the coaming's after end signalling to the crane driver,
+    // and one on the far side who guides the pallet clear as it comes up; in the boat's frame (x to starboard, z aft), their heading on hers
+    let hatch = null; const GH = L.kind === 'pall' ? GEO(vtype()).hatch : null;
+    if (GH && GH.size){ const [hx, , hz] = GH.at, dy = GH.deck, w2 = GH.size[0] / 2, l2 = GH.size[1] / 2, busyU = i >= 0 && u > 0 && u < 1;
+      const inn = busyU && u >= 0.2 && u < 0.42 ? 'unhook' : busyU && u >= 0.42 && u < 0.52 ? 'guide' : 'look', sig = busyU && u > 0.1 && u < 0.62 ? 'signal' : 'look', gd = busyU && u >= 0.44 && u < 0.62 ? 'guide' : 'look';
+      hatch = [{at:[hx - w2 + 0.38, dy - 1.4, hz + l2 - 0.38], h:Math.PI * 0.75, task:inn}, {at:[hx + 0.25, dy, hz + l2 + 0.6], h:0, task:sig}, {at:[hx + w2 + 0.65, dy, hz - 0.2], h:-Math.PI / 2, task:gd}]; }
+    // (her own crane: one of the gang drives it from the crane driver's cage amidships forward, facing the hatch)
+    if (hatch && SC){ const cz = SC.axis[2] - 3.8, hx = VG.hatch.at[0], hz = VG.hatch.at[2]; hatch.push({at:[0, VG.hatch.deck, cz], h:Math.atan2(hx, -(hz - cz)), task:'remote'}); }
+    return {e, i, u, pose, hang, att, deck, quay, fk, busy, hatch, ship:!!SC, spose, D, K:from(Math.max(0, i)).w, slewD};
   }
   // walking over when a job moves: a person or the forklift that has to be somewhere else walks (drives) there instead of jumping
   function follow(P, key, st, T, v){
@@ -172,7 +234,11 @@
     const r = drawUnitParts(P, eye, pose, FK, P.doorK, P.chA, LS ? T : null);   // (the driver is on the forklift while it works a landing)
     // what hangs from the hook (in the sling, swaying a little), the sling itself through the landing, the loads on deck and on the quay
     const ring = rel(r.tip[0], pose.hook + 0.1, r.tip[2]), sway = Math.sin(T * 1.3) * 0.035;
-    if (LS && LS.hang){ const h = LS.hang.h, t = rel(r.tip[0] + sway * Math.cos(pose.a), pose.hook - 0.1 - h, r.tip[2] - sway * Math.sin(pose.a)), HM = chain(M4.T(t[0], t[1], t[2]), M4.RY(LS.hang.yaw + Math.sin(T * 0.8) * 0.03));
+    if (LS && LS.ship){ const tip = SHIPCR.tip, sp = LS.spose, fork = kit('pall', 'gaffel');   // (her own crane's hook: drawShipCrane drew the crane and the block)
+      if (tip && sp){ const ey = sp.hook - SBD, yaw = LS.hang ? LS.hang.yaw : 0;
+        if (LS.hang){ LS.hang.L.draw(chain(BMrel, M4.T(tip[0], ey - LS.hang.h, tip[2]), M4.RY(yaw))); }
+        if (fork) drawN(fork, chain(BMrel, M4.T(tip[0], ey, tip[2]), M4.RY(yaw + Math.PI / 2))); } }
+    else if (LS && LS.hang){ const h = LS.hang.h, t = rel(r.tip[0] + sway * Math.cos(pose.a), pose.hook - 0.1 - h, r.tip[2] - sway * Math.sin(pose.a)), HM = chain(M4.T(t[0], t[1], t[2]), M4.RY(LS.hang.yaw + Math.sin(T * 0.8) * 0.03));
       LS.hang.L.draw(HM); if (LS.hang.L.tub) drawSling([t[0], ring[1], t[2]], HM, 0, 1);
       if (LS.hang.L.pall) drawN(kit('pall', 'gaffel'), chain(M4.T(t[0], t[1] + h, t[2]), M4.RY(LS.hang.yaw + Math.sin(T * 0.8) * 0.03))); }
     else if (LS && LS.att) drawSling(ring, LS.att.M, T * 0.3, LS.att.k);
@@ -180,11 +246,14 @@
     else if (LS) drawSling(ring, null, T * 0.3, 0);
     if (LS){
       for (const q of LS.deck) q.L.draw(chain(BMrel, M4.T(q.at[0], q.at[1], q.at[2])));
-      for (const q of LS.quay){ const c = rel(P.drop[0], q.y, P.drop[1]); q.L.draw(chain(M4.T(c[0], c[1], c[2]), M4.RY(LS.slewD))); }
+      for (const q of LS.quay){ const c = rel(LS.D[0], q.y, LS.D[1]); q.L.draw(chain(M4.T(c[0], c[1], c[2]), M4.RY(LS.slewD))); }
     }
     // people: the day shift, or one on watch at night; everyone turns out for a landing
     const R = plantRounds(P); P.spray = 0;
     for (let i = 0; i < 4; i++){ if (!onShift && i !== 3) continue; drawWorker(P, follow(P, 'w' + i, LS ? LS.busy[i] : roundAt(R[i], T + i * 17), T, 1.6), eye, T, i); }
+    // the gang at the hatch aboard (landScene hatch, H2d2), where the boat is now
+    if (LS && LS.hatch) LS.hatch.forEach((q, k) => { const w = xf(BMrel, q.at), H = P.hgang || (P.hgang = {id:P.id, spray:0, y:0, gy(){ return this.y; }}); H.y = w[1] + eye[1];
+      drawWorker(H, {x:w[0] + eye[0], z:w[2] + eye[2], h:bv.head + q.h, task:q.task, walk:false, s:0}, eye, T, 4 + k); });
     // ice from the chute's spout down into the boat
     if (icing && Math.abs(angDiff(P.chA, chW)) < 0.15){
       const G = GEO(vtype()), dy = xf(BMrel, [0, (G.deck || {y:G.gw}).y, 0])[1] + eye[1], L = A.silo.chute, O = unitP(U, [ax[0] + Math.sin(P.chA) * L, ax[1] + A.silo.spout, ax[2] + Math.cos(P.chA) * L]), fall = Math.max(0.5, O[1] - dy);
@@ -306,6 +375,7 @@
   // an event at its place on the rail (boat frame); the nearest hand at work there plays it (drawWorker), so the fish he handles is the
   // one that came up. DKBLOOD: the drops of the cut, drawn as points after the people.
   const DKEV = [], DKDUR = {bleed:3.0, gaff:2.4, pick:2.4, jigup:2.2}, DKDROP = {gaff:1.75, pick:2.0}, DKBLOOD = [], DKWATER = [], DKSMOKE = [], DKDECK = [], DKF = {t:0, jig:{}}, DKN = {gaff:0, pick:0, jigup:0, bleed:0};   // DKN: the events played (the tests)
+  const ASLIDE = [];   // the autoliner's gaffed fish sliding into the chute's mouth (e.chute, 10-gear.js drawAutoSlides; H2d2)
   // (o: the rest of it: D where it is let fall on the deck, for the one meant to take it, wait how long it may wait for him, t0 a later start)
   function dkEvent(kind, at, sp, kg, o){ const now = performance.now() / 1000; while (DKEV.length && (DKEV.length > 12 || now - DKEV[0].t0 > (DKEV[0].wait || DKDUR[DKEV[0].kind]) + 4)) DKEV.shift(); const e = {kind, at:at.slice(), sp, kg, t0:now, who:null}; if (o) Object.assign(e, o); DKEV.push(e); return e; }
   // which events a hand at his work plays (the agents' tasks, deckcrew.js): the hauler gaffs the fish in, the one at the net picks them out,
@@ -333,6 +403,8 @@
     for (let i = DKEV.length - 1; i >= 0; i--){ const e = DKEV[i]; if (now - e.t0 > (e.who == null ? e.wait || DKDUR[e.kind] : DKDUR[e.kind]) + 4) DKEV.splice(i, 1); }
     for (const e of DKEV){ if (e.who == null || e.chained) continue; const age = now - e.t0;
       if ((e.kind === 'gaff' || e.kind === 'pick') && e.D && age >= DKDROP[e.kind]){ e.chained = true;
+        // (the autoliner's: let fall at the chute, it slides on into its mouth to the bleeding tanks inside, nobody bleeds it in the station)
+        if (e.chute){ ASLIDE.push({at:e.D.slice(), to:e.chute.slice(), t:now, sp:e.sp, kg:e.kg, yaw:Math.PI / 2 + (hash(Math.floor(now * 7)) - 0.5) * 0.6}); if (ASLIDE.length > 8) ASLIDE.shift(); continue; }
         const bl = CREW3D.visible().find(a => a.st === 'blogg' && a.mode === 'at'), f = {at:e.D.slice(), sp:e.sp, kg:e.kg, t:now, yaw:hash(Math.floor(now * 7)) * 6.28};
         DKDECK.push(f); dkEvent('bleed', e.D, e.sp, e.kg, {for:bl ? bl.id : e.who, deckF:f, wait:20, t0:now + (bl ? 0.3 : 0.6)}); }
       else if (e.kind === 'jigup' && age >= DKDUR.jigup){ e.chained = true; dkEvent('bleed', e.at, e.sp, e.kg, {for:e.who, wait:12}); }

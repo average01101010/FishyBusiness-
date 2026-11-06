@@ -211,9 +211,33 @@
   const HATCHM = {};
   function drawHatch(t, G, M, k){ if (!(t in HATCHM)) HATCHM[t] = typeof glbHas === 'function' && glbHas(t) && glbPart(t, 'hatch') ? upA(glbPart(t, 'hatch')) : null;
     const h = HATCHM[t], H = G && G.hatch; if (!h || !H || !H.hinge) return; drawN(h, chain(M, M4.T(H.hinge[0], H.hinge[1], H.hinge[2]), M4.RZ((H.open || 1.8) * (k || 0)))); }
+  // a vessel's own deck crane as parts of its own (H2d2, 06.11.2026: the autoliner's forward crane, anchors.crane, tools/boats/al45.py
+  // crane_parts): the slewing head turned about the column, the boom from its heel pin luffed as the pose asks ({a, el, hook}: the
+  // slew about the slewing axis in the boat's frame, the boom's elevation, the hook's height; 09-landing-deck.js shipAim), and the hook block on its wire under the
+  // tip. Without a pose the boom lies parked in its rest, the block hanging a metre under the tip. Returns the tip (boat frame)
+  const SCRM = {}, SHIPCR = {pose:null, f:-9, tip:null};   // SHIPCR.pose: the landing's (09-landing-deck.js landScene), the frame before
+  function shipCraneOf(t){ if (!(t in SCRM)) SCRM[t] = typeof glbHas === 'function' && glbHas(t) && glbPart(t, 'crane_boom') ? {head:upA(glbPart(t, 'crane_head')), boom:upA(glbPart(t, 'crane_boom')), block:upA(glbPart(t, 'crane_block'))} : null; return SCRM[t]; }
+  function shipCraneAim(C, pose){
+    const ax = C.axis, hl = C.heel, L = C.len, hy = hl[1] - ax[1], ho = Math.hypot(hl[0] - ax[0], hl[2] - ax[2]);
+    let dx, dz, el; if (!pose){ const v = [C.park[0] - hl[0], C.park[1] - hl[1], C.park[2] - hl[2]], h = Math.hypot(v[0], v[2]) || 1; dx = v[0] / h; dz = v[2] / h; el = Math.atan2(v[1], h); }
+    else { dx = Math.sin(pose.a); dz = Math.cos(pose.a); el = pose.el; }
+    const c = Math.cos(el), s = Math.sin(el), H = [ax[0] + dx * ho, ax[1] + hy, ax[2] + dz * ho];
+    return {dx, dz, c, s, heel:H, tip:[H[0] + dx * c * L, H[1] + s * L, H[2] + dz * c * L]};
+  }
+  function drawShipCrane(t, G, M, pose){
+    const K = shipCraneOf(t), C = G && G.crane; if (!K || !C || !C.axis) return null; const A = shipCraneAim(C, pose), {dx, dz, c, s} = A, ax = C.axis;
+    // (the head's -z, its boom's way, to the boom's heading; the boom's -z along the boom, its y square to it, its x across)
+    drawN(K.head, chain(M, new Float32Array([-dz, 0, dx, 0, 0, 1, 0, 0, -dx, 0, -dz, 0, ax[0], ax[1], ax[2], 1])));
+    drawN(K.boom, chain(M, new Float32Array([-dz, 0, dx, 0, -dx * s, c, -dz * s, 0, -dx * c, -s, -dz * c, 0, A.heel[0], A.heel[1], A.heel[2], 1])));
+    const hk = pose ? pose.hook : A.tip[1] - (C.hang || 1); if (!GB) buildGear();
+    drawN(GB.net, chain(M, limbM([A.tip[0], A.tip[1] - 0.15, A.tip[2]], [A.tip[0], hk, A.tip[2]], 0.012)));   // (the wire)
+    drawN(K.block, chain(M, M4.T(A.tip[0], hk, A.tip[2]), M4.RY(Math.atan2(dx, dz))));
+    return A.tip;
+  }
   function drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named){
     const m = pvm(t, liv); if (!m) return; const P = people(); nSetup(VP); const wr = named && wearOn(t), lf = named && !BENCH.on && lifeOn('me', BMrel, null, t, HL.meAge, wr, bv.spd, G); drawN(named && !BENCH.on ? pvmHull(t, liv, ownTier(t, BMrel)) || m.hull : m.hull, BMrel); if (lf) lifeOff(); else if (wr) wearOff();
     drawSail(t, BMrel, named && S.boat && S.boat.status !== 'port'); drawHatch(t, G, BMrel, named ? hatchOpenK() : 0);
+    { const tip = drawShipCrane(t, G, BMrel, named && FRAMEN - SHIPCR.f <= 2 ? SHIPCR.pose : null); if (named) SHIPCR.tip = tip; }   // (the landing's pose from the frame before)
     if (named && BENCH.on){ for (let j = 1; j < BENCH.k; j++) drawN(m.hull, BMrel);
       for (let i = 0; i < BENCH.n; i++){ const M = chain(BMrel, M4.T(((i % 4) - 1.5) * ((G.beam || 4) + 3), 0, (Math.floor(i / 4) + 1) * ((G.stern || 5) * 2 + 6))); drawN(m.hull, M); }
       BENCH.tris = Math.round(m.hull.n / 3) * (BENCH.k + BENCH.n); }
@@ -330,7 +354,7 @@
     if (!kit.length) return;
     const P = people(); nSetup(VP);
     for (const n of kit){ const K = n.K, G = K.geo, at = (p, r) => chain(n.M, M4.T(p[0] * K.sv[0], p[1] * K.sv[1], p[2] * K.sv[2]), M4.RY(r || 0));
-      const lf = lifeOn(n.id, n.M, K.sv, K.t, npcAge(n), false, n.st === 'fishing' || n.st === 'port' ? 0 : 4, G); drawN(K.hull, chain(n.M, K.S)); if (lf) lifeOff(); drawSail(K.t, chain(n.M, K.S), n.st !== 'port'); drawHatch(K.t, G, chain(n.M, K.S), 0);
+      const lf = lifeOn(n.id, n.M, K.sv, K.t, npcAge(n), false, n.st === 'fishing' || n.st === 'port' ? 0 : 4, G); drawN(K.hull, chain(n.M, K.S)); if (lf) lifeOff(); drawSail(K.t, chain(n.M, K.S), n.st !== 'port'); drawHatch(K.t, G, chain(n.M, K.S), 0); drawShipCrane(K.t, G, chain(n.M, K.S), null);
       // an ocean trawler towing (05d-hav.js): her trawl out astern as yours is when towing
       if (n.trawl && G && G.trawl) drawTrawl(K.t, G.trawl, chain(n.M, K.S), performance.now() / 1000, NPCTOW);
       // a purse seiner or Danish seiner setting or hauling (05d-hav.js havFish): her seine on the sea by the clock's stage
