@@ -2151,7 +2151,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 89 `srchCard()`
   - 113 `srchSvg(u)`
 
-## `src/js/ui/04-panels-instruments.js` (293 linjer)
+## `src/js/ui/04-panels-instruments.js` (297 linjer)
 
 ---------- estimates ----------
 
@@ -2167,14 +2167,14 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 86 `hudShortEv(txt)`
   - 87 `hudLine3(how)`
   - 112 `renderHud()`
-  - 174 `liveFrac()`
-  - 175 `livePose(frac)`
-  - 198 `vnoise2(x, y, s)`
-  - 204 `microBottom(p, d)`
-- **206** instruments: GPS and echo sounder
-  - 277 `hudCardOpen(on)`
-  - 284 `hudClasses(stripOn, cardOn)`
-  - 288 `hudFold(which)`
+  - 177 `liveFrac()`
+  - 178 `livePose(frac)`
+  - 201 `vnoise2(x, y, s)`
+  - 207 `microBottom(p, d)`
+- **209** instruments: GPS and echo sounder
+  - 281 `hudCardOpen(on)`
+  - 288 `hudClasses(stripOn, cardOn)`
+  - 292 `hudFold(which)`
 
 ## `src/js/ui/05-tattoo-art.js` (169 linjer)
 
@@ -2246,15 +2246,16 @@ the Kvote app: your quotas, the open group's season, the stocks, and the market 
   - 25 `kvStock(H)`
   - 43 `kvMkt(H)`
 
-## `src/js/ui/phone/05-rigg-innst-admin.js` (80 linjer)
+## `src/js/ui/phone/05-rigg-innst-admin.js` (91 linjer)
 
 the rig: one kind of fishing at a time, changed here aboard (under Beholdning) when none of the boat's gear is in the sea
 
   - 2 `rigg()`
-  - 13 `beholdning()`
-  - 22 `logg()`
-  - 23 `innst()`
-  - 61 `admin()`
+  - 14 `beholdning()`
+  - 26 `crewTab()`
+  - 33 `logg()`
+  - 34 `innst()`
+  - 72 `admin()`
 
 ## `src/js/ui/phone/06-render.js` (65 linjer)
 
@@ -2270,12 +2271,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1174 linjer)
+## `src/js/ui/phone/07-patch.js` (1180 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1167 `patch()`
+  - 1173 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2819,14 +2820,14 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 223 `wpActCycle(w)`
   - 228 `gearDoAct(act, el)`
 
-## `src/js/ui/10c-dock.js` (420 linjer)
+## `src/js/ui/10c-dock.js` (437 linjer)
 
 ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 
 - **1** the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side
-- **324** the drawer
-  - 393 `renderActs()`
-  - 406 `showroomTick()`
+- **336** the drawer
+  - 410 `renderActs()`
+  - 423 `showroomTick()`
 
 ## `src/js/ui/10d-helm.js` (51 linjer)
 

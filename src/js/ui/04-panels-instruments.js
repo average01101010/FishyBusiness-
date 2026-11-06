@@ -151,6 +151,9 @@ function renderHud(){
   if (atSea){ const z = motionHere(H, b).state; if (z.lvl) now.push('<div class="row warn"><span>' + L('Stabilitet', 'Stability') + '</span><b class="r' + z.lvl + '">' + {gm:L('rank', 'tender'), res:stabStill(b) ? L('synkronrulling · rull ', 'synchronous roll · rolls ') + Math.round((motionHere(H, b).M.roll + motionHere(H, b).M.heel) * 180 / Math.PI) + '°' : L('synkronrulling · endre kurs eller fart', 'synchronous roll · change course or speed'), roll:L('kraftig rulling · ta det rolig', 'heavy rolling · ease off')}[z.why] + '</b></div>'); }
   // the rules where you are (03e-rules.js ruNow): a tap opens the Regler app
   if (atSea && RU.ok){ const r = ruNow(), it = r.items.find(i => i.v === r.v && i.v !== 'ok'); now.push('<div class="row rlink"><span>' + L('Regler', 'Rules') + '</span><b class="' + (r.v === 'no' ? 'r2' : r.v === 'warn' ? 'r1' : 'r0') + '">' + (r.v === 'no' ? '✕ ' : r.v === 'warn' ? '! ' : '✓ ') + (it ? ruShort(it) : L('Lov her', 'Allowed here')) + ' ›</b></div>'); }
+  // the bunk (UI 2, U2-2, plan 4.3): «Hvil i køya» is in the dock row only when the energy warns or she lies at anchor; else, at sea with a
+  // berth and a watch, it is this row in the box behind the strip (10c-dock.js restShow has the rule)
+  if (atSea && !resting() && !asleep() && !b.anch && S.energy >= ENERGY.warn && restWhere(b) === 'koye') now.push('<div class="row"><span>' + L('Køya', 'The bunk') + '</span><b>' + Math.round(S.energy) + ' %</b><button type="button" class="hgo" data-hrest>' + L('Hvil i køya', 'Rest in the bunk') + '</button></div>');
   { const cp = coldPen(S.t / 60); if (cp > 0.03) now.push('<div class="row"><span>' + L('Kulde', 'Cold') + '</span><b class="cold">−' + Math.round(cp * 100) + ' % · ' + Math.round(effTemp(S.t / 60)) + ' °C</b></div>'); }
   if (haillStage()) now.push('<div class="row"><span>' + L('Haill', 'Luck') + '</span><b class="haill">' + haillStage()[S.lang] + ' +' + Math.round(haillBoost() * 100) + ' %</b></div>');
   // the whole table behind the tap: the figures the gauges round off, the wind, the bonus and the bank's other accounts
@@ -265,6 +268,7 @@ const INSTR = (() => {
 // the whole box as a card (U2-1)
 hud.addEventListener('click', e => {
   const go = e.target.closest('[data-hgo]'); if (go){ e.stopPropagation(); const s = mySets().find(x => String(x.id) === go.dataset.hgo); if (s) DOCK.goTo(s); return; }
+  if (e.target.closest('[data-hrest]')){ e.stopPropagation(); hudCardOpen(false); doAct({dataset:{act:'rest'}, disabled:false}); return; }   // the bunk from the box (U2-2)
   if (e.target.closest('[data-hmin]')){ e.stopPropagation(); hudFold('hud'); return; }
   if (e.target.closest('[data-hcard]')){ e.stopPropagation(); hudCardOpen(false); return; }
   if (e.target.closest('[data-hfull]')){ e.stopPropagation(); S.settings.hudFull = !S.settings.hudFull; save(); renderHud(); return; }

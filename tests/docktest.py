@@ -40,10 +40,10 @@ async def run(p, w, h, tag):
     ids = lambda: pg.evaluate("[...document.querySelectorAll('#dock [data-dk]')].map(x => x.dataset.dk)")
     print('--', tag, w, 'x', h)
 
-    # in port at Finnsnes (the shop and the boat hall, no plant): Butikk, Bygd, Verft and Beholdning; the old action bar is gone (a plant has Mottak in place of Butikk and Verft, further down)
+    # in port at Finnsnes (the shop and the boat hall, no plant): Butikk, Bygd, Verft and Om bord (the inventory, U2-2); the old action bar is gone (a plant has Mottak in place of Butikk and Verft, further down)
     await pg.evaluate("S.cash = 200000; renderActs()")
     d = await ids()
-    check(d == ['butikk', 'bygd', 'verft', 'beh'], 'i Finnsnes: Butikk, Bygd, Verft og Beholdning (Planlegg er borte: den lille kartplotteren åpner den store)', d)
+    check(d == ['butikk', 'bygd', 'verft', 'beh'] and await pg.evaluate("document.querySelector('#dock [data-dk=beh] .dk-l').textContent") == 'Om bord', 'i Finnsnes: Butikk, Bygd, Verft og Om bord sist (Planlegg er borte: den lille kartplotteren åpner den store)', d)
     check(not await pg.evaluate("!!document.getElementById('actbar')"), 'den gamle handlingslinja er borte')
     lbl = await pg.evaluate("[...document.querySelectorAll('#dock .dk-l')].map(x => x.textContent)")
     check(lbl[:3] == ['Butikk', 'Bygd', 'Verft'], 'knappene har kort tekst under ikonet', lbl)
@@ -84,7 +84,7 @@ async def run(p, w, h, tag):
     # at a plant: Mottak (not Butikk or Verft), with the landing, the ice, the bait and the fuel; Lever is not grey, and ice is bought in the drawer
     await pg.evaluate("(() => { const q = portById('botnhamn'), b = S.boat; b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; renderActs(); })()"); await pg.wait_for_timeout(300)
     d2 = await ids()
-    check(d2 == ['marked', 'bygd', 'beh'] and await pg.evaluate("document.querySelector('#dock [data-dk=marked] .dk-l').textContent") == 'Mottak', 'ved et mottak: Mottak, Bygd og Beholdning, og ingen Butikk eller Verft', d2)
+    check(d2 == ['marked', 'bygd', 'beh'] and await pg.evaluate("document.querySelector('#dock [data-dk=marked] .dk-l').textContent") == 'Mottak', 'ved et mottak: Mottak, Bygd og Om bord, og ingen Butikk eller Verft', d2)
     await tap_el('#dock [data-dk=marked]'); await fan_up()
     f = await pg.evaluate("[...document.querySelectorAll('#dockFan [data-dk]')].map(x => x.dataset.dk)")
     off = await pg.evaluate("document.querySelector('#dockFan [data-dk=lever]').classList.contains('off')")
@@ -104,11 +104,20 @@ async def run(p, w, h, tag):
     check(await pg.evaluate("document.getElementById('drawer').hidden"), 'skuffen lukkes')
 
 
-    # the inventory: three tabs
+    # Om bord (U2-2): five tabs, the crew page as the fifth, and the old «arbeid» lands on it; the dot on the button with a quarrel aboard
     await tap_el('#dock [data-dk=beh]'); await pg.wait_for_timeout(300)
     tabs = await pg.evaluate("[...document.querySelectorAll('#drawerBody .ph-sub button')].map(x => x.textContent)")
-    check(tabs == ['Redskap', 'Rigg', 'Lasterom', 'Båten'], 'Beholdning har fanene Redskap, Rigg, Lasterom og Båten', tabs)
+    check(tabs == ['Redskap', 'Rigg', 'Lasterom', 'Båten', 'Mannskap'] and await pg.evaluate("document.getElementById('drawerTitle').textContent") == 'Om bord', 'Om bord har fanene Redskap, Rigg, Lasterom, Båten og Mannskap', tabs)
+    await tap_el('#drawerBody .ph-sub button:nth-child(5)'); await pg.wait_for_timeout(300)
+    cr = await pg.evaluate("(() => { const b = document.getElementById('drawerBody'); return {on:(b.querySelector('.ph-sub button.on') || {}).textContent, wk:!!b.querySelector('.wk'), ans:!!b.querySelector('[data-pa=open][data-a=mannskap]'), bors:!!b.querySelector('[data-pa=open][data-a=bors]'), arbeid:!document.querySelector('#dock [data-dk=arbeid]')}; })()")
+    check(cr['on'] == 'Mannskap' and cr['wk'] and cr['ans'] and cr['bors'] and cr['arbeid'], 'fanen Mannskap viser Mannskap-siden med veien til Ansatte og Mannskapsbørsen, og linja har ingen Mannskap-knapp', cr)
+    await tap_el('#drawerBody [data-pa=open][data-a=bors]'); await pg.wait_for_timeout(300)
+    check(await pg.evaluate("DOCK.page") == 'bors', 'Mannskapsbørsen åpnes fra fanen')
     await tap_el('#drawerClose'); await pg.wait_for_timeout(200)
+    aw = await pg.evaluate("(() => { DOCK.open('arbeid'); const b = document.getElementById('drawerBody'), r = {page:DOCK.page, on:(b.querySelector('.ph-sub button.on') || {}).textContent}; DOCK.close(); return r; })()")
+    check(aw == {'page':'beholdning', 'on':'Mannskap'}, 'DOCK.open(arbeid) lander på fanen Mannskap i Om bord', aw)
+    dq = await pg.evaluate("(() => { const q = () => !!document.querySelector('#dock [data-dk=beh] .dk-dot'); const d0 = q(); S.cevt = {a:null, b:null, t:S.t}; renderActs(); const d1 = q(); S.cevt = null; renderActs(); return [d0, d1, q()]; })()")
+    check(dq == [False, True, False], 'prikken for krangel om bord står på Om bord-knappen', dq)
 
     # the phone has only the apps that are left, and Kvote is one of them
     await pg.evaluate("PHONE.open('home')"); await pg.wait_for_timeout(400)
@@ -137,8 +146,12 @@ async def run(p, w, h, tag):
     # at sea: lying still, jigging, sailing
     await pg.evaluate("(() => { const b = S.boat; b.status = 'idle'; b.port = null; b.pos = {...tutField().p}; b.v = 0; b.gear = true; renderActs(); })()")   # a hand jig aboard: without one nobody fishes (the rod is gone)
     d = await ids()
-    check(d[:4] == ['jukse', 'settut', 'taopp', 'nav'] and 'beh' in d, 'stille på sjøen: Jukse, Sett ut, Ta opp, Auto-nav og Beholdning', d)
-    await tap_el('#dock [data-dk=taopp]', force=True); await pg.wait_for_timeout(200)
+    # (UI 2, U2-2: five at most when the screen stands, the greyed ones behind «Mer» first; on its side six as before)
+    if w > h: check(d[:4] == ['jukse', 'settut', 'taopp', 'nav'] and d[-1] == 'beh', 'stille på sjøen: Jukse, Sett ut, Ta opp, Auto-nav og Om bord sist', d)
+    else: check(d[0] == 'jukse' and 'nav' in d and 'mer' in d and len(d) <= 5 and d[-1] == 'beh', 'stille på sjøen stående: Jukse først, Auto-nav, høyst fem med Mer (Sett ut og Ta opp grå bak den), Om bord sist', d)
+    if 'taopp' in d: await tap_el('#dock [data-dk=taopp]', force=True)
+    else: await tap_el('#dock [data-dk=mer]'); await fan_up(); await tap_el('#dockFan [data-dk=taopp]')
+    await pg.wait_for_timeout(200)
     check('redskap i sjøen' in await pg.evaluate("document.getElementById('toast').textContent"), 'Ta opp er grått uten redskap og sier hvorfor')
     await tap_el('#dock [data-dk=jukse]'); await pg.wait_for_timeout(250)
     await pg.screenshot(path='dock_jig_' + tag + '.png')

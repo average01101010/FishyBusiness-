@@ -21,7 +21,7 @@ HOOK = r"""(() => {
   const R = r => r ? {x:Math.round(r.x), y:Math.round(r.y), w:Math.round(r.width), h:Math.round(r.height)} : null;
   const txt = e => e ? (e.innerText || e.textContent || '').replace(/\s+/g, ' ').trim() : '';
   const btns = sel => [...document.querySelectorAll(sel)].filter(vis).map(b => { const r = b.getBoundingClientRect(), l = b.querySelector('.dk-l'), i = b.querySelector('.dk-i');
-    return {id:b.dataset.dk, lbl:txt(l || b).slice(0, 30), off:b.classList.contains('off'), hero:b.classList.contains('hero'), pri:b.classList.contains('pri'), top:Math.round(r.top), w:Math.round(r.width), h:Math.round(r.height), iw:i ? Math.round(i.getBoundingClientRect().width) : null, fs:getComputedStyle(l || b).fontSize}; });
+    return {id:b.dataset.dk, lbl:txt(l || b).slice(0, 30), off:b.classList.contains('off'), hero:b.classList.contains('hero'), pri:b.classList.contains('pri'), dot:!!b.querySelector('.dk-dot'), top:Math.round(r.top), w:Math.round(r.width), h:Math.round(r.height), iw:i ? Math.round(i.getBoundingClientRect().width) : null, fs:getComputedStyle(l || b).fontSize}; });
   window.K = {
     vis, txt, R,
     measure(){
@@ -113,8 +113,9 @@ async def run(b, tag, W, H):
             if menu: await pg.evaluate("DOCK.menu(null); DOCK.close()")
             R['states'][name] = m; ok += 1
             d = m['box']
-            print('OK  %-6s %-24s %-14s linja %d knapper på %d rad(er), grå %d, hero %s%s | boks %d px, stripe %d px, neste: %s, nå-rader %d | info: %s' % (
+            print('OK  %-6s %-24s %-14s linja %d knapper på %d rad(er), grå %d, hero %s, sist %s%s%s | boks %d px, stripe %d px, neste: %s, nå-rader %d | info: %s' % (
                 tag, name, d['st'][:14], len(d['dock']), d['rows'], sum(1 for x in d['dock'] if x['off']), next((x['lbl'] for x in d['dock'] if x['hero']), '–'),
+                d['dock'][-1]['lbl'] if d['dock'] else '–', ' (prikk)' if d['dock'] and d['dock'][-1]['dot'] else '',
                 (' | vifte %d på %d rad(er)' % (len(d['fan']), d['fanRows'])) if d['fan'] else '', d['hud']['r']['h'], m['strip']['hud']['r']['h'], (d['nx'] or {}).get('txt', '–'), len(d['now']), d['info'][:40]), flush=True)
         except Exception as e:
             bad += 1; print('FEIL', tag, name, str(e)[:200], flush=True)

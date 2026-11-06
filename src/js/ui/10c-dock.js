@@ -1,6 +1,7 @@
 // ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 // In port Marked, Bygd and Verft open a fan of smaller buttons above them, and their pages open in the drawer at the side (a sheet
-// from below when the screen stands), never in a big window in the middle. At sea: jig, set and haul gear, auto-nav, the inventory.
+// from below when the screen stands), never in a big window in the middle. At sea: jig, set and haul gear, auto-nav. «Om bord» (the
+// inventory, with the crew as its fifth tab) stands last in every state, the row's one global button (UI 2, U2-2, 06.11.2026).
 // The pages themselves are the phone's (PHONE.page); this file only decides which buttons there are and where things open.
 const DOCK = (() => {
   let rowsDue = false;   // the button rows to measure when the row is next shown (rowsUp)
@@ -49,7 +50,7 @@ const DOCK = (() => {
   // the drawer's pages: title, and the pages that share a row of tabs
   const TITLE = {lever:['Lever fangst', 'Land the catch'], is:['Is', 'Ice'], agn:['Agn og egning', 'Bait and baiting'], bank:['Kystbanken', 'The bank'], oppdrag:['Oppdrag', 'Orders'],
     mannskap:['Mannskap', 'Crew'], bors:['Mannskap', 'Crew'], fartoy:['Båthandel', 'Boat market'], maler:['Malerverksted', 'Paint shop'], utstyr:['Oppgraderinger', 'Upgrades'], utstyrb:['Elektronikk og haler', 'Electronics and haulers'], fiske:['Fiskeutstyr', 'Tackle'], service:['Service', 'Service'],
-    redskap:['Redskap', 'Gear'], rigg:['Rigg', 'Rig'], arbeid:['Mannskap', 'Crew'], drift:['Driftsplan', 'Operations plan'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Lasterom', 'Hold'], beholdning:['Beholdning', 'Inventory']};
+    redskap:['Redskap', 'Gear'], rigg:['Rigg', 'Rig'], arbeid:['Mannskap', 'Crew'], drift:['Driftsplan', 'Operations plan'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Lasterom', 'Hold'], beholdning:['Om bord', 'Aboard']};
   const TABS = {mannskap:[['mannskap', 'Om bord', 'Aboard'], ['bors', 'Mannskapsbørs', 'Crew exchange']], bors:null, fiske:[['fiske', 'Redskap', 'Gear'], ['utstyrb', 'Elektronikk og haler', 'Electronics and haulers']], utstyrb:null};
   TABS.bors = TABS.mannskap; TABS.utstyrb = TABS.fiske;
   const SHOP_PAGES = ['fiske', 'utstyrb', 'service', 'is', 'agn'];
@@ -71,26 +72,32 @@ const DOCK = (() => {
   }
   // the operations plan wants you: it has stopped, or waits until you give the boat back (the Crew page has its line, ui/05c-drift.js)
   const opsDot = () => { const o = S.ops; return !!(o && (o.v === DRV || o.v === DRV2) && ((!o.on && o.stop) || (o.on && o.held))); };
-  // at home the rest is in the Bygd fan, and on the dock itself when you are tired or resting (five buttons crowd a phone)
-  const restOnDock = () => resting() || S.energy < 40;
+  // «Om bord» (UI 2, U2-2, docs/planer/ui-2-staaende.md 4.4, Jonas 06.11.2026, V3 revidert A): the inventory with the crew page as its
+  // fifth tab, last in the row in every state, the row's one global button. Its dot says a quarrel aboard (S.cevt) or the operations plan
+  // wants you, and then the tap lands on the crew tab
+  const behDot = () => !!S.cevt || opsDot();
+  const behItem = () => I('beh', 'beh', 'Om bord', 'Aboard', {page:behDot() ? 'beholdning:crew' : 'beholdning', dot:behDot()});
+  // the rest is contextual, never global (U2-2, plan 4.3): in the row when resting, when the energy warns (the strip's yellow, ENERGY.warn)
+  // and at anchor; at the naust's quay and at a rorbu always (their rows below). Else the bunk is a row in the box behind the strip
+  // (04-panels-instruments.js renderHud), and in a harbour of trade «Hvil» is in the Bygd fan
+  const restShow = () => { const b = S.boat; return resting() || S.energy < ENERGY.warn || (b.status !== 'port' && !!b.anch); };
   function portItems(){
     const b = S.boat, p = port(), tot = holdTotal(), busy = portBusy(b);
     // a rorbu has a bed and a quay, nothing more (07d-rorbu.js)
-    if (p.rorbu) return [restItem(), I('gjestebok', 'oppdrag', 'Gjestebok', 'Guestbook', {page:'gbook'}), S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid', dot:opsDot()}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
-    // Father's naust is a home, not a place of trade (Jonas 07.10.2026): rest, the boathouse itself, the crew and the inventory; the
-    // shop, the plant and the yard are at their own quays
-    if (berthKind(b) === 'naust') return [restItem(), I('naustup', 'naust', 'Naustet', 'Boathouse', {run:() => { NAUST3D.open(); }}), S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid', dot:opsDot()}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
+    if (p.rorbu) return [restItem(), I('gjestebok', 'oppdrag', 'Gjestebok', 'Guestbook', {page:'gbook'}), behItem()].filter(Boolean);
+    // Father's naust is a home, not a place of trade (Jonas 07.10.2026): rest, the boathouse itself and Om bord (the crew is a tab there);
+    // the shop, the plant and the yard are at their own quays
+    if (berthKind(b) === 'naust') return [restItem(), I('naustup', 'naust', 'Naustet', 'Boathouse', {run:() => { NAUST3D.open(); }}), behItem()].filter(Boolean);
     // the three places of trade (Jonas 07.10.2026): the plant (core/06c-steder.js portServices) takes the catch and sells ice, bait and fuel,
     // the tackle shop sells gear and electronics, the yard sells and mends boats and sells fuel; each has its own button, and all three have the village
     const sv = portServices(p, berthKind(b));
-    return [restOnDock() ? restItem() : null,
+    return [restShow() ? restItem() : null,
       sv.mottak ? I('marked', 'marked', 'Mottak', 'Plant', {menu:'marked', dot:p.mottak && tot > 0.5 && !b.land}) : null,
       // the first trip shows only the plant (Onboarding 2, O5, V7 A): the shop, the village, the yard and the inventory come after it
       sv.butikk && !tutOn() ? I('butikk', 'butikk', 'Butikk', 'Shop', {menu:'butikk', dot:pickAt(b.port).length > 0}) : null,
       tutOn() ? null : I('bygd', 'bygd', 'Bygd', 'Village', {menu:'bygd'}),
       sv.verft && !tutOn() ? I('verft', 'verft', 'Verft', 'Yard', {menu:'verft', dot:svcOverdue() > 0}) : null,
-      S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid', dot:opsDot()}) : null,
-      tutOn() ? null : I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);   // «Planlegg» went 02.10.2026: the little chart opens the plotter
+      tutOn() ? null : behItem()].filter(Boolean);   // «Planlegg» went 02.10.2026: the little chart opens the plotter
   }
   function menuItems(m){
     const b = S.boat, p = port(), H = S.t / 60;
@@ -111,7 +118,7 @@ const DOCK = (() => {
       I('gjestebok', 'oppdrag', 'Gjestebok', 'Guestbook', {page:'gbook'}),
       I('bank', 'bank', 'Bank', 'Bank', {page:'bank'}),
       I('oppdrag', 'oppdrag', 'Oppdrag', 'Orders', {page:'oppdrag'}),
-      I('mannskap', 'mannskap', 'Ansatte', 'Employees', {page:'mannskap'}), restOnDock() ? null : restItem(),
+      I('mannskap', 'mannskap', 'Ansatte', 'Employees', {page:'mannskap'}), restShow() ? null : restItem(),
       // (Father's naust is set to rights from the dock when the boat lies at it, and only there: ui/06c-notebook.js)
       ].filter(Boolean);
     if (m === 'verft') return [
@@ -140,12 +147,11 @@ const DOCK = (() => {
   // the nearest of your own buoys, for the haul button's hint
   function nearestBuoy(){ let best = null; for (const s of mySets()) for (const e of [s.a, s.b]){ const d = dist(S.boat.pos, e); if (!best || d < best.d) best = {s, d}; } return best; }
   function seaItems(){
-    // a quarrel aboard waits for an answer, also at sea
-    const crew = S.cevt && I('mannskap', 'mannskap', 'Ansatte', 'Employees', {page:'mannskap', dot:true});
-    const work = (S.crew.length || S.ops) && I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid', dot:opsDot()});
-    const b = S.boat, beh = I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'});   // no «Hjem» (the user's wish 02.10.2026: Autonav to the harbour, or «Returner samme vei» in the plotter)
+    // (a quarrel aboard and the plan's stop are the dot on Om bord, U2-2; the crew page is its tab)
+    const b = S.boat, beh = behItem(), rest = restShow() ? restItem() : null;   // no «Hjem» (the user's wish 02.10.2026: Autonav to the harbour, or «Returner samme vei» in the plotter)
     // a full hold: Auto-nav is the main button, not «Jukse» (spilltest 3, U5)
-    const full = (typeof holdFmt === 'function' ? holdFmt().load : holdTotal()) >= capHold() - 0.5, nav = I('nav', 'nav', 'Auto-nav', 'Auto-nav', {run:autoNav, pri:full && b.status === 'idle'});
+    // (late: Auto-nav folds behind «Mer» before the contextual buttons when the row is full, U2-2; U2-3 takes it out of the row)
+    const full = (typeof holdFmt === 'function' ? holdFmt().load : holdTotal()) >= capHold() - 0.5, nav = I('nav', 'nav', 'Auto-nav', 'Auto-nav', {run:autoNav, pri:full && b.status === 'idle', late:true});
     const tut = typeof HAIL !== 'undefined' ? HAIL.dockItem(I) : null;
     const ptow = typeof PTOW !== 'undefined' ? PTOW.dockItem(I) : null;   // «Ta slep» by a player's broken-down boat (ui/10o-ptow.js)   // another player's boat within 1 nm (ui/10n-hail.js)
     if (b.status === 'idle'){
@@ -161,16 +167,16 @@ const DOCK = (() => {
       // anchor: the boat keeps her place and the crew rests; the anchor can drag in weather the boat does not hold (06e-anchor.js)
       const sp = !b.anch && anchorSpot(b.pos), anc = b.anch && b.anch.up != null ? I('anker', 'anker', 'Hiver anker', 'Weighing', {off:[L('Ankeret er oppe om ' + anchorUpIn() + ' min.', 'The anchor is up in ' + anchorUpIn() + ' min.')], on:true}) : b.anch ? I('anker', 'anker', 'Hiv anker', 'Weigh anchor', {run:() => { weighAnchor(); refreshAll(); }, on:true}) : !moor ? I('anker', 'anker', 'Kast anker', 'Drop anchor', sp && sp.ok ? {run:() => { dropAnchor(); refreshAll(); }} : {off:[sp && anchorWhy[sp.why] ? L(anchorWhy[sp.why][0], anchorWhy[sp.why][1]) : L('Ikke her.', 'Not here.')]}) : null;
       return [vesselJigs() ? I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s && !full && !(nb && nb.d <= GEARLIE.r * 1.2)}) : I('jukse', 'jukse', 'Jukse', 'Jig', {off:[L('Et havfiskefartøy fisker ikke med juksa.', 'An ocean vessel does not fish with the jig.')]}),
-        I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:rigJig() ? [L('Båten er rigget for juksa. Rigg om til line, garn eller teiner under Beholdning.', 'The boat is rigged for jigging. Re-rig for line, nets or pots under Inventory.')] : !ch.length && [setOff()]}),
+        I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:rigJig() ? [L('Båten er rigget for juksa. Rigg om til line, garn eller teiner under Om bord.', 'The boat is rigged for jigging. Re-rig for line, nets or pots under Aboard.')] : !ch.length && [setOff()]}),
         // by a quay with no buoy near, «Fortøy» takes the place of the greyed «Ta opp», so the row stays five wide on a phone
-        ptow, s || !moor ? haul : null, moor, nav, tut, anc, restItem(), crew, work, beh].filter(Boolean);   // (the bunk, #70)
+        ptow, s || !moor ? haul : null, moor, nav, tut, anc, rest, beh].filter(Boolean);   // (the bunk, #70)
     }
-    if (b.status === 'fishing' && b.gop) return [I('gstop', 'stopp', 'Stopp arbeidet', 'Stop the work', {act:'gstop'}), work, beh].filter(Boolean);
-    if (gopAfter(b)) return [work, beh].filter(Boolean);   // the minute after the gear work (F4)
+    if (b.status === 'fishing' && b.gop) return [I('gstop', 'stopp', 'Stopp arbeidet', 'Stop the work', {act:'gstop'}), beh];
+    if (gopAfter(b)) return [beh];   // the minute after the gear work (F4)
     if (b.status === 'fishing') return [I('stopfish', 'stopp', 'Stopp', 'Stop', {act:'stopfish'}),
       b.deckStop && !b.deckEnd ? I('deckgo', 'videre', 'Fisk videre', 'Fish on', {act:'deckgo', pri:true}) : !b.deckStop && deckPending() > 0.5 ? I('deckstop', 'sloy', 'Stopp og sløy', 'Stop and gut', {act:'deckstop'}) : null,
-      G3.isActive() && window.JIGG && (window.jigActive || window.JIGG.ok()) ? I('jigg', 'juks', window.jigActive ? 'Slutt å jukse' : 'Jukse selv', window.jigActive ? 'Stop jigging' : 'Jig yourself', {act:'jigg', pri:!window.jigActive, on:!!window.jigActive}) : null, restItem(), crew, work, beh].filter(Boolean);
-    if (b.status === 'sailing') return [I('stop', 'stopp', 'Stopp båten', 'Stop', {act:'stop'}), nav, tut, restItem(), crew, work, beh].filter(Boolean);
+      G3.isActive() && window.JIGG && (window.jigActive || window.JIGG.ok()) ? I('jigg', 'juks', window.jigActive ? 'Slutt å jukse' : 'Jukse selv', window.jigActive ? 'Stop jigging' : 'Jig yourself', {act:'jigg', pri:!window.jigActive, on:!!window.jigActive}) : null, rest, beh].filter(Boolean);
+    if (b.status === 'sailing') return [I('stop', 'stopp', 'Stopp båten', 'Stop', {act:'stop'}), nav, tut, rest, beh].filter(Boolean);
     if (b.status === 'tow') return [beh];   // the tow takes its time (no fast forward: one clock for everyone)
     if (b.status === 'adrift' || b.status === 'engine' || b.status === 'aground') return [I('hjelp', 'hjelp', 'Hjelp', 'Help', {run:() => PHONE.open('redning'), warn:true}), beh];
     return [beh];
@@ -200,7 +206,7 @@ const DOCK = (() => {
   }
   function items0(){
     const b = S.boat;
-    if (S.plan && S.plan.depAt) return [I('depnow', 'loss', 'Kast loss', 'Cast off', {act:'depnow', pri:true}), I('depcancel', 'avbryt', 'Avbryt', 'Cancel', {act:'depcancel'}), I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})];
+    if (S.plan && S.plan.depAt) return [I('depnow', 'loss', 'Kast loss', 'Cast off', {act:'depnow', pri:true}), I('depcancel', 'avbryt', 'Avbryt', 'Cancel', {act:'depcancel'}), behItem()];
     if (b.status === 'port') return portItems();
     return seaItems();
   }
@@ -215,13 +221,18 @@ const DOCK = (() => {
       (tk ? '<div class="dk-tks">' + tk + '</div>' : '') + '<button type="button" class="dk-go" data-dk="startfish">' + L('Start jukse', 'Start jigging') + '</button></div>';
   }
   // «Kystlys» U3 (docs/planer/ui-redesign.md, V6 A, 04.11.2026): the row is never more than six: the first ones as they come, then «⋯ Mer»
-  // with the rest in a fan, and Beholdning last; the first thing marked as what to do now (pri) is the hero, a bigger button the eye goes to
-  const MAXV = 6; let more = [];
+  // with the rest in a fan, and Om bord last; the first thing marked as what to do now (pri) is the hero, a bigger button the eye goes to.
+  // In a standing screen (UI 2, U2-2, plan 4.4: a phone upright is the measure, a tablet inherits) never more than five, so the row never
+  // wraps; «Mer» stays there until U2-3 takes Auto-nav out of the row and folds the gear into one button. What cannot be used now (off,
+  // greyed) goes behind «Mer» first, then Auto-nav (late), then the tail, so the row keeps the buttons that do something (K3 is U2-3's)
+  const portrait = matchMedia('(orientation: portrait)'), MAXV = () => portrait.matches ? 5 : 6; let more = [];
   function rowOf(all){
-    more = [];
-    if (all.length <= MAXV) return all;
-    const beh = all.find(x => x.id === 'beh'), rest = all.filter(x => x !== beh), keep = rest.slice(0, MAXV - 2 - (beh ? 0 : -1));
-    more = rest.slice(keep.length);
+    more = []; const max = MAXV();
+    if (all.length <= max) return all;
+    const beh = all.find(x => x.id === 'beh'), rest = all.filter(x => x !== beh), room = max - 2 - (beh ? 0 : -1);
+    const on = rest.filter(x => !x.off && !x.late), late = rest.filter(x => !x.off && x.late), off = rest.filter(x => x.off);
+    const pick = new Set(on.slice(0, room).concat(late.slice(0, Math.max(0, room - on.length)), off.slice(0, Math.max(0, room - on.length - late.length))));
+    const keep = rest.filter(x => pick.has(x)); more = rest.filter(x => !pick.has(x));
     return keep.concat([I('mer', 'mer', 'Mer', 'More', {menu:'mer', dot:more.some(x => x.dot)})], beh ? [beh] : []);
   }
   function render(){
@@ -247,6 +258,7 @@ const DOCK = (() => {
   function rowsUp(){ if (!bar.offsetParent){ rowsDue = true; document.body.style.setProperty('--dkh', '0px'); return; } rowsDue = false; const ks = [...bar.children], tops = ks.map(k => k.offsetTop - (parseFloat(getComputedStyle(k).marginTop) || 0)), x = ks.length ? Math.max(0, Math.max(...tops) - Math.min(...tops)) : 0; document.body.style.setProperty('--dkx', x + 'px');
     const top = ks.length ? Math.min(...ks.map(k => k.getBoundingClientRect().top)) : null; document.body.style.setProperty('--dkh', top == null ? '0px' : Math.max(0, Math.round(bar.offsetParent.getBoundingClientRect().bottom - top + 6)) + 'px'); }
   window.addEventListener('resize', () => { if (bar) rowsUp(); });
+  (portrait.addEventListener ? portrait.addEventListener('change', () => { html = ''; render(); }) : portrait.addListener(() => { html = ''; render(); }));   // five or six on the row
   // the fan stands centred over its button, inside the screen
   function placeFan(){
     const pb = bar.querySelector('[data-dk="' + (items.find(x => x.menu === menu) || {}).id + '"]') || bar.querySelector('[data-dk="mer"]'); if (!pb) return;
@@ -334,8 +346,11 @@ const DOCK = (() => {
     dr.classList.toggle('tall', TALL.has(page));
     const y = keep ? dBody.scrollTop : 0, t0 = TITLE[page] || [page, page];
     dTitle.textContent = L(t0[0], t0[1]); drawTabs();
-    const h = dress(page, PHONE.page(page)); if (h !== shown){ shown = h; dBody.innerHTML = h; fold(); ordbok(dBody); } dBody.scrollTop = y;
+    const h = dress(page, PHONE.page(page)); if (h !== shown){ shown = h; dBody.innerHTML = h; fold(); ordbok(dBody); tabInView(); } dBody.scrollTop = y;
   }
+  // the page's own row of tabs (.ph-sub) scrolls sideways when it is wider than the drawer: the chosen tab is kept in view (Om bord's five
+  // tabs on a phone, U2-2)
+  function tabInView(){ const on = dBody.querySelector('.ph-sub button.on'); if (!on) return; const r = on.parentNode; if (r.scrollWidth <= r.clientWidth + 1) return; const x = on.offsetLeft - (r.clientWidth - on.offsetWidth) / 2; r.scrollLeft = Math.max(0, x); }
   // «Kystlys» U6 (docs/planer/ui-redesign.md, V3 A, 04.11.2026): the trade pages belong to a place (the plant, the shop, the yard), and
   // each says first where that place is: «Du er her», or the nearest with its distance and Autonav there, one header in place of the
   // «Nærmeste …» card that stood at the top, the middle or the foot of the page. Away from the place, a button that cannot be pressed
@@ -358,7 +373,9 @@ const DOCK = (() => {
   function fold(){ const op = folds[page]; for (const e of dBody.querySelectorAll('.ph-note, p.note')){ if (e.textContent.length > 260 && !e.closest('.pl-head')){ e.classList.add('fold'); if (op && op.has(foldKey(e))) e.classList.add('open'); } } }
   dBody.addEventListener('click', e => { const f = e.target.closest('.fold'); if (f){ const on = f.classList.toggle('open'), op = folds[page] || (folds[page] = new Set()); if (on) op.add(foldKey(f)); else op.delete(foldKey(f)); } }, true);
   function open(a){
-    const [pg, sb] = String(a).split(':'); if (!PHONE.DRAWER.has(pg)) return;
+    let [pg, sb] = String(a).split(':');
+    if (pg === 'arbeid'){ pg = 'beholdning'; sb = sb || 'crew'; }   // the crew page is Om bord's fifth tab (U2-2): the plan's «Til Mannskap-siden» and the tests land there
+    if (!PHONE.DRAWER.has(pg)) return;
     const was = page; page = pg; menu = null; html = '';
     if (sb) PHONE.dact(pg, 'sub', {s:sb});
     dr.hidden = false; document.body.classList.add('dk-open'); shown = ''; draw(was === pg); render();

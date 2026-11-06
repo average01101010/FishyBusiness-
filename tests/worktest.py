@@ -183,11 +183,12 @@ async def main():
         print(ok(r['vign'] > 0.4 and r['vignOff'] == 0), 'under 15 % the edges of the screen darken')
 
         # the Mannskap page (Jonas 23.10.2026): the chips of «På dekk nå», one card each with why, effort, energy and mood, the mate badge and button, and the skills on a tap
+        # (since UI 2, U2-2, 06.11.2026 the page is the fifth tab of Om bord, and the dock has no Mannskap button; DOCK.open('arbeid') lands on the tab)
         for vw, vh, tag in ((1100, 800, 'liggende'), (800, 1180, 'staende')):
             await pg.set_viewport_size({'width':vw, 'height':vh})
             u = await pg.evaluate("""(()=>{ """ + seed(20261032) + """ const R = {}, b = S.boat; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.gop = null; S.hold = []; S.plan = null; addCatch('torsk', 40, null, true);   // (fish to gut at the quay: someone at work)
-              const c0 = S.crew; S.crew = []; DOCK.render(); R.noCrew = !document.querySelector('#dock [data-dk=arbeid]'); S.crew = c0; DOCK.render();
-              R.btn = !!document.querySelector('#dock [data-dk=arbeid]'); DOCK.open('arbeid'); const dr = () => document.getElementById('drawerBody');
+              R.noCrew = !document.querySelector('#dock [data-dk=arbeid]');
+              R.btn = !!document.querySelector('#dock [data-dk=beh]'); DOCK.open('arbeid'); const dr = () => document.getElementById('drawerBody'); R.tab = DOCK.page === 'beholdning' && (dr().querySelector('.ph-sub button.on') || {}).textContent === 'Mannskap';
               R.rows = dr().querySelectorAll('.wk-p').length; R.flow = [...dr().querySelectorAll('.wk-dks .wk-dk b')].map(e => e.textContent); R.meters = dr().querySelectorAll('.wk-p .wk-ms .wk-m').length; R.kv = dr().querySelectorAll('.ph-kv').length;
               const tap = sel => { const e = dr().querySelector(sel); if (e) e.click(); return !!e; };
               const B = S.crew[1]; R.noChains = !dr().querySelector('[data-pa=wk-edit], [data-pa=wk-pre], .wk-pick'); R.whyShown = [...dr().querySelectorAll('.wk-p .wk-now')].filter(e => e.textContent.includes(' – ')).length;
@@ -198,7 +199,7 @@ async def main():
               return R; })()""")
             print(tag, json.dumps(u, ensure_ascii=False))
             await pg.screenshot(path=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'work_' + tag + '.png'))
-            print(ok(u['noCrew'] and u['btn'] and u['rows'] == 3 and u['flow'][:4] == ['Ror', 'Fiske', 'Sløying', 'Ising'] and u['meters'] == 5 and u['kv'] == 0), tag + ': the Mannskap button shows only with crew; «På dekk nå» has a chip for each station of the rig, and one card each with energy (and mood for the crew), nobody listed twice', u['flow'], u['meters'], u['kv'])
+            print(ok(u['noCrew'] and u['btn'] and u['tab'] and u['rows'] == 3 and u['flow'][:4] == ['Ror', 'Fiske', 'Sløying', 'Ising'] and u['meters'] == 5 and u['kv'] == 0), tag + ': no Mannskap button, the page is the Mannskap tab of Om bord; «På dekk nå» has a chip for each station of the rig, and one card each with energy (and mood for the crew), nobody listed twice', u['flow'], u['meters'], u['kv'])
             print(ok(u['noChains'] and u['whyShown'] >= 2), tag + ': no chains to set up: each row says why the person does what they do', u['whyShown'])
             print(ok(all(u['mate']) and u['card'] >= 9 and u['cardShut'] and 'Styrmann' in u['badge']), tag + ': Gjør til styrmann makes the mate (the plan\'s too) and marks the card; a tap on the name shows the skills, and closes on a second tap', u['mate'], u['card'], u['badge'])
             print(ok(u['team'] and u['working'] >= 1 and u['effShown'] == u['working']), tag + ': the samhold line on top, and how each one at work is going in words', u['team'], u['effShown'], u['working'])
