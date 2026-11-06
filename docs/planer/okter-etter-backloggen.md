@@ -185,7 +185,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 | Ø7 Småfeil | Kan starte (spilltest 3 er ute) | | |
 | Ø8 Spillbarhet | Kan starte (spilltest 3 er ute) | | |
 | Ø9 Fysikk 4 | Kan starte (spilltest 3 er ute) | | |
-| Ø16 Sanntid S2 | Bygd, ikke rullet ut: reléet (`tools/server/rt`), `rt_ticket()` (HMAC i Postgres, hemmeligheten i Vault), klienten med 5 Hz/1 Hz og interpolasjon 0,5 s bak, `setup.sh`, `Caddyfile`, `deploy.yml`; `rttest` 12 OK, `sqltest` 135 OK. Migreringen, `setup.sh` og hemmeligheten i Vault gjort av Jonas 06.11.2026. Venter bare på ja til utrullingen. Igjen: S3 (lasten) og «Lasten med 5 000 spillere» mot Supabase | `ccr-529a099b-0o66nk` | 05.11.2026 |
+| Ø16 Sanntid S2 | Ferdig og rullet ut 06.11.2026 (01c89b6f): reléet (`tools/server/rt`), `rt_ticket()` (HMAC i Postgres, hemmeligheten i Vault), klienten med 5 Hz/1 Hz og interpolasjon 0,5 s bak, `setup.sh`, `Caddyfile`, `deploy.yml`; `rttest` 12 OK, `sqltest` 135 OK. Migreringen, `setup.sh` og hemmeligheten i Vault gjort av Jonas 06.11.2026. Igjen: S3 (lasten) og «Lasten med 5 000 spillere» mot Supabase | `ccr-529a099b-0o66nk` | 05.11.2026 |
 | Ø10 Regelmotoren | Venter på H2 | | |
 | Ø11 Lover, regler og sikkerhet | Venter på H2 og «kjør på» (ni økter Ø11.1–Ø11.9; valgene tatt) | | |
 | Ø12 Driftsplan 2, resten | Venter på H2 | | |
@@ -217,3 +217,4 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 - 05.11.2026: Ø16 bygd (S2 og S1 sammen, i `ui/10h-world.js`). Billetten er HMAC i Postgres med hemmeligheten i Vault, ikke JWT-sjekk i reléet (grunnene i `docs/planer/sanntid-posisjoner.md`). Ikke rullet ut: Jonas kjører migreringen `20261105160000_rt_ticket.sql`, `setup.sh` fra grenen og linjen til Vault, og sier ja.
 - 06.11.2026: migreringen `20261105160000_rt_ticket.sql` kjørt av Jonas i SQL Editor og bekreftet. Ø16 venter på `setup.sh`, hemmeligheten i Vault og ja.
 - 06.11.2026: Jonas kjørte `setup.sh` på serveren og la hemmeligheten i Vault (bekreftet). Ø16 venter bare på ja til utrullingen.
+- 06.11.2026: Ø16 rullet ut etter Jonas' «ja, rull ut» (01c89b6f). Igjen: S3 (lasten) og «Lasten med 5 000 spillere» mot Supabase.
