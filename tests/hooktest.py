@@ -51,10 +51,14 @@ def cmds(event, matcher=None):
 
 start_cmd = next((c for c in cmds('SessionStart') if 'okt-start.sh' in c), '')
 guard_cmd = next((c for c in cmds('PreToolUse', 'Read') if 'lesevakt.py' in c), '')
+commit_cmd = next((c for c in cmds('PreToolUse', 'Bash') if 'commitvakt.py' in c), '')
+COMMIT = os.path.join(ROOT, '.claude', 'hooks', 'commitvakt.py')
 ok(bool(start_cmd), 'SessionStart kjører okt-start.sh', start_cmd)
 # no matcher, so it runs at startup, resume, clear and after every compaction (source "compact")
 ok(all(not g.get('matcher') for g in H.get('SessionStart', [])), 'SessionStart uten matcher (også etter komprimering)')
 ok(bool(guard_cmd), 'PreToolUse på Read kjører lesevakt.py', guard_cmd)
+ok(bool(commit_cmd), 'PreToolUse på Bash kjører commitvakt.py', commit_cmd)
+ok(os.path.exists(COMMIT), 'commitvakt.py finnes')
 ok(all(h.get('onFailure', 'continue') == 'continue' for ev in H.values() for g in ev for h in g.get('hooks', [])),
    'ingen hook har onFailure: block (en hook som feiler, slipper verktøyet gjennom)')
 ok(os.path.exists(START) and os.access(START, os.X_OK), 'okt-start.sh finnes og kan kjøres')
@@ -172,4 +176,52 @@ if guard_cmd:
                                ('uten python på PATH', {'tool_name': 'Read', 'tool_input': {'file_path': big_md}}, {'PATH': '/nonexistent'})):
         code, out, err, dt = hook(guard_cmd, payload, env=env)
         ok(code != 2 and not out.strip(), 'lesevakten %s slipper lesingen gjennom (kode %s, aldri 2)' % (what, code), err.strip()[-160:])
+    shutil.rmtree(tmp, ignore_errors=True)
+
+# ---------- A3: the commit guard ----------
+
+
+def commit(command, project=ROOT, env=None, tool='Bash'):
+    return hook(commit_cmd, {'hook_event_name': 'PreToolUse', 'tool_name': tool, 'tool_input': {'command': command}, 'cwd': project}, project=project, env=env)
+
+
+if commit_cmd:
+    for what, c in (('Co-Authored-By med modellnavn', 'git commit -m "Fix" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"'),
+                    ('modellnavn i en heredoc', "cd %s && git commit -q -F - <<'EOF'\nØ17: hooks\n\nClaude-Session: https://claude.ai/code/x\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nEOF" % ROOT),
+                    ('modell-ID i meldingen', 'git commit --amend -m "written by claude-sonnet-5-5"'),
+                    ('git -C og modellnavn', 'git -C %s commit -m "Opus 5.5 did this"' % ROOT)):
+        code, out, err, dt = commit(c)
+        d = decision(out) or {}
+        ok(code == 0 and d.get('permissionDecision') == 'deny' and 'modellnavn' in d.get('permissionDecisionReason', ''), 'commit-vakten nekter %s' % what, 'kode %s, %s %s' % (code, out[:160], err[-120:]))
+    ok(dt < 1.5, 'commit-vakten under 1,5 s', '%.2f s' % dt)
+    open(os.path.join(ROOT, 'tests', 'out', 'hooktest-commitvakt.txt'), 'w').write(d.get('permissionDecisionReason', ''))
+    msgf = os.path.join(tempfile.mkdtemp(), 'melding.txt'); open(msgf, 'w').write('Fix\n\nCo-Authored-By: Claude Haiku 5.5 <noreply@anthropic.com>\n')
+    ok((decision(commit('git commit -F %s' % msgf)[1]) or {}).get('permissionDecision') == 'deny', 'commit-vakten leser meldingsfila (-F) og nekter modellnavn der')
+    for what, c in (('en vanlig melding som nevner grenen claude/u2-3', 'git commit -q -m "Flett inn claude/u2-3-knappelinja-felp6h i arbeidsgrenen"'),
+                    ('en melding med Claude-Session-lenka', "git commit -F - <<'EOF'\nØ17: hooks\n\nClaude-Session: https://claude.ai/code/session_013\nEOF"),
+                    ('git status (ikke en commit)', 'git status --short'), ('git push (ikke en commit)', 'git push -u origin ccr-5e1ba2f4-pusvyd'),
+                    ('en doku-endring som nevner «&& git commit» og et modellnavn i en heredoc', "cd %s && python3 - <<'EOF'\nprint('cd x && git commit -m ok; Claude Opus 5.5')\nEOF" % ROOT)):
+        code, out, err, dt = commit(c)
+        ok(code == 0 and not out.strip(), 'commit-vakten slipper gjennom %s' % what, 'kode %s, %s' % (code, out[:160]))
+    ok(not commit('git commit -m "Co-Authored-By: Claude Opus 5.5"', tool='Read')[1].strip(), 'commit-vakten ser bare på Bash')
+    # a repo of its own with the build staged by force (dist/ is in .gitignore, so it takes -f)
+    tmp = tempfile.mkdtemp(); shutil.copytree(os.path.dirname(COMMIT), os.path.join(tmp, '.claude', 'hooks'))
+    subprocess.run(['git', 'init', '-q'], cwd=tmp, capture_output=True)
+    for rel in ('dist/index.html', 'tests/out/x.png', 'src/ok.js'):
+        os.makedirs(os.path.dirname(os.path.join(tmp, rel)), exist_ok=True); open(os.path.join(tmp, rel), 'w').write('x')
+    subprocess.run(['git', 'add', '-f', 'dist/index.html', 'tests/out/x.png', 'src/ok.js'], cwd=tmp, capture_output=True)
+    d = decision(commit('git commit -m "ok"', project=tmp)[1]) or {}
+    ok(d.get('permissionDecision') == 'deny' and 'dist/index.html' in d.get('permissionDecisionReason', '') and 'tests/out/x.png' in d.get('permissionDecisionReason', ''),
+       'commit-vakten nekter en commit med dist/ og tests/out/ staget', d.get('permissionDecisionReason', '')[:160])
+    ok((decision(commit('cd %s && git commit -m "ok"' % tmp)[1]) or {}).get('permissionDecision') == 'deny', 'commit-vakten følger cd <mappe> && git commit')
+    subprocess.run(['git', 'reset', '-q', '--', 'dist/index.html', 'tests/out/x.png'], cwd=tmp, capture_output=True)
+    ok(not commit('git commit -m "ok"', project=tmp)[1].strip(), 'commit-vakten slipper gjennom når bare src/ok.js er staget')
+    shutil.rmtree(tmp, ignore_errors=True)
+    # it must never stop a commit by itself
+    tmp = tempfile.mkdtemp(); shutil.copytree(os.path.dirname(COMMIT), os.path.join(tmp, '.claude', 'hooks'))
+    for what, payload, env, project in (('med søppel på stdin', 'ikke json {', None, ROOT), ('uten tool_input', {'tool_name': 'Bash'}, None, ROOT),
+                                        ('i en mappe uten git', {'tool_name': 'Bash', 'tool_input': {'command': 'git commit -m "ok"'}, 'cwd': tmp}, None, tmp),
+                                        ('uten python på PATH', {'tool_name': 'Bash', 'tool_input': {'command': 'git commit -m "Claude Opus 5.5"'}}, {'PATH': '/nonexistent'}, ROOT)):
+        code, out, err, dt = hook(commit_cmd, payload, project=project, env=env)
+        ok(code != 2 and not out.strip(), 'commit-vakten %s slipper kommandoen gjennom (kode %s, aldri 2)' % (what, code), err.strip()[-160:])
     shutil.rmtree(tmp, ignore_errors=True)
