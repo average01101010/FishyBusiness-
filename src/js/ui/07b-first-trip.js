@@ -179,6 +179,10 @@ const TUTSM = {txt:'', t0:0, hid:false};
 // the step's tip; when it points at something outside the phone while the phone is open, close the phone first
 function tutTip(st){
   const drift = tutAdrift(), T0 = drift ? tutDriftTip(drift) : st.tip() || {};
+  // a small tip only tells what is going on (the boat on her way, the hold filling): there is nothing to do outside the phone, so it does
+  // not ask for the phone to be closed, and loses its ring outside it. Before, «Lukk telefonen først» stood over the phone for the whole
+  // sail out, the hour on the grounds and the way in, and did not go by itself as the small tip does (Ø7, UI review 04.11.2026 F1)
+  if (PHONE.isOpen() && T0.small) return Object.assign({}, T0, {el:null, map:null, rect:null});
   if (PHONE.isOpen() && ((T0.el && !T0.el.closest('#phone')) || T0.map)) return {el:vis('#phone .ph-nav [data-pa=close]'), no:'Lukk telefonen først.', en:'Close the phone first.'};
   // the drawer left open from an earlier step (the inventory from the fishing) lay over «Autonav» on the way in, and the ring pointed at
   // the drawer's text under it: the guide hung for good (UI review 04.11.2026, docs/planer/ui-redesign.md F1). A target the open drawer

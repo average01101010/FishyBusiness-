@@ -1,6 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['o7-061126', '06.11.2026', 'Småfeil rettet', 'Small fixes', [
+       ['«Første tur»: med telefonen åpen mens båten går eller fisker, står ikke lenger «Lukk telefonen først» over den.', '«First trip»: with the phone open while the boat sails or fishes, «Close the phone first» no longer stands over it.'],
        ['Skiffen: kartplotteren og målerne på konsollen lever, og kaia, karene og de andre båtene vises igjen rundt den.', 'The skiff: the chart plotter and gauges on the console are live, and the quay, the tubs and the other boats show around her again.'],
        ['Ikonene i knappelinja står på linje også når et navn går over to linjer.', 'The icons in the button row stand in line also when a name takes two lines.']
     ]],
