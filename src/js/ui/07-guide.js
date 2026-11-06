@@ -261,18 +261,18 @@ function panelPort(){
   const b = S.boat, H = S.t / 60, h = [];
   if (b.status === 'port'){
     const p = portById(b.port), svc = [];
-    if (p.fuel) svc.push(t('svc_fuel')); if (p.ice) svc.push(t('svc_ice')); if (p.mottak) svc.push(t('svc_mottak'));
+    if (p.fuel) svc.push(t('svc_fuel')); if (p.ice) svc.push(t('svc_ice')); if (plantFor(p, b.type)) svc.push(t('svc_mottak'));
     h.push('<h3>' + p.name + '</h3><div class="kv"><span>' + t('services') + '</span><span>' + svc.join(', ') + '</span></div>');
     const btn = [];
     const tot = holdTotal();
     if (b.shift || b.fueling) h.push('<p class="note">' + quayText(false) + '</p>');
     if (b.land) h.push('<p class="note"><b>' + (S.lang === 'no' ? 'Lossing: ' : 'Landing: ') + '</b>' + landText(false) + ' ' + (S.lang === 'no' ? 'Sluttseddelen kommer ca. kl. ' : 'The landing note comes at about ') + whenTxt(b.land.until) + '.</p>');
-    else if (p.mottak && tot > 0 && !b.shift && !b.fueling) btn.push(mottakOpen(S.t / 60) ? '<button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button>' : mottakShut());
+    else if (plantFor(p, b.type) && tot > 0 && !b.shift && !b.fueling) btn.push(mottakOpen(S.t / 60) ? '<button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button>' : mottakShut());
     if (p.fuel){ const need = BOAT.fuelCap - b.fuel; btn.push('<button class="btn" data-act="fuel"' + (need < 0.5 || portBusy(b) ? ' disabled' : '') + '>' + t('fill_fuel', fmt(need, 0), kr(need * fuelPrice())) + '</button>'); }
     { const kg = Math.min(50, shopIceRoom()); btn.push('<button class="btn" data-act="ice" data-kg="' + (kg || 50) + '"' + (kg < 1 || b.shift || b.land && berthKind(b) !== 'main' ? ' disabled' : '') + '>' + t('buy_ice', kg || 50, kr(Math.round((kg || 50) * shopIceKr()))) + '</button>'); }
     btn.push('<button class="btn' + (b.gear ? '' : ' primary') + '" data-act="gear">' + t('shop_open') + '</button>');
     h.push('<div class="btns">' + btn.join('') + '</div>');
-    if (!p.mottak) h.push('<p class="note">' + t('no_mottak') + '</p>');
+    if (!plantFor(p, b.type)) h.push('<p class="note">' + t('no_mottak') + '</p>');
     if (p.mottak && !p.ice) h.push('<p class="note">' + (S.lang === 'no' ? 'Mottaket her har ingen isrenne, så det selger is i sekker og bærer den om bord.' : 'The plant here has no ice chute, so it sells bagged ice and carries it aboard.') + '</p>');
     h.push(portSlip());
   } else h.push('<p class="note">' + t('not_port') + '</p>');
@@ -386,7 +386,7 @@ function landPage(){
   const p = portById(b.port), tot = holdTotal();
   if (b.land) h.push('<p class="note"><b>' + LN('Lossing: ', 'Landing: ') + '</b>' + landText(false) + ' ' + LN('Sluttseddelen kommer ca. kl. ', 'The landing note comes at about ') + whenTxt(b.land.until) + '.</p>');
   else if (b.shift || b.fueling) h.push('<p class="note">' + quayText(false) + '</p>');
-  else if (!p.mottak) h.push('<p class="note">' + t('no_mottak') + '</p>');
+  else if (!plantFor(p, b.type)) h.push('<p class="note">' + t('no_mottak') + '</p>');
   else if (tutOn() && p.id !== tutLand()) h.push('<p class="note">' + LN('På første tur leverer du i ' + tutLandN() + '.', 'On the first trip you land in ' + tutLandN() + '.') + '</p>');
   else if (tot > 0.5) h.push(landWarn(p) + '<div class="btns">' + (mottakOpen(S.t / 60) ? '<button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button>' : mottakShut()) + '</div>');
   h.push('<h3>' + LN('Lasterom', 'Hold') + '</h3>' + panelHold());

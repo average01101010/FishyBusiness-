@@ -407,7 +407,7 @@ function mottakWhen(H, no, from){
 }
 function startLanding(ops){
   const b = S.boat, pt = portById(b.port), kg = holdTotal();
-  if (b.status !== 'port' || !pt || !pt.mottak || b.land || b.shift || kg < 0.5 || !mottakOpen(S.t / 60)) return false;
+  if (b.status !== 'port' || !plantFor(pt, b.type) || b.land || b.shift || kg < 0.5 || !mottakOpen(S.t / 60)) return false;
   if (berthKind(b) === 'naust'){ log(NAUST_SAIL[0], NAUST_SAIL[1]); return false; }
   if (berthKind(b) !== 'main') return startShift('main', ops ? 'landops' : 'land');   // the crane is at the plant's quay
   const lp = landPlan(b.type, kg), pall = lp.kind === 'pall', unit = pall ? ['paller', 'pallets'] : ['kar', 'tubs'];
@@ -435,7 +435,10 @@ function iceChute(kg){ const b = S.boat; b.iceUntil = Math.max(b.iceUntil || 0, 
 // landing the catch from the bunker quay means going back first. Finnsnes fills where you lie. The boat pumps its own fuel,
 // about 45 litres a minute of petrol and 90 of diesel (guesses from small-boat bunker pumps), and pays as it runs.
 const SHIFT_MPM = 3 * 1852 / 60;   // metres a minute at 3 knots in the harbour
-const PUMP = {petrol:45, diesel:90, hose:1.5, stow:1};   // litres a minute; minutes to get the hose out and the nozzle in, and to stow it
+// litres a minute; minutes to get the hose out and the nozzle in, and to stow it. An ocean vessel bunkers from the quay's tank system or a
+// bunker boat at 800 l/min (48 m³ an hour, assumed between a bunker boat's 400 l/min, iLaks on «Aas Provider», and Thyborøn's fixed system
+// for the fishing fleet, up to 1,500 l/min; H2e 06.11.2026): at the coastal boats' 90 l/min her 300 m³ tank took over two days
+const PUMP = {petrol:45, diesel:90, hav:800, hose:1.5, stow:1};
 // where she lies: 'main' (the plant's quay), 'bunker' or 'naust' (Father's pile quay in the home harbour; 'main' until it is found)
 const berthKind = b => b.berth === 'naust' && !quayFace(b.port, 'naust') ? 'main' : (b.berth || 'main');
 // where the boat lies: at Father's naust its berth, not the harbour point the simulation keeps her at (tilbakemelding #20: Autonav
@@ -468,7 +471,7 @@ function startFueling(ops){
   if (BOAT.fuelCap - b.fuel < 0.5) return false;
   if (hasBunker(pt.id) && berthKind(b) !== 'bunker') return startShift('bunker', ops ? 'fuelops' : 'fuel');
   if (berthKind(b) === 'naust'){ log(NAUST_SAIL[0], NAUST_SAIL[1]); return false; }   // no pump at the naust: sail over first
-  const lpm = BOAT.diesel ? PUMP.diesel : PUMP.petrol, l = Math.min(BOAT.fuelCap - b.fuel, Math.max(0, S.cash) / fuelPrice());
+  const lpm = (VESSELS[b.type] || {}).cls === 'hav' ? PUMP.hav : BOAT.diesel ? PUMP.diesel : PUMP.petrol, l = Math.min(BOAT.fuelCap - b.fuel, Math.max(0, S.cash) / fuelPrice());
   if (l < 0.5){ log('Har ikke penger til drivstoff.', 'No money for fuel.'); return false; }
   b.fueling = {t0:S.t, pumpAt:S.t + PUMP.hose, until:S.t + PUMP.hose + l / lpm + PUMP.stow, liters:l, lpm, done:0, ops:!!ops};
   log('Fyller ' + fmt(l, 0) + ' L ' + (BOAT.diesel ? 'diesel' : 'bensin') + ', ferdig ca. kl. ' + hm(b.fueling.until / 60) + '.', 'Filling ' + fmt(l, 0) + ' L of ' + (BOAT.diesel ? 'diesel' : 'petrol') + ', done at about ' + hm(b.fueling.until / 60) + '.');
