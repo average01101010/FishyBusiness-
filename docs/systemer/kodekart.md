@@ -17,7 +17,7 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 60 `natP(lat, lon)`
   - 61 `natLL(p)`
 
-## `src/js/core/01-world.js` (455 linjer)
+## `src/js/core/01-world.js` (462 linjer)
 
 - **10** one clock for everyone (05.10.2026, the shared world V1)
   - 55 `gridScale(p)`
@@ -35,32 +35,32 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 147 `legHazard(a, c, sd)`
   - 160 `legHazardMemo(a, c, sd)`
   - 165 `draftHazards()`
-  - 175 `legReady(a, c)`
-  - 182 `nearestPlace(p)`
-  - 186 `groundCheck(a, c)`
-  - 202 `runAground(p)`
-  - 217 `rocksNear(a, b, r)`
-  - 227 `rocksIn(x0, y0, x1, y1)`
-  - 235 `rocksAlong(a, b, r)`
-  - 249 `coastDist(p)`
-  - 250 `coastDistFar(p)`
-  - 256 `decodeContours()`
-  - 265 `isLand(p)`
-  - 273 `isLandFar(p)`
-  - 279 `isLandUI(p)`
-  - 285 `inHarbourPocket(p)`
-  - 291 `harbourNear(x, z)`
-  - 297 `qPockets()`
-  - 298 `pocketHit(US, QS, x, z)`
-  - 305 `pocketsIn(x0, y0, x1, y1)`
-  - 314 `legClear(a, b)`
-  - 345 `portLabel(p)`
-- **361** the harbour unit (02.10.2026)
-  - 402 `fillOut(U, lx, lz)`
-  - 415 `onUnitGround(p)`
-  - 422 `unitCovers(x, z, m)`
-  - 430 `bridgeUnderUnit(br, extra)`
-  - 435 `portApproach(pt)`
+  - 180 `legReady(a, c)`
+  - 189 `nearestPlace(p)`
+  - 193 `groundCheck(a, c)`
+  - 209 `runAground(p)`
+  - 224 `rocksNear(a, b, r)`
+  - 234 `rocksIn(x0, y0, x1, y1)`
+  - 242 `rocksAlong(a, b, r)`
+  - 256 `coastDist(p)`
+  - 257 `coastDistFar(p)`
+  - 263 `decodeContours()`
+  - 272 `isLand(p)`
+  - 280 `isLandFar(p)`
+  - 286 `isLandUI(p)`
+  - 292 `inHarbourPocket(p)`
+  - 298 `harbourNear(x, z)`
+  - 304 `qPockets()`
+  - 305 `pocketHit(US, QS, x, z)`
+  - 312 `pocketsIn(x0, y0, x1, y1)`
+  - 321 `legClear(a, b)`
+  - 352 `portLabel(p)`
+- **368** the harbour unit (02.10.2026)
+  - 409 `fillOut(U, lx, lz)`
+  - 422 `onUnitGround(p)`
+  - 429 `unitCovers(x, z, m)`
+  - 437 `bridgeUnderUnit(br, extra)`
+  - 442 `portApproach(pt)`
 
 ## `src/js/core/01b-mapdata.js` (212 linjer)
 
@@ -2362,12 +2362,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1222 linjer)
+## `src/js/ui/phone/07-patch.js` (1223 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1215 `patch()`
+  - 1216 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
