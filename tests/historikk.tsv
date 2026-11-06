@@ -99,3 +99,11 @@
 2026-11-06 07:29	ccr-5e1ba2f4-pusvyd	cb915c57+	boottest	OK	30	lite	samtidig	
 2026-11-06 07:29	ccr-5e1ba2f4-pusvyd	cb915c57+	trip2	OK	37	lite	samtidig	
 2026-11-06 07:30	ccr-5e1ba2f4-pusvyd	cb915c57+	dbg23o	OK	38	3d	alene	
+2026-11-06 08:04	ccr-aee4fa08-paslvj	d96c1c78+	hudtest	FEIL	91	lite	samtidig	avsluttet med kode 1
+2026-11-06 08:04	ccr-aee4fa08-paslvj	d96c1c78+	uishots	FEIL	91	lite	samtidig	avsluttet med kode 1
+2026-11-06 08:06	ccr-aee4fa08-paslvj	d96c1c78+	tutdrift	FEIL	91	lite	samtidig	avsluttet med kode 1
+2026-11-06 08:06	ccr-aee4fa08-paslvj	7c2c4b01	hudtest	OK	27	lite	samtidig	
+2026-11-06 08:08	ccr-aee4fa08-paslvj	7c2c4b01	uishots	OK	90	lite	samtidig	
+2026-11-06 08:08	ccr-aee4fa08-paslvj	7c2c4b01	tutdrift	OK	7	lite	samtidig	
+2026-11-06 08:08	ccr-aee4fa08-paslvj	d94fb645	hudtest	OK	26	lite	samtidig	
+2026-11-06 08:09	ccr-aee4fa08-paslvj	d94fb645	uishots	OK	88	lite	samtidig	
