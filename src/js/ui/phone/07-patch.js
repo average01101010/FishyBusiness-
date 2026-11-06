@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['o8-061126', '06.11.2026', 'Rutepanelet og innloggingsbonusen', 'The route panel and the login bonus', [
+       ['Rutepanelet viser sjøen på hver etappe slik den er der når båten kommer dit. Over båtens grense står den i rødt, og en linje under kortene sier hvilke etapper det gjelder.', 'The route panel shows the sea on each leg as it is there when the boat gets there. Over the boat\'s limit it stands in red, and a line under the cards says which legs that is.'],
+       ['Salg-appen sier at innloggingsbonusen regnes i ekte kalenderdager, og når neste prosent kommer.', 'The Sales app says that the login bonus is counted in real calendar days, and when the next percent comes.']]],
     ['h3a-061126', '06.11.2026', 'Snøkrabbe', 'Snow crab', [
        ['Snøkrabbefartøyet kan kjøpes, med en snøkrabbetillatelse fra en av de 30 i registeret. Alle tillatelsene har samme kvote: 433 tonn i 2027, og inntil 10 % kan flyttes til neste år.', 'The snow crab vessel can be bought, with a snow crab permit from one of the 30 in the register. All the permits have the same quota: 433 tonnes in 2027, and up to 10% can be moved to the next year.'],
        ['Snøkrabben fanges med koniske teiner i lenker på 200 på Storbanken, Sentralbanken og ved Hopen, der flåten fisker den, på 220–380 m og bare på norsk sokkel utenfor 12 nm.', 'The snow crab is caught with conical pots in strings of 200 on Storbanken, Sentralbanken and at Hopen, where the fleet fishes it, at 220–380 m and only on the Norwegian shelf outside 12 nm.'],

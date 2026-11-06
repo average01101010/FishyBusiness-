@@ -20,6 +20,7 @@ Jonas: energi som ny inntektskilde, «en fiktiv energidrikk som heter "Skipperta
 - Regnes i `streakTouch()` (`core/03-simulation.js`) ved oppstart, når appen blir synlig igjen, og hvert minutt. Dagene er lokale kalenderdager (`dayKey`, `dayNum`).
 - Bonusen gjelder fisken, ikke tillegg for bestillinger, lever eller rogn. Den står som egen linje på sluttseddelen, og mannskapets lott regnes av totalen med bonusen.
 - Vises i HUD-en («Bonus +12 %») og på et kort i Salg-appen med hva i morgen gir og hva en tapt dag koster.
+- **Teksten i Salg-appen** (Ø8, 06.11.2026, backloggen 10.2 «Innloggingsbonusen»; `ui/phone/09-vaer-post-salg-redning.js`): kortet sier nå at dagene er ekte kalenderdager etter klokka på enheten, ikke spilldøgn, at første gang spillet åpnes en ny dag gir `STREAK.step` % uansett hvor lenge man spiller, og raden «Neste prosent» sier «+N % · i morgen, fra midnatt». Kjernen var riktig fra før (`dayKey`/`dayNum` i `ui/02-format-state.js`, `streakTouch`); bare teksten er endret, norsk og engelsk. Test: `streaktest` (kortet), `posttest` og `shoptest` (fila).
 - **Migrering:** Eldre lagringer starter på 0 %. Ubrukte gratis pubrunder fra kaffen ble betalt ut med 1 000 kr hver. Lånte fiskekar og rengjort bunn er borte.
 - **Å måle:** Uten tak dobler bonusen fiskeprisen etter 100 dager. Konstantene i `STREAK` gjør det enkelt å sette et tak senere.
 

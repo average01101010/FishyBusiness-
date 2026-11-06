@@ -48,6 +48,13 @@ async def run(p, W, H, tag):
     check(d['n'] >= 3 and names == ['WP' + str(i) for i in range(d['n'] + 1)] and 'WP0' in d['labels'] and 'WP' + str(d['n']) in d['labels'], tag + ': WP0 er starten, så WP1 … i lista og på kartet', names)
     card = d['cards'][-1]
     check(re.search(r'Kurs \d{3}°', card) and re.search(r'[\d,]+ nm', card) and re.search(r'ETA \d\d:\d\d', card) and 'om ' in card and '°' in card and "'N" in card, tag + ': kortet har kurs, lengde, ETA med nedtelling og koordinat', card[:120])
+    # the sea along the route (Ø8, 06.11.2026): every card has «Sjø … m» from hsAt at the boat's time on the leg, the top value is the top
+    # of hsAt sampled independently along the legs, red and the line under the cards only when a leg is over BOAT.risk[0]
+    sea = json.loads(await J("""JSON.stringify((() => { const tl = draftTimeline(), q = draftSea(tl); let mx = 0;
+      S.draft.forEach((w, i) => { const a = i ? S.draft[i - 1] : draftOrigin(), T0 = i ? tl.legs[i - 1].leave : tl.dep, T1 = tl.legs[i].arrive; const n = Math.max(1, Math.min(24, Math.ceil(dist(a, w) / 0.5))); for (let k = 0; k <= n; k++){ const f = k / n; mx = Math.max(mx, hsAt({x:a.x + (w.x - a.x) * f, y:a.y + (w.y - a.y) * f}, (T0 + (T1 - T0) * f) / 60)); } });
+      const cards = [...document.querySelectorAll('#panel .wpc[data-i] .wsea')], red = cards.map(e => !!e.querySelector('b').style.color);
+      return {n:S.draft.length, cards:cards.map(e => e.textContent), red, lvl:q.map(x => x.lvl), top:+Math.max(...q.map(x => x.hs)).toFixed(2), mx:+mx.toFixed(2), line:!!document.querySelector('#panel p.wsea')}; })())"""))
+    check(len(sea['cards']) == sea['n'] and all(re.match(r'Sjø [\d,]+ m', c) for c in sea['cards']) and abs(sea['top'] - sea['mx']) < 0.15 and all(r == (l > 0) for r, l in zip(sea['red'], sea['lvl'])) and sea['line'] == (max(sea['lvl']) > 0), tag + ': hvert kort har sjøen på etappen når båten er der (hsAt), rød og linja under bare over båtens grense', sea)
     # undo and redo with the floating buttons
     tools = json.loads(await J("JSON.stringify(['rUndo', 'rRedo'].map(id => { const r = $(id).getBoundingClientRect(); return {w:Math.round(r.width), h:Math.round(r.height), x:r.x, y:r.y, vis:!$(id).hidden}; }))"))
     check(all(t['vis'] and t['w'] == 48 and t['h'] == 48 for t in tools), tag + ': angre og gjør om er 48 × 48 px', tools)
