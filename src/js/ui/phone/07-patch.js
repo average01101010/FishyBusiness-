@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['o7-061126', '06.11.2026', 'Småfeil rettet', 'Small fixes', [
+       ['Ikonene i knappelinja står på linje også når et navn går over to linjer.', 'The icons in the button row stand in line also when a name takes two lines.']
+    ]],
     ['havplan-051126', '05.11.2026', 'Autolineren på driftsplanen', 'The autoliner on the operations plan', [
        ['Driftsplanen kan drive autolineren: lagene setter lenkene på feltene, lar dem stå, trekker dem og setter dem ut igjen, døgnet rundt, også uten deg om bord og når spillet er lukket.', 'The operations plan can run the autoliner: the teams set the lenker on the fields, let them stand, haul them and set them out again, round the clock, also without you aboard and while the game is closed.'],
        ['Turen varer til lasten er nesten full, eller agnet, drivstoffet eller provianten tar slutt, eller så mange døgn du velger. Så trekkes lenkene inn, og skipet losser, bytter skift, bunkrer, tar agn for neste tur og går ut igjen.', 'The trip lasts until the hold is nearly full, or the bait, the fuel or the provisions run out, or as many days as you choose. Then the lenker are hauled in, and the ship lands, changes crews, bunkers, takes bait for the next trip and goes out again.'],
