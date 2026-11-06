@@ -521,10 +521,13 @@
     if (L && L.mob && K.mob){ const q = K.mob, XM = kitX('mob'), M = chain(BMrel, M4.T(q[0], q[1], q[2]), M4.RY(q[3] || 0)), ba = XM.boat_at || [0, 0.45, 0], MB = chain(M, M4.T(ba[0], ba[1], ba[2]));
       let n = 0; for (const nm of ['mob_boat', 'mob_tarp', 'mob_sling']){ const m = kit('mob', nm); if (m){ drawN(m, MB); n++; } }
       for (const nm of ['mob_vugge', 'mob_lash']){ const m = kit('mob', nm); if (m){ drawN(m, M); n++; } }
-      const s = q[4] || 1, da = XM.davit_at || [1.75, 0, 0.4], MD = s < 0 ? chain(M, M4.T(-da[0], da[1], da[2]), M4.RY(Math.PI)) : chain(M, M4.T(da[0], da[1], da[2]));
-      for (const nm of ['mob_davit', 'mob_arm']){ const m = kit('mob', nm); if (m){ drawN(m, MD); n++; } }
+      // dz moves the davit along the ship (clear of what stands there); the arm slews about the column so the hook still points at the
+      // sling's master link (short of it by reach - hypot(reach, dz), 3.5 cm at dz 0.35)
+      const s = q[4] || 1, dz = q[5] || 0, da = XM.davit_at || [1.75, 0, 0.4], MD = s < 0 ? chain(M, M4.T(-da[0], da[1], da[2] + dz), M4.RY(Math.PI)) : chain(M, M4.T(da[0], da[1], da[2] + dz));
+      const MA = dz ? chain(MD, M4.RY(Math.atan2(-dz * s, XM.reach || 1.75))) : MD, DV = kit('mob', 'mob_davit'), AR = kit('mob', 'mob_arm');
+      if (DV){ drawN(DV, MD); n++; } if (AR){ drawN(AR, MA); n++; }
       const ha = XM.hook_at || [-1.75, 3.174, 0], hd = XM.head_at || [-1.75, 3.474, 0], HK = kit('mob', 'mob_hook'), FL = kit('mob', 'mob_fall');
-      if (HK) drawN(HK, chain(MD, M4.T(ha[0], ha[1], ha[2]))); if (FL) drawN(FL, limbM(xf(MD, hd), xf(MD, ha), 1)); KST.mob = n; }
+      if (HK) drawN(HK, chain(MA, M4.T(ha[0], ha[1], ha[2]))); if (FL) drawN(FL, limbM(xf(MA, hd), xf(MA, ha), 1)); KST.mob = n; }
     // the ladder aft where the model lacks it or it is too short for § 63 (vessel3d.js LADDERS): stainless tube, built once a type
     if (K.ladder){ const m = LADM[vtype()] || (LADM[vtype()] = ladderMesh(K.ladder)); if (m){ drawN(m, BMrel); KST.ladder = K.ladder.length; } }
     // the radar that is bought: a dome on the roof or in the mast, or the open array on the mast that turns at 24 rpm while she is out

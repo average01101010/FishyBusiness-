@@ -130,7 +130,10 @@ async def main():
         await pg.set_viewport_size({'width': 640, 'height': 960})
         for t, scene in [('sjarkny', 'line'), ('kyst15', 'kai')]:
             await show(pg, t, scene)
-            if scene == 'kai': await pg.wait_for_function(CRANE_AT, arg='work', timeout=120000)
+            if scene == 'kai':
+                # the crane's own check above reports when it does not reach its pose; here a slow fold must not stop the last checks
+                try: await pg.wait_for_function(CRANE_AT, arg='work', timeout=120000)
+                except Exception: print('   kyst15 kai: kranen nådde ikke arbeidsstillingen innen 120 s (se kranens sjekk over)', flush=True)
             await pg.screenshot(path=os.path.join(OUT, f'deck_{t}_{scene}_staaende.png'))
         gerr = await pg.evaluate("G3._debug.glErr()")
         check(gerr == 0, 'ingen GL-feil', gerr)
