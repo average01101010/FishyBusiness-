@@ -67,10 +67,10 @@ function hudFigures(){
   const b = S.boat, H = S.t / 60, W = windAt(H), hs = hsAt(b.pos, H), atSea = b.status !== 'port', lvl = riskLevel(W, hs), L = (a, c) => S.lang === 'no' ? a : c;
   const fuelP = b.fuel / BOAT.fuelCap, HF = holdFmt(), holdP = HF.load / Math.max(1, capHold()), e = S.energy == null ? 100 : S.energy, full = holdP >= 0.995;
   return {W, hs, lvl, atSea, HF,
-    fuel:{v:fuelP, txt:fmt(b.fuel, 0) + ' L', cls:fuelP < 0.1 ? 'r2' : fuelP < 0.25 ? 'r1' : ''},
+    fuel:{v:fuelP, txt:fmt(b.fuel, 0) + ' L', tiny:fmt(b.fuel, 0), cls:fuelP < 0.1 ? 'r2' : fuelP < 0.25 ? 'r1' : ''},
     // full is red with «Full», nearly full yellow (spilltest 3, U5); a freezer vessel's in tonnes of product (H2b); the strip says only «Full»
-    hold:{v:holdP, txt:full ? L('Full', 'Full') + ' · ' + HF.short : HF.short, short:full ? L('Full', 'Full') : HF.short, cls:full ? 'r2' : holdP >= 0.9 ? 'r1' : ''},
-    en:{v:energyOff() ? 1 : e / 100, txt:energyOff() ? L('av', 'off') : asleep() ? L('sover', 'asleep') : Math.round(e) + ' %', cls:asleep() || (!energyOff() && e < ENERGY.dim) ? 'r2' : !energyOff() && e < ENERGY.warn ? 'r1' : ''},
+    hold:{v:holdP, txt:full ? L('Full', 'Full') + ' · ' + HF.short : HF.short, short:full ? L('Full', 'Full') : HF.short, tiny:full ? L('Full', 'Full') : HF.short.replace(/ kg$/, ''), cls:full ? 'r2' : holdP >= 0.9 ? 'r1' : ''},
+    en:{v:energyOff() ? 1 : e / 100, txt:energyOff() ? L('av', 'off') : asleep() ? L('sover', 'asleep') : Math.round(e) + ' %', tiny:energyOff() ? L('av', 'off') : asleep() ? L('sover', 'asleep') : Math.round(e) + '%', cls:asleep() || (!energyOff() && e < ENERGY.dim) ? 'r2' : !energyOff() && e < ENERGY.warn ? 'r1' : ''},
     sea:{v:atSea ? (lvl + 1) / 3 : 0.15, txt:fmt(hs, 1) + ' m', cls:atSea ? 'r' + lvl : ''}};
 }
 // the third line (U2-1, plan 4.2): the warning that applies now (the rules ✕ or !, a synchronous roll with the advice, the buoy a mile off
@@ -81,6 +81,9 @@ function hudFigures(){
 // card has room for the deck's whole text, the box takes the short one so it stays inside its reserved height). The class «st nx»
 // stays: the first trip points at it (07b-first-trip.js sail, deck, full, land, slip). Upright the line is empty only while she lies
 // still with nothing on (U2-0: 6 of 48 samples), and its place stands
+const HUD_SHORT = [['Fisket er ferdig', 'Ferdig'], ['Forhalingen er ferdig', 'Ferdig'], ['Bunkringen er ferdig', 'Ferdig'], ['Mannskapet er ferdig', 'Mannskapet ferdig'], ['Verkstedet er ferdig', 'Verkstedet ferdig'],
+  ['Fishing done', 'Done'], ['Shifting done', 'Done'], ['Fuelling done', 'Done'], ['The crew is done', 'Crew done'], ['The yard is done', 'Yard done']];
+function hudShortEv(txt){ for (const [a, b] of HUD_SHORT) if (txt === a) return b; return txt; }
 function hudLine3(how){
   const strip = how === 'strip';
   const b = S.boat, H = S.t / 60, atSea = b.status !== 'port', no = S.lang === 'no', L = (a, c) => no ? a : c, I = typeof DOCK !== 'undefined' ? DOCK.info() : {};
@@ -91,13 +94,20 @@ function hudLine3(how){
     if (!h && b.status !== 'sailing' && typeof gearBuoyNear === 'function'){ const nb = gearBuoyNear(b.pos); if (nb && nb.d > GEARLIE.alarm){ cls = 'r2'; go = String(nb.s.id); h = L('Blåsa ', 'Buoy ') + fmt(nb.d / NM, 1) + L(' nm unna · Kjør dit ›', ' nm off · Go there ›'); } }
   }
   let on = I.on || '';   // the work going on; in the box a row of its own under the event, in the strip only when there is no event
-  if (!h){ const nx = nextEvent(); if (nx) h = '⏱ ' + nx.txt + ' ' + hm(nx.t / 60) + ' <small>· ' + inReal(nx.t - S.t) + '</small>'; }
+  // the next event: in the box «⏱ Fisket er ferdig 09:01 · om 27 min i ekte tid»; in the strip the real time stands in a span of its own
+  // (.l3s) that gives way first when the line is short, so the event and its hour are never cut before it, and the narrow phone drops
+  // the clock sign («Fisket er ferdig 19:30» and «Dekk 81 kg» on one line at 10 px in 47 vw of 390 px)
+  // the narrow phone (Jonas 06.11.2026: «Bare å fjerne ordet "fisket" så får du masse plass»): line 1 says what she does («Fisker»,
+  // «Forhaler», «Bunkrer»), so line 3 says only «Ferdig 19:30» beside the deck's kg; the crew and the yard keep their word, the place
+  // its name («Fremme i Botnhamn»)
+  const narrow = strip && window.innerWidth <= 560; let hs = '';
+  if (!h){ const nx = nextEvent(); if (nx){ h = (narrow ? hudShortEv(nx.txt) : '⏱ ' + nx.txt) + ' ' + hm(nx.t / 60); if (strip) hs = '· ' + (no ? 'om ' : 'in ') + realDur(nx.t - S.t); else h += ' <small>· ' + inReal(nx.t - S.t) + '</small>'; } }
   if (!h && (on || I.place)){ h = on || I.place; on = ''; cls = 'q'; }
   if (!h && strip && atSea){ const cp = coldPen(H); if (cp > 0.03){ cls = 'cold'; h = L('Kulde −', 'Cold −') + Math.round(cp * 100) + ' % · ' + Math.round(effTemp(H)) + ' °C'; } }
   const tail = [strip ? '' : on, I.reels, I.deck ? (how === 'card' ? I.deck[0] : L('Dekk ', 'Deck ') + I.deck[1]) : ''].filter(Boolean).join(' · ');
   if (!h && tail) return '<div class="st nx q"><span class="l3">' + tail + '</span></div>';   // only the deck (or the work): the line itself
   if (!h && !tail && !strip) return '';
-  return '<div class="st nx' + (cls ? ' ' + cls : '') + '"' + (go ? ' data-hgo="' + go + '"' : '') + '><span class="l3">' + h + '</span>' + (tail ? '<span class="l3d">' + tail + '</span>' : '') + '</div>';
+  return '<div class="st nx' + (cls ? ' ' + cls : '') + '"' + (go ? ' data-hgo="' + go + '"' : '') + '><span class="l3">' + h + '</span>' + (hs ? '<span class="l3s">' + hs + '</span>' : '') + (tail ? '<span class="l3d">' + tail + '</span>' : '') + '</div>';
 }
 function renderHud(){
   const b = S.boat, H = S.t / 60, no = S.lang === 'no', L = (a, c) => no ? a : c, F = hudFigures(), {W, hs, lvl, atSea, HF} = F;
@@ -112,8 +122,12 @@ function renderHud(){
     // 1: the clock, the state with its dot, the till. 2: diesel, hold, energy and sea as an icon and a figure, coloured when they warn.
     // 3: hudLine3. A tap gives the whole box as a card over the chart; on its side, where the whole box is the normal state, «+» opens
     // it again for good
-    const g2 = (k, f, lbl) => '<span class="g2 g-' + k + (f.cls ? ' ' + f.cls : '') + '" title="' + lbl + '">' + HICON[k] + '<b>' + (f.short || f.txt) + '</b></span>';
-    setHtml(hud, '<div class="hs1' + (up ? '' : ' wb') + '"><span class="ht">' + hm(H) + '</span><i class="dot ' + dot + '"></i><span class="hs">' + statusText() + '</span><b class="hc' + (S.cash < 0 ? ' r2' : '') + '">' + kr(cashShown()) + '</b>' +
+    // a phone upright (47 vw, as wide as the little chart, Jonas 06.11.2026): the figures without their units (the icons say what they
+    // are; the card has them whole), and «I havn» without the place, which stands on line 3
+    const narrow = up && window.innerWidth <= 560;
+    const g2 = (k, f, lbl) => '<span class="g2 g-' + k + (f.cls ? ' ' + f.cls : '') + '" title="' + lbl + '">' + HICON[k] + '<b>' + (narrow ? (f.tiny || f.short || f.txt) : (f.short || f.txt)) + '</b></span>';
+    const stTxt = narrow && b.status === 'port' && !b.land && !b.shift && !b.fueling && !(S.plan && S.plan.depAt) ? L('I havn', 'In port') : statusText();
+    setHtml(hud, '<div class="hs1' + (up ? '' : ' wb') + '"><span class="ht">' + hm(H) + '</span><i class="dot ' + dot + '"></i><span class="hs">' + stTxt + '</span><b class="hc' + (S.cash < 0 ? ' r2' : '') + '">' + kr(cashShown()) + '</b>' +
       (up ? '' : '<button type="button" class="hmin" data-hmin="hud" aria-label="' + L('Vis hele boksen', 'Show the whole box') + '">+</button>') + '</div>' +
       '<div class="hs2">' + g2('fuel', F.fuel, 'Diesel') + g2('hold', F.hold, L('Last', 'Hold')) + g2('en', F.en, L('Energi', 'Energy')) + g2('sea', F.sea, L('Sjø', 'Sea')) + '</div>' + hudLine3('strip'));
   } else {

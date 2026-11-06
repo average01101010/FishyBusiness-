@@ -2,7 +2,7 @@
 minimer på disse, som gjør slik at bare basisinformasjonen vises på en tynn stripe… Legg også inn muligheten for fjerning av HUD i
 innstillingene»; UI 2, U2-1, docs/planer/ui-2-staaende.md 4.1–4.2, 06.11.2026: upright the strip is the normal state). On a phone upright:
 the strip has three lines and a fixed height, no fold button, the same height in harbour, idle and under way, and the little chart stands
-still under it; a tap on the strip gives the whole box as a card over the chart, with the whole table, and a tap outside or on the card closes it; the
+still above it, as wide as the strip (Jonas 06.11.2026, B); a tap on the strip gives the whole box as a card over the chart, with the whole table, and a tap outside or on the card closes it; the
 chart folds to a strip with speed, course and position, and opens again; «Skjul HUD» in the settings takes them all away, and it is kept
 after a reload. On a tablet on its side: the whole box with a fixed width and a 44 px fold button, the gauges a 44 px target; «–» folds it
 to the three-line strip with «+», and the chart moves up under it; the chart's top is the same in harbour and under way. Prints OK or FEIL."""
@@ -45,7 +45,9 @@ async def phone(p):
     # 1. upright the strip is the normal state: three lines, a fixed height, no fold button, the time, the state and the money
     check(a['hud'] and 40 <= a['hud']['h'] <= 70 and 'hudstrip' in a['cls'] and not a['hmin'] and all(c in a['lines'] for c in ('.hs1', '.hs2', '.st.nx')) and ':' in a['text'] and 'kr' in a['text'],
           'upright the status box is the strip: three lines, a fixed height, no fold button, with the time, the state and the money', {'hud': a['hud'], 'lines': a['lines'], 'cls': a['cls'], 'text': a['text'][:80]})
-    # 2. the same height in harbour, idle and under way, and the little chart stands still under it
+    # 1b. the chart on top and the strip under it, as wide as the chart (Jonas 06.11.2026, B: «symmetri og harmoni med kartplotteren»)
+    check(a['plot'] and a['plot']['top'] < a['hud']['top'] and a['plot']['w'] == a['hud']['w'] and a['hud']['top'] >= a['plot']['top'] + a['plot']['h'], 'the little chart stands at the top and the strip right under it, both as wide', {'plot': a['plot'], 'hud': a['hud']})
+    # 2. the same height in harbour, idle and under way, and the little chart stands still above it
     T = await tops(pg)
     hs = {k: v['hud']['h'] for k, v in T.items()}; ps = {k: v['plot']['top'] for k, v in T.items()}
     check(len(set(hs.values())) == 1 and len(set(ps.values())) == 1 and all(v['nx'] for v in T.values()), 'the strip is as high in harbour, idle and under way, the third line stands in all of them, and the little chart does not move', {'strip': hs, 'chart top': ps})
@@ -62,8 +64,9 @@ async def phone(p):
     await pg.click('#plotMin'); await pg.wait_for_timeout(600); e = await pg.evaluate(BOX)
     check(a['plot'] and not e['plot'] and e['gps'] and e['gps']['h'] < 40 and e['gps']['top'] == a['plot']['top'] and 'kn' in e['gtext'] and '°' in e['gtext'] and 'plotmin' in e['cls'],
           'the little chart folds to a strip with speed, course and position, where the chart stood', {'plot': a['plot'], 'gps': e['gps'], 'text': e['gtext'][:80]})
+    check(e['hud'] and e['hud']['top'] < a['hud']['top'] and e['hud']['top'] >= e['gps']['top'] + e['gps']['h'], 'and the strip moves up under the GPS strip', {'hud': e['hud'], 'gps': e['gps']})
     await pg.click('#plotMin'); await pg.wait_for_timeout(600); f = await pg.evaluate(BOX)
-    check(f['plot'] and f['plot']['top'] == a['plot']['top'] and 'plotmin' not in f['cls'], 'and opens again at the same place', f['plot'])
+    check(f['plot'] and f['plot']['top'] == a['plot']['top'] and f['hud']['top'] == a['hud']['top'] and 'plotmin' not in f['cls'], 'and opens again at the same place, the strip back under it', {'plot': f['plot'], 'hud': f['hud']})
     await pg.click('#plotMin'); await pg.wait_for_timeout(300)
     # 5. «Skjul HUD» in the settings takes them all away, and it is kept after a reload
     await pg.evaluate("(() => { PHONE.open('innst'); document.querySelector('#phone [data-pa=hudShow][data-v=\"0\"]').click(); PHONE.show(false); })()"); await pg.wait_for_timeout(500)

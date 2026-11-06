@@ -720,6 +720,7 @@ body.hudstrip #hud .hmin{position:absolute;top:0;right:0}
 #hud .g2{display:inline-flex;align-items:center;gap:3px;min-width:0;color:var(--t-on-dark)} #hud .g2 svg{width:12px;height:12px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.85} #hud .g2 b{font-weight:700;white-space:nowrap}
 #hud .g2.r1{color:#ffcf7a} #hud .g2.r2{color:#ff9b91}
 #hud .st.nx .l3{flex:1 1 auto;min-width:0} #hud .st.nx .l3d{flex:none;white-space:nowrap}
+#hud .st.nx .l3s{flex:0 1000 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.9em;opacity:.85}   /* (the real time gives way first: shrinks a thousand times faster than the event before it) */
 body.hudstrip #hud .st.nx{margin:0;min-height:15px;font-size:11px!important;line-height:1.25;gap:4px} body.hudstrip #hud .st.nx small{font-size:.9em} body.hudstrip #hud .st.nx .l3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* (!important: #hud .st sets 12.5px so) */
 /* in the box and the card the deck's text takes a row of its own under the event */
 body:not(.hudstrip) #hud .st.nx{flex-wrap:wrap;row-gap:1px} body:not(.hudstrip) #hud .st.nx .l3d{flex:1 1 auto;white-space:normal;font-weight:500;color:rgba(230,240,245,.82)} body.hudcard #hud .st.nx .l3d{flex:1 0 100%}
@@ -740,6 +741,7 @@ body.hudoff #hud,body.hudoff #miniPlot,body.hudoff #gps3d,body.hudoff #compass3d
    tablet's GPU, 03.10.2026); the boxes are a little denser instead, all alike */
 body.v3d #hud,body.v3d #gps3d:not([hidden]),body.v3d #gps,body.v3d .ov,body.v3d .dk-b .dk-i,body.v3d #dockInfo,body.v3d #dockFan{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 body.v3d #hud,body.v3d #gps3d:not([hidden]),body.v3d #gps{background:rgba(6,16,24,.56)!important}
+body.v3d.hudcard #hud{background:rgba(6,16,24,.96)!important}   /* (the rule above won over the card's .96, and the chart shone through the card, Jonas' phone 06.11.2026) */
 body.v3d .ov,body.v3d #dockInfo{background:rgba(6,16,24,.56)}
 body.v3d .dk-b .dk-i{background:rgba(6,16,24,.7)}
 /* the helm on the screen (ui/10d-helm.js): a throttle on the right and a joystick on the left, nearly see-through until touched */
@@ -1616,17 +1618,22 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
    box as before (max-height 520). The plotter's instruments (#instr) still take --gpsTop, measured as before */
 body.v3d #hud{z-index:6} body.v3d #plotMin{z-index:7}   /* (the chart's fold button stays reachable under a box taller than its reserve) */
 @media (orientation:portrait){
-  body.v3d{--sTop:calc(env(safe-area-inset-top,0px) + 8px);--sW:290px;--sH:62px;--mW:230px}
-  body.v3d #hud{zoom:1;--hz:1;top:var(--sTop);width:var(--sW);max-width:none;min-width:0!important;box-sizing:border-box}
+  /* upright (Jonas 06.11.2026, after the first strip: «B, det må være symmetri og harmoni med kartplotteren», and the chart on top): the
+     little chart at the top of the zone, the strip under it, both --mW wide; the chart folded (plotmin) leaves its GPS strip (--gH) at the
+     top and the strip moves up under it; the card opens where the strip stands, downwards over the 3D view, never over the chart */
+  body.v3d{--sTop:calc(env(safe-area-inset-top,0px) + 8px);--mW:250px;--mH:min(var(--mW),20vh);--sW:var(--mW);--sH:62px;--gH:36px}
+  body.v3d #miniPlot{top:var(--sTop);width:var(--mW);height:var(--mH)}
+  body.v3d #plotMin{top:calc(var(--sTop) - 4px);left:3px}
+  body.v3d.plotmin #gps3d:not([hidden]){top:var(--sTop);width:var(--mW)}
+  body.v3d #hud{zoom:1;--hz:1;top:calc(var(--sTop) + var(--mH) + 6px);width:var(--sW);max-width:none;min-width:0!important;box-sizing:border-box}
+  body.v3d.plotmin #hud{top:calc(var(--sTop) + var(--gH) + 6px)}
   body.v3d.hudstrip #hud{height:var(--sH)}
   body.v3d.hudcard #hud{width:min(92vw,400px);height:auto}
-  body.v3d #miniPlot{top:calc(var(--sTop) + var(--sH) + 6px);width:var(--mW);height:min(var(--mW),20vh)}
-  body.v3d #plotMin{top:calc(var(--sTop) + var(--sH) + 2px);left:3px}
-  body.v3d.plotmin #gps3d:not([hidden]){top:calc(var(--sTop) + var(--sH) + 6px);width:var(--mW)}
 }
 @media (orientation:portrait) and (max-width:560px){
-  body.v3d{--sTop:calc(env(safe-area-inset-top,0px) + 40px);--sW:73vw;--sH:60px;--mW:37vw}   /* (73 vw: «Fisket er ferdig 09:01 · om 27 min i ekte tid» and the deck's kg on one line at 10.5 px on a 390 px phone) */
-  body.v3d #hud .hs1{font-size:11.5px} body.v3d #hud .hs2{font-size:10.5px} body.v3d.hudstrip #hud .st.nx{font-size:10.5px!important}
+  body.v3d{--sTop:calc(env(safe-area-inset-top,0px) + 40px);--mW:47vw;--sH:60px}   /* (47 vw: the old box's width; the strip as wide as the chart) */
+  body.v3d.hudstrip #hud{padding:5px 8px 5px!important}
+  body.v3d #hud .hs1{font-size:10.5px;gap:5px} body.v3d #hud .hs2{font-size:10px;gap:3px} body.v3d #hud .g2{gap:2px} body.v3d #hud .g2 svg{width:11px;height:11px} body.v3d.hudstrip #hud .st.nx{font-size:10px!important}
   body.v3d.hudcard #hud{width:calc(100vw - 70px)}   /* clear of the camera buttons at the right */
 }
 @media (orientation:landscape) and (min-height:521px){
