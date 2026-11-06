@@ -61,7 +61,9 @@ const hudPortrait = () => !!(HUDMQ && HUDMQ.matches);
 const HICON = {fuel:'<svg viewBox="0 0 24 24"><path d="M5 20V5.5A1.5 1.5 0 0 1 6.5 4h6A1.5 1.5 0 0 1 14 5.5V20"/><path d="M4 20h11"/><path d="M7 7.5h5V12H7z"/><path d="M14 11h2a2 2 0 0 1 2 2v3.5a1.5 1.5 0 0 0 3 0V9l-2.5-2.5"/></svg>',
   hold:'<svg viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></svg>',
   en:'<svg viewBox="0 0 24 24"><path d="M13 2.5L5 13.5h6L10 21.5l9-11h-6z"/></svg>',
-  sea:'<svg viewBox="0 0 24 24"><path d="M2 10c3.3-1.6 6.7-1.6 10 0s6.7 1.6 10 0"/><path d="M2 16c3.3-1.6 6.7-1.6 10 0s6.7 1.6 10 0"/></svg>'};
+  sea:'<svg viewBox="0 0 24 24"><path d="M2 10c3.3-1.6 6.7-1.6 10 0s6.7 1.6 10 0"/><path d="M2 16c3.3-1.6 6.7-1.6 10 0s6.7 1.6 10 0"/></svg>',
+  // the bleeding tub (Tony 06.11.2026): a tub with its water line
+  kar:'<svg viewBox="0 0 24 24"><path d="M3 7h18l-2 13H5z"/><path d="M6 13c2-1 4-1 6 0s4 1 6 0"/></svg>'};
 // the four figures the gauges and the strip show: the share 0–1, the text, and the class that colours a warning (yellow r1, red r2)
 function hudFigures(){
   const b = S.boat, H = S.t / 60, W = windAt(H), hs = hsAt(b.pos, H), atSea = b.status !== 'port', lvl = riskLevel(W, hs), L = (a, c) => S.lang === 'no' ? a : c;
@@ -71,7 +73,10 @@ function hudFigures(){
     // full is red with «Full», nearly full yellow (spilltest 3, U5); a freezer vessel's in tonnes of product (H2b); the strip says only «Full»
     hold:{v:holdP, txt:full ? L('Full', 'Full') + ' · ' + HF.short : HF.short, short:full ? L('Full', 'Full') : HF.short, tiny:full ? L('Full', 'Full') : HF.short.replace(/ kg$/, ''), cls:full ? 'r2' : holdP >= 0.9 ? 'r1' : ''},
     en:{v:energyOff() ? 1 : e / 100, txt:energyOff() ? L('av', 'off') : asleep() ? L('sover', 'asleep') : Math.round(e) + ' %', tiny:energyOff() ? L('av', 'off') : asleep() ? L('sover', 'asleep') : Math.round(e) + '%', cls:asleep() || (!energyOff() && e < ENERGY.dim) ? 'r2' : !energyOff() && e < ENERGY.warn ? 'r1' : ''},
-    sea:{v:atSea ? (lvl + 1) / 3 : 0.15, txt:fmt(hs, 1) + ' m', cls:atSea ? 'r' + lvl : ''}};
+    sea:{v:atSea ? (lvl + 1) / 3 : 0.15, txt:fmt(hs, 1) + ' m', cls:atSea ? 'r' + lvl : ''},
+    // the bleeding tub (Tony 06.11.2026: «nivå bløggekar må vises på en intuitiv måte»): kg in it of its size, yellow from half full
+    // (the haul slows, core/10-gear.js haulSlow), red at 90 % (full stops the fishing to gut); shown while she fishes or something lies in it
+    kar:(() => { const kg = deckPending(), cap = tubCap(), p = cap > 0 ? kg / cap : 0; return {v:p, txt:fmt(kg, 0) + ' / ' + fmt(cap, 0) + ' kg', short:fmt(kg, 0) + '/' + fmt(cap, 0), tiny:Math.round(p * 100) + '%', cls:p >= 0.9 ? 'r2' : p >= 0.5 ? 'r1' : '', on:atSea && (b.status === 'fishing' || kg > 0.5)}; })()};
 }
 // the third line (U2-1, plan 4.2): the warning that applies now (the rules ✕ or !, a synchronous roll with the advice, the buoy a mile off
 // with «Kjør dit»), or the next event («Fisket er ferdig 09:01 · om 30 min i ekte tid»); when neither, what the pill over the buttons used
@@ -108,7 +113,7 @@ function hudLine3(how){
   if (!h){ const nx = nextEvent(); if (nx){ h = (narrow ? hudShortEv(nx.txt) : '⏱ ' + nx.txt) + ' ' + hm(nx.t / 60); if (strip) hs = '· ' + (no ? 'om ' : 'in ') + realDur(nx.t - S.t); else h += ' <small>· ' + inReal(nx.t - S.t) + '</small>'; } }
   if (!h && (on || I.place)){ h = on || I.place; on = ''; cls = 'q'; }
   if (!h && strip && atSea){ const cp = coldPen(H); if (cp > 0.03){ cls = 'cold'; h = L('Kulde −', 'Cold −') + Math.round(cp * 100) + ' % · ' + Math.round(effTemp(H)) + ' °C'; } }
-  const tail = [strip ? '' : on, I.reels, I.deck ? (how === 'card' ? I.deck[0] : L('Dekk ', 'Deck ') + I.deck[1]) : ''].filter(Boolean).join(' · ');
+  const tail = [strip ? '' : on, I.reels, I.deck ? (how === 'card' ? I.deck[0] : I.deck[1]) : ''].filter(Boolean).join(' · ');   // (the deck's short text says what goes on: «Sløyer 90 kg · 4 min», «Kar 90/150 kg»)
   if (!h && tail) return '<div class="st nx q"><span class="l3">' + tail + '</span></div>';   // only the deck (or the work): the line itself
   if (!h && !tail && !strip) return '';
   return '<div class="st nx' + (cls ? ' ' + cls : '') + '"' + (go ? ' data-hgo="' + go + '"' : '') + '><span class="l3">' + h + '</span>' + (hs ? '<span class="l3s">' + hs + '</span>' : '') + (tail ? '<span class="l3d">' + tail + '</span>' : '') + '</div>';
@@ -133,7 +138,7 @@ function renderHud(){
     const stTxt = narrow && b.status === 'port' && !b.land && !b.shift && !b.fueling && !(S.plan && S.plan.depAt) ? L('I havn', 'In port') : statusText();
     setHtml(hud, '<div class="hs1' + (up ? '' : ' wb') + '"><span class="ht">' + hm(H) + '</span><i class="dot ' + dot + '"></i><span class="hs">' + stTxt + '</span><b class="hc' + (S.cash < 0 ? ' r2' : '') + '">' + kr(cashShown()) + '</b>' +
       (up ? '' : '<button type="button" class="hmin" data-hmin="hud" aria-label="' + L('Vis hele boksen', 'Show the whole box') + '">+</button>') + '</div>' +
-      '<div class="hs2">' + g2('fuel', F.fuel, 'Diesel') + g2('hold', F.hold, L('Last', 'Hold')) + g2('en', F.en, L('Energi', 'Energy')) + g2('sea', F.sea, L('Sjø', 'Sea')) + '</div>' + hudLine3('strip'));
+      '<div class="hs2">' + g2('fuel', F.fuel, 'Diesel') + g2('hold', F.hold, L('Last', 'Hold')) + (F.kar.on ? g2('kar', F.kar, L('Bløggekar', 'Bleeding tub')) : '') + g2('en', F.en, L('Energi', 'Energy')) + g2('sea', F.sea, L('Sjø', 'Sea')) + '</div>' + hudLine3('strip'));
   } else {
   // «Kystlys» U3 (docs/planer/ui-redesign.md, V5 A, 04.11.2026): the status box is instruments, not a table of eleven rows. Four gauges
   // on one row (diesel, hold, energy, sea), under them only what matters now (the rules at sea, a roll, the cold, the luck, the fleet),
