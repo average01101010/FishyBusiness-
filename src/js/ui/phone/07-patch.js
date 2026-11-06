@@ -1,5 +1,12 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['knappelinja-061126', '06.11.2026', 'Knappelinja til sjøs', 'The row at sea', [
+       ['Auto-nav er ute av knappelinja: minikartet åpner kartplotteren, der Autonav er en knapp. Med full last står «Til mottaket» som hovedknapp, med nærmeste mottak og avstanden dit, og den finner veien.', 'Auto-nav is out of the row: the little chart opens the chart plotter, where Autonav is a button. With a full hold «To the plant» stands as the main button, with the nearest plant and its distance, and it finds the way.'],
+       ['Sett ut, Ta opp og Trekk og sett igjen ligger under én knapp, «Redskap», som står i linja når du har settredskap. Ved egen blåse er Ta opp eller Til blåsa hovedknappen som før.', 'Set, Haul and Haul and set again are under one button, «Gear», which is in the row when you have set gear. By your own buoy Haul or To the buoy is the main button as before.'],
+       ['En knapp som ikke kan brukes nå, sier grunnen under navnet. Knapper som aldri gjelder båten, vises ikke.', 'A button that cannot be used now says why under its name. Buttons that never apply to the boat are not shown.'],
+       ['Hovedknappen står først. På telefonen stående er det aldri mer enn fem på raden og ingen «Mer»; viftene for Bygd og Verft står på to rader med to og tre.', 'The main button stands first. On a phone upright there are never more than five on the row and no «More»; the Village and Yard fans stand on two rows of two and three.'],
+       ['Tekstene som sa «under Beholdning», sier nå «under Om bord».', 'The texts that said «under Inventory» now say «under Aboard».'],
+    ]],
     ['ombord-061126', '06.11.2026', 'Om bord', 'Aboard', [
        ['Beholdning heter nå Om bord og har Mannskap som femte fane ved siden av Redskap, Rigg, Lasterom og Båten. Knappen står sist i linja i alle tilstander, og prikken for krangel om bord og for driftsplanen står på den.', 'The inventory is now called Aboard and has Crew as a fifth tab beside Gear, Rig, Hold and The boat. The button stands last in the row in every state, and the dot for a quarrel aboard and for the operations plan is on it.'],
        ['Mannskap-knappen er borte fra linja; siden ligger under Om bord. Ansatte og Mannskapsbørsen nås også derfra.', 'The Crew button is gone from the row; the page is under Aboard. Employees and the crew exchange are reached from there too.'],

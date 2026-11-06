@@ -21,7 +21,7 @@ HOOK = r"""(() => {
   const R = r => r ? {x:Math.round(r.x), y:Math.round(r.y), w:Math.round(r.width), h:Math.round(r.height)} : null;
   const txt = e => e ? (e.innerText || e.textContent || '').replace(/\s+/g, ' ').trim() : '';
   const btns = sel => [...document.querySelectorAll(sel)].filter(vis).map(b => { const r = b.getBoundingClientRect(), l = b.querySelector('.dk-l'), i = b.querySelector('.dk-i');
-    return {id:b.dataset.dk, lbl:txt(l || b).slice(0, 30), off:b.classList.contains('off'), hero:b.classList.contains('hero'), pri:b.classList.contains('pri'), dot:!!b.querySelector('.dk-dot'), top:Math.round(r.top), w:Math.round(r.width), h:Math.round(r.height), iw:i ? Math.round(i.getBoundingClientRect().width) : null, fs:getComputedStyle(l || b).fontSize}; });
+    return {id:b.dataset.dk, lbl:txt(l || b).slice(0, 30), off:b.classList.contains('off'), why:b.dataset.why || '', hero:b.classList.contains('hero'), pri:b.classList.contains('pri'), dot:!!b.querySelector('.dk-dot'), top:Math.round(r.top), w:Math.round(r.width), h:Math.round(r.height), iw:i ? Math.round(i.getBoundingClientRect().width) : null, fs:getComputedStyle(l || b).fontSize}; });
   window.K = {
     vis, txt, R,
     measure(){
@@ -62,12 +62,26 @@ HOOK = r"""(() => {
       return {t:S.t, hm:hm(S.t / 60), st:S.boat.status, nx:nx ? nx.txt : null, now, info:info.hidden ? '' : txt(info).slice(0, 50), n:document.querySelectorAll('#dock .dk-b').length}; },
     play(min){ if (typeof DYN !== 'undefined') DYN.on = false; for (let i = 0; i < min; i++){ if (S.energy < 35) S.energy = 80; step(); } refreshAll(); return S.boat.status; },
     async port(id){ const p = portById(id), b = S.boat; await mapNeed(p.p, MAPD.simR); S.plan = null; b.status = 'port'; b.port = id; b.pos = {x:p.p.x, y:p.p.y}; b.v = 0; b.gop = null; b.land = null; b.fishUntil = null; DOCK.close(); refreshAll(); return {berth:berthKind(b), home:atHome(b), sv:portServices(p, berthKind(b))}; },
+    // at Father's naust: the home set, the naust found and the boat moored at its quay (as naustleia.py), so berthKind gives 'naust'
+    async naust(){ const id = 'vangshamn', p = portById(id), b = S.boat; await mapNeed(p.p, MAPD.simR); S.home = id; S.naust = null; naustSite(); S.plan = null; b.gop = null; b.land = null; b.fishUntil = null; dock(id, 'naust'); DOCK.close(); refreshAll(); return {berth:berthKind(b), home:atHome(b)}; },
+    // a line of her own in the sea (as docktest): the boat 50 m off the buoy (near), or 600 m off («Til blåsa», within half a mile)
+    async buoy(near){ const b = S.boat, p = b.pos, deep = q => !isLand(q) && depthF(q) >= 10; let dx = 2, dy = 0;
+      search: for (const r of [2, 1.5, 3, 1, 4]) for (let k = 0; k < 16; k++){ const a = k / 16 * Math.PI * 2, A = {x:p.x + r * Math.cos(a), y:p.y + r * Math.sin(a)}, B = {x:A.x + Math.cos(a), y:A.y + Math.sin(a)}, F = {x:A.x - 0.05 * Math.cos(a), y:A.y - 0.05 * Math.sin(a)}, G = {x:A.x - 0.6 * Math.cos(a), y:A.y - 0.6 * Math.sin(a)};
+        if (deep(A) && deep(B) && deep(F) && deep(G)){ dx = A.x - p.x; dy = A.y - p.y; break search; } }
+      const s = {id:'kart', vid:S.cur, kind:'line', lk:'hyse', n:1, hooks:700, a:{x:p.x + dx, y:p.y + dy}, b:{x:p.x + dx * 1.5, y:p.y + dy * 1.5}, tSet:S.t, depth:40, heavy:false};
+      S.sets = (S.sets || []).filter(x => x.id !== 'kart'); S.sets.push(s); const d = Math.hypot(dx, dy), to = near ? buoyStandoff(s, s.a) : {x:s.a.x - dx / d * 0.6, y:s.a.y - dy / d * 0.6};
+      b.pos = {x:to.x, y:to.y}; refreshAll(); return {m:Math.round(Math.min(dist(b.pos, s.a), dist(b.pos, s.b)) * 1000), near:!!nearSet(b.pos, 0.3)}; },
+    nobuoy(){ S.sets = (S.sets || []).filter(x => x.id !== 'kart'); refreshAll(); },
+    // a place to anchor within a few km of a harbour (4–40 m, clear of the land), with no quay within 400 m
+    anchorSpot(id){ const p = portById(id).p; for (const d of [0.6, 0.8, 1, 1.3, 1.6, 2, 2.5, 3]) for (let k = 0; k < 24; k++){ const a = k / 24 * 2 * Math.PI, q = {x:p.x + Math.sin(a) * d, y:p.y - Math.cos(a) * d}; try { if (!isLand(q) && anchorSpot(q).ok && !moorAll(q, 0.4).length) return q; } catch (e){} } return null; },
     async sea(p){ const b = S.boat; await mapNeed(p, MAPD.simR); S.plan = null; b.status = 'idle'; b.port = null; b.pos = {x:p.x, y:p.y}; b.v = 0; b.gop = null; b.fishUntil = null; DOCK.close(); refreshAll(); return {depth:Math.round(depthF(p)), moor:moorAll(p, 0.4).length}; },
     // a spot at sea within 400 m of a harbour's quay, for «Fortøy»
     quaySpot(id){ const p = portById(id).p; for (const d of [0.2, 0.3, 0.38]) for (let k = 0; k < 16; k++){ const a = k / 16 * 2 * Math.PI, q = {x:p.x + Math.sin(a) * d, y:p.y - Math.cos(a) * d}; try { if (!isLand(q) && depthF(q) > 2 && moorAll(q, 0.4).length) return q; } catch (e){} } return null; },
     line(){ S.equip.linehaler = true; S.boat.rig = 'line'; S.pgear.lines.hyse.n = 2; S.pgear.lines.hyse.baited = 2; btOf(S.pgear.lines.hyse); S.pgear.kits.n = 2; refreshAll(); return setChoices(true).length; },
     crew(n){ S.crew = ['Trond Eriksen', 'Roger Bakke', 'Kari Nilsen'].slice(0, n).map(nm => Object.assign(genCrew(), {bi:false, off:false, name:nm, known:[true, true], fatigue:0})); refreshAll(); return S.crew.length; },
-    fill(){ let room = capHold() - holdTotal() - 2; while (room > 4){ addCatch('torsk', 4, 2, true); room -= 4; } S.boat.deckStop = false; if (typeof DYN !== 'undefined') DYN.on = false; for (let i = 0; i < 600 && deckPending() > 1; i++) step(); refreshAll(); return Math.round(holdTotal()) + '/' + Math.round(capHold()) + ' (dekk ' + Math.round(deckPending()) + ')'; },
+    // a full hold, as the dock sees it (within half a kilo of the capacity, 10c-dock.js seaItems): the hold filled and the deck worked off
+    fill(){ let room = capHold() - holdTotal() - 2; while (room > 4){ addCatch('torsk', 4, 2, true); room -= 4; } S.boat.deckStop = false; if (typeof DYN !== 'undefined') DYN.on = false; for (let i = 0; i < 600 && deckPending() > 1; i++) step();
+      for (let i = 0; i < 40 && holdTotal() < capHold() - 0.3; i++){ addCatch('torsk', 1, 2, true); for (let k = 0; k < 60 && deckPending() > 0.2; k++) step(); } refreshAll(); return Math.round(holdTotal()) + '/' + Math.round(capHold()) + ' (dekk ' + Math.round(deckPending()) + ')'; },
     empty(){ S.hold = []; refreshAll(); },
     sail(id){ const p = portById(id).p, b = S.boat; S.plan = {wps:[{x:p.x, y:p.y, port:id}], idx:0, speed:8}; b.status = 'sailing'; b.v = 8; refreshAll(); return statusText(); },
     depart(id){ const p = portById(id).p; S.plan = {wps:[{x:p.x, y:p.y, port:id}], idx:0, speed:8, depAt:S.t + 90}; refreshAll(); return statusText(); },
@@ -82,15 +96,22 @@ STATES = [
   ('havn-vifte-bygd', "K.port('finnsnes')", 'bygd'),
   ('havn-vifte-verft', "K.port('finnsnes')", 'verft'),
   ('havn-vifte-marked', "K.port('finnsnes')", 'marked'),
-  ('havn-naust', "K.port('vangshamn')", None),
+  ('havn-naust', "K.naust()", None),
   ('havn-avgang', "(async () => { await K.port('finnsnes'); return K.depart('botnhamn'); })()", None),
   ('sjo-stille', "K.sea(GROUNDS[0].p)", None),
   ('sjo-stille-uten-mannskap', "(async () => { K.crew(0); return K.sea(GROUNDS[0].p); })()", None),
   ('sjo-jukse-vifte', "K.sea(GROUNDS[0].p)", 'jukse'),
   ('sjo-line', "(async () => { K.crew(2); const r = await K.sea(GROUNDS[0].p); return [r, K.line()]; })()", None),
-  ('sjo-line-settut', "K.sea(GROUNDS[0].p)", 'settut'),
-  ('sjo-ved-kai', "(async () => { S.boat.rig = 'jukse'; const q = K.quaySpot('finnsnes'); if (!q) return 'no quay spot'; return K.sea(q); })()", None),
-  ('sjo-full-last', "(async () => { const r = await K.sea(GROUNDS[0].p); return [r, K.fill()]; })()", None),
+  ('sjo-line-redskap-vifte', "K.sea(GROUNDS[0].p)", 'redskap'),
+  ('sjo-line-settut-vifte', "K.sea(GROUNDS[0].p)", ['redskap', 'settut']),
+  # by her own gear (plan 4.3 «Ved egen blåse», kartlegging.md kap. 6): 50 m off the buoy, 600 m off, and 2 km off
+  ('sjo-ved-blasa', "(async () => { await K.sea(GROUNDS[0].p); return K.buoy(true); })()", None),
+  ('sjo-til-blasa', "(async () => { await K.sea(GROUNDS[0].p); return K.buoy(false); })()", None),
+  ('sjo-blasa-langt', "(async () => { await K.sea(GROUNDS[0].p); const r = await K.buoy(false); S.boat.pos = {...GROUNDS[0].p}; refreshAll(); return r; })()", 'redskap'),
+  ('sjo-ved-kai', "(async () => { K.nobuoy(); S.boat.rig = 'juksa'; S.pgear.lines.hyse.n = 0; S.pgear.lines.hyse.baited = 0; S.pgear.kits.n = 0; const q = K.quaySpot('finnsnes'); if (!q) return 'no quay spot'; return K.sea(q); })()", None),
+  ('sjo-anker', "(async () => { const q = K.anchorSpot('finnsnes'); if (!q) return 'no anchor spot'; await K.sea(q); dropAnchor(); refreshAll(); return {anch:!!S.boat.anch, depth:Math.round(depthF(q))}; })()", None),
+  # a full hold (plan 4.3 «Full last», kartlegging.md kap. 6): the way to the plant as the hero, Jukse greyed
+  ('sjo-full-last', "(async () => { S.boat.anch = null; const r = await K.sea(GROUNDS[0].p); return [r, K.fill()]; })()", None),
   ('sjo-krangel', "(async () => { K.empty(); const r = await K.sea(GROUNDS[0].p); S.cevt = S.cevt || {a:S.crew[0] && S.crew[0].id, b:S.crew[1] && S.crew[1].id, t:S.t}; refreshAll(); return r; })()", None),
   ('underveis', "(async () => { S.cevt = null; await K.sea(GROUNDS[0].p); return K.sail('botnhamn'); })()", None),
 ]
@@ -107,16 +128,19 @@ async def run(b, tag, W, H):
     for name, setup, menu in STATES:
         try:
             r = await pg.evaluate(setup); await pg.wait_for_timeout(250)
-            if menu: await pg.evaluate("m => { const e = document.querySelector('#dock .dk-b[data-dk=\"' + m + '\"]'); if (e) e.click(); }", menu); await pg.wait_for_timeout(400)
+            # a fan: the row's button, and then a button in the fan when a second name is given (Sett ut inside Redskap, U2-3)
+            for k, m in enumerate(menu if isinstance(menu, list) else [menu] if menu else []):
+                await pg.evaluate("([m, k]) => { const e = document.querySelector((k ? '#dockFan' : '#dock') + ' .dk-b[data-dk=\"' + m + '\"]'); if (e) e.click(); }", [m, k]); await pg.wait_for_timeout(400)
             m = await pg.evaluate("K.both()"); m['setup'] = r; m['small'] = await pg.evaluate("K.small()")
             await pg.screenshot(path=os.path.join(out, name + '.png'))
             if menu: await pg.evaluate("DOCK.menu(null); DOCK.close()")
             R['states'][name] = m; ok += 1
             d = m['box']
-            print('OK  %-6s %-24s %-14s linja %d knapper på %d rad(er), grå %d, hero %s, sist %s%s%s | boks %d px, stripe %d px, neste: %s, nå-rader %d | info: %s' % (
-                tag, name, d['st'][:14], len(d['dock']), d['rows'], sum(1 for x in d['dock'] if x['off']), next((x['lbl'] for x in d['dock'] if x['hero']), '–'),
+            grey = lambda bs: ', '.join('%s (%s)' % (x['lbl'], x['why'] or 'uten grunn') for x in bs if x['off'])
+            print('OK  %-6s %-24s %-14s linja %s på %d rad(er), grå %d%s, hero %s, sist %s%s%s | boks %d px, stripe %d px, neste: %s, nå-rader %d | info: %s' % (
+                tag, name, d['st'][:14], ' · '.join(x['lbl'] for x in d['dock']), d['rows'], sum(1 for x in d['dock'] if x['off']), (' [' + grey(d['dock']) + ']') if grey(d['dock']) else '', next((x['lbl'] for x in d['dock'] if x['hero']), '–'),
                 d['dock'][-1]['lbl'] if d['dock'] else '–', ' (prikk)' if d['dock'] and d['dock'][-1]['dot'] else '',
-                (' | vifte %d på %d rad(er)' % (len(d['fan']), d['fanRows'])) if d['fan'] else '', d['hud']['r']['h'], m['strip']['hud']['r']['h'], (d['nx'] or {}).get('txt', '–'), len(d['now']), d['info'][:40]), flush=True)
+                (' | vifte %s på %d rad(er)%s' % (' · '.join(x['lbl'] for x in d['fan']), d['fanRows'], (' grå [' + grey(d['fan']) + ']') if grey(d['fan']) else '')) if d['fan'] else '', d['hud']['r']['h'], m['strip']['hud']['r']['h'], (d['nx'] or {}).get('txt', '–'), len(d['now']), d['info'][:40]), flush=True)
         except Exception as e:
             bad += 1; print('FEIL', tag, name, str(e)[:200], flush=True)
     # the drawer pages for the «Om bord» merge, and the crew page

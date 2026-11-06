@@ -2271,12 +2271,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1180 linjer)
+## `src/js/ui/phone/07-patch.js` (1187 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1173 `patch()`
+  - 1180 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2820,14 +2820,14 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 223 `wpActCycle(w)`
   - 228 `gearDoAct(act, el)`
 
-## `src/js/ui/10c-dock.js` (437 linjer)
+## `src/js/ui/10c-dock.js` (509 linjer)
 
 ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 
 - **1** the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side
-- **336** the drawer
-  - 410 `renderActs()`
-  - 423 `showroomTick()`
+- **408** the drawer
+  - 482 `renderActs()`
+  - 495 `showroomTick()`
 
 ## `src/js/ui/10d-helm.js` (51 linjer)
 
@@ -3072,7 +3072,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 - **70** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (263 linjer)
+## `src/js/ui/11-boot.js` (264 linjer)
 
 ---------- boot ----------
 
@@ -3090,12 +3090,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 65 `dataEls()`
   - 66 `dataEarly()`
   - 76 `dataGet(el, opt)`
-  - 89 `bootData()`
-  - 96 `bootDataLate()`
-  - 111 `modelsLabel()`
-  - 118 `bootMapLoad()`
-  - 139 `bootGame()`
-  - 246 `bootFail(e)`
+  - 90 `bootData()`
+  - 97 `bootDataLate()`
+  - 112 `modelsLabel()`
+  - 119 `bootMapLoad()`
+  - 140 `bootGame()`
+  - 247 `bootFail(e)`
 
 ## `src/js/vessel3d.js` (1493 linjer)
 

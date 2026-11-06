@@ -139,3 +139,11 @@
 2026-11-06 11:05	ccr-5cc88064-l54ouc	e876f199	docktest	OK	59	lite	alene	
 2026-11-06 11:07	ccr-5cc88064-l54ouc	30c0faa4	docktest	OK	60	lite	samtidig	
 2026-11-06 11:07	ccr-5cc88064-l54ouc	30c0faa4	boottest	OK	28	lite	samtidig	
+2026-11-06 11:40	claude/u2-3-knappelinja-felp6h	441ea099+	docktest	FEIL	65	lite	samtidig	FEIL stille på sjøen: Jukse først, høyst fem, ingen Auto-nav, Mer eller redskapsknapp uten redskap, Om bord sist  ['jukse', 'redskap', 'anker', 'beh']
+2026-11-06 11:40	claude/u2-3-knappelinja-felp6h	441ea099+	kartlegging	OK	56	lite	samtidig	
+2026-11-06 11:45	claude/u2-3-knappelinja-felp6h	441ea099+	docktest	OK	65	lite	samtidig	
+2026-11-06 11:45	claude/u2-3-knappelinja-felp6h	441ea099+	kartlegging	OK	56	lite	samtidig	
+2026-11-06 11:46	claude/u2-3-knappelinja-felp6h	441ea099+	dockrow	OK	43	lite	samtidig	
+2026-11-06 11:46	claude/u2-3-knappelinja-felp6h	441ea099+	geartest	OK	36	lite	samtidig	
+2026-11-06 11:46	claude/u2-3-knappelinja-felp6h	441ea099+	hbtest	OK	14	lite	samtidig	
+2026-11-06 11:47	claude/u2-3-knappelinja-felp6h	441ea099+	uishots	OK	84	lite	samtidig	
