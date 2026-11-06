@@ -168,7 +168,7 @@ Lovdata ble lest gjennom en leseagent. Der den bare ga et sammendrag og ikke tek
 | 5-55, 5-56 | Minst tre bærbare brannslukkere (under 24 m); 50 % flere for fartøy bygd etter 2003 [sammendrag] | Oppbevares inne |
 | 8-3 | Båt- og brannøvelse hver måned (under 24 m hver tredje). MOB-båten sjøsettes hver måned, minst hver tredje [sammendrag] | Ikke med (V11 C) |
 
-**Avvik i spillet i dag:** `lsaOf` gir kyst21 (21 m) fire livbøyer (§ 7-10: tre) og pelagisk (75 m) seks (§ 7-10: åtte), og vet ikke om røyk. Rettes i Ø11.5.
+**Avvik i spillet før Ø11.5:** `lsaOf` ga kyst21 (21 m) fire livbøyer (§ 7-10: tre) og pelagisk (75 m) seks (§ 7-10: åtte), og visste ikke om røyk. Rettet i Ø11.5 06.11.2026.
 
 ### 5.7 Sikkerhetsopplæringen, FOR-2011-12-22-1523
 
@@ -334,6 +334,15 @@ Etter `/blender` og `docs/skipsmodeller/leseliste.md`. Ingen merkenavn eller log
   - `deckshot` og `shoptest`.
   - Skjermbilder i begge formater, og stikkprøver av båtene langs kysten.
 
+- **Status 06.11.2026: bygd (gren `ccr-2f9c820c-pucumq`), venter på Jonas' klarsignal for utrulling** (Jonas: «Oppgave: Ø11.5, utstyret og merkingen på båtene … etter planen»; MOB-båtene: «Skjul den gamle»). Lovdata lest ordrett for §§ 43, 63, 64, 68 og 77 i FOR-2013-11-22-1404 06.11.2026; FOR-2000-06-13-660 kap. 7–10 fortsatt bare som sammendrag.
+  - **`lsaOf`:** 3, 4, 6 og 8 livbøyer fra 15 m (kyst21 4 → 3, pelagisk 6 → 8), røyk på én under 24 m og to fra 24 m (`smoke`), MOB-båt fra 45 m (`mob`). Grensen er 15,00 m. MOB-lyset med røyk (`mobroyk`) står ved den første bøya (eller de to første, én på hver side) der bøyelyset ellers sto, 0,55 m til siden etter `mobroyk_holder`.
+  - **MOB-båten** (`deck-mob`) på `kit.mob` på de fire havbåtene fra 45 m. Alle fire har en bakt MOB-båt i skroget (også krabbe50 og not75, ikke bare al45, tral60 og ringnot38); på egen båt tas den ut når modellen lages (`MOBCUT`, `mobCut`), andres båter har den. Den nye står der det er plass (målt med stråler): autolineren og snøkrabbebåten til styrbord (den gamle plassen var for trang), tråleren på den gamle plassen, den pelagiske på tier B over nisjen. ringnot38 (38,55 m) trenger ingen og beholder sin. Havbåtene har ingen `kit` i modellen, så bøyeholderne, MOB-plassen og autolinerens to flåter (modellen har ingen) står i `KITADD` i `vessel3d.js` til Ø4 reviderer modellene.
+  - **Vesten** på mannskapet og skipperen på egen båt til sjøs på dekk (ikke i havn, ved levering eller inne i styrhuset): `seaLook`, `vestKit` (vestdelen etter jakka, håret etter `vestHair`). Klasjsjekken mot armene i spillet (`tools/harbour/vestarm.py`, 27 stillinger) fant armroten gjennom kragen; skulderleddet settes 2 cm ut og ned med vesten på (`VEST_SH`). Tallene i 5.33 og backloggen.
+  - **V6 A:** `reqOf` (VHF på dekkede og åpne med styrhus, AIS fra 15 m, brovaktalarm fra 10,67 m), lagt til `std`, satt på av `applyVessel` (`reqFill`), gratis for gamle lagringer (`ui/11-boot.js`, ikke `ui/02-format-state.js`, så UI 2 ikke får noe å flette), og butikken selger det ikke (står under «Om bord» med «påbudt, følger båten»). AIS er ikke påbudt under 15 m (§ 68 har bare AIS-SART).
+  - **Leideren (§ 63):** bare plastsnekka holdt. Hurtigsjarkene og kystbåten på 14,99 m får et trinn til under (og kystbåten håndrekker), skiffen et trinn og en håndrekke, plastsjarken, havsjarken og breisjarken en hel leider på hekken, trebåten en over låringen (`LADDERS`, fra koden til Ø4).
+  - **L4:** kjenningssignal (LF/LG/LH/LK/LM og fire siffer) fra 10,67 m, aldri et av de 4 003 i sluttsedlene 2024–2025 (`REGM.c`, `regmerke.py kall`), malt på begge sider akter for registreringsmerket (12 cm under 15 m, 30 cm fra 15 m). Navnet og hjemstedet akter med minst 15 cm fra 15 m og navnet minst 6 cm under. Signalet på AIS-kortet og i VHF-meldingene venter på Ø11.3. Merkingen i `docs/batplan.md` del 12 er dermed gjort for spillerens båt (malingssonene og dekalene der hører ikke til L4).
+  - **Tester:** `tests/unit/sikker.test.mjs` (ny), enhetstestene, `vesseltest`, `vessel3d` alene, `deckshot` og `shoptest`, skjermbilder i begge formater og `/stikkprove`; resultatene i øktplanen og backloggen.
+
 ### Ø11.6 Mann over bord (SK2, SK3)
 
 - **SK2 Risikoen:**
@@ -492,3 +501,4 @@ Jonas 05.11.2026: «V7: Vi trenger ikke tenke på dagsignaler i spillet. Stort s
 - 05.11.2026: planen skrevet i Ø11a. Kildene er sjekket på Lovdata (kap. 5). `lover-og-regler.md`, SK1–SK6 og N8 er slått sammen i Ø11.1–Ø11.9. Venter på V7–V11 og «kjør på» for Ø11.1 når H2 er ute.
 - 05.11.2026: Jonas svarte på V7–V11: ingen dagsignaler (V7), ingen dør ved mann over bord (V8 A), nødstoppen er en detalj på haleren som mannskapet bruker selv (V9 B), ingen sender på vesten (V10 C), ingen kurs eller øvelser (V11 C). Øktene er rettet etter det. Venter på «kjør på» for Ø11.1 når H2e er ute.
 - 06.11.2026: Ø11.4 bygd uten nødstoppen (den venter på H2d): vesten i garderoben, MOB-båten med davit og vugge (`tools/deck/mob.py`, `deck-mob.b64`) og MOB-lyset med røyk (`sikker.py`). Ikke satt på båtene eller folkene ennå (Ø11.5). Ø11.1–Ø11.3 venter fortsatt på H2e og «kjør på».
+- 06.11.2026: Ø11.5 bygd (gren `ccr-2f9c820c-pucumq`): livbøyene og røyken etter § 7-10, MOB-båten fra 45 m med de bakte skjult på egen båt (Jonas: «Skjul den gamle»), vesten på folkene til sjøs på dekk, påbudt utstyr følger båten (V6 A), leideren etter § 63 og kjenningssignalet og navnestørrelsene etter merkeforskriften (L4). Venter på Jonas' klarsignal for utrulling. Detaljene under Ø11.5 i kap. 6.

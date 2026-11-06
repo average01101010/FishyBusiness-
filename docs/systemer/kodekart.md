@@ -152,7 +152,7 @@ THE SEA MARKS ALONG THE WHOLE COAST (05.10.2026; Jonas: «Sjømerker må ordnes 
   - 43 `feltData()`
   - 56 `feltIn(x0, y0, x1, y1)`
 
-## `src/js/core/02-species-gear.js` (253 linjer)
+## `src/js/core/02-species-gear.js` (271 linjer)
 
 Placeholder prices (NOK/kg, grade A) – to be tuned
 
@@ -163,9 +163,11 @@ Placeholder prices (NOK/kg, grade A) – to be tuned
   - 230 `fuelBase(v, vmax, planing)`
   - 231 `fuelKOf(V)`
   - 233 `vesselDerive(V)`
-  - 247 `lsaOf(V)`
+  - 246 `reqOf(V)`
+  - 252 `reqFill(eq, type)`
+  - 264 `lsaOf(V)`
 
-## `src/js/core/03-simulation.js` (1220 linjer)
+## `src/js/core/03-simulation.js` (1221 linjer)
 
 fleet: each vessel keeps its own state; the company holds the rest. The simulation steps through the vessels one at a
 
@@ -190,195 +192,195 @@ fleet: each vessel keeps its own state; the company holds the rest. The simulati
 - **46** the yard's rebuilds, per boat (S.boat; the user's list 04.10.2026): a bigger hold in three steps, the last doubling it (more
   - 91 `powerX(b)`
   - 93 `applyVessel()`
-  - 114 `effortOf(people, jk, hand)`
-  - 115 `fishEffort()`
-  - 123 `jigMeShare()`
-  - 132 `hash(n)`
-  - 133 `h2(a, b)`
-  - 134 `vn(t, s)`
-  - 135 `sstep(a, b, x)`
-  - 136 `seasonal(arr, H)`
-  - 156 `wxTrack()`
-  - 167 `wxMeasure(p)`
-  - 175 `wxPlace(p)`
-  - 183 `wxLowShape(k, m)`
-  - 190 `stormsNear(H, p)`
-  - 202 `wxWindF(H, p)`
-  - 203 `windAt(H, p)`
-  - 213 `windDir(H, p)`
-  - 224 `exposure(p)`
-  - 226 `fcErr(H, now, seed)`
-  - 227 `fcWind(H, now, p)`
-  - 229 `beaufort(W)`
-  - 244 `climW(p)`
-  - 250 `climV(key, H, p)`
-  - 251 `climDiff(key, H, p)`
-  - 252 `climRatio(key, H, p)`
-  - 253 `airTemp(H, p)`
-  - 255 `precipAt(H, p)`
-  - 256 `cloudAt(H, p)`
-  - 257 `visibility(H, p)`
-  - 259 `seaTemp(H, p)`
-- **260** snow and the seasons on land (V2 and V3 of the weather plan; Jonas 09.10.2026: «vi må bygge ferdig værsystemene og årstidene»).
-  - 272 `wxDay(d, p)`
-  - 279 `seasonAt(H, p)`
-  - 306 `snowLineAt(H, p)`
-  - 313 `snowAt(H, z, p)`
-  - 320 `obsAt(p)`
-  - 321 `eqToHor(ra, dec, d, ob)`
-  - 327 `sunEq(d)`
-  - 331 `moonEq(d)`
-  - 336 `sunAt(H, p)`
-  - 337 `moonAt(H, p)`
-  - 344 `moonName(mo)`
-  - 346 `sunTimes(H, p)`
-  - 354 `flagUp(H, p)`
-- **359** tide: harmonic prediction per place (phase K10 of the coast plan)
-  - 372 `tidePlace(p)`
-  - 381 `tideH(H, p)`
-  - 389 `tideEvents(H0, hours, p)`
-  - 397 `auroraAt(H, p)`
-  - 400 `riskLevel(W, hs)`
-- **403** weight (the user's list 04.10.2026: «mer last og vekt betyr mindre fart ... viktig at ikke dette blir urealistisk»): what she
-  - 408 `boatTons()`
-  - 409 `boatTons0()`
-  - 410 `loadF()`
-- **411** fouling: weed and barnacles on the hull (S.boat.foul, 0 to 1) slow her up to 15 % and cost up to 25 % more fuel; it grows in
-  - 415 `foulHour(H)`
-  - 419 `fuelUse(b, l)`
-  - 420 `fuelAdd(b, l, kr0)`
-  - 421 `fuelLph(v, W)`
-  - 422 `speedCap(hs, cb = 1)`
-  - 425 `noise2(x, y, s)`
-  - 431 `slopeAt(p)`
-  - 439 `hotField(sp, p, H, k)`
-  - 443 `hotspot(sp, p, H)`
-  - 452 `schField(sp, p, H, k, si, v)`
-  - 456 `school(sp, p, H)`
-  - 463 `schoolHeading(sp, p, H)`
-  - 472 `fieldCode(p)`
-  - 474 `skreiSpot(p, d = depthF(p)`
-  - 479 `gauss(u1, u2)`
-  - 481 `sampleFish(sp, p, H)`
-  - 486 `clsOf(sp, kg)`
-  - 489 `kveiteClosed(H)`
-  - 492 `targetF(sp, H, pilk)`
-  - 497 `uerOpen(H)`
-  - 501 `denPlace(p)`
-  - 507 `denTime(H)`
-  - 515 `denSp(sp, q, H, T)`
-  - 529 `density(sp, p, H)`
-  - 536 `eggaArea(p, d, H, E)`
-  - 562 `tutBonus(sp, p)`
-  - 574 `stockIdx(p)`
-  - 576 `stockW(p)`
-  - 581 `stockFill(v)`
-  - 586 `stockAt(p, sp, H)`
-  - 594 `takeStock(p, kg, sp, npc)`
-- **600** the shared world V2 (05.10.2026; ui/10h-world.js, supabase/migrations/20261006000000_world_v2.sql): one sea, one quota and one
-  - 606 `wq()`
-  - 607 `wshOpen(y)`
-  - 608 `wshSat(pid, sp, H)`
-  - 609 `wshTake(k, kg)`
-  - 611 `wshLand(port, H, acc, kgSp, codQ)`
-  - 620 `initStock()`
-  - 621 `stockHour(H)`
-  - 643 `depthFactor(sp, d, k = 1)`
-  - 648 `depthF(p)`
-  - 654 `depthHas(p)`
-  - 663 `deepAt(p)`
-  - 668 `offDepth(p)`
-  - 671 `tileDepth(p, d)`
-  - 678 `depthWater(p)`
-  - 690 `depthAt(p)`
-  - 691 `depthModel(p)`
-  - 692 `grade(f)`
-- **693** How the catch keeps (D3 of the operations plan, Jonas 23.10.2026, svar 15a: calibrated against the sources)
-  - 703 `keepDay(f)`
-  - 704 `keepF(day)`
-  - 707 `keepK(x, rrs)`
-  - 709 `keepHours(f, f2, k)`
-  - 711 `supplyFactor(H)`
-  - 718 `weekOfH(H)`
-  - 719 `weekDev(sp, H)`
-  - 725 `marketPrice(sp, H, fz)`
-  - 727 `clsPrice(port, sp, c, H, hook, fz)`
-  - 733 `price(port, sp, H)`
-  - 735 `avgPrice(sp, H, days)`
-- **736** quotas north of 62° N: the regulation and the year's figures are in 03d-quota.js
-  - 737 `doyH(H)`
-  - 738 `yearH(H)`
-  - 739 `quotaState()`
-  - 757 `licValue(l)`
-- **774** the books (Økonomi 2, Ø1, 27.10.2026, docs/planer/okonomi/02-design.md)
-  - 796 `bookMigrate()`
-  - 804 `bookAll(parts, no, en, vid)`
-  - 818 `bookResult(y)`
-- **820** the bank's accounts (Økonomi 2, Ø3, 27.10.2026; Jonas: «Automatisk skatteavsetning, rente på sparekonto, kassakreditt med
-  - 829 `bankS()`
-  - 837 `bankMove(k, kr0, no, en)`
-  - 840 `bankAfterIncome(inKr)`
-  - 848 `taxPay(kr0, no, en)`
-  - 851 `bankRelease()`
-  - 855 `bankDay(H)`
-  - 888 `taxOf(P, form, days, skj = 0, carry = 0)`
-  - 898 `saldoOf(v)`
-  - 909 `skjOf(frac, ri = 1)`
-  - 913 `txInit(H, adv)`
-  - 915 `yearFrac(H)`
-  - 917 `txProfit(H)`
-  - 920 `txNow(H = S.t / 60)`
-  - 926 `taxOwed(H = S.t / 60)`
-  - 931 `enkAdv(H)`
-  - 937 `taxPlan(H = S.t / 60)`
-  - 950 `asBase(y)`
-  - 954 `txClose(H)`
-  - 970 `taxDayMark(H)`
-  - 976 `taxFix(H)`
-  - 993 `taxTick(H)`
-  - 1031 `foundAS()`
-  - 1044 `mvaCheck(total)`
-  - 1053 `trekkOf(total, len)`
-  - 1058 `fmInit()`
-  - 1060 `fmLand(total)`
-  - 1069 `takeLoan(amount, months, k)`
-  - 1073 `payDown(x)`
-  - 1079 `deal(price, ti, inn)`
-  - 1086 `finance(x, months)`
-  - 1089 `lenGroup()`
-  - 1090 `codLimits(H)`
-  - 1093 `codOpen(H)`
-  - 1094 `codLimitNow(H)`
-- **1095** haill: luck from the quay. Fresh goods: full effect for two days, fading to nothing on day seven. Sold for real money only (test mode now) or won at the pub.
-  - 1113 `haillBoost()`
-  - 1114 `haillLeft()`
-  - 1115 `haillStage()`
-  - 1117 `haillF()`
-  - 1118 `luck(sp)`
-  - 1120 `giveHaill(type, how)`
-  - 1121 `useHaill(type)`
-  - 1127 `pubEvening(H)`
-  - 1128 `pubOpen(H)`
-  - 1131 `capHold()`
-  - 1133 `cargoRoom()`
-  - 1135 `cargoMin(kg)`
-- **1136** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
-  - 1139 `streakState()`
-  - 1140 `streakPct()`
-  - 1141 `streakTouch()`
-- **1152** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
-  - 1156 `effTemp(H)`
-  - 1157 `coldPen(H, hs)`
-- **1164** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
-  - 1179 `gradeOk(g, q)`
-  - 1180 `ordState()`
-  - 1183 `custNear(c)`
-  - 1188 `repOf(id)`
-  - 1190 `bkOrderable(H)`
-  - 1192 `bkPlant(id)`
-  - 1193 `custSp(c)`
-  - 1194 `spCatchable(sp, H)`
-  - 1196 `ordersTick(H)`
+  - 115 `effortOf(people, jk, hand)`
+  - 116 `fishEffort()`
+  - 124 `jigMeShare()`
+  - 133 `hash(n)`
+  - 134 `h2(a, b)`
+  - 135 `vn(t, s)`
+  - 136 `sstep(a, b, x)`
+  - 137 `seasonal(arr, H)`
+  - 157 `wxTrack()`
+  - 168 `wxMeasure(p)`
+  - 176 `wxPlace(p)`
+  - 184 `wxLowShape(k, m)`
+  - 191 `stormsNear(H, p)`
+  - 203 `wxWindF(H, p)`
+  - 204 `windAt(H, p)`
+  - 214 `windDir(H, p)`
+  - 225 `exposure(p)`
+  - 227 `fcErr(H, now, seed)`
+  - 228 `fcWind(H, now, p)`
+  - 230 `beaufort(W)`
+  - 245 `climW(p)`
+  - 251 `climV(key, H, p)`
+  - 252 `climDiff(key, H, p)`
+  - 253 `climRatio(key, H, p)`
+  - 254 `airTemp(H, p)`
+  - 256 `precipAt(H, p)`
+  - 257 `cloudAt(H, p)`
+  - 258 `visibility(H, p)`
+  - 260 `seaTemp(H, p)`
+- **261** snow and the seasons on land (V2 and V3 of the weather plan; Jonas 09.10.2026: «vi må bygge ferdig værsystemene og årstidene»).
+  - 273 `wxDay(d, p)`
+  - 280 `seasonAt(H, p)`
+  - 307 `snowLineAt(H, p)`
+  - 314 `snowAt(H, z, p)`
+  - 321 `obsAt(p)`
+  - 322 `eqToHor(ra, dec, d, ob)`
+  - 328 `sunEq(d)`
+  - 332 `moonEq(d)`
+  - 337 `sunAt(H, p)`
+  - 338 `moonAt(H, p)`
+  - 345 `moonName(mo)`
+  - 347 `sunTimes(H, p)`
+  - 355 `flagUp(H, p)`
+- **360** tide: harmonic prediction per place (phase K10 of the coast plan)
+  - 373 `tidePlace(p)`
+  - 382 `tideH(H, p)`
+  - 390 `tideEvents(H0, hours, p)`
+  - 398 `auroraAt(H, p)`
+  - 401 `riskLevel(W, hs)`
+- **404** weight (the user's list 04.10.2026: «mer last og vekt betyr mindre fart ... viktig at ikke dette blir urealistisk»): what she
+  - 409 `boatTons()`
+  - 410 `boatTons0()`
+  - 411 `loadF()`
+- **412** fouling: weed and barnacles on the hull (S.boat.foul, 0 to 1) slow her up to 15 % and cost up to 25 % more fuel; it grows in
+  - 416 `foulHour(H)`
+  - 420 `fuelUse(b, l)`
+  - 421 `fuelAdd(b, l, kr0)`
+  - 422 `fuelLph(v, W)`
+  - 423 `speedCap(hs, cb = 1)`
+  - 426 `noise2(x, y, s)`
+  - 432 `slopeAt(p)`
+  - 440 `hotField(sp, p, H, k)`
+  - 444 `hotspot(sp, p, H)`
+  - 453 `schField(sp, p, H, k, si, v)`
+  - 457 `school(sp, p, H)`
+  - 464 `schoolHeading(sp, p, H)`
+  - 473 `fieldCode(p)`
+  - 475 `skreiSpot(p, d = depthF(p)`
+  - 480 `gauss(u1, u2)`
+  - 482 `sampleFish(sp, p, H)`
+  - 487 `clsOf(sp, kg)`
+  - 490 `kveiteClosed(H)`
+  - 493 `targetF(sp, H, pilk)`
+  - 498 `uerOpen(H)`
+  - 502 `denPlace(p)`
+  - 508 `denTime(H)`
+  - 516 `denSp(sp, q, H, T)`
+  - 530 `density(sp, p, H)`
+  - 537 `eggaArea(p, d, H, E)`
+  - 563 `tutBonus(sp, p)`
+  - 575 `stockIdx(p)`
+  - 577 `stockW(p)`
+  - 582 `stockFill(v)`
+  - 587 `stockAt(p, sp, H)`
+  - 595 `takeStock(p, kg, sp, npc)`
+- **601** the shared world V2 (05.10.2026; ui/10h-world.js, supabase/migrations/20261006000000_world_v2.sql): one sea, one quota and one
+  - 607 `wq()`
+  - 608 `wshOpen(y)`
+  - 609 `wshSat(pid, sp, H)`
+  - 610 `wshTake(k, kg)`
+  - 612 `wshLand(port, H, acc, kgSp, codQ)`
+  - 621 `initStock()`
+  - 622 `stockHour(H)`
+  - 644 `depthFactor(sp, d, k = 1)`
+  - 649 `depthF(p)`
+  - 655 `depthHas(p)`
+  - 664 `deepAt(p)`
+  - 669 `offDepth(p)`
+  - 672 `tileDepth(p, d)`
+  - 679 `depthWater(p)`
+  - 691 `depthAt(p)`
+  - 692 `depthModel(p)`
+  - 693 `grade(f)`
+- **694** How the catch keeps (D3 of the operations plan, Jonas 23.10.2026, svar 15a: calibrated against the sources)
+  - 704 `keepDay(f)`
+  - 705 `keepF(day)`
+  - 708 `keepK(x, rrs)`
+  - 710 `keepHours(f, f2, k)`
+  - 712 `supplyFactor(H)`
+  - 719 `weekOfH(H)`
+  - 720 `weekDev(sp, H)`
+  - 726 `marketPrice(sp, H, fz)`
+  - 728 `clsPrice(port, sp, c, H, hook, fz)`
+  - 734 `price(port, sp, H)`
+  - 736 `avgPrice(sp, H, days)`
+- **737** quotas north of 62° N: the regulation and the year's figures are in 03d-quota.js
+  - 738 `doyH(H)`
+  - 739 `yearH(H)`
+  - 740 `quotaState()`
+  - 758 `licValue(l)`
+- **775** the books (Økonomi 2, Ø1, 27.10.2026, docs/planer/okonomi/02-design.md)
+  - 797 `bookMigrate()`
+  - 805 `bookAll(parts, no, en, vid)`
+  - 819 `bookResult(y)`
+- **821** the bank's accounts (Økonomi 2, Ø3, 27.10.2026; Jonas: «Automatisk skatteavsetning, rente på sparekonto, kassakreditt med
+  - 830 `bankS()`
+  - 838 `bankMove(k, kr0, no, en)`
+  - 841 `bankAfterIncome(inKr)`
+  - 849 `taxPay(kr0, no, en)`
+  - 852 `bankRelease()`
+  - 856 `bankDay(H)`
+  - 889 `taxOf(P, form, days, skj = 0, carry = 0)`
+  - 899 `saldoOf(v)`
+  - 910 `skjOf(frac, ri = 1)`
+  - 914 `txInit(H, adv)`
+  - 916 `yearFrac(H)`
+  - 918 `txProfit(H)`
+  - 921 `txNow(H = S.t / 60)`
+  - 927 `taxOwed(H = S.t / 60)`
+  - 932 `enkAdv(H)`
+  - 938 `taxPlan(H = S.t / 60)`
+  - 951 `asBase(y)`
+  - 955 `txClose(H)`
+  - 971 `taxDayMark(H)`
+  - 977 `taxFix(H)`
+  - 994 `taxTick(H)`
+  - 1032 `foundAS()`
+  - 1045 `mvaCheck(total)`
+  - 1054 `trekkOf(total, len)`
+  - 1059 `fmInit()`
+  - 1061 `fmLand(total)`
+  - 1070 `takeLoan(amount, months, k)`
+  - 1074 `payDown(x)`
+  - 1080 `deal(price, ti, inn)`
+  - 1087 `finance(x, months)`
+  - 1090 `lenGroup()`
+  - 1091 `codLimits(H)`
+  - 1094 `codOpen(H)`
+  - 1095 `codLimitNow(H)`
+- **1096** haill: luck from the quay. Fresh goods: full effect for two days, fading to nothing on day seven. Sold for real money only (test mode now) or won at the pub.
+  - 1114 `haillBoost()`
+  - 1115 `haillLeft()`
+  - 1116 `haillStage()`
+  - 1118 `haillF()`
+  - 1119 `luck(sp)`
+  - 1121 `giveHaill(type, how)`
+  - 1122 `useHaill(type)`
+  - 1128 `pubEvening(H)`
+  - 1129 `pubOpen(H)`
+  - 1132 `capHold()`
+  - 1134 `cargoRoom()`
+  - 1136 `cargoMin(kg)`
+- **1137** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
+  - 1140 `streakState()`
+  - 1141 `streakPct()`
+  - 1142 `streakTouch()`
+- **1153** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
+  - 1157 `effTemp(H)`
+  - 1158 `coldPen(H, hs)`
+- **1165** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
+  - 1180 `gradeOk(g, q)`
+  - 1181 `ordState()`
+  - 1184 `custNear(c)`
+  - 1189 `repOf(id)`
+  - 1191 `bkOrderable(H)`
+  - 1193 `bkPlant(id)`
+  - 1194 `custSp(c)`
+  - 1195 `spCatchable(sp, H)`
+  - 1197 `ordersTick(H)`
 
 ## `src/js/core/03b-sea.js` (157 linjer)
 
@@ -829,7 +831,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 249 `startReturn(auto, W, home, hsOver, opsKeep)`
 - **269** CORE END
 
-## `src/js/core/06b-coastports.js` (144 linjer)
+## `src/js/core/06b-coastports.js` (160 linjer)
 
 the fish receivers along the whole coast as harbours (05.10.2026, M2 of the coast plan)
 
@@ -838,9 +840,11 @@ the fish receivers along the whole coast as harbours (05.10.2026, M2 of the coas
   - 28 `regLetters(pt)`
   - 34 `regUsed(f, k, n)`
   - 35 `regOf(b)`
-  - 115 `plantsNear(p, n = 10)`
-- **121** the ocean vessels at the plants (H0 of docs/planer/havsteget.md, 03.11.2026)
-  - 128 `portWhy(pt, type)`
+  - 50 `callFree(p, n)`
+  - 51 `callOf(b)`
+  - 131 `plantsNear(p, n = 10)`
+- **137** the ocean vessels at the plants (H0 of docs/planer/havsteget.md, 03.11.2026)
+  - 144 `portWhy(pt, type)`
 
 ## `src/js/core/06c-steder.js` (44 linjer)
 
@@ -2270,12 +2274,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1174 linjer)
+## `src/js/ui/phone/07-patch.js` (1181 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1167 `patch()`
+  - 1174 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2328,19 +2332,19 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 32 `rederi()`
 - **69** equipment
 
-## `src/js/ui/phone/12-utstyr-redskap.js` (202 linjer)
+## `src/js/ui/phone/12-utstyr-redskap.js` (204 linjer)
 
 the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the shop's (electronics, haulers, the jigging machine and the clothes)
 
   - 2 `utstyr(mode)`
-- **52** gear: in the sea, aboard (baiting and mending), and the shop
-- **53** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
-- **58** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
-  - 62 `lineCard(lk, o)`
-  - 87 `egnChooser(lk, o)`
-  - 113 `autoCard()`
-  - 125 `careAboard(inPort, p)`
-  - 151 `redskap(tab0)`
+- **54** gear: in the sea, aboard (baiting and mending), and the shop
+- **55** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
+- **60** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
+  - 64 `lineCard(lk, o)`
+  - 89 `egnChooser(lk, o)`
+  - 115 `autoCard()`
+  - 127 `careAboard(inPort, p)`
+  - 153 `redskap(tab0)`
 
 ## `src/js/ui/phone/13-mannskap-bank-meld.js` (177 linjer)
 
@@ -2363,7 +2367,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
 - **163** actions
   - 166 `switchVessel(k)`
 
-## `src/js/ui/phone/13b-nettet.js` (136 linjer)
+## `src/js/ui/phone/13b-nettet.js` (138 linjer)
 
 Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.md, Jonas 30.10.2026)
 
@@ -2378,11 +2382,11 @@ Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.
 - **54** fetching a reservation: the same purchase as over the counter; null when it went, else why not (a string)
   - 58 `equipTry(k)`
   - 60 `equipBuy(k)`
-  - 74 `clothBuy(k)`
-  - 81 `pickTake(o)`
-- **93** the Net: the bookmarks, and the web shop
-  - 95 `nett()`
-  - 107 `netShop()`
+  - 76 `clothBuy(k)`
+  - 83 `pickTake(o)`
+- **95** the Net: the bookmarks, and the web shop
+  - 97 `nett()`
+  - 109 `netShop()`
 
 ## `src/js/ui/phone/13c-megler.js` (156 linjer)
 
@@ -3071,7 +3075,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 - **70** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (263 linjer)
+## `src/js/ui/11-boot.js` (269 linjer)
 
 ---------- boot ----------
 
@@ -3094,9 +3098,9 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 111 `modelsLabel()`
   - 118 `bootMapLoad()`
   - 139 `bootGame()`
-  - 246 `bootFail(e)`
+  - 252 `bootFail(e)`
 
-## `src/js/vessel3d.js` (1493 linjer)
+## `src/js/vessel3d.js` (1602 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -3141,75 +3145,82 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 423 `glbPeek(G, name)`
   - 426 `glbPaint(part, liv)`
   - 434 `glbZones(type)`
-  - 441 `glbModel(type, lod, liv)`
-  - 466 `vesselSpec(type)`
-  - 467 `buildVesselModel(type, lod, liv)`
-  - 508 `vesselGeo(type, hs, sp, house, anch)`
-  - 520 `vesselModel(type)`
-  - 521 `geoOf(type)`
-- **525** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
-  - 544 `modelLiv(L)`
-  - 551 `hullLiv(b)`
-  - 552 `livKey(liv)`
-  - 554 `livGeo(liv)`
-  - 559 `livStr(b)`
-  - 571 `livPen(s)`
-  - 573 `livMark(s)`
-  - 574 `livParse(s)`
-- **579** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
-  - 583 `topsides(type)`
-  - 601 `designLines(TS, liv)`
-  - 610 `glbDesign(type, part, liv)`
-  - 644 `designFits(type, k)`
-  - 651 `kitLiv(liv)`
-- **653** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
-- **702** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
-  - 713 `logoCanvas(cv, L, img)`
-  - 724 `logoStrips(type)`
-  - 726 `logoStr(L)`
-  - 727 `logoParse(s)`
-  - 731 `flagCanvas(cv, code, shape, logo)`
-  - 743 `flagOf(L)`
-- **744** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
-  - 753 `hullTris(type)`
-  - 768 `sideStrip(type, frac, hMax, aspect, drop)`
-  - 800 `nameStrips(type)`
-  - 836 `stripProud(type, st)`
-  - 859 `stripPaint(type, st)`
-  - 880 `markStrips(type)`
-  - 902 `anchorLen(bw)`
-  - 905 `markRGB(type, liv)`
-  - 913 `hullRGB(type, liv)`
-- **923** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
-  - 934 `facingTris(P, dir, keep)`
-  - 949 `rayZ(T, x, y, dir, za, zb)`
-  - 960 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
-  - 971 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
-  - 982 `halfWidth(T, y, z0, zw, dir, wmax)`
-  - 993 `houseFront(type, P, Gl, V)`
-  - 1026 `transom(type, P, V)`
-  - 1057 `namePlaces(type)`
-  - 1075 `placeRGB(type, p, liv)`
-  - 1083 `nameInkLight(rgb)`
-  - 1087 `npcKit(L, B)`
-  - 1090 `npcModel(type, lod, liv)`
-  - 1092 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **1104** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 1117 `wkPart(name, kit)`
-  - 1127 `wkPut(B, o, ax, s, at)`
-  - 1137 `wkLimb(B, o, A, E, r)`
-  - 1144 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 1166 `vesselSVG(type, w, h)`
-- **1204** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1211 `deckMap(type)`
-  - 1356 `deckPass(M, k, q)`
-  - 1361 `passLine(M, A, B)`
-  - 1363 `linkPass(M, k, q)`
-  - 1367 `deckComp(M)`
-  - 1376 `deckPath(M, a, b)`
-- **1407** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1420 `lanterns(G, V, st)`
-  - 1454 `deckPoints(type)`
+  - 441 `glbModel(type, lod, liv, own)`
+- **468** the life-saving gear's places that the models from 45 m do not have yet (Ø11.5, 06.11.2026; until Ø4 revises them and gives them
+- **494** the ladder aft (FOR-2013-11-22-1404 § 63, read on Lovdata 06.11.2026: «På fartøyets aktre del skal det være montert fast leider med
+  - 521 `mobCut(o, boxes)`
+  - 530 `vesselSpec(type)`
+  - 531 `buildVesselModel(type, lod, liv, own)`
+  - 572 `vesselGeo(type, hs, sp, house, anch)`
+  - 584 `vesselModel(type)`
+  - 585 `geoOf(type)`
+- **589** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
+  - 608 `modelLiv(L)`
+  - 615 `hullLiv(b)`
+  - 616 `livKey(liv)`
+  - 618 `livGeo(liv)`
+  - 623 `livStr(b)`
+  - 635 `livPen(s)`
+  - 637 `livMark(s)`
+  - 638 `livParse(s)`
+- **643** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
+  - 647 `topsides(type)`
+  - 665 `designLines(TS, liv)`
+  - 674 `glbDesign(type, part, liv)`
+  - 708 `designFits(type, k)`
+  - 715 `kitLiv(liv)`
+- **717** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
+- **766** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
+  - 777 `logoCanvas(cv, L, img)`
+  - 788 `logoStrips(type)`
+  - 790 `logoStr(L)`
+  - 791 `logoParse(s)`
+  - 795 `flagCanvas(cv, code, shape, logo)`
+  - 807 `flagOf(L)`
+- **808** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
+  - 817 `hullTris(type)`
+  - 832 `sideStrip(type, frac, hMax, aspect, drop)`
+  - 864 `nameStrips(type)`
+  - 900 `stripProud(type, st)`
+  - 923 `stripPaint(type, st)`
+  - 944 `markStrips(type)`
+  - 952 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
+  - 977 `callStrips(type)`
+  - 983 `callRGB(type, liv)`
+  - 986 `anchorLen(bw)`
+  - 989 `markRGB(type, liv)`
+  - 997 `hullRGB(type, liv)`
+- **1007** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
+  - 1018 `facingTris(P, dir, keep)`
+  - 1033 `rayZ(T, x, y, dir, za, zb)`
+  - 1044 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
+  - 1055 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
+  - 1066 `halfWidth(T, y, z0, zw, dir, wmax)`
+  - 1077 `houseFront(type, P, Gl, V)`
+  - 1110 `transom(type, P, V)`
+  - 1145 `namePlaces(type)`
+  - 1163 `placeRGB(type, p, liv)`
+  - 1171 `nameInkLight(rgb)`
+  - 1175 `npcKit(L, B)`
+  - 1178 `npcModel(type, lod, liv)`
+  - 1180 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **1192** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 1211 `vestKit(K)`
+  - 1226 `wkPart(name, kit)`
+  - 1236 `wkPut(B, o, ax, s, at)`
+  - 1246 `wkLimb(B, o, A, E, r)`
+  - 1253 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 1275 `vesselSVG(type, w, h)`
+- **1313** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1320 `deckMap(type)`
+  - 1465 `deckPass(M, k, q)`
+  - 1470 `passLine(M, A, B)`
+  - 1472 `linkPass(M, k, q)`
+  - 1476 `deckComp(M)`
+  - 1485 `deckPath(M, a, b)`
+- **1516** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1529 `lanterns(G, V, st)`
+  - 1563 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (491 linjer)
 
@@ -3426,7 +3437,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 205 `signOcc(VP)`
   - 222 `signTake()`
 
-## `src/js/view3d/08-plants.js` (467 linjer)
+## `src/js/view3d/08-plants.js` (469 linjer)
 
 ---------- fish plants: the harbour unit's crane, forklift, door and chute at work, and the people on the quay ----------
 
@@ -3440,11 +3451,11 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 108 `workTurn(st, eye, T, idx)`
   - 119 `drawShovel(G, B, tip, full, c, box, top)`
   - 128 `drawWorker(P, st, eye, T, idx)`
-- **215** the work on deck, step by step (Jonas 20.10.2026: «Alle deler av arbeidsprosessene må ha egne animasjoner»); the places the
-- **316** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
-- **417** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
+- **216** the work on deck, step by step (Jonas 20.10.2026: «Alle deler av arbeidsprosessene må ha egne animasjoner»); the places the
+- **317** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
+- **419** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
 
-## `src/js/view3d/09-landing-deck.js` (767 linjer)
+## `src/js/view3d/09-landing-deck.js` (794 linjer)
 
 ---------- landing the catch ----------
 
@@ -3489,32 +3500,33 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **475** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
   - 481 `boyeCanvas(txt)`
   - 487 `boyeTex()`
-  - 492 `boyeQ()`
-  - 493 `drawSafety(BMrel, G, VP, t)`
-  - 514 `cargoUnits(G)`
-  - 515 `drawCargo(BMrel, G, hide)`
-  - 530 `crFrames(X, Q, BMrel, p)`
-  - 539 `crLink(X, a2)`
-  - 542 `drawCrane(BMrel, G, VP, t, d)`
-- **597** the fish tubs on an open boat's deck (core/07f-kar.js, docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
-  - 608 `karPlan(key, spec, kg, dims)`
-  - 616 `karSpec()`
-  - 618 `drawKarLoad(M, load, key, washed)`
-  - 637 `karPlaces(vt)`
-  - 641 `drawCatchTubs(BMrel, vt, skip, washed)`
-  - 647 `karTop(vt, i)`
-  - 650 `karFilling(vt)`
-- **651** the ice box (tools/deck/fisk.py iskasse, the 300 l tub in blue): it stands on deck at its place (the model's kit.iskasse, under
-  - 654 `iceBoxAt(vt)`
-  - 659 `iceBoxTop(vt)`
-  - 663 `drawIceBox(BMrel, vt, shovelIn)`
-  - 674 `shaftM(A, B)`
-- **678** the sling (tools/deck/fisk.py slynge_*): the master link on the crane's hook at H (eye-relative, its top), a strap from the ring
-  - 680 `drawSling(H, M, swing, k)`
-- **698** the bleeding tub (Jonas 04.11.2026: «se at blodet og fisken fyller karet på en ordentlig måte»): the 300 l tub at the model's
-  - 702 `drawBleedTub(BMrel, W, d, ux, uz, KT, KW)`
-  - 720 `dkTub(G)`
-  - 721 `drawDeck(BMrel, eye, VP, t, DK)`
+  - 494 `ladderMesh(L)`
+  - 502 `boyeQ()`
+  - 503 `drawSafety(BMrel, G, VP, t)`
+  - 541 `cargoUnits(G)`
+  - 542 `drawCargo(BMrel, G, hide)`
+  - 557 `crFrames(X, Q, BMrel, p)`
+  - 566 `crLink(X, a2)`
+  - 569 `drawCrane(BMrel, G, VP, t, d)`
+- **624** the fish tubs on an open boat's deck (core/07f-kar.js, docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
+  - 635 `karPlan(key, spec, kg, dims)`
+  - 643 `karSpec()`
+  - 645 `drawKarLoad(M, load, key, washed)`
+  - 664 `karPlaces(vt)`
+  - 668 `drawCatchTubs(BMrel, vt, skip, washed)`
+  - 674 `karTop(vt, i)`
+  - 677 `karFilling(vt)`
+- **678** the ice box (tools/deck/fisk.py iskasse, the 300 l tub in blue): it stands on deck at its place (the model's kit.iskasse, under
+  - 681 `iceBoxAt(vt)`
+  - 686 `iceBoxTop(vt)`
+  - 690 `drawIceBox(BMrel, vt, shovelIn)`
+  - 701 `shaftM(A, B)`
+- **705** the sling (tools/deck/fisk.py slynge_*): the master link on the crane's hook at H (eye-relative, its top), a strap from the ring
+  - 707 `drawSling(H, M, swing, k)`
+- **725** the bleeding tub (Jonas 04.11.2026: «se at blodet og fisken fyller karet på en ordentlig måte»): the 300 l tub at the model's
+  - 729 `drawBleedTub(BMrel, W, d, ux, uz, KT, KW)`
+  - 747 `dkTub(G)`
+  - 748 `drawDeck(BMrel, eye, VP, t, DK)`
 
 ## `src/js/view3d/10-gear.js` (532 linjer)
 
@@ -3559,33 +3571,34 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 31 `nearestBunker(eye)`
   - 32 `drawBunker(B, eye, VP, T, BMrel)`
 
-## `src/js/view3d/12-skiff.js` (415 linjer)
+## `src/js/view3d/12-skiff.js` (420 linjer)
 
 ---------- boat ----------
 
 - **1** boat
 - **3** the starter boat: a 19 ft centre-console skiff, modelled in detail
   - 86 `NB()`
-  - 94 `lookMesh(look)`
-  - 101 `nSetup(VP)`
-  - 107 `wearOn(t)`
-  - 108 `wearOff()`
-  - 116 `wetTick(key, M, sv, len, beam, top, spd)`
-  - 127 `lifeOn(key, M, sv, type, age, keep, spd, G)`
-  - 135 `lifeOff()`
-  - 138 `drawN(m, M)`
-  - 140 `texStrip(Pb, Pt)`
-  - 141 `texQuad(P0, P1, P2, P3)`
-  - 142 `mkTex()`
-  - 143 `upTex(t, cv)`
-  - 144 `drawTexQuad(q, tex, M, VP, lit, nrm)`
-- **152** the open boats worked by hand: one kit per type
-  - 160 `refreshPeople(K)`
-  - 171 `useHand(t)`
-  - 177 `handKit(t)`
-  - 198 `buildSkiff()`
+  - 95 `seaLook(l, helm)`
+  - 99 `lookMesh(look)`
+  - 106 `nSetup(VP)`
+  - 112 `wearOn(t)`
+  - 113 `wearOff()`
+  - 121 `wetTick(key, M, sv, len, beam, top, spd)`
+  - 132 `lifeOn(key, M, sv, type, age, keep, spd, G)`
+  - 140 `lifeOff()`
+  - 143 `drawN(m, M)`
+  - 145 `texStrip(Pb, Pt)`
+  - 146 `texQuad(P0, P1, P2, P3)`
+  - 147 `mkTex()`
+  - 148 `upTex(t, cv)`
+  - 149 `drawTexQuad(q, tex, M, VP, lit, nrm)`
+- **157** the open boats worked by hand: one kit per type
+  - 165 `refreshPeople(K)`
+  - 176 `useHand(t)`
+  - 182 `handKit(t)`
+  - 203 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (506 linjer)
+## `src/js/view3d/13-instruments.js` (512 linjer)
 
 ---------- the skiff's live instruments ----------
 
@@ -3606,23 +3619,25 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 139 `drawLogo(t, M, VP, L, img)`
   - 142 `markQ(t)`
   - 143 `drawMark(t, M, VP, liv)`
-  - 146 `nameCanvas(cv, nm, light)`
-  - 161 `nameTex(nm, light, aspect, mark)`
-  - 169 `drawNPCNames(kit, VP)`
-  - 181 `paintHand()`
-  - 190 `limbM(A, B, r)`
-  - 193 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
-  - 330 `drawSkiffGlass(BMrel, VP)`
-  - 340 `jigRail(t, G)`
-  - 361 `drawJigRail(BMrel, VP, t, G, dt)`
-  - 394 `drawGlass(m, BMrel, VP)`
-  - 413 `drawDrops(m, BMrel, VP, t)`
-  - 424 `buildBoat()`
-  - 450 `buildFlag()`
-  - 462 `flagTex()`
-  - 477 `penTex()`
-  - 490 `mastTop(G)`
-  - 494 `updateFlag(t, appW)`
+  - 147 `callQ(t)`
+  - 148 `drawCall(t, M, VP, liv)`
+  - 152 `nameCanvas(cv, nm, light)`
+  - 167 `nameTex(nm, light, aspect, mark)`
+  - 175 `drawNPCNames(kit, VP)`
+  - 187 `paintHand()`
+  - 196 `limbM(A, B, r)`
+  - 199 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
+  - 336 `drawSkiffGlass(BMrel, VP)`
+  - 346 `jigRail(t, G)`
+  - 367 `drawJigRail(BMrel, VP, t, G, dt)`
+  - 400 `drawGlass(m, BMrel, VP)`
+  - 419 `drawDrops(m, BMrel, VP, t)`
+  - 430 `buildBoat()`
+  - 456 `buildFlag()`
+  - 468 `flagTex()`
+  - 483 `penTex()`
+  - 496 `mastTop(G)`
+  - 500 `updateFlag(t, appW)`
 
 ## `src/js/view3d/14-sea.js` (357 linjer)
 

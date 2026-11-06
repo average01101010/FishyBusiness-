@@ -226,6 +226,7 @@ Kilden er Sjøveisreglene (forskrift 1. desember 1975 nr. 5 om forebygging av sa
 - **Malingssonene** 1–4 i alle modeller, så Malerverkstedet kan tilby skrog, stripe, overbygg og dekk for hver båt. Designene (ripe, totone, vannlinje) skjæres som i dag; stripa krever sone 2 i modellen.
 - **Dekaler:** logofeltet på styrhuset (finnes) og et nytt felt på baugen for et symbol fra samlingen (kommer med merkene). Flagget og vimpelen som i dag.
 - Hva en modell har, står i `signs` og `paint` i skjemaet, så Malerverkstedet aldri tilbyr noe modellen ikke kan vise.
+- **Merkingen etter loven, Ø11.5 (06.11.2026, L4 i `docs/planer/lover-regler-sikkerhet.md`):** kjenningssignalet fra 10,67 m (aldri et ekte, sjekket mot sluttsedlene) malt på begge sider akter for registreringsmerket, og navnet og hjemstedet akter med bokstaver på minst 15 cm fra 15 m og navnet på minst 6 cm under (merkeforskriften §§ 5 og 9). Navnet står på styrhusfronten og hekken, ikke på baugene (Jonas 04.11.2026). Detaljene i 4.23 i `docs/systemer/baater.md`. Malingssonene, dekalene og `signs`/`paint` i skjemaet over er ikke en del av det.
 
 ## 13. Tester, dokumentasjon og utrulling
 
