@@ -252,7 +252,7 @@ function havNear(H, only){
         const m = R + 200 + (havWay(s, tr.gi, null, tr.H0).ice ? 400 : 0);
         if (!near(P0, G0, m) && !(Q && (near(G0, Q, m) || near(Q, P0, m)))) continue; } }
     const A = havState(s, H, b.pos); if (A.hidden) continue;
-    if (A.set) for (const q of A.set) if (q.a !== q.b && Math.min(dist(q.a, b.pos), dist(q.b, b.pos)) <= R) gear.push({k:q.k, a:q.a, b:q.b, id:s.id, name:s.name});
+    if (A.set) for (const q of A.set) if (q.a !== q.b && Math.min(dist(q.a, b.pos), dist(q.b, b.pos)) <= R) gear.push({k:q.k, a:q.a, b:q.b, id:s.id, name:s.name, hav:true});   // (hav: the ocean fleet's; its lines are autolines, marked by § 68, H2d)
     if (dist(A.p, b.pos) > R) continue;
     // (a minute ago she may have been hidden, in a port whose berth is not known: then she has just come out and no speed is read,
     // where P.p was read before P.hidden was asked and threw in npcStates, UI review 04.11.2026)

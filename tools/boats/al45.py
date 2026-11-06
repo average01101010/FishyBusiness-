@@ -23,6 +23,19 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.pat
 WL = 3.30; XA = -2.00; XF = 43.40; XM = (XA + XF) / 2; HB = 5.225
 D1, D2, D3 = 4.75, 7.15, 9.55
 HP_X0, HP_X1 = 20.7, 23.5                       # the hauling port on the starboard side
+HP_Z0, HP_Z1 = 5.5, 7.05                        # its sill and its top (an open hole in the plating, H2d 05.11.2026)
+HP_IN = 2.5                                     # how far in the hauling station goes behind the port, to the magazine's wall
+DOOR = (0.05, 0.75)                             # the doorway in its back wall, from the port's after end (H2d2: the watch's way in)
+CHUTE = (0.80, 1.25)                            # the fish chute's mouth in the back wall at the floor, aft of the line (H2d2)
+SLIDE = ((-2.02, 4.85), (-3.0, 4.32))           # the setting chute's slide astern of the transom: from the opening's sill out and down (x, z)
+CR_AX = (20.6, -2.6, 9.55 + 1.6)                # the forward crane's slewing axis on top of its column (H2d2: its head, boom and hook are parts)
+CR_HEEL = (20.7, -2.6, 9.55 + 2.6)              # the boom's heel pin on the head
+CR_PARK = (28.4, -2.4, 9.55 + 2.45)             # the boom's tip laid forward in its rest, as it was baked in before
+HP_FOOT = 22.1                                  # where the autoline hauler (tools/gear/autoline.py) stands in it, 1.0 m in
+# the cargo hatch on the weather deck over the freezer hold (H2d): port of the centreline between the wheelhouse's ladders and the crane
+# operator's cage, within the forward crane's reach; the lid is hinged on its outboard (port) edge and is its own part (hatch)
+HX0, HX1, HY0, HY1 = 20.35, 22.85, 0.35, 2.85   # the coaming's outside
+HCH = 0.35                                      # the coaming's height over the deck
 
 
 # ---------- measured lines (metres) ----------
@@ -119,14 +132,15 @@ def band_mat(z):
 def stations(fine=True):
     if fine:
         xs = [XA + 0.05 * i for i in range(5)] + [XA + 0.25 + 0.4 * i for i in range(16)] + [4.5 + 0.75 * i for i in range(30)] + \
-             [27.0 + 0.4 * i for i in range(28)] + [38.2 + 0.2 * i for i in range(26)] + [XF - 0.05]
+             [27.0 + 0.4 * i for i in range(28)] + [38.2 + 0.2 * i for i in range(26)] + [XF - 0.05] + [HP_X0, HP_X1]
     else:
         xs = [XA, XA + 0.2, -1.0, 0.5, 2.5, 5.0, 9.0, 14.0, 20.0, 26.0, 30.0, 33.0, 36.0, 38.5, 40.0, 41.2, 42.2, 42.9, XF - 0.05]
     return sorted(set(round(x, 4) for x in xs if XA <= x < XF - 0.01))
 
 OUTH = lambda c: (0, c.y, min(c.z, 5.0) - 5.0)
 
-BANDS = lambda fine: [(WL - 0.10, 11 if fine else 3), (WL + 0.30, 2), (D2 + 0.02, 7 if fine else 2), (None, 4 if fine else 1)]
+# (rows at the hauling port's sill and top, so the port is an open hole in the fine hull)
+BANDS = lambda fine: [(WL - 0.10, 11 if fine else 3), (WL + 0.30, 2)] + ([(HP_Z0, 3), (HP_Z1, 3), (D2 + 0.02, 1)] if fine else [(D2 + 0.02, 2)]) + [(None, 4 if fine else 1)]
 
 def hull_rows(sg, fine=True):
     rows = []
@@ -143,8 +157,10 @@ def build_hull(fine=True):
     objs = []; first = {}
     for sg, nm in ((1, 'p'), (-1, 's')):
         rows = hull_rows(sg, fine); first[sg] = rows[0]
-        def mf(i, j, rows=rows):
-            a = rows[i][j]; b = rows[i + 1][j + 1]; return band_mat((a[2] + b[2]) / 2)
+        def mf(i, j, rows=rows, sg=sg):
+            a = rows[i][j]; b = rows[i + 1][j + 1]; xm, zm = (a[0] + b[0]) / 2, (a[2] + b[2]) / 2
+            if fine and sg < 0 and HP_X0 < xm < HP_X1 and HP_Z0 < zm < HP_Z1: return None     # the hauling port, open
+            return band_mat(zm)
         objs.append(grid('hull_' + nm, rows, mf, out=OUTH))
     T = [[q, p] for p, q in zip(first[1], first[-1])]
     objs.append(grid('transom', T, lambda i, j: band_mat((T[i][0][2] + T[i + 1][0][2]) / 2), angle=20, out=lambda c: (-1, 0, 0)))
@@ -252,11 +268,11 @@ def deck_gear(fine=True):
     acyl(A, (0.8, 3.6, D3), (0.8, 3.6, D3 + 1.7), 0.35, lambda z: w, seg=sg_)
     beam(A, (0.8, 3.6, D3 + 1.9), (0.9, 3.4, D3 + 2.9), 0.35, 0.4, w); beam(A, (0.9, 3.4, D3 + 2.9), (3.6, 3.2, D3 + 2.6), 0.28, 0.32, w)
     boom_rest(A, (0.9, 3.4, D3 + 2.9), (3.6, 3.2, D3 + 2.6), 0.28, 0.32, (2.5, 3.3), D3, w, C['dark'], brace=((2.5, 4.35, D3), (2.5, 2.25, D3)), strap=C['yellow'], fine=fine)
-    # the crane forward of the wheelhouse, its boom laid forward along the starboard side in its rest aft of the hook, braced across
-    acyl(A, (20.6, -2.6, D3), (20.6, -2.6, D3 + 1.6), 0.4, lambda z: w, seg=sg_)
-    beam(A, (20.6, -2.6, D3 + 1.8), (20.7, -2.6, D3 + 2.6), 0.4, 0.45, w); beam(A, (20.7, -2.6, D3 + 2.6), (28.4, -2.4, D3 + 2.45), 0.3, 0.35, w)
-    boom_rest(A, (20.7, -2.6, D3 + 2.6), (28.4, -2.4, D3 + 2.45), 0.3, 0.35, (27.3, -2.43), D3, w, C['dark'], brace=((27.3, -3.55, D3), (27.3, -1.35, D3)), strap=C['yellow'], fine=fine)
-    acyl(A, (28.3, -2.4, D3 + 2.4), (28.3, -2.4, D3 + 1.5), 0.04, lambda z: C['steel'], seg=6); abox(A, 28.1, 28.5, -2.6, -2.2, D3 + 1.2, D3 + 1.5, C['yellow'])
+    # the crane forward of the wheelhouse, its boom laid forward along the starboard side in its rest aft of the hook, braced across.
+    # (H2d2) The column and the rest are the hull's; the slewing head, the boom and the hook block are parts of their own (crane_parts,
+    # anchors.crane) that the game turns and luffs, so the ship's own crane lands the pallets from the hatch. No lashing over the boom
+    acyl(A, CR_AX[:2] + (D3,), CR_AX, 0.4, lambda z: w, seg=sg_)
+    boom_rest(A, CR_HEEL, CR_PARK, 0.3, 0.35, (27.3, -2.43), D3, w, C['dark'], brace=((27.3, -3.55, D3), (27.3, -1.35, D3)), fine=fine)
     # the cage for the crane operator, amidships forward
     for dx in (23.2, 25.6):
         for dy in (-1.2, 1.2): acyl(A, (dx, dy, D3), (dx, dy, D3 + 2.1), 0.04, lambda z: C['steel'], seg=5)
@@ -300,14 +316,72 @@ def deck_gear(fine=True):
             xa, xb = chord(15.0); F.searchlight(A, (xb + 0.1, sg * 0.25, 15.0), (1, 0, -0.8), 0.14, w, C['lens'], m_yoke=C['dark'])
     # the masthead light at the top of the pole (B8)
     acyl(A, (29.6, 0, 20.55), (29.6, 0, 20.85), 0.14, lambda z: C['lampW'], seg=10); acyl(A, (29.6, 0, 20.85), (29.6, 0, 20.9), 0.16, lambda z: C['dark'], seg=10)
-    # the hauling port on the starboard side, open: a dark opening with its door swung up, the roller in its sill
-    for x0, x1, z0, z1, m, o in ((HP_X0, HP_X1, 5.5, 7.05, C['dark'], 0.02),):
-        y = hbz((x0 + x1) / 2, (z0 + z1) / 2) + o
-        A.poly([(x0, -y, z0), (x1, -y, z0), (x1, -y, z1), (x0, -y, z1)], m, (0, -1, 0))
-        abox(A, x0 - 0.1, x1 + 0.1, -y - 0.6, -y, z1 + 0.05, z1 + 0.15, C['hull'])
-        acyl(A, (x0 + 0.3, -y - 0.12, z0 + 0.12), (x1 - 0.3, -y - 0.12, z0 + 0.12), 0.11, lambda z: C['steel'], seg=10)
+    # the hauling port on the starboard side, open, with its door swung up and the roller in its sill. In the fine hull the port is a
+    # hole in the plating (build_hull) and the hauling station shows through it: the floor of the main deck, the sides, the roof and the
+    # wall in from the plating where the line goes on to the magazine (a dark slot); the autoline hauler is not in the boat (the game sets
+    # it on the anchor aline, tools/gear/autoline.py). Nothing further in is modelled (CLAUDE.md: the outside only). The far hull keeps a
+    # dark plate.
+    x0, x1, z0, z1 = HP_X0, HP_X1, HP_Z0, HP_Z1
+    y = hbz((x0 + x1) / 2, (z0 + z1) / 2); yi = y - HP_IN
+    if fine:
+        A.poly([(x0, -y, D1), (x1, -y, D1), (x1, -yi, D1), (x0, -yi, D1)], C['deck'], (0, 0, 1))
+        A.poly([(x0, -y, z1), (x1, -y, z1), (x1, -yi, z1), (x0, -yi, z1)], C['inner'], (0, 0, -1))
+        A.poly([(x0, -y, D1), (x0, -yi, D1), (x0, -yi, z1), (x0, -y, z1)], C['inner'], (1, 0, 0))
+        A.poly([(x1, -y, D1), (x1, -yi, D1), (x1, -yi, z1), (x1, -y, z1)], C['inner'], (-1, 0, 0))
+        A.poly([(x0, -yi, D1), (x1, -yi, D1), (x1, -yi, z1), (x0, -yi, z1)], C['inner'], (0, -1, 0))
+        A.poly([(HP_FOOT - 0.25, -yi - 0.01, D1 + 1.45), (HP_FOOT + 0.25, -yi - 0.01, D1 + 1.45), (HP_FOOT + 0.25, -yi - 0.01, D1 + 1.95), (HP_FOOT - 0.25, -yi - 0.01, D1 + 1.95)], C['dark'], (0, -1, 0))
+        # (H2d2) in the back wall: the doorway at the after end where the watch goes in and out to the factory (the crew's way in,
+        # deckcrew.js), and the fish chute's mouth at the floor just aft of the line, where the gaffed fish slide on to the bleeding
+        # tanks; both dark openings in steel frames, nothing behind them modelled
+        for (xa, xb, za, zb) in ((x0 + DOOR[0], x0 + DOOR[1], D1, D1 + 1.95), (x0 + CHUTE[0], x0 + CHUTE[1], D1, D1 + 0.42)):
+            A.poly([(xa, -yi - 0.012, za), (xb, -yi - 0.012, za), (xb, -yi - 0.012, zb), (xa, -yi - 0.012, zb)], C['dark'], (0, -1, 0))
+            for (ua, ub, va, vb) in ((xa - 0.05, xa, za, zb + 0.05), (xb, xb + 0.05, za, zb + 0.05), (xa, xb, zb, zb + 0.05)):
+                abox(A, ua, ub, -yi - 0.04, -yi - 0.005, va, vb, C['steel'])
+        abox(A, x0 + CHUTE[0], x0 + CHUTE[1], -yi - 0.30, -yi - 0.005, D1 + 0.005, D1 + 0.02, C['steel'])   # (the chute's stainless lip on the floor)
+        # the sill: the plating's edge as a steel cap 0.1 m in, its inside down to the floor; the plating's edges round the hole
+        abox(A, x0, x1, -y, -y + 0.10, z0 - 0.03, z0, C['steel'])
+        A.poly([(x0, -y + 0.10, D1), (x1, -y + 0.10, D1), (x1, -y + 0.10, z0 - 0.03), (x0, -y + 0.10, z0 - 0.03)], C['inner'], (0, 1, 0))
+        for xa, s_ in ((x0, 1), (x1, -1)): abox(A, min(xa, xa + 0.06 * s_), max(xa, xa + 0.06 * s_), -y, -y + 0.02, z0, z1, C['hull'])
+        abox(A, x0, x1, -y, -y + 0.02, z1 - 0.05, z1, C['hull'])
+        # the station's light in the roof, and a gaff on its hooks on the aft side, where the man at the port reaches it
+        abox(A, HP_FOOT - 0.5, HP_FOOT + 0.5, -y + 0.6, -y + 0.75, z1 - 0.06, z1 - 0.01, C['lampW'])
+        acyl(A, (x0 + 0.04, -y + 0.35, D1 + 1.7), (x0 + 0.04, -y + 0.35, D1 + 0.5), 0.016, lambda z: C['yellow'], seg=6)
+        acyl(A, (x0 + 0.04, -y + 0.35, D1 + 0.5), (x0 + 0.04, -y + 0.47, D1 + 0.42), 0.008, lambda z: C['steel'], seg=5)
+    else:
+        A.poly([(x0, -y - 0.02, z0), (x1, -y - 0.02, z0), (x1, -y - 0.02, z1), (x0, -y - 0.02, z1)], C['dark'], (0, -1, 0))
+    y += 0.02
+    abox(A, x0 - 0.1, x1 + 0.1, -y - 0.6, -y, z1 + 0.05, z1 + 0.15, C['hull'])
+    acyl(A, (x0 + 0.3, -y - 0.12, z0 + 0.12), (x1 - 0.3, -y - 0.12, z0 + 0.12), 0.11, lambda z: C['steel'], seg=10)
+    # the cargo hatch over the freezer hold: the coaming with its top bar, the hinge lugs on the port side, the trunk inside dark below the
+    # deck (no hold is modelled); the lid is its own part (hatch_lid), shut at sea, and in the far hull it is baked in shut
+    t = 0.06
+    for xa, xb, ya, yb in ((HX0, HX1, HY0, HY0 + t), (HX0, HX1, HY1 - t, HY1), (HX0, HX0 + t, HY0, HY1), (HX1 - t, HX1, HY0, HY1)):
+        abox(A, xa, xb, ya, yb, D3, D3 + HCH, C['white'])
+    if fine:
+        for xa, xb, ya, yb in ((HX0 - 0.03, HX1 + 0.03, HY0 - 0.03, HY0 + t), (HX0 - 0.03, HX1 + 0.03, HY1 - t, HY1 + 0.03), (HX0 - 0.03, HX0 + t, HY0, HY1), (HX1 - t, HX1 + 0.03, HY0, HY1)):
+            abox(A, xa, xb, ya, yb, D3 + HCH - 0.02, D3 + HCH, C['white'])
+        i0, i1, j0, j1, zb = HX0 + t, HX1 - t, HY0 + t, HY1 - t, D3 - 1.4
+        A.poly([(i0, j0, zb), (i1, j0, zb), (i1, j0, D3 + HCH), (i0, j0, D3 + HCH)], C['inner'], (0, 1, 0))
+        A.poly([(i0, j1, zb), (i1, j1, zb), (i1, j1, D3 + HCH), (i0, j1, D3 + HCH)], C['inner'], (0, -1, 0))
+        A.poly([(i0, j0, zb), (i0, j1, zb), (i0, j1, D3 + HCH), (i0, j0, D3 + HCH)], C['inner'], (1, 0, 0))
+        A.poly([(i1, j0, zb), (i1, j1, zb), (i1, j1, D3 + HCH), (i1, j0, D3 + HCH)], C['inner'], (-1, 0, 0))
+        A.poly([(i0, j0, zb), (i1, j0, zb), (i1, j1, zb), (i0, j1, zb)], C['dark'], (0, 0, 1))
+        for x in (HX0 + 0.45, (HX0 + HX1) / 2, HX1 - 0.45):
+            abox(A, x - 0.08, x + 0.08, HY1, HY1 + 0.12, D3 + HCH - 0.14, D3 + HCH + 0.02, C['steel'])
+        for x in (HX0 + 0.6, HX1 - 0.6):   # the cleats that dog the lid down, on the starboard side
+            abox(A, x - 0.05, x + 0.05, HY0 - 0.10, HY0, D3 + HCH - 0.18, D3 + HCH - 0.02, C['steel'])
+    else:
+        abox(A, HX0 - 0.05, HX1 + 0.05, HY0 - 0.05, HY1 + 0.05, D3 + HCH, D3 + HCH + 0.12, C['white'])   # (under the lid part's top, 0.14)
     # the setting chute at the stern, starboard side, on the main deck
     A.poly([(XA - 0.02, -3.9, D1 + 0.1), (XA - 0.02, -2.9, D1 + 0.1), (XA - 0.02, -2.9, D1 + 1.0), (XA - 0.02, -3.9, D1 + 1.0)], C['dark'], (-1, 0, 0))
+    # (H2d2) the slide (slisken) the line runs down from the chute towards the sea: a stainless trough sloping out and down from the
+    # opening's sill, its sides 0.12 m, on two stays back to the transom; the marks (the poles, the grapnels, the blåser) go over the same way
+    if fine:
+        (sx0, sz0), (sx1, sz1) = SLIDE; yw = 0.22
+        A.poly([(sx0, -3.4 - yw, sz0), (sx0, -3.4 + yw, sz0), (sx1, -3.4 + yw, sz1), (sx1, -3.4 - yw, sz1)], C['steel'], (0.5, 0, 1))
+        for sg in (-1, 1):
+            A.poly([(sx0, -3.4 + sg * yw, sz0), (sx1, -3.4 + sg * yw, sz1), (sx1, -3.4 + sg * yw, sz1 + 0.12), (sx0, -3.4 + sg * yw, sz0 + 0.12)], C['steel'], (0, sg, 0))
+            acyl(A, (sx1 + 0.15, -3.4 + sg * (yw - 0.04), sz1 - 0.02), (XA - 0.02, -3.4 + sg * (yw - 0.04), sz1 - 0.55), 0.025, lambda z: C['steel'], seg=6)
     # the stern light on its staff at the rail, port of the centreline (B8)
     zt = z_top(XA); acyl(A, (XA + 0.3, 0.6, zt), (XA + 0.3, 0.6, zt + 1.25), 0.03, lambda z: w, seg=6)
     acyl(A, (XA + 0.3, 0.6, zt + 0.9), (XA + 0.3, 0.6, zt + 1.1), 0.07, lambda z: C['lampW'], seg=8); acyl(A, (XA + 0.3, 0.6, zt + 1.1), (XA + 0.3, 0.6, zt + 1.14), 0.08, lambda z: C['dark'], seg=8)
@@ -388,7 +462,8 @@ def hull_details(fine=True):
             p, n, tt = surf(x, D3 + 0.2, sg, off=0.004); F.freeing_port(A, p, n, 0.7, 0.26, C['white'], C['dark'], flap=C['white'])
         # the plating's weld seams (SKR-09): butts every 6 m up to the white, a long seam between the main deck and the 2nd
         for x in [3.0 + 6.0 * k for k in range(7)]:
-            zs = [WL + 0.40 + (D2 - 0.1 - WL - 0.40) * i / 12 for i in range(13)]
+            z1 = HP_Z0 - 0.04 if sg < 0 and HP_X0 - 0.05 < x < HP_X1 + 0.05 else D2 - 0.1     # (not across the open hauling port)
+            zs = [WL + 0.40 + (z1 - WL - 0.40) * i / 12 for i in range(13)]
             F.seam(A, [surf(x, z, sg)[0] for z in zs], lambda q, sg=sg: surf(q.x, q.z, sg)[1], C['hull'])
         xs = [XA + 0.6 + (40.6 - XA - 0.6) * i / 30 for i in range(31)]
         F.seam(A, [surf(x, 5.6, sg)[0] for x in xs if not (sg < 0 and HP_X0 - 0.3 < x < HP_X1 + 0.3)], lambda q, sg=sg: surf(q.x, q.z, sg)[1], C['hull'])
@@ -407,6 +482,40 @@ def build(fine=True):
     solids = build_hull(fine) + decks(fine) + underwater(fine) + deck_gear(fine) + hull_details(fine)
     o, g = wheelhouse(fine); solids += o
     return [s for s in solids if s], [x for x in g if x]
+
+
+# the hatch's lid, its own part (H2d): from its hinge on the port edge, so the game turns it open (about the boat's length)
+HINGE = (0.0, HY1 + 0.06, D3 + HCH + 0.06)
+def hatch_lid():
+    A = Acc('hatch_lid'); w = C['white']; x0, x1, y0, y1 = HX0 - 0.05, HX1 + 0.05, HY0 - 0.05, HY1 + 0.05; z0 = D3 + HCH
+    abox(A, x0, x1, y0, y1, z0 + 0.02, z0 + 0.14, w)
+    abox(A, x0 + 0.05, x1 - 0.05, y0 + 0.05, y1 - 0.05, z0, z0 + 0.02, C['black'])          # the rubber seal on the coaming
+    for k in range(4):   # the stiffeners across the top
+        x = x0 + 0.3 + (x1 - x0 - 0.6) * k / 3; abox(A, x - 0.04, x + 0.04, y0 + 0.05, y1 - 0.05, z0 + 0.14, z0 + 0.24, w)
+    for x in (HX0 + 0.45, (HX0 + HX1) / 2, HX1 - 0.45):   # the hinge knuckles round the pin, the pin
+        acyl(A, (x - 0.07, HINGE[1], HINGE[2]), (x + 0.07, HINGE[1], HINGE[2]), 0.06, lambda z: C['steel'], seg=10)
+        abox(A, x - 0.05, x + 0.05, y1 - 0.10, HINGE[1], z0 + 0.06, z0 + 0.14, C['steel'])
+    acyl(A, (HX0 + 0.3, HINGE[1], HINGE[2]), (HX1 - 0.3, HINGE[1], HINGE[2]), 0.025, lambda z: C['steel'], seg=8)
+    for x in (HX0 + 0.6, HX1 - 0.6):   # the dogs on the starboard edge
+        abox(A, x - 0.06, x + 0.06, y0 - 0.06, y0 + 0.02, z0 - 0.05, z0 + 0.10, C['steel'])
+    return A.done(25)
+
+
+def crane_parts():
+    """the forward crane's moving parts (H2d2), each in its own frame for the game: the slewing head from the slewing axis on the
+    column's top (turns about the game's y), the boom from its heel pin lying straight forward along the game's -z (the game aims it at
+    the load), and the hook block from the eye it hangs by"""
+    w = C['white']; L = (V(CR_PARK) - V(CR_HEEL)).length
+    H = Acc('crane_head'); acyl(H, CR_AX, (CR_AX[0], CR_AX[1], CR_AX[2] + 0.2), 0.45, lambda z: C['dark'], seg=16)   # the slewing ring
+    beam(H, (CR_AX[0], CR_AX[1], CR_AX[2] + 0.2), CR_HEEL, 0.4, 0.45, w)
+    for sg in (-1, 1): abox(H, CR_HEEL[0] - 0.12, CR_HEEL[0] + 0.12, CR_HEEL[1] + sg * 0.17, CR_HEEL[1] + sg * 0.25, CR_HEEL[2] - 0.15, CR_HEEL[2] + 0.15, C['steel'])
+    B = Acc('crane_boom'); x0, y0, z0 = CR_HEEL
+    beam(B, (x0, y0, z0), (x0 + L, y0, z0), 0.3, 0.35, w)
+    acyl(B, (x0 + L - 0.1, y0 - 0.2, z0 - 0.05), (x0 + L - 0.1, y0 + 0.2, z0 - 0.05), 0.15, lambda z: C['steel'], seg=12)   # the sheave at the tip
+    acyl(B, (x0, y0 - 0.2, z0), (x0, y0 + 0.2, z0), 0.07, lambda z: C['steel'], seg=10)                                    # the heel pin
+    K = Acc('crane_block'); abox(K, -0.2, 0.2, -0.2, 0.2, -0.3, 0.0, C['yellow'])
+    acyl(K, (0, 0, -0.3), (0, 0, -0.42), 0.03, lambda z: C['steel'], seg=6); acyl(K, (0, 0, -0.42), (0.06, 0, -0.52), 0.025, lambda z: C['steel'], seg=6)
+    return H.done(30), B.done(30), K.done(30), L
 
 
 def to_game(p): return (-p[1], p[2] - WL, -(p[0] - XM))
@@ -446,7 +555,21 @@ def anchors():
             # the deck where the line is worked: the main deck inside the hauling port (the hauler and the tubs stand there, out of sight)
             'deck': {'y': round(D1 - WL, 3), 'z': round(-(22.0 - XM), 3)}, 'gw': round(z_top(20.0) - WL, 3),
             'stern': round(XM - XA, 3), 'bow': round(-(XF - XM), 3), 'side': HB, 'beam': 10.45, 'pl': 18.0, 'rl': 4.0, 'open': False, 'hand': False,
-            'pole': G(XA + 0.5, 0, z_top(XA) + 2.2), 'hauler': G(22.1, -(hy - 0.5), 6.2), 'filler': G(24.0, HB, D3 + 0.3)}
+            'pole': G(XA + 0.5, 0, z_top(XA) + 2.2), 'hauler': G(22.1, -(hy - 0.5), 6.2), 'filler': G(24.0, HB, D3 + 0.3),
+            # the autoline (H2d, 05.11.2026): the hauler's foot in the hauling station (tools/gear/autoline.py: 1.0 m in from the plating),
+            # the port (its sill and top at the plating, fore and aft ends), the setting chute at the stern where the line goes out
+            'aline': {'foot': G(HP_FOOT, -(hy - 1.0), D1), 'sill': G(HP_FOOT, -hy, HP_Z0), 'top': G(HP_FOOT, -hy, HP_Z1), 'x0': G(HP_X0, -hy, HP_Z0), 'x1': G(HP_X1, -hy, HP_Z0),
+                      'chute': G(XA, -3.4, D1 + 0.1), 'slide': G(SLIDE[1][0], -3.4, SLIDE[1][1]), 'in': HP_IN,
+                      # (H2d2) the doorway and the fish chute's mouth in the station's back wall, on the floor
+                      'door': G(HP_X0 + (DOOR[0] + DOOR[1]) / 2, -(hy - HP_IN), D1), 'fish': G(HP_X0 + (CHUTE[0] + CHUTE[1]) / 2, -(hy - HP_IN), D1)},
+            # the cargo hatch over the freezer hold: its middle on the coaming's top, the inside opening (across, along), the lid's hinge
+            # (the lid turns about the boat's length, open to port), and how far it opens
+            'hatch': {'at': G((HX0 + HX1) / 2, (HY0 + HY1) / 2, D3 + HCH), 'deck': round(D3 - WL, 3), 'size': [round(HY1 - HY0 - 0.12, 3), round(HX1 - HX0 - 0.12, 3)],
+                      'hinge': G(*HINGE), 'open': 1.85, 'axis': [0, 0, 1]},
+            # the forward crane (H2d2): the slewing axis on the column's top, the heel pin (on the head, slewed with it), the boom's length
+            # from the heel to the tip's sheave, and the tip as it lies parked in its rest; the hook block hangs from the tip on its wire
+            'crane': {'axis': G(*CR_AX), 'heel': G(*CR_HEEL), 'len': round((V(CR_PARK) - V(CR_HEEL)).length - 0.1, 3), 'park': G(*CR_PARK), 'hang': 1.0,
+                      'clear': round(D3 + 2.15 - WL, 3)}}   # (the crane driver's cage's roof, the highest thing the load slews over)
 
 
 SHOTS = [('bow3q', (72.0, -42.0, 15.0), (20.0, 0, 6.0), 35), ('stern3q', (-30.0, 32.0, 19.0), (14.0, 0, 7.0), 35), ('side', (20.7, -80, 7.0), (20.7, 0, 8.0), 35),
@@ -462,8 +585,13 @@ def main():
     if 'fast' not in sys.argv: beauty(OUT, 'al', WL, SHOTS)
     ex = {'frame': 'kystfiske: x starboard, y up from the waterline, z aft; metres', 'type': 'autoliner', 'name': '45 m Longliner (6161)',
           'len': 45.38, 'beam': 10.45, 'draft': 3.75, 'anchors': anchors()}
+    hg = to_game(HINGE)
+    CPC = []; CP = lambda: CPC[0] if CPC else (CPC.append(crane_parts()) or CPC[0])   # (the crane's parts made once, after the hull is baked)
     export_boat(build, to_game, to_game_n, OUT, 'al45.glb', os.path.join(ROOT, 'src', 'data', 'boat-al45.b64'), ex,
-                side=(os.path.join(ROOT, 'src', 'data', 'boat-al45-side.b64'), 20.7, 8.0, 50.0), dry='dry' in sys.argv)
+                side=(os.path.join(ROOT, 'src', 'data', 'boat-al45-side.b64'), 20.7, 8.0, 50.0), dry='dry' in sys.argv,
+                more=[{'name': 'hatch', 'obj': hatch_lid, 'xf_p': lambda p: tuple(a - b for a, b in zip(to_game(p), hg)), 'ao': True, 'show': True}] +
+                     [{'name': nm, 'obj': (lambda i=i: CP()[i]), 'xf_p': (lambda p, o=o: tuple(a - b for a, b in zip(to_game(p), o))), 'ao': True, 'show': True}
+                      for i, (nm, o) in enumerate((('crane_head', to_game(CR_AX)), ('crane_boom', to_game(CR_HEEL)), ('crane_block', to_game((0.0, 0.0, 0.0)))))])
 
 
 if __name__ == '__main__':

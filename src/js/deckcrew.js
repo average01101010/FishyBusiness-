@@ -43,6 +43,9 @@ function crewSim(src){
     const tu = W ? W.tub : [Bm / 2 - 0.62, d.y, d.z + 0.35], s = (W && W.s) || 1; box(tu[0], tu[2], 0.72 * s, 1.08 * s, W && W.ry || 0);
     if (!(W && W.own)){ const tb = W ? W.table : [-(Bm / 2 - 0.42), d.y, d.z]; box(tb[0], tb[2], 0.62, V.len >= 10 ? 1.6 : 1.15); }
     if (G.hauler) box(Bm / 2 - 0.2, G.hauler[2], 0.35, 0.4);
+    // (the autoline hauler and its hook cleaner across the hauling station, from the port in to the cleaner; the line's guide arm over
+    // the way along the back wall is high enough to pass under, H2d2)
+    if (G.aline && G.aline.foot){ const F = G.aline.foot; box(F[0] + 0.05, F[2], 1.9, 0.62); }
     // (the fish tubs an open boat has now, core/07f-kar.js, and her ice box, view3d.js iceBoxAt)
     const nK = V.kar ? (ST.type === S.boat.type && BOAT.karN ? BOAT.karN : karN(ST.type, 0)) : (K.tubs || []).length;
     for (const q of (K.tubs || []).slice(0, nK)){ if (q[5] >= 0) continue; const big = (q[4] || 460) > 300; box(q[0], q[2], big ? 1.0 : 0.72, big ? 1.2 : 1.08, q[3]); }
@@ -111,6 +114,14 @@ function crewSim(src){
     rail.sort((a, b) => a[3] - b[3]);
     PL.mend = []; for (const r of rail){ if (PL.mend.length >= 4) break; if (PL.mend.some(q => Math.hypot(q[0] - r[0], q[1] - r[1]) < 0.9)) continue; PL.mend.push([r[0] - gs * 0.12, r[1], r[2], 'mend']); }
     PL.cargo = K.cargo && K.cargo[0] ? [K.cargo[0][0] + 0.9, K.cargo[0][2], -Math.PI / 2, 'guide'] : null;
+    // the autoliner's hauling station inside the port (anchors.aline, H2d2 06.11.2026): the line comes in over the sill roller across the
+    // boat to the hauler, the hook cleaner and on to the magazine (tools/gear/autoline.py); both hands stand aft of it. The gaffer by the
+    // plating facing the sill, where each fish is taken in; the one minding the hook cleaner and the line inboard of him, facing the
+    // cleaner; the fish let fall at the drop slide on into the chute's mouth in the back wall (al45.py), to the bleeding tanks inside
+    const AL = G.aline; if (AL && AL.foot){ const F = AL.foot, sl = AL.sill || [F[0] + 1, F[1] + 0.75, F[2]], fz = AL.fish ? AL.fish[2] : F[2] + 0.4;
+      const gx = F[0] + 0.55, gz = F[2] + 0.88, tx = F[0] - 0.9, tz = F[2] + 0.82;
+      PL.port = {gaff:[gx, gz, face(gx, gz, sl[0], sl[2]), 'haul'], tend:[tx, tz, face(tx, tz, F[0] - 0.42, F[2]), 'coil'],
+        drop:[F[0] - 0.3, F[1] + 0.05, fz], chute:AL.fish ? [AL.fish[0] + 0.05, F[1] + 0.08, fz] : [F[0] - 2.2, F[1] + 0.08, fz]}; }
     return (ST.PL = PL);
   }
   const near = (x, z, r) => ST.M.near(x, z, r || 1.5);
@@ -149,6 +160,13 @@ function crewSim(src){
     const PT = ST.PT, PL = places(), st = p.st;
     if (ctx.away) return null;
     if (st === 'ror'){ if (PT.ror) return {k:PT.ror.k, h:PT.ror.h || 0, task:'helm', inside:'helm'}; return PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:'helm', inside:'helm'} : null; }
+    // the autoliner (H2d2, places port): the deck map is her hauling station inside the port, the rest of her is inside. At the line the
+    // hauler gaffs the fish in at the port, and the deck hand on the bleeding minds the hook cleaner and sees the fish into the chute (the
+    // bleeding itself is inside, at the tanks the chute leads to); everyone else of the watch (more at the line, the gutting, the
+    // freezing) and those on a break are in the factory and the mess, through the doorway in the station's back wall
+    if (ST.G.aline && PL.port){ if (st === 'haling' && n === 0 && p.role === 'haler'){ const q = at(PL.port.gaff, 0.6); if (q) return q; }
+      if (st === 'blogg' && n === 0){ const q = at(PL.port.tend, 0.6); if (q) return q; }
+      return PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:null, inside:'in'} : null; }
     // a break as the game chose it (core/13-work.js idleAssign): inside, asleep in the bunk and up at the shop are not on deck
     if (st === 'pause' && p.idle){ if (p.idle === 'inside' || p.idle === 'sleep' || p.idle === 'shop') return PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:null, inside:'in'} : null; return idleGoal(p, ctx); }
     if (ctx.underway && !ctx.open && st === 'pause') return PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:null, inside:'in'} : null;   // under way the crew are inside (03.10.2026)
