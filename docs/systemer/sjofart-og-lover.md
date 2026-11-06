@@ -149,7 +149,7 @@ Næringsfartøy: 5 omkomne i 2024 og 7 i 2025; fiskefartøy er 24 % av ulykkene.
 
 ## 3. Ø11.1 Vikeplikten for spilleren og NPC-ene (L1, N8)
 
-Bygd 06.11.2026 (Jonas: «Oppgave: Ø11.1, vikeplikten for spilleren og NPC-ene (L1 og N8)»). Reglene ligger i den nye `core/05e-sjovei.js`. De delte filene har ett kall hver: `npcStates` (`colregNpc`) og `sail` (`sjvSail`) i `core/05-vessels.js`, `havNear` (`colregHav`) i `core/05d-hav.js` og `dynAuto` (`sjvAuto`) i `core/16b-dyn.js`. Varselet står i `ui/04-panels-instruments.js` (stripa og boksen), `ui/03-map.js` (plotteren og AIS-kortet) og `ui/03e-miniplot.js` (minikartet).
+Bygd og rullet ut 06.11.2026 (981a4751, flettet i d62153dc; Jonas: «Oppgave: Ø11.1, vikeplikten for spilleren og NPC-ene (L1 og N8)»). Reglene ligger i den nye `core/05e-sjovei.js`. De delte filene har ett kall hver: `npcStates` (`colregNpc`) og `sail` (`sjvSail`) i `core/05-vessels.js`, `havNear` (`colregHav`) i `core/05d-hav.js` og `dynAuto` (`sjvAuto`) i `core/16b-dyn.js`. Varselet står i `ui/04-panels-instruments.js` (stripa og boksen), `ui/03-map.js` (plotteren og AIS-kortet) og `ui/03e-miniplot.js` (minikartet).
 
 ### 3.1 Klassene (regel 3 og 18): `colregCls`, `colregOwnCls`, `colregHav`
 
