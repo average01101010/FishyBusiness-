@@ -61,6 +61,8 @@
     const E = EQUIP[k]; if (!E) return L('Ukjent utstyr.', 'Unknown equipment.');
     if (!atKind(EQ_YARD(k) ? 'verft' : 'butikk')) return L('Det monteres ' + (EQ_YARD(k) ? 'på verftet.' : 'i utstyrsbutikken.'), 'It is fitted ' + (EQ_YARD(k) ? 'at the yard.' : 'at the tackle shop.'));
     if (!equipFits(k, S.boat.type)) return L(E.name.no + ' passer ikke «' + S.boatName + '».', 'The ' + E.name.en + ' does not suit the «' + S.boatName + '».');
+    // (what the rules ask for follows the boat and is never sold to her: V6 A, core/02-species-gear.js reqOf)
+    if ((VESSELS[S.boat.type].req || []).includes(k)){ reqFill(S.equip, S.boat.type); return L(E.name.no + ' er påbudt og følger med båten.', 'The ' + E.name.en + ' is required and comes with the boat.'); }
     const have = E.multi ? S.equip[k] || 0 : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1;
     if (have >= max || (!E.multi && (S.jobs || []).some(j => j.kind === 'fit' && j.k === k))) return L('Det har båten alt.', 'The boat has it already.');
     if (spendable() < E.price) return t('no_cash');

@@ -235,18 +235,36 @@ function vesselDerive(V){
   V.watch = V.fac.house === 'hus' && V.berths >= 2; V.openOk = V.len < 11 && V.cls !== 'hav';
   V.haulers = Object.keys(EQUIP).filter(k => /haler$/.test(k) && equipFits(k, V.key));
   V.lsa = lsaOf(V);
+  // the gear the rules ask for comes with the boat (V6 A, Jonas 28.10.2026): it is in std, and the shop sells it only where it is optional
+  V.req = reqOf(V); V.std = [...new Set([...(V.std || []), ...V.req])];
   return V;
 }
+// the electronics the rules ask for, so they follow the boat and are never sold to her (Ø11.5, read on Lovdata 06.11.2026): a VHF with
+// DSC on every decked boat and open boat with a wheelhouse (FOR-2013-11-22-1404 §§ 64 and 68; from 15 m FOR-2000-06-13-660 § 9-6); AIS
+// from 15 m (§ 10-4a; under 15 m only an AIS-SART, which is kept inside); a bridge watch alarm from 10.67 m on a boat with an autopilot
+// (every boat with a wheelhouse here has Autonav) and a vessel instruction beyond fjordfiske (§ 77; from 15 m § 10-7)
+function reqOf(V){
+  const house = V.fac.house !== 'open' || V.len >= 15, r = [];
+  if (house) r.push('vhf'); if (V.len >= 15) r.push('ais'); if (house && V.len >= 10.67) r.push('brovakt');
+  return r;
+}
+// a boat's equipment with what the rules ask for added, free (a boat bought, traded in or from an old save); the keys it added
+function reqFill(eq, type){ const V = VESSELS[type]; if (!eq || !V) return []; const add = V.req.filter(k => !eq[k]); for (const k of add) eq[k] = true; return add; }
 // the life-saving gear the rules ask for, so every boat carries it from the yard (forskrift om fiskefartøy under 15 meter,
 // FOR-2013-11-22-1404, read on Lovdata 19.10.2026): a type-approved liferaft for everyone aboard on a decked boat over 6 m, hydrostatically
 // released (§ 38; with three or fewer aboard a four-person ISO 9650-1 raft will do); a lifebuoy for every third person, at least one with
 // 30 m of floating line under 10.67 m and two from there to 15 m, one with a line on each side, half of them with a light, all marked
-// with the boat's name and home port (§ 43). The boats over 15 m (other rules) get a raft on each side, four buoys on the coastal ones and
-// six on the sea-going ships, our estimate. The raft's size is the smallest common one for the most aboard (skipper and crew).
+// with the boat's name and home port (§ 43). From 15 m (forskrift om fiskefartøy fra 15 m, FOR-2000-06-13-660, read as a summary on
+// Lovdata 05.11.2026, Ø11.5): rafts for 200 % of those aboard, one each side (§ 7-5); lifebuoys 3 under 24 m, 4 for 24-45 m, 6 for
+// 45-75 m and 8 from 75 m, a light on half of them (under 24 m at least one), a smoke signal on at least two (under 24 m one), a 30 m
+// line on one each side (§ 7-10); the smoke is the MOB light with smoke on its bracket (tools/deck/sikker.py mobroyk), which is the
+// light as well, so smoke <= lights. A rescue boat (MOB boat, tools/deck/mob.py) from 45 m (§ 7-5; 24-45 m only from bankfiske II,
+// which no boat here has). The raft's size is the smallest common one for the most aboard (skipper and crew).
 const RAFT_CAP = [4, 6, 8, 10, 12, 16, 20, 25];
 function lsaOf(V){
-  const n = 1 + V.crewMax, cap = RAFT_CAP.find(c => c >= n) || 25, big = V.len > 15;
-  const buoys = big ? (V.cls === 'hav' ? 6 : 4) : Math.max(V.len >= 10.67 ? 2 : 1, Math.ceil(n / 3));
-  return {persons:n, rafts:big ? 2 : V.fac.house !== 'open' && V.len > 6 ? 1 : 0, cap, buoys, lines:big || V.len >= 10.67 ? 2 : 1, lights:Math.ceil(buoys / 2)};
+  const n = 1 + V.crewMax, cap = RAFT_CAP.find(c => c >= n) || 25, L = V.len, big = L >= 15;
+  const buoys = big ? (L < 24 ? 3 : L < 45 ? 4 : L < 75 ? 6 : 8) : Math.max(L >= 10.67 ? 2 : 1, Math.ceil(n / 3));
+  return {persons:n, rafts:big ? 2 : V.fac.house !== 'open' && L > 6 ? 1 : 0, cap, buoys, lines:big || L >= 10.67 ? 2 : 1, lights:Math.ceil(buoys / 2),
+    smoke:!big ? 0 : L < 24 ? 1 : 2, mob:L >= 45 ? 1 : 0};
 }
 for (const k in VESSELS){ VESSELS[k].key = k; vesselDerive(VESSELS[k]); }

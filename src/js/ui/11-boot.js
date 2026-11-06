@@ -178,6 +178,12 @@ if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
   if (!S.boat.type) S.boat.type = 'trebat'; if (S.boat.engH === undefined){ S.boat.engH = 0; S.boat.svcAt = 0; }
   delete S.settings.bleed;   // never used; the fish is always bled at the rail
   if (typeof S.tut === 'number') S.tut = 0;   // saves from before «Første tur» are not sent through it
+  // 06.11.2026 (Ø11.5, V6 A, Jonas 28.10.2026): what the rules ask for follows the boat; a save from before gets what is missing, free
+  // (applyVessel keeps it so from here on: core/02-species-gear.js reqFill)
+  { const got = new Set(), fill = (eq, b) => { if (eq && b && b.type) for (const k of reqFill(eq, b.type)) got.add(k); };
+    fill(S.equip, S.boat); for (const v of S.fleet || []) if (v.equip && v.boat) fill(v.equip, v.boat);
+    if (got.size){ const nm = l => [...got].map(k => EQUIP[k].name[l]).join(', ');
+      log('Påbudt utstyr følger nå båten, og det som manglet, er montert gratis: ' + nm('no') + '.', 'Required equipment now comes with the boat, and what was missing has been fitted free: ' + nm('en') + '.'); } }
   karRefund(); applyVessel(); if (!S.settings.chart) S.settings.chart = S.settings.plotter && S.equip.plotter ? 'fish' : 'nav'; if (S.settings.heatSp && !HEAT.sp.includes(S.settings.heatSp)) delete S.settings.heatSp;
   if (S.boat.status === 'port' && portById(S.boat.port)){ const pp = portById(S.boat.port).p; S.boat.pos = {x:pp.x, y:pp.y}; }
   if (S.fleet && S.fleet.length){ ensureFleet(); for (const v of S.fleet) withVessel(v, () => { if (S.boat.status === 'port' && portById(S.boat.port)){ const pp = portById(S.boat.port).p; S.boat.pos = {x:pp.x, y:pp.y}; } }); } else ensureFleet(); }
