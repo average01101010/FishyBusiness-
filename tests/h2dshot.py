@@ -13,13 +13,19 @@ Havsteget H2d2 (06.11.2026), the animations:
   7 the landing from the hold: her own forward crane (anchors.crane) takes the pallets up from the hold through the hatch on the pallet
     fork and sets them on the quay abreast of it for the forklift; the landing gang in the hatch, by it (signalling, guiding) and in the
     crane driver's cage, the plant's gang on the quay as before (the plant's crane idle: it could not reach the hatch)
+Havsteget H2e (06.11.2026), the spot checks along the coast:
+  8 the landing with her own crane at the plants that take her nearest Båtsfjord, Tromsø, Ålesund and Bergen (the ones tests/havtur.py
+    lands at): the pallet set down on the plant's quay (P.onQuay), within the boom's reach, and the forklift taking it; pictures in both
+    formats. Before H2e only Vannareid had been looked at. Run the towns alone with: python3 tests/h2dshot.py 8 [town ...]
 Pictures in both formats (h2d_<what>_liggende.png, _staaende.png). 3D: run alone. Needs tools/map/out/game (release.py and game.py).
 Prints OK or FEIL."""
 from _env import GAME, boot
 import asyncio, sys
 from playwright.async_api import async_playwright
 
-SEL = set(sys.argv[1:]); want = lambda k: not SEL or k in SEL
+TOWNS = [('Båtsfjord', 70.633, 29.72), ('Tromsø', 69.649, 18.96), ('Ålesund', 62.472, 6.155), ('Bergen', 60.393, 5.312)]
+SEL = set(a for a in sys.argv[1:] if not any(a.lower() == t[0].lower() for t in TOWNS)); want = lambda k: not SEL or k in SEL
+TOWNSEL = [t for t in TOWNS if any(a.lower() == t[0].lower() for a in sys.argv[1:])] or TOWNS
 def check(ok, what, extra=''):
     print(('OK  ' if ok else 'FEIL') + ' ' + what + (('  ' + str(extra)) if extra else ''))
 
@@ -61,6 +67,21 @@ LAND = """async () => { const R = {}, b = S.boat; b.gop = null; S.sets = [];
   if (L){ S.t = Math.floor(L.t0 + landLiftT(L, 2) + 0.6 * liftMin(L)); window.__L = L; }
   return R; }"""
 
+# a landing on pallets at the plant nearest a town that takes her (as tests/havtur.py), the boat at her berth there
+LANDT = """async ([la, lo]) => { const R = {}, b = S.boat, T = P(la, lo); b.gop = null; S.sets = []; b.land = null; b.fueling = null; b.shift = null;
+  const pt = PORTS.filter(q => (q.mottak || q.havOnly) && !portWhy(q, 'autoliner')).sort((a, c) => dist(a.p, T) - dist(c.p, T))[0];
+  await mapNeed(pt.p, 6); R.port = pt.name; R.id = pt.id;
+  b.status = 'port'; b.port = pt.id; b.pos = {x:pt.p.x, y:pt.p.y}; b.v = 0; b.berth = 'main'; S.me = null; G3.vesselChanged();
+  S.t = Math.round((Date.UTC(2027, 2, 9, 11) - EPOCH) / 6e4); S.hold = [{sp:'torsk', kg:30000, n:9000, cls:0, fresh:100, gut:true, iced:true, frozen:true, bled:true, hr:0, hook:true}];
+  R.started = startLanding(false); const L = b.land; R.kind = L && L.kind; R.lifts = L && L.lifts; window.__L = L;
+  const bp = berthPose(pt.id, 'autoliner'); R.berth = bp ? {side:bp.side, face:!!bp.face} : null;
+  return R; }"""
+
+# the scene at a held moment of the third lift: her crane, the set-down spot on the quay (the plant's quay block?) and the forklift
+QSCENE = """(() => { const P = G3._debug.PLANTS.find(q => q.scene), S0 = P && P.scene; if (!S0) return null; const C = geoOf('autoliner').crane, D = S0.D;
+  return {ship:!!S0.ship, hang:!!S0.hang, quay:S0.quay.length, D:D && D.map(v => +v.toFixed(1)), onQuay:!!(D && P.onQuay(D)), tip:G3._debug.shipCr.tip, len:C.len,
+    fk:S0.fk ? {x:+S0.fk.x.toFixed(1), z:+S0.fk.z.toFixed(1), on:P.onQuay([S0.fk.x, S0.fk.z])} : null, u:+S0.u.toFixed(2)}; })()"""
+
 # the landing's clock back to a pallet on the fork in the air (the third lift), before each picture
 HOLD = """() => { const L = window.__L; if (L && S.boat.land === L) S.t = Math.floor(L.t0 + landLiftT(L, 2) + 0.6 * liftMin(L)); }"""
 
@@ -94,13 +115,14 @@ async def frames(pg, n=3):
     """wait for n frames drawn (SwiftShader can take a second or more for one)"""
     for _ in range(n): await pg.evaluate("new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))")
 
-async def shots(pg, name, pre=None):
+async def shots(pg, name, pre=None, tmo=None):
     for tag, w, h in (('liggende', 1280, 800), ('staaende', 800, 1280)):
         # (SwiftShader takes seconds to draw again after the canvas changes size: wait for the 3D view's own frames, not a fixed time)
         await pg.set_viewport_size({'width': w, 'height': h}); await pg.wait_for_timeout(3000)
         if pre: await pg.evaluate(pre)
         await frames(pg, 6)
-        await pg.screenshot(path=f'h2d_{name}_{tag}.png')
+        # (at a plant a frame can take minutes in SwiftShader: kaishot gives its pictures five)
+        await pg.screenshot(path=f'h2d_{name}_{tag}.png', **({'timeout': tmo} if tmo else {}))
     await pg.set_viewport_size({'width': 1280, 'height': 800})
 
 async def main():
@@ -220,6 +242,20 @@ async def main():
                 await pg.evaluate(CAM, [18, 1.0, 1.2, [5.0, 5.0, -4.0]]); await pg.evaluate(HOLDU, 0.8); await frames(pg, 3); await pg.screenshot(path='h2d_lossing_kaia.png')
             except Exception as e: print('  (bildet av lossingen gikk ut på tid i SwiftShader:', str(e).split(chr(10))[0][:120] + ')')
             await pg.evaluate(HOLDU, None)
+        if want('8'):
+            for town, la, lo in TOWNSEL:
+                L = await pg.evaluate(LANDT, [la, lo]); print('  lossingen ved', town + ':', L); await pg.wait_for_timeout(6000); await frames(pg, 3)
+                # (the pallet on the fork over the quay, about to be set down: u 0.7 of the third lift; then set down, 0.8)
+                await pg.evaluate(CAM, [22, 0.9, 1.2, [4.0, 5.0, -4.0]]); await pg.evaluate(HOLDU, 0.7); await frames(pg, 4); over = await pg.evaluate(QSCENE)
+                await pg.evaluate(HOLDU, 0.8); await frames(pg, 4); down = await pg.evaluate(QSCENE)
+                check(L.get('started') and L.get('kind') == 'pall' and down and down['ship'] and down['onQuay'] and over and over['hang'],
+                      'lossingen ved ' + L.get('port', town) + ' (' + town + '): båtens egen kran setter pallen på mottakets kai', {'over': over, 'nede': down, 'kai': L.get('berth')})
+                try:
+                    # (from high over the quay at her crane, looking down at the pallet going ashore: the fewer buildings, the quicker the frame)
+                    await pg.evaluate(CAM, [18, 1.25, -1.4, [5.0, 5.0, -4.0]])
+                    await shots(pg, 'kran_' + town.lower().replace('ø', 'o').replace('å', 'a'), "G3._debug.landFix(2, 0.75)", 300000)
+                except Exception as e: print('  (bildet ved', town, 'gikk ut på tid i SwiftShader:', str(e).split(chr(10))[0][:120] + ')')
+                await pg.evaluate(HOLDU, None)
         gerr = await pg.evaluate("G3._debug.glErr()")
         check(gerr == 0, 'ingen GL-feil', gerr)
         print('sidefeil:', list(dict.fromkeys(errs))[:5])

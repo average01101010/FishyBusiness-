@@ -8,6 +8,14 @@
 #    and what the boat really burnt on the way against the estimate
 #  - a storm (WX_FORCE): far out a boat lies to and goes on when it eases; near the coast a coastal boat runs for the nearest quay as
 #    before; an ocean vessel works on through 20 m/s and lies to over her own limit even near the coast (lieTo, core/05-vessels.js)
+# The whole trip with the autoliner (H2e of docs/planer/havsteget-h2-autoline.md, 06.11.2026), from Båtsfjord, Tromsø, Ålesund and Bergen:
+#  - bought with her permit at the yard nearest the town, through Båthandelen (blad B, the register, the price with the quota)
+#  - to the plant nearest the town that takes conventional catch from an ocean vessel (portWhy), bait by the tonne and bunkers there
+#  - out by Autonav to the NPC autoliners' nearest ground where the rules let her set (§ 26, § 32, the zones), the stores filled as she casts off
+#  - four lenker set and hauled by the teams, the catch gutted and frozen in the factory, the fuel, the coast guard if she comes
+#  - home by Autonav, landed on pallets, the landing note in round weight with the price for frozen fish, the share and the crews' change
+#  - pictures in both formats: the sale sheet, on the ground while hauling, the landing note
+# Run alone: python3 tests/havtur.py tur [town ...]; with no arguments the voyages, the storm and the trips all run.
 # LITE (no 3D). Needs the whole coast in tools/map/out/game and dist-vec (the harbours in Longyearbyen), as lybtest.
 import asyncio, json, os, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,6 +36,108 @@ TRIPS = [
     ('Måløy', 61.0, -1.0, 'Måløy–Shetland', ('gb',)),
 ]
 ONLY = [a for a in sys.argv[1:] if not a.startswith('-')]
+TUR = 'tur' in ONLY; ONLY = [a for a in ONLY if a != 'tur']
+# the trips: the town, its middle (stikkprove's places)
+TOWNS = [('Båtsfjord', 70.633, 29.72), ('Tromsø', 69.649, 18.96), ('Ålesund', 62.472, 6.155), ('Bergen', 60.393, 5.312)]
+OUTD = os.path.join(ROOT, 'tests', 'out')
+
+# the helpers the trip uses: running the shared clock while a condition holds (loading the chart as she goes), and sailing by Autonav
+HT = """() => { window.HT = {
+  run: async (cond, max) => { const b = S.boat; let k = 0; while (cond() && k < max){ if (!simAreaReady()){ await mapNeed(b.pos, 4); await new Promise(r => setTimeout(r, 30)); continue; } DYN.on = false; step(); k++; if (k % 150 === 0) await new Promise(r => setTimeout(r, 0)); } return k; },
+  sail: async (to, toPort, max) => { const b = S.boat, a = {...b.pos}, ap = b.status === 'port' ? b.port : null; let r = null;
+    try { r = await leiaRoute(a, to, ap, toPort || null); } catch (e){ r = {why:[String(e)]}; }
+    if (!r || !r.wps) return {why:r && r.why ? String(r.why[0]).slice(0, 140) : 'ingen'};
+    S.plan = {wps:r.wps.map((q, i) => i === r.wps.length - 1 && toPort ? {x:to.x, y:to.y, port:toPort, fish:0} : {x:q.x, y:q.y, port:null, fish:0, leia:true}), idx:0, speed:BOAT.vcruise, returning:false};
+    const T0 = S.t, f0 = b.fuel; depart(); let n = 0;
+    for (let i = 0; i < 6; i++){ n += await HT.run(() => !!S.plan || ['sailing', 'unmooring'].includes(b.status), max || 4000);
+      if (!S.plan && (S.shelter || sailWaiting())){ for (let w = 0; w < 200 && (S.shelter || sailWaiting()) && !S.plan; w++) await new Promise(r => setTimeout(r, 150)); } if (!S.plan) break; }
+    return {nm:+r.nm.toFixed(0), h:+((S.t - T0) / 60).toFixed(1), fuel:Math.round(f0 - b.fuel), status:b.status, port:b.port ? (portById(b.port) || {}).name : null, atEnd:+(kmTrue(b.pos, to) / NM).toFixed(1), n}; },
+  shot: (app) => { PHONE.show(true); PHONE.open(app); PHONE.render(); }
+}; return true; }"""
+
+# at the yard nearest the town, in a coastal vessel with no right, the cash for the autoliner on blad B; Båthandelen › Havfiske › the autoliner
+PREP = """async ([la, lo]) => {
+  const R = {}, b = S.boat, T = P(la, lo), H0 = (Date.UTC(2027, 5, 8, 6) - EPOCH) / 36e5;
+  S.t = Math.round(H0 * 60); S.tut = 0; S.landN = Math.max(S.landN || 0, 8); S.fm = Object.assign(S.fm || {}, {b:true}); S.cash = Math.max(S.cash, 4e8);
+  const yard = PORTS.filter(q => /verft/.test(q.sted || '')).sort((a, c) => dist(a.p, T) - dist(c.p, T))[0];
+  const plant = PORTS.filter(q => (q.mottak || q.havOnly) && !portWhy(q, 'autoliner')).sort((a, c) => dist(a.p, T) - dist(c.p, T))[0];
+  R.yard = yard.name; R.yardNm = +(kmTrue(yard.p, T) / NM).toFixed(1); R.plant = plant.name; R.plantId = plant.id; R.plantNm = +(kmTrue(plant.p, T) / NM).toFixed(1); R.plantGear = plant.mk && plant.mk.gear;
+  await mapNeed(yard.p, 6);
+  if (S.lic){ try { regFree(S.lic.id); } catch (e){} } S.lic = null;
+  b.type = 'kyst15'; applyVessel(); freshQuota(); b.status = 'port'; b.port = yard.id; b.pos = {...yard.p}; b.berth = 'main'; b.land = null; b.gop = null; b.fueling = null; b.shift = null; b.hove = null; b.anch = null;
+  S.plan = null; S.sets = []; S.hold = []; S.kvHaul = []; S.me = S.cur; S.crew = []; S.lag = null; S.ops = null;
+  R.reg = (npcReg().konv || 0); R.price = havPrice('autoliner', S.t / 60); R.why = havLicWhy('autoliner');
+  PHONE.show(true); PHONE.open('fartoy'); PHONE.render(); await new Promise(r => setTimeout(r, 100));
+  const tab = document.querySelector('[data-pa="mktab"][data-s="hav"]'); if (tab) tab.click(); await new Promise(r => setTimeout(r, 100));
+  const card = document.querySelector('[data-pa="mksel"][data-k="autoliner"]'); if (card) card.click(); await new Promise(r => setTimeout(r, 150));
+  const v = document.querySelector('.vsheet') || document.getElementById('drawerBody'); R.sheet = v ? v.closest('#drawerBody, #phView').innerText : '';
+  const btn = document.querySelector('[data-pa="buy"][data-ti="1"][data-k="autoliner"]'); R.btn = btn ? !btn.disabled : null;
+  if (btn) btn.scrollIntoView({block:'center'});
+  return R; }"""
+
+BUY = """async () => {
+  const R = {}, b = S.boat, c0 = S.cash, r0 = npcReg().konv || 0, m0 = S.msgs.length;
+  document.querySelector('[data-pa="buy"][data-ti="1"][data-k="autoliner"]').click(); await new Promise(r => setTimeout(r, 200));
+  R.type = b.type; R.lic = S.lic ? {id:S.lic.id, hav:S.lic.hav, kf:S.lic.kf, from:S.lic.from} : null; R.paid = Math.round(c0 - S.cash); R.loan = Math.round((S.loan || 0));
+  R.reg = [r0, npcReg().konv || 0]; R.msg = S.msgs.slice(m0).map(m => m.from + ': ' + m.no).join(' | ').slice(0, 300);
+  R.q = (q => ({torsk:Math.round(q.torsk / 1000), hyse:Math.round(q.hyse[0] / 1000)}))(licQ(S.lic, S.t / 60));
+  // the moment of the purchase (ui/10q-buymoment.js): her name painted on and the flag up; skipped, as a player would once seen
+  await new Promise(r => setTimeout(r, 400)); const sk = document.querySelector('.bm-skip'); R.moment = !!sk; if (sk) sk.click();
+  PHONE.show(false); return R; }"""
+
+# to the plant: bunkers and bait by the tonne there, then out by Autonav to the ground
+OUT = """async ([la, lo, plantId]) => {
+  const R = {}, b = S.boat, pg = S.pgear, T = P(la, lo), plant = portById(plantId);
+  await mapNeed(plant.p, 6);
+  if (b.port !== plant.id){ R.toPlant = await HT.sail({...plant.p}, plant.id, 2000); }
+  R.atPlant = b.status === 'port' && b.port === plant.id;
+  // bunkers at the plant's pump, and the bait: half squid, half saury, for a short trip of four lenker twice over and some to spare
+  const f0 = b.fuel, tb = S.t; R.fuelStart = startFueling(false); await HT.run(() => !!(b.fueling || b.shift), 1500); R.bunkered = Math.round(b.fuel - f0); R.fuelCap = BOAT.fuelCap; R.fuelFull = BOAT.fuelCap - b.fuel < 1; R.bunkerH = +((S.t - tb) / 60).toFixed(1);
+  R.bait = [buyGear('bait', 'blekksprut', 1000), buyGear('bait', 'saury', 1000)].map(w => w ? w[0] : null); R.baitKg = Object.assign({}, baitOf(pg)); R.lenker = autoL(pg).n; R.hooks = pg.hooks;
+  // the ground: the NPC autoliners' grounds nearest the plant where a line with a baiting machine may be set this month, in Norwegian waters
+  const H = S.t / 60, GR = havData().g.line.filter(e => e[1] != null).map(e => ({x:e[1], y:e[2]})).sort((a, c) => dist(a, plant.p) - dist(c, plant.p));
+  let gnd = null, tried = 0; R.skip = [];
+  for (const p of GR.slice(0, 30)){ tried++; await mapNeed(p, 4); if (isLand(p) || depthF(p) < 60) continue;
+    const r = rulesAt({p, H, len:BOAT.len, gear:'line', sp:'torsk', egn:true}), bl = r.items.find(i => i.block && i.v === 'no'); if (bl){ R.skip.push([+(kmTrue(plant.p, p) / NM).toFixed(0), bl.k, ruSea(p)]); continue; }
+    const far = {x:p.x + 13, y:p.y}; await mapNeed(far, 4); if (rulesAt({p:far, H, len:BOAT.len, gear:'line', sp:'torsk', egn:true}).items.some(i => i.block && i.v === 'no')) continue;
+    gnd = p; break; }
+  R.tried = tried; if (!gnd) return R;
+  R.ground = LL(gnd); R.groundNm = +(kmTrue(plant.p, gnd) / NM).toFixed(0); R.blNm = +blNm(gnd).toFixed(1); R.depth = Math.round(depthF(gnd)); R.zone = ruSeaName(ruSea(gnd)); window.__g = gnd;
+  const p0 = b.prov; R.out = await HT.sail(gnd, null, 6000); R.prov = [p0, +(b.prov || 0).toFixed(0)]; R.status = b.status;
+  return R; }"""
+
+# on the ground: two lenker at a time eastwards, two strings 1.2 km apart, each hauled when it has stood six hours; until stopAt hauls
+# are under way (a picture), then on until all four are hauled; the factory freezes meanwhile
+FISH = """async (stopAt) => {
+  const R = window.__F || (window.__F = {set:0, hauls:0, why:[], f0:S.boat.fuel, T0:S.t, kg0:holdTotal()}), b = S.boat, pg = S.pgear, p0 = window.__g; let k = 0;
+  while (k < 4000 && (R.set < 4 || mySets().length || b.gop)){
+    if (!b.gop && b.status !== 'port'){
+      const sets = mySets(), old = sets.filter(s => !s.hauling && S.t - s.tSet >= 6 * 60).sort((a, c) => a.tSet - c.tSet)[0];
+      if (old){ b.pos = {...old.a}; b.status = 'idle'; const w = startHaul(old.id, false, 0); if (w) R.why.push(w[0]); else R.hauls++; }
+      else if (R.set < 4 && autoL(pg).n >= 2){ b.pos = {x:p0.x, y:p0.y + 1.2 * (R.set / 2)}; b.status = 'idle'; b.heading = Math.PI / 2;
+        const ch = setChoices().find(c => c.spec && c.spec.lk === 'auto' && c.n === 2), w = ch ? startSet('line', ch.spec, 0, Math.PI / 2) : ['no choice']; if (w) { R.why.push(w[0]); R.set = 4; } else R.set += 2; }
+    }
+    if (stopAt && R.hauls >= stopAt && b.gop && b.gop.op === 'haul' && b.gop.done >= 1) break;
+    if (!simAreaReady()){ await mapNeed(b.pos, 4); await new Promise(r => setTimeout(r, 30)); continue; }
+    DYN.on = false; step(); k++; if (k % 150 === 0) await new Promise(r => setTimeout(r, 0)); }
+  const fr = S.hold.filter(x => x.frozen).reduce((a, x) => a + x.kg, 0), sp = {}; for (const x of S.hold) sp[x.sp] = (sp[x.sp] || 0) + Math.round(x.kg);
+  return {set:R.set, hauls:R.hauls, why:R.why, h:+((S.t - R.T0) / 60).toFixed(1), fuel:Math.round(R.f0 - b.fuel), round:Math.round(holdTotal()), prod:Math.round(holdLoad()), frozen:Math.round(fr), sp,
+    sets:mySets().length, gop:b.gop ? b.gop.op : null, sleep:S.log.filter(l => /sovnet av utmattelse/.test(l.no || '')).map(l => l.no).slice(-2), slNote:(document.getElementById('slNote') || {}).textContent || null, haul:(S.kvHaul || [])[0] ? {ms:S.kvHaul[0].ms, kg:Object.fromEntries(Object.entries(S.kvHaul[0].kg).map(([a, v]) => [a, Math.round(v)]))} : null, kv:S.kv ? {n:S.kv.n, k:(S.kv.log[0] || {}).k} : null}; }"""
+
+# home by Autonav to the plant, the freezing done, landed on pallets; the landing note
+HOME = """async (plantId) => {
+  const R = {}, b = S.boat, plant = portById(plantId), m0 = S.msgs.length; window.__F = null;
+  await HT.run(() => S.hold.some(x => !x.frozen), 24 * 60); R.unfrozen = Math.round(S.hold.filter(x => !x.frozen).reduce((a, x) => a + x.kg, 0));
+  R.round = Math.round(holdTotal()); R.prod = Math.round(holdLoad());
+  R.home = await HT.sail({...plant.p}, plant.id, 6000); R.atPlant = b.status === 'port' && b.port === plant.id;
+  R.portWhy = portWhy(plant, b.type); const n0 = S.stats.trips;
+  let k = 0, started = false; while (k++ < 3000 && !started){ started = startLanding(false); if (!started) await HT.run(() => true, 5); }
+  const L = b.land; R.started = started; R.land = L ? {kind:L.kind, n:L.n, pk:L.pk, h:+((L.until - L.t0) / 60).toFixed(1)} : null; R.wait = k;
+  await HT.run(() => !!b.land, 3000); R.done = !b.land;
+  const ls = S.lastSale || {}, LN = ls.lines || []; R.total = Math.round(ls.total || 0); R.kg = Math.round(LN.reduce((a, l) => a + l.kg, 0)); R.lott = Math.round(ls.lott || 0); R.dl = ls.ls ? [ls.ls.n, +ls.ls.M.toFixed(3)] : null;
+  R.fz = LN.every(l => l.fz); R.lines = LN.slice(0, 8).map(l => [l.sp, Math.round(l.kg), Math.round(l.sum), +(l.sum / Math.max(1, l.kg)).toFixed(1)]); R.left = S.hold.length; R.conf = Math.round(ls.confKg || 0);
+  R.msg = S.msgs.slice(m0).map(m => m.from + ': ' + m.no).join(' | ').slice(0, 400); R.log = S.log.slice(-4).map(l => l.no).join(' | ').slice(0, 400);
+  return R; }"""
 
 PLAN = """async ([an, la, lo]) => {
   const R = {}, A = PORTS.find(p => p.name === an && p.mottak) || PORTS.find(p => p.name.startsWith(an)), B = P(la, lo), H7 = (Date.UTC(2027, 6, 5, 6) - EPOCH) / 36e5;
@@ -112,7 +222,7 @@ async def main():
         b = await p.chromium.launch(args=['--disable-gpu-compositing'])
         pg = await b.new_page(viewport={'width': 1280, 'height': 800}); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg); pg.set_default_timeout(1800000)
-        for an, la, lo, name, zones in TRIPS:
+        for an, la, lo, name, zones in ([] if TUR else TRIPS):
             if ONLY and not any(o.lower() in name.lower() for o in ONLY): continue
             r = await pg.evaluate(PLAN, [an, la, lo]); wps = r.pop('wps', None)
             print('plan', name, json.dumps(r, ensure_ascii=False))
@@ -131,7 +241,7 @@ async def main():
                 print(ok(arrived or s.get('shelter')), name + ' med ' + t + ': fram, eller til nærmeste kai i kuling', [s['h'], s['atEnd'], s.get('shelter'), s.get('port')])
                 print(ok(not s['empty'] or r['fuel'][t]['pct'] > 100), name + ' med ' + t + ': tanken holder der overslaget sier den gjør det', [s['used'], s['est'], s['cap'], s['empty']])
                 if arrived and not s.get('shelter'): print(ok(s['used'] <= s['est'] * 1.25), name + ' med ' + t + ': brukt mot overslaget i rutepanelet (høyst 25 % over)', [s['used'], s['est']])
-        if not ONLY or 'storm' in ONLY:
+        if not TUR and (not ONLY or 'storm' in ONLY):
             r = await pg.evaluate(STORM, ['kyst15', 66.0, -12.0, 20]); print('uvær kyst15 langt ute', json.dumps(r, ensure_ascii=False))
             print(ok(r['hove'] and r['moved'] < 50 and r['burnt'] > 0 and 'bi' in r['text']), 'kyst15 langt ute i 20 m/s: ligger bi (holder stedet, bruker diesel), løper ikke hundrevis av nm til kai', [r['moved'], r['burnt'], r['text']])
             print(ok(r.get('after') and r['after']['status'] == 'sailing' and r['after']['plan'] and not r['after']['hove']), 'kyst15: fortsetter ruta når det har løyet en time', r.get('after'))
@@ -141,6 +251,47 @@ async def main():
             print(ok(not r['hove'] and not r['returning'] and r['status'] == 'sailing' and r['moved'] > 1000), 'havfartøyet går videre i 20 m/s (grensen er dens egen)', [r['lim'], r['status'], r['moved']])
             r = await pg.evaluate(STORM, ['snokrabbe', 62.55, 5.6, 28]); print('uvær havfartøy 28 m/s', json.dumps(r, ensure_ascii=False))
             print(ok(r['hove'] and not r['returning']), 'havfartøyet ligger bi i 28 m/s også nær kysten, og går ikke i havn', [r['lim'], r['text']])
+        if TUR or not ONLY:
+            await pg.evaluate(HT)
+            for town, la, lo in TOWNS:
+                if ONLY and not any(o.lower() in town.lower() for o in ONLY): continue
+                await tur(pg, town, la, lo)
         print('sidefeil:', errs[:5])
         await b.close()
+
+async def pics(pg, town, what, js):
+    # both formats: 1280×800 and 800×1280, the phone open on what the step shows
+    for tag, w, h in (('liggende', 1280, 800), ('staaende', 800, 1280)):
+        await pg.set_viewport_size({'width': w, 'height': h}); await pg.wait_for_timeout(300)
+        if js: await pg.evaluate(js)
+        await pg.wait_for_timeout(300); await pg.screenshot(path=os.path.join(OUTD, 'havtur-%s-%s-%s.png' % (town.lower().replace('ø', 'o').replace('å', 'a').replace('æ', 'ae'), what, tag)))
+    await pg.set_viewport_size({'width': 1280, 'height': 800})
+
+async def tur(pg, town, la, lo):
+    r = await pg.evaluate(PREP, [la, lo]); sheet = r.pop('sheet', '')
+    print('tur', town, 'forberedt', json.dumps(r, ensure_ascii=False)); print('tur', town, 'databladet', json.dumps(sheet[-900:], ensure_ascii=False))
+    import re as _re
+    pay = [int(_re.sub(r'\D', '', x)) for x in _re.findall(r'(?:bytte|innbytte): ([\d\s\u00a0\u202f]+?)\s*kr', sheet)]
+    print(ok(r['btn'] and r['why'] is None and r['reg'] > 0 and 'tillatelse' in sheet.lower() and 'Kvotefaktor' in sheet and 'Uten hjemmel' not in sheet), town + ': Båthandelen › Havfiske viser autolineren med tillatelsen og kjøpsknappen på ' + r['yard'], [r['yard'], r['yardNm'], r['price'], r['reg']])
+    print(ok(len(pay) == 2 and pay[1] == r['price'] and pay[0] < pay[1]), town + ': prisen ved knappene er skroget med tillatelsen (%s kr), som kjøpet betaler' % r['price'], pay)
+    await pics(pg, town, 'kjop', "(() => { const btn = document.querySelector('[data-pa=\"buy\"][data-ti=\"1\"][data-k=\"autoliner\"]'); if (btn) btn.scrollIntoView({block:'center'}); })()")
+    k = await pg.evaluate(BUY); print('tur', town, 'kjøpt', json.dumps(k, ensure_ascii=False))
+    print(ok(k['type'] == 'autoliner' and k['lic'] and k['lic']['hav'] and k['lic']['id'] == 'konv' and k['reg'][1] == k['reg'][0] - 1 and 'Fiskeridirektoratet' in k['msg'] and k['paid'] == pay[0] if pay else False), town + ': autolineren kjøpt med konvensjonell havfisketillatelse fra registeret, for mellomlegget ved knappen', [k['lic'], k['q'], k['reg'], k['paid']])
+    o = await pg.evaluate(OUT, [la, lo, r['plantId']]); print('tur', town, 'ut', json.dumps(o, ensure_ascii=False))
+    print(ok(o['atPlant'] and o['bunkered'] > 0 and o['fuelFull'] and o['bunkerH'] < 8 and not any(o['bait']) and o['lenker'] == 8), town + ': til ' + r['plant'] + ' (tar konvensjonelt), bunkret %s l på %s timer og kjøpte agn i tonn' % (o['bunkered'], o['bunkerH']), [o.get('toPlant'), o['baitKg']])
+    if not o.get('ground'):
+        print('FEIL', town + ': fant ikke et felt der lina kan settes', o.get('tried')); return
+    out = o['out']
+    print(ok(not out.get('why') and out['atEnd'] < 1 and o['status'] in ('idle', 'fishing') and o['prov'][1] > 0), town + ': ut med Autonav til feltet %s nm unna (%s nm fra grunnlinja, %s m, %s), proviant ved avgang' % (o['groundNm'], o['blNm'], o['depth'], o['zone']), [out, o['prov'], 'hoppet over (nm, regel, sone):', o.get('skip')])
+    f = await pg.evaluate(FISH, 2); print('tur', town, 'feltet', json.dumps(f, ensure_ascii=False))
+    print(ok(all('driver' not in x for x in f['sleep']) and (not f['slNote'] or 'driver' not in f['slNote'])), town + ': sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver»)', [f['sleep'], f['slNote']])
+    await pics(pg, town, 'feltet', "(() => { if (S.sleep) wakeUp(); PHONE.show(false); refreshAll(); })()")
+    f = await pg.evaluate(FISH, 0); print('tur', town, 'fisket', json.dumps(f, ensure_ascii=False))
+    print(ok(f['set'] == 4 and f['hauls'] == 2 and f['sets'] == 0 and not f['why'] and f['round'] > 1000), town + ': fire lenker satt og trukket (%s kg rund vekt, %s timer)' % (f['round'], f['h']), [f['sp'], f['why']])
+    print(ok(f['frozen'] > 0.5 * f['round'] and f['prod'] < f['round']), town + ': fabrikken sløyde og frøs %s av %s kg; lasten er %s kg produkt' % (f['frozen'], f['round'], f['prod']))
+    h = await pg.evaluate(HOME, r['plantId']); print('tur', town, 'hjem', json.dumps(h, ensure_ascii=False))
+    print(ok(h['atPlant'] and h['portWhy'] is None and not h['home'].get('why')), town + ': hjem med Autonav til ' + r['plant'], h['home'])
+    print(ok(h['started'] and h['land'] and h['land']['kind'] == 'pall' and h['done'] and h['left'] == 0), town + ': losset på %s paller (%s t produkt) på %s timer' % (h['land'] and h['land']['n'], h['land'] and round((h['land']['pk'] or 0) / 1000, 1), h['land'] and h['land']['h']))
+    print(ok(h['total'] > 0 and abs(h['kg'] - h['round']) < 0.02 * h['round'] + 5 and h['fz'] and h['dl'] and h['dl'][0] == 15), town + ': sluttseddelen på %s kg rund vekt, fryst, %s kr (inndratt %s kg), lott etter § 6 (%s mann, %s)' % (h['kg'], h['total'], h['conf'], h['dl'] and h['dl'][0], h['dl'] and h['dl'][1]), h['lines'])
+    await pics(pg, town, 'levert', "(() => { if (S.sleep) wakeUp(); HT.shot('salg'); const t = [...document.querySelectorAll('#phView button')].find(x => /Mine landinger/.test(x.textContent)); if (t) t.click(); })()")
 asyncio.run(main())

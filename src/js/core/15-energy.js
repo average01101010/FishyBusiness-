@@ -124,10 +124,13 @@ function energyMinute(){
 function fallAsleep(v, doze){
   S.sleep = {t0:S.t, until:S.t + ENERGY.sleep, v:v.id}; achAdd('sleep');
   onVessel(v, () => {
-    const on = crewAboard(), b = S.boat; S.sleep.alone = !on.length;
+    // (an ocean vessel's teams (lagOf, 04-crew.js) work on and keep the watch on the bridge, as sleepAlone has it; the screen and the log
+    // said she drifted, H2e 06.11.2026)
+    const on = crewAboard(), b = S.boat, lag = !on.length && typeof lagOf === 'function' && lagOf(); S.sleep.alone = !on.length && !lag;
     if (S.equip && S.equip.brovakt && b.status !== 'port') S.sleep.alarmAt = S.t + BNWAS.after;
     if (doze) log('Du duppet av.', 'You dozed off.');
     if (S.sleep.alone){ b.v = 0; log('Du sovnet av utmattelse. Båten ligger og driver.', 'You fell asleep from exhaustion. The boat is drifting.'); }
+    else if (lag) log('Du sovnet av utmattelse. Vakta på broa tar over, og lagene arbeider videre.', 'You fell asleep from exhaustion. The watch on the bridge takes over, and the teams work on.');
     else { const sk = on.slice().sort((a, c) => c.attr.sjo - a.attr.sjo)[0]; log('Du sovnet av utmattelse. ' + sk.name.split(' ')[0] + ' tar roret.', 'You fell asleep from exhaustion. ' + sk.name.split(' ')[0] + ' takes the helm.'); }
   });
   if (hooks.onEnergy) hooks.onEnergy('sleep');

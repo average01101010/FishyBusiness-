@@ -107,3 +107,14 @@
 2026-11-06 08:08	ccr-aee4fa08-paslvj	7c2c4b01	tutdrift	OK	7	lite	samtidig	
 2026-11-06 08:08	ccr-aee4fa08-paslvj	d94fb645	hudtest	OK	26	lite	samtidig	
 2026-11-06 08:09	ccr-aee4fa08-paslvj	d94fb645	uishots	OK	88	lite	samtidig	
+2026-11-06 07:57	ccr-4a897f45-dtssey	f53e5d20+	kystvakttest	OK	13	lite	alene	
+2026-11-06 07:58	ccr-4a897f45-dtssey	f53e5d20+	autolinetest	OK	12	lite	samtidig	
+2026-11-06 07:59	ccr-4a897f45-dtssey	f53e5d20+	geartest	OK	46	lite	samtidig	
+2026-11-06 07:59	ccr-4a897f45-dtssey	f53e5d20+	trip2	OK	40	lite	samtidig	
+2026-11-06 09:13	ccr-4a897f45-dtssey	705054fb+	sleeptest	OK	23	lite	samtidig	
+2026-11-06 09:14	ccr-4a897f45-dtssey	705054fb+	selltest	LES	31	lite	samtidig	
+2026-11-06 09:14	ccr-4a897f45-dtssey	705054fb+	sleeptest	OK	11	lite	alene	
+2026-11-06 09:33	ccr-5e1ba2f4-pusvyd	ad4b2e86+	boottest	OK	44	lite	samtidig	
+2026-11-06 09:34	ccr-5e1ba2f4-pusvyd	ad4b2e86+	trip2	OK	51	lite	samtidig	
+2026-11-06 09:34	ccr-5e1ba2f4-pusvyd	ad4b2e86+	kystvakttest	OK	11	lite	samtidig	
+2026-11-06 09:34	ccr-5e1ba2f4-pusvyd	ad4b2e86+	dbg23o	OK	37	3d	alene	

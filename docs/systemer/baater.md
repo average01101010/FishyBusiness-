@@ -195,6 +195,7 @@ Mister du juksa, fisker bare juksamaskinene til du kjøper ny i utstyrsbutikken.
 - Databladet har Generelt (pris, mål, vekt, lasterom, is, drivstoff, motor, fart, mannskap, køyer, hva båten tåler, gruppe og fjordlinja), Redskap, Hjemmel og Mannskap om bord, og knappene «Kjøp og bytt inn», «Kjøp til flåten» og «Se båten i 3D».
 - «Se båten i 3D» (`G3.showroom(type)`) viser båten flytende utenfor havna med et kamera som går sakte rundt. Brikka `#showChip` har navn, mål og «Tilbake».
 - Før rederiet har en båt i lukket gruppe, kjøpes en båt i åpen gruppe bare ved å bytte inn den du har. Et rederi kan ha én båt i åpen gruppe.
+- **Havbåtene** (rettet i H2e 06.11.2026): prisen ved kjøpsknappene er skroget med tillatelsen (`havPrice`), slik kjøpet betaler den; før viste mellomlegget og «Til flåten» bare skroget (57,4 og 70 MNOK mot 202,8 og 215,4 MNOK betalt), og notatet «Uten hjemmel kan hun bare ta … som bifangst» sto under. Nå står det at tillatelsen følger med og at hun fisker på fartøykvoten. Fanen Havfiske sier at autolineren kan kjøpes og at de merket «kommer» ikke kan det ennå. Funnet av `havtur`.
 
 ## 5.12 Verksted
 

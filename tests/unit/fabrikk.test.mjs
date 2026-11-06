@@ -113,4 +113,13 @@ export default function (t){
   // the share by § 6 for 15 aboard a 45.4 m autoliner: 47.5 % (the survey: 27.8 of about 59 MNOK)
   t.near(K.oppgPct(OPPG.hav, 15, 45.4), 47.5, 1e-9, '§ 6: 15 mann på 44–49 m får 47,5 % av delingsfangsten');
   t.near(K.oppgPct(OPPG.hav, 30, 45.4), 51.5, 1e-9, '§ 6: tabellen for 22 mann og flere');
+  // bunkers (H2e, 06.11.2026): an ocean vessel fills at 800 l/min from the quay's tank system or a bunker boat, so her whole tank takes
+  // hours, not the two days the coastal boats' 90 l/min gave
+  const PUMP = K.PUMP, cap = K.VESSELS.autoliner.fuelCap;
+  t.ok(PUMP.hav >= 400 && PUMP.hav <= 1500 && PUMP.diesel === 90, `bunkring: havbåten ${PUMP.hav} l/min (mellom bunkerbåtens 400 og Thyborøns 1 500), kystbåtene 90`);
+  // an ocean fleet's plant (havOnly) is a plant for an ocean vessel, and only for her: she lands there (H2e: Avaldsnes from Bergen)
+  const {plantFor} = K;
+  t.ok(plantFor({havOnly:true}, 'autoliner') && !plantFor({havOnly:true}, 'sjark') && plantFor({mottak:true}, 'sjark') && plantFor({mottak:true}, 'autoliner') && !plantFor({}, 'autoliner') && !plantFor(null, 'autoliner'),
+    'et havmottak er et mottak for havbåten og bare for henne; et vanlig mottak for alle');
+  t.ok(cap / PUMP.hav / 60 < 8 && cap / PUMP.diesel / 60 > 48, `en full tank på autolineren (${cap} l) tar ${(cap / PUMP.hav / 60).toFixed(1)} t (før ${(cap / PUMP.diesel / 60).toFixed(0)} t)`);
 }

@@ -137,3 +137,7 @@ function portWhy(pt, type){
   return null;
 }
 const portFits = (pt, type) => !portWhy(pt, type);
+// a plant for this vessel: every plant, and an ocean fleet's plant (havOnly) for an ocean vessel. The landing and the landing page asked
+// for pt.mottak alone, so an ocean vessel could not land at an ocean plant such as Avaldsnes (found by tests/havtur.py from Bergen, H2e
+// 06.11.2026); the sale, the services (06c-steder.js portServices) and Driftsplan 2 (p2PlantOk) already took it
+const plantFor = (pt, type) => !!pt && (!!pt.mottak || (!!pt.havOnly && (VESSELS[type] || {}).cls === 'hav'));

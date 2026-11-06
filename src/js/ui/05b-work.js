@@ -132,7 +132,7 @@ function energyUi(){
     $('slAck').hidden = !ring; sl.classList.toggle('alarm', ring);
     const canW = S.t - S.sleep.t0 >= WAKE_MIN; $('slSkip').disabled = !canW; $('slSkip').hidden = al;
     $('slSkip').textContent = canW ? L('Våkn opp (energi ' + Math.round(sleepGain()) + ' %)', 'Wake up (energy ' + Math.round(sleepGain()) + ' %)') : L('Du kan vekke deg kl. ', 'You can wake at ') + whenTxt(S.sleep.t0 + WAKE_MIN);
-    $('slNote').textContent = S.sleep.alone ? L('Båten ligger og driver med vinden.', 'The boat is drifting with the wind.') : L('Mannskapet har roret og fortsetter turen.', 'The crew has the helm and carries on with the trip.');
+    $('slNote').textContent = S.sleep.alone ? L('Båten ligger og driver med vinden.', 'The boat is drifting with the wind.') : !crewAboard().length && typeof lagOf === 'function' && lagOf() ? L('Vakta på broa har roret, og lagene arbeider videre.', 'The watch on the bridge has the helm, and the teams work on.') : L('Mannskapet har roret og fortsetter turen.', 'The crew has the helm and carries on with the trip.');
   } else if (!sl.hidden){ sl.classList.remove('on', 'alarm'); sl.hidden = true; }
 }
 // «ACK»: the alarm is acknowledged and you are awake (15-energy.js alarmAck)
