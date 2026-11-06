@@ -1,8 +1,9 @@
 """Contact sheets of the wardrobe (check images, tools/harbour/out/gd_*.png): heads with every hairstyle and beard, the hats, the jackets
-on both bodies, the shoes. Run after changing garderobe.py:  python3 tools/harbour/garderobe_bilder.py"""
+on both bodies, the shoes, the inflatable vests (gd_vest*.png). Run after changing garderobe.py:  python3.11 tools/harbour/garderobe_bilder.py
+It builds the parts with arbeider.py dry: src/data/worker.b64 is left as it is (it used to be written again, with new noise in the shade)."""
 import os, sys, math
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(HERE)), 'tools', 'boats'))
-sys.argv.append('fast')
+sys.argv += ['fast', 'dry']
 import bpy, mathutils
 import arbeider as A
 from bpyutil import *
@@ -156,4 +157,39 @@ closeup('hat_bucket', 'mid', 'gd_close_bucket.png'); closeup('beanie', 'short', 
 combo('beanie', ['short', 'mid', 'long', 'pony', 'bun', 'curl'], 'gd_clip_beanie.png')
 combo('hat_bucket', ['short', 'mid', 'long', 'pony', 'bun', 'curl'], 'gd_clip_bucket.png')
 combo('hardhat', ['short', 'mid', 'long', 'pony', 'bun', 'curl'], 'gd_clip_hardhat.png')
+
+# ---- the vests (Ø11.4, 06.11.2026): triangle pairs that cross between each vest and what is worn with it (0 is right) ----
+import garderobe as GD
+def overl(a, objs): return sum(len(a.overlap(bvh(o))) for o in objs)
+okh = [n for n in W if n.startswith('hair_') and n.replace('hair_', '').replace('_h', '') not in GD.VEST_HAIR]
+hang = [n for n in W if n.startswith('hair_') and n.replace('hair_', '').replace('_h', '') in GD.VEST_HAIR]
+bds = [n for n in W if n.startswith('b_')]; hts = ['hardhat', 'beanie', 'skippercap'] + [n for n in W if n.startswith('hat_')]
+posed = A.pose(P, 0, 0, 0.0, 'crew')       # a standing figure: its upper arms and thighs where drawWorker stands them
+limbs = [o for o in posed if o.data.name.startswith(('UARM', 'THIGH'))]
+print('VEST (crossing triangle pairs with: its jackets, the head, the hair styles worn under it, the beards, the hats; 0 is right):')
+tot = 0
+for vn, js, rc in GD.VEST_GROUPS:
+    vb = bvh(W[vn]); r = {'jackets': overl(vb, [P[j] if j in P else W[j] for j in js]), 'head': overl(vb, [P['head']]),
+                          'hair': overl(vb, [W[n] for n in okh]), 'beards': overl(vb, [W[n] for n in bds]), 'hats': overl(vb, [W[h] if h in W else P[h] for h in hts])}
+    tot += sum(r.values())
+    print('  %-8s %s   (long hair left down, put up under the vest: %d; standing arms and thighs: %d)' % (vn, r, overl(vb, [W[n] for n in hang]), overl(vb, limbs)))
+print('VEST total', tot, '-> 0' if tot == 0 else '-> NOT 0')
+for o in posed: bpy.data.objects.remove(o)
+def vestsheet(turn, fname, cam, look, lens):
+    rows = [(False, ['torso', 'sweater', 'fleece', 'oilskin', 'parka'], 'hair_short'), (True, ['jacketF', 'sweaterF', 'fleeceF', 'oilskinF', 'parkaF'], 'hair_bun')]
+    for r, (f, js, hair) in enumerate(rows):
+        for i, j in enumerate(js):
+            x = (i - 2) * 0.62; z = -r * 1.05
+            put(P[j] if j in P else W[j], x, 0, z, turn); put(P['head'], x, 0, z, turn); put(W[hair], x, 0, z, turn); put(W[GD.VEST_FOR[j]], x, 0, z, turn)
+    camera(cam, look, lens=lens); render(os.path.join(OUT, fname))
+    for o in [x for x in bpy.data.objects if x.hide_render is False and x.type == 'MESH' and x.name != 'ground']: bpy.data.objects.remove(o)
+vestsheet(0.0, 'gd_vest.png', (0.0, 6.6, 0.75), (0.0, 0, 0.62), 45)
+vestsheet(math.pi, 'gd_vest_back.png', (0.0, 6.6, 0.75), (0.0, 0, 0.62), 45)
+vestsheet(0.6, 'gd_vest_3q.png', (0.0, 6.6, 1.6), (0.0, 0, 0.62), 45)
+# one close, on a whole figure (the crew's kit: oilskins and the knitted cap), from the front and the side
+fig = A.pose(P, 0, 0, 0.0, 'crew'); fig += [put(W['oilskin'], 0, 0, 0), put(W['vest_o'], 0, 0, 0), put(W['hair_short_h'], 0, 0, 0)]
+for o in fig:
+    if o.data.name.startswith('TORSO'): o.hide_render = True
+camera((0.55, 1.75, 1.45), (0.0, 0, 1.18), lens=55); render(os.path.join(OUT, 'gd_vest_close.png'))
+camera((1.9, 0.25, 1.30), (0.0, 0, 1.15), lens=55); render(os.path.join(OUT, 'gd_vest_side.png'))
 print('sheets done')

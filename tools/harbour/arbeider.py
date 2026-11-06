@@ -8,6 +8,10 @@ quay, orange oilskins on deck).
     pip install bpy==4.5.4
     python3 tools/harbour/arbeider.py          -> src/data/worker.b64, renders in tools/harbour/out/
     python3 tools/harbour/arbeider.py fast     -> without the renders
+    python3 tools/harbour/arbeider.py add      -> as fast, but keeps the parts already in src/data/worker.b64 byte for byte and only adds
+                                                  the new ones (tools/boats/glbadd.py: the baked shade is not the same from run to run);
+                                                  add renders: and the renders too
+    python3 tools/harbour/arbeider.py dry      -> builds and writes out/worker.glb only (garderobe_bilder.py runs it so)
 
 Frames (the game's: x to the right, y up, z backwards, so the person faces -z): the torso's origin is the middle of the hips, 0.92 m
 above the ground; the head's (and the hat's) the base of the neck, 1.50 m up; the boot's the ground under the ankle. The limbs are
@@ -262,9 +266,17 @@ def main():
     # the wardrobe (garderobe.py): each part with the head (and the others hidden) so it shades like the hats do
     import garderobe
     WR = garderobe.build(sys.modules[__name__])
+    W0 = {n: o for n, o, g in WR}
+    WR = WR + garderobe.vests(sys.modules[__name__], P, W0)      # the inflatable vests (Ø11.4), last, each laid on its jackets
     for nm, o, origin in WR:
         o.hide_render = False
-        if origin == 'neck':
+        if nm in garderobe.VEST_ON:           # a vest shaded on the jacket under it, with the head
+            under = P.get(garderobe.VEST_ON[nm]) or W0[garderobe.VEST_ON[nm]]; under.hide_render = False
+            hid = [x for x in bpy.data.objects if x.type == 'MESH' and x not in (P['head'], under, o) and not x.hide_render]
+            for x in hid: x.hide_render = True
+            bake_ao(o, 24, 0.06)
+            for x in hid: x.hide_render = False
+        elif origin == 'neck':
             hid = [x for x in bpy.data.objects if x.type == 'MESH' and x not in (P['head'], o) and not x.hide_render]
             for x in hid: x.hide_render = True
             bake_ao(o, 24, 0.05)
@@ -285,12 +297,18 @@ def main():
           'joints': {'hip': HIP, 'neck': NECK, 'hipX': 0.11, 'shoulder': list(SHO)}, 'zones': {'1': 'jacket', '3': 'trousers', '4': 'skin', '5': 'hair', '6': 'hat', '7': 'shoes'},
           # the hands in their grips (hR_<grip>, hL_<grip>): from the wrist along +z, the palm +y, the thumb +x (right) or -x (left); where
           # the held thing sits and its axis, per grip and side (hender.py)
-          'hands': HANDS}
+          'hands': HANDS,
+          # the inflatable vest over each jacket (garderobe.py VEST_GROUPS, from the hips like the jackets), and the hair styles that are
+          # put up under it (the long ones: on deck long hair is tied up, and the vest's collar lies where it hangs; Ø11.4, 06.11.2026)
+          'vest': garderobe.VEST_FOR, 'vestHair': garderobe.VEST_HAIR}
     glb = os.path.join(OUT, 'worker.glb'); n = write_glb(glb, parts, ex)
-    import base64
-    open(os.path.join(ROOT, 'src', 'data', 'worker.b64'), 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())
+    import base64; b64 = os.path.join(ROOT, 'src', 'data', 'worker.b64')
+    if 'dry' in sys.argv: pass  # (garderobe_bilder.py: the check images only, src/data as it is)
+    elif 'add' in sys.argv:     # keep the parts src/data has byte for byte (the baked shade differs a little from run to run), add the new ones
+        import glbadd; print('added to worker.b64:', glbadd.add_parts(b64, glb, b64))
+    else: open(b64, 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())
     print('worker GLB %.1f KB, %s' % (n / 1024, ', '.join('%s %d' % (p[0], len(p[1]['idx']) // 3) for p in parts)))
-    if 'fast' in sys.argv: return
+    if 'fast' in sys.argv or ('add' in sys.argv and 'renders' not in sys.argv): return
     # renders: the harbour worker, the skipper and a fisherman side by side, painted as the game paints them
     for o in P.values(): o.hide_render = True
     for _n, o, _g in WR: o.hide_render = True
