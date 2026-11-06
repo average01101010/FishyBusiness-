@@ -30,14 +30,16 @@
     const aboard = [], nofit = [];
     for (const k of keys){ const E = EQUIP[k];
       if (!equipFits(k, S.boat.type)){ nofit.push(E.name[S.lang]); continue; }
-      const have = E.multi ? S.equip[k] : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1, fitting = (S.jobs || []).some(j => j.kind === 'fit' && j.k === k);
+      const have = E.multi ? S.equip[k] : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1, fj = (S.jobs || []).filter(j => j.kind === 'fit' && j.k === k), fitting = fj.length > 0;
+      // (Tony 06.11.2026: the card says when the fitting is done, not only that it is; the yard's queue has the bar)
+      const fitTxt = !fitting ? '' : (E.multi && fj.length > 1 ? fj.length + ' ' : '') + L('Til montering', 'Being fitted') + (fj[0].until != null ? ' · ' + L('ferdig kl. ', 'done at ') + hm(fj[0].until / 60) + ' (' + inReal(fj[0].until - S.t) + ')' : ' · ' + L('venter på havn', 'waits for port'));
       // (what the rules ask for is aboard and not for sale here: V6 A; it says so in the card of what is aboard)
       const req = (VESSELS[S.boat.type].req || []).includes(k);
       if (have >= max || req){ const br = SPUI.brandOf(k); aboard.push(E.name[S.lang] + (br && br.m ? ' (' + br.m + ')' : '') + (E.multi ? ' × ' + have : '') + (req ? ' (' + L('påbudt, følger båten', 'required, comes with the boat') + ')' : '')); continue; }
       const pend = shopPend && shopPend.k === 'equip:' + k && Date.now() - shopPend.t <= IC_CONFIRM_MS, dis = !(atKind(EQ_YARD(k) ? 'verft' : 'butikk') && spendable() >= E.price);
       const btn = pend ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(E.price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
         : '<button class="ph-btn p" data-pa="equip" data-k="' + k + '"' + (dis ? ' disabled' : '') + '>' + L('Kjøp og monter', 'Buy and fit') + ' · ' + durBoth(fitHours(k) * 60) + '</button>';
-      h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? (have || 0) + ' / ' + max : '', price:E.price, have:fitting && !E.multi ? L('Til montering', 'Being fitted') : '', note:typeof G3 !== 'undefined' && G3.trying === k ? L('Vises på «' + S.boatName + '» nå, før du har kjøpt. Dra for å se rundt.', 'Shown on the «' + S.boatName + '» now, before you buy. Drag to look round.') : '', btns:fitting && !E.multi ? '' : '<span class="ic-row">' + btn + tryBtn(k) + '</span>'}));
+      h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? (have || 0) + ' / ' + max : '', price:E.price, have:fitTxt, note:typeof G3 !== 'undefined' && G3.trying === k ? L('Vises på «' + S.boatName + '» nå, før du har kjøpt. Dra for å se rundt.', 'Shown on the «' + S.boatName + '» now, before you buy. Drag to look round.') : '', btns:fitting && !E.multi ? '' : '<span class="ic-row">' + btn + tryBtn(k) + '</span>'}));
       // the same item from a partner with a written agreement (M6, ui/10r-sponsor.js): same price, same numbers, marked
       if (!(fitting && !E.multi) && typeof spOf === 'function' && spOf('item', k)){ const pend2 = shopPend && shopPend.k === 'equip:' + k + ':sp' && Date.now() - shopPend.t <= IC_CONFIRM_MS;
         h.push(SPUI.card(k, pend2 ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-sp="1" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(E.price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'

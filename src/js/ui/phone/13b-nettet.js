@@ -129,8 +129,10 @@
       h.push(itemCard({k:'hooks', name:L('Kroker og juksasett', 'Hooks and jig sets'), price:CARE.hookKr[100], anchor:L('per 100', 'a 100'), btns:ord('hooks', null, 500, 1, L('500 kroker', '500 hooks')) + ord('hooks', null, 1000, 1, L('1000 kroker', '1000 hooks')) + ord('jig', null, 'mark', 1, L('Juksasett', 'Jig set'))}));
     } else {
       for (const [k, E] of Object.entries(EQUIP)){ if (EQ_YARD(k) || !equipFits(k, b.type)) continue;
-        const have = E.multi ? S.equip[k] || 0 : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1, r = res('equip', k, null);
-        h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? have + ' / ' + max : '', price:E.price, have:have >= max ? L('Montert', 'Fitted') : r ? at : '', btns:have >= max ? '' : ord('equip', k, null, 1, L('Bestill', 'Order'))})); }
+        const have = E.multi ? S.equip[k] || 0 : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1, r = res('equip', k, null), fj = (S.jobs || []).find(j => j.kind === 'fit' && j.k === k);
+        // (one being fitted shows so, with when; before, the tab offered it again and the fetch said «Det har båten alt»)
+        const fitTxt = fj && !E.multi ? L('Til montering', 'Being fitted') + (fj.until != null ? ' · ' + L('ferdig kl. ', 'done at ') + hm(fj.until / 60) : '') : '';
+        h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? have + ' / ' + max : '', price:E.price, have:have >= max ? L('Montert', 'Fitted') : fitTxt || (r ? at : ''), btns:have >= max || fitTxt ? '' : ord('equip', k, null, 1, L('Bestill', 'Order'))})); }
       for (const k of ['olje', 'varme']){ const C = CLOTHES[k], r = res('cloth', k, null); h.push(itemCard({k, name:C[S.lang], price:C.price, have:r ? at : '', btns:ord('cloth', k, null, 1, L('Bestill én', 'Order one'))})); }
     }
     return h.join('') + '</div>';

@@ -5,6 +5,36 @@
     if (DRAWER.has(String(app).split(':')[0])){ const to = app; app = DRAWER.has(was) ? 'home' : was; show(false); DOCK.open(to); return; }
     if (done) { save(); renderHud(); renderClock(); panelDirty = true; render(); }
   }
+  // ---- the receipt after a buy for kroner (Jonas 06.11.2026, Tony's test: «Det skal ikke være tvil om et kjøp er gjennomført»): one
+  // toast for every path (the counter, the gear, the Net's fetch, the yard's orders): what, what it cost (the till before and after),
+  // how many are aboard now, and for equipment when the fitting is done (the job's until), with a tick of the till
+  let buyC0 = null;
+  const buyMark = () => { buyC0 = S.cash; };
+  function ownedTxt(w, s){
+    const pg = S.pgear ? careInit(S.pgear) : null, people = 1 + S.crew.length;
+    if (!pg) return '';
+    if (w === 'net'){ const n = pg.nets.reduce((a, l) => a + l.n, 0); return L(n + ' garn om bord', n + ' nets aboard'); }
+    if (w === 'stamp'){ const n = (pg.lines[s] || {n:0}).n; return L(n + ' stamper ' + (LINE_KINDS[s] ? LINE_KINDS[s].no.toLowerCase() : '') + ' om bord', n + ' tubs of ' + (LINE_KINDS[s] ? LINE_KINDS[s].en.toLowerCase() : '') + ' aboard'); }
+    if (w === 'pot'){ const n = pg.pots[s] || 0; return L(n + ' teiner om bord', n + ' pots aboard'); }
+    if (w === 'kit') return L(pg.kits.n + ' blåsesett om bord', pg.kits.n + ' buoy sets aboard');
+    if (w === 'heavy') return L(pg.kits.heavy + ' tunge dregger', pg.kits.heavy + ' heavy anchors');
+    if (w === 'hooks') return L(pg.hooks + ' kroker på lager', pg.hooks + ' hooks in store');
+    if (w === 'jig'){ const n = pg.jig && pg.jig[s] ? pg.jig[s].n : 0; return L(n + ' sett på lager', n + ' sets in store'); }
+    if (w === 'bait'){ const n = Object.values(baitOf(pg)).reduce((a, v) => a + v, 0); return L(fmt(n, 0) + ' kg agn om bord', fmt(n, 0) + ' kg bait aboard'); }
+    if (w === 'equip'){ const E = EQUIP[s]; if (!E) return ''; if (E.multi) return (S.equip[s] || 0) + ' / ' + BOAT.jukseMax + L(' montert', ' fitted'); return ''; }
+    if (w === 'cloth'){ const n = Math.min((S.clothes || {})[s] || 0, people); return n + ' / ' + people + L(' om bord har', ' aboard have one'); }
+    return '';
+  }
+  function receipt(nm, w, s){
+    const paid = buyC0 == null ? 0 : Math.round(buyC0 - S.cash); buyC0 = null;
+    const j = w === 'equip' ? (S.jobs || []).find(x => x.kind === 'fit' && x.k === s) : w === 'yard' ? (S.jobs || []).find(x => x.kind === s) : null;
+    const parts = ['✓ ' + (w === 'yard' ? L('Bestilt: ', 'Ordered: ') : L('Kjøpt: ', 'Bought: ')) + nm];
+    if (paid > 0) parts.push('−' + kr(paid)); else if (paid === 0 && w !== 'yard') parts.push(L('gratis', 'free'));
+    const own = w === 'yard' ? '' : ownedTxt(w, s); if (own) parts.push(own);
+    if (j) parts.push(j.until != null ? L('ferdig kl. ', 'done at ') + hm(j.until / 60) + ' (' + inReal(j.until - S.t) + ')' : L('monteres når båten er i havn', 'fitted when the boat is in port'));
+    toast(parts.join(' · '), 6000);
+    try { if (typeof SND !== 'undefined' && SND.coin) SND.coin(0.6); } catch (e){}
+  }
   function act0(a, d){
     const b = S.boat;
     if (a !== 'shop' && a !== 'equip') shopPend = null;
@@ -16,7 +46,7 @@
     if (a === 'open'){ appSeen(d.a); app = d.a === 'kaiboden' ? kbLast : d.a; confirmMayday = false; if (d.s) sub[d.a] = d.s; if (d.a === 'post') sub.postArt = null; }
     else if (a === 'home'){ app = 'home'; }
     else if (a === 'back'){ app = 'home'; }
-    else if (a === 'shop'){ const k = d.k, kg = +d.kg || 0; if (!shopPend || shopPend.k !== k || shopPend.kg !== kg || Date.now() - shopPend.t > IC_CONFIRM_MS){ shopPend = {k, kg, t:Date.now()}; return true; } shopPend = null; const free = tutFree(k), why = shopBuy(k, kg, free); if (why){ toast(L(why[0], why[1])); } else { if (free){ if (k === 'ice') S.iceFree = 0; tutMark('free_' + k); } if (k !== 'ice') shopBought(k === 'jig' ? 'Håndjuksa' : 'Kveiteutstyr', k === 'jig' ? 'Hand jig' : 'Halibut gear'); if (typeof cloudEv === 'function') cloudEv('shop_buy', {w:'shop', k}); } }
+    else if (a === 'shop'){ const k = d.k, kg = +d.kg || 0; if (!shopPend || shopPend.k !== k || shopPend.kg !== kg || Date.now() - shopPend.t > IC_CONFIRM_MS){ shopPend = {k, kg, t:Date.now()}; return true; } shopPend = null; const free = tutFree(k); buyMark(); const why = shopBuy(k, kg, free); if (why){ toast(L(why[0], why[1])); } else { if (free){ if (k === 'ice') S.iceFree = 0; tutMark('free_' + k); } if (k !== 'ice') shopBought(k === 'jig' ? 'Håndjuksa' : 'Kveiteutstyr', k === 'jig' ? 'Hand jig' : 'Halibut gear'); if (typeof cloudEv === 'function') cloudEv('shop_buy', {w:'shop', k}); receipt(k === 'ice' ? L(fmt(kg, 0) + ' kg is', fmt(kg, 0) + ' kg ice') : k === 'jig' ? L('Håndjuksa', 'Hand jig') : L('Kveiteutstyr', 'Halibut gear'), 'shop', k); } }
     else if (a === 'shop0'){ }
     else if (a === 'shopgear'){ app = 'redskap'; sub.redskap = 'kjop'; }
     else if (a === 'close'){ show(false); return; }
@@ -87,7 +117,7 @@
     else if (a === 'rig'){ const why = rigSet(d.r); if (why){ toast(why[0]); return; } }
     else if (a === 'grpref'){ if (BAITS[d.k]) S.pgear.baitPref = d.k; }
     else if (a === 'grown'){ const got = baitFromHold(d.k, +d.n || 0); if (got > 0) toast(fmt(got, 0) + ' kg ' + SPECIES[d.k][S.lang].toLowerCase() + L(' er agn nå.', ' is bait now.')); }
-    else if (a === 'grbuy'){ const why = buyGear(d.w, isNaN(+d.s) ? d.s : +d.s, +d.n); if (why){ toast(why[0]); return; } achAdd('equip'); if (d.w !== 'bait'){ const nm = pickName({w:d.w, s:isNaN(+d.s) ? d.s : +d.s, n:+d.n}); shopBought(nm[0], nm[1]); } if (typeof cloudEv === 'function') cloudEv('shop_buy', {w:d.w, k:d.s}); }
+    else if (a === 'grbuy'){ const s0 = isNaN(+d.s) ? d.s : +d.s; buyMark(); const why = buyGear(d.w, s0, +d.n); if (why){ toast(why[0]); return; } achAdd('equip'); const nm = pickName({w:d.w, s:s0, n:+d.n}); if (d.w !== 'bait') shopBought(nm[0], nm[1]); if (typeof cloudEv === 'function') cloudEv('shop_buy', {w:d.w, k:d.s}); receipt(L(nm[0], nm[1]), d.w, s0); }
     // the Net's web shop (13b-nettet.js, core/10c-pick.js): the shop to fetch at, reserving, cancelling, fetching at the counter
     else if (a === 'pshop'){ if (pickShopOk(d.id)) S.pickShop = d.id; }
     else if (a === 'nettab'){ sub.nettab = d.s; }
@@ -95,8 +125,8 @@
       if (why){ toast(L(why[0], why[1])); return true; } const nm = pickName(pickState().find(o => o.port === port && o.w === d.w && (o.k || null) === (d.k || null) && String(o.s == null ? '' : o.s) === String(s0 == null ? '' : s0)));
       toast(L(nm[0] + ' er bestilt til henting i ' + portById(port).name + '. Du betaler når du henter.', nm[1] + ' is ordered for collection at ' + portById(port).name + '. You pay when you fetch it.')); if (typeof cloudEv === 'function') cloudEv('shop_order', {w:d.w, k:d.k || d.s, port}); }
     else if (a === 'pdrop'){ pickDrop(d.id); }
-    else if (a === 'ptake'){ const why = pickTake(pickById(d.id)); if (why){ toast(why); return true; } }
-    else if (a === 'ptakeall'){ for (const o of pickAt(S.boat.port).slice()){ const why = pickTake(o); if (why){ toast(why); break; } } }
+    else if (a === 'ptake'){ const o = pickById(d.id); buyMark(); const why = pickTake(o); if (why){ toast(why); return true; } { const nm = pickName(o); receipt(L(nm[0], nm[1]), o.w, o.w === 'stamp' || o.w === 'pot' || o.w === 'jig' ? o.s : o.k); } }
+    else if (a === 'ptakeall'){ const got = []; buyMark(); for (const o of pickAt(S.boat.port).slice()){ const why = pickTake(o); if (why){ toast(why); break; } got.push(o); } if (got.length) receipt(got.map(o => L(...pickName(o))).join(', '), got.length === 1 ? got[0].w : 'many', got.length === 1 ? (got[0].w === 'stamp' || got[0].w === 'pot' || got[0].w === 'jig' ? got[0].s : got[0].k) : null); }
     // a chip in the shop's list of what the boat needs: to its card, on the page it is on
     else if (a === 'icgo'){ if (d.pg && d.pg !== app) app = d.pg; const id = d.id; setTimeout(() => { const el = document.getElementById(id); if (el){ el.scrollIntoView({block:'start'}); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1600); } }, 80); return true; }
     else if (a === 'grrep'){ reportLost(d.id); }
@@ -127,16 +157,16 @@
     else if (a === 'jobx'){ const j = (S.jobs || [])[+d.i]; if (j && j.until == null){ S.jobs.splice(+d.i, 1); gearJobCancel(j); const refund = j.kind === 'prep' ? PREP[j.k].cost : j.kind === 'fit' ? EQUIP[j.k].price : j.kind === 'hold' ? upPrice(HOLDUP[j.lv - 1].pc) : j.kind === 'eng' ? upPrice(ENGUP[j.lv - 1].pc) : j.kind === 'hull' ? 1500 + Math.round(BOAT.len * 400 / 100) * 100 : 0; book(j.kind === 'fit' ? 'redskap' : 'verft', refund, 'Avbestilt: ' + j.no, 'Cancelled: ' + j.en); } }
     else if (a === 'service'){ const c = svcCostOf(b); if (spendable() < c){ toast(t('no_cash')); return; } book('verft', -c, 'Motorservice', 'Engine service'); b.svcAt = b.engH || 0; S.svcTold = false; log('Motorservice utført.', 'Engine serviced.'); }
     else if (a === 'holdup'){ const lv = (S.boat.holdLv || 0) + 1, nx = HOLDUP[lv - 1]; if (!nx || lv > karSteps(S.boat.type) || !atKind('verft') || (S.jobs || []).some(j => j.kind === 'hold')) return; const c = upPrice(nx.pc, nx.min); if (spendable() < c) return;
-      if (!queueJob({kind:'hold', lv, h:nx.h, no:'Ombygging av lasterommet', en:'Rebuilding the hold'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } book('verft', -c, 'Ombygging av lasterommet', 'Rebuilding the hold'); log('Bestilte ombygging av lasterommet, ' + kr(c) + '.', 'Ordered a rebuild of the hold, ' + kr(c) + '.'); }
+      if (!queueJob({kind:'hold', lv, h:nx.h, no:'Ombygging av lasterommet', en:'Rebuilding the hold'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } buyMark(); book('verft', -c, 'Ombygging av lasterommet', 'Rebuilding the hold'); log('Bestilte ombygging av lasterommet, ' + kr(c) + '.', 'Ordered a rebuild of the hold, ' + kr(c) + '.'); receipt(L('Ombygging av lasterommet', 'Rebuilding the hold'), 'yard', 'hold'); }
     else if (a === 'upg'){ const k = d.u, U = UPGS[k], nx = U && upgNext(S.boat, k); if (!nx || !atKind('verft') || (S.jobs || []).some(j => j.kind === 'upg' && j.u === k)) return; const c = upPrice(nx.pc, nx.min); if (spendable() < c) return;
-      if (!queueJob({kind:'upg', u:k, lv:upgLv(S.boat, k) + 1, h:nx.h, no:'Ombygging: ' + nx.no, en:'Rebuild: ' + nx.en})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } book('verft', -c, 'Ombygging: ' + nx.no, 'Rebuild: ' + nx.en); log('Bestilte ombygging, ' + nx.no.toLowerCase() + ', ' + kr(c) + '.', 'Ordered a rebuild, ' + nx.en.toLowerCase() + ', ' + kr(c) + '.'); }
+      if (!queueJob({kind:'upg', u:k, lv:upgLv(S.boat, k) + 1, h:nx.h, no:'Ombygging: ' + nx.no, en:'Rebuild: ' + nx.en})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } buyMark(); book('verft', -c, 'Ombygging: ' + nx.no, 'Rebuild: ' + nx.en); log('Bestilte ombygging, ' + nx.no.toLowerCase() + ', ' + kr(c) + '.', 'Ordered a rebuild, ' + nx.en.toLowerCase() + ', ' + kr(c) + '.'); receipt(L('Ombygging: ' + nx.no, 'Rebuild: ' + nx.en), 'yard', 'upg'); }
     else if (a === 'engup'){ const lv = (S.boat.engLv || 0) + 1, nx = ENGUP[lv - 1]; if (!nx || !atKind('verft') || VESSELS[S.boat.type].outboard || (S.jobs || []).some(j => j.kind === 'eng')) return; const c = upPrice(nx.pc, nx.min); if (spendable() < c) return;
-      if (!queueJob({kind:'eng', lv, h:nx.h, no:'Motorbytte', en:'Engine change'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } book('verft', -c, 'Motorbytte', 'Engine change'); log('Bestilte større motor, ' + kr(c) + '.', 'Ordered a bigger engine, ' + kr(c) + '.'); }
+      if (!queueJob({kind:'eng', lv, h:nx.h, no:'Motorbytte', en:'Engine change'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } buyMark(); book('verft', -c, 'Motorbytte', 'Engine change'); log('Bestilte større motor, ' + kr(c) + '.', 'Ordered a bigger engine, ' + kr(c) + '.'); receipt(L('Motorbytte', 'Engine change'), 'yard', 'eng'); }
     else if (a === 'hullfix'){ if (!atKind('verft')) return; const why = hullOrder(false); if (why){ toast(why[0] === 'no_cash' ? t('no_cash') : L('Arbeidskøen er full.', 'The work queue is full.')); return; } }
     else if (a === 'kasko'){ if (!atKind('verft')) return; if (kaskoSign()){ toast(t('no_cash')); return; } }
     else if (a === 'kaskox'){ kaskoEnd(); }
     else if (a === 'hullclean'){ if (!atKind('verft') || (S.jobs || []).some(j => j.kind === 'hull')) return; const c = 1500 + Math.round(BOAT.len * 400 / 100) * 100; if (spendable() < c) return;
-      if (!queueJob({kind:'hull', h:6, no:'Skrogrens på slipp', en:'Hull cleaning on the slip'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } book('verft', -c, 'Skrogrens på slipp', 'Hull cleaning on the slip'); log('Bestilte skrogrens på slipp, ' + kr(c) + '.', 'Ordered a hull cleaning on the slip, ' + kr(c) + '.'); }
+      if (!queueJob({kind:'hull', h:6, no:'Skrogrens på slipp', en:'Hull cleaning on the slip'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } buyMark(); book('verft', -c, 'Skrogrens på slipp', 'Hull cleaning on the slip'); log('Bestilte skrogrens på slipp, ' + kr(c) + '.', 'Ordered a hull cleaning on the slip, ' + kr(c) + '.'); receipt(L('Skrogrens på slipp', 'Hull cleaning on the slip'), 'yard', 'hull'); }
     else if (a === 'trimbuy'){ const b = S.boat, B = BOOSTS[d.k]; if (!B || !canBoost(VESSELS[b.type])) return; payBuy(d.k, () => { trimSet(d.k); log(B.no + ' er på i ' + B.h + ' timer. Toppfart nå ' + fmt(BOAT.vmax, 1) + ' knop.', B.en + ' is on for ' + B.h + ' hours. Top speed now ' + fmt(BOAT.vmax, 1) + ' knots.'); toast(L(B.no + ': ', B.en + ': ') + fmt(BOAT.vmax, 1) + ' kn'); }); }
     else if (/^mg/.test(a)){ if (!mgAct(a, d)) return; }   // Kystmegleren (phone/13c-megler.js, M4)
     else if (a === 'eqtry'){ equipTry(d.k); return true; }   // try it on the boat in 3D (M3)
@@ -144,7 +174,7 @@
       // expensive equipment confirms in the button, as the counter's other buys do (M2: IC_CONFIRM_KR)
       const pk = 'equip:' + d.k + (d.sp ? ':sp' : '');   // (the partner's item confirms on its own card, M6)
       if (E.price >= IC_CONFIRM_KR && !(shopPend && shopPend.k === pk && Date.now() - shopPend.t <= IC_CONFIRM_MS)){ shopPend = {k:pk, kg:0, t:Date.now()}; return true; }
-      shopPend = null; const why = equipBuy(d.k); if (why){ toast(why); return true; } SPUI.setBrand(d.k, d.sp ? spOf('item', d.k) : null); if (d.sp && typeof cloudEv === 'function') cloudEv('sp_buy', {pl:(spOf('item', d.k) || {}).id || 0}); } else if (a === 'equipOLD'){ const E = EQUIP[d.k]; if (E.multi) S.equip[d.k] = (S.equip[d.k] || 0) + 1; else S.equip[d.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); updateMapButtons(); INSTR.show(); }
+      shopPend = null; buyMark(); const why = equipBuy(d.k); if (why){ toast(why); return true; } receipt(E.name[S.lang], 'equip', d.k); SPUI.setBrand(d.k, d.sp ? spOf('item', d.k) : null); if (d.sp && typeof cloudEv === 'function') cloudEv('sp_buy', {pl:(spOf('item', d.k) || {}).id || 0}); } else if (a === 'equipOLD'){ const E = EQUIP[d.k]; if (E.multi) S.equip[d.k] = (S.equip[d.k] || 0) + 1; else S.equip[d.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); updateMapButtons(); INSTR.show(); }
     else if (a === 'hire'){ const c = candidates().find(x => x.id === d.id); if (c && S.crew.length < BOAT.crewMax && !crewHireWhy()){ S.crew.push(crewUpgrade(c)); log(c.name + ' er ansatt som ' + c.lv + '.', c.name + ' joined as ' + c.lvEn + '.'); } }
     else if (a === 'fire'){ if (!crewAshore()) return; const c = S.crew[+d.i]; if (c){ crewSettle(c); flyOut(c); S.crew.splice(+d.i, 1); } if (c) log(c.name + ' har gått i land.', c.name + ' has gone ashore.'); }
     else if (a === 'repay'){ const k = d.k || 'loan', Q = S[k]; if (!Q || S.cash < 10000) return; const x = Math.min(10000, Q.bal); book('avdrag', -x, 'Ekstra innbetaling, ' + LOANS[k].who, 'Extra repayment, ' + LOANS[k].who); Q.bal -= x; if (Q.bal < 1) S[k] = null; }
@@ -226,7 +256,7 @@
     else if (a === 'ptdrop'){ PTOW.drop(); }
     else if (a === 'turfoto'){ turFotoShoot(+d.id); }
     else if (a === 'ordtake'){ const O = ordState(), o = O.offers.find(x => x.id === +d.id); if (!o || O.active.length >= 3) return; O.offers.splice(O.offers.indexOf(o), 1); o.due = S.t + o.days * 1440; O.active.push(o); log('Tok en bestilling fra ' + CUSTOMERS.find(c => c.id === o.cust).no + '.', 'Took an order from ' + CUSTOMERS.find(c => c.id === o.cust).no + '.'); }
-    else if (a === 'cloth'){ const why = clothBuy(d.k); if (why){ toast(why); return true; } }
+    else if (a === 'cloth'){ buyMark(); const why = clothBuy(d.k); if (why){ toast(why); return true; } receipt(CLOTHES[d.k][S.lang], 'cloth', d.k); }
     else if (a === 'haillbuy'){ if (tutFree('haill') && d.k !== 'luksus') return; const k = d.k, got = () => { giveHaill(k, 'shop'); toast(HAILL[k][S.lang] + L(' ligger i beholdningen. Trykk «Aktiver» når du vil bruke den.', ' is in store. Tap «Switch on» when you want it.')); };
       if (tutFree('haill')){ tutMark('free_haill'); got(); } else payBuy(k, got); }
     else if (a === 'skipbuy'){ const k = d.k; if (!SKIP[k]) return; payBuy('sk_' + k, () => { const n = giveSkip(k); if (n) toast(n + L(': du og mannskapet er uthvilt i ' + Math.round(skipLeft()) + ' timer.', ': you and the crew are rested for ' + Math.round(skipLeft()) + ' hours.')); }); }
