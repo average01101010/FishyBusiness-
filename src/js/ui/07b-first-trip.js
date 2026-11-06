@@ -191,6 +191,10 @@ function tutTip(st){
     if (a && a.width && Math.min(a.right, q.right) - Math.max(a.left, q.left) > 2 && Math.min(a.bottom, q.bottom) - Math.max(a.top, q.top) > 2) DOCK.close(); }
   if (DOCK.page && T0.map && inPlot()){ const d = $('drawer'), a = d && !d.hidden ? d.getBoundingClientRect() : null, c = mapToClient(T0.map.p);
     if (a && a.width && c.x >= a.left && c.x <= a.right && c.y >= a.top && c.y <= a.bottom) DOCK.close(); }
+  // the status box open as a card over the little chart (U2-1 hudCardOpen; upright, a tap on the strip opens it, and the ring of a small
+  // tip on the strip's third line invites that tap): a target outside the box closes the card first, else the ring stood round the
+  // little chart hidden under it, and the first trip hung on «Åpne kartplotteren» (tut.py upright, 06.11.2026)
+  if (T0.el && typeof hudCardOpen === 'function' && document.body.classList.contains('hudcard') && !T0.el.closest('#hud')) hudCardOpen(false);
   return T0;
 }
 // where the guide points: the hole in the dimmed layer and the ring, round a button or round a place on the chart

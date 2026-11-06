@@ -2141,7 +2141,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 89 `srchCard()`
   - 113 `srchSvg(u)`
 
-## `src/js/ui/04-panels-instruments.js` (277 linjer)
+## `src/js/ui/04-panels-instruments.js` (279 linjer)
 
 ---------- estimates ----------
 
@@ -2161,9 +2161,9 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 184 `vnoise2(x, y, s)`
   - 190 `microBottom(p, d)`
 - **192** instruments: GPS and echo sounder
-  - 261 `hudCardOpen(on)`
-  - 268 `hudClasses(stripOn, cardOn)`
-  - 272 `hudFold(which)`
+  - 263 `hudCardOpen(on)`
+  - 270 `hudClasses(stripOn, cardOn)`
+  - 274 `hudFold(which)`
 
 ## `src/js/ui/05-tattoo-art.js` (169 linjer)
 
@@ -2259,12 +2259,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1155 linjer)
+## `src/js/ui/phone/07-patch.js` (1156 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1148 `patch()`
+  - 1149 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2616,7 +2616,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 401 `renderPanel()`
   - 405 `panelBusy()`
 
-## `src/js/ui/07b-first-trip.js` (300 linjer)
+## `src/js/ui/07b-first-trip.js` (304 linjer)
 
 ---------- «Første tur»: the guided first trip every new player goes through ----------
 
@@ -2635,16 +2635,16 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 153 `tutDriftTip(d)`
   - 167 `tutStartWhy()`
   - 180 `tutTip(st)`
-  - 199 `tutReveal(el)`
-  - 205 `tutRect(T0)`
-  - 211 `tutStep()`
-  - 217 `tutFinish()`
-  - 218 `tutScrollSlip()`
-  - 221 `tutAllow(what)`
-  - 239 `tutView(st)`
-  - 246 `tutUpdate()`
-  - 269 `tipPlace(txt, T0, o)`
-  - 294 `tipToast()`
+  - 203 `tutReveal(el)`
+  - 209 `tutRect(T0)`
+  - 215 `tutStep()`
+  - 221 `tutFinish()`
+  - 222 `tutScrollSlip()`
+  - 225 `tutAllow(what)`
+  - 243 `tutView(st)`
+  - 250 `tutUpdate()`
+  - 273 `tipPlace(txt, T0, o)`
+  - 298 `tipToast()`
 
 ## `src/js/ui/07c-handbook.js` (240 linjer)
 

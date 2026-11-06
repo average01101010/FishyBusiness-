@@ -255,9 +255,11 @@ hud.addEventListener('click', e => {
   if (e.target.closest('[data-hcard]')){ e.stopPropagation(); hudCardOpen(false); return; }
   if (e.target.closest('[data-hfull]')){ e.stopPropagation(); S.settings.hudFull = !S.settings.hudFull; save(); renderHud(); return; }
   if (e.target.closest('.rlink')){ PHONE.open('regler'); return; }
+  if (document.body.classList.contains('hudcard')){ e.stopPropagation(); hudCardOpen(false); return; }   // a tap on the card itself closes it, as the ✕ does
   if (document.body.classList.contains('hudstrip')){ e.stopPropagation(); hudCardOpen(true); }
 });
-// the card over the chart: a tap outside closes it (as the dock's fans close), so do Escape and a turn of the screen
+// the card over the chart: a tap outside or on the card closes it (as the dock's fans close), so do Escape and a turn of the screen,
+// and the first trip when it points at something under it (07b-first-trip.js tutTip)
 function hudCardOpen(on){ on = !!on; if (hudCard === on) return; hudCard = on; renderHud(); }
 document.addEventListener('pointerdown', e => { if (hudCard && !hud.contains(e.target)) hudCardOpen(false); }, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && hudCard) hudCardOpen(false); });

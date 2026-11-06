@@ -2,7 +2,7 @@
 minimer på disse, som gjør slik at bare basisinformasjonen vises på en tynn stripe… Legg også inn muligheten for fjerning av HUD i
 innstillingene»; UI 2, U2-1, docs/planer/ui-2-staaende.md 4.1–4.2, 06.11.2026: upright the strip is the normal state). On a phone upright:
 the strip has three lines and a fixed height, no fold button, the same height in harbour, idle and under way, and the little chart stands
-still under it; a tap on the strip gives the whole box as a card over the chart, with the whole table, and a tap outside closes it; the
+still under it; a tap on the strip gives the whole box as a card over the chart, with the whole table, and a tap outside or on the card closes it; the
 chart folds to a strip with speed, course and position, and opens again; «Skjul HUD» in the settings takes them all away, and it is kept
 after a reload. On a tablet on its side: the whole box with a fixed width and a 44 px fold button, the gauges a 44 px target; «–» folds it
 to the three-line strip with «+», and the chart moves up under it; the chart's top is the same in harbour and under way. Prints OK or FEIL."""
@@ -55,6 +55,8 @@ async def phone(p):
           'a tap on the strip opens the whole box as a card over the chart, with the whole table, and the chart does not move', {'card': c['hud'], 'strip': a['hud'], 'lines': c['lines'], 'plot': c['plot'], 'gauges': c['gauges']})
     await pg.touchscreen.tap(380, 600); await pg.wait_for_timeout(400); d = await pg.evaluate(BOX)
     check('hudstrip' in d['cls'] and 'hudcard' not in d['cls'] and d['hud']['h'] == a['hud']['h'], 'a tap outside closes the card, and the strip is as before', {'hud': d['hud'], 'cls': d['cls']})
+    await pg.tap('#hud'); await pg.wait_for_timeout(500); await pg.tap('#hud .hfull'); await pg.wait_for_timeout(400); d2 = await pg.evaluate(BOX)
+    check('hudstrip' in d2['cls'] and 'hudcard' not in d2['cls'], 'a tap on the card itself closes it too (the first trip points at the chart under it)', d2['cls'])
     # 4. the little chart folds to a strip with speed, course and position, at the chart's place, and opens again; the fold button is a 44 px target
     check(d['fold'] and d['fold']['w'] >= 44 and d['fold']['h'] >= 44, 'the chart\'s fold button is a 44 px target', d['fold'])
     await pg.click('#plotMin'); await pg.wait_for_timeout(600); e = await pg.evaluate(BOX)
