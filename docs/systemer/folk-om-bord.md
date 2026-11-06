@@ -178,6 +178,14 @@ Brukerens ønske: mannskapet skal være en levende og givende del av spillet, in
     - Kilder til selve ordningen er ikke sjekket. BNWAS er påbudt på større skip (SOLAS V/19). Om og når den kreves på norske fiskefartøy, er ikke sjekket.
   - **«Energi av» i Admin** (`S.adm.noEnergy`, `energyOff`; Jonas 03.10.2026, for testing): energien holdes på 100 %, du sovner ikke og døser ikke av, og knappen vekker deg om du sover. HUD-raden viser «av». `sleeptest.py` sjekker den.
 
+## 5.19b Spilltest 4: mannskapet tre døgn på sjøen (Ø8, 06.11.2026)
+
+`tests/mannskapsplay.py` (gjennomgangsverktøy som `fiskeplay.py`, ikke i `run.py`) holder et mannskap 72 timer på feltet ved Husøy 1. mars, juksa 06–22 og stille om natta, i fire scenarioer: uten kokk (ingen med kokk ≥ 3), med kokk 4, med kokk og skipperen i køya om natta, og snekka uten bysse. Rapporten er `docs/playtest/rapport-4-mannskap.md`. Det den fant, kort:
+- **Maten virker som bygd:** tørre brødskiver (1) hver 7. time når ingen kan lage mat (`workAssign` setter bare kokk ≥ 3 ved Kokk, `13-work.js` linje 240), kokt torsk (4) med en kokk på 4, matpakke (2) uten bysse. På tre døgn gir det 5–6 poeng i trivsel (49–53 mot 54–58) og halvparten så mange timer «Har lite å gi» (28–29 av 48 fisketimer uten kokk, 12–15 med). Ingen krangler, ingen mønstrer av.
+- **Skipperen er det som er for hardt uten køya:** energien faller 100/24 per time også når båten ligger stille (`15-energy.js` linje 115), så uten «Hvil i køya» sovner du av utmattelse kl. 06–07 og sover til 14; med køya kl. 22–06 er du 100 % hver morgen. Toasten ved 25 % sier «Gå til kai for å hvile» også på en båt med køyer til sjøs (`ui/05b-work.js` linje 149; backloggen 10.2).
+- **Tekst å rette:** «Ingen hadde tid til å lage mat» når grunnen er at ingen om bord kan (`14-crewlife.js` linje 65); setningen «Lager du maten selv, blir den 3» i 5.19 over har ingen knapp i spillet (`workAssign` setter aldri deg ved Kokk). Måltidene kommer hver 6. time fra forrige, også kl. 01 og 05 mens alle hviler (10.5).
+- Slitenheten etter 16 timers juksa er 81–91 kl. 22 og 0 kl. 06 igjen; innsatsen faller til 0,46–0,59 de siste timene. Det står.
+
 ## 5.54 Mannskapets arbeid på sjøen og prat om redskapen (Jonas 09.10.2026)
 
 - **Arbeid på sjøen:** egning, krokbytte, reparasjon av line og teiner, bøting og nytt juksesett kan nå gjøres på sjøen (`seaWork()` i `core/10b-gearcare.js`). Kravene:
