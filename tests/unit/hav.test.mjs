@@ -78,4 +78,18 @@ export default function (t){
   } else t.ok(false, 'en tur som leverer borte finnes');
   // the clock alone: the same hour gives the same place
   const a = K.havState(s, H0 + 30), b = K.havState(s, H0 + 30); t.ok(a.p.x === b.p.x && a.p.y === b.p.y, 'samme tid gir samme sted');
+  // half a minute after she leaves a port whose berth is not known (no berth here: the quays' land is not loaded in Node), she is out and
+  // a minute before she was hidden: havNear reads no speed from the minute before and does not throw (it threw «reading 'x'» in
+  // npcStates under the sail to Botnhamn, UI review 04.11.2026 F2; U0 18d7c37f, the check Ø7 06.11.2026; the coast sweep found 13 such
+  // minutes in a week at Botnhamn and Ålesund)
+  const SS = K.get('S'); let dep = 0, threw = [], speed = [];
+  for (const q of D.ships){ for (let k = 1; k < 40; k++){ const r = K.havTrip(q, k); if (!r || r.e[1] == null) continue;
+      const Hd = ((k * q.C + q.port) - q.ph) * 24 + 0.5 / 60, A = K.havState(q, Hd), P = K.havState(q, Hd - 1 / 60);
+      if (A.hidden || A.st === 'port' || !P.hidden) continue;
+      dep++; SS.boat.pos = {x:A.p.x, y:A.p.y};
+      try { const n = K.havNear(Hd, q.id).find(x => x.id === q.id); if (!n || n.v !== 0) speed.push(q.id + ' ' + (n ? n.v : 'borte')); K.havNear(Hd); }
+      catch (e){ threw.push(q.id + ': ' + e.message); }
+      break; }
+    if (dep >= 60) break; }
+  t.ok(dep >= 20 && !threw.length && !speed.length, `havNear kaster ikke for ${dep} skip et halvt minutt etter at de gikk fra en havn uten kjent kaiplass, og leser ingen fart fra minuttet før`, threw.slice(0, 3).concat(speed.slice(0, 3)));
 }
