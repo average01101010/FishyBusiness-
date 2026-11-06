@@ -313,3 +313,7 @@
 2026-11-06 16:21	ccr-2f1306ed-u6tdgs	b63df02b+	tidetest	OK	7	lite	samtidig	
 2026-11-06 16:22	ccr-2f1306ed-u6tdgs	91f7f01b	climtest	OK	15	lite	samtidig	
 2026-11-06 16:22	ccr-2f1306ed-u6tdgs	91f7f01b	yardupgtest	OK	17	lite	samtidig	
+2026-11-06 16:22	ccr-2f1306ed-u6tdgs	d9f88a69	krabbefabrikktest	OK	20	lite	samtidig	
+2026-11-06 16:22	ccr-2f1306ed-u6tdgs	d9f88a69	fabrikktest	FEIL	13	lite	samtidig	FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined |
+2026-11-06 16:22	ccr-2f1306ed-u6tdgs	d9f88a69	skiptest	OK	18	lite	samtidig	
+2026-11-06 16:23	ccr-2f1306ed-u6tdgs	d9f88a69	fleet2test	OK	54	lite	samtidig	
