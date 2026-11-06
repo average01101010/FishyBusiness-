@@ -140,6 +140,7 @@ Jonas valgte 1A–8A og sa «kjør på» 27.10.2026. Fasene O0–O6 står i plan
 - **Ingen haill i første tur:** `luck`, `haill` og `luckhud` er tatt ut, båten venter ikke lenger på feltet (`tutWait`; en lagring som venter, begynner å fiske), og første tur gir ingen gratis luksushaill (`tutFree('haill')` er alltid usann). Luksushaill er bare gaven ved registrering (`CLAUDE.md`). Haillen kommer som dryppet `lykke` (kapittel 2) første gang båten fisker etter første levering.
 - **Én times fisketid** (`TUT_FISH_H` i `core/03-simulation.js`, ti ekte minutter), og påfyllingen fyller til halvt lasterom (`TUT_HOLD`, `tutTarget()`, 175 kg i trebåten). Leveringen venter ikke på full last: `full` er ferdig når fisketida er ute.
 - **`deck`** viser «Rykk når det napper» til første fisk er om bord, og bløggingen etterpå.
+- **Full last igjen, valgt 06.11.2026** (Ø8, V3 C i `docs/planer/spillbarhet-fangst.md`; Jonas: «det er jo dumt å ikke fylle båten», og «brukeren skal jo selv få lov til å bestemme hvor lenge de ønsker å fiske før de leverer»). Ikke bygd: påfyllingen skal fylle mot fullt lasterom (`TUT_HOLD` 1), og spilleren skal kunne stoppe fisket og levere når hun vil. Linja om vanlig fiske på sluttseddelen skal også stå i dekksdagboka (V1 A). Datoen merkes i trakten.
 
 ### O4: hjem og mottaket (27.10.2026, V5 A)
 

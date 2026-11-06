@@ -73,6 +73,16 @@ Spilleren er `tests/mannskapsplay.py`. Den spilte grenen `ccr-ccfb0017-rmieib` (
 - **Krangelen er ikke prøvd:** tre personer som går overens, gir aldri `compat` under −1. En kjøring til med en kranglefant og en stolt (frøet 7 gir ikke det) hører til neste spilltest, sammen med å svare på krangelen under Mannskap.
 - **«Tom for is» hver andre time** i dagboka er støy når isen er slutt og båten blir ute (10.7): én linje når isen tar slutt, og én per døgn etterpå, holder.
 
+## Jonas' valg (06.11.2026)
+
+- **M1 A:** varselet ved 25 % sier «Gå ned i køya og hvil» på en båt med køyer, og spillere på båter uten køyer skal få vite at de må finne en rorbu for å sove («Dette er viktig for nye spillere»).
+- **M2 B:** skipperen lager ikke mat; den beste i mannskapet lager maten også under kokk 3, og blir bedre over tid.
+- **M3:** faste måltider 06:30, 12:30, 18:30 og 00:30; bare de som er våkne, spiser.
+- **M4 A:** vent med å gjøre maten viktigere til en ukelang test med leveringer er kjørt.
+- **M5 A:** «Tom for is» én gang, så én gang per døgn.
+
+Hvordan de bygges, står i `docs/systemer/folk-om-bord.md` 5.19b. Ikke bygd ennå.
+
 ## Bildene
 
 | Bilde | Viser |
