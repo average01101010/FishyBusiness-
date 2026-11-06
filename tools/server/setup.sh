@@ -171,8 +171,15 @@ say "The site"
 HERE=${BASH_SOURCE[0]:-}
 if [ -n "$HERE" ] && [ -f "$(dirname "$HERE")/Caddyfile" ]; then CF=$(cat "$(dirname "$HERE")/Caddyfile"); else CF=$(curl -fsSL "$RAW/Caddyfile"); fi
 if [ -f /etc/caddy/Caddyfile ] && ! grep -q 'Det Store Blå' /etc/caddy/Caddyfile; then cp /etc/caddy/Caddyfile "/etc/caddy/Caddyfile.bak-$(date +%Y%m%d-%H%M%S)"; fi
-printf '%s\n' "${CF//@DOMAIN@/$DOMAIN}" > /etc/caddy/Caddyfile
-caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null
+# the new one is checked before it takes the old one's place (06.11.2026): an invalid file in /etc/caddy would leave the running Caddy
+# as it is, but take the site down at Caddy's next restart (an update, a reboot). The one before is kept as Caddyfile.prev.
+CFN=$(mktemp /etc/caddy/Caddyfile.new.XXXXXX)
+printf '%s\n' "${CF//@DOMAIN@/$DOMAIN}" > "$CFN"
+if ! caddy validate --config "$CFN" --adapter caddyfile >/dev/null; then
+  echo "The new Caddyfile does not validate, so the running one is left as it is (the new one is in $CFN to look at)." >&2; exit 1
+fi
+if [ -f /etc/caddy/Caddyfile ]; then cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.prev; fi
+mv "$CFN" /etc/caddy/Caddyfile; chmod 644 /etc/caddy/Caddyfile
 systemctl enable --now caddy >/dev/null 2>&1 || true
 systemctl reload caddy || systemctl restart caddy
 
