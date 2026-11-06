@@ -287,7 +287,7 @@
   // ---------- the deck kit (the user's wish 19.10.2026, tools/deck/*.py): the fish tubs, the gaff and the knife, the gutting table and
   // bench, the line tubs and the net in its tub, the crates, each a part of its own GLB (src/data/deck-*.b64) drawn like the fish; a part
   // the page does not have leaves the old block in its place ----------
-  const KITF = {fish:'deck-fish', rig:'deck-rig', crane:'deck-crane', safe:'deck-safety', anchor:'deck-anchor', pause:'deck-pause', pall:'deck-pall'}, KITM = {}, KITX = {};
+  const KITF = {fish:'deck-fish', rig:'deck-rig', crane:'deck-crane', safe:'deck-safety', anchor:'deck-anchor', pause:'deck-pause', pall:'deck-pall', mob:'deck-mob'}, KITM = {}, KITX = {};
   function kit(f, nm){ const k = f + ':' + nm; if (k in KITM) return KITM[k]; let m = null; const t = KITF[f];
     if (typeof glbHas === 'function' && glbHas(t)){ const o = glbPart(t, nm); if (o) m = {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3}; }
     return KITM[k] = m; }
@@ -476,7 +476,7 @@
   // 02-species-gear.js lsaOf), the radar that is bought, the freight on deck in crates and the crane. Nothing is drawn where the
   // model has no places or the kit is not in the page.
   const RAFTSZ = c => c <= 4 ? 4 : c <= 6 ? 6 : 12, RADS = {a:0, t:0}, BOYEQ = {}, BOYET = {k:'', top:null, bot:null, cv:null};
-  const KST = {raft:0, buoys:0, text:0, radar:0, cargo:0, crane:null, tubs:0, htub:0, pots:0, vt:null, n:0};   // what the last frame drew of the kit, for which boat, and how many frames (the tests read it)
+  const KST = {raft:0, buoys:0, text:0, smoke:0, mob:0, ladder:0, radar:0, cargo:0, crane:null, tubs:0, htub:0, pots:0, vt:null, n:0};   // what the last frame drew of the kit, for which boat, and how many frames (the tests read it)
   // the buoy's lettering: the boat's name over the ring and her home port under it, in black block capitals (§ 43)
   function boyeCanvas(txt){
     // (1024 × 116: the strip's own shape on the ring, 0.57 m of arc by 0.065 m, so the letters are not stretched)
@@ -489,17 +489,44 @@
     if (BOYET.k !== k){ BOYET.k = k; if (!BOYET.top){ BOYET.top = mkTex(); BOYET.bot = mkTex(); } upTex(BOYET.top, boyeCanvas(nm)); upTex(BOYET.bot, boyeCanvas(pn)); }
     return BOYET;
   }
+  // the ladder's pieces as one mesh: two stiles along each centre line, w apart across a, and the rungs at their heights
+  const LADM = {};
+  function ladderMesh(L){
+    const b = VB(), STL = VC.steel || [0.74, 0.76, 0.78, 0.9];
+    for (const q of L){ const a = q.a, h = q.w / 2, off = (p, sg) => [p[0] + a[0] * h * sg, p[1] + a[1] * h * sg, p[2] + a[2] * h * sg];
+      for (const sg of [-1, 1]) b.tube(q.c.map(p => off(p, sg)), 0.016, STL, 6);
+      for (const y of q.r || []) for (let i = 0; i + 1 < q.c.length; i++){ const A = q.c[i], B = q.c[i + 1]; if ((y - A[1]) * (y - B[1]) > 0 || A[1] === B[1]) continue;
+        const f = (y - A[1]) / (B[1] - A[1]), P = [A[0] + (B[0] - A[0]) * f, y, A[2] + (B[2] - A[2]) * f]; b.tube([off(P, -1), off(P, 1)], 0.013, STL, 6); break; } }
+    return b.p.length ? upA(b) : null;
+  }
   function boyeQ(){ if (!('q' in BOYEQ)){ const X = kitX('safe'), mk = st => st && st.length > 1 ? texStrip(st.map(p => p[0]), st.map(p => p[1])) : null; BOYEQ.q = [mk(X.boye_strip_top), mk(X.boye_strip_bot)]; } return BOYEQ.q; }
   function drawSafety(BMrel, G, VP, t){
     const K = G.kit; if (!K) return; const V = VESSELS[vtype()], L = V && V.lsa, X = kitX('safe'), b = S.boat, eq = S.equip || {};
     // the raft in its cradle with the hydrostatic release, the smallest size for everyone aboard (§ 38)
     if (L && L.rafts && K.raft){ const z = RAFTSZ(L.cap), R = kit('safe', 'flate' + z), C = kit('safe', 'vugge' + z), fa = (X.flate_at || {})[z] || [0, 0.07, 0];
       for (const q of K.raft.slice(0, L.rafts)){ const M = chain(BMrel, M4.T(q[0], q[1], q[2]), M4.RY(q[3] || 0)); if (C) drawN(C, M); if (R){ drawN(R, chain(M, M4.T(fa[0], fa[1], fa[2]))); KST.raft++; } } }
-    // the buoys on their brackets, the first with the light and the line (§ 43: half with a light, one or two with 30 m of line)
+    // the buoys on their brackets, the first with the light and the line (§ 43: half with a light, one or two with 30 m of line); from 15 m
+    // the first one or two with the MOB light with smoke on its bracket beside the holder instead of the buoy light (§ 7-10, Ø11.5: the
+    // smoke canister's line runs to the buoy's grab line; sikker.py mobroyk_holder is the holder's place from the canister's)
     const BM = [];
-    if (L && K.buoys){ const H = kit('safe', 'boyeholder'), B = kit('safe', 'livboye'), LT = kit('safe', 'boyelys'), LN = kit('safe', 'boyeline'), at = X.boye_at || [0, -0.3, 0.05];
+    if (L && K.buoys){ const H = kit('safe', 'boyeholder'), B = kit('safe', 'livboye'), LT = kit('safe', 'boyelys'), LN = kit('safe', 'boyeline'), MR = kit('safe', 'mobroyk'), at = X.boye_at || [0, -0.3, 0.05], mh = X.mobroyk_holder || [-0.55, -0.15, 0];
       K.buoys.slice(0, L.buoys).forEach((q, i) => { const M = chain(BMrel, M4.T(q[0], q[1], q[2]), M4.RY(q[3] || 0)), MB = chain(M, M4.T(at[0], at[1], at[2]));
-        if (H) drawN(H, M); if (B){ drawN(B, MB); BM.push(MB); KST.buoys++; } if (LT && i < L.lights) drawN(LT, chain(M, M4.T(0.42, 0.04, 0))); if (LN && i < L.lines) drawN(LN, chain(M, M4.T(-0.44, 0, 0))); }); }
+        if (H) drawN(H, M); if (B){ drawN(B, MB); BM.push(MB); KST.buoys++; }
+        if (MR && i < (L.smoke || 0)){ drawN(MR, chain(M, M4.T(-mh[0], -mh[1], -mh[2]))); KST.smoke++; } else if (LT && i < L.lights) drawN(LT, chain(M, M4.T(0.42, 0.04, 0)));
+        if (LN && i < L.lines) drawN(LN, chain(M, M4.T(-0.44, 0, 0))); }); }
+    // the rescue boat from 45 m (§ 7-5; tools/deck/mob.py, Ø11.5) at kit.mob [x, y, z, ry, s] (the cradle's base on deck): the boat in its
+    // cradle under its cover with the lashings and the sling, and the davit beside her with the arm stowed over her and the hook in the
+    // sling's master link. s = -1 stands the davit on the other side of the cradle, turned round, so her bow is forward on either side
+    // of the ship. The davit stands still; swinging her out is Ø11.6
+    if (L && L.mob && K.mob){ const q = K.mob, XM = kitX('mob'), M = chain(BMrel, M4.T(q[0], q[1], q[2]), M4.RY(q[3] || 0)), ba = XM.boat_at || [0, 0.45, 0], MB = chain(M, M4.T(ba[0], ba[1], ba[2]));
+      let n = 0; for (const nm of ['mob_boat', 'mob_tarp', 'mob_sling']){ const m = kit('mob', nm); if (m){ drawN(m, MB); n++; } }
+      for (const nm of ['mob_vugge', 'mob_lash']){ const m = kit('mob', nm); if (m){ drawN(m, M); n++; } }
+      const s = q[4] || 1, da = XM.davit_at || [1.75, 0, 0.4], MD = s < 0 ? chain(M, M4.T(-da[0], da[1], da[2]), M4.RY(Math.PI)) : chain(M, M4.T(da[0], da[1], da[2]));
+      for (const nm of ['mob_davit', 'mob_arm']){ const m = kit('mob', nm); if (m){ drawN(m, MD); n++; } }
+      const ha = XM.hook_at || [-1.75, 3.174, 0], hd = XM.head_at || [-1.75, 3.474, 0], HK = kit('mob', 'mob_hook'), FL = kit('mob', 'mob_fall');
+      if (HK) drawN(HK, chain(MD, M4.T(ha[0], ha[1], ha[2]))); if (FL) drawN(FL, limbM(xf(MD, hd), xf(MD, ha), 1)); KST.mob = n; }
+    // the ladder aft where the model lacks it or it is too short for § 63 (vessel3d.js LADDERS): stainless tube, built once a type
+    if (K.ladder){ const m = LADM[vtype()] || (LADM[vtype()] = ladderMesh(K.ladder)); if (m){ drawN(m, BMrel); KST.ladder = K.ladder.length; } }
     // the radar that is bought: a dome on the roof or in the mast, or the open array on the mast that turns at 24 rpm while she is out
     // (where the model gives both the same place, the open array stands there when she has both)
     const on = b.status !== 'port' && !b.land; if (on) RADS.a = (RADS.a + Math.max(0, Math.min(0.2, t - RADS.t)) * 2.5) % (Math.PI * 2); RADS.t = t;
@@ -732,7 +759,7 @@
     const potRig = b.rig === 'teiner' && !(typeof deckPending === 'function' && deckPending() > 0.5);
     KST.tank = null; if (!G.hand){ if (!GB) buildGear(); drawCrabTank(BMrel, G, d, Bm / 2, G.hauler || [Bm / 2 * 0.92, d.y + 1, d.z - 1.3]); nSetup(VP); }
     drawRigRest(BMrel, G, d); drawHaulRest(BMrel, G, d, VP); nSetup(VP);
-    KST.raft = KST.buoys = KST.text = KST.radar = KST.cargo = 0; KST.crane = null; KST.vt = vt; KST.n++;
+    KST.raft = KST.buoys = KST.text = KST.smoke = KST.mob = KST.ladder = KST.radar = KST.cargo = 0; KST.crane = null; KST.vt = vt; KST.n++;
     drawSafety(BMrel, G, VP, t); const lifted = drawCrane(BMrel, G, VP, t, d); drawCargo(BMrel, G, lifted ? 1 : 0);
     if (!potRig){
       // the bleeding tub: a 300 l fish tub with the bloody water at its level (the old box where the kit is not in the page)
@@ -748,7 +775,7 @@
       if (n > 0 && SK && SK.fishM && !potRig && !DK.on){ const sp0 = (S.hold.find(wait) || {sp:'torsk'}).sp; drawN(fishOf(sp0), chain(BMrel, M4.T(tx, topY, tz + (own ? 0 : 0.25)), M4.RY(0.2), M4.RZ(Math.PI / 2), M4.S(0.5))); } }
     if (!DK.on) return;
     const agents = !G.hand && typeof CREW3D !== 'undefined' && CREW3D.on();   // (the agents walk to the table and the tub themselves, deckcrew.js)
-    const wl = xf(BMrel, [tx + 0.62, d.y, tz]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:DK.me ? 'skipper' : null, look:DK.me ? lookMe() : lookCrew(0)}, head = bv.head - Math.PI / 2;
+    const wl = xf(BMrel, [tx + 0.62, d.y, tz]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:DK.me ? 'skipper' : null, look:seaLook(DK.me ? lookMe() : lookCrew(0))}, head = bv.head - Math.PI / 2;
     // (icing on an open boat: the shovel from the ice box on deck over the fish in the tub being filled, as the packer does; deckcrew.js)
     const kp = karPlaces(vt), ki = kp.length ? karFilling(vt) : -1, IB = iceBoxTop(vt), icing = kp.length ? {task:'pack', Cr:xf(BMrel, kp[ki].at), crTop:karTop(vt, ki), crTub:true, Bin:IB ? xf(BMrel, IB) : null} : {task:'ice'};
     // (gutting: the fish from the bleeding tub onto the table, the guts over the rail, the gutted fish into the fish tub, 08-plants.js gutw)
@@ -757,7 +784,7 @@
     if (!agents) drawWorker(P, Object.assign({x:wl[0] + eye[0], z:wl[2] + eye[2], h:head, walk:false, s:0}, DK.task === 'gut' ? gutting : icing), eye, t, 7);
     // the skipper and a hand both on the deck work: the hand stands inboard of the bleeding tub, facing it
     if (!agents && DK.me && DK.crew && !DK.alone){ const w2 = xf(BMrel, [ux + (ux > tx ? -0.62 : 0.62), d.y, uz]), y2 = w2[1] + eye[1];
-      drawWorker({gy:() => y2, bare:true, spray:0, kit:null, look:lookCrew(0)}, Object.assign({x:w2[0] + eye[0], z:w2[2] + eye[2], h:bv.head + (ux > tx ? 1 : -1) * Math.PI / 2, walk:false, s:0}, icing), eye, t, 8); }
+      drawWorker({gy:() => y2, bare:true, spray:0, kit:null, look:seaLook(lookCrew(0))}, Object.assign({x:w2[0] + eye[0], z:w2[2] + eye[2], h:bv.head + (ux > tx ? 1 : -1) * Math.PI / 2, walk:false, s:0}, icing), eye, t, 8); }
     // the offal goes over the rail on the table's side into the water (down the bench's chute), where the gulls come down for it
     const kDrop = KB && XF[big ? 'benk_drop' : 'bord_drop'], dropP = kDrop ? [tx + tSide * kDrop[2], d.y + Math.max(0.6, kDrop[1]), tz - tSide * kDrop[0]] : [tx - tSide * 0.15, d.y + 1.0, tz];
     const out = [-tSide * Math.cos(bv.head), -tSide * Math.sin(bv.head)], a = xf(BMrel, dropP), wat = (env.tide || 0) - eye[1];

@@ -82,6 +82,12 @@ async def main():
         lsa = await pg.evaluate("((boats) => Object.fromEntries(boats.map(t => [t, VESSELS[t].lsa])))", boats)
         bad = {t: [seen[(t, 'fiske')]['raft'], seen[(t, 'fiske')]['buoys']] for t in boats if seen[(t, 'fiske')]['raft'] != lsa[t]['rafts'] or seen[(t, 'fiske')]['buoys'] != lsa[t]['buoys']}
         check(not bad, 'flåtene og livbøyene tegnes i tallet reglene krever', bad)
+        # (Ø11.5) the MOB light with smoke by the first buoy from 15 m (§ 7-10), and the ladder aft where the model lacks it (§ 63)
+        smk = {t: [seen[(t, 'fiske')].get('smoke'), lsa[t].get('smoke')] for t in boats if seen[(t, 'fiske')].get('smoke') != lsa[t].get('smoke')}
+        check(not smk, 'MOB-lyset med røyk står ved bøyene reglene krever (kyst21: én, under 15 m: ingen)', smk)
+        lad = await pg.evaluate("((boats) => Object.fromEntries(boats.map(t => [t, ((geoOf(t).kit || {}).ladder || []).length])))", boats)
+        bl = {t: [seen[(t, 'fiske')].get('ladder'), lad[t]] for t in boats if seen[(t, 'fiske')].get('ladder') != lad[t]}
+        check(not bl, 'leideren akter fra koden tegnes der modellen mangler den eller den er for kort (§ 63)', bl)
         txt = {t: seen[(t, 'fiske')]['text'] for t in boats if seen[(t, 'fiske')]['text'] != seen[(t, 'fiske')]['buoys']}
         check(not txt, 'hver livbøye har båtens navn og hjemhavn', txt)
         rad = {t: seen[(t, 'fiske')]['radar'] for t in boats if seen[(t, 'fiske')]['radar'] == 0 and (t not in ('skiff', 'trebat'))}
@@ -94,12 +100,12 @@ async def main():
         a0 = await pg.evaluate("G3._debug.kitStat.radar"); await pg.screenshot(path=os.path.join(OUT, 'deck_radar_a.png')); await pg.wait_for_timeout(700); await pg.screenshot(path=os.path.join(OUT, 'deck_radar_b.png'))
         check(a0 == 2, 'den åpne radarantennen på kystbåten tegnes', a0)
         # the crane at the quay: folded at sea, out and working while the freight goes aboard, with crates on deck
-        CR = ('kyst15', 'kyst21', 'hurtigsjark', 'sjarkny')
+        CR = tuple(t for t in ('kyst15', 'kyst21', 'hurtigsjark', 'sjarkny') if t in boats)   # (only the boats chosen with KYST_DECK)
         cr = {t: seen[(t, 'kai')]['crane'] for t in CR if (t, 'kai') in seen}
         sea = {t: seen[(t, 'fiske')]['crane'] for t in CR}
         work = [t for t in CR if pose.get((t, 'fiske')) and pose.get((t, 'kai')) and cr.get(t) and cr[t]['job']]
-        check(len(work) == len(CR), 'kranen er foldet sammen på sjøen og folder seg ut for å laste ved kaia', {'kai': cr, 'sjø': sea})
-        crates = {t: seen[(t, 'kai')]['cargo'] for t in ('kyst15', 'kyst21', 'hurtigsjark', 'sjarkny', 'snekke')}
+        check(len(work) == len(CR) and (CR or os.environ.get('KYST_DECK')), 'kranen er foldet sammen på sjøen og folder seg ut for å laste ved kaia', {'kai': cr, 'sjø': sea})
+        crates = {t: seen[(t, 'kai')]['cargo'] for t in ('kyst15', 'kyst21', 'hurtigsjark', 'sjarkny', 'snekke') if (t, 'kai') in seen}
         # the crab tank (Jonas 21.10.2026): not aboard when she is rigged for something else than pots, and when she is, on clear deck
         # (the deck map under its whole footprint), not through the cabin as on the new fast sjark
         tank = {t: seen[(t, 'fiske')].get('tank') for t in boats if seen[(t, 'fiske')].get('tank')}
@@ -111,6 +117,15 @@ async def main():
         tk = await pg.evaluate("G3._debug.kitStat.tank"); await pg.screenshot(path=os.path.join(OUT, 'deck_sjarkny_teiner.png'))
         check(bool(tk), 'rigget for teiner står krabbekaret på dekk på den nye hurtigsjarken (deck_sjarkny_teiner.png)', tk)
         check(all(v > 0 for v in crates.values()), 'trekassene står på dekk når båten har frakt', crates)
+        # (Ø11.5) the ocean vessels from 45 m: the rescue boat in its cradle with the davit (§ 7-5), the old one built into the hull left out
+        # of your own boat, and the buoys and the smoke by the rules (§ 7-10), on the places the code gives them (vessel3d.js KITADD)
+        hav = [t for t in ('autoliner', 'bunntral', 'snokrabbe', 'pelagisk') if not os.environ.get('KYST_DECK') or t in os.environ['KYST_DECK'].split(',')]
+        hs = {}
+        for t in hav:
+            await show(pg, t, 'fiske'); hs[t] = await pg.evaluate("JSON.parse(JSON.stringify(G3._debug.kitStat))"); await pg.screenshot(path=os.path.join(OUT, f'deck_{t}_mob.png')); print('  ', t, 'mob', hs[t].get('mob'), flush=True)
+        hl = await pg.evaluate("((ts) => Object.fromEntries(ts.map(t => [t, VESSELS[t].lsa])))", hav)
+        badh = {t: [hs[t].get('mob'), hs[t]['buoys'], hs[t].get('smoke')] for t in hav if not (hs[t].get('mob', 0) >= 7 and hs[t]['buoys'] == hl[t]['buoys'] and hs[t].get('smoke') == hl[t]['smoke'])}
+        check(hav and not badh, 'havbåtene fra 45 m har MOB-båten med davit, og bøyene og røyken reglene krever (deck_*_mob.png)', badh or hav)
         # two pictures standing up (the tablet held upright)
         await pg.set_viewport_size({'width': 640, 'height': 960})
         for t, scene in [('sjarkny', 'line'), ('kyst15', 'kai')]:

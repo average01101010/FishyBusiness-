@@ -438,7 +438,7 @@ function glbZones(type){
 }
 // lod: 2 near (lod0, your own boat close by: up to some 300 000 triangles), 1 middle (lodm where the model has one, else lod0: the
 // local fleet near by and your boat further off, today's level), under 1 far (lod1); docs/planer/grafikk-batmodeller.md F1
-function glbModel(type, lod, liv){
+function glbModel(type, lod, liv, own){
   const G = glbLoad(type); if (!G || !('lod0' in G.parts)) return null;   // (asked by name, not read: the fleet never reads its lod0)
   const part = lod >= 2 ? G.parts.lod0 : lod >= 1 ? (G.parts.lodm || G.parts.lod0) : (G.parts.lod1 || G.parts.lod0); let o = part;
   if (liv && DESIGNS.some(k => liv[k])) o = glbDesign(type, part, liv); else if (liv && (liv.hull || liv.house || liv.deck)) o = glbPaint(part, liv);
@@ -459,14 +459,78 @@ function glbModel(type, lod, liv){
   // the lid inside an open boat's gunwales, as triangles (drawn into depth only, so the sea does not show inside)
   let cap = null; const L = G.parts.cap;
   if (L){ cap = []; for (let i = 0; i < L.p.length; i += 9) cap.push([[L.p[i], L.p[i + 1], L.p[i + 2]], [L.p[i + 3], L.p[i + 4], L.p[i + 5]], [L.p[i + 6], L.p[i + 7], L.p[i + 8]]]); }
-  return {o, glass:lod >= 1 && G.parts.glass ? G.parts.glass : {p:[], n:[], c:[]}, cap, geo:Object.assign({gw:1, open:false, hand:false}, G.ex.anchors), hs:null, glb:true};
+  // your own boat from 45 m without the old rescue boat in her hull, where the new one is in the page to stand in her place (KITADD)
+  if (own && MOBCUT[type] && glbHas('deck-mob') && ((VESSELS[type] || {}).lsa || {}).mob) o = mobCut(o, MOBCUT[type]);
+  const geo = Object.assign({gw:1, open:false, hand:false}, G.ex.anchors), add = KITADD[type];
+  if (add){ geo.kit = Object.assign({}, geo.kit || {}); for (const k in add) if (!(k in geo.kit)) geo.kit[k] = add[k]; }   // (the model's own places first)
+  return {o, glass:lod >= 1 && G.parts.glass ? G.parts.glass : {p:[], n:[], c:[]}, cap, geo, hs:null, glb:true};
+}
+// ---- the life-saving gear's places that the models from 45 m do not have yet (Ø11.5, 06.11.2026; until Ø4 revises them and gives them
+// kit.buoys and kit.mob of their own). The lifebuoys' holders [x, y, z, ry] (the holder's back on the rail or the bulwark, +z out from
+// it) for the most §§ 7-10 asks (6, and 8 on the 75 m one), the first on each side the smoke ones (lsaOf smoke); the rescue boat's
+// cradle [x, y, z, ry, s, dz] (its base on deck; s: the davit's side of the cradle, dz: how far the davit stands aft of the sling's
+// master link, the arm slewed to reach it). Each model has an old rescue boat built into its hull: MOBCUT says where, and your own boat
+// is drawn without it (mobCut) so the new one from tools/deck/mob.py stands alone (Jonas 06.11.2026, «Skjul den gamle»); the boats of
+// others keep it, as they carry none of your deck kit. Measured on the models with rays (the decks' heights, the rails' faces, what
+// stands on deck), not guessed. Keyed by type like HELM_KIT: data about the models, not a choice made by the type's name.
+const KITADD = {
+  // the autoliner: the boat deck aft of the casing (6.25 m over the waterline, the bulwark's inside 5.165 m out); the old boat stood to
+  // port by the crane's boom rest, too narrow for the new one, so she stands to starboard where the deck is clear
+  autoliner:{buoys:[[5.165, 6.7, 12.0, -Math.PI / 2], [-5.165, 6.7, 12.0, Math.PI / 2], [5.165, 6.7, 13.6, -Math.PI / 2], [-5.165, 6.7, 15.0, Math.PI / 2], [-5.165, 6.7, 17.0, Math.PI / 2], [-5.165, 6.7, 20.6, Math.PI / 2]],
+    mob:[2.95, 6.25, 17.8, 0, 1, 0],
+    // (and her liferafts, which the model does not have: one each side, § 7-5; the others carry theirs in the hull)
+    raft:[[-4.5, 6.25, 14.0, Math.PI / 2], [4.5, 6.25, 13.0, Math.PI / 2]]},
+  // the freezer trawler: deck 3 (6.3 m), the old boat's place to port with the davit outboard of her
+  bunntral:{buoys:[[6.2, 6.85, 2.0, Math.PI / 2], [-6.2, 6.85, 2.0, -Math.PI / 2], [6.2, 6.85, 5.0, Math.PI / 2], [-6.2, 6.85, 10.4, -Math.PI / 2], [6.2, 6.85, 10.6, Math.PI / 2], [-6.2, 6.85, 1.0, -Math.PI / 2]],
+    mob:[-3.65, 6.3, 6.4, 0, -1, 0]},
+  // the snow crab vessel: the old boat on her platform under the crane's boom to port is gone; the new one on the shelter's roof (6.5 m)
+  // to starboard, clear of the boom
+  snokrabbe:{buoys:[[4.82, 7.0, 12.0, Math.PI / 2], [-4.82, 7.0, 12.0, -Math.PI / 2], [4.82, 7.0, 21.5, Math.PI / 2], [-4.82, 7.0, 15.0, -Math.PI / 2], [-4.82, 7.0, 18.0, -Math.PI / 2], [-4.82, 7.0, 23.5, -Math.PI / 2]],
+    mob:[2.65, 6.5, 15.0, 0, 1, 0]},
+  // the purse seiner: the old boat in her recess under tier B to starboard had no room for a davit; the new one on tier B's top
+  // (9.55 m) above it, the davit between the two liferaft canisters at the rail
+  pelagisk:{buoys:[16.2, 17.7, 19.2, 20.7].flatMap(z => [[7.6, 10.1, z, Math.PI / 2], [-7.6, 10.1, z, -Math.PI / 2]]),
+    mob:[5.15, 9.55, 18.35, 0, 1, -0.35]}};
+// ---- the ladder aft (FOR-2013-11-22-1404 § 63, read on Lovdata 06.11.2026: «På fartøyets aktre del skal det være montert fast leider med
+// håndrekker. Leiderens nederste trinn skal nå minst 300 millimeter under vannlinjen», every boat under 15 m; Ø11.5). Checked on each model
+// with rays: the plastic snekke's meets it (its lowest rung 0.32 m under, the stiles hooked over the transom's top to hold); the fast
+// sjarks' lowest rung is 0.25 m under and the 15 m boat's 0.17 m (and she has no handrails), so they get a rung more under it; the skiff's
+// folded one on the port pod a rung more and a handrail up to the transom's top; the plastic sjark, the havsjark and the breisjark have
+// none, so they get a whole one on the transom to starboard, and the double-ended wooden boat one over her starboard quarter. Until Ø4
+// gives the models their own: each piece is the stiles' centre line (top down, the game's frame), the way across it (a), the stiles'
+// spacing (w) and the rungs' heights (r, over the waterline). Drawn in stainless tube by the deck kit (view3d drawSafety)
+const LADDERS = {
+  skiff:[{c:[[-0.74, -0.24, 3.03], [-0.74, -0.42, 3.03]], a:[1, 0, 0], w:0.24, r:[-0.36], ext:1},
+    {c:[[-0.74, 0.32, 2.45], [-0.74, 1.05, 2.45], [-0.74, 1.05, 2.3], [-0.74, 0.79, 2.3]], a:[1, 0, 0], w:0.24, r:[]}],
+  trebat:[{c:[[0.8, 1.08, 2.2], [1.0, 1.08, 2.2], [1.0, 0.7, 2.2], [1.0, -0.42, 2.2]], a:[0, 0, 1], w:0.32, r:[-0.35, -0.07, 0.21, 0.49]}],
+  plastsjark:[{c:[[0.8, 1.49, 4.55], [0.8, 1.49, 4.79], [0.8, 1.08, 4.77], [0.8, -0.42, 4.656]], a:[1, 0, 0], w:0.4, r:[-0.35, -0.07, 0.21, 0.49, 0.77]}],
+  sjark:[{c:[[1.23, 1.46, 5.2], [1.23, 1.46, 5.44], [1.23, 1.03, 5.354], [1.23, -0.42, 4.94]], a:[1, 0, 0], w:0.4, r:[-0.35, -0.07, 0.21, 0.49, 0.77]}],
+  breisjark:[{c:[[1.26, 1.66, 5.45], [1.26, 1.66, 5.7], [1.26, 1.22, 5.628], [1.26, -0.42, 5.55]], a:[1, 0, 0], w:0.4, r:[-0.35, -0.07, 0.21, 0.49, 0.77, 1.05]}],
+  hurtigsjark:[{c:[[1.0, -0.3, 5.545], [1.0, -0.62, 5.545]], a:[1, 0, 0], w:0.3, r:[-0.55], ext:1}],
+  sjarkny:[{c:[[1.2, -0.3, 5.545], [1.2, -0.62, 5.545]], a:[1, 0, 0], w:0.3, r:[-0.55], ext:1}],
+  kyst15:[{c:[[1.55, -0.45, 7.555], [1.55, -0.52, 7.555]], a:[1, 0, 0], w:0.4, r:[-0.45], ext:1},
+    {c:[[1.55, 3.21, 7.555], [1.55, 3.75, 7.555], [1.55, 3.75, 7.47], [1.55, 3.37, 7.47]], a:[1, 0, 0], w:0.4, r:[]}]};
+for (const k in LADDERS){ (KITADD[k] = KITADD[k] || {}).ladder = LADDERS[k]; }
+// the old rescue boat in each hull (the game's frame: [x0, x1, y0, y1, z0, z1]): the triangles wholly inside are left out of your own
+// boat (the boat, her cradle or platform and the old davit; tests/unit/vessel3d.test.mjs counts them and checks that no deck goes)
+const MOBCUT = {autoliner:[[-4.4, -2.7, 6.24, 7.9, 12.95, 17.85], [-4.8, -3.6, 6.24, 9.8, 12.2, 15.25]],
+  bunntral:[[-5.6, -3.3, 6.29, 9.0, 3.3, 9.5], [-5.75, -4.35, 6.29, 11.2, 2.3, 6.3]],
+  snokrabbe:[[-4.95, -2.55, 3.39, 6.35, 4.45, 9.95]],
+  pelagisk:[[5.4, 7.4, 7.1, 8.45, 14.3, 19.95]]};
+// a model's arrays without the triangles wholly inside the boxes (a detailed model's lod: three points to a triangle, none shared)
+function mobCut(o, boxes){
+  if (!boxes || !o || !o.p) return o; const inB = (i, B) => o.p[i] >= B[0] && o.p[i] <= B[1] && o.p[i + 1] >= B[2] && o.p[i + 1] <= B[3] && o.p[i + 2] >= B[4] && o.p[i + 2] <= B[5];
+  const p = [], n = [], c = [];
+  for (let v = 0; v * 3 + 9 <= o.p.length; v += 3){ const q = v * 3; if (boxes.some(B => inB(q, B) && inB(q + 3, B) && inB(q + 6, B))) continue;
+    for (let k = 0; k < 9; k++){ p.push(o.p[q + k]); n.push(o.n[q + k]); } for (let k = 0; k < 12; k++) c.push(o.c[v * 4 + k]); }
+  return {p, n, c};
 }
 // a model for a type: the hull with its fittings (near: lod 1, a detailed model's own near version at 2), the glass, the depth cap for open hulls, and where things are
 const VMODEL = {};
 function vesselSpec(type){ return SPEC3D[type] || null; }
-function buildVesselModel(type, lod, liv){
+function buildVesselModel(type, lod, liv, own){
   lod = lod || 1; const V = VESSELS[type], sp = vesselSpec(type); if (!V || !sp) return null;
-  { const g = glbModel(type, lod, liv); if (g) return g; }       // a detailed model, also for the hand-steered starter boat
+  { const g = glbModel(type, lod, liv, own); if (g) return g; }       // a detailed model, also for the hand-steered starter boat
   if (sp.hand) return null;
   lod = Math.min(lod, 1);   // (the kit models have no level over near)
   const H = Object.assign({L:V.len, B:V.beam, T:V.draft}, sp.hull, liv ? {col:Object.assign({}, sp.hull.col, kitLiv(liv))} : null), hs = hullShape(H), o = VB(), gb = VB(); o.lod = lod; gb.lod = lod;
@@ -879,24 +943,44 @@ function stripPaint(type, st){
 const MARKSTRIP = {}, MARKPAINT = {};
 function markStrips(type){
   if (type in MARKSTRIP) return MARKSTRIP[type];
-  const V = VESSELS[type] || {len:10}, lh = V.len >= 15 ? 0.45 : V.len >= 9 ? 0.25 : 0.15, h = lh * 1.35;
-  const first = sideStrip(type, 0.11, h, 4) || sideStrip(type, 0.14, h, 4); MARKPAINT[type] = null;
-  if (!first || !glbHas(type)) return MARKSTRIP[type] = first;
+  const V = VESSELS[type] || {len:10}, lh = V.len >= 15 ? 0.45 : V.len >= 9 ? 0.25 : 0.15;
+  return MARKSTRIP[type] = stripSearch(type, lh, [0.11, 0.14], [0.11, 0.13, 0.09, 0.15, 0.17, 0.07, 0.19], MARKPAINT);
+}
+// a strip for painted letters lh tall on both sides (first: the shares of the length from the stem tried for the plain place; fr: those
+// tried for one clear of what stands proud, of the anchors and on one even paint, at heights down to 1.75 strips under the sheer); the
+// paint under it into PAINT[type]. The registration mark's and the call sign's
+function stripSearch(type, lh, first0, fr, PAINT, avoid){
+  const h = lh * 1.35;
+  let first = null; for (const f of first0){ first = sideStrip(type, f, h, 4); if (first) break; } PAINT[type] = null;
+  if (!first || !glbHas(type)) return first;
   // the anchors stowed at the bow, and how far from their fairlead they reach
   const bw = (typeof geoOf === 'function' ? geoOf(type) : {}).bower, anc = [];
   if (bw && bw.fair){ const r = anchorLen(bw) * 0.75 + 0.15; anc.push([bw.fair, r]); if (bw.spare && bw.spare.fair) anc.push([bw.spare.fair, r]); }
   const nearAnc = st => st.some(([B, T]) => anc.some(([f, r]) => B.concat(T).some(p => Math.hypot(p[0] - f[0], p[1] - f[1], p[2] - f[2]) < r)));
-  const ok = st => { if (stripProud(type, st[0]) || stripProud(type, st[1]) || nearAnc(st)) return null;
+  // (and clear of another strip's, avoid: the registration mark's where the call sign looks)
+  const near = st => !!avoid && st.some(([B, T], i) => avoid[i] && B.concat(T).some(p => avoid[i][0].concat(avoid[i][1]).some(q => Math.abs(p[2] - q[2]) < 0.15 && Math.abs(p[1] - q[1]) < h)));
+  const ok = st => { if (stripProud(type, st[0]) || stripProud(type, st[1]) || nearAnc(st) || near(st)) return null;
     const P = st.map(s => stripPaint(type, s)); if (P.some(p => !p || p.even < 0.9)) return null; return P; };
   // (down to 1.75 heights under the sheer since 01.11.2026: on the havsjark the fender strake runs 0.35 m under the sheer at the bow, so the
   // mark goes under it; only a boat where every place higher up failed gets a lower one)
-  for (const dr of [0, 0.35, 0.7, 1.05, 1.4, 1.75]) for (const f of [0.11, 0.13, 0.09, 0.15, 0.17, 0.07, 0.19]) for (const k of [1, 0.85]){
+  for (const dr of [0, 0.35, 0.7, 1.05, 1.4, 1.75]) for (const f of fr) for (const k of [1, 0.85]){
     const st = sideStrip(type, f, h * k, 4, dr * h * k); if (!st) continue; const P = ok(st);
-    if (P){ MARKPAINT[type] = P; return MARKSTRIP[type] = st; }
+    if (P){ PAINT[type] = P; return st; }
   }
-  MARKPAINT[type] = [stripPaint(type, first[0]), stripPaint(type, first[1])];
-  return MARKSTRIP[type] = first;
+  PAINT[type] = [stripPaint(type, first[0]), stripPaint(type, first[1])];
+  return first;
 }
+// the call sign's strip (Ø11.5; FOR-2002-06-27-754 § 9: painted on the outside of the hull under 15 m, letters of at least 6 cm; from 15 m
+// marked for good, and painted here too): aft of the registration mark on both sides, a quarter to a third of the length from the stem,
+// 12 cm letters under 15 m and 30 cm from 15 m
+const CALLSTRIP = {}, CALLPAINT = {};
+function callStrips(type){
+  if (type in CALLSTRIP) return CALLSTRIP[type];
+  const V = VESSELS[type] || {len:10};
+  return CALLSTRIP[type] = stripSearch(type, V.len >= 15 ? 0.3 : 0.12, [0.26, 0.3], [0.26, 0.29, 0.23, 0.32, 0.21, 0.35], CALLPAINT, markStrips(type));
+}
+// the colour under the call sign, as markRGB has it for the mark
+function callRGB(type, liv){ callStrips(type); const P = CALLPAINT[type], p = P && (P[0] || P[1]); if (!p || p.zone1 >= 0.6) return hullRGB(type, liv); return p.rgb; }
 // the anchor's length over all from its kind and mass (tools/deck/anker.py: the plough 1.00 m for 20 kg, the Hall 1.49 m for 1000 kg,
 // the grapnel 0.56 m), by the cube root of the mass
 function anchorLen(bw){ const kg = bw.kg || 10; return bw.kind === 'hall' ? 1.49 * Math.cbrt(kg / 1000) : bw.kind === 'dregg' ? 0.56 : 1.0 * Math.cbrt(kg / 20); }
@@ -1024,6 +1108,7 @@ function houseFront(type, P, Gl, V){
   return [{kind:'house', line:'name', B:st[0], T:st[1], aspect:2 * w / sh, paint:crossPaint(T, w, -w, y0, y1, -1, z0 - 0.15 - Math.abs(R.zl - R.z0), z0 + 0.15 + Math.abs(R.zl - R.z0))}];
 }
 function transom(type, P, V){
+  let portMin = V.len >= 15 ? 0.15 : 0;   // (the home port's letters from 15 m, § 9)
   // the aft-facing surface near the stern on the hull's, the stripe's and the house's paint (not the fittings, the ladder, the rails)
   // (the hull's own aft end: a rail or a gantry further aft is not the stern)
   let zA = -Infinity; for (let v = 0; v < P.zone.length; v++) if (P.zone[v] === 1) zA = Math.max(zA, P.p[v * 3 + 2]);
@@ -1034,7 +1119,7 @@ function transom(type, P, V){
   for (let y = 0.1; y < 0.5 * V.len; y += 0.02){ const h = rayZ(T, 0, y, 1); if (h && (z0 === null || Math.abs(h.z - z0) < 0.6)){ if (yb === null) yb = y; yt = y; z0 = h.z; } else if (yb !== null) break; }
   if (yb === null || yt - yb < 0.2) return null; yb = Math.max(yb, 0.12 + 0.012 * V.len);
   const fit = (cap, two) => {
-    const nh = cap / CAPK, ph = 0.55 * nh, gap = 0.12 * nh, H = nh + (two ? gap + ph : 0), mg = Math.max(0.04, 0.2 * cap); let first = null;
+    const nh = cap / CAPK, ph = Math.max(0.55 * nh, portMin / CAPK), gap = 0.12 * nh, H = nh + (two ? gap + ph : 0), mg = Math.max(0.04, 0.2 * cap); let first = null;
     for (let top = yt - mg; top - H >= yb; top -= 0.04){
       const ln = [[top - nh, top, 'name']]; if (two) ln.push([top - nh - gap - ph, top - nh - gap, 'port']);
       const out = [];
@@ -1049,9 +1134,12 @@ function transom(type, P, V){
     }
     return first;
   };
-  const cap = sternCap(V.len);
-  for (const k of [1, 0.8, 0.65]){ const r = fit(cap * k, true); if (r) return r; }
-  for (const k of [1, 0.8, 0.65]){ const r = fit(cap * k, false); if (r) return r; }
+  // (the marking rules, FOR-2002-06-27-754 § 9, Ø11.5: from 15 m the name aft and the home port under it in letters of at least 15 cm,
+  // under 15 m the name in letters of at least 6 cm; smaller only where the hull has no room for that)
+  const cap = sternCap(V.len), big = V.len >= 15, min = big ? 0.15 : 0.06, ks = [1, 0.8, 0.65].filter(k => cap * k >= min - 1e-9);
+  for (const k of ks){ const r = fit(cap * k, true); if (r) return r; }
+  for (const k of ks){ const r = fit(cap * k, false); if (r) return r; }
+  portMin = 0; for (const k of [1, 0.8, 0.65]){ const r = fit(cap * k, true) || fit(cap * k, false); if (r) return r; }
   return null;
 }
 function namePlaces(type){
@@ -1111,8 +1199,29 @@ const WKIT = {hw:{top:[0.13, 0.29, 0.62], legs:[0.13, 0.29, 0.62], torso:'torso'
 const WK_S = 0.95;      // on board a little smaller than on the quay (1.73 m with the cap), as the wheelhouses were made for the old figure
 const WK_SH = 1.42 * WK_S;      // the shoulders' height on board, for the arms the 3D view draws live
 const WKPC = {};
-// a figure's kit: one of the three old ones by name, or a look (core/09i-look.js: an object, or lookKit's result)
-const wkKitOf = kit => typeof kit === 'string' ? WKIT[kit] : kit && kit.top ? kit : lookKit(kit);
+// a figure's kit: one of the three old ones by name, or a look (core/09i-look.js: an object, or lookKit's result); a look with v set
+// wears the life jacket (vestKit)
+const wkKitOf = kit => typeof kit === 'string' ? WKIT[kit] : kit && kit.top ? kit : kit && kit.v ? vestKit(lookKit(kit)) : lookKit(kit);
+// the inflatable life jacket over the jacket (Ø11.4 tools/harbour/arbeider.py; Ø11.5, Jonas 28.10.2026: worn on deck at sea, not in port
+// or on the quay): the vest part that goes with the jacket (the worker GLB's extras vest: jacket part -> vest part), and long hair, a
+// ponytail and a braid put up in a bun under it (extras vestHair; under a sou'wester lookKit has made them a plain medium cut already).
+// A kit of its own (key + 'V'), so the parts are painted and kept apart from the same look without it. No vest over a flotation suit,
+// which is a buoyancy garment of its own (there is none in the wardrobe yet: docs/karaktersystem.md)
+const VESTK = {};
+function vestKit(K){
+  if (!K || K.vest !== undefined) return K; if (VESTK[K.key]) return VESTK[K.key];
+  const X = glbHas('worker') ? (glbLoad('worker').ex || {}) : {}, vp = (X.vest || {})[K.torso] || null; if (!vp || /flyte/.test(K.torso)) return K;
+  let hairP = K.hairP; const hs = K.look && K.look.hs, to0 = hs && (X.vestHair || {})[hs], to = to0 === 'bun' && K.look.ht === 'bucket' ? 'mid' : to0;   // (a bun under a sou'wester is a medium cut, as lookKit has it)
+  if (to && hairP) hairP = 'hair_' + to + (/_h$/.test(hairP) ? '_h' : '');
+  if (Object.keys(VESTK).length > 200) for (const q in VESTK) delete VESTK[q];
+  return VESTK[K.key] = Object.assign({}, K, {key:K.key + 'V', vest:vp, hairP});
+}
+// the shoulder joint under the vest, out and down, and the elbow further out (m): the arm's root then comes out under the collar and
+// the pads instead of through them (tools/harbour/vestarm.py: the arm's triangles through the vest but not the jacket, in the game's 27
+// poses, from 307, 498 and 642 to 47, 88 and 227 for the work jacket's, the oilskin's and the parka's vest; Ø11.5)
+const VEST_SH = [0.02, 0.02, 0.04];
+// a look with the life jacket on (or as it was: a kit name, nothing, or already on)
+const lookVest = l => !l || typeof l === 'string' || l.v ? l : Object.assign({}, l, {v:1});
 const wkKeyOf = kit => typeof kit === 'string' ? kit : wkKitOf(kit).key;
 function wkPart(name, kit){
   const K = wkKitOf(kit); if (!K) return null;
@@ -1148,14 +1257,14 @@ function figureVB(B, x, y, z, seated, hands, kit){
     const foot = seated ? [x + sd * 0.12 * S, y + 0.08 * S, z - 0.46 * S] : [x + sd * 0.12 * S, y + 0.08 * S, z];
     wkLimb(B, P('thigh'), H, knee, S); wkLimb(B, P('shin'), knee, foot, S); wkPut(B, P(K.shoe || 'boot'), WKI, [S, S, S], [foot[0], foot[1] - 0.08 * S, foot[2]]);
   }
-  wkPut(B, P(K.torso), WKI, [S, S, S], [x, hip, z]);
+  wkPut(B, P(K.torso), WKI, [S, S, S], [x, hip, z]); if (K.vest) wkPut(B, P(K.vest), WKI, [S, S, S], [x, hip, z]);   // (the vest from the hips, as the jackets)
   const neck = [x, hip + 0.58 * S, z]; wkPut(B, P('head'), WKI, [S, S, S], neck);
   for (const nm of [K.hairP, K.beard, K.hat]) if (nm) wkPut(B, P(nm), WKI, [S, S, S], neck);
   if (hands === false) return;
   const sh = hip + 0.5 * S;
   for (const sd of [-1, 1]){
-    const S0 = [x + sd * 0.21 * S, sh, z], hd = hands ? hands[sd < 0 ? 0 : 1] : seated ? [x + sd * 0.16, hip + 0.1, z - 0.36] : [x + sd * 0.26 * S, y + 0.82 * S, z + 0.02];
-    const el = [(S0[0] + hd[0]) / 2 + sd * 0.04, (S0[1] + hd[1]) / 2 - 0.06, (S0[2] + hd[2]) / 2 + 0.05];
+    const S0 = K.vest ? [x + sd * (0.21 + VEST_SH[0]) * S, sh - VEST_SH[1] * S, z] : [x + sd * 0.21 * S, sh, z], hd = hands ? hands[sd < 0 ? 0 : 1] : seated ? [x + sd * 0.16, hip + 0.1, z - 0.36] : [x + sd * 0.26 * S, y + 0.82 * S, z + 0.02];
+    const el = [(S0[0] + hd[0]) / 2 + sd * (0.04 + (K.vest ? VEST_SH[2] : 0)), (S0[1] + hd[1]) / 2 - 0.06, (S0[2] + hd[2]) / 2 + 0.05];
     wkLimb(B, P('uarm'), S0, el, S); wkLimb(B, P('farm'), el, hd, S);
     const d = [hd[0] - el[0], hd[1] - el[1], hd[2] - el[2]], l = Math.hypot(d[0], d[1], d[2]) || 1;
     wkLimb(B, P('hand_lo') || P('hand'), hd, [hd[0] + d[0] / l * S, hd[1] + d[1] / l * S, hd[2] + d[2] / l * S], S);   // (the one-piece glove: these figures are seen from a distance)

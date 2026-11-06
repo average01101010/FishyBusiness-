@@ -152,11 +152,11 @@
     const key = liv ? t + '|own' : t; let E = PVM[key];
     // a design that cuts the hull (vessel3d.js livGeo) is a new shape: the own buffers are built again
     if (E && liv && E.geoK !== livGeo(liv)){ for (const H of [E.hull, E.h1, E.h0]) if (H) for (const b of [H.pb, H.nb, H.cb]) gl.deleteBuffer(b); E = PVM[key] = null; }
-    if (!E){ const m = buildVesselModel(t, 2, liv); if (!m) return null;
+    if (!E){ const m = buildVesselModel(t, 2, liv, true); if (!m) return null;
       const up = o => ({pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3});
       let cap = null; if (m.cap){ const c = MB(); for (const tr of m.cap) c.tri(tr[0], tr[1], tr[2], [0, 0, 0]); cap = c.mesh(); }
       E = PVM[key] = {hull:up(m.o), glass:up(m.glass), cap, livK:livKey(liv), geoK:livGeo(liv)}; }
-    if (liv){ const k = livKey(liv); if (E.livK !== k){ E.livK = k; const m = buildVesselModel(t, 2, liv);
+    if (liv){ const k = livKey(liv); if (E.livK !== k){ E.livK = k; const m = buildVesselModel(t, 2, liv, true);
       if (m && m.o.c.length === E.hull.n * 4){ gl.bindBuffer(gl.ARRAY_BUFFER, E.hull.cb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(m.o.c), gl.STATIC_DRAW); } } }
     return E;
   }
@@ -166,7 +166,7 @@
     const E = pvm(t, liv); if (!E) return null; if (tier >= 2 || !glbPart(t, tier ? 'lodm' : 'lod1')) return E.hull;
     const k = 'h' + tier, want = E.livK + '|' + E.geoK; let H = E[k];
     if (H && H.key !== want){ for (const b of [H.pb, H.nb, H.cb]) gl.deleteBuffer(b); H = E[k] = null; }
-    if (!H){ const m = buildVesselModel(t, tier ? 1 : 0.3, liv); if (!m) return E.hull; H = E[k] = {pb:buf(new Float32Array(m.o.p)), nb:buf(new Float32Array(m.o.n)), cb:buf(new Float32Array(m.o.c)), n:m.o.p.length / 3, key:want}; }
+    if (!H){ const m = buildVesselModel(t, tier ? 1 : 0.3, liv, true); if (!m) return E.hull; H = E[k] = {pb:buf(new Float32Array(m.o.p)), nb:buf(new Float32Array(m.o.n)), cb:buf(new Float32Array(m.o.c)), n:m.o.p.length / 3, key:want}; }
     return H;
   }
   // which version of your boat is drawn: by how long she looks in the drawing, in its pixels (her length over the distance, times the
@@ -187,7 +187,7 @@
     const b = VB(); b.lod = 0.6; personVB(b, 0, 0, 0, false, kind === 'skip' ? [[-0.16, 1.08, -0.42], [0.16, 1.08, -0.42]] : null, null, look);
     return PV[key] = {pb:buf(new Float32Array(b.p)), nb:buf(new Float32Array(b.n)), cb:buf(new Float32Array(b.c)), n:b.p.length / 3};
   }
-  const ownPerson = (kind, i) => { const l = kind === 'crew' ? lookCrew(i) : lookMe(); if (!l) return null; const key = 'o|' + kind + '|' + lookKey(l); return PV[key] || personMesh(kind, l, key); };
+  const ownPerson = (kind, i) => { const l = seaLook(kind === 'crew' ? lookCrew(i) : lookMe(), kind === 'skip'); if (!l) return null; const key = 'o|' + kind + '|' + lookSig(l); return PV[key] || personMesh(kind, l, key); };
   // a boat of another player: her skipper's and crew's looks as she sent them (lk, ck); the local boats' from a look made from the id
   const npcPerson = (kind, n, i) => {
     if (n.lk){ const code = kind === 'crew' ? String(n.ck || '').split(';')[i || 0] : n.lk, key = 'p|' + kind + '|' + code, look = !PV[key] && lookFromKey(code); if (PV[key]) return PV[key]; if (look) return personMesh(kind, look, key); }
