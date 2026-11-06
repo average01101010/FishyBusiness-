@@ -1,6 +1,8 @@
 """The anchor light and the anchor alarm in 3D (view3d.js ANCHAL): on a January night a boat under way shows her side and stern lights as
 well as the white one; at anchor only the all-round white one (1 light); a drag sounds the alarm: the banner shows and the light is
-red and flashing for a few seconds. Also the alarm hook and the rest that starts by itself at a rorbu. Prints OK or FEIL."""
+red and flashing for a few seconds. Also the alarm hook and the rest that starts by itself at a rorbu. Ø11.2: by day in clear weather no
+lanterns, by day in restricted visibility they are lit (rule 20 c); the coast guard on her inspection at night shows her blue all-round
+light (kap. II 53 d). Prints OK or FEIL."""
 from _env import GAME, boot, OUT
 import asyncio, json
 from playwright.async_api import async_playwright
@@ -26,6 +28,18 @@ async def main():
         check(anch == 1, 'for anker: bare det hvite ankerlyset', anch)
         check(al['on'] and al['el'] and 'ANKERALARM' in (al['txt'] or ''), 'ankeralarmen viser banner og lyset blinker rødt', al)
         await pg.screenshot(path=OUT + '/anchorlight.png')
+        # Ø11.2: by day the lanterns are out in clear weather and lit in restricted visibility (rule 20 c), fainter than at night
+        await pg.evaluate("(() => { S.t = Math.round((Date.UTC(2027, 5, 15, 12) - EPOCH) / 6e4); const b = S.boat; b.anch = null; b.status = 'idle'; G3._debug.anchl.until = 0; })()"); await pg.wait_for_timeout(3000)
+        day = await pg.evaluate("({d:G3._debug.anchl.drawn, a:+G3._debug.anchl.litA.toFixed(2)})")
+        await pg.evaluate("(() => { window.__vis = visibility; visibility = () => 0.8; })()"); await pg.wait_for_timeout(3000)
+        fogd = await pg.evaluate("({d:G3._debug.anchl.drawn, a:+G3._debug.anchl.litA.toFixed(2)})")
+        check(day['d'] == 0 and fogd['d'] >= 3 and 0.3 < fogd['a'] < 0.9, 'Ø11.2: om dagen i klart vær er lanternene slukket, i tåke om dagen er de tent (regel 20 c)', [day, fogd])
+        await pg.screenshot(path=OUT + '/anchorlight-fog.png')
+        # the coast guard alongside on her inspection, at night: the blue all-round light on her highest masthead (kap. II 53 d)
+        await pg.evaluate("(() => { visibility = window.__vis; S.t = Math.round((Date.UTC(2027, 0, 12, 22) - EPOCH) / 6e4); const b = S.boat, K = kvState(); K.visit = {t0:S.t, hav:null}; K.visit.p = kvSide(b); K.visit.hd = b.heading || 0; K.visit.v = 0; })()"); await pg.wait_for_timeout(3500)
+        kv = await pg.evaluate("({kv:G3._debug.anchl.kvLit, npc:G3._debug.anchl.npcLit, here:npcStates(S.t / 60).some(n => n.kv)})")
+        check(kv['here'] and kv['kv'] >= 1, 'Ø11.2: Kystvakta under kontroll viser blått rundtlys om natta (kap. II 53 d)', kv)
+        await pg.screenshot(path=OUT + '/anchorlight-kv.png')
         errs2 = await pg.evaluate("1")
         print('sidefeil', errs[:3]); await b.close()
 asyncio.run(main())

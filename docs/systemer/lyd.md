@@ -33,3 +33,14 @@
   - Mørkere om natta (lavere lavpass) og i dårlig vær, og sjeldnere klokker i storm.
   - Den har egen vei ut (ikke `master`), så den spiller også når lydeffektene er av. Styrken er `S.settings.music` (Av, Svak 0,2, Normal 0,35, som er standard, og Sterkere 0,6), og ganget med 0,2 er den aldri høy.
   - Ingen filer eller lisenser. `soundtest.py` sjekker at den spiller med egen styrke og blir stille med Av.
+
+## 5.25b Lydsignalene på sjøen (Ø11.2, 06.11.2026)
+
+Sjøveisreglene regel 32–35 og vedlegg III, lest ordrett på Lovdata 06.11.2026. Reglene for når et signal gis, står i `docs/systemer/sjofart-og-lover.md` (4.4); her står hvordan det låter.
+
+- **Køen:** `core/05e-sjovei.js` legger signalene i `SJV.sig` (mønsteret, hvor i rammen, fartøyets lengde, egen båt eller ikke), og `sigTick` i `SND.tick` spiller dem. Et signal som er eldre enn 8 sekunder (lyden startet sent, siden var skjult), spilles ikke. Med lyden av tømmes køen.
+- **Mønstrene** (`SND.blasts(pat, {k, L, pan, lp})`, gir tiden i sekunder): `S` kort støt 1 s (32 b «om lag et sekunds varighet»), `L` langt 4,5 s (32 c «fra fire til seks sekunders varighet»), 1 s mellom støtene og 2 s mellom to lange (35 b «om lag 2 sekunders mellomrom»), og `bell`: klokka ringt hurtig i 5 s (35 g), et slag hvert femte sekund med tre deltoner fra en skipsklokke (620 Hz).
+- **Fløyta** (`blast`): to sagtenner med en ters mellom gjennom et lavpass, med tonen etter lengden (`SND.hornHz`, vedlegg III 1 b): 420 Hz under 20 m, 300 Hz til 75 m, 190 Hz til 200 m, 110 Hz over. Hornet til tutingen (`SND.horn`, `ui/10n-hail.js`) er ett støt på 1,5 s med tonen til din egen båt; før var det 147 og 220 Hz for alle, som et stort skip.
+- **Hvor det høres fra:** som de andre lydene, `(ref / d)^0,9` med lavpasset og panoreringen fra `at`. `ref` er 3,6 % av hørevidden i vedlegg III 1 c (0,5 mil under 20 m: 33 m; 1 mil: 67 m; 1,5 mil: 100 m), så fløyta er en hvisken ved grensa og under 0,03 ikke spilt. En båt på 10 m 400 m unna gir 0,11, kystruteskipet 2 km unna 0,07. I 3D er øret kameraet og egen båt `G3.sndSrc().boat`; i kartet er øret om bord og ser forover (en båt øst for deg når du går nordover høres til høyre). Egen båt spilles på 0,85, så tåkesignalet hennes hvert 110. spillsekund ikke tar over.
+- **Et øre som ikke er et tall** (et kamera gått NaN) høres nå om bord, og `set` og `place` hopper over et tall som ikke er endelig (backloggen 10.1, rettet i Ø11.2).
+- `soundtest.py` sjekker tonen etter lengden, lengden på mønstrene, egen båt for fullt, en båt på 10 m 400 m unna svakt og til høyre, ingen 2 km unna men kystruteskipet der, at et gammelt signal ikke spilles, hornvifta, og øret som er NaN; ikke hvordan det låter.

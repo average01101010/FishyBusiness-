@@ -801,43 +801,61 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 212 `havState(s, H, near)`
   - 237 `havNear(H, only)`
 
-## `src/js/core/05e-sjovei.js` (394 linjer)
+## `src/js/core/05e-sjovei.js` (584 linjer)
 
 ---------- the rules of the road: who gives way, and the NPCs and Autonav that do (Ø11.1, docs/systemer/sjofart-og-lover.md) ----------
 
 - **1** the rules of the road: who gives way, and the NPCs and Autonav that do (Ø11.1, docs/systemer/sjofart-og-lover.md)
-  - 35 `colregLim(La, Lb)`
-  - 41 `colregCls(n)`
-  - 54 `colregHav(s, A)`
-  - 62 `colregOwnCls(b)`
-  - 71 `colregAisSt(n)`
-  - 88 `colregSit(a, b, o = {})`
-  - 118 `sjvNeed(R, hd, sg, want, mover, gs = 1)`
-  - 129 `sjvSide(R, hd, mover, want, gs)`
-- **135** the manoeuvre laid over the shared course (npc-flåten 4 A): a fixed direction off the track, ramped at the turn's rate, held,
-  - 138 `sjvOffAt(E, H)`
-  - 145 `sjvPhase(E, H)`
-  - 151 `sjvLagAt(E, H)`
-  - 156 `sjvPose(n, E, H)`
-  - 168 `sjvLive()`
-  - 170 `sjvOwn()`
-  - 186 `sjvNarrow(n, H)`
-  - 195 `sjvRoom(n, nx, ny, k)`
-  - 206 `sjvRoomOwn(a, nx, ny, k)`
-  - 214 `sjvStart(n, R, H, mover, why, own, id)`
-- **225** one look: the encounters round the boat you follow (at most once a game tenth of a minute, a real second)
-  - 226 `sjvEval(H, list)`
-  - 297 `sjvNearMiss(n, R, clr)`
-  - 307 `colregNpc(H, out, only)`
-  - 321 `sjvTrack(list)`
-- **323** Autonav
-  - 327 `sjvFresh(model)`
-  - 336 `sjvAuto(d, h, ds, T)`
-  - 350 `sjvSail(pl, b, left)`
-- **363** the warning's words (the strip, the box and the card, the chart plotter)
-  - 365 `sjvSay(W, how)`
-  - 391 `sjvWhen(W)`
-  - 393 `sjvWarn()`
+  - 46 `colregLim(La, Lb)`
+  - 52 `colregCls(n)`
+  - 65 `colregHav(s, A)`
+  - 73 `colregOwnCls(b)`
+  - 82 `colregAisSt(n)`
+  - 103 `colregSit(a, b, o = {})`
+  - 134 `sjvNeed(R, hd, sg, want, mover, gs = 1)`
+  - 145 `sjvSide(R, hd, mover, want, gs)`
+  - 155 `sjvSide19(rel, ov)`
+- **157** the manoeuvre laid over the shared course (npc-flåten 4 A): a fixed direction off the track, ramped at the turn's rate, held,
+  - 160 `sjvOffAt(E, H)`
+  - 167 `sjvPhase(E, H)`
+  - 173 `sjvLagAt(E, H)`
+  - 178 `sjvPose(n, E, H)`
+  - 190 `sjvLive()`
+  - 192 `sjvOwn()`
+  - 208 `sjvNarrow(n, H)`
+  - 217 `sjvRoom(n, nx, ny, k)`
+  - 230 `sjvRoomOn(n, E, H)`
+  - 243 `sjvRoomOwn(a, nx, ny, k)`
+  - 251 `sjvStart(n, R, H, mover, why, own, id)`
+- **262** Ø11.2: the sight, the lanterns and the sound signals (pure; sjvEval and the views use them)
+  - 266 `sjvLampNm(k, L)`
+  - 277 `sjvLightNm(D0, vis)`
+  - 284 `sjvSeenKm(L, vis, dark)`
+  - 286 `sjvHearNm(L)`
+  - 291 `sjvFogPat(c, v, L)`
+  - 300 `sjvManPat(side, slow)`
+  - 305 `sjvLanternSt(n)`
+  - 307 `sjvMinKn()`
+  - 310 `sjvSafeMs(dM)`
+  - 316 `sjvVisAt(H, p)`
+  - 317 `sjvDark(H, p)`
+  - 321 `sjvSig(id, pat, p, L, own)`
+  - 329 `sjvFogSigs(H, list, A, gs, vis, dark)`
+  - 347 `sjvCapV()`
+- **353** one look: the encounters round the boat you follow (at most once a game tenth of a minute, a real second)
+  - 354 `sjvEval(H, list)`
+  - 463 `sjvNearMiss(n, R, clr)`
+  - 473 `colregNpc(H, out, only)`
+  - 487 `sjvTrack(list)`
+- **489** Autonav
+  - 493 `sjvFresh(model)`
+  - 503 `sjvAuto(d, h, ds, T)`
+  - 518 `sjvSail(pl, b, left)`
+  - 533 `sjvCreep(pl, b, L, v)`
+- **542** the warning's words (the strip, the box and the card, the chart plotter)
+  - 544 `sjvSay(W, how)`
+  - 581 `sjvWhen(W)`
+  - 583 `sjvWarn()`
 
 ## `src/js/core/06-services.js` (271 linjer)
 
@@ -2311,12 +2329,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1192 linjer)
+## `src/js/ui/phone/07-patch.js` (1198 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1185 `patch()`
+  - 1191 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2860,14 +2878,14 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 223 `wpActCycle(w)`
   - 228 `gearDoAct(act, el)`
 
-## `src/js/ui/10c-dock.js` (509 linjer)
+## `src/js/ui/10c-dock.js` (510 linjer)
 
 ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 
 - **1** the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side
-- **408** the drawer
-  - 482 `renderActs()`
-  - 495 `showroomTick()`
+- **409** the drawer
+  - 483 `renderActs()`
+  - 496 `showroomTick()`
 
 ## `src/js/ui/10d-helm.js` (51 linjer)
 
@@ -2875,13 +2893,14 @@ THE HELM ON THE SCREEN (core/16-helm.js; the user's wish 03.10.2026)
 
 - **1** THE HELM ON THE SCREEN (core/16-helm.js; the user's wish 03.10.2026)
 
-## `src/js/ui/10e-sound.js` (319 linjer)
+## `src/js/ui/10e-sound.js` (370 linjer)
 
 SOUND (the user's wish 03.10.2026)
 
 - **1** SOUND (the user's wish 03.10.2026)
-- **82** inside Father's naust (Jonas 09.10.2026: «Kjør på med lyd i naustet»; ui/09c-naust3d.js)
-- **141** the music (Jonas 05.10.2026: «rolig ambient instrumentaler som svak stemning i bakgrunnen. Må kunne skrus av i innstillinger»)
+- **85** inside Father's naust (Jonas 09.10.2026: «Kjør på med lyd i naustet»; ui/09c-naust3d.js)
+- **144** the music (Jonas 05.10.2026: «rolig ambient instrumentaler som svak stemning i bakgrunnen. Må kunne skrus av i innstillinger»)
+- **290** the whistle and the bell (Ø11.2; sjøveisreglene FOR-1975-12-01-5 rules 32-35 and vedlegg III, read 06.11.2026)
 
 ## `src/js/ui/10f-cloud.js` (936 linjer)
 
@@ -3087,7 +3106,7 @@ Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sp
 - **1** the guestbooks and Kystfareren (Jonas 09.10.2026; supabase/migrations/20261009220000_guestbook.sql)
 - **62** Kystfareren: the parts of the coast by where the place lies (natLL), south to north
 
-## `src/js/ui/10n-hail.js` (61 linjer)
+## `src/js/ui/10n-hail.js` (80 linjer)
 
 ---------- tuting and the six phrases at sea (Jonas 09.10.2026; supabase/migrations/20261009240000_hails.sql) ----------
 
@@ -3926,7 +3945,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 144 `drawRescue(BMrel, eye, VP, t)`
   - 158 `drawRescueLights(VP, t)`
 
-## `src/js/view3d/22-docks-air.js` (209 linjer)
+## `src/js/view3d/22-docks-air.js` (254 linjer)
 
 ---------- the coast harbours' floating docks and mooring buoys (core/05-vessels.js moorHarbour, tools/harbour/brygge.py) ----------
 
@@ -3943,7 +3962,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 170 `drawAir(eye, t, H, VP)`
   - 184 `drawAirLights(VP, t)`
   - 194 `drawNPCGlass(VP)`
-  - 195 `drawNPCLights(VP)`
+- **195** the lanterns in thick weather (Ø11.2; sjøveisreglene rule 20 c and vedlegg I, read 06.11.2026)
+  - 201 `lanternFog()`
+  - 202 `lampFade(d, kind, L, LF)`
+  - 211 `lampArc(M, lp, lk)`
+  - 224 `lampsMore(L3, st, len)`
+  - 232 `drawNPCLights(VP)`
 
 ## `src/js/view3d/23-camera-frame.js` (104 linjer)
 
@@ -3961,7 +3985,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **94** frame
   - 98 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (694 linjer)
+## `src/js/view3d/24-cinema.js` (693 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -3986,13 +4010,13 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 268 `frameClock(raw)`
   - 277 `frame()`
   - 282 `frame0()`
-  - 475 `snapTake()`
-  - 480 `drawRoute(VP, eye)`
-  - 492 `driftSpray(VP, eye, dt, t, col)`
-  - 507 `drawSmoke(VP, eye, BM, dt)`
-  - 540 `scupperWater(VP, eye, BM, dt, t, col)`
-  - 566 `drawEffects(VP, eye, BM, dt, t)`
-  - 676 `updateLabels(VP, eye, W, Hh)`
+  - 474 `snapTake()`
+  - 479 `drawRoute(VP, eye)`
+  - 491 `driftSpray(VP, eye, dt, t, col)`
+  - 506 `drawSmoke(VP, eye, BM, dt)`
+  - 539 `scupperWater(VP, eye, BM, dt, t, col)`
+  - 565 `drawEffects(VP, eye, BM, dt, t)`
+  - 675 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (224 linjer)
 

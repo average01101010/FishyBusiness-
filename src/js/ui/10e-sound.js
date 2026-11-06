@@ -11,6 +11,8 @@
 //            chute's rumble when ice comes aboard
 //   fishing  the hauler's hydraulic whine while gear is hauled; the jigging reel now and then while fishing
 //   music    quiet ambient chords and a bell now and then, made as it plays (below; its own volume, S.settings.music)
+//   signals  the whistle's short and long blasts and the bell of the rules of the road (Ø11.2): the fog signals of the vessels within
+//            hearing and your own, the manoeuvring signals, the five short in doubt, and the horn's signals from the dock (SJV.sig)
 // The volume and on or off are in the phone's settings (S.settings.vol, 0 to 1; S.settings.sound false is off).
 // Where you hear it from (the user's wish 03.10.2026): in 3D the ear is the camera (G3.ear), and what has a place (your boat's engine,
 // wash, hauler, reel and slaps, the gulls round her, the plant's crane, forklift and ice chute, the pump, the three nearest boats of
@@ -62,7 +64,8 @@ const SND = (() => {
       const {g, p} = pgain(), f = filt('bandpass', bp, q), o = osc(type, fr), wob = osc('sine', k === 'reel' ? 13 : 0.7), wg = gain(fr * 0.02); wob.connect(wg); wg.connect(o.frequency); o.connect(f); f.connect(g); L[k] = {g, p, o};
     }
   }
-  const set = (k, v, tc) => { LV[k] = v; L[k].g.gain.setTargetAtTime(v, ac.currentTime, tc || 0.25); };
+  // (a value that is not finite, from an ear gone NaN, is skipped: setTargetAtTime throws on it; backlog 10.1, fixed in Ø11.2)
+  const set = (k, v, tc) => { LV[k] = v; if (Number.isFinite(v)) L[k].g.gain.setTargetAtTime(v, ac.currentTime, tc || 0.25); };
   // where a sound at q ([x, y, z] m) is heard from the ear: {g (0-1), pan (-1 left to 1 right), lp (the low-pass's share), d}
   function at(q, ref){
     const e = EAR; if (!e || !q) return {g:1, pan:0, lp:1, d:0};
@@ -70,7 +73,7 @@ const SND = (() => {
     const side = dh > 0.01 ? (dx * -e.fz / fl + dz * e.fx / fl) / dh : 0;
     return {g:Math.min(1, Math.pow(ref / Math.max(ref, d), 0.9)), pan:clamp(side * 0.85 * clamp(dh / 4, 0, 1), -0.85, 0.85), lp:clamp(1.15 - 0.25 * Math.log10(Math.max(d, 1)), 0.35, 1), d};
   }
-  const place = (k, a) => { const P = L[k].p; LV[k + 'Pan'] = a.pan; if (P) P.pan.setTargetAtTime(a.pan, ac.currentTime, 0.1); };
+  const place = (k, a) => { const P = L[k].p; LV[k + 'Pan'] = a.pan; if (P && Number.isFinite(a.pan)) P.pan.setTargetAtTime(a.pan, ac.currentTime, 0.1); };
   // a one-shot's own panner (the gull, the slap, the beeps, the chute, the alarm)
   const oneOut = pan => { const out = dest || master; if (!pan || !ac.createStereoPanner) return out; const p = ac.createStereoPanner(); p.pan.value = pan; p.connect(out); return p; };
   // a burst of noise through a filter, with an attack and a decay (a slap, the chute)
@@ -192,10 +195,12 @@ const SND = (() => {
     if (!ac || ac.state !== 'running') return;
     musTick(); roomTick();
     const b = S.boat, H = S.t / 60, p3 = typeof G3 !== 'undefined' && G3.isActive(), mv = vol() * (p3 ? 1 : 0.6);
-    master.gain.setTargetAtTime(mv, ac.currentTime, 0.3); LV.master = mv; if (!mv) return;
+    master.gain.setTargetAtTime(mv, ac.currentTime, 0.3); LV.master = mv; if (!mv){ if (typeof SJV !== 'undefined') SJV.sig.length = 0; return; }
     // the ear and the places: the camera in 3D (or what a test sets), else aboard
     EAR = SND.testEar || (p3 && G3.ear ? G3.ear() : null);
+    if (EAR && !Number.isFinite(EAR.x + EAR.y + EAR.z + EAR.fx + EAR.fz)) EAR = null;   // (a camera gone NaN: heard aboard, as in the chart)
     const SRC = SND.testSrc || (EAR && G3.sndSrc ? G3.sndSrc() : {}), boat = SRC.boat || null, now = ac.currentTime;
+    sigTick(b, SRC);   // the whistles and bells of the rules of the road (Ø11.2)
     const aB = at(boat, SNDREF.eng); LV.engAtt = aB.g; LV.d = aB.d;
     // the bridge watch alarm: a shrill beep twice a second until it is acknowledged; never under half, wherever the camera is
     LV.alarm = typeof alarmOn === 'function' && alarmOn() ? 1 : 0;
@@ -282,12 +287,58 @@ const SND = (() => {
       o.start(t + dt); o.stop(t + dt + dec + 0.05);
     }
   }
-  // a ship's horn (ui/10n-hail.js): two low reedy notes together, about a second and a half; k is how near (1 your own, less far off)
+  // ---------- the whistle and the bell (Ø11.2; sjøveisreglene FOR-1975-12-01-5 rules 32-35 and vedlegg III, read 06.11.2026) ----------
+  // The note by the vessel's length (vedlegg III 1 b: «250-700 Hz for et fartøy på mindre enn 75 meters lengde», 130-350 Hz from 75 m,
+  // 70-200 Hz from 200 m): 420 Hz under 20 m, 300 Hz to 75 m, 190 Hz to 200 m, 110 Hz over, with a third over it as the two-tone horns have
+  const hornHz = L => L >= 200 ? 110 : L >= 75 ? 190 : L >= 20 ? 300 : 420;
+  // one blast from t for dur seconds: two reedy notes through a low-pass (duller far off: lp), to the left or right (pan)
+  function blast(t, dur, a, hz, pan, lp){
+    const f = filt('lowpass', (900 + 1100 * clamp(a / 0.22, 0, 1)) * (lp == null ? 1 : lp), 0.7), g = gain(0, oneOut(pan)); f.connect(g);
+    for (const r of [1, 1.26]){ const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = hz * r; o.connect(f); o.start(t); o.stop(t + dur + 0.1); }
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(a, t + 0.08); g.gain.setValueAtTime(a, t + dur - 0.12); g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.05);
+  }
+  // the bell «hurtig … i om lag 5 sekunder» (35 g): a stroke every fifth of a second, a ship's bell's partials dying away
+  function bellRing(t, a, pan, lp){
+    const out = oneOut(pan), f0 = 620;
+    for (let s = 0; s < 5; s += 0.17 + Math.random() * 0.06) for (const [r, pa, dec] of [[1, 1, 0.9], [2.76, 0.45, 0.45], [5.4, 0.2, 0.22]]){
+      if (r > 3 && (lp == null ? 1 : lp) < 0.6) continue;
+      const o = ac.createOscillator(), g = gain(0, out); o.type = 'sine'; o.frequency.value = f0 * r; o.connect(g);
+      g.gain.setValueAtTime(0.0001, t + s); g.gain.exponentialRampToValueAtTime(a * pa * 0.6, t + s + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + s + dec); o.start(t + s); o.stop(t + s + dec + 0.05); }
+  }
+  // a signal: L a long blast (4.5 s; 32 c «fra fire til seks sekunders varighet»), S a short (1 s; 32 b «om lag et sekunds varighet»), a
+  // second between them and two between two long (35 b «om lag 2 sekunders mellomrom»), or the bell. o: {k (0-1), L (m), pan, lp}.
+  // Returns how long it takes (s)
+  function blasts(pat, o){
+    if (!ac || ac.state !== 'running' || !vol() || !pat) return 0;
+    o = o || {}; const a = 0.22 * clamp(o.k == null ? 1 : o.k, 0, 1), hz = hornHz(o.L || BOAT.len || 10), t0 = ac.currentTime + 0.05;
+    if (pat === 'bell'){ bellRing(t0, a, o.pan, o.lp); return 5; }
+    let t = t0; for (let i = 0; i < pat.length; i++){ const dur = pat[i] === 'L' ? 4.5 : 1; blast(t, dur, a, hz, o.pan, o.lp); t += dur + (pat[i] === 'L' && pat[i + 1] === 'L' ? 2 : 1); }
+    return t - t0 - 1;
+  }
+  // a ship's horn (ui/10n-hail.js, the «Tut» to another player): one blast of a second and a half; k is how near (1 your own, less far off)
   function horn(k){
     if (!ac || ac.state !== 'running' || !vol()) return;
-    const t = ac.currentTime, a = 0.22 * clamp(k == null ? 1 : k, 0.1, 1), f = filt('lowpass', 900 + 900 * clamp(k || 1, 0, 1), 0.7), g = gain(0, master); f.connect(g);
-    for (const hz of [147, 220]){ const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = hz; o.connect(f); o.start(t); o.stop(t + 1.7); }
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(a, t + 0.08); g.gain.setValueAtTime(a, t + 1.35); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.65);
+    const kk = clamp(k == null ? 1 : k, 0.1, 1); blast(ac.currentTime, 1.5, 0.22 * kk, hornHz(BOAT.len || 10), 0, 0.6 + 0.4 * kk);
+  }
+  // the signals the rules of the road queue (core/05e-sjovei.js SJV.sig): from where the vessel was when it began, fainter with the
+  // distance from a reference that leaves a whistle at its range (vedlegg III 1 c: half a mile under 20 m, a mile to 75 m, …) a whisper,
+  // duller and to the side as it lies; your own from your boat. In 3D the ear is the camera, in the chart it is aboard, facing ahead.
+  // Older than eight seconds (the sound started late, the page was hidden) they are dropped
+  function sigTick(b, SRC){
+    if (typeof SJV === 'undefined' || !SJV.sig.length) return;
+    const now = Date.now(), list = SJV.sig.splice(0), k0 = EAR;
+    const e = EAR || (b && b.pos ? {x:b.pos.x * 1000, y:3, z:b.pos.y * 1000, fx:Math.sin(b.heading || 0), fz:-Math.cos(b.heading || 0)} : null);
+    try {
+      EAR = e;
+      for (const q of list){
+        if (now - q.t > 8000) continue;
+        const ref = q.own ? 12 : Math.max(12, sjvHearNm(q.L) * NM * 1000 * 0.036), at3 = q.own && k0 && SRC && SRC.boat ? SRC.boat : [q.x * 1000, q.own ? 4 : 6, q.y * 1000], A = at(at3, ref);
+        const g = Number.isFinite(A.g) ? A.g : q.own ? 1 : 0, pan = Number.isFinite(A.pan) ? A.pan : 0, lp = Number.isFinite(A.lp) ? A.lp : 1;
+        if (!q.own && g < 0.03) continue;
+        blasts(q.pat, {k:(q.own ? 0.85 : 1) * g, L:q.L, pan, lp});
+        LV.sig = q.pat; LV.sigG = g; LV.sigPan = pan; LV.sigOwn = q.own ? 1 : 0; LV.sigN = (LV.sigN || 0) + 1;
+      }
+    } finally { EAR = k0; }
   }
   // a nudge on the jig line before a bite, and now and then without one (spilltest 3, U12; Jonas 05.11.2026, V5 A): a soft low knock
   // and the line's faint creak, quiet enough to be felt more than heard
@@ -314,5 +365,5 @@ const SND = (() => {
   document.addEventListener('pointerdown', () => { if (!started){ if (S && S.settings) start(); } else if (ac && ac.state !== 'running' && ac.state !== 'closed' && !document.hidden) quiet(ac.resume()); }, true);
   document.addEventListener('visibilitychange', () => { if (!ac || ac.state === 'closed') return; quiet(document.hidden ? ac.suspend() : ac.resume()); });
   // testEar / testSrc (for the tests): an ear and the places, as G3.ear and G3.sndSrc give them in 3D
-  return {start, cash, coin, nudge, horn, room, anchorAlarm, FIRES, MUS, get started(){ return started; }, get state(){ return ac ? ac.state : 'none'; }, LV, tick, at:(q, ref, e) => { const k = EAR; EAR = e; const r = at(q, ref); EAR = k; return r; }, testEar:null, testSrc:null};
+  return {start, cash, coin, nudge, horn, blasts, hornHz, room, anchorAlarm, FIRES, MUS, get started(){ return started; }, get state(){ return ac ? ac.state : 'none'; }, LV, tick, at:(q, ref, e) => { const k = EAR; EAR = e; const r = at(q, ref); EAR = k; return r; }, testEar:null, testSrc:null};
 })();

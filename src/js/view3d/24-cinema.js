@@ -443,7 +443,9 @@
     drawNPCGlass(VPn);
     if (pr && pr.spray){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); drawPts(pr.spray, gl.POINTS, VPn, [0.86, 0.93, 1], 30, true); gl.depthMask(true); gl.disable(gl.BLEND); }
     if (pr && env.night > 0.05){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false); pr.lamps.forEach((q, i) => { PB[i * 3] = q[0]; PB[i * 3 + 1] = q[1]; PB[i * 3 + 2] = q[2]; PA[i] = env.night; }); drawPts(pr.lamps.length, gl.POINTS, VPn, [1, 0.9, 0.72], 1400, true); gl.depthMask(true); gl.disable(gl.BLEND); }
-    if (env.night > 0.05){
+    // (by day in restricted visibility too, fainter: rule 20 c, Ø11.2; 22-docks-air.js lanternFog)
+    const LFo = lanternFog(), LA = Math.max(env.night, LFo.a);
+    if (LA > 0.05){
       gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false);
       // at anchor only the all-round white light shows (no side lights or stern light, which are for a boat under way); the anchor
       // alarm turns it red and makes it flash (06e-anchor.js)
@@ -455,15 +457,12 @@
       // the side lights and the stern light shine only in their arcs (vedlegg I 9(a): a side from right ahead to 22.5 degrees abaft the beam
       // on its own side, the stern 67.5 degrees each side of aft); the glow drew them all round, so the green showed from the port bow
       // through the wheelhouse (01.11.2026). The eye is the frame's origin (BMrel is relative to it)
-      for (const [lp, lc, lk] of L3){ const q = xf(BMrel, lp);
-        if (lk === 'side' || lk === 'stern'){ const f = xf(BMrel, [lp[0], lp[1], lp[2] - 1]), r = xf(BMrel, [lp[0] + 1, lp[1], lp[2]]);
-          const fw = -((f[0] - q[0]) * q[0] + (f[1] - q[1]) * q[1] + (f[2] - q[2]) * q[2]), sb = -((r[0] - q[0]) * q[0] + (r[1] - q[1]) * q[1] + (r[2] - q[2]) * q[2]);
-          const ang = Math.atan2(Math.abs(sb), fw) * 180 / Math.PI;
-          if (lk === 'side' && (ang > 112.5 || (lp[0] < 0 ? sb > 0.05 : sb < -0.05) && ang > 1)) continue;
-          if (lk === 'stern' && ang < 180 - 67.5) continue; }
-        PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VPn, lc, anchored ? 420 : 260, true); }
+      // (the arcs: 22-docks-air.js lampArc, the same for the other boats since Ø11.2)
+      for (const [lp, lc, lk] of L3){ if (!lampArc(BMrel, lp, lk)) continue; const q = xf(BMrel, lp);
+        PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = LA; drawPts(1, gl.POINTS, VPn, lc, anchored ? 420 : 260, true); }
       gl.depthMask(true); gl.disable(gl.BLEND);
-    }
+    } else ANCHAL.drawn = 0;   // (none lit: by day in clear weather)
+    ANCHAL.litA = LA;   // (how strongly the lanterns show: the night, or the fog by day; for the tests)
     updateLabels(VPf, eye, W, Hh);
     gfxEnd(now, eye, VPn, W, Hh);
     if (PROF.on) profEnd();

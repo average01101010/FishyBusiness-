@@ -215,3 +215,21 @@
 2026-11-06 12:46	claude/u2-3-knappelinja-felp6h	d62153dc	havplantest	FEIL	229	lite	alene	FEIL spot check Egersund: the plan made, out from Egersund, the lenker set and hauled, fish aboard [[{'lat': 58.249999999999986, 'lon': 4.9}, {'lat': 58.3826273
 2026-11-06 12:29	ccr-e5ae7b11-uibmpt	60e27413	trackfollow	OK	1567	3d	alene	
 2026-11-06 12:49	ccr-e5ae7b11-uibmpt	f54bb222	tut	OK	1178	lite	alene	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	colregtest	FEIL	603	lite	samtidig	FEIL 19 e: tåkesignalet forut tar Autonav ned til minste styrefart (2.2 kn, minste 2.0), og varselet sier det  ['Nedsatt sikt: vik til styrbord · CPA 0 m om 38 
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	npctest	OK	11	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	autonavtest	OK	34	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	hudtest	OK	31	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	havflaate	OK	14	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	hailtest	OK	8	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	soundtest	OK	9	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	cashfxtest	OK	10	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	docktest	OK	67	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	dockrow	OK	49	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	geartest	OK	45	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	rorbutest	OK	16	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	bunktest	OK	17	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	lanterntest	OK	17	lite	samtidig	
+2026-11-06 17:19	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	colregtest	OK	603	lite	alene	
+2026-11-06 17:20	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	gfxtest	OK	67	3d	alene	
+2026-11-06 17:21	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	dbg23o	OK	39	3d	alene	
+2026-11-06 17:25	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	anchorlight3d	OK	234	3d	alene	

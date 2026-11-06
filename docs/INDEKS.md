@@ -34,7 +34,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `fiskerimodellen.md` | Kart, fjordlinje og fangstfelt, fiskerimodellen, fordelingen og vandringen fra sluttsedlene (5.3c), feltnavnene langs kysten, Fiskeguiden, juks i dødtiden. Spesifikasjonen står i `docs/spesifikasjon.md`. | `core/03-simulation.js`, `core/03f-fiske.js`, `core/03c-*`, `ui/06f-fishguide.js`, `src/data/fiske.json`, `src/data/felt.json`, `tools/npc/` |
 | `priser-og-salg.md` | Priser, kvalitet og salg, bestillingene. | `core/03-simulation.js` (`grade`, `sell`), `core/08-*` |
 | `kvoter-og-regler.md` | Kvoter og regulering, reglenes kartdata, regelmotoren, Regler-appen, varsel før feil, Kystvakta om bord, regelverket og kildene. | `core/03d-quota.js`, `core/03e-rules.js`, `core/09j-kystvakt.js`, `src/data/rules.json`, `tools/rules/` |
-| `sjofart-og-lover.md` | Sjøfart og lover (Ø11, fra 06.11.2026): Jonas' valg V1–V11, sjøveisreglene, sjøloven, skipssikkerhetsloven, forskriftene for fiskefartøy, merkingen og farvannet med paragraf og kilde, og det som er bygd: vikeplikten for spilleren, NPC-ene og Autonav (Ø11.1). Planen står i `docs/planer/lover-regler-sikkerhet.md`. | `core/05e-sjovei.js` |
+| `sjofart-og-lover.md` | Sjøfart og lover (Ø11, fra 06.11.2026): Jonas' valg V1–V11, sjøveisreglene, sjøloven, skipssikkerhetsloven, forskriftene for fiskefartøy, merkingen og farvannet med paragraf og kilde, og det som er bygd: vikeplikten for spilleren, NPC-ene og Autonav (Ø11.1), sikt, lys og lyd med regel 19, sikker fart, lydsignalene og lanternene etter det båtene gjør (Ø11.2). Planen står i `docs/planer/lover-regler-sikkerhet.md`. | `core/05e-sjovei.js`, `view3d/22-docks-air.js` (`drawNPCLights`), `ui/10e-sound.js` (signalene), `ui/10n-hail.js` (hornet) |
 | `folk-om-bord.md` | Mannskapet, kulde og klær, arbeid om bord, mat, hviletid og energien, mannskapets arbeid på sjøen, karakteren og garderoben. Planen står i `docs/mannskap-plan.md`. | `core/04-crew.js`, `core/14-crewlife.js`, `ui/05b-work.js`, `ui/13-work.js`, `tools/harbour/arbeider.py`, `tools/harbour/garderobe.py` |
 | `driftsplan.md` | Driftsplanen (`S.ops`), Driftsplan-appen, den gamle planleggeren. | `core/06d-drift.js`, `ui/05c-drift.js` |
 | `oppdrag-og-kystposten.md` | Turoppdrag fra der du er, Kystposten. | `core/09g-turer.js`, `ui/06b-book-tabs.js` |
@@ -44,7 +44,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `tilbakemelding-og-admin.md` | Tilbakemeldingsagenten og rutinen, admin, Tilbakemelding-appen. | `ui/06e-feedback.js`, `src/admin/`, `tools/feedback/`, `supabase/functions/feedback-agent` |
 | `opning-og-veiledning.md` | Åpningsscenen og veiledningen «Første tur». | `ui/07b-first-trip.js`, `ui/08b-letter.js`, `ui/08c-start.js`, `tools/opening/` |
 | `ui-og-telefon.md` | Knappelinja, skuffen og «Sett ut», dekksdagboka, telefon, nettbrett og PC. | `ui/phone/` (delene av `05-phone.js`, én per app), `ui/07-guide.js`, `ui/08-actions.js`, `src/styles.css` |
-| `lyd.md` | Lyden. | `ui/12-sound.js` |
+| `lyd.md` | Lyden, og lydsignalene på sjøen (5.25b, Ø11.2). | `ui/10e-sound.js` |
 | `monetisering-og-engasjement.md` | Monetisering og engasjement slik det sto i overleveringen. Reglene som gjelder, står i `CLAUDE.md` og `docs/engasjement.md`. | `ui/10i-shop.js` |
 | `rettelser.md` | Rettelsesrundene etter spilltestene og tilbakemeldingene. | |
 
