@@ -308,7 +308,7 @@ function sjvMinKn(){ return clamp(0.3 * ((typeof BOAT !== 'undefined' && BOAT.vc
 // the safe speed in restricted visibility (rules 6 and 19 b, m/s): what she can stop from within half the distance she sees (the old
 // rule of thumb; the rules give no figure), from her own stopping distances (16b-dyn.js dynCal, dynVStop); never under the minimum steerage
 function sjvSafeMs(dM){
-  let v = null; try { v = dynVStop(dynCal(S.boat.type), dM / 2); } catch (e){}
+  let v = null; try { v = dynVStop(dynCalOf(S.boat), dM / 2); } catch (e){}
   if (v == null || !isFinite(v)){ const L = (typeof BOAT !== 'undefined' && BOAT.len) || 10, vc = ((typeof BOAT !== 'undefined' && BOAT.vcruise) || 7) * KN_MS; v = vc * Math.sqrt(Math.max(0, dM / 2) / (4 * L)); }
   return Math.max(sjvMinKn() * KN_MS, v);
 }

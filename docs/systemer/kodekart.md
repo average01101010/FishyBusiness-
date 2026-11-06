@@ -1935,7 +1935,7 @@ MANUAL HELM (the user's wish 03.10.2026)
   - 63 `helmCast()`
   - 69 `helmCastDone(pid, kind)`
 
-## `src/js/core/16b-dyn.js` (575 linjer)
+## `src/js/core/16b-dyn.js` (595 linjer)
 
 HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
 
@@ -1948,46 +1948,49 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 96 `dynTurn(P, V, u0 = V.vcruise * KN_MS)`
   - 107 `dynAccel(P)`
   - 113 `dynStops(P)`
-  - 117 `dynCal(key)`
-  - 141 `dynStopDist(cal, v)`
-  - 145 `dynVStop(cal, d)`
-- **146** the wind and the sea on her this tick (Fysikk 2)
-  - 159 `dynEnv(b, d, cal, H, dtG = 0)`
-- **186** contact: the hull against the piers, the breakwaters and the harbour units' quays (Fysikk 2)
-  - 195 `dynObsNear(X, Y, R)`
-  - 202 `dynInside(O, x, z)`
-  - 213 `dynContact(b, d, P, O)`
-- **239** with no way on: she drifts (Fysikk 2)
-  - 245 `dynDrift(type, p, H)`
-  - 267 `gearBuoyNear(p)`
-  - 269 `gearLieCrew()`
-  - 271 `gearWatch(b)`
-  - 279 `lieDrift(H)`
-- **318** the state, in step with the boat the rest of the game reads
-  - 319 `dynState(b)`
-  - 330 `dynWrite(b, d)`
-  - 335 `dynCan()`
-  - 340 `dynLive()`
-  - 345 `dynPose()`
-  - 352 `dynRest()`
-  - 353 `dynLivePose(frac)`
-  - 355 `dynHaltNeed()`
-- **356** the tick
-  - 357 `dynTick(dt)`
-  - 370 `dynMinute(H, W)`
-- **377** by hand (16-helm.js): the throttle and the rudder into the model
-  - 378 `dynHelm(d, dtG)`
-- **399** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
-  - 401 `dynLineBuild(pl, dep)`
-  - 421 `dynLineAt(T, s)`
-  - 427 `dynSeg(T, s)`
-  - 428 `dynSegHd(T, i)`
-  - 429 `dynLineProj(T, x, z, s0, back = 30)`
-  - 439 `dynLineHd(T, s, r0)`
-  - 446 `dynGroundAhead(T, s, look)`
-- **455** the autopilot
-  - 456 `dynAuto(d, dtG)`
-  - 574 `dynTrackView()`
+  - 118 `dynCal(key, sx = 1)`
+  - 137 `dynCalEng(base, sx, ck)`
+  - 142 `dynCalOf(b = S.boat)`
+  - 144 `dynCalRun(key, V, P, sx)`
+  - 161 `dynStopDist(cal, v)`
+  - 165 `dynVStop(cal, d)`
+- **166** the wind and the sea on her this tick (Fysikk 2)
+  - 179 `dynEnv(b, d, cal, H, dtG = 0)`
+- **206** contact: the hull against the piers, the breakwaters and the harbour units' quays (Fysikk 2)
+  - 215 `dynObsNear(X, Y, R)`
+  - 222 `dynInside(O, x, z)`
+  - 233 `dynContact(b, d, P, O)`
+- **259** with no way on: she drifts (Fysikk 2)
+  - 265 `dynDrift(type, p, H)`
+  - 287 `gearBuoyNear(p)`
+  - 289 `gearLieCrew()`
+  - 291 `gearWatch(b)`
+  - 299 `lieDrift(H)`
+- **338** the state, in step with the boat the rest of the game reads
+  - 339 `dynState(b)`
+  - 350 `dynWrite(b, d)`
+  - 355 `dynCan()`
+  - 360 `dynLive()`
+  - 365 `dynPose()`
+  - 372 `dynRest()`
+  - 373 `dynLivePose(frac)`
+  - 375 `dynHaltNeed()`
+- **376** the tick
+  - 377 `dynTick(dt)`
+  - 390 `dynMinute(H, W)`
+- **397** by hand (16-helm.js): the throttle and the rudder into the model
+  - 398 `dynHelm(d, dtG)`
+- **419** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
+  - 421 `dynLineBuild(pl, dep)`
+  - 441 `dynLineAt(T, s)`
+  - 447 `dynSeg(T, s)`
+  - 448 `dynSegHd(T, i)`
+  - 449 `dynLineProj(T, x, z, s0, back = 30)`
+  - 459 `dynLineHd(T, s, r0)`
+  - 466 `dynGroundAhead(T, s, look)`
+- **475** the autopilot
+  - 476 `dynAuto(d, dtG)`
+  - 594 `dynTrackView()`
 
 ## `src/js/core/16c-hull.js` (146 linjer)
 
@@ -2359,12 +2362,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1218 linjer)
+## `src/js/ui/phone/07-patch.js` (1220 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1211 `patch()`
+  - 1213 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 

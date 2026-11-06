@@ -443,6 +443,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
 
+## Strøket 06.11.2026 (trimfarten, gren `ccr-dfa1209c-7vgp4x`)
+
+- ~~Trim gir ingen fart i Autonav og ved roret~~ (TonyHjelmseth, «Legoy», trebåt, kjøpte «Økt turbotrykk» 18:49 og fikk ingen økning): manøvreringsmodellen hadde bare båttypens motor siden Fysikk 1 (19.10.2026), så trim, større motor og 90-hesteren ga fart bare på papiret og med spillet lukket. Rettet med `dynCalOf` (`fysikk-og-styring.md` 5.58, «Båtens egen motor»), sjekk i `tests/unit/trimfart.test.mjs`.
+
 ## Strøket 06.11.2026 (Ø11.2 sikt, lys og lyd, gren `claude/o11-2-sikring-lys-lyd-bsrlub`, rullet ut i f04d4feb)
 
 - L3 «sikt, lyd og dagsignaler» i «Lover og regler på sjøen» (dagsignalene er ikke med, V7) og N8s lanterner og lydsignaler i «NPC-flåten for hele landet»: regel 19 d–e for båtene som ikke ser hverandre i nedsatt sikt, sikker fart og minste styrefart for Autonav gjennom `sjvAuto` og `sjvSail`, tåkesignalene (regel 35) for alle innen hørevidde og egen båt, manøversignalene (34 a) og fem korte (34 d), hornet med signalene i knappelinja, lanternene på NPC-ene etter det de gjør og innenfor sektorene, om dagen i tåke (20 c) og med Kystvaktas blå rundtlys (kap. II 53 d). Regel 19 d–e, 20–37 og vedlegg I og III lest ordrett på Lovdata 06.11.2026. Alt står i `docs/systemer/sjofart-og-lover.md` kap. 4 og `docs/systemer/lyd.md` 5.25b.
