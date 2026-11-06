@@ -154,6 +154,7 @@
   - **Kjenningssignalet** sjekkes mot kallesignalene i sluttsedlene 2024–2025 (4 003), ikke mot fartøyregisteret; et fartøy som ikke har levert de to årene, kan ha et signal spillet gir. Signalet står ikke på AIS-kortet eller i VHF-meldingene ennå (Ø11.3), og andre spillere ser det ikke. `regmerke.json` er 20 KB større (i siden, som før).
   - **Navnet under 15 m «godt synlig fra begge sider»** (§ 9) er tolket som styrhusfronten og hekken (Jonas 04.11.2026: ikke i baugen). Fra 15 m blir hjemstedet akter like høyt som navnet på kyst21 (15 cm, regelen), mot litt mindre før.
   - **Lampene i MOB-lyset og bøyelysene** lyser ikke om natta (`mobroyk_lamps` finnes i extras). Det hører til Ø11.2 (lys) eller Ø11.6.
+  - **`workshot line`** (06.11.2026) tok to av tre bilder i liggende format før det tredje gikk ut på tid (120 s i SwiftShader), og kameraet der ser taket på hurtigsjarken, ikke folkene; vesten i arbeid er sett i egne bilder. Kjør den på nytt på en maskin med GPU.
   - **Vesten** er bare på din egen båt; NPC-båtene og andre spillere har ingen. Den er av inne i styrhuset og på kaia; i havn er den av også om folkene står på dekk.
 - **Brygger uten `floating=yes`** er tredekke på pæler fra G10 (29.10.2026); utriggerne fra alternativ b er ikke bygd.
 - **NPC-båter ved flytebrygger tegnet som linje** ligger rundt 0,9 m fra pontongkanten (kaiplassen regnes mot en brygge på 4,2 m).
