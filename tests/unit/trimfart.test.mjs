@@ -50,7 +50,7 @@ export default function (t){
   // applyVessel), the running route's speed and the next route's follow the trim, and go back when it runs out (trimEnd) ----
   const give = k => typeof K.trimSet === 'function' ? K.trimSet(k) : (St().boat.trim = {k, t0:St().t}, K.applyVessel());
   const end = () => typeof K.trimEnd === 'function' ? K.trimEnd() : (delete St().boat.trim, K.applyVessel());
-  { boat('trebat'); St().plan = {wps:[{x:0, y:0}], idx:0, speed:7, returning:false}; St().draftSpeed = 6;
+  { boat('trebat'); St().plan = {wps:[{x:0, y:0}], idx:0, speed:7, returning:false}; St().draftSpeed = 6; St().draftFull = false;
     give('turbo');
     t.near(St().plan.speed, 14, 0.05, 'turbotrim på ruta som går: rutas 7 kn (gammel toppfart) blir 14 kn uten at glidebryteren flyttes');
     t.near(St().draftSpeed, 12, 0.05, 'neste rute: marsjfarten 6 kn blir 12 kn med trimmen');
@@ -60,4 +60,18 @@ export default function (t){
     t.near(St().plan.speed, 7, 0.05, 'trimmen går ut: rutas fart tilbake på 7 kn'); t.near(St().draftSpeed, 6, 0.05, 'og neste rute tilbake på 6 kn'); }
   { boat('trebat'); St().plan = null; St().draftSpeed = 16; give('turbo');
     t.ok(St().draftSpeed >= K.BOAT.vmax, 'standardfarten (16 kn, over toppfarten) holder seg over den nye toppfarten: full fart'); }
+
+  // ---- «Full fart» as the default (Jonas 06.11.2026: «den slideren burde alltid stå på det som er høyest mulig», also the operations
+  // plans): the slider's top is full, not knots, and follows the top speed she has now (speedPin in applyVessel) ----
+  { const b = boat('hurtigsjark');
+    t.ok(St().draftFull === true, 'nytt spill: farten står på full'); t.near(St().draftSpeed, K.BOAT.vmax, 1e-9, 'full fart er båtens toppfart (22 kn, ikke 16)');
+    b.engLv = 2; K.applyVessel(); t.near(St().draftSpeed, K.BOAT.vmax, 1e-9, 'større motor: full fart følger den nye toppfarten (' + K.BOAT.vmax.toFixed(1) + ' kn)');
+    St().plan = {wps:[{x:0, y:0}], idx:0, speed:K.BOAT.vmax, full:true, returning:false}; give('turbo');
+    t.near(St().plan.speed, K.BOAT.vmax, 1e-9, 'rute på full fart med turbotrim: toppfarten med trim (' + K.BOAT.vmax.toFixed(1) + ' kn), ikke dobbelt opp'); t.near(St().draftSpeed, K.BOAT.vmax, 1e-9, 'og neste rute også');
+    end(); t.near(St().plan.speed, K.BOAT.vmax, 1e-9, 'trimmen går ut: full fart er toppfarten uten trim igjen'); }
+  { boat('trebat'); St().draftFull = false; St().draftSpeed = 5; K.applyVessel(); t.near(St().draftSpeed, 5, 1e-9, 'valgt lavere fart (5 kn) blir stående');
+    St().plan = {wps:[{x:0, y:0}], idx:0, speed:5, full:false, returning:false}; give('turbo'); t.near(St().plan.speed, 10, 0.05, 'og følger trimmen (5 → 10 kn)'); }
+  // a save from before the flag: at or over the top speed is full, under it is the knots chosen
+  { boat('trebat'); delete St().draftFull; St().draftSpeed = 16; K.applyVessel(); t.ok(St().draftFull === true && St().draftSpeed === K.BOAT.vmax, 'gammel lagring med 16 kn: full fart');
+    boat('trebat'); delete St().draftFull; St().draftSpeed = 5; K.applyVessel(); t.ok(St().draftFull === false && St().draftSpeed === 5, 'gammel lagring med 5 kn: blir 5 kn'); }
 }

@@ -1,6 +1,6 @@
 // ===== fleet: each vessel keeps its own state; the company holds the rest. The simulation steps through the vessels one at a
 // time and binds S.boat, S.hold, S.crew and the others to the vessel it is working on, so the rest of the code is unchanged. =====
-const VKEYS = ['meal', 'sayT', 'boat', 'plan', 'hold', 'crew', 'equip', 'jobs', 'cevt', 'ops', 'lic', 'quota', 'draft', 'draftSpeed', 'draftDep', 'marks', 'target', 'trail', 'fsess', 'facc', 'fnext', 'fishPlanH', 'workLog', 'clothes', 'tripBuff', 'prep', 'svcTold', 'boatName', 'lastSale', 'restWarn', 'kvRel', 'codWarn', 'lastIceWarn', 'navrows', 'tripOwner', 'pgear', 'cargo', 'team', 'lag'];
+const VKEYS = ['meal', 'sayT', 'boat', 'plan', 'hold', 'crew', 'equip', 'jobs', 'cevt', 'ops', 'lic', 'quota', 'draft', 'draftSpeed', 'draftFull', 'draftDep', 'marks', 'target', 'trail', 'fsess', 'facc', 'fnext', 'fishPlanH', 'workLog', 'clothes', 'tripBuff', 'prep', 'svcTold', 'boatName', 'lastSale', 'restWarn', 'kvRel', 'codWarn', 'lastIceWarn', 'navrows', 'tripOwner', 'pgear', 'cargo', 'team', 'lag'];
 function curVessel(){ return S.fleet.find(v => v.id === S.cur) || S.fleet[0]; }
 function storeVessel(v){ for (const k of VKEYS) v[k] = S[k]; }
 function bindVessel(v){ for (const k of VKEYS) S[k] = v[k]; S.cur = v.id; applyVessel(); }
@@ -95,8 +95,8 @@ const trimLeft = b => trimOn(b) ? (b.trim.t0 + BOOSTS[b.trim.k].h * 60 - S.t) / 
 function trimRescale(v0){
   const v1 = BOAT.vmax; if (!(v0 > 0) || !(v1 > 0) || Math.abs(v1 / v0 - 1) < 0.005) return;
   const sc = x => Math.max(2, Math.round(x * v1 / v0 * 10) / 10);
-  if (S.plan && S.plan.speed > 0) S.plan.speed = sc(S.plan.speed);
-  if (S.draftSpeed > 0) S.draftSpeed = sc(S.draftSpeed);
+  if (S.plan && S.plan.speed > 0 && !S.plan.full) S.plan.speed = sc(S.plan.speed);   // (full ones are speedPin's)
+  if (S.draftSpeed > 0 && !S.draftFull) S.draftSpeed = sc(S.draftSpeed);
 }
 // a trim on the boat aboard (S.boat; the shop gives it inside withVessel for the boat it was bought for), and one that has run out
 function trimSet(k){ const v0 = BOAT.vmax; S.boat.trim = {k, t0:S.t}; applyVessel(); trimRescale(v0); }
@@ -120,6 +120,18 @@ function applyVessel(){
     BOAT.vmax *= sx; BOAT.vcruise *= sx; BOAT.fuelK *= 1 + 0.4 * (P - 1); BOAT.accel *= 1 + (b.engLv ? 0.3 * ENGUP[b.engLv - 1].p : 0); BOAT.hp = Math.round(BOAT.hp * P); }
   const T = canBoost(BOAT) && trimOn(b); if (T){ BOAT.vmax *= T.x; BOAT.vcruise *= T.x; BOAT.accel *= T.x; }
   b.fuel = Math.min(b.fuel, BOAT.fuelCap); b.ice = Math.min(b.ice, BOAT.iceCap);
+  speedPin();
+}
+// «Full fart» (Jonas 06.11.2026: «de aller fleste brukerne alltid ønsker å gå båten i maksimal hastighet fartøyet er kapabel til»,
+// also the operations plans): the speed slider's top is full, not a number of knots, and follows the top speed the boat has now (trim,
+// the yard's engine, the 90 hp outboard, another vessel), for the next route (S.draftFull, a vessel's own, VKEYS) and the one under way
+// (S.plan.full); a route set lower keeps its knots (and follows a trim by trimRescale). A save from before: at or over the top speed is full
+function speedPin(){
+  if (!(BOAT.vmax > 0)) return;
+  if (S.draftFull == null) S.draftFull = !(S.draftSpeed < BOAT.vmax - 0.05);
+  if (S.draftFull) S.draftSpeed = BOAT.vmax;
+  if (S.plan && S.plan.full == null && S.plan.speed != null) S.plan.full = S.plan.speed >= BOAT.vmax - 0.05;
+  if (S.plan && S.plan.full) S.plan.speed = BOAT.vmax;
 }
 // fishing effort per person: a hand jig (pilk and four fly hooks; there is no rod, and without a jig nobody fishes by hand); an
 // electric jigging reel does about twice what a hand jig does, and one person tends up to three reels instead of jigging by hand.
@@ -1134,6 +1146,10 @@ function haillStage(){ const v = haillBoost(), X = S.haill && HAILL[S.haill.type
   const s = HAILL_STAGE.find(x => x[0] === v); return s ? {v, no:s[1], en:s[2]} : null; }
 function haillF(){ return haillBoost() > 0 ? 1 : 0; }   // luck aboard or not
 function luck(sp){ return 1 + haillBoost(); }
+// the room in the gear while the haill lasts (Jonas 06.11.2026, «Mer plass i redskapet»: the haill promises «alt redskapet ditt fanger
+// dobbelt så mye», but a full net or line takes no more, so over a long soak the haill gave far less, 6 nets 24 h x1.3): the nets', the
+// lines' and the pots' room grows with the luck, read every hour as the luck is, so the gear takes the same multiple all through the soak
+function haillCap(){ return 1 + haillBoost(); }
 // a purchase or a pub prize goes into the store; switching one on takes it from there (and replaces the one aboard)
 function giveHaill(type, how){ const inv = S.haillInv || (S.haillInv = {haill:0, luksus:0}); inv[type] = (inv[type] || 0) + 1; log('Ny ' + HAILL[type].no.toLowerCase() + ' i beholdningen. Aktiver den i Haill-appen når du vil.', 'New ' + HAILL[type].en.toLowerCase() + ' in store. Switch it on in the Luck app when you like.'); }
 function useHaill(type){ const inv = S.haillInv || {}; if (!(inv[type] > 0)) return false; inv[type]--; S.haill = {type, t0:S.t, how:'inv'}; log(HAILL[type].no + ' er aktivert.', HAILL[type].en + ' is switched on.'); return true; }

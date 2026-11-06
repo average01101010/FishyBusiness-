@@ -452,8 +452,8 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 ## Venter på Jonas (gjennomgangen av butikken 06.11.2026)
 
-- **Haill lover «alt redskapet ditt fanger dobbelt så mye»**, men garn og line fylles opp, så gevinsten krymper med ståtida (6 garn: ×1,50 i 12 t og ×1,30 i 24 t med haill; autoline 5000 krok 8 t: ×1,06), og alene om bord holder sløyingen igjen (juksa 6 t: haill ×1,76, luksus ×1,90). Enten mykere tekst («fisken går dobbelt så fort i redskapet») eller mer plass i redskapet med hailen.
-- **Glidebryteren for farten på full fart som standard** (Jonas 06.11.2026: «de aller fleste brukerne alltid ønsker å gå båten i maksimal hastighet»): forslag i økta, venter på ja.
+- ~~Haill lover «alt redskapet ditt fanger dobbelt så mye», men garn og line fylles opp~~: Jonas valgte mer plass i redskapet; `haillCap` (`haill-pub-og-bonus.md` 5.10), `tests/haillplass.py`. Står igjen: juksa alene om bord holdes igjen av sløyingen (×1,76 og ×1,90).
+- ~~Glidebryteren for farten på full fart som standard~~: «Full fart» følger toppfarten, også driftsplanene (`fysikk-og-styring.md` 5.58).
 - **`shopClaim` markerer også tildelinger klienten ikke kjenner som levert** (`10i-shop.js`): ingen slike i databasen nå, men en ny produkttype før klienten kjenner den, ville gått tapt.
 
 ## Strøket 06.11.2026 (Ø11.2 sikt, lys og lyd, gren `claude/o11-2-sikring-lys-lyd-bsrlub`, rullet ut i f04d4feb)

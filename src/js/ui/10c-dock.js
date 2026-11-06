@@ -371,7 +371,7 @@ const DOCK = (() => {
     if (b.status !== 'idle') return;   // something else started while the way was found
     if (S.draft.length) draftEdit(() => { S.draft = []; });
     const wps = res.wps.map((q, i) => i === res.wps.length - 1 ? {x:mo.x, y:mo.y, port:mo.id, berth:mo.berth, fish:0} : {x:q.x, y:q.y, port:null, fish:0, leia:true});
-    S.plan = {wps, idx:0, speed:S.draftSpeed || BOAT.cruise || 6, returning:false}; b.status = 'sailing';
+    S.plan = {wps, idx:0, speed:S.draftSpeed || BOAT.vcruise || 6, full:!!S.draftFull, returning:false}; b.status = 'sailing';
     toast(L('Legger til ved ' + mo.name + '.', 'Coming in to ' + mo.name + '.')); save(); refreshAll();
   }
   // «Til mottaket» (U2-3, plan 4.3): the hero with a full hold. The way to the nearest plant that takes her, as Autonav finds it, drawn in

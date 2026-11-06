@@ -466,7 +466,7 @@ function drGo(o, H, budget){
   drDepart(o, T.wps, 'fish', T.noJig);
 }
 function drDepart(o, wps, kind, noJig){
-  S.plan = {wps, idx:0, speed:BOAT.vcruise, returning:false, depAt:null, ops:true, opsK:kind, unsafe:[], noJig:!!noJig};
+  S.plan = {wps, idx:0, speed:BOAT.vmax, full:true, returning:false, depAt:null, ops:true, opsK:kind, unsafe:[], noJig:!!noJig};
   o.cur = {t0:S.t, k:kind}; o.wait = null; o.fails = 0; o.stop = null;
   if (kind === 'home') log('Går hjem til ' + (portById(o.home) || {name:'?'}).name + (o.homeA && wps[wps.length - 1].anchor ? ' og legger seg til ankers' : '') + '.', 'Going home to ' + (portById(o.home) || {name:'?'}).name + (o.homeA && wps[wps.length - 1].anchor ? ' to lie at anchor' : '') + '.');
   else if (kind === 'land') log('Går til ' + (portById(o.M) || {name:'mottaket'}).name + ' for å levere.', 'Going to ' + (portById(o.M) || {name:'the plant'}).name + ' to land.');

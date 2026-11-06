@@ -639,7 +639,7 @@ function newState(){
   return {v:2, frame:'utm33', t:WCLOCK.on ? worldT() : 0, lastReal:Date.now(), mult:1, lang:'no', cash:15000,
     boat:{type:'trebat', pos:{x:home.p.x, y:home.p.y}, heading:0, v:0, fuel:60, ice:0, gear:true, status:'port', port:home.id, prev:null, engineUntil:0, fishUntil:null, engH:0, svcAt:0},
     equip:{vhf:false, ais:false, plotter:false, chirp:false, sonar:false, jukse:0, motor90:false}, crew:[], loan:null, member:false, msgs:[], sales:[], order:null, owned:['trebat'], lic:null, qseed:WCLOCK.on ? WORLD_SEED : Math.floor(Math.random() * 1e9), fm:{n:0, last:-1, kr:0, b:false}, haill:null, haillInv:{haill:0, luksus:0}, pubE:-1e9, target:'mix', streak:null, clothes:{olje:0, varme:0}, orders:null, rep:{}, bors:null, cevt:null, workLog:[], stock:initStock(), marks:[], navrows:[], incidents:[], lore:{}, tattoos:{}, tat:{}, pgear:newPGear(), sets:[], gseq:0, ops:null, company:'', boatName:'', tut:0, jobs:[], prep:{}, tripBuff:null, draftDep:null,
-    plan:null, draft:[], draftSpeed:16, trail:[{x:home.p.x, y:home.p.y, port:home.id}],
+    plan:null, draft:[], draftSpeed:16, draftFull:true, trail:[{x:home.p.x, y:home.p.y, port:home.id}],
     settings:{deckFirst:true, autoOn:true, autoW:11, autoTo:'near', catchByWork:true, radarKit:true},
     hold:[], log:[], market:{}, stats:{revenue:0, costs:0, trips:0, kg:0}, lastSale:null, fishPlanH:3, lastIceWarn:-1e9, intro:false};
 }
@@ -851,7 +851,7 @@ function sailReplan(pl, b, gp){
 function iceWhy(p, tried){ const w = seaIceWords(p); return tried ? [w.no + ' Autonav fant ingen vei rundt. Båten ligger stille. Legg en ny rute.', w.en + ' Autonav found no way round. The boat lies still. Set a new route.'] : [w.no + ' Båten ligger stille. Legg en ny rute.', w.en + ' The boat lies still. Set a new route.']; }
 // the boat stops where she is, and what is left of the route goes back to the draft (as «pause» does, ui/03b-route.js routePause)
 function sailStop(pl, b, why){
-  S.draft = pl.wps.slice(pl.idx).map(w => ({...w})); S.draftSpeed = pl.speed || S.draftSpeed; if (typeof draftForget === 'function') draftForget();
+  S.draft = pl.wps.slice(pl.idx).map(w => ({...w})); S.draftSpeed = pl.speed || S.draftSpeed; if (pl.full != null) S.draftFull = !!pl.full; if (typeof draftForget === 'function') draftForget();
   S.plan = null; b.status = 'idle'; b.v = 0;
   log(why[0], why[1], 'nav'); if (typeof toast === 'function') toast(S.lang === 'en' ? why[1] : why[0]);
 }
@@ -866,7 +866,7 @@ function haltPlan(need){
     if (d >= left || w.port || i === pl.wps.length - 1){ const f = Math.min(1, left / Math.max(d, 1e-9)); wps.push({x:p0.x + (w.x - p0.x) * f, y:p0.y + (w.y - p0.y) * f}); break; }
     wps.push({x:w.x, y:w.y}); left -= d; p0 = w;
   }
-  return {wps, idx:0, speed:pl.speed, returning:false, depAt:null, unsafe:[], halt:true};
+  return {wps, idx:0, speed:pl.speed, full:pl.full, returning:false, depAt:null, unsafe:[], halt:true};
 }
 function arrive(w){
   const b = S.boat, pl = S.plan;

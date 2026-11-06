@@ -101,7 +101,7 @@ async function turGo(id){
   const fishH = m.k === 'prove' && m.kind === 'stasjon' ? Math.round(((m.need - (m.min || 0)) / 60 + 0.1) * 10) / 10 : 0;
   const wps = res.wps.map((p, i) => i === res.wps.length - 1 ? {x:q ? q.p.x : p.x, y:q ? q.p.y : p.y, port:toPort, fish:fishH} : {x:p.x, y:p.y, port:null, fish:0, leia:true});
   if (ekko) for (let k = (m.at || 0) + 1; k < m.pts.length; k++) wps.push({x:m.pts[k].x, y:m.pts[k].y, port:null, fish:0});
-  S.plan = {wps, idx:0, speed:S.draftSpeed || BOAT.vcruise || 6, returning:false};
+  S.plan = {wps, idx:0, speed:S.draftSpeed || BOAT.vcruise || 6, full:!!S.draftFull, returning:false};
   if (b.status === 'port') depart(); else { b.status = 'sailing'; turDepart(); }
   save(); if (typeof refreshAll === 'function') refreshAll();
 }

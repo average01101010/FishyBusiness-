@@ -162,7 +162,7 @@ function plan2Shelter(W, hsOver){
   else return false;
   if (b.gop) gopAbort('return');
   const why = hsOver ? ['Sjøen økte til ' + hsOver.toFixed(1).replace('.', ',') + ' m', 'The sea rose to ' + hsOver.toFixed(1) + ' m'] : ['Vinden økte til ' + W.toFixed(1).replace('.', ',') + ' m/s', 'Wind rose to ' + W.toFixed(1) + ' m/s'];
-  S.plan = {wps, idx:0, speed:pl.speed, returning:true, ops:true, opsK:'ly', unsafe:wps.map(() => false), p2:{from:pl.p2.from, to:pl.p2.to, ly:true, start:st}};
+  S.plan = {wps, idx:0, speed:pl.speed, full:pl.full, returning:true, ops:true, opsK:'ly', unsafe:wps.map(() => false), p2:{from:pl.p2.from, to:pl.p2.to, ly:true, start:st}};
   b.status = 'sailing'; b.fishUntil = null; b.v = 0;
   log(why[0] + '. Går i ly til ' + (portById(to) || {name:'?'}).name + (back.length ? ' samme vei tilbake' : '') + '.', why[1] + '. Going to shelter at ' + (portById(to) || {name:'?'}).name + (back.length ? ', back the same way' : '') + '.');
   return true;
@@ -360,7 +360,7 @@ function plan2Go(o, H, i0){
   if (!meAboard() && !S.lic && b.kgear && !kveiteClosed(H)) S.target = 'kveite';
   const here = plan2Here(o);
   if (S.rest && S.rest.w === 'koye' && o.rhythm !== 'watch') restEnd();   // up from the bunk at anchor (ashore the departure ends the rest, depart)
-  S.plan = {wps:T.wps, idx:0, speed:BOAT.vcruise, returning:false, depAt:null, ops:true, opsK:T.kind, unsafe:[], noJig:!!T.noJig, p2:{from:i0, to:T.to, start:{x:here.p.x, y:here.p.y, port:here.port}}};
+  S.plan = {wps:T.wps, idx:0, speed:BOAT.vmax, full:true, returning:false, depAt:null, ops:true, opsK:T.kind, unsafe:[], noJig:!!T.noJig, p2:{from:i0, to:T.to, start:{x:here.p.x, y:here.p.y, port:here.port}}};
   r.trip = {from:i0, to:T.to, t0:S.t, kg0:holdTotal(), anchor:!!T.wps[T.wps.length - 1].anchor}; r.wait = null; o.hold = 0; o.stop = null;
   if (T.kind === 'home') log('Går hjem til ' + (portById(o.home) || {name:'?'}).name + (o.homeA && T.wps[T.wps.length - 1].anchor ? ' og legger seg til ankers' : '') + '.', 'Going home to ' + (portById(o.home) || {name:'?'}).name + (o.homeA && T.wps[T.wps.length - 1].anchor ? ' to lie at anchor' : '') + '.');
   else if (T.kind === 'land') log('Går til ' + (portById(o.M) || {name:'mottaket'}).name + ' for å levere.', 'Going to ' + (portById(o.M) || {name:'the plant'}).name + ' to land.');

@@ -100,7 +100,7 @@ function snoSoak(s, H){
   const a = (S.t - s.tSet) / 60, P = POTS[s.pot], A = s.acc.snokrabbe || (s.acc.snokrabbe = {kg:0, n:0, ts:0}), pts = snoPts(s);
   let D = 0; for (const p of pts) D += snoDen(p, H); D /= pts.length;
   const pull = Math.exp(-a / SNOC.tau) * baitF(s.bait || 'blekksprut', 'snokrabbe') + SNOC.ghost;
-  const lam = SNOC.q * s.n * D * pull * Math.max(0, 1 - A.n / ((P.cap || SNOC.cap) * s.n)) * potQ(s) * luck('snokrabbe');
+  const lam = SNOC.q * s.n * D * pull * Math.max(0, 1 - A.n / ((P.cap || SNOC.cap) * s.n * haillCap())) * potQ(s) * luck('snokrabbe');   // (the room grows with the haill, haillCap)
   if (!(lam > 0)) return 0;
   const kg = lam * SNOWM; A.kg += kg; A.n += lam; A.ts += kg * H;
   if (!s.dry) for (const p of pts) takeStock(p, kg / pts.length, 'snokrabbe');
