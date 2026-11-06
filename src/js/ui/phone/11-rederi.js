@@ -24,45 +24,54 @@
     if (o && !o.on && o.stop) A('ops', 'Driftsplanen har stoppet: ' + o.stop.no, 'The plan has stopped: ' + o.stop.en, 'drift');
     else if (o && o.on && o.held) A('ops', 'Driftsplanen venter til du gir båten tilbake', 'The plan waits until you give the boat back', 'drift');
     if (access() !== 'none'){ const lim = codLimitNow(H); if (lim > 0 && quotaState().torsk >= lim * 0.9) A('quota', 'Torskekvoten er nesten brukt opp', 'The cod quota is nearly used up', 'kvote'); }
-    return {name:S.boatName, type:b.type, status:statusText(), pos:b.status === 'port' ? portById(b.port).name : fieldCode(b.pos) + ' · ' + L('nær ', 'near ') + nearestPort(b.pos).name,
+    let nx = null; try { const e = nextEvent(); if (e) nx = {t:e.t, txt:e.txt}; } catch (e){}   // the vessel's next event (ui/04-panels-instruments.js), for her card in Rederi
+    return {name:S.boatName, type:b.type, status:statusText(), nx, pos:b.status === 'port' ? portById(b.port).name : fieldCode(b.pos) + ' · ' + L('nær ', 'near ') + nearestPort(b.pos).name,
       hold:holdTotal(), cap:capHold(), fuel:b.fuel, fuelCap:BOAT.fuelCap, ice:b.ice, iceCap:BOAT.iceCap, crew:S.crew.length, crewMax:BOAT.crewMax, ops:o, sk, now:!o ? null : o.v === DRV2 ? [PLAN2UI.nowOf(o)[0], PLAN2UI.nowOf(o)[0]] : driftNow(o), inc, al, inPort:b.status === 'port'};
   }
   const summaries = () => S.fleet.map(v => ({v, s:withVessel(v, vSummary)}));
   const alerts = () => summaries().flatMap(x => x.s.al);
+  // UI 2, U2-5 (docs/planer/ui-2-staaende.md 4.6, Jonas 06.11.2026, V5 A: the fleet first; V1 A: the phone upright is the measure). One card
+  // a vessel with her name and type, her state with a dot, the next event with the countdown, hold and diesel as two bars, her own alerts
+  // as lines on the card, and the buttons: «Ta roret» is the main button when both vessels lie in port, otherwise «Følg» is, and «Ta roret»
+  // stands grey with the reason under its label (data-why, as the row's buttons from U2-3). The rule that both must lie in port is the
+  // game's (vboard in 14-act.js); the card only says it. Rename, Sell and the broker's offers sit behind «⋯». Under the fleet: the company
+  // card, the year's accounts as one line with the way to the bank (the loans and the balance sheet are in the bank's Regnskap tab), and
+  // Foretaket last as before
   function rederi(){
-    const all = summaries(), al = all.flatMap(x => x.s.al), bar = (a, c, k) => '<div class="ph-bar"><i class="' + (k || '') + '" style="width:' + Math.round(clamp(a / Math.max(1, c), 0, 1) * 100) + '%"></i></div>';
-    const h = ['<div class="ph-c"><div class="ph-card"><h4>' + (S.company || L('Rederiet', 'The company')) + '</h4>' + kv(L('Båter', 'Vessels'), all.length) + kv(L('Konto', 'Account'), kr(S.cash)) + kv(L('Inntekt i dag', 'Income today'), kr(Math.round(all.reduce((a, x) => a + x.s.inc, 0)))) + '</div>'];
-    // the company's books (tilbakemelding #9, Jonas 09.10.2026: «lånedetaljer burde stå i regnskapet til rederiet»): the year's result, each
-    // loan with its balance, rate, instalment and the interest paid on it, and what the company owns against what it owes
-    // (Økonomi 2, Ø1: the year's figures from the books, the whole accounts in the bank's Regnskap tab)
-    { const fleetV = all.reduce((a, x) => a + vesselValue(x.v), 0), D = debt(), H = S.t / 60, yR = bookResult(yearH(H)), dep = Math.round(depBase() * TAX.dep * yearFrac(H));
-      const loanRows = k => { const Q = S[k]; if (!Q) return ''; return '<p class="ph-note" style="margin:8px 0 2px"><b>' + (k === 'loanIN' ? L('Risikolån, ', 'Risk loan, ') : L('Båtlån, ', 'Vessel loan, ')) + LOANS[k].who + '</b></p>' +
-        kv(L('Restgjeld', 'Balance'), kr(Math.round(Q.bal))) + kv(L('Rente', 'Interest'), fmt(Q.rate * 100, 1) + ' %') + kv(L('Terminbeløp', 'Monthly payment'), kr(Q.pay)) +
-        kv(L('Neste trekk', 'Next payment'), dayStr(Q.next / 60)) + kv(L('Renter betalt', 'Interest paid'), kr(Math.round(Q.intPaid || 0))); };
-      h.push('<div class="ph-card"><h4>' + L('Regnskap ', 'Accounts ') + yearH(H) + '</h4>' + kv(L('Inntekter i år', 'Income this year'), kr(yR.inc)) + kv(L('Kostnader i år', 'Costs this year'), kr(yR.cost)) +
-        kv(L('Avskrivning', 'Depreciation'), kr(dep)) + kv(L('Resultat før skatt', 'Result before tax'), kr(yR.res - dep)) +
-        '<button class="ph-btn" data-pa="open" data-a="bank" data-s="regnskap">' + L('Hele regnskapet', 'The whole accounts') + '</button>' + (S.loan || S.loanIN ? loanRows('loan') + loanRows('loanIN') : '<p class="ph-note">' + L('Rederiet har ingen lån.', 'The company has no loans.') + '</p>') +
-        '<p class="ph-note" style="margin:8px 0 2px"><b>' + L('Balanse', 'Balance sheet') + '</b></p>' + kv(L('Flåten (verdi)', 'The fleet (value)'), kr(fleetV)) + kv(L('Konto', 'Account'), kr(Math.round(S.cash))) +
-        kv(L('Gjeld', 'Debt'), kr(Math.round(D))) + kv(L('Egenkapital', 'Equity'), kr(Math.round(fleetV + S.cash - D))) +
-        '<button class="ph-btn" data-pa="open" data-a="bank">' + L('Til banken (nedbetaling og nye lån)', 'To the bank (repayment and new loans)') + '</button></div>'); }
-    h.push('<h4 style="margin:10px 2px 6px">' + L('Trenger deg', 'Needs you') + (al.length ? ' (' + al.length + ')' : '') + '</h4>');
-    if (!al.length) h.push('<p class="ph-note">' + L('Alt er i orden i flåten.', 'All is well in the fleet.') + '</p>');
-    for (const a of al) h.push('<div class="ph-card"><div class="ph-kv"><span><b>«' + vget(vesselById(a.id), 'boatName') + '»</b> ' + L(a.no, a.en) + '</span><span><button class="ph-btn" style="margin:0" data-pa="goto" data-id="' + a.id + '" data-a="' + a.app + '">' + L('Åpne', 'Open') + '</button></span></div></div>');
-    h.push('<h4 style="margin:10px 2px 6px">' + L('Flåten', 'The fleet') + '</h4>');
-      const meV = vesselById(S.me), meIn = !meV || vget(meV, 'boat').status === 'port';
-      for (const {v, s: sm} of all){
-        const vb = vget(v, 'boat'), cur = v.id === S.cur, me = v.id === S.me, inp = vb.status === 'port';
-        h.push('<div class="ph-card"><h4>«' + vget(v, 'boatName') + '»' + (me ? ' ⚓' : '') + '</h4>' + '<p class="ph-note">' + VESSELS[vb.type].name[S.lang] + '</p>' + kv('Status', sm.status) + kv(L('Posisjon', 'Position'), sm.pos) +
-          kv(L('Last', 'Hold'), fmt(sm.hold, 0) + ' / ' + fmt(sm.cap, 0) + ' kg') + bar(sm.hold, sm.cap) + kv(L('Drivstoff', 'Fuel'), fmt(sm.fuel, 0) + ' / ' + sm.fuelCap + ' L') + bar(sm.fuel, sm.fuelCap, sm.fuel < sm.fuelCap * 0.2 ? 'bad' : '') + kv(L('Is', 'Ice'), fmt(sm.ice, 0) + ' / ' + sm.iceCap + ' kg') +
-          kv(L('Mannskap', 'Crew'), sm.crew + ' / ' + sm.crewMax) + kv(L('Driftsplan', 'Operations plan'), !sm.ops ? L('ingen', 'none') : L(sm.now[0], sm.now[1])) + kv(L('Inntekt i dag', 'Income today'), kr(Math.round(sm.inc))) +
-          '<p class="ph-note">' + L('Adgang: ', 'Access: ') + accessText(v) + '</p>' +
-          (me ? '<p class="ph-note">' + L('Du er om bord på denne båten.', 'You are aboard this vessel.') + '</p>' : '') + (cur && S.fleet.length > 1 ? '<p class="ph-note">' + L('Denne båten følger du nå.', 'You are following this vessel.') + '</p>' : '') +
-          '<div class="ph-btncol">' + (cur ? '' : '<button class="ph-btn p" data-pa="vfollow" data-id="' + v.id + '">' + L('Følg denne båten', 'Follow this vessel') + '</button>') +
-          (me ? '' : '<button class="ph-btn" data-pa="vboard" data-id="' + v.id + '"' + (inp && meIn ? '' : ' disabled') + '>' + L('Gå om bord', 'Go aboard') + '</button>') +
-          '<button class="ph-btn alt" data-pa="vname" data-id="' + v.id + '">' + L('Gi nytt navn', 'Rename') + '</button>' +
-          (me || S.fleet.length < 2 ? '' : '<button class="ph-btn red" data-pa="vsell" data-id="' + v.id + '"' + (inp && !tiLocked(v) ? '' : ' disabled') + '>' + L('Selg for ', 'Sell for ') + kr(vesselValue(v)) + '</button>') + '</div>' +
-          (!me && !(inp && meIn) ? '<p class="ph-note">' + L('For å bytte båt må begge ligge i havn.', 'To change vessel, both must be in port.') + '</p>' : '') + (me ? '' : mgOwnRow(v)) + '</div>');   // (Kystmegleren and delivery, M4)
-      }
+    const all = summaries(), H = S.t / 60, no = S.lang === 'no';
+    const bar = (a, c, k) => '<div class="ph-bar"><i class="' + (k || '') + '" style="width:' + Math.round(clamp(a / Math.max(1, c), 0, 1) * 100) + '%"></i></div>';
+    const meV = vesselById(S.me), meIn = !meV || vget(meV, 'boat').status === 'port', why = no ? 'Begge må ligge i havn' : 'Both must be in port';
+    const h = ['<div class="ph-c">'];
+    for (const {v, s: sm} of all){
+      const vb = vget(v, 'boat'), cur = v.id === S.cur, me = v.id === S.me, inp = vb.status === 'port', canBoard = !me && inp && meIn;
+      const dot = /engine|adrift|aground/.test(vb.status) ? 'bad' : sm.al.length ? 'warn' : inp ? 'port' : 'ok';
+      const tags = (me ? '<span class="fl-tag">' + L('Om bord', 'Aboard') + '</span>' : '') + (cur && all.length > 1 ? '<span class="fl-tag">' + L('Følger', 'Following') + '</span>' : '');
+      const meta = [L('Mannskap ', 'Crew ') + sm.crew + ' / ' + sm.crewMax];
+      if (sm.iceCap > 0) meta.push(L('Is ', 'Ice ') + fmt(sm.ice, 0) + ' / ' + sm.iceCap + ' kg');
+      if (sm.inc > 0) meta.push(L('Inntekt i dag ', 'Income today ') + kr(Math.round(sm.inc)));
+      // the buttons: the main one first, then the second, then «⋯» with the rest
+      const take = me ? '' : '<button class="ph-btn' + (canBoard ? ' p' : '') + '" data-pa="vboard" data-id="' + v.id + '"' + (canBoard ? '' : ' disabled data-why="' + why + '"') + '>' + L('Ta roret', 'Take the helm') + '</button>';
+      const follow = cur ? '' : '<button class="ph-btn ' + (canBoard ? 'alt' : 'p') + '" data-pa="vfollow" data-id="' + v.id + '">' + L('Følg', 'Follow') + '</button>';
+      const more = ['<button class="ph-btn alt" data-pa="vname" data-id="' + v.id + '">' + L('Gi nytt navn', 'Rename') + '</button>'];
+      if (!me && all.length > 1){ const sw = !inp ? L('Må ligge i havn', 'Must lie in port') : tiLocked(v) ? L('Går i innbytte', 'Being traded in') : '';
+        more.push('<button class="ph-btn red" data-pa="vsell" data-id="' + v.id + '"' + (sw ? ' disabled data-why="' + sw + '"' : '') + '>' + L('Selg for ', 'Sell for ') + kr(vesselValue(v)) + '</button>'); }
+      // the broker (Kystmegleren and delivery, M4): what is under way stands on the card, the offers sit behind «⋯»
+      const mg = me ? '' : mgOwnRow(v), mgOn = !me && (mktOwn(v.id) || (mktState().del || []).some(d => d.vid === v.id));
+      if (mg && !mgOn) more.push(mg);
+      h.push('<div class="ph-card fl"><div class="fl-h"><h4>«' + vget(v, 'boatName') + '»' + (me ? ' ⚓' : '') + '</h4>' + tags + '</div><p class="ph-note fl-type">' + VESSELS[vb.type].name[S.lang] + '</p>' +
+        '<div class="fl-st"><i class="fl-dot ' + dot + '"></i><span>' + sm.status + (inp ? '' : ' · ' + sm.pos) + '</span></div>' +
+        (sm.nx ? '<div class="fl-nx">⏱ ' + sm.nx.txt + ' ' + hm(sm.nx.t / 60) + ' <small>· ' + inReal(sm.nx.t - S.t) + '</small></div>' : '') +
+        '<div class="fl-bars"><div><span>' + L('Last', 'Hold') + ' <b>' + fmt(sm.hold, 0) + ' / ' + fmt(sm.cap, 0) + ' kg</b></span>' + bar(sm.hold, sm.cap, sm.hold >= sm.cap - 1 ? 'warn' : '') + '</div>' +
+        '<div><span>' + L('Diesel', 'Diesel') + ' <b>' + fmt(sm.fuel, 0) + ' / ' + sm.fuelCap + ' L</b></span>' + bar(sm.fuel, sm.fuelCap, sm.fuel < sm.fuelCap * 0.2 ? 'bad' : '') + '</div></div>' +
+        '<p class="ph-note fl-meta">' + meta.join(' · ') + (sm.ops && sm.ops.on && sm.now ? '<br>' + L('Driftsplan: ', 'Plan: ') + L(sm.now[0], sm.now[1]) : '') + '</p>' +
+        sm.al.map(a => '<div class="fl-al"><span>' + L(a.no, a.en) + '</span><button class="ph-btn sm" data-pa="goto" data-id="' + a.id + '" data-a="' + a.app + '">' + L('Åpne', 'Open') + '</button></div>').join('') +
+        (mgOn ? mg : '') +
+        '<div class="fl-btns">' + (canBoard ? take + follow : follow + take) + '<details class="fl-more"><summary aria-label="' + L('Mer', 'More') + '">⋯</summary><div class="fl-menu">' + more.join('') + '</div></details></div></div>');
+    }
+    h.push('<div class="ph-card"><h4>' + (S.company || L('Rederiet', 'The company')) + '</h4>' + kv(L('Båter', 'Vessels'), all.length) + kv(L('Konto', 'Account'), kr(S.cash)) + kv(L('Inntekt i dag', 'Income today'), kr(Math.round(all.reduce((a, x) => a + x.s.inc, 0)))) + '</div>');
+    // the year's result from the books (tilbakemelding #9, Jonas 09.10.2026; Økonomi 2, Ø1): one line, the whole accounts, the loans and the balance sheet in the bank's Regnskap tab
+    { const yR = bookResult(yearH(H)), dep = Math.round(depBase() * TAX.dep * yearFrac(H));
+      h.push('<div class="ph-card fl-acc"><span>' + L('Regnskap ', 'Accounts ') + yearH(H) + ': ' + kr(yR.res - dep) + L(' før skatt', ' before tax') + '</span><button class="ph-btn sm" data-pa="open" data-a="bank" data-s="regnskap">' + L('Bank', 'Bank') + ' ›</button></div>'); }
     h.push('<h4 style="margin:10px 2px 6px">' + L('Foretaket', 'The business') + '</h4>' + papBiz());   // from the Sjømann app (Jonas 09.10.2026)
     h.push('</div>'); return h.join('');
   }

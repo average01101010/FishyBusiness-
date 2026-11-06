@@ -1658,3 +1658,22 @@ body.v3d #hud{z-index:6} body.v3d #plotMin{z-index:7}   /* (the chart's fold but
   body.v3d.hudmin #plotMin{top:calc(var(--bTop) + var(--sH) + 2px)}
   body.v3d.hudmin.plotmin #gps3d:not([hidden]){top:calc(var(--bTop) + var(--sH) + 6px)}
 }
+/* UI 2, U2-5 (docs/planer/ui-2-staaende.md 4.6, Jonas 06.11.2026, V5 A: the fleet first; V1 A: the phone upright is the measure). Rederi: one
+   card a vessel with her name and type, the state with a dot (grey in port, green at work, amber when she needs you, red in trouble), the
+   next event with the countdown, hold and diesel as two bars, her alerts as lines on the card, the main button first («Ta roret» when both
+   lie in port, else «Følg»; the grey one says why under its label from data-why, with a solid ring as the row's buttons from U2-3), and
+   Rename, Sell and the broker's offers behind «⋯» (a native details, no state to keep; it opens under the row and closes with the next render) */
+.ph-card.fl .fl-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap} .ph-card.fl .fl-h h4{margin:0;flex:1 1 auto}
+.fl-tag{font:600 var(--fs-cap)/1.5 var(--sans);color:var(--a-primary);background:rgba(181,34,122,.1);border-radius:var(--r-pill);padding:1px 8px;white-space:nowrap}
+.fl-type{margin:0 0 6px}
+.fl-st{display:flex;align-items:center;gap:7px;font:600 var(--fs-sm)/1.3 var(--sans);color:var(--t-ink)}
+.fl-dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--t-muted)} .fl-dot.ok{background:var(--ok)} .fl-dot.warn{background:var(--warn)} .fl-dot.bad{background:var(--bad)} .fl-dot.port{background:rgba(91,114,124,.5)}
+.fl-nx{margin:3px 0 0 16px;font:500 var(--fs-sm)/1.35 var(--sans);color:var(--t-ink)} .fl-nx small{color:var(--t-muted);font-size:var(--fs-cap);white-space:nowrap}
+.fl-bars{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin:8px 0 2px} .fl-bars span{display:block;font:500 var(--fs-cap)/1.3 var(--sans);color:var(--t-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .fl-bars b{color:var(--t-ink);font-weight:600} .fl-bars .ph-bar{margin:3px 0 0}
+.fl-meta{margin:6px 0 0}
+.fl-al{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;padding:6px 8px;border-radius:var(--r-btn);background:rgba(169,108,7,.09);border-left:3px solid var(--warn);font:500 var(--fs-sm)/1.3 var(--sans);color:var(--t-ink)} .fl-al .ph-btn{margin:0;flex:0 0 auto}
+.fl-btns{display:flex;gap:6px;align-items:stretch;justify-content:flex-end;margin-top:10px;position:relative} .fl-btns > .ph-btn{flex:1 1 0;margin:0;min-width:0} .fl-btns > .ph-btn:disabled{flex:1.35 1 0} .fl-btns .ph-btn:disabled,.fl-menu .ph-btn:disabled{border-style:solid}
+.fl-more{flex:0 0 auto} .fl-more summary{list-style:none;display:flex;align-items:center;justify-content:center;width:44px;min-height:var(--h-btn);height:100%;box-sizing:border-box;border-radius:var(--r-btn);background:var(--s-card-2);color:var(--t-ink);font:700 20px/1 var(--sans);cursor:pointer;user-select:none;-webkit-user-select:none} .fl-more summary::-webkit-details-marker{display:none}
+.fl-more[open] summary{background:var(--t-ink);color:#fff}
+.fl-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:4;min-width:min(260px,100%);display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--s-card);border:1px solid rgba(22,50,63,.12);border-radius:var(--r-card);box-shadow:0 6px 20px rgba(11,23,32,.18)} .fl-menu .ph-btn{margin:0;text-align:left} .fl-menu .ph-btncol{margin:0}
+.fl-acc{display:flex;justify-content:space-between;align-items:center;gap:10px;font:500 var(--fs-sm)/1.35 var(--sans);color:var(--t-ink)} .fl-acc .ph-btn{margin:0;flex:0 0 auto}
