@@ -152,6 +152,9 @@ Jonas 05.11.2026: «husk at vi må ha blendermodeller og animasjoner for hele op
   - **Lossingen:** luka åpnes, kranen (båtens eller kaiens) løfter pall for pall opp fra rommet og ned på kaia, trucken kjører dem inn i fryselageret, lossegjengen i luka og på kaia.
 - **Filer:** `tools/gear/` (ny `autoline.py`), `tools/gear/blaase.py`, `tools/deck/` (ny `pall.py`), `view3d/10-gear.js`, `view3d/09-landing-deck.js`, `src/data/*.b64`, malen.
 - **Tester:** `vessel3d.test.mjs`, kontrollbildene fra Blender, `haultest`, `landtest` og skjermbilder i begge formater, 3D-testene alene.
+- **Delt i to økter (05.11.2026, Jonas: «Er H2d for stor for én økt, del den (modellene først, så animasjonene)»):**
+  - **H2d1 modellene:** autolinehaleren med krokrenseren, krok, forsyn og agn, bøyestanga etter § 68, kartongen, pallen med film og pallegaffelen, haleporten åpen og lasteluka med lokket som egen del på autolineren; satt i spillet der scenene alt finnes (haleren i porten, stengene på autolinesettene med lysene om natta, Blender-pallen i lossingen med luka åpen). Test `tests/h2dshot.py`.
+  - **H2d2 animasjonene:** settingen (dreggen og stanga over hekken fra slisken `aline.chute`, lina med egnede kroker ut i kjølvannet i båtens fart, ny stang mellom lenkene), draget (båten mot lina, fisken løftet inn med gaffel én og én ved porten, folkene i haleplassen, krokrenseren og lina mot magasinet) og lossingen (pallene opp fra rommet gjennom luka på gaffelen, kranen fra kaia eller båtens egen, lossegjengen i luka og på kaia).
 
 ### H2e Kystvakta på havet, hele turen og stikkprøvene
 
@@ -250,3 +253,12 @@ Fra H2c (05.11.2026):
   - Rettet underveis: leia «mellom Vannareid og Vannareid» (hjem er mottaket) stoppet planen, og lossemeldingen sa «i dag» om en seddel to døgn fram.
   - Prøvd bare nord for Loppa med Vannareid som mottak (hele kysten i testmiljøet); stikkprøvene langs kysten og havturen hele veien er H2e. **Venter på Jonas før utrulling.**
 - 05.11.2026: **H2c rullet ut** (Jonas: «Rull ut. Gi meg promptet for å starte h2d i en ny økt»), flettet med arbeidsgrenen i 493c636 (det nye der var Spilltest 3, Ø2 og Ø6; etter flettingen enhetstestene 1195 OK, `havplantest` 18 OK, `driftsplan2test` 62 OK, `driftsplan2ui` 22 OK). **Neste:** H2d (Blender-modellene og animasjonene) i en ny økt.
+- 05.11.2026: **H2d delt i H2d1 (modellene) og H2d2 (animasjonene)**, fordi hele operasjonen ikke rekker i én økt. **H2d1 bygd** på grenen `ccr-87bd2cf3-hnz2ak` (fra arbeidsgrenen etter H2c, 5.66 i `docs/systemer/redskap.md`, autolineren i `docs/systemer/3d-baater-og-animasjon.md`):
+  - `tools/gear/autoline.py` (ny): autolinehaleren med krokrenser, og krok, forsyn og agnbit (blekksprut og saury) som deler til instanser.
+  - `tools/gear/blaase.py`: bøyestanga etter § 68 for vest (to flagg, to gule lys) og øst (ett av hver), toppen 3,15 m over vannet.
+  - `tools/deck/pall.py` (ny): kartongen (0,60 × 0,40 × 0,14 m, 22 kg), pallen med 44 kartonger i film (968 kg, 1,68 m) og pallegaffelen.
+  - `tools/boats/al45.py`: haleporten som ekte hull med haleplassen bak (bare så langt man ser utenfra), lasteluka med karm og lokket som egen del, ankrene `aline` og `hatch`; 25 100 trekanter nær.
+  - I spillet: haleren står i porten (til sjøs og under draget, der lina kommer inn med forsyn og kroker), stengene står på endene av alle autolinesett (også havflåtens) og blinker gult om natta, lossingen har Blender-pallen på gaffelen og luka åpen. Uten stamper på autolineren.
+  - Rettet underveis: sidefeilen «map: mask block 94,18 has no pack» i 3D på feltet nord for Loppa (`groundStep` i `view3d/17-draw.js`, eldre enn økta).
+  - Tester: enhetstestene 1195 OK; `h2dshot` (ny, 3D alene, hele kysten) grønn i alle fire deler, sidefeil `[]`: haleren i porten, draget, stengene om dagen og lysene om natta nord for Loppa, lossingen med luka åpen og pallen i gaffelen i Vannareid; skjermbilder i begge formater. `trip2`, `vesseltest` (33), `docktest` (96), `havflaate` (9), `npctest` (19), `haultest` (4), `dbg23o` og `landtest` (8) grønne; `tral3d` (14 OK, autolinersjekken med) og `deckshot` (2 OK) gikk ut på tid i SwiftShader, som kjent (backloggen 10.6). Ikke prøvd langs kysten ellers (lossingens kode er den samme for alle mottak; stikkprøven av lossingen ble gjort i H2b).
+  - **Står igjen til H2d2:** animasjonene (setting, drag med folk og gaffel, lossing fra rommet). **Venter på Jonas før utrulling.**

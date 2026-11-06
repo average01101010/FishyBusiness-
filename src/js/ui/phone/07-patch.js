@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['h2d-051126', '05.11.2026', 'Autolineren i 3D', 'The autoliner in 3D', [
+       ['Autolineren har fått autolinehaleren med krokrenseren i haleporten, og porten er åpen, så du ser lina komme inn over skiva med forsyn og kroker.', 'The autoliner has its autoline hauler with the hook cleaner in the hauling port, and the port is open, so you see the line come in over the sheave with its snoods and hooks.'],
+       ['Lenkene er merket med bøyestenger som på havet: to flagg i vest og ett i øst, og gule blinklys om natta.', 'The lenker are marked with ocean marker poles: two flags at the west end and one at the east, and yellow flashing lights at night.'],
+       ['Ved lossingen åpnes lasteluka, og pallene med fryste kartonger i film går i land på pallegaffelen.', 'At the landing the cargo hatch opens, and the pallets of frozen cartons in film go ashore on the pallet fork.'],
+    ]],
     ['havplan-051126', '05.11.2026', 'Autolineren på driftsplanen', 'The autoliner on the operations plan', [
        ['Driftsplanen kan drive autolineren: lagene setter lenkene på feltene, lar dem stå, trekker dem og setter dem ut igjen, døgnet rundt, også uten deg om bord og når spillet er lukket.', 'The operations plan can run the autoliner: the teams set the lenker on the fields, let them stand, haul them and set them out again, round the clock, also without you aboard and while the game is closed.'],
        ['Turen varer til lasten er nesten full, eller agnet, drivstoffet eller provianten tar slutt, eller så mange døgn du velger. Så trekkes lenkene inn, og skipet losser, bytter skift, bunkrer, tar agn for neste tur og går ut igjen.', 'The trip lasts until the hold is nearly full, or the bait, the fuel or the provisions run out, or as many days as you choose. Then the lenker are hauled in, and the ship lands, changes crews, bunkers, takes bait for the next trip and goes out again.'],

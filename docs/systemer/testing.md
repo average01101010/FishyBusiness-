@@ -74,6 +74,7 @@ Hvilke tester som dekker hvilke filer, står i `COVER` i `tests/run.py`. Funksjo
     - `lighttest.py` (3D): lysene om natta, «Lav» og fyrkjeglene
     - `kinotest.py` (3D): kino-opptakene, «Skjul» og avslutning
     - `haultest.py` (3D): halerne fra Blender, skiva og mannskapet
+    - `h2dshot.py` (3D, hele kysten, alene): autolinens modeller fra H2d1 nord for Loppa: haleren i den åpne haleporten, draget, bøyestengene etter § 68 dag og natt, lossingen med åpen luke og Blender-pallen i gaffelen; bilder `h2d_*` i begge formater
     - `charttest.py`: tidsmåler også første bilde og drar kartet et halvt utsnitt
       - Tegnetiden er beste av to malinger med CPU strupet 4x; fjorden stående ligger på 3,0 s mot grensen 2,5 s (rasterflisene i `chartRaster`, `BACKLOG.md` 10.6). Lyngen måles inne i alpene (69,3 N 20,3 E), og fjordnavnene slik pakkene plasserer dem uten havn i veien (E4, 26.10.2026).
   - **`sea3d.py` (3D):**
