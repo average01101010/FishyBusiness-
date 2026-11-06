@@ -114,6 +114,8 @@ writeFileSync(join(MAPOUT, 'manifest.json'), JSON.stringify(mapMan)); mapFiles.p
 // and the admin's tables tell the builds apart; until now every build reported 'dev'
 const ver = createHash('sha256').update(page).update(JSON.stringify(mapMan)).update(JSON.stringify(dataFiles)).digest('hex').slice(0, 12);
 page = page.replace('</head>', `<meta name="dsb-version" content="${ver}">\n</head>`);
+// and beside the page, for an open game to ask whether a newer build is out (ui/10p-install.js UPDATE; Jonas 06.11.2026)
+writeFileSync(join(DIST, 'version.json'), JSON.stringify({v:ver, at:new Date().toISOString()}));
 { const sm = srcMarks(page), b = sm.page.lastIndexOf('</body>');
   if (b < 0){ console.error('build: no </body> for the source map'); process.exit(1); }
   page = sm.page.slice(0, b) + '<script>window.DSB_SRCMAP=' + JSON.stringify(sm.map) + ';</script>' + sm.page.slice(b); }
