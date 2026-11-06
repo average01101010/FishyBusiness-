@@ -829,7 +829,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 249 `startReturn(auto, W, home, hsOver, opsKeep)`
 - **269** CORE END
 
-## `src/js/core/06b-coastports.js` (140 linjer)
+## `src/js/core/06b-coastports.js` (144 linjer)
 
 the fish receivers along the whole coast as harbours (05.10.2026, M2 of the coast plan)
 
@@ -1041,7 +1041,7 @@ the fish tubs (docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
   - 58 `tubPack(dims, spec, seed)`
   - 91 `karRefund()`
 
-## `src/js/core/07-harbours.js` (541 linjer)
+## `src/js/core/07-harbours.js` (544 linjer)
 
 harbours: quays, berths and mooring
 
@@ -1080,14 +1080,14 @@ harbours: quays, berths and mooring
   - 423 `finishLanding()`
   - 431 `iceChute(kg)`
 - **433** the bunker quay: moving along the harbour and filling fuel
-  - 443 `quayPos(b)`
-  - 454 `portBusy(b)`
-  - 455 `startShift(to, after)`
-  - 465 `startFueling(ops)`
-  - 478 `quayMinute()`
-  - 494 `buyIce(kg, free)`
-- **504** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
-  - 510 `shopBuy(k, kg, free)`
+  - 446 `quayPos(b)`
+  - 457 `portBusy(b)`
+  - 458 `startShift(to, after)`
+  - 468 `startFueling(ops)`
+  - 481 `quayMinute()`
+  - 497 `buyIce(kg, free)`
+- **507** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
+  - 513 `shopBuy(k, kg, free)`
 
 ## `src/js/core/07c-naust.js` (168 linjer)
 
@@ -1404,25 +1404,35 @@ looks: how the people of the game look (Jonas 10.10.2026: character customisatio
   - 99 `lookQuay(id, i)`
   - 106 `lookFromKey(s)`
 
-## `src/js/core/09j-kystvakt.js` (102 linjer)
+## `src/js/core/09j-kystvakt.js` (203 linjer)
 
 Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026; docs/planer/oppdrag-2.md, docs/systemer/kvoter-og-regler.md 5.30)
 
 - **1** Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026; docs/planer/oppdrag-2.md, docs/systemer/kvoter-og-regler.md 5.30)
-  - 10 `kvState()`
-  - 13 `kvReady()`
-  - 23 `kvHour()`
-  - 29 `kvArrive()`
-  - 36 `kvSide(b)`
-  - 37 `kvMinute()`
-  - 43 `kvNpcs()`
-  - 46 `kvSums(sets, inside)`
-  - 48 `kvMostSp(sets)`
-  - 53 `kvCheck(b)`
-  - 75 `kvWhat(r)`
-  - 85 `kvFinish()`
+- **10** the check at sea aboard an ocean vessel (H2e of docs/planer/havsteget-h2-autoline.md, 06.11.2026): the inspectors come over by the
+  - 21 `kvCmKg(sp, cm)`
+  - 22 `kvMinCm(sp, p)`
+  - 25 `kvSampleFish(g, sp, w, p)`
+  - 28 `kvHaulKeep(g, s)`
+  - 33 `kvMix(ms, p, gear, most)`
+  - 47 `kvAlong(a, b)`
+  - 52 `kvMarks(s)`
+  - 53 `kvHavCheck(b, sets, H, len, add, most)`
+  - 85 `kvState()`
+  - 88 `kvReady()`
+  - 98 `kvHour()`
+  - 106 `kvArrive()`
+  - 115 `kvSide(b)`
+  - 116 `kvMinute()`
+  - 122 `kvNpcs()`
+  - 125 `kvSums(sets, inside)`
+  - 127 `kvMostSp(sets)`
+  - 132 `kvCheck(b)`
+  - 159 `kvWhat(r)`
+  - 171 `kvWhatHav(r)`
+  - 184 `kvFinish()`
 
-## `src/js/core/10-gear.js` (798 linjer)
+## `src/js/core/10-gear.js` (802 linjer)
 
 passive gear: nets, line and pots that stand in the sea while the boat is away
 
@@ -1477,35 +1487,35 @@ passive gear: nets, line and pots that stand in the sea while the boat is away
   - 422 `gopAfter(b = S.boat)`
   - 426 `gearUnset(s, n)`
   - 436 `gopAbort(why)`
-  - 455 `gearBack(s, n, cond, W)`
-  - 462 `wearNets(s, g)`
-  - 471 `haulUnit(g, H, SL)`
-  - 488 `landFish(sp, kg, key, mesh, p, H, hook, fresh, g)`
-  - 502 `netLen(w)`
-  - 503 `retain(sp, key, mesh, w)`
-  - 510 `sampleSel(sp, key, mesh, p, H)`
-  - 513 `landCrabs(g, n, kg)`
-  - 524 `finishHaul(g, H)`
-- **558** a station on a route or the standing plan: haul what stands here and set it again, or set new gear if nothing stands here.
-  - 561 `cycleSpec(kind, want, n)`
-  - 575 `gearCycle(w, fishAfter)`
-  - 593 `opsGearNeeds(o)`
-  - 603 `opsGearAfter()`
-- **609** in the sea, every hour: catch, losses, weather and deadlines (company level)
-  - 610 `soakHour(s, H)`
-  - 642 `gearHour(H)`
-  - 673 `reportLost(sid)`
-  - 681 `netMended(l)`
-- **682** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
-  - 688 `egnOrder(lk, n, bait)`
-  - 702 `egnHands()`
-  - 711 `egnSelf(lk, n, bait)`
-  - 732 `stripSelf(lk, bait, n, then)`
-  - 746 `mendSelf(nid)`
-  - 757 `botOrder(nid)`
-  - 768 `gearJob(j)`
-  - 780 `gearJobCancel(j)`
-  - 787 `shoreTick()`
+  - 456 `gearBack(s, n, cond, W)`
+  - 463 `wearNets(s, g)`
+  - 472 `haulUnit(g, H, SL)`
+  - 489 `landFish(sp, kg, key, mesh, p, H, hook, fresh, g)`
+  - 505 `netLen(w)`
+  - 506 `retain(sp, key, mesh, w)`
+  - 513 `sampleSel(sp, key, mesh, p, H)`
+  - 516 `landCrabs(g, n, kg)`
+  - 527 `finishHaul(g, H)`
+- **562** a station on a route or the standing plan: haul what stands here and set it again, or set new gear if nothing stands here.
+  - 565 `cycleSpec(kind, want, n)`
+  - 579 `gearCycle(w, fishAfter)`
+  - 597 `opsGearNeeds(o)`
+  - 607 `opsGearAfter()`
+- **613** in the sea, every hour: catch, losses, weather and deadlines (company level)
+  - 614 `soakHour(s, H)`
+  - 646 `gearHour(H)`
+  - 677 `reportLost(sid)`
+  - 685 `netMended(l)`
+- **686** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
+  - 692 `egnOrder(lk, n, bait)`
+  - 706 `egnHands()`
+  - 715 `egnSelf(lk, n, bait)`
+  - 736 `stripSelf(lk, bait, n, then)`
+  - 750 `mendSelf(nid)`
+  - 761 `botOrder(nid)`
+  - 772 `gearJob(j)`
+  - 784 `gearJobCancel(j)`
+  - 791 `shoreTick()`
 
 ## `src/js/core/10b-gearcare.js` (266 linjer)
 
@@ -1806,7 +1816,7 @@ life aboard: learning, meals, the rest rule and what the crew says
   - 367 `lifeHail(H)`
   - 374 `alumniReturn(B)`
 
-## `src/js/core/15-energy.js` (160 linjer)
+## `src/js/core/15-energy.js` (163 linjer)
 
 your own energy: a day at sea empties it, a night ashore fills it
 
@@ -1821,9 +1831,9 @@ your own energy: a day at sea empties it, a night ashore fills it
   - 91 `giveSkip(k)`
   - 102 `energyMinute()`
   - 124 `fallAsleep(v, doze)`
-  - 135 `wakeUp()`
-  - 141 `wakeEarly(back)`
-  - 153 `sleepDrift(H)`
+  - 138 `wakeUp()`
+  - 144 `wakeEarly(back)`
+  - 156 `sleepDrift(H)`
 
 ## `src/js/core/16-helm.js` (74 linjer)
 
@@ -2259,12 +2269,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1166 linjer)
+## `src/js/ui/phone/07-patch.js` (1173 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1159 `patch()`
+  - 1166 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2298,7 +2308,7 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 126 `redning()`
 - **143** vessels: my vessel overview and the market
 
-## `src/js/ui/phone/10-fartoy.js` (164 linjer)
+## `src/js/ui/phone/10-fartoy.js` (165 linjer)
 
   - 10 `goals()`
   - 25 `goalsCard()`
@@ -2307,8 +2317,8 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 43 `market()`
   - 69 `specSecs(k, O)`
   - 93 `sheet(k, O)`
-  - 134 `fartoy(tab0)`
-- **163** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
+  - 135 `fartoy(tab0)`
+- **164** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
 
 ## `src/js/ui/phone/11-rederi.js` (70 linjer)
 
