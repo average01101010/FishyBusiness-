@@ -352,7 +352,9 @@ function berthPath(from, bp){
 // prep: the crane swings straight over to the boat for the first load (Jonas 07.10.2026, tilbakemelding #22: no rigging first)
 // wash: an open boat's full tubs go in with the forklift, are emptied and washed, and come out again on it before the crane takes them
 // back aboard (game minutes between the last full lift and the first back)
-const LANDING = {prep:1, lift:2.5, note:5, tubKg:TUB_KG, hooked:0.86, wash:6};
+// note 5 → 2 and wash 6 → 3 (Jonas 06.11.2026, Tony's test: «Kort ned tid til sluttseddel»): a sjark's 500 kg lands in 5.5 min, not
+// 8.5, and the open boat's one tub up and back in 9, not 17; the lifts are as the crane plays them in 3D
+const LANDING = {prep:1, lift:2.5, note:2, tubKg:TUB_KG, hooked:0.86, wash:3};
 // A freezer vessel lands her frozen catch on pallets (H2b, V1 A of docs/planer/havsteget-h2-autoline.md, 05.11.2026): the landing gang
 // stacks the cartons on pallets of about a tonne down in the hold, and the crane lifts them ashore one a lift. About 10 t an hour with
 // the gang and the crane (FAO, «Handling sea-frozen fish»: 1-1.5 t a man-hour with mechanical gear and a practised crew, a gang of 8),
