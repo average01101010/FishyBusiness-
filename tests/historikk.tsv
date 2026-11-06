@@ -24,3 +24,10 @@
 2026-11-06 00:02	ccr-3609ceee-8lzhrx	0b9de6d7+	boottest	OK	44	lite	samtidig	
 2026-11-06 00:02	ccr-3609ceee-8lzhrx	0b9de6d7+	skiptest	OK	24	lite	samtidig	
 2026-11-06 01:44	ccr-3609ceee-8lzhrx	4e2e01b6+	tut	OK	3045	lite	alene	
+2026-11-05 23:49	ccr-529a099b-0o66nk	11bc8895+	cloudtest	OK	43	lite	samtidig	
+2026-11-05 23:49	ccr-529a099b-0o66nk	11bc8895+	peergear	OK	6	lite	samtidig	
+2026-11-05 23:49	ccr-529a099b-0o66nk	11bc8895+	eventtest	OK	8	lite	samtidig	
+2026-11-05 23:49	ccr-529a099b-0o66nk	11bc8895+	rttest	OK	47	lite	samtidig	
+2026-11-05 23:49	ccr-529a099b-0o66nk	11bc8895+	sqltest	OK	29	lite	samtidig	
+2026-11-06 01:34	ccr-529a099b-0o66nk	1ad14dc2+	docktest	OK	65	lite	alene	
+2026-11-06 01:55	ccr-3609ceee-8lzhrx	a58260be+	docktest	OK	57	lite	alene	

@@ -5,6 +5,9 @@
        ['Skiffen: kartplotteren og målerne på konsollen lever, og kaia, karene og de andre båtene vises igjen rundt den.', 'The skiff: the chart plotter and gauges on the console are live, and the quay, the tubs and the other boats show around her again.'],
        ['Ikonene i knappelinja står på linje også når et navn går over to linjer.', 'The icons in the button row stand in line also when a name takes two lines.']
     ]],
+    ['sanntid-061126', '06.11.2026', 'De andre spillerne i sanntid', 'The other players in real time', [
+       ['De andre spillernes båter beveger seg jevnt og følger kursen sin uten etterslep: posisjonen kommer nå flere ganger i sekundet, ikke hvert 15. sekund.', 'The other players\' boats move smoothly and follow their course without lag: their position now comes several times a second, not every 15 seconds.'],
+    ]],
     ['havplan-051126', '05.11.2026', 'Autolineren på driftsplanen', 'The autoliner on the operations plan', [
        ['Driftsplanen kan drive autolineren: lagene setter lenkene på feltene, lar dem stå, trekker dem og setter dem ut igjen, døgnet rundt, også uten deg om bord og når spillet er lukket.', 'The operations plan can run the autoliner: the teams set the lenker on the fields, let them stand, haul them and set them out again, round the clock, also without you aboard and while the game is closed.'],
        ['Turen varer til lasten er nesten full, eller agnet, drivstoffet eller provianten tar slutt, eller så mange døgn du velger. Så trekkes lenkene inn, og skipet losser, bytter skift, bunkrer, tar agn for neste tur og går ut igjen.', 'The trip lasts until the hold is nearly full, or the bait, the fuel or the provisions run out, or as many days as you choose. Then the lenker are hauled in, and the ship lands, changes crews, bunkers, takes bait for the next trip and goes out again.'],

@@ -55,3 +55,15 @@ Hva som ble gjort (siste blokk i `styles.css`):
 - **Juksespillet (V5 A):** et dupp 1–3 s før nappet (`dupp` i `ui/10-rod-acts.js`, lyden `SND.nudge`, «Det dupper i snøret …»), og av og til uten napp etter, så duppet er et tegn og ikke et løfte.
 - **Knappelinja:** tekstene brytes i to linjer inne i knappen (U10), og ved full last er Auto-nav hovedknappen (U5).
 - **Ikonene på linje (U10, rest, Ø7 06.11.2026):** knappene henger fra toppen av raden (`#dock` `align-items:flex-start`; på de smale telefonene, der raden brytes oppover med `wrap-reverse`, er det `flex-end`), så ikonene står på linje uansett hvor mange linjer teksten tar; før sto ikonet i en knapp med to linjer en linje høyere enn naboene. Ved siden av hovedknappen (`hero`, ikonet 8 px høyere) starter de andre 8 px lavere (`#dock:has(> .dk-b.hero)`), så ikonføttene og tekstene står som før. `rowsUp` regner radenes topp fra margkanten, så `--dkx` ikke tar med de 8 px. Raden blir da 8 px høyere når en tekst med to linjer står ved hovedknappen, så statusfeltet og viften står minst 10 px over den høyeste knappen (`max(…, --dkh + 4px)`). Målt i 1280 × 800, 800 × 1280 og 390 × 844 på norsk og engelsk («Rest in the bunk» ved «Fish on»): alle ikonføtter på samme linje, ingen tekster i hverandre, 6 px fra hovedknappens ring til statusfeltet.
+
+## UI 2, U2-0: kartleggingen i stående (06.11.2026)
+
+Planen `docs/planer/ui-2-staaende.md` (Jonas 05.–06.11.2026: telefon stående er hovedflaten, naturen eier skjermen, færre knapper, Rederi med flåten først). U2-0 målte det Kystlys ikke gjorde, i 390×844 og 800×1280 uten 3D, med `tests/kartlegging.py` (ny, i `LITE`), `uishots.py` i fem størrelser og `uiplay.py` i stående (`KYST_UIPLAY_SIZE=390x844:tlf` er ny). Alt står i `docs/planer/ui-2/kartlegging.md`: inventaret av datapunkt og handlinger i tre bøtter, målingene per tilstand og funnene K1–K15. Det som gjelder koden slik den er i dag:
+
+- Knappelinja på telefonen holder fem på én rad; seks brekker, og Beholdning står alene øverst. Til sjøs er det alltid seks, med «Mer» (Hvil, Mannskap, Anker) og en til tre grå. Viftene brekker ved fem.
+- Boksen varierer 47 px i høyde mellom havn og underveis på telefonen, og minikartet flytter seg like mye (`--gpsTop`). Stripa (`hudMin`) er 31 px i alle tilstander.
+- Pilla `#dockInfo` sier aldri noe boksens neste-linje ikke sier, utenom dekkets kg og minutter og stedet i havn (48 prøver over fire spilletimer).
+- Veiledningen peker på `#hud .st.nx` (fire steg), `#dockInfo` (dekket) og `#miniPlot` (tre steg) i tillegg til `#rAuto`; en ombygging av boksen må holde disse målene.
+- Minimer-knappene (`hmin`, `plotMin`) er 32×30 px, målerknappen 31 px høy på telefonen.
+- Hjemskjermen har sju kort før appene; på nettbrett stående synes seks av 22 apper uten å rulle, på telefonen tolv. Rederi har flåten 0,8 (telefon) og 1,1 (nettbrett) skjermer ned.
+- Ansatte-siden (`mannskap`) er ikke i `TALL` og åpner på 55 % med 4,6 skjermer innhold på telefonen.

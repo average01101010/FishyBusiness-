@@ -151,7 +151,7 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 - **Supabase Auth:** vern mot lekkede passord er av (gjelder bare Jonas' admin-passord, som også har TOTP). **Jonas kan** slå det på under Authentication i Supabase, hvis planen har det.
 - **Status 05.11.2026 (Jonas: «Kjør på ryddejobbene 8–12 og 15», 656da4d2):**
   - **Admin-siden har en streng CSP**, lagt inn av `build.mjs`: bare sitt eget skript etter hash, bilder som `data:`, video og kall bare til Supabase, ingen `<base>` og ingen skjema. Den ene `onclick` i HTML-en er flyttet inn i skriptet. `admintest` sjekker CSP-en, og alle 18 fanene tegner under den uten brudd.
-  - **Caddyfile** sender `frame-ancestors 'none'` og `X-Frame-Options DENY` for `/admin`. Det trer i kraft først når `setup.sh` kjøres på serveren igjen, fordi utrullingen bare laster opp siden.
+  - **Caddyfile** sender `frame-ancestors 'none'` og `X-Frame-Options DENY` for `/admin`. Det trer i kraft først når `setup.sh` kjøres på serveren igjen, fordi utrullingen bare laster opp siden. **I kraft 06.11.2026:** Jonas kjørte `setup.sh` for Ø16, og `/admin/` svarer med begge hodene.
   - **`setup.sh`** stopper når `rrsync` mangler, i stedet for å gi deploy-nøkkelen et skall.
   - CSP for selve spillet er ikke laget: det har workers, blob-URL-er og WASM og trenger en egen gjennomgang.
 

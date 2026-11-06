@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Sets up the Hetzner server to serve Det Store Blå (docs/lansering.md G, 04.10.2026): Caddy with HTTPS from Let's Encrypt, a deploy
 # user that GitHub Actions uploads to over SSH and that can do nothing but rsync into /srv/detstorebla, a firewall with only SSH, 80
-# and 443 open, and automatic security updates. For Ubuntu or Debian. Run once as root, on the server, straight from GitHub:
+# and 443 open, and automatic security updates. Since 05.11.2026 also the real-time relay (tools/server/rt, docs/planer/sanntid-posisjoner.md
+# S2): Node, a user of its own, its secret in /etc/dsb-rt.env (made here, printed once as the line for the database's Vault), and the
+# systemd service dsb-rt behind Caddy's /rt, restarted when GitHub uploads a new version. For Ubuntu or Debian. Run once as root, on
+# the server, straight from GitHub:
 #
 #   curl -fsSL https://raw.githubusercontent.com/average01101010/FishyBusiness-/ccr-5e1ba2f4-pusvyd/tools/server/setup.sh | bash -s detstorebla.no
 #
@@ -46,7 +49,7 @@ else echo "Note: $DOMAIN points to ${DNS4:-nothing yet}, not $IP4. Caddy gets th
 # ---------- packages, Caddy ----------
 say "Installing Caddy, the firewall and automatic updates"
 apt-get update -q
-apt-get install -yq debian-keyring debian-archive-keyring apt-transport-https curl gnupg ufw unattended-upgrades rsync openssh-client
+apt-get install -yq debian-keyring debian-archive-keyring apt-transport-https curl gnupg ufw unattended-upgrades rsync openssh-client openssl
 if ! command -v caddy >/dev/null; then
   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor --yes -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' > /etc/apt/sources.list.d/caddy-stable.list
@@ -78,14 +81,105 @@ if [ -z "$(ls -A "$SITE/current")" ]; then
   chown deploy:deploy "$SITE/current/index.html"
 fi
 
+# ---------- the real-time relay: Node, its user, its secret and the service (tools/server/rt/server.mjs) ----------
+say "The real-time relay"
+# Node 20 or newer; Ubuntu 24.04's own is 18, which has run out, so Node 22 (supported to April 2027) comes from NodeSource, signed,
+# as Caddy comes from its own source. apt upgrade keeps it up to date (unattended-upgrades takes only Ubuntu's own security updates).
+NODEV=$(node -v 2>/dev/null | sed -E 's/^v([0-9]+).*/\1/' || true)
+if [ -z "$NODEV" ] || [ "$NODEV" -lt 20 ]; then
+  curl -1sLf https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor --yes -o /usr/share/keyrings/nodesource.gpg
+  echo "deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
+  apt-get update -q && apt-get install -yq nodejs
+fi
+NODE=$(command -v node); echo "Node $($NODE -v) at $NODE"
+# a user of its own with no shell and no home; the code is the deploy user's (uploaded by GitHub to $SITE/rt), read-only to the service
+id dsbrt >/dev/null 2>&1 || adduser --system --group --no-create-home --home /nonexistent --shell /usr/sbin/nologin dsbrt
+install -d -m 755 -o deploy -g deploy "$SITE/rt"
+# the secret the relay checks the database's tickets with (rt_ticket): made here once, 64 hex characters, readable only by root; systemd
+# hands it to the service. The same value goes into the database's Vault (printed at the end), and nowhere else.
+RTENV=/etc/dsb-rt.env; NEWRT=0
+if ! grep -qE '^RT_SECRET=[0-9a-f]{64}' "$RTENV" 2>/dev/null; then (umask 077; printf 'RT_SECRET=%s\n' "$(openssl rand -hex 32)" > "$RTENV"); NEWRT=1; fi
+chown root:root "$RTENV"; chmod 600 "$RTENV"
+cat > /etc/systemd/system/dsb-rt.service <<EOF
+[Unit]
+Description=Det Store Blå: the real-time relay (tools/server/rt)
+After=network.target
+ConditionPathExists=$SITE/rt/server.mjs
+
+[Service]
+User=dsbrt
+Group=dsbrt
+EnvironmentFile=$RTENV
+Environment=RT_HOST=127.0.0.1 RT_PORT=8787 RT_ORIGINS=https://$DOMAIN,https://www.$DOMAIN NODE_ENV=production
+ExecStart=$NODE $SITE/rt/server.mjs
+Restart=always
+RestartSec=2
+RestartPreventExitStatus=78
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+MemoryMax=1G
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+# GitHub uploads VERSION (the hash of the relay's files) last, and only when the files changed: then the service starts again
+cat > /etc/systemd/system/dsb-rt-reload.path <<EOF
+[Unit]
+Description=Det Store Blå: restart the real-time relay when GitHub has uploaded a new version
+
+[Path]
+PathChanged=$SITE/rt/VERSION
+Unit=dsb-rt-reload.service
+
+[Install]
+WantedBy=multi-user.target
+EOF
+cat > /etc/systemd/system/dsb-rt-reload.service <<EOF
+[Unit]
+Description=Det Store Blå: restart the real-time relay (a new version from GitHub)
+
+[Service]
+Type=oneshot
+ExecStart=$(command -v systemctl) restart dsb-rt.service
+EOF
+systemctl daemon-reload
+systemctl enable dsb-rt.service dsb-rt-reload.path >/dev/null 2>&1
+systemctl restart dsb-rt-reload.path
+if [ -f "$SITE/rt/server.mjs" ]; then systemctl restart dsb-rt.service; sleep 1; echo "The relay: $(systemctl is-active dsb-rt.service || true)"
+else echo "The relay's code comes with the next upload from GitHub; the service starts by itself then."; fi
+
 # ---------- the site ----------
 say "The site"
 # next to the script in a checkout, or from the same branch on GitHub when the script came through curl | bash
 HERE=${BASH_SOURCE[0]:-}
 if [ -n "$HERE" ] && [ -f "$(dirname "$HERE")/Caddyfile" ]; then CF=$(cat "$(dirname "$HERE")/Caddyfile"); else CF=$(curl -fsSL "$RAW/Caddyfile"); fi
 if [ -f /etc/caddy/Caddyfile ] && ! grep -q 'Det Store Blå' /etc/caddy/Caddyfile; then cp /etc/caddy/Caddyfile "/etc/caddy/Caddyfile.bak-$(date +%Y%m%d-%H%M%S)"; fi
-printf '%s\n' "${CF//@DOMAIN@/$DOMAIN}" > /etc/caddy/Caddyfile
-caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null
+# the new one is checked before it takes the old one's place (06.11.2026): an invalid file in /etc/caddy would leave the running Caddy
+# as it is, but take the site down at Caddy's next restart (an update, a reboot). The one before is kept as Caddyfile.prev.
+CFN=$(mktemp /etc/caddy/Caddyfile.new.XXXXXX)
+printf '%s\n' "${CF//@DOMAIN@/$DOMAIN}" > "$CFN"
+if ! caddy validate --config "$CFN" --adapter caddyfile >/dev/null; then
+  echo "The new Caddyfile does not validate, so the running one is left as it is (the new one is in $CFN to look at)." >&2; exit 1
+fi
+if [ -f /etc/caddy/Caddyfile ]; then cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.prev; fi
+mv "$CFN" /etc/caddy/Caddyfile; chmod 644 /etc/caddy/Caddyfile
 systemctl enable --now caddy >/dev/null 2>&1 || true
 systemctl reload caddy || systemctl restart caddy
 
@@ -100,6 +194,17 @@ dpkg-reconfigure -f noninteractive unattended-upgrades
 say "Done"
 echo "Caddy serves $SITE/current at https://$DOMAIN (a placeholder page until the first upload)."
 echo "If the server has a firewall in Hetzner's console (Firewalls), it must let in TCP 80 and 443 too."
+echo "The real-time relay listens on 127.0.0.1:8787 behind Caddy's /rt: systemctl status dsb-rt, journalctl -u dsb-rt, curl -s 127.0.0.1:8787/stats"
+if [ "$NEWRT" = 1 ]; then
+  cat <<EOF
+
+The real-time relay's secret was made now ($RTENV). Put the same secret in the database once: Supabase -> SQL Editor, after the
+migration supabase/migrations/20261105160000_rt_ticket.sql, run this one line (do not paste it into a chat, a file or the repo):
+
+  select vault.create_secret('$(sed -n 's/^RT_SECRET=//p' "$RTENV")', 'rt_secret', 'Sanntidsreléet (rt_ticket)');
+
+EOF
+else echo "The relay's secret is kept from before ($RTENV); the database has the same in Vault as rt_secret."; fi
 if [ -f "$DKEY" ]; then
   [ "$NEWKEY" = 1 ] || echo "(The key was made on an earlier run; if GitHub already has it, nothing needs to change there.)"
   cat <<EOF

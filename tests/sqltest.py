@@ -22,6 +22,8 @@ grant usage on schema public to anon, authenticated;
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
 alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+-- Supabase's Vault (supabase_vault: vault.decrypted_secrets), which rt_ticket reads its secret from (20261105160000_rt_ticket.sql)
+create schema vault; create table vault.decrypted_secrets (id uuid primary key default gen_random_uuid(), name text unique, decrypted_secret text, created_at timestamptz default now());
 """
 
 
@@ -919,6 +921,28 @@ def main():
         print(ok(RY['err'][0] == RY['err'][1] and RY['err'][0] < 400 and RY['perf'][0] == RY['perf'][1] and RY['perf'][0] < NP and RY['ev'] == 'big={} small={"x": 1}'
                  and RY['bSeen'] == [1, 0] and RY['bTake'] == 'ok' and RY['bBack'] == 'taken' and all(RY['anonNo']) and all(RY['authYes']) and RY['anonList'] == 'sp_now,tm_error,tm_perf' and all(RY['anonTab']) and RY['anonYes'] == 'array'),
               "without a sign-in the errors and the frame rate stop at a ceiling that grows with the active players; an event's data has a size; a guest's berth gives way to an account and is not shown to it; anon runs only tm_error, tm_perf and sp_now (Ø6 funn 9, 10, 12)", RY)
+        # Ø16 (20261105160000_rt_ticket.sql): the real-time relay's ticket. Without the secret in Vault it refuses; with it, a ticket of
+        # «1.<id>.<guest>.<expiry>.<nonce>.<hmac>» signed with the secret (checked here as the relay checks it), the public id pos_world
+        # gives, the guest flag for a guest, 60 s, a new nonce each time; anon cannot ask, nor a player who is not there
+        import hashlib, hmac as _hmac
+        RT = {'off': sql("select public.rt_ticket()", A, 'authenticated', expect_err=True)}
+        RKEY = '5a' * 32
+        sql("insert into vault.decrypted_secrets (name, decrypted_secret) values ('rt_secret', '%s')" % RKEY)
+        def rtk(t):
+            pay, _, sig = t.rpartition('.'); f = pay.split('.')
+            return {'ok': _hmac.compare_digest(_hmac.new(RKEY.encode(), pay.encode(), hashlib.sha256).hexdigest(), sig), 'f': f, 'n': len(t)}
+        now_s = int(time.time()); tA, tA2, tG = [rtk(sql("select public.rt_ticket()", w, 'authenticated')) for w in (A, A, G2)]
+        RT['a'] = tA; RT['g'] = tG['f'][2]; RT['nonce'] = tA['f'][4] != tA2['f'][4]
+        RT['id'] = tA['f'][1] == hashlib.md5(('dsb' + A['sub']).encode()).hexdigest()[:10] == sql("select left(md5('dsb' || '%s'), 10)" % A['sub'])
+        RT['exp'] = int(tA['f'][3]) - now_s
+        RT['anon'] = sql("select public.rt_ticket()", {}, 'anon', expect_err=True)[0]
+        RT['nobody'] = sql("select public.rt_ticket()", {'sub': 'user_01NOPE', 'role': 'authenticated'}, 'authenticated', expect_err=True)[0]
+        RT['priv'] = [sql("select has_function_privilege('%s', 'public.rt_ticket()', 'execute')" % r) for r in ('anon', 'authenticated')]
+        sql("update vault.decrypted_secrets set decrypted_secret = 'short' where name = 'rt_secret'")
+        RT['bad'] = sql("select public.rt_ticket()", A, 'authenticated', expect_err=True)
+        print(ok(RT['off'][0] and 'rt off' in RT['off'][1] and tA['ok'] and tA2['ok'] and tG['ok'] and tA['f'][0] == '1' and tA['f'][2] == '0' and RT['g'] == '1' and RT['id'] and RT['nonce']
+                 and 58 <= RT['exp'] <= 62 and len(tA['f'][4]) == 16 and tA['n'] < 160 and RT['anon'] and RT['nobody'] and RT['priv'] == ['f', 't'] and RT['bad'][0] and 'rt off' in RT['bad'][1]),
+              "the relay's ticket: refused without the secret, signed with it, the public id, the guest flag, 60 s, once; not for anon or a player who is not there (Ø16)", RT)
         # the load of 5 000 players (plan 5b; KYST_LAST=5000): landings and catches for that many players, then what world_get costs
         NL = int(os.environ.get('KYST_LAST') or 0)
         if NL:

@@ -29,6 +29,7 @@ Fra `CLAUDE.md` 26.10.2026 (Jonas 07.10.2026, «Spør før hver test»: «Dekker
 | `coast3d`, `sitetest` | 4–5 min | terrenget, kartdataene eller mottaksregisteret |
 | `kjoptest` | 3,5 min | butikken |
 | `lighttest`, `ultratest`, `uishots`, `haultest` | 2–3 min | lys, ultra-grafikk, UI-oppsett, haling |
+| `kartlegging` | 4–5 min | UI 2 (06.11.2026): knappelinja, boksen, stripa, skuffen og telefonen målt i 17 tilstander i 390×844 og 800×1280, uten 3D; tallene i `tests/out/kartlegging/<fmt>.json` (`docs/planer/ui-2/kartlegging.md`) |
 | `f1test` | 4 min | konteksten (WebGL 2 og 1), skyggeroversettelsen (`glsl3`), egen båts detaljnivåer, ultra-forsøket i `qualTick` |
 | `profshot`, `benchshot` | 3–5 min | profilen (`#prof`) og målebenken (`#bench`), merkene i bildeløkka |
 
@@ -56,6 +57,7 @@ Hvilke tester som dekker hvilke filer, står i `COVER` i `tests/run.py`. Funksjo
   - `tut.py`: veiledningen «Første tur», spilt gjennom med berøring som en spiller, liggende og stående, med tre omlastinger. Skal ende med `"tut": 0`.
   - `dbg23o.py`: ingen WebGL-feil.
 - **Funksjonstester**, blant andre:
+  - **`rttest.py` (uten 3D, 05.11.2026, Ø16):** sanntidsreléet (`tools/server/rt/server.mjs`) startes lokalt med en tilfeldig hemmelighet, og spillet kjører mot stand-ins for WorkOS og Supabase (som `cloudtest`) med `window.DSB_RT` (virker bare på 127.0.0.1). Små WebSocket-klienter i Python sender og tar imot. Sjekkene: billettene (god, brukt, feil nøkkel, feil signatur, utløpt, for langt fram, feil origin, feil sti), rutene (egen og de åtte rundt, ikke to ruter unna, også med y under 0), en båt som seiler en sirkel i 8 knop tegnes 0,5 s bak (median 4 cm, toleranse 1,5 m) med jevn fart (95 % under 8 % avvik), glidningen inn og ut uten hopp, spillets egne meldinger (1 Hz stille, 5 Hz i fart, riktig sted), gjestene, samme spiller to ganger, flom og dårlige rammer, skjult side, omstart av reléet og `rt_ticket` som mangler (404). Trenger Node og `ws` (`npm ci` i `tools/server/rt`; testen gjør det selv). Alt går på én maskin, så nettets forsinkelse og ujevnhet er ikke med.
   - **`seatest.py` (uten 3D):**
     - strøklengderoser og at `exposure()` er uendret
     - le og lo ved 11 m/s, WMO-høydene og jevnheten

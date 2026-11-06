@@ -2,7 +2,7 @@
 # to the deploy user that tools/server/setup.sh made. Runs on a push to main or the working branch (as pwa.yml) that changes the game,
 # and by hand from the Actions tab once the file is on main; until then a run is started again with «Re-run all jobs».
 # Needs the secrets DEPLOY_HOST (the server's address), DEPLOY_KEY (the private deploy key) and DEPLOY_KNOWN_HOSTS (ssh-keyscan of
-# the server); without DEPLOY_HOST it builds and stops.
+# the server); without DEPLOY_HOST it builds and stops. The real-time relay (tools/server/rt) goes up beside the site, to /srv/detstorebla/rt.
 name: Appen på Hetzner
 on:
   push:
@@ -54,3 +54,16 @@ jobs:
           printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           rsync -az --delete-after --delay-updates -e "ssh -i ~/.ssh/deploy" dist-pwa/ "deploy@$DEPLOY_HOST:current/"
+      # the real-time relay (tools/server/rt, docs/planer/sanntid-posisjoner.md S2, 05.11.2026): ws from the lock file, then the files
+      # beside the site (rrsync keeps the key in /srv/detstorebla), compared by content and without times, so an unchanged relay is not
+      # touched; VERSION (the hash of the files) goes last, and setup.sh's dsb-rt-reload.path restarts the service when it changes.
+      # Before setup.sh has made the service on the server, the files just lie there.
+      - name: Upload the real-time relay
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          if [ -z "$DEPLOY_HOST" ]; then echo "No DEPLOY_HOST secret yet: not uploaded."; exit 0; fi
+          (cd tools/server/rt && npm ci --omit=dev --no-audit --no-fund && node --check server.mjs)
+          (cd tools/server/rt && find . -type f -not -name VERSION -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c1-16) > "$RUNNER_TEMP/rt-version"
+          rsync -rlc --delete-after --delay-updates --exclude VERSION -e "ssh -i ~/.ssh/deploy" tools/server/rt/ "deploy@$DEPLOY_HOST:rt/"
+          rsync -rlc -e "ssh -i ~/.ssh/deploy" "$RUNNER_TEMP/rt-version" "deploy@$DEPLOY_HOST:rt/VERSION"
