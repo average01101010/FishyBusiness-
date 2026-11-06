@@ -152,6 +152,9 @@ Jonas 05.11.2026: «husk at vi må ha blendermodeller og animasjoner for hele op
   - **Lossingen:** luka åpnes, kranen (båtens eller kaiens) løfter pall for pall opp fra rommet og ned på kaia, trucken kjører dem inn i fryselageret, lossegjengen i luka og på kaia.
 - **Filer:** `tools/gear/` (ny `autoline.py`), `tools/gear/blaase.py`, `tools/deck/` (ny `pall.py`), `view3d/10-gear.js`, `view3d/09-landing-deck.js`, `src/data/*.b64`, malen.
 - **Tester:** `vessel3d.test.mjs`, kontrollbildene fra Blender, `haultest`, `landtest` og skjermbilder i begge formater, 3D-testene alene.
+- **Delt i to økter (05.11.2026, Jonas: «Er H2d for stor for én økt, del den (modellene først, så animasjonene)»):**
+  - **H2d1 modellene:** autolinehaleren med krokrenseren, krok, forsyn og agn, bøyestanga etter § 68, kartongen, pallen med film og pallegaffelen, haleporten åpen og lasteluka med lokket som egen del på autolineren; satt i spillet der scenene alt finnes (haleren i porten, stengene på autolinesettene med lysene om natta, Blender-pallen i lossingen med luka åpen). Test `tests/h2dshot.py`.
+  - **H2d2 animasjonene:** settingen (dreggen og stanga over hekken fra slisken `aline.chute`, lina med egnede kroker ut i kjølvannet i båtens fart, ny stang mellom lenkene), draget (båten mot lina, fisken løftet inn med gaffel én og én ved porten, folkene i haleplassen, krokrenseren og lina mot magasinet) og lossingen (pallene opp fra rommet gjennom luka på gaffelen, kranen fra kaia eller båtens egen, lossegjengen i luka og på kaia).
 
 ### H2e Kystvakta på havet, hele turen og stikkprøvene
 
@@ -214,6 +217,14 @@ Fra H2c (05.11.2026):
 - **Draget i dagens anslag** er maskinens 2 t per lenke; en ny og kald gjeng går saktere (målt om lag 2,7 t i mars). Planens klokkeslett er derfor anslag; motoren følger det som skjer.
 - **Ståtida:** planen trekker aldri før ståtida (3–12 t, standard 6), men med to felt à fire lenker står lina i praksis 10–20 t, fordi draget av fire lenker tar åtte timer. Hvor lenge autolinerne lar lina stå, er ikke funnet.
 
+Fra H2d2 (06.11.2026):
+
+- **Slisken, døråpningen og fiskerennas munning** i modellen er plassert av oss; generalarrangementet viser dem ikke.
+- **Krokene i settingen** går ut i båtens fart, men høyst 0,42 krokavstand per bilde; med spillets klokke (seks ganger) blir lina på et nettbrett slept litt i stedet for å bli liggende der den faller.
+- **Mellomstengene** (uten lys) og **blåsene hver nautiske mil** (§ 68) er tegnet som stengene og kystblåsene; forskriften sier ikke hvordan mellomvakene ser ut, og én mellomdregg per stang er antatt.
+- **Draget:** bare gafferen og den ved krokrenseren står i haleplassen; resten av vakta er i fabrikken, som ikke er modellert. Fisken gaffes i kystbåtenes takt (2,4 s per fisk), ikke etter halerens fart.
+- **Lossingen:** båtens egen kran forut løfter, fordi mottakets kaikran ikke når luka (13,3 m mot 9,55 m i Vannareid) eller over karmen 6,6 m over sjøen; pallene settes på kaia abreast kranen, og trucken henter dem der. Pallene tas 3,2 m under værdekket; rommet er ikke modellert. Lossegjengen ved luka er mottakets folk. Prøvd bare i Vannareid.
+
 ## 6. Hva planen ikke gjør
 
 - Ikke garn eller snurrevad på konvensjonell havfisketillatelse (de hører til tillatelsen, men kommer med egne båter senere).
@@ -250,3 +261,18 @@ Fra H2c (05.11.2026):
   - Rettet underveis: leia «mellom Vannareid og Vannareid» (hjem er mottaket) stoppet planen, og lossemeldingen sa «i dag» om en seddel to døgn fram.
   - Prøvd bare nord for Loppa med Vannareid som mottak (hele kysten i testmiljøet); stikkprøvene langs kysten og havturen hele veien er H2e. **Venter på Jonas før utrulling.**
 - 05.11.2026: **H2c rullet ut** (Jonas: «Rull ut. Gi meg promptet for å starte h2d i en ny økt»), flettet med arbeidsgrenen i 493c636 (det nye der var Spilltest 3, Ø2 og Ø6; etter flettingen enhetstestene 1195 OK, `havplantest` 18 OK, `driftsplan2test` 62 OK, `driftsplan2ui` 22 OK). **Neste:** H2d (Blender-modellene og animasjonene) i en ny økt.
+- 05.11.2026: **H2d delt i H2d1 (modellene) og H2d2 (animasjonene)**, fordi hele operasjonen ikke rekker i én økt. **H2d1 bygd** på grenen `ccr-87bd2cf3-hnz2ak` (fra arbeidsgrenen etter H2c, 5.66 i `docs/systemer/redskap.md`, autolineren i `docs/systemer/3d-baater-og-animasjon.md`):
+  - `tools/gear/autoline.py` (ny): autolinehaleren med krokrenser, og krok, forsyn og agnbit (blekksprut og saury) som deler til instanser.
+  - `tools/gear/blaase.py`: bøyestanga etter § 68 for vest (to flagg, to gule lys) og øst (ett av hver), toppen 3,15 m over vannet.
+  - `tools/deck/pall.py` (ny): kartongen (0,60 × 0,40 × 0,14 m, 22 kg), pallen med 44 kartonger i film (968 kg, 1,68 m) og pallegaffelen.
+  - `tools/boats/al45.py`: haleporten som ekte hull med haleplassen bak (bare så langt man ser utenfra), lasteluka med karm og lokket som egen del, ankrene `aline` og `hatch`; 25 100 trekanter nær.
+  - I spillet: haleren står i porten (til sjøs og under draget, der lina kommer inn med forsyn og kroker), stengene står på endene av alle autolinesett (også havflåtens) og blinker gult om natta, lossingen har Blender-pallen på gaffelen og luka åpen. Uten stamper på autolineren.
+  - Rettet underveis: sidefeilen «map: mask block 94,18 has no pack» i 3D på feltet nord for Loppa (`groundStep` i `view3d/17-draw.js`, eldre enn økta).
+  - Tester: enhetstestene 1195 OK; `h2dshot` (ny, 3D alene, hele kysten) grønn i alle fire deler, sidefeil `[]`: haleren i porten, draget, stengene om dagen og lysene om natta nord for Loppa, lossingen med luka åpen og pallen i gaffelen i Vannareid; skjermbilder i begge formater. `trip2`, `vesseltest` (33), `docktest` (96), `havflaate` (9), `npctest` (19), `haultest` (4), `dbg23o` og `landtest` (8) grønne; `tral3d` (14 OK, autolinersjekken med) og `deckshot` (2 OK) gikk ut på tid i SwiftShader, som kjent (backloggen 10.6). Ikke prøvd langs kysten ellers (lossingens kode er den samme for alle mottak; stikkprøven av lossingen ble gjort i H2b).
+  - **Står igjen til H2d2:** animasjonene (setting, drag med folk og gaffel, lossing fra rommet). **Venter på Jonas før utrulling.**
+- 06.11.2026: **H2d2 bygd** på grenen `ccr-29346d8a-qz1f9z` (fra arbeidsgrenen etter Ø11a, 0b9de6d, med H2d1 flettet inn i 2ff5e51, fordi H2d1 ikke er rullet ut; 5.67 i `docs/systemer/redskap.md`, autolineren i `docs/systemer/3d-baater-og-animasjon.md`). Jonas: «Neste økt i havsteget: H2d2, animasjonene for hele autolineoperasjonen … spør Jonas før noe rulles ut.»
+  - **Settingen:** lina går ut gjennom settesjakta og ned den nye slisken akter (`al45.py`), med egnede kroker (saury eller blekksprut, som settet) akterover i kjølvannet i båtens fart; bøyestanga og dreggen går over hekken først, en ny stang og dregg mellom hver to lenker, en blåse hver nautiske mil (§ 68), og den siste dreggen og stanga når slisken når enden. Merkene ligger der slisken har vært (31,3 m akter for simuleringens punkt).
+  - **Draget:** gafferen ved porten tar hver fisk inn én og én (den ekte fangsten), svinger den inn og slipper den i fiskerenna, der den sklir inn i rennas munning i bakveggen; dekksmannen på bløggingen passer krokrenseren; resten av vakta (flere på draget, sløyingen, frysingen) og de som har pause, er i fabrikken og messa gjennom den nye døråpningen. Agnrester på krokene fram til krokrenseren, rene kroker etter, og agnrester som faller fra den. Merkene som haleporten har passert, er om bord.
+  - **Lossingen:** pallene står i rommet under luka; **båtens egen kran forut** (nå egne deler i modellen) luffer opp over luka, pallegaffelen går ned gjennom luka, pallen kommer opp på den og settes på kaia abreast kranen, der trucken henter den. Mottakets kaikran når ikke luka (13,3 m mot 9,55 m i Vannareid), så i H2d1 hang pallen i lufta ved tuppen av den. Lossegjengen fra mottaket står én i luka, én ved karmen som gir tegn, én som leder pallen fri og én i kranførerens bur.
+  - Tester: `h2dshot` (3D alene, hele kysten) del 1–6 grønne i én kjøring og del 5 og 7 grønne i en ny kjøring etter en retting i testen, sidefeil `[]`, ingen GL-feil, bilder i begge formater; enhetstestene 1201 OK; `vesseltest` 33 OK, `crewwalk` 13 OK, `haultest` 4 OK, `dbg23o` og `landtest` 8 OK grønne. `crewclip` rød på `bunntral` og `ringnot38` som på utgangspunktet (autolineren er grønn der nå); `tral3d` gikk ut på tid etter 9 OK, som kjent. Prøvd nord for Loppa og i Vannareid; ikke langs kysten ellers (lossingens kode er den samme for alle mottak, men skipskranas rekkevidde til kaia er bare sett i Vannareid).
+  - **Venter på Jonas før utrulling**, sammen med H2d1. **Neste:** H2e (Kystvakta på havet, hele turen og stikkprøvene) i en ny økt.

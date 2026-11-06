@@ -20,27 +20,125 @@
     GB = {buoy:b.mesh(), haul:h.mesh(), pot:pt.mesh(), bin:bin.mesh(), tub:tub.mesh(), float:fl.mesh(), net:net.mesh(), bait:bt.mesh(), dregg:null};
     // the blåse and the grapnel from tools/gear/blaase.py, in place of the drawn float above
     if (typeof glbHas === 'function' && glbHas('gear-marks')){ const up = nm => { const o = glbPart('gear-marks', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; };
-      GB.buoy = up('blaase') || GB.buoy; GB.dregg = up('dregg'); }
+      GB.buoy = up('blaase') || GB.buoy; GB.dregg = up('dregg');
+      // the ocean marker poles of § 68 at the ends of an autoline set (H2d, 05.11.2026): two flags and two yellow lamps at the west end,
+      // one of each at the east end; the lamps' places from the extras (havlys), flashing at night
+      GB.havV = up('havstang_v'); GB.havO = up('havstang_o'); const X = (glbLoad('gear-marks') || {}).ex || {}; GB.havL = X.havlys || null; GB.blink = X.blink || 22; }
+    // the autoline's snood with its hook, empty and baited (tools/gear/autoline.py), drawn along the line as it comes in
+    if (typeof glbHas === 'function' && glbHas('gear-autoline')){ const up = nm => { const o = glbPart('gear-autoline', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; };
+      GB.aTom = up('tom'); GB.aEgB = up('egnet_b'); GB.aEgS = up('egnet_s'); }
     // the king crab pot, its hatch, the pot hauler on its davit and the live crab tank from tools/gear/teine.py, in place of the drawn pot
     if (typeof glbHas === 'function' && glbHas('gear-pot')){ const up = nm => { const o = glbPart('gear-pot', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; }, pg = glbLoad('gear-pot');
       const pt = up('teine'); if (pt){ GB.pot = pt; GB.potB = true; GB.door = up('teinedor'); GB.davit = up('davit'); GB.davitSh = up('davitskive'); GB.tank = up('krabbekar'); GB.px = (pg && pg.ex) || {};
         GB.kon = up('kon'); GB.kontopp = up('kontopp'); GB.konlag = up('konlag'); GB.konlag11 = up('konlag11'); } }
   }
   // the buoys of every set within sight, bobbing on the waves, flags blowing downwind
+  // An autoline set carries the marks of § 68 (H2d, aMarks): the ocean marker poles at its ends (the west end two flags and two lamps,
+  // the east end one; the grid's x is east near enough), a pole between each two lenker (no lamps), and a blåse between them at least
+  // every nautical mile («vak minst hver nautiske mil på faststående redskap»). e.hav: 'v', 'o' or 'm' (between)
+  // ---------- the autoline's marks over the stern (H2d2, 06.11.2026) ----------
+  // The line leaves her setting chute in the stern, so it lies where her chute has been: a set's ends a and b are where her middle was,
+  // so the marks lie the chute's distance (zc) aft of them along the line. aMarks: the marks of a set of n lenker from a to b, by their
+  // distance s along it from A; the grapnel after each pole (dl: it goes over that long after the pole), the end's before it
+  const NMI = 1852, ALEN = LINE_KINDS.auto.hooks * LINE_KINDS.auto.kmHook * 1000;   // (a lenke: 5,000 hooks at 1.3 m, 6.5 km)
+  function aMarks(a, b, n, zc){
+    const L = Math.hypot(b.x - a.x, b.y - a.y) * 1000; if (!(L > 1)) return null; const ux = (b.x - a.x) * 1000 / L, uz = (b.y - a.y) * 1000 / L, w = a.x <= b.x, list = [];
+    n = Math.max(1, Math.round(n || L / ALEN)); const A = [a.x * 1000 - ux * zc, a.y * 1000 - uz * zc];
+    for (let k = 0; k <= n; k++){ const s = L * k / n, end = k === 0 || k === n;
+      list.push({s, id:'p' + k, hav:k === 0 ? (w ? 'v' : 'o') : k === n ? (w ? 'o' : 'v') : 'm', lamp:end, dl:k === n ? 1.4 : 0});
+      list.push({s, id:'d' + k, dregg:true, dl:k === n ? 0 : 1.1});
+      if (k < n){ const m = Math.ceil(L / n / NMI - 1e-6); for (let i = 1; i < m; i++) list.push({s:s + L / n * i / m, id:'b' + k + '.' + i, vak:true, dl:0}); } }
+    return {A, ux, uz, L, n, list};
+  }
+  // (how far aft of where the simulation has her the slide's end is: the simulation's point is her pivot a third from the bow,
+  // 16-motion.js, and the slide is at her stern: 31 m on the autoliner)
+  const aZc = G => { const AL = G && G.aline; if (!AL) return 0; const sl = AL.slide || AL.chute, zp = (G.bow || -2.2) + ((G.stern || 3.1) - (G.bow || -2.2)) / 3; return sl[2] - zp; };
+  const AMW = new WeakMap(), AMN = new Map();
+  function aMarksOf(s, zc, key){ const C = key ? AMN.get(key) : AMW.get(s); if (C && C.a === s.a && C.b === s.b && C.n === s.n && C.zc === zc) return C.M;
+    const M = aMarks(s.a, s.b, s.n, zc), E = {a:s.a, b:s.b, n:s.n, zc, M}; if (key){ if (AMN.size > 300) AMN.clear(); AMN.set(key, E); } else AMW.set(s, E); return M; }
+  // the set she is laying (or has just laid, until her chute has reached its end): which of its marks are over the side, the ones going
+  // now (drops), her chute's lip and how far along the line it is (sC); the hauling port as she hauls one (hP)
+  const ALM = {key:null, M:null, out:new Set(), drops:[], C:null, sC:-1e9, t:0, first:false, haul:null, n:0, fix:null};   // fix: a moment of the drops held for pictures (G3._debug.almFix)
+  const aAge = (d, t) => (ALM.fix != null ? ALM.fix : t - d.t0) - (d.m.dl || 0);
+  function autoMarks(BMrel, eye, t){
+    const b = S.boat, g = b.gop, G = GEO(vtype()), AL = G.aline; ALM.C = null; ALM.haul = null;
+    if (!AL || !AL.chute || !BMrel || typeof isAuto !== 'function'){ ALM.key = null; ALM.M = null; ALM.drops.length = 0; return; }
+    const w = q => { const r = xf(BMrel, q); return [r[0] + eye[0], r[1] + eye[1], r[2] + eye[2]]; }, sl = AL.slide || [AL.chute[0], AL.chute[1] - 0.5, AL.chute[2] + 1];
+    ALM.C = w([sl[0], sl[1] + 0.12, sl[2]]);   // (the slide's end, where the line and the marks leave her)
+    if (g && g.op === 'haul' && g.auto){ const s = (S.sets || []).find(x => x.id === g.sid); if (s) ALM.haul = {s, fromA:dist(g.a, s.a) <= dist(g.a, s.b), P:w(AL.sill || AL.foot)}; }
+    let a = null, bb = null, n = 0, fresh = false;
+    if (g && g.op === 'set' && g.auto){ a = g.a; bb = g.b; n = g.n; fresh = g.done === 0 && g.prog < 0.03; ALM.t = t; }
+    else if (ALM.key){ const s = (S.sets || []).find(x => x.a === ALM.key && !x.lost); if (s && t - ALM.t < 60){ a = s.a; bb = s.b; n = s.n; } }
+    if (!a){ ALM.key = null; ALM.M = null; return; }
+    if (ALM.key !== a){ ALM.key = a; ALM.out = new Set(); ALM.M = null; ALM.first = !fresh; ALM.drops.length = 0; }
+    if (!ALM.M || ALM.bb !== bb || ALM.n !== n){ ALM.M = aMarks(a, bb, n, aZc(G)); ALM.bb = bb; ALM.n = n; }   // (a set stopped halfway is shorter)
+    const M = ALM.M; if (!M) return;
+    ALM.sC = (ALM.C[0] - M.A[0]) * M.ux + (ALM.C[2] - M.A[1]) * M.uz;
+    for (const m of M.list){ if (ALM.out.has(m.id) || m.s > ALM.sC + 3) continue; ALM.out.add(m.id); if (ALM.first) continue;   // (opened mid-set: the passed ones lie there)
+      ALM.drops.push({m, t0:t, W:null}); KST.aDrops = (KST.aDrops || 0) + 1; KST['aDrop_' + (m.vak ? 'vak' : m.dregg ? 'dregg' : 'pole')] = (KST['aDrop_' + (m.vak ? 'vak' : m.dregg ? 'dregg' : 'pole')] || 0) + 1; }
+    ALM.first = false;
+    if (ALM.fix == null) for (let i = ALM.drops.length - 1; i >= 0; i--) if (aAge(ALM.drops[i], t) > 5) ALM.drops.splice(i, 1);
+  }
+  const AFLY = {pole:1.0, vak:0.7, dregg:0.9}, ASET = {pole:2.6, vak:1.6, dregg:4.0};   // (s: in the air from the slide; in all, then the mark lies as the others)
+  // the marks of the set she lays, that her chute has passed and are not going over now; the hauled set's, that her port has not reached
+  function aLive(M, m, t){ if (!ALM.out.has(m.id)) return false; for (const d of ALM.drops) if (d.m === m && aAge(d, t) < ASET[d.m.vak ? 'vak' : d.m.dregg ? 'dregg' : 'pole']) return false; return true; }
+  function aMarksPush(L, M, filt){ if (!M) return; for (const m of M.list){ if (m.dregg || (filt && !filt(m))) continue;
+    L.push({x:(M.A[0] + M.ux * m.s) / 1000, y:(M.A[1] + M.uz * m.s) / 1000, hav:m.vak ? null : m.hav, lamp:m.lamp}); } }
   function drawGearSea(eye, t, VP, H){
-    const L = []; for (const s of S.sets || []) if (!s.lost){ L.push(s.a); L.push(s.b); }
+    const L = [], zc = aZc(GEO(vtype())), Hl = ALM.haul;
+    for (const s of S.sets || []) if (!s.lost){ if (s.kind === 'line' && typeof isAuto === 'function' && isAuto(s.lk)){
+        if (s.a === ALM.key && ALM.M){ aMarksPush(L, ALM.M, m => aLive(ALM.M, m, t)); continue; }
+        const M = aMarksOf(s, zc);
+        // (hauling it: the marks her hauling port has passed are aboard)
+        if (Hl && Hl.s === s && M){ const sP = (Hl.P[0] - M.A[0]) * M.ux + (Hl.P[2] - M.A[1]) * M.uz; aMarksPush(L, M, m => Hl.fromA ? m.s > sP + 2 : m.s < sP - 2); }
+        else aMarksPush(L, M); }
+      else { L.push(s.a); L.push(s.b); } }
     for (const s of PEERGEAR){ L.push(s.a); L.push(s.b); }   // the other players' buoys (tilbakemelding #35)
-    for (const s of NPCGEAR){ L.push(s.a); L.push(s.b); }    // the coast boats' nets, lines and pots (05-vessels.js)
+    // the coast boats' nets, lines and pots, the ocean fleet's autolines with their marks (05-vessels.js, 05d-hav.js)
+    for (const s of NPCGEAR){ if (s.hav && s.k === 'line') aMarksPush(L, aMarksOf(s, 0, s.a.x.toFixed(4) + ',' + s.a.y.toFixed(4) + ',' + s.b.x.toFixed(4) + ',' + s.b.y.toFixed(4))); else { L.push(s.a); L.push(s.b); } }
     // setting, the first buoy goes over the stern and lies astern of her until she has run clear of it (tilbakemelding #25: «bøya skal
-    // ligge på siden eller bak båten når settingen starter»)
-    const g = S.boat.gop; if (g && g.op === 'set' && g.done >= 0){ const back = ((GEO(vtype()).stern || 3) + 5) / 1000, d = Math.hypot(bv.x / 1000 - g.a.x, bv.z / 1000 - g.a.y);
-      L.push(bv.init && d < back ? {x:(bv.x - Math.sin(bv.head) * back * 1000 + Math.cos(bv.head) * 1.5) / 1000, y:(bv.z + Math.cos(bv.head) * back * 1000 + Math.sin(bv.head) * 1.5) / 1000} : g.a); }
-    if (!L.length) return; if (!GB) buildGear();
+    // ligge på siden eller bak båten når settingen starter»); the autoline's marks go over from her chute (ALM, below)
+    const g = S.boat.gop; if (g && g.op === 'set' && g.done >= 0){ if (g.auto && ALM.M) aMarksPush(L, ALM.M, m => aLive(ALM.M, m, t)); else if (!g.auto){ const back = ((GEO(vtype()).stern || 3) + 5) / 1000, d = Math.hypot(bv.x / 1000 - g.a.x, bv.z / 1000 - g.a.y);
+      L.push(bv.init && d < back ? {x:(bv.x - Math.sin(bv.head) * back * 1000 + Math.cos(bv.head) * 1.5) / 1000, y:(bv.z + Math.cos(bv.head) * back * 1000 + Math.sin(bv.head) * 1.5) / 1000} : g.a); } }
+    if (!L.length && !ALM.drops.length) return; if (!GB) buildGear();
     nSetup(VP); const wd = (windDir(H, {x:bv.x / 1000, y:bv.z / 1000}) - gridGamma({x:bv.x / 1000, y:bv.z / 1000}) + 180) * DEG;
-    for (const e of L){ const x = e.x * 1000, z = e.y * 1000; if (Math.hypot(x - eye[0], z - eye[2]) > 4000) continue;
-      const y = seaH(x, z, t) - 0.1, sx = (seaH(x + 0.6, z, t) - seaH(x - 0.6, z, t)) / 1.2, sz = (seaH(x, z + 0.6, t) - seaH(x, z - 0.6, t)) / 1.2;
-      drawN(GB.buoy, model(x - eye[0], y - eye[1], z - eye[2], Math.PI / 2 - wd, -sz * 0.9, sx * 0.9)); }
+    const lamps = [], night = env.night || 0, per = 60 / (GB.blink || 22); let nMarks = 0;
+    for (const e of L){ const x = e.x * 1000, z = e.y * 1000, dd = Math.hypot(x - eye[0], z - eye[2]), hv = e.hav && GB.havV ? e.hav : null; if (dd > (hv && e.lamp !== false ? 4600 : 4000)) continue;   // (a lamp is seen 2 nm, § 68)
+      const y = seaH(x, z, t) - (hv ? 0.15 : 0.1), sx = (seaH(x + 0.6, z, t) - seaH(x - 0.6, z, t)) / 1.2, sz = (seaH(x, z + 0.6, t) - seaH(x, z - 0.6, t)) / 1.2;
+      const M = model(x - eye[0], y - eye[1], z - eye[2], Math.PI / 2 - wd, -sz * 0.9, sx * 0.9);
+      if (!hv){ if (dd <= 4000) drawN(GB.buoy, M); continue; }
+      if (dd <= 4000){ drawN(hv === 'v' ? GB.havV : GB.havO, M); nMarks++; }
+      // the yellow lamps of the ends: 22 flashes a minute (§ 68: 20-25), each pole on its own beat
+      if (hv !== 'm' && e.lamp !== false && night > 0.05 && GB.havL && ((t + hash(Math.round(x) * 7 + Math.round(z)) * per) % per) < 0.35) for (const q of GB.havL[hv === 'v' ? 'havstang_v' : 'havstang_o'] || []) lamps.push(xf(M, q)); }
+    KST.havPoles = nMarks;
+    if (lamps.length){ const n = Math.min(lamps.length, 4000); for (let i = 0; i < n; i++){ PB[i * 3] = lamps[i][0]; PB[i * 3 + 1] = lamps[i][1]; PB[i * 3 + 2] = lamps[i][2]; PA[i] = night; }
+      drawPts(n, gl.POINTS, VP, [1, 0.78, 0.18], 320, true); KST.havLamps = n; nSetup(VP); }
+    drawAutoDrops(eye, t);
     gl.useProgram(PL.p);
+  }
+  // the marks going over (ALM.drops): from the slide's end as she runs on, out and down to where they will lie on the line; the pole
+  // tipped over the stern rights itself in the water with a wobble, the blåse is thrown, the grapnel follows its pole and goes down on its
+  // rope (the end's goes first); then each lies as the others (the static marks above)
+  function drawAutoDrops(eye, t){
+    if (!ALM.drops.length || !ALM.C || !ALM.M) return; const C = ALM.C, M = ALM.M, yaw = -bv.head; let n = 0;
+    const poleAt = {};   // (where each pole is now, for its grapnel's rope)
+    for (const d of ALM.drops){ const m = d.m, kind = m.vak ? 'vak' : m.dregg ? 'dregg' : 'pole', e = aAge(d, t); if (e < 0 || e > ASET[kind]) continue;
+      if (!d.W){ const s = Math.max(m.s, ALM.sC); d.W = [M.A[0] + M.ux * s, M.A[1] + M.uz * s]; }
+      const W = d.W, T1 = AFLY[kind], u = clamp(e / T1, 0, 1), k = u * u * (3 - 2 * u), wy = seaH(W[0], W[1], t);
+      const p = [C[0] + (W[0] - C[0]) * k, C[1] + (wy - C[1]) * u + Math.sin(Math.PI * u) * (kind === 'vak' ? 0.9 : 0.35), C[2] + (W[1] - C[2]) * k];
+      let pitch = 0, roll = 0;
+      // (the pole leaves the slide float first, its top aft over the water and clear of the transom, and rights itself as it lands)
+      if (kind === 'pole'){ const r = e - T1; pitch = -(u < 1 ? 1.35 * (1 - k) + 0.6 * k : 0.6 * Math.exp(-2.2 * r) * Math.cos(5 * r)); p[1] -= 0.15 + (u >= 1 ? Math.max(0, 0.4 - r) * 0.6 : 0); poleAt[m.id.slice(1)] = p; }
+      else if (kind === 'dregg'){ pitch = e * 3; roll = e * 1.7; if (u >= 1) p[1] = wy - (e - T1) * 1.8; }
+      else { roll = Math.sin(e * 9) * 0.3 * (1 - u); p[1] -= u >= 1 ? 0.1 : 0; }
+      const Mx = model(p[0] - eye[0], p[1] - eye[1], p[2] - eye[2], yaw + (kind === 'vak' ? e * 4 * (1 - u) : 0), pitch, roll);
+      if (kind === 'pole') drawN(m.hav === 'v' ? GB.havV || GB.buoy : GB.havO || GB.buoy, Mx);
+      else if (kind === 'vak') drawN(GB.buoy, Mx);
+      else if (GB.dregg){ drawN(GB.dregg, Mx);
+        // (its rope: up to its pole when the pole is going over too, else back to the slide it pays out from)
+        const P = poleAt[m.id.slice(1)] || C; drawN(GB.net, limbM([p[0] - eye[0], p[1] - eye[1], p[2] - eye[2]], [P[0] - eye[0], P[1] - eye[1] + (P === C ? 0 : 0.2), P[2] - eye[2]], 0.012)); }
+      n++; }
+    KST.aFly = n;
   }
   // the string between the buoys under water (task 3, 03.11.2026): the buoy ropes down to the grapnels, the net (float line, lead line
   // and the meshes between) or the line (with its snoods), and the pots on their rope, along the bottom; for your own sets, the other
@@ -140,6 +238,25 @@
     if (GB.dregg && g.done === 0 && ta < 4){ const u = clamp(ta / 1.4, 0, 1), A = path[1], B = [x0 + 0.4, -0.2, st + 2.6], dn = Math.max(0, ta - 1.4);
       drawN(GB.dregg, chain(BMrel, M4.T(A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u + Math.sin(Math.PI * u) * 0.6 - dn * 0.9, A[2] + (B[2] - A[2]) * u + dn * 0.4), M4.RX(ta * 2))); }
   }
+  // the autoline going out (H2d2, 06.11.2026): the baiting machine baits each hook as the line runs out through the setting chute in her
+  // stern (anchors.aline.chute) and down the slide (aline.slide, tools/boats/al45.py); it falls to the sea and streams astern in her wake,
+  // the snoods with their baited hooks every 1.3 m (squid or saury, as the set was baited, tools/gear/autoline.py), at her speed through
+  // the water so it lies where it falls as she runs on (at most what the frame rate shows, else the hooks would be seen to run back).
+  // The end lines go first (g.lead): then the rope alone, slower
+  let ASETA = 0, ASETT = 0;
+  function drawAutoSet(BMrel, t, g, G){
+    const AL = G.aline, C = AL.chute, Sl = AL.slide || [C[0], C[1] - 0.5, C[2] + 1], x = C[0], lead = g.lead > 0;
+    const v = lead ? Math.min(5, Math.max(1, bv.spd || 0) + 1) : Math.min(Math.max(bv.spd || 0, 1.5), 0.42 * 1.3 * clamp((typeof FPS !== 'undefined' && FPS.v) || 30, 10, 60));
+    ASETA += v * clamp(t - ASETT, 0, 0.1); ASETT = t;
+    const z = Sl[2], path = [[x, C[1] + 0.42, C[2] - 0.7], [x, C[1] + 0.1, C[2] + 0.05], [x, Sl[1] + 0.06, z], [x + 0.03, Sl[1] - 0.55, z + 0.9], [x + 0.06, -0.05, z + 2.6], [x + 0.12, -0.12, z + 12], [x + 0.25, -0.7, z + 32], [x + 0.4, -2.8, z + 58]];
+    const Ls = []; let tot = 0; for (let i = 1; i < path.length; i++){ const l = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1], path[i][2] - path[i - 1][2]); Ls.push(l); tot += l; }
+    const pos = s => { let i = 0; while (i < Ls.length - 1 && s > Ls[i]){ s -= Ls[i]; i++; } const u = clamp(s / Ls[i], 0, 1), A = path[i], B = path[i + 1]; return [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u, A[2] + (B[2] - A[2]) * u]; };
+    for (let i = 1; i < path.length; i++) drawN(GB.net, chain(BMrel, limbM(path[i - 1], path[i], lead ? 0.011 : 0.008)));
+    const hm = (g.s && g.s.bait === 'saury' ? GB.aEgS : GB.aEgB) || GB.aEgS || GB.aEgB; KST.aSet = 0; if (lead || !hm) return;
+    // (on the slide and in the air the snoods hang from the line; in the water they trail aft in the wake)
+    for (let s = ASETA % 1.3; s < tot; s += 1.3){ const p = pos(s); if (p[2] < C[2] - 0.05) continue; if (p[1] < -1.0) break;
+      const tr = clamp((p[2] - z - 1.5) / 3, 0, 1); drawN(hm, chain(BMrel, M4.T(p[0], p[1], p[2]), M4.RX(-tr * 1.1))); KST.aSet++; }
+  }
   // fish in the meshes or on the hooks coming up while hauling (plan E2): as many as the set still holds, the species in proportion
   function haulFish(g){
     const s = (S.sets || []).find(x => x.id === g.sid); if (!s || g.op !== 'haul') return null;
@@ -150,12 +267,13 @@
     const left = Math.max(0.2, (g.n - g.done) - (g.sub || 0) / (g.sl || 1)), unit = g.kind === 'garn' ? 30 : Math.max(10, g.hooksPer || 30);
     return {p:clamp(nF / left / unit * 3, nF >= 1 ? 0.125 : 0, 0.85), sp:r => (cum.find(c => r * kg <= c[1] + 1e-9) || cum[0])[0]};
   }
+  // (kind 'auto': the autoline hauler with its hook cleaner, tools/gear/autoline.py, set in the autoliner's hauling port, anchors.aline)
   function haulModel(kind){
-    if (kind in HAULM) return HAULM[kind]; HAULM[kind] = null; const type = 'haul-' + kind;
+    if (kind in HAULM) return HAULM[kind]; HAULM[kind] = null; const type = kind === 'auto' ? 'gear-autoline' : 'haul-' + kind;
     if (typeof glbHas !== 'function' || !glbHas(type)) return null;
     const G = glbLoad(type), ex = (G && G.ex) || {}, mk = nm => { const o = glbPart(type, nm); if (!o) return null; const n = o.p.length / 3, c = new Float32Array(n * 3);
       for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) c[i * 3 + k] = o.c[i * 4 + k]; return {pb:buf(new Float32Array(o.p)), cb:buf(c), n}; };
-    if (ex.axle && ex.path) HAULM[kind] = {frame:mk('frame'), sheave:mk('sheave'), stripper:mk('stripper'), ax:ex.axle, st:ex.stripper, r:ex.r, path:ex.path};
+    if (ex.axle && ex.path) HAULM[kind] = {frame:mk('frame'), sheave:mk('sheave'), stripper:mk('stripper'), ax:ex.axle, st:ex.stripper, r:ex.r, rg:ex.rg || ex.r, path:ex.path};
     return HAULM[kind];
   }
   // who hauls: those on the station «Haling» (13-work.js), and whether you are one of them
@@ -291,11 +409,27 @@
     const kg = S.hold.reduce((a, x) => a + (x.sp === 'krabbe' ? x.kg : 0), 0), n = Math.min(Math.round(14 * s * s), Math.ceil(kg / 4));
     for (let k = 0; k < n; k++) drawN(fishOf('krabbe'), chain(BMrel, M4.T(D.tank[0] + (hash(k * 5 + 7) - 0.5) * T.half[0] * s * 1.5, D.tank[1] + (T.water - 0.04) * s + Math.floor(k / 5) * 0.03, D.tank[2] + (hash(k * 7 + 9) - 0.5) * T.half[1] * s * 1.6), M4.RY(hash(k) * 6.3), M4.S(0.75)));
   }
+  // the autoliner's hauling station without the walking crew (deckcrew.js places().port, the same places): the gaffer's and the cleaner
+  // hand's places [x, z, heading], the drop and the chute's mouth in the boat's frame
+  function autoPort(G){ const AL = G.aline, F = AL.foot, sl = AL.sill || [F[0] + 1, F[1] + 0.75, F[2]], fz = AL.fish ? AL.fish[2] : F[2] + 0.4, hd = (x, z, tx, tz) => Math.atan2(tx - x, -(tz - z));
+    const gx = F[0] + 0.55, gz = F[2] + 0.88, tx = F[0] - 0.9, tz = F[2] + 0.82;
+    return {gaff:[gx, gz, hd(gx, gz, sl[0], sl[2])], tend:[tx, tz, hd(tx, tz, F[0] - 0.42, F[2])], drop:[F[0] - 0.3, F[1] + 0.05, fz], chute:AL.fish ? [AL.fish[0] + 0.05, F[1] + 0.08, fz] : [F[0] - 2.2, F[1] + 0.08, fz]}; }
+  // how far along the autoline hauler's path the hook cleaner's brush is (the path from tools/gear/autoline.py: the sea, the sill roller,
+  // the guide, eleven points round the sheave, then the cleaner's slot)
+  function aCleanS(HM, L){ if (HM.cl != null) return HM.cl; let s = 0; for (let i = 0; i < Math.min(L.length, 14); i++) s += L[i]; return (HM.cl = s); }
+  // the gaffed fish sliding from where it was let fall into the chute's mouth (09-landing-deck.js dkTick fills ASLIDE), 0.9 s each
+  function drawAutoSlides(BMrel){ if (!ASLIDE.length || !BMrel) return; const now = performance.now() / 1000; let on = false;
+    for (let i = ASLIDE.length - 1; i >= 0; i--){ const f = ASLIDE[i], u = (now - f.t) / 0.9; if (u > 1){ ASLIDE.splice(i, 1); continue; } if (u < 0) continue;
+      if (!on){ on = true; if (ASLIDE.VP) nSetup(ASLIDE.VP); } const k = u * u, p = [f.at[0] + (f.to[0] - f.at[0]) * k, f.at[1] + (f.to[1] - f.at[1]) * k, f.at[2] + (f.to[2] - f.at[2]) * k];
+      drawN(fishOf(f.sp), chain(BMrel, M4.T(p[0], p[1] + 0.05, p[2]), M4.RY(f.yaw), M4.RZ(Math.PI / 2), M4.S(clamp(0.42 * Math.cbrt(f.kg || 2), 0.28, 1.2)))); KST.aSlid = (KST.aSlid || 0) + (f.seen ? 0 : 1); f.seen = true; } }
   // the hauler bolted on while she is not working her gear (M3): the one tried on or being lifted aboard, else the one for her rig, else
   // whichever she has (a net or line hauler on its post; the pot hauler on its davit when she is rigged for pots). drawGearOp draws it
   // while the gear is worked. The skiff's small hauler stands on its rail place.
   function drawHaulRest(BMrel, G, d, VP){
     const b = S.boat; KST.haul = null; if (b.gop && b.status === 'fishing') return; if (!GB) buildGear();
+    // the autoliner: her autoline hauler stands in the hauling port whatever she does (it follows the boat, autoHooks; H2d 05.11.2026)
+    if (G.aline && BOAT.autoHooks){ const HM = haulModel('auto'); if (!HM) return; const F = G.aline.foot, at = q => chain(BMrel, M4.T(F[0] + q[0], F[1] + q[1], F[2] + q[2]));
+      litSetup(VP); drawLit(HM.frame, at([0, 0, 0])); drawLit(HM.sheave, at(HM.ax)); drawLit(HM.stripper, at(HM.st)); KST.haul = 'autoline'; return; }
     const eq = S.equip || {}, rig = typeof rigOf === 'function' ? rigOf() : b.rig, own = k => !!eq[k] && equipFits(k, vtype());
     const hot = TRYK && /haler$/.test(TRYK) ? TRYK : HOIST && /haler$/.test(HOIST.k) ? HOIST.k : null;
     const pick = hot || (rig === 'teiner' && own('teinehaler') ? 'teinehaler' : rig === 'line' && own('linehaler') ? 'linehaler' : rig === 'garn' && own('garnhaler') ? 'garnhaler' : own('garnhaler') ? 'garnhaler' : own('linehaler') ? 'linehaler' : null);
@@ -310,24 +444,28 @@
     litSetup(VP); drawLit(HM.frame, at([0, 0, 0])); drawLit(HM.sheave, at(HM.ax)); drawLit(HM.stripper, at(HM.st)); KST.haul = pick;
   }
   function drawGearOp(BMrel, eye, VP, t){
+    autoMarks(BMrel, eye, t); ASLIDE.VP = VP; drawAutoSlides(BMrel);   // (the autoline's marks over the stern, and its gaffed fish down the chute, H2d2)
     const b = S.boat, g = b.gop; if (!g || b.status !== 'fishing') return; if (!GB) buildGear();
     const vt = vtype(), G = GEO(vt), gw = G.gw || 1, sx = G.beam / 2, d = G.deck || {y:gw, z:1}, skiff = !!G.hand;
     // the hauler on the starboard rail just forward of the working deck; gear stacks on the deck aft of it
     const HP = skiff ? SKA.haul : G.hauler, turning = g.op === 'haul' && !(b.deckStop), DZ = skiff ? 0 : d.z - 0.6;
     nSetup(VP);
-    const HM = !skiff && (g.kind === 'garn' || g.kind === 'line') ? haulModel(g.kind) : null, setting = g.op === 'set' && (g.kind === 'garn' || g.kind === 'line');
+    // (the autoline: its own hauler in the hauling port, anchors.aline; no tubs, the line lies on the magazines below deck, H2d)
+    const auto = !skiff && !!g.auto && !!G.aline;
+    const HM = !skiff && (g.kind === 'garn' || g.kind === 'line') ? haulModel(auto ? 'auto' : g.kind) : null, setting = g.op === 'set' && (g.kind === 'garn' || g.kind === 'line');
     if (!HM && !(g.kind === 'teine' && potDavit(skiff)) && (!skiff || S.equip.linehaler || S.equip.teinehaler)) drawN(GB.haul, chain(BMrel, M4.T(HP[0], HP[1], HP[2]), M4.RX(turning ? -t * 3 : 0)));
     // from the hauler down into the sea, outboard and a little ahead
     const W0 = [sx + (skiff ? 1.6 : 2.6), -0.35, HP[2] - (skiff ? 1.2 : 2.2)], seg = (A, Bp, r, m, sag) => { let prev = A; for (let i = 1; i <= 8; i++){ const u = i / 8, P = [A[0] + (Bp[0] - A[0]) * u, A[1] + (Bp[1] - A[1]) * u - sag * 4 * u * (1 - u), A[2] + (Bp[2] - A[2]) * u]; drawN(m, chain(BMrel, limbM(prev, P, r))); prev = P; } };
     if (HM){
       // the hauler on its post inside the rail (its foot on deck), the gear from the water up its path, over the sheave and down the
       // tray; the sheave turns with the gear (0.6 m/s while hauling), the stripper the other way; floats on the net, snoods on the line
-      const P0 = [sx - 0.2, d.y, HP[2]], v = turning ? 0.6 : 0, at = q => chain(BMrel, M4.T(P0[0] + q[0], P0[1] + q[1], P0[2] + q[2]));
-      HAULA += v * clamp(t - HAULT, 0, 0.1) / HM.r; HAULT = t;
+      // (the autoline's sheave turns at the line's speed, about 2 500 hooks an hour at 1.3 m: 0.9 m/s, on the groove's radius)
+      const P0 = auto ? G.aline.foot : [sx - 0.2, d.y, HP[2]], v = turning ? (auto ? 0.9 : 0.6) : 0, at = q => chain(BMrel, M4.T(P0[0] + q[0], P0[1] + q[1], P0[2] + q[2]));
+      HAULA += v * clamp(t - HAULT, 0, 0.1) / (auto ? HM.rg : HM.r); HAULT = t;
       litSetup(VP); drawLit(HM.frame, at([0, 0, 0])); drawLit(HM.sheave, chain(at(HM.ax), M4.RZ(HAULA))); drawLit(HM.stripper, chain(at(HM.st), M4.RZ(-HAULA * HM.r / (g.kind === 'garn' ? 0.06 : 0.08))));
       nSetup(VP);
-      if (setting) drawSetting(BMrel, t, g, G, rigAt(G, g.kind, d).at, 0.45); else {
-      const path = HM.path.map(q => [P0[0] + q[0], P0[1] + q[1], P0[2] + q[2]]); path[0] = W0.slice();
+      if (setting){ if (auto) drawAutoSet(BMrel, t, g, G); else drawSetting(BMrel, t, g, G, rigAt(G, g.kind, d).at, 0.45); } else {
+      const path = HM.path.map(q => [P0[0] + q[0], P0[1] + q[1], P0[2] + q[2]]); path[0] = auto ? [P0[0] + 3.4, -0.3, P0[2] - 3.0] : W0.slice();
       const garn = g.kind === 'garn', rope = garn ? GB.net : GB.float;
       for (let i = 1; i < path.length; i++) seg(path[i - 1], path[i], garn ? 0.03 : 0.006, rope, i === 1 ? 0.25 : 0);
       // along the path by length: floats (net) or snoods with a hook (line) every metre, moving in with the gear
@@ -338,22 +476,34 @@
       // hauler as it gets there, and no fish drawn on the line past it (the nets' fish are picked out at the tray, as before)
       // With the people walking the deck (deckcrew.js) the fish gaffed and picked are the real catch as the haul brings it aboard (CATCHQ): one
       // at a time, shaken off the hook or let fall from the net on the deck at the drop, where the bleeder takes it up (dkTick)
-      const agentsOn = !skiff && typeof CREW3D !== 'undefined' && CREW3D.on(), PLc = agentsOn ? CREW3D.places() : null, dropAt = PLc ? [PLc.drop[0], d.y, PLc.drop[1]] : null, nowE = performance.now() / 1000;
-      let sR = tot * 0.7; if (!garn){ for (let s2 = 0; s2 < tot; s2 += 0.1) if (pos(s2)[1] > (G.gw || d.y + 0.9) - 0.45){ sR = s2; break; }
-        const Hn = HAULA * HM.r;
+      const agentsOn = !skiff && typeof CREW3D !== 'undefined' && CREW3D.on(), PLc = agentsOn ? CREW3D.places() : null, nowE = performance.now() / 1000;
+      // (the autoliner, H2d2: the gaffer at the port takes each fish in as it comes up to the sill roller, swings it in and lets it fall at
+      // the chute, where it slides on into the chute's mouth in the back wall to the bleeding tanks: no bleeder in the station, deckcrew.js)
+      const AP = auto ? (PLc && PLc.port) || autoPort(G) : null, dropAt = AP ? AP.drop : PLc ? [PLc.drop[0], d.y, PLc.drop[1]] : null;
+      let sR = tot * 0.7; if (auto) sR = Math.max(0.5, L[0] - 0.22); else if (!garn){ for (let s2 = 0; s2 < tot; s2 += 0.1) if (pos(s2)[1] > (G.gw || d.y + 0.9) - 0.45){ sR = s2; break; } }
+      if (!garn){ const Hn = HAULA * HM.r, gx = AP ? {D:dropAt, wait:12, chute:AP.chute, Wat:pos(Math.max(0, sR - 0.95))} : {D:dropAt, wait:12};
         // (the next one comes in when the last is off the deck: the hauler waits for the bleeder, as the line can be stopped)
-        if (agentsOn){ const Q = catchQ(); if (turning && Q.length && nowE - DKF.t > DKDUR.gaff + 0.3 && !dkWaits()){ const f = Q.shift(); dkEvent('gaff', pos(sR), f.sp, f.kg, {D:dropAt, wait:12}); DKF.t = nowE; } }
-        else if (turning && HF && GAFFH != null && Hn > GAFFH && Hn - GAFFH < 2) for (let j = Math.ceil(sR - Hn); j <= Math.ceil(sR - GAFFH) - 1; j++) if (hash(j * 7 + 13) < HF.p) dkEvent('gaff', pos(sR), HF.sp(hash(j * 3 + 1)), 2 + hash(j * 5) * 4);
+        if (agentsOn){ const Q = catchQ(); if (turning && Q.length && nowE - DKF.t > DKDUR.gaff + 0.3 && !dkWaits()){ const f = Q.shift(); dkEvent('gaff', pos(sR), f.sp, f.kg, gx); DKF.t = nowE; } }
+        else if (turning && HF && GAFFH != null && Hn > GAFFH && Hn - GAFFH < 2) for (let j = Math.ceil(sR - Hn); j <= Math.ceil(sR - GAFFH) - 1; j++) if (hash(j * 7 + 13) < HF.p) dkEvent('gaff', pos(sR), HF.sp(hash(j * 3 + 1)), 2 + hash(j * 5) * 4, AP ? gx : null);
         GAFFH = Hn; }
       else if (agentsOn && PLc){ const Q = catchQ(), pk = PLc.pick; if (turning && Q.length && nowE - DKF.t > DKDUR.pick + 0.3 && !dkWaits()){ const f = Q.shift();
         dkEvent('pick', [pk[0] + Math.sin(pk[2]) * 0.48, d.y + 1.0, pk[1] - Math.cos(pk[2]) * 0.48], f.sp, f.kg, {D:dropAt, wait:12}); DKF.t = nowE; } }
-      for (let s = off, k = 0; s < tot; s += 1, k++){ const p = pos(s), q = pos(Math.min(tot, s + (garn ? 0.12 : 0.05)));
+      // the autoline's snoods every 1.3 m with their hooks (tools/gear/autoline.py), coming in with the line; the ones past the sheave
+      // stripped and cleaned, on to the magazine
+      // (H2d2: up to the hook cleaner some hooks still carry what is left of the bait; the cleaner's brush takes it off, and the line goes on
+      // clean to the magazine, the crumbs falling from the cleaner's box)
+      if (auto && GB.aTom){ const sp = 1.3, o2 = (HAULA * HM.rg) % sp, id2 = Math.floor(HAULA * HM.rg / sp), sCl = aCleanS(HM, L), old = GB.aEgB || GB.aTom;
+        for (let s = o2, k = 0; s < tot; s += sp, k++){ const p = pos(s), j = k - id2; if (HF && s < sR && hash(j * 7 + 13) < HF.p * 1.3) drawN(fishOf(HF.sp(hash(j * 3 + 1))), chain(BMrel, M4.T(p[0], p[1] - 0.55, p[2]), M4.RX(Math.PI / 2), M4.RZ(hash(j) - 0.5), M4.S(0.5)));
+          drawN(s < sCl && hash(j * 11 + 5) < 0.3 ? old : GB.aTom, chain(BMrel, M4.T(p[0], p[1], p[2]))); }
+        if (turning && GB.bait){ const c = [P0[0] + HM.st[0], P0[1] + HM.st[1] - 0.12, P0[2] + HM.st[2]];
+          for (let i = 0; i < 4; i++){ const q = (t * 1.3 + i / 4) % 1; drawN(GB.bait, chain(BMrel, M4.T(c[0] + (hash(i * 3 + Math.floor(t * 1.3)) - 0.5) * 0.3, c[1] - q * q * 1.1, c[2] + (hash(i * 5 + 1) - 0.5) * 0.25), M4.S(0.6))); } } }
+      else for (let s = off, k = 0; s < tot; s += 1, k++){ const p = pos(s), q = pos(Math.min(tot, s + (garn ? 0.12 : 0.05)));
         if (HF && s < sR && hash((k - id0) * 7 + 13) < HF.p) drawN(fishOf(HF.sp(hash((k - id0) * 3 + 1))), chain(BMrel, M4.T(p[0], p[1] - (garn ? 0.3 : 0.4), p[2]), M4.RX(Math.PI / 2), M4.RZ(hash(k - id0) - 0.5), M4.S(garn ? 0.5 : 0.45)));
         if (garn){ drawN(GB.float, chain(BMrel, limbM([p[0], p[1] + 0.05, p[2]], [q[0], q[1] + 0.05, q[2]], 0.035))); if (s < L[0] && Math.floor(s + HAULA * HM.r) % 3 === 0) drawN(GB.net, chain(BMrel, limbM(p, [p[0], p[1] - 0.45, p[2]], 0.01))); }
         else drawN(GB.float, chain(BMrel, limbM(p, [p[0], p[1] - 0.25, p[2] + 0.02], 0.004))); }
       }
       const R = rigAt(G, g.kind, d), n = g.op === 'haul' ? g.done : g.n - g.done;
-      if (g.kind === 'garn') drawNetTub(BMrel, R.at, clamp(n / Math.max(1, g.n), 0, 1), R.ry); else drawLineTubs(BMrel, R.at, n, g.op === 'set' ? n : 0, false, R.ry);
+      if (g.kind === 'garn') drawNetTub(BMrel, R.at, clamp(n / Math.max(1, g.n), 0, 1), R.ry); else if (!auto) drawLineTubs(BMrel, R.at, n, g.op === 'set' ? n : 0, false, R.ry);
     } else if (g.kind === 'garn'){
       // float line on top, lead line below, and the mesh between them moving with the net
       if (setting) drawSetting(BMrel, t, g, G, rigAt(G, 'garn', d).at, -0.55); else {
@@ -372,7 +522,8 @@
     // those on «Haling» in the work chains (the skipper too when it is his job; he then leaves the wheel, gopMe): the first at the
     // hauler taking the gear in, the next clearing it at the end of the tray, a third stacking it aft (the skiff's fisher is drawn with
     // the boat)
-    if (!skiff && !(typeof CREW3D !== 'undefined' && CREW3D.on())){ const n = clamp(gopHands(), 0, 3), spots = [[HP[0] - 0.55, HP[2] + 0.2, 'haul', Math.PI / 2], [HP[0] - 1.25, HP[2] + 0.75, 'tend', Math.PI * 0.6], [sx * 0.3 + 0.5, DZ + 0.2, 'tend', Math.PI]];
+    if (!skiff && !(typeof CREW3D !== 'undefined' && CREW3D.on())){ const AQ = g.auto && G.aline ? autoPort(G) : null, n = clamp(gopHands(), 0, AQ ? 2 : 3);
+      const spots = AQ ? [[AQ.gaff[0], AQ.gaff[1], 'haul', AQ.gaff[2]], [AQ.tend[0], AQ.tend[1], 'coil', AQ.tend[2]]] : [[HP[0] - 0.55, HP[2] + 0.2, 'haul', Math.PI / 2], [HP[0] - 1.25, HP[2] + 0.75, 'tend', Math.PI * 0.6], [sx * 0.3 + 0.5, DZ + 0.2, 'tend', Math.PI]];
       for (let k = 0; k < n; k++){ const [x, z, task, a] = spots[k], wl = xf(BMrel, [x, d.y, z]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:k === 0 && gopMe() ? 'skipper' : null, look:k === 0 && gopMe() ? lookMe() : lookCrew(k - (gopMe() ? 1 : 0))};
         const ev = dkFor('h' + k, [x, d.y, z], task);
         drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + a, task:ev ? ev.kind : task, ev:ev ? dkEv(ev, BMrel, G) : null, walk:false, s:0}, eye, t, 9 + k); }
