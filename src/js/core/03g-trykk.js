@@ -133,7 +133,7 @@ function trykkYear(sp, y){
 }
 // the species' biomass in the waters of fiske.json (kg): from the spawning stock where the game has one, else the landings over a harvest rate
 function trkBiomass(sp, y, notes){
-  if (STOCK[sp]) return stockYear(sp, y).ssb * 1000 * (TRK.tsb[sp] || 2);
+  if (STOCK[sp] && !STOCK[sp].idx) return stockYear(sp, y).ssb * 1000 * (TRK.tsb[sp] || 2);   // (the snow crab's stock is an index, B/BMSY: H3a)
   if (TRK.ssb[sp]) return TRK.ssb[sp] * 1000;
   let n = 0; for (const g in notes) n += notes[g]; return n / (TRK.harv[sp] || 0.2);
 }

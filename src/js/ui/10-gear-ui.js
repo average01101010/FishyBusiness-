@@ -87,9 +87,10 @@ function setChoices(all){
     const lbl = (n, no, en) => [n + ' ' + (n === 1 ? 'stamp' : 'stamper') + ' ' + K.no.toLowerCase() + ' · ' + no, n + ' ' + (n === 1 ? 'tub' : 'tubs') + ' of ' + K.en.toLowerCase() + ' · ' + en];
     for (const k of Object.keys(bt).filter(k => bt[k] > 0).sort((a, b) => bt[b] - bt[a])) out.push({kind:'line', spec:{lk, n:bt[k], bait:k}, n:bt[k], bait:k, lbl:lbl(bt[k], BAITS[k] ? BAITS[k].no.toLowerCase() : k, BAITS[k] ? BAITS[k].en.toLowerCase() : k)});
     const un = L0.n - L0.baited; if (all && un > 0) out.push({kind:'line', off:true, lk, n:un, lbl:lbl(un, 'ikke egnet', 'not baited')}); }
-  for (const pot of ['big']){ const np = pg.pots[pot] || 0; if (!np) continue; const B = baitOf(pg), P = POTS[pot];
-    for (const k of Object.keys(B).filter(k => BAITS[k] && B[k] >= GPRICE.potBait - 1e-9).sort((a, b) => B[b] - B[a])){ const n = Math.min(np, Math.floor(B[k] / GPRICE.potBait + 1e-9));
-      out.push({kind:'teine', spec:{pot, n, bait:k}, n, bait:k, lbl:[n + ' ' + P.no.toLowerCase() + ' · ' + BAITS[k].no.toLowerCase(), n + ' ' + P.en.toLowerCase() + ' · ' + BAITS[k].en.toLowerCase()]}); }
+  // (H3a) the snow crab vessel's conical pots go out a string (lenke) of 200 at a time, 25 m apart (SNOC.lenke)
+  for (const pot of [potK()]){ const np = pg.pots[pot] || 0; if (!np) continue; const B = baitOf(pg), P = POTS[pot], pb = potBaitKg(pot);
+    for (const k of Object.keys(B).filter(k => BAITS[k] && B[k] >= pb - 1e-9).sort((a, b) => B[b] - B[a])){ const n = Math.min(np, Math.floor(B[k] / pb + 1e-9), P.sno ? SNOC.lenke : Infinity);
+      out.push({kind:'teine', spec:{pot, n, bait:k}, n, bait:k, lbl:P.sno ? ['1 lenke · ' + n + ' ' + P.no.toLowerCase() + ' · ' + BAITS[k].no.toLowerCase(), '1 string · ' + n + ' ' + P.en.toLowerCase() + ' · ' + BAITS[k].en.toLowerCase()] : [n + ' ' + P.no.toLowerCase() + ' · ' + BAITS[k].no.toLowerCase(), n + ' ' + P.en.toLowerCase() + ' · ' + BAITS[k].en.toLowerCase()]}); }
     if (all && !out.some(c => c.kind === 'teine')) out.push({kind:'teine', off:true, n:np, lbl:[np + ' ' + P.no.toLowerCase() + ' · uten agn', np + ' ' + P.en.toLowerCase() + ' · no bait']}); }
   return out.filter(c => c.kind === r);
 }
@@ -141,7 +142,7 @@ function gearPanel(){
   { const A = autoL(pg), sea = mySets().filter(x => x.kind === 'line' && isAuto(x.lk)).reduce((a, x) => a + x.n, 0);
     if (A && (A.n || sea)) h.push('<div class="kv"><span>' + GL('Autoline på magasinene', 'Autoline on the magazines') + '</span><span>' + A.n + ' ' + unitName('line', A.n, 'auto') + (sea ? ' · ' + sea + GL(' i sjøen', ' in the sea') : '') + ' · ' + Math.round(lineQ(A) * 100) + ' %</span></div>'); }
   for (const l of pg.nets) h.push('<div class="kv"><span>' + GL(...netN(l, l.n)) + '</span><span>' + Math.round(l.cond * 100) + ' %</span></div>');
-  for (const pot of ['big']) if (pg.pots[pot]) h.push('<div class="kv"><span>' + GL(POTS[pot].no, POTS[pot].en) + '</span><span>' + pg.pots[pot] + ' · ' + Math.round(((pg.potc || {}).cond || 1) * 100) + ' %</span></div>');
+  for (const pot of ['big', 'sno']) if (pg.pots[pot]) h.push('<div class="kv"><span>' + GL(POTS[pot].no, POTS[pot].en) + '</span><span>' + pg.pots[pot] + ' · ' + Math.round(((pg.potc || {}).cond || 1) * 100) + ' %</span></div>');
   for (const j of jigSets()) h.push('<div class="kv"><span>' + GL(CARE.jig[j.k].no, CARE.jig[j.k].en) + (j.on ? ' · ' + GL('i bruk', 'in use') : '') + '</span><span>' + (j.k === 'kveite' && j.closed ? GL('kveita er fredet', 'halibut closed') : Math.round(((pg.jig || {})[j.k] || {c:1}).c * 100) + ' %') + '</span></div>' + (j.sp.length ? spChips(j.sp) : ''));
   const bk = Object.entries(baitOf(pg)).filter(e => e[1] > 0.05 && BAITS[e[0]]);
   h.push('<div class="kv"><span>' + GL('Agn', 'Bait') + '</span><span class="bkg">' + (bk.length ? bk.map(([k, kg]) => baitDot(k) + baitNm(k) + ' ' + fmt(kg, 0) + ' kg').join(' · ') : GL('ingen', 'none')) + '</span></div>');

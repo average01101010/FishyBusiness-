@@ -34,7 +34,11 @@ export default function (t){
   t.ok(ma > 0.2 && mf === 0, `makrellen er i Lofoten i august (${ma.toFixed(2)}) og ikke i februar (${mf})`);
   t.ok(at('makrell', 70.7, 25, H(7, 15)) < 0.2 * ma, 'makrellen når ikke Finnmark i august');
   // the snow crab is in the far north-east only
-  t.ok(at('snokrabbe', ...LOF, H(5, 15)) === 0 && K.MIG.snokrabbe(72.6, 32) > 0.9, 'snøkrabben er bare nordøst i Barentshavet');
+  // (H3a: the snow crab's box went; snoArea reads the notes by location on Norway's shelf, with the depth, which needs the chart: the
+  // sea is laid at 300 m here, tests/unit/snokrabbe.test.mjs and tests/snokrabbetest.py have the rest)
+  const isL = K.isLand, dF = K.depthF; K.set('isLand', () => false); K.set('depthF', () => 300);
+  t.ok(at('snokrabbe', ...LOF, H(5, 15)) === 0 && !K.MIG.snokrabbe && at('snokrabbe', 76.5, 33, H(1, 15)) > 0.5, 'snøkrabben er bare nordøst i Barentshavet, på bankene sedlene viser');
+  K.set('isLand', isL); K.set('depthF', dF);
   // saithe: the notes rule where they have the location, and Senja keeps its saithe
   // since 02.11.2026 the season comes from the notes too (FK.season 'data'): Senja's saithe in May is the notes' level against Senja's
   // mean over the year, not the old table's May peak
@@ -107,8 +111,10 @@ export default function (t){
   const BJ = [74.3, 22.0], SPV = [77.5, 10.5], SENT = [75.5, 35.0], NE = [79.0, 34.0];
   const bj = [0, 3, 6, 9].map(m => cell('torsk', ...BJ, m)), sv = [6, 9].map(m => cell('torsk', ...SPV, m));
   t.ok(bj.every(v => v > 0) && sv.some(v => v > 0), `torsken har tall ved Bjørnøya (${lok(...BJ)}: ${bj.map(v => v.toFixed(2)).join(' ')}) og vest av Spitsbergen (${lok(...SPV)}: ${sv.map(v => v.toFixed(2)).join(' ')})`);
-  const sk = [1, 3].map(m => at('snokrabbe', ...SENT, H(m, 15))), skn = at('snokrabbe', ...NE, H(2, 15));
-  t.ok(sk.every(v => v > 0.05) && skn > 0.05 && at('snokrabbe', ...BAT, H(2, 15)) === 0, `snøkrabben er på Sentralbanken (${lok(...SENT)}: ${sk.map(v => v.toFixed(2)).join(' ')}) og nordøst for Svalbard (${lok(...NE)}: ${skn.toFixed(2)}), ikke i Båtsfjord`);
+  K.set('isLand', () => false); K.set('depthF', () => 300);
+  const sk = [1, 3].map(m => at('snokrabbe', ...SENT, H(m, 15))), skn = at('snokrabbe', 77.5, 35, H(2, 15));
+  t.ok(sk.every(v => v > 0.05) && skn > 0.05 && at('snokrabbe', ...BAT, H(2, 15)) === 0, `snøkrabben er på Sentralbanken (${lok(...SENT)}: ${sk.map(v => v.toFixed(2)).join(' ')}) og nord på Storbanken (${lok(77.5, 35)}: ${skn.toFixed(2)}), ikke i Båtsfjord`);
+  K.set('isLand', isL); K.set('depthF', dF);
   // the herring feeds in the Norwegian Sea in summer (out there, nothing in winter)
   const nh = at('sild', 68.5, 0, H(6, 15)), nw = at('sild', 68.5, 0, H(0, 15));
   t.ok(nh > 3 * nw, `silda beiter i Norskehavet om sommeren (juli ${nh.toFixed(2)}, januar ${nw.toFixed(2)})`);

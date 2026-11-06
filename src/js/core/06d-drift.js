@@ -67,7 +67,7 @@ function planUnits(kind){
   const pg = S.pgear; if (!pg) return 0;
   if (kind === 'line') return (pg.lines.hyse.n || 0) + (pg.lines.bank.n || 0);
   if (kind === 'garn') return pg.nets.reduce((a, l) => a + l.n, 0);
-  if (kind === 'teine') return pg.pots.big || 0;
+  if (kind === 'teine') return potsAboard(pg);
   return 0;
 }
 // where the crew can sleep: a rorbu, the home naust, or aboard a boat with bunks

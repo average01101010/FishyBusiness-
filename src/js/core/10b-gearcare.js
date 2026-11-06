@@ -124,7 +124,7 @@ function careQuote(what, key, shop){
     return {n, need, tot:L.n * LINE_KINDS[key].hooks, fee:shop ? Math.round(n * (CARE.hookKr[100] / 100 + CARE.feeHook)) : 0, h:careJobHours(n / (CARE.hookRate * ce.eff), shop)}; }
   if (what === 'line'){ const L = pg.lines[key], ce = careHands('line'); if (!L.n || L.cond >= L.max - 0.05 || !ce.hands) return null; const d = L.max - L.cond;
     return {n:L.n, fee:shop ? Math.round(CARE.feeLine * L.n * d / 0.1) : Math.round(CARE.matLine * L.n * d / 0.1), h:careJobHours(L.n * d / 0.25 * 0.5 / ce.eff, shop)}; }
-  if (what === 'pot'){ const c = pg.potc, n = pg.pots.big, ce = careHands('teiner'); if (!n || c.cond >= c.max - 0.05 || !ce.hands) return null; const d = c.max - c.cond;
+  if (what === 'pot'){ const c = pg.potc, n = potsAboard(pg), ce = careHands('teiner'); if (!n || c.cond >= c.max - 0.05 || !ce.hands) return null; const d = c.max - c.cond;
     return {n, fee:shop ? Math.round(CARE.feePot * n * d / 0.1) : Math.round(CARE.matPot * n * d / 0.1), h:careJobHours(n * d / 0.25 * 0.3 / ce.eff, shop)}; }
   if (what === 'net'){ const l = pg.nets.find(x => x.id === key), ce = careHands('garn'); if (!l || l.cond >= nMax(l) - 0.05 || !ce.hands) return null; const d = nMax(l) - l.cond;
     return {n:l.n, fee:shop ? Math.round(GPRICE.bot * l.n * d / 0.1 * 0.8) : 0, h:careJobHours(l.n * d / 0.25 * 0.5 / ce.eff, shop)}; }
@@ -153,7 +153,7 @@ function lineFix(lk, shop){
   return null;
 }
 function potFix(shop){
-  const pg = careG(), c = pg.potc, n = pg.pots.big, why = careGate(shop); if (why) return why;
+  const pg = careG(), c = pg.potc, n = potsAboard(pg), why = careGate(shop); if (why) return why;
   if (!n || c.cond >= c.max - 0.05) return [gL('Teinene trenger ikke reparasjon.', 'The pots need no repair.')];
   const q = careQuote('pot', 0, shop); if (!q) return careNoHands();
   const e = careQueue({kind:'pr', h:q.h, shop:!!shop, fee:q.fee, no:(shop ? 'Butikken reparerer ' : 'Reparere ') + n + ' teiner', en:(shop ? 'The shop mends ' : 'Mending ') + n + ' pots'}, q.fee); if (e) return e;
@@ -203,7 +203,7 @@ function sellValue(what, key, n){
   const pg = careG();
   if (what === 'line'){ const L = pg.lines[key]; return Math.round(LINE_KINDS[key].price * CARE.sellF * (0.2 + 0.8 * L.cond) * n); }
   if (what === 'net'){ const l = pg.nets.find(x => x.id === key); return l ? Math.round(NETTY[netTy(l)].price * CARE.sellF * (0.2 + 0.8 * l.cond) * l.n) : 0; }
-  if (what === 'pot') return Math.round(POTS.big.price * CARE.sellF * (0.2 + 0.8 * pg.potc.cond) * n);
+  if (what === 'pot') return Math.round(POTS[potK()].price * CARE.sellF * (0.2 + 0.8 * pg.potc.cond) * n);
   if (what === 'kit') return Math.round(GPRICE.kit * CARE.sellF * n);
   if (what === 'heavy') return Math.round(GPRICE.heavy * CARE.sellF * n);
   if (what === 'jig') return Math.round(CARE.jig[key].kr * CARE.sellF * n);
@@ -215,7 +215,7 @@ function sellGear(what, key, n){
   n = Math.max(1, Math.round(n || 1));
   if (what === 'line'){ const L = pg.lines[key], free = L.n - L.baited; if (!L || free < n) return [gL('Du har ikke så mange uegnede stamper om bord.', 'You do not have that many unbaited tubs aboard.')]; book('redskap', sellValue('line', key, n), 'Solgt redskap', 'Gear sold'); L.n -= n; }
   else if (what === 'net'){ const l = pg.nets.find(x => x.id === key); if (!l) return [gL('Finner ikke garna.', 'Cannot find the nets.')]; book('redskap', sellValue('net', key, 1), 'Solgt redskap', 'Gear sold'); pg.nets.splice(pg.nets.indexOf(l), 1); }
-  else if (what === 'pot'){ if (pg.pots.big < n) return [gL('Du har ikke så mange teiner om bord.', 'You do not have that many pots aboard.')]; book('redskap', sellValue('pot', key, n), 'Solgt redskap', 'Gear sold'); pg.pots.big -= n; }
+  else if (what === 'pot'){ if (potsAboard(pg) < n) return [gL('Du har ikke så mange teiner om bord.', 'You do not have that many pots aboard.')]; book('redskap', sellValue('pot', key, n), 'Solgt redskap', 'Gear sold'); pg.pots[potK()] -= n; }
   else if (what === 'kit'){ if (pg.kits.n - pg.kits.heavy < n && pg.kits.n < n) return [gL('Du har ikke så mange blåsesett.', 'You do not have that many buoy sets.')]; book('redskap', sellValue('kit', key, n), 'Solgt redskap', 'Gear sold'); pg.kits.n -= n; pg.kits.heavy = Math.min(pg.kits.heavy, pg.kits.n); }
   else if (what === 'heavy'){ if (pg.kits.heavy < n) return [gL('Du har ikke så mange tunge dregger.', 'You do not have that many heavy anchors.')]; book('redskap', sellValue('heavy', key, n), 'Solgt redskap', 'Gear sold'); pg.kits.heavy -= n; }
   else if (what === 'jig'){ if (pg.jig[key].n < n) return [gL('Du har ikke så mange reservesett.', 'You do not have that many spare sets.')]; book('redskap', sellValue('jig', key, n), 'Solgt redskap', 'Gear sold'); pg.jig[key].n -= n; }
@@ -244,7 +244,7 @@ function careTick(){
   for (const lk of ['hyse', 'bank']){ const L = pg.lines[lk]; if (!L.n) continue;
     if (hooksNeed(lk) >= Math.max(5, 0.06 * L.n * LINE_KINDS[lk].hooks) && pg.hooks > 0 && !hooksJob(lk, false)) return;
     if (L.cond < Math.min(0.6, L.max - 0.1) && !lineFix(lk, false)) return; }
-  if (pg.pots.big && pg.potc.cond < Math.min(0.6, pg.potc.max - 0.1) && !potFix(false)) return;
+  if (potsAboard(pg) && pg.potc.cond < Math.min(0.6, pg.potc.max - 0.1) && !potFix(false)) return;
   const k = jigKind(); if (pg.jig[k].c < 0.3 && pg.jig[k].n > 0 && !jigJob(k)) return;
 }
 
@@ -260,6 +260,6 @@ function gearTalk(){
   if (lines && pg.hooks > 0 && pg.hooks < lineHooks && say('hooksLow')) return;
   if (tubs && baitKg(pg) < 0.5 && say('baitOut')) return;
   if (tubs && baitKg(pg) >= 0.5 && baitKg(pg) < tubKg * Math.min(tubs, 3) && say('baitLow')) return;
-  if ((pg.nets.some(l => l.cond < 0.4) || ['hyse', 'bank'].some(lk => pg.lines[lk].n && pg.lines[lk].cond < 0.4) || (pg.pots.big && pg.potc.cond < 0.4)) && say('gearWorn')) return;
+  if ((pg.nets.some(l => l.cond < 0.4) || ['hyse', 'bank'].some(lk => pg.lines[lk].n && pg.lines[lk].cond < 0.4) || (potsAboard(pg) && pg.potc.cond < 0.4)) && say('gearWorn')) return;
   if (pg.jig && pg.jig[jigKind()].c < 0.3 && say('jigWorn')) return;
 }

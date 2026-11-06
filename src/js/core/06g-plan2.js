@@ -119,7 +119,7 @@ function plan2State(o){
   const V = VESSELS[b.type] || {};
   return {H:S.t / 60, at, hold, cap:capHold(), fresh:S.hold.length ? Math.min(...S.hold.map(x => x.fresh)) : 100,
     sets:mySets().map(s => ({fid:s.fid || null, kind:s.kind, n:s.n, tSet:s.tSet, x:setMid(s).x, y:setMid(s).y})),
-    aboard:{line:{n:(pg.lines.hyse.n || 0) + (pg.lines.bank.n || 0), baited:(pg.lines.hyse.baited || 0) + (pg.lines.bank.baited || 0), kinds:{hyse:{n:pg.lines.hyse.n || 0, baited:pg.lines.hyse.baited || 0}, bank:{n:pg.lines.bank.n || 0, baited:pg.lines.bank.baited || 0}}}, garn:pg.nets.reduce((a, l) => a + l.n, 0), teine:pg.pots.big || 0, bait:Object.values(baitOf(pg)).reduce((a, v) => a + v, 0)},
+    aboard:{line:{n:(pg.lines.hyse.n || 0) + (pg.lines.bank.n || 0), baited:(pg.lines.hyse.baited || 0) + (pg.lines.bank.baited || 0), kinds:{hyse:{n:pg.lines.hyse.n || 0, baited:pg.lines.hyse.baited || 0}, bank:{n:pg.lines.bank.n || 0, baited:pg.lines.bank.baited || 0}}}, garn:pg.nets.reduce((a, l) => a + l.n, 0), teine:potsAboard(pg), bait:Object.values(baitOf(pg)).reduce((a, v) => a + v, 0)},
     crew:crewAboard(null, true).map(c => ({name:c.name, fat:c.fatigue || 0, sk:!!c.sk, mate:!!c.mate, rate:6 * (1.4 - 0.16 * ((c.attr && c.attr.uth) || 2.5)) * ((BOAT.fx && BOAT.fx.fat) || 1) * (V.fac && V.fac.house === 'open' ? 1.1 : 1)})),   // fatigue an hour of fishing (04-crew.js crewTick)
     me:{aboard:meAboard(), energy:S.energy == null ? 100 : S.energy, homeRate:p2MeRate(o.home, !!o.homeA), anchRate:p2MeRate(null, true)}, bunks:V.berths || 0, house:!!V.watch, crewMax:V.crewMax || 0, v:BOAT.vcruise || 7,
     homeRest:plan2RestOk(o.home), homeShed:!!(portById(o.home) || {}).mottak, dayIndex:o.t0 == null ? 0 : Math.floor((S.t - o.t0) / 1440),

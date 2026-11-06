@@ -130,6 +130,9 @@ function landConf(H, q, acc){
   // ling and tusk for vessels of 28 m and over (J-128-2026 and the proposal for 2027, 03d-quota.js lbShare): ling at most 35 % of the
   // landing all year, tusk free until the group quota is taken and then at most 15 %
   if (BOAT.len >= 28 && acc !== 'none') for (const sp of ['lange', 'brosme']){ const k = kgOf(sp), sh = lbShare(sp, H); if (k > 0 && sh < 1){ const ok = Math.min(k, sh * holdTotal()); if (ok < k - 0.01) confBy[sp] = 1 - ok / k; } }
+  // snow crab (H3a): the vessel quota with the flexibility (03d-quota.js snoRoom, round weight); the rest is confiscated. In H3a it is all
+  // landed whole and frozen on the ordinary quota (the extra quota for live crab comes with the tanks in H3b)
+  { const k = kgOf('snokrabbe'); if (k > 0){ const ok = acc === 'lukket' && S.lic && S.lic.id === 'krab' ? Math.min(k, snoRoom(H)) : 0; if (ok < k - 0.01) confBy.snokrabbe = 1 - ok / k; } }
   // Greenland halibut: the maximum quota in the direct fishery, otherwise at most 7 % of the week's landings (03d-quota.js bkAllow)
   const bkKg = kgOf('blakveite'), bkOk = bkKg > 0 ? bkAllow(H, bkKg, holdTotal()) : 0;
   if (bkKg > 0 && bkOk < bkKg - 0.01) confBy.blakveite = 1 - bkOk / bkKg;
@@ -184,6 +187,7 @@ function sell(){
   let coopKr = 0; if (acc === 'lukket' && S.lic.coop && S.lic.coop.y === yearH(H) && codQ > 0){ const own = licQ({...S.lic, coop:null}, H).torsk, onP = Math.max(0, q.torsk + codQ - own) - Math.max(0, q.torsk - own);
     const codGross = Object.values(lines).filter(r => r.sp === 'torsk').reduce((a, r) => a + r.sum, 0); coopKr = Math.round(COOP.share * onP * codGross / Math.max(1, codKg)); }
   q.torsk += codQ; q.hyse += kgOf('hyse') * (1 - (confBy.hyse || 0)); q.sei += kgOf('sei') * (1 - (confBy.sei || 0)); q.byCod = (q.byCod || 0) + byCod;
+  q.snokrabbe = (q.snokrabbe || 0) + kgOf('snokrabbe') * (1 - (confBy.snokrabbe || 0));   // (H3a: on the vessel quota)
   if (acc !== 'none'){ q.ffTot += saleKg; q.ffCod += codFF; }
   if (acc === 'open') qyAt(H).me += codQ / 1000;   // your landings count in the open group's catch (03d-quota.js)
   bkLanded(H, bkOk || 0, holdTotal());   // the Greenland halibut's maximum quota and the week's 7 %

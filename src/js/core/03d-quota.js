@@ -113,7 +113,16 @@ const STOCK = {
   // luck, and the agreed quota has been far over the advice (2025: 19 000 t against 12 431 t)
   blakveite:{ssb:{2015:93020, 2019:89902, 2021:80283, 2023:68445, 2025:58116, 2026:55174, 2027:52635},
     tac:{2020:27000, 2021:27000, 2022:25000, 2023:25000, 2024:21250, 2025:19000, 2026:19000},
-    adv27:19610, Blim:33391, Bpa:46747, Bm:75000, a:0.1, sd:0.06, cap:0.2, slack:0.1}
+    adv27:19610, Blim:33391, Bpa:46747, Bm:75000, a:0.1, sd:0.06, cap:0.2, slack:0.1},
+  // snow crab (H3a of docs/planer/havsteget-h3-snokrabbe.md, V4, 06.11.2026): HI's quota advice for 2027 (Rapport fra havforskningen
+  // 2026-54, tab. 5 and 6, read): the stock as B/BMSY from the SPiCT model (idx: an index, not tonnes; 2018, 2020 and 2022 between their
+  // neighbours), the total quotas 2017-2027 (the ministry set 16 594 t for 2027 on 28.10.2026), MSY Btrigger 0.5 and Blim 0.3 of BMSY.
+  // The advice is the catch at FMSY with no cap on the change from year to year, and the quota has been set at or under it (slack 0).
+  // After 2027 the game's model: the stock drifts towards Bm (the level fished at the advice; 2 BMSY unfished in the model, an
+  // assumption), with year-class luck sd; the newcomer's stock grew sevenfold 2017-2027
+  snokrabbe:{idx:true, ssb:{2017:0.24, 2018:0.28, 2019:0.32, 2020:0.46, 2021:0.61, 2022:0.87, 2023:1.13, 2024:1.58, 2025:1.6, 2026:1.7, 2027:1.78},
+    tac:{2017:4000, 2018:4000, 2019:4000, 2020:4500, 2021:6500, 2022:6725, 2023:7117, 2024:9758, 2025:12019, 2026:12336},
+    adv27:16594, Blim:0.3, Bpa:0.5, Bm:1.6, a:0.2, sd:0.15, cap:0.6, slack:0}
 };
 // The coastal cod are not the Northeast Arctic cod (B4, 02.11.2026): ICES assesses them on their own (the Stock Assessment Graphs database,
 // sag.ices.dk, read 02.11.2026). North of 67° N (cod.27.1-2.coastN, assessment of 2026, key 22637): the spawning stock in tonnes. Between
@@ -142,7 +151,7 @@ function stockYear(sp, y){
   if (y <= 2026) r = {ssb:P.ssb[y] || P.ssb[2026], tac:P.tac[y] || P.tac[2026], adv:P.tac[y] || P.tac[2026]};
   else if (y === 2027) r = {ssb:P.ssb[2027], adv:P.adv27, tac:Math.round(P.adv27 * (1 + P.slack * u(1)) / 100) * 100};
   else { const p = stockYear(sp, y - 1), over = Math.max(0, p.tac / p.adv - 1);
-    const ssb = Math.round(p.ssb * Math.exp(P.a * Math.log(P.Bm / p.ssb) + P.sd * gauss(u(2), u(3)) - 0.5 * over));
+    const s1 = p.ssb * Math.exp(P.a * Math.log(P.Bm / p.ssb) + P.sd * gauss(u(2), u(3)) - 0.5 * over), ssb = P.idx ? Math.round(s1 * 1000) / 1000 : Math.round(s1);   // (an index, the snow crab's B/BMSY: not whole tonnes)
     let adv = A * curve(ssb); if (ssb >= P.Bpa) adv = clamp(adv, p.tac * (1 - P.cap), p.tac * (1 + P.cap));
     adv = Math.round(adv / 100) * 100; r = {ssb, adv, tac:Math.round(adv * (1 + P.slack * u(4)) / 100) * 100}; }
   return STKY[key] = r;
@@ -221,12 +230,14 @@ const REGN = {u7:300, h7:280, h8:230, h9:200, h10:162, h14:291, h20:103};
 // the fleet over 351 t guaranteed each; a reply to the Storting speaks of about 70 permits, year not given). For each permit a player
 // holds, one NPC ship of the kind leaves the sea (Jonas' rule, havHeld in 05d-hav.js; the NPC fleet has more ships than permits, as
 // vessels with other permits, shrimp and saithe trawl among them, fish beside them)
-const HREG = {tral:36, konv:26, rnot:69, krab:34};
+// (H3a, 06.11.2026: snow crab 30, Fiskeridirektoratet's sak 17/2026: «70 fartøy hadde en slik tillatelse i 2024» and from 2025 «fikk 30
+// fartøy tillatelse til å delta»; it was 34, worked out of the vessel quota, before. A save from before is cut to 30 in npcReg)
+const HREG = {tral:36, konv:26, rnot:69, krab:30};
 // B4 (02.11.2026): the register is the server's when the game is online (one for all players, supabase/migrations/20261102120000_register.sql:
 // a right one player buys is gone from the NPC owners for everybody, and a player who neither lands nor buys for 90 days gives the place
 // back); it comes with the world every ten minutes (WSH.reg) and after each purchase or sale. Offline the save keeps its own as before.
 // (H1 of docs/planer/havsteget.md, 03.11.2026: the ocean permits HREG share the register; a save from before gets them full)
-function npcReg(){ const R = S.npcReg || (S.npcReg = {...REGN}); for (const k in HREG) if (R[k] == null) R[k] = HREG[k];
+function npcReg(){ const R = S.npcReg || (S.npcReg = {...REGN}); for (const k in HREG) if (R[k] == null || R[k] > HREG[k]) R[k] = Math.min(R[k] == null ? HREG[k] : R[k], HREG[k]);
   if (typeof WSH !== 'undefined' && WSH.reg){ for (const k in REGN) if (WSH.reg[k] != null) R[k] = WSH.reg[k]; for (const k in HREG) if (WSH.reg[k] != null) R[k] = WSH.reg[k]; } return R; }
 function regSend(fn, id){
   if (typeof cloudRpc !== 'function' || typeof CLOUD === 'undefined' || !CLOUD.on || !CLOUD.user) return;
@@ -280,8 +291,44 @@ const HAVLIC = {
   tral:{no:'Torsketråltillatelse', en:'Cod trawl permit', ves:['bunntral'], gear:['tral'], q26:{torsk:372, hyse:332, sei:422}, grp26:{torsk:31785, hyse:28665, sei:43397}, src:'konsesjonsforskriften § 2-1; J-187-2026 §§ 5, 7–9'},
   konv:{no:'Konvensjonell havfisketillatelse', en:'Ocean-going conventional permit', ves:['autoliner'], gear:['line', 'garn', 'snurrevad'], q26:{torsk:118, hyse:107, sei:null}, grp26:{torsk:10717, hyse:8647, sei:6128}, src:'konsesjonsforskriften; J-187-2026 §§ 5, 13'},
   rnot:{no:'Ringnottillatelse', en:'Purse seine permit', ves:['pelagisk', 'ringnot38'], gear:['not'], q26:{sild:342666 * 0.49 / 69}, grp26:{sild:342666 * 0.49}, src:'konsesjonsforskriften § 4-1; NVG-reguleringen 2026'},
-  krab:{no:'Snøkrabbetillatelse', en:'Snow crab permit', ves:['snokrabbe'], gear:['teine'], q26:{snokrabbe:351}, grp26:{snokrabbe:12336}, src:'Regulering av fangst av snøkrabbe i 2026'}
+  krab:{no:'Snøkrabbetillatelse', en:'Snow crab permit', ves:['snokrabbe'], gear:['teine'], q26:{snokrabbe:351}, grp26:{snokrabbe:12336}, src:'Regulering av fangst av snøkrabbe i 2026 (J-237-2025); for 2027 Fiskeridirektoratets forslag (sak 17/2026)', flat:true, yq:y => ({snokrabbe:snoYear(y).vq})}
 };
+// ---- the snow crab's regulation year by year, as data (V4 of docs/planer/havsteget-h3-snokrabbe.md, Jonas 06.11.2026: «Gjør det som blir
+// mest riktig, og passer spillet i et fremtidsperspektiv»). Each year's J-message gives the total quota (tac, t), the part set aside for
+// live delivery (live), the research and management quota (fou), the overregulation of the vessel quota (over) and whether unused or
+// overfished vessel quota carries over to the next year (flex, at most that share of the vessel quota). The vessel quotas are worked out of
+// them with the permits (n): the ordinary (tac - live - fou) / n × (1 + over), and the extra quota for live crab live / n. A new year's
+// regulation is one more row here (the one for 2027 comes in December). After the last row the total quota is the stock's (stockYear)
+// and the rest as the last row.
+//   2026  J-237-2025 §§ 2-4 (read): 12 336 t, 2 460 t for live delivery, 300 t research, «10 % overregulering fra starten av året»
+//         (sak 17/2026): 351 t ordinary and 82 t extra a vessel, which is § 3 and § 4. The 10 % flexibility is on the total quota only.
+//   2027  the total quota is set (16 594 t); the rest is Fiskeridirektoratet's proposal (sak 17/2026, reguleringsmøtet 4.-5.11.2026,
+//         read): no overregulation, 20 % for live delivery (the example: 3 300 t), the flexibility of 10 % on the vessel quota from the
+//         turn of 2027/2028. «Den ordinære fartøykvoten vil utgjøre om lag 430 tonn og tilleggskvoten om lag 110 tonn.»
+const SNOREG = {
+  2026:{tac:12336, live:2460, fou:300, over:0.1, flex:0, n:30, src:'J-237-2025'},
+  2027:{tac:16594, live:3300, fou:300, over:0, flex:0.1, n:30, src:'Fiskeridirektoratet, sak 17/2026 (forslag)'}};
+const SNOREG_LIVE = 0.2;   // the share for live delivery in a year after the last row (sak 17/2026: «videreført med 20 % avsetning»)
+// The vessel's snow crab quota for the year of H (kg round weight): the ordinary vessel quota, what the flexibility carried from last year
+// (S.lic.flex {y, kg}, + unused or - overfished), and how far over it the year's flexibility lets her fish (deducted the year after);
+// null without a snow crab permit. The landings count in round weight (quotaState().snokrabbe)
+function snoQuota(H){ const l = S.lic; if (!l || l.id !== 'krab') return null; const y = yearH(H == null ? S.t / 60 : H), Y = snoYear(y), base = Math.round(Y.vq * 1000), fl = l.flex && l.flex.y === y ? l.flex.kg : 0;
+  return {y, base, flex:fl, over:Math.round(Y.flex * base), max:base + fl + Math.round(Y.flex * base), extra:Math.round(Y.tq * 1000)}; }
+function snoRoom(H){ const Q = snoQuota(H); return Q ? Math.max(0, Q.max - quotaState().snokrabbe) : 0; }
+// at the turn of the year (quotaState): what was unused, or fished over, of last year's vessel quota is carried into the new year, at most
+// the flexibility (10 % of the vessel quota, from 2027/2028, sak 17/2026), kept in the save on the permit (S.lic.flex)
+function snoFlexNewYear(q, y){
+  const l = S.lic; if (!l || l.id !== 'krab' || q.y !== y - 1) return; const Yp = snoYear(q.y); if (!Yp.flex){ l.flex = null; return; }
+  const base = Math.round(Yp.vq * 1000), had = l.flex && l.flex.y === q.y ? l.flex.kg : 0, lim = Math.round(Yp.flex * base), kg = clamp(base + had - (q.snokrabbe || 0), -lim, lim);
+  l.flex = {y, kg:Math.round(kg)}; if (Math.abs(kg) >= 1000) log('Kvotefleks for snøkrabbe: ' + fmtC(Math.abs(kg) / 1000, 1) + ' t ' + (kg > 0 ? 'ubrukt kvote er godskrevet' : 'overfiske er belastet') + ' ' + y + '.', 'Snow crab quota flexibility: ' + fmtC(Math.abs(kg) / 1000, 1) + ' t ' + (kg > 0 ? 'of unused quota credited to' : 'of overfishing charged to') + ' ' + y + '.');
+}
+// the year's figures: {y, tac, live, fou, over, flex, n, vq (the ordinary vessel quota, t), tq (the extra quota for live crab, t), src, known}
+function snoYear(y){
+  const ys = Object.keys(SNOREG).map(Number), y1 = Math.max(...ys), R = SNOREG[clamp(y, Math.min(...ys), y1)] || SNOREG[y1];
+  let o = {...R, known:y <= y1};
+  if (y > y1){ const tac = stockYear('snokrabbe', y).tac; o = {...SNOREG[y1], tac, live:Math.round(tac * SNOREG_LIVE / 100) * 100, known:false, src:'spillets bestand (etter ' + y1 + ')'}; }
+  o.y = y; o.vq = Math.round((o.tac - o.live - o.fou) / o.n * (1 + o.over)); o.tq = Math.round(o.live / o.n); return o;   // (whole tonnes, as § 3 and § 4 give them: 351 and 82)
+}
 // the mean quota factors a vessel of the group holds (the group's factors in 2026 over its permits)
 const HAVKF = {tral:31785 / 372 / 36, konv:10717 / 118 / 26, rnot:1, krab:1};
 // the quota price, kr per kg of the vessel quota (V2 B): cod at KPK as for the coast (260 kr/kg, Hepsøfjord 2025; no source publishes
@@ -302,13 +349,14 @@ function havF(id, sp, y){
 }
 // the species whose quota for the coming year is set already (snow crab: 16 594 t for 2027 against 12 336 t for 2026, regjeringen.no);
 // a table, not a test on the name, since a species shares its name with a vessel type (vesseltest)
-const HAVF_SP = {snokrabbe:16594 / 12336};
+const HAVF_SP = {};   // (snow crab: its rows in SNOREG and the stock since H3a, snoYear)
 // a group's quota in tonnes for the year (§ 5 for cod, haddock and saithe; the purse seiners' herring; the snow crab total)
-function havGroup(id, y){ const P = HAVLIC[id], o = {}; for (const sp in P.grp26) o[sp] = Math.round(P.grp26[sp] * havF(id, sp, y)); return o; }
+function havGroup(id, y){ const P = HAVLIC[id], o = {}; for (const sp in P.grp26) o[sp] = Math.round(P.grp26[sp] * havF(id, sp, y)); if (id === 'krab') o.snokrabbe = snoYear(y).tac; return o; }
 // a permit's vessel quota in kg for the year of H, in the shape licQ gives (haddock and saithe as [maximum, guaranteed], Infinity for
 // no vessel quota), and the ocean species by name; a permit is {id, kf (default 1), extra (structure quota, later)}
 function havQ(l, H){
-  const P = HAVLIC[l.id], y = yearH(H == null ? S.t / 60 : H), kf = (l.kf || 1) + (l.extra || 0), kg = sp => P.q26[sp] == null ? (sp in P.q26 ? Infinity : 0) : Math.round(P.q26[sp] * havF(l.id, sp, y) * kf * 1000);
+  const P = HAVLIC[l.id], y = yearH(H == null ? S.t / 60 : H), kf = P.flat ? 1 : (l.kf || 1) + (l.extra || 0), YQ = P.yq ? P.yq(y) : null,
+    kg = sp => YQ && YQ[sp] != null ? Math.round(YQ[sp] * kf * 1000) : P.q26[sp] == null ? (sp in P.q26 ? Infinity : 0) : Math.round(P.q26[sp] * havF(l.id, sp, y) * kf * 1000);
   const o = {torsk:kg('torsk'), hyse:[kg('hyse'), kg('hyse')], sei:[kg('sei'), kg('sei')]};
   for (const sp in P.q26) if (!(sp in o)) o[sp] = kg(sp); return o;
 }
@@ -322,9 +370,27 @@ function havLicWhy(type){
 }
 // the permit for sale this week with an ocean vessel: its NPC owner and the quota factors he has (0.6-1.4 times the group's mean)
 function havOffer(id, H){ const sl = regSeller(id, H), u = h2(weekOfH(H) * 37 + id.charCodeAt(0) * 11 + id.length, 8400);
-  return {id, kf:Math.round(HAVKF[id] * (0.6 + 0.8 * u) * 100) / 100, from:sl.name + ', ' + sl.home}; }
+  return {id, kf:HAVLIC[id].flat ? 1 : Math.round(HAVKF[id] * (0.6 + 0.8 * u) * 100) / 100, from:sl.name + ', ' + sl.home}; }   // (a flat permit, the snow crab's: every vessel the same quota, J-237-2025 § 3)
 // what the permit's quotas are worth this year (HPK), kr
-function havValue(l, H){ const Q = havQ(l, H); let v = 0; for (const sp in HPK){ const q = Q[sp], kg = Array.isArray(q) ? q[1] : q; if (kg && kg !== Infinity) v += kg * HPK[sp]; } return Math.round(v / 1e5) * 1e5; }
+function havValue(l, H){ if (l.id === 'krab') return snoLicValue(yearH(H == null ? S.t / 60 : H)).v;
+  const Q = havQ(l, H); let v = 0; for (const sp in HPK){ const q = Q[sp], kg = Array.isArray(q) ? q[1] : q; if (kg && kg !== Infinity) v += kg * HPK[sp]; } return Math.round(v / 1e5) * 1e5; }
+// The snow crab permit at what the fishery bears (V6 B, Jonas 06.11.2026): no price for a permit is found (they were given out by catch
+// history, konsesjonsforskriften § 6-2, and follow the vessel when she is sold for further fishing), so it is the earnings before
+// depreciation of a mean vessel with the year's quota, times SNOV.yrs. Read (kap. 2b of the plan): the profitability survey 2024, group 014
+// «Havgående krabbefartøy» (Fiskeridirektoratet, tab. G 22; 5 vessels of 14): income 52.5 MNOK a vessel, the crew 16.6 (31.5 %), fuel 4.9,
+// bait, ice, salt and packing 3.1, provisions 0.54, upkeep 4.3, gear 2.7, the operating result -3.7 MNOK; the group took 9 181 t snow crab
+// and 2 000 t shrimp. The other costs are the rest (24.06 MNOK with the depreciation, dep assumed); the costs are put on the snow crab by
+// its share of the income (sno, 656 t at 68.90 kr/kg of 52.5 MNOK). The prices of several years (Fiskeridirektoratet's sak 17/2025: frozen
+// 68.90 and 130.68, live 63.68 and 82.41 kr/kg round weight in 2024 and 2025; 2026 to week 22 live 71.23 and frozen clusters about 179
+// kr/kg product, about 120 round with 1.49, a search snippet), the mean, so the bad 2024 and the good 2025 both count. The crew's share is
+// the game's 35 % (§ 20; 31.5-43.6 % of the income 2022-2024). yrs: 7, the present value of ten years' earnings at 7 % (the bank's 6.9 %;
+// our choice: the permit is lasting, the stock is not). An estimate without a sale price, as the plan says.
+const SNOV = {pF:[68.90, 130.68, 120], pL:[63.68, 82.41, 71.23], crew:0.35, cost:15.54 + 24.06, dep:4, sno:656 * 68.90 / 52500, yrs:7};
+function snoLicValue(y){
+  const Y = snoYear(y), mean = a => a.reduce((x, v) => x + v, 0) / a.length;
+  const inc = (Y.vq * mean(SNOV.pF) + Y.tq * mean(SNOV.pL)) / 1000, cost = (SNOV.cost - SNOV.dep) * SNOV.sno, ebitda = inc * (1 - SNOV.crew) - cost;
+  return {inc, cost, ebitda, v:Math.round(Math.max(0, ebitda) * SNOV.yrs * 10) * 1e5};   // (MNOK in, kr out)
+}
 // the price of an ocean vessel with this week's permit: the hull and the quota
 function havPrice(type, H){ const id = havLicFor(type); return (VESSELS[type] || {}).price + (id ? havValue(havOffer(id, H), H) : 0); }
 // the permit taken from an NPC owner when an ocean vessel is bought (one NPC ship of her kind leaves the sea, havHeld in 05d-hav.js)

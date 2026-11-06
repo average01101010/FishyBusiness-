@@ -24,7 +24,8 @@ export default function (t){
   const f27 = havF('tral', 'torsk', 2027), u27 = yearQuota(2027).chain.grp.u11 / yearQuota(2026).chain.grp.u11;
   t.ok(f27 > 0.7 && f27 < 1.5 && Math.abs(f27 / u27 - 1) < 0.1, `torsketrål 2027 følger kvotekjeden: ${f27.toFixed(3)} mot lukket gruppe under 11 m ${u27.toFixed(3)}`);
   t.ok(havF('konv', 'hyse', 2027) === yearQuota(2027).fh && havF('tral', 'sei', 2027) === yearQuota(2027).fs, 'hyse og sei følger Norges kvote');
-  t.ok(havQ({id:'krab'}, Hy(2027)).snokrabbe === Math.round(351 * 16594 / 12336 * 1000), `snøkrabbe 2027: ${t1(havQ({id:'krab'}, Hy(2027)).snokrabbe)} t (totalkvoten 16 594 t)`);
+  // (H3a, V4: the vessel quota worked out of the year's rules, SNOREG; 2027 by Fiskeridirektoratet's proposal, sak 17/2026: (16 594 - 3 300 - 300) / 30)
+  t.ok(havQ({id:'krab'}, Hy(2027)).snokrabbe === 433000, `snøkrabbe 2027: ${t1(havQ({id:'krab'}, Hy(2027)).snokrabbe)} t (totalkvoten 16 594 t, forslaget for 2027)`);
   // the vessel quota is the factors times the quota per factor, and licQ gives it for an ocean permit
   const L = licQ({id:'tral', kf:1.5, extra:0.25}, Hy(2026));
   t.ok(t1(L.torsk) === 651 && t1(L.hyse[1]) === 581, `fartøykvoten er faktorene ganger kvoten per faktor: 1,75 × 372 = ${t1(L.torsk)} t torsk`);
@@ -41,7 +42,7 @@ export default function (t){
   t.ok(K.havOffer('konv', Hy(2026)).kf === K.havOffer('konv', Hy(2026) + 24).kf || Math.floor((Hy(2026) + 6) / 168) !== Math.floor((Hy(2026) + 30) / 168), 'tilbudet er det samme hele uka');
   // the register: a save from before H1 gets the ocean permits full
   S.npcReg = {u7:300, h7:280, h8:230, h9:200, h10:162, h14:291, h20:103};
-  const R0 = npcReg(); t.ok(R0.tral === 36 && R0.konv === 26 && R0.rnot === 69 && R0.krab === 34 && R0.h9 === 200, 'en gammel lagring får havtillatelsene i registeret, fulle');
+  const R0 = npcReg(); t.ok(R0.tral === 36 && R0.konv === 26 && R0.rnot === 69 && R0.krab === 30 && R0.h9 === 200, 'en gammel lagring får havtillatelsene i registeret, fulle');
   // blad B first, as for the closed group
   S.fm = {n:0, kr:0, b:false}; const w = havLicWhy('bunntral'); t.ok(w && /blad B/.test(w[0]) && /blad B/.test(w[1]), `uten blad B: «${w && w[0]}»`);
   t.ok(havLicTake('bunntral', Hy(2027)) === null && npcReg().tral === 36, 'uten blad B tas ingen tillatelse');

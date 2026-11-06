@@ -113,10 +113,8 @@ const MIG = {
   lodde(lat, lon, mf){ return 3.7 * migBump(mf, 3.3, 1.6); },
   // (the coast only: the capelin spawns by the shore, so out in the Barents Sea, north of 72° N, the cod's spring is the skrei front's, H1b R6)
   loddeW(lat, lon){ return 0.5 * sstep(70.0, 70.4, lat) * sstep(21.2, 21.8, lon) * (1 - sstep(71.6, 72.2, lat)); },
-  // Snow crab (HI, «Snøkrabbe», hi.no): a newcomer in the Barents Sea, spreading west from the Russian side; fished in the east of the
-  // Norwegian zone, on the Central Bank, in the Loophole and north-east of Svalbard (main areas 13, 15, 23 and 24), north of 72° N and
-  // east of about 25° E. None along the coast. (Before H1b R6 the frame ended at 72.5° N, and the curve was its corner, east of 30° E.)
-  snokrabbe(lat, lon){ return sstep(23.5, 26.5, lon) * sstep(71.6, 72.4, lat); },
+  // (Snow crab: the box north of 72.4° N and east of 26.5° E went in H3a, 06.11.2026; where it is comes from the landing notes by location
+  // and month, the depth of the banks and Norway's shelf, snoArea in 10d-snokrabbe.js, which fkAvail asks)
 };
 
 // ---- where the fish swim: the heading of the schools and of the good patches, by species, season and place ----
@@ -345,6 +343,7 @@ function fkAvail(sp, q, T){
     const kk = T.kf || (T.kf = {}), kl = Math.round(c.lat * 5), kf = kk[kl] !== undefined ? kk[kl] : (kk[kl] = kystF(c.lat, T.H));
     return t.av / (t.sf || 1) * b * kf + skreiPulse(c, T.H, T) * t.sf * q.skr * x * T.skl;
   }
+  if (sp === 'snokrabbe') return t.av * snoArea(q.p, T.H);   // (H3a: the notes by location and month, 10d-snokrabbe.js)
   let v = F && l >= 0 ? fkAt(F.m, l, T.fk) : NaN;
   const mig = MIG[sp];
   if (sp === 'sei'){ if (v !== v) v = mig(c.lat, c.lon, T.fk.mf) / mig(MIG.latRef, 17, T.fk.mf); }

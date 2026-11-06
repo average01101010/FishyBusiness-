@@ -322,6 +322,12 @@ function rulesAt(q){
   // west of it the fishing is free: no quota and no minimum size, but all king crab caught must be landed (§ 5: it is forbidden to put
   // it back) and the pots must be without escape vents. Closed 1-9 November 2026 in the box 71°09′-71°14′ N, 25°20′-26° E (§ 10).
   if (sp === 'krabbe' && (!gear || gear === 'teiner')){
+    // høstingsforskriften § 27 (H3a, read 06.11.2026): no vessel over 21.5 m with pots for king crab «eller annen krabbe» within 4 nm of the
+    // baselines along the coast from Sweden to Russia, and none over 21.35 m within 6 nm in Finnmark from 1 November to 31 March (no
+    // boat of the game is that big yet: kyst21 is 21 m; the snow crab vessel cannot rig for king crab)
+    const kyst = !ruSea(p) || ruSea(p) === 'no', fm = hom === '03' || hom === '04';
+    if (kyst && len > 21.5 && (inBL || nm < 4)) add('no', 'f27', 'Fartøy over 21,5 m kan ikke fangste krabbe med teiner innenfor 4 nm av grunnlinjene.', 'Vessels over 21.5 m may not take crab with pots within 4 nm of the baselines.', 'Høstingsforskriften § 27', RU_HF, true);
+    else if (kyst && fm && len > 21.35 && (inBL || nm < 6) && ruIn2(md, 1101, 331)) add('no', 'f27b', 'Fra 1. november til 31. mars kan fartøy over 21,35 m ikke fangste krabbe med teiner innenfor 6 nm av grunnlinjene i Finnmark.', 'From 1 November to 31 March vessels over 21.35 m may not take crab with pots within 6 nm of the baselines in Finnmark.', 'Høstingsforskriften § 27', RU_HF, true);
     if (kcQuota(ll)) add('no', 'kc2', 'Kvoteregulert område for kongekrabbe: bare båter registrert i Finnmark, med eier bosatt der i minst to år.', 'The quota area for king crab: only vessels registered in Finnmark, with an owner who has lived there for at least two years.', 'J-136-2026 § 2', RU_KC1, true);
     else {
       if (ruIn2(md, 1101, 1109) && ll.lat > 71.15 && ll.lat < 71.2334 && ll.lon > 25.3333 && ll.lon < 26) add('no', 'kc10', 'Stengt for kongekrabbe 1.–9. november (71°09′–71°14′ N, 25°20′–26° Ø).', 'Closed to king crab 1–9 November (71°09′–71°14′ N, 25°20′–26° E).', 'J-138-2026 § 10', RU_KC2, true);
@@ -340,7 +346,14 @@ function rulesAt(q){
     if (terr) add('no', 'sk1', 'Snøkrabbe er forbudt i norsk sjøterritorium og indre farvann (innenfor 12 nm).', 'Snow crab is banned in Norway\'s territorial sea and inner waters (within 12 nm).', 'J-237-2025 § 1', U, true);
     else if (!ruShelf(p)) add('no', 'sk2', 'Norske fartøy kan ikke fangste snøkrabbe på andre lands kontinentalsokkel.', 'Norwegian vessels may not take snow crab on another country\'s continental shelf.', 'J-237-2025 § 1', U, true);
     if (ruIn2(md, 701, 1130)) add('no', 'sk3', 'Snøkrabbefangsten er stengt fra 1. juli til 30. november, og teinene skal være på land.', 'The snow crab fishery is closed from 1 July to 30 November, and the pots must be ashore.', 'J-237-2025 § 5', U, true);
-    else if (q.hav === 'krab' && !terr && ruShelf(p)) add('ok', 'sk4', 'Snøkrabbe på norsk kontinentalsokkel: fartøykvote 351 tonn (pluss 82 tonn til levende levering), høyst 20 % bløtkrabbe.', 'Snow crab on Norway\'s continental shelf: vessel quota 351 tonnes (plus 82 tonnes for live delivery), at most 20% soft crab.', 'J-237-2025 §§ 3–5', U);
+    else if (q.hav === 'krab' && !terr && ruShelf(p)){ const Y = snoYear(yearH(H)), ref = Y.y <= 2026 ? 'J-237-2025 §§ 3–5' : Y.known ? Y.src : 'Spillets bestand etter ' + Math.max(...Object.keys(SNOREG).map(Number));
+      add('ok', 'sk4', 'Snøkrabbe på norsk kontinentalsokkel: fartøykvote ' + fmtC(Y.vq) + ' tonn (pluss ' + fmtC(Y.tq) + ' tonn til levende levering), høyst 20 % bløtkrabbe.', 'Snow crab on Norway\'s continental shelf: vessel quota ' + fmtC(Y.vq) + ' tonnes (plus ' + fmtC(Y.tq) + ' tonnes for live delivery), at most 20% soft crab.', ref, U); }
+    // høstingsforskriften § 28 tredje ledd: «Snøkrabbe kan kun fangstes med teiner» and «Hvert fartøy kan fangste med maksimalt 8 000 teiner»
+    // (the count is checked when a string is set, gearRules); §§ 18 and 25: tended and the position reported at least every third week
+    if (gear && gear !== 'teiner') add('no', 'sk7', 'Snøkrabbe kan bare fangstes med teiner.', 'Snow crab may only be taken with pots.', 'Høstingsforskriften § 28', RU_HF, true);
+    else if (q.hav === 'krab') add('info', 'sk6', 'Høyst 8 000 teiner per fartøy. Teinene røktes og posisjonen rapporteres minst hver tredje uke. Alt over 9,5 cm og død krabbe skal i land.', 'At most 8,000 pots a vessel. The pots are tended and their position reported at least every third week. All over 9.5 cm and dead crab must be landed.', 'Høstingsforskriften §§ 18, 25, 28, 46, 47 og 51', RU_HF);
+    // J-237-2025 § 5: over 20 % soft crab in a haul the vessel changes field (10d-snokrabbe.js snoHaulDone)
+    { const sf = snoSoftAt(p); if (sf) add('warn', 'sk5', 'Her var det ' + sf.pct + ' % bløtkrabbe i siste trekk. Over 20 % skal fartøyet skifte felt.', 'The last haul here had ' + sf.pct + '% soft crab. Over 20% the vessel changes field.', 'J-237-2025 § 5', U); }
   }
   const rank = {no:3, warn:2, ok:1, info:0}, v = out.reduce((a, r) => rank[r.v] > rank[a] ? r.v : a, 'ok');
   return {v:v === 'info' ? 'ok' : v, items:out, bits, inBL, F, nm, hom, lat:ll.lat, n62, sea};
@@ -370,6 +383,7 @@ function ruMinSize(sp, p){
     case 'kveite': return 84;
     case 'blakveite': return 45;
     case 'uer': return nm < 12 ? 32 : 30;
+    case 'snokrabbe': return 9.5;   // (§ 47: 9.5 cm, measured over the widest part of the shell, § 46)
     default: return null;
   }
 }
@@ -397,9 +411,11 @@ const RU_SHORT = {lb28:['Lange og brosme over 28 m', 'Ling and tusk over 28 m'],
   fo0:['Færøysk sone: krever lisens', 'Faroese zone: licence needed'], fo1:['Færøysk sone: ikke for deg', 'Faroese zone: not for you'], fo2:['Lange stoppet', 'Ling stopped'], fo3:['Færøysk sone: lange og brosme', 'Faroese zone: ling and tusk'], fo4:['Bare bifangst her', 'Bycatch only here'],
   gb0:['Britisk sone: krever lisens', 'British zone: licence needed'], gb2:['Britisk sone: blåkveite', 'British zone: Greenland halibut'], gb2x:['Bare bifangst her', 'Bycatch only here'], gb6:['Britisk sone: lange og brosme', 'British zone: ling and tusk'],
   gb6x:['Bare bifangst her', 'Bycatch only here'], gb4:['Britisk sone: Nordsjøen', 'British zone: North Sea'], gb4x:['Ikke denne arten her', 'Not this species here'], dk0:['Ikke sjekket: stengt', 'Not checked: closed'], xx0:['Utenfor spillets farvann', 'Off the game\'s waters'],
-  sk0:['Krever snøkrabbetillatelse', 'Snow crab permit needed'], sk1:['Ikke snøkrabbe innenfor 12 nm', 'No snow crab within 12 nm'], sk2:['Annet lands sokkel', 'Another country\'s shelf'], sk3:['Snøkrabbe stengt', 'Snow crab closed'], sk4:['Snøkrabbe: lov', 'Snow crab: allowed']};
+  sk0:['Krever snøkrabbetillatelse', 'Snow crab permit needed'], sk1:['Ikke snøkrabbe innenfor 12 nm', 'No snow crab within 12 nm'], sk2:['Annet lands sokkel', 'Another country\'s shelf'], sk3:['Snøkrabbe stengt', 'Snow crab closed'], sk4:['Snøkrabbe: lov', 'Snow crab: allowed'],
+  sk5:['Bløtkrabbe: skift felt', 'Soft crab: change field'], sk6:['Høyst 8 000 teiner', 'At most 8,000 pots'], sk7:['Bare teiner', 'Pots only'],
+  f27:['Ikke krabbeteiner innenfor 4 nm', 'No crab pots within 4 nm'], f27b:['Ikke krabbeteiner innenfor 6 nm nå', 'No crab pots within 6 nm now']};
 function ruCtx(){ const b = S.boat; return {p:b.status === 'port' && typeof portById === 'function' && b.port ? portById(b.port).p : b.pos, len:BOAT.len, gear:b.rig || 'juksa', hav:S.lic && S.lic.hav ? S.lic.id : null,
-  sp:b.rig === 'teiner' ? 'krabbe' : S.target === 'kveite' ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)}; }
+  sp:b.rig === 'teiner' ? potSp() : S.target === 'kveite' ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)}; }
 // the answer for your boat now, kept for 10 game minutes and 50 m
 let RU_NOW = null;
 function ruNow(){ const q = ruCtx(), k = [q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey()].join('|');
@@ -421,7 +437,7 @@ function ruLayerBlock(bx, by, q, budget){
 // R4 (05.10.2026, Jonas: «Ja, kjør på»): a warning before the mistake, not after it. The question for a planned stop: a fishing point
 // asks for the jig (the boat jigs on its fishing hours), a point that sets gear asks for that gear
 function ruWpQ(w){ const c = ruCtx(), p = {x:w.x, y:w.y};
-  if (w.act && (w.act.op === 'set' || w.act.op === 'cycle') && w.act.kind){ const k = w.act.kind; return {p, len:c.len, gear:k === 'teine' ? 'teiner' : k, sp:k === 'teine' ? 'krabbe' : null, hand:c.hand, hav:c.hav}; }
+  if (w.act && (w.act.op === 'set' || w.act.op === 'cycle') && w.act.kind){ const k = w.act.kind; return {p, len:c.len, gear:k === 'teine' ? 'teiner' : k, sp:k === 'teine' ? potSp() : null, hand:c.hand, hav:c.hav}; }
   return {p, len:c.len, gear:'juksa', sp:S.target === 'kveite' ? 'kveite' : null, hand:c.hand, hav:c.hav}; }
 // what stops the boat at a planned stop (null when it may fish or set there), kept per point, boat and day
 const RU_WP = new Map();
