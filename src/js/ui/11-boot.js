@@ -74,12 +74,13 @@ function dataEarly(){
 // and the yard's cards put them in a data: URL.
 const DATAB = new Map();
 async function dataGet(el, opt){
-  const src = el.dataset.src; let r;
+  const src = el.dataset.src; let b;
+  // the body is read inside the tries too (06.11.2026): Safari on iOS can drop the body after the headers came, and the blob then
+  // threw «Load failed» once, without the retries, so the model was left out
   for (let t = 0; ; t++){
-    try { r = await fetch(src, Object.assign(t ? {cache:'reload'} : {}, opt)); if (!r.ok) throw new Error('HTTP ' + r.status); break; }
+    try { const r = await fetch(src, Object.assign(t ? {cache:'reload'} : {}, opt)); if (!r.ok) throw new Error('HTTP ' + r.status); b = await r.blob(); break; }
     catch (e){ if (t >= 3) throw new Error('data ' + src + ': ' + (e && e.message || e)); await new Promise(res => setTimeout(res, 700 * (t + 1))); }
   }
-  const b = await r.blob();
   if (/^pic-/.test(el.id)){ const s = await new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(String(f.result)); f.onerror = () => rej(f.error); f.readAsDataURL(b); });
     el.textContent = s.slice(s.indexOf(',') + 1); }
   else DATAB.set(el.id, new Uint8Array(await b.arrayBuffer()));
