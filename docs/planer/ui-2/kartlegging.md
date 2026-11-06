@@ -82,7 +82,7 @@ Lest ut av koden (`ui/04-panels-instruments.js`, `ui/10c-dock.js`, `ui/03e-minip
 
 - **`tests/kartlegging.py`** (ny, i `LITE` i `run.py`): starter spillet uten veiledning og uten 3D i 390×844 og 800×1280 (berøring, `device_scale_factor` 2), setter opp 17 tilstander likt i begge (i havn ved mottaket i Finnsnes, med fisk om bord, med mannskap, viftene Bygd, Verft og Mottak, ved fars naust i Vangshamn, avgang planlagt, stille til sjøs på `GROUNDS[0]` med og uten mannskap, juksevifta, med linehaler og to stamper, Sett ut-vifta, innenfor 400 m fra kaia, nesten full last, krangel om bord, underveis til Botnhamn) og leser for hver: knappene i linja med bredde, høyde, skrift, grå og hovedknapp, hvor mange rader de brekker til (topper samlet med 30 px toleranse, så den høyere hovedknappen ikke telles som egen rad), vifta, pilla over knappene, boksens og stripas høyde, neste hendelse, «nå»-radene, hvor minikartet lander, og trykkflatene under 44 px. Så skuffesidene Beholdning, Mannskap og Ansatte (arkets høyde, innholdets lengde i skjermer, knapper), telefonens hjemskjerm og Rederi (målt etter innglidningen), tellingen av fire skjermer, og en tidslinje på fire spilletimer (stille 30 min, juksing 2 t, seiling 1,5 t) med en prøve hvert femte minutt av det stripas tredje linje ville hatt å si. Tallene ligger i `tests/out/kartlegging/<fmt>.json`, bildene ved siden av. Frø 1. Kjøringen tar rundt fire minutter.
 - **`tests/uishots.py`** uten 3D i de fem størrelsene (390×844, 844×390, 800×1280, 1280×800, 1440×900): 45 visninger, 0 funn (kuttet tekst, knapper utenfor skjermen, blokker oppå hverandre, knapper under 32×30 px). Sidefeil `[]` i alle.
-- **`tests/uiplay.py`** med 3D i 800×1280: første runde ble stoppet av bakgrunnsgrensa på 90 minutter etter 94 av rundt 113 bilder (hele første tur, knappelinja, alle skuffesidene og halve telefonen; bildene ligger i `tests/out/uiplay/staaende-avbrutt-1/`), og tellingen gikk tapt fordi skriptet skrev den først til slutt. Skriptet skriver nå tellingen og stegene etter hvert bilde, og runden kjøres på nytt med to timers grense. `KYST_UIPLAY_SIZE=390x844:tlf` (ny) gir telefonstørrelsen; den kjøres etter nettbrettet om tida rekker. Tellingen føres inn i kap. 3.7 når den finnes.
+- **`tests/uiplay.py`** med 3D i 800×1280: første runde ble stoppet av bakgrunnsgrensa på 90 minutter etter 94 av rundt 113 bilder (hele første tur, knappelinja, alle skuffesidene og halve telefonen; bildene ligger i `tests/out/uiplay/staaende-avbrutt-1/`), og tellingen gikk tapt fordi skriptet skrev den først til slutt. Skriptet skriver nå tellingen og stegene etter hvert bilde, og andre runde gikk gjennom alle 128 bildene på 1 t 25 min med 0 sidefeil (`tests/out/uiplay/staaende/`); tellingen står i kap. 3.7. Garderoben kom ikke med: skriptet åpnet den som en app (`PHONE.show`), men den er et eget ark (`WARD.open()`, `ui/10g-wardrobe.js`), så skriptet åpner den slik nå, og bildet tas i neste runde. `KYST_UIPLAY_SIZE=390x844:tlf` (ny) gir telefonstørrelsen; den er ikke kjørt.
 - **Bildene fra Jonas' telefon og nettbrett** (`tlf-01` til `tlf-13`, `brett-01` til `brett-04`) er 3D-laget: hva som dekker båten.
 - **Svakheter:** ingen 3D i målingene (bakgrunnen er svart, og båtens plass i bildet kommer bare fra Jonas' bilder); bare Senja; «full last» nådde 496 av 500 kg, som er «nesten full» og ikke «full», så hovedknappen ved full last (Auto-nav etter spilltest 3, U5) er ikke prøvd; «ved egen blåse», nød, slep og prai er ikke satt opp; tidslinja er én tur uten havnefasen; `env(safe-area-inset-*)` og ekte sveip er ikke med i Chromium.
 
@@ -163,7 +163,18 @@ Fire skjermer uten 3D (havn, sjø, skuffen Beholdning, telefonens hjem):
 | Radier | 15 | 17 | høyst 6 |
 | Knappestiler | 18 | 17 | 3–4 |
 
-Hele tellingen over alle flatene (`uiplay.py`, 3D) føres inn her når kjøringene er ferdige.
+Alle flatene med 3D i 800×1280 (`uiplay.py`, 128 bilder: første tur steg for steg, linja og viftene, de 21 skuffesidene med faner og bunn, 22 apper med faner, dagboka, plotteren og puben; 0 sidefeil):
+
+| | Alle 128 bilder | I minst to bilder | I minst fem bilder | Kystlys' mål |
+|---|---|---|---|---|
+| Skriftstørrelser | 45 (23 ekte, 8–46 px; 11 under 13 px) | 36 | 19 (16 ekte) | høyst 10 |
+| Skrifter | 7 | 7 | 4 | |
+| Tekstfarger | 85 | 54 | 31 | |
+| Bakgrunner | 197 | 105 | 50 | høyst 25 |
+| Radier | 24 | 23 | 21 | høyst 6 |
+| Knappestiler | 101 | 84 | 31 | 3–4 |
+
+Tellingen leser den beregnede stilen på alt som vises i hvert bilde, så den teller også det som bare finnes ett sted: de 24 appflisenes farger er 24 bakgrunner, viftenes og arkets hjørner er egne radier, og en knapp med egen bakgrunn er en egen stil. Av de 45 skriftstørrelsene er 16 under 2 px (SVG-tekst som skaleres) og 6 desimaltall fra `zoom`, så 23 er ekte størrelser, og 11 av dem er under 13 px. Kolonnen «i minst fem bilder» sier hvordan spillet ser ut dag for dag: 16 ekte skriftstørrelser, 50 bakgrunner, 21 radier og 31 knappestiler, alle over Kystlys' mål. Skriftene er Archivo (126 bilder), Source Serif 4 (122), Caveat (12), ui-monospace (8), og system-ui, Rock Salt og Arial Narrow i to bilder hver. Tallene og bildene ligger i `tests/out/uiplay/staaende/` (`census.json`, `steps.json`). Telefonstørrelsen (`KYST_UIPLAY_SIZE=390x844:tlf`) er ikke kjørt.
 
 ### 3.8 Første tur i stående nettbrett (uiplay med 3D)
 
@@ -200,5 +211,5 @@ Sett på bildene fra den avbrutte runden (`u20-brett-tur-plotter-tips-og-toast.j
 
 ## 6. Det som gjenstår i U2-0
 
-- Tellingen fra `uiplay.py` i 800×1280 (kjører på nytt med to timers grense) føres inn i 3.7; 390×844 etterpå om tida rekker. Første tur i stående nettbrett er sett (K12, K13, K16).
+- Tellingen fra `uiplay.py` i 800×1280 står i 3.7. 390×844 er ikke kjørt (rundt halvannen time med 3D uten GPU); den tas når det er en ledig 3D-plass, senest i U2-9 sammen med tellingen etter. Første tur i stående nettbrett er sett (K12, K13, K16).
 - «Full last» og «ved egen blåse» måles i U2-3 når linja bygges om, med `fiskeplay.py` som har oppsettet for blåsa.

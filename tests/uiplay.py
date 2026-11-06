@@ -97,7 +97,7 @@ async def play(b, W, H, tag):
     # ---------- the walk: every surface a player meets, with a design census of each picture ----------
     async def clear():
         await pg.evaluate("""(() => { try { PHONE.show(false) } catch (e) {} try { DOCK.close() } catch (e) {} try { BOOK.isOpen() && BOOK.close() } catch (e) {}
-          try { PUB3.isOpen() && PUB3.close() } catch (e) {} try { NAUST3D.isOpen() && NAUST3D.close() } catch (e) {}
+          try { PUB3.isOpen() && PUB3.close() } catch (e) {} try { NAUST3D.isOpen() && NAUST3D.close() } catch (e) {} try { WARD.isOpen() && WARD.close() } catch (e) {}
           for (let i = 0; i < 4; i++){ const m = document.getElementById('modal'); if (!m || m.hidden) break; const b = [...m.querySelectorAll('button')].filter(e => e.offsetParent); (b[0] || {click(){}}).click(); } })()""")
         await pg.wait_for_timeout(350)
 
@@ -141,6 +141,8 @@ async def play(b, W, H, tag):
     for a in ['vaer', 'post', 'meld', 'rederi', 'salg', 'kvote', 'regler', 'drift', 'ordl', 'nett', 'kaiboden', 'haill', 'sesong', 'guide', 'folk', 'merker', 'redning', 'trim', 'handbok', 'garderobe', 'patch', 'tilbake', 'innst']:
         await clear()
         try:
+            if a == 'garderobe':   # the wardrobe is a sheet of its own (ui/10g-wardrobe.js, WARD), opened from the phone by the act 'open'
+                await pg.evaluate("PHONE.show(false); WARD.open()"); await pg.wait_for_timeout(1200); await shot('app-' + a, 'the wardrobe sheet'); continue
             await pg.evaluate("a => PHONE.show(true, a)", a); await pg.wait_for_timeout(700); await shot('app-' + a, 'phone app ' + a)
             await tabs('#phone [data-pa="sub"], #phone [data-pa$="tab"], #phone .kb-tab', 'app-' + a)
         except Exception as e: print('   app', a, e)

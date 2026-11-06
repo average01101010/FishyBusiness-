@@ -213,7 +213,7 @@ Rekkefølgen U2-0 → U2-1 → U2-2 → U2-3 er ryggraden: stripa før Om bord, 
 - Roen må ikke skjule et varsel eller slå inn i første tur. Hva som bryter roen, prøves i `tut.py` og `hbtest`.
 - Containeren har ingen GPU og bare Senja. Bildene med 3D kommer fra Jonas' telefon; målingene tas uten 3D, der bakgrunnen er svart.
 - Nettbrett liggende får trolig beholde hele boksen. Det avgjøres i U2-8 med bilder.
-- Målet for tellingen fra Kystlys (høyst 10 skriftstørrelser, 25 bakgrunner, 6 radier) står. U2-0 sier hvor vi er.
+- Målet for tellingen fra Kystlys (høyst 10 skriftstørrelser, 25 bakgrunner, 6 radier) står. U2-0 målte over alle flatene i 800×1280 (det som står i minst fem av 128 bilder): 16 skriftstørrelser, 50 bakgrunner, 21 radier, 31 knappestiler (`ui-2/kartlegging.md` 3.7). U2-9 måler det samme etter.
 
 ## 9. Det planen ikke gjør
 
@@ -227,5 +227,5 @@ Rekkefølgen U2-0 → U2-1 → U2-2 → U2-3 er ryggraden: stripa før Om bord, 
 ## 10. Status
 
 - 06.11.2026: planen skrevet etter samtalen 05.–06.11.2026 og bildene fra Jonas' telefon (`ui-2/`). Ingenting bygd.
-- 06.11.2026, **U2-0 ferdig** (`ui-2/kartlegging.md`, `tests/kartlegging.py`, `uishots` i fem størrelser, `uiplay` i stående kjører): inventaret i tre bøtter (kap. 1 der), 17 tilstander målt i 390×844 og 800×1280, funnene K1–K15. Det som endret planen: linje 3 får stedet i havn og er tom bare når båten ligger stille uten noe på gang (4.2); U2-1 holder veiledningens mål i live (`#hud .st.nx`, `#dockInfo`, `#miniPlot`) og tar minimer-knappene til 44 px; viftene høyst fire per rad; Ansatte-siden inn i ett ark (U2-7). Bekreftet: fem på raden holder på telefonen, seks brekker; Om bord som fane gir ingen lengre side; pilla sier aldri noe boksen ikke sier. Ikke målt: full last, egen blåse, roen (lest i koden). `uishots` fant 0 i fem størrelser, så den ser ikke det strukturelle.
+- 06.11.2026, **U2-0 ferdig** (`ui-2/kartlegging.md`, `tests/kartlegging.py`, `uishots` i fem størrelser, `uiplay` i 800×1280 ferdig med tellingen i 3.7): inventaret i tre bøtter (kap. 1 der), 17 tilstander målt i 390×844 og 800×1280, funnene K1–K16. Det som endret planen: linje 3 får stedet i havn og er tom bare når båten ligger stille uten noe på gang (4.2); U2-1 holder veiledningens mål i live (`#hud .st.nx`, `#dockInfo`, `#miniPlot`) og tar minimer-knappene til 44 px; viftene høyst fire per rad; Ansatte-siden inn i ett ark (U2-7). Bekreftet: fem på raden holder på telefonen, seks brekker; Om bord som fane gir ingen lengre side; pilla sier aldri noe boksen ikke sier. Ikke målt: full last, egen blåse, roen (lest i koden). `uishots` fant 0 i fem størrelser, så den ser ikke det strukturelle.
 - 06.11.2026: Jonas svarte V2 A, V6 A, V7 A, V8 A, og la til to ting: ekkoloddet i minikartet brukes aktivt under seiling, så roen tar bort knapper og aldri instrumenter (4.5); og søyla ved siden kan være mer i veien i stående, så V3 er åpnet igjen som V3 revidert med «Om bord» i linja som anbefaling (4.4, kap. 7). Venter på V3 revidert og «kjør på». U2-0 kjøres som en Playwright-runde i stående før byggingen (Jonas' spørsmål 06.11.2026), med oppdraget: mål og finn, ikke tegn om.
