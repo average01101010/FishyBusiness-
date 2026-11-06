@@ -149,7 +149,7 @@ Næringsfartøy: 5 omkomne i 2024 og 7 i 2025; fiskefartøy er 24 % av ulykkene.
 
 ## 3. Ø11.1 Vikeplikten for spilleren og NPC-ene (L1, N8)
 
-Bygd 06.11.2026 (Jonas: «Oppgave: Ø11.1, vikeplikten for spilleren og NPC-ene (L1 og N8)»). Reglene ligger i den nye `core/05e-sjovei.js`. De delte filene har ett kall hver: `npcStates` (`colregNpc`) og `sail` (`sjvSail`) i `core/05-vessels.js`, `havNear` (`colregHav`) i `core/05d-hav.js` og `dynAuto` (`sjvAuto`) i `core/16b-dyn.js`. Varselet står i `ui/04-panels-instruments.js` (stripa og boksen), `ui/03-map.js` (plotteren og AIS-kortet) og `ui/03e-miniplot.js` (minikartet).
+Bygd og rullet ut 06.11.2026 (981a4751, flettet i d62153dc; Jonas: «Oppgave: Ø11.1, vikeplikten for spilleren og NPC-ene (L1 og N8)»). Reglene ligger i den nye `core/05e-sjovei.js`. De delte filene har ett kall hver: `npcStates` (`colregNpc`) og `sail` (`sjvSail`) i `core/05-vessels.js`, `havNear` (`colregHav`) i `core/05d-hav.js` og `dynAuto` (`sjvAuto`) i `core/16b-dyn.js`. Varselet står i `ui/04-panels-instruments.js` (stripa og boksen), `ui/03-map.js` (plotteren og AIS-kortet) og `ui/03e-miniplot.js` (minikartet).
 
 ### 3.1 Klassene (regel 3 og 18): `colregCls`, `colregOwnCls`, `colregHav`
 
@@ -205,6 +205,7 @@ En passering der avstanden minus en firedel av de to lengdene er under 50 m (`SJ
 
 - `tests/unit/sjovei.test.mjs` (73 sjekker): regel 13–15, rangen i 18, 18 d, 9 b–c, regel 2 b, CPA og TCPA, grensene for sektorene (12°, 112,5°), avviket over tid, klassene, AIS-statusen og tekstene.
 - `tests/colregtest.py` (LITE, 25 sjekker) på Senja: ferja med spilleren om styrbord viker 390 m til styrbord og er tilbake på den felles banen etterpå, aldri på land, og spilleren holder kurs; med spilleren om babord holder ferja kurs og fart og Autonav viker 294 m og er 6 m fra linja til slutt, med varselet i boksen og ringen i plotteren; en båt fra Senja-flåten på vei ut viker 325 m; uten plass slakker hun av (700 m etter) og tar det igjen; når Autonav ikke viker, gjør ferja noe selv (17 a ii) og de går 131 m fra hverandre; båtene lenger unna enn 1,2 km er der klokka sier; Autonav viker også når ingen visning spør etter båtene (291 m ut, 1 m fra linja til slutt); ingen varsler i havn, ingen viking i `catchUp`. Den spiller møtene i ekte tid og tar rundt 7 minutter.
+- **3D og veiledningen** (06.11.2026, på det flettede bygget d62153dc): `trackfollow` 10 OK (autopiloten i `dynAuto` med det ene kallet), `tut` i stående 14 OK og `"tut": 0` (veiledningen peker på tredje linje, der varselet nå står først).
 - **Stikkprøven langs kysten** (06.11.2026, `dist-vec` med kystflåten fra vec-pakkene, juni kl. 6, uten 3D): en kystbåt på vei ut eller inn på kryssende kurs med spilleren, begge veier.
 
   | Sted | Båten | Spilleren om styrbord: NPC-en viker | Spilleren om babord: Autonav viker |

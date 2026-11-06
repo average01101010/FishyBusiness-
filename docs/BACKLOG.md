@@ -406,7 +406,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
 
-## Strøket 06.11.2026 (Ø11.1 vikeplikten for spilleren og NPC-ene, gren `ccr-e5ae7b11-uibmpt`)
+## Strøket 06.11.2026 (Ø11.1 vikeplikten for spilleren og NPC-ene, gren `ccr-e5ae7b11-uibmpt`, rullet ut i d62153dc)
 
 - L1 «vikeplikt og varsel (sjøveisreglene 13–18)» i «Lover og regler på sjøen» og N8s vikeplikt og AIS-status i «NPC-flåten for hele landet»: `core/05e-sjovei.js` med `colregCls`, `colregSit` og vikingen for NPC-ene og Autonav, varselet i stripa, boksen, kartplotteren og minikartet, AIS-statusen og nestenulykkene (`S.nearMiss`) til Ø11.7. Sjøveisreglene 1–18 og 19 a–c lest ordrett 06.11.2026. Prøvd i `colregtest` (Senja) og i Bergen, Bodø og Hammerfest. Alt står i `docs/systemer/sjofart-og-lover.md`.
 
