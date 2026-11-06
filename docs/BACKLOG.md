@@ -446,6 +446,15 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 ## Strøket 06.11.2026 (trimfarten, gren `ccr-dfa1209c-7vgp4x`)
 
 - ~~Trim gir ingen fart i Autonav og ved roret~~ (TonyHjelmseth, «Legoy», trebåt, kjøpte «Økt turbotrykk» 18:49 og fikk ingen økning): manøvreringsmodellen hadde bare båttypens motor siden Fysikk 1 (19.10.2026), så trim, større motor og 90-hesteren ga fart bare på papiret og med spillet lukket. Rettet med `dynCalOf` (`fysikk-og-styring.md` 5.58, «Båtens egen motor»), sjekk i `tests/unit/trimfart.test.mjs`.
+- ~~Rutefarten fulgte ikke trimmen~~: en rute satt på den gamle toppfarten eller marsjfarten fikk ingenting av trimmen før glidebryteren ble flyttet. `trimSet`/`trimEnd` skalerer rutefarten (`fysikk-og-styring.md` 5.58).
+- ~~Rederilogoen kunne ikke kjøpes~~: `des_logo` manglet i `SHOP_PRODUCT` (kassen fikk et tomt produkt, «Kunne ikke åpne betalingen»), og malerverkstedet viste 29 kr der databasen tar 49. Sjekken `tests/unit/butikk.test.mjs` sammenligner hvert produkt spillet selger med migreringene.
+- ~~Haill ga ikke mer av bifangsten i teinene~~ (torsk, brosme): `luck(sp)` manglet (`haill-pub-og-bonus.md` 5.10).
+
+## Venter på Jonas (gjennomgangen av butikken 06.11.2026)
+
+- **Haill lover «alt redskapet ditt fanger dobbelt så mye»**, men garn og line fylles opp, så gevinsten krymper med ståtida (6 garn: ×1,50 i 12 t og ×1,30 i 24 t med haill; autoline 5000 krok 8 t: ×1,06), og alene om bord holder sløyingen igjen (juksa 6 t: haill ×1,76, luksus ×1,90). Enten mykere tekst («fisken går dobbelt så fort i redskapet») eller mer plass i redskapet med hailen.
+- **Glidebryteren for farten på full fart som standard** (Jonas 06.11.2026: «de aller fleste brukerne alltid ønsker å gå båten i maksimal hastighet»): forslag i økta, venter på ja.
+- **`shopClaim` markerer også tildelinger klienten ikke kjenner som levert** (`10i-shop.js`): ingen slike i databasen nå, men en ny produkttype før klienten kjenner den, ville gått tapt.
 
 ## Strøket 06.11.2026 (Ø11.2 sikt, lys og lyd, gren `claude/o11-2-sikring-lys-lyd-bsrlub`, rullet ut i f04d4feb)
 

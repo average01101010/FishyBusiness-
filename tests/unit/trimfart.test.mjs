@@ -43,4 +43,21 @@ export default function (t){
     t.near(K.dynTurn(c1.P, c0.V).R, K.dynTurn(c0.P, c0.V).R, 0.1 * K.dynTurn(c0.P, c0.V).R, 'nesten samme svingradius ved marsjfart uten trim (innen 10 %)');
     t.ok(c1.nom.length === c0.nom.length + 1 && c1.nom[c1.nom.length - 1].u > c0.nom[c0.nom.length - 1].u * 1.9, 'autopilotens forsterkning er også målt ved marsjfarten med trim');
     t.ok(c1.stop.length > c0.stop.length, 'stopplengdene er målt opp til den nye toppfarten (autopiloten bremser riktig fra full fart)'); }
+
+  // ---- the route's own speed (Jonas 06.11.2026: «Det skal ikke være nødvendig med refresh etter kjøp av noen typer boost»): the speed
+  // chosen on the slider is knots, and Autonav and the minute step hold her under it, so a trim on a route set at the old top speed (or
+  // at cruise) gave nothing until the slider was moved. Given the way the shop gives it (trimSet, or as the game did before: b.trim and
+  // applyVessel), the running route's speed and the next route's follow the trim, and go back when it runs out (trimEnd) ----
+  const give = k => typeof K.trimSet === 'function' ? K.trimSet(k) : (St().boat.trim = {k, t0:St().t}, K.applyVessel());
+  const end = () => typeof K.trimEnd === 'function' ? K.trimEnd() : (delete St().boat.trim, K.applyVessel());
+  { boat('trebat'); St().plan = {wps:[{x:0, y:0}], idx:0, speed:7, returning:false}; St().draftSpeed = 6;
+    give('turbo');
+    t.near(St().plan.speed, 14, 0.05, 'turbotrim på ruta som går: rutas 7 kn (gammel toppfart) blir 14 kn uten at glidebryteren flyttes');
+    t.near(St().draftSpeed, 12, 0.05, 'neste rute: marsjfarten 6 kn blir 12 kn med trimmen');
+    give('pump');
+    t.near(St().plan.speed, 10.5, 0.05, 'ny trim i stedet for den som er på: farten følger den nye (+50 %), ikke begge');
+    end();
+    t.near(St().plan.speed, 7, 0.05, 'trimmen går ut: rutas fart tilbake på 7 kn'); t.near(St().draftSpeed, 6, 0.05, 'og neste rute tilbake på 6 kn'); }
+  { boat('trebat'); St().plan = null; St().draftSpeed = 16; give('turbo');
+    t.ok(St().draftSpeed >= K.BOAT.vmax, 'standardfarten (16 kn, over toppfarten) holder seg over den nye toppfarten: full fart'); }
 }

@@ -88,6 +88,19 @@ const BOOSTS = {pump:{x:1.5, h:24, nok:29, no:'Justert dieselpumpe', en:'Tuned i
 const canBoost = V => !!(V && V.diesel && !V.outboard);
 const trimOn = b => { const T = b && b.trim && BOOSTS[b.trim.k]; return T && S.t < b.trim.t0 + T.h * 60 ? T : null; };
 const trimLeft = b => trimOn(b) ? (b.trim.t0 + BOOSTS[b.trim.k].h * 60 - S.t) / 60 : 0;   // game hours
+// the route's speed follows a trim that comes on or runs out (Jonas 06.11.2026: «Det skal ikke være nødvendig med refresh etter kjøp av
+// noen typer boost»): the speed chosen on the slider is knots, and Autonav and the minute step hold her under it, so a trim bought on
+// a route set at the old top speed or at cruise gave nothing until the slider was moved. v0 is the top speed before applyVessel: the
+// running plan's speed and the next route's are scaled by the new over the old, so the slider keeps its place (full stays full)
+function trimRescale(v0){
+  const v1 = BOAT.vmax; if (!(v0 > 0) || !(v1 > 0) || Math.abs(v1 / v0 - 1) < 0.005) return;
+  const sc = x => Math.max(2, Math.round(x * v1 / v0 * 10) / 10);
+  if (S.plan && S.plan.speed > 0) S.plan.speed = sc(S.plan.speed);
+  if (S.draftSpeed > 0) S.draftSpeed = sc(S.draftSpeed);
+}
+// a trim on the boat aboard (S.boat; the shop gives it inside withVessel for the boat it was bought for), and one that has run out
+function trimSet(k){ const v0 = BOAT.vmax; S.boat.trim = {k, t0:S.t}; applyVessel(); trimRescale(v0); }
+function trimEnd(){ const v0 = BOAT.vmax; delete S.boat.trim; applyVessel(); trimRescale(v0); }
 function powerX(b){ const V = VESSELS[b.type || 'skiff']; return 1 + (b.engLv && !V.outboard ? ENGUP[b.engLv - 1].p : 0); }
 const speedOfPower = (P, planing) => planing ? Math.sqrt(P) : Math.min(1.12, Math.cbrt(P));
 function applyVessel(){

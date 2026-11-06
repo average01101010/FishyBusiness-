@@ -21,7 +21,7 @@ var PAINT = (() => {
   const LGPIC = {}; const logoPic = L => { if (L && L.kind === 'u') return L.img || ''; const k = logoStr(L); if (!LGPIC[k]){ const cv = document.createElement('canvas'); cv.width = cv.height = 64; logoCanvas(cv, L); LGPIC[k] = cv.toDataURL(); } return LGPIC[k]; };
   const initials = () => String(S.company || S.boatName || 'DSB').split(/\s+/).filter(w => /^[A-Za-zÆØÅæøå]/.test(w)).map(w => w[0].toUpperCase()).join('').slice(0, 3) || 'DSB';
   const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
-  const DNOK = 29, NOK = {flagg:19, reg:29}, nok = k => NOK[k] || DNOK;
+  const DNOK = 29, NOK = {flagg:19, reg:29, logo:49}, nok = k => NOK[k] || DNOK;
   const SHAPE = {rekt:['Rektangel', 'Rectangle'], vimpel:['Vimpel', 'Pennant'], splitt:['Splitt', 'Swallowtail']};
   // the flags as small pictures for the picker, drawn once
   const FPIC = {}; const fpic = (code, shape) => { const k = code + '|' + shape; if (!FPIC[k]){ const cv = document.createElement('canvas'); cv.width = 64; cv.height = 47; flagCanvas(cv, code, shape); FPIC[k] = cv.toDataURL(); } return FPIC[k]; };

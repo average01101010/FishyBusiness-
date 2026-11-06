@@ -683,7 +683,7 @@ function step(){
 function vesselStep(H){
   const b = S.boat;
   // a trim that has run its time (core BOOSTS): the speed goes back
-  if (b.trim && !trimOn(b)){ const T = BOOSTS[b.trim.k]; delete b.trim; applyVessel(); if (T) log(T.no + ' er gått ut. Toppfarten er tilbake på ' + fmt(BOAT.vmax, 1) + ' knop.', 'The ' + T.en.toLowerCase() + ' has run out. Top speed is back at ' + fmt(BOAT.vmax, 1) + ' knots.'); }
+  if (b.trim && !trimOn(b)){ const T = BOOSTS[b.trim.k]; trimEnd(); if (T) log(T.no + ' er gått ut. Toppfarten er tilbake på ' + fmt(BOAT.vmax, 1) + ' knop.', 'The ' + T.en.toLowerCase() + ' has run out. Top speed is back at ' + fmt(BOAT.vmax, 1) + ' knots.'); }
   const clean = 1;
   const WA = workMinute();
   const kar = S.equip && S.equip.krabbekar;
