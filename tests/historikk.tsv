@@ -317,3 +317,39 @@
 2026-11-06 16:22	ccr-2f1306ed-u6tdgs	d9f88a69	fabrikktest	FEIL	13	lite	samtidig	FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined |
 2026-11-06 16:22	ccr-2f1306ed-u6tdgs	d9f88a69	skiptest	OK	18	lite	samtidig	
 2026-11-06 16:23	ccr-2f1306ed-u6tdgs	d9f88a69	fleet2test	OK	54	lite	samtidig	
+2026-11-06 16:23	ccr-2f1306ed-u6tdgs	7f630850	opsowntest	OK	58	lite	samtidig	
+2026-11-06 16:23	ccr-2f1306ed-u6tdgs	7f630850	worktest	FEIL	24	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-06 16:23	ccr-2f1306ed-u6tdgs	7f630850	crewlifetest	OK	6	lite	samtidig	
+2026-11-06 16:23	ccr-2f1306ed-u6tdgs	7f630850	selfcrew	OK	7	lite	samtidig	
+2026-11-06 16:24	ccr-2f1306ed-u6tdgs	7f630850	lybtest	OK	75	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	colregtest	OK	449	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	autonavtest	OK	27	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	turtest	OK	16	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	npctest	OK	8	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	towtest	OK	16	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	tattest	OK	18	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	peergear	OK	5	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	naustleia	OK	7	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	harbourtest	OK	17	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	rorbutest	OK	14	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	havntest	OK	17	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	havtur	FEIL	90	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	snokrabbetest	FEIL	13	lite	samtidig	FEIL etter 7 døgn: 16.7 krabber i teina, 1499 kg beholdt (7.5 kg per teine), klassene {'0': 2576, '1': 88, '2': 34}, hel og usløyd
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	autolinetest	OK	10	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	geartest	FEIL	37	lite	samtidig	FEIL king crab: all of it is kept (J-138-2026 § 5) and sorted by sex, weight and damage into Råfisklaget’s classes
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	booktest	OK	27	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	caretest	OK	15	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	jigalongtest	OK	15	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	sleeptest	OK	11	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	r4test	OK	15	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	cashfxtest	OK	9	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	slidertest	OK	17	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	sidetab	OK	15	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	fartstidtest	OK	22	lite	samtidig	
+2026-11-06 16:32	ccr-2f1306ed-u6tdgs	7f630850	boottest	OK	45	lite	samtidig	
+2026-11-06 16:32	ccr-2f1306ed-u6tdgs	7f630850	worldtest	OK	26	lite	samtidig	
+2026-11-06 16:32	ccr-2f1306ed-u6tdgs	7f630850	pushtest	OK	28	lite	samtidig	
+2026-11-06 16:32	ccr-2f1306ed-u6tdgs	7f630850	itemcardtest	FEIL	20	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'jukse', 'krabbekar', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-06 16:33	ccr-2f1306ed-u6tdgs	7f630850	posttest	OK	25	lite	samtidig	
+2026-11-06 16:33	ccr-2f1306ed-u6tdgs	7f630850	fleet3test	OK	17	lite	samtidig	
+2026-11-06 16:33	ccr-2f1306ed-u6tdgs	7f630850	adminbuytest	OK	10	lite	samtidig	

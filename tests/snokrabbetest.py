@@ -82,7 +82,8 @@ TRIP = """async ([la, lo]) => {
   R.haulWhy = startHaul(s.id, false, 0); const t1 = S.t; k = 0; while (b.gop && k++ < 900) step();
   R.haulMin = S.t - t1; R.holdKg = Math.round(holdTotal()); R.kgPot = +(holdTotal() / s.n).toFixed(2);
   R.cls = {}; R.n = 0; for (const x of S.hold){ if (x.sp !== 'snokrabbe') continue; R.cls[x.cls] = (R.cls[x.cls] || 0) + x.n; R.n += x.n; }
-  R.gut = S.hold.every(x => x.sp !== 'snokrabbe' || x.gut); R.potsBack = pg.pots.sno;
+  // (H3b: on a frozen trip the kept crab goes to the factory, split into clusters and frozen, none whole and none in the tanks; the dead round)
+  R.gut = S.hold.every(x => x.sp !== 'snokrabbe' || (!x.tank && (x.rund ? x.cls === 2 : !x.frozen || x.gut))) && S.hold.some(x => x.sp === 'snokrabbe' && x.gut && !x.rund); R.potsBack = pg.pots.sno;
   R.log = S.log.slice(m0).map(l => l.no || l[0] || '').filter(x => /Sortert|Trakk/.test(x)).join(' | ');
   return R; }"""
 
@@ -153,7 +154,7 @@ async def main():
         print(ok(r['why'] is None and r['set'].get('n') == 200 and 4.9 < r['set'].get('km', 0) < 5.1 and r['set'].get('pot') == 'sno'), 'satte 1 lenke (%s teiner, %s km) på %s m ved %s, krabben der %.2f' % (r['set'].get('n'), r['set'].get('km'), r['set'].get('depth'), r['ll'], r['area']))
         print(ok(20 <= r['setMin'] <= 50 and r['potsLeft'] == 200 and r['baitLeft'] == 200), 'settingen tok %d min, 200 teiner igjen om bord, 100 kg akkar brukt (%d kg igjen)' % (r['setMin'], r['baitLeft']))
         print(ok(r['haulWhy'] is None and 150 <= r['haulMin'] <= 300 and r['potsBack'] == 400), 'trekkingen av 200 teiner tok %d min, teinene er om bord igjen (%d)' % (r['haulMin'], r['potsBack']))
-        print(ok(2 <= r['kgPot'] <= 10 and r['n'] > 0 and r['gut']), 'etter 7 døgn: %.1f krabber i teina, %d kg beholdt (%.1f kg per teine), klassene %s, hel og usløyd' % (r['inPot'], r['holdKg'], r['kgPot'], r['cls']))
+        print(ok(2 <= r['kgPot'] <= 10 and r['n'] > 0 and r['gut']), 'etter 7 døgn: %.1f krabber i teina, %d kg beholdt (%.1f kg per teine), klassene %s, til fabrikken (delt eller ventende, den døde rund)' % (r['inPot'], r['holdKg'], r['kgPot'], r['cls']))
         print(ok('Sortert' in r['log'] and 'satt ut levende' in r['log']), 'loggen:', r['log'][:300])
         u = await pg.evaluate(RULES, [76.6, 33.5])
         print(ok(u['r200'] is None and u['r201'] and '§ 28' in u['r201'][0]), '§ 28: 8 000 teiner går, 8 001 stoppes: %s' % (u['r201'] and u['r201'][0]))
