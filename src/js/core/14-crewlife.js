@@ -196,6 +196,33 @@ function dialectText(key, text){
   return text.replace(/\p{L}+/gu, w => { for (const [from, to] of d) if (w.toLowerCase() === from) return capLike(w, to); return w; });
 }
 function crewDialect(c, text){ return dialectText(dialectOf(c), text); }
+// the named folk's own lines (04-crew.js NAMED_CREW): Tony, the joker from Husøy who kept a shop and tended salmon before the nets
+const NAMED_SAY = {tony:{
+  chat:[['Æ sto bak disken i butikken i mange år. Nu står æ bak rekka. Færre kunda, meir fesk.', 'I stood behind the shop counter for years. Now I stand at the rail. Fewer customers, more fish.'],
+    ['Æ passa laks i merd før. Dem svømte i ring heile dagen. Litt som oss, skipper.', 'I tended salmon in the pens before. They swam in circles all day. A bit like us, skipper.'],
+    ['Vet du ka forskjellen på en røkter og en fesker e? Røkteren vet kor fesken e.', 'Know the difference between a farm hand and a fisher? The farm hand knows where the fish are.'],
+    ['Æ har vært kjøpmann, røkter og fesker. Neste gang blir æ kanskje fesk, så får æ sett det fra den sia òg.', 'I have been a shopkeeper, a farm hand and a fisher. Next time maybe a fish, to see it from that side too.'],
+    ['Husøy e verdens navle. Det e bare resten av verden som ikkje har skjønt det ennu.', 'Husøy is the hub of the world. The rest of the world just has not noticed yet.']],
+  morning:[['God mårrå! Æ har sovna i verre køya enn den her, men ikkje mange.', 'Good morning! I have slept in worse bunks than this one, but not many.'],
+    ['Kaffen e klar. Æ har lært å koke han av en røkter, så han e sterk nok te å vekke laks.', 'The coffee is ready. I learned to make it from a farm hand, so it is strong enough to wake salmon.']],
+  goodCatch:[['Det her e som Black Friday i butikken, bare at kundan bit.', 'This is like Black Friday at the shop, only the customers bite.'],
+    ['Nu slår vi kassa i butikken på Husøy, og den gikk bra, den.', 'Now we are beating the till at the Husøy shop, and that one did well.']],
+  badCatch:[['Æ har sett meir fesk i frysedisken.', 'I have seen more fish in the freezer counter.'],
+    ['Vi sku ha tatt med oss laksen fra merda. Han bet i alle fall.', 'We should have brought the salmon from the pens. At least they bit.']],
+  tubFull:[['Karet e fullt, skipper! Det e kø ved kassa.', 'The tub is full, skipper! There is a queue at the till.']],
+  cold:[['Det e så kaldt at æ sakne kjøledisken. Den va varmar.', 'It is so cold I miss the chiller cabinet. That was warmer.']],
+  storm:[['Han blås så det e like før butikkskiltet på Husøy tar av.', 'It blows so hard the shop sign on Husøy is about to take off.']],
+  calm:[['Så stilt at æ hør laksen tenke. Nei vent, det e magen min.', 'So still I can hear the salmon think. No wait, that is my stomach.']],
+  hungry:[['Æ hadde en heil butikk full av mat før. Nu har æ ei tørr brødskive. Karriere, kalle dem det.', 'I had a whole shop full of food once. Now I have a dry slice of bread. A career, they call it.']],
+  payday:[['Lott! Nu går æ i butikken æ sjøl sto i og kjøpe nokka dyrt. Full sirkel.', 'A share! Now I will go to the shop I used to keep and buy something dear. Full circle.']],
+  haulGood:[['Garnet e fullt! Det e som å telle opp kassa lille julaften.', 'The net is full! It is like counting the till on the 23rd of December.']],
+  haulBad:[['Mest tang. Tang selg dårlig. Æ har prøvd.', 'Mostly kelp. Kelp sells badly. I have tried.']],
+  foodBad:[['Æ solgte bedre mat på tilbud, tre førr to.', 'I sold better food on offer, three for two.']],
+  slip:[['Den der va på vei te butikken sjøl. La han gå.', 'That one was on its way to the shop by itself. Let it go.']],
+  cut:[['Au. Det der hadde ikkje skjedd bak disken.', 'Ow. That would not have happened behind the counter.']],
+  tired:[['Æ e så trøtt at æ sa «velkommen innom» te en måse.', 'I am so tired I said «welcome in» to a gull.']],
+  longTrip:[['Æ begynne å savne laksan. Dem sa i alle fall ikkje nokka.', 'I am starting to miss the salmon. At least they said nothing.']],
+  teamGood:[['Godt lag det her. Nesten like bra som kveldsskiftet i butikken, og dem va gode.', 'A good crew, this. Almost as good as the evening shift at the shop, and they were good.']]}};
 // someone says a line for the situation: c, or a person whose ways suit one of the lines, or anyone aboard
 // (vars fill the line's {t}, {place}, {sp}: a value, or [no, en]; filled after the dialect, so a place keeps its name)
 function crewSay(c, sit, vars){
@@ -207,6 +234,10 @@ function crewSay(c, sit, vars){
   else { const fit = L0.filter(l => l[2] && on.some(p => p.traits.includes(l[2])));
     if (fit.length && Math.random() < 0.6){ const l = pick1(fit); who = pick1(on.filter(p => p.traits.includes(l[2]))); pool = [l]; }
     else { pool = L0.filter(l => !l[2]); who = pick1(on); } }
+  // a named person aboard with lines of their own for this: theirs, three times in four (and when nobody was picked for them, they
+  // are picked half the time)
+  if (!c){ const nm = on.filter(p => p.nid && NAMED_SAY[p.nid] && NAMED_SAY[p.nid][sit]); if (nm.length && Math.random() < 0.5) who = pick1(nm); }
+  if (who && who.nid && NAMED_SAY[who.nid] && NAMED_SAY[who.nid][sit] && Math.random() < 0.75) pool = NAMED_SAY[who.nid][sit];
   if (!pool.length || !who) return false;
   const fill = (t, i) => vars ? t.replace(/\{(\w+)\}/g, (m, k) => vars[k] == null ? m : Array.isArray(vars[k]) ? vars[k][i] : vars[k]) : t;
   const l0 = pick1(pool), l = [fill(crewDialect(who, l0[0]), 0), fill(l0[1], 1)], nm = who.name.split(' ')[0], no = l[0]; S.sayT = S.t;

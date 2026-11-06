@@ -403,10 +403,36 @@ function crewSettle(c){
 }
 function crewQuit(c, why, whyEn){ const i = S.crew.indexOf(c); if (i < 0) return; crewSettle(c); flyOut(c); S.crew.splice(i, 1); for (const o of S.crew){ if (o.grudge) delete o.grudge[c.id]; }
   msg(c.name, why || 'Jeg mønstrer av her. Det er ikke noe for meg lenger.', whyEn || 'I am signing off here. It is not for me any more.'); log(c.name + ' har mønstret av.', c.name + ' has signed off.'); if (S.cevt && (S.cevt.a === c.id || S.cevt.b === c.id)) S.cevt = null; }
+// ===== Named folk on the coast (Jonas 06.11.2026): real people who have asked to be in the game, as crew to hire at their home quay =====
+// Tony Hjelmseth (Jonas 06.11.2026, after his visit: «Legg inn en NPC-fisker på Husøya som heter Tony Hjelmseth … spøkefugl født 10. mai
+// 1998 … jobbet på en garnbåt med fast havn på Husøy noen år … tidligere kjøpmann på butikk før han startet som røkter på
+// oppdrettsanlegg, men nå er han fisker på fulltid»; then «Tony er ikke en båt, men en man skal kunne ansette som mannskap»). He stands
+// on the quay in Husøy whenever the boat lies there and he is not aboard one of the company's boats, in the crew exchange like the
+// others, with his own story on the card and his own lines at sea (14-crewlife.js NAMED_SAY). His age follows the game's clock.
+const NAMED_CREW = [{nid:'tony', name:'Tony Hjelmseth', sex:'m', born:[1998, 5, 10], home:['Husøy', 'husoy'], yrs:4, traits:['spokefugl', 'lokalkjent'],
+  attr:{erf:3, styrke:3.5, uth:3.5, tek:3, kokk:2.5, sjo:3}, gear:{juksa:2.5, line:2.5, garn:4, teiner:2.5, sloy:3, is:3, sort:2.5},
+  story:['Født 10. mai 1998 på Husøy. Sto bak disken i butikken i flere år, var røkter på et oppdrettsanlegg, og har de siste årene gått på en garnbåt med fast havn på Husøy. Fisker på fulltid nå, og har en kommentar til det meste.',
+    'Born 10 May 1998 on Husøy. Kept the shop counter for years, tended fish at a salmon farm, and has gone on a gillnetter out of Husøy these last years. A full-time fisher now, with a remark about most things.']}];
+function namedAge(n, H){ const d = gDate(H); let a = d.getUTCFullYear() - n.born[0]; if (d.getUTCMonth() + 1 < n.born[1] || (d.getUTCMonth() + 1 === n.born[1] && d.getUTCDate() < n.born[2])) a--; return a; }
+function namedMake(n){
+  return crewDerive({id:'n_' + n.nid, nid:n.nid, name:n.name, sex:n.sex, age:namedAge(n, S.t / 60), home:n.home[0], homePort:n.home[1], yrs:n.yrs, attr:Object.assign({}, n.attr), gear:Object.assign({}, n.gear), traits:n.traits.slice(),
+    known:[true, true], bi:false, biDays:null, ask:LOTT.hand, share:LOTT.hand, morale:66, fatigue:10, seaH:0, grudge:{}, earn:[], hiredT:S.t, story:n.story.slice()});
+}
+// aboard one of the company's boats already (the one you are on, or another in the fleet)
+function namedTaken(nid){ const id = 'n_' + nid; if ((S.crew || []).some(c => c.id === id)) return true; for (const v of S.fleet || []) if (v.id !== S.cur && (v.crew || []).some(c => c.id === id)) return true; return false; }
+function namedTick(B){
+  if (!S.boat || S.boat.status !== 'port') return;
+  for (const n of NAMED_CREW){ const id = 'n_' + n.nid, inPool = B.pool.find(c => c.id === id);
+    if (S.boat.port !== n.home[1] || namedTaken(n.nid)){ if (inPool) inPool.until = Math.min(inPool.until, S.t + 60); continue; }   // (gone from the list an hour after she left)
+    if (inPool){ inPool.until = S.t + 1440; inPool.age = namedAge(n, S.t / 60); continue; }
+    const c = namedMake(n); c.until = S.t + 1440; B.pool.push(c);
+    log(n.name + ' (' + c.age + ') står på kaia i ' + n.home[0] + ' og vil mønstre på. Se Mannskapsbørsen.', n.name + ' (' + c.age + ') is on the quay in ' + n.home[0] + ' and wants to sign on. See the crew exchange.'); }
+}
 // the job exchange: new people look for a berth every morning; fewer in the skrei season, when every boat is hiring
 function borsTick(H){
   const B = S.bors || (S.bors = {pool:[], day:-1}), day = Math.floor((H + 6) / 24);
   B.pool = B.pool.filter(c => c.until > S.t);
+  namedTick(B);   // the named folk at their home quay, whatever the day
   const first = B.day === -1; if (B.day === day || (!first && gDate(H).getUTCHours() < 7)) return; B.day = day;
   if (typeof alumniReturn === 'function') alumniReturn(B);
   const n = skreiSeason(H) ? (Math.random() < 0.5 ? 1 : 0) : 1 + (Math.random() < 0.5 ? 1 : 0);
