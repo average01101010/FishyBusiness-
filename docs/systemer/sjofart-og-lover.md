@@ -238,7 +238,7 @@ En passering der avstanden minus en firedel av de to lengdene er under 50 m (`SJ
 
 ## 4. Ø11.2 Sikt, lys og lyd (L3, N8)
 
-Bygd 06.11.2026 (Jonas: «Oppgave: Ø11.2, sikt, lys og lyd (L3, N8). Les regel 19 d–e, 20–37 og vedlegg I og III i sjøveisreglene ordrett på Lovdata før noe bygges … Sikker fart for Autonav legges i core/05e-sjovei.js gjennom sjvAuto og sjvSail, uten nye kall i core/05-vessels.js eller core/16b-dyn.js»). Reglene og de rene funksjonene ligger i `core/05e-sjovei.js`; ingen nye kall i de delte kjernefilene. Lyden i `ui/10e-sound.js`, hornknappen i `ui/10n-hail.js` og `ui/10c-dock.js` (vifta `horn`), lanternene i `view3d/22-docks-air.js` (`drawNPCLights`, `lanternFog`, `lampFade`, `lampArc`, `lampsMore`) og `view3d/24-cinema.js` (egen båt). `vessel3d.js` (`lanterns`) er ikke rørt (Ø11.5 kjørte).
+Bygd og rullet ut 06.11.2026 (05134a03, flettet i 23556f43, rullet ut i f04d4feb; Jonas: «Oppgave: Ø11.2, sikt, lys og lyd (L3, N8). Les regel 19 d–e, 20–37 og vedlegg I og III i sjøveisreglene ordrett på Lovdata før noe bygges … Sikker fart for Autonav legges i core/05e-sjovei.js gjennom sjvAuto og sjvSail, uten nye kall i core/05-vessels.js eller core/16b-dyn.js»). Reglene og de rene funksjonene ligger i `core/05e-sjovei.js`; ingen nye kall i de delte kjernefilene. Lyden i `ui/10e-sound.js`, hornknappen i `ui/10n-hail.js` og `ui/10c-dock.js` (vifta `horn`), lanternene i `view3d/22-docks-air.js` (`drawNPCLights`, `lanternFog`, `lampFade`, `lampArc`, `lampsMore`) og `view3d/24-cinema.js` (egen båt). `vessel3d.js` (`lanterns`) er ikke rørt (Ø11.5 kjørte).
 
 ### 4.1 Sikten og nedsatt sikt
 
