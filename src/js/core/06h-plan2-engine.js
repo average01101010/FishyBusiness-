@@ -226,7 +226,9 @@ function plan2Decide(o, H){
     case 'behold': case 'vakt': case 'lagvakt': return next();
     case 'hjem': if (atH) return next(); return plan2Go(o, H, r.i);
     case 'egning': plan2Egn(o, s); return next();
-    case 'hvile': { const until = s.until == null ? H : s.until; if (H < until - 1 / 60 || !drRested()){ const at = Math.max(until, H); const me = meAboard(); plan2Wait(o, 'rest', (me ? 'Mannskapet og du hviler til kl. ' : 'Mannskapet hviler til kl. ') + driftClock(driftHod(at)) + '.', (me ? 'The crew and you rest until ' : 'The crew rest until ') + driftClock(driftHod(at)) + '.', H < until ? until : H + 0.5); return; } return next(); }
+    // (Skippertak: no rest, only the baiting when there is any, s.ready after s.t; at full speed she is home before the hour the day
+    // reckoned with, and waiting for that hour was a rest of its own; Jonas 06.11.2026)
+    case 'hvile': { const until = skipOn() ? (s.ready != null && s.ready > s.t + 1e-6 ? s.ready : H) : s.until == null ? H : s.until; if (H < until - 1 / 60 || !drRested()){ const at = Math.max(until, H); const me = meAboard(); plan2Wait(o, 'rest', (me ? 'Mannskapet og du hviler til kl. ' : 'Mannskapet hviler til kl. ') + driftClock(driftHod(at)) + '.', (me ? 'The crew and you rest until ' : 'The crew rest until ') + driftClock(driftHod(at)) + '.', H < until ? until : H + 0.5); return; } return next(); }
     case 'ut': r.i = r.day.steps.length; return plan2Boundary(o, H);
   }
   return next();
@@ -242,6 +244,23 @@ function plan2MeRest(o, H){
   if (!w || !(w.k === 'energy' || (w.until != null && w.until - H >= 1))) return;   // (not for a wait of minutes: a rorbu night for nothing)
   if (!restStart() && w.k === 'energy') o.hold = 0;   // (in: the departure reckons the hour again now, by the rest's rate)
 }
+// Skippertak given (15-energy.js giveSkip; Jonas 06.11.2026, «Døgnet rundt»): the plans of the whole fleet go on at once, without a reload:
+// the holds and the waits for the rest, your energy and the hour are let go, and in port a day not yet begun (or one laid short for
+// tired hands) is laid again, rested. A trip under way goes on, and the day is laid again where it ends, as always; a rest at the end
+// of a day waits only for the baiting ('hvile', s.ready)
+// (each vessel's own plan read where it lies, vget, without binding the vessel: a purchase must never fail on a vessel half made)
+function plan2SkipGiven(){
+  if (!DRIFT2) return;
+  for (const v of S.fleet && S.fleet.length ? S.fleet : [{id:S.cur}]){
+    const o = vget(v, 'ops'), pl = vget(v, 'plan'); if (!o || o.v !== DRV2 || !o.on) continue;
+    o.hold = 0; const r = o.run; if (!r) continue;
+    if (r.wait && ['rest', 'energy', 'dep'].includes(r.wait.k)) r.wait = null;
+    const s = r.day && r.day.steps[r.i]; if (!(pl && pl.ops) && !r.trip && !(s && s.k === 'hvile')) r.replan = true;
+  }
+}
+// when the day is done: its end (the rest included), or with Skippertak on only the baiting's, else now (a day laid before it was bought
+// had the rest in its end, and at full speed she is home before the hour the day reckoned with)
+function p2DayEnd(d){ if (!skipOn()) return d.end; const h = d.steps.find(s => s.k === 'hvile'); return h && h.ready != null && h.ready > h.t + 1e-6 ? Math.min(d.end, h.ready) : 0; }   // (0: nothing to wait for, she goes now)
 // the day's end: the next day at the hour (or now, round the clock, or when the day must be made again from where she lies)
 function plan2Boundary(o, H){
   const r = o.run;
@@ -254,7 +273,7 @@ function plan2Boundary(o, H){
   // a day's work left, else after the rest and at the hour, like any day (GUI review F2: a day made again late at night went out again)
   const spent = r && r.replan ? plan2Spent(o, H) : 0;
   if (r && r.replan && !spent) return plan2NewDay(o, H);
-  const from = spent ? H + spent : r && r.day ? r.day.end : H, dep = plan2NextDep(o, H, from);
+  const from = spent ? H + spent : r && r.day ? p2DayEnd(r.day) : H, dep = plan2NextDep(o, H, from);
   // the rules at the next departure: a closed place waits for its date, a used-up quota stops the plan now, not tomorrow morning
   { const st = plan2RulesWhy(o, dep); if (st){ if (st.k === 'closed'){ const at = plan2RulesOpenAt(o, dep); if (at != null){ const d = gDate(at); plan2Wait(o, 'closed', st.no + ' Planen venter til ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', st.en + ' The plan waits until ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', Math.min(at, H + 24)); return; } } plan2Stop(o, st.k, st.no, st.en, st.fix); return; } }
   if (H < dep - 1 / 60){ plan2Wait(o, 'dep', (spent ? 'Mannskapet hviler. ' : '') + 'Neste tur går kl. ' + driftClock(driftHod(dep)) + (dep - H > 20 ? ' i morgen' : '') + '.', (spent ? 'The crew rest. ' : '') + 'The next trip goes at ' + driftClock(driftHod(dep)) + (dep - H > 20 ? ' tomorrow' : '') + '.', dep); if (spent) r.replan = true; return; }

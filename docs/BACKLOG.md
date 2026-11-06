@@ -454,6 +454,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 - ~~Haill lover «alt redskapet ditt fanger dobbelt så mye», men garn og line fylles opp~~: Jonas valgte mer plass i redskapet; `haillCap` (`haill-pub-og-bonus.md` 5.10), `tests/haillplass.py`. Står igjen: juksa alene om bord holdes igjen av sløyingen (×1,76 og ×1,90).
 - ~~Glidebryteren for farten på full fart som standard~~: «Full fart» følger toppfarten, også driftsplanene (`fysikk-og-styring.md` 5.58).
+- ~~Skippertak virket ikke på driftsplanene~~ (plan2 fra 27.10): Jonas valgte «Døgnet rundt»; `haill-pub-og-bonus.md` 5.40, `tests/skipdrift.py`. Kjent: når ankeret drar, får mannskapet +6 slitasje og du −3 energi også med drikken (`06e-anchor.js:161`), nullstilt innen timen.
 - **`shopClaim` markerer også tildelinger klienten ikke kjenner som levert** (`10i-shop.js`): ingen slike i databasen nå, men en ny produkttype før klienten kjenner den, ville gått tapt.
 
 ## Strøket 06.11.2026 (Ø11.2 sikt, lys og lyd, gren `claude/o11-2-sikring-lys-lyd-bsrlub`, rullet ut i f04d4feb)

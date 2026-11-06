@@ -987,7 +987,7 @@ Drift: the standing operations plan, per vessel. Made anew 23.10.2026 (Jonas: «
 - **556** the plan to another vessel of the company: the answers, made again there
   - 557 `driftCopy(vid)`
 
-## `src/js/core/06g-plan2.js` (427 linjer)
+## `src/js/core/06g-plan2.js` (433 linjer)
 
 Driftsplan 2: the day is the plan (26.10.2026, docs/planer/driftsplan-2/02-design.md). Part 1: the model, the day and the check.
 
@@ -1007,22 +1007,22 @@ Driftsplan 2: the day is the plan (26.10.2026, docs/planer/driftsplan-2/02-desig
   - 115 `plan2State(o)`
   - 132 `plan2RestOk(pid)`
   - 134 `plan2Ready(kind, st, lk)`
-  - 136 `plan2NextDep(o, H, from)`
-  - 144 `plan2Watch(H)`
-  - 145 `plan2Roles(st)`
-- **151** the ocean vessel's day (H2c of docs/planer/havsteget-h2-autoline.md, 05.11.2026): the autoline in a loop on the fields, round the
-  - 159 `p2AutoEnd(o, st)`
-  - 169 `planDayAuto(o, H0, st)`
-- **221** the day. H0: the hour the day begins (the departure). Returns {t0, steps:[{t, k, …}], end, why:[no, en], skipped:[{id, no, en}]}.
-  - 224 `planDay(o, H0, st)`
-- **337** the day as text: [[clock, no, en], …], one line a step, the skipped places and the reason last
-  - 338 `planDayText(o, day)`
-- **370** the check: errors keep the plan from being switched on, warnings only inform (as driftCheck; the rhythm's rules from Jonas 26.10.2026)
-  - 374 `plan2WatchWhy(st, aboard, short)`
-  - 384 `p2Kits()`
-  - 385 `plan2Check(o, st)`
+  - 138 `plan2NextDep(o, H, from)`
+  - 148 `plan2Watch(H)`
+  - 149 `plan2Roles(st)`
+- **155** the ocean vessel's day (H2c of docs/planer/havsteget-h2-autoline.md, 05.11.2026): the autoline in a loop on the fields, round the
+  - 163 `p2AutoEnd(o, st)`
+  - 173 `planDayAuto(o, H0, st)`
+- **225** the day. H0: the hour the day begins (the departure). Returns {t0, steps:[{t, k, …}], end, why:[no, en], skipped:[{id, no, en}]}.
+  - 228 `planDay(o, H0, st)`
+- **343** the day as text: [[clock, no, en], …], one line a step, the skipped places and the reason last
+  - 344 `planDayText(o, day)`
+- **376** the check: errors keep the plan from being switched on, warnings only inform (as driftCheck; the rhythm's rules from Jonas 26.10.2026)
+  - 380 `plan2WatchWhy(st, aboard, short)`
+  - 390 `p2Kits()`
+  - 391 `plan2Check(o, st)`
 
-## `src/js/core/06h-plan2-engine.js` (489 linjer)
+## `src/js/core/06h-plan2-engine.js` (508 linjer)
 
 Driftsplan 2, part 2: the engine (26.10.2026, docs/planer/driftsplan-2/02-design.md chapter 2). It follows the day that planDay
 
@@ -1054,24 +1054,26 @@ Driftsplan 2, part 2: the engine (26.10.2026, docs/planer/driftsplan-2/02-design
 - **191** the engine: each minute, on each vessel (06d-drift.js opsStep hands over with DRIFT2 on)
   - 193 `plan2Step(H)`
   - 209 `plan2Decide(o, H)`
-  - 238 `plan2MeRest(o, H)`
-  - 246 `plan2Boundary(o, H)`
-  - 265 `plan2Spent(o, H)`
-  - 274 `plan2NewDay(o, H)`
-  - 286 `plan2CostDay(o, r)`
-  - 289 `plan2Caught(o, tr)`
-  - 290 `plan2StatDay(o, d)`
-- **291** a trip: the steps from i0 to the next port call, as waypoints on the kept legs
-  - 292 `plan2Trip(o, D, i0)`
-  - 327 `plan2Go(o, H, i0)`
-  - 373 `plan2Sea(o, H)`
-  - 411 `plan2WorkStop(o, H, W, hs)`
-  - 422 `plan2WorkWait(o, H, wx, pts, port)`
-  - 433 `plan2Landed(pid, k)`
-  - 442 `plan2Report(pid, kg, total, landed)`
-  - 454 `plan2Bait(o, s)`
-  - 469 `plan2Egn(o, s)`
-  - 476 `plan2WatchTick(H)`
+  - 240 `plan2MeRest(o, H)`
+  - 252 `plan2SkipGiven()`
+  - 263 `p2DayEnd(d)`
+  - 265 `plan2Boundary(o, H)`
+  - 284 `plan2Spent(o, H)`
+  - 293 `plan2NewDay(o, H)`
+  - 305 `plan2CostDay(o, r)`
+  - 308 `plan2Caught(o, tr)`
+  - 309 `plan2StatDay(o, d)`
+- **310** a trip: the steps from i0 to the next port call, as waypoints on the kept legs
+  - 311 `plan2Trip(o, D, i0)`
+  - 346 `plan2Go(o, H, i0)`
+  - 392 `plan2Sea(o, H)`
+  - 430 `plan2WorkStop(o, H, W, hs)`
+  - 441 `plan2WorkWait(o, H, wx, pts, port)`
+  - 452 `plan2Landed(pid, k)`
+  - 461 `plan2Report(pid, kg, total, landed)`
+  - 473 `plan2Bait(o, s)`
+  - 488 `plan2Egn(o, s)`
+  - 495 `plan2WatchTick(H)`
 
 ## `src/js/core/06e-anchor.js` (180 linjer)
 
@@ -1903,7 +1905,7 @@ life aboard: learning, meals, the rest rule and what the crew says
   - 367 `lifeHail(H)`
   - 374 `alumniReturn(B)`
 
-## `src/js/core/15-energy.js` (163 linjer)
+## `src/js/core/15-energy.js` (166 linjer)
 
 your own energy: a day at sea empties it, a night ashore fills it
 
@@ -1916,11 +1918,11 @@ your own energy: a day at sea empties it, a night ashore fills it
 - **77** Skippertak (Jonas 12.10.2026): an energy drink, for real money only (never for the game's kroner), in three sizes
   - 90 `fleetCrews()`
   - 91 `giveSkip(k)`
-  - 102 `energyMinute()`
-  - 124 `fallAsleep(v, doze)`
-  - 138 `wakeUp()`
-  - 144 `wakeEarly(back)`
-  - 156 `sleepDrift(H)`
+  - 105 `energyMinute()`
+  - 127 `fallAsleep(v, doze)`
+  - 141 `wakeUp()`
+  - 147 `wakeEarly(back)`
+  - 159 `sleepDrift(H)`
 
 ## `src/js/core/16-helm.js` (74 linjer)
 
@@ -2367,12 +2369,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1225 linjer)
+## `src/js/ui/phone/07-patch.js` (1226 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1218 `patch()`
+  - 1219 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
