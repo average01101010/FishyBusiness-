@@ -336,3 +336,12 @@
 2026-11-06 16:04	ccr-91234803-y9yb7j	b63df02b+	navbarshot	OK	35	lite	samtidig	
 2026-11-06 16:04	ccr-91234803-y9yb7j	b63df02b+	dockrow	OK	43	lite	samtidig	
 2026-11-06 16:05	ccr-91234803-y9yb7j	b63df02b+	kartlegging	OK	51	lite	samtidig	
+2026-11-06 18:02	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	tut	OK	2221	lite	alene	
+2026-11-06 18:02	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	lanterntest	OK	13	lite	samtidig	
+2026-11-06 18:02	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	soundtest	OK	7	lite	samtidig	
+2026-11-06 18:03	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	hudtest	OK	24	lite	samtidig	
+2026-11-06 18:03	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	hailtest	OK	5	lite	samtidig	
+2026-11-06 18:04	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	docktest	FEIL	61	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-06 18:05	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	anchorlight3d	FEIL	106	3d	alene	avsluttet med kode 1
+2026-11-06 18:07	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	docktest	OK	60	lite	alene	
+2026-11-06 18:12	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	anchorlight3d	OK	286	3d	alene	
