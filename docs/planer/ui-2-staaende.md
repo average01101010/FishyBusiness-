@@ -1,6 +1,6 @@
 # UI 2: telefon stående først (plan 06.11.2026)
 
-> Venter på «kjør på». V1, V3, V4 og V5 er tatt 06.11.2026. V2, V6, V7 og V8 står åpne (kap. 7). Bildene fra Jonas' telefon ligger i `ui-2/`.
+> Venter på «kjør på». V1, V2, V4, V5, V6, V7 og V8 er tatt 06.11.2026. V3 er åpnet igjen etter Jonas' innvending mot søyla og står som V3 revidert (kap. 7). Bildene fra Jonas' telefon ligger i `ui-2/`.
 
 ## 1. Hva Jonas ba om
 
@@ -11,6 +11,7 @@
 - 06.11.2026, valgene fra samtalen: V1 A (telefon stående er fasiten), V3 A («Kanskje stable de opp langs siden? Hva tenker du?»), V4 A (en knapp som ikke kan brukes, sier grunnen på seg selv), V5 A (Rederi med flåten først). V2: «Usikker på denne. Kom gjerne med konkrete forslag til hva du tenker.»
 - 06.11.2026: «Jeg tenker man kanskje kan fjerne noen av knappene? Autonav kan man feks få tilgang til ved å trykke på mini-mappet, og andre knapper kan sikkert flyttes inn i andre ting eller?»
 - 06.11.2026: «Jeg er også litt opptatt av at spillet skal være visuelt pent og at masse knapper og menyer ikke dekker hele bildet, kanskje spesielt under seiling der det ikke skjer så mye annet enn å følge med på naturen.»
+- 06.11.2026, etter planen: «Vi må bare huske at mange spillere bruker ekkoloddet på mini-mappet aktivt mens de seiler for å lete etter fisken.» Og om søyla: «en mobilskjerm i stående format er jo smalest langs siden på en måte så knappene vil jo eventuelt være mer i veien på siden». V2 A, V6 A, V7 A, V8 A.
 
 Reglene som gjelder (`CLAUDE.md`): grafikken er nesten det viktigste; alle UI-endringer tas med skjermbilder i stående og liggende før de meldes ferdige; handel bare på de tre handelsstedene; ingen ventetid lagt inn for å selge seg forbi den; patchnotes uten design eller psykologi. Ingen regelverk er berørt, så ingen kilder å sjekke.
 
@@ -73,10 +74,10 @@ Reglene som gjelder (`CLAUDE.md`): grafikken er nesten det viktigste; alle UI-en
 ## 3. Prinsippene
 
 1. **Telefon stående er fasiten** (V1 A). Nettbrett og PC arver; der det er plass, får de mer av det samme, aldri noe annet.
-2. **Naturen eier skjermen** (Jonas 06.11.2026). UI-et ligger i kantene, i faste soner, og det som ikke trengs nå, er borte. Under seiling står bare stripa og én knapp.
+2. **Naturen eier skjermen** (Jonas 06.11.2026). UI-et ligger i kantene, i faste soner, og det som ikke trengs nå, er borte. Roen tar bort knapper, aldri instrumenter: under seiling står stripa, minikartet med ekkoloddet, kompasset og én knapp.
 3. **Faste soner.** Ingenting flytter seg fordi noe annet vokser. Innholdet varierer, rammen står.
 4. **Hvert tall har ett hjem.** Neste hendelse står ett sted.
-5. **Kontekst i linja, det globale i søyla** (V3 A). Linja har hovedknappen og høyst tre til, aldri «Mer», aldri to rader.
+5. **Kontekst i linja, og så lite globalt som mulig** (V3 revidert). Linja har hovedknappen, høyst tre kontekstuelle og det ene globale, «Om bord», med Telefon ved siden av. Aldri «Mer», aldri to rader.
 6. **En knapp som ikke kan brukes nå, sier grunnen på seg selv** (V4 A). En knapp som aldri kan brukes på denne båten, vises ikke.
 7. **Kystlys-tokens beholdes** (V2 A, anbefalt): ingen ny palett, ingen ny skrift. Det som endres, er hva som står hvor, og at telefonen får samme språk som resten.
 8. **Måles før og etter:** tellingen fra `uiplay.py` og bildene i fem størrelser.
@@ -93,8 +94,8 @@ Reglene som gjelder (`CLAUDE.md`): grafikken er nesten det viktigste; alle UI-en
 | Øverst til høyre | Kamera og Kino som i dag | ja |
 | Midten | 3D, urørt | |
 | Nederst til venstre | Dekksdagbok-fanen som i dag | ja |
-| Nederst i midten | Knappelinja: hovedknappen og høyst tre til, én rad | ja |
-| Nederst til høyre | Søyla: Telefon nederst, over den Beholdning, Mannskap, Hvil | ja |
+| Nederst i midten | Knappelinja: hovedknappen, høyst tre kontekstuelle og «Om bord» sist, én rad | ja |
+| Nederst til høyre | Telefon, som i dag | ja |
 
 ### 4.2 Stripa
 
@@ -124,15 +125,20 @@ Med V7 A (Auto-nav ut av linja, redskapet som én knapp):
 | Underveis | Stopp båten | (roen, 4.5) |
 | Slep, nød | Hjelp | |
 
-Prai og «Ta slep» (`ui/10n-hail.js`, `ui/10o-ptow.js`) kommer når en annen spiller er nær, og teller blant de tre. Auto-nav går ut av linja: minikartet åpner plotteren, der Autonav er en knapp (`#rAuto`). Det som i dag bruker Auto-nav som hovedknapp, får sitt eget navn og kjører Autonav direkte. Viftene for Bygd og Verft får høyst fire på én rad, med fem som to rader på to og tre (ikke fire og én).
+I alle tilstander står «Om bord» sist i linja (4.4), og Telefon ved siden av. Høyst fem i stående medregnet Om bord. Hvil i køya er kontekstuell: den vises når energien er under varselgrensa, ved anker, og ved naust eller rorbu; ellers ligger den i boksen bak stripa. Prai og «Ta slep» (`ui/10n-hail.js`, `ui/10o-ptow.js`) kommer når en annen spiller er nær, og teller blant de tre; blir det for mange, slås Fortøy og Anker sammen til én knapp «Ligg» med vifte. Auto-nav går ut av linja: minikartet åpner plotteren, der Autonav er en knapp (`#rAuto`). Det som i dag bruker Auto-nav som hovedknapp, får sitt eget navn og kjører Autonav direkte. Viftene for Bygd og Verft får høyst fire på én rad, med fem som to rader på to og tre (ikke fire og én).
 
-### 4.4 Søyla
+### 4.4 Det globale: «Om bord» og Telefon
 
-En loddrett stabel ved høyre kant, nedenfra: Telefon (med varselmerket), Beholdning, Mannskap (bare med mannskap eller driftsplan, prikk ved krangel), Hvil i køya eller i naustet. Alltid synlig i 3D; borte i plotteren og mens telefonen er åpen. I liggende står samme søyle ved høyre kant, og med skuffen åpen flytter den seg til venstre for skuffen slik linja gjør i dag (`body.dk-open`). Kamera og Kino øverst til høyre står.
+Planen foreslo først en søyle ved høyre kant med Telefon, Beholdning, Mannskap og Hvil (V3 A). Jonas' innvending (06.11.2026) er riktig: i stående er bredden det knappe, og når kameraet er nær, fyller båten bredden (`tlf-07`), så en søyle legger seg over skroget. Det som taler for søyla, er at den dekker under halvparten av det en rad nummer to dekker, og at roen tar den bort; men den er et nytt element der linja alt finnes. Derfor, V3 revidert (anbefalt A):
+
+- **Beholdning blir «Om bord»** og får Mannskap som femte fane ved siden av Redskap, Rigg, Lasterom og Båten. Alt som er om bord, er ett sted. Prikken for krangel og driftsplan flyttes til Om bord-knappen.
+- **Hvil i køya blir kontekstuell** (4.3) i stedet for global.
+- **Linja får da ett globalt element,** Om bord sist, og Telefon ved siden av som i dag. Det gir høyst fem på raden i stående, og ingen søyle.
+- I liggende som i dag, med linja til venstre for skuffen når den er åpen (`body.dk-open`). Kamera og Kino øverst til høyre står.
 
 ### 4.5 Roen under seiling
 
-Under seiling, og ellers når ingen har rørt skjermen på åtte sekunder, glir minikartet, søyla, dagbokfanen og kompasset ut, og bare stripa og hovedknappen står. Et trykk hvor som helst henter alt tilbake. Et varsel (kuling, regler ✕, full last, framme) bryter roen. Kino (`#kinoBtn`, `#kinoHud` «Skjul», `view3d/24-cinema.js`) gjør noe av dette for hånd i dag, og roen bygger på den. Roen slår aldri inn i første tur (`tutOn`). Valget V8 sier hvor langt den går.
+Under seiling, og ellers når ingen har rørt skjermen på åtte sekunder, glir knappene ut: linja unntatt hovedknappen, Om bord, Telefon og dagbokfanen. Instrumentene står: stripa, minikartet med ekkoloddet (Jonas 06.11.2026: spillerne leter etter fisken i det mens de seiler) og kompasset. Kamera og Kino går ut med knappene. Et trykk hvor som helst henter alt tilbake. Et varsel (kuling, regler ✕, full last, framme) bryter roen. Kino (`#kinoBtn`, `#kinoHud` «Skjul», `view3d/24-cinema.js`) gjør noe av dette for hånd i dag, og roen bygger på den. Roen slår aldri inn i første tur (`tutOn`). Valget V8 sier hvor langt den går.
 
 ### 4.6 Telefonen
 
@@ -148,7 +154,7 @@ Hver fase passer én økt og slutter med `/lever` og `/okt-slutt`, med skjermbil
 |---|---|---|---|
 | **U2-0** Kartlegging i stående | `uishots.py` og `uiplay.py` i 390×844 og 800×1280, tellingen før; lista over alle datapunkt og handlinger i tre bøtter (sanntid, ett trykk, bakmeny); inventaret av linja per tilstand og telefonens apper og sider. Skrives til `ui-2/kartlegging.md`. Bare dokumenter og tester. | `tests/`, `docs/planer/ui-2/` | – |
 | **U2-1** Stripa og sonene | Stripa med tre linjer og fast høyde som normal i stående; boksen som kort ved trykk; minikartet i fast plass uten `--gpsTop` fra boksens høyde; `#dockInfo` ut og innholdet på linje 3 | `ui/04-panels-instruments.js`, `ui/03e-miniplot.js`, `ui/10c-dock.js` (`infoText`), `styles.css` | `hudtest`, `dockrow`, `uishots`, `tut.py` i begge formater |
-| **U2-2** Søyla | Søyla ved høyre kant med Telefon, Beholdning, Mannskap og Hvil; telefonknappen inn i den; de globale ut av linja; liggende med skuffen åpen | `src/index.html`, `styles.css`, `ui/10c-dock.js`, `ui/phone/00-shell.js` (varselmerket) | `docktest`, `uishots` |
+| **U2-2** Om bord | Beholdning blir Om bord med Mannskap som fane, prikken flyttet; Mannskap-knappen ut av linja; Hvil kontekstuell; Om bord sist i alle tilstander. (Ved V3 B: søyla i stedet, `src/index.html` og `styles.css`.) | `ui/10c-dock.js`, `ui/phone/11-rederi.js` (`DRAWER`, sidene `beholdning` og `arbeid`), `styles.css` | `docktest`, `dockrow`, `worktest`, `uishots` |
 | **U2-3** Knappelinja | Reglene i 4.3: Auto-nav ut, Redskap som én knapp med vifte, hovedknappen med mål («Til mottaket · 3 nm»), grunnen på knappen (`data-why` tegnet under etiketten, ikke stiplet ring), det som aldri gjelder båten skjult, ingen «Mer» og ingen to rader i stående, viftene på høyst fire per rad | `ui/10c-dock.js`, `styles.css`, `ui/07b-first-trip.js` bare om et steg peker på linja | `docktest`, `dockrow`, `tut.py` i begge formater, fisketestene som trykker i linja (`fiskeplay`, `geartest`) |
 | **U2-4** Roen | 4.5 etter V8 | `ui/10c-dock.js`, `styles.css`, `view3d/24-cinema.js`, `ui/02-format-state.js` (toast bryter roen) | `tut.py` (roen må ikke slå inn), `hbtest`, `uishots` |
 | **U2-5** Rederi | 4.6 etter V5 A | `ui/phone/11-rederi.js`, `ui/phone/14-act.js` (`vboard`, `vfollow`), `styles.css` | `fleet2test`, telefontestene, `uishots` |
@@ -157,7 +163,7 @@ Hver fase passer én økt og slutter med `/lever` og `/okt-slutt`, med skjermbil
 | **U2-8** Nettbrett og PC arver | De fem størrelsene: hele boksen der det er plass, søyla i liggende, viftene; det som ser rart ut på 1440×900 | `styles.css` | `uishots` i alle fem |
 | **U2-9** Måling etter og regresjon | Tellingen etter, patchnotes, `/regresjon`, fletting inn i arbeidsgrenen | | `/regresjon` |
 
-Rekkefølgen U2-0 → U2-1 → U2-2 → U2-3 er ryggraden: stripa før søyla, søyla før linja mister de globale. U2-4 til U2-7 kan tas i den rekkefølgen Jonas vil etter U2-3. U2-8 etter alt i `src/`, U2-9 sist.
+Rekkefølgen U2-0 → U2-1 → U2-2 → U2-3 er ryggraden: stripa før Om bord, Om bord før linja mister Mannskap og Hvil. U2-4 til U2-7 kan tas i den rekkefølgen Jonas vil etter U2-3. U2-8 etter alt i `src/`, U2-9 sist.
 
 ## 6. Filene og hvem fasene ikke går samtidig med
 
@@ -168,6 +174,17 @@ Rekkefølgen U2-0 → U2-1 → U2-2 → U2-3 er ryggraden: stripa før søyla, s
 - Alle fasene rører `styles.css`. To UI 2-økter går derfor aldri samtidig.
 
 ## 7. Valgene
+
+**Tatt 06.11.2026:** V1 A (telefon stående er fasiten), V2 A (Kystlys strammet inn), V4 A (grunnen på knappen), V5 A (Rederi med flåten først), V6 A (hjemskjermen i grupper), V7 A (Auto-nav ut, Redskap som én knapp), V8 A (roen automatisk, med instrumentene stående).
+
+**Åpent:**
+
+- **V3 revidert, det globale.** Jonas valgte først A, søyla, og spurte så om den ikke er mer i veien i stående (kap. 4.4).
+  - **A «Om bord» i linja** (anbefalt): Beholdning og Mannskap slås sammen til Om bord med fem faner, Hvil blir kontekstuell, og linja har ett globalt element sist. Ingen søyle, høyst fem på raden, og færre knapper, som Jonas ba om.
+  - **B Søyla** som planlagt: Telefon, Beholdning, Mannskap og Hvil ved høyre kant. Dekker mindre enn en rad nummer to, og roen tar den bort, men den ligger over skroget når kameraet er nær.
+  - **C To globale i linja:** Beholdning og Mannskap sist i linja som i dag, Hvil kontekstuell. Enklest, men seks på raden til sjøs med Fortøy og Anker.
+
+**Slik var valgene stilt:**
 
 - **V2 Omfang.** Jonas ba om konkrete forslag.
   - **A «Kystlys strammet inn»** (anbefalt): samme tokens, skrifter og flater. Det som endres: telefonens fliser får glass og strekikoner som linja; magenta brukes bare til hovedknappen og det som er aktivt; de stiplede rammene (pilla, knappene som ikke kan brukes) går ut; krem står bare i veiledningen. Lite arbeid, lav risiko, og problemene Jonas peker på er strukturelle, ikke fargene.
@@ -209,4 +226,5 @@ Rekkefølgen U2-0 → U2-1 → U2-2 → U2-3 er ryggraden: stripa før søyla, s
 
 ## 10. Status
 
-- 06.11.2026: planen skrevet etter samtalen 05.–06.11.2026 og bildene fra Jonas' telefon (`ui-2/`). Ingenting bygd. Venter på V2, V6, V7, V8 og «kjør på».
+- 06.11.2026: planen skrevet etter samtalen 05.–06.11.2026 og bildene fra Jonas' telefon (`ui-2/`). Ingenting bygd.
+- 06.11.2026: Jonas svarte V2 A, V6 A, V7 A, V8 A, og la til to ting: ekkoloddet i minikartet brukes aktivt under seiling, så roen tar bort knapper og aldri instrumenter (4.5); og søyla ved siden kan være mer i veien i stående, så V3 er åpnet igjen som V3 revidert med «Om bord» i linja som anbefaling (4.4, kap. 7). Venter på V3 revidert og «kjør på». U2-0 kjøres som en Playwright-runde i stående før byggingen (Jonas' spørsmål 06.11.2026), med oppdraget: mål og finn, ikke tegn om.
