@@ -328,10 +328,8 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **fleet2test ventet fast 1,8 s etter reload** og ble rød da oppstarten ble tregere (lasteskjermen); venter nå på `S.fleet` (02.11.2026).
 
 
-- `S.owned` skrives fortsatt (`03-simulation.js`, `05-phone.js`, `05-vessels.js`), men leses bare av en lagringsmigrering i `11-boot.js`.
-- Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
+- **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
-- Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
 
 ## Strøket 06.11.2026 (Ø7 Småfeil i spillet, gren `ccr-3609ceee-8lzhrx`)
 
@@ -340,6 +338,9 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **10.1 (4)–(6), sjekket i Ø7:** (4) «Start på nytt» er tatt bort fra havnesiden og står bare i rødt i Innstillinger, med `confirm` (U0). (5) Lever-siden til sjøs sier «Du er ikke i havn. Fisken leveres på et fiskemottak.» med nærmeste mottak og «Autonav dit» over (U0); havnesiden har fortsatt «Prislisten under» med prislista under. (6) «Kjøp (test, ingen betaling)» er ikke en feil: `shopMode` gir den bare utenfor detstorebla.no eller for admin, og en spiller ser «Kjøp · kr» eller «Snart i salg». Skjermbilder i begge formater.
 - **U10, rest (spilltest 3): ikonet i en knapp med to linjer sto en linje høyere enn naboene.** Knappene henger nå fra toppen av raden, og ved siden av hovedknappen starter de andre 8 px lavere, så ikonføttene og tekstene står på linje; `rowsUp` regner radene fra margkanten, og statusfeltet og viften står minst 10 px over den høyeste knappen (`ui-og-telefon.md`). Målt i 1280 × 800, 800 × 1280 og 390 × 844 på norsk og engelsk, også med «Fish on» som hovedknapp ved «Rest in the bunk» på to linjer: før 12 px mellom ikonføttene, nå 0; tekstene går ikke i hverandre.
 - **`paintPlotter` kastet «reading '0'» i `drawSkiff`:** i G3-skopet er `inFrame` hendenes ramme (`view3d/09-landing-deck.js`), som skygget for verdens `inFrame(p)`, så skiffens levende kartplotter kastet hvert halve sekund når modellen med `skiff.scr` var nær kameraet. Det skjedde i spillet for alle med skiff, både ved båtbytte og når en lagring med skiffen ble lastet: kastet stoppet resten av bildet (kaia, karene, de andre båtene og snøen manglet), og skjermene sto svarte. Kjernen har nå `inMapFrame`, som `paintPlotter` bruker (`3d-baater-og-animasjon.md`). Prøvd i 3D i begge formater: før 3–21 sidefeil på 8 s, nå 0, og konsollen viser kartplotteren og målerne.
+- **10.7 `S.owned`:** blir stående som merket for migreringen i `11-boot.js` (en lagring begynt etter 04.10.2026 har `['trebat']` fra `newState`, så en skiff kjøpt på verftet blir stående); kjøpet i telefonen legger ikke lenger til i lista, og det samme i `addVessel` står i 10.7 til H2 er ferdig. `boottest` 4 OK.
+- **10.7 ikonet `sjomann`:** tatt bort (`ui/phone/00-shell.js`).
+- **10.7 skiffen (`buildSkiff`):** sløyebordet og blødekaret sto ikke lenger ved setet: skiffrevisjonen 31.10.2026 la sløyebordet over babord ripe ved konsollen og blødekaret på dørken akter om det (`skiff-grunnlag.md`, rad 8), sett i 3D i Ø7. Skjermene var døde fordi `paintPlotter` kastet (over); nå lever de. `buildSkiff` blir, siden `handKit` bygger på den.
 
 ## Strøket 05.11.2026 (Finnmark kalibrert mot sluttsedlene)
 

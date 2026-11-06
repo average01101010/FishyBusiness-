@@ -15,3 +15,11 @@
 2026-11-05 21:54	ccr-9c21028c-lptg24	6a65b974	driftsplan2test	OK	119	lite	alene	
 2026-11-05 21:56	ccr-9c21028c-lptg24	6a65b974	driftsplan2test	OK	123	lite	alene	
 2026-11-05 22:07	ccr-9c21028c-lptg24	10bc93d1	boottest	OK	25	lite	alene	
+2026-11-05 23:58	ccr-3609ceee-8lzhrx	0b9de6d7+	dockrow	OK	54	lite	samtidig	
+2026-11-05 23:58	ccr-3609ceee-8lzhrx	0b9de6d7+	docktest	OK	66	lite	samtidig	
+2026-11-06 00:00	ccr-3609ceee-8lzhrx	0b9de6d7+	uishots	OK	112	lite	samtidig	
+2026-11-06 00:00	ccr-3609ceee-8lzhrx	0b9de6d7+	navbarshot	OK	39	lite	samtidig	
+2026-11-06 00:00	ccr-3609ceee-8lzhrx	0b9de6d7+	tutdrift	OK	12	lite	samtidig	
+2026-11-06 00:02	ccr-3609ceee-8lzhrx	0b9de6d7+	starttest	OK	186	lite	samtidig	
+2026-11-06 00:02	ccr-3609ceee-8lzhrx	0b9de6d7+	boottest	OK	44	lite	samtidig	
+2026-11-06 00:02	ccr-3609ceee-8lzhrx	0b9de6d7+	skiptest	OK	24	lite	samtidig	

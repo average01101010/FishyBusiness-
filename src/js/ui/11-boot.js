@@ -146,8 +146,10 @@ if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
 // the skiff is only bought at the yard (05.10.2026, Jonas: «Den båten der skal kun være tilgjengelig for kjøp i verftet … For alle
 // brukere»): a save that still sails the free aluminium skiff it started with (the start boat until 04.10.2026: the first vessel, never
 // traded, S.owned just ['skiff'] or not kept yet) gets Father's old wooden boat instead, and what does not fit her (the 90 hp outboard)
-// is paid back at its price. A skiff bought at the yard (S.owned has more) stays. (A save migration about one old type by name, which
-// the rule against branching on type names in game logic, vesseltest, does not cover.)
+// is paid back at its price. A skiff bought at the yard stays: S.owned is only this migration's mark, ['trebat'] in every save begun
+// after 04.10.2026 (newState), and nothing else reads it, so a purchase no longer adds to it (Ø7; the add in core/03-simulation.js
+// addVessel goes when havsteget H2 is out). (A save migration about one old type by name, which the rule against branching on type
+// names in game logic, vesseltest, does not cover.)
 { const v0 = S.fleet && S.fleet.length ? S.fleet[0] : null, on = fn => v0 ? withVessel(v0, fn) : fn(), OLD = 'skiff', isOld = t => !t || t === OLD;
   if ((!S.owned || (S.owned.length === 1 && isOld(S.owned[0]))) && on(() => isOld(S.boat.type))){
     let back = 0;
