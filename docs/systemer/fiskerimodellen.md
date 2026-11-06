@@ -130,7 +130,7 @@
   - **NVG-silda** (HI, «Norsk vårgytande sild»): gyting på Møre og Haltenbanken (62–65,5° N) i februar–mars, beiting i Norskehavet om sommeren (utenfor rammen), overvintring utenfor Troms og Vesterålen (68,3–71° N) i oktober–januar. Sedlene viser det samme: havflåtens sild er i hovedområde 04 i oktober–januar (71 850 t i januar i året).
   - **Makrellen** (HI, «Makrell»): langs kysten mai–november. Nordgrensen går fra 58° N i mai til 69° N i august, og ingen langs kysten desember–april.
   - **Seien** (HI, «Sei»; sluttsedlene): gyting på Møre og Haltenbanken i februar–mars, stimene langs kysten nord for 65° N i mai. Kurven er 1 på Senja og fyller bare inn der sedlene ikke har lokasjonen. Der de har den, gjelder sedlene.
-  - **Snøkrabben** (HI, «Snøkrabbe»): bare nordøst i Barentshavet, øst for 30° Ø og nord for 72° N (hjørnet av rammen).
+  - **Snøkrabben** (HI, «Snøkrabbe»): bare nordøst i Barentshavet, øst for 30° Ø og nord for 72° N (hjørnet av rammen). Erstattet i H3a (06.11.2026) av sedlene per lokasjon, se 5.3c-R6.
 - **De nye artene** sild, makrell og snøkrabbe (`SPECIES`, `npc:true`, valg 4 = A):
   - De er bare for flåtetrykket (B3) og AIS (H1).
   - De er ikke i `SP` eller `SHELL`, og `spCatchable` sier nei.
@@ -203,7 +203,14 @@
 - **Målt:** torsk ved Bjørnøya (20-10) 2,99 / 1,13 / 2,62 / 2,73 i januar, april, juli og oktober (mot Senjas snitt over året), vest av Spitsbergen (21-25) 3,22 i juli; snøkrabbe på Sentralbanken (15-10) 0,97 i februar.
 - **Vandringen på de nye feltene:**
   - **Silda** beiter i Norskehavet om sommeren (april–august, topp i juni–juli), 64–74° N vest for 8° Ø og ut mot Jan Mayen og Island (HI). Før var Norskehavet utenfor rammen.
-  - **Snøkrabben** er nord for 72° N og øst for rundt 25° Ø (hovedområde 13, 15, 23 og 24); før var kurven rammens hjørne øst for 30° Ø.
+  - **Snøkrabben** er nord for 72° N og øst for rundt 25° Ø (hovedområde 13, 15, 23 og 24); før var kurven rammens hjørne øst for 30° Ø. **Fra H3a (06.11.2026) er boksen borte** (`MIG.snokrabbe`): snøkrabben står der sedlene 2024–2026 viser den per lokasjon og måned (`snoArea` i `core/10d-snokrabbe.js`, `fkAvail` spør den), med dybden og bare på norsk sokkel:
+    - **Dataene:** `tools/npc/fiske.py snokrabbe` legger en egen del `snok` i `fiske.json` (bare denne arten; resten av fila er byte for byte som før, så kalibreringen er urørt): kilo i året per lokasjon etter siste fangstdato (snittet over årene som har måneden), landinger, vektgruppene for levende krabbe og tonn fryst og levende. 29 lokasjoner; mest 24-02 (1 846 t i året), 15-05 (1 611 t), 15-04, 24-01, 15-03, 15-09 og 24-03; ved Hopen 23-07 og 23-15 (om lag 100 t hver).
+    - **Indeksen:** sesongens fangst per lokasjon (desember–juni), fjerderota av den mot snittet vektet etter fangsten (flåten går dit krabba er, så fangsten varierer mye mer enn krabba; fjerderota gir Hopen om lag halvparten av Storbanken, som fangsten per turdøgn i sedlene: 5,3 mot 9,5 t i februar), og måneden mot sesongens snitt som kvadratrota, mellom 0,4 og 1,6. En lokasjon uten landinger ved siden av noen med får 35 % av naboenes snitt, resten av norsk sokkel i Barentshavet (nord for 72° N, øst for 20° Ø) 6 %. Månedene juli–november (stengt) er sesongens snitt.
+    - **Dybden:** full fra 220 til 380 m, ingenting grunnere enn 150 eller dypere enn 460 m (HI 2023-51: forsøksfartøyet fisket på 250–350 m).
+    - **Sokkelen:** bare på norsk kontinentalsokkel (`ruShelf`); på russisk sokkel er det ingen snøkrabbe for spilleren.
+    - **Flekkene:** et langsomt mønster på noen titalls km (0,7–1,3, snitt 1).
+    - **Bestanden:** årets indeks (`stockF`, B/BMSY fra HI) og det teinene har tatt i cellen (`S.sstk`).
+    - Målt i `snokrabbetest` (kg per teine etter 7 døgn): se 5.68 i `redskap.md`.
   - **Loddetorsken** (`MIG.loddeW`) gjelder bare langs kysten, ikke nord for 72° N: lodda gyter ved land.
   - Skreien, seien og makrellen er som før: skreifronten er klemt til 66–71,2° N, og nivået per måned kommer fra sedlene.
 - **Tester:** `tests/unit/vandring.test.mjs` (fire nye sjekker).
