@@ -277,3 +277,8 @@
 2026-11-06 12:46	claude/u2-3-knappelinja-felp6h	d62153dc	havplantest	FEIL	229	lite	alene	FEIL spot check Egersund: the plan made, out from Egersund, the lenker set and hauled, fish aboard [[{'lat': 58.249999999999986, 'lon': 4.9}, {'lat': 58.3826273
 2026-11-06 12:29	ccr-e5ae7b11-uibmpt	60e27413	trackfollow	OK	1567	3d	alene	
 2026-11-06 12:49	ccr-e5ae7b11-uibmpt	f54bb222	tut	OK	1178	lite	alene	
+2026-11-06 15:17	ccr-1c785ad6-0di8o1	feac945f+	snokrabbetest	OK	24	lite	samtidig	
+2026-11-06 15:17	ccr-1c785ad6-0di8o1	feac945f+	geartest	OK	54	lite	samtidig	
+2026-11-06 15:17	ccr-1c785ad6-0di8o1	feac945f+	boottest	OK	38	lite	samtidig	
+2026-11-06 15:18	ccr-1c785ad6-0di8o1	feac945f+	trip2	OK	38	lite	samtidig	
+2026-11-06 15:19	ccr-1c785ad6-0di8o1	feac945f+	dbg23o	OK	41	3d	alene	

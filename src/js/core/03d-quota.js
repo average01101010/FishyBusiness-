@@ -238,7 +238,7 @@ const HREG = {tral:36, konv:26, rnot:69, krab:30};
 // back); it comes with the world every ten minutes (WSH.reg) and after each purchase or sale. Offline the save keeps its own as before.
 // (H1 of docs/planer/havsteget.md, 03.11.2026: the ocean permits HREG share the register; a save from before gets them full)
 function npcReg(){ const R = S.npcReg || (S.npcReg = {...REGN}); for (const k in HREG) if (R[k] == null || R[k] > HREG[k]) R[k] = Math.min(R[k] == null ? HREG[k] : R[k], HREG[k]);
-  if (typeof WSH !== 'undefined' && WSH.reg){ for (const k in REGN) if (WSH.reg[k] != null) R[k] = WSH.reg[k]; for (const k in HREG) if (WSH.reg[k] != null) R[k] = WSH.reg[k]; } return R; }
+  if (typeof WSH !== 'undefined' && WSH.reg){ for (const k in REGN) if (WSH.reg[k] != null) R[k] = WSH.reg[k]; for (const k in HREG) if (WSH.reg[k] != null) R[k] = Math.min(WSH.reg[k], HREG[k]); } return R; }   // (never over HREG: the server's snow crab register said 34 until its migration to 30, H3a)
 function regSend(fn, id){
   if (typeof cloudRpc !== 'function' || typeof CLOUD === 'undefined' || !CLOUD.on || !CLOUD.user) return;
   cloudRpc(fn, {rid:id}).then(r => { if (r && typeof r === 'object') WSH.reg = r; })

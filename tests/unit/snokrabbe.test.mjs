@@ -104,6 +104,7 @@ export default function (t){
   S.lic.flex = null; S.quota = {y:2026, torsk:0, hyse:0, sei:0, snokrabbe:100000}; S.t = Hd(2027, 1, 5) * 60; K.quotaState(); t.ok(!S.lic.flex, 'ingen kvotefleks på fartøynivå fra 2026 til 2027');
   // the register: 30 permits, an old save with 34 is cut to 30
   S.npcReg = {...K.REGN, tral:36, konv:26, rnot:69, krab:34}; t.ok(HREG.krab === 30 && K.npcReg().krab === 30, '30 snøkrabbetillatelser i registeret (sak 17/2026), en gammel lagring med 34 får 30');
+  K.WSH.reg = {krab:34}; t.ok(K.npcReg().krab === 30, 'serverens register med 34 (før migreringen) vises som 30'); K.WSH.reg = null;
   // the permit: no quota factor, priced by what the fishery bears (V6 B)
   const kfs = new Set([0, 1, 2, 3, 4, 5].map(wk => K.havOffer('krab', wk * 168).kf)), V = K.snoLicValue(2027);
   t.ok(kfs.size === 1 && kfs.has(1) && K.havValue({id:'krab', kf:1}, Hd(2027, 3, 1)) === V.v, 'ukas snøkrabbetillatelse har ingen kvotefaktor, og verdien er det driften bærer');
