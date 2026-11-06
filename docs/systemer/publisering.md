@@ -32,3 +32,10 @@ Appen for hjemskjermen (PWA, fra 03.10.2026) bygges med `KYST_PWA=1 node build.m
 - Med hele kysten (4.13) er det 425 kartfiler og 195 MB. Én publisering tar høyst 255 filer og 64 MB, og en versjon høyst 511 filer og 256 MB. Send derfor de endrede filene i flere publiseringer til samme URL, hver med siden og en bunke filer under 64 MB.
 
 Begrensningen som gjelder: siden må forbli én fil. Alt er innebygd, også skriftene (fra 05.10.2026), bortsett fra kartpakkene i `map/` (fra kystplanens fase K3), som ligger ved siden av siden i samme artifact. Et framtidig PWA-bygg på GitHub Pages kan ha flere filer (manifest, service worker, ikoner, kartsoner), se veikartet «PWA og hele kysten» i `docs/planer/flaateplanen.md`.
+
+## Ny versjon er ute: «Oppdater nå» (Jonas 06.11.2026)
+
+Jonas: «Varsel ved oppdatering for å kjøre refresh på appen slik at de spiller på den nyeste versjonen?» Før byttet tjenestearbeideren kode stille (`skipWaiting` + `clients.claim`), og et åpent spill kjørte gammel kode til neste innlasting.
+
+- **`version.json`** ved siden av siden (`build.mjs`): `{"v": "<12 hex>", "at": "<ISO>"}`, samme versjon som `<meta name="dsb-version">` og tjenestearbeiderens cache. `tools/server/Caddyfile` har `/version.json` i `@fresh` (no-cache). **Caddyfilen på serveren må oppdateres for hånd** (den ligger ikke i utrullingen). På Pages spør klienten med `?t=` så den ikke caches.
+- **`UPDATE`** (`ui/10p-install.js`, startet fra `ui/11-boot.js`): spør `version.json` hvert tiende minutt, halvannet sekund etter at fanen kommer tilbake, og 90 s etter start. Er versjonen en annen enn sidens, kommer stripa `#updBar` øverst: «En ny versjon av spillet er klar. [Oppdater nå] ✕». Knappen lagrer (`save()`) og laster siden på nytt; ✕ utsetter en halv time. I appen gir også `controllerchange` på en side som alt hadde en tjenestearbeider stripa, og `reg.update()` kalles hver halvtime. Ingenting laster på nytt av seg selv. Måles med `update_ask` og `update_go` (fra, til) i hendelsene. Ikke i artifacten (`dev`).

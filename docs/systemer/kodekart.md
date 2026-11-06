@@ -614,7 +614,7 @@ The fleet's pressure and the stock's baseline (B3 of docs/planer/bestand-og-flaa
   - 46 `seaIceShut(p, H, V)`
   - 51 `seaIceOnLeg(a, b, H, V)`
 
-## `src/js/core/04-crew.js` (522 linjer)
+## `src/js/core/04-crew.js` (548 linjer)
 
 crew: people with skills, habits and moods
 
@@ -672,14 +672,19 @@ crew: people with skills, habits and moods
   - 386 `holdNet()`
   - 395 `crewSettle(c)`
   - 404 `crewQuit(c, why, whyEn)`
-  - 407 `borsTick(H)`
-  - 415 `crewRumour()`
-  - 417 `crewTick(H)`
-  - 484 `codRoom(H)`
-- **486** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
-  - 500 `flyIn(c)`
-  - 509 `flyOut(c)`
-  - 517 `flyTick()`
+- **406** Named folk on the coast (Jonas 06.11.2026): real people who have asked to be in the game, as crew to hire at their home quay
+  - 416 `namedAge(n, H)`
+  - 417 `namedMake(n)`
+  - 422 `namedTaken(nid)`
+  - 423 `namedTick(B)`
+  - 432 `borsTick(H)`
+  - 441 `crewRumour()`
+  - 443 `crewTick(H)`
+  - 510 `codRoom(H)`
+- **512** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
+  - 526 `flyIn(c)`
+  - 535 `flyOut(c)`
+  - 543 `flyTick()`
 
 ## `src/js/core/05-vessels.js` (1295 linjer)
 
@@ -1114,7 +1119,7 @@ the fish tubs (docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
   - 58 `tubPack(dims, spec, seed)`
   - 91 `karRefund()`
 
-## `src/js/core/07-harbours.js` (544 linjer)
+## `src/js/core/07-harbours.js` (546 linjer)
 
 harbours: quays, berths and mooring
 
@@ -1143,24 +1148,24 @@ harbours: quays, berths and mooring
   - 319 `berthClear(a, b, m)`
   - 320 `berthPath(from, bp)`
 - **345** landing the catch
-  - 366 `landFreeze()`
-  - 372 `landPlan(type, kg, hold)`
-  - 387 `landState(L, t)`
-  - 396 `mottakOpen(H)`
-  - 398 `mottakNext(H)`
-  - 402 `mottakWhen(H, no, from)`
-  - 408 `startLanding(ops)`
-  - 423 `finishLanding()`
-  - 431 `iceChute(kg)`
-- **433** the bunker quay: moving along the harbour and filling fuel
-  - 446 `quayPos(b)`
-  - 457 `portBusy(b)`
-  - 458 `startShift(to, after)`
-  - 468 `startFueling(ops)`
-  - 481 `quayMinute()`
-  - 497 `buyIce(kg, free)`
-- **507** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
-  - 513 `shopBuy(k, kg, free)`
+  - 368 `landFreeze()`
+  - 374 `landPlan(type, kg, hold)`
+  - 389 `landState(L, t)`
+  - 398 `mottakOpen(H)`
+  - 400 `mottakNext(H)`
+  - 404 `mottakWhen(H, no, from)`
+  - 410 `startLanding(ops)`
+  - 425 `finishLanding()`
+  - 433 `iceChute(kg)`
+- **435** the bunker quay: moving along the harbour and filling fuel
+  - 448 `quayPos(b)`
+  - 459 `portBusy(b)`
+  - 460 `startShift(to, after)`
+  - 470 `startFueling(ops)`
+  - 483 `quayMinute()`
+  - 499 `buyIce(kg, free)`
+- **509** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
+  - 515 `shopBuy(k, kg, free)`
 
 ## `src/js/core/07c-naust.js` (168 linjer)
 
@@ -1822,7 +1827,7 @@ WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå
   - 124 `heatAt(p)`
   - 127 `schoolDrift(sp, p, H)`
 
-## `src/js/core/13-work.js` (344 linjer)
+## `src/js/core/13-work.js` (347 linjer)
 
 work aboard: stations, and how the crew share them
 
@@ -1852,17 +1857,17 @@ work aboard: stations, and how the crew share them
   - 168 `jobMinute(j, A)`
   - 178 `jobWait(j)`
   - 183 `workAssign(as)`
-- **251** what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
-  - 267 `crewVice(c)`
-  - 269 `idleEnv()`
-  - 277 `idleWeights(p, ctx, E, mates)`
-  - 299 `idleAssign(P, ctx)`
-  - 313 `idleText(p)`
-  - 319 `workDoing(p)`
-  - 324 `workTeam(st, g, as)`
-  - 330 `workMinute()`
+- **254** what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
+  - 270 `crewVice(c)`
+  - 272 `idleEnv()`
+  - 280 `idleWeights(p, ctx, E, mates)`
+  - 302 `idleAssign(P, ctx)`
+  - 316 `idleText(p)`
+  - 322 `workDoing(p)`
+  - 327 `workTeam(st, g, as)`
+  - 333 `workMinute()`
 
-## `src/js/core/14-crewlife.js` (381 linjer)
+## `src/js/core/14-crewlife.js` (412 linjer)
 
 life aboard: learning, meals, the rest rule and what the crew says
 
@@ -1882,28 +1887,28 @@ life aboard: learning, meals, the rest rule and what the crew says
   - 190 `dialectOf(c)`
   - 194 `dialectText(key, text)`
   - 198 `crewDialect(c, text)`
-  - 201 `crewSay(c, sit, vars)`
-  - 219 `vitalsTalk(on)`
-  - 229 `sayHour(H, on, hs)`
-- **249** advice from those who know (Jonas 23.10.2026: «de kan gjerne ta initiativ og komme med kommentarer knyttet til driften om de vet
-  - 253 `crewAdvice(H, on, W, fs)`
-  - 267 `adviceGround(H)`
-- **280** mistakes on deck (Jonas 23.10.2026: «Ja, det kan de godt gjøre. Det skaper realisme»): now and then a fish slips over the side, the
-  - 284 `crewRand()`
-  - 285 `crewSlip(team)`
-- **302** Del 2 of «mannskap med liv» (docs/mannskap-plan.md; Jonas 17.10.2026): each person's life beside the work
-  - 308 `crewLife(c)`
-  - 319 `lifeStory(c, no, en)`
-  - 321 `lifeEarn(c, sum)`
-  - 323 `lifeOff(c, days, no, en, sno, sen)`
-  - 325 `lifeDay(c, H)`
-  - 341 `lifeInjury(c, hs)`
-  - 344 `lifeOffTick(c)`
-  - 347 `lifeDepart(c)`
-  - 358 `alumniGround(a)`
-  - 360 `alumniStates(H)`
-  - 367 `lifeHail(H)`
-  - 374 `alumniReturn(B)`
+  - 228 `crewSay(c, sit, vars)`
+  - 250 `vitalsTalk(on)`
+  - 260 `sayHour(H, on, hs)`
+- **280** advice from those who know (Jonas 23.10.2026: «de kan gjerne ta initiativ og komme med kommentarer knyttet til driften om de vet
+  - 284 `crewAdvice(H, on, W, fs)`
+  - 298 `adviceGround(H)`
+- **311** mistakes on deck (Jonas 23.10.2026: «Ja, det kan de godt gjøre. Det skaper realisme»): now and then a fish slips over the side, the
+  - 315 `crewRand()`
+  - 316 `crewSlip(team)`
+- **333** Del 2 of «mannskap med liv» (docs/mannskap-plan.md; Jonas 17.10.2026): each person's life beside the work
+  - 339 `crewLife(c)`
+  - 350 `lifeStory(c, no, en)`
+  - 352 `lifeEarn(c, sum)`
+  - 354 `lifeOff(c, days, no, en, sno, sen)`
+  - 356 `lifeDay(c, H)`
+  - 372 `lifeInjury(c, hs)`
+  - 375 `lifeOffTick(c)`
+  - 378 `lifeDepart(c)`
+  - 389 `alumniGround(a)`
+  - 391 `alumniStates(H)`
+  - 398 `lifeHail(H)`
+  - 405 `alumniReturn(B)`
 
 ## `src/js/core/15-energy.js` (166 linjer)
 
@@ -2249,7 +2254,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 89 `srchCard()`
   - 113 `srchSvg(u)`
 
-## `src/js/ui/04-panels-instruments.js` (301 linjer)
+## `src/js/ui/04-panels-instruments.js` (306 linjer)
 
 ---------- estimates ----------
 
@@ -2261,18 +2266,18 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 19 `statusText()`
   - 35 `nextEvent()`
   - 53 `setHtml(el, h)`
-  - 66 `hudFigures()`
-  - 86 `hudShortEv(txt)`
-  - 87 `hudLine3(how)`
-  - 116 `renderHud()`
-  - 181 `liveFrac()`
-  - 182 `livePose(frac)`
-  - 205 `vnoise2(x, y, s)`
-  - 211 `microBottom(p, d)`
-- **213** instruments: GPS and echo sounder
-  - 285 `hudCardOpen(on)`
-  - 292 `hudClasses(stripOn, cardOn)`
-  - 296 `hudFold(which)`
+  - 68 `hudFigures()`
+  - 91 `hudShortEv(txt)`
+  - 92 `hudLine3(how)`
+  - 121 `renderHud()`
+  - 186 `liveFrac()`
+  - 187 `livePose(frac)`
+  - 210 `vnoise2(x, y, s)`
+  - 216 `microBottom(p, d)`
+- **218** instruments: GPS and echo sounder
+  - 290 `hudCardOpen(on)`
+  - 297 `hudClasses(stripOn, cardOn)`
+  - 301 `hudFold(which)`
 
 ## `src/js/ui/05-tattoo-art.js` (169 linjer)
 
@@ -2369,12 +2374,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1229 linjer)
+## `src/js/ui/phone/07-patch.js` (1241 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1222 `patch()`
+  - 1234 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2427,19 +2432,19 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 40 `rederi()`
 - **78** equipment
 
-## `src/js/ui/phone/12-utstyr-redskap.js` (208 linjer)
+## `src/js/ui/phone/12-utstyr-redskap.js` (210 linjer)
 
 the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the shop's (electronics, haulers, the jigging machine and the clothes)
 
   - 2 `utstyr(mode)`
-- **54** gear: in the sea, aboard (baiting and mending), and the shop
-- **55** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
-- **60** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
-  - 64 `lineCard(lk, o)`
-  - 89 `egnChooser(lk, o)`
-  - 115 `autoCard()`
-  - 127 `careAboard(inPort, p)`
-  - 154 `redskap(tab0)`
+- **56** gear: in the sea, aboard (baiting and mending), and the shop
+- **57** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
+- **62** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
+  - 66 `lineCard(lk, o)`
+  - 91 `egnChooser(lk, o)`
+  - 117 `autoCard()`
+  - 129 `careAboard(inPort, p)`
+  - 156 `redskap(tab0)`
 
 ## `src/js/ui/phone/13-mannskap-bank-meld.js` (177 linjer)
 
@@ -2462,7 +2467,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
 - **163** actions
   - 166 `switchVessel(k)`
 
-## `src/js/ui/phone/13b-nettet.js` (138 linjer)
+## `src/js/ui/phone/13b-nettet.js` (140 linjer)
 
 Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.md, Jonas 30.10.2026)
 
@@ -2498,10 +2503,13 @@ Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/pla
   - 115 `mgHere()`
   - 122 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (284 linjer)
+## `src/js/ui/phone/14-act.js` (314 linjer)
 
   - 2 `act(a, d)`
-  - 8 `act0(a, d)`
+- **8** the receipt after a buy for kroner (Jonas 06.11.2026, Tony's test: «Det skal ikke være tvil om et kjøp er gjennomført»): one
+  - 13 `ownedTxt(w, s)`
+  - 28 `receipt(nm, w, s)`
+  - 38 `act0(a, d)`
 
 ## `src/js/ui/05b-work.js` (152 linjer)
 
@@ -2631,13 +2639,13 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 108 `ukeLogo()`
   - 112 `ukeShare(w)`
 
-## `src/js/ui/05j-catchfeed.js` (55 linjer)
+## `src/js/ui/05j-catchfeed.js` (56 linjer)
 
 ---------- «Kystlys» U4: the catch as it comes over the rail (docs/planer/ui-redesign.md, 04.11.2026) ----------
 
 - **1** «Kystlys» U4: the catch as it comes over the rail (docs/planer/ui-redesign.md, 04.11.2026)
-  - 53 `catchFeed(sp, kg)`
-  - 54 `catchRec(sp, kg)`
+  - 54 `catchFeed(sp, kg)`
+  - 55 `catchRec(sp, kg)`
 
 ## `src/js/ui/05k-ordbok.js` (74 linjer)
 
@@ -2700,7 +2708,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
 - **116** the year view
 - **124** the species card
 
-## `src/js/ui/07-guide.js` (412 linjer)
+## `src/js/ui/07-guide.js` (417 linjer)
 
   - 1 `renderClock()`
   - 10 `mottakShut()`
@@ -2717,14 +2725,14 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 199 `panelWx()`
   - 231 `landText(short)`
   - 244 `deckText(short)`
-  - 259 `quayText(short)`
-  - 265 `panelPort()`
-  - 299 `portSlip()`
-  - 373 `landWarn(p)`
-  - 386 `landPage()`
-  - 401 `panelLog()`
-  - 406 `renderPanel()`
-  - 410 `panelBusy()`
+  - 264 `quayText(short)`
+  - 270 `panelPort()`
+  - 304 `portSlip()`
+  - 378 `landWarn(p)`
+  - 391 `landPage()`
+  - 406 `panelLog()`
+  - 411 `renderPanel()`
+  - 415 `panelBusy()`
 
 ## `src/js/ui/07b-first-trip.js` (304 linjer)
 
@@ -2756,7 +2764,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 273 `tipPlace(txt, T0, o)`
   - 298 `tipToast()`
 
-## `src/js/ui/07c-handbook.js` (240 linjer)
+## `src/js/ui/07c-handbook.js` (243 linjer)
 
 Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
 
@@ -2769,9 +2777,9 @@ Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps ev
   - 185 `hbReady()`
 - **187** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
   - 193 `appShown(id)`
-  - 197 `appUnlock(id)`
-  - 199 `appSeen(id)`
-  - 200 `hbUpdate()`
+  - 200 `appUnlock(id)`
+  - 202 `appSeen(id)`
+  - 203 `hbUpdate()`
 
 ## `src/js/ui/10g-wardrobe.js` (133 linjer)
 
@@ -2781,7 +2789,7 @@ Garderoben: the player changes how his figure looks (Jonas 10.10.2026)
 - **14** the right-hand side: what the current tab offers
 - **50** the little renderer
 
-## `src/js/ui/08-actions.js` (443 linjer)
+## `src/js/ui/08-actions.js` (446 linjer)
 
 actions
 
@@ -2795,23 +2803,23 @@ actions
   - 273 `boatUnnamed()`
   - 274 `boatChristen(nm)`
   - 276 `showIntro(namesOnly)`
-- **291** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
-  - 296 `awayStart(mins, realMs)`
-  - 297 `awayEnd()`
-  - 298 `showAway(A)`
-- **325** time
-  - 331 `playMinutes(n, away)`
-  - 335 `catchUp(realMs)`
-  - 346 `tick()`
-  - 383 `deliverOrder()`
-- **393** chrome
-  - 394 `applyLang()`
-- **407** screens: full-screen 3D, or the chart plotter for route planning
-  - 408 `setBodyView(v3d)`
-  - 413 `openPlotter()`
-  - 418 `plotSetRender()`
-  - 422 `plotSetOpen(on)`
-  - 435 `kinoUi()`
+- **294** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
+  - 299 `awayStart(mins, realMs)`
+  - 300 `awayEnd()`
+  - 301 `showAway(A)`
+- **328** time
+  - 334 `playMinutes(n, away)`
+  - 338 `catchUp(realMs)`
+  - 349 `tick()`
+  - 386 `deliverOrder()`
+- **396** chrome
+  - 397 `applyLang()`
+- **410** screens: full-screen 3D, or the chart plotter for route planning
+  - 411 `setBodyView(v3d)`
+  - 416 `openPlotter()`
+  - 421 `plotSetRender()`
+  - 425 `plotSetOpen(on)`
+  - 438 `kinoUi()`
 
 ## `src/js/ui/08b-letter.js` (127 linjer)
 
@@ -2881,12 +2889,12 @@ actions
 - **73** the club's notice board: fixed lines, never free text (F2, 20261030160000_lag_board.sql)
 - **155** the week's quiz: five questions from the bank, the same for everyone in a game week
 
-## `src/js/ui/10-rod-acts.js` (96 linjer)
+## `src/js/ui/10-rod-acts.js` (100 linjer)
 
 ---------- the jig game: jigging by hand yourself, and the buttons and hooks around it ----------
 
 - **1** the jig game: jigging by hand yourself, and the buttons and hooks around it
-  - 94 `refreshAll()`
+  - 98 `refreshAll()`
 
 ## `src/js/ui/10-gear-ui.js` (240 linjer)
 
@@ -2942,7 +2950,7 @@ SOUND (the user's wish 03.10.2026)
 - **144** the music (Jonas 05.10.2026: «rolig ambient instrumentaler som svak stemning i bakgrunnen. Må kunne skrus av i innstillinger»)
 - **290** the whistle and the bell (Ø11.2; sjøveisreglene FOR-1975-12-01-5 rules 32-35 and vedlegg III, read 06.11.2026)
 
-## `src/js/ui/10f-cloud.js` (945 linjer)
+## `src/js/ui/10f-cloud.js` (964 linjer)
 
 THE CLOUD (04.10.2026; docs/lansering.md E and F)
 
@@ -3026,19 +3034,20 @@ THE CLOUD (04.10.2026; docs/lansering.md E and F)
 - **778** registering, for a guest: in the game's own words, never a wall before the third landing
   - 787 `guestHave()`
   - 793 `guestAsk(why)`
-  - 817 `namesKept()`
-  - 818 `namesKeep(o)`
-  - 820 `namesApply()`
-  - 828 `nameTake(n, quiet)`
-  - 838 `nameCheck()`
-  - 853 `nameSuggest()`
-  - 862 `nameAsk(why, reason)`
-  - 887 `guestOpenAsk()`
-  - 895 `nameNudge(force)`
-  - 908 `guestNudge(step)`
-  - 920 `guestLogin(src)`
-  - 926 `guestRegister(signIn)`
-  - 938 `guestGift()`
+  - 819 `nameWhy(v)`
+  - 836 `namesKept()`
+  - 837 `namesKeep(o)`
+  - 839 `namesApply()`
+  - 847 `nameTake(n, quiet)`
+  - 857 `nameCheck()`
+  - 872 `nameSuggest()`
+  - 881 `nameAsk(why, reason)`
+  - 906 `guestOpenAsk()`
+  - 914 `nameNudge(force)`
+  - 927 `guestNudge(step)`
+  - 939 `guestLogin(src)`
+  - 945 `guestRegister(signIn)`
+  - 957 `guestGift()`
 
 ## `src/js/ui/10g-push.js` (206 linjer)
 
@@ -3127,7 +3136,7 @@ Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sp
 
 - **1** Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
 
-## `src/js/ui/10k-friends.js` (133 linjer)
+## `src/js/ui/10k-friends.js` (134 linjer)
 
 ---------- Venner: friends between players (Jonas 09.10.2026; supabase/migrations/20261009180000_friends.sql) ----------
 
@@ -3164,12 +3173,13 @@ Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sp
 - **111** the polling
 - **125** the chart: the asks near, and the card
 
-## `src/js/ui/10p-install.js` (100 linjer)
+## `src/js/ui/10p-install.js` (134 linjer)
 
 put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
-- **70** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
+- **70** a new build is out: «Oppdater nå» (Jonas 06.11.2026: «Varsel ved oppdatering for å kjøre refresh på appen»)
+- **104** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
 ## `src/js/ui/11-boot.js` (359 linjer)
 
@@ -3705,7 +3715,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 182 `handKit(t)`
   - 203 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (512 linjer)
+## `src/js/view3d/13-instruments.js` (514 linjer)
 
 ---------- the skiff's live instruments ----------
 
@@ -3734,17 +3744,17 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 187 `paintHand()`
   - 196 `limbM(A, B, r)`
   - 199 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
-  - 336 `drawSkiffGlass(BMrel, VP)`
-  - 346 `jigRail(t, G)`
-  - 367 `drawJigRail(BMrel, VP, t, G, dt)`
-  - 400 `drawGlass(m, BMrel, VP)`
-  - 419 `drawDrops(m, BMrel, VP, t)`
-  - 430 `buildBoat()`
-  - 456 `buildFlag()`
-  - 468 `flagTex()`
-  - 483 `penTex()`
-  - 496 `mastTop(G)`
-  - 500 `updateFlag(t, appW)`
+  - 338 `drawSkiffGlass(BMrel, VP)`
+  - 348 `jigRail(t, G)`
+  - 369 `drawJigRail(BMrel, VP, t, G, dt)`
+  - 402 `drawGlass(m, BMrel, VP)`
+  - 421 `drawDrops(m, BMrel, VP, t)`
+  - 432 `buildBoat()`
+  - 458 `buildFlag()`
+  - 470 `flagTex()`
+  - 485 `penTex()`
+  - 498 `mastTop(G)`
+  - 502 `updateFlag(t, appW)`
 
 ## `src/js/view3d/14-sea.js` (357 linjer)
 
@@ -4047,7 +4057,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **94** frame
   - 98 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (693 linjer)
+## `src/js/view3d/24-cinema.js` (701 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -4076,9 +4086,9 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 479 `drawRoute(VP, eye)`
   - 491 `driftSpray(VP, eye, dt, t, col)`
   - 506 `drawSmoke(VP, eye, BM, dt)`
-  - 539 `scupperWater(VP, eye, BM, dt, t, col)`
-  - 565 `drawEffects(VP, eye, BM, dt, t)`
-  - 675 `updateLabels(VP, eye, W, Hh)`
+  - 547 `scupperWater(VP, eye, BM, dt, t, col)`
+  - 573 `drawEffects(VP, eye, BM, dt, t)`
+  - 683 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (224 linjer)
 

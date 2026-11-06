@@ -462,3 +462,7 @@ Jonas valgte dem fra lista (nr. 5 og 7).
   - Hos hjelperen legges den slepte båten 30 m akterut, og tauet går fra hjelperens akterende til den slepte båtens baug. Hos den slepte legges hjelperen 30 m forut, og tauet går fra egen baug til hjelperens akterende.
   - Båtene følger dermed hverandre jevnt, selv om rapportene kommer hvert 15. sekund. Tauet henger litt, som ved slep av NPC-båter.
 - **Testene:** `ptowtest` (begge rollene, med en falsk database) og slep i `sqltest`.
+
+### Venner-appen etter registrering (Tonys spilltest 06.11.2026)
+
+Nye spillere fikk «X vil bli venn med deg. Svar i Venner-appen» uten å finne appen: den kom først fra tredje landing (Onboarding 2, O5). Nå: `appShown('folk')` er sann for en registrert spiller utenfor første tur (`ui/07c-handbook.js`), og `news()` i `ui/10k-friends.js` kaller `appUnlock('folk')` når en forespørsel kommer. Gjester ser den fra tredje landing som før.

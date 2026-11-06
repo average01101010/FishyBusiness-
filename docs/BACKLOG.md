@@ -445,6 +445,33 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
 
+## Strøket 06.11.2026 (Tonys spilltest, gren `ccr-a9ff699b-re4zwf`)
+
+Tony Hjelmseth prøvde spillet hos Jonas på iPhone (trebåt, Senjahopen, tilbakemeldingene #115 og #116 er hans). Jonas' liste etterpå, punkt for punkt:
+
+- ~~Nivået i bløggekaret og sløyestatusen synes ikke under fisket~~: en femte måler på stripa (kg av karet, gul fra halvfullt, rød fra 90 %), og linje 3 sier «Sløyer 37 kg · 2 min» eller «Kar 42/60 kg»; kortet deler i «å sløye» og «sløyd og venter på is» (`ui-og-telefon.md`, «Etter Tonys spilltest»).
+- ~~«HER» i fangstboksen over telefonknappen~~: bare kg/t.
+- ~~Lang tid til sluttseddelen~~: `LANDING.note` 5 → 2, `wash` 6 → 3 (`havner-og-mottak.md`).
+- ~~Ingen forklaring på hvorfor et todelt brukernavn ikke godtas~~: `nameWhy` under feltet mens det skrives, med forslag.
+- ~~Eksosen blinker og blir grå skiver på iPhone~~: tones inn og ut, seks trinn, høyst 320 piksler (`3d-baater-og-animasjon.md`). Ikke sett på iPhone her.
+- ~~Får automatisk håndjukse mer enn «Jukse selv»?~~ Nei: snittet var likt (din del ble tatt ut av den automatiske fangsten og kom via nappene), god spilling ga opp til 2×. Nå `SELF = 5`.
+- ~~Venner-appen vises ikke etter registrering~~: ute så snart spilleren er registrert, og når en forespørsel kommer.
+- ~~Skipperen klonet seg i trebåten~~: `DECKACT.me` holder rekkefiskeren borte, og `workAssign` holder spilleren ved rekka mens han jukser selv.
+- ~~Nettet: layout~~: bokmerkene som rader, båten inne i rammen, brikkene venstrestilt.
+- ~~Kjøpsbekreftelse~~: kvittering for alle kjøp (hva, pris, antall om bord, montering ferdig kl.), monteringstida på utstyrskortet og i Nettets fane.
+- ~~Tony Hjelmseth som NPC~~: mannskap å ansette på kaia i Husøy, med historie og egne replikker (`folk-om-bord.md` 5.6d).
+- ~~Varsel ved ny versjon~~: `version.json` og stripa «Oppdater nå» (`publisering.md`).
+- ~~Registrering tidlig?~~ Åpningskortet forteller gjesten at spillet lagres i nettleseren og at registreringen kommer etter første levering.
+- Svart i økta (ikke kode): mottak opptatt av en annen spiller, Autonav etter søk, salg av båt og utstyret, bruktsalg mellom spillere, vann i båten, staur/blåse/dregg, rund eller sløyd levering.
+
+## Venter på Jonas (Tonys spilltest 06.11.2026)
+
+- **«Jukse selv» 5×** (`SELF` i `ui/10-rod-acts.js`): satt til 5 som Jonas foreslo («kanskje?»). Med trebåt alene og god spilling gir det rundt fem til ti ganger håndjuksa. Står det for sterkt mot juksamaskinene (4,0 per maskin), er tallet ett sted.
+- **`FLEET`, Senja-flåten, står igjen i koden** (`core/05-vessels.js`, 14 navngitte Senja-båter; `tools/map/npc.py` holder Senja-ruta utenfor den nasjonale flåten «fordi FLEET er flåten der»; `core/05-vessels.js flaateApply` legger inn Senjas havner fra `tools/npc/senja.py`). Jonas 06.11.2026: «Det er altså ingenting som skal hete senja-flåten eller senja-data.» Å ta `FLEET` ut og la npc.py ta Senja med i neste kartrelease er en egen økt (npctest, `fleetBerth`, AIS-kortet, `HOME_NAMES`, dokumentasjonen).
+- **Rund eller sløyd levering** (realismen): i dag sløyer dekket alt (Jonas 23.10.2026), og mottaket betaler rund vekt. Det Jonas kan velge: la de små båtene levere rund fisk som mottaket sløyer (slik mange sjarker gjør i vintersesongen, og Råfisklaget har egne minstepriser for rund torsk, hyse, sei og uer) mot lavere pris per kg rund, og la sløying om bord gi full pris. Kildene og svaret står i øktens rapport til Jonas.
+- **Staur, blåse og dregg:** blåsesettet i spillet er alt «to blåser med stake, flagg og dregg» (`core/10-gear.js`), og tung dregg kjøpes i tillegg. Skal kortet hete «Blåsesett (blåse, staur med flagg og dregg)» og stauren og dreggen stå som egne linjer? Venter på Jonas.
+- **Kjent rødt, ikke vårt:** `itemcardtest` («Elektronikk og haler: utstyret og klærne er varekort», `vhf` mangler for snekke) var rød før denne økta (sjekket med `git stash` på grunnbygget).
+
 ## Strøket 06.11.2026 (trimfarten, gren `ccr-dfa1209c-7vgp4x`)
 
 - ~~Trim gir ingen fart i Autonav og ved roret~~ (TonyHjelmseth, «Legoy», trebåt, kjøpte «Økt turbotrykk» 18:49 og fikk ingen økning): manøvreringsmodellen hadde bare båttypens motor siden Fysikk 1 (19.10.2026), så trim, større motor og 90-hesteren ga fart bare på papiret og med spillet lukket. Rettet med `dynCalOf` (`fysikk-og-styring.md` 5.58, «Båtens egen motor»), sjekk i `tests/unit/trimfart.test.mjs`.
