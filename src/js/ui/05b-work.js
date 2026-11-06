@@ -6,7 +6,7 @@ const WORK = (() => {
   let card = null;   // the person whose card is open
   const SHORT = {ror:['Ror', 'Helm'], fiske:['Fiske', 'Fish'], haling:['Haling', 'Haul'], blogg:['Bløgging', 'Bleed'], sort:['Krabbe', 'Crab'], sloy:['Sløying', 'Gut'], is:['Ising', 'Ice'], kokk:['Kokk', 'Cook'],
     egn:['Egning', 'Bait'], strip:['Rensing', 'Strip'], mend:['Bøting', 'Mend'], stell:['Vedlikehold', 'Upkeep'], last:['Last', 'Cargo'], pause:['Pause', 'Break']};
-  const sn = k => k === 'is' && holdFreezes() ? L('Frysing', 'Freeze') : L(SHORT[k][0], SHORT[k][1]);
+  const sn = k => snoVessel() && (k === 'sloy' || k === 'is') ? (k === 'sloy' ? L('Deling', 'Split') : L('Koking', 'Cook')) : k === 'is' && holdFreezes() ? L('Frysing', 'Freeze') : L(SHORT[k][0], SHORT[k][1]);   // (the snow crab factory, H3b)
   // the first name, with the surname's initial when two aboard share it
   const first = p => { if (!p.c) return L('Du', 'You'); if (p.c.anon) return p.c.name; const n = p.c.name.split(' '); return S.crew.some(c => c !== p.c && c.name.split(' ')[0] === n[0]) ? n[0] + ' ' + n[n.length - 1][0] + '.' : n[0]; };
   const pid = c => c ? c.id : 'me';
@@ -17,7 +17,7 @@ const WORK = (() => {
   // what waits at a station: the queue line on its card
   function queue(k){
     const b = S.boat, cg = catchGut(), ci = catchIce(), g = b.gop; let gut = 0, ice = 0;
-    for (const x of S.hold){ if (SPECIES[x.sp].live || x.iced) continue; if (cg && !x.gut) gut += x.kg; else if (ci) ice += x.kg; }
+    for (const x of S.hold){ if (liveLot(x) || x.iced) continue; if (cg && !x.gut) gut += x.kg; else if (ci) ice += x.kg; }
     if (k === 'ror') return b.status === 'sailing' ? fmt(b.v || 0, 0) + ' kn' : '–';
     if (k === 'fiske') return b.status === 'fishing' && !g && S.fsess ? fmt(S.fsess.kg, 0) + ' kg' : '–';
     if (k === 'haling' || k === 'sort') return g ? g.done + '/' + g.n : '–';
@@ -113,13 +113,16 @@ hooks.onSay = (c, no, en) => { if (typeof G3 !== 'undefined' && G3.isActive() &&
 function lagCardHtml(){
     const L = (no, en) => S.lang === 'no' ? no : en, kv = (a, b) => '<div class="ph-kv"><span>' + a + '</span><span>' + b + '</span></div>';
     const G = lagOf(), V = lagSpec(), sh = G.sh[G.on], w = lagWatch(S.t / 60), off = G.sh.filter(x => x !== sh);
+    const wk = V.rotD ? Math.round(V.rotD / 7) : 0, onD = G.since != null ? (S.t - G.since) / 1440 : 0, pRef = (OPPG[lottFishery()] || {}).ref || '§ 6';
     return '<div class="ph-card"><h4>' + L('Lagene', 'The teams') + '</h4>' + kv(L('Om bord', 'Aboard'), L('skift ', 'crew ') + lagShName(G.on) + ' · ' + lagN() + L(' mann', ' men') + (meAboard() ? L(' og deg', ' and you') : '')) +
       kv(L('Lag', 'Teams'), L('nøkkelfolk ', 'key people ') + V.key.length + ' · ' + V.teams.map(t => (t.role === 'dekk' ? L('dekk ', 'deck ') : L('fabrikk ', 'factory ')) + t.n).join(' · ')) +
       '<p class="ph-note">' + L('Nøkkelfolk: ', 'Key people: ') + V.key.join(', ') + '.</p>' +
       kv(L('Ferdighet', 'Skill'), fmt(sh.skill, 1) + ' / 5' + (sh.trips ? ' · ' + sh.trips + L(sh.trips === 1 ? ' tur' : ' turer', sh.trips === 1 ? ' trip' : ' trips') : '')) +
       kv(L('Vakt nå', 'Watch now'), w ? L('2. vakt (06–12 og 18–24)', '2nd watch (06–12 and 18–24)') : L('1. vakt (00–06 og 12–18)', '1st watch (00–06 and 12–18)')) +
       off.map(x => kv(L('I land', 'Ashore'), L('skift ', 'crew ') + lagShName(x.i) + ' · ' + fmt(x.skill, 1) + ' / 5')).join('') +
-      '<p class="ph-note">' + L('Dekkslaget og fabrikklaget går seks og seks, halvparten av hvert lag på hver vakt. Skipperen og styrmannen har broa hver sin vakt, maskinistene maskinen og kokken byssa. Skiftene bytter ved hver levering, og lotten går til skiftet om bord etter § 6.', 'The deck and factory teams go six on, six off, half of each team on each watch. The skipper and the mate have the bridge a watch each, the engineers the engine room and the cook the galley. The crews change at each landing, and the share goes to the crew aboard by § 6.') + '</p></div>';
+      // (H3b: a vessel whose crews go so many weeks on, VESSELS crew rotD, and the share's paragraph by the fishery: § 6 autoline, § 20 snow crab)
+      '<p class="ph-note">' + L('Dekkslaget og fabrikklaget går seks og seks, halvparten av hvert lag på hver vakt. Skipperen og styrmannen har broa hver sin vakt, maskinistene maskinen og kokken byssa. ' + (wk ? 'Skiftene går ' + wk + ' uker på og ' + wk + ' av og bytter ved første levering etter det (skift ' + lagShName(G.on) + ' har vært om bord i ' + fmt(onD, 0) + ' døgn)' : 'Skiftene bytter ved hver levering') + ', og lotten går til skiftet om bord etter ' + pRef + '.',
+        'The deck and factory teams go six on, six off, half of each team on each watch. The skipper and the mate have the bridge a watch each, the engineers the engine room and the cook the galley. ' + (wk ? 'The crews go ' + wk + ' weeks on and ' + wk + ' off and change at the first landing after (crew ' + lagShName(G.on) + ' has been aboard for ' + fmt(onD, 0) + ' days)' : 'The crews change at each landing') + ', and the share goes to the crew aboard by ' + pRef + '.') + '</p></div>';
   }
 function energyUi(){
   const L = (no, en) => S.lang === 'no' ? no : en, e = S.energy == null ? 100 : S.energy, sl = $('sleep'), vg = $('vign'), zz = asleep();

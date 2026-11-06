@@ -656,8 +656,12 @@ const holdTotal = () => S.hold.reduce((a, x) => a + x.kg, 0);
 // the hold in product weight (H2b, V2 A of docs/planer/havsteget-h2-autoline.md, 05.11.2026): what is frozen gutted and headed weighs its
 // round weight over the species' conversion factor (SPECIES uh), the rest as it lies. The catch's kilos stay round weight everywhere
 // else (the quota, the price, the landing rules); this is what fills the room (capHold), weighs on the boat and goes up on the pallets
-const prodKg = x => x.frozen && x.gut ? x.kg / ((SPECIES[x.sp] || {}).uh || 1) : x.kg;
-const holdLoad = () => S.hold.reduce((a, x) => a + prodKg(x), 0);
+// (H3b, 06.11.2026) the snow crab's clusters by the year's factor (SPECIES.snokrabbe.uh, 10e-krabbefabrikk.js); dead crab frozen round
+// for meal (rund) by its round weight; the live crab in the tanks (tank) is not in the hold's room at all (tankLoad)
+const prodKg = x => x.frozen && x.gut && !x.rund ? x.kg / ((SPECIES[x.sp] || {}).uh || 1) : x.kg;
+const holdLoad = () => S.hold.reduce((a, x) => a + (x.tank ? 0 : prodKg(x)), 0);
+// a lot the deck neither guts nor ices: a live species (king crab in the tub), or the snow crab in the tanks (H3b)
+const liveLot = x => !!(x.tank || (SPECIES[x.sp] || {}).live);
 function nearestPort(p){ let best = null, bd = 1e9; for (const q of PORTS){ const d = dist(p, q.p); if (d < bd){ bd = d; best = q; } } return best; }
 // the nearest yard (portKind 'verft', 01-world.js): where a tow ends, since the hull wants mending after (Jonas 08.10.2026)
 function nearestYard(p){ let best = null, bd = 1e9; for (const q of PORTS){ if (portKind(q) !== 'verft') continue; const d = dist(p, q.p); if (d < bd){ bd = d; best = q; } } return best; }
@@ -690,9 +694,11 @@ function vesselStep(H){
   // (live crab by its own rates; the fish as KEEP: a day in ice a day when iced, faster on deck in the warmth, not at all frozen)
   let rrs = null;
   for (const x of S.hold){ if (SPECIES[x.sp].live){ x.fresh = Math.max(0, x.fresh - (kar ? 0.4 : 2.5) * clean / 60); continue; }
-    if (x.frozen) continue; if (!x.iced && rrs === null) rrs = keepRRS(H, b.pos);
+    // (the snow crab in the tanks lives or dies there: snoTankHour, H3b)
+    if (x.frozen || x.tank) continue; if (!x.iced && rrs === null) rrs = keepRRS(H, b.pos);
     x.fresh = Math.max(0, keepF(keepDay(x.fresh) + keepK(x, rrs) * clean / 1440)); }
   iceMinute(); deckMinute();
+  if (S.t % 60 === 0 && BOAT.tank) snoTankHour(H);   // the live snow crab in the tanks (10e-krabbefabrikk.js, H3b)
   // a leak, the bilge pump, the water aboard (Fysikk 3, 16c-hull.js): every minute, also under tow and in port
   if (typeof hullMinute === 'function') hullMinute();
   // work queue at the yard and on the quay: runs while the boat is in port
@@ -1046,12 +1052,15 @@ function addCatch(sp, kg, cls, hook, opt){
   if (typeof catchFeed === 'function') catchFeed(sp, kg);   // the card over the sea as it comes aboard (ui/05j-catchfeed.js, U4)
   for (const c of crewAboard(null, true)) c.trip = 1;   // aboard for this catch: a share of it at the landing, or when let go before it (crewSettle)
   // (into chilled sea water the catch is chilled as it comes aboard: an RSW hold)
-  // (whole: the snow crab is landed whole, never gutted, H3a; gut stands for «needs no gutting»)
-  const bled = true, iced = holdRSW() && !SPECIES[sp].live, gut = !!SPECIES[sp].whole, hr = Math.floor(S.t / 60), start = opt && opt.fresh != null ? opt.fresh : 100; hook = hook !== false;
-  let x = S.hold.find(h => h.sp === sp && h.cls === cls && h.bled === bled && h.iced === iced && !h.frozen && h.hr === hr && !!h.gut === gut && h.hook === hook);
-  if (!x){ x = {sp, cls, kg:0, n:0, bled, iced, hr, fresh:start, gut, hook}; S.hold.push(x); }
+  // (whole: a species landed whole, never gutted; gut stands for «needs no gutting». H3b: opt.tank, the snow crab into the tanks alive;
+  // opt.rund, dead snow crab frozen round for meal, not split)
+  const tank = !!(opt && opt.tank), rund = !!(opt && opt.rund);
+  const bled = true, iced = holdRSW() && !SPECIES[sp].live && !tank, gut = !!SPECIES[sp].whole || rund, hr = Math.floor(S.t / 60), start = opt && opt.fresh != null ? opt.fresh : 100; hook = hook !== false;
+  let x = S.hold.find(h => h.sp === sp && h.cls === cls && h.bled === bled && h.iced === iced && !h.frozen && h.hr === hr && !!h.gut === gut && h.hook === hook && !!h.tank === tank && !!h.rund === rund);
+  if (!x){ x = {sp, cls, kg:0, n:0, bled, iced, hr, fresh:start, gut, hook}; if (tank) x.tank = true; if (rund) x.rund = true; S.hold.push(x); }
   x.n = (x.n || 0) + 1;
   x.fresh = (x.fresh * x.kg + start * kg) / (x.kg + kg); x.kg += kg;
+  return x;
 }
 // ---- work on deck: gutting and icing take hands and time ----
 // About 300 kg an hour per person to gut, wash and sort, and 800 to ice down (guesses: no good source for hand gutting was found).
@@ -1069,10 +1078,10 @@ const handsAboard = () => (meAboard() ? 1 : 0) + crewAboard().length + (lagOf() 
 function deckHands(){ return workAssign().filter(p => p.st === 'sloy' || p.st === 'is').length; }
 // what is still to be done: gutting (when the catch is gutted on board) and icing (when there is ice)
 // live crab is kept wet in tubs: it is neither gutted nor iced
-function deckPending(){ const cg = catchGut(), icing = iceReady(); return S.hold.reduce((a, x) => a + (!SPECIES[x.sp].live && ((cg && !x.gut && !x.iced) || (icing && !x.iced)) ? x.kg : 0), 0); }
+function deckPending(){ const cg = catchGut(), icing = iceReady(); return S.hold.reduce((a, x) => a + (!liveLot(x) && ((cg && !x.gut && !x.iced) || (icing && !x.iced)) ? x.kg : 0), 0); }
 function deckEta(hands){
   const cg = catchGut(), icing = iceReady(), e = hands ? workTeam(['sloy', 'is'], 'sloy').sum : 0; if (!e) return Infinity;
-  let m = 0; for (const x of S.hold){ if (SPECIES[x.sp].live) continue; if (cg && !x.gut && !x.iced) m += x.kg / DECK.gut; if (icing && !x.iced) m += x.kg / DECK.ice; } return m / e;
+  let m = 0; for (const x of S.hold){ if (liveLot(x)) continue; if (cg && !x.gut && !x.iced) m += x.kg / DECK.gut; if (icing && !x.iced) m += x.kg / DECK.ice; } return m / e;
 }
 // move kg of a hold entry into the entry with the new state (gutted, iced), keeping its freshness
 function moveKg(x, kg, patch){
@@ -1090,15 +1099,15 @@ function deckMinute(){
   const G = workTeam('sloy', 'sloy'), I = workTeam('is', 'is'); if (!G.n && !I.n) return;
   // the gutting machine (BOAT.gutMachine, kg an hour; schema v2) adds its throughput while someone feeds it; it ices nothing
   let pm = G.sum + (G.n && BOAT.gutMachine ? BOAT.gutMachine / 60 / DECK.gut : 0), worked = 0;
-  if (cg) for (const x of S.hold.filter(x => !x.gut && !x.iced && !SPECIES[x.sp].live)){ if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.gut); moveKg(x, kg, {gut:true}); pm -= kg / DECK.gut; worked += kg; }
+  if (cg) for (const x of S.hold.filter(x => !x.gut && !x.iced && !liveLot(x))){ if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.gut); moveKg(x, kg, {gut:true}); pm -= kg / DECK.gut; worked += kg; }
   pm = Math.min(pm, G.sum) + I.sum;   // the gutters ice what they have gutted once the gutting is done
   const fz = holdFreezes();
   // the plate freezers (BOAT.freezeT, kg of product a day; H2b of docs/planer/havsteget-h2-autoline.md, 05.11.2026): the crew packs the
   // frames at their pace, but no more goes in than the freezers take in a minute; the rest waits in the bleeding tub, and the haul slows
   // (haulSlow). They run on the generators: with the tanks dry nothing is frozen
   let fzLeft = fz && BOAT.freezeT ? (b.fuel > 0 ? BOAT.freezeT / 1440 : 0) : Infinity;
-  if (catchIce()) for (const x of S.hold.filter(x => !x.iced && (x.gut || !cg) && !SPECIES[x.sp].live)){
-    if (pm <= 0.001 || fzLeft <= 1e-6) break; const ux = x.gut ? SPECIES[x.sp].uh || 1 : 1;
+  if (catchIce()) for (const x of S.hold.filter(x => !x.iced && (x.gut || !cg) && !liveLot(x))){
+    if (pm <= 0.001 || fzLeft <= 1e-6) break; const ux = x.gut && !x.rund ? SPECIES[x.sp].uh || 1 : 1;
     const kg = Math.min(x.kg, pm * DECK.ice, fz ? fzLeft * ux : b.ice / (0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)));
     if (kg <= 0.01){ if (S.t - (S.lastIceWarn || -1e9) > 120){ log('Tom for is. Fangsten ises ikke.', 'Out of ice. The catch is not being iced.'); S.lastIceWarn = S.t; } break; }
     if (fz){ moveKg(x, kg, {iced:true, frozen:true}); fzLeft -= kg / ux; } else { moveKg(x, kg, {iced:true}); const ik = Math.min(b.ice, kg * 0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)); b.ice -= ik; tripOf(b).iceKg += ik; }

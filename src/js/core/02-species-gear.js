@@ -65,12 +65,20 @@ const SPECIES = {
     pm:[27.7,27.5,23.2,18.9,14.5,14.7,14.4,37.4,42.1,48.2,41.4,34.5], sig:0.05, size:[0.45, 0.25], minKg:0.1, uh:1, cls:[[0, 14.4, 'Makrell']], ref:0},
   // (H3a of docs/planer/havsteget-h3-snokrabbe.md, 06.11.2026) the snow crab is fished by the player's snow crab vessel too: lic names
   // the permit that may take it (the pots' catch, 10d-snokrabbe.js, not the jig or the fish guide, so it stays npc and last in ALLSP);
-  // stk its own stock layer (S.sstk, stkK its size against the fish's), whole: landed whole and frozen, never gutted (H3a; the factory
-  // for the clusters and the live crab is H3b). Each crab is drawn with sex, carapace width and weight (SNOC), so size is not used.
-  // cls: the hard male, the soft crab (bløtkrabbe, J-237-2025 § 5) and the dead crab (§ 51: landed too), all at the one price there is
-  // (the notes have no price by shell or condition; an assumption, kap. 5 of the plan)
-  snokrabbe:{no:'Snøkrabbe', en:'Snow crab', npc:true, lic:'krab', shell:true, whole:true, stk:'sstk', stkK:6, k:1, base:1, prod:0.3, dep:[250, 0.6], av:[1,1,1,1,1,1,1,1,1,1,1,1],
-    pm:[133.3,133.0,136.8,118.5,94.5,123,123,123,123,123,123,128], sig:0.05, size:[0.6, 0.3], minKg:0, uh:1, cls:[[0, 94.5, 'Hard hann'], [0, 94.5, 'Bløtkrabbe'], [0, 94.5, 'Død snøkrabbe']], ref:0}
+  // stk its own stock layer (S.sstk, stkK its size against the fish's). Each crab is drawn with sex, carapace width and weight (SNOC), so
+  // size is not used. (H3b, 06.11.2026) It is no longer landed whole: the factory splits it in two clusters (the deck's «gutting»), cooks,
+  // freezes and glazes them (the freezers, BOAT.freezeT), and uh is Fiskeridirektoratet's factor from clusters to round weight for the
+  // year (snoUh in 10e-krabbefabrikk.js: 1.61 to 2025, 1.49 from 2026), so the hold fills by the clusters' weight and the quota and the
+  // price go by the round weight; or it goes live into the tanks (VESSELS tank). cls: the clusters of a hard male and of a soft crab
+  // (bløtkrabbe, J-237-2025 § 5), the dead crab (§ 51: landed too, round, for meal; sedlene 2025: 1 kr/kg), and the live crab by the
+  // notes' size groups (Størrelsesgruppering) at Råfisklaget's minimum prices from 9.2.2026 (rundskriv 2/2026, a search snippet: 800 g
+  // and over 60, 500-800 g 50, 350-500 g 30, under 350 g 5 kr/kg); the clusters' minimum price is 80 kr/kg of product (A, glazed; the
+  // price report week 34/2026, a snippet), 54 kr/kg round weight with 1.49. pm and pmL: the price of the clusters and of the live crab by
+  // month, kr/kg round weight, from the landing notes of several years (snoPrice in 10e-krabbefabrikk.js has the sources)
+  snokrabbe:{no:'Snøkrabbe', en:'Snow crab', npc:true, lic:'krab', shell:true, stk:'sstk', stkK:6, k:1, base:1, prod:0.3, dep:[250, 0.6], av:[1,1,1,1,1,1,1,1,1,1,1,1],
+    pm:[104.1,107.5,110.7,101.3,74.1,72.4,70.3,77.1,83.8,90.6,97.3,104.1], pmL:[74.5,75.8,78.7,72.5,69.7,71.1,61.5,64.1,66.7,69.3,71.9,74.5], sig:0.05, size:[0.6, 0.3], minKg:0,
+    get uh(){ return typeof snoUh === 'function' ? snoUh() : 1.49; },
+    cls:[[0, 54, 'Klør'], [0, 54, 'Klør, bløtkrabbe'], [0, 1, 'Død snøkrabbe'], [0.8, 60, 'Levende, 800 g og over'], [0.5, 50, 'Levende, 500–800 g'], [0.35, 30, 'Levende, 350–500 g'], [0, 5, 'Levende, under 350 g']], ref:0}
 };
 // pmF (cod, haddock, saithe): the price of fish frozen at sea, by month, from the landing notes for 2025 from vessels of 28 m and over
 // (Fiskeridirektoratet, fangstdata 2025, NLOD; kroner a kilo round weight, the frozen lots only; November and December filled between
@@ -160,14 +168,25 @@ const VESSELS = {
     desc:{no:'Stålbåt fra 70-tallet med bakk, rundgatt og galge. Fra 15 meter kan hun ikke fiske innenfor fjordlinja.', en:'Steel boat from the 70s with a forecastle, a cruiser stern and a gallows. From 15 metres she may not fish inside the fjord line.'}},
   // the ocean fleet: shown in the market with the full spec, bought when the ocean grounds open (west of today's chart)
   snokrabbe:{name:{no:'Snøkrabbefartøy 50 m med fryseri', en:'50 m snow crab vessel with a freezing plant'}, len:50, beam:11, draft:6, disp:1800, holdCap:500000, iceCap:0, fuelCap:350000, hp:3600, engine:{no:'3 600 hk diesel', en:'3,600 hp diesel'},
-    vmax:13.5, vcruise:11, accel:1, turnR:300, planing:false, outboard:false, diesel:true, risk:[6, 9, 24, 30], sea:0.04, crewMax:14, berths:18, tubCap:2000, land:'tub', std:['plotter', 'vhf', 'ais', 'chirp', 'sonar'],
+    vmax:13.5, vcruise:11, accel:1, turnR:300, planing:false, outboard:false, diesel:true, risk:[6, 9, 24, 30], sea:0.04, crewMax:22, berths:26, tubCap:2000, land:'tub', std:['plotter', 'vhf', 'ais', 'chirp', 'sonar'],
     // (H3a, 06.11.2026) pot: her conical snow crab pots (POTS.sno in 10-gear.js); gearMax.teine the cap of høstingsforskriften § 28
     // (8 000 a vessel): the fleet carries up to 12 000 pots a trip (Olsen et al. 2019, a search snippet), the conical pots stack, so the
     // deck is not what limits her. Bought with her snow crab permit (havOffer, 03d-quota.js), no longer locked
     rigs:['teiner'], pot:'sno', jukseMax:0, gearMax:{garn:0, stamp:0, teine:8000}, svcH:600, svcCost:400000, svcJobH:72, mottak:['Konvensjonelle'], cls:'hav', price:60000000, year:2001,
-    crew:{key:['skipper', 'styrmann', 'maskinsjef', '2. maskinist', 'kokk', 'bas'], teams:[{role:'dekk', n:4}, {role:'fabrikk', n:4}], rot:2},
-    hullMat:'stål', hold:{kind:'frys', m3:900}, deckCargo:40000, iceMaker:0, gutMachine:0, lph:400, cabins:9, fac:{house:'hus', shelter:true, galley:'bysse', wc:true, dry:true, mess:true}, stations:{table:4, hauler:2}, crane:5,
-    desc:{no:'Teinefartøy for snøkrabbe i Barentshavet, med fryseri om bord. Krever snøkrabbetillatelse.', en:'Pot vessel for snow crab in the Barents Sea, with a freezing plant aboard. Needs a snow crab licence.'}},
+    // (H3b, 06.11.2026) the crew by the landing notes' «Besetning» (50-53 m freezing 21-29 aboard, median 22 in 2025 and 21-23 in
+    // 2026): the six key people, a deck team of 8 and a factory team of 8, two crews (rot) that go five weeks on and five off (rotD
+    // days; the hearing answer of Polar Pioneer AS et al., fiskeridir.no 22.9.2023, read: «to skift under sesongen, hvor mannskapet er
+    // 5 uker på og 5 uker av»; Polar Pioneer 52 m has berths for 32, Arctic Pioneer 45 m and Kvitungen 47.5 m for 21), 26 berths
+    crew:{key:['skipper', 'styrmann', 'maskinsjef', '2. maskinist', 'kokk', 'bas'], teams:[{role:'dekk', n:8}, {role:'fabrikk', n:8}], rot:2, rotD:35},
+    // (H3b) the factory: the clusters cooked, frozen and glazed, 12 t of product a day (freezeT, 18 t round weight; no Norwegian figure
+    // found: the Russian crab vessels Arktur, Zenith and Vaigach «30 tonnes of raw snow crab per 24 hours to generate 20 tonnes of
+    // finished product», Frøyanes 20 t of legs a day with 35 aboard, the plant in Båtsfjord 8-10 t of clusters a day; all search snippets),
+    // the generators for it, the tanks' pumps and the hotel (plantLph, 180 l an hour at sea; no litres found for group 014, an assumption
+    // against its 4.9 MNOK of fuel in 2024), and the RSW tanks for live crab (tank: 400 m3, 40 t at 100 kg/m3; FHF 901919: «pumpes et
+    // parti levende krabbe fra RSW-tank til lossekar», a 100 m3 tank; Nofima's trials at 100-200 kg/m3, snippets). provDays: provisions
+    // for 30 days (the notes' frozen trips 15-28 days between landings, the live 7-15)
+    hullMat:'stål', hold:{kind:'frys', m3:900}, deckCargo:40000, iceMaker:0, gutMachine:0, freezeT:12000, plantLph:180, tank:{m3:400, kg:40000}, provDays:30, lph:400, cabins:13, fac:{house:'hus', shelter:true, galley:'bysse', wc:true, dry:true, mess:true}, stations:{table:4, hauler:2}, crane:5,
+    desc:{no:'Teinefartøy for snøkrabbe i Barentshavet, med fabrikk for klør og tanker for levende krabbe. Krever snøkrabbetillatelse.', en:'Pot vessel for snow crab in the Barents Sea, with a factory for the clusters and tanks for live crab. Needs a snow crab licence.'}},
   autoliner:{name:{no:'Autoliner 45 m med frysing', en:'45 m autoliner with freezing'}, len:45.4, beam:10.45, draft:3.8, disp:1050, holdCap:400000, iceCap:0, fuelCap:300000, hp:3000, engine:{no:'3 000 hk diesel', en:'3,000 hp diesel'},
     vmax:13, vcruise:11, accel:1, turnR:280, planing:false, outboard:false, diesel:true, risk:[6, 9, 24, 30], sea:0.04, crewMax:14, berths:16, tubCap:2000, land:'tub', std:['plotter', 'vhf', 'ais', 'chirp', 'sonar'],
     rigs:['line'], jukseMax:0, gearMax:{garn:0, stamp:0, teine:4}, autoHooks:40000, svcH:600, svcCost:350000, svcJobH:72, mottak:['Konvensjonelle'], cls:'hav', price:70000000, priceNew:300000000, year:1999,

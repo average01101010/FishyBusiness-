@@ -9,7 +9,7 @@ function karN(type, lv){ const K = (VESSELS[type] || {}).kar; return K ? Math.mi
 // how many of the yard's hold steps the boat can take (the open boats: one tub a step, up to her places; the rest: HOLDUP)
 function karSteps(type){ const K = (VESSELS[type] || {}).kar; return K ? Math.max(0, K.max - K.n) : HOLDUP.length; }
 // a fish that goes in the tubs: gutted or iced, not one kept alive (the crabs go in their tank)
-const inTub = x => (x.gut || x.iced) && !(SPECIES[x.sp] || {}).live;
+const inTub = x => (x.gut || x.iced) && !liveLot(x);
 // what lies in each of n tubs: they fill in turn, TUB_KG each, the iced fish under the not yet iced (the packer ices as he goes), and
 // the last tub takes what is over (a hold that shrank keeps its fish). [{kg, iced, sp:{sp:kg}}], n long.
 function tubLoads(hold, n){

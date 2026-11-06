@@ -118,7 +118,7 @@ function pushItems(now){
     // fish in the hold about to drop a grade (not while she is on her way in: that is the line above), two game hours before
     if (kg > 20 && !(P && P.idx < P.wps.length) && !(O && O.on)){
       let best = null, rrs = null;
-      for (const x of S.hold){ if (x.kg < 20 || SPECIES[x.sp].live || x.frozen) continue;
+      for (const x of S.hold){ if (x.kg < 20 || liveLot(x) || x.frozen) continue;
         const f = x.fresh, nx = f >= 85 ? 85 : f >= 65 ? 65 : f >= 40 ? 40 : f >= 15 ? 15 : null; if (nx == null) continue;
         if (!x.iced && rrs === null) rrs = keepRRS(S.t / 60, b.pos);
         const h = keepHours(f, nx, keepK(x, rrs)); if (!isFinite(h)) continue; const T = S.t + h * 60 - 120;

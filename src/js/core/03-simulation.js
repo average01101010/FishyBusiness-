@@ -406,7 +406,7 @@ function riskLevel(W, hs){ const r = BOAT.risk; if (hs >= r[1] || W >= r[3]) ret
 // hull's resistance at a speed goes with the weight to the 2/3, so at the same power the speed goes with (D0/D)^(2/9), about ^0.22
 // (+50 % weight: −9 %); a planing hull feels it more, ^0.5. The fuel at a speed goes with (D/D0)^(2/3)
 const FUEL_KG = d => d ? 0.84 : 0.74;   // kg a litre, diesel and petrol
-function boatTons(){ const b = S.boat, V = VESSELS[b.type] || VESSELS.skiff; return V.disp + (holdLoad() + (typeof cargoKg === 'function' ? cargoKg() : 0) + (b.ice || 0) + (b.fuel || 0) * FUEL_KG(V.diesel) + 90 * Math.max(1, handsAboard()) + (typeof hullWaterKg === 'function' ? hullWaterKg(b) : 0)) / 1000; }
+function boatTons(){ const b = S.boat, V = VESSELS[b.type] || VESSELS.skiff; return V.disp + (holdLoad() + (typeof tankLoad === 'function' ? tankLoad() : 0) + (typeof cargoKg === 'function' ? cargoKg() : 0) + (b.ice || 0) + (b.fuel || 0) * FUEL_KG(V.diesel) + 90 * Math.max(1, handsAboard()) + (typeof hullWaterKg === 'function' ? hullWaterKg(b) : 0)) / 1000; }
 function boatTons0(){ const V = VESSELS[S.boat.type] || VESSELS.skiff; return V.disp + (V.holdCap * 0.25 + V.fuelCap * 0.5 * FUEL_KG(V.diesel) + 90) / 1000; }
 function loadF(){ return clamp(Math.pow(boatTons0() / Math.max(0.1, boatTons()), BOAT.planing ? 0.5 : 0.22), 0.55, 1.08); }
 // ---- fouling: weed and barnacles on the hull (S.boat.foul, 0 to 1) slow her up to 15 % and cost up to 25 % more fuel; it grows in
@@ -741,7 +741,7 @@ function avgPrice(sp, H, days){ let s = 0, n = 0; const near = plantsNear(S.boat
 // ---------- quotas north of 62° N: the regulation and the year's figures are in 03d-quota.js ----------
 function doyH(H){ const g = gDate(H); return Math.floor((g - Date.UTC(g.getUTCFullYear(), 0, 1)) / 864e5); }
 function yearH(H){ return gDate(H).getUTCFullYear(); }
-function quotaState(){ const y = yearH(S.t / 60); if (!S.quota || S.quota.y !== y){ if (S.quota) snoFlexNewYear(S.quota, y); S.quota = {y, torsk:0, hyse:0, sei:0, snokrabbe:0, ffW:-1, ffTot:0, ffCod:0, conf:0, confKr:0, byCod:0}; } if (S.quota.snokrabbe == null) S.quota.snokrabbe = 0; return S.quota; }
+function quotaState(){ const y = yearH(S.t / 60); if (!S.quota || S.quota.y !== y){ if (S.quota) snoFlexNewYear(S.quota, y); S.quota = {y, torsk:0, hyse:0, sei:0, snokrabbe:0, snoTq:0, ffW:-1, ffTot:0, ffCod:0, conf:0, confKr:0, byCod:0}; } if (S.quota.snokrabbe == null) S.quota.snokrabbe = 0; if (S.quota.snoTq == null) S.quota.snoTq = 0; return S.quota; }
 // Vessels for sale with a closed-group right (deltakeradgang), by quota length (hjemmelslengde). The quotas are the year's (licQ in
 // 03d-quota.js): cod as a fixed vessel quota, haddock and saithe as [maximum, guaranteed] kg for the boat's largest length. The price
 // is the boat plus the cod quota at KPK kr a kg. KPK is an estimate: Hepsøfjord (10.98 m, two quota sets) sold for 17.5 million in

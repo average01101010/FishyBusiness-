@@ -49,7 +49,10 @@ const SNOC = {
   // the local stock (S.sstk) fills back this share of what is missing an hour (about two weeks to most of it; an assumption)
   back:0.003,
   // the string, the cap and the tending (høstingsforskriften §§ 18, 25 and 28)
-  lenke:200, max:8000, tendH:21 * 24, warnH:18 * 24, posH:21 * 24
+  lenke:200, max:8000, tendH:21 * 24, warnH:18 * 24, posH:21 * 24,
+  // (H3b) the weather's share of the coast gear's losses a snow crab string takes (gearHour): about one string in 15 a 20 days' trip with
+  // 30 in the sea in rough weather, against three before (an assumption; the losses in the drift ice come in H3c)
+  lossF:0.1
 };
 // the index by location and month (Float32Array of RU.lok × 12, 0 where the notes have nothing), built once from fiske.json snok
 const SNOF = {};
@@ -108,16 +111,17 @@ function snoSoak(s, H){
 }
 // the sorting on deck as the crabs come out of the pot (høstingsforskriften §§ 46, 47 and 51; J-237-2025 § 5): a male from 9.5 cm over
 // the widest part of the shell is kept, and so is every crab over the minimum (no female here reaches it) and every dead one, which may
-// not be thrown back; the small ones and the females go back alive. Soft crab is kept and counted against the 20 %. The kept crab lies in
-// the hold in three classes (hard, soft, dead) at the one price there is
+// not be thrown back; the small ones and the females go back alive. Soft crab is kept and counted against the 20 %. (H3b) The kept crab
+// goes where the trip sends it (snoStow, 10e-krabbefabrikk.js): the dead to the freezer round, on a live trip into the tanks while there
+// is room, the rest to the factory for the clusters
 function landSno(g, n){
-  const G = S.gacc || (S.gacc = {}), so = g.snoS || (g.snoS = {n:0, kept:0, rel:0, fem:0, soft:0, dead:0, kg:0, small:0}), m = gDate(S.t / 60).getUTCMonth();
+  const G = S.gacc || (S.gacc = {}), so = g.snoS || (g.snoS = {n:0, kept:0, rel:0, fem:0, soft:0, dead:0, kg:0, small:0, live:0}), m = gDate(S.t / 60).getUTCMonth();
   G.snoN = (G.snoN || 0) + n; let room = capHold() - holdLoad();
   while (G.snoN >= 1 && room > 0.05){
     G.snoN -= 1; const c = snoCrab(m); so.n++; if (c.fem) so.fem++;
     if (c.cw < SNOC.minCW && !c.dead){ so.rel++; g.rel = (g.rel || 0) + 1; S.stats.released = (S.stats.released || 0) + 1; if (!c.fem) so.small++; continue; }
-    const k = Math.min(c.w, room); room -= k;
-    addCatch('snokrabbe', k, c.dead ? 2 : c.soft ? 1 : 0, false, {fresh:100, how:'teine'}); g.kg += k; so.kept++; so.kg += k;
+    const k = Math.min(c.w, room), w = snoStow(c, k); if (w !== 'tank') room -= k; else so.live = (so.live || 0) + 1;
+    g.kg += k; so.kept++; so.kg += k;
     if (c.soft) so.soft++; if (c.dead) so.dead++;
     if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp:'snokrabbe', kg:k, t:performance.now()}); }
   }
@@ -127,8 +131,8 @@ function landSno(g, n){
 // reported to the Directorate (the game reports it for you and remembers the location for softDays)
 function snoHaulDone(g, s){
   const so = g.snoS; if (!so || !so.n) return;
-  log('Sortert: ' + fmtC(so.kept, 0) + ' krabber beholdt' + (so.soft ? ', ' + fmtC(so.soft, 0) + ' bløte' : '') + (so.dead ? ', ' + fmtC(so.dead, 0) + ' døde' : '') + '; ' + fmtC(so.rel, 0) + ' satt ut levende (' + fmtC(so.small, 0) + ' under 9,5 cm' + (so.fem ? ', ' + fmtC(so.fem, 0) + ' hunner' : '') + ').',
-    'Sorted: ' + fmtC(so.kept, 0) + ' crabs kept' + (so.soft ? ', ' + fmtC(so.soft, 0) + ' soft' : '') + (so.dead ? ', ' + fmtC(so.dead, 0) + ' dead' : '') + '; ' + fmtC(so.rel, 0) + ' put back alive (' + fmtC(so.small, 0) + ' under 9.5 cm' + (so.fem ? ', ' + fmtC(so.fem, 0) + ' females' : '') + ').');
+  log('Sortert: ' + fmtC(so.kept, 0) + ' krabber beholdt' + (so.live ? ' (' + fmtC(so.live, 0) + ' levende i tankene)' : '') + (so.soft ? ', ' + fmtC(so.soft, 0) + ' bløte' : '') + (so.dead ? ', ' + fmtC(so.dead, 0) + ' døde' : '') + '; ' + fmtC(so.rel, 0) + ' satt ut levende (' + fmtC(so.small, 0) + ' under 9,5 cm' + (so.fem ? ', ' + fmtC(so.fem, 0) + ' hunner' : '') + ').',
+    'Sorted: ' + fmtC(so.kept, 0) + ' crabs kept' + (so.live ? ' (' + fmtC(so.live, 0) + ' alive in the tanks)' : '') + (so.soft ? ', ' + fmtC(so.soft, 0) + ' soft' : '') + (so.dead ? ', ' + fmtC(so.dead, 0) + ' dead' : '') + '; ' + fmtC(so.rel, 0) + ' put back alive (' + fmtC(so.small, 0) + ' under 9.5 cm' + (so.fem ? ', ' + fmtC(so.fem, 0) + ' females' : '') + ').');
   const sh = so.kept >= 50 ? so.soft / so.kept : 0;
   if (sh > SNOC.softMax){ const c = lokOfCell(setMid(s)); S.snoSoft = {l:c.l, t:S.t, pct:Math.round(sh * 100)};
     msg('Fiskeridirektoratet', 'Innblandingen av bløtkrabbe i trekket var ' + Math.round(sh * 100) + ' %. Over 20 % skal fangsten stoppes og fartøyet skifte felt (J-237-2025 § 5). Innblandingen er meldt.',

@@ -163,15 +163,18 @@ function panelHold(){
   const b = S.boat, HF = holdFmt(), tot = HF.round, h = [], L = (no, en) => S.lang === 'no' ? no : en;
   h.push('<div class="kv"><span>' + t('load') + '</span><span>' + HF.txt + (HF.fz ? ' ' + L('produkt', 'product') : '') + '</span></div><div class="bar"><i style="width:' + (100 * HF.load / BOAT.holdCap).toFixed(1) + '%"></i></div>');
   if (HF.fz) h.push('<div class="kv"><span>' + L('Rund vekt', 'Round weight') + '</span><span>' + HF.rnd + '</span></div>');
+  if (snoTanks()) h.push('<div class="kv"><span>' + L('Tankene', 'The tanks') + '</span><span>' + fmt(tankLoad() / 1000, 1) + ' / ' + fmt(tankCap() / 1000, 0) + ' t ' + L('levende', 'live') + (snoLive() ? '' : ' · ' + L('frysetur', 'frozen trip')) + '</span></div><div class="bar"><i style="width:' + (100 * tankLoad() / Math.max(1, tankCap())).toFixed(1) + '%"></i></div>');   // (H3b)
   if (BOAT.iceCap > 0) h.push('<div class="kv"><span>' + t('ice') + '</span><span>' + fmt(b.ice, 0) + ' / ' + BOAT.iceCap + ' kg</span></div>');
   h.push('<div class="kv"><span>' + t('fuel') + '</span><span>' + fmt(b.fuel, 0) + ' / ' + BOAT.fuelCap + ' L</span></div>');
   if (!tot){ h.push('<p class="note">' + t('hold_empty') + '</p>'); return h.join(''); }
   const agg = {};
-  for (const x of S.hold){ const g = grade(x.fresh), k = x.sp + g; agg[k] = agg[k] || {sp:x.sp, g, kg:0}; agg[k].kg += x.kg; }
+  // (the snow crab by what it is: the clusters done and waiting, the live crab, the dead crab for meal; H3b)
+  const sf = x => x.sp !== 'snokrabbe' ? null : x.tank ? 'lev' : x.rund ? 'rund' : x.frozen ? 'klor' : 'fab', SFN = {klor:L('klør, fryst', 'clusters, frozen'), fab:L('venter i fabrikken', 'waiting in the factory'), lev:L('levende', 'live'), rund:L('død, rund', 'dead, round')};
+  for (const x of S.hold){ const g = grade(x.fresh), f = sf(x), k = x.sp + g + (f || ''); agg[k] = agg[k] || {sp:x.sp, g, kg:0, f, v:0}; agg[k].kg += x.kg; if (f){ const pt = (plantsNear(S.boat.pos, 1)[0] || {}).pt; agg[k].v += x.kg * snoPrice(pt, x, S.t / 60); } }
   const rows = Object.values(agg).sort((a, c) => ALLSP.indexOf(a.sp) - ALLSP.indexOf(c.sp) || 'EABX'.indexOf(a.g) - 'EABX'.indexOf(c.g));
   let sum = 0;
   h.push('<table class="tbl"><thead><tr><th>' + t('species') + '</th><th>' + t('quality') + '</th><th>' + t('kg') + '</th><th>' + t('value') + '</th></tr></thead><tbody>');
-  rows.forEach(r => { const v = r.kg * valueEst(r.sp, r.g); sum += v; h.push('<tr><td>' + spName(r.sp) + '</td><td>' + t('grade_' + r.g) + '</td><td>' + fmt(r.kg, 0) + '</td><td>' + kr(v) + '</td></tr>'); });
+  rows.forEach(r => { const v = r.f ? r.v : r.kg * valueEst(r.sp, r.g); sum += v; h.push('<tr><td>' + spName(r.sp) + '</td><td>' + (r.f ? SFN[r.f] : t('grade_' + r.g)) + '</td><td>' + fmt(r.kg, 0) + '</td><td>' + kr(v) + '</td></tr>'); });
   h.push('<tr class="sum"><td>' + t('total') + '</td><td></td><td>' + fmt(tot, 0) + '</td><td>' + kr(sum) + '</td></tr></tbody></table>');
   h.push('<p class="note">' + t('hold_n') + '</p>');
   return h.join('');
@@ -225,7 +228,7 @@ function panelWx(){
 // where a landing has got to, for the action bar and the harbour panel
 function landText(short){
   const L0 = S.boat.land; if (!L0) return '';
-  const st = landState(L0, S.t), L = (no, en) => S.lang === 'no' ? no : en, u = L0.kind === 'tub' ? L('kar', 'tubs') : L0.kind === 'pall' ? L('paller', 'pallets') : L('kasser', 'boxes'), at = hm(L0.until / 60);
+  const st = landState(L0, S.t), L = (no, en) => S.lang === 'no' ? no : en, u = L0.kind === 'tub' ? L('kar', 'tubs') : L0.kind === 'pall' ? (L0.kar ? L('paller og kar', 'pallets and tubs') : L('paller', 'pallets')) : L('kasser', 'boxes'), at = hm(L0.until / 60);
   // an open boat's own tubs: when the full ones are ashore, they are emptied, washed and set back aboard one by one
   if (L0.own && st.phase === 'lift' && st.up >= L0.n){ const k = st.up - L0.n;
     if (short) return [L('Kar om bord ', 'Tubs aboard ') + k + '/' + L0.n, k + '/' + L0.n + ' ' + u];
@@ -233,7 +236,7 @@ function landText(short){
   // the action bar: a line for wide screens and a short one for narrow
   if (short) return st.phase === 'prep' ? [L('Kranen svinger inn', 'The crane swings in'), L('Kran', 'Crane')] : st.phase === 'note' ? [L('Veier inn · seddel ', 'Weighing · note ') + at, L('Seddel ', 'Note ') + at] : [L('Losser ', 'Landing ') + st.units + '/' + L0.n + ' ' + u, st.units + '/' + L0.n + ' ' + u];
   return st.phase === 'prep' ? L('Mottaket gjør klar kranen og trucken.', 'The plant is getting the crane and the forklift ready.') : st.phase === 'note' ? L('Alt er på kaia. Fangsten veies inn.', 'Everything is ashore. The catch is being weighed in.')
-    : L(st.units + ' av ' + L0.n + ' ' + u + ' er på kaia.', st.units + ' of ' + L0.n + ' ' + u + ' are ashore.') + (L0.kind === 'pall' ? L(' Sluttseddelen kommer ' + mottakWhen(L0.until / 60, true) + '.', ' The landing note comes ' + mottakWhen(L0.until / 60, false) + '.') : '');
+    : L(st.units + ' av ' + L0.n + ' ' + u + ' er på kaia.', st.units + ' of ' + L0.n + ' ' + u + ' are ashore.') + (L0.kind === 'pall' || L0.lv ? L(' Sluttseddelen kommer ' + mottakWhen(L0.until / 60, true) + '.', ' The landing note comes ' + mottakWhen(L0.until / 60, false) + '.') : '');
 }
 // the bleeding tub: what lies in it and how long the work takes with the hands free for it now
 function deckText(short){

@@ -41,7 +41,8 @@ const WORK_ALL = WORK_ST.concat(['egn', 'strip', 'mend', 'stell', 'last']);   //
 // the stations whose work is heavy, and how heavy: a tired person leaves them to the others first
 const HEAVY_ST = {haling:1, last:1, sloy:0.5, is:0.6, fiske:0.4, sort:0.3, blogg:0.3, egn:0.2, strip:0.2, mend:0.2, stell:0.2};
 // the catch is bled, gutted and iced, the trade's way; S.settings.gut and .ice set to false leave it round or uniced (the tests)
-function catchGut(){ return S.settings.gut !== false; }
+// (H3b) the snow crab vessel's factory always splits its crab into clusters (10e-krabbefabrikk.js), whatever the setting for the fish
+function catchGut(){ return S.settings.gut !== false || snoVessel(); }
 function catchIce(){ return S.settings.ice !== false; }
 // ---- the mate (Jonas 23.10.2026: «vi må kunne definere 1 fra mannskapet til å være styrmann ombord»): one of the crew, the same one
 // who with the skipper runs the boat on the operations plan when you are not aboard (06d-drift.js); at the helm and in charge on deck when you sleep or are not aboard
@@ -126,7 +127,7 @@ function stPlaces(st, ctx){
 function workCtx(as){
   const b = S.boat, st = S.settings, s = as === 'fishing' ? 'fishing' : b.status, g = as === 'fishing' ? null : b.gop, stop = as === 'fishing' ? false : !!b.deckStop;
   const icing = iceReady(), cg = catchGut(); let gut = 0, ice = 0, pend = 0;
-  for (const x of S.hold){ if (SPECIES[x.sp].live || x.iced) continue; if (cg && !x.gut) gut += x.kg; else if (icing) ice += x.kg; if ((cg && !x.gut) || icing) pend += x.kg; }
+  for (const x of S.hold){ if (liveLot(x) || x.iced) continue; if (cg && !x.gut) gut += x.kg; else if (icing) ice += x.kg; if ((cg && !x.gut) || icing) pend += x.kg; }
   const deck = s !== 'aground' && pend > 0.5, gk = g ? g.kind : null;
   // the icing station packs what is gutted into the crate or the tub and ices it as it comes from the table, so it has work while anything is
   // on its way to it (the gutted fish, and the round fish waiting for the knife)
@@ -318,6 +319,7 @@ function idleText(p){
 // what a person does, for the work page: the station's word, or the part of it at the hauler
 function workDoing(p){ const no = S.lang === 'no'; if (p.role === 'plukk') return no ? 'Plukker og bløgger' : 'Picking and bleeding'; if (p.role === 'teine') return no ? 'Tømmer og egner teiner' : 'Emptying and baiting pots';
   if (p.st === 'pause' && p.idle){ const t = idleText(p); if (t) return t; }
+  if (snoVessel() && (p.st === 'sloy' || p.st === 'is')) return p.st === 'sloy' ? (no ? 'Deler krabben i klør' : 'Splitting the crab into clusters') : (no ? 'Koker, fryser og pakker klør' : 'Cooking, freezing and packing clusters');   // the snow crab factory (H3b)
   if (p.st === 'is' && holdFreezes()) return no ? 'Pakker og fryser' : 'Packing and freezing';   // a freezer hold (05-vessels.js)
   return STATIONS[p.st].ing[no ? 0 : 1]; }
 // the people on a station and what they do there together: n, the sum of their efficiency for skill g, and the mean

@@ -163,20 +163,22 @@ function tripLeft(b = S.boat){
   R.fuel = Math.max(0, b.fuel - homeL) / Math.max(1, fuelDay);
   if (L){ const lenker = BOAT.autoHooks / LINE_KINDS.auto.hooks; R.bait = baitKg(pg) / (lenker * LINE_KINDS.auto.baitKg); R.hooks = (pg.hooks || 0) / (BOAT.autoHooks * AUTOFIX.day); }
   R.hold = Math.max(0, capHold() - prod) / prodDay; if (lagOf()) R.prov = provOf(b) / Math.max(1, provMen());
-  R.min = Math.min(R.fuel, R.hold, R.bait == null ? Infinity : R.bait, R.hooks == null ? Infinity : R.hooks, R.prov == null ? Infinity : R.prov);
+  if (snoVessel()) snoTrip(R, b, d);   // (H3b: the bait for the pots, the room in the tanks on a live trip, 10e-krabbefabrikk.js)
+  const inf = v => v == null ? Infinity : v;
+  R.min = Math.min(R.fuel, R.hold, inf(R.bait), inf(R.hooks), inf(R.prov), inf(R.tank));
   return R;
 }
-const TRIPW = {prov:['Provianten', 'The provisions'], fuel:['Drivstoffet', 'The fuel'], bait:['Agnet', 'The bait'], hooks:['Krokene til krokbyttet', 'The hooks for the hook change'], hold:['Plassen i lasterommet', 'The room in the hold']};
+const TRIPW = {prov:['Provianten', 'The provisions'], fuel:['Drivstoffet', 'The fuel'], bait:['Agnet', 'The bait'], hooks:['Krokene til krokbyttet', 'The hooks for the hook change'], hold:['Plassen i lasterommet', 'The room in the hold'], tank:['Plassen i tankene', 'The room in the tanks']};
 // once an hour at sea on an ocean vessel: the days at sea, and a word when the trip is running out of something
 function tripHour(){
   const b = S.boat; if (BOAT.cls !== 'hav' || b.status === 'port') return;
   const T = tripOf(b); T.seaM = (T.seaM || 0) + 60;
   const R = tripLeft(b), W = b.tripWarn || (b.tripWarn = {}), home = R.home ? R.home.pt.name : '', hd = R.home ? fmtC(R.home.days, 1) : '';
-  for (const k of ['prov', 'fuel', 'bait', 'hooks', 'hold']){ const v = R[k]; if (v == null || v >= TRIPX.warn || S.t - (W[k] || -1e9) < TRIPX.every) continue; W[k] = S.t;
+  for (const k of ['prov', 'fuel', 'bait', 'hooks', 'hold', 'tank']){ const v = R[k]; if (v == null || v >= TRIPX.warn || S.t - (W[k] || -1e9) < TRIPX.every) continue; W[k] = S.t;
     const days = v < 0.5 ? ['under et halvt døgn', 'under half a day'] : ['om lag ' + fmtC(v, 1) + ' døgn', 'about ' + fmtC(v, 1) + ' days'];
     const no = TRIPW[k][0] + ' rekker ' + days[0] + ' til' + (k === 'fuel' && home ? ', og så trengs resten for å gå til ' + home + ' (' + hd + ' døgn)' : '') + '.',
       en = TRIPW[k][1] + ' lasts ' + days[1] + ' more' + (k === 'fuel' && home ? ', and the rest is needed to steam to ' + home + ' (' + hd + ' days)' : '') + '.';
-    log(no, en); msg(gL('Turen', 'The trip'), no + (k === 'hold' || k === 'prov' ? ' Det er tid for å gå til mottaket.' : home ? ' Nærmeste mottak som tar båten, er ' + home + '.' : ''), en + (k === 'hold' || k === 'prov' ? ' It is time to head for the plant.' : home ? ' The nearest plant that takes her is ' + home + '.' : '')); }
+    log(no, en); msg(gL('Turen', 'The trip'), no + (k === 'hold' || k === 'prov' || k === 'tank' ? ' Det er tid for å gå til mottaket.' : home ? ' Nærmeste mottak som tar båten, er ' + home + '.' : ''), en + (k === 'hold' || k === 'prov' || k === 'tank' ? ' It is time to head for the plant.' : home ? ' The nearest plant that takes her is ' + home + '.' : '')); }
 }
 // ===== the ocean vessel's crew as anonymous teams (H2b of docs/planer/havsteget-h2-autoline.md, V3 A; Jonas 05.11.2026: the teams
 // «Følger båten») =====
@@ -193,7 +195,7 @@ const fmtC = (v, d = 0) => typeof fmt === 'function' ? fmt(v, d) : v.toFixed(d);
 const lagSpec = () => (VESSELS[S.boat && S.boat.type] || {}).crew || null;
 function lagOf(){
   const V = lagSpec(); if (!V) return null;
-  if (!S.lag || S.lag.type !== S.boat.type) S.lag = {type:S.boat.type, on:0, sh:Array.from({length:V.rot || 1}, (_, i) => ({i, skill:LAG.skill0, trips:0}))};
+  if (!S.lag || S.lag.type !== S.boat.type) S.lag = {type:S.boat.type, on:0, since:S.t, sh:Array.from({length:V.rot || 1}, (_, i) => ({i, skill:LAG.skill0, trips:0}))};
   return S.lag;
 }
 const lagN = () => { const V = lagSpec(); return V ? V.key.length + V.teams.reduce((a, t) => a + t.n, 0) : 0; };
@@ -231,7 +233,12 @@ function lagLanded(kr){
   if ((S.crew || []).length){ const nm = S.crew.map(c => c.name.split(' ')[0]); for (const c of S.crew.slice()){ crewSettle(c); if (typeof flyOut === 'function') flyOut(c); } S.crew = [];
     log(nm.join(', ') + ' har gått i land. Havbåten har sine egne lag.', nm.join(', ') + ' went ashore. The ocean vessel has her own teams.'); }
   if (G.sh.length < 2) return; const a = G.sh[G.on]; a.trips++; a.skill = Math.min(LAG.max, Math.round((a.skill + LAG.step) * 100) / 100);
-  G.on = (G.on + 1) % G.sh.length; const b = G.sh[G.on];
+  // (H3b) a vessel whose crews go so many weeks on (VESSELS crew rotD: the snow crab vessel's five weeks on and five off) keeps the crew
+  // aboard until its time is out; the autoliner's change at each landing (H2b). A save from before has no sign-on time: it changes now
+  const rd = lagSpec().rotD, on = G.since != null ? (S.t - G.since) / 1440 : Infinity;
+  if (rd && on < rd){ log('Skift ' + lagShName(a.i) + ' blir om bord' + (kr > 0 ? ' og får ' + fmtC(kr, 0) + ' kr i lott' : '') + '. Det har vært om bord i ' + fmtC(on, 0) + ' av ' + rd + ' døgn.',
+    'Crew ' + lagShName(a.i) + ' stays aboard' + (kr > 0 ? ' and gets NOK ' + fmtC(kr, 0) + ' in shares' : '') + '. It has been aboard for ' + fmtC(on, 0) + ' of ' + rd + ' days.'); return; }
+  G.on = (G.on + 1) % G.sh.length; G.since = S.t; const b = G.sh[G.on];
   log('Skift ' + lagShName(a.i) + ' går i land' + (kr > 0 ? ' med ' + fmtC(kr, 0) + ' kr i lott' : '') + ', og skift ' + lagShName(b.i) + ' mønstrer på (' + lagN() + ' mann, ferdighet ' + fmtC(b.skill, 1) + ').',
     'Crew ' + lagShName(a.i) + ' signs off' + (kr > 0 ? ' with NOK ' + fmtC(kr, 0) + ' in shares' : '') + ', and crew ' + lagShName(b.i) + ' signs on (' + lagN() + ' men, skill ' + fmtC(b.skill, 1) + ').');
 }
@@ -241,12 +248,14 @@ function lagLanded(kr){
 // eat a day's share a day; the stores are a limit of the trip (tripLeft), and with them empty the meals are dry bread
 const PROV = {days:60, kr:250};
 const provMen = () => lagN() + (meAboard() ? 1 : 0) + crewAboard().length;
-const provCap = () => PROV.days * (lagN() + 1);
+// (H3b) the days a vessel stores for (VESSELS provDays: the snow crab vessel's trips are shorter, 30 days), else the autoliner's 60
+const provDays = () => (typeof BOAT !== 'undefined' && BOAT && BOAT.provDays) || PROV.days;
+const provCap = () => provDays() * (lagN() + 1);
 function provOf(b = S.boat){ if (b.prov == null) b.prov = provCap(); return b.prov; }
 function provFill(){
   const b = S.boat; if (!lagOf()) return 0; const cap = provCap(), add = Math.max(0, cap - provOf(b)); if (add < 1) return 0;
   const kr0 = Math.round(add * PROV.kr); book('proviant', -kr0, 'Proviant for turen', 'Provisions for the trip'); b.prov = cap;
-  log('Skipshandelen har levert proviant om bord for ' + PROV.days + ' døgn til ' + (lagN() + 1) + ' mann: ' + fmtC(kr0, 0) + ' kr.', 'The ship\'s chandler has delivered provisions for ' + PROV.days + ' days for ' + (lagN() + 1) + ' men: NOK ' + fmtC(kr0, 0) + '.');
+  log('Skipshandelen har levert proviant om bord for ' + provDays() + ' døgn til ' + (lagN() + 1) + ' mann: ' + fmtC(kr0, 0) + ' kr.', 'The ship\'s chandler has delivered provisions for ' + provDays() + ' days for ' + (lagN() + 1) + ' men: NOK ' + fmtC(kr0, 0) + '.');
   return kr0;
 }
 function provMinute(){ const b = S.boat; if (!lagOf() || b.status === 'port') return; b.prov = Math.max(0, provOf(b) - provMen() / 1440); }

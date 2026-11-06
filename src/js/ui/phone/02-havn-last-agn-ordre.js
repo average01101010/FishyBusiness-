@@ -13,7 +13,7 @@
     // and when the pots are set (Jonas 20.10.2026), so there is no «chosen kind» here
     const B = baitOf(pg), good = k => { const best = baitGood(k).map(spLc); return best.length ? L('best på ', 'best for ') + best.join(', ') : L('helt ok på alt', 'fair on everything'); };
     // an autoliner buys by the tonne: some 85 kg a lenke, 680 kg a day with the whole line (H2a)
-    const am = autoL(pg) ? [1000, 5000] : [20, 100];
+    const am = autoL(pg) || snoVessel() ? [1000, 5000] : [20, 100];   // (and the snow crab vessel: half a kilo a pot, some 860 kg a day, H3b)
     // the reason first, and no grey buttons under it (spilltest 3, U7): the kinds stay, with what each is best for
     const gate = buyGate('bait');
     const rows = Object.entries(BAITS).map(([k, X]) => { const c20 = am[0] * X.kr, c100 = am[1] * X.kr;
