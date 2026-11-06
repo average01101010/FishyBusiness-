@@ -78,6 +78,9 @@ function farL(kind, p){ const n = FARL[kind], A = MAPD.L[n[0]]; if (A && mapCell
 const mapCellIn = (L, p) => { const ix = Math.floor(p.x / L.c), iy = Math.floor(p.y / L.c); return ix >= L.ix0 && iy >= L.iy0 && ix < L.ix0 + L.nx && iy < L.iy0 + L.ny; };
 // whether the map has anything at p (the screens draw off-map where it has not)
 const inFrame = p => p.x >= MAPB.x0 && p.y >= MAPB.y0 && p.x < MAPB.x1 && p.y < MAPB.y1 && !!farL('land', p);
+// the same under a second name for the 3D view, where inFrame is a hand's frame (view3d/09-landing-deck.js) and hides this one: the
+// skiff's live plotter asked that one and threw «reading '0'» every half second (view3d/13-instruments.js paintPlotter, Ø7)
+const inMapFrame = inFrame;
 // the openness (0-255) for what looks far; 0 where there is none
 function expoFar(p){ const L = farL('expo', p); return L ? rbil(L, p) : 0; }
 // the land at x, z (metres) between the four nearest cells (0-1), for the 3D view's ground off the tiles; 0 where there is none (the 3D
