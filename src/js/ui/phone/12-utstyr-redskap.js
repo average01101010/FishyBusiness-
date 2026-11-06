@@ -31,7 +31,9 @@
     for (const k of keys){ const E = EQUIP[k];
       if (!equipFits(k, S.boat.type)){ nofit.push(E.name[S.lang]); continue; }
       const have = E.multi ? S.equip[k] : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1, fitting = (S.jobs || []).some(j => j.kind === 'fit' && j.k === k);
-      if (have >= max){ const br = SPUI.brandOf(k); aboard.push(E.name[S.lang] + (br && br.m ? ' (' + br.m + ')' : '') + (E.multi ? ' × ' + have : '')); continue; }
+      // (what the rules ask for is aboard and not for sale here: V6 A; it says so in the card of what is aboard)
+      const req = (VESSELS[S.boat.type].req || []).includes(k);
+      if (have >= max || req){ const br = SPUI.brandOf(k); aboard.push(E.name[S.lang] + (br && br.m ? ' (' + br.m + ')' : '') + (E.multi ? ' × ' + have : '') + (req ? ' (' + L('påbudt, følger båten', 'required, comes with the boat') + ')' : '')); continue; }
       const pend = shopPend && shopPend.k === 'equip:' + k && Date.now() - shopPend.t <= IC_CONFIRM_MS, dis = !(atKind(EQ_YARD(k) ? 'verft' : 'butikk') && spendable() >= E.price);
       const btn = pend ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(E.price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
         : '<button class="ph-btn p" data-pa="equip" data-k="' + k + '"' + (dis ? ' disabled' : '') + '>' + L('Kjøp og monter', 'Buy and fit') + ' · ' + durBoth(fitHours(k) * 60) + '</button>';
@@ -129,9 +131,10 @@
     const hk = '<p class="ph-note">' + L('Kroker på lager: ', 'Hooks in store: ') + pg.hooks + '. ' + L('Kjøpes i pakker på 100, 500 og 1000 i utstyrsbutikken.', 'Bought in packs of 100, 500 and 1000 at the tackle shop.') + '</p>';
     h.push(!pg.lines.hyse.n && !pg.lines.bank.n && !h.length ? '<div class="ph-card"><h4>' + L('Line', 'Line') + '</h4><p class="ph-note">' + L('Ingen line om bord.', 'No line aboard.') + '</p>' + hk + '</div>' : hk);
     // pots
-    const rgp = (VESSELS[b.type] || {}).rigs || [], showP = rgp.includes('teiner') || pg.pots.big > 0;
-    if (showP) h.push('<div class="ph-card"><h4>' + L('Teiner', 'Pots') + '</h4>' + kv(POTS.big[S.lang], pg.pots.big));
-    if (pg.pots.big){ h.push(kv(L('Stand', 'Condition'), pctOf(pg.potc.cond) + ' · ' + L('tak ', 'ceiling ') + pctOf(pg.potc.max)) + cbar(pg.potc.cond));
+    const rgp = (VESSELS[b.type] || {}).rigs || [], pK = potK(), PP = POTS[pK], nP = pg.pots[pK] || 0, showP = rgp.includes('teiner') || nP > 0;
+    // (H3a) the snow crab vessel: the pots in the sea against the cap of § 28, and the strings
+    if (showP) h.push('<div class="ph-card"><h4>' + L('Teiner', 'Pots') + '</h4>' + kv(PP[S.lang], nP) + (PP.sno ? kv(L('I sjøen', 'In the sea'), fmt(snoInSea(), 0) + ' ' + L('av høyst', 'of at most') + ' ' + fmt(SNOC.max, 0) + ' (§ 28)') + '<p class="ph-note">' + L('Konisk teine, 135 mm maske, rømmingshull med bomullstråd og fartøyets registreringsmerke. Settes i lenker på 200 med 25 m mellom.', 'Conical pot, 135 mm mesh, an escape opening laced with cotton twine and the vessel\'s registration mark. Set in strings of 200, 25 m apart.') + '</p>' : ''));
+    if (nP){ h.push(kv(L('Stand', 'Condition'), pctOf(pg.potc.cond) + ' · ' + L('tak ', 'ceiling ') + pctOf(pg.potc.max)) + cbar(pg.potc.cond));
       if (inPort){ const qp = careQuote('pot', 0, false); if (qp) h.push('<div class="ph-btncol">' + cbtn('carepot', 'data-m="self"', L('Reparer teinene selv', 'Mend the pots yourselves') + qTxt(qp), true) + '</div>'); } }
     if (showP) h.push('</div>');
     // the jig: the pilk and hooks that are mounted, and the spare sets (not on a vessel that cannot jig, vesselJigs)
@@ -144,7 +147,7 @@
     // buoys, bait and the crew's own upkeep
     const bk = Object.entries(baitOf(pg)).filter(e => e[1] > 0.05);
     h.push('<div class="ph-card" id="baitCard"><h4>' + L('Blåser og agn', 'Buoys and bait') + '</h4>' + kv(L('Blåsesett', 'Buoy sets'), pg.kits.n + (pg.kits.heavy ? ' (' + pg.kits.heavy + ' ' + L('med tung dregg', 'with heavy anchor') + ')' : '')) +
-      (bk.length ? bk.map(e => kv((BAITS[e[0]] ? baitDot(e[0]) + BAITS[e[0]][S.lang] : e[0]) + (pg.pots.big ? ' <small>' + L('til ', 'for ') + Math.min(pg.pots.big, Math.floor(e[1] / GPRICE.potBait + 1e-9)) + L(' teiner', ' pots') + '</small>' : ''), fmt(e[1], 0) + ' kg')).join('') : kv(L('Agn', 'Bait'), L('ingen', 'none'))) +
+      (bk.length ? bk.map(e => kv((BAITS[e[0]] ? baitDot(e[0]) + BAITS[e[0]][S.lang] : e[0]) + (potsAboard(pg) ? ' <small>' + L('til ', 'for ') + Math.min(potsAboard(pg), Math.floor(e[1] / potBaitKg(potK()) + 1e-9)) + L(' teiner', ' pots') + '</small>' : ''), fmt(e[1], 0) + ' kg')).join('') : kv(L('Agn', 'Bait'), L('ingen', 'none'))) +
       '<div class="ph-btncol">' + cbtn('careauto', '', L('Mannskapet vedlikeholder selv i havn: ', 'The crew does the upkeep in port: ') + (S.settings.careAuto === false ? L('av', 'off') : L('på', 'on')), true, 'alt') + '</div></div>');
     return h.join('');
   }
@@ -187,7 +190,10 @@
         btns:NETOPT.map(o => buy('net', netKey(o[0], o[1]), 10, n => L(NETTY[o[0]].no, NETTY[o[0]].en) + ' ' + o[1] + ' mm × ' + n, NETTY[o[0]].price)).join('')}));
       h.push(itemCard({k:'line', name:L('Line', 'Line'), price:kr(LINE_KINDS.bank.price) + '–' + kr(LINE_KINDS.hyse.price) + L(' per stamp', ' a tub'), have:own('line', pg.lines.hyse.n + pg.lines.bank.n, 'stamper', 'tubs'), body:roomTxt(room('line'), 'stamper', 'tubs'),
         btns:['hyse', 'bank'].map(lk => buy('stamp', lk, 4, n => n + (n === 1 ? L(' stamp ', ' tub of ') : L(' stamper ', ' tubs of ')) + LINE_KINDS[lk][S.lang].toLowerCase(), LINE_KINDS[lk].price)).join('')}));
-      h.push(itemCard({k:'pot', name:L('Krabbeteiner', 'Crab pots'), price:POTS.big.price, have:own('pot', pg.pots.big, 'teiner', 'pots'), body:'<p class="ic-have">' + KC_WHERE() + '</p>' + roomTxt(room('teine'), 'teiner', 'pots'),
+      // (H3a) the snow crab vessel buys the conical pots a string (200) at a time, with a buoy set and a heavy anchor for each string
+      if (POTS[potK()].sno) h.push(itemCard({k:'pot', name:L('Snøkrabbeteiner', 'Snow crab pots'), price:POTS.sno.price, have:own('pot', pg.pots.sno || 0, 'teiner', 'pots'), body:'<p class="ic-have">' + L('Lenker à 200 teiner med dregg og blåse i hver ende. Høyst 8 000 teiner per fartøy (høstingsforskriften § 28).', 'Strings of 200 pots with an anchor and a buoy at each end. At most 8,000 pots a vessel (høstingsforskriften § 28).') + '</p>' + roomTxt(room('teine'), 'teiner', 'pots'),
+        btns:buy('pot', 'sno', SNOC.lenke, n => n % SNOC.lenke ? potsN(n) : n / SNOC.lenke + ' ' + L(n === SNOC.lenke ? 'lenke' : 'lenker', n === SNOC.lenke ? 'string' : 'strings') + ' (' + potsN(n) + ')', POTS.sno.price)}));
+      else h.push(itemCard({k:'pot', name:L('Krabbeteiner', 'Crab pots'), price:POTS.big.price, have:own('pot', pg.pots.big, 'teiner', 'pots'), body:'<p class="ic-have">' + KC_WHERE() + '</p>' + roomTxt(room('teine'), 'teiner', 'pots'),
         btns:buy('pot', 'big', 20, potsN, POTS.big.price)}));
       // bait is sold at the fish plant, not here (docs/handelssteder.md; buyGear refuses it at the shop)
       h.push(itemCard({k:'kit', name:L('Blåser og dregg', 'Buoys and anchors'), price:GPRICE.kit, anchor:L('tung dregg ', 'heavy anchor ') + kr(GPRICE.heavy), have:own('kit', pg.kits.n, 'sett', 'sets'),

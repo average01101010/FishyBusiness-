@@ -74,6 +74,31 @@ def rules_polys():
         return o
     return {('h', h['c']): [[dec(r) for r in poly] for poly in h['r']] for h in R['hom']} | {('l', h['c']): [[dec(r) for r in poly] for poly in h['r']] for h in R['lok']}
 
+# where a Norwegian vessel may take snow crab (H3a of docs/planer/havsteget-h3-snokrabbe.md, 06.11.2026; the game's rules sk1 and sk2 in
+# 03e-rules.js, J-237-2025 § 1): on Norway's continental shelf, in Norway's economic zone, the fisheries protection zone at Svalbard or the
+# Loophole (not the territorial sea, of the mainland or of Svalbard and Jan Mayen, and not another country's zone), at least 12 nm off the
+# mainland's baseline (13 here, for the zones' 0.3 km), and not where høstingsforskriften § 58 or the vulnerable ecosystems close the pots
+def sno_rules():
+    R = json.load(open(os.path.join(ROOT, 'src', 'data', 'rules.json'))); U = R.get('unit', 0.01)
+    def dec(a):
+        x = y = 0; o = []
+        for i in range(0, len(a) - 1, 2): x += a[i]; y += a[i + 1]; o.append((x * U, y * U))
+        return o
+    polys = lambda r: [[dec(q) for q in poly] for poly in r]
+    sea = [(z['c'], polys(z['r'])) for z in R['sea']]; shelf = polys(R['shelf'])
+    closed = [polys(f['r']) for k in ('26', '25') for f in R['L'].get(k, {}).get('f', []) if f.get('r')]
+    bl = np.array(dec(R['bl'])); A, B = bl[:-1], bl[1:]
+    def bl_km(x, y):
+        d = B - A; L2 = (d ** 2).sum(1); L2[L2 == 0] = 1e-9; t = np.clip(((x - A[:, 0]) * d[:, 0] + (y - A[:, 1]) * d[:, 1]) / L2, 0, 1)
+        return float(np.min(np.hypot(x - A[:, 0] - t * d[:, 0], y - A[:, 1] - t * d[:, 1])))
+    def ok(x, y):
+        if not any(pip(p, x, y) for p in shelf): return False
+        zone = next((c for c, P in sea if any(pip(p, x, y) for p in P)), '')
+        if zone not in ('no', 'sv', 'smh'): return False
+        if any(pip(p, x, y) for P in closed for p in P): return False
+        return bl_km(x, y) >= 13 * 1.852
+    return ok
+
 def pip(rings, x, y):
     c = False
     for r in rings:
@@ -119,7 +144,7 @@ def main(game):
         d = math.hypot(b[0] - a[0], b[1] - a[1]); n = max(1, int(d / 0.05))   # (every 50 m: a leg grazing a cell's corner is caught)
         # (from b's end: the land, when there is any, is mostly by the fairway node or the plant, so a long leg over the sea fails at once)
         return all(not land(a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n) for k in range(n, -1, -1) if d * k / n >= skip and (not both or d * (n - k) / n >= skip))
-    P = rules_polys(); KN = kommunenavn()
+    P = rules_polys(); KN = kommunenavn(); SNO_OK = sno_rules()
     # the vessels by kommune and gear
     ves = []
     for knr, rows in F['kom'].items():
@@ -150,6 +175,8 @@ def main(game):
                         d = depth(x, y)
                         if relax == 1 and not (lo <= d <= hi): continue
                         if d < 20 or any(math.hypot(x - a, y - b) < 4 for a, b in pts): continue
+                        # (H3a) the snow crab vessels only where a Norwegian vessel may take snow crab (sno_rules)
+                        if g == 'teine' and not SNO_OK(x, y): continue
                         # (H1b R6) not in the drift ice in the months the area has its landings (the mean, weighted by the kilos, under ICE_LIM)
                         tot = sum(kg) or 1
                         if sum(kg[m] * ICE(m, x, y) for m in range(12)) / tot >= ICE_LIM: continue

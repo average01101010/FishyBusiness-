@@ -137,8 +137,63 @@ def register():
 def lg_of(length):
     return 0 if length < 11 else 1 if length < 15 else 2 if length < 21 else 3 if length < 28 else 4
 
+# The snow crab by location and month (H3a of docs/planer/havsteget-h3-snokrabbe.md, 06.11.2026): the snow crab is fished by vessels of
+# 28 m and over, so the sp table has it by main area only (h). The game's snow crab vessel needs where on the banks it is, so this is a
+# part of its own, «snok», from the notes of 2024 to this year (the H3 plan's 2b: 2024-2026), only this species: the rest of fiske.json
+# and its calibration are untouched (`python3 tools/npc/fiske.py snokrabbe` writes this part alone into the file there is).
+#   snok   {meta: {years, last (the last month of the last year's file), n (the years each month has), src, unit,
+#                  sz (the live crab's weight groups in grams on the notes, «Størrelsesgruppering», share of the live round weight),
+#                  frozen, live (t a year by how it was landed)},
+#           lok: [[location code, [12 kg a year by catch month], [12 landings a year]], ...]}
+#   kg by the month of the note's last catch date («Siste fangstdato»; the landing date when it has none), a year's mean over the years
+#   that have that month; a landing is one vessel on one landing date. Locations as the notes give them (Hovedområde-Lokasjon); the
+#   lines with no location are left out (0.6 % of the round weight in 2024-2026).
+SNOK_Y0 = 2024
+def snok(years):
+    lok = {}; sz = {}; land = {}; last = {}; how = {'frozen': 0.0, 'live': 0.0}
+    for y in years:
+        f = mottak.get(NOTES.format(y), os.path.join(CACHE, f'fangstdata_{y}.csv.zip'))
+        z = zipfile.ZipFile(f); t = io.TextIOWrapper(z.open(z.namelist()[0]), encoding='utf-8-sig', newline='')
+        rd = csv.reader(t, delimiter=';'); h = [c.strip('"') for c in next(rd)]; ix = {c: i for i, c in enumerate(h)}
+        iNat, iAG, iW, iH, iL, iSd, iLd, iB, iP, iSz, iLm = (ix[c] for c in ('Fartøynasjonalitet (kode)', 'Art - gruppe', 'Rundvekt', 'Hovedområde (kode)',
+            'Lokasjon (kode)', 'Siste fangstdato', 'Landingsdato', 'Fartøy ID', 'Produkttilstand', 'Størrelsesgruppering (kode)', 'Landingsmåned (kode)'))
+        for r in rd:
+            if r[iLm].isdigit() and 1 <= int(r[iLm]) <= 12: last[y] = max(last.get(y, 0), int(r[iLm]))
+            if r[iAG] != 'Snøkrabbe' or r[iNat] != 'NOR': continue
+            kg = num(r[iW]); live = r[iP] == 'Levende'; how['live' if live else 'frozen'] += kg / 1000
+            if live and r[iSz]: sz[r[iSz]] = sz.get(r[iSz], 0.0) + kg
+            if not (r[iH] and r[iL].isdigit() and int(r[iL]) > 0): continue
+            d = r[iSd] or r[iLd]
+            try: m = int(d[3:5]) if d[2] == '.' else int(d[5:7])
+            except (ValueError, IndexError): continue
+            code = f'{r[iH]}-{int(r[iL]):02d}'; e = lok.setdefault(code, [[0.0] * 12, [0] * 12]); e[0][m - 1] += kg
+            k = (code, m, r[iB], r[iLd])
+            if k not in land: land[k] = 1; e[1][m - 1] += 1
+    # the years each month has: a year's file reaches its last landing month, and the newest year's last month is not over yet
+    n = [sum(1 for y in years if last.get(y, 0) - (1 if y == max(years) else 0) >= m + 1) or 1 for m in range(12)]
+    tot = sum(sz.values()) or 1
+    meta = dict(years=years, last=[max(years), last.get(max(years), 12)], n=n, src='Fiskeridirektoratet: fangstdata (seddel), NLOD (tools/npc/fiske.py snokrabbe)',
+                unit='kg rund vekt i året etter siste fangstdato (snittet over årene som har måneden), og landinger i året',
+                sz={k: round(v / tot, 3) for k, v in sorted(sz.items(), key=lambda kv: -kv[1]) if v / tot >= 0.005},
+                frozen=round(how['frozen'] / len(years)), live=round(how['live'] / len(years)))
+    rows = [[c, [round(e[0][m] / n[m]) for m in range(12)], [round(e[1][m] / n[m], 1) for m in range(12)]] for c, e in sorted(lok.items()) if sum(e[0]) > 0]
+    return dict(meta=meta, lok=rows)
+def snok_years():
+    return list(range(SNOK_Y0, int(time.strftime('%Y')) + 1))
+def snok_json(o): return '"snok":' + json.dumps(o, ensure_ascii=False, separators=(',', ':'))
+# fiske.json with the snow crab part put in (or put in anew), the rest of the file as it is, byte for byte
+def snok_into(s, o):
+    i = s.find(',"snok":')
+    if i >= 0: s = s[:i] + '}\n'
+    return s.rstrip('\n')[:-1] + ',' + snok_json(o) + '}\n'
+
 def main():
-    Y = int(time.strftime('%Y')); years = [int(a) for a in sys.argv[1:]] or [Y - 2, Y - 1]; ny = len(years); last = max(years)
+    Y = int(time.strftime('%Y'))
+    if sys.argv[1:] == ['snokrabbe']:
+        os.makedirs(CACHE, exist_ok=True); out = os.environ.get('KYST_FISKE') or os.path.join(ROOT, 'src', 'data', 'fiske.json')
+        o = snok(snok_years()); s = snok_into(open(out).read(), o); open(out, 'w').write(s)
+        print(f'{out}: snok {len(o["lok"])} locations', json.dumps(o['meta'], ensure_ascii=False)); return
+    years = [int(a) for a in sys.argv[1:]] or [Y - 2, Y - 1]; ny = len(years); last = max(years)
     os.makedirs(CACHE, exist_ok=True)
     lok_all, hom_all = rules_codes(); lok_ok = set(lok_all)
     agg = notes(years, lok_ok); reg = register()
@@ -189,6 +244,7 @@ def main():
     out = os.environ.get('KYST_FISKE') or os.path.join(ROOT, 'src', 'data', 'fiske.json')
     J = lambda o: json.dumps(o, ensure_ascii=False, separators=(',', ':'))
     s = '{"meta":' + J(meta) + ',"sp":{' + ','.join(f'"{k}":{{"k":{dumps_short(v["k"])},"h":{dumps_short(v["h"])}}}' for k, v in sp_out.items()) + '},"kom":' + J(kom_out) + ',"kn":' + J(kn) + '}\n'
+    s = snok_into(s, snok(snok_years()))   # (the snow crab by location, H3a: its own years)
     open(out, 'w').write(s)
     print(f'{out}: {len(s.encode()) / 1000:.0f} kB, {ncell} cells, '
           f'{len(used_lok)} locations, {len(used_hom)} main areas, {len(kom_out)} kommuner', json.dumps(nb))

@@ -1046,7 +1046,8 @@ function addCatch(sp, kg, cls, hook, opt){
   if (typeof catchFeed === 'function') catchFeed(sp, kg);   // the card over the sea as it comes aboard (ui/05j-catchfeed.js, U4)
   for (const c of crewAboard(null, true)) c.trip = 1;   // aboard for this catch: a share of it at the landing, or when let go before it (crewSettle)
   // (into chilled sea water the catch is chilled as it comes aboard: an RSW hold)
-  const bled = true, iced = holdRSW() && !SPECIES[sp].live, gut = false, hr = Math.floor(S.t / 60), start = opt && opt.fresh != null ? opt.fresh : 100; hook = hook !== false;
+  // (whole: the snow crab is landed whole, never gutted, H3a; gut stands for «needs no gutting»)
+  const bled = true, iced = holdRSW() && !SPECIES[sp].live, gut = !!SPECIES[sp].whole, hr = Math.floor(S.t / 60), start = opt && opt.fresh != null ? opt.fresh : 100; hook = hook !== false;
   let x = S.hold.find(h => h.sp === sp && h.cls === cls && h.bled === bled && h.iced === iced && !h.frozen && h.hr === hr && !!h.gut === gut && h.hook === hook);
   if (!x){ x = {sp, cls, kg:0, n:0, bled, iced, hr, fresh:start, gut, hook}; S.hold.push(x); }
   x.n = (x.n || 0) + 1;

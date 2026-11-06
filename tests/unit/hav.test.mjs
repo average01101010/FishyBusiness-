@@ -25,6 +25,10 @@ export default function (t){
   t.ok(M.away === 0 && !away.length, `ingen felt er borte (${Object.values(D.g).reduce((a, G) => a + G.length, 0)} feltpunkter)`, away.slice(0, 6));
   const noWay = Object.entries(D.g).flatMap(([g, G]) => G.filter(e => !(e[4] && e[4].length)).map(e => g + ' ' + e[0]));
   t.ok(!noWay.length, 'hvert felt har en vei til leinettet', noWay.slice(0, 6));
+  // (H3a, 06.11.2026) every snow crab ground lies where a Norwegian vessel may take snow crab: on Norway's shelf, outside 12 nm and not in
+  // another country's zone (J-237-2025 § 1; before, h24 was in the Russian zone, h15 on Russia's shelf in the Loophole, h03 within 12 nm)
+  { const Hf = (Date.UTC(2027, 1, 15, 12) - K.EPOCH) / 36e5, bad = D.g.teine.filter(e => e[1] != null && K.rulesAt({p:{x:e[1], y:e[2]}, H:Hf, len:50, gear:'teiner', sp:'snokrabbe', hav:'krab'}).items.some(i => i.block && i.v === 'no')).map(e => e[0] + ' ' + e[1] + ',' + e[2]);
+    t.ok(!bad.length && D.g.teine.length >= 9, `alle ${D.g.teine.length} snøkrabbefeltene ligger der et norsk fartøy kan fange snøkrabbe`, bad); }
   const sk = where('teine', 2), skN = (sk.c.h15 || 0) + (sk.c.h24 || 0) + (sk.c.h23 || 0) + (sk.c.h13 || 0) + (sk.c.h01 || 0);
   t.ok(sk.n > 0 && skN > 0.6, `snøkrabbefartøyene er øst og nordøst i Barentshavet i mars (h13, h15, h23, h24, h01): ${JSON.stringify(sk.c)}`);
   // the ice (H1b R6): no trip goes to a ground that lies in the drift ice the day it starts, and the way out keeps out of the ice

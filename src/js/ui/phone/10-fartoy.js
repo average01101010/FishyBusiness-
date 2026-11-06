@@ -102,9 +102,13 @@
     // an ocean vessel: the permit that comes with her, its vessel quota this year and how many the register has left (H1 of the ocean step)
     const hid = V.cls === 'hav' && typeof havLicFor === 'function' ? havLicFor(k) : null;
     if (hid){ const P = HAVLIC[hid], O = havOffer(hid, S.t / 60), Q = havQ(O), y = yearH(S.t / 60), G = havGroup(hid, y), t1 = n => n === Infinity ? L('ingen fartøykvote', 'no vessel quota') : fmt(n / 1000, 0) + ' t', NM = {torsk:['Torsk', 'Cod'], hyse:['Hyse', 'Haddock'], sei:['Sei', 'Saithe'], sild:['NVG-sild', 'NVG herring'], snokrabbe:['Snøkrabbe', 'Snow crab']};
-      h.push(sec(L('Tillatelse', 'Permit'), [kv(L('Tillatelse', 'Permit'), L(P.no, P.en)), kv(L('Selger', 'Seller'), O.from), kv(L('Kvotefaktor', 'Quota factor'), fmt(O.kf, 2) + ' · ' + L('snittet ', 'the mean ') + fmt(HAVKF[hid], 2)),
+      // (H3a) the snow crab permit: the same vessel quota for all (no quota factor), the extra quota for live crab, and its value by what the
+      // fishery bears (snoLicValue)
+      const SY = hid === 'krab' ? snoYear(y) : null, SV = SY ? snoLicValue(y) : null;
+      h.push(sec(L('Tillatelse', 'Permit'), [kv(L('Tillatelse', 'Permit'), L(P.no, P.en)), kv(L('Selger', 'Seller'), O.from), P.flat ? kv(L('Kvote', 'Quota'), L('lik for alle ' + HREG[hid] + ' tillatelsene', 'the same for all ' + HREG[hid] + ' permits')) : kv(L('Kvotefaktor', 'Quota factor'), fmt(O.kf, 2) + ' · ' + L('snittet ', 'the mean ') + fmt(HAVKF[hid], 2)),
         ...Object.keys(P.q26).map(sp => kv(L(NM[sp][0], NM[sp][1]) + ' ' + y, t1(Array.isArray(Q[sp]) ? Q[sp][0] : Q[sp]) + ' · ' + L('gruppa ', 'the group ') + fmt(G[sp], 0) + ' t')),
-        kv(L('Kvoteverdi', 'Quota value'), kr(havValue(O)) + ' · ' + L('skroget ', 'the hull ') + kr(V.price)),
+        ...(SY ? [kv(L('Tilleggskvote for levende', 'Extra quota for live crab'), fmt(SY.tq, 0) + ' t'), kv(L('Kvotefleks', 'Quota flexibility'), SY.flex ? L('inntil ', 'up to ') + Math.round(SY.flex * 100) + L(' % til neste år', '% to the next year') : L('ingen på fartøynivå', 'none for the vessel'))] : []),
+        SV ? kv(L('Tillatelsens verdi', 'The permit\'s value'), kr(SV.v) + ' · ' + L('driftsresultat før avskrivninger ', 'earnings before depreciation ') + fmt(SV.ebitda, 1) + L(' MNOK i året × ' + SNOV.yrs + ' år', ' MNOK a year × ' + SNOV.yrs + ' years')) : kv(L('Kvoteverdi', 'Quota value'), kr(havValue(O)) + ' · ' + L('skroget ', 'the hull ') + kr(V.price)),
         kv(L('Ledige i registeret', 'Left in the register'), fmt(npcReg()[hid] || 0, 0) + ' ' + L('av', 'of') + ' ' + HREG[hid]), kv(L('Kilde', 'Source'), P.src)])); }
     for (const [t, rows] of secs.slice(1)) h.push(sec(t, rows));
     // buying

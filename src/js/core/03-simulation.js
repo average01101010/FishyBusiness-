@@ -92,6 +92,7 @@ function powerX(b){ const V = VESSELS[b.type || 'skiff']; return 1 + (b.engLv &&
 const speedOfPower = (P, planing) => planing ? Math.sqrt(P) : Math.min(1.12, Math.cbrt(P));
 function applyVessel(){
   const b = S.boat; Object.assign(BOAT, VESSELS[b.type || 'skiff']);
+  reqFill(S.equip, b.type || 'skiff');   // the gear the rules ask for is always aboard (V6 A, Ø11.5)
   for (const k in EQUIP) if (EQUIP[k].boost && S.equip && S.equip[k] && equipFits(k, b.type || 'skiff')) Object.assign(BOAT, EQUIP[k].boost);
   BOAT.fuelK = fuelKOf(BOAT);   // the boat burns BOAT.lph at cruising speed, with the engine the boosts gave her
   // the hold: an open boat's is her tubs (core/07f-kar.js, TUB_KG each, one more for each of the yard's steps), the rest grow by HOLDUP
@@ -584,16 +585,17 @@ function stockFill(v){ const m = {}; for (let iy = Math.floor(HOME.y0 / STK.c) -
 // B3 (02.11.2026): for a fish species the stock is the baseline (the balance with the whole fleet's pressure, baseAt in 03g-trykk.js, the
 // same for every player) times the deviation in S.stock (what the players have done); without a species, the deviation alone
 function stockAt(p, sp, H){
+  if (sp && SPECIES[sp].stk) return S && S[SPECIES[sp].stk] ? stkGet(S[SPECIES[sp].stk], stockIdx(p)) : 1;   // the Greenland halibut's own (and the snow crab's, H3a)
   if (sp && SPECIES[sp].shell) return S && S.cstk ? stkGet(S.cstk, stockIdx(p)) : 1;
-  if (sp && SPECIES[sp].stk) return S && S[SPECIES[sp].stk] ? stkGet(S[SPECIES[sp].stk], stockIdx(p)) : 1;   // the Greenland halibut's own
   const b = sp ? baseAt(p, sp, H == null ? (S ? S.t / 60 : 0) : H) : 1;
   if (!S || !S.stock) return b; let v = 0; for (const [k, w] of stockW(p)) v += stkGet(S.stock, k) * w; return b * v;
 }
 // npc: the local fleet's take (stockHour), which every game works out for itself; what the player's own boats take is also kept for
 // the other players (the shared world V2)
 function takeStock(p, kg, sp, npc){
+  // (a species with a layer of its own first: the Greenland halibut, and the snow crab with stkK, H3a)
+  if (sp && SPECIES[sp].stk){ const n = SPECIES[sp].stk; if (!S[n]) S[n] = {}; const k = stockIdx(p); stkSet(S[n], k, Math.max(0.1, stkGet(S[n], k) - kg / (STK.K * (SPECIES[sp].stkK || 0.4)))); return; }
   if (sp && SPECIES[sp].shell){ if (!S.cstk) S.cstk = {}; const k = stockIdx(p); stkSet(S.cstk, k, Math.max(0.1, stkGet(S.cstk, k) - kg / (STK.K * 0.25))); return; }
-  if (sp && SPECIES[sp].stk){ const n = SPECIES[sp].stk; if (!S[n]) S[n] = {}; const k = stockIdx(p); stkSet(S[n], k, Math.max(0.1, stkGet(S[n], k) - kg / (STK.K * 0.4))); return; }
   if (!S.stock) return; const q = !npc && WSH.rec ? wq().c : null;
   for (const [k, w] of stockW(p)) if (w > 0){ stkSet(S.stock, k, Math.max(0.12, stkGet(S.stock, k) - kg * w / STK.K)); if (q && (q[k] != null || Object.keys(q).length < 3000)) q[k] = (q[k] || 0) + kg * w; }
 }
@@ -634,6 +636,9 @@ function stockHour(H){
   if (S.cstk){ const c = {}; for (const k in S.cstk){ const v = S.cstk[k]; stkSet(c, k, Math.round(Math.min(1, v + Math.max((1 - v) * 0.0015, 0.0001)) * 1e4) / 1e4); } S.cstk = c; }
   // the Greenland halibut grows slowly and lives long (M 0.12-0.16): its cells come back slower still
   if (S.bstk){ const c = {}; for (const k in S.bstk){ const v = S.bstk[k]; stkSet(c, k, Math.round(Math.min(1, v + Math.max((1 - v) * 0.001, 0.0001)) * 1e4) / 1e4); } S.bstk = c; }
+  // the snow crab moves about on the bank and fills a fished cell from round it within a couple of weeks (SNOC.back, 10d-snokrabbe.js; an
+  // assumption: HI's tagging finds the crab moving some kilometres, no rate was found)
+  if (S.sstk){ const c = {}; for (const k in S.sstk){ const v = S.sstk[k]; stkSet(c, k, Math.round(Math.min(1, v + Math.max((1 - v) * SNOC.back, 0.0001)) * 1e4) / 1e4); } S.sstk = c; }
   // the local fleet's take (18 kg an hour a Senja boat, and the three known grounds) went out in B3 (02.11.2026): the whole fleet's
   // pressure is in the baseline (baseAt, 03g-trykk.js), along the whole coast
 }
@@ -736,7 +741,7 @@ function avgPrice(sp, H, days){ let s = 0, n = 0; const near = plantsNear(S.boat
 // ---------- quotas north of 62° N: the regulation and the year's figures are in 03d-quota.js ----------
 function doyH(H){ const g = gDate(H); return Math.floor((g - Date.UTC(g.getUTCFullYear(), 0, 1)) / 864e5); }
 function yearH(H){ return gDate(H).getUTCFullYear(); }
-function quotaState(){ const y = yearH(S.t / 60); if (!S.quota || S.quota.y !== y) S.quota = {y, torsk:0, hyse:0, sei:0, ffW:-1, ffTot:0, ffCod:0, conf:0, confKr:0, byCod:0}; return S.quota; }
+function quotaState(){ const y = yearH(S.t / 60); if (!S.quota || S.quota.y !== y){ if (S.quota) snoFlexNewYear(S.quota, y); S.quota = {y, torsk:0, hyse:0, sei:0, snokrabbe:0, ffW:-1, ffTot:0, ffCod:0, conf:0, confKr:0, byCod:0}; } if (S.quota.snokrabbe == null) S.quota.snokrabbe = 0; return S.quota; }
 // Vessels for sale with a closed-group right (deltakeradgang), by quota length (hjemmelslengde). The quotas are the year's (licQ in
 // 03d-quota.js): cod as a fixed vessel quota, haddock and saithe as [maximum, guaranteed] kg for the boat's largest length. The price
 // is the boat plus the cod quota at KPK kr a kg. KPK is an estimate: Hepsøfjord (10.98 m, two quota sets) sold for 17.5 million in

@@ -88,7 +88,10 @@ export default function (t){
   t.ok(B.active / B.registered > 0.84 && B.active / B.registered < 0.94, `${Math.round(B.active / B.registered * 100)} % av registeret hadde landinger siste år (Fiskeridirektoratet: 89 %)`);
 
   // only statistics: the top level and the meta keys are the ones the script writes, and the kommune names are names, not vessels
-  t.eq(Object.keys(F).sort(), ['kn', 'kom', 'meta', 'sp'], 'fiske.json har bare meta, sp, kom og kn');
+  t.eq(Object.keys(F).sort(), ['kn', 'kom', 'meta', 'snok', 'sp'], 'fiske.json har bare meta, sp, kom, kn og snøkrabben per lokasjon (snok, H3a)');
+  // (H3a) the snow crab by location: only statistics (location codes, kilos, landings), no vessels
+  t.ok(F.snok.lok.length > 20 && F.snok.lok.every(r => /^\d\d-\d\d$/.test(r[0]) && r[1].length === 12 && r[2].length === 12) && Object.keys(F.snok.meta).sort().join() === 'frozen,last,live,n,src,sz,unit,years',
+    `snok: ${F.snok.lok.length} lokasjoner med kilo og landinger per måned, ingen fartøy`);
   t.ok(Object.values(F.kn).every(n => /^[A-ZÆØÅa-zæøåáčđŋšŧžÁČĐŊŠŦŽ .'-]+$/.test(n)) && Object.keys(F.kn).every(k => k in F.kom), 'kn er bare kommunenavn for kommunene i kom');
   t.ok(!/[A-ZÆØÅ]{1,2} ?\d{4}[A-ZÆØÅ]{1,2}\b|Fartøynavn|Mottaker/.test(readFileSync(file, 'utf8')), 'ingen registreringsmerker eller fartøy- og kjøperfelt i fila');
 }

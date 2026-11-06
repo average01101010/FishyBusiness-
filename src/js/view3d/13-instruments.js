@@ -141,6 +141,12 @@
   const MARKQ = {};
   function markQ(t){ if (!(t in MARKQ)){ const st = markStrips(t); MARKQ[t] = st ? st.map(([B, T]) => texStrip(B, T)) : null; } return MARKQ[t]; }
   function drawMark(t, M, VP, liv){ const q = markQ(t), tex = q && markTex(t, liv); if (!tex) return; gl.disableVertexAttribArray(2); for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]); }
+  // the call sign on both sides aft of the mark (vessel3d.js callStrips; core/06b-coastports.js callOf, Ø11.5), in the mark's letters,
+  // white or black by the paint under it as § 9 of the marking rules has it for the registration mark
+  const CALLQ = {};
+  function callQ(t){ if (!(t in CALLQ)){ const st = callStrips(t); CALLQ[t] = st ? st.map(([B, T]) => texStrip(B, T)) : null; } return CALLQ[t]; }
+  function drawCall(t, M, VP, liv){ const cs = callOf(S.boat), q = cs && callQ(t); if (!q) return; const tex = nameTex(cs, isLight(callRGB(t, liv !== undefined ? liv : hullLiv(S.boat))), 4, true);
+    gl.disableVertexAttribArray(2); for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]); }
   // the name in block capitals (the game's own Archivo, bold and a little narrow, in the page so it is the same on every device), as tall
   // as the strip allows (caps at 0.74 of it, room for the ring over Å) and narrower where the name is long, centred
   function nameCanvas(cv, nm, light){
@@ -320,7 +326,7 @@
     // screens and name boards up close
     const near = Math.hypot(BMrel[12], BMrel[13], BMrel[14]) < 45, now = performance.now();
     if (!S.unnamed) drawNames(SK.hullT || vtype(), BMrel, VP, hullLiv(S.boat), S.boatName, ownPort());   // an unnamed boat has her mark only
-    drawMark(SK.hullT || vtype(), BMrel, VP); drawLogo(SK.hullT || vtype(), BMrel, VP, ...ownLogo());
+    drawMark(SK.hullT || vtype(), BMrel, VP); drawCall(SK.hullT || vtype(), BMrel, VP); drawLogo(SK.hullT || vtype(), BMrel, VP, ...ownLogo());
     if (near && SK.live !== false){
       if (now - SK.tP > 500){ SK.tP = now; paintPlotter(); if (S.equip.vhf) paintVhf(); }
       if (now - SK.tG > 90){ paintGauges((now - SK.tG) / 1000); SK.tG = now; }

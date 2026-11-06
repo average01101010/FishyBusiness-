@@ -10,7 +10,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # the ocean vessels that can be bought (havsteget: the autoliner from H2a, 05.11.2026); the others stay locked until their phase
-HAV_OPEN = ['autoliner']
+HAV_OPEN = ['autoliner', 'snokrabbe']   # (the snow crab vessel unlocked in H3a, 06.11.2026)
 
 
 def guard():

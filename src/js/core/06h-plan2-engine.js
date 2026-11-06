@@ -459,7 +459,7 @@ function plan2Bait(o, s){
     if (got.length) log('Kjøpte agn for turen: ' + got.join(' og ') + ' for ' + kr(Math.round(c0 - S.cash)) + '.', 'Bought bait for the trip: ' + kg + ' kg for ' + kr(Math.round(c0 - S.cash)) + '.'); return; }
   const k = BAITS[pg.baitPref] ? pg.baitPref : 'makrell', have = baitOf(pg)[k] || 0;
   const potsSea = mySets().filter(x => x.kind === 'teine').reduce((a, x) => a + x.n, 0);
-  const need = kind === 'teine' ? (pg.pots.big + potsSea) * GPRICE.potBait * 2 - have : kind === 'line' ? ((pg.lines.hyse.n - pg.lines.hyse.baited) * LINE_KINDS.hyse.baitKg + (pg.lines.bank.n - pg.lines.bank.baited) * LINE_KINDS.bank.baitKg) - have : 0;
+  const need = kind === 'teine' ? (potsAboard(pg) + potsSea) * potBaitKg(potK()) * 2 - have : kind === 'line' ? ((pg.lines.hyse.n - pg.lines.hyse.baited) * LINE_KINDS.hyse.baitKg + (pg.lines.bank.n - pg.lines.bank.baited) * LINE_KINDS.bank.baitKg) - have : 0;
   if (need <= 0.01) return;
   const c0 = S.cash, why = buyGear('bait', k, Math.ceil(need));
   if (why) log('Fikk ikke kjøpt agn: ' + why[0], 'Could not buy bait: ' + why[0]);
