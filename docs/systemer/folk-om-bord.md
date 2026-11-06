@@ -48,6 +48,8 @@ Det går ingen vei fra Longyearbyen til fastlandet, så mannskapsbytte på Svalb
 
 Havbåtene med `VESSELS.crew` (autolineren) har to skift à 14 som følger båten, anonyme med antall og ferdighet, i stedet for folk fra mannskapsbørsen (Jonas 05.11.2026: V3 A og «Følger båten»). Dekkslaget og fabrikklaget går seks og seks, skiftene bytter ved hver levering, kokken lager maten, og lotten etter § 6 går til skiftet om bord. Alt står i 5.65 i `docs/systemer/redskap.md`. Mannskapsbørsen er stengt for havbåten (`crewHireWhy`), og Mannskap-siden og -appen viser kortet «Lagene». Navngitte nøkkelfolk med liv kommer i H7.
 
+- **Når du sovner om bord på havbåten** (rettet i H2e 06.11.2026): vakta på broa tar over og lagene arbeider videre (`fallAsleep` i `15-energy.js` regner med `lagOf()`, som `sleepAlone` alt gjorde). Før sa loggen og søvnskjermen «Båten ligger og driver» mens skiftet faktisk dro lina; det var bare teksten, simuleringen var riktig. Funnet av `havtur`.
+
 ## 5.11 Kulde og klær
 
 - **Effektiv temperatur** (`effTemp`): Vindavkjølingsformelen. `coldPen` gir opptil 35 % kuldestraff og 15 % våtstraff.
