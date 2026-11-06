@@ -2141,7 +2141,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 89 `srchCard()`
   - 113 `srchSvg(u)`
 
-## `src/js/ui/04-panels-instruments.js` (216 linjer)
+## `src/js/ui/04-panels-instruments.js` (277 linjer)
 
 ---------- estimates ----------
 
@@ -2153,14 +2153,17 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 19 `statusText()`
   - 35 `nextEvent()`
   - 53 `setHtml(el, h)`
-  - 55 `renderHud()`
-  - 111 `liveFrac()`
-  - 112 `livePose(frac)`
-  - 135 `vnoise2(x, y, s)`
-  - 141 `microBottom(p, d)`
-- **143** instruments: GPS and echo sounder
-  - 205 `hudClasses()`
-  - 211 `hudFold(which)`
+  - 66 `hudFigures()`
+  - 84 `hudLine3(how)`
+  - 102 `renderHud()`
+  - 160 `liveFrac()`
+  - 161 `livePose(frac)`
+  - 184 `vnoise2(x, y, s)`
+  - 190 `microBottom(p, d)`
+- **192** instruments: GPS and echo sounder
+  - 261 `hudCardOpen(on)`
+  - 268 `hudClasses(stripOn, cardOn)`
+  - 272 `hudFold(which)`
 
 ## `src/js/ui/05-tattoo-art.js` (169 linjer)
 
@@ -2256,12 +2259,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1151 linjer)
+## `src/js/ui/phone/07-patch.js` (1155 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1144 `patch()`
+  - 1148 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 

@@ -124,9 +124,9 @@ async def main():
         check(len([x for x in tk_rows if 'MVA' not in x['c'][0]]) == 5 and sum(num(x['c'][-1]) for x in tk_rows) == -r['tk'], 'sluttseddelen viser de fem trekkene for båter under 15 m (lagsavgift, pensjon, produkt, forskning, ressurs)', [x['c'][0] for x in tk_rows])
         await pg.screenshot(path='shop_slip.png')
 
-        # A9: status in the action bar is not a button
-        st = json.loads(await J("(() => { S.boat.status = 'unmooring'; renderActs(); const s = document.getElementById('dockInfo'), cs = getComputedStyle(s); return {text:s.textContent, border:cs.borderTopStyle, pe:cs.pointerEvents, radius:cs.borderTopLeftRadius}; })()"))
-        check(st['text'] == 'Kaster loss …' and st['border'] == 'dashed' and st['pe'] == 'none' and st['radius'] == '8px', 'statusfeltet over knappene ser ikke ut som en knapp', st)
+        # A9: the status is not a button: since UI 2 (U2-1) it is the status box's third line, no pill over the buttons
+        st = json.loads(await J("(() => { S.boat.status = 'unmooring'; renderActs(); renderHud(); const s = document.querySelector('#hud .st.nx'), p = document.getElementById('dockInfo'); return {text:s ? s.textContent : '', tag:s ? s.tagName : '', pill:!!p && !p.hidden}; })()"))
+        check(st['text'] == 'Kaster loss …' and st['tag'] == 'DIV' and not st['pill'], 'statusen står som en linje i statusboksen, ikke som en knapp, og pilla over knappene er borte', st)
         print('sidefeil', errs)
         await b.close()
 

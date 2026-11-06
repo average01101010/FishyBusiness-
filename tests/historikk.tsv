@@ -31,3 +31,25 @@
 2026-11-05 23:49	ccr-529a099b-0o66nk	11bc8895+	sqltest	OK	29	lite	samtidig	
 2026-11-06 01:34	ccr-529a099b-0o66nk	1ad14dc2+	docktest	OK	65	lite	alene	
 2026-11-06 01:55	ccr-3609ceee-8lzhrx	a58260be+	docktest	OK	57	lite	alene	
+2026-11-06 02:19	ccr-aee4fa08-paslvj	c22e8854+	hudtest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-06 02:20	ccr-aee4fa08-paslvj	c22e8854+	docktest	OK	60	lite	samtidig	
+2026-11-06 02:20	ccr-aee4fa08-paslvj	c22e8854+	dockrow	OK	45	lite	samtidig	
+2026-11-06 02:21	ccr-aee4fa08-paslvj	c22e8854+	hudtest	FEIL	23	lite	alene	FEIL a tap on the strip opens the whole box as a card over the chart, with the whole table, and the chart does not move  {"card": {"h": 239, "w": 342, "top": 40
+2026-11-06 02:22	ccr-aee4fa08-paslvj	c22e8854+	hudtest	OK	23	lite	alene	
+2026-11-06 02:26	ccr-aee4fa08-paslvj	c22e8854+	hudtest	OK	23	lite	alene	
+2026-11-06 02:28	ccr-aee4fa08-paslvj	c22e8854+	kartlegging	OK	49	lite	samtidig	
+2026-11-06 02:29	ccr-aee4fa08-paslvj	c22e8854+	uishots	OK	90	lite	samtidig	
+2026-11-06 02:30	ccr-aee4fa08-paslvj	c22e8854+	hudtest	OK	27	lite	samtidig	
+2026-11-06 02:31	ccr-aee4fa08-paslvj	c22e8854+	starttest	OK	139	lite	samtidig	
+2026-11-06 02:31	ccr-aee4fa08-paslvj	c22e8854+	tutdrift	OK	8	lite	samtidig	
+2026-11-06 02:31	ccr-aee4fa08-paslvj	c22e8854+	docktest	OK	63	lite	samtidig	
+2026-11-06 02:32	ccr-aee4fa08-paslvj	c22e8854+	geartest	OK	54	lite	samtidig	
+2026-11-06 02:32	ccr-aee4fa08-paslvj	c22e8854+	rorbutest	OK	14	lite	samtidig	
+2026-11-06 02:32	ccr-aee4fa08-paslvj	c22e8854+	bunktest	OK	14	lite	samtidig	
+2026-11-06 02:32	ccr-aee4fa08-paslvj	c22e8854+	dockrow	OK	44	lite	samtidig	
+2026-11-06 02:33	ccr-aee4fa08-paslvj	c22e8854+	uishots	OK	90	lite	samtidig	
+2026-11-06 02:33	ccr-aee4fa08-paslvj	c22e8854+	navbarshot	OK	35	lite	samtidig	
+2026-11-06 02:33	ccr-aee4fa08-paslvj	c22e8854+	shoptest	OK	29	lite	samtidig	
+2026-11-06 03:33	ccr-aee4fa08-paslvj	c22e8854+	tut	FEIL	3600	lite	alene	gikk ut på tid
+2026-11-06 03:37	ccr-aee4fa08-paslvj	c22e8854+	trytest	FEIL	182	3d	alene	avsluttet med kode 1
+2026-11-06 03:42	ccr-aee4fa08-paslvj	c22e8854+	heattest	OK	334	3d	alene	

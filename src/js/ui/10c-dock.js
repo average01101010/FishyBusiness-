@@ -4,7 +4,7 @@
 // The pages themselves are the phone's (PHONE.page); this file only decides which buttons there are and where things open.
 const DOCK = (() => {
   let rowsDue = false;   // the button rows to measure when the row is next shown (rowsUp)
-  const bar = $('dock'), info = $('dockInfo'), fan = $('dockFan'), dr = $('drawer'), dBody = $('drawerBody'), dTitle = $('drawerTitle'), dTabs = $('drawerTabs');
+  const bar = $('dock'), fan = $('dockFan'), dr = $('drawer'), dBody = $('drawerBody'), dTitle = $('drawerTitle'), dTabs = $('drawerTabs');
   const L = (no, en) => S.lang === 'no' ? no : en;
   const SVG = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
   const IC = {
@@ -175,27 +175,28 @@ const DOCK = (() => {
     if (b.status === 'adrift' || b.status === 'engine' || b.status === 'aground') return [I('hjelp', 'hjelp', 'Hjelp', 'Help', {run:() => PHONE.open('redning'), warn:true}), beh];
     return [beh];
   }
-  // what stands above the buttons: work at the quay, the yard, the deck, the jig's time left
+  // what the pill over the buttons said until UI 2 (U2-1, docs/planer/ui-2-staaende.md 4.2, 06.11.2026): now the status strip's third
+  // line says it (04-panels-instruments.js hudLine3), so this gives only what the next event does not already say: the work going on
+  // (on), the place in harbour when nothing is on (place), the reels short of hands (reels) and the deck's kg (deck: the long text and
+  // the short). The departure, the yard, the landing note and the jig's end are next events (nextEvent) and are not repeated here
   function infoText(){
-    const b = S.boat, out = [];
-    if (S.plan && S.plan.depAt) out.push(L('Avgang ', 'Departs ') + hm(S.plan.depAt / 60));
-    if (b.status === 'port'){ if (S.jobs && S.jobs.length) out.push(L(jobsCrewOnly() ? 'Mannskapet jobber til ' : 'Verksted til ', jobsCrewOnly() ? 'Crew working until ' : 'Yard until ') + hm((jobsDone() || S.t) / 60)); if (b.land) out.push(landText(true)[0]); if (b.shift || b.fueling) out.push(quayText(true)[0]); }
-    if (b.status === 'port' && !resting() && restWhere(b) === 'rorbu') out.push(L('Rorbu: ' + kr(RORBU.kr) + ' natta', 'Rorbu: ' + kr(RORBU.kr) + ' a night'));
-    // in the home harbour, which of the two berths she lies at: Father's naust or the plant's quay (07-harbours.js berthKind)
-    if (b.status === 'port' && !resting() && atHome(b) && quayFace(b.port, 'naust')){ const k = berthName(berthKind(b), b.port); out.push(L('Ved ' + k[0], 'At ' + k[1])); }
-    if (b.status === 'port' && resting()){ const r = restRate(b), m = r > 0 ? Math.ceil((100 - S.energy) / r) : 0, up = S.rest.w === 'naust' ? Math.round((naustRest(b) - 1) * 100) : 0;
-      out.push((S.rest.w === 'rorbu' ? L('Hviler på rorbua', 'Resting at the rorbu') : L('Hviler i naustet', 'Resting in the boathouse')) + ' · ' + Math.round(S.energy) + ' %' + (up > 0 ? L(' · ' + up + ' % raskere', ' · ' + up + ' % faster') : '') + (m > 0 ? L(', uthvilt kl. ', ', rested at ') + hm((S.t + m) / 60) : '')); }
-    if (b.status !== 'port' && resting()) out.push(L('Hviler i køya', 'Resting in the bunk') + ' · ' + Math.round(S.energy) + ' %');
-    if (b.status === 'unmooring') out.push(L('Kaster loss …', 'Casting off …'));
-    if (b.gop){ const g = gopText(); if (g) out.push(L(g[0], g[1])); }
-    else if (b.status === 'fishing' && b.fishUntil != null && !b.deckEnd && !gopAfter(b)){   // (seeing to the catch before leaving: no jigging, F4)
-      // how many jigging reels are working (tilbakemelding #64), short enough for a phone: the hands at the rail tend three each, as in
-      // fishEffort (core/03-simulation.js), so «3 av 5» means too few hands for the rest
-      const own = S.equip ? S.equip.jukse || 0 : 0, jk = own > 0 && !(S.target === 'kveite' && b.kgear && !kveiteClosed(S.t / 60)) ? Math.min(own, workTeam('fiske', 'juksa', 'fishing').n * JIG.perPerson) : 0;
-      out.push(jk > 0 ? (jk < own ? L('Jukser med ' + jk + ' av ' + own + ' maskiner', 'Jigging with ' + jk + ' of ' + own + ' reels') : L('Jukser med ' + jk + (jk === 1 ? ' maskin' : ' maskiner'), 'Jigging with ' + jk + (jk === 1 ? ' reel' : ' reels'))) + L(' til ', ' until ') + whenTxt(b.fishUntil)
-        : L('Jukser til ', 'Jigging until ') + whenTxt(b.fishUntil)); }
-    const dk = b.status !== 'port' && deckText(true); if (dk) out.push(dk[0]);
-    return out.join(' · ');
+    const b = S.boat, o = {on:'', place:'', reels:'', deck:null}, port = b.status === 'port';
+    if (resting()){
+      if (port){ const r = restRate(b), m = r > 0 ? Math.ceil((100 - S.energy) / r) : 0, up = S.rest.w === 'naust' ? Math.round((naustRest(b) - 1) * 100) : 0;
+        o.on = (S.rest.w === 'rorbu' ? L('Hviler på rorbua', 'Resting at the rorbu') : L('Hviler i naustet', 'Resting in the boathouse')) + ' · ' + Math.round(S.energy) + ' %' + (up > 0 ? L(' · ' + up + ' % raskere', ' · ' + up + ' % faster') : '') + (m > 0 ? L(' · uthvilt ', ' · rested ') + hm((S.t + m) / 60) : ''); }
+      else o.on = L('Hviler i køya', 'Resting in the bunk') + ' · ' + Math.round(S.energy) + ' %'; }
+    else if (b.status === 'unmooring') o.on = L('Kaster loss …', 'Casting off …');
+    else if (b.gop){ const g = gopText(); if (g) o.on = L(g[0], g[1]); }
+    else if (port && b.land) o.on = landText(true)[0];   // the crane, the tubs ashore, the weighing (07-guide.js)
+    else if (port && (b.shift || b.fueling)) o.on = quayText(true)[0];   // to the bunker quay, the pump running
+    // in harbour: the rorbu's price, or where she lies («Ved naustet», «Ved kaia · Finnsnes»; 07-harbours.js berthKind)
+    if (port && !resting()){ const pt = portById(b.port), k = berthKind(b);
+      o.place = restWhere(b) === 'rorbu' ? L('Rorbu · ' + kr(RORBU.kr) + ' natta', 'Rorbu · ' + kr(RORBU.kr) + ' a night') : k === 'naust' ? L('Ved naustet', 'At the boathouse') : L('Ved ' + (k === 'bunker' ? 'bunkerskaia' : 'kaia'), 'At the ' + (k === 'bunker' ? 'bunker quay' : 'quay')) + (pt ? ' · ' + pt.name : ''); }
+    // too few hands for the reels (tilbakemelding #64): the hands at the rail tend three each, as in fishEffort (core/03-simulation.js)
+    if (b.status === 'fishing' && b.fishUntil != null && !b.deckEnd && !gopAfter(b)){ const own = S.equip ? S.equip.jukse || 0 : 0, jk = own > 0 && !(S.target === 'kveite' && b.kgear && !kveiteClosed(S.t / 60)) ? Math.min(own, workTeam('fiske', 'juksa', 'fishing').n * JIG.perPerson) : 0;
+      if (jk > 0 && jk < own) o.reels = L(jk + ' av ' + own + ' maskiner', jk + ' of ' + own + ' reels'); }
+    const dk = !port && deckText(true); if (dk) o.deck = dk;
+    return o;
   }
   function items0(){
     const b = S.boat;
@@ -228,9 +229,8 @@ const DOCK = (() => {
     items = rowOf(items0());
     { const hero = items.find(x => x.pri && !x.off); items.forEach(x => { x.hero = x === hero; }); }
     if (menu && !items.some(x => x.menu === menu) && !more.some(x => x.menu === menu)) menu = null;
-    const h = items.map(x => btn(x)).join(''), it = infoText();
+    const h = items.map(x => btn(x)).join('');
     if (h !== html){ html = h; bar.innerHTML = h; rowsUp(); } else if (rowsDue) rowsUp();
-    if (info.textContent !== it){ info.textContent = it; info.hidden = !it; }
     fanItems = menu === 'mer' ? more : menu && menu !== 'jukse' ? menuItems(menu).filter(Boolean) : [];
     const fh = !menu ? '' : menu === 'jukse' ? jigCard() : fanItems.map(x => btn(x, true)).join('');
     if (fh !== fanHtml){ fanHtml = fh; fan.innerHTML = fh; }
@@ -384,10 +384,10 @@ const DOCK = (() => {
   let lastDraw = 0;
   function tick(){ if (!page) return; const now = performance.now(); if (now - lastDraw < 700 || dBody.matches(':active')) return; lastDraw = now; draw(true); }
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && page && !PHONE.isOpen()) close(); });
-  // the buttons as text, for the tests: the labels, and the status above them
-  const text = () => items0().map(x => L(x.lbl[0], x.lbl[1])).join(' | ') + (infoText() ? ' | ' + infoText() : '');
+  // the buttons as text, for the tests: the labels, and what the strip's third line says beyond the next event (infoText)
+  const text = () => { const i = infoText(), s = [i.on, i.place, i.reels, i.deck ? i.deck[0] : ''].filter(Boolean).join(' · '); return items0().map(x => L(x.lbl[0], x.lbl[1])).join(' | ') + (s ? ' | ' + s : ''); };
   const redraw = () => { if (page){ lastDraw = performance.now(); draw(true); } };   // at once, after something that came later (a picture read, a payment)
-  return {render, redraw, open, close, tick, text, goTo, items:m => m ? menuItems(m).filter(Boolean) : items0(), menu:m => setMenu(m), get page(){ return page; }, get menuOpen(){ return menu; }};
+  return {render, redraw, open, close, tick, text, info:infoText, goTo, items:m => m ? menuItems(m).filter(Boolean) : items0(), menu:m => setMenu(m), get page(){ return page; }, get menuOpen(){ return menu; }};
 })();
 // the old name: everything that changes what the boat does asks for the buttons again
 function renderActs(){ DOCK.render(); }

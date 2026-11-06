@@ -117,6 +117,8 @@ Knappene på telefonen er 44 px sirkler (hovedknappen 52) med etikett 9,5 px; p�
 
 Boksen varierer med 47 px på telefonen mellom havn og underveis, og minikartet flytter seg like mye, fordi `--gpsTop` måles fra boksen. Stripa er 31 px i alle tilstander. Med stripa står minikartet på samme sted (målt: samme topp som med boksen i hver tilstand, fordi målingen tok begge i samme tilstand; det er boksens høyde mellom tilstander som flytter det).
 
+**Etter U2-1 (06.11.2026, samme skript på bygget med stripa):** stripa er 60 px på telefonen og 62 px på nettbrettet i alle 17 tilstander (boksen vises ikke i stående; `K.both()` gir samme tall for begge), minikartets topp er 106 px på telefonen og 76 px på nettbrettet i alle, og ingen trykkflate i boksen eller på kartet er under 44 px. Tidslinja: noe på tredje linje i 42 av 48 prøver (neste hendelse i 42; de seks er båten stille uten noe på gang, der linja står tom, eller sier kulda). Tellingen på fire skjermer: telefonen 16 skriftstørrelser, 13 tekstfarger, 33 bakgrunner, 15 radier, 16 knappestiler; nettbrettet 14, 14, 34, 17, 16.
+
 ### 3.3 Stripas tredje linje
 
 Tidslinja, 48 prøver i hvert format (samme tall i begge):
