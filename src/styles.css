@@ -1527,11 +1527,18 @@ body.pm #ecdisTop{visibility:hidden}
 #hud .hnow .row .hgo{pointer-events:auto;margin-left:8px;min-height:32px;padding:4px 10px;border-radius:var(--r-pill,16px);border:0;background:var(--mag);color:#fff;font:700 12px var(--sans);cursor:pointer;white-space:nowrap}   /* «Kjør dit» to the gear a mile off (spilltest 3, U2) */
 #hud .hfull{margin-top:5px;padding-top:5px;border-top:1px dashed rgba(238,244,247,.18)}
 #hud .gauges.open{border-top-color:rgba(232,201,106,.45)}
-/* the dock (ui/10c-dock.js, V6 A): the hero is the one thing to do now, bigger and lit; a button that cannot be used has a dashed ring
-   and a faded icon (a tap still says why), so it does not read as one of the others */
+/* the dock (ui/10c-dock.js, V6 A): the hero is the one thing to do now, bigger and lit. A button that cannot be used now keeps a plain
+   ring, faded, and says why under its label from data-why (UI 2, U2-3, plan V4 A; a tap still gives the whole text as a toast): the
+   dashed ring went with Kystlys V2 A. The hero's second line (.dk-sub, «Botnhamn 3,2 nm» under «Til mottaket») may stand a little
+   wider than the button; the fans of more than four stand in rows (.dk-row, K2) */
 .dk-b.hero{width:78px} .dk-b.hero .dk-i{width:60px;height:60px;box-shadow:0 0 0 4px rgba(181,34,122,.28),0 4px 14px rgba(0,0,0,.35)} .dk-b.hero .dk-i svg{width:29px;height:29px} .dk-b.hero .dk-l{font-weight:700}
-.dk-b.off .dk-i{border-style:dashed;border-color:rgba(255,255,255,.32);background:rgba(6,16,24,.34)} .dk-b.off .dk-i svg{opacity:.45} .dk-b.off .dk-l{opacity:.7}
+.dk-b.off .dk-i{border-style:solid;border-color:rgba(255,255,255,.22);background:rgba(6,16,24,.34)} .dk-b.off .dk-i svg{opacity:.45} .dk-b.off .dk-l{opacity:.7}
 .dk-b.off{opacity:.9}
+.dk-b.off[data-why]::after{content:attr(data-why);display:block;max-width:96px;margin-top:-1px;font:500 10px/1.15 var(--sans);color:rgba(255,255,255,.78);text-align:center;letter-spacing:-.1px}
+#dockFan .dk-b.sm.off[data-why]::after{max-width:84px}
+.dk-b .dk-sub{display:block;width:max-content;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:-1px;font:600 10px/1.15 var(--sans);opacity:.85}
+#dockFan:has(.dk-row){flex-direction:column;align-items:center} #dockFan .dk-row{display:flex;justify-content:center;gap:6px}
+@media (max-width:560px){.dk-b.off[data-why]::after{max-width:72px;font-size:9px;letter-spacing:-.15px} .dk-b .dk-sub{max-width:96px;font-size:9px}}
 /* the catch as it comes aboard (ui/05j-catchfeed.js, U4): instrument cards at the right over the sea, the spot's kg an hour above them */
 #catchFeed{position:absolute;z-index:5;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none;max-width:min(260px,46vw)}
 #catchFeed[hidden]{display:none}
@@ -1592,6 +1599,8 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 .dr-plc{gap:8px 18px}.dr-st{gap:8px}
 .dr-kv button,#drawerBody .ops-days button{min-width:44px;min-height:44px;padding:0 10px}
 #drawerBody .ph-sub button,#drawerTabs button{min-height:44px}
+/* UI 2, U2-2 (06.11.2026): Om bord's five tabs (Redskap, Rigg, Lasterom, Båten, Mannskap) on one row in the drawer on a phone (390 px) and at its side (380 px) */
+#drawerBody .ph-sub{gap:4px} #drawerBody .ph-sub button{padding:7px 9px}
 #pmBar .pm-h button,#pmBar .pm-t button{min-height:44px}
 @media (min-width:701px){#pmCard{width:300px}}
 #pmCard .ai-h button{width:44px;height:44px;margin:-6px -8px -6px 0;padding:0;font-size:24px;line-height:1;border-radius:8px}

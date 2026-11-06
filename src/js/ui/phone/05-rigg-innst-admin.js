@@ -9,15 +9,26 @@
     }
     return h.join('') + '</div>';
   }
-  // what the boat has: gear aboard and in the sea, the hold, and the boat herself
+  // «Om bord» (UI 2, U2-2, 06.11.2026; was Beholdning): what the boat has: gear aboard and in the sea, the hold, the boat herself, and
+  // the crew as the fifth tab (the Mannskap page, ui/05b-work.js, as it was; the dock's Mannskap button went)
   function beholdning(){
-    const tab = sub.beholdning || 'gear', head = subs('beholdning', [['gear', 'Redskap', 'Gear'], ['rigg', 'Rigg', 'Rig'], ['last', 'Lasterom', 'Hold'], ['boat', 'Båten', 'The boat']]);
+    const tab = sub.beholdning || 'gear', head = subs('beholdning', [['gear', 'Redskap', 'Gear'], ['rigg', 'Rigg', 'Rig'], ['last', 'Lasterom', 'Hold'], ['boat', 'Båten', 'The boat'], ['crew', 'Mannskap', 'Crew']]);
     if (tab === 'rigg') return head + rigg();
     if (tab === 'last') return head + last();
     if (tab === 'boat') return head + fartoy('min');
+    if (tab === 'crew') return head + crewTab();
     // the shop's service sits here now, beside the crew's own upkeep (M2): only at a tackle shop's quay
     const svc = atKind('butikk') ? '<div class="ph-c" style="padding-bottom:0"><div class="ph-card svc-l"><h4>' + L('Service i butikken her', 'Service at this shop') + '</h4><p class="ph-note">' + L('Butikken reparerer og bytter på halve tiden mot et gebyr, og kjøper redskap tilbake.', 'The shop mends and changes in half the time for a fee, and buys gear back.') + '</p><button class="ph-btn p" data-pa="open" data-a="service">' + L('Til service', 'To the service') + '</button></div></div>' : '';
     return head + svc + (S.pgear ? redskap('bord') + redskap('sjo') : '');
+  }
+  // the crew tab: the Mannskap page with the plan's line (PAGES().arbeid), and the way to the Ansatte pages (who is signed on, with the
+  // quarrel when one waits for an answer, and the crew exchange; ui/phone/13-mannskap-bank-meld.js), first with a quarrel aboard, else last
+  function crewTab(){
+    const q = !!S.cevt, card = '<div class="ph-c" style="padding-' + (q ? 'bottom' : 'top') + ':0"><div class="ph-card' + (q ? ' conflict' : '') + '"><h4>' + L('Ansatte', 'Employees') + '</h4><p class="ph-note">' +
+      (q ? '<b>' + L('Uløst krangel om bord.', 'Unresolved quarrel aboard.') + '</b> ' + L('Svar under Ansatte.', 'Answer under Employees.') : L('Hvem som er mønstret på, lott og oppsigelse, og ledige folk i Mannskapsbørsen.', 'Who is signed on, shares and dismissal, and available hands in the crew exchange.')) + '</p>' +
+      '<div class="ph-row2"><button class="ph-btn' + (q ? ' p' : '') + '" data-pa="open" data-a="mannskap">' + L('Ansatte', 'Employees') + '</button><button class="ph-btn alt" data-pa="open" data-a="bors">' + L('Mannskapsbørs', 'Crew exchange') + '</button></div></div></div>';
+    const w = PAGES().arbeid();
+    return q ? card + w : w + card;
   }
   function logg(){ return '<div class="ph-panel">' + panelLog() + '</div>'; }
   function innst(){

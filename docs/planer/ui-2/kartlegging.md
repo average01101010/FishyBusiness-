@@ -204,4 +204,4 @@ Sett på bildene så langt (`u20-brett-tur-plotter-tips-og-toast.jpg`, `u20-bret
 ## 6. Det som gjenstår i U2-0
 
 - Tellingen fra `uiplay.py` i 800×1280 og 390×844 (kjører) føres inn i 3.7, og feil den finner i første tur i stående, inn i backloggen.
-- «Full last» og «ved egen blåse» måles i U2-3 når linja bygges om, med `fiskeplay.py` som har oppsettet for blåsa.
+- ~~«Full last» og «ved egen blåse» måles i U2-3 når linja bygges om, med `fiskeplay.py` som har oppsettet for blåsa.~~ Målt i U2-3 (06.11.2026): `kartlegging.py` har tilstandene `sjo-full-last` (fylt til kapasiteten), `sjo-ved-blasa` (50 m), `sjo-til-blasa` (600 m) og `sjo-blasa-langt` (2 km), pluss naustet ved egen kai, Redskap-vifta og til ankers; radene står i `docs/systemer/ui-og-telefon.md`, «UI 2, U2-3». K1 (resten), K2 og K3 er løst der.

@@ -529,6 +529,7 @@ function dynAuto(d, dtG){
             const rs = room(1), rp = room(-1); side = rs === rp ? (dynAng(d.psi, dynSegHd(T, dynSeg(T, T.s))) >= 0 ? 1 : -1) : rs > rp ? 1 : -1; }
           T.bow = {gd, astern, bk, u:N0.u, side}; } } }
     if (T.bow) vCmd = Math.min(vCmd, T.bow.astern ? 0 : T.bow.u);
+    const sj = sjvAuto(d, h, ds, T); if (sj) vCmd = Math.min(vCmd, sj.v);   // giving way (Ø11.1, 05e-sjovei.js): off the line to starboard, or slower
     // (the lever goes over gradually, a quarter of its travel a game second, as a hand moves it)
     // the throttle for the acceleration that brings her to the commanded speed in three game seconds, and along the easing curve
     // when she is slackening off (the resistance she has at this speed counted in, so she follows the curve and does not lag it)
@@ -548,7 +549,7 @@ function dynAuto(d, dtG){
     const Kp = wn * wn * Tn / Kn, Kd = Math.max(0, (2 * wn * Tn - 1) / Kn), Rn = N[j - 1].R + (N[j].R - N[j - 1].R) * fN;
     const Rt = Math.max(Rn, d.u * d.u / P.alat), n = T.P.length; let seg = dynSeg(T, T.s);
     if (seg + 1 <= n - 1){ const th = Math.abs(dynAng(dynSegHd(T, seg), dynSegHd(T, seg + 1))), lead = Math.min(Rt * Math.tan(Math.min(th, 2.6) / 2) + Math.abs(d.u) * (Tn + 0.5 * DYN_RUD / P.drate), 0.5 * (T.L[seg] - T.L[seg - 1])); if (T.L[seg] - T.s < lead) seg++; }
-    const sa = T.P[seg - 1], hdP = dynSegHd(T, seg), ye = (d.X - sa[0]) * Math.cos(hdP) + (d.Y - sa[1]) * Math.sin(hdP);
+    const sa = T.P[seg - 1], hdP = dynSegHd(T, seg), ye = (d.X - sa[0]) * Math.cos(hdP) + (d.Y - sa[1]) * Math.sin(hdP) - (sj ? sj.off : 0);
     const chi = Math.abs(d.u) > 0.3 ? d.psi + Math.atan2(d.v, d.u) : d.psi, chiD = hdP - Math.atan(ye / Math.max(1.5 * Rt, L));
     const rud = T.bow ? (T.bow.astern ? 0 : T.bow.side) : clamp((Kp * dynAng(chi, chiD) - Kd * d.r) / DYN_RUD, -1, 1);
     dynInt(P, d, thr, rud, h, capF, E); dynMove(d, h);

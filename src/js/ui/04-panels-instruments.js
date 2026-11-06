@@ -87,9 +87,13 @@ function hudShortEv(txt){ for (const [a, b] of HUD_SHORT) if (txt === a) return 
 function hudLine3(how){
   const strip = how === 'strip';
   const b = S.boat, H = S.t / 60, atSea = b.status !== 'port', no = S.lang === 'no', L = (a, c) => no ? a : c, I = typeof DOCK !== 'undefined' ? DOCK.info() : {};
-  let cls = '', go = '', h = '';
+  let cls = '', go = '', h = '', hs = '';
+  // the rules of the road first (Ø11.1, core/05e-sjovei.js): a risk of collision within a few minutes, who gives way and the CPA, in the
+  // strip (the short words: it is 47 vw on a phone and 250 px on a tablet), the box (in the place of the next event, so it does not grow
+  // over the little chart) and the card (with the other's name and when, in real time)
+  if (atSea){ const w = sjvWarn(); if (w){ cls = w.sev; h = sjvSay(w, strip ? 'tiny' : how === 'card' ? 'box' : 'strip'); if (strip) hs = '· CPA ' + w.cpa + ' m'; else h += ' <small>· CPA ' + w.cpa + ' m ' + sjvWhen(w) + '</small>'; } }
   if (strip && atSea){
-    if (RU.ok){ const r = ruNow(); if (r.v !== 'ok'){ const it = r.items.find(i => i.v === r.v); cls = r.v === 'no' ? 'r2' : 'r1'; h = (r.v === 'no' ? '✕ ' : '! ') + (it ? ruShort(it) : L('Regler', 'Rules')); } }
+    if (!h && RU.ok){ const r = ruNow(); if (r.v !== 'ok'){ const it = r.items.find(i => i.v === r.v); cls = r.v === 'no' ? 'r2' : 'r1'; h = (r.v === 'no' ? '✕ ' : '! ') + (it ? ruShort(it) : L('Regler', 'Rules')); } }
     if (!h){ const M = motionHere(H, b), z = M.state; if (z.lvl){ cls = 'r' + z.lvl; h = {gm:L('Rank båt', 'Tender boat'), res:stabStill(b) ? L('Synkronrulling · rull ', 'Synchronous roll · rolls ') + Math.round((M.M.roll + M.M.heel) * 180 / Math.PI) + '°' : L('Synkronrulling · endre kurs eller fart', 'Synchronous roll · change course or speed'), roll:L('Kraftig rulling · ta det rolig', 'Heavy rolling · ease off')}[z.why] || ''; } }
     if (!h && b.status !== 'sailing' && typeof gearBuoyNear === 'function'){ const nb = gearBuoyNear(b.pos); if (nb && nb.d > GEARLIE.alarm){ cls = 'r2'; go = String(nb.s.id); h = L('Blåsa ', 'Buoy ') + fmt(nb.d / NM, 1) + L(' nm unna · Kjør dit ›', ' nm off · Go there ›'); } }
   }
@@ -100,7 +104,7 @@ function hudLine3(how){
   // the narrow phone (Jonas 06.11.2026: «Bare å fjerne ordet "fisket" så får du masse plass»): line 1 says what she does («Fisker»,
   // «Forhaler», «Bunkrer»), so line 3 says only «Ferdig 19:30» beside the deck's kg; the crew and the yard keep their word, the place
   // its name («Fremme i Botnhamn»)
-  const narrow = strip && window.innerWidth <= 560; let hs = '';
+  const narrow = strip && window.innerWidth <= 560;
   if (!h){ const nx = nextEvent(); if (nx){ h = (narrow ? hudShortEv(nx.txt) : '⏱ ' + nx.txt) + ' ' + hm(nx.t / 60); if (strip) hs = '· ' + (no ? 'om ' : 'in ') + realDur(nx.t - S.t); else h += ' <small>· ' + inReal(nx.t - S.t) + '</small>'; } }
   if (!h && (on || I.place)){ h = on || I.place; on = ''; cls = 'q'; }
   if (!h && strip && atSea){ const cp = coldPen(H); if (cp > 0.03){ cls = 'cold'; h = L('Kulde −', 'Cold −') + Math.round(cp * 100) + ' % · ' + Math.round(effTemp(H)) + ' °C'; } }
@@ -151,6 +155,9 @@ function renderHud(){
   if (atSea){ const z = motionHere(H, b).state; if (z.lvl) now.push('<div class="row warn"><span>' + L('Stabilitet', 'Stability') + '</span><b class="r' + z.lvl + '">' + {gm:L('rank', 'tender'), res:stabStill(b) ? L('synkronrulling · rull ', 'synchronous roll · rolls ') + Math.round((motionHere(H, b).M.roll + motionHere(H, b).M.heel) * 180 / Math.PI) + '°' : L('synkronrulling · endre kurs eller fart', 'synchronous roll · change course or speed'), roll:L('kraftig rulling · ta det rolig', 'heavy rolling · ease off')}[z.why] + '</b></div>'); }
   // the rules where you are (03e-rules.js ruNow): a tap opens the Regler app
   if (atSea && RU.ok){ const r = ruNow(), it = r.items.find(i => i.v === r.v && i.v !== 'ok'); now.push('<div class="row rlink"><span>' + L('Regler', 'Rules') + '</span><b class="' + (r.v === 'no' ? 'r2' : r.v === 'warn' ? 'r1' : 'r0') + '">' + (r.v === 'no' ? '✕ ' : r.v === 'warn' ? '! ' : '✓ ') + (it ? ruShort(it) : L('Lov her', 'Allowed here')) + ' ›</b></div>'); }
+  // the bunk (UI 2, U2-2, plan 4.3): «Hvil i køya» is in the dock row only when the energy warns or she lies at anchor; else, at sea with a
+  // berth and a watch, it is this row in the box behind the strip (10c-dock.js restShow has the rule)
+  if (atSea && !resting() && !asleep() && !b.anch && S.energy >= ENERGY.warn && restWhere(b) === 'koye') now.push('<div class="row"><span>' + L('Køya', 'The bunk') + '</span><b>' + Math.round(S.energy) + ' %</b><button type="button" class="hgo" data-hrest>' + L('Hvil i køya', 'Rest in the bunk') + '</button></div>');
   { const cp = coldPen(S.t / 60); if (cp > 0.03) now.push('<div class="row"><span>' + L('Kulde', 'Cold') + '</span><b class="cold">−' + Math.round(cp * 100) + ' % · ' + Math.round(effTemp(S.t / 60)) + ' °C</b></div>'); }
   if (haillStage()) now.push('<div class="row"><span>' + L('Haill', 'Luck') + '</span><b class="haill">' + haillStage()[S.lang] + ' +' + Math.round(haillBoost() * 100) + ' %</b></div>');
   // the whole table behind the tap: the figures the gauges round off, the wind, the bonus and the bank's other accounts
@@ -265,6 +272,7 @@ const INSTR = (() => {
 // the whole box as a card (U2-1)
 hud.addEventListener('click', e => {
   const go = e.target.closest('[data-hgo]'); if (go){ e.stopPropagation(); const s = mySets().find(x => String(x.id) === go.dataset.hgo); if (s) DOCK.goTo(s); return; }
+  if (e.target.closest('[data-hrest]')){ e.stopPropagation(); hudCardOpen(false); doAct({dataset:{act:'rest'}, disabled:false}); return; }   // the bunk from the box (U2-2)
   if (e.target.closest('[data-hmin]')){ e.stopPropagation(); hudFold('hud'); return; }
   if (e.target.closest('[data-hcard]')){ e.stopPropagation(); hudCardOpen(false); return; }
   if (e.target.closest('[data-hfull]')){ e.stopPropagation(); S.settings.hudFull = !S.settings.hudFull; save(); renderHud(); return; }

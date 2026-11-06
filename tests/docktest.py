@@ -31,6 +31,10 @@ async def run(p, w, h, tag):
     async def fan_up():
         try: await pg.wait_for_function("!document.getElementById('dockFan').hidden && !!document.querySelector('#dockFan [data-dk]')", timeout=4000, polling=50)
         except Exception: pass
+    # a toast with the text, polled: a rules warning that comes a moment later replaces the text (seen in portrait, U2-3)
+    async def toast_has(t, ms=1500):
+        try: await pg.wait_for_function("t => document.getElementById('toast').textContent.includes(t)", arg=t, timeout=ms, polling=40); return True
+        except Exception: return False
 
     # boot() waits for «Båten etter far» and closes it: a fixed 1.5 s and a tap on #obGo left the modal over the dock now and then
     # (13 FEIL 05.11.2026, all the fans; Ø2)
@@ -40,10 +44,10 @@ async def run(p, w, h, tag):
     ids = lambda: pg.evaluate("[...document.querySelectorAll('#dock [data-dk]')].map(x => x.dataset.dk)")
     print('--', tag, w, 'x', h)
 
-    # in port at Finnsnes (the shop and the boat hall, no plant): Butikk, Bygd, Verft and Beholdning; the old action bar is gone (a plant has Mottak in place of Butikk and Verft, further down)
+    # in port at Finnsnes (the shop and the boat hall, no plant): Butikk, Bygd, Verft and Om bord (the inventory, U2-2); the old action bar is gone (a plant has Mottak in place of Butikk and Verft, further down)
     await pg.evaluate("S.cash = 200000; renderActs()")
     d = await ids()
-    check(d == ['butikk', 'bygd', 'verft', 'beh'], 'i Finnsnes: Butikk, Bygd, Verft og Beholdning (Planlegg er borte: den lille kartplotteren åpner den store)', d)
+    check(d == ['butikk', 'bygd', 'verft', 'beh'] and await pg.evaluate("document.querySelector('#dock [data-dk=beh] .dk-l').textContent") == 'Om bord', 'i Finnsnes: Butikk, Bygd, Verft og Om bord sist (Planlegg er borte: den lille kartplotteren åpner den store)', d)
     check(not await pg.evaluate("!!document.getElementById('actbar')"), 'den gamle handlingslinja er borte')
     lbl = await pg.evaluate("[...document.querySelectorAll('#dock .dk-l')].map(x => x.textContent)")
     check(lbl[:3] == ['Butikk', 'Bygd', 'Verft'], 'knappene har kort tekst under ikonet', lbl)
@@ -84,7 +88,7 @@ async def run(p, w, h, tag):
     # at a plant: Mottak (not Butikk or Verft), with the landing, the ice, the bait and the fuel; Lever is not grey, and ice is bought in the drawer
     await pg.evaluate("(() => { const q = portById('botnhamn'), b = S.boat; b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; renderActs(); })()"); await pg.wait_for_timeout(300)
     d2 = await ids()
-    check(d2 == ['marked', 'bygd', 'beh'] and await pg.evaluate("document.querySelector('#dock [data-dk=marked] .dk-l').textContent") == 'Mottak', 'ved et mottak: Mottak, Bygd og Beholdning, og ingen Butikk eller Verft', d2)
+    check(d2 == ['marked', 'bygd', 'beh'] and await pg.evaluate("document.querySelector('#dock [data-dk=marked] .dk-l').textContent") == 'Mottak', 'ved et mottak: Mottak, Bygd og Om bord, og ingen Butikk eller Verft', d2)
     await tap_el('#dock [data-dk=marked]'); await fan_up()
     f = await pg.evaluate("[...document.querySelectorAll('#dockFan [data-dk]')].map(x => x.dataset.dk)")
     off = await pg.evaluate("document.querySelector('#dockFan [data-dk=lever]').classList.contains('off')")
@@ -104,11 +108,20 @@ async def run(p, w, h, tag):
     check(await pg.evaluate("document.getElementById('drawer').hidden"), 'skuffen lukkes')
 
 
-    # the inventory: three tabs
+    # Om bord (U2-2): five tabs, the crew page as the fifth, and the old «arbeid» lands on it; the dot on the button with a quarrel aboard
     await tap_el('#dock [data-dk=beh]'); await pg.wait_for_timeout(300)
     tabs = await pg.evaluate("[...document.querySelectorAll('#drawerBody .ph-sub button')].map(x => x.textContent)")
-    check(tabs == ['Redskap', 'Rigg', 'Lasterom', 'Båten'], 'Beholdning har fanene Redskap, Rigg, Lasterom og Båten', tabs)
+    check(tabs == ['Redskap', 'Rigg', 'Lasterom', 'Båten', 'Mannskap'] and await pg.evaluate("document.getElementById('drawerTitle').textContent") == 'Om bord', 'Om bord har fanene Redskap, Rigg, Lasterom, Båten og Mannskap', tabs)
+    await tap_el('#drawerBody .ph-sub button:nth-child(5)'); await pg.wait_for_timeout(300)
+    cr = await pg.evaluate("(() => { const b = document.getElementById('drawerBody'); return {on:(b.querySelector('.ph-sub button.on') || {}).textContent, wk:!!b.querySelector('.wk'), ans:!!b.querySelector('[data-pa=open][data-a=mannskap]'), bors:!!b.querySelector('[data-pa=open][data-a=bors]'), arbeid:!document.querySelector('#dock [data-dk=arbeid]')}; })()")
+    check(cr['on'] == 'Mannskap' and cr['wk'] and cr['ans'] and cr['bors'] and cr['arbeid'], 'fanen Mannskap viser Mannskap-siden med veien til Ansatte og Mannskapsbørsen, og linja har ingen Mannskap-knapp', cr)
+    await tap_el('#drawerBody [data-pa=open][data-a=bors]'); await pg.wait_for_timeout(300)
+    check(await pg.evaluate("DOCK.page") == 'bors', 'Mannskapsbørsen åpnes fra fanen')
     await tap_el('#drawerClose'); await pg.wait_for_timeout(200)
+    aw = await pg.evaluate("(() => { DOCK.open('arbeid'); const b = document.getElementById('drawerBody'), r = {page:DOCK.page, on:(b.querySelector('.ph-sub button.on') || {}).textContent}; DOCK.close(); return r; })()")
+    check(aw == {'page':'beholdning', 'on':'Mannskap'}, 'DOCK.open(arbeid) lander på fanen Mannskap i Om bord', aw)
+    dq = await pg.evaluate("(() => { const q = () => !!document.querySelector('#dock [data-dk=beh] .dk-dot'); const d0 = q(); S.cevt = {a:null, b:null, t:S.t}; renderActs(); const d1 = q(); S.cevt = null; renderActs(); return [d0, d1, q()]; })()")
+    check(dq == [False, True, False], 'prikken for krangel om bord står på Om bord-knappen', dq)
 
     # the phone has only the apps that are left, and Kvote is one of them
     await pg.evaluate("PHONE.open('home')"); await pg.wait_for_timeout(400)
@@ -135,16 +148,34 @@ async def run(p, w, h, tag):
     await pg.evaluate("DOCK.close()")
 
     # at sea: lying still, jigging, sailing
-    await pg.evaluate("(() => { const b = S.boat; b.status = 'idle'; b.port = null; b.pos = {...tutField().p}; b.v = 0; b.gear = true; renderActs(); })()")   # a hand jig aboard: without one nobody fishes (the rod is gone)
+    await pg.evaluate("(() => { const b = S.boat; b.status = 'idle'; b.port = null; b.pos = {...tutField().p}; b.v = 0; b.gear = true; S.pgear.nets = []; renderActs(); })()")   # a hand jig aboard: without one nobody fishes (the rod is gone); the net bought above is out again, so no set gear is aboard
     d = await ids()
-    check(d[:4] == ['jukse', 'settut', 'taopp', 'nav'] and 'beh' in d, 'stille på sjøen: Jukse, Sett ut, Ta opp, Auto-nav og Beholdning', d)
-    await tap_el('#dock [data-dk=taopp]', force=True); await pg.wait_for_timeout(200)
-    check('redskap i sjøen' in await pg.evaluate("document.getElementById('toast').textContent"), 'Ta opp er grått uten redskap og sier hvorfor')
+    # (UI 2, U2-3, plan 4.3: the hero first, at most three contextual and Om bord last, in both formats; no Auto-nav (the little chart
+    # opens the plotter, where Autonav is), no «Mer», and no Sett ut or Ta opp on a boat with no set gear aboard or in the sea)
+    check(d[0] == 'jukse' and d[-1] == 'beh' and len(d) <= 5 and not any(k in d for k in ('nav', 'mer', 'settut', 'taopp', 'redskap')), 'stille på sjøen: Jukse først, høyst fem, ingen Auto-nav, Mer eller redskapsknapp uten redskap, Om bord sist', d)
+    # a button that cannot be used now says why under its label (K3, V4 A): the anchor at the grounds
+    why = await pg.evaluate("(() => { const e = document.querySelector('#dock [data-dk=anker]'); return e ? [e.classList.contains('off'), e.dataset.why || '', getComputedStyle(e, '::after').content, getComputedStyle(e.querySelector('.dk-i')).borderStyle] : null; })()")
+    check(why and (not why[0] or (why[1] and why[1] in why[2])) and why[3] != 'dashed', 'Kast anker står i linja; er den grå, står grunnen under etiketten, uten stiplet ring', why)
+    # a line in the sea 3 km off: «Redskap» is one button in the row (not Sett ut and Ta opp), greyed with the distance to the buoy under
+    # its label, and a tap says why; rigged for line with baited tubs it opens its fan, Sett ut lit and Ta opp greyed with the distance
+    await pg.evaluate("(() => { const p = S.boat.pos; S.sets = (S.sets || []).filter(x => x.id !== 'far'); S.sets.push({id:'far', vid:S.cur, kind:'line', lk:'hyse', n:1, hooks:700, a:{x:p.x + 3, y:p.y}, b:{x:p.x + 3.6, y:p.y}, tSet:S.t, depth:40, heavy:false}); renderActs(); })()")
+    d = await ids(); r = await pg.evaluate("(() => { const e = document.querySelector('#dock [data-dk=redskap]'); return e && [e.classList.contains('off'), e.dataset.why || '']; })()")
+    check('redskap' in d and 'taopp' not in d and 'settut' not in d and r and r[0] and 'nm' in r[1], 'med redskap i sjøen langt unna står Redskap i linja (ikke Sett ut og Ta opp hver for seg), grå med avstanden til blåsa under', [d, r])
+    await tap_el('#dock [data-dk=redskap]')
+    check(await toast_has('nm unna'), 'et trykk på det grå Redskap sier hvor langt det er til blåsa')
+    await pg.evaluate("(() => { const pg = S.pgear; S.equip.linehaler = true; S.boat.rig = 'line'; pg.lines.hyse.n = 2; pg.lines.hyse.baited = 2; btOf(pg.lines.hyse); pg.kits.n = 2; renderActs(); })()")
+    await tap_el('#dock [data-dk=redskap]'); await fan_up()
+    f = await pg.evaluate("[...document.querySelectorAll('#dockFan [data-dk]')].map(x => [x.dataset.dk, x.classList.contains('off'), x.dataset.why || ''])")
+    check([x[0] for x in f] == ['settut', 'taopp'] and not f[0][1] and f[1][1] and 'nm' in f[1][2], 'Redskap-vifta med line om bord: Sett ut lyser, Ta opp grå med avstanden til blåsa under', f)
+    await tap_el('#dockFan [data-dk=taopp]')
+    check(await toast_has('nm unna'), 'et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa')
+    # (the set, the tubs and the line rig out again: the jig part below is as before)
+    await pg.evaluate("(() => { const pg = S.pgear; S.sets = S.sets.filter(x => x.id !== 'far'); S.boat.rig = 'juksa'; pg.lines.hyse.n = 0; pg.lines.hyse.baited = 0; pg.lines.hyse.bt = {}; pg.kits.n = 0; DOCK.menu(null); renderActs(); })()"); await pg.wait_for_timeout(150)
     await tap_el('#dock [data-dk=jukse]'); await pg.wait_for_timeout(250)
     await pg.screenshot(path='dock_jig_' + tag + '.png')
     await tap_el('#dockFan [data-dk=startfish]'); await pg.wait_for_timeout(300)
     d = await ids()
-    check(await pg.evaluate("S.boat.status") == 'fishing' and d[0] == 'stopfish', 'Start jukse i viften starter fisket', d)
+    check(await pg.evaluate("S.boat.status") == 'fishing' and 'stopfish' in d and d[0] in ('stopfish', 'jigg'), 'Start jukse i viften starter fisket (Jukse selv først som hovedknapp i 3D, ellers Stopp)', d)
     info = await pg.evaluate("(document.querySelector('#hud .st.nx') || {}).textContent || ''")
     check('ferdig' in info, 'fisket står på statusboksens tredje linje (UI 2, U2-1: pilla over knappene er borte)', info)
     await tap_el('#dock [data-dk=stopfish]'); await pg.wait_for_timeout(300)
@@ -160,7 +191,7 @@ async def run(p, w, h, tag):
 
     # «Sett ut»: the chart opens with the gear drawn as a line from the boat, exactly as long as the gear
     await pg.evaluate("(() => { const pg = S.pgear; pg.lines.hyse.n = 3; pg.lines.hyse.baited = 3; pg.kits.n = 4; S.boat.rig = 'line'; S.crew = S.crew.length ? S.crew : []; renderActs(); })()")
-    await tap_el('#dock [data-dk=settut]'); await pg.wait_for_timeout(300)
+    await tap_el('#dock [data-dk=redskap]'); await fan_up(); await tap_el('#dockFan [data-dk=settut]'); await pg.wait_for_timeout(300)   # (U2-3: Sett ut in the Redskap fan opens the choices over the same button)
     fan = await pg.evaluate("[...document.querySelectorAll('#dockFan .dk-l')].map(x => x.textContent)")
     i = next((k for k, t in enumerate(fan) if 'hyseline' in t), None)
     check(i is not None, 'Sett ut viser redskapet om bord', fan)
@@ -205,10 +236,10 @@ async def run(p, w, h, tag):
         if (deep(A) && deep(B) && deep(F)){ dx = A.x - p.x; dy = A.y - p.y; break search; } }
       const s = {id:'tst', vid:S.cur, kind:'line', lk:'hyse', n:1, hooks:700, a:{x:p.x + dx, y:p.y + dy}, b:{x:p.x + dx * 1.5, y:p.y + dy * 1.5}, tSet:S.t, depth:40, heavy:false};
       S.sets = (S.sets || []).filter(x => x.id !== 'tst'); S.sets.push(s); renderActs();
-      const far = DOCK.items().find(x => x.id === 'taopp'); const sf = buoyStandoff(s, s.a);
-      b.pos = {x:sf.x, y:sf.y}; renderActs(); const near = DOCK.items().find(x => x.id === 'taopp');
-      return {far:!!far.off, near:!near.off, act:near.act, d:Math.round(dist(sf, s.a) * 1000)}; })()"""))
-    check(r['far'] and r['near'] and r['act'] == 'ghaul' and r['d'] == 50, 'Ta opp er grått langt unna og lyser 50 m fra blåsa', r)
+      const far = DOCK.items('redskap').find(x => x.id === 'taopp'), farRow = DOCK.items().some(x => x.id === 'taopp'); const sf = buoyStandoff(s, s.a);
+      b.pos = {x:sf.x, y:sf.y}; renderActs(); const near = DOCK.items().find(x => x.id === 'taopp'), first = document.querySelector('#dock [data-dk]').dataset.dk;
+      return {far:!!far.off && !farRow, near:!!near && !near.off, act:near && near.act, d:Math.round(dist(sf, s.a) * 1000), first, hero:!!document.querySelector('#dock [data-dk=taopp].hero')}; })()"""))
+    check(r['far'] and r['near'] and r['act'] == 'ghaul' and r['d'] == 50 and r['first'] == 'taopp' and r['hero'], 'Ta opp er grått i Redskap-vifta langt unna, og lyser først i linja som hovedknapp 50 m fra blåsa', r)
     await pg.evaluate("(() => { const s = S.sets.find(x => x.id === 'tst'); S.sets.splice(S.sets.indexOf(s), 1); renderActs(); })()")
     # Autonav to a set's buoy puts the haul in the route, and it starts there (tilbakemelding #31: line, nets and pots alike)
     r = await pg.evaluate("""(async () => { const b = S.boat, keep = {pos:{...b.pos}, status:b.status, port:b.port, plan:S.plan}, g = GROUNDS[0].p, out = [];

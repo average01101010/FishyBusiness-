@@ -102,6 +102,7 @@ function miniPaint(){
     ctx.strokeStyle = 'rgba(208,40,120,.9)'; ctx.lineWidth = 2 * dpr; ctx.setLineDash([6 * dpr, 4 * dpr]); ctx.beginPath(); ctx.moveTo(X(p.x), Y(p.y));
     for (const w of S.plan.wps.slice(Math.max(S.plan.idx, pose.idx || 0))) ctx.lineTo(X(w.x), Y(w.y)); ctx.stroke(); ctx.setLineDash([]);
   }
+  miniSjv(ctx, X, Y, p, dpr);   // the rules of the road (Ø11.1)
   const s = 7 * dpr; ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(pose.hd);
   ctx.beginPath(); ctx.moveTo(0, -s * 1.3); ctx.lineTo(s * 0.7, s); ctx.lineTo(0, s * 0.55); ctx.lineTo(-s * 0.7, s); ctx.closePath();
   ctx.fillStyle = '#d02878'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5 * dpr; ctx.fill(); ctx.stroke(); ctx.restore();
@@ -126,6 +127,24 @@ function miniPaint(){
   const h = L.length * lh + pad; ctx.fillStyle = 'rgba(6,16,24,.66)'; ctx.fillRect(0, H - h, W, h);
   ctx.fillStyle = '#eef4f7';
   L.forEach((r, i) => { const y = H - h + pad * 0.6 + (i + 0.78) * lh; ctx.textAlign = 'left'; ctx.fillText(r[0], pad, y); if (r[1]){ ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(230,240,245,.7)'; ctx.fillText(r[1], W - pad, y); ctx.fillStyle = '#eef4f7'; } });
+}
+// the warning of the rules of the road (Ø11.1, core/05e-sjovei.js), as the big chart has it (03-map.js sjvChartSvg): a ring round the other
+// vessel, her vector and yours on to the CPA and the line between them there, red when you give way and yellow when you hold on; the ring
+// stays on the edge when she is outside the little chart, and the CPA stands under it
+function miniSjv(ctx, X, Y, p, dpr){
+  const w = typeof sjvWarn === 'function' ? sjvWarn() : null; if (!w || !w.p) return;
+  const A = sjvOwn(), m = clamp(w.tcpa, 0, SJV.TW) / 60, gs = gridScale(w.p), c = w.sev === 'r2' ? '#e5383b' : '#f0a202', W = ctx.canvas.width, H = ctx.canvas.height;
+  const fwd = (q, cg, v) => ({x:q.x + Math.sin(cg) * v * NM * gs * m, y:q.y - Math.cos(cg) * v * NM * gs * m}), ta = fwd(p, A.cog, A.v), tb = fwd(w.p, w.cog, w.v);
+  const line = (a, b, lw, dash) => { ctx.setLineDash(dash || []); ctx.lineWidth = lw * dpr; ctx.beginPath(); ctx.moveTo(X(a.x), Y(a.y)); ctx.lineTo(X(b.x), Y(b.y)); ctx.stroke(); };
+  ctx.save(); ctx.strokeStyle = c; ctx.lineCap = 'round';
+  line(p, ta, 1.6, [5 * dpr, 3 * dpr]); line(w.p, tb, 2.4); line(ta, tb, 1.1, [2 * dpr, 2 * dpr]); ctx.setLineDash([]);
+  // (above the GPS along the foot, which is painted after: up to four lines)
+  const r = 9 * dpr, cx = clamp(X(w.p.x), r + 2, W - r - 2), cy = clamp(Y(w.p.y), r + 2, H - 58 * dpr - r);
+  ctx.lineWidth = 2.4 * dpr; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.stroke();
+  ctx.font = '700 ' + Math.round(9.5 * dpr) + 'px sans-serif'; ctx.textAlign = cx > W / 2 ? 'right' : 'left'; ctx.lineJoin = 'round';
+  const tx = cx + (cx > W / 2 ? -r - 3 * dpr : r + 3 * dpr), ty = cy > H - 70 * dpr ? cy - r - 3 * dpr : cy + 4 * dpr, label = 'CPA ' + w.cpa + ' m';
+  ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(6,16,24,.75)'; ctx.strokeText(label, tx, ty); ctx.fillStyle = c; ctx.fillText(label, tx, ty);
+  ctx.restore();
 }
 // four times a second while she moves, so her position on it keeps up (once a second when she lies still)
 if (MINIP.el){ MINIP.el.addEventListener('click', () => openPlotter()); let last = 0;

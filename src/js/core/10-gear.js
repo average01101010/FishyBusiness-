@@ -191,7 +191,7 @@ function gearReserve(){
 function rigHas(r){ return !RIGS[r].kind || hasHauler(RIGS[r].kind); }
 const rigName = r => gL(RIGS[r].no, RIGS[r].en);
 const lc1 = x => x[0].toLowerCase() + x.slice(1);
-function rigWrong(kind){ return [gL('Båten er rigget for ' + rigName(rigOf()).toLowerCase() + '. Rigg om til ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Beholdning.', 'The boat is rigged for ' + rigName(rigOf()).toLowerCase() + '. Re-rig for ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Inventory.')]; }
+function rigWrong(kind){ return [gL('Båten er rigget for ' + rigName(rigOf()).toLowerCase() + '. Rigg om til ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Om bord.', 'The boat is rigged for ' + rigName(rigOf()).toLowerCase() + '. Re-rig for ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Aboard.')]; }
 // no hauler for this kind of gear fits the boat: the reason, said the same in the Rig tab and the shop (spilltest 3, F3), or null
 function haulerNoFit(kind){
   const b = S.boat || {}, hs = GEAR[kind].haulers; if (hasHauler(kind) || hs.some(h => equipFits(h, b.type || 'skiff'))) return null;   // (a hauler already aboard, as in an old save, is never refused)
@@ -686,7 +686,7 @@ function gearHour(H){
       { const v = vesselById(s.vid), cf = 0.2 + 0.8 * (s.cond != null ? s.cond : 1), val = (s.kind === 'garn' ? (NETTY[netTy(s)] || NETTY.bunn).price : s.kind === 'line' ? (isAuto(s.lk) ? AUTOLENKE_KR : (LINE_KINDS[s.lk] || LINE_KINDS.hyse).price) : (POTS[s.pot] || POTS.big).price) * s.n * cf + GPRICE.kit + (s.heavy ? GPRICE.heavy : 0);
         if (v) tripAdd(vget(v, 'boat'), 'lostKr', Math.round(val)); }   // the gear lost is a common cost of nets, lines and pots (oppgjørsavtalene §§ 1, 3, 19)
       setLog(s, 'Mistet ' + what + ' (' + s.n + ' ' + unitName(s.kind, s.n, s.lk) + ') i været. Tapt redskap skal meldes til Kystvakten.', 'Lost ' + whatEn + ' (' + s.n + ' ' + unitName(s.kind, s.n, s.lk) + ') in the weather. Lost gear must be reported to the Coast Guard.');
-      msg(gL('Redskap', 'Gear'), 'Blåsene er borte, og ' + what + ' er tapt. Meld tapt redskap til Kystvakten under Beholdning.', 'The buoys are gone and the ' + whatEn + ' is lost. Report the lost gear to the Coast Guard under Inventory.');
+      msg(gL('Redskap', 'Gear'), 'Blåsene er borte, og ' + what + ' er tapt. Meld tapt redskap til Kystvakten under Om bord.', 'The buoys are gone and the ' + whatEn + ' is lost. Report the lost gear to the Coast Guard under Aboard.');
       continue;
     }
     if (r < p * 2.5){

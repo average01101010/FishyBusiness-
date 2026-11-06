@@ -1,6 +1,6 @@
 # Lover, regler og sikkerhet på sjøen (Ø11a, plan 05.11.2026)
 
-> Plan etter `/planlegg`. Bare dokument; ingenting er bygd. Planen slår sammen `docs/planer/lover-og-regler.md` (L0–L8), «Sikkerhet SK1–SK6» (oppgave #164) og N8 i `docs/planer/npc-flaaten.md` til én rekke økter, Ø11.1–Ø11.9. Valgene Jonas alt har tatt, står i kap. 2 og spørres ikke om igjen. De nye valgene V7–V11 besvarte Jonas 05.11.2026 (kap. 7). Byggingen er Ø11 i `docs/planer/okter-etter-backloggen.md` og starter etter H2. **Venter på «kjør på» for Ø11.1 når H2 er ute.**
+> Plan etter `/planlegg`. Bare dokument; ingenting er bygd. Planen slår sammen `docs/planer/lover-og-regler.md` (L0–L8), «Sikkerhet SK1–SK6» (oppgave #164) og N8 i `docs/planer/npc-flaaten.md` til én rekke økter, Ø11.1–Ø11.9. Valgene Jonas alt har tatt, står i kap. 2 og spørres ikke om igjen. De nye valgene V7–V11 besvarte Jonas 05.11.2026 (kap. 7). Byggingen er Ø11 i `docs/planer/okter-etter-backloggen.md` og starter etter H2. **Ø11.1 bygd 06.11.2026** (status i kap. 6 og 10); det som gjelder og er bygd, står i `docs/systemer/sjofart-og-lover.md`.
 
 ## 1. Hva Jonas ba om
 
@@ -235,6 +235,7 @@ Hver økt er én fase, ferdig, testet og rullet ut før den neste. Alle kommer e
   - Nye: `tests/unit/sjovei.test.mjs` (situasjonene 13–15, rangen i 18, 9 b–c, CPA og TCPA, grensetilfellene) og `tests/colregtest.py` (LITE). `colregtest` prøver Senjas ferje og en kystbåt på kryssende kurs med spilleren: NPC-en viker innen 1 km og holder kurs når spilleren skal vike, Autonav viker og kommer tilbake, og ingen NPC havner på land.
   - Fra før: `npctest` (samme tid gir samme posisjon utenfor 1 km), `autonavtest` og `routetest`.
 - **Måles:** hvor ofte varselet kommer på en tur ut og hjem, og tiden i avviksfunksjonen i Lofoten i mars.
+- **Status 06.11.2026: bygd og rullet ut (981a4751, flettet i d62153dc)** (Jonas: «Oppgave: Ø11.1, vikeplikten for spilleren og NPC-ene (L1 og N8)»). `core/05e-sjovei.js` med ett kall i `npcStates`, `sail`, `havNear` og `dynAuto`; varselet i stripa (UI 2, U2-1), boksen, kartplotteren, minikartet og AIS-kortet; `docs/systemer/sjofart-og-lover.md` er nytt og står i indeksen. Sjøveisreglene 1–18 og 19 a–c lest ordrett; 19 d–e bare delvis (Ø11.2 leser dem). Avvik fra planen: rollene står mens møtet varer (ellers byttet de under kystbåtens avslakking, og båtene passerte 2 m fra hverandre i testen); ferja og kystruteskipet fikk målene sine fra AIS-kortet; nestenulykken lagres i `S.nearMiss`. Tester: `sjovei.test.mjs` (73), `colregtest` (25, i ekte tid, 7 min), stikkprøver i Bergen, Bodø og Hammerfest (Tromsø ikke prøvd: ingen åpen kryssing). Tallene og tolkningene som er antatt, står i backloggen 10.3.
 
 ### Ø11.2 Sikt, lys og lyd (L3, N8)
 
@@ -491,4 +492,5 @@ Jonas 05.11.2026: «V7: Vi trenger ikke tenke på dagsignaler i spillet. Stort s
 
 - 05.11.2026: planen skrevet i Ø11a. Kildene er sjekket på Lovdata (kap. 5). `lover-og-regler.md`, SK1–SK6 og N8 er slått sammen i Ø11.1–Ø11.9. Venter på V7–V11 og «kjør på» for Ø11.1 når H2 er ute.
 - 05.11.2026: Jonas svarte på V7–V11: ingen dagsignaler (V7), ingen dør ved mann over bord (V8 A), nødstoppen er en detalj på haleren som mannskapet bruker selv (V9 B), ingen sender på vesten (V10 C), ingen kurs eller øvelser (V11 C). Øktene er rettet etter det. Venter på «kjør på» for Ø11.1 når H2e er ute.
+- 06.11.2026: Ø11.1 bygd og rullet ut (981a4751, d62153dc): vikeplikten for spilleren, NPC-ene og Autonav etter regel 13–18 og 9 b–c, varselet og AIS-statusen (kap. 6, `docs/systemer/sjofart-og-lover.md`). Neste: Ø11.2 (sikt, lys og lyd), som ikke kan gå samtidig med Ø15, Ø9 eller Ø7.
 - 06.11.2026: Ø11.4 bygd uten nødstoppen (den venter på H2d): vesten i garderoben, MOB-båten med davit og vugge (`tools/deck/mob.py`, `deck-mob.b64`) og MOB-lyset med røyk (`sikker.py`). Ikke satt på båtene eller folkene ennå (Ø11.5). Ø11.1–Ø11.3 venter fortsatt på H2e og «kjør på».
