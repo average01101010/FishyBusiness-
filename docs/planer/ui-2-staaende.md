@@ -1,0 +1,212 @@
+# UI 2: telefon stående først (plan 06.11.2026)
+
+> Venter på «kjør på». V1, V3, V4 og V5 er tatt 06.11.2026. V2, V6, V7 og V8 står åpne (kap. 7). Bildene fra Jonas' telefon ligger i `ui-2/`.
+
+## 1. Hva Jonas ba om
+
+- 05.11.2026, om skjermbildene slik de er etter Kystlys: «Jeg mener personlig at det er myyyye å hente her, og har helst lyst til å re-designe hele systemet.»
+- 05.11.2026: «Spillet er en pwa-app som sannsynligvis vil spilles mest på telefoner i stående format, men det må også være tilpasset nettbrett og pc ettersom det kan spilles i nettleseren.»
+- 05.11.2026: «Spilleren kjører bare en båt samtidig. Om man trykker helt nederst til høyre åpner det seg en telefon med apper. Der finnes en app for rederiet spilleren eier, hvor han eventuelt kan ta styringen over en annen båt i rederiet, men jeg synes ikke menyen inne på appen er intuitiv nok den heller.»
+- 05.11.2026, om underskuffene: «Det ligger litt forskjellig, og det vil ikke komme så mye mer. Spillet nærmer seg lansering.»
+- 06.11.2026, valgene fra samtalen: V1 A (telefon stående er fasiten), V3 A («Kanskje stable de opp langs siden? Hva tenker du?»), V4 A (en knapp som ikke kan brukes, sier grunnen på seg selv), V5 A (Rederi med flåten først). V2: «Usikker på denne. Kom gjerne med konkrete forslag til hva du tenker.»
+- 06.11.2026: «Jeg tenker man kanskje kan fjerne noen av knappene? Autonav kan man feks få tilgang til ved å trykke på mini-mappet, og andre knapper kan sikkert flyttes inn i andre ting eller?»
+- 06.11.2026: «Jeg er også litt opptatt av at spillet skal være visuelt pent og at masse knapper og menyer ikke dekker hele bildet, kanskje spesielt under seiling der det ikke skjer så mye annet enn å følge med på naturen.»
+
+Reglene som gjelder (`CLAUDE.md`): grafikken er nesten det viktigste; alle UI-endringer tas med skjermbilder i stående og liggende før de meldes ferdige; handel bare på de tre handelsstedene; ingen ventetid lagt inn for å selge seg forbi den; patchnotes uten design eller psykologi. Ingen regelverk er berørt, så ingen kilder å sjekke.
+
+## 2. Slik er det i dag
+
+### 2.1 Kystlys (04.11.2026)
+
+`docs/planer/ui-redesign.md`: undersøkelsen (`tests/uiplay.py`, 113 bilder og tellingen `census.json`) ble gjort bare i liggende format, og planen sier selv at stående ikke er undersøkt. Alle fasene U0–U10 ble bygd 04.11.2026. Det som kom inn, var tokenene og lagskalaen i `styles.css`, fire knappetyper, fangstkortene, «Nå»-kortene på telefonen, ordboka, og i knappelinja «høyst seks knapper, Mer og en hero». Grepet «fem steder i skuffen» (V3 A) ble mindre enn planlagt: de 21 sidene står. Informasjonsarkitekturen er altså den samme som før Kystlys; det er den denne planen bygger om.
+
+### 2.2 Statusboksen og minikartet
+
+- `renderHud` i `ui/04-panels-instruments.js` tegner enten hele boksen (dato og klokke, kassa, tilstanden `statusText`, neste hendelse `nextEvent`, fire målere, «nå»-radene, og hele tabellen ved trykk, `S.settings.hudFull`) eller stripa (`S.settings.hudMin`: klokka, tilstanden, varslene for sjø og energi, kassa). Høyden følger innholdet.
+- `--gpsTop` og `--hudW` måles fra boksen (`getBoundingClientRect`, hvert 2. sekund), og minikartet (`#miniPlot`, `ui/03e-miniplot.js`) og GPS-stripa (`#gps3d`, `render3d`) legges under den. Når boksen vokser, flytter kartet seg.
+- Stående telefon (`styles.css`, `@media (max-width:560px)`): boksen i `zoom:.74` og `max-width:47vw`, minikartet `min(var(--hudW), 20vh)`. Etikettene DIESEL LAST ENERGI SJØ renner sammen i den bredden. Liggende telefon (`max-height:520px`): minikartet er borte, GPS-boksen står under boksen, og minimer-knappen ligger over ordet «Fart».
+- Stripa (`hudFold`, minimer-knappen) finnes alt, og Jonas' bilde `tlf-06` viser at skjermen med stripa og minimert kart er den reneste av dem alle.
+
+### 2.3 Knappelinja
+
+`DOCK` i `ui/10c-dock.js`:
+
+- `items0` velger `portItems` eller `seaItems`. I havn: Hvil (ved naust eller rorbu), Mottak, Butikk, Bygd, Verft, Mannskap, Beholdning. Stille til sjøs: Jukse, Sett ut, Ta opp eller Til blåsa, Fortøy, Ta slep, Auto-nav, prai, anker, Hvil, Ansatte (ved krangel), Mannskap, Beholdning. Jukser: Stopp, Fisk videre eller Stopp og sløy, Jukse selv, Hvil, Mannskap, Beholdning. Underveis: Stopp båten, Auto-nav, Hvil, Mannskap, Beholdning. Redskapsarbeid: Stopp arbeidet. Nød: Hjelp. Avgang planlagt: Kast loss, Avbryt, Beholdning.
+- `rowOf` kutter ved seks (`MAXV`), legger resten under «Mer» og Beholdning sist. `render` gjør det første med `pri` til hovedknappen. `infoText` fyller pilla `#dockInfo` over knappene (avgang, verksted, hviling, juksing til, dekket). `rowsUp` måler radene og løfter det som står over (`--dkx`).
+- Stående telefon: knappene 44 px, etiketten 9,5 px, `flex-wrap:wrap-reverse`. Fem står på én rad, den sjette går opp alene (`tlf-01`). Viftene (`menuItems`) for Bygd og Verft har fem og brekker også (`tlf-10`, `tlf-11`). «Mer» inneholder Hvil i køya og Mannskap (`tlf-04`).
+- Auto-nav (`autoNav`) åpner plotteren med Autonav klar (`leiaArm` i `ui/03b-route.js`). Plotteren har sin egen Autonav-knapp `#rAuto`, og veiledningens Autonav-steg peker på den (`ui/07b-first-trip.js` linje 86, 115 og 163), ikke på knappen i linja. Minikartet er `role="button"` og åpner plotteren (`docs/systemer/ui-og-telefon.md`). «Til blåsa» (`buoyGo`), «Kjør dit» (`goTo`) og Auto-nav som hovedknapp ved full last (spilltest 3, U5) bruker Autonav under.
+- Juksekortet (`jigCard`: timer med − og +, artsbrikkene, «Start jukse») fungerer godt på telefonen (`tlf-02`) og er mønsteret for kort i viftene.
+
+### 2.4 Skuffen
+
+`#drawer`: stående et ark fra bunnen på 55 % (`@media (orientation:portrait)`), 88 % for skjemasidene i `TALL` (`dr.classList.toggle('tall', TALL.has(page))`, Driftsplan-gjennomgangen U1 A); liggende 380 px fra høyre, og linja flytter seg til venstre (`body.dk-open`). Sidene er telefonens (`DRAWER` i `ui/phone/11-rederi.js`, 21 sider). I stående stikker boksen halvveis opp bak arket (`tlf-03`). Mannskap-siden (`ui/05b-work.js`) har to like tunge knapper per person, «Gjør til skipper» og «Gjør til styrmann» (`tlf-12`).
+
+### 2.5 Telefonen og Rederi
+
+- `PHONE` i `ui/phone/00-shell.js`: `APPS` er 24 apper med hver sin farge, `IC` er strekikonene. Hjemskjermen `home` i `ui/phone/08-home-papers-merker.js`: klokka, vær og kassa, Neste mål, Første uke, fartstid, «Nå»-kortene (`nowCards`: reglene her, best betalt torsk, rederiet trenger deg), så rutenettet. På telefonen synes tolv apper før rulling (`tlf-05`). Flisene er fargede firkanter på en blågrønn gradient, et annet språk enn glasset og kortene.
+- Rederi, `rederi` i `ui/phone/11-rederi.js`: rederikortet (båter, konto, inntekt i dag), regnskapskortet (året, lån, balansen, «Hele regnskapet» og «Til banken»), «Trenger deg» (`alerts` fra `vSummary`), flåten (ett kort per båt med status, posisjon, last, drivstoff, is, mannskap, driftsplan, inntekt, adgang og knappene Følg denne båten, Gå om bord, Gi nytt navn, Selg), og Foretaket. Flåten kommer under bretten. `vboard` i `ui/phone/14-act.js` krever at begge båtene ligger i havn; knappen er `disabled`, og grunnen står som en note under kortet.
+- Stående telefon: telefonen fyller skjermen (`#phone` i `@media (max-width:560px)`). Liggende: 62 vw fra høyre.
+
+### 2.6 Testene og målingen
+
+`tests/uishots.py` tar hovedvisningene i fem størrelser (390×844, 844×390, 800×1280, 1280×800, 1440×900) og finner kuttet tekst, knapper utenfor skjermen, blokker oppå hverandre og knapper under 32×30 px. `tests/uiplay.py` spiller hele spillet og skriver tellingen. `docktest.py`, `dockrow`, `hudtest` og `tut.py` i begge formater dekker linja, boksen og veiledningen. `tests/driftsplan2gui.py` er mønsteret for en gjennomgang med ekte berøring i tre formater. Containeren har ingen GPU (3D i SwiftShader brukte ni minutter på elleve bilder) og bare Senja, så bildene med 3D kommer fra Jonas' telefon, og målingene tas uten 3D.
+
+### 2.7 Bildene fra Jonas' telefon (06.11.2026)
+
+| Bilde | Viser | Funn |
+|---|---|---|
+| `ui-2/tlf-01-sjo-stille-seks-knapper.jpg` | Stille til sjøs | Seks knapper: Beholdning alene på raden over. Sett ut stiplet. Boksen og kartet dekker baugen og masta. |
+| `ui-2/tlf-02-sjo-juksekortet.jpg` | Juksekortet | Fungerer: timer, arter, én stor Start. Mønster for kort. |
+| `ui-2/tlf-03-sjo-skuffen-beholdning.jpg` | Beholdning i stående | Arket på 88 %, boksen halvdekket bak, linja under arket. |
+| `ui-2/tlf-04-sjo-mer-viften.jpg` | «Mer» | Inneholder Hvil i køya og Mannskap: de globale. |
+| `ui-2/tlf-05-telefon-hjem.jpg` | Hjemskjermen | Fem kort før appene, tolv apper synlige, fargede fliser. |
+| `ui-2/tlf-06-sjo-stripa-minimert.jpg` | Stripa og kartet minimert | Den reneste skjermen: hele båten synlig, to tynne striper. |
+| `ui-2/tlf-07-underveis-fem-knapper.jpg` | Underveis 9,5 kn | Fem på én rad. Boksen minimert. |
+| `ui-2/tlf-08-havn-fem-knapper.jpg` | I havn | Fem på én rad: Butikk, Bygd, Verft, Mannskap, Beholdning. |
+| `ui-2/tlf-09-havn-butikk-viften.jpg` | Butikk | To i vifta: Fiskeutstyr, Elektronikk og haler. |
+| `ui-2/tlf-10-havn-bygd-viften.jpg` | Bygd | Fem i vifta, brekker til to rader. |
+| `ui-2/tlf-11-havn-verft-viften.jpg` | Verft | Fem i vifta, brekker til to rader. |
+| `ui-2/tlf-12-havn-skuffen-mannskap.jpg` | Mannskap-siden | To like tunge knapper per person. |
+| `ui-2/tlf-13-havn-skuffen-beholdning.jpg` | Beholdning i havn | «Service i butikken her» som første kort. |
+| `ui-2/brett-01-fisker.jpg` … `brett-04-stille.jpg` | Nettbrett liggende | Boksen vokser med neste hendelse, og kartet flytter seg mellom tilstandene. Samme tid står i boksen og i pilla. |
+
+## 3. Prinsippene
+
+1. **Telefon stående er fasiten** (V1 A). Nettbrett og PC arver; der det er plass, får de mer av det samme, aldri noe annet.
+2. **Naturen eier skjermen** (Jonas 06.11.2026). UI-et ligger i kantene, i faste soner, og det som ikke trengs nå, er borte. Under seiling står bare stripa og én knapp.
+3. **Faste soner.** Ingenting flytter seg fordi noe annet vokser. Innholdet varierer, rammen står.
+4. **Hvert tall har ett hjem.** Neste hendelse står ett sted.
+5. **Kontekst i linja, det globale i søyla** (V3 A). Linja har hovedknappen og høyst tre til, aldri «Mer», aldri to rader.
+6. **En knapp som ikke kan brukes nå, sier grunnen på seg selv** (V4 A). En knapp som aldri kan brukes på denne båten, vises ikke.
+7. **Kystlys-tokens beholdes** (V2 A, anbefalt): ingen ny palett, ingen ny skrift. Det som endres, er hva som står hvor, og at telefonen får samme språk som resten.
+8. **Måles før og etter:** tellingen fra `uiplay.py` og bildene i fem størrelser.
+
+## 4. Målet: skjermen i stående
+
+### 4.1 Sonene
+
+| Sone | Innhold | Fast |
+|---|---|---|
+| Toppen | Kompasset som i dag | ja |
+| Øverst til venstre | Stripa, tre linjer med fast høyde | ja |
+| Under stripa | Minikartet i fast plass (20 vh), eller kartets egen stripe når det er minimert | ja |
+| Øverst til høyre | Kamera og Kino som i dag | ja |
+| Midten | 3D, urørt | |
+| Nederst til venstre | Dekksdagbok-fanen som i dag | ja |
+| Nederst i midten | Knappelinja: hovedknappen og høyst tre til, én rad | ja |
+| Nederst til høyre | Søyla: Telefon nederst, over den Beholdning, Mannskap, Hvil | ja |
+
+### 4.2 Stripa
+
+Stripa er normaltilstanden i stående. Den har tre linjer og fast høyde:
+
+- **Linje 1:** klokka · tilstandsprikken og tilstanden · kassa.
+- **Linje 2:** diesel, last, energi og sjø som ikon og tall, farget ved varsel (gult og rødt som i dag, «Full» ved full last).
+- **Linje 3:** neste hendelse («Fisket er ferdig 09:01 · om 30 min i ekte tid») eller varselet som gjelder nå (regler ✕ eller !, synkronrulling med rådet, blåsa langt unna med «Kjør dit», kulde). Finnes ingen, er linja tom, men plassen står.
+- **Trykk på stripa** gir hele boksen som et kort over kartet: målerne som i dag, «nå»-radene og hele tabellen. Et trykk utenfor lukker. Ingenting under flytter seg.
+- **Pilla `#dockInfo` går ut.** Det den sa (juksing til, dekket, avgang, verksted, hviling), står på linje 3.
+- Nettbrett liggende og PC har plass til hele boksen som i dag; den får fast bredde, og minikartet fast plass under den (antatt, kap. 8, avgjøres i U2-8).
+
+### 4.3 Knappelinja per tilstand
+
+Med V7 A (Auto-nav ut av linja, redskapet som én knapp):
+
+| Tilstand | Hovedknappen | Resten |
+|---|---|---|
+| Havn ved handelssted | Mottak når det er fisk om bord, Verft når service er forfalt, ellers ingen | Mottak, Butikk, Bygd, Verft (bare de stedet har) |
+| Havn ved naustet | Naustet | (Hvil står i søyla) |
+| Avgang planlagt | Kast loss | Avbryt |
+| Stille til sjøs | Jukse (på en båt rigget for juksa, uten eget redskap nær) | Redskap (vifte: Sett ut, Ta opp, Trekk og sett igjen; bare når settredskap er om bord), Fortøy (kai innen 400 m), Anker |
+| Ved egen blåse | Ta opp, eller Til blåsa innen en halv mil | Jukse, Anker |
+| Full last | Til mottaket · Botnhamn 3 nm (Autonav dit) | Jukse sier «Lasten er full» |
+| Jukser | Jukse selv, Fisk videre eller Stopp og sløy | Stopp |
+| Redskapsarbeid | Stopp arbeidet | |
+| Underveis | Stopp båten | (roen, 4.5) |
+| Slep, nød | Hjelp | |
+
+Prai og «Ta slep» (`ui/10n-hail.js`, `ui/10o-ptow.js`) kommer når en annen spiller er nær, og teller blant de tre. Auto-nav går ut av linja: minikartet åpner plotteren, der Autonav er en knapp (`#rAuto`). Det som i dag bruker Auto-nav som hovedknapp, får sitt eget navn og kjører Autonav direkte. Viftene for Bygd og Verft får høyst fire på én rad, med fem som to rader på to og tre (ikke fire og én).
+
+### 4.4 Søyla
+
+En loddrett stabel ved høyre kant, nedenfra: Telefon (med varselmerket), Beholdning, Mannskap (bare med mannskap eller driftsplan, prikk ved krangel), Hvil i køya eller i naustet. Alltid synlig i 3D; borte i plotteren og mens telefonen er åpen. I liggende står samme søyle ved høyre kant, og med skuffen åpen flytter den seg til venstre for skuffen slik linja gjør i dag (`body.dk-open`). Kamera og Kino øverst til høyre står.
+
+### 4.5 Roen under seiling
+
+Under seiling, og ellers når ingen har rørt skjermen på åtte sekunder, glir minikartet, søyla, dagbokfanen og kompasset ut, og bare stripa og hovedknappen står. Et trykk hvor som helst henter alt tilbake. Et varsel (kuling, regler ✕, full last, framme) bryter roen. Kino (`#kinoBtn`, `#kinoHud` «Skjul», `view3d/24-cinema.js`) gjør noe av dette for hånd i dag, og roen bygger på den. Roen slår aldri inn i første tur (`tutOn`). Valget V8 sier hvor langt den går.
+
+### 4.6 Telefonen
+
+- **Rederi (V5 A), flåten først.** Ett kort per båt: navnet og typen, tilstanden med prikk, neste hendelse med nedtelling, last og diesel som to striper, båtens egne varsler («Trenger deg») som linjer på kortet, og hovedknappen «Ta roret» når begge ligger i havn. Ellers «Følg» som hovedknapp og «Ta roret» med grunnen i seg («Begge må ligge i havn»). Gi nytt navn og Selg bak ⋯ på kortet. Under flåten rederikortet (båter, konto, inntekt i dag), så regnskapet som én linje med lenke: «Regnskap 2027: −1 023 kr før skatt › Bank». Foretaket sist som i dag. «Gå om bord» heter «Ta roret»; regelen om havn står (spillets regel, ikke UI-ets).
+- **Hjemskjermen (V6).** Flisene får instrumentspråket: samme strekikoner som linja, én glassflate, én aksent. Grupperingen etter V6. «Nå»-kortene står, men Neste mål, Første uke og fartstid blir én rad på to kort, så appene kommer over bretten.
+- **Liggende** som i dag.
+
+## 5. Fasene
+
+Hver fase passer én økt og slutter med `/lever` og `/okt-slutt`, med skjermbilder i 390×844, 800×1280 og 1280×800.
+
+| Fase | Bygger | Filer | Tester |
+|---|---|---|---|
+| **U2-0** Kartlegging i stående | `uishots.py` og `uiplay.py` i 390×844 og 800×1280, tellingen før; lista over alle datapunkt og handlinger i tre bøtter (sanntid, ett trykk, bakmeny); inventaret av linja per tilstand og telefonens apper og sider. Skrives til `ui-2/kartlegging.md`. Bare dokumenter og tester. | `tests/`, `docs/planer/ui-2/` | – |
+| **U2-1** Stripa og sonene | Stripa med tre linjer og fast høyde som normal i stående; boksen som kort ved trykk; minikartet i fast plass uten `--gpsTop` fra boksens høyde; `#dockInfo` ut og innholdet på linje 3 | `ui/04-panels-instruments.js`, `ui/03e-miniplot.js`, `ui/10c-dock.js` (`infoText`), `styles.css` | `hudtest`, `dockrow`, `uishots`, `tut.py` i begge formater |
+| **U2-2** Søyla | Søyla ved høyre kant med Telefon, Beholdning, Mannskap og Hvil; telefonknappen inn i den; de globale ut av linja; liggende med skuffen åpen | `src/index.html`, `styles.css`, `ui/10c-dock.js`, `ui/phone/00-shell.js` (varselmerket) | `docktest`, `uishots` |
+| **U2-3** Knappelinja | Reglene i 4.3: Auto-nav ut, Redskap som én knapp med vifte, hovedknappen med mål («Til mottaket · 3 nm»), grunnen på knappen (`data-why` tegnet under etiketten, ikke stiplet ring), det som aldri gjelder båten skjult, ingen «Mer» og ingen to rader i stående, viftene på høyst fire per rad | `ui/10c-dock.js`, `styles.css`, `ui/07b-first-trip.js` bare om et steg peker på linja | `docktest`, `dockrow`, `tut.py` i begge formater, fisketestene som trykker i linja (`fiskeplay`, `geartest`) |
+| **U2-4** Roen | 4.5 etter V8 | `ui/10c-dock.js`, `styles.css`, `view3d/24-cinema.js`, `ui/02-format-state.js` (toast bryter roen) | `tut.py` (roen må ikke slå inn), `hbtest`, `uishots` |
+| **U2-5** Rederi | 4.6 etter V5 A | `ui/phone/11-rederi.js`, `ui/phone/14-act.js` (`vboard`, `vfollow`), `styles.css` | `fleet2test`, telefontestene, `uishots` |
+| **U2-6** Hjemskjermen | 4.6 etter V6, ikonene og flisene | `ui/phone/00-shell.js`, `ui/phone/08-home-papers-merker.js`, `styles.css` | telefontestene, `uishots` |
+| **U2-7** Skuffen og sidene | Ett ark på 88 % for alle sider i stående, stripa synlig over arket; Mannskap-siden med én hovedknapp per person og resten bak ⋯; samme regel på sidene med flere like tunge knapper (U2-0 lister dem) | `styles.css`, `ui/10c-dock.js` (`TALL`), `ui/05b-work.js` | `dockrow`, `driftsplan2gui`, `worktest` |
+| **U2-8** Nettbrett og PC arver | De fem størrelsene: hele boksen der det er plass, søyla i liggende, viftene; det som ser rart ut på 1440×900 | `styles.css` | `uishots` i alle fem |
+| **U2-9** Måling etter og regresjon | Tellingen etter, patchnotes, `/regresjon`, fletting inn i arbeidsgrenen | | `/regresjon` |
+
+Rekkefølgen U2-0 → U2-1 → U2-2 → U2-3 er ryggraden: stripa før søyla, søyla før linja mister de globale. U2-4 til U2-7 kan tas i den rekkefølgen Jonas vil etter U2-3. U2-8 etter alt i `src/`, U2-9 sist.
+
+## 6. Filene og hvem fasene ikke går samtidig med
+
+- **Ø7 Småfeil** eier `ui/07b-first-trip.js`, `ui/07-guide.js`, `ui/06-logbook.js`, `view3d/12-skiff.js` og `ui/phone/`. U2-3 rører `07b` bare om et steg peker på linja; U2-5 og U2-6 rører telefondelene. Før U2-3, U2-5 og U2-6 begynner: `git fetch origin && git diff --stat origin/ccr-5e1ba2f4-pusvyd...origin/<Ø7-grenen>`, og vent eller flett.
+- **H2d og H2e** eier `ui/phone/10-fartoy.js`, `ui/phone/14-act.js`, `ui/08-actions.js` og `ui/05d-plan2.js`. U2-5 rører `14-act.js` (`vboard`, `vfollow`): holdes til etter H2e, eller endringen holdes i `11-rederi.js` alene (knappene og teksten) med handlingene som de er.
+- **Ø3 Ytelse** eier `view3d/02`, `04`, `06`, `17` og `18`, `ui/11-boot.js`. U2-4 rører bare `view3d/24-cinema.js`.
+- **Ø9 Fysikk** og **Ø16 Sanntid** rører ingen av filene her.
+- Alle fasene rører `styles.css`. To UI 2-økter går derfor aldri samtidig.
+
+## 7. Valgene
+
+- **V2 Omfang.** Jonas ba om konkrete forslag.
+  - **A «Kystlys strammet inn»** (anbefalt): samme tokens, skrifter og flater. Det som endres: telefonens fliser får glass og strekikoner som linja; magenta brukes bare til hovedknappen og det som er aktivt; de stiplede rammene (pilla, knappene som ikke kan brukes) går ut; krem står bare i veiledningen. Lite arbeid, lav risiko, og problemene Jonas peker på er strukturelle, ikke fargene.
+  - **B «Instrument overalt»:** mørkt glass også i skuffen og telefonens apper. Hver side må tegnes om, og lange tekstsider på mørkt leses dårligere. Kystlys V1 B, som Jonas sa nei til.
+  - **C «Ny hud»:** ny palett og skrift. Hele tellingen gjøres om, og ingenting i bildene tyder på at det er fargene som er feil.
+- **V6 Hjemskjermen.**
+  - **A Grupper med overskrifter** (anbefalt): Drift (Rederi, Driftsplan, Oppdrag, Nettet), Handel og regler (Salgslaget, Kvote, Regler, Kaiboden), Deg (Milepæler, Garderoben, Venner, Sesong, Fiskeguide, Håndboka), Verden (Vær, Kystposten, Meldinger, Redning), System (Patchnotes, Tilbakemelding, Innstillinger, Admin). Spilleren finner Kvote og Regler uten å rulle etter dem.
+  - **B Rutenettet som nå**, bare med nye fliser og ikoner.
+  - **C En dokk** med de fire mest brukte nederst og resten bak «Alle apper».
+- **V7 Færre knapper til sjøs.**
+  - **A Auto-nav ut av linja og redskapet som én knapp** (anbefalt, Jonas' forslag): minikartet og plotteren gir Autonav, og «Til mottaket», «Til blåsa» og «Kjør dit» kjører den direkte. Sett ut, Ta opp og Trekk og sett igjen i én vifte, bare når settredskap er om bord. Stille til sjøs blir to til fire knapper i stedet for seks.
+  - **B Bare Auto-nav ut.** Sett ut og Ta opp står med grunnen (V4 A).
+  - **C Som i dag,** bare med grunnen på knappene.
+- **V8 Roen under seiling.**
+  - **A Automatisk** (anbefalt): etter åtte sekunder uten berøring, under seiling og ellers, med varslene som bryter den. Naturen får skjermen av seg selv.
+  - **B Bare under seiling,** automatisk der, aldri ellers.
+  - **C Bare Kino for hånd** som i dag, men med stripa i stedet for ingenting.
+
+## 8. Antatt eller usikkert
+
+- Stripa med fast høyde på tre linjer gir en tom tredje linje mye av tiden. Den må ses på telefonen før den låses; alternativet er to linjer der varselet tar plassen til målerne når det kommer.
+- At minikartet åpner plotteren, står i `docs/systemer/ui-og-telefon.md`; U2-1 sjekker at trykket virker også når kartet er minimert.
+- Veiledningens Autonav-steg peker på `#rAuto` i plotteren. Om noe steg i første tur peker på knappen i linja, viser `tut.py` det i U2-3.
+- Hovedknappen «Til mottaket · 3 nm» trenger nærmeste mottak med rute: `plantsNear`, `goplace` og `goTo` finnes. Avstanden på knappen er luftlinje; ruta regnes når knappen trykkes.
+- «Ta roret» krever at begge båtene ligger i havn (`vboard`). Det er spillets regel og står; UI-et sier den på knappen.
+- Roen må ikke skjule et varsel eller slå inn i første tur. Hva som bryter roen, prøves i `tut.py` og `hbtest`.
+- Containeren har ingen GPU og bare Senja. Bildene med 3D kommer fra Jonas' telefon; målingene tas uten 3D, der bakgrunnen er svart.
+- Nettbrett liggende får trolig beholde hele boksen. Det avgjøres i U2-8 med bilder.
+- Målet for tellingen fra Kystlys (høyst 10 skriftstørrelser, 25 bakgrunner, 6 radier) står. U2-0 sier hvor vi er.
+
+## 9. Det planen ikke gjør
+
+- Ingen nye funksjoner, og ingen endring i regler, priser, fangst eller økonomi. Alt som flyttes, gjør det samme som før.
+- 3D, kartet og plotterens innhold er urørt.
+- Slår ikke sammen de 21 skuffesidene (Kystlys V3 A, som ble liggende). Det kan bli en egen plan etter lansering.
+- Ingen nye apper. Appene får ny plass og nye ikoner, ikke nytt innhold.
+- Veiledningens tekster endres bare der de peker på noe som er flyttet.
+- Ingen ny palett eller skrift (V2 A), med mindre Jonas velger B eller C.
+
+## 10. Status
+
+- 06.11.2026: planen skrevet etter samtalen 05.–06.11.2026 og bildene fra Jonas' telefon (`ui-2/`). Ingenting bygd. Venter på V2, V6, V7, V8 og «kjør på».
