@@ -2114,7 +2114,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 765 `portByLabel(pt)`
   - 770 `addWaypoint(pt)`
 
-## `src/js/ui/03b-route.js` (221 linjer)
+## `src/js/ui/03b-route.js` (266 linjer)
 
 ---------- the route editor: waypoint names, a timeline for the list, undo and redo, moving and inserting points ----------
 
@@ -2129,25 +2129,29 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 35 `routeChanged()`
 - **37** the floating undo and redo buttons over the zoom buttons on the chart
   - 39 `renderRouteTools()`
-  - 56 `routePlayMode()`
-  - 64 `routePause()`
-  - 70 `routePlay()`
-  - 75 `routeUndoRedo(redo)`
-- **77** moving a point with a finger, and inserting one on a leg with its «+» handle
-  - 82 `legEnds(i)`
-  - 84 `insHandles()`
-  - 89 `routeGrab(mp)`
-  - 100 `routeDragMove(g, mp)`
-  - 105 `routeDragCancel(g)`
-  - 106 `routeDragEnd(g)`
-  - 118 `routeFocus(i)`
-  - 124 `mapToClient(p)`
-- **126** «Autonav» (the button in the chart plotter, and the dock's Auto-nav): the next tap on the chart is where to go, and the route
-  - 129 `leiaArm(on)`
-  - 135 `leiaTo(pt, buoy, act)`
-  - 190 `deepNear(p, maxKm)`
-  - 200 `leiaStops()`
-  - 205 `leiaCompare()`
+  - 57 `routePlayMode()`
+  - 65 `routePause()`
+  - 71 `routePlay()`
+  - 76 `routeUndoRedo(redo)`
+- **78** moving a point with a finger, and inserting one on a leg with its «+» handle
+  - 83 `legEnds(i)`
+  - 85 `insHandles()`
+  - 90 `routeGrab(mp)`
+  - 101 `routeDragMove(g, mp)`
+  - 106 `routeDragCancel(g)`
+  - 107 `routeDragEnd(g)`
+  - 119 `routeFocus(i)`
+  - 125 `mapToClient(p)`
+- **127** «Autonav» (the button in the chart plotter, and the dock's Auto-nav): the next tap on the chart is where to go, and the route
+  - 130 `leiaArm(on)`
+  - 136 `leiaTo(pt, buoy, act)`
+  - 191 `deepNear(p, maxKm)`
+  - 201 `leiaStops()`
+  - 206 `leiaCompare()`
+- **223** the sea along the route (Ø8, 06.11.2026): the wave height on each leg at the minute the boat is there, from the game's own sea
+  - 230 `draftSea(tl)`
+  - 243 `routeSeaWatch()`
+  - 248 `routeSeaDraw()`
 
 ## `src/js/ui/03g-planmap.js` (117 linjer)
 
@@ -2337,12 +2341,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1205 linjer)
+## `src/js/ui/phone/07-patch.js` (1208 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1198 `patch()`
+  - 1201 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2361,7 +2365,7 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 92 `merker()`
   - 104 `lore()`
 
-## `src/js/ui/phone/09-vaer-post-salg-redning.js` (144 linjer)
+## `src/js/ui/phone/09-vaer-post-salg-redning.js` (146 linjer)
 
 --- weather
 
@@ -2372,9 +2376,9 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 28 `post()`
 - **34** sales organisation
   - 38 `salg(s)`
-- **125** rescue
-  - 126 `redning()`
-- **143** vessels: my vessel overview and the market
+- **127** rescue
+  - 128 `redning()`
+- **145** vessels: my vessel overview and the market
 
 ## `src/js/ui/phone/10-fartoy.js` (169 linjer)
 

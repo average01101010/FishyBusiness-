@@ -208,13 +208,13 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 
 - **Ligge bi i uvær (H1b R8, 05.11.2026; 4.12j i `autonav.md`):** grensene er en vurdering etter det verste været modellen gir (35 m/s og 12,4 m på Vikingbanken), ikke lest hos rederier eller i Sjøfartsdirektoratets regler: havfartøyene ligger bi over `BOAT.risk[2]` (24–26 m/s) eller sjø midt mellom `risk[0]` og `risk[1]` (6,5–8,5 m); de andre båtene ligger bi når nærmeste kai er over 8 timer unna. Ikke spilltestet. Driftsplan 2 for havbåtene er rettet i H2c (05.11.2026, rullet ut i 493c636): planen ligger bi i stedet for å gå til kai, og arbeidet med redskapet stopper over planens grense. Uten planen stopper fisket ikke i seg selv ved noen arbeidsgrense.
 - **Diesel tilbake fra havet (H1b R8):** rutepanelet varsler nå når tanken ikke rekker tilbake til nærmeste bunkring, men stopper ikke turen (en spiller kan ha en plan, for eksempel Longyearbyen). Går tanken tom ute, driver båten og «Hjelp» åpner Redning-appen som langs kysten; hva slepet koster og hvor lang tid det tar 300 nm til havs, er ikke prøvd. Ikke spilltestet.
-- **Fangsten er uforklart, og den garanterte første turen gir feil forventning** (spilltest 2): full last på første tur (`03-simulation.js`, påfyllingen i `05-vessels.js`), nå også med luksushaill. Etter første levering sier ingenting at turen var ekstra god eller hva vanlig fiske gir. Varmekartet, ekkoloddet, fangstmerkene og Fiskeguiden viser nå hvor fisken er.
-- **Planleggeren viser ikke bølger langs ruta**, bare «her» og på åpent hav i Vær-fanen.
-- **Innloggingsbonusen** sier «Hver dag du åpner spillet gir 1 % til», men ikke at det er ekte dager eller når neste prosent kommer (kjernen regner riktig med kalenderdager).
+- **Fangsten er uforklart, og den garanterte første turen gir feil forventning** (spilltest 2): **planlagt i `docs/planer/spillbarhet-fangst.md` (Ø8, 06.11.2026), venter på valgene V1–V5.** Halve punktet er alt tatt av Onboarding 2 (O3: én time og halvt lasterom, ingen haill; O4: sluttseddelen i første tur sier at turen var ekstra god og hva vanlig fiske gir der). Igjen: etter første tur sier ingenting hvorfor en tur ble god eller dårlig (sjøen, kulda, haillen, bestanden, tida på døgnet finnes i `catchFactors` i `05-vessels.js` linje 943, men står ingen steder). Planen: linja om første tur også i dagboka (V1), turens linje på sluttseddelen og i Drift (V2, V4), halvt lasterom som nå (V3).
 - **De navngitte fangstfeltene finnes bare på Senja** (spilltest 1: «fangstfeltene har liten vekt»). Resten av kysten har varmekartet og ekkoloddet.
 - **Reglene** ble lagt der spilleren er i R4 (05.10.2026: røde linjer i rutekortene, sperre ved «Kast loss», regelrad i statusboksen, førstegangstips). Bekreftes i neste spilltest.
-- **Fiske inne i havna i kuling** har ingen egen regel (`inHarbour` brukes ikke av fisket).
-- **Mannskapet er ikke spilltestet:** du våkner med 60 % (`ENERGY.wake`); uten noen med kokk ≥ 3 blir det tørre brødskiver hvert 6. time, som gir −6 i trivselen; båter uten bysse får matpakke (−3). Følg med på om det blir for hardt.
+- **Fiske inne i havna i kuling** har ingen egen regel (`inHarbour` brukes ikke av fisket): **valg V5 i `docs/planer/spillbarhet-fangst.md` (Ø8, 06.11.2026).** Anbefalt: ingen ny regel før tettheten i ti havnebasseng er målt mot feltet utenfor (S3); en sperre ville være en oppdiktet regel uten kilde per havn. Regelen ville ligge i `core/03-simulation.js` (`denPlace`) eller `05-vessels.js` (`fish()`), som H3b og Ø11.2 eier nå.
+- **Mannskapet etter spilltest 4** (`docs/playtest/rapport-4-mannskap.md`, Ø8 06.11.2026; tre døgn uten kokk, med kokk, med køya og uten bysse: ingen krangler, ingen mønstrer av, trivsel 49–58, maten gir 5–6 poeng og halverer timene «Har lite å gi»). Det som bør rettes:
+  - **Toasten ved 25 % energi peker til kai på en båt med køyer til sjøs:** `ui/05b-work.js` linje 149 sier «Gå til kai for å hvile» mens «Hvil i køya» står i knappelinja. Si «Gå ned i køya og hvil» når `restWhere(S.boat) === 'koye'`; dryppet `hvile` i Håndboka kan nevne køya. Uten køya sovner skipperen av utmattelse kl. 06 hver tredje dag og mister dagens fiske (`core/15-energy.js` linje 115: energien faller også når båten ligger stille).
+  - **«Ingen hadde tid til å lage mat» når ingen om bord kan:** `core/14-crewlife.js` linje 58–65 skiller ikke «ingen med kokk ≥ 3» (`core/13-work.js` linje 240) fra «ingen ledig». Og «Lager du maten selv, blir den 3» (`docs/systemer/folk-om-bord.md` 5.19) finnes ikke i spillet: `workAssign` setter aldri deg ved Kokk, og det er ingen knapp. Enten en knapp «Lag mat» på Mannskap-siden (kvalitet 3, 30 min borte fra fisket), eller stryk setningen.
 
 ## 10.3 Anslag og antakelser (tall uten sikker kilde)
 
@@ -299,6 +299,8 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 
 ## 10.4 Valg (står med vilje)
 
+- **Sjøen langs ruta er spillets egen sjø, ikke varselet** (Ø8, 06.11.2026, `draftSea` i `ui/03b-route.js`): kortene viser `hsAt` ved det minuttet båten er der, den samme som «Bølger her», mens Vær-fanens tabell for timene framover viser varselet (`hsAtFc`) med feilen sin (opptil ±35 % to døgn fram). En rute med utsatt avgang viser altså sjøen slik den blir, ikke slik varselet sier. Bestillingen sa `hsAt`; om panelet heller skal vise varselet for avganger fram i tid, er ett bytte av funksjon.
+
 - **Turen går videre når du sover:** med mannskap om bord tar styrmannen eller den mest sjøvante roret. Det følger regelen om én felles klokke.
 - **Kranen er ikke med i kamerahindringene** (`camSolid`/`camFree` i `view3d.js`; kaier, bruer, fyr, siloer, bygninger og båtene i nærheten er med). Søyla er rundt 1 m tykk og står 2 m fra landingsplassen, så som hindring ville den dratt følgekameraet helt inn hver gang den kom mellom båten og kameraet under levering. Bommen svinger (vurdert 24.10.2026).
 - **Tempo 1:6** (`GAME_RATE`): farten ser høy ut i 3D, men de korte bølgene følger båten med 5/6 av farten, så vannet passerer skroget i ekte fart (Jonas 19.10.2026).
@@ -308,6 +310,9 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 - **Riggen:** trekking sjekker ikke riggen, men utsetting gjør det, og omrigging er sperret så lenge redskap står i sjøen. Blandet redskap kan bare komme fra lagringer fra før 07.10.2026, og det er ufarlig.
 
 ## 10.5 Må måles eller ses i spillet
+
+- **Måltidene følger ikke klokka** (spilltest 4, 06.11.2026): `MEAL.every` (360 min, `core/14-crewlife.js` linje 38) teller fra forrige måltid, så kokken lager mat kl. 01 og 05 mens båten ligger stille og alle hviler. Forslag: måltid bare når noen er våkne i arbeid, eller faste tider (07, 13, 19) på sjøen. Startverdi, må avgjøres.
+- **Maten gjør lite for trivselen og mye for innsatsen** (spilltest 4): −6 på målet og glidningen 0,04 per time (`core/04-crew.js` linje 452 og 457) gir 5–6 poeng på tre døgn mellom brødskiver og kokt torsk; ingen nær oppsigelse (22). Vent med å endre til lotten og leveringene er med i et lengre løp (en uke): lotten mot forventningen (±12) slår inn etter tre døgn og veier trolig tyngre. Krangelen er ikke prøvd (ingen par med `compat` under −1 i testmannskapet).
 
 - **Vikeplikten i 3D og på Jonas' nettbrett (Ø11.1, 06.11.2026):** svingen og avslakkingen er prøvd uten 3D (`colregtest`, stikkprøvene), og i 3D bare i skjermbildene. Ses i spillet: om NPC-ens sving på 35° og tilbake ser naturlig ut med `npcFollow` og `npcHead` (`view3d/20-trawl-seine.js`), om varselet kommer for ofte eller for sjelden på en vanlig tur, og om teksten på tredje linje er lett å forstå på telefonen.
 - **Knappelinja etter U2-3 på Jonas' telefon med 3D** (06.11.2026): grunnen under etiketten (9 px, dempet hvit) over sjøen og skroget, hovedknappen «Til mottaket» med «Botnhamn 3,2 nm» på linja under (kan stikke ut til sidene på 390 px), raden som står 10–12 px høyere når en grå knapp har grunn, og Redskap-vifta med Sett ut-valgene over samme knapp. «Ligg» (Fortøy og Anker slått sammen) er bare prøvd med Prai og Ta slep lagt inn som knapper; ses med en annen spiller ved siden når det skjer. Målt og sett uten 3D i containeren (`tests/out/u23/`).
@@ -351,6 +356,8 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 - **Datamengden ved oppstart (Ø11.4, 06.11.2026):** vestene legger 0,51 MB til `worker.b64` (base64; 1 940 trekanter hver, seks stykker) og `deck-mob.b64` er en ny fil på 1,21 MB (0,88 MB binært), som også hentes ved oppstart (`bootDataLate`) selv om spillet ikke bruker den før Ø11.5. Se «Førstegangsstarten» øverst; kan hentes først når typen trengs, slik modellene leses (`glbData`).
 
 ## 10.6 Tester som feiler (regresjonen 24.10.2026, gjennomgått i E4 26.10.2026)
+
+- **`autonavtest` henger i steg 9 (Havøysund) med hele kysten i bygget** (Ø8, 06.11.2026): 16 OK fram til 8c, så står `mapNeed(A.p, 9)`/`leiaRoute` til rorbua ved Havøysund til tidsgrensen (900 s i `run.py`, 660 s alene), både i `run.py changed` to ganger og alene, og **like hengende på grunnbygget uten Ø8s endringer** (`KYST_DIST=dist-base`, samme 16 OK, samme steg), og rød på samme vis 11:30 på H3a-grenen (`tests/historikk.tsv`). Grønn 25–26 s 10:47 og 11:28 på Ø11.1-grenen, trolig uten hele kysten i bygget. Ikke Ø8s; sjekk steg 9 med `kart-31` i bygget (leinettet eller en flis som ikke kommer ved Havøya?).
 
 - **Røde i `run.py changed` for H3a (06.11.2026), alle røde også på bygget før H3a (3e259a14) og derfor ikke fra snøkrabben:** `drifttest` «a long trip rests aboard away from home and goes home at its end» (alene: [False, False, 3, None]; før H3a [True, False, 4, None]); `havtur` «kyst15 ved kysten i 16 m/s … til nærmeste kai som før» ([None, 'tow']) og «Båtsfjord: sovner du om bord, tar vakta på broa over …» (første melding sier fortsatt «Båten ligger og driver»), begge kjørt alene på begge byggene. Ikke undersøkt videre. **Ikke prøvd på bygget før:** `sea3d` «sailing 3 km the near sea map is rebuilt …» og `unittest` (skjermbildet gikk ut på 90 s), begge 3D med andre tester ferdige før dem; resten av 3D-lista (fra `trackfollow`) ble stoppet, fordi H3a ikke rører 3D. `vesseltest` var rød fordi snøkrabbefartøyet nå er låst opp; testen er rettet (HAV_OPEN).
 - **`havplantest`, stikkprøven Egersund, rød (sett i U2-3, 06.11.2026):** «Fant ingen vei mellom Egersund og felt 1. Flytt plassen litt.» for feltet på 58,25° N 4,9° Ø; de 17 andre sjekkene er grønne (Båtsfjord og Ålesund går). Like rød på 441ea099 (før U2-3), c0a9a8aa og det flettede d62153dc, alene og ved siden av en annen test, så den kommer ikke fra knappelinja. Hører til havsteget (H2, `tests/havplantest.py`, ruta fra Egersund i `leiaRoute`); ses på når H2/H3 er i fila.
@@ -405,6 +412,9 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 ## 10.7 Små ryddejobber
 
+- **«Tom for is. Fangsten ises ikke.» hver andre time** (spilltest 4, 06.11.2026): `core/05-vessels.js` linje 1103 demper bare to timer, så en båt som blir ute uten is, får 12–15 like linjer i dagboka på tre døgn. Én linje når isen tar slutt og én per døgn etterpå holder.
+- **Sjøen på rutekortene legges inn etter tegningen** (Ø8, 06.11.2026): `routeSeaDraw` i `ui/03b-route.js` legger «Sjø … m» inn i kortene gjennom en `MutationObserver` på `#panel`, fordi økta bare skulle røre den fila. Når `ui/07-guide.js` er fri, flyttes linja inn i `panelRoute` (ett kall per kort og én linje under lista), og observeren og inline-fargen tas bort.
+
 
 - **Skyggen som bakes, er ikke lik fra kjøring til kjøring (funnet i Ø11.4, 06.11.2026):** to kjøringer av samme `arbeider.py` ga annen skygge på 44 av 63 deler (opptil noen trinn av 255, og andre punkttall fordi like punkter slås sammen etter fargen), og `sikker.py` ga 6 andre byte i `vugge12`. En full eksport endrer derfor folkene og utstyret litt hver gang. `add` (`tools/boats/glbadd.py`) legger nye deler til uten å røre de gamle; `tools/boats/qa/glbdiff.py` sammenligner to GLB-er del for del. Om eksporten skal bli lik hver gang, må Cycles' frø og trådene låses i `bake_ao` (`bpyutil.py`), og det er ikke prøvd.
 
@@ -425,6 +435,12 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 - **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
+
+## Strøket 06.11.2026 (Ø8 Spillbarhet, gren `ccr-ccfb0017-rmieib`)
+
+- 10.2 «Planleggeren viser ikke bølger langs ruta»: hvert rutekort viser sjøen på etappen ved tida båten er der (`draftSea`/`routeSeaDraw` i `ui/03b-route.js`), rød over `BOAT.risk[0]` med én linje under kortene; prøvd i Bergen, Bodø og Hammerfest i begge formater (`docs/systemer/autonav.md` 5.15).
+- 10.2 «Innloggingsbonusen»: teksten i Salg-appen sier ekte kalenderdager og «Neste prosent · i morgen, fra midnatt» (`ui/phone/09-vaer-post-salg-redning.js`; `haill-pub-og-bonus.md` 5.9).
+- 10.2 «Mannskapet er ikke spilltestet»: spilt i `tests/mannskapsplay.py`, rapporten i `docs/playtest/rapport-4-mannskap.md`; det som bør endres, står i 10.2 og 10.5.
 
 ## Strøket 06.11.2026 (havsteget H3a, gren `ccr-1c785ad6-0di8o1`, rullet ut i 8982db93)
 

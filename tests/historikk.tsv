@@ -296,3 +296,15 @@
 2026-11-06 15:23	ccr-1c785ad6-0di8o1	73a72c72+	vesseltest	OK	42	lite	samtidig	
 2026-11-06 15:24	ccr-1c785ad6-0di8o1	73a72c72+	shoptest	OK	30	lite	samtidig	
 2026-11-06 15:24	ccr-1c785ad6-0di8o1	73a72c72+	dbg23o	OK	37	3d	alene	
+2026-11-06 16:13	ccr-ccfb0017-rmieib	b63df02b+	streaktest	OK	69	lite	samtidig	
+2026-11-06 16:13	ccr-ccfb0017-rmieib	b63df02b+	posttest	OK	29	lite	samtidig	
+2026-11-06 16:13	ccr-ccfb0017-rmieib	b63df02b+	shoptest	OK	37	lite	samtidig	
+2026-11-06 16:28	ccr-ccfb0017-rmieib	b63df02b+	autonavtest	FEIL	900	lite	samtidig	gikk ut på tid
+2026-11-06 16:28	ccr-ccfb0017-rmieib	b63df02b+	routetest	OK	45	lite	alene	
+2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	autonavtest	FEIL	900	lite	samtidig	gikk ut på tid
+2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	r4test	OK	16	lite	samtidig	
+2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	naustleia	OK	7	lite	samtidig	
+2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	docktest	OK	62	lite	samtidig	
+2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	posttest	OK	24	lite	samtidig	
+2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	shoptest	OK	28	lite	samtidig	
+2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	routetest	OK	45	lite	alene	
