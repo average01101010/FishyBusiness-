@@ -12,6 +12,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `docs/utviklingsplan.md` | Arbeidsmåten framover: økter, skills, agenter, oppdeling av koden. |
 | `docs/systemer/kodekart.md` | Seksjonene og funksjonene i hver kildefil med linjenummer (lages av `python3 tools/docs/kodekart.py`). Slå opp her før en stor fil leses. |
 | `docs/systemer/testing.md` | Testene: `run.py`, `COVER`, LITE og 3D, de lange testene og når de er nødvendige, triksene. |
+| `.claude/settings.json`, `.claude/hooks/` | Deny-lista, øktstarten og lesevakten (Ø17, 06.11.2026). Hva de gjør og ikke gjør: `docs/utviklingsplan.md` D7. |
 
 ## Systemene
 
@@ -103,7 +104,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `docs/planer/onboarding-2.md` | Onboarding 2 (27.10.2026): kortere første tur for hele kysten, målingene som viser frafall under seilingen ut, fasene O0–O6, de ti prinsippene mot churn og valgene V1–V8. Venter på svar. |
 | `docs/planer/lover-og-regler.md` | Lover og regler på sjøen (28.10.2026): sjøveisreglene, sjøloven, skipssikkerhetsloven, skipsarbeidsloven, merkeforskriften, havne- og farvannsloven, farvannsskiltene og IALA, i fasene L0–L8 (én lov om gangen), valgene V1–V6, lista over påbudt utstyr per båt og kildene. Slått sammen i `docs/planer/lover-regler-sikkerhet.md` 05.11.2026; valgene her gjelder fortsatt. |
 | `docs/planer/lover-regler-sikkerhet.md` | Lover, regler og sikkerhet på sjøen (Ø11a, plan 05.11.2026): `lover-og-regler.md` (L0–L8), sikkerheten SK1–SK6 og N8 i `npc-flaaten.md` slått sammen til øktene Ø11.1–Ø11.9 (vikeplikten for spilleren og NPC-ene, sikt, lys og lyd, sammenstøt, utstyrsmodellene, utstyret og merkingen på båtene, mann over bord, nødstopp, nestenulykker og havsnød, farvannet, arbeidsavtalen). Regelverket sjekket mot Lovdata med paragraf per krav, filene hver økt rører, og valgene V7–V11 (tatt 05.11.2026). Venter på «kjør på» etter H2. |
-| `docs/planer/verktoy-fra-game-studios.md` | Vurdering 28.10.2026 av Claude Code Game Studios (github.com/donchitos): det vi bør ta (deny-liste, øktstart-, commit- og lesevakt som hooks, historikk for ustabile tester, «se testen feile først», én sikkerhetsgjennomgang), det vi lar ligge (roller, GDD/epics/stories, `project.yaml`), og valgene 1–4. Venter på svar. |
+| `docs/planer/verktoy-fra-game-studios.md` | Vurdering 28.10.2026 av Claude Code Game Studios (github.com/donchitos): det vi tok (deny-liste, øktstart og lesevakt som hooks, historikk for ustabile tester, «se testen feile først», én sikkerhetsgjennomgang), det vi lar ligge (roller, GDD/epics/stories, `project.yaml`), og valgene 1–4. Gjort: A7 (Ø6), A5 (Ø2), A1, A2, A4 og A6 (Ø17); A3 commit-vakten venter. |
 
 ## Regler og kilder
 

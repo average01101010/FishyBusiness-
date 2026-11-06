@@ -196,7 +196,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 | Ø13 Ny kartrelease | Ikke begynt | | |
 | Ø14 Fangstfelt med navn | Venter på H2 | | |
 | Ø15 NPC-flåten | Valgene tatt; venter på klarsignal | | |
-| Ø17 Hooks og regler | Venter på Ø2 | | |
+| Ø17 Hooks og regler | Ferdig: A1 deny-lista, A2 øktstarten, A4 lesevakten (`.claude/settings.json`, `.claude/hooks/`), A6 i `CLAUDE.md`, `testing.md` og `/lever`, `hooktest` i `run.py` (34 OK); prøvd i Claude Code i samme økt. A3 venter. Funnet: `main` er tom, så en økt fra `main` får hookene først med arbeidsgrenen | `ccr-d22aebce-865bcx` | 06.11.2026 |
 
 - 05.11.2026: planen skrevet etter gjennomgangen av backloggen, planene og grenene. Grenene sjekket samme dag: `ccr-664fd66b-ftggff` og PR #42 har rettinger som ikke er i arbeidsgrenen.
 - 05.11.2026: PR #42 flettet inn og PR #18, #19 og #33 lukket (Jonas: «Ja, flett PR #42 og lukk #18, #19 og #33»). `vesseltest` (snøkrabbe) ble rettet i H2a og er tatt ut av Ø2.
@@ -226,3 +226,4 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 - 06.11.2026: Ø11.4 bygd (Jonas: «Oppgave: Ø11.4, utstyrsmodellene i Blender, uten nødstoppen på halerne»): vesten som seks deler i `worker.b64`, `tools/deck/mob.py` og `deck-mob.b64` med dataelementet i malen, `mobroyk` i `sikker.py`. De gamle delene er byte for byte som før (`glbdiff.py`; skyggen som bakes, er ikke lik fra kjøring til kjøring, derfor `add`). Nødstoppen venter på H2d; Ø11.5 setter utstyret på båtene og folkene.
 - 06.11.2026: Ø11.1 bygd og rullet ut i d62153dc (Jonas: «Oppgave: Ø11.1, vikeplikten for spilleren og NPC-ene (L1 og N8)»): `core/05e-sjovei.js` med ett kall i hver av de delte filene, varselet i stripa og plotteren, `docs/systemer/sjofart-og-lover.md`. N8s vikeplikt og AIS-status er dermed bygd; Ø15 gir de nye typene bare klassen. Ø11.2 er neste i Ø11.
 - 06.11.2026: Ø11.5 bygd (Jonas: «Oppgave: Ø11.5, utstyret og merkingen på båtene (L6b, L4, SK1, V6 A), etter planen»). Lagt fram før byggingen: de bakte MOB-båtene (alle fire havbåtene fra 45 m har en), Jonas valgte «Skjul den gamle». `ui/02-format-state.js` er ikke rørt (gamle lagringer i `ui/11-boot.js`), og `tools/boats/` er ikke rørt (plassene som mangler, står i `KITADD` og `LADDERS` i `vessel3d.js` til Ø4).
+- 06.11.2026: Ø17 ferdig (Jonas: «Oppgave: Ø17, hooks og regler … En hook som selv feiler, skal slippe verktøyet gjennom, ikke stoppe økta. Rør ikke src/»). `run.py` fikk `hooktest` på egne linjer (`LITE += […]` og én linje i `COVER`), så øktene som legger tester i `LITE` og `COVER` (U2-3, H3b, Ø11.2), ikke møter den i en fletting. Hvordan hookene virker: `docs/utviklingsplan.md` D7.
