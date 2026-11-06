@@ -88,11 +88,16 @@
   const upA = o => o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null;
   // the figure's parts for one kit (vessel3d.js wkPart), to pose joint by joint
   const wkMeshes = kit => { const g = n => n ? upA(wkPart(n, kit)) : null, K = wkKitOf(kit);
-    return {torso:g(K.torso), head:g('head'), hat:g(K.hat), hair:g(K.hairP), beard:g(K.beard), uarm:g('uarm'), farm:g('farm'), thigh:g('thigh'), shin:g('shin'), boot:g(K.shoe || 'boot'), hand:g('hand')}; };
+    return {torso:g(K.torso), vest:g(K.vest), head:g('head'), hat:g(K.hat), hair:g(K.hairP), beard:g(K.beard), uarm:g('uarm'), farm:g('farm'), thigh:g('thigh'), shin:g('shin'), boot:g(K.shoe || 'boot'), hand:g('hand')}; };
+  // the life jacket on your own boat's people (Ø11.5, Jonas 28.10.2026: «alltid på dekk til sjøs, ikke i havn eller på kaia»): at sea, on
+  // deck; the one at the wheel only where the helm is out on deck (an open boat, the hard top), not inside a wheelhouse
+  const ownAtSea = () => { const b = S.boat; return !!b && b.status !== 'port' && !b.land; };
+  function seaLook(l, helm){ if (!l || typeof l === 'string' || !ownAtSea()) return l; if (helm && ((VESSELS[vtype()] || {}).fac || {}).house === 'hus') return l; return lookVest(l); }
+  const lookSig = l => l && typeof l === 'object' ? lookKey(l) + (l.v ? '.v' : '') : String(l || '');
   // the meshes of a look, kept by its key (the last 40 looks; the buffers of the one that goes are freed)
   const LOOKM = new Map();
   function lookMesh(look){
-    const key = lookKit(look).key; let m = LOOKM.get(key);
+    const key = wkKitOf(look).key; let m = LOOKM.get(key);
     if (m){ LOOKM.delete(key); LOOKM.set(key, m); return m; }
     m = wkMeshes(look); LOOKM.set(key, m);
     if (LOOKM.size > 40){ const k0 = LOOKM.keys().next().value, o = LOOKM.get(k0); LOOKM.delete(k0); for (const q in o){ const x = o[q]; if (x && x.pb){ gl.deleteBuffer(x.pb); gl.deleteBuffer(x.nb); gl.deleteBuffer(x.cb); } } }
@@ -156,14 +161,14 @@
   let PERSON = null; const HANDK = {cur:null};
   // the figures on the own boat (the skipper at the wheel, the crewman on the seat, the fisher at the rail and the fisher's arms) are built
   // once per boat kit with the look the skipper and the first hand have; when either changes (the wardrobe, a new hand) they are built again
-  const peopleSig = () => lookKey(lookMe()) + '|' + (lookCrew(0) ? lookKey(lookCrew(0)) : '');
+  const peopleSig = () => lookSig(seaLook(lookMe(), true)) + '|' + lookSig(seaLook(lookMe())) + '|' + (lookCrew(0) ? lookSig(seaLook(lookCrew(0))) : '');
   function refreshPeople(K){
     if (!K || !K.pp || !PERSON) return; const sig = peopleSig(); if (K.pSig === sig) return; K.pSig = sig;
     // (the old buffers are left: boat kits made from each other share them, and a look changes rarely)
     const free = () => {};
     const build = (a, look) => { const b = NB(); PERSON(b, a[0], a[1], a[2], a[3], a[4], look); return b.mesh(); };
-    const me = lookMe(), c0 = lookCrew(0) || 'crew';
-    if (K.pp.skipper){ free(K.skipper); K.skipper = build(K.pp.skipper, me); }
+    const me = seaLook(lookMe()), meH = seaLook(lookMe(), true), c0 = seaLook(lookCrew(0)) || 'crew';
+    if (K.pp.skipper){ free(K.skipper); K.skipper = build(K.pp.skipper, meH); }
     if (K.pp.crew){ free(K.crew); K.crew = build(K.pp.crew, c0); }
     if (K.pp.fisher){ free(K.fisher); K.fisher = build(K.pp.fisher, me); }
     if (glbHas('worker')){ if (K.wk) for (const q in K.wk) free(K.wk[q]); K.wk = wkMeshes(me); }
@@ -188,10 +193,10 @@
     const g = A.tiller && A.tiller.grip, sk = A.skipper;
     // at a tiller: seated beside it, the right hand on its grip, the left on his knee
     const hands = g ? [[sk[0] - 0.12, sk[1] + 0.56, sk[2] - 0.34], [g[0] - 0.03, g[1] + 0.03, g[2]]] : A.wheel ? [[A.wheel[0] - 0.14, A.wheel[1] + 0.14, A.wheel[2] + 0.05], [A.wheel[0] + 0.14, A.wheel[1] + 0.12, A.wheel[2] + 0.05]] : null;
-    const ps = NB(); PERSON(ps, sk[0], sk[1], sk[2], !!A.sit, hands, lookMe()); K.skipper = ps.mesh();
-    const pc = NB(); PERSON(pc, A.seat[0], A.seat[1], A.seat[2], true, null, lookCrew(0) || 'crew'); K.crew = pc.mesh();
-    K.pp = {skipper:[sk[0], sk[1], sk[2], !!A.sit, hands], crew:[A.seat[0], A.seat[1], A.seat[2], true, null], fisher:[0, 0, 0, false, false]}; K.pSig = peopleSig(); K.wk = wkMeshes(lookMe());
-    { const fb = NB(); PERSON(fb, 0, 0, 0, false, false, lookMe()); K.fisher = fb.mesh(); }
+    const ps = NB(); PERSON(ps, sk[0], sk[1], sk[2], !!A.sit, hands, seaLook(lookMe(), true)); K.skipper = ps.mesh();
+    const pc = NB(); PERSON(pc, A.seat[0], A.seat[1], A.seat[2], true, null, seaLook(lookCrew(0)) || 'crew'); K.crew = pc.mesh();
+    K.pp = {skipper:[sk[0], sk[1], sk[2], !!A.sit, hands], crew:[A.seat[0], A.seat[1], A.seat[2], true, null], fisher:[0, 0, 0, false, false]}; K.pSig = peopleSig(); K.wk = wkMeshes(seaLook(lookMe()));
+    { const fb = NB(); PERSON(fb, 0, 0, 0, false, false, seaLook(lookMe())); K.fisher = fb.mesh(); }
     const KA = Object.assign({}, HANDK.skiff.SKA); for (const k of ['sole', 'tub', 'fisher', 'haul', 'reel', 'mach', 'stack', 'filler']) if (A[k]) KA[k] = A[k];
     return {SK:K, SKA:KA, CHARM:A.charm || HANDK.skiff.CHARM};
   }

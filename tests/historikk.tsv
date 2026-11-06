@@ -180,6 +180,8 @@
 2026-11-06 11:45	ccr-1c785ad6-0di8o1	3bc3b4cb	penshot	OK	648	3d	alene	
 2026-11-06 12:20	ccr-1c785ad6-0di8o1	75eec891	sea3d	FEIL	2086	3d	alene	FEIL sailing 3 km the near sea map is rebuilt, and the sea at a fixed spot does not jump meanwhile
 2026-11-06 12:31	ccr-1c785ad6-0di8o1	75eec891	vectest	OK	641	3d	alene	
+2026-11-06 11:05	ccr-2f9c820c-pucumq	1df71d75+	vesseltest	OK	44	lite	samtidig	
+2026-11-06 11:05	ccr-2f9c820c-pucumq	1df71d75+	shoptest	OK	53	lite	samtidig	
 2026-11-06 10:41	ccr-e5ae7b11-uibmpt	e53d3262+	trip2	OK	36	lite	samtidig	
 2026-11-06 10:41	ccr-e5ae7b11-uibmpt	e53d3262+	docktest	OK	62	lite	samtidig	
 2026-11-06 10:47	ccr-e5ae7b11-uibmpt	e53d3262+	colregtest	OK	386	lite	samtidig	
@@ -282,3 +284,15 @@
 2026-11-06 15:17	ccr-1c785ad6-0di8o1	feac945f+	boottest	OK	38	lite	samtidig	
 2026-11-06 15:18	ccr-1c785ad6-0di8o1	feac945f+	trip2	OK	38	lite	samtidig	
 2026-11-06 15:19	ccr-1c785ad6-0di8o1	feac945f+	dbg23o	OK	41	3d	alene	
+2026-11-06 15:16	ccr-2f9c820c-pucumq	32f49d00	boottest	OK	40	lite	samtidig	
+2026-11-06 15:16	ccr-2f9c820c-pucumq	32f49d00	trip2	OK	45	lite	samtidig	
+2026-11-06 15:17	ccr-2f9c820c-pucumq	32f49d00	shoptest	OK	42	lite	samtidig	
+2026-11-06 15:17	ccr-2f9c820c-pucumq	32f49d00	vesseltest	OK	31	lite	samtidig	
+2026-11-06 15:18	ccr-2f9c820c-pucumq	32f49d00	dbg23o	OK	37	3d	alene	
+2026-11-06 15:22	ccr-1c785ad6-0di8o1	73a72c72+	snokrabbetest	OK	15	lite	samtidig	
+2026-11-06 15:22	ccr-1c785ad6-0di8o1	73a72c72+	geartest	OK	45	lite	samtidig	
+2026-11-06 15:22	ccr-1c785ad6-0di8o1	73a72c72+	boottest	OK	37	lite	samtidig	
+2026-11-06 15:23	ccr-1c785ad6-0di8o1	73a72c72+	trip2	OK	48	lite	samtidig	
+2026-11-06 15:23	ccr-1c785ad6-0di8o1	73a72c72+	vesseltest	OK	42	lite	samtidig	
+2026-11-06 15:24	ccr-1c785ad6-0di8o1	73a72c72+	shoptest	OK	30	lite	samtidig	
+2026-11-06 15:24	ccr-1c785ad6-0di8o1	73a72c72+	dbg23o	OK	37	3d	alene	

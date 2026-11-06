@@ -141,7 +141,7 @@
       // (a place stood off its cell: leaning back, the back at the rail, deckcrew.js idlePlace)
       const go = CREW3D.walkOff(a);
       const lp = a.mode === 'helm' && G.skipperAt ? [G.skipperAt[0], G.skipperAt[1], G.skipperAt[2]] : [a.x + go[0], a.y, a.z + go[1]], wl = xf(BMrel, lp), wy = wl[1] + eye[1];
-      const P = {gy:() => wy, bare:true, spray:0, kit:a.me ? 'skipper' : null, look:a.me ? lookMe() : a.c ? lookOf(a.c) : lookCrew(0)};
+      const P = {gy:() => wy, bare:true, spray:0, kit:a.me ? 'skipper' : null, look:seaLook(a.me ? lookMe() : a.c ? lookOf(a.c) : lookCrew(0), a.mode === 'helm')};
       const ev = a.mode === 'at' ? dkFor(a.id, lp, a.task) : null;   // a fish to bleed or to gaff in at his place
       // a helm made for sitting (the model's eye low over the place, as under the snekke's hard top) is steered from the seat
       const sat = a.mode === 'helm' && G.eye && G.skipperAt && G.eye[1] - G.skipperAt[1] < 1.4;
@@ -248,7 +248,7 @@
     if (G.trawl) drawTrawl(t, G.trawl, BMrel, performance.now() / 1000);
     if (G.seine) drawSeine(t, G.seine, BMrel, VP, performance.now() / 1000);
     gl.disableVertexAttribArray(2);
-    if (named && SK){ if (!S.unnamed) drawNames(t, BMrel, VP, liv, S.boatName, ownPort()); drawMark(t, BMrel, VP, liv); drawLogo(t, BMrel, VP, ...ownLogo()); }
+    if (named && SK){ if (!S.unnamed) drawNames(t, BMrel, VP, liv, S.boatName, ownPort()); drawMark(t, BMrel, VP, liv); drawCall(t, BMrel, VP, liv); drawLogo(t, BMrel, VP, ...ownLogo()); }
     gl.useProgram(PL.p);
   }
   // the local fleet near you: the kit model nearest each boat (vessel3d.js npcKit), scaled to her length and beam, at lod 1 within

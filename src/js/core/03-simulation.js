@@ -92,6 +92,7 @@ function powerX(b){ const V = VESSELS[b.type || 'skiff']; return 1 + (b.engLv &&
 const speedOfPower = (P, planing) => planing ? Math.sqrt(P) : Math.min(1.12, Math.cbrt(P));
 function applyVessel(){
   const b = S.boat; Object.assign(BOAT, VESSELS[b.type || 'skiff']);
+  reqFill(S.equip, b.type || 'skiff');   // the gear the rules ask for is always aboard (V6 A, Ø11.5)
   for (const k in EQUIP) if (EQUIP[k].boost && S.equip && S.equip[k] && equipFits(k, b.type || 'skiff')) Object.assign(BOAT, EQUIP[k].boost);
   BOAT.fuelK = fuelKOf(BOAT);   // the boat burns BOAT.lph at cruising speed, with the engine the boosts gave her
   // the hold: an open boat's is her tubs (core/07f-kar.js, TUB_KG each, one more for each of the yard's steps), the rest grow by HOLDUP

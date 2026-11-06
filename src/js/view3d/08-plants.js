@@ -143,7 +143,8 @@
       if (K){ drawN(K.thigh, limbM(hip, knee, 1)); drawN(K.shin, limbM(knee, foot, 1)); drawN(K.boot, chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h))); continue; }
       drawN(PM.leg, limbM(hip, knee, 0.075)); drawN(PM.leg, limbM(knee, foot, 0.065)); drawN(PM.boot, chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h))); }
     const bend = LB[1] * bk + (st.slump || 0) * 0.45;   // (and stoop)
-    const tc = W(bend * 0.4, 1.2 + dy, 0); drawN(K ? K.torso : PM.torso, chain(M4.T(tc[0], tc[1] - 0.28, tc[2]), M4.RY(-h), M4.RX(-bend)));
+    const tc = W(bend * 0.4, 1.2 + dy, 0), TM = chain(M4.T(tc[0], tc[1] - 0.28, tc[2]), M4.RY(-h), M4.RX(-bend)); drawN(K ? K.torso : PM.torso, TM);
+    if (K && K.vest) drawN(K.vest, TM);   // the life jacket over the jacket, on deck at sea (vessel3d.js vestKit, Ø11.5)
     // the head: looking about when idle, and at you when you bring the camera close in front of him (deckcrew agents, st.peek)
     let hy = st.task === 'look' ? Math.sin(T * 0.4 + idx) * 0.5 : 0;
     if (st.peek){ const ex = eye[0] - st.x, ez = eye[2] - st.z, d = Math.hypot(ex, ez); if (d < 7){ let dh = Math.atan2(ex, -ez) - h; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI; if (Math.abs(dh) < 1.3) hy = -dh * 0.85 * Math.min(1, (7 - d) / 2); } }
@@ -366,7 +367,8 @@
     // the wrist is found back from it, and what the hand holds is drawn in the grip (GP, GA). Far off (and on the old figure) the one-piece
     // glove at the wrist as before.
     const HS = near ? handSpecs(st, F, R, hands) : null, GP = [hands[0], hands[1]], GA = [null, null];
-    [0.21, -0.21].forEach((r, i) => { const sh = W(bend * 0.8, 1.42 + dy, r), elOf = q => [(sh[0] + q[0]) / 2 - F[0] * 0.05 + R[0] * r * 0.25, (sh[1] + q[1]) / 2 - 0.08, (sh[2] + q[2]) / 2 - F[1] * 0.05 + R[1] * r * 0.25];
+    const vsh = K && K.vest ? VEST_SH : null;   // (the shoulder under the life jacket, vessel3d.js VEST_SH)
+    [0.21, -0.21].forEach((r, i) => { const sh = vsh ? W(bend * 0.8, 1.42 + dy - vsh[1], r + Math.sign(r) * vsh[0]) : W(bend * 0.8, 1.42 + dy, r), eo = r * 0.25 + (vsh ? Math.sign(r) * vsh[2] : 0), elOf = q => [(sh[0] + q[0]) / 2 - F[0] * 0.05 + R[0] * eo, (sh[1] + q[1]) / 2 - 0.08, (sh[2] + q[2]) / 2 - F[1] * 0.05 + R[1] * eo];
       if (near){ const sd = i ? 'L' : 'R', sp = HS[i], gd = (HMS.grip[sp.g] || HMS.grip.relax)[sd], tg = hands[i];
         let Fr = handFrame(nrm3(sub3(tg, elOf(tg))), sp, i ? -1 : 1); const wr = sub3(tg, inFrame(Fr, gd.at)), el = elOf(wr);
         Fr = handFrame(nrm3(sub3(wr, el)), sp, i ? -1 : 1);

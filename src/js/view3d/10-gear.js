@@ -524,7 +524,7 @@
     // the boat)
     if (!skiff && !(typeof CREW3D !== 'undefined' && CREW3D.on())){ const AQ = g.auto && G.aline ? autoPort(G) : null, n = clamp(gopHands(), 0, AQ ? 2 : 3);
       const spots = AQ ? [[AQ.gaff[0], AQ.gaff[1], 'haul', AQ.gaff[2]], [AQ.tend[0], AQ.tend[1], 'coil', AQ.tend[2]]] : [[HP[0] - 0.55, HP[2] + 0.2, 'haul', Math.PI / 2], [HP[0] - 1.25, HP[2] + 0.75, 'tend', Math.PI * 0.6], [sx * 0.3 + 0.5, DZ + 0.2, 'tend', Math.PI]];
-      for (let k = 0; k < n; k++){ const [x, z, task, a] = spots[k], wl = xf(BMrel, [x, d.y, z]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:k === 0 && gopMe() ? 'skipper' : null, look:k === 0 && gopMe() ? lookMe() : lookCrew(k - (gopMe() ? 1 : 0))};
+      for (let k = 0; k < n; k++){ const [x, z, task, a] = spots[k], wl = xf(BMrel, [x, d.y, z]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:k === 0 && gopMe() ? 'skipper' : null, look:seaLook(k === 0 && gopMe() ? lookMe() : lookCrew(k - (gopMe() ? 1 : 0)))};
         const ev = dkFor('h' + k, [x, d.y, z], task);
         drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + a, task:ev ? ev.kind : task, ev:ev ? dkEv(ev, BMrel, G) : null, walk:false, s:0}, eye, t, 9 + k); }
       dkBloodDraw(VP); }

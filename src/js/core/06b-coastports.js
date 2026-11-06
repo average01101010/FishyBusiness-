@@ -40,6 +40,22 @@ function regOf(b){
   return b.reg = {f:e[0], n, k:e[1]};
 }
 const regText = r => r ? r.f + '-' + r.n + '-' + r.k : '';
+// the call sign (kjenningssignal, FOR-2002-06-27-754, read on Lovdata 05.11.2026; Ø11.5): § 5 gives one to fishing vessels from 10.67 m
+// (and the registered ships, which all ours from 15 m are), two letters and four digits under 15 m, as VH5150 (Store norske leksikon),
+// and § 9 has it painted on the outside of the hull. Ours are from Norway's block as the fishing fleet's are (LF, LG, LH, LK, LM) and
+// never one a real vessel carries: REGM.c is the call signs in Fiskeridirektoratet's landing notes 2024-2025 (tools/regmerke). It belongs
+// to the vessel (b.call), not to the owner as the registration mark does, so a boat traded in leaves hers behind (switchVessel)
+const CALLP = ['LF', 'LG', 'LH', 'LK', 'LM'];
+const callNeeded = type => !!VESSELS[type] && VESSELS[type].len >= 10.67;
+function callFree(p, n){ const u = REGM && REGM.c && REGM.c[p]; return !(u && u.includes(n)); }
+function callOf(b){
+  if (!b || !callNeeded(b.type)) return null;
+  if (b.call && /^L[A-N]\d{4}$/.test(b.call) && callFree(b.call.slice(0, 2), +b.call.slice(2))) return b.call;
+  let h = 7; for (const c of String(S.boatName || '') + (S.cur || '') + (b.type || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const p = CALLP[h % CALLP.length]; let n = 1000 + Math.floor(h / CALLP.length) % 9000;
+  for (let i = 0; i < 9000 && !callFree(p, n); i++) n = n >= 9999 ? 1000 : n + 1;
+  return b.call = p + n;
+}
 
 const COASTQ = {};
 const STEDER_D = /*@include(data/steder.json)*/null;   // the shops and yards (06c-steder.js), here so the plants below can keep 1.5 km to them

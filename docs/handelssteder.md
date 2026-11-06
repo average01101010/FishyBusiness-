@@ -71,6 +71,7 @@ Reparasjon av skroget etter støt og grunnstøting og kasko (skrogforsikring) li
 
 ## Nettet-appen, bruktmarkedet og sponsede varer (Jonas 30.10.2026, `docs/planer/butikker-og-sponsorer.md`)
 
+- **Påbudt utstyr selges ikke (V6 A, Jonas 28.10.2026; bygd i Ø11.5 06.11.2026):** det forskriftene krever for båten (VHF, AIS fra 15 m, brovaktalarm fra 10,67 m; `reqOf` i `core/02-species-gear.js`), følger med båten og står under «Om bord» med «påbudt, følger båten». Butikken selger det bare til båter der det er valgfritt, og `equipBuy` sier nei ellers. Gamle lagringer fikk det som manglet, gratis.
 - **Bygd 30.10.2026 (M2):** Nettet-appen og bestilling til henting finnes for utstyrsbutikkene (`core/10c-pick.js`). Bestillingen er en reservasjon: pengene trekkes og utstyret monteres når det hentes i butikken, med samme kjøp og samme `buyGate`/`equipFits` som over disken. Service i butikken ligger under Beholdning › Redskap ved butikkens kai.
 - **Bygd 02.11.2026 (M3):** utstyr med modell kan prøves på egen båt i 3D i butikken eller på verftet før det kjøpes («Prøv på båten»). Det koster ingenting og endrer ingenting; kjøpet skjer fortsatt bare over disken der utstyret monteres, med `buyGate`/`equipFits` som før.
 - **Bygd 02.11.2026 (M4):** bruktmarkedet. Brukte båter ses og bys på i Nettet (Kystmegleren) hvor som helst; takst og kjøp bare ved verftet der båten ligger. Typemarkedet (nybygg og hjemmelstilbud) i verftets Båthandel står som før.
