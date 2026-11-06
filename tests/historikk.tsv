@@ -296,3 +296,11 @@
 2026-11-06 15:23	ccr-1c785ad6-0di8o1	73a72c72+	vesseltest	OK	42	lite	samtidig	
 2026-11-06 15:24	ccr-1c785ad6-0di8o1	73a72c72+	shoptest	OK	30	lite	samtidig	
 2026-11-06 15:24	ccr-1c785ad6-0di8o1	73a72c72+	dbg23o	OK	37	3d	alene	
+2026-11-06 16:03	ccr-91234803-y9yb7j	b63df02b+	docktest	OK	66	lite	samtidig	
+2026-11-06 16:03	ccr-91234803-y9yb7j	b63df02b+	boktest	OK	10	lite	samtidig	
+2026-11-06 16:03	ccr-91234803-y9yb7j	b63df02b+	fleet3test	OK	13	lite	samtidig	
+2026-11-06 16:03	ccr-91234803-y9yb7j	b63df02b+	fleet2test	OK	37	lite	samtidig	
+2026-11-06 16:04	ccr-91234803-y9yb7j	b63df02b+	uishots	OK	89	lite	samtidig	
+2026-11-06 16:04	ccr-91234803-y9yb7j	b63df02b+	navbarshot	OK	35	lite	samtidig	
+2026-11-06 16:04	ccr-91234803-y9yb7j	b63df02b+	dockrow	OK	43	lite	samtidig	
+2026-11-06 16:05	ccr-91234803-y9yb7j	b63df02b+	kartlegging	OK	51	lite	samtidig	
