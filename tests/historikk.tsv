@@ -2,3 +2,13 @@
 2026-11-05 21:15	o2-best	d585ce9+	maptest	OK	42	lite	samtidig	
 2026-11-05 21:16	o2-best	d585ce9+	cloudtest	OK	46	lite	samtidig	
 2026-11-05 21:19	o2-best	d585ce9+	gfxtest	OK	182	3d	alene	
+2026-11-05 23:30	ccr-87bd2cf3-hnz2ak	5395f788+	trip2	OK	40	lite	samtidig	
+2026-11-05 23:30	ccr-87bd2cf3-hnz2ak	5395f788+	vesseltest	OK	29	lite	samtidig	
+2026-11-05 23:30	ccr-87bd2cf3-hnz2ak	5395f788+	docktest	OK	56	lite	samtidig	
+2026-11-05 23:30	ccr-87bd2cf3-hnz2ak	5395f788+	havflaate	OK	9	lite	samtidig	
+2026-11-05 23:30	ccr-87bd2cf3-hnz2ak	5395f788+	npctest	OK	7	lite	samtidig	
+2026-11-05 23:45	ccr-87bd2cf3-hnz2ak	5395f788+	tral3d	FEIL	900	3d	alene	gikk ut på tid
+2026-11-05 23:50	ccr-87bd2cf3-hnz2ak	5395f788+	haultest	OK	250	3d	alene	
+2026-11-06 00:30	ccr-87bd2cf3-hnz2ak	5395f788+	deckshot	FEIL	2400	3d	alene	gikk ut på tid
+2026-11-06 00:30	ccr-87bd2cf3-hnz2ak	5395f788+	dbg23o	OK	46	3d	alene	
+2026-11-06 00:32	ccr-87bd2cf3-hnz2ak	5395f788+	landtest	OK	80	3d	alene	

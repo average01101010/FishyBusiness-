@@ -10,7 +10,7 @@
   // fills the plant's tubs from the hold, set out on deck (deckSlots) one by one. A landing saved before then ('box') keeps its pallets.
   const SLH = 1.793;   // the hook's level over the base of the tub hanging in the sling (the ring 0.95 m over the rim)
   const TUBH = 0.74;   // a tub's height, for stacking two on the quay and on the forks
-  const PALLH = 1.9;   // a pallet of frozen cartons (H2b, 08-plants.js palF): about a tonne, 11 layers of four, wrapped
+  const PALLH = 1.9;   // a pallet of frozen cartons (H2b, 08-plants.js palF): about a tonne, 11 layers of four, wrapped (the Blender one, H2d: kitX('pall').h)
   const loadH = (kind, nb) => kind === 'tub' ? TUBH : kind === 'pall' ? PALLH : 0.13 + Math.ceil(nb / 3) * 0.29;
   const craneIdle = (P, T) => ({a:Math.atan2(P.u[0], P.u[1]) + Math.sin(T * 0.05) * 0.25, r:5.5, hook:QTOP + 3.2});
   // the forklift at rest: at its spot east of the drop spot, forks towards it
@@ -21,6 +21,8 @@
   // where the plant's tubs stand on deck on a boat with a hold, in the boat's frame (x to starboard, z aft); the first is the next to go up
   function deckSlots(kind){
     const G = GEO(vtype()), d = G.deck || {y:G.gw, z:(G.stern || 3) * 0.5};
+    // (a freezer vessel's pallets come up through her cargo hatch over the hold, anchors.hatch, H2d: the next one stands in the opening)
+    if (kind === 'pall' && G.hatch) return [[G.hatch.at[0], G.hatch.deck, G.hatch.at[2]]];
     return kind === 'tub' ? [[0.65, d.y, d.z - 0.55], [-0.65, d.y, d.z - 0.55], [0.65, d.y, d.z + 0.55], [-0.65, d.y, d.z + 0.55]] : [[0, d.y, d.z - 0.45], [0, d.y, d.z + 0.45]];
   }
   // the forklift's run on the unit's route: from its spot east of the drop spot forward to the loads, lift, on round a quarter turn to
@@ -57,13 +59,20 @@
   // or an old landing's pallet; draw(M) draws it with M at its base, h its height on the quay and the forks, sl its hook height in the sling
   function landLoad(L, j){
     if (L.kind === 'box'){ const nb = Math.min(9, L.n - 9 * j), m = PM.palN[Math.max(0, nb)]; return {draw:M => drawN(m, M), h:loadH('box', nb), sl:loadH('box', nb), box:true}; }
-    if (L.kind === 'pall') return {draw:M => drawN(PM.palF, M), h:PALLH, sl:PALLH, box:true};   // a freezer vessel's frozen catch (H2b; the Blender pallet is H2d)
+    // a freezer vessel's frozen catch: the Blender pallet of 44 cartons in film (tools/deck/pall.py, H2d), carried on the pallet fork whose
+    // eye the hook takes (sl: the hook's eye over the pallet's base); the simple pallet of H2b where the model is not in the page
+    if (L.kind === 'pall'){ const PF = kit('pall', 'pall_full'), X = kitX('pall'); if (PF && X.gaffel) return {draw:M => drawN(PF, M), h:X.h || PALLH, sl:-X.gaffel.base, box:true, pall:true};
+      return {draw:M => drawN(PM.palF, M), h:PALLH, sl:PALLH, box:true}; }
     if (L.own){ const vt = vtype(), i = j < L.n ? j : j - L.n, back = j >= L.n, T = tubLoads(S.hold, karPlaces(vt).length)[i];
       return {draw:M => drawKarLoad(M, back ? null : T, vt + ':' + i, back), h:TUBH, sl:SLH, tub:true, place:i, back}; }
     const ic = (() => { let a = 0, b = 0; for (const x of S.hold || []) if (inTub(x)){ a += x.kg; if (x.iced) b += x.kg; } return a > 0 ? b / a : 1; })();
     const kg = Math.max(0, Math.min(TUB_KG, (L.kg || 0) - TUB_KG * j));
     return {draw:M => drawKarLoad(M, {kg, iced:kg * ic}, 'pl:' + L.t0 + ':' + j, false), h:TUBH, sl:SLH, tub:true};
   }
+  // how far open your boat's cargo hatch is (0 shut, 1 open; anchors.hatch, H2d): open while she lands pallets, from the crane's first move
+  // over to the last pallet ashore, shut at sea
+  function hatchOpenK(){ const b = S.boat, L = b && b.land; if (!L || L.kind !== 'pall' || b.status !== 'port') return 0;
+    const e = S.t + currentFrac() - L.t0, end = landLiftT(L, L.lifts - 1) + liftMin(L); return clamp(e / (LANDING.prep * 0.8), 0, 1) * (1 - clamp((e - end) / LANDING.prep, 0, 1)); }
   // the tubs of an open boat off her deck at a landing now (on the hook, on the quay, in the plant)
   function landOff(L){ if (!L || !L.own) return null; const e = S.t + currentFrac() - L.t0, lf = LANDING.lift, out = new Set();
     for (let i = 0; i < L.n; i++) if (e >= landLiftT(L, i) + 0.42 * lf && e < landLiftT(L, L.n + i) + LANDING.hooked * lf) out.add(i);
@@ -164,8 +173,10 @@
     // what hangs from the hook (in the sling, swaying a little), the sling itself through the landing, the loads on deck and on the quay
     const ring = rel(r.tip[0], pose.hook + 0.1, r.tip[2]), sway = Math.sin(T * 1.3) * 0.035;
     if (LS && LS.hang){ const h = LS.hang.h, t = rel(r.tip[0] + sway * Math.cos(pose.a), pose.hook - 0.1 - h, r.tip[2] - sway * Math.sin(pose.a)), HM = chain(M4.T(t[0], t[1], t[2]), M4.RY(LS.hang.yaw + Math.sin(T * 0.8) * 0.03));
-      LS.hang.L.draw(HM); if (LS.hang.L.tub) drawSling([t[0], ring[1], t[2]], HM, 0, 1); }
+      LS.hang.L.draw(HM); if (LS.hang.L.tub) drawSling([t[0], ring[1], t[2]], HM, 0, 1);
+      if (LS.hang.L.pall) drawN(kit('pall', 'gaffel'), chain(M4.T(t[0], t[1] + h, t[2]), M4.RY(LS.hang.yaw + Math.sin(T * 0.8) * 0.03))); }
     else if (LS && LS.att) drawSling(ring, LS.att.M, T * 0.3, LS.att.k);
+    else if (LS && b.land.kind === 'pall' && kit('pall', 'gaffel')){ const e = rel(r.tip[0] + sway * Math.cos(pose.a), pose.hook - 0.1, r.tip[2] - sway * Math.sin(pose.a)); drawN(kit('pall', 'gaffel'), chain(M4.T(e[0], e[1], e[2]), M4.RY(pose.a + Math.PI / 2))); }   // (the empty pallet fork on the hook)
     else if (LS) drawSling(ring, null, T * 0.3, 0);
     if (LS){
       for (const q of LS.deck) q.L.draw(chain(BMrel, M4.T(q.at[0], q.at[1], q.at[2])));
@@ -207,7 +218,7 @@
   // ---------- the deck kit (the user's wish 19.10.2026, tools/deck/*.py): the fish tubs, the gaff and the knife, the gutting table and
   // bench, the line tubs and the net in its tub, the crates, each a part of its own GLB (src/data/deck-*.b64) drawn like the fish; a part
   // the page does not have leaves the old block in its place ----------
-  const KITF = {fish:'deck-fish', rig:'deck-rig', crane:'deck-crane', safe:'deck-safety', anchor:'deck-anchor', pause:'deck-pause'}, KITM = {}, KITX = {};
+  const KITF = {fish:'deck-fish', rig:'deck-rig', crane:'deck-crane', safe:'deck-safety', anchor:'deck-anchor', pause:'deck-pause', pall:'deck-pall'}, KITM = {}, KITX = {};
   function kit(f, nm){ const k = f + ':' + nm; if (k in KITM) return KITM[k]; let m = null; const t = KITF[f];
     if (typeof glbHas === 'function' && glbHas(t)){ const o = glbPart(t, nm); if (o) m = {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3}; }
     return KITM[k] = m; }
