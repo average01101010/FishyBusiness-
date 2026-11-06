@@ -308,3 +308,13 @@
 2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	posttest	OK	24	lite	samtidig	
 2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	shoptest	OK	28	lite	samtidig	
 2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	routetest	OK	45	lite	alene	
+2026-11-06 15:53	ccr-d22aebce-865bcx	b63df02b+	hooktest	OK	1	lite	alene	
+2026-11-06 16:13	ccr-d22aebce-865bcx	635d5bcb+	hooktest	OK	1	lite	alene	
+2026-11-06 16:03	ccr-91234803-y9yb7j	b63df02b+	docktest	OK	66	lite	samtidig	
+2026-11-06 16:03	ccr-91234803-y9yb7j	b63df02b+	boktest	OK	10	lite	samtidig	
+2026-11-06 16:03	ccr-91234803-y9yb7j	b63df02b+	fleet3test	OK	13	lite	samtidig	
+2026-11-06 16:03	ccr-91234803-y9yb7j	b63df02b+	fleet2test	OK	37	lite	samtidig	
+2026-11-06 16:04	ccr-91234803-y9yb7j	b63df02b+	uishots	OK	89	lite	samtidig	
+2026-11-06 16:04	ccr-91234803-y9yb7j	b63df02b+	navbarshot	OK	35	lite	samtidig	
+2026-11-06 16:04	ccr-91234803-y9yb7j	b63df02b+	dockrow	OK	43	lite	samtidig	
+2026-11-06 16:05	ccr-91234803-y9yb7j	b63df02b+	kartlegging	OK	51	lite	samtidig	

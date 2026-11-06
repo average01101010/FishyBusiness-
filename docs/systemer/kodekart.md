@@ -2341,12 +2341,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1208 linjer)
+## `src/js/ui/phone/07-patch.js` (1212 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1201 `patch()`
+  - 1205 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2392,12 +2392,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 139 `fartoy(tab0)`
 - **168** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
 
-## `src/js/ui/phone/11-rederi.js` (70 linjer)
+## `src/js/ui/phone/11-rederi.js` (79 linjer)
 
   - 6 `selRow()`
   - 8 `vSummary()`
-  - 32 `rederi()`
-- **69** equipment
+  - 40 `rederi()`
+- **78** equipment
 
 ## `src/js/ui/phone/12-utstyr-redskap.js` (208 linjer)
 

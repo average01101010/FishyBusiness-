@@ -53,7 +53,7 @@ HOOK = r"""(() => {
     phoneHome(){ const v = document.getElementById('phView'), apps = [...document.querySelectorAll('.ph-app')].filter(vis), grid = document.querySelector('.ph-grid');
       const inView = apps.filter(a => a.getBoundingClientRect().bottom <= innerHeight).length, cards = [...document.querySelectorAll('.ph-homescr > *')].filter(e => e !== grid && vis(e)).length;
       return {apps:apps.length, inView, cardsAbove:cards, gridTop:grid ? Math.round(grid.getBoundingClientRect().top) : null, H:innerHeight, scroll:v.scrollHeight, client:v.clientHeight, screens:+(v.scrollHeight / Math.max(1, v.clientHeight)).toFixed(1)}; },
-    phoneRederi(){ const v = document.getElementById('phView'), h4 = [...document.querySelectorAll('#phView h4')].find(h => /Flåten|The fleet/.test(txt(h)));
+    phoneRederi(){ const v = document.getElementById('phView'), h4 = [...document.querySelectorAll('#phView h4')].find(h => /Flåten|The fleet/.test(txt(h))) || v.querySelector('.ph-card.fl');   // (U2-5: the fleet's first card, no heading)
       const top = h4 ? h4.getBoundingClientRect().top - v.getBoundingClientRect().top + v.scrollTop : null;
       return {scroll:v.scrollHeight, client:v.clientHeight, screens:+(v.scrollHeight / Math.max(1, v.clientHeight)).toFixed(1), fleetTop:top == null ? null : Math.round(top), fleetScreens:top == null ? null : +(top / Math.max(1, v.clientHeight)).toFixed(2), btns:[...v.querySelectorAll('.ph-btn')].filter(vis).map(b => txt(b).slice(0, 24))}; },
     // the sample for the strip's third line: the next event, the «now» rows, the text over the buttons
