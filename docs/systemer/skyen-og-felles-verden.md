@@ -48,6 +48,7 @@ Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med Work
     - **Ved start** (`cloudSync`):
       - Ingen spill her: kontoens hentes.
       - Kontoen har spillet herfra (`rev` stemmer): videre med det.
+      - **Unntak (06.11.2026, oppstarten som låser seg, `BOOTG` i `11-boot.js`):** har spillet her låst siden to ganger på rad mens det ble bygd, og er enheten spilt forbi kontoens kopi av det (`lastReal` over `at`), hentes kontoens kopi én gang (litt eldre, uten det som ble gjort her siden), og spillet her legges i `kystfiske_v2_prev`. Spilleren får vite det (`dsb_note`). Adrian 06.11.2026: Autonav satt i Bodø rett før appen ble lukket, ruta nådde aldri skyen, og hver start leste den samme lagringen og låste seg. Se `tilbakemelding-og-admin.md` (Oppstarten).
       - Ikke spilt her siden sist i takt (opptil 150 sekunder, det siste minuttet som kanskje ikke nådde opp da siden ble lukket): kontoens hentes.
       - Spilt begge steder: spilleren velger før spillet starter, og ser begge (dag, penger, båtnavn og type, antall båter, om første tur pågår; `saveSum`, sendt med hver lagring som `summary`).
     - **Under spillet:** avviser skyen en lagring, kommer det samme valget som en dialog, og ingenting sendes før spilleren har valgt. «Spillet på denne enheten» sendes med `force`.

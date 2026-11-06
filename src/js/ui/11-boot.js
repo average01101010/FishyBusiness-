@@ -19,6 +19,7 @@ function bootInfo(){ return {s:Math.round((performance.now() - bootAway()) / 100
 function bootDone(){
   if (BOOTW.done) return; bootStep('ferdig'); BOOTW.done = true;
   const r = BOOTW.res = bootInfo(); delete r.stage;
+  setTimeout(bootgOk, 20000);   // (BOOTG below: 20 s on from here the start got through)
   if (r.s > 30 && typeof cloudErr === 'function') cloudErr('Treg oppstart: ' + (r.s < 60 ? '30–60' : r.s < 120 ? '60–120' : 'over 120') + ' s', 'boot', JSON.stringify(r), 'slow');
 }
 const BOOT_WATCH = setInterval(() => {
@@ -27,6 +28,83 @@ const BOOT_WATCH = setInterval(() => {
   BOOTW.stuck = true;
   try { if (typeof cloudErr === 'function') cloudErr('Oppstarten står fast: ' + BOOTW.stage, 'boot', JSON.stringify(bootInfo()), 'slow'); if (typeof errStart === 'function') errStart(); } catch (e){}
 }, 5000);
+// A start that locks the page (06.11.2026; Adrian on the iPhone app: «Står bare å laste», eight starts in five hours after Autonav was
+// set in Bodø and the app closed). A page caught in an endless loop, or ended by the phone while on the screen, says nothing: no
+// error, no «står fast» (BOOT_WATCH is a timer on the same thread), and the errors wait for a game that never comes (errStart). And the
+// next start reads the same save and locks the same way. So each start writes on the device how far it came (BOOTG_KEY): «in» when the
+// game is built from the save (bootGame with the time away), «ok» once it has run 20 s after that or gone to the background, and whether
+// the page was on the screen. The next start reads it: a start that got into building the game, never got through and was on the screen
+// locked; the locks in a row are counted (fails), and a start that got through counts them from nothing again.
+//   1+  «Oppstarten står fast: siden låste seg …» goes to the error list at once, at the sign-in (bootgReport, before the game is built),
+//       with what the save had going (the boats, the routes), and the admin gets the push (err_alert)
+//   2   the account's copy of this device's game, when this device has played past it (ui/10f-cloud.js cloudSync: a minute or so
+//       before; the newest is kept under Tidligere lagringer); with nothing older on the account, the safe start
+//   3   the safe start (bootgSafe): every Autonav route stops where the boat is and goes back to the draft, and the time away is
+//       played with the boats lying still
+//   4+  the game is not built: «Spillet startet ikke» with try again, safe mode and the save before (bootFail), each of which starts
+//       the count again
+// A start that ends in bootFail (an error, not a lock) is not counted: the dialog is the way on.
+const BOOTG_KEY = 'dsb_bootg';
+const BOOTG = (() => {
+  let p = null; try { p = JSON.parse(localStorage.getItem(BOOTG_KEY) || 'null'); } catch (e){}
+  if (!p || typeof p !== 'object') p = null;
+  const locked = !!(p && p.in && !p.ok && p.vis), fails = !p || p.ok ? 0 : (p.fails || 0) + (locked ? 1 : 0);
+  // (took: the start before took the account's copy and loaded the page again, so this one tries that game as it is first;
+  // safe: the dialog's «sikker modus» asked for the safe start)
+  return {prev:p, fails, said:false, safe:false, save:null, rec:{fails, at:Date.now(), v:(document.querySelector('meta[name=dsb-version]') || {}).content || 'dev',
+    in:false, ok:false, vis:!document.hidden, took:!!(p && p.took && !p.in && !p.ok), safe:!!(p && p.safeAsk && !p.in)}};
+})();
+function bootgWrite(){ if (BOOTG.off) return; try { localStorage.setItem(BOOTG_KEY, JSON.stringify(BOOTG.rec)); } catch (e){} }
+bootgWrite();
+function bootgOk(){ const r = BOOTG.rec; if (r.ok || !r.in) return; r.ok = true; r.fails = 0; bootgWrite(); }
+document.addEventListener('visibilitychange', () => { const r = BOOTG.rec; if (r.ok) return; if (document.hidden && BOOTW.done && r.in){ bootgOk(); return; } r.vis = !document.hidden; bootgWrite(); });
+// (a page closed or left the ordinary way did not lock, also where the browser sends no visibilitychange first)
+addEventListener('pagehide', () => { const r = BOOTG.rec; if (r.ok) return; if (BOOTW.done && r.in){ bootgOk(); return; } r.vis = false; bootgWrite(); });
+// what the save has going, for the report (bootMapLoad has it read): each boat's type, status, harbour, position and route
+function bootgNote(s){
+  try {
+    const vs = !s ? [] : s.fleet && s.fleet.length ? s.fleet : [s], r3 = v => Math.round(v * 1000) / 1000, pt = w => w ? (w.port || [r3(w.x), r3(w.y)]) : null;
+    BOOTG.save = {seq:s ? s.seq || 0 : null, t:s ? Math.round(s.t || 0) : null, n:vs.length, b:vs.slice(0, 4).map(v => { const b = v.boat || {}, pl = v.plan, W = pl && pl.wps || [];
+      return {ty:b.type || null, st:b.status || null, port:b.port || null, p:b.pos ? [r3(b.pos.x), r3(b.pos.y)] : null, wps:W.length, idx:pl ? pl.idx : null, to:pt(W[W.length - 1]),
+        next:pt(W[pl ? pl.idx : 0]), rp:!!(pl && pl.replan), ops:!!v.ops}; })};
+  } catch (e){}
+}
+// the game is about to be built from the save: from here a lock counts
+function bootgIn(){
+  const g = BOOTG, r = g.rec;
+  if (g.fails >= 4 && !r.safe){ bootgWrite(); const l = (navigator.language || 'no').toLowerCase(), en = !/^no|^nb|^nn/.test(l);   // (as bootFail says it)
+    throw new Error(en ? 'The game has stopped while starting ' + g.fails + ' times in a row.' : 'Spillet har stoppet under oppstarten ' + g.fails + ' ganger på rad.'); }
+  g.safe = r.safe || g.fails >= 3 || (g.fails === 2 && !r.took);
+  r.in = true; r.vis = !document.hidden; r.at = Date.now(); r.act = g.safe ? 'safe' : r.took ? 'cloud' : null; r.save = g.save; r.safe = false; bootgWrite();
+}
+function bootgOut(){ const r = BOOTG.rec; r.in = false; bootgWrite(); }
+// the dialog's buttons: the count from nothing (over: what the next start is to do); this page writes no more, so its own record does not
+// come back over it as the page goes hidden on the way to the reload
+function bootgClear(over){ BOOTG.off = true; try { if (over) localStorage.setItem(BOOTG_KEY, JSON.stringify(over)); else localStorage.removeItem(BOOTG_KEY); } catch (e){} }
+// the start before locked: told at once, while the cloud is there (ui/10f-cloud.js cloudGate, after tm_hello), with what waited from it
+function bootgReport(){
+  const g = BOOTG; if (g.said || g.fails < 1 || typeof cloudRpc !== 'function') return; g.said = true;
+  const p = g.prev || {}, meta = {}; try { Object.assign(meta, cloudMeta()); } catch (e){} try { Object.assign(meta, cloudDev()); } catch (e){}
+  const info = {fails:g.fails, version:p.v || null, min_ago:p.at ? Math.round((Date.now() - p.at) / 60000) : null, act:p.act || null, save:p.save || null};
+  cloudRpc('tm_error', {msg:'Oppstarten står fast: siden låste seg mens spillet ble bygd', src:'boot', stack:JSON.stringify(info).slice(0, 2000), meta}).catch(() => {});
+  // (the crash note the locked page left, ui/10f-cloud.js aliveCheck, and the errors kept on the device go now too, not when the game is up)
+  try { if (!ERR.ready && ERR.pend.length) for (const e of ERR.pend.splice(0)) cloudRpc('tm_error', e).catch(() => errKeep([e])); errFlush(); } catch (e){}
+}
+// the second lock: the account's copy of this device's game, when this device has played past it (ui/10f-cloud.js cloudSync)
+function bootgRescue(){ const g = BOOTG, r = g.rec; if (g.fails < 2 || g.fails >= 4 || r.took) return false; r.took = true; r.act = 'cloud'; bootgWrite(); return true; }
+// the safe start (bootGame): every route stops where her boat is and goes back to the draft, as «Pause» does (ui/03b-route.js)
+function bootgSafe(){
+  let n = 0;
+  const stop = () => { const pl = S.plan, b = S.boat; if (!pl) return; n++;
+    if (pl.wps && pl.idx < pl.wps.length){ S.draft = pl.wps.slice(pl.idx).map(w => ({...w})); if (pl.speed) S.draftSpeed = pl.speed; }
+    S.plan = null; if (b && b.status === 'sailing'){ b.status = 'idle'; b.v = 0; } };
+  try { if (S.fleet && S.fleet.length){ for (const v of S.fleet) withVessel(v, stop); storeVessel(curVessel()); } else stop(); } catch (e){ console.error(e); }
+  const no = n ? 'Spillet stoppet under oppstarten. For å slippe deg inn igjen er Autonav stoppet der båten er, og ruta ligger som utkast i kartet.' : 'Spillet stoppet under oppstarten, og startes nå forsiktig.',
+    en = n ? 'The game stopped while starting. To let you in again, Autonav was stopped where the boat is, and the route is kept as a draft on the chart.' : 'The game stopped while starting, and now starts carefully.';
+  BOOTG.say = [no, en]; try { sessionStorage.setItem('dsb_note', S.lang === 'en' ? en : no); } catch (e){}
+}
+// (the log's line when the player is back, after the time away: bootGame)
+function bootgSay(){ const s = BOOTG.say; if (!s) return; BOOTG.say = null; try { log(s[0], s[1], 'nav'); } catch (e){ console.error(e); } }
 async function bootMap(){ await Promise.all([(async () => { await mapStart(); await bootMapLoad(); })(), bootData()]); }
 // The data elements (the boat models, the pictures, Senja's buildings: src/data/*.b64) are out of the page from 29.10.2026 (build.mjs,
 // Jonas: the page need not be one file when that is better for the players): each empty <script type="application/octet-stream"
@@ -117,7 +195,7 @@ function modelsLabel(){
 // The packs round everything the saved game holds. It runs again after the cloud gate (08.10.2026, a player on a new PC: the cloud save
 // is put in place only then, and its boat may lie in a tile the first round never asked for: «mask block 105,20 is not loaded»).
 async function bootMapLoad(){
-  const saved = load(), pts = [];
+  const saved = load(), pts = []; bootgNote(saved);
   for (const v of saved && saved.fleet && saved.fleet.length ? saved.fleet : saved ? [saved] : []){
     const b = v.boat; if (b && b.pos) pts.push(b.pos); for (const w of [...((v.plan && v.plan.wps) || []), ...((v.ops && v.ops.wps) || []), ...(v.draft || [])]) pts.push(w); }
   for (const s of (saved && saved.sets) || []) if (s.a && s.b) pts.push(setMid(s));
@@ -144,6 +222,7 @@ if (S && S.msgs) S.msgs = S.msgs.filter(m => !/^God morgen! Vi betaler /.test(m.
 // the coast radio is no longer kept among the messages (21.10.2026): what it has sent moves to the deck log's list
 if (S && S.msgs && S.msgs.some(m => m.from === 'Kystradio')){ S.radio = (S.radio || []).concat(S.msgs.filter(m => m.from === 'Kystradio').map(({t, from, no, en}) => ({t, from, no, en}))).slice(-40); S.msgs = S.msgs.filter(m => m.from !== 'Kystradio'); }
 if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
+if (BOOTG.safe) bootgSafe();   // the starts before locked (BOOTG above): the routes stop before the time away is played
 // the skiff is only bought at the yard (05.10.2026, Jonas: «Den båten der skal kun være tilgjengelig for kjøp i verftet … For alle
 // brukere»): a save that still sails the free aluminium skiff it started with (the start boat until 04.10.2026: the first vessel, never
 // traded, S.owned just ['skiff'] or not kept yet) gets Father's old wooden boat instead, and what does not fit her (the 90 hp outboard)
@@ -241,10 +320,11 @@ mapOnReady(() => { setInterval(tick, 200); const go3d = () => { if (document.get
 // the simulation's data are in (bootMap), so the clock may run, and the time away is played
 SIMREADY = true; CONT_D = null; renderBase(); panelDirty = true;
 if (AWAY){ catchUp(AWAY + Date.now() - BOOT_T); AWAY = 0; refreshAll(); } lastWall = Date.now();
+bootgSay();   // the safe start's line in the log (BOOTG above), at the time the player is back
 loadRoads().then(r => { ROADS = r; scheduleStatic(); if (g3Live()) G3.roadsReady(); }).catch(e => console.error(e));
 loadFine().then(f => { FINE = f; if (g3Live()) G3.fineReady(); }).catch(e => console.error(e));
 }
-bootMap().then(() => { bootDataLate(); bootStep('innlogging og skyen'); return cloudGate(); }).then(() => { bootStep('kartet rundt lagringen'); return bootMapLoad(); }).then(() => { bootStep('spillet bygges'); bootGame(); bootDone(); cloudHooks(); cloudStart(); try { INSTALL.start(); } catch (e){} try { sessionStorage.removeItem('dsb_needpk'); } catch (e){} }).catch(e => { console.error(e);
+bootMap().then(() => { bootDataLate(); bootStep('innlogging og skyen'); return cloudGate(); }).then(() => { bootStep('kartet rundt lagringen'); return bootMapLoad(); }).then(() => { bootStep('spillet bygges'); bootgIn(); bootGame(); bootDone(); cloudHooks(); cloudStart(); try { INSTALL.start(); } catch (e){} try { sessionStorage.removeItem('dsb_needpk'); } catch (e){} }).catch(e => { console.error(e);
   // a read in a pack that is not in: remember the pack and start again with it, a few times at most, before the player sees the error
   try { if (e && e.pk && e.pk.file){ const L = JSON.parse(sessionStorage.getItem('dsb_needpk') || '[]'); if (L.length < 8 && !L.includes(e.pk.file)){ L.push(e.pk.file); sessionStorage.setItem('dsb_needpk', JSON.stringify(L)); location.reload(); return; } } } catch (e2){} bootFail(e); });
 // A start that fails never leaves the player stuck (Jonas 08.10.2026): what went wrong goes to the admin's error list, and the player can try
@@ -253,6 +333,7 @@ bootMap().then(() => { bootDataLate(); bootStep('innlogging og skyen'); return c
 function bootFail(e){
   const msg = String(e && e.message || e), en = !/^no/.test((navigator.language || 'no').toLowerCase()) && !/^nb|^nn/.test((navigator.language || '').toLowerCase()), L = (no, eng) => en ? eng : no;
   BOOTW.done = true;   // (not stuck: it stopped, and says so)
+  bootgOut();   // (an error with the dialog, not a lock: BOOTG does not count it; each button below starts its count again)
   try { if (typeof cloudErr === 'function') cloudErr('boot: ' + msg, 'boot', e && e.stack); if (typeof errStart === 'function') errStart(); } catch (e2){}   // (the game is not coming: what waited for it goes now)
   const safe = /safe/.test(location.hash), prev = (() => { try { return !!localStorage.getItem(KEY_PREV); } catch (e2){ return false; } })();
   loaderGone();   // the loading screen lies over the dialog otherwise
@@ -263,7 +344,7 @@ function bootFail(e){
     (safe ? '' : '<button id="bfSafe" class="btn">' + L('Start i sikker modus (uten 3D)', 'Start in safe mode (no 3D)') + '</button>') +
     (prev ? '<button id="bfPrev" class="btn">' + L('Hent forrige lagring', 'Take back the save before') + '</button>' : '') + '</div></div>';
   const on = (id, f) => { const b = document.getElementById(id); if (b) b.onclick = f; };
-  on('bfRetry', () => { try { sessionStorage.removeItem('dsb_needpk'); } catch (e2){} location.reload(); });
-  on('bfSafe', () => { location.hash = (location.hash ? location.hash + ',' : '#') + 'safe,no3d'; location.reload(); });
-  on('bfPrev', () => { try { const cur = localStorage.getItem(KEY), pv = localStorage.getItem(KEY_PREV); if (pv){ localStorage.setItem(KEY, pv); if (cur) localStorage.setItem(KEY_PREV, cur); tabMark(); sessionStorage.setItem('dsb_force', '1'); } } catch (e2){} location.reload(); });
+  on('bfRetry', () => { bootgClear(); try { sessionStorage.removeItem('dsb_needpk'); } catch (e2){} location.reload(); });
+  on('bfSafe', () => { bootgClear({fails:0, safeAsk:true}); location.hash = (location.hash ? location.hash + ',' : '#') + 'safe,no3d'; location.reload(); });
+  on('bfPrev', () => { bootgClear(); try { const cur = localStorage.getItem(KEY), pv = localStorage.getItem(KEY_PREV); if (pv){ localStorage.setItem(KEY, pv); if (cur) localStorage.setItem(KEY_PREV, cur); tabMark(); sessionStorage.setItem('dsb_force', '1'); } } catch (e2){} location.reload(); });
 }
