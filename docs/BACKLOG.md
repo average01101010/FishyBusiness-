@@ -458,6 +458,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **10.7 ikonet `sjomann`:** tatt bort (`ui/phone/00-shell.js`).
 - **10.7 skiffen (`buildSkiff`):** sløyebordet og blødekaret sto ikke lenger ved setet: skiffrevisjonen 31.10.2026 la sløyebordet over babord ripe ved konsollen og blødekaret på dørken akter om det (`skiff-grunnlag.md`, rad 8), sett i 3D i Ø7. Skjermene var døde fordi `paintPlotter` kastet (over); nå lever de. `buildSkiff` blir, siden `handKit` bygger på den.
 
+## Strøket 06.11.2026 (UI 2, U2-5: Rederi, gren `ccr-91234803-y9yb7j`)
+
+- K9 (Rederi: flåten begynte 0,8 skjermer ned på telefonen og 1,1 på nettbrettet, bak regnskapet og to knapper) fra `docs/planer/ui-2/kartlegging.md` kap. 4: flåten står først i Rederi-appen med ett kort per båt, «Ta roret» som hovedknapp når begge ligger i havn og ellers grå med grunnen, regnskapet som én linje med «Bank ›» under flåten, ingen knapper over flåten. Målt med `kartlegging.py`: telefonen 1,0 skjermer og flåten 0,08 skjermer ned, nettbrettet 1,5 og 0,11 (`docs/systemer/ui-og-telefon.md`, «UI 2, U2-5»).
+
 ## Strøket 06.11.2026 (UI 2, U2-1: stripa og de faste sonene, gren `ccr-aee4fa08-paslvj`)
 
 - K4 (boksen vokste 47 px mellom havn og underveis og minikartet flyttet seg), K5 (pilla sa det boksen sa), K6 (tredje linje tom i havn), K7 (minimer-knappene 32×30, målerknappen 31 px) og K13 (veiledningens mål) fra `docs/planer/ui-2/kartlegging.md`: stripa med tre linjer og fast høyde er normalen i stående, boksen er et kort ved trykk, minikartet står fast, pilla `#dockInfo` er borte og linje 3 sier det den sa, dekk-steget peker på `#hud .st.nx`, `hmin`, `plotMin` og målerknappen er 44 px (`docs/systemer/ui-og-telefon.md`, «UI 2, U2-1»). K12 står igjen (10.1, Ø7).
