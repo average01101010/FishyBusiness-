@@ -29,6 +29,7 @@ Fra `CLAUDE.md` 26.10.2026 (Jonas 07.10.2026, «Spør før hver test»: «Dekker
 | `coast3d`, `sitetest` | 4–5 min | terrenget, kartdataene eller mottaksregisteret |
 | `kjoptest` | 3,5 min | butikken |
 | `lighttest`, `ultratest`, `uishots`, `haultest` | 2–3 min | lys, ultra-grafikk, UI-oppsett, haling |
+| `kartlegging` | 4–5 min | UI 2 (06.11.2026): knappelinja, boksen, stripa, skuffen og telefonen målt i 17 tilstander i 390×844 og 800×1280, uten 3D; tallene i `tests/out/kartlegging/<fmt>.json` (`docs/planer/ui-2/kartlegging.md`) |
 | `f1test` | 4 min | konteksten (WebGL 2 og 1), skyggeroversettelsen (`glsl3`), egen båts detaljnivåer, ultra-forsøket i `qualTick` |
 | `profshot`, `benchshot` | 3–5 min | profilen (`#prof`) og målebenken (`#bench`), merkene i bildeløkka |
 

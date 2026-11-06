@@ -2,7 +2,8 @@
 guided first trip (tapping the guide's ring as tut.py does), and after it a walk through every surface a player meets: the dock and
 its fans, every drawer page, every phone app, the chart plotter, the deck log, the settings. A picture of each step lands in
 tests/out/uiplay/<format>/NN_<step>.png, and a list of what was seen in tests/out/uiplay/<format>/steps.json.
-Landscape only by default (Jonas 04.11.2026); KYST_UIPLAY_ONE=staaende plays upright, KYST_UIPLAY_ONE= both."""
+Landscape only by default (Jonas 04.11.2026); KYST_UIPLAY_ONE=staaende plays upright, KYST_UIPLAY_ONE= both, and
+KYST_UIPLAY_SIZE=390x844:tlf one size of its own (a phone upright, UI 2)."""
 from _env import GAME_TUT as GAME
 import asyncio, json, os, time
 from playwright.async_api import async_playwright
@@ -162,8 +163,13 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--disable-gpu-compositing', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         one = os.environ.get('KYST_UIPLAY_ONE', 'liggende')   # landscape only while the UI is being reviewed (Jonas 04.11.2026); KYST_UIPLAY_ONE= plays both
-        if one != 'staaende': await play(b, 1280, 800, 'liggende')
-        if one != 'liggende': await play(b, 800, 1280, 'staaende')
+        size = os.environ.get('KYST_UIPLAY_SIZE', '')   # one size of its own, as «390x844:tlf» (UI 2, U2-0: the phone upright, 06.11.2026)
+        if size:
+            wh, tag = size.split(':') if ':' in size else (size, size); W, H = (int(v) for v in wh.lower().split('x'))
+            await play(b, W, H, tag)
+        else:
+            if one != 'staaende': await play(b, 1280, 800, 'liggende')
+            if one != 'liggende': await play(b, 800, 1280, 'staaende')
         await b.close()
 
 asyncio.run(main())

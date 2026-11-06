@@ -103,7 +103,7 @@ Stripa er normaltilstanden i stående. Den har tre linjer og fast høyde:
 
 - **Linje 1:** klokka · tilstandsprikken og tilstanden · kassa.
 - **Linje 2:** diesel, last, energi og sjø som ikon og tall, farget ved varsel (gult og rødt som i dag, «Full» ved full last).
-- **Linje 3:** neste hendelse («Fisket er ferdig 09:01 · om 30 min i ekte tid») eller varselet som gjelder nå (regler ✕ eller !, synkronrulling med rådet, blåsa langt unna med «Kjør dit», kulde). Finnes ingen, er linja tom, men plassen står.
+- **Linje 3:** neste hendelse («Fisket er ferdig 09:01 · om 30 min i ekte tid») eller varselet som gjelder nå (regler ✕ eller !, synkronrulling med rådet, blåsa langt unna med «Kjør dit», kulde), og dekkets kg og minutter under fisket. I havn står stedet der når ingenting er på gang («Ved kaia · Finnsnes», «Ved naustet», rorbuas pris), slik pilla gjør i dag. Til sjøs er linja tom bare mens båten ligger stille uten noe på gang (U2-0: 6 av 48 prøver), og plassen står. «Regler ✓» står ikke der; den er alltid sann og hører til boksen.
 - **Trykk på stripa** gir hele boksen som et kort over kartet: målerne som i dag, «nå»-radene og hele tabellen. Et trykk utenfor lukker. Ingenting under flytter seg.
 - **Pilla `#dockInfo` går ut.** Det den sa (juksing til, dekket, avgang, verksted, hviling), står på linje 3.
 - Nettbrett liggende og PC har plass til hele boksen som i dag; den får fast bredde, og minikartet fast plass under den (antatt, kap. 8, avgjøres i U2-8).
@@ -153,7 +153,7 @@ Hver fase passer én økt og slutter med `/lever` og `/okt-slutt`, med skjermbil
 | Fase | Bygger | Filer | Tester |
 |---|---|---|---|
 | **U2-0** Kartlegging i stående | `uishots.py` og `uiplay.py` i 390×844 og 800×1280, tellingen før; lista over alle datapunkt og handlinger i tre bøtter (sanntid, ett trykk, bakmeny); inventaret av linja per tilstand og telefonens apper og sider. Skrives til `ui-2/kartlegging.md`. Bare dokumenter og tester. | `tests/`, `docs/planer/ui-2/` | – |
-| **U2-1** Stripa og sonene | Stripa med tre linjer og fast høyde som normal i stående; boksen som kort ved trykk; minikartet i fast plass uten `--gpsTop` fra boksens høyde; `#dockInfo` ut og innholdet på linje 3 | `ui/04-panels-instruments.js`, `ui/03e-miniplot.js`, `ui/10c-dock.js` (`infoText`), `styles.css` | `hudtest`, `dockrow`, `uishots`, `tut.py` i begge formater |
+| **U2-1** Stripa og sonene | Stripa med tre linjer og fast høyde som normal i stående; boksen som kort ved trykk; minikartet i fast plass uten `--gpsTop` fra boksens høyde; `#dockInfo` ut og innholdet på linje 3; veiledningens mål holdes i live (linje 3 har klassen `st nx`, dekk-steget peker dit i stedet for på `#dockInfo`, `#miniPlot` står; U2-0 K13); minimer-knappene og målerknappen til 44 px (K7) | `ui/04-panels-instruments.js`, `ui/03e-miniplot.js`, `ui/10c-dock.js` (`infoText`), `ui/07b-first-trip.js` (dekk-steget, linje 109), `styles.css` | `hudtest`, `dockrow`, `uishots`, `tut.py` i begge formater |
 | **U2-2** Om bord | Beholdning blir Om bord med Mannskap som fane, prikken flyttet; Mannskap-knappen ut av linja; Hvil kontekstuell; Om bord sist i alle tilstander. (Ved V3 B: søyla i stedet, `src/index.html` og `styles.css`.) | `ui/10c-dock.js`, `ui/phone/11-rederi.js` (`DRAWER`, sidene `beholdning` og `arbeid`), `styles.css` | `docktest`, `dockrow`, `worktest`, `uishots` |
 | **U2-3** Knappelinja | Reglene i 4.3: Auto-nav ut, Redskap som én knapp med vifte, hovedknappen med mål («Til mottaket · 3 nm»), grunnen på knappen (`data-why` tegnet under etiketten, ikke stiplet ring), det som aldri gjelder båten skjult, ingen «Mer» og ingen to rader i stående, viftene på høyst fire per rad | `ui/10c-dock.js`, `styles.css`, `ui/07b-first-trip.js` bare om et steg peker på linja | `docktest`, `dockrow`, `tut.py` i begge formater, fisketestene som trykker i linja (`fiskeplay`, `geartest`) |
 | **U2-4** Roen | 4.5 etter V8 | `ui/10c-dock.js`, `styles.css`, `view3d/24-cinema.js`, `ui/02-format-state.js` (toast bryter roen) | `tut.py` (roen må ikke slå inn), `hbtest`, `uishots` |
@@ -205,9 +205,9 @@ Rekkefølgen U2-0 → U2-1 → U2-2 → U2-3 er ryggraden: stripa før Om bord, 
 
 ## 8. Antatt eller usikkert
 
-- Stripa med fast høyde på tre linjer gir en tom tredje linje mye av tiden. Den må ses på telefonen før den låses; alternativet er to linjer der varselet tar plassen til målerne når det kommer.
+- Stripa med fast høyde på tre linjer: U2-0 målte at linja har noe å si i 42 av 48 prøver til sjøs, og alltid i havn når stedet står der. Tom bare mens båten ligger stille uten noe på gang. Hvordan den tomme linja ser ut, ses på telefonen i U2-1.
 - At minikartet åpner plotteren, står i `docs/systemer/ui-og-telefon.md`; U2-1 sjekker at trykket virker også når kartet er minimert.
-- Veiledningens Autonav-steg peker på `#rAuto` i plotteren. Om noe steg i første tur peker på knappen i linja, viser `tut.py` det i U2-3.
+- Veiledningens Autonav-steg peker på `#rAuto` i plotteren, ikke på linjas Auto-nav (U2-0 K13, `ui/07b-first-trip.js`). Men fire steg peker på boksens neste-linje (`#hud .st.nx`), ett på pilla (`#dockInfo`) og tre på minikartet, så U2-1 holder de målene i live, og `tut.py` i begge formater er porten.
 - Hovedknappen «Til mottaket · 3 nm» trenger nærmeste mottak med rute: `plantsNear`, `goplace` og `goTo` finnes. Avstanden på knappen er luftlinje; ruta regnes når knappen trykkes.
 - «Ta roret» krever at begge båtene ligger i havn (`vboard`). Det er spillets regel og står; UI-et sier den på knappen.
 - Roen må ikke skjule et varsel eller slå inn i første tur. Hva som bryter roen, prøves i `tut.py` og `hbtest`.
@@ -227,4 +227,5 @@ Rekkefølgen U2-0 → U2-1 → U2-2 → U2-3 er ryggraden: stripa før Om bord, 
 ## 10. Status
 
 - 06.11.2026: planen skrevet etter samtalen 05.–06.11.2026 og bildene fra Jonas' telefon (`ui-2/`). Ingenting bygd.
+- 06.11.2026, **U2-0 ferdig** (`ui-2/kartlegging.md`, `tests/kartlegging.py`, `uishots` i fem størrelser, `uiplay` i stående kjører): inventaret i tre bøtter (kap. 1 der), 17 tilstander målt i 390×844 og 800×1280, funnene K1–K15. Det som endret planen: linje 3 får stedet i havn og er tom bare når båten ligger stille uten noe på gang (4.2); U2-1 holder veiledningens mål i live (`#hud .st.nx`, `#dockInfo`, `#miniPlot`) og tar minimer-knappene til 44 px; viftene høyst fire per rad; Ansatte-siden inn i ett ark (U2-7). Bekreftet: fem på raden holder på telefonen, seks brekker; Om bord som fane gir ingen lengre side; pilla sier aldri noe boksen ikke sier. Ikke målt: full last, egen blåse, roen (lest i koden). `uishots` fant 0 i fem størrelser, så den ser ikke det strukturelle.
 - 06.11.2026: Jonas svarte V2 A, V6 A, V7 A, V8 A, og la til to ting: ekkoloddet i minikartet brukes aktivt under seiling, så roen tar bort knapper og aldri instrumenter (4.5); og søyla ved siden kan være mer i veien i stående, så V3 er åpnet igjen som V3 revidert med «Om bord» i linja som anbefaling (4.4, kap. 7). Venter på V3 revidert og «kjør på». U2-0 kjøres som en Playwright-runde i stående før byggingen (Jonas' spørsmål 06.11.2026), med oppdraget: mål og finn, ikke tegn om.
