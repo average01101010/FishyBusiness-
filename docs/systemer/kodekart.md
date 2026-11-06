@@ -17,50 +17,50 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 60 `natP(lat, lon)`
   - 61 `natLL(p)`
 
-## `src/js/core/01-world.js` (452 linjer)
+## `src/js/core/01-world.js` (455 linjer)
 
 - **10** one clock for everyone (05.10.2026, the shared world V1)
   - 55 `gridScale(p)`
   - 59 `gridGamma(p)`
   - 77 `farL(kind, p)`
-  - 82 `expoFar(p)`
-  - 87 `landFracM(x, z)`
-  - 92 `landXIn(X, x, z)`
-  - 97 `dcCellFar(p)`
-  - 104 `b64bytes(s)`
-  - 105 `varints(b)`
-  - 113 `loadFine()`
-  - 121 `loadRoads()`
-  - 137 `inHarbour(p)`
-  - 144 `legHazard(a, c, sd)`
-  - 157 `legHazardMemo(a, c, sd)`
-  - 162 `draftHazards()`
-  - 172 `legReady(a, c)`
-  - 179 `nearestPlace(p)`
-  - 183 `groundCheck(a, c)`
-  - 199 `runAground(p)`
-  - 214 `rocksNear(a, b, r)`
-  - 224 `rocksIn(x0, y0, x1, y1)`
-  - 232 `rocksAlong(a, b, r)`
-  - 246 `coastDist(p)`
-  - 247 `coastDistFar(p)`
-  - 253 `decodeContours()`
-  - 262 `isLand(p)`
-  - 270 `isLandFar(p)`
-  - 276 `isLandUI(p)`
-  - 282 `inHarbourPocket(p)`
-  - 288 `harbourNear(x, z)`
-  - 294 `qPockets()`
-  - 295 `pocketHit(US, QS, x, z)`
-  - 302 `pocketsIn(x0, y0, x1, y1)`
-  - 311 `legClear(a, b)`
-  - 342 `portLabel(p)`
-- **358** the harbour unit (02.10.2026)
-  - 399 `fillOut(U, lx, lz)`
-  - 412 `onUnitGround(p)`
-  - 419 `unitCovers(x, z, m)`
-  - 427 `bridgeUnderUnit(br, extra)`
-  - 432 `portApproach(pt)`
+  - 85 `expoFar(p)`
+  - 90 `landFracM(x, z)`
+  - 95 `landXIn(X, x, z)`
+  - 100 `dcCellFar(p)`
+  - 107 `b64bytes(s)`
+  - 108 `varints(b)`
+  - 116 `loadFine()`
+  - 124 `loadRoads()`
+  - 140 `inHarbour(p)`
+  - 147 `legHazard(a, c, sd)`
+  - 160 `legHazardMemo(a, c, sd)`
+  - 165 `draftHazards()`
+  - 175 `legReady(a, c)`
+  - 182 `nearestPlace(p)`
+  - 186 `groundCheck(a, c)`
+  - 202 `runAground(p)`
+  - 217 `rocksNear(a, b, r)`
+  - 227 `rocksIn(x0, y0, x1, y1)`
+  - 235 `rocksAlong(a, b, r)`
+  - 249 `coastDist(p)`
+  - 250 `coastDistFar(p)`
+  - 256 `decodeContours()`
+  - 265 `isLand(p)`
+  - 273 `isLandFar(p)`
+  - 279 `isLandUI(p)`
+  - 285 `inHarbourPocket(p)`
+  - 291 `harbourNear(x, z)`
+  - 297 `qPockets()`
+  - 298 `pocketHit(US, QS, x, z)`
+  - 305 `pocketsIn(x0, y0, x1, y1)`
+  - 314 `legClear(a, b)`
+  - 345 `portLabel(p)`
+- **361** the harbour unit (02.10.2026)
+  - 402 `fillOut(U, lx, lz)`
+  - 415 `onUnitGround(p)`
+  - 422 `unitCovers(x, z, m)`
+  - 430 `bridgeUnderUnit(br, extra)`
+  - 435 `portApproach(pt)`
 
 ## `src/js/core/01b-mapdata.js` (212 linjer)
 
@@ -2177,12 +2177,12 @@ The item card (M1 in docs/planer/butikker-og-sponsorer.md, 30.10.2026)
 - **63** what each thing does, in numbers from the code ([no, en]); the long story is in the Håndboka (ITEM_HB)
   - 105 `itemCard(o)`
 
-## `src/js/ui/phone/00-shell.js` (60 linjer)
+## `src/js/ui/phone/00-shell.js` (59 linjer)
 
 ---------- the phone ----------
 
 - **1** the phone
-  - 59 `setBadge()`
+  - 58 `setBadge()`
 
 ## `src/js/ui/phone/01-haill-fiske-service.js` (112 linjer)
 
@@ -2256,12 +2256,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1143 linjer)
+## `src/js/ui/phone/07-patch.js` (1148 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1136 `patch()`
+  - 1141 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2328,7 +2328,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
   - 125 `careAboard(inPort, p)`
   - 151 `redskap(tab0)`
 
-## `src/js/ui/phone/13-mannskap-bank-meld.js` (178 linjer)
+## `src/js/ui/phone/13-mannskap-bank-meld.js` (177 linjer)
 
 --- crew
 
@@ -2613,7 +2613,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 401 `renderPanel()`
   - 405 `panelBusy()`
 
-## `src/js/ui/07b-first-trip.js` (296 linjer)
+## `src/js/ui/07b-first-trip.js` (300 linjer)
 
 ---------- «Første tur»: the guided first trip every new player goes through ----------
 
@@ -2632,16 +2632,16 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 153 `tutDriftTip(d)`
   - 167 `tutStartWhy()`
   - 180 `tutTip(st)`
-  - 195 `tutReveal(el)`
-  - 201 `tutRect(T0)`
-  - 207 `tutStep()`
-  - 213 `tutFinish()`
-  - 214 `tutScrollSlip()`
-  - 217 `tutAllow(what)`
-  - 235 `tutView(st)`
-  - 242 `tutUpdate()`
-  - 265 `tipPlace(txt, T0, o)`
-  - 290 `tipToast()`
+  - 199 `tutReveal(el)`
+  - 205 `tutRect(T0)`
+  - 211 `tutStep()`
+  - 217 `tutFinish()`
+  - 218 `tutScrollSlip()`
+  - 221 `tutAllow(what)`
+  - 239 `tutView(st)`
+  - 246 `tutUpdate()`
+  - 269 `tipPlace(txt, T0, o)`
+  - 294 `tipToast()`
 
 ## `src/js/ui/07c-handbook.js` (240 linjer)
 
@@ -2805,14 +2805,14 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 223 `wpActCycle(w)`
   - 228 `gearDoAct(act, el)`
 
-## `src/js/ui/10c-dock.js` (419 linjer)
+## `src/js/ui/10c-dock.js` (420 linjer)
 
 ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 
 - **1** the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side
-- **323** the drawer
-  - 392 `renderActs()`
-  - 405 `showroomTick()`
+- **324** the drawer
+  - 393 `renderActs()`
+  - 406 `showroomTick()`
 
 ## `src/js/ui/10d-helm.js` (51 linjer)
 
@@ -3044,7 +3044,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 - **70** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (261 linjer)
+## `src/js/ui/11-boot.js` (263 linjer)
 
 ---------- boot ----------
 
@@ -3067,7 +3067,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 111 `modelsLabel()`
   - 118 `bootMapLoad()`
   - 139 `bootGame()`
-  - 244 `bootFail(e)`
+  - 246 `bootFail(e)`
 
 ## `src/js/vessel3d.js` (1493 linjer)
 
