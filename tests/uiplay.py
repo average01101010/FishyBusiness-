@@ -68,16 +68,19 @@ async def play(b, W, H, tag):
     await tap_el('#obGo'); await pg.wait_for_timeout(600)
     await pg.wait_for_function("G3.isActive() || document.body.classList.contains('vplot')", timeout=90000); await pg.wait_for_timeout(1500)
     await pg.evaluate("S.mult = 30; save()")
-    stuck = 0
+    stuck, t_step = 0, time.monotonic()
     for it in range(900):
         await pg.evaluate("if (!asleep() && S.energy < 60) S.energy = 60")
         s = json.loads(await pg.evaluate(STATE)); sid = s['id']
         if not seen or seen[-1] != sid:
-            seen.append(sid); stuck = 0; await pg.wait_for_timeout(500); await shot('tut-' + str(sid), s['tip'])
+            seen.append(sid); stuck = 0; t_step = time.monotonic(); await pg.wait_for_timeout(500); await shot('tut-' + str(sid), s['tip'])
         if sid is None:
             if await pg.evaluate("S.tut === 0"): break
             await pg.wait_for_timeout(500); continue
         stuck += 1
+        if time.monotonic() - t_step > 720:   # twelve minutes on one step (the longest honest one, «full», took 386 s under SwiftShader): a step no ring or «Skjønner» moves (the phone's «Kast loss», U2-0 K17); say so, and walk the rest without the guide
+            print('   FEIL første tur står fast på', sid, json.dumps({k: s[k] for k in ('ring', 'ok', 'okText', 'st', 'rod')}), flush=True)
+            await pg.evaluate("tutFinish()"); await pg.wait_for_timeout(600); break
         if s['sleep']:
             if s['ack']: await tap_el('#slAck')
             elif s['wake']: await tap_el('#slSkip')
