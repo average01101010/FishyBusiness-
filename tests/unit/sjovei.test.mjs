@@ -132,4 +132,72 @@ export default function (t){
   t.eq(K.sjvSay(W({sit:'18', cls:'fish'}), 'box'), 'Fiskefartøy: du viker · MS Kystpilen', 'i boksen med navnet');
   t.eq(K.sjvSay(W({give:'b', sit:'2', ownCls:'fish'}), 'strip'), 'Du fisker: den andre viker', 'du fisker og ligger stille');
   t.ok(K.sjvSay(W({}), 'tiny').length <= 22 && K.sjvSay(W({give:'b'}), 'tiny').length <= 22, 'de korte tekstene får plass i 47 vw');
+
+  // ---- Ø11.2: the sight, rule 19, the lanterns and the sound signals ----
+  // rule 22: the range a lantern must be seen at (nautical miles)
+  t.eq([K.sjvLampNm('masthead', 10), K.sjvLampNm('masthead', 15), K.sjvLampNm('masthead', 21), K.sjvLampNm('masthead', 75)], [2, 3, 5, 6], 'regel 22: topplanterne 2, 3, 5 og 6 mil etter lengden');
+  t.eq([K.sjvLampNm('side', 10), K.sjvLampNm('side', 15), K.sjvLampNm('side', 60)], [1, 2, 3], 'regel 22: sidelanterne 1, 2 og 3 mil');
+  t.eq([K.sjvLampNm('stern', 10), K.sjvLampNm('allround', 30), K.sjvLampNm('fishR', 60), K.sjvLampNm('kv', 15)], [2, 2, 3, 2], 'regel 22: akter og rundtlysende 2 (3 fra 50 m); det blå lyset 2 mil (53 d)');
+  // vedlegg I 8: at K 0.8 (about 13 miles' visibility) a lantern is seen as far as it is made for; in thick weather much shorter
+  t.near(K.sjvLightNm(2, 13 * NM), 2, 0.06, 'vedlegg I 8: en lanterne for 2 mil ses 2 mil ved 13 mils sikt');
+  t.near(K.sjvLightNm(5, 13 * NM), 5, 0.15, 'og en for 5 mil 5 mil');
+  const l12 = K.sjvLightNm(2, 1.2), l37 = K.sjvLightNm(2, 3.7), l50 = K.sjvLightNm(2, 50);
+  t.ok(l12 > 0.3 && l12 < 0.9 && l12 < l37 && l37 < 2 && l50 > 2, 'lanterna ses kortere i dårlig sikt, lenger i klart vær', [l12, l37, l50].map(x => +x.toFixed(2)));
+  t.eq(K.sjvSeenKm(10, 1.2, false), 1.2, 'om dagen ses en båt så langt sikten er');
+  t.near(K.sjvSeenKm(10, 1.2, true), l12 * NM, 1e-6, 'i mørket så langt lanternene hennes ses');
+  // vedlegg III 1 c: how far the whistle is heard
+  t.eq([K.sjvHearNm(10), K.sjvHearNm(49.9), K.sjvHearNm(121.8), K.sjvHearNm(250)], [0.5, 1, 1.5, 2], 'vedlegg III: hørevidde 0,5, 1, 1,5 og 2 mil etter lengden');
+  // rule 35: the fog signals
+  t.eq([K.sjvFogPat('pow', 8, 10), K.sjvFogPat('pow', 0, 10), K.sjvFogPat('fish', 0, 10), K.sjvFogPat('nuc', 2, 10), K.sjvFogPat('ram', 3, 20), K.sjvFogPat('anch', 0, 10), K.sjvFogPat('towed', 3, 10), K.sjvFogPat('moor', 0, 10)],
+    ['L', 'LL', 'LSS', 'LSS', 'LSS', 'bell', 'LSSS', null], 'regel 35: ett langt med fart, to lange stoppet, langt og to korte (fisker, ikke under kommando, begrenset), klokke til ankers, langt og tre korte på slep, ingenting fortøyd');
+  // rule 34 a: the manoeuvring signals
+  t.eq([K.sjvManPat(1, false), K.sjvManPat(-1, false), K.sjvManPat(1, true)], ['S', 'SS', 'SSS'], 'regel 34 a: ett kort styrbord, to korte babord, tre korte akterover');
+  // 19 d: the side in restricted visibility
+  t.eq([K.sjvSide19(0.3, false), K.sjvSide19(-0.3, false), K.sjvSide19(-0.3, true), K.sjvSide19(2, false), K.sjvSide19(-2, false), K.sjvSide19(Math.PI / 2, false)], [1, 1, 0, -1, 1, -1],
+    '19 d: forenom tvers til styrbord (fritt når du innhenter), tvers eller aktenfor bort fra den andre');
+  // colregSit under rule 19: not in sight in restricted visibility both act; no overtaking (avsnitt II); one not under command leaves it
+  s = K.colregSit(V(0, d4, 0, 10), V(d4, 0, 270, 10), {fog:true});
+  t.eq([s.sit, s.give], ['19', 'both'], 'regel 19: kryssende i tåke uten sikt, begge tar forholdsregler');
+  s = K.colregSit(V(0, 0.5, 0, 12), V(0, 0, 0, 6), {fog:true});
+  t.eq([s.sit, s.give], ['19', 'both'], 'regel 19: innhenting i tåke er ikke regel 13 (avsnitt II gjelder i sikte)');
+  t.eq(K.sjvSide(s, 0, 'a', 200, 1) !== 0, true, 'og den som innhenter, kan svinge til den siden som åpner mest');
+  s = K.colregSit(V(0, d4, 0, 10, {cls:'nuc'}), V(d4, 0, 270, 10), {fog:true});
+  t.eq([s.sit, s.give], ['19', 'b'], 'regel 19: du er ikke under kommando, den andre tar forholdsregler');
+  s = K.colregSit(V(0, d4, 0, 0), V(d4, 0, 270, 10), {fog:true});
+  t.eq(s.sit, '2', 'du ligger stille: den som går, holder klar også i tåke');
+  s = K.colregSit(V(0, d4, 0, 10), V(d4, 0, 270, 10), {fog:true});
+  t.eq(K.sjvSide(s, 270 * R, 'b', 200, 1), 1, '19 d i: den andre, som har deg forenom tvers om babord, svinger ikke til babord');
+  // the lanterns by what she does (26 e: jigging is not fishing; 26 b trawl; the quay none; 53 d the coast guard)
+  const LS = K.sjvLanternSt;
+  t.ok(LS({cls:'fish', v:0}).fishing && !LS({cls:'pow', st:'fishing', v:0}).fishing, 'lanternene: garn, line og teiner i sjøen gir fiskelys, juksa gjør det ikke (26 e)');
+  t.ok(LS({cls:'fish', trawl:true, v:3}).trawl && !LS({cls:'fish', v:3}).trawl, 'tråleren som sleper, viser grønt over hvitt (26 b)');
+  t.ok(LS({cls:'moor'}).port && LS({cls:'anch'}).anch && LS({cls:'nuc', v:2}).nuc && LS({cls:'pow', kv:true, v:6}).kv && LS({cls:'pow', v:7.5}).v === 7.5, 'ved kaia ingen, til ankers ankerlys, ikke under kommando to røde, Kystvakta blått, og den virkelige farten');
+  t.ok(K.sjvMinKn() >= 2 && K.sjvMinKn() <= 4, 'minste styrefart mellom 2 og 4 knop', K.sjvMinKn());
+  // the words under rule 19
+  const W19 = o => W(Object.assign({sit:'19', give:'both', R:{relA:0.3, relB:-0.5, closing:true}}, o));
+  t.eq(K.sjvSay(W19({}), 'strip'), 'Nedsatt sikt: vik til styrbord', 'regel 19: forenom tvers, vik til styrbord');
+  t.eq(K.sjvSay(W19({}), 'tiny'), 'Tåke: vik til SB', 'og kort i stripa');
+  t.eq(K.sjvSay(W19({R:{relA:2, relB:-0.5, closing:true}}), 'strip'), 'Nedsatt sikt: vik til babord', '19 d ii: aktenfor tvers om styrbord, vik bort fra den');
+  t.eq(K.sjvSay(W19({e19:true}), 'strip'), 'Tåkesignal forut: minste styrefart', '19 e: tåkesignal forut, minste styrefart');
+  t.eq(K.sjvSay(W19({e19:true, pilot:true}), 'strip'), 'Tåkesignal forut: Autonav går sakte', '19 e med Autonav');
+  t.eq(K.sjvSay(W19({auto:true}), 'box'), 'Nedsatt sikt: Autonav viker · MS Kystpilen', 'Autonav viker i tåke, i boksen med navnet');
+  t.ok(['', 'e19', 'pilot', 'auto'].every(k => K.sjvSay(W19(k ? (k === 'pilot' ? {e19:true, pilot:true} : {[k]:true}) : {}), 'tiny').length <= 22), 'de korte tekstene i tåke får plass i 47 vw');
+
+  // rule 35 over time (sjvFogSigs): each vessel within hearing sounds her signal on a beat of her own at least every two game minutes,
+  // the boat you follow hers; out of hearing nothing; one heard forward of the beam and not in sight is kept for 19 e
+  const SJ = K.SJV; SJ.sigLog.length = 0; SJ.sig.length = 0; SJ.fogT.clear(); SJ.heard.clear();
+  const own = {p:{x:0, y:0}, hd:0, v:6, cls:'pow', L:10}, fl = [
+    {id:'near', p:{x:0, y:-0.6}, cls:'pow', v:8, L:10},          // 600 m right ahead, a 10 m boat: heard (half a mile)
+    {id:'far', p:{x:1.6, y:0}, cls:'pow', v:8, L:10},            // 1.6 km abeam, 10 m: not heard
+    {id:'ship', p:{x:-2, y:0.5}, cls:'pow', v:15, L:121.8},      // the coastal ship 2.1 km off: heard (1.5 miles)
+    {id:'anch', p:{x:0.3, y:0.3}, cls:'anch', v:0, L:15},        // at anchor: the bell
+    {id:'quay', p:{x:0.2, y:0}, cls:'moor', v:0, L:20}];         // moored: nothing
+  const run35 = (H) => { for (let k = 0; k < 130; k++) K.sjvFogSigs(H + k / 3600, fl, own, 1, 0.4, false); };
+  K.sjvFogSigs(10, fl, own, 1, 0.4, false); const first = SJ.sigLog.length; run35(10 + 1 / 3600);
+  const by = id => SJ.sigLog.filter(q => q.id === id).map(q => q.pat);
+  t.eq(first, 0, 'regel 35: ingen signaler i det første øyeblikket (takten settes)');
+  t.ok(by('near').length >= 1 && by('near').every(p => p === 'L') && by('ship').length >= 1 && by('_own').length >= 1 && by('_own').every(p => p === 'L'), 'regel 35: båten nær og kystruteskipet gir ett langt støt innen to minutter, og din egen båt også', {near:by('near'), ship:by('ship'), own:by('_own')});
+  t.ok(by('far').length === 0 && by('quay').length === 0, 'utenfor hørevidden og ved kaia ingen signaler');
+  t.ok(by('anch').length >= 2 && by('anch').every(p => p === 'bell'), 'til ankers klokka minst hvert minutt', by('anch'));
+  t.ok(SJ.heard.has('near') && !SJ.heard.has('ship'), '19 e: tåkesignalet rett forut uten sikt huskes, skipet aktenfor tvers ikke');
 }

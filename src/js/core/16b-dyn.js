@@ -114,8 +114,11 @@ function dynStops(P){
   const out = [0]; for (let v = 0.25; v <= P.umax + 0.25; v += 0.25){ const s = dynZero(); s.u = v; let d = 0, t = 0; while (s.u > 0.05 && t < 600){ d += s.u * 0.1; dynInt(P, s, -0.3, 0, 0.1, 1); t += 0.1; } out.push(d); }
   return out;
 }
-function dynCal(key){
-  if (DYN.cal[key]) return DYN.cal[key];
+// sx: the boat's own engine over the type's (dynCalOf): the same hull, rudder and areas, measured again with that engine (dynCalEng)
+function dynCal(key, sx = 1){
+  sx = Math.round(sx * 1000) / 1000; const ck = sx === 1 || !(sx > 0) ? key : key + '@' + sx;
+  if (DYN.cal[ck]) return DYN.cal[ck];
+  if (ck !== key) return DYN.cal[ck] = dynCalEng(dynCal(key), sx, ck);
   const V = VESSELS[key] || VESSELS.skiff, P = dynPar(V), want = clamp(V.turnR || 2 * V.len, 1.2 * V.len, 2 * V.len);
   // the wind's areas: the side above the water (the freeboard along her, and the wheelhouse, a hardtop or the people at the console
   // over a share of her length) and the front; the centre of the side at the middle of a small boat (she drifts across the wind), a
@@ -124,10 +127,27 @@ function dynCal(key){
   { const h = hullOf(V === VESSELS[key] ? key : 'skiff'), hs = {hus:[0.35, 2.0], hardtop:[0.3, 1.5]}[(V.fac || {}).house] || [0.15, 1.0];
     P.AL = V.len * h.f + hs[0] * V.len * hs[1] * (V.len >= 30 ? 1.6 : 1); P.AF = V.beam * (h.f + 0.8 * hs[1] * (V.len >= 30 ? 1.6 : 1)); P.xw = V.len >= 14 ? 0.04 * V.len : 0; P.hp = 0.45 * V.draft; P.Tm = h.T; }
   let lo = 0.02, hi = 20; for (let i = 0; i < 16; i++){ P.rs = Math.sqrt(lo * hi); if (dynTurn(P, V).R > want) lo = P.rs; else hi = P.rs; } P.rs = Math.sqrt(lo * hi);
+  return DYN.cal[key] = dynCalRun(key, V, P, 1);
+}
+// the boat's own engine (Trim, the yard's bigger engine, the 90 hp outboard: BOAT.vmax over the type's, core/03-simulation.js
+// applyVessel). Until 06.11.2026 the model had only the type's engine (dynCal(type)), so full ahead held the type's top speed whatever
+// was bought: a Trim paid for gave no speed by Autonav or by hand, only on paper (tilbakemelding 06.11.2026). Now the hull, the rudder
+// and the areas are the type's, and the screw pushes sx^2 as hard, so full ahead holds sx times her top speed against the same
+// resistance; the stops, the acceleration and the autopilot's gains are measured again with that engine
+function dynCalEng(base, sx, ck){
+  const P = Object.assign({}, base.P, {umax:base.P.umax * sx, Tmax:base.P.Tmax * sx * sx});
+  return dynCalRun(ck, base.V, P, sx);
+}
+// the calibration for the player's own boat with the engine she has now (BOAT), which the helm, Autonav and the rules of the road use
+function dynCalOf(b = S.boat){ const V = VESSELS[b.type] || VESSELS.skiff; return dynCal(b.type, b === S.boat && V.vmax > 0 && BOAT.vmax > 0 ? BOAT.vmax / V.vmax : 1); }
+// what is measured on the model once the hull and the rudder are set (sx: the engine over the type's, 1 for the type's own)
+function dynCalRun(key, V, P, sx){
   const turn = dynTurn(P, V), acc = dynAccel(P), stop = dynStops(P);
   // Nomoto's K and T measured again at a quarter, half and three quarters of cruising speed, for the autopilot's gains at the way she
-  // has (on a planing hull they do not follow the textbook scaling: T stays about the same, K falls with the speed)
+  // has (on a planing hull they do not follow the textbook scaling: T stays about the same, K falls with the speed); with a stronger
+  // engine also at her own cruising speed, so the gains above the type's are measured and not stretched
   const nom = [0.25, 0.5, 0.75].map(f => { const t = dynTurn(P, V, f * turn.Uc); return {u:f * turn.Uc, K:t.K, T:t.T, R:t.R}; }).concat([{u:turn.Uc, K:turn.K, T:turn.T, R:turn.R}]);
+  if (sx > 1.01){ const t = dynTurn(P, V, sx * turn.Uc); nom.push({u:sx * turn.Uc, K:t.K, T:t.T, R:t.R}); }
   // the autopilot's rudder: a second-order loop on Nomoto's K and T (at cruising speed; K grows and T shrinks with speed), not faster
   // than 0.6 rad/s so she does not flap the rudder, critically damped
   const wn = Math.min(1.2 / turn.T, 0.6), Kp = wn * wn * turn.T / turn.K, Kd0 = Math.max(0, (2 * wn * turn.T - 1) / turn.K);
@@ -135,7 +155,7 @@ function dynCal(key){
   // cruising speed, at most 0.08 m/s2 (0.25 for a planing hull, which comes off the plane quickly; at 6x on the screen the hard stop
   // looked like a jolt)
   const uc = V.vcruise * KN_MS, aC = clamp(0.6 * uc * uc / (2 * Math.max(1, dynStopDist({stop}, uc))), 0.02, V.planing ? 0.25 : 0.08);
-  return DYN.cal[key] = {key, V, P, turn, acc, stop, Kp, Kd0, aC, nom};
+  return {key, V, P, turn, acc, stop, Kp, Kd0, aC, nom, sx};
 }
 // the way to stop from the speed v, and the speed she can have with d metres to stop in
 function dynStopDist(cal, v){ const S = cal.stop, i = Math.min(S.length - 2, Math.floor(Math.abs(v) / 0.25)), f = Math.abs(v) / 0.25 - i; return S[i] + (S[i + 1] - S[i]) * f; }
@@ -352,7 +372,7 @@ function dynPose(){
 function dynRest(){ const b = S.boat, d = b.dyn; return !!d && Date.now() - d.wall < 4000 && Math.hypot(d.X - b.pos.x * 1000, d.Y - b.pos.y * 1000) < 5; }
 function dynLivePose(frac){ const q = dynPose(); return {p:{x:q.x, y:q.y}, hd:q.hd, frac, idx:S.plan ? S.plan.idx : 0}; }
 // «Stopp»: how far ahead (km) she needs to come to a gentle stop from the way she has
-function dynHaltNeed(){ const b = S.boat; if (!dynLive()) return 0; return (dynEaseDist(dynCal(b.type), Math.max(0, b.dyn.u)) + 5) / 1000; }
+function dynHaltNeed(){ const b = S.boat; if (!dynLive()) return 0; return (dynEaseDist(dynCalOf(b), Math.max(0, b.dyn.u)) + 5) / 1000; }
 // ---- the tick ----
 function dynTick(dt){
   const b = S.boat; DYN.on = true;
@@ -376,7 +396,7 @@ function dynMinute(H, W){
 }
 // ---- by hand (16-helm.js): the throttle and the rudder into the model ----
 function dynHelm(d, dtG){
-  const b = S.boat, h = S.helm, cal = dynCal(b.type), P = cal.P, H = S.t / 60;
+  const b = S.boat, h = S.helm, cal = dynCalOf(b), P = cal.P, H = S.t / 60;
   if (Math.abs(h.v * KN_MS - d.u) > 0.6) d.u = h.v * KN_MS;   // set from outside (a test, «Fortøy» undone): the model takes it
   const E = dynEnv(b, d, cal, H, dtG), capF = E.capF, X0 = d.X, Y0 = d.Y, O = dynObsNear(d.X, d.Y, P.L + Math.abs(d.u) * dtG + 20);
   for (let left = dtG; left > 1e-6;){ const s = Math.min(DYN_H, left); left -= s; dynInt(P, d, h.thr, h.rud, s, capF, E); dynMove(d, s); dynContact(b, d, P, O); }
@@ -454,7 +474,7 @@ function dynGroundAhead(T, s, look){
 }
 // ---- the autopilot ----
 function dynAuto(d, dtG){
-  const b = S.boat, pl = S.plan, cal = dynCal(b.type), P = cal.P, L = P.L, H = S.t / 60;
+  const b = S.boat, pl = S.plan, cal = dynCalOf(b), P = cal.P, L = P.L, H = S.t / 60;
   let T = DYN.line;
   if (!T || T.plan !== pl || T.n !== pl.wps.length || ((T.chk = (T.chk + 1) % 30) === 0 && dynSig(pl) !== T.sig)){
     const dep = !T && DYN.dep && Math.hypot(DYN.dep.bp.x * 1000 - d.X, DYN.dep.bp.y * 1000 - d.Y) < 60 ? DYN.dep : null; DYN.dep = null;

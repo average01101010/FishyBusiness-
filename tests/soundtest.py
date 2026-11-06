@@ -1,6 +1,9 @@
 """The sound (ui/10e-sound.js; the user's wish 03.10.2026): it starts at the first touch, and its layers follow the boat: the engine off
 in port and running under way (louder and higher at speed), the wash louder under way, the crane while the catch is landed, the pump
-while she is fuelled, the hauler while gear is hauled; off in the settings, the master is silent. Prints OK or FEIL."""
+while she is fuelled, the hauler while gear is hauled; off in the settings, the master is silent. Ø11.2: the whistle's signals (the
+rules of the road queue them, core/05e-sjovei.js SJV.sig): the note by the vessel's length (vedlegg III), how long a signal takes (short
+1 s, long 4.5 s, two seconds between two long), a 10 m boat's whistle heard 400 m off but not 2 km off where the coastal ship's is, to
+the right when she is east of a boat heading north, your own at full strength, and the dock's horn fan. Prints OK or FEIL."""
 from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
@@ -58,6 +61,24 @@ async def main():
         check(al['on'] == 1 and al['g'] >= 0.5, 'brovaktsalarmen høres med minst halv styrke også med kameraet 2 km unna', al)
         nb = await pg.evaluate("""(() => { const r = []; for (const d of [120, 3000]){ SND.testEar = {x:0, y:6, z:0, fx:0, fz:-1}; SND.testSrc = {boat:[0, 1, 0], npc:[{x:d, z:0, v:8, st:'out', big:false}]}; SND.tick(); r.push(SND.LV.npc0); } SND.testEar = null; SND.testSrc = null; return r; })()""")
         check(nb[0] > 0.01 and nb[1] == 0, 'en fiskebåt i fart 120 m unna høres, en 3 km unna ikke', nb)
+        # Ø11.2: the whistle and the bell (sjøveisreglene rules 32-35, vedlegg III)
+        hz = await pg.evaluate("[10, 49.9, 121.8, 250].map(L => SND.hornHz(L))")
+        check(hz == [420, 300, 190, 110], 'vedlegg III 1 b: tonen etter lengden (250-700 Hz under 75 m, 130-350 til 200 m, 70-200 over)', hz)
+        du = await pg.evaluate("['S', 'SSSSS', 'L', 'LL', 'LSS', 'bell'].map(p => +SND.blasts(p, {k:0.01, L:10}).toFixed(2))")
+        check(du == [1, 9, 4.5, 11, 8.5, 5], 'regel 32 og 35: kort støt 1 s, langt 4,5 s, 1 s mellom, 2 s mellom to lange, klokka 5 s', du)
+        sg = await pg.evaluate("""(() => { SND.testEar = null; SND.testSrc = null; const b = S.boat; b.status = 'sailing'; b.port = null; b.heading = 0; const r = {};
+          const one = (id, pat, dx, dy, L, own) => { SJV.sig.length = 0; const n0 = SND.LV.sigN || 0; sjvSig(id, pat, {x:b.pos.x + dx, y:b.pos.y + dy}, L, own); SND.tick(); return {n:(SND.LV.sigN || 0) - n0, g:+(SND.LV.sigG || 0).toFixed(3), pan:+(SND.LV.sigPan || 0).toFixed(2), pat:SND.LV.sig}; };
+          r.own = one('_own', 'S', 0, 0, 10, true); r.near = one('x', 'L', 0.4, 0, 10, false); r.far = one('x', 'L', 2, 0, 10, false); r.ship = one('cs', 'L', -2, 0, 121.8, false);
+          SJV.sig.push({pat:'L', x:b.pos.x, y:b.pos.y, L:10, own:false, id:'old', t:Date.now() - 9000}); const n0 = SND.LV.sigN; SND.tick(); r.old = SND.LV.sigN - n0; return r; })()""")
+        check(sg['own']['n'] == 1 and sg['own']['g'] > 0.9 and sg['own']['pat'] == 'S', 'ditt eget horn høres for fullt', sg['own'])
+        check(sg['near']['n'] == 1 and 0.04 < sg['near']['g'] < 0.3 and sg['near']['pan'] > 0.3, 'fløyta til en båt på 10 m 400 m øst høres svakt og til høyre når båten din går nordover', sg['near'])
+        check(sg['far']['n'] == 0 and sg['ship']['n'] == 1 and sg['ship']['pan'] < -0.3, '2 km unna høres ikke en båt på 10 m (en halv mil), men kystruteskipet (halvannen mil), til venstre', [sg['far'], sg['ship']])
+        check(sg['old'] == 0, 'et signal som er eldre enn åtte sekunder, spilles ikke', sg['old'])
+        # the dock's horn: while the warning stands, «Horn» with the five signals of rule 34; a signal sounds out before the next
+        hf = await pg.evaluate("""(() => { const I = (id, ic, no, en, o) => Object.assign({id, lbl:[no, en]}, o || {}); const w0 = sjvWarn, W = {id:'f', sit:'15', give:'a', cpa:80, tcpa:3, R:{}, sev:'r2'};
+          sjvWarn = () => W; const it = HAIL.dockItem(I), fan = HAIL.menuItems(I); SJV.sig.length = 0; HAIL._H.hornUntil = 0; const a = HAIL.signal('SS'), b2 = HAIL.signal('S'), q = SJV.sig.map(x => [x.pat, x.own]); sjvWarn = w0;
+          return {id:it && it.id, menu:it && it.menu, fan:fan.map(x => x.lbl[0]), a, b2, q, none:HAIL.dockItem(I) === null}; })()""")
+        check(hf['id'] == 'tut' and hf['menu'] == 'horn' and len(hf['fan']) == 5 and hf['a'] and not hf['b2'] and hf['q'] == [['SS', True]] and hf['none'], 'Horn i knappelinja mens varselet står, med 1, 2, 3 og 5 korte og ett langt; ett signal om gangen; borte uten varsel', hf)
         await pg.evaluate("(() => { S.settings.sound = false; })()"); off = await pg.evaluate(LV)
         check(off['master'] == 0, 'med lyden av i innstillingene er alt stille', off['master'])
         has = await pg.evaluate("(() => { PHONE.open('innst'); return document.querySelectorAll('[data-pa=snd]').length; })()")

@@ -644,18 +644,19 @@ function soakHour(s, H){
   const add = (sp, kg, n) => { const A = acc[sp] || (acc[sp] = {kg:0, n:0, ts:0}); A.kg += kg; A.n += n; A.ts += kg * H; };
   if (s.kind === 'teine' && POTS[s.pot] && POTS[s.pot].sno) return snoSoak(s, H);   // the snow crab (10d-snokrabbe.js)
   if (s.kind === 'teine'){
-    const P = POTS[s.pot], A = acc.krabbe || {n:0}, cap = P.cap * s.n, g = Math.min(1, a / 6) * Math.exp(-a / 40);
+    const P = POTS[s.pot], A = acc.krabbe || {n:0}, cap = P.cap * s.n * haillCap(), g = Math.min(1, a / 6) * Math.exp(-a / 40);
     const lam = KC.q * GEAR.teine.q * 30 * s.n * P.f * density('krabbe', mid, H) * luck('krabbe') * baitF(s.bait || 'makrell', 'krabbe') * g * Math.max(0, 1 - A.n / cap) * potQ(s);
     const mw = KC.mean;
     if (lam > 0){ add('krabbe', lam * mw, lam); tot += lam * mw; takeStock(mid, lam * mw, 'krabbe'); }
-    for (const sp in SELQ.teine){ const r = 30 * GEAR.teine.q * s.n * SELQ.teine[sp] * density(sp, mid, H) * g; if (r > 0) add(sp, r, r / SPECIES[sp].size[0]); }
+    // (the fish in the pots get the haill as the crab does: «+100 % fiskelykke på alle arter», 06.11.2026; it was left out here)
+    for (const sp in SELQ.teine){ const r = 30 * GEAR.teine.q * s.n * SELQ.teine[sp] * density(sp, mid, H) * luck(sp) * g; if (r > 0) add(sp, r, r / SPECIES[sp].size[0]); }
     // after two days the crab starts to die in the pots
     if (a > 48 && acc.krabbe && acc.krabbe.n > 0){ const fr = a > 72 ? 0.05 : 0.02, K = acc.krabbe; s.dead += K.n * fr; K.n *= 1 - fr; K.kg *= 1 - fr; K.ts *= 1 - fr; }
     return tot;
   }
   const key = gearKey(s), sel = SELQ[key], G = GEAR[s.kind];
   const nNow = Object.values(acc).reduce((q, x) => q + x.n, 0), kgNow = Object.values(acc).reduce((q, x) => q + x.kg, 0);
-  const f = s.kind === 'line' ? Math.exp(-a / 10) * Math.max(0, 1 - nNow / (s.hooks * 0.35)) : Math.exp(-a / 30) * Math.max(0, 1 - kgNow / ((G.cap || 80) * s.n));
+  const hc = haillCap(), f = s.kind === 'line' ? Math.exp(-a / 10) * Math.max(0, 1 - nNow / (s.hooks * 0.35 * hc)) : Math.exp(-a / 30) * Math.max(0, 1 - kgNow / ((G.cap || 80) * s.n * hc));   // (the room grows with the haill, haillCap)
   const units = s.kind === 'line' ? s.hooks / 100 : s.n, cond = s.kind === 'garn' ? 0.5 + 0.5 * (s.cond || 1) : s.kind === 'line' ? lineQ(s) : 1;
   // a line's bait: the tubs' kinds weighed by how many (an old set without them: makrell, as the old bait)
   const bw = s.kind === 'line' ? (s.baitW || {makrell:s.n}) : null, bwN = bw ? Object.values(bw).reduce((a, v) => a + v, 0) || 1 : 1, lineB = sp => { if (!bw) return 1; let v = 0; for (const k in bw) v += bw[k] * baitF(k, sp); return v / bwN; };

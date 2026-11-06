@@ -29,6 +29,11 @@ function chartSettings(){
     '<div class="kv"><span>' + L('Sikker dybde', 'Safety depth') + '</span><span class="sdv"><button type="button" data-act="sd-">−</button><b>' + sd + ' m</b><button type="button" data-act="sd+">+</button></span></div>' +
     '<p class="note">' + (fish ? L('Havbunnen i farger med dybdekoter. Bruk den til å finne kanter og grunner med fisk.', 'The seabed in colour with depth contours. Use it to find edges and banks holding fish.') : L('Blått er grunnere enn sikker dybde. Båten stikker ', 'Blue is shallower than the safety depth. The boat draws ') + fmt(BOAT.draft, 1) + ' m.') + '</p>' + echoSettings() + '</div>';
 }
+// the speed slider (Jonas 06.11.2026, full speed by default): its top step is «Full fart», the top speed the boat has now (core speedPin);
+// the top step is the top speed rounded up, so a top speed of 10.5 knots is reached (with steps of a knot from 2 it was not)
+const spdTop = () => 2 + Math.ceil(Math.max(0, (BOAT.vmax || 2) - 2) - 1e-9);
+const spdVal = (kn, full) => full ? spdTop() : Math.min(Math.round(kn), spdTop() - 1);
+const spdTxt = (kn, full) => full ? (S.lang === 'en' ? 'Full speed ' : 'Full fart ') + fmt(BOAT.vmax, BOAT.vmax % 1 ? 1 : 0) + ' kn' : fmt(kn, 0) + ' kn';
 function panelRoute(){
   const b = S.boat, h = [];
   // choosing a place for the operations plan (05c-drift.js pick): the place and «Use the place» first, not a route, whatever the boat
@@ -66,7 +71,7 @@ function panelRoute(){
     const rest = S.plan.wps.slice(S.plan.idx);
     h.push('<h3>' + (S.plan.returning ? t('ret_active') : t('active')) + '</h3>');
     h.push('<ul class="wps">' + rest.map((w, i) => '<li' + (w.auto ? ' class="auto"' : '') + '><span class="n' + (w.fish > 0 ? ' f' : '') + '">' + wpName(S.plan.idx + i + 1) + '</span><span class="lbl">' + (w.port ? portById(w.port).name : coordStr(w)) + '<small>' + (w.port ? '' : w.auto && !w.act && !(w.fish > 0) ? wpTag(w) : (w.act ? wpActLabel(w.act) + (w.fish > 0 ? ', ' : '') : '') + (w.fish > 0 ? t('fish_h', w.fish) : w.act ? '' : t('no_fish'))) + '</small></span></li>').join('') + '</ul>');
-    h.push('<div class="range step2"><button class="sb" data-act="spdstep" data-id="spdLive" data-d="-1" aria-label="−">−</button><input type="range" min="2" max="' + BOAT.vmax + '" step="1" value="' + Math.min(S.plan.speed, BOAT.vmax) + '" id="spdLive" aria-label="' + t('speed') + '"><button class="sb" data-act="spdstep" data-id="spdLive" data-d="1" aria-label="+">+</button><output id="spdLiveOut">' + S.plan.speed + ' kn</output></div>');
+    h.push('<div class="range step2"><button class="sb" data-act="spdstep" data-id="spdLive" data-d="-1" aria-label="−">−</button><input type="range" min="2" max="' + spdTop() + '" step="1" value="' + spdVal(S.plan.speed, S.plan.full) + '" id="spdLive" aria-label="' + t('speed') + '"><button class="sb" data-act="spdstep" data-id="spdLive" data-d="1" aria-label="+">+</button><output id="spdLiveOut">' + spdTxt(S.plan.speed, S.plan.full) + '</output></div>');
     if (b.status === 'sailing' && b.v < S.plan.speed - 0.5) h.push('<p class="note">' + t('speed_live') + ': ' + fmt(b.v, 0) + ' kn (' + t('waves').toLowerCase() + ')</p>');
     h.push('<div class="btns">' + (S.plan.returning || tutOn() ? '' : '<button class="btn" data-act="retrace">' + t('retrace') + '</button>') + (b.status === 'sailing' ? '<button class="btn" data-act="stop">' + t('stop') + '</button>' : '') + '</div>');
     return h.join('');
@@ -87,7 +92,7 @@ function panelRoute(){
       (w.port ? '' : '<div class="wf">' + ctl + gch + '</div>') + ((rb => rb ? '<p class="bad wrule">✕ ' + rb + '</p>' : '')(ruWpMsg(w))) + '</li>';
   }).join('') + '</ul>');
   const e = estimate();
-  h.push('<div class="range step2"><button class="sb" data-act="spdstep" data-id="spd" data-d="-1" aria-label="−">−</button><input type="range" min="2" max="' + BOAT.vmax + '" step="1" value="' + Math.min(S.draftSpeed, BOAT.vmax) + '" id="spd" aria-label="' + t('speed') + '"><button class="sb" data-act="spdstep" data-id="spd" data-d="1" aria-label="+">+</button><output id="spdOut">' + S.draftSpeed + ' kn, ' + t('lpnm', fmt(fuelLph(S.draftSpeed, windAt(S.t / 60)) / S.draftSpeed, 2)) + '</output></div>');
+  h.push('<div class="range step2"><button class="sb" data-act="spdstep" data-id="spd" data-d="-1" aria-label="−">−</button><input type="range" min="2" max="' + spdTop() + '" step="1" value="' + spdVal(S.draftSpeed, S.draftFull) + '" id="spd" aria-label="' + t('speed') + '"><button class="sb" data-act="spdstep" data-id="spd" data-d="1" aria-label="+">+</button><output id="spdOut">' + spdTxt(S.draftSpeed, S.draftFull) + ', ' + t('lpnm', fmt(fuelLph(S.draftSpeed, windAt(S.t / 60)) / S.draftSpeed, 2)) + '</output></div>');
   { const H0 = S.t / 60, opts = ['<option value="">' + t('dep_now') + '</option>'];
     for (let k = 1; k <= 36; k++){ const m = (Math.floor(H0) + k) * 60, H1 = m / 60; opts.push('<option value="' + m + '"' + (S.draftDep === m ? ' selected' : '') + '>' + (gDate(H1).getUTCDate() !== gDate(H0).getUTCDate() ? dayStr(H1).split(' ')[0] + ' ' : '') + hm(H1) + ' · ' + dirName(windDir(H1)) + ' ' + fmt(fcWind(H1, H0), 0) + ' m/s</option>'); }
     h.push('<div class="kv"><span>' + t('departure') + '</span><span><select id="dep" class="depsel">' + opts.join('') + '</select></span></div>'); }

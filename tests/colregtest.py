@@ -3,7 +3,9 @@ local fleet on crossing courses with the boat you follow, on Autonav, without 3D
 the NPC gives way) the NPC turns to starboard within about a kilometre, never onto land, and comes back to the shared course after; she
 holds course and Autonav does not turn. With the other from her starboard side (she gives way) the NPC holds course and speed, Autonav
 turns to starboard, opens the CPA and comes back to the route; the warning stands in the strip's third line and in the chart plotter
-(the ring, the vectors) while it applies. The NPCs with no manoeuvre on are where the clock says. Prints OK or FEIL."""
+(the ring, the vectors) while it applies. The NPCs with no manoeuvre on are where the clock says. Ø11.2: the same ferry in thick fog
+(not in sight, rule 19): the warning comes earlier, both act (the ferry to starboard, Autonav by 19 d), the ferry's fog signal heard
+forward of the beam takes Autonav down to the minimum steerage speed (19 e), and both sound their fog signals (rule 35). Prints OK or FEIL."""
 from _env import GAME, boot
 import asyncio, json, time
 from playwright.async_api import async_playwright
@@ -40,7 +42,8 @@ SAMPLE = """([id, L0]) => { const H = (S.t + liveFrac()) / 60, all = npcStates(H
   const nx = document.querySelector('#hud .st.nx'), W = sjvWarn();
   return {H, dev:Math.round(dev), land:n ? isLand(n.p) : false, rng:R ? Math.round(R.rng) : -1, tcpa:R ? +R.tcpa.toFixed(2) : 0, cpa:R ? Math.round(R.cpa) : -1, E:SJV.E.has(id) ? SJV.E.get(id).why + (SJV.E.get(id).slow ? ' slow' : '') : '',
     own:SJV.own ? SJV.own.why + (SJV.own.slow ? ' slow' : '') : '', off:Math.round(SJV.ownOff), xte:Math.round(xte), st:b.status, plan:!!S.plan, warn:W ? [W.id, W.sit, W.give, W.cpa, W.sev] : null,
-    l3:nx ? nx.textContent : '', hud:(document.getElementById('hud') || {}).textContent || '', ring:!!document.querySelector('#gDyn g.sjv'), svgw:W ? sjvChartSvg(1 / view.px).length : -1, dyn:(document.getElementById('gDyn') || {}).innerHTML ? document.getElementById('gDyn').innerHTML.length : -1, far:Math.round(far), man, ms:+SJV.ms.toFixed(2), n:SJV.n, lim:R ? Math.round(R.lim) : 0, L:n ? n.L : 0, sw:SJV.warn ? 1 : 0}; }"""
+    l3:nx ? nx.textContent : '', hud:(document.getElementById('hud') || {}).textContent || '', ring:!!document.querySelector('#gDyn g.sjv'), svgw:W ? sjvChartSvg(1 / view.px).length : -1, dyn:(document.getElementById('gDyn') || {}).innerHTML ? document.getElementById('gDyn').innerHTML.length : -1, far:Math.round(far), man, ms:+SJV.ms.toFixed(2), n:SJV.n, lim:R ? Math.round(R.lim) : 0, L:n ? n.L : 0, sw:SJV.warn ? 1 : 0,
+    fog:SJV.fog, e19:SJV.e19 ? (SJV.e19.off ? 'off' : 'on') : '', vown:+sjvOwn().v.toFixed(1), cap:+(sjvCapV() < 1e8 ? sjvCapV() / KN_MS : 0).toFixed(1)}; }"""
 
 
 # the same with nobody asking for the vessels (no npcStates from the test, the chart plotter shut, no 3D): Autonav keeps the look fresh
@@ -72,7 +75,8 @@ def summary(r):
     return {'n': len(S), 'Emax': max(s['dev'] for s in S), 'E': sorted({s['E'] for s in S if s['E']}), 'own': sorted({s['own'] for s in S if s['own']}),
             'offmax': max(abs(s['off']) for s in S), 'xtemax': max(s['xte'] for s in S), 'xteEnd': S[-1]['xte'], 'devEnd': S[-1]['dev'], 'rngMin': min(s['rng'] for s in S),
             'warn': sorted({tuple(s['warn'][1:3]) for s in S if s['warn']}), 'l3': sorted({s['l3'] for s in S if s['warn']})[:3], 'hud': any(('Vikeplikt' in s['hud'] or 'styrbord' in s['l3'] or 'Autonav' in s['l3']) for s in S if s['warn']), 'ring': any(s['ring'] for s in S if s['warn']),
-            'land': any(s['land'] for s in S), 'far': max(s['far'] for s in S), 'ms': max(s['ms'] for s in S)}
+            'land': any(s['land'] for s in S), 'far': max(s['far'] for s in S), 'ms': max(s['ms'] for s in S),
+            'warn1': next((s['rng'] for s in S if s['warn']), -1), 'tsig': any('Tåkesignal' in s['l3'] for s in S if s['warn']), 'e19': any(s['e19'] == 'on' for s in S), 'vmin': min((s['vown'] for s in S if s['e19'] == 'on'), default=-1)}
 
 
 async def main():
@@ -82,6 +86,7 @@ async def main():
         pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
         await pg.evaluate("() => { S.settings.autoOn = false; S.boat.fuel = BOAT.fuelCap; }")
+        clear1 = 0   # (the first warning's range in clear weather, for the fog's)
         # ---- the ferry, from her port side: she gives way ----
         r = await run(pg, 'ferje', 'npc', 7, 4)
         if not r or 'S' not in r: check(False, 'ferja og spilleren på kryssende kurs (oppsettet)', r)
@@ -93,6 +98,30 @@ async def main():
             check(not s['land'], 'ferja er aldri på land under vikingen')
             check(s['rngMin'] >= 150, 'de passerer klar av hverandre (nærmest %d m)' % s['rngMin'])
             check(s['far'] <= 1, 'alle båtene som ikke viker eller er på vei tilbake, er der klokka sier (største avvik %d m)' % s['far'])
+            clear1 = s['warn1']
+        # ---- Ø11.2: the same in thick fog, not in sight of each other (rule 19) ----
+        await pg.evaluate("() => { window.__vis = visibility; visibility = () => 0.5; SJV.sigLog.length = 0; }")
+        r = await run(pg, 'ferje', 'npc', 7, 4)
+        sl = await pg.evaluate("() => { visibility = window.__vis; return SJV.sigLog.map(q => [q.id, q.pat]); }")
+        if not r or 'S' not in r: check(False, 'ferja og spilleren i tåke (oppsettet)', r)
+        else:
+            s = summary(r); print('   i tåke:', json.dumps(s), 'signaler:', sl[:12])
+            check(('19', 'both') in s['warn'] and any('Tåke' in x or 'sikt' in x or 'Tåkesignal' in x for x in s['l3']), 'regel 19: i tåke uten sikt tar begge forholdsregler, og varselet sier det', (s['warn'], s['l3']))
+            check(s['warn1'] > max(1500, clear1), 'varselet kommer tidligere i tåke (%d m mot %s m i klart vær)' % (s['warn1'], clear1))
+            check('19' in s['E'] and s['Emax'] >= 100 and not s['land'], 'ferja viker til styrbord (19 d) og er aldri på land (avviket %d m)' % s['Emax'], s['E'])
+            print('   (19 e i dette møtet: %s; Autonavs sving åpner CPA før tåkesignalet høres, og da er det ikke fare for sammenstøt)' % s['e19'])
+            check(any(q[0] == 'ferje' and q[1] == 'L' for q in sl) and any(q[0] == '_own' and q[1] == 'L' for q in sl), 'regel 35: ferja og båten din gir ett langt støt i tåka', sl[:8])
+            check(s['rngMin'] >= 150 and s['devEnd'] <= 2, 'de passerer klar av hverandre (nærmest %d m), og ferja er tilbake på banen' % s['rngMin'], s['devEnd'])
+        # ---- 19 e: in fog with neither turning (their reach set to nothing), the ferry's fog signal ahead takes Autonav down to the
+        # minimum steerage speed, and she stops when the ferry is as close as the limit, till the danger is over ----
+        await pg.evaluate("() => { window.__vis = visibility; visibility = () => 0.5; window.__rn = [SJV.RNPCF, SJV.ROWNF]; SJV.RNPCF = 0; SJV.ROWNF = 0; }")
+        r = await run(pg, 'ferje', 'npc', 7, 4)
+        await pg.evaluate("() => { visibility = window.__vis; SJV.RNPCF = window.__rn[0]; SJV.ROWNF = window.__rn[1]; }")
+        if not r or 'S' not in r: check(False, '19 e (oppsettet)', r)
+        else:
+            s = summary(r); vm = await pg.evaluate("sjvMinKn()"); print('   19 e:', json.dumps(s), 'minste styrefart', vm)
+            check(s['e19'] and 0 <= s['vmin'] <= vm + 0.6 and s['tsig'], '19 e: tåkesignalet forut tar Autonav ned til minste styrefart (%s kn, minste %.1f), og varselet sier det' % (s['vmin'], vm), s['l3'][:2])
+            check(s['rngMin'] >= 120, 'de går klar av hverandre (nærmest %d m)' % s['rngMin'])
         # ---- the ferry, from her starboard side: you give way, Autonav does it ----
         await pg.evaluate("() => openPlotter()")   # (the ring and the vectors are the chart plotter's: renderDyn runs while it shows)
         r = await run(pg, 'ferje', 'own', 8, 34)

@@ -37,6 +37,7 @@ function routeChanged(){ hzCache.k = ''; panelDirty = true; renderDyn(); renderR
 // --- the floating undo and redo buttons over the zoom buttons on the chart
 let rtKey = '';
 function renderRouteTools(){
+  routeSeaWatch();   // the sea along the route on the cards (below), added after each draw of the panel
   const u = $('rUndo'), r = $('rRedo'); if (!u) return;
   // the side panel shows (on a wide screen) only when there is a route: drawn, being found, or being sailed (the user's wish 02.10.2026)
   const routing = S.draft.length > 0 || !!S.plan || LEIA_BUSY;
@@ -63,7 +64,7 @@ function routePlayMode(){
 // changed first)
 function routePause(){
   const b = S.boat; if (!S.plan || b.status !== 'sailing') return;
-  S.draft = S.plan.wps.slice(S.plan.idx).map(w => ({...w})); S.draftSpeed = S.plan.speed || S.draftSpeed; draftForget();
+  S.draft = S.plan.wps.slice(S.plan.idx).map(w => ({...w})); S.draftSpeed = S.plan.speed || S.draftSpeed; if (S.plan.full != null) S.draftFull = !!S.plan.full; draftForget();
   S.plan = null; b.status = 'idle'; b.v = 0;
   log('Pause på ruta. Trykk ▶ for å gå videre.', 'Paused on the route. Tap ▶ to go on.');
 }
@@ -217,4 +218,48 @@ function leiaCompare(){
     panelDirty = true; renderPanel();
   }, 350);
   return null;
+}
+
+// --- the sea along the route (Ø8, 06.11.2026): the wave height on each leg at the minute the boat is there, from the game's own sea
+// (hsAt, the same as «Bølger her» in the Vær tab; not the forecast), on the leg's card after the ETA. Red from the boat's own limit
+// (BOAT.risk[0], the sea she handles safely, as the Fartøy app states it), as the rule lines on the cards are red, and «farlig» from her
+// danger limit (risk[1]); a line under the cards names the legs over the limit. The cards are drawn by panelRoute (07-guide.js); the route
+// editor adds the sea to them after each draw (a MutationObserver on the panel, set up from renderRouteTools), so that file is left alone.
+const ROUTE_SEA = {step:0.5, maxN:24};   // km between the samples along a leg, and at most this many on one leg (the sea changes on a few hundred metres at a harbour's mouth: every 1 km showed 0,7 m where Bodø's gave 1,2 m)
+// the sea leg by leg: the highest hsAt along the leg at the minute the boat passes each sample, and its level against the boat's limits
+function draftSea(tl){
+  const r = BOAT.risk, out = []; let a = draftOrigin(), T0 = tl.dep;
+  S.draft.forEach((w, i) => {
+    const lg = tl.legs[i], n = Math.max(1, Math.min(ROUTE_SEA.maxN, Math.ceil(dist(a, w) / ROUTE_SEA.step)));
+    let hs = 0;
+    for (let k = i === 0 ? 0 : 1; k <= n; k++){ const f = k / n, p = {x:a.x + (w.x - a.x) * f, y:a.y + (w.y - a.y) * f}, T = T0 + (lg.arrive - T0) * f;
+      try { hs = Math.max(hs, hsAt(p, T / 60)); } catch (e){} }   // (a block of the sea not loaded yet: the leg shows what the rest gives)
+    out.push({hs, lvl:hs >= r[1] ? 2 : hs >= r[0] ? 1 : 0});
+    a = w; T0 = lg.leave;
+  });
+  return out;
+}
+let ROUTE_SEA_OBS = null;
+function routeSeaWatch(){
+  if (ROUTE_SEA_OBS || typeof MutationObserver === 'undefined') return;
+  const el = document.getElementById('panel'); if (!el) return;
+  ROUTE_SEA_OBS = new MutationObserver(() => routeSeaDraw()); ROUTE_SEA_OBS.observe(el, {childList:true}); routeSeaDraw();
+}
+function routeSeaDraw(){
+  const el = document.getElementById('panel'); if (!el || el.querySelector('.wsea')) return;   // (drawn already: our own nodes wake the observer too)
+  const ul = el.querySelector('ul.wpcards'); if (!ul || !S.draft.length) return;
+  const L = (no, en) => S.lang === 'no' ? no : en, sea = draftSea(draftTimeline()), over = [];
+  ul.querySelectorAll('li.wpc[data-i]').forEach(li => {
+    const i = +li.dataset.i, q = sea[i], wg = li.querySelector('.wg'); if (!q || !wg) return;
+    const sp = document.createElement('span'); sp.className = 'wsea';
+    // (inline: «.wpc .wg b» sets the ink colour with more weight than «.bad», and styles.css is another session's)
+    sp.innerHTML = L('Sjø ', 'Sea ') + '<b' + (q.lvl ? ' style="color:var(--bad)"' : '') + '>' + fmt(q.hs, 1) + ' m' + (q.lvl > 1 ? L(' farlig', ' dangerous') : '') + '</b>';
+    wg.appendChild(sp); if (q.lvl) over.push([i, q]);
+  });
+  if (!over.length) return;
+  const r = BOAT.risk, p = document.createElement('p'); p.className = 'bad wsea';
+  p.textContent = '✕ ' + L('Sjøen går over båtens grense på ', 'The sea goes over the boat\'s limit on ') + fmt(r[0], 1) + ' m ' + L('på etappe ', 'on leg ') +
+    over.slice(0, 4).map(([i, q]) => legName(i) + ' (' + fmt(q.hs, 1) + ' m)').join(', ') + (over.length > 4 ? ' …' : '') + L(' når båten er der.', ' when the boat is there.') +
+    (over.some(x => x[1].lvl > 1) ? L(' Over ' + fmt(r[1], 1) + ' m er det farlig for denne båten.', ' Over ' + fmt(r[1], 1) + ' m it is dangerous for this boat.') : '');
+  ul.after(p);
 }

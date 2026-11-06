@@ -3,6 +3,8 @@
 // where you lie, with a line over your boat in 3D and in the messages. The AIS card of a player's boat within 5 nm has six preset
 // lines (never free text). The same boat once a minute; the server measures the distance itself. What came in is fetched every 15 s
 // while the game is open and signed in (the id after the last one seen, S.hailId), a friend's in green. A badge counts the horns.
+// Ø11.2 (06.11.2026): while the warning for a vessel to give way for or stand on for stands (core/05e-sjovei.js), the button is «Horn»
+// with a fan of the signals of rule 34 (and «Tut» to a player within 1 nm), sounded from your boat (sjvSig, ui/10e-sound.js)
 const HAIL = (() => {
   const L = (no, en) => S.lang === 'no' ? no : en, esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
   const cloudOn = () => typeof CLOUD !== 'undefined' && CLOUD.on && CLOUD.user && !(typeof isGuest === 'function' && isGuest());
@@ -39,11 +41,28 @@ const HAIL = (() => {
       }
     }).catch(e => { if (/ 404$/.test(e.message)) H.off = true; }).finally(() => { H.busy = false; });
   }
-  // the dock's «Tut» (ui/10c-dock.js), with a player's boat within 1 nm
+  // the signals of rule 34 on the horn (sjøveisreglene FOR-1975-12-01-5, read 06.11.2026): «et kort støt som betyr «Jeg forandrer kurs til
+  // styrbord»», two short to port, three «Jeg bruker maskinkraften akterover», at least five when in doubt that the other keeps clear
+  // (34 d), one long by a bend where others may be hidden (34 e). One at a time: a signal sounds out before the next
+  const SIGS = [['S', '1 kort · styrbord', '1 short · starboard'], ['SS', '2 korte · babord', '2 short · port'], ['SSS', '3 korte · bakk', '3 short · astern'],
+    ['SSSSS', '5 korte · tvil', '5 short · in doubt'], ['L', '1 langt', '1 long']];
+  const sigSec = pat => [...pat].reduce((a, c, i) => a + (c === 'L' ? 4.5 : 1) + (i ? (c === 'L' && pat[i - 1] === 'L' ? 2 : 1) : 0), 0);
+  function signal(pat){
+    if (Date.now() < (H.hornUntil || 0) || typeof sjvSig !== 'function') return false;
+    H.hornUntil = Date.now() + sigSec(pat) * 1000; H.lastSig = pat;
+    sjvSig('_own', pat, S.boat.pos, BOAT.len || 10, true); return true;
+  }
+  // the dock's «Tut» (ui/10c-dock.js), with a player's boat within 1 nm; «Horn» with the signals while the warning stands
   function dockItem(I){
+    if (typeof sjvWarn === 'function' && sjvWarn()) return I('tut', 'horn', 'Horn', 'Horn', {menu:'horn'});
     if (!cloudOn() || H.off) return null;
     const n = near(HORN_KM); if (!n) return null;
     return I('tut', 'horn', 'Tut', 'Horn', {run:() => send(n, -1)});
+  }
+  // the fan (ui/10c-dock.js menuItems 'horn'): «Tut» to a player within 1 nm first, then the signals
+  function menuItems(I){
+    const n = cloudOn() && !H.off ? near(HORN_KM) : null;
+    return (n ? [I('tutp', 'horn', 'Tut til «' + n.name + '»', 'Horn at «' + n.name + '»', {run:() => send(n, -1)})] : []).concat(SIGS.map(([p, no, en]) => I('sig' + p, 'horn', no, en, {run:() => signal(p)})));
   }
   // the AIS card of a player's boat within 5 nm: the six lines
   function card(n){
@@ -56,5 +75,5 @@ const HAIL = (() => {
     const n = peerStates().find(q => q.id === AISSEL); if (n) send(n, +b.dataset.hl);
   }, true);
   setInterval(fetch, 15000);
-  return {send, fetch, dockItem, card, LINES, _H:H};
+  return {send, fetch, dockItem, menuItems, signal, card, LINES, SIGS, _H:H};
 })();

@@ -132,8 +132,12 @@ function plan2State(o){
 function plan2RestOk(pid){ const p = portById(pid); if (!p) return false; return isRorbu(pid) || pid === (S.home || HOME0) || (VESSELS[S.boat.type].berths || 0) > 0; }
 // the units ready to set, of the plan's kind
 function plan2Ready(kind, st, lk){ return kind === 'line' ? (lk && st.aboard.line.kinds && st.aboard.line.kinds[lk] ? st.aboard.line.kinds[lk].baited : st.aboard.line.baited) : kind === 'garn' ? st.aboard.garn : kind === 'teine' ? Math.min(st.aboard.teine, Math.floor(st.aboard.bait / GPRICE.potBait + 1e-9)) : 0; }
+// the game hour Skippertak lasts to (15-energy.js), 0 when it is not on: the hours before it the crew and you are rested and work on
+const p2SkipH = () => skipOn() ? S.skip.until / 60 : 0;
 // the next departure: today's hour if it has not passed by more than DRP2.late, else tomorrow's; never before `from`
 function plan2NextDep(o, H, from){
+  // Skippertak (Jonas 06.11.2026, «Døgnet rundt»): while it lasts the next trip goes as soon as the day is done, not at the hour
+  { const t = Math.max(H, from == null ? H : from); if (p2SkipH() > t) return t; }
   const ds = H - driftHod(H); let dep = ds + o.dep;
   if (H > dep + DRP2.late) dep += 24;
   // not before `from` (the rest, the baiting): late the same day when it is within DRP2.late of the hour, else the next day's hour
@@ -231,7 +235,8 @@ function planDay(o, H0, st){
   let dayMax = DRP2.dayMax, why = ['dagen er ' + DRP2.dayMax + ' t', 'the day is ' + DRP2.dayMax + ' h'];
   if (!watch){
     // (each hand tires at their own rate, by their stamina: the one who reaches 72 first sets the day)
-    const cF = st.crew.map(c => ({c, h:(DRP2.tired - c.fat) / Math.max(1, c.rate || DRP2.fatH)})).sort((a, b) => a.h - b.h)[0], bF = cF ? cF.h : Infinity, bE = st.me.aboard ? (st.me.energy - DRP2.enMin) / DRP2.enH : Infinity;
+    // (Skippertak: nobody tires before it runs out, so the hours it covers come first, sk; Jonas 06.11.2026, «Døgnet rundt»)
+    const sk = Math.max(0, p2SkipH() - H0), cF = st.crew.map(c => ({c, h:sk + (DRP2.tired - c.fat) / Math.max(1, c.rate || DRP2.fatH)})).sort((a, b) => a.h - b.h)[0], bF = cF ? cF.h : Infinity, bE = st.me.aboard ? sk + (st.me.energy - DRP2.enMin) / DRP2.enH : Infinity;
     // (already past the limit: said as it is, never as negative hours; the engine rests first, plan2Spent, GUI review F7)
     if (bF < dayMax){ dayMax = bF; const c = cF.c, n = c.name.split(' ')[0]; why = bF > 0.05 ? [n + ' blir sliten (' + DRP2.tired + ') etter ' + fmt(bF, 1) + ' t', n + ' is tired (' + DRP2.tired + ') after ' + fmt(bF, 1) + ' h'] : [n + ' er sliten nå (' + Math.round(c.fat) + ') og må hvile først', n + ' is tired now (' + Math.round(c.fat) + ') and must rest first']; }
     if (bE < dayMax){ dayMax = bE; why = bE > 0.05 ? ['energien din holder ' + fmt(bE, 1) + ' t', 'your energy lasts ' + fmt(bE, 1) + ' h'] : ['energien din er nesten brukt opp (' + Math.round(st.me.energy) + ' %): du må hvile først', 'your energy is nearly spent (' + Math.round(st.me.energy) + ' %): you must rest first']; }
@@ -320,12 +325,13 @@ function planDay(o, H0, st){
     let ready2 = home;
     if (kind === 'line'){ const un = Math.max(0, st.aboard.line.n - st.aboard.line.baited + hauledLine); if (un >= 1){ const hands = Math.max(1, st.crew.length + (st.me.aboard ? 1 : 0)), coop = DRP2.egn.coop[Math.min(hands, DRP2.egn.coop.length - 1)];
       const where = st.homeShed && !(multi && !last) ? 'egnebu' : 'mannskapet', h = where === 'egnebu' ? DRP2.egn.shedH + un * DRP2.egn.shedPer : un * DRP2.egn.selfH / coop; ready2 = home + h; steps.push({t:home, k:'egning', where, n:un, ready:ready2}); } }
-    const seaH = home - H0, fatEnd = fat0 + seaH * (st.crew.length ? Math.max(...st.crew.map(c => c.rate || DRP2.fatH)) : DRP2.fatH), rate = multi && !last ? p2RestRate('anker') : st.homeRest ? p2RestRate('bunks') : p2RestRate('quay');
+    // (Skippertak: tired only by the hours after it runs out, from rested; skH the hour it ends)
+    const skH = p2SkipH(), seaH = home - H0, awakeH = skH > H0 ? Math.max(0, home - skH) : seaH, fatEnd = (skH > H0 ? 0 : fat0) + awakeH * (st.crew.length ? Math.max(...st.crew.map(c => c.rate || DRP2.fatH)) : DRP2.fatH), rate = multi && !last ? p2RestRate('anker') : st.homeRest ? p2RestRate('bunks') : p2RestRate('quay');
     // (you too: the night must give you a full day's energy again, at the home's or the anchorage's rest, U11)
-    const meH = st.me.aboard ? p2MeRestH(st.me.energy - DRP2.enH * seaH, multi && !last ? st.me.anchRate : st.me.homeRate) : 0;
+    const meH = st.me.aboard ? p2MeRestH((skH > H0 ? 100 : st.me.energy) - DRP2.enH * awakeH, multi && !last ? st.me.anchRate : st.me.homeRate) : 0;
     const restH = Math.max(0, (fatEnd - DRP2.rested) / rate), until = Math.max(home + restH, home + meH, ready2);
     if (seaH > dayMax + 0.1) why = ['dagen blir ' + fmt(seaH, 1) + ' t: ståtida' + (land ? ', leveringen' : '') + ' og veien hjem gir ikke kortere dag', 'the day comes to ' + fmt(seaH, 1) + ' h: the soak' + (land ? ', the landing' : '') + ' and the way home allow no shorter day'];
-    steps.push({t:home, k:'hvile', where:multi && !last ? 'anker' : 'hjem', until, fat:Math.round(fatEnd)});
+    steps.push({t:home, k:'hvile', where:multi && !last ? 'anker' : 'hjem', until, fat:Math.round(fatEnd), ready:ready2});
     for (const s of steps) if (s.k === 'hvile' && s.until == null) s.until = until;
     return {t0:H0, steps, end:until, home, why, skipped, dayMax};
   }

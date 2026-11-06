@@ -151,6 +151,7 @@ async function cloudGate(){
     try { await guestStart(); }
     catch (e){ console.error(e); CLOUD.on = false; return; }   // no anonymous sign-in to be had (no network): the game on the device alone
     try { const h = await cloudRpc('tm_hello', {meta:cloudMeta()}); CLOUD.consent = h ? h.consent : null; } catch (e){ console.error(e); }
+    if (typeof bootgReport === 'function') bootgReport();   // a start before that locked: told now (11-boot.js BOOTG)
     return;
   }
   if (!CLOUD.user){
@@ -174,6 +175,7 @@ async function cloudGate(){
   }
   try {
     const h = await cloudRpc('tm_hello', {meta:cloudMeta()}); CLOUD.consent = h ? h.consent : null; CLOUD.owned = (h && h.owned) || []; CLOUD.admin = !!(h && h.admin === true);
+    if (typeof bootgReport === 'function') bootgReport();   // a start before that locked: told now, before this one builds the game (11-boot.js BOOTG)
     // the save: which of the game here and the account's goes on (cloudSync)
     if (sessionStorage.getItem('dsb_force')){ sessionStorage.removeItem('dsb_force'); CLOUD.forceNext = true; }   // a game taken back (cloudRestore)
     await cloudClaim(true);   // this device takes the game; the one that had it sends its last state first (cloudClaim)
@@ -462,6 +464,13 @@ async function cloudSync(cs){
   if (lo && sync && Date.parse(sync.rev) === Date.parse(rev) && sync.sq != null && (lo.seq || 0) < sync.sq){
     cloudGateShow('<p>' + cloudL('Henter spillet ditt …', 'Fetching your game …') + '</p>'); return cloudTake(cs); }
   if (sessionStorage.getItem('dsb_pulled') === rev) return;                                        // just loaded it (never in a loop)
+  // the game here locked the page twice in a row as it was built (11-boot.js BOOTG; Adrian 06.11.2026: Autonav set just before the app
+  // was closed, the route never sent): the account's copy of this device's game, from before what was played here since, goes on, and
+  // the one here is kept (Tidligere lagringer). Once: the start after it tries that game, and the safe start comes after that
+  if (lo && sync && Date.parse(sync.rev) === Date.parse(rev) && local > (sync.at || 0) + 1000 && typeof bootgRescue === 'function' && bootgRescue()){
+    try { sessionStorage.setItem('dsb_note', cloudL('Spillet stoppet under oppstarten. Vi fortsetter fra den siste lagringen på kontoen din, litt før. Det nyeste fra denne enheten er tatt vare på under Innstillinger › Tidligere lagringer.',
+      'The game stopped while starting. We go on from the last save on your account, a little earlier. The newest from this device is kept under Settings › Earlier saves.')); } catch (e){}
+    cloudGateShow('<p>' + cloudL('Henter spillet ditt …', 'Fetching your game …') + '</p>'); return cloudTake(cs); }
   if (!lo || (lo.t || 0) < 1 && !lo.boatName){ cloudGateShow('<p>' + cloudL('Henter spillet ditt …', 'Fetching your game …') + '</p>'); return cloudTake(cs); }   // nothing here yet
   if (sync && Date.parse(sync.rev) === Date.parse(rev)){
     // the account has this device's game: on with it

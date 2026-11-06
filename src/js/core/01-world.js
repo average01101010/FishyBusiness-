@@ -168,14 +168,21 @@ function draftHazards(){
   // a drawn leg can cross tiles whose packs are not in yet (08.10.2026: «mask block … is not loaded» from the route editor stopped
   // the game): such a leg is left unflagged while its packs are fetched, and the chart is drawn again when they are in
   let a = S.boat.pos, wait = null; const v = S.draft.map(w => { const p = a; a = w; if (!legReady(p, w)){ (wait = wait || []).push([p, w]); return {minD:1e9, rocks:0, unsafe:false}; } return legHazardMemo(p, w, sd); });
-  if (wait){ const kw = 'wait|' + k; hzCache = {k:kw, v}; Promise.all(wait.map(lnetLoad)).then(() => { if (hzCache.k === kw && typeof routeChanged === 'function') routeChanged(); }, e => { if (hzCache.k === kw) hzCache.k = 'fail|' + k; console.error(e); }); return v; }
+  // (drawn again only when the wait brought the packs: a leg still not ready would start the same wait over, and with every pack along
+  // it in already the chain of resolved promises ran as microtasks for ever, with nothing else on the thread: the page froze on the
+  // draft of a long route, four times for one player 06.11.2026, Bodø–Husøy among them; the save of the draft then froze every start)
+  if (wait){ const kw = 'wait|' + k; hzCache = {k:kw, v}; Promise.all(wait.map(lnetLoad)).then(() => { if (hzCache.k !== kw || typeof routeChanged !== 'function') return; if (wait.some(([p, w]) => !legReady(p, w))){ hzCache.k = 'fail|' + k; return; } routeChanged(); }, e => { if (hzCache.k === kw) hzCache.k = 'fail|' + k; console.error(e); }); return v; }
   hzCache = {k, v}; return v;
 }
-// whether the packs legHazard reads are in along a leg (the box lnetLoad fetches, 11c-leinett.js)
+// whether the packs legHazard reads are in along a leg: the same pieces lnetLoad fetches (11c-leinett.js, from 05.11.2026: 5 km of the
+// leg at a time with half a kilometre round each, not the leg's whole box). The whole box held packs off the line of a long diagonal leg
+// that lnetLoad never fetched, so such a leg was never ready (draftHazards above)
 function legReady(a, c){
-  const x0 = Math.min(a.x, c.x) - 0.5, y0 = Math.min(a.y, c.y) - 0.5, x1 = Math.max(a.x, c.x) + 0.5, y1 = Math.max(a.y, c.y) + 0.5;
-  for (const pk of mapPacksIn('sim', x0, y0, x1, y1)) if (!pk.buf) return false;
-  for (const pk of mapPacksIn('chart', x0, y0, x1, y1)) if (!pk.buf || !pk.coast) return false;
+  const m = Math.max(1, Math.ceil(dist(a, c) / 5));
+  for (let u = 0; u < m; u++){ const p = {x:a.x + (c.x - a.x) * u / m, y:a.y + (c.y - a.y) * u / m}, q = {x:a.x + (c.x - a.x) * (u + 1) / m, y:a.y + (c.y - a.y) * (u + 1) / m};
+    const x0 = Math.min(p.x, q.x) - 0.5, y0 = Math.min(p.y, q.y) - 0.5, x1 = Math.max(p.x, q.x) + 0.5, y1 = Math.max(p.y, q.y) + 0.5;
+    for (const pk of mapPacksIn('sim', x0, y0, x1, y1)) if (!pk.buf) return false;
+    for (const pk of mapPacksIn('chart', x0, y0, x1, y1)) if (!pk.buf || !pk.coast) return false; }
   return true;
 }
 // running aground

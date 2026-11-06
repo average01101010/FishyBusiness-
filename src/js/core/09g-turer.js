@@ -553,7 +553,7 @@ function turProveMinute(m, b){
     if (typeof toast === 'function') toast(turL('Stasjonen er fisket. Mål ti fisk i Oppdrag-appen.', 'The station is fished. Measure ten fish in the Oppdrag app.'));
   }
   if (m.kind === 'ekko' && m.stage === 'line'){ const q = m.pts[m.at]; if (!q) return; const d = dist(b.pos, q);
-    if (d < 1 && S.plan && (S.plan.speed || 0) > TUR.ekkoV && b.status === 'sailing'){ S.plan.speed = TUR.ekkoV; log('Slakker av til ' + TUR.ekkoV + ' knop for ekkoloddlinja.', 'Slowing to ' + TUR.ekkoV + ' knots for the echo line.'); }
+    if (d < 1 && S.plan && (S.plan.speed || 0) > TUR.ekkoV && b.status === 'sailing'){ S.plan.speed = TUR.ekkoV; S.plan.full = false; log('Slakker av til ' + TUR.ekkoV + ' knop for ekkoloddlinja.', 'Slowing to ' + TUR.ekkoV + ' knots for the echo line.'); }
     if (d >= 0.2) return;
     if ((b.v || 0) > TUR.ekkoMax + 0.5){ if (m.fast !== m.at){ m.fast = m.at; if (typeof toast === 'function') toast(turL('For fort for et godt ekkoloddbilde. Hold høyst 8 knop.', 'Too fast for a good echo picture. Keep to 8 knots at most.')); } return; }
     m.at++;

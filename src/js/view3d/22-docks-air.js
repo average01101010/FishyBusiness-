@@ -192,16 +192,61 @@
     gl.depthMask(true); gl.disable(gl.BLEND);
   }
   function drawNPCGlass(VP){ for (const n of npcNow) if (n.K && n.K.glass) drawGlass(n.K.glass, chain(n.M, n.K.S), VP); }
+  // ---- the lanterns in thick weather (Ø11.2; sjøveisreglene rule 20 c and vedlegg I, read 06.11.2026) ----
+  // By day in restricted visibility they are lit too (20 c: «skal hvis de føres, også vises fra soloppgang til solnedgang under nedsatt
+  // sikt»), fainter than at night; and far off in it a lantern fades out at the range it is seen at in this visibility (vedlegg I 8,
+  // core/05e-sjovei.js sjvLightNm), blended in with the fog so in clear weather they stand as before. The visibility is the one the view
+  // draws (env.fogD: the fog reaches 18 % there)
+  const LRC = {vis:-1, m:{}};
+  function lanternFog(){ const vis = 1.73 / Math.max(1e-7, env.fogD || 1e-7) / 1000; return {vis, a:clamp((SJV.FOG - vis) / 2.5, 0, 0.6), w:sstep(SJV.FOG * 1.6, SJV.FOG, vis)}; }
+  function lampFade(d, kind, L, LF){
+    if (LF.w <= 0) return 1;
+    if (Math.abs(LF.vis - LRC.vis) > 0.02){ LRC.vis = LF.vis; LRC.m = {}; }
+    const D0 = sjvLampNm(kind, L), R = LRC.m[D0] || (LRC.m[D0] = sjvLightNm(D0, LF.vis) * NM * 1000);
+    return 1 - LF.w + LF.w * clamp((R - d) / (0.3 * R), 0, 1);
+  }
+  // a side light or the stern light only within its arc (rule 21: the sides «fra rett forover til 22,5 grader aktenfor tvers», the stern
+  // «67,5 grader på hver side av fartøyet fra rett akterover»; vedlegg I 9 a). M is the boat's frame relative to the eye (her bow to -z, her
+  // starboard to +x); lp the light in it. The glow drew them all round, so the green showed from the port bow through the wheelhouse
+  function lampArc(M, lp, lk){
+    if (lk !== 'side' && lk !== 'stern') return true;
+    const q = xf(M, lp), f = xf(M, [lp[0], lp[1], lp[2] - 1]), r = xf(M, [lp[0] + 1, lp[1], lp[2]]);
+    const fw = -((f[0] - q[0]) * q[0] + (f[1] - q[1]) * q[1] + (f[2] - q[2]) * q[2]), sb = -((r[0] - q[0]) * q[0] + (r[1] - q[1]) * q[1] + (r[2] - q[2]) * q[2]);
+    const ang = Math.atan2(Math.abs(sb), fw) * 180 / Math.PI;
+    if (lk === 'side' && (ang > 112.5 || (lp[0] < 0 ? sb > 0.05 : sb < -0.05) && ang > 1)) return false;
+    if (lk === 'stern' && ang < 180 - 67.5) return false;
+    return true;
+  }
+  // the lights over the rest that the view adds to vessel3d.js lanterns: restricted in her ability to manoeuvre red, white, red (27 b i),
+  // constrained by her draught three reds (28), and the coast guard's blue all-round light on her highest masthead while she is on her
+  // inspection (kap. II 53 d: «en blå lanterne … på høyeste mastetopp … ubrutt, blått lys i 360 grader»), over the highest of her lights
+  const KV_BLUE = [0.18, 0.4, 1];
+  function lampsMore(L3, st, len){
+    if (!L3.length || !(st.ram || st.cbd || st.kv)) return L3;
+    const top = L3.reduce((a, l) => l[0][1] > a[0][1] ? l : a, L3[0])[0], sp = len >= 20 ? 2 : 1, out = L3.slice(), up = k => [top[0], top[1] + k, top[2]];
+    if (st.ram){ out.push([up(sp), LANT_C.r, 'ram'], [up(2 * sp), LANT_C.w, 'ram'], [up(3 * sp), LANT_C.r, 'ram']); }
+    else if (st.cbd){ out.push([up(sp), LANT_C.r, 'cbd'], [up(2 * sp), LANT_C.r, 'cbd'], [up(3 * sp), LANT_C.r, 'cbd']); }
+    if (st.kv) out.push([up(st.ram || st.cbd ? 3 * sp + 0.8 : 0.8), KV_BLUE, 'kv']);
+    return out;
+  }
   function drawNPCLights(VP){
-    if (env.night < 0.05 || !npcNow.length) return;
+    const LF = lanternFog(), A0 = Math.max(env.night, LF.a); ANCHAL.npcLit = 0; ANCHAL.kvLit = 0;   // (what was lit, for the tests: G3._debug.anchl)
+    if (A0 < 0.05 || !npcNow.length) return;
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false);
     for (const n of npcNow){
-      // the same rules as the own boat (vessel3d.js lanterns): fishing red over white, under way the full set, in port nothing
-      const stN = {port:n.st === 'port', fishing:n.st === 'fishing', v:n.st === 'fishing' ? 0 : 5, anch:false};
-      if (n.K){ const M = chain(n.M, n.K.S), px = n.L < 14 ? 260 : 600; for (const [p, col] of lanterns(n.K.geo, {len:n.L || 8, vmax:10}, stN)){ const q = xf(M, p); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VP, col, px, true); } continue; }
-      const LG = NPCM.lanG || (NPCM.lanG = {}), GN = LG[n.type] || (LG[n.type] = {lights:(NPCM.lights[n.type] || []).map(([lx, ly, lz, c]) => [[lx, ly, lz], NLC[c]])});
-      for (const [p, col] of lanterns(GN, {len:n.L || 20, vmax:12}, stN)){ const q = xf(n.M, p); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VP, col, NPCM.lightPx[n.type] || 900, true); } }
-    const cs = npcNow.find(n => n.type === 'coastal');
+      // the same rules as the own boat (vessel3d.js lanterns), from what she is doing (N8, Ø11.2; 05e-sjovei.js sjvLanternSt): her class
+      // and her real speed, so a boat jigging shows the lights of one under way, a trawler towing green over white, one at anchor the
+      // anchor light, one not under command two reds; at the quay none
+      const stN = sjvLanternSt(n), len = n.L || (n.K ? 8 : 20);
+      const M = n.K ? chain(n.M, n.K.S) : n.M, px = n.K ? (n.L < 14 ? 260 : 600) : NPCM.lightPx[n.type] || 900;
+      const G = n.K ? n.K.geo : (() => { const LG = NPCM.lanG || (NPCM.lanG = {}); return LG[n.type] || (LG[n.type] = {lights:(NPCM.lights[n.type] || []).map(([lx, ly, lz, c]) => [[lx, ly, lz], NLC[c]])}); })();
+      for (const [p, col, lk] of lampsMore(lanterns(G, {len, vmax:n.K ? 10 : 12}, stN), stN, len)){
+        if (!lampArc(M, p, lk)) continue;
+        const q = xf(M, p), a = A0 * lampFade(Math.hypot(q[0], q[1], q[2]), lk === 'side' || lk === 'stern' || lk === 'kv' ? lk : lk === 'masthead' || lk === 'masthead2' ? 'masthead' : 'allround', len, LF);
+        if (a < 0.01) continue;
+        ANCHAL.npcLit++; if (lk === 'kv') ANCHAL.kvLit++;
+        PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = a; drawPts(1, gl.POINTS, VP, col, px, true); } }
+    const cs = env.night > 0.05 && npcNow.find(n => n.type === 'coastal');
     if (cs){ let k = 0; for (let r = 0; r < 4; r++) for (let i = 0; i < 18; i++) for (const sx of [-1, 1]){ if (hash(r * 97 + i * 13 + (sx > 0 ? 5 : 0)) < 0.35) continue; const q = xf(cs.M, [sx * 8.95, 8.5 + r * 3.2, -24 + i * 3.4]); PB[k * 3] = q[0]; PB[k * 3 + 1] = q[1]; PB[k * 3 + 2] = q[2]; PA[k] = env.night * 0.9; k++; } drawPts(k, gl.POINTS, VP, [1, 0.8, 0.5], 420, true); }
     gl.depthMask(true); gl.disable(gl.BLEND);
   }

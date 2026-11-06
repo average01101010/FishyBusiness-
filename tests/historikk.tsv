@@ -279,6 +279,24 @@
 2026-11-06 12:46	claude/u2-3-knappelinja-felp6h	d62153dc	havplantest	FEIL	229	lite	alene	FEIL spot check Egersund: the plan made, out from Egersund, the lenker set and hauled, fish aboard [[{'lat': 58.249999999999986, 'lon': 4.9}, {'lat': 58.3826273
 2026-11-06 12:29	ccr-e5ae7b11-uibmpt	60e27413	trackfollow	OK	1567	3d	alene	
 2026-11-06 12:49	ccr-e5ae7b11-uibmpt	f54bb222	tut	OK	1178	lite	alene	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	colregtest	FEIL	603	lite	samtidig	FEIL 19 e: tåkesignalet forut tar Autonav ned til minste styrefart (2.2 kn, minste 2.0), og varselet sier det  ['Nedsatt sikt: vik til styrbord · CPA 0 m om 38 
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	npctest	OK	11	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	autonavtest	OK	34	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	hudtest	OK	31	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	havflaate	OK	14	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	hailtest	OK	8	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	soundtest	OK	9	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	cashfxtest	OK	10	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	docktest	OK	67	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	dockrow	OK	49	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	geartest	OK	45	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	rorbutest	OK	16	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	bunktest	OK	17	lite	samtidig	
+2026-11-06 16:28	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	lanterntest	OK	17	lite	samtidig	
+2026-11-06 17:19	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	colregtest	OK	603	lite	alene	
+2026-11-06 17:20	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	gfxtest	OK	67	3d	alene	
+2026-11-06 17:21	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	dbg23o	OK	39	3d	alene	
+2026-11-06 17:25	claude/o11-2-sikring-lys-lyd-bsrlub	cdcd8aa4+	anchorlight3d	OK	234	3d	alene	
 2026-11-06 15:17	ccr-1c785ad6-0di8o1	feac945f+	snokrabbetest	OK	24	lite	samtidig	
 2026-11-06 15:17	ccr-1c785ad6-0di8o1	feac945f+	geartest	OK	54	lite	samtidig	
 2026-11-06 15:17	ccr-1c785ad6-0di8o1	feac945f+	boottest	OK	38	lite	samtidig	
@@ -367,3 +385,60 @@
 2026-11-06 18:15	ccr-2f1306ed-u6tdgs	ec00fe30	itemcardtest	FEIL	23	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'jukse', 'krabbekar', 'brovakt', 'ais', 'plotter', 'rad
 2026-11-06 18:21	ccr-2f1306ed-u6tdgs	ec00fe30	heattest	OK	333	3d	alene	
 2026-11-06 18:23	ccr-2f1306ed-u6tdgs	ec00fe30	landtest	OK	100	3d	alene	
+2026-11-06 16:13	ccr-ccfb0017-rmieib	b63df02b+	streaktest	OK	69	lite	samtidig	
+2026-11-06 16:13	ccr-ccfb0017-rmieib	b63df02b+	posttest	OK	29	lite	samtidig	
+2026-11-06 16:13	ccr-ccfb0017-rmieib	b63df02b+	shoptest	OK	37	lite	samtidig	
+2026-11-06 16:28	ccr-ccfb0017-rmieib	b63df02b+	autonavtest	FEIL	900	lite	samtidig	gikk ut på tid
+2026-11-06 16:28	ccr-ccfb0017-rmieib	b63df02b+	routetest	OK	45	lite	alene	
+2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	autonavtest	FEIL	900	lite	samtidig	gikk ut på tid
+2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	r4test	OK	16	lite	samtidig	
+2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	naustleia	OK	7	lite	samtidig	
+2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	docktest	OK	62	lite	samtidig	
+2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	posttest	OK	24	lite	samtidig	
+2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	shoptest	OK	28	lite	samtidig	
+2026-11-06 16:49	ccr-ccfb0017-rmieib	b4713d7b+	routetest	OK	45	lite	alene	
+2026-11-06 15:53	ccr-d22aebce-865bcx	b63df02b+	hooktest	OK	1	lite	alene	
+2026-11-06 16:13	ccr-d22aebce-865bcx	635d5bcb+	hooktest	OK	1	lite	alene	
+2026-11-06 16:03	ccr-91234803-y9yb7j	b63df02b+	docktest	OK	66	lite	samtidig	
+2026-11-06 16:03	ccr-91234803-y9yb7j	b63df02b+	boktest	OK	10	lite	samtidig	
+2026-11-06 16:03	ccr-91234803-y9yb7j	b63df02b+	fleet3test	OK	13	lite	samtidig	
+2026-11-06 16:03	ccr-91234803-y9yb7j	b63df02b+	fleet2test	OK	37	lite	samtidig	
+2026-11-06 16:04	ccr-91234803-y9yb7j	b63df02b+	uishots	OK	89	lite	samtidig	
+2026-11-06 16:04	ccr-91234803-y9yb7j	b63df02b+	navbarshot	OK	35	lite	samtidig	
+2026-11-06 16:04	ccr-91234803-y9yb7j	b63df02b+	dockrow	OK	43	lite	samtidig	
+2026-11-06 16:05	ccr-91234803-y9yb7j	b63df02b+	kartlegging	OK	51	lite	samtidig	
+2026-11-06 18:02	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	tut	OK	2221	lite	alene	
+2026-11-06 18:02	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	lanterntest	OK	13	lite	samtidig	
+2026-11-06 18:02	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	soundtest	OK	7	lite	samtidig	
+2026-11-06 18:03	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	hudtest	OK	24	lite	samtidig	
+2026-11-06 18:03	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	hailtest	OK	5	lite	samtidig	
+2026-11-06 18:04	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	docktest	FEIL	61	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-06 18:05	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	anchorlight3d	FEIL	106	3d	alene	avsluttet med kode 1
+2026-11-06 18:07	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	docktest	OK	60	lite	alene	
+2026-11-06 18:12	claude/o11-2-sikring-lys-lyd-bsrlub	23556f43	anchorlight3d	OK	286	3d	alene	
+2026-11-06 20:49	ccr-a3c53300-9f9ly1	f56038f	tabtest	FEIL	106	lite	samtidig	FEIL no page errors (app) ["Cannot read properties of undefined (reading 'boat')"]
+2026-11-06 20:49	ccr-a3c53300-9f9ly1	f56038f	synctest	FEIL	66	lite	samtidig	FEIL with the phone silent (screen off), the tablet takes the game back by itself, without a card {"s": {"held": false, "wait": false, "gate": false, "ready": t
+2026-11-06 20:49	ccr-a3c53300-9f9ly1	f56038f	cloudtest	OK	44	lite	samtidig	
+2026-11-06 20:49	ccr-a3c53300-9f9ly1	f56038f+	errtest	OK	33	lite	samtidig	
+2026-11-06 20:50	ccr-a3c53300-9f9ly1	f56038f+	guesttest	OK	54	lite	samtidig	
+2026-11-06 20:50	ccr-a3c53300-9f9ly1	f56038f+	pwatest	OK	30	lite	samtidig	
+2026-11-06 20:50	ccr-a3c53300-9f9ly1	f56038f+	boottest	OK	29	lite	samtidig	
+2026-11-06 20:50	ccr-a3c53300-9f9ly1	f56038f+	pushtest	OK	23	lite	samtidig	
+2026-11-06 20:53	ccr-a3c53300-9f9ly1	f56038f+	starttest	OK	136	lite	samtidig	
+2026-11-06 20:53	ccr-a3c53300-9f9ly1	f56038f+	bootgtest	OK	159	lite	samtidig	
+2026-11-06 20:53	ccr-a3c53300-9f9ly1	f56038f+	savestest	OK	0	lite	samtidig	
+2026-11-06 20:53	ccr-a3c53300-9f9ly1	f56038f+	trip2	OK	38	lite	samtidig	
+2026-11-06 20:53	ccr-a3c53300-9f9ly1	f56038f+	worldtest	OK	19	lite	samtidig	
+2026-11-06 20:54	ccr-a3c53300-9f9ly1	f56038f+	docktest	FEIL	62	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-06 21:13	ccr-a3c53300-9f9ly1	9871601	tabtest	FEIL	0	lite	samtidig	FEIL no page errors (app) ["Cannot read properties of undefined (reading 'boat')"] (bygget før BOOTG: den samme feilen)
+2026-11-06 21:13	ccr-a3c53300-9f9ly1	9871601	synctest	OK	0	lite	samtidig	
+2026-11-06 21:13	ccr-a3c53300-9f9ly1	f56038f+	synctest	OK	0	lite	alene	
+2026-11-06 22:17	ccr-a3c53300-9f9ly1	8c90f83+	trip2	OK	34	lite	samtidig	
+2026-11-06 22:17	ccr-a3c53300-9f9ly1	8c90f83+	harbourtest	OK	14	lite	samtidig	
+2026-11-06 22:17	ccr-a3c53300-9f9ly1	8c90f83+	worldtest	OK	18	lite	samtidig	
+2026-11-06 22:17	ccr-a3c53300-9f9ly1	cc8d061	draftlooptest	OK	18	lite	samtidig	
+2026-11-06 22:17	ccr-a3c53300-9f9ly1	cc8d061	autonavtest	FEIL	12	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 184, 'cell': 0.2, 'maxSlice': 11.4, 'mended': 0, '
+2026-11-06 22:18	ccr-a3c53300-9f9ly1	cc8d061	routetest	FEIL	46	lite	alene	FEIL Autonav over hele kysten: Finnsnes–Tromsø, Bodø–Reine og Bergen–Florø gir en vei fri for land, grunner og skjær, med høyst 40 punkter, eller ett per 2 km d
+2026-11-06 22:19	ccr-a3c53300-9f9ly1	9871601	autonavtest	FEIL	0	lite	alene	FEIL 6. Autonav Vannareid → Honningsvåg … (bygget før rettingen, bare Senja: de samme ti røde linjene som på det rettede bygget)
+2026-11-06 22:22	ccr-a3c53300-9f9ly1	4073902	draftlooptest	OK	19	lite	samtidig	
+2026-11-06 22:24	ccr-a3c53300-9f9ly1	7cbe5c7	bootgtest	OK	125	lite	samtidig	

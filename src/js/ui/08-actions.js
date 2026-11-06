@@ -27,7 +27,7 @@ function doAct(el){
     if (!meAboard() && !crewAboard().length){ toast(L(...noCrewText())); return; }
     const later = S.draftDep && S.draftDep > S.t ? S.draftDep : null;
     if (!later && b.status === 'port' && S.jobs && S.jobs.length){ toast(t(jobsCrewOnly() ? 'crew_busy' : 'yard_busy', hm((jobsDone() || S.t) / 60))); return; }
-    S.plan = {wps:S.draft.map(w => ({...w})), idx:0, speed:S.draftSpeed, returning:false, depAt:later, unsafe:draftHazards().map(h => h.unsafe)};
+    S.plan = {wps:S.draft.map(w => ({...w})), idx:0, speed:S.draftSpeed, full:!!S.draftFull, returning:false, depAt:later, unsafe:draftHazards().map(h => h.unsafe)};
     S.draft = []; S.draftDep = null; draftForget();
     if (later) log('Avgang planlagt ' + dayStr(later / 60) + ' kl. ' + hm(later / 60) + '.', 'Departure planned for ' + dayStr(later / 60) + ' at ' + hm(later / 60) + '.');
     else { if (b.status === 'idle') log('Ny rute satt.', 'New route set.'); depart();
@@ -73,8 +73,9 @@ function doAct(el){
   renderPanel(); renderDyn(); renderHud(); renderClock(); renderActs(); renderRouteTools(); save();
 }
 function panelInput(e){
-  if (e.target.id === 'spd'){ S.draftSpeed = +e.target.value; $('spdOut').textContent = S.draftSpeed + ' kn, ' + t('lpnm', fmt(fuelLph(S.draftSpeed, windAt(S.t / 60)) / S.draftSpeed, 2)); }
-  if (e.target.id === 'spdLive' && S.plan){ S.plan.speed = +e.target.value; $('spdLiveOut').textContent = S.plan.speed + ' kn'; }
+  // (the top step is «Full fart»: the top speed she has now, and it follows it, core speedPin)
+  if (e.target.id === 'spd'){ const v = +e.target.value; S.draftFull = v >= spdTop(); S.draftSpeed = S.draftFull ? BOAT.vmax : v; $('spdOut').textContent = spdTxt(S.draftSpeed, S.draftFull) + ', ' + t('lpnm', fmt(fuelLph(S.draftSpeed, windAt(S.t / 60)) / S.draftSpeed, 2)); }
+  if (e.target.id === 'spdLive' && S.plan){ const v = +e.target.value; S.plan.full = v >= spdTop(); S.plan.speed = S.plan.full ? BOAT.vmax : v; $('spdLiveOut').textContent = spdTxt(S.plan.speed, S.plan.full); }
   if (e.target.id === 'autoW'){ S.settings.autoW = +e.target.value; $('autoWOut').textContent = S.settings.autoW + ' m/s'; }
 }
 function panelChange(e){
