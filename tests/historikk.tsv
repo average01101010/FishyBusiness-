@@ -979,3 +979,8 @@
 2026-11-07 16:08	ccr-6e84b098-t2tu38	b763342c	nettest	OK	27	lite	samtidig	
 2026-11-07 16:08	ccr-6e84b098-t2tu38	b763342c	itemcardtest	FEIL	15	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'linesetter', 'garnrenne', 'jukse', 'krabbekar', 'brova
 2026-11-07 16:08	ccr-6e84b098-t2tu38	b763342c	itemcardtest	FEIL	15	lite	alene	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'jukse', 'krabbekar', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	boottest	OK	29	lite	samtidig	
+2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	opptest	OK	63	lite	samtidig	
+2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	vesseltest	OK	28	lite	samtidig	
+2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	nettest	OK	27	lite	samtidig	
+2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	caretest	OK	15	lite	samtidig	
