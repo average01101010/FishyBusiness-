@@ -371,3 +371,14 @@
 2026-11-06 22:19	ccr-a3c53300-9f9ly1	9871601	autonavtest	FEIL	0	lite	alene	FEIL 6. Autonav Vannareid → Honningsvåg … (bygget før rettingen, bare Senja: de samme ti røde linjene som på det rettede bygget)
 2026-11-06 22:22	ccr-a3c53300-9f9ly1	4073902	draftlooptest	OK	19	lite	samtidig	
 2026-11-06 22:24	ccr-a3c53300-9f9ly1	7cbe5c7	bootgtest	OK	125	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	colregtest	OK	603	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	npctest	FEIL	0	lite	samtidig	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py)
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	autonavtest	FEIL	11	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 102, 'cell': 0.2, 'maxSlice': 8.1, 'mended': 0, 'b
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	hudtest	OK	25	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	havflaate	OK	8	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	hulltest	OK	70	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	lanterntest	OK	10	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	dyntest	FEIL	252	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	helmtest	OK	26	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	trip2	OK	35	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	hailtest	OK	5	lite	samtidig	
