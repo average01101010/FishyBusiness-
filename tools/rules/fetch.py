@@ -1,12 +1,15 @@
 # The sources of the rules along the coast (R1 of the rules plan, 04.10.2026), fetched into tools/rules/cache/:
 #  - Fiskeridirektoratet's map of the fishing regulations (Yggdrasil/Fiskerireguleringer, ArcGIS REST, 38 layers), as GeoJSON in
 #    EPSG:25833, paged (maxRecordCount 2000). Layer 0 (closed fields by J-melding) and 30 (king crab closures) change from week to week.
-#  - Fiskeridirektoratet's statistics areas (Yggdrasil/Statistikområder): main areas (layer 6) and locations (layer 8) from 2018.
+#  - Fiskeridirektoratet's statistics areas (Yggdrasil/Statistikområder): main areas (layer 6) and locations (layer 8) from 2018, and
+#    from ICES's areas from 2018 (layer 3, Ø10 07.11.2026) the Skagerrak (3.a.20), whose edges are the lines of the cod regulation for the
+#    North Sea and the Skagerrak (Hanstholmen fyr – Lindesnes fyr, Skagen fyr – Tistlarna fyr).
 #  - Fiskeridirektoratet's sea boundaries (Yggdrasil/Sjøgrenser_linje, H1b R4, 04.11.2026): the 200 nm lines of Russia, Iceland,
 #    Greenland, the Faroes and the United Kingdom and the agreed lines between them, which Kartverket's file does not have.
 #  - Kartverket's «Norges maritime grenser» (Geonorge, CC BY 4.0) as GML in EPSG:25833, ordered through Geonorge's download API
 #    (the WFS answers 500): the baseline, the 1, 4, 6 and 10 nm lines, the territorial limit (12 nm), the contiguous zone (24 nm).
 #   python3 tools/rules/fetch.py [--force]
+#   python3 tools/rules/fetch.py --skag [--force]   only ICES's areas (layer 3), for regler.py --skag
 import os, io, re, sys, json, time, zipfile, requests
 HERE = os.path.dirname(os.path.abspath(__file__)); CACHE = os.path.join(HERE, 'cache')
 FD = 'https://gis.fiskeridir.no/server/rest/services/Yggdrasil'
@@ -61,6 +64,16 @@ def fd_all(force):
                                        desc=re.sub(r'<[^>]+>', ' ', info.get('description') or '').strip()[:600], file=os.path.basename(f)))
             print(f'{service} {L["id"]:>2} {n:>5} {L["name"]}' + (f'  ({ng} uten geometri)' if ng else ''))
     json.dump(meta, open(os.path.join(CACHE, 'fd-meta.json'), 'w'), ensure_ascii=False, indent=1)
+# ICES's Skagerrak (Statistikområder layer 3, area 3.a.20) alone: the whole layer is the world's ICES areas in full detail, and the server
+# answers 500 when asked for all of it as GeoJSON (07.11.2026)
+def ices(force):
+    f = os.path.join(CACHE, 'fd-stati-3.geojson')
+    if os.path.exists(f) and not force: return
+    p = dict(where="area_27='3.a.20'", outFields='*', outSR=25833, f='geojson', returnGeometry='true')
+    fs = get(f'{FD}/Statistikområder/MapServer/3/query', params=p).json().get('features', [])
+    if len(fs) != 1 or not fs[0].get('geometry'): raise RuntimeError(f'Statistikområder/3: {len(fs)} features for 3.a.20')
+    json.dump({'type': 'FeatureCollection', 'features': fs}, open(f, 'w'), ensure_ascii=False)
+    print(f'Statistikområder  3 {len(fs):>5} ICES-områder (f.o.m. 2018), 3.a.20 Skagerrak')
 def nmg(force):
     f = os.path.join(CACHE, 'nmg-25833.gml')
     if os.path.exists(f) and not force: return
@@ -76,4 +89,5 @@ def nmg(force):
     open(f, 'wb').write(z.read(name)); print('Norges maritime grenser', name, os.path.getsize(f))
 if __name__ == '__main__':
     os.makedirs(CACHE, exist_ok=True); force = '--force' in sys.argv
-    nmg(force); fd_all(force)
+    if '--skag' in sys.argv: ices(force)
+    else: nmg(force); fd_all(force); ices(force)
