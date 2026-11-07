@@ -134,6 +134,94 @@
     const pts = ANC3.mode === 'bottom' ? rodePts(Aw, Fw, Lr, 16).reverse() : [Fw, Aw];
     ANC3.links = rodeDraw(pts, dm, !gr.chain, wy, Lr, CH, Ms); drawMany(CH, Ms);
   }
+  // ---------- man overboard (Ø11.6, core/14b-sikkerhet.js): the person in the water, the lifebuoy with its light and its smoke, and the
+  // rescue boat swung out on its davit, lowered, run out to her and back, and hoisted in (from 45 m). The thrown buoy leaves its bracket
+  // empty and the rescue boat its cradle: for the frame, drawSafety (09-landing-deck.js) gets the boat's kit with that buoy's place sunk
+  // out of sight and without the rescue boat (MOB3.G, put back in drawRescueLights once the deck is drawn), and this draws the empty
+  // holder, the cradle and the davit. The hand who keeps the person in sight and points is in deckcrew.js (MOBUI.spot).
+  // The phases of the rescue boat (core mobLift: lift.ph, in game minutes): the davit out (t0 to swing, the boat lifted off its cradle
+  // first), the fall paid out to the sea (to low; LSA 6.1.2.8), out to the person at 6 knots (to there), the person in (to tp), back (to
+  // back), hoisted and swung in (to t1).
+  const MOB3 = {G:null, K:null, eye:null, p:null, light:null, sm:{x:new Float32Array(160), y:new Float32Array(160), z:new Float32Array(160), age:new Float32Array(160).fill(99), n:0}, smT:0, look:null, lookK:'', st:{person:0, buoy:0, light:0, smoke:0, boat:null, holder:0}};
+  if (typeof window !== 'undefined') window.MOB3D = MOB3;   // (the tests: what the last frame drew)
+  function mobKitBack(){ if (MOB3.G){ MOB3.G.kit = MOB3.K; MOB3.G = MOB3.K = null; } }
+  const mobEase = u => u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u);
+  function mobLook(M){
+    if (MOB3.lookK === M.id && MOB3.look) return MOB3.look;
+    let l = null; try { const c = !M.anon && typeof crewById === 'function' ? crewById(M.cid) : null; l = c ? lookOf(c) : lookFromSeed(String(M.cid), M.sex || 'm', 30, 'sea'); } catch (e){ l = null; }
+    MOB3.look = l ? lookVest(l) : null; MOB3.lookK = M.id; return MOB3.look;
+  }
+  function drawMob(BMrel, eye, VP, t){
+    mobKitBack(); MOB3.eye = eye; MOB3.p = MOB3.light = null; const ST = MOB3.st; ST.person = ST.buoy = ST.light = ST.holder = 0; ST.boat = null;
+    const M = S.mob; if (!M || M.vid !== S.cur || typeof mobAt !== 'function') return;
+    const f = liveFrac(), tg = S.t + f, vt = vtype(), G = GEO(vt), K = G.kit, L = (VESSELS[vt] || {}).lsa, LF = M.lift;
+    const boatOut = !!(LF && LF.how === 'boat' && LF.ph && L && L.mob && K && K.mob);
+    nSetup(VP);
+    // the deck this frame: the thrown buoy's place and the rescue boat out of drawSafety; the empty holder drawn here
+    if (K && (M.buoy || boatOut)){ const k2 = Object.assign({}, K);
+      if (M.buoy && K.buoys && K.buoys[0]){ const q = K.buoys[0]; k2.buoys = K.buoys.slice(); k2.buoys[0] = [q[0], q[1] - 500, q[2], q[3]];
+        const H = kit('safe', 'boyeholder'); if (H){ drawN(H, chain(BMrel, M4.T(q[0], q[1], q[2]), M4.RY(q[3] || 0))); ST.holder = 1; } }
+      if (boatOut) k2.mob = null;
+      MOB3.G = G; MOB3.K = K; G.kit = k2; }
+    const sea = (x, z) => (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8;
+    // the person: head and shoulders over the sea in the life jacket, facing the boat, one arm waving; gone into the rescue boat at tp
+    const p = mobAt(f), px = p.x * 1000, pz = p.y * 1000, me = (typeof livePose === 'function' ? livePose(f).p : S.boat.pos);
+    if (M.st === 'water' && Math.hypot(px - eye[0], pz - eye[2]) < 4000){ const sy = sea(px, pz), lk = mobLook(M), h = Math.atan2(me.x * 1000 - px, -(me.y * 1000 - pz));
+      if (typeof drawWorker === 'function') drawWorker({gy:() => sy - 1.4, bare:true, spray:0, kit:null, look:lk}, {x:px, z:pz, h, task:'signal', walk:false, s:0}, eye, t, 11);
+      nSetup(VP); MOB3.p = [px - eye[0], sy - eye[1], pz - eye[2]]; ST.person = 1; }
+    // the lifebuoy: flat on the sea (the ring stands in x-y in its model), round her when she holds it; its light floating upright by it
+    const B = M.buoy;
+    if (B){ const held = B.held && M.st === 'water', bx = held ? px : B.x * 1000, bz = held ? pz : B.y * 1000;
+      if (Math.hypot(bx - eye[0], bz - eye[2]) < 4000){ const by = sea(bx, bz), R = kit('safe', 'livboye'), LT = kit('safe', 'boyelys');
+        if (R && !(M.st !== 'water' && B.held)){ drawN(R, chain(model(bx - eye[0], by - 0.03 - eye[1], bz - eye[2], 0.4, 0, 0), M4.RX(Math.PI / 2))); ST.buoy = 1; }
+        const lx = bx + 0.62, lz = bz + 0.2, ly = sea(lx, lz);
+        if (LT){ drawN(LT, chain(model(lx - eye[0], ly - 0.12 - eye[1], lz - eye[2], 0, Math.sin(t * 1.3) * 0.15, Math.sin(t * 1.1) * 0.15), M4.RX(Math.PI))); ST.light = 1; }
+        MOB3.light = [lx - eye[0], ly + 0.2 - eye[1], lz - eye[2], B.smoke && tg - B.t < MOBK.smoke ? 1 : 0]; } }
+    // the rescue boat from 45 m: the cradle stays, the davit's arm slews out and back, the boat hangs from the hook, rides the sea out to
+    // her and back
+    if (boatOut){ const q = K.mob, XM = kitX('mob'), Mc = chain(BMrel, M4.T(q[0], q[1], q[2]), M4.RY(q[3] || 0)), ba = XM.boat_at || [0, 0.45, 0], MBs = chain(Mc, M4.T(ba[0], ba[1], ba[2]));
+      const V0 = kit('mob', 'mob_vugge'); if (V0) drawN(V0, Mc);
+      const s = q[4] || 1, dz = q[5] || 0, da = XM.davit_at || [1.75, 0, 0.4], MD = s < 0 ? chain(Mc, M4.T(-da[0], da[1], da[2] + dz), M4.RY(Math.PI)) : chain(Mc, M4.T(da[0], da[1], da[2] + dz));
+      const a0 = dz ? Math.atan2(-dz * s, XM.reach || 1.75) : 0, ph = LF.ph, back = ph.back, t1 = LF.t1, mid = back + (t1 - back) / 2;
+      const sw = tg < ph.swing ? mobEase((tg - LF.t0 - 0.15) / Math.max(0.01, ph.swing - LF.t0 - 0.15)) : tg < mid ? 1 : 1 - mobEase((tg - mid) / Math.max(0.01, t1 - mid));
+      const MA = chain(MD, M4.RY(a0 + Math.PI * sw)), MAs = chain(MD, M4.RY(a0)), ha = XM.hook_at || [-1.75, 3.174, 0], hd = XM.head_at || [-1.75, 3.474, 0];
+      const ring = XM.ring || [0, 1.5, -2], hookS = xf(chain(MAs, M4.T(ha[0], ha[1], ha[2])), [0, 0, 0]), ringS = xf(MBs, ring), hookN = xf(chain(MA, M4.T(ha[0], ha[1], ha[2])), [0, 0, 0]);
+      const lift0 = tg < ph.swing ? 0.3 * mobEase((tg - LF.t0) / 0.15) : 0.3;   // (off the cradle first)
+      // where the boat's origin would hang now, and where it floats under the davit
+      const hang = xf(MBs, [0, 0, 0]); hang[0] += hookN[0] - hookS[0]; hang[1] += hookN[1] - hookS[1] + lift0; hang[2] += hookN[2] - hookS[2];
+      const wy = sea(hang[0] + eye[0], hang[2] + eye[2]) - 0.3 - eye[1], drop = hang[1] - wy;
+      let O = hang, yaw = null, inWater = false;
+      const pp = [px - eye[0], 0, pz - eye[2]], dirx = pp[0] - hang[0], dirz = pp[2] - hang[2], dl = Math.hypot(dirx, dirz) || 1, by = [pp[0] - dirx / dl * 2.2, 0, pp[2] - dirz / dl * 2.2];
+      const at = u => { const x = hang[0] + (by[0] - hang[0]) * u, z = hang[2] + (by[2] - hang[2]) * u; return [x, sea(x + eye[0], z + eye[2]) - 0.3 - eye[1], z]; };
+      let phase;
+      if (tg < ph.swing){ phase = 'swing'; }
+      else if (tg < ph.low){ phase = 'lower'; O = [hang[0], hang[1] - drop * mobEase((tg - ph.swing) / Math.max(0.01, ph.low - ph.swing)), hang[2]]; }
+      else if (tg < ph.there){ phase = 'out'; O = at(mobEase((tg - ph.low) / Math.max(0.01, ph.there - ph.low))); yaw = Math.atan2(dirx, -dirz); inWater = true; }
+      else if (tg < LF.tp){ phase = 'pick'; O = at(1); yaw = Math.atan2(dirx, -dirz); inWater = true; }
+      else if (tg < back){ phase = 'back'; O = at(1 - mobEase((tg - LF.tp) / Math.max(0.01, back - LF.tp))); yaw = Math.atan2(-dirx, dirz); inWater = true; }
+      else if (tg < mid){ phase = 'hoist'; O = [hang[0], wy + drop * mobEase((tg - back) / Math.max(0.01, mid - back)), hang[2]]; }
+      else phase = 'in';
+      // the boat: hanging she keeps the ship's heading (the painters), in the water she points where she goes and rides the sea
+      const o0 = xf(MBs, [0, 0, 0]), MBn = yaw == null ? chain(M4.T(O[0] - o0[0], O[1] - o0[1], O[2] - o0[2]), MBs)
+        : model(O[0], O[1], O[2], -yaw, Math.sin(t * 1.4) * 0.05, Math.sin(t * 1.1) * 0.08);
+      for (const nm of ['mob_boat', 'mob_sling']){ const m = kit('mob', nm); if (m) drawN(m, MBn); }
+      // the davit, the arm, the hook (down with the boat while she hangs, up again while she is away) and the fall
+      const DV = kit('mob', 'mob_davit'), AR = kit('mob', 'mob_arm'), HK = kit('mob', 'mob_hook'), FL = kit('mob', 'mob_fall'); if (DV) drawN(DV, MD); if (AR) drawN(AR, MA);
+      const down = inWater ? 0 : hang[1] - O[1], MH = chain(M4.T(0, -down, 0), MA, M4.T(ha[0], ha[1], ha[2]));
+      if (HK) drawN(HK, MH); if (FL) drawN(FL, limbM(xf(MA, hd), xf(MH, [0, 0, 0]), 1));
+      ST.boat = phase; }
+  }
+  // the lights and the smoke (drawRescueLights, after the deck: the kit is put back first): the buoy's light by night, flashing; the
+  // MOB light's orange smoke by day and night while it burns (15 min), rising and drifting off with the wind
+  function drawMobLights(VP, t){
+    mobKitBack(); const Q = MOB3.light, eye = MOB3.eye, SM = MOB3.sm, now = performance.now() / 1000, dt = Math.min(0.1, Math.max(0, now - (MOB3.smT || now))); MOB3.smT = now; MOB3.st.smoke = 0;
+    if (Q && Q[3] && eye){ const k = SM.n = (SM.n + Math.floor(dt * 20 + 0.5)) % 160; for (let j = 0; j < Math.max(1, Math.floor(dt * 20 + 0.5)); j++){ const i = (k + j) % 160; SM.x[i] = Q[0] + eye[0] + (Math.random() - 0.5) * 0.2; SM.y[i] = Q[1] + eye[1]; SM.z[i] = Q[2] + eye[2] + (Math.random() - 0.5) * 0.2; SM.age[i] = 0; } }
+    let n = 0; if (eye){ const wv = (env.wind || 0) * 0.7, wx = env.windDir[0] * wv, wz = env.windDir[1] * wv;
+      for (let i = 0; i < 160; i++){ if (SM.age[i] >= 6) continue; SM.age[i] += dt; SM.x[i] += wx * dt; SM.z[i] += wz * dt; SM.y[i] += (0.9 - SM.age[i] * 0.12) * dt;
+        const a = SM.age[i] / 6; PB[n * 3] = SM.x[i] - eye[0]; PB[n * 3 + 1] = SM.y[i] - eye[1]; PB[n * 3 + 2] = SM.z[i] - eye[2]; PA[n] = Math.pow(1 - a, 1.4) * 0.55 * Math.min(1, SM.age[i] / 0.3); n++; } }
+    if (n){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); drawPts(n, gl.POINTS, VP, [1.0, 0.45, 0.12], 1100, 2, null, 180); gl.depthMask(true); gl.disable(gl.BLEND); MOB3.st.smoke = n; }
+    if (Q && env.night > 0.05 && Math.floor(t * 1.1) % 2 === 0){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false); PB[0] = Q[0]; PB[1] = Q[1] + 0.15; PB[2] = Q[2]; PA[0] = Math.max(0.6, env.night); drawPts(1, gl.POINTS, VP, [1, 0.97, 0.85], 700, true); gl.depthMask(true); gl.disable(gl.BLEND); }
+  }
   let RB = null;
   function buildRescue(){
     if (typeof glbHas !== 'function' || !glbHas('redning')) return;
@@ -142,6 +230,7 @@
     RB = {hull:up('hull'), blue:up('blue'), rope:r.mesh(), ex:(G && G.ex) || {}, M:null, q:null};
   }
   function drawRescue(BMrel, eye, VP, t){
+    drawMob(BMrel, eye, VP, t);   // man overboard (Ø11.6)
     if (!RB) return; RB.M = null; RB.q = null;
     const q = S.boat.status === 'tow' && typeof towPose === 'function' ? towPose(liveFrac()) : null; if (!q || !RB.hull) return;
     const x = q.r.p.x * 1000, z = q.r.p.y * 1000; if (Math.hypot(x - eye[0], z - eye[2]) > 12000) return;
@@ -156,6 +245,7 @@
     }
   }
   function drawRescueLights(VP, t){
+    drawMobLights(VP, t);   // man overboard (Ø11.6): the kit back, the buoy's light and the smoke
     if (!RB || !RB.M || !RB.ex.lights) return;
     const flash = Math.floor(t * 2.5) % 2 === 0, BL = [0.25, 0.45, 1];
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false);

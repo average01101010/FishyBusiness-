@@ -134,6 +134,7 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
     - Hans kvote kommer om bord for året, og han får halvparten av verdien av torsken som landes på den. Andelen er en antakelse.
     - Han går i land ved nyttår.
   - **Leie av kvote** er ikke med. Det er ikke lov å overføre fangst eller kvantum til en annen båt (§ 30).
+  - **Kvotemarkedet mellom spillere** er planlagt, ikke bygd (`docs/planer/kvotemarkedet.md`, steg 60–64 i køen). Jonas' valg 07.11.2026: «V1, a», «V2, a», «V3, a», «V4, anbefalt», «V5, a». Det betyr at hjemler og strukturkvoter handles, aldri kilo; at selgeren velger om hjemmelen følger båten; at registeret selger som i dag; at taksten skal følge torskeprisen og kvoteutsiktene; og at det blir ett nasjonalt marked.
 - **Kvote-appen:** fanene Mine kvoter, Åpen gruppe (gruppekvote, fisket så langt, stopp, økninger og ferskfisk), Bestand (graf over gytebestand og totalkvote med B_pa og B_lim) og Marked.
 - **Kystposten:** stoppvarsel og stopp, økning, fritt fiske, endringer i ferskfiskordningen, kvoterådet for neste år (26. juni), totalkvoten (17. oktober) og reguleringen for neste år (19. desember).
 - **Kvoteprisen** (`KPK`) står på 260 kr/kg. Jeg fant ingen kilde for kvotepriser (se kapittel 10). Med større kvoter i 2027 koster hjemlene mer, og inngangen til lukket gruppe kommer litt senere i `progweek`.

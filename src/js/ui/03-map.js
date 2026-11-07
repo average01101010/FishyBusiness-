@@ -681,6 +681,7 @@ function renderDyn(){
   else if (TAPNAME){ TAPNAME = null; }
   if (typeof FRIENDS !== 'undefined') g.push(FRIENDS.svg(u, AISNOW));
   if (typeof SHARE !== 'undefined') g.push(SHARE.svg(u));
+  if (typeof MOBUI !== 'undefined') g.push(MOBUI.svg(u, bp));   // man overboard: the MOB mark, the line to it, the lifebuoy and the person (ui/10s-mob.js, Ø11.6)
   if (typeof PTOW !== 'undefined') g.push(PTOW.svg(u));   // players who need a tow (ui/10o-ptow.js)   // catch marks shared with you (ui/10l-share.js)   // friends whose game is closed, where they were last (ui/10k-friends.js)
   // gear being drawn out
   if (SETM) g.push(setSvg(u));

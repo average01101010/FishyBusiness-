@@ -22,6 +22,8 @@ D2 = r"""window.D2 = (() => {
   function boat(vt, n, me, port){
     const b = S.boat, home = portById(port || S.home || HOME0);
     b.type = vt; applyVessel(); b.status = 'port'; b.port = home.id; b.pos = {...home.p}; b.anch = null; b.berth = 'main'; S.plan = null; S.hold = []; b.fuel = BOAT.fuelCap; b.ice = BOAT.iceCap; b.gear = true; b.land = null; b.landWait = null; b.gop = null; b.fishUntil = null;
+    // (a quay shift, a fuelling or the landing queue from the scenario before ends at a time after T0, so the plan waited for it: S19 waited two days, 07.11.2026)
+    b.shift = null; b.fueling = null; b.after = null; b.landQ = null;
     S.crew = Array.from({length:n}, (_, i) => Object.assign(genCrew(), {bi:false, off:false, fatigue:10, traits:[], known:[true, true], name:['Ole Hansen', 'Per Berg', 'Kari Nilsen', 'Jan Olsen', 'Roger Strand', 'Rune Lie'][i] || 'Mann ' + i}));
     if (n){ setSkipper(S.crew[0].id); if (n > 1) setMate(S.crew[1].id); }
     S.me = me ? S.cur : 'nobody'; S.sets = (S.sets || []).filter(s => s.vid !== S.cur); S.jobs = []; S.ops = null; S.pgear = newPGear(); S.equip.jukse = 0;
@@ -58,7 +60,7 @@ D2 = r"""window.D2 = (() => {
       if (mode === 'open' && i % 10 === 9){ Math.random = NATIVE; await new Promise(r => setTimeout(r, 0)); Math.random = RNG.f; }
     }
     L.log = S.log.slice(L.log0).map(e => [when(e.t), (e.no || '').slice(0, 160)]); L.msgs = S.msgs.slice(L.msg0).map(m => [when(m.t), (m.no || '').slice(0, 200)]);
-    L.gearLog = (S.gearLog || []).filter(e => (e.tSet || 0) >= L.t0).map(e => ({kind:e.kind, n:e.n, set:when(e.tSet), haul:e.tHaul ? when(e.tHaul) : null, soak:e.tHaul ? Math.round((e.tHaul - e.n * DRP2.work.trekk[e.kind] * 60 - e.tSet) / 6) / 10 : null, kg:e.kg}));   // the soak: from the set to the start of the haul
+    L.gearLog = (S.gearLog || []).filter(e => (e.tSet || 0) >= L.t0).map(e => ({kind:e.kind, n:e.n, set:when(e.tSet), haul:e.tHaul ? when(e.tHaul) : null, soak:e.tHaul ? Math.round((e.tHaul - e.n * DRP2.work.trekk[e.kind] * 60 - e.tSet) / 6) / 10 : null, lost:e.lost ? when(e.lost) : null, kg:e.kg}));   // the soak: from the set to the start of the haul
     L.stats = JSON.parse(JSON.stringify(o.stats)); L.ops = {on:o.on, stop:o.stop, wait:o.run && o.run.wait, i:o.run && o.run.i, held:o.held, M:o.M, ly:o.ly};
     L.fin = {en:Math.round(S.energy), fat:S.crew.map(c => Math.round(c.fatigue)), cash:Math.round(S.cash), hold:Math.round(holdTotal()), status:b.status, port:b.port, sets:mySets().map(s => [s.fid, s.n])};
     return L;
@@ -216,7 +218,10 @@ async def main():
             print('  gearLog:', L['gearLog']); print('  ops:', json.dumps(L['ops'], ensure_ascii=False)[:300]); print('  fin:', L['fin'], 'spent', L['spent'], 'bait', L['bait'])
             hauls = [g for g in L['gearLog'] if g['haul']]; bought = logs(L, 'Kjøpte')
             print(ok(not L['err'] and bought and all(g['n'] == 15 for g in L['gearLog'][:2]) and len(L['gearLog']) >= 2), 'S3 bait is bought at the plant, then both strings of 15 pots are set', [bought[:2], [(g['set'], g['n']) for g in L['gearLog'][:2]]])
-            print(ok(len(hauls) >= 2 and all(48.0 - 0.05 <= g['soak'] <= 52 for g in hauls)), 'S3 the pots are hauled after 48-52 h and set again', [(g['set'], g['soak']) for g in hauls])
+            # (a string lost in the weather is the sea's own chance, gearHour: about 1 % a string over two days in ordinary weather; the plan
+            # says so and does not haul it, so it is counted with the hauled ones, 07.11.2026)
+            lost = [g for g in L['gearLog'][:2] if g.get('lost') and not g['haul']]
+            print(ok(len(hauls) >= 1 and len(lost) <= 1 and len(hauls) + len(lost) >= 2 and all(48.0 - 0.05 <= g['soak'] <= 52 for g in hauls)), 'S3 the pots are hauled after 48-52 h and set again (a string lost in the weather is not hauled)', [(g['set'], g['soak']) for g in hauls], 'tapt', [(g['set'], g['lost']) for g in lost])
             print(ok(L['ops']['on'] and not L['ops']['stop']), 'S3 the plan is still on after four days', L['ops'])
         print('== S7 med motoren: valgt mottak, og «når lasten er full» holder fangsten om bord')
         L = await pg.evaluate("""(async () => { D2.reset(27); const home = D2.boat('sjark', 2, true); await mapNeed(portById(home).p, 14);
@@ -475,4 +480,5 @@ async def main():
             if s not in BUILT: print('VENTER', s, 'bygges i en senere del (02-design.md kapittel 7)')
         print('sidefeil:', errs[:5])
         await b.close()
-asyncio.run(main())
+# (driftsplan2kyst.py uses the same harness, D2)
+if __name__ == '__main__': asyncio.run(main())

@@ -806,6 +806,9 @@
 2026-11-07 13:05	ccr-fc7a11b2-nl5jor	0e1f99c3	roetest	OK	120	lite	samtidig	
 2026-11-07 13:05	ccr-fc7a11b2-nl5jor	0e1f99c3	trip2	OK	39	lite	samtidig	
 2026-11-07 13:06	ccr-fc7a11b2-nl5jor	0e1f99c3	docktest	OK	60	lite	alene	
+2026-11-07 15:22	ccr-2040aa61-qgig5a	a4900d7b	driftsplan2test	FEIL	96	lite	alene	FEIL S19 home at a rorbu, you aboard an open boat: you go in to rest by yourself each night and the plan goes out every day, played closed [[['2028-03-08', 1, 3
+2026-11-07 15:27	ccr-2040aa61-qgig5a	a4900d7b+	driftsplan2test	FEIL	88	lite	alene	FEIL S3 the pots are hauled after 48-52 h and set again [('D2 05:43', 48.3)]
+2026-11-07 15:29	ccr-2040aa61-qgig5a	a4900d7b+	driftsplan2test	OK	85	lite	alene	
 2026-11-07 15:43	ccr-6e84b098-t2tu38	82fc777a+	opptest	OK	40	lite	alene	
 2026-11-07 15:46	ccr-6e84b098-t2tu38	2de52aeb+	selltest	LES	24	lite	samtidig	
 2026-11-07 15:47	ccr-6e84b098-t2tu38	2de52aeb+	shoptest	OK	35	lite	samtidig	
@@ -945,6 +948,22 @@
 2026-11-07 15:46	plan/2026-11-07-opp4	9e818532	hbtest	FEIL	17	lite	samtidig	FEIL liggende: the search narrows the list to the tip that matches  {"tips": 2, "first": "Diesel"}
 2026-11-07 15:46	plan/2026-11-07-opp4	9e818532+	hbtest	OK	15	lite	alene	
 2026-11-07 15:48	plan/2026-11-07-opp4	9e818532+	opptest	OK	42	lite	alene	
+2026-11-07 16:17	ccr-2040aa61-qgig5a	091c641d	skipdrift	OK	24	lite	samtidig	
+2026-11-07 16:17	ccr-2040aa61-qgig5a	091c641d	drifttest	OK	38	lite	samtidig	
+2026-11-07 16:18	ccr-2040aa61-qgig5a	413e9c36	fleet2test	OK	44	lite	samtidig	
+2026-11-07 16:32	ccr-2040aa61-qgig5a	413e9c36	havplantest	FEIL	891	lite	samtidig	FEIL the hold at 95 %: the strings hauled home, the landing at the plant, the other crew signs on [0, 1, 585161, [0, 1]]
+2026-11-07 16:32	ccr-2040aa61-qgig5a	413e9c36	driftsplan2kyst	OK	155	lite	samtidig	
+2026-11-07 16:32	ccr-2040aa61-qgig5a	413e9c36	havntest	OK	19	lite	samtidig	
+2026-11-07 16:32	ccr-2040aa61-qgig5a	413e9c36	driftuitest	OK	19	lite	samtidig	
+2026-11-07 16:32	ccr-2040aa61-qgig5a	413e9c36	skiptest	OK	18	lite	samtidig	
+2026-11-07 16:32	ccr-2040aa61-qgig5a	413e9c36	pushtest	OK	24	lite	samtidig	
+2026-11-07 16:32	ccr-2040aa61-qgig5a	413e9c36	driftsplan2ui	OK	31	lite	samtidig	
+2026-11-07 16:32	ccr-2040aa61-qgig5a	413e9c36	driftsplan2map	OK	13	lite	samtidig	
+2026-11-07 16:32	ccr-2040aa61-qgig5a	413e9c36	driftsplan2gui	FEIL	371	lite	samtidig	FEIL s02-ikke-klar: U13: grunnen er en knapp, og et trykk på den åpner Mannskap-siden i samme skuff  {"grunnen": "Når du ikke er om bord, må både en skipper og 
+2026-11-07 16:32	ccr-2040aa61-qgig5a	413e9c36	dockrow	OK	40	lite	samtidig	
+2026-11-07 16:32	ccr-2040aa61-qgig5a	413e9c36	docktest	OK	59	lite	samtidig	
+2026-11-07 16:47	ccr-2040aa61-qgig5a	413e9c36	kaishot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-07 16:49	ccr-2040aa61-qgig5a	413e9c36	driftsplan2test	FEIL	87	lite	alene	FEIL S1 the line is set on both fields and hauled after 6-7.5 h each day [('D1 05:52', 6.2), ('D2 05:35', 6.3), ('D3 05:35', 6.4)]
 2026-11-07 16:03	ccr-6e84b098-t2tu38	b763342c	selltest	LES	22	lite	samtidig	
 2026-11-07 16:03	ccr-6e84b098-t2tu38	b763342c	shoptest	OK	37	lite	samtidig	
 2026-11-07 16:03	ccr-6e84b098-t2tu38	b763342c	vesseltest	OK	30	lite	samtidig	
@@ -1014,3 +1033,60 @@
 2026-11-07 18:54	ccr-7538447c-xt5b4p	51299d12	f1test	OK	336	3d	alene	
 2026-11-07 18:54	ccr-7538447c-xt5b4p	51299d12	routetest	OK	45	lite	alene	
 2026-11-07 18:55	ccr-7538447c-xt5b4p	51299d12	charttest	OK	52	lite	alene	
+2026-11-07 16:51	ccr-73ea871d-9b5rz6	46b9cef8	trip2	OK	34	lite	samtidig	
+2026-11-07 16:52	ccr-73ea871d-9b5rz6	46b9cef8	docktest	FEIL	61	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-07 16:52	ccr-73ea871d-9b5rz6	46b9cef8	krabbefabrikktest	OK	16	lite	samtidig	
+2026-11-07 16:52	ccr-73ea871d-9b5rz6	46b9cef8	fabrikktest	FEIL	11	lite	samtidig	FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined |
+2026-11-07 16:52	ccr-73ea871d-9b5rz6	46b9cef8	lotttest	OK	7	lite	samtidig	
+2026-11-07 16:52	ccr-73ea871d-9b5rz6	46b9cef8	skiptest	OK	14	lite	samtidig	
+2026-11-07 16:53	ccr-73ea871d-9b5rz6	46b9cef8	fleet2test	OK	36	lite	samtidig	
+2026-11-07 16:53	ccr-73ea871d-9b5rz6	46b9cef8	opsowntest	OK	39	lite	samtidig	
+2026-11-07 16:53	ccr-73ea871d-9b5rz6	46b9cef8	worktest	FEIL	18	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-07 16:53	ccr-73ea871d-9b5rz6	46b9cef8	crewlifetest	OK	5	lite	samtidig	
+2026-11-07 16:53	ccr-73ea871d-9b5rz6	46b9cef8	selfcrew	OK	6	lite	samtidig	
+2026-11-07 16:54	ccr-73ea871d-9b5rz6	46b9cef8	lybtest	OK	43	lite	samtidig	
+2026-11-07 16:55	ccr-73ea871d-9b5rz6	46b9cef8	mobtest	OK	137	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	colregtest	OK	600	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	keeptest	OK	12	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	autonavtest	OK	32	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	turtest	OK	13	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	decktest	OK	11	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	npctest	OK	6	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	towtest	OK	12	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	tattest	OK	14	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	peergear	OK	4	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	merketest	OK	11	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	fartstidtest	FEIL	11	lite	samtidig	FEIL the phone's home shows the years and days, and the Merker app explains how sea time is earned  "06:02\nman 1. mar\nNØ 5 m/s · −1 °C\n15 000 kr\nNeste mål: 
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	opptest	OK	53	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	seaworktest	OK	4	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	crewwalk	OK	6	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	crewclip	FEIL	13	lite	samtidig	FEIL nor does the work at its places (jigging, gutting, icing, hauling) {'bunntral': {'jig': ['jig:1[0]null'], 'deck': [], 'haul': []}}
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	driftsplan2map	OK	11	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	placetest	OK	4	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	sidetab	OK	10	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	etikett	OK	48	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	hbtest	OK	13	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	itemcardtest	FEIL	14	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'linesetter', 'garnrenne', 'jukse', 'krabbekar', 'brova
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	soundtest	OK	5	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	cashfxtest	OK	7	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	legmemotest	OK	11	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	dbg23o	OK	35	3d	alene	
+2026-11-07 17:15	ccr-73ea871d-9b5rz6	46b9cef8	anchor3d	FEIL	623	3d	alene	FEIL kyst15 stowed, falls with a splash, lies on the bottom with its chain {"stow": true, "links": 84, "hang": false, "bottom": true, "shot": true, "upHang": tr
+2026-11-07 17:15	ccr-73ea871d-9b5rz6	46b9cef8	routetest	OK	38	lite	alene	
+2026-11-07 17:16	ccr-73ea871d-9b5rz6	46b9cef8	charttest	OK	48	lite	alene	
+2026-11-07 17:30	ccr-73ea871d-9b5rz6	bb9b5d3e	docktest	OK	60	lite	samtidig	
+2026-11-07 17:30	ccr-73ea871d-9b5rz6	bb9b5d3e	fabrikktest	FEIL	12	lite	samtidig	FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined |
+2026-11-07 17:30	ccr-73ea871d-9b5rz6	bb9b5d3e	worktest	FEIL	23	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-07 17:30	ccr-73ea871d-9b5rz6	bb9b5d3e	fartstidtest	FEIL	12	lite	samtidig	FEIL the phone's home shows the years and days, and the Merker app explains how sea time is earned  "06:02\nman 1. mar\nNØ 5 m/s · −1 °C\n15 000 kr\nNeste mål: 
+2026-11-07 17:30	ccr-73ea871d-9b5rz6	bb9b5d3e	crewclip	FEIL	14	lite	samtidig	FEIL nor does the work at its places (jigging, gutting, icing, hauling) {'bunntral': {'jig': ['jig:1[0]null'], 'deck': [], 'haul': []}}
+2026-11-07 17:30	ccr-73ea871d-9b5rz6	bb9b5d3e	itemcardtest	FEIL	14	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'linesetter', 'garnrenne', 'jukse', 'krabbekar', 'brova
+2026-11-07 17:31	ccr-73ea871d-9b5rz6	bb9b5d3e	docktest	OK	58	lite	alene	
+2026-11-07 17:32	ccr-73ea871d-9b5rz6	bb9b5d3e	docktest	OK	58	lite	alene	
+2026-11-07 17:33	ccr-73ea871d-9b5rz6	bb9b5d3e	hulltest	OK	76	lite	alene	
+2026-11-07 17:01	ccr-2040aa61-qgig5a	1e4dd80d	boottest	OK	22	lite	samtidig	
+2026-11-07 17:02	ccr-2040aa61-qgig5a	1e4dd80d	docktest	FEIL	62	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-07 17:03	ccr-2040aa61-qgig5a	1e4dd80d	driftsplan2kyst	OK	91	lite	samtidig	
+2026-11-07 17:04	ccr-2040aa61-qgig5a	1e4dd80d	driftsplan2test	FEIL	88	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
+2026-11-07 17:05	ccr-2040aa61-qgig5a	1e4dd80d	docktest	OK	58	lite	alene	
+2026-11-07 17:35	ccr-73ea871d-9b5rz6	d3b8bde0	boottest	OK	25	lite	samtidig	
+2026-11-07 17:37	ccr-73ea871d-9b5rz6	d3b8bde0	mobtest	OK	136	lite	samtidig	
