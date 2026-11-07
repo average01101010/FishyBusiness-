@@ -453,7 +453,30 @@ Etter hvert fall sender spillet meldingen for deg og skriver den i dagboka: «Me
 
 ### 6.7 Tester og målinger
 
-(fylles inn under)
+- **Enhetstestene** (`tests/unit/mob.test.mjs`, 79 sjekker, ny): sjansen mot sjøen, mørket, isingen, redskapet og åpen båt; tiden i vannet og 1-10-1; sikten; hvem som er på dekk; redningen (skøyta nær land, helikopteret 120 km ut); fallet med dagboka, MAYDAY-en og livbøya; merket; Williamson-svingen; opptaket for langt unna, for fort og klart; leideren og utfallet med meldingen og merket; forbi grensa med redningen og sykmeldingen, og tilbake om bord først i havn; MOB-båten fra 45 m; spillet lukket (mannskapet tar ham opp); terningene tvunget: nestenulykke med spillet lukket, fall med det åpent, aldri to fall på et døgn, ikke når du ikke er om bord, alene eller sover; og (etter gjennomgangen) merket i `ACHL`, værvendingen som venter, MOB-båtens opptak som står når spillet går bort, kjønnet til skjermen. Sett rød uten kjernefila (linja i malen tatt bort med `git stash`: 0 OK, 1 FEIL) og grønn med den; sjekkene fra gjennomgangen sett røde mot commiten før (4 FEIL). Hele kjernen 2067 OK etter flettingen.
+- **`mobtest`** (LITE, ny; sett rød mot bygget uten Ø11.6, c679069c i en worktree: `ReferenceError: mobRnd is not defined`): utenfor Senjas ytterside i juli i 15 m/s og 3,7 m sjø går Stian over bord i spillets eget minutt mens sjarken jukser (panelet, dagboka, MAYDAY med posisjonen og «redningsskøyta fra Gryllefjord … om rundt 21 minutter», Kari kastet bøya, Stian ikke på dekk); båten går fra ham i 7 knop i fem sekunder (106 m), «MOB» setter merket 114 m fra ham, «Autonav: MOB» går Williamson-svingen (ut til rundt 450 m, rundt og tilbake), stopper 49 m unna (målet var livbøya, som var i sikte og han ikke: 3,7 m sjø), «Autonav: MOB på nytt» tar henne inn til 22 m i 1,7 knop, og leideren: «Stian Nilsen er oppe etter 9 minutter i sjøen, med leideren akter. Kald og våt, men i orden.», meldingen og merket. Så Kari med båten 1,5 km unna: redningsskøyta fra Gryllefjord tar henne etter 20 minutter, sykmeldt i 1 dag. Spillet lukket: bare en nestenulykke. Bildene `mob_*.png` i begge formater (i stående under minikartet og stripa etter første bilde, der panelet dekket minikartet).
+- **`mobshot`** (3D, alene, ny): kystbåten på 21 m med personen 12 m tvers om styrbord (vinkende, i vesten), bøya flat med lyset, røyken, den tomme holderen og den som peker; autolineren med MOB-båten svingt ut og firt, og så på vei ut til personen 40 m unna; ingenting igjen etterpå. Første kjøringer viste personen utenfor bildet (drevet 120 m mens SwiftShader tok bildet, og kameraet for nær): personen holdes nå på plass mens bildet tas.
+- **Stikkprøven langs kysten** (`mobtest` med `KYST_MOB_AT` og hele kysten fra kart-31, uten bilder):
+
+  | Sted | Sjøen | Redningen | Williamson og Autonav | Opptaket | For sent tilbake |
+  |---|---|---|---|---|---|
+  | Senja, yttersiden | 10,2 °C, 3,7 m | redningsskøyta fra Gryllefjord, 21 min | ut rundt 450 m, tilbake til 49 m, inn til 22 m på nytt | leideren etter 9 min | skøyta fra Gryllefjord, 20 min, 1 dag |
+  | Bergen, Korsfjorden | 12,5 °C, 2,4 m | helikopteret fra Sola, 49 min (skøyta fra Bergen ville brukt rundt 50) | ut 416 m, tilbake til 36 m, inn til 31 m på nytt | leideren etter 11 min | helikopteret fra Sola, 49 min, 2 dager |
+  | Bodø, Vestfjorden | 11,3 °C, 3,9 m | helikopteret fra Bodø, 19 min | ut 412 m, tilbake til 45 m, inn til 26 m | leideren etter 9 min | helikopteret fra Bodø, 19 min, 1 dag |
+  | Hammerfest, Sørøysundet | 8,8 °C, 1,0 m | redningsskøyta fra Hammerfest, 31 min | ut 420 m, tilbake til 49 m, inn til 31 m på nytt | leideren etter 11 min | skøyta fra Hammerfest, 31 min, 2 dager |
+
+  MAYDAY-en hadde riktig posisjon alle steder (60°10.8' N 5°09.6' Ø, 67°22.8' N 14°06.0' Ø, 70°46.2' N 23°30.0' Ø). Første «Autonav: MOB» stopper ofte 35–50 m fra ham fordi målet er livbøya, som ses lenger enn hodet i sjø og driver fra ham; det andre trykket, når han er i sikte, tar henne inn.
+- **Hyppigheten** (`tests/mobrate.py`, spillets vær time for time i januar og juli 2027, én på dekk): fall per 100 timer på dekk de timene båten er ute (under sin røde grense), og nestenulykkene (tre per fall):
+
+  | Sted | Januar, sjarken, haler | Januar, snekka, jukser | Juli | Timer over rød grense i januar (sjarken) | Mørkt i januar | Ising i januar |
+  |---|---|---|---|---|---|---|
+  | Senja, yttersiden | 0,10 (nestenulykker 0,29) | 0,14 | 0,00–0,01 | 40 % | 75 % | 32 % |
+  | Bergen, utenfor Fedje | 0,08 (0,25) | 0,14 | 0,00–0,02 | 75 % | 64 % | 0 % |
+  | Bodø, Vestfjorden | 0,10 (0,30) | 0,13 | 0,00–0,01 | 31 % | 71 % | 7 % |
+  | Hammerfest, utenfor Sørøya | 0,12 (0,36) | 0,16 | 0,00–0,01 | 56 % | 78 % | 38 % |
+
+  Med to på dekk og seks spilltimer i timen er det rundt ett fall per 80 timers spill om vinteren og en nestenulykke per 25–30 timer; om sommeren nesten aldri. Det er et spillvalg (kap. 5.10 i planen), og må ses i spilltest.
+
 
 ### 6.8 Ikke med
 
@@ -464,6 +487,7 @@ Etter hvert fall sender spillet meldingen for deg og skriver den i dagboka: «Me
 
 ## 7. Antatt eller usikkert
 
+- Ø11.6 (kap. 6): hyppigheten (`MOBK.R0`, tre nestenulykker per fall), tiden i vannet (de nedre endene av tabellen for kaldt vann), 1-10-1 for leideren, driften (1,2 % og 3 % av vinden), sikten, redningens oppmøtetid og fart og helikopterbasene, sykedagene, og at Sjøfartsdirektoratet er myndigheten etter § 475 og at et fall uten skade meldes (forskriften om melding er ikke lest). Isingen er Overlands varsling i grove trekk.
 - Regel 19–37, vedlegg I og III og kapittel II 46, 49, 52 og 53 d er lest ordrett 06.11.2026 (Ø11.2); vedlegg II og IV ikke. Grensa for nedsatt sikt (2 mil), minste styrefart (2–4 knop), sikker fart (stopp innen halve sikten), at rollene står når de kommer i sikte, at NPC-en bruker maskinen akterover når hun slakker av, og at klokka høres som en fløyte under 20 m, er antatt (4.1–4.4).
 - Sjøloven kapittel 8 er lest på Lovdata 06.11.2026, men leseverktøyet ga bare korte ordrette sitater; resten er gjengitt med egne ord (2.2). §§ 135 og 475, skipssikkerhetsloven fra § 28 og kapittel 7–10 i FOR-2000-06-13-660 er bare lest i sammendrag.
 - Skylda (Ø11.3) er et spillvalg ut fra reglene, ikke en domstols vurdering: poengene, det halve minuttet for «tid til overlegninger», at en femdel av grensa er en markert manøver, åtte lengder for hennes sikre fart, verdiene etter lengden, massene etter en halv blokkoeffisient, og at hvert skrog tar støtet som mot en kai med den andres andel av massen (5.2–5.4).

@@ -984,3 +984,44 @@
 2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	vesseltest	OK	28	lite	samtidig	
 2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	nettest	OK	27	lite	samtidig	
 2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	caretest	OK	15	lite	samtidig	
+2026-11-07 16:51	ccr-73ea871d-9b5rz6	46b9cef8	trip2	OK	34	lite	samtidig	
+2026-11-07 16:52	ccr-73ea871d-9b5rz6	46b9cef8	docktest	FEIL	61	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-07 16:52	ccr-73ea871d-9b5rz6	46b9cef8	krabbefabrikktest	OK	16	lite	samtidig	
+2026-11-07 16:52	ccr-73ea871d-9b5rz6	46b9cef8	fabrikktest	FEIL	11	lite	samtidig	FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined |
+2026-11-07 16:52	ccr-73ea871d-9b5rz6	46b9cef8	lotttest	OK	7	lite	samtidig	
+2026-11-07 16:52	ccr-73ea871d-9b5rz6	46b9cef8	skiptest	OK	14	lite	samtidig	
+2026-11-07 16:53	ccr-73ea871d-9b5rz6	46b9cef8	fleet2test	OK	36	lite	samtidig	
+2026-11-07 16:53	ccr-73ea871d-9b5rz6	46b9cef8	opsowntest	OK	39	lite	samtidig	
+2026-11-07 16:53	ccr-73ea871d-9b5rz6	46b9cef8	worktest	FEIL	18	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-07 16:53	ccr-73ea871d-9b5rz6	46b9cef8	crewlifetest	OK	5	lite	samtidig	
+2026-11-07 16:53	ccr-73ea871d-9b5rz6	46b9cef8	selfcrew	OK	6	lite	samtidig	
+2026-11-07 16:54	ccr-73ea871d-9b5rz6	46b9cef8	lybtest	OK	43	lite	samtidig	
+2026-11-07 16:55	ccr-73ea871d-9b5rz6	46b9cef8	mobtest	OK	137	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	colregtest	OK	600	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	keeptest	OK	12	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	autonavtest	OK	32	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	turtest	OK	13	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	decktest	OK	11	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	npctest	OK	6	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	towtest	OK	12	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	tattest	OK	14	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	peergear	OK	4	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	merketest	OK	11	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	fartstidtest	FEIL	11	lite	samtidig	FEIL the phone's home shows the years and days, and the Merker app explains how sea time is earned  "06:02\nman 1. mar\nNØ 5 m/s · −1 °C\n15 000 kr\nNeste mål: 
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	opptest	OK	53	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	seaworktest	OK	4	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	crewwalk	OK	6	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	crewclip	FEIL	13	lite	samtidig	FEIL nor does the work at its places (jigging, gutting, icing, hauling) {'bunntral': {'jig': ['jig:1[0]null'], 'deck': [], 'haul': []}}
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	driftsplan2map	OK	11	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	placetest	OK	4	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	sidetab	OK	10	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	etikett	OK	48	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	hbtest	OK	13	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	itemcardtest	FEIL	14	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'linesetter', 'garnrenne', 'jukse', 'krabbekar', 'brova
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	soundtest	OK	5	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	cashfxtest	OK	7	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	legmemotest	OK	11	lite	samtidig	
+2026-11-07 17:04	ccr-73ea871d-9b5rz6	46b9cef8	dbg23o	OK	35	3d	alene	
+2026-11-07 17:15	ccr-73ea871d-9b5rz6	46b9cef8	anchor3d	FEIL	623	3d	alene	FEIL kyst15 stowed, falls with a splash, lies on the bottom with its chain {"stow": true, "links": 84, "hang": false, "bottom": true, "shot": true, "upHang": tr
+2026-11-07 17:15	ccr-73ea871d-9b5rz6	46b9cef8	routetest	OK	38	lite	alene	
+2026-11-07 17:16	ccr-73ea871d-9b5rz6	46b9cef8	charttest	OK	48	lite	alene	
