@@ -429,7 +429,7 @@ SEA: fetch, wind sea, swell
   - 150 `seaPartsNear(p, H)`
   - 152 `seaDirF(p, H, head)`
 
-## `src/js/core/03c-stability.js` (210 linjer)
+## `src/js/core/03c-stability.js` (216 linjer)
 
 STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the work aboard
 
@@ -449,8 +449,8 @@ STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the wo
   - 136 `secArea(H, i, h)`
   - 141 `secBreadth(H, i, h)`
   - 148 `hullRest(H, D)`
-  - 166 `hullX(R)`
-  - 181 `hullStep(H, R, X, eta, deta, dt, o)`
+  - 171 `hullX(R)`
+  - 186 `hullStep(H, R, X, eta, deta, dt, o)`
 
 ## `src/js/core/03d-quota.js` (456 linjer)
 
@@ -2127,12 +2127,12 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 125 `hullOrder(auto, b = S.boat)`
   - 140 `hullMended(j, b = S.boat)`
 
-## `src/js/ui/01-i18n.js` (118 linjer)
+## `src/js/ui/01-i18n.js` (120 linjer)
 
 the logo (src/brand/logo.svg, the user's anchor of 03.11.2026), filled with currentColor: the sign-in's gate (ui/10f-cloud.js) and the
 
 - **4** i18n
-  - 115 `t(k, ...a)`
+  - 117 `t(k, ...a)`
 
 ## `src/js/ui/02-format-state.js` (233 linjer)
 
@@ -2475,12 +2475,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1296 linjer)
+## `src/js/ui/phone/07-patch.js` (1300 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1289 `patch()`
+  - 1293 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2516,7 +2516,7 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
   - 134 `redning()`
 - **151** vessels: my vessel overview and the market
 
-## `src/js/ui/phone/10-fartoy.js` (310 linjer)
+## `src/js/ui/phone/10-fartoy.js` (326 linjer)
 
   - 14 `goals()`
   - 39 `goalsCard()`
@@ -2524,17 +2524,17 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
   - 58 `haulNow(kind)`
   - 62 `haulNow0(kind)`
   - 73 `tierLad(k, pg, fxOf)`
-  - 79 `oneLad(k, base, pg, fx)`
-  - 133 `ladders()`
-  - 137 `kitCard()`
-  - 138 `kitCard0()`
-- **162** the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
-  - 171 `mkCard(k, O)`
-  - 175 `market()`
-  - 202 `specSecs(k, O)`
-  - 226 `sheet(k, O)`
-  - 274 `fartoy(tab0)`
-- **309** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
+  - 79 `oneLad(k, base, pg, fx, nm)`
+  - 132 `ladders()`
+  - 148 `kitCard()`
+  - 149 `kitCard0()`
+- **178** the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
+  - 187 `mkCard(k, O)`
+  - 191 `market()`
+  - 218 `specSecs(k, O)`
+  - 242 `sheet(k, O)`
+  - 290 `fartoy(tab0)`
+- **325** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
 
 ## `src/js/ui/phone/11-rederi.js` (85 linjer)
 
@@ -2849,7 +2849,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 433 `renderPanel()`
   - 437 `panelBusy()`
 
-## `src/js/ui/07b-first-trip.js` (304 linjer)
+## `src/js/ui/07b-first-trip.js` (321 linjer)
 
 ---------- «Første tur»: the guided first trip every new player goes through ----------
 
@@ -2871,13 +2871,15 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 203 `tutReveal(el)`
   - 209 `tutRect(T0)`
   - 215 `tutStep()`
-  - 221 `tutFinish()`
-  - 222 `tutScrollSlip()`
-  - 225 `tutAllow(what)`
-  - 243 `tutView(st)`
-  - 250 `tutUpdate()`
-  - 273 `tipPlace(txt, T0, o)`
-  - 298 `tipToast()`
+  - 227 `tutNormKg()`
+  - 233 `tutNormLog()`
+  - 238 `tutFinish()`
+  - 239 `tutScrollSlip()`
+  - 242 `tutAllow(what)`
+  - 260 `tutView(st)`
+  - 267 `tutUpdate()`
+  - 290 `tipPlace(txt, T0, o)`
+  - 315 `tipToast()`
 
 ## `src/js/ui/07c-handbook.js` (257 linjer)
 
@@ -3935,7 +3937,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 103 `moorStep(dt, bp, at = dt)`
   - 135 `drawMooring(BMrel, eye, VP, t)`
 
-## `src/js/view3d/16-motion.js` (310 linjer)
+## `src/js/view3d/16-motion.js` (318 linjer)
 
 ---------- boat motion ----------
 
@@ -3953,12 +3955,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 133 `dynFollow(dt)`
   - 141 `updateBoat(dt, t, frac, rdt)`
 - **238** the hull in the sea: buoyancy per section (Fysikk 4 F2, 07.11.2026; docs/planer/fysikk-4-sjo-og-skrog.md, Jonas' choice 2B)
-  - 251 `hullSea(G, Bs, t, tf, dt)`
-  - 271 `hullMove(dt, b, G)`
-  - 286 `slamLog(v)`
-- **295** particles
-  - 299 `spawn(x, y, z, vx, vy, vz, life, g)`
-  - 301 `drawPts(n, mode, VP, col, size, round, off, mx)`
+  - 254 `hullSea(G, Bs, t, tf, dt)`
+  - 276 `hullMove(dt, b)`
+  - 294 `slamLog(v)`
+- **303** particles
+  - 307 `spawn(x, y, z, vx, vy, vz, life, g)`
+  - 309 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
 ## `src/js/view3d/17-draw.js` (207 linjer)
 
@@ -4186,7 +4188,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **94** frame
   - 98 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (709 linjer)
+## `src/js/view3d/24-cinema.js` (720 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -4216,8 +4218,8 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 491 `driftSpray(VP, eye, dt, t, col)`
   - 506 `drawSmoke(VP, eye, BM, dt)`
   - 547 `scupperWater(VP, eye, BM, dt, t, col)`
-  - 573 `drawEffects(VP, eye, BM, dt, t)`
-  - 691 `updateLabels(VP, eye, W, Hh)`
+  - 574 `drawEffects(VP, eye, BM, dt, t)`
+  - 702 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (224 linjer)
 

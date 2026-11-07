@@ -67,7 +67,7 @@
     if (isFinite(m)) return {m, live:true};
     return {m:(kind === 'line' ? G.haul * g.hooksPer : G.haul) * (hasHauler(kind) ? 1 : G.hand) * upgSum(kind === 'line' ? -hookX('haul') : 0) * (1 + coldPen(H, hs)), live:false};
   }
-  const UNIT = {line:['min per stamp', 'min a tub'], garn:['min per garn', 'min a net'], teine:['min per teine', 'min a pot']};
+  const UNIT = {line:['min/stamp', 'min/tub'], garn:['min/garn', 'min/net'], teine:['min/teine', 'min/pot']};
   const unitTxt = (kind, m) => isFinite(m) ? fx1(m) + ' ' + L(UNIT[kind][0], UNIT[kind][1]) : L('kan ikke trekkes', 'cannot be hauled');
   // a tiered item (EQUIP tiers: the knives and the gaff, OPP1): the tier aboard, the next tier's price for this boat and its numbers
   function tierLad(k, pg, fxOf){
@@ -76,87 +76,103 @@
     return {k, n:E.name[S.lang], lv, max:E.tiers.length, cur:T[S.lang], at:'butikk', pg, tier:true, nx:N ? {n:N[S.lang], lv:lv + 1, kr:tierKr(k, lv + 1), get fx(){ return fxOf(T, N); }} : null};   // (fx when the line is drawn: Neste mål reads only the price)
   }
   // an item bought once (EQUIP without tiers): the base it replaces as the first dot, the item as the second
-  function oneLad(k, base, pg, fx){
+  function oneLad(k, base, pg, fx, nm){
     const E = EQUIP[k]; if (!E || !equipFits(k, S.boat.type)) return null; const have = !!S.equip[k], at = EQ_YARD(k) ? 'verft' : 'butikk';
-    return {k, n:E.name[S.lang], lv:have ? 2 : 1, max:2, cur:have ? E.name[S.lang] : base, at, pg, nx:have ? null : busyOf('fit', k) ? {busy:true} : {n:E.name[S.lang], lv:2, kr:E.price, get fx(){ return fx(); }}};
+    return {k, n:nm || E.name[S.lang], lv:have ? 2 : 1, max:2, cur:have ? E.name[S.lang] : base, at, pg, nx:have ? null : busyOf('fit', k) ? {busy:true} : {n:E.name[S.lang], lv:2, kr:E.price, get fx(){ return fx(); }}};
   }
+  // (the gain on a line is short, in the player's own numbers: Jonas 07.11.2026 on the first version, «Det er jo nesten umulig å skjønne
+  // hva som skjer på denne siden når det er så mye tekst … Det må gjøres mer intuitivt»; the long story is on the item's card and in the
+  // Håndboka)
   const LADDERS = [
     // the knives: kg an hour a person at the table (DECK.gut × the tier, knifeX)
-    () => tierLad('kniv', 'fiske', (T, N) => { const kg = t => fmt(DECK.gut * 60 * upgSum(t.gut), 0); return L(kg(T) + ' → ' + kg(N) + ' kg i timen per person ved bordet, ' + pct(N.slip) + ' færre stygt sløyd og kutt', kg(T) + ' → ' + kg(N) + ' kg an hour a person at the table, ' + pct(N.slip) + ' fewer badly gutted and cuts'); }),
-    // the gaff: the fish over the rail, the slip at a half hit, and the minutes a tub of line takes (gopUnitMin)
-    () => tierLad('hott', 'fiske', (T, N) => { const j = t => pct(JIG_SLIP * upgSum(-t.jig)), ln = VESSELS[S.boat.type].rigs.includes('line') ? haulNow('line').m : NaN;
-      return L(pct(N.rail) + ' færre fisk over ripa, glipp ved halvt treff ' + j(T) + ' → ' + j(N) + (isFinite(ln) ? ', line ' + fx1(ln) + ' → ' + unitTxt('line', ln * upgSum(-N.haul) / upgSum(-T.haul)) : ''),
-        pct(N.rail) + ' fewer fish over the rail, slip at a half hit ' + j(T) + ' → ' + j(N) + (isFinite(ln) ? ', line ' + fx1(ln) + ' → ' + unitTxt('line', ln * upgSum(-N.haul) / upgSum(-T.haul)) : '')); }),
+    () => tierLad('kniv', 'fiske', (T, N) => { const kg = t => fmt(DECK.gut * 60 * upgSum(t.gut), 0); return kg(T) + ' → ' + kg(N) + L(' kg/t ved bordet', ' kg/h at the table'); }),
+    // the gaff: the fish over the rail (its share of the base, crewSlip)
+    () => tierLad('hott', 'fiske', (T, N) => '−' + pct(N.rail) + L(' fisk over ripa', ' fish over the rail') + (VESSELS[S.boat.type].rigs.includes('line') ? L(', −' + pct(N.haul) + ' linetrekk', ', −' + pct(N.haul) + ' line hauling') : '')),
     // the jig: the hand jig as the first dot, then the machines up to what she takes (jukseMax)
     () => { const V = VESSELS[S.boat.type], mx = V.jukseMax || 0; if (!mx || !vesselJigs()) return null; const gear = !!S.boat.gear, n = Math.min(S.equip.jukse || 0, mx);
       const cur = n ? n + ' ' + L(n === 1 ? 'juksamaskin' : 'juksamaskiner', n === 1 ? 'jigging reel' : 'jigging reels') : gear ? L('Håndjuksa', 'Hand jig') : L('Ingen juksa', 'No jig');
-      const nx = !gear ? {n:L('Håndjuksa', 'Hand jig'), lv:1, kr:PRICE.gear, fx:L('fisker for hånd', 'fishes by hand')} : n >= mx ? null : busyOf('fit', 'jukse') ? {busy:true}
-        : {n:L('Juksamaskin nr. ' + (n + 1), 'Jigging reel no. ' + (n + 1)), lv:n + 2, kr:EQUIP.jukse.price, fx:L('fisker ' + fmt(JIG.machine / JIG.hand, 0) + '× håndjuksa, én person passer ' + JIG.perPerson + ' · ' + (n + 1) + ' av ' + mx + ' om bord', 'catches ' + fmt(JIG.machine / JIG.hand, 0) + '× a hand jig, one person tends ' + JIG.perPerson + ' · ' + (n + 1) + ' of ' + mx + ' aboard')};
-      return {k:'jukse', n:L('Juksa', 'Jigging'), lv:(gear ? 1 : 0) + n, max:1 + mx, cur, at:'butikk', pg:!gear ? 'fiske' : 'utstyrb', nx}; },
+      const nx = !gear ? {n:L('Håndjuksa', 'Hand jig'), lv:1, kr:PRICE.gear, fx:L('fisk for hånd', 'fish by hand')} : n >= mx ? null : busyOf('fit', 'jukse') ? {busy:true}
+        : {n:L('Juksamaskin nr. ' + (n + 1), 'Jigging reel no. ' + (n + 1)), lv:n + 2, kr:EQUIP.jukse.price, fx:L('maskin ' + (n + 1) + ' av ' + mx + ', ' + fmt(JIG.machine / JIG.hand, 0) + '× håndjuksa', 'reel ' + (n + 1) + ' of ' + mx + ', ' + fmt(JIG.machine / JIG.hand, 0) + '× a hand jig')};
+      return {k:'jukse', ic:n ? 'jukse' : 'jig', n:L('Juksa', 'Jigging'), lv:(gear ? 1 : 0) + n, max:1 + mx, cur, at:'butikk', pg:!gear ? 'fiske' : 'utstyrb', nx}; },
     // the haulers that suit her: by hand as the first dot (pots cannot be hauled by hand), the minutes a unit takes now and with it
     ...['linehaler', 'garnhaler', 'teinehaler'].map(h => () => { const V = VESSELS[S.boat.type], kind = {linehaler:'line', garnhaler:'garn', teinehaler:'teine'}[h];
       if (!V.haulers.includes(h)) return null; if (EQUIP[h].tiers) return tierLad(h, 'utstyrb', () => '');
       return oneLad(h, kind === 'teine' ? L('Ingen haler', 'No hauler') : L('For hånd', 'By hand'), 'utstyrb', () => { const now = haulNow(kind).m, H = S.t / 60;
         const with1 = isFinite(now) ? now / GEAR[kind].hand : GEAR[kind].haul * (1 + coldPen(H, hsWork(S.boat.pos, H)));   // (pots: one at the hauler at full strength)
-        return unitTxt(kind, now) + ' → ' + unitTxt(kind, with1); }); }),
-    // the engine: the yard's two steps (ENGUP), knots and litres an hour at cruise without trim; an outboard has the 90 hp outboard instead
+        return (isFinite(now) ? fx1(now) + ' → ' : L('trekker teiner, ', 'hauls pots, ')) + unitTxt(kind, with1); }); }),
+    // the engine: the yard's two steps (ENGUP), the top speed without trim; an outboard has the 90 hp outboard instead
     () => { const b = S.boat, V = VESSELS[b.type];
-      if (V.outboard) return oneLad('motor90', V.engine[S.lang], 'utstyr', () => fmt(V.vmax, 1) + ' → ' + fmt(EQUIP.motor90.boost.vmax, 0) + ' kn ' + L('topp', 'top') + ' · ' + fx1(V.lph) + ' → ' + fx1(EQUIP.motor90.boost.lph) + L(' l/t i marsj', ' l/h at cruise'));
-      const at = P => { const sx = speedOfPower(P, V.planing); return {v:V.vmax * sx, l:fuelBase(V.vcruise * sx, V.vmax * sx, V.planing) * fuelKOf(V) * (1 + 0.4 * (P - 1)), hp:Math.round(V.hp * P)}; };
-      const lv = b.engLv || 0, st = ENGUP[lv], A = at(powerX(b)), B = st ? at(1 + st.p) : null;
-      return {k:'motor', n:L('Motor', 'Engine'), lv:1 + lv, max:1 + ENGUP.length, cur:A.hp + ' hk', at:'verft', pg:'utstyr',
-        nx:!st ? null : busyOf('eng') ? {busy:true} : {n:B.hp + ' hk', lv:lv + 2, kr:upPrice(st.pc, st.min), fx:fmt(A.v, 1) + ' → ' + fmt(B.v, 1) + ' kn ' + L('topp', 'top') + ' · ' + fx1(A.l) + ' → ' + fx1(B.l) + L(' l/t i marsj', ' l/h at cruise')}}; },
+      if (V.outboard) return oneLad('motor90', V.engine[S.lang], 'utstyr', () => fmt(V.vmax, 1) + ' → ' + fmt(EQUIP.motor90.boost.vmax, 0) + ' kn, +' + pct(EQUIP.motor90.boost.lph / V.lph - 1) + ' diesel', L('Motor', 'Engine'));
+      const vAt = P => V.vmax * speedOfPower(P, V.planing), lv = b.engLv || 0, st = ENGUP[lv], P0 = powerX(b), P1 = st ? 1 + st.p : P0;
+      return {k:'motor', n:L('Motor', 'Engine'), lv:1 + lv, max:1 + ENGUP.length, cur:Math.round(V.hp * P0) + ' hk', at:'verft', pg:'utstyr',
+        nx:!st ? null : busyOf('eng') ? {busy:true} : {n:Math.round(V.hp * P1) + ' hk', lv:lv + 2, kr:upPrice(st.pc, st.min), fx:fmt(vAt(P0), 1) + ' → ' + fmt(vAt(P1), 1) + ' kn, +' + pct(0.4 * (P1 - P0)) + ' diesel'}}; },   // (fuelK × (1 + 0,4·(P − 1)), applyVessel)
     // the hold (HOLDUP), or an open boat's tubs (core/07f-kar.js); not the ocean fleet's tanks
     () => { const b = S.boat, V = VESSELS[b.type]; if (V.cls === 'hav') return null; const lv = b.holdLv || 0, steps = karSteps(b.type), st = lv < steps ? HOLDUP[lv] : null, kar = !!V.kar;
-      const kg = l => kar ? karN(b.type, l) * TUB_KG : Math.round(V.holdCap * (l ? HOLDUP[l - 1].x : 1)), txt = l => (kar ? karN(b.type, l) + ' ' + L('kar', 'tubs') + ', ' : '') + fmt(kg(l), 0) + ' kg';
-      return {k:'hold', n:kar ? L('Fiskekar', 'Fish tubs') : L('Lasterom', 'Hold'), lv:1 + lv, max:1 + steps, cur:txt(lv), at:'verft', pg:'utstyr',
-        nx:!st ? null : busyOf('hold') ? {busy:true} : {n:txt(lv + 1), lv:lv + 2, kr:upPrice(st.pc, st.min), fx:fmt(kg(lv), 0) + ' → ' + fmt(kg(lv + 1), 0) + L(' kg last', ' kg of catch')}}; },
+      const kg = l => kar ? karN(b.type, l) * TUB_KG : Math.round(V.holdCap * (l ? HOLDUP[l - 1].x : 1));
+      return {k:'hold', n:kar ? L('Fiskekar', 'Fish tubs') : L('Lasterom', 'Hold'), lv:1 + lv, max:1 + steps, cur:fmt(kg(lv), 0) + ' kg', at:'verft', pg:'utstyr',
+        nx:!st ? null : busyOf('hold') ? {busy:true} : {n:fmt(kg(lv + 1), 0) + ' kg', lv:lv + 2, kr:upPrice(st.pc, st.min), fx:fmt(kg(lv), 0) + ' → ' + fmt(kg(lv + 1), 0) + ' kg'}}; },
     // the yard's other rebuilds (UPGS) that suit her, step by step
     ...Object.keys(UPGS).map(u => () => { const b = S.boat, V = VESSELS[b.type], U = UPGS[u]; if (!U.fit(V)) return null;
       const all = U.steps.filter(st => !st.minLen || V.len >= st.minLen), lv = Math.min(upgLv(b, u), all.length), cur = lv ? U.steps[lv - 1] : null, st = upgNext(b, u);
-      const fx = {cabin:s => '−' + pct(1 - s.fat) + L(' trøtthet på sjøen', ' tiredness at sea'), galley:s => L('måltidet ' + s.cook + ' min, humøret +' + s.mood, 'the meal ' + s.cook + ' min, the mood +' + s.mood),
-        dry:s => '−' + pct(1 - s.cold) + L(' kuldeslit', ' wear from the cold'), insul:s => '−' + pct(1 - s.ice) + L(' is per kilo fisk', ' ice a kilo of fish'),
-        tank:s => fmt(V.fuelCap * (cur ? cur.x : 1), 0) + ' → ' + fmt(V.fuelCap * s.x, 0) + ' L, ' + fmt(V.range * (cur ? cur.x : 1), 0) + ' → ' + fmt(V.range * s.x, 0) + ' nm', stab:s => '−' + pct(1 - s.sea) + L(' fartstap i sjø', ' speed lost in a sea'),
-        gut:s => fmt(s.gut, 0) + L(' kg i timen med én som mater', ' kg an hour with one feeding it'), ice:s => fmt(s.maker, 0) + L(' kg is i døgnet', ' kg of ice a day')}[u];
+      const fx = {cabin:s => '−' + pct(1 - s.fat) + L(' trøtthet', ' tiredness'), galley:s => L('måltid på ' + s.cook + ' min', 'meals in ' + s.cook + ' min'), dry:s => '−' + pct(1 - s.cold) + L(' kulde', ' cold'),
+        insul:s => '−' + pct(1 - s.ice) + L(' is', ' ice'), tank:s => fmt(V.fuelCap * (cur ? cur.x : 1), 0) + ' → ' + fmt(V.fuelCap * s.x, 0) + ' L', stab:s => '−' + pct(1 - s.sea) + L(' fartstap i sjø', ' speed lost in a sea'),
+        gut:s => fmt(s.gut, 0) + L(' kg/t sløying', ' kg/h gutting'), ice:s => fmt(s.maker, 0) + L(' kg is i døgnet', ' kg of ice a day')}[u];
       return {k:u, n:U[S.lang], lv:1 + lv, max:1 + all.length, cur:cur ? cur[S.lang] : L('Som levert', 'As delivered'), at:'verft', pg:'utstyr',
         nx:!st ? null : busyOf('upg', u) ? {busy:true} : {n:st[S.lang], lv:lv + 2, kr:upPrice(st.pc, st.min), fx:fx ? fx(st) : ''}}; }),
     // the sounder: the basic one every boat has, the CHIRP, and the sonar where it fits (from 10 m)
     () => { const t = S.boat.type, son = equipFits('sonar', t), have = ['chirp', 'sonar'].filter(k => S.equip[k] && equipFits(k, t)), next = ['chirp'].concat(son ? ['sonar'] : []).find(k => !S.equip[k]);
-      const FX = {chirp:L('ser fisken 0,75 nm rundt båten i kartet, velg art', 'sees the fish 0.75 nm around the boat on the chart, pick the species'), sonar:L('ser fisken 1,5 nm rundt, skiller torsk, hyse og sei', 'sees the fish 1.5 nm around, tells cod, haddock and saithe apart')};
-      return {k:'ekko', n:L('Ekkolodd og sonar', 'Sounder and sonar'), lv:1 + have.length, max:son ? 3 : 2, cur:have.length ? have.map(k => EQUIP[k].name[S.lang]).join(' + ') : L('Enkelt ekkolodd', 'Basic sounder'), at:'butikk', pg:'utstyrb',
+      const FX = {chirp:L('ser fisken 0,75 nm rundt', 'sees the fish 0.75 nm around'), sonar:L('ser fisken 1,5 nm rundt', 'sees the fish 1.5 nm around')};
+      return {k:'ekko', ic:have.includes('sonar') || next === 'sonar' ? 'sonar' : 'chirp', n:L('Ekkolodd', 'Sounder'), lv:1 + have.length, max:son ? 3 : 2, cur:have.length ? have.map(k => EQUIP[k].name[S.lang]).join(' + ') : L('Enkelt ekkolodd', 'Basic sounder'), at:'butikk', pg:'utstyrb',
         nx:!next ? null : busyOf('fit', next) ? {busy:true} : {n:EQUIP[next].name[S.lang], lv:2 + have.length, kr:EQUIP[next].price, fx:FX[next]}}; },
-    // the antifouling coat (the yard): the weed now, and how fast the hull fouls this month (core/03-simulation.js foulHour)
-    () => { const m = gDate(S.t / 60).getUTCMonth(), d = (m >= 5 && m <= 8 ? 1.2 : 0.4);
-      return oneLad('antigro', L('Uten bunnstoff', 'No bottom paint'), 'utstyr', () => L('groe nå ' + pct(S.boat.foul || 0) + ', gror ' + fmt(d, 1) + ' → ' + fmt(d * 0.3, 2) + ' % i døgnet', 'weed now ' + pct(S.boat.foul || 0) + ', fouls ' + fmt(d, 1) + ' → ' + fmt(d * 0.3, 2) + '% a day')); }
+    // the antifouling coat (the yard): the hull fouls three times as slowly (core/03-simulation.js foulHour)
+    // (3× as the item card says, ICFX.antigro; foulHour's factor is 0.3)
+    () => oneLad('antigro', L('Uten bunnstoff', 'No bottom paint'), 'utstyr', () => L('gror 3× saktere', 'fouls 3× slower'), L('Bunnstoff', 'Bottom paint'))
   ];
   // (a ladder of one step, such as a wooden boat's one tub that cannot be more, has nothing to buy and does not stand)
   function ladders(){ const out = []; for (const f of LADDERS){ const x = f(); if (x && x.max > 1) out.push(x); } return out; }
-  const MORE = ' style="min-height:0;padding:0;margin:0 0 0 4px"';   // (a «›» link in a line of text, without the item card's tall tap area)
-  const AT = {butikk:['Utstyrsbutikken', 'The tackle shop', 'i butikken', 'at the shop', 'utstyrsbutikken', 'the tackle shop'], verft:['Verftet', 'The yard', 'på verftet', 'at the yard', 'verftet', 'the yard']};
-  const dots = x => '<span class="bu-d" aria-label="' + L('trinn ' + x.lv + ' av ' + x.max, 'step ' + x.lv + ' of ' + x.max) + '" style="letter-spacing:2px;white-space:nowrap;color:#1e7a5c">' + '●'.repeat(Math.max(0, x.lv)) + '<span style="color:#9fb0ba">' + '○'.repeat(Math.max(0, x.max - x.lv)) + '</span></span>';
+  // the pictures: the item cards' (ui/05a-itemcard.js ICPIC) where there is one, and a few small ones here for the yard's rebuilds
+  const BU_IC = {
+    motor:'<rect x="16" y="12" width="30" height="18" rx="3" fill="' + IC_C.mid + '"/><path d="M20 12V7h6v5M30 12V7h6v5M46 18h6v6h-6" fill="' + IC_C.soft + '"/><circle cx="24" cy="21" r="3" fill="#fff"/><circle cx="36" cy="21" r="3" fill="#fff"/>' + IC_DECK,
+    hold:'<path d="M10 14h44v18H10z" fill="#fff"/><path d="M10 14l6-6h32l6 6"/><path d="M20 23c4-4 10-4 14 0-4 4-10 4-14 0zM34 23l5-3v6z" fill="' + IC_C.blu + '"/>' + IC_DECK,
+    cabin:'<path d="M10 16h44v6H10zM10 28h44v6H10z" fill="' + IC_C.soft + '"/><path d="M10 10v26M54 10v26"/><rect x="12" y="13" width="10" height="3" rx="1.5" fill="#fff"/>',
+    galley:'<path d="M18 18h28v12a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6z" fill="' + IC_C.mid + '"/><path d="M14 18h36M26 8c-2 3 2 4 0 7M34 8c-2 3 2 4 0 7" stroke="' + IC_C.soft + '"/>',
+    dry:'<path d="M14 10h36"/><path d="M22 10l-6 6 3 4 3-2v14h12V18l3 2 3-4-6-6" fill="' + IC_C.yel + '"/><path d="M44 22c3 2 3 5 0 7M50 20c4 3 4 8 0 11" stroke="' + IC_C.red + '"/>',
+    insul:'<path d="M12 12h40v22H12z" fill="#fff"/><path d="M16 16h32v14H16z" fill="' + IC_C.ice + '"/><path d="M26 20l3 3-3 3M34 20l3 3-3 3" stroke="' + IC_C.blu + '"/>',
+    tank:'<rect x="18" y="8" width="28" height="28" rx="4" fill="' + IC_C.soft + '"/><path d="M18 22h28v10a4 4 0 0 1-4 4H22a4 4 0 0 1-4-4z" fill="' + IC_C.org + '"/><path d="M46 14h6v8"/>',
+    stab:'<path d="M8 28c6-6 12-6 18 0s12 6 18 0 8-4 12-2" stroke="' + IC_C.blu + '"/><path d="M16 22h32l-4-10H20z" fill="#fff"/><path d="M32 22v8M28 30h8" />',
+    gut:'<rect x="12" y="14" width="40" height="16" rx="3" fill="' + IC_C.soft + '"/><circle cx="22" cy="22" r="4" fill="#fff"/><circle cx="42" cy="22" r="4" fill="#fff"/><path d="M26 22h12" stroke="' + IC_C.red + '"/>' + IC_DECK,
+    ice:'<path d="M14 20h36v14H14z" fill="' + IC_C.ice + '"/><path d="M32 6v10M27 8l5 4 5-4M24 26l4-3 4 3 4-3 4 3" stroke="' + IC_C.blu + '"/>'};
+  const buPic = x => { const k = x.ic || x.k; return BU_IC[k] ? icSvg(BU_IC[k]) : ICPIC[k] ? ICPIC[k] : ICPIC.box; };
+  const AT = {butikk:['Utstyrsbutikken', 'The tackle shop'], verft:['Verftet', 'The yard']};
+  const dots = x => '<span class="bu-d" role="img" aria-label="' + L('trinn ' + x.lv + ' av ' + x.max, 'step ' + x.lv + ' of ' + x.max) + '">' + '●'.repeat(Math.max(0, x.lv)) + '<i>' + '○'.repeat(Math.max(0, x.max - x.lv)) + '</i></span>';
   function kitCard(){ HN = {}; try { return kitCard0(); } finally { HN = null; } }
   function kitCard0(){
     const Ls = ladders(), b = S.boat; if (!Ls.length) return '';
-    const h = ['<div class="ph-card bu-card"><h4>' + L('Båten og utstyret', 'The boat and her gear') + '</h4><p class="ph-note">' + L('«' + S.boatName + '»: hver stige med trinnet om bord og det neste, med pris for denne båten og hva det gir. Første prikk er det båten har uten kjøp. Prosentene regnes av grunnivået og legges sammen.', 'The «' + S.boatName + '»: each ladder with the step aboard and the next, priced for this boat and with what it gives. The first dot is what the boat has without a purchase. The per cents are of the base level and add up.') +
-      ' <button type="button" class="ic-more"' + MORE + ' data-pa="open" data-a="handbok" data-hbid="lex_oppgrad">' + L('Mer om trinnene ›', 'More on the steps ›') + '</button></p>'];
-    for (const at of ['butikk', 'verft']){ const G = Ls.filter(x => x.at === at), A = AT[at]; if (!G.length) continue;
+    const got = Ls.reduce((a, x) => a + Math.max(0, x.lv), 0), all = Ls.reduce((a, x) => a + x.max, 0);
+    const h = ['<div class="ph-card bu-card"><div class="bu-h"><h4>' + L('Båten og utstyret', 'The boat and her gear') + '</h4><button type="button" class="bu-q" data-pa="open" data-a="handbok" data-hbid="lex_oppgrad" aria-label="' + L('Slik leser du siden', 'How to read the page') + '">?</button></div>' +
+      '<div class="bu-sum"><span>«' + S.boatName + '»</span><span>' + got + L(' av ', ' of ') + all + L(' trinn', ' steps') + '</span></div><div class="qbar"><i style="width:' + (got / Math.max(1, all) * 100).toFixed(0) + '%"></i></div>'];
+    // what can be bought first, the cheapest at the top; then what is on its way; what is full last
+    const rank = x => !x.nx ? 2e12 : x.nx.busy ? 1e12 : x.nx.kr;
+    for (const at of ['butikk', 'verft']){ const G = Ls.filter(x => x.at === at).sort((a, c) => rank(a) - rank(c)), A = AT[at]; if (!G.length) continue;
       // where it is bought: here, or the nearest with Autonav there (core/06c-steder.js placesNear)
       const here = atKind(at), n = here ? null : placesNear(b.pos, at, 1)[0];
-      h.push('<div class="dr-line bu-at" data-at="' + at + '" style="margin-top:10px;border-top:1px solid #d5dee3;padding-top:6px"><span><b>' + L(A[0], A[1]) + '</b><small>' + (here ? L('Du er her: ', 'You are here: ') + portById(b.port).name : n ? L('Nærmeste: ', 'Nearest: ') + n.pt.name + ' · ' + fmt(n.d / NM, 1) + ' nm' : '–') + '</small></span>' +
+      h.push('<div class="bu-at" data-at="' + at + '"><span><b>' + L(A[0], A[1]) + '</b><small>' + (here ? L('Du er her', 'You are here') : n ? L('Nærmeste: ', 'Nearest: ') + n.pt.name + ' · ' + fmt(n.d / NM, 1) + ' nm' : '–') + '</small></span>' +
         (!here && n ? '<button class="ph-btn alt" data-pa="goplace" data-id="' + n.pt.id + '">' + L('Autonav dit', 'Autonav there') + '</button>' : '') + '</div>');
       for (const x of G){ const nx = x.nx;
-        const foot = !nx ? L('Fullt', 'Full') : nx.busy ? (at === 'verft' ? L('På verftet nå', 'At the yard now') : L('Monteres nå', 'Being fitted now'))
-          : L('Neste: ', 'Next: ') + '<b>' + nx.n + '</b> · ' + kr(nx.kr) + ' ' + L(A[2], A[3]) + (nx.fx ? ' · ' + nx.fx : '');
-        h.push('<div class="bu-l" data-lad="' + x.k + '" data-lv="' + x.lv + '" data-max="' + x.max + '" style="margin:6px 0 2px"><div class="ph-kv"><span>' + x.n + ' · ' + x.cur + '</span>' + dots(x) + '</div><p class="ph-note" style="margin:2px 0 0">' + foot +
-          (here && nx && !nx.busy ? ' <button type="button" class="ic-more"' + MORE + ' data-pa="open" data-a="' + x.pg + '">' + L('Til kjøpet ›', 'To the purchase ›') + '</button>' : '') + '</p></div>'); }
+        // the price: at the place a button to the page it is bought on, away only the price; on its way, or full with a tick
+        const pr = !nx ? '<span class="bu-pr ok" role="img" aria-label="' + L('Fullt', 'Full') + '">✓</span>' : nx.busy ? '<span class="bu-pr off">' + (at === 'verft' ? L('På verftet', 'At the yard') : L('Monteres', 'Being fitted')) + '</span>'
+          : here ? '<button class="bu-pr' + (nx.kr > spendable() ? ' dim' : '') + '" data-pa="open" data-a="' + x.pg + '">' + kr(nx.kr) + '</button>' : '<span class="bu-pr off">' + kr(nx.kr) + '</span>';
+        h.push('<div class="bu-l' + (nx ? '' : ' full') + '" data-lad="' + x.k + '" data-lv="' + x.lv + '" data-max="' + x.max + '"><div class="bu-ic">' + buPic(x) + '</div><div class="bu-tx"><div class="bu-n"><b>' + x.n + '</b>' + dots(x) + '</div><small>' +
+          (!nx ? x.cur : nx.busy ? nx.n || x.cur : nx.fx || nx.n) + '</small></div>' + pr + '</div>'); }
     }
-    // the waste and the time, as numbers before a purchase: the fish lost over the rail this week on this boat and for the company in all
-    // (core/14-crewlife.js railWeek, S.stats.lostRail), and the minutes a unit of passive gear takes to haul today (gopUnitMin)
-    const R = (S.stats || {}).lostRail, wk = railWeek(), V = VESSELS[b.type], rows = [];
-    if (equipFits('hott', b.type)) rows.push(kv(L('Tapt over ripa denne uka', 'Lost over the rail this week'), wk.n + ' ' + L('fisk', 'fish') + ', ' + fmt(wk.kg, 0) + ' kg') + (R && R.n ? kv(L('Tapt over ripa i alt, rederiet', 'Lost over the rail in all, the company'), R.n + ' ' + L('fisk', 'fish') + ', ' + fmt(R.kg, 0) + ' kg') : ''));
-    for (const [kind, rig] of [['line', 'line'], ['garn', 'garn'], ['teine', 'teiner']]) if (V.cls !== 'hav' && V.rigs.includes(rig)){ const u = haulNow(kind);
-      rows.push('<div class="ph-kv" data-unit="' + kind + '"><span>' + L({line:'Trekk av en stamp line i dag', garn:'Trekk av et garn i dag', teine:'Trekk av en teine i dag'}[kind], {line:'Hauling a tub of line today', garn:'Hauling a net today', teine:'Hauling a pot today'}[kind]) + '</span><span>' + unitTxt(kind, u.m) + (isFinite(u.m) && !u.live ? L(' (én person)', ' (one person)') : '') + '</span></div>'); }
-    if (rows.length) h.push('<div class="bu-num" style="margin-top:10px;border-top:1px solid #d5dee3;padding-top:6px">' + rows.join('') + '</div>');
+    // the waste and the time, as numbers before a purchase: the fish lost over the rail this week on this boat (core/14-crewlife.js railWeek;
+    // the company's in all, S.stats.lostRail, under it), and the minutes a tub of line takes to haul today (gopUnitMin)
+    const R = (S.stats || {}).lostRail, wk = railWeek(), V = VESSELS[b.type], tiles = [];
+    if (equipFits('hott', b.type)) tiles.push('<div data-num="rail"><b>' + wk.n + ' ' + L('fisk', 'fish') + '</b><span>' + L('tapt over ripa denne uka', 'lost over the rail this week') + (R && R.n > wk.n ? L(' · ' + R.n + ' i alt', ' · ' + R.n + ' in all') : '') + '</span></div>');
+    const rg = rigOf(), kind = {line:'line', garn:'garn', teiner:'teine'}[rg] || (V.rigs.includes('line') ? 'line' : null);
+    if (V.cls !== 'hav' && kind){ const u = haulNow(kind); tiles.push('<div data-num="' + kind + '"><b>' + (isFinite(u.m) ? fx1(u.m) + ' min' : '–') + '</b><span>' + L({line:'per stamp line i dag', garn:'per garn i dag', teine:'per teine i dag'}[kind], {line:'a tub of line today', garn:'a net today', teine:'a pot today'}[kind]) +
+      (!isFinite(u.m) ? L(' (trenger haler)', ' (needs a hauler)') : !u.live ? L(' (én person)', ' (one person)') : '') + '</span></div>'); }
+    if (tiles.length) h.push('<div class="bu-num">' + tiles.join('') + '</div>');
     h.push('</div>'); return h.join('');
   }
   // ---- the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
