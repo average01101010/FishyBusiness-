@@ -456,6 +456,7 @@ function crewTick(H){
   const b = S.boat; if (!S.crew || !S.crew.length){ S.workLog = []; return; }
   S.crew = S.crew.map(crewUpgrade);
   flyTick();   // the crew flying in to Svalbard (H1b R7)
+  if (typeof mobCrewHour === 'function') mobCrewHour();   // back aboard at a quay after the sick leave from a fall overboard (Ø11.6, 14b-sikkerhet.js)
   driftWatch(H);   // 2 + 2: who is on watch this hour (06d-drift.js)
   const hs = hsAt(b.pos, H), atSea = b.status === 'sailing' || b.status === 'fishing', fishing = b.status === 'fishing', hr = gDate(H).getUTCHours(), night = hr >= 22 || hr < 6;
   // the vessel's own log of hours at sea, for the crew page
