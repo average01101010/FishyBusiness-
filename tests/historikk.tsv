@@ -806,3 +806,16 @@
 2026-11-07 13:05	ccr-fc7a11b2-nl5jor	0e1f99c3	roetest	OK	120	lite	samtidig	
 2026-11-07 13:05	ccr-fc7a11b2-nl5jor	0e1f99c3	trip2	OK	39	lite	samtidig	
 2026-11-07 13:06	ccr-fc7a11b2-nl5jor	0e1f99c3	docktest	OK	60	lite	alene	
+2026-11-07 15:00	ccr-68a96e99-8x1jh1	f4dd4df2	rulestest	OK	13	lite	samtidig	
+2026-11-07 15:00	ccr-68a96e99-8x1jh1	f4dd4df2	sonetest	OK	9	lite	samtidig	
+2026-11-07 15:01	ccr-68a96e99-8x1jh1	f4dd4df2	trip2	OK	35	lite	samtidig	
+2026-11-07 15:01	ccr-68a96e99-8x1jh1	f4dd4df2	snokrabbetest	OK	13	lite	samtidig	
+2026-11-07 15:01	ccr-68a96e99-8x1jh1	f4dd4df2	autolinetest	OK	8	lite	samtidig	
+2026-11-07 15:01	ccr-68a96e99-8x1jh1	f4dd4df2	r4test	OK	14	lite	samtidig	
+2026-11-07 15:02	ccr-68a96e99-8x1jh1	f4dd4df2	geartest	OK	34	lite	samtidig	
+2026-11-07 15:02	ccr-68a96e99-8x1jh1	f4dd4df2	selltest	LES	23	lite	samtidig	
+2026-11-07 15:02	ccr-68a96e99-8x1jh1	f4dd4df2	vesseltest	OK	22	lite	samtidig	
+2026-11-07 15:02	ccr-68a96e99-8x1jh1	f4dd4df2	bktest	OK	7	lite	samtidig	
+2026-11-07 15:02	ccr-68a96e99-8x1jh1	f4dd4df2	kystvakttest	OK	9	lite	samtidig	
+2026-11-07 15:03	ccr-68a96e99-8x1jh1	f4dd4df2	starttest	OK	92	lite	samtidig	
+2026-11-07 15:03	ccr-68a96e99-8x1jh1	f4dd4df2	quotatest	OK	13	lite	samtidig	
