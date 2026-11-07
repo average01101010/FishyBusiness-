@@ -104,6 +104,7 @@ Brukerens valg:
   - `WX_FORCE = {w, d}` holder været fast i tester.
 - **Strøklengde** `fetchAt(p, fra)`:
   - Sju stråler, −45…+45°, mot vinden. Effektiv strøklengde etter Saville (SPM 1984): Σ F·cos²α / Σ cos α.
+  - `fetchRay` slår opp de fjerne lagene (`FARL`) én gang per stråle og bruker stegets landlag igjen for landet, i stedet for `farL` to ganger og `isLandFar` per steg (Ø3a, 07.11.2026): det samme laget og de samme tallene (`tests/unit/fetchray.test.mjs` mot den gamle måten), om lag 13 % raskere varmt. Målingen av bølgekartet over fjernterrenget står i `3d-verden.md` 4.11o.
   - Strålene marsjerer med `coastDist` (steg `max(25 m, 0,92·d − 70 m)`) og stopper på 25 m-masken.
   - Utenfor kartet:
     - åpent Norskehav mot N og NV (600 km)
