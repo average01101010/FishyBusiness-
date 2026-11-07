@@ -119,4 +119,112 @@ export default function (t){
   t.ok(!!K.buyGate('tier', 'kniv'), 'over trinn 3 finnes ingenting å kjøpe');
   S.cash = -1e7; t.ok(!!K.buyGear('tier', 'hott'), 'uten penger nektes høtten'); t.ok(!S.equip.hott, 'og ingenting er kjøpt');
   S.cash = 100000; boat('autoliner'); t.ok(!!K.buyGate('tier', 'hott'), 'havbåten får ikke kjøpe trinn'); boat('trebat');
+
+  opp2(t, K, S, boat, shop, plant);
+}
+
+// OPP2 of docs/planer/oppgraderinger.md (07.11.2026): the deck gear in tiers. The jigging reels (V1 A, Jonas 07.11.2026: «A»: only more
+// reels a person, never more fish an hour), the haulers +10 and +20 % (time off a unit hauled), the jig sets that wear half as fast,
+// and the new line setter and net chute (time off a unit set). Every share is of the base and they add up with the gaff's (prinsipp 1)
+function opp2(t, K, S, boat, shop, plant){
+  const {EQUIP, GEAR, JIG, CARE} = K;
+  for (const n of ['jigPer', 'equipKr', 'haulerX', 'setterX', 'jigKr']) t.ok(typeof K[n] === 'function', 'kjernen har ' + n);
+  const has = k => EQUIP[k] && EQUIP[k].tiers;
+  t.ok(['linehaler', 'garnhaler', 'teinehaler', 'jukseLv', 'juksesett', 'linesetter'].every(has) && !!EQUIP.garnrenne, 'trinnene finnes for halerne, juksamaskinene, juksasettene og linesetteren, og garnrenna er en vare');
+  if (!['linehaler', 'garnhaler', 'teinehaler', 'jukseLv', 'juksesett', 'linesetter'].every(has) || !EQUIP.garnrenne || typeof K.jigPer !== 'function') return;
+
+  // ---- the tables in the plan
+  for (const [k, kr] of [['linehaler', 68000], ['garnhaler', 95000], ['teinehaler', 58000]]){
+    t.eq(EQUIP[k].tiers.map(x => x.haul), [0, 0.1, 0.2], k + ': 10 og 20 % kortere trekk per enhet');
+    t.eq([2, 3].map(lv => K.tierKr(k, lv, 'sjark')), [kr / 2, kr], k + ': trinn 2 til halve nyprisen, trinn 3 til hele');
+    t.eq(EQUIP[k].price, kr, k + ': nyprisen står');
+  }
+  t.eq(EQUIP.jukseLv.tiers.map(x => x.tend), [3, 4, 5], 'juksamaskinene: én person passer 3, 4 og 5');
+  t.eq(EQUIP.jukseLv.tiers.map(x => x.kr), [0, 12000, 24000], 'juksamaskinene: 12 000 og 24 000 kr per maskin');
+  t.eq(EQUIP.juksesett.tiers.map(x => x.wear), [0, 0.5], 'juksasettene: trinn 2 slites halvparten så fort');
+  t.eq(EQUIP.linesetter.tiers.map(x => x.set), [0.2, 0.35], 'linesetteren: 20 og 35 % kortere setting');
+  t.eq([EQUIP.linesetter.price, K.tierKr('linesetter', 2, 'sjark')], [24000, 22000], 'linesetteren koster 24 000 og 22 000 kr');
+  t.eq([EQUIP.garnrenne.set, EQUIP.garnrenne.price, EQUIP.garnrenne.needs, EQUIP.linesetter.needs], [0.25, 18000, 'garnhaler', 'linehaler'], 'garnrenna: 25 % kortere setting, 18 000 kr, krever garnhaler; linesetteren krever linehaler');
+  t.eq(JIG.machine, 4, 'en maskin fisker som før (V1 A: ingen fisk per time)');
+
+  // ---- what fits: the reel tiers from four reels up (nothing to gain below), none of it on the ocean fleet
+  t.ok(!K.equipFits('jukseLv', 'trebat') && !K.equipFits('jukseLv', 'snekke') && K.equipFits('jukseLv', 'plastsjark') && K.equipFits('jukseLv', 'kyst15') && !K.equipFits('jukseLv', 'autoliner'), 'juksamaskinenes trinn passer fra plastsjarken (fire maskiner) og opp, ikke trebåten, snekka eller havbåtene');
+  t.ok(K.equipFits('juksesett', 'trebat') && !K.equipFits('juksesett', 'snokrabbe'), 'juksasettene passer kystbåtene');
+
+  // ---- the tier a boat has of an item it buys: none without it, 1 with it (true), the number after that
+  boat('sjark'); S.equip = {};
+  t.eq([K.equipLv('linehaler'), K.equipLv('linesetter')], [0, 0], 'uten linehaler og linesetter er trinnet 0');
+  S.equip = {linehaler:true, linesetter:true}; t.eq([K.equipLv('linehaler'), K.equipLv('linesetter')], [1, 1], 'kjøpt (true) er trinn 1');
+  S.equip = {linehaler:3, linesetter:2}; t.eq([K.equipLv('linehaler'), K.equipLv('linesetter')], [3, 2], 'tallet er trinnet');
+  S.equip = {}; t.eq([K.equipLv('jukseLv'), K.equipLv('juksesett')], [1, 1], 'juksamaskinene og juksasettene er trinn 1 uten feltet');
+
+  // ---- the reels: more a person, the same fish a reel (fishEffort with one person at the rail, alone)
+  const wt = K.workTeam; K.set('workTeam', () => ({n:1, sum:1, eff:1, crew:[], me:true}));
+  const eff = (type, n, lv) => { boat(type); S.boat.gear = true; S.plan = null; S.equip = {jukse:n}; if (lv > 1) S.equip.jukseLv = lv; return [K.jigPer(), K.fishEffort()]; };
+  t.eq(eff('plastsjark', 4, 1), [3, 12], 'plastsjarken med fire maskiner, alene: trinn 1 passer tre (effort 12)');
+  t.eq(eff('plastsjark', 4, 2), [4, 16], 'trinn 2 passer alle fire (16)');
+  t.eq(eff('sjark', 5, 3), [5, 20], 'havsjarken med fem, trinn 3: alle fem (20)');
+  t.eq(eff('sjark', 5, 2), [4, 16], 'havsjarken med fem, trinn 2: fire (16)');
+  t.eq(eff('trebat', 2, 3), [3, 8], 'trebåten: feltet satt gir ingenting (trinnene passer ikke), to maskiner som før');
+  t.eq(JIG.perPerson, 3, 'JIG.perPerson følger båten man er om bord i (trebåten: 3)');
+  boat('sjark'); S.equip = {jukse:5, jukseLv:3}; t.eq(JIG.perPerson, 5, 'JIG.perPerson på havsjarken med trinn 3: 5');
+  K.set('workTeam', wt);
+
+  // ---- hauling and setting: base × (1 − haler − høtt), never the product; the setter and the chute only on setting
+  K.set('workTeam', () => ({n:1, sum:1, eff:1, crew:[], me:true}));
+  const hh = K.hasHauler, cp = K.coldPen; K.set('hasHauler', () => true); K.set('coldPen', () => 0);
+  const unit = (g, eq) => { S.equip = Object.assign({}, eq); return K.gopUnitMin(g, 0, 0); };
+  const line = {kind:'line', op:'haul', hooksPer:600}, lset = {kind:'line', op:'set', hooksPer:600}, garn = {kind:'garn', op:'haul'}, gset = {kind:'garn', op:'set'}, teine = {kind:'teine', op:'haul'};
+  const L1 = 25 / 700 * 600;
+  t.near(unit(line, {linehaler:true}), L1, 1e-9, 'en stamp hyseline med linehaleren: 21,4 min');
+  t.near(unit(line, {linehaler:2}), L1 * 0.9, 1e-9, 'linehaler trinn 2: 10 % kortere');
+  t.near(unit(line, {linehaler:3}), L1 * 0.8, 1e-9, 'linehaler trinn 3: 20 % kortere');
+  t.near(unit(line, {linehaler:3, hott:3}), L1 * (1 - 0.2 - 0.08), 1e-9, 'linehaler 3 og høtt 3: 28 % av grunnivået, ikke 0,8 × 0,92');
+  t.near(unit(garn, {garnhaler:true}), 4, 1e-9, 'et garn med garnhaleren: 4 min');
+  t.eq([2, 3].map(lv => Math.round(unit(garn, {garnhaler:lv}) * 1000) / 1000), [3.6, 3.2], 'garnhaler trinn 2 og 3: 3,6 og 3,2 min per garn');
+  t.eq([1, 2, 3].map(lv => Math.round(unit(teine, {teinehaler:lv > 1 ? lv : true}) * 1000) / 1000), [1.2, 1.08, 0.96], 'teinehaler: 1,2, 1,08 og 0,96 min per teine');
+  t.near(unit(garn, {garnhaler:3, hott:3}), 3.2, 1e-9, 'høtten tar ingenting av garnet');
+  t.near(unit(lset, {linehaler:3}), 5 * 600 / 700, 1e-9, 'halerens trinn tar ingenting av settinga');
+  t.near(unit(lset, {linehaler:true, linesetter:true}), 5 * 600 / 700 * 0.8, 1e-9, 'linesetteren: 20 % kortere setting per stamp');
+  t.near(unit(lset, {linehaler:true, linesetter:2}), 5 * 600 / 700 * 0.65, 1e-9, 'linesetter trinn 2: 35 % kortere');
+  t.near(unit(line, {linehaler:true, linesetter:2}), L1, 1e-9, 'linesetteren tar ingenting av trekket');
+  t.near(unit(gset, {garnhaler:true, garnrenne:true}), 0.6, 1e-9, 'garnrenna: et garn settes på 0,6 min (0,8)');
+  t.near(unit({kind:'teine', op:'set'}, {teinehaler:3, garnrenne:true, linesetter:2}), 0.9, 1e-9, 'teinene settes som før');
+  t.near(unit({kind:'line', op:'haul', hooksPer:5000, auto:true}, {linehaler:3}), unit({kind:'line', op:'haul', hooksPer:5000, auto:true}, {}), 1e-9, 'autolina går i maskinens tempo');
+  K.set('hasHauler', () => false);
+  t.near(unit(line, {linehaler:3}), L1 * GEAR.line.hand, 1e-9, 'for hånd (uten haler) gir trinnene ingenting');
+  K.set('workTeam', wt); K.set('hasHauler', hh); K.set('coldPen', cp);
+
+  // ---- the jig sets: tier 2 wears half as fast and costs half again as much
+  boat('trebat'); S.equip = {}; S.pgear = K.newPGear(); K.careInit(S.pgear);
+  const J = S.pgear.jig.mark, wear = lv => { S.equip = lv > 1 ? {juksesett:lv} : {}; J.c = 1; K.jigWear(); return 1 - J.c; };
+  t.near(wear(2) / wear(1), 0.5, 1e-9, 'juksasett trinn 2 slites halvparten så fort per minutt');
+  t.eq([1, 2].map(lv => { S.equip = lv > 1 ? {juksesett:lv} : {}; return [K.jigKr('mark'), K.jigKr('kveite')]; }), [[CARE.jig.mark.kr, CARE.jig.kveite.kr], [CARE.jig.mark.kr * 1.5, CARE.jig.kveite.kr * 1.5]], 'juksasett trinn 2 koster 50 % mer');
+  S.equip = {}; S.pgear.jig.mark.n = 2; S.boat.kgear = false;
+  t.eq(K.tierKr('juksesett', 2, 'trebat'), CARE.jig.mark.kr * 0.5 * 3, 'trinn 2 koster halve prisen for settene om bord (det monterte og to i reserve)');
+
+  // ---- buying: tier by tier at the tackle shop's quay, the reels' tier only with reels aboard and where it gives something
+  S.cash = 1e6; S.boat.status = 'port'; S.boat.berth = 'main'; S.boat.port = shop.id;
+  boat('plastsjark'); S.equip = {};
+  t.ok(!!K.buyGate('tier', 'jukseLv'), `uten juksamaskiner nektes trinnet: «${(K.buyGate('tier', 'jukseLv') || [''])[0]}»`);
+  S.equip = {jukse:4}; t.eq(K.buyGate('tier', 'jukseLv'), null, 'med fire maskiner kan trinn 2 kjøpes');
+  t.eq(K.tierKr('jukseLv', 2, 'plastsjark'), 48000, 'trinn 2 for fire maskiner: 48 000 kr');
+  const c0 = S.cash; t.eq(K.buyGear('tier', 'jukseLv'), null, 'kjøpet av trinn 2 går');
+  t.ok(S.equip.jukseLv === 2 && S.equip.jukse === 4 && S.cash === c0 - 48000, `maskinene er trinn 2, fire av dem, 48 000 kr betalt (${S.equip.jukseLv}, ${S.equip.jukse}, ${c0 - S.cash})`);
+  t.ok(!!K.buyGate('tier', 'jukseLv'), `trinn 3 gir ingenting med plass til fire maskiner og nektes: «${(K.buyGate('tier', 'jukseLv') || [''])[0]}»`);
+  t.eq(K.equipKr('jukse'), 34000 + 12000, 'en ny maskin på trinn 2 koster 46 000 kr');
+  boat('sjark'); S.equip = {jukse:5, jukseLv:2}; t.eq(K.buyGate('tier', 'jukseLv'), null, 'havsjarken (fem maskiner) kan kjøpe trinn 3');
+  S.equip.jukseLv = 3; t.eq(K.equipKr('jukse'), 34000 + 12000 + 24000, 'en maskin på trinn 3 koster 70 000 kr');
+  S.equip = {}; t.ok(!!K.buyGate('tier', 'linehaler'), `uten linehaler nektes trinnet: «${(K.buyGate('tier', 'linehaler') || [''])[0]}»`);
+  S.equip = {linehaler:true}; t.ok(!!K.buyGate('tier', 'linehaler', 3), 'trinn 3 uten trinn 2 nektes');
+  const c1 = S.cash; t.eq(K.buyGear('tier', 'linehaler'), null, 'trinn 2 på linehaleren går');
+  t.ok(S.equip.linehaler === 2 && c1 - S.cash === 34000 && K.hasHauler('line'), `linehaleren er trinn 2 (${S.equip.linehaler}), 34 000 kr, og er fortsatt haleren`);
+  S.boat.port = plant.id; t.ok(!!K.buyGate('tier', 'linehaler'), 'ved et mottak uten butikk nektes trinnet'); S.boat.port = shop.id;
+  S.equip = {}; t.ok(!!K.buyGate('equip', 'linesetter'), `linesetteren uten linehaler nektes: «${(K.buyGate('equip', 'linesetter') || [''])[0]}»`);
+  t.ok(!!K.buyGate('equip', 'garnrenne'), 'garnrenna uten garnhaler nektes');
+  S.equip = {linehaler:true, garnhaler:true}; t.ok(K.buyGate('equip', 'linesetter') === null && K.buyGate('equip', 'garnrenne') === null, 'med halerne kan de kjøpes');
+  t.ok(!!K.buyGate('tier', 'linesetter'), 'linesetterens trinn 2 krever linesetteren');
+  S.equip.linesetter = true; t.eq(K.buyGate('tier', 'linesetter'), null, 'med linesetteren kan trinn 2 kjøpes');
+  t.eq(K.equipKr('linehaler'), 68000, 'linehaleren koster som før');
+  boat('trebat'); S.equip = {};
 }

@@ -162,6 +162,13 @@ function mySets(vid){ return (S.sets || []).filter(s => s.vid === (vid || S.cur)
 // an autoliner's own autoline system (its hauler, hook cleaner and baiting machine, VESSELS autoHooks) hauls her line
 // (H3a) and the snow crab vessel's portal with its pot hauler (VESSELS pot 'sno') hauls her pots
 function hasHauler(kind){ return (kind === 'line' && BOAT && BOAT.autoHooks > 0) || (kind === 'teine' && BOAT && POTS[BOAT.pot] && POTS[BOAT.pot].sno) || GEAR[kind].haulers.some(k => S.equip && S.equip[k]); }
+// the share off the time to haul a unit from the hauler's tier (OPP2: 0, 10 and 20 %; the best of the boat's haulers for the gear), and the
+// share off the time to set one from the line setter's tier or the net chute (EQUIP linesetter, garnrenne); 0 without them
+function haulerX(kind, eq = S.equip, type){ let x = 0; for (const h of GEAR[kind].haulers){ const lv = equipLv(h, eq, type); if (lv) x = Math.max(x, EQUIP[h].tiers[lv - 1].haul || 0); } return x; }
+function setterX(kind, eq = S.equip, type){
+  if (kind === 'line'){ const lv = equipLv('linesetter', eq, type); return lv ? EQUIP.linesetter.tiers[lv - 1].set : 0; }
+  return kind === 'garn' && eq && eq.garnrenne ? EQUIP.garnrenne.set : 0;
+}
 
 // ---- the rig: a boat is rigged for one kind of fishing at a time. Jigging needs a hand jig or reels; line and pots
 // need a hauler that takes them, nets a net hauler. Fitting a hauler the first time is a yard job; once it is aboard, the rig is
@@ -230,6 +237,11 @@ function buyGate(what, spec, lv){
   // the knives and the gaff in tiers (OPP1): only at the tackle shop's quay, on a boat they fit, and tier by tier (spec the EQUIP key, lv
   // the tier asked for, the next one when left out)
   if (what === 'tier') return tierGate(spec, lv);
+  // (OPP2) an item that hangs on another (the line setter on the line hauler, the net chute on the net hauler) only with that aboard or
+  // being fitted
+  if (what === 'equip'){ const E = EQUIP[spec], nd = E && E.needs; if (nd && !(S.equip && S.equip[nd]) && !(S.jobs || []).some(j => j.kind === 'fit' && j.k === nd))
+    return [gL(E.name.no + ' krever ' + lc1(EQUIP[nd].name.no) + ' om bord. Kjøp ' + lc1(EQUIP[nd].name.no) + ' først.', 'The ' + lc1(E.name.en) + ' needs a ' + lc1(EQUIP[nd].name.en) + ' aboard. Buy a ' + lc1(EQUIP[nd].name.en) + ' first.')];
+    return null; }
   const own = k => ownedUnits(k) > 0, anyGear = own('line') || own('garn') || own('teine');
   { const k = {stamp:'line', net:'garn', pot:'teine'}[what], nf = k && haulerNoFit(k); if (nf) return nf; }   // no hauler fits: the same words as the Rig tab (F3)
   if (what === 'stamp' && !hasHauler('line')) return [gL('Du trenger en linehaler før du kan kjøpe line.', 'You need a line hauler before you can buy line.')];
@@ -246,12 +258,19 @@ function buyGate(what, spec, lv){
   return null;
 }
 function tierGate(k, lv){
-  const E = EQUIP[k], b = S.boat; if (!E || !E.tiers) return [gL('Ukjent utstyr.', 'Unknown equipment.')];
-  if (!equipFits(k, b.type)) return [gL(E.name.no + ' i trinn hører til kystbåtene. Havbåtene har sitt eget utstyr.', 'The ' + E.name.en.toLowerCase() + ' in tiers are for the coastal boats. The ocean vessels have their own.')];
+  const E = EQUIP[k], b = S.boat, V = VESSELS[b.type] || {}; if (!E || !E.tiers) return [gL('Ukjent utstyr.', 'Unknown equipment.')];
+  // (OPP2) the haulers and the line setter: tier 1 is the one bought, at Shop › Electronics and haulers; the reels' tier needs reels
+  if (E.price && !equipLv(k)) return [gL('Båten har ingen ' + lc1(E.name.no) + '. Den kjøpes og monteres under Elektronikk og haler.', 'The boat has no ' + lc1(E.name.en) + '. It is bought and fitted under Electronics and haulers.')];
+  if (!E.price && !equipFits(k, b.type)){ const f = E.fit || {};
+    if (f.jig && V.cls !== 'hav') return [gL('«' + S.boatName + '» har plass til ' + (V.jukseMax || 0) + ' juksamaskiner, og én person passer ' + E.tiers[0].tend + '. Trinnene gir noe fra fire maskiner.', 'The «' + S.boatName + '» has room for ' + (V.jukseMax || 0) + ' reels, and one person tends ' + E.tiers[0].tend + '. The tiers give something from four reels.')];
+    return [gL(E.name.no + ' i trinn hører til kystbåtene. Havbåtene har sitt eget utstyr.', 'The ' + E.name.en.toLowerCase() + ' in tiers are for the coastal boats. The ocean vessels have their own.')]; }
+  if (k === 'jukseLv' && !(tierUnits(k, 2) > 0)) return [gL('Båten har ingen juksamaskin. Den kjøpes og monteres under Elektronikk og haler.', 'The boat has no jigging reel. It is bought and fitted under Electronics and haulers.')];
   const cur = equipLv(k), top = E.tiers.length, want = lv == null ? cur + 1 : lv;
   if (cur >= top) return [gL('Båten har det beste: ' + lc1(E.tiers[top - 1].no) + '.', 'The boat has the best: ' + lc1(E.tiers[top - 1].en) + '.')];
   if (want <= cur) return [gL('Båten har alt trinn ' + cur + '.', 'The boat already has tier ' + cur + '.')];
   if (want > cur + 1) return [gL('Trinn ' + want + ' kjøpes etter trinn ' + (want - 1) + '.', 'Tier ' + want + ' comes after tier ' + (want - 1) + '.')];
+  // a tier of the reels that gives the boat nothing: one person tends all she can carry already (plastsjarken with four, tier 3)
+  if (k === 'jukseLv' && E.tiers[want - 2].tend >= (V.jukseMax || 0)) return [gL('«' + S.boatName + '» har plass til ' + (V.jukseMax || 0) + ' juksamaskiner, og én person passer alle med ' + lc1(E.tiers[want - 2].no.replace(/^Juksamaskiner med /, '')) + '. ' + E.tiers[want - 1].no + ' gir ingenting mer her.', 'The «' + S.boatName + '» has room for ' + (V.jukseMax || 0) + ' reels, and one person tends them all with ' + E.tiers[want - 2].en.replace(/^Reels with /, '') + '. ' + E.tiers[want - 1].en + ' give nothing more here.')];
   if (b.status !== 'port' || !portServices(portById(b.port), berthKind(b)).butikk) return [gL(E.name.no + ' kjøper du ved utstyrsbutikkens kai.', 'You buy the ' + E.name.en.toLowerCase() + ' at the tackle shop\'s quay.')];
   return null;
 }
@@ -368,8 +387,10 @@ function gopUnitMin(g, H, hs){
   const hand = g.op === 'haul' && !hasHauler(g.kind) ? G.hand : 1;
   const sort = g.op === 'haul' && g.kind === 'teine' && !workTeam('sort', 'sort').n ? 1.3 : 1;   // the haulers sort the crab by class themselves
   // the upgrades that take time off a unit, as shares of the base that add up (prinsipp 1 of docs/planer/oppgraderinger.md, upgSum): the
-  // gaff's on a tub of line hauled (OPP1: the fish is easier to get aboard; not the nets, which are picked at the net table, nor the pots)
-  const up = upgSum(g.kind === 'line' && g.op === 'haul' ? -hookX('haul') : 0);
+  // gaff's on a tub of line hauled (OPP1: the fish is easier to get aboard; not the nets, which are picked at the net table, nor the pots),
+  // the hauler's tier on every unit hauled with it (OPP2), and the line setter's or the net chute's on every unit set (OPP2):
+  // base × (1 − hauler − gaff), never (1 − hauler) × (1 − gaff)
+  const up = g.op === 'haul' ? upgSum(g.kind === 'line' ? -hookX('haul') : 0, hand === 1 ? -haulerX(g.kind) : 0) : upgSum(-setterX(g.kind));
   return base * up * hand * sort * (1 + coldPen(H, hs)) / crewF;
 }
 // hdg: the course drawn on the chart; the gear goes out exactly there or not at all. Without it the string follows the course

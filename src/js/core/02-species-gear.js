@@ -245,12 +245,31 @@ const EQUIP = {
   chirp:{price:13900, name:{no:'CHIRP-ekkolodd', en:'CHIRP sounder'}, desc:{no:'Skarpere fiskeekko og bedre skille like over bunnen. Viser fisken 0,75 nm rundt båten i kartet, og du kan velge art.', en:'Sharper fish echoes and better separation near the bottom. Shows the fish 0.75 nm around the boat on the chart, and you can choose the species.'}},
   // a searchlight sonar on a hoist through the hull (start price: the parts of a Furuno CH-37BB are about 13 200 USD, before fitting)
   sonar:{price:150000, fit:{minLen:10}, name:{no:'Sonar (søkelys)', en:'Searchlight sonar'}, desc:{no:'Ser fisken 1,5 nm rundt båten, skiller torsk, hyse og sei og viser hvor stimene trekker. Monteres med senkerør gjennom skroget.', en:'Sees the fish 1.5 nm around the boat, tells cod, haddock and saithe apart and shows where the schools are heading. Fitted with a hoist through the hull.'}},
-  jukse:{price:34000, multi:true, name:{no:'Juksamaskin', en:'Electric jigging reel'}, desc:{no:'Fisker omtrent dobbelt så mye som håndjuksa. Én person kan passe tre. Med maskiner om bord passer du dem og jukser ikke selv.', en:'Catches about twice as much as a hand jig. One person can tend three. With machines aboard you tend them and do not jig by hand.'}},
+  // lvk: the reels' tier is an item of its own (jukseLv, OPP2), since S.equip.jukse counts the reels; a reel bought later comes at that tier (equipKr)
+  jukse:{price:34000, multi:true, lvk:'jukseLv', name:{no:'Juksamaskin', en:'Electric jigging reel'}, desc:{no:'Fisker omtrent dobbelt så mye som håndjuksa. Én person kan passe tre, flere med autostopp. Med maskiner om bord passer du dem og jukser ikke selv.', en:'Catches about twice as much as a hand jig. One person can tend three, more with auto-stop. With machines aboard you tend them and do not jig by hand.'}},
   motor90:{price:148000, fit:{outboard:true}, boost:{vmax:30, lph:15}, name:{no:'Påhengsmotor 90 hk', en:'90 hp outboard'}, desc:{no:'Toppfart 30 knop, men tørstere.', en:'Top speed 30 knots, but thirstier.'}},
-  // haulers for passive gear (start prices): without one, nets and line come up by hand, slowly, and pots cannot be hauled at all
-  linehaler:{price:68000, name:{no:'Linehaler', en:'Line hauler'}, desc:{no:'Trekker lina jevnt og raskt.', en:'Hauls the line steadily and fast.'}},
-  garnhaler:{price:95000, fit:{minLen:7.5}, name:{no:'Garnhaler', en:'Net hauler'}, desc:{no:'Trekker garna. For hånd går det sakte.', en:'Hauls the nets. By hand it is slow.'}},
-  teinehaler:{price:58000, name:{no:'Teinehaler', en:'Pot hauler'}, desc:{no:'Hiver teinene opp. Teiner kan ikke trekkes for hånd.', en:'Lifts the pots. Pots cannot be hauled by hand.'}},
+  // haulers for passive gear (start prices): without one, nets and line come up by hand, slowly, and pots cannot be hauled at all.
+  // In three tiers (OPP2 of docs/planer/oppgraderinger.md, 07.11.2026, Jonas: «enig» to tiers on the deck gear there is): tier 1 is the
+  // hauler as bought (S.equip[k] true), tiers 2 and 3 take 10 and 20 % off the time to haul a unit (haul, a share of GEAR[kind].haul that
+  // adds up with the gaff's, prinsipp 1: gopUnitMin in 10-gear.js), for half the new price and then the whole of it once more (kr). The
+  // tier bought is the number in S.equip[k] (2 or 3); no fitting and no upkeep. The names of the tiers are ours, after what is done to a
+  // hauler to make it pull faster (no maker's model)
+  linehaler:{price:68000, name:{no:'Linehaler', en:'Line hauler'}, desc:{no:'Trekker lina jevnt og raskt.', en:'Hauls the line steadily and fast.'},
+    tiers:[{no:'Linehaleren', en:'The line hauler', haul:0, kr:68000}, {no:'Linehaler med sterkere hydraulikk', en:'Line hauler with stronger hydraulics', haul:0.1, kr:34000},
+      {no:'Linehaler med ny motor og større skive', en:'Line hauler with a new motor and a bigger sheave', haul:0.2, kr:68000}]},
+  garnhaler:{price:95000, fit:{minLen:7.5}, name:{no:'Garnhaler', en:'Net hauler'}, desc:{no:'Trekker garna. For hånd går det sakte.', en:'Hauls the nets. By hand it is slow.'},
+    tiers:[{no:'Garnhaleren', en:'The net hauler', haul:0, kr:95000}, {no:'Garnhaler med sterkere hydraulikk', en:'Net hauler with stronger hydraulics', haul:0.1, kr:47500},
+      {no:'Garnhaler med ny motor og bredere skive', en:'Net hauler with a new motor and a wider sheave', haul:0.2, kr:95000}]},
+  teinehaler:{price:58000, name:{no:'Teinehaler', en:'Pot hauler'}, desc:{no:'Hiver teinene opp. Teiner kan ikke trekkes for hånd.', en:'Lifts the pots. Pots cannot be hauled by hand.'},
+    tiers:[{no:'Teinehaleren', en:'The pot hauler', haul:0, kr:58000}, {no:'Teinehaler med sterkere hydraulikk', en:'Pot hauler with stronger hydraulics', haul:0.1, kr:29000},
+      {no:'Teinehaler med ny motor og større skive', en:'Pot hauler with a new motor and a bigger sheave', haul:0.2, kr:58000}]},
+  // the line setter and the net chute (OPP2; Ships at Sea's «longline setter»): a chute over the stern the gear runs out through, so a tub of
+  // line or a net goes out faster (set, a share of GEAR[kind].set: gopUnitMin). Each hangs on its hauler (needs: buyGate('equip')). The
+  // line setter in two tiers, the second with a magazine for the tubs; the chute in one. No model yet (OPP5): the card and «aboard», as
+  // the plotter and the sounder. Prices and shares are start values
+  linesetter:{price:24000, needs:'linehaler', name:{no:'Linesetter', en:'Line setter'}, desc:{no:'Renne over hekken som lina går ut gjennom. Stampene settes fortere.', en:'A chute over the stern the line runs out through. The tubs are set faster.'},
+    tiers:[{no:'Linesetteren', en:'The line setter', set:0.2, kr:24000}, {no:'Linesetter med stampemagasin', en:'Line setter with a tub magazine', set:0.35, kr:22000}]},
+  garnrenne:{price:18000, needs:'garnhaler', fit:{minLen:7.5}, set:0.25, name:{no:'Garnrenne', en:'Net chute'}, desc:{no:'Renne over hekken som garna går ut gjennom. Garna settes fortere.', en:'A chute over the stern the nets run out through. The nets are set faster.'}},
   // a tank of running sea water for king crab (the price is an estimate): without it a crab lives about a day in the hold, and a dead
   // one is worth nothing (05-vessels.js, sell)
   krabbekar:{price:28000, fit:{minLen:6.5}, name:{no:'Krabbekar med sjøvann', en:'Live crab tank'}, desc:{no:'Kar med sirkulerende sjøvann som holder kongekrabben levende i flere døgn. Uten kar lever den rundt et døgn i lasten, og død krabbe er verdiløs.', en:'A tank of running sea water that keeps king crab alive for days. Without it a crab lives about a day in the hold, and a dead crab is worthless.'}},
@@ -270,26 +289,58 @@ const EQUIP = {
   hott:{tiers:[{no:'Høtten om bord', en:'The gaff aboard', rail:0, jig:0, haul:0, kr:0},
     {no:'Stålhøtt', en:'Steel gaff', rail:0.3, jig:0.2, haul:0.04, kr:900},
     {no:'Lang høtt med krok av stål', en:'Long gaff with a steel hook', rail:0.6, jig:0.4, haul:0.08, kr:2900}],
-    fit:{coast:true}, name:{no:'Høtt', en:'Gaff'}, desc:{no:'En bedre høtt tar fisken som henger løst ved ripa, så færre glipper. Lina kommer litt fortere om bord.', en:'A better gaff takes the fish that hangs loose at the rail, so fewer slip. The line comes aboard a little faster.'}}
+    fit:{coast:true}, name:{no:'Høtt', en:'Gaff'}, desc:{no:'En bedre høtt tar fisken som henger løst ved ripa, så færre glipper. Lina kommer litt fortere om bord.', en:'A better gaff takes the fish that hangs loose at the rail, so fewer slip. The line comes aboard a little faster.'}},
+  // the jigging reels in tiers (OPP2, V1 A, Jonas 07.11.2026: «A»): more reels a person, never more fish a reel (JIG.machine stands).
+  // tend: the reels one person tends (JIG in 03-simulation.js, jigPer); kr a reel aboard (per:'jukse'), bought for all of them at once, and
+  // a reel bought after comes at the boat's tier (equipKr). Only from four reels up (fit.jig: jukseMax), where one more a person is
+  // something; a tier that adds nothing for the boat is refused (tierGate). S.equip.jukseLv is the tier, S.equip.jukse the reels
+  jukseLv:{tiers:[{no:'Juksamaskinene', en:'The jigging reels', tend:3, kr:0},
+    {no:'Juksamaskiner med autostopp', en:'Reels with auto-stop', tend:4, kr:12000, per:'jukse'},
+    {no:'Juksamaskiner med skjerm og telling', en:'Reels with a display and counting', tend:5, kr:24000, per:'jukse'}],
+    fit:{coast:true, jig:4}, name:{no:'Juksamaskinene', en:'The jigging reels'}, desc:{no:'Med autostopp stopper maskinen selv når fisken er på, så én person passer fire. Med skjerm og telling passer han fem.', en:'With auto-stop the reel stops by itself when a fish is on, so one person tends four. With a display and counting, five.'}},
+  // the jig sets in tiers (OPP2): tier 2, better hooks and pilk, wears half as fast (wear, a share off CARE.jig wear: jigWear in
+  // 10b-gearcare.js) and every set costs half again (pc: jigKr); the tier costs that half for the sets aboard (per:'jig': tierKr)
+  juksesett:{tiers:[{no:'Juksasettene', en:'The jig sets', wear:0, pc:0, kr:0}, {no:'Bedre kroker og pilk', en:'Better hooks and pilk', wear:0.5, pc:0.5, kr:0, per:'jig'}],
+    fit:{coast:true}, name:{no:'Juksasett', en:'Jig sets'}, desc:{no:'Bedre kroker og pilk slites halvparten så fort. Hvert sett koster halvparten mer.', en:'Better hooks and pilk wear half as fast. Every set costs half again as much.'}}
 };
 // whether an item fits a vessel type: by length, and outboards only on boats with an outboard; the tiered knives and gaff not on the
-// ocean fleet (coast: their factories and machines have their own numbers)
-function equipFits(k, type){ const f = EQUIP[k] && EQUIP[k].fit, V = VESSELS[type]; if (!f || !V) return !!V; return !(f.minLen && V.len < f.minLen) && !(f.maxLen && V.len > f.maxLen) && !(f.outboard && !V.outboard) && !(f.house && V.fac.house === 'open') && !(f.coast && V.cls === 'hav'); }
+// ocean fleet (coast: their factories and machines have their own numbers); the reels' tiers only where she takes four reels or more (jig)
+function equipFits(k, type){ const f = EQUIP[k] && EQUIP[k].fit, V = VESSELS[type]; if (!f || !V) return !!V; return !(f.minLen && V.len < f.minLen) && !(f.maxLen && V.len > f.maxLen) && !(f.outboard && !V.outboard) && !(f.house && V.fac.house === 'open') && !(f.coast && V.cls === 'hav') && !(f.jig && !((V.jukseMax || 0) >= f.jig)); }
 // ---- the upgrades in tiers (OPP1 of docs/planer/oppgraderinger.md, 07.11.2026)
 // The rule (prinsipp 1; Jonas 07.11.2026: «jeg mener ikke vi skal ha en renters rente-effekt på oppgraderingene. Om det står 10% økning
 // feks, så betyr det at økningen er 10% opp fra grunnnivået»): every tier's per cent is of the base level, and the shares add up, never
 // compound: base × upgSum(a, b) = base × (1 + a + b), not base × (1 + a) × (1 + b). A share that takes time off is negative.
 function upgSum(...p){ return 1 + p.reduce((a, x) => a + (+x || 0), 0); }
 // the tier a boat has of a tiered item: 1 without the field (an old save, a new boat), the tier bought otherwise; 1 on a boat it does
-// not fit (the ocean fleet), whatever the field says. eq: the boat's equipment (S.equip of the boat bound now), type: her type
+// not fit (the ocean fleet), whatever the field says. eq: the boat's equipment (S.equip of the boat bound now), type: her type.
+// An item that is bought (a price: the haulers, the line setter, OPP2) has tier 0 until it is aboard, 1 when it is (true), and the
+// number after that, also on a boat it no longer fits (a hauler already aboard is never taken away); the free ones read true as 2
 function equipLv(k, eq = S.equip, type = S.boat && S.boat.type){
-  const E = EQUIP[k]; if (!E || !E.tiers) return 0; if (type && !equipFits(k, type)) return 1;
-  const v = eq && eq[k]; return Math.max(1, Math.min(E.tiers.length, v === true ? 2 : Math.round(+v || 1)));
+  const E = EQUIP[k]; if (!E || !E.tiers) return 0; const v = eq && eq[k];
+  if (E.price) return !v ? 0 : Math.max(1, Math.min(E.tiers.length, v === true ? 1 : Math.round(+v || 1)));
+  if (type && !equipFits(k, type)) return 1;
+  return Math.max(1, Math.min(E.tiers.length, v === true ? 2 : Math.round(+v || 1)));
 }
-function equipTier(k, eq, type){ return EQUIP[k].tiers[equipLv(k, eq, type) - 1]; }
-// what a tier costs a boat type: the knives per gutting place (tierUnits: stations.table), the gaff once
-function tierUnits(k, lv, type = S.boat && S.boat.type){ const T = EQUIP[k].tiers[lv - 1], V = VESSELS[type]; return T && T.per === 'table' ? (V && V.stations && V.stations.table) || 1 : 1; }
-function tierKr(k, lv, type = S.boat && S.boat.type){ const T = EQUIP[k].tiers[lv - 1]; return T ? T.kr * tierUnits(k, lv, type) : 0; }
+function equipTier(k, eq, type){ return EQUIP[k].tiers[Math.max(1, equipLv(k, eq, type)) - 1]; }
+// what a tier costs a boat type: the knives per gutting place (tierUnits: stations.table), the reels' tier per reel aboard or on its way
+// (per:'jukse', the fitting jobs too, so a reel bought before the tier does not get it free), the jig sets half their price for those
+// aboard (per:'jig', jigSetsKr in 10b-gearcare.js), the rest once
+function tierUnits(k, lv, type = S.boat && S.boat.type, eq = S.equip){
+  const T = EQUIP[k].tiers[lv - 1], V = VESSELS[type]; if (!T) return 0;
+  if (T.per === 'table') return (V && V.stations && V.stations.table) || 1;
+  if (T.per === 'jukse') return Math.max(0, Math.round(+(eq && eq.jukse) || 0)) + (eq === S.equip ? (S.jobs || []).filter(j => j.kind === 'fit' && j.k === 'jukse').length : 0);
+  return 1;
+}
+function tierKr(k, lv, type = S.boat && S.boat.type, eq = S.equip){
+  const T = EQUIP[k].tiers[lv - 1]; if (!T) return 0;
+  return T.per === 'jig' ? Math.round(T.pc * jigSetsKr()) : T.kr * tierUnits(k, lv, type, eq);
+}
+// what an item costs the boat now: its price, and for a reel the tiers the boat's reels have (lvk: a reel comes at that tier)
+function equipKr(k, eq = S.equip, type = S.boat && S.boat.type){
+  const E = EQUIP[k]; if (!E) return 0; let p = E.price || 0;
+  if (E.lvk) for (let i = 1; i < equipLv(E.lvk, eq, type); i++) p += EQUIP[E.lvk].tiers[i].kr;
+  return p;
+}
 // the knife's gutting pace over DECK.gut (deckMinute, deckEta, the work's left.sloy), and the gaff's shares (rail, jig, haul)
 function knifeX(eq, type){ return upgSum(equipTier('kniv', eq, type).gut); }
 function hookX(f, eq, type){ return equipTier('hott', eq, type)[f] || 0; }
