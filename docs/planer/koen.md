@@ -46,14 +46,9 @@ Svar i en økt, eller rett her. Økta som får svaret, skriver det inn i planfil
 4. **UI 2, V3 revidert** (`docs/planer/ui-2-staaende.md` kap. 7): U2-2 til U2-6 er bygd etter A («Om bord» i linja), men kap. 7 sier fortsatt «Åpent». **Bekreft A**, eller si B/C, så skrives det inn.
 5. ~~**Ø16 S3, lasttesten**~~ Jonas 07.11.2026: «Jeg tenker vi skalerer ned testen til 500 brukere til å starte med, det vil sannsynligvis gi oss en pekepinn på status. Dette løser du på beste mulig måte.» Steg 47 i køen: 500 klienter mot reléet om natta, og 500 syntetiske spillere mot Supabase om natta med stopp ved feil (ingen egen gren); 2 000 og 5 000 kommer som nytt valg om tallene tilsier det.
 6. **Ø6 funn 7, innloggingsdomenet** (`docs/planer/sikkerhet-skyen.md`): bare Jonas kan sette opp `auth.detstorebla.no` hos WorkOS og DNS. Si fra når det er gjort, så bygges `workosDevMode:false`.
-<<<<<<< HEAD
 7. **Ø5 M7/M8, IAB-retningslinjen** (backloggen 10.6): PDF-en fra MRC/IAB må lastes ned og tallene sjekkes av Jonas før noe selges på dem. Ikke et A/B. Jonas 07.11.2026: «Jeg skal se hva jeg finner.»
 8. **Grafikk, båtmodellene** («Det Jonas måler» i `docs/planer/okter-etter-backloggen.md`): `#prof` på OnePlus Pad 3 (F2/F3 i `grafikk-batmodeller.md`) og `#prof` fra Galaxy A52s/642L (Ø3b). Målinger, ikke valg; Ø3a (steg 21) tar det som kan måles her. Jonas 07.11.2026: «Ok» (målingene kommer når det passer).
-=======
-7. **Ø5 M7/M8, IAB-retningslinjen** (backloggen 10.6): PDF-en fra MRC/IAB må lastes ned og tallene sjekkes av Jonas før noe selges på dem. Ikke et A/B.
-8. **Grafikk, båtmodellene** («Det Jonas måler» i `docs/planer/okter-etter-backloggen.md`): `#prof` på OnePlus Pad 3 (F2/F3 i `grafikk-batmodeller.md`) og `#prof` fra Galaxy A52s/642L (Ø3b). Målinger, ikke valg; Ø3a (steg 21) tar det som kan måles her.
 9. **Trinnene ved innbytte** (OPP4, `docs/planer/oppgraderinger.md` prinsipp 5): kniv og høtt blir med den gamle båten ved innbytte på verftet, og den nye står på trinn 1. I dag regnes de ikke i innbytteprisen (som utstyr som ikke passer den nye båten). **A (anbefalt):** la det stå; prisene er små mot båtene (900–13 500 kr), og båtbladet sier det før kjøpet. B: trinnene regnes i innbytteprisen til 70 % av det de kostet, som skroget. Ikke blokkerende; OPP3 (propellen) følger det som velges.
->>>>>>> origin/ccr-5e1ba2f4-pusvyd
 
 Valg som kommer når steget kommer opp (skrives inn med A/B/C av rutinen da): H5 auksjon eller fast pris hos Sildelaget; H8 stigen mellom 15 m og havbåtene; Ø11.9 oppsigelsesfristene i ekte tid; Ø14, Ø13, H4 og kvotemarkedet (planer med valg).
 
