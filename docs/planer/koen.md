@@ -14,7 +14,8 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 
 ## Øktene som kjører
 
-- Ingen (07.11.2026 13:00 UTC). OPP1 (steg 53) ble rullet ut i 73c12b26 i en økt Jonas startet; før det H3b og H3c (4107d71a), U2-4 (c62047f0) og stripa og kartet (4f5f6d91).
+- `plan/2026-11-07-opp4`: OPP4 (steg 54), Jonas' økt, startet 07.11.2026 14:32 UTC. Eier `ui/phone/10-fartoy.js`, `ui/07c-handbook.js`, `ui/01-i18n.js`, `ui/phone/14-act.js`, `ui/phone/13-mannskap-bank-meld.js`, `core/09k-market.js`, `supabase/migrations/`, `src/admin/index.html`, `ui/phone/07-patch.js`.
+- Før det: OPP1 (steg 53) ble rullet ut i 73c12b26 i en økt Jonas startet; før det H3b og H3c (4107d71a), U2-4 (c62047f0) og stripa og kartet (4f5f6d91).
 
 ## Utrullinger fra rutinen
 
@@ -99,7 +100,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 51 | **Ø4** Båtmodellene | Grafikk | lagt bort (Jonas 05.11.2026: «Vent med båtene») | | `tools/boats/` | øktplanen Ø4, `grafikk-batmodeller.md` |
 | 52 | **H5–H9** Not, snurrevad, skift, stigen, spilltesten | Havsteget | venter på H4 | steg 32 | se `havsteget.md` | `havsteget.md` |
 | 53 | **OPP1** Kniv og høtt i tre trinn, per båt, i utstyrsbutikken | Oppgraderinger | ferdig (73c12b26, 07.11.2026, rullet ut i 73c12b26; Jonas' økt, gren `plan/2026-11-07-opp1`; porten i `RUTINE.md` punkt 6 holdt) | | `core/02-species-gear.js`, `05-vessels.js`, `13-work.js`, `14-crewlife.js`, `10-gear.js`, `ui/10-rod-acts.js`, `05a-itemcard.js`, `phone/12-utstyr-redskap.js`, `13b-nettet.js`, `01-i18n.js`, `07-patch.js` | `oppgraderinger.md` OPP1 |
-| 54 | **OPP4** «Båten og utstyret», Neste mål og trakten | Oppgraderinger | klar | steg 53 (ferdig) | `phone/10-fartoy.js`, `ui/07c-handbook.js`, `01-i18n.js`, `phone/14-act.js`, `phone/13-mannskap-bank-meld.js`, `core/09k-market.js`, `supabase/migrations/`, `src/admin/index.html`, `phone/07-patch.js` | `oppgraderinger.md` OPP4 |
+| 54 | **OPP4** «Båten og utstyret», Neste mål og trakten | Oppgraderinger | pågår (Jonas' økt, gren `plan/2026-11-07-opp4`, 07.11.2026 14:32 UTC) | steg 53 (ferdig) | `phone/10-fartoy.js`, `ui/07c-handbook.js`, `01-i18n.js`, `phone/14-act.js`, `phone/13-mannskap-bank-meld.js`, `core/09k-market.js`, `supabase/migrations/`, `src/admin/index.html`, `phone/07-patch.js` | `oppgraderinger.md` OPP4 |
 | 55 | **OPP3** Propellen på verftet og den additive fartsregelen | Oppgraderinger | klar (startmeldingen skrives fra planen når steget kommer opp) | steg 53 (ferdig) | `core/03-simulation.js`, `06-services.js`, `phone/12-utstyr-redskap.js`, `14-act.js`, `10-fartoy.js`, `tests/unit/trimfart.test.mjs` | `oppgraderinger.md` OPP3 |
 | 56 | **OPP2** Trinn på juksamaskin, halere og juksasett, linesetter og garnrenne | Oppgraderinger | klar (startmeldingen skrives fra planen når steget kommer opp; `tests/unit/oppgradering.test.mjs`, `opptest` og målescenarioet `kniv*` i `fiskeplay.py` finnes) | steg 53 (ferdig) | `core/02-species-gear.js`, `03-simulation.js`, `10-gear.js`, `10b-gearcare.js`, `phone/12-utstyr-redskap.js`, `05a-itemcard.js` | `oppgraderinger.md` OPP2 |
 | 57 | **OPP5** Modellene: kniv, høtt, linesetter, garnrenne, plasket | Oppgraderinger | venter på OPP2 (Jonas ser modellene før utrulling) | steg 56 | `tools/deck/`, `src/data/*.b64`, malen, `view3d/10-gear.js`, `09-landing-deck.js`, `25-controls.js` | `oppgraderinger.md` OPP5 |
