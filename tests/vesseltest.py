@@ -157,7 +157,8 @@ async def main():
         r = await pg.evaluate(r'''(()=>{ const R = {}, b = S.boat; S.fleet = [S.fleet[0]]; bindVessel(S.fleet[0]); b.type = 'skiff'; applyVessel(); S.lic = null; S.loan = null; S.loanIN = null; S.inUsed = false; S.order = null;
           const Y = PORTS.find(q => q.sted === 'verft'); b.status = 'port'; b.port = Y.id; b.pos = {...Y.p}; b.gear = true; S.equip.jukse = 1; S.equip.motor90 = false; S.fm = {n:0, last:-1, kr:0, b:false}; S.msgs = [];
           const dr = () => document.getElementById('drawerBody'), tap = sel => { const e = dr().querySelector(sel); if (e) e.click(); return !!e; };
-          const goalTxt = () => { DOCK.open('fartoy'); const c = [...dr().querySelectorAll('.ph-card')].find(e => /Neste mål/.test(e.textContent)); const t = c ? [...c.querySelectorAll('b')].map(e => e.textContent) : []; DOCK.close(); return t; };
+          // (the knives and the gaff at the top, so the ladder here is the boats': the tier between them has its own check below, OPP4)
+          const goalTxt = () => { S.equip.kniv = 3; S.equip.hott = 3; DOCK.open('fartoy'); const c = [...dr().querySelectorAll('.ph-card')].find(e => /Neste mål/.test(e.textContent)); const t = c ? [...c.querySelectorAll('b')].map(e => e.textContent) : []; DOCK.close(); return t; };
           R.goals0 = goalTxt();
           // ten landing days with you aboard and 1 G
           const t0 = S.t; for (let d = 0; d < 9; d++){ S.t = t0 + d * 1440; fmLand(15000); } R.b9 = bladB(); S.t = t0 + 9 * 1440; fmLand(15000); R.b10 = bladB(); S.t = t0;
@@ -212,6 +213,26 @@ async def main():
         print(ok(r['hav'] == ['Stift Rederi AS'] and r['havHome'] and r['havAS'] == [] and not r['havASHome']),
               'Neste mål with an ocean vessel in the fleet: no jigging machine and no right under 7 m, only the AS, and no goal on the home screen with it', r)
         print(ok(len(r['top']) == 2 and '14,99' in r['top'][0] and r['top'][1] == r['cheap']), 'Neste mål ends with the cheapest ocean vessel that can be bought, not «Havfiske, kommer»', r['top'])
+        # one tier between the boats (OPP4 of docs/planer/oppgraderinger.md): with one boat, the cheapest tier not bought that costs under a
+        # tenth of the next boat in the ladder comes before her. A wooden boat with NOK 40 000 and the gaff at tier 2 gets the knives at tier
+        # 2 (1 500 kr), not the old wooden snekke with a right; with nothing bought the gaff comes first (900 kr); with everything at the top,
+        # or with two boats, the ladder is the boats' as before
+        r = await pg.evaluate(r'''(()=>{ const R = {}, dr = () => document.getElementById('drawerBody');
+          const goalTxt = () => { DOCK.open('fartoy'); const c = [...dr().querySelectorAll('.ph-card')].find(e => /Neste mål/.test(e.textContent)); const t = c ? [...c.querySelectorAll('b')].map(e => e.textContent) : []; DOCK.close(); return t; };
+          const home = () => { PHONE.open('home'); const e = document.querySelector('#phone .ph-goal'); const t = e ? e.textContent : ''; PHONE.show(false); return t; };
+          S.fleet = [S.fleet[0]]; bindVessel(S.fleet[0]); const b = S.boat; b.type = 'trebat'; applyVessel(); S.lic = null; S.loan = null; S.loanIN = null; S.order = null; S.form = 'ENK';
+          b.gear = true; S.equip.jukse = 1; S.equip.hott = 2; delete S.equip.kniv; S.fm = Object.assign(S.fm || {}, {b:true}); S.cash = 40000;
+          R.kniv = goalTxt(); R.home = home();
+          delete S.equip.hott; R.hott = goalTxt();
+          S.equip.kniv = 3; S.equip.hott = 3; R.top = goalTxt();
+          delete S.equip.kniv; delete S.equip.hott; newVesselObj('snekke', 'husoy'); R.two = goalTxt();
+          return R; })()''')
+        print('goals, tier:', json.dumps(r, ensure_ascii=False))
+        print(ok(len(r['kniv']) == 2 and 'sløyekniver' in r['kniv'][0].lower() and 'trinn 2' in r['kniv'][0] and 'under 7 m' in r['kniv'][1] and 'sløyekniver' in r['home'].lower()),
+              'Neste mål on a wooden boat with NOK 40 000: the knives at tier 2 first, then the old wooden snekke with a right, and the home screen says the knives', r)
+        print(ok(r['hott'] and 'høtt' in r['hott'][0].lower() and 'trinn 2' in r['hott'][0] and r['top'] and 'under 7 m' in r['top'][0] and not any('trinn' in x for x in r['top'])
+                 and r['two'] and not any('trinn' in x for x in r['two'])),
+              'the cheapest tier comes first (the gaff at 900 kr); with the tiers at the top, or two boats in the fleet, the ladder is the boats\' only', r)
         # the catch from tools/fish/fisk.py: every species 1 m long with the head at -z, the halibut flat, the crab 1 m across its legs
         r = await pg.evaluate('''() => { const out = {}; for (const sp of ['torsk', 'sei', 'hyse', 'lyr', 'lange', 'brosme', 'uer', 'kveite', 'blakveite', 'krabbe']){ const o = glbPart('fish', sp);
             if (!o){ out[sp] = null; continue; } const lo = [9, 9, 9], hi = [-9, -9, -9]; let fz = 0, fn = 0;

@@ -523,42 +523,43 @@ Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood f
   - 448 `bkLanded(H, bk, all)`
   - 450 `bkNews(H)`
 
-## `src/js/core/03e-rules.js` (469 linjer)
+## `src/js/core/03e-rules.js` (498 linjer)
 
 The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a place, a time, the boat's length, the gear and the
 
-  - 29 `ruPip(rings, x, y)`
-  - 30 `ruIn(P, x, y)`
-  - 35 `ruBlock(bx, by)`
-  - 53 `ruBits(p)`
-  - 70 `ruSeaBlock(bx, by)`
-  - 84 `ruSea(p)`
-  - 88 `ruShelf(p)`
-  - 94 `zoneLic(c)`
-  - 95 `zoneLicApply(c)`
-  - 99 `insideFjord(p)`
-  - 100 `insideBaseline(p)`
-  - 102 `blDist(p)`
-  - 108 `ruHom(p)`
-  - 114 `landsdel(p)`
-  - 115 `ruLok(p)`
-  - 117 `ruZone(p)`
-  - 118 `ruAt(id, p)`
-  - 120 `ruLineName(ref)`
-  - 134 `kcQuota(ll)`
-  - 151 `ruSeaRules(c, q, ll, md, add)`
-  - 224 `rulesAt(q)`
-  - 370 `f26In(f, ll)`
-  - 375 `ruBlockMsg(q)`
-  - 377 `ruMinSize(sp, p)`
-  - 391 `fjordLimits(p, H)`
-  - 417 `ruCtx()`
-  - 421 `ruNow()`
-  - 427 `ruLayerBlock(bx, by, q, budget)`
-  - 439 `ruWpQ(w)`
-  - 444 `ruWpMsg(w)`
-  - 451 `ruOpenNear(p, q, maxKm)`
-  - 460 `ruTips()`
+  - 31 `ruPip(rings, x, y)`
+  - 32 `ruIn(P, x, y)`
+  - 38 `ruBlock(bx, by)`
+  - 56 `ruBits(p)`
+  - 73 `ruSeaBlock(bx, by)`
+  - 87 `ruSea(p)`
+  - 91 `ruShelf(p)`
+  - 96 `ruSkag(p, b = ruBits(p)`
+  - 102 `zoneLic(c)`
+  - 103 `zoneLicApply(c)`
+  - 107 `insideFjord(p)`
+  - 108 `insideBaseline(p)`
+  - 110 `blDist(p)`
+  - 116 `ruHom(p)`
+  - 122 `landsdel(p)`
+  - 123 `ruLok(p)`
+  - 125 `ruZone(p)`
+  - 126 `ruAt(id, p)`
+  - 128 `ruLineName(ref)`
+  - 143 `kcQuota(ll)`
+  - 160 `ruSeaRules(c, q, ll, md, add)`
+  - 233 `rulesAt(q)`
+  - 398 `f26In(f, ll)`
+  - 403 `ruBlockMsg(q)`
+  - 405 `ruMinSize(sp, p)`
+  - 419 `fjordLimits(p, H)`
+  - 446 `ruCtx()`
+  - 450 `ruNow()`
+  - 456 `ruLayerBlock(bx, by, q, budget)`
+  - 468 `ruWpQ(w)`
+  - 473 `ruWpMsg(w)`
+  - 480 `ruOpenNear(p, q, maxKm)`
+  - 489 `ruTips()`
 
 ## `src/js/core/03f-fiske.js` (386 linjer)
 
@@ -1761,7 +1762,7 @@ the snow crab aboard: the factory for the clusters and the live crab in the tank
 - **114** the trip of a snow crab vessel (tripLeft, 04-crew.js): the bait for the pots at the trip's pace (a pot baited at each setting, half
   - 117 `snoTrip(R, b, d)`
 
-## `src/js/core/09k-market.js` (191 linjer)
+## `src/js/core/09k-market.js` (194 linjer)
 
 Kystmegleren: boat sales between players (B1–B8 in docs/planer/etter-tonys-test.md; Jonas 07.11.2026, V4 A, V5 A, V6 A)
 
@@ -1773,21 +1774,21 @@ Kystmegleren: boat sales between players (B1–B8 in docs/planer/etter-tonys-tes
   - 38 `mbOpsOn(v)`
   - 41 `mbWhy(v)`
   - 55 `mbPack(v, yard)`
-  - 64 `mbCond(P)`
-  - 67 `mbUnpack(P, port)`
-  - 82 `mbLock(v, r, o, yard)`
-  - 89 `mbBuyWhy(L, kr0)`
-  - 98 `mbWishHits(list)`
-- **100** the quick sale (B4): to the broker for 90 % of her value, at once, from anywhere she lies in port; the loans are paid first
-  - 101 `mbQuickWhy(v)`
-  - 105 `mbDrop(v)`
-  - 112 `mbQuickSell(vid)`
-- **122** the ledger (broker_pending): every krone bound, given back or paid, every boat handed over, applied once (S.mkt.mb.done keeps
-  - 126 `mbApply(rows)`
-- **171** delivery (10.2b «Få henne levert»): a skipper from the yard sails a boat of yours that nobody is aboard to the port you choose, for
-  - 175 `mktDelWhy(v, to)`
-  - 176 `mktDeliver(vid, to)`
-  - 182 `mktHour(H)`
+  - 65 `mbCond(P)`
+  - 68 `mbUnpack(P, port)`
+  - 85 `mbLock(v, r, o, yard)`
+  - 92 `mbBuyWhy(L, kr0)`
+  - 101 `mbWishHits(list)`
+- **103** the quick sale (B4): to the broker for 90 % of her value, at once, from anywhere she lies in port; the loans are paid first
+  - 104 `mbQuickWhy(v)`
+  - 108 `mbDrop(v)`
+  - 115 `mbQuickSell(vid)`
+- **125** the ledger (broker_pending): every krone bound, given back or paid, every boat handed over, applied once (S.mkt.mb.done keeps
+  - 129 `mbApply(rows)`
+- **174** delivery (10.2b «Få henne levert»): a skipper from the yard sails a boat of yours that nobody is aboard to the port you choose, for
+  - 178 `mktDelWhy(v, to)`
+  - 179 `mktDeliver(vid, to)`
+  - 185 `mktHour(H)`
 
 ## `src/js/core/09l-sponsor.js` (31 linjer)
 
@@ -2119,12 +2120,12 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 125 `hullOrder(auto, b = S.boat)`
   - 140 `hullMended(j, b = S.boat)`
 
-## `src/js/ui/01-i18n.js` (118 linjer)
+## `src/js/ui/01-i18n.js` (120 linjer)
 
 the logo (src/brand/logo.svg, the user's anchor of 03.11.2026), filled with currentColor: the sign-in's gate (ui/10f-cloud.js) and the
 
 - **4** i18n
-  - 115 `t(k, ...a)`
+  - 117 `t(k, ...a)`
 
 ## `src/js/ui/02-format-state.js` (233 linjer)
 
@@ -2467,12 +2468,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1290 linjer)
+## `src/js/ui/phone/07-patch.js` (1296 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1283 `patch()`
+  - 1289 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2508,17 +2509,25 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
   - 134 `redning()`
 - **151** vessels: my vessel overview and the market
 
-## `src/js/ui/phone/10-fartoy.js` (183 linjer)
+## `src/js/ui/phone/10-fartoy.js` (310 linjer)
 
   - 14 `goals()`
-  - 33 `goalsCard()`
-- **38** the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
-  - 47 `mkCard(k, O)`
-  - 51 `market()`
-  - 78 `specSecs(k, O)`
-  - 102 `sheet(k, O)`
-  - 148 `fartoy(tab0)`
-- **182** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
+  - 39 `goalsCard()`
+- **44** «Båten og utstyret» (OPP4 of docs/planer/oppgraderinger.md, 07.11.2026; Jonas: «én side for båten og utstyret»: «enig»): every
+  - 58 `haulNow(kind)`
+  - 62 `haulNow0(kind)`
+  - 73 `tierLad(k, pg, fxOf)`
+  - 79 `oneLad(k, base, pg, fx)`
+  - 133 `ladders()`
+  - 137 `kitCard()`
+  - 138 `kitCard0()`
+- **162** the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
+  - 171 `mkCard(k, O)`
+  - 175 `market()`
+  - 202 `specSecs(k, O)`
+  - 226 `sheet(k, O)`
+  - 274 `fartoy(tab0)`
+- **309** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
 
 ## `src/js/ui/phone/11-rederi.js` (85 linjer)
 
@@ -2527,7 +2536,7 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
   - 45 `rederi()`
 - **84** equipment
 
-## `src/js/ui/phone/12-utstyr-redskap.js` (221 linjer)
+## `src/js/ui/phone/12-utstyr-redskap.js` (224 linjer)
 
 the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the shop's (electronics, haulers, the jigging machine and the clothes)
 
@@ -2541,7 +2550,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
   - 129 `careAboard(inPort, p)`
   - 156 `redskap(tab0)`
 
-## `src/js/ui/phone/13-mannskap-bank-meld.js` (176 linjer)
+## `src/js/ui/phone/13-mannskap-bank-meld.js` (182 linjer)
 
 --- crew
 
@@ -2560,7 +2569,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
 - **155** messages
   - 156 `meld()`
 - **163** actions
-  - 166 `switchVessel(k)`
+  - 170 `switchVessel(k)`
 
 ## `src/js/ui/phone/13b-nettet.js` (144 linjer)
 
@@ -2600,7 +2609,7 @@ Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-ton
   - 155 `mgAfter(key, okNo, okEn)`
   - 157 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (317 linjer)
+## `src/js/ui/phone/14-act.js` (320 linjer)
 
   - 2 `act(a, d)`
 - **8** the receipt after a buy for kroner (Jonas 06.11.2026, Tony's test: «Det skal ikke være tvil om et kjøp er gjennomført»): one
@@ -2833,7 +2842,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 433 `renderPanel()`
   - 437 `panelBusy()`
 
-## `src/js/ui/07b-first-trip.js` (304 linjer)
+## `src/js/ui/07b-first-trip.js` (321 linjer)
 
 ---------- «Første tur»: the guided first trip every new player goes through ----------
 
@@ -2855,30 +2864,32 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 203 `tutReveal(el)`
   - 209 `tutRect(T0)`
   - 215 `tutStep()`
-  - 221 `tutFinish()`
-  - 222 `tutScrollSlip()`
-  - 225 `tutAllow(what)`
-  - 243 `tutView(st)`
-  - 250 `tutUpdate()`
-  - 273 `tipPlace(txt, T0, o)`
-  - 298 `tipToast()`
+  - 227 `tutNormKg()`
+  - 233 `tutNormLog()`
+  - 238 `tutFinish()`
+  - 239 `tutScrollSlip()`
+  - 242 `tutAllow(what)`
+  - 260 `tutView(st)`
+  - 267 `tutUpdate()`
+  - 290 `tipPlace(txt, T0, o)`
+  - 315 `tipToast()`
 
-## `src/js/ui/07c-handbook.js` (252 linjer)
+## `src/js/ui/07c-handbook.js` (257 linjer)
 
 Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
 
 - **1** Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
   - 10 `hbState()`
-  - 182 `hbPick()`
-  - 190 `hbEv(id, how)`
-  - 191 `hbDone(id)`
-  - 192 `hbSkip(ch, id)`
-  - 194 `hbReady()`
-- **196** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
-  - 202 `appShown(id)`
-  - 209 `appUnlock(id)`
-  - 211 `appSeen(id)`
-  - 212 `hbUpdate()`
+  - 187 `hbPick()`
+  - 195 `hbEv(id, how)`
+  - 196 `hbDone(id)`
+  - 197 `hbSkip(ch, id)`
+  - 199 `hbReady()`
+- **201** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
+  - 207 `appShown(id)`
+  - 214 `appUnlock(id)`
+  - 216 `appSeen(id)`
+  - 217 `hbUpdate()`
 
 ## `src/js/ui/10g-wardrobe.js` (133 linjer)
 
@@ -2929,7 +2940,7 @@ actions
   - 32 `letterSound(kind)`
   - 44 `showLetter(done)`
 
-## `src/js/ui/08c-start.js` (167 linjer)
+## `src/js/ui/08c-start.js` (166 linjer)
 
 «Hvor står fars naust?»: where a new game starts (05.10.2026)
 
@@ -2939,9 +2950,9 @@ actions
   - 47 `startRing(pt)`
   - 48 `startWx(pt, H0)`
   - 56 `showStart(done)`
-  - 119 `tutMixAt(q, H, len, land)`
-  - 129 `tutFieldNear(pt, land)`
-  - 152 `chooseStart(pt, onProgress)`
+  - 118 `tutMixAt(q, H, len, land)`
+  - 128 `tutFieldNear(pt, land)`
+  - 151 `chooseStart(pt, onProgress)`
 
 ## `src/js/ui/09-hand-fishing.js` (59 linjer)
 
