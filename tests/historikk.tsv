@@ -807,3 +807,6 @@
 2026-11-07 13:05	ccr-fc7a11b2-nl5jor	0e1f99c3	trip2	OK	39	lite	samtidig	
 2026-11-07 13:06	ccr-fc7a11b2-nl5jor	0e1f99c3	docktest	OK	60	lite	alene	
 2026-11-07 15:23	ccr-dc24762d-iyuakj	997edc80+	booktest	OK	23	lite	alene	
+2026-11-07 15:32	HEAD	103e1d73	tut	OK	567	lite	alene	
+2026-11-07 15:35	HEAD	103e1d73	starttest	OK	81	lite	samtidig	
+2026-11-07 15:35	HEAD	103e1d73	tutdrift	OK	6	lite	samtidig	
