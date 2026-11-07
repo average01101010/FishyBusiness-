@@ -441,3 +441,11 @@
 2026-11-07 01:18	ccr-67e5a499-sxgchb	55f1bbb5+	docktest	OK	63	lite	samtidig	
 2026-11-07 01:18	ccr-67e5a499-sxgchb	55f1bbb5+	friendtest	OK	9	lite	samtidig	
 2026-11-07 01:19	ccr-67e5a499-sxgchb	55f1bbb5+	uishots	OK	81	lite	samtidig	
+2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	starttest	OK	137	lite	samtidig	
+2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	trip2	OK	37	lite	samtidig	
+2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	seasontest	OK	7	lite	samtidig	
+2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	havtur	FEIL	0	lite	samtidig	FEIL hele kysten mangler i tools/map/out/game (release.py og game.py)
+2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	maletest	OK	20	lite	samtidig	
+2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	regnrtest	OK	15	lite	samtidig	
+2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	sqltest	FEIL	36	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-07 01:40	ccr-04f41d1f-p26bxn	4edaa996+	coast3d	FEIL	579	3d	alene	FEIL off Tromsø the coast's lights are there in 3D at night {'inR': 0, 'on': 0, 'sec': 0}

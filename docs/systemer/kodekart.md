@@ -904,20 +904,21 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 253 `startReturn(auto, W, home, hsOver, opsKeep)`
 - **273** CORE END
 
-## `src/js/core/06b-coastports.js` (160 linjer)
+## `src/js/core/06b-coastports.js` (166 linjer)
 
 the fish receivers along the whole coast as harbours (05.10.2026, M2 of the coast plan)
 
 - **1** the fish receivers along the whole coast as harbours (05.10.2026, M2 of the coast plan)
 - **19** the registration mark (Malerverkstedet, 07.10.2026): the county's letters, a serial number and the municipality's letters,
-  - 28 `regLetters(pt)`
-  - 34 `regUsed(f, k, n)`
-  - 35 `regOf(b)`
-  - 50 `callFree(p, n)`
-  - 51 `callOf(b)`
-  - 131 `plantsNear(p, n = 10)`
-- **137** the ocean vessels at the plants (H0 of docs/planer/havsteget.md, 03.11.2026)
-  - 144 `portWhy(pt, type)`
+  - 30 `regLetters(pt)`
+  - 36 `regUsed(f, k, n)`
+  - 37 `regOf(b)`
+  - 43 `regDraw(e)`
+  - 56 `callFree(p, n)`
+  - 57 `callOf(b)`
+  - 137 `plantsNear(p, n = 10)`
+- **143** the ocean vessels at the plants (H0 of docs/planer/havsteget.md, 03.11.2026)
+  - 150 `portWhy(pt, type)`
 
 ## `src/js/core/06c-steder.js` (44 linjer)
 
@@ -3120,18 +3121,15 @@ THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/func
   - 104 `shopClaim()`
   - 127 `shopStart()`
 
-## `src/js/ui/10j-paint.js` (246 linjer)
+## `src/js/ui/10j-paint.js` (215 linjer)
 
 THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
 
 - **1** THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
-  - 184 `logoSet(L)`
-  - 192 `logoCheck()`
-  - 200 `giveCos(k)`
-  - 213 `regSet(n, paid)`
-  - 228 `regKeep()`
-  - 229 `regTaken(mark, paid)`
-  - 238 `regFree(mark, keep, paid)`
+  - 180 `logoSet(L)`
+  - 188 `logoCheck()`
+  - 196 `giveCos(k)`
+  - 210 `regSet(n)`
 
 ## `src/js/ui/10q-buymoment.js` (36 linjer)
 
