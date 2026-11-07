@@ -945,3 +945,37 @@
 2026-11-07 15:46	plan/2026-11-07-opp4	9e818532	hbtest	FEIL	17	lite	samtidig	FEIL liggende: the search narrows the list to the tip that matches  {"tips": 2, "first": "Diesel"}
 2026-11-07 15:46	plan/2026-11-07-opp4	9e818532+	hbtest	OK	15	lite	alene	
 2026-11-07 15:48	plan/2026-11-07-opp4	9e818532+	opptest	OK	42	lite	alene	
+2026-11-07 16:03	ccr-6e84b098-t2tu38	b763342c	selltest	LES	22	lite	samtidig	
+2026-11-07 16:03	ccr-6e84b098-t2tu38	b763342c	shoptest	OK	37	lite	samtidig	
+2026-11-07 16:03	ccr-6e84b098-t2tu38	b763342c	vesseltest	OK	30	lite	samtidig	
+2026-11-07 16:03	ccr-6e84b098-t2tu38	b763342c	fuelcal	OK	15	lite	samtidig	
+2026-11-07 16:03	ccr-6e84b098-t2tu38	b763342c	bktest	OK	6	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	opptest	OK	62	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	skattetest	OK	7	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	lotttest	OK	9	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	boktest	OK	9	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	keeptest	OK	14	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	decktest	OK	13	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	simday	LES	13	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	calib	LES	14	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	tidetest	OK	6	lite	samtidig	
+2026-11-07 16:05	ccr-6e84b098-t2tu38	b763342c	climtest	OK	14	lite	samtidig	
+2026-11-07 16:05	ccr-6e84b098-t2tu38	b763342c	yardupgtest	OK	14	lite	samtidig	
+2026-11-07 16:05	ccr-6e84b098-t2tu38	b763342c	posttest	OK	24	lite	samtidig	
+2026-11-07 16:05	ccr-6e84b098-t2tu38	b763342c	turtest	OK	17	lite	samtidig	
+2026-11-07 16:06	ccr-6e84b098-t2tu38	b763342c	fixtest	OK	41	lite	samtidig	
+2026-11-07 16:06	ccr-6e84b098-t2tu38	b763342c	fleet3test	OK	14	lite	samtidig	
+2026-11-07 16:06	ccr-6e84b098-t2tu38	b763342c	opsowntest	OK	41	lite	samtidig	
+2026-11-07 16:06	ccr-6e84b098-t2tu38	b763342c	seasontest	OK	6	lite	samtidig	
+2026-11-07 16:06	ccr-6e84b098-t2tu38	b763342c	haillplass	OK	6	lite	samtidig	
+2026-11-07 16:06	ccr-6e84b098-t2tu38	b763342c	snokrabbetest	OK	14	lite	samtidig	
+2026-11-07 16:06	ccr-6e84b098-t2tu38	b763342c	autolinetest	OK	10	lite	samtidig	
+2026-11-07 16:07	ccr-6e84b098-t2tu38	b763342c	geartest	OK	37	lite	samtidig	
+2026-11-07 16:07	ccr-6e84b098-t2tu38	b763342c	booktest	OK	29	lite	samtidig	
+2026-11-07 16:07	ccr-6e84b098-t2tu38	b763342c	caretest	OK	15	lite	samtidig	
+2026-11-07 16:07	ccr-6e84b098-t2tu38	b763342c	jigalongtest	OK	15	lite	samtidig	
+2026-11-07 16:08	ccr-6e84b098-t2tu38	b763342c	docktest	OK	62	lite	samtidig	
+2026-11-07 16:08	ccr-6e84b098-t2tu38	b763342c	seaworktest	OK	5	lite	samtidig	
+2026-11-07 16:08	ccr-6e84b098-t2tu38	b763342c	nettest	OK	27	lite	samtidig	
+2026-11-07 16:08	ccr-6e84b098-t2tu38	b763342c	itemcardtest	FEIL	15	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'linesetter', 'garnrenne', 'jukse', 'krabbekar', 'brova
+2026-11-07 16:08	ccr-6e84b098-t2tu38	b763342c	itemcardtest	FEIL	15	lite	alene	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'jukse', 'krabbekar', 'brovakt', 'ais', 'plotter', 'rad

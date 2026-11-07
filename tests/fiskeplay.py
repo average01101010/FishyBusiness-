@@ -696,7 +696,7 @@ def _opp2(kind, lv):
         sp = await to_sea(pl, 'botnhamn', 10, 40, 140, 'hyse', 'a haddock spot off Senja') if kind == 'line' else await to_sea(pl, 'gryllefjord', 10, 30, 120, 'torsk', 'a cod spot off Gryllefjord')
         if not sp: return
         tag = kind + str(lv)
-        if not await set_out(pl, 'hyseline' if kind == 'line' else '180', tag): return
+        if not await set_out(pl, 'hyseline' if kind == 'line' else '180', tag, drag_land=True): return   # (turned away from the nearest land)
         await soak(pl, 12 if kind == 'line' else 18, tag); await haul(pl, tag)
         r = json.loads(await pl.js("JSON.stringify(Object.assign({}, window.__opp, {eq:{lh:equipLv('linehalerLv'), gh:equipLv('garnhalerLv'), ho:S.equip.hott, ls:S.equip.linesetter ? equipLv('linesetterLv') : 0, gr:S.equip.garnrenne || 0}, crew:crewAboard().length}))"))
         if r.get('s1') is not None and r.get('s0') is not None: r['setMin'] = r['s1'] - r['s0']; r['setPer'] = round(r['setMin'] / max(1, r.get('sn') or 1), 2)
