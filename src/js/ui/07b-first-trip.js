@@ -222,10 +222,11 @@ function tutStep(){
 // ordinary fishing leaves the drawer four game hours after the sale, so the same line with the same N goes into the log (Drift) when the
 // first trip is done, where a player who wonders after trip 2 finds it. N is the landed catch times the stock's own share of the density
 // on the field (S.tut.fk, summed in fish(), core/05-vessels.js) per fishing hour, rounded to 10 kg, as in portSlip (ui/07-guide.js);
-// no line when it is not known (a save from before S.tut.fk, or no landing at the first trip's plant). Both texts in ui/01-i18n.js
+// no line when it is not known (a save from before S.tut.fk, or no landing yet). The first trip can only land at its own plant
+// (tutAllow: «sell» on the step «land», the route home must end at tutLand()), so the last sale is the one the slip shows. Texts: ui/01-i18n.js
 function tutNormKg(){
   const F = S.tut && S.tut.fk, ls = S.lastSale;
-  if (!F || !(F.d > 0) || !ls || !Array.isArray(ls.lines) || ls.port !== tutLand()) return null;
+  if (!F || !(F.d > 0) || !ls || !Array.isArray(ls.lines)) return null;
   const kg = ls.lines.reduce((a, r) => a + (r.kg || 0), 0);
   return Math.round(kg * Math.max(0, (F.d - F.t) / F.d) / TUT_FISH_H / 10) * 10;
 }
