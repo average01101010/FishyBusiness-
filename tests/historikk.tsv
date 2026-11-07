@@ -403,3 +403,6 @@
 2026-11-06 23:39	ccr-ccfb0017-rmieib	731e4792+	docktest	FEIL	62	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
 2026-11-06 23:39	ccr-ccfb0017-rmieib	731e4792+	routetest	OK	44	lite	alene	
 2026-11-06 23:41	ccr-ccfb0017-rmieib	731e4792+	docktest	OK	61	lite	alene	
+2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	docktest	OK	62	lite	samtidig	
+2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	searchtest	OK	9	lite	samtidig	
+2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	hudtest	OK	25	lite	samtidig	
