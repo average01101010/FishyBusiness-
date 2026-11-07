@@ -150,11 +150,15 @@ function speedPin(){
 // fishing effort per person: a hand jig (pilk and four fly hooks; there is no rod, and without a jig nobody fishes by hand); an
 // electric jigging reel does about twice what a hand jig does, and one person tends up to three reels instead of jigging by hand.
 // The hand jig and the reels are twice what they were (the user's test 04.10.2026: 350 kg in nine game hours was a long day for little money)
-const JIG = {hand:2, machine:4.0, perPerson:3};
-function effortOf(people, jk, hand){ return Math.max(0, people - Math.ceil(jk / JIG.perPerson)) * hand + jk * JIG.machine; }
+// The reels one person tends follow the boat's tier of reels (OPP2 of docs/planer/oppgraderinger.md, V1 A, Jonas 07.11.2026: «A»): three
+// as bought, four with auto-stop, five with a display and counting (EQUIP.jukseLv tend); a reel fishes as before (machine). jigPer(eq,
+// type) asks for a boat; JIG.perPerson is the boat bound now, so the callers outside the core (the dock's fan, the trips) follow it too
+const JIG = {hand:2, machine:4.0, get perPerson(){ return jigPer(); }};
+function jigPer(eq, type){ return equipTier('jukseLv', eq, type).tend; }
+function effortOf(people, jk, hand, per = jigPer()){ return Math.max(0, people - Math.ceil(jk / per)) * hand + jk * JIG.machine; }
 function fishEffort(){
   // the people at the rail: those whose chain has them fishing (as if the boat were jigging where it lies)
-  const hand = S.boat && S.boat.gear ? JIG.hand : 0, F = workTeam('fiske', 'juksa', 'fishing'), people = F.n, jk = Math.min(S.equip ? S.equip.jukse : 0, people * JIG.perPerson);
+  const hand = S.boat && S.boat.gear ? JIG.hand : 0, F = workTeam('fiske', 'juksa', 'fishing'), people = F.n, jk = Math.min(S.equip ? S.equip.jukse : 0, people * jigPer());
   if (S.plan && S.plan.ops && !meAboard()){ const sk = opsSkipper(); return effortOf(people, jk, hand) * (sk ? sk.skill : 0.8) * 0.9; }
   return effortOf(people, jk, hand) * F.eff;
 }
@@ -162,8 +166,8 @@ function fishEffort(){
 // aboard, have no hand jig, or tend the reels
 function jigMeShare(){
   const b = S.boat; if (!b || !b.gear || !meAboard()) return 0;
-  const F = workTeam('fiske', 'juksa', 'fishing'), jk = Math.min(S.equip ? S.equip.jukse : 0, F.n * JIG.perPerson);
-  if (F.n - Math.ceil(jk / JIG.perPerson) < 1) return 0;
+  const F = workTeam('fiske', 'juksa', 'fishing'), per = jigPer(), jk = Math.min(S.equip ? S.equip.jukse : 0, F.n * per);
+  if (F.n - Math.ceil(jk / per) < 1) return 0;
   const tot = effortOf(F.n, jk, JIG.hand) * F.eff; return tot > 0 ? clamp(JIG.hand * meEff() / tot, 0, 1) : 0;
 }
 const GM = {E:1.05, A:1.0, B:0.85, X:0.6, V:0};

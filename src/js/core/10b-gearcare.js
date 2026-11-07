@@ -38,7 +38,14 @@ const lineQ = s => clamp(1 - (s.miss || 0) - 0.5 * (s.bent || 0), 0.1, 1) * (0.8
 const potQ = s => 0.6 + 0.4 * (s.cond == null ? 1 : s.cond);
 function jigKind(){ return S.target === 'kveite' && S.boat.kgear ? 'kveite' : 'mark'; }
 function jigQ(){ const pg = S.pgear; if (!pg || !pg.jig) return 1; return 0.65 + 0.35 * pg.jig[jigKind()].c; }
-function jigWear(){ const pg = S.pgear; if (!pg || !pg.jig) return; const k = jigKind(), J = pg.jig[k]; J.c = Math.max(0, J.c - CARE.jig[k].wear); }   // (not rounded: the wear of a minute is smaller than the rounding)
+// (OPP2) better hooks and pilk (EQUIP.juksesett tier 2) wear half as fast: the tier's share off the wear, as a share of the base (upgSum)
+function jigWear(){ const pg = S.pgear; if (!pg || !pg.jig) return; const k = jigKind(), J = pg.jig[k]; J.c = Math.max(0, J.c - CARE.jig[k].wear * upgSum(-equipTier('juksesett').wear)); }   // (not rounded: the wear of a minute is smaller than the rounding)
+// what a jig set costs the boat now: half again with the better hooks and pilk (EQUIP.juksesett pc), so a tier-2 boat buys tier-2 sets
+function jigKr(k){ return Math.round(CARE.jig[k].kr * upgSum(equipTier('juksesett').pc || 0)); }
+// the jig sets aboard at their base price (the one mounted of each kind in use, and the spares), which the tier's half is reckoned on:
+// the fly hooks and pilk mounted when the boat jigs (a hand jig or reels), the halibut pilk with the halibut gear
+function jigSetsKr(pg = S.pgear, b = S.boat){ const J = (pg && pg.jig) || {mark:{n:0}, kveite:{n:0}}, jigs = !!(b && b.gear) || ((S.equip && S.equip.jukse) || 0) > 0;
+  return CARE.jig.mark.kr * ((jigs ? 1 : 0) + (J.mark.n || 0)) + CARE.jig.kveite.kr * ((b && b.kgear ? 1 : 0) + (J.kveite.n || 0)); }
 
 // ---- wear in one haul (what the string looks like when it comes back): used by finishHaul and a stopped haul
 function wearOf(s, g){
@@ -72,7 +79,7 @@ function careBuy(what, spec, n){
   const sv = portServices(portById(b.port), berthKind(b)); if (!sv.butikk) return [gL('Redskap kjøper du i utstyrsbutikken.', 'You buy gear in the tackle shop.')];
   let cost = 0;
   if (what === 'hooks'){ if (!CARE.hookKr[spec]) return [gL('Ukjent krokpakke.', 'Unknown hook pack.')]; cost = CARE.hookKr[spec] * n; }
-  else if (what === 'jig'){ if (!CARE.jig[spec]) return [gL('Ukjent juksautstyr.', 'Unknown jig tackle.')]; cost = CARE.jig[spec].kr * n; }
+  else if (what === 'jig'){ if (!CARE.jig[spec]) return [gL('Ukjent juksautstyr.', 'Unknown jig tackle.')]; cost = jigKr(spec) * n; }
   else return null;
   if (cost > spendable()) return [gL('Ikke nok penger.', 'Not enough money.')];
   book('redskap', -cost, what === 'hooks' ? 'Kroker' : 'Juksautstyr', what === 'hooks' ? 'Hooks' : 'Jig tackle'); if (what === 'jig') tripAdd(b, 'jigKr', cost);   // the jig's gear is a common cost (§ 8 B 19)
@@ -206,7 +213,7 @@ function sellValue(what, key, n){
   if (what === 'pot') return Math.round(POTS[potK()].price * CARE.sellF * (0.2 + 0.8 * pg.potc.cond) * n);
   if (what === 'kit') return Math.round(GPRICE.kit * CARE.sellF * n);
   if (what === 'heavy') return Math.round(GPRICE.heavy * CARE.sellF * n);
-  if (what === 'jig') return Math.round(CARE.jig[key].kr * CARE.sellF * n);
+  if (what === 'jig') return Math.round(jigKr(key) * CARE.sellF * n);
   if (what === 'hooks') return Math.round(CARE.hookKr[100] / 100 * 0.2 * n);
   return 0;
 }
