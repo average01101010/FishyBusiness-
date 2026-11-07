@@ -59,7 +59,9 @@ const HUDMQ = typeof matchMedia === 'function' ? matchMedia('(orientation: portr
 const hudPortrait = () => !!(HUDMQ && HUDMQ.matches);
 // the strip's second line: diesel, hold, energy and sea as an icon (the dock's stroke icons' kin) and a figure
 const HICON = {fuel:'<svg viewBox="0 0 24 24"><path d="M5 20V5.5A1.5 1.5 0 0 1 6.5 4h6A1.5 1.5 0 0 1 14 5.5V20"/><path d="M4 20h11"/><path d="M7 7.5h5V12H7z"/><path d="M14 11h2a2 2 0 0 1 2 2v3.5a1.5 1.5 0 0 0 3 0V9l-2.5-2.5"/></svg>',
-  hold:'<svg viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></svg>',
+  // the hold: a fish (Jonas 07.11.2026: «gjør ikonet som står for last i statusboksen om til en fisk. Det er mye mer forståelig»; the box
+  // before was Om bord's button in the dock): the body as two arcs that cross into the tail, and the eye
+  hold:'<svg viewBox="0 0 24 24"><path data-fish d="M22.5 12Q15.5 1.5 8.5 12L2.5 17.5v-11L8.5 12Q15.5 22.5 22.5 12z"/><circle cx="17" cy="10.3" r="1.5" fill="currentColor" stroke="none"/></svg>',
   en:'<svg viewBox="0 0 24 24"><path d="M13 2.5L5 13.5h6L10 21.5l9-11h-6z"/></svg>',
   sea:'<svg viewBox="0 0 24 24"><path d="M2 10c3.3-1.6 6.7-1.6 10 0s6.7 1.6 10 0"/><path d="M2 16c3.3-1.6 6.7-1.6 10 0s6.7 1.6 10 0"/></svg>',
   // the bleeding tub (Tony 06.11.2026): a tub with its water line
@@ -152,15 +154,15 @@ function renderHud(){
   if (strip && !card){
     // the strip (U2-1; before it, Jonas 05.10.2026: «bare basisinformasjonen vises på en tynn stripe»): three lines of fixed height.
     // 1: the clock, the state with its dot, the till. 2: diesel, hold, energy and sea as an icon and a figure, coloured when they warn.
-    // 3: hudLine3. A tap gives the whole box as a card over the chart; on its side, where the whole box is the normal state, «+» opens
-    // it again for good
+    // 3: hudLine3. Upright a tap gives the whole box as a card over the chart; on its side, where the whole box is the normal state, a
+    // tap opens it again for good, and the strip has no «+» (Jonas 07.11.2026: «Fjern plusstegnet fra den øverste statusboksen slik at
+    // den fungerer bare ved å trykke på stripa»: it stood on the sea's figure, and the little chart's «+» stands to the left)
     // a phone upright (47 vw, as wide as the little chart, Jonas 06.11.2026): the figures without their units (the icons say what they
     // are; the card has them whole), and «I havn» without the place, which stands on line 3
     const narrow = up && window.innerWidth <= 560;
     const g2 = (k, f, lbl) => '<span class="g2 g-' + k + (f.cls ? ' ' + f.cls : '') + '" title="' + lbl + '">' + HICON[k] + '<b>' + (narrow ? (f.tiny || f.short || f.txt) : (f.short || f.txt)) + '</b></span>';
     const stTxt = narrow && b.status === 'port' && !b.land && !b.shift && !b.fueling && !(S.plan && S.plan.depAt) ? L('I havn', 'In port') : statusText();
-    setHtml(hud, '<div class="hs1' + (up ? '' : ' wb') + '"><span class="ht">' + hm(H) + '</span><i class="dot ' + dot + '"></i><span class="hs">' + stTxt + '</span><b class="hc' + (S.cash < 0 ? ' r2' : '') + '">' + kr(cashShown()) + '</b>' +
-      (up ? '' : '<button type="button" class="hmin" data-hmin="hud" aria-label="' + L('Vis hele boksen', 'Show the whole box') + '">+</button>') + '</div>' +
+    setHtml(hud, '<div class="hs1"><span class="ht">' + hm(H) + '</span><i class="dot ' + dot + '"></i><span class="hs">' + stTxt + '</span><b class="hc' + (S.cash < 0 ? ' r2' : '') + '">' + kr(cashShown()) + '</b></div>' +
       '<div class="hs2">' + g2('fuel', F.fuel, 'Diesel') + g2('hold', F.hold, L('Last', 'Hold')) + (F.kar.on ? g2('kar', F.kar, L('Bløggekar', 'Bleeding tub')) : '') + g2('en', F.en, L('Energi', 'Energy')) + g2('sea', F.sea, L('Sjø', 'Sea')) + '</div>' + hudLine3('strip'));
   } else {
   // «Kystlys» U3 (docs/planer/ui-redesign.md, V5 A, 04.11.2026): the status box is instruments, not a table of eleven rows. Four gauges
@@ -199,16 +201,13 @@ function renderHud(){
     (streakPct() > 0 ? '<div class="row"><span>Bonus</span><b>+' + fmt(streakPct(), 0) + ' %</b></div>' : '') +
     (S.bank && (S.bank.skatt >= 1 || S.bank.spare >= 1) ? '<div class="row"><span>' + L('Skatt · spart', 'Tax · saved') + '</span><b>' + kr(Math.round(S.bank.skatt)) + ' · ' + kr(Math.round(S.bank.spare)) + '</b></div>' : '') + '</div>';
   setHtml(hud, '<div class="hd"><span>' + dayStr(H) + ' ' + hm(H) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(cashShown()) + '</b>' +
-    (card ? '<button type="button" class="hmin" data-hcard aria-label="' + L('Lukk', 'Close') + '">✕</button>' : '<button type="button" class="hmin" data-hmin="hud" aria-label="' + L('Minimer', 'Minimise') + '">–</button>') + '</div>' +
+    (card ? '<button type="button" class="hmin" data-hcard aria-label="' + L('Lukk', 'Close') + '">✕</button>' : '') + '</div>' +   // (no «–» on the whole box: a tap on it folds it, Jonas 07.11.2026)
     '<div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + hudLine3(card ? 'card' : 'box') + gauges + (now.length ? '<div class="hnow">' + now.join('') + '</div>' : '') + full);
   }
   // the compass and the plotter's instruments take their room from the box (--hudW, --gpsTop): measured when its content has changed and
   // every 2 s (setting them on the chart's parent every tick restyled the whole chart), never while the card is open (it is wider, and
   // nothing under it moves). In 3D the little chart has a fixed place of its own (styles.css, U2-1), whatever the box's height
-  if (!card && (hud.dataset.v !== hudV || performance.now() - hudT > 2000)){ hudV = hud.dataset.v; hudT = performance.now(); requestAnimationFrame(() => { const mw = $('mapwrap').style, hr = hud.getBoundingClientRect(), top = Math.round(hr.bottom - $('mapwrap').getBoundingClientRect().top + 6) + 'px', w = Math.round(hr.width) + 'px'; if (mw.getPropertyValue('--gpsTop') !== top) mw.setProperty('--gpsTop', top); if (mw.getPropertyValue('--hudW') !== w) mw.setProperty('--hudW', w);
-    // on its side the little chart stands under the box's reserved height (--bH), or under the box itself when it is taller (more «now» rows:
-    // the hull, the buoy, the stability; Jonas 07.11.2026: «Hater at disse boksene overlapper hverandre»): --bHm is the larger of the two
-    const bh = parseFloat(getComputedStyle(document.body).getPropertyValue('--bH')) || 0, bhm = Math.round(Math.max(bh, hr.height)) + 'px'; if (bh && mw.getPropertyValue('--bHm') !== bhm) mw.setProperty('--bHm', bhm); }); }
+  if (!card && (hud.dataset.v !== hudV || performance.now() - hudT > 2000)){ hudV = hud.dataset.v; hudT = performance.now(); requestAnimationFrame(() => { const mw = $('mapwrap').style, hr = hud.getBoundingClientRect(), top = Math.round(hr.bottom - $('mapwrap').getBoundingClientRect().top + 6) + 'px', w = Math.round(hr.width) + 'px'; if (mw.getPropertyValue('--gpsTop') !== top) mw.setProperty('--gpsTop', top); if (mw.getPropertyValue('--hudW') !== w) mw.setProperty('--hudW', w); }); }   // (on its side the chart stands on top since 07.11.2026, so the box's height (--bHm) is not measured for it any more)
 }
 // position/heading between simulation steps, so instruments and 3D move smoothly
 function liveFrac(){ return clamp(acc + (wallNow() - lastWall) / 1000 * simRate() / 60, 0, 0.999); }
@@ -301,17 +300,20 @@ const INSTR = (() => {
   document.addEventListener('visibilitychange', () => { if (!document.hidden) show(); });
   return {show, renderGPS, echoOn};
 })();
-// a tap in the box: «Kjør dit» to the buoy, the fold and the card, the whole table, the rules line (the Regler app); on the strip itself,
-// the whole box as a card (U2-1)
+// a tap in the box: «Kjør dit» to the buoy, the card's ✕, the whole table, the rules line (the Regler app); on the strip itself, the whole
+// box as a card upright (U2-1), and on its side the whole box again (the strip there is the box folded); and on its side a tap anywhere
+// else on the whole box folds it to the strip (Jonas 07.11.2026: «Fjern plusstegnet fra den øverste statusboksen slik at den fungerer
+// bare ved å trykke på stripa», and of the box's «–»: «Du har ikke fjernet dette minustegnet»), but not in the first trip, where a tap on
+// the box does nothing as before (the guide's rings stand round its third line)
 hud.addEventListener('click', e => {
   const go = e.target.closest('[data-hgo]'); if (go){ e.stopPropagation(); if (go.dataset.hgo === 'yard'){ hudGoYard(); return; } const s = mySets().find(x => String(x.id) === go.dataset.hgo); if (s) DOCK.goTo(s); return; }
   if (e.target.closest('[data-hrest]')){ e.stopPropagation(); hudCardOpen(false); doAct({dataset:{act:'rest'}, disabled:false}); return; }   // the bunk from the box (U2-2)
-  if (e.target.closest('[data-hmin]')){ e.stopPropagation(); hudFold('hud'); return; }
   if (e.target.closest('[data-hcard]')){ e.stopPropagation(); hudCardOpen(false); return; }
   if (e.target.closest('[data-hfull]')){ e.stopPropagation(); S.settings.hudFull = !S.settings.hudFull; save(); renderHud(); return; }
   if (e.target.closest('.rlink')){ PHONE.open('regler'); return; }
   if (document.body.classList.contains('hudcard')){ e.stopPropagation(); hudCardOpen(false); return; }   // a tap on the card itself closes it, as the ✕ does
-  if (document.body.classList.contains('hudstrip')){ e.stopPropagation(); hudCardOpen(true); }
+  if (document.body.classList.contains('hudstrip')){ e.stopPropagation(); if (!hudPortrait() && S.settings.hudMin) hudFold('hud'); else hudCardOpen(true); return; }
+  if (!hudPortrait() && document.body.classList.contains('v3d') && !tutOn() && !e.target.closest('button,a,input,select,label')){ e.stopPropagation(); hudFold('hud'); }
 });
 // the card over the chart: a tap outside or on the card closes it (as the dock's fans close), so do Escape and a turn of the screen,
 // and the first trip when it points at something under it (07b-first-trip.js tutTip)

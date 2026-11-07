@@ -723,15 +723,15 @@ body.v3d #gps3d:not([hidden]){display:block;position:absolute;z-index:4;left:8px
 /* folding the boxes (S.settings.hudMin, plotMin; 04-panels-instruments.js hudFold) and «Vis HUD» off (hudOff) */
 #hud{--hz:1} #hud .hmin,#plotMin{flex:none;width:calc(44px / var(--hz,1));height:calc(44px / var(--hz,1));margin:0;padding:0;border:0;color:#fff;font:700 calc(15px / var(--hz,1))/1 var(--sans);text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;
   background:radial-gradient(circle,rgba(6,16,24,.85) 0 calc(11px / var(--hz,1)),rgba(255,255,255,.32) calc(11px / var(--hz,1)) calc(12px / var(--hz,1)),transparent calc(12.5px / var(--hz,1)))}   /* a finger's target of 44 px (UI 2, U2-1, K7) round a small disc */
-#hud .hmin{pointer-events:auto} #hud .hd{padding-right:calc(30px / var(--hz,1))} #hud .hd .hmin{position:absolute;top:calc(-6px / var(--hz,1));right:calc(-5px / var(--hz,1));margin:0}
+#hud .hmin{pointer-events:auto} body.hudcard #hud .hd{padding-right:calc(30px / var(--hz,1))} #hud .hd .hmin{position:absolute;top:calc(-6px / var(--hz,1));right:calc(-5px / var(--hz,1));margin:0}
 /* the strip (UI 2, U2-1, docs/planer/ui-2-staaende.md 4.2, 06.11.2026): three lines of fixed height. 1: the clock, the state with its
    dot, the till; 2: diesel, hold, energy and sea as an icon and a figure, coloured when they warn; 3: the next event or the warning
    that applies now (.st.nx, the first trip's target), the deck's kg at its end. A tap on it gives the whole box as a card */
 body.hudstrip #hud,body.hudcard #hud{pointer-events:auto}
+@media (orientation:landscape){body.v3d #hud{pointer-events:auto;cursor:pointer}}   /* on its side a tap on the whole box folds it (no «–» since 07.11.2026); the 3D view is not dragged through its corner, as through the strip */
 body.hudstrip #hud{cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;height:60px;min-width:0!important;padding:5px 9px 5px!important}
 #hud .hs1,#hud .hs2{display:flex;align-items:center;gap:6px;white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.2}
 #hud .hs1{font-size:12px} #hud .hs1 .ht{flex:none;color:rgba(230,240,245,.78)} #hud .hs1 .hs{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:650} #hud .hs1 .hc{flex:none;color:#fff;font-weight:700}
-#hud .hs1.wb{padding-right:30px}   /* room for «+» on its side, where the whole box is the normal state */
 body.hudstrip #hud .hmin{position:absolute;top:0;right:0}
 #hud .hs2{justify-content:space-between;gap:4px;font-size:11px}
 #hud .g2{display:inline-flex;align-items:center;gap:3px;min-width:0;color:var(--t-on-dark)} #hud .g2 svg{width:12px;height:12px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.85} #hud .g2 b{font-weight:700;white-space:nowrap}
@@ -1641,11 +1641,11 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 @media (orientation:landscape){body.dk-open #toast{left:calc((100% - min(380px,92vw)) / 2);max-width:calc(100% - min(380px,92vw) - 24px)}}
 
 /* ---------- UI 2, U2-1: the fixed zones in 3D (docs/planer/ui-2-staaende.md 4.1, 06.11.2026; V1 A: the phone upright is the measure) ----------
-   The strip (or the box) has a fixed width, and the little chart a fixed place under it, not --gpsTop from the box's height: upright
-   under the strip (the phone under the compass line, the tablet beside it); on its side (a tablet, a PC) under the whole box's reserved
-   height, or under the strip when the box is folded (hudmin). A box taller than its reserve (the whole table open, many «now» rows)
-   pushes the chart down under itself (--bHm, measured by renderHud; before 07.11.2026 it lay over the chart's top edge). The card is wider and lies over the chart. A phone on its side keeps the GPS box under the measured
-   box as before (max-height 520). The plotter's instruments (#instr) still take --gpsTop, measured as before */
+   The strip (or the box) has a fixed width, and the little chart a fixed place on top of it, not --gpsTop from the box's height: upright
+   the chart on top and the strip under it (the phone under the compass line); on its side (a tablet, a PC) the same since 07.11.2026, the
+   chart on top and the whole box (or the strip) under it (before, the box stood on top and pushed the chart down, --bHm). The card is
+   wider. A phone on its side keeps the GPS box under the measured box as before (max-height 520). The plotter's instruments (#instr)
+   still take --gpsTop, measured as before */
 body.v3d #hud{z-index:6} body.v3d #plotMin{z-index:7}   /* (the chart's fold button stays reachable under a box taller than its reserve) */
 @media (orientation:portrait){
   /* upright (Jonas 06.11.2026, after the first strip: «B, det må være symmetri og harmoni med kartplotteren», and the chart on top): the
@@ -1667,18 +1667,19 @@ body.v3d #hud{z-index:6} body.v3d #plotMin{z-index:7}   /* (the chart's fold but
   body.v3d.hudcard #hud{width:calc(100vw - 70px)}   /* clear of the camera buttons at the right */
 }
 @media (orientation:landscape) and (min-height:521px){
-  body.v3d{--bTop:calc(env(safe-area-inset-top,0px) + 8px);--bW:270px;--bH:196px;--sH:62px}   /* (196: the box while she fishes, the next event on two lines and the deck's kg; 270: the gauges' figures and «Fremme i …») */
-  body.v3d #hud{width:var(--bW);max-width:none;min-width:0!important;box-sizing:border-box}
+  /* on its side too the little chart stands at the top and the box under it (Jonas 07.11.2026: «jeg sa at kartet alltid skulle være den
+     øverste boksen»; until then the whole box stood on top here, left to U2-8): the chart --bW wide and --mH high at the top, its GPS strip
+     (--gH) there when it is folded, and the box (or the strip, when it is folded) right under either, growing downwards over the 3D view,
+     so a box taller than its reserve never lies over the chart (--bHm is not needed here any more). The card opens where the box stands */
+  body.v3d{--bTop:calc(env(safe-area-inset-top,0px) + 8px);--bW:270px;--bH:196px;--sH:62px;--mH:min(var(--bW),26vh);--gH:36px}   /* (196: the box while she fishes, the next event on two lines and the deck's kg; 270: the gauges' figures and «Fremme i …») */
+  body.v3d #miniPlot{top:var(--bTop);width:var(--bW);height:var(--mH)}
+  body.v3d #plotMin{top:calc(var(--bTop) - 4px);left:3px}
+  body.v3d.plotmin #gps3d:not([hidden]){top:var(--bTop);width:var(--bW)}
+  body.v3d #hud{top:calc(var(--bTop) + var(--mH) + 6px);width:var(--bW);max-width:none;min-width:0!important;box-sizing:border-box}
+  body.v3d.plotmin #hud{top:calc(var(--bTop) + var(--gH) + 6px)}
   body.v3d:not(.hudstrip):not(.hudcard) #hud{min-height:var(--bH)}
   body.v3d.hudstrip #hud{height:var(--sH)}
   body.v3d.hudcard #hud{width:min(92vw,400px)}
-  /* (--bHm: the box's own height when it is taller than its reserve, set by renderHud; so the chart never lies under the box, 07.11.2026) */
-  body.v3d #miniPlot{top:calc(var(--bTop) + var(--bHm,var(--bH)) + 6px);width:var(--bW);height:min(var(--bW),26vh)}
-  body.v3d #plotMin{top:calc(var(--bTop) + var(--bHm,var(--bH)) + 2px);left:3px}
-  body.v3d.plotmin #gps3d:not([hidden]){top:calc(var(--bTop) + var(--bHm,var(--bH)) + 6px);width:var(--bW)}
-  body.v3d.hudmin #miniPlot{top:calc(var(--bTop) + var(--sH) + 6px)}
-  body.v3d.hudmin #plotMin{top:calc(var(--bTop) + var(--sH) + 2px)}
-  body.v3d.hudmin.plotmin #gps3d:not([hidden]){top:calc(var(--bTop) + var(--sH) + 6px)}
 }
 /* UI 2, U2-5 (docs/planer/ui-2-staaende.md 4.6, Jonas 06.11.2026, V5 A: the fleet first; V1 A: the phone upright is the measure). Rederi: one
    card a vessel with her name and type, the state with a dot (grey in port, green at work, amber when she needs you, red in trouble), the
