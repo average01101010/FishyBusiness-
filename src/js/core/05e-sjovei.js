@@ -188,11 +188,11 @@ function sjvPose(n, E, H){
   // (standing by after a collision, Ø11.3: where she was at the blow, as the whole list had her, till the stand-by ends; after it she is
   // behind her course by the time she stood, and makes it up as after slackening off)
   if (E.p0){
-    if (H <= E.t1) return Object.assign({}, n, {p:E.p0, hd:E.hd0, cog:E.hd0, v:0, give:E.why});
+    if (H <= E.t1) return Object.assign({}, n, {p:E.p0, hd:E.hd0, cog:E.hd0, v:0, give:E.why, hd0:E.hd0});
     const lag = sjvLagAt(E, H), off = sjvOffAt(E, H); let p = n.p, hd = n.hd, cog = n.cog != null ? n.cog : n.hd;
     if (lag > 1e-6){ const q = npcStates(H - lag, n.id)[0]; if (q && q.p){ p = q.p; hd = q.hd; cog = q.cog != null ? q.cog : q.hd; } }
     if (off > 1e-6) p = {x:p.x + E.nx * off, y:p.y + E.ny * off};
-    return Object.assign({}, n, {p, hd, cog, v:Math.round((n.v || 0) * (lag > 1e-6 ? 1.3 : 1) * 10) / 10, give:E.why});
+    return Object.assign({}, n, {p, hd, cog, v:Math.round((n.v || 0) * (lag > 1e-6 ? 1.3 : 1) * 10) / 10, give:E.why, hd0:hd});
   }
   const off = sjvOffAt(E, H), lag = sjvLagAt(E, H);
   if (off <= 1e-6 && lag <= 1e-6) return n;
@@ -200,7 +200,7 @@ function sjvPose(n, E, H){
   if (lag > 1e-6){ const q = npcStates(H - lag, n.id)[0]; if (q && q.p){ p = q.p; hd = q.hd; cog = q.cog != null ? q.cog : q.hd; }
     v = n.v * (E.t1 == null || H <= E.t1 ? E.f : 1.3); }
   if (off > 1e-6){ p = {x:p.x + E.nx * off, y:p.y + E.ny * off}; const ph = sjvPhase(E, H); if (ph){ hd = hd + ph * E.side * SJV_TH; cog = hd; v = n.v / Math.cos(SJV_TH); } }
-  return Object.assign({}, n, {p, hd, cog, v:Math.round(v * 10) / 10, give:E.why});
+  return Object.assign({}, n, {p, hd, cog, v:Math.round(v * 10) / 10, give:E.why, hd0:n.hd});   // (hd0: her course on the shared clock, Ø11.3)
 }
 
 // the game open and running at its pace (the manoeuvring model ticks: 16b-dyn.js DYN.on, false while the time away is caught up)
@@ -403,7 +403,7 @@ function sjvEval(H, list){
     seen.add(n0.id);
     // (Ø11.3: the look, for the fault if they meet: the roles that stand, the CPA, the sight, and how each of them goes)
     if (R.rng < 3000) sjvTrailAdd(n0.id, {H, sit:R.sit, give:R.give, risk:R.risk, tcpa:R.tcpa, cpa:R.cpa, rng:R.rng, lim:R.lim, fog:f19, relA:R.relA, relB:R.relB, gs:gsA, safeA, seen:seenM,
-      a:{x:A.p.x, y:A.p.y, hd:A.hd, cog:A.cog, v:A.v || 0, cls:A.cls, L:A.L}, b:{x:n.p.x, y:n.p.y, hd:n.hd, cog:n.cog != null ? n.cog : n.hd, v:n.v || 0, cls:n.cls || R.clsB, L:n.L || 10}});
+      a:{x:A.p.x, y:A.p.y, hd:A.hd, cog:A.cog, v:A.v || 0, cls:A.cls, L:A.L}, b:{x:n.p.x, y:n.p.y, hd:n.hd, hd0:n.player ? null : n.hd0 != null ? n.hd0 : n.hd, cog:n.cog != null ? n.cog : n.hd, v:n.v || 0, cls:n.cls || R.clsB, L:n.L || 10}});
     // the encounter: kept while it lasts (13 d), with the least clearance between the hulls for the near miss (about 50 m, Ø11.7)
     const clr = R.rng - ((A.L || 10) + (n.L || 10)) / 4;
     let s = prev; if (!s && R.risk && R.rng < RW * 1000){ s = {sit:R.sit, give:R.give, t:H, clr, nm:false}; SJV.sits.set(n0.id, s); }
@@ -743,7 +743,8 @@ function sjvFault(T, X){
   const early = T.filter(e => e.H <= Hb - SJV_DELIB && Hb - e.H <= SJV_TRAIL), r0 = early.findIndex(e => e.risk);
   if (r0 < 0){
     // no risk seen in good time: the one that turned into the other in the last game minute; with neither, the rules at the blow
-    const base = T.find(e => Hb - e.H <= 1 / 60), turn = k => base ? Math.abs(sjvWrap(X[k].hd - base[k].hd)) * 180 / Math.PI : 0, ta = turn('a'), tb = turn('b');
+    const hdOf = (k, q) => k === 'b' && q.hd0 != null ? sjvWrap(q.hd - q.hd0) : q.hd, base = T.find(e => Hb - e.H <= 1 / 60);
+    const turn = k => base ? Math.abs(sjvWrap(hdOf(k, X[k]) - hdOf(k, base[k]))) * 180 / Math.PI : 0, ta = turn('a'), tb = turn('b');
     if (ta >= 20 && tb < 10 && !cant(ca)){ add('a', 3, 'sving'); return res('sving'); }
     if (tb >= 20 && ta < 10 && !cant(cb)){ add('b', 3, 'sving'); return res('sving'); }
     const R = colregSit({p:{x:X.a.x, y:X.a.y}, hd:X.a.hd, cog:X.a.cog, v:va, cls:ca, L:X.a.L}, {p:{x:X.b.x, y:X.b.y}, hd:X.b.hd, cog:X.b.cog, v:vb, cls:cb, L:X.b.L}, {gs, fog:!!X.fog});
@@ -751,6 +752,9 @@ function sjvFault(T, X){
     return res(R.sit);
   }
   const E0 = early[r0], last = early[early.length - 1], sit = last.sit, give = last.give, ev = early.slice(r0);
+  // (an NPC's own change of course is her deviation from her course on the shared clock (hd0, kept by sjvPose): following the bends of her
+  // route is keeping her course, found in the stikkprøve at Tromsø 07.11.2026, where a bend to port counted as 17 c)
+  const own = (k, e) => k === 'b' && e.b.hd0 != null ? sjvWrap(e.b.hd - e.b.hd0) : e[k].hd;
   for (const k of ['a', 'b']){
     const o = k === 'a' ? 'b' : 'a', rel = k === 'a' ? E0.relA : E0.relB;   // (the other's bearing from her bow when the risk began)
     if (cant(E0[k].cls) || cant(X[k].cls)) continue;
@@ -760,9 +764,9 @@ function sjvFault(T, X){
     let opened = false, slowed = false, worse = false, port = false, oCh = null, kTurn = null, prevE = null;
     for (const e of ev){
       // (when the other first changed her course, and when she last turned: one that turns after the other has, follows her)
-      if (oCh == null && Math.abs(sjvWrap(e[o].hd - E0[o].hd)) >= 10 * Math.PI / 180) oCh = e.H;
-      if (prevE && Math.abs(sjvWrap(e[k].hd - prevE[k].hd)) >= 3 * Math.PI / 180) kTurn = e.H; prevE = e;
-      const dh = sjvWrap(e[k].hd - E0[k].hd) * 180 / Math.PI, dv = (E0[k].v || 0) > 0.5 ? 1 - (e[k].v || 0) / E0[k].v : 0;
+      if (oCh == null && Math.abs(sjvWrap(own(o, e) - own(o, E0))) >= 10 * Math.PI / 180) oCh = e.H;
+      if (prevE && Math.abs(sjvWrap(own(k, e) - own(k, prevE))) >= 3 * Math.PI / 180) kTurn = e.H; prevE = e;
+      const dh = sjvWrap(own(k, e) - own(k, E0)) * 180 / Math.PI, dv = (E0[k].v || 0) > 0.5 ? 1 - (e[k].v || 0) / E0[k].v : 0;
       // what her own change did to the CPA: where and how she goes now against where she would be on the course and speed she had when the
       // risk began (by dead reckoning from there), the other as she really goes (so one that follows the other's turn towards her has not
       // given way, hulltest 7a)
@@ -884,7 +888,7 @@ function sjvBlow(n, kn, E, H, pre){
     return C0.rec; }
   const r = hullHit(kA, E, 'båt', b), say = hullSay(r), c = r ? hullCost(b, {s:r.ds, h:r.dh, A:r.dA}) : {scr:0, str:0, eng:0, tot:0};
   const A = sjvOwn(), X = {H, gs, fog:SJV.fog && Math.hypot(n.p.x - A.p.x, n.p.y - A.p.y) / gs * 1000 > sjvSeenKm(n.L || 10, SJV.vis, SJV.night) * 1000,
-    a:{x:pre.p.x, y:pre.p.y, hd:pre.hd, cog:pre.cog != null ? pre.cog : pre.hd, v:pre.v, cls:A.cls, L:A.L}, b:{x:n.p.x, y:n.p.y, hd:n.hd, cog:n.cog != null ? n.cog : n.hd, v:n.v || 0, cls:n.cls || colregCls(n), L:n.L || 10}};
+    a:{x:pre.p.x, y:pre.p.y, hd:pre.hd, cog:pre.cog != null ? pre.cog : pre.hd, v:pre.v, cls:A.cls, L:A.L}, b:{x:n.p.x, y:n.p.y, hd:n.hd, hd0:n.player ? null : n.hd0 != null ? n.hd0 : n.hd, cog:n.cog != null ? n.cog : n.hd, v:n.v || 0, cls:n.cls || colregCls(n), L:n.L || 10}};
   const F = peer ? null : sjvFault(SJV.trail.get(n.id) || [], X), O = peer ? {kr:0, dh:0, dA:0} : sjvOtherCost(kB, n.L || 10, sjvMatOf(n), sjvValue(n.L || 10)), M = peer ? {owe:0, ins:0, you:0, got:0} : sjvSettle(b, F, c, O.kr, n.name);
   const rec = {t:S.t, x:Math.round(b.pos.x * 1000) / 1000, y:Math.round(b.pos.y * 1000) / 1000, vid:S.cur, id:String(n.id), name:String(n.name || ''), kn:+kn.toFixed(1), kA:+kA.toFixed(1), kB:+kB.toFixed(1), peer,
     sit:F ? F.sit : null, law:F ? F.law : null, fa:F ? F.fa : 0, fb:F ? F.fb : 0, why:F ? F.why : null, own:c.tot, oth:O.kr, othA:O.dA, owe:M.owe, ins:M.ins, you:M.you, got:M.got};

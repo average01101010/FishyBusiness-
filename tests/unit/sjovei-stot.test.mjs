@@ -50,7 +50,7 @@ export default function (t){
       if (prev && prev.give){ Rs.sit = prev.sit; Rs.give = prev.give; }
       if (!prev && Rs.risk && Rs.rng < 3000) prev = {sit:Rs.sit, give:Rs.give};
       trail.push({H:tm / 60, sit:Rs.sit, give:Rs.give, risk:Rs.risk, tcpa:Rs.tcpa, cpa:Rs.cpa, rng:Rs.rng, lim:Rs.lim, fog:!!sc.fog, relA:Rs.relA, relB:Rs.relB, gs:1, safeA:sc.safeA || 0, seen:sc.seen || 50000,
-        a:{x:a.x, y:a.y, hd:a.hd, cog:a.hd, v:a.v, cls:A.cls, L:10}, b:{x:b.x, y:b.y, hd:b.hd, cog:b.hd, v:b.v, cls:B.cls, L:B.L}});
+        a:{x:a.x, y:a.y, hd:a.hd, cog:a.hd, v:a.v, cls:A.cls, L:10}, b:{x:b.x, y:b.y, hd:b.hd, hd0:sc.route ? b.hd : undefined, cog:b.hd, v:b.v, cls:B.cls, L:B.L}});
     }
     const a = sc.a(T), b = sc.b(T);
     return K.sjvFault(trail.filter(e => e.H < T / 60 - 1e-9), {H:T / 60, gs:1, fog:!!sc.fog, a:{x:a.x, y:a.y, hd:a.hd, cog:a.hd, v:a.v, cls:sc.clsA || 'pow', L:10}, b:{x:b.x, y:b.y, hd:b.hd, cog:b.hd, v:b.v, cls:sc.clsB || 'pow', L:sc.Lb || 10}});
@@ -71,6 +71,9 @@ export default function (t){
   // you stood on, but altered to port early towards her (17 a i, 17 c), and she did not give way: shared equally
   F = fault({a:way(...meet(0, 10, 6), 0, 10, [{at:1.5, turn:-30}]), b:sE});
   t.eq(sh(F), ['161', 0.4, 0.6], 'regel 17 c: du skulle holde kurs og svingte til babord tidlig, hun vek ikke: 40 mot 60', F.why);
+  // an NPC following the bend of her route on the shared clock (her course there turns with her: hd0) keeps her course: no 17 c, no fault
+  F = fault({a:yN, b:way(...meet(270, 10, 6), 270, 10, [{at:1.5, turn:-30}]), route:true});
+  t.eq([F.law, F.fa, F.why.b], ['161', 1, []], 'NPC-en som følger ruta si rundt en sving til babord, holder kursen: ingen 17 c for henne (stikkprøven i Tromsø)');
   // § 161 fifth ledd: you stood on and turned hard at the last moment (in the last half minute): no time to deliberate, no fault
   F = fault({a:way(...meet(0, 10, 6), 0, 10, [{at:5.7, turn:60}]), b:sE});
   t.eq(sh(F), ['161', 0, 1], 'sjøloven § 161 femte ledd: et kast i siste halve minutt teller ikke; hennes skyld');
