@@ -801,3 +801,8 @@
 2026-11-07 12:53	plan/2026-11-07-opp1	7217777f	docktest	OK	63	lite	samtidig	
 2026-11-07 12:53	plan/2026-11-07-opp1	7217777f	opptest	OK	37	lite	samtidig	
 2026-11-07 12:54	plan/2026-11-07-opp1	7217777f	shoptest	OK	28	lite	samtidig	
+2026-11-07 13:03	ccr-fc7a11b2-nl5jor	0e1f99c3	docktest	FEIL	62	lite	alene	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-07 13:03	ccr-fc7a11b2-nl5jor	0e1f99c3	hudtest	OK	41	lite	samtidig	
+2026-11-07 13:05	ccr-fc7a11b2-nl5jor	0e1f99c3	roetest	OK	120	lite	samtidig	
+2026-11-07 13:05	ccr-fc7a11b2-nl5jor	0e1f99c3	trip2	OK	39	lite	samtidig	
+2026-11-07 13:06	ccr-fc7a11b2-nl5jor	0e1f99c3	docktest	OK	60	lite	alene	
