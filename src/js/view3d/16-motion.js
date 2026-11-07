@@ -103,7 +103,10 @@
     if (T.s < T.back + T.turnL || T.s > T.sIn) vDes = Math.min(vDes, (T.s > T.sIn ? 4 : 3) * KNV());
     // speed: up and down gradually, and never more than she can brake from to stand at the stop
     T.v += clamp(vDes - T.v, -aDn * dt, aUp * dt); T.v = clamp(T.v, 0, Math.sqrt(2 * aDn * Math.max(0, sStop - T.s)));
-    T.s = Math.min(T.s + T.v * dt, sStop);
+    const s0 = T.s; T.s = Math.min(T.s + T.v * dt, sStop);
+    // under way never ahead of the simulation (out from the quay excepted: it starts at the harbour point), never back: one slow frame
+    // (up to 30 s under SwiftShader) took her far past it with the way she had
+    if (live && T.s > Math.max(sT, T.sOut)){ T.s = Math.max(s0, sT, T.sOut); T.v = Math.min(T.v, vs); }
     if (sStop - T.s < 0.05){ T.s = sStop; T.v = 0; }
     // stopped where the simulation is (it takes over from here: the quay's lines, or lying still)
     if (!live && T.v < 0.02 && (T.s >= sStop - 0.05 || vDes === 0)) T.done = true;
@@ -119,6 +122,12 @@
     // in at the quay: the lines go on (moorStep takes it from here)
     if (T.done && T.endBp && b.status === 'port'){ MO.key = S.cur + '|' + b.port + '|' + vtype() + '|' + (b.moorT || 0); MO.init = true; MO.phase = 'lines'; MO.t = 0; MO.lines = 0; MO.len = [0, 0, 0, 0]; }
   }
+  // the manoeuvring model takes her on its next tick: under way on a route, with the simulation's data in and the world at its own pace
+  // (core dynCan without DYN.on, which is off only for a tick that caught time up with the kinematic minute step; the model starts again
+  // from where that put her). Until then she stands where she is: the follower, run in the frame between with all the time it took (up
+  // to 30 s under SwiftShader), went 200 m out along the line from the quay she had just cast off from, and the model then took her
+  // back from there (trackfollow, 07.11.2026)
+  function dynSoon(){ const b = S.boat, pl = S.plan; return typeof SIMREADY !== 'undefined' && SIMREADY && simRate() <= 12 && b.status === 'sailing' && !b.anch && !helmOn() && !!pl && pl.wps.length > pl.idx; }
   // the manoeuvring model has her (core/16b-dyn.js, Fysikk 1): she is drawn where it puts her, a little on from its last tick, with
   // the way and the turn it gives her (the wake, the banking and the skid come from those, as under the follower)
   function dynFollow(dt){
@@ -130,7 +139,9 @@
     else { bv.px += (x - bv.px) * k; bv.pz += (z - bv.pz) * k; bv.cog += angDiff(bv.cog, hd) * k; }
   }
   function updateBoat(dt, t, frac, rdt){
-    const b = S.boat, pr = predict(frac), tx = pr.p.x * 1000, tz = pr.p.y * 1000, sailing = b.status === 'sailing' && S.plan, G = GEO(vtype());
+    // (when the model takes her on its next tick, where the simulation has her is where it starts her, not the minute step's way on
+    // from there: after time caught up, the jump over 900 m below put her up to a minute's way ahead of it, 177 m at 7 knots)
+    const b = S.boat, pr = predict(dynSoon() && !dynLive() ? 0 : frac), tx = pr.p.x * 1000, tz = pr.p.y * 1000, sailing = b.status === 'sailing' && S.plan, G = GEO(vtype());
     const zp = (G.bow || -2.2) + ((G.stern || 3.1) - (G.bow || -2.2)) / 3;   // pivot point, local z (negative = forward)
     if (!bv.init || Math.hypot(tx - (bv.px || 0), tz - (bv.pz || 0)) > 900){ TRK = null; bv.px = tx; bv.pz = tz; bv.cog = pr.hd; bv.head = pr.hd; bv.spd = sailing ? b.v * KNV() : 0; bv.yr = 0; bv.beta = 0; bv.init = true; bv.osc = false; bv.st = null; TRAIL.length = 0; WV.init = false; }
     else if (dt > 0){
@@ -139,6 +150,7 @@
       // (with the time that has really gone, up to 30 s: a slow frame or a stall must not leave her behind the simulation for good)
       if (dynLive()) dynFollow(Math.min(30, rdt || dt));   // the manoeuvring model has her (core/16b-dyn.js); with the time that has really gone, so a slow frame never leaves her behind
       else if (!bp && dynRest() && !S.plan && !helmOn() && !b.drv && !b.anch) dynFollow(Math.min(30, rdt || dt));   // the model has just stopped her: stand where it left her (until she drifts: core lieDrift)
+      else if (dynSoon()){ TRK = null; bv.spd *= Math.exp(-dt * 1.2); bv.yr *= Math.exp(-dt * 2); }   // the model takes her on its next tick: she stands where she is till then
       else if (trkOn()) trkStep(Math.min(30, rdt || dt), pr);
       else if (bp) moorStep(dt, bp, Math.min(30, rdt || dt));   // (the way in and the lines on the time that has really gone: a slow frame never holds her off the quay)
       else if (helmOn()){

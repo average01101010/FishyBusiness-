@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['hakk-071126', '07.11.2026', 'Båten i 3D etter et hakk', 'The boat in 3D after a hitch', [
+       ['Hakker spillet idet du kaster loss, eller har det hengt en stund under en tur, blir båten i 3D liggende der hun er til styringen tar henne. Før kunne hun fare et par hundre meter fram langs ruta og hoppe tilbake.', 'If the game hitches as you cast off, or has hung for a while on a trip, the boat in 3D stays where she is until the steering takes her. Before, she could rush a couple of hundred metres along the route and jump back.']]],
     ['tonytest-061126', '06.11.2026', 'Etter en spilltest på besøk', 'After a play test on a visit', [
        ['Bløggekaret står på stripa: en egen måler med kg av karets størrelse, gul fra halvfullt og rød like før fullt, og linje 3 sier hva som sløyes og hvor lenge det tar. Kortet deler karet i det som skal sløyes og det som er sløyd og venter på is.', 'The bleeding tub is on the strip: its own gauge with kg of the tub\'s size, yellow from half full and red just before full, and line 3 says what is being gutted and how long it takes. The card splits the tub into what is to be gutted and what is gutted and waiting for ice.'],
        ['Sluttseddelen kommer raskere: innveiingen tar to minutter, og karvasken på de åpne båtene tre.', 'The landing note comes sooner: the weighing takes two minutes, and the tub wash on the open boats three.'],

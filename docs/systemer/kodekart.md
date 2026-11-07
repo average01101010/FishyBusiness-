@@ -2376,12 +2376,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1241 linjer)
+## `src/js/ui/phone/07-patch.js` (1243 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1234 `patch()`
+  - 1236 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -3813,7 +3813,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 103 `moorStep(dt, bp, at = dt)`
   - 135 `drawMooring(BMrel, eye, VP, t)`
 
-## `src/js/view3d/16-motion.js` (233 linjer)
+## `src/js/view3d/16-motion.js` (245 linjer)
 
 ---------- boat motion ----------
 
@@ -3827,11 +3827,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 67 `trkOn()`
   - 83 `trkHaltNeed()`
   - 88 `trkStep(dt, pr)`
-  - 124 `dynFollow(dt)`
-  - 132 `updateBoat(dt, t, frac, rdt)`
-- **218** particles
-  - 222 `spawn(x, y, z, vx, vy, vz, life, g)`
-  - 224 `drawPts(n, mode, VP, col, size, round, off, mx)`
+  - 130 `dynSoon()`
+  - 133 `dynFollow(dt)`
+  - 141 `updateBoat(dt, t, frac, rdt)`
+- **230** particles
+  - 234 `spawn(x, y, z, vx, vy, vz, life, g)`
+  - 236 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
 ## `src/js/view3d/17-draw.js` (207 linjer)
 
