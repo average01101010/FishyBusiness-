@@ -65,14 +65,22 @@
     if (L.kind === 'box'){ const nb = Math.min(9, L.n - 9 * j), m = PM.palN[Math.max(0, nb)]; return {draw:M => drawN(m, M), h:loadH('box', nb), sl:loadH('box', nb), box:true}; }
     // a freezer vessel's frozen catch: the Blender pallet of 44 cartons in film (tools/deck/pall.py, H2d), carried on the pallet fork whose
     // eye the hook takes (sl: the hook's eye over the pallet's base); the simple pallet of H2b where the model is not in the page
-    if (L.kind === 'pall'){ const PF = kit('pall', 'pall_full'), X = kitX('pall'); if (PF && X.gaffel) return {draw:M => drawN(PF, M), h:X.h || PALLH, sl:-X.gaffel.base, box:true, pall:true};
-      return {draw:M => drawN(PM.palF, M), h:PALLH, sl:PALLH, box:true}; }
+    // (H3d1, 07.11.2026) the snow crab vessel's: the clusters in their cartons on the pallet of their own (pall_sno), and the live crab
+    // pumped from the tanks into the tubs (kar_levende) that go ashore after the pallets (07-harbours.js landPlan: lift np and after)
+    if (L.kind === 'pall' || (L.kind === 'tub' && !L.own && L.lv > 0)){ const X = kitX('pall'), live = L.kind === 'tub' || (L.np != null && j >= L.np);
+      if (L.sno == null) L.sno = (S.hold || []).some(x => x.sp === 'snokrabbe' && !x.tank);
+      if (live){ const KL = kit('pall', 'kar_levende'), K = X.kar || {}; if (KL) return {draw:M => drawLiveTub(KL, M, K, j), h:K.h || TUBH, sl:SLH, tub:true, live:true}; }
+      else { const PF = kit('pall', L.sno && kit('pall', 'pall_sno') ? 'pall_sno' : 'pall_full'); if (PF && X.gaffel) return {draw:M => drawN(PF, M), h:(L.sno && X.sno ? X.sno.h : X.h) || PALLH, sl:-X.gaffel.base, box:true, pall:true}; }
+      if (L.kind === 'pall') return {draw:M => drawN(PM.palF, M), h:PALLH, sl:PALLH, box:true}; }
     if (L.own){ const vt = vtype(), i = j < L.n ? j : j - L.n, back = j >= L.n, T = tubLoads(S.hold, karPlaces(vt).length)[i];
       return {draw:M => drawKarLoad(M, back ? null : T, vt + ':' + i, back), h:TUBH, sl:SLH, tub:true, place:i, back}; }
     const ic = (() => { let a = 0, b = 0; for (const x of S.hold || []) if (inTub(x)){ a += x.kg; if (x.iced) b += x.kg; } return a > 0 ? b / a : 1; })();
     const kg = Math.max(0, Math.min(TUB_KG, (L.kg || 0) - TUB_KG * j));
     return {draw:M => drawKarLoad(M, {kg, iced:kg * ic}, 'pl:' + L.t0 + ':' + j, false), h:TUBH, sl:SLH, tub:true};
   }
+  // a tub of live snow crab: the tub with its sea water, and the crabs in it at the surface (each tub its own few, from its lift)
+  function drawLiveTub(KL, M, K, j){ drawN(KL, M); if (!SK || !SK.fishM) return; const w = (K.water || 0.62) + 0.02;
+    for (let k = 0; k < 5; k++) drawN(fishOf('snokrabbe'), chain(M, M4.T((hash(j * 13 + k * 5) - 0.5) * 0.6, w, (hash(j * 7 + k * 11 + 3) - 0.5) * 0.8), M4.RY(hash(j + k * 3) * 6.3), M4.S(0.42))); }
   // how far open your boat's cargo hatch is (0 shut, 1 open; anchors.hatch, H2d): open while she lands pallets, from the crane's first move
   // over to the last pallet ashore, shut at sea
   function hatchOpenK(){ const b = S.boat, L = b && b.land; if (!L || L.kind !== 'pall' || b.status !== 'port') return 0;
