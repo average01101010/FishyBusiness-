@@ -83,7 +83,7 @@ export default function (t){
   // freezers' time before the note when it is longer than the lifts
   S.hold = [{sp:'torsk', kg:30000, n:1, cls:0, fresh:100, gut:false, iced:false}];
   const lz = K.landPlan('autoliner', 30000);
-  t.ok(lz.pk === 20000 && lz.n === 20 && lz.fz === Math.ceil(20000 / (15000 / 1440)) && lz.dur === 1 + lz.fz + 5, `30 t rund fisk ufryst: ${lz.n} paller, fryses på ${(lz.fz / 60).toFixed(0)} t før innveiingen`);
+  t.ok(lz.pk === 20000 && lz.n === 20 && lz.fz === Math.ceil(20000 / (15000 / 1440)) && lz.dur === 1 + lz.fz + 2, `30 t rund fisk ufryst: ${lz.n} paller, fryses på ${(lz.fz / 60).toFixed(0)} t før innveiingen`);
   const fzk = K.landFreeze(); t.ok(fzk === 30000 && S.hold.every(x => x.frozen && x.gut) && Math.abs(K.holdLoad() - 20000) < 1e-6, 'ved innveiingen er alt sløyd og fryst');
 
   // the teams (V3 A, «Følger båten»): two crews of 14 come with the vessel; at sea half of each team is on watch, six and six
@@ -107,7 +107,7 @@ export default function (t){
   // the coast boats and the tubs are as before
   for (const k in B) delete B[k]; Object.assign(B, VESSELS.sjark); S.boat.type = 'sjark';
   S.hold = [{sp:'torsk', kg:2500, n:1, cls:0, fresh:100, gut:true, iced:true}];
-  const lc = K.landPlan('sjark', 2500); t.ok(lc.kind === 'tub' && lc.n === 5 && lc.dur === 1 + 5 * 2.5 + 5 && !lc.lf, `en sjark med 2,5 t lander i ${lc.n} kar på ${lc.dur} min som før`);
+  const lc = K.landPlan('sjark', 2500); t.ok(lc.kind === 'tub' && lc.n === 5 && lc.dur === 1 + 5 * 2.5 + 2 && !lc.lf, `en sjark med 2,5 t lander i ${lc.n} kar på ${lc.dur} min (seddelen 2 min etter siste løft, 06.11.2026)`);
   t.near(K.holdLoad(), 2500, 1e-9, 'på en kystbåt er lasten rund vekt som før');
 
   // the share by § 6 for 15 aboard a 45.4 m autoliner: 47.5 % (the survey: 27.8 of about 59 MNOK)

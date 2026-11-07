@@ -246,4 +246,4 @@ du sier noe annet.
   første tur prøves fra Bergen, Bodø og Båtsfjord.
 - 28.10.2026: **O6 stikkprøven grønn:** hele første tur fra Bøvågen (Bergen), Bodø og Vadsø (Båtsfjord var stengt for uvær), alle sjekker OK
   (tallene i `docs/systemer/opning-og-veiledning.md`, O6). Gjenstår: to uker måling i admin («Første tur per landsdel» og trakten per steg).
-
+- 06.11.2026: V2 er endret av Jonas i Ø8 (V3 C i `docs/planer/spillbarhet-fangst.md`): første tur skal gi full last igjen, og spilleren skal selv bestemme når fisket slutter. Ikke bygd; S0 i den planen.

@@ -1,6 +1,6 @@
 # Spillbarhet: fangsten forklart, første turs forventning og fiske i havna i kuling (plan 06.11.2026, Ø8)
 
-> Plan etter `/planlegg`. Ingenting er bygd. Venter på valgene V1–V5 og «kjør på». Hver fase er én økt (`docs/planer/okter-etter-backloggen.md`, Ø8). Krokene skal være ekte (`CLAUDE.md`, engasjement): ingen oppdiktet friksjon, aldri et oppdiktet tall vist som fakta, og tallene her er startverdier.
+> Plan etter `/planlegg`. **Jonas valgte 06.11.2026: V1 A, V2 A, V3 C, V4 A, V5 A.** Ingenting av planen er bygd. Den venter på «kjør på» og på at havsteget H3b er rullet ut, fordi H3b holder `core/03-simulation.js`, `04-crew.js`, `05-vessels.js`, `ui/07-guide.js` og `08-actions.js`. Hver fase er én økt (`docs/planer/okter-etter-backloggen.md`, Ø8b). Krokene skal være ekte (`CLAUDE.md`, engasjement): ingen oppdiktet friksjon, aldri et oppdiktet tall vist som fakta, og tallene her er startverdier.
 
 ## Hva Jonas ba om
 
@@ -48,6 +48,8 @@ Alt leses fra fiskemodellen (`density(sp, p, H)` i `core/03-simulation.js` er de
 
 ### V1. Hva som sies etter første levering
 
+**Valgt: A** (Jonas 06.11.2026).
+
 I dag: linja på sluttseddelen i første tur (O4), borte fire spilltimer etter salget.
 
 - **A (anbefalt): linja beholdes, og skrives også i dekksdagboka** som én logglinje ved første levering (`tutFinish` i `ui/07b-first-trip.js` → `log()`), med det samme tallet: «Første tur var ekstra god. Vanlig fiske med håndjuksa gir her nå rundt N kg i timen.» Så står den i Drift den dagen, og en spiller som lurer etter tur 2, finner den. Hvorfor: det er én linje og ett tall som alt finnes, og den overlever skuffen.
@@ -55,6 +57,8 @@ I dag: linja på sluttseddelen i første tur (O4), borte fire spilltimer etter s
 - C: som i dag.
 
 ### V2. Hva sluttseddelen eller dagboka kan si om en god og en dårlig tur
+
+**Valgt: A** (Jonas 06.11.2026).
 
 Alle tre bygger på det samme: `fish()` summerer per tur det modellen alt regner, i `tripOf(b)` (`core/04-crew.js` linje 143, der turens felleskostnader alt samles): fisketimene, Σ 30·`density`·innsats (det fisken sto til, «potensialet»), og hvor mye `wpen`, `coldPen`, `luck` og bestandens nedtrekk tok eller ga i snitt over turen. Teksten skriver bare det som var over 10 %, og aldri et tall modellen ikke har. Redskapstrekkene har sitt eget «vanlig» (`HEATG.fair`) og får samme linje per trekk.
 
@@ -64,17 +68,30 @@ Alle tre bygger på det samme: `fish()` summerer per tur det modellen alt regner
 
 ### V3. Om første tur skal være garantert full
 
+**Valgt: C, full last** (Jonas 06.11.2026: «Jeg tenker den første turen er ekstremt viktig for å forhindre churn og dermed må vi sikte oss inn på alt som gir dopamin og serotonin til brukeren, men brukeren skal jo selv få lov til å bestemme hvor lenge de ønsker å fiske før de leverer, men det er jo dumt å ikke fylle båten.»). Slik bygges det (antatt, Jonas retter om det er feil):
+- Påfyllingen fyller til fullt lasterom (`TUT_HOLD` 1, 350 kg i trebåten) innen fisketida er ute. Fisketida er fortsatt én spilltime (`TUT_FISH_H`, ti ekte minutter).
+- Spilleren bestemmer selv når fisket slutter: «Slutt å jukse» og veien inn virker som på andre turer, og veiledningens steg `full` er ferdig når lasten er full, tida er ute eller spilleren stopper. Påfyllingen fyller bare mens båten fisker, så den som stopper tidlig, leverer det som er om bord.
+- Det koster tid: alene må spilleren sløye alt (rundt 5 kg i minuttet), så en full trebåt gir rundt 35 spillminutter mer på feltet enn halv, om lag seks ekte minutter, om spilleren fisker timen ut.
+- Linjene fra V1 og V2 bærer forventningen: sluttseddelen og dagboka sier at første tur var ekstra god, og hva vanlig fiske gir der.
+- Datoen skrives i planen og i trakten i admin, så første til tredje levering kan sammenlignes før og etter.
+
+Alternativene som sto:
+
 - **A (anbefalt): halvt lasterom som nå** (V2 A i Onboarding 2, Jonas 27.10.2026), og forventningen rettes med V1 og V2. Hvorfor: valget er en uke gammelt, O6 har tallene, og trakten første → tredje levering skal måles i to uker før noe endres («Mål og se», `CLAUDE.md`). Å endre tallet nå gjør målingen verdiløs.
 - B: bare flekken, ingen påfylling (`TUT_HOLD` 0). Første fangst blir det flekken gir (rundt 175 kg/t i sentrum, mindre ved kanten og når spilleren jukser dårlig), så 60–175 kg. Mer ærlig, men første levering kan bli 3 000 kr, og det er ikke målt hva det gjør med frafallet.
 - C: full last igjen (`TUT_HOLD` 1). Gir den feile forventningen tilbake. Ikke anbefalt.
 
 ### V4. Hvor det skal stå
 
+**Ført som A** (06.11.2026). Jonas: «Forklaringen på hva? Jeg skjønner ikke konteksten.» Forklaringen er linjene fra V1 og V2: at første tur var ekstra god, og hvorfor en vanlig tur ble god eller dårlig. Med V1 A og V2 A står de på sluttseddelen og i dagboka, og det er A. Spørsmålet som sto igjen, var om de også skal stå i statusboksen mens båten fisker (B). Det er ikke valgt, og S4 er tatt ut.
+
 - **A (anbefalt): sluttseddelen og dekksdagboka.** Linja (V2 A) på seddelen, og den samme linja i Drift-loggen for dagen, så den finnes etter at seddelen er borte. Første tur (V1 A) på samme måte.
 - B: statusboksen under fisket (V2 C) i tillegg: «Her nå» mot «du». Kan komme senere, når linja er sett i trakten.
 - C: en toast når fisket slutter (`endFishing`). Ikke anbefalt: varslene drukner alt (spilltest 3, U4).
 
 ### V5. Fiske inne i havna i kuling
+
+**Valgt: A** (Jonas 06.11.2026): ingen ny regel før tettheten i havnebassengene er målt.
 
 **Slik er det i dag:** `fish()` spør ikke `inHarbour` (`core/01-world.js` linje 140: 600 m fra havnepunktet og 350 m fra innseilingspunktet, «mudret og merket, ingen grunner der»). En båt som ligger stille inne i havnebassenget med status `fishing`, jukser det modellen gir der: `denPlace` gir lite på grunt, lunt vann, og sjøen er lav (kort strøklengde i `hsAt`), så `wpen` er nær 1. Kulinga ute stopper ingenting der inne. Hvor mye det gir, er ikke målt. Reglene (`ruBlockMsg`) har ingen havneregel. Det finnes ingen generell lov mot å fiske i et havnebasseng; noen kommuners ordensforskrifter etter havne- og farvannsloven § 8 forbyr fiske fra kai eller i bassenget, men det er per havn og ikke sjekket mot Lovdata for noen av spillets 160 havner, så en sperre ville være en oppdiktet regel inntil det er gjort.
 
@@ -88,12 +105,12 @@ Regelen (A-målingen og B) ligger i `core/03-simulation.js` (`denPlace`) eller `
 
 | Fase | Hva | Filer | Tester | Måles |
 |---|---|---|---|---|
+| **S0. Full last på første tur** (V3 C) | `TUT_HOLD` 1; påfyllingen fyller mot full last i den tida som er igjen; spilleren kan stoppe når hun vil, og `full` er ferdig da; teksten i steget | `core/03-simulation.js`, `core/05-vessels.js` (`fish()`), `ui/07b-first-trip.js`, `docs/systemer/opning-og-veiledning.md` | `tut` i ett format, `tutcoast` (påfyllingen og miksen), skjermbilder av steget i begge formater | Trakten første → tredje levering før og etter datoen |
 | **S1. Første tur i dagboka** (V1 A) | Logglinja ved `tutFinish` med N fra `S.tut.fk` | `ui/07b-first-trip.js`, `01-i18n.js` | `tut` i ett format (`KYST_TUT_ONE=liggende`), `booktest` | Trakten første → tredje levering (admin), som nå |
 | **S2. Turens linje** (V2 A, V4 A) | `tripOf(b)` får fisketimene, potensialet og faktorene fra `fish()` og `finishHaul`; linja på sluttseddelen og i Drift ved salget; tekstene i begge språk | `core/04-crew.js` (`tripOf`), `core/05-vessels.js` (`fish()`), `core/10-gear.js` (`finishHaul`), `ui/07-guide.js` (`portSlip`), `ui/08-actions.js` (`sell`), `01-i18n.js` | `selltest`, `booktest`, `geartest`, enhetstest av faktorsummene i `tests/unit/`, skjermbilder av seddelen i begge formater | Om linja leses: hendelsen `slip_why {kgph, fair, pen}` i skyen, og om leveringene per spiller går opp etter tur 2 |
 | **S3. Havna** (V5 A, så B om målingen sier det) | Målingen i ti basseng; ×0,1 bare om den krever det | `core/03-simulation.js` (`denPlace`), skript i `tests/` | `heattest` (varmekartet), `simday`, enhetstest | Tettheten i bassengene mot feltene |
-| **S4. Statusboksen** (V4 B, senere) | «Her nå» mot «du» under fisket | `ui/04-panels-instruments.js` (HUD) | `hudtest`, skjermbilder | Etter S2 |
 
-S2 venter på at `05-vessels.js` og `03-simulation.js` er frie (H3b, Ø11.2). S1 kan gå først.
+S0, S2 og S3 venter på at H3b er rullet ut (`03-simulation.js`, `04-crew.js`, `05-vessels.js`, `07-guide.js`, `08-actions.js`). S1 rører bare `ui/07b-first-trip.js` og kan gå først. S4 (statusboksen) er tatt ut: V4 B ble ikke valgt.
 
 ## Antatt og usikkert
 
@@ -114,3 +131,4 @@ S2 venter på at `05-vessels.js` og `03-simulation.js` er frie (H3b, Ø11.2). S1
 ## Status
 
 - 06.11.2026: planen skrevet (Ø8, gren `ccr-ccfb0017-rmieib`). Venter på V1–V5 og «kjør på». Bølgene langs ruta og innloggingsbonusens tekst fra samme økt er bygd og står ikke her (`docs/systemer/autonav.md` 5.15 og `haill-pub-og-bonus.md` 5.9); mannskapstesten står i `docs/playtest/rapport-4-mannskap.md`.
+- 06.11.2026: Jonas valgte V1 A, V2 A, V3 C (full last, spilleren bestemmer selv når hun leverer), V5 A, og V4 er ført som A etter at konteksten var forklart. Planen har fått S0 for full last, og S4 er tatt ut. Venter på «kjør på» og på at H3b er rullet ut.

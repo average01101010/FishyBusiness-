@@ -280,12 +280,23 @@ body.v3d #aisCard{display:none} .lbl-ais{font-family:var(--sans);font-weight:600
 .ph-widget{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:9px 12px;margin-bottom:16px;font-size:12.5px;display:flex;justify-content:space-between;gap:8px}
 /* the goal on the phone's home screen: its name, then what is left, then the bar, one under the other (Jonas 05.10.2026: the text
    beside the name ran out of the card on a narrow phone) */
-.ph-goal{display:grid;grid-template-columns:minmax(0,1fr);gap:3px;align-items:center;width:100%;box-sizing:border-box;min-width:0;margin:-8px 0 16px;padding:8px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font:500 12px var(--sans);text-align:left;cursor:pointer}.ph-goal .gb{grid-column:1/-1;height:4px;border-radius:2px;background:rgba(255,255,255,.15);overflow:hidden}.ph-goal .gb i{display:block;height:100%;background:#c9a227}.ph-goal small{opacity:.8;white-space:normal;line-height:1.3}.ph-goal span{line-height:1.3}
-.ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 10px}
-.ph-app{background:none;border:0;color:#fff;display:flex;flex-direction:column;align-items:center;gap:6px;font:500 11.5px var(--sans);cursor:pointer;position:relative}
-.ph-app .ic{width:58px;height:58px;border-radius:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.25)}
-.ph-app .ic svg{width:30px;height:30px}
-.ph-app .bd{position:absolute;top:-5px;right:10px;min-width:19px;height:19px;border-radius:10px;background:#e0412f;color:#fff;font:700 11px/19px var(--sans);padding:0 5px}.ph-app .bd.ny{background:#1e8c6e;font-size:10px;text-transform:uppercase;letter-spacing:.03em}
+.ph-goal{display:grid;grid-template-columns:minmax(0,1fr);gap:3px;align-items:center;width:100%;box-sizing:border-box;min-width:0;margin:0;padding:8px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font:500 12px var(--sans);text-align:left;cursor:pointer}.ph-goal .gb{grid-column:1/-1;height:4px;border-radius:2px;background:rgba(255,255,255,.15);overflow:hidden}.ph-goal .gb i{display:block;height:100%;background:#c9a227}.ph-goal small{opacity:.8;white-space:normal;line-height:1.3}.ph-goal span{line-height:1.3}
+/* the next goal and the milestones as one row of two cards; alone, a card takes the row (UI 2, U2-6) */
+.ph-goals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:-6px 0 16px}
+.ph-goals:empty{display:none} .ph-goals > :only-child{grid-column:1 / -1}
+.ph-goals .ph-goal{align-content:start;overflow-wrap:anywhere}
+/* the apps in groups with a heading each, four to a row, on one glass with the dock's stroke icons; the one accent is the badge
+   (UI 2, U2-6; docs/planer/ui-2-staaende.md 4.6, V6 A and V2 A). The same standing and lying, on a tablet and a PC */
+.ph-grid{display:flex;flex-direction:column;gap:14px}
+.ph-grp h5{margin:0 2px 8px;font:600 var(--fs-cap)/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--t-on-dark-2)}
+.ph-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 4px}
+.ph-app{background:none;border:0;padding:0;min-width:0;color:var(--t-on-dark);display:flex;flex-direction:column;align-items:center;gap:5px;font:500 var(--fs-cap)/1.15 var(--sans);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ph-app .ic{position:relative;width:52px;height:52px;border-radius:var(--r-card);display:flex;align-items:center;justify-content:center;background:rgba(6,16,24,.55);border:1.5px solid rgba(255,255,255,.24);box-shadow:0 2px 8px rgba(0,0,0,.3);color:var(--t-on-dark)}
+.ph-app .ic svg{width:26px;height:26px}
+.ph-app:active .ic{transform:scale(.94)}
+.ph-app .lb{max-width:100%;text-align:center;-webkit-hyphens:manual;hyphens:manual}
+.ph-app .bd{position:absolute;top:-7px;right:-6px;min-width:20px;height:20px;border-radius:var(--r-pill);background:var(--a-primary);border:2px solid #0b1622;color:#fff;font:700 11px/16px var(--sans);padding:0 5px;text-align:center}
+.ph-app .bd.ny{font-size:10px;text-transform:uppercase;letter-spacing:.03em}
 .ph-appv{min-height:100%;background:#f3f6f8;color:#15252f}
 .ph-top{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:10px;padding:12px 14px;color:#fff;font:700 16px var(--sans)}
 .ph-top .ic{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.2)} .ph-top .ic svg{width:18px;height:18px}
@@ -471,6 +482,7 @@ body.vplot .attr{display:block!important;left:6px;right:auto}
 .ground{fill:rgba(47,109,134,.05);stroke:var(--water);opacity:.7}
 .route{fill:none;stroke:var(--mag);stroke-linecap:round;stroke-linejoin:round}
 .route.bad{stroke:var(--bad)}
+.note.bad,.ph-note.bad{color:var(--bad);font-weight:600}   /* why a player name is not taken (ui/10f-cloud.js nameWhy) */
 .trail{fill:none;stroke:var(--muted);opacity:.7;stroke-linecap:round}
 .wp{fill:var(--sea);stroke:var(--mag)} .wp.fish{fill:var(--mag)}
 .wpn{font-family:var(--sans);font-weight:650;fill:var(--mag);paint-order:stroke;stroke:var(--sea);stroke-linejoin:round}
@@ -549,6 +561,9 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nume
 
 #toast{position:fixed;left:50%;bottom:calc(128px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 14px;border-radius:8px;font-size:14px;max-width:90vw;opacity:0;pointer-events:none;transition:opacity .2s;z-index:var(--z-toast)}
 #toast.on{opacity:1}
+/* a new build is out (ui/10p-install.js UPDATE): a bar at the top with «Oppdater nå» */
+#updBar{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);z-index:var(--z-toast);display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px;border-radius:999px;background:var(--ink);color:var(--paper);font:600 13px var(--sans);box-shadow:0 6px 20px rgba(0,0,0,.35);max-width:calc(100vw - 24px)}
+#updBar button{min-height:36px;border:0;border-radius:999px;padding:0 14px;font:700 13px var(--sans);cursor:pointer;background:#ffd27a;color:#15252f} #updBar #updX{background:transparent;color:var(--paper);padding:0 8px;font-size:16px}
 #modal{position:fixed;inset:0;background:rgba(5,15,20,.55);display:grid;place-items:center;padding:20px;z-index:var(--z-modal)}
 #modal[hidden]{display:none}
 #modal .box{background:var(--paper);border-radius:12px;max-width:440px;width:100%;padding:18px 20px;max-height:80vh;overflow:auto;border:1px solid var(--line)}
@@ -1061,7 +1076,6 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 .pnt-lg.on{outline:3px solid #1e6fd9;outline-offset:1px}
 .pnt-up{display:inline-flex;align-items:center;cursor:pointer}
 /* sea time (core/09e-fartstid.js): the chip on the phone's home, the bar in its card, and the report on opening */
-.ph-goal.ph-fs{margin-top:-6px}
 .ph-goal.ph-fs .gb i{background:linear-gradient(90deg,#f2b33d,#ffd77a)}
 .fsbar{display:block;height:6px;border-radius:3px;background:rgba(0,0,0,.1);overflow:hidden;margin:6px 0 4px}
 .fsbar i{display:block;height:100%;background:linear-gradient(90deg,#f2b33d,#ffd77a)}
@@ -1131,7 +1145,6 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 .tur.mid .tur-c{background:#c9971c}.tur.lang .tur-c{background:#b8402f}.tur.sesong .tur-c{background:#1f4e79}
 .tur-b{display:flex;gap:8px;margin-top:8px}.tur-b .ph-btn{flex:1}
 .turmk{fill:none;stroke:#2e7d4f}.lbl-tur{fill:#1d5c38;font-weight:600;paint-order:stroke;stroke:#fff}
-.ph-goal.ph-ach{margin-top:-6px}
 
 /* the route list's tab (Jonas 08.10.2026: «en liten tab ... som skyver rutelisten til siden og skjuler den helt»): in the chart plotter the
    list slides off to the right (sideways) or down (upright), and the tab stays out to open it again; the Rute button of the top bar is gone upright */
@@ -1431,10 +1444,11 @@ body.pm #ecdisTop{visibility:hidden}
 .ph-card.ic-aboard p,.ph-card.ic-nofit p{font-size:13px;color:#3d5260}
 .ph-card.ic-nofit summary{font:600 13px var(--sans);color:#5b6c76;cursor:pointer;min-height:30px;display:flex;align-items:center}
 .net-bar{background:#e3eaee;border-radius:18px;padding:8px 14px;font:600 13px var(--sans);color:#3d5260;margin:4px 0 12px}
-.net-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.net-tile{display:flex;flex-direction:column;gap:4px;text-align:left;background:#fff;border:0;border-radius:12px;padding:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);cursor:pointer;font:inherit;color:#15252f}
-.net-tile .net-ic{background:#eef3f6;border-radius:10px;aspect-ratio:8/5;display:flex;align-items:center;justify-content:center;padding:4px}.net-tile .net-ic svg{width:100%;height:100%}
-.net-tile small{color:#5b6c76;font-size:12px}
+.net-tiles{display:grid;grid-template-columns:1fr;gap:10px}
+.net-tile{display:grid;grid-template-columns:64px 1fr;grid-template-rows:auto auto;column-gap:12px;row-gap:2px;align-items:center;text-align:left;background:#fff;border:0;border-radius:12px;padding:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);cursor:pointer;font:inherit;color:#15252f;min-height:64px}
+.net-tile .net-ic{grid-row:span 2;width:64px;height:64px;background:#eef3f6;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:6px;overflow:hidden}.net-tile .net-ic svg{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain}
+.net-tile b{font-size:14px} .net-tile small{color:#5b6c76;font-size:12px;line-height:1.3}
+.net-shops .chip-b{text-align:left;line-height:1.25}
 /* the moment a boat is bought (M5, ui/10q-buymoment.js) */
 .bm{position:fixed;left:0;right:0;bottom:calc(96px + env(safe-area-inset-bottom));display:flex;justify-content:center;z-index:var(--z-fx);pointer-events:none;padding:0 16px}
 .bm-card{pointer-events:auto;background:#0e1a24;color:#fff;border-radius:16px;padding:16px 20px;max-width:520px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.35);animation:bmIn .6s ease-out both}
@@ -1623,7 +1637,7 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
    The strip (or the box) has a fixed width, and the little chart a fixed place under it, not --gpsTop from the box's height: upright
    under the strip (the phone under the compass line, the tablet beside it); on its side (a tablet, a PC) under the whole box's reserved
    height, or under the strip when the box is folded (hudmin). A box taller than its reserve (the whole table open, many «now» rows)
-   lies over the chart's top edge. The card is wider and lies over the chart. A phone on its side keeps the GPS box under the measured
+   pushes the chart down under itself (--bHm, measured by renderHud; before 07.11.2026 it lay over the chart's top edge). The card is wider and lies over the chart. A phone on its side keeps the GPS box under the measured
    box as before (max-height 520). The plotter's instruments (#instr) still take --gpsTop, measured as before */
 body.v3d #hud{z-index:6} body.v3d #plotMin{z-index:7}   /* (the chart's fold button stays reachable under a box taller than its reserve) */
 @media (orientation:portrait){
@@ -1651,9 +1665,10 @@ body.v3d #hud{z-index:6} body.v3d #plotMin{z-index:7}   /* (the chart's fold but
   body.v3d:not(.hudstrip):not(.hudcard) #hud{min-height:var(--bH)}
   body.v3d.hudstrip #hud{height:var(--sH)}
   body.v3d.hudcard #hud{width:min(92vw,400px)}
-  body.v3d #miniPlot{top:calc(var(--bTop) + var(--bH) + 6px);width:var(--bW);height:min(var(--bW),26vh)}
-  body.v3d #plotMin{top:calc(var(--bTop) + var(--bH) + 2px);left:3px}
-  body.v3d.plotmin #gps3d:not([hidden]){top:calc(var(--bTop) + var(--bH) + 6px);width:var(--bW)}
+  /* (--bHm: the box's own height when it is taller than its reserve, set by renderHud; so the chart never lies under the box, 07.11.2026) */
+  body.v3d #miniPlot{top:calc(var(--bTop) + var(--bHm,var(--bH)) + 6px);width:var(--bW);height:min(var(--bW),26vh)}
+  body.v3d #plotMin{top:calc(var(--bTop) + var(--bHm,var(--bH)) + 2px);left:3px}
+  body.v3d.plotmin #gps3d:not([hidden]){top:calc(var(--bTop) + var(--bHm,var(--bH)) + 6px);width:var(--bW)}
   body.v3d.hudmin #miniPlot{top:calc(var(--bTop) + var(--sH) + 6px)}
   body.v3d.hudmin #plotMin{top:calc(var(--bTop) + var(--sH) + 2px)}
   body.v3d.hudmin.plotmin #gps3d:not([hidden]){top:calc(var(--bTop) + var(--sH) + 6px)}

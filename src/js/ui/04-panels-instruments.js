@@ -61,7 +61,9 @@ const hudPortrait = () => !!(HUDMQ && HUDMQ.matches);
 const HICON = {fuel:'<svg viewBox="0 0 24 24"><path d="M5 20V5.5A1.5 1.5 0 0 1 6.5 4h6A1.5 1.5 0 0 1 14 5.5V20"/><path d="M4 20h11"/><path d="M7 7.5h5V12H7z"/><path d="M14 11h2a2 2 0 0 1 2 2v3.5a1.5 1.5 0 0 0 3 0V9l-2.5-2.5"/></svg>',
   hold:'<svg viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></svg>',
   en:'<svg viewBox="0 0 24 24"><path d="M13 2.5L5 13.5h6L10 21.5l9-11h-6z"/></svg>',
-  sea:'<svg viewBox="0 0 24 24"><path d="M2 10c3.3-1.6 6.7-1.6 10 0s6.7 1.6 10 0"/><path d="M2 16c3.3-1.6 6.7-1.6 10 0s6.7 1.6 10 0"/></svg>'};
+  sea:'<svg viewBox="0 0 24 24"><path d="M2 10c3.3-1.6 6.7-1.6 10 0s6.7 1.6 10 0"/><path d="M2 16c3.3-1.6 6.7-1.6 10 0s6.7 1.6 10 0"/></svg>',
+  // the bleeding tub (Tony 06.11.2026): a tub with its water line
+  kar:'<svg viewBox="0 0 24 24"><path d="M3 7h18l-2 13H5z"/><path d="M6 13c2-1 4-1 6 0s4 1 6 0"/></svg>'};
 // the four figures the gauges and the strip show: the share 0–1, the text, and the class that colours a warning (yellow r1, red r2)
 function hudFigures(){
   const b = S.boat, H = S.t / 60, W = windAt(H), hs = hsAt(b.pos, H), atSea = b.status !== 'port', lvl = riskLevel(W, hs), L = (a, c) => S.lang === 'no' ? a : c;
@@ -71,7 +73,10 @@ function hudFigures(){
     // full is red with «Full», nearly full yellow (spilltest 3, U5); a freezer vessel's in tonnes of product (H2b); the strip says only «Full»
     hold:{v:holdP, txt:full ? L('Full', 'Full') + ' · ' + HF.short : HF.short, short:full ? L('Full', 'Full') : HF.short, tiny:full ? L('Full', 'Full') : HF.short.replace(/ kg$/, ''), cls:full ? 'r2' : holdP >= 0.9 ? 'r1' : ''},
     en:{v:energyOff() ? 1 : e / 100, txt:energyOff() ? L('av', 'off') : asleep() ? L('sover', 'asleep') : Math.round(e) + ' %', tiny:energyOff() ? L('av', 'off') : asleep() ? L('sover', 'asleep') : Math.round(e) + '%', cls:asleep() || (!energyOff() && e < ENERGY.dim) ? 'r2' : !energyOff() && e < ENERGY.warn ? 'r1' : ''},
-    sea:{v:atSea ? (lvl + 1) / 3 : 0.15, txt:fmt(hs, 1) + ' m', cls:atSea ? 'r' + lvl : ''}};
+    sea:{v:atSea ? (lvl + 1) / 3 : 0.15, txt:fmt(hs, 1) + ' m', cls:atSea ? 'r' + lvl : ''},
+    // the bleeding tub (Tony 06.11.2026: «nivå bløggekar må vises på en intuitiv måte»): kg in it of its size, yellow from half full
+    // (the haul slows, core/10-gear.js haulSlow), red at 90 % (full stops the fishing to gut); shown while she fishes or something lies in it
+    kar:(() => { const kg = deckPending(), cap = tubCap(), p = cap > 0 ? kg / cap : 0; return {v:p, txt:fmt(kg, 0) + ' / ' + fmt(cap, 0) + ' kg', short:fmt(kg, 0) + '/' + fmt(cap, 0), tiny:Math.round(p * 100) + '%', cls:p >= 0.9 ? 'r2' : p >= 0.5 ? 'r1' : '', on:atSea && (b.status === 'fishing' || kg > 0.5)}; })()};
 }
 // the third line (U2-1, plan 4.2): the warning that applies now (the rules ✕ or !, a synchronous roll with the advice, the buoy a mile off
 // with «Kjør dit»), or the next event («Fisket er ferdig 09:01 · om 30 min i ekte tid»); when neither, what the pill over the buttons used
@@ -92,6 +97,9 @@ function hudLine3(how){
   // strip (the short words: it is 47 vw on a phone and 250 px on a tablet), the box (in the place of the next event, so it does not grow
   // over the little chart) and the card (with the other's name and when, in real time)
   if (atSea){ const w = sjvWarn(); if (w){ cls = w.sev; h = sjvSay(w, strip ? 'tiny' : how === 'card' ? 'box' : 'strip'); if (strip) hs = '· CPA ' + w.cpa + ' m'; else h += ' <small>· CPA ' + w.cpa + ' m ' + sjvWhen(w) + '</small>'; } }
+  // the hull (core/16c-hull.js, Fysikk 3; Jonas 07.11.2026 after Tony's test: «viste ikke om det var noe å være bekymret for»): red while
+  // the water rises, with the minutes to a full engine room and «Verft ›» (the nearest yard by Autonav); yellow while the pump keeps up
+  if (!h && atSea){ const hw = hullWarn(b); if (hw){ cls = hw.cls; go = 'yard'; h = hw.short; } }
   if (strip && atSea){
     if (!h && RU.ok){ const r = ruNow(); if (r.v !== 'ok'){ const it = r.items.find(i => i.v === r.v); cls = r.v === 'no' ? 'r2' : 'r1'; h = (r.v === 'no' ? '✕ ' : '! ') + (it ? ruShort(it) : L('Regler', 'Rules')); } }
     if (!h){ const M = motionHere(H, b), z = M.state; if (z.lvl){ cls = 'r' + z.lvl; h = {gm:L('Rank båt', 'Tender boat'), res:stabStill(b) ? L('Synkronrulling · rull ', 'Synchronous roll · rolls ') + Math.round((M.M.roll + M.M.heel) * 180 / Math.PI) + '°' : L('Synkronrulling · endre kurs eller fart', 'Synchronous roll · change course or speed'), roll:L('Kraftig rulling · ta det rolig', 'Heavy rolling · ease off')}[z.why] || ''; } }
@@ -108,10 +116,30 @@ function hudLine3(how){
   if (!h){ const nx = nextEvent(); if (nx){ h = (narrow ? hudShortEv(nx.txt) : '⏱ ' + nx.txt) + ' ' + hm(nx.t / 60); if (strip) hs = '· ' + (no ? 'om ' : 'in ') + realDur(nx.t - S.t); else h += ' <small>· ' + inReal(nx.t - S.t) + '</small>'; } }
   if (!h && (on || I.place)){ h = on || I.place; on = ''; cls = 'q'; }
   if (!h && strip && atSea){ const cp = coldPen(H); if (cp > 0.03){ cls = 'cold'; h = L('Kulde −', 'Cold −') + Math.round(cp * 100) + ' % · ' + Math.round(effTemp(H)) + ' °C'; } }
-  const tail = [strip ? '' : on, I.reels, I.deck ? (how === 'card' ? I.deck[0] : L('Dekk ', 'Deck ') + I.deck[1]) : ''].filter(Boolean).join(' · ');
+  const tail = [strip ? '' : on, I.reels, I.deck ? (how === 'card' ? I.deck[0] : I.deck[1]) : ''].filter(Boolean).join(' · ');   // (the deck's short text says what goes on: «Sløyer 90 kg · 4 min», «Kar 90/150 kg»)
   if (!h && tail) return '<div class="st nx q"><span class="l3">' + tail + '</span></div>';   // only the deck (or the work): the line itself
   if (!h && !tail && !strip) return '';
   return '<div class="st nx' + (cls ? ' ' + cls : '') + '"' + (go ? ' data-hgo="' + go + '"' : '') + '><span class="l3">' + h + '</span>' + (hs ? '<span class="l3s">' + hs + '</span>' : '') + (tail ? '<span class="l3d">' + tail + '</span>' : '') + '</div>';
+}
+// the leak as the strip and the box say it: null when the hull is whole. Red and the minutes left while the water rises (the pump cannot
+// keep up), yellow while the pump keeps up with it (core/16c-hull.js hullMinute has the same arithmetic)
+function hullWarn(b){
+  const d = b.dmg; if (!d || !(d.A > 0 || d.w > 0) || d.flood) return null;
+  const L = (no, en) => S.lang === 'no' ? no : en, Q = hullLeak(b), P = hullPump(b), rise = Q > P && d.w > 0;
+  if (rise){ const left = Math.max(0, Math.round((hullFlood(b) - d.w) / (Q - P))); return {cls:'r2', short:L('VANN I BÅTEN · fullt om ' + left + ' min · Verft ›', 'WATER IN THE BOAT · full in ' + left + ' min · Yard ›'), long:L('Vann stiger · fullt om ' + left + ' min', 'Water rising · full in ' + left + ' min')}; }
+  if (Q > 0) return {cls:'r1', short:L('Lekkasje · pumpa holder unna · Verft ›', 'Leak · the pump keeps up · Yard ›'), long:L('Lekkasje ' + Math.round(Q) + ' l/min · pumpa holder unna', 'Leak ' + Math.round(Q) + ' l/min · pump keeps up')};
+  if (d.w > 0) return {cls:'r1', short:L('Vann i båten · pumpa lenser · Verft ›', 'Water in the boat · pumping out · Yard ›'), long:L('Lenser ' + Math.round(d.w) + ' l', 'Pumping out ' + Math.round(d.w) + ' l')};
+  return null;
+}
+// «Kjør til verft»: Autonav to the nearest yard, as the dock's «Kjør dit» to a buoy (10c-dock.js goTo)
+function hudGoYard(){
+  const b = S.boat, L = (no, en) => S.lang === 'no' ? no : en, y = nearestYard(b.pos); if (!y){ toast(L('Fant ikke noe verft.', 'No yard found.')); return; }
+  if (b.status === 'sailing'){ S.plan = null; b.status = 'idle'; b.v = 0; }
+  if (!['idle', 'port'].includes(b.status) || (S.plan && S.plan.depAt)){ toast(L('Båten er opptatt. Stopp det den holder på med først.', 'The boat is busy. Stop what it is doing first.')); return; }
+  if (S.draft.length) draftEdit(() => { S.draft = []; });
+  hudCardOpen(false); if (typeof DOCK !== 'undefined' && DOCK.close) DOCK.close(); openPlotter();
+  toast(L('Autonav til ' + y.name + ', ' + fmt(dist(b.pos, y.p) / NM, 1) + ' nm. Trykk «Kast loss» når ruta ligger.', 'Autonav to ' + y.name + ', ' + fmt(dist(b.pos, y.p) / NM, 1) + ' nm. Tap «Cast off» once the route is there.'), 8000);
+  leiaTo({x:y.p.x, y:y.p.y});
 }
 function renderHud(){
   const b = S.boat, H = S.t / 60, no = S.lang === 'no', L = (a, c) => no ? a : c, F = hudFigures(), {W, hs, lvl, atSea, HF} = F;
@@ -133,7 +161,7 @@ function renderHud(){
     const stTxt = narrow && b.status === 'port' && !b.land && !b.shift && !b.fueling && !(S.plan && S.plan.depAt) ? L('I havn', 'In port') : statusText();
     setHtml(hud, '<div class="hs1' + (up ? '' : ' wb') + '"><span class="ht">' + hm(H) + '</span><i class="dot ' + dot + '"></i><span class="hs">' + stTxt + '</span><b class="hc' + (S.cash < 0 ? ' r2' : '') + '">' + kr(cashShown()) + '</b>' +
       (up ? '' : '<button type="button" class="hmin" data-hmin="hud" aria-label="' + L('Vis hele boksen', 'Show the whole box') + '">+</button>') + '</div>' +
-      '<div class="hs2">' + g2('fuel', F.fuel, 'Diesel') + g2('hold', F.hold, L('Last', 'Hold')) + g2('en', F.en, L('Energi', 'Energy')) + g2('sea', F.sea, L('Sjø', 'Sea')) + '</div>' + hudLine3('strip'));
+      '<div class="hs2">' + g2('fuel', F.fuel, 'Diesel') + g2('hold', F.hold, L('Last', 'Hold')) + (F.kar.on ? g2('kar', F.kar, L('Bløggekar', 'Bleeding tub')) : '') + g2('en', F.en, L('Energi', 'Energy')) + g2('sea', F.sea, L('Sjø', 'Sea')) + '</div>' + hudLine3('strip'));
   } else {
   // «Kystlys» U3 (docs/planer/ui-redesign.md, V5 A, 04.11.2026): the status box is instruments, not a table of eleven rows. Four gauges
   // on one row (diesel, hold, energy, sea), under them only what matters now (the rules at sea, a roll, the cold, the luck, the fleet),
@@ -144,6 +172,8 @@ function renderHud(){
   const gauges = card ? '<div class="gauges open">' + gs + '</div>' : '<button type="button" class="gauges' + (showAll ? ' open' : '') + '" data-hfull aria-label="' + L('Vis alle tallene', 'Show all the figures') + '">' + gs + '</button>';
   // what matters now, as rows with what to do
   const now = [];
+  // water in the boat (Fysikk 3): the leak and the pump, red while it rises, with «Kjør til verft»
+  if (atSea){ const hw = hullWarn(b); if (hw) now.push('<div class="row warn"><span>' + L('Skroget', 'The hull') + '</span><b class="' + hw.cls + '">' + hw.long + '</b><button type="button" class="hgo" data-hgo="yard">' + L('Verft', 'Yard') + '</button></div>'); }
   if (S.fleet && S.fleet.length > 1) now.push('<div class="row"><span>' + L('Båt', 'Vessel') + '</span><b>' + S.boatName + (meAboard() ? ' ⚓' : '') + '</b></div>');
   // her own gear in the sea (spilltest 3, U2; Jonas 05.11.2026, V2 B): how far to the nearest buoy and how she moves; red with «Kjør dit»
   // a mile off
@@ -175,7 +205,10 @@ function renderHud(){
   // the compass and the plotter's instruments take their room from the box (--hudW, --gpsTop): measured when its content has changed and
   // every 2 s (setting them on the chart's parent every tick restyled the whole chart), never while the card is open (it is wider, and
   // nothing under it moves). In 3D the little chart has a fixed place of its own (styles.css, U2-1), whatever the box's height
-  if (!card && (hud.dataset.v !== hudV || performance.now() - hudT > 2000)){ hudV = hud.dataset.v; hudT = performance.now(); requestAnimationFrame(() => { const mw = $('mapwrap').style, hr = hud.getBoundingClientRect(), top = Math.round(hr.bottom - $('mapwrap').getBoundingClientRect().top + 6) + 'px', w = Math.round(hr.width) + 'px'; if (mw.getPropertyValue('--gpsTop') !== top) mw.setProperty('--gpsTop', top); if (mw.getPropertyValue('--hudW') !== w) mw.setProperty('--hudW', w); }); }
+  if (!card && (hud.dataset.v !== hudV || performance.now() - hudT > 2000)){ hudV = hud.dataset.v; hudT = performance.now(); requestAnimationFrame(() => { const mw = $('mapwrap').style, hr = hud.getBoundingClientRect(), top = Math.round(hr.bottom - $('mapwrap').getBoundingClientRect().top + 6) + 'px', w = Math.round(hr.width) + 'px'; if (mw.getPropertyValue('--gpsTop') !== top) mw.setProperty('--gpsTop', top); if (mw.getPropertyValue('--hudW') !== w) mw.setProperty('--hudW', w);
+    // on its side the little chart stands under the box's reserved height (--bH), or under the box itself when it is taller (more «now» rows:
+    // the hull, the buoy, the stability; Jonas 07.11.2026: «Hater at disse boksene overlapper hverandre»): --bHm is the larger of the two
+    const bh = parseFloat(getComputedStyle(document.body).getPropertyValue('--bH')) || 0, bhm = Math.round(Math.max(bh, hr.height)) + 'px'; if (bh && mw.getPropertyValue('--bHm') !== bhm) mw.setProperty('--bHm', bhm); }); }
 }
 // position/heading between simulation steps, so instruments and 3D move smoothly
 function liveFrac(){ return clamp(acc + (wallNow() - lastWall) / 1000 * simRate() / 60, 0, 0.999); }
@@ -271,7 +304,7 @@ const INSTR = (() => {
 // a tap in the box: «Kjør dit» to the buoy, the fold and the card, the whole table, the rules line (the Regler app); on the strip itself,
 // the whole box as a card (U2-1)
 hud.addEventListener('click', e => {
-  const go = e.target.closest('[data-hgo]'); if (go){ e.stopPropagation(); const s = mySets().find(x => String(x.id) === go.dataset.hgo); if (s) DOCK.goTo(s); return; }
+  const go = e.target.closest('[data-hgo]'); if (go){ e.stopPropagation(); if (go.dataset.hgo === 'yard'){ hudGoYard(); return; } const s = mySets().find(x => String(x.id) === go.dataset.hgo); if (s) DOCK.goTo(s); return; }
   if (e.target.closest('[data-hrest]')){ e.stopPropagation(); hudCardOpen(false); doAct({dataset:{act:'rest'}, disabled:false}); return; }   // the bunk from the box (U2-2)
   if (e.target.closest('[data-hmin]')){ e.stopPropagation(); hudFold('hud'); return; }
   if (e.target.closest('[data-hcard]')){ e.stopPropagation(); hudCardOpen(false); return; }

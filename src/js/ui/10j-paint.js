@@ -141,9 +141,14 @@ var PAINT = (() => {
       if (n === r.n) return false;
       if (regUsed(r.f, r.k, n)){ toast(L(r.f + '-' + n + '-' + r.k + ' er en ekte båt. Velg et annet nummer.', r.f + '-' + n + '-' + r.k + ' is a real boat. Choose another number.')); return false; }
       if (owned('reg')){ regSet(n); return false; }
-      S.cosWant = Object.assign({}, S.cosWant, {reg:n}); payBuy('des_reg', () => { giveCos('reg'); if (typeof DOCK !== 'undefined') DOCK.render(); }); return true; }
+      // not yours yet: the shared world is asked before the payment, so a number another boat has is refused here and not after it is
+      // paid for (the shop's review 07.11.2026); without the cloud (the artifact, the tests) and for a guest (asked to register) at once
+      const buy = () => { S.cosWant = Object.assign({}, S.cosWant, {reg:n}); payBuy('des_reg', () => { giveCos('reg'); if (typeof DOCK !== 'undefined') DOCK.render(); }); };
+      if (!regCloud()){ buy(); return true; }
+      regFree(regText({f:r.f, n, k:r.k}), regKeep()).then(ok => { if (ok) buy(); }); return false; }
     if (a === 'pntbuy'){ const k = d.d; if (!COS.includes(k) || owned(k)) return false;
       S.cosWant = Object.assign({}, S.cosWant, {[k]:k === 'flagg' ? Object.assign({}, pre.flag) : k === 'logo' ? pre.logo || null : pre.d[k] || 1});   // what to put on when it comes back from the payment
+      if (k === 'logo' && flagOf(pre).code === 'LOGO') S.cosWant.logoFlag = Object.assign({}, pre.flag);   // (the house flag tried with it, 07.11.2026)
       payBuy('des_' + k, () => { giveCos(k); const was = pre; pre = copy(S.boat.liv); if (k === 'logo' && was && flagOf(was).code === 'LOGO') pre.flag = was.flag; PAINTPRE = pre; if (typeof DOCK !== 'undefined'){ DOCK.render(); DOCK.redraw(); } });
       return true; }
     if (a === 'pntgo'){
@@ -195,21 +200,46 @@ async function logoCheck(){
 function giveCos(k){
   if (!COS.includes(k)) return null; S.cos = Object.assign({}, S.cos, {[k]:1});
   const want = S.cosWant && S.cosWant[k], b = S.boat; if (S.cosWant) delete S.cosWant[k];
-  if (want && k === 'reg') regSet(want);
-  else if (k === 'logo' && want) logoSet(want);
+  if (want && k === 'reg') regSet(want, true);
+  else if (k === 'logo' && want){ logoSet(want); const lf = S.cosWant && S.cosWant.logoFlag; if (lf){ b.liv = Object.assign({}, b.liv, {flag:lf}); delete S.cosWant.logoFlag; } }
   else if (want && k === 'flagg' && want.c){ b.liv = Object.assign({}, b.liv, {flag:{c:want.c, s:want.s || 'rekt'}}); }
   else if (want && designFits(b.type, k)){ b.liv = Object.assign({}, b.liv); b.liv.d = Object.assign({}, b.liv.d, {[k]:want}); }
   const N = PAINT.DNAME[k]; log('Du har nå «' + N[0] + '» i Malerverkstedet.', 'You now have «' + N[1] + '» in the paint shop.');
   return S.lang === 'en' ? N[1] : N[0];
 }
 // a number of one's own in the boat's registration mark: the shared world's claim first (no two players' boats wear the same mark,
-// supabase/migrations/20261007100000_designs.sql reg_claim); without the cloud (the artifact, the tests) it is set at once
-async function regSet(n){
-  const b = S.boat, r = regOf(b); if (!r) return false; const mark = r.f + '-' + n + '-' + r.k, L = (no, en) => S.lang === 'en' ? en : no;
-  if (typeof CLOUD !== 'undefined' && CLOUD.on && CLOUD.user && !(typeof isGuest === 'function' && isGuest())){
-    let ok = false; try { ok = await cloudRpc('reg_claim', {mark}); } catch (e){ toast(L('Fikk ikke sjekket nummeret. Prøv igjen litt senere.', 'Could not check the number. Try again a little later.')); return false; }
-    if (ok !== true){ toast(L(mark + ' er tatt av en annen båt. Velg et annet nummer.', mark + ' is taken by another boat. Choose another number.')); return false; }
+// supabase/migrations/20261107120000_reg_in_use.sql reg_claim); without the cloud (the artifact, the tests) it is set at once. paid: it
+// was just bought (giveCos), so a number taken during the payment says the number is still yours to choose
+async function regSet(n, paid){
+  const b = S.boat, r = regOf(b); if (!r) return false; const mark = r.f + '-' + n + '-' + r.k, L = (no, en) => S.lang === 'en' ? en : no, keep = regKeep(), nm = S.boatName;
+  if (regCloud()){
+    const free = await regFree(mark, keep, paid); if (!free) return false;
+    let ok = false; try { ok = await cloudRpc('reg_claim', free === 'old' ? {mark} : {mark, keep}); } catch (e){ toast(L(REG_FAIL[0], REG_FAIL[1])); return false; }
+    if (ok !== true){ regTaken(mark, paid); return false; }
   }
-  b.reg = {f:r.f, n, k:r.k}; log((S.boatName || 'Båten') + ' har fått registreringsmerket ' + mark + '.', (S.boatName || 'The boat') + ' now carries the registration mark ' + mark + '.');
+  b.reg = {f:r.f, n, k:r.k}; log((nm || 'Båten') + ' har fått registreringsmerket ' + mark + '.', (nm || 'The boat') + ' now carries the registration mark ' + mark + '.');
   save(); if (typeof DOCK !== 'undefined') DOCK.render(); return true;
+}
+const REG_FAIL = ['Fikk ikke sjekket nummeret. Prøv igjen litt senere.', 'Could not check the number. Try again a little later.'];
+// the shared world says whose number is whose; a guest has none of its own (and is asked to register before buying)
+const regCloud = () => typeof CLOUD !== 'undefined' && CLOUD.on && CLOUD.user && !(typeof isGuest === 'function' && isGuest());
+// the marks the company's other boats wear: their claims are kept when this boat takes a number, and the player's others are let go,
+// so only the numbers in use count (07.11.2026: a boat's previous number, a boat sold, the numbers set before were kept for good)
+function regKeep(){ return (S.fleet || []).filter(v => v.id !== S.cur).map(v => { const bb = vget(v, 'boat'); return bb && bb.reg && bb.reg.f ? regText(bb.reg) : null; }).filter(Boolean); }
+function regTaken(mark, paid){
+  if (!paid){ toast(S.lang === 'en' ? mark + ' is taken by another boat. Choose another number.' : mark + ' er tatt av en annen båt. Velg et annet nummer.'); return; }
+  const no = mark + ' ble tatt av en annen båt mens du betalte. Ønskenummeret er ditt, så velg et annet nummer i Malerverkstedet uten å betale igjen.',
+    en = mark + ' was taken by another boat while you paid. Your own number is yours, so choose another in the paint shop without paying again.';
+  msg('Malerverkstedet', no, en); toast(S.lang === 'en' ? en : no);
+}
+// may this boat take the mark: asked of the shared world without claiming it (reg_check), before the payment and before the claim.
+// true, or false with a toast that says why; 'old' when the server has not had that migration (no reg_check, 404): then the number is
+// claimed as before and nothing is asked before the payment (until 20261107120000_reg_in_use.sql is run, then never)
+async function regFree(mark, keep, paid){
+  const L = (no, en) => S.lang === 'en' ? en : no; let s;
+  try { s = await cloudRpc('reg_check', {mark, keep}); } catch (e){ if (/ 404$/.test(e.message || '')) return 'old'; toast(L(REG_FAIL[0], REG_FAIL[1])); return false; }
+  if (s === 'taken'){ regTaken(mark, paid); return false; }
+  if (s === 'many'){ toast(L('Du har ønskenummer på ti båter allerede, og det er det meste om gangen.', 'You already have your own number on ten boats, which is the most at a time.')); return false; }
+  if (s !== 'ok'){ toast(L(REG_FAIL[0], REG_FAIL[1])); return false; }
+  return true;
 }
