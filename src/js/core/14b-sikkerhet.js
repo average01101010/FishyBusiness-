@@ -23,7 +23,7 @@ const MOBK = {
   dark:1.5, ice:2, gop:1.3, open:1.5, shelter:0.35,
   gap:24 * 60, nearGap:120,       // game minutes: at most one fall a day on a vessel, one near miss in two hours
   leeP:0.012, leeB:0.03,          // leeway: a person in a life jacket and a lifebuoy, a share of the wind's speed
-  reach:0.025, slow:2,            // the ladder and the sling: within 25 m, under 2 knots
+  reach:0.03, slow:2,             // the ladder and the sling: within 30 m (the buoy's line, FOR-2013-11-22-1404 § 43), under 2 knots
   boatReach:0.5, boatSlow:3,      // the rescue boat from 45 m: within 500 m, the ship under 3 knots
   ladder:2, sling:4,              // game minutes to get her up
   mb:{swing:1, lowerH:8, kn:6, pick:1, hoist:1.5},   // the rescue boat: the davit out, the fall (LSA 6.1.2.8: 0.4 + 0.02 H m/s), 6 knots (LSA 5.1.1.3)
@@ -181,7 +181,11 @@ function mobVhf(M){
 }
 
 // ---- where she is, and what is seen (live: at fraction f of the minute) ----
-function mobAt(f){ const M = S.mob; if (!M) return null; if (M.st !== 'water') return {x:M.x, y:M.y}; f = f || 0; return {x:M.x + M.vx * f, y:M.y + M.vy * f}; }
+function mobAt(f){ const M = S.mob; if (!M) return null; if (M.st !== 'water' || mobFast()) return {x:M.x, y:M.y}; f = f || 0; return {x:M.x + M.vx * f, y:M.y + M.vy * f}; }
+// on the ladder or in the sling she is fast to the boat (the buoy's line, the sling): alongside at the quarter, where the ladder is
+const mobFast = () => { const M = S.mob; return !!(M && M.lift && M.lift.how !== 'boat' && M.st === 'water'); };
+function mobAlong(){ const M = S.mob, b = S.boat, hd = b.heading || 0, gs = gridScale(b.pos), aft = (BOAT.len || 8) * 0.42 / 1000 * gs, out = ((BOAT.beam || 3) / 2 + 0.4) / 1000 * gs * (M.side || 1);
+  return {x:b.pos.x - Math.sin(hd) * aft + Math.cos(hd) * out, y:b.pos.y + Math.cos(hd) * aft + Math.sin(hd) * out}; }
 function mobSightOf(p, buoyOnly){
   const M = S.mob, b = S.boat, H = S.t / 60; let dark = !!M.dark, hs = 0, vis = 50;
   try { dark = sunAt(H, p).el < -6; hs = hsAt(p, H); vis = visibility(H, p); } catch (e){ /* a block not loaded */ }
@@ -210,7 +214,7 @@ function mobThrow(pos){
 function mobTarget(){
   const M = S.mob, b = S.boat; if (!M || M.st !== 'water') return null; const s = mobSeen(), p = mobAt(0);
   if (s.p){ const eta = kmTrue(b.pos, p) / (Math.max(3, Math.min(BOAT.vcruise || 6, 8)) * NM) * 60; return {x:p.x + M.vx * eta, y:p.y + M.vy * eta, k:'p'}; }
-  if (s.b) return {x:M.buoy.x, y:M.buoy.y, k:'b'};
+  if (s.b){ const B = M.buoy, eta = kmTrue(b.pos, B) / (Math.max(3, Math.min(BOAT.vcruise || 6, 8)) * NM) * 60, L = mobLee(S.t / 60, B, MOBK.leeB); return {x:B.x + L.x * eta, y:B.y + L.y * eta, k:'b'}; }
   return M.mark ? {x:M.mark.x, y:M.mark.y, k:'m'} : null;
 }
 // the way back: the Williamson turn while she still runs away from the place (60° to the side she fell, then hard over to the other
@@ -225,7 +229,10 @@ function mobRoute(){
   const P = b.pos, at = (u, v) => ({x:P.x + f.x * u * R + r.x * v * R, y:P.y + f.y * u * R + r.y * v * R}), wps = [];
   const turn = Math.abs(rel) > 1.6 && b.status === 'sailing' && (b.v || 0) > 2 && kmTrue(P, tgt) < 2;
   if (turn) wps.push(at(0.866, 0.5), at(2.232, 0.866), at(2.598, -0.5), at(1.732, -1));
-  const last = wps.length ? wps[wps.length - 1] : P, d = dist(last, tgt), stop = d > 0.02 ? {x:tgt.x - (tgt.x - last.x) * 0.015 * gs / d, y:tgt.y - (tgt.y - last.y) * 0.015 * gs / d} : {x:tgt.x, y:tgt.y};
+  // (the stop 18 m to windward of her: with no way on the boat drifts faster than a person, so she comes down on her, not away; in
+  // little wind 15 m short of her on the way in)
+  const last = wps.length ? wps[wps.length - 1] : P, d = dist(last, tgt), Lw = mobLee(S.t / 60, tgt, 1), lw = Math.hypot(Lw.x, Lw.y);
+  const stop = lw > 0.06 * gs ? {x:tgt.x - Lw.x / lw * 0.018 * gs, y:tgt.y - Lw.y / lw * 0.018 * gs} : d > 0.02 ? {x:tgt.x - (tgt.x - last.x) * 0.015 * gs / d, y:tgt.y - (tgt.y - last.y) * 0.015 * gs / d} : {x:tgt.x, y:tgt.y};
   wps.push(stop);
   const why = {why:['Williamson-svingen går over land eller grunt her.', 'The Williamson turn crosses land or shallows here.'], to:stop};
   try { let a = P; for (const w of wps){ if (isLand(w) || groundCheck(a, w)) return why; a = w; } } catch (e){ return why; }   // (the chart not loaded there: Autonav finds its own way)
@@ -251,6 +258,7 @@ function mobLift(how, pos, kn){
     ph = {swing:t0 + MOBK.mb.swing, low:t0 + MOBK.mb.swing + low, there:t0 + MOBK.mb.swing + low + go}; tp = ph.there + MOBK.mb.pick; ph.back = tp + go; t1 = ph.back + MOBK.mb.hoist; }
   else tp = t1 = t0 + (how === 'ladder' ? MOBK.ladder : MOBK.sling);
   M.lift = {how, t0, tp:Math.ceil(tp), t1:Math.ceil(t1), ph, d:Math.round(kmTrue(pos || S.boat.pos, mobAt(0)) * 1000)};
+  if (how !== 'boat'){ const q = mobAlong(); M.x = q.x; M.y = q.y; M.vx = M.vy = 0; }   // (the line on her, and in to the quarter)
   const T = {ladder:['Opp med leideren akter: ' + M.name + ' blir halt inntil og klatrer opp (§ 63).', 'Up the ladder aft: ' + M.name + ' is pulled alongside and climbs up (§ 63).'],
     sling:['Løftestroppen ut: ' + M.name + ' får den rundt seg og blir heist om bord.', 'The lifting sling out: ' + M.name + ' gets it round and is hoisted aboard.'],
     boat:['MOB-båten svinges ut med davitet og fires på sjøen.', 'The rescue boat is swung out on the davit and lowered to the sea.']}[how];
@@ -260,14 +268,15 @@ function mobLift(how, pos, kn){
 function mobLiftHolds(){
   const M = S.mob, L = M.lift, b = S.boat, d = kmTrue(b.pos, mobAt(0)), v = Math.abs(b.v || 0);
   if (L.how === 'boat') return M.st !== 'water' || S.t >= L.ph.low || (d <= MOBK.boatReach * 1.2 && v <= MOBK.boatSlow + 1);
-  return d <= MOBK.reach * 1.6 && v <= MOBK.slow + 1;
+  return v <= MOBK.slow + 1;   // (she is fast to the boat: it holds while the boat is not driven off)
 }
 
 // ---- the minute of the event ----
 function mobStep(){
   const M = S.mob, H = S.t / 60;
   if (!mobLive() || !mobFollowed() || !meAboard()){ mobAway(); return; }
-  if (M.st === 'water'){ const L = mobLee(H, M, MOBK.leeP); M.vx = L.x; M.vy = L.y; M.x += L.x; M.y += L.y; }
+  if (mobFast()){ const q = mobAlong(); M.x = q.x; M.y = q.y; M.vx = M.vy = 0; }
+  else if (M.st === 'water'){ const L = mobLee(H, M, MOBK.leeP); M.vx = L.x; M.vy = L.y; M.x += L.x; M.y += L.y; }
   const B = M.buoy;
   if (B){ if (B.held){ B.x = M.x; B.y = M.y; } else { const L = mobLee(H, B, MOBK.leeB); B.x += L.x; B.y += L.y;
     if (M.st === 'water' && kmTrue(B, M) < MOBK.hold && S.t - M.t0 < M.able){ B.held = true; log(M.name + ' fikk tak i livbøya.', M.name + ' got hold of the lifebuoy.', 'nav'); } } }

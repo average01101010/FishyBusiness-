@@ -119,6 +119,17 @@ COVER = {'tests/kartkorridortest.py':['kartkorridortest'], 'tests/legmemotest.py
 # Ø11.3 (07.11.2026): the collisions are in core/05e-sjovei.js (hulltest 7); and the lanterns' and the anchor light's tests for the file
 # Ø11.2 changed (backloggen «lanterntest og anchorlight3d står ikke i COVER»). On a line of their own: the line above is H3b's as well
 COVER['src/js/core/05e-sjovei.js'] = COVER['src/js/core/05e-sjovei.js'] + ['hulltest', 'lanterntest', 'anchorlight3d']
+# Ø11.6 (07.11.2026): man overboard. mobtest plays it without 3D (the fall in the game's minute, the mark, the Williamson turn, the ladder,
+# the rescue, the near miss); mobshot draws the person in the water, the lifebuoy with its smoke and the rescue boat on its davit (3D,
+# alone). On lines of their own, so a merge with the sessions that add to the lists above does not meet them
+LITE += ['mobtest']
+D3 += ['mobshot']
+COVER['src/js/core/14b-sikkerhet.js'] = ['mobtest', 'seaworktest']   # (crewtest is run by hand: it is in no list)
+COVER['src/js/ui/10s-mob.js'] = ['mobtest', 'mobshot']
+COVER['tests/mobtest.py'] = ['mobtest']
+COVER['tests/mobshot.py'] = ['mobshot']
+for _f, _t in (('src/js/view3d/21-rescue-anchor.js', 'mobshot'), ('src/js/deckcrew.js', 'mobshot'), ('src/js/core/04-crew.js', 'mobtest'), ('src/js/core/13-work.js', 'mobtest'), ('src/js/core/05-vessels.js', 'mobtest'), ('src/js/ui/03-map.js', 'mobtest'), ('src/js/ui/10e-sound.js', 'mobtest')):
+    COVER[_f] = COVER.get(_f, []) + [_t]
 
 
 def changed_tests():
