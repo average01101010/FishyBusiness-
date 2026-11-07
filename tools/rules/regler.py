@@ -14,8 +14,10 @@
 #  - hom, lok: the main statistics areas and the locations (from 2018), for the landing notes.
 #  - sea, shelf (H1b R4, 04.11.2026): the zones off the coast (Norway's, the neighbours', the international waters) and Norway's
 #    continental shelf, see seas() below.
+#  - skag (Ø10, 07.11.2026): the Skagerrak of the cod regulation, see skagerrak() below.
 # Coordinates: in units of 10 m, every ring or line as [x0, y0, dx1, dy1, ...].
 #   python3 tools/rules/regler.py [map dir]      (default tools/map/out/game, else the newest kart- release through game.py)
+#   python3 tools/rules/regler.py --skag         only skag, put into the rules.json there is (after fetch.py --skag), the rest untouched
 import os, re, sys, json, time, math, datetime, numpy as np, shapely, contourpy
 from PIL import Image, ImageDraw
 from shapely.geometry import shape, LineString, MultiLineString, Polygon, MultiPolygon, Point
@@ -490,6 +492,55 @@ def stats():
         old = g.bounds[0] >= 0 and g.bounds[2] <= 1450 and g.bounds[1] >= 0 and g.bounds[3] <= 1750
         lok.append(dict(c=p.get('lokref') or f"{p.get('havomr')}-{p.get('lokasjon')}", r=rings(g.simplify(0.4 if old else 1.0, preserve_topology=True))))
     return hom, lok
+# ---------- the Skagerrak (Ø10, 07.11.2026) ----------
+# Forskrift 19. desember 2025 nr. 2805 om regulering av fisket etter torsk i Nordsjøen og Skagerrak i 2026 § 1 (the same words in the 2023
+# one, FOR-2022-12-16-2281): «Det er forbudt for norske fartøy å fiske og lande torsk» «I Skagerrak, det vil si utenfor den norske
+# grunnlinjen og videre avgrenset mot vest av en rett linje gjennom fra Hanstholmen fyr til Lindesnes fyr og i sør av en rett linje gjennom
+# Skagen fyr til Tistlarna fyr utenfor 4 nautiske mil av de svenske og danske grunnlinjene.» Those are ICES's own lines round 3.a.20, so the
+# area is ICES 3.a.20 as Fiskeridirektoratet draws it (Statistikområder layer 3, fetch.py), its west edge the straight line from Hanstholm to
+# Lindesnes. The game asks it only outside the Norwegian baseline and in Norway's waters (03e-rules.js ruSkag; the Danish and Swedish zones
+# are closed anyway), so its shore does not matter: before it is simplified the area is widened over the land and the inner waters inside
+# the baseline (blin) east of the line, so the simplification moves only edges that lie inside the baseline, and the holes (islands) go.
+SKAG_TOL = 0.2
+def skagerrak(blin):
+    f = [g for g, p in fd(3, 'stati') if p.get('area_27') == '3.a.20']; assert len(f) == 1, len(f)
+    ices = shapely.union_all([Polygon(p.exterior) for p in getattr(f[0], 'geoms', [f[0]])])
+    # the west edge: the ring's corners at the two lights (ICES's polygon has Lindesnes at 57.97993 N 7.05134 E and Hanstholm at 57.11789 N
+    # 8.58917 E, with 39 points on the straight line between them), and the side of it the Skagerrak is on
+    ring = np.asarray(max(getattr(f[0], 'geoms', [f[0]]), key=lambda p: p.area).exterior.coords); bb = ices.bounds
+    near = lambda la, lo: min(ring, key=lambda c, q=ll2frame(la, lo): (c[0] - q[0]) ** 2 + (c[1] - q[1]) ** 2)
+    a, b = near(57.98, 7.05), near(57.118, 8.589)   # Lindesnes, Hanstholm
+    d = np.array(b) - np.array(a); d /= np.hypot(*d); n = np.array([-d[1], d[0]])   # n points east of the line (to the Skagerrak)
+    if np.dot(np.array(ices.centroid.coords[0]) - a, n) < 0: n = -n
+    far = 2000; east = Polygon([a - d * far, b + d * far, b + d * far + n * far, a - d * far + n * far])
+    box = Polygon([(bb[0], bb[1]), (bb[2], bb[1]), (bb[2], bb[3]), (bb[0], bb[3])])
+    wide = shapely.union_all([ices, blin.intersection(box).intersection(east)])
+    S = shapely.union_all([Polygon(p.exterior) for p in getattr(wide, 'geoms', [wide]) if p.area > 1]).simplify(SKAG_TOL, preserve_topology=True)
+    S = MultiPolygon([p for p in getattr(S, 'geoms', [S]) if p.geom_type == 'Polygon' and p.area > 1]) if S.geom_type != 'Polygon' else S
+    # checks: outside the baseline the simplified area says what ICES's says, and the places the game is tested at
+    shapely.prepare(blin); shapely.prepare(ices); shapely.prepare(S)
+    rng = np.random.default_rng(1); X = rng.uniform(bb[0], bb[2], 40000); Y = rng.uniform(bb[1], bb[3], 40000); o = ~shapely.contains_xy(blin, X, Y)
+    agree = (shapely.contains_xy(S, X, Y) == shapely.contains_xy(ices, X, Y))[o]
+    chk = {'skag outside the baseline vs ICES 3.a.20': f'{agree.mean() * 100:.2f} % of {agree.size}', 'skag corners': sum(len(p.exterior.coords) for p in getattr(S, 'geoms', [S])),
+           'Lindesnes': frame2ll(*a), 'Hanstholm': frame2ll(*b)}
+    for k, (la, lo, want) in {'57.7 N 7.3 E (west of the line)': (57.7, 7.3, False), '57.7 N 7.8 E (east of it)': (57.7, 7.8, True),
+                              'off Kristiansand 57.95 N 8.0 E': (57.95, 8.0, True), 'off Egersund 58.35 N 5.8 E': (58.35, 5.8, False),
+                              'off Lista 58.0 N 6.6 E': (58.0, 6.6, False), 'off Karmøy 59.3 N 5.0 E': (59.3, 5.0, False)}.items():
+        x, y = ll2frame(la, lo); got = bool(shapely.contains_xy(S, x, y)) and not bool(shapely.contains_xy(blin, x, y))
+        chk[k] = 'OK' if got == want else f'FEIL ({got})'
+    print('skag', json.dumps(chk, ensure_ascii=False))
+    bad = [k for k, v in chk.items() if str(v).startswith('FEIL')]
+    if bad or agree.mean() < 0.995: raise SystemExit(f'skag: the area is wrong ({bad or "agreement"}); rules.json not written')
+    return rings(S)
+SKAG_SRC = 'Fiskeridirektoratet, Statistikområder lag 3 (ICES-områder f.o.m. 2018, NLOD): Skagerrak 3.a.20, hentet '
+skag_src = lambda: SKAG_SRC + time.strftime('%Y-%m-%d', time.gmtime(os.path.getmtime(os.path.join(CACHE, 'fd-stati-3.geojson'))))   # the day the file was fetched
+def skag_only():
+    # the rules.json there is: its blin back to polygons in the frame, skag computed and put in, the rest as it was
+    R = json.load(open(OUT, encoding='utf-8'))
+    dec = lambda a: np.cumsum(np.asarray(a, float).reshape(-1, 2), axis=0) * U
+    blin = shapely.union_all([Polygon(dec(r[0]), [dec(h) for h in r[1:]]).buffer(0) for r in R['blin']])
+    R['skag'] = skagerrak(blin); R['src']['ices'] = skag_src()
+    s = json.dumps(R, separators=(',', ':'), ensure_ascii=False); open(OUT, 'w').write(s); print(f'{OUT}: {len(s) / 1e6:.2f} MB, skag {len(json.dumps(R["skag"]))} B')
 def main():
     t0 = time.time(); md = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'tools', 'map', 'out', 'game')
     land = Land(md); G = gml(os.path.join(CACHE, 'nmg-25833.gml'))
@@ -514,14 +565,16 @@ def main():
     for l in llog: print(l)
     hom, lok = stats()
     sea, shelf, _ = seas(md)
+    skag = skagerrak(blin)
     meta = json.load(open(os.path.join(CACHE, 'fd-meta.json')))
     R = dict(v=1, made=meta['fetched'], unit=U,
              src=dict(fd='Fiskeridirektoratet, Yggdrasil/Fiskerireguleringer og Statistikområder (NLOD), hentet ' + meta['fetched'],
                       nmg='Kartverket, Norges maritime grenser (CC BY 4.0, Geonorge)',
-                      sjo='Fiskeridirektoratet, Yggdrasil/Sjøgrenser_linje (NLOD): nabolandenes 200 nm og grenselinjene mellom dem'),
-             bl=enc(bl.coords), blin=rings(blin.simplify(0.05)), nm=nm_lines(bl, blin, off), zones=Z, L=Lyr, hom=hom, lok=lok, sea=sea, shelf=shelf)
+                      sjo='Fiskeridirektoratet, Yggdrasil/Sjøgrenser_linje (NLOD): nabolandenes 200 nm og grenselinjene mellom dem',
+                      ices=skag_src()),
+             bl=enc(bl.coords), blin=rings(blin.simplify(0.05)), nm=nm_lines(bl, blin, off), zones=Z, L=Lyr, hom=hom, lok=lok, sea=sea, shelf=shelf, skag=skag)
     s = json.dumps(R, separators=(',', ':'), ensure_ascii=False)
     open(OUT, 'w').write(s)
     print(f'{OUT}: {len(s) / 1e6:.2f} MB, {time.time() - t0:.0f} s')
 if __name__ == '__main__':
-    main()
+    skag_only() if '--skag' in sys.argv else main()

@@ -523,42 +523,43 @@ Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood f
   - 448 `bkLanded(H, bk, all)`
   - 450 `bkNews(H)`
 
-## `src/js/core/03e-rules.js` (469 linjer)
+## `src/js/core/03e-rules.js` (498 linjer)
 
 The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a place, a time, the boat's length, the gear and the
 
-  - 29 `ruPip(rings, x, y)`
-  - 30 `ruIn(P, x, y)`
-  - 35 `ruBlock(bx, by)`
-  - 53 `ruBits(p)`
-  - 70 `ruSeaBlock(bx, by)`
-  - 84 `ruSea(p)`
-  - 88 `ruShelf(p)`
-  - 94 `zoneLic(c)`
-  - 95 `zoneLicApply(c)`
-  - 99 `insideFjord(p)`
-  - 100 `insideBaseline(p)`
-  - 102 `blDist(p)`
-  - 108 `ruHom(p)`
-  - 114 `landsdel(p)`
-  - 115 `ruLok(p)`
-  - 117 `ruZone(p)`
-  - 118 `ruAt(id, p)`
-  - 120 `ruLineName(ref)`
-  - 134 `kcQuota(ll)`
-  - 151 `ruSeaRules(c, q, ll, md, add)`
-  - 224 `rulesAt(q)`
-  - 370 `f26In(f, ll)`
-  - 375 `ruBlockMsg(q)`
-  - 377 `ruMinSize(sp, p)`
-  - 391 `fjordLimits(p, H)`
-  - 417 `ruCtx()`
-  - 421 `ruNow()`
-  - 427 `ruLayerBlock(bx, by, q, budget)`
-  - 439 `ruWpQ(w)`
-  - 444 `ruWpMsg(w)`
-  - 451 `ruOpenNear(p, q, maxKm)`
-  - 460 `ruTips()`
+  - 31 `ruPip(rings, x, y)`
+  - 32 `ruIn(P, x, y)`
+  - 38 `ruBlock(bx, by)`
+  - 56 `ruBits(p)`
+  - 73 `ruSeaBlock(bx, by)`
+  - 87 `ruSea(p)`
+  - 91 `ruShelf(p)`
+  - 96 `ruSkag(p, b = ruBits(p)`
+  - 102 `zoneLic(c)`
+  - 103 `zoneLicApply(c)`
+  - 107 `insideFjord(p)`
+  - 108 `insideBaseline(p)`
+  - 110 `blDist(p)`
+  - 116 `ruHom(p)`
+  - 122 `landsdel(p)`
+  - 123 `ruLok(p)`
+  - 125 `ruZone(p)`
+  - 126 `ruAt(id, p)`
+  - 128 `ruLineName(ref)`
+  - 143 `kcQuota(ll)`
+  - 160 `ruSeaRules(c, q, ll, md, add)`
+  - 233 `rulesAt(q)`
+  - 398 `f26In(f, ll)`
+  - 403 `ruBlockMsg(q)`
+  - 405 `ruMinSize(sp, p)`
+  - 419 `fjordLimits(p, H)`
+  - 446 `ruCtx()`
+  - 450 `ruNow()`
+  - 456 `ruLayerBlock(bx, by, q, budget)`
+  - 468 `ruWpQ(w)`
+  - 473 `ruWpMsg(w)`
+  - 480 `ruOpenNear(p, q, maxKm)`
+  - 489 `ruTips()`
 
 ## `src/js/core/03f-fiske.js` (386 linjer)
 
@@ -2119,12 +2120,12 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 125 `hullOrder(auto, b = S.boat)`
   - 140 `hullMended(j, b = S.boat)`
 
-## `src/js/ui/01-i18n.js` (118 linjer)
+## `src/js/ui/01-i18n.js` (120 linjer)
 
 the logo (src/brand/logo.svg, the user's anchor of 03.11.2026), filled with currentColor: the sign-in's gate (ui/10f-cloud.js) and the
 
 - **4** i18n
-  - 115 `t(k, ...a)`
+  - 117 `t(k, ...a)`
 
 ## `src/js/ui/02-format-state.js` (233 linjer)
 
@@ -2841,7 +2842,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 433 `renderPanel()`
   - 437 `panelBusy()`
 
-## `src/js/ui/07b-first-trip.js` (304 linjer)
+## `src/js/ui/07b-first-trip.js` (321 linjer)
 
 ---------- «Første tur»: the guided first trip every new player goes through ----------
 
@@ -2863,13 +2864,15 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 203 `tutReveal(el)`
   - 209 `tutRect(T0)`
   - 215 `tutStep()`
-  - 221 `tutFinish()`
-  - 222 `tutScrollSlip()`
-  - 225 `tutAllow(what)`
-  - 243 `tutView(st)`
-  - 250 `tutUpdate()`
-  - 273 `tipPlace(txt, T0, o)`
-  - 298 `tipToast()`
+  - 227 `tutNormKg()`
+  - 233 `tutNormLog()`
+  - 238 `tutFinish()`
+  - 239 `tutScrollSlip()`
+  - 242 `tutAllow(what)`
+  - 260 `tutView(st)`
+  - 267 `tutUpdate()`
+  - 290 `tipPlace(txt, T0, o)`
+  - 315 `tipToast()`
 
 ## `src/js/ui/07c-handbook.js` (257 linjer)
 
@@ -2937,7 +2940,7 @@ actions
   - 32 `letterSound(kind)`
   - 44 `showLetter(done)`
 
-## `src/js/ui/08c-start.js` (167 linjer)
+## `src/js/ui/08c-start.js` (166 linjer)
 
 «Hvor står fars naust?»: where a new game starts (05.10.2026)
 
@@ -2947,9 +2950,9 @@ actions
   - 47 `startRing(pt)`
   - 48 `startWx(pt, H0)`
   - 56 `showStart(done)`
-  - 119 `tutMixAt(q, H, len, land)`
-  - 129 `tutFieldNear(pt, land)`
-  - 152 `chooseStart(pt, onProgress)`
+  - 118 `tutMixAt(q, H, len, land)`
+  - 128 `tutFieldNear(pt, land)`
+  - 151 `chooseStart(pt, onProgress)`
 
 ## `src/js/ui/09-hand-fishing.js` (59 linjer)
 
