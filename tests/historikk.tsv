@@ -440,6 +440,11 @@
 2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	docktest	OK	62	lite	samtidig	
 2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	searchtest	OK	9	lite	samtidig	
 2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	hudtest	OK	25	lite	samtidig	
+2026-11-07 01:20	ccr-f981c5f0-ezb7x7	bcf2df80+	trackfollow	FEIL	1344	3d	alene	FEIL Stopp underway: she slacks off gradually, not all at once  {"v0": 21.5, "worst m/s per s": 8.4, "secs": 49.8}
+2026-11-07 03:16	ccr-f981c5f0-ezb7x7	bcf2df80+	trackfollow	FEIL	1174	3d	alene	FEIL a slow frame after time caught up with the minute step (the model off for a tick) does not run her past the simulation for the model to put her back  {"st"
+2026-11-07 03:41	ccr-f981c5f0-ezb7x7	bcf2df80+	trackfollow	OK	1332	3d	alene	
+2026-11-07 03:50	ccr-f981c5f0-ezb7x7	bcf2df80+	docktest	OK	59	lite	alene	
+2026-11-07 03:51	ccr-f981c5f0-ezb7x7	bcf2df80+	routetest	FEIL	38	lite	alene	FEIL Autonav over hele kysten: Finnsnes–Tromsø, Bodø–Reine og Bergen–Florø gir en vei fri for land, grunner og skjær, med høyst 40 punkter, eller ett per 2 km d
 2026-11-07 00:57	HEAD	12b6216c+	docktest	OK	65	lite	samtidig	
 2026-11-07 01:04	HEAD	12b6216c+	kjoptest	OK	470	lite	samtidig	
 2026-11-07 01:04	HEAD	12b6216c+	skiptest	OK	19	lite	samtidig	
@@ -539,3 +544,6 @@
 2026-11-07 03:39	ccr-fc7a11b2-nl5jor	55c5dc0f+	roetest	OK	119	lite	samtidig	
 2026-11-07 03:39	ccr-fc7a11b2-nl5jor	55c5dc0f+	dockrow	OK	39	lite	samtidig	
 2026-11-07 03:39	ccr-fc7a11b2-nl5jor	55c5dc0f+	uishots	OK	84	lite	samtidig	
+2026-11-07 03:55	ccr-f981c5f0-ezb7x7	ba79cfbf+	docktest	OK	58	lite	alene	
+2026-11-07 04:15	ccr-f981c5f0-ezb7x7	f92cff1e	trackfollow	OK	1193	3d	alene	
+2026-11-07 09:20	ccr-fc7a11b2-nl5jor	14b51422+	docktest	OK	63	lite	alene	
