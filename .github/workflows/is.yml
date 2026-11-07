@@ -1,0 +1,40 @@
+# The sea ice by month (Havsteget H1b R5, V3 A): tools/is/is.py averages OSI SAF's sea ice concentration climate data record
+# (OSI-450-a, EUMETSAT, CC BY 4.0) per calendar month over 1991-2020 from MET Norway's THREDDS server, which is closed to the cloud
+# session and open here. The result is kept as a release is-<run number> (is.json), which goes into src/data/is.json.
+# Started by a push that changes tools/is/is.json (on any branch), or by hand from the Actions tab once this file is on main.
+name: Isen etter måned
+on:
+  push:
+    paths: ['tools/is/is.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: '1'
+jobs:
+  ice:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - id: seen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/ci/seen.py is tools/is/is.json tools/is/is.py
+      - if: steps.seen.outputs.skip != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - if: steps.seen.outputs.skip != 'true'
+        run: pip install numpy scipy pyproj netCDF4 requests
+      - if: steps.seen.outputs.skip != 'true'
+        name: OSI SAF's monthly ice concentration
+        run: python3 tools/is/is.py build is.json
+      - name: The release
+        if: steps.seen.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=is-${{ github.run_number }}
+          gh release create "$TAG" is.json --target "${{ github.sha }}" --title "Is $TAG" \
+            --notes "Iskonsentrasjonen etter måned, middel 1991–2020, fra EUMETSAT OSI SAF OSI-450-a (CC BY 4.0, doi:10.15770/EUM_SAF_OSI_0013), tools/is/is.py, commit ${{ github.sha }}. ${{ steps.seen.outputs.mark }}"

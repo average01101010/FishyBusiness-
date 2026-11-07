@@ -1,0 +1,24 @@
+# Revisjonslogg Wclosed (closed): tilstandsskifter minutt for minutt, spilt i testbygget 26.10.2026
+# hjem Finnsnes · mottak Botnhamn · felt [('f1', 2, 6), ('f2', 2, 6)] · juksplasser 1
+# slutt: on=True stop=None wait=None
+# tid: dag klokke | tilstand (plan:status@havn/redskapsarbeid ?venter !stopp) | energi | høyeste slitenhet | last kg
+D1 03:01  -:port@finnsnes?dep                            en=100 fat=  0 hold=    0
+D1 05:00  -:port@finnsnes?wx                             en=100 fat=  0 hold=    0
+D1 09:00  fish:unmooring@finnsnes                        en=100 fat=  0 hold=    0
+D1 09:01  fish:sailing                                   en=100 fat=  0 hold=    0
+D1 09:21  fish:fishing/set-line                          en=100 fat=  0 hold=    0
+D1 09:30  fish:fishing                                   en=100 fat=  0 hold=    0
+D1 09:31  fish:sailing                                   en=100 fat=  0 hold=    0
+D1 09:41  fish:fishing/set-line                          en=100 fat=  0 hold=    0
+D1 09:50  fish:fishing                                   en=100 fat=  0 hold=    0
+D1 09:51  fish:sailing                                   en=100 fat=  0 hold=    0
+D1 09:55  fish:fishing                                   en=100 fat=  0 hold=    0
+D1 10:10  fish:sailing                                   en=100 fat=  5 hold=    4
+D1 10:23  fish:fishing/haul-line                         en=100 fat=  5 hold=    4
+D1 11:01  -:idle/shelter                                 en=100 fat= 10 hold=   14
+# landinger (o.rep): []
+# salg: []
+# redskap i sjøen ved slutt: [{"fid": "f2", "kind": "line", "n": 1, "set": "D1 09:30", "ageH": 41.5, "acc": "torsk:2 hyse:5 sei:0 lyr:0 lange:0 brosme:0 uer:0 kveite:0"}, {"fid": "f1", "kind": "line", "n": 2, "set": "D1 09:50", "ageH": 41.2, "acc": "torsk:2 hyse:7 sei:1 lyr:0 lange:0 brosme:0 uer:0 kveite:0"}]
+# «Neste tur» slik siden viste den: [{"at": "D1 03:01", "sk": [["05:00", "Går fra Finnsnes"], ["05:17", "Setter 2 stamper på felt 2"], ["05:39", "Setter 2 stamper på felt 1"], ["06:05", "Jukser på plass 1 (høyst 4,0 t)"], ["10:16", "Trekker felt 2"], ["11:02", "Trekker felt 1"], ["14:46", "Leverer i Botnhamn"], ["18:59", "Hjem til Finnsnes og hvile"]]}]
+# slutt: {"en": 100, "fat": [0, 0], "cash": 1000000, "hold": 14, "status": "idle", "port": null, "pos": [871.21, 366.78], "revenue": 0, "kg": 0, "costs": 0}
+# meldinger: D1 05:00 Roger Strand: Venter på været: vinden blir 12 m/s, og grensen er 10 m/s. || D1 08:00 Edvard: Jeg hørte om torska på 16 kilo. Far din hadde vært stolt.

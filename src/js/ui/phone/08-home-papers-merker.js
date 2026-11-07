@@ -1,0 +1,123 @@
+  // the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2-staaende.md): the clock, the weather and the cash,
+  // then the next goal and the milestones as one row of two cards (the first week while it is on, then the sea time: both open
+  // Milepæler), the «Nå» cards, and the apps in groups with a heading each (GROUPS), on glass tiles with the dock's stroke icons and one
+  // accent, the badges. A group with no app shown is left out. The same in a phone standing and lying, on a tablet and a PC
+  function home(){
+    const H = S.t / 60, W = windAt(H), na = alerts().length;
+    // the counts on the tiles; «ny» on an app the player has not opened since it came, when it has no count
+    const cnt = id => id === 'meld' ? unread() : id === 'ordl' ? ordState().active.length : id === 'rederi' ? na : id === 'patch' ? patchNew() : id === 'post' ? pressUnread() :
+      id === 'handbok' ? (typeof hbReady === 'function' && !tutOn() ? hbReady() : 0) : 0;
+    const tile = a => { const c = cnt(a[0]);
+      return '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic">' + IC[a[0]] + (c ? '<span class="bd">' + c + '</span>' : appNew(a[0]) ? '<span class="bd ny">' + L('ny', 'new') + '</span>' : '') + '</span><span class="lb">' + (TILE_SHY[a[0]] ? L(...TILE_SHY[a[0]]) : L(a[1], a[2])) + '</span></button>'; };
+    const shown = APPS.filter(a => (a[0] !== 'admin' || adminOk()) && (a[0] !== 'rederi' || rederiOpen()) && !KBT.includes(a[0]) && appShown(a[0]));
+    const grp = GROUPS.map(([k, no, en, ids]) => [k, no, en, ids.map(id => shown.find(a => a[0] === id)).filter(Boolean)]);
+    grp[grp.length - 1][3].push(...shown.filter(a => !GROUPS.some(g => g[3].includes(a[0]))));
+    const g = goals()[0], goal = g ? '<button class="ph-goal" data-pa="open" data-a="fartoy"><span>' + L('Neste mål: ', 'Next goal: ') + '<b>' + g.n + '</b></span><small>' + (g.txt || kr(Math.min(Math.max(0, S.cash), g.need)) + ' / ' + kr(g.need)) + '</small><span class="gb"><i style="width:' + (g.pc * 100).toFixed(1) + '%"></i></span></button>' : '';
+    return '<div class="ph-homescr"><div class="ph-clock">' + hm(H) + '</div><div class="ph-date">' + dayStr(H) + '</div>' +
+      '<div class="ph-widget"><span class="w1">' + dirName(windDir(H)) + ' ' + fmt(W, 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C</span><span class="w2">' + kr(S.cash) + '</span></div>' +
+      '<div class="ph-goals">' + goal + ((typeof achChip === 'function' ? achChip() : '') || fsChip()) + '</div>' + nowCards(na) +
+      '<div class="ph-grid">' + grp.filter(x => x[3].length).map(([k, no, en, as]) => '<section class="ph-grp" data-g="' + k + '"><h5>' + L(no, en) + '</h5><div class="ph-tiles">' + as.map(tile).join('') + '</div></section>').join('') + '</div></div>';
+  }
+  // «Nå» on the home screen (U7, docs/planer/ui-redesign.md, V4 A): the phone answers before it is asked. Each card opens the app that has
+  // the rest: the rules where the boat is (Regler), the best price for cod among the nearest plants (Salgslaget), and the company when it
+  // needs you (Rederi). Spilltest 2: the Regler and Kvote apps were never opened, though their content was what the player needed
+  function nowCards(na){
+    const out = [], b = S.boat;
+    try { if (b.status !== 'port' && typeof RU !== 'undefined' && RU.ok){ const r = ruNow(), it = r.items.find(i => i.v === r.v && i.v !== 'ok');
+      out.push('<button class="ph-now ' + (r.v === 'no' ? 'r2' : r.v === 'warn' ? 'r1' : 'r0') + '" data-pa="open" data-a="regler"><span>' + L('Regler her', 'Rules here') + '</span><b>' + (r.v === 'no' ? '✕ ' : r.v === 'warn' ? '! ' : '✓ ') + (it ? ruShort(it) : L('Du kan fiske her', 'You may fish here')) + '</b></button>'); } } catch (e){}
+    try { const H = S.t / 60, best = plantsNear(b.pos, 4).map(x => ({pt:x.pt, v:price(x.pt, 'torsk', H)})).sort((a, c) => c.v - a.v)[0];
+      if (best) out.push('<button class="ph-now" data-pa="open" data-a="salg"><span>' + L('Best betalt torsk', 'Best price for cod') + '</span><b>' + fmt(best.v, 2) + ' kr/kg · ' + best.pt.name + '</b></button>'); } catch (e){}
+    if (na > 0 && rederiOpen()) out.push('<button class="ph-now r1" data-pa="open" data-a="rederi"><span>' + L('Rederiet', 'The company') + '</span><b>' + L('Trenger deg (' + na + ')', 'Needs you (' + na + ')') + '</b></button>');
+    return out.length ? '<div class="ph-nowc">' + out.join('') + '</div>' : '';
+  }
+  const kv = (a, b) => '<div class="ph-kv"><span>' + a + '</span><span>' + b + '</span></div>';
+  const tq = (kg, d) => isFinite(kg) ? fmt(kg / 1000, d) + ' t' : L('ingen grense', 'no limit');   // a quota in tonnes, or no limit
+  const subs = (a, list) => '<div class="ph-sub">' + list.map(([k, no, en]) => '<button class="' + ((sub[a] || list[0][0]) === k ? 'on' : '') + '" data-pa="sub" data-s="' + k + '">' + L(no, en) + '</button>').join('') + '</div>';
+  const inPort = () => S.boat.status === 'port';
+  // the boat lies at a place where things are bought and sold: Father's naust is a home, not a place of trade (Jonas 07.10.2026)
+  const atTrade = () => inPort() && berthKind(S.boat) !== 'naust';
+  // at a place that offers this (core/06c-steder.js portServices): 'mottak' the plant, 'butikk' the tackle shop, 'verft' the yard
+  const atKind = k => atTrade() && !!portServices(portById(S.boat.port), berthKind(S.boat))[k];
+  const EQ_YARD = k => k === 'antigro' || k === 'motor90';
+  // the nearest place of a kind from the boat, with Autonav there (Jonas 07.10.2026: «hjelp for å finne nærmeste butikk, verft og mottak»)
+  const KIND_NAME = {mottak:['fiskemottaket', 'the fish plant'], butikk:['utstyrsbutikken', 'the tackle shop'], verft:['verftet', 'the yard']};
+  function nearHint(kind){
+    const n = placesNear(S.boat.pos, kind, 1)[0]; if (!n) return '';
+    return '<div class="ph-card"><p class="ph-note">' + L('Nærmeste ' + KIND_NAME[kind][0] + ': ', 'Nearest ' + KIND_NAME[kind][1] + ': ') + '<b>' + n.pt.name + '</b> · ' + fmt(n.d / NM, 1) + ' nm</p><button class="ph-btn" data-pa="goplace" data-id="' + n.pt.id + '">' + L('Autonav dit', 'Autonav there') + '</button></div>';
+  }
+  // --- the seaman's life: the tattoos you have earned, and the old ways at sea you have heard of
+  function tattoos(){
+    const got = S.tattoos || {}, c = tatCounts(), n = TATS.filter(T => got[T.id]).length;
+    // only the list (Jonas 05.10.2026: «Fjern sjømannen helt, jeg vil kun ha listen med tatoveringene»)
+    const h = ['<div class="ph-card"><h4>' + L('Tatoveringer', 'Tattoos') + '</h4><p class="ph-note">' + L('Sjøfolkets gamle merker kommer av seg selv når du har gjort deg fortjent til dem. Du har ', 'The old marks of seafarers come by themselves when you have earned them. You have ') + n + L(' av ', ' of ') + TATS.length + '.</p></div>'];
+    for (const T of TATS){
+      const icon = TATART.icon(T.id, !!got[T.id]);
+      let foot;
+      if (got[T.id]) foot = L('Fått ', 'Earned ') + dayStr(got[T.id] / 60);
+      else if (T.lock) foot = L(T.r[0], T.r[1]) + L(', kommer når spillet får nye farvann.', ', coming when the game reaches new waters.');
+      else { const [have, need] = T.p(c); foot = L(T.r[0], T.r[1]) + ': ' + fmt(Math.min(have, need), 0) + ' / ' + fmt(need, 0) + '<div class="ph-bar"><i style="width:' + Math.round(clamp(have / need, 0, 1) * 100) + '%"></i></div>'; }
+      h.push('<div class="ph-card"' + (T.lock && !got[T.id] ? ' style="opacity:.7"' : '') + '><div style="display:flex;gap:10px;align-items:center">' + icon + '<div><h4 style="margin:0">' + L(T.n[0], T.n[1]) + '</h4><p style="margin:2px 0">' + L(T.m[0], T.m[1]) + '</p></div></div><p class="ph-note">' + foot + '</p></div>');
+    }
+    return h.join('');
+  }
+  // the papers a fisher carries, shown where they matter (Jonas 09.10.2026: the Sjømann app is gone): blad B and the permit in the Kvote
+  // app, the business there too until the Rederi app opens (rederiOpen), then in Rederi. The made-up certificates (health, safety course, skipper, SRC) are no longer shown.
+  const papWho = () => S.company ? L('Skipper i ', 'Skipper of ') + S.company : L('Skipper på «', 'Skipper of the «') + (S.boatName || 'Havbris') + '»';
+  const papCard = (col, title, rows, note) => '<div class="ph-card papc"><div class="pap-h" style="background:' + col + '">' + title + '</div>' + rows.map(([a, b]) => kv(a, b)).join('') + (note ? '<p class="ph-note">' + note + '</p>' : '') + '</div>';
+  function papBladB(){ const who = papWho(), card = papCard;
+    return (F => card('#7a5a2c', L('Fiskermanntallet, blad B', 'Fishermen\'s register, blad B'), [[L('Navn', 'Name'), who], [L('Landingsdager med deg om bord', 'Landing days with you aboard'), fmt(F.n, 0) + ' / ' + BLADB.days], [L('Førstehåndsverdi', 'First-hand value'), kr(F.kr) + ' / ' + kr(BLADB.kr) + ' (1 G)'],
+        ['Status', F.b ? '<span class="r0">' + L('Ført på blad B', 'On blad B') + '</span>' : L('Blad A: fiske er ikke hovedyrket ennå', 'Blad A: fishing is not your main occupation yet')]],
+        L('Forenklet. Deltakerloven § 6 krever at den som kjøper en båt i lukket gruppe, har fisket i minst tre av de siste fem årene, og blad B er det vanlige beviset. I spillet holder det med ' + BLADB.days + ' landingsdager med deg om bord og 1 G i førstehåndsverdi.', 'Simplified. Deltakerloven § 6 asks the buyer of a closed-group boat to have fished in at least three of the last five years, and blad B is the usual proof. In the game, ' + BLADB.days + ' landing days with you aboard and 1 G of first-hand value will do.')))(S.fm || {n:0, kr:0, b:false});
+  }
+  function papPermit(){ const card = papCard;
+    return card('#33617a', L('Ervervstillatelse', 'Fishing permit'), S.fleet.map(v => [vget(v, 'boatName') || L('Båten', 'The boat'), L('Gitt', 'Granted') + ' · ' + String((VESSELS[vget(v, 'boat').type] || {}).len || '').replace('.', ',') + ' m' + ((r => r ? ' · ' + regText(r) : '')(v.id === S.cur ? regOf(S.boat) : vget(v, 'boat').reg))]).concat([[L('Utstedt av', 'Issued by'), L('Fiskeridirektoratet', 'Directorate of Fisheries')]]),
+        L('Deltakerloven § 4: en båt kan bare brukes i ervervsmessig fiske med ervervstillatelse for eieren. Under 15 m holder det at du er aktiv fisker (ervervstillatelsesforskriften § 2). I spillet gis den når du kjøper båten.', 'Deltakerloven § 4: a boat may be used in commercial fishing only with a permit for its owner. Under 15 m it is enough that you are an active fisher. In the game it comes with the boat.'));
+  }
+  // H1b R4: the licences for the foreign zones (core/03e-rules.js zoneLic): applied for here and given at once, since no source gives the
+  // time it takes; the Russian one comes with an ocean permit
+  function papZlic(){ const card = papCard;
+    return card('#5b6e3a', L('Lisenser for andre lands soner', 'Licences for other countries\' zones'), ZLIC.map(c => [ruSeaName(c), zoneLic(c) ? '<span class="r0">' + L('Gitt', 'Granted') + '</span>' + (c === 'ru' && S.lic && S.lic.hav && !(S.zlic && S.zlic.ru) ? L(' · med havtillatelsen', ' · with the ocean permit') : '')
+        : '<button class="ph-btn" data-pa="zlic" data-k="' + c + '">' + L('Søk', 'Apply') + '</button>']).concat([[L('Utstedt av', 'Issued by'), L('Fiskeridirektoratet, og russiske myndigheter for russisk sone', 'The Directorate of Fisheries, and the Russian authorities for the Russian zone')]]),
+      L('Fiskeridirektoratet: «Alle norske fartøy må søke om lisens for å kunne fiske i andre lands farvann.» Lisensen åpner bare sonen. Artene, fartøygruppene og kvotene står i Regler-appen. Ingen kilde oppgir hvor lang tid søknaden tar, så i spillet gis lisensen med en gang. Islandsk sone er stengt: ingen adgang for 2026 er funnet.', 'The Directorate of Fisheries: «All Norwegian vessels must apply for a licence to fish in other countries\' waters.» The licence only opens the zone. The species, vessel groups and quotas are in the Regler app. No source gives how long the application takes, so in the game the licence is given at once. The Icelandic zone is closed: no access for 2026 is found.')); }
+  // the coast guard's inspections (core/09j-kystvakt.js): how many, the last one and its outcome, and what she asks about
+  function papKv(){ const card = papCard, K = S.kv || {n:0, nOk:0, log:[]}, l = (K.log || [])[0];
+    const last = !l ? L('Ikke kontrollert ennå', 'Not inspected yet') : dayStr(l.t / 60) + ' · ' + (l.ok ? '<span class="r0">' + L('Alt i orden', 'All in order') + '</span>' : L('Merknad: ', 'Remark: ') + [...new Set(l.ref || [])].join(', '));
+    return card('#3d5a73', L('Kystvakta', 'The coast guard'), [[L('Kontroller', 'Inspections'), fmt(K.n || 0, 0)], [L('Uten merknad', 'Without remarks'), fmt(K.nOk || 0, 0) + ' / ' + fmt(K.n || 0, 0)], [L('Siste kontroll', 'Last inspection'), last]],
+      L('Kystvakta kommer langs siden høyst én gang i uka, ved kai eller på feltet, aldri i kuling. Den spør om det Regler-appen alt kan si deg: redskapen i sjøen, fangsten om bord og reglene der du er («Kan jeg fiske her?»). Etter en kontroll uten merknad går det lenger til neste. Merknader får ingen ny straff; fangst utover regelen inndras ved levering som ellers.' + (S.lic && S.lic.hav ? ' På en havbåt setter hun over inspektører på feltet og ser også på posisjonen langs hele lina (§ 26 og § 32), merkingen (§§ 66 og 68), fangsten mot fartøykvoten, bifangsten av sei, lange og brosme, og en stikkprøve av siste fangst mot minstemålene (høyst 15 % under, § 49).' : ''), 'The coast guard comes alongside at most once a week, at the quay or on the field, never in a gale. She asks what the Regler app can already tell you: the gear in the sea, the catch aboard and the rules where you are («Can I fish here?»). After an inspection without remarks the next is further off. Remarks bring no new penalty; catch beyond the rule is confiscated at the landing as always.' + (S.lic && S.lic.hav ? ' On an ocean vessel she sends inspectors over on the field and also looks at the position along the whole line (§ 26 and § 32), the marking (§§ 66 and 68), the catch against the vessel quota, the bycatch of saithe, ling and tusk, and a sample of the last catch against the minimum sizes (at most 15 % under, § 49).' : '')));
+  }
+  // the business: in Kvote while it is a sole proprietorship, in Rederi once the company is founded (Jonas 09.10.2026)
+  function papBiz(){ const card = papCard;
+    return (M => card('#6b5b95', L('Foretaket', 'The business'), M ? [[L('Form', 'Form'), S.form === 'AS' ? L('Aksjeselskap (AS)', 'Limited company') : L('Enkeltpersonforetak (ENK)', 'Sole proprietorship')], [L('Org.nr.', 'Org. no.'), String(M.org).replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3')], [L('MVA-registrert', 'VAT registered'), bkDate(M.t)], ['Status', '<span class="r0">' + L('Registrert', 'Registered') + '</span>']]
+          : [[L('Form', 'Form'), S.form === 'AS' ? L('Aksjeselskap (AS)', 'Limited company') : L('Enkeltpersonforetak (ENK)', 'Sole proprietorship')], [L('Salg siste tolv måneder', 'Sales in the last twelve months'), kr((S.sales || []).filter(s => s.t > S.t - 365 * 1440).reduce((a, s) => a + (s.total || 0), 0)) + ' / ' + kr(MVA.limit)], ['Status', L('Ikke registrert ennå', 'Not registered yet')]],
+        L('Du trenger verken ENK eller AS for å fiske. Når salget passerer 50 000 kr på tolv måneder, må foretaket i Merverdiavgiftsregisteret (merverdiavgiftsloven § 2-1). Da legges MVA på 11,11 % på oppgjøret, og den går videre til staten. Org.nr. er fiktivt.', 'You need neither a sole proprietorship nor a company to fish. When the sales pass NOK 50,000 in twelve months, the business must enter the VAT register. Then 11.11 % VAT comes with the settlement and goes on to the state. The org. no. is fictional.')))(S.mva);
+  }
+  // the sea time (core/09e-fartstid.js): the years and days, the bar to the next year, and the rest built up while away
+  function fsChip(){ const F = fsState(), o = fsOf(F.p), rest = Math.round(F.rest / 60);
+    return '<button class="ph-goal ph-fs" data-pa="open" data-a="merker" data-s="merker"><span><b>' + fsText(F.p, true) + '</b></span><small>' + (rest > 0 ? L('Uthvilt: ' + rest + ' t med dobbel fartstid', 'Rested: ' + rest + ' h of double sea time') : L('Neste år: ' + (365 - o.d) + ' døgn igjen', 'Next year: ' + (365 - o.d) + ' days to go')) + '</small><span class="gb"><i style="width:' + (o.f * 100).toFixed(1) + '%"></i></span></button>'; }
+  function fsCard(){ const F = fsState(), o = fsOf(F.p), rest = Math.round(F.rest / 60);
+    return '<div class="ph-card"><h4>' + L('Fartstid', 'Sea time') + '</h4><div class="ph-big">' + fsText(F.p, true) + '</div><span class="gb fsbar"><i style="width:' + (o.f * 100).toFixed(1) + '%"></i></span>' +
+      '<p class="ph-note">' + L('Fartstid tjenes om bord: hver time til sjøs og hver levering. Det mannskapet gjør mens du er borte, teller en firedel. Når du har vært borte, gir de neste timene til sjøs dobbel fartstid.', 'Sea time is earned aboard: every hour at sea and every landing. What the crew does while you are away counts a quarter. After time away, the next hours at sea give double sea time.') +
+      (rest > 0 ? ' <b>' + L('Uthvilt: ' + rest + ' t igjen.', 'Rested: ' + rest + ' h left.') + '</b>' : '') + '</p></div>'; }
+  // the Milepæler app (Jonas 09.10.2026: «alt av achievements ... samles i en enkelt app som kalles milepæler»): the week's milestones,
+  // the long badges with the sea time, the record fish (the wall itself is in Father's naust), the old ways and the tattoos.
+  // The app keeps its id 'merker'.
+  function merker(){
+    if (typeof achCheck === 'function') achCheck(true);
+    const tab = sub.merker || 'uke', tabs = subs('merker', [['uke', 'Første uke', 'First week'], ['merker', 'Merker', 'Badges'], ['rekord', 'Rekordfisk', 'Record fish'], ['overtro', 'Fra gamle dager', 'The old ways'], ['tatover', 'Tatoveringer', 'Tattoos'], ['kyst', 'Kystfareren', 'Coastfarer'], ['kart', 'Kystkartet', 'Coast map']]);
+    if (tab === 'tatover') return '<div class="ph-c">' + tabs + tattoos() + '</div>';
+    if (tab === 'merker') return '<div class="ph-c">' + tabs + fsCard() + achLong() + '</div>';
+    if (tab === 'rekord') return '<div class="ph-c">' + tabs + '<div class="ph-card">' + NOTEBOOK.wall(true) + '</div></div>';
+    if (tab === 'overtro') return '<div class="ph-c">' + tabs + lore() + '</div>';
+    if (tab === 'kart') return '<div class="ph-c">' + tabs + kkTab() + '</div>';   // Kystkartet (ui/05h-kystkart.js)
+    if (tab === 'kyst') return '<div class="ph-c">' + tabs + GBOOK.kyst() + '</div>';   // the guestbooks signed (ui/10m-guestbook.js)
+    return '<div class="ph-c">' + tabs + achWeek() + '</div>';
+  }
+  // the old ways you have heard (core/08-lore.js), the rest as unknown
+  function lore(){
+    const heard = S.lore || {}, ids = Object.keys(LORE), n = ids.filter(id => heard[id]).length;
+    const h = ['<div class="ph-card"><h4>' + L('Fra gamle dager', 'The old ways') + '</h4><p class="ph-note">' + L('Sjøfolk og fiskere har alltid vært overtroiske. Det du hører om bord, på kaia og på puben, samles her. Du har hørt ', 'Seafarers and fishermen have always been superstitious. What you hear aboard, on the quay and at the pub is kept here. You have heard ') + n + L(' av ', ' of ') + ids.length + L(' fortellinger.', ' stories.') + '</p></div>'];
+    for (const id of ids){ const E = LORE[id], w = heard[id];
+      h.push(w ? '<div class="ph-card"><h4>' + L(E.t[0], E.t[1]) + '</h4><p>' + L(E.x[0], E.x[1]) + '</p><p class="ph-note">' + L('Hørt første gang ', 'First heard ') + dayStr(w.first / 60) + '</p></div>'
+        : '<div class="ph-card" style="opacity:.55"><h4>?</h4><p class="ph-note">' + L('Ennå ikke hørt. Lytt til folk på sjøen og på puben.', 'Not heard yet. Listen to people at sea and at the pub.') + '</p></div>'); }
+    return h.join('');
+  }

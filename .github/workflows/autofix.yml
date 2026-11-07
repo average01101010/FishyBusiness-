@@ -1,0 +1,98 @@
+# Automatisk retting (02.11.2026; Jonas: «jeg vil ha prosessen så helautomatisert som overhodet mulig»). The feedback routine
+# (tools/feedback/RUTINE.md) opens a PR against the working branch with the label `autofix` when it has fixed an error from the error
+# list or a player's feedback. This runs the gate on it (tools/autofix/gate.py: the files a fix may touch, its size, no code that talks
+# to other hosts or runs text, and no test red that is green on the working branch), and when it passes, merges the PR and starts the
+# deploy to detstorebla.no and Pages (a merge made with this workflow's token does not start the push workflows by itself).
+# A PR the gate stops gets the label `autofix-stoppet` and a comment with why; it waits for Jonas as before.
+# Only a fix from the error list goes out by itself (Ø6 funn 8, 05.11.2026): a PR that names a player's feedback («tilbakemelding #12»)
+# builds on text anyone can write, and waits for Jonas whatever the gate says. The routine names the feedback a fix is for in the PR.
+# Off switch: the repository variable AUTO_FIX_MERGE set to off (Settings → Secrets and variables → Actions → Variables): then nothing
+# runs here and every PR waits for Jonas.
+name: Automatisk retting
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    branches: [ccr-5e1ba2f4-pusvyd]
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+concurrency:
+  group: autofix-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  gate:
+    # only the routine's own PRs from this repository, with the label, while the switch is on
+    if: >-
+      contains(github.event.pull_request.labels.*.name, 'autofix') &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      vars.AUTO_FIX_MERGE != 'off'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Playwright
+        run: pip install playwright==1.63.0 && python -m playwright install --with-deps chromium
+      - name: Opphavet
+        id: origin
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # a fix built on a player's feedback waits for Jonas (Ø6 funn 8): the title or the text names «tilbakemelding #N»
+          if gh pr view "$PR" --json title,body -q '.title + " " + .body' | grep -qiE 'tilbakemelding(en|ene|er)? *#[0-9]|feedback *#[0-9]'; then
+            echo "fb=1" >> "$GITHUB_OUTPUT"; else echo "fb=0" >> "$GITHUB_OUTPUT"; fi
+      - name: Porten
+        id: gate
+        if: steps.origin.outputs.fb == '0'
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          set +e
+          python3 tools/autofix/gate.py --base origin/${{ github.base_ref }} --out gate.json | tee gate.txt
+          echo "code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+      - name: Fletter inn og ruller ut
+        if: steps.origin.outputs.fb == '0' && steps.gate.outputs.code == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # the PR must still be at the commit the gate tested
+          head=$(gh pr view "$PR" --json headRefOid -q .headRefOid)
+          [ "$head" = "${{ github.event.pull_request.head.sha }}" ] || { echo "PR-en har fått nye commits; venter på neste kjøring"; exit 0; }
+          # the text again, as it is now (it can be edited while the tests run)
+          if gh pr view "$PR" --json title,body -q '.title + " " + .body' | grep -qiE 'tilbakemelding(en|ene|er)? *#[0-9]|feedback *#[0-9]'; then echo "PR-en viser nå til en tilbakemelding; venter på Jonas"; exit 0; fi
+          { echo "Porten slapp rettingen ut: filene, størrelsen, koden og testene holder."; echo; echo '```'; tail -n 3 gate.txt; echo '```'; echo; echo "Flettes inn og rulles ut til detstorebla.no nå."; echo; echo "---"; echo "_Automatisk retting (.github/workflows/autofix.yml)_"; } > body.md
+          gh pr comment "$PR" --body-file body.md
+          gh pr merge "$PR" --squash --delete-branch
+          gh workflow run deploy.yml --ref ${{ github.base_ref }}
+          gh workflow run pwa.yml --ref ${{ github.base_ref }}
+      - name: Venter på Jonas (tilbakemelding)
+        if: steps.origin.outputs.fb == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh label create autofix-stoppet --color B60205 --description "Porten stoppet den automatiske rettingen" 2>/dev/null || true
+          gh pr edit "$PR" --add-label autofix-stoppet
+          { echo "Rettingen bygger på en spillers tilbakemelding, og den rulles ikke ut av seg selv: den venter på Jonas (bare rettinger fra feillista går ut automatisk)."; echo; echo "---"; echo "_Automatisk retting (.github/workflows/autofix.yml)_"; } > body.md
+          gh pr comment "$PR" --body-file body.md
+      - name: Stoppet
+        if: steps.origin.outputs.fb == '0' && steps.gate.outputs.code != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh label create autofix-stoppet --color B60205 --description "Porten stoppet den automatiske rettingen" 2>/dev/null || true
+          gh pr edit "$PR" --add-label autofix-stoppet
+          { echo "Porten stoppet den automatiske rettingen. Den venter på Jonas."; echo; echo '```'; head -c 3500 gate.txt; echo '```'; echo; echo "---"; echo "_Automatisk retting (.github/workflows/autofix.yml)_"; } > body.md
+          gh pr comment "$PR" --body-file body.md
+          exit 1

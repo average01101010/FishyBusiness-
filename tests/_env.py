@@ -1,0 +1,56 @@
+# Shared paths for the Playwright scripts. They test the built game (run `node build.mjs` first),
+# and screenshots and other output land in tests/out/.
+import os, threading, functools, http.server
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+# the game is served over HTTP from dist/ (it fetches its map data from dist/map/, which a file:// page cannot), by a server of
+# this test's own on a free port; each test gets its own origin, so its own localStorage
+class _Quiet(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *a): pass
+# (KYST_DIST is made absolute here: the handler resolves its directory on every request, and this module chdirs to tests/out below, so
+# a relative KYST_DIST=dist-pwa served nothing and the game never started, 29.10.2026)
+class _Srv(http.server.ThreadingHTTPServer):
+    # the page reloads or closes while a map pack is still on its way: the browser drops the connection, and the server's own
+    # traceback (BrokenPipeError, ConnectionResetError) made run.py count a Python error in a test whose checks were all green
+    # (crewwalk, boottest, fleet2test, streaktest, tabtest; Ø2 05.11.2026). Those are the browser's to drop; anything else is printed
+    def handle_error(self, request, client_address):
+        import sys
+        if isinstance(sys.exc_info()[1], (BrokenPipeError, ConnectionResetError, ConnectionAbortedError)): return
+        super().handle_error(request, client_address)
+
+
+_SRV = _Srv(('127.0.0.1', 0), functools.partial(_Quiet, directory=os.path.abspath(os.environ.get('KYST_DIST') or os.path.join(os.path.dirname(HERE), 'dist'))))
+threading.Thread(target=_SRV.serve_forever, daemon=True).start()
+BASE = 'http://127.0.0.1:%d/' % _SRV.server_port
+# «#qfix»: the 3D view keeps its high quality (view3d.js QUAL), so SwiftShader's few frames a second do not step it down.
+# «#seed=N» (29.10.2026): the game swaps Math.random for a seeded generator (core/01-world.js), so the weather, the catch and the crew
+# repeat from run to run and a red test is a bug, not a bad roll. KYST_SEED=0 turns it off, another number gives another run.
+SEED = os.environ.get('KYST_SEED', '1')
+# «ro0» (UI 2, U2-4, 07.11.2026): the calm is off. In the game the buttons slide out when the screen has not been touched for eight
+# seconds (ui/10c-dock.js CALM), and most tests wait longer than that between their clicks: Playwright would wait for a button the
+# calm has hidden until its time-out. So every test plays with the calm off, but the two that are about it: tut.py (the calm must
+# never come in the first trip; the port for U2-4) and roetest.py, which open GAME_RO, the game as a player has it
+GAME_RO = BASE + 'index.html#qfix' + (',seed=' + SEED if SEED != '0' else '')
+GAME_TUT = GAME_RO + ',ro0'
+# the tests play without the first-trip tutorial; tut.py uses GAME_TUT
+GAME = GAME_TUT + '#notut'
+# KYST_LITE=1 (tests/run.py sets it for the tests that do not look at 3D): the game runs as before, but no 3D frame is drawn,
+# which is most of the time a test takes with SwiftShader
+if os.environ.get('KYST_LITE') == '1':
+    GAME = GAME_TUT + '#notut,no3d'
+# the hand-drawn routes, in the national frame (km, UTM 33: x = (E + 250 km) / 1000, y = (8050 km - N) / 1000)
+ROUTES = os.path.join(HERE, 'routes.json')
+OUT = os.path.join(HERE, 'out')
+os.makedirs(OUT, exist_ok=True)
+os.chdir(OUT)
+
+
+async def boot(pg, url=None):
+    """Open the game and press «Start» on the first screen. It waits for the page and the start, not for fixed pauses."""
+    # the software GPU of the test machine draws only a few 3D frames a second (05.10.2026): a screenshot or a wait without its own
+    # limit gets 120 s instead of Playwright's 30
+    pg.set_default_timeout(120000)
+    await pg.goto(url or GAME)
+    await pg.wait_for_selector('#obGo', state='visible', timeout=90000)
+    await pg.click('#obGo')
+    await pg.wait_for_function("S.intro === true && document.getElementById('modal').hidden", timeout=30000)

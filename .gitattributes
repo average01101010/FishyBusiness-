@@ -1,0 +1,5 @@
+# Compressed map data: keep it out of diffs
+src/data/** -diff linguist-generated
+
+# the test history (tests/run.py, A5): every session and regression adds lines at the end; a merge keeps both sides
+tests/historikk.tsv merge=union

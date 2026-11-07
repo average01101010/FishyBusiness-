@@ -1,0 +1,40 @@
+# The rules along the coast (R1 of the rules plan, 04.10.2026): tools/rules/fetch.py fetches Fiskeridirektoratet's regulation layers
+# and Kartverket's maritime boundaries, and tools/rules/regler.py makes rules.json in the game's frame from them and the game's own land
+# (the newest kart- release joined by tools/map/game.py). The result is kept as a release regler-<run number> (rules.json), which goes
+# into src/data/rules.json. The closed fields (layer 0) and the king crab closures (30) change from week to week.
+# Started by a push that changes tools/rules/regler.json (on any branch), every Monday morning (on the default branch), or by hand from
+# the Actions tab once this file is on main.
+name: Regler langs kysten
+on:
+  push:
+    paths: ['tools/rules/regler.json']
+  schedule:
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: '1'
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy scipy shapely pyproj requests contourpy pillow
+      - name: The game's land (the newest kart- release, joined with Senja's)
+        run: python3 tools/map/game.py
+      - name: The sources
+        run: python3 tools/rules/fetch.py --force
+      - name: rules.json
+        run: KYST_RULES=rules.json python3 tools/rules/regler.py
+      - name: The release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=regler-${{ github.run_number }}
+          gh release create "$TAG" rules.json --target "${{ github.sha }}" --title "Regler $TAG" \
+            --notes "Fiskeridirektoratets reguleringskart og statistikkområder (NLOD) og Kartverkets Norges maritime grenser (CC BY 4.0), i spillets ramme (tools/rules/regler.py), commit ${{ github.sha }}."

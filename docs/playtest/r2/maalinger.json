@@ -1,0 +1,236 @@
+{
+ "run": "r2",
+ "faser": {
+  "spill": {
+   "kommandoer": 397,
+   "handlinger": 302,
+   "ekte_tid": "0 t 34 min",
+   "menneskelig_tid": "10 t 21 min",
+   "borte_tid": "9 t 57 min",
+   "spilltid": "62 t 07 min",
+   "spilltid_fra_til": [
+    "man 1. mar 2027, 06:01",
+    "ons 3. mar 2027, 20:08"
+   ],
+   "kontanter_fra_til": [
+    15000,
+    11183
+   ],
+   "kontanter_min_max": [
+    9503,
+    15000
+   ],
+   "turer_kg_omsetning": [
+    3,
+    23,
+    730
+   ],
+   "båt_flåte_eide_lisens": [
+    "skiff",
+    1,
+    1,
+    null
+   ],
+   "mannskap_redskap_i_sjøen": [
+    0,
+    0
+   ],
+   "lån": 0,
+   "per_kommando": {
+    "trykk": 217,
+    "tekst": 54,
+    "rull": 29,
+    "bilde": 28,
+    "vent": 19,
+    "dra": 19,
+    "dagbok": 13,
+    "knip": 11,
+    "borte": 4,
+    "skriv": 2,
+    "velg": 1
+   },
+   "spillhandlinger_brukt": {
+    "undo": 19,
+    "fp": 6,
+    "rm": 5,
+    "clear": 4,
+    "start": 3,
+    "fuel": 2,
+    "rod": 2,
+    "sell": 2,
+    "cm": 1,
+    "ice": 1,
+    "pub": 1
+   },
+   "apper_åpnet": {
+    "vaer": 3,
+    "salg": 2,
+    "fartoy": 1,
+    "post": 1,
+    "redskap": 1
+   },
+   "telefonknapper": {
+    "back": 7,
+    "close": 7,
+    "sub": 3,
+    "cloth": 2
+   },
+   "bomtrykk": 103,
+   "tekst_ikke_funnet": 8,
+   "ugyldige_kommandoer": 0,
+   "statuser": {
+    "port": 362,
+    "fishing": 32,
+    "unmooring": 2,
+    "sailing": 1
+   },
+   "tempo_brukt": [
+    1
+   ],
+   "omlastinger": 0,
+   "snudd": 0,
+   "lengste_gjentakelse": [
+    9,
+    "trykk Angre"
+   ],
+   "kontanthopp": []
+  },
+  "knekk": {
+   "kommandoer": 77,
+   "handlinger": 50,
+   "ekte_tid": "0 t 07 min",
+   "menneskelig_tid": "0 t 29 min",
+   "borte_tid": "0 t 24 min",
+   "spilltid": "2 t 54 min",
+   "spilltid_fra_til": [
+    "ons 3. mar 2027, 20:08",
+    "ons 3. mar 2027, 23:02"
+   ],
+   "kontanter_fra_til": [
+    11183,
+    5000
+   ],
+   "kontanter_min_max": [
+    5000,
+    11183
+   ],
+   "turer_kg_omsetning": [
+    4,
+    29,
+    907
+   ],
+   "båt_flåte_eide_lisens": [
+    "snekke",
+    1,
+    2,
+    null
+   ],
+   "mannskap_redskap_i_sjøen": [
+    0,
+    0
+   ],
+   "lån": 174254,
+   "per_kommando": {
+    "trykk": 40,
+    "tekst": 18,
+    "vent": 7,
+    "dagbok": 5,
+    "bilde": 4,
+    "lastinn": 1,
+    "borte": 1,
+    "rull": 1
+   },
+   "spillhandlinger_brukt": {
+    "pub": 2,
+    "rm": 2,
+    "fp": 2,
+    "fuel": 1,
+    "start": 1,
+    "sell": 1
+   },
+   "apper_åpnet": {
+    "fartoy": 2,
+    "bank": 1
+   },
+   "telefonknapper": {
+    "close": 2,
+    "sub": 2,
+    "back": 2,
+    "buy": 1
+   },
+   "bomtrykk": 7,
+   "tekst_ikke_funnet": 3,
+   "ugyldige_kommandoer": 0,
+   "statuser": {
+    "port": 75,
+    "unmooring": 2
+   },
+   "tempo_brukt": [
+    1
+   ],
+   "omlastinger": 1,
+   "snudd": 0,
+   "lengste_gjentakelse": [
+    2,
+    "trykk Fyll drivstoff ved bunkerskaia"
+   ],
+   "kontanthopp": []
+  }
+ },
+ "spillet": {
+  "grunnstøtinger": [],
+  "logg_grunn_slep_redning": [],
+  "motorstopp_tom": [],
+  "snudd_vær": [],
+  "inndragning_meldinger": [],
+  "kvote_full_logg": 0,
+  "kveite": [],
+  "fjordlinja": [],
+  "ferskfisk": [],
+  "hvile": [],
+  "tapt_redskap": [],
+  "landinger": 3,
+  "landet_kg_kr": [
+   29,
+   907
+  ],
+  "kg_per_art": {
+   "sei": 14,
+   "hyse": 8,
+   "torsk": 7
+  },
+  "mottak": {
+   "botnhamn": 3
+  },
+  "utstyr": null,
+  "eide_båter": [
+   "skiff",
+   "snekke"
+  ],
+  "lisens": null,
+  "mannskap": [],
+  "redskap_i_sjøen": 0,
+  "pgear": null,
+  "stats": {
+   "revenue": 906.8009400000001,
+   "costs": 8161.037108169875,
+   "trips": 4,
+   "kg": 29.15
+  },
+  "meldinger_fra": {
+   "Husøy Fisk": 3,
+   "Puben": 1,
+   "Kystbanken": 1,
+   "Verftet": 1
+  },
+  "tatoveringer": [],
+  "lore": [
+   "mastemynt"
+  ]
+ },
+ "snapshot": "/root/playtest-obs/r2/snap/final_02694.json",
+ "sidefeil": [],
+ "konsollfeil": 3,
+ "tempo_hendelser": [],
+ "dagbok_notater": 18
+}

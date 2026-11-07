@@ -1,0 +1,133 @@
+// ================= put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet») =================
+// The app keeps the game and the chart on the device and runs full screen; in the browser tab iOS clears what a site stores after a week
+// without a visit. So the game recommends it: once after the first landing (and at most three times, two days apart), and as a card in
+// Settings for as long as the game runs in a tab. Android (Chrome, Samsung): the browser's own install dialog when it offers one
+// (beforeinstallprompt), else the menu steps; iPhone and iPad: «Del» and «Legg til på Hjem-skjerm» (there is no dialog to call).
+const INSTALL = (() => {
+  const KEY = 'dsb_install', ua = navigator.userAgent, L = (no, en) => cloudL(no, en);
+  let ev = null;
+  const os = () => /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'ios' : /Android/.test(ua) ? 'android' : null;
+  const standalone = () => !!(navigator.standalone || (window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: minimal-ui)').matches)));
+  const hasApp = () => !!document.querySelector('link[rel=manifest]');   // the build with a manifest and a service worker (the artifact has none)
+  const st = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e){ return {}; } };
+  const keep = o => { try { localStorage.setItem(KEY, JSON.stringify(Object.assign(st(), o))); } catch (e){} };
+  addEventListener('beforeinstallprompt', e => { e.preventDefault(); ev = e; });
+  addEventListener('appinstalled', () => { keep({done:1}); ev = null; try { if (typeof cloudEv === 'function') cloudEv('install_done', {os:os()}); } catch (e){} const m = document.getElementById('modal'); if (m && !m.hidden && m.querySelector('.ob.inst')) m.hidden = true; });
+  // can it be offered here: a phone or tablet (or a browser that has an install dialog) in a tab, not already the app
+  // (on an iPhone the app keeps storage of its own, and a guest's game, which lives only in this browser, would not come along: a guest
+  // is asked once registered; Android's app shares the browser's storage)
+  const can = () => hasApp() && !standalone() && !st().done && (!!os() || !!ev) && !(os() === 'ios' && typeof isGuest === 'function' && isGuest());
+  const SHARE = '<svg viewBox="0 0 24 24" width="22" height="22" style="vertical-align:-5px" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M5 11v9h14v-9"/></svg>';
+  const steps = () => {
+    if (os() === 'ios') return '<ol class="inst-steps"><li>' + L('Trykk på ', 'Tap ') + '<b>' + L('Del', 'Share') + '</b> ' + SHARE + L(' (firkanten med pil opp) i Safari.', ' (the square with an arrow up) in Safari.') + '</li>' +
+      '<li>' + L('Bla ned og velg ', 'Scroll down and choose ') + '<b>' + L('Legg til på Hjem-skjerm', 'Add to Home Screen') + '</b>.</li><li>' + L('Trykk ', 'Tap ') + '<b>' + L('Legg til', 'Add') + '</b>.</li></ol>' +
+      '<p class="note">' + L('Åpner du spillet i en annen nettleser enn Safari, finner du «Del» i menyen. Åpne spillet fra ikonet etterpå.', 'If you have the game open in a browser other than Safari, «Share» is in its menu. Open the game from the icon afterwards.') + '</p>' +
+      '<p class="note">' + L('Appen har sin egen lagring på iPhone. Første gang du åpner den, trykker du «Logg inn» med den samme kontoen, så blir spillet ditt med.', 'On an iPhone the app keeps its own storage. The first time you open it, tap «Sign in» with the same account, and your game comes along.') + '</p>';
+    return '<ol class="inst-steps"><li>' + L('Åpne nettleserens meny ', 'Open the browser\'s menu ') + '(⋮).</li><li>' + L('Velg ', 'Choose ') + '<b>' + L('Installer app', 'Install app') + '</b> ' + L('eller ', 'or ') + '<b>' + L('Legg til på startskjermen', 'Add to Home screen') + '</b>.</li><li>' + L('Åpne spillet fra ikonet etterpå.', 'Open the game from the icon afterwards.') + '</li></ol>';
+  };
+  const why = () => L('Spillet starter fra ikonet i fullskjerm, kartet blir liggende på enheten så det går fort og virker uten nett, og lagringen blir værende. Nettlesere sletter det de har lagret etter en stund, på iPhone etter en uke uten besøk.', 'The game starts from the icon in full screen, the chart stays on the device so it is quick and works offline, and the save stays. Browsers delete what they have stored after a while, an iPhone after a week without a visit.');
+  function ask(src){
+    if (!can()) return false;
+    const n = st().n || 0; keep({n:n + 1, t:Date.now()});
+    modal('<div class="ob inst"><h2>' + L('Legg spillet på hjemskjermen', 'Put the game on your home screen') + '</h2><p>' + why() + '</p>' + (ev ? '' : steps()) +
+      '<div class="btns"><button class="btn" data-close>' + L('Senere', 'Later') + '</button>' + (ev ? '<button class="btn primary" id="instGo">' + L('Installer', 'Install') + '</button>' : '<button class="btn primary" data-close>' + L('Skjønner', 'Got it') + '</button>') + '</div></div>');
+    const b = document.getElementById('instGo'); if (b) b.onclick = () => go('modal');
+    try { if (typeof cloudEv === 'function') cloudEv('install_ask', {os:os(), src, n:n + 1, dialog:!!ev}); } catch (e){}
+    return true;
+  }
+  // the install button: the browser's dialog when it has one, else the steps
+  async function go(src){
+    try { if (typeof cloudEv === 'function') cloudEv('install_go', {os:os(), src, dialog:!!ev}); } catch (e){}
+    if (!ev){ modal('<div class="ob inst"><h2>' + L('Legg spillet på hjemskjermen', 'Put the game on your home screen') + '</h2>' + steps() + '<div class="btns"><button class="btn primary" data-close>' + L('Skjønner', 'Got it') + '</button></div></div>'); return; }
+    const m = document.getElementById('modal'); if (m && m.querySelector('.ob.inst')) m.hidden = true;
+    try { ev.prompt(); const r = await ev.userChoice; if (r && r.outcome === 'accepted') keep({done:1}); } catch (e){}
+    ev = null;
+  }
+  // the card in Settings
+  function card(){
+    if (!can()) return '';
+    return '<div class="ph-card"><h4>' + L('Legg spillet på hjemskjermen', 'Put the game on your home screen') + '</h4><p class="ph-note">' + why() + '</p>' + (ev ? '' : steps()) +
+      (ev ? '<button class="ph-btn p" data-pa="installGo">' + L('Installer spillet', 'Install the game') + '</button>' : '') + '</div>';
+  }
+  // after the first landing, when the screen is free and the registration card (a guest's) has had its turn; three times at most, two days apart
+  function start(){
+    if (!can()) return;
+    const iv = setInterval(() => {
+      if (!can()){ clearInterval(iv); return; }
+      const s = st(); if ((s.n || 0) >= 3){ clearInterval(iv); return; }
+      if (typeof tutOn === 'function' && tutOn()) return;
+      if ((S.landN || 0) < 1 && (S.opens || 0) < 2) return;
+      if (s.t && Date.now() - s.t < 2 * 864e5) { clearInterval(iv); return; }
+      if (typeof isGuest === 'function' && isGuest() && !(S.regAsk > 0)) return;
+      const m = document.getElementById('modal'); if (m && !m.hidden) return;
+      const ph = document.getElementById('phone'); if (ph && !ph.hidden) return;
+      ask('auto'); clearInterval(iv);
+    }, 20000);
+  }
+  return {can, card, ask, go, start, standalone};
+})();
+
+// ================= a new build is out: «Oppdater nå» (Jonas 06.11.2026: «Varsel ved oppdatering for å kjøre refresh på appen») =================
+// The build's version stands in the page (<meta name="dsb-version">, build.mjs) and in version.json beside it. An open game asks for
+// version.json every ten minutes and when the tab comes back, and when it differs a bar comes at the top with «Oppdater nå», which
+// saves and loads the page again; ✕ puts it off half an hour. In the app the service worker takes over as soon as it is installed
+// (sw.js skipWaiting and clients.claim), so a controllerchange on a page that had a worker says the same. Nothing reloads by itself:
+// a player in the middle of a haul decides when
+const UPDATE = (() => {
+  const L = (no, en) => cloudL(no, en), mine = () => (document.querySelector('meta[name=dsb-version]') || {}).content || 'dev';
+  let el = null, snooze = 0, had = false, seen = null;
+  function bar(){
+    if (el || Date.now() < snooze || (typeof booting === 'function' && booting())) return;
+    el = document.createElement('div'); el.id = 'updBar';
+    el.innerHTML = '<span>' + L('En ny versjon av spillet er klar.', 'A new version of the game is ready.') + '</span><button type="button" id="updGo">' + L('Oppdater nå', 'Update now') + '</button><button type="button" id="updX" aria-label="' + L('Senere', 'Later') + '">✕</button>';
+    document.getElementById('app').appendChild(el);
+    el.querySelector('#updGo').onclick = () => { try { if (typeof cloudEv === 'function') cloudEv('update_go', {from:mine(), to:seen}); } catch (e){} try { save(); } catch (e){} location.reload(); };
+    el.querySelector('#updX').onclick = () => { el.remove(); el = null; snooze = Date.now() + 30 * 60e3; };
+    try { if (typeof cloudEv === 'function') cloudEv('update_ask', {from:mine(), to:seen}); } catch (e){}
+  }
+  async function check(){
+    if (mine() === 'dev' || document.hidden || Date.now() < snooze || el) return;
+    try { const r = await fetch('version.json?t=' + Date.now(), {cache:'no-store'}); if (!r.ok) return; const j = await r.json(); if (j && j.v && j.v !== mine()){ seen = j.v; bar(); } } catch (e){}
+  }
+  function start(){
+    if (mine() === 'dev') return;
+    setInterval(check, 10 * 60e3); document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(check, 1500); }); setTimeout(check, 90e3);
+    if ('serviceWorker' in navigator){
+      had = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange', () => { if (had){ seen = seen || 'sw'; bar(); } had = true; });
+      navigator.serviceWorker.getRegistration().then(reg => { if (reg) setInterval(() => reg.update().catch(() => {}), 30 * 60e3); }).catch(() => {});
+    }
+  }
+  return {start, check, bar, mine};
+})();
+
+// ================= the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109) =================
+// Firefox and Opera on Android drew the 3D view at 27-35 frames a second on a tablet that has 60 in Chrome, even on the lowest 3D
+// level, so the browser and not the drawing held it back. Those browsers get a small card on the loading screen: the game runs
+// smoothest in Chrome, or as the app installed from Chrome. Once a day at most; it stays till it is closed. Another browser keeps a
+// storage of its own, so a guest is told to register first (the account brings the game along). Firefox asking for the desktop site
+// on Android says Linux, so a Linux Firefox with a touch screen counts too. #brwtip in the address shows it anywhere (the tests).
+const BRWTIP = (() => {
+  const KEY = 'dsb_brwtip', ua = navigator.userAgent, force = /brwtip/.test(location.hash);
+  const which = () => force ? 'Firefox' : /OPR\/|OPX\/|OPT\//.test(ua) && /Android/.test(ua) ? 'Opera'
+    : /Firefox\//.test(ua) && (/Android/.test(ua) || (/Linux/.test(ua) && navigator.maxTouchPoints > 0)) ? 'Firefox' : null;
+  const L = (no, en) => { const s = typeof cloudS === 'function' ? cloudS() : null; const lang = s && s.lang ? s.lang : /^(nb|nn|no)/i.test(navigator.language || 'no') ? 'no' : 'en'; return lang === 'en' ? en : no; };
+  function show(){
+    const b = which(); if (!b) return false;
+    try { if (!force && Date.now() - (+localStorage.getItem(KEY) || 0) < 864e5) return false; localStorage.setItem(KEY, String(Date.now())); } catch (e){}
+    const host = location.host || 'detstorebla.no', path = location.pathname || '/';
+    const el = document.createElement('div'); el.id = 'brwTip'; el.setAttribute('role', 'dialog');
+    el.innerHTML = '<b>' + L('Spillet går jevnest i Chrome', 'The game runs smoothest in Chrome') + '</b><p>' +
+      L(b + ' på Android tegner 3D-bildet tregere enn Chrome, så det kan hakke. Åpne spillet i Chrome, eller installer det som app fra Chrome (menyen ⋮, «Installer app»).',
+        b + ' on Android draws the 3D view more slowly than Chrome, so it may stutter. Open the game in Chrome, or install it as an app from Chrome (the ⋮ menu, «Install app»).') +
+      '</p><p class="bt-n">' + L('Er du gjest, registrerer du deg først, så blir spillet med deg til Chrome.', 'If you play as a guest, register first so your game comes along to Chrome.') + '</p>' +
+      '<div class="bt-b"><button type="button" class="bt-x">' + L('Lukk', 'Close') + '</button><a class="bt-go" href="intent://' + host + path + '#Intent;scheme=https;package=com.android.chrome;end">' + L('Åpne i Chrome', 'Open in Chrome') + '</a></div>';
+    el.querySelector('.bt-x').onclick = () => el.remove();
+    el.querySelector('.bt-go').onclick = () => { try { if (typeof cloudEv === 'function') cloudEv('brwtip_go', {b}); } catch (e){} };
+    document.body.appendChild(el);
+    setTimeout(() => { try { if (typeof cloudEv === 'function') cloudEv('brwtip_show', {b}); } catch (e){} }, 30000);   // once the cloud has a session
+    return true;
+  }
+  return {show, which};
+})();
+try { BRWTIP.show(); } catch (e){}

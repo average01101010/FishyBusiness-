@@ -1,0 +1,250 @@
+{
+ "run": "r1",
+ "faser": {
+  "spill": {
+   "kommandoer": 327,
+   "handlinger": 301,
+   "ekte_tid": "0 t 49 min",
+   "menneskelig_tid": "4 t 06 min",
+   "borte_tid": "3 t 30 min",
+   "spilltid": "24 t 48 min",
+   "spilltid_fra_til": [
+    "man 1. mar 2027, 06:00",
+    "tir 2. mar 2027, 06:48"
+   ],
+   "kontanter_fra_til": [
+    15000,
+    14840
+   ],
+   "kontanter_min_max": [
+    14283,
+    15000
+   ],
+   "turer_kg_omsetning": [
+    3,
+    6,
+    132
+   ],
+   "båt_flåte_eide_lisens": [
+    "skiff",
+    1,
+    1,
+    null
+   ],
+   "mannskap_redskap_i_sjøen": [
+    0,
+    0
+   ],
+   "lån": 0,
+   "per_kommando": {
+    "trykk": 215,
+    "vent": 40,
+    "rull": 20,
+    "dagbok": 18,
+    "dra": 9,
+    "knip": 6,
+    "hold": 6,
+    "bilde": 4,
+    "tekst": 4,
+    "borte": 3,
+    "skriv": 2
+   },
+   "spillhandlinger_brukt": {
+    "fp": 7,
+    "clear": 5,
+    "start": 4,
+    "rod": 4,
+    "undo": 4,
+    "rm": 4,
+    "fuel": 1,
+    "gwp": 1,
+    "cm": 1,
+    "stopfish": 1,
+    "retrace": 1,
+    "sell": 1,
+    "ice": 1
+   },
+   "apper_åpnet": {
+    "salg": 3,
+    "vaer": 2,
+    "meld": 2,
+    "redskap": 2,
+    "post": 1
+   },
+   "telefonknapper": {
+    "back": 8,
+    "close": 6,
+    "sub": 5,
+    "home": 2
+   },
+   "bomtrykk": 79,
+   "tekst_ikke_funnet": 3,
+   "ugyldige_kommandoer": 0,
+   "statuser": {
+    "port": 175,
+    "fishing": 110,
+    "idle": 31,
+    "sailing": 6,
+    "unmooring": 5
+   },
+   "tempo_brukt": [
+    1
+   ],
+   "omlastinger": 0,
+   "snudd": 0,
+   "lengste_gjentakelse": [
+    9,
+    "trykk 646 700"
+   ],
+   "kontanthopp": []
+  },
+  "knekk": {
+   "kommandoer": 64,
+   "handlinger": 51,
+   "ekte_tid": "0 t 15 min",
+   "menneskelig_tid": "3 t 12 min",
+   "borte_tid": "3 t 00 min",
+   "spilltid": "19 t 14 min",
+   "spilltid_fra_til": [
+    "tir 2. mar 2027, 06:48",
+    "ons 3. mar 2027, 02:02"
+   ],
+   "kontanter_fra_til": [
+    14840,
+    14767
+   ],
+   "kontanter_min_max": [
+    12196,
+    15767
+   ],
+   "turer_kg_omsetning": [
+    4,
+    114,
+    3702
+   ],
+   "båt_flåte_eide_lisens": [
+    "skiff",
+    1,
+    1,
+    null
+   ],
+   "mannskap_redskap_i_sjøen": [
+    0,
+    0
+   ],
+   "lån": 0,
+   "per_kommando": {
+    "trykk": 41,
+    "dagbok": 9,
+    "vent": 7,
+    "tekst": 3,
+    "bilde": 1,
+    "lastinn": 1,
+    "rull": 1,
+    "borte": 1
+   },
+   "spillhandlinger_brukt": {
+    "retrace": 2,
+    "ice": 2,
+    "stopfish": 1,
+    "gear": 1,
+    "fuel": 1,
+    "undo": 1,
+    "start": 1,
+    "sell": 1,
+    "pub": 1
+   },
+   "apper_åpnet": {
+    "bank": 1,
+    "salg": 1
+   },
+   "telefonknapper": {
+    "back": 2,
+    "close": 2,
+    "sub": 1
+   },
+   "bomtrykk": 14,
+   "tekst_ikke_funnet": 1,
+   "ugyldige_kommandoer": 0,
+   "statuser": {
+    "port": 51,
+    "fishing": 6,
+    "idle": 4,
+    "sailing": 2,
+    "unmooring": 1
+   },
+   "tempo_brukt": [
+    1
+   ],
+   "omlastinger": 1,
+   "snudd": 0,
+   "lengste_gjentakelse": [
+    8,
+    "trykk 1225 465"
+   ],
+   "kontanthopp": []
+  }
+ },
+ "spillet": {
+  "grunnstøtinger": [],
+  "logg_grunn_slep_redning": [],
+  "motorstopp_tom": [],
+  "snudd_vær": [
+   "Returnerer samme vei.",
+   "Returnerer samme vei.",
+   "Returnerer samme vei."
+  ],
+  "inndragning_meldinger": [],
+  "kvote_full_logg": 0,
+  "kveite": [],
+  "fjordlinja": [],
+  "ferskfisk": [],
+  "hvile": [],
+  "tapt_redskap": [],
+  "landinger": 2,
+  "landet_kg_kr": [
+   113,
+   3702
+  ],
+  "kg_per_art": {
+   "torsk": 38,
+   "hyse": 31,
+   "sei": 28,
+   "brosme": 8,
+   "lyr": 4,
+   "lange": 4,
+   "uer": 1
+  },
+  "mottak": {
+   "botnhamn": 2
+  },
+  "utstyr": null,
+  "eide_båter": [
+   "skiff"
+  ],
+  "lisens": null,
+  "mannskap": [],
+  "redskap_i_sjøen": 0,
+  "pgear": null,
+  "stats": {
+   "revenue": 3702.380410000002,
+   "costs": 4435.509886326205,
+   "trips": 4,
+   "kg": 113.7,
+   "released": 1
+  },
+  "meldinger_fra": {
+   "Husøy Fisk": 2,
+   "Kaia": 1
+  },
+  "tatoveringer": [],
+  "lore": [
+   "prest"
+  ]
+ },
+ "snapshot": "/root/playtest-obs/r1/snap/final_04173.json",
+ "sidefeil": [],
+ "konsollfeil": 1,
+ "tempo_hendelser": [],
+ "dagbok_notater": 27
+}

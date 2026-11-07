@@ -1,0 +1,31 @@
+# Revisjonslogg N (open): tilstandsskifter minutt for minutt, spilt i testbygget 26.10.2026
+# hjem Finnsnes · mottak Botnhamn · felt [('f1', 2, 6), ('f2', 2, 6)] · juksplasser 1
+# slutt: on=False stop=Går ikke ut: lina er ikke egnet. wait=None
+# tid: dag klokke | tilstand (plan:status@havn/redskapsarbeid ?venter !stopp) | energi | høyeste slitenhet | last kg
+D1 03:01  -:port@finnsnes?dep                            en=  3 fat=  0 hold=    0
+D1 05:00  fish:unmooring@finnsnes                        en= 28 fat=  0 hold=    0
+D1 05:01  fish:sailing                                   en= 28 fat=  0 hold=    0
+D1 05:21  fish:fishing/set-line                          en= 27 fat=  0 hold=    0
+D1 05:30  fish:fishing                                   en= 26 fat=  0 hold=    0
+D1 05:31  fish:sailing                                   en= 26 fat=  0 hold=    0
+D1 05:41  fish:fishing/set-line                          en= 25 fat=  0 hold=    0
+D1 05:50  fish:fishing                                   en= 25 fat=  0 hold=    0
+D1 05:51  fish:sailing                                   en= 24 fat=  0 hold=    0
+D1 05:55  fish:fishing                                   en= 24 fat=  0 hold=    0
+D1 09:55  fish:sailing                                   en=  8 fat= 18 hold=  128
+D1 10:07  fish:fishing/haul-line                         en=  7 fat= 21 hold=  128
+D1 10:49  fish:fishing                                   en=  4 fat= 21 hold=  173
+D1 10:50  fish:sailing                                   en=  4 fat= 21 hold=  173
+D1 11:00  fish:fishing/haul-line                         en=  3 fat= 21 hold=  173
+D1 11:43  fish:fishing                                   en=  0 fat= 25 hold=  183
+D1 11:44  fish:sailing/zz                                en=  0 fat= 25 hold=  183
+D1 14:58  -:port@botnhamn/land/zz                        en=  0 fat= 33 hold=  183
+D1 15:07  -:port@botnhamn/zz                             en=  0 fat= 16 hold=    0
+D1 17:14  -:port@botnhamn!stop:fail!off/zz               en=  0 fat=  0 hold=    0
+D1 19:44  -:port@botnhamn!stop:fail!off                  en= 60 fat=  0 hold=    0
+# landinger (o.rep): [{"w": "D1 15:07", "port": "botnhamn", "kg": 183, "kr": 3199, "h": 10.1, "landed": true}]
+# salg: [{"w": "D1 15:07", "port": "botnhamn", "kg": 183, "total": 5136, "conf": 0}]
+# redskap i sjøen ved slutt: []
+# «Neste tur» slik siden viste den: [{"at": "D1 03:01", "sk": [["05:00", "Går fra Finnsnes"], ["05:17", "Setter 2 stamper på felt 2"], ["05:39", "Setter 2 stamper på felt 1"], ["06:05", "Jukser på plass 1 (høyst 4,0 t)"], ["10:16", "Trekker felt 2"], ["11:02", "Trekker felt 1"], ["14:46", "Leverer i Botnhamn"], ["18:59", "Hjem til Finnsnes og hvile"]]}]
+# slutt: {"en": 100, "fat": [0, 0], "cash": 999989, "hold": 0, "status": "port", "port": "botnhamn", "pos": [863.55, 336.19], "revenue": 5136, "kg": 183, "costs": 5147}
+# meldinger: D1 11:00 Vegard Mathisen: Vegard fant vafler i matkassa og kikket på deg: – Hvem tok med vafler om bord? || D1 15:07 Driftsplan: Driftsrapport: 183 kg levert i Botnhamn, 3 199 kr etter lott. || D1 15:14 Driftsplan: Går ikke ut: lina er ikke egnet. || D1 16:14 Driftsplan: Går ikke ut: lina er ikke egnet. || D1 17:14 Driftsplan: Går ikke ut: lina er ikke egnet. || D1 17:14 Driftsplan: Driftsplanen for «T-333-LK» har stoppet: Går ikke ut: lina er ikke egnet.

@@ -1,0 +1,496 @@
+# Sjøfart og lover: vikeplikten, sikkerheten og regelverket på sjøen
+
+> Nytt systemdokument i Ø11.1 (06.11.2026), skrevet ut fra kap. 5 og valgene i `docs/planer/lover-regler-sikkerhet.md` (Ø11a). Planen sier hvilken økt som bygger hva (Ø11.1–Ø11.9); dette dokumentet sier hva som gjelder og hva som er bygd, med paragraf og kilde, slik `kvoter-og-regler.md` gjør for fiskeriet. Hver økt i Ø11 skriver det den avgjør her samme dag.
+>
+> Kystvakta ser bare på fiskeriet (V1 A), så ingenting her har bøter eller kontroll. Fiskerireglene (kvoter, redskap, felt) står i `kvoter-og-regler.md`.
+
+## 1. Valgene
+
+Jonas' valg, med datoen de ble tatt. De spørres ikke om igjen.
+
+| Valg | Jonas | Det betyr |
+|---|---|---|
+| V1 Når en regel brytes | **A** (28.10.2026) | Følgene kommer fra simuleringen: skade, ansvar etter skyld, høyere kaskopremie og en linje i dagboka. Ingen bøter, forelegg eller overtredelsesgebyr. Kystvakta ser bare på fiskeriet. |
+| V2 Hvor strenge NPC-ene er | **A** (28.10.2026) | NPC-ene følger regel 13–18 fullt ut: de viker når de skal, og holder kurs og fart når spilleren skal vike. |
+| npc-flåten 4 Vikeplikten | **A** (05.11.2026) | NPC-ene viker bare i spillerens egen visning, innen rundt 1 km fra båten hennes, og går tilbake til den felles banen etterpå. Avviket lagres aldri og sendes aldri. |
+| npc-flåten 2 Navnene | **A** (05.11.2026) | Oppdiktede navn på alle fartøy. |
+| V3 Påbudt utstyr | **Ingen sjekkliste, ingen sperre, ingen følger i kaskoen** (28.10.2026) | Lista over påbudt utstyr per båt, og modellene der de mangler. |
+| V4 Fartsgrensene | **A** (28.10.2026) | En fast grense i havnene hvis Kystverket ikke har et åpent datasett. Et datasett er funnet (kap. 2.9), så V4 A er reserven i Ø11.8. |
+| V5 Alkohol | **A** (28.10.2026) | Ikke med. |
+| V6 Påbudt utstyr i butikken | **A** (28.10.2026) | Det som er påbudt, følger med båten. Butikken selger det bare der det er valgfritt. Gamle lagringer får det som mangler, gratis. |
+| V7 Dagsignalene | **Ikke med** (05.11.2026: «Vi trenger ikke tenke på dagsignaler i spillet. Stort sett ingen bruker det på ekte») | Kjeglene, kulene og signalfigurene tegnes ikke. Om dagen sier AIS-kortet hva båten gjør (3.4). |
+| V8 Det verste ved mann over bord | **A** (05.11.2026) | Ingen dør. Kommer båten ikke tilbake i tide, henter redningsskøyta eller helikopteret personen, som er sykmeldt noen dager. |
+| V9 Nødstoppen på haleren | **B** (05.11.2026) | Bare en detalj på haleren. Mannskapet bruker den selv, og det står som nestenulykke i loggen. |
+| V10 Senderen på vesten (PLB, AIS-MOB) | **C** (05.11.2026) | Ikke med. |
+| V11 Kurs og øvelser | **C** (05.11.2026) | Ingen kurs eller øvelser i spillet. |
+| Det som ikke lages | 28.10.2026 | Nødsignalene, linekasteren, EPIRB, SART, den håndholdte VHF-en og brannslukkeren oppbevares inne og vises ikke. Signalfigurene, radarreflektoren og refleksstripene lages ikke. Overlevelsesdrakten oppbevares inne. |
+| Det som lages | 28.10.2026 | Oppblåsbar vest uten merkenavn, båret av mannskapet og skipperen på dekk. MOB-båt med davit og vugge. MOB-lys med røyk på brakett (bygd i Ø11.4, 06.11.2026). |
+| Hviletid og papirer | 11.10.2026 | Hviletiden er fjernet og kommer ikke tilbake. Sertifikatene sperrer ingenting. |
+
+Prinsippene 1–7 i `docs/planer/lover-og-regler.md` gjelder videre. Særlig **prinsipp 4: den som ikke styrer, får aldri følger for noe hun ikke kunne påvirke.** Derfor regnes vikingen, sammenstøtene og ulykkene bare når spillet er åpent, aldri i `catchUp`. Fra `CLAUDE.md`: felles klokke, Friction for Flow, sosialt er additivt (andre spilleres båter skades aldri), ingen ekte firmanavn.
+
+## 2. Regelverket, med paragraf og kilde
+
+Sjekket mot Lovdata 05.11.2026 i Ø11a (kap. 5 i planen), og sjøveisreglene 1–19 lest ordrett på nytt 06.11.2026 i Ø11.1. Der bare et sammendrag er lest, står det **[sammendrag]**; det leses ordrett i økta som bygger det.
+
+### 2.1 Sjøveisreglene, FOR-1975-12-01-5
+
+<https://lovdata.no/dokument/SF/forskrift/1975-12-01-5>. Forskrift om forebygging av sammenstøt på sjøen, fastsatt av Sjøfartsdirektoratet, i kraft 15.07.1977, sist endret FOR-2025-06-26-1372.
+
+**Lest ordrett 06.11.2026:** regel 1–18 og 19 a–c (Ø11.1), og i Ø11.2 regel 19 d–e, 20–37, vedlegg I og III og kapittel II regel 46, 49, 52 og 53 d. Hovedsiden kuttes i leseverktøyet etter regel 19, så kapittelsidene (`…/KAPITTEL_1-2-19`, `KAPITTEL_1-3-1` til `-12`, `KAPITTEL_1-4-1` til `-6`, `KAPITTEL_4` vedlegg I, `KAPITTEL_6` vedlegg III, `KAPITTEL_2-3-1` til `2-4-4`) ble lest én og én, med forskyvning inn i siden der teksten sto lenger ned (hver kapittelside gir hele forskriften). Lovdata stopper `curl` og Chromium herfra. Vedlegg II (tilleggssignal for fiske nær andre) og IV (nødsignalene) er ikke lest ordrett. Utdragene står i tabellen under; teksten er tatt fra leseverktøyets omgjøring av siden, så tegnsettingen kan avvike litt fra Norsk Lovtidend.
+
+Det spillet bruker, regel for regel:
+
+| Regel | Teksten (kort, ordrett der det står i anførselstegn) | I spillet |
+|---|---|---|
+| 2 b | Ved tolkingen skal det tas hensyn til «alle særlige omstendigheter», også fartøyets manøvreringsmuligheter | Et fartøy som ligger stille eller driver under 1 knop, kan ikke gjøre noe; da viker den som går (3.2, antatt) |
+| 3 b | Maskindrevet fartøy: drevet fram av maskineri | Alle båtene i spillet (ingen seilbåter) |
+| 3 d | «Fartøy som holder på med å fiske» fisker med «garn, liner, trål eller andre fiskeredskap som begrenser manøvreringsevnen», men ikke med «liner på slep eller andre fiskeredskap som ikke begrenser manøvreringsevnen» | Bare garn, line, teine, trål, not og snurrevad i sjøen gir forrang; juksa og dorg gjør det ikke (`colregCls`) |
+| 3 f | Ikke under kommando: «på grunn av en eller annen usedvanlig omstendighet» ute av stand til å manøvrere | Motorstopp, tom for diesel og drift uten motor (`engine`, `adrift`); NPC-båten i et oppdrag som driver med motorfeil |
+| 3 g | Begrenset evne til å manøvrere, blant annet slep som «sterkt begrenser» evnen til å avvike fra kursen (vi) | Redningsskøyta og den som sleper (slepet i oppdragene) |
+| 3 h | Hemmet av sitt dypgående: maskindrevet fartøy med «sterkt begrenset evne til å avvike fra den kurs det følger» | Klassen finnes (`cbd`), men ingen fartøy får den før de store skipene kommer i Ø15 |
+| 3 i | Underveis: ikke til ankers, ikke fast til land, ikke på grunn | Fortøyde og ankrede båter er ikke med i vikeplikten |
+| 3 k, 11 | I sikte av hverandre «utelukkende når det ene kan ses fra det andre»; avsnitt II (regel 11–18) gjelder bare da | Ø11.2: i sikte innen sikten om dagen og lanternenes synsvidde i mørket (`sjvSeenKm`); utenfor den i nedsatt sikt gjelder regel 19 (4.1, 4.2) |
+| 5, 7 a, 7 d i | Utkikk; «Hvis det er noen tvil, skal det regnes med at det er fare for sammenstøt»; fare når «kompasspeilingen … ikke forandrer seg merkbart» | Faren regnes som CPA og TCPA (3.2) |
+| 8 a, b, e | Manøveren «markert, utføres i god tid»; så stor at den er «helt tydelig», «En rekke små forandringer … bør unngås»; om nødvendig «slakke på farten eller stoppe» | NPC-ene og Autonav svinger rundt 35° til styrbord og holder den nye linja til det andre fartøyet er klart, eller slakker av når det ikke er plass (3.3) |
+| 9 b, 9 c | Fartøy under 20 m «skal ikke hindre eller vanskeliggjøre gjennomfarten» for et fartøy som bare kan navigere sikkert i en trang lei; det samme for den som fisker | Et stort fartøy i et smalt sund holder kurs, og spilleren får «Trang lei: gå av veien» (3.2) |
+| 10 | Trafikkseparasjonssystemer | Ikke med (planens kap. 9) |
+| 13 | Innhentende fartøy holder av veien «uten omsyn til» resten av avsnitt I og II; innhenting er å komme opp «mer enn 22,5 grader aktenfor tvers»; ved tvil er man innhentende; senere peilingsendring gjør det ikke til kryssende «før dette er endelig passert og klaret» | `colregSit` regner innhenting først og husker den til de er klare (3.2) |
+| 14 | To maskindrevne på motsatte eller nesten motsatte kurser: «begge vike til styrbord»; når det andre ses «forut eller nesten forut»; ved tvil «gå ut fra den er det» | Møtende når begge ser den andre innen 12° av baugen (3.2) |
+| 15 | Kryssende: det fartøyet holder av veien «som har det andre på sin styrbord side», og unngår «å gå forenom» | Kryssende fra styrbord: du viker; fra babord: du holder kurs |
+| 16 | Den vikepliktige gjør «såvidt mulig i god tid … en markert manøver for å holde godt klar» | NPC-ene og Autonav (3.3) |
+| 17 a i, a ii, b, c, d | Den andre «skal … beholde sin kurs og fart»; kan selv gjøre noe «så snart det blir klar over» at den andre ikke viker; skal gjøre noe når sammenstøt ikke kan unngås av den andre alene; skal ikke «forandre kurs til babord for et fartøy på sin babord side»; regelen fritar ikke den vikepliktige | NPC-en holder kurs og fart, og svinger til styrbord først når spilleren ikke har gjort noe og det er nært (3.3) |
+| 18 | «Unntatt hvor regel 9, 10 og 13 krever noe annet»: maskindrevet viker for ikke under kommando, begrenset manøvreringsevne, fiske og seil; den som fisker, viker «så vidt mulig» for de to første; alle unntatt de to første unngår å hindre den som er hemmet av dypgående | Rangen i `colregSit` (3.2) |
+| 19 a | «Denne regel gjelder for fartøy som ikke er i sikte av hverandre når de navigerer i eller nær et område med nedsatt sikt.» | Utenfor synsvidden i nedsatt sikt gjelder regel 19 i stedet for 11–18 (4.2) |
+| 19 b | «Ethvert fartøy skal gå med sikker fart avpasset etter de rådende omstendigheter og nedsatte siktforhold. Et maskindrevet fartøy skal ha sitt maskineri klar til øyeblikkelig manøver.» | Autonav i sikker fart (4.3) |
+| 19 d | «Et fartøy som oppdager et annet fartøy bare ved hjelp av radar, skal avgjøre om en nærsituasjon kan utvikle seg og/eller om det er fare for sammenstøt. Hvis så er tilfelle skal det i god tid ta forholdsregler … skal såvidt mulig følgende unngås: i. en kursforandring til babord for et fartøy som er forenom tvers unntatt for et fartøy som blir innhentet, ii. en kursforandring mot et fartøy som er tvers eller aktenfor tvers.» | Begge viker; siden etter 19 d (`sjvSide19`, 4.2) |
+| 19 e | «… skal ethvert fartøy som tilsynelatende forenom tvers hører tåkesignalet fra et annet fartøy eller som ikke kan unngå å komme i en nærsituasjon med et annet fartøy som er forenom tvers, redusere farten til minste styrefart. Om nødvendig skal det stoppe helt og i alle tilfelle navigere ytterst varsomt inntil faren for sammenstøt er over.» | Autonav ned til minste styrefart, stopp når det er nært (4.2) |
+| 20 b, c | Lanternene «fra solnedgang til soloppgang», og «skal hvis de føres, også vises fra soloppgang til solnedgang under nedsatt sikt» | Lanternene tennes om dagen i tåke (4.5) |
+| 21 | Topplanterne 225° (rett forover til 22,5° aktenfor tvers), sidelanterner 112,5°, akterlanterne 135° («67,5 grader på hver side av fartøyet fra rett akterover»), rundtlysende 360° | Sektorene for egen båt og nå NPC-ene (`lampArc`, 4.5) |
+| 22 | Synlighet: fra 50 m topp 6 mil, side, akter og rundt 3; 12–50 m topp 5 (under 20 m 3), side, akter og rundt 2; under 12 m topp 2, side 1, akter og rundt 2 | `sjvLampNm`; hvor langt båten ses i mørket (4.1) |
+| 23 | Topplanterne, en akterste høyere (ikke plikt under 50 m), sider, akter; under 12 m kan rundtlysende hvit og sider; under 7 m og høyst 7 knop rundtlysende hvit | Som før (`lanterns`) |
+| 26 | Fisker: «bare» disse; trål grønt over hvitt, annet fiske rødt over hvitt, sider og akter «når det gjør fart gjennom vannet»; e: den som ikke fisker, viser dem ikke | NPC-ene etter klassen og den virkelige farten (`sjvLanternSt`, 4.5) |
+| 27 a, b | Ikke under kommando: to røde rundtlysende, sider og akter med fart; begrenset manøvreringsevne: rødt, hvitt, rødt; g: under 12 m behøver ikke | To røde finnes; rødt-hvitt-rødt legges til av 3D-visningen (4.5) |
+| 28 | Hemmet av dypgående «kan» vise tre røde rundtlysende | Legges til når klassen kommer (Ø15) |
+| 30 | Ankers: forut rundtlysende hvit, akter lavere; under 50 m én; grunn: to røde i tillegg (ikke under 12 m) | Som før; NPC-ene til ankers får ankerlyset (4.5) |
+| 32 | Kort støt «om lag et sekunds varighet», langt «fra fire til seks sekunders varighet» | 1 s og 4,5 s (4.4) |
+| 33 | Fløyte fra 12 m, klokke fra 20 m, gongong fra 100 m; under 12 m «noe annet som kan gi et kraftig lydsignal» | Alle båtene har horn; klokka brukes til ankers |
+| 34 a, d, e | I sikte, ved manøver: ett kort «Jeg forandrer kurs til styrbord», to korte babord, tre korte «Jeg bruker maskinkraften akterover»; d: «minst fem korte støt» i tvil; e: ett langt ved en sving med skjult farvann | NPC-ene og Autonav gir manøversignalet; fem korte når spilleren ikke viker; hornknappen (4.4) |
+| 35 | «I eller nær farvann med nedsatt sikt … enten det er dag eller natt»: med fart ett langt minst hvert annet minutt (a), stoppet to lange med om lag 2 s mellom (b), ikke under kommando, begrenset, hemmet, fiske og slep langt og to korte (c), slept og bemannet langt og tre korte (e), til ankers klokka om lag 5 s minst hvert minutt (g), grunn klokke og tre slag (h); under 12 m et annet kraftig lydsignal (j) | Tåkesignalene for alle innen hørevidde og egen båt (`sjvFogPat`, 4.4) |
+| 36 | Signal for å påkalle oppmerksomhet; blitzlys unngås | Ikke med |
+| 37, vedlegg IV | Nødsignalene (vedlegg IV ikke lest) | Bare i håndboka (Ø11.6) |
+| Vedlegg I 8 | «I = 3,43 x 10^6 x T x D² x K^-D», T 2 x 10^-7 lux, «K … 0,8, som tilsvarer en meteorologisk sikt på omkring 13 nautiske mil»; tabellen 1 mil 0,9 cd, 2 mil 4,3, 3 mil 12, 4 mil 27, 5 mil 52, 6 mil 94 | Hvor langt en lanterne ses i en annen sikt (`sjvLightNm`, 4.1) |
+| Vedlegg I 9 a | Sidelanterner avskjæres 1–3° utenfor sektoren; topp og akter høyst 5° | Sektorene (4.5) |
+| Vedlegg III 1 b, c | Grunnfrekvens 250–700 Hz under 75 m, 130–350 Hz 75–200 m, 70–200 Hz fra 200 m; hørevidde 0,5 mil under 20 m, 1 mil 20–75 m, 1,5 mil 75–200 m, 2 mil fra 200 m | Tonen og hørevidden (4.4) |
+| Vedlegg III 2 | Klokke minst 110 dB på 1 m; åpning minst 300 mm fra 20 m | Klokka høres som et horn under 20 m (antatt, 4.4) |
+| Kap. II 53 d | «I tillegg til posisjonslanterner, skal norske kystvaktfartøy vise en blå lanterne som kjennetegn under kontroll med fiske. Lanternen skal plasseres på høyeste mastetopp og lyse med et ubrutt, blått lys i 360 grader og være synlig på minst 2 nautiske mils avstand.» (planen sa fiskerioppsynsfartøy; teksten sier kystvaktfartøy) | Kystvakta under kontroll (4.5) |
+| Kap. II 49, 52 | Vaktfartøy grønt over to røde; toll og politi kan vise egne lanterner eller bluss | Ikke med |
+
+### 2.2 Sjøloven, LOV-1994-06-24-39
+
+<https://lovdata.no/dokument/NL/lov/1994-06-24-39>. **Kapittel 8 «Sammenstøt» (§§ 161–164) lest på Lovdata 06.11.2026, sent på kvelden (Ø11.3):** hovedsiden og `…/KAPITTEL_8` gir bare innholdsfortegnelsen og et sammendrag i leseverktøyet, så paragrafsiden `…/%C2%A7161` ble lest med forskyvning 39 933 inn i siden, der teksten under «Del III. Ansvar» står; den siden har hele kapittelet. Kapittelet har ikke noen § 165 (neste er kapittel 9, §§ 171–182 c). Leseverktøyet gir bare korte ordrette sitater (de i anførselstegn under); resten er gjengitt med egne ord ledd for ledd. Siden viste ingen «sist endret» i teksten som ble lest. § 135 er fortsatt bare lest i sammendrag. **§ 475 lest på Lovdata 07.11.2026 (Ø11.6):** paragrafsiden `…/%C2%A7475` gir hele avsnitt II i kapittel 18 (§ 471 «Plikt til å fjerne vrak og fremlegge forsikringsbevis», § 472 «Virkeområde», § 473 «Undersøkelsesmyndigheten», § 474, § 475 «Meldeplikt», § 475 a «Plikt til sikring av bevis», § 476 «Iverksetting av undersøkelse»); leseverktøyet ga korte ordrette sitater (i anførselstegn), resten er gjengitt med egne ord. Under paragrafen: endret ved lover 7. januar 2005 nr. 2, 16. februar 2007 nr. 9, 27. juni 2008 nr. 72, 16. desember 2011 nr. 64 og 20. desember 2018 nr. 115 (i kraft 11. februar 2025).
+
+| § | Krav | I spillet | Økt |
+|---|---|---|---|
+| 135 | Skipsføreren hjelper alle i havsnød så langt det skjer uten alvorlig fare for eget skip og folk [sammendrag] | Anropet når en båt i nærheten er i nød | Ø11.7 |
+| 161 «Sammenstøt som følge av skyld på en eller begge sider» | 1. ledd: skyld på én side, «skal den skyldige erstatte skaden» (på skip, last eller person). 2. ledd: skyld på begge sider, hver erstatter etter forholdet mellom feilene; lar det seg ikke fastslå, «deles skaden likt». 3. ledd: hver svarer bare for sin del, men for personskade er de skyldige «solidarisk ansvarlige». 4. ledd: den som har betalt mer enn sin del, kan kreve det tilbake fra den andre. 5. ledd: ved bedømmelsen av skylda skal det særlig tas hensyn til «om det var tid til overlegninger eller ikke» | Skylda leses fra vikeplikten i spillminuttene før støtet, men ikke det siste halve minuttet; delt etter feilene (5.3, 5.4). Ingen blir skadet i spillet, så det solidariske ansvaret og regressen er ikke med | Ø11.3 |
+| 162 «Sammenstøt som følge av ulykkeshendelse» | Følge av ulykkeshendelse, eller kan det ikke vises at skyld på noen side er årsaken, «bærer hvert skip sin skade» | Ingen feil funnet: hver sin skade (5.3) | Ø11.3 |
+| 163 «Sammenstøt uten at skip støter sammen» | Reglene gjelder også når et skip ved manøver eller lignende skader et annet skip eller folk eller last om bord, også «uten at sammenstøt mellom skipene har funnet sted» | Ikke bygd (svell og sug) | |
+| 164 «Plikt til å yte bistand m m» | Etter sammenstøt skal hver skipsfører gi det andre skipet, mannskapet og passasjerene «all den hjelp som er mulig og nødvendig» så langt det kan skje uten særlig fare for eget skip og folk; skipsførerne skal også «oppgi til den andre sitt eget skips navn og hjemsted», og hvor skipet kommer fra og skal; det samme når et skip støter sammen med en båt | Spillet gjør det for deg: VHF-meldingen og dagboka; NPC-en blir liggende (5.5) | Ø11.3 |
+| 475 «Meldeplikt» | 1. ledd: «Skipsføreren, den driftsansvarlige eller rederiet skal straks gi den myndighet Kongen bestemmer, melding om sjøulykke.» 2. ledd: «Meldeplikt etter første ledd har også enhver som blir vitne til en sjøulykke», og den som ser vrakrester eller andre tegn på en ulykke, med mindre de har grunn til å tro at melding er unødvendig. 3. ledd: vrak i en annen stats konvensjonsområde meldes også til den staten | Spillet melder for deg til Sjøfartsdirektoratet etter hver mann over bord, med tid, navn og minutter i sjøen, og skriver det i dagboka (6.4) | Ø11.6 (bygd) |
+
+### 2.3 Skipssikkerhetsloven, LOV-2007-02-16-9
+
+<https://lovdata.no/dokument/NL/lov/2007-02-16-9>, sist endret LOV-2025-04-25-12. §§ 1–27 ordrett, resten [sammendrag].
+
+- § 2: gjelder fiskefartøy i næring uansett lengde.
+- § 14 navigering (hjemmelen for sjøveisreglene), § 19 skipsførerens plikter, § 21 utstyret (kravene står i forskriftene i 2.5 og 2.6).
+- § 24 hviletid: ikke med (Jonas 11.10.2026).
+- **§ 47 «Rederiets melde- og rapporteringsplikt»** (lest på Lovdata 07.11.2026, Ø11.6; korte sitater, resten med egne ord; endret ved lov 27. juni 2008 nr. 72): 1. ledd: «Rederiet skal gi tilsynsmyndigheten melding når det har inngått avtale om:» bygging, ombygging eller kjøp av skip. 2. ledd: «Rederiet eller skipsføreren skal gi den myndighet Kongen bestemmer melding og rapport ved skade eller sykdom» hos den som arbeider om bord, og ved arbeids- eller skipsulykker som omfattes av sjøloven kapittel 18 avsnitt II etter reglene i eller i medhold av sjøloven § 475. 3. ledd: rapport om andre forhold tilsynsmyndigheten bør vite om. 4. ledd: departementet kan gi forskrift. I spillet: meldingen etter § 475 er også meldingen etter § 47 (6.4).
+- §§ 52, 55–56, 58–70 tilbakeholdelse, gebyr og straff [sammendrag]: ikke med (V1 A).
+- Ingen plikt til å **bruke** flyteplagg står i loven.
+
+### 2.4 Skipsarbeidsloven, LOV-2013-06-21-102
+
+<https://lovdata.no/dokument/NL/lov/2013-06-21-102>, sist endret LOV-2026-04-10-14. Ordrett. § 3-1 skriftlig arbeidsavtale; § 3-2 prøvetid inntil seks måneder; § 5-2 oppsigelsesfrist én måned (to etter fem år, tre etter ti, 14 dager i prøvetiden); § 5-6 saklig grunn; § 4-1 (4) lønnsreglene gjelder ikke lotten. Ø11.9.
+
+### 2.5 Fiskefartøy under 15 m, FOR-2013-11-22-1404
+
+<https://lovdata.no/dokument/SF/forskrift/2013-11-22-1404>, sist endret FOR-2025-06-26-1372. Ordrett.
+
+| § | Krav | Økt |
+|---|---|---|
+| 17 | Minst to brannslukkere på 6 kg | Oppbevares inne |
+| 36 | Én redningsvest per person, lett tilgjengelig | Ø11.4 (bygd), Ø11.5 |
+| 37 | Redningsdrakt per person på dekkede og åpne med styrhus | Oppbevares inne |
+| 38 | Dekket over 6 m: flåte til alle | Finnes |
+| 43 | Én livbøye per tre personer, halvparten med lys, merket med navn og hjemsted; under 10,67 m minst én med 30 m line; 10,67–15 m minst to, én med line på hver side | Ø11.5 |
+| 44 | Røyksignaler, fallskjermlys, håndbluss | Oppbevares inne |
+| 45 (6) | Øvelse hver tredje måned | Ikke med (V11 C) |
+| 60, 61 | Radarreflektor, refleksstriper | Lages ikke |
+| 63 | Fast leider akter med håndrekker, nederste trinn minst 300 mm under vannlinja | Ø11.5, Ø11.6 |
+| 64, 68 | VHF-DSC; fra kystfiske EPIRB, SART og håndholdt VHF (tabellen er flatet ut på Lovdata, kolonnene tolket) | VHF følger båten (V6 A); resten inne |
+| 75, 84 | Magnetkompass; prismekikkert | Finnes |
+| 77 | Brovaktalarm på 10,67–15 m med selvstyring over fjordfiske | Ø11.5 (V6 A) |
+| 79 | Radaren der den finnes; radar er ikke påbudt | |
+| 86–88 | Lanterner; signalfigurer; horn eller fløyte på 12–15 m | Bygd i Ø11.2 (lanternene etter regel 20–30, hornet med signalene); signalfigurene ikke med (V7) |
+| 89 | Lyskaster på 12–15 m bygd etter 1.7.1997 over fjordfiske | Finnes |
+
+Ikke funnet i forskriften: plikt til å bære vest på dekk, nødstopp på haler, utstyr for mann over bord utover leideren og livbøya, PLB og AIS-MOB, risikovurdering.
+
+### 2.6 Fiskefartøy fra 15 m, FOR-2000-06-13-660
+
+<https://lovdata.no/dokument/SF/forskrift/2000-06-13-660>, sist endret FOR-2025-06-26-1372. § 7-5 redningsfarkoster til 200 % og MOB-båt fra 45 m (ordrett); § 7-10 livbøyer 3 / 4 / 6 / 8 etter lengden, lys og røyk [sammendrag]; § 9-6 VHF-DSC og SART (ordrett); § 10-3 radar fra 24 m; § 10-4a AIS fra 15 m; § 10-7 brovaktalarm [sammendrag]. **Avvik i spillet:** `lsaOf` gir kyst21 fire livbøyer (§ 7-10: tre) og pelagisk seks (åtte). Rettes i Ø11.5.
+
+### 2.7 Sikkerhetsopplæringen, FOR-2011-12-22-1523
+
+<https://lovdata.no/dokument/SF/forskrift/2011-12-22-1523>, §§ 5–16 ordrett. § 8 (4) sikkerhetsopplæring for fiskere; § 7 (b) dekker «en person faller over bord». Kurset er ikke med (V11 C).
+
+### 2.8 Merking og kjenningssignal, FOR-2002-06-27-754
+
+<https://lovdata.no/dokument/SF/forskrift/2002-06-27-754>, ordrett. § 5 kjenningssignal for 10,67–15 m; § 9 navn forut og akter, hjemsted akter, 15 cm (under 15 m 6 cm). Formen to bokstaver og fire siffer er fra Store norske leksikon. Ø11.5.
+
+### 2.9 Farvannet
+
+- **Havne- og farvannsloven, LOV-2019-06-21-70**, §§ 1–32 ordrett: § 7 staten regulerer ferdselen; **§ 8 kommunen kan bare regulere fritidsfartøy**, så spillets næringsfartøy følger de statlige fartsgrensene; § 10 skiltene; § 11 varsle om farer; § 17 fartøy til fare.
+- **FOR-2021-04-19-1214** § 2: aktsomhetsregelen, og 5 knop innen 50 m fra der det bades.
+- **FOR-2021-12-16-3622**, statlige fartsgrenser for næringsfartøy: ikke lest.
+- **Datasettet** «Statlige fartsgrenser på sjøen for næringsfartøy» (Kystverket) i Geonorges testkatalog; lisensen ikke sjekket.
+- **FOR-2012-12-19-1329**, farvannsskilt.
+
+→ Ø11.8.
+
+### 2.10 Ulykkene
+
+Næringsfartøy: 5 omkomne i 2024 og 7 i 2025; fiskefartøy er 24 % av ulykkene. Fiskefartøy under 15 m: 14 fall over bord på ti år, 13 omkom (Sjøfartsdirektoratet, fra søkemotorens sammendrag av direktoratets PDF-er; `sdir.no` nås ikke herfra).
+
+## 3. Ø11.1 Vikeplikten for spilleren og NPC-ene (L1, N8)
+
+Bygd og rullet ut 06.11.2026 (981a4751, flettet i d62153dc; Jonas: «Oppgave: Ø11.1, vikeplikten for spilleren og NPC-ene (L1 og N8)»). Reglene ligger i den nye `core/05e-sjovei.js`. De delte filene har ett kall hver: `npcStates` (`colregNpc`) og `sail` (`sjvSail`) i `core/05-vessels.js`, `havNear` (`colregHav`) i `core/05d-hav.js` og `dynAuto` (`sjvAuto`) i `core/16b-dyn.js`. Varselet står i `ui/04-panels-instruments.js` (stripa og boksen), `ui/03-map.js` (plotteren og AIS-kortet) og `ui/03e-miniplot.js` (minikartet).
+
+### 3.1 Klassene (regel 3 og 18): `colregCls`, `colregOwnCls`, `colregHav`
+
+| Klasse | Hvem | Regel |
+|---|---|---|
+| `pow` maskindrevet | Alle under fart, også den som jukser eller dorger | 3 b, 3 d |
+| `fish` holder på med å fiske | Spilleren mens hun setter eller drar garn, line eller teiner (`b.gop`). En kystbåt i fisket med lenka si i sjøen (`NPCGEAR`). Havfartøyet som tråler, setter og drar line, teiner eller garn, eller har nota eller snurrevaden ute (ikke mens det leter). En annen spiller som fisker | 3 d |
+| `nuc` ikke under kommando | Spilleren med motorstopp eller tom tank (`engine`, `adrift`) | 3 f |
+| `ram` begrenset manøvreringsevne | Redningsskøyta med slepet | 3 g vi |
+| `cbd` hemmet av dypgående | Finnes, men ingen får den før Ø15 | 3 h |
+| `moor`, `anch` ikke underveis | Ved kai, ved naustet, til ankers; kystruteskipet og ferja ved kaia | 3 i |
+
+AIS-kortet har en ny rad «Navigasjonsstatus» med AIS-ens egne navn (`colregAisSt`): underveis med motor, driver fiske, til ankers, fortøyd, ikke under kommando, begrenset manøvreringsevne, hemmet av dypgående (N8).
+
+### 3.2 Situasjonen: `colregSit(a, b)`
+
+Gir regelen, hvem som viker (`a`, `b`, `both` eller `none`), CPA og avstand i meter, TCPA i spillminutter og om det er fare. Rekkefølgen følger teksten:
+
+1. **Regel 2 b:** ligger ett av dem stille eller driver under 1 knop, holder den som går, klar (antatt tolkning av «særlige omstendigheter»; to som ligger stille gir ingen fare).
+2. **Regel 13** (først, «uten omsyn til» resten): den som kommer opp mer enn 22,5° aktenfor tvers (over 112,5° fra den andres baug) og haler inn. Innhentingen huskes til de er klare (13 d).
+3. **Regel 9 b–c:** et fartøy på 40 m eller mer der sjøen tvers over er under 1,2 km med land innen 0,9 km på begge sider (`sjvNarrow`), «kan bare navigere sikkert» i leia. Spilleren under 20 m, eller som fisker, skal ikke hindre det: «Trang lei: gå av veien». Storskipet holder kurs.
+4. **Regel 18 d**, så **rangen i 18 a og c:** maskindrevet < fisker < ikke under kommando og begrenset manøvreringsevne. To som fisker, holder klar begge (regel 2 og 8). To som ikke kan manøvrere, kan ingen av dem.
+5. **Regel 14 og 15** mellom to maskindrevne: møtende når begge ser den andre innen 12° av baugen (14 b «nesten forut», og 14 c «Hvis et fartøy er i noen tvil …»); ellers kryssende, og den som har den andre om styrbord (0–112,5°), viker.
+
+**Rollene står mens møtet varer** (rettet under testingen 06.11.2026): når faren først er der, beholdes regelen og hvem som viker til de er passert og klare. Uten det gjorde kystbåtens avslakking at hun etter en stund lå forut for spilleren, situasjonen snudde til «du viker», Autonav svingte mot henne, og de passerte 2 m fra hverandre. Regel 17 a sier at den andre skal beholde kurs og fart; det er når rollene byttes, sammenstøtene skjer.
+
+**Faren** (regel 7): CPA under grensa og TCPA foran. Grensa er `100 m + 1,5 × den lengste` (`colregLim`), mellom 120 og 400 m: to sjarker 120 m, ferja 175 m, kystruteskipet 283 m. Ferjas og kystruteskipets mål kommer fra AIS-kortet (`SJV_SIZE`), siden `npcStates` ikke har dem.
+
+### 3.3 Hva NPC-ene og Autonav gjør (V2 A, npc-flåten 4 A)
+
+- **Når:** `sjvEval` ser på møtene rundt båten du følger høyst én gang per tiendedels spillminutt (et sekund), og bare med spillet åpent og i gang (`sjvLive`: `DYN.on`, ikke i `catchUp`, `simRate` høyst 60). I havn (`inHarbour`), fortøyd, til ankers eller på slep skjer ingenting. Det er `npcStates` som utløser det, og 3D-visningen og kartplotteren spør hvert bilde. Når ingen visning spør (telefonen over en visning som står, eller en test uten noen av dem), holder Autonav det ferskt fra sine egne steg (`sjvFresh` i `sjvAuto` og `sjvSail`, bare for båten du følger). Funnet 06.11.2026 da turmålingen uten 3D og uten plotter ga null varsler fordi ingenting ble sett på.
+- **Den vikepliktige NPC-en** (16) svinger 35° til styrbord innen 1 km og TCPA under 8 spillminutter, og står ut fra kursen sin så langt at CPA blir minst 1,5 ganger grensa (`sjvNeed`, ganger 1,3, minst 150 m og høyst 600 m). Hun holder den nye linja parallelt og svinger tilbake når de er passert og klare (`sjvOffAt`, `sjvPhase`). Ved innhenting og rangen velges siden som åpner mest; ellers alltid styrbord (14 a, 15, 17 c).
+- **Uten plass** (8 e): stripa ut til avviket og 600 m fram må være sjø dypere enn dypgåendet og en meter, utenfor havnene (`sjvRoom`); er den ikke, halveres avviket, og er det fortsatt ikke plass, slakker hun av til 35 % og ligger etter kursen sin (`sjvLagAt`, posisjonen fra `npcStates` med den tiden hun ligger etter), og tar det igjen i 1,3 ganger farten etterpå.
+- **Den som skal holde kurs og fart** (17 a i) gjør det. Først når spilleren ikke har gjort noe og det er nært (innen et spillminutt av hverandre, TCPA under 1,5 spillminutter, CPA under 0,7 ganger grensa), svinger hun til styrbord selv (17 a ii, b, c).
+- **Avviket er lokalt** (npc-flåten 4 A): det legges over posisjonen fra den felles klokka i `colregNpc` hver gang `npcStates` lager lista, som en kopi, og lagres eller sendes aldri. Retningen er fast fra hun begynner å svinge, så et hjørne i ruta flytter henne ikke. Spor og enkeltbåter (`only`) er den felles banen.
+- **Autonav** (og Driftsplan, som seiler med Autonav) viker for fartøy båten du følger skal vike for, innen 1,2 km og TCPA under 8 spillminutter, på samme måte: `sjvAuto` gir autopiloten i `dynAuto` et avvik fra linja (svingens fart er 35° av farten) og tar det tilbake når de er klare. Ved et stopp (seks lengder, minst 150 m), når hun rygger eller snur fra land (`T.bow`), eller når grunnsjekken finner grunn foran henne (hvert spillsekund), går avviket tilbake og hun slakker av i stedet. Minuttsteget (`sail`, når manøvreringsmodellen ikke går) svinger 35° fra etappen til avviket er nådd, og etappens egen kurs tar henne til neste punkt etterpå (`sjvSail`).
+- **Ikke med:** NPC-ene viker ikke for hverandre (de går på den felles klokka). De andre spillernes båter viker aldri automatisk for deg; deres eget spill gjør det for dem. Spilleren som holder kurs, gjør ingenting automatisk etter 17 a ii.
+
+### 3.4 Varselet
+
+- **Når:** CPA under grensa og TCPA under 6 spillminutter (ett minutt i ekte tid), innen 3 km, og innen 1,5 km når det er den andre som skal vike. Aldri i havn og aldri mens tiden tas igjen. Det som er varslet, står til CPA er klart åpen (1,3 ganger grensa) og, når NPC-en eller Autonav viker for akkurat den båten, til de er passert, så spilleren ser hvorfor båten svinger.
+- **Stripa** (UI 2, U2-1): varselet står først på tredje linje, foran reglene, rullingen, blåsa og neste hendelse, i den korte formen («Fra styrbord: vik», «Autonav viker»; stripa er 47 vw på telefonen og 250 px på nettbrettet), med CPA i den delen som kuttes først (`.l3s`): «Fra styrbord: vik · CPA 80 m». Rødt (`r2`) når du viker, gult (`r1`) når den andre viker eller Autonav gjør det for deg.
+- **Boksen og kortet** (nettbrett liggende, PC): på tredje linje i stedet for neste hendelse, så boksen ikke vokser over minikartet: «Kryssende fra styrbord: du viker · CPA 80 m om 40 s» (tiden i ekte tid); kortet har navnet på den andre i tillegg. Den første utgaven la en rad «Vikeplikt» i «nå»-radene; den gjorde boksen tre linjer høyere og la den over minikartet i liggende (skjermbildet 06.11.2026).
+- **Kartplotteren og minikartet:** en ring rundt båten, hennes vektor og din fram til CPA, og en stiplet linje mellom de to punktene der, med «CPA 80 m · om 40 s» (`sjvChartSvg`, `miniSjv`). I minikartet står ringen på kanten når båten er utenfor.
+- **AIS-kortet:** raden «Vikeplikt» øverst når det er båten som er varslet.
+- **Tekstene** (`sjvSay`): kryssende fra styrbord og babord, møtende, innhenter og innhentes, fiskefartøy, ikke under kommando, begrenset manøvreringsevne, hemmet av dypgående, trang lei, ligger stille, begge fisker, og «For nær: gjør noe nå» når den andre skulle vike og det er for nært (17 b).
+
+### 3.5 Nestenulykker
+
+En passering der avstanden minus en firedel av de to lengdene er under 50 m (`SJV.NEAR`), med minst ett av fartøyene i 2 knop eller mer, lagres i `S.nearMiss` (høyst 40) med tid, sted, båten, navnet på den andre, avstanden og regelen. Ø11.7 viser dem i kortet «Sikkerhet».
+
+### 3.6 Tester og målinger
+
+- `tests/unit/sjovei.test.mjs` (73 sjekker): regel 13–15, rangen i 18, 18 d, 9 b–c, regel 2 b, CPA og TCPA, grensene for sektorene (12°, 112,5°), avviket over tid, klassene, AIS-statusen og tekstene.
+- `tests/colregtest.py` (LITE, 25 sjekker) på Senja: ferja med spilleren om styrbord viker 390 m til styrbord og er tilbake på den felles banen etterpå, aldri på land, og spilleren holder kurs; med spilleren om babord holder ferja kurs og fart og Autonav viker 294 m og er 6 m fra linja til slutt, med varselet i boksen og ringen i plotteren; en båt fra Senja-flåten på vei ut viker 325 m; uten plass slakker hun av (700 m etter) og tar det igjen; når Autonav ikke viker, gjør ferja noe selv (17 a ii) og de går 131 m fra hverandre; båtene lenger unna enn 1,2 km er der klokka sier; Autonav viker også når ingen visning spør etter båtene (291 m ut, 1 m fra linja til slutt); ingen varsler i havn, ingen viking i `catchUp`. Den spiller møtene i ekte tid og tar rundt 7 minutter.
+- **3D og veiledningen** (06.11.2026, på det flettede bygget d62153dc): `trackfollow` 10 OK (autopiloten i `dynAuto` med det ene kallet), `tut` i stående 14 OK og `"tut": 0` (veiledningen peker på tredje linje, der varselet nå står først).
+- **Stikkprøven langs kysten** (06.11.2026, `dist-vec` med kystflåten fra vec-pakkene, juni kl. 6, uten 3D): en kystbåt på vei ut eller inn på kryssende kurs med spilleren, begge veier.
+
+  | Sted | Båten | Spilleren om styrbord: NPC-en viker | Spilleren om babord: Autonav viker |
+  |---|---|---|---|
+  | Bergen | Sjøsprøyt | 325 m til styrbord, tilbake på banen (0 m), nærmest 234 m, aldri på land | 311 m fra ruta, 1 m fra linja til slutt, nærmest 249 m; NPC-en holder kurs |
+  | Bodø | Steinbit | 345 m, tilbake (0 m), nærmest 275 m | 196 m, 0 m til slutt, nærmest 174 m |
+  | Hammerfest | Ishavet II | 325 m, tilbake (0 m), nærmest 232 m | 299 m, 1 m til slutt, nærmest 236 m |
+  | Tromsø | | Ikke prøvd: kystbåten (Havbris) gikk i trange sund, og skriptet fant ingen kryssing med åpen sjø hele veien | |
+
+  Feilen ble ikke funnet noe sted (det var en ny funksjon). Ved Bodø var en annen kystbåt 359 m fra kursen sin mer enn 1,2 km fra spilleren: den hadde veket og var på vei tilbake. `colregtest` sjekker derfor at alle båtene som ikke er i en manøver, er der klokka sier.
+- **Hvor ofte varselet kommer** (06.11.2026, Autonav ut omtrent 6–8 km og hjem igjen fra nærmeste havn, juni kl. 6–7 da flåten går ut, fem ganger farten, med kartplotteren åpen som i spillet): Bodø 17,2 km, opptil 15 fartøy på AIS: 0 varsler. Husøy 11,9 km, 38 på AIS: 1 varsel (en Senja-båt fra babord, som veik). Bergen 8,9 km, 11 på AIS: 0. Hammerfest 15,1 km, 34 på AIS: 0. Ingen nestenulykker. Sjeldent, som planen ville; om det er for sjeldent til at spilleren lærer reglene, ses i spilltest (backloggen 10.5).
+- **Tiden** (Lofoten i mars, Henningsvær 10.03.2027 kl. 9, 42 fartøy innen AIS, 29 fra kystflåten, 5 innen 3 km): `npcStates` 0,7 ms med reglene mot 0,5 ms uten (median av 25), selve `sjvEval` under 0,1 ms; den lengste enkeltkjøringen som ble sett, var 5,2 ms (Hammerfest, med sjekken av plassen til svingen). Ingen havfartøy var innen AIS den dagen, så det verste tilfellet (havflåten på feltet) er ikke målt.
+
+## 4. Ø11.2 Sikt, lys og lyd (L3, N8)
+
+Bygd og rullet ut 06.11.2026 (05134a03, flettet i 23556f43, rullet ut i f04d4feb; Jonas: «Oppgave: Ø11.2, sikt, lys og lyd (L3, N8). Les regel 19 d–e, 20–37 og vedlegg I og III i sjøveisreglene ordrett på Lovdata før noe bygges … Sikker fart for Autonav legges i core/05e-sjovei.js gjennom sjvAuto og sjvSail, uten nye kall i core/05-vessels.js eller core/16b-dyn.js»). Reglene og de rene funksjonene ligger i `core/05e-sjovei.js`; ingen nye kall i de delte kjernefilene. Lyden i `ui/10e-sound.js`, hornknappen i `ui/10n-hail.js` og `ui/10c-dock.js` (vifta `horn`), lanternene i `view3d/22-docks-air.js` (`drawNPCLights`, `lanternFog`, `lampFade`, `lampArc`, `lampsMore`) og `view3d/24-cinema.js` (egen båt). `vessel3d.js` (`lanterns`) er ikke rørt (Ø11.5 kjørte).
+
+### 4.1 Sikten og nedsatt sikt
+
+- **Sikten** er spillets `visibility(H, p)` der båten du følger er (`sjvVisAt`). **Mørkt** er når sola står mer enn 6° under horisonten (`sjvDark`, etter den borgerlige skumringen).
+- **Hvor langt en båt ses** (`sjvSeenKm`): om dagen så langt sikten er; i mørket så langt hovedlanterna hennes ses i den sikten. Lanterna er laget for regel 22-avstanden (`sjvLampNm`: 2, 3, 5 eller 6 mil etter lengden), og vedlegg I 8 gir lysstyrken; `sjvLightNm` finner avstanden der samme lysstyrke når terskelen med sikten nå (transmisjonen per mil er 0,05 opphøyd i en mil delt på sikten; 0,05^(1/13) = 0,79, som er vedleggets K 0,8 ved 13 mils sikt). En lanterne for 2 mil ses 1,1 km i 1,2 km sikt, 2 km i 3,7 km sikt og 2,2 mil i klart vær.
+- **I sikte** (regel 3 k) er en båt nærmere enn det. **Nedsatt sikt** er sikt under 2 nautiske mil, 3,7 km (`SJV.FOG`, antatt: reglene gir ikke noe tall, regel 3 l nevner tåke, snøfall og sterke regnbyger), og slutter først over 4,2 km, så den ikke blinker i kanten.
+- **Været har ingen tåke** (backloggen 10.3): `visibility` går ned til 1,2 km bare i tett snøvær (45 − 42 × nedbøren − 8 × skydekket, minst 1,2 km), i regn ikke under 9 km. Nedsatt sikt kommer altså i spillet i snøbyger om vinteren; testene og bildene tvinger sikten ned som `coneshot` gjør. Havskodde om sommeren hører hjemme i `core/03-simulation.js`, som H3a hadde åpen; den er ikke lagt inn.
+
+### 4.2 Regel 19: når dere ikke ser hverandre
+
+- **Klassen:** `colregSit(a, b, {fog:true})` gir situasjonen `19` når de ikke er i sikte i nedsatt sikt. Avsnitt II gjelder da ikke (heller ikke innhenting, regel 13); regel 2 b (den som ligger stille) og regel 9 (trang lei, avsnitt I) kommer fortsatt først. **Begge tar forholdsregler** (19 d «skal det i god tid ta forholdsregler»); er den ene ikke under kommando eller har begrenset manøvreringsevne, gjør den andre det.
+- **Siden** (`sjvSide19`, 19 d): et fartøy forenom tvers gir sving til styrbord (19 d i), men den som innhenter, kan svinge til den siden som åpner mest; et fartøy tvers eller aktenfor tvers gir sving bort fra det (19 d ii: om styrbord til babord, om babord til styrbord). Gjelder både NPC-ene og Autonav. Svingen er den samme som i Ø11.1 (35°, avviket, plassen, tilbake etterpå), og NPC-en ser nå etter plassen hvert sekund mens hun står ut fra kursen (`sjvRoomOn`: banen hennes etter klokka 0–450 m fram med avviket hun har); er det ikke plass, går hun tilbake straks. Funnet i stikkprøven i Bergen: under 19 begynner manøveren tidligere og varer lenger, og kursen bøyde inn mot land etter de 600 m som ble sjekket da hun svingte. Gjelder også møtene i klart vær.
+- **Rollene står** mens møtet varer, som i Ø11.1: et møte som begynte under 19, er under 19 til de er passert og klare, også når de kommer i sikte (antatt: etter teksten gjelder avsnitt II fra de ser hverandre, men å bytte roller midt i en manøver er det som ga sammenstøtet i Ø11.1).
+- **Tidligere varsel** («I tåke og mørke kommer varselet fra Ø11.1 tidligere»): under 19 står varselet fra TCPA 10 spillminutter (6 i sikte) og innen 5 km (3), NPC-en viker innen 1,6 km (1,0) og Autonav innen 1,8 km (1,2), fra TCPA 12 spillminutter (8). I mørket i klart vær er båtene i sikte (lanternene ses 2 mil eller mer, lenger enn varselets 3 km), så der endrer ingenting seg; mørket teller bare sammen med nedsatt sikt.
+- **19 e:** høres et tåkesignal tilsynelatende forenom tvers fra et fartøy som ikke er i sikte, eller kan hun ikke unngå en nærsituasjon med et fartøy forenom tvers (under 1 km og CPA under halve grensa), går Autonav ned til **minste styrefart** (`sjvMinKn`: en tredjedel av marsjfarten, 2–4 knop, antatt) og **stopper** når de er nærmere enn grensa, til faren er over (CPA åpen eller passert), høyst et kvarter. Tåkesignalet huskes i tre spillminutter (`SJV.heard`).
+- **Tekstene** (`sjvSay`): «Nedsatt sikt: vik til styrbord», «… vik til babord» (aktenfor tvers om styrbord), «… hold klar» (du innhenter), «… Autonav viker», «… den andre viker», og «Tåkesignal forut: minste styrefart» (eller «stopp», «Autonav går sakte»); kort i stripa «Tåke: vik til SB», «Tåke: Autonav sakte», «Tåkesignal: sakte».
+
+### 4.3 Sikker fart (regel 6 og 19 b)
+
+- Med Autonav i nedsatt sikt er farten høyst det hun kan stoppe fra innen halve avstanden hun ser (`sjvSafeMs`: hennes egne stoppdistanser fra manøvreringsmodellen, `dynVStop` og `dynCal`; den gamle tommelfingerregelen, reglene gir ikke noe tall), aldri under minste styrefart. Om dagen er avstanden sikten, i mørket lanternene til en båt under 12 m i den sikten.
+- Det går gjennom de to kallene som fantes (`sjvCapV`): `sjvAuto` gir autopiloten i `dynAuto` en fart den ikke går over, og minuttsteget `sjvSail` gjør minuttet kortere med eller uten en vikemanøver (`sjvCreep`, langs etappen, ikke inn i den siste halve kilometeren til et stopp, og grunn foran overlates til minuttstegets egen sjekk).
+- Med 1,2 km sikt (det tetteste været gir) binder det nesten aldri: en sjark stopper på langt under 600 m. I 0,6 km sikt gikk trebåten høyst 7,3 knop. Det er minste styrefart etter tåkesignalet (19 e) som merkes.
+- En linje i dagboka når det begynner: «Nedsatt sikt (1,2 km). Autonav går i sikker fart og gir tåkesignal.» (høyst én gang i tre spillimer).
+- Bare med spillet åpent (`sjvLive`), aldri i `catchUp` (prinsipp 4).
+
+### 4.4 Lydsignalene (regel 32–35, vedlegg III)
+
+- **Køen:** kjernen legger signalene i `SJV.sig` (`sjvSig`: mønsteret, hvor, lengden, egen båt), og lyden spiller dem (`sigTick` i `SND.tick`). Mønstrene: `L` langt støt 4,5 s, `S` kort 1 s, 1 s mellom og 2 s mellom to lange (35 b), og `bell`, klokka ringt hurtig i 5 s (35 g). Eldre enn 8 sekunder spilles ikke.
+- **Tåkesignalene** (`sjvFogSigs`, regel 35): hver båt innen hørevidden gir sitt signal på sin egen takt fra id-en, hvert 100.–117. spillsekund (35: «minst hvert annet minutt»; i spilltid, siden båtene går i spillets fart, det er rundt hvert 18. sekund i ekte tid), klokka hvert 50.–57. sekund. Med fart ett langt, stoppet to lange, fiske, ikke under kommando, begrenset og hemmet langt og to korte, til ankers klokka, fortøyd ingenting (`sjvFogPat`). Egen båt gjør det samme hvert 110. sekund, og langt og tre korte på slep med redningsskøyta (35 e). Ikke klokke og tre slag på grunn (35 h); egen båt på grunn regnes som fortøyd.
+- **Hørevidden** (vedlegg III 1 c): 0,5 mil under 20 m, 1 mil til 75 m, 1,5 mil til 200 m. Styrken avtar som de andre lydene, `(ref / d)^0,9`, med `ref` 3,6 % av hørevidden, så en fløyte er en hvisken ved grensa (en båt på 10 m 400 m unna 0,11, kystruteskipet 2 km unna 0,07). Til venstre eller høyre etter retningen; i kartet er øret om bord og ser forover.
+- **Tonen** (vedlegg III 1 b): 420 Hz under 20 m, 300 Hz til 75 m, 190 Hz til 200 m, 110 Hz over, med en ters over (to toner, som tonehornene). Hornet sto før på 147 og 220 Hz for alle (et stort skip); tutingen til andre spillere bruker nå tonen til din egen båt.
+- **Manøversignalene** (34 a): når en NPC begynner å vike og dere er i sikte, ett kort (styrbord), to korte (babord) eller tre (hun slakker av fordi det ikke er plass; antatt at hun da bruker maskinen akterover). Autonav gir det samme for din båt. Svingen tilbake gir ikke noe signal.
+- **Fem korte** (34 d): en NPC som skal holde kurs og fart, og ser at spilleren ikke viker (innen 1,5 km, TCPA under 2,5 spillminutter, CPA under 0,8 grensa, i sikte), gir minst fem korte én gang, før hun gjør noe selv (17 a ii).
+- **Hornet** (`HAIL.signal`, `ui/10n-hail.js`): mens et vikepliktvarsel står, er «Tut» i knappelinja «Horn», med en vifte: «1 kort · styrbord», «2 korte · babord», «3 korte · bakk», «5 korte · tvil», «1 langt», og «Tut til «…»» øverst når en spiller er innen 1 nm. Ett signal om gangen. Uten varsel er knappen som før (bare tutingen til en spiller innen 1 nm). NPC-ene reagerer ikke på hornet; de følger reglene uansett.
+- Lyden fikk også rettingen av et øre som ikke er et tall (backloggen 10.1, «Lyden tar imot tall som ikke er endelige»): et kamera som er NaN, høres om bord, og `set` og `place` hopper over et tall som ikke er endelig.
+
+### 4.5 Lanternene (N8, regel 20–30, kap. II 53 d)
+
+- **Etter det NPC-ene gjør** (`sjvLanternSt`): klassen fra Ø11.1 og den virkelige farten i stedet for fast 5 knop og fiskelys for alle med `st` «fishing». En kystbåt som jukser, viser lanternene til et maskindrevet fartøy (26 e); garn, line og teiner i sjøen rødt over hvitt; havtråleren som sleper, grønt over hvitt (26 b); sider og akter bare når hun gjør fart (over 0,5 knop); til ankers ankerlyset; ikke under kommando to røde; ved kaia ingen (også ferja og kystruteskipet når de ligger ved kaia).
+- **Det 3D-visningen legger til** (`lampsMore`), siden `lanterns` i `vessel3d.js` ikke kan endres nå: rødt, hvitt, rødt over toppen for begrenset manøvreringsevne (27 b i), tre røde for hemmet av dypgående (28, ingen har klassen ennå), og **Kystvaktas blå rundtlys** øverst (kap. II 53 d) mens hun ligger langs siden for kontroll (`kv`).
+- **Sektorene** (regel 21, vedlegg I 9 a): sidelanternene og akterlanterna på NPC-ene vises bare innenfor buene sine (`lampArc`, samme sjekk som egen båt fikk 01.11.2026). Før lyste grønt og rødt rundt hele horisonten på de andre båtene.
+- **Om dagen i nedsatt sikt** (20 c) er lanternene tent, svakere enn om natta (styrken `clamp((3,7 − sikt) / 2,5, 0, 0,6)`: 0,6 ved 1,2 km), både på egen båt og NPC-ene.
+- **Langt unna i tåke** blekner en lanterne ut ved avstanden den ses i sikten (`lampFade`, `sjvLightNm`), blandet inn med tåka fra 5,9 km sikt ned til 3,7 km, så natta i klart vær er som før (alle lys til 16 km).
+- Sikten her er den 3D-visningen tegner (`env.fogD`), som på nivå 3 er 1,8 ganger spillets og kortere i storm (sjørokket).
+
+### 4.6 Tester og målinger
+
+- **Enhetstestene** (`tests/unit/sjovei.test.mjs`, 107 sjekker, 34 nye): regel 22-avstandene, vedlegg I 8 (2 mil i 13 mils sikt, 1,1 km i 1,2 km), hvor langt en båt ses dag og natt, hørevidden i vedlegg III, mønstrene i regel 35 og 34 a, sidene i 19 d, `colregSit` under 19 (begge viker, ingen innhenting, den som ikke er under kommando, den som ligger stille), lanternene etter klassen, tekstene og at de korte får plass, og tåkesignalene over tid (`sjvFogSigs`: takten, hørevidden, klokka, 19 e). Hele kjernen 1 340 OK.
+- **`colregtest`** (LITE, 32 OK, 603 s) fikk to møter i tåke med Senjas ferje i 0,5 km sikt: (1) begge viker (ferja 325 m til styrbord, Autonav 600 m), varselet «Nedsatt sikt: Autonav viker» kommer ved 1 635 m mot 1 483 m i klart vær, begge gir ett langt støt, de passerer 288 m fra hverandre, og ferja er tilbake på banen. 19 e slo ikke inn her, fordi Autonavs sving hadde åpnet CPA før ferja ble hørt (da er det ikke «fare for sammenstøt»). (2) Med ingen av dem svingende tar tåkesignalet forut Autonav ned til 2,2 knop (minste styrefart 2,0), varselet sier «Tåkesignal forut», og de går 222 m fra hverandre. Første kjøring hadde en rød sjekk som var testens egen (den så bare på de tre første tekstene); rettet.
+- **`soundtest`** (24 OK), **`lanterntest`** (12 OK, de tre nye om NPC-ene), **`anchorlight3d`** (3D, alene, 5 OK: om dagen i klart vær ingen lanterner, i tåke tre tent med styrke 0,6, og Kystvakta under kontroll med blått lys om natta), **`gfxtest`** (3D, 7 OK; rød siden 04.11.2026 på lydfeilen, grønn nå) og **`dbg23o`** (3D, stille).
+- **`tut.py` i stående** (14 OK, `"tut": 0`, 2 221 s): knappelinja kan få «Horn» når et varsel står, så veiledningen er kjørt; bare i stående (der det er færrest plasser på raden), ikke i liggende.
+- **Testene som dekker filene** (`run.py smoke`, uten 3D): `npctest` 19, `autonavtest` 25, `hudtest` 18, `havflaate` 9, `hailtest` 4, `cashfxtest` 4, `docktest` 112, `dockrow` 16, `geartest` 46, `rorbutest` 13, `bunktest` 5, alle OK.
+- **Skjermbildene** (`tests/out/o112/`, ikke i git; 800×1280 og 1280×800, 3D i SwiftShader): Senjas ferje om dagen i 0,3 km sikt og kystruteskipet en januarkveld i 0,4 km, med varselet i stripa og boksen («Tåke: Autonav viker · CPA 270 m», «Nedsatt sikt: Autonav viker · CPA 280 m om 3 s»), Horn i knappelinja, ringen i plotteren og minikartet, egen båts lanterner om dagen i tåke og kystruteskipets lanterner og vinduer nær. Om dagen ses ikke ferja i 0,3 km sikt, bare ringen rundt henne i minikartet («Tåke: Autonav viker · CPA 470 m»). Lyspunktene er små i SwiftShader; stjernene står over tåka når skydekket er tvunget lavt (i spillet kommer tett sikt bare med snø og skyer). I det liggende dagbildet kom ferja 18 m unna etter at skriptet hadde frosset tiden (`S.mult`) i et halvt minutt for bildet og så sluppet den; uten frysingen gikk det samme møtet klar med 565 m i 3D og 294 m uten 3D. `S.mult` finnes bare for testene (én klokke for alle).
+- **Stikkprøven langs kysten** (`/stikkprove`, `dist-vec` med hele kysten og kystflåten, juni kl. 6, 0,5 km sikt, uten 3D; en kystbåt på kryssende kurs, begge veier):
+
+  | Sted | Båten | NPC-en har deg om styrbord | Du har NPC-en om styrbord |
+  |---|---|---|---|
+  | Bergen | Sjøsprøyt | Første kjøring: hun sto **på land** et halvt minutt 195 m fra kursen (funnet her, rettet med `sjvRoomOn`). Etter rettingen: hun gikk tilbake da det ble trangt, slakket av (lå 1,2 km etter) og var tilbake på banen; nærmest 652 m; Autonav 519 m ut | Autonav viker 477 m, nærmest 389 m; NPC-en trengte ikke å gjøre noe (CPA var åpen) |
+  | Trondheim | Kystvakt | 195 m til styrbord, tilbake (0 m), nærmest 211 m; Autonav 456 m | Autonav 456 m, nærmest 401 m |
+  | Hammerfest | Vesterhav | 228 m, tilbake (0 m), nærmest 299 m; Autonav 600 m | Begge viker (325 m og 456 m), nærmest 600 m |
+  | Kristiansand | Kystvakt | Ikke plass til å svinge: hun slakket av, og Autonav svingte 390 m; nærmest 704 m | Ingen av dem hadde plass: begge slakket av, 19 e tok Autonav ned, og de passerte **98 m** fra hverandre uten nestenulykke |
+  | Bodø | | Ikke prøvd: ingen kryssing med åpen sjø hele veien, kl. 6 og kl. 8 | |
+
+  Aldri på land etter rettingen. Alle steder ga båten og NPC-en ett langt støt, og egen båt to lange da hun lå stille ved enden av ruta. Om natta i januar var alle båtene ved kaia uten lanterner og de få under fart med lanternene til et maskindrevet fartøy. Funnet om listene (`npcStates` med og uten id) står i backloggen.
+- **Tiden** (`npcStates` med reglene, median av 25 med 25–42 båter på AIS): 0,5–0,8 ms i klart vær og 0,4–0,5 ms i tåke; den lengste enkeltkjøringen 25,8 ms (Hammerfest, i tåke, med maskinen under last fra testene ved siden av).
+
+### 4.7 Ikke med
+
+- Havskodde i været (4.1), dagsignalene (V7), vedlegg II (lysene for fiske nær andre som fisker) og vedlegg IV (nødsignalene, Ø11.6).
+- Klokka og de tre slagene på grunn (35 h), losfartøyets fire korte (35 k), lyssignalene i 34 b og oppmerksomhetssignalet (36).
+- NPC-ene sakker ikke farten etter tåkesignalet (19 e gjelder Autonav); de svinger etter 19 d, og slakker av bare når det ikke er plass (8 e). NPC-ene gir ikke signal når de svinger tilbake.
+- Andre spilleres båter gir tåkesignal i ditt spill etter det spillet vet om dem (klassen og farten), ikke etter hva spilleren gjør med hornet.
+
+## 5. Ø11.3 Sammenstøt (L2)
+
+Bygd og rullet ut 07.11.2026 (grenen `ccr-208d78a1-ruhxll`, flettet med arbeidsgrenen i 01594293 og fdac21e3, ute i 21ec10d3; Jonas: «Rull ut ø11.3»; oppgaven: «Oppgave: Ø11.3, sammenstøt mellom båter (L2). Les sjøloven kapittel 8 (§§ 161–164) ordrett på Lovdata før noe bygges … Kontakten og skylda legges i core/05e-sjovei.js. Skylda leses fra vikeplikten i sekundene før støtet (colregSit, rollene som står, regel 19 og sikker fart). I 16b-dyn.js og 16c-hull.js holdes det til ett kall hver, og 05-vessels.js røres ikke … Andre spilleres båter skades aldri, og det regnes bare med spillet åpent, aldri i catchUp»). Alt ligger nederst i `core/05e-sjovei.js`. De delte filene: ett kall i `core/16b-dyn.js` (øverst i `dynContact`: `sjvTouch`), ingen i `core/16c-hull.js` (skaden regnes med `hullHit`, `hullSay`, `hullCost`, `kaskoSelf` og `KASKO` slik de er), ingen i `core/05-vessels.js` (minuttsteget går gjennom `sjvSail` og blikket). Meldingen til en annen spiller ligger i `ui/10n-hail.js` (`hooks.onClash`), dagboka trengte ingen endring (`ui/06-logbook.js` viser loggen med `k:'nav'` og `S.radio`).
+
+### 5.1 Kontakten
+
+- **Skrogene** er femkanter av lengden og bredden (stevnen, skuldrene ved 0,3 L, hekken ved −0,47 L; `sjvHullPts`, samme ramme som `dynContact`), og kontakten finnes med skillende akser (`sjvSat`): overlappen, veien ut og punktet. Sjømerkene, brupilarene og vindturbinene i sjøen er sirkler fra hinderindeksen (`HIND`, `11b-obstacles.js`; `sjvSatC`), og blåsene til redskapet i sjøen punkter (`NPCGEAR`).
+- **Mot hele lista** (backloggen 10.1, «`npcStates(H)` og `npcStates(H, id)` gir ulik plass»): båtene hentes fra `npcStates(H)` uten id, den samme lista som 3D-visningen og kartplotteren tegner, hvert andre spillsekund innen 300 m (`sjvNear`), og føres videre med farten og kursen mellom.
+- **Tre steder det ses etter:** (1) i hvert steg i manøvreringsmodellen, både for hånd og med Autonav (`sjvTouch` fra `dynContact`, 0,2 spillsekunder; klokka for stegene er `sjvClock`: første steg i et tikk på visningenes tid, hvert steg etter `DYN_H` lenger fram); (2) i hvert blikk når modellen ikke har båten (`sjvSweep` fra `sjvEval`): skrogene fra forrige blikk til dette i steg på halvannen meter av bevegelsen mellom dem, når hun ligger stille, fisker eller driver på sjøen, eller går med minuttsteget; (3) minuttsteget går gjennom `sjvSail`, som tar blikket (`sjvFresh`) og holder henne der det minuttet støtet skjedde (`SJV.stopT`).
+- **Hvem som er med:** alle i lista unntatt redningsskøyta, Kystvakta langs siden under kontroll, båten på slepet i et oppdrag, en spiller du sleper eller blir slept av, og de skjulte. Fortøyde og ankrede bare når du styrer selv (antatt: Autonavs vei inn er havnas, og en båt ved kai der 3D-visningen legger den er ikke noe Autonav ser). I havn, til ankers og på slep ses det ikke etter i blikket.
+
+### 5.2 Støtet og skaden
+
+- **Impulsen** er som mot kaia (`sjvImpulse`, som `dynContact`): båten settes ut av overlappen, farten inn i den andre snus med en femdel, med den andres masse (en halv blokkoeffisient av lengde, bredde og dypgang, `sjvMass`; din egen fra `disp`). NPC-en er på den felles klokka og flyttes ikke av støtet.
+- **Under en knop** tar fendrene det. Over: hvert skrog tar støtet med den farten en kai ville gitt det samme (`sjvKnEq`: hele støtet på den med den andres andel av massen): sjarken mot kystruteskipet tar nesten hele farten, skipet nesten ingenting; to like båter hver farten over roten av to.
+- **Din skade** er `hullHit` (Fysikk 3) med den farten, og det står i dagboka med `hullSay`: «Sammenstøt med «Sjøsprøyt», 6,0 knop. Skroget er skadet. «Sjøsprøyt» fikk skrammer.» (under 3 knop «Smell i …»).
+- **Den andres skade** (`sjvOtherCost`) regnes som `hullHit` med hennes materiale (stål fra 15 m, havflåten og skipene, ellers glassfiber), og prisen er malingen over en flekk etter lengden, skroget etter hva hun er verdt (`sjvValue`: 6 m 0,1 MNOK, 10 m 1,2, 15 m 12, 21 m 20, 40 m 90, 60 m 150, 80 m 250, 125 m 900, antatt), og hullet; aldri over halve verdien. Kystruteskipet som får et lett støt, koster titusener, ikke millioner. Tar hun under en knop som mot kai (den tunge i et skrått støt), får hun ingen skade, ingen betaler, og dagboka sier «… tok ikke skade.» (før sto det «fikk skrammer»; funnet i `hulltest` på det flettede bygget, der ferja ble tatt nesten fra siden i 5,2 knop).
+- **Et nytt støt** mens sammenstøtet varer (til NPC-en har ligget ferdig og ett minutt til) teller bare når det er en halv knop hardere, og da bare som skade på ditt skrog; ingen ny skyld og ingen ny betaling.
+- **Sjømerkene, brupilarene og turbinene:** støtet som mot kaia, «Smell i sjømerket, 2,3 knop.» / «Hardt støt mot brupilaren …», skade med `hullHit`; ingen andre betaler eller får betalt (antatt: Kystverkets krav for et merke er ikke med).
+- **Blåsene:** kjører du over en blåse i mer enn halvannen knop, står det «Kjørte over blåsa til «…». Pass deg for redskap i sjøen.» Ingen skade (de er myke) og ingen tau i propellen (ikke bygd).
+
+### 5.3 Skylda (§§ 161 og 162)
+
+Skylda leses fra **sporet av blikk** (`SJV.trail`): hvert blikk på hvert fartøy innen 3 km de siste 8 spillminuttene, med regelen og rollene som står (Ø11.1: de låses når faren begynner), CPA, TCPA, grensa, om regel 19 gjelder, peilingene, sikten og den sikre farten, og hvordan begge går. `sjvFault` gir poeng for feil:
+
+| Feil | Poeng | Regel |
+|---|---|---|
+| Den vikepliktige (16; begge i 14, 18 c og 19) gjorde ingen markert manøver i god tid | 3 | 8, 16 |
+| Den vikepliktige gjorde noe, men møtte den andre likevel (for lite, for sent) | 1 | 8, 16 |
+| Den som skulle holde kurs og fart, endret kurs eller fart så de kom nærmere, mens det var mer enn 3 spillminutter til CPA (etter det tillater 17 a ii og krever 17 b) | 2 | 17 a i |
+| Sving til babord for en forut: for den som skulle holde kurs, med den andre om babord | 2 | 17 c |
+| Sving til babord for en forut ellers (møtende, nedsatt sikt; ikke den som innhenter) | 1 | 14 a, 19 d i |
+| Over sikker fart i nedsatt sikt (din: stoppdistansene dine, `sjvSafeMs`; hennes: hun ses på under åtte lengder) | 1 | 6, 19 b |
+| Ikke ned til minste styrefart i nærsituasjon med en forut i tåka (under 1 km, CPA under halve grensa) | 1 | 19 e |
+| Svingte rett mot den andre i siste spillminutt uten at det var fare før | 3 | 8, 2 |
+| Gikk på et fartøy som lå fortøyd eller til ankers | 3 | (2 b) |
+
+- **Ikke det siste halve minuttet** (§ 161 femte ledd, «tid til overlegninger»): blikkene i de siste 30 spillsekundene (fem sekunder i ekte tid) teller ikke, så et kast i siste øyeblikk er ingen feil.
+- **Manøveren måles** ved det siste blikket før det halve minuttet: hennes endringer i kurs og fart siden faren begynte, mot der hun ville vært på kursen og farten hun hadde da (bestikk), skal ha åpnet CPA med en femdel av grensa (minst 30 m) mot den andre slik hun faktisk gikk, eller mot den andre på kursen og farten hun hadde (17 a i: den vikepliktige kan regne med det); eller tatt 40 % av farten. **Å styre mot henne er ikke å vike:** en som fortsatte å svinge etter at den andre hadde lagt om, og fikk CPA ned der den gamle kursen ville gått klar (minst halve grensa), har ikke veket (funnet i `hulltest` 7a: forfølgelsen av ferja etter hennes sving etter 17 a ii så ut som en vikemanøver).
+- **Ikke under kommando og begrenset manøvreringsevne** (3 f, g) får ingen poeng: hun kunne ikke gjøre noe. To som ligger stille eller driver under en knop: § 162. To som ikke kan manøvrere: § 162.
+- **Ingen fare sett i tide** (ingen blikk med fare før det siste halve minuttet): den som svingte 20° eller mer mot den andre det siste spillminuttet mens den andre holdt kursen, får skylda; ellers rollene ved støtet (`colregSit` der og da), og den vikepliktige 3.
+- **Delingen:** ingen poeng gir § 162, hver bærer sin skade. Ellers § 161, etter poengene i hele prosent, og minst en femdel til hver som har en feil (avrundet til firedeler ga 40/60 som 50/50 i testen; § 161 sier etter feilene). Eksempler (enhetstestene): du hadde vikeplikt etter regel 15 og gjorde ingenting, 100/0; hun skulle vike og gjorde ingenting, 0/100; du skulle holde kurs og svingte til babord tidlig, hun vek ikke, 40/60; møtende og ingen svingte, 50/50; du svingte til styrbord og hun ikke, 25/75; i tåke uten at noen gjorde noe, og du over sikker fart, 56/44.
+- **Teksten** (`sjvFaultSay`): «Skylda etter sjøloven § 161 er din: du hadde vikeplikt etter regel 15 (kryssende) og holdt ikke av veien.», «… deles likt: du …, og «…» …», «Skylda etter sjøloven § 161: du 40 %, «Sjøsprøyt» 60 %. Du …, og hun …», «Sjøloven § 162: ingen feil på noen av sidene, så hver bærer sin skade.»
+
+### 5.4 Betalingen
+
+- **Din del av hennes skade** (`sjvSettle`): uten kasko betaler du alt, ført som «Erstatning til «…» (sjøloven § 161)» under «Forsikring og slep». Med kasko betaler forsikringen det som går over egenandelen, og du egenandelen; det er en skade på kaskoen som ved en reparasjon (premien en firedel opp i et år, `kaskoClaims`).
+- **Hennes del av din skade:** det skaden din koster deg på verftet (`sjvOwnLoss`: ingenting når det er den første reparasjonen av skroget, som er gratis; egenandelen med kasko; ellers hele) ganger hennes andel, betalt som «Erstatning fra «…» (sjøloven § 161)» under «Andre inntekter». Med kasko tar verftet fortsatt egenandelen og registrerer skaden (antatt; i virkeligheten søker forsikringen regress og kan la være å telle skaden).
+- Linja i dagboka: «Du erstatter 100 % av skaden på «MF Senjasund», 13 500 kr.» eller «Rederiet til «…» betaler deg 12 800 kr for din del av skaden på båten.»
+
+### 5.5 § 164: VHF, dagboka, og NPC-en som blir liggende
+
+- **VHF 16** (`sjvVhf`): ««Sjøsprøyt», «Sjøsprøyt», dette er «Havbris», LM6779, hjemsted Finnsnes, på vei fra Botnhamn til Tromsø. Vi har kollidert med dere. Er alle om bord i orden? Trenger dere hjelp?» og svaret ««Sjøsprøyt»: Alle i orden her. Ingen er skadet, vi klarer oss. Vi blir liggende litt og ser over skroget.» (med vann i båten: «Vi tar inn litt vann, men lensepumpa holder unna.»). Kjenningssignalet er båtens fra 10,67 m (`callOf`, Ø11.5); det sto i backloggen som noe som ventet på Ø11.3. Hvor hun kommer fra, er siste «Kastet loss fra …» i loggen (ellers nærmeste havn); hvor hun skal, neste havn på ruta, eller «feltet».
+- Meldingen står 15 sekunder på skjermen som kystradioen (`toast`) og i `S.radio`, så dekksdagbokas navigasjonsside viser den med tiden («VHF 16: …»). Sammenstøtet og skylda med betalingen står som to linjer i loggen (`k:'nav'`).
+- **NPC-en blir liggende** (`sjvStandBy`): tre spillminutter (et halvt minutt i ekte tid) der støtet var, som en lokal stopp over den felles banen (npc-flåten 4 A: aldri lagret eller sendt). Var hun i en vikemanøver, ligger hun med avviket hun hadde. Etterpå ligger hun så langt etter kursen sin som hun ventet og tar det igjen i 1,3 ganger farten, mens avviket går tilbake med svingens fart (`sjvPose`, `sjvOffAt` for `E.p0`). Mens hun ligger, er posisjonen den hele lista ga ved støtet; etterpå kommer den fra `npcStates(H, id)` (som etter en avslakking i Ø11.1).
+- Sammenstøtene lagres i `S.clashes` (høyst 40, med tid, sted, båt, navnet, farten, regelen, skylda, skadene og betalingen) til Sikkerhet-kortet i Ø11.7.
+
+### 5.6 Andre spilleres båter
+
+Skades aldri (`CLAUDE.md`: sosialt er additivt): din båt tar støtet som mot en båt av hennes størrelse, men hun får ingen skade, ingen betaler noen, og hun stoppes ikke. Loggen sier «… er en annen spillers båt og tar ikke skade.» og «Du ropte opp «…» og spurte om de trenger hjelp (sjøloven § 164).», og spillet sender henne den faste linja «Trenger du hjelp?» (`HAIL.send(n, 4)`; serveren tar bare linjene 0–5, så en egen linje for sammenstøt trenger en migrering).
+
+### 5.7 Når det regnes
+
+Bare med spillet åpent og i gang (`sjvLive`: `DYN.on`, ikke i `catchUp`, `simRate` høyst 60). Med spillet lukket (catchUp) ses det ikke etter kontakt, og ingenting skjer (prinsipp 4). Siden NPC-ene og Autonav viker, skjer det i praksis når spilleren styrer selv, eller når ingen av dem har plass.
+
+### 5.8 Tester og målinger
+
+- **Enhetstestene** (`tests/unit/sjovei-stot.test.mjs`, 71 sjekker, ny): skrogene og kontakten (femkantene, overlapp og vei ut, sjømerket), massene og støtet hvert skrog tar, den andres skade og pris, skylda i hver situasjon (regel 15 begge veier, for lite og for sent, 17 a ii, 17 c, § 161 femte ledd, regel 14, 13, 2, 18, 3 f, to som driver, ved kai, regel 19 med sikker fart og 19 e, brå sving uten fare, å følge hennes sving, NPC-en som følger ruta si), tekstene, betalingen med og uten kasko, den første reparasjonen, § 162, sammenstøtet i sin helhet (`sjvBlow`: skaden, dagboka, VHF med kjenningssignal og hjemsted, NPC-en som blir liggende, et nytt støt uten ny betaling), en annen spillers båt, ingenting i catchUp, et steg i modellen mot en båt i lista, stopp med avvik, og sveipet mellom to blikk. Sett rød uten koden (git stash: 0 OK, 1 FEIL) og grønn med den; sjekken for ruta sett rød mot commiten før rettingen (60/40 med «port»). Hele kjernen grønn.
+- **`hulltest` del 7** (LITE, 28 OK, 70 s; sett rød mot utgangspunktet 731e4792 i en worktree: `TypeError`, `SJV.trail` finnes ikke): (7a) for hånd i ekte tid inn i Senjas ferje som kom fra styrbord (regel 15: du viker), med hurtigsjarken som styrer mot punktet foran henne: støt i 18,6 knop, din båt slått inn (du tar 18,5 knop, ferja 2,0: 12 t mot 983 t), ferja 13 500 kr i skrammer; (7b) skylda din etter regel 15, «holdt ikke av veien» (den første kjøringen sa «vek for sent eller for lite» fordi forfølgelsen etter ferjas sving etter 17 a ii så ut som en vikemanøver; rettet, 5.3); (7c, 7g) dagboka med sammenstøtet, skylda og begge VHF-linjene; (7d) VHF 16 med navnet, kjenningssignalet, hjemstedet og hvor fra, og svaret, på skjermen; (7e) ferja ligger der det skjedde med farten 0; (7f) erstatningen ført som «Erstatning til «MF Senjasund» (sjøloven § 161)»; (7h) en annen spillers båt: ingen skade på henne, ingen betaling, ikke stoppet, meldingen gikk ut; (7i) et sjømerke (en bøye på 1 m lagt i hinderindeksen i åpent vann; Senjas merker står på skjær, dybden ved dem er 0 i kartet): «Hardt støt mot sjømerket, 4,1 knop. Skroget er skadet.»
+- **Skjermbildene** (`tests/out/clash_vhf_land.png`, `clash_vhf_port.png`, `clash_book_land.png`, `clash_book_port.png`, ikke i git; 1280×800 og 800×1280): VHF-meldingen står nederst i liggende og øverst i stående, lesbar i begge; dekksdagboka viser kl. 08:10 «Sammenstøt med «MF Senjasund», 18,6 knop. Skroget er slått inn, og det lekker. «MF Senjasund» fikk skrammer.», skylda med erstatningen og de to VHF-linjene, som oppslag i liggende og én side i stående. I liggende står også lekkasjen og redningsskøyta (støtet åpnet båten).
+- **`run.py changed`** (bygget med bare Senja): `colregtest` 32 OK (603 s; vikingen og tåka som før, med kontakten i hvert steg), `hudtest` 18, `havflaate` 9, `lanterntest` 12, `helmtest` 12, `hailtest` 4 OK, `trip2` i havn uten sidefeil. `dyntest` 26 OK og rød på `ringnot38` (svingdiameteren og stoppen; kjent rød før, regresjonen 05.11.2026). `npctest` og `autonavtest` krever hele kysten i bygget (npctest sier det selv; autonavtest fikk 200 m-celler i Finnmark) og var røde uten den; med kart-31 i `dist/` og `dist-vec/` er de grønne (19 og 25 OK). `trackfollow` (3D) 10 OK (autopiloten i `dynAuto` med kontakten i hvert steg). `anchorlight3d` gikk ut på tid (20 s) mens stikkprøven gikk ved siden av, og var grønn alene (5 OK, 236 s, bare Senja i bygget).
+- **Stikkprøven langs kysten** (`/stikkprove`, `dist-stikk` med hele kysten fra kart-31 og kystflåten fra vec-pakkene, juni kl. 6, uten 3D; en kystbåt under fart som kommer fra styrbord, regel 15, og hurtigsjarken som styrer for hånd mot punktet foran henne, så de møtes; deretter hennes viste plass hvert halve sekund gjennom ventetiden og 30 sekunder etter):
+
+  | Sted | Båten | Støtet (du / hun som mot kai) | Skylda | Hun ble liggende | Etter ventetiden |
+  |---|---|---|---|---|---|
+  | Kristiansand | Morgenrøde, 8,3 m | 15,2 knop (11,9 / 9,5) | din, 100 % | 28 s med avviket 168 m (hun var i en vikemanøver) | største flytt mellom to målinger 18 m (farten hennes), aldri på land |
+  | Bergen | Sjøsprøyt, 15 m | 20,3 knop (18,9 / 7,4); hun slått inn, 498 200 kr | din, 100 % | 28 s, uten avvik | 28 m, aldri på land |
+  | Bodø | Steinbit, 10,7 m | 16,2 knop (14,0 / 8,1) | din, 100 % | 29 s med avviket 130 m | 20 m, aldri på land |
+  | Hammerfest | Torsken II, 6,5 m | 9,9 knop (6,9 / 7,1) | din, 100 % | 28 s med avviket 92 m | 20 m, aldri på land |
+  | Tromsø | Breiflabb II, 9,2 m | først 9,0 knop: **60/40**, fordi ruta hennes bøyde til babord og ble lest som 17 c (funnet her, rettet: en NPC vurderes etter avviket fra kursen sin); etter rettingen 6,5 knop (5,3 / 3,7) | din, 100 %, «holdt ikke av veien» | 29 s med avviket 153 m | 22 m, aldri på land |
+
+  Ingen hopp der ventetiden slutter (den største flyttingen er hennes fart i 1,3 ganger mens hun tar igjen tiden), så forskjellen på `npcStates` med og uten id (10.1) ga ikke noe hopp på disse stedene. VHF-meldingen hadde navnet, kjenningssignalet og hjemstedet alle steder; «på vei fra» var skriptets egen linje i loggen (nærmeste havn, også et verft). I Kristiansand, Bergen, Bodø og Hammerfest sa grunnen «vek for sent eller for lite»: forfølgelsen i skriptet svinger mot punktet foran henne fra starten, før hun legger om, og ser da ut som en tidlig manøver (skylda er den samme, 100 %).
+
+- **Det flettede bygget** (arbeidsgrenen med Tonys spilltest, butikkrettingene og U2-6 flettet inn, 07.11.2026, hele kysten i bygget): hele kjernen 1655 OK, `colregtest` 32, `boottest` 4, `hudtest` 18, `trip2` i havn, `dbg23o` stille med 3D. `hulltest` var rød én gang: støtet mot ferja ble skrått (5,2 knop inn mot skroget, ferja 0,6 som mot kai), og testen krevde skade og betaling hos henne, mens dagboka sa «fikk skrammer» uten at hun hadde noen skade. Teksten er rettet, og testen krever hennes skade bare når hennes støt er over en knop; deretter 28 OK (14,8 knop, ferja 1,6, erstatning 12 200 kr).
+- **Tiden** (`dist-stikk`, uten 3D, en sjark for hånd der stedet er): å hente båtene, merkene og blåsene på nytt (`sjvNear`, hvert andre spillsekund, mest `npcStates`) tok 0,8 ms i median og høyst 6,7 ms i Bergen (16 i lista), 0,6 og 5,1 ms ved Henningsvær 10.03.2027 kl. 9, 1,1 og 4,7 ms i Tromsø (54 i lista); selve steget (`sjvTouch`) under 0,001 ms i median og høyst 2,7 ms (med en henting). Der målingen sto, var ingen båter innen 300 m, så kostnaden med mange skrog tett innpå er ikke målt (hvert skrog er to femkanter mot hverandre).
+
+### 5.9 Ikke med
+
+- § 163 (skade uten kontakt: svell og sug), regressen og det solidariske ansvaret for personskade i § 161 (ingen blir skadet).
+- Tau i propellen fra en blåse, skade på andres redskap, og Kystverkets krav for et sjømerke.
+- At NPC-er støter i hverandre (de går på den felles klokka), og at en annen spillers båt stopper eller får vite skylda.
+- At malusen på kaskoen faller bort når den andre hadde skylda.
+
+## 6. Ø11.6 Mann over bord (SK2, SK3)
+
+Bygd og rullet ut 07.11.2026 i Jonas' økt (grenen `ccr-73ea871d-9b5rz6`, flettet med arbeidsgrenen og ute i d3b8bde0; oppgaven: «Oppgave: Ø11.6, mann over bord (SK2 risikoen, SK3 hendelsen). Les sjøloven § 475 og skipssikkerhetsloven § 47 ordrett på Lovdata før noe bygges … Ingen dør (V8 A) … Meldingen etter § 475 og § 47 sender spillet for deg og skriver i dagboka»). Kjernen ligger i nye `core/14b-sikkerhet.js`, skjermen i nye `ui/10s-mob.js`, 3D-en i `view3d/21-rescue-anchor.js` (`drawMob`, `drawMobLights`) og `deckcrew.js` (den som peker). De delte filene har ett kall hver: `core/05-vessels.js` (`risk` → `mobRisk`), `core/13-work.js` (`workAssign` → `mobDeck`), `core/04-crew.js` (`crewTick` → `mobCrewHour`); `ui/03-map.js` (`renderDyn` → `MOBUI.svg`) og `ui/10e-sound.js` (`SND.mobAlarm`). `ui/08-actions.js` og `tools/boats/` er ikke rørt. Ingen `Math.random` i kjernen: terningene er en hash av spillets frø, båten og minuttet (`mobRnd`), så testene med frø beholder sine.
+
+### 6.1 Risikoen (SK2)
+
+- **Sjansen** er fall i timen per person i arbeid på dekk (`mobRate`): grunnsjansen `MOBK.R0` = 1/400 ved båtens egen røde grense (`BOAT.risk`, det `riskLevel` gir 2 ved), ganger sjøens andel, mørket, isingen, redskapet og åpen båt. Sjøens andel (`mobSeaF`) er null under 30 % av den røde grensa (stille vær), et kvadrat opp til 1 ved grensa og videre over den; sjøen er bølgehøyden der båten arbeider (`hsWork`: bevegelsene, ikke bare høyden) mot bølgegrensa, eller vinden mot vindgrensa, det som er nærmest (`mobSeaX`). Mørket (sola 6° under horisonten) ganger 1,5, isingen (sjøsprøyt som fryser: lufta på −2 °C eller kaldere, 9 m/s og mer, sjøen under 8 °C; `mobIcing`, Overlands varsling i grove trekk, antatt) 2, setting og draging (`b.gop`) 1,3, åpen båt 1,5.
+- **Hvem som er på dekk** kommer fra arbeidsfordelingen (`workAssign` → `mobDeck`, det minuttets egne kall): ved rekka der redskapet kommer inn (haling, bløgging) 1,6, jukse ved rekka 1,2, sløying, ising og krabbesortering 1, egning, rensing, bøting og vedlikehold 0,8, last 1, en pause på dekk 0,6 og sjøsyk over rekka 1,5. Inne (i styrhuset, byssa, køya, fabrikken på snøkrabbebåten og havbåtenes fabrikklag, fryserommet) og ved roret i et styrhus er null; under et shelterdekk ganges sløyingen, isingen og halingen med 0,35. Skipperen (spilleren) er aldri med, og havbåtenes bro heller ikke.
+- **Når et fall kan skje** (`mobCan`): spillet åpent og i gang (`mobLive`: `DYN.on`, `simRate` høyst 60, ingen tid igjen å spille fra fraværet), på båten hun følger (`MOBF.fol`, satt av skjermen mellom tikkene) og er om bord på, våken og ikke i køya, båten under fart, fiskende eller liggende stille på sjøen, ikke i første tur og ikke mens en annen hendelse pågår. Høyst ett fall i døgnet per båt (`MOBK.gap`).
+- **Nestenulykkene**: for hvert fall kommer tre nestenulykker (`MOBK.near`), og når et fall ikke kan skje (spillet lukket, en annen båt, hun sover, hun er ikke om bord), blir det alltid en nestenulykke i stedet; mannskapet tar dem selv, og de står i dagboka («Nestenulykke: Stian skled på dekket i sjøen og fikk tak i rekka. Ingen gikk over bord.»), og dermed i «Mens du var borte». Høyst én i to spilltimer per båt. Alene om bord skjer ingenting.
+- **Lagret** i `S.mobs` (høyst 40: tid, sted, båt, navn, og for fallene utfallet, måten, minuttene, sykedagene, om merket ble satt og hvem som kastet bøya) til Sikkerhet-kortet i Ø11.7.
+
+### 6.2 Hendelsen (SK3)
+
+1. **Fallet** (`mobStart`): «Mann over bord! Stian Nilsen gikk over bord om babord kl. 10:01. Sjøen holder 10,2 °C. Vesten holder ham oppe.» Personen ligger litt ut fra siden hun falt (`side`), og driver med vinden: 1,2 % av vindens fart for en person i vest, 3 % for livbøya (`MOBK.leeP`, `leeB`; antatt). Var det en til på dekk, kaster hun livbøya etter ham med én gang (8 m fra ham); han svømmer til den og holder seg i den så lenge han orker (innen 15 m).
+2. **MAYDAY på VHF 16** (spillet sender den for deg, som meldingen etterpå): «MAYDAY, MAYDAY, MAYDAY. Dette er «Havbris», LM6779. Mann over bord i posisjon 69°19.8' N 16°55.8' Ø. Én person i sjøen med redningsvest. Vi snur og tar ham opp.» og svaret «Kystradioen: «Havbris», mottatt. Hovedredningssentralen har varslet redningsskøyta fra Gryllefjord, som er hos dere om rundt 21 minutter.»
+3. **MOB-merket** (knappen «MOB», `mobMark`): der båten er når du trykker, ikke der han falt; dagboka sier hvor langt fra ham merket ble satt.
+4. **Livbøya** («Kast livbøya», `mobThrow`, når ingen på dekk kastet den): der båten er; fikk han den innen 15 m, holder han seg i den. Fra 15 m har den første bøya MOB-lyset med røyk (§ 7-10), som røyker i 15 minutter (LSA 2.1.3); under 15 m har den et bøyelys (§ 43: lys på halvparten).
+5. **Williamson-svingen** («Autonav: MOB», `mobRoute`): løper båten fra ham (han ligger mer enn 90° fra baugen, over 2 knop, under 2 km unna), går ruta 60° ut mot den siden han falt, hardt over til den andre siden og rundt til motsatt kurs tilbake på sitt eget spor (fire punkter på en sirkel med 1,6 ganger båtens svingradius), og så inn til ham. Målet er ham der han vil være når båten er fram, når han er i sikte, ellers livbøya der den vil være, ellers merket. Ruta stopper 18 m til lo for ham, så båten (som driver fortere enn en person) kommer ned på ham og ikke fra ham; i lite vind 15 m før ham. Går et ben over land eller grunt (eller kartet er ikke lastet), finner Autonav sin egen vei dit (`leiaRoute`). For hånd styrer du som ellers (roret tar over fra Autonav).
+6. **Opptaket** (`mobLiftOpts`, `mobLift`): innen 30 m (lina på livbøya, § 43) og under 2 knop: **leideren akter** (§ 63, under 15 m) så lenge han orker å klatre, 2 spillminutter; **løftestroppen** (under 45 m), 4 minutter; fra 45 m **MOB-båten** (§ 7-5) innen 500 m med skipet under 3 knop: davitet ut (1 min), firt på sjøen (senkefarten 0,4 + 0,02 H m/s, LSA 6.1.2.8), ut til ham i 6 knop (LSA 5.1.1.3), opp i båten (1 min), tilbake og heist inn (1,5 min). På leideren og i stroppen er han fast i båten (lina, stroppen) og ligger ved låringen; opptaket holder så lenge båten ikke kjøres fra ham (over 3 knop). MOB-båten holder så lenge skipet ligger innen rekkevidden til den er på sjøen.
+7. **Utfallet** (`mobEnd`): oppe i tide: «Stian Nilsen er oppe etter 9 minutter i sjøen, med leideren akter. Kald og våt, men i orden. Han skifter og varmer seg.» (slitenheten til 90), og «Kystradioen: … personen er oppe. Redningsskøyta fra Gryllefjord snur.» Et merke (6.6). Ikke tilbake i tide (V8 A): redningen tar ham opp når den er fram, og han er sykmeldt.
+
+### 6.3 Tiden i vannet, redningen og sykmeldingen
+
+- **Tiden** med vest før utmattelse eller bevisstløshet etter sjøtemperaturen (`MOBT`, `mobLimMin`): 12 minutter under −2 °C, 15 ved 0, 30 ved 4,5, 60 ved 10, 120 ved 15,5, 180 ved 21 (den vanlige tabellen for kaldt vann, de nedre endene; antatt, ikke lest hos kilden herfra). Han orker å klatre en leider den første tredjedelen, minst 8 og høyst 40 minutter (1-10-1-regelen, `mobAbleMin`). Forbi grensa er han «sterkt nedkjølt»; vesten holder ham oppe.
+- **Redningen** (`mobRescue`): redningsskøyta fra nærmeste stasjon (`rescueBases`, Redningsselskapets stasjoner, Kystvakta på Svalbard) med 10 minutter til mannskapet er om bord og 25 knop langs leia (1,25 ganger rett linje), eller redningshelikopteret når det er der først: 330-skvadronens baser (Sola, Florø, Ørland, Bodø, Banak, Rygge) og Sysselmesterens i Longyearbyen, 15 minutter og 140 knop (antatt). Den varsles med MAYDAY-en; kommer den før du har ham, tar den ham.
+- **Sykmeldingen** (V8 A): redningen tok ham før grensa, 1–2 dager; etter grensa (redningen, eller du fikk ham opp for sent) 3–5 dager, og helikopteret eller skøyta tar ham til sykehuset. En av mannskapet er da `c.off` med `offUntil` (Mannskap-appen sier «er i land til …»), og kommer om bord igjen først når båten ligger til kai etter dagene (`mobCrewHour` skyver dagen en time om gangen så lenge båten er på sjøen; `c.mobOff`). En fra havbåtens lag holdes av dekket de dagene (`S.mobOff`). Mannskapets historie (`lifeStory`) får linja.
+- **Med spillet lukket under en hendelse** (eller båten forlatt: annen båt fulgt, du ikke om bord): mannskapet snur båten selv og får ham opp med leideren, stroppen eller MOB-båten rundt tolv minutter etter fallet (`mobAway`), eller redningen tar ham om det er forbi grensa (prinsipp 4). En hendelse som er eldre enn seks timer, eller båten i havn eller på slep, avsluttes slik.
+
+### 6.4 Meldingen (§ 475, § 47)
+
+Etter hvert fall sender spillet meldingen for deg og skriver den i dagboka: «Melding sendt til Sjøfartsdirektoratet for deg (sjøloven § 475 og skipssikkerhetsloven § 47): mann over bord fra «Havbris» kl. 10:01, Stian Nilsen, 9 minutter i sjøen, ingen skade.» (eller «sykmeldt i 3 dager»). At myndigheten Kongen har bestemt er Sjøfartsdirektoratet, og at et fall over bord uten skade også meldes, er antatt: forskriften om melding er ikke lest. Nestenulykkene meldes ikke.
+
+### 6.5 Skjermen, kartet og lyden
+
+- **Panelet** (`ui/10s-mob.js`): rødt, øverst midt på (i stående under minikartet og stripa, UI 2s soner; på liggende telefon mellom boksen og kameraknappene), med tiden i sjøen (røde tall forbi grensa), navnet, sjøtemperaturen og hvor lenge han klarer seg, peilingen og avstanden til ham (bare når han er i sikte), til merket og til livbøya (og om den røyker), redningen og hvor lenge til den er fram, og opptaket som går. Knappene i drillens rekkefølge: «MOB», «Kast livbøya», «Autonav: MOB» («… på nytt» etter første), og måtene å ta ham opp på, grå med det som står i veien («For langt unna, 49 m.», «Stopp båten først, 3,0 knop.», «Stian Nilsen orker ikke å klatre lenger.»). Slutten står i 20 sekunder (grønn i tide, gul sykmeldt). Roen (`ui/10c-dock.js`) holdes borte så lenge han er i sjøen (`DOCK.wake`), og telefonen lukkes når alarmen går.
+- **Sikten** (`mobSightKm`): om dagen hodet og vestens krage 400 m i stille sjø, mindre i sjø (delt på 1 + 1,2 × bølgehøyden); livbøya det dobbelte; røyken 2 km; om natta 40 m, 200 m med lyskaster (fra 12 m, § 89), bøyelyset rundt en nautisk mil (2 cd); aldri lenger enn sikten (tåke). Personen holder seg i bøya: han ses som bøya.
+- **Kartplotteren** (`MOBUI.svg` fra `renderDyn`): merket som en rød ring med kryss og «MOB 04:12» (tiden i sjøen), stiplet linje fra båten, livbøya som oransje ring når den er i sikte, og personen som en gul prikk med fornavnet når han er i sikte.
+- **Lyden** (`SND.mobAlarm`): en skarp totone-alarm, så «O» i hornet, tre lange støt (kodebokstaven for mann over bord). Telefonen vibrerer.
+
+### 6.6 3D og merket
+
+- **Personen i sjøen** (`drawMob`): figuren med vesten (`lookVest`), hode og skuldre over sjøen, vendt mot båten og vinkende med én arm (`drawWorker` 'signal'), og borte fra dekket (`workAssign`). **Livbøya** flat på sjøen (ringen ligger i x-y i modellen), rundt ham når han holder den, med lyset flytende ved den (blinker om natta), og den oransje røyken fra 15 m så lenge den brenner (`drawMobLights`). **Den tomme holderen** står på rekka der bøya hang. **Den som holder øye med ham** (en på pause, ellers den med minst å gjøre) går til rekka på hans side og peker (`deckcrew.js` `spotGoal`, 'guide'), og snur seg med ham når båten svinger.
+- **MOB-båten fra 45 m** (`drawMob`): vugga står, davitets arm svinger ut (180° om søylen), båten løftes av vugga og henger i kroken, fires ned, kjører ut til ham og tilbake og heises inn igjen. For rammen får `drawSafety` (`09-landing-deck.js`, H3d1 sin fil) båtens utstyr uten MOB-båten og med den kastede bøyas plass senket under sjøen (`MOB3.G`, satt tilbake i `drawRescueLights` etter dekket), så `09-landing-deck.js` ikke er rørt.
+- **Merket** «Mann over bord: tatt opp i tide» (`ACHL`, `achC('mob')`, trinnene 1, 3 og 10): bare når du fikk ham opp før grensa selv.
+
+### 6.7 Tester og målinger
+
+- **Enhetstestene** (`tests/unit/mob.test.mjs`, 79 sjekker, ny): sjansen mot sjøen, mørket, isingen, redskapet og åpen båt; tiden i vannet og 1-10-1; sikten; hvem som er på dekk; redningen (skøyta nær land, helikopteret 120 km ut); fallet med dagboka, MAYDAY-en og livbøya; merket; Williamson-svingen; opptaket for langt unna, for fort og klart; leideren og utfallet med meldingen og merket; forbi grensa med redningen og sykmeldingen, og tilbake om bord først i havn; MOB-båten fra 45 m; spillet lukket (mannskapet tar ham opp); terningene tvunget: nestenulykke med spillet lukket, fall med det åpent, aldri to fall på et døgn, ikke når du ikke er om bord, alene eller sover; og (etter gjennomgangen) merket i `ACHL`, værvendingen som venter, MOB-båtens opptak som står når spillet går bort, kjønnet til skjermen. Sett rød uten kjernefila (linja i malen tatt bort med `git stash`: 0 OK, 1 FEIL) og grønn med den; sjekkene fra gjennomgangen sett røde mot commiten før (4 FEIL). Hele kjernen 2067 OK etter flettingen.
+- **`mobtest`** (LITE, ny; sett rød mot bygget uten Ø11.6, c679069c i en worktree: `ReferenceError: mobRnd is not defined`): utenfor Senjas ytterside i juli i 15 m/s og 3,7 m sjø går Stian over bord i spillets eget minutt mens sjarken jukser (panelet, dagboka, MAYDAY med posisjonen og «redningsskøyta fra Gryllefjord … om rundt 21 minutter», Kari kastet bøya, Stian ikke på dekk); båten går fra ham i 7 knop i fem sekunder (106 m), «MOB» setter merket 114 m fra ham, «Autonav: MOB» går Williamson-svingen (ut til rundt 450 m, rundt og tilbake), stopper 49 m unna (målet var livbøya, som var i sikte og han ikke: 3,7 m sjø), «Autonav: MOB på nytt» tar henne inn til 22 m i 1,7 knop, og leideren: «Stian Nilsen er oppe etter 9 minutter i sjøen, med leideren akter. Kald og våt, men i orden.», meldingen og merket. Så Kari med båten 1,5 km unna: redningsskøyta fra Gryllefjord tar henne etter 20 minutter, sykmeldt i 1 dag. Spillet lukket: bare en nestenulykke. Bildene `mob_*.png` i begge formater (i stående under minikartet og stripa etter første bilde, der panelet dekket minikartet).
+- **`mobshot`** (3D, alene, ny): kystbåten på 21 m med personen 12 m tvers om styrbord (vinkende, i vesten), bøya flat med lyset, røyken, den tomme holderen og den som peker; autolineren med MOB-båten svingt ut og firt, og så på vei ut til personen 40 m unna; ingenting igjen etterpå. Første kjøringer viste personen utenfor bildet (drevet 120 m mens SwiftShader tok bildet, og kameraet for nær): personen holdes nå på plass mens bildet tas.
+- **Stikkprøven langs kysten** (`mobtest` med `KYST_MOB_AT` og hele kysten fra kart-31, uten bilder):
+
+  | Sted | Sjøen | Redningen | Williamson og Autonav | Opptaket | For sent tilbake |
+  |---|---|---|---|---|---|
+  | Senja, yttersiden | 10,2 °C, 3,7 m | redningsskøyta fra Gryllefjord, 21 min | ut rundt 450 m, tilbake til 49 m, inn til 22 m på nytt | leideren etter 9 min | skøyta fra Gryllefjord, 20 min, 1 dag |
+  | Bergen, Korsfjorden | 12,5 °C, 2,4 m | helikopteret fra Sola, 49 min (skøyta fra Bergen ville brukt rundt 50) | ut 416 m, tilbake til 36 m, inn til 31 m på nytt | leideren etter 11 min | helikopteret fra Sola, 49 min, 2 dager |
+  | Bodø, Vestfjorden | 11,3 °C, 3,9 m | helikopteret fra Bodø, 19 min | ut 412 m, tilbake til 45 m, inn til 26 m | leideren etter 9 min | helikopteret fra Bodø, 19 min, 1 dag |
+  | Hammerfest, Sørøysundet | 8,8 °C, 1,0 m | redningsskøyta fra Hammerfest, 31 min | ut 420 m, tilbake til 49 m, inn til 31 m på nytt | leideren etter 11 min | skøyta fra Hammerfest, 31 min, 2 dager |
+
+  MAYDAY-en hadde riktig posisjon alle steder (60°10.8' N 5°09.6' Ø, 67°22.8' N 14°06.0' Ø, 70°46.2' N 23°30.0' Ø). Første «Autonav: MOB» stopper ofte 35–50 m fra ham fordi målet er livbøya, som ses lenger enn hodet i sjø og driver fra ham; det andre trykket, når han er i sikte, tar henne inn.
+- **Hyppigheten** (`tests/mobrate.py`, spillets vær time for time i januar og juli 2027, én på dekk): fall per 100 timer på dekk de timene båten er ute (under sin røde grense), og nestenulykkene (tre per fall):
+
+  | Sted | Januar, sjarken, haler | Januar, snekka, jukser | Juli | Timer over rød grense i januar (sjarken) | Mørkt i januar | Ising i januar |
+  |---|---|---|---|---|---|---|
+  | Senja, yttersiden | 0,10 (nestenulykker 0,29) | 0,14 | 0,00–0,01 | 40 % | 75 % | 32 % |
+  | Bergen, utenfor Fedje | 0,08 (0,25) | 0,14 | 0,00–0,02 | 75 % | 64 % | 0 % |
+  | Bodø, Vestfjorden | 0,10 (0,30) | 0,13 | 0,00–0,01 | 31 % | 71 % | 7 % |
+  | Hammerfest, utenfor Sørøya | 0,12 (0,36) | 0,16 | 0,00–0,01 | 56 % | 78 % | 38 % |
+
+  Med to på dekk og seks spilltimer i timen er det rundt ett fall per 80 timers spill om vinteren og en nestenulykke per 25–30 timer; om sommeren nesten aldri. Det er et spillvalg (kap. 5.10 i planen), og må ses i spilltest.
+
+
+### 6.8 Ikke med
+
+- Kurs og øvelser (V11 C), sender på vesten (V10 C), død (V8 A), at skipperen går over bord.
+- Redningsskøyta og helikopteret i 3D (de kommer bare i ord), at personen sitter i MOB-båten på vei tilbake, lyset i MOB-lyset på braketten om natta, strømmen (Fysikk 4 F8) i driften.
+- At NPC-båter har mann over bord og ber om hjelp: Ø11.7 (L8, § 135).
+- Sikkerhet-kortet i Redning-appen: Ø11.7 (dataene står i `S.mobs`).
+
+## 7. Antatt eller usikkert
+
+- Ø11.6 (kap. 6): hyppigheten (`MOBK.R0`, tre nestenulykker per fall), tiden i vannet (de nedre endene av tabellen for kaldt vann), 1-10-1 for leideren, driften (1,2 % og 3 % av vinden), sikten, redningens oppmøtetid og fart og helikopterbasene, sykedagene, og at Sjøfartsdirektoratet er myndigheten etter § 475 og at et fall uten skade meldes (forskriften om melding er ikke lest). Isingen er Overlands varsling i grove trekk.
+- Regel 19–37, vedlegg I og III og kapittel II 46, 49, 52 og 53 d er lest ordrett 06.11.2026 (Ø11.2); vedlegg II og IV ikke. Grensa for nedsatt sikt (2 mil), minste styrefart (2–4 knop), sikker fart (stopp innen halve sikten), at rollene står når de kommer i sikte, at NPC-en bruker maskinen akterover når hun slakker av, og at klokka høres som en fløyte under 20 m, er antatt (4.1–4.4).
+- Sjøloven kapittel 8 er lest på Lovdata 06.11.2026, men leseverktøyet ga bare korte ordrette sitater; resten er gjengitt med egne ord (2.2). §§ 135 og 475, skipssikkerhetsloven fra § 28 og kapittel 7–10 i FOR-2000-06-13-660 er bare lest i sammendrag.
+- Skylda (Ø11.3) er et spillvalg ut fra reglene, ikke en domstols vurdering: poengene, det halve minuttet for «tid til overlegninger», at en femdel av grensa er en markert manøver, åtte lengder for hennes sikre fart, verdiene etter lengden, massene etter en halv blokkoeffisient, og at hvert skrog tar støtet som mot en kai med den andres andel av massen (5.2–5.4).
+- `sdir.no`, `kystverket.no`, `geonorge.no` og `nkom.no` nås ikke herfra. Lovdata svarer bare leseverktøyet, ikke `curl` eller Chromium (06.11.2026).
+- Skyldfordelingen (Ø11.3) avgjøres i virkeligheten av en domstol; spillet bruker en enkel regel ut fra vikeplikten.
+- Vikingen er lokal (npc-flåten 4 A): to spillere nær samme NPC-båt kan se den vike ulikt.
