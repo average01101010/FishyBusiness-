@@ -75,5 +75,8 @@ const HAIL = (() => {
     const n = peerStates().find(q => q.id === AISSEL); if (n) send(n, +b.dataset.hl);
   }, true);
   setInterval(fetch, 15000);
+  // Ø11.3: a collision with another player's boat (core/05e-sjovei.js sjvBlow): her boat takes no damage, she gets a message. The game
+  // asks for you whether they need help (sjøloven § 164), as the preset line «Trenger du hjelp?» (the server takes lines 0-5 only)
+  hooks.onClash = (n, r) => { if (n && n.player && r && r.peer) send(n, 4); };
   return {send, fetch, dockItem, menuItems, signal, card, LINES, SIGS, _H:H};
 })();
