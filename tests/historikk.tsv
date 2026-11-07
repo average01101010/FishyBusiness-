@@ -806,3 +806,33 @@
 2026-11-07 13:05	ccr-fc7a11b2-nl5jor	0e1f99c3	roetest	OK	120	lite	samtidig	
 2026-11-07 13:05	ccr-fc7a11b2-nl5jor	0e1f99c3	trip2	OK	39	lite	samtidig	
 2026-11-07 13:06	ccr-fc7a11b2-nl5jor	0e1f99c3	docktest	OK	60	lite	alene	
+2026-11-07 15:43	ccr-6e84b098-t2tu38	82fc777a+	opptest	OK	40	lite	alene	
+2026-11-07 15:46	ccr-6e84b098-t2tu38	2de52aeb+	selltest	LES	24	lite	samtidig	
+2026-11-07 15:47	ccr-6e84b098-t2tu38	2de52aeb+	shoptest	OK	35	lite	samtidig	
+2026-11-07 15:47	ccr-6e84b098-t2tu38	2de52aeb+	vesseltest	OK	28	lite	samtidig	
+2026-11-07 15:47	ccr-6e84b098-t2tu38	2de52aeb+	fuelcal	OK	15	lite	samtidig	
+2026-11-07 15:47	ccr-6e84b098-t2tu38	2de52aeb+	bktest	OK	6	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	opptest	OK	49	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	skattetest	OK	7	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	lotttest	OK	9	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	boktest	OK	9	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	keeptest	OK	15	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	decktest	OK	14	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	simday	LES	14	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	calib	LES	12	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	tidetest	OK	6	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	climtest	OK	16	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	yardupgtest	OK	14	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	haillplass	OK	6	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	snokrabbetest	OK	14	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	autolinetest	OK	10	lite	samtidig	
+2026-11-07 15:49	ccr-6e84b098-t2tu38	2de52aeb+	turtest	OK	17	lite	samtidig	
+2026-11-07 15:49	ccr-6e84b098-t2tu38	2de52aeb+	geartest	FEIL	42	lite	samtidig	FEIL the hauler at tiers 2 and 3 takes 10 and 20 % off a tub, a net and a pot hauled {'line': [28.452, 23.764, 21.375], 'garn': [4.906, 5.246, 4.597], 'teine': 
+2026-11-07 15:49	ccr-6e84b098-t2tu38	2de52aeb+	booktest	OK	27	lite	samtidig	
+2026-11-07 15:49	ccr-6e84b098-t2tu38	2de52aeb+	caretest	FEIL	15	lite	samtidig	FEIL a set costs half again at tier 2, and is bought back on that price [350, 525, 88, 131]
+2026-11-07 15:49	ccr-6e84b098-t2tu38	2de52aeb+	jigalongtest	OK	15	lite	samtidig	
+2026-11-07 15:50	ccr-6e84b098-t2tu38	2de52aeb+	docktest	OK	62	lite	samtidig	
+2026-11-07 15:50	ccr-6e84b098-t2tu38	2de52aeb+	seaworktest	OK	6	lite	samtidig	
+2026-11-07 15:50	ccr-6e84b098-t2tu38	2de52aeb+	nettest	FEIL	24	lite	samtidig	FEIL halerne først, og det som ikke passer snekka, er lukket nederst  [['linehaler', 'linesetter', 'garnhaler'], 'Passer ikke «T-658-LK» (2)Radar (åpen antenne)
+2026-11-07 15:50	ccr-6e84b098-t2tu38	2de52aeb+	itemcardtest	FEIL	15	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'linesetter', 'garnrenne', 'teinehaler', 'jukse', 'krabbekar', 'brova
+2026-11-07 15:55	ccr-6e84b098-t2tu38	0607e08a	heattest	OK	286	3d	alene	
