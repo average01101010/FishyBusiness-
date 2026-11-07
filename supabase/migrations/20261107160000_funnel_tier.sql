@@ -1,7 +1,7 @@
 -- The funnel with the upgrades (OPP4 of docs/planer/oppgraderinger.md, 07.11.2026; docs/engasjement.md «Mål og se»): one number more,
 -- the share who bought at least one tier within their first seven days. A tier is the game's shop_buy {w:'equip', k, lv} (the knives and
--- the gaff from OPP1, ui/phone/13b-nettet.js equipBuy; the deck gear's tiers from OPP2) or the yard's upg {k, lv} (the propeller and the
--- rebuilds, OPP3); a buy without lv (a VHF, a jigging reel) is not a tier. Everything else is 20261007150000_funnel.sql as it was.
+-- the gaff from OPP1, ui/phone/13b-nettet.js equipBuy; the deck gear's tiers from OPP2) or the yard's upg {k, lv} (the propeller,
+-- OPP3); a buy without lv (a VHF, a jigging reel) is not a tier. Everything else is 20261007150000_funnel.sql as it was.
 --   tier    bought a tier within seven days of the first session, of all who started (the week not over counts as far as it has come)
 --   tier7   the same, of those whose first session is at least seven days ago (tier7n): the share that can be compared before and after
 -- Only the players who share usage statistics (they alone have sessions and events). Sums only; for the admin.
