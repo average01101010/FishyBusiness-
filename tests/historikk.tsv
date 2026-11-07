@@ -371,6 +371,23 @@
 2026-11-06 22:19	ccr-a3c53300-9f9ly1	9871601	autonavtest	FEIL	0	lite	alene	FEIL 6. Autonav Vannareid → Honningsvåg … (bygget før rettingen, bare Senja: de samme ti røde linjene som på det rettede bygget)
 2026-11-06 22:22	ccr-a3c53300-9f9ly1	4073902	draftlooptest	OK	19	lite	samtidig	
 2026-11-06 22:24	ccr-a3c53300-9f9ly1	7cbe5c7	bootgtest	OK	125	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	colregtest	OK	603	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	npctest	FEIL	0	lite	samtidig	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py)
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	autonavtest	FEIL	11	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 102, 'cell': 0.2, 'maxSlice': 8.1, 'mended': 0, 'b
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	hudtest	OK	25	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	havflaate	OK	8	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	hulltest	OK	70	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	lanterntest	OK	10	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	dyntest	FEIL	252	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	helmtest	OK	26	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	trip2	OK	35	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	hailtest	OK	5	lite	samtidig	
+2026-11-07 00:44	ccr-208d78a1-ruhxll	cb03960a	anchorlight3d	FEIL	116	3d	alene	avsluttet med kode 1
+2026-11-07 01:09	ccr-208d78a1-ruhxll	21194a43	trackfollow	OK	1514	3d	alene	
+2026-11-07 01:14	ccr-208d78a1-ruhxll	21194a43	anchorlight3d	OK	236	3d	alene	
+2026-11-07 01:14	ccr-208d78a1-ruhxll	21194a43	npctest	OK	9	lite	samtidig	
+2026-11-07 01:14	ccr-208d78a1-ruhxll	8c1faf2d	autonavtest	OK	22	lite	samtidig	
+2026-11-07 01:17	ccr-208d78a1-ruhxll	c3eabdf2	hulltest	OK	68	lite	alene	
 2026-11-06 23:19	ccr-a9ff699b-re4zwf	509c633b	hudtest	FEIL	0	lite	samtidig	avsluttet med kode 1
 2026-11-06 23:19	ccr-a9ff699b-re4zwf	509c633b	friendtest	FEIL	0	lite	samtidig	avsluttet med kode 1
 2026-11-06 23:19	ccr-a9ff699b-re4zwf	509c633b	hbtest	FEIL	0	lite	samtidig	avsluttet med kode 1
@@ -403,6 +420,23 @@
 2026-11-06 23:39	ccr-ccfb0017-rmieib	731e4792+	docktest	FEIL	62	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
 2026-11-06 23:39	ccr-ccfb0017-rmieib	731e4792+	routetest	OK	44	lite	alene	
 2026-11-06 23:41	ccr-ccfb0017-rmieib	731e4792+	docktest	OK	61	lite	alene	
+2026-11-07 00:11	ccr-67e5a499-sxgchb	61f462f7+	docktest	OK	63	lite	samtidig	
+2026-11-07 00:11	ccr-67e5a499-sxgchb	61f462f7+	merketest	OK	12	lite	samtidig	
+2026-11-07 00:12	ccr-67e5a499-sxgchb	61f462f7+	uishots	OK	88	lite	samtidig	
+2026-11-07 00:12	ccr-67e5a499-sxgchb	61f462f7+	shoptest	OK	27	lite	samtidig	
+2026-11-07 00:12	ccr-67e5a499-sxgchb	61f462f7+	nettest	OK	25	lite	samtidig	
+2026-11-07 00:12	ccr-67e5a499-sxgchb	61f462f7+	fleet3test	OK	15	lite	samtidig	
+2026-11-07 00:13	ccr-67e5a499-sxgchb	61f462f7+	posttest	OK	23	lite	samtidig	
+2026-11-07 00:13	ccr-67e5a499-sxgchb	61f462f7+	kartlegging	OK	52	lite	samtidig	
+2026-11-07 00:06	HEAD	61f462f7+	kjoptest	FEIL	266	lite	samtidig	avsluttet med kode 1
+2026-11-07 00:06	HEAD	61f462f7+	skiptest	OK	23	lite	samtidig	
+2026-11-07 00:06	HEAD	61f462f7+	skipdrift	OK	43	lite	samtidig	
+2026-11-07 00:06	HEAD	61f462f7+	haillplass	OK	10	lite	samtidig	
+2026-11-07 00:06	HEAD	61f462f7+	docktest	OK	89	lite	samtidig	
+2026-11-07 00:32	HEAD	61f462f7+	trackfollow	FEIL	1510	3d	alene	FEIL she keeps to the line all the way, at most 9 m off it in the corners (the model turns on her own radius), and never goes back along it  {"off": 0.49, "back
+2026-11-07 00:32	HEAD	61f462f7+	moortest	OK	34	3d	alene	
+2026-11-07 00:35	HEAD	61f462f7+	maletest	OK	21	lite	samtidig	
+2026-11-07 00:36	HEAD	61f462f7+	boostklokke	OK	45	lite	samtidig	
 2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	docktest	OK	62	lite	samtidig	
 2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	searchtest	OK	9	lite	samtidig	
 2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	hudtest	OK	25	lite	samtidig	
@@ -411,3 +445,85 @@
 2026-11-07 03:41	ccr-f981c5f0-ezb7x7	bcf2df80+	trackfollow	OK	1332	3d	alene	
 2026-11-07 03:50	ccr-f981c5f0-ezb7x7	bcf2df80+	docktest	OK	59	lite	alene	
 2026-11-07 03:51	ccr-f981c5f0-ezb7x7	bcf2df80+	routetest	FEIL	38	lite	alene	FEIL Autonav over hele kysten: Finnsnes–Tromsø, Bodø–Reine og Bergen–Florø gir en vei fri for land, grunner og skjær, med høyst 40 punkter, eller ett per 2 km d
+2026-11-07 00:57	HEAD	12b6216c+	docktest	OK	65	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	kjoptest	OK	470	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	skiptest	OK	19	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	skipdrift	OK	27	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	haillplass	OK	8	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	boostklokke	OK	51	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	maletest	OK	22	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	slidertest	OK	19	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	trip2	OK	39	lite	samtidig	
+2026-11-07 01:20	ccr-a9ff699b-re4zwf	b36a7580+	kotest	FEIL	12	lite	alene	avsluttet med kode 1
+2026-11-07 01:22	ccr-a9ff699b-re4zwf	b36a7580+	kotest	FEIL	11	lite	alene	avsluttet med kode 1
+2026-11-07 01:23	ccr-a9ff699b-re4zwf	b36a7580+	kotest	OK	12	lite	alene	
+2026-11-07 01:26	ccr-a9ff699b-re4zwf	b36a7580+	docktest	OK	66	lite	samtidig	
+2026-11-07 01:26	ccr-a9ff699b-re4zwf	b36a7580+	hudtest	OK	28	lite	samtidig	
+2026-11-07 01:26	ccr-a9ff699b-re4zwf	b36a7580+	drifttest	OK	29	lite	samtidig	
+2026-11-07 01:26	ccr-a9ff699b-re4zwf	b36a7580+	fleet2test	OK	33	lite	samtidig	
+2026-11-07 01:28	ccr-a9ff699b-re4zwf	a11ed09b	landtest	OK	97	3d	alene	
+2026-11-07 01:07	ccr-04f41d1f-p26bxn	bcf2df80+	maletest	OK	17	lite	samtidig	
+2026-11-07 01:07	ccr-04f41d1f-p26bxn	bcf2df80+	regnrtest	OK	20	lite	samtidig	
+2026-11-07 01:07	ccr-04f41d1f-p26bxn	bcf2df80+	sqltest	FEIL	29	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-07 01:08	ccr-04f41d1f-p26bxn	e8a2431e+	maletest	OK	16	lite	samtidig	
+2026-11-07 01:08	ccr-04f41d1f-p26bxn	e8a2431e+	regnrtest	OK	20	lite	samtidig	
+2026-11-07 01:09	ccr-04f41d1f-p26bxn	e8a2431e+	sqltest	FEIL	30	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-07 01:18	ccr-67e5a499-sxgchb	55f1bbb5+	docktest	OK	63	lite	samtidig	
+2026-11-07 01:18	ccr-67e5a499-sxgchb	55f1bbb5+	friendtest	OK	9	lite	samtidig	
+2026-11-07 01:19	ccr-67e5a499-sxgchb	55f1bbb5+	uishots	OK	81	lite	samtidig	
+2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	starttest	OK	137	lite	samtidig	
+2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	trip2	OK	37	lite	samtidig	
+2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	seasontest	OK	7	lite	samtidig	
+2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	havtur	FEIL	0	lite	samtidig	FEIL hele kysten mangler i tools/map/out/game (release.py og game.py)
+2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	maletest	OK	20	lite	samtidig	
+2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	regnrtest	OK	15	lite	samtidig	
+2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	sqltest	FEIL	36	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-07 01:40	ccr-04f41d1f-p26bxn	4edaa996+	coast3d	FEIL	579	3d	alene	FEIL off Tromsø the coast's lights are there in 3D at night {'inR': 0, 'on': 0, 'sec': 0}
+2026-11-07 01:24	ccr-208d78a1-ruhxll	01594293	hulltest	FEIL	78	lite	samtidig	FEIL 7a. by hand into the ferry: the contact in the manoeuvring model's steps, damage to your hull and to hers  [{"id": "ferje", "name": "MF Senjasund", "kn": 5
+2026-11-07 01:24	ccr-208d78a1-ruhxll	01594293	boottest	OK	26	lite	samtidig	
+2026-11-07 01:24	ccr-208d78a1-ruhxll	01594293	trip2	OK	29	lite	samtidig	
+2026-11-07 01:24	ccr-208d78a1-ruhxll	01594293	hudtest	OK	23	lite	samtidig	
+2026-11-07 01:34	ccr-208d78a1-ruhxll	01594293	colregtest	OK	604	lite	samtidig	
+2026-11-07 01:35	ccr-208d78a1-ruhxll	01594293	dbg23o	OK	39	3d	alene	
+2026-11-07 01:38	ccr-208d78a1-ruhxll	01594293+	hulltest	OK	69	lite	alene	
+2026-11-07 01:29	ccr-a9ff699b-re4zwf	b6b3f1e2	kotest	OK	14	lite	samtidig	
+2026-11-07 01:30	ccr-a9ff699b-re4zwf	b6b3f1e2	docktest	OK	61	lite	samtidig	
+2026-11-07 01:30	ccr-a9ff699b-re4zwf	b6b3f1e2	hudtest	OK	24	lite	samtidig	
+2026-11-07 01:46	ccr-bc0543eb-umtheg	51f767b5+	fleet3test	OK	14	lite	samtidig	
+2026-11-07 01:47	ccr-bc0543eb-umtheg	51f767b5+	vesseltest	OK	27	lite	samtidig	
+2026-11-07 01:47	ccr-bc0543eb-umtheg	51f767b5+	fleet2test	OK	45	lite	samtidig	
+2026-11-07 01:47	ccr-bc0543eb-umtheg	51f767b5+	boktest	OK	10	lite	samtidig	
+2026-11-07 01:47	ccr-bc0543eb-umtheg	51f767b5+	adminbuytest	OK	9	lite	samtidig	
+2026-11-07 01:48	ccr-bc0543eb-umtheg	51f767b5+	shoptest	OK	30	lite	samtidig	
+2026-11-07 01:50	ccr-bc0543eb-umtheg	51f767b5+	docktest	OK	58	lite	alene	
+2026-11-07 01:42	ccr-208d78a1-ruhxll	fdac21e3	hulltest	OK	69	lite	samtidig	
+2026-11-07 01:42	ccr-208d78a1-ruhxll	fdac21e3	trip2	OK	30	lite	samtidig	
+2026-11-07 01:42	ccr-208d78a1-ruhxll	fdac21e3	boottest	OK	22	lite	samtidig	
+2026-11-07 02:27	ccr-2cfcfb0c-tfhulm	52d095f3+	megletest	OK	14	lite	samtidig	
+2026-11-07 02:27	ccr-2cfcfb0c-tfhulm	52d095f3+	markettest	OK	32	lite	samtidig	
+2026-11-07 02:27	ccr-2cfcfb0c-tfhulm	52d095f3+	fleet2test	OK	36	lite	samtidig	
+2026-11-07 02:27	ccr-2cfcfb0c-tfhulm	52d095f3+	vesseltest	OK	28	lite	samtidig	
+2026-11-07 02:27	ccr-2cfcfb0c-tfhulm	52d095f3+	fleet3test	OK	14	lite	samtidig	
+2026-11-07 02:27	ccr-2cfcfb0c-tfhulm	52d095f3+	adminbuytest	OK	10	lite	samtidig	
+2026-11-07 02:28	ccr-2cfcfb0c-tfhulm	52d095f3+	docktest	FEIL	62	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-07 02:28	ccr-2cfcfb0c-tfhulm	52d095f3+	nettest	OK	23	lite	samtidig	
+2026-11-07 02:28	ccr-2cfcfb0c-tfhulm	52d095f3+	boktest	OK	7	lite	samtidig	
+2026-11-07 02:28	ccr-2cfcfb0c-tfhulm	52d095f3+	boottest	OK	26	lite	samtidig	
+2026-11-07 02:29	ccr-2cfcfb0c-tfhulm	52d095f3+	sponsor2test	OK	11	lite	samtidig	
+2026-11-07 01:53	ccr-bc0543eb-umtheg	e0300e6a	fleet3test	OK	15	lite	samtidig	
+2026-11-07 01:53	ccr-bc0543eb-umtheg	e0300e6a	vesseltest	OK	27	lite	samtidig	
+2026-11-07 01:54	ccr-bc0543eb-umtheg	e0300e6a	docktest	FEIL	63	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-07 01:54	ccr-bc0543eb-umtheg	e0300e6a	shoptest	OK	29	lite	samtidig	
+2026-11-07 01:54	ccr-bc0543eb-umtheg	e0300e6a	fleet2test	OK	32	lite	samtidig	
+2026-11-07 01:02	ccr-3d7890ec-9bzzlc	bcf2df80+	maletest	FEIL	16	lite	alene	FEIL the company logo: a sign, letters and colours tried on the boat and as the house flag, then bought it is the company's, flies as her flag and goes to the o
+2026-11-07 01:19	ccr-3d7890ec-9bzzlc	b8aaaa50+	vesseltest	OK	28	lite	samtidig	
+2026-11-07 01:19	ccr-3d7890ec-9bzzlc	b8aaaa50+	walktest	FEIL	15	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 14
+2026-11-07 01:19	ccr-3d7890ec-9bzzlc	b8aaaa50+	crewclip	FEIL	17	lite	samtidig	FEIL nor does the work at its places (jigging, gutting, icing, hauling) {'bunntral': {'jig': ['jig:1[0]null'], 'deck': [], 'haul': []}}
+2026-11-07 01:19	ccr-3d7890ec-9bzzlc	b8aaaa50+	lanterntest	OK	13	lite	samtidig	
+2026-11-07 01:19	ccr-3d7890ec-9bzzlc	b8aaaa50+	maletest	OK	16	lite	samtidig	
+2026-11-07 01:19	ccr-3d7890ec-9bzzlc	b8aaaa50+	regmarktest	OK	6	lite	samtidig	
+2026-11-07 01:53	ccr-3d7890ec-9bzzlc	52d095f3+	maletest	OK	14	lite	alene	
+2026-11-07 02:38	ccr-2cfcfb0c-tfhulm	d1332961+	megletest	OK	14	lite	samtidig	
+2026-11-07 02:38	ccr-2cfcfb0c-tfhulm	d1332961+	markettest	OK	31	lite	samtidig	
+2026-11-07 02:38	ccr-2cfcfb0c-tfhulm	d1332961+	vesseltest	OK	26	lite	samtidig	
+2026-11-07 02:38	ccr-2cfcfb0c-tfhulm	d1332961+	fleet2test	OK	34	lite	samtidig	

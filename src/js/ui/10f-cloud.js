@@ -209,7 +209,7 @@ function cloudStart(){
   // one device at a time: the beat every five seconds while the game is on the screen (cloudBeat); a database without it: the head
   setInterval(() => { if (!document.hidden) cloudBeat(); }, 5000);
   setInterval(() => { if (!document.hidden && CLOUD.noBeat) cloudCheckHead(); }, 120000); setTimeout(() => { if (CLOUD.noBeat) cloudCheckHead(); }, 20000);
-  pushStart(); worldStart(); shopStart(); guestGift(); namesApply(); setTimeout(nameCheck, 6000); guestOpenAsk();
+  pushStart(); worldStart(); shopStart(); try { MBC.start(); } catch (e){ console.error(e); } guestGift(); namesApply(); setTimeout(nameCheck, 6000); guestOpenAsk();
   window.addEventListener('pagehide', () => { cloudSaveSoon(true); if (CLOUD.sid) cloudFlush(true); });
 }
 function cloudAsk(){

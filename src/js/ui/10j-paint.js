@@ -90,8 +90,8 @@ var PAINT = (() => {
     // the registration mark: as the home harbour's municipality gives it, or with a number of one's own
     { const r = regOf(b), has = owned('reg');
       if (r) h.push('<div class="ph-card pnt-d"><h4>' + L('Registreringsmerke', 'Registration mark') + '<span class="pnt-own">' + (has ? L('Ditt', 'Yours') : realKr(nok('reg'))) + '</span></h4>' +
-        '<p class="pnt-mark">' + regText(r) + '</p><p class="ph-note">' + L('Fylke, løpenummer og kommune, malt på begge sider ved baugen (ervervstillatelsesforskriften §§ 22–23). Med ønskenummer velger du løpenummeret selv, så lenge ingen annen båt har det.',
-          'County, serial number and municipality, painted on both sides near the bow (ervervstillatelsesforskriften §§ 22–23). With your own number you choose the serial number yourself, as long as no other boat has it.') + '</p>' +
+        '<p class="pnt-mark">' + regText(r) + '</p><p class="ph-note">' + L('Fylke, løpenummer og kommune, malt på begge sider ved baugen (ervervstillatelsesforskriften §§ 22–23). Med ønskenummer velger du løpenummeret selv, så lenge det ikke er en ekte båts.',
+          'County, serial number and municipality, painted on both sides near the bow (ervervstillatelsesforskriften §§ 22–23). With your own number you choose the serial number yourself, as long as it is not a real boat\'s.') + '</p>' +
         '<div class="pnt-row"><input id="pntNum" class="pnt-num" type="number" inputmode="numeric" min="1" max="9999" value="' + r.n + '" aria-label="' + L('Løpenummer', 'Serial number') + '"> ' +
         '<button class="ph-btn sm" data-pa="pntreg">' + (has ? L('Bruk nummeret', 'Use the number') : shopLabel(nok('reg'))) + '</button></div>' + (has ? '' : shopFine()) + '</div>'); }
     // the company logo (all the company's boats): made, or a picture of one's own; shown to the others, so the admin may take it away
@@ -144,6 +144,7 @@ var PAINT = (() => {
       S.cosWant = Object.assign({}, S.cosWant, {reg:n}); payBuy('des_reg', () => { giveCos('reg'); if (typeof DOCK !== 'undefined') DOCK.render(); }); return true; }
     if (a === 'pntbuy'){ const k = d.d; if (!COS.includes(k) || owned(k)) return false;
       S.cosWant = Object.assign({}, S.cosWant, {[k]:k === 'flagg' ? Object.assign({}, pre.flag) : k === 'logo' ? pre.logo || null : pre.d[k] || 1});   // what to put on when it comes back from the payment
+      if (k === 'logo' && flagOf(pre).code === 'LOGO') S.cosWant.logoFlag = Object.assign({}, pre.flag);   // (the house flag tried with it, 07.11.2026)
       payBuy('des_' + k, () => { giveCos(k); const was = pre; pre = copy(S.boat.liv); if (k === 'logo' && was && flagOf(was).code === 'LOGO') pre.flag = was.flag; PAINTPRE = pre; if (typeof DOCK !== 'undefined'){ DOCK.render(); DOCK.redraw(); } });
       return true; }
     if (a === 'pntgo'){
@@ -196,20 +197,18 @@ function giveCos(k){
   if (!COS.includes(k)) return null; S.cos = Object.assign({}, S.cos, {[k]:1});
   const want = S.cosWant && S.cosWant[k], b = S.boat; if (S.cosWant) delete S.cosWant[k];
   if (want && k === 'reg') regSet(want);
-  else if (k === 'logo' && want) logoSet(want);
+  else if (k === 'logo' && want){ logoSet(want); const lf = S.cosWant && S.cosWant.logoFlag; if (lf){ b.liv = Object.assign({}, b.liv, {flag:lf}); delete S.cosWant.logoFlag; } }
   else if (want && k === 'flagg' && want.c){ b.liv = Object.assign({}, b.liv, {flag:{c:want.c, s:want.s || 'rekt'}}); }
   else if (want && designFits(b.type, k)){ b.liv = Object.assign({}, b.liv); b.liv.d = Object.assign({}, b.liv.d, {[k]:want}); }
   const N = PAINT.DNAME[k]; log('Du har nå «' + N[0] + '» i Malerverkstedet.', 'You now have «' + N[1] + '» in the paint shop.');
   return S.lang === 'en' ? N[1] : N[0];
 }
-// a number of one's own in the boat's registration mark: the shared world's claim first (no two players' boats wear the same mark,
-// supabase/migrations/20261007100000_designs.sql reg_claim); without the cloud (the artifact, the tests) it is set at once
-async function regSet(n){
-  const b = S.boat, r = regOf(b); if (!r) return false; const mark = r.f + '-' + n + '-' + r.k, L = (no, en) => S.lang === 'en' ? en : no;
-  if (typeof CLOUD !== 'undefined' && CLOUD.on && CLOUD.user && !(typeof isGuest === 'function' && isGuest())){
-    let ok = false; try { ok = await cloudRpc('reg_claim', {mark}); } catch (e){ toast(L('Fikk ikke sjekket nummeret. Prøv igjen litt senere.', 'Could not check the number. Try again a little later.')); return false; }
-    if (ok !== true){ toast(L(mark + ' er tatt av en annen båt. Velg et annet nummer.', mark + ' is taken by another boat. Choose another number.')); return false; }
-  }
+// a number of one's own in the boat's registration mark, set at once. Two players may wear the same (Jonas 07.11.2026: «om du betaler
+// penger for registreringsnummeret så skal du få ha hva du vil, det er jo egentlig bare kosmetisk»), so the shared world is not asked:
+// reg_claim (20261007100000_designs.sql) said «too many» for good after ten numbers and was asked only after the payment. Only a real
+// vessel's number is refused (regUsed, before this is called)
+function regSet(n){
+  const b = S.boat, r = regOf(b); if (!r) return false; const mark = r.f + '-' + n + '-' + r.k;
   b.reg = {f:r.f, n, k:r.k}; log((S.boatName || 'Båten') + ' har fått registreringsmerket ' + mark + '.', (S.boatName || 'The boat') + ' now carries the registration mark ' + mark + '.');
   save(); if (typeof DOCK !== 'undefined') DOCK.render(); return true;
 }

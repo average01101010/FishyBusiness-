@@ -126,8 +126,14 @@ async def run(p, w, h, tag):
     # the phone has only the apps that are left, and Kvote is one of them
     await pg.evaluate("PHONE.open('home')"); await pg.wait_for_timeout(400)
     apps = await pg.evaluate("[...document.querySelectorAll('#phone .ph-app')].map(x => x.dataset.a)")
-    BASE = ['vaer', 'post', 'meld', 'salg', 'kvote', 'regler', 'drift', 'ordl', 'nett', 'kaiboden', 'merker', 'redning', 'patch', 'tilbake', 'innst', 'admin']   # Nettet from 30.10.2026 (M2); and since 05.10.2026 Notatbok, Sesong and Folk among them, and Tilbakemelding, and Fiskeguide from 08.10.2026; Haill and Trim in Kaiboden, and Håndboka and Garderoben
+    # in the groups' order from UI 2, U2-6 (Jonas 06.11.2026, V6 A): Drift, Handel og regler, Deg, Verden, System
+    BASE = ['drift', 'ordl', 'nett', 'salg', 'kvote', 'regler', 'kaiboden', 'merker', 'vaer', 'post', 'meld', 'redning', 'patch', 'tilbake', 'innst', 'admin']   # Nettet from 30.10.2026 (M2); and since 05.10.2026 Notatbok, Sesong and Folk among them, and Tilbakemelding, and Fiskeguide from 08.10.2026; Haill and Trim in Kaiboden, and Håndboka and Garderoben
     check([a for a in apps if a in BASE] == BASE and all(a in BASE + ['sesong', 'guide', 'folk', 'handbok', 'garderobe'] for a in apps), 'telefonen har appene, med Kvote, Regler, Kaiboden, Patchnotes og Admin i rekkefølge', apps)
+    # the home screen in groups with a heading each, and every tile on the same glass (UI 2, U2-6: V6 A, V2 A)
+    gr = await pg.evaluate("[...document.querySelectorAll('#phone .ph-grp')].map(g => [g.dataset.g, (g.querySelector('h5') || {}).textContent, g.querySelectorAll('.ph-app').length])")
+    check([g[0] for g in gr] == ['drift', 'handel', 'deg', 'verden', 'system'] and [g[1] for g in gr] == ['Drift', 'Handel og regler', 'Deg', 'Verden', 'System'] and all(g[2] > 0 for g in gr), 'hjemskjermen har gruppene Drift, Handel og regler, Deg, Verden og System med overskrift, ingen tom', gr)
+    gl = await pg.evaluate("[...new Set([...document.querySelectorAll('#phone .ph-app .ic')].map(e => { const c = getComputedStyle(e); return c.backgroundColor + '|' + c.backgroundImage + '|' + c.borderTopColor; }))]")
+    check(len(gl) == 1 and 'gradient' not in gl[0], 'alle flisene har samme glass, ikke hver sin farge', gl[:3])
     # the Rederi app only once the company is founded in the bank (Jonas 06.10.2026)
     rd = await pg.evaluate("(() => { const has = () => [...document.querySelectorAll('#phone .ph-app')].some(x => x.dataset.a === 'rederi'); const f0 = S.form, r0 = has(); S.form = 'AS'; PHONE.open('home'); const r1 = has(); S.form = f0; PHONE.open('home'); return [r0, r1]; })()")
     check(rd == [False, True], 'Rederi-appen kommer først når rederiet er stiftet', rd)

@@ -68,14 +68,14 @@ async def main():
           q('#pntNum').value = real; q('[data-pa=pntreg]').click(); const refused = regOf(S.boat).n === r0.n;
           let n = 777; while (REGM.k.senja[2].includes(n)) n++; q('#pntNum').value = n; q('[data-pa=pntreg]').click();
           return {r0, used:REGM.k.senja[2].includes(r0.n), card, refused, n, r1:regOf(S.boat), own:PAINT.owned('reg'), str:livStr(S.boat), back:livMark(livStr(S.boat)), oe:livMark('m:N.12.B2'),
-            strips:Object.keys(VESSELS).filter(t => markStrips(t)).length, types:Object.keys(VESSELS).length}; })()""")
+            nostrip:Object.keys(VESSELS).filter(t => !markStrips(t))}; })()""")
         await pg.wait_for_function("regOf(S.boat).n !== %d" % rg['r0']['n'], timeout=10000)
         rg2 = await pg.evaluate("({r:regOf(S.boat), papers:(PHONE.open('kvote'), document.getElementById('phView').innerText)})")
         await pg.evaluate("PHONE.show(false)")
         want = 'T-%d-LK' % rg['n']
         check(rg['r0']['f'] == 'T' and rg['r0']['k'] == 'LK' and not rg['used'] and rg['card'] and rg['refused'] and rg2['r']['n'] == rg['n'] and want in rg2['papers']
-              and rg['back'] in (want, 'T-%d-LK' % rg['r0']['n']) and rg['oe'] == 'N-12-BØ' and rg['strips'] >= rg['types'] - 1,
-              "the registration mark: Senja's letters (T-..-LK) and a number no real boat there has; a real boat's number is refused, one's own goes on the boat and the permit; it travels to the others", {'rg': rg, 'r': rg2['r']})
+              and rg['back'] in (want, 'T-%d-LK' % rg['r0']['n']) and rg['oe'] == 'N-12-BØ' and rg['nostrip'] == [],
+              "the registration mark: Senja's letters (T-..-LK) and a number no real boat there has; a real boat's number is refused, one's own goes on the boat and the permit; it travels to the others; every type has its place on her hull", {'rg': rg, 'r': rg2['r']})
         # the name and the mark never on each other (tilbakemelding #76: on the havsjark the model's name boards lay where the mark stands on
         # the bows): on every type the side name strips and the mark's strips do not overlap on the same side, beyond their margins
         lap = await pg.evaluate("""(() => { const out = {}, box = s => { const P = s[0].concat(s[1]); return {sd:Math.sign(P.reduce((a, p) => a + p[0], 0)), y0:Math.min(...P.map(p => p[1])), y1:Math.max(...P.map(p => p[1])), z0:Math.min(...P.map(p => p[2])), z1:Math.max(...P.map(p => p[2]))}; };
@@ -89,7 +89,7 @@ async def main():
         # one the admin took away is gone from the boat at the next start, and the player is told why
         lg = await pg.evaluate("""(async () => { const q = s => document.querySelector('#drawerBody ' + s);
           const nSym = document.querySelectorAll('#drawerBody [data-pa=pntlg]').length; q('[data-pa=pntlg][data-k=fisk]').click(); q('#pntLogoTxt').value = 'jh'; q('[data-pa=pntlgt]').click();
-          q('.pnt-sw[data-pa=pntlgc][data-d=c1][data-k=oksblod]').click(); const tried = {L:PAINTPRE.logo, own:PAINT.owned('logo'), buy:!!q('[data-pa=pntbuy][data-d=logo]'), house:!!q('.pnt-fl[data-k=LOGO]'), strips:Object.keys(VESSELS).filter(t => logoStrips(t)).length, types:Object.keys(VESSELS).length};
+          q('.pnt-sw[data-pa=pntlgc][data-d=c1][data-k=oksblod]').click(); const tried = {L:PAINTPRE.logo, own:PAINT.owned('logo'), buy:!!q('[data-pa=pntbuy][data-d=logo]'), house:!!q('.pnt-fl[data-k=LOGO]'), nostrip:Object.keys(VESSELS).filter(t => !logoStrips(t))};
           q('.pnt-fl[data-k=LOGO]').click(); tried.flag = flagOf(PAINTPRE).code;
           q('[data-pa=pntbuy][data-d=logo]').click(); await new Promise(r => setTimeout(r, 50)); q('[data-pa=pntgo]') && !q('[data-pa=pntgo]').disabled && q('[data-pa=pntgo]').click();
           const after = {own:PAINT.owned('logo'), L:S.logo, flag:S.boat.liv && S.boat.liv.flag, str:livStr(S.boat), back:logoParse(livStr(S.boat))};
@@ -106,8 +106,8 @@ async def main():
           return {nSym, nLogo:Object.keys(LOGOSYM).length, tried, after, upInfo, wh, upSet, removed}; })()""")
         tr, af, rm = lg['tried'], lg['after'], lg['removed']
         check(lg['nSym'] == lg['nLogo'] and tr['L'] == {'kind': 'g', 'sym': 'fisk', 'txt': 'JH', 'c1': 'oksblod', 'c2': 'hvit'} and not tr['own'] and tr['buy'] and tr['house'] and tr['flag'] == 'LOGO'
-              and tr['strips'] >= tr['types'] - 1 and af['own'] and af['L'] and af['L'].get('sym') == 'fisk' and (af['flag'] or {}).get('c') == 'LOGO' and 'l:g.fisk.JH.oksblod.hvit' in af['str'] and af['back'] and af['back'].get('txt') == 'JH',
-              'the company logo: a sign, letters and colours tried on the boat and as the house flag, then bought it is the company\'s, flies as her flag and goes to the others', {'tried': tr, 'after': af})
+              and tr['nostrip'] == [] and af['own'] and af['L'] and af['L'].get('sym') == 'fisk' and (af['flag'] or {}).get('c') == 'LOGO' and 'l:g.fisk.JH.oksblod.hvit' in af['str'] and af['back'] and af['back'].get('txt') == 'JH',
+              'the company logo: a sign, letters and colours tried on the boat and as the house flag, then bought it is the company\'s, flies as her flag and goes to the others; every type has a place for it on her hull (all of them since 07.11.2026: the ringnotbåt had none)', {'tried': tr, 'after': af})
         check(lg['upInfo'] and lg['upInfo']['kind'] == 'u' and lg['upInfo']['len'] <= 58000 and lg['upInfo']['type'].startswith('data:image/') and lg['wh'] == [256, 256] and lg['upSet'] == 'u',
               'an uploaded picture is made 256 × 256 and small enough to share, tried on the boat and then put on', {k: lg[k] for k in ('upInfo', 'wh', 'upSet')})
         check(rm['L'] is None and rm['flag'] == {'c': 'NO', 's': 'rekt'} and 'Støtende innhold' in rm['msg'] and 'uten å betale' in rm['msg'] and rm['own'],

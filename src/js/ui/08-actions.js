@@ -64,6 +64,9 @@ function doAct(el){
   else if (act === 'deckstop'){ if (b.status === 'fishing'){ b.deckStop = true; log('Stopper fisket for å sløye og ise.', 'Stopping fishing to gut and ice.'); } }
   else if (act === 'deckgo'){ b.deckStop = false; b.deckEnd = null; }
   else if (act === 'sell'){ if (!tutAllow('sell')) return; if (berthKind(b) === 'naust'){ toast(L(NAUST_SAIL[0], NAUST_SAIL[1])); return; } if (!mottakOpen(S.t / 60)){ toast(L('Mottaket er stengt. Det åpner ', 'The plant is closed. It opens ') + mottakWhen(S.t / 60, S.lang === 'no') + '.'); return; } startLanding(false); }
+  else if (act === 'landq0'){ landQueueEnd(); toast(L('Du gikk ut av køen. Fisken er fortsatt om bord.', 'You left the queue. The fish is still aboard.')); }
+  else if (act === 'landgo'){ const q = portById(el.dataset.pid); if (!q) return; landQueueEnd(); if (typeof DOCK !== 'undefined' && DOCK.close) DOCK.close(); if (S.draft.length) draftEdit(() => { S.draft = []; }); openPlotter(); view.cx = q.p.x; view.cy = q.p.y;
+    toast(L('Autonav til ' + q.name + ', ' + fmt(dist(b.pos, q.p) / NM, 1) + ' nm. Trykk «Kast loss» når ruta ligger.', 'Autonav to ' + q.name + ', ' + fmt(dist(b.pos, q.p) / NM, 1) + ' nm. Tap «Cast off» once the route is there.'), 8000); setTimeout(() => leiaTo({x:q.p.x, y:q.p.y}), 450); return; }
   else if (act === 'rest'){ const why = restStart(); if (why){ toast(L(why[0], why[1])); return; } }
   else if (act === 'restend') restEnd();
   else if (act === 'fuel'){ if (spendable() <= 0){ toast(t('no_cash')); return; } if (berthKind(b) === 'naust'){ toast(L(NAUST_SAIL[0], NAUST_SAIL[1])); return; } startFueling(false); }
@@ -331,7 +334,7 @@ const CATCHUP_CAP = 72 * 60;
 // CATCH_LEFT and is played by the tick once the packs are in, so a slow network makes the clock wait, never guess.
 let CATCH_LEFT = 0;
 // (the time away, away: also while Autonav finds a way round shallow water, sailWaiting in core/05-vessels.js)
-function playMinutes(n, away){ let i = 0; for (; i < n; i++){ if (!simAreaReady() || (away && sailWaiting())){ CATCH_LEFT += n - i; break; } step(); } return i; }
+function playMinutes(n, away){ let i = 0; LANDQ.away = !!away; try { for (; i < n; i++){ if (!simAreaReady() || (away && sailWaiting())){ CATCH_LEFT += n - i; break; } step(); } } finally { LANDQ.away = false; } return i; }   // (LANDQ.away: no queue at the plants while the time away is played, core/07-harbours.js)
 // on the world's clock (core/01-world.js) the time away is what the game is behind it, all of it; more than two weeks is skipped to the
 // last two (the clock moves on, the simulation plays the last two weeks)
 const WORLD_SIM_MAX = 14 * 24 * 60;

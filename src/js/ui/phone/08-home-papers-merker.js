@@ -1,10 +1,22 @@
+  // the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2-staaende.md): the clock, the weather and the cash,
+  // then the next goal and the milestones as one row of two cards (the first week while it is on, then the sea time: both open
+  // Milepæler), the «Nå» cards, and the apps in groups with a heading each (GROUPS), on glass tiles with the dock's stroke icons and one
+  // accent, the badges. A group with no app shown is left out. The same in a phone standing and lying, on a tablet and a PC
   function home(){
-    const H = S.t / 60, W = windAt(H), n = unread(), na = alerts().length, np = patchNew(), npost = pressUnread(), nhb = typeof hbReady === 'function' && !tutOn() ? hbReady() : 0;
+    const H = S.t / 60, W = windAt(H), na = alerts().length;
+    // the counts on the tiles; «ny» on an app the player has not opened since it came, when it has no count
+    const cnt = id => id === 'meld' ? unread() : id === 'ordl' ? ordState().active.length : id === 'rederi' ? na : id === 'patch' ? patchNew() : id === 'post' ? pressUnread() :
+      id === 'handbok' ? (typeof hbReady === 'function' && !tutOn() ? hbReady() : 0) : 0;
+    const tile = a => { const c = cnt(a[0]);
+      return '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic">' + IC[a[0]] + (c ? '<span class="bd">' + c + '</span>' : appNew(a[0]) ? '<span class="bd ny">' + L('ny', 'new') + '</span>' : '') + '</span><span class="lb">' + (TILE_SHY[a[0]] ? L(...TILE_SHY[a[0]]) : L(a[1], a[2])) + '</span></button>'; };
+    const shown = APPS.filter(a => (a[0] !== 'admin' || adminOk()) && (a[0] !== 'rederi' || rederiOpen()) && !KBT.includes(a[0]) && appShown(a[0]));
+    const grp = GROUPS.map(([k, no, en, ids]) => [k, no, en, ids.map(id => shown.find(a => a[0] === id)).filter(Boolean)]);
+    grp[grp.length - 1][3].push(...shown.filter(a => !GROUPS.some(g => g[3].includes(a[0]))));
+    const g = goals()[0], goal = g ? '<button class="ph-goal" data-pa="open" data-a="fartoy"><span>' + L('Neste mål: ', 'Next goal: ') + '<b>' + g.n + '</b></span><small>' + (g.txt || kr(Math.min(Math.max(0, S.cash), g.need)) + ' / ' + kr(g.need)) + '</small><span class="gb"><i style="width:' + (g.pc * 100).toFixed(1) + '%"></i></span></button>' : '';
     return '<div class="ph-homescr"><div class="ph-clock">' + hm(H) + '</div><div class="ph-date">' + dayStr(H) + '</div>' +
       '<div class="ph-widget"><span class="w1">' + dirName(windDir(H)) + ' ' + fmt(W, 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C</span><span class="w2">' + kr(S.cash) + '</span></div>' +
-      ((g => g ? '<button class="ph-goal" data-pa="open" data-a="fartoy"><span>' + L('Neste mål: ', 'Next goal: ') + '<b>' + g.n + '</b></span><small>' + (g.txt || kr(Math.min(Math.max(0, S.cash), g.need)) + ' / ' + kr(g.need)) + '</small><span class="gb"><i style="width:' + (g.pc * 100).toFixed(1) + '%"></i></span></button>' : '')(goals()[0])) +
-      (typeof achChip === 'function' ? achChip() : '') + fsChip() + nowCards(na) +
-      '<div class="ph-grid">' + APPS.filter(a => (a[0] !== 'admin' || adminOk()) && (a[0] !== 'rederi' || rederiOpen()) && !KBT.includes(a[0]) && appShown(a[0])).map(a => '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic" style="background:linear-gradient(160deg,' + a[3] + ',' + a[3] + 'cc)">' + IC[a[0]] + '</span>' + L(a[1], a[2]) + (a[0] === 'meld' && n ? '<span class="bd">' + n + '</span>' : '') + (a[0] === 'ordl' && ordState().active.length ? '<span class="bd">' + ordState().active.length + '</span>' : '') + (a[0] === 'rederi' && na ? '<span class="bd">' + na + '</span>' : '') + (a[0] === 'patch' && np ? '<span class="bd">' + np + '</span>' : '') + (a[0] === 'handbok' && nhb ? '<span class="bd">' + nhb + '</span>' : '') + (a[0] === 'post' && npost ? '<span class="bd">' + npost + '</span>' : '') + (appNew(a[0]) ? '<span class="bd ny">' + L('ny', 'new') + '</span>' : '') + '</button>').join('') + '</div></div>';
+      '<div class="ph-goals">' + goal + ((typeof achChip === 'function' ? achChip() : '') || fsChip()) + '</div>' + nowCards(na) +
+      '<div class="ph-grid">' + grp.filter(x => x[3].length).map(([k, no, en, as]) => '<section class="ph-grp" data-g="' + k + '"><h5>' + L(no, en) + '</h5><div class="ph-tiles">' + as.map(tile).join('') + '</div></section>').join('') + '</div></div>';
   }
   // «Nå» on the home screen (U7, docs/planer/ui-redesign.md, V4 A): the phone answers before it is asked. Each card opens the app that has
   // the rest: the rules where the boat is (Regler), the best price for cod among the nearest plants (Salgslaget), and the company when it

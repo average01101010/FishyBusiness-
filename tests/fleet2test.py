@@ -84,7 +84,7 @@ async def main():
           q('[data-pa="vname"][data-id="' + v2.id + '"]').click(); return R; })()""")
         await pg.wait_for_timeout(300)
         btn2 = await pg.evaluate("""(()=>{
-          const R = {name:S.boatName}; const q = s => document.querySelector(s), v1 = S.fleet[0], val = vesselValue(v1), c0 = S.cash;
+          const R = {name:S.boatName}; const q = s => document.querySelector(s), v1 = S.fleet[0], val = Math.round(vesselValue(v1) * 0.9), c0 = S.cash;   // «Selg nå» to the broker: 90 % (B4, 07.11.2026)
           PHONE.render(); q('[data-pa="vsell"][data-id="' + v1.id + '"]').click(); return Object.assign(R, {val, c0}); })()""")
         await pg.wait_for_timeout(300)
         btn3 = await pg.evaluate("""(([c0, val])=>{
@@ -101,7 +101,7 @@ async def main():
         print(ok(btn['follow'] == 'v2' and btn['hudRow']), 'follow: the HUD shows the followed vessel, no anchor')
         print(ok(btn['board'] == 'v2' and btn['hudAnchor']), 'go aboard: the anchor shows')
         print(ok(btn2['name'] == 'Testbåt'), 'rename via prompt')
-        print(ok(btn3['fleet'] == 1 and btn3['cashUp']), 'sell the other vessel for its value')
+        print(ok(btn3['fleet'] == 1 and btn3['cashUp']), 'sell the other vessel now to Kystmegleren for 90 % of its value (B4)')
         print(ok(btn3['buyEnabled'] and len(btn3['after']) == 2 and btn3['depart'] is False), 'buy for the fleet, and a crewless vessel without you cannot leave')
 
         # 4. save and load with two vessels
