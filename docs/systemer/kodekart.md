@@ -3484,24 +3484,24 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (602 linjer)
+## `src/js/view3d/01-shaders.js` (649 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
-- **156** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **224** the boat's own foam, when she has way on
-- **232** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
-  - 512 `cloudStep(dt)`
-  - 519 `skyFrame(u, Hh, tn, bv)`
-  - 534 `glsl3(src, fs)`
-  - 542 `compile(type, src, nm)`
-  - 549 `program(vs, fs, attrs, nm = '?')`
-  - 557 `buf(data, target, usage)`
-  - 562 `airSet(u, terr)`
-  - 577 `sunT0()`
-  - 584 `attr(loc, b, size)`
-  - 600 `upload(pos, col, idx)`
+- **183** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
+- **253** the boat's own foam, when she has way on
+- **261** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
+  - 559 `cloudStep(dt)`
+  - 566 `skyFrame(u, Hh, tn, bv)`
+  - 581 `glsl3(src, fs)`
+  - 589 `compile(type, src, nm)`
+  - 596 `program(vs, fs, attrs, nm = '?')`
+  - 604 `buf(data, target, usage)`
+  - 609 `airSet(u, terr)`
+  - 624 `sunT0()`
+  - 631 `attr(loc, b, size)`
+  - 647 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (99 linjer)
 
@@ -3864,7 +3864,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 498 `mastTop(G)`
   - 502 `updateFlag(t, appW)`
 
-## `src/js/view3d/14-sea.js` (357 linjer)
+## `src/js/view3d/14-sea.js` (413 linjer)
 
 ---------- sea ----------
 
@@ -3872,34 +3872,36 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 3 `buildPatch()`
   - 11 `buildSea()`
 - **21** the waves: wind sea and swell from the sea model (03b-sea.js)
-  - 27 `specW(L0)`
-  - 28 `updateWaves(dt, H)`
-- **54** the near field: the short sea rides with the boat
-  - 63 `nfStep()`
-- **74** the boat's own waves (the uniforms of WAKE_GLSL)
-  - 81 `wakeTrack(x, z, fx, fz, ds)`
-  - 100 `wakeTU(u, ox, oz)`
-  - 101 `updateWake()`
-  - 127 `wakeHFast(x, z)`
-- **140** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
-  - 153 `foamFree()`
-  - 154 `foamInit()`
-  - 170 `wavePh()`
-  - 177 `foamStep(dt, t)`
-  - 237 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
-  - 277 `foamBind(u)`
-- **284** the sea state over the near terrain and the whole map
-  - 291 `ssLevel(n, unit)`
-  - 293 `ssRect(L)`
-  - 294 `ssWork(L, until)`
-  - 317 `ssStep(rdt)`
-  - 319 `ssBlend(L)`
-  - 321 `ssTex(L, x, z, out)`
-  - 328 `ssAt(x, z)`
-  - 337 `seaDisp(x, z, t, S, fade)`
-  - 348 `seaFade(x, z)`
-  - 349 `seaH(x, z, t)`
-  - 355 `seaHFast(x, z, t)`
+  - 35 `specW(L0)`
+  - 42 `spreadSd(f, ia)`
+  - 43 `updateWaves(dt, H)`
+- **76** the near field: the short sea rides with the boat
+  - 85 `nfStep()`
+- **96** the boat's own waves (the uniforms of WAKE_GLSL)
+  - 103 `wakeTrack(x, z, fx, fz, ds)`
+  - 122 `wakeTU(u, ox, oz)`
+  - 123 `updateWake()`
+  - 149 `wakeHFast(x, z)`
+- **162** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
+  - 175 `foamFree()`
+  - 176 `foamInit()`
+  - 192 `wavePh()`
+  - 199 `foamStep(dt, t)`
+  - 267 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
+  - 307 `foamBind(u)`
+- **338** the sea state over the near terrain and the whole map
+  - 345 `ssLevel(n, unit)`
+  - 347 `ssRect(L)`
+  - 348 `ssWork(L, until)`
+  - 371 `ssStep(rdt)`
+  - 373 `ssBlend(L)`
+  - 375 `ssTex(L, x, z, out)`
+  - 382 `ssAt(x, z)`
+  - 392 `seaQ(S, ren)`
+  - 393 `seaDisp(x, z, t, S, fade)`
+  - 404 `seaFade(x, z)`
+  - 405 `seaH(x, z, t)`
+  - 411 `seaHFast(x, z, t)`
 
 ## `src/js/view3d/15-env-mooring.js` (158 linjer)
 
