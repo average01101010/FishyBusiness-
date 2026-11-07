@@ -424,3 +424,10 @@
 2026-11-07 01:04	HEAD	12b6216c+	maletest	OK	22	lite	samtidig	
 2026-11-07 01:04	HEAD	12b6216c+	slidertest	OK	19	lite	samtidig	
 2026-11-07 01:04	HEAD	12b6216c+	trip2	OK	39	lite	samtidig	
+2026-11-07 01:20	ccr-a9ff699b-re4zwf	b36a7580+	kotest	FEIL	12	lite	alene	avsluttet med kode 1
+2026-11-07 01:22	ccr-a9ff699b-re4zwf	b36a7580+	kotest	FEIL	11	lite	alene	avsluttet med kode 1
+2026-11-07 01:23	ccr-a9ff699b-re4zwf	b36a7580+	kotest	OK	12	lite	alene	
+2026-11-07 01:26	ccr-a9ff699b-re4zwf	b36a7580+	docktest	OK	66	lite	samtidig	
+2026-11-07 01:26	ccr-a9ff699b-re4zwf	b36a7580+	hudtest	OK	28	lite	samtidig	
+2026-11-07 01:26	ccr-a9ff699b-re4zwf	b36a7580+	drifttest	OK	29	lite	samtidig	
+2026-11-07 01:26	ccr-a9ff699b-re4zwf	b36a7580+	fleet2test	OK	33	lite	samtidig	
