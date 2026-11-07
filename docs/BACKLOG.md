@@ -446,7 +446,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
 
-## Strøket 07.11.2026 (UI 2, U2-6: Hjemskjermen, gren `ccr-67e5a499-sxgchb`)
+## Strøket 07.11.2026 (UI 2, U2-6: Hjemskjermen, gren `ccr-67e5a499-sxgchb`, rullet ut i 533b8e29)
 
 - K8 (hjemskjermen hadde sju kort før appene; på nettbrett stående synes seks av 22 apper, på telefonen tolv) fra `docs/planer/ui-2/kartlegging.md` kap. 4: Neste mål og Første uke (fartstiden etter den første uka) er én rad på to kort, og appene står i gruppene Drift, Handel og regler, Deg, Verden og System, fire på rad, på én glassflate med linjas strekikoner og merkene i én aksent. Apper synlige uten å rulle, av 22: telefonen 390×844 9 → 14, 412×915 12 → 18, nettbrett og PC 3 → 8 (målt med alle appene, merker og tre «Nå»-kort). Liggende telefon 0 → 0 (står i 10.5).
 ## Strøket 06.11.2026 (Tonys spilltest, gren `ccr-a9ff699b-re4zwf`)
