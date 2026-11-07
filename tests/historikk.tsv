@@ -499,3 +499,11 @@
 2026-11-07 01:54	ccr-bc0543eb-umtheg	e0300e6a	docktest	FEIL	63	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
 2026-11-07 01:54	ccr-bc0543eb-umtheg	e0300e6a	shoptest	OK	29	lite	samtidig	
 2026-11-07 01:54	ccr-bc0543eb-umtheg	e0300e6a	fleet2test	OK	32	lite	samtidig	
+2026-11-07 01:02	ccr-3d7890ec-9bzzlc	bcf2df80+	maletest	FEIL	16	lite	alene	FEIL the company logo: a sign, letters and colours tried on the boat and as the house flag, then bought it is the company's, flies as her flag and goes to the o
+2026-11-07 01:19	ccr-3d7890ec-9bzzlc	b8aaaa50+	vesseltest	OK	28	lite	samtidig	
+2026-11-07 01:19	ccr-3d7890ec-9bzzlc	b8aaaa50+	walktest	FEIL	15	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 14
+2026-11-07 01:19	ccr-3d7890ec-9bzzlc	b8aaaa50+	crewclip	FEIL	17	lite	samtidig	FEIL nor does the work at its places (jigging, gutting, icing, hauling) {'bunntral': {'jig': ['jig:1[0]null'], 'deck': [], 'haul': []}}
+2026-11-07 01:19	ccr-3d7890ec-9bzzlc	b8aaaa50+	lanterntest	OK	13	lite	samtidig	
+2026-11-07 01:19	ccr-3d7890ec-9bzzlc	b8aaaa50+	maletest	OK	16	lite	samtidig	
+2026-11-07 01:19	ccr-3d7890ec-9bzzlc	b8aaaa50+	regmarktest	OK	6	lite	samtidig	
+2026-11-07 01:53	ccr-3d7890ec-9bzzlc	52d095f3+	maletest	OK	14	lite	alene	
