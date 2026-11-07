@@ -22,10 +22,11 @@
 //
 // The figures (DRP2.sno): the soak 3-14 days in the plan, 7 by default (HI 2023-51: the test string 3-17 days in 2021 and 4-25 in 2022,
 // about 7.6 and 11 on average); a frozen trip of about 20 days and a live one of 8-9 days between landings (the landing notes 2024-2026,
-// kap. 2b); the strings side by side 1 km apart, eight in a row, the rows 6.5 km apart (a string is 5 km; the pattern is an assumption);
+// kap. 2b); the strings side by side 2 km apart (about a nautical mile, so each has its own cells of the stock, STK.c), eight in a row,
+// the rows 6.5 km apart (a string is 5 km; the pattern is an assumption, no source gives it);
 // 1.2 t round weight a string is reckoned for the quota's budget (6 kg a pot after a week, H3a)
-DRP2.sno = {soak:[72, 96, 264, 336], soakDef:168, step:24, days:20, liveDays:10, full:0.95, tank:0.95, age:6, look:24, endD:1,
-  col:1.0, row:6.5, cols:8, near:30, tend:18, margin:2, lenkeKg:1200, minDepth:120};
+DRP2.sno = {soak:[72, 96, 264, 336], soakDef:168, step:24, days:20, liveDays:10, full:0.95, tank:0.95, age:6, look:24, endD:1, idle:12,
+  col:2.0, row:6.5, cols:8, near:30, tend:18, margin:2, lenkeKg:1200, minDepth:120};
 const p2Sno = o => p2Kind(o) === 'teine' && typeof snoVessel === 'function' && snoVessel();
 const p2SnoKm = () => SNOC.lenke * GEAR.teine.km;
 const p2SnoH = () => { const P = POTS.sno; return {set:SNOC.lenke * P.set / 60, haul:SNOC.lenke * P.haul / 60, bait:SNOC.lenke * P.bait}; };
@@ -154,28 +155,36 @@ function planDaySno(o, H0, st){
   }
   // strings in the sea that are no longer the plan's (a field made smaller or taken away): hauled in when their soak is up
   for (const s of sets) if (!seen.has(s.fid)){ const q = F.slice().sort((a, c) => dist(a, s.a) - dist(c, s.a))[0] || {id:null, soak:D.soakDef, x:s.a.x, y:s.a.y}; cyc.push({q, L:{k:null, a:s.a, b:s.b, fid:s.fid}, s, at:s.a, due:s.tSet / 60 + (q.soak || D.soakDef), set:s.tSet / 60, ice:true, n:s.n, orphan:true}); }
-  const haul = (p, reset) => {
-    steps.push({t, k:'trekk', pid:p.q.id, ln:p.L.k, fid:p.L.fid, n:p.n, kind:'teine', h:A.haul, soakH:t - p.set, reset, wait:0, due:p.due}); t += A.haul;
+  // (now: a haul before the soak is up, the ice coming, the ship idle, § 18 before she goes in, everything in for the season: the engine
+  // starts it on arrival, as no other haul starts before its soak is up)
+  const haul = (p, reset, now) => {
+    steps.push({t, k:'trekk', pid:p.q.id, ln:p.L.k, fid:p.L.fid, n:p.n, kind:'teine', h:A.haul, soakH:t - p.set, reset, wait:0, due:now || t < p.due - 1e-6 ? null : p.due, now:!!(now || t < p.due - 1e-6)}); t += A.haul;
     if (reset){ steps.push({t, k:'sett', pid:p.q.id, ln:p.L.k, n:p.n, kind:'teine', h:A.set, again:true}); t += A.set; bait -= A.bait; budget -= D.lenkeKg; p.set = t; p.due = t + p.q.soak; return false; }
     pots += p.n; return true; };
   // the strings under the ice cannot be hauled now: they wait for it (said on the day)
   const under = p => { const c = iceAt(p.at, p.s ? p.s.b : p.L.b, t); if (c < SNOI.haul) return false; skipAdd(p.q, 'under drivisen (' + Math.round(c / 10) + '/10): trekkes når isen går', 'under the drift ice (' + Math.round(c / 10) + '/10): hauled when the ice goes'); return true; };
   if (all){
     // every string comes in now, the nearest first, whatever its soak; then to the plant
-    while (cyc.length){ cyc.sort((a, c) => dist(at, a.at) - dist(at, c.at)); const p = cyc.shift(); if (under(p)) continue; go(p.at); haul(p, false); }
+    while (cyc.length){ cyc.sort((a, c) => dist(at, a.at) - dist(at, c.at)); const p = cyc.shift(); if (under(p)) continue; go(p.at); haul(p, false, true); }
   } else if (end){
     // the trip is over: the strings stand while she lands, but one that would pass DRP2.sno.tend days before she is back is tended first (§ 18)
     const away = M ? 2 * plan2LegH(o, at, null, M, o.M, v) + landH + 12 : 48;
-    for (const p of cyc.slice().sort((a, c) => a.set - c.set)){ if ((t + away - p.set) / 24 < D.tend || under(p)) continue; go(p.at); haul(p, !p.ice && !p.orphan && !setWhy(p.q, p.L, t + A.haul, true)); }
+    for (const p of cyc.slice().sort((a, c) => a.set - c.set)){ if ((t + away - p.set) / 24 < D.tend || under(p)) continue; go(p.at); haul(p, !p.ice && !p.orphan && !setWhy(p.q, p.L, t + A.haul, true), true); }
   } else {
     // pass 2: the hauls in the order they fall due, never before the soak is up, over the hours ahead; each set out again at once while
     // the trip goes on (setWhy), else hauled in with its pots aboard
+    // (she does not lie idle for long: when the next string is more than DRP2.sno.idle hours off, the one that has stood longest is hauled
+    // now, if it has stood the shortest soak, DRP2.sno.soak[0], 3 days; HI 2023-51: 3-25 days. So the season's first trip, the strings
+    // all set at once, and the way back from the plant do not cost days of waiting; with enough strings for the soak she never waits)
+    const arr = x => t + plan2LegH(o, at, atPort, x.at, null, v);
     for (let k = 0; k < 400 && cyc.length; k++){
-      cyc.sort((a, c) => a.due - c.due); const p = cyc[0]; if (p.due > until) break;
-      if (under(p)){ cyc.shift(); continue; }
-      go(p.at); const tArr = t; t = Math.max(t, p.due);
+      cyc.sort((a, c) => a.due - c.due); let p = cyc[0], now = false;
+      if (p.due > arr(p) + D.idle){ const e = t < until ? cyc.filter(x => !x.orphan && !x.ice && arr(x) - x.set >= D.soak[0]).sort((a, c) => a.set - c.set)[0] : null; if (e){ p = e; now = true; } }
+      if (!now && p.due > until) break;
+      if (under(p)){ cyc.splice(cyc.indexOf(p), 1); continue; }
+      go(p.at); const tArr = t; if (!now) t = Math.max(t, p.due);
       if (t - tArr > 1 / 60) steps.push({t:tArr, k:'vent', pid:p.q.id, ln:p.L.k, fid:p.L.fid, until:t});
-      if (haul(p, !p.ice && !p.orphan && !setWhy(p.q, p.L, t + A.haul, true))) cyc.shift();
+      if (haul(p, !p.ice && !p.orphan && !setWhy(p.q, p.L, t + A.haul, true), now)) cyc.splice(cyc.indexOf(p), 1);
     }
     const left = cyc.filter(p => p.due > until).sort((a, c) => a.due - c.due);
     for (const p of left){ const w = p2When(p.due, H0); skipAdd(p.q, 'står til ståtida er ute (den første ' + w[0] + ')', 'stand until the soak is up (the first ' + w[1] + ')'); }

@@ -90,6 +90,7 @@ function plan2Ops(){
     // (an ocean vessel, H2c: her teams' watches round the clock, no jig, and the fields of her autoline in lenker)
     if (p2Lag()){ if (o.rhythm !== 'watch') o.rhythm = 'watch'; if (o.jig && !p2Jig(o)) o.jig = false; if (o.land && o.land.when === 'trip') o.land.when = 'full';
       if (p2Auto(o)) for (const q of o.places) if (q.k === 'felt' && q.lk !== 'auto'){ q.lk = 'auto'; q.n = Math.max(1, Math.min(q.n, p2Left(o, q))); q.soak = clamp(q.soak, DRP2.hav.soak[0], DRP2.hav.soak[3]); }
+      if (p2Sno(o) && o.land && o.land.when !== 'days'){ o.land.when = 'days'; o.land.days = DRP2.sno.days; }   // (H3c: a frozen trip lasts some 20 days at most)
       if (p2Sno(o)) for (const q of o.places) if (q.k === 'felt' && (q.soak < DRP2.sno.soak[0] || q.soak > DRP2.sno.soak[3])){ q.soak = clamp(Math.round(q.soak / 24) * 24, DRP2.sno.soak[0], DRP2.sno.soak[3]); q.n = Math.max(1, Math.min(q.n, p2Left(o, q))); } }   // (H3c: a field from before is strings of 200 and days)
     return o; }
   S.ops = null;

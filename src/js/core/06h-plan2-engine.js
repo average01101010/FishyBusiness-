@@ -336,7 +336,7 @@ function plan2Trip(o, D, i0){
       const L = s.k === 'sett' && s.ln != null ? p2SnoLenke(q, s.ln) : null, p = L ? L.a : snoAt(s); if (!p || !q) continue;
       h += hop(q, p);
       if (s.k === 'sett'){ wps.push({x:p.x, y:p.y, port:null, fish:0, act:{op:'cycle', kind, n:s.n, fid:L.fid, final:true, only:'set', spec:null, hdg:L.hdg}}); h += s.h; }
-      else if (s.k === 'trekk'){ wps.push({x:p.x, y:p.y, port:null, fish:0, act:{op:'cycle', kind, n:s.n, fid:s.fid, final:!s.reset, only:'haul', due:s.due != null ? s.due : s.t}}); h += s.h; }
+      else if (s.k === 'trekk'){ wps.push({x:p.x, y:p.y, port:null, fish:0, act:{op:'cycle', kind, n:s.n, fid:s.fid, final:!s.reset, only:'haul', due:s.now ? null : s.due != null ? s.due : s.t}}); h += s.h; }   // (s.now: hauled on arrival, before the soak is up)
       else { wps.push({x:p.x, y:p.y, port:null, fish:Math.max(0.1, Math.round((s.until - s.t) * 10) / 10)}); noJig = true; h += s.until - s.t; }
       continue;
     }

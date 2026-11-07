@@ -64,7 +64,7 @@ export default function (t){
       o.sno = Object.assign({pots:8000, bait:20000, live:false, tank:0, tankCap:40000, age:null, q:400000, extraLeft:0, season:p2SnoSeason(H, 16), nL:16}, zo || {}); return o; };
     const lenkeSet = (q, k, tSetH) => { const L = p2SnoLenke(q, k); return {fid:L.fid, kind:'teine', n:200, tSet:Math.round(tSetH * 60), x:(L.a.x + L.b.x) / 2, y:(L.a.y + L.b.y) / 2, a:L.a, b:L.b}; };
     const ks = d => d.steps.map(s => s.k + (s.again ? '+' : '') + (s.k === 'trekk' && !s.reset ? '!' : ''));
-    // the strings of a field: side by side 1 km apart, eight in a row, the rows 6.5 km apart, 5 km each
+    // the strings of a field: side by side 2 km apart, eight in a row, the rows 6.5 km apart, 5 km each
     { const q = field('f1', sent, 10, 7), L = [...Array(10).keys()].map(k => p2SnoLenke(q, k));
       t.near(Math.hypot(L[0].b.x - L[0].a.x, L[0].b.y - L[0].a.y), 5, 1e-9, 'en lenke er 5 km (200 teiner med 25 m mellom)');
       t.near(Math.hypot(L[1].a.x - L[0].a.x, L[1].a.y - L[0].a.y), D.col, 1e-9, 'lenkene står ' + D.col + ' km fra hverandre');
@@ -87,6 +87,13 @@ export default function (t){
       t.ok(tr.every(s => s.pid === 'f1') && !k.includes('lever') && !k.includes('hjem'), 'felt 2 står (ståtida er ikke ute), og dagen ender ute ved lenkene');
       t.ok(d.skipped.some(x => x.id === 'f2' && /6 lenker står til ståtida er ute/.test(x.no)), 'dagen sier at seks lenker står på felt 2: «' + (d.skipped.find(x => x.id === 'f2') || {no:''}).no + '»');
       t.near(tr[0].h, A.haul, 1e-9, 'en lenke trekkes på ' + A.haul.toFixed(1) + ' t (50 s per teine)'); }
+    // she does not lie idle for days: strings that have stood five days of a week's soak (the way back from the plant) are hauled now,
+    // the longest-standing first, and set out again; with two hours to the next she waits for it
+    { const o = oS(), sets = []; for (let k = 0; k < 10; k++) sets.push(lenkeSet(o.places[0], k, H0 - 5 * 24 + k * 0.1));
+      const d = planDaySno(o, H0, stS(H0, {sets})), tr = d.steps.filter(s => s.k === 'trekk');
+      t.ok(tr.length >= 5 && tr.every(s => s.now && s.due == null && s.reset) && tr[0].ln === 0 && !d.steps.some(s => s.k === 'vent'), 'lenkene har stått fem døgn: de eldste trekkes nå i stedet for å vente to døgn (' + tr.length + ' trekk, ' + tr.map(s => (s.soakH / 24).toFixed(1)).slice(0, 3).join(', ') + ' døgn)');
+      const s2 = [lenkeSet(o.places[0], 0, H0 - 7 * 24 + 2)], d2 = planDaySno(oS({places:[field('f1', sent, 1, 7)]}), H0, stS(H0, {sets:s2}));
+      t.ok(d2.steps.some(s => s.k === 'vent') && d2.steps.find(s => s.k === 'trekk' && !s.now), 'med to timer igjen av ståtida venter skipet ved lenka'); }
     // the empty fields are set as far as the pots go; the rest stays aboard
     { const d = planDaySno(oS(), H0, stS(H0, {}, {pots:1000})), k = ks(d);
       t.ok(k.filter(x => x === 'sett').length === 5 && d.skipped.some(x => x.id === 'f1' && /5 lenker står om bord/.test(x.no)), '1 000 teiner om bord: fem lenker settes, resten «står om bord» (' + d.skipped.map(x => x.no).join(' | ') + ')'); }
