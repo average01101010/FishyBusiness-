@@ -480,4 +480,5 @@ async def main():
             if s not in BUILT: print('VENTER', s, 'bygges i en senere del (02-design.md kapittel 7)')
         print('sidefeil:', errs[:5])
         await b.close()
-asyncio.run(main())
+# (driftsplan2kyst.py uses the same harness, D2)
+if __name__ == '__main__': asyncio.run(main())
