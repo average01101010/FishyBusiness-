@@ -169,9 +169,10 @@ async def main():
         print(ok(Mo['skiff']['ok'] and Mo['kyst21']['ok'] and Mo['kyst21']['rmsDeg'] > 0.1 and all(abs(Mo[v]['free'] / Mo[v]['Tr'] - 1) < 0.25 for v in Mo) and Mo['kyst21']['free'] > 2 * Mo['skiff']['free']), 'in 3D the hull rolls as an oscillator: let go from a heel each swings at its own roll period, the 21 m coaster much slower than the skiff')
         await pg.close()   # the first page is done; left open it keeps drawing 3D and starves the second page's sea-state work in a slow browser
         # 7. a GPU with no textures in the vertex shader: the same page, the waves from the values at the boat
-        pg2 = await b.new_page(viewport={'width': 640, 'height': 400}); errs2 = []; pg2.on('pageerror', lambda e: errs2.append(str(e)))
+        # (the small window while the sea state is worked out, as the first page: 300 s ran out here on 07.11.2026, F3)
+        pg2 = await b.new_page(viewport={'width': 320, 'height': 200}); errs2 = []; pg2.on('pageerror', lambda e: errs2.append(str(e)))
         await boot(pg2, GAME_TUT + '#notut,novtf'); await pg2.evaluate(SETUP)
-        await pg2.wait_for_function("G3.isActive() && G3._debug.SSL.w.on", timeout=300000); await pg2.wait_for_timeout(2000)
+        await pg2.wait_for_function("G3.isActive() && G3._debug.SSL.w.on", timeout=900000); await pg2.wait_for_timeout(2000)
         R['novtf'] = await pg2.evaluate("({vtf:G3._debug.sstVS, y:+G3._debug.seaH(G3._debug.bv.x, G3._debug.bv.z, 3).toFixed(3)})"); R['novtfErrors'] = errs2[:3]
         await pg2.close()
         # 8. the lighter seas a device steps down to when its driver lost the context making the full one (#sealvl, as dsb_sea): 1 the far
