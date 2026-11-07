@@ -918,3 +918,5 @@
 2026-11-07 16:10	ccr-c01d562d-pf9kca	ff279f9b	stabtest	OK	13	lite	samtidig	
 2026-11-07 16:10	ccr-c01d562d-pf9kca	ff279f9b	calib	LES	13	lite	samtidig	
 2026-11-07 16:11	ccr-c01d562d-pf9kca	ff279f9b	simday	LES	14	lite	samtidig	
+2026-11-07 16:11	ccr-c01d562d-pf9kca	6a71af65	progweek	LES	40	lite	samtidig	
+2026-11-07 16:11	ccr-c01d562d-pf9kca	6a71af65	worktest	FEIL	21	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
