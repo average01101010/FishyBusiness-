@@ -39,4 +39,20 @@ export default function (t){
   }
   const c0 = npcModel('sjark', 0.3, 0).o.c, c1 = npcModel('sjark', 0.3, 1).o.c; let d = 0; for (let i = 0; i < c0.length; i++) if (Math.abs(c0[i] - c1[i]) > 1e-3) d++;
   t.ok(d > 0, 'utgavene (livery) endrer fargene');
+  // the painted places on every hull (07.11.2026: the ringnotbåt had no place for the company logo, so it was never drawn on her): the
+  // logo, the registration mark and the call sign on both sides, and the logo on none of the name, the mark and the call sign
+  const {logoStrips, markStrips, callStrips, nameStrips, stripProud, stripPaint} = t.K;
+  const box = s => { const P = s[0].concat(s[1]), z = P.map(p => p[2]), y = P.map(p => p[1]); return [Math.min(...z), Math.max(...z), Math.min(...y), Math.max(...y), Math.sign(P.reduce((a, p) => a + p[0], 0))]; };
+  const all = Object.keys(VESSELS), miss = all.filter(k => !(logoStrips(k) && markStrips(k) && callStrips(k)));
+  t.ok(!miss.length, `hver type (${all.length}) har plass til rederilogoen, registreringsmerket og kallesignalet på skroget` + (miss.length ? ', mangler: ' + miss.join(', ') : ''));
+  const laps = []; for (const k of all){ const L = logoStrips(k); if (!L) continue;
+    for (const [n, st] of [['navnet', nameStrips(k)], ['merket', markStrips(k)], ['kallesignalet', callStrips(k)]]) if (st && L.some(a => st.some(b => { const p = box(a), q = box(b); return p[4] === q[4] && p[0] < q[1] && p[1] > q[0] && p[2] < q[3] && p[3] > q[2]; }))) laps.push(k + ' på ' + n); }
+  t.ok(!laps.length, 'logoen ligger ikke på navnet, merket eller kallesignalet' + (laps.length ? ': ' + laps.join(', ') : ''));
+  // the ringnotbåt's logo stands on the blue band of her topsides near midships, on each side: no porthole, outlet or strake under it
+  // or within a quarter of its height round it, one even hull paint
+  const {stripBare} = t.K, R = logoStrips('ringnot38'), Rb = R && R.map(box), z0 = Math.min(...t.K.HULLT.ringnot38.flatMap(q => [q[2], q[5], q[8]])), Lr = VESSELS.ringnot38.len;
+  t.ok(R && R.every(s => { const p = stripPaint('ringnot38', s); return !stripProud('ringnot38', s) && !stripBare('ringnot38', s) && p && p.even >= 0.9 && p.zone1 >= 0.9; })
+    && Rb.every(b => b[3] - b[2] >= 0.9 && Math.abs((b[0] + b[1]) / 2 - z0 - Lr / 2) < 0.15 * Lr),
+    'ringnot38: logoen nær midtskips på skrogets egen maling, uten koøyer, utløp eller lister under eller rundt den på noen side, minst 0,9 m høy'
+    + (R ? ' (' + Rb.map((b, i) => `${i ? 'babord' : 'styrbord'} ${(b[3] - b[2]).toFixed(2)} m, z ${b[0].toFixed(2)}–${b[1].toFixed(2)}, y ${b[2].toFixed(2)}–${b[3].toFixed(2)}`).join('; ') + ')' : ''));
 }

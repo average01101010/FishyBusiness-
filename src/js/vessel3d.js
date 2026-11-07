@@ -783,9 +783,48 @@ function logoCanvas(cv, L, img){
   const t = String(L.txt || '').slice(0, 3); if (t){ g.fillStyle = css(c2); g.strokeStyle = css(c1); g.lineWidth = 8; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '800 ' + (t.length > 2 ? 64 : 80) + 'px Georgia, serif'; g.strokeText(t, 128, 136); g.fillText(t, 128, 136); }
   g.restore();
 }
-// the logo's place on the hull: a square midships, as tall as the topsides allow (at most 0.06 L + 0.3 m, 1.6 m)
+// the logo's place on the hull: a square midships, as tall as the topsides allow (at most 0.06 L + 0.3 m, 1.6 m). Where that finds no
+// place (07.11.2026: on the ringnotbåt the hull's blue also runs along the rails and the lists on the house, so the top at midships was
+// the house's and the logo was never drawn on her), the square stands on the band of hull paint itself (sideStrip's band), on each side
+// in the middle of the stretch nearest midships (within 0.35–0.65 of the length) where the hull is bare a quarter of its height round it
+// (stripBare: her portholes and outlets are real holes, and not the same on both sides), the paint under it is the hull's own and even,
+// and it is clear of the name, the registration mark and the call sign
 const LOGOSTRIP = {};
-function logoStrips(type){ if (!(type in LOGOSTRIP)){ const V = VESSELS[type] || {len:10}; LOGOSTRIP[type] = sideStrip(type, 0.5, Math.min(1.6, 0.06 * V.len + 0.3), 1) || sideStrip(type, 0.42, Math.min(1.6, 0.06 * V.len + 0.3), 1); } return LOGOSTRIP[type]; }
+function logoStrips(type){
+  if (type in LOGOSTRIP) return LOGOSTRIP[type];
+  const V = VESSELS[type] || {len:10}, h = Math.min(1.6, 0.06 * V.len + 0.3);
+  const st = sideStrip(type, 0.5, h, 1) || sideStrip(type, 0.42, h, 1); if (st || !vesselModel(type)) return LOGOSTRIP[type] = st;
+  const box = s => { const P = s[0].concat(s[1]), z = P.map(p => p[2]), y = P.map(p => p[1]); return [Math.min(...z), Math.max(...z), Math.min(...y), Math.max(...y)]; };
+  const others = [nameStrips(type), markStrips(type), callStrips(type)].filter(Boolean).flat().map(box);
+  const ok = s => { const a = box(s); if (others.some(b => a[0] < b[1] + 0.1 && a[1] > b[0] - 0.1 && a[2] < b[3] && a[3] > b[2])) return false;
+    if (!glbHas(type)) return true; if (stripBare(type, s)) return false; const p = stripPaint(type, s); return !!p && p.even >= 0.9 && p.zone1 >= 0.6; };
+  // (in hundredths of the length) the bare place nearest midships on each side, then the middle of the bare stretch it lies in, so the
+  // logo stands as far from the portholes on either hand (the first try stood 0.5 m from one group and 1.6 m from the next)
+  const S = {}, at = j => j in S ? S[j] : (S[j] = sideStrip(type, j / 100, h, 1, 0, true));
+  const out = [0, 1].map(i => { const good = j => j >= 35 && j <= 65 && !!at(j) && ok(at(j)[i]);
+    let j0 = null; for (let d = 0; d <= 15 && j0 === null; d++) for (const j of d ? [50 + d, 50 - d] : [50]) if (j0 === null && good(j)) j0 = j;
+    if (j0 === null) return null; let a = j0, b = j0; while (good(a - 1)) a--; while (good(b + 1)) b++;
+    return at(Math.round((a + b) / 2))[i]; });
+  return LOGOSTRIP[type] = out[0] && out[1] ? out : null;
+}
+// how many of a detailed model's triangles lie off the bare hull under a strip or within a quarter of its height round it: sunk into the
+// hull (a porthole's glass and frame, an outlet: the openings are real holes in the models) or standing out from it (a strake, a
+// fitting), from 2 cm to 40 cm in or 50 cm out. One side's strip, its rows [B, T] as stripProud takes them
+const BARE = {};
+function stripBare(type, st){
+  if (!(type in BARE)){ const G = glbHas(type) ? glbLoad(type) : null, P = G && G.parts.lod0, c = [], w = 0.25 * ((VESSELS[type] || {}).beam || 2);
+    if (P) for (let q = 0; q + 9 <= P.p.length; q += 9){ const x = (P.p[q] + P.p[q + 3] + P.p[q + 6]) / 3; if (Math.abs(x) > w) c.push(x, (P.p[q + 1] + P.p[q + 4] + P.p[q + 7]) / 3, (P.p[q + 2] + P.p[q + 5] + P.p[q + 8]) / 3); }
+    BARE[type] = c; }
+  const c = BARE[type], [B, T] = st, sx = B[0][0] < 0 ? -1 : 1, N = B.length - 1, za = B[0][2], zb = B[N][2], m = (T[0][1] - B[0][1]) / 4;
+  const off = 0.01 + 0.0006 * (VESSELS[type] || {len:10}).len, z0 = Math.min(za, zb) - m, z1 = Math.max(za, zb) + m; let n = 0;
+  for (let k = 0; k < c.length; k += 3){
+    const x = sx * c[k], z = c[k + 2]; if (x <= 0 || z < z0 || z > z1) continue;
+    const i = Math.max(0, Math.min(N, Math.round((z - za) / (zb - za) * N))), b = B[i], t = T[i], y = c[k + 1]; if (y < b[1] - m || y > t[1] + m) continue;
+    const f = Math.max(0, Math.min(1, (y - b[1]) / (t[1] - b[1]))), d = sx * (b[0] + (t[0] - b[0]) * f) - off - x;   // how far in from the hull
+    if ((d > 0.02 && d < 0.4) || (d < -0.02 && d > -0.5)) n++;
+  }
+  return n;
+}
 // the logo as it goes to the others: 'g.anker.JH.marine.hvit' (made) or 'u.3' (a picture, fetched by the player's id and version)
 function logoStr(L){ if (!L) return ''; if (L.kind === 'u') return L.ver ? 'u.' + (L.ver | 0) : ''; return 'g.' + (LOGOSYM[L.sym] ? L.sym : 'anker') + '.' + MARKENC(String(L.txt || '').toUpperCase().replace(/[^A-ZÆØÅ]/g, '').slice(0, 3)) + '.' + (palRGB(L.c1) ? L.c1 : 'marine') + '.' + (palRGB(L.c2) ? L.c2 : 'hvit'); }
 function logoParse(s){ const m = /(?:^|;)l:([^;]+)/.exec(String(s || '')); if (!m) return null; const a = m[1].split('.');
@@ -828,15 +867,17 @@ function hullTris(type){
 }
 const HULLT = {};
 // a strip on each side at a share of the length from the stem (frac), at most hMax tall, aspect times as long as tall, its top a quarter
-// of its height under the hull's top (and drop metres lower)
-function sideStrip(type, frac, hMax, aspect, drop){
+// of its height under the hull's top (and drop metres lower). With band, the top and the bottom are those of the band of hull paint the
+// strip stands on, unbroken (gaps under 2 cm closed): the tallest at frac, then at each station the one round its middle there. Where
+// the hull's paint also runs along the rails and the lists high up on the house (the ringnotbåt's blue), the plain top is the house's
+function sideStrip(type, frac, hMax, aspect, drop, band){
   const m = vesselModel(type); if (!m) return null;
   // the hull's triangles once a type: the name's search tries many strips (nameStrips)
   const T = HULLT[type] || hullTris(type); if (T.length < 8) return null; HULLT[type] = T;
   let z0 = Infinity, z1 = -Infinity; for (const t of T) for (const k of [2, 5, 8]){ z0 = Math.min(z0, t[k]); z1 = Math.max(z1, t[k]); }
   // the hull cut at station z: segments [y, x, y, x]
-  const cut = z => { const seg = [];
-    for (const t of T){ const pts = [];
+  const cut = (z, U) => { const seg = [];
+    for (const t of U || T){ const pts = [];
       for (const [a, b] of [[0, 3], [3, 6], [6, 0]]){ const za = t[a + 2], zb = t[b + 2]; if ((za - z) * (zb - z) > 0 || za === zb) continue; const f = (z - za) / (zb - za); pts.push(t[a + 1] + (t[b + 1] - t[a + 1]) * f, t[a] + (t[b] - t[a]) * f); }
       if (pts.length >= 4) seg.push(pts.slice(0, 4)); }
     return seg; };
@@ -847,13 +888,21 @@ function sideStrip(type, frac, hMax, aspect, drop){
       if (y < lo - 1e-4 || y > hi + 1e-4){ for (const k of [0, 2]){ const d = Math.abs(q[k] - y); if (d < gd){ gd = d; gx = q[k + 1]; } } continue; }
       const f = hi - lo < 1e-6 ? 0.5 : (y - q[0]) / (q[2] - q[0]); x = Math.max(x, q[1] + (q[3] - q[1]) * f); }
     return x >= 0 ? x : gx; };
+  // (band) the cut's runs of paint up the side [bottom, top]
+  const runs = sg => { const r = sg.map(q => [Math.min(q[0], q[2]), Math.max(q[0], q[2])]).sort((a, b) => a[0] - b[0]), out = [];
+    for (const q of r){ const l = out[out.length - 1]; if (l && q[0] <= l[1] + 0.02) l[1] = Math.max(l[1], q[1]); else out.push(q); } return out; };
   const L = z1 - z0, V = VESSELS[type] || {len:L}, mid = z0 + frac * L;
   const s0 = cut(mid); if (!s0.length) return null;
-  const h = Math.min(hMax, (top(s0) - Math.max(0.05, bot(s0))) * 0.6); if (h < 0.08) return null;
+  let lim = sg => [bot(sg), top(sg)];
+  if (band){ const r0 = runs(s0).reduce((a, q) => q[1] - q[0] > a[1] - a[0] ? q : a), yc = (r0[0] + r0[1]) / 2; lim = sg => runs(sg).find(q => q[0] <= yc && q[1] >= yc); }
+  const l0 = lim(s0), h = Math.min(hMax, (l0[1] - Math.max(0.05, l0[0])) * 0.6); if (h < 0.08) return null;
   const len = aspect * h, off = 0.01 + 0.0006 * V.len, N = 12, B = [], Tp = [];
+  // the stations cut only the triangles along the strip (the same segments in the same order, in a fraction of the time: the name's and
+  // the logo's searches cut hundreds of strips)
+  const Ts = T.filter(t => Math.max(t[2], t[5], t[8]) >= mid - len / 2 - 1e-3 && Math.min(t[2], t[5], t[8]) <= mid + len / 2 + 1e-3);
   for (let i = 0; i <= N; i++){
-    const z = mid - len / 2 + len * i / N, sg = cut(z); if (!sg.length) return null;
-    const yT = top(sg) - h * 0.25 - (drop || 0), yB = yT - h, xT = xAt(sg, yT), xB = xAt(sg, yB); if (xT < 0 || xB < 0 || yB < bot(sg) - 1e-3) return null;
+    const z = mid - len / 2 + len * i / N, sg = cut(z, Ts); if (!sg.length) return null; const l = lim(sg); if (!l) return null;
+    const yT = l[1] - h * 0.25 - (drop || 0), yB = yT - h, xT = xAt(sg, yT), xB = xAt(sg, yB); if (xT < 0 || xB < 0 || yB < l[0] - 1e-3) return null;
     B.push([xB + off, yB, z]); Tp.push([xT + off, yT, z]);
   }
   // the bow is at -z and starboard at +x: seen from starboard the bow is on the right, so the text runs stern to bow there and bow to
