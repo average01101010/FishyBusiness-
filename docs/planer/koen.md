@@ -24,6 +24,7 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 - `ccr-9a3530e8-3tup0j`: Ø9 F3 (steg 15), Jonas' økt, startet 07.11.2026 15:17 UTC. Eier `view3d/01-shaders.js`, `view3d/14-sea.js`, `tests/sea3d.py` (og `tests/seatrytest.py`, `tests/skytest.py` om skummålet eller skyggerlinjene krever det).
 - `ccr-5a96a95a-wu5hvn`: Ø14-planen (steg 31), Jonas' økt, startet 07.11.2026 15:25 UTC. Eier bare `docs/planer/fangstfelt.md` (ny) og radene og valgene for Ø14 i denne fila; ingen kode.
 - `claude/kvotemarkedet-steg-30-y3ctw0`: kvotemarkedet, planen (steg 30), Jonas' økt, startet 07.11.2026 15:17 UTC. Eier bare `docs/planer/kvotemarkedet.md` og radene og valgene for steg 30 i køen.
+- `plan/2026-11-07-opp4`: OPP4 etter Jonas' tilbakemelding 07.11.2026 16:29 («Det er jo nesten umulig å skjønne hva som skjer på denne siden når det er så mye tekst … Det må gjøres mer intuitivt»): siden «Båten og utstyret» gjøres om. Eier `ui/phone/10-fartoy.js` og de nye `bu-`-klassene i `src/styles.css`; rører ikke `07-patch.js`, `07c-handbook.js` eller `01-i18n.js`.
 - Før det: OPP4 (steg 54) ble rullet ut i e10cd8ad og OPP1 (steg 53) i 73c12b26, begge i økter Jonas startet; før det H3b og H3c (4107d71a), U2-4 (c62047f0) og stripa og kartet (4f5f6d91).
 
 ## Utrullinger fra rutinen
