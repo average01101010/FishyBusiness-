@@ -287,6 +287,35 @@ async def main():
                 if mode == 'frys': good = 300 <= tot <= 520 and 3 <= Z['n'] <= 8 and 14 <= med <= 26
                 else: good = 380 <= tot <= 620 and 8 <= Z['n'] <= 22 and 6 <= med <= 13
                 print(ok(good), 'season %s: %.0f t round weight in %d landings (median %.1f t), median %.1f days between landings, %d strings lost, until %s (the notes: %s)' % (mode, tot, Z['n'], pmed, med, Z['lost'], Z['until'], 'frozen 99-127 t a landing, 19-20 days between, about 430 t a vessel in 2026' if mode == 'frys' else 'live 21-32 t a landing, 8-9 days between, about 430 t a vessel in 2026'))
+        if want('10'):
+            print('== 10: siden og kartvinduet for snøkrabbefartøyet i begge formater')
+            await pg.evaluate("""(async () => { await SNO.reset(5, 'port', SNO.TF); const o = SNO.plan(); await HPT.make(o); TAB.held = false; })()""")
+            for w, h in [(800, 1280), (1280, 800)]:
+                await pg.set_viewport_size({'width': w, 'height': h})
+                for row in [None, 'rig', 'places', 'land']:
+                    if row: await pg.evaluate("PHONE.dact('drift', 'p2-row', {k:'%s'})" % row)
+                    await pg.evaluate("DOCK.open('drift')"); await pg.wait_for_timeout(600)
+                    if row: await pg.evaluate("(() => { const e = document.querySelector('.dr-row.on'); if (!e) return; let d = e.parentElement; while (d && d !== document.body && !(d.scrollHeight > d.clientHeight + 4 && /auto|scroll/.test(getComputedStyle(d).overflowY))) d = d.parentElement; if (d) d.scrollTop = e.offsetTop - 8; })()")
+                    await pg.wait_for_timeout(200)
+                    await pg.screenshot(path=os.path.join(OUT, 'havplan-sno-%dx%d%s.png' % (w, h, '-' + row if row else '')))
+                    if row: await pg.evaluate("PHONE.dact('drift', 'p2-row', {k:'%s'})" % row)
+                ov = await pg.evaluate("(() => { const d = document.getElementById('drawerBody'); return {w:d.scrollWidth, cw:d.clientWidth, txt:d.innerText}; })()")
+                print(ok(ov['cw'] > 0 and ov['w'] <= ov['cw'] + 1), 'no sideways overflow at %d px' % w, {'w': ov['w'], 'cw': ov['cw']})
+                if w == 800: print('  ', ov['txt'].replace('\n', ' | ')[:900])
+                txt = ov['txt']
+                print(ok('lenker à 200' in txt and 'døgn' in txt), 'the page speaks of strings of 200 and the soak in days (%d px)' % w)
+                await pg.evaluate("DOCK.close()")
+                # the land row with the choice of frozen or live, and the chart window with every string of the fields
+                await pg.evaluate("PHONE.dact('drift', 'p2-row', {k:'land'})"); await pg.evaluate("DOCK.open('drift')"); await pg.wait_for_timeout(400)
+                lv = await pg.evaluate("(() => { const b = [...document.querySelectorAll('[data-pa=\"p2-sno\"]')]; return b.map(x => x.innerText.split('\\n')[0] + (x.classList.contains('on') ? '*' : '')); })()")
+                print(ok(len(lv) == 2 and lv[0].endswith('*')), 'Levering: «Fryste klør» or «Levende krabbe», frozen chosen', lv)
+                await pg.evaluate("PHONE.dact('drift', 'p2-row', {k:'land'})"); await pg.evaluate("DOCK.close()")
+                await pg.evaluate("PLANMAP.open(S.cur)"); await pg.wait_for_timeout(1500)
+                await pg.evaluate("(() => { const o = S.ops, q = o.places[0]; PLANMAP.tap && PLANMAP.tap({x:q.x, y:q.y}); })()"); await pg.wait_for_timeout(800)
+                await pg.screenshot(path=os.path.join(OUT, 'havplan-sno-kart-%dx%d.png' % (w, h)))
+                mp = await pg.evaluate("(() => ({lines:document.querySelectorAll('.pm-string').length, card:(document.getElementById('pmCard') || {}).innerText || ''}))()")
+                print(ok(mp['lines'] >= 40), 'the chart draws every string of the fields (%d)' % mp['lines'], mp['card'].replace('\n', ' | ')[:200])
+                await pg.evaluate("PLANMAP.close ? PLANMAP.close() : null"); await pg.wait_for_timeout(300)
         if want('6'):
             print('== 6: siden i begge formater')
             await pg.evaluate("""(async () => { await HPT.reset(5, 'port'); const o = HPT.plan(); await HPT.make(o); TAB.held = false; })()""")

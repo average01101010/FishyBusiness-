@@ -158,7 +158,10 @@ function tripHome(b = S.boat){
 }
 function tripLeft(b = S.boat){
   const T = tripOf(b), d = (T.seaM || 0) / 1440, pg = S.pgear, home = b.status === 'port' ? null : tripHome(b);
-  const fuelDay = d < 0.5 ? (BOAT.plantLph || 0) * 24 + TRIPX.gearL : T.fuelL / d, homeL = home ? home.days * 24 * (BOAT.lph || 0) : 0;
+  // (the fuel kept for the way in at the speed she goes it: the plan steams at full speed since 06.11.2026 («Full fart som standard»), which
+  // takes twice the cruise's litres an hour on the snow crab vessel, 851 against 400; reckoned at the cruise she ran dry on the way in, H3c)
+  const vh = S.plan && S.plan.ops && S.plan.speed ? Math.max(4, Math.min(S.plan.speed, BOAT.vmax || S.plan.speed)) : Math.max(4, BOAT.vcruise || 8);
+  const fuelDay = d < 0.5 ? (BOAT.plantLph || 0) * 24 + TRIPX.gearL : T.fuelL / d, homeL = home ? home.km / NM / vh * (typeof fuelLph === 'function' ? fuelLph(vh, 8) : (BOAT.lph || 0)) : 0;
   const prod = holdLoad(), prodDay = d < 0.5 || prod < 1000 ? TRIPX.prodDay : prod / d, L = BOAT.autoHooks && pg ? autoL(pg) : null, R = {d, home};
   R.fuel = Math.max(0, b.fuel - homeL) / Math.max(1, fuelDay);
   if (L){ const lenker = BOAT.autoHooks / LINE_KINDS.auto.hooks; R.bait = baitKg(pg) / (lenker * LINE_KINDS.auto.baitKg); R.hooks = (pg.hooks || 0) / (BOAT.autoHooks * AUTOFIX.day); }

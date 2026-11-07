@@ -157,6 +157,18 @@ export default function (t){
     // (the open sea's waves, hsOpen: no map in the unit tests, and the bank is 300 km from land)
     { let E = 0, n = 0; for (let H = Hd(2026, 12, 1, 0); H < Hd(2027, 7, 1, 0); H++){ const hs = K.hsOpen(H, sent); E += (0.0002 + 0.008 * K.sstep(2.5, 5, hs) * 0.8 * 0.8) * 0.35 * SNOC.lossF; n++; }
       const lost = 40 * E; t.ok(lost > 0.15 && lost < 0.6, 'været tar ' + lost.toFixed(2) + ' lenker av 40 på en sesong på Sentralbanken (SNOC.lossF ' + SNOC.lossF + '), og drivisen resten der den kommer'); }
+    // (found in the season run: before EPOCH the game's minutes are negative, and the pump at work read as free, so the plan cast off
+    // with the tank empty; seen red before the fix: portBusy gave 0)
+    { const S0 = K.get('S'), t0 = S0.t; S0.t = -30000; const b = {fueling:{until:-29940}}; t.ok(K.portBusy(b) === -29940, 'kaia er opptatt mens pumpa går, også før EPOCH (negative minutter): ' + K.portBusy(b));
+      S0.t = 5000; t.ok(K.portBusy({fueling:{until:5060}}) === 5060 && K.portBusy({}) === 0 && K.portBusy({after:'fuel'}) === 5000, 'og som før etter EPOCH'); S0.t = t0; }
+    // the fuel kept for the way in follows the speed she goes it: on the plan at full speed (851 l an hour on the snow crab vessel against
+    // 400 at cruise); the season ran dry on the way in before (H3c)
+    { const S0 = K.get('S'), b = S0.boat, keepB = {type:b.type, status:b.status, port:b.port, pos:b.pos, fuel:b.fuel, trip:b.trip}, keepP = S0.plan;
+      b.type = 'snokrabbe'; K.applyVessel(); const B = K.get('BOAT'); b.status = 'sailing'; b.port = null; b.pos = natP(74.8, 34.0); b.fuel = 100000; b.trip = {t0:0, fuelL:0, iceKg:0, baitKr:0, seaM:0};
+      S0.plan = null; const r0 = K.tripLeft(b), home = r0.home; S0.plan = {ops:true, speed:B.vmax, wps:[], idx:0}; const r1 = K.tripLeft(b);
+      const keep0 = (b.fuel - r0.fuel * (B.plantLph * 24 + 1300)), keep1 = (b.fuel - r1.fuel * (B.plantLph * 24 + 1300));
+      t.ok(home && keep1 > keep0 * 1.5 && keep1 < keep0 * 2.5, 'reserven for veien inn til ' + (home ? home.pt.name : '?') + ': ' + Math.round(keep0) + ' l i marsjfart, ' + Math.round(keep1) + ' l i full fart på planen');
+      S0.plan = keepP; Object.assign(b, keepB); K.applyVessel(); }
     for (const nm in keep) K.set(nm, keep[nm]);
   }
 }

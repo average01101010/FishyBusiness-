@@ -459,7 +459,10 @@ const BERTHN = {main:['mottakskaia', 'the plant\'s quay'], bunker:['bunkerskaia'
 const berthName = (k, pid) => { const pt = portById(pid); return k === 'main' && pt && !pt.mottak ? ['kaia', 'the quay'] : BERTHN[k] || BERTHN.main; };
 const hasBunker = pid => !!quayFace(pid, 'bunker');
 // busy at the quay: landing, moving or filling; a departure waits for it
-function portBusy(b){ const u = Math.max(b.land ? b.land.until : 0, b.shift ? b.shift.until : 0, b.fueling ? b.fueling.until : 0); return u > 0 || b.after ? Math.max(u, S.t) : 0; }
+// (busy while a landing, a shift or the pump is under way, or something waits for the shift: the hour it is done, never 0. H3c 07.11.2026:
+// it was max(0, …), so before EPOCH, where the game's minutes are negative (a season from January 2027), a pump at work read as free
+// and the plan cast off with the tank empty; for positive hours it is as before)
+function portBusy(b){ if (!b.land && !b.shift && !b.fueling && !b.after) return 0; const u = Math.max(b.land ? b.land.until : -Infinity, b.shift ? b.shift.until : -Infinity, b.fueling ? b.fueling.until : -Infinity, S.t); return u || 1e-9; }
 function startShift(to, after){
   const b = S.boat, pt = portById(b.port), from = berthKind(b);
   // (never to or from Father's naust: you sail there and back by a route, Jonas 05.10.2026: «Fast travel er ikke mulig i spillet, punktum»)
