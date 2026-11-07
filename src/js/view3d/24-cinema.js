@@ -570,6 +570,7 @@
     if (n) drawPts(n, gl.POINTS, VP, col, 46, 1);
     SCW.drawn = n;
   }
+  const SLN = 420, SLP = {x:new Float64Array(SLN), y:new Float64Array(SLN), z:new Float64Array(SLN), vx:new Float64Array(SLN), vy:new Float64Array(SLN), vz:new Float64Array(SLN), age:new Float64Array(SLN).fill(99), life:new Float64Array(SLN).fill(1), n:0};
   function drawEffects(VP, eye, BM, dt, t){
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
     const foamCol = [Math.min(1, env.amb[0] * 1.4 + env.sunCol[0] * 0.8), Math.min(1, env.amb[1] * 1.4 + env.sunCol[1] * 0.8), Math.min(1, env.amb[2] * 1.4 + env.sunCol[2] * 0.8)];
@@ -604,13 +605,15 @@
           spawn(p[0], p[1], p[2], -Math.sin(bv.head) * bk + wx, 2.2 + Math.random() * 2.2, Math.cos(bv.head) * bk + wz, 0.6 + Math.random() * 0.4, 9.8); } }
     }
     // a slam (16-motion.js hullMove, Fysikk 4 F2): the bow comes down on the sea faster than her threshold and throws a sheet of white
-    // water up and out to both sides from the forefoot, more the harder she hits, carried off with her way and the wind
+    // water up and out to both sides from the forefoot, more the harder she hits, carried off with her way and the wind. Its own
+    // particles (SLP, drawn below), larger and denser than the spray's mist: the first try put 160 into the mist and the picture showed
+    // a fleck at the stem
     if (HSEA.slam.t > (wk.slamSeen || 0)){ wk.slamSeen = HSEA.slam.t;
-      const VG = GEO(vtype()), Lb = VG.stern - VG.bow, s = Math.min(3, HSEA.slam.s), N = Math.round(40 + 50 * s), way = (bv.spd || 0) * 0.6, fx = Math.sin(bv.head), fz = -Math.cos(bv.head);
+      const VG = GEO(vtype()), Lb = VG.stern - VG.bow, s = Math.min(3, HSEA.slam.s), N = Math.round(Math.min(SLN - 1, 140 + 80 * s)), way = (bv.spd || 0) * 0.6, fx = Math.sin(bv.head), fz = -Math.cos(bv.head);
       const wv = (env.wind || 0) * 0.35, wd = env.windDir || [0, -1], wx = wd[0] * wv, wz = wd[1] * wv;
-      for (let i = 0; i < N; i++){ const side = Math.random() < 0.5 ? -1 : 1, a = 0.04 + Math.random() * 0.22, p = xf(BM, [side * VG.side * (0.4 + a * 1.4), 0.05, VG.bow + a * Lb]);
-        const up = (2.5 + Math.random() * 3) * Math.sqrt(s), out = (1.5 + Math.random() * 3) * Math.sqrt(s);
-        spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, up, Math.sin(bv.head) * side * out + fz * way + wz, 0.8 + Math.random() * 0.7, 9.8); } }
+      for (let i = 0; i < N; i++){ const side = Math.random() < 0.5 ? -1 : 1, a = 0.02 + Math.random() * 0.25, p = xf(BM, [side * VG.side * (0.3 + a * 1.5), -0.1 + Math.random() * 0.3, VG.bow + a * Lb]);
+        const up = (2 + Math.random() * 4) * Math.sqrt(s), out = (1.5 + Math.random() * 3.5) * Math.sqrt(s), k = SLP.n = (SLP.n + 1) % SLN;
+        SLP.x[k] = p[0]; SLP.y[k] = p[1]; SLP.z[k] = p[2]; SLP.vx[k] = Math.cos(bv.head) * side * out + fx * way + wx; SLP.vy[k] = up; SLP.vz[k] = Math.sin(bv.head) * side * out + fz * way + wz; SLP.age[k] = 0; SLP.life[k] = 1 + Math.random() * 0.9; } }
     // wake: the prop wash's bubbles behind the stern (gone in 6 s; the pale band under them went, Jonas 04.10.2026: «kun vise
     // boblepartiklene») and the two Kelvin arms spreading at 19.5 degrees, fading out within 10 s («gradvis forsvinner»), each corner
     // laid on the waves where it lies (one height across an arm hid it under the waves on one side more than the other)
@@ -656,6 +659,14 @@
       PB[n * 3] = wk.x[i] - eye[0]; PB[n * 3 + 1] = wk.y[i] - eye[1]; PB[n * 3 + 2] = wk.z[i] - eye[2]; PA[n] = Math.pow(Math.max(0, 1 - wk.age[i] / wk.life[i]), 1.5) * 0.75; n++;
     }
     if (QUAL.lvl) drawPts(n, gl.POINTS, VP, foamCol, 95, 2);   // (soft, as mist: round discs read as blobs)
+    // the slam's white water: up, slowed by the air, down into the sea, where it is gone
+    { let m = 0;
+      for (let i = 0; i < SLN; i++){
+        if (SLP.age[i] >= SLP.life[i]) continue;
+        const dr = Math.exp(-dt * 1.2); SLP.age[i] += dt; SLP.vx[i] *= dr; SLP.vz[i] *= dr; SLP.vy[i] -= 9.8 * dt; SLP.x[i] += SLP.vx[i] * dt; SLP.y[i] += SLP.vy[i] * dt; SLP.z[i] += SLP.vz[i] * dt;
+        if (SLP.vy[i] < 0 && SLP.y[i] < seaHFast(SLP.x[i], SLP.z[i], t)){ SLP.age[i] = 99; continue; }
+        PB[m * 3] = SLP.x[i] - eye[0]; PB[m * 3 + 1] = SLP.y[i] - eye[1]; PB[m * 3 + 2] = SLP.z[i] - eye[2]; PA[m] = 0.95 * Math.pow(Math.max(0, 1 - SLP.age[i] / SLP.life[i]), 0.6); m++; }
+      if (m) drawPts(m, gl.POINTS, VP, foamCol, 450, 2, null, 64); }   // (size / distance in pixels: some 0.35 m a blob, a sheet together)
     scupperWater(VP, eye, BM, dt, t, [foamCol[0] * 0.88, foamCol[1] * 0.95, foamCol[2]]);
     if (QUAL.lvl) driftSpray(VP, eye, dt, t, foamCol);
     drawSmoke(VP, eye, BM, dt);
