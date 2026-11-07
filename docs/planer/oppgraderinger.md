@@ -1,6 +1,6 @@
 # Oppgraderinger: kniv, høtt, dekksutstyr i trinn, propell og én side for båten og utstyret (plan 07.11.2026)
 
-> Plan etter `/planlegg`. **Jonas tok valgene 07.11.2026** (sitert under), **og V1 A samme dag.** Ingenting av planen er bygd. Den venter på «kjør på» og på at planen flettes inn i arbeidsgrenen. Hver fase er én økt. Reglene som gjelder: `CLAUDE.md` (handelsstedene, `buyGate`, modulære modeller, patchnotes), `docs/engasjement.md` (alt kan nås uten å betale, friksjonen er simuleringens egen, nye ting starter aldri på null) og `docs/handelssteder.md`. Tallene her er startverdier som måles før de settes.
+> Plan etter `/planlegg`. **Jonas tok valgene 07.11.2026** (sitert under), **og V1 A samme dag.** OPP1 er bygd og rullet ut 07.11.2026 (Status nederst); OPP2–OPP5 står i køen. Hver fase er én økt. Reglene som gjelder: `CLAUDE.md` (handelsstedene, `buyGate`, modulære modeller, patchnotes), `docs/engasjement.md` (alt kan nås uten å betale, friksjonen er simuleringens egen, nye ting starter aldri på null) og `docs/handelssteder.md`. Tallene her er startverdier som måles før de settes.
 
 ## Hva Jonas ba om
 
@@ -144,6 +144,26 @@ Spillet har alt mange oppgraderinger, men de er spredt på fem steder, nesten al
 | **OPP4 «Båten og utstyret», Neste mål og trakten** | seksjonen i Fartøy-appen; `goals()` med utstyrstrinnet; Håndboka kap. 8; migreringen som utvider `admin_funnel`; admin-fanen | `ui/phone/10-fartoy.js`, `ui/07c-handbook.js`, `01-i18n.js`, `supabase/migrations/`, `src/admin/index.html`, `07-patch.js` | `vesseltest` (Neste mål, sett rød: trebåt med 40 000 kr får kniv trinn 2, ikke snekka), `opptest` (siden i begge formater, skjermbilder), `sqltest`, `admintest` | trakten: andel med kjøpt trinn innen dag 7, før og etter datoen |
 | **OPP5 Modellene** | kniv, høtt, linesetter, garnrenne i Blender; tegningen på festepunktene; plasket; «Prøv på båten» | `tools/deck/`, `src/data/*.b64`, malen, `view3d/10-gear.js`, `09-landing-deck.js`, `25-controls.js`, `vessel3d.js` | `vesseltest` (delene finnes, målene), `deckshot`, `geartest` 3D, `trytest`; kontrollbilder i `tools/deck/out/` | Jonas ser modellene; ingen tall |
 
+### OPP1, målt 07.11.2026 (før tallene ble satt)
+
+`tests/fiskeplay.py kniv1 kniv2 kniv3 kniv1m kniv2m kniv3m` (frø 1, uten 3D, ny side per kjøring): trebåten (bløggekar 60 kg, rom 500 kg) med håndjuksa på et torskested nord for Senja på startdagen (1. mars), ti timer jukse, så til fangsten er sløyd og iset. Kniv og høtt på samme trinn. «Minutter ved bordet» er minuttene noen sløyde eller iset; «dine» er skipperens egne (`S.deckMe`).
+
+| | Trinn 1 | Trinn 2 | Trinn 3 |
+|---|---|---|---|
+| Alene, kg etter 6 t | 306,5 | 307,4 (+0,3 %) | 310,8 (+1,4 %) |
+| Alene, minutter ved bordet etter 6 t | 61 | 55 (−10 %) | 51 (−16 %) |
+| Alene, rommet fullt (500 kg) etter | 9,40 t | 9,42 t | 9,32 t |
+| Alene, minutter ved bordet hele dagen | 105 | 95 (−10 %) | 87 (−17 %) |
+| Med én mann, rommet fullt etter | 4,65 t | 4,82 t | 4,80 t |
+| Med én mann, minutter ved bordet hele dagen | 91 | 84 (−8 %) | 69 (−24 %) |
+| Med én mann, dine minutter ved bordet | 45 | 29 | 0 |
+| Fisk over ripa, stygt sløyd, kutt (en dag) | 0 | 0 | 0 |
+
+- **Det kniven gir, er tid, som planen sa.** Alene i trebåten står skipperen ved bordet 10 og 17 % kortere; kiloene øker bare 0,3 og 1,4 % på seks timer, fordi sløyinga tar om lag 100 av 560 minutter, og rommet på 500 kg er fullt etter drøyt ni timer på alle trinn. «Flere kilo per dag for den som fisker alene» (designet over) stemmer bare der karet er flaskehalsen; med håndjuksa på trebåten er det rommet. Med en mann om bord holder han sløyinga alene fra trinn 3, og skipperen kan jukse hele tida (45, 29 og 0 minutter ved bordet).
+- **Feilene er så sjeldne at én dag ikke viser dem** (ingen i de seks spilte dagene). Andelene er målt i `tests/unit/oppgradering.test.mjs` med frøsatte terninger: 400 000 minutter gir 1 589 over ripa, 1 102 stygt sløyde og 867 kutt på trinn 1; kniv 3 halverer de to siste, høtt 3 tar 60 % av den første, trinn 2 30 %.
+- **Høttens trekk og glipp** er ikke målt i en spilt dag (trebåten har ingen linehaler, og juksespillet timer en person): `gopUnitMin` og `jigSlip` er regnet i enhetstesten (21,4, 20,6 og 19,7 min per stamp hyseline; glipp 50, 40 og 30 %). Måles i OPP2 med `fiskeplay.py line`.
+- **Tallene i tabellene over står** (+10/+20 % tempo, −30/−50 % feil, −30/−60 % over ripa, −4/−8 % trekk). Målingen ga ingen grunn til å flytte dem; Jonas kan flytte dem.
+
 **Rekkefølgen:** OPP1 og OPP4 først, fordi begge treffer første uke på trebåten og kan leses av i trakten. Så OPP3, OPP2 og OPP5. OPP1 og OPP3 rører `core/03-simulation.js`, `05-vessels.js`, `10-gear.js` og `14-crewlife.js`, som Ø8b S0, S2 og M (køen steg 5, 7, 8) også eier mens de går; rutinens regel om filer avgjør hvem som går først.
 
 ## Valget
@@ -181,3 +201,4 @@ Spillet har alt mange oppgraderinger, men de er spredt på fem steder, nesten al
 
 - 07.11.2026: planen skrevet (Jonas' økt, grenen `ccr-5626c087-fg38n2`, bygd på arbeidsgrenen samme dag). Valgene 1–7 over er tatt av Jonas 07.11.2026. Stegene OPP1–OPP5 står i `docs/planer/koen.md` (53–57), med hel startmelding for OPP1.
 - 07.11.2026: Jonas valgte **V1 A** (juksamaskinens trinn gir bare flere maskiner per person, ingen fisk per time). Alle valgene er tatt. Venter på «kjør på», og på at planen flettes inn i arbeidsgrenen, så rutinen ser stegene.
+- 07.11.2026: Jonas ga klarsignal for OPP1 ved å be om startmeldingen. Planen og køen ble pushet til arbeidsgrenen før arbeidet (bare dokumenter). **OPP1 bygd** i Jonas' økt, gren `plan/2026-11-07-opp1`: `EQUIP.kniv` og `EQUIP.hott` med trinnene i tabellene over, `upgSum` (prinsipp 1), kniven i `deckMinute`, `deckEta` og `left.sloy`, feilene i `crewSlip`, høtten i `gopUnitMin` (bare trekk av line) og i juksespillets glipp, `S.stats.lostRail` med uka per båt, `buyGate('tier')`, kortene i Fiskeutstyr, `lex_kniv` og `lex_hott` i Håndboka (utenfor startmeldingens filer, fordi `itemcardtest` krever «Mer» på hvert kort), patchnoten. Målingene står over («OPP1, målt»), systemet i «Kniv og høtt i tre trinn» i `docs/systemer/redskap.md`, det som er svakt i backloggen. Det som hører til kjøpet og ikke var i OPP1s filer (bekreftelsen over 10 000 kr og trinnet i kvitteringen i `14-act.js`, trinnet ved salg i `09k-market.js`, innbyttet i `13-mannskap-bank-meld.js`), er lagt til OPP4 i køen. **Rullet ut i 73c12b26** (flettet med arbeidsgrenen i 7217777f; porten i `tools/plan/RUTINE.md` punkt 6 holdt, 3D-testene ikke kjørt etter Jonas' «ikke 3D»). Neste på sporet: OPP4 (steg 54), med hel startmelding i køen.

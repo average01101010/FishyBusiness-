@@ -117,6 +117,25 @@ Alt dette ligger i `core/10b-gearcare.js` (kjernen) og i `ui/05-phone.js` (Behol
 - **Gamle lagringer:** `careInit` legger til feltene.
 - **Ikke gjort:** pilker og juksamaskiner (elektrisk) har ingen egen slitasje utover settet; teinene har én felles stand.
 
+## Kniv og høtt i tre trinn (OPP1 av `docs/planer/oppgraderinger.md`, 07.11.2026)
+
+Jonas 07.11.2026: «kniv brukes allerede i dag til både bløgging og sløying, og jeg tenker en oppgradering kutter ned på tiden brukt samt kvaliteten på sløyingen. Høtten minsker risikoen for tap av fisk generelt, ikke bare kveite.» Og om prosentene: «Om det står 10% økning feks, så betyr det at økningen er 10% opp fra grunnnivået båten eller utstyret hadde.»
+
+- **Data** (`core/02-species-gear.js`): `EQUIP.kniv` og `EQUIP.hott` har `tiers` med navn, andeler og pris, og `fit:{coast:true}` (ikke havflåten). `S.equip.kniv`/`S.equip.hott` er trinnet som er kjøpt (2 eller 3); uten feltet er det trinn 1, og ingenting fylles i gamle lagringer. `true` leses som trinn 2. Elementene har ingen `price`, så lister som går gjennom `EQUIP` (gavene i `09f-merker.js`, Elektronikk og haler, nettbutikken) lar dem være.
+
+  | | Trinn 1 (om bord) | Trinn 2 | Trinn 3 |
+  |---|---|---|---|
+  | Kniv | knivene om bord | nye sløyekniver: +10 % sløyetempo, −30 % stygt sløyd og kutt; 1 500 kr per sløyeplass | sløyekniver i ett stykke og stålhansker: +20 %, −50 %; 4 500 kr per sløyeplass |
+  | Høtt | høtten om bord | stålhøtt: −30 % over ripa, glipp 40 %, −4 % trekk per stamp line; 900 kr | lang høtt med krok av stål: −60 %, glipp 30 %, −8 %; 2 900 kr |
+
+- **Regelen** (`upgSum`): andelene regnes av grunnivået og legges sammen, aldri ganget (`base × (1 + a + b)`). `equipLv`, `equipTier`, `tierKr`, `knifeX` (sløyetempoet), `hookX(f)` (høttens andel `rail`, `jig`, `haul`) og `jigSlip` (glippet ved halvt treff, `JIG_SLIP` 0,5 på trinn 1) ligger ved `equipFits`. Mannskapets ferdighet (`crewEff`, `teamEff`) ganges inn etterpå som før.
+- **Kniven:** `gutPace()` (`DECK.gut × knifeX()`) i `deckMinute`, `deckEta` (`core/05-vessels.js`) og `left.sloy` i `workAssign` (`core/13-work.js`). Sløyemaskinen (`BOAT.gutMachine`) går i sitt eget tempo. I `crewSlip` (`core/14-crewlife.js`) er de tre feilene 45, 30 og 25 % av grunnsjansen; kniven tar sin andel av «stygt sløyd» og «kutt», høtten av «over ripa», aldri på tvers (`SLIP_W`). På trinn 1 er terningene de samme som før.
+- **Høtten:** `gopUnitMin` (`core/10-gear.js`) ganger trekket av line med `upgSum(−hookX('haul'))`; ikke setting, ikke autolina (maskinens tempo), ikke garn (tømmes ved garnbordet) og ikke teiner. Juksespillet (`land(m)` i `ui/10-rod-acts.js`) glipper ved halvt treff med `jigSlip()`. Fisk tapt over ripa telles i `S.stats.lostRail` (`railLost`: kg og antall i alt, og uka i `w`, `wkg`, `wn`), for hele rederiet.
+- **Kjøpet:** `buyGate('tier', k, lv)` (`tierGate`) nekter på havflåten, over trinn 3, trinn 3 uten trinn 2, og utenfor utstyrsbutikkens kai; `buyGear('tier', k)` (`tierBuy`) betaler og setter trinnet med en gang, uten montering. UI-et: kortene øverst i Fiskeutstyr og Redskap › Kjøp (`redskap('kjop')` i `ui/phone/12-utstyr-redskap.js`) med «Om bord · trinn N», neste trinns tall (`ICFX.kniv`, `ICFX.hott` i `ui/05a-itemcard.js`), prisen og «Kjøp trinn N», eller det `buyGate` sier; høttens kort viser fisken tapt over ripa denne uka. Knappen går gjennom handlingen `equip` til `equipBuy` (`ui/phone/13b-nettet.js`), som sender `shop_buy {w:'equip', k, lv}`. Håndboka kap. 8 har `lex_kniv` og `lex_hott` med tallene fra trinnene.
+- **Ingen vedlikehold:** mannskapet sliper knivene om bord som før (ledig-oppgaven står), og høtten trenger ingenting.
+- **Tester:** `tests/unit/oppgradering.test.mjs` (summene, `DECK`-faktoren per trinn, `crewSlip` med `CREW_SEED` per trinn, `gopUnitMin`, glippet, `buyGate`), `tests/opptest.py` (kortene, kjøpet ved kaia, trinn 2 før 3, tapt fisk, gammel lagring er trinn 1). Målingene står i planen under OPP1.
+- **Ikke gjort:** trinnene i nettbutikken (`core/10c-pick.js`), bekreftelse i knappen for et trinn over 10 000 kr (kniv trinn 3 på kystbåtene, 13 500 kr: `ui/phone/14-act.js` leser `E.price`), trinnet ved salg mellom spillere (`mbPack` i `core/09k-market.js` gjør det til `true`, som leses som trinn 2), modellene (OPP5). Står i backloggen.
+
 ## 5.62 Dekksutstyret: modulære modeller på båtenes festepunkter (Jonas 19.10.2026: «Alt må være modulært og kunne plasseres i alle aktuelle båter»)
 
 Utstyret på dekk er egne Blender-modeller i `tools/deck/` og står på faste plasser i hver båtmodell, i stedet for å være bakt inn i båtene. Dataene bestemmer hva som vises.

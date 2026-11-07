@@ -26,7 +26,7 @@
     // in the shop: the top (the keeper, what is ordered here, what the boat needs), then what the boat lacks, what is aboard in one card,
     // and what does not suit her folded away (M2). The hauler and the deck first, the electronics after
     if (mode === 'butikk' && atKind('butikk')) h.splice(1, 0, shopTop('utstyrb'));
-    const ORDER = ['linehaler', 'garnhaler', 'teinehaler', 'jukse', 'krabbekar'], keys = Object.keys(EQUIP).filter(k => yardEq(k) === (mode === 'verft')).sort((a, c) => (ORDER.includes(a) ? ORDER.indexOf(a) : 99) - (ORDER.includes(c) ? ORDER.indexOf(c) : 99));
+    const ORDER = ['linehaler', 'garnhaler', 'teinehaler', 'jukse', 'krabbekar'], keys = Object.keys(EQUIP).filter(k => !EQUIP[k].tiers && yardEq(k) === (mode === 'verft')).sort((a, c) => (ORDER.includes(a) ? ORDER.indexOf(a) : 99) - (ORDER.includes(c) ? ORDER.indexOf(c) : 99));
     const aboard = [], nofit = [];
     for (const k of keys){ const E = EQUIP[k];
       if (!equipFits(k, S.boat.type)){ nofit.push(E.name[S.lang]); continue; }
@@ -188,6 +188,17 @@
       // no room line where no hauler fits the boat: the gate says why instead (spilltest 3, F3)
       const roomTxt = (n, no, en) => haulerNoFit({garn:'garn', stamper:'line', teiner:'teine'}[no]) ? '' : '<p class="ic-have">' + L('Plass til ' + n + ' ' + no + ' til', 'Room for ' + n + ' more ' + en) + '</p>';
       const own = (w, n, no, en) => n ? L(n + ' ' + no + ' om bord', n + ' ' + en + ' aboard') : '';
+      // the knives and the gaff in tiers (OPP1 of docs/planer/oppgraderinger.md): what is aboard and its tier, the next tier's numbers
+      // (ICFX), price and button, or what stands in the way (buyGate); the gaff's card shows the fish lost over the rail this week
+      for (const k of ['kniv', 'hott']){ const E = EQUIP[k]; if (!equipFits(k, b.type)) continue;
+        const lv = equipLv(k), top = E.tiers.length, T = E.tiers[lv - 1], nx = lv < top ? lv + 1 : 0, price = nx ? tierKr(k, nx) : null, gate = nx ? buyGate('tier', k) : null;
+        const per = nx && E.tiers[nx - 1].per === 'table' ? tierUnits(k, nx) : 0, wk = railWeek();   // (the fish lost over the rail on this boat this week)
+        const body = (per ? '<p class="ic-have">' + L(kr(E.tiers[nx - 1].kr) + ' per sløyeplass, ' + per + ' om bord', kr(E.tiers[nx - 1].kr) + ' a gutting place, ' + per + ' aboard') + '</p>' : '') +
+          (k === 'hott' ? '<p class="ph-note" data-lost="' + wk.n + '">' + (wk.n ? L('Tapt over ripa denne uka: ' + wk.n + ' fisk, ' + fmt(wk.kg, 0) + ' kg', 'Lost over the rail this week: ' + wk.n + ' fish, ' + fmt(wk.kg, 0) + ' kg') : L('Ingen fisk tapt over ripa denne uka.', 'No fish lost over the rail this week.')) + '</p>'
+            : '<p class="ph-note">' + L('Feilene ved bordet er sjeldne, så det meste kniven gir, er tid.', 'Mistakes at the table are rare, so most of what the knife gives is time.') + '</p>');
+        const btns = !nx ? '' : gate ? '<p class="ph-note"><b>' + gate[0] + '</b></p>'
+          : '<button class="ph-btn p" data-pa="equip" data-k="' + k + '"' + (price > spendable() ? ' disabled' : '') + '>' + L('Kjøp trinn ' + nx, 'Buy tier ' + nx) + ' · ' + kr(price) + '</button>';
+        h.push(itemCard({k, name:E.name[S.lang], sub:L('trinn ', 'tier ') + lv + ' / ' + top, price:nx ? price : L('Øverste trinn', 'Top tier'), have:L('Om bord · trinn ' + lv + ': ' + lc1(T.no), 'Aboard · tier ' + lv + ': ' + lc1(T.en)) + (nx ? '' : L(' (det beste)', ' (the best)')), body, btns})); }
       h.push(itemCard({k:'net', name:L('Garn', 'Nets'), price:L('fra ', 'from ') + kr(NETTY.bunn.price) + L(' per garn', ' a net'), have:own('net', pg.nets.reduce((a, l) => a + l.n, 0), 'garn', 'nets'), body:roomTxt(room('garn'), 'garn', 'nets'),
         btns:NETOPT.map(o => buy('net', netKey(o[0], o[1]), 10, n => L(NETTY[o[0]].no, NETTY[o[0]].en) + ' ' + o[1] + ' mm × ' + n, NETTY[o[0]].price)).join('')}));
       h.push(itemCard({k:'line', name:L('Line', 'Line'), price:kr(LINE_KINDS.bank.price) + '–' + kr(LINE_KINDS.hyse.price) + L(' per stamp', ' a tub'), have:own('line', pg.lines.hyse.n + pg.lines.bank.n, 'stamper', 'tubs'), body:roomTxt(room('line'), 'stamper', 'tubs'),

@@ -103,8 +103,11 @@ Alle kjøpssystemer følger det spilleren eier. Regelen ligger i `buyGate(what)`
 | agn | at du eier line eller teiner |
 | juksautstyr (pilk, markkroker) | ingenting (juksa følger med fra start) |
 | kveitepilk (reservesett) | kveiteutstyr om bord (Jonas 20.10.2026) |
+| sløyekniver og høtt, trinn 2 og 3 (OPP1, 07.11.2026) | utstyrsbutikkens kai, trinnet under (trinn 3 etter trinn 2), en kystbåt (ikke havflåten); `buyGate('tier', k)` |
 
 Agn selges bare på fiskemottaket (Mottak › Agn); utstyrsbutikken har ingen agnknapper. Agnet velges når stampene egnes (selv eller i egnebua) og når teinene settes, og agnet kan tas av stampene igjen (`stripSelf`) for å egne med et annet slag.
+
+**Kniver og høtt i trinn** (OPP1 av `docs/planer/oppgraderinger.md`, bygd 07.11.2026; Jonas 07.11.2026: «kjøp av kniver, høtter, juksautstyr, halere og alt sånt hører hjemme i utstyrsbutikken»): sløyeknivene og høtten er båtens (`S.equip.kniv`, `S.equip.hott`, trinnet som tall), trinn 1 er det båten har om bord fra start, og trinnene kjøpes ett om gangen i Butikk › Fiskeutstyr. De betales og er om bord med en gang (ingen montering). Kortet står øverst i Fiskeutstyr og i Redskap › Kjøp. Ingenting av dette selges for ekte penger, og det står ikke i Nettet-appens nettbutikk ennå (bestillingen i `core/10c-pick.js` kjenner ikke trinnene).
 
 Halerne heter bare linehaler, garnhaler og teinehaler (ingen «elektrisk», «hydraulisk» eller 12 V). Linehaler og teinehaler passer på alle båter. Eldre lagringer med den gamle elektriske haleren får linehaler og teinehaler. Et nytt kjøpssystem legger regelen sin i `buyGate` (eller `equipFits` for utstyr som må passe båten) i stedet for å sjekke selv.
 

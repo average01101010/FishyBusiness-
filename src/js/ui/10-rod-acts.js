@@ -31,8 +31,9 @@ window.JIGG = (() => {
   function grade(off){ if (off == null) return 0.5; for (const [s, m] of GR) if (Math.abs(off) <= s) return m; return 0.5; }
   // the bite worth what came due since the last one, times the hit: whole fish until it is used up (the rest carries to the next)
   function land(m){
-    // 0.5×: half the time it slips and the bite is lost, else one fish's worth (so on average half)
-    if (m === 0.5 && Math.random() < 0.5){ due = 0; got = {n:0, m}; return; }
+    // 0.5×: half the time it slips and the bite is lost, else one fish's worth (so on average half); a better gaff takes more of them
+    // (OPP1, core jigSlip: 50, 40 and 30 %)
+    if (m === 0.5 && Math.random() < jigSlip()){ due = 0; got = {n:0, m}; return; }
     let left = due * (m === 0.5 ? 1 : m) + debt, n = 0, kgSum = 0; const H = S.t / 60; due = 0;
     while (left > 0 && n < 6){
       const f = pick(), room = capHold() - holdLoad(); if (room <= 0.05) break; left -= f.kg; n++;

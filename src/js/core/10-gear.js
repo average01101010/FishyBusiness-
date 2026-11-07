@@ -226,7 +226,10 @@ function gearRoom(kind){ if (haulerNoFit(kind)) return 0; const m = (BOAT.gearMa
 // ---- buying (in port)
 // one rule for everything sold for gear (Jonas 08.10.2026): nothing for line, nets or pots is bought before the boat has the hauler for it,
 // and what goes with them (hooks, buoy sets, anchors, bait) only once the boat owns some of that gear. Every shop button and buyGear ask this.
-function buyGate(what, spec){
+function buyGate(what, spec, lv){
+  // the knives and the gaff in tiers (OPP1): only at the tackle shop's quay, on a boat they fit, and tier by tier (spec the EQUIP key, lv
+  // the tier asked for, the next one when left out)
+  if (what === 'tier') return tierGate(spec, lv);
   const own = k => ownedUnits(k) > 0, anyGear = own('line') || own('garn') || own('teine');
   { const k = {stamp:'line', net:'garn', pot:'teine'}[what], nf = k && haulerNoFit(k); if (nf) return nf; }   // no hauler fits: the same words as the Rig tab (F3)
   if (what === 'stamp' && !hasHauler('line')) return [gL('Du trenger en linehaler før du kan kjøpe line.', 'You need a line hauler before you can buy line.')];
@@ -242,7 +245,27 @@ function buyGate(what, spec){
   if (what === 'jig' && spec === 'kveite' && !(S.boat && S.boat.kgear)) return [gL('Kveitepilk trenger du først når du har kveiteutstyr om bord.', 'You only need halibut pilk once you have halibut gear aboard.')];
   return null;
 }
+function tierGate(k, lv){
+  const E = EQUIP[k], b = S.boat; if (!E || !E.tiers) return [gL('Ukjent utstyr.', 'Unknown equipment.')];
+  if (!equipFits(k, b.type)) return [gL(E.name.no + ' i trinn hører til kystbåtene. Havbåtene har sitt eget utstyr.', 'The ' + E.name.en.toLowerCase() + ' in tiers are for the coastal boats. The ocean vessels have their own.')];
+  const cur = equipLv(k), top = E.tiers.length, want = lv == null ? cur + 1 : lv;
+  if (cur >= top) return [gL('Båten har det beste: ' + lc1(E.tiers[top - 1].no) + '.', 'The boat has the best: ' + lc1(E.tiers[top - 1].en) + '.')];
+  if (want <= cur) return [gL('Båten har alt trinn ' + cur + '.', 'The boat already has tier ' + cur + '.')];
+  if (want > cur + 1) return [gL('Trinn ' + want + ' kjøpes etter trinn ' + (want - 1) + '.', 'Tier ' + want + ' comes after tier ' + (want - 1) + '.')];
+  if (b.status !== 'port' || !portServices(portById(b.port), berthKind(b)).butikk) return [gL(E.name.no + ' kjøper du ved utstyrsbutikkens kai.', 'You buy the ' + E.name.en.toLowerCase() + ' at the tackle shop\'s quay.')];
+  return null;
+}
+// the next tier, paid and aboard at once (no fitting: the crew takes them in hand)
+function tierBuy(k, lv){
+  const gate = tierGate(k, lv); if (gate) return gate;
+  const E = EQUIP[k], nx = lv == null ? equipLv(k) + 1 : lv, T = E.tiers[nx - 1], cost = tierKr(k, nx);
+  if (cost > spendable()) return [gL('Ikke nok penger.', 'Not enough money.')];
+  book('redskap', -cost, T.no, T.en); S.equip[k] = nx;
+  log('Kjøpt ' + lc1(T.no) + ' (trinn ' + nx + ') til «' + S.boatName + '».', 'Bought ' + lc1(T.en) + ' (tier ' + nx + ') for the «' + S.boatName + '».');
+  return null;
+}
 function buyGear(what, spec, n){
+  if (what === 'tier') return tierBuy(spec, n);
   const pg = S.pgear, b = S.boat; n = Math.max(1, Math.round(n || 1));
   if (b.status !== 'port') return [gL('Redskap kjøpes i havn.', 'Gear is bought in port.')];
   // gear in the tackle shop, bait at the plant (Jonas 07.10.2026; core/06c-steder.js portServices)
@@ -344,7 +367,10 @@ function gopUnitMin(g, H, hs){
   if (g.sno){ const P = POTS.sno; return (g.op === 'set' ? P.set : P.haul) * (1 + coldPen(H, hs)) / Math.min(1, T.eff); }
   const hand = g.op === 'haul' && !hasHauler(g.kind) ? G.hand : 1;
   const sort = g.op === 'haul' && g.kind === 'teine' && !workTeam('sort', 'sort').n ? 1.3 : 1;   // the haulers sort the crab by class themselves
-  return base * hand * sort * (1 + coldPen(H, hs)) / crewF;
+  // the upgrades that take time off a unit, as shares of the base that add up (prinsipp 1 of docs/planer/oppgraderinger.md, upgSum): the
+  // gaff's on a tub of line hauled (OPP1: the fish is easier to get aboard; not the nets, which are picked at the net table, nor the pots)
+  const up = upgSum(g.kind === 'line' && g.op === 'haul' ? -hookX('haul') : 0);
+  return base * up * hand * sort * (1 + coldPen(H, hs)) / crewF;
 }
 // hdg: the course drawn on the chart; the gear goes out exactly there or not at all. Without it the string follows the course
 function startSet(kind, spec, fishAfter, hdg){
