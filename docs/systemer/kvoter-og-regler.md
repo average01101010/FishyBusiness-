@@ -14,7 +14,7 @@ Jonas: «Det neste vi må finne ut da er hvor grunnlinjen går langs hele kysten
 - **Fiskeridirektoratets reguleringskart** (`Yggdrasil/Fiskerireguleringer`, ArcGIS REST, 38 lag, NLOD): alle lagene som GeoJSON i 25833, med sidevis henting.
   - Fire lag gir ingen geometri fra MapServer: 0 stengte felt, 18 og 19 gyte- og oppvekstområder, 40 rødspette.
   - De hentes fra WFS-en til `FiskeridirWFS_fiskeri`, som av og til feiler og derfor prøves på nytt. Feltnavnene der er andre og rettes.
-- **Statistikkområdene** (`Yggdrasil/Statistikområder`): hovedområder (lag 6) og lokasjoner (lag 8) fra 2018.
+- **Statistikkområdene** (`Yggdrasil/Statistikområder`): hovedområder (lag 6) og lokasjoner (lag 8) fra 2018, og fra ICES-områdene (lag 3) Skagerrak, 3.a.20 (Ø10, 07.11.2026, se 5.28c). Hele lag 3 som GeoJSON gir 500 fra tjenesten, så `fetch.py` spør etter 3.a.20 alene.
 
 **Utregningen** (`tools/rules/regler.py`, rundt 95 s), som gir `src/data/rules.json` (0,32 MB) i spillets ramme med koordinater i enheter på 10 m:
 - **Grunnlinja for fastlandet** lukkes langt inne i land gjennom Sverige, Finland og Russland til flata «innenfor grunnlinja».
@@ -346,6 +346,44 @@ Jonas 03.11.2026: «kjør på» for hele H1b. Bestillingen: `rules.json` får so
 - Reglene for blåkveite, lange, brosme, uer og kveite i fiskevernsonen og i internasjonalt farvann. De er stengt.
 - Skagerrakavtalen (dansk og svensk sone). Den er stengt.
 
+## 5.28c Skagerrak: torsken øst for Lindesnes (Ø10, 07.11.2026)
+
+Bestillingen (steg 10 i `docs/planer/koen.md`, fra backloggen «Regelmotoren mangler Skagerrak», funnet i Onboarding 2): torsk utenfor grunnlinjen i Skagerrak øst for Lindesnes er stengt for norske fartøy, med unntaket for juksa under 11 m. Første tur hadde sin egen sjekk (`tutSkagOut`); nå svarer `rulesAt`.
+
+**Regelverket** (lest 07.11.2026):
+- **Forskrift om regulering av fisket etter torsk i Nordsjøen og Skagerrak i 2026** (FOR-2025-12-19-2805), lest på Lovdata som sist endret ved FOR-2026-10-01-1976, og ordrett i J-160-2026 hos Fiskeridirektoratet («Forskriften lyder etter dette», gjeldende 1.10–31.12.2026). Endringene i 2026 (FOR-2026-06-26-1451, FOR-2026-08-27-1705, FOR-2026-10-01-1976; J-113, J-135 og J-160-2026) gjelder maksimalkvotene i Nordsjøen, ikke Skagerrak.
+- **§ 1:** «Det er forbudt for norske fartøy å fiske og lande torsk i følgende områder i 2026: […] I Skagerrak, det vil si utenfor den norske grunnlinjen og videre avgrenset mot vest av en rett linje gjennom fra Hanstholmen fyr til Lindesnes fyr og i sør av en rett linje gjennom Skagen fyr til Tistlarna fyr utenfor 4 nautiske mil av de svenske og danske grunnlinjene.»
+- **§ 2:** «Uten hinder av forbudet i § 1 kan norske fartøy fiske inntil 52 tonn torsk i Skagerrak utenfor grunnlinjene.»
+- **§ 4, siste ledd:** «Fartøy som i 2004 fikk dispensasjon fra forbudet mot å fiske direkte etter torsk i Skagerrak utenfor grunnlinjene, kan maksimalt fiske og lande 3 tonn torsk i Skagerrak utenfor grunnlinjene. Andre fartøy med største lengde under 11 meter, kan i perioden fra og med 1. april til og med 30. juni maksimalt fiske og lande 3 tonn torsk med juksa i Skagerrak utenfor grunnlinjene dersom eier/høvedsmann er registrert på blad B i fiskermanntallet og fartøyet ikke har adgang til å delta i lukket gruppe i fisket etter torsk med konvensjonelle redskap i Nordsjøen.»
+- **§ 5:** «Fartøy som fisker med andre konvensjonelle redskap enn snurrevad i Skagerrak kan ha inntil 5 % bifangst av torsk i de enkelte fangster og ved landing.» (Snurrevad 2,5 %, trål 1–2,5 %; ikke i spillet.)
+- **2023-forskriften** (FOR-2022-12-16-2281, utløpt 31.12.2023, lest på Lovdata) har samme ordlyd i § 1 og samme juksaunntak i § 4; tallene var 100 tonn i § 2 og 6 tonn for dispensasjonsfartøyene. Backloggen viste til den.
+- **Bakgrunnen** (Fiskeridirektoratets foreløpige forslag 01.12.2025, sak 12/2025): «utgangspunktet [bør] være at det ikke bør åpnes for et direkte fiske etter torsk utenfor grunnlinjene i Skagerrak i 2026». Ordningen for under 11 m med juksa kom i 2015; dispensasjonen fra 2004 gjaldt 7 fartøy, i dag 3–4.
+
+**Kartdataene** (`skag` i `rules.json`, `skagerrak()` i `tools/rules/regler.py`):
+- Linjene i § 1 er ICES' egne rundt 3.a.20 (Skagerrak), så flata er ICES 3.a.20 slik Fiskeridirektoratet tegner den (Statistikområder lag 3, NLOD). Vestkanten er den rette linja fra Hanstholm (57,11789° N 8,58917° Ø) til Lindesnes (57,97993° N 7,05134° Ø), 39 punkter på linja; Lindesnes-punktet ligger om lag 300 m fra fyret slik Wikipedia oppgir det (57°58′57″ N 7°02′48″ Ø). Linja er rett i lengde og bredde, ikke en storsirkel.
+- Spillet spør bare utenfor grunnlinja, så flata er utvidet over land og indre farvann (innenfor grunnlinja, øst for linja) før den forenkles på 0,2 km. Forenklingen flytter da bare kanter innenfor grunnlinja. Utenfor grunnlinja sier den forenklede flata det samme som ICES-flata i 99,87 % av 21 189 punkter; avvikene ligger i dansk og svensk farvann og i 2 punkter rett ved linja i NØS. 1 063 hjørner, 9,8 kB.
+- **Oppdatering:** `python3 tools/rules/fetch.py --skag && python3 tools/rules/regler.py --skag` legger `skag` inn i `rules.json` slik den er, og resten blir byte for byte som før (rundt 2 min). Full kjøring (`fetch.py`, `regler.py`) tar den med. Ikke for hånd.
+
+**Regelmotoren** (`core/03e-rules.js`):
+- `ruSkag(p)`: utenfor grunnlinja, i flata, og i norsk farvann (`ruSea` er `''` eller `no`). Flata ligger i de samme 100 m-cellene som sonene (bit 64). Den danske og svenske delen av Skagerrak er stengt fra før (`dk0`, 5.28b), med sin egen grunn.
+- `rulesAt` sør for 62° N utenfor grunnlinja i Skagerrak:
+  - `skag` (nei, stopper): torsk, også når arten ikke er oppgitt (juksa, line og garn uten art), med grunnen og unntaket i teksten: «Norske fartøy kan ikke fiske torsk i Skagerrak utenfor grunnlinjen (øst for linja Lindesnes–Hanstholmen). Unntaket er juksa fra fartøy under 11 m med eier på blad B, 1. april–30. juni, høyst 3 tonn.»
+  - `skag4` (advarsel): unntaket, når redskapet er juksa (eller ikke oppgitt), båten er under 11 m, datoen 1.4–30.6 og spilleren på blad B (`bladB()`). Teksten sier 3 tonn og 52 tonn norsk kvote.
+  - `skag5` (advarsel): andre arter med juksa, line eller garn, høyst 5 % torsk som bifangst. Ikke for teiner.
+- Kortnavnene (`RU_SHORT`): «Ikke torsk i Skagerrak her», «Skagerrak: juksa, høyst 3 t torsk», «Høyst 5 % torsk som bifangst».
+
+**I spillet** (som de andre reglene, ingen egen kode): juksa stopper og båten venter med grunnen i loggen (`05-vessels.js`), setting av redskap stopper (`10-gear.js`), ruta og «Kast loss» varsler, Autonav går til nærmeste lovlige sted (5.29b), regellaget er rødt utenfor grunnlinja øst for Lindesnes, statusboksen sier «✕ Ikke torsk i Skagerrak her», Regler-appen gir grunnen og kilden, og tipset kommer første gang. Kystvakta tar `skag` med i merknadene (`KV_REF.skag`, så saken i Kystposten får kilden). Første tur: `tutSkagOut` i `ui/08c-start.js` er tatt ut; feltet ved et mottak i Skagerrak finnes nå innenfor grunnlinja (juksa uten art er stengt utenfor), og miksen spør `rulesAt` per art.
+
+**Forenklet, antatt, ikke med:**
+- **Juksa stopper helt** utenfor grunnlinja i Skagerrak, ikke bare torsken: fangsten har torsk i seg og kan ikke holde den ute per sted, slik Oslofjordens torskeforbud og § 31 stopper (5.28). Etter § 5 kunne spilleren fiske andre arter med høyst 5 % torsk. Et valg for Jonas (køen, «Valg som venter på Jonas»).
+- **Taket på 3 tonn telles ikke**: teksten sier det, `03d-quota.js` har bare kvotene nord for 62° N (Ø10 skulle ikke røre den). Kystvakta spør ikke om det.
+- **Lukket gruppe i Nordsjøen** finnes ikke i spillet, så det vilkåret i § 4 regnes som oppfylt (antatt).
+- **Dispensasjonsfartøyene fra 2004** (3 tonn, tre eller fire navngitte båter) er ikke spillerens og er ikke med.
+- **Nordsjøen** (§ 1 a, vest for linja sør for 62° N): også der er torsk forbudt for norske fartøy uten adgang, og åpen gruppe kan fiske høyst 3 tonn (garantert 2) etter § 4. Spillet regner spilleren som om hun har adgang og teller ikke taket (backloggen).
+- **Gyte- og oppvekstområdene for torsk i NØS sør for 62° N** (lag 18 og 19 i `rules.json`, blant dem Revet i Skagerrak) brukes ikke av `rulesAt` (backloggen).
+
+**Tester:** `tests/unit/skagerrak.test.mjs` (32 sjekker: flata ved Kristiansand, Arendal og Egersund og på hver side av linja, stoppet med grunnen og kilden, unntaket i tid, lengde, redskap og blad B, bifangsten, teinene, dansk sone, Bergen; sett rød før regelen fantes). Stikkprøven 07.11.2026 (Kristiansand, Arendal, Egersund, Bergen) står i PR #49 og i køen.
+
 ## 5.29 Regler-appen, statuslinja og regellaget (R3 av regelplanen, 05.10.2026)
 
 Jonas: «mange som skal spille dette har kanskje ikke så mye erfaring med fiskeri fra før, så vi blir nødt til å lage en intuitiv løsning der hvordan vi skal vise og lære dem hvilke regelverk som gjelder».
@@ -423,10 +461,13 @@ Jonas 06.11.2026: «Neste økt i havsteget: H2e, Kystvakta på havet, hele turen
 | Fordeling av norsk kvote | Fiskeridirektoratets saksdokument 5/2025 (reguleringsmøtet november 2025), og tilsvarende for 2019–2024 | Avsetninger, åpen gruppe 6,62 %, trålstigen, Finnmarksmodellen. Gir § 5 eksakt |
 | Bestander og råd | HI, kvoteråd for 2027 (juni 2026), og IMR-VNIRO-rapporten 2026 | Torsk: TAC 2026 285 000 t, råd 2027 312 667 t, B_lim 220 000, B_pa 460 000 t. Hyse og sei i STOCK |
 | Strukturkvoter | Forskrift om spesielle kvoteordninger for kystfiskeflåten (J-244-2025), og høringsnotatet om strukturgevinst 2026 | 11–27,99 m, samme gruppe, 10 % avkorting, 20 år, kvotetak 3× (11–14,99) og 4× (15–27,99). Særlig kvoteordning under 11 m fra 2025 |
+| Strukturkvoter, lest på nytt for kvotemarkedet | Forskrift 7. november 2003 nr. 1309 (Lovdata, sist endret FOR-2025-12-19-2812, lest 07.11.2026) og deltakerloven (LOV-1999-03-26-15) | § 8: båten «meldt ut av registeret over fiskefartøy» og deltakeradgangene oppgitt, ingen krav om kondemnering. § 9: landsdel (Nord-Norge eller Sør-Norge) i 12 måneder for torsk, hyse og sei. § 12: 3× eller 5× i én sektor (11–14,99 m), 4× eller 6× i én sektor (15–27,99 m). Kap. 2 § 6: den særlige ordningens andre kvote faller bort ved salg for fortsatt drift. Deltakerloven § 4 annet ledd, § 6 og § 7 b. Spillet bruker fortsatt 3× og 4× (backloggen, «Kvotemarkedet, funnene fra planen») |
+| Fiskeritillatelser og strukturgevinst (forslag) | Fiskeridirektoratets høringsnotat 26.03.2026 (fiskeridir.no, høringen «Fiskeritillatelser, kvotetak og fordeling av strukturgevinst», lest 07.11.2026) | Utkastets § 5: utskiftning, overtakelse av fartøy for fortsatt drift og flytting av driftsgrunnlag; § 6 lengdegrensene for flytting (11, 15, 21 m); § 7 forhåndstilsagn i to år; § 8 driftskravet (foreslått). Avkortingen er 10 % for alle fra 27.11.2020. Strukturgevinsten ved utløp etter modell X (Stortinget vedtak 592, 2023–2024); de første strukturkvotene går ut 31.12.2026. 1 452 deltakeradganger i torsk nord, kyst, per 31.12.2025 (tabell 3). Brukes i `docs/planer/kvotemarkedet.md` |
 | Åpen gruppe og ferskfisk, historikk | Saksdokumentene 2019–2025 | Stopp 24.3.2019, 20.4.2020, 1.5.2023, 15.5.2025, 16.4.2026; ingen i 2021, 2022, 2024. Ferskfisk 2017–2025 |
 | Maskevidde i torskegarn | Maskeviddeforskriften (Lovdata 1989-10-10-1095) | Minst 156 mm nord for 62° N. Spillet selger 156, 180 og 200 mm |
 | Trekk i oppgjøret | Norges Råfisklag, «Forklaring til trekk på fiskers avregning» (rafisklaget.no, lest 04.10.2026) | Lagsavgift 0,43 % (ferskt fra 1.7.2026). Av totalen minus den: pensjonstrekk 0,4 %, produktavgift 1,6 % (fra 1.1.2026), forskningsavgift 1,35 %, ressursavgift 0,42 %, kontrollavgift 0,22 % (ikke under 15 m ennå). MVA 11,11 % på salget til salgslaget. Se 5.4 |
 | Fjordlinja og redskap | Høstingsforskriften kap. VI (§ 31, 33, 33a, lest 04.10.2026) | Innenfor: høyst 80 torskegarn og 5 000 kroker (yttersidene av kroklinjene i Finnmark unntatt 1.11–30.4), ikke snurrevad. 15 m eller mer: ikke torsk; under 21 m andre arter, sør for 68° 15,6′ N annet enn torsk. Se 5.28 |
+| Torsk i Skagerrak | FOR-2025-12-19-2805 §§ 1, 2, 4 og 5 (Lovdata, lest 07.11.2026, sist endret FOR-2026-10-01-1976; J-160-2026), og FOR-2022-12-16-2281 (2023, samme ordlyd) | Torsk forbudt for norske fartøy utenfor grunnlinjen øst for linja Lindesnes–Hanstholm; unntak juksa under 11 m, blad B, 1.4–30.6, høyst 3 t; 52 t norsk kvote; 5 % bifangst. Se 5.28c |
 | Kysttorsk etter lengde | J-161-2026 § 32 (lest 04.10.2026) | 21–27,99 m ikke innenfor grunnlinja, 28 m og over ikke innenfor 4 nm, med unntak etter område og dato. Henningsværboksen og Borgundfjorden. Se 5.28 |
 | Grunnlinja og sonene | Kartverket, Norges maritime grenser (Geonorge, 25833) | Grunnlinja, 1, 4, 6, 10, 12 og 24 nm. Se 4.17 |
 | Sonene utenfor kysten | Kartverket, Norges maritime grenser; Fiskeridirektoratet, Yggdrasil/Sjøgrenser_linje (hentet 04.11.2026) | NØS, fiskevernsonen, Jan Mayen, territorialfarvannet ved Svalbard og Jan Mayen, sokkelen; nabolandenes 200 nm og linjene mellom dem. Se 5.28b |
@@ -454,5 +495,6 @@ Jonas 06.11.2026: «Neste økt i havsteget: H2e, Kystvakta på havet, hele turen
 | Hviletid | Forskrift om arbeids- og hviletid på fiskefartøy (FOR-2017-11-10-1758) §§ 1 og 3 | ≥ 10 t hvile per 24 t og ≥ 77 t per 168 t, høyst to perioder der én er ≥ 6 t, og ≤ 14 t mellom hvileperiodene. Gjelder ikke den som jobber alene på egen båt. Snittet på 48 t arbeid per uke er ikke modellert. Sjekket mot søkeresultat 01.10.2026, fordi Lovdata er sperret her. |
 
 **Følg med på:**
+- Fiskeridirektoratets forslag til ny forskrift om fiskeritillatelser og ny forskrift om spesielle kvoteordninger og strukturgevinst (høring 26.03.2026, «Forslag etter høring» 11.09.2026, ikke lest). Det endrer navnene og kan gi driftskrav ved salg; kvotemarkedet (`docs/planer/kvotemarkedet.md`) bygger på det.
 - Arbeidsgruppens rapport om åpen gruppe fra 23.06.2026, som foreslår minstekvantum og aldersgrense 30 år.
 - Høringen om kveiteregulering, som kan gi åpen gruppe for kveite for båter under 15 m.

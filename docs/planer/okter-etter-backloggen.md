@@ -117,7 +117,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 
 ### Ø10 Regelmotoren
 
-- «Regelmotoren mangler Skagerrak» (FOR-2022-12-16-2281 §§ 1 og 4; 2026-forskriften er ikke lest).
+- ~~«Regelmotoren mangler Skagerrak» (FOR-2022-12-16-2281 §§ 1 og 4; 2026-forskriften er ikke lest)~~: ferdig 07.11.2026 (FOR-2025-12-19-2805 lest; 5.28c i `docs/systemer/kvoter-og-regler.md`). Det som står igjen sør for 62° N, er steg 65 i køen.
 - «`quotatest` er rød på kvotesamarbeidet»: Ø2 fant at det var testens feil (den leste bare de tre siste logglinjene etter leveringen); rettet i testen 05.11.2026, ingenting å gjøre her.
 - **Filer:** `core/03e-rules.js`, `core/03d-quota.js`, `src/data/rules.json`, `tools/rules/`.
 
@@ -151,6 +151,7 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 
 - 10.2 «De navngitte fangstfeltene finnes bare på Senja» og 10.5 «Feltnavnene (B2)».
 - **Filer:** `src/data/felt.json`, `tools/npc/`, `core/03f-fiske.js`. Kommer etter H2 (`fiske.json`).
+- **Planen** skrevet 07.11.2026: `docs/planer/fangstfelt.md`, fasene F1–F5 (steg 31a–31e i køen) og valgene V1–V4.
 
 ### Ø15 NPC-flåten
 
@@ -199,11 +200,11 @@ Jonas 05.11.2026: «Vi skal jobbe oss gjennom listen av ting som står i planer,
 | Ø8 Spillbarhet | Ferdig 06.11.2026: planen `docs/planer/spillbarhet-fangst.md` (fangsten forklart, første turs forventning, havna i kuling; V1–V5, venter på valgene), bølgene langs ruta i rutepanelet (`ui/03b-route.js`, prøvd i Bergen, Bodø og Hammerfest i begge formater), innloggingsbonusens tekst (`ui/phone/09-vaer-post-salg-redning.js`), mannskapet spilltestet (`tests/mannskapsplay.py`, `docs/playtest/rapport-4-mannskap.md`; det som bør rettes, i backloggen 10.2, 10.5 og 10.7). Igjen i 10.2: fangsten og havna (planen), mannskapets to rettinger Valgene tatt 06.11.2026 (V1 A, V2 A, V3 C, V4 A, V5 A; R1 A bygd; M1 A, M2 B, M3 faste tider, M4 A, M5 A); byggingen er Ø8b | `ccr-ccfb0017-rmieib` | 06.11.2026 |
 | Ø9 Fysikk 4 | I køen (steg 14 F2, 15 F3, 20 F5, 22 F4, 41–43 F8, F6, F7) | | 07.11.2026 |
 | Ø16 Sanntid S2 | Ferdig og rullet ut 06.11.2026 (01c89b6f): reléet (`tools/server/rt`), `rt_ticket()` (HMAC i Postgres, hemmeligheten i Vault), klienten med 5 Hz/1 Hz og interpolasjon 0,5 s bak, `setup.sh`, `Caddyfile`, `deploy.yml`; `rttest` 12 OK, `sqltest` 135 OK. Migreringen, `setup.sh` og hemmeligheten i Vault gjort av Jonas 06.11.2026. Igjen: S3 (lasten) og «Lasten med 5 000 spillere» mot Supabase | `ccr-529a099b-0o66nk` | 05.11.2026 |
-| Ø10 Regelmotoren | I køen (steg 10; H2 er ferdig, `03d-quota.js` først etter H3b) | | 07.11.2026 |
+| Ø10 Regelmotoren | Skagerrak ferdig 07.11.2026 (Jonas' økt, gren `ccr-68a96e99-8x1jh1`, PR #49): `skag`, `skag4`, `skag5` i `rulesAt` etter FOR-2025-12-19-2805, flata ICES 3.a.20 i `rules.json` fra `tools/rules/`, første tur og Kystvakta leser den (`docs/systemer/kvoter-og-regler.md` 5.28c). `03d-quota.js` ikke rørt; det som står igjen sør for 62° N, er steg 65 i køen | | 07.11.2026 |
 | Ø11 Lover, regler og sikkerhet | Ø11.3 bygd og rullet ut 07.11.2026 i 21ec10d3 (sammenstøtene: kontakten, skylda etter sjøloven §§ 161–162 fra vikeplikten før støtet, betalingen med kaskoen, § 164 på VHF og i dagboka; gren `ccr-208d78a1-ruhxll`, `docs/systemer/sjofart-og-lover.md` kap. 5). Ø11.2 bygd og rullet ut 06.11.2026 (f04d4feb; regel 19 i nedsatt sikt, sikker fart og 19 e for Autonav, tåke- og manøversignalene og hornet, lanternene etter det NPC-ene gjør, om dagen i tåke og Kystvaktas blå lys; `docs/systemer/sjofart-og-lover.md` kap. 4). Ø11.5 bygd og rullet ut 06.11.2026 (livbøyene, MOB-båten, vesten, V6 A, leideren, kjenningssignalet; gren `ccr-2f9c820c-pucumq`). Ø11.1 bygd og rullet ut 06.11.2026 (d62153dc; vikeplikten for spilleren, NPC-ene og Autonav, varselet og AIS-statusen, `core/05e-sjovei.js`, `docs/systemer/sjofart-og-lover.md`). Ø11.4 bygd 06.11.2026 (2f00d140) uten nødstoppen på halerne (venter på H2d); modellene er satt på båtene og folkene i Ø11.5. Neste: Ø11.3 sammenstøt | `claude/o11-2-sikring-lys-lyd-bsrlub` (Ø11.2), `ccr-2f9c820c-pucumq` (Ø11.5), `ccr-e5ae7b11-uibmpt` (Ø11.1), `ccr-d0cfc148-iavi2e` (Ø11.4), `ccr-5e1ba2f4-pusvyd` | 06.11.2026 |
 | Ø12 Driftsplan 2, resten | I køen (steg 18 del 8 ryddingen etter H3b og Ø11.6, steg 23 GUI-resten og stikkprøvene etter H3c) | | 07.11.2026 |
 | Ø13 Ny kartrelease | I køen (steg 33, planen med `/planlegg` etter Ø3a og F4; én release om gangen) | | 07.11.2026 |
-| Ø14 Fangstfelt med navn | I køen (steg 31, planen; H2 er ferdig, feltnavnene for hele kysten finnes alt i `felt.json`, det som står igjen er vekten utenfor Senja) | | 07.11.2026 |
+| Ø14 Fangstfelt med navn | Planen skrevet 07.11.2026 (`docs/planer/fangstfelt.md`); fasene F1–F5 er steg 31a–31e i køen og venter på valgene V1–V4 | | 07.11.2026 |
 | Ø15 NPC-flåten | I køen (steg 34–38, N3 etter Ø13-planen fordi vec-laget trenger en kartrelease; klarsignalet er Jonas' svar 07.11.2026) | | 07.11.2026 |
 | Ø17 Hooks og regler | Ferdig: A1 deny-lista, A2 øktstarten, A4 lesevakten (`.claude/settings.json`, `.claude/hooks/`), A6 i `CLAUDE.md`, `testing.md` og `/lever`, A3 commit-vakten etter «Fiks det du mener er nødvendig», `hooktest` i `run.py` (55 OK); prøvd i Claude Code i samme økt. Funnet: `main` er tom, så en økt fra `main` får hookene først med arbeidsgrenen | `ccr-d22aebce-865bcx` | 06.11.2026 |
 
