@@ -12,9 +12,9 @@ export default function (t){
   const D = K.fkData(), RU = K.RU, I = new Map(RU.lok.map((h, i) => [h.c, i]));
   const ptIn = (c, k) => { const P = RU.lok[I.get(c)].P[0], b = P.bb; for (let j = 0; j < 200; j++){ const x = b[0] + (b[2] - b[0]) * K.h2(k, 9100 + j), y = b[1] + (b[3] - b[1]) * K.h2(k, 9300 + j); if (K.ruIn(RU.lok[I.get(c)].P, x, y) && K.ruShelf({x, y})) return {x, y}; } return null; };
 
-  // the species: fished by the snow crab vessel with its permit, still last in ALLSP (no other species' seeds move), landed whole
+  // the species: fished by the snow crab vessel with its permit, still last in ALLSP (no other species' seeds move); split in the factory (H3b)
   const sp = SPECIES.snokrabbe;
-  t.ok(sp.lic === 'krab' && sp.npc && sp.whole && sp.stk === 'sstk' && K.get('ALLSP')[K.get('ALLSP').length - 1] === 'snokrabbe' && !K.get('PLAYSP').includes('snokrabbe'), 'snøkrabben fanges med snøkrabbetillatelsen, ligger sist i ALLSP og landes hel');
+  t.ok(sp.lic === 'krab' && sp.npc && !sp.whole && sp.stk === 'sstk' && K.get('ALLSP')[K.get('ALLSP').length - 1] === 'snokrabbe' && !K.get('PLAYSP').includes('snokrabbe'), 'snøkrabben fanges med snøkrabbetillatelsen, ligger sist i ALLSP og deles i klør i fabrikken (H3b)');
 
   // width-weight (HI 2023-61 fig. 8, hard shell medians 95-99 mm 380 g, 110-114 mm 600 g, 120-124 mm 780 g; new shell 10-15 % lighter)
   const w = (cw, soft) => K.snoW(cw, soft) * 1000;
@@ -67,7 +67,8 @@ export default function (t){
   S.hold = []; S.t = Hf * 60; const g = {rel:0, kg:0}; K.landSno(g, 3000);
   const kept = S.hold.reduce((a, x) => a + x.n, 0), so = g.snoS, keptKg = S.hold.reduce((a, x) => a + x.kg, 0);
   t.ok(so.n === 3000 && kept === so.kept && so.kept + so.rel === 3000 && so.rel === g.rel && so.small > 300, `sortert: ${so.kept} beholdt (${so.soft} bløte, ${so.dead} døde), ${so.rel} satt ut levende (${so.small} under 9,5 cm, ${so.fem} hunner)`);
-  t.ok(S.hold.every(x => x.sp === 'snokrabbe' && x.gut) && S.hold.some(x => x.cls === 2) && keptKg / kept > 0.45, `i lasten: ${keptKg.toFixed(0)} kg i klassene hard, bløt og død (${(keptKg / kept).toFixed(2)} kg per krabbe), hel og usløyd`);
+  // (H3b: the hard and the soft crab wait for the factory, not split yet; the dead one is round, for the freezer)
+  t.ok(S.hold.every(x => x.sp === 'snokrabbe' && (x.cls === 2 ? x.rund && x.gut : !x.gut && !x.tank)) && S.hold.some(x => x.cls === 2) && keptKg / kept > 0.45, `i lasten: ${keptKg.toFixed(0)} kg i klassene hard, bløt og død (${(keptKg / kept).toFixed(2)} kg per krabbe); de levende venter på fabrikken, de døde er runde`);
   // over 20 % soft crab: the vessel changes field (J-237-2025 § 5)
   S.msgs = []; const g2 = {rel:0, kg:0, snoS:{n:500, kept:400, rel:100, fem:5, soft:100, dead:2, kg:200, small:95}}, sset = {a:K.P(76.5, 33), b:K.P(76.5, 33.1)};
   K.snoHaulDone(g2, sset); const r5 = K.rulesAt({p:K.P(76.5, 33.05), H:Hf, len:50, gear:'teiner', sp:'snokrabbe', hav:'krab'});

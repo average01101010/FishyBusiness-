@@ -477,7 +477,8 @@ function drDepart(o, wps, kind, noJig){
 // a closed place, or the cod quota used up: the plan stops (Jonas 23.10.2026)
 function drRulesWhy(o, H, placesOnly){
   const kind = drKind(o), hand = !(S.equip && S.equip.jukse > 0);
-  for (const [i, f] of o.fields.entries()){ const why = ruBlockMsg({p:f, len:BOAT.len, gear:o.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? 'krabbe' : null}); if (why) return {k:'closed', fix:'places', no:'Felt ' + (i + 1) + ' er stengt: ' + why, en:'Field ' + (i + 1) + ' is closed: ' + why}; }
+  // (the pots' own species, potSp: the snow crab vessel's conical pots take snow crab, H3c; the hour H the plan asks for)
+  for (const [i, f] of o.fields.entries()){ const why = ruBlockMsg({p:f, len:BOAT.len, gear:o.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? potSp() : null, H}); if (why) return {k:'closed', fix:'places', no:'Felt ' + (i + 1) + ' er stengt: ' + why, en:'Field ' + (i + 1) + ' is closed: ' + why}; }
   if (drJig(o)) for (const [i, j] of o.jigs.entries()){ const why = ruBlockMsg({p:j, len:BOAT.len, gear:'juksa', sp:null, hand}); if (why) return {k:'closed', fix:'places', no:'Juksplass ' + (i + 1) + ' er stengt: ' + why, en:'Jig place ' + (i + 1) + ' is closed: ' + why}; }
   if (!placesOnly && o.rig !== 'teiner' && access() !== 'none'){ const q = quotaState(); if (q.torsk >= codLimitNow(H) - 1) return {k:'quota', fix:'quota', no:'Torskekvoten er brukt opp.', en:'The cod quota is used up.'}; }
   return null;

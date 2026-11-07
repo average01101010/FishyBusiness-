@@ -1,5 +1,5 @@
-"""The sea ice in the page (H1b R5, core/03h-is.js, data/is.json): a goal in the ice is refused by Autonav with the reason (and not for
-a boat with an ice class: then the search goes on, which is not waited for), a whole route round the ice in March (H1b R6: open water
+"""The sea ice in the page (H1b R5, core/03h-is.js, data/is.json): a goal in the ice is refused by Autonav with the reason (for
+a boat with ice class 1C with the limit of her class, H3c; under it the search goes on, which is not waited for), a whole route round the ice in March (H1b R6: open water
 at both ends, the straight line through the ice; every leg clear of it, and the time it takes), the drift ice in the chart plotter
 and the Weather app's ice card, and screenshots of the plotter by Svalbard in March in both formats. tests/unit/is.test.mjs checks the
 month, the edge, the sailing and the router's checks without a page; this checks that the page has them. Prints OK or FEIL per check."""
@@ -43,8 +43,10 @@ async def main():
         await boot(pg)
         g = await pg.evaluate(GOAL, [[76.0, 24.0], [78.8, 28.0], None])
         print(ok(g['why'] and 'drivisen' in g['why']), 'a goal in the ice (Kong Karls land in March) is refused with the reason (%s ms):' % g['ms'], g['why'])
+        # (H3c: the ice class is a limit, 6/10 for 1C, not free going: Kong Karls land at 9/10 is refused with the class' limit. That a goal
+        # under it is searched for, is in tests/unit/is.test.mjs: a search here goes on in the background and gets in the way of the next)
         c = await pg.evaluate(GOAL, [[76.0, 24.0], [78.8, 28.0], '1C'])
-        print(ok(not c['why']), 'not for a boat with an ice class', c)
+        print(ok(c['why'] and 'Isklassen 1C går opp til 6/10' in c['why']), 'a boat with ice class 1C: the goal at 9/10 is refused with the limit of her class', c)
         await pg.evaluate(ROUND); r = None
         for _ in range(240):
             r = await pg.evaluate("window.__ice")

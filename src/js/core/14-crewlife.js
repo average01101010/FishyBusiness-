@@ -321,10 +321,10 @@ function crewSlip(team){
     const pr = 0.0012 * (1 + 2 * f * f + Math.max(0, hs - 1) + 2 * cp + (5 - sk) / 3 + 3 * Math.max(0, 1 - e));
     if (crewRand() >= pr) continue;
     const r = crewRand(), nm = c.name.split(' ')[0];
-    if (r < 0.45){ const x = S.hold.filter(y => !y.iced && !SPECIES[y.sp].live && y.kg > 0.5).sort((a, y) => y.kg - a.kg)[0]; if (!x) continue;
+    if (r < 0.45){ const x = S.hold.filter(y => !y.iced && !liveLot(y) && y.kg > 0.5).sort((a, y) => y.kg - a.kg)[0]; if (!x) continue;
       const kg = Math.min(x.kg, 1.5 + crewRand() * 3); if (x.n) x.n = Math.max(0, x.n - 1); x.kg -= kg; if (x.kg < 0.01) S.hold.splice(S.hold.indexOf(x), 1);
       log(nm + ' mistet en ' + SPECIES[x.sp].no.toLowerCase() + ' på ' + fmt(kg, 1) + ' kg over ripa.', nm + ' lost a ' + SPECIES[x.sp].en.toLowerCase() + ' of ' + fmt(kg, 1) + ' kg over the rail.'); crewSay(c, 'slip'); if (hooks.onCrewFx) hooks.onCrewFx(c, 'slip', {sp:x.sp, kg}); }
-    else if (r < 0.75){ const x = S.hold.find(y => y.gut && !y.iced && !SPECIES[y.sp].live); if (!x) continue;
+    else if (r < 0.75){ const x = S.hold.find(y => y.gut && !y.iced && !liveLot(y)); if (!x) continue;
       x.fresh = Math.max(0, x.fresh - 6 * Math.min(1, 4 / x.kg)); log(nm + ' sløyde en fisk stygt. Den blir litt dårligere betalt.', nm + ' gutted a fish badly. It will fetch a little less.'); crewSay(c, 'botch'); }
     else { c.cut = S.t + 240; log(nm + ' skar seg i hånda på sløyekniven.', nm + ' cut a hand on the gutting knife.'); crewSay(c, 'cut'); if (hooks.onCrewFx) hooks.onCrewFx(c, 'cut'); }
   }

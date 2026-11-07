@@ -186,6 +186,7 @@
     else if (a === 'mktab'){ sub.marked = d.s; mkSel = null; }
     else if (a === 'mksel'){ mkSel = d.k ? {k:d.k, o:d.o || null} : null; }
     else if (a === 'minsheet'){ minSheet = !minSheet; }
+    else if (a === 'snomode'){ snoSetMode(d.m); }   // live or frozen snow crab for the trip (H3b, 10e-krabbefabrikk.js)
     else if (a === 'mk3d'){ if (typeof DOCK !== 'undefined') DOCK.close(); if (isOpen) show(false); G3.showroom(d.k); return; }
     else if (a === 'buy'){
       // data-ti="1": trade in the vessel you follow; data-ti="0": add a vessel to the fleet (not an open-group boat before the company has a closed-group one)

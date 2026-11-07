@@ -13,9 +13,10 @@ const PLANMAP = (() => {
   const labels = o => { const fi = {felt:0, juks:0}, out = {}; for (const q of o.places){ fi[q.k]++; out[q.id] = q.k === 'felt' ? L('Felt ', 'Field ') + fi[q.k] : L('Juksplass ', 'Jig place ') + fi[q.k]; } return out; };
   const find = (o, id) => o ? o.places.find(p => p.id === id) : null;
   // the string of a field: its length from the units (startSet: the line by hooks, nets and pots by the unit), and where it ends for a heading
-  const stringKm = (o, q) => { const kind = p2Kind(o); if (!kind) return 0; return kind === 'line' ? lineKm(q.lk || 'hyse', q.n * LINE_KINDS[q.lk || 'hyse'].hooks) : q.n * GEAR[kind].km; };
+  // (the snow crab vessel, H3c: each string of a field is 200 pots, 5 km; the field's strings lie side by side, 06i-plan2-sno.js)
+  const stringKm = (o, q) => { const kind = p2Kind(o); if (!kind) return 0; if (p2Sno(o)) return p2SnoKm(); return kind === 'line' ? lineKm(q.lk || 'hyse', q.n * LINE_KINDS[q.lk || 'hyse'].hooks) : q.n * GEAR[kind].km; };
   const stringEnd = (q, hdg, km) => ({x:q.x + Math.sin(hdg) * km, y:q.y - Math.cos(hdg) * km});
-  const roomOf = (o, q) => { try { const km = stringKm(o, q); return !!(q.hdg != null ? setGeomExact(q, q.hdg, km) : setGeom(q, 0, km)); } catch (e){ return true; } };
+  const roomOf = (o, q) => { try { if (p2Sno(o)){ for (let k = 0; k < q.n; k++) if (!p2SnoFit(q, k)) return true; return q.n === 0; } const km = stringKm(o, q); return !!(q.hdg != null ? setGeomExact(q, q.hdg, km) : setGeom(q, 0, km)); } catch (e){ return true; } };
   const degOf = (q, hdg) => Math.round(((typeof trueDeg === 'function' ? trueDeg(hdg, q) : hdg * 180 / Math.PI) % 360 + 360) % 360);
   const hit = (o, mp, rr) => { let best = null, bd = rr; for (const q of o.places){ const d = dist(q, mp); if (d < bd){ bd = d; best = q; } } return best; };
   // the chart round the whole plan: home, the plant and the places
@@ -54,8 +55,8 @@ const PLANMAP = (() => {
     card.innerHTML = '<div class="ai-h"><b>' + lb[q.id] + '</b><button type="button" data-pm="x" aria-label="' + L('Lukk', 'Close') + '">×</button></div>' +
       (isF ? (two ? '<div class="pm-kv"><span>' + L('Line', 'Longline') + '</span><span><button type="button" data-pm="lk" class="pm-w">' + L(LINE_KINDS[q.lk || 'hyse'].no, LINE_KINDS[q.lk || 'hyse'].en) + ' ⇄</button></span></div>' : '') +
         // (with the line's kind on its own row above, this row is the tubs: the card said «Hyseline» twice, GUI review P3)
-        '<div class="pm-kv"><span>' + (kind === 'line' ? (two ? L('Stamper', 'Tubs') : L(LINE_KINDS[q.lk || 'hyse'].no, LINE_KINDS[q.lk || 'hyse'].en)) : L(GEAR[kind].no, GEAR[kind].en)) + '</span><span><button type="button" data-pm="n" data-d="-1" aria-label="−">−</button><b>' + q.n + ' ' + unitName(kind, q.n) + ' <small>' + L('av ', 'of ') + Math.max(0, p2Left(o, q)) + '</small></b><button type="button" data-pm="n" data-d="1" aria-label="+">+</button></span></div>' +
-        '<div class="pm-kv"><span>' + L('Ståtid', 'Soak') + '</span><span><button type="button" data-pm="s" data-d="-1" aria-label="−">−</button><b>' + q.soak + L(' t', ' h') + '</b><button type="button" data-pm="s" data-d="1" aria-label="+">+</button></span></div>' +
+        '<div class="pm-kv"><span>' + (kind === 'line' ? (two ? L('Stamper', 'Tubs') : L(LINE_KINDS[q.lk || 'hyse'].no, LINE_KINDS[q.lk || 'hyse'].en)) : (p2Sno(o) ? L('Lenker', 'Strings') : L(GEAR[kind].no, GEAR[kind].en))) + '</span><span><button type="button" data-pm="n" data-d="-1" aria-label="−">−</button><b>' + q.n + ' ' + (p2Sno(o) ? L('à 200', 'of 200') : unitName(kind, q.n)) + ' <small>' + L('av ', 'of ') + Math.max(0, p2Left(o, q)) + '</small></b><button type="button" data-pm="n" data-d="1" aria-label="+">+</button></span></div>' +
+        '<div class="pm-kv"><span>' + L('Ståtid', 'Soak') + '</span><span><button type="button" data-pm="s" data-d="-1" aria-label="−">−</button><b>' + (p2Sno(o) ? fmt(q.soak / 24, 0) + L(' døgn', ' days') : q.soak + L(' t', ' h')) + '</b><button type="button" data-pm="s" data-d="1" aria-label="+">+</button></span></div>' +
         '<div class="pm-kv"><span>' + L('Lenka', 'String') + ' <small>' + fmt(stringKm(o, q), 1) + ' km' + (roomOf(o, q) ? '' : L(' · får ikke plass her', ' · no room here')) + '</small></span><span><button type="button" data-pm="h" data-d="-15" aria-label="↶">↶</button><b>' + (q.hdg == null ? L('etter kursen', 'by course') : degOf(q, q.hdg) + '°') + '</b><button type="button" data-pm="h" data-d="15" aria-label="↷">↷</button>' + (q.hdg != null ? '<button type="button" data-pm="h0" class="pm-w">' + L('fri', 'free') + '</button>' : '') + '</span></div>' : '') +
       '<div class="ai-t">' + dkm + own + '</div>' +
       '<div class="pin-b"><button type="button" data-pm="up"' + (i ? '' : ' disabled') + ' aria-label="' + L('Før', 'Earlier') + '">↑</button><button type="button" data-pm="dn"' + (i < o.places.length - 1 ? '' : ' disabled') + ' aria-label="' + L('Etter', 'Later') + '">↓</button><button type="button" data-pm="del">' + L('Fjern', 'Remove') + '</button></div>';
@@ -108,7 +109,9 @@ const PLANMAP = (() => {
     if (hp && o.places.length){ const pts = [hp.p].concat(o.places, [hp.p]); g.push('<polyline points="' + pts.map(p => p.x.toFixed(3) + ',' + p.y.toFixed(3)).join(' ') + '" fill="none" stroke="#ffd95e" stroke-opacity=".55" stroke-width="' + (1.5 * u).toFixed(3) + '" stroke-dasharray="' + (6 * u).toFixed(3) + ' ' + (5 * u).toFixed(3) + '"/>'); }
     if (hp) pin(o.homeA || hp.p, L('Hjem', 'Home'), '#29a36a');
     if (mp && mp.id !== o.home) pin(mp.p, mp.name, '#2f7fd0');
-    for (const q of o.places) if (q.k === 'felt' && q.hdg != null){ const e = stringEnd(q, q.hdg, stringKm(o, q)); g.push('<line x1="' + q.x.toFixed(3) + '" y1="' + q.y.toFixed(3) + '" x2="' + e.x.toFixed(3) + '" y2="' + e.y.toFixed(3) + '" stroke="#d9822b" stroke-width="' + (3 * u).toFixed(3) + '" stroke-linecap="round" class="pm-string"/>'); }
+    // (the snow crab vessel, H3c: every string of the field, side by side as the plan sets them, 06i-plan2-sno.js p2SnoLenke)
+    if (p2Sno(o)) for (const q of o.places) if (q.k === 'felt') for (let k = 0; k < q.n; k++){ const L2 = p2SnoLenke(q, k); g.push('<line x1="' + L2.a.x.toFixed(3) + '" y1="' + L2.a.y.toFixed(3) + '" x2="' + L2.b.x.toFixed(3) + '" y2="' + L2.b.y.toFixed(3) + '" stroke="#d9822b" stroke-width="' + (2 * u).toFixed(3) + '" stroke-linecap="round" class="pm-string"/>'); }
+    for (const q of o.places) if (q.k === 'felt' && q.hdg != null && !p2Sno(o)){ const e = stringEnd(q, q.hdg, stringKm(o, q)); g.push('<line x1="' + q.x.toFixed(3) + '" y1="' + q.y.toFixed(3) + '" x2="' + e.x.toFixed(3) + '" y2="' + e.y.toFixed(3) + '" stroke="#d9822b" stroke-width="' + (3 * u).toFixed(3) + '" stroke-linecap="round" class="pm-string"/>'); }
     for (const q of o.places) pin(q, lb[q.id], q.k === 'felt' ? '#d9822b' : '#b05ad6', q.id === sel);
     return '<g class="pm">' + g.join('') + '</g>';
   }

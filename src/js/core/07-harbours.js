@@ -363,11 +363,11 @@ const LANDING = {prep:1, lift:2.5, note:2, tubKg:TUB_KG, hooked:0.86, wash:3};
 const PALL = {kg:1000, lift:6};
 const liftMin = L => L.lf || LANDING.lift;
 // the product weight of a lot at the landing: frozen as it lies (prodKg), or as it will be once gutted (as the deck guts) and frozen at the quay
-const landProd = x => x.frozen || (SPECIES[x.sp] || {}).live ? prodKg(x) : x.kg / ((x.gut || catchGut()) ? (SPECIES[x.sp] || {}).uh || 1 : 1);
+const landProd = x => x.frozen || liveLot(x) ? prodKg(x) : x.kg / ((x.gut || catchGut()) && !x.rund ? (SPECIES[x.sp] || {}).uh || 1 : 1);
 // at the weighing: what was still unfrozen aboard a freezer vessel is frozen now, gutted as the deck guts it (landPlan gave the time)
 function landFreeze(){
   if (!holdFreezes()) return 0; let kg = 0;
-  for (const x of S.hold.slice()) if (!x.frozen && !(SPECIES[x.sp] || {}).live){ kg += x.kg; moveKg(x, x.kg, {gut:!!(x.gut || catchGut()), iced:true, frozen:true}); }
+  for (const x of S.hold.slice()) if (!x.frozen && !liveLot(x)){ kg += x.kg; moveKg(x, x.kg, {gut:!!(x.gut || catchGut()), iced:true, frozen:true}); }
   return kg;
 }
 // own: the boat's own tubs (an open boat; the per-tub kilos in kgs, the empties come back), else the plant's tubs from the hold
@@ -375,9 +375,13 @@ function landPlan(type, kg, hold){
   const V = VESSELS[type] || {};
   // (what still lies unfrozen is frozen at the quay before the weighing, Jonas 05.11.2026: «Fryses ved kaia»: its product weight goes on
   // the pallets, and the freezers' time for it comes before the landing note when it is longer than the lifts after it: landFreeze)
-  if (V.hold && V.hold.kind === 'frys'){ const H0 = hold || S.hold, pk = H0.reduce((a, x) => a + landProd(x), 0), n = Math.max(1, Math.ceil(pk / PALL.kg));
-    const fz = Math.ceil(H0.reduce((a, x) => a + (x.frozen || (SPECIES[x.sp] || {}).live ? 0 : landProd(x)), 0) / Math.max(1, (V.freezeT || 15000) / 1440)), lifts = n * PALL.lift;
-    return {kind:'pall', own:false, n, lifts:n, wash:0, lf:PALL.lift, pk:Math.round(pk), fz, dur:LANDING.prep + Math.max(lifts, fz) + LANDING.note}; }
+  // (H3b, 06.11.2026) the live snow crab in the tanks is pumped into tubs on deck and lifted ashore after the pallets (10e-krabbefabrikk.js
+  // KARLV); with only live crab aboard it is a landing of tubs. The lifts share one pace (the mean of the two), so the clock is even
+  if (V.hold && V.hold.kind === 'frys'){ const H0 = hold || S.hold, HF = H0.filter(x => !x.tank), lv = H0.reduce((a, x) => a + (x.tank ? x.kg : 0), 0), pk = HF.reduce((a, x) => a + landProd(x), 0);
+    const np = pk > 0.5 || lv <= 0.5 ? Math.max(1, Math.ceil(pk / PALL.kg)) : 0, nk = lv > 0.5 ? Math.ceil(lv / KARLV.kg) : 0, n = np + nk, lf = (np * PALL.lift + nk * KARLV.lift) / n;
+    const fz = Math.ceil(HF.reduce((a, x) => a + (x.frozen || liveLot(x) ? 0 : landProd(x)), 0) / Math.max(1, (V.freezeT || 15000) / 1440)), lifts = n * lf;
+    if (!np) return {kind:'tub', own:false, n:nk, lifts:nk, wash:0, lf, pk:0, np:0, kar:nk, lv:Math.round(lv), fz, dur:LANDING.prep + Math.max(lifts, fz) + LANDING.note};
+    return {kind:'pall', own:false, n, lifts:n, wash:0, lf, pk:Math.round(pk), np, kar:nk, lv:Math.round(lv), fz, dur:LANDING.prep + Math.max(lifts, fz) + LANDING.note}; }
   if (V.kar){ const nk = karN(type, S.boat && S.boat.type === type ? S.boat.holdLv : 0), T = tubLoads(hold || S.hold, nk), kgs = T.map(t => Math.round(t.kg)), n = clamp(Math.max(tubsFull(T), Math.ceil((kg || 0) / TUB_KG)), 1, nk);
     return {kind:'tub', own:true, n, kgs, lifts:2 * n, wash:LANDING.wash, dur:LANDING.prep + 2 * n * LANDING.lift + LANDING.wash + LANDING.note}; }
   const n = Math.max(1, Math.ceil(kg / LANDING.tubKg));
@@ -475,13 +479,14 @@ function startLanding(ops){
 }
 // the landing itself: the crane's timeline from now (b.land), and the log
 function landStart(pt, lp, kg, ops){
-  const b = S.boat, pall = lp.kind === 'pall', unit = pall ? ['paller', 'pallets'] : ['kar', 'tubs'];
+  const b = S.boat, pall = lp.kind === 'pall', lv = lp.lv > 0.5, unit = pall ? (lp.kar ? ['paller og kar', 'pallets and tubs'] : ['paller', 'pallets']) : ['kar', 'tubs'];   // (and the live snow crab in tubs, H3b)
   b.land = {pid:pt.id, t0:S.t, until:S.t + lp.dur, kind:lp.kind, n:lp.n, lifts:lp.lifts, kg:Math.round(kg), ops:!!ops, own:lp.own, kgs:lp.kgs, wash:lp.wash};
-  if (pall){ b.land.lf = lp.lf; b.land.pk = lp.pk; }
-  // (on pallets the weight is the product's, and the round weight the quota and the price go by beside it)
-  const what = pall ? [fmt(lp.pk / 1000, 1) + ' t fryst (' + fmt(kg / 1000, 1) + ' t rund vekt)', fmt(lp.pk / 1000, 1) + ' t frozen (' + fmt(kg / 1000, 1) + ' t round weight)'] : [fmt(kg, 0) + ' kg', fmt(kg, 0) + ' kg'];
-  const at = pall ? [mottakWhen(b.land.until / 60, true), mottakWhen(b.land.until / 60, false)] : ['ca. kl. ' + hm(b.land.until / 60), 'at about ' + hm(b.land.until / 60)];   // (a landing of a day or more: the day too)
-  log('Losser ' + what[0] + ' i ' + pt.name + ', ' + lp.n + ' ' + unit[0] + '. Sluttseddelen kommer ' + at[0] + '.', 'Landing ' + what[1] + ' at ' + pt.name + ', ' + lp.n + ' ' + unit[1] + '. The landing note comes ' + at[1] + '.');
+  if (pall || lv){ b.land.lf = lp.lf; b.land.pk = lp.pk; b.land.np = lp.np; b.land.kar = lp.kar; b.land.lv = lp.lv; }
+  // (on pallets the weight is the product's, and the round weight the quota and the price go by beside it; the live snow crab in tubs, H3b)
+  const live = lv ? [fmt(lp.lv / 1000, 1) + ' t levende krabbe i ' + lp.kar + ' kar', fmt(lp.lv / 1000, 1) + ' t of live crab in ' + lp.kar + ' tubs'] : null, fr = kg - (lp.lv || 0);
+  const what = pall ? [fmt(lp.pk / 1000, 1) + ' t fryst (' + fmt(fr / 1000, 1) + ' t rund vekt) på ' + lp.np + ' paller' + (live ? ' og ' + live[0] : ''), fmt(lp.pk / 1000, 1) + ' t frozen (' + fmt(fr / 1000, 1) + ' t round weight) on ' + lp.np + ' pallets' + (live ? ' and ' + live[1] : '')] : live || [fmt(kg, 0) + ' kg, ' + lp.n + ' kar', fmt(kg, 0) + ' kg, ' + lp.n + ' tubs'];
+  const at = pall || lv ? [mottakWhen(b.land.until / 60, true), mottakWhen(b.land.until / 60, false)] : ['ca. kl. ' + hm(b.land.until / 60), 'at about ' + hm(b.land.until / 60)];   // (a landing of a day or more: the day too)
+  log('Losser ' + what[0] + ' i ' + pt.name + '. Sluttseddelen kommer ' + at[0] + '.', 'Landing ' + what[1] + ' at ' + pt.name + '. The landing note comes ' + at[1] + '.');
   return true;
 }
 // the catch is weighed in: the sale is settled on what is in the hold now, and a standing plan gets its report
@@ -520,7 +525,11 @@ const BERTHN = {main:['mottakskaia', 'the plant\'s quay'], bunker:['bunkerskaia'
 const berthName = (k, pid) => { const pt = portById(pid); return k === 'main' && pt && !pt.mottak ? ['kaia', 'the quay'] : BERTHN[k] || BERTHN.main; };
 const hasBunker = pid => !!quayFace(pid, 'bunker');
 // busy at the quay: landing, moving or filling; a departure waits for it
-function portBusy(b){ const u = Math.max(b.land ? b.land.until : 0, b.shift ? b.shift.until : 0, b.fueling ? b.fueling.until : 0); return u > 0 || b.after || b.landQ ? Math.max(u, S.t + (b.landQ ? 1 : 0)) : 0; }   // (in the queue: busy, asked again the next minute)
+// (busy while a landing, a shift or the pump is under way, or something waits for the shift: the hour it is done, never 0. H3c 07.11.2026:
+// it was max(0, …), so before EPOCH, where the game's minutes are negative (a season from January 2027), a pump at work read as free
+// and the plan cast off with the tank empty; for positive hours it is as before)
+// (in the landing queue too, landQ: busy, asked again the next minute)
+function portBusy(b){ if (!b.land && !b.shift && !b.fueling && !b.after && !b.landQ) return 0; const u = Math.max(b.land ? b.land.until : -Infinity, b.shift ? b.shift.until : -Infinity, b.fueling ? b.fueling.until : -Infinity, S.t + (b.landQ ? 1 : 0)); return u || 1e-9; }
 function startShift(to, after){
   const b = S.boat, pt = portById(b.port), from = berthKind(b);
   // (never to or from Father's naust: you sail there and back by a route, Jonas 05.10.2026: «Fast travel er ikke mulig i spillet, punktum»)

@@ -29,5 +29,6 @@ export default function (t){
   t.ok(pr('hyse', true) > pr('hyse', false) && pr('torsk', true) > 40 && pr('sei', true) > 18, `fryst om bord i mars (sedlene 2025): torsk ${pr('torsk', true)} (fersk ${pr('torsk', false)}), hyse ${pr('hyse', true)} (${pr('hyse', false)}), sei ${pr('sei', true)} (${pr('sei', false)}) kr/kg`);
   t.ok(pr('lyr', true) === pr('lyr', false), 'en art uten pris for fryst selges som fersk');
   const sild = pr('sild'), mak = K.clsPrice(pt, 'makrell', 0, (Date.UTC(2027, 8, 15) - K.EPOCH) / 36e5, false), sk = pr('snokrabbe');
-  t.ok(sild > 10 && sild < 15 && mak > 35 && mak < 50 && sk > 110 && sk < 160, `sild ${sild}, makrell i september ${mak}, snøkrabbe ${sk} kr/kg (sluttsedlene 2025)`);
+  // (snow crab: the clusters at the mean of 2024-2026 by month since H3b, 106.5 kr/kg round weight over the season; tests/unit/krabbefabrikk.test.mjs)
+  t.ok(sild > 10 && sild < 15 && mak > 35 && mak < 50 && sk > 95 && sk < 125, `sild ${sild}, makrell i september ${mak}, snøkrabbe ${sk} kr/kg (sluttsedlene 2025; snøkrabben snittet 2024–2026)`);
 }

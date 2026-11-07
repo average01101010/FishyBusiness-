@@ -314,6 +314,77 @@
 2026-11-06 15:23	ccr-1c785ad6-0di8o1	73a72c72+	vesseltest	OK	42	lite	samtidig	
 2026-11-06 15:24	ccr-1c785ad6-0di8o1	73a72c72+	shoptest	OK	30	lite	samtidig	
 2026-11-06 15:24	ccr-1c785ad6-0di8o1	73a72c72+	dbg23o	OK	37	3d	alene	
+2026-11-06 16:19	ccr-2f1306ed-u6tdgs	b63df02b+	trip2	OK	40	lite	samtidig	
+2026-11-06 16:20	ccr-2f1306ed-u6tdgs	b63df02b+	docktest	OK	67	lite	samtidig	
+2026-11-06 16:20	ccr-2f1306ed-u6tdgs	b63df02b+	selltest	LES	20	lite	samtidig	
+2026-11-06 16:20	ccr-2f1306ed-u6tdgs	b63df02b+	shoptest	OK	43	lite	samtidig	
+2026-11-06 16:20	ccr-2f1306ed-u6tdgs	b63df02b+	vesseltest	OK	37	lite	samtidig	
+2026-11-06 16:21	ccr-2f1306ed-u6tdgs	b63df02b+	fuelcal	OK	14	lite	samtidig	
+2026-11-06 16:21	ccr-2f1306ed-u6tdgs	b63df02b+	bktest	OK	7	lite	samtidig	
+2026-11-06 16:21	ccr-2f1306ed-u6tdgs	b63df02b+	skattetest	OK	8	lite	samtidig	
+2026-11-06 16:21	ccr-2f1306ed-u6tdgs	b63df02b+	lotttest	OK	9	lite	samtidig	
+2026-11-06 16:21	ccr-2f1306ed-u6tdgs	b63df02b+	boktest	OK	9	lite	samtidig	
+2026-11-06 16:21	ccr-2f1306ed-u6tdgs	b63df02b+	keeptest	OK	17	lite	samtidig	
+2026-11-06 16:21	ccr-2f1306ed-u6tdgs	b63df02b+	decktest	OK	17	lite	samtidig	
+2026-11-06 16:21	ccr-2f1306ed-u6tdgs	b63df02b+	simday	LES	14	lite	samtidig	
+2026-11-06 16:21	ccr-2f1306ed-u6tdgs	b63df02b+	calib	LES	15	lite	samtidig	
+2026-11-06 16:21	ccr-2f1306ed-u6tdgs	b63df02b+	tidetest	OK	7	lite	samtidig	
+2026-11-06 16:22	ccr-2f1306ed-u6tdgs	91f7f01b	climtest	OK	15	lite	samtidig	
+2026-11-06 16:22	ccr-2f1306ed-u6tdgs	91f7f01b	yardupgtest	OK	17	lite	samtidig	
+2026-11-06 16:22	ccr-2f1306ed-u6tdgs	d9f88a69	krabbefabrikktest	OK	20	lite	samtidig	
+2026-11-06 16:22	ccr-2f1306ed-u6tdgs	d9f88a69	fabrikktest	FEIL	13	lite	samtidig	FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined |
+2026-11-06 16:22	ccr-2f1306ed-u6tdgs	d9f88a69	skiptest	OK	18	lite	samtidig	
+2026-11-06 16:23	ccr-2f1306ed-u6tdgs	d9f88a69	fleet2test	OK	54	lite	samtidig	
+2026-11-06 16:23	ccr-2f1306ed-u6tdgs	7f630850	opsowntest	OK	58	lite	samtidig	
+2026-11-06 16:23	ccr-2f1306ed-u6tdgs	7f630850	worktest	FEIL	24	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-06 16:23	ccr-2f1306ed-u6tdgs	7f630850	crewlifetest	OK	6	lite	samtidig	
+2026-11-06 16:23	ccr-2f1306ed-u6tdgs	7f630850	selfcrew	OK	7	lite	samtidig	
+2026-11-06 16:24	ccr-2f1306ed-u6tdgs	7f630850	lybtest	OK	75	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	colregtest	OK	449	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	autonavtest	OK	27	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	turtest	OK	16	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	npctest	OK	8	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	towtest	OK	16	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	tattest	OK	18	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	peergear	OK	5	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	naustleia	OK	7	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	harbourtest	OK	17	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	rorbutest	OK	14	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	havntest	OK	17	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	havtur	FEIL	90	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	snokrabbetest	FEIL	13	lite	samtidig	FEIL etter 7 døgn: 16.7 krabber i teina, 1499 kg beholdt (7.5 kg per teine), klassene {'0': 2576, '1': 88, '2': 34}, hel og usløyd
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	autolinetest	OK	10	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	geartest	FEIL	37	lite	samtidig	FEIL king crab: all of it is kept (J-138-2026 § 5) and sorted by sex, weight and damage into Råfisklaget’s classes
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	booktest	OK	27	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	caretest	OK	15	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	jigalongtest	OK	15	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	sleeptest	OK	11	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	r4test	OK	15	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	cashfxtest	OK	9	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	slidertest	OK	17	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	sidetab	OK	15	lite	samtidig	
+2026-11-06 16:31	ccr-2f1306ed-u6tdgs	7f630850	fartstidtest	OK	22	lite	samtidig	
+2026-11-06 16:32	ccr-2f1306ed-u6tdgs	7f630850	boottest	OK	45	lite	samtidig	
+2026-11-06 16:32	ccr-2f1306ed-u6tdgs	7f630850	worldtest	OK	26	lite	samtidig	
+2026-11-06 16:32	ccr-2f1306ed-u6tdgs	7f630850	pushtest	OK	28	lite	samtidig	
+2026-11-06 16:32	ccr-2f1306ed-u6tdgs	7f630850	itemcardtest	FEIL	20	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'jukse', 'krabbekar', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-06 16:33	ccr-2f1306ed-u6tdgs	7f630850	posttest	OK	25	lite	samtidig	
+2026-11-06 16:33	ccr-2f1306ed-u6tdgs	7f630850	fleet3test	OK	17	lite	samtidig	
+2026-11-06 16:33	ccr-2f1306ed-u6tdgs	7f630850	adminbuytest	OK	10	lite	samtidig	
+2026-11-06 16:38	ccr-2f1306ed-u6tdgs	ed5729e9	unittest	FEIL	286	3d	alene	avsluttet med kode 1
+2026-11-06 16:49	ccr-2f1306ed-u6tdgs	a8f2f137	penshot	OK	694	3d	alene	
+2026-11-06 17:00	ccr-2f1306ed-u6tdgs	b7d1cfe0	vectest	OK	629	3d	alene	
+2026-11-06 17:15	ccr-2f1306ed-u6tdgs	b7d1cfe0	kaishot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-06 17:16	ccr-2f1306ed-u6tdgs	b7d1cfe0	bunkertest	OK	66	3d	alene	
+2026-11-06 17:16	ccr-2f1306ed-u6tdgs	b7d1cfe0	moortest	OK	33	3d	alene	
+2026-11-06 17:18	ccr-2f1306ed-u6tdgs	b7d1cfe0	saytest	OK	102	3d	alene	
+2026-11-06 17:44	ccr-2f1306ed-u6tdgs	b7d1cfe0	trackfollow	OK	1587	3d	alene	
+2026-11-06 18:03	ccr-2f1306ed-u6tdgs	b7d1cfe0	kinotest	OK	1101	3d	alene	
+2026-11-06 18:15	ccr-2f1306ed-u6tdgs	4a90b072	snokrabbetest	OK	18	lite	samtidig	
+2026-11-06 18:15	ccr-2f1306ed-u6tdgs	ec00fe30	geartest	OK	47	lite	samtidig	
+2026-11-06 18:15	ccr-2f1306ed-u6tdgs	ec00fe30	itemcardtest	FEIL	23	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'jukse', 'krabbekar', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-06 18:21	ccr-2f1306ed-u6tdgs	ec00fe30	heattest	OK	333	3d	alene	
+2026-11-06 18:23	ccr-2f1306ed-u6tdgs	ec00fe30	landtest	OK	100	3d	alene	
 2026-11-06 16:13	ccr-ccfb0017-rmieib	b63df02b+	streaktest	OK	69	lite	samtidig	
 2026-11-06 16:13	ccr-ccfb0017-rmieib	b63df02b+	posttest	OK	29	lite	samtidig	
 2026-11-06 16:13	ccr-ccfb0017-rmieib	b63df02b+	shoptest	OK	37	lite	samtidig	
@@ -371,6 +442,60 @@
 2026-11-06 22:19	ccr-a3c53300-9f9ly1	9871601	autonavtest	FEIL	0	lite	alene	FEIL 6. Autonav Vannareid → Honningsvåg … (bygget før rettingen, bare Senja: de samme ti røde linjene som på det rettede bygget)
 2026-11-06 22:22	ccr-a3c53300-9f9ly1	4073902	draftlooptest	OK	19	lite	samtidig	
 2026-11-06 22:24	ccr-a3c53300-9f9ly1	7cbe5c7	bootgtest	OK	125	lite	samtidig	
+2026-11-07 02:13	ccr-5c109e47-twgn6s	a140a831	trip2	OK	37	lite	samtidig	
+2026-11-07 02:13	ccr-5c109e47-twgn6s	a140a831	docktest	OK	62	lite	samtidig	
+2026-11-07 02:13	ccr-5c109e47-twgn6s	a140a831	harbourtest	OK	12	lite	samtidig	
+2026-11-07 02:13	ccr-5c109e47-twgn6s	a140a831	worldtest	OK	18	lite	samtidig	
+2026-11-07 02:14	ccr-5c109e47-twgn6s	a140a831	draftlooptest	OK	17	lite	samtidig	
+2026-11-07 02:14	ccr-5c109e47-twgn6s	a140a831	selltest	LES	23	lite	samtidig	
+2026-11-07 02:14	ccr-5c109e47-twgn6s	a140a831	shoptest	OK	35	lite	samtidig	
+2026-11-07 02:14	ccr-5c109e47-twgn6s	a140a831	vesseltest	OK	25	lite	samtidig	
+2026-11-07 02:14	ccr-5c109e47-twgn6s	a140a831	fuelcal	OK	13	lite	samtidig	
+2026-11-07 02:14	ccr-5c109e47-twgn6s	a140a831	bktest	OK	6	lite	samtidig	
+2026-11-07 02:15	ccr-5c109e47-twgn6s	a140a831	istest	FEIL	14	lite	samtidig	FEIL not for a boat with an ice class {'ms': 101, 'why': 'Målet ligger i drivisen (9/10). Båten har ikke isklasse.', 'done': True}
+2026-11-07 02:15	ccr-5c109e47-twgn6s	a140a831	krabbefabrikktest	OK	17	lite	samtidig	
+2026-11-07 02:15	ccr-5c109e47-twgn6s	a140a831	fabrikktest	FEIL	12	lite	samtidig	FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined |
+2026-11-07 02:15	ccr-5c109e47-twgn6s	a140a831	lotttest	OK	8	lite	samtidig	
+2026-11-07 02:15	ccr-5c109e47-twgn6s	a140a831+	skiptest	OK	15	lite	samtidig	
+2026-11-07 02:16	ccr-5c109e47-twgn6s	a140a831+	fleet2test	OK	39	lite	samtidig	
+2026-11-07 02:16	ccr-5c109e47-twgn6s	a140a831+	opsowntest	OK	42	lite	samtidig	
+2026-11-07 02:16	ccr-5c109e47-twgn6s	a140a831+	worktest	FEIL	28	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-07 02:16	ccr-5c109e47-twgn6s	a140a831+	crewlifetest	OK	6	lite	samtidig	
+2026-11-07 02:16	ccr-5c109e47-twgn6s	a140a831+	selfcrew	OK	7	lite	samtidig	
+2026-11-07 02:17	ccr-5c109e47-twgn6s	a140a831+	lybtest	OK	62	lite	samtidig	
+2026-11-07 02:17	ccr-5c109e47-twgn6s	a140a831+	drifttest	OK	40	lite	samtidig	
+2026-11-07 02:17	ccr-5c109e47-twgn6s	a140a831+	driftuitest	OK	17	lite	samtidig	
+2026-11-07 02:17	ccr-5c109e47-twgn6s	a140a831+	anchortest	OK	27	lite	samtidig	
+2026-11-07 02:18	ccr-5c109e47-twgn6s	a140a831+	geartest	OK	42	lite	samtidig	
+2026-11-07 02:18	ccr-5c109e47-twgn6s	a140a831+	skipdrift	OK	23	lite	samtidig	
+2026-11-07 02:18	ccr-5c109e47-twgn6s	a140a831+	naustleia	OK	6	lite	samtidig	
+2026-11-07 02:18	ccr-5c109e47-twgn6s	a140a831+	rorbutest	OK	14	lite	samtidig	
+2026-11-07 02:18	ccr-5c109e47-twgn6s	a140a831+	havntest	OK	15	lite	samtidig	
+2026-11-07 02:26	ccr-5c109e47-twgn6s	a140a831+	havtur	FEIL	486	lite	samtidig	FEIL kyst15 ved kysten i 16 m/s (over 11 i innstillingen): til nærmeste kai som før [None, 'tow']
+2026-11-07 02:26	ccr-5c109e47-twgn6s	a140a831+	haillplass	OK	5	lite	samtidig	
+2026-11-07 02:26	ccr-5c109e47-twgn6s	a140a831+	snokrabbetest	OK	11	lite	samtidig	
+2026-11-07 02:26	ccr-5c109e47-twgn6s	a140a831+	autolinetest	OK	10	lite	samtidig	
+2026-11-07 02:26	ccr-5c109e47-twgn6s	a140a831+	turtest	OK	14	lite	samtidig	
+2026-11-07 02:26	ccr-5c109e47-twgn6s	a140a831+	booktest	OK	25	lite	samtidig	
+2026-11-07 02:26	ccr-5c109e47-twgn6s	a140a831+	caretest	OK	12	lite	samtidig	
+2026-11-07 02:26	ccr-5c109e47-twgn6s	a140a831+	jigalongtest	OK	12	lite	samtidig	
+2026-11-07 02:26	ccr-5c109e47-twgn6s	a140a831+	autonavtest	OK	34	lite	samtidig	
+2026-11-07 02:26	ccr-5c109e47-twgn6s	a140a831+	obstest	OK	6	lite	samtidig	
+2026-11-07 02:30	ccr-5c109e47-twgn6s	a140a831+	colregtest	OK	603	lite	samtidig	
+2026-11-07 02:30	ccr-5c109e47-twgn6s	a140a831+	driftsplan2map	OK	12	lite	samtidig	
+2026-11-07 02:30	ccr-5c109e47-twgn6s	a140a831+	npctest	OK	7	lite	samtidig	
+2026-11-07 02:30	ccr-5c109e47-twgn6s	a140a831+	placetest	OK	4	lite	samtidig	
+2026-11-07 02:30	ccr-5c109e47-twgn6s	a140a831+	sidetab	OK	11	lite	samtidig	
+2026-11-07 02:30	ccr-5c109e47-twgn6s	a140a831+	etikett	OK	49	lite	samtidig	
+2026-11-07 02:30	ccr-5c109e47-twgn6s	a140a831+	pushtest	OK	20	lite	samtidig	
+2026-11-07 02:30	ccr-5c109e47-twgn6s	a140a831+	posttest	OK	22	lite	samtidig	
+2026-11-07 02:31	ccr-5c109e47-twgn6s	a140a831+	bunkertest	OK	51	3d	alene	
+2026-11-07 02:32	ccr-5c109e47-twgn6s	a140a831+	routetest	OK	42	lite	alene	
+2026-11-07 02:33	ccr-5c109e47-twgn6s	a140a831+	charttest	FEIL	59	lite	alene	FEIL hele landet: Hardangervidda, Børgefjell og Lyngen er land (ingen sømmer mellom landbitene), Norskehavet er sjø (kysten fra kjernen)  [[167, 203, 235], [167
+2026-11-07 02:46	ccr-5c109e47-twgn6s	29cd0117	driftsplan2test	OK	89	lite	alene	
+2026-11-07 02:46	ccr-5c109e47-twgn6s	29cd0117	driftsplan2ui	OK	26	lite	alene	
+2026-11-07 03:00	ccr-5c109e47-twgn6s	29cd0117	havplantest	FEIL	791	lite	alene	FEIL the hold at 95 %: the strings hauled home, the landing at the plant, the other crew signs on [0, 1, 585184, [0, 1]]
+2026-11-07 03:15	ccr-5c109e47-twgn6s	9dc77f32	havplantest	FEIL	868	lite	alene	FEIL the hold at 95 %: the strings hauled home, the landing at the plant, the other crew signs on [0, 1, 585178, [0, 1]]
 2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	colregtest	OK	603	lite	samtidig	
 2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	npctest	FEIL	0	lite	samtidig	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py)
 2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	autonavtest	FEIL	11	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 102, 'cell': 0.2, 'maxSlice': 8.1, 'mended': 0, 'b
@@ -547,3 +672,20 @@
 2026-11-07 03:55	ccr-f981c5f0-ezb7x7	ba79cfbf+	docktest	OK	58	lite	alene	
 2026-11-07 04:15	ccr-f981c5f0-ezb7x7	f92cff1e	trackfollow	OK	1193	3d	alene	
 2026-11-07 09:20	ccr-fc7a11b2-nl5jor	14b51422+	docktest	OK	63	lite	alene	
+2026-11-07 09:31	ccr-5c109e47-twgn6s	7008450e	trip2	OK	44	lite	samtidig	
+2026-11-07 09:31	ccr-5c109e47-twgn6s	7008450e	boottest	OK	38	lite	samtidig	
+2026-11-07 09:32	ccr-5c109e47-twgn6s	7008450e	vesseltest	OK	26	lite	samtidig	
+2026-11-07 09:32	ccr-5c109e47-twgn6s	7008450e	shoptest	OK	34	lite	samtidig	
+2026-11-07 09:32	ccr-5c109e47-twgn6s	7008450e	snokrabbetest	OK	13	lite	samtidig	
+2026-11-07 09:32	ccr-5c109e47-twgn6s	7008450e	krabbefabrikktest	OK	20	lite	samtidig	
+2026-11-07 09:33	ccr-5c109e47-twgn6s	7008450e	geartest	OK	37	lite	samtidig	
+2026-11-07 09:33	ccr-5c109e47-twgn6s	7008450e	istest	OK	17	lite	samtidig	
+2026-11-07 09:33	ccr-5c109e47-twgn6s	7008450e	driftsplan2ui	OK	32	lite	samtidig	
+2026-11-07 09:33	ccr-5c109e47-twgn6s	7008450e	harbourtest	OK	18	lite	samtidig	
+2026-11-07 09:34	ccr-5c109e47-twgn6s	7008450e	docktest	OK	64	lite	samtidig	
+2026-11-07 09:35	ccr-5c109e47-twgn6s	7008450e	dbg23o	OK	50	3d	alene	
+2026-11-07 09:37	ccr-5c109e47-twgn6s	7008450e	driftsplan2test	FEIL	106	lite	alene	FEIL S19 home at a rorbu, you aboard an open boat: you go in to rest by yourself each night and the plan goes out every day, played closed [[['2028-03-08', 1, 2
+2026-11-07 09:44	ccr-fc7a11b2-nl5jor	4866ccb2+	docktest	OK	62	lite	alene	
+2026-11-07 09:46	ccr-fc7a11b2-nl5jor	4866ccb2+	roetest	OK	120	lite	samtidig	
+2026-11-07 09:46	ccr-fc7a11b2-nl5jor	4866ccb2+	dockrow	OK	41	lite	samtidig	
+2026-11-07 09:46	ccr-fc7a11b2-nl5jor	4866ccb2+	trip2	OK	36	lite	samtidig	
