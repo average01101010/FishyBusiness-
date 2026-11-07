@@ -164,6 +164,18 @@ Spillet har alt mange oppgraderinger, men de er spredt på fem steder, nesten al
 - **Høttens trekk og glipp** er ikke målt i en spilt dag (trebåten har ingen linehaler, og juksespillet timer en person): `gopUnitMin` og `jigSlip` er regnet i enhetstesten (21,4, 20,6 og 19,7 min per stamp hyseline; glipp 50, 40 og 30 %). Måles i OPP2 med `fiskeplay.py line`.
 - **Tallene i tabellene over står** (+10/+20 % tempo, −30/−50 % feil, −30/−60 % over ripa, −4/−8 % trekk). Målingen ga ingen grunn til å flytte dem; Jonas kan flytte dem.
 
+### OPP4, målt 07.11.2026 (trakten før datoen)
+
+Trakten (`admin_funnel`, «kjøpt trinn innen dag 7», migreringen `20261107160000_funnel_tier.sql`), regnet med samme regel som funksjonen, bare summer, 07.11.2026 15:03 UTC:
+
+| Kull | Startet (med statistikk) | Har hatt sju dager | Kjøpt trinn innen dag 7 |
+|---|---|---|---|
+| Før 07.11.2026 | 21 | 14 | 0 (0 %) |
+| Fra 07.11.2026 | 0 | 0 | – |
+
+- Ingen spiller hadde kjøpt et trinn ennå (0 `shop_buy` med `lv`, 0 `upg` de siste 30 dagene): trinnene kom med OPP1 samme dag rundt 13:00 UTC. Ukene før er derfor nullpunktet. Kullene er små: 7, 5, 0, 4 og 5 nye spillere med statistikk i ukene fra 5.10, 12.10, 19.10, 26.10 og 2.11. De fem fra uka 2.11 startet før datoen, men har dagene sine etter OPP1 og kan fortsatt telle; de første som startet med trinnene i butikken, leses av fra 14.11.2026. Tallet bør leses over to–tre uker før noe vurderes.
+- Bare spillere som deler bruksstatistikk, er med (de alene har økter og hendelser).
+
 **Rekkefølgen:** OPP1 og OPP4 først, fordi begge treffer første uke på trebåten og kan leses av i trakten. Så OPP3, OPP2 og OPP5. OPP1 og OPP3 rører `core/03-simulation.js`, `05-vessels.js`, `10-gear.js` og `14-crewlife.js`, som Ø8b S0, S2 og M (køen steg 5, 7, 8) også eier mens de går; rutinens regel om filer avgjør hvem som går først.
 
 ## Valget
@@ -202,3 +214,5 @@ Spillet har alt mange oppgraderinger, men de er spredt på fem steder, nesten al
 - 07.11.2026: planen skrevet (Jonas' økt, grenen `ccr-5626c087-fg38n2`, bygd på arbeidsgrenen samme dag). Valgene 1–7 over er tatt av Jonas 07.11.2026. Stegene OPP1–OPP5 står i `docs/planer/koen.md` (53–57), med hel startmelding for OPP1.
 - 07.11.2026: Jonas valgte **V1 A** (juksamaskinens trinn gir bare flere maskiner per person, ingen fisk per time). Alle valgene er tatt. Venter på «kjør på», og på at planen flettes inn i arbeidsgrenen, så rutinen ser stegene.
 - 07.11.2026: Jonas ga klarsignal for OPP1 ved å be om startmeldingen. Planen og køen ble pushet til arbeidsgrenen før arbeidet (bare dokumenter). **OPP1 bygd** i Jonas' økt, gren `plan/2026-11-07-opp1`: `EQUIP.kniv` og `EQUIP.hott` med trinnene i tabellene over, `upgSum` (prinsipp 1), kniven i `deckMinute`, `deckEta` og `left.sloy`, feilene i `crewSlip`, høtten i `gopUnitMin` (bare trekk av line) og i juksespillets glipp, `S.stats.lostRail` med uka per båt, `buyGate('tier')`, kortene i Fiskeutstyr, `lex_kniv` og `lex_hott` i Håndboka (utenfor startmeldingens filer, fordi `itemcardtest` krever «Mer» på hvert kort), patchnoten. Målingene står over («OPP1, målt»), systemet i «Kniv og høtt i tre trinn» i `docs/systemer/redskap.md`, det som er svakt i backloggen. Det som hører til kjøpet og ikke var i OPP1s filer (bekreftelsen over 10 000 kr og trinnet i kvitteringen i `14-act.js`, trinnet ved salg i `09k-market.js`, innbyttet i `13-mannskap-bank-meld.js`), er lagt til OPP4 i køen. **Rullet ut i 73c12b26** (flettet med arbeidsgrenen i 7217777f; porten i `tools/plan/RUTINE.md` punkt 6 holdt, 3D-testene ikke kjørt etter Jonas' «ikke 3D»). Neste på sporet: OPP4 (steg 54), med hel startmelding i køen.
+- 07.11.2026: Jonas ga klarsignal for OPP4 ved å be om startmeldingen. **OPP4 bygd og rullet ut i e10cd8ad** (Jonas' økt, gren `plan/2026-11-07-opp4`, flettet med arbeidsgrenen i 24eb4a19): siden «Båten og utstyret» først under Om bord › Båten med alle stigene, prikkene, neste trinn med pris, sted og tall, «Nærmeste» og Autonav, tapt over ripa og minuttene per stamp i dag; Neste mål med ett utstyrstrinn under en tidel av neste båt når flåten er én båt; bekreftelsen i knappen fra 10 000 kr og trinnet i kvitteringen; trinnet som tall ved salg mellom spillere; kniv og høtt blir med den gamle båten ved innbytte (prinsipp 5). Trakten har «kjøpt trinn innen dag 7» (`20261107160000_funnel_tier.sql`, kjørt av økta); målingen før datoen står over («OPP4, målt»). Systemet står i `docs/systemer/baater.md`, trakten i `samlinger-og-kultur.md`, det som er svakt i backloggen. Valg 9 i køen: om trinnene skal regnes i innbytteprisen (anbefalt A: nei, som nå). Neste på sporet: OPP3 (steg 55, venter på OPP2), med hel startmelding i køen.
+- 07.11.2026: Jonas svarte **A** på valg 9 fra OPP4 (trinnene ved innbytte): kniv og høtt følger den gamle båten ved innbytte og regnes ikke i innbytteprisen; båtbladet sier det før kjøpet. OPP3 (propellen) følger det samme.

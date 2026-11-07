@@ -33,6 +33,13 @@ async def main():
         check('Gibostad' in ag and 'Åpne PR-er' in ag and before == '' and after == ['seen', 'Takk! Vi ser på Autonav ved Gibostad.'],
               'the Agent tab shows the reports, and «Bruk forslaget» fills in the suggested status and reply without saving', {'after': after})
         check(demo, 'without keys (or with ?demo) the numbers are marked made-up and there is no sign-in')
+        # the funnel's upgrades (OPP4, 20261107160000_funnel_tier.sql): the share who bought a tier within day 7, of those who have had
+        # seven days, and the column per week
+        await pg.click('nav button[data-t="trakt"]'); await pg.wait_for_timeout(200)
+        tr = await pg.evaluate("""(() => { const m = document.querySelector('main'), k = [...m.querySelectorAll('.kpi')].find(e => /Kjøpt trinn innen dag 7/.test(e.textContent));
+          return {kpi:k ? k.innerText.replace(/\s+/g, ' ') : null, col:[...m.querySelectorAll('th')].some(e => e.textContent === 'Trinn ≤ dag 7')}; })()""")
+        await pg.screenshot(path='admin_trakt.png', full_page=True)
+        check(tr['kpi'] and re.search(r'\d+ %', tr['kpi']) and 'som har hatt sju dager' in tr['kpi'] and tr['col'], 'the funnel shows the share with a tier bought within day 7, and a column per week', tr)
         # with keys: the sign-in comes first, nothing is fetched before it
         await pg.add_init_script("")
         raw = await (await pg.request.get(BASE + 'admin/')).text()
