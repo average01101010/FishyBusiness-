@@ -483,10 +483,7 @@ const KITADD = {
   // the freezer trawler: deck 3 (6.3 m), the old boat's place to port with the davit outboard of her
   bunntral:{buoys:[[6.2, 6.85, 2.0, Math.PI / 2], [-6.2, 6.85, 2.0, -Math.PI / 2], [6.2, 6.85, 5.0, Math.PI / 2], [-6.2, 6.85, 10.4, -Math.PI / 2], [6.2, 6.85, 10.6, Math.PI / 2], [-6.2, 6.85, 1.0, -Math.PI / 2]],
     mob:[-3.65, 6.3, 6.4, 0, -1, 0]},
-  // the snow crab vessel: the old boat on her platform under the crane's boom to port is gone; the new one on the shelter's roof (6.5 m)
-  // to starboard, clear of the boom
-  snokrabbe:{buoys:[[4.82, 7.0, 12.0, Math.PI / 2], [-4.82, 7.0, 12.0, -Math.PI / 2], [4.82, 7.0, 21.5, Math.PI / 2], [-4.82, 7.0, 15.0, -Math.PI / 2], [-4.82, 7.0, 18.0, -Math.PI / 2], [-4.82, 7.0, 23.5, -Math.PI / 2]],
-    mob:[2.65, 6.5, 15.0, 0, 1, 0]},
+  // (the snow crab vessel has her own since H3d1, 07.11.2026: tools/boats/krabbe50.py kit)
   // the purse seiner: the old boat in her recess under tier B to starboard had no room for a davit; the new one on tier B's top
   // (9.55 m) above it, the davit between the two liferaft canisters at the rail
   pelagisk:{buoys:[16.2, 17.7, 19.2, 20.7].flatMap(z => [[7.6, 10.1, z, Math.PI / 2], [-7.6, 10.1, z, -Math.PI / 2]]),
@@ -515,7 +512,6 @@ for (const k in LADDERS){ (KITADD[k] = KITADD[k] || {}).ladder = LADDERS[k]; }
 // boat (the boat, her cradle or platform and the old davit; tests/unit/vessel3d.test.mjs counts them and checks that no deck goes)
 const MOBCUT = {autoliner:[[-4.4, -2.7, 6.24, 7.9, 12.95, 17.85], [-4.8, -3.6, 6.24, 9.8, 12.2, 15.25]],
   bunntral:[[-5.6, -3.3, 6.29, 9.0, 3.3, 9.5], [-5.75, -4.35, 6.29, 11.2, 2.3, 6.3]],
-  snokrabbe:[[-4.95, -2.55, 3.39, 6.35, 4.45, 9.95]],
   pelagisk:[[5.4, 7.4, 7.1, 8.45, 14.3, 19.95]]};
 // a model's arrays without the triangles wholly inside the boxes (a detailed model's lod: three points to a triangle, none shared)
 function mobCut(o, boxes){
@@ -1607,7 +1603,7 @@ function lanterns(G, V, st){
   if (len >= 50) push(extra.length ? extra[0][0] : up(mt, 1.5), 'w', 'masthead2');
   return out;
 }
-const HELM_KIT = {autoliner:1, bunntral:1, pelagisk:1, snokrabbe:1, ringnot38:1};   // the coastal models from the Blender round (sjarkny, hurtigsjark, kyst15, kyst21) have their console, wheel and chair in the model (tools/boats)
+const HELM_KIT = {autoliner:1, bunntral:1, pelagisk:1, ringnot38:1};   // the coastal models from the Blender round (sjarkny, hurtigsjark, kyst15, kyst21) and the snow crab vessel (krabbe50.py, H3d1) have their console, wheel and chair in the model (tools/boats)
 const DECKPTS = {};
 function deckPoints(type){
   if (type in DECKPTS) return DECKPTS[type]; const M = deckMap(type), G = geoOf(type); if (!M || !G){ DECKPTS[type] = null; return null; }

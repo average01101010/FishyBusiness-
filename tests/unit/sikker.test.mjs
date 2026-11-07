@@ -49,7 +49,11 @@ export default function (t){
   t.ok(callOf(b0) !== 'LK' + real0, 'et lagret signal som er ekte, byttes', [real0, b0.call]);
 
   // ---- the models: the old rescue boats out of your own hull, the places from the code ----
-  for (const k of ['autoliner', 'bunntral', 'snokrabbe', 'pelagisk']){
+  // (the snow crab vessel has her own places since H3d1, 07.11.2026: no old rescue boat in her hull, nothing from KITADD)
+  { const k = 'snokrabbe', g = glbHas(k) ? glbModel(k, 2, null, true).geo.kit || {} : {};
+    t.ok(!MOBCUT[k] && !KITADD[k] && g.mob && g.mob.length >= 5 && g.buoys && g.buoys.length >= VESSELS[k].lsa.buoys && g.raft && g.raft.length >= VESSELS[k].lsa.rafts,
+      `${k}: MOB-båten, ${VESSELS[k].lsa.buoys} bøyeholdere og flåtene på modellens egne plasser (krabbe50.py kit), ingenting fra KITADD eller MOBCUT`, {mob:g.mob, buoys:g.buoys && g.buoys.length, raft:g.raft && g.raft.length}); }
+  for (const k of ['autoliner', 'bunntral', 'pelagisk']){
     if (!glbHas(k) || !glbHas('deck-mob')) { t.ok(false, k + ': modellen eller deck-mob mangler'); continue; }
     const P = glbPart(k, 'lod0'), own = glbModel(k, 2, null, true), other = glbModel(k, 2, null, false), cut = (P.p.length - own.o.p.length) / 9;
     // what went: none of it the deck (a big flat triangle facing up) or the hull's paint (zone 1)

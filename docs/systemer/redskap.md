@@ -284,6 +284,42 @@ Jonas 06.11.2026: «Neste økt i havsteget: H3b, drift om bord: fabrikken for kl
 - **Drivisen over lenkene** (H3c, 07.11.2026, `SNOI` og `snoIceHour` i `core/10d-snokrabbe.js`, fra `gearHour` hver time): HI 2023-51 (lest): drivisen «drar med seg teinelenken og kutter iletauet» og «sliter av iletauene», «en av hovedårsakene til redskapstap»; Fiskeridirektoratets høringsnotat 15.06.2023 (lest): tapte lenker som finnes igjen, «er ofte endene på teinelenkene avslitt», og opprenskingstoktene tok opp 12 309 snøkrabbeteiner i 2018–2022 (8 600 i 2018, 81 lenker som hadde stått i 1,5 år); SINTEF Oceans høringssvar 27.11.2024 (lest): «flere tusen teiner» forlatt i isen i mars–april de to siste sesongene. Isen driver 0,33–0,43 m/s i det vestlige Barentshavet (april 2012) og om lag 21 km i døgnet i nordøst (2006) (søkeutdrag). Ingen kilde sier hvor langt en lenke dras eller hvor mange teiner et fartøy mister. Modellen: isen er middelet for 1991–2020, så en konsentrasjon er et snitt over gode og dårlige år (Storbanken ved 76,5° N har 27–36 % i januar til tidlig i mars, der sedlene har mest fangst). Fra 2/10 over lenka sliter flakene på iletauene, og sjansen i timen for at de kuttes er 0,07 % × ((c − 20) / 70)²; da er lenka tapt der den ligger (meldes som annet tapt redskap). Mens isen griper den, dras lenka litt med drevet: 2 % av vinden, 20° til høyre for den, og en sjettedel av det (dreggene drar langs bunnen); fra 1 km sier loggen det. Kalibrert så en sesong med 40 lenker på Storbanken i januar–mars (30–36 %) mister om lag én lenke til isen, og ved iskanten (40 %) 1–2 % av lenkene i uka (målt 1,7 %, flyttet 0,6 km), i tett is (79 %) 7 % (3,4 km), mot flåtens «flere tusen teiner» av om lag 240 000 i en sesong. Driftsplanen (`driftsplan.md`) setter ikke der iskanten (4/10) kommer innen ståtida, tar lenkene inn før den kommer og trekker ingen under 5/10.
 - **Tester:** `tests/unit/krabbefabrikk.test.mjs` (faktoren per år, lasterommet og tankene, fabrikkens 12 t, sorteringen til tankene etter størrelse og overløpet, dødeligheten mot sedlene, prisene, tilleggskvoten, lossingen, lagene, skiftet på fem uker, lotten, turen, drivstoffet) og `tests/krabbefabrikktest.py` (to døgn der lagene trekker og setter ut igjen 30 lenker på Sentralbanken uten deg om bord, lossing av klør i Båtsfjord, en levendetur med lossing i kar, skjermbilder i begge formater). Målingene står i planen (H3b i kap. 3).
 
+## 5.70 Snøkrabbens modeller i 3D (H3d1 av `docs/planer/havsteget-h3-snokrabbe.md`, 07.11.2026)
+
+Jonas 07.11.2026 bestilte H3d1: snøkrabbefartøyet bygd på nytt fra bunnen (`tools/boats/krabbe50.py`; skroget, arbeidsdekket og
+overbygget står i `docs/skipsmodeller/snokrabbe-bygging.md` og grunnlaget i `snokrabbe-grunnlag.md`), og redskapet og fangsten som
+Blender-modeller. Bare utsiden; kjøpbart utstyr som egne deler på ankrene (CLAUDE.md).
+
+- **Snøkrabbeteina** (`tools/gear/snoteine.py` → `gear-snoteine`, delene `kon`, `kontopp`, `konlag`, `konlag11`; erstatter `gear-pot`s
+  koniske teine når den er i siden): bunnring 1,30 m, toppring 0,70 m, 0,60 m høy (HI 2023-51 «konisk, stålramme og notlin, inngangen på
+  toppen og tømming i bunnen»; målene og 14,5 kg er søkeutdrag), åtte staver, diagonalmasket notlin på 135 mm (HI 2025-52), traktnot fra
+  toppringen ned til den hvite inngangsringen, perforert agnboks med akkar under den, bunnen snørt med tau (tømmes der), **rømmingshullet**
+  etter høstingsforskriften vedlegg 3 f (22 cm, nedre kant 12 cm over bunnringen, snørt med ufarget bomullstråd som råtner hvis teina går
+  tapt) og **registreringsmerket** på en gul merkelapp i sideflatens øvre halvdel (§ 66, fra 1.1.2024; høringsnotatet 15.06.2023). Teinene
+  stables tolv i høyden med 0,16 m mellom (2,36 m); spillet tegner så mange som er om bord på modellens 70 plasser (`kit.pots.at`, 840
+  teiner), den øverste hel (`kontopp`, 1 523 trekanter) og de under som ringen og båndet som synes (`konlag11`, 2 112).
+- **Teinehaleren** (`haler` og `haler_skive` i samme GLB): hydraulisk skivehaler med V-skive på 0,9 m, svingsøyle, motor, slanger,
+  avstryker og innløp med to loddrette ruller. Den hører til fartøyet fra verftet og står på sokkelen under portalen (`anchors.hauler`,
+  `snoHauler` i `view3d/10-gear.js`), skiva går rundt mens lina går (`POTA.sh`).
+- **Merkingen i lenkenes ender** (§ 66: vak merkes om de brukes): **blåsa** (`blase`, oppblåsbar A-bøye 0,8 m, oransje med hvitt bånd
+  der registreringsmerket skrives; `strip_top` og `strip_bot` i extras til teksten, som livbøyene) i den ene enden og **bøyestanga**
+  (`boye`: flottør, stang 3 m med flagg, radarreflektor og lys) i den andre. Spillet setter dem på endene av dine snøkrabbelenker og av
+  havflåtens (`drawGearSea`, `KST.snoMarks`).
+- **Snøkrabben** (`tools/fish/fisk.py` → `fish`, delene `snokrabbe`, `snokrabbe_h`, `snoklor`): hannen med det runde, kornete skallet,
+  de korte hornene, de slanke klørne og de fire parene lange flate gangbein, oransjebrun over og kremhvit under; hunnen med mindre skall og
+  klør og den oransje rognmassen under bakkroppen; **klørne** (seksjonen, halv krabbe med skulderen, kloa og de fire beina samlet, kokt
+  og glassert) som de fryses om bord. Krabbene i en snøkrabbeteine er snøkrabber (`drawPots`), minst to synlige når lenka har fangst.
+- **Lasten** (`tools/deck/pall.py` → `deck-pall`): kartongen med fryste klør (`kartong_sno`, 25 kg, 0,60 × 0,40 × 0,20 m, hvit med
+  oransje bånd og blank etikett), pallen med åtte lag à fire (`pall_sno`, 800 kg, 1,74 m, strekkfilm og kantbeskyttere), og **karet for
+  levende krabbe** (`kar_levende`, isolert kar på 1 000 liter med sjøvann). I lossingen (`landLoad`) tar en snøkrabbelast `pall_sno` på
+  gaffelen, og karene med levende krabbe (løftene etter pallene, `landPlan`) går i land som `kar_levende` med krabbene i vannet.
+- **Sorteringsbordet, transportbåndet og teinerenna** er fartøyets egne og står i skroget (`snokrabbe-bygging.md`).
+- **Ankrene H3d2 bruker** (`anchors.snok`): haleren, blokka i portalen, kroken der teina henger når den løftes inn, bordet med størrelsen,
+  båndets topp fra bordet til renna, rennas topp og leppe over hekken, RSW-lukene, stablenes høyde og antall; `hatch` og `crane` som på
+  autolineren.
+- **Test:** `tests/h3dshot.py` (3D, alene): modellen og ankrene, ute, broa, draget, natt fra begge sider og akterfra, i havna og
+  havflåtens fartøy nær og fjernt; skjermbilder i begge formater (`TAG=for` og `TAG=etter`).
+
 ## Snøkrabbe på havbåten (H3 av `docs/planer/havsteget-h3-snokrabbe.md`, valgene 06.11.2026)
 
 Planlagt 06.11.2026; H3a bygd samme dag (5.68). Jonas' valg samme dag: «V1: A», «V2: C», «V3: B», «V4: Gjør det som blir mest riktig, og passer spillet i et fremtidsperspektiv.», «V5: A», «V6: B».
