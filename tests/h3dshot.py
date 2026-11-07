@@ -69,11 +69,8 @@ NPC = """async ([dkm]) => { const D = havData(), b = S.boat, R = {}; let best = 
   R.near = havNear(S.t / 60).filter(n => n.vtype === 'snokrabbe').map(n => [n.name, +(dist(n.p, b.pos) * 1000).toFixed(0)]); return R; }"""
 
 CAM = """([dist, pitch, yaw, at]) => { const c = G3._debug.cam; c.helm = false; c.dist = dist; c.pitch = pitch; c.yaw = yaw; c.at = at || null; if (G3._debug.wets) G3._debug.wets.clear(); }"""
-# the camera aimed at a share k of the way from you to a point (lat/lon): cam.at in your boat's frame (x starboard, z aft) from the 3D
-# view's heading bv.head (its forward is (sin h, -cos h) in the world)
-CAMAT = """([dist, pitch, yaw, ll, k]) => { const q = P(ll.lat, ll.lon), bv = G3._debug.bv, h = bv.head, dx = (q.x * 1000 - bv.x) * k, dz = (q.y * 1000 - bv.z) * k;
-  const c = G3._debug.cam; c.helm = false; c.dist = dist; c.pitch = pitch; c.yaw = yaw; c.at = [dx * Math.cos(h) + dz * Math.sin(h), 3, -dx * Math.sin(h) + dz * Math.cos(h)];
-  if (G3._debug.wets) G3._debug.wets.clear(); return c.at; }"""
+# the game's camera on a boat of the ocean fleet by her name (npcLook: dist, pitch, and off her heading, 0 from astern)
+LOOK = """([name, dist, pitch, off]) => { const n = havNear(S.t / 60).find(q => q.name === name); if (!n) return null; return (G3._debug.npcLook || G3.npcLook)(n.id, dist, pitch, off); }"""
 
 async def frames(pg, n=3):
     for _ in range(n): await pg.evaluate("new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))")
@@ -134,11 +131,11 @@ async def main():
             r = await pg.evaluate(NPC, [0.12]); print('  havflåten:', r, flush=True); await pg.wait_for_timeout(6000)
             check(not r.get('none') and r.get('ships', 0) >= 17, 'havflåtens snøkrabbefartøy (samme modell) er ute', r)
             if not r.get('none'):
-                # (the camera's target cam.at on the vessel herself, in your boat's frame from the 3D view's own heading (the grid's
-                # convergence is 18 degrees out there, so 'straight ahead' missed her), so your own boat is not in front of her: 40 m off
-                # her for the near one; for the far one 60 m from you toward her at 700 m)
-                await pg.evaluate(CAMAT, [40, 0.12, 0.6, r['ll'], 1.0]); await pg.wait_for_timeout(4000); await shots(pg, 'flate_naer')
-                r2 = await pg.evaluate(NPC, [0.7]); await pg.wait_for_timeout(5000); await pg.evaluate(CAMAT, [50, 0.06, 0.0, r2['ll'], 0.09]); await pg.wait_for_timeout(3000); await shots(pg, 'flate_fjern')
+                # (the game's own test camera on a boat of the fleet, npcLook: aimed at her from off her bow quarter at 45 m, then from
+                # 700 m for the far model; your own boat is not in the way)
+                L = await pg.evaluate(LOOK, [r['name'], 45, 0.15, 2.4]); await pg.wait_for_timeout(5000); await shots(pg, 'flate_naer')
+                await pg.evaluate(LOOK, [r['name'], 700, 0.05, 2.4]); await pg.wait_for_timeout(5000); await shots(pg, 'flate_fjern')
+                await pg.evaluate("(G3._debug.npcLook || G3.npcLook)(null)"); print('  havflåtens kamera:', L, flush=True)
         gerr = await pg.evaluate("G3._debug.glErr()")
         check(gerr == 0, 'ingen GL-feil', gerr)
         print('sidefeil:', list(dict.fromkeys(errs))[:5], flush=True)
