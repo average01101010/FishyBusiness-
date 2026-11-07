@@ -986,3 +986,7 @@
 2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	caretest	OK	15	lite	samtidig	
 2026-11-07 17:02	ccr-7538447c-xt5b4p	d0b44fe7	maptest	OK	29	lite	samtidig	
 2026-11-07 17:02	ccr-7538447c-xt5b4p	d0b44fe7	boottest	OK	28	lite	samtidig	
+2026-11-07 17:02	ccr-7538447c-xt5b4p	8101ac63	trip2	OK	41	lite	samtidig	
+2026-11-07 17:02	ccr-7538447c-xt5b4p	8101ac63	seatest	OK	19	lite	samtidig	
+2026-11-07 17:02	ccr-7538447c-xt5b4p	8101ac63	calib	LES	13	lite	samtidig	
+2026-11-07 17:03	ccr-7538447c-xt5b4p	8101ac63	simday	LES	15	lite	samtidig	
