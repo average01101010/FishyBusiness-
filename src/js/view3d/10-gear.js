@@ -370,7 +370,7 @@
     const RG = XP.ring != null ? XP.ring : 0.45, ring = (p, rz) => [p[0] - Math.sin(rz || 0) * (ph + RG), p[1] + Math.cos(rz || 0) * (ph + RG), p[2]];
     const bridle = p => { const R = ring(p); for (const c of XP.bridle || []) drawN(GB.float, chain(BMrel, limbM([p[0] + c[0] * ps, p[1] + c[1] * ps, p[2] + c[2] * ps], R, 0.006))); };
     // the crabs in the pot now: the set's catch shared over its pots, at most five drawn
-    const csp = s && s.acc && s.acc.snokrabbe ? 'snokrabbe' : 'krabbe', crabN = s && s.acc && s.acc[csp] ? Math.min(5, Math.max(csp === 'snokrabbe' ? 2 : 0, Math.round(s.acc[csp].n / Math.max(1, s.n)))) : 0;
+    const csp = Object.keys((s && s.acc) || {}).find(k => SPECIES[k] && SPECIES[k].shell && s.acc[k].n > 0) || 'krabbe', crabN = s && s.acc && s.acc[csp] ? Math.min(5, Math.max(SPECIES[csp].npc ? 2 : 0, Math.round(s.acc[csp].n / Math.max(1, s.n)))) : 0;   // (the ocean's crab: at least two seen)
     const crabsIn = (p, left) => { for (let k = 0; k < left; k++) drawN(fishOf(csp), chain(BMrel, M4.T(p[0] + (hash(k * 5 + 1) - 0.5) * pw, p[1] + 0.02, p[2] + (hash(k * 7 + 2) - 0.5) * pw), M4.RY(hash(k * 3) * 6.3), M4.S(0.8 * (0.85 + 0.3 * hash(k * 11))))); };
     // the hauler on its davit: the sheave turns while the rope runs
     const running = g.op === 'haul' ? u < 0.55 : u > 0.55;

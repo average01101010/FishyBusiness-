@@ -617,7 +617,41 @@ egne punkter under 1,3 m over arbeidsdekket for en ripe langs hele den lukkede s
 **Før-bildene i fjernkjøring kan dø.** `ky15shot.py` sto i en time på broa etter at arbeidsprosessen ble startet på nytt, og jobben var borte.
 Jonas tok før-bildene selv på nettbrettet på noen minutter. Spør om det når bildene i SwiftShader trekker ut.
 
+## 21. Lært av snøkrabbefartøyet (07.11.2026)
+
+Snøkrabbefartøyet (`krabbe50.py`, `snokrabbe-grunnlag.md`, `snokrabbe-bygging.md`) var den første havbåten bygd fra bunnen etter piloten:
+50 m, to dekk i høyden akter (teinedekket under shelteret), en åpen midtdel, bakken med hus og styrhus, og en arbeidsflyt som H3d2 skal
+animere. Det som var nytt:
+
+**`beam()` med en loddrett stolpe forsvinner.** `beam(A, p0, p1, …)` bygger tverrsnittet fra `up=(0, 0, 1)`; for en stolpe langs z blir
+kryssproduktet null og boksen klapper sammen uten feilmelding. Portalens to bein manglet i K1–K5 til nærbildet viste armen sveve.
+Gi en stolpe `up=(1, 0, 0)` (eller bruk `abox`/`acyl`), og se etter svevende deler i nærbildene av alt som står på dekk.
+
+**Vegger med boolske vinduer skal skygges flatt.** Husets vegger ble lofta med glatt skygge; vinduskuttene laget vifter av trekanter, og K5
+viste flekkete, bulete vegger. Etter kuttet: alle flatene `use_smooth = False` (veggene er plane plater).
+
+**Lanternenes «over skroget» er det øverste gjennomgående dekket.** På en båt med bakk og shelter som ikke går hele lengden, er det
+teinedekket (vedlegg I). Regnet fra bakken ville topplanterna stått 1,4 m for lavt. Skriv i `check()` hvilket dekk som er «skroget».
+
+**Plasser det spillet stabler, før bjelkene.** Stablene på tolv er 2,38 m; under shelteret var det 2,60 m til taket, men bjelkene (0,26 m) stod
+over stablene. Bjelkene ble lagt midt mellom stableplassene (spantavstanden er stableavstanden, 1,38 m), og `check()` regner klaringen.
+
+**Hjørnene i et avrundet speil er smalere enn bredden.** Teinerennas port var lagt til y −4,62, men speilet er bare 4,4 m ute i den høyden.
+Regn `y_at(0, z)` for åpningens høyder før kuttet.
+
+**Fjernmodellen har sitt eget budsjett.** Første eksport ga 7 956 trekanter for havflåten (grensen 4 000). Grovversjonen tar bare formens
+stasjoner, ingen kutt (åpningene som mørke plater), ingen rekker, trapper, bjelker eller små beslag: 3 831.
+
+**Kameraet i spillet følger din båt.** Bildet av havflåtens fartøy ble tatt fra inni ditt eget 50 m skrog. Sett deg i en liten båt når en annen
+skal fotograferes.
+
+**Blender og SwiftShader etter hverandre.** Før-bildene i spillet tok 50 minutter; Blender-rendringene ble lagt i kø bak dem med en
+`until`-løkke i bakgrunnen, så de aldri gikk samtidig. Python 3.11 i økta fant ikke PIL (Debians pakke skygget): `pip install
+--ignore-installed pillow`.
+
 ## Endringslogg
+
+- 07.11.2026: kap. 21, det snøkrabbefartøyet lærte (loddrette bjelker, flate vegger etter kutt, «over skroget» for lanternene, stablene før bjelkene, speilets hjørner, fjernmodellens budsjett, kameraet i spillet, Blender og SwiftShader etter hverandre).
 
 - 02.11.2026: kap. 20, det revisjonen av kystbåten lærte (se hva et bilde viser, render det gamle først, finnekjølen, vinduer på en buet vegg, lanterner over takets bue, leideren som lenke, spillets antakelser om bordet og ripa, før-bildene).
 

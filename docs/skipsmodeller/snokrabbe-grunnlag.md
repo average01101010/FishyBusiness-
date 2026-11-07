@@ -66,3 +66,42 @@ H3d2, ingen MOB-plass på modellen, ingen snøkrabbeteine fra Blender).
 | A10 | Store flate sider uten plateskjøter, lensporter eller isbelte (M3) | M3, SKR-09–11 | Sveiste skjøter, isbeltet, lensporter med klaff, spygatter, rubbelister, hawse-rør |
 | A11 | Under vann: ingen slingrekjøl, ingen thrustertunnel, ingen sonar | M15 | Slingrekjøler, baugthruster med rist og symbol, anoder, sjøkister, sonarkum, ekkoloddgivere |
 | A12 | 29 181 trekanter nær | budsjettet 300k | Mer detalj innenfor budsjettet |
+
+## 5. Lanternene (FOR-1975-12-01-5 vedlegg I, regnet i `check()`)
+
+| Lys | Plass | Kravet | Verdi |
+|---|---|---|---|
+| Forreste topplanterne | toppen av masta på styrhustaket, x 38,6, z 23,65 | 3(a): høyst L/4 (12,5 m) fra stevnen; 2(a)(i): minst bredden (11 m) over skroget | 11,4 m fra stevnen; 14,25 m over teinedekket (det øverste gjennomgående dekket: bakken og shelteret går ikke hele lengden) |
+| Aktre topplanterne | toppen av aktermasta på skorsteinen, x 12,35, z 28,25 | 2(a)(ii): minst 4,5 m over den forreste; 3(a): minst L/2 bak | 4,50 m over, 26,2 m bak |
+| Sidelysene | vingenes forkant, ±5,38 m ut, z 16,20, skjermet innenfor | 2(g): høyst tre firedeler av topplanternas høyde over skroget; forut for topplanterna | 6,80 mot 10,69; 2,9 m forut |
+| Fiskelysene | rødt over hvitt på armen forut for masta, z 22,30 og 20,30 | 2(i)(ii): minst 2 m fra hverandre (fra 20 m), det nederste minst 4 m over skroget; 2(j): det hvite minst to ganger avstanden over sidelysene | 2,00 m; 10,90 m; 4,10 over sidelysene |
+| Akterlyset | på stolpen midt på shelterets akterrekke, z 13,65 | | 7,65 m over vannet |
+
+M21(2) i kartleggingen (den forreste topplanterna 16,5 m fra baugen på den gamle modellen) er rettet.
+
+## 6. Arbeidsflyten og plassene (kap. 19: lagt inn før veggene)
+
+Plassene ble satt først og regnet i `check()`: rekka ved haleren 1,20 m over teinedekket, blokka 0,95 m utenfor siden og 3,50 m over rekka,
+sorteringsbordet 0,95 m høyt og 0,15 m over båndet, båndet 18,55 m fra bordet til renna, 70 stableplasser (840 teiner) med 0,69 m fri gang
+langs båndet, 1,03 m i midtgangen og 0,78 m langs babord side, stablene 0,22 m under shelterets tak og bjelkene mellom toppene, kranbommen
+11,4 m som når luka (5,5 m), 9,7 m utenfor babord og 2,1 m utenfor styrbord. Trappene og dørene er ankre (`stairs`, `doors`), og ankrene
+H3d2 trenger står i `anchors.snok`.
+
+## 7. Kritikksløyfen
+
+| # | Funn | Rettet |
+|---|---|---|
+| 1 | Første `check()`: 1 684 t (−6 %) | fyldigheten midtskips 0,90 → 0,965: 1 762 t |
+| 2 | Vannlinjene: 0,524 m i stigningen akter (filteret tok punkter under kroppen ved skjegget) | filteret 0,5 m over bunnlinja: 0,011 |
+| 3 | Stablene på tolv kolliderte med shelterets bjelker (−0,08 m) | bjelkene midt mellom stableplassene |
+| 4 | Kranens rekkevidde om styrbord 0,7 m | bommen 11,4 m |
+| 5 | `wh_ring` med punkter på linje ga deling på null i `offset_poly` | bare hjørnene til takets omriss |
+| 6 | K1–K5: portalens bein manglet (en loddrett bjelke i `beam()` klapper sammen) | `up=(1, 0, 0)` for stolper |
+| 7 | K5, K7: husveggene flekkete rundt vinduene (glatt skygge over boolske vifter) | flat skygge etter kuttet |
+| 8 | K1: baugen full og rund øverst, som en slepebåt | halvbredden forut smalere øverst |
+| 9 | Teinerennas port lå utenfor speilets avrundede hjørne | porten flyttet inn til y −3,95 |
+| 10 | K2, c_stern: flatt speil uten beslag | fender rundt hekken, loddrett fender om babord, navnefeltet over fenderen |
+| 11 | c_wh: kassene for panamaklyssene sto ut av skansekledningen som trekanter | ovale ringer på innsida |
+| 12 | Fjernmodellen 7 956 trekanter | grovversjonen uten kutt og småbeslag: 3 831 |
+| 13 | Bøyestangas flagg svart (to flater i ett plan) | tynn plate |
+| 14 | `h3dshot`: havflåtens bilder tatt fra inni eget skrog | deg i kystbåten |

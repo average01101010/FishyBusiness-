@@ -491,10 +491,13 @@ def on_drawing(render_png, drawing, box, out_png, alpha=0.55):
 LODM_TRIS = 40000
 
 
-def export_boat(build, to_game, to_game_n, out_dir, glb_name, data_b64, extras, side=None, dry=False, more=None):
+def export_boat(build, to_game, to_game_n, out_dir, glb_name, data_b64, extras, side=None, dry=False, more=None, mid=None):
     """bake and write a boat: build(fine) -> (solids, glass); lod0 + glass + lod1 into a GLB, base64 to data_b64 (unless dry), and the
     side picture side = (pic_b64, cx, cz, ortho). The objects of the fine build must already exist as BOAT0 and GLASS0.
-    more: further parts [{name, obj, alpha, xf_p, xf_n, ao, show}] (a lid, a motor in its own frame ...), written after lod1."""
+    more: further parts [{name, obj, alpha, xf_p, xf_n, ao, show}] (a lid, a motor in its own frame ...), written after lod1.
+    mid: a callable that builds the middle version (the solids) itself, in place of the Decimate of the near one (the snow crab vessel,
+    07.11.2026: the Decimate pulled her hull's outside and its inside 8 cm behind together, and the inside showed through in stripes);
+    it is built and baked with the near model hidden."""
     import os
     boat = bpy.data.objects['BOAT0']; gl = bpy.data.objects['GLASS0']
     bake_ao(boat, samples=48, distance=0.9)
@@ -502,7 +505,13 @@ def export_boat(build, to_game, to_game_n, out_dir, glb_name, data_b64, extras, 
     # the middle version: a copy of the baked near model with a collapsing Decimate (mesh_arrays reads it evaluated); the faces keep
     # their materials (the paint zones) and the corners their baked shade
     Am = None; n0 = len(A0['idx']) // 3
-    if n0 > LODM_TRIS:
+    if mid is not None:
+        shown = [o for o in bpy.data.objects if o.name not in ('cam', 'sun') and not o.hide_render]
+        for o in shown: o.hide_render = True; o.hide_viewport = True
+        om = join(mid(), 'BOATM'); bake_ao(om, samples=24, distance=0.9); Am = mesh_arrays(om, to_game, to_game_n)
+        bpy.data.objects.remove(om, do_unlink=True)
+        for o in shown: o.hide_render = False; o.hide_viewport = False
+    elif n0 > LODM_TRIS:
         bm = boat.copy(); bm.data = boat.data.copy(); bm.name = 'BOATM'; boat.users_collection[0].objects.link(bm)
         md = bm.modifiers.new('lodm', 'DECIMATE'); md.decimate_type = 'COLLAPSE'; md.ratio = LODM_TRIS / n0; md.use_collapse_triangulate = True
         Am = mesh_arrays(bm, to_game, to_game_n)

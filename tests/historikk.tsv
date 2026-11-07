@@ -689,3 +689,11 @@
 2026-11-07 09:46	ccr-fc7a11b2-nl5jor	4866ccb2+	roetest	OK	120	lite	samtidig	
 2026-11-07 09:46	ccr-fc7a11b2-nl5jor	4866ccb2+	dockrow	OK	41	lite	samtidig	
 2026-11-07 09:46	ccr-fc7a11b2-nl5jor	4866ccb2+	trip2	OK	36	lite	samtidig	
+2026-11-07 12:20	ccr-287cbb81-whkbel	4cb9b5e6+	snokrabbetest	OK	15	lite	samtidig	
+2026-11-07 12:20	ccr-287cbb81-whkbel	4cb9b5e6+	krabbefabrikktest	OK	21	lite	samtidig	
+2026-11-07 12:21	ccr-287cbb81-whkbel	4cb9b5e6+	vesseltest	FEIL	35	lite	samtidig	FEIL no code branches on a vessel type name ['src/js/view3d/10-gear.js:373']
+2026-11-07 12:21	ccr-287cbb81-whkbel	4cb9b5e6+	walktest	FEIL	19	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 48
+2026-11-07 12:21	ccr-287cbb81-whkbel	4cb9b5e6+	regmarktest	OK	10	lite	samtidig	
+2026-11-07 12:21	ccr-287cbb81-whkbel	4cb9b5e6+	maletest	OK	22	lite	samtidig	
+2026-11-07 12:21	ccr-287cbb81-whkbel	4cb9b5e6+	lanterntest	OK	16	lite	samtidig	
+2026-11-07 12:36	ccr-287cbb81-whkbel	4cb9b5e6+	vesseltest	OK	17	lite	alene	

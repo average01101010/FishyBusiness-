@@ -187,6 +187,7 @@ def wroot(x): return wk(x) * 1.7 if x <= X_KF else wk(x)
 
 NKB, NF = 4, 3
 _S = {}
+MID = [False]      # the middle version (build('mid')): the near one's structure with fewer stations, bands and fittings
 def rub_on(x):
     """how far the rubbing bars stand out at x (they end in tapers at RUB_X)"""
     return ss(RUB_X[0], RUB_X[0] + 1.0, x) * (1 - ss(RUB_X[1] - 1.0, RUB_X[1], x))
@@ -194,10 +195,10 @@ def section(x, sg=1, fine=True):
     """the whole half-section at x as (y, z, kind) from the skeg's underside on the centreline to the bulwark's top; the counts never
     change (points collapse where a band is empty). Kinds: 'k' the skeg, 'f' the fillet at its root, 'b' the bottom, 't' the topside,
     'r' a rubbing bar, 'u' the ochre stripe, 's' the bulwark's top"""
-    key = (round(x, 5), sg, fine)
+    mid = fine and MID[0]; key = (round(x, 5), sg, fine, mid)
     if key in _S: return _S[key]
     P = vline(x, sg); zl = P[0][1]; top = P[-1][1]; out = []
-    nk = NKB if fine else 1; nf = NF if fine else 1
+    nk = (2 if mid else NKB) if fine else 1; nf = (2 if mid else NF) if fine else 1
     if x >= X_KA:
         b = kb(x); f = min(1.0, (x - X_KA) / 0.10); ww = wk(x) * f; wr = wroot(x) * f
         if x <= X_KF:
@@ -218,16 +219,16 @@ def section(x, sg=1, fine=True):
         out += [(0.0, zl, 'k')] * ((4 if fine else 2) + nk) + [(0.0, zl, 'f')] * nf
         body = P
     z0 = body[0][1]; cl = lambda z: min(top, max(z0, z))
-    nb = 16 if fine else 3
+    nb = (8 if mid else 16) if fine else 3
     zw = cl(WL + 0.6); out += [(yy, zz, 'b') for yy, zz in along(body, z0, zw, nb)]
     zprev = zw; ro = rub_on(x)
     for zr in RUB:
-        zr0 = cl(zr - RUBH); out += [(yy, zz, 't') for yy, zz in along(body, zprev, zr0, 5 if fine else 1)]
-        for dz, off in (((-0.062, 0.36), (-0.044, 0.72), (-0.018, 0.96), (0.018, 0.96), (0.044, 0.72), (0.062, 0.36), (RUBH, 0.0)) if fine else ((0.0, 1.0), (RUBH, 0.0))):
+        zr0 = cl(zr - RUBH); out += [(yy, zz, 't') for yy, zz in along(body, zprev, zr0, (3 if mid else 5) if fine else 1)]
+        for dz, off in (((-0.062, 0.36), (-0.044, 0.72), (-0.018, 0.96), (0.018, 0.96), (0.044, 0.72), (0.062, 0.36), (RUBH, 0.0)) if fine and not mid else ((-0.04, 0.8), (0.04, 0.8), (RUBH, 0.0)) if fine else ((0.0, 1.0), (RUBH, 0.0))):
             zq = cl(zr + dz); yy, zz = at_z(body, zq); out.append((yy + RUBW * off * ro, zz, 'r' if off > 0 and ro > 1e-4 else 't'))
         zprev = cl(zr + RUBH)
     zst = cl(z_stripe(x))
-    out += [(yy, zz, 't') for yy, zz in along(body, zprev, zst, 6 if fine else 1)]
+    out += [(yy, zz, 't') for yy, zz in along(body, zprev, zst, (3 if mid else 6) if fine else 1)]
     out += [(yy, zz, 'u') for yy, zz in along(body, zst, top, 3 if fine else 1)[:-1]]
     out.append((P[-1][0], top, 's'))
     _S[key] = out; return out
@@ -424,6 +425,7 @@ def stations(fine=True):
         for a, b in OPEN_S: sp += [a, b]
         # (0.2 m where the hull's shape turns, 0.4 m along the parallel body: the GLB is downloaded, 07.11.2026)
         xs = [XA + 0.02, XA + 0.05, XA + 0.09, XA + 0.14, XA + 0.20, XA + 0.27, XA + 0.35, XA + 0.45, XA + 0.6, XA + 0.8] + [x for x in [1.0 + 0.20 * i for i in range(240)] if not (10.0 < x < 36.0) or abs((x - 10.0) / 0.4 - round((x - 10.0) / 0.4)) < 1e-6] + [49.0 + 0.04 * i for i in range(25)]
+        if MID[0]: xs = [XA + 0.05, XA + 0.2, XA + 0.45, XA + 0.8] + [1.0 + 1.2 * i for i in range(40)] + [48.0 + 0.25 * i for i in range(8)]
         sp += stem_stations(lambda x: z_low(x) if x > X_KF else kb(x), [Z_AF, Z_BT, RUB[0] - RUBH, RUB[0] + RUBH, RUB[1] - RUBH, RUB[1] + RUBH, z_stripe], 40.0, XF - 0.012)
     else:
         xs = [0.6, 2.4, 8.0, 22.0, 34.0, 40.0, 43.5, 46.0, 47.6, 48.7, 49.5]
@@ -465,7 +467,7 @@ def hull_shell(M, fine=True):
         q = [(Tp[j][0], Tp[j][1], Tp[j][2]), (Ts[j][0], -Ts[j][1], Ts[j][2]), (Ts[j + 1][0], -Ts[j + 1][1], Ts[j + 1][2]), (Tp[j + 1][0], Tp[j + 1][1], Tp[j + 1][2])]
         k = Tp[j][3]; M.f(q, C[HULL_MAT[k]] if k in 'us' else C['hull'], (-1, 0, 0), HULL_KIND.get(k, 1))
     # ---- the insides: from the floor (the pot deck, the forecastle deck) up to the cap's inner edge, NIN rows; the cap across ----
-    nin = NIN if fine else 2
+    nin = (6 if MID[0] else NIN) if fine else 2
     xi = [x for x in xs if x >= XA + TT - 1e-9 and yin(x, z_cap(x)) > 0.05]
     if xi[0] > XA + TT + 1e-6: xi = [XA + TT] + xi
     def irow(x, sg):
@@ -492,7 +494,7 @@ def hull_shell(M, fine=True):
         A0 = [(x_, sg * ysh(x_), zc) for x_ in tops] + [(XA + TT, sg * yin(XA + TT, zc), zc)]
         for a, b in zip(A0, A0[1:]): M.f([a, b, (b[0], -b[1], b[2]), (a[0], -a[1], a[2])] if sg > 0 else [a, (a[0], -a[1], a[2]), (b[0], -b[1], b[2]), b], C['stripe'], (0, 0, 1), 4)
     # ---- the decks (in rows: a big flat face goes dark in the game, kap. 19) ----
-    ND = 16 if fine else 2
+    ND = (8 if MID[0] else 16) if fine else 2
     def across(x, z_of, e, n=ND): return [(x, e * (1 - 2 * i / n), z_of(x, e * (1 - 2 * i / n))) for i in range(n + 1)]
     # the pot deck from the transom's inside to the forecastle's bulkhead
     px = [x for x in xi if x <= X_FC + 1e-6]
@@ -587,29 +589,30 @@ def tube(A, ring, d, depth, m, m_end=None):
 def linings(A, G, fine=True):
     """the reveals of the holes (the side's thickness between the outside and the inside), the portholes' glass with the dark behind and
     their rings, the hawse pipes, the freeing ports' flaps, the scuppers"""
+    cs, ls = (10, 4) if MID[0] else (20, 8)     # (the middle version: coarser circles and lips)
     for sg in (1, -1):
         for x0, x1 in OPEN_S:
             o = rr_pts((x0 + x1) / 2, sum(OPEN_Z) / 2, x1 - x0, OPEN_Z[1] - OPEN_Z[0], 0.40, 4)
             ring = [V((p, sg * (y_at(p, q, sg) + 0.001), q)) for p, q in o]
             tube(A, ring, (0, -sg, 0), TT + 0.004, C['white'])
             if fine:     # a half-round steel lip round the opening, painted with the hull (it reads as the opening's edge from afar)
-                F.pipe(A, [V((p, sg * (y_at(p, q, sg) + 0.012), q)) for p, q in o + [o[0]]], 0.022, C['rubbar'], 8)
+                F.pipe(A, [V((p, sg * (y_at(p, q, sg) + 0.012), q)) for p, q in o + [o[0]]], 0.022, C['rubbar'], ls)
         if not fine: continue
         for x in PORTS:
             on = lambda p, q, dd: V((x + p, sg * (y_at(x + p, PORT_Z + q, sg) - dd), PORT_Z + q))
-            tube(A, [on(p, q, 0.0) for p, q in circle(PORT_R, 20)], (0, -sg, 0), 0.12, C['white'])
-            G.poly([on(p, q, 0.05) for p, q in circle(PORT_R, 20)], C['glass'], (0, sg, 0))
-            A.poly([on(p, q, 0.12) for p, q in circle(PORT_R, 20)], C['cabin'], (0, sg, 0))
-            F.atorus(A, (x, sg * (y_at(x, PORT_Z, sg) + 0.01), PORT_Z), (0, sg, 0), PORT_R + 0.025, 0.022, lambda a: C['steel'], seg=24, rseg=5)
-        hx, hz = HAWSE; ring = [V((hx + p, sg * (y_at(hx + p, hz + q, sg) + 0.001), hz + q)) for p, q in circle(HAWSE_R, 20)]
+            tube(A, [on(p, q, 0.0) for p, q in circle(PORT_R, cs)], (0, -sg, 0), 0.12, C['white'])
+            G.poly([on(p, q, 0.05) for p, q in circle(PORT_R, cs)], C['glass'], (0, sg, 0))
+            A.poly([on(p, q, 0.12) for p, q in circle(PORT_R, cs)], C['cabin'], (0, sg, 0))
+            if not MID[0]: F.atorus(A, (x, sg * (y_at(x, PORT_Z, sg) + 0.01), PORT_Z), (0, sg, 0), PORT_R + 0.025, 0.022, lambda a: C['steel'], seg=24, rseg=5)
+        hx, hz = HAWSE; ring = [V((hx + p, sg * (y_at(hx + p, hz + q, sg) + 0.001), hz + q)) for p, q in circle(HAWSE_R, cs)]
         tube(A, ring, (-0.35, -sg, 0.60), 0.45, C['steel'], C['black'])
-        F.atorus(A, (hx, sg * (y_at(hx, hz, sg) + 0.03), hz), (0, sg, 0), HAWSE_R + 0.05, 0.05, lambda a: C['steel'], seg=24, rseg=6)
+        if not MID[0]: F.atorus(A, (hx, sg * (y_at(hx, hz, sg) + 0.03), hz), (0, sg, 0), HAWSE_R + 0.05, 0.05, lambda a: C['steel'], seg=24, rseg=6)
         for xc in FREE:
             o = rr_pts(xc, DK + 0.02 + FREE_H / 2, FREE_W, FREE_H, 0.05, 3)
             tube(A, [V((p, sg * (y_at(p, q, sg) + 0.001), q)) for p, q in o], (0, -sg, 0), TT + 0.004, C['inner'])
             # the flap hung from its top edge outside, so the sea does not come in (SKR-11)
             obox(A, (xc, sg * (y_at(xc, DK + 0.20, sg) + 0.03), DK + 0.17), V((FREE_W / 2 - 0.03, 0, 0)), V((0, 0.012, 0)), V((0, 0, FREE_H / 2 - 0.02)), C['hull'])
-            acyl(A, (xc - FREE_W / 2, sg * (y_at(xc, DK + 0.33, sg) + 0.04), DK + 0.34), (xc + FREE_W / 2, sg * (y_at(xc, DK + 0.33, sg) + 0.04), DK + 0.34), 0.02, lambda q: C['steel'], seg=8)
+            if not MID[0]: acyl(A, (xc - FREE_W / 2, sg * (y_at(xc, DK + 0.33, sg) + 0.04), DK + 0.34), (xc + FREE_W / 2, sg * (y_at(xc, DK + 0.33, sg) + 0.04), DK + 0.34), 0.02, lambda q: C['steel'], seg=8)
         for xc in SCUP:
             o = rr_pts(xc, DK + 0.10, 0.30, 0.16, 0.05, 3)
             tube(A, [V((p, sg * (y_at(p, q, sg) + 0.001), q)) for p, q in o], (0, -sg, 0), TT + 0.004, C['inner'])
@@ -617,7 +620,7 @@ def linings(A, G, fine=True):
     for (y0, y1, z0, z1), r, m in ((STERN_O, 0.35, C['white']), (CHUTE_O, 0.18, C['inox'])):
         o = rr_pts((y0 + y1) / 2, (z0 + z1) / 2, y1 - y0, z1 - z0, r, 4)
         tube(A, [V((XA - 0.001, p, q)) for p, q in o], (1, 0, 0), TT + 0.004, m)
-        if fine: F.pipe(A, [V((XA - 0.012, p, q)) for p, q in o + [o[0]]], 0.022, C['rubbar'], 8)
+        if fine: F.pipe(A, [V((XA - 0.012, p, q)) for p, q in o + [o[0]]], 0.022, C['rubbar'], ls)
     # the cargo hatch's trunk down into the hold, dark at its bottom (H2d: the pallets come up through it)
     x0, x1, y0, y1 = HATCH; t = 0.10; o = rr_pts((x0 + x1) / 2, (y0 + y1) / 2, x1 - x0 - 2 * t, y1 - y0 - 2 * t, 0.06, 3)
     tube(A, [V((p, q, DK + 0.001)) for p, q in o], (0, 0, -1), 2.6, C['inner'], C['dark'])
@@ -660,15 +663,15 @@ def pot_deck(A, G, fine=True):
     for x in (BEAMS_X if fine else []):
         e = yin(x, CEIL) - 0.01
         abox(A, x - 0.06, x + 0.06, -e, e, CEIL - 0.26, CEIL - 0.002, C['frameW'], skip=('+z',))
-        for sg in (1, -1):
+        for sg in ((1, -1) if not MID[0] else ()):
             if any(a - 0.2 < x < b + 0.2 for a, b in OPEN_S): continue
             yy = yin(x, (DK + CEIL) / 2)
             abox(A, x - 0.05, x + 0.05, sg * (yy - 0.24) if sg > 0 else -yy + 0.001, sg * yy - 0.001 if sg > 0 else -(yy - 0.24), DK, CEIL - 0.24, C['frameW'])
-    if fine:
+    if fine and not MID[0]:
         for x in (3.0, 7.7, 12.3):
             for y in (-3.4, 0.0, 3.0): F.work_light(A, (x, y, CEIL - 0.002), (0, 0.15 * (1 if y < 0 else -1), -1), C['dark'], C['lens'])
     # ---- the open pot deck's bulwark: the stays inside, the rail on its cap ----
-    for x in ([15.3 + 1.8 * k for k in range(7)] if fine else []):
+    for x in ([15.3 + 1.8 * k for k in range(7)] if fine and not MID[0] else []):
         for sg in (1, -1):
             if sg < 0 and PORTAL[0] - 0.4 < x < PORTAL[1] + 0.4: continue
             if sg > 0 and CR_AX[0] - 0.8 < x < CR_AX[0] + 0.8: continue
@@ -732,7 +735,7 @@ def pot_deck(A, G, fine=True):
     for xx in [xa + 0.4 + 1.5 * k for k in range(13) if xa + 0.4 + 1.5 * k < xb]:
         for yy in (ya + 0.08, yb - 0.08): abox(A, xx - 0.04, xx + 0.04, yy - 0.04, yy + 0.04, DK - 0.004, zb - 0.2, C['galv'])
     if fine:
-        for xx in [xa + 0.3 + 0.5 * k for k in range(37) if xa + 0.3 + 0.5 * k < xb - 0.2]:
+        for xx in ([xa + 0.3 + 0.5 * k for k in range(37) if xa + 0.3 + 0.5 * k < xb - 0.2] if not MID[0] else []):
             abox(A, xx - 0.008, xx + 0.008, ya + 0.06, yb - 0.06, zb + 0.001, zb + 0.012, C['rubber'])   # the cleats on the belt
         abox(A, xa + 0.05, xa + 0.45, yb - 0.02, yb + 0.30, zb - 0.32, zb - 0.02, C['blue'])   # the drive at the after end
     # ---- the pot chute: from the conveyor's end down through the port in the transom and out over the stern, stainless, its cheeks ----
@@ -819,11 +822,19 @@ AMX = 12.35                              # the after mast's foot (on the centrel
 AM_TOP = 28.15                           # its top: the second masthead light 4.5 m over the forward one (2(a)(ii))
 STERN_L = (XA + 0.30, 0.0, SD + COAM + 1.05)
 RAIL_H = 1.00
+_WL = F.work_light
+def _work_light(*a, **k):
+    if MID[0]: return
+    return _WL(*a, **k)
+F.work_light = _work_light       # (the middle version draws no work lights: some 40 small lamps the eye cannot see from there)
+
 def rail_line(A, pts, h=RAIL_H, every=1.6, base_z=None, fine=True, r=0.024, knee=0.5):
     """a pipe rail along pts (x, y, z of the foot), stanchions every so often, a top rail and a knee rail"""
     s = lambda q: C['steel']
-    if not fine:
-        F.pipe(A, [(x, y, z + h) for x, y, z in pts], r, C['steel'], 4); return
+    if not fine or MID[0]:
+        F.pipe(A, [(x, y, z + h) for x, y, z in pts], r * 1.2, C['steel'], 4)
+        if MID[0]: F.pipe(A, [(x, y, z) for x, y, z in pts], r, C['steel'], 4)   # (the middle version: the rail as two pipes, no stanchions)
+        return
     Lc = [0.0]
     for a, b in zip(pts, pts[1:]): Lc.append(Lc[-1] + math.dist(a, b))
     n = max(1, int(Lc[-1] / every)); posts = []
@@ -961,7 +972,7 @@ def win(objs, glass, name, o, u, v, poly, n, fine, frame=0.03):
     if fine:
         cx = sum(p[0] for p in poly) / len(poly); cy = sum(p[1] for p in poly) / len(poly)
         outer = [(p[0] + (frame if p[0] > cx else -frame), p[1] + (frame if p[1] > cy else -frame)) for p in poly]
-        objs.append(frame_ring('wf_' + name, V(o) + V(n) * 0.006, u, v, outer, poly, C['frame'], 0.0, 0.02, nrm=n))
+        if not MID[0]: objs.append(frame_ring('wf_' + name, V(o) + V(n) * 0.006, u, v, outer, poly, C['frame'], 0.0, 0.02, nrm=n))
         glass.append(plate('wg_' + name, V(o) - V(n) * 0.035, u, v, poly, C['glass'], nrm=n))
         return plate_cutter('wc_' + name, o, u, v, poly, 0.45)
     us = [q[0] for q in poly]; ws = [q[1] for q in poly]
@@ -1331,7 +1342,7 @@ def paint_of(z, x):
     return C['hull']
 def clear_for_text(x, z): return not ((31.0 <= x <= 46.0 and 10.7 <= z <= z_cap(x) + 0.1) or (x <= 0.6 and 8.2 <= z <= 10.4))
 def seams(A, fine=True):
-    if not fine: return
+    if not fine or MID[0]: return
     for sg in (1, -1):
         nf = lambda p, sg=sg: surf(p.x, p.z, sg)[1]
         for z in SEAM_Z:
@@ -1376,6 +1387,11 @@ def stern(A, fine=True):
         for zz in (8.45, 10.1, 11.65): abox(A, XA - 0.03, XA + 0.002, sg * yv - 0.14, sg * yv + 0.14, zz - 0.05, zz + 0.05, C['steel'])
 
 def build(fine=True):
+    if fine == 'mid':
+        MID[0] = True
+        try: s_, g_ = build(True)
+        finally: MID[0] = False
+        return s_ + g_, []
     HELM_EXTRA.clear()
     M = Mesh('hull'); hull_shell(M, fine)
     for z in (Z_AF, Z_BT):
@@ -1397,8 +1413,8 @@ def build(fine=True):
         y0, y1, z0, z1 = STERN_O; A.poly([(XA - 0.03, y0, z0), (XA - 0.03, y1, z0), (XA - 0.03, y1, z1), (XA - 0.03, y0, z1)], C['cabin'], (-1, 0, 0))
     pot_deck(A, G, fine); shelter_top(A, G, fine); after_mast(A, fine)
     ho, hg = house(fine); wo, wg, crown = wheelhouse(fine)
-    helm(A, G, fine); fore(A, crown, fine); lanterns_side(A, fine); foredeck(A, fine); seams(A, fine); stern(A, fine)
-    out = [hull, A.done(35, tint=wear), underwater(fine)] + ho + wo + HELM_EXTRA
+    helm(A, G, fine and not MID[0]); fore(A, crown, fine); lanterns_side(A, fine); foredeck(A, fine); seams(A, fine); stern(A, fine)
+    out = [hull, A.done(35, tint=wear), underwater(fine and not MID[0])] + ho + wo + HELM_EXTRA
     if not fine: out += list(crane_parts(False)[:3]) + [hatch_lid(False)]   # (the far model carries her crane parked and the hatch shut)
     g = G.done(35)
     return [o for o in out if o], hg + wg + ([g] if g else [])
@@ -1608,7 +1624,7 @@ def main():
     hg = to_game(HINGE)
     CPC = []; CP = lambda: CPC[0] if CPC else (CPC.append(crane_parts(True)) or CPC[0])
     export_boat(build, to_game, to_game_n, OUT, 'krabbe50.glb', os.path.join(ROOT, 'src', 'data', 'boat-krabbe50.b64'), ex,
-                side=(os.path.join(ROOT, 'src', 'data', 'boat-krabbe50-side.b64'), 25.0, 11.0, 56.0), dry='dry' in sys.argv,
+                side=(os.path.join(ROOT, 'src', 'data', 'boat-krabbe50-side.b64'), 25.0, 11.0, 56.0), dry='dry' in sys.argv, mid=lambda: build('mid')[0],
                 more=[{'name': 'hatch', 'obj': lambda: hatch_lid(True), 'xf_p': lambda p: tuple(a - b for a, b in zip(to_game(p), hg)), 'ao': True, 'show': True}] +
                      [{'name': nm, 'obj': (lambda i=i: CP()[i]), 'xf_p': (lambda p, o=o: tuple(a - b for a, b in zip(to_game(p), o))), 'ao': True, 'show': True}
                       for i, (nm, o) in enumerate((('crane_head', to_game(CR_AX)), ('crane_boom', to_game(CR_HEEL)), ('crane_block', to_game((0.0, 0.0, 0.0)))))])
