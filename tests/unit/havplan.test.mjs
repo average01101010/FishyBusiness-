@@ -107,7 +107,7 @@ export default function (t){
     // live: the tanks full, or the oldest crab six days in them
     { const o = oS();
       t.ok(/tankene er fulle/.test((p2SnoEnd(o, stS(H0, {}, {live:true, tank:38500})) || {why:['']}).why[0]), 'levende: tankene 96 % fulle: turen er over');
-      t.ok(p2SnoEnd(o, stS(H0, {}, {live:true, tank:30000, age:5})) === null, 'levende: tankene 75 % og den eldste krabben fem døgn: videre');
+      t.ok(p2SnoEnd(o, stS(H0, {}, {live:true, tank:30000, age:4})) === null, 'levende: tankene 75 % og den eldste krabben fire døgn: videre');
       t.ok(/eldste krabben/.test((p2SnoEnd(o, stS(H0, {}, {live:true, tank:20000, age:6.2})) || {why:['']}).why[0]), 'levende: den eldste krabben over ' + D.age + ' døgn i tankene: turen er over');
       t.ok(/20 døgn/.test((p2SnoEnd(o, stS(H0, {tripD:20.2})) || {why:['']}).why[0]) && p2SnoEnd(o, stS(H0, {tripD:19})) === null, 'fryst: turen er over etter 20 døgn'); }
     // the close season: late in June nothing is set (it would stand past 1 July), and from the hour they must come in, every string is
@@ -169,6 +169,17 @@ export default function (t){
       const keep0 = (b.fuel - r0.fuel * (B.plantLph * 24 + 1300)), keep1 = (b.fuel - r1.fuel * (B.plantLph * 24 + 1300));
       t.ok(home && keep1 > keep0 * 1.5 && keep1 < keep0 * 2.5, 'reserven for veien inn til ' + (home ? home.pt.name : '?') + ': ' + Math.round(keep0) + ' l i marsjfart, ' + Math.round(keep1) + ' l i full fart på planen');
       S0.plan = keepP; Object.assign(b, keepB); K.applyVessel(); }
+    // two fields whose strings lie across each other: a warning (found in the screenshots of H3c: the test's fields tangled)
+    { const W1 = [], W2 = [], E = [], st = stS(H0); K.p2SnoCheck(oS({places:[field('f1', sent, 10, 7), field('f2', {x:sent.x + 3, y:sent.y}, 10, 7)]}), st, (m) => E.push(m), W1);
+      K.p2SnoCheck(oS({places:[field('f1', sent, 10, 7), field('f2', {x:sent.x + 30, y:sent.y}, 10, 7)]}), st, (m) => E.push(m), W2);
+      t.ok(W1.some(w => /ligger over hverandre/.test(w)) && !W2.some(w => /ligger over hverandre/.test(w)), 'to felt 3 km fra hverandre: lenkene ligger over hverandre (advarsel); 30 km fra hverandre: ingen'); }
+    // the large ocean vessels go round the clock only (Jonas 07.11.2026: «På de store havbåtene skal forresten mannskapet kun gå
+    // døgndrift. Det skal ikke være et alternativ med dagdrift.»): a new plan, and an old one read with day trips
+    { const S0 = K.get('S'), b = S0.boat, t0 = b.type, ops0 = S0.ops, D2 = K.get('DRIFT2'); K.set('DRIFT2', true);
+      for (const ty of Object.keys(K.VESSELS).filter(k => K.VESSELS[k].cls === 'hav')){ b.type = ty; K.applyVessel(); S0.lag = null;
+        const o = K.plan2New({}); S0.ops = Object.assign(K.plan2New({}), {rhythm:'day'}); const o2 = K.plan2Ops();
+        t.ok(o.rhythm === 'watch' && o2 && o2.rhythm === 'watch', ty + ': døgndrift i en ny plan og i en gammel med dagdrift (' + o.rhythm + ', ' + (o2 && o2.rhythm) + ')'); }
+      b.type = t0; K.applyVessel(); S0.ops = ops0; S0.lag = null; K.set('DRIFT2', D2); }
     for (const nm in keep) K.set(nm, keep[nm]);
   }
 }

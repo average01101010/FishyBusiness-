@@ -161,7 +161,9 @@ const PLAN2UI = (() => {
   function placeWhy(o, k, q){
     try { if (isLand(q)) return L('Det er land der.', 'That is land.'); if (depthF(q) < 5) return L('For grunt der.', 'Too shallow there.'); } catch (e){}
     const kind = p2Kind(o); if (k === 'felt' && !kind) return L('Båten fisker bare med juksa.', 'The boat fishes with the jig only.');
-    return (k === 'felt' ? ruBlockMsg({p:q, len:BOAT.len, gear:o.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? 'krabbe' : null}) : ruBlockMsg({p:q, len:BOAT.len, gear:'juksa', sp:(typeof jigKind === 'function' && jigKind() === 'kveite') ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)})) || null;
+    // (the pots' own species, potSp: the snow crab vessel's fields were tried against the king crab's rules; and the snow crab's at the
+    // season's next open hour, as the close season is the plan's to wait out, H3c)
+    return (k === 'felt' ? ruBlockMsg({p:q, len:BOAT.len, gear:o.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? potSp() : null, H:p2Sno(o) ? p2SnoSeason(S.t / 60, 0).openAt : S.t / 60}) : ruBlockMsg({p:q, len:BOAT.len, gear:'juksa', sp:(typeof jigKind === 'function' && jigKind() === 'kveite') ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)})) || null;
   }
   function put(o, k, q){
     const kind = p2Kind(o), why = placeWhy(o, k, q);
@@ -225,9 +227,10 @@ const PLAN2UI = (() => {
       '<p class="ph-note">' + L('Over grensene venter båten hjemme til varselet for de neste timene er under. Blir det verre ute, går den i ly samme vei tilbake. Båten tåler ' + fmt(hsMax(), 1) + ' m sjø, og den grensen gjelder uansett.', 'Over the limits the boat waits at home until the next hours\' forecast is under. If it gets worse out there, she goes to shelter back the way she came. The boat takes ' + fmt(hsMax(), 1) + ' m of sea, and that limit holds regardless.') + '</p>');
   }
   // ---- Rytme
-  const rhythmVal = o => p2Lag() ? L('Døgndrift med lagene, seks og seks', 'Round the clock with the teams, six and six') : o.rhythm === 'watch' ? L('Døgndrift, to vakter à 12 t', 'Round the clock, two watches of 12 h') : o.rhythm === 'multi' ? L('Turer på ' + o.days + ' døgn, ut kl. ', 'Trips of ' + o.days + ' days, out at ') + driftClock(o.dep) : L('Dagdrift, ut kl. ', 'Day trips, out at ') + driftClock(o.dep);
+  const rhythmVal = o => p2Lag() ? L('Døgndrift med lagene, seks og seks', 'Round the clock with the teams, six and six') : p2Hav() ? L('Døgndrift, to vakter à 12 t', 'Round the clock, two watches of 12 h') : o.rhythm === 'watch' ? L('Døgndrift, to vakter à 12 t', 'Round the clock, two watches of 12 h') : o.rhythm === 'multi' ? L('Turer på ' + o.days + ' døgn, ut kl. ', 'Trips of ' + o.days + ' days, out at ') + driftClock(o.dep) : L('Dagdrift, ut kl. ', 'Day trips, out at ') + driftClock(o.dep);
   function rhythmBody(o){
-    if (p2Lag()) return BIG('p2-rhythm', L('Døgndrift med lagene', 'Round the clock with the teams'), L('Dekkslaget og fabrikklaget går seks og seks: 1. vakt 00–06 og 12–18, 2. vakt 06–12 og 18–24. Skipperen og styrmannen har broa hver sin vakt. Er du om bord, går du dagvakta og sover i køya om natta.', 'The deck and factory teams go six and six: 1st watch 00–06 and 12–18, 2nd watch 06–12 and 18–24. The skipper and the mate have the bridge a watch each. When you are aboard, you keep the day watch and sleep in the bunk at night.'), true, 'data-v="watch"');
+    // (the large ocean vessels go round the clock only, no day trips: Jonas 07.11.2026)
+    if (p2Lag() || p2Hav()) return (p2Lag() ? '' : '<p class="ph-note">' + L('Havbåtene går bare døgndrift.', 'The ocean vessels go round the clock only.') + '</p>') + BIG('p2-rhythm', p2Lag() ? L('Døgndrift med lagene', 'Round the clock with the teams') : L('Døgndrift', 'Round the clock'), L('Dekkslaget og fabrikklaget går seks og seks: 1. vakt 00–06 og 12–18, 2. vakt 06–12 og 18–24. Skipperen og styrmannen har broa hver sin vakt. Er du om bord, går du dagvakta og sover i køya om natta.', 'The deck and factory teams go six and six: 1st watch 00–06 and 12–18, 2nd watch 06–12 and 18–24. The skipper and the mate have the bridge a watch each. When you are aboard, you keep the day watch and sleep in the bunk at night.'), true, 'data-v="watch"');
     const st = plan2State(o), aboard = st.crew.length + (st.me.aboard ? 1 : 0);
     // (the boat's own limits first, GUI review U2: a boat that can never go round the clock says so, not «you are three»)
     const wWhy = plan2WatchWhy(st, aboard, true), mWhy = st.bunks > 0 ? null : L('Krever køyer om bord', 'Needs bunks aboard');
@@ -376,7 +379,7 @@ const PLAN2UI = (() => {
     if (a === 'p2-wx-w'){ o.wx.wind = clamp(o.wx.wind + (+d.d), 5, windMax()); return true; }
     if (a === 'p2-wx-h'){ o.wx.hs = clamp(Math.round((o.wx.hs + 0.5 * (+d.d)) * 10) / 10, 0.5, hsMax()); return true; }
     if (a === 'p2-wx-preset'){ if (!WXP[d.v]) return false; o.wx = wxOf(d.v); return true; }
-    if (a === 'p2-rhythm'){ o.rhythm = d.v; return true; }
+    if (a === 'p2-rhythm'){ if (p2Hav() && d.v !== 'watch') return false; o.rhythm = d.v; return true; }   // (an ocean vessel round the clock only, Jonas 07.11.2026)
     if (a === 'p2-dep'){ o.dep = clamp(o.dep + 0.5 * (+d.d), 0, 23.5); return true; }
     if (a === 'p2-days'){ o.days = clamp(o.days + (+d.d), 2, 7); return true; }
     if (a === 'p2-copy'){ if (plan2Copy(d.id)) toast(L('Planen er kopiert til «' + vget(vesselById(d.id), 'boatName') + '». Sjekk den og start den der.', 'The plan is copied to «' + vget(vesselById(d.id), 'boatName') + '». Check it and start it there.')); return true; }

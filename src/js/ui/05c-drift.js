@@ -175,7 +175,7 @@ const DRIFTUI = (() => {
   // a place is checked before it is put in the plan: at sea, deep enough, and allowed for the gear
   function placeWhy(o, q, k){
     try { if (isLand(q)) return L('Det er land der.', 'That is land.'); if (depthF(q) < 5) return L('For grunt der.', 'Too shallow there.'); } catch (e){ return null; }
-    const kind = drKind(o), why = k === 'F' ? ruBlockMsg({p:q, len:BOAT.len, gear:o.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? 'krabbe' : null}) : ruBlockMsg({p:q, len:BOAT.len, gear:'juksa', sp:null, hand:!(S.equip && S.equip.jukse > 0)});
+    const kind = drKind(o), why = k === 'F' ? ruBlockMsg({p:q, len:BOAT.len, gear:o.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? potSp() : null}) : ruBlockMsg({p:q, len:BOAT.len, gear:'juksa', sp:null, hand:!(S.equip && S.equip.jukse > 0)});
     return why || null;
   }
   function put(o, k, q){

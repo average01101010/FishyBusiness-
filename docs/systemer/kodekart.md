@@ -17,7 +17,7 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 60 `natP(lat, lon)`
   - 61 `natLL(p)`
 
-## `src/js/core/01-world.js` (462 linjer)
+## `src/js/core/01-world.js` (463 linjer)
 
 - **10** one clock for everyone (05.10.2026, the shared world V1)
   - 55 `gridScale(p)`
@@ -38,29 +38,29 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 180 `legReady(a, c)`
   - 189 `nearestPlace(p)`
   - 193 `groundCheck(a, c)`
-  - 209 `runAground(p)`
-  - 224 `rocksNear(a, b, r)`
-  - 234 `rocksIn(x0, y0, x1, y1)`
-  - 242 `rocksAlong(a, b, r)`
-  - 256 `coastDist(p)`
-  - 257 `coastDistFar(p)`
-  - 263 `decodeContours()`
-  - 272 `isLand(p)`
-  - 280 `isLandFar(p)`
-  - 286 `isLandUI(p)`
-  - 292 `inHarbourPocket(p)`
-  - 298 `harbourNear(x, z)`
-  - 304 `qPockets()`
-  - 305 `pocketHit(US, QS, x, z)`
-  - 312 `pocketsIn(x0, y0, x1, y1)`
-  - 321 `legClear(a, b)`
-  - 352 `portLabel(p)`
-- **368** the harbour unit (02.10.2026)
-  - 409 `fillOut(U, lx, lz)`
-  - 422 `onUnitGround(p)`
-  - 429 `unitCovers(x, z, m)`
-  - 437 `bridgeUnderUnit(br, extra)`
-  - 442 `portApproach(pt)`
+  - 210 `runAground(p)`
+  - 225 `rocksNear(a, b, r)`
+  - 235 `rocksIn(x0, y0, x1, y1)`
+  - 243 `rocksAlong(a, b, r)`
+  - 257 `coastDist(p)`
+  - 258 `coastDistFar(p)`
+  - 264 `decodeContours()`
+  - 273 `isLand(p)`
+  - 281 `isLandFar(p)`
+  - 287 `isLandUI(p)`
+  - 293 `inHarbourPocket(p)`
+  - 299 `harbourNear(x, z)`
+  - 305 `qPockets()`
+  - 306 `pocketHit(US, QS, x, z)`
+  - 313 `pocketsIn(x0, y0, x1, y1)`
+  - 322 `legClear(a, b)`
+  - 353 `portLabel(p)`
+- **369** the harbour unit (02.10.2026)
+  - 410 `fillOut(U, lx, lz)`
+  - 423 `onUnitGround(p)`
+  - 430 `unitCovers(x, z, m)`
+  - 438 `bridgeUnderUnit(br, extra)`
+  - 443 `portApproach(pt)`
 
 ## `src/js/core/01b-mapdata.js` (212 linjer)
 
@@ -152,20 +152,20 @@ THE SEA MARKS ALONG THE WHOLE COAST (05.10.2026; Jonas: «Sjømerker må ordnes 
   - 43 `feltData()`
   - 56 `feltIn(x0, y0, x1, y1)`
 
-## `src/js/core/02-species-gear.js` (299 linjer)
+## `src/js/core/02-species-gear.js` (303 linjer)
 
 Placeholder prices (NOK/kg, grade A) – to be tuned
 
 - **93** vessels, equipment, crew
-  - 226 `fuelWeek(w)`
-  - 228 `fuelPrice(H = S.t / 60, pid = S.boat && S.boat.port, diesel = BOAT.die…)`
-  - 255 `equipFits(k, type)`
-  - 258 `fuelBase(v, vmax, planing)`
-  - 259 `fuelKOf(V)`
-  - 261 `vesselDerive(V)`
-  - 274 `reqOf(V)`
-  - 280 `reqFill(eq, type)`
-  - 292 `lsaOf(V)`
+  - 230 `fuelWeek(w)`
+  - 232 `fuelPrice(H = S.t / 60, pid = S.boat && S.boat.port, diesel = BOAT.die…)`
+  - 259 `equipFits(k, type)`
+  - 262 `fuelBase(v, vmax, planing)`
+  - 263 `fuelKOf(V)`
+  - 265 `vesselDerive(V)`
+  - 278 `reqOf(V)`
+  - 284 `reqFill(eq, type)`
+  - 296 `lsaOf(V)`
 
 ## `src/js/core/03-simulation.js` (1254 linjer)
 
@@ -603,18 +603,19 @@ The fleet's pressure and the stock's baseline (B3 of docs/planer/bestand-og-flaa
   - 195 `baseAt(p, sp, H)`
   - 201 `skreiLeft(H)`
 
-## `src/js/core/03h-is.js` (58 linjer)
+## `src/js/core/03h-is.js` (71 linjer)
 
 ---------- the sea ice by month (Havsteget H1b R5, V3 A; Jonas 03.11.2026: «iskanten etter måned») ----------
 
 - **1** the sea ice by month (Havsteget H1b R5, V3 A; Jonas 03.11.2026: «iskanten etter måned»)
-  - 24 `seaIceMonth(H)`
-  - 29 `seaIceCell(A, p)`
-  - 35 `seaIceAt(p, H)`
-  - 46 `seaIceShut(p, H, V)`
-  - 51 `seaIceOnLeg(a, b, H, V)`
+  - 25 `seaIceMonth(H)`
+  - 30 `seaIceCell(A, p)`
+  - 36 `seaIceAt(p, H)`
+  - 58 `seaIceLim(V)`
+  - 60 `seaIceShut(p, H, V)`
+  - 62 `seaIceOnLeg(a, b, H, V)`
 
-## `src/js/core/04-crew.js` (531 linjer)
+## `src/js/core/04-crew.js` (534 linjer)
 
 crew: people with skills, habits and moods
 
@@ -638,48 +639,48 @@ crew: people with skills, habits and moods
 - **148** the trip's limits on an ocean vessel (H2b of docs/planer/havsteget-h2-autoline.md, 05.11.2026). The fuel, the bait, the hooks for
   - 154 `tripHome(b = S.boat)`
   - 159 `tripLeft(b = S.boat)`
-  - 173 `tripHour()`
-- **183** the ocean vessel's crew as anonymous teams (H2b of docs/planer/havsteget-h2-autoline.md, V3 A; Jonas 05.11.2026: the teams
-  - 196 `lagOf()`
-  - 206 `lagPeople()`
-  - 223 `lagOnDeck(H, under)`
-  - 228 `lagMeal()`
-  - 231 `lagLanded(kr)`
-- **245** the provisions of an ocean vessel (H2b; Jonas 05.11.2026: «Fylles ved avgang»): the ship's chandler fills the stores aboard when she
-  - 254 `provOf(b = S.boat)`
-  - 255 `provFill()`
-  - 261 `provMinute()`
-  - 263 `crewHireWhy()`
-  - 266 `lottParty()`
-  - 276 `lottSplit(D)`
-  - 280 `payMates()`
-  - 285 `weekKr(len)`
-  - 286 `lotWeek(c, H = S.t / 60)`
-  - 291 `crewAboard(H, all)`
-  - 294 `biDaysTxt(c)`
-  - 297 `crewBiOff(H)`
-  - 299 `crewEff(c, H, hs, g = 'juksa')`
-- **306** what lifts or drags a person's effort just now, besides what they can and who they are (Jonas 23.10.2026: «dette skal være dynamisk
-  - 312 `crewDrive(c, H, hs)`
-  - 333 `crewEffort(c, H, hs)`
-- **340** samhold: how the crew aboard pull together (Jonas 23.10.2026: «Samhold ja, men det må gjøres intuitivt»), 0-100 per vessel (S.team,
-  - 345 `crewTeam()`
-  - 350 `teamHour(H, on, hs, food)`
-  - 369 `teamLine()`
-  - 377 `teamEff(team, me = true, g = 'juksa')`
-  - 379 `compat(a, b)`
-  - 392 `crewById(id)`
-  - 395 `holdNet()`
-  - 404 `crewSettle(c)`
-  - 413 `crewQuit(c, why, whyEn)`
-  - 416 `borsTick(H)`
-  - 424 `crewRumour()`
-  - 426 `crewTick(H)`
-  - 493 `codRoom(H)`
-- **495** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
-  - 509 `flyIn(c)`
-  - 518 `flyOut(c)`
-  - 526 `flyTick()`
+  - 176 `tripHour()`
+- **186** the ocean vessel's crew as anonymous teams (H2b of docs/planer/havsteget-h2-autoline.md, V3 A; Jonas 05.11.2026: the teams
+  - 199 `lagOf()`
+  - 209 `lagPeople()`
+  - 226 `lagOnDeck(H, under)`
+  - 231 `lagMeal()`
+  - 234 `lagLanded(kr)`
+- **248** the provisions of an ocean vessel (H2b; Jonas 05.11.2026: «Fylles ved avgang»): the ship's chandler fills the stores aboard when she
+  - 257 `provOf(b = S.boat)`
+  - 258 `provFill()`
+  - 264 `provMinute()`
+  - 266 `crewHireWhy()`
+  - 269 `lottParty()`
+  - 279 `lottSplit(D)`
+  - 283 `payMates()`
+  - 288 `weekKr(len)`
+  - 289 `lotWeek(c, H = S.t / 60)`
+  - 294 `crewAboard(H, all)`
+  - 297 `biDaysTxt(c)`
+  - 300 `crewBiOff(H)`
+  - 302 `crewEff(c, H, hs, g = 'juksa')`
+- **309** what lifts or drags a person's effort just now, besides what they can and who they are (Jonas 23.10.2026: «dette skal være dynamisk
+  - 315 `crewDrive(c, H, hs)`
+  - 336 `crewEffort(c, H, hs)`
+- **343** samhold: how the crew aboard pull together (Jonas 23.10.2026: «Samhold ja, men det må gjøres intuitivt»), 0-100 per vessel (S.team,
+  - 348 `crewTeam()`
+  - 353 `teamHour(H, on, hs, food)`
+  - 372 `teamLine()`
+  - 380 `teamEff(team, me = true, g = 'juksa')`
+  - 382 `compat(a, b)`
+  - 395 `crewById(id)`
+  - 398 `holdNet()`
+  - 407 `crewSettle(c)`
+  - 416 `crewQuit(c, why, whyEn)`
+  - 419 `borsTick(H)`
+  - 427 `crewRumour()`
+  - 429 `crewTick(H)`
+  - 496 `codRoom(H)`
+- **498** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
+  - 512 `flyIn(c)`
+  - 521 `flyOut(c)`
+  - 529 `flyTick()`
 
 ## `src/js/core/05-vessels.js` (1304 linjer)
 
@@ -921,7 +922,7 @@ the tackle shops and the yards along the coast: the other two places of trade (0
   - 32 `portServices(pt, berth)`
   - 40 `placesNear(p, kind, n = 3)`
 
-## `src/js/core/06d-drift.js` (563 linjer)
+## `src/js/core/06d-drift.js` (564 linjer)
 
 Drift: the standing operations plan, per vessel. Made anew 23.10.2026 (Jonas: «en fullstendig redesign av driftsplan-systemet …
 
@@ -977,17 +978,17 @@ Drift: the standing operations plan, per vessel. Made anew 23.10.2026 (Jonas: «
   - 452 `drGo(o, H, budget)`
   - 468 `drDepart(o, wps, kind, noJig)`
   - 478 `drRulesWhy(o, H, placesOnly)`
-  - 486 `opsLanded(pid, k)`
-  - 498 `driftStock()`
-  - 499 `opsReport(pid, kg, total, landed)`
-- **510** what the plan is doing, in a few words: the page's «Nå» and the company's fleet list ([no, en])
-  - 511 `driftNow(o)`
-- **530** the trip as a timeline for the page: the one under way from where she is now, or the next one from where it starts.
-  - 532 `driftSketch(o)`
-- **556** the plan to another vessel of the company: the answers, made again there
-  - 557 `driftCopy(vid)`
+  - 487 `opsLanded(pid, k)`
+  - 499 `driftStock()`
+  - 500 `opsReport(pid, kg, total, landed)`
+- **511** what the plan is doing, in a few words: the page's «Nå» and the company's fleet list ([no, en])
+  - 512 `driftNow(o)`
+- **531** the trip as a timeline for the page: the one under way from where she is now, or the next one from where it starts.
+  - 533 `driftSketch(o)`
+- **557** the plan to another vessel of the company: the answers, made again there
+  - 558 `driftCopy(vid)`
 
-## `src/js/core/06g-plan2.js` (433 linjer)
+## `src/js/core/06g-plan2.js` (443 linjer)
 
 Driftsplan 2: the day is the plan (26.10.2026, docs/planer/driftsplan-2/02-design.md). Part 1: the model, the day and the check.
 
@@ -996,33 +997,34 @@ Driftsplan 2: the day is the plan (26.10.2026, docs/planer/driftsplan-2/02-desig
   - 35 `p2MeRate(pid, anchor)`
   - 46 `p2MeRestH(e, rate)`
   - 51 `p2Units(kind, lk)`
-  - 57 `p2Left(o, q)`
-  - 59 `p2LineKind(o)`
-  - 75 `plan2New(over)`
-  - 85 `plan2Ops()`
-- **97** the places: a point, a port, or a key ('H' home, 'Q' the home quay, 'M' the plant, 'A' the rest anchorage)
-  - 98 `plan2P(o, k)`
-  - 107 `plan2LegH(o, a, ap, b, bp, v)`
-- **114** the state the day is reckoned from: where she lies, the hold, the gear in the sea and aboard, the crew, you. Tests pass their own
-  - 115 `plan2State(o)`
-  - 132 `plan2RestOk(pid)`
-  - 134 `plan2Ready(kind, st, lk)`
-  - 138 `plan2NextDep(o, H, from)`
-  - 148 `plan2Watch(H)`
-  - 149 `plan2Roles(st)`
-- **155** the ocean vessel's day (H2c of docs/planer/havsteget-h2-autoline.md, 05.11.2026): the autoline in a loop on the fields, round the
-  - 163 `p2AutoEnd(o, st)`
-  - 173 `planDayAuto(o, H0, st)`
-- **225** the day. H0: the hour the day begins (the departure). Returns {t0, steps:[{t, k, …}], end, why:[no, en], skipped:[{id, no, en}]}.
-  - 228 `planDay(o, H0, st)`
-- **343** the day as text: [[clock, no, en], …], one line a step, the skipped places and the reason last
-  - 344 `planDayText(o, day)`
-- **376** the check: errors keep the plan from being switched on, warnings only inform (as driftCheck; the rhythm's rules from Jonas 26.10.2026)
-  - 380 `plan2WatchWhy(st, aboard, short)`
-  - 390 `p2Kits()`
-  - 391 `plan2Check(o, st)`
+  - 58 `p2Left(o, q)`
+  - 60 `p2LineKind(o)`
+  - 76 `plan2New(over)`
+  - 86 `plan2Ops()`
+- **100** the places: a point, a port, or a key ('H' home, 'Q' the home quay, 'M' the plant, 'A' the rest anchorage)
+  - 101 `plan2P(o, k)`
+  - 110 `plan2LegH(o, a, ap, b, bp, v)`
+- **117** the state the day is reckoned from: where she lies, the hold, the gear in the sea and aboard, the crew, you. Tests pass their own
+  - 118 `plan2State(o)`
+  - 136 `plan2StateOf(o)`
+  - 137 `plan2RestOk(pid)`
+  - 139 `plan2Ready(kind, st, lk)`
+  - 143 `plan2NextDep(o, H, from)`
+  - 153 `plan2Watch(H)`
+  - 154 `plan2Roles(st)`
+- **160** the ocean vessel's day (H2c of docs/planer/havsteget-h2-autoline.md, 05.11.2026): the autoline in a loop on the fields, round the
+  - 168 `p2AutoEnd(o, st)`
+  - 178 `planDayAuto(o, H0, st)`
+- **230** the day. H0: the hour the day begins (the departure). Returns {t0, steps:[{t, k, …}], end, why:[no, en], skipped:[{id, no, en}]}.
+  - 233 `planDay(o, H0, st)`
+- **349** the day as text: [[clock, no, en], …], one line a step, the skipped places and the reason last
+  - 350 `planDayText(o, day)`
+- **384** the check: errors keep the plan from being switched on, warnings only inform (as driftCheck; the rhythm's rules from Jonas 26.10.2026)
+  - 388 `plan2WatchWhy(st, aboard, short)`
+  - 398 `p2Kits()`
+  - 399 `plan2Check(o, st)`
 
-## `src/js/core/06h-plan2-engine.js` (508 linjer)
+## `src/js/core/06h-plan2-engine.js` (537 linjer)
 
 Driftsplan 2, part 2: the engine (26.10.2026, docs/planer/driftsplan-2/02-design.md chapter 2). It follows the day that planDay
 
@@ -1033,47 +1035,62 @@ Driftsplan 2, part 2: the engine (26.10.2026, docs/planer/driftsplan-2/02-design
   - 22 `plan2LegOk(o, a, ap, b, bp)`
 - **30** making the plan: the plant, the anchorages, the legs and the shelter ports. Async; cb(err) when done
   - 31 `plan2Make(o, cb)`
-- **73** what the plan says, waits for and stops at
-  - 78 `plan2ActWhy(w, why)`
-  - 80 `plan2Abort(o)`
-  - 81 `plan2Wait(o, k, no, en, until)`
-  - 87 `plan2Stop(o, k, no, en, fix)`
-  - 97 `plan2Pause(o)`
-  - 106 `plan2Start(o)`
-  - 111 `plan2Resume(o)`
-  - 113 `plan2CrewWhy(o)`
-  - 123 `plan2Wx()`
-  - 128 `plan2WxAhead(o, H, dur, pts, L)`
-  - 137 `plan2WxWait(o, wx, H)`
-  - 144 `plan2WxFirstOk(o, H, dur, pts)`
-- **145** shelter without a search (part 3): back the way she came to the last place or port she passed, and from a place the kept leg to its
-  - 148 `plan2Shelter(W, hsOver)`
-  - 171 `plan2Cut(o, why)`
-  - 183 `plan2RulesWhy(o, H, placesOnly)`
-  - 190 `plan2RulesOpenAt(o, H)`
-- **191** the engine: each minute, on each vessel (06d-drift.js opsStep hands over with DRIFT2 on)
-  - 193 `plan2Step(H)`
-  - 209 `plan2Decide(o, H)`
-  - 240 `plan2MeRest(o, H)`
-  - 252 `plan2SkipGiven()`
-  - 263 `p2DayEnd(d)`
-  - 265 `plan2Boundary(o, H)`
-  - 284 `plan2Spent(o, H)`
-  - 293 `plan2NewDay(o, H)`
-  - 305 `plan2CostDay(o, r)`
-  - 308 `plan2Caught(o, tr)`
-  - 309 `plan2StatDay(o, d)`
-- **310** a trip: the steps from i0 to the next port call, as waypoints on the kept legs
-  - 311 `plan2Trip(o, D, i0)`
-  - 346 `plan2Go(o, H, i0)`
-  - 392 `plan2Sea(o, H)`
-  - 430 `plan2WorkStop(o, H, W, hs)`
-  - 441 `plan2WorkWait(o, H, wx, pts, port)`
-  - 452 `plan2Landed(pid, k)`
-  - 461 `plan2Report(pid, kg, total, landed)`
-  - 473 `plan2Bait(o, s)`
-  - 488 `plan2Egn(o, s)`
-  - 495 `plan2WatchTick(H)`
+- **75** what the plan says, waits for and stops at
+  - 80 `plan2ActWhy(w, why)`
+  - 82 `plan2Abort(o)`
+  - 83 `plan2Wait(o, k, no, en, until)`
+  - 89 `plan2Stop(o, k, no, en, fix)`
+  - 99 `plan2Pause(o)`
+  - 108 `plan2Start(o)`
+  - 113 `plan2Resume(o)`
+  - 115 `plan2CrewWhy(o)`
+  - 125 `plan2Wx()`
+  - 130 `plan2WxAhead(o, H, dur, pts, L)`
+  - 139 `plan2WxWait(o, wx, H)`
+  - 146 `plan2WxFirstOk(o, H, dur, pts)`
+- **147** shelter without a search (part 3): back the way she came to the last place or port she passed, and from a place the kept leg to its
+  - 150 `plan2Shelter(W, hsOver)`
+  - 173 `plan2Cut(o, why)`
+  - 185 `plan2RulesWhy(o, H, placesOnly)`
+  - 192 `plan2RulesOpenAt(o, H)`
+- **193** the engine: each minute, on each vessel (06d-drift.js opsStep hands over with DRIFT2 on)
+  - 195 `plan2Step(H)`
+  - 211 `plan2Decide(o, H)`
+  - 242 `plan2MeRest(o, H)`
+  - 254 `plan2SkipGiven()`
+  - 265 `p2DayEnd(d)`
+  - 267 `plan2Boundary(o, H)`
+  - 286 `plan2Spent(o, H)`
+  - 295 `plan2NewDay(o, H)`
+  - 307 `plan2CostDay(o, r)`
+  - 310 `plan2Caught(o, tr)`
+  - 311 `plan2StatDay(o, d)`
+- **312** a trip: the steps from i0 to the next port call, as waypoints on the kept legs
+  - 313 `plan2Trip(o, D, i0)`
+  - 366 `plan2Go(o, H, i0)`
+  - 412 `plan2Sea(o, H)`
+  - 456 `plan2WorkStop(o, H, W, hs)`
+  - 467 `plan2WorkWait(o, H, wx, pts, port)`
+  - 478 `plan2Landed(pid, k)`
+  - 487 `plan2Report(pid, kg, total, landed)`
+  - 499 `plan2Bait(o, s)`
+  - 517 `plan2Egn(o, s)`
+  - 524 `plan2WatchTick(H)`
+
+## `src/js/core/06i-plan2-sno.js` (225 linjer)
+
+Driftsplan 2 for the snow crab vessel (H3c of docs/planer/havsteget-h3-snokrabbe.md, 06.11.2026)
+
+- **1** Driftsplan 2 for the snow crab vessel (H3c of docs/planer/havsteget-h3-snokrabbe.md, 06.11.2026)
+  - 33 `p2SnoLenke(q, k)`
+  - 41 `p2SnoFit(q, k)`
+  - 54 `p2SnoSeason(H, nL)`
+  - 61 `p2SnoQLeft(H, live)`
+  - 68 `p2SnoState(o, st)`
+  - 75 `p2SnoEnd(o, st)`
+  - 91 `planDaySno(o, H0, st)`
+  - 199 `p2SnoText(o, s, pl, kl, at)`
+  - 211 `p2SnoCheck(o, st, ER, Wn)`
 
 ## `src/js/core/06e-anchor.js` (180 linjer)
 
@@ -1114,7 +1131,7 @@ the fish tubs (docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
   - 58 `tubPack(dims, spec, seed)`
   - 91 `karRefund()`
 
-## `src/js/core/07-harbours.js` (549 linjer)
+## `src/js/core/07-harbours.js` (552 linjer)
 
 harbours: quays, berths and mooring
 
@@ -1154,13 +1171,13 @@ harbours: quays, berths and mooring
   - 436 `iceChute(kg)`
 - **438** the bunker quay: moving along the harbour and filling fuel
   - 451 `quayPos(b)`
-  - 462 `portBusy(b)`
-  - 463 `startShift(to, after)`
-  - 473 `startFueling(ops)`
-  - 486 `quayMinute()`
-  - 502 `buyIce(kg, free)`
-- **512** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
-  - 518 `shopBuy(k, kg, free)`
+  - 465 `portBusy(b)`
+  - 466 `startShift(to, after)`
+  - 476 `startFueling(ops)`
+  - 489 `quayMinute()`
+  - 505 `buyIce(kg, free)`
+- **515** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
+  - 521 `shopBuy(k, kg, free)`
 
 ## `src/js/core/07c-naust.js` (168 linjer)
 
@@ -1644,21 +1661,24 @@ Bestilt til henting (M2 in docs/planer/butikker-og-sponsorer.md, 10.2b, V12 A; J
   - 46 `pickAdd(port, w, k, s, n)`
   - 59 `pickDrop(id)`
 
-## `src/js/core/10d-snokrabbe.js` (153 linjer)
+## `src/js/core/10d-snokrabbe.js` (192 linjer)
 
 the snow crab (H3a of docs/planer/havsteget-h3-snokrabbe.md, 06.11.2026)
 
 - **1** the snow crab (H3a of docs/planer/havsteget-h3-snokrabbe.md, 06.11.2026)
-  - 59 `snoField()`
-  - 80 `snoArea(p, H)`
-  - 89 `snoW(cw, soft)`
-  - 90 `snoCrab(m)`
-  - 99 `snoPts(s)`
-  - 102 `snoSoak(s, H)`
-  - 117 `landSno(g, n)`
-  - 132 `snoHaulDone(g, s)`
-  - 142 `snoSoftAt(p)`
-  - 147 `snoTend(s, a, mid)`
+- **59** the drift ice over the strings (H3c, V3 B; Jonas 06.11.2026). Sources, read 06.11.2026 unless said: HI 2023-51 (Humborstad et al.):
+  - 77 `snoIceOf(a, b, H)`
+  - 80 `snoIceHour(s, H)`
+  - 98 `snoField()`
+  - 119 `snoArea(p, H)`
+  - 128 `snoW(cw, soft)`
+  - 129 `snoCrab(m)`
+  - 138 `snoPts(s)`
+  - 141 `snoSoak(s, H)`
+  - 156 `landSno(g, n)`
+  - 171 `snoHaulDone(g, s)`
+  - 181 `snoSoftAt(p)`
+  - 186 `snoTend(s, a, mid)`
 
 ## `src/js/core/10e-krabbefabrikk.js` (126 linjer)
 
@@ -1752,47 +1772,47 @@ Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md a
   - 34 `ukeDue()`
   - 40 `ukeLast()`
 
-## `src/js/core/11-route.js` (657 linjer)
+## `src/js/core/11-route.js` (658 linjer)
 
 ---------- Autonav (once «Følg leia»): a route along the fairway ----------
 
 - **1** Autonav (once «Følg leia»): a route along the fairway
   - 35 `leiaTideCredit(a, b)`
-  - 48 `leiaIceSet(a, b)`
-  - 56 `leiaIceLeg(p, q)`
-  - 70 `legLandIn(p, q, L, s0, s1)`
-  - 74 `legNearPt(pt, z)`
-  - 86 `legRunsWalk(W, ms)`
-  - 97 `legRunsW(p, q, z)`
-  - 99 `legRuns(p, q, z)`
-  - 105 `legRunsAsync(p, q, z)`
-  - 111 `legIdx(runs, L, n, last)`
-  - 121 `leiaGrid(x0, y0, x1, y1, c, mask)`
-  - 128 `leiaRocks(G)`
-  - 137 `leiaShore(G, p)`
-  - 147 `leiaCost(G, v, sd)`
-  - 165 `leiaNearCell(G, p, sd, km = 1, free)`
-  - 172 `leiaHeap()`
-  - 180 `leiaSlice(st, t0, at)`
-  - 183 `leiaSearch(G, s, t, sd, st)`
-  - 214 `leiaFind(from, to, sd, st)`
-  - 228 `leiaFind1(from, to, sd, st, pad, c0)`
-  - 281 `leiaCorridor(pp, R, c, sd, st)`
-  - 297 `leiaCorridor1(pp, bb, R, c, sd, st, first, last)`
-  - 316 `leiaHarbourClr(pt, ports)`
-  - 322 `leiaPortsBy(p, q)`
-  - 326 `leiaLegOk(p, q, sd, margin)`
-  - 353 `leiaLegOkL(p, q, sd, margin, tick)`
-  - 361 `leiaLegFail(p, q, tick, endP, endQ, strict)`
-  - 378 `rockOnLeg(a, b, r)`
-  - 387 `leiaMend(P, sd, st, strict)`
-  - 428 `leiaStraighten(P, sd, margin, st)`
-  - 456 `leiaPull(P, sd, st)`
-  - 490 `leiaRoute(a, b, aPort, bPort, opt)`
-  - 514 `leiaLane(p, goal, km)`
-  - 545 `leiaPocket(p, sd)`
-  - 562 `leiaPocketOut(e, sd, st)`
-  - 572 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
+  - 49 `leiaIceSet(a, b)`
+  - 57 `leiaIceLeg(p, q)`
+  - 71 `legLandIn(p, q, L, s0, s1)`
+  - 75 `legNearPt(pt, z)`
+  - 87 `legRunsWalk(W, ms)`
+  - 98 `legRunsW(p, q, z)`
+  - 100 `legRuns(p, q, z)`
+  - 106 `legRunsAsync(p, q, z)`
+  - 112 `legIdx(runs, L, n, last)`
+  - 122 `leiaGrid(x0, y0, x1, y1, c, mask)`
+  - 129 `leiaRocks(G)`
+  - 138 `leiaShore(G, p)`
+  - 148 `leiaCost(G, v, sd)`
+  - 166 `leiaNearCell(G, p, sd, km = 1, free)`
+  - 173 `leiaHeap()`
+  - 181 `leiaSlice(st, t0, at)`
+  - 184 `leiaSearch(G, s, t, sd, st)`
+  - 215 `leiaFind(from, to, sd, st)`
+  - 229 `leiaFind1(from, to, sd, st, pad, c0)`
+  - 282 `leiaCorridor(pp, R, c, sd, st)`
+  - 298 `leiaCorridor1(pp, bb, R, c, sd, st, first, last)`
+  - 317 `leiaHarbourClr(pt, ports)`
+  - 323 `leiaPortsBy(p, q)`
+  - 327 `leiaLegOk(p, q, sd, margin)`
+  - 354 `leiaLegOkL(p, q, sd, margin, tick)`
+  - 362 `leiaLegFail(p, q, tick, endP, endQ, strict)`
+  - 379 `rockOnLeg(a, b, r)`
+  - 388 `leiaMend(P, sd, st, strict)`
+  - 429 `leiaStraighten(P, sd, margin, st)`
+  - 457 `leiaPull(P, sd, st)`
+  - 491 `leiaRoute(a, b, aPort, bPort, opt)`
+  - 515 `leiaLane(p, goal, km)`
+  - 546 `leiaPocket(p, sd)`
+  - 563 `leiaPocketOut(e, sd, st)`
+  - 573 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
 
 ## `src/js/core/11b-obstacles.js` (226 linjer)
 
@@ -2112,7 +2132,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 121 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 134 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (819 linjer)
+## `src/js/ui/03-map.js` (820 linjer)
 
 ---------- map ----------
 
@@ -2140,29 +2160,29 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 179 `chartCame(pk)`
   - 194 `ruLayerCanvas(A)`
   - 203 `chartVectors(V, again)`
-  - 261 `chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st)`
-  - 267 `chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr)`
-  - 364 `scheduleChart()`
-  - 367 `renderBase()`
-  - 381 `updateMapButtons()`
-  - 393 `tapName(mp, rr)`
-  - 398 `renderStatic()`
-  - 499 `portIcon(p, s, u)`
-  - 520 `anchorPath(x, y, s, u)`
-  - 528 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 547 `scheduleStatic()`
-  - 552 `aisTrack(id, H)`
-  - 557 `aisInfo(n)`
-  - 576 `sjvChartSvg(u, bp)`
-  - 586 `renderAisCard()`
-  - 587 `renderDyn()`
-  - 672 `pinAdd(mp)`
-  - 677 `pinOpen(id, fresh)`
-  - 697 `pinKb()`
-  - 728 `ptrUp(e)`
-  - 758 `unzoom()`
-  - 765 `portByLabel(pt)`
-  - 770 `addWaypoint(pt)`
+  - 262 `chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st)`
+  - 268 `chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr)`
+  - 365 `scheduleChart()`
+  - 368 `renderBase()`
+  - 382 `updateMapButtons()`
+  - 394 `tapName(mp, rr)`
+  - 399 `renderStatic()`
+  - 500 `portIcon(p, s, u)`
+  - 521 `anchorPath(x, y, s, u)`
+  - 529 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 548 `scheduleStatic()`
+  - 553 `aisTrack(id, H)`
+  - 558 `aisInfo(n)`
+  - 577 `sjvChartSvg(u, bp)`
+  - 587 `renderAisCard()`
+  - 588 `renderDyn()`
+  - 673 `pinAdd(mp)`
+  - 678 `pinOpen(id, fresh)`
+  - 698 `pinKb()`
+  - 729 `ptrUp(e)`
+  - 759 `unzoom()`
+  - 766 `portByLabel(pt)`
+  - 771 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (266 linjer)
 
@@ -2203,12 +2223,12 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 243 `routeSeaWatch()`
   - 248 `routeSeaDraw()`
 
-## `src/js/ui/03g-planmap.js` (117 linjer)
+## `src/js/ui/03g-planmap.js` (120 linjer)
 
 Driftsplan 2, part 6: the chart plotter in plan mode (docs/planer/driftsplan-2/02-design.md 4.2). «Velg i kartet …» on the
 
 - **1** Driftsplan 2, part 6: the chart plotter in plan mode (docs/planer/driftsplan-2/02-design.md 4.2). «Velg i kartet …» on the
-- **85** the chart: a tap adds a place or opens a pin's card; a pin dragged moves (03-map.js pointer handlers)
+- **86** the chart: a tap adds a place or opens a pin's card; a pin dragged moves (03-map.js pointer handlers)
 
 ## `src/js/ui/03c-heat.js` (133 linjer)
 
@@ -2391,12 +2411,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1235 linjer)
+## `src/js/ui/phone/07-patch.js` (1239 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1228 `patch()`
+  - 1232 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2552,7 +2572,7 @@ the Drift app: the operations plan of a vessel (core/06d-drift.js) on one screen
 - **221** actions (data-pa="dr-…"); true when something changed
   - 257 `driftSvg(u)`
 
-## `src/js/ui/05d-plan2.js` (384 linjer)
+## `src/js/ui/05d-plan2.js` (404 linjer)
 
 Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The day first («I dag» with where she is now, or the
 
@@ -2561,15 +2581,15 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
 - **50** the day: today's as the engine follows it (with «← nå»), or the next as planDay reckons it from the answers
 - **79** Hjem (GUI review U14 A, 05.11.2026): the naust first, then the rorbuer nearest the places, then the rest; no yard (it is no home);
 - **113** Redskap
-- **125** Plasser: the list in the order she works them
-- **169** Levering
-- **194** Vær
-- **209** Rytme
-- **222** Mannskap
-- **245** the top: Start or Pause, Nå, and the button that fixes a stop
-- **263** the statistics (R9): today, the last seven days, and all
-- **280** the page
-  - 378 `plan2Copy(vid)`
+- **127** Plasser: the list in the order she works them
+- **176** Levering
+- **212** Vær
+- **227** Rytme
+- **240** Mannskap
+- **263** the top: Start or Pause, Nå, and the button that fixes a stop
+- **281** the statistics (R9): today, the last seven days, and all
+- **298** the page
+  - 398 `plan2Copy(vid)`
 
 ## `src/js/ui/05e-merker.js` (86 linjer)
 

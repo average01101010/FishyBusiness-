@@ -99,8 +99,8 @@ HS = r"""window.SNO = (() => {
     S.pgear = newPGear(); const pg = S.pgear; careInit(pg); pg.pots.sno = 8000; pg.kits.n = 40; pg.kits.heavy = 40; baitOf(pg).blekksprut = 20000;
     S.crew = []; S.lag = null; lagOf();
     if (!plant){ const tgt = P(70.63, 29.72); plant = PORTS.filter(q => (q.mottak || q.havOnly) && !portWhy(q, 'snokrabbe')).sort((a, c) => dist(a.p, tgt) - dist(c.p, tgt))[0]; await mapNeed(plant.p, 8); }
-    if (!F){ F = []; for (const [la, lo] of [[74.8, 34.0], [74.95, 34.6]]){ let q0 = null; for (let k = 0; k < 200 && !q0; k++){ const q = P(la + 0.15 * Math.sin(k * 0.7), lo + 0.4 * Math.cos(k * 1.3)); await mapNeed(q, 26);
-        const d = depthF(q); if (isLand(q) || d < 230 || d > 340 || ruBlockMsg({p:q, len:50, gear:'teiner', sp:'snokrabbe', hav:'krab'})) continue;
+    if (!F){ F = []; for (const [la, lo] of [[74.8, 34.0], [75.0, 34.9]]){ let q0 = null; for (let k = 0; k < 200 && !q0; k++){ const q = P(la + 0.15 * Math.sin(k * 0.7), lo + 0.4 * Math.cos(k * 1.3)); await mapNeed(q, 26);
+        const d = depthF(q); if (isLand(q) || d < 230 || d > 340 || ruBlockMsg({p:q, len:50, gear:'teiner', sp:'snokrabbe', hav:'krab'}) || F.some(z => dist(z, q) < 25)) continue;   // (the fields 25 km apart or more: their strings would lie across each other)
         const f = {id:'s' + F.length, k:'felt', x:q.x, y:q.y, n:20, soak:168, hdg:null}; let ok = true; for (let j = 0; j < 20 && ok; j++) if (p2SnoFit(f, j)) ok = false; if (ok) q0 = q; } if (q0) F.push(q0); } }
     b.fuel = BOAT.fuelCap; b.prov = null; b.trip = null; S.hold = []; b.land = null; b.landWait = null; b.gop = null; b.fishUntil = null; b.hove = null; b.anch = null; b.v = 0;
     if (at === 'sea'){ b.status = 'idle'; b.port = null; b.pos = {x:F[0].x, y:F[0].y}; b.heading = 0; }
@@ -270,7 +270,9 @@ async def main():
                 for e in T['loglines']: print('     log', e)
                 print('   landings', T['LOG'], 'in sea', T['inSea'], 'aboard', T['potsAboard'], T['wait'])
                 t1 = T['LOG'][0]['ord'] / 1000 if T['LOG'] else 0; dt = abs(t1 - 95) / 95
-                print(ok(T['LOG'] and dt <= 0.15 and T['inSea'] >= 30 and T['on'] and not T['stop']), 'a frozen trip on the plan from the plant (the strings standing): %.1f t round weight landed after %.1f days, against H3b by hand about 95 t a trip of 20 days (%.1f %%), and the strings stood in the sea while she landed (%d)' % (t1, T['tripD'] or 0, 100 * dt, T['inSea']))
+                # (H3b's 95 t is its estimate from 5.7 t a fishing day, without the weather; the plan stops the work over its limit, a few days
+                # a winter. The plan against the hand on the same strings and days, in the same weather, is the 15 % check above)
+                print(ok(T['LOG'] and dt <= 0.20 and T['inSea'] >= 30 and T['on'] and not T['stop']), 'a frozen trip on the plan from the plant (the strings standing): %.1f t round weight landed after %.1f days, against H3b\'s estimate by hand of about 95 t a trip of 20 days without the weather (%.1f %%, within 20 %%), and the strings stood in the sea while she landed (%d)' % (t1, T['tripD'] or 0, 100 * dt, T['inSea']))
                 print(ok(T['after'] >= 3), 'and out again to the strings after the landing: %d strings hauled since' % T['after'])
         if want('9'):
             print('== 9: sesongen mot sedlene: fryst og levende, fra januar til kvoten er tatt eller fredningen')
@@ -311,7 +313,8 @@ async def main():
                 print(ok(len(lv) == 2 and lv[0].endswith('*')), 'Levering: «Fryste klør» or «Levende krabbe», frozen chosen', lv)
                 await pg.evaluate("PHONE.dact('drift', 'p2-row', {k:'land'})"); await pg.evaluate("DOCK.close()")
                 await pg.evaluate("PLANMAP.open(S.cur)"); await pg.wait_for_timeout(1500)
-                await pg.evaluate("(() => { const o = S.ops, q = o.places[0]; PLANMAP.tap && PLANMAP.tap({x:q.x, y:q.y}); })()"); await pg.wait_for_timeout(800)
+                # (zoomed in on the fields, and the first field's pin chosen, so the card with its strings and days shows)
+                await pg.evaluate("(() => { const o = S.ops, q = o.places[0], r = o.places[1] || q; view.cx = (q.x + r.x) / 2; view.cy = (q.y + r.y) / 2 - 4; view.z = Math.min(ZMAX, view.z * 4); applyView(); scheduleStatic(); PLANMAP.tap({x:q.x, y:q.y}, 4); })()"); await pg.wait_for_timeout(3000)
                 await pg.screenshot(path=os.path.join(OUT, 'havplan-sno-kart-%dx%d.png' % (w, h)))
                 mp = await pg.evaluate("(() => ({lines:document.querySelectorAll('.pm-string').length, card:(document.getElementById('pmCard') || {}).innerText || ''}))()")
                 print(ok(mp['lines'] >= 40), 'the chart draws every string of the fields (%d)' % mp['lines'], mp['card'].replace('\n', ' | ')[:200])

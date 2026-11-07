@@ -25,7 +25,7 @@
 // kap. 2b); the strings side by side 2 km apart (about a nautical mile, so each has its own cells of the stock, STK.c), eight in a row,
 // the rows 6.5 km apart (a string is 5 km; the pattern is an assumption, no source gives it);
 // 1.2 t round weight a string is reckoned for the quota's budget (6 kg a pot after a week, H3a)
-DRP2.sno = {soak:[72, 96, 264, 336], soakDef:168, step:24, days:20, liveDays:10, full:0.95, tank:0.95, age:6, look:24, endD:1, idle:12,
+DRP2.sno = {soak:[72, 96, 264, 336], soakDef:168, step:24, days:20, liveDays:10, full:0.95, tank:0.95, age:5, look:24, endD:1, idle:12,
   col:2.0, row:6.5, cols:8, near:30, tend:18, margin:2, lenkeKg:1200, minDepth:120};
 const p2Sno = o => p2Kind(o) === 'teine' && typeof snoVessel === 'function' && snoVessel();
 const p2SnoKm = () => SNOC.lenke * GEAR.teine.km;
@@ -218,6 +218,11 @@ function p2SnoCheck(o, st, ER, Wn){
     if (bad === q.n && q.n) ER(no('Ingen av lenkene på felt ' + (i + 1) + ' får plass: ' + why[0] + '. Flytt feltet.', 'None of the strings at field ' + (i + 1) + ' has room: ' + why[1] + '. Move the field.'), 'places');
     else if (bad) Wn.push(no(bad + ' av ' + q.n + ' lenker på felt ' + (i + 1) + ' får ikke plass (' + why[0] + ') og settes ikke.', bad + ' of ' + q.n + ' strings at field ' + (i + 1) + ' have no room (' + why[1] + ') and are not set.'));
     if (q.soak > D.soak[2]) Wn.push(no('Ståtida på felt ' + (i + 1) + ' er ' + Math.round(q.soak / 24) + ' døgn. Teinene skal røktes minst hver tredje uke (høstingsforskriften § 18), og turen til mottaket kommer i tillegg.', 'The soak at field ' + (i + 1) + ' is ' + Math.round(q.soak / 24) + ' days. The pots must be tended at least every third week (høstingsforskriften § 18), and the trip to the plant comes on top.')); }
+  // (two fields whose strings lie across or closer than three quarters of the spacing to each other: the strings would tangle and share
+  // the crab; a warning, the player moves them)
+  for (let i = 0; i < F.length; i++) for (let j = i + 1; j < F.length; j++){ const a = F[i], b = F[j], ra = D.row * Math.ceil(a.n / D.cols) + p2SnoKm(), rb = D.row * Math.ceil(b.n / D.cols) + p2SnoKm();
+    if (dist(a, b) < (Math.max(ra, D.cols * D.col) + Math.max(rb, D.cols * D.col)) / 2){ let hit = false; for (let k = 0; k < a.n && !hit; k++){ const La = p2SnoLenke(a, k); for (let m = 0; m < b.n && !hit; m++){ const Lb = p2SnoLenke(b, m); const g = D.col * 0.75; if (segDist(La.a, Lb.a, Lb.b) < g || segDist(La.b, Lb.a, Lb.b) < g || segDist(Lb.a, La.a, La.b) < g) hit = true; } }
+      if (hit) Wn.push(no('Lenkene på felt ' + (i + 1) + ' og felt ' + (j + 1) + ' ligger over hverandre. Flytt feltene fra hverandre, så lenkene ikke floker seg og deler krabben.', 'The strings of field ' + (i + 1) + ' and field ' + (j + 1) + ' lie across each other. Move the fields apart, so the strings do not tangle and share the crab.')); } }
   const se = p2SnoSeason(st.H, want);
   if (!se.open || st.H >= se.inBy){ const d = gDate(se.openAt); Wn.push(no('Snøkrabben er fredet fra 1. juli til 30. november (J-237-2025 § 5). Planen tar teinene på land før 1. juli og setter ingenting før ' + (se.open ? '1. desember' : d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.') + '.', 'The snow crab is closed from 1 July to 30 November (J-237-2025 § 5). The plan takes the pots ashore before 1 July and sets nothing before ' + (se.open ? '1 December' : d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.') + '.')); }
   const qL = p2SnoQLeft(st.H, snoLive()); if (qL <= D.lenkeKg) Wn.push(no('Kvoten for ' + yearH(st.H) + ' er tatt. Planen venter til nyttår' + (!snoLive() && st.sno && st.sno.extraLeft > D.lenkeKg ? ', eller ta tilleggskvoten med levende krabbe under Levering' : '') + '.', 'The quota for ' + yearH(st.H) + ' is taken. The plan waits until the new year' + (!snoLive() && st.sno && st.sno.extraLeft > D.lenkeKg ? ', or take the extra quota with live crab under Landing' : '') + '.'));

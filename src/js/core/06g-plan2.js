@@ -65,6 +65,9 @@ const p2Jig = o => (!p2Kind(o) || !!o.jig) && (typeof vesselJigs !== 'function' 
 // lagOf), the soak the page steps in and warns at, and the hours of a lenke's set and haul at the machine's pace (LINE_KINDS.auto)
 const p2Auto = o => p2Kind(o) === 'line' && typeof autoL === 'function' && !!(BOAT && BOAT.autoHooks) && !!autoL();
 const p2Lag = () => typeof lagOf === 'function' && !!lagOf();
+// the large ocean vessels go round the clock only (Jonas 07.11.2026: «På de store havbåtene skal forresten mannskapet kun gå døgndrift. Det
+// skal ikke være et alternativ med dagdrift.»): by the vessel's class, not by her teams, so no ocean vessel can get day trips on the plan
+const p2Hav = () => typeof BOAT !== 'undefined' && !!BOAT && BOAT.cls === 'hav';
 const p2Soak = o => p2Sno(o) ? DRP2.sno.soak : p2Auto(o) ? DRP2.hav.soak : DRP2.soak[p2Kind(o)];   // (the snow crab's in days, H3c, 06i-plan2-sno.js)
 const p2SoakDef = o => p2Sno(o) ? DRP2.sno.soakDef : p2Auto(o) ? DRP2.hav.soakDef : DRP2.soakDef[p2Kind(o)];
 // the plants the plan can land at: a fish plant, and for an ocean vessel one whose quay and plant take her (06b-coastports.js portWhy)
@@ -74,7 +77,7 @@ const p2AutoH = () => { const A = LINE_KINDS.auto; return {set:A.hooks * A.setH,
 let P2_SID = 0;
 const plan2Sid = () => 'p' + Date.now().toString(36).slice(-4) + (P2_SID++).toString(36);
 function plan2New(over){
-  const b = S.boat, here = b.status === 'port' ? b.port : null, hav = p2Lag(), sno = typeof snoVessel === 'function' && snoVessel();   // (H3c: frozen trips of about 20 days)
+  const b = S.boat, here = b.status === 'port' ? b.port : null, hav = p2Lag() || p2Hav(), sno = typeof snoVessel === 'function' && snoVessel();   // (H3c: frozen trips of about 20 days)
   // (an ocean vessel with her teams works round the clock in their watches, does not jig, works the gear to the ocean presets, and a
   // trip lasts until the hold, the bait, the fuel or the provisions are spent, or DRP2.hav.days at the most when the player chooses it)
   return Object.assign({v:DRV2, on:false, home:here, anchor:false, rig:RIGS[b.rig] ? b.rig : 'juksa', jig:!hav, places:[],
@@ -88,7 +91,7 @@ function plan2Ops(){
   const o = S.ops; if (!o) return null;
   if (o.v === DRV2){ if (o.rig === 'line' && o.places.some(q => q.k === 'felt' && !q.lk)){ for (const q of o.places) if (q.k === 'felt' && !q.lk){ q.lk = p2LineKind(o); q.n = Math.max(1, Math.min(q.n, p2Left(o, q))); } }   // (fields from before 27.10.2026: the line's kind and the tubs the boat owns)
     // (an ocean vessel, H2c: her teams' watches round the clock, no jig, and the fields of her autoline in lenker)
-    if (p2Lag()){ if (o.rhythm !== 'watch') o.rhythm = 'watch'; if (o.jig && !p2Jig(o)) o.jig = false; if (o.land && o.land.when === 'trip') o.land.when = 'full';
+    if (p2Lag() || p2Hav()){ if (o.rhythm !== 'watch') o.rhythm = 'watch';   // (an ocean vessel round the clock only, Jonas 07.11.2026) if (o.jig && !p2Jig(o)) o.jig = false; if (o.land && o.land.when === 'trip') o.land.when = 'full';
       if (p2Auto(o)) for (const q of o.places) if (q.k === 'felt' && q.lk !== 'auto'){ q.lk = 'auto'; q.n = Math.max(1, Math.min(q.n, p2Left(o, q))); q.soak = clamp(q.soak, DRP2.hav.soak[0], DRP2.hav.soak[3]); }
       if (p2Sno(o) && o.land && o.land.when !== 'days'){ o.land.when = 'days'; o.land.days = DRP2.sno.days; }   // (H3c: a frozen trip lasts some 20 days at most)
       if (p2Sno(o)) for (const q of o.places) if (q.k === 'felt' && (q.soak < DRP2.sno.soak[0] || q.soak > DRP2.sno.soak[3])){ q.soak = clamp(Math.round(q.soak / 24) * 24, DRP2.sno.soak[0], DRP2.sno.soak[3]); q.n = Math.max(1, Math.min(q.n, p2Left(o, q))); } }   // (H3c: a field from before is strings of 200 and days)

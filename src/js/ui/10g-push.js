@@ -148,7 +148,7 @@ function pushItems(now){
     if (O && !O.on && O.stop && S.t - O.stop.t < 120) add(S.t + 1, 'ops-' + tag, nm, 'Driftsplanen for ' + nm + ' har stoppet: ' + O.stop.no, 'The plan for ' + nm + ' has stopped: ' + O.stop.en, 24, 1);
     else if (O && O.on){ const H0 = S.t / 60, kind = drKind(O); let hit = null;
       for (let d = 1; d <= Math.floor(PUSH_AHEAD / 1440) && !hit; d++){ const H = H0 + d * 24;
-        O.fields.forEach((f, i) => { if (!hit && ruBlockMsg({p:f, H, len:BOAT.len, gear:O.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? 'krabbe' : null})) hit = {H, no:'felt ' + (i + 1), en:'field ' + (i + 1)}; });
+        O.fields.forEach((f, i) => { if (!hit && ruBlockMsg({p:f, H, len:BOAT.len, gear:O.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? potSp() : null})) hit = {H, no:'felt ' + (i + 1), en:'field ' + (i + 1)}; });
         if (drJig(O)) O.jigs.forEach((j, i) => { if (!hit && ruBlockMsg({p:j, H, len:BOAT.len, gear:'juksa', sp:null, hand:!(S.equip && S.equip.jukse > 0)})) hit = {H, no:'juksplass ' + (i + 1), en:'jig place ' + (i + 1)}; }); }
       if (hit) add(hit.H * 60, 'ops-' + tag, nm, 'Driftsplanen for ' + nm + ' har stoppet: ' + hit.no + ' er stengt etter reglene fra i dag. Velg en ny plass.', 'The plan for ' + nm + ' has stopped: ' + hit.en + ' is closed by the rules from today. Choose a new place.', 24, 1); }
     // an engine overdue for service, while she is out: the risk of a stop grows with every hour (core/05-vessels.js risk)
