@@ -2453,12 +2453,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1283 linjer)
+## `src/js/ui/phone/07-patch.js` (1287 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1276 `patch()`
+  - 1280 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3310,7 +3310,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 226 `bootGame()`
   - 341 `bootFail(e)`
 
-## `src/js/vessel3d.js` (1651 linjer)
+## `src/js/vessel3d.js` (1650 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -3357,81 +3357,81 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 434 `glbZones(type)`
   - 441 `glbModel(type, lod, liv, own)`
 - **468** the life-saving gear's places that the models from 45 m do not have yet (Ø11.5, 06.11.2026; until Ø4 revises them and gives them
-- **494** the ladder aft (FOR-2013-11-22-1404 § 63, read on Lovdata 06.11.2026: «På fartøyets aktre del skal det være montert fast leider med
-  - 521 `mobCut(o, boxes)`
-  - 530 `vesselSpec(type)`
-  - 531 `buildVesselModel(type, lod, liv, own)`
-  - 572 `vesselGeo(type, hs, sp, house, anch)`
-  - 584 `vesselModel(type)`
-  - 585 `geoOf(type)`
-- **589** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
-  - 608 `modelLiv(L)`
-  - 615 `hullLiv(b)`
-  - 616 `livKey(liv)`
-  - 618 `livGeo(liv)`
-  - 623 `livStr(b)`
-  - 635 `livPen(s)`
-  - 637 `livMark(s)`
-  - 638 `livParse(s)`
-- **643** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
-  - 647 `topsides(type)`
-  - 665 `designLines(TS, liv)`
-  - 674 `glbDesign(type, part, liv)`
-  - 708 `designFits(type, k)`
-  - 715 `kitLiv(liv)`
-- **717** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
-- **766** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
-  - 777 `logoCanvas(cv, L, img)`
-  - 793 `logoStrips(type)`
-  - 814 `stripBare(type, st)`
-  - 829 `logoStr(L)`
-  - 830 `logoParse(s)`
-  - 834 `flagCanvas(cv, code, shape, logo)`
-  - 846 `flagOf(L)`
-- **847** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
-  - 856 `hullTris(type)`
-  - 873 `sideStrip(type, frac, hMax, aspect, drop, band)`
-  - 913 `nameStrips(type)`
-  - 949 `stripProud(type, st)`
-  - 972 `stripPaint(type, st)`
-  - 993 `markStrips(type)`
-  - 1001 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
-  - 1026 `callStrips(type)`
-  - 1032 `callRGB(type, liv)`
-  - 1035 `anchorLen(bw)`
-  - 1038 `markRGB(type, liv)`
-  - 1046 `hullRGB(type, liv)`
-- **1056** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
-  - 1067 `facingTris(P, dir, keep)`
-  - 1082 `rayZ(T, x, y, dir, za, zb)`
-  - 1093 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
-  - 1104 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
-  - 1115 `halfWidth(T, y, z0, zw, dir, wmax)`
-  - 1126 `houseFront(type, P, Gl, V)`
-  - 1159 `transom(type, P, V)`
-  - 1194 `namePlaces(type)`
-  - 1212 `placeRGB(type, p, liv)`
-  - 1220 `nameInkLight(rgb)`
-  - 1224 `npcKit(L, B)`
-  - 1227 `npcModel(type, lod, liv)`
-  - 1229 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **1241** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 1260 `vestKit(K)`
-  - 1275 `wkPart(name, kit)`
-  - 1285 `wkPut(B, o, ax, s, at)`
-  - 1295 `wkLimb(B, o, A, E, r)`
-  - 1302 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 1324 `vesselSVG(type, w, h)`
-- **1362** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1369 `deckMap(type)`
-  - 1514 `deckPass(M, k, q)`
-  - 1519 `passLine(M, A, B)`
-  - 1521 `linkPass(M, k, q)`
-  - 1525 `deckComp(M)`
-  - 1534 `deckPath(M, a, b)`
-- **1565** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1578 `lanterns(G, V, st)`
-  - 1612 `deckPoints(type)`
+- **491** the ladder aft (FOR-2013-11-22-1404 § 63, read on Lovdata 06.11.2026: «På fartøyets aktre del skal det være montert fast leider med
+  - 517 `mobCut(o, boxes)`
+  - 526 `vesselSpec(type)`
+  - 527 `buildVesselModel(type, lod, liv, own)`
+  - 568 `vesselGeo(type, hs, sp, house, anch)`
+  - 580 `vesselModel(type)`
+  - 581 `geoOf(type)`
+- **585** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
+  - 604 `modelLiv(L)`
+  - 611 `hullLiv(b)`
+  - 612 `livKey(liv)`
+  - 614 `livGeo(liv)`
+  - 619 `livStr(b)`
+  - 631 `livPen(s)`
+  - 633 `livMark(s)`
+  - 634 `livParse(s)`
+- **639** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
+  - 643 `topsides(type)`
+  - 661 `designLines(TS, liv)`
+  - 670 `glbDesign(type, part, liv)`
+  - 704 `designFits(type, k)`
+  - 711 `kitLiv(liv)`
+- **713** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
+- **762** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
+  - 773 `logoCanvas(cv, L, img)`
+  - 789 `logoStrips(type)`
+  - 810 `stripBare(type, st)`
+  - 825 `logoStr(L)`
+  - 826 `logoParse(s)`
+  - 830 `flagCanvas(cv, code, shape, logo)`
+  - 842 `flagOf(L)`
+- **843** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
+  - 852 `hullTris(type)`
+  - 869 `sideStrip(type, frac, hMax, aspect, drop, band)`
+  - 909 `nameStrips(type)`
+  - 945 `stripProud(type, st)`
+  - 968 `stripPaint(type, st)`
+  - 989 `markStrips(type)`
+  - 997 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
+  - 1022 `callStrips(type)`
+  - 1028 `callRGB(type, liv)`
+  - 1031 `anchorLen(bw)`
+  - 1034 `markRGB(type, liv)`
+  - 1042 `hullRGB(type, liv)`
+- **1052** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
+  - 1063 `facingTris(P, dir, keep)`
+  - 1078 `rayZ(T, x, y, dir, za, zb)`
+  - 1089 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
+  - 1100 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
+  - 1111 `halfWidth(T, y, z0, zw, dir, wmax)`
+  - 1122 `houseFront(type, P, Gl, V)`
+  - 1158 `transom(type, P, V)`
+  - 1193 `namePlaces(type)`
+  - 1211 `placeRGB(type, p, liv)`
+  - 1219 `nameInkLight(rgb)`
+  - 1223 `npcKit(L, B)`
+  - 1226 `npcModel(type, lod, liv)`
+  - 1228 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **1240** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 1259 `vestKit(K)`
+  - 1274 `wkPart(name, kit)`
+  - 1284 `wkPut(B, o, ax, s, at)`
+  - 1294 `wkLimb(B, o, A, E, r)`
+  - 1301 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 1323 `vesselSVG(type, w, h)`
+- **1361** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1368 `deckMap(type)`
+  - 1513 `deckPass(M, k, q)`
+  - 1518 `passLine(M, A, B)`
+  - 1520 `linkPass(M, k, q)`
+  - 1524 `deckComp(M)`
+  - 1533 `deckPath(M, a, b)`
+- **1564** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1577 `lanterns(G, V, st)`
+  - 1611 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (491 linjer)
 
@@ -3666,7 +3666,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **317** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
 - **419** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
 
-## `src/js/view3d/09-landing-deck.js` (797 linjer)
+## `src/js/view3d/09-landing-deck.js` (805 linjer)
 
 ---------- landing the catch ----------
 
@@ -3675,103 +3675,106 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 36 `fkRun(P, back, Q)`
   - 55 `legAt(g, w)`
   - 64 `landLoad(L, j)`
-  - 78 `hatchOpenK()`
-  - 81 `landOff(L)`
-  - 85 `landBack(L)`
-  - 94 `shipQuay(P, BMrel, eye, VG)`
-  - 100 `shipAim(C, x, z, hook)`
-  - 102 `shipPark(C)`
-  - 106 `landScene(P, T, BMrel, eye)`
-  - 211 `follow(P, key, st, T, v)`
-  - 219 `drawPlant(P, eye, VP, T, BMrel)`
-  - 266 `plantsCoast(eye)`
-  - 274 `nearestPlant(eye)`
-- **276** work on deck: the bleeding tub and the gutting table on the after deck; whoever works the deck guts or ices there
-  - 278 `deckActivity()`
-- **287** the deck kit (the user's wish 19.10.2026, tools/deck/*.py): the fish tubs, the gaff and the knife, the gutting table and
-  - 291 `kit(f, nm)`
-  - 294 `kitX(f)`
-- **296** the hands in their grips (tools/harbour/hender.py): the meshes once for all the figures (the glove is the same on every look),
-  - 304 `handMeshes()`
-  - 317 `handFrame(z0, sp, side)`
-  - 326 `handSpecs(st, F, R, hands)`
-  - 372 `toolM(A, dir)`
-  - 380 `dkEvent(kind, at, sp, kg, o)`
-  - 386 `dkFor(who, p, task)`
-  - 394 `dkEv(e, BMrel, G)`
-  - 396 `catchQ()`
-  - 401 `dkTick()`
-  - 414 `dkBloodDraw(VP)`
-  - 423 `rigAt(G, kind, d)`
-  - 427 `drawNetTub(BMrel, at, fill, ry)`
-  - 433 `drawLineTubs(BMrel, at, n, baited, green, ry, fill)`
-  - 444 `jobTubs(j)`
-  - 448 `drawMendNet(BMrel, G, d, R)`
-  - 462 `drawRigRest(BMrel, G, d)`
-- **475** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
-  - 481 `boyeCanvas(txt)`
-  - 487 `boyeTex()`
-  - 494 `ladderMesh(L)`
-  - 502 `boyeQ()`
-  - 503 `drawSafety(BMrel, G, VP, t)`
-  - 544 `cargoUnits(G)`
-  - 545 `drawCargo(BMrel, G, hide)`
-  - 560 `crFrames(X, Q, BMrel, p)`
-  - 569 `crLink(X, a2)`
-  - 572 `drawCrane(BMrel, G, VP, t, d)`
-- **627** the fish tubs on an open boat's deck (core/07f-kar.js, docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
-  - 638 `karPlan(key, spec, kg, dims)`
-  - 646 `karSpec()`
-  - 648 `drawKarLoad(M, load, key, washed)`
-  - 667 `karPlaces(vt)`
-  - 671 `drawCatchTubs(BMrel, vt, skip, washed)`
-  - 677 `karTop(vt, i)`
-  - 680 `karFilling(vt)`
-- **681** the ice box (tools/deck/fisk.py iskasse, the 300 l tub in blue): it stands on deck at its place (the model's kit.iskasse, under
-  - 684 `iceBoxAt(vt)`
-  - 689 `iceBoxTop(vt)`
-  - 693 `drawIceBox(BMrel, vt, shovelIn)`
-  - 704 `shaftM(A, B)`
-- **708** the sling (tools/deck/fisk.py slynge_*): the master link on the crane's hook at H (eye-relative, its top), a strap from the ring
-  - 710 `drawSling(H, M, swing, k)`
-- **728** the bleeding tub (Jonas 04.11.2026: «se at blodet og fisken fyller karet på en ordentlig måte»): the 300 l tub at the model's
-  - 732 `drawBleedTub(BMrel, W, d, ux, uz, KT, KW)`
-  - 750 `dkTub(G)`
-  - 751 `drawDeck(BMrel, eye, VP, t, DK)`
+  - 82 `drawLiveTub(KL, M, K, j)`
+  - 86 `hatchOpenK()`
+  - 89 `landOff(L)`
+  - 93 `landBack(L)`
+  - 102 `shipQuay(P, BMrel, eye, VG)`
+  - 108 `shipAim(C, x, z, hook)`
+  - 110 `shipPark(C)`
+  - 114 `landScene(P, T, BMrel, eye)`
+  - 219 `follow(P, key, st, T, v)`
+  - 227 `drawPlant(P, eye, VP, T, BMrel)`
+  - 274 `plantsCoast(eye)`
+  - 282 `nearestPlant(eye)`
+- **284** work on deck: the bleeding tub and the gutting table on the after deck; whoever works the deck guts or ices there
+  - 286 `deckActivity()`
+- **295** the deck kit (the user's wish 19.10.2026, tools/deck/*.py): the fish tubs, the gaff and the knife, the gutting table and
+  - 299 `kit(f, nm)`
+  - 302 `kitX(f)`
+- **304** the hands in their grips (tools/harbour/hender.py): the meshes once for all the figures (the glove is the same on every look),
+  - 312 `handMeshes()`
+  - 325 `handFrame(z0, sp, side)`
+  - 334 `handSpecs(st, F, R, hands)`
+  - 380 `toolM(A, dir)`
+  - 388 `dkEvent(kind, at, sp, kg, o)`
+  - 394 `dkFor(who, p, task)`
+  - 402 `dkEv(e, BMrel, G)`
+  - 404 `catchQ()`
+  - 409 `dkTick()`
+  - 422 `dkBloodDraw(VP)`
+  - 431 `rigAt(G, kind, d)`
+  - 435 `drawNetTub(BMrel, at, fill, ry)`
+  - 441 `drawLineTubs(BMrel, at, n, baited, green, ry, fill)`
+  - 452 `jobTubs(j)`
+  - 456 `drawMendNet(BMrel, G, d, R)`
+  - 470 `drawRigRest(BMrel, G, d)`
+- **483** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
+  - 489 `boyeCanvas(txt)`
+  - 495 `boyeTex()`
+  - 502 `ladderMesh(L)`
+  - 510 `boyeQ()`
+  - 511 `drawSafety(BMrel, G, VP, t)`
+  - 552 `cargoUnits(G)`
+  - 553 `drawCargo(BMrel, G, hide)`
+  - 568 `crFrames(X, Q, BMrel, p)`
+  - 577 `crLink(X, a2)`
+  - 580 `drawCrane(BMrel, G, VP, t, d)`
+- **635** the fish tubs on an open boat's deck (core/07f-kar.js, docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
+  - 646 `karPlan(key, spec, kg, dims)`
+  - 654 `karSpec()`
+  - 656 `drawKarLoad(M, load, key, washed)`
+  - 675 `karPlaces(vt)`
+  - 679 `drawCatchTubs(BMrel, vt, skip, washed)`
+  - 685 `karTop(vt, i)`
+  - 688 `karFilling(vt)`
+- **689** the ice box (tools/deck/fisk.py iskasse, the 300 l tub in blue): it stands on deck at its place (the model's kit.iskasse, under
+  - 692 `iceBoxAt(vt)`
+  - 697 `iceBoxTop(vt)`
+  - 701 `drawIceBox(BMrel, vt, shovelIn)`
+  - 712 `shaftM(A, B)`
+- **716** the sling (tools/deck/fisk.py slynge_*): the master link on the crane's hook at H (eye-relative, its top), a strap from the ring
+  - 718 `drawSling(H, M, swing, k)`
+- **736** the bleeding tub (Jonas 04.11.2026: «se at blodet og fisken fyller karet på en ordentlig måte»): the 300 l tub at the model's
+  - 740 `drawBleedTub(BMrel, W, d, ux, uz, KT, KW)`
+  - 758 `dkTub(G)`
+  - 759 `drawDeck(BMrel, eye, VP, t, DK)`
 
-## `src/js/view3d/10-gear.js` (532 linjer)
+## `src/js/view3d/10-gear.js` (548 linjer)
 
 ---------- passive gear: buoys at both ends of every set, and the work over the rail when setting and hauling ----------
 
 - **1** passive gear: buoys at both ends of every set, and the work over the rail when setting and hauling
   - 3 `buildGear()`
-- **39** the autoline's marks over the stern (H2d2, 06.11.2026)
-  - 44 `aMarks(a, b, n, zc)`
-  - 57 `aMarksOf(s, zc, key)`
-  - 63 `autoMarks(BMrel, eye, t)`
-  - 84 `aLive(M, m, t)`
-  - 85 `aMarksPush(L, M, filt)`
-  - 87 `drawGearSea(eye, t, VP, H)`
-  - 122 `drawAutoDrops(eye, t)`
-  - 152 `underProf(s, kind)`
-  - 170 `drawGearUnder(VP, eye)`
-  - 225 `drawSetting(BMrel, t, g, G, stack, x0)`
-  - 247 `drawAutoSet(BMrel, t, g, G)`
-  - 261 `haulFish(g)`
-  - 271 `haulModel(kind)`
-  - 280 `gopHauls()`
-  - 294 `potDeck(G, HP, sx, d, pw, vt, ph)`
-  - 301 `drawPotStacks(BMrel, K, n)`
-  - 309 `stackTop(K, i, d)`
-  - 313 `drawPotsAboard(BMrel, G, d, n)`
-  - 329 `tankAt(x, z, d, vt)`
-  - 347 `drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg)`
-  - 405 `drawCrabTank(BMrel, G, d, sx, HP)`
-  - 414 `autoPort(G)`
-  - 419 `aCleanS(HM, L)`
-  - 421 `drawAutoSlides(BMrel)`
-  - 428 `drawHaulRest(BMrel, G, d, VP)`
-  - 446 `drawGearOp(BMrel, eye, VP, t)`
+- **44** the autoline's marks over the stern (H2d2, 06.11.2026)
+  - 49 `aMarks(a, b, n, zc)`
+  - 62 `aMarksOf(s, zc, key)`
+  - 68 `autoMarks(BMrel, eye, t)`
+  - 89 `aLive(M, m, t)`
+  - 90 `aMarksPush(L, M, filt)`
+  - 92 `drawGearSea(eye, t, VP, H)`
+  - 129 `drawAutoDrops(eye, t)`
+  - 159 `underProf(s, kind)`
+  - 177 `drawGearUnder(VP, eye)`
+  - 232 `drawSetting(BMrel, t, g, G, stack, x0)`
+  - 254 `drawAutoSet(BMrel, t, g, G)`
+  - 268 `haulFish(g)`
+  - 278 `haulModel(kind)`
+  - 287 `gopHauls()`
+  - 301 `potDeck(G, HP, sx, d, pw, vt, ph)`
+  - 308 `drawPotStacks(BMrel, K, n)`
+  - 316 `stackTop(K, i, d)`
+  - 322 `potsAboard()`
+  - 323 `drawPotsAboard(BMrel, G, d, n)`
+  - 339 `tankAt(x, z, d, vt)`
+  - 357 `drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg)`
+  - 416 `drawCrabTank(BMrel, G, d, sx, HP)`
+  - 425 `autoPort(G)`
+  - 430 `aCleanS(HM, L)`
+  - 432 `drawAutoSlides(BMrel)`
+  - 439 `drawHaulRest(BMrel, G, d, VP)`
+  - 460 `snoHauler(BMrel, G, VP, a)`
+  - 462 `drawGearOp(BMrel, eye, VP, t)`
 
 ## `src/js/view3d/11-bunker.js` (65 linjer)
 
