@@ -10,13 +10,18 @@ const FETCH_A = [-45, -30, -15, 0, 15, 30, 45].map(a => ({a:a * Math.PI / 180, c
 const FETCH_C = new Map();
 function fetchRay(x, y, dx, dy){
   let s = 0; const q = {x, y};   // (one point along the ray: an object a step was the most garbage the sea state left, 05.11.2026)
+  // the far layers looked up once a ray, and a step's land layer used again for its land (Ø3a, 07.11.2026): what farL, coastDistFar
+  // and isLandFar pick for the point, the same layer and the same numbers (fetchRayRef in tests/unit/fetchray.test.mjs is the old way,
+  // on the live farL, coastDistFar and isLandFar, so a change in their rule shows there)
+  const LA = MAPD.L[FARL.land[0]], LB = MAPD.L[FARL.land[1]], DA = MAPD.L[FARL.dc[0]], DB = MAPD.L[FARL.dc[1]];
   for (let i = 0; i < 3000; i++){
     q.x = x; q.y = y;
-    if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1 || !farL('land', q)) return s + FETCH.open;
+    if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1) return s + FETCH.open;
+    const LL = LA && mapCellIn(LA, q) ? LA : LB && mapCellIn(LB, q) ? LB : null; if (!LL) return s + FETCH.open;   // (farL('land'))
     if (s >= FETCH.open) return s;
-    const d = coastDistFar(q);
+    const DL = DA && mapCellIn(DA, q) ? DA : DB && mapCellIn(DB, q) ? DB : null, d = DL ? rbil(DL, q) * DCSTEP[DL.name] : 0;   // (coastDistFar)
     let st = 0.1;
-    if (d < 0.2){ if (isLandFar(q)) return s; } else st = Math.max(0.1, 0.92 * d - 0.15);
+    if (d < 0.2){ if (rcell(LL, Math.floor(x / LL.c), Math.floor(y / LL.c)) === 1) return s; } else st = Math.max(0.1, 0.92 * d - 0.15);   // (isLandFar)
     x += dx * st; y += dy * st; s += st;
   }
   return s;

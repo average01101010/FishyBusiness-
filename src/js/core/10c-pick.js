@@ -13,7 +13,7 @@ function pickState(){ if (!Array.isArray(S.pick)) S.pick = []; return S.pick; }
 function pickKr(o){
   const n = o.n || 1;
   if (o.w === 'shop') return o.k === 'jig' ? PRICE.gear : PRICE.kgear;
-  if (o.w === 'equip') return EQUIP[o.k] ? EQUIP[o.k].price : 0;
+  if (o.w === 'equip') return EQUIP[o.k] ? equipKr(o.k) : 0;   // (a reel at the boat's tier, OPP2)
   if (o.w === 'cloth') return CLOTHES[o.k] ? CLOTHES[o.k].price : 0;
   if (o.w === 'net'){ const x = NETOPT.find(q => netKey(q[0], q[1]) === String(o.s)); return x ? n * NETTY[x[0]].price : 0; }
   if (o.w === 'stamp') return isAuto(o.s) ? n * AUTOLENKE_KR : LINE_KINDS[o.s] ? n * LINE_KINDS[o.s].price : 0;
@@ -21,7 +21,7 @@ function pickKr(o){
   if (o.w === 'kit') return n * GPRICE.kit;
   if (o.w === 'heavy') return n * GPRICE.heavy;
   if (o.w === 'hooks') return CARE.hookKr[o.s] || 0;
-  if (o.w === 'jig') return CARE.jig[o.s] ? CARE.jig[o.s].kr : 0;
+  if (o.w === 'jig') return CARE.jig[o.s] ? jigKr(o.s) : 0;   // (half again with better hooks and pilk, OPP2)
   return 0;
 }
 // its name, [no, en]

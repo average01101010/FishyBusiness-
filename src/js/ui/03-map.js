@@ -265,6 +265,7 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){ const step = chartRast
 // frames (05.11.2026: 70-255 ms at once on a PC). A row needs the one above (the edge of the safe depth), so the rows are not split up,
 // only spread out; the picture is the same. (Not a generator: as one the whole chart was 13 % slower, its loops less optimised.)
 // scr: arrays kept between calls (the little chart's, so a background leaves no garbage); without it they are new
+const CRS = {};   // chartRasterJob's arrays for the rasters without scr of their own (chartRaster: one at a time, to the end)
 function chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr){
   const {lv, fish, night, sd} = V, LD = MAPD.L.depth, c = LD.c, X0 = LD.ix0, Y0 = LD.iy0, X1 = LD.ix0 + LD.nx - 1, Y1 = LD.iy0 + LD.ny - 1, D = (ix, iy) => rcell(LD, ix, iy);
   const s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
@@ -282,12 +283,33 @@ function chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr){
   // deep inside the 25 m mask's land (the cell and its four neighbours) the vector coast's fill covers the pixel anyway: it is painted
   // in that fill's colour and its depth is not worked out (the B-spline's 16 cells a pixel for the land made the fjord's view 3x slower);
   // at the mask's edge, where it and the coast differ, the depth is drawn and the coast's fill decides
-  const deep = (x, y) => { const mx = Math.floor(x / lc), my = Math.floor(y / lc); return rcell(LM, mx, my) === 1 && rcell(LM, mx + 1, my) === 1 && rcell(LM, mx - 1, my) === 1 && rcell(LM, mx, my + 1) === 1 && rcell(LM, mx, my - 1) === 1; };
+  const deepC = (mx, my) => rcell(LM, mx, my) === 1 && rcell(LM, mx + 1, my) === 1 && rcell(LM, mx - 1, my) === 1 && rcell(LM, mx, my + 1) === 1 && rcell(LM, mx, my - 1) === 1;
   let ltx = NaN, lty = NaN, lsim = false;
-  const simAt = (x, y) => { const tx = Math.floor(x / T), ty = Math.floor(y / T); if (tx !== ltx || ty !== lty){ ltx = tx; lty = ty; const pk = lv > 0 ? MAPD.byTile.get('sim:' + tx + ':' + ty) : null; lsim = !!(pk && pk.buf); if (pk && !pk.buf && st) st.prov = true; } return lsim; };
+  const simT = (tx, ty) => { if (tx !== ltx || ty !== lty){ ltx = tx; lty = ty; const pk = lv > 0 ? MAPD.byTile.get('sim:' + tx + ':' + ty) : null; lsim = !!(pk && pk.buf); if (pk && !pk.buf && st) st.prov = true; } return lsim; };
+  const simAt = (x, y) => simT(Math.floor(x / T), Math.floor(y / T));
+  // What a sample asks of the map that is the same along its column or its row, or for its cell, is asked once (Ø3a, 07.11.2026:
+  // the fjord's view standing took 2.5 s with the CPU slowed 4x, most of it in these): whether it is in the frame (inFrame: the frame and
+  // the far land layers' extent, per column and per row), the tile it is in (simAt), the land deep in the mask (deep, per 25 m cell
+  // where a cell has more than one sample), and the B-spline's sum along a row of depth cells (per row of cells and column of samples,
+  // where a cell has more than one sample). The same numbers in the same order, so the picture is the same byte for byte; a cell whose
+  // block is not in throws as before, each time it is asked for (its pack may have come between two steps of a job), and is not kept.
+  // (kept between calls in scr, or in CRS for the big chart's tiles, which chartRaster paints one at a time to the end: new ones for
+  // every tile were some 5 MB of garbage a paint)
+  const own = (k, A, n) => { const O = R || CRS; return O[k] && O[k].length >= n ? O[k] : (O[k] = new A(n)); };
+  const LA = MAPD.L[FARL.land[0]], LB = MAPD.L[FARL.land[1]], inL = (L, v, o, n) => { const k = Math.floor(v / L.c); return k >= o && k < o + n; };
+  const ifl = (v, lo, hi, a, b) => (v >= lo && v < hi ? 1 : 0) | (LA && inL(LA, v, LA[a], LA[b]) ? 2 : 0) | (LB && inL(LB, v, LB[a], LB[b]) ? 4 : 0);
+  const IFX = own('IFX', Uint8Array, PW), TXC = own('TXC', Int32Array, PW), MXC = own('MXC', Int32Array, PW);
+  for (let i = 0; i < PW; i++){ const x = x0 + (i + 0.5) * pkx; IFX[i] = ifl(x, MAPB.x0, MAPB.x1, 'ix0', 'nx'); TXC[i] = Math.floor(x / T); MXC[i] = Math.floor(x / lc); }
+  const inFr = (fx, fy) => (fx & fy & 1) !== 0 && (fx & fy & 6) !== 0;   // (in the frame, and in the fine or the coarse land layer on both axes: inFrame's and farL's rule)
+  const dmx = MXC[0], dnx = MXC[PW - 1] - dmx + 1, dmy = Math.floor((y0 + 0.5 * pky) / lc), dny = Math.floor((y0 + (PH - 0.5) * pky) / lc) - dmy + 1;
+  const DM = lv > 0 && pkx < lc && pky < lc && dnx * dny <= 4e6 ? own('DM', Uint8Array, dnx * dny).fill(0, 0, dnx * dny) : null;   // 0 not asked, 1 no, 2 yes
+  const deepI = (i, my) => { const mx = MXC[i], k = (my - dmy) * dnx + mx - dmx; let r = DM[k]; if (!r) DM[k] = r = deepC(mx, my) ? 2 : 1; return r === 2; };
   const bw = (t, o) => { const t2 = t * t, t3 = t2 * t; o[0] = (1 - t) * (1 - t) * (1 - t) / 6; o[1] = (3 * t3 - 6 * t2 + 4) / 6; o[2] = (-3 * t3 + 3 * t2 + 3 * t + 1) / 6; o[3] = t3 / 6; };
   const CX = R ? R.CX : new Int32Array(PW * 4), CW = R ? R.CW : new Float32Array(PW * 4), tmp = [0, 0, 0, 0];
   if (smooth) for (let i = 0; i < PW; i++){ const x = x0 + (i + 0.5) * pkx, gx = x / c - 0.5, ix = Math.floor(gx); bw(gx - ix, tmp); for (let k = 0; k < 4; k++){ CX[i * 4 + k] = clamp(ix - 1 + k, X0, X1); CW[i * 4 + k] = tmp[k]; } }
+  // the B-spline's sums along the depth rows (HC, kept where HOK says so): the rows of cells the samples' rows reach, by column
+  const iyrOf = j => Math.floor((y0 + (j + 0.5) * pky) / c - 0.5), hro = smooth ? clamp(iyrOf(0) - 1, Y0, Y1) : 0, hn = smooth ? clamp(iyrOf(PH - 1) + 2, Y0, Y1) - hro + 1 : 0;
+  const HOK = smooth && hn * PW <= 4e6 ? own('HOK', Uint8Array, hn * PW).fill(0, 0, hn * PW) : null, HC = HOK ? own('HC', Float64Array, hn * PW) : null;
   const RW = [0, 0, 0, 0], RO = [0, 0, 0, 0], col = [0, 0, 0], pt = {x:0, y:0}, put = (o, k) => { d[o] = k[0]; d[o + 1] = k[1]; d[o + 2] = k[2]; d[o + 3] = 255; };
   // near in (a sample under an eighth of a cell) the B-spline every GS samples and between them bilinear: the depth is smooth there,
   // and the 16 cells a sample made the harbour's tiles slow; NaN where a corner is off the packs (the sample is then its own)
@@ -306,22 +328,27 @@ function chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr){
   const pixRow = j => {
     const y = y0 + (j + 0.5) * pky, gy = clamp(y / c - 0.5, Y0, Y1 - 0.001), iy = Math.floor(gy), fy = gy - iy;
     if (smooth){ const gyr = y / c - 0.5, iyr = Math.floor(gyr); bw(gyr - iyr, RW); for (let k = 0; k < 4; k++) RO[k] = clamp(iyr - 1 + k, Y0, Y1); }
+    const fyr = ifl(y, MAPB.y0, MAPB.y1, 'iy0', 'ny'), tyr = Math.floor(y / T), myr = Math.floor(y / lc), dok = DM && myr >= dmy && myr < dmy + dny;
     let left = NaN;
     for (let i = 0; i < PW; i++){
       const x = x0 + (i + 0.5) * pkx, o = (j * PW + i) * 4;
       pt.x = x; pt.y = y;   // (one point for every sample: an object a sample was most of the garbage it left)
-      if (!inFrame(pt)){ put(o, OFF); prev[i] = NaN; left = NaN; continue; }
+      if (!inFr(IFX[i], fyr)){ put(o, OFF); prev[i] = NaN; left = NaN; continue; }   // (inFrame(pt))
       const gx = clamp(x / c - 0.5, X0, X1 - 0.001), ix = Math.floor(gx), fx = gx - ix;
       let v, land = 0, sv = 0;   // sv: the depth is the tiles' (1) or the offshore layer's (0): no line where they meet (their floors differ)
-      if (!simAt(x, y) || !(x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c)){
+      if (!simT(TXC[i], tyr) || !(x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c)){
         const q = pt; if (lv && isLandFar(q)){ put(o, FAR); prev[i] = NaN; left = NaN; continue; }
         v = offDepth(q); }
       else try {
-        sv = 1; { const pk = pocket ? pocket(x, y) : 0; if (pk === 2 || (!pk && lv && (deep(x, y) || coastAtIf(pt) > 0))) land = 1; }   // (the coast's index where it is in: 01d-coast.js)
+        sv = 1; { const pk = pocket ? pocket(x, y) : 0; if (pk === 2 || (!pk && lv && ((dok ? deepI(i, myr) : deepC(MXC[i], myr)) || coastAtIf(pt) > 0))) land = 1; }   // (the coast's index where it is in: 01d-coast.js)
         if (land >= 1){ put(o, UG); prev[i] = NaN; left = NaN; continue; }
         const gi = Math.floor(i / GS), gj = Math.floor(j / GS), go = gj * GW + gi;
         if (G && !isNaN(v = ((G[go] * (GS - i % GS) + G[go + 1] * (i % GS)) * (GS - j % GS) + (G[go + GW] * (GS - i % GS) + G[go + GW + 1] * (i % GS)) * (j % GS)) / (GS * GS))){ }
-        else if (smooth){ const q = i * 4; v = 0; for (let a = 0; a < 4; a++){ const ro = RO[a]; v += RW[a] * (D(CX[q], ro) * CW[q] + D(CX[q + 1], ro) * CW[q + 1] + D(CX[q + 2], ro) * CW[q + 2] + D(CX[q + 3], ro) * CW[q + 3]); } }
+        else if (smooth){ const q = i * 4; v = 0;
+          for (let a = 0; a < 4; a++){ const ro = RO[a], hk = (ro - hro) * PW + i; let h;
+            if (HOK && HOK[hk]) h = HC[hk];
+            else { h = D(CX[q], ro) * CW[q] + D(CX[q + 1], ro) * CW[q + 1] + D(CX[q + 2], ro) * CW[q + 2] + D(CX[q + 3], ro) * CW[q + 3]; if (HOK){ HC[hk] = h; HOK[hk] = 1; } }
+            v += RW[a] * h; } }
         else v = (D(ix, iy) * (1 - fx) + D(ix + 1, iy) * fx) * (1 - fy) + (D(ix, iy + 1) * (1 - fx) + D(ix + 1, iy + 1) * fx) * fy;
       } catch (e){
         // a cell across the edge of a tile whose pack has not come (or has none): the depth model here, painted again when it comes
@@ -654,6 +681,7 @@ function renderDyn(){
   else if (TAPNAME){ TAPNAME = null; }
   if (typeof FRIENDS !== 'undefined') g.push(FRIENDS.svg(u, AISNOW));
   if (typeof SHARE !== 'undefined') g.push(SHARE.svg(u));
+  if (typeof MOBUI !== 'undefined') g.push(MOBUI.svg(u, bp));   // man overboard: the MOB mark, the line to it, the lifebuoy and the person (ui/10s-mob.js, Ø11.6)
   if (typeof PTOW !== 'undefined') g.push(PTOW.svg(u));   // players who need a tow (ui/10o-ptow.js)   // catch marks shared with you (ui/10l-share.js)   // friends whose game is closed, where they were last (ui/10k-friends.js)
   // gear being drawn out
   if (SETM) g.push(setSvg(u));

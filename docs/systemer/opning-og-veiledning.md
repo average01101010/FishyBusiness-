@@ -140,7 +140,7 @@ Jonas valgte 1A–8A og sa «kjør på» 27.10.2026. Fasene O0–O6 står i plan
 - **Ingen haill i første tur:** `luck`, `haill` og `luckhud` er tatt ut, båten venter ikke lenger på feltet (`tutWait`; en lagring som venter, begynner å fiske), og første tur gir ingen gratis luksushaill (`tutFree('haill')` er alltid usann). Luksushaill er bare gaven ved registrering (`CLAUDE.md`). Haillen kommer som dryppet `lykke` (kapittel 2) første gang båten fisker etter første levering.
 - **Én times fisketid** (`TUT_FISH_H` i `core/03-simulation.js`, ti ekte minutter), og påfyllingen fyller til halvt lasterom (`TUT_HOLD`, `tutTarget()`, 175 kg i trebåten). Leveringen venter ikke på full last: `full` er ferdig når fisketida er ute.
 - **`deck`** viser «Rykk når det napper» til første fisk er om bord, og bløggingen etterpå.
-- **Full last igjen, valgt 06.11.2026** (Ø8, V3 C i `docs/planer/spillbarhet-fangst.md`; Jonas: «det er jo dumt å ikke fylle båten», og «brukeren skal jo selv få lov til å bestemme hvor lenge de ønsker å fiske før de leverer»). Ikke bygd: påfyllingen skal fylle mot fullt lasterom (`TUT_HOLD` 1), og spilleren skal kunne stoppe fisket og levere når hun vil. Linja om vanlig fiske på sluttseddelen skal også stå i dekksdagboka (V1 A). Datoen merkes i trakten.
+- **Full last igjen, valgt 06.11.2026** (Ø8, V3 C i `docs/planer/spillbarhet-fangst.md`; Jonas: «det er jo dumt å ikke fylle båten», og «brukeren skal jo selv få lov til å bestemme hvor lenge de ønsker å fiske før de leverer»). Ikke bygd: påfyllingen skal fylle mot fullt lasterom (`TUT_HOLD` 1), og spilleren skal kunne stoppe fisket og levere når hun vil. Datoen merkes i trakten. Linja om vanlig fiske står nå også i dekksdagboka (V1 A, Ø8b S1 07.11.2026, under).
 
 ### O4: hjem og mottaket (27.10.2026, V5 A)
 
@@ -178,3 +178,10 @@ Jonas valgte 1A–8A og sa «kjør på» 27.10.2026. Fasene O0–O6 står i plan
 
 Vangshamn på Senja er prøvd i begge formater (O2–O5). Trakten i admin har de nye stegene (`TUT_STEPS`). Det som gjenstår av O6, er to uker med måling før noe mer endres.
 
+### Ø8b S1: første tur i dekksdagboka (07.11.2026, `docs/planer/spillbarhet-fangst.md` V1 A)
+
+- **Linja:** når første tur er ferdig, skriver `tutFinish` (`ui/07b-first-trip.js`) én linje i dekksdagboka før «Første tur er fullført»: «Første tur var ekstra god. Vanlig fiske med håndjuksa gir her nå rundt N kg i timen.» Den står i Drift den dagen (`logKind` gir `drift`), så en spiller som lurer etter tur 2, finner den etter at sluttseddelen har forlatt skuffen (fire spilltimer etter salget).
+- **N er sluttseddelens tall** (`tutNormKg`): levert fangst på siste salg ganger bestandens andel av tettheten på feltet (`S.tut.fk`, `(d − t)/d`, summert i `fish()` i `core/05-vessels.js`) per fisketime (`TUT_FISH_H`), rundet til 10 kg; under 10 kg står «under 10 kg». Formelen står også i `portSlip` (`ui/07-guide.js`); de to skal gi samme tall, og `portSlip` kan kalle `tutNormKg()` neste gang `07-guide.js` åpnes (S2 eier den).
+- **Ingen linje** når `S.tut.fk` mangler (en lagring fra før O4) eller ingenting er levert. Første tur kan bare levere ved sitt eget mottak (`tutAllow`: «Lever» bare på steget `land`, ruta hjem må ende i `tutLand()`), så siste salg er det sluttseddelen viser, og `tutNormKg` sjekker ikke havna selv. Linja står i `try`, så første tur blir fullført selv om den feiler.
+- **Tekstene** på norsk og engelsk i `ui/01-i18n.js` (`tut_norm`, `tut_norm_kg`, `tut_norm_lo`); `log()` lagrer begge, så linja følger språket.
+- **Prøvd** 07.11.2026: N likt på seddelen og i dagboka for fem andeler av bestanden og ved mottakene nær Bergen, Bodø og Hammerfest (et eget skript, sett rødt uten endringen), `booktest`, og `tut` i liggende. Skjermbildene i `docs/okter/2026-11-07-o8b-s1/`.

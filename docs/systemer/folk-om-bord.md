@@ -31,6 +31,7 @@
   - Uløst etter 12 timer blir det verre, og etter 48 timer mønstrer noen av.
 - **Utvikling:** Ferdighetene vokser med stasjonen personen faktisk står på (5.19). Erfaring og sjømannskap vokser i tillegg hver 40. time på sjøen, dobbelt så fort for lærevillige. Skjulte trekk avsløres etter 12 timer på sjøen.
 - **Rettet 01.10.2026:** `crewQuit` avbrøt resten av `crewTick` den timen, og juksing trente feil redskap etter garn (`lastGear`). Begge er borte.
+- **Mann over bord** (Ø11.6, 07.11.2026; `docs/systemer/sjofart-og-lover.md` kap. 6): den som jobber på dekk, kan gå over bord i grov sjø (aldri skipperen). Den i sjøen er ikke om bord (`workAssign` → `mobDeck`). Opp i tide: slitenheten til 90. Tatt av redningen, eller opp etter grensa: sykmeldt 1–2 eller 3–5 dager (`c.off`, `offUntil`, Mannskap viser «er i land til …»), og tilbake om bord først når båten ligger til kai etter dagene (`c.mobOff`, `mobCrewHour` fra `crewTick`). En fra havbåtens lag holdes av dekket de dagene (`S.mobOff`). Historien (`lifeStory`) får linja.
 - **Testet:** Vanlig drift med 10 timers fiske og klær ga trivsel 60–70. Hardkjøring med 20 timer per døgn fikk alle tre til å si opp innen fire døgn.
 
 ## 5.6b Mannskapet flyr til og fra Svalbard (H1b R7, 05.11.2026)

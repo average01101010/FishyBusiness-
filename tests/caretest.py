@@ -103,6 +103,18 @@ async def main():
           return R; })()""")
         print('gate:', json.dumps(r, ensure_ascii=False))
         print(ok(all(r['noHaul']) and all(r['noGear']) and r['line'] is None and r['hooks'] is None and r['names'] == ['Linehaler', 'Garnhaler', 'Teinehaler']), 'line, nets and pots need their hauler, hooks, buoy sets and bait need the gear, and the haulers carry plain names')
+        # OPP2 (07.11.2026): better hooks and pilk (EQUIP.juksesett tier 2) wear half as fast, a set costs half again, and the shop buys it
+        # back on that price; the tier is bought for half the price of the sets aboard
+        r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; S.pgear = newPGear(); careInit(S.pgear); S.cash = 1e6; S.target = 'mix'; b.kgear = false; delete S.equip.juksesett;
+          const J = S.pgear.jig.mark, wear = () => { J.c = 1; for (let i = 0; i < 2000; i++) jigWear(); return 1 - J.c; };
+          R.w1 = wear(); const c0 = S.cash; R.buy1 = buyGear('jig', 'mark', 1); R.kr1 = c0 - S.cash; R.sell1 = sellValue('jig', 'mark', 1);
+          R.gate = buyGate('tier', 'juksesett'); R.tierKr = tierKr('juksesett', 2); const c1 = S.cash; R.tier = buyGear('tier', 'juksesett'); R.paidTier = c1 - S.cash; R.lv = S.equip.juksesett;
+          R.w2 = wear(); const c2 = S.cash; R.buy2 = buyGear('jig', 'mark', 1); R.kr2 = c2 - S.cash; R.sell2 = sellValue('jig', 'mark', 1); R.base = CARE.jig.mark.kr;
+          R.sellF = CARE.sellF; delete S.equip.juksesett; return R; })()""")
+        print('juksasett (OPP2):', json.dumps(r, ensure_ascii=False))
+        print(ok(r['w1'] > 0 and abs(r['w2'] / r['w1'] - 0.5) < 1e-6), 'jig sets at tier 2 wear half as fast', [r['w1'], r['w2']])
+        print(ok(r['buy1'] is None and r['kr1'] == r['base'] and r['buy2'] is None and r['kr2'] == round(r['base'] * 1.5) and r['sell1'] == round(r['kr1'] * r['sellF']) and r['sell2'] == round(r['kr2'] * r['sellF'])), 'a set costs half again at tier 2, and is bought back on that price', [r['kr1'], r['kr2'], r['sell1'], r['sell2']])
+        print(ok(r['gate'] is None and r['tier'] is None and r['lv'] == 2 and r['paidTier'] == r['tierKr'] == round(r['base'] * 0.5 * 2)), 'tier 2 costs half the price of the sets aboard (the mounted one and the spare bought)', [r['tierKr'], r['paidTier']])
         print(ok(not errs), 'no page errors', errs[:2])
         await br.close()
 asyncio.run(main())

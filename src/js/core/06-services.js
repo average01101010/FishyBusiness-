@@ -189,7 +189,8 @@ function finishJob(j){
   if (j.kind === 'svc'){ b.svcAt = b.engH || 0; S.svcTold = false; log('Service på motoren er ferdig.', 'The engine service is done.'); turMechanic(); }
   else if (j.kind === 'fit'){ const E = EQUIP[j.k];
     // the boat may have been traded for one the equipment does not suit while it waited: the yard pays back
-    if (!equipFits(j.k, b.type)){ book('redskap', E.price, 'Tilbakebetalt: ' + E.name.no, 'Paid back: ' + E.name.en); log(E.name.no + ' passer ikke denne båten. Verkstedet betalte tilbake ' + kr(E.price) + '.', E.name.en + ' does not suit this vessel. The yard paid back ' + kr(E.price) + '.'); }
+    // (j.kr: what was paid for it, OPP2: a reel bought at a tier costs more than EQUIP's price; an older job has only the price)
+    if (!equipFits(j.k, b.type)){ const back = j.kr || E.price; book('redskap', back, 'Tilbakebetalt: ' + E.name.no, 'Paid back: ' + E.name.en); log(E.name.no + ' passer ikke denne båten. Verkstedet betalte tilbake ' + kr(back) + '.', E.name.en + ' does not suit this vessel. The yard paid back ' + kr(back) + '.'); }
     else { if (E.multi) S.equip[j.k] = (S.equip[j.k] || 0) + 1; else S.equip[j.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); if (hooks.onEquip) hooks.onEquip(); } }
   else if (j.kind === 'repair'){ if (typeof hullMended === 'function') hullMended(j); else b.damage = 0; log('Skroget er reparert.', 'The hull is repaired.'); }
   else if (j.kind === 'eng'){ b.engLv = j.lv; applyVessel(); log('Ny motor montert: ' + BOAT.hp + ' hk, ' + fmt(BOAT.vmax, 1) + ' knop.', 'New engine fitted: ' + BOAT.hp + ' hp, ' + fmt(BOAT.vmax, 1) + ' knots.'); }
