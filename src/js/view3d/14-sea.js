@@ -19,15 +19,30 @@
     foamInit();
   }
   // ---------- the waves: wind sea and swell from the sea model (03b-sea.js) ----------
-  const WL = [96, 67, 49, 36.5, 27.5, 20.5, 15.3, 11.4, 8.6, 6.4], WOFF = [0, -0.46, 0.53, -0.92, 0.27, 0.84, -0.21, 1.12, -0.68, 0.41], WPH = [0, 2.1, 4.4, 1.3, 5.6, 3.2, 0.7, 4.9, 2.6, 5.9];
+  // WOFF: where each wind wave lies in the spread of directions round the wind, in standard deviations of the spread (Fysikk 4, F3:
+  // before, fixed angles of up to 64 degrees, the same for a young sea and a grown one)
+  const WL = [96, 67, 49, 36.5, 27.5, 20.5, 15.3, 11.4, 8.6, 6.4], WOFF = [0, -0.75, 0.8, -1.2, 0.45, 1.25, -0.4, 1.4, -1.0, 0.6], WPH = [0, 2.1, 4.4, 1.3, 5.6, 3.2, 0.7, 4.9, 2.6, 5.9];
   // the swell: three long waves around its peak wavelength (deep water L = 1.56 T^2), from its own direction
   const SWL = [0.8, 1.0, 1.25], SWW = [0.55, 1, 0.6], SWOFF = [-0.14, 0, 0.17], SWPH = [1.7, 4.2, 0.4];
-  const WV = {hs:0.3, W:5, dir:0, swHs:0, swDir:0, swTp:10, init:false, list:[], ph:[], kd:[], ua:new Float32Array(52), ub:new Float32Array(52), C:0, cap:0, lnFcap:1, dot:1, steep:0.3, loc:[0.3, 0, 1, 1]};
-  // a broad spectrum around the peak wavelength; short waves keep a little energy so the surface always has texture (sum of squares 1/8, so Hs = 1)
-  function specW(L0){ const w = WL.map(L => Math.exp(-(((Math.log(L) - Math.log(L0)) / 0.75) ** 2)) + 0.06 * Math.min(1, L0 / L)), n = Math.sqrt(w.reduce((a, c) => a + c * c, 0)) * 2.828; return w.map(v => v / n); }
+  const WV = {hs:0.3, W:5, dir:0, swHs:0, swDir:0, swTp:10, init:false, list:[], ph:[], kd:[], ua:new Float32Array(52), ub:new Float32Array(52), C:0, cap:0, lnFcap:1, dot:1, steep:0.3, KO:0, KY:0, ia:1, loc:[0.3, 0, 1, 1]};
+  // The wind sea's spectrum (Fysikk 4, F3, 07.11.2026; before, a log-normal bump 0.75 wide in ln L with a floor of 0.06 for the short
+  // waves): JONSWAP (Hasselmann et al. 1973), S(w) ~ w^-5 exp(-5/4 (wp/w)^4) gamma^r, r = exp(-(w - wp)^2 / (2 sig^2 wp^2)), gamma
+  // 3.3, sig 0.07 below the peak and 0.09 above. Each component carries the energy of its own band, a = sqrt(2 S(w) dw), dw from its
+  // neighbours, worked in logs so a peak far from the components never underflows. Past the peak the w^-5 tail gives every band the
+  // same slope (k a), which is what the short sea looks like; the floor made the short waves some six times too steep against the long
+  // ones in a grown sea, and the bands between 10 and 40 m too weak. Sum of squares 1/8, so Hs = 1.
+  const JW = WL.map(L => Math.sqrt(2 * Math.PI * 9.81 / L)), JDW = JW.map((w, i) => ((JW[Math.min(9, i + 1)] - JW[Math.max(0, i - 1)]) / (i === 0 || i === 9 ? 1 : 2)));
+  function specW(L0){
+    const wp = Math.sqrt(2 * Math.PI * 9.81 / L0), lg = JW.map((w, i) => { const sg = w <= wp ? 0.07 : 0.09; return -5 * Math.log(w) - 1.25 * (wp / w) ** 4 + Math.log(3.3) * Math.exp(-((w - wp) ** 2) / (2 * sg * sg * wp * wp)) + Math.log(JDW[i]); });
+    const m = Math.max(...lg), w = lg.map(v => Math.exp(0.5 * (v - m))), n = Math.sqrt(w.reduce((a, c) => a + c * c, 0)) * 2.828; return w.map(v => v / n); }
+  // The spread of directions (cos^2s of half the angle, Hasselmann et al. 1980, the JONSWAP measurements): s = 6.97 (f/fp)^4.06 below
+  // 1.05 fp and 9.77 (f/fp)^mu above, mu = -2.33 - 1.45 (U/cp - 1.17), so the waves near the peak keep close to the wind and the shorter
+  // and the longer ones spread wider, the more so the younger the sea (U/cp, the inverse wave age at the boat). Mitsuyasu et al. 1975
+  // (s_max = 11.5 (U/cp)^-2.5) points the same way. The standard deviation of that spread is sqrt(2 / (s + 1)) (Kuik et al. 1988).
+  function spreadSd(f, ia){ const s = f < 1.05 ? 6.97 * Math.pow(f, 4.06) : 9.77 * Math.pow(f, -2.33 - 1.45 * (clamp(ia, 0.6, 4) - 1.17)); return Math.sqrt(2 / (s + 1)); }
   function updateWaves(dt, H){
     const p = {x:bv.x / 1000, y:bv.z / 1000}, gT = gridGamma(p), hsT = hsAt(p, H), WT = windAt(H, p), wdT = windDir(H, p) - gT, dirT = (wdT + 180) * DEG, SW = swellOpen(H, p), swDirT = (SW.dir - gT + 180) * DEG;   // the world is drawn on the grid: true directions turn by -gamma
-    if (!WV.init){ WV.hs = hsT; WV.W = WT; WV.dir = dirT; WV.swHs = SW.hs; WV.swDir = swDirT; WV.swTp = SW.tp; WV.init = true; }
+    const fresh = !WV.init; if (fresh){ WV.hs = hsT; WV.W = WT; WV.dir = dirT; WV.swHs = SW.hs; WV.swDir = swDirT; WV.swTp = SW.tp; WV.init = true; }
     // the sea answers the wind over a few seconds (a sudden change, as after skipping time, never snaps the waves)
     const k = 1 - Math.exp(-dt / 4); WV.hs = lerp(WV.hs, hsT, k); WV.W = lerp(WV.W, WT, k); WV.swHs = lerp(WV.swHs, SW.hs, k); WV.swTp = lerp(WV.swTp, SW.tp, k * 0.2);
     WV.dir += angDiff(WV.dir, dirT) * Math.min(1, dt / 12); WV.swDir += angDiff(WV.swDir, swDirT) * Math.min(1, dt / 30);
@@ -35,10 +50,17 @@
     const U = Math.max(0.3, WV.W), Fc = Math.max(1.01, fetchCap(U)), L0 = T => 9.81 * T * T / (2 * Math.PI);
     WV.C = 0.0016 * U * Math.sqrt(1000 / 9.81); WV.cap = hsWMO(U); WV.lnFcap = Math.log(Fc);
     const wo = specW(L0(Math.max(0.5, tpWind(U, Fc)))), wy = specW(L0(Math.max(0.5, tpWind(U, 1))));
-    WV.dot = 8 * wo.reduce((a, v, i) => a + v * wy[i], 0); WV.steep = 0.25 + 0.45 * sstep(4, 14, U);
+    // the Gerstner sharpness (F3): one Q for all the wind waves at a place, so their summed compression sum(Q k a) never passes the
+    // limit, which is near the cusp (0.85) in a young sea in a stiff wind and 0.6 of it in a grown one (the shaders' qOf, seaDisp);
+    // KO and KY: sum(k w) of the grown and the young spectrum, for that sum where the wave heights are known
+    WV.dot = 8 * wo.reduce((a, v, i) => a + v * wy[i], 0); WV.steep = 0.3 + 0.55 * sstep(4, 14, U);
+    WV.KO = WL.reduce((a, Lw, i) => a + 2 * Math.PI / Lw * wo[i], 0); WV.KY = WL.reduce((a, Lw, i) => a + 2 * Math.PI / Lw * wy[i], 0);
     const f = (((wdT % 360) + 360) % 360) / FETCH.sec; SSK = [Math.floor(f) % 36, (Math.floor(f) + 1) % 36]; SSU = f - Math.floor(f);
+    // the inverse wave age at the boat, U / cp from the peak her fetch gives, for the spread (it eases over the same seconds as the sea)
+    const q = hsParts(p, H), rF = Math.sqrt(q.F), Tb = Math.max(0.5, tpWind(U, Math.max(q.F, 0.05))), iaT = U * 2 * Math.PI / (9.81 * Tb);
+    WV.ia = fresh ? iaT : lerp(WV.ia, iaT, k); const wpB = 2 * Math.PI / Tb;
     const L = [];
-    WL.forEach((Lw, i) => { const kk = 2 * Math.PI / Lw, ang = WV.dir + WOFF[i] * (0.75 + 0.25 * sstep(3, 12, U)); L.push({Dx:Math.sin(ang), Dz:-Math.cos(ang), k:kk, wo:wo[i], wy:wy[i], swell:0, om:Math.sqrt(9.81 * kk), ph0:WPH[i]}); });
+    WL.forEach((Lw, i) => { const kk = 2 * Math.PI / Lw, ang = WV.dir + clamp(WOFF[i] * spreadSd(JW[i] / wpB, WV.ia), -1.25, 1.25); L.push({Dx:Math.sin(ang), Dz:-Math.cos(ang), k:kk, wo:wo[i], wy:wy[i], swell:0, om:Math.sqrt(9.81 * kk), ph0:WPH[i]}); });
     const sn = Math.sqrt(SWW.reduce((a, c) => a + c * c, 0)) * 2.828, Ls = 1.56 * WV.swTp * WV.swTp;
     SWL.forEach((m, j) => { const kk = 2 * Math.PI / (Ls * m), ang = WV.swDir + SWOFF[j]; L.push({Dx:Math.sin(ang), Dz:-Math.cos(ang), k:kk, wo:SWW[j] / sn, wy:SWW[j] / sn, swell:1, om:Math.sqrt(9.81 * kk), ph0:SWPH[j]}); });
     // as a wave turns or lengthens, its phase is held where the boat is, so the sea does not slide past her (the map is 80 km across)
@@ -47,7 +69,7 @@
       WV.kd[i] = [kx, kz]; c.ph = WV.ph[i]; WV.ua.set([c.Dx, c.Dz, c.k, c.wo], i * 4); WV.ub.set([c.swell, c.om, c.ph, c.wy], i * 4); });
     WV.list = L;
     // the same at the boat: for the vertex shader on a GPU that cannot read textures there, and until the textures are ready
-    const q = hsParts(p, H), rF = Math.sqrt(q.F); WV.loc = [Math.min(WV.cap, WV.C * rF), WV.swHs * swellFactor(p), clamp(2 * Math.log(Math.max(rF, 1)) / WV.lnFcap, 0, 1), rF];
+    WV.loc = [Math.min(WV.cap, WV.C * rF), WV.swHs * swellFactor(p), clamp(2 * Math.log(Math.max(rF, 1)) / WV.lnFcap, 0, 1), rF];
     env.windDir = [Math.sin(dirT), -Math.cos(dirT)]; env.wind = WV.W;
   }
 
@@ -147,7 +169,7 @@
   // 8 bits hold it), rolls the birth windows, and FOAM_FS adds the foam made this frame; the sea shader reads it (foamBind, unit 7) and
   // ages it as exp(-age / tau). «#foam0» in the address turns it off (the sea as before, for the comparison); it is off too on the lite
   // and the basic sea, on the low quality (the far shader draws the near sea there), and when no framebuffer can be made.
-  const FOAM = {on:!/foam0/.test(location.hash), ok:false, N:0, M:600, tex:[null, null], fb:[null, null], r:0, ox:0, oz:0, t0:[0, 0], win:[160, 32], tau:[14, 3.5], now:[0, 0], prog:null, pB:null, fresh:true, why:'', ms:0, sh:[0, 0], n:0, G:[0, 0], C:[0, 0], gs:[0, 0], cur:{x:0, y:0}, curT:-1e9};
+  const FOAM = {on:!/foam0/.test(location.hash), ok:false, N:0, M:600, tex:[null, null], fb:[null, null], r:0, ox:0, oz:0, t0:[0, 0], win:[160, 32], tau:[14, 6], now:[0, 0], prog:null, pB:null, fresh:true, why:'', ms:0, sh:[0, 0], n:0, G:[0, 0], C:[0, 0], gs:[0, 0], cur:{x:0, y:0}, curT:-1e9, Cw:[0, 0], CwT:[0, 0], cs:[0, 0]};
   const foamLive = () => FOAM.on && FOAM.ok;
   const foamSize = () => QUAL.lvl >= 2 ? 1024 : 512;
   function foamFree(){ for (let k = 0; k < 2; k++){ if (FOAM.fb[k]) gl.deleteFramebuffer(FOAM.fb[k]); if (FOAM.tex[k]) gl.deleteTexture(FOAM.tex[k]); FOAM.fb[k] = FOAM.tex[k] = null; } FOAM.ok = false; }
@@ -192,6 +214,10 @@
     for (let k = 0; k < 2; k++){ const d = (k ? Dz : Dx) - FOAM.G[k]; if (Math.abs(d) > 30000) FOAM.G[k] += Math.round(d / 65536) * 65536; }   // (nfStep folds D by 65 536 m)
     const gsx = Math.round((Dx - FOAM.G[0] - cdx) / px), gsz = Math.round((Dz - FOAM.G[1] - cdz) / px);
     FOAM.G[0] += gsx * px + cdx; FOAM.G[1] += gsz * px + cdz; FOAM.gs[0] = gsx; FOAM.gs[1] = gsz;
+    // the whitecaps' foam (b, a) drifts downwind with the wind's drift on the water, some 3.5 % of the wind (F3), in real time as the
+    // waves run: shifted by whole texels as the drift adds up (cs), and CwT is all it has drifted, the frame its grain is drawn in
+    const wdv = env.windDir || [0, 1], dv = 0.035 * (env.wind || 0) * Math.min(dt, 0.5);
+    for (let k = 0; k < 2; k++){ FOAM.Cw[k] += wdv[k] * dv; const n = Math.round(FOAM.Cw[k] / px); FOAM.Cw[k] -= n * px; FOAM.cs[k] = n; FOAM.CwT[k] = (FOAM.CwT[k] + n * px) % 16384; }   // (the grain jumps once at the fold: some 4.5 hours at 1 m/s)
     // the birth windows roll on: by 128/255 of the window each time the frame's time passes 0.95 of it (a long frame may need several
     // rolls; the foam born before the rolled t0 is dropped, which only an age past half the window is); the clock set back clears
     const reb = [0, 0];
@@ -204,7 +230,7 @@
     gl.activeTexture(gl.TEXTURE7); gl.bindTexture(gl.TEXTURE_2D, FOAM.tex[FOAM.r]); gl.uniform1i(u.uPrev, 7);
     for (const L of [SSL.n, SSL.w]){ gl.activeTexture(gl.TEXTURE0 + L.unit); gl.bindTexture(gl.TEXTURE_2D, L.on ? L.tex : SSDUMMY); gl.uniform1i(L === SSL.n ? u.uSSTn : u.uSSTw, L.unit); gl.uniform4fv(L === SSL.n ? u.uSSN : u.uSSW, L.on ? [L.rect[0] - RO.x, L.rect[1] - RO.z, 1 / L.rect[2], 1] : [0, 0, 1, 0]); }
     gl.activeTexture(gl.TEXTURE0);
-    gl.uniform2f(u.uShift, sx, sz); gl.uniform2f(u.uShiftG, sx === N ? 0 : gsx, sz === N ? 0 : gsz); gl.uniform2f(u.uFoamG, Dx - FOAM.G[0], Dz - FOAM.G[1]); gl.uniform1f(u.uN, N); gl.uniform2f(u.uRebase, reb[0], reb[1]);
+    gl.uniform2f(u.uShift, sx, sz); gl.uniform2f(u.uShiftG, sx === N ? 0 : gsx, sz === N ? 0 : gsz); if (u.uShiftC != null) gl.uniform2f(u.uShiftC, sx === N ? 0 : FOAM.cs[0], sz === N ? 0 : FOAM.cs[1]); gl.uniform2f(u.uFoamG, Dx - FOAM.G[0], Dz - FOAM.G[1]); gl.uniform1f(u.uN, N); gl.uniform2f(u.uRebase, reb[0], reb[1]);
     // the land the wake's foam may not lie on: the shore texture (buildLandMask, the foreshore's height), as the sea shader reads it
     const lon = !!(LMTEX && LMON && LRECT); gl.uniform1f(u.uLSOn, lon ? 1 : 0); gl.uniform1f(u.uTideL, env.tide || 0);
     // (the sampler is always on unit 6, a stand-in when the shore is not in: left on unit 0 it read the map being drawn, GL error 1282)
@@ -213,6 +239,7 @@
     gl.uniform4fv(u.uFoamRect, [FOAM.ox - RO.x, FOAM.oz - RO.z, 1 / M, M]); gl.uniform4fv(u.uFoamT, [FOAM.now[0], FOAM.win[0], FOAM.tau[0], 0]); gl.uniform4fv(u.uFoamTc, [FOAM.now[1], FOAM.win[1], FOAM.tau[1], 0]);
     gl.uniform1f(u.uTime, t); gl.uniform2f(u.uNFD, Dx, Dz); gl.uniform1f(u.uWind, env.wind || 0); gl.uniform2fv(u.uWindDir, env.windDir || [0, 1]);
     gl.uniform4fv(u.uSea, [WV.C, WV.cap, WV.lnFcap, WV.swHs]); gl.uniform4fv(u.uSea2, [WV.dot, WV.steep, ssBlend(SSL.n), ssBlend(SSL.w)]); gl.uniform4fv(u.uLocal, WV.loc);
+    if (u.uSeaK != null) gl.uniform2f(u.uSeaK, WV.KO, WV.KY);
     const ph = wavePh(); gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ph.ub); gl.uniform1fv(u.uGp, ph.gp); gl.uniform1fv(u.uNFp, NF.ph); gl.uniform1fv(u.uNFg, NF.gp);
     gl.uniform4fv(u.uWk0, [WK.u0[0] - Dx - FOAM.ox, WK.u0[1] - Dz - FOAM.oz, WK.u0[2], WK.u0[3]]); gl.uniform4fv(u.uWk1, WK.u1); gl.uniform4fv(u.uWk2, WK.u2); gl.uniform4fv(u.uWk3, WK.u3); wakeTU(u, Dx + FOAM.ox, Dz + FOAM.oz);
     gl.uniform4f(u.uFB, pb[0] - FOAM.ox, pb[1] - FOAM.oz, qx - FOAM.ox, qz - FOAM.oz); gl.uniform4f(u.uFH, pb[2], pb[3], fx, fz);
@@ -275,11 +302,35 @@
   }
   // the sea shader reads the map (unit 7) where it is on
   function foamBind(u){
+    if (u.uSeaK != null) gl.uniform2f(u.uSeaK, WV.KO, WV.KY);   // (every sea program, near and far: qOf's sum(k w), F3)
     if (u.uFoamOn == null) return; const on = foamLive(); gl.uniform1f(u.uFoamOn, on ? 1 : 0); if (!on) return;
     gl.activeTexture(gl.TEXTURE7); gl.bindTexture(gl.TEXTURE_2D, FOAM.tex[FOAM.r]); gl.uniform1i(u.uFoam, 7); gl.activeTexture(gl.TEXTURE0);
     gl.uniform4fv(u.uFoamRect, [FOAM.ox - RO.x, FOAM.oz - RO.z, 1 / FOAM.M, FOAM.M]); gl.uniform4fv(u.uFoamT, [FOAM.now[0], FOAM.win[0], FOAM.tau[0], 0]); gl.uniform4fv(u.uFoamTc, [FOAM.now[1], FOAM.win[1], FOAM.tau[1], 0]);
-    gl.uniform2f(u.uFoamG, NF.D[0] - FOAM.G[0], NF.D[1] - FOAM.G[1]); gl.uniform2f(u.uFoamW, NF.D[0] - FOAM.C[0], NF.D[1] - FOAM.C[1]);
+    gl.uniform2f(u.uFoamG, NF.D[0] - FOAM.G[0], NF.D[1] - FOAM.G[1]); gl.uniform2f(u.uFoamW, NF.D[0] - FOAM.C[0], NF.D[1] - FOAM.C[1]); if (u.uFoamCw != null) gl.uniform2f(u.uFoamCw, FOAM.CwT[0], FOAM.CwT[1]);
   }
+  // The whitecaps as the near sea shader finds them close by (WCAPS in 01-shaders.js, F3), on the CPU: at the rest point (x, z) at
+  // time t, fv and the threshold th (a cap where fv > th), the compression 1 - J in standard deviations (jn) and J. As close by: every
+  // wave whole (the shaders fade a wave shorter than a few pixels, att) and the open sea's fetch (S[3]; the shaders also look upwind in
+  // the shore texture, fetchW). fine, mid: the grain's finest and middle octave (1 close by; the foam map has fine 0). kk: the crests'
+  // share of Monahan's cover (WCAP.k). For the tests (sea3d's share against Monahan) and for spray from the breaking crests.
+  const FRC = x => x - Math.floor(x), HS3 = (x, y) => { let a = FRC(x * 0.1031), b = FRC(y * 0.1031), c = FRC(x * 0.1031); const d = a * (b + 33.33) + b * (c + 33.33) + c * (a + 33.33); a += d; b += d; c += d; return FRC((a + b) * c); };
+  const NS3 = (x, y) => { const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy); return (HS3(ix, iy) * (1 - ux) + HS3(ix + 1, iy) * ux) * (1 - uy) + (HS3(ix, iy + 1) * (1 - ux) + HS3(ix + 1, iy + 1) * ux) * uy; };
+  FOAM.capK = WCAP.k; FOAM.wcap = WCAP;   // (WCAP for the tests: sea3d's share, and a threshold set wrong on purpose to see it red)
+  FOAM.capAt = (x, z, t, fine = 1, U = env.wind || 0, kk = WCAP.k, mid = 1) => {
+    const S = ssAt(x, z), dv = S[2], ren = 1 / Math.sqrt(Math.max(1 - 2 * dv * (1 - dv) * (1 - WV.dot), 0.05)), Qw = seaQ(S, ren);
+    let y = 0, sa = 1e-6, jxx = 0, jxz = 0, jtr = 0, jv = 1e-8, jsc = 0, jsv = 1e-8;
+    for (let i = 0; i < 10; i++){ const c = WV.list[i]; if (!c) continue; const am = S[0] * (dv * c.wo + (1 - dv) * c.wy) * ren;
+      const gr = 0.62 + 0.38 * Math.sin((x * c.Dx + z * c.Dz) * c.k * 0.083 + (x * c.Dz - z * c.Dx) * c.k * 0.041 - c.om * t * 0.5 + i * 2.59 - NF.gp[i]);
+      const sn = Math.sin(c.k * (c.Dx * x + c.Dz * z) - c.om * t + c.ph - NF.ph[i]), wa = c.k * am * gr, jw = Qw * wa * sn;
+      y += am * gr * sn; sa += am * am * 0.228; jxx += jw * c.Dx * c.Dx; jxz += jw * c.Dx * c.Dz; jtr += jw; jv += (Qw * c.k * am) ** 2 * 0.228; if (i >= 4){ jsc += jw; jsv += (Qw * c.k * am) ** 2 * 0.228; } }
+    const jzz = jtr - jxx, J = (1 - jxx) * (1 - jzz) - jxz * jxz, jn = (1 - J) / Math.sqrt(jv), crest = y / Math.sqrt(sa);
+    const w = env.windDir || [0, 1], px = x - RO.x - NF.D[0], pz = z - RO.z - NF.D[1], a = px * w[0] + pz * w[1], b = px * -w[1] + pz * w[0];
+    const g = NS3(a * 0.3 + t * 0.35, b * 0.36) * 0.5 + (0.5 + (NS3(a * 0.9 - t * 0.5, b * 1.1 - t * 0.2) - 0.5) * mid) * 0.3 + (0.5 + (NS3(a * 2.8 + t * 0.8, b * 3.4 + 1.7) - 0.5) * fine) * 0.2;
+    const dws = sstep(0.45, 1.73, S[3]), Wc = clamp(3.84e-6 * Math.pow(Math.max(U, 0.3), 3.41) * dws, 1e-5, 0.5), W = clamp(Wc * kk, 1e-5, 0.5);
+    let zt = Math.sqrt(-2 * Math.log(W)); zt -= (2.515517 + 0.802853 * zt + 0.010328 * zt * zt) / (1 + 1.432788 * zt + 0.189269 * zt * zt + 0.001308 * zt * zt * zt);
+    const js = jsc / Math.sqrt(jsv);
+    return {fv:jn * WCAP.j + js * WCAP.s + crest * WCAP.c + (g - 0.5) * WCAP.g, js, th:WCAP.th[0] + WCAP.th[1] * zt + WCAP.th[2] * zt * zt, jn, J, crest, g, Wc};
+  };
 
   // ---------- the sea state over the near terrain and the whole map ----------
   // Two textures, as SEA_STATE reads them: n (32 x 32 over the near terrain) and w (128 x 128 over the map). Each holds the root of the
@@ -334,11 +385,13 @@
   // the sea's height at (x, z) as the wave patch draws it: the same waves with the local heights, groups, fading and the Gerstner shift
   // undone (two steps back to the rest point that moved there). seaHFast skips the undoing (the wake, which lies across the waves anyway).
   const SEA_D = [0, 0, 0, 0];
+  // the wind waves' Q where the local sea is S (qOf in the shaders, F3): their summed compression sum(Q k a) held to the limit
+  function seaQ(S, ren){ const ka = S[0] * ren * (S[2] * WV.KO + (1 - S[2]) * WV.KY); return Math.min(WV.steep * (1 - 0.4 * S[2]) / (ka + 1e-4), 1); }
   function seaDisp(x, z, t, S, fade){
-    let dx = 0, dy = 0, dz = 0, dn = 0; const ren = 1 / Math.sqrt(Math.max(1 - 2 * S[2] * (1 - S[2]) * (1 - WV.dot), 0.05)), cell = 2 * HALF / NP;
+    let dx = 0, dy = 0, dz = 0, dn = 0; const ren = 1 / Math.sqrt(Math.max(1 - 2 * S[2] * (1 - S[2]) * (1 - WV.dot), 0.05)), cell = 2 * HALF / NP, Qw = seaQ(S, ren);
     for (let i = 0; i < WV.list.length; i++){
       const c = WV.list[i], att = sstep(2.5, 5, 2 * Math.PI / (c.k * cell)); if (att <= 0) continue;
-      const am0 = c.swell ? S[1] * c.wo : S[0] * (S[2] * c.wo + (1 - S[2]) * c.wy) * ren, Q = c.swell ? 0.3 : Math.min(WV.steep / (10 * c.k * am0 + 1e-4), 1);
+      const am0 = c.swell ? S[1] * c.wo : S[0] * (S[2] * c.wo + (1 - S[2]) * c.wy) * ren, Q = c.swell ? 0.3 : Qw;
       const grp = 0.62 + 0.38 * Math.sin((x * c.Dx + z * c.Dz) * c.k * 0.083 + (x * c.Dz - z * c.Dx) * c.k * 0.041 - c.om * t * 0.5 + i * 2.59 - NF.gp[i]);
       const am = am0 * grp * att * fade, f = c.k * (c.Dx * x + c.Dz * z) - c.om * t + c.ph - NF.ph[i], co = Math.cos(f), h = am * Math.sin(f);
       dx += Q * am * c.Dx * co; dz += Q * am * c.Dz * co; dy += h; if (i >= 4 && i < 10) dn += h;
