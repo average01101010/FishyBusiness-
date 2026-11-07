@@ -642,11 +642,17 @@ Regn `y_at(0, z)` for åpningens høyder før kuttet.
 **Fjernmodellen har sitt eget budsjett.** Første eksport ga 7 956 trekanter for havflåten (grensen 4 000). Grovversjonen tar bare formens
 stasjoner, ingen kutt (åpningene som mørke plater), ingen rekker, trapper, bjelker eller små beslag: 3 831.
 
-**Decimate trekker et dobbelt skall sammen.** Mellomversjonen (`lodm`) var Decimate av nærmodellen. Skroget er én flate med utsida og
-innsida 8 cm fra hverandre (karmen over), og Decimate slo dem sammen der flatene var store: innsida stakk gjennom som mørke striper på
-styrbord baug i spillet i middels avstand. Våtheten, skadene, normalene og AO ble utelukket først. Mellomversjonen bygges nå av skriptet
-(`export_boat(..., mid=...)`, en byggemodus med færre stasjoner og uten de minste beslagene), og budsjettet (120 000 punkter i
-`vessel3d`-enhetstesten) holdes ved å ta bort det avstanden ikke viser: vindusrammer, stag, ringer, hengsler.
+**En buffer på `id()` gir feil svar når lista er midlertidig.** `pchip` bufret splinene på `id(tab)`. `keel_t` og `wk` sender en ny
+liste ved hvert kall; når søppeltømmingen ga id-en videre til den andre lista, fikk en stasjon den andres spline, skjegget fikk negativ
+bredde og snittet falt sammen til en korde fra kjølen til ripa. Hvilke stasjoner som ble rammet, kom an på rekkefølgen av kallene: etter
+`check()` (som kjører før byggingen) foldet babord baug inn hver femte stasjon eller så, en kam av kiler i spillet fra rekka til vannlinja.
+Den ble først lagt på Decimate i mellomversjonen, så på styrbord side; begge deler var feil. Det som fant den: GLB-en lest inn i Blender
+igjen (`import_scene.gltf`) og sett fra begge sider, så en telling av sidene før og etter `check()`. Buffer på innholdet (`tuple(tab)`),
+og `check()` sjekker at babord og styrbord er like i alle stasjonene. `kyst15.py` og `malo36.py` hadde samme feil (10,6 cm og 1,3 cm);
+skriptene er rettet, GLB-ene ikke eksportert på nytt.
+
+**Les GLB-en tilbake før du leter i spillet.** Skjer noe rart i spillet, les eksporten inn i Blender og se på den derfra. Da vet du om
+feilen er i dataene eller i spillets tegning før du leter i shaderne.
 
 **En brem er skrog for spillet om den har skrogets sone.** Bremmen rundt styrhustaket (Jonas: «Jeg hater at du lager helt flate
 styrhustak») fikk først sone 1, og `markStrips` fant «ripa» på den. Pynt i skrogets farge over skroget går i sone 2. `houseFront`
@@ -664,7 +670,7 @@ skal fotograferes.
 
 ## Endringslogg
 
-- 07.11.2026: kap. 21, det snøkrabbefartøyet lærte (loddrette bjelker, flate vegger etter kutt, «over skroget» for lanternene, stablene før bjelkene, speilets hjørner, fjernmodellens budsjett, Decimate og det doble skallet, bremmen i sone 2, se at spillet tegner ankrene, kameraet i spillet, Blender og SwiftShader etter hverandre).
+- 07.11.2026: kap. 21, det snøkrabbefartøyet lærte (loddrette bjelker, flate vegger etter kutt, «over skroget» for lanternene, stablene før bjelkene, speilets hjørner, fjernmodellens budsjett, spline-bufferen på id() og GLB-en lest tilbake, bremmen i sone 2, se at spillet tegner ankrene, kameraet i spillet, Blender og SwiftShader etter hverandre).
 
 - 02.11.2026: kap. 20, det revisjonen av kystbåten lærte (se hva et bilde viser, render det gamle først, finnekjølen, vinduer på en buet vegg, lanterner over takets bue, leideren som lenke, spillets antakelser om bordet og ripa, før-bildene).
 

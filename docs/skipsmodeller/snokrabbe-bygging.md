@@ -74,8 +74,8 @@ stablene til sjøs. Trapper: fra teinedekket opp på shelteret (midtgangen) og o
 ## 6. Eksporten og mellomversjonen
 
 `export_boat(..., mid=lambda: build('mid')[0])`: mellomversjonen (`lodm`, lokalflåten nær og egen båt lenger unna) bygges av skriptet
-selv (`MID[0]`), ikke med Decimate av nærmodellen. Decimate trakk skrogets utside og innside (8 cm fra hverandre) sammen, og innsida
-stakk gjennom som striper på styrbord baug i spillet. I `MID`: stasjoner hver 1,2 m, færre rader i innsida og dekkene, rekka som to rør,
+selv (`MID[0]`), ikke med Decimate av nærmodellen, så skriptet styrer hva som tas bort, og skrogets utside og innside (8 cm fra
+hverandre) holdes fra hverandre. (Stripene i spillet som først ble lagt på Decimate, var `pchip`-bufferen, punkt 17 i kap. 7 i grunnlaget.) I `MID`: stasjoner hver 1,2 m, færre rader i innsida og dekkene, rekka som to rør,
 koøyene og klyssene med ti punkter, ingen vindusrammer, stag, spantene på innsida, ringer, hengsler, broens pult og arbeidslys; under vann
 grovversjonen. Tallene 07.11.2026: nær 123 453, midt 36 393 (enhetstesten tillater 120 000 punkter), fjern 3 891, GLB 5 993 KB.
 

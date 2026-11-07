@@ -496,8 +496,8 @@ def export_boat(build, to_game, to_game_n, out_dir, glb_name, data_b64, extras, 
     side picture side = (pic_b64, cx, cz, ortho). The objects of the fine build must already exist as BOAT0 and GLASS0.
     more: further parts [{name, obj, alpha, xf_p, xf_n, ao, show}] (a lid, a motor in its own frame ...), written after lod1.
     mid: a callable that builds the middle version (the solids) itself, in place of the Decimate of the near one (the snow crab vessel,
-    07.11.2026: the Decimate pulled her hull's outside and its inside 8 cm behind together, and the inside showed through in stripes);
-    it is built and baked with the near model hidden."""
+    07.11.2026: a version the script controls, with the hull's outside and its inside 8 cm behind kept apart; the stripes first blamed
+    on the Decimate were pchip's cache, krabbe50.py); it is built and baked with the near model hidden."""
     import os
     boat = bpy.data.objects['BOAT0']; gl = bpy.data.objects['GLASS0']
     bake_ao(boat, samples=48, distance=0.9)

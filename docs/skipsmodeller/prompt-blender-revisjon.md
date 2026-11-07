@@ -53,7 +53,8 @@ Det neste økt bør vite (etter snøkrabbefartøyet, H3d1 07.11.2026):
   broa, lanternene (vedlegg I: «over skroget» er det øverste gjennomgående dekket), arbeidsplassene og kranen; luka og kranen som deler
   (al45.py); kit-plassene i modellen, ikke i `KITADD`/`MOBCUT`; fjernmodellen under 4 000 trekanter. Lærdommene står i `sulebas-bygging.md` kap. 21.
 - `tests/h3dshot.py` er malen for havbåtenes før- og etter-bilder (ute, broa, arbeidet, natt fra begge sider, havna, havflåten med deg i en liten båt).
-- Mellomversjonen bygges av skriptet (`export_boat(..., mid=...)`) når skroget har utside og innside: Decimate slo dem sammen til striper i spillet.
+- `pchip` i `kyst15.py`, `malo36.py` og `krabbe50.py` bufret på `id(tab)` og ga stasjoner feil spline (en kam på babord baug); rettet til innholdet. Et skript bygd på dem skal ha det rettet, og `check()` skal sjekke at sidene er like. `kyst15` og `malo36` må eksporteres på nytt.
+- Mellomversjonen kan bygges av skriptet (`export_boat(..., mid=...)`).
 - Styrhus får brem over vinduene, aldri helt flatt tak (Jonas 07.11.2026, bildet av et blått bånd som skrår ut og opp); i sone 2.
 
 Det neste økt bør vite (etter kystbåten 02.11.2026):
