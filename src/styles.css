@@ -1628,7 +1628,7 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
    The strip (or the box) has a fixed width, and the little chart a fixed place under it, not --gpsTop from the box's height: upright
    under the strip (the phone under the compass line, the tablet beside it); on its side (a tablet, a PC) under the whole box's reserved
    height, or under the strip when the box is folded (hudmin). A box taller than its reserve (the whole table open, many «now» rows)
-   lies over the chart's top edge. The card is wider and lies over the chart. A phone on its side keeps the GPS box under the measured
+   pushes the chart down under itself (--bHm, measured by renderHud; before 07.11.2026 it lay over the chart's top edge). The card is wider and lies over the chart. A phone on its side keeps the GPS box under the measured
    box as before (max-height 520). The plotter's instruments (#instr) still take --gpsTop, measured as before */
 body.v3d #hud{z-index:6} body.v3d #plotMin{z-index:7}   /* (the chart's fold button stays reachable under a box taller than its reserve) */
 @media (orientation:portrait){
@@ -1656,9 +1656,10 @@ body.v3d #hud{z-index:6} body.v3d #plotMin{z-index:7}   /* (the chart's fold but
   body.v3d:not(.hudstrip):not(.hudcard) #hud{min-height:var(--bH)}
   body.v3d.hudstrip #hud{height:var(--sH)}
   body.v3d.hudcard #hud{width:min(92vw,400px)}
-  body.v3d #miniPlot{top:calc(var(--bTop) + var(--bH) + 6px);width:var(--bW);height:min(var(--bW),26vh)}
-  body.v3d #plotMin{top:calc(var(--bTop) + var(--bH) + 2px);left:3px}
-  body.v3d.plotmin #gps3d:not([hidden]){top:calc(var(--bTop) + var(--bH) + 6px);width:var(--bW)}
+  /* (--bHm: the box's own height when it is taller than its reserve, set by renderHud; so the chart never lies under the box, 07.11.2026) */
+  body.v3d #miniPlot{top:calc(var(--bTop) + var(--bHm,var(--bH)) + 6px);width:var(--bW);height:min(var(--bW),26vh)}
+  body.v3d #plotMin{top:calc(var(--bTop) + var(--bHm,var(--bH)) + 2px);left:3px}
+  body.v3d.plotmin #gps3d:not([hidden]){top:calc(var(--bTop) + var(--bHm,var(--bH)) + 6px);width:var(--bW)}
   body.v3d.hudmin #miniPlot{top:calc(var(--bTop) + var(--sH) + 6px)}
   body.v3d.hudmin #plotMin{top:calc(var(--bTop) + var(--sH) + 2px)}
   body.v3d.hudmin.plotmin #gps3d:not([hidden]){top:calc(var(--bTop) + var(--sH) + 6px)}

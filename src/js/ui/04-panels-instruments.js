@@ -205,7 +205,10 @@ function renderHud(){
   // the compass and the plotter's instruments take their room from the box (--hudW, --gpsTop): measured when its content has changed and
   // every 2 s (setting them on the chart's parent every tick restyled the whole chart), never while the card is open (it is wider, and
   // nothing under it moves). In 3D the little chart has a fixed place of its own (styles.css, U2-1), whatever the box's height
-  if (!card && (hud.dataset.v !== hudV || performance.now() - hudT > 2000)){ hudV = hud.dataset.v; hudT = performance.now(); requestAnimationFrame(() => { const mw = $('mapwrap').style, hr = hud.getBoundingClientRect(), top = Math.round(hr.bottom - $('mapwrap').getBoundingClientRect().top + 6) + 'px', w = Math.round(hr.width) + 'px'; if (mw.getPropertyValue('--gpsTop') !== top) mw.setProperty('--gpsTop', top); if (mw.getPropertyValue('--hudW') !== w) mw.setProperty('--hudW', w); }); }
+  if (!card && (hud.dataset.v !== hudV || performance.now() - hudT > 2000)){ hudV = hud.dataset.v; hudT = performance.now(); requestAnimationFrame(() => { const mw = $('mapwrap').style, hr = hud.getBoundingClientRect(), top = Math.round(hr.bottom - $('mapwrap').getBoundingClientRect().top + 6) + 'px', w = Math.round(hr.width) + 'px'; if (mw.getPropertyValue('--gpsTop') !== top) mw.setProperty('--gpsTop', top); if (mw.getPropertyValue('--hudW') !== w) mw.setProperty('--hudW', w);
+    // on its side the little chart stands under the box's reserved height (--bH), or under the box itself when it is taller (more «now» rows:
+    // the hull, the buoy, the stability; Jonas 07.11.2026: «Hater at disse boksene overlapper hverandre»): --bHm is the larger of the two
+    const bh = parseFloat(getComputedStyle(document.body).getPropertyValue('--bH')) || 0, bhm = Math.round(Math.max(bh, hr.height)) + 'px'; if (bh && mw.getPropertyValue('--bHm') !== bhm) mw.setProperty('--bHm', bhm); }); }
 }
 // position/heading between simulation steps, so instruments and 3D move smoothly
 function liveFrac(){ return clamp(acc + (wallNow() - lastWall) / 1000 * simRate() / 60, 0, 0.999); }
