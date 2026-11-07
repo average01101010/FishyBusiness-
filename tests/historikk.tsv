@@ -1058,3 +1058,5 @@
 2026-11-07 17:03	ccr-2040aa61-qgig5a	1e4dd80d	driftsplan2kyst	OK	91	lite	samtidig	
 2026-11-07 17:04	ccr-2040aa61-qgig5a	1e4dd80d	driftsplan2test	FEIL	88	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
 2026-11-07 17:05	ccr-2040aa61-qgig5a	1e4dd80d	docktest	OK	58	lite	alene	
+2026-11-07 17:35	ccr-73ea871d-9b5rz6	d3b8bde0	boottest	OK	25	lite	samtidig	
+2026-11-07 17:37	ccr-73ea871d-9b5rz6	d3b8bde0	mobtest	OK	136	lite	samtidig	
