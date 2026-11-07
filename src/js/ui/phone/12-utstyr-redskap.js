@@ -198,7 +198,7 @@
       else h.push(itemCard({k:'pot', name:L('Krabbeteiner', 'Crab pots'), price:POTS.big.price, have:own('pot', pg.pots.big, 'teiner', 'pots'), body:'<p class="ic-have">' + KC_WHERE() + '</p>' + roomTxt(room('teine'), 'teiner', 'pots'),
         btns:buy('pot', 'big', 20, potsN, POTS.big.price)}));
       // bait is sold at the fish plant, not here (docs/handelssteder.md; buyGear refuses it at the shop)
-      h.push(itemCard({k:'kit', name:L('Blåser og dregg', 'Buoys and anchors'), price:GPRICE.kit, anchor:L('tung dregg ', 'heavy anchor ') + kr(GPRICE.heavy), have:own('kit', pg.kits.n, 'sett', 'sets'),
+      h.push(itemCard({k:'kit', name:L('Blåsesett: staur, blåse og dregg', 'Buoy set: pole, buoy and anchor'), price:GPRICE.kit, anchor:L('tung dregg ', 'heavy anchor ') + kr(GPRICE.heavy), have:own('kit', pg.kits.n, 'sett', 'sets'),
         btns:buy('kit', 0, 1, () => L('Blåsesett', 'Buoy set'), GPRICE.kit) + (pg.kits.heavy < pg.kits.n ? buy('heavy', 0, 1, () => L('Tung dregg', 'Heavy anchor'), GPRICE.heavy) : ''), note:L('Agn selges på fiskemottaket.', 'Bait is sold at the fish plant.')}));
       h.push(itemCard({k:'hooks', name:L('Kroker og juksasett', 'Hooks and jig sets'), price:CARE.hookKr[100], anchor:L('per 100', 'a 100'), have:pg.hooks ? L(pg.hooks + ' kroker på lager', pg.hooks + ' hooks in store') : '',
         btns:buy('hooks', 100, 1, () => L('100 kroker', '100 hooks'), CARE.hookKr[100]) + buy('hooks', 500, 1, () => L('500 kroker', '500 hooks'), CARE.hookKr[500]) + buy('hooks', 1000, 1, () => L('1000 kroker', '1000 hooks'), CARE.hookKr[1000]) + (BOAT.autoHooks ? buy('hooks', 10000, 1, () => L('10 000 kroker', '10,000 hooks'), CARE.hookKr[10000]) : '') +
