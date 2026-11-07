@@ -276,7 +276,7 @@ async def main():
                 print(ok(T['after'] >= 3), 'and out again to the strings after the landing: %d strings hauled since' % T['after'])
         if want('9'):
             print('== 9: sesongen mot sedlene: fryst og levende, fra januar til kvoten er tatt eller fredningen')
-            for mode in ['frys', 'lev']:
+            for mode in [m for m in ['frys', 'lev'] if m in SEL] or ['frys', 'lev']:   # (python3 havplantest.py 9 lev: only the live season)
                 Z = await pg.evaluate("""(async (mode) => { await SNO.reset(21, 'port'); S.boat.snoMode = mode; const o = SNO.plan(); const err = await HPT.make(o); if (err) return {err}; plan2Start(o); const t0 = performance.now();
                   const Q = snoQuota(S.t / 60), end = (Date.UTC(2027, 6, 1) - EPOCH) / 6e4; let lastY = 0;
                   while (S.t < end){ await HPT.run(10 * 1440, 'closed'); const q = quotaState(); if (o.run && o.run.wait && o.run.wait.k === 'idle' && !mySets().length && holdTotal() < 1) break; if (performance.now() - t0 > 400000) break; }

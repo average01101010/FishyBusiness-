@@ -424,9 +424,13 @@ function plan2Sea(o, H){
     if (over && work){ plan2WorkStop(o, H, W, hs); return; }
     // (the snow crab vessel, H3c: the tanks of a live trip or the hold full between two hauls: the strings stand, and the day is laid
     // again from where she lies, which is the way to the plant, planDaySno)
-    if (o.run.day.sno){ if (!b.gop && pl.wps.slice(pl.idx).some(w => w.act) && (holdLoad() >= DRP2.sno.full * capHold() || (snoLive() && tankCap() > 0 && tankLoad() >= DRP2.sno.tank * tankCap()))){
+    // (and the oldest crab of a live trip in the tanks for DRP2.sno.age days: seen in the season, the trip ran a day over while the day
+    // was laid only at its end)
+    if (o.run.day.sno){ const full = holdLoad() >= DRP2.sno.full * capHold(), tf = snoLive() && tankCap() > 0 && tankLoad() >= DRP2.sno.tank * tankCap();
+      const old = snoLive() ? S.hold.filter(x => x.tank && x.kg > 0.5).reduce((a, x) => Math.min(a, x.hr), Infinity) : Infinity, aged = isFinite(old) && H - old >= DRP2.sno.age * 24;
+      if (!b.gop && pl.wps.slice(pl.idx).some(w => w.act) && (full || tf || aged)){
         const tr = o.run.trip; if (tr) plan2Caught(o, tr); plan2Abort(o); b.status = 'idle'; b.v = 0; o.run.replan = true;
-        log(snoLive() && tankLoad() >= DRP2.sno.tank * tankCap() ? 'Tankene er fulle (' + fmt(tankLoad() / 1000, 1) + ' t levende krabbe). Lenkene står, og skipet går til mottaket.' : 'Lasten er full. Lenkene står, og skipet går til mottaket.', snoLive() && tankLoad() >= DRP2.sno.tank * tankCap() ? 'The tanks are full (' + (tankLoad() / 1000).toFixed(1) + ' t of live crab). The strings stand, and the ship goes to the plant.' : 'The hold is full. The strings stand, and the ship goes to the plant.'); }
+        log(tf ? 'Tankene er fulle (' + fmt(tankLoad() / 1000, 1) + ' t levende krabbe). Lenkene står, og skipet går til mottaket.' : aged ? 'Den eldste krabben har vært ' + DRP2.sno.age + ' døgn i tankene. Lenkene står, og skipet går til mottaket.' : 'Lasten er full. Lenkene står, og skipet går til mottaket.', tf ? 'The tanks are full (' + (tankLoad() / 1000).toFixed(1) + ' t of live crab). The strings stand, and the ship goes to the plant.' : aged ? 'The oldest crab has been ' + DRP2.sno.age + ' days in the tanks. The strings stand, and the ship goes to the plant.' : 'The hold is full. The strings stand, and the ship goes to the plant.'); }
       return; }
     // the hold at DRP2.hav.full: nothing more is set, the lenker standing are hauled home to the magazines, and the next day is the way to
     // the plant (planDayAuto). A haul in hand finishes without setting again

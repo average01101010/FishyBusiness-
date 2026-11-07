@@ -25,7 +25,7 @@
 // kap. 2b); the strings side by side 2 km apart (about a nautical mile, so each has its own cells of the stock, STK.c), eight in a row,
 // the rows 6.5 km apart (a string is 5 km; the pattern is an assumption, no source gives it);
 // 1.2 t round weight a string is reckoned for the quota's budget (6 kg a pot after a week, H3a)
-DRP2.sno = {soak:[72, 96, 264, 336], soakDef:168, step:24, days:20, liveDays:10, full:0.95, tank:0.95, age:5, look:24, endD:1, idle:12,
+DRP2.sno = {soak:[72, 96, 264, 336], soakDef:168, step:24, days:20, liveDays:10, full:0.95, tank:0.95, age:6, look:24, endD:1, idle:12,
   col:2.0, row:6.5, cols:8, near:30, tend:18, margin:2, lenkeKg:1200, minDepth:120};
 const p2Sno = o => p2Kind(o) === 'teine' && typeof snoVessel === 'function' && snoVessel();
 const p2SnoKm = () => SNOC.lenke * GEAR.teine.km;
