@@ -60,7 +60,8 @@
   function equipBuy(k){
     const E = EQUIP[k]; if (!E) return L('Ukjent utstyr.', 'Unknown equipment.');
     // the knives and the gaff in tiers (OPP1): the next tier, paid and aboard at once at the tackle shop's quay (core/10-gear.js tierBuy,
-    // which asks buyGate); no fitting and no hoist
+    // which asks buyGate); no fitting and no hoist. (OPP2) The same for the tiers of the haulers, the reels, the line setter and the jig
+    // sets, which are items of their own (linehalerLv …)
     if (E.tiers){ const lv = equipLv(k) + 1, why = buyGear('tier', k, lv); if (why) return why[0]; const T = E.tiers[lv - 1];
       achAdd('equip'); shopBought(T.no, T.en); folkShop(); if (typeof cloudEv === 'function') cloudEv('shop_buy', {w:'equip', k, lv}); return null; }
     if (!atKind(EQ_YARD(k) ? 'verft' : 'butikk')) return L('Det monteres ' + (EQ_YARD(k) ? 'på verftet.' : 'i utstyrsbutikken.'), 'It is fitted ' + (EQ_YARD(k) ? 'at the yard.' : 'at the tackle shop.'));
@@ -69,9 +70,12 @@
     if ((VESSELS[S.boat.type].req || []).includes(k)){ reqFill(S.equip, S.boat.type); return L(E.name.no + ' er påbudt og følger med båten.', 'The ' + E.name.en + ' is required and comes with the boat.'); }
     const have = E.multi ? S.equip[k] || 0 : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1;
     if (have >= max || (!E.multi && (S.jobs || []).some(j => j.kind === 'fit' && j.k === k))) return L('Det har båten alt.', 'The boat has it already.');
-    if (spendable() < E.price) return t('no_cash');
-    if (!queueJob({kind:'fit', k, h:fitHours(k), no:'Montering av ' + E.name.no.toLowerCase(), en:'Fitting the ' + E.name.en})) return L('Arbeidskøen er full.', 'The work queue is full.');
-    book('redskap', -E.price, E.name.no, E.name.en); achAdd('equip'); shopBought(E.name.no, E.name.en); folkShop();
+    // (OPP2: the line setter and the net chute hang on their hauler, core/10-gear.js buyGate; a reel comes at the boat's tier, equipKr)
+    { const why = buyGate('equip', k); if (why) return why[0]; }
+    const price = equipKr(k);
+    if (spendable() < price) return t('no_cash');
+    if (!queueJob({kind:'fit', k, kr:price, h:fitHours(k), no:'Montering av ' + E.name.no.toLowerCase(), en:'Fitting the ' + E.name.en})) return L('Arbeidskøen er full.', 'The work queue is full.');   // (kr: what was paid, for a pay-back: a reel at a tier costs more than EQUIP's price)
+    book('redskap', -price, E.name.no, E.name.en); achAdd('equip'); shopBought(E.name.no, E.name.en); folkShop();
     log('Kjøpt ' + E.name.no + '. Monteres i verkstedet.', 'Bought the ' + E.name.en + '. Being fitted at the yard.');
     // the moment it is bought: it is lifted aboard on your own boat in 3D (M3, 10 s), and the measure says whether it was tried on first
     const tried = TRIED.has(k); TRIED.delete(k); if (typeof G3 !== 'undefined' && G3.tryView){ G3.tryView(null); G3.hoist(k); }
@@ -132,11 +136,11 @@
       h.push(itemCard({k:'kit', name:L('Blåsesett: staur, blåse og dregg', 'Buoy set: pole, buoy and anchor'), price:GPRICE.kit, anchor:L('tung dregg ', 'heavy anchor ') + kr(GPRICE.heavy), btns:ord('kit', null, null, 1, L('Blåsesett', 'Buoy set')) + ord('heavy', null, null, 1, L('Tung dregg', 'Heavy anchor'))}));
       h.push(itemCard({k:'hooks', name:L('Kroker og juksasett', 'Hooks and jig sets'), price:CARE.hookKr[100], anchor:L('per 100', 'a 100'), btns:ord('hooks', null, 500, 1, L('500 kroker', '500 hooks')) + ord('hooks', null, 1000, 1, L('1000 kroker', '1000 hooks')) + ord('jig', null, 'mark', 1, L('Juksasett', 'Jig set'))}));
     } else {
-      for (const [k, E] of Object.entries(EQUIP)){ if (EQ_YARD(k) || E.tiers || !equipFits(k, b.type)) continue;   // (the knives and the gaff in tiers are bought at the shop, OPP1)
-        const have = E.multi ? S.equip[k] || 0 : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1, r = res('equip', k, null), fj = (S.jobs || []).find(j => j.kind === 'fit' && j.k === k);
+      for (const [k, E] of Object.entries(EQUIP)){ if (EQ_YARD(k) || E.tiers || !equipFits(k, b.type)) continue;   // (the tiers are bought at the shop, OPP1 and OPP2)
+        const have = E.multi ? S.equip[k] || 0 : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1, r = res('equip', k, null), fj = (S.jobs || []).find(j => j.kind === 'fit' && j.k === k), nd = !have && buyGate('equip', k);
         // (one being fitted shows so, with when; before, the tab offered it again and the fetch said «Det har båten alt»)
         const fitTxt = fj && !E.multi ? L('Til montering', 'Being fitted') + (fj.until != null ? ' · ' + L('ferdig kl. ', 'done at ') + hm(fj.until / 60) : '') : '';
-        h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? have + ' / ' + max : '', price:E.price, have:have >= max ? L('Montert', 'Fitted') : fitTxt || (r ? at : ''), btns:have >= max || fitTxt ? '' : ord('equip', k, null, 1, L('Bestill', 'Order'))})); }
+        h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? have + ' / ' + max : '', price:equipKr(k), have:have >= max ? L('Montert', 'Fitted') : fitTxt || (r ? at : ''), btns:have >= max || fitTxt ? '' : nd && !r ? '<p class="ph-note"><b>' + nd[0] + '</b></p>' : ord('equip', k, null, 1, L('Bestill', 'Order'))})); }
       for (const k of ['olje', 'varme']){ const C = CLOTHES[k], r = res('cloth', k, null); h.push(itemCard({k, name:C[S.lang], price:C.price, have:r ? at : '', btns:ord('cloth', k, null, 1, L('Bestill én', 'Order one'))})); }
     }
     return h.join('') + '</div>';

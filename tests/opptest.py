@@ -3,7 +3,13 @@ An old save without the field is tier 1 and is not filled; the cards in Fiskeuts
 price and button; they are bought only at the shop's quay (at a plant without a shop and at sea the card says why, and the purchase is
 refused), tier 2 before 3; a tier is paid and aboard at once and stays after a reload; the gaff's card shows the fish lost over the rail
 this week; the knives and the gaff are not in Elektronikk og haler or the web shop. Pictures of the cards in both formats. Prints OK or
-FEIL per check."""
+FEIL per check.
+
+OPP2 (07.11.2026): the deck gear in tiers. On the plastsjark (room for four reels) with a line hauler and four reels at Finnsnes: the
+cards in Fiskeutstyr for the reels, the jig sets and the line hauler (not the net hauler, which she has not bought); the hauler's tier
+confirms in the button and costs half its price; the reels' tier is 12 000 kr a reel and tier 3 is refused where one person tends all
+four; the line setter is offered under Elektronikk og haler once the hauler is aboard, the net chute says it needs a net hauler; what is
+aboard says the tiers; the web shop still has the haulers. Pictures of the cards at tiers 1, 2 and 3 and of «aboard» in both formats."""
 from _env import boot
 import asyncio, json
 from playwright.async_api import async_playwright
@@ -183,8 +189,92 @@ async def main():
         check(note == 'kniv,hott' and r['type'] == 'snekke' and r.get('kn') is None and r.get('ho') is None and r['lv'] == [1, 1] and 'Ble med' in r['log'] and 'trinn 3' in r['log'].split('Ble med')[-1],
               'innbyttet: bladet sier at trinnene følger den gamle båten, og den nye står på trinn 1 (loggen sier hva som ble med)', {'note': note, 'r': r})
 
+        await opp2(pg, J, card)
+
         check(not errs, 'ingen sidefeil', errs[:3])
         print('sidefeil', errs[:5])
         await b.close()
+
+async def opp2(pg, J, card):
+    # the plastsjark at the shop's quay in Finnsnes, with a line hauler and four reels; the save is as the game makes it
+    await pg.set_viewport_size({'width': 1280, 'height': 800}); await pg.wait_for_timeout(400)
+    await pg.evaluate("""DOCK.close(); const b = S.boat, q = portById('finnsnes'); b.type = 'plastsjark'; b.status = 'port'; b.port = 'finnsnes'; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; b.gear = true;
+      S.equip = {jukse:4, linehaler:true, plotter:true, vhf:true}; S.jobs = []; S.cash = 500000; applyVessel(); DOCK.open('fiske')"""); await pg.wait_for_timeout(400)
+    jl = json.loads(await card('jukseLv')); lh = json.loads(await card('linehalerLv')); js = json.loads(await card('juksesett'))
+    gh = json.loads(await card('garnhalerLv')); ls = json.loads(await card('linesetterLv'))
+    check(jl and 'Om bord · trinn 1' in jl['have'] and 'Kjøp trinn 2' in jl['btn'] and '48 000' in jl['btn'] and '12 000 kr per maskin, 4 om bord' in jl['have'] and 'passer 4 maskiner (3 før)' in jl['fx'] and 'samme fangst per maskin' in jl['fx'],
+      'juksamaskinene: trinn 1 om bord, «Kjøp trinn 2 · 48 000 kr» for fire maskiner, én person passer 4 (3 før), samme fangst per maskin', jl)
+    check(lh and 'Linehaler' in lh['name'] and 'Om bord · trinn 1: linehaleren' in lh['have'] and 'Kjøp trinn 2' in lh['btn'] and '34 000' in lh['btn'] and '19,3 min mot 21,4 (−10 %)' in lh['fx'],
+      'linehaleren: trinn 1 om bord, «Kjøp trinn 2 · 34 000 kr», en stamp hyseline på 19,3 min mot 21,4 (−10 %)', lh)
+    check(js and 'Kjøp trinn 2' in js['btn'] and '175' in js['btn'] and 'slites 50 % saktere' in js['fx'], 'juksasettene: «Kjøp trinn 2 · 175 kr» (halve prisen for settet om bord), slites 50 % saktere', js)
+    check(gh is None and ls is None, 'garnhaleren og linesetteren har ingen trinnkort før de er kjøpt', {'garnhaler': gh, 'linesetter': ls})
+    check(all(c and c['more'] for c in (jl, lh, js)), 'trinnkortene har «Mer» til Håndboka')
+
+    # the hauler's tier confirms in the button (from 10 000 kr), the second tap buys it, at once and without fitting
+    await pg.evaluate("document.querySelector('#drawerBody [data-ic=linehalerLv] [data-pa=equip]').click()"); await pg.wait_for_timeout(300)
+    lh = json.loads(await card('linehalerLv')); r = json.loads(await J("{lh:S.equip.linehalerLv || 1, cash:S.cash}"))
+    check(lh and 'Bekreft' in lh['btn'] and '34 000' in lh['btn'] and r['lh'] == 1 and r['cash'] == 500000, 'første trykk på linehalerens trinn ber om bekreftelse i knappen, ingenting er kjøpt', {'card': lh and lh['btn'], 'r': r})
+    await pg.evaluate("document.querySelector('#drawerBody [data-ic=linehalerLv] [data-pa=equip]').click()"); await pg.wait_for_timeout(300)
+    lh = json.loads(await card('linehalerLv')); r = json.loads(await J("{lh:S.equip.linehalerLv, h:S.equip.linehaler, cash:S.cash, fit:(S.jobs || []).length, x:haulerX('line'), log:S.log[S.log.length - 1].no}"))
+    check(r['lh'] == 2 and r['h'] is True and r['cash'] == 466000 and r['fit'] == 0 and abs(r['x'] - 0.1) < 1e-9 and 'trinn 2' in r['log'], 'andre trykk kjøper trinn 2 for 34 000 kr, med en gang og uten montering', r)
+    check(lh and 'Om bord · trinn 2' in lh['have'] and 'Kjøp trinn 3' in lh['btn'] and '68 000' in lh['btn'] and '17,1 min mot 21,4 (−20 %)' in lh['fx'], 'kortet viser trinn 2 om bord og «Kjøp trinn 3 · 68 000 kr» med 17,1 min', lh)
+
+    # the reels' tier confirms in the button too (48 000 kr for four: tierKr, 14-act.js), then tier 3 is refused on a boat with room for four
+    await pg.evaluate("document.querySelector('#drawerBody [data-ic=jukseLv] [data-pa=equip]').click()"); await pg.wait_for_timeout(300)
+    jl = json.loads(await card('jukseLv')); check(jl and 'Bekreft' in jl['btn'] and '48 000' in jl['btn'], 'første trykk på juksamaskinenes trinn ber om bekreftelse (48 000 kr)', jl and jl['btn'])
+    await pg.evaluate("document.querySelector('#drawerBody [data-ic=jukseLv] [data-pa=equip]').click()"); await pg.wait_for_timeout(300)
+    jl = json.loads(await card('jukseLv')); r = json.loads(await J("{lv:S.equip.jukseLv, n:S.equip.jukse, cash:S.cash, per:jigPer(), kr:equipKr('jukse')}"))
+    check(r['lv'] == 2 and r['n'] == 4 and r['cash'] == 466000 - 48000 and r['per'] == 4 and r['kr'] == 46000, 'juksamaskinene på trinn 2 for 48 000 kr: én person passer 4, en ny maskin koster 46 000 kr', r)
+    check(jl and not jl['btn'] and 'gir ingenting mer her' in jl['note'], 'trinn 3 nektes på plastsjarken (plass til fire): kortet sier hvorfor', jl and jl['note'])
+
+    # Elektronikk og haler: the line setter once the line hauler is aboard, the net chute says it needs the net hauler, aboard with tiers
+    await pg.evaluate("DOCK.open('utstyrb')"); await pg.wait_for_timeout(300)
+    ls = json.loads(await card('linesetter')); gr = json.loads(await card('garnrenne'))
+    ab = await pg.evaluate("(document.querySelector('#drawerBody .ic-aboard') || {}).textContent || ''")
+    check(ls and 'Kjøp og monter' in ls['btn'] and '24 000' in ls['price'] and 'krever linehaler' in ls['fx'] and '3,4 min mot 4,3 (−20 %)' in ls['fx'], 'linesetteren selges under Elektronikk og haler: 24 000 kr, setter en stamp på 3,4 min mot 4,3', ls)
+    check(gr and not gr['btn'] and 'krever garnhaler' in gr['note'].lower() and '0,6 min mot 0,8' in gr['fx'], 'garnrenna uten garnhaler: ingen kjøpsknapp, kortet sier at den krever garnhaler', gr)
+    check('Linehaler (trinn 2)' in ab and 'Juksamaskin × 4 (trinn 2)' in ab and 'Trinnene kjøpes under Fiskeutstyr' in ab, '«Om bord» sier trinnene og hvor de kjøpes', ab)
+    await pg.evaluate("document.querySelector('#drawerBody [data-ic=linesetter] [data-pa=equip]').click()"); await pg.wait_for_timeout(200)
+    await pg.evaluate("document.querySelector('#drawerBody [data-ic=linesetter] [data-pa=equip]').click()"); await pg.wait_for_timeout(300)
+    r = json.loads(await J("{job:(S.jobs || []).some(j => j.kind === 'fit' && j.k === 'linesetter'), cash:S.cash}"))
+    check(r['job'] and r['cash'] == 466000 - 48000 - 24000, 'linesetteren kjøpes og monteres i butikken (24 000 kr)', r)
+    await pg.evaluate("for (const j of (S.jobs || []).filter(j => j.kind === 'fit')) finishJob(j); S.jobs = []; DOCK.open('fiske')"); await pg.wait_for_timeout(300)
+    ls = json.loads(await card('linesetterLv')); r = json.loads(await J("{ls:S.equip.linesetter, x:setterX('line')}"))
+    check(r['ls'] is True and abs(r['x'] - 0.2) < 1e-9 and ls and 'Om bord · trinn 1' in ls['have'] and 'Kjøp trinn 2' in ls['btn'] and '22 000' in ls['btn'] and '2,8 min mot 4,3 (−35 %)' in ls['fx'], 'montert: linesetteren har trinnkort i Fiskeutstyr, «Kjøp trinn 2 · 22 000 kr», 2,8 min mot 4,3', {'r': r, 'card': ls})
+
+    # the web shop's equipment still has the haulers (the tiers are bought at the counter)
+    await pg.evaluate("DOCK.close(); PHONE.show(true); PHONE.open('home'); document.querySelector('#phone .ph-app[data-a=nett]').click(); document.querySelector('#phone .net-tile[data-s=shop]').click()"); await pg.wait_for_timeout(300)
+    await pg.evaluate("const e = document.querySelector('#phone [data-pa=nettab][data-s=eq]'); if (e) e.click()"); await pg.wait_for_timeout(300)
+    r = json.loads(await J("{ks:[...document.querySelectorAll('#phone .ph-card.ic')].map(c => c.dataset.ic), txt:document.getElementById('phone').textContent}"))
+    check('garnhaler' in r['ks'] and 'teinehaler' in r['ks'] and not any(k in r['ks'] for k in ('jukseLv', 'juksesett', 'linehalerLv', 'garnhalerLv')) and 'NaN' not in r['txt'] and 'undefined' not in r['txt'], 'nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined', r['ks'])
+    await pg.evaluate("PHONE.show(false)")
+
+    # pictures: the havsjark (room for five reels) with the hauler cards at tiers 1, 2 and 3 and the reels at tier 2, then «aboard»
+    await pg.evaluate("""const b = S.boat; b.type = 'sjark'; S.equip = {jukse:5, jukseLv:2, linehaler:true, garnhaler:true, garnhalerLv:2, teinehaler:true, teinehalerLv:3, linesetter:true, linesetterLv:2, garnrenne:true, plotter:true, vhf:true, kniv:2, hott:3, juksesett:2}; S.jobs = []; applyVessel(); DOCK.open('fiske')"""); await pg.wait_for_timeout(400)
+    cs = {k: json.loads(await card(k)) for k in ('linehalerLv', 'garnhalerLv', 'teinehalerLv', 'jukseLv', 'linesetterLv', 'juksesett')}
+    check(cs['linehalerLv'] and 'trinn 1 / 3' in cs['linehalerLv']['name'] and cs['garnhalerLv'] and 'trinn 2 / 3' in cs['garnhalerLv']['name'] and '3,2 min mot 4,0 (−20 %)' in cs['garnhalerLv']['fx'] and '95 000' in cs['garnhalerLv']['btn']
+      and cs['teinehalerLv'] and 'det beste' in cs['teinehalerLv']['have'] and '0,96 min mot 1,2' in cs['teinehalerLv']['fx'] and cs['jukseLv'] and 'Kjøp trinn 3' in cs['jukseLv']['btn'] and '120 000' in cs['jukseLv']['btn']
+      and cs['linesetterLv'] and 'det beste' in cs['linesetterLv']['have'] and cs['juksesett'] and 'det beste' in cs['juksesett']['have'], 'havsjarken: halerne på trinn 1, 2 og 3, juksamaskinene «Kjøp trinn 3 · 120 000 kr» for fem, linesetteren og juksasettene på øverste trinn', cs)
+    await pg.evaluate("document.querySelector('#drawerBody [data-ic=jukseLv]').scrollIntoView({block:'start'})"); await pg.wait_for_timeout(200)
+    await pg.screenshot(path='opp2_kort_liggende.png')
+    await pg.evaluate("DOCK.open('utstyrb')"); await pg.wait_for_timeout(300)
+    await pg.evaluate("const e = document.querySelector('#drawerBody .ic-aboard'); if (e) e.scrollIntoView({block:'center'})"); await pg.wait_for_timeout(200)
+    await pg.screenshot(path='opp2_ombord_liggende.png')
+    await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(600)
+    await pg.evaluate("DOCK.close(); DOCK.open('fiske')"); await pg.wait_for_timeout(400)
+    await pg.evaluate("document.querySelector('#drawerBody [data-ic=jukseLv]').scrollIntoView({block:'start'})"); await pg.wait_for_timeout(200)
+    fit = json.loads(await J("""(() => { const d = document.getElementById('drawerBody'), r = d.getBoundingClientRect(), K = ['jukseLv', 'juksesett', 'linehalerLv', 'garnhalerLv', 'teinehalerLv', 'linesetterLv'].map(k => '[data-ic=' + k + ']');
+      const wide = [...d.querySelectorAll(K.map(k => k + ', ' + k + ' *').join(', '))].filter(e => { const q = e.getBoundingClientRect(); return q.width && q.right > r.right + 1; }).length;
+      const small = [...d.querySelectorAll(K.map(k => k + ' .ph-btn').join(', '))].filter(e => { const q = e.getBoundingClientRect(); return q.width && q.height < 30; }).length;
+      return {wide, small}; })()"""))
+    check(not fit['wide'] and not fit['small'], 'stående: ingenting på trinnkortene stikker ut av skuffen, knappene er store nok', fit)
+    await pg.screenshot(path='opp2_kort_staaende.png')
+    await pg.evaluate("document.querySelector('#drawerBody [data-ic=garnhalerLv]').scrollIntoView({block:'start'})"); await pg.wait_for_timeout(200)
+    await pg.screenshot(path='opp2_kort2_staaende.png')
+    await pg.evaluate("DOCK.open('utstyrb')"); await pg.wait_for_timeout(300)
+    await pg.evaluate("const e = document.querySelector('#drawerBody .ic-aboard'); if (e) e.scrollIntoView({block:'center'})"); await pg.wait_for_timeout(200)
+    await pg.screenshot(path='opp2_ombord_staaende.png')
+    await pg.evaluate("DOCK.close()")
+
 
 asyncio.run(main())
