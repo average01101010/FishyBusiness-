@@ -9,6 +9,8 @@
 //  - J-187-2026 § 32 (coastal cod: 21-27.99 m inside the baseline, 28 m and over within 4 nm, the exceptions by statistics area and
 //    date, Henningsvær, Borgundfjorden)
 //  - the layers' own texts: closed fields (J-meldinger), the spawning areas south of 62° N, the Oslo fjord, Lopphavet, Lofoten
+//  - FOR-2025-12-19-2805 (cod in the North Sea and the Skagerrak in 2026) §§ 1, 2, 4 and 5: no cod outside the baseline in the Skagerrak
+//    east of Lindesnes, with the exception for jig from boats under 11 m (Ø10, 07.11.2026)
 // Only what concerns the game's species and gear (Jonas 04.10.2026: no lobster, nothing for species the game does not have).
 // Said plainly: the closed fields are a snapshot of the day the data were fetched and hold in the game whatever its date; the zones
 // follow the game's 200 m land, so where the sea is narrow they can be 100-200 m off; a point is looked up in 100 m cells.
@@ -24,13 +26,14 @@ const RU = (() => {
   const zones = (D.zones || []).map(z => ({f:z.f || '', l:z.l || [], km2:z.km2, P:polys(z.r)}));
   return {D, ok:!!D.bl, made:D.made || '', bl:D.bl ? dec(D.bl) : new Float64Array(0), blin:polys(D.blin), zones, L,
     hom:(D.hom || []).map(h => ({c:h.c, P:polys(h.r)})), lok:(D.lok || []).map(h => ({c:h.c, P:polys(h.r)})), nm:D.nm || {}, dec,
-    sea:(D.sea || []).map(z => ({c:z.c, P:polys(z.r)})), shelf:polys(D.shelf)};
+    sea:(D.sea || []).map(z => ({c:z.c, P:polys(z.r)})), shelf:polys(D.shelf), skag:polys(D.skag)};
 })();
 function ruPip(rings, x, y){ let c = false; for (const r of rings){ const n = r.length; for (let i = 0, j = n - 2; i < n; j = i, i += 2){ const yi = r[i + 1], yj = r[j + 1]; if ((yi > y) !== (yj > y) && x < (r[j] - r[i]) * (y - yi) / (yj - yi) + r[i]) c = !c; } } return c; }
 function ruIn(P, x, y){ for (const p of P){ const b = p.bb; if (x < b[0] || x > b[2] || y < b[1] || y > b[3]) continue; if (ruPip(p.rings, x, y)) return true; } return false; }
 // the zones and the baseline in 100 m cells, a 10 km block at a time when first asked for (scanlines over the rings): bit 1 inside the
 // baseline, 2 inside the fjord lines (F), 16 the Oslo fjord (O), 32 inside the fjord lines but outside a Finnmark hook line (B, free of
-// the hook limit 1.11-30.4)
+// the hook limit 1.11-30.4), 64 the Skagerrak of the cod regulation (skag, Ø10; widened over the land, so only its sea outside the
+// baseline counts: ruSkag)
 const RU_C = 0.1, RU_B = 10, RU_N = 100, RUB = new Map(), RU_BIT = {F:2, O:16, B:32};
 function ruBlock(bx, by){
   const key = bx * 8192 + by; let A = RUB.get(key); if (A) return A;
@@ -45,7 +48,7 @@ function ruBlock(bx, by){
       if (xs.length < 2) continue; xs.sort((a, b) => a - b);
       for (let q = 0; q + 1 < xs.length; q += 2){ const i0 = Math.max(0, Math.ceil((xs[q] - x0) / RU_C - 0.5)), i1 = Math.min(RU_N - 1, Math.floor((xs[q + 1] - x0) / RU_C - 0.5)); for (let i = i0; i <= i1; i++) A[j * RU_N + i] |= bit; } } };
   const fill = (P, bit) => { for (const p of P){ const b = p.bb; if (b[2] < x0 || b[0] > x0 + RU_B || b[3] < y0 || b[1] > y0 + RU_B) continue; scan(p.rings, bit); } };
-  fill(RU.blin, 1);
+  fill(RU.blin, 1); fill(RU.skag, 64);
   for (const z of RU.zones){ let bit = 0; for (const ch of z.f) bit |= RU_BIT[ch] || 0; if (bit) fill(z.P, bit); }
   if (RUB.size > 600) RUB.delete(RUB.keys().next().value);
   RUB.set(key, A); return A;
@@ -86,6 +89,11 @@ function ruSea(p){ if (!RU.ok || !RU.sea.length) return ''; const bx = Math.floo
 const ruSeaName = c => c && RU_SEA[c] ? gL(...RU_SEA[c]) : '';
 // on Norway's continental shelf (Kartverket), where snow crab may be taken outside the territorial sea (J-237-2025 § 1)
 function ruShelf(p){ return ruIn(RU.shelf, p.x, p.y); }
+// Ø10 (07.11.2026): in the Skagerrak where Norwegian vessels may not fish cod (FOR-2025-12-19-2805 § 1 b: «utenfor den norske grunnlinjen og
+// videre avgrenset mot vest av en rett linje gjennom fra Hanstholmen fyr til Lindesnes fyr»): outside the baseline, inside ICES 3.a.20 as
+// Fiskeridirektoratet draws it (tools/rules/regler.py skagerrak(): its edges are the regulation's lines), and in Norway's waters. The
+// Danish and Swedish part of the Skagerrak is closed in the game anyway (dk0), with its own reason
+function ruSkag(p, b = ruBits(p)){ if ((b & 65) !== 64) return false; const s = ruSea(p); return !s || s === 'no'; }
 // the licence for a foreign zone (Fiskeridirektoratet: «Alle norske fartøy må søke om lisens for å kunne fiske i andre lands farvann»,
 // skjema FD-54 for the Russian zone, where the permit is issued by the Russian authorities). No source gives the time it takes, so the
 // game gives it at once when you apply in the Papirer app (none made up: CLAUDE.md, «Friction for Flow»); an ocean permit brings the
@@ -123,6 +131,7 @@ function ruLineName(ref){ const k = ref[0], i = +ref.slice(1), id = {F:2, K:5, O
 const ruMD = H => { const g = gDate(H); return (g.getUTCMonth() + 1) * 100 + g.getUTCDate(); };
 const ruIn2 = (md, a, b) => a <= b ? md >= a && md <= b : md >= a || md <= b;
 const RU_HF = 'https://lovdata.no/forskrift/2021-12-23-3910', RU_J187 = 'https://www.fiskeridir.no/yrkesfiske/j-meldinger/j-187-2026';
+const RU_SK = 'https://lovdata.no/forskrift/2025-12-19-2805', RU_SKF = 'Forskrift om regulering av fisket etter torsk i Nordsjøen og Skagerrak i 2026 (FOR-2025-12-19-2805)';
 // the line in Vestfjorden (J-187-2026 § 32 tredje ledd): 28 m and over may fish haddock and saithe in area 00 on the outer side of it
 const RU_VF = [P(67 + 49.61 / 60, 12 + 49.25 / 60), P(67 + 15.20 / 60, 14 + 18.90 / 60)], RU_SVV = P(68.234, 14.568);
 const ruVfIn = p => { const [a, b] = RU_VF, s = q => Math.sign((b.x - a.x) * (q.y - a.y) - (b.y - a.y) * (q.x - a.x)); return s(p) === s(RU_SVV); };
@@ -295,6 +304,25 @@ function rulesAt(q){
   }
   for (const f of ruAt(39, p)) add('no', 'lopp', (f.a.navn || 'Lopphavet') + ': det er forbudt å fiske i dette området (Lopphavet marine verneområde).', (f.a.navn || 'Lopphavet') + ': fishing is banned in this area (Lopphavet marine protected area).', 'Verneforskriften for Lopphavet', f.a.forskrift, true);
   for (const f of ruAt(31, p)) add('warn', 'raet', 'Raet nasjonalpark, sone ' + (f.a.sone || '') + ': egne regler for fiske i verneforskriften.', 'Raet national park, zone ' + (f.a.sone || '') + ': own fishing rules in the protection regulation.', 'Verneforskriften for Raet', f.a.forskrift);
+  // the Skagerrak (Ø10, 07.11.2026; docs/systemer/kvoter-og-regler.md 5.28c): FOR-2025-12-19-2805, read on Lovdata 07.11.2026 as amended
+  // up to FOR-2026-10-01-1976 (J-160-2026), the same words in the 2023 one (FOR-2022-12-16-2281). § 1: «Det er forbudt for norske fartøy å
+  // fiske og lande torsk» in the Skagerrak outside the baseline (ruSkag). § 2: «inntil 52 tonn torsk i Skagerrak utenfor grunnlinjene» for
+  // Norway. § 4: «Andre fartøy med største lengde under 11 meter, kan i perioden fra og med 1. april til og med 30. juni maksimalt fiske og
+  // lande 3 tonn torsk med juksa i Skagerrak utenfor grunnlinjene dersom eier/høvedsmann er registrert på blad B i fiskermanntallet og
+  // fartøyet ikke har adgang til å delta i lukket gruppe i fisket etter torsk med konvensjonelle redskap i Nordsjøen» (the game has no
+  // closed group south of 62° N, so that holds; the 3 tonnes are said, not counted: 03d-quota.js has the quotas north of 62° N only). The
+  // vessels with the 2004 dispensation (3 tonnes; three or four named boats) are not the player's. § 5: other conventional gear than seine
+  // «kan ha inntil 5 % bifangst av torsk i de enkelte fangster og ved landing». Without a species the jig's catch has cod in it, so it
+  // stops as the Oslo fjord's cod ban does (the catch cannot leave the cod out by place yet: BACKLOG). Pots and shellfish are not asked:
+  // the game's pots take crab, not cod. With no gear given the exception counts, as everywhere here no gear means «is there a lawful way»
+  const shell = gear === 'teiner' || !!(sp && SPECIES[sp] && SPECIES[sp].shell);
+  if (!n62 && !inBL && !shell && (bits & 64) && ruSkag(p, bits)){
+    if (isSp('torsk')){
+      if ((!gear || gear === 'juksa') && len > 0 && len < 11 && ruIn2(md, 401, 630) && bladB())
+        add('warn', 'skag4', 'Unntaket i Skagerrak: fartøy under 11 m med eier på blad B kan fiske og lande høyst 3 tonn torsk med juksa utenfor grunnlinjen fra 1. april til 30. juni. Ellers er torsk forbudt her. Hele den norske kvoten i Skagerrak er 52 tonn i 2026.', 'The Skagerrak exception: vessels under 11 m whose owner is on blad B may fish and land at most 3 tonnes of cod with jig outside the baseline from 1 April to 30 June. Otherwise cod is banned here. Norway\'s whole quota in the Skagerrak is 52 tonnes in 2026.', RU_SKF + ' §§ 1, 2 og 4', RU_SK);
+      else add('no', 'skag', 'Norske fartøy kan ikke fiske torsk i Skagerrak utenfor grunnlinjen (øst for linja Lindesnes–Hanstholmen). Unntaket er juksa fra fartøy under 11 m med eier på blad B, 1. april–30. juni, høyst 3 tonn.', 'Norwegian vessels may not fish cod in the Skagerrak outside the baseline (east of the line Lindesnes–Hanstholm). The exception is jig from vessels under 11 m whose owner is on blad B, 1 April–30 June, at most 3 tonnes.', RU_SKF + ' § 1 og § 4', RU_SK, true);
+    } else add('warn', 'skag5', 'I Skagerrak utenfor grunnlinjen kan du ha høyst 5 % torsk som bifangst når du fisker andre arter.', 'In the Skagerrak outside the baseline you may have at most 5% cod as bycatch when fishing other species.', RU_SKF + ' § 5', RU_SK);
+  }
   // the species and the seasons (§ 39, § 40)
   if (sp === 'kveite'){
     if (!n62) add('no', 'kv39', 'Det er forbudt å fiske kveite sør for 62° N hele året.', 'Fishing halibut south of 62° N is banned all year.', 'Høstingsforskriften § 39', RU_HF);
@@ -413,19 +441,20 @@ const RU_SHORT = {lb28:['Lange og brosme over 28 m', 'Ling and tusk over 28 m'],
   gb6x:['Bare bifangst her', 'Bycatch only here'], gb4:['Britisk sone: Nordsjøen', 'British zone: North Sea'], gb4x:['Ikke denne arten her', 'Not this species here'], dk0:['Ikke sjekket: stengt', 'Not checked: closed'], xx0:['Utenfor spillets farvann', 'Off the game\'s waters'],
   sk0:['Krever snøkrabbetillatelse', 'Snow crab permit needed'], sk1:['Ikke snøkrabbe innenfor 12 nm', 'No snow crab within 12 nm'], sk2:['Annet lands sokkel', 'Another country\'s shelf'], sk3:['Snøkrabbe stengt', 'Snow crab closed'], sk4:['Snøkrabbe: lov', 'Snow crab: allowed'],
   sk5:['Bløtkrabbe: skift felt', 'Soft crab: change field'], sk6:['Høyst 8 000 teiner', 'At most 8,000 pots'], sk7:['Bare teiner', 'Pots only'],
-  f27:['Ikke krabbeteiner innenfor 4 nm', 'No crab pots within 4 nm'], f27b:['Ikke krabbeteiner innenfor 6 nm nå', 'No crab pots within 6 nm now']};
+  f27:['Ikke krabbeteiner innenfor 4 nm', 'No crab pots within 4 nm'], f27b:['Ikke krabbeteiner innenfor 6 nm nå', 'No crab pots within 6 nm now'],
+  skag:['Ikke torsk i Skagerrak her', 'No cod in the Skagerrak here'], skag4:['Skagerrak: juksa, høyst 3 t torsk', 'Skagerrak: jig, at most 3 t cod'], skag5:['Høyst 5 % torsk som bifangst', 'At most 5% cod as bycatch']};
 function ruCtx(){ const b = S.boat; return {p:b.status === 'port' && typeof portById === 'function' && b.port ? portById(b.port).p : b.pos, len:BOAT.len, gear:b.rig || 'juksa', hav:S.lic && S.lic.hav ? S.lic.id : null,
   sp:b.rig === 'teiner' ? potSp() : S.target === 'kveite' ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)}; }
 // the answer for your boat now, kept for 10 game minutes and 50 m
 let RU_NOW = null;
-function ruNow(){ const q = ruCtx(), k = [q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey()].join('|');
+function ruNow(){ const q = ruCtx(), k = [q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey(), bladB()].join('|');
   if (RU_NOW && RU_NOW.k === k && Math.abs(RU_NOW.t - S.t) < 10 && Math.hypot(RU_NOW.p.x - q.p.x, RU_NOW.p.y - q.p.y) < 0.05) return RU_NOW.r;
   const r = rulesAt(q); RU_NOW = {k, t:S.t, p:{x:q.p.x, y:q.p.y}, r}; return r; }
 const ruShort = it => it ? gL(...(RU_SHORT[it.k] || [it.no, it.en])) : '';
 // the chart's rule layer: the answer for your boat on a 250 m grid, a 10 km block at a time (40 x 40), 0 ok, 1 warn, 2 no; only at sea
 const RU_LAYER = new Map();
 function ruLayerBlock(bx, by, q, budget){
-  const key = bx + ',' + by + '|' + [q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey(), ruMD(S.t / 60)].join('|'); let A = RU_LAYER.get(key); if (A) return A;
+  const key = bx + ',' + by + '|' + [q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey(), bladB(), ruMD(S.t / 60)].join('|'); let A = RU_LAYER.get(key); if (A) return A;
   if (budget && performance.now() > budget) return null;
   A = new Uint8Array(1600); const rank = {no:2, warn:1, ok:0};
   for (let j = 0; j < 40; j++) for (let i = 0; i < 40; i++){ const p = {x:bx * 10 + (i + 0.5) * 0.25, y:by * 10 + (j + 0.5) * 0.25};
@@ -443,7 +472,7 @@ function ruWpQ(w){ const c = ruCtx(), p = {x:w.x, y:w.y};
 const RU_WP = new Map();
 function ruWpMsg(w){
   if (!RU.ok || !w || w.port || !((w.fish || 0) > 0 || (w.act && (w.act.op === 'set' || w.act.op === 'cycle')))) return null;
-  const q = ruWpQ(w), k = [q.p.x.toFixed(3), q.p.y.toFixed(3), q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey(), S.lang, ruMD(S.t / 60)].join('|');
+  const q = ruWpQ(w), k = [q.p.x.toFixed(3), q.p.y.toFixed(3), q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey(), bladB(), S.lang, ruMD(S.t / 60)].join('|');
   if (RU_WP.has(k)) return RU_WP.get(k);
   const m = ruBlockMsg(q); if (RU_WP.size > 300) RU_WP.delete(RU_WP.keys().next().value); RU_WP.set(k, m); return m;
 }
