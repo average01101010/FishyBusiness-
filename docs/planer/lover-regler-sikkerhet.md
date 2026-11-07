@@ -96,7 +96,7 @@ Lovdata ble lest gjennom en leseagent. Der den bare ga et sammendrag og ikke tek
 | 162 | Ulykkeshendelse eller uvisst: hvert skip bærer sin skade [sammendrag] | Samme | Ø11.3 |
 | 163 | De samme reglene når et skip skader et annet ved manøver uten at de støter sammen [sammendrag] | Ikke bygd (kjølvann og svell); står i kap. 8 | |
 | 164 | Etter sammenstøt: hjelpe den andre, og oppgi skipets navn og hjemsted og hvor det kommer fra og skal [sammendrag]. Det står i § 164, ikke i § 136 | Spillet gjør det for deg (VHF og dagboka) | Ø11.3 |
-| 475 | Melding om sjøulykke til den myndighet Kongen bestemmer [sammendrag] | Spillet melder for deg | Ø11.6 |
+| 475 «Meldeplikt» | Skipsføreren, den driftsansvarlige eller rederiet skal straks melde sjøulykke til den myndighet Kongen bestemmer (lest på Lovdata 07.11.2026, `sjofart-og-lover.md` 2.2) | Spillet melder for deg | Ø11.6 (bygd) |
 | 131, 133, 143–145, 441–455 | Sjødyktighet, skipsbøkene, alkohol, berging: bare overskriftene lest | Alkohol er ikke med (V5 A). Bergelønnen finnes (`turSlep`); § 445 er ikke lest | |
 
 ### 5.3 Skipssikkerhetsloven, LOV-2007-02-16-9
@@ -106,7 +106,7 @@ Lovdata ble lest gjennom en leseagent. Der den bare ga et sammendrag og ikke tek
 - **§ 2:** loven gjelder også fiskefartøy i næring, uansett lengde. Bare skip under 24 m som ikke brukes i næring, er unntatt (ordrett). Om en forskrift unntar fiskefartøy under 24 m, er ikke sjekket.
 - **§ 7** sikkerhetsstyringssystem, **§ 9** teknisk sikkerhet (g: redningsmidler), **§ 14** navigering (hjemmelen for sjøveisreglene), **§ 19** skipsførerens plikter, **§ 20** at andre om bord skal medvirke, **§ 21** sikkerhetsinnretninger og utstyr. Kravene til utstyret står i forskriftene i 5.5 og 5.6.
 - **§ 24** hviletid: ikke med (Jonas 11.10.2026).
-- **§ 47** melding ved skade eller sykdom [sammendrag] → Ø11.6.
+- **§ 47** «Rederiets melde- og rapporteringsplikt», annet ledd: melding og rapport ved skade eller sykdom hos den som arbeider om bord, etter reglene i medhold av sjøloven § 475 (lest på Lovdata 07.11.2026, `sjofart-og-lover.md` 2.3) → Ø11.6 (bygd).
 - **§ 52** tilbakeholdelse, **§§ 55–56** overtredelsesgebyr, **§§ 58–70** straff [sammendrag]: ikke med (V1 A).
 - Ingen plikt til å **bruke** flyteplagg står i loven (§ 22 c gir bare hjemmel til en forskrift om verneutstyr).
 
@@ -375,6 +375,7 @@ Etter `/blender` og `docs/skipsmodeller/leseliste.md`. Ingen merkenavn eller log
   - Ny `tests/mobtest.py` (LITE): hendelsen i grov sjø med mannskap, merket, svingen, personen opp med leideren og utfallet; 3D-bildet kjørt alene.
   - Ny `tests/unit/mob.test.mjs`: sjansen mot været og tiden i vannet.
   - `crewtest` og `seaworktest`.
+- **Bygd 07.11.2026** (Jonas' økt, grenen `ccr-73ea871d-9b5rz6`; systemet i kap. 6 i `docs/systemer/sjofart-og-lover.md`): risikoen per time på dekk mot båtens egne grenser, mørket, isingen, redskapet og åpen båt, bare med spillet åpent og deg om bord og våken (ellers nestenulykker); fallet med MAYDAY og redningen varslet, livbøya (kastet av den andre på dekk), MOB-merket, Williamson-svingen med «Autonav: MOB» (stopper 18 m til lo), leideren akter (§ 63) innen 30 m (bøyas line, § 43), løftestroppen, MOB-båten med davitet fra 45 m; tiden i vannet etter sjøtemperaturen; ingen dør (V8 A): redningen tar personen, som er sykmeldt og kommer om bord i havn; meldingen etter § 475 og § 47; merket; den som peker; panelet, kartplotteren og alarmen. Filene som i planen, og `deckcrew.js` (den som peker); `ui/03-map.js` og `10e-sound.js` med ett kall og én funksjon. Funnet underveis: Autonav stoppet først 73 m unna fordi målet var livbøya der den lå da knappen ble trykket (den driver dobbelt så fort som personen); rettet med driften regnet fram og stoppet til lo.
 
 ### Ø11.7 Nødstopp, nestenulykker og havsnød (SK4, SK6, L8)
 
@@ -508,3 +509,4 @@ Jonas 05.11.2026: «V7: Vi trenger ikke tenke på dagsignaler i spillet. Stort s
 - 06.11.2026: Ø11.4 bygd uten nødstoppen (den venter på H2d): vesten i garderoben, MOB-båten med davit og vugge (`tools/deck/mob.py`, `deck-mob.b64`) og MOB-lyset med røyk (`sikker.py`). Ikke satt på båtene eller folkene ennå (Ø11.5). Ø11.1–Ø11.3 venter fortsatt på H2e og «kjør på».
 - 06.11.2026: Ø11.5 bygd (gren `ccr-2f9c820c-pucumq`): livbøyene og røyken etter § 7-10, MOB-båten fra 45 m med de bakte skjult på egen båt (Jonas: «Skjul den gamle»), vesten på folkene til sjøs på dekk, påbudt utstyr følger båten (V6 A), leideren etter § 63 og kjenningssignalet og navnestørrelsene etter merkeforskriften (L4). Etter flettingen med Ø11.1, U2-2 og U2-3: enhetstestene 1348 OK, `boottest`, `trip2`, `shoptest`, `vesseltest` og `dbg23o` grønne. Rullet ut 06.11.2026 (4d78cde4; Jonas: «Rull ut på det store blå.»). Detaljene under Ø11.5 i kap. 6.
 - 07.11.2026: Ø11.3 bygd og rullet ut i 21ec10d3 (grenen `ccr-208d78a1-ruhxll`; Jonas: «Rull ut ø11.3») (kap. 6, `docs/systemer/sjofart-og-lover.md` kap. 5): sjøloven kap. 8 lest på Lovdata, kontakten mellom skrogene, sjømerkene og blåsene, skylda etter §§ 161 og 162 lest fra vikeplikten i spillminuttene før støtet (rollene som står, regel 19 og sikker fart, ikke det siste halve minuttet), betalingen med kaskoen, § 164 på VHF og i dagboka, NPC-en som blir liggende, og andre spilleres båter som aldri skades. Neste i rekka: Ø11.6 (mann over bord), som trenger `core/04-crew.js`, `05-vessels.js` og `13-work.js` (H3b), og Ø11.8 (farvannet).
+- 07.11.2026: Ø11.6 bygd (grenen `ccr-73ea871d-9b5rz6`, kap. 6 over, `docs/systemer/sjofart-og-lover.md` kap. 6): sjøloven § 475 og skipssikkerhetsloven § 47 lest på Lovdata først. Neste i rekka: Ø11.7 (nødstopp, nestenulykker og havsnød), som bruker `S.mobs`, `mobStart` og redningen herfra.

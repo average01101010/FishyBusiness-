@@ -88,7 +88,7 @@ Det spillet bruker, regel for regel:
 
 ### 2.2 Sjøloven, LOV-1994-06-24-39
 
-<https://lovdata.no/dokument/NL/lov/1994-06-24-39>. **Kapittel 8 «Sammenstøt» (§§ 161–164) lest på Lovdata 06.11.2026, sent på kvelden (Ø11.3):** hovedsiden og `…/KAPITTEL_8` gir bare innholdsfortegnelsen og et sammendrag i leseverktøyet, så paragrafsiden `…/%C2%A7161` ble lest med forskyvning 39 933 inn i siden, der teksten under «Del III. Ansvar» står; den siden har hele kapittelet. Kapittelet har ikke noen § 165 (neste er kapittel 9, §§ 171–182 c). Leseverktøyet gir bare korte ordrette sitater (de i anførselstegn under); resten er gjengitt med egne ord ledd for ledd. Siden viste ingen «sist endret» i teksten som ble lest. §§ 135 og 475 er fortsatt bare lest i sammendrag.
+<https://lovdata.no/dokument/NL/lov/1994-06-24-39>. **Kapittel 8 «Sammenstøt» (§§ 161–164) lest på Lovdata 06.11.2026, sent på kvelden (Ø11.3):** hovedsiden og `…/KAPITTEL_8` gir bare innholdsfortegnelsen og et sammendrag i leseverktøyet, så paragrafsiden `…/%C2%A7161` ble lest med forskyvning 39 933 inn i siden, der teksten under «Del III. Ansvar» står; den siden har hele kapittelet. Kapittelet har ikke noen § 165 (neste er kapittel 9, §§ 171–182 c). Leseverktøyet gir bare korte ordrette sitater (de i anførselstegn under); resten er gjengitt med egne ord ledd for ledd. Siden viste ingen «sist endret» i teksten som ble lest. § 135 er fortsatt bare lest i sammendrag. **§ 475 lest på Lovdata 07.11.2026 (Ø11.6):** paragrafsiden `…/%C2%A7475` gir hele avsnitt II i kapittel 18 (§ 471 «Plikt til å fjerne vrak og fremlegge forsikringsbevis», § 472 «Virkeområde», § 473 «Undersøkelsesmyndigheten», § 474, § 475 «Meldeplikt», § 475 a «Plikt til sikring av bevis», § 476 «Iverksetting av undersøkelse»); leseverktøyet ga korte ordrette sitater (i anførselstegn), resten er gjengitt med egne ord. Under paragrafen: endret ved lover 7. januar 2005 nr. 2, 16. februar 2007 nr. 9, 27. juni 2008 nr. 72, 16. desember 2011 nr. 64 og 20. desember 2018 nr. 115 (i kraft 11. februar 2025).
 
 | § | Krav | I spillet | Økt |
 |---|---|---|---|
@@ -97,7 +97,7 @@ Det spillet bruker, regel for regel:
 | 162 «Sammenstøt som følge av ulykkeshendelse» | Følge av ulykkeshendelse, eller kan det ikke vises at skyld på noen side er årsaken, «bærer hvert skip sin skade» | Ingen feil funnet: hver sin skade (5.3) | Ø11.3 |
 | 163 «Sammenstøt uten at skip støter sammen» | Reglene gjelder også når et skip ved manøver eller lignende skader et annet skip eller folk eller last om bord, også «uten at sammenstøt mellom skipene har funnet sted» | Ikke bygd (svell og sug) | |
 | 164 «Plikt til å yte bistand m m» | Etter sammenstøt skal hver skipsfører gi det andre skipet, mannskapet og passasjerene «all den hjelp som er mulig og nødvendig» så langt det kan skje uten særlig fare for eget skip og folk; skipsførerne skal også «oppgi til den andre sitt eget skips navn og hjemsted», og hvor skipet kommer fra og skal; det samme når et skip støter sammen med en båt | Spillet gjør det for deg: VHF-meldingen og dagboka; NPC-en blir liggende (5.5) | Ø11.3 |
-| 475 | Melding om sjøulykke [sammendrag] | Spillet melder for deg | Ø11.6 |
+| 475 «Meldeplikt» | 1. ledd: «Skipsføreren, den driftsansvarlige eller rederiet skal straks gi den myndighet Kongen bestemmer, melding om sjøulykke.» 2. ledd: «Meldeplikt etter første ledd har også enhver som blir vitne til en sjøulykke», og den som ser vrakrester eller andre tegn på en ulykke, med mindre de har grunn til å tro at melding er unødvendig. 3. ledd: vrak i en annen stats konvensjonsområde meldes også til den staten | Spillet melder for deg til Sjøfartsdirektoratet etter hver mann over bord, med tid, navn og minutter i sjøen, og skriver det i dagboka (6.4) | Ø11.6 (bygd) |
 
 ### 2.3 Skipssikkerhetsloven, LOV-2007-02-16-9
 
@@ -106,7 +106,7 @@ Det spillet bruker, regel for regel:
 - § 2: gjelder fiskefartøy i næring uansett lengde.
 - § 14 navigering (hjemmelen for sjøveisreglene), § 19 skipsførerens plikter, § 21 utstyret (kravene står i forskriftene i 2.5 og 2.6).
 - § 24 hviletid: ikke med (Jonas 11.10.2026).
-- § 47 melding ved skade eller sykdom [sammendrag]: Ø11.6.
+- **§ 47 «Rederiets melde- og rapporteringsplikt»** (lest på Lovdata 07.11.2026, Ø11.6; korte sitater, resten med egne ord; endret ved lov 27. juni 2008 nr. 72): 1. ledd: «Rederiet skal gi tilsynsmyndigheten melding når det har inngått avtale om:» bygging, ombygging eller kjøp av skip. 2. ledd: «Rederiet eller skipsføreren skal gi den myndighet Kongen bestemmer melding og rapport ved skade eller sykdom» hos den som arbeider om bord, og ved arbeids- eller skipsulykker som omfattes av sjøloven kapittel 18 avsnitt II etter reglene i eller i medhold av sjøloven § 475. 3. ledd: rapport om andre forhold tilsynsmyndigheten bør vite om. 4. ledd: departementet kan gi forskrift. I spillet: meldingen etter § 475 er også meldingen etter § 47 (6.4).
 - §§ 52, 55–56, 58–70 tilbakeholdelse, gebyr og straff [sammendrag]: ikke med (V1 A).
 - Ingen plikt til å **bruke** flyteplagg står i loven.
 
@@ -405,7 +405,64 @@ Bare med spillet åpent og i gang (`sjvLive`: `DYN.on`, ikke i `catchUp`, `simRa
 - At NPC-er støter i hverandre (de går på den felles klokka), og at en annen spillers båt stopper eller får vite skylda.
 - At malusen på kaskoen faller bort når den andre hadde skylda.
 
-## 6. Antatt eller usikkert
+## 6. Ø11.6 Mann over bord (SK2, SK3)
+
+Bygd 07.11.2026 i Jonas' økt (grenen `ccr-73ea871d-9b5rz6`; oppgaven: «Oppgave: Ø11.6, mann over bord (SK2 risikoen, SK3 hendelsen). Les sjøloven § 475 og skipssikkerhetsloven § 47 ordrett på Lovdata før noe bygges … Ingen dør (V8 A) … Meldingen etter § 475 og § 47 sender spillet for deg og skriver i dagboka»). Kjernen ligger i nye `core/14b-sikkerhet.js`, skjermen i nye `ui/10s-mob.js`, 3D-en i `view3d/21-rescue-anchor.js` (`drawMob`, `drawMobLights`) og `deckcrew.js` (den som peker). De delte filene har ett kall hver: `core/05-vessels.js` (`risk` → `mobRisk`), `core/13-work.js` (`workAssign` → `mobDeck`), `core/04-crew.js` (`crewTick` → `mobCrewHour`); `ui/03-map.js` (`renderDyn` → `MOBUI.svg`) og `ui/10e-sound.js` (`SND.mobAlarm`). `ui/08-actions.js` og `tools/boats/` er ikke rørt. Ingen `Math.random` i kjernen: terningene er en hash av spillets frø, båten og minuttet (`mobRnd`), så testene med frø beholder sine.
+
+### 6.1 Risikoen (SK2)
+
+- **Sjansen** er fall i timen per person i arbeid på dekk (`mobRate`): grunnsjansen `MOBK.R0` = 1/400 ved båtens egen røde grense (`BOAT.risk`, det `riskLevel` gir 2 ved), ganger sjøens andel, mørket, isingen, redskapet og åpen båt. Sjøens andel (`mobSeaF`) er null under 30 % av den røde grensa (stille vær), et kvadrat opp til 1 ved grensa og videre over den; sjøen er bølgehøyden der båten arbeider (`hsWork`: bevegelsene, ikke bare høyden) mot bølgegrensa, eller vinden mot vindgrensa, det som er nærmest (`mobSeaX`). Mørket (sola 6° under horisonten) ganger 1,5, isingen (sjøsprøyt som fryser: lufta på −2 °C eller kaldere, 9 m/s og mer, sjøen under 8 °C; `mobIcing`, Overlands varsling i grove trekk, antatt) 2, setting og draging (`b.gop`) 1,3, åpen båt 1,5.
+- **Hvem som er på dekk** kommer fra arbeidsfordelingen (`workAssign` → `mobDeck`, det minuttets egne kall): ved rekka der redskapet kommer inn (haling, bløgging) 1,6, jukse ved rekka 1,2, sløying, ising og krabbesortering 1, egning, rensing, bøting og vedlikehold 0,8, last 1, en pause på dekk 0,6 og sjøsyk over rekka 1,5. Inne (i styrhuset, byssa, køya, fabrikken på snøkrabbebåten og havbåtenes fabrikklag, fryserommet) og ved roret i et styrhus er null; under et shelterdekk ganges sløyingen, isingen og halingen med 0,35. Skipperen (spilleren) er aldri med, og havbåtenes bro heller ikke.
+- **Når et fall kan skje** (`mobCan`): spillet åpent og i gang (`mobLive`: `DYN.on`, `simRate` høyst 60, ingen tid igjen å spille fra fraværet), på båten hun følger (`MOBF.fol`, satt av skjermen mellom tikkene) og er om bord på, våken og ikke i køya, båten under fart, fiskende eller liggende stille på sjøen, ikke i første tur og ikke mens en annen hendelse pågår. Høyst ett fall i døgnet per båt (`MOBK.gap`).
+- **Nestenulykkene**: for hvert fall kommer tre nestenulykker (`MOBK.near`), og når et fall ikke kan skje (spillet lukket, en annen båt, hun sover, hun er ikke om bord), blir det alltid en nestenulykke i stedet; mannskapet tar dem selv, og de står i dagboka («Nestenulykke: Stian skled på dekket i sjøen og fikk tak i rekka. Ingen gikk over bord.»), og dermed i «Mens du var borte». Høyst én i to spilltimer per båt. Alene om bord skjer ingenting.
+- **Lagret** i `S.mobs` (høyst 40: tid, sted, båt, navn, og for fallene utfallet, måten, minuttene, sykedagene, om merket ble satt og hvem som kastet bøya) til Sikkerhet-kortet i Ø11.7.
+
+### 6.2 Hendelsen (SK3)
+
+1. **Fallet** (`mobStart`): «Mann over bord! Stian Nilsen gikk over bord om babord kl. 10:01. Sjøen holder 10,2 °C. Vesten holder ham oppe.» Personen ligger litt ut fra siden hun falt (`side`), og driver med vinden: 1,2 % av vindens fart for en person i vest, 3 % for livbøya (`MOBK.leeP`, `leeB`; antatt). Var det en til på dekk, kaster hun livbøya etter ham med én gang (8 m fra ham); han svømmer til den og holder seg i den så lenge han orker (innen 15 m).
+2. **MAYDAY på VHF 16** (spillet sender den for deg, som meldingen etterpå): «MAYDAY, MAYDAY, MAYDAY. Dette er «Havbris», LM6779. Mann over bord i posisjon 69°19.8' N 16°55.8' Ø. Én person i sjøen med redningsvest. Vi snur og tar ham opp.» og svaret «Kystradioen: «Havbris», mottatt. Hovedredningssentralen har varslet redningsskøyta fra Gryllefjord, som er hos dere om rundt 21 minutter.»
+3. **MOB-merket** (knappen «MOB», `mobMark`): der båten er når du trykker, ikke der han falt; dagboka sier hvor langt fra ham merket ble satt.
+4. **Livbøya** («Kast livbøya», `mobThrow`, når ingen på dekk kastet den): der båten er; fikk han den innen 15 m, holder han seg i den. Fra 15 m har den første bøya MOB-lyset med røyk (§ 7-10), som røyker i 15 minutter (LSA 2.1.3); under 15 m har den et bøyelys (§ 43: lys på halvparten).
+5. **Williamson-svingen** («Autonav: MOB», `mobRoute`): løper båten fra ham (han ligger mer enn 90° fra baugen, over 2 knop, under 2 km unna), går ruta 60° ut mot den siden han falt, hardt over til den andre siden og rundt til motsatt kurs tilbake på sitt eget spor (fire punkter på en sirkel med 1,6 ganger båtens svingradius), og så inn til ham. Målet er ham der han vil være når båten er fram, når han er i sikte, ellers livbøya der den vil være, ellers merket. Ruta stopper 18 m til lo for ham, så båten (som driver fortere enn en person) kommer ned på ham og ikke fra ham; i lite vind 15 m før ham. Går et ben over land eller grunt (eller kartet er ikke lastet), finner Autonav sin egen vei dit (`leiaRoute`). For hånd styrer du som ellers (roret tar over fra Autonav).
+6. **Opptaket** (`mobLiftOpts`, `mobLift`): innen 30 m (lina på livbøya, § 43) og under 2 knop: **leideren akter** (§ 63, under 15 m) så lenge han orker å klatre, 2 spillminutter; **løftestroppen** (under 45 m), 4 minutter; fra 45 m **MOB-båten** (§ 7-5) innen 500 m med skipet under 3 knop: davitet ut (1 min), firt på sjøen (senkefarten 0,4 + 0,02 H m/s, LSA 6.1.2.8), ut til ham i 6 knop (LSA 5.1.1.3), opp i båten (1 min), tilbake og heist inn (1,5 min). På leideren og i stroppen er han fast i båten (lina, stroppen) og ligger ved låringen; opptaket holder så lenge båten ikke kjøres fra ham (over 3 knop). MOB-båten holder så lenge skipet ligger innen rekkevidden til den er på sjøen.
+7. **Utfallet** (`mobEnd`): oppe i tide: «Stian Nilsen er oppe etter 9 minutter i sjøen, med leideren akter. Kald og våt, men i orden. Han skifter og varmer seg.» (slitenheten til 90), og «Kystradioen: … personen er oppe. Redningsskøyta fra Gryllefjord snur.» Et merke (6.6). Ikke tilbake i tide (V8 A): redningen tar ham opp når den er fram, og han er sykmeldt.
+
+### 6.3 Tiden i vannet, redningen og sykmeldingen
+
+- **Tiden** med vest før utmattelse eller bevisstløshet etter sjøtemperaturen (`MOBT`, `mobLimMin`): 12 minutter under −2 °C, 15 ved 0, 30 ved 4,5, 60 ved 10, 120 ved 15,5, 180 ved 21 (den vanlige tabellen for kaldt vann, de nedre endene; antatt, ikke lest hos kilden herfra). Han orker å klatre en leider den første tredjedelen, minst 8 og høyst 40 minutter (1-10-1-regelen, `mobAbleMin`). Forbi grensa er han «sterkt nedkjølt»; vesten holder ham oppe.
+- **Redningen** (`mobRescue`): redningsskøyta fra nærmeste stasjon (`rescueBases`, Redningsselskapets stasjoner, Kystvakta på Svalbard) med 10 minutter til mannskapet er om bord og 25 knop langs leia (1,25 ganger rett linje), eller redningshelikopteret når det er der først: 330-skvadronens baser (Sola, Florø, Ørland, Bodø, Banak, Rygge) og Sysselmesterens i Longyearbyen, 15 minutter og 140 knop (antatt). Den varsles med MAYDAY-en; kommer den før du har ham, tar den ham.
+- **Sykmeldingen** (V8 A): redningen tok ham før grensa, 1–2 dager; etter grensa (redningen, eller du fikk ham opp for sent) 3–5 dager, og helikopteret eller skøyta tar ham til sykehuset. En av mannskapet er da `c.off` med `offUntil` (Mannskap-appen sier «er i land til …»), og kommer om bord igjen først når båten ligger til kai etter dagene (`mobCrewHour` skyver dagen en time om gangen så lenge båten er på sjøen; `c.mobOff`). En fra havbåtens lag holdes av dekket de dagene (`S.mobOff`). Mannskapets historie (`lifeStory`) får linja.
+- **Med spillet lukket under en hendelse** (eller båten forlatt: annen båt fulgt, du ikke om bord): mannskapet snur båten selv og får ham opp med leideren, stroppen eller MOB-båten rundt tolv minutter etter fallet (`mobAway`), eller redningen tar ham om det er forbi grensa (prinsipp 4). En hendelse som er eldre enn seks timer, eller båten i havn eller på slep, avsluttes slik.
+
+### 6.4 Meldingen (§ 475, § 47)
+
+Etter hvert fall sender spillet meldingen for deg og skriver den i dagboka: «Melding sendt til Sjøfartsdirektoratet for deg (sjøloven § 475 og skipssikkerhetsloven § 47): mann over bord fra «Havbris» kl. 10:01, Stian Nilsen, 9 minutter i sjøen, ingen skade.» (eller «sykmeldt i 3 dager»). At myndigheten Kongen har bestemt er Sjøfartsdirektoratet, og at et fall over bord uten skade også meldes, er antatt: forskriften om melding er ikke lest. Nestenulykkene meldes ikke.
+
+### 6.5 Skjermen, kartet og lyden
+
+- **Panelet** (`ui/10s-mob.js`): rødt, øverst midt på (i stående under minikartet og stripa, UI 2s soner; på liggende telefon mellom boksen og kameraknappene), med tiden i sjøen (røde tall forbi grensa), navnet, sjøtemperaturen og hvor lenge han klarer seg, peilingen og avstanden til ham (bare når han er i sikte), til merket og til livbøya (og om den røyker), redningen og hvor lenge til den er fram, og opptaket som går. Knappene i drillens rekkefølge: «MOB», «Kast livbøya», «Autonav: MOB» («… på nytt» etter første), og måtene å ta ham opp på, grå med det som står i veien («For langt unna, 49 m.», «Stopp båten først, 3,0 knop.», «Stian Nilsen orker ikke å klatre lenger.»). Slutten står i 20 sekunder (grønn i tide, gul sykmeldt). Roen (`ui/10c-dock.js`) holdes borte så lenge han er i sjøen (`DOCK.wake`), og telefonen lukkes når alarmen går.
+- **Sikten** (`mobSightKm`): om dagen hodet og vestens krage 400 m i stille sjø, mindre i sjø (delt på 1 + 1,2 × bølgehøyden); livbøya det dobbelte; røyken 2 km; om natta 40 m, 200 m med lyskaster (fra 12 m, § 89), bøyelyset rundt en nautisk mil (2 cd); aldri lenger enn sikten (tåke). Personen holder seg i bøya: han ses som bøya.
+- **Kartplotteren** (`MOBUI.svg` fra `renderDyn`): merket som en rød ring med kryss og «MOB 04:12» (tiden i sjøen), stiplet linje fra båten, livbøya som oransje ring når den er i sikte, og personen som en gul prikk med fornavnet når han er i sikte.
+- **Lyden** (`SND.mobAlarm`): en skarp totone-alarm, så «O» i hornet, tre lange støt (kodebokstaven for mann over bord). Telefonen vibrerer.
+
+### 6.6 3D og merket
+
+- **Personen i sjøen** (`drawMob`): figuren med vesten (`lookVest`), hode og skuldre over sjøen, vendt mot båten og vinkende med én arm (`drawWorker` 'signal'), og borte fra dekket (`workAssign`). **Livbøya** flat på sjøen (ringen ligger i x-y i modellen), rundt ham når han holder den, med lyset flytende ved den (blinker om natta), og den oransje røyken fra 15 m så lenge den brenner (`drawMobLights`). **Den tomme holderen** står på rekka der bøya hang. **Den som holder øye med ham** (en på pause, ellers den med minst å gjøre) går til rekka på hans side og peker (`deckcrew.js` `spotGoal`, 'guide'), og snur seg med ham når båten svinger.
+- **MOB-båten fra 45 m** (`drawMob`): vugga står, davitets arm svinger ut (180° om søylen), båten løftes av vugga og henger i kroken, fires ned, kjører ut til ham og tilbake og heises inn igjen. For rammen får `drawSafety` (`09-landing-deck.js`, H3d1 sin fil) båtens utstyr uten MOB-båten og med den kastede bøyas plass senket under sjøen (`MOB3.G`, satt tilbake i `drawRescueLights` etter dekket), så `09-landing-deck.js` ikke er rørt.
+- **Merket** «Mann over bord: tatt opp i tide» (`ACHL`, `achC('mob')`, trinnene 1, 3 og 10): bare når du fikk ham opp før grensa selv.
+
+### 6.7 Tester og målinger
+
+(fylles inn under)
+
+### 6.8 Ikke med
+
+- Kurs og øvelser (V11 C), sender på vesten (V10 C), død (V8 A), at skipperen går over bord.
+- Redningsskøyta og helikopteret i 3D (de kommer bare i ord), at personen sitter i MOB-båten på vei tilbake, lyset i MOB-lyset på braketten om natta, strømmen (Fysikk 4 F8) i driften.
+- At NPC-båter har mann over bord og ber om hjelp: Ø11.7 (L8, § 135).
+- Sikkerhet-kortet i Redning-appen: Ø11.7 (dataene står i `S.mobs`).
+
+## 7. Antatt eller usikkert
 
 - Regel 19–37, vedlegg I og III og kapittel II 46, 49, 52 og 53 d er lest ordrett 06.11.2026 (Ø11.2); vedlegg II og IV ikke. Grensa for nedsatt sikt (2 mil), minste styrefart (2–4 knop), sikker fart (stopp innen halve sikten), at rollene står når de kommer i sikte, at NPC-en bruker maskinen akterover når hun slakker av, og at klokka høres som en fløyte under 20 m, er antatt (4.1–4.4).
 - Sjøloven kapittel 8 er lest på Lovdata 06.11.2026, men leseverktøyet ga bare korte ordrette sitater; resten er gjengitt med egne ord (2.2). §§ 135 og 475, skipssikkerhetsloven fra § 28 og kapittel 7–10 i FOR-2000-06-13-660 er bare lest i sammendrag.
