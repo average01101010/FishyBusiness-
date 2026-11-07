@@ -814,7 +814,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 212 `havState(s, H, near)`
   - 237 `havNear(H, only)`
 
-## `src/js/core/05e-sjovei.js` (1009 linjer)
+## `src/js/core/05e-sjovei.js` (1013 linjer)
 
 ---------- the rules of the road: who gives way, and the NPCs and Autonav that do (Ø11.1, docs/systemer/sjofart-og-lover.md) ----------
 
@@ -884,23 +884,23 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 712 `sjvCpa(a, b, gs)`
   - 717 `sjvTrailAdd(id, e)`
   - 735 `sjvFault(T, X)`
-  - 798 `sjvFaultWord(w, no)`
-  - 809 `sjvFaultSay(F, name, lang)`
-  - 820 `sjvSettle(b, F, c, oth, name)`
-  - 831 `sjvPaySay(M, F, name, lang)`
-  - 839 `sjvKr(x, no)`
-  - 841 `sjvFrom()`
-  - 845 `sjvTo()`
-  - 852 `sjvVhf(n, rec)`
-  - 866 `sjvStandBy(n, H)`
-  - 877 `sjvBlow(n, kn, E, H, pre)`
-- **908** the manoeuvring model's steps (16b-dyn.js dynContact, by hand and on Autonav)
-  - 911 `sjvClock()`
-  - 918 `sjvNear(H, X, Z)`
-  - 937 `sjvImpulse(d, P, I, ve, vz, m2, gs)`
-  - 948 `sjvTouch(b, d, P)`
-- **981** the look's sweep (sjvEval), when the model does not have her
-  - 984 `sjvSweep(n, A, H, gs, on)`
+  - 802 `sjvFaultWord(w, no)`
+  - 813 `sjvFaultSay(F, name, lang)`
+  - 824 `sjvSettle(b, F, c, oth, name)`
+  - 835 `sjvPaySay(M, F, name, lang)`
+  - 843 `sjvKr(x, no)`
+  - 845 `sjvFrom()`
+  - 849 `sjvTo()`
+  - 856 `sjvVhf(n, rec)`
+  - 870 `sjvStandBy(n, H)`
+  - 881 `sjvBlow(n, kn, E, H, pre)`
+- **912** the manoeuvring model's steps (16b-dyn.js dynContact, by hand and on Autonav)
+  - 915 `sjvClock()`
+  - 922 `sjvNear(H, X, Z)`
+  - 941 `sjvImpulse(d, P, I, ve, vz, m2, gs)`
+  - 952 `sjvTouch(b, d, P)`
+- **985** the look's sweep (sjvEval), when the model does not have her
+  - 988 `sjvSweep(n, A, H, gs, on)`
 
 ## `src/js/core/06-services.js` (271 linjer)
 
