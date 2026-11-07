@@ -153,6 +153,7 @@ Den nye planen ble bygd del for del bak bryteren `DRIFT2` (`core/06g-plan2.js`),
     - **M, flerdøgnstur fra Hammerfest** (sjark med køyer, deg og én i mannskapet, tre døgn, levering hvert 3. døgn, hjem på rorbua i Forsøl): de to første nettene ved mottakskaia i Forsøl («Hviler ved kaia»), den tredje hjemme på rorbua, ut igjen dag 4. Leveringen «hvert 3. døgn» regnes fra første dag, så fangsten ble levert dag 1 og dag 4, ikke ved turens slutt dag 3; det følger regelen, men står som et spørsmål til Jonas i backloggen.
   - **Skuffen over 3D-sjøen** (`driftsplan2kyst.py 3d`, med 3D, alene): Drift-siden i Bodø med en ny plan, i 800×1280, 1280×800 og 384×853; bildene i `docs/okter/2026-11-07-o12ab/`.
   - **Testene:** `driftsplan2test` S19 (rorbua) var rød på arbeidsgrenen fordi testens `D2.boat` lot kaiskiftet (`b.shift`) fra scenarioet før stå mens klokka ble satt tilbake; rettet i testen. S3 tåler en teinelenke tapt i været. Testen tar 85–96 s, ikke 35 min (Ø2 gjorde den rask 05.11.2026). `driftsplan2ui` spiller til lina står siden Ø2 (d663638a), ikke et fast antall steg.
+  - **Patchnotes** `o12-071126` (`ui/phone/07-patch.js`): siden ved Hammerfest, «Feltet er åpent igjen» på dagen, varselet når planen stopper.
   - **Står igjen til Jonas på nettbrettet** (backloggen): sveip med fart i Drift-siden og kartet, lange trykk, tilbakeknappen, skjermtastaturet, og om skuffen i 88 % (U1) føles riktig.
 
 ## Havbåten i Driftsplan 2: autolina, lagene, været og ligge bi (H2c av `docs/planer/havsteget-h2-autoline.md`, 05.11.2026)
