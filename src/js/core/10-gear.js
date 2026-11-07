@@ -283,6 +283,8 @@ function tierBuy(k, lv){
   const E = EQUIP[k], nx = lv == null ? equipLv(k) + 1 : lv, T = E.tiers[nx - 1], cost = tierKr(k, nx);
   if (cost > spendable()) return [gL('Ikke nok penger.', 'Not enough money.')];
   book('redskap', -cost, T.no, T.en); S.equip[k] = nx;
+  // (OPP2) a reel still waiting to be fitted was paid for at this tier too (tierUnits): the job keeps it, so a pay-back gives it all back
+  if (T.per === 'jukse') for (const j of S.jobs || []) if (j.kind === 'fit' && j.k === 'jukse') j.kr = (j.kr || EQUIP.jukse.price) + T.kr;
   log('Kjøpt ' + lc1(T.no) + ' (trinn ' + nx + ') til «' + S.boatName + '».', 'Bought ' + lc1(T.en) + ' (tier ' + nx + ') for the «' + S.boatName + '».');
   return null;
 }

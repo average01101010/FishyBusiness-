@@ -217,6 +217,11 @@ function opp2(t, K, S, boat, shop, plant){
   t.ok(S.equip.jukseLv === 2 && S.equip.jukse === 4 && S.cash === c0 - 48000, `maskinene er trinn 2, fire av dem, 48 000 kr betalt (${S.equip.jukseLv}, ${S.equip.jukse}, ${c0 - S.cash})`);
   t.ok(!!K.buyGate('tier', 'jukseLv'), `trinn 3 gir ingenting med plass til fire maskiner og nektes: «${(K.buyGate('tier', 'jukseLv') || [''])[0]}»`);
   t.eq(K.equipKr('jukse'), 34000 + 12000, 'en ny maskin på trinn 2 koster 46 000 kr');
+  // (the review 07.11.2026) a reel waiting for its fitting when the tier is bought: paid for at the tier, and the job keeps what it cost
+  boat('sjark'); S.equip = {jukse:4}; S.jobs = [{kind:'fit', k:'jukse', kr:34000, h:0.5}];
+  t.eq(K.tierKr('jukseLv', 2, 'sjark'), 60000, 'trinn 2 for fire maskiner og én under montering: 60 000 kr');
+  t.eq(K.buyGear('tier', 'jukseLv'), null, 'kjøpet går'); t.eq(S.jobs[0].kr, 46000, 'maskinen under montering har nå kostet 46 000 kr, og det betales tilbake om jobben faller bort');
+  S.jobs = []; boat('plastsjark'); S.equip = {jukse:4, jukseLv:2};
   boat('sjark'); S.equip = {jukse:5, jukseLv:2}; t.eq(K.buyGate('tier', 'jukseLv'), null, 'havsjarken (fem maskiner) kan kjøpe trinn 3');
   S.equip.jukseLv = 3; t.eq(K.equipKr('jukse'), 34000 + 12000 + 24000, 'en maskin på trinn 3 koster 70 000 kr');
   S.equip = {}; S.jobs = []; t.ok(!!K.buyGate('tier', 'linehalerLv'), `uten linehaler nektes trinnet: «${(K.buyGate('tier', 'linehalerLv') || [''])[0]}»`);
