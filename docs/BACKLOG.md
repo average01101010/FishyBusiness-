@@ -477,12 +477,24 @@ Tony Hjelmseth prøvde spillet hos Jonas på iPhone (trebåt, Senjahopen, tilbak
 - ~~Rederilogoen kunne ikke kjøpes~~: `des_logo` manglet i `SHOP_PRODUCT` (kassen fikk et tomt produkt, «Kunne ikke åpne betalingen»), og malerverkstedet viste 29 kr der databasen tar 49. Sjekken `tests/unit/butikk.test.mjs` sammenligner hvert produkt spillet selger med migreringene.
 - ~~Haill ga ikke mer av bifangsten i teinene~~ (torsk, brosme): `luck(sp)` manglet (`haill-pub-og-bonus.md` 5.10).
 
-## Venter på Jonas (gjennomgangen av butikken 06.11.2026)
+## Venter på Jonas (gjennomgangen av butikken 06.–07.11.2026)
 
-- ~~Haill lover «alt redskapet ditt fanger dobbelt så mye», men garn og line fylles opp~~: Jonas valgte mer plass i redskapet; `haillCap` (`haill-pub-og-bonus.md` 5.10), `tests/haillplass.py`. Står igjen: juksa alene om bord holdes igjen av sløyingen (×1,76 og ×1,90).
+- **Rederilogoen vises ikke på skroget til kystnotbåten 38,55 m** (`ringnot38`): `logoStrips('ringnot38')` er null (`vessel3d.js`), så logoen tegnes ikke der; 14 av 15 båttyper har plassen. Trenger plassen på skroget fra modellen (Blender).
+- **Ønskenummer i registreringsmerket slutter å virke etter ti numre** (`supabase/migrations/20261007100000_designs.sql` `reg_claim`: «too many» etter ti krav per spiller, og ingen migrering sletter et gammelt krav), så spilleren får «Fikk ikke sjekket nummeret» for alltid. Nummeret sjekkes heller ikke før betaling: et nummer en annen har, avvises først etter kjøpet. Trenger en migrering (slippe båtens forrige krav når et nytt settes, og sjekke ledig nummer før betalingen).
+- **`trackfollow` (3D) rød etter full fart**: «går aldri tilbake langs linja» (205 m) og «Stopp slakker av gradvis» (8,5 mot 8 m/s per s ved 21,4 kn), rød også på publiseringsgrenen 07.11 00:32, grønn 06.11 12:29. Med ruta låst til 16 kn er «går aldri tilbake» grønn (back 0, 158 målinger mot 78 i full fart): den følger farten, enten et ekte hopp eller at målingen treffer feil del av linja når bildene ligger langt fra hverandre. Stoppsjekken ble ikke prøvd i 16 kn. Prompt til egen økt gitt 07.11.
+- **`kjoptest` går ut på tid i siste steg** (oppstart med `#nocloud`) etter at alle kjøpssjekkene er grønne, både på publiseringsgrenen og med endringene 07.11; under full last. Ikke prøvd alene.
+
+- ~~Haill lover «alt redskapet ditt fanger dobbelt så mye», men garn og line fylles opp~~: Jonas valgte mer plass i redskapet; `haillCap` (`haill-pub-og-bonus.md` 5.10), `tests/haillplass.py`. Juksa alene: se under.
 - ~~Glidebryteren for farten på full fart som standard~~: «Full fart» følger toppfarten, også driftsplanene (`fysikk-og-styring.md` 5.58).
 - ~~Skippertak virket ikke på driftsplanene~~ (plan2 fra 27.10): Jonas valgte «Døgnet rundt»; `haill-pub-og-bonus.md` 5.40, `tests/skipdrift.py`. Kjent: når ankeret drar, får mannskapet +6 slitasje og du −3 energi også med drikken (`06e-anchor.js:161`), nullstilt innen timen.
-- **`shopClaim` markerer også tildelinger klienten ikke kjenner som levert** (`10i-shop.js`): ingen slike i databasen nå, men en ny produkttype før klienten kjenner den, ville gått tapt.
+- ~~`shopClaim` markerte også tildelinger klienten ikke kjenner, som levert~~ (07.11.2026): de blir liggende på serveren til spillet kjenner dem.
+- ~~En ny trim slettet resttida på den som gikk, uten advarsel~~ (07.11.2026): samme type legger til, en annen spør først.
+- ~~Kjøpsbekreftelsen var bare en kort melding~~ (07.11.2026): vindu fra Det Store Blå og en melding i Meldinger (`haill-pub-og-bonus.md` 5.40).
+- ~~`BOAT.cruise` finnes ikke~~ (07.11.2026): «Kjør opp til blåsa» går som andre ruter (full fart om ikke glidebryteren sier mindre). Vinduet for tidevannet og isen langs ruta regnes fortsatt ved 6 kn, nå med vilje (`LEIA_KN` i `11-route.js`): med båtens marsjfart ble vinduet kortere og ruta under Gisundbrua gikk nærmere skjærene (`obstest`).
+- ~~Skippertak og trim ble spist av tid som spilles inn~~ (07.11.2026): et kjøp levert mens tid fra et lukket spill eller en sovende fane ennå spilles inn (en kartpakke som kommer sent, en fane som våkner), regnet fra den gamle spilltida; lukket 24 t mistet hele Skippertak (48 t) og turbotrim (72 t). Nå fra verdensklokka (`boostT` i `01-world.js`; også haill som slås på). `tests/boostklokke.py`.
+- ~~«Verftet ferdig nå» kunne ta betalt for ingenting~~ (07.11.2026): kortet vises bare med minst 30 spillminutter igjen (`YARD_NOW_MIN`), og et kjøp som ikke fant noe å gjøre ferdig, blir en kreditt som gjør neste verftsjobb ferdig (`S.yardCredit`). Teksten sier «verftsjobbene», ikke «alle jobbene» (utstyrsbutikkens og mannskapets går som før).
+- ~~Husflagget prøvd med rederilogoen gikk tapt ved betalingen~~, og ~~et design ble lagt på båten du er om bord i, ikke den det ble prøvd på~~ (07.11.2026, `10j-paint.js`, `10i-shop.js`).
+- ~~Haill på juksa alene~~: målt, fangsten per juksetime ×1,95 og ×2,80; resten er sløyingen (mannskapets), ingen endring (`haill-pub-og-bonus.md` 5.10).
 
 ## Strøket 06.11.2026 (Ø11.2 sikt, lys og lyd, gren `claude/o11-2-sikring-lys-lyd-bsrlub`, rullet ut i f04d4feb)
 

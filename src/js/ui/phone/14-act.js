@@ -167,7 +167,10 @@
     else if (a === 'kaskox'){ kaskoEnd(); }
     else if (a === 'hullclean'){ if (!atKind('verft') || (S.jobs || []).some(j => j.kind === 'hull')) return; const c = 1500 + Math.round(BOAT.len * 400 / 100) * 100; if (spendable() < c) return;
       if (!queueJob({kind:'hull', h:6, no:'Skrogrens på slipp', en:'Hull cleaning on the slip'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } buyMark(); book('verft', -c, 'Skrogrens på slipp', 'Hull cleaning on the slip'); log('Bestilte skrogrens på slipp, ' + kr(c) + '.', 'Ordered a hull cleaning on the slip, ' + kr(c) + '.'); receipt(L('Skrogrens på slipp', 'Hull cleaning on the slip'), 'yard', 'hull'); }
-    else if (a === 'trimbuy'){ const b = S.boat, B = BOOSTS[d.k]; if (!B || !canBoost(VESSELS[b.type])) return; payBuy(d.k, () => { trimSet(d.k); log(B.no + ' er på i ' + B.h + ' timer. Toppfart nå ' + fmt(BOAT.vmax, 1) + ' knop.', B.en + ' is on for ' + B.h + ' hours. Top speed now ' + fmt(BOAT.vmax, 1) + ' knots.'); toast(L(B.no + ': ', B.en + ': ') + fmt(BOAT.vmax, 1) + ' kn'); }); }
+    // (another kind than the one on takes its place and the rest of its time: asked first, as the haill is; the same kind adds its hours)
+    else if (a === 'trimbuy'){ const b = S.boat, B = BOOSTS[d.k], on = trimOn(b); if (!B || !canBoost(VESSELS[b.type])) return; if (on && on !== B && trimPend !== d.k){ trimPend = d.k; return true; } trimPend = null;
+      payBuy(d.k, () => { const w = trimWords(d.k, trimSet(d.k)); log(w.no, w.en); toast(L(B.no + ': ', B.en + ': ') + fmt(BOAT.vmax, 1) + ' kn'); }); }
+    else if (a === 'trim0'){ trimPend = null; return true; }
     else if (/^mg/.test(a)){ if (!mgAct(a, d)) return; }   // Kystmegleren (phone/13c-megler.js, M4)
     else if (a === 'eqtry'){ equipTry(d.k); return true; }   // try it on the boat in 3D (M3)
     else if (a === 'equip'){ const E = EQUIP[d.k]; if (!E) return;

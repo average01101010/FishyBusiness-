@@ -403,6 +403,24 @@
 2026-11-06 23:39	ccr-ccfb0017-rmieib	731e4792+	docktest	FEIL	62	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
 2026-11-06 23:39	ccr-ccfb0017-rmieib	731e4792+	routetest	OK	44	lite	alene	
 2026-11-06 23:41	ccr-ccfb0017-rmieib	731e4792+	docktest	OK	61	lite	alene	
+2026-11-07 00:06	HEAD	61f462f7+	kjoptest	FEIL	266	lite	samtidig	avsluttet med kode 1
+2026-11-07 00:06	HEAD	61f462f7+	skiptest	OK	23	lite	samtidig	
+2026-11-07 00:06	HEAD	61f462f7+	skipdrift	OK	43	lite	samtidig	
+2026-11-07 00:06	HEAD	61f462f7+	haillplass	OK	10	lite	samtidig	
+2026-11-07 00:06	HEAD	61f462f7+	docktest	OK	89	lite	samtidig	
+2026-11-07 00:32	HEAD	61f462f7+	trackfollow	FEIL	1510	3d	alene	FEIL she keeps to the line all the way, at most 9 m off it in the corners (the model turns on her own radius), and never goes back along it  {"off": 0.49, "back
+2026-11-07 00:32	HEAD	61f462f7+	moortest	OK	34	3d	alene	
+2026-11-07 00:35	HEAD	61f462f7+	maletest	OK	21	lite	samtidig	
+2026-11-07 00:36	HEAD	61f462f7+	boostklokke	OK	45	lite	samtidig	
 2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	docktest	OK	62	lite	samtidig	
 2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	searchtest	OK	9	lite	samtidig	
 2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	hudtest	OK	25	lite	samtidig	
+2026-11-07 00:57	HEAD	12b6216c+	docktest	OK	65	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	kjoptest	OK	470	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	skiptest	OK	19	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	skipdrift	OK	27	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	haillplass	OK	8	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	boostklokke	OK	51	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	maletest	OK	22	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	slidertest	OK	19	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	trip2	OK	39	lite	samtidig	
