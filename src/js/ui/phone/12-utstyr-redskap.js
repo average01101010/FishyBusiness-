@@ -28,7 +28,7 @@
     if (mode === 'butikk' && atKind('butikk')) h.splice(1, 0, shopTop('utstyrb'));
     // (the tiers of the knives, the gaff, the reels and the jig sets are in Fiskeutstyr; the haulers and the line setter are bought here and
     // their tiers there, OPP1 and OPP2)
-    const ORDER = ['linehaler', 'linesetter', 'garnhaler', 'garnrenne', 'teinehaler', 'jukse', 'krabbekar'], keys = Object.keys(EQUIP).filter(k => !(EQUIP[k].tiers && !EQUIP[k].price) && yardEq(k) === (mode === 'verft')).sort((a, c) => (ORDER.includes(a) ? ORDER.indexOf(a) : 99) - (ORDER.includes(c) ? ORDER.indexOf(c) : 99));
+    const ORDER = ['linehaler', 'garnhaler', 'teinehaler', 'linesetter', 'garnrenne', 'jukse', 'krabbekar'], keys = Object.keys(EQUIP).filter(k => !(EQUIP[k].tiers && !EQUIP[k].price) && yardEq(k) === (mode === 'verft')).sort((a, c) => (ORDER.includes(a) ? ORDER.indexOf(a) : 99) - (ORDER.includes(c) ? ORDER.indexOf(c) : 99));
     const aboard = [], nofit = []; let tiersAboard = false;
     for (const k of keys){ const E = EQUIP[k];
       if (!equipFits(k, S.boat.type)){ nofit.push(E.name[S.lang]); continue; }

@@ -110,10 +110,10 @@ async def main():
           R.w1 = wear(); const c0 = S.cash; R.buy1 = buyGear('jig', 'mark', 1); R.kr1 = c0 - S.cash; R.sell1 = sellValue('jig', 'mark', 1);
           R.gate = buyGate('tier', 'juksesett'); R.tierKr = tierKr('juksesett', 2); const c1 = S.cash; R.tier = buyGear('tier', 'juksesett'); R.paidTier = c1 - S.cash; R.lv = S.equip.juksesett;
           R.w2 = wear(); const c2 = S.cash; R.buy2 = buyGear('jig', 'mark', 1); R.kr2 = c2 - S.cash; R.sell2 = sellValue('jig', 'mark', 1); R.base = CARE.jig.mark.kr;
-          delete S.equip.juksesett; return R; })()""")
+          R.sellF = CARE.sellF; delete S.equip.juksesett; return R; })()""")
         print('juksasett (OPP2):', json.dumps(r, ensure_ascii=False))
         print(ok(r['w1'] > 0 and abs(r['w2'] / r['w1'] - 0.5) < 1e-6), 'jig sets at tier 2 wear half as fast', [r['w1'], r['w2']])
-        print(ok(r['buy1'] is None and r['kr1'] == r['base'] and r['buy2'] is None and r['kr2'] == round(r['base'] * 1.5) and r['sell2'] == round(r['sell1'] * 1.5)), 'a set costs half again at tier 2, and is bought back on that price', [r['kr1'], r['kr2'], r['sell1'], r['sell2']])
+        print(ok(r['buy1'] is None and r['kr1'] == r['base'] and r['buy2'] is None and r['kr2'] == round(r['base'] * 1.5) and r['sell1'] == round(r['kr1'] * r['sellF']) and r['sell2'] == round(r['kr2'] * r['sellF'])), 'a set costs half again at tier 2, and is bought back on that price', [r['kr1'], r['kr2'], r['sell1'], r['sell2']])
         print(ok(r['gate'] is None and r['tier'] is None and r['lv'] == 2 and r['paidTier'] == r['tierKr'] == round(r['base'] * 0.5 * 2)), 'tier 2 costs half the price of the sets aboard (the mounted one and the spare bought)', [r['tierKr'], r['paidTier']])
         print(ok(not errs), 'no page errors', errs[:2])
         await br.close()
