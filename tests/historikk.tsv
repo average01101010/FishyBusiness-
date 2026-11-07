@@ -789,3 +789,7 @@
 2026-11-07 12:20	ccr-fc7a11b2-nl5jor	c6862628+	roetest	OK	119	lite	samtidig	
 2026-11-07 12:20	ccr-fc7a11b2-nl5jor	c6862628+	uishots	OK	84	lite	samtidig	
 2026-11-07 12:20	ccr-fc7a11b2-nl5jor	c6862628+	trip2	OK	34	lite	samtidig	
+2026-11-07 12:53	plan/2026-11-07-opp1	7217777f	boottest	OK	27	lite	samtidig	
+2026-11-07 12:53	plan/2026-11-07-opp1	7217777f	docktest	OK	63	lite	samtidig	
+2026-11-07 12:53	plan/2026-11-07-opp1	7217777f	opptest	OK	37	lite	samtidig	
+2026-11-07 12:54	plan/2026-11-07-opp1	7217777f	shoptest	OK	28	lite	samtidig	
