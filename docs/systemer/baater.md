@@ -202,7 +202,13 @@ Mister du juksa, fisker bare juksamaskinene til du kjøper ny i utstyrsbutikken.
 - Ekkoloddet og sonaren slås av og på i sidepanelet i plotteren (`S.settings.echo`, `S.settings.sonar`). Av betyr ingen varme, og ekkoloddet slutter å tegne. Fartøy-appen merker dem «(av)».
 - En montering som venter mens båten byttes til en type utstyret ikke passer, betales tilbake (`finishJob`).
 
-**«Neste mål»** står øverst i Båthandel og som en linje på telefonens hjemskjerm, og følger stigen: håndjuksa, første juksamaskin, blad B (landingsdager og verdi, knapp til Papirer), første båt med hjemmel (egenkapitalen banken krever), neste hjemmel opp, kystbåten på 14,99 m og «Havfiske» (kommer). De to neste stegene vises.
+**«Neste mål»** står øverst i Båthandel og som en linje på telefonens hjemskjerm, og følger stigen: håndjuksa, første juksamaskin, blad B (landingsdager og verdi, knapp til Papirer), første båt med hjemmel (egenkapitalen banken krever), neste hjemmel opp, kystbåten på 14,99 m, «Stift Rederi AS» og til sist det billigste havfiskefartøyet som kan kjøpes (skrog og tillatelse, `havPrice`). De to neste stegene vises.
+
+**Stigen er flåtens** (Jonas 07.11.2026: med en autoliner og to sjarker og 93 millioner på konto ba hjemskjermen om første juksamaskin, som autolineren ikke kan ha, og etter den om den gamle tresnekka med hjemmel under 7 m; «nå er den bare irriterende og stjeler plass»). `goals()` i `ui/phone/10-fartoy.js` ser på hele flåten, ikke båten du følger, og et steg er passert når flåten har nådd det eller et steg over det:
+- Håndjuksa og første juksamaskin gjelder bare den første båten alene: de er borte når flåten har mer enn én båt, en båt med hjemmel eller en båt utenfor åpen gruppe. Juksamaskinen foreslås bare til en båt som kan ha en (`jukseMax` over null).
+- Med et havfiskefartøy i flåten er stigen klatret: blad B, hjemlene, kystbåten og havfiskefartøyet hoppes over. Bare «Stift Rederi AS» kan stå igjen, og når selskapet er et AS, er Neste mål borte fra hjemskjermen og Båthandel (kortet for første uke eller fartstiden fyller da raden alene).
+- Det siste steget het «Havfiske, kommer når kartet utvides vestover» til autolineren kunne kjøpes (H2); nå er det det billigste havfiskefartøyet som ikke er låst, for flåten uten innbytte.
+- `vesseltest` sjekker det (sett rød på bygget før rettingen: «Håndjuksa» og «Første juksamaskin» med autolineren og sjarken).
 
 **Båthandel** (Verft → Båthandel, `market()` og `sheet()` i `ui/05-phone.js`):
 - Fanene er Åpen gruppe, Med hjemmel, Kystflåten og Havfiske. Hvert kort har et sideriss i SVG (`vesselSVG`, laget fra den samme 3D-spesifikasjonen, så det virker uten WebGL), navn, mål og pris.

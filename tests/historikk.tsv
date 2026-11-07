@@ -452,3 +452,10 @@
 2026-11-07 01:29	ccr-a9ff699b-re4zwf	b6b3f1e2	kotest	OK	14	lite	samtidig	
 2026-11-07 01:30	ccr-a9ff699b-re4zwf	b6b3f1e2	docktest	OK	61	lite	samtidig	
 2026-11-07 01:30	ccr-a9ff699b-re4zwf	b6b3f1e2	hudtest	OK	24	lite	samtidig	
+2026-11-07 01:46	ccr-bc0543eb-umtheg	51f767b5+	fleet3test	OK	14	lite	samtidig	
+2026-11-07 01:47	ccr-bc0543eb-umtheg	51f767b5+	vesseltest	OK	27	lite	samtidig	
+2026-11-07 01:47	ccr-bc0543eb-umtheg	51f767b5+	fleet2test	OK	45	lite	samtidig	
+2026-11-07 01:47	ccr-bc0543eb-umtheg	51f767b5+	boktest	OK	10	lite	samtidig	
+2026-11-07 01:47	ccr-bc0543eb-umtheg	51f767b5+	adminbuytest	OK	9	lite	samtidig	
+2026-11-07 01:48	ccr-bc0543eb-umtheg	51f767b5+	shoptest	OK	30	lite	samtidig	
+2026-11-07 01:50	ccr-bc0543eb-umtheg	51f767b5+	docktest	OK	58	lite	alene	

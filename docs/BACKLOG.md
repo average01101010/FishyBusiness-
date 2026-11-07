@@ -446,6 +446,12 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
 
+## Strøket 07.11.2026 (Neste mål og «Trenger deg», gren `ccr-bc0543eb-umtheg`)
+
+- ~~«Neste mål» forsvinner ikke når målene er nådd~~ (Jonas 07.11.2026, med en autoliner, to sjarker og 93 millioner: «Første juksamaskin», så «Gammel tresnekke med hjemmel under 7 m»): stigen er flåtens, steg som er passert hoppes over, juksamaskinen bare til en båt som kan ha den, og med et havfiskefartøy i flåten er stigen ferdig og Neste mål borte når selskapet er et AS. Det siste steget er det billigste havfiskefartøyet som kan kjøpes, ikke «Havfiske, kommer» (`baater.md`, «Stigen er flåtens»).
+- ~~«Rederiet trenger deg» for en torskekvote som er nesten fisket~~ (Jonas 07.11.2026: «hva trenger den meg til?»): kvoten står som en dempet linje på båtens kort i Rederi og teller ikke i «Trenger deg» eller på ikonet (`ui-og-telefon.md`, U2-5).
+- **Antatt:** At «Stift Rederi AS» blir stående som Neste mål for et ENK med havfiskefartøy, er med vilje (et ekte valg med skatten). Om en kvote som er helt fisket opp bør bli et varsel igjen når driftsplanen fortsatt leverer torsk som inndras, er ikke avgjort.
+
 ## Strøket 07.11.2026 (køen ved mottakene, K1–K4 og K6, gren `ccr-a9ff699b-re4zwf`)
 
 - ~~Mottakene tar alle som kommer, samtidig~~: losseplasser etter kailengden (1–4), køen på serveren (`landing_q`, `land_begin`/`land_end`/`land_look`), «Kø · 2 foran · ca. 11 min» på stripa, Lever-siden med «Gå ut av køen» og «Lever et annet sted» (`havner-og-mottak.md`, «Køen ved mottakene»). Gjenstår: K5 (NPC-flåten tar plasser i sesongen), push «Din tur ved kaia», de andres lossing i 3D.
