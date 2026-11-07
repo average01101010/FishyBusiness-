@@ -92,3 +92,118 @@ function stabTick(H){
   b.stab = s.lvl;
 }
 const fmt1 = v => (Math.round(v * 10) / 10).toFixed(1).replace('.', S.lang === 'no' ? ',' : '.');
+
+// ===== THE HULL IN THE SEA: buoyancy per section (Fysikk 4 F2, 07.11.2026; docs/planer/fysikk-4-sjo-og-skrog.md, Jonas' choice 2B) =====
+// Heave and pitch in 3D are reckoned from forces, not by following the surface (view3d/16-motion.js updateBoat; «#hull0» gives the old
+// following back). The hull is cut in HS_N sections along its waterline, each with a breadth at the waterline W, a draft d, a breadth at
+// the deck Bd and a freeboard f, from a parametric form of VESSELS: a fine entrance over the forward 45 % with the forefoot cut up towards
+// the stem, full amidships, a transom aft (a planing hull keeps her width there), the sheer rising forward and the sides flaring out to
+// the deck. The breadths are scaled so the waterplane is hullOf's Cwp L B, and every section's underwater shape is w(y) = W (y / d)^p
+// with p = Awp / (Cb L B) - 1, so the volume is hullOf's Cb L B T, the displacement. Above the waterline the side flares to Bd at the
+// deck; with the deck under, a section gives no more (the buoyancy saturates, and the bow buries). The underwater forms are guessed
+// (the models from Blender have no sections we can read), so they are calibrated to stabOf's periods, not to drawings (plan, ch. 7).
+const HS_N = 9, HS_RHO = 1025, HS_G = 9.81, HS_C = new Map();
+function hullSections(type, zb, zs){
+  const key = type + '|' + zb + '|' + zs; let H = HS_C.get(key); if (H) return H;
+  const h = hullOf(type), V = VESSELS[type] || VESSELS.skiff, L = h.L, B = h.B, pl = !!V.planing;
+  if (!(zs > zb)){ zb = -L / 2; zs = L / 2; }
+  const Lg = zs - zb, za = zb + 0.04 * Lg, zf = zs - 0.02 * Lg, n = HS_N, dx = (zf - za) / n;
+  const z = [], W = [], d = [], Bd = [], f = [];
+  for (let i = 0; i < n; i++){
+    const s = (i + 0.5) / n;   // 0 at the bow, 1 at the stern
+    z.push(za + (i + 0.5) * dx);
+    W.push(Math.pow(Math.sin(Math.PI / 2 * Math.min(1, s / 0.45)), 0.9) * (1 - (pl ? 0.08 : 0.25) * sstep(0.65, 1, s)));
+    d.push(0.3 + 0.7 * sstep(0, 0.35, s));
+    Bd.push(0.45 + 0.55 * sstep(0, 0.3, s));
+    f.push(h.f * (1 + 0.6 * (1 - s) * (1 - s)));
+  }
+  // the waterplane: scaled to Cwp L B, no section wider than the beam (what one cannot take, the others share)
+  const want = h.Cwp * L * B; let kw = 1;
+  for (let it = 0; it < 6; it++){ let free = 0, full = 0; for (const w of W){ if (w * kw >= B) full += B; else free += w * kw; } if (!free) break; kw *= Math.max(0, want - full * dx) / (free * dx); }
+  for (let i = 0; i < n; i++){ W[i] = Math.min(B, W[i] * kw); Bd[i] = Math.max(W[i], Math.min(B, Bd[i] * B)); }
+  const sW = W.reduce((a, w) => a + w, 0), Awp = sW * dx, kd = h.T * sW / W.reduce((a, w, i) => a + w * d[i], 0);
+  for (let i = 0; i < n; i++) d[i] *= kd;
+  const p = Math.max(0, Awp / (h.Cb * L * B) - 1);
+  // the longitudinal radius of gyration: as the waterplane's (so pitch has heave's period, as stabOf gives both), within 0.22-0.30 L
+  let zF = 0; for (let i = 0; i < n; i++) zF += W[i] * z[i]; zF /= sW;
+  let IL = 0; for (let i = 0; i < n; i++) IL += W[i] * ((z[i] - zF) ** 2 + dx * dx / 12);
+  const Lw = zf - za, kyy = clamp(Math.sqrt(IL / sW), 0.22 * Lw, 0.3 * Lw);
+  H = {key, type, n, z, dx, W, d, Bd, f, p, zc:d.map(v => v / (p + 2)), V:Awp * h.T / (p + 1), Awp, L, B, T:h.T, Lw, zFwd:za, zAft:zf, kyy, planing:pl, bc:Math.max(...W), beta:14, rest:new Map()};
+  HS_C.set(key, H); return H;
+}
+// a section's drowned area (m^2) and its breadth at the water, the keel h metres under the water (W (y/d)^p up to the waterline, the flare
+// out to the deck above it, nothing more with the deck under)
+function secArea(H, i, h){
+  if (!(h > 0)) return 0;
+  const W = H.W[i], d = H.d[i], p = H.p; if (h <= d) return W * d / (p + 1) * Math.pow(h / d, p + 1);
+  const f = H.f[i], q = Math.min(h - d, f); return W * d / (p + 1) + q * (W + (H.Bd[i] - W) * q / (2 * f));
+}
+function secBreadth(H, i, h){ if (!(h > 0)) return 0; const d = H.d[i]; if (h <= d) return H.W[i] * Math.pow(h / d, H.p); const f = H.f[i]; return h - d >= f ? 0 : H.W[i] + (H.Bd[i] - H.W[i]) * (h - d) / f; }
+// The bow section back into the water from clear of it at a relative speed over this is a slam (Ochi's threshold is 0.093 sqrt(g L); the
+// plan's «rundt 2 m/s for sjarken» is 0.2 sqrt(g L): 2.0 m/s for the sjark, 1.5 for the skiff, 2.9 for the 21 m coaster)
+const hullSlamV = H => 0.2 * Math.sqrt(HS_G * H.L);
+// She floats in still water with D tonnes aboard: the sinkage where the buoyancy carries her, the centre of gravity over the centre of
+// buoyancy (level), the stiffness in heave and pitch, the masses with 0.8 added (stabOf's Tz has the same 0.8), and the damping. The model's
+// origin is 0.06 m over its design waterline (the old following put her there), so y0 is 0.06 empty and lower with a load.
+function hullRest(H, D){
+  const key = Math.round(D * 100); let R = H.rest.get(key); if (R) return R;
+  const n = H.n, m = D * 1000, dx = H.dx; let s = 0;
+  for (let it = 0; it < 40; it++){
+    let F = 0, Fp = 0; for (let i = 0; i < n; i++){ F += secArea(H, i, H.d[i] + s); Fp += secBreadth(H, i, H.d[i] + s); }
+    F = F * dx * HS_RHO - m; Fp *= dx * HS_RHO; if (Math.abs(F) < m * 1e-7) break;
+    s = clamp(s - F / Math.max(Fp, m * 0.01), -Math.max(...H.d), Math.max(...H.f));
+  }
+  let A = 0, Az = 0, w = 0, wz = 0;
+  for (let i = 0; i < n; i++){ const a = secArea(H, i, H.d[i] + s), b = secBreadth(H, i, H.d[i] + s); A += a; Az += a * H.z[i]; w += b; wz += b * H.z[i]; }
+  const zG = Az / A, zF = wz / w; let IG = 0; for (let i = 0; i < n; i++) IG += secBreadth(H, i, H.d[i] + s) * ((H.z[i] - zG) ** 2 + dx * dx / 12);
+  const K33 = HS_RHO * HS_G * w * dx, K55 = HS_RHO * HS_G * IG * dx, m33 = 1.8 * m, I55 = 1.8 * m * H.kyy * H.kyy;   // (pitch about the centre of gravity)
+  R = {D, m, s, y0:0.06 - s, th0:0, zG, zF, K33, K55, m33, I55};
+  if (H.rest.size > 16) H.rest.clear(); H.rest.set(key, R); return R;
+}
+// the state of a hull let go at rest: the origin's height y (m, over the still water), pitch th (bow up), their speeds, and per section
+// the keel's depth under the water last step (the slam looks for a section coming back in)
+// (she turns about her centre of gravity, yg its height; y follows from it: the model turns about its origin, zG forward or aft of it)
+function hullX(R){ return {y:R.y0, yg:R.y0 - Math.sin(R.th0) * R.zG, vy:0, th:R.th0, vth:0, h:new Float64Array(HS_N), t:0, slamT:-9}; }
+// One step of dt seconds: eta[i] is the water's height at section i (over the still water, the short sea's pressure already taken down
+// with the depth, Smith's e^(-k d)), deta[i] how fast it rises. The force and the moment about the origin from the buoyancy of each
+// section about her centre of gravity (the weight is there), damped as wave making (0.3 of critical at rest, more with way on). With way on (o.V, m/s through the
+// water, and o.Fr) she lies in her own wave: the water along her is taken down and tilted, the bow wave's crest forward and the trough
+// aft, linearised: a displacement hull squats 0.4 % of her length and lifts her bow a degree near her hull speed (Fr 0.35-0.45, as the
+// old trim did), a planing hull climbs her bow wave to some 6 degrees over the hump (Fr 0.25-0.7) and leaves it behind on the plane.
+// (A fixed moment for the hump, the first try, lifted the skiff's light bow clear of the water and stood her on her transom at 8-12
+// knots, 20-40 degrees: her own wave tilts the water instead, and she can trim no further than it.) On the plane she gets the dynamic
+// lift of a planing surface, Savitsky's C_L0 = tau^1.1 0.012 sqrt(lambda)
+// (the hydrostatic part of his formula is the sections' own), less for the deadrise, at his centre of pressure l_p / (lambda b) =
+// 0.75 - 1 / (5.21 Cv^2 / lambda^2 + 2.39) forward of the transom, with the angle of attack the trim less what her own rise takes off it
+// (that damps the porpoising), and the bottom's own degree aft (the buttocks rise a little forward of the transom, so she has lift from the
+// start). The trim on the plane comes out of where that lift and the buoyancy carry her, not from a fixed number.
+// Returns the slam, as a share of the threshold, when a bow section re-entered the water faster than hullSlamV, else 0.
+function hullStep(H, R, X, eta, deta, dt, o){
+  const n = H.n, c = Math.cos(X.th), sn = Math.sin(X.th), V = (o && o.V) || 0, Fr = (o && o.Fr) || 0, vth = hullSlamV(H), pl = !!(o && o.planing);
+  const way = V > 0.5, wt = !way ? 0 : pl ? 0.1 * sstep(0.25, 0.6, Fr) * (1 - sstep(0.7, 1.4, Fr)) : 0.018 * sstep(0.2, 0.45, Fr), ws = way && !pl ? 0.004 * H.Lw * sstep(0.3, 0.45, Fr) : 0;
+  const zG = R.zG; let F = -R.m * HS_G, M = 0, slam = 0;
+  for (let i = 0; i < n; i++){
+    const z = H.z[i] - zG, h = eta[i] - wt * (H.z[i] - R.zF) - ws - (X.yg - (0.06 + H.d[i]) * c - sn * z), a = secArea(H, i, h) * H.dx * HS_RHO * HS_G;
+    F += a; M -= z * a;
+    if (i < 2 && X.h[i] <= 0 && h > 0 && X.t - X.slamT > 0.4){
+      const vr = (deta ? deta[i] : 0) - (X.vy - z * c * X.vth + (0.06 + H.d[i]) * sn * X.vth);
+      if (vr > vth){ slam = Math.max(slam, vr / vth); }
+    }
+    X.h[i] = h;
+  }
+  if (slam) X.slamT = X.t;
+  if (way && pl){
+    { const b = H.bc, Cv = V / Math.sqrt(HS_G * b); let Lk = 0;
+      for (let i = n - 1; i >= 0; i--){ if (X.h[i] <= 0) break; Lk += H.dx; }
+      const lam = Math.max(0.5, Lk / b), zcp = H.zAft - lam * b * (0.75 - 1 / (5.21 * Cv * Cv / (lam * lam) + 2.39));
+      const tau = clamp((X.th - R.th0 - (X.vy - (zcp - zG) * X.vth) / V) * 180 / Math.PI + 1, 0, 12), CL0 = Math.pow(tau, 1.1) * 0.012 * Math.sqrt(lam);
+      const lift = 0.5 * HS_RHO * V * V * b * b * Math.max(0, CL0 - 0.0065 * H.beta * Math.pow(CL0, 0.6)) * sstep(0.8, 1.6, Cv);
+      F += lift; M -= (zcp - zG) * lift; }
+  }
+  const ze = 0.3 + 0.15 * sstep(0.2, 0.8, Fr), c33 = 2 * ze * Math.sqrt(R.K33 * R.m33), c55 = 2 * ze * Math.sqrt(R.K55 * R.I55);
+  X.vy += (F - c33 * X.vy) / R.m33 * dt; X.yg += X.vy * dt;
+  X.vth += (M - c55 * X.vth) / R.I55 * dt; X.th += X.vth * dt; X.t += dt;
+  if (!(Number.isFinite(X.yg) && Number.isFinite(X.th) && Number.isFinite(X.vy) && Number.isFinite(X.vth)) || Math.abs(X.th) > 0.8){ X.yg = R.y0 - Math.sin(R.th0) * zG; X.th = R.th0; X.vy = X.vth = 0; }
+  X.y = X.yg + Math.sin(X.th) * zG;
+  return slam;
+}
