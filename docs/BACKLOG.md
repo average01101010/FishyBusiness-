@@ -225,7 +225,7 @@
   - **Ikke med:** § 163 (svell og sug), tau i propellen fra en blåse, skade på andres redskap, Kystverkets krav for et sjømerke, regressen og personskade i § 161, NPC-er som støter i hverandre. Kjenningssignalet står i VHF-meldingen, men fortsatt ikke på AIS-kortet.
   - **Sikkerhet-kortet (Ø11.7)** skal vise `S.clashes` (høyst 40) sammen med nestenulykkene.
 - **Ø11.5, det som er antatt eller står igjen (06.11.2026; `docs/planer/lover-regler-sikkerhet.md` Ø11.5):**
-  - **Ø4 (modellene):** havbåtene har ingen `kit` i modellen; bøyeholderne, MOB-plassen og autolinerens to flåter står i `KITADD` i `vessel3d.js`, og leiderne der modellene mangler dem eller de er for korte i `LADDERS`. De bakte MOB-båtene i al45, tral60, krabbe50 og not75 skjules bare på egen båt (`MOBCUT`); NPC-ene og andre spillere viser den gamle. Når Ø4 reviderer en modell: ta ut den bakte båten, gi modellen `kit.mob`, `kit.buoys`, `kit.raft` (al45) og en leider etter § 63, og stryk linjene i `KITADD`, `MOBCUT` og `LADDERS`.
+  - **Ø4 (modellene):** havbåtene har ingen `kit` i modellen; bøyeholderne, MOB-plassen og autolinerens to flåter står i `KITADD` i `vessel3d.js`, og leiderne der modellene mangler dem eller de er for korte i `LADDERS`. De bakte MOB-båtene i al45, tral60 og not75 skjules bare på egen båt (`MOBCUT`; krabbe50 har ingen fra H3d1 07.11.2026, og har `kit.mob`, `kit.buoys` og `kit.raft` i modellen); NPC-ene og andre spillere viser den gamle. Når Ø4 reviderer en modell: ta ut den bakte båten, gi modellen `kit.mob`, `kit.buoys`, `kit.raft` (al45) og en leider etter § 63, og stryk linjene i `KITADD`, `MOBCUT` og `LADDERS`.
   - **Plassene på de låste havbåtene** (snøkrabbebåten, tråleren, den pelagiske) er målt med stråler og sett på ett bilde hver; ingen spiller ser dem før de kan kjøpes. Snøkrabbebåtens og autolinerens nye MOB-båt står til styrbord, ikke der den gamle sto (for trangt), og den pelagiskes på tier B over nisjen, med davitet flyttet 0,35 m forover (klar av flåtebeholderen) og armen svingt mot masterløkka, som da står 3,5 cm utenfor kroken.
   - **Brovaktalarmen er påbudt fra 10,67 m** fordi alle båtene med styrhus har Autonav (selvstyring) og fartsområde over fjordfiske (antatt som før: kystfiske under 15 m). Dermed er den alltid om bord på hurtigsjarkene, breisjarken og kystbåtene, og døsingen ved roret vekker alltid.
   - **FOR-2000-06-13-660 (fra 15 m)** er fortsatt bare lest som sammendrag (§§ 7-5, 7-10, 9-6, 10-4a, 10-7); FOR-2013-11-22-1404 §§ 43, 63, 64, 68 og 77 er lest ordrett 06.11.2026. Tabellen i § 68 er flatet ut på Lovdata (kolonnene tolket), og § 77 viser til «vedlegg 8», mens innholdsfortegnelsen har brovaktalarmen i vedlegg 7.
@@ -513,6 +513,13 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 - **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
+
+## Strøket 07.11.2026 (havsteget H3d1, gren `ccr-287cbb81-whkbel`, ikke rullet ut)
+
+- Teinedekket på snøkrabbefartøyet var tomt (M1 i `kartlegging-spillet.md`): 70 stableplasser i modellen, og spillet tegner teinene om bord fra `potsAboard()` (leste `pots.big`, fartøyet bærer `pots.sno`). 5ab3abd9.
+- Den forreste topplanterna sto 16,5 m fra baugen (M21(2)): masta på styrhustaket, 11,4 m fra stevnen (vedlegg I 3(a)). `krabbe50.py`.
+- MOB-båten bakt inn i `krabbe50` (`MOBCUT`), bøyene og flåtene fra `KITADD`, konsollen fra `HELM_KIT`: modellens egne plasser og egen pult.
+- En kam av innfoldede stasjoner på babord baug (`pchip` bufret på `id(tab)`): rettet i e7687c78, med kontroll av sidene i `check()`.
 
 ## Strøket 07.11.2026 (UI 2, U2-4: Roen, gren `ccr-fc7a11b2-nl5jor`, rullet ut i c62047f0)
 
