@@ -686,11 +686,11 @@ def _opp2(kind, lv):
     async def f(pl):
         await pl.js("FP.cash(1500000)"); await pl.js("FP.vessel('sjark')")
         if kind == 'line':
-            await pl.js("""lv => { const e = S.equip; e.linehaler = lv > 1 ? lv : true; e.hott = lv; if (lv > 1) e.linesetter = lv > 2 ? 2 : true; S.boat.rig = 'line';
+            await pl.js("""lv => { const e = S.equip; e.linehaler = true; e.linehalerLv = lv; e.hott = lv; if (lv > 1) e.linesetter = true; if (lv > 2) e.linesetterLv = 2; S.boat.rig = 'line';
               const L = S.pgear.lines.hyse; L.n = 4; L.baited = 4; btOf(L); S.pgear.kits.n = 2; refreshAll(); }""", lv)
         else:
             pl.note('crew', await pl.js("""() => { const c = PHONE.candidates().find(x => !x.bi); if (!c) return 'none'; const k = crewUpgrade(c); Object.assign(k.gear, {sloy:3, is:3, garn:3}); k.fatigue = 0; k.morale = 70; S.crew.push(k); refreshAll(); return k.name + ' aboard: ' + crewAboard().length; }"""))
-            await pl.js("""lv => { const e = S.equip; e.garnhaler = lv > 1 ? lv : true; e.hott = lv; if (lv > 1) e.garnrenne = true; S.boat.rig = 'garn';
+            await pl.js("""lv => { const e = S.equip; e.garnhaler = true; e.garnhalerLv = lv; e.hott = lv; if (lv > 1) e.garnrenne = true; S.boat.rig = 'garn';
               S.pgear.nets.push({id:'nOpp', mesh:180, ty:'bunn', n:10, cond:1, max:0.95}); S.pgear.kits.n = 2; refreshAll(); }""", lv)
         await pl.js(OPP2_TIME)
         sp = await to_sea(pl, 'botnhamn', 10, 40, 140, 'hyse', 'a haddock spot off Senja') if kind == 'line' else await to_sea(pl, 'gryllefjord', 10, 30, 120, 'torsk', 'a cod spot off Gryllefjord')
@@ -698,7 +698,7 @@ def _opp2(kind, lv):
         tag = kind + str(lv)
         if not await set_out(pl, 'hyseline' if kind == 'line' else '180', tag): return
         await soak(pl, 12 if kind == 'line' else 18, tag); await haul(pl, tag)
-        r = json.loads(await pl.js("JSON.stringify(Object.assign({}, window.__opp, {eq:{lh:S.equip.linehaler, gh:S.equip.garnhaler, ho:S.equip.hott, ls:S.equip.linesetter || 0, gr:S.equip.garnrenne || 0}, crew:crewAboard().length}))"))
+        r = json.loads(await pl.js("JSON.stringify(Object.assign({}, window.__opp, {eq:{lh:equipLv('linehalerLv'), gh:equipLv('garnhalerLv'), ho:S.equip.hott, ls:S.equip.linesetter ? equipLv('linesetterLv') : 0, gr:S.equip.garnrenne || 0}, crew:crewAboard().length}))"))
         if r.get('s1') is not None and r.get('s0') is not None: r['setMin'] = r['s1'] - r['s0']; r['setPer'] = round(r['setMin'] / max(1, r.get('sn') or 1), 2)
         if r.get('h1') is not None and r.get('h0') is not None: r['haulMin'] = r['h1'] - r['h0']; r['haulPer'] = round(r['haulMin'] / max(1, r.get('hn') or 1), 2)
         r['lv'] = lv; pl.note('measure', json.dumps(r, ensure_ascii=False))

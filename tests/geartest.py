@@ -320,11 +320,11 @@ async def main():
         # The hauler's tier takes 10 and 20 % off a tub, a net and a pot hauled; the line setter 20 and 35 % off a tub set, the net chute
         # 25 % off a net set; the gaff's 8 % adds to the hauler's 20 % (28 %, not 1 - 0.8 x 0.92); setting is not touched by the hauler
         r = await pg.evaluate("""(()=>{ const b = S.boat, R = {}, c = hand();   // (one and the same hand in every measure: a new one has other skills)
-          const tm = (kind, op, eq) => { S.equip = Object.assign({}, S.equip, {linehaler:true, garnhaler:true, teinehaler:true, linesetter:false, garnrenne:false, hott:1}, eq); S.crew = [c]; S.hold = []; b.status = 'fishing'; b.deckStop = false;
+          const tm = (kind, op, eq) => { S.equip = Object.assign({}, S.equip, {linehaler:true, garnhaler:true, teinehaler:true, linehalerLv:1, garnhalerLv:1, teinehalerLv:1, linesetter:false, linesetterLv:1, garnrenne:false, hott:1}, eq); S.crew = [c]; S.hold = []; b.status = 'fishing'; b.deckStop = false;
             b.gop = {op, kind, n:2, done:0, prog:0, sub:0, sl:1, hooksPer:kind === 'line' ? 600 : 0}; const ms = gopUnitMin(b.gop, S.t / 60, 0); b.gop = null; return +ms.toFixed(3); };
-          for (const [kind, h] of [['line', 'linehaler'], ['garn', 'garnhaler'], ['teine', 'teinehaler']]) R[kind] = [1, 2, 3].map(lv => tm(kind, 'haul', {[h]:lv > 1 ? lv : true}));
-          R.lineHott = tm('line', 'haul', {linehaler:3, hott:3}); R.lset = [tm('line', 'set', {}), tm('line', 'set', {linesetter:true}), tm('line', 'set', {linesetter:2}), tm('line', 'set', {linehaler:3})];
-          R.gset = [tm('garn', 'set', {}), tm('garn', 'set', {garnrenne:true})]; S.equip.linesetter = false; S.equip.garnrenne = false; S.equip.hott = 1; S.crew = [hand()];
+          for (const [kind, h] of [['line', 'linehalerLv'], ['garn', 'garnhalerLv'], ['teine', 'teinehalerLv']]) R[kind] = [1, 2, 3].map(lv => tm(kind, 'haul', {[h]:lv}));
+          R.lineHott = tm('line', 'haul', {linehalerLv:3, hott:3}); R.lset = [tm('line', 'set', {}), tm('line', 'set', {linesetter:true}), tm('line', 'set', {linesetter:true, linesetterLv:2}), tm('line', 'set', {linehalerLv:3})];
+          R.gset = [tm('garn', 'set', {}), tm('garn', 'set', {garnrenne:true})]; for (const k of ['linesetter', 'garnrenne', 'linehalerLv', 'garnhalerLv', 'teinehalerLv', 'linesetterLv']) delete S.equip[k]; S.equip.hott = 1; S.crew = [hand()];
           return R; })()""")
         print('minutter per enhet per trinn (OPP2):', json.dumps(r))
         q = lambda a, b0: abs(a / b0 - 1) if b0 else 9

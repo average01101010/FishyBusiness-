@@ -162,13 +162,14 @@ function mySets(vid){ return (S.sets || []).filter(s => s.vid === (vid || S.cur)
 // an autoliner's own autoline system (its hauler, hook cleaner and baiting machine, VESSELS autoHooks) hauls her line
 // (H3a) and the snow crab vessel's portal with its pot hauler (VESSELS pot 'sno') hauls her pots
 function hasHauler(kind){ return (kind === 'line' && BOAT && BOAT.autoHooks > 0) || (kind === 'teine' && BOAT && POTS[BOAT.pot] && POTS[BOAT.pot].sno) || GEAR[kind].haulers.some(k => S.equip && S.equip[k]); }
-// the share off the time to haul a unit from the hauler's tier (OPP2: 0, 10 and 20 %; the best of the boat's haulers for the gear), and the
-// share off the time to set one from the line setter's tier or the net chute (EQUIP linesetter, garnrenne); 0 without them, and 0 without
-// the hauler they hang on (needs: one bought while the hauler waited for its fitting, and that job cancelled)
-function haulerX(kind, eq = S.equip, type){ let x = 0; for (const h of GEAR[kind].haulers){ const lv = equipLv(h, eq, type); if (lv) x = Math.max(x, EQUIP[h].tiers[lv - 1].haul || 0); } return x; }
+// the share off the time to haul a unit from the hauler's tier (OPP2: 0, 10 and 20 %, EQUIP linehalerLv …; the best of the boat's haulers
+// for the gear that are aboard), and the share off the time to set one from the line setter and its tier or the net chute (EQUIP
+// linesetter + linesetterLv, garnrenne); 0 without them, and 0 without the hauler they hang on (needs: one bought while the hauler waited
+// for its fitting, and that job cancelled)
+function haulerX(kind, eq = S.equip, type){ let x = 0; for (const h of GEAR[kind].haulers) if (eq && eq[h] && EQUIP[h].lvk) x = Math.max(x, equipTier(EQUIP[h].lvk, eq, type).haul || 0); return x; }
 function setterX(kind, eq = S.equip, type){
   const k = kind === 'line' ? 'linesetter' : kind === 'garn' ? 'garnrenne' : null, E = k && EQUIP[k]; if (!E || !(eq && eq[k] && eq[E.needs])) return 0;
-  return E.tiers ? E.tiers[equipLv(k, eq, type) - 1].set : E.set;
+  return upgSum(E.set, E.lvk ? equipTier(E.lvk, eq, type).set : 0) - 1;
 }
 
 // ---- the rig: a boat is rigged for one kind of fishing at a time. Jigging needs a hand jig or reels; line and pots
@@ -260,12 +261,12 @@ function buyGate(what, spec, lv){
 }
 function tierGate(k, lv){
   const E = EQUIP[k], b = S.boat, V = VESSELS[b.type] || {}; if (!E || !E.tiers) return [gL('Ukjent utstyr.', 'Unknown equipment.')];
-  // (OPP2) the haulers and the line setter: tier 1 is the one bought, at Shop › Electronics and haulers; the reels' tier needs reels
-  if (E.price && !equipLv(k)) return [gL('Båten har ingen ' + lc1(E.name.no) + '. Den kjøpes og monteres under Elektronikk og haler.', 'The boat has no ' + lc1(E.name.en) + '. It is bought and fitted under Electronics and haulers.')];
-  if (!E.price && !equipFits(k, b.type)){ const f = E.fit || {};
+  // (OPP2) the tiers of an item that is bought (the haulers, the line setter, the reels: of) only with it aboard or being fitted
+  if (E.of && !(S.equip && S.equip[E.of]) && !(S.jobs || []).some(j => j.kind === 'fit' && j.k === E.of)){ const O = EQUIP[E.of];
+    return [gL('Båten har ingen ' + lc1(O.name.no) + '. Den kjøpes og monteres under Elektronikk og haler.', 'The boat has no ' + lc1(O.name.en) + '. It is bought and fitted under Electronics and haulers.')]; }
+  if (!equipFits(k, b.type)){ const f = E.fit || {};
     if (f.jig && V.cls !== 'hav') return [gL('«' + S.boatName + '» har plass til ' + (V.jukseMax || 0) + ' juksamaskiner, og én person passer ' + E.tiers[0].tend + '. Trinnene gir noe fra fire maskiner.', 'The «' + S.boatName + '» has room for ' + (V.jukseMax || 0) + ' reels, and one person tends ' + E.tiers[0].tend + '. The tiers give something from four reels.')];
     return [gL(E.name.no + ' i trinn hører til kystbåtene. Havbåtene har sitt eget utstyr.', 'The ' + E.name.en.toLowerCase() + ' in tiers are for the coastal boats. The ocean vessels have their own.')]; }
-  if (k === 'jukseLv' && !(tierUnits(k, 2) > 0)) return [gL('Båten har ingen juksamaskin. Den kjøpes og monteres under Elektronikk og haler.', 'The boat has no jigging reel. It is bought and fitted under Electronics and haulers.')];
   if (k === 'juksesett' && !(tierKr(k, 2) > 0)) return [gL('Båten har ingen juksa og ingen juksasett om bord.', 'The boat has no jig and no jig sets aboard.')];
   const cur = equipLv(k), top = E.tiers.length, want = lv == null ? cur + 1 : lv;
   if (cur >= top) return [gL('Båten har det beste: ' + lc1(E.tiers[top - 1].no) + '.', 'The boat has the best: ' + lc1(E.tiers[top - 1].en) + '.')];

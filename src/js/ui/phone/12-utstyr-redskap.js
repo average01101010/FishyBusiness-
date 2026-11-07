@@ -28,7 +28,7 @@
     if (mode === 'butikk' && atKind('butikk')) h.splice(1, 0, shopTop('utstyrb'));
     // (the tiers of the knives, the gaff, the reels and the jig sets are in Fiskeutstyr; the haulers and the line setter are bought here and
     // their tiers there, OPP1 and OPP2)
-    const ORDER = ['linehaler', 'garnhaler', 'teinehaler', 'linesetter', 'garnrenne', 'jukse', 'krabbekar'], keys = Object.keys(EQUIP).filter(k => !(EQUIP[k].tiers && !EQUIP[k].price) && yardEq(k) === (mode === 'verft')).sort((a, c) => (ORDER.includes(a) ? ORDER.indexOf(a) : 99) - (ORDER.includes(c) ? ORDER.indexOf(c) : 99));
+    const ORDER = ['linehaler', 'garnhaler', 'teinehaler', 'linesetter', 'garnrenne', 'jukse', 'krabbekar'], keys = Object.keys(EQUIP).filter(k => !EQUIP[k].tiers && yardEq(k) === (mode === 'verft')).sort((a, c) => (ORDER.includes(a) ? ORDER.indexOf(a) : 99) - (ORDER.includes(c) ? ORDER.indexOf(c) : 99));
     const aboard = [], nofit = []; let tiersAboard = false;
     for (const k of keys){ const E = EQUIP[k];
       if (!equipFits(k, S.boat.type)){ nofit.push(E.name[S.lang]); continue; }
@@ -37,8 +37,8 @@
       const fitTxt = !fitting ? '' : (E.multi && fj.length > 1 ? fj.length + ' ' : '') + L('Til montering', 'Being fitted') + (fj[0].until != null ? ' · ' + L('ferdig kl. ', 'done at ') + hm(fj[0].until / 60) + ' (' + inReal(fj[0].until - S.t) + ')' : ' · ' + L('venter på havn', 'waits for port'));
       // (what the rules ask for is aboard and not for sale here: V6 A; it says so in the card of what is aboard)
       const req = (VESSELS[S.boat.type].req || []).includes(k);
-      // (OPP2: what is aboard says its tier, the haulers' and the line setter's, and the reels' where they have tiers)
-      const tierTxt = E.tiers && have ? ' (' + L('trinn ', 'tier ') + equipLv(k) + ')' : E.lvk && have && equipFits(E.lvk, S.boat.type) ? ' (' + L('trinn ', 'tier ') + equipLv(E.lvk) + ')' : '';
+      // (OPP2: what is aboard says its tier: the haulers', the line setter's and the reels', where the tiers suit the boat)
+      const tierTxt = E.lvk && have && equipFits(E.lvk, S.boat.type) ? ' (' + L('trinn ', 'tier ') + equipLv(E.lvk) + ')' : '';
       if (tierTxt) tiersAboard = true;
       if (have >= max || req){ const br = SPUI.brandOf(k); aboard.push(E.name[S.lang] + (br && br.m ? ' (' + br.m + ')' : '') + (E.multi ? ' × ' + have : '') + tierTxt + (req ? ' (' + L('påbudt, følger båten', 'required, comes with the boat') + ')' : '')); continue; }
       // (OPP2) the line setter and the net chute hang on their hauler (buyGate('equip')); a reel costs what the boat's tier of reels does (equipKr)
@@ -198,10 +198,11 @@
       // the knives and the gaff in tiers (OPP1 of docs/planer/oppgraderinger.md): what is aboard and its tier, the next tier's numbers
       // (ICFX), price and button, or what stands in the way (buyGate); the gaff's card shows the fish lost over the rail this week.
       // (OPP2) The same for the reels and the jig sets, and for the haulers and the line setter once they are aboard (bought under
-      // Elektronikk og haler); their line is the next tier's in the player's own minutes and reels (icTierFx). A tier from 10 000 kr
-      // confirms in the button where phone/14-act.js asks for it (the haulers' and the line setter's price)
-      for (const k of ['kniv', 'hott', 'jukseLv', 'juksesett', 'linehaler', 'garnhaler', 'teinehaler', 'linesetter']){ const E = EQUIP[k]; if (E.price ? !equipLv(k) : !equipFits(k, b.type)) continue;
-        const lv = Math.max(1, equipLv(k)), top = E.tiers.length, T = E.tiers[lv - 1], nx = lv < top ? lv + 1 : 0, price = nx ? tierKr(k, nx) : null, gate = nx ? buyGate('tier', k) : null;
+      // Elektronikk og haler; their tiers are items of their own, linehalerLv …, of the item); their line is the next tier's in the
+      // player's own minutes and reels (icTierFx). A tier from 10 000 kr confirms in the button (phone/14-act.js, tierKr)
+      for (const k of ['kniv', 'hott', 'jukseLv', 'juksesett', 'linehalerLv', 'garnhalerLv', 'teinehalerLv', 'linesetterLv']){ const E = EQUIP[k], O = E.of && E.of !== 'jukse' ? EQUIP[E.of] : null;
+        if (!equipFits(k, b.type) || (O && !S.equip[E.of])) continue;
+        const lv = equipLv(k), top = E.tiers.length, T = E.tiers[lv - 1], nx = lv < top ? lv + 1 : 0, price = nx ? tierKr(k, nx) : null, gate = nx ? buyGate('tier', k) : null;
         const per = nx && ['table', 'jukse'].includes(E.tiers[nx - 1].per) ? tierUnits(k, nx) : 0, wk = railWeek();   // (the fish lost over the rail on this boat this week)
         const body = (per ? '<p class="ic-have">' + (E.tiers[nx - 1].per === 'jukse' ? L(kr(E.tiers[nx - 1].kr) + ' per maskin, ' + per + ' om bord', kr(E.tiers[nx - 1].kr) + ' a reel, ' + per + ' aboard') : L(kr(E.tiers[nx - 1].kr) + ' per sløyeplass, ' + per + ' om bord', kr(E.tiers[nx - 1].kr) + ' a gutting place, ' + per + ' aboard')) + '</p>' : '') +
           (k === 'hott' ? '<p class="ph-note" data-lost="' + wk.n + '">' + (wk.n ? L('Tapt over ripa denne uka: ' + wk.n + ' fisk, ' + fmt(wk.kg, 0) + ' kg', 'Lost over the rail this week: ' + wk.n + ' fish, ' + fmt(wk.kg, 0) + ' kg') : L('Ingen fisk tapt over ripa denne uka.', 'No fish lost over the rail this week.')) + '</p>'
@@ -213,7 +214,7 @@
           : pend ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
           : '<button class="ph-btn p" data-pa="equip" data-k="' + k + '"' + (price > spendable() ? ' disabled' : '') + '>' + L('Kjøp trinn ' + nx, 'Buy tier ' + nx) + ' · ' + kr(price) + '</button>';
         const fx = k === 'kniv' || k === 'hott' ? undefined : icTierFx(k, nx || lv);   // (the knife's and the gaff's are ICFX's, OPP1)
-        h.push(itemCard({k, anchor:'', pic:k === 'jukseLv' ? 'jukse' : k === 'juksesett' ? 'jigset' : undefined, fx, name:E.name[S.lang], sub:L('trinn ', 'tier ') + lv + ' / ' + top, price:nx ? price : L('Øverste trinn', 'Top tier'), have:L('Om bord · trinn ' + lv + ': ' + lc1(T.no), 'Aboard · tier ' + lv + ': ' + lc1(T.en)) + (nx ? '' : L(' (det beste)', ' (the best)')), body, btns})); }
+        h.push(itemCard({k, anchor:'', pic:O ? E.of : k === 'jukseLv' ? 'jukse' : k === 'juksesett' ? 'jigset' : undefined, fx, name:(O || E).name[S.lang], sub:L('trinn ', 'tier ') + lv + ' / ' + top, price:nx ? price : L('Øverste trinn', 'Top tier'), have:L('Om bord · trinn ' + lv + ': ' + lc1(T.no), 'Aboard · tier ' + lv + ': ' + lc1(T.en)) + (nx ? '' : L(' (det beste)', ' (the best)')), body, btns})); }
       h.push(itemCard({k:'net', name:L('Garn', 'Nets'), price:L('fra ', 'from ') + kr(NETTY.bunn.price) + L(' per garn', ' a net'), have:own('net', pg.nets.reduce((a, l) => a + l.n, 0), 'garn', 'nets'), body:roomTxt(room('garn'), 'garn', 'nets'),
         btns:NETOPT.map(o => buy('net', netKey(o[0], o[1]), 10, n => L(NETTY[o[0]].no, NETTY[o[0]].en) + ' ' + o[1] + ' mm × ' + n, NETTY[o[0]].price)).join('')}));
       h.push(itemCard({k:'line', name:L('Line', 'Line'), price:kr(LINE_KINDS.bank.price) + '–' + kr(LINE_KINDS.hyse.price) + L(' per stamp', ' a tub'), have:own('line', pg.lines.hyse.n + pg.lines.bank.n, 'stamper', 'tubs'), body:roomTxt(room('line'), 'stamper', 'tubs'),

@@ -107,19 +107,19 @@ const ICFX = {
   hott:() => { const lv = Math.min(equipLv('hott') + 1, EQUIP.hott.tiers.length), T = EQUIP.hott.tiers[lv - 1], r = Math.round(T.rail * 100), j = Math.round(JIG_SLIP * upgSum(-T.jig) * 100), h = Math.round(T.haul * 100);
     return ['Trinn ' + lv + ': ' + r + ' % færre fisk over ripa · ' + j + ' % glipper ved halvt treff i juksa · ' + h + ' % raskere linetrekk', 'Tier ' + lv + ': ' + r + '% fewer fish over the rail · ' + j + '% slip at a half hit on the jig · ' + h + '% faster line hauling']; },
   // (OPP2) the line setter and the net chute before they are bought: what they take off the setting, and what they hang on
-  linesetter:() => icTierLine('linesetter', 1),
+  linesetter:() => { const b = GEAR.line.set * LINE_KINDS.hyse.hooks / 700, x = EQUIP.linesetter.set; return ['Setter en stamp hyseline på ' + fmt(b * (1 - x), 1) + ' min mot ' + fmt(b, 1) + ' (−' + Math.round(x * 100) + ' %) · krever linehaler', 'Sets a tub of haddock line in ' + fmt(b * (1 - x), 1) + ' min against ' + fmt(b, 1) + ' (−' + Math.round(x * 100) + '%) · needs a line hauler']; },
   garnrenne:() => { const b = GEAR.garn.set, x = EQUIP.garnrenne.set; return ['Setter et garn på ' + fmt(b * (1 - x), 1) + ' min mot ' + fmt(b, 1) + ' (−' + Math.round(x * 100) + ' %) · krever garnhaler', 'Sets a net in ' + fmt(b * (1 - x), 1) + ' min against ' + fmt(b, 1) + ' (−' + Math.round(x * 100) + '%) · needs a net hauler']; }
 };
 // (OPP2) a tier's line in the player's own numbers: the minutes a unit takes at the hauler or over the stern for one person (before the crew,
 // the gaff and the cold, which add their own: gopUnitMin), the reels a person tends, the jig sets' wear and price. [no, en]
-const IC_HAUL = {linehaler:'line', garnhaler:'garn', teinehaler:'teine'};
+const IC_HAUL = {linehalerLv:'line', garnhalerLv:'garn', teinehalerLv:'teine'};
 function icTierLine(k, lv){
   const E = EQUIP[k], T = E.tiers[lv - 1], m = v => v < 2 ? fmt(v, 2).replace(/0$/, '') : fmt(v, 1);   // (1,08 and 1,2 min a pot; 21,4 a tub)
   if (IC_HAUL[k]){ const G = GEAR[IC_HAUL[k]], b = IC_HAUL[k] === 'line' ? G.haul * LINE_KINDS.hyse.hooks : G.haul, v = b * (1 - T.haul), p = Math.round(T.haul * 100),
       u = {line:['en stamp hyseline', 'a tub of haddock line'], garn:['et garn', 'a net'], teine:['en teine', 'a pot']}[IC_HAUL[k]];
     return ['Trinn ' + lv + ': trekker ' + u[0] + ' på ' + m(v) + ' min' + (p ? ' mot ' + m(b) + ' (−' + p + ' %)' : ''), 'Tier ' + lv + ': hauls ' + u[1] + ' in ' + m(v) + ' min' + (p ? ' against ' + m(b) + ' (−' + p + '%)' : '')]; }
-  if (k === 'linesetter'){ const b = GEAR.line.set * LINE_KINDS.hyse.hooks / 700, v = b * (1 - T.set), p = Math.round(T.set * 100);
-    return ['Trinn ' + lv + ': setter en stamp hyseline på ' + m(v) + ' min mot ' + m(b) + ' (−' + p + ' %)' + (lv === 1 ? ' · krever linehaler' : ''), 'Tier ' + lv + ': sets a tub of haddock line in ' + m(v) + ' min against ' + m(b) + ' (−' + p + '%)' + (lv === 1 ? ' · needs a line hauler' : '')]; }
+  if (k === 'linesetterLv'){ const b = GEAR.line.set * LINE_KINDS.hyse.hooks / 700, x = upgSum(EQUIP.linesetter.set, T.set) - 1, v = b * (1 - x), p = Math.round(x * 100);
+    return ['Trinn ' + lv + ': setter en stamp hyseline på ' + m(v) + ' min mot ' + m(b) + ' (−' + p + ' %)', 'Tier ' + lv + ': sets a tub of haddock line in ' + m(v) + ' min against ' + m(b) + ' (−' + p + '%)']; }
   if (k === 'jukseLv'){ const was = E.tiers[Math.max(0, lv - 2)].tend;
     return ['Trinn ' + lv + ': én person passer ' + T.tend + ' maskiner' + (lv > 1 ? ' (' + was + ' før)' : '') + ' · samme fangst per maskin', 'Tier ' + lv + ': one person tends ' + T.tend + ' reels' + (lv > 1 ? ' (' + was + ' before)' : '') + ' · the same catch a reel']; }
   if (k === 'juksesett'){ const x = upgSum(T.pc || 0), m0 = kr(Math.round(CARE.jig.mark.kr * x)), k0 = kr(Math.round(CARE.jig.kveite.kr * x));
@@ -138,7 +138,7 @@ const ICANCHOR = {
 const ICMORE = {jig:'juksa', kgear:'kveiteutstyr', jukse:'juksa', jigset:'kroker', linehaler:'halere', garnhaler:'halere', teinehaler:'halere', krabbekar:'teiner',
   chirp:'elektronikk', sonar:'elektronikk', plotter:'elektronikk', vhf:'elektronikk', ais:'elektronikk', brovakt:'elektronikk', radar:'elektronikk', radarA:'elektronikk',
   antigro:'montering', motor90:'montering', olje:'klaer', varme:'klaer', ice:'is', bait:'agn', net:'garn', line:'line', pot:'teiner', kit:'blaser', heavy:'blaser', hooks:'kroker', kniv:'kniv', hott:'hott',
-  jukseLv:'juksa', juksesett:'kroker', linesetter:'line', garnrenne:'garn'};   // (OPP2; the line setter and the net chute get their own entries with OPP4's kap. 8)
+  jukseLv:'juksa', juksesett:'kroker', linesetter:'line', garnrenne:'garn', linehalerLv:'halere', garnhalerLv:'halere', teinehalerLv:'halere', linesetterLv:'line'};   // (OPP2; the line setter and the net chute get their own entries with OPP4's kap. 8)
 // the card. o: {k (picture, line, anchor, «Mer»), name, sub (small after the name), fx (instead of the line), price (kr or text), anchor,
 // cond (0–1 with its label), have (a line in green, «Om bord»), note, btns (html), body (html after the price), id}
 function itemCard(o){
