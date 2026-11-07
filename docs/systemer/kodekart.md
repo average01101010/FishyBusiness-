@@ -2332,7 +2332,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 89 `srchCard()`
   - 113 `srchSvg(u)`
 
-## `src/js/ui/04-panels-instruments.js` (336 linjer)
+## `src/js/ui/04-panels-instruments.js` (338 linjer)
 
 ---------- estimates ----------
 
@@ -2344,20 +2344,20 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 19 `statusText()`
   - 35 `nextEvent()`
   - 53 `setHtml(el, h)`
-  - 70 `hudFigures()`
-  - 93 `hudShortEv(txt)`
-  - 94 `hudLine3(how)`
-  - 128 `hullWarn(b)`
-  - 137 `hudGoYard()`
-  - 146 `renderHud()`
-  - 213 `liveFrac()`
-  - 214 `livePose(frac)`
-  - 237 `vnoise2(x, y, s)`
-  - 243 `microBottom(p, d)`
-- **245** instruments: GPS and echo sounder
-  - 320 `hudCardOpen(on)`
-  - 327 `hudClasses(stripOn, cardOn)`
-  - 331 `hudFold(which)`
+  - 72 `hudFigures()`
+  - 95 `hudShortEv(txt)`
+  - 96 `hudLine3(how)`
+  - 130 `hullWarn(b)`
+  - 139 `hudGoYard()`
+  - 148 `renderHud()`
+  - 215 `liveFrac()`
+  - 216 `livePose(frac)`
+  - 239 `vnoise2(x, y, s)`
+  - 245 `microBottom(p, d)`
+- **247** instruments: GPS and echo sounder
+  - 322 `hudCardOpen(on)`
+  - 329 `hudClasses(stripOn, cardOn)`
+  - 333 `hudFold(which)`
 
 ## `src/js/ui/05-tattoo-art.js` (169 linjer)
 
