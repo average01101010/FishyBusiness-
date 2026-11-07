@@ -125,9 +125,40 @@ async def tablet(p):
     print('errors (tablet):', errs[:3]); await ctx.close(); await br.close()
 
 
+# a phone on its side (Jonas 07.11.2026: «Telefon liggende må jo ha minikartet på samme måte som stående, nettbrett og pc … Og det skal være
+# likt i alle formater. Kart øverst, statusboksen under uten pluss og minus»): before, no little chart at all there, and the chart's «–»
+# stood alone under the box. Now as the phone upright: the chart on top, the strip under it without «+» or «–», a tap gives the card
+async def phone_side(p):
+    br = await p.chromium.launch(args=['--disable-gpu-compositing'])
+    for W, H in ((844, 390), (780, 360)):
+        ctx = await br.new_context(viewport={'width': W, 'height': H}, has_touch=True, is_mobile=True); pg = await ctx.new_page(); errs = []
+        pg.on('pageerror', lambda e: errs.append(str(e)))
+        await boot(pg, GAME + '#notut'); await pg.wait_for_timeout(800)
+        await pg.evaluate("(() => { if (!document.body.classList.contains('v3d') && typeof G3 !== 'undefined') G3.show(true); S.settings.hudMin = false; S.settings.plotMin = false; S.boat.status = 'idle'; S.boat.port = null; renderHud(); })()"); await pg.wait_for_timeout(800)
+        a = await pg.evaluate(BOX)
+        tag = '%dx%d' % (W, H)
+        check(a['plot'] and a['plot']['top'] <= 12 and a['plot']['h'] >= 80 and a['hud'] and a['hud']['top'] == a['plot']['top'] + a['plot']['h'] + 6,
+              tag + ': on its side the phone has the little chart at the top and the status box right under it', {'chart': a['plot'], 'hud': a['hud']})
+        check('hudstrip' in a['cls'] and not a['hmin'] and '+' not in a['text'] and '–' not in a['text'] and a['hud']['top'] + a['hud']['h'] < H - 90,
+              tag + ': the box is the strip without «+» or «–», clear of the button row', {'hud': a['hud'], 'cls': a['cls'], 'knapp': a['hmin']})
+        # at sea the old GPS box (speed, course, position) is not there besides the chart's foot (it stood over the deck log's tab)
+        await pg.evaluate("(() => { S.boat.status = 'idle'; S.boat.port = null; renderHud(); })()"); await pg.wait_for_timeout(1200); g = await pg.evaluate(BOX)
+        check(not g['gps'] and g['plot'], tag + ': at sea no GPS box beside the little chart (its foot says the same)', {'gps': g['gps']})
+        await pg.click('#hud .hs2'); await pg.wait_for_timeout(400); b = await pg.evaluate(BOX)
+        check('hudcard' in b['cls'] and b['plot']['top'] == a['plot']['top'], tag + ': a tap on the strip gives the whole box as a card, and the chart stays', {'cls': b['cls'], 'chart': b['plot']})
+        await pg.mouse.click(W - 200, H // 2); await pg.wait_for_timeout(400)
+        await pg.click('#plotMin'); await pg.wait_for_timeout(400); c = await pg.evaluate(BOX)
+        check('plotmin' in c['cls'] and c['gps'] and c['gps']['top'] <= 12 and c['hud']['top'] == c['gps']['top'] + c['gps']['h'] + 6, tag + ': the chart folded: its GPS strip at the top and the strip under it', {'gps': c['gps'], 'hud': c['hud']})
+        await pg.click('#plotMin'); await pg.wait_for_timeout(300)
+        await pg.screenshot(path='hud_phone_side_%s.png' % tag)
+        print('errors (phone on its side %s):' % tag, errs[:3]); await ctx.close()
+    await br.close()
+
+
 async def main():
     async with async_playwright() as p:
         await phone(p)
         await tablet(p)
+        await phone_side(p)
 
 asyncio.run(main())

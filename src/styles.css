@@ -718,7 +718,7 @@ body.v3d #instr{display:none!important}
 #gps3d{display:none}
 body.v3d #gps3d:not([hidden]){display:block;position:absolute;z-index:4;left:8px;top:calc(var(--gpsTop,130px) + min(var(--hudW,176px),26vh) + 6px);width:var(--hudW,176px);box-sizing:border-box;padding:6px 9px 7px;border-radius:8px;border:1px solid rgba(255,255,255,.14);background:rgba(6,16,24,.38);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#eef4f7;font-size:12.5px;pointer-events:none}
 /* the little chart carries the GPS in its foot (03e-miniplot.js, Jonas 05.10.2026): the box is only shown where the chart is not */
-@media (min-height:521px){ body.v3d #gps3d:not([hidden]){display:none} }
+body.v3d:not(.plotmin) #gps3d:not([hidden]){display:none}   /* the little chart's foot says the speed, the course and the position: the big GPS box is not shown, on a phone on its side either since it has the chart (07.11.2026); the chart folded leaves its GPS strip (.plotmin) */
 #gps3d .row{display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums;line-height:1.45} #gps3d .row > span{color:rgba(230,240,245,.68);white-space:nowrap} #gps3d .row b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* folding the boxes (S.settings.hudMin, plotMin; 04-panels-instruments.js hudFold) and «Vis HUD» off (hudOff) */
 #hud{--hz:1} #hud .hmin,#plotMin{flex:none;width:calc(44px / var(--hz,1));height:calc(44px / var(--hz,1));margin:0;padding:0;border:0;color:#fff;font:700 calc(15px / var(--hz,1))/1 var(--sans);text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;
@@ -947,12 +947,21 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
   #ecdisTop #ecSet::before{content:'⚙';font-size:17px} #ecdisTop #ecClose::before{content:'✕';font-size:16px}
   #ecdisTop #ecRoute{min-width:44px;padding:0 8px}
 }
-/* a phone on its side: the info box a little smaller, no mini chart (the chart is a tap away), the GPS box right under the info, and
-   the phone in the game as tall as the screen without its frame */
+/* a phone on its side, as the phone upright (Jonas 07.11.2026: «Telefon liggende må jo ha minikartet på samme måte som stående, nettbrett
+   og pc, hvis ikke er jo spillet ubrukelig … Og det skal være likt i alle formater. Kart øverst, statusboksen under uten pluss og minus»;
+   before, no little chart here and the box on top): the little chart at the top, 250 px wide and at most 30 vh high, its GPS strip there
+   when it is folded, and the strip under it (hudPortrait is true here: the strip is the box, and a tap gives the card, which scrolls if
+   it is taller than the room under the chart); and the phone in the game as tall as the screen without its frame */
 @media (max-height:520px){
-  body.v3d #hud{zoom:.86;--hz:.86}
-  body.v3d #miniPlot{display:none}
-  body.v3d #gps3d:not([hidden]){top:calc(var(--gpsTop,130px) + 6px)}
+  body.v3d{--sTop:calc(env(safe-area-inset-top,0px) + 8px);--mW:250px;--mH:min(var(--mW),30vh);--sW:var(--mW);--sH:62px;--gH:36px}
+  body.v3d #miniPlot{top:var(--sTop);width:var(--mW);height:var(--mH)}
+  body.v3d #plotMin{top:calc(var(--sTop) - 4px);left:3px}
+  body.v3d.plotmin #gps3d:not([hidden]){top:var(--sTop);width:var(--mW)}
+  body.v3d #hud{zoom:1;--hz:1;top:calc(var(--sTop) + var(--mH) + 6px);width:var(--sW);max-width:none;min-width:0!important;box-sizing:border-box}
+  body.v3d.plotmin #hud{top:calc(var(--sTop) + var(--gH) + 6px)}
+  body.v3d.hudstrip #hud{height:var(--sH)}
+  body.v3d.hudcard #hud{width:min(92vw,400px);height:auto;max-height:calc(100vh - var(--sTop) - var(--mH) - 14px);overflow-y:auto}
+  body.v3d.plotmin.hudcard #hud{max-height:calc(100vh - var(--sTop) - var(--gH) - 14px)}
   #phone{top:0;bottom:0;right:0;height:auto;width:min(380px,62vw);filter:drop-shadow(0 0 30px rgba(0,0,0,.5))}
   #phone .ph-body{border-radius:0;padding:0;border:0;background:#0b1622} #phone .ph-cam{display:none} #phone .ph-screen{border-radius:0}
   #logbook{bottom:calc(env(safe-area-inset-bottom,0px) + 4px)!important;height:92px!important}

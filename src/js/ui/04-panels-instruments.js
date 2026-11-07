@@ -55,7 +55,9 @@ let hudV = '', hudT = 0, hudCard = false;   // hudCard: the whole box open as a 
 // UI 2, U2-1 (docs/planer/ui-2-staaende.md 4.1–4.2, Jonas 06.11.2026, V1 A: the phone upright is the measure). Upright, the strip is the
 // normal state and the whole box is a card a tap away; on its side the whole box stands as before, and the strip is what «–» folds it
 // to (S.settings.hudMin). The little chart has a fixed place under either (styles.css), whatever the box holds
-const HUDMQ = typeof matchMedia === 'function' ? matchMedia('(orientation: portrait)') : null;
+// the phone's layout: upright, and a phone on its side too (no higher than 520 px; Jonas 07.11.2026: «Telefon liggende må jo ha minikartet på
+// samme måte som stående … Og det skal være likt i alle formater»): the chart on top, the strip under it, a tap gives the card
+const HUDMQ = typeof matchMedia === 'function' ? matchMedia('(orientation: portrait), (max-height: 520px)') : null;
 const hudPortrait = () => !!(HUDMQ && HUDMQ.matches);
 // the strip's second line: diesel, hold, energy and sea as an icon (the dock's stroke icons' kin) and a figure
 const HICON = {fuel:'<svg viewBox="0 0 24 24"><path d="M5 20V5.5A1.5 1.5 0 0 1 6.5 4h6A1.5 1.5 0 0 1 14 5.5V20"/><path d="M4 20h11"/><path d="M7 7.5h5V12H7z"/><path d="M14 11h2a2 2 0 0 1 2 2v3.5a1.5 1.5 0 0 0 3 0V9l-2.5-2.5"/></svg>',

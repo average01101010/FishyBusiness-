@@ -734,3 +734,11 @@
 2026-11-07 12:20	ccr-fc7a11b2-nl5jor	c6862628+	roetest	OK	119	lite	samtidig	
 2026-11-07 12:20	ccr-fc7a11b2-nl5jor	c6862628+	uishots	OK	84	lite	samtidig	
 2026-11-07 12:20	ccr-fc7a11b2-nl5jor	c6862628+	trip2	OK	34	lite	samtidig	
+2026-11-07 12:51	ccr-fc7a11b2-nl5jor	6d30c93a+	hudtest	OK	36	lite	alene	
+2026-11-07 12:53	ccr-fc7a11b2-nl5jor	6d30c93a+	hudtest	OK	39	lite	alene	
+2026-11-07 12:55	ccr-fc7a11b2-nl5jor	6d30c93a+	docktest	OK	60	lite	alene	
+2026-11-07 12:57	ccr-fc7a11b2-nl5jor	6d30c93a+	roetest	OK	120	lite	samtidig	
+2026-11-07 12:57	ccr-fc7a11b2-nl5jor	6d30c93a+	uishots	OK	86	lite	samtidig	
+2026-11-07 12:57	ccr-fc7a11b2-nl5jor	6d30c93a+	dockrow	OK	42	lite	samtidig	
+2026-11-07 12:58	ccr-fc7a11b2-nl5jor	6d30c93a+	kartlegging	OK	51	lite	samtidig	
+2026-11-07 13:00	ccr-fc7a11b2-nl5jor	6d30c93a+	docktest	OK	60	lite	alene	
