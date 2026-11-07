@@ -192,10 +192,9 @@
       // (ICFX), price and button, or what stands in the way (buyGate); the gaff's card shows the fish lost over the rail this week
       for (const k of ['kniv', 'hott']){ const E = EQUIP[k]; if (!equipFits(k, b.type)) continue;
         const lv = equipLv(k), top = E.tiers.length, T = E.tiers[lv - 1], nx = lv < top ? lv + 1 : 0, price = nx ? tierKr(k, nx) : null, gate = nx ? buyGate('tier', k) : null;
-        const per = nx && E.tiers[nx - 1].per === 'table' ? ((BOAT.stations && BOAT.stations.table) || 1) : 0;
-        const R = (S.stats || {}).lostRail, wk = R && R.w === weekOfH(S.t / 60) ? R : null;
+        const per = nx && E.tiers[nx - 1].per === 'table' ? tierUnits(k, nx) : 0, wk = railWeek();   // (the fish lost over the rail on this boat this week)
         const body = (per ? '<p class="ic-have">' + L(kr(E.tiers[nx - 1].kr) + ' per sløyeplass, ' + per + ' om bord', kr(E.tiers[nx - 1].kr) + ' a gutting place, ' + per + ' aboard') + '</p>' : '') +
-          (k === 'hott' ? '<p class="ph-note" data-lost="' + (wk ? wk.wn : 0) + '">' + (wk && wk.wn ? L('Tapt over ripa denne uka: ' + wk.wn + ' fisk, ' + fmt(wk.wkg, 0) + ' kg', 'Lost over the rail this week: ' + wk.wn + '  fish, ' + fmt(wk.wkg, 0) + ' kg') : L('Ingen fisk tapt over ripa denne uka.', 'No fish lost over the rail this week.')) + '</p>'
+          (k === 'hott' ? '<p class="ph-note" data-lost="' + wk.n + '">' + (wk.n ? L('Tapt over ripa denne uka: ' + wk.n + ' fisk, ' + fmt(wk.kg, 0) + ' kg', 'Lost over the rail this week: ' + wk.n + ' fish, ' + fmt(wk.kg, 0) + ' kg') : L('Ingen fisk tapt over ripa denne uka.', 'No fish lost over the rail this week.')) + '</p>'
             : '<p class="ph-note">' + L('Feilene ved bordet er sjeldne, så det meste kniven gir, er tid.', 'Mistakes at the table are rare, so most of what the knife gives is time.') + '</p>');
         const btns = !nx ? '' : gate ? '<p class="ph-note"><b>' + gate[0] + '</b></p>'
           : '<button class="ph-btn p" data-pa="equip" data-k="' + k + '"' + (price > spendable() ? ' disabled' : '') + '>' + L('Kjøp trinn ' + nx, 'Buy tier ' + nx) + ' · ' + kr(price) + '</button>';

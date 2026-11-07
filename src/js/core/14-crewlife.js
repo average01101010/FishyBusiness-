@@ -335,13 +335,17 @@ function crewSlip(team){
   }
 }
 
-// the fish lost over the rail, for the whole company (S.stats.lostRail: kg and number in all, and this week's in w, wkg, wn), so the
-// gaff's card can show what a better one would save (OPP1)
+// the fish lost over the rail (S.stats.lostRail): kg and number for the whole company, in all and this week (w, wkg, wn), and this
+// week's per boat (v, by the vessel's id: the gaff is the boat's), so the gaff's card can show what a better one would save (OPP1)
 function railLost(kg){
   const st = S.stats || (S.stats = {}), w = weekOfH(S.t / 60), R = st.lostRail || (st.lostRail = {kg:0, n:0, w, wkg:0, wn:0});
   if (R.w !== w){ R.w = w; R.wkg = 0; R.wn = 0; }
   R.kg += kg; R.n++; R.wkg += kg; R.wn++;
+  const V = R.v || (R.v = {}), id = S.cur == null ? '_' : S.cur; for (const q in V) if (V[q].w !== w) delete V[q];
+  const x = V[id] || (V[id] = {w, kg:0, n:0}); x.kg += kg; x.n++;
 }
+// this week's loss over the rail on one boat (the one bound now): {kg, n}
+function railWeek(id = S.cur){ const R = (S.stats || {}).lostRail, x = R && R.v && R.v[id == null ? '_' : id]; return x && x.w === weekOfH(S.t / 60) ? x : {kg:0, n:0}; }
 
 // ===== Del 2 of «mannskap med liv» (docs/mannskap-plan.md; Jonas 17.10.2026): each person's life beside the work =====
 // c.life = {fam, goal, saved, target, best, story[], notice, day, bday}: a family at home, a dream (a boat of their own, skipper of a

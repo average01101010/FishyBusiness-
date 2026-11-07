@@ -258,7 +258,7 @@ function tierGate(k, lv){
 // the next tier, paid and aboard at once (no fitting: the crew takes them in hand)
 function tierBuy(k, lv){
   const gate = tierGate(k, lv); if (gate) return gate;
-  const E = EQUIP[k], nx = equipLv(k) + 1, T = E.tiers[nx - 1], cost = tierKr(k, nx);
+  const E = EQUIP[k], nx = lv == null ? equipLv(k) + 1 : lv, T = E.tiers[nx - 1], cost = tierKr(k, nx);
   if (cost > spendable()) return [gL('Ikke nok penger.', 'Not enough money.')];
   book('redskap', -cost, T.no, T.en); S.equip[k] = nx;
   log('Kjøpt ' + lc1(T.no) + ' (trinn ' + nx + ') til «' + S.boatName + '».', 'Bought ' + lc1(T.en) + ' (tier ' + nx + ') for the «' + S.boatName + '».');

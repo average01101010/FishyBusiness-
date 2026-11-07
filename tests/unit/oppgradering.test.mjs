@@ -80,7 +80,11 @@ export default function (t){
   t.ok(R && R.n === cnt.rail && R.kg >= 1.5 * R.n && R.kg <= 4.5 * R.n && R.wn === R.n && Math.abs(R.wkg - R.kg) < 1e-9 && R.w === K.weekOfH(S.t / 60), `tapt over ripa telles: ${R ? R.n + ' fisk, ' + R.kg.toFixed(1) + ' kg' : 'ingenting'}`);
   const R0 = Object.assign({}, R); S.t += 7 * 1440; K.railLost(2);
   t.ok(S.stats.lostRail.n === R0.n + 1 && Math.abs(S.stats.lostRail.kg - R0.kg - 2) < 1e-9 && S.stats.lostRail.wn === 1 && S.stats.lostRail.wkg === 2, 'en ny uke begynner tellingen for uka på nytt, totalen går videre');
-  S.t -= 7 * 1440; for (const n in stub) K.set(n, stub[n]); delete W.CREW_SEED; if (fmt0) globalThis.fmt = fmt0; else delete globalThis.fmt;
+  // per boat this week (the gaff is the boat's): what another boat in the fleet lost is not on this boat's card
+  S.cur = 'a'; K.railLost(3); K.railLost(1); S.cur = 'b'; K.railLost(2);
+  t.ok(K.railWeek('a').n === 2 && K.railWeek('a').kg === 4 && K.railWeek('b').n === 1 && K.railWeek('c').n === 0 && S.stats.lostRail.wn === 4, 'tapt over ripa denne uka per båt: a 2 fisk 4 kg, b 1, c ingen');
+  S.t += 7 * 1440; t.eq(K.railWeek('a').n, 0, 'neste uke har båten ingen tapt ennå');
+  S.t -= 14 * 1440; for (const n in stub) K.set(n, stub[n]); delete W.CREW_SEED; if (fmt0) globalThis.fmt = fmt0; else delete globalThis.fmt;
 
   // ---- hauling: the gaff takes 4 and 8 % off a tub of line, not the setting, not nets, pots or the autoline
   K.set('workTeam', () => ({n:1, sum:1, eff:1, crew:[], me:true}));

@@ -287,8 +287,9 @@ function equipLv(k, eq = S.equip, type = S.boat && S.boat.type){
   const v = eq && eq[k]; return Math.max(1, Math.min(E.tiers.length, v === true ? 2 : Math.round(+v || 1)));
 }
 function equipTier(k, eq, type){ return EQUIP[k].tiers[equipLv(k, eq, type) - 1]; }
-// what a tier costs a boat type: the knives per gutting place (stations.table), the gaff once
-function tierKr(k, lv, type = S.boat && S.boat.type){ const T = EQUIP[k].tiers[lv - 1], V = VESSELS[type]; if (!T) return 0; return T.kr * (T.per === 'table' ? (V && V.stations && V.stations.table) || 1 : 1); }
+// what a tier costs a boat type: the knives per gutting place (tierUnits: stations.table), the gaff once
+function tierUnits(k, lv, type = S.boat && S.boat.type){ const T = EQUIP[k].tiers[lv - 1], V = VESSELS[type]; return T && T.per === 'table' ? (V && V.stations && V.stations.table) || 1 : 1; }
+function tierKr(k, lv, type = S.boat && S.boat.type){ const T = EQUIP[k].tiers[lv - 1]; return T ? T.kr * tierUnits(k, lv, type) : 0; }
 // the knife's gutting pace over DECK.gut (deckMinute, deckEta, the work's left.sloy), and the gaff's shares (rail, jig, haul)
 function knifeX(eq, type){ return upgSum(equipTier('kniv', eq, type).gut); }
 function hookX(f, eq, type){ return equipTier('hott', eq, type)[f] || 0; }

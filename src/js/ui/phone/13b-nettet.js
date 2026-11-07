@@ -61,7 +61,7 @@
     const E = EQUIP[k]; if (!E) return L('Ukjent utstyr.', 'Unknown equipment.');
     // the knives and the gaff in tiers (OPP1): the next tier, paid and aboard at once at the tackle shop's quay (core/10-gear.js tierBuy,
     // which asks buyGate); no fitting and no hoist
-    if (E.tiers){ const lv = equipLv(k) + 1, why = buyGear('tier', k); if (why) return why[0]; const T = E.tiers[lv - 1];
+    if (E.tiers){ const lv = equipLv(k) + 1, why = buyGear('tier', k, lv); if (why) return why[0]; const T = E.tiers[lv - 1];
       achAdd('equip'); shopBought(T.no, T.en); folkShop(); if (typeof cloudEv === 'function') cloudEv('shop_buy', {w:'equip', k, lv}); return null; }
     if (!atKind(EQ_YARD(k) ? 'verft' : 'butikk')) return L('Det monteres ' + (EQ_YARD(k) ? 'på verftet.' : 'i utstyrsbutikken.'), 'It is fitted ' + (EQ_YARD(k) ? 'at the yard.' : 'at the tackle shop.'));
     if (!equipFits(k, S.boat.type)) return L(E.name.no + ' passer ikke «' + S.boatName + '».', 'The ' + E.name.en + ' does not suit the «' + S.boatName + '».');
