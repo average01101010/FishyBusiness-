@@ -529,6 +529,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
 
+## Strøket 07.11.2026 (Ø8b S1: første tur i dekksdagboka, gren `ccr-dc24762d-iyuakj`, rullet ut i 91cc422a)
+
+- Linja om vanlig fiske etter første tur sto bare på første sluttseddel, som forlater skuffen fire spilltimer etter salget. Nå står den også i dekksdagboka (Drift) med samme N (`tutNormKg` i `ui/07b-first-trip.js`, 4310a20f; V1 A i `docs/planer/spillbarhet-fangst.md`). Resten av punktet «Fangsten er uforklart» (S0, S2, S3) står over i 10.2.
+
 ## Strøket 07.11.2026 (Ø10 Skagerrak i regelmotoren, gren `ccr-68a96e99-8x1jh1`, PR #49)
 
 - ~~**Regelmotoren mangler Skagerrak**~~ (funnet 27.10.2026 i Onboarding 2): `rulesAt` stenger torsk for norske fartøy utenfor grunnlinjen i Skagerrak øst for linja Lindesnes–Hanstholm (`skag`, FOR-2025-12-19-2805 § 1, lest på Lovdata 07.11.2026; 2023-forskriften FOR-2022-12-16-2281 sa det samme), med unntaket for juksa under 11 m på blad B 1.4–30.6, høyst 3 tonn (`skag4`, § 4), og 5 % bifangst for andre arter (`skag5`, § 5). Flata er ICES 3.a.20 fra Fiskeridirektoratet, bygd inn av `tools/rules/regler.py --skag`. 2026-forskriften er lest (52 tonn norsk kvote, § 2). Første tur leser regelen (`tutSkagOut` tatt ut), og Kystvakta tar den med (`KV_REF.skag`). Commitene 3024043a, 39820d6f og f4dd4df2. Det som står igjen, står i «Regelmotoren sør for 62° N, det som står igjen etter Ø10».
