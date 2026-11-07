@@ -527,3 +527,5 @@
 2026-11-07 02:38	ccr-2cfcfb0c-tfhulm	d1332961+	markettest	OK	31	lite	samtidig	
 2026-11-07 02:38	ccr-2cfcfb0c-tfhulm	d1332961+	vesseltest	OK	26	lite	samtidig	
 2026-11-07 02:38	ccr-2cfcfb0c-tfhulm	d1332961+	fleet2test	OK	34	lite	samtidig	
+2026-11-07 03:55	ccr-f981c5f0-ezb7x7	ba79cfbf+	docktest	OK	58	lite	alene	
+2026-11-07 04:15	ccr-f981c5f0-ezb7x7	f92cff1e	trackfollow	OK	1193	3d	alene	
