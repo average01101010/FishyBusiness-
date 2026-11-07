@@ -679,12 +679,24 @@ def main():
             ('44444444-4444-4444-8444-444444444444', 'user_01FN3', now() - interval '3 days'), ('44444444-4444-4444-8444-444444444445', 'user_01FN3', now() - interval '36 hours');
           insert into public.events (player_id, kind, data) values ('user_01FN1', 'ach', '{"id":"fish"}'), ('user_01FN1', 'sale', '{}'), ('user_01FN1', 'sale', '{}'), ('user_01FN1', 'sale', '{}'),
             ('user_01FN3', 'sale', '{}'), ('33333333-3333-4333-8333-333333333333', 'ach', '{"id":"took"}')""")
+        # (OPP4, 20261107160000_funnel_tier.sql: a tier bought in the first seven days, from shop_buy {w:'equip', k, lv} and the yard's upg
+        # {k, lv}; a buy without lv is not a tier)
+        sql("""insert into public.events (player_id, kind, data, ts) values ('user_01FN1', 'shop_buy', '{"w":"equip","k":"kniv","lv":2}', now() - interval '8 days'),
+            ('user_01FN1', 'shop_buy', '{"w":"equip","k":"jukse"}', now() - interval '9 days'), ('user_01FN3', 'upg', '{"k":"prop","lv":1}', now() - interval '1 day'),
+            ('33333333-3333-4333-8333-333333333333', 'shop_buy', '{"w":"equip","k":"vhf"}', now() - interval '1 hour')""")
         F1 = json.loads(sql("select public.admin_funnel(8)", AD2, 'authenticated'))
         FD = {k: F1['all'][k] - F0.get(k, 0) for k in F1['all']}
         FX = {'pl': sql("select public.admin_funnel(8)", B, 'authenticated', expect_err=True), 'mfa': sql("select public.admin_funnel(8)", AD1, 'authenticated', expect_err=True)}
-        print(ok(FD == {'start': 3, 'catch': 2, 'land1': 2, 'land3': 1, 'reg': 2, 'd1': 2, 'd1n': 2, 'd7': 1, 'd7n': 1, 'd30': 0, 'd30n': 0} and FX['pl'][0] and FX['mfa'][0]
-                 and F1['weeks'] and sum(w['start'] for w in F1['weeks']) >= 3),
-              "the funnel: started, first catch, first and third landing, an account, and back after 1, 7 and 30 days of those who have had that long; by the week they started; only the admin with MFA reads it", FD)
+        print(ok(FD == {'start': 3, 'catch': 2, 'land1': 2, 'land3': 1, 'reg': 2, 'd1': 2, 'd1n': 2, 'd7': 1, 'd7n': 1, 'd30': 0, 'd30n': 0, 'tier': 2, 'tier7': 1, 'tier7n': 1} and FX['pl'][0] and FX['mfa'][0]
+                 and F1['weeks'] and sum(w['start'] for w in F1['weeks']) >= 3 and all('tier' in w and 'tier7n' in w for w in F1['weeks'])),
+              "the funnel: started, first catch, first and third landing, an account, back after 1, 7 and 30 days of those who have had that long, and a tier bought within day 7 (OPP4); by the week they started; only the admin with MFA reads it", FD)
+        # a tier bought after the first seven days is not counted, but the player is among those who have had them (tier7n)
+        sql("""insert into public.players (id, guest) values ('user_01FN4', false);
+          insert into public.sessions (id, player_id, started_at) values ('44444444-4444-4444-8444-444444444446', 'user_01FN4', now() - interval '20 days');
+          insert into public.events (player_id, kind, data, ts) values ('user_01FN4', 'shop_buy', '{"w":"equip","k":"hott","lv":2}', now() - interval '12 days')""")
+        F2 = json.loads(sql("select public.admin_funnel(8)", AD2, 'authenticated'))['all']; sql("delete from public.players where id = 'user_01FN4'")
+        FT = {k: F2.get(k, 0) - F1['all'].get(k, 0) for k in ('start', 'tier', 'tier7', 'tier7n')}
+        print(ok(FT == {'start': 1, 'tier': 0, 'tier7': 0, 'tier7n': 1}), "the funnel's tier: one bought on day 8 is not within day 7", FT)
         # the first trip's steps (20261010100000_tut_steps.sql): players per step, the median seconds (settled steps not counted), the
         # trips finished and their median; only the admin with MFA reads it
         sql("""insert into public.events (player_id, kind, data) values ('user_01FN1', 'tut_step', '{"id":"gps","s":12}'), ('user_01FN1', 'tut_step', '{"id":"route1","s":40}'),
