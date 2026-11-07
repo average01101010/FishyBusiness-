@@ -1,6 +1,6 @@
 # Kvotemarkedet: kjøp og salg av kvote mellom spillere (plan 07.11.2026)
 
-Steg 30 i `docs/planer/koen.md` (`/planlegg`, stopper ved valgene). Dette er en plan med valg, ikke noe som er bygd. Fasene står som steg 60–64 i køen med `venter på valg`, og valgene står som valg 10 under «Valg som venter på Jonas».
+Steg 30 i `docs/planer/koen.md` (`/planlegg`, stopper ved valgene). Dette er en plan med valg, ikke noe som er bygd. Jonas tok valgene 07.11.2026 (kap. 10), og fasene står som steg 60–64 i køen.
 
 ## 1. Hva Jonas ba om
 
@@ -72,7 +72,7 @@ Lest 07.11.2026. Kildene står i kap. 9.
 1. **Det som handles, er tillatelser og kvotefaktorer, aldri kilo** (V1). Tonnene følger av året: kvotefaktoren ganger kvoteenheten.
 2. **Én felles kvote.** Summen av kvotefaktorene i en gruppe ligger fast, fordi registeret har et fast antall hjemler. Det én spiller kjøper, har en annen spiller solgt, eller en NPC-eier har gått ut. Kvoteenheten er den samme for alle (frøet, og bestanden fra serveren når bryteren er på), så samme hjemmel er like mye verdt hos kjøperen som hos selgeren. Handelen flytter bare hvem som fisker. Bestanden påvirkes av fangsten, ikke av handelen.
 3. **B sin mekanikk, ingen NPC-oppføringer.** Auksjon med startpris, «Kjøp nå» og varighet (1 t, 6 t, 1 døgn, 3 døgn i ekte tid), bud som binder pengene, oppgjør hvert minutt og innboksen. Kommisjonen er 5 % og hurtigsalget 90 %, som Jonas valgte for B (V4 A og V6 A). Ingen nye valg om dem.
-4. **Registeret er gulvet.** De virkelige eierne som spillet alt har, er der fra før. De legger ikke ut oppføringer, men selger og kjøper til taksten, slik verftet er gulvet for båtene (B6). V3 avgjør hvor mye de selger.
+4. **Registeret er gulvet.** De virkelige eierne som spillet alt har, er der fra før. De legger ikke ut oppføringer, men selger og kjøper til taksten, slik verftet er gulvet for båtene (B6). Etter V3 A selger de som i dag, så lenge det finnes eiere.
 5. **Reglene som i virkeligheten der de gjør spillet bedre:** blad B, samme gruppe, kvotetaket, 10 % avkorting, 20 år, lengdegrensen for flytting og driftskravet. Ingen ventetid for saksbehandlingen. Fiskeridirektoratet godkjenner ved oppgjøret og sender melding. Saksbehandling tar uker i virkeligheten, og å legge inn den ventetida bryter Friction for Flow.
 6. **Bare spillkroner.** Ingen haill, ingen ekte penger og ingen «Ferdig nå» i markedet. Ingen tilfeldige utfall, og varen er kjent på forhånd: kvotefaktoren, årene som er igjen, og det som er fisket på den i år.
 
@@ -116,7 +116,12 @@ Uansett faller den andre kvoten fra den særlige ordningen bort (kap. 2 § 6), o
 ### 4.5 Det som holder markedet levende med få spillere
 
 Uten NPC-oppføringer og uten bud fra noen som ikke finnes:
-1. **Registeret som gulv og tak** (V3 B): én eier per hjemmelslengde som går ut denne uka, felles for alle spillerne, til taksten. Med få spillere merkes ikke grensen; med mange blir hjemlene knappe, og spillernes oppføringer blir det som finnes, som i virkeligheten. «Selg nå» til registeret til 90 % av taksten er der alltid, så ingen blir sittende med en hjemmel de ikke får solgt.
+1. **Registeret som gulv og tak** (V3 A): NPC-eierne selger som i dag til taksten så lenge det finnes eiere. «Selg nå» til registeret til 90 % av taksten er der alltid, så ingen blir sittende med en hjemmel de ikke får solgt. Prisen på en hjemmel mellom spillere havner derfor mellom 90 og 100 % av taksten. Det som gjør markedet verdt å bruke likevel:
+   - Det har varer registeret ikke har. En strukturkvote til taksten koster 1/20 av hjemmelens takst per år den varer. Å kjøpe og strukturere fra registeret koster 1/18, fordi 10 % avkortes og kvoten varer 20 år.
+   - En båt kan selges uten at eieren går ut av lukket gruppe (V2 A).
+   - Taksten flytter seg (V4 B), så tidspunktet betyr noe.
+
+   Målingen i KM5 viser om spillerne legger ut hjemler (kap. 7).
 2. **Taksten lever** (V4 B): den følger torskeprisen og kvoteutsiktene. Kvoterådet 26. juni, totalkvoten 17. oktober og reguleringen 19. desember står alt i Kystposten. Det gir naturlige tidspunkter å kjøpe og selge på, uten at noe er oppdiktet.
 3. **Strukturkvotene eldes:** en kvote med tre år igjen er billigere enn en med femten. Det gir ulike priser og en grunn til å selge før den går ut.
 4. **Ønsket hjemmel:** «si fra når en hjemmel 14–14,9 m legges ut under X kr» går som push, etter mønsteret fra «Ønsket båt» (`broker_tell`, høyst én gang i tolv timer) og `docs/push-plan.md`. Kjøperen trenger ikke å følge med.
@@ -149,7 +154,7 @@ Svaret på «hva gir den spilleren å gjøre nå, i dag og denne uka?»: nå å 
   - **Anbefalingen til økta:** utvid `listings` med `kind` (`boat` som standard, `right`, `struct`) og `item jsonb`, og bruk `bids`, `broker_ledger` og `listing_settle` videre. Da er det ett auksjonshus, ett oppgjør og én innboks, som spillet bruker på samme måte.
   - Båndet mot taksten fra en ny tabell `quota_ref` (`HJ` med faktorene, 2026-enheten og 260 kr/kg).
   - Ved oppgjøret flytter `broker_reg_move` plassen i registeret for en hjemmel. En strukturkvote er ingen plass i registeret, og en strukturert hjemmel går ut av registeret for godt, som i dag.
-  - Med V3 B: `reg_week` (ukas eier per hjemmelslengde), som `reg_take` sjekker. Verftets «Med hjemmel» og strukturering fra registeret bruker den samme.
+  - Registeret som i dag (V3 A): `reg_take` og `reg_free` uendret, ingen grense per uke.
   - `listings_get` filtrert på `kind`, `broker_wish` for hjemmelslengdene, `km_*` i målingen og en lesefunksjon for admin.
   - Kjør migreringen selv (Jonas 07.11.2026: «Du er hjertlig velkommen til å kjøre migreringene selv»).
 - **Filer:** `supabase/migrations/`, `tests/sqltest.py`.
@@ -158,7 +163,7 @@ Svaret på «hva gir den spilleren å gjøre nå, i dag og denne uka?»: nå å 
 ### KM3 Kvotemarkedet i Kvote-appen (steg 62)
 
 - **Bygger:**
-  - Ny `ui/phone/04b-kvotemarked.js`: Kvote → Marked blir Kvotemarkedet, med fanene Registeret (ukas eier per hjemmelslengde med taksten), Hjemler, Strukturkvoter, Dine (oppføringer og bud) og Solgt siste måned.
+  - Ny `ui/phone/04b-kvotemarked.js`: Kvote → Marked blir Kvotemarkedet, med fanene Registeret (eierne som er igjen per hjemmelslengde, ukas selger og taksten), Hjemler, Strukturkvoter, Dine (oppføringer og bud) og Solgt siste måned.
   - **Kortet:** hjemmelslengde, kvotefaktor, årets kvote i tonn for torsk, hyse og sei, år igjen, landet på den i år, taksten, høyeste bud, «Kjøp nå» og tid igjen, med «Fiskeridirektoratet godkjenner ved oppgjøret».
   - **«Legg ut»:** varen, startpris, «Kjøp nå» og varighet. **Kjøpet:** valget av båt (sett på en båt uten hjemmel, eller strukturer, med taket og −10 % vist), og «Selg nå til registeret · 90 %».
   - **Øverst:** den felles kvoten (kap. 4.5 punkt 6).
@@ -196,7 +201,9 @@ Svaret på «hva gir den spilleren å gjøre nå, i dag og denne uka?»: nå å 
 
 **Rekkefølgen:** KM1, så KM2, så KM3. KM4 kan gå etter KM1 ved siden av KM2 og KM3 så lenge den ikke rører de samme filene (`14-act.js` deles med KM3: KM4 tar den etter KM3, eller de deler den etter tur). KM5 går sist.
 
-## 6. Valgene (valg 10 i køen)
+## 6. Valgene (tatt 07.11.2026)
+
+Jonas valgte V1 A, V2 A, V3 A, V4 B og V5 A (kap. 10). Teksten under står slik den ble lagt fram.
 
 **V1 Hva som selges.**
 - **A (anbefalt):** hjemler og strukturkvoter, altså kvotefaktorer, som i virkeligheten. Tonnene følger av året.
@@ -243,6 +250,7 @@ Hvorfor A: med få spillere deler B et tynt marked i to. B kan tas inn når admi
 - **Antallet:** 1 452 deltakeradganger per 31.12.2025 (høringsnotatet tabell 3) mot 1 622 i spillet (saksdokument 5/2025 tabell 8, 17.10.2025). Det kan være ulike tellinger eller datoer; ikke undersøkt.
 - **Serveren stoler på klienten** for blad B, lengden og taket, som B gjør for `vesselValue`. En endret klient kan kjøpe en hjemmel den ikke skulle hatt, men skader bare seg selv. Pengene og registeret holdes på serveren.
 - **Ekte liv i markedet** kan bare måles etter utrullingen (KM5). Med få spillere vil prisene ligge nær taksten. Det er ærlig, og det er greit.
+- **V3 A gir hjemlene et smalt bånd:** 90–100 % av taksten (kap. 4.5 punkt 1). En selger tjener høyst 5 % på å legge ut i stedet for å selge til registeret. KM5 viser om spillerne legger ut hjemler likevel. Strukturkvotene og båtene uten hjemmel er ikke bundet av båndet.
 
 ## 8. Hva planen ikke gjør
 
@@ -265,8 +273,16 @@ Hvorfor A: med få spillere deler B et tynt marked i to. B kan tas inn når admi
 
 ## 10. Jonas' valg
 
-Venter (valg 10 i `docs/planer/koen.md`).
+Jonas 07.11.2026, svar på valg 10 i køen: «V1, a», «V2, a», «V3, a», «V4, anbefalt», «V5, a».
+
+- **V1 A:** hjemler og strukturkvoter (kvotefaktorer) handles, aldri kilo.
+- **V2 A:** selgeren velger om hjemmelen følger båten eller blir i rederiet (ledig i høyst to spillår).
+- **V3 A:** registeret selger som i dag, til taksten så lenge det finnes eiere, på verftet og i Kvote-appen. Det er ingen grense per uke. «Selg nå» til 90 % står.
+- **V4 B:** taksten følger torskeprisen og kvoteutsiktene, 0,7–1,4 × 260 kr/kg (KM5).
+- **V5 A:** ett nasjonalt marked.
+- **Driftskravet og kvotetaket på 5 og 6 ganger**, som planen tok med uten å spørre, sa Jonas ikke noe imot. De står.
 
 ## Status
 
 - 07.11.2026: planen skrevet (steg 30, Jonas' økt, gren `claude/kvotemarkedet-steg-30-y3ctw0`). Regelverket lest på Lovdata (deltakerloven, kvoteforskriften) og i Fiskeridirektoratets høringsnotat 26.03.2026. Fasene KM1–KM5 står som steg 60–64 i køen med `venter på valg`, og valgene V1–V5 som valg 10. Funnene som gjelder spillet slik det er nå (kvotetaket, «hogger», `two` ved båtsalg), står i backloggen. Ingenting er bygd.
+- 07.11.2026 18:15 UTC: Jonas' valg skrevet inn (kap. 10): V1 A, V2 A, V3 A, V4 B, V5 A. KM1 (steg 60) er klar. KM2–KM5 venter bare på fasene før seg. KM2 trenger ikke `reg_week` (V3 A), og kap. 4.5 punkt 1 er skrevet om etter V3 A.
