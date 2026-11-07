@@ -91,7 +91,10 @@ async def main():
         r = json.loads(await J("{kn:S.equip.kniv, ho:S.equip.hott, lost:S.stats.lostRail && S.stats.lostRail.n}"))
         check(r['kn'] == 3 and r['ho'] == 3 and r['lost'] == 3, 'trinnene og tellingen står etter en omstart', r)
 
-        # pictures of the cards in both formats: tier 1 knife and tier 2 gaff with the lost fish (back to the start for the picture)
+        # pictures of the cards in both formats: tier 1 knife and tier 2 gaff with the lost fish (back to the start for the picture), once
+        # the loading veil after the reload is gone (it showed through behind the drawer)
+        await pg.wait_for_function("(() => { const ld = document.getElementById('loader'); return !ld || ld.classList.contains('gone') || ld.hidden || getComputedStyle(ld).opacity === '0' || getComputedStyle(ld).display === 'none'; })()", timeout=60000)
+        await pg.wait_for_timeout(1500)
         await pg.evaluate("S.equip.kniv = 1; S.equip.hott = 2; const b = S.boat; b.status = 'port'; b.port = 'finnsnes'; b.berth = 'main'; DOCK.open('fiske')"); await pg.wait_for_timeout(400)
         await pg.evaluate("document.querySelector('#drawerBody [data-ic=kniv]').scrollIntoView({block:'start'})"); await pg.wait_for_timeout(200)
         await pg.screenshot(path='opp1_kort_liggende.png')
