@@ -2331,7 +2331,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 89 `srchCard()`
   - 113 `srchSvg(u)`
 
-## `src/js/ui/04-panels-instruments.js` (333 linjer)
+## `src/js/ui/04-panels-instruments.js` (336 linjer)
 
 ---------- estimates ----------
 
@@ -2354,9 +2354,9 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 237 `vnoise2(x, y, s)`
   - 243 `microBottom(p, d)`
 - **245** instruments: GPS and echo sounder
-  - 317 `hudCardOpen(on)`
-  - 324 `hudClasses(stripOn, cardOn)`
-  - 328 `hudFold(which)`
+  - 320 `hudCardOpen(on)`
+  - 327 `hudClasses(stripOn, cardOn)`
+  - 331 `hudFold(which)`
 
 ## `src/js/ui/05-tattoo-art.js` (169 linjer)
 
