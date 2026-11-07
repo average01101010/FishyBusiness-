@@ -82,6 +82,11 @@ Bare brukte båter fra spillere hos megleren, ingen NPC-oppføringer; kommisjon 
 - Kvalitetsforskriftens gjeldende ordlyd om tid til sløying er ikke bekreftet (bare § 7 og § 8 via Mattilsynet).
 - Spillerbasert marked uten NPC-tilbud blir tomt de første ukene med få spillere. B6 og «ønske»-varselet er svaret; alternativet er å la de tre siste NPC-oppføringene stå til det finnes ti spillere (ikke anbefalt, Jonas vil ikke ha flooding).
 
+## Jonas' valg (07.11.2026)
+
+- **V1 A, V2 A, V3 A, V4 A, V5 A, V6 A, V7 A.**
+- **Om V5:** Jonas: «Kvoter kan vel selges med båten på ekte også? Men planen min er å lage et kvotemarked også der man kan kjøpe og selge kvoter.» Svaret: ja, i praksis følger kvotegrunnlaget båten når den selges «for fortsatt drift» og Fiskeridirektoratet godkjenner kjøperen (deltakerloven §§ 6–7: aktiv fisker, ervervstillatelse); strukturkvoter kan flyttes mellom fartøy i samme gruppe. Et eget kvotemarked (kjøp og salg av kvoter mellom spillere) er en egen plan som kommer etter B, og B8 holder hjemmelen med båten til den er skrevet.
+
 ## Status
 
-- Planen skrevet 07.11.2026, gren `ccr-a9ff699b-re4zwf`. Venter på valgene V1–V7 og «kjør på».
+- Planen skrevet 07.11.2026, gren `ccr-a9ff699b-re4zwf`. Valgene tatt 07.11.2026 (alle A). Rekkefølgen etter V7 A: K (køen, med migreringen `landing_q`), så B (båtsalget, med `listings` og `bids`), så R (rund/sløyd synlig). Venter på «kjør på» for K.
