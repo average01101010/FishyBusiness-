@@ -131,8 +131,10 @@ const MODELS = {done:false, wait:[], total:0, got:0, failed:[]};
 // letter and the 3D view, so the wait after «Start» never reached the error list. ask: when the 3D view was first asked for (the letter
 // and the start place are off the screen), shown: two frames after it came up (loaderGone). Sent once as the event 'first3d' with the seconds from
 // the ask (wait_s, of it the models' part models_s), from the navigation less the gate and the background (total_s), and whether this
-// device had the app's worker already (warm: false is a first visit or a browser without it)
-const B3D = {ask:0, models:0, sent:false, res:null, warm:!!(navigator.serviceWorker && navigator.serviceWorker.controller), hid:0, hidAt:0};
+// device had the app's worker already (warm: false is a first visit or a browser without it). letter_s (Ø3a, 07.11.2026): from the
+// navigation to Father's letter on the screen, less the gate and the background (the wait before the letter, the first start's own;
+// null when no letter came: a saved game); read_s: from the letter to the ask (the player's own time with the letter and the start place)
+const B3D = {ask:0, models:0, sent:false, res:null, warm:!!(navigator.serviceWorker && navigator.serviceWorker.controller), hid:0, hidAt:0, lt:0};
 // (the time in the background between the ask and the picture is left out, as the boot's is: a player who put the tablet away on
 // the start place gave «wait_s» 984 and «total_s» -968, 04.11.2026; BOOTW stops counting the background once the game is built)
 function boot3dAsk(){ if (!B3D.ask){ B3D.ask = performance.now(); if (document.hidden) B3D.hidAt = B3D.ask; } }
@@ -143,6 +145,7 @@ function boot3dShown(){
   requestAnimationFrame(() => requestAnimationFrame(() => {
   const n = performance.now(), away = B3D.hid + (B3D.hidAt ? n - B3D.hidAt : 0);
   B3D.res = {wait_s:Math.round((n - B3D.ask - away) / 100) / 10, models_s:Math.round(B3D.models / 100) / 10, total_s:Math.round((n - bootAway() - away) / 100) / 10, hid_s:Math.round(away / 1000), warm:B3D.warm,
+    letter_s:B3D.lt ? Math.round(B3D.lt / 100) / 10 : null, read_s:B3D.lt ? Math.round((B3D.ask - B3D.ltAt) / 100) / 10 : null,
     net:(navigator.connection && navigator.connection.effectiveType) || null, mem:navigator.deviceMemory || null};
   boot3dSend(); }));
 }
@@ -331,7 +334,9 @@ INSTR.show(); tab = 'route'; setBodyView(true);
 // G3 comes from a later <script> (view3d.js): the clock starts when the whole page is read (it may be read already)
 // the 3D view starts after Father's letter is put down: building it takes the main thread for seconds, and the letter's animation
 // stood still meanwhile (ui/08b-letter.js)
-mapOnReady(() => { setInterval(tick, 200); const go3d = () => { if (document.getElementById('letter') || document.getElementById('startPick')) setTimeout(go3d, 400); else G3.show(true, true); }; go3d(); });
+// (the letter's time for first3d: when it is first seen here, within the 0.4 s of the look)
+mapOnReady(() => { setInterval(tick, 200); const go3d = () => { const lt = document.getElementById('letter'); if (lt && !B3D.lt){ B3D.ltAt = performance.now(); B3D.lt = B3D.ltAt - bootAway(); }
+  if (lt || document.getElementById('startPick')) setTimeout(go3d, 400); else G3.show(true, true); }; go3d(); });
 // the simulation's data are in (bootMap), so the clock may run, and the time away is played
 SIMREADY = true; CONT_D = null; renderBase(); panelDirty = true;
 if (AWAY){ catchUp(AWAY + Date.now() - BOOT_T); AWAY = 0; refreshAll(); } lastWall = Date.now();
