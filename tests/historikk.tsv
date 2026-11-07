@@ -495,3 +495,4 @@
 2026-11-07 02:46	ccr-5c109e47-twgn6s	29cd0117	driftsplan2test	OK	89	lite	alene	
 2026-11-07 02:46	ccr-5c109e47-twgn6s	29cd0117	driftsplan2ui	OK	26	lite	alene	
 2026-11-07 03:00	ccr-5c109e47-twgn6s	29cd0117	havplantest	FEIL	791	lite	alene	FEIL the hold at 95 %: the strings hauled home, the landing at the plant, the other crew signs on [0, 1, 585184, [0, 1]]
+2026-11-07 03:15	ccr-5c109e47-twgn6s	9dc77f32	havplantest	FEIL	868	lite	alene	FEIL the hold at 95 %: the strings hauled home, the landing at the plant, the other crew signs on [0, 1, 585178, [0, 1]]

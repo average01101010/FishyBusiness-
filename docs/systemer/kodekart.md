@@ -988,7 +988,7 @@ Drift: the standing operations plan, per vessel. Made anew 23.10.2026 (Jonas: «
 - **557** the plan to another vessel of the company: the answers, made again there
   - 558 `driftCopy(vid)`
 
-## `src/js/core/06g-plan2.js` (443 linjer)
+## `src/js/core/06g-plan2.js` (446 linjer)
 
 Driftsplan 2: the day is the plan (26.10.2026, docs/planer/driftsplan-2/02-design.md). Part 1: the model, the day and the check.
 
@@ -999,32 +999,32 @@ Driftsplan 2: the day is the plan (26.10.2026, docs/planer/driftsplan-2/02-desig
   - 51 `p2Units(kind, lk)`
   - 58 `p2Left(o, q)`
   - 60 `p2LineKind(o)`
-  - 76 `plan2New(over)`
-  - 86 `plan2Ops()`
-- **100** the places: a point, a port, or a key ('H' home, 'Q' the home quay, 'M' the plant, 'A' the rest anchorage)
-  - 101 `plan2P(o, k)`
-  - 110 `plan2LegH(o, a, ap, b, bp, v)`
-- **117** the state the day is reckoned from: where she lies, the hold, the gear in the sea and aboard, the crew, you. Tests pass their own
-  - 118 `plan2State(o)`
-  - 136 `plan2StateOf(o)`
-  - 137 `plan2RestOk(pid)`
-  - 139 `plan2Ready(kind, st, lk)`
-  - 143 `plan2NextDep(o, H, from)`
-  - 153 `plan2Watch(H)`
-  - 154 `plan2Roles(st)`
-- **160** the ocean vessel's day (H2c of docs/planer/havsteget-h2-autoline.md, 05.11.2026): the autoline in a loop on the fields, round the
-  - 168 `p2AutoEnd(o, st)`
-  - 178 `planDayAuto(o, H0, st)`
-- **230** the day. H0: the hour the day begins (the departure). Returns {t0, steps:[{t, k, …}], end, why:[no, en], skipped:[{id, no, en}]}.
-  - 233 `planDay(o, H0, st)`
-- **349** the day as text: [[clock, no, en], …], one line a step, the skipped places and the reason last
-  - 350 `planDayText(o, day)`
-- **384** the check: errors keep the plan from being switched on, warnings only inform (as driftCheck; the rhythm's rules from Jonas 26.10.2026)
-  - 388 `plan2WatchWhy(st, aboard, short)`
-  - 398 `p2Kits()`
-  - 399 `plan2Check(o, st)`
+  - 79 `plan2New(over)`
+  - 89 `plan2Ops()`
+- **103** the places: a point, a port, or a key ('H' home, 'Q' the home quay, 'M' the plant, 'A' the rest anchorage)
+  - 104 `plan2P(o, k)`
+  - 113 `plan2LegH(o, a, ap, b, bp, v)`
+- **120** the state the day is reckoned from: where she lies, the hold, the gear in the sea and aboard, the crew, you. Tests pass their own
+  - 121 `plan2State(o)`
+  - 139 `plan2StateOf(o)`
+  - 140 `plan2RestOk(pid)`
+  - 142 `plan2Ready(kind, st, lk)`
+  - 146 `plan2NextDep(o, H, from)`
+  - 156 `plan2Watch(H)`
+  - 157 `plan2Roles(st)`
+- **163** the ocean vessel's day (H2c of docs/planer/havsteget-h2-autoline.md, 05.11.2026): the autoline in a loop on the fields, round the
+  - 171 `p2AutoEnd(o, st)`
+  - 181 `planDayAuto(o, H0, st)`
+- **233** the day. H0: the hour the day begins (the departure). Returns {t0, steps:[{t, k, …}], end, why:[no, en], skipped:[{id, no, en}]}.
+  - 236 `planDay(o, H0, st)`
+- **352** the day as text: [[clock, no, en], …], one line a step, the skipped places and the reason last
+  - 353 `planDayText(o, day)`
+- **387** the check: errors keep the plan from being switched on, warnings only inform (as driftCheck; the rhythm's rules from Jonas 26.10.2026)
+  - 391 `plan2WatchWhy(st, aboard, short)`
+  - 401 `p2Kits()`
+  - 402 `plan2Check(o, st)`
 
-## `src/js/core/06h-plan2-engine.js` (537 linjer)
+## `src/js/core/06h-plan2-engine.js` (541 linjer)
 
 Driftsplan 2, part 2: the engine (26.10.2026, docs/planer/driftsplan-2/02-design.md chapter 2). It follows the day that planDay
 
@@ -1069,15 +1069,15 @@ Driftsplan 2, part 2: the engine (26.10.2026, docs/planer/driftsplan-2/02-design
   - 313 `plan2Trip(o, D, i0)`
   - 366 `plan2Go(o, H, i0)`
   - 412 `plan2Sea(o, H)`
-  - 456 `plan2WorkStop(o, H, W, hs)`
-  - 467 `plan2WorkWait(o, H, wx, pts, port)`
-  - 478 `plan2Landed(pid, k)`
-  - 487 `plan2Report(pid, kg, total, landed)`
-  - 499 `plan2Bait(o, s)`
-  - 517 `plan2Egn(o, s)`
-  - 524 `plan2WatchTick(H)`
+  - 460 `plan2WorkStop(o, H, W, hs)`
+  - 471 `plan2WorkWait(o, H, wx, pts, port)`
+  - 482 `plan2Landed(pid, k)`
+  - 491 `plan2Report(pid, kg, total, landed)`
+  - 503 `plan2Bait(o, s)`
+  - 521 `plan2Egn(o, s)`
+  - 528 `plan2WatchTick(H)`
 
-## `src/js/core/06i-plan2-sno.js` (225 linjer)
+## `src/js/core/06i-plan2-sno.js` (230 linjer)
 
 Driftsplan 2 for the snow crab vessel (H3c of docs/planer/havsteget-h3-snokrabbe.md, 06.11.2026)
 
@@ -1772,7 +1772,7 @@ Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md a
   - 34 `ukeDue()`
   - 40 `ukeLast()`
 
-## `src/js/core/11-route.js` (658 linjer)
+## `src/js/core/11-route.js` (660 linjer)
 
 ---------- Autonav (once «Følg leia»): a route along the fairway ----------
 
@@ -1809,10 +1809,10 @@ Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md a
   - 429 `leiaStraighten(P, sd, margin, st)`
   - 457 `leiaPull(P, sd, st)`
   - 491 `leiaRoute(a, b, aPort, bPort, opt)`
-  - 515 `leiaLane(p, goal, km)`
-  - 546 `leiaPocket(p, sd)`
-  - 563 `leiaPocketOut(e, sd, st)`
-  - 573 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
+  - 517 `leiaLane(p, goal, km)`
+  - 548 `leiaPocket(p, sd)`
+  - 565 `leiaPocketOut(e, sd, st)`
+  - 575 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
 
 ## `src/js/core/11b-obstacles.js` (226 linjer)
 
@@ -2572,7 +2572,7 @@ the Drift app: the operations plan of a vessel (core/06d-drift.js) on one screen
 - **221** actions (data-pa="dr-…"); true when something changed
   - 257 `driftSvg(u)`
 
-## `src/js/ui/05d-plan2.js` (404 linjer)
+## `src/js/ui/05d-plan2.js` (407 linjer)
 
 Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The day first («I dag» with where she is now, or the
 
@@ -2582,14 +2582,14 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
 - **79** Hjem (GUI review U14 A, 05.11.2026): the naust first, then the rorbuer nearest the places, then the rest; no yard (it is no home);
 - **113** Redskap
 - **127** Plasser: the list in the order she works them
-- **176** Levering
-- **212** Vær
-- **227** Rytme
-- **240** Mannskap
-- **263** the top: Start or Pause, Nå, and the button that fixes a stop
-- **281** the statistics (R9): today, the last seven days, and all
-- **298** the page
-  - 398 `plan2Copy(vid)`
+- **178** Levering
+- **214** Vær
+- **229** Rytme
+- **243** Mannskap
+- **266** the top: Start or Pause, Nå, and the button that fixes a stop
+- **284** the statistics (R9): today, the last seven days, and all
+- **301** the page
+  - 401 `plan2Copy(vid)`
 
 ## `src/js/ui/05e-merker.js` (86 linjer)
 
