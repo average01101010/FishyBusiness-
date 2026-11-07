@@ -1101,3 +1101,17 @@
 2026-11-07 19:46	ccr-7538447c-xt5b4p	c7fd9849	colregtest	OK	603	lite	samtidig	
 2026-11-07 19:46	ccr-7538447c-xt5b4p	c7fd9849	routetest	OK	46	lite	alene	
 2026-11-07 19:48	ccr-7538447c-xt5b4p	c7fd9849	charttest	OK	60	lite	alene	
+2026-11-07 20:06	ccr-9a3530e8-3tup0j	e0771cf3	boottest	OK	27	lite	alene	
+2026-11-07 20:11	ccr-9a3530e8-3tup0j	e0771cf3	skytest	FEIL	272	3d	alene	FEIL in 10 m/s from the west the clouds drift east-south-east at 15 m/s over a 1 500 m deck  {"secs": 66.2, "d": [-0.3628, -0.0786], "exp": [-0.7669, -0.2055]}
+2026-11-07 21:01	ccr-9a3530e8-3tup0j	e0771cf3	sea3d	FEIL	3000	3d	alene	gikk ut på tid
+2026-11-07 21:08	ccr-9a3530e8-3tup0j	47ffbce8	lighttest	OK	446	3d	alene	
+2026-11-07 21:09	ccr-9a3530e8-3tup0j	47ffbce8	dbg23o	OK	44	3d	alene	
+2026-11-07 21:27	ccr-9a3530e8-3tup0j	47ffbce8	wetshot	OK	1068	3d	alene	
+2026-11-07 21:32	ccr-9a3530e8-3tup0j	47ffbce8	f1test	OK	304	3d	alene	
+2026-11-07 21:33	ccr-9a3530e8-3tup0j	47ffbce8	gfxtest	OK	55	3d	alene	
+2026-11-07 21:39	ccr-9a3530e8-3tup0j	47ffbce8	sunshot	OK	368	3d	alene	
+2026-11-07 21:42	ccr-9a3530e8-3tup0j	47ffbce8	seatrytest	OK	163	3d	alene	
+2026-11-07 21:51	ccr-9a3530e8-3tup0j	47ffbce8	wakeshot	OK	559	3d	alene	
+2026-11-07 21:53	ccr-9a3530e8-3tup0j	47ffbce8	skytest	OK	130	3d	alene	
+2026-11-07 21:57	ccr-9a3530e8-3tup0j	47ffbce8	skytest	OK	199	3d	alene	
+2026-11-07 21:58	ccr-9a3530e8-3tup0j	47ffbce8	docktest	OK	59	lite	alene	
