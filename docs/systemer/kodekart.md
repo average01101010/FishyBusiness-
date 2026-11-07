@@ -17,7 +17,7 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 60 `natP(lat, lon)`
   - 61 `natLL(p)`
 
-## `src/js/core/01-world.js` (467 linjer)
+## `src/js/core/01-world.js` (480 linjer)
 
 - **10** one clock for everyone (05.10.2026, the shared world V1)
   - 59 `gridScale(p)`
@@ -54,13 +54,14 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 310 `pocketHit(US, QS, x, z)`
   - 317 `pocketsIn(x0, y0, x1, y1)`
   - 326 `legClear(a, b)`
-  - 357 `portLabel(p)`
-- **373** the harbour unit (02.10.2026)
-  - 414 `fillOut(U, lx, lz)`
-  - 427 `onUnitGround(p)`
-  - 434 `unitCovers(x, z, m)`
-  - 442 `bridgeUnderUnit(br, extra)`
-  - 447 `portApproach(pt)`
+  - 340 `legClearMemo(a, b)`
+  - 370 `portLabel(p)`
+- **386** the harbour unit (02.10.2026)
+  - 427 `fillOut(U, lx, lz)`
+  - 440 `onUnitGround(p)`
+  - 447 `unitCovers(x, z, m)`
+  - 455 `bridgeUnderUnit(br, extra)`
+  - 460 `portApproach(pt)`
 
 ## `src/js/core/01b-mapdata.js` (212 linjer)
 
@@ -2453,12 +2454,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1283 linjer)
+## `src/js/ui/phone/07-patch.js` (1284 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1276 `patch()`
+  - 1277 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3274,7 +3275,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **70** a new build is out: «Oppdater nå» (Jonas 06.11.2026: «Varsel ved oppdatering for å kjøre refresh på appen»)
 - **104** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (359 linjer)
+## `src/js/ui/11-boot.js` (366 linjer)
 
 ---------- boot ----------
 
@@ -3307,8 +3308,8 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 183 `bootDataLate()`
   - 198 `modelsLabel()`
   - 205 `bootMapLoad()`
-  - 226 `bootGame()`
-  - 341 `bootFail(e)`
+  - 233 `bootGame()`
+  - 348 `bootFail(e)`
 
 ## `src/js/vessel3d.js` (1651 linjer)
 

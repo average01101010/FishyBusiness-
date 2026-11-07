@@ -2,7 +2,7 @@
 function estimate(){
   const b = S.boat, H = S.t / 60, W = windAt(H);
   let km = 0, fishH = 0, bad = -1, a = quayPos(b);   // from where she lies (at Father's naust its berth, not the plant's harbour point)
-  S.draft.forEach((w, i) => { km += kmTrue(a, w); if (bad < 0 && !legClear(a, w)) bad = i; fishH += w.fish || 0; a = w; });
+  S.draft.forEach((w, i) => { km += kmTrue(a, w); if (bad < 0 && !legClearMemo(a, w)) bad = i; fishH += w.fish || 0; a = w; });
   const v = Math.min(S.draftSpeed, speedCap(hsAt(b.pos, H)));
   const nm = km / NM, hours = nm / v, fuel = fuelLph(v, W) * hours;
   return {nm, hours, fishH, fuel, bad, v};

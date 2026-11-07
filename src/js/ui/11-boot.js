@@ -203,9 +203,16 @@ function modelsLabel(){
 // The packs round everything the saved game holds. It runs again after the cloud gate (08.10.2026, a player on a new PC: the cloud save
 // is put in place only then, and its boat may lie in a tile the first round never asked for: «mask block 105,20 is not loaded»).
 async function bootMapLoad(){
-  const saved = load(), pts = []; bootgNote(saved);
+  const saved = load(), pts = [], ways = []; bootgNote(saved);
   for (const v of saved && saved.fleet && saved.fleet.length ? saved.fleet : saved ? [saved] : []){
-    const b = v.boat; if (b && b.pos) pts.push(b.pos); for (const w of [...((v.plan && v.plan.wps) || []), ...((v.ops && v.ops.wps) || []), ...(v.draft || [])]) pts.push(w); }
+    const b = v.boat; if (b && b.pos) pts.push(b.pos); for (const w of [...((v.plan && v.plan.wps) || []), ...((v.ops && v.ops.wps) || []), ...(v.draft || [])]) pts.push(w);
+    // and the way along the plan still ahead and the draft (07.11.2026): the start's check of the plan (legClear in bootGame) and the
+    // chart's drawing of the draft (renderDyn) read the whole leg, and the packs round its ends left out the middle of a long one
+    // (Adrian 05.11.2026: «mask block … is not loaded», and the page loaded again for it). The same pieces as the route finder and the
+    // draft's hazards (lnetLoad, core/11c-leinett.js: 5 km of the leg at a time, half a kilometre round it)
+    if (b && b.pos){ const i0 = v.plan ? v.plan.idx || 0 : 0;
+      if (v.plan && v.plan.wps && v.plan.wps.length > i0) ways.push([b.pos].concat(v.plan.wps.slice(i0)));
+      if (v.draft && v.draft.length) ways.push([b.pos].concat(v.draft)); } }
   for (const s of (saved && saved.sets) || []) if (s.a && s.b) pts.push(setMid(s));
   // Senja's harbours (a new game starts in Finnsnes before the player picks a place, ui/08c-start.js), the saved home and the grounds
   // (the talk on the quay weighs them all); not the coast's receivers, which would be the whole coast's packs
@@ -216,7 +223,7 @@ async function bootMapLoad(){
   for (let t = 0; ; t++){
     // packs the last start found missing too late (the catch at the bottom remembers them for this tab and loads the page again)
     let late = []; try { const L = JSON.parse(sessionStorage.getItem('dsb_needpk') || '[]'); late = [...MAPD.byTile.values()].filter(pk => L.includes(pk.file)); } catch (e){}
-    try { await Promise.all([mapLoad(MAPD.core), ...pts.map(p => mapNeed(p, MAPD.simR)), ...late.map(mapLoad)]); break; }
+    try { await Promise.all([mapLoad(MAPD.core), ...pts.map(p => mapNeed(p, MAPD.simR)), ...ways.map(P => lnetLoad(P)), ...late.map(mapLoad)]); break; }
     catch (e){ if (t >= 8) throw e; if (e && e.pk) await mapLoad(e.pk); else await new Promise(res => setTimeout(res, 1000)); }
   }
   DEPTH = true;
