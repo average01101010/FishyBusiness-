@@ -654,3 +654,16 @@
 2026-11-07 02:38	ccr-2cfcfb0c-tfhulm	d1332961+	fleet2test	OK	34	lite	samtidig	
 2026-11-07 03:55	ccr-f981c5f0-ezb7x7	ba79cfbf+	docktest	OK	58	lite	alene	
 2026-11-07 04:15	ccr-f981c5f0-ezb7x7	f92cff1e	trackfollow	OK	1193	3d	alene	
+2026-11-07 09:31	ccr-5c109e47-twgn6s	7008450e	trip2	OK	44	lite	samtidig	
+2026-11-07 09:31	ccr-5c109e47-twgn6s	7008450e	boottest	OK	38	lite	samtidig	
+2026-11-07 09:32	ccr-5c109e47-twgn6s	7008450e	vesseltest	OK	26	lite	samtidig	
+2026-11-07 09:32	ccr-5c109e47-twgn6s	7008450e	shoptest	OK	34	lite	samtidig	
+2026-11-07 09:32	ccr-5c109e47-twgn6s	7008450e	snokrabbetest	OK	13	lite	samtidig	
+2026-11-07 09:32	ccr-5c109e47-twgn6s	7008450e	krabbefabrikktest	OK	20	lite	samtidig	
+2026-11-07 09:33	ccr-5c109e47-twgn6s	7008450e	geartest	OK	37	lite	samtidig	
+2026-11-07 09:33	ccr-5c109e47-twgn6s	7008450e	istest	OK	17	lite	samtidig	
+2026-11-07 09:33	ccr-5c109e47-twgn6s	7008450e	driftsplan2ui	OK	32	lite	samtidig	
+2026-11-07 09:33	ccr-5c109e47-twgn6s	7008450e	harbourtest	OK	18	lite	samtidig	
+2026-11-07 09:34	ccr-5c109e47-twgn6s	7008450e	docktest	OK	64	lite	samtidig	
+2026-11-07 09:35	ccr-5c109e47-twgn6s	7008450e	dbg23o	OK	50	3d	alene	
+2026-11-07 09:37	ccr-5c109e47-twgn6s	7008450e	driftsplan2test	FEIL	106	lite	alene	FEIL S19 home at a rorbu, you aboard an open boat: you go in to rest by yourself each night and the plan goes out every day, played closed [[['2028-03-08', 1, 2
