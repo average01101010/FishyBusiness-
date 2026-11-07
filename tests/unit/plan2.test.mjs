@@ -25,6 +25,15 @@ export default function (t){
     S.pgear.kits.n = 2; t.ok(p2Kits() === 2, 'to om bord: 2');
     S.sets = [{vid:S.cur, kind:'line'}, {vid:S.cur, kind:'line', lost:true}, {vid:'annen', kind:'line'}];
     t.ok(p2Kits() === 3, 'to om bord og ett på lina i sjøen (en tapt lenke og en annen båts teller ikke): 3 (' + p2Kits() + ')'); }
+  // a field closed by the rules (Ø12 07.11.2026): the plan looks again each day (until, and holds to it) but the field opens on its date
+  // (open), and the push «Feltet er åpent igjen» goes then; before it went the next day the plan looked, while the field was still closed
+  { const {newState, plan2Wait} = K; K.set('S', newState()); const o = {run:null, hold:0};
+    plan2Wait(o, 'closed', 'Felt 1 er stengt. Planen venter til 1.6.', 'Field 1 is closed. The plan waits until 1.6.', 100, 196);
+    t.ok(o.run.wait.until === 100 && o.run.wait.open === 196 && o.hold === 100, 'stengt felt: neste titt (until 100) holder planen, åpningsdagen (open 196) står i ventingen (' + JSON.stringify([o.run.wait.until, o.run.wait.open, o.hold]) + ')');
+    plan2Wait(o, 'closed', 'Felt 1 er stengt. Planen venter til 1.6.', 'Field 1 is closed. The plan waits until 1.6.', 124, 196);
+    t.ok(o.run.wait.until === 124 && o.run.wait.open === 196, 'samme venting dagen etter: ny titt, samme åpningsdag');
+    plan2Wait(o, 'wx', 'Venter på været.', 'Waits for the weather.', 130);
+    t.ok(o.run.wait.open === null && o.run.wait.until === 130, 'en annen venting (været) har ingen åpningsdag'); }
   // round the clock (U2): the boat's own limits before the number aboard
   { const {plan2WatchWhy} = K, st = (house, bunks, crewMax) => ({house, bunks, crewMax});
     t.ok(String(plan2WatchWhy(st(false, 0, 2), 3, true)) === 'Båten har verken styrhus eller køyer', 'snekke (ingen styrhus, ingen køyer), tre om bord: båtens grense, ikke «dere er 3»');

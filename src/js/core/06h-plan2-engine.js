@@ -80,10 +80,12 @@ const plan2Say = (o, no, en) => { msg(p2SkName() || gL('Driftsplan', 'Operations
 function plan2ActWhy(w, why){ const o = plan2Ops(); if (!o || !o.run) return; const what = w.act && w.act.only === 'set' ? ['sette', 'set'] : ['trekke', 'haul']; if (o.run.fail && o.run.fail.no === why[0]) return; o.run.fail = {t:S.t, no:why[0], en:why[1] || why[0]}; plan2Say(o, 'Kunne ikke ' + what[0] + ' redskapet: ' + why[0], 'Could not ' + what[1] + ' the gear: ' + (why[1] || why[0])); }
 // the trip she is on cut short where she is (the page's «Hent redskapet» at sea): the boat stops, and the engine lays the day again from here
 function plan2Abort(o){ const b = S.boat; if (!S.plan || !S.plan.ops) return; if (b.gop) gopAbort('return'); if (b.status === 'fishing') endFishing('move'); S.plan = null; if (b.status !== 'port'){ b.status = 'idle'; b.v = 0; } if (o && o.run) o.run.trip = null; }
-function plan2Wait(o, k, no, en, until){
+// (open: the hour the wait really ends, when it is later than until, the next look at it: a field closed by the rules is looked at
+// again each day but opens on its date, and the push says «Feltet er åpent igjen» then, not tomorrow; Ø12 07.11.2026)
+function plan2Wait(o, k, no, en, until, open){
   const r = o.run || (o.run = {day:null, i:0, trip:null, wait:null});
-  if (!r.wait || r.wait.k !== k){ r.wait = {k, t:S.t, no, en, until}; if (!['dep', 'rest', 'make', 'route', 'jobs', 'open'].includes(k)) plan2Say(o, no, en); }
-  else { r.wait.no = no; r.wait.en = en; r.wait.until = until; }
+  if (!r.wait || r.wait.k !== k){ r.wait = {k, t:S.t, no, en, until, open:open == null ? null : open}; if (!['dep', 'rest', 'make', 'route', 'jobs', 'open'].includes(k)) plan2Say(o, no, en); }
+  else { r.wait.no = no; r.wait.en = en; r.wait.until = until; r.wait.open = open == null ? null : open; }
   o.hold = until == null ? 0 : until;
 }
 function plan2Stop(o, k, no, en, fix){
@@ -277,7 +279,7 @@ function plan2Boundary(o, H){
   if (r && r.replan && !spent) return plan2NewDay(o, H);
   const from = spent ? H + spent : r && r.day ? p2DayEnd(r.day) : H, dep = plan2NextDep(o, H, from);
   // the rules at the next departure: a closed place waits for its date, a used-up quota stops the plan now, not tomorrow morning
-  { const st = plan2RulesWhy(o, dep); if (st){ if (st.k === 'closed'){ const at = plan2RulesOpenAt(o, dep); if (at != null){ const d = gDate(at); plan2Wait(o, 'closed', st.no + ' Planen venter til ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', st.en + ' The plan waits until ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', Math.min(at, H + 24)); return; } } plan2Stop(o, st.k, st.no, st.en, st.fix); return; } }
+  { const st = plan2RulesWhy(o, dep); if (st){ if (st.k === 'closed'){ const at = plan2RulesOpenAt(o, dep); if (at != null){ const d = gDate(at); plan2Wait(o, 'closed', st.no + ' Planen venter til ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', st.en + ' The plan waits until ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', Math.min(at, H + 24), at); return; } } plan2Stop(o, st.k, st.no, st.en, st.fix); return; } }
   if (H < dep - 1 / 60){ plan2Wait(o, 'dep', (spent ? 'Mannskapet hviler. ' : '') + 'Neste tur går kl. ' + driftClock(driftHod(dep)) + (dep - H > 20 ? ' i morgen' : '') + '.', (spent ? 'The crew rest. ' : '') + 'The next trip goes at ' + driftClock(driftHod(dep)) + (dep - H > 20 ? ' tomorrow' : '') + '.', dep); if (spent) r.replan = true; return; }
   plan2NewDay(o, H);
 }
@@ -368,7 +370,7 @@ function plan2Go(o, H, i0){
   const cw = plan2CrewWhy(o); if (cw){ if (cw.wait) plan2Wait(o, cw.k, cw.no, cw.en, H + 1); else plan2Stop(o, cw.k, cw.no, cw.en, cw.fix); return; }
   if (S.jobs && S.jobs.length){ const until = Math.max(H + 5 / 60, (jobsDone() || S.t) / 60 + 1 / 60); plan2Wait(o, 'jobs', jobsCrewOnly() ? 'Mannskapet gjør ferdig arbeidet på kaia. Går kl. ' + driftClock(driftHod(until)) + '.' : 'Verkstedet jobber på båten, så den venter.', jobsCrewOnly() ? 'The crew finish the work at the quay. Leaving at ' + driftClock(driftHod(until)) + '.' : 'The yard is working on the boat, so she waits.', until); return; }
   if (!p2Sno(o)){ const st = plan2RulesWhy(o, H); if (st){   // (the snow crab's day keeps the season and the rules itself: a string held by the ice must still come in, H3c)
-      if (st.k === 'closed'){ const at = plan2RulesOpenAt(o, H); if (at != null){ const d = gDate(at); plan2Wait(o, 'closed', st.no + ' Planen venter til ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', st.en + ' The plan waits until ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', Math.min(at, H + 24)); return; } }
+      if (st.k === 'closed'){ const at = plan2RulesOpenAt(o, H); if (at != null){ const d = gDate(at); plan2Wait(o, 'closed', st.no + ' Planen venter til ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', st.en + ' The plan waits until ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', Math.min(at, H + 24), at); return; } }
       plan2Stop(o, st.k, st.no, st.en, st.fix); return; } }
   // the day was laid for an earlier departure (the weather, the quay): it is made again from now, so the soak and the hours are right
   if (i0 === 1 && D.t0 < H - 0.5 && !r.remade){ r.remade = true; return plan2NewDay(o, H); }

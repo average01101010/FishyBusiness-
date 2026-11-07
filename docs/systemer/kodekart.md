@@ -1076,7 +1076,7 @@ Driftsplan 2: the day is the plan (26.10.2026, docs/planer/driftsplan-2/02-desig
   - 401 `p2Kits()`
   - 402 `plan2Check(o, st)`
 
-## `src/js/core/06h-plan2-engine.js` (541 linjer)
+## `src/js/core/06h-plan2-engine.js` (543 linjer)
 
 Driftsplan 2, part 2: the engine (26.10.2026, docs/planer/driftsplan-2/02-design.md chapter 2). It follows the day that planDay
 
@@ -1090,44 +1090,44 @@ Driftsplan 2, part 2: the engine (26.10.2026, docs/planer/driftsplan-2/02-design
 - **75** what the plan says, waits for and stops at
   - 80 `plan2ActWhy(w, why)`
   - 82 `plan2Abort(o)`
-  - 83 `plan2Wait(o, k, no, en, until)`
-  - 89 `plan2Stop(o, k, no, en, fix)`
-  - 99 `plan2Pause(o)`
-  - 108 `plan2Start(o)`
-  - 113 `plan2Resume(o)`
-  - 115 `plan2CrewWhy(o)`
-  - 125 `plan2Wx()`
-  - 130 `plan2WxAhead(o, H, dur, pts, L)`
-  - 139 `plan2WxWait(o, wx, H)`
-  - 146 `plan2WxFirstOk(o, H, dur, pts)`
-- **147** shelter without a search (part 3): back the way she came to the last place or port she passed, and from a place the kept leg to its
-  - 150 `plan2Shelter(W, hsOver)`
-  - 173 `plan2Cut(o, why)`
-  - 185 `plan2RulesWhy(o, H, placesOnly)`
-  - 192 `plan2RulesOpenAt(o, H)`
-- **193** the engine: each minute, on each vessel (06d-drift.js opsStep hands over with DRIFT2 on)
-  - 195 `plan2Step(H)`
-  - 211 `plan2Decide(o, H)`
-  - 242 `plan2MeRest(o, H)`
-  - 254 `plan2SkipGiven()`
-  - 265 `p2DayEnd(d)`
-  - 267 `plan2Boundary(o, H)`
-  - 286 `plan2Spent(o, H)`
-  - 295 `plan2NewDay(o, H)`
-  - 307 `plan2CostDay(o, r)`
-  - 310 `plan2Caught(o, tr)`
-  - 311 `plan2StatDay(o, d)`
-- **312** a trip: the steps from i0 to the next port call, as waypoints on the kept legs
-  - 313 `plan2Trip(o, D, i0)`
-  - 366 `plan2Go(o, H, i0)`
-  - 412 `plan2Sea(o, H)`
-  - 460 `plan2WorkStop(o, H, W, hs)`
-  - 471 `plan2WorkWait(o, H, wx, pts, port)`
-  - 482 `plan2Landed(pid, k)`
-  - 491 `plan2Report(pid, kg, total, landed)`
-  - 503 `plan2Bait(o, s)`
-  - 521 `plan2Egn(o, s)`
-  - 528 `plan2WatchTick(H)`
+  - 85 `plan2Wait(o, k, no, en, until, open)`
+  - 91 `plan2Stop(o, k, no, en, fix)`
+  - 101 `plan2Pause(o)`
+  - 110 `plan2Start(o)`
+  - 115 `plan2Resume(o)`
+  - 117 `plan2CrewWhy(o)`
+  - 127 `plan2Wx()`
+  - 132 `plan2WxAhead(o, H, dur, pts, L)`
+  - 141 `plan2WxWait(o, wx, H)`
+  - 148 `plan2WxFirstOk(o, H, dur, pts)`
+- **149** shelter without a search (part 3): back the way she came to the last place or port she passed, and from a place the kept leg to its
+  - 152 `plan2Shelter(W, hsOver)`
+  - 175 `plan2Cut(o, why)`
+  - 187 `plan2RulesWhy(o, H, placesOnly)`
+  - 194 `plan2RulesOpenAt(o, H)`
+- **195** the engine: each minute, on each vessel (06d-drift.js opsStep hands over with DRIFT2 on)
+  - 197 `plan2Step(H)`
+  - 213 `plan2Decide(o, H)`
+  - 244 `plan2MeRest(o, H)`
+  - 256 `plan2SkipGiven()`
+  - 267 `p2DayEnd(d)`
+  - 269 `plan2Boundary(o, H)`
+  - 288 `plan2Spent(o, H)`
+  - 297 `plan2NewDay(o, H)`
+  - 309 `plan2CostDay(o, r)`
+  - 312 `plan2Caught(o, tr)`
+  - 313 `plan2StatDay(o, d)`
+- **314** a trip: the steps from i0 to the next port call, as waypoints on the kept legs
+  - 315 `plan2Trip(o, D, i0)`
+  - 368 `plan2Go(o, H, i0)`
+  - 414 `plan2Sea(o, H)`
+  - 462 `plan2WorkStop(o, H, W, hs)`
+  - 473 `plan2WorkWait(o, H, wx, pts, port)`
+  - 484 `plan2Landed(pid, k)`
+  - 493 `plan2Report(pid, kg, total, landed)`
+  - 505 `plan2Bait(o, s)`
+  - 523 `plan2Egn(o, s)`
+  - 530 `plan2WatchTick(H)`
 
 ## `src/js/core/06i-plan2-sno.js` (230 linjer)
 
@@ -1270,7 +1270,7 @@ the rorbuer along the coast: a cheap bed ashore and a quay to lie at (05.10.2026
   - 61 `rorbuTarget(pt, r)`
   - 74 `rorbuSoon(p, r)`
 
-## `src/js/core/07e-havn.js` (267 linjer)
+## `src/js/core/07e-havn.js` (271 linjer)
 
 A berth in the coast's harbours for the player's boats (Jonas 23.10.2026: «Båten burde som oftest ligge til en skikkelig kai
 
@@ -1289,25 +1289,25 @@ A berth in the coast's harbours for the player's boats (Jonas 23.10.2026: «Båt
   - 113 `havnOnSlab(S0, x, z)`
   - 119 `havnHullFree(p, hd, L, B, d, others, piers, slabs)`
   - 135 `havnBerths(H, type, vid, n)`
-  - 170 `havnMoor(h)`
-  - 173 `havnPlaceOf(H, b, type)`
-  - 183 `havnPrune(keep)`
-  - 190 `havnFace(pid)`
-  - 192 `havnFind(p, r, type)`
-  - 198 `havnTapNear(pt, r)`
-  - 203 `havnOptions(p, r, type)`
-- **208** held: the berth is the vessel's while she lies there, or while it is her plan's home (06d-drift.js o.home)
-  - 209 `havnHold(id)`
-  - 213 `havnFree(id)`
-  - 221 `havnMinute()`
-  - 229 `havnBlocked(x, z, r)`
-- **234** the server (D: «Serveren holder rede på hvem som ligger hvor»): what the others hold in a harbour, asked at most every two minutes;
-  - 237 `havnCloud()`
-  - 238 `havnAsk(hid)`
-  - 247 `havnPut(id, s)`
-  - 255 `havnRenew()`
-  - 256 `havnDrop(id)`
-  - 257 `havnMoved(id)`
+  - 174 `havnMoor(h)`
+  - 177 `havnPlaceOf(H, b, type)`
+  - 187 `havnPrune(keep)`
+  - 194 `havnFace(pid)`
+  - 196 `havnFind(p, r, type)`
+  - 202 `havnTapNear(pt, r)`
+  - 207 `havnOptions(p, r, type)`
+- **212** held: the berth is the vessel's while she lies there, or while it is her plan's home (06d-drift.js o.home)
+  - 213 `havnHold(id)`
+  - 217 `havnFree(id)`
+  - 225 `havnMinute()`
+  - 233 `havnBlocked(x, z, r)`
+- **238** the server (D: «Serveren holder rede på hvem som ligger hvor»): what the others hold in a harbour, asked at most every two minutes;
+  - 241 `havnCloud()`
+  - 242 `havnAsk(hid)`
+  - 251 `havnPut(id, s)`
+  - 259 `havnRenew()`
+  - 260 `havnDrop(id)`
+  - 261 `havnMoved(id)`
 
 ## `src/js/core/08-lore.js` (67 linjer)
 
@@ -2529,12 +2529,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1306 linjer)
+## `src/js/ui/phone/07-patch.js` (1310 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1299 `patch()`
+  - 1303 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3221,7 +3221,7 @@ THE CLOUD (04.10.2026; docs/lansering.md E and F)
   - 945 `guestRegister(signIn)`
   - 957 `guestGift()`
 
-## `src/js/ui/10g-push.js` (206 linjer)
+## `src/js/ui/10g-push.js` (218 linjer)
 
 PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase/migrations/20261005120000_push.sql and
 
@@ -3233,11 +3233,11 @@ PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase
   - 63 `pushAuto()`
   - 66 `pushAsk()`
   - 78 `pushItems(now)`
-  - 174 `pushPlan(away)`
-  - 182 `pushStart()`
-  - 190 `pushCardRow()`
-  - 197 `pushCatToggle(k)`
-  - 202 `pushToggle()`
+  - 186 `pushPlan(away)`
+  - 194 `pushStart()`
+  - 202 `pushCardRow()`
+  - 209 `pushCatToggle(k)`
+  - 214 `pushToggle()`
 
 ## `src/js/ui/10h-world.js` (320 linjer)
 
