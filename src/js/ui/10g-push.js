@@ -104,9 +104,12 @@ function pushItems(now){
       // the plan stops (Jonas 23.10.2026, as for the old plan below): when it has just stopped, and when the rules close one of its places
       // within the days ahead for longer than the plan waits (a month, plan2RulesOpenAt); one closed for less is the wait above
       if (o && !o.on && o.stop && S.t - o.stop.t < 120) add(S.t + 1, 'ops-' + tag, nm, 'Driftsplanen for ' + nm + ' har stoppet: ' + o.stop.no, 'The plan for ' + nm + ' has stopped: ' + o.stop.en, 24, 1);
-      else if (o && o.on && !p2Sno(o) && typeof plan2RulesWhy === 'function'){ const H0 = S.t / 60;
-        for (let d = 1; d <= Math.floor(PUSH_AHEAD / 1440); d++){ const H = H0 + d * 24, st = plan2RulesWhy(o, H, true); if (!st) continue;
-          if (st.k === 'closed' && plan2RulesOpenAt(o, H) == null) add(H * 60, 'ops-' + tag, nm, 'Driftsplanen for ' + nm + ' stopper: ' + st.no.replace(/ er stengt:.*/, '').toLowerCase() + ' er stengt etter reglene fra i dag. Velg en ny plass.', 'The plan for ' + nm + ' stops: ' + st.en.replace(/ is closed:.*/, '').toLowerCase() + ' is closed by the rules from today. Choose a new place.', 24, 1);
+      // (the rules go by the date: each day is looked at from its first minute; a short closing is passed over to the day it opens, so a
+      // long one after it is still found, and plan2RulesOpenAt is asked once per closing)
+      else if (o && o.on && !p2Sno(o) && typeof plan2RulesWhy === 'function'){ const g0 = gDate(S.t / 60), D0 = S.t / 60 - g0.getUTCHours() - g0.getUTCMinutes() / 60 + 1 / 60, n = Math.floor(PUSH_AHEAD / 1440);
+        for (let d = 1; d <= n; d++){ const H = D0 + d * 24, st = plan2RulesWhy(o, H, true); if (!st || st.k !== 'closed') continue;
+          const at = plan2RulesOpenAt(o, H); if (at != null){ d = Math.max(d, Math.floor((at - D0) / 24) - 1); continue; }
+          add(H * 60, 'ops-' + tag, nm, 'Driftsplanen for ' + nm + ' stopper: ' + st.no.replace(/ er stengt:.*/, '').toLowerCase() + ' er stengt etter reglene fra i dag. Velg en ny plass.', 'The plan for ' + nm + ' stops: ' + st.en.replace(/ is closed:.*/, '').toLowerCase() + ' is closed by the rules from today. Choose a new place.', 24, 1);
           break; } } }
     if (P && P.idx < P.wps.length && out_ && !onPlan){
       const wps = P.wps.slice(P.idx), last = wps[wps.length - 1], pt = last.port && portById(last.port);

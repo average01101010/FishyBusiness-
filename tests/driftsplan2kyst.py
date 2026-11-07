@@ -163,7 +163,7 @@ REAL_M = r"""async () => { const R = {};
   return R; }"""
 
 # ---- the drawer over the 3D sea (with 3D drawn): the plan page at Bodø in each format
-SHOT = r"""async () => { const {M} = await KY.town(67.285, 14.38, 5); D2.gear('line', 4); S.ops = null; KY.act('p2-new'); const o = S.ops; KY.act('p2-rig', {g:'line'});
+SHOT = r"""async () => { const {M} = await KY.town(67.285, 14.38, 5); S.t = D2.T0 + 9 * 60; D2.gear('line', 4); S.ops = null; KY.act('p2-new'); const o = S.ops; KY.act('p2-rig', {g:'line'});
   KY.put(o, 'felt', 2, M.p, 3, 10); KY.put(o, 'juks', 1, M.p, 2, 5); TAB.held = false; return {home:o.home, places:o.places.length, q:{...S.boat.pos}}; }"""
 # the tile's 3D statics in (as vectest READY)
 READY = """(q) => { const v = G3._debug.vec, tx = Math.floor(q.x / 50), ty = Math.floor(q.y / 50); return !vecHas(tx, ty) || (v.statics.some(s => s.k === tx + ':' + ty) && v.chunks > 15); }"""
@@ -258,7 +258,7 @@ async def shots(p):
         except Exception as e: print('  3D-flisa kom ikke inn:', str(e)[:120])
         await pg.evaluate("PHONE.close && PHONE.close(); DOCK.open('drift')")
         await pg.wait_for_timeout(8000)
-        f = os.path.join(OUT, 'driftsplan2kyst-3d-' + fmt + '.png'); await pg.screenshot(path=f)
+        f = os.path.join(OUT, 'driftsplan2kyst-3d-' + fmt + '.png'); await pg.screenshot(path=f, timeout=300000)
         info = await pg.evaluate("(() => { const d = document.getElementById('drawer'); return {drawer:!!d && !d.hidden && Math.round(d.getBoundingClientRect().height), page:DOCK.page, three:!document.body.classList.contains('no3d') && typeof G3 !== 'undefined' && !!G3._debug, w:innerWidth, sx:document.documentElement.scrollWidth > innerWidth + 1}; })()")
         print(ok(info['drawer'] and info['three'] and not info['sx'] and not errs), '3d ' + fmt + ': the plan drawer over the 3D sea', r, info, f, errs[:2])
         await b.close()

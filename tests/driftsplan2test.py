@@ -221,7 +221,7 @@ async def main():
             # (a string lost in the weather is the sea's own chance, gearHour: about 1 % a string over two days in ordinary weather; the plan
             # says so and does not haul it, so it is counted with the hauled ones, 07.11.2026)
             lost = [g for g in L['gearLog'][:2] if g.get('lost') and not g['haul']]
-            print(ok(len(hauls) >= 1 and len(hauls) + len(lost) >= 2 and all(48.0 - 0.05 <= g['soak'] <= 52 for g in hauls)), 'S3 the pots are hauled after 48-52 h and set again (a string lost in the weather is not hauled)', [(g['set'], g['soak']) for g in hauls], 'tapt', [(g['set'], g['lost']) for g in lost])
+            print(ok(len(hauls) >= 1 and len(lost) <= 1 and len(hauls) + len(lost) >= 2 and all(48.0 - 0.05 <= g['soak'] <= 52 for g in hauls)), 'S3 the pots are hauled after 48-52 h and set again (a string lost in the weather is not hauled)', [(g['set'], g['soak']) for g in hauls], 'tapt', [(g['set'], g['lost']) for g in lost])
             print(ok(L['ops']['on'] and not L['ops']['stop']), 'S3 the plan is still on after four days', L['ops'])
         print('== S7 med motoren: valgt mottak, og «når lasten er full» holder fangsten om bord')
         L = await pg.evaluate("""(async () => { D2.reset(27); const home = D2.boat('sjark', 2, true); await mapNeed(portById(home).p, 14);
