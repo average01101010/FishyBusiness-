@@ -861,3 +861,7 @@
 2026-11-07 15:40	plan/2026-11-07-opp4	65d8bbb2	markettest	OK	32	lite	samtidig	
 2026-11-07 15:40	plan/2026-11-07-opp4	65d8bbb2	opptest	OK	56	lite	samtidig	
 2026-11-07 15:41	plan/2026-11-07-opp4	65d8bbb2+	docktest	OK	63	lite	samtidig	
+2026-11-07 15:41	plan/2026-11-07-opp4	3e1a4bf1	uishots	OK	91	lite	samtidig	
+2026-11-07 15:41	plan/2026-11-07-opp4	3e1a4bf1	navbarshot	OK	32	lite	samtidig	
+2026-11-07 15:42	plan/2026-11-07-opp4	3e1a4bf1	dockrow	OK	43	lite	samtidig	
+2026-11-07 15:43	plan/2026-11-07-opp4	3e1a4bf1	roetest	OK	122	lite	samtidig	
