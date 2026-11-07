@@ -14,13 +14,13 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 
 ## Øktene som kjører
 
-- **OPP1** (steg 53), Jonas' økt, gren `plan/2026-11-07-opp1`, fra 07.11.2026 12:08 UTC. Eier `core/02-species-gear.js`, `05-vessels.js`, `13-work.js`, `14-crewlife.js`, `10-gear.js`, `ui/10-rod-acts.js`, `ui/05a-itemcard.js`, `ui/phone/12-utstyr-redskap.js`, `13b-nettet.js`, `01-i18n.js`, `07-patch.js` til den er rullet ut.
-- Før det: ingen (07.11.2026 09:50 UTC). H3b og H3c ble rullet ut i 4107d71a og U2-4 i c62047f0, begge i økter Jonas startet; B (steg 4 og 9) ble rullet ut tidligere samme dag.
+- Ingen (07.11.2026 13:00 UTC). OPP1 (steg 53) ble rullet ut i 73c12b26 i en økt Jonas startet; før det H3b og H3c (4107d71a), U2-4 (c62047f0) og stripa og kartet (4f5f6d91).
 
 ## Utrullinger fra rutinen
 
 | Dato | Steg | Flettecommit | Versjon | PR |
 |---|---|---|---|---|
+| 07.11.2026 | OPP1 Kniv og høtt i tre trinn (Jonas' økt, ikke rutinen) | 73c12b26 (flettet med arbeidsgrenen i 7217777f) | 050a64091a3d | – (direkte til arbeidsgrenen; porten i `tools/plan/RUTINE.md` punkt 6 holdt) |
 | 07.11.2026 | U2-4 Roen (Jonas' økt, ikke rutinen) | c62047f0 | – | – (direkte til arbeidsgrenen etter Jonas' «Rull ut nå») |
 | 07.11.2026 | H3b og H3c (Jonas' økt, ikke rutinen) | 4107d71a | – | – (direkte til arbeidsgrenen etter Jonas' «Rull ut på det store blå») |
 | 07.11.2026 | B1 og B2 (Jonas' økt, ikke rutinen) | 98c7befa | 9d020b3b180b | – (direkte til arbeidsgrenen etter Jonas' «så ruller vi ut») |
@@ -98,10 +98,10 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 50 | **Ø6 funn 7** Innloggingsdomenet | Skyen | venter på Jonas: WorkOS (valg 6) | | `src/data/cloud.json`, `ui/10f-cloud.js`, `tools/server/Caddyfile` | `sikkerhet-skyen.md` funn 7 |
 | 51 | **Ø4** Båtmodellene | Grafikk | lagt bort (Jonas 05.11.2026: «Vent med båtene») | | `tools/boats/` | øktplanen Ø4, `grafikk-batmodeller.md` |
 | 52 | **H5–H9** Not, snurrevad, skift, stigen, spilltesten | Havsteget | venter på H4 | steg 32 | se `havsteget.md` | `havsteget.md` |
-| 53 | **OPP1** Kniv og høtt i tre trinn, per båt, i utstyrsbutikken | Oppgraderinger | pågår (Jonas' økt, gren `plan/2026-11-07-opp1`, 07.11.2026 12:08 UTC; Jonas ga klarsignal ved å be om startmeldingen) | | `core/02-species-gear.js`, `05-vessels.js`, `13-work.js`, `14-crewlife.js`, `10-gear.js`, `ui/10-rod-acts.js`, `05a-itemcard.js`, `phone/12-utstyr-redskap.js`, `13b-nettet.js`, `01-i18n.js`, `07-patch.js` | `oppgraderinger.md` OPP1 |
-| 54 | **OPP4** «Båten og utstyret», Neste mål og trakten | Oppgraderinger | venter på OPP1 | steg 53 | `phone/10-fartoy.js`, `ui/07c-handbook.js`, `01-i18n.js`, `phone/14-act.js`, `phone/13-mannskap-bank-meld.js`, `core/09k-market.js`, `supabase/migrations/`, `src/admin/index.html`, `phone/07-patch.js` | `oppgraderinger.md` OPP4 |
-| 55 | **OPP3** Propellen på verftet og den additive fartsregelen | Oppgraderinger | venter på OPP1 | steg 53 | `core/03-simulation.js`, `06-services.js`, `phone/12-utstyr-redskap.js`, `14-act.js`, `10-fartoy.js`, `tests/unit/trimfart.test.mjs` | `oppgraderinger.md` OPP3 |
-| 56 | **OPP2** Trinn på juksamaskin, halere og juksasett, linesetter og garnrenne | Oppgraderinger | venter på OPP1 | steg 53 | `core/02-species-gear.js`, `03-simulation.js`, `10-gear.js`, `10b-gearcare.js`, `phone/12-utstyr-redskap.js`, `05a-itemcard.js` | `oppgraderinger.md` OPP2 |
+| 53 | **OPP1** Kniv og høtt i tre trinn, per båt, i utstyrsbutikken | Oppgraderinger | ferdig (73c12b26, 07.11.2026, rullet ut i 73c12b26; Jonas' økt, gren `plan/2026-11-07-opp1`; porten i `RUTINE.md` punkt 6 holdt) | | `core/02-species-gear.js`, `05-vessels.js`, `13-work.js`, `14-crewlife.js`, `10-gear.js`, `ui/10-rod-acts.js`, `05a-itemcard.js`, `phone/12-utstyr-redskap.js`, `13b-nettet.js`, `01-i18n.js`, `07-patch.js` | `oppgraderinger.md` OPP1 |
+| 54 | **OPP4** «Båten og utstyret», Neste mål og trakten | Oppgraderinger | klar | steg 53 (ferdig) | `phone/10-fartoy.js`, `ui/07c-handbook.js`, `01-i18n.js`, `phone/14-act.js`, `phone/13-mannskap-bank-meld.js`, `core/09k-market.js`, `supabase/migrations/`, `src/admin/index.html`, `phone/07-patch.js` | `oppgraderinger.md` OPP4 |
+| 55 | **OPP3** Propellen på verftet og den additive fartsregelen | Oppgraderinger | klar (startmeldingen skrives fra planen når steget kommer opp) | steg 53 (ferdig) | `core/03-simulation.js`, `06-services.js`, `phone/12-utstyr-redskap.js`, `14-act.js`, `10-fartoy.js`, `tests/unit/trimfart.test.mjs` | `oppgraderinger.md` OPP3 |
+| 56 | **OPP2** Trinn på juksamaskin, halere og juksasett, linesetter og garnrenne | Oppgraderinger | klar (startmeldingen skrives fra planen når steget kommer opp; `tests/unit/oppgradering.test.mjs`, `opptest` og målescenarioet `kniv*` i `fiskeplay.py` finnes) | steg 53 (ferdig) | `core/02-species-gear.js`, `03-simulation.js`, `10-gear.js`, `10b-gearcare.js`, `phone/12-utstyr-redskap.js`, `05a-itemcard.js` | `oppgraderinger.md` OPP2 |
 | 57 | **OPP5** Modellene: kniv, høtt, linesetter, garnrenne, plasket | Oppgraderinger | venter på OPP2 (Jonas ser modellene før utrulling) | steg 56 | `tools/deck/`, `src/data/*.b64`, malen, `view3d/10-gear.js`, `09-landing-deck.js`, `25-controls.js` | `oppgraderinger.md` OPP5 |
 
 ## Startmeldingene
@@ -170,6 +170,7 @@ Startmeldingene for Ø8b S3 (13), Ø9 F2 (14; står i `fysikk-4-sjo-og-skrog.md`
 
 ## Status
 
+- 07.11.2026 13:00 UTC: **OPP1 (kniv og høtt i tre trinn) ferdig og rullet ut i 73c12b26** (Jonas' økt, gren `plan/2026-11-07-opp1`, flettet med arbeidsgrenen etter stripa og kartet i 7217777f). Porten i `RUTINE.md` punkt 6 holdt: enhetstestene (1 857), de 33 testene uten 3D som dekker filene (30 grønne; `worktest` og `itemcardtest` røde likt på arbeidsgrenens bygg, `docktest` den kjente ustabile sjekken, grønn tre ganger alene), stikkprøver ved butikkene nær Bergen, Bodø og Hammerfest, skjermbildene i `docs/okter/2026-11-07-opp1/`, `/code-review` med rettingene, flettet og testet på nytt. 3D-testene ble ikke kjørt (Jonas: «ikke 3D»). Målingene står i planen under OPP1. OPP4 (steg 54) er klar med hel startmelding, og har fått det fra OPP1 som hørte til kjøpet (bekreftelsen over 10 000 kr og kvitteringen i `14-act.js`, innbyttet, trinnet ved salg mellom spillere). OPP3 og OPP2 venter ikke lenger på OPP1. `ui/07c-handbook.js` ble rørt utenfor startmeldingens filer (to oppføringer i kap. 8, fordi `itemcardtest` krever «Mer» på hvert kort).
 - 07.11.2026 (Jonas' økt, grenen `ccr-5626c087-fg38n2`): **planen `docs/planer/oppgraderinger.md` skrevet** etter Jonas' spørsmål om et oppgraderingssystem (kniv, høtt, dekksutstyr i trinn, propell, én side for båten og utstyret) og svarene hans samme dag; stegene OPP1–OPP5 lagt til som 53–57, med hel startmelding for OPP1. Jonas valgte V1 A samme dag; alle valgene er tatt. Venter på «kjør på». Jonas flytter radene om de skal opp i køen.
 - 07.11.2026 10:25 UTC: **H3b og H3c ferdig og rullet ut i 4107d71a** (Jonas' økt, grenen `ccr-5c109e47-twgn6s`, flettet med arbeidsgrenen i 192d4059; Jonas: «Rull ut på det store blå»). Ø12 A+B (steg 23) og H3d1 (steg 24) venter ikke lenger. Startmeldingen for H3d1 står over: Jonas vil ha hele snøkrabbefartøyet revidert eller bygd på nytt med mye høyere kvalitet, og ribba er satt til 85/100. Økta valgte at H3d1 ikke rulles ut før Jonas har sett modellen, siden kvaliteten her er hans å bedømme. Jonas kan oppheve det. Under H3c bestemte Jonas at havbåtene bare går døgndrift (driftsplan.md).
 - 07.11.2026 09:50 UTC: **U2-4 Roen rullet ut i c62047f0** (Jonas: «Rull ut nå»), flettet med arbeidsgrenen etter H3b og H3c; Ø9 F2 (steg 14) venter ikke lenger på den.

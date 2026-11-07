@@ -4,7 +4,7 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
-- **OPP1 (kniv og høtt i tre trinn, per båt, i utstyrsbutikken) bygd 07.11.2026** (Jonas' økt, gren `plan/2026-11-07-opp1`; «Kniv og høtt i tre trinn» i `docs/systemer/redskap.md`, målingene under OPP1 i `docs/planer/oppgraderinger.md`). Det som er svakt, antatt eller ikke gjort:
+- **OPP1 (kniv og høtt i tre trinn, per båt, i utstyrsbutikken) bygd og rullet ut 07.11.2026 i 73c12b26** (Jonas' økt, gren `plan/2026-11-07-opp1`; «Kniv og høtt i tre trinn» i `docs/systemer/redskap.md`, målingene under OPP1 i `docs/planer/oppgraderinger.md`). Det som er svakt, antatt eller ikke gjort:
   - **Bekreftelsen i knappen** gjelder ikke trinnene: `ui/phone/14-act.js` (handlingen `equip`) spør `E.price >= IC_CONFIRM_KR`, og kniv og høtt har ingen `price`. Bare kniv trinn 3 på kystbåtene (13 500 kr) er over 10 000 kr. Rettes ved å la `14-act.js` lese `tierKr` for `E.tiers` (utenfor OPP1s filer; OPP4 eller OPP2).
   - **Kvitteringen** sier «Kjøpt: Sløyekniver» uten trinnet (samme sted, `receipt(E.name …)`); loggen og kortet sier trinnet.
   - **Innbytte på verftet** (`ui/phone/13-mannskap-bank-meld.js`, linje 170) beholder knivtrinnet når den nye båten også er en kystbåt, selv om prisen er per sløyeplass: trinn 3 kjøpt på trebåten (4 500 kr) følger med til kystbåten på 15 m (13 500 kr der). Halerne følger med på samme måte i dag. Valg for Jonas: la det følge med, eller la trinnet bli med den gamle båten (planens prinsipp 5 sier «følger båten ved innbytte»).
