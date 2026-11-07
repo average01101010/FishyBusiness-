@@ -231,6 +231,7 @@ function dynInside(O, x, z){
   return best;
 }
 function dynContact(b, d, P, O){
+  sjvTouch(b, d, P);   // the other vessels, the sea marks and the buoys (Ø11.3, 05e-sjovei.js: the collision and the fault)
   if (!O || (!O.boxes.length && !O.units.length)) return null;
   const c = Math.cos(d.psi), sn = Math.sin(d.psi); let hit = null;
   for (const [fx, fy] of DYN_HULL){

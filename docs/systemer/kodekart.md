@@ -814,61 +814,93 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 212 `havState(s, H, near)`
   - 237 `havNear(H, only)`
 
-## `src/js/core/05e-sjovei.js` (584 linjer)
+## `src/js/core/05e-sjovei.js` (1009 linjer)
 
 ---------- the rules of the road: who gives way, and the NPCs and Autonav that do (Ø11.1, docs/systemer/sjofart-og-lover.md) ----------
 
 - **1** the rules of the road: who gives way, and the NPCs and Autonav that do (Ø11.1, docs/systemer/sjofart-og-lover.md)
-  - 46 `colregLim(La, Lb)`
-  - 52 `colregCls(n)`
-  - 65 `colregHav(s, A)`
-  - 73 `colregOwnCls(b)`
-  - 82 `colregAisSt(n)`
-  - 103 `colregSit(a, b, o = {})`
-  - 134 `sjvNeed(R, hd, sg, want, mover, gs = 1)`
-  - 145 `sjvSide(R, hd, mover, want, gs)`
-  - 155 `sjvSide19(rel, ov)`
-- **157** the manoeuvre laid over the shared course (npc-flåten 4 A): a fixed direction off the track, ramped at the turn's rate, held,
-  - 160 `sjvOffAt(E, H)`
-  - 167 `sjvPhase(E, H)`
-  - 173 `sjvLagAt(E, H)`
-  - 178 `sjvPose(n, E, H)`
-  - 190 `sjvLive()`
-  - 192 `sjvOwn()`
-  - 208 `sjvNarrow(n, H)`
-  - 217 `sjvRoom(n, nx, ny, k)`
-  - 230 `sjvRoomOn(n, E, H)`
-  - 243 `sjvRoomOwn(a, nx, ny, k)`
-  - 251 `sjvStart(n, R, H, mover, why, own, id)`
-- **262** Ø11.2: the sight, the lanterns and the sound signals (pure; sjvEval and the views use them)
-  - 266 `sjvLampNm(k, L)`
-  - 277 `sjvLightNm(D0, vis)`
-  - 284 `sjvSeenKm(L, vis, dark)`
-  - 286 `sjvHearNm(L)`
-  - 291 `sjvFogPat(c, v, L)`
-  - 300 `sjvManPat(side, slow)`
-  - 305 `sjvLanternSt(n)`
-  - 307 `sjvMinKn()`
-  - 310 `sjvSafeMs(dM)`
-  - 316 `sjvVisAt(H, p)`
-  - 317 `sjvDark(H, p)`
-  - 321 `sjvSig(id, pat, p, L, own)`
-  - 329 `sjvFogSigs(H, list, A, gs, vis, dark)`
-  - 347 `sjvCapV()`
-- **353** one look: the encounters round the boat you follow (at most once a game tenth of a minute, a real second)
-  - 354 `sjvEval(H, list)`
-  - 463 `sjvNearMiss(n, R, clr)`
-  - 473 `colregNpc(H, out, only)`
-  - 487 `sjvTrack(list)`
-- **489** Autonav
-  - 493 `sjvFresh(model)`
-  - 503 `sjvAuto(d, h, ds, T)`
-  - 518 `sjvSail(pl, b, left)`
-  - 533 `sjvCreep(pl, b, L, v)`
-- **542** the warning's words (the strip, the box and the card, the chart plotter)
-  - 544 `sjvSay(W, how)`
-  - 581 `sjvWhen(W)`
-  - 583 `sjvWarn()`
+  - 54 `colregLim(La, Lb)`
+  - 60 `colregCls(n)`
+  - 73 `colregHav(s, A)`
+  - 81 `colregOwnCls(b)`
+  - 90 `colregAisSt(n)`
+  - 111 `colregSit(a, b, o = {})`
+  - 142 `sjvNeed(R, hd, sg, want, mover, gs = 1)`
+  - 153 `sjvSide(R, hd, mover, want, gs)`
+  - 163 `sjvSide19(rel, ov)`
+- **165** the manoeuvre laid over the shared course (npc-flåten 4 A): a fixed direction off the track, ramped at the turn's rate, held,
+  - 168 `sjvOffAt(E, H)`
+  - 176 `sjvPhase(E, H)`
+  - 182 `sjvLagAt(E, H)`
+  - 187 `sjvPose(n, E, H)`
+  - 208 `sjvLive()`
+  - 210 `sjvOwn()`
+  - 226 `sjvNarrow(n, H)`
+  - 235 `sjvRoom(n, nx, ny, k)`
+  - 248 `sjvRoomOn(n, E, H)`
+  - 261 `sjvRoomOwn(a, nx, ny, k)`
+  - 269 `sjvStart(n, R, H, mover, why, own, id)`
+- **280** Ø11.2: the sight, the lanterns and the sound signals (pure; sjvEval and the views use them)
+  - 284 `sjvLampNm(k, L)`
+  - 295 `sjvLightNm(D0, vis)`
+  - 302 `sjvSeenKm(L, vis, dark)`
+  - 304 `sjvHearNm(L)`
+  - 309 `sjvFogPat(c, v, L)`
+  - 318 `sjvManPat(side, slow)`
+  - 323 `sjvLanternSt(n)`
+  - 325 `sjvMinKn()`
+  - 328 `sjvSafeMs(dM)`
+  - 334 `sjvVisAt(H, p)`
+  - 335 `sjvDark(H, p)`
+  - 339 `sjvSig(id, pat, p, L, own)`
+  - 347 `sjvFogSigs(H, list, A, gs, vis, dark)`
+  - 365 `sjvCapV()`
+- **371** one look: the encounters round the boat you follow (at most once a game tenth of a minute, a real second)
+  - 372 `sjvEval(H, list)`
+  - 492 `sjvNearMiss(n, R, clr)`
+  - 502 `colregNpc(H, out, only)`
+  - 516 `sjvTrack(list)`
+- **518** Autonav
+  - 522 `sjvFresh(model)`
+  - 532 `sjvAuto(d, h, ds, T)`
+  - 547 `sjvSail(pl, b, left)`
+  - 564 `sjvCreep(pl, b, L, v)`
+- **573** the warning's words (the strip, the box and the card, the chart plotter)
+  - 575 `sjvSay(W, how)`
+  - 612 `sjvWhen(W)`
+  - 614 `sjvWarn()`
+- **616** Ø11.3: collisions (sjøloven kap. 8, LOV-1994-06-24-39 §§ 161-164, read on Lovdata 06.11.2026)
+  - 641 `sjvHullPts(X, Z, psi, L, B)`
+  - 645 `sjvInPoly(P, x, z)`
+  - 652 `sjvSat(A, B)`
+  - 673 `sjvSatC(A, cx, cz, r)`
+  - 682 `sjvMass(n)`
+  - 683 `sjvOwnMass(b = S.boat)`
+  - 686 `sjvKnEq(kn, mA, mB)`
+  - 688 `sjvValue(L)`
+  - 693 `sjvMatOf(n)`
+  - 696 `sjvOtherCost(kn, L, mat, P)`
+  - 706 `sjvOwnLoss(b, c)`
+  - 712 `sjvCpa(a, b, gs)`
+  - 717 `sjvTrailAdd(id, e)`
+  - 735 `sjvFault(T, X)`
+  - 798 `sjvFaultWord(w, no)`
+  - 809 `sjvFaultSay(F, name, lang)`
+  - 820 `sjvSettle(b, F, c, oth, name)`
+  - 831 `sjvPaySay(M, F, name, lang)`
+  - 839 `sjvKr(x, no)`
+  - 841 `sjvFrom()`
+  - 845 `sjvTo()`
+  - 852 `sjvVhf(n, rec)`
+  - 866 `sjvStandBy(n, H)`
+  - 877 `sjvBlow(n, kn, E, H, pre)`
+- **908** the manoeuvring model's steps (16b-dyn.js dynContact, by hand and on Autonav)
+  - 911 `sjvClock()`
+  - 918 `sjvNear(H, X, Z)`
+  - 937 `sjvImpulse(d, P, I, ve, vz, m2, gs)`
+  - 948 `sjvTouch(b, d, P)`
+- **981** the look's sweep (sjvEval), when the model does not have her
+  - 984 `sjvSweep(n, A, H, gs, on)`
 
 ## `src/js/core/06-services.js` (271 linjer)
 
@@ -1942,7 +1974,7 @@ MANUAL HELM (the user's wish 03.10.2026)
   - 63 `helmCast()`
   - 69 `helmCastDone(pid, kind)`
 
-## `src/js/core/16b-dyn.js` (595 linjer)
+## `src/js/core/16b-dyn.js` (596 linjer)
 
 HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
 
@@ -1967,37 +1999,37 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 215 `dynObsNear(X, Y, R)`
   - 222 `dynInside(O, x, z)`
   - 233 `dynContact(b, d, P, O)`
-- **259** with no way on: she drifts (Fysikk 2)
-  - 265 `dynDrift(type, p, H)`
-  - 287 `gearBuoyNear(p)`
-  - 289 `gearLieCrew()`
-  - 291 `gearWatch(b)`
-  - 299 `lieDrift(H)`
-- **338** the state, in step with the boat the rest of the game reads
-  - 339 `dynState(b)`
-  - 350 `dynWrite(b, d)`
-  - 355 `dynCan()`
-  - 360 `dynLive()`
-  - 365 `dynPose()`
-  - 372 `dynRest()`
-  - 373 `dynLivePose(frac)`
-  - 375 `dynHaltNeed()`
-- **376** the tick
-  - 377 `dynTick(dt)`
-  - 390 `dynMinute(H, W)`
-- **397** by hand (16-helm.js): the throttle and the rudder into the model
-  - 398 `dynHelm(d, dtG)`
-- **419** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
-  - 421 `dynLineBuild(pl, dep)`
-  - 441 `dynLineAt(T, s)`
-  - 447 `dynSeg(T, s)`
-  - 448 `dynSegHd(T, i)`
-  - 449 `dynLineProj(T, x, z, s0, back = 30)`
-  - 459 `dynLineHd(T, s, r0)`
-  - 466 `dynGroundAhead(T, s, look)`
-- **475** the autopilot
-  - 476 `dynAuto(d, dtG)`
-  - 594 `dynTrackView()`
+- **260** with no way on: she drifts (Fysikk 2)
+  - 266 `dynDrift(type, p, H)`
+  - 288 `gearBuoyNear(p)`
+  - 290 `gearLieCrew()`
+  - 292 `gearWatch(b)`
+  - 300 `lieDrift(H)`
+- **339** the state, in step with the boat the rest of the game reads
+  - 340 `dynState(b)`
+  - 351 `dynWrite(b, d)`
+  - 356 `dynCan()`
+  - 361 `dynLive()`
+  - 366 `dynPose()`
+  - 373 `dynRest()`
+  - 374 `dynLivePose(frac)`
+  - 376 `dynHaltNeed()`
+- **377** the tick
+  - 378 `dynTick(dt)`
+  - 391 `dynMinute(H, W)`
+- **398** by hand (16-helm.js): the throttle and the rudder into the model
+  - 399 `dynHelm(d, dtG)`
+- **420** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
+  - 422 `dynLineBuild(pl, dep)`
+  - 442 `dynLineAt(T, s)`
+  - 448 `dynSeg(T, s)`
+  - 449 `dynSegHd(T, i)`
+  - 450 `dynLineProj(T, x, z, s0, back = 30)`
+  - 460 `dynLineHd(T, s, r0)`
+  - 467 `dynGroundAhead(T, s, look)`
+- **476** the autopilot
+  - 477 `dynAuto(d, dtG)`
+  - 595 `dynTrackView()`
 
 ## `src/js/core/16c-hull.js` (146 linjer)
 
@@ -2369,12 +2401,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1229 linjer)
+## `src/js/ui/phone/07-patch.js` (1234 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1222 `patch()`
+  - 1227 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
 
@@ -2881,12 +2913,12 @@ actions
 - **73** the club's notice board: fixed lines, never free text (F2, 20261030160000_lag_board.sql)
 - **155** the week's quiz: five questions from the bank, the same for everyone in a game week
 
-## `src/js/ui/10-rod-acts.js` (96 linjer)
+## `src/js/ui/10-rod-acts.js` (97 linjer)
 
 ---------- the jig game: jigging by hand yourself, and the buttons and hooks around it ----------
 
 - **1** the jig game: jigging by hand yourself, and the buttons and hooks around it
-  - 94 `refreshAll()`
+  - 95 `refreshAll()`
 
 ## `src/js/ui/10-gear-ui.js` (240 linjer)
 
@@ -3146,7 +3178,7 @@ Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sp
 - **1** the guestbooks and Kystfareren (Jonas 09.10.2026; supabase/migrations/20261009220000_guestbook.sql)
 - **62** Kystfareren: the parts of the coast by where the place lies (natLL), south to north
 
-## `src/js/ui/10n-hail.js` (80 linjer)
+## `src/js/ui/10n-hail.js` (83 linjer)
 
 ---------- tuting and the six phrases at sea (Jonas 09.10.2026; supabase/migrations/20261009240000_hails.sql) ----------
 
