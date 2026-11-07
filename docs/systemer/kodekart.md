@@ -429,7 +429,7 @@ SEA: fetch, wind sea, swell
   - 150 `seaPartsNear(p, H)`
   - 152 `seaDirF(p, H, head)`
 
-## `src/js/core/03c-stability.js` (95 linjer)
+## `src/js/core/03c-stability.js` (210 linjer)
 
 STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the work aboard
 
@@ -444,6 +444,13 @@ STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the wo
   - 69 `motionHere(H, b = S.boat)`
   - 76 `hsWork(p, H)`
   - 80 `stabTick(H)`
+- **96** THE HULL IN THE SEA: buoyancy per section (Fysikk 4 F2, 07.11.2026; docs/planer/fysikk-4-sjo-og-skrog.md, Jonas' choice 2B)
+  - 106 `hullSections(type, zb, zs)`
+  - 136 `secArea(H, i, h)`
+  - 141 `secBreadth(H, i, h)`
+  - 148 `hullRest(H, D)`
+  - 166 `hullX(R)`
+  - 181 `hullStep(H, R, X, eta, deta, dt, o)`
 
 ## `src/js/core/03d-quota.js` (456 linjer)
 
@@ -3928,7 +3935,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 103 `moorStep(dt, bp, at = dt)`
   - 135 `drawMooring(BMrel, eye, VP, t)`
 
-## `src/js/view3d/16-motion.js` (245 linjer)
+## `src/js/view3d/16-motion.js` (310 linjer)
 
 ---------- boat motion ----------
 
@@ -3945,9 +3952,13 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 130 `dynSoon()`
   - 133 `dynFollow(dt)`
   - 141 `updateBoat(dt, t, frac, rdt)`
-- **230** particles
-  - 234 `spawn(x, y, z, vx, vy, vz, life, g)`
-  - 236 `drawPts(n, mode, VP, col, size, round, off, mx)`
+- **238** the hull in the sea: buoyancy per section (Fysikk 4 F2, 07.11.2026; docs/planer/fysikk-4-sjo-og-skrog.md, Jonas' choice 2B)
+  - 251 `hullSea(G, Bs, t, tf, dt)`
+  - 271 `hullMove(dt, b, G)`
+  - 286 `slamLog(v)`
+- **295** particles
+  - 299 `spawn(x, y, z, vx, vy, vz, life, g)`
+  - 301 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
 ## `src/js/view3d/17-draw.js` (207 linjer)
 
@@ -4175,7 +4186,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **94** frame
   - 98 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (701 linjer)
+## `src/js/view3d/24-cinema.js` (709 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -4206,7 +4217,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 506 `drawSmoke(VP, eye, BM, dt)`
   - 547 `scupperWater(VP, eye, BM, dt, t, col)`
   - 573 `drawEffects(VP, eye, BM, dt, t)`
-  - 683 `updateLabels(VP, eye, W, Hh)`
+  - 691 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (224 linjer)
 
