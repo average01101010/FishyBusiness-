@@ -388,6 +388,24 @@ function landWarn(p){
   return '<p class="bad landwarn">' + LN('Leverer du nå, blir ca. ' + fmt(kg, 0) + ' kg inndratt, verdi ca. ' + kr(Math.round(sum)) + '. ', 'If you land now, about ' + fmt(kg, 0) + ' kg is confiscated, worth about ' + kr(Math.round(sum)) + '. ') + why +
     LN(' Se Kvote-appen.', ' See the Kvote app.') + '</p>';
 }
+// the queue at the plant (core/07-harbours.js LANDQ, K3): [the line, the short word]
+function landQText(short){
+  const Q = S.boat.landQ, L = (no, en) => S.lang === 'no' ? no : en; if (!Q) return ['', ''];
+  const pt = portById(Q.pid), nm = pt ? pt.name : '', m = Q.wait != null ? Math.max(1, Math.round(Q.wait / 60)) : null;
+  if (Q.ahead == null) return [L('Ber om plass ved kaia i ' + nm + ' …', 'Asking for a place at the quay in ' + nm + ' …'), L('Ber om plass …', 'Asking for a place …')];
+  const ahead = Q.ahead === 0 ? L('kaia er opptatt', 'the quay is busy') : Q.ahead + L(Q.ahead === 1 ? ' båt foran' : ' båter foran', Q.ahead === 1 ? ' boat ahead' : ' boats ahead');
+  return [L('Kø ved mottaket i ' + nm + ': ' + ahead + (m ? ', plass om ca. ' + m + ' min' : ''), 'Queue at the plant in ' + nm + ': ' + ahead + (m ? ', a place in about ' + m + ' min' : '')), L('Kø · ' + (Q.ahead === 0 ? 'opptatt' : Q.ahead + ' foran') + (m ? ' · ca. ' + m + ' min' : ''), 'Queue · ' + (Q.ahead === 0 ? 'busy' : Q.ahead + ' ahead') + (m ? ' · c. ' + m + ' min' : ''))];
+}
+// the plants near by with their queues now (land_look), for «Lever et annet sted»
+function landQOthers(){
+  const b = S.boat, L = (no, en) => S.lang === 'no' ? no : en, near = plantsNear(b.pos, 4).filter(x => x.pt.id !== b.port && plantFor(x.pt, b.type)).slice(0, 3);
+  if (!near.length) return '';
+  landLook(near.map(x => x.pt));
+  const by = LANDQ.look ? LANDQ.look.by : null;
+  return '<h3>' + L('Lever et annet sted', 'Land elsewhere') + '</h3>' + near.map(x => { const q = by ? by[x.pt.id] : null, sl = landSlots(x.pt), busy = q ? q.active >= sl : false, w = q ? q.waiting : 0;
+    const st = !by ? L('…', '…') : !q || (!busy && !w) ? L('ledig', 'free') : (w ? w + L(w === 1 ? ' i kø' : ' i kø', ' waiting') : L('opptatt', 'busy'));
+    return '<div class="lq-row"><span>' + x.pt.name + ' · ' + fmt(x.d / NM, 1) + ' nm</span><b class="' + (st === L('ledig', 'free') ? 'ok' : 'busy') + '">' + st + '</b><button class="btn" data-act="landgo" data-pid="' + x.pt.id + '">' + L('Kjør dit', 'Go there') + '</button></div>'; }).join('');
+}
 function landPage(){
   const b = S.boat, h = [], LN = (no, en) => S.lang === 'no' ? no : en;
   // (at sea the page said «the price list below» with no list under it, UI review 04.11.2026: it says where the catch goes instead, and
@@ -395,6 +413,7 @@ function landPage(){
   if (b.status !== 'port') return '<p class="note">' + LN('Du er ikke i havn. Fisken leveres på et fiskemottak.', 'You are not in harbour. The catch is landed at a fish plant.') + '</p>';
   const p = portById(b.port), tot = holdTotal();
   if (b.land) h.push('<p class="note"><b>' + LN('Lossing: ', 'Landing: ') + '</b>' + landText(false) + ' ' + LN('Sluttseddelen kommer ca. kl. ', 'The landing note comes at about ') + whenTxt(b.land.until) + '.</p>');
+  else if (b.landQ) h.push('<p class="note"><b>' + LN('Kø: ', 'Queue: ') + '</b>' + landQText(false)[0] + '. ' + LN('Lossingen starter av seg selv når det blir din tur. Fisken ligger som i lasten imens.', 'The landing starts by itself when your turn comes. The fish keeps as in the hold meanwhile.') + '</p><div class="btns"><button class="btn" data-act="landq0">' + LN('Gå ut av køen', 'Leave the queue') + '</button></div>' + landQOthers());
   else if (b.shift || b.fueling) h.push('<p class="note">' + quayText(false) + '</p>');
   else if (!plantFor(p, b.type)) h.push('<p class="note">' + t('no_mottak') + '</p>');
   else if (tutOn() && p.id !== tutLand()) h.push('<p class="note">' + LN('På første tur leverer du i ' + tutLandN() + '.', 'On the first trip you land in ' + tutLandN() + '.') + '</p>');

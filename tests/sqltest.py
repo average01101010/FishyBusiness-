@@ -912,6 +912,26 @@ def main():
         RY['bSeen'] = [len(json.loads(sql("select public.berth_get('h_ry')", who, 'authenticated'))) for who in (G2, PY)]
         RY['bTake'] = sql("select public.berth_put('h_ry:k1:0', 'h_ry', 'v2', 900, 300, 0, 10, 3)", PY, 'authenticated')
         RY['bBack'] = sql("select public.berth_put('h_ry:k1:0', 'h_ry', 'v1', 900, 300, 0, 10, 3)", G2, 'authenticated')
+        # the queue at the plants (20261107120000_landing_q.sql, K2): one place at 'p_ko': the first goes, the second waits behind her with
+        # a wait of about her landing, the third behind both; the first's end frees the place for the second; a wait not renewed in a
+        # minute is gone (seen set back); land_look counts them; anon runs none of it
+        KO = {}
+        KO['g1'] = json.loads(sql("select public.land_begin('p_ko', 500, 600, 1)", PY, 'authenticated'))
+        KO['w2'] = json.loads(sql("select public.land_begin('p_ko', 300, 600, 1)", G2, 'authenticated'))
+        KO['w3'] = json.loads(sql("select public.land_begin('p_ko', 300, 600, 1)", A, 'authenticated'))
+        KO['look'] = json.loads(sql("select public.land_look(array['p_ko', 'p_other'])", A, 'authenticated'))
+        sql("select public.land_end()", PY, 'authenticated')
+        KO['g2'] = json.loads(sql("select public.land_begin('p_ko', 300, 600, 1)", G2, 'authenticated'))
+        sql("update public.landing_q set seen = now() - interval '2 minutes' where player_id = '%s'" % A['sub'])
+        KO['w3gone'] = json.loads(sql("select public.land_look(array['p_ko'])", G2, 'authenticated'))
+        KO['two'] = json.loads(sql("select public.land_begin('p_two', 300, 600, 2)", A, 'authenticated'))
+        KO['anon'] = sql("select public.land_begin('p_ko', 1, 60, 1)", {}, 'anon', expect_err=True)
+        sql("select public.land_end()", G2, 'authenticated'); sql("select public.land_end()", A, 'authenticated')
+        print(ok(KO['g1'].get('go') is True and KO['w2'].get('go') is False and KO['w2'].get('ahead') == 0 and KO['w2'].get('active') == 1 and 0 < KO['w2'].get('wait_s', 0) <= 600
+                 and KO['w3'].get('go') is False and KO['w3'].get('ahead') == 1 and KO['w3'].get('wait_s', 0) > 600
+                 and KO['look'] == [{'port': 'p_ko', 'active': 1, 'waiting': 2}] and KO['g2'].get('go') is True
+                 and KO['w3gone'] == [{'port': 'p_ko', 'active': 1, 'waiting': 0}] and KO['two'].get('go') is True and KO['anon'][0]),
+              "the queue at the plants: the first lands, the next wait in order with a wait of about a landing each, the place frees at land_end, a wait a page stopped renewing is gone, land_look counts, anon is refused (K2)", KO)
         # the right itself, not only that the call fails (the functions refuse anon by themselves too); and the player's rights stay
         RY['anonNo'] = [sql("select has_function_privilege('anon', 'public.%s', 'execute')" % f) == 'f' for f in ('guest_claim()', 'guest_merge(text)', 'push_plan(jsonb)', 'admin_cash_flags(int)', 'admin_tur_share(int)', 'saves_cash_check()')]
         RY['authYes'] = [sql("select has_function_privilege('authenticated', 'public.%s', 'execute')" % f) == 't' for f in ('guest_claim()', 'guest_merge(text)', 'push_plan(jsonb)', 'admin_cash_flags(int)', 'admin_tur_share(int)')]

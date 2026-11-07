@@ -432,6 +432,14 @@
 2026-11-07 01:04	HEAD	12b6216c+	maletest	OK	22	lite	samtidig	
 2026-11-07 01:04	HEAD	12b6216c+	slidertest	OK	19	lite	samtidig	
 2026-11-07 01:04	HEAD	12b6216c+	trip2	OK	39	lite	samtidig	
+2026-11-07 01:20	ccr-a9ff699b-re4zwf	b36a7580+	kotest	FEIL	12	lite	alene	avsluttet med kode 1
+2026-11-07 01:22	ccr-a9ff699b-re4zwf	b36a7580+	kotest	FEIL	11	lite	alene	avsluttet med kode 1
+2026-11-07 01:23	ccr-a9ff699b-re4zwf	b36a7580+	kotest	OK	12	lite	alene	
+2026-11-07 01:26	ccr-a9ff699b-re4zwf	b36a7580+	docktest	OK	66	lite	samtidig	
+2026-11-07 01:26	ccr-a9ff699b-re4zwf	b36a7580+	hudtest	OK	28	lite	samtidig	
+2026-11-07 01:26	ccr-a9ff699b-re4zwf	b36a7580+	drifttest	OK	29	lite	samtidig	
+2026-11-07 01:26	ccr-a9ff699b-re4zwf	b36a7580+	fleet2test	OK	33	lite	samtidig	
+2026-11-07 01:28	ccr-a9ff699b-re4zwf	a11ed09b	landtest	OK	97	3d	alene	
 2026-11-07 01:07	ccr-04f41d1f-p26bxn	bcf2df80+	maletest	OK	17	lite	samtidig	
 2026-11-07 01:07	ccr-04f41d1f-p26bxn	bcf2df80+	regnrtest	OK	20	lite	samtidig	
 2026-11-07 01:07	ccr-04f41d1f-p26bxn	bcf2df80+	sqltest	FEIL	29	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
@@ -449,3 +457,6 @@
 2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	regnrtest	OK	15	lite	samtidig	
 2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	sqltest	FEIL	36	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
 2026-11-07 01:40	ccr-04f41d1f-p26bxn	4edaa996+	coast3d	FEIL	579	3d	alene	FEIL off Tromsø the coast's lights are there in 3D at night {'inR': 0, 'on': 0, 'sec': 0}
+2026-11-07 01:29	ccr-a9ff699b-re4zwf	b6b3f1e2	kotest	OK	14	lite	samtidig	
+2026-11-07 01:30	ccr-a9ff699b-re4zwf	b6b3f1e2	docktest	OK	61	lite	samtidig	
+2026-11-07 01:30	ccr-a9ff699b-re4zwf	b6b3f1e2	hudtest	OK	24	lite	samtidig	

@@ -407,12 +407,75 @@ function mottakWhen(H, no, from){
   const day = days <= 0 ? (no ? 'i dag' : 'today') : days === 1 ? (no ? 'i morgen' : 'tomorrow') : (no ? ['søndag', 'mandag', 'tirsdag', 'onsdag', 'torsdag', 'fredag', 'lørdag'] : ['on Sunday', 'on Monday', 'on Tuesday', 'on Wednesday', 'on Thursday', 'on Friday', 'on Saturday'])[wd];
   return day + (no ? ' kl. ' : ' at ') + t;
 }
+// ===== The queue at the plant (docs/planer/etter-tonys-test.md K1–K4, K6; Jonas 07.11.2026, V2 A and V3 A) =====
+// Jonas: «La det være mulig at det blir kø ved mottakene, dette er faktisk ganske realistisk … Det insentiverer at brukerne sprer seg i
+// landet.» A plant has landing places by its quay's length from the buyers' register (landSlots: one for each 25 m, 1 to 4: Husøy's
+// 59 m two, Botnhamn's 25 m one, Senjahopen's 144 m four), shared by every player through the server (20261107120000_landing_q.sql).
+// A boat that lands with the cloud on asks for a place (land_begin): free, and nobody waiting before her, she lands at once; else she
+// lies at the quay with b.landQ (where, how many ahead, the wait), asks again every 15 s (quayMinute), and the landing starts by itself
+// when her turn comes. The catch keeps as in the hold meanwhile (K4). «Lever et annet sted» (ui/07-guide.js landPage) shows the queues
+// at the nearest plants (land_look), which is what spreads the boats. Without the cloud, in the first trip, while the time away is
+// played (LANDQ.away: no server then), or when the server is down or without the queue (two failures, a 404), she lands as before:
+// the queue never keeps a player from landing. The NPC fleet takes no places in this round (K5).
+const LANDQ = {off:false, busy:false, fail:0, away:false, at:0, look:null, lookBusy:false};
+function landSlots(pt){ const q = pt && pt.mk && pt.mk.q ? pt.mk.q[0] : 0; return q > 0 ? clamp(Math.floor(q / 25), 1, 4) : 1; }
+function landQueueOn(){ return !LANDQ.off && !LANDQ.away && typeof havnCloud === 'function' && havnCloud() && !(typeof tutOn === 'function' && tutOn()); }
+// ask for the place (again while waiting, every 15 s; force: now)
+function landQueueAsk(force){
+  const b = S.boat, Q = b.landQ; if (!Q || LANDQ.busy || (!force && Date.now() - LANDQ.at < 15000)) return;
+  const pt = portById(Q.pid); if (!pt || b.status !== 'port' || b.port !== Q.pid || b.land){ landQueueEnd(); return; }
+  if (!landQueueOn()){ landQueueGo(); return; }
+  const lp = landPlan(b.type, holdTotal()), durS = Math.max(10, Math.round(lp.dur * 60 / GAME_RATE));
+  LANDQ.busy = true; LANDQ.at = Date.now();
+  cloudRpc('land_begin', {port:Q.pid, kg:Q.kg, dur_s:durS, slots:Q.slots}).then(r => {
+    LANDQ.fail = 0; if (S.boat.landQ !== Q) return;
+    if (r && r.go){ landQueueGo(); return; }
+    const first = Q.ahead == null; Q.ahead = r ? (r.ahead | 0) : 0; Q.active = r ? (r.active | 0) : 0; Q.wait = r ? (r.wait_s | 0) : 0; Q.askN = (Q.askN || 0) + 1;
+    if (first) log('Kø ved mottaket i ' + pt.name + ': ' + Q.ahead + (Q.ahead === 1 ? ' båt' : ' båter') + ' foran, plass om ca. ' + Math.max(1, Math.round(Q.wait / 60)) + ' min. Fisken ligger som i lasten imens.',
+      'Queue at the plant in ' + pt.name + ': ' + Q.ahead + (Q.ahead === 1 ? ' boat' : ' boats') + ' ahead, a place in about ' + Math.max(1, Math.round(Q.wait / 60)) + ' min. The fish keeps as in the hold meanwhile.');
+    if (hooks.onLandQ) try { hooks.onLandQ(Q, first); } catch (e){ console.warn('onLandQ', e); }
+  }).catch(e => {
+    const gone = / 404$/.test(String(e && e.message || '')); LANDQ.fail++;
+    if (gone) LANDQ.off = true;   // a server without the queue: as before, and no more asking this session
+    if (gone || LANDQ.fail >= 2) landQueueGo();   // the server down: she lands as before rather than wait for it
+  }).finally(() => { LANDQ.busy = false; });
+}
+// her turn: the landing starts as it always did
+function landQueueGo(){
+  const b = S.boat, Q = b.landQ; if (!Q) return; b.landQ = null;
+  const pt = portById(Q.pid), kg = holdTotal();
+  if (pt && b.status === 'port' && b.port === pt.id && kg >= 0.5 && !b.land) landStart(pt, landPlan(b.type, kg), kg, Q.ops);
+  if (hooks.onLandQ) try { hooks.onLandQ(null); } catch (e){ console.warn('onLandQ', e); }   // (the screen never stops the landing)
+}
+// the place is given up or the landing is over: the server forgets her (also when she casts off while waiting)
+function landQueueEnd(){
+  const b = S.boat, had = !!b.landQ; b.landQ = null;
+  if (!LANDQ.off && typeof havnCloud === 'function' && havnCloud()) cloudRpc('land_end', {}).catch(() => {});
+  if (had && hooks.onLandQ) try { hooks.onLandQ(null); } catch (e){ console.warn('onLandQ', e); }
+}
+// the queues at the plants near by (land_look), a minute old at most: LANDQ.look = {at, by:{port:{active, waiting}}}
+function landLook(pts){
+  if (!landQueueOn() || LANDQ.lookBusy || !pts.length) return; if (LANDQ.look && Date.now() - LANDQ.look.at < 60000) return;
+  LANDQ.lookBusy = true;
+  cloudRpc('land_look', {ports:pts.slice(0, 12).map(p => p.id)}).then(r => { const by = {}; for (const q of (Array.isArray(r) ? r : [])) by[q.port] = {active:q.active | 0, waiting:q.waiting | 0}; LANDQ.look = {at:Date.now(), by}; if (hooks.onLandQ) try { hooks.onLandQ(S.boat.landQ || null); } catch (e){ console.warn('onLandQ', e); } })
+    .catch(() => { LANDQ.look = {at:Date.now(), by:{}}; }).finally(() => { LANDQ.lookBusy = false; });
+}
 function startLanding(ops){
   const b = S.boat, pt = portById(b.port), kg = holdTotal();
   if (b.status !== 'port' || !plantFor(pt, b.type) || b.land || b.shift || kg < 0.5 || !mottakOpen(S.t / 60)) return false;
   if (berthKind(b) === 'naust'){ log(NAUST_SAIL[0], NAUST_SAIL[1]); return false; }
   if (berthKind(b) !== 'main') return startShift('main', ops ? 'landops' : 'land');   // the crane is at the plant's quay
-  const lp = landPlan(b.type, kg), pall = lp.kind === 'pall', unit = pall ? ['paller', 'pallets'] : ['kar', 'tubs'];
+  const lp = landPlan(b.type, kg);
+  // with the cloud on, the plant's places are shared: the server says go, or where in the queue she is (landQueueAsk)
+  if (landQueueOn()){
+    if (!b.landQ || b.landQ.pid !== pt.id){ b.landQ = {pid:pt.id, kg:Math.round(kg), ops:!!ops, t0:S.t, ahead:null, wait:null, slots:landSlots(pt)}; LANDQ.fail = 0; LANDQ.at = 0; }
+    landQueueAsk(true); return true;
+  }
+  landStart(pt, lp, kg, ops); return true;
+}
+// the landing itself: the crane's timeline from now (b.land), and the log
+function landStart(pt, lp, kg, ops){
+  const b = S.boat, pall = lp.kind === 'pall', unit = pall ? ['paller', 'pallets'] : ['kar', 'tubs'];
   b.land = {pid:pt.id, t0:S.t, until:S.t + lp.dur, kind:lp.kind, n:lp.n, lifts:lp.lifts, kg:Math.round(kg), ops:!!ops, own:lp.own, kgs:lp.kgs, wash:lp.wash};
   if (pall){ b.land.lf = lp.lf; b.land.pk = lp.pk; }
   // (on pallets the weight is the product's, and the round weight the quota and the price go by beside it)
@@ -424,6 +487,7 @@ function startLanding(ops){
 // the catch is weighed in: the sale is settled on what is in the hold now, and a standing plan gets its report
 function finishLanding(){
   const b = S.boat, L = b.land; b.land = null;
+  landQueueEnd();   // the place at the quay is free for the next (K2)
   if (b.status !== 'port' || b.port !== L.pid) return;
   const fz = landFreeze(); if (fz > 0.5) log(fmt(fz, 0) + ' kg som lå ufryst, er fryst ved kaia før innveiingen.', fmt(fz, 0) + ' kg that lay unfrozen was frozen at the quay before the weighing.');
   const c0 = S.cash; sell(); const total = S.cash - c0;
@@ -456,7 +520,7 @@ const BERTHN = {main:['mottakskaia', 'the plant\'s quay'], bunker:['bunkerskaia'
 const berthName = (k, pid) => { const pt = portById(pid); return k === 'main' && pt && !pt.mottak ? ['kaia', 'the quay'] : BERTHN[k] || BERTHN.main; };
 const hasBunker = pid => !!quayFace(pid, 'bunker');
 // busy at the quay: landing, moving or filling; a departure waits for it
-function portBusy(b){ const u = Math.max(b.land ? b.land.until : 0, b.shift ? b.shift.until : 0, b.fueling ? b.fueling.until : 0); return u > 0 || b.after ? Math.max(u, S.t) : 0; }
+function portBusy(b){ const u = Math.max(b.land ? b.land.until : 0, b.shift ? b.shift.until : 0, b.fueling ? b.fueling.until : 0); return u > 0 || b.after || b.landQ ? Math.max(u, S.t + (b.landQ ? 1 : 0)) : 0; }   // (in the queue: busy, asked again the next minute)
 function startShift(to, after){
   const b = S.boat, pt = portById(b.port), from = berthKind(b);
   // (never to or from Father's naust: you sail there and back by a route, Jonas 05.10.2026: «Fast travel er ikke mulig i spillet, punktum»)
@@ -482,6 +546,7 @@ function startFueling(ops){
 // a minute at the quay: the pump runs, the boat moves along, and what was waiting for it starts
 function quayMinute(){
   const b = S.boat, f = b.fueling;
+  if (b.landQ) landQueueAsk();   // her turn at the quay (K2): every 15 real seconds
   if (f){
     if (S.t > f.pumpAt && f.done < f.liters){ const l = Math.min(f.lpm, f.liters - f.done), c = l * fuelPrice(); if (c > spendable()){ f.liters = f.done; f.until = S.t + PUMP.stow; } else { fuelAdd(b, Math.min(BOAT.fuelCap, b.fuel + l) - b.fuel, c); f.done += l; f.paid = (f.paid || 0) + c; book('diesel', -c, 'Bunkring', 'Bunkering'); if (f.done >= f.liters - 0.01) f.until = Math.min(f.until, S.t + PUMP.stow); } }
     if (S.t >= f.until){ b.fueling = null; log('Fylte ' + fmt(f.done, 0) + ' L for ' + kr(Math.round(f.paid || 0)) + '.', 'Filled ' + fmt(f.done, 0) + ' L for ' + kr(Math.round(f.paid || 0)) + '.'); }
