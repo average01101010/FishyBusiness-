@@ -126,9 +126,9 @@ function hudLine3(how){
 function hullWarn(b){
   const d = b.dmg; if (!d || !(d.A > 0 || d.w > 0) || d.flood) return null;
   const L = (no, en) => S.lang === 'no' ? no : en, Q = hullLeak(b), P = hullPump(b), rise = Q > P && d.w > 0;
-  if (rise){ const left = Math.max(0, Math.round((hullFlood(b) - d.w) / (Q - P))); return {cls:'r2', short:L('VANN I BÅTEN · fullt om ' + left + ' min · Verft ›', 'WATER IN THE BOAT · full in ' + left + ' min · Yard ›'), long:L('Vann i båten: pumpa klarer ikke å holde unna, motorrommet er fullt om ' + left + ' min', 'Water in the boat: the pump cannot keep up, the engine room is full in ' + left + ' min')}; }
-  if (Q > 0) return {cls:'r1', short:L('Lekkasje · pumpa holder unna · Verft ›', 'Leak · the pump keeps up · Yard ›'), long:L('Lekkasje ' + Math.round(Q) + ' l/min, lensepumpa holder unna. Få skroget reparert.', 'Leak ' + Math.round(Q) + ' l/min, the bilge pump keeps up. Have the hull mended.')};
-  if (d.w > 0) return {cls:'r1', short:L('Vann i båten · pumpa lenser · Verft ›', 'Water in the boat · pumping out · Yard ›'), long:L(Math.round(d.w) + ' liter i båten, pumpa lenser', Math.round(d.w) + ' litres aboard, pumping out')};
+  if (rise){ const left = Math.max(0, Math.round((hullFlood(b) - d.w) / (Q - P))); return {cls:'r2', short:L('VANN I BÅTEN · fullt om ' + left + ' min · Verft ›', 'WATER IN THE BOAT · full in ' + left + ' min · Yard ›'), long:L('Vann stiger · fullt om ' + left + ' min', 'Water rising · full in ' + left + ' min')}; }
+  if (Q > 0) return {cls:'r1', short:L('Lekkasje · pumpa holder unna · Verft ›', 'Leak · the pump keeps up · Yard ›'), long:L('Lekkasje ' + Math.round(Q) + ' l/min · pumpa holder unna', 'Leak ' + Math.round(Q) + ' l/min · pump keeps up')};
+  if (d.w > 0) return {cls:'r1', short:L('Vann i båten · pumpa lenser · Verft ›', 'Water in the boat · pumping out · Yard ›'), long:L('Lenser ' + Math.round(d.w) + ' l', 'Pumping out ' + Math.round(d.w) + ' l')};
   return null;
 }
 // «Kjør til verft»: Autonav to the nearest yard, as the dock's «Kjør dit» to a buoy (10c-dock.js goTo)
@@ -173,7 +173,7 @@ function renderHud(){
   // what matters now, as rows with what to do
   const now = [];
   // water in the boat (Fysikk 3): the leak and the pump, red while it rises, with «Kjør til verft»
-  if (atSea){ const hw = hullWarn(b); if (hw) now.push('<div class="row warn"><span>' + L('Skroget', 'The hull') + '</span><b class="' + hw.cls + '">' + hw.long + '</b><button type="button" class="hgo" data-hgo="yard">' + L('Kjør til verft', 'Go to a yard') + '</button></div>'); }
+  if (atSea){ const hw = hullWarn(b); if (hw) now.push('<div class="row warn"><span>' + L('Skroget', 'The hull') + '</span><b class="' + hw.cls + '">' + hw.long + '</b><button type="button" class="hgo" data-hgo="yard">' + L('Verft', 'Yard') + '</button></div>'); }
   if (S.fleet && S.fleet.length > 1) now.push('<div class="row"><span>' + L('Båt', 'Vessel') + '</span><b>' + S.boatName + (meAboard() ? ' ⚓' : '') + '</b></div>');
   // her own gear in the sea (spilltest 3, U2; Jonas 05.11.2026, V2 B): how far to the nearest buoy and how she moves; red with «Kjør dit»
   // a mile off
