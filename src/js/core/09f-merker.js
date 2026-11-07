@@ -72,6 +72,7 @@ const ACHL = [
   {id:'kyst', n:['Kystfareren: gjestebøker', 'Coastfarer: guestbooks'], tiers:[1, 5, 10, 25, 50, 100, 250], unit:'', v:() => Object.keys(S.gb || {}).length},
   {id:'ptow', n:['Slept andre spillere', 'Towed other players'], tiers:[1, 5, 20], unit:'', v:() => achC('ptow')},
   {id:'tut', n:['Tutet på andre båter', 'Horns sounded at other boats'], tiers:[1, 10, 50, 200], unit:'', v:() => achC('horn')},
+  {id:'mob', n:['Mann over bord: tatt opp i tide', 'Man overboard: picked up in time'], tiers:[1, 3, 10], unit:'', v:() => achC('mob')},   // (core/14b-sikkerhet.js mobEnd, Ø11.6)
   {id:'venner', n:['Venner', 'Friends'], tiers:[1, 5, 10, 25], unit:'', v:() => typeof FRIENDS !== 'undefined' ? FRIENDS.count() : 0},
   {id:'arter', n:['Arter levert', 'Species landed'], tiers:[3, 5, 8, 10], unit:'', v:() => Object.keys((S.ach && S.ach.sp) || {}).length},   // (10 species a coastal boat can land: the last step is all of them, Kystkartet K2)
   {id:'nm', n:['Nautiske mil om bord', 'Nautical miles aboard'], tiers:[250, 1000, 2500, 5000, 10000], unit:'nm', v:() => (S.tat && S.tat.nm) || 0},

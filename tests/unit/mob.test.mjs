@@ -136,5 +136,17 @@ export default function (t){
   S.mobs = []; S.t += 60; S.me = 'v9'; K.mobDeck([{c:C[0], st:'haling'}]); K.mobRisk(14, 2.6); t.ok(!S.mob && S.mobs[0] && S.mobs[0].k === 'near', 'du er ikke om bord: bare nestenulykke'); S.me = S.cur;
   S.mobs = []; S.t += 3 * 60; K.mobDeck([{c:null, st:'haling'}]); K.mobRisk(14, 2.6); t.ok(!S.mob && !S.mobs.length, 'alene om bord: ingenting (skipperen går ikke over bord)');
   S.mobs = []; S.t += 60; S.sleep = {until:S.t + 600}; K.mobDeck([{c:C[0], st:'haling'}]); K.mobRisk(14, 2.6); t.ok(!S.mob && S.mobs[0] && S.mobs[0].k === 'near', 'du sover: bare nestenulykke'); S.sleep = null;
-  K.set('mobRnd', rnd0); MOBF.live = null; MOBF.fol = null; K.hooks.onMob = null;
+  K.set('mobRnd', rnd0);
+  // ---- found in the review (07.11.2026): the badge, the rescue boat's lift finished when the game goes away, the weather's turn-back held ----
+  t.ok(K.ACHL.some(a => a.id === 'mob' && a.v() === K.achC('mob')), 'merket «Mann over bord: tatt opp i tide» står blant de lange merkene og leser telleren');
+  b.type = 'autoliner'; K.applyVessel(); b.status = 'idle'; b.v = 0; S.t += 2 * 24 * 60; S.mobs = []; MOBF.live = true;
+  const hand2 = {id:'lag-A-dekk4', anon:true, role:'dekk', name:'Dekk 4', sex:'f'}; ev = []; let endX = null; K.hooks.onMob = (k, x) => { ev.push(k); if (k === 'end') endX = x; };
+  K.mobStart({p:{c:hand2, st:'haling'}, w:1}, [{p:{c:hand2}, w:1}], {sst:6, dark:false}); const M4 = S.mob; b.windArm = true; S.t++; K.mobRisk(4, 0.5);
+  t.ok(b.windArm === false, 'mens personen er i sjøen, venter vendingen for været (b.windArm holdes nede)');
+  const at4 = {x:K.mobAt(0).x + 0.2, y:K.mobAt(0).y}; b.pos = at4; K.mobLift('boat', at4, 0); const L4 = M4.lift; S.t = L4.tp; K.mobRisk(4, 0.5);
+  t.eq(M4.st, 'up', 'MOB-båten har henne om bord og går tilbake');
+  MOBF.live = false; S.t = M4.t0 + M4.lim + 5; K.mobRisk(4, 0.5);
+  t.ok(!S.mob && endX && endX.out === 'own' && endX.how === 'boat' && endX.days === 0, 'spillet borte mens MOB-båten går tilbake: opptaket i tide står, ikke redningen', endX);
+  t.eq(endX && endX.sex, 'f', 'slutten sender kjønnet med (skjermen sier «henne»)');
+  MOBF.live = null; MOBF.fol = null; K.hooks.onMob = null;
 }

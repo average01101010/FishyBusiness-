@@ -149,6 +149,9 @@ function mobRescue(p){
   best.min = Math.round(best.min); best.eta = S.t + best.min; return best;
 }
 const mobWhoR = (R, en) => R.k === 'heli' ? (en ? 'the rescue helicopter from ' : 'redningshelikopteret fra ') + R.n : R.org === 'kv' ? (en ? 'the Coast Guard ship' : 'Kystvaktskipet') : (en ? 'the rescue boat from ' : 'redningsskøyta fra ') + R.n;
+const mobCap = t => t ? t[0].toUpperCase() + t.slice(1) : t;
+// the speed Autonav: MOB runs at, and that the lead on a drifting target is reckoned with
+const mobSpeed = () => Math.max(4, Math.min(BOAT.vcruise || 6, 8));
 const mobHim = (M, en) => en ? (M.sex === 'f' ? 'her' : 'him') : (M.sex === 'f' ? 'henne' : 'ham');
 const mobHe = (M, en) => en ? (M.sex === 'f' ? 'she' : 'he') : (M.sex === 'f' ? 'hun' : 'han');
 
@@ -165,6 +168,7 @@ function mobStart(q, on, o){
   const mate = on.find(x => x.p.c && x.p.c !== c);
   if (mate){ const bo = 0.008 * gridScale(b.pos); M.buoy = {x:px + Math.cos(hd + 2) * bo, y:py + Math.sin(hd + 2) * bo, t:S.t, by:mate.p.c.name, held:false, light:true, smoke:!!(BOAT.lsa && BOAT.lsa.smoke)};
     log(mate.p.c.name + ' kastet livbøya etter ' + mobHim(M) + (M.buoy.smoke ? ', og MOB-lyset røyker.' : '.'), mate.p.c.name + ' threw the lifebuoy after ' + mobHim(M, true) + (M.buoy.smoke ? ', and the MOB light is smoking.' : '.'), 'nav'); }
+  b.windArm = false;
   mobVhf(M);
   mobRec({k:'mob', name:c.name, T, lim:M.lim, resc:M.resc.k});
   if (hooks.onMob) hooks.onMob('start', M);
@@ -186,11 +190,13 @@ function mobAt(f){ const M = S.mob; if (!M) return null; if (M.st !== 'water' ||
 const mobFast = () => { const M = S.mob; return !!(M && M.lift && M.lift.how !== 'boat' && M.st === 'water'); };
 function mobAlong(){ const M = S.mob, b = S.boat, hd = b.heading || 0, gs = gridScale(b.pos), aft = (BOAT.len || 8) * 0.42 / 1000 * gs, out = ((BOAT.beam || 3) / 2 + 0.4) / 1000 * gs * (M.side || 1);
   return {x:b.pos.x - Math.sin(hd) * aft + Math.cos(hd) * out, y:b.pos.y + Math.cos(hd) * aft + Math.sin(hd) * out}; }
+let MOBSIGHT = {k:'', v:0};
 function mobSightOf(p, buoyOnly){
-  const M = S.mob, b = S.boat, H = S.t / 60; let dark = !!M.dark, hs = 0, vis = 50;
+  const M = S.mob, H = S.t / 60, B0 = M.buoy, key = S.t + '|' + Math.round(p.x * 50) + '|' + Math.round(p.y * 50) + '|' + (buoyOnly ? 1 : 0) + '|' + (B0 ? (B0.held ? 2 : 1) : 0);
+  if (MOBSIGHT.k === key) return MOBSIGHT.v; let dark = !!M.dark, hs = 0, vis = 50;
   try { dark = sunAt(H, p).el < -6; hs = hsAt(p, H); vis = visibility(H, p); } catch (e){ /* a block not loaded */ }
   const B = M.buoy, near = !!(B && (buoyOnly || B.held)), smoke = near && B.smoke && S.t - B.t < MOBK.smoke;
-  return mobSightKm({dark, hs, vis, buoy:near, light:near && B.light, smoke, lamp:(BOAT.len || 0) >= 12});
+  const v = mobSightKm({dark, hs, vis, buoy:near, light:near && B.light, smoke, lamp:(BOAT.len || 0) >= 12}); MOBSIGHT = {k:key, v}; return v;
 }
 // seen from the boat: the person (and the buoy she holds), or the buoy on its own
 function mobSeen(pos){ const M = S.mob; if (!M || M.st !== 'water') return {p:false, b:false}; const b = pos || S.boat.pos, p = mobAt(0);
@@ -213,8 +219,8 @@ function mobThrow(pos){
 // where Autonav goes: the person when she is seen (where she will be when the boat is there), else the buoy when it is seen, else the mark
 function mobTarget(){
   const M = S.mob, b = S.boat; if (!M || M.st !== 'water') return null; const s = mobSeen(), p = mobAt(0);
-  if (s.p){ const eta = kmTrue(b.pos, p) / (Math.max(3, Math.min(BOAT.vcruise || 6, 8)) * NM) * 60; return {x:p.x + M.vx * eta, y:p.y + M.vy * eta, k:'p'}; }
-  if (s.b){ const B = M.buoy, eta = kmTrue(b.pos, B) / (Math.max(3, Math.min(BOAT.vcruise || 6, 8)) * NM) * 60, L = mobLee(S.t / 60, B, MOBK.leeB); return {x:B.x + L.x * eta, y:B.y + L.y * eta, k:'b'}; }
+  if (s.p){ const eta = kmTrue(b.pos, p) / (mobSpeed() * NM) * 60; return {x:p.x + M.vx * eta, y:p.y + M.vy * eta, k:'p'}; }
+  if (s.b){ const B = M.buoy, eta = kmTrue(b.pos, B) / (mobSpeed() * NM) * 60, L = mobLee(S.t / 60, B, MOBK.leeB); return {x:B.x + L.x * eta, y:B.y + L.y * eta, k:'b'}; }
   return M.mark ? {x:M.mark.x, y:M.mark.y, k:'m'} : null;
 }
 // the way back: the Williamson turn while she still runs away from the place (60° to the side she fell, then hard over to the other
@@ -232,7 +238,7 @@ function mobRoute(){
   // (the stop 18 m to windward of her: with no way on the boat drifts faster than a person, so she comes down on her, not away; in
   // little wind 15 m short of her on the way in)
   const last = wps.length ? wps[wps.length - 1] : P, d = dist(last, tgt), Lw = mobLee(S.t / 60, tgt, 1), lw = Math.hypot(Lw.x, Lw.y);
-  const stop = lw > 0.06 * gs ? {x:tgt.x - Lw.x / lw * 0.018 * gs, y:tgt.y - Lw.y / lw * 0.018 * gs} : d > 0.02 ? {x:tgt.x - (tgt.x - last.x) * 0.015 * gs / d, y:tgt.y - (tgt.y - last.y) * 0.015 * gs / d} : {x:tgt.x, y:tgt.y};
+  const stop = lw > 0.06 * gs ? {x:tgt.x - Lw.x / lw * 0.018 * gs, y:tgt.y - Lw.y / lw * 0.018 * gs} : d > 0.02 * gs ? {x:tgt.x - (tgt.x - last.x) * 0.015 * gs / d, y:tgt.y - (tgt.y - last.y) * 0.015 * gs / d} : {x:tgt.x, y:tgt.y};
   wps.push(stop);
   const why = {why:['Williamson-svingen går over land eller grunt her.', 'The Williamson turn crosses land or shallows here.'], to:stop};
   try { let a = P; for (const w of wps){ if (isLand(w) || groundCheck(a, w)) return why; a = w; } } catch (e){ return why; }   // (the chart not loaded there: Autonav finds its own way)
@@ -275,6 +281,7 @@ function mobLiftHolds(){
 function mobStep(){
   const M = S.mob, H = S.t / 60;
   if (!mobLive() || !mobFollowed() || !meAboard()){ mobAway(); return; }
+  S.boat.windArm = false;   // (the turn for port or lying to over the weather limit waits while she is in the water: core/05-vessels.js arms it again under the limit)
   if (mobFast()){ const q = mobAlong(); M.x = q.x; M.y = q.y; M.vx = M.vy = 0; }
   else if (M.st === 'water'){ const L = mobLee(H, M, MOBK.leeP); M.vx = L.x; M.vy = L.y; M.x += L.x; M.y += L.y; }
   const B = M.buoy;
@@ -294,7 +301,9 @@ function mobStep(){
 // with the game closed or the boat left to itself (principle 4): the crew take her round themselves and get the person up by the ladder or
 // the sling in about twelve minutes from the fall; past the limit the rescue takes her
 function mobAway(){
-  const M = S.mob; if (!M) return; const up = Math.max(S.t, M.t0 + 12);
+  const M = S.mob; if (!M) return;
+  if (M.st === 'up' && M.lift){ mobEnd(M.tUp - M.t0 > M.lim ? 'late' : 'own', M.lift.how); return; }   // (she was up already: the rescue boat finishes coming back)
+  const up = Math.max(S.t, M.t0 + 12);
   if (up - M.t0 <= M.lim){ M.st = 'up'; M.tUp = up; mobEnd('crew', (BOAT.lsa && BOAT.lsa.mob) ? 'boat' : (BOAT.len || 0) < 15 ? 'ladder' : 'sling'); }
   else mobEnd('rescue');
 }
@@ -306,16 +315,16 @@ function mobEnd(out, how){
   const days = (out === 'own' || out === 'crew') && !late ? 0 : late ? 3 + Math.floor(mobRnd('sick') * 3) : 1 + Math.floor(mobRnd('sick') * 2);
   const he = mobHe(M), heE = mobHe(M, true), N = M.name, HOW = {ladder:['med leideren akter', 'up the ladder aft'], sling:['med løftestroppen', 'with the lifting sling'], boat:['med MOB-båten', 'with the rescue boat']}[how] || ['', ''];
   let no, en;
-  if (out === 'own' && !late){ no = N + ' er oppe etter ' + tIn + ' minutter i sjøen, ' + HOW[0] + '. Kald og våt, men i orden. ' + he[0].toUpperCase() + he.slice(1) + ' skifter og varmer seg.';
-    en = N + ' is up after ' + tIn + ' minutes in the water, ' + HOW[1] + '. Cold and wet, but all right. ' + heE[0].toUpperCase() + heE.slice(1) + ' changes and warms up.'; }
+  if (out === 'own' && !late){ no = N + ' er oppe etter ' + tIn + ' minutter i sjøen, ' + HOW[0] + '. Kald og våt, men i orden. ' + mobCap(he) + ' skifter og varmer seg.';
+    en = N + ' is up after ' + tIn + ' minutes in the water, ' + HOW[1] + '. Cold and wet, but all right. ' + mobCap(heE) + ' changes and warms up.'; }
   else if (out === 'crew' && !late){ no = 'Mannskapet snudde båten og fikk ' + N + ' opp ' + HOW[0] + ' etter ' + tIn + ' minutter. Kald og våt, men i orden.'; en = 'The crew turned the boat and got ' + N + ' up ' + HOW[1] + ' after ' + tIn + ' minutes. Cold and wet, but all right.'; }
-  else if (out === 'rescue'){ no = mobWhoR(R)[0].toUpperCase() + mobWhoR(R).slice(1) + ' tok ' + N + ' opp etter ' + tIn + ' minutter og bringer ' + mobHim(M) + ' til sykehuset. ' + N + ' er sykmeldt i ' + days + (days === 1 ? ' dag' : ' dager') + ' og kommer om bord igjen når båten ligger i havn etter det.';
-    en = mobWhoR(R, true)[0].toUpperCase() + mobWhoR(R, true).slice(1) + ' took ' + N + ' up after ' + tIn + ' minutes and takes ' + mobHim(M, true) + ' to hospital. ' + N + ' is off sick for ' + days + (days === 1 ? ' day' : ' days') + ' and comes back aboard when the boat lies in port after that.'; }
+  else if (out === 'rescue'){ no = mobCap(mobWhoR(R)) + ' tok ' + N + ' opp etter ' + tIn + ' minutter og bringer ' + mobHim(M) + ' til sykehuset. ' + N + ' er sykmeldt i ' + days + (days === 1 ? ' dag' : ' dager') + ' og kommer om bord igjen når båten ligger i havn etter det.';
+    en = mobCap(mobWhoR(R, true)) + ' took ' + N + ' up after ' + tIn + ' minutes and takes ' + mobHim(M, true) + ' to hospital. ' + N + ' is off sick for ' + days + (days === 1 ? ' day' : ' days') + ' and comes back aboard when the boat lies in port after that.'; }
   else { no = N + ' er oppe ' + HOW[0] + ' etter ' + tIn + ' minutter, men er sterkt nedkjølt. ' + (R.k === 'heli' ? 'Helikopteret' : 'Redningsskøyta') + ' henter ' + mobHim(M) + ' til sykehuset. ' + N + ' er sykmeldt i ' + days + ' dager.';
     en = N + ' is up ' + HOW[1] + ' after ' + tIn + ' minutes, but badly chilled. ' + (R.k === 'heli' ? 'The helicopter' : 'The rescue boat') + ' takes ' + mobHim(M, true) + ' to hospital. ' + N + ' is off sick for ' + days + ' days.'; }
   log(no, en, 'nav');
   if (out === 'own' || out === 'crew'){ const L = S.radio || (S.radio = []), nm = '«' + (S.boatName || 'Havbris') + '»';
-    const a = ['Kystradioen: ' + nm + ', mottatt, personen er oppe. ' + mobWhoR(R)[0].toUpperCase() + mobWhoR(R).slice(1) + ' snur.', 'The coast radio: ' + nm + ', received, the person is up. ' + mobWhoR(R, true)[0].toUpperCase() + mobWhoR(R, true).slice(1) + ' turns back.'];
+    const a = ['Kystradioen: ' + nm + ', mottatt, personen er oppe. ' + mobCap(mobWhoR(R)) + ' snur.', 'The coast radio: ' + nm + ', received, the person is up. ' + mobCap(mobWhoR(R, true)) + ' turns back.'];
     if (!late) { L.push({t:S.t, from:'VHF 16', no:a[0], en:a[1]}); if (L.length > 40) L.shift(); log('VHF 16: ' + a[0], 'VHF 16: ' + a[1], 'nav'); } }
   // the person: off sick ashore (a hand of the crew: c.off, and back aboard at a quay after the days, mobCrewHour; one of an ocean
   // vessel's teams: kept off the deck the days), or tired and cold
@@ -324,9 +333,9 @@ function mobEnd(out, how){
     else if (M.anon){ const L = S.mobOff || (S.mobOff = []); L.push({vid:M.vid, id:M.cid, until:S.t + days * 1440}); while (L.length > 20) L.shift(); } }
   else if (c){ c.fatigue = Math.max(c.fatigue || 0, 90); if (typeof lifeStory === 'function') withVesselId(M.vid, () => lifeStory(c, 'Gikk over bord og ble tatt opp etter ' + tIn + ' minutter.', 'Went overboard and was picked up after ' + tIn + ' minutes.')); }
   const rep = mobReport(M, tIn, out, how, days); log(rep[0], rep[1], 'nav');
-  const rec = (S.mobs || []).find(r => r.k === 'mob' && r.vid === M.vid && r.t === M.t0); const res = {out, how:how || null, min:tIn, late, days, by:out === 'rescue' ? R.k : null, mark:!!M.mark, buoy:M.buoy ? M.buoy.by : null};
+  const rec = (S.mobs || []).find(r => r.k === 'mob' && r.vid === M.vid && r.t === M.t0); const res = {out, how:how || null, min:tIn, late, days, by:out === 'rescue' ? R.k : null, mark:!!M.mark, buoy:M.buoy ? M.buoy.by : null, sex:M.sex};
   if (rec) Object.assign(rec, res); else mobRec(Object.assign({k:'mob', name:N}, res));
-  if (out === 'own' && !late && typeof achAdd === 'function'){ achAdd('mob'); if (typeof achCheck === 'function') achCheck(); }
+  if (out === 'own' && !late && typeof achAdd === 'function') achAdd('mob');   // (the badge itself comes with achMinute's achCheck, 09f-merker.js)
   if (hooks.onMob) hooks.onMob('end', Object.assign({name:N}, res));
 }
 // the bound vessel's crew is S.crew; another vessel's is in the fleet (the event ends on the vessel it began on)

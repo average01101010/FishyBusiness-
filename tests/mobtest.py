@@ -1,4 +1,4 @@
-"""Man overboard (Ø11.6, core/14b-sikkerhet.js and ui/10s-mob.js; docs/systemer/sjofart-og-lover.md kap. 6), in the game as it runs,
+"""Man overboard (Ø11.6, KYST_MOB_AT=lat,lon for another place on the coast (the whole coast in KYST_DIST), KYST_MOB_SHOTS=0 without pictures; core/14b-sikkerhet.js and ui/10s-mob.js; docs/systemer/sjofart-og-lover.md kap. 6), in the game as it runs,
 without 3D (the 3D picture is mobshot.py, run alone):
 1. In a heavy sea off Senja in July, the sjark jigging with two hands at the rail: with the dice forced, a hand goes over the side in the
    game's own minute (workAssign → mobDeck → risk → mobRisk): the alarm, the panel «MANN OVER BORD», the log, the MAYDAY on VHF 16 with
@@ -21,10 +21,10 @@ def check(ok, what, extra=''):
 
 
 # a July day off Senja's outer coast in a fresh gale from the west; the sjark lies jigging in open water with two hands at the rail
-SETUP = """async () => { PHONE.show(false); if (typeof DOCK !== 'undefined') DOCK.close(); S.jobs = []; S.cash = 1e6; S.plan = null; S.mob = null; S.mobs = []; S.mobOff = [];
+SETUP = """async (A) => { PHONE.show(false); if (typeof DOCK !== 'undefined') DOCK.close(); S.jobs = []; S.cash = 1e6; S.plan = null; S.mob = null; S.mobs = []; S.mobOff = [];
   S.t = Math.round((Date.UTC(2027, 6, 14, 10, 0) - EPOCH) / 6e4); acc = 0; WX_FORCE = {w:15, d:260};
   const b = S.boat; b.type = 'sjark'; applyVessel(); b.dmg = null; b.damage = 0; b.tow = null; b.anch = null; b.hove = null; b.gop = null; S.boatName = 'Havbris'; S.home = 'finnsnes';
-  let sea = null; for (let k = 0; k < 60 && !sea; k++){ const a = k / 60 * 2 * Math.PI, q = P(69.33 + Math.cos(a) * 0.05, 17.05 + Math.sin(a) * 0.12); await mapNeed(q, MAPD.simR);
+  let sea = null; for (let k = 0; k < 60 && !sea; k++){ const a = k / 60 * 2 * Math.PI, q = P(A[0] + Math.cos(a) * 0.05, A[1] + Math.sin(a) * 0.12); await mapNeed(q, MAPD.simR);
     if (!isLand(q) && depthF(q) > 40 && !inHarbour(q)){ let ok = true; for (let j = 0; j < 8 && ok; j++){ const r = {x:q.x + Math.sin(j / 8 * 2 * Math.PI) * 0.6, y:q.y - Math.cos(j / 8 * 2 * Math.PI) * 0.6}; if (isLand(r) || depthF(r) < 15 || groundCheck(q, r)) ok = false; } if (ok) sea = q; } }
   if (!sea) return {err:'fant ikke åpent hav'};
   b.port = null; b.pos = {x:sea.x, y:sea.y}; b.heading = 0; b.v = 0; b.status = 'fishing'; b.fishUntil = S.t + 600; b.dyn = null; DYN.line = null; S.settings.manual = false; if (typeof helmOff === 'function') helmOff();
@@ -41,6 +41,7 @@ READ = """(L0) => { const M = S.mob, b = S.boat, p = M ? mobAt(liveFrac()) : nul
 
 
 async def shot(pg, name):
+    if os.environ.get('KYST_MOB_SHOTS') == '0': return
     for w, h in ((1280, 800), (800, 1280)):
         await pg.set_viewport_size({'width': w, 'height': h}); await pg.wait_for_timeout(600)
         await pg.screenshot(path='mob_%s_%s.png' % (name, 'land' if w > h else 'port'))
@@ -53,7 +54,8 @@ async def main():
         pg = await br.new_page(viewport={'width': 1280, 'height': 800}); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg, GAME + ('#no3d' if os.environ.get('KYST_LITE') else ''))
-        L0 = await pg.evaluate(SETUP)
+        AT = [float(v) for v in os.environ.get('KYST_MOB_AT', '69.33,17.05').split(',')]   # (the stikkprøve: KYST_MOB_AT=lat,lon with the whole coast in KYST_DIST)
+        L0 = await pg.evaluate(SETUP, AT)
         print('setup:', json.dumps(L0, ensure_ascii=False))
         if not L0 or L0.get('err'):
             check(False, '0. åpent hav utenfor Senja', L0); print('errors:', errs); await br.close(); return
@@ -106,7 +108,7 @@ async def main():
                 await pg.wait_for_timeout(400)
                 if await pg.evaluate("!S.plan || !!document.querySelector('" + ready.replace("'", "\\'") + "')"): break
         r = await pg.evaluate(READ, L0); print('2 by him:', r['d'], r['v'], r['btn'], r['mob'] and r['mob']['tIn'])
-        check(r['d'] is not None and r['d'] <= 30 and r['v'] <= 2 and ('ladder+' in r['btn'] or 'sling+' in r['btn']), '2d. inntil og stille: leideren akter (eller stroppen) er klar', [r['d'], r['v'], r['btn']])
+        check(r['d'] is not None and r['d'] <= 35 and r['v'] <= 2 and ('ladder+' in r['btn'] or 'sling+' in r['btn']), '2d. inntil og stille: leideren akter (eller stroppen) er klar (avstanden lest litt etter panelet, som krever 30 m)', [r['d'], r['v'], r['btn']])
         await shot(pg, 'opptak')
         how = 'ladder' if 'ladder+' in r['btn'] else 'sling'
         if how + '+' in r['btn']: await pg.click('#mobUI [data-mb="%s"]' % how)

@@ -54,7 +54,7 @@ const MOBUI = (() => {
     if (typeof helmOff === 'function') helmOff();
     if (S.draft && S.draft.length && typeof draftEdit === 'function') draftEdit(() => { S.draft = []; });
     b.fishUntil = null; b.status = 'sailing';
-    S.plan = {wps, idx:0, speed:Math.max(4, Math.min(BOAT.vcruise || 6, 8)), full:false, returning:false, unsafe:wps.map(() => false), mob:true};
+    S.plan = {wps, idx:0, speed:mobSpeed(), full:false, returning:false, unsafe:wps.map(() => false), mob:true};
     log(kind === 'williamson' ? 'Autonav: MOB. Williamson-svingen, så inn til ' + M.name + '.' : 'Autonav: MOB. Kjører inn til ' + M.name + '.', kind === 'williamson' ? 'Autonav: MOB. The Williamson turn, then in to ' + M.name + '.' : 'Autonav: MOB. Running in to ' + M.name + '.', 'nav');
     toast(L('Autonav: MOB', 'Autonav: MOB')); save(); if (typeof refreshAll === 'function') refreshAll(); draw(true);
   }
@@ -108,7 +108,7 @@ const MOBUI = (() => {
       if (navigator.vibrate) try { navigator.vibrate([300, 120, 300, 120, 600]); } catch (e){}
       toast(L('Mann over bord! ' + x.name + ' er i sjøen.', 'Man overboard! ' + x.name + ' is in the water.'), 6000); }
     else if (k === 'end'){ const last = (S.log || []).slice(-6).find(l => /er oppe|tok .* opp|Mannskapet snudde/.test(l.no));
-      U.done = Object.assign({}, x, {until:performance.now() + 20000, text:last ? L(last.no, last.en) : '', sex:(S.crew || []).some(c => c.name === x.name && c.sex === 'f') ? 'f' : 'm'}); }
+      U.done = Object.assign({}, x, {until:performance.now() + 20000, text:last ? L(last.no, last.en) : '', sex:x.sex || 'm'}); }
     draw(true); refreshChart();
   }
   hooks.onMob = onMob;
