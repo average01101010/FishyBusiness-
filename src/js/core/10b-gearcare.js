@@ -42,8 +42,10 @@ function jigQ(){ const pg = S.pgear; if (!pg || !pg.jig) return 1; return 0.65 +
 function jigWear(){ const pg = S.pgear; if (!pg || !pg.jig) return; const k = jigKind(), J = pg.jig[k]; J.c = Math.max(0, J.c - CARE.jig[k].wear * upgSum(-equipTier('juksesett').wear)); }   // (not rounded: the wear of a minute is smaller than the rounding)
 // what a jig set costs the boat now: half again with the better hooks and pilk (EQUIP.juksesett pc), so a tier-2 boat buys tier-2 sets
 function jigKr(k){ return Math.round(CARE.jig[k].kr * upgSum(equipTier('juksesett').pc || 0)); }
-// the jig sets aboard at their base price (the one mounted of each kind in use, and the spares), which the tier's half is reckoned on
-function jigSetsKr(pg = S.pgear, b = S.boat){ const J = (pg && pg.jig) || {mark:{n:0}, kveite:{n:0}}; return CARE.jig.mark.kr * (1 + (J.mark.n || 0)) + CARE.jig.kveite.kr * ((b && b.kgear ? 1 : 0) + (J.kveite.n || 0)); }
+// the jig sets aboard at their base price (the one mounted of each kind in use, and the spares), which the tier's half is reckoned on:
+// the fly hooks and pilk mounted when the boat jigs (a hand jig or reels), the halibut pilk with the halibut gear
+function jigSetsKr(pg = S.pgear, b = S.boat){ const J = (pg && pg.jig) || {mark:{n:0}, kveite:{n:0}}, jigs = !!(b && b.gear) || ((S.equip && S.equip.jukse) || 0) > 0;
+  return CARE.jig.mark.kr * ((jigs ? 1 : 0) + (J.mark.n || 0)) + CARE.jig.kveite.kr * ((b && b.kgear ? 1 : 0) + (J.kveite.n || 0)); }
 
 // ---- wear in one haul (what the string looks like when it comes back): used by finishHaul and a stopped haul
 function wearOf(s, g){

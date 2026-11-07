@@ -163,11 +163,12 @@ function mySets(vid){ return (S.sets || []).filter(s => s.vid === (vid || S.cur)
 // (H3a) and the snow crab vessel's portal with its pot hauler (VESSELS pot 'sno') hauls her pots
 function hasHauler(kind){ return (kind === 'line' && BOAT && BOAT.autoHooks > 0) || (kind === 'teine' && BOAT && POTS[BOAT.pot] && POTS[BOAT.pot].sno) || GEAR[kind].haulers.some(k => S.equip && S.equip[k]); }
 // the share off the time to haul a unit from the hauler's tier (OPP2: 0, 10 and 20 %; the best of the boat's haulers for the gear), and the
-// share off the time to set one from the line setter's tier or the net chute (EQUIP linesetter, garnrenne); 0 without them
+// share off the time to set one from the line setter's tier or the net chute (EQUIP linesetter, garnrenne); 0 without them, and 0 without
+// the hauler they hang on (needs: one bought while the hauler waited for its fitting, and that job cancelled)
 function haulerX(kind, eq = S.equip, type){ let x = 0; for (const h of GEAR[kind].haulers){ const lv = equipLv(h, eq, type); if (lv) x = Math.max(x, EQUIP[h].tiers[lv - 1].haul || 0); } return x; }
 function setterX(kind, eq = S.equip, type){
-  if (kind === 'line'){ const lv = equipLv('linesetter', eq, type); return lv ? EQUIP.linesetter.tiers[lv - 1].set : 0; }
-  return kind === 'garn' && eq && eq.garnrenne ? EQUIP.garnrenne.set : 0;
+  const k = kind === 'line' ? 'linesetter' : kind === 'garn' ? 'garnrenne' : null, E = k && EQUIP[k]; if (!E || !(eq && eq[k] && eq[E.needs])) return 0;
+  return E.tiers ? E.tiers[equipLv(k, eq, type) - 1].set : E.set;
 }
 
 // ---- the rig: a boat is rigged for one kind of fishing at a time. Jigging needs a hand jig or reels; line and pots
@@ -265,6 +266,7 @@ function tierGate(k, lv){
     if (f.jig && V.cls !== 'hav') return [gL('«' + S.boatName + '» har plass til ' + (V.jukseMax || 0) + ' juksamaskiner, og én person passer ' + E.tiers[0].tend + '. Trinnene gir noe fra fire maskiner.', 'The «' + S.boatName + '» has room for ' + (V.jukseMax || 0) + ' reels, and one person tends ' + E.tiers[0].tend + '. The tiers give something from four reels.')];
     return [gL(E.name.no + ' i trinn hører til kystbåtene. Havbåtene har sitt eget utstyr.', 'The ' + E.name.en.toLowerCase() + ' in tiers are for the coastal boats. The ocean vessels have their own.')]; }
   if (k === 'jukseLv' && !(tierUnits(k, 2) > 0)) return [gL('Båten har ingen juksamaskin. Den kjøpes og monteres under Elektronikk og haler.', 'The boat has no jigging reel. It is bought and fitted under Electronics and haulers.')];
+  if (k === 'juksesett' && !(tierKr(k, 2) > 0)) return [gL('Båten har ingen juksa og ingen juksasett om bord.', 'The boat has no jig and no jig sets aboard.')];
   const cur = equipLv(k), top = E.tiers.length, want = lv == null ? cur + 1 : lv;
   if (cur >= top) return [gL('Båten har det beste: ' + lc1(E.tiers[top - 1].no) + '.', 'The boat has the best: ' + lc1(E.tiers[top - 1].en) + '.')];
   if (want <= cur) return [gL('Båten har alt trinn ' + cur + '.', 'The boat already has tier ' + cur + '.')];

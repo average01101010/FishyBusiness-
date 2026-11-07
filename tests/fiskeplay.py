@@ -670,6 +670,44 @@ for _c in (False, True):
     for _lv in (1, 2, 3):
         _f = scenario(_kniv(_lv, _c)); MEASURE.add(_f.__name__)
 
+# ---- OPP2 of docs/planer/oppgraderinger.md (07.11.2026): the haulers, the gaff, the line setter and the net chute per tier, in a day's
+# line and nets on the havsjark. Line alone: four tubs of haddock line set and hauled after 12 h on a haddock spot off Senja on 1 March,
+# the line hauler, the gaff and the line setter at tier lv (none, 1 and 2 for the setter). Nets with one deckhand (nets need two): ten
+# cod nets of 180 mm off Gryllefjord, 18 h, the net hauler at tier lv and the net chute from lv 2. What is measured: the game minutes
+# from the first unit to the last when setting and hauling (startSet/finishSet, startHaul/finishHaul), per unit, gopUnitMin at the
+# start of the haul (the pace before the bleeding tub slows it), the kg. Each tier on a fresh page with the same seed. Not in the default
+# run (MEASURE); run as: python3 tests/fiskeplay.py line1 line2 line3 garn1 garn2 garn3
+OPP2_TIME = """() => { window.__opp = {};
+  const ss = startSet; startSet = function(){ const r = ss.apply(this, arguments); if (!r){ window.__opp.s0 = S.t; window.__opp.sn = S.boat.gop && S.boat.gop.n; } return r; };
+  const fs = finishSet; finishSet = function(){ window.__opp.s1 = S.t; return fs.apply(this, arguments); };
+  const sh = startHaul; startHaul = function(){ const r = sh.apply(this, arguments); if (!r){ const g = S.boat.gop; window.__opp.h0 = S.t; window.__opp.hn = g && g.n; window.__opp.pace = g && +gopUnitMin(g, S.t / 60, hsAt(S.boat.pos, S.t / 60)).toFixed(3); } return r; };
+  const fh = finishHaul; finishHaul = function(){ window.__opp.h1 = S.t; window.__opp.kg = +holdTotal().toFixed(1); return fh.apply(this, arguments); }; }"""
+def _opp2(kind, lv):
+    async def f(pl):
+        await pl.js("FP.cash(1500000)"); await pl.js("FP.vessel('sjark')")
+        if kind == 'line':
+            await pl.js("""lv => { const e = S.equip; e.linehaler = lv > 1 ? lv : true; e.hott = lv; if (lv > 1) e.linesetter = lv > 2 ? 2 : true; S.boat.rig = 'line';
+              const L = S.pgear.lines.hyse; L.n = 4; L.baited = 4; btOf(L); S.pgear.kits.n = 2; refreshAll(); }""", lv)
+        else:
+            pl.note('crew', await pl.js("""() => { const c = PHONE.candidates().find(x => !x.bi); if (!c) return 'none'; const k = crewUpgrade(c); Object.assign(k.gear, {sloy:3, is:3, garn:3}); k.fatigue = 0; k.morale = 70; S.crew.push(k); refreshAll(); return k.name + ' aboard: ' + crewAboard().length; }"""))
+            await pl.js("""lv => { const e = S.equip; e.garnhaler = lv > 1 ? lv : true; e.hott = lv; if (lv > 1) e.garnrenne = true; S.boat.rig = 'garn';
+              S.pgear.nets.push({id:'nOpp', mesh:180, ty:'bunn', n:10, cond:1, max:0.95}); S.pgear.kits.n = 2; refreshAll(); }""", lv)
+        await pl.js(OPP2_TIME)
+        sp = await to_sea(pl, 'botnhamn', 10, 40, 140, 'hyse', 'a haddock spot off Senja') if kind == 'line' else await to_sea(pl, 'gryllefjord', 10, 30, 120, 'torsk', 'a cod spot off Gryllefjord')
+        if not sp: return
+        tag = kind + str(lv)
+        if not await set_out(pl, 'hyseline' if kind == 'line' else '180', tag): return
+        await soak(pl, 12 if kind == 'line' else 18, tag); await haul(pl, tag)
+        r = json.loads(await pl.js("JSON.stringify(Object.assign({}, window.__opp, {eq:{lh:S.equip.linehaler, gh:S.equip.garnhaler, ho:S.equip.hott, ls:S.equip.linesetter || 0, gr:S.equip.garnrenne || 0}, crew:crewAboard().length}))"))
+        if r.get('s1') is not None and r.get('s0') is not None: r['setMin'] = r['s1'] - r['s0']; r['setPer'] = round(r['setMin'] / max(1, r.get('sn') or 1), 2)
+        if r.get('h1') is not None and r.get('h0') is not None: r['haulMin'] = r['h1'] - r['h0']; r['haulPer'] = round(r['haulMin'] / max(1, r.get('hn') or 1), 2)
+        r['lv'] = lv; pl.note('measure', json.dumps(r, ensure_ascii=False))
+    f.__name__ = '%s%d' % (kind, lv)
+    return f
+for _k in ('line', 'garn'):
+    for _lv in (1, 2, 3):
+        _f = _opp2(_k, _lv); SCEN[_f.__name__] = _f; MEASURE.add(_f.__name__)
+
 #SCENARIOS#
 
 async def main():

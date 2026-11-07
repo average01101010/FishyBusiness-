@@ -74,7 +74,7 @@
     { const why = buyGate('equip', k); if (why) return why[0]; }
     const price = equipKr(k);
     if (spendable() < price) return t('no_cash');
-    if (!queueJob({kind:'fit', k, h:fitHours(k), no:'Montering av ' + E.name.no.toLowerCase(), en:'Fitting the ' + E.name.en})) return L('Arbeidskøen er full.', 'The work queue is full.');
+    if (!queueJob({kind:'fit', k, kr:price, h:fitHours(k), no:'Montering av ' + E.name.no.toLowerCase(), en:'Fitting the ' + E.name.en})) return L('Arbeidskøen er full.', 'The work queue is full.');   // (kr: what was paid, for a pay-back: a reel at a tier costs more than EQUIP's price)
     book('redskap', -price, E.name.no, E.name.en); achAdd('equip'); shopBought(E.name.no, E.name.en); folkShop();
     log('Kjøpt ' + E.name.no + '. Monteres i verkstedet.', 'Bought the ' + E.name.en + '. Being fitted at the yard.');
     // the moment it is bought: it is lifted aboard on your own boat in 3D (M3, 10 s), and the measure says whether it was tried on first

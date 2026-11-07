@@ -226,5 +226,14 @@ function opp2(t, K, S, boat, shop, plant){
   t.ok(!!K.buyGate('tier', 'linesetter'), 'linesetterens trinn 2 krever linesetteren');
   S.equip.linesetter = true; t.eq(K.buyGate('tier', 'linesetter'), null, 'med linesetteren kan trinn 2 kjøpes');
   t.eq(K.equipKr('linehaler'), 68000, 'linehaleren koster som før');
+  // (the review 07.11.2026) a line setter or net chute without the hauler it hangs on gives nothing (its hauler's fitting cancelled);
+  // the jig sets' tier reckons the mounted set only when the boat jigs, and is refused with no sets at all
+  S.equip = {linesetter:2, garnrenne:true}; t.eq([K.setterX('line'), K.setterX('garn')], [0, 0], 'linesetter og garnrenne uten haleren de henger på gir ingenting');
+  S.equip = {linesetter:2, linehaler:true, garnrenne:true, garnhaler:true}; t.eq([K.setterX('line'), K.setterX('garn')], [0.35, 0.25], 'med halerne: 35 og 25 %');
+  boat('trebat'); S.equip = {}; S.pgear = K.newPGear(); K.careInit(S.pgear); S.boat.kgear = false;
+  S.boat.gear = false; t.eq(K.jigSetsKr(), 0, 'uten håndjuksa, maskiner og reservesett er ingen juksasett om bord');
+  t.ok(!!K.buyGate('tier', 'juksesett'), `juksasettenes trinn nektes da: «${(K.buyGate('tier', 'juksesett') || [''])[0]}»`);
+  S.equip = {jukse:1}; t.eq(K.jigSetsKr(), CARE.jig.mark.kr, 'med en juksamaskin teller settet som står på');
+  S.boat.gear = true; S.equip = {};
   boat('trebat'); S.equip = {};
 }

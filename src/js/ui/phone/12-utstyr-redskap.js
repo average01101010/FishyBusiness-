@@ -49,7 +49,7 @@
       h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? (have || 0) + ' / ' + max + tierTxt : '', price, have:fitTxt, note:typeof G3 !== 'undefined' && G3.trying === k ? L('Vises på «' + S.boatName + '» nå, før du har kjøpt. Dra for å se rundt.', 'Shown on the «' + S.boatName + '» now, before you buy. Drag to look round.') : '', btns:fitting && !E.multi ? '' : '<span class="ic-row">' + btn + tryBtn(k) + '</span>'}));
       // the same item from a partner with a written agreement (M6, ui/10r-sponsor.js): same price, same numbers, marked
       if (!(fitting && !E.multi) && typeof spOf === 'function' && spOf('item', k)){ const pend2 = shopPend && shopPend.k === 'equip:' + k + ':sp' && Date.now() - shopPend.t <= IC_CONFIRM_MS;
-        h.push(SPUI.card(k, pend2 ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-sp="1" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(E.price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
+        h.push(SPUI.card(k, gate ? '<p class="ph-note"><b>' + gate[0] + '</b></p>' : pend2 ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-sp="1" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
           : '<span class="ic-row"><button class="ph-btn p" data-pa="equip" data-sp="1" data-k="' + k + '"' + (dis ? ' disabled' : '') + '>' + L('Kjøp og monter', 'Buy and fit') + ' · ' + durBoth(fitHours(k) * 60) + '</button>' + tryBtn(k) + '</span>')); }
     }
     if (mode === 'butikk'){ const people = 1 + S.crew.length, c = S.clothes || {}, H = S.t / 60, cp = coldPen(H);
