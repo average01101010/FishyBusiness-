@@ -1,9 +1,10 @@
 """Havsteget H3d1 (docs/planer/havsteget-h3-snokrabbe.md, 07.11.2026): the Blender model of the snow crab vessel (tools/boats/krabbe50.py)
 and the snow crab gear (tools/gear/snoteine.py) in the game, with the whole coast, in both formats (800×1280 and 1280×800):
-  1 at sea off Båtsfjord by day: K1 the starboard bow quarter, K2 the port stern quarter, the bridge (the helm's view) and K7 from above
+  1 at sea off Båtsfjord by day: K1 the port bow quarter, K2 the starboard stern quarter, the bridge (the helm's view) and K7 from above
   2 the work on Sentralbanken: a string of conical pots hauled at the hauler under the portal, the pot emptied on the sorting table, the
     stacks on the pot deck, the crew of the watch on deck (the before and after of the hauling station, H3d2 builds the work on it)
-  3 K6 at night under way, from the starboard bow, the port bow and astern: the lanterns
+  3 K6 at night under way, from the starboard bow, the port bow and astern: the lanterns (the camera's yaw: + is to port,
+    - to starboard; the red and the green side light tell them apart in the pictures, 07.11.2026)
   4 at the plant nearest Båtsfjord, alongside: her size against the quay
   5 one of the ocean fleet's snow crab vessels (05d-hav.js, the same model) at 120 m and at 700 m (the far model)
 and asks the game whether it draws the Blender model with the anchors the work needs (sulebas-bygging.md kap. 12): the hauler, the
@@ -116,7 +117,7 @@ async def main():
             await pg.evaluate("G3._debug.pota.fix = null")
             await pg.evaluate(SET, [11, 70.78, 30.1])
         if want('3'):
-            for nm, yaw in (('natt_sb', 2.5), ('natt_bb', -2.5), ('natt_akter', 0.0)):
+            for nm, yaw in (('natt_sb', -2.5), ('natt_bb', 2.5), ('natt_akter', 0.0)):
                 await pg.evaluate(SET, [22, 70.78, 30.1]); await pg.evaluate(CAM, [62, 0.07, yaw]); await pg.wait_for_timeout(5000)
                 await shots(pg, nm)
             await pg.evaluate(SET, [11, 70.78, 30.1])

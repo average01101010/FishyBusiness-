@@ -109,3 +109,47 @@ H3d2 trenger står i `anchors.snok`.
 | 16 | Navnet på bremmen: `houseFront` fant ingen stripe der bremmens hjørner bøyer bort (navntesten rød) | stripa krymper til den passer (`vessel3d.js`) |
 | 17 | I spillet: en kam av kiler fra rekka til vannlinja på babord baug (bildene `ute` og `ovenfra`; først tatt for styrbord og for mellomversjonen). Våtheten, skadene, normalene, AO, merkene, teinene, farten og en annen båt på samme sted utelukket; GLB-en lest inn i Blender viste kammen | `pchip` bufret splinene på `id(tab)`, og `keel_t` og `wk` sender en ny liste hvert kall: når en id kom igjen, fikk en stasjon feil spline, skjegget negativ bredde og snittet falt sammen til en korde. `check()` kjører før byggingen og ga babord feil ved noen stasjoner. Bufferen bruker nå innholdet, og `check()` sjekker at sidene er like (rød 4,0 m, grønn 0,0000). Mellomversjonen ble før det bygd i skriptet i stedet for med Decimate (36 393 trekanter); den beholdes, men Decimate var ikke skyldig |
 | 18 | Stablene om bord ble aldri tegnet: koden leste `pots.big`, fartøyet bærer `pots.sno` | `potsAboard()` (M1 rettet i spillet, ikke bare i modellen) |
+| 19 | Bildenavnene i `h3dshot`: kameraets yaw + er babord, ikke styrbord (sidelysene i nattbildene: rødt i «natt_sb») | yaw byttet for natt_sb/natt_bb, bildene døpt om; K1 er babord baug, K2 styrbord hekk |
+
+## 8. Selvvurdering (07.11.2026)
+
+**Karakter: 85/100**, akkurat på kravet (Jonas: minst 85). Bildene fra spillet ligger i `tests/out/h3d_etter_*` (før: `h3d_for_*`), i
+begge formater.
+
+Det som holder:
+- **Skroget** er én flate med dødved, bunnreisning, utfall og fyldighet per stasjon: 1 762 t mot 1 800, jevne vannlinjer (0,011), og
+  babord og styrbord like i alle 227 stasjonene (ny kontroll). Isbeltet, rubbelistene, sveiseskjøtene, dypgangsmerkene, thrustersymbolet
+  og lensportene med klaff står på platene; åpningene er ekte hull med kanter.
+- **Arbeidet er lagt før veggene** og regnet i `check()` (12 grupper, alle OK): rekka ved haleren, blokka, bordet, båndet, renna, 70
+  stableplasser med gang rundt, kranens rekkevidde til luka, kaia og stablene. Ankrene H3d2 trenger, luka og kranen som egne deler, og
+  `kit`-plassene i modellen (`KITADD`, `MOBCUT` og `HELM_KIT` for typen er borte). I spillet: haleren under portalen, teina på bordet,
+  mannskapet ved halestasjonen og stablene om bord (bildet `drag` og `teinedekk`).
+- **Lanternene** er lovlige etter vedlegg I og sett i spillet om natta fra begge sider og akterfra: rødt og grønt sidelys, begge
+  topplanternene, akterlyset; fiskelysene av under gange.
+- **Broa** har egen pult, ratt, spaker og skjermer, vinduer rundt hele styrhuset, og bremmen Jonas ba om rundt taket.
+- **Budsjettene:** 123 449 trekanter nær (300 000), 36 393 midt (40 000), 3 891 fjern (4 000).
+- **Testene:** enhetstestene 1 800 OK; `snokrabbetest`, `krabbefabrikktest`, `vesseltest`, `regmarktest`, `maletest`, `lanterntest` OK;
+  `walktest` rød bare for autolineren (kjent i backloggen); `h3dshot` rød før og grønn etter.
+
+Trekk:
+1. **Jonas måtte påpeke det flate styrhustaket.** Vanlige styrhus har en brem eller en skrående kant over vinduene, og det burde
+   vært med fra start.
+2. **Kammen på babord baug** sto i to eksporter før den ble funnet. Jeg la den først på Decimate i mellomversjonen, så på styrbord side;
+   begge deler var feil. Årsaken var spline-bufferen i `pchip`, arvet fra `kyst15.py`, og den ble funnet først da GLB-en ble lest inn i
+   Blender igjen. Kontrollen av sidene sto ikke i `check()` fra start.
+3. **Stablene ble ikke tegnet** i spillet (koden leste `pots.big`) før etter-bildene viste det tomme dekket; `check()` regnet plassene,
+   men ingen prøve så dem i spillet.
+4. **Mål på tvers, høydene i huset og fargefeltene er antatt**: bildene fra 06.10.2026 ligger ikke i repoet, og tegningen fra 07.11.2026
+   er et større fartøy skalert ned.
+5. **Haleren er vår egen** (ingen tegning av en ekte), og registreringsmerket er ikke skrevet på blåsa ennå.
+6. **GLB-en er 5,9 MB** mot 0,6 MB før.
+7. `deckshot`, `potshot`, `haultest` og `landtest` er ikke kjørt (H3d2 kjører dem med animasjonene).
+
+## 9. Spørsmål og bilder som ville gjort resultatet bedre
+
+1. **Bildene fra 06.10.2026** og helst generalarrangementet eller et bilde rett fra siden av et norsk snøkrabbefartøy rundt 50 m: da kan
+   modellen legges over hver runde, og målene på tvers og husets høyder trenger ikke være antatt.
+2. Et bilde av halestasjonen og sorteringsbordet om bord (hvor bordet står mot haleren, og hvordan teina går til båndet), og av stablene
+   under shelteret.
+3. Haleren: et bilde eller merke (bare til tegningen, aldri som navn i spillet).
+4. Om fargene (antrasitt, oker, kremhvitt) skal stå, eller om du vil ha et annet design.
