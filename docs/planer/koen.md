@@ -14,6 +14,7 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 
 ## Øktene som kjører
 
+- `ccr-dc24762d-iyuakj`: Ø8b S1 (steg 1), Jonas' økt, startet 07.11.2026 15:17 UTC. Eier `ui/07b-first-trip.js`; i `ui/01-i18n.js` (OPP4 eier fila) bare de nye nøklene for linja i dagboka, samlet ett sted, så flettingen med OPP4 ikke får konflikt. Ingen patchnote i `phone/07-patch.js` før OPP4 er ute (OPP4 eier fila).
 - `ccr-6e84b098-t2tu38`: OPP2 (steg 56), Jonas' økt, startet 07.11.2026 15:17 UTC. Eier `core/02-species-gear.js`, `03-simulation.js`, `10-gear.js`, `10b-gearcare.js`, `ui/phone/12-utstyr-redskap.js`, `ui/05a-itemcard.js`, `tests/unit/oppgradering.test.mjs`, `jig.test.mjs`; `ui/01-i18n.js` og `phone/07-patch.js` delt (egne linjer, OPP4 eier resten).
 - `ccr-73ea871d-9b5rz6`: Ø11.6 (steg 6), Jonas' økt, startet 07.11.2026 15:15 UTC. Eier nye `core/14b-sikkerhet.js`, `ui/10s-mob.js`, `tests/mobtest.py`, `tests/unit/mob.test.mjs`; `core/05-vessels.js`, `13-work.js`, `04-crew.js`, `09f-merker.js`, `ui/03-map.js`, `10e-sound.js`, `deckcrew.js`, `view3d/21-rescue-anchor.js`, en linje hver i `src/index.html`; `ui/07c-handbook.js`, `01-i18n.js` og `phone/07-patch.js` først etter at OPP4 er ute.
 - `ccr-7538447c-xt5b4p`: Ø3a (steg 21), Jonas' økt, startet 07.11.2026 15:16 UTC. Eier `view3d/02-mesh-terrain.js`, `04-vec-packs.js`, `06-buildings-lights.js`, `17-draw.js`, `18-setup.js`, `ui/11-boot.js`, `ui/03a-chart.js`, `core/01b-mapdata.js`, `01c-vec.js`. Rører ikke F2 (`16-motion.js`, `24-cinema.js`), F3 (`01-shaders.js`, `14-sea.js`) eller H3d1 (`10-gear.js`, `09-landing-deck.js`).
@@ -54,7 +55,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 
 | # | Steg | Spor | Status | Venter på | Filer steget eier mens det går | Plan |
 |---|---|---|---|---|---|---|
-| 1 | **Ø8b S1** Første tur i dagboka | Spillbarhet | klar | | `ui/07b-first-trip.js`, `ui/01-i18n.js` | `spillbarhet-fangst.md` S1 |
+| 1 | **Ø8b S1** Første tur i dagboka | Spillbarhet | pågår (Jonas' økt, gren `ccr-dc24762d-iyuakj`, 07.11.2026 15:17 UTC) | | `ui/07b-first-trip.js`, `ui/01-i18n.js` | `spillbarhet-fangst.md` S1 |
 | 2 | **H3b** Flett inn og rull ut driften om bord (snøkrabbe) | Havsteget | ferdig (bygd på `ccr-2f1306ed-u6tdgs`, flettet i 192d4059, rullet ut i 4107d71a 07.11.2026; Jonas: «Rull ut på det store blå») | | H3bs filer (over) + `core/02-species-gear.js`, `07-harbours.js`, `07f-kar.js`, `10-gear.js`, `10d-snokrabbe.js`, ny `10e-krabbefabrikk.js`, `ui/10g-push.js`, `phone/02`, `09`, `14`, `tests/run.py` | `havsteget-h3-snokrabbe.md` H3b |
 | 3 | **U2-4** Roen | UI 2 | ferdig (55c5dc0f, 07.11.2026, rullet ut i c62047f0; Jonas' økt, grenen `ccr-fc7a11b2-nl5jor`) | | `ui/10c-dock.js`, `styles.css`, `view3d/24-cinema.js`, `ui/02-format-state.js` | `ui-2-staaende.md` 4.5 |
 | 4 | **B1** Båtsalget mellom spillere, serveren | Tonys test | ferdig (a75e1156, 07.11.2026; migreringen kjørt av Jonas i SQL-editoren og sjekket; rullet ut i 98c7befa) | | `supabase/migrations/`, `tests/sqltest.py` | `etter-tonys-test.md` B1–B3, B7 |
