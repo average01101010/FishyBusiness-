@@ -504,7 +504,9 @@ async function leiaRoute(a, b, aPort, bPort, opt){
     LEIA_RUN.splice(LEIA_RUN.indexOf(run), 1); const top = LEIA_RUN.length ? LEIA_RUN[LEIA_RUN.length - 1] : LEIA_RUN.base; HIND.ctx = top.ctx; LEIA_TIDE.credit = top.credit; Object.assign(LEIA_ICE, top.ice); };
   // the end itself in the ice: said so, not searched for
   if (!bPort && leiaIce(b)){ back();
-    return {why:['Målet ligger i drivisen (' + Math.round(seaIceAt(b) / 10) + '/10). Båten har ikke isklasse.', 'The goal lies in the drift ice (' + Math.round(seaIceAt(b) / 10) + '/10). The boat has no ice class.']}; }
+    // (a boat with an ice class is told the limit of her class, H3c)
+    const c = Math.round(seaIceAt(b) / 10), k = BOAT.iceClass, L = Math.round(seaIceLim() / 10);
+    return {why:k ? ['Målet ligger i drivisen (' + c + '/10). Isklassen ' + k + ' går opp til ' + L + '/10.', 'The goal lies in the drift ice (' + c + '/10). Ice class ' + k + ' goes up to ' + L + '/10.'] : ['Målet ligger i drivisen (' + c + '/10). Båten har ikke isklasse.', 'The goal lies in the drift ice (' + c + '/10). The boat has no ice class.']}; }
   try { const r = await leiaRoute0(a, b, aPort, bPort, false, opt); if (r && r.st){ r.st.tide = +credit.toFixed(2); if (LEIA_ICE.on) r.st.ice = {cap:Math.round(LEIA_ICE.cap)}; } return r; } finally { back(); }
 }
 // Step 1 of the coast-wide Autonav (08.10.2026): the way from a point by the shore, in a narrow basin or among islets, out to
