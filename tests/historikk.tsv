@@ -930,3 +930,7 @@
 2026-11-07 18:29	ccr-c01d562d-pf9kca	33420272	gfxtest	FEIL	113	3d	alene	FEIL a GL error is sent with the step it came after, the graphics chip, the quality and the view  []
 2026-11-07 18:30	ccr-c01d562d-pf9kca	b68080f7	moortest	OK	38	3d	alene	
 2026-11-07 18:47	ccr-c01d562d-pf9kca	db538e51	hull3d	OK	1046	3d	alene	
+2026-11-07 18:49	ccr-c01d562d-pf9kca	3ad552db	gfxtest	OK	101	3d	alene	
+2026-11-07 18:57	ccr-c01d562d-pf9kca	3ad552db	benchshot	OK	501	3d	alene	
+2026-11-07 19:04	ccr-c01d562d-pf9kca	3ad552db	profshot	OK	423	3d	alene	
+2026-11-07 19:05	ccr-c01d562d-pf9kca	3ad552db	routetest	FEIL	40	lite	alene	FEIL Autonav over hele kysten: Finnsnes–Tromsø, Bodø–Reine og Bergen–Florø gir en vei fri for land, grunner og skjær, med høyst 40 punkter, eller ett per 2 km d
