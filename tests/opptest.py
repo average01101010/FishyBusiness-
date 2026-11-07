@@ -112,30 +112,34 @@ async def main():
         # first is what she has without a purchase), the next step with price, place and numbers, what is full with every dot filled, what
         # does not suit her not there, where it is bought with «Nærmeste» and Autonav, and the fish over the rail and the minutes a tub today
         LAD = """(() => { const d = document.getElementById('drawerBody'), nb = x => (x || '').replace(/\\u00a0|\\u202f/g, ' '), card = d.querySelector('.bu-card'); if (!card) return null;
-          const L = {}; for (const e of card.querySelectorAll('.bu-l')) L[e.dataset.lad] = {lv:+e.dataset.lv, max:+e.dataset.max, dots:nb(e.querySelector('.bu-d').textContent), txt:nb(e.textContent), buy:!!e.querySelector('[data-pa=open]')};
+          const L = {}; for (const e of card.querySelectorAll('.bu-l')) L[e.dataset.lad] = {lv:+e.dataset.lv, max:+e.dataset.max, dots:nb(e.querySelector('.bu-d').textContent), gain:nb((e.querySelector('.bu-tx small') || {}).textContent),
+            pr:nb((e.querySelector('.bu-pr') || {}).textContent), buy:!!e.querySelector('button.bu-pr[data-pa=open]'), pic:!!e.querySelector('.bu-ic svg'), txt:nb(e.textContent)};
           const at = {}; for (const e of card.querySelectorAll('.bu-at')) at[e.dataset.at] = {txt:nb(e.textContent), go:(e.querySelector('[data-pa=goplace]') || {dataset:{}}).dataset.id || null};
-          return {first:d.querySelector('.ph-c > .ph-card') === card || d.querySelector('.ph-card') === card, L, at, num:nb((card.querySelector('.bu-num') || {}).textContent), txt:nb(card.textContent)}; })()"""
+          const order = []; for (let e = card.querySelector('.bu-at[data-at=butikk]'); e && (e = e.nextElementSibling) && e.classList.contains('bu-l');) order.push(e.dataset.lad);
+          return {first:d.querySelector('.ph-card') === card, L, at, order, num:nb((card.querySelector('.bu-num') || {}).textContent), sum:nb((card.querySelector('.bu-sum') || {}).textContent), q:!!card.querySelector('.bu-q[data-hbid=lex_oppgrad]'), txt:nb(card.textContent)}; })()"""
         await pg.set_viewport_size({'width': 1280, 'height': 800}); await pg.wait_for_timeout(400)
         await pg.evaluate("DOCK.close(); const b = S.boat, q = portById('finnsnes'); b.type = 'trebat'; applyVessel(); b.status = 'port'; b.port = 'finnsnes'; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; S.equip.kniv = 2; S.equip.hott = 3; DOCK.open('beholdning:boat')"); await pg.wait_for_timeout(500)
         r = json.loads(await J(LAD))
         kn, ho = (r or {}).get('L', {}).get('kniv'), (r or {}).get('L', {}).get('hott')
-        check(r and r['first'] and kn and kn['dots'] == '●●○' and kn['lv'] == 2 and 'Neste: Sløyekniver i ett stykke og stålhansker · 4 500 kr i butikken' in kn['txt'] and '330 → 360 kg i timen per person ved bordet' in kn['txt'],
-              'siden står først under Om bord › Båten: kniven ●●○ med neste trinn, prisen for båten, «i butikken» og kg i timen ved bordet', kn)
-        check(ho and ho['dots'] == '●●●' and 'Fullt' in ho['txt'] and not ho['buy'], 'høtten på trinn 3 står med alle prikkene fylt og «Fullt», uten knapp', ho)
+        check(r and r['first'] and kn and kn['dots'] == '●●○' and kn['lv'] == 2 and kn['gain'] == '330 → 360 kg/t ved bordet' and kn['pr'] == '4 500 kr' and kn['pic'],
+              'siden står først under Om bord › Båten: kniven med bilde, ●●○, gevinsten i egne tall (330 → 360 kg/t ved bordet) og prisen 4 500 kr', kn)
+        check(ho and ho['dots'] == '●●●' and ho['pr'] == '✓' and not ho['buy'] and 'Lang høtt' in ho['gain'], 'høtten på trinn 3 står med alle prikkene fylt og en hake, uten knapp', ho)
         L0 = r['L'] if r else {}
         check(all(k in L0 for k in ('jukse', 'linehaler', 'teinehaler', 'motor', 'tank', 'ekko', 'antigro')) and 'garnhaler' not in L0 and 'hold' not in L0 and 'cabin' not in L0 and 'stab' not in L0 and L0['ekko']['max'] == 2,
               'trebåten har stigene som passer henne; ikke garnhaleren (fra 7,5 m), lasterommet (ett kar, fullt fra start), lugarer, stabilisering eller sonaren', sorted(L0))
-        check(L0.get('motor') and '8 hk' in L0['motor']['txt'] and ' kn topp' in L0['motor']['txt'] and 'l/t i marsj' in L0['motor']['txt'] and 'på verftet' in L0['motor']['txt'] and L0['motor']['dots'] == '●○○'
-              and L0.get('linehaler') and 'min per stamp →' in L0['linehaler']['txt'], 'motoren i knop og liter i timen på verftet, linehaleren i minutter per stamp', {k: L0.get(k, {}).get('txt') for k in ('motor', 'linehaler')})
-        check(r and 'Du er her' in r['at'].get('butikk', {}).get('txt', '') and kn['buy'] and not r['at']['butikk']['go'], 'ved butikkens kai i Finnsnes: «Du er her» og «Til kjøpet» på linja, ingen Autonav', r and r['at'])
-        check(r and 'Tapt over ripa denne uka3 fisk, 9 kg' in r['num'] and 'Trekk av en stamp line i dag' in r['num'] and 'min per stamp' in r['num'] and 'NaN' not in r['txt'] and 'undefined' not in r['txt'],
+        check(L0.get('motor') and L0['motor']['gain'].endswith(' kn') and '→' in L0['motor']['gain'] and L0['motor']['dots'] == '●○○' and L0.get('linehaler') and L0['linehaler']['gain'].endswith('min/stamp') and '→' in L0['linehaler']['gain'],
+              'motoren i knop, linehaleren i minutter per stamp, nå og med neste trinn', {k: L0.get(k, {}).get('gain') for k in ('motor', 'linehaler')})
+        check(r and r['order'][-1] == 'hott' and r['order'].index('kniv') < r['order'].index('jukse') and r['sum'].endswith('trinn') and r['q'],
+              'det som kan kjøpes, står først med det billigste øverst, og det fulle sist; summen av trinnene og «?» til Håndboka', {'order': r and r['order'], 'sum': r and r['sum']})
+        check(r and 'Du er her' in r['at'].get('butikk', {}).get('txt', '') and kn['buy'] and not r['at']['butikk']['go'], 'ved butikkens kai i Finnsnes: «Du er her», og prisen er knappen til kjøpet; ingen Autonav', r and r['at'])
+        check(r and '3 fisk' in r['num'] and 'tapt over ripa denne uka' in r['num'] and 'per stamp line i dag' in r['num'] and ' min' in r['num'] and 'NaN' not in r['txt'] and 'undefined' not in r['txt'],
               'tapt over ripa denne uka og minuttene per stamp i dag står som tall', r and r['num'])
         await pg.screenshot(path='opp4_side_liggende.jpg', type='jpeg', quality=60)
         # away from the shop and the yard (the plant in Botnhamn): «Nærmeste» with the distance and Autonav to the nearest of each kind
         await pg.evaluate("DOCK.close(); const b = S.boat, q = portById('botnhamn'); b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; DOCK.open('beholdning:boat')"); await pg.wait_for_timeout(400)
         r = json.loads(await J(LAD)); nr = json.loads(await J("{b:placesNear(S.boat.pos, 'butikk', 1)[0].pt.id, v:placesNear(S.boat.pos, 'verft', 1)[0].pt.id}"))
-        check(r and 'Nærmeste' in r['at']['butikk']['txt'] and ' nm' in r['at']['butikk']['txt'] and r['at']['butikk']['go'] == nr['b'] and r['at']['verft']['go'] == nr['v'] and not r['L']['kniv']['buy'],
-              'ved mottaket i Botnhamn: «Nærmeste» butikk og verft med avstanden og Autonav dit, og ingen kjøpsknapp på linjene', {'at': r and r['at'], 'near': nr})
+        check(r and 'Nærmeste' in r['at']['butikk']['txt'] and ' nm' in r['at']['butikk']['txt'] and r['at']['butikk']['go'] == nr['b'] and r['at']['verft']['go'] == nr['v'] and not r['L']['kniv']['buy'] and r['L']['kniv']['pr'] == '4 500 kr',
+              'ved mottaket i Botnhamn: «Nærmeste» butikk og verft med avstanden og Autonav dit; prisen står, men er ingen knapp', {'at': r and r['at'], 'near': nr})
         await pg.screenshot(path='opp4_naermeste_liggende.jpg', type='jpeg', quality=60)
         await pg.evaluate("S.draft = []; const e = document.querySelector('#drawerBody .bu-at[data-at=butikk] [data-pa=goplace]'); if (e) e.click()")
         try: await pg.wait_for_function("S.draft.length > 1 && S.draft[S.draft.length - 1].port === " + json.dumps(nr['b']), timeout=30000)
@@ -143,12 +147,13 @@ async def main():
         r = json.loads(await J("{drawer:document.body.classList.contains('dk-open'), n:S.draft.length, end:S.draft.length ? S.draft[S.draft.length - 1].port || null : null}"))
         check(r['end'] == nr['b'] and r['n'] > 1 and not r['drawer'], '«Autonav dit» lukker skuffen og legger ruta til den nærmeste butikken', r)
         await pg.evaluate("S.draft = []; if (typeof closePlotter === 'function') closePlotter()")
-        # portrait: nothing sticks out of the drawer, and the buttons are big enough to tap
+        # portrait: nothing sticks out of the drawer, and the price buttons are big enough to tap
         await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(500)
         await pg.evaluate("if (typeof closePlotter === 'function') closePlotter(); const b = S.boat, q = portById('finnsnes'); b.status = 'port'; b.port = 'finnsnes'; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; DOCK.close(); DOCK.open('beholdning:boat')"); await pg.wait_for_timeout(500)
-        fit = json.loads(await J("""(() => { const d = document.getElementById('drawerBody'), r = d.getBoundingClientRect(), c = d.querySelector('.bu-card'); if (!c) return {wide:0, lines:0};
-          return {wide:[...c.querySelectorAll('*')].filter(e => { const q = e.getBoundingClientRect(); return q.width && q.right > r.right + 1; }).length, lines:c.querySelectorAll('.bu-l').length}; })()"""))
-        check(fit['lines'] >= 7 and not fit['wide'], 'stående: siden har linjene og ingenting stikker ut av skuffen', fit)
+        fit = json.loads(await J("""(() => { const d = document.getElementById('drawerBody'), r = d.getBoundingClientRect(), c = d.querySelector('.bu-card'); if (!c) return {wide:0, lines:0, small:0};
+          return {wide:[...c.querySelectorAll('*')].filter(e => { const q = e.getBoundingClientRect(); return q.width && q.right > r.right + 1; }).length, lines:c.querySelectorAll('.bu-l').length,
+            small:[...c.querySelectorAll('button.bu-pr, .bu-q, .bu-at .ph-btn')].filter(e => { const q = e.getBoundingClientRect(); return q.width && (q.height < 30 || q.width < 30); }).length}; })()"""))
+        check(fit['lines'] >= 7 and not fit['wide'] and not fit['small'], 'stående: siden har linjene, ingenting stikker ut av skuffen, og knappene er store nok', fit)
         await pg.screenshot(path='opp4_side_staaende.jpg', type='jpeg', quality=60)
 
         # the confirmation in the button from 10 000 kr (14-act.js, tierKr): the knives at tier 3 on the 14.99 m coastal vessel are 4 500 kr a
