@@ -638,10 +638,42 @@ async def jig3d(pl):
         await pl.dock('taopp'); await pl.play(20); await pl.pg.wait_for_timeout(5000); await pl.shot('trekker-3d', 'hauling the line in 3D')
         await pl.play(30); await pl.pg.wait_for_timeout(5000); await pl.shot('dekk-3d', 'the deck work in 3D')
 
+# ---- OPP1 of docs/planer/oppgraderinger.md (07.11.2026): the knives and the gaff per tier, alone and with a deckhand. A day on the hand
+# jig in the trebåt (60 kg bleeding tub) on a cod spot north of Senja on the start day: ten hours of jigging, then until the catch is
+# gutted and iced. What is measured: the kg aboard and the minutes the deck was worked (someone gutting or icing) and your own (S.deckMe)
+# after six hours, when the fishing ended (the 500 kg hold full or the ten hours up) and when the deck work did, the fish lost over the rail. Each tier on a fresh page with the same seed. Not in the default
+# run (MEASURE); run as: python3 tests/fiskeplay.py kniv1 kniv2 kniv3 kniv1m kniv2m kniv3m
+MEASURE = set()
+def _kniv(lv, crew):
+    async def f(pl):
+        await pl.js("FP.vessel('trebat')"); await pl.js("lv => { S.equip.kniv = lv; S.equip.hott = lv; refreshAll(); }", lv)
+        # the same deckhand every run: the first who asks for a berth as a main job, with the skills and the rest set (the exchange is
+        # drawn from the page's dice, which differ a little from run to run with the map loading)
+        if crew: pl.note('crew', await pl.js("""() => { const c = PHONE.candidates().find(x => !x.bi); if (!c) return 'none'; const k = crewUpgrade(c); Object.assign(k.gear, {sloy:3, is:3, juksa:3}); k.fatigue = 0; k.morale = 70; S.crew.push(k); refreshAll(); return k.name + ' aboard: ' + crewAboard().length; }"""))
+        await pl.js("() => { window.__deckMin = 0; const dm = deckMinute; deckMinute = function(){ const t0 = S.boat.deckT; dm(); if (S.boat.deckT === S.t && t0 !== S.t) window.__deckMin++; }; S.deckMe = 0; }")
+        if not await to_sea(pl, 'husoy', 8, 20, 90, 'torsk', 'a cod spot north of Senja'): return
+        if not await pl.js("FP.vis(document.getElementById('dockFan'))"): await pl.dock('jukse')
+        cur = await pl.js("S.fishPlanH")
+        for _ in range(abs(10 - cur)): await pl.tap('#dockFan [data-dk="fh%s"]' % ('+' if 10 > cur else '-'))
+        t0 = await pl.js("S.t"); await pl.tap('#dockFan [data-dk="startfish"]')
+        await pl.play(360, until="S.boat.status !== 'fishing'")
+        six = json.loads(await pl.js("JSON.stringify({kg:+holdTotal().toFixed(1), deckMin:window.__deckMin, me:S.deckMe || 0, waiting:Math.round(deckPending())})"))
+        await pl.play(600, until="S.boat.status !== 'fishing'"); tf = await pl.js("S.t")
+        await pl.play(600, until="deckPending() < 0.5"); td = await pl.js("S.t")
+        r = json.loads(await pl.js("JSON.stringify({kg:+holdTotal().toFixed(1), cap:Math.round(capHold()), deckMin:window.__deckMin, me:S.deckMe || 0, crew:crewAboard().length, knife:knifeX(), lost:S.stats.lostRail || null, slips:S.log.filter(x => /over ripa|stygt|skar seg/.test(x.no)).length})"))
+        r.update({'lv': lv, 'six': six, 'fishH': round((tf - t0) / 60, 2), 'deckDoneH': round((td - t0) / 60, 2)})
+        pl.note('measure', json.dumps(r, ensure_ascii=False))
+        await pl.shot('dag-slutt', 'the day done: the catch gutted and iced')
+    f.__name__ = 'kniv%d%s' % (lv, 'm' if crew else '')
+    return f
+for _c in (False, True):
+    for _lv in (1, 2, 3):
+        _f = scenario(_kniv(_lv, _c)); MEASURE.add(_f.__name__)
+
 #SCENARIOS#
 
 async def main():
-    names = [a for a in sys.argv[1:] if not a.startswith('-')] or [k for k in SCEN if not k.endswith('3d')]
+    names = [a for a in sys.argv[1:] if not a.startswith('-')] or [k for k in SCEN if not k.endswith('3d') and k not in MEASURE]
     async with async_playwright() as p:
         br = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--disable-gpu-compositing'])
         summary = {}
