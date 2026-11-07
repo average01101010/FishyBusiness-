@@ -876,7 +876,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 581 `sjvWhen(W)`
   - 583 `sjvWarn()`
 
-## `src/js/core/06-services.js` (275 linjer)
+## `src/js/core/06-services.js` (276 linjer)
 
 ---------- services behind the phone ----------
 
@@ -895,14 +895,14 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
 - **149** standing operations plan: a hired skipper runs a saved route on set days, lands the catch and restocks
   - 151 `autoRestock()`
   - 160 `depart()`
-  - 183 `finishJob(j)`
-  - 210 `fitHours(k)`
-  - 213 `jobOk(j)`
-  - 218 `queueJob(j)`
-  - 221 `jobsDone()`
-  - 227 `shelterReturn(W, hsOver)`
-  - 253 `startReturn(auto, W, home, hsOver, opsKeep)`
-- **273** CORE END
+  - 184 `finishJob(j)`
+  - 211 `fitHours(k)`
+  - 214 `jobOk(j)`
+  - 219 `queueJob(j)`
+  - 222 `jobsDone()`
+  - 228 `shelterReturn(W, hsOver)`
+  - 254 `startReturn(auto, W, home, hsOver, opsKeep)`
+- **274** CORE END
 
 ## `src/js/core/06b-coastports.js` (166 linjer)
 
@@ -1121,7 +1121,7 @@ the fish tubs (docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
   - 58 `tubPack(dims, spec, seed)`
   - 91 `karRefund()`
 
-## `src/js/core/07-harbours.js` (546 linjer)
+## `src/js/core/07-harbours.js` (611 linjer)
 
 harbours: quays, berths and mooring
 
@@ -1156,18 +1156,26 @@ harbours: quays, berths and mooring
   - 398 `mottakOpen(H)`
   - 400 `mottakNext(H)`
   - 404 `mottakWhen(H, no, from)`
-  - 410 `startLanding(ops)`
-  - 425 `finishLanding()`
-  - 433 `iceChute(kg)`
-- **435** the bunker quay: moving along the harbour and filling fuel
-  - 448 `quayPos(b)`
-  - 459 `portBusy(b)`
-  - 460 `startShift(to, after)`
-  - 470 `startFueling(ops)`
-  - 483 `quayMinute()`
-  - 499 `buyIce(kg, free)`
-- **509** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
-  - 515 `shopBuy(k, kg, free)`
+- **410** The queue at the plant (docs/planer/etter-tonys-test.md K1–K4, K6; Jonas 07.11.2026, V2 A and V3 A)
+  - 421 `landSlots(pt)`
+  - 422 `landQueueOn()`
+  - 424 `landQueueAsk(force)`
+  - 444 `landQueueGo()`
+  - 451 `landQueueEnd()`
+  - 457 `landLook(pts)`
+  - 463 `startLanding(ops)`
+  - 477 `landStart(pt, lp, kg, ops)`
+  - 488 `finishLanding()`
+  - 497 `iceChute(kg)`
+- **499** the bunker quay: moving along the harbour and filling fuel
+  - 512 `quayPos(b)`
+  - 523 `portBusy(b)`
+  - 524 `startShift(to, after)`
+  - 534 `startFueling(ops)`
+  - 547 `quayMinute()`
+  - 564 `buyIce(kg, free)`
+- **574** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
+  - 580 `shopBuy(k, kg, free)`
 
 ## `src/js/core/07c-naust.js` (168 linjer)
 
@@ -2378,12 +2386,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1252 linjer)
+## `src/js/ui/phone/07-patch.js` (1253 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1245 `patch()`
+  - 1246 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2714,7 +2722,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
 - **116** the year view
 - **124** the species card
 
-## `src/js/ui/07-guide.js` (417 linjer)
+## `src/js/ui/07-guide.js` (436 linjer)
 
   - 1 `renderClock()`
   - 10 `mottakShut()`
@@ -2735,10 +2743,12 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 270 `panelPort()`
   - 304 `portSlip()`
   - 378 `landWarn(p)`
-  - 391 `landPage()`
-  - 406 `panelLog()`
-  - 411 `renderPanel()`
-  - 415 `panelBusy()`
+  - 392 `landQText(short)`
+  - 400 `landQOthers()`
+  - 409 `landPage()`
+  - 425 `panelLog()`
+  - 430 `renderPanel()`
+  - 434 `panelBusy()`
 
 ## `src/js/ui/07b-first-trip.js` (304 linjer)
 
@@ -2795,37 +2805,37 @@ Garderoben: the player changes how his figure looks (Jonas 10.10.2026)
 - **14** the right-hand side: what the current tab offers
 - **50** the little renderer
 
-## `src/js/ui/08-actions.js` (446 linjer)
+## `src/js/ui/08-actions.js` (449 linjer)
 
 actions
 
   - 6 `doAct(el)`
-  - 75 `panelInput(e)`
-  - 81 `panelChange(e)`
-  - 104 `landConf(H, q, acc)`
-  - 142 `sell()`
-- **262** modal
-  - 264 `modal(html)`
-  - 273 `boatUnnamed()`
-  - 274 `boatChristen(nm)`
-  - 276 `showIntro(namesOnly)`
-- **294** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
-  - 299 `awayStart(mins, realMs)`
-  - 300 `awayEnd()`
-  - 301 `showAway(A)`
-- **328** time
-  - 334 `playMinutes(n, away)`
-  - 338 `catchUp(realMs)`
-  - 349 `tick()`
-  - 386 `deliverOrder()`
-- **396** chrome
-  - 397 `applyLang()`
-- **410** screens: full-screen 3D, or the chart plotter for route planning
-  - 411 `setBodyView(v3d)`
-  - 416 `openPlotter()`
-  - 421 `plotSetRender()`
-  - 425 `plotSetOpen(on)`
-  - 438 `kinoUi()`
+  - 78 `panelInput(e)`
+  - 84 `panelChange(e)`
+  - 107 `landConf(H, q, acc)`
+  - 145 `sell()`
+- **265** modal
+  - 267 `modal(html)`
+  - 276 `boatUnnamed()`
+  - 277 `boatChristen(nm)`
+  - 279 `showIntro(namesOnly)`
+- **297** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
+  - 302 `awayStart(mins, realMs)`
+  - 303 `awayEnd()`
+  - 304 `showAway(A)`
+- **331** time
+  - 337 `playMinutes(n, away)`
+  - 341 `catchUp(realMs)`
+  - 352 `tick()`
+  - 389 `deliverOrder()`
+- **399** chrome
+  - 400 `applyLang()`
+- **413** screens: full-screen 3D, or the chart plotter for route planning
+  - 414 `setBodyView(v3d)`
+  - 419 `openPlotter()`
+  - 424 `plotSetRender()`
+  - 428 `plotSetOpen(on)`
+  - 441 `kinoUi()`
 
 ## `src/js/ui/08b-letter.js` (127 linjer)
 
@@ -2895,12 +2905,12 @@ actions
 - **73** the club's notice board: fixed lines, never free text (F2, 20261030160000_lag_board.sql)
 - **155** the week's quiz: five questions from the bank, the same for everyone in a game week
 
-## `src/js/ui/10-rod-acts.js` (101 linjer)
+## `src/js/ui/10-rod-acts.js` (104 linjer)
 
 ---------- the jig game: jigging by hand yourself, and the buttons and hooks around it ----------
 
 - **1** the jig game: jigging by hand yourself, and the buttons and hooks around it
-  - 99 `refreshAll()`
+  - 102 `refreshAll()`
 
 ## `src/js/ui/10-gear-ui.js` (240 linjer)
 
@@ -2932,14 +2942,14 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 224 `wpActCycle(w)`
   - 229 `gearDoAct(act, el)`
 
-## `src/js/ui/10c-dock.js` (510 linjer)
+## `src/js/ui/10c-dock.js` (511 linjer)
 
 ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 
 - **1** the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side
-- **409** the drawer
-  - 483 `renderActs()`
-  - 496 `showroomTick()`
+- **410** the drawer
+  - 484 `renderActs()`
+  - 497 `showroomTick()`
 
 ## `src/js/ui/10d-helm.js` (51 linjer)
 
