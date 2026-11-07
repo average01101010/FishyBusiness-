@@ -723,11 +723,12 @@ body.v3d #gps3d:not([hidden]){display:block;position:absolute;z-index:4;left:8px
 /* folding the boxes (S.settings.hudMin, plotMin; 04-panels-instruments.js hudFold) and «Vis HUD» off (hudOff) */
 #hud{--hz:1} #hud .hmin,#plotMin{flex:none;width:calc(44px / var(--hz,1));height:calc(44px / var(--hz,1));margin:0;padding:0;border:0;color:#fff;font:700 calc(15px / var(--hz,1))/1 var(--sans);text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;
   background:radial-gradient(circle,rgba(6,16,24,.85) 0 calc(11px / var(--hz,1)),rgba(255,255,255,.32) calc(11px / var(--hz,1)) calc(12px / var(--hz,1)),transparent calc(12.5px / var(--hz,1)))}   /* a finger's target of 44 px (UI 2, U2-1, K7) round a small disc */
-#hud .hmin{pointer-events:auto} #hud .hd{padding-right:calc(30px / var(--hz,1))} #hud .hd .hmin{position:absolute;top:calc(-6px / var(--hz,1));right:calc(-5px / var(--hz,1));margin:0}
+#hud .hmin{pointer-events:auto} body.hudcard #hud .hd{padding-right:calc(30px / var(--hz,1))} #hud .hd .hmin{position:absolute;top:calc(-6px / var(--hz,1));right:calc(-5px / var(--hz,1));margin:0}
 /* the strip (UI 2, U2-1, docs/planer/ui-2-staaende.md 4.2, 06.11.2026): three lines of fixed height. 1: the clock, the state with its
    dot, the till; 2: diesel, hold, energy and sea as an icon and a figure, coloured when they warn; 3: the next event or the warning
    that applies now (.st.nx, the first trip's target), the deck's kg at its end. A tap on it gives the whole box as a card */
 body.hudstrip #hud,body.hudcard #hud{pointer-events:auto}
+@media (orientation:landscape){body.v3d #hud{pointer-events:auto;cursor:pointer}}   /* on its side a tap on the whole box folds it (no «–» since 07.11.2026); the 3D view is not dragged through its corner, as through the strip */
 body.hudstrip #hud{cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;height:60px;min-width:0!important;padding:5px 9px 5px!important}
 #hud .hs1,#hud .hs2{display:flex;align-items:center;gap:6px;white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.2}
 #hud .hs1{font-size:12px} #hud .hs1 .ht{flex:none;color:rgba(230,240,245,.78)} #hud .hs1 .hs{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:650} #hud .hs1 .hc{flex:none;color:#fff;font-weight:700}

@@ -702,3 +702,10 @@
 2026-11-07 10:38	ccr-fc7a11b2-nl5jor	5607da82+	uishots	OK	86	lite	samtidig	
 2026-11-07 10:39	ccr-fc7a11b2-nl5jor	5607da82+	dockrow	OK	41	lite	samtidig	
 2026-11-07 11:19	ccr-fc7a11b2-nl5jor	5607da82+	tut	OK	2391	lite	alene	
+2026-11-07 11:46	ccr-fc7a11b2-nl5jor	66c3dd74+	hudtest	OK	24	lite	alene	
+2026-11-07 11:47	ccr-fc7a11b2-nl5jor	66c3dd74+	docktest	OK	59	lite	alene	
+2026-11-07 11:49	ccr-fc7a11b2-nl5jor	66c3dd74+	roetest	OK	120	lite	samtidig	
+2026-11-07 11:49	ccr-fc7a11b2-nl5jor	66c3dd74+	uishots	OK	85	lite	samtidig	
+2026-11-07 11:49	ccr-fc7a11b2-nl5jor	66c3dd74+	dockrow	OK	40	lite	samtidig	
+2026-11-07 12:10	ccr-fc7a11b2-nl5jor	66c3dd74+	tut	OK	1266	lite	alene	
+2026-11-07 12:12	ccr-fc7a11b2-nl5jor	66c3dd74+	docktest	OK	60	lite	alene	

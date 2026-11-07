@@ -201,7 +201,7 @@ function renderHud(){
     (streakPct() > 0 ? '<div class="row"><span>Bonus</span><b>+' + fmt(streakPct(), 0) + ' %</b></div>' : '') +
     (S.bank && (S.bank.skatt >= 1 || S.bank.spare >= 1) ? '<div class="row"><span>' + L('Skatt · spart', 'Tax · saved') + '</span><b>' + kr(Math.round(S.bank.skatt)) + ' · ' + kr(Math.round(S.bank.spare)) + '</b></div>' : '') + '</div>';
   setHtml(hud, '<div class="hd"><span>' + dayStr(H) + ' ' + hm(H) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(cashShown()) + '</b>' +
-    (card ? '<button type="button" class="hmin" data-hcard aria-label="' + L('Lukk', 'Close') + '">✕</button>' : '<button type="button" class="hmin" data-hmin="hud" aria-label="' + L('Minimer', 'Minimise') + '">–</button>') + '</div>' +
+    (card ? '<button type="button" class="hmin" data-hcard aria-label="' + L('Lukk', 'Close') + '">✕</button>' : '') + '</div>' +   // (no «–» on the whole box: a tap on it folds it, Jonas 07.11.2026)
     '<div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + hudLine3(card ? 'card' : 'box') + gauges + (now.length ? '<div class="hnow">' + now.join('') + '</div>' : '') + full);
   }
   // the compass and the plotter's instruments take their room from the box (--hudW, --gpsTop): measured when its content has changed and
@@ -300,17 +300,20 @@ const INSTR = (() => {
   document.addEventListener('visibilitychange', () => { if (!document.hidden) show(); });
   return {show, renderGPS, echoOn};
 })();
-// a tap in the box: «Kjør dit» to the buoy, the fold and the card, the whole table, the rules line (the Regler app); on the strip itself,
-// the whole box as a card upright (U2-1), and on its side the whole box again (the strip there is the box folded, 07.11.2026)
+// a tap in the box: «Kjør dit» to the buoy, the card's ✕, the whole table, the rules line (the Regler app); on the strip itself, the whole
+// box as a card upright (U2-1), and on its side the whole box again (the strip there is the box folded); and on its side a tap anywhere
+// else on the whole box folds it to the strip (Jonas 07.11.2026: «Fjern plusstegnet fra den øverste statusboksen slik at den fungerer
+// bare ved å trykke på stripa», and of the box's «–»: «Du har ikke fjernet dette minustegnet»), but not in the first trip, where a tap on
+// the box does nothing as before (the guide's rings stand round its third line)
 hud.addEventListener('click', e => {
   const go = e.target.closest('[data-hgo]'); if (go){ e.stopPropagation(); if (go.dataset.hgo === 'yard'){ hudGoYard(); return; } const s = mySets().find(x => String(x.id) === go.dataset.hgo); if (s) DOCK.goTo(s); return; }
   if (e.target.closest('[data-hrest]')){ e.stopPropagation(); hudCardOpen(false); doAct({dataset:{act:'rest'}, disabled:false}); return; }   // the bunk from the box (U2-2)
-  if (e.target.closest('[data-hmin]')){ e.stopPropagation(); hudFold('hud'); return; }
   if (e.target.closest('[data-hcard]')){ e.stopPropagation(); hudCardOpen(false); return; }
   if (e.target.closest('[data-hfull]')){ e.stopPropagation(); S.settings.hudFull = !S.settings.hudFull; save(); renderHud(); return; }
   if (e.target.closest('.rlink')){ PHONE.open('regler'); return; }
   if (document.body.classList.contains('hudcard')){ e.stopPropagation(); hudCardOpen(false); return; }   // a tap on the card itself closes it, as the ✕ does
-  if (document.body.classList.contains('hudstrip')){ e.stopPropagation(); if (!hudPortrait() && S.settings.hudMin) hudFold('hud'); else hudCardOpen(true); }
+  if (document.body.classList.contains('hudstrip')){ e.stopPropagation(); if (!hudPortrait() && S.settings.hudMin) hudFold('hud'); else hudCardOpen(true); return; }
+  if (!hudPortrait() && document.body.classList.contains('v3d') && !tutOn() && !e.target.closest('button,a,input,select,label')){ e.stopPropagation(); hudFold('hud'); }
 });
 // the card over the chart: a tap outside or on the card closes it (as the dock's fans close), so do Escape and a turn of the screen,
 // and the first trip when it points at something under it (07b-first-trip.js tutTip)
