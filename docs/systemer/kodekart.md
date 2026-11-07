@@ -63,7 +63,7 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 455 `bridgeUnderUnit(br, extra)`
   - 460 `portApproach(pt)`
 
-## `src/js/core/01b-mapdata.js` (212 linjer)
+## `src/js/core/01b-mapdata.js` (215 linjer)
 
 MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in packs from map/
 
@@ -93,14 +93,14 @@ MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in p
   - 143 `mapBlock(L, bx, by)`
   - 155 `mapHasBlock(L, bx, by)`
   - 158 `mapBlockKnown(L, bx, by)`
-  - 160 `rcell(L, ix, iy)`
-  - 166 `rbil(L, p)`
-  - 171 `rbilM(L, x, z)`
-  - 176 `mapHasM(L, x0, z0, x1, z1)`
-  - 183 `mapVec(pk, name)`
-  - 190 `mapViewReady(x0, y0, x1, y1, then, kinds)`
-  - 197 `simAreaReady()`
-  - 207 `mapDrop(pk)`
+  - 161 `rcell(L, ix, iy)`
+  - 169 `rbil(L, p)`
+  - 174 `rbilM(L, x, z)`
+  - 179 `mapHasM(L, x0, z0, x1, z1)`
+  - 186 `mapVec(pk, name)`
+  - 193 `mapViewReady(x0, y0, x1, y1, then, kinds)`
+  - 200 `simAreaReady()`
+  - 210 `mapDrop(pk)`
 
 ## `src/js/core/01c-vec.js` (223 linjer)
 
@@ -400,36 +400,36 @@ fleet: each vessel keeps its own state; the company holds the rest. The simulati
   - 1246 `spCatchable(sp, H)`
   - 1248 `ordersTick(H)`
 
-## `src/js/core/03b-sea.js` (157 linjer)
+## `src/js/core/03b-sea.js` (162 linjer)
 
 SEA: fetch, wind sea, swell
 
 - **1** SEA: fetch, wind sea, swell
   - 11 `fetchRay(x, y, dx, dy)`
-  - 25 `fetchAt(p, from)`
-  - 32 `fetchCell(ix, iy, k)`
-  - 43 `fetchSector(p, k)`
-  - 57 `fetchFine(p, from)`
-  - 67 `fetchHere(p, from)`
-  - 68 `fetchField(p, from)`
-  - 78 `hsWMO(U)`
-  - 83 `hsWind(U, F)`
-  - 85 `fetchCap(U)`
-  - 86 `tpWind(U, F)`
-  - 90 `wdAt(H, p)`
-  - 91 `weAt(H, p)`
-  - 100 `swellOpen(H, p)`
-  - 109 `swellFactor(p)`
-  - 111 `hsParts(p, H)`
-  - 116 `hsAt(p, H)`
-  - 121 `hsOpen(H, p)`
-  - 123 `fcHsOpen(H, now, p)`
-  - 124 `hsAtFc(p, H, now)`
-  - 130 `seaState(hs)`
-  - 133 `seaHere(p, H)`
-  - 143 `seaDirOf(rel)`
-  - 150 `seaPartsNear(p, H)`
-  - 152 `seaDirF(p, H, head)`
+  - 30 `fetchAt(p, from)`
+  - 37 `fetchCell(ix, iy, k)`
+  - 48 `fetchSector(p, k)`
+  - 62 `fetchFine(p, from)`
+  - 72 `fetchHere(p, from)`
+  - 73 `fetchField(p, from)`
+  - 83 `hsWMO(U)`
+  - 88 `hsWind(U, F)`
+  - 90 `fetchCap(U)`
+  - 91 `tpWind(U, F)`
+  - 95 `wdAt(H, p)`
+  - 96 `weAt(H, p)`
+  - 105 `swellOpen(H, p)`
+  - 114 `swellFactor(p)`
+  - 116 `hsParts(p, H)`
+  - 121 `hsAt(p, H)`
+  - 126 `hsOpen(H, p)`
+  - 128 `fcHsOpen(H, now, p)`
+  - 129 `hsAtFc(p, H, now)`
+  - 135 `seaState(hs)`
+  - 138 `seaHere(p, H)`
+  - 148 `seaDirOf(rel)`
+  - 155 `seaPartsNear(p, H)`
+  - 157 `seaDirF(p, H, head)`
 
 ## `src/js/core/03c-stability.js` (95 linjer)
 
@@ -1582,7 +1582,7 @@ Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026;
   - 171 `kvWhatHav(r)`
   - 184 `kvFinish()`
 
-## `src/js/core/10-gear.js` (885 linjer)
+## `src/js/core/10-gear.js` (887 linjer)
 
 passive gear: nets, line and pots that stand in the sea while the boat is away
 
@@ -1619,57 +1619,57 @@ passive gear: nets, line and pots that stand in the sea while the boat is away
   - 238 `buyGate(what, spec, lv)`
   - 262 `tierGate(k, lv)`
   - 281 `tierBuy(k, lv)`
-  - 289 `buyGear(what, spec, n)`
-  - 324 `joinNets(id1, id2)`
-  - 325 `splitNets(id, n)`
-- **327** rules for setting at a place
-  - 329 `segDist(p, a, b)`
-  - 330 `nearSet(p, km)`
-  - 331 `gearRules(kind, spec, p)`
-  - 365 `setGeom(p, hdg, km)`
-  - 372 `setGeomExact(p, hdg, km)`
-- **374** the work at sea: status stays 'fishing' with b.gop, so deck work, rest rules, auto-return and the tub pause work as before
-  - 375 `gopUnitMin(g, H, hs)`
-  - 400 `startSet(kind, spec, fishAfter, hdg)`
-  - 423 `startHaul(sid, reset, fishAfter)`
-  - 442 `endLines(op, kind, d)`
-  - 445 `thiefOf(s)`
-  - 455 `haulSlow(g)`
-  - 460 `gearOpMinute(H, W, hs)`
-  - 484 `finishSet(g, H)`
-  - 496 `gopEnd(g)`
-  - 498 `gopAfter(b = S.boat)`
-  - 502 `gearUnset(s, n)`
-  - 512 `gopAbort(why)`
-  - 532 `gearBack(s, n, cond, W)`
-  - 539 `wearNets(s, g)`
-  - 548 `haulUnit(g, H, SL)`
-  - 566 `landFish(sp, kg, key, mesh, p, H, hook, fresh, g)`
-  - 582 `netLen(w)`
-  - 583 `retain(sp, key, mesh, w)`
-  - 590 `sampleSel(sp, key, mesh, p, H)`
-  - 593 `landCrabs(g, n, kg)`
-  - 604 `finishHaul(g, H)`
-- **640** a station on a route or the standing plan: haul what stands here and set it again, or set new gear if nothing stands here.
-  - 643 `cycleSpec(kind, want, n)`
-  - 657 `gearCycle(w, fishAfter)`
-  - 675 `opsGearNeeds(o)`
-  - 685 `opsGearAfter()`
-- **691** in the sea, every hour: catch, losses, weather and deadlines (company level)
-  - 692 `soakHour(s, H)`
-  - 726 `gearHour(H)`
-  - 760 `reportLost(sid)`
-  - 768 `netMended(l)`
-- **769** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
-  - 775 `egnOrder(lk, n, bait)`
-  - 789 `egnHands()`
-  - 798 `egnSelf(lk, n, bait)`
-  - 819 `stripSelf(lk, bait, n, then)`
-  - 833 `mendSelf(nid)`
-  - 844 `botOrder(nid)`
-  - 855 `gearJob(j)`
-  - 867 `gearJobCancel(j)`
-  - 874 `shoreTick()`
+  - 291 `buyGear(what, spec, n)`
+  - 326 `joinNets(id1, id2)`
+  - 327 `splitNets(id, n)`
+- **329** rules for setting at a place
+  - 331 `segDist(p, a, b)`
+  - 332 `nearSet(p, km)`
+  - 333 `gearRules(kind, spec, p)`
+  - 367 `setGeom(p, hdg, km)`
+  - 374 `setGeomExact(p, hdg, km)`
+- **376** the work at sea: status stays 'fishing' with b.gop, so deck work, rest rules, auto-return and the tub pause work as before
+  - 377 `gopUnitMin(g, H, hs)`
+  - 402 `startSet(kind, spec, fishAfter, hdg)`
+  - 425 `startHaul(sid, reset, fishAfter)`
+  - 444 `endLines(op, kind, d)`
+  - 447 `thiefOf(s)`
+  - 457 `haulSlow(g)`
+  - 462 `gearOpMinute(H, W, hs)`
+  - 486 `finishSet(g, H)`
+  - 498 `gopEnd(g)`
+  - 500 `gopAfter(b = S.boat)`
+  - 504 `gearUnset(s, n)`
+  - 514 `gopAbort(why)`
+  - 534 `gearBack(s, n, cond, W)`
+  - 541 `wearNets(s, g)`
+  - 550 `haulUnit(g, H, SL)`
+  - 568 `landFish(sp, kg, key, mesh, p, H, hook, fresh, g)`
+  - 584 `netLen(w)`
+  - 585 `retain(sp, key, mesh, w)`
+  - 592 `sampleSel(sp, key, mesh, p, H)`
+  - 595 `landCrabs(g, n, kg)`
+  - 606 `finishHaul(g, H)`
+- **642** a station on a route or the standing plan: haul what stands here and set it again, or set new gear if nothing stands here.
+  - 645 `cycleSpec(kind, want, n)`
+  - 659 `gearCycle(w, fishAfter)`
+  - 677 `opsGearNeeds(o)`
+  - 687 `opsGearAfter()`
+- **693** in the sea, every hour: catch, losses, weather and deadlines (company level)
+  - 694 `soakHour(s, H)`
+  - 728 `gearHour(H)`
+  - 762 `reportLost(sid)`
+  - 770 `netMended(l)`
+- **771** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
+  - 777 `egnOrder(lk, n, bait)`
+  - 791 `egnHands()`
+  - 800 `egnSelf(lk, n, bait)`
+  - 821 `stripSelf(lk, bait, n, then)`
+  - 835 `mendSelf(nid)`
+  - 846 `botOrder(nid)`
+  - 857 `gearJob(j)`
+  - 869 `gearJobCancel(j)`
+  - 876 `shoreTick()`
 
 ## `src/js/core/10b-gearcare.js` (273 linjer)
 
@@ -2175,7 +2175,7 @@ the logo (src/brand/logo.svg, the user's anchor of 03.11.2026), filled with curr
   - 219 `codeRead(code)`
   - 227 `loadCode(code)`
 
-## `src/js/ui/03a-chart.js` (157 linjer)
+## `src/js/ui/03a-chart.js` (226 linjer)
 
 THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, the graticule and the place names
 
@@ -2183,17 +2183,19 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 12 `vReader(b)`
   - 21 `vecPath(v, sc, tol, keep)`
   - 41 `chartPath0(px, out)`
-  - 48 `vecPathsIn(v, sc, r)`
-  - 60 `chartPathsIn(pk, r)`
-  - 61 `chartPath(pk, lv, px)`
-  - 64 `chartCoast(ctx, x0, y0, kx, ky, W, H, dpr, fish)`
-  - 93 `fmtDM(v, pos, neg)`
-  - 97 `chartGrid(ctx, x0, y0, kx, ky, W, H, dpr, fish)`
-- **118** the place names
-  - 121 `chartNamesOf(pk, entry, sc, ox, oy)`
-  - 134 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
+  - 55 `chartRings0(v)`
+  - 66 `chartPath0In(out, box)`
+  - 111 `vecPathsIn(v, sc, r)`
+  - 123 `chartPathsIn(pk, r)`
+  - 124 `chartPath(pk, lv, px)`
+  - 127 `chartCoast(ctx, x0, y0, kx, ky, W, H, dpr, fish)`
+  - 162 `fmtDM(v, pos, neg)`
+  - 166 `chartGrid(ctx, x0, y0, kx, ky, W, H, dpr, fish)`
+- **187** the place names
+  - 190 `chartNamesOf(pk, entry, sc, ox, oy)`
+  - 203 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (820 linjer)
+## `src/js/ui/03-map.js` (847 linjer)
 
 ---------- map ----------
 
@@ -2222,28 +2224,28 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 194 `ruLayerCanvas(A)`
   - 203 `chartVectors(V, again)`
   - 262 `chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st)`
-  - 268 `chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr)`
-  - 365 `scheduleChart()`
-  - 368 `renderBase()`
-  - 382 `updateMapButtons()`
-  - 394 `tapName(mp, rr)`
-  - 399 `renderStatic()`
-  - 500 `portIcon(p, s, u)`
-  - 521 `anchorPath(x, y, s, u)`
-  - 529 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 548 `scheduleStatic()`
-  - 553 `aisTrack(id, H)`
-  - 558 `aisInfo(n)`
-  - 577 `sjvChartSvg(u, bp)`
-  - 587 `renderAisCard()`
-  - 588 `renderDyn()`
-  - 673 `pinAdd(mp)`
-  - 678 `pinOpen(id, fresh)`
-  - 698 `pinKb()`
-  - 729 `ptrUp(e)`
-  - 759 `unzoom()`
-  - 766 `portByLabel(pt)`
-  - 771 `addWaypoint(pt)`
+  - 269 `chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr)`
+  - 392 `scheduleChart()`
+  - 395 `renderBase()`
+  - 409 `updateMapButtons()`
+  - 421 `tapName(mp, rr)`
+  - 426 `renderStatic()`
+  - 527 `portIcon(p, s, u)`
+  - 548 `anchorPath(x, y, s, u)`
+  - 556 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 575 `scheduleStatic()`
+  - 580 `aisTrack(id, H)`
+  - 585 `aisInfo(n)`
+  - 604 `sjvChartSvg(u, bp)`
+  - 614 `renderAisCard()`
+  - 615 `renderDyn()`
+  - 700 `pinAdd(mp)`
+  - 705 `pinOpen(id, fresh)`
+  - 725 `pinKb()`
+  - 756 `ptrUp(e)`
+  - 786 `unzoom()`
+  - 793 `portByLabel(pt)`
+  - 798 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (267 linjer)
 
@@ -3306,7 +3308,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **70** a new build is out: «Oppdater nå» (Jonas 06.11.2026: «Varsel ved oppdatering for å kjøre refresh på appen»)
 - **104** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (366 linjer)
+## `src/js/ui/11-boot.js` (375 linjer)
 
 ---------- boot ----------
 
@@ -3328,19 +3330,19 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 104 `bootgSafe()`
   - 115 `bootgSay()`
   - 116 `bootMap()`
-  - 138 `boot3dAsk()`
-  - 140 `boot3dShown()`
-  - 149 `boot3dSend()`
-  - 150 `modelsReady()`
-  - 151 `dataEls()`
-  - 152 `dataEarly()`
-  - 162 `dataGet(el, opt)`
-  - 176 `bootData()`
-  - 183 `bootDataLate()`
-  - 198 `modelsLabel()`
-  - 205 `bootMapLoad()`
-  - 233 `bootGame()`
-  - 348 `bootFail(e)`
+  - 141 `boot3dAsk()`
+  - 146 `boot3dShown()`
+  - 156 `boot3dSend()`
+  - 157 `modelsReady()`
+  - 158 `dataEls()`
+  - 159 `dataEarly()`
+  - 169 `dataGet(el, opt)`
+  - 183 `bootData()`
+  - 190 `bootDataLate()`
+  - 205 `modelsLabel()`
+  - 212 `bootMapLoad()`
+  - 240 `bootGame()`
+  - 357 `bootFail(e)`
 
 ## `src/js/vessel3d.js` (1651 linjer)
 
