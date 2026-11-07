@@ -2147,7 +2147,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 765 `portByLabel(pt)`
   - 770 `addWaypoint(pt)`
 
-## `src/js/ui/03b-route.js` (266 linjer)
+## `src/js/ui/03b-route.js` (267 linjer)
 
 ---------- the route editor: waypoint names, a timeline for the list, undo and redo, moving and inserting points ----------
 
@@ -2181,10 +2181,10 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 191 `deepNear(p, maxKm)`
   - 201 `leiaStops()`
   - 206 `leiaCompare()`
-- **223** the sea along the route (Ø8, 06.11.2026): the wave height on each leg at the minute the boat is there, from the game's own sea
-  - 230 `draftSea(tl)`
-  - 243 `routeSeaWatch()`
-  - 248 `routeSeaDraw()`
+- **223** the sea along the route (Ø8, 06.11.2026): the wave height on each leg at the minute the boat is there, as the local forecast gives it
+  - 231 `draftSea(tl)`
+  - 244 `routeSeaWatch()`
+  - 249 `routeSeaDraw()`
 
 ## `src/js/ui/03g-planmap.js` (117 linjer)
 
@@ -2254,7 +2254,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 89 `srchCard()`
   - 113 `srchSvg(u)`
 
-## `src/js/ui/04-panels-instruments.js` (331 linjer)
+## `src/js/ui/04-panels-instruments.js` (334 linjer)
 
 ---------- estimates ----------
 
@@ -2272,14 +2272,14 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 126 `hullWarn(b)`
   - 135 `hudGoYard()`
   - 144 `renderHud()`
-  - 211 `liveFrac()`
-  - 212 `livePose(frac)`
-  - 235 `vnoise2(x, y, s)`
-  - 241 `microBottom(p, d)`
-- **243** instruments: GPS and echo sounder
-  - 315 `hudCardOpen(on)`
-  - 322 `hudClasses(stripOn, cardOn)`
-  - 326 `hudFold(which)`
+  - 214 `liveFrac()`
+  - 215 `livePose(frac)`
+  - 238 `vnoise2(x, y, s)`
+  - 244 `microBottom(p, d)`
+- **246** instruments: GPS and echo sounder
+  - 318 `hudCardOpen(on)`
+  - 325 `hudClasses(stripOn, cardOn)`
+  - 329 `hudFold(which)`
 
 ## `src/js/ui/05-tattoo-art.js` (169 linjer)
 
@@ -2891,12 +2891,12 @@ actions
 - **73** the club's notice board: fixed lines, never free text (F2, 20261030160000_lag_board.sql)
 - **155** the week's quiz: five questions from the bank, the same for everyone in a game week
 
-## `src/js/ui/10-rod-acts.js` (100 linjer)
+## `src/js/ui/10-rod-acts.js` (101 linjer)
 
 ---------- the jig game: jigging by hand yourself, and the buttons and hooks around it ----------
 
 - **1** the jig game: jigging by hand yourself, and the buttons and hooks around it
-  - 98 `refreshAll()`
+  - 99 `refreshAll()`
 
 ## `src/js/ui/10-gear-ui.js` (240 linjer)
 

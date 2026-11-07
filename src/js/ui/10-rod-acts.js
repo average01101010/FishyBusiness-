@@ -92,7 +92,8 @@ hooks.onEquip = () => { updateMapButtons(); INSTR.show(); heatReset(); };
 hooks.onRadio = (no, en) => toast('📻 Kystradio: ' + (S.lang === 'no' ? no : en), 15000);
 hooks.onMsg = () => { PHONE.setBadge(); const m = S.msgs[S.msgs.length - 1]; if (m && !PHONE.isOpen()) toast('✉ ' + m.from + ': ' + (S.lang === 'no' ? m.no : m.en), 10000); if (PHONE.isOpen() && (PHONE.app === 'meld' || PHONE.app === 'home')) PHONE.render(); };
 $('instrBtn').onclick = () => { S.settings.instr = S.settings.instr === false; save(); updateMapButtons(); INSTR.show(); };
-if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => renderBase());
+// the chart is drawn once the game is built (11-boot.js); a theme change before that waits for it
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (S && SIMREADY) renderBase(); });
 $('lang').onclick = () => { S.lang = S.lang === 'no' ? 'en' : 'no'; refreshAll(); save(); };
 $('pace').onchange = e => { if (WCLOCK.on){ e.target.value = '1'; return; } S.mult = +e.target.value; save(); };
 function refreshAll(){ applyLang(); renderTabs(); applyView(); renderBase(); renderStatic(); renderDyn(); renderHud(); renderClock(); renderPanel(); $('pace').value = String(S.mult); }
