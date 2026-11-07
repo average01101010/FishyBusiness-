@@ -494,3 +494,8 @@
 2026-11-07 01:42	ccr-208d78a1-ruhxll	fdac21e3	hulltest	OK	69	lite	samtidig	
 2026-11-07 01:42	ccr-208d78a1-ruhxll	fdac21e3	trip2	OK	30	lite	samtidig	
 2026-11-07 01:42	ccr-208d78a1-ruhxll	fdac21e3	boottest	OK	22	lite	samtidig	
+2026-11-07 01:53	ccr-bc0543eb-umtheg	e0300e6a	fleet3test	OK	15	lite	samtidig	
+2026-11-07 01:53	ccr-bc0543eb-umtheg	e0300e6a	vesseltest	OK	27	lite	samtidig	
+2026-11-07 01:54	ccr-bc0543eb-umtheg	e0300e6a	docktest	FEIL	63	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-07 01:54	ccr-bc0543eb-umtheg	e0300e6a	shoptest	OK	29	lite	samtidig	
+2026-11-07 01:54	ccr-bc0543eb-umtheg	e0300e6a	fleet2test	OK	32	lite	samtidig	
