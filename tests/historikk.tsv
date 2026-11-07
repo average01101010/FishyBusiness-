@@ -689,3 +689,16 @@
 2026-11-07 09:46	ccr-fc7a11b2-nl5jor	4866ccb2+	roetest	OK	120	lite	samtidig	
 2026-11-07 09:46	ccr-fc7a11b2-nl5jor	4866ccb2+	dockrow	OK	41	lite	samtidig	
 2026-11-07 09:46	ccr-fc7a11b2-nl5jor	4866ccb2+	trip2	OK	36	lite	samtidig	
+2026-11-07 10:16	ccr-fc7a11b2-nl5jor	5607da82+	hudtest	OK	23	lite	alene	
+2026-11-07 10:26	ccr-fc7a11b2-nl5jor	5607da82+	colregtest	OK	602	lite	samtidig	
+2026-11-07 10:26	ccr-fc7a11b2-nl5jor	5607da82+	uishots	OK	87	lite	samtidig	
+2026-11-07 10:28	ccr-fc7a11b2-nl5jor	5607da82+	hudtest	OK	23	lite	alene	
+2026-11-07 10:29	ccr-fc7a11b2-nl5jor	5607da82+	docktest	FEIL	62	lite	alene	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-07 10:31	ccr-fc7a11b2-nl5jor	5607da82+	docktest	OK	60	lite	alene	
+2026-11-07 10:33	ccr-fc7a11b2-nl5jor	5607da82+	hudtest	OK	24	lite	alene	
+2026-11-07 10:36	ccr-fc7a11b2-nl5jor	5607da82+	docktest	OK	61	lite	alene	
+2026-11-07 10:37	ccr-fc7a11b2-nl5jor	5607da82+	hudtest	OK	25	lite	samtidig	
+2026-11-07 10:38	ccr-fc7a11b2-nl5jor	5607da82+	roetest	OK	122	lite	samtidig	
+2026-11-07 10:38	ccr-fc7a11b2-nl5jor	5607da82+	uishots	OK	86	lite	samtidig	
+2026-11-07 10:39	ccr-fc7a11b2-nl5jor	5607da82+	dockrow	OK	41	lite	samtidig	
+2026-11-07 11:19	ccr-fc7a11b2-nl5jor	5607da82+	tut	OK	2391	lite	alene	
