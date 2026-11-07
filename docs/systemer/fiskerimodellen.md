@@ -48,7 +48,7 @@
 - **Stimer** (`school`, `SCHOOL`): et finere mønster (400 m) som svømmer 0,5–1 km i timen. Fra B2 svømmer stimene dit arten vandrer på stedet og i sesongen, i felt på 6 timer som toner over i hverandre (se 5.3c). Før hadde hver art én fast retning for hele kysten. Det gir ±15 % og er 1 i snitt, så fangsten over en dag er den samme, men bittet på ett sted kommer og går i løpet av en halvtime. Sonaren viser retningen (`schoolDrift`).
 - **Bestanden** (`STK`, `S.stock`, ruter på 2 km). Fra B3 (5.3d) er dette spillernes avvik, og bestanden på et sted er grunnlinja (hele flåtens trykk) × avviket: Den leses mellom de fire nærmeste rutene (`gridBilinear`), og fangsten trekkes fra de samme fire med samme vekter (`stockW`). Nedtrekket der du fisker er kg/K·Σw², altså mykere enn før, men det samlede uttaket er det samme. Gjenveksten har et minste steg og runder til 1e-4, så en rute kommer helt tilbake til 1: en rute på 0,5 er full igjen etter rundt 42 dager. Før stoppet den på 0,876, og krabbe på 0,667. Krabbe (`S.cstk`) er fortsatt én verdi per rute, som før, fordi teinekalibreringen hviler på det og varmekartet ikke viser krabbe.
 - **Fangst:** `density() × luck(sp) × targetF(sp) × innsats × værstraff`, deretter trekkes hver fisk for seg med egen vekt.
-  - Fisk under minstemålet slippes.
+  - Fisk under minstemålet slippes. Jonas 07.11.2026: `minKg` settes etter høstingsforskriften § 47 med sonene (nord og sør for 62° N, torsk innenfor 4 nm), ikke som spillverdier (valg 3 A; steg 59 i `docs/planer/koen.md`, ikke bygd ennå).
   - Kveite i fredningstiden eller over 100 kg slippes.
   - Uer utenfor juni–august er bare bifangst (×0,15).
 - **Kalibrering** (én person med håndjuksa, 8 timer, etter doblingen 04.10.2026):
