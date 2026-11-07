@@ -31,10 +31,14 @@ const LEIA_ST = {gen:0};
 // stops short of a shoal if the tide fell faster than the plan (sailReplan). 0 outside a route (the bake, the tests). The strict rule
 // (the safe depth, leiaLegFail strict) stays the chart's, as the route list's warnings (legHazard) read it.
 const LEIA_TIDE = {credit:0};
+// the speed the tide's and the ice's windows along a route are reckoned at: 6 knots, slow on purpose, so the window is long and the water
+// counted on is the lower (the safe side; it read BOAT.cruise, which no vessel has, and so was 6 always; with the boat's own cruising
+// speed the window was shorter and a route under Gisundbrua went nearer the skerries, obstest, 07.11.2026)
+const LEIA_KN = 6;
 const leiaLim = () => BOAT.draft + LEIA.minOver - LEIA_TIDE.credit;
 function leiaTideCredit(a, b){
   if (typeof tideCD !== 'function' || !S || S.t == null) return 0;
-  const H0 = S.t / 60, kn = Math.min(S.draftSpeed || 99, BOAT.cruise || 6), hrs = Math.min(36, dist(a, b) * 1.3 / (kn * 1.852) + 4);
+  const H0 = S.t / 60, kn = Math.min(S.draftSpeed || 99, LEIA_KN), hrs = Math.min(36, dist(a, b) * 1.3 / (kn * 1.852) + 4);
   let lo = Infinity;
   for (const p of [a, b]) for (let h = 0; h <= hrs; h += 0.25){ const z = tideCD(H0 + h, p); if (z < lo) lo = z; }
   return isFinite(lo) ? clamp(lo - LEIA.tideMargin, -0.5, 1) : 0;
@@ -48,7 +52,7 @@ function leiaTideCredit(a, b){
 const LEIA_ICE = {on:false, H0:0, H1:0, cap:0, lim:SEA_ICE_LIM};
 function leiaIceSet(a, b){
   if (typeof SEA_ICE === 'undefined' || !SEA_ICE || !S || S.t == null) return {on:false, H0:0, H1:0, cap:0, lim:SEA_ICE_LIM};
-  const H0 = S.t / 60, kn = Math.min(S.draftSpeed || 99, BOAT.cruise || 6), hrs = Math.min(240, dist(a, b) * 1.3 / (kn * 1.852) + 4), c = seaIceAt(a, H0), lim = seaIceLim();
+  const H0 = S.t / 60, kn = Math.min(S.draftSpeed || 99, LEIA_KN), hrs = Math.min(240, dist(a, b) * 1.3 / (kn * 1.852) + 4), c = seaIceAt(a, H0), lim = seaIceLim();
   return {on:true, H0, H1:H0 + hrs, cap:c >= lim ? c + 1 : 0, lim};
 }
 const leiaIceC = p => LEIA_ICE.on ? Math.max(seaIceAt(p, LEIA_ICE.H0), seaIceAt(p, LEIA_ICE.H1)) : 0;

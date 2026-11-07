@@ -24,7 +24,8 @@ const CFEED = (() => {
   function rate(){
     const fs = S.fsess, b = S.boat; if (!fs || b.status !== 'fishing') return '';
     const h = (S.t - fs.t0) / 60; if (h < 0.08) return '';
-    return '<div class="cf-rate"><span>' + L('Her', 'Here') + '</span><b>' + fmt(fs.kg, 0) + ' kg</b><span>·</span><b>' + fmt(fs.kg / h, 0) + ' kg/t</b></div>';
+    // only the rate (Jonas 06.11.2026, Tony's test: «Fjern HER, vis kun kg/t»): the kg so far are in the hold gauge and the strip
+    return '<div class="cf-rate"><b>' + fmt(fs.kg / h, 0) + L(' kg/t', ' kg/h') + '</b></div>';
   }
   function tick(){
     if (!el) mk();

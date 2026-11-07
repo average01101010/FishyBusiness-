@@ -190,6 +190,9 @@ function workAssign(as){
   for (const p of P){ p.st = null; p.why = null; }
   if (ctx.s === 'aground'){ for (const p of P){ p.st = 'pause'; p.why = 'aground'; } return P; }
   const n = {}, cnt = k => n[k] || 0, room = k => cnt(k) < stPlaces(k, ctx), put = (p, k, why) => { if (p.st) n[p.st]--; p.st = k; n[k] = cnt(k) + 1; if (why) p.why = why; };
+  // «Jukse selv» (ui/10-rod-acts.js): while you jig by hand yourself, you stay at the rail; the chains never send you to the table (Tony
+  // 06.11.2026: the skipper stood at the rail and at the table at once). Not while stopped to gut: then the jig game is off anyway
+  if (ctx.fiske && !ctx.stop && typeof window !== 'undefined' && window.jigActive){ const me = P.find(p => !p.c); if (me) put(me, 'fiske', 'jig'); }
   const free = () => P.filter(p => !p.st), bestOf = (L, k) => L.slice().sort((a, b) => workScore(b, k, ctx, 1) - workScore(a, k, ctx, 1))[0];
   // the helm, while she is driven: you, else the mate, else the skipper, else the best seaman
   if (ctx.ror){ const me = P.find(p => !p.c), m = P.find(p => p.c && p.c.mate), sk = typeof opsSkipper === 'function' && opsSkipper(), o = sk && P.find(p => p.c === sk);

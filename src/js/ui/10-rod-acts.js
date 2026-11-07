@@ -6,6 +6,10 @@
 window.JIGG = (() => {
   let on = false, st = 'jig', tNext = 0, t0 = 0, last = 0, raf = 0, due = 0, debt = 0, mult = 1, got = null, miss = 0, pre = 0, fNext = 0, dupT = -1e9;
   const SWEEP = 1.4, GR = [[0.06, 2], [0.15, 1.5], [0.3, 1]];   // seconds off the middle, and what the hit is worth
+  // jigging yourself pays (Jonas 06.11.2026, Tony's test: «Øk mengde man får på jukse selv til 5x kanskje?»): the bites are worth SELF times
+  // what your share of the hand jig would take on its own (jigMeShare, which the automatic catch leaves out while you play); the hit's
+  // 2×, 1.5×, 1× or 0.5× comes on top as before. One number to tune
+  const SELF = 5;
   const el = document.createElement('div'); el.id = 'jigUI'; el.hidden = true;
   el.innerHTML = '<div class="jig-msg"></div><div class="jig-bar"><i class="z1"></i><i class="z15"></i><i class="z2"></i><b class="jn"></b></div><button type="button" class="jig-btn"></button>';
   document.getElementById('mapwrap').appendChild(el);
@@ -15,10 +19,10 @@ window.JIGG = (() => {
   function kgps(){
     const b = S.boat, H = S.t / 60, sh = jigMeShare(); if (sh <= 0) return 0;
     const f = catchFactors(H, windAt(H), hsAt(b.pos, H)); let d = 0; for (const sp of SP) d += density(sp, b.pos, H) * luck(sp) * jigTake(sp, H);   // as fish() takes them: the jig factor (Greenland halibut next to none) and the tackle
-    return 30 * f.eff * sh * d * f.wpen * (1 - f.cold) / 3600 * simRate();
+    return SELF * 30 * f.eff * sh * d * f.wpen * (1 - f.cold) / 3600 * simRate();
   }
   // the next bite: about one fish a bite, 5 to 40 real seconds apart (4 to 8 on the first trip)
-  function schedule(now){ if (S.tut && S.tut.catch) tNext = now + (4 + Math.random() * 4) * 1000; else { const k = kgps(), mean = clamp(3 / Math.max(1e-6, k), 5, 40); tNext = now + mean * (0.6 + Math.random() * 0.8) * 1000; }
+  function schedule(now){ if (S.tut && S.tut.catch) tNext = now + (4 + Math.random() * 4) * 1000; else { const k = kgps() / SELF, mean = clamp(3 / Math.max(1e-6, k), 5, 40); tNext = now + mean * (0.6 + Math.random() * 0.8) * 1000; }   // (the bites' timing as before SELF: each bite carries more)
     // the wait has life (spilltest 3, U12; Jonas 05.11.2026, V5 A): a nudge on the line 1–3 s before the bite, and now and then one with
     // no bite after it, so a nudge is a sign and not a promise. The catch and the bites' timing are as before
     pre = tNext - (1 + Math.random() * 2) * 1000; if (pre < now + 400) pre = 0; fNext = now + (5 + Math.random() * 9) * 1000; }
@@ -85,6 +89,9 @@ hooks.onDeck = k => { const L = (no, en) => S.lang === 'no' ? no : en;
   if (k === 'stop'){ const e = deckEta(deckHands()); toast(L('Bløggekaret er fullt. Du sløyer og iser fangsten' + (e < Infinity ? ' (ca. ' + durBoth(e) + ')' : '') + ', så fisker du videre.', 'The bleeding tub is full. You gut and ice the catch' + (e < Infinity ? ' (about ' + durBoth(e) + ')' : '') + ', then you fish on.')); }
   else toast(L('Ferdig på dekk. Du fisker videre.', 'Deck work done. You fish on.')); };
 hooks.onEquip = () => { updateMapButtons(); INSTR.show(); heatReset(); };
+// the queue at the plant (core/07-harbours.js, K3): the strip, the dock and the Lever page follow it; the first answer as a toast
+hooks.onLandQ = (Q, first) => { renderHud(); panelDirty = true; if (typeof renderActs === 'function') renderActs(); if (typeof DOCK !== 'undefined' && DOCK.page === 'lever' && DOCK.open) DOCK.open('lever');
+  if (Q && first) toast(landQText(false)[0] + (S.lang === 'no' ? '. Lossingen starter av seg selv. «Lever» viser mottakene i nærheten.' : '. The landing starts by itself. «Land» shows the plants near by.'), 9000); };
 hooks.onRadio = (no, en) => toast('📻 Kystradio: ' + (S.lang === 'no' ? no : en), 15000);
 hooks.onMsg = () => { PHONE.setBadge(); const m = S.msgs[S.msgs.length - 1]; if (m && !PHONE.isOpen()) toast('✉ ' + m.from + ': ' + (S.lang === 'no' ? m.no : m.en), 10000); if (PHONE.isOpen() && (PHONE.app === 'meld' || PHONE.app === 'home')) PHONE.render(); };
 $('instrBtn').onclick = () => { S.settings.instr = S.settings.instr === false; save(); updateMapButtons(); INSTR.show(); };

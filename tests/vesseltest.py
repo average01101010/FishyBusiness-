@@ -179,7 +179,7 @@ async def main():
           DOCK.open('bank'); R.bank = dr().textContent.includes('Innovasjon Norge'); DOCK.close();
           PHONE.open('kvote'); PHONE.render(); R.papers = /blad B/.test(document.querySelector('#phone').textContent) && /Ført på blad B/.test(document.querySelector('#phone').textContent); PHONE.show(false);
           // selling a vessel pays the loans first
-          const v2 = newVesselObj('snekke', 'husoy'), l0 = S.loan.bal, c0 = S.cash, val = vesselValue(v2); window.confirm = () => true; PHONE.dact('rederi', 'vsell', {id:v2.id}); R.sell = {loanDown:Math.round(l0 - (S.loan ? S.loan.bal : 0)), cash:Math.round(S.cash - c0), val};
+          const v2 = newVesselObj('snekke', 'husoy'), l0 = S.loan.bal, c0 = S.cash, val = Math.round(vesselValue(v2) * 0.9); window.confirm = () => true; PHONE.dact('rederi', 'vsell', {id:v2.id}); R.sell = {loanDown:Math.round(l0 - (S.loan ? S.loan.bal : 0)), cash:Math.round(S.cash - c0), val};
           return R; })()''')
         print('V7:', json.dumps(r, ensure_ascii=False)[:1400])
         print(ok(not r['b9'] and r['b10'] and r['msgB']), 'blad B comes with the tenth landing day and 1 G, with a message from Fiskeridirektoratet')
@@ -191,7 +191,27 @@ async def main():
         g0, g1, g2 = r['goals0'], r['goals1'], r['goals2']
         print(ok(len(g0) == 2 and 'Blad B' in g0[0] and 'under 7 m' in g0[1] and 'under 7 m' in g1[0] and '7–7,9 m' in g2[0] and '14,99' in g2[1]), 'Neste mål follows the ladder: blad B, the entry right, the next right, the 14.99 m coastal vessel', [g0, g1, g2])
         print(ok(r['bank'] and r['papers']), 'the bank shows the risk loan, and the papers show blad B')
-        print(ok(r['sell']['loanDown'] == r['sell']['val'] and r['sell']['cash'] == 0), 'selling a vessel pays the loan off first')
+        print(ok(r['sell']['loanDown'] == r['sell']['val'] and r['sell']['cash'] == 0), 'selling a vessel (now to Kystmegleren for 90 %, B4) pays the loan off first')
+        # «Neste mål» is the fleet's (Jonas 07.11.2026): an ocean vessel without a jigging machine and a sjark without a right, with 93 million
+        # in the bank, asked for the first jigging machine and then the wooden snekke with a right under 7 m. With an ocean vessel the
+        # ladder is climbed: only the AS is left, and with it the home screen has no goal. Without one, the cheapest ocean vessel is the last step
+        r = await pg.evaluate(r'''(()=>{ const R = {};
+          const dr = () => document.getElementById('drawerBody');
+          const goalTxt = () => { DOCK.open('fartoy'); const c = [...dr().querySelectorAll('.ph-card')].find(e => /Neste mål/.test(e.textContent)); const t = c ? [...c.querySelectorAll('b')].map(e => e.textContent) : []; DOCK.close(); return t; };
+          const home = () => { PHONE.open('home'); const t = document.getElementById('phone').innerText; PHONE.show(false); return /Neste mål/.test(t); };
+          S.fleet = [S.fleet[0]]; bindVessel(S.fleet[0]); S.boat.type = 'autoliner'; applyVessel(); S.lic = null; S.equip.jukse = 0; S.boat.gear = false; S.cash = 93518391; S.form = 'ENK';
+          newVesselObj('sjarkny', 'husoy');
+          R.hav = goalTxt(); R.havHome = home();
+          S.form = 'AS'; R.havAS = goalTxt(); R.havASHome = home();
+          // one open boat with the top right and the AS: the 14.99 m coastal vessel, then the cheapest ocean vessel
+          S.fleet = [S.fleet[0]]; bindVessel(S.fleet[0]); S.boat.type = 'sjarkny'; applyVessel(); S.lic = {id:'h20'}; S.equip.jukse = 1; S.fm = Object.assign(S.fm || {}, {b:true});
+          const cheap = Object.keys(VESSELS).filter(k => VESSELS[k].cls === 'hav' && !VESSELS[k].lock).sort((a, b) => havPrice(a, S.t / 60) - havPrice(b, S.t / 60))[0];
+          R.top = goalTxt(); R.cheap = VESSELS[cheap].name.no;
+          return R; })()''')
+        print('goals, ocean:', json.dumps(r, ensure_ascii=False))
+        print(ok(r['hav'] == ['Stift Rederi AS'] and r['havHome'] and r['havAS'] == [] and not r['havASHome']),
+              'Neste mål with an ocean vessel in the fleet: no jigging machine and no right under 7 m, only the AS, and no goal on the home screen with it', r)
+        print(ok(len(r['top']) == 2 and '14,99' in r['top'][0] and r['top'][1] == r['cheap']), 'Neste mål ends with the cheapest ocean vessel that can be bought, not «Havfiske, kommer»', r['top'])
         # the catch from tools/fish/fisk.py: every species 1 m long with the head at -z, the halibut flat, the crab 1 m across its legs
         r = await pg.evaluate('''() => { const out = {}; for (const sp of ['torsk', 'sei', 'hyse', 'lyr', 'lange', 'brosme', 'uer', 'kveite', 'blakveite', 'krabbe']){ const o = glbPart('fish', sp);
             if (!o){ out[sp] = null; continue; } const lo = [9, 9, 9], hi = [-9, -9, -9]; let fz = 0, fn = 0;

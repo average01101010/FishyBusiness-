@@ -26,6 +26,10 @@ const WCLOCK = {off:0, on:typeof location === 'undefined' ? false : !/^(localhos
 const worldNow = () => Date.now() + WCLOCK.off;
 const worldTf = () => Math.max(0, (worldNow() - WORLD_T0) * GAME_RATE / 60000);
 const worldT = () => Math.floor(worldTf());
+// the game minute a bought boost starts from (07.11.2026): the world's while the time the game was closed or a tab slept is still being
+// played in (S.t behind it: a catch-up held for a map pack, a tab waking), so the catch-up does not eat the hours bought; measured: a
+// game closed 24 h lost all 48 h of a Skippertak and 72 h of a trim given in that window. S.t without the world clock
+const boostT = () => WCLOCK.on ? Math.max(S.t, worldT()) : S.t;
 const NM = 1.852;
 // The game's frame is the national one (phase K4 of the coast plan): UTM zone 33 in km, x = (E + 250 km) / 1000 east and
 // y = (8 050 km - N) / 1000 south (00-proj.js). Senja lies at x 810-892, y 311-397. Grid north is not true north: a true bearing is

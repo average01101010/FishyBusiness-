@@ -31,6 +31,7 @@ const FRIENDS = (() => {
   function news(){
     const seen = S.frSeen || (S.frSeen = {});
     for (const r of (F.d.in || [])) if (!seen[r.id]){ seen[r.id] = 1; const who = nm(r);
+      if (typeof appUnlock === 'function') appUnlock('folk');   // the message points to the app, so it is on the phone (Tony 06.11.2026)
       msg('Venner', who + ' vil bli venn med deg. Svar i Venner-appen.', who + ' wants to be your friend. Answer in the Friends app.'); }
   }
   function rpc(name, args, after){

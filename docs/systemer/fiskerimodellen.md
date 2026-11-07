@@ -363,6 +363,12 @@
   - Hysas sesong er nesten tilfeldig fra år til år (taket 0,15), så den kan ikke treffes.
   - Testen måler månedssnitt. Fronten og lodda virker innenfor måneden og synes ikke her; for det trengs sedlene uke for uke.
 
+## 5.3f Fangsten forklart etter turen (plan, Ø8 06.11.2026)
+
+Planen står i `docs/planer/spillbarhet-fangst.md`. Jonas valgte 06.11.2026:
+- **V2 A og V4 A:** én linje på sluttseddelen etter hver tur, og den samme i dekksdagboka, som sier hva turen ga i timen mot det fisken sto til, og hva som tok eller ga mest: sjøen, kulda, haillen, bestanden eller tida på døgnet. Tallene kommer fra `catchFactors` og `fish()` (`core/05-vessels.js`), summert i `tripOf`. Bare det som er over 10 % nevnes. Ikke bygd.
+- **V5 A:** ingen egen regel for fiske i havnebassenget i kuling før tettheten i ti basseng er målt mot feltet utenfor. Ikke bygd.
+
 ## 5.33 Fiskeguiden (Jonas 08.10.2026)
 
 Appen **Fiskeguide** på telefonen (`ui/06f-fishguide.js`, `GUIDE`) svarer på «hvor og når skal jeg lete etter hver art» på noen sekunder. Alt leses fra fiskemodellen, så guiden aldri kan si noe annet enn havet gjør: `SPECIES` (`av` per måned og `skrei` for torsk, `dep` og `prod` for dyp og åpen kyst, `minKg`, `maxKg`, `pm` for pris), `SELQ` (hva redskapet beholder), `BAITS`/`baitF` (agn), reglenes datoer (kveite fredet 20. des–20. april, uer bare juni–august: `kveiteClosed` og `uerOpen` i `03-simulation.js`), og de to artene havet forteller per sted: blåkveite (`eggaArea`, lite sør for 62° N) og kongekrabbe (`kingArea`). Rene tekster for stedene (`WHERE`) er skrevet etter kommentarene og reglene i modellen.

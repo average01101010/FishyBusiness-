@@ -86,8 +86,10 @@ const upgNext = (b, k) => { const U = UPGS[k], V = VESSELS[(b || S.boat).type ||
 // (a new one takes the place of the one on, b.trim {k, t0}), diesel engines only. x: top and cruising speed.
 const BOOSTS = {pump:{x:1.5, h:24, nok:29, no:'Justert dieselpumpe', en:'Tuned injection pump'}, ic:{x:1.75, h:48, nok:39, no:'Ladeluftkjøling', en:'Charge air cooling'}, turbo:{x:2, h:72, nok:49, no:'Økt turbotrykk', en:'Higher boost pressure'}};
 const canBoost = V => !!(V && V.diesel && !V.outboard);
-const trimOn = b => { const T = b && b.trim && BOOSTS[b.trim.k]; return T && S.t < b.trim.t0 + T.h * 60 ? T : null; };
-const trimLeft = b => trimOn(b) ? (b.trim.t0 + BOOSTS[b.trim.k].h * 60 - S.t) / 60 : 0;   // game hours
+// (until: the end, game minutes; a trim from before it was kept ends at t0 + its hours)
+const trimUntil = b => b.trim.until != null ? b.trim.until : b.trim.t0 + BOOSTS[b.trim.k].h * 60;
+const trimOn = b => { const T = b && b.trim && BOOSTS[b.trim.k]; return T && S.t < trimUntil(b) ? T : null; };
+const trimLeft = b => trimOn(b) ? (trimUntil(b) - S.t) / 60 : 0;   // game hours
 // the route's speed follows a trim that comes on or runs out (Jonas 06.11.2026: «Det skal ikke være nødvendig med refresh etter kjøp av
 // noen typer boost»): the speed chosen on the slider is knots, and Autonav and the minute step hold her under it, so a trim bought on
 // a route set at the old top speed or at cruise gave nothing until the slider was moved. v0 is the top speed before applyVessel: the
@@ -99,7 +101,19 @@ function trimRescale(v0){
   if (S.draftSpeed > 0 && !S.draftFull) S.draftSpeed = sc(S.draftSpeed);
 }
 // a trim on the boat aboard (S.boat; the shop gives it inside withVessel for the boat it was bought for), and one that has run out
-function trimSet(k){ const v0 = BOAT.vmax; S.boat.trim = {k, t0:S.t}; applyVessel(); trimRescale(v0); }
+// The same kind as the one on adds its hours to it (06.11.2026: no paid time lost, as Skippertak); another kind takes its place, which
+// the Trim app asks about first (phone/14-act.js trimPend). Returns 'ext' when it was added, 'new' when it came on
+function trimSet(k){
+  const b = S.boat, B = BOOSTS[k]; if (!B) return null;
+  if (trimOn(b) && b.trim.k === k){ b.trim.until = trimUntil(b) + B.h * 60; return 'ext'; }
+  const v0 = BOAT.vmax, t0 = boostT(); b.trim = {k, t0, until:t0 + B.h * 60}; applyVessel(); trimRescale(v0); return 'new';   // (from the world's minute: boostT)
+}
+// what a trim given says (the log, the confirmation of a purchase): on for its hours, or added to the one on
+function trimWords(k, how){
+  const B = BOOSTS[k], left = trimOn(S.boat) ? Math.round((trimUntil(S.boat) - boostT()) / 60) : 0, v = fmt(BOAT.vmax, 1), nm = S.boatName || '';
+  return how === 'ext' ? {no:B.no + ' på «' + nm + '» er forlenget med ' + B.h + ' timer: ' + left + ' timer igjen. Toppfart ' + v + ' knop.', en:'The ' + B.en.toLowerCase() + ' on the «' + nm + '» is extended by ' + B.h + ' hours: ' + left + ' hours left. Top speed ' + v + ' knots.'}
+    : {no:B.no + ' er på «' + nm + '» i ' + B.h + ' timer. Toppfart nå ' + v + ' knop.', en:B.en + ' is on the «' + nm + '» for ' + B.h + ' hours. Top speed now ' + v + ' knots.'};
+}
 function trimEnd(){ const v0 = BOAT.vmax; delete S.boat.trim; applyVessel(); trimRescale(v0); }
 function powerX(b){ const V = VESSELS[b.type || 'skiff']; return 1 + (b.engLv && !V.outboard ? ENGUP[b.engLv - 1].p : 0); }
 const speedOfPower = (P, planing) => planing ? Math.sqrt(P) : Math.min(1.12, Math.cbrt(P));
@@ -1152,7 +1166,7 @@ function luck(sp){ return 1 + haillBoost(); }
 function haillCap(){ return 1 + haillBoost(); }
 // a purchase or a pub prize goes into the store; switching one on takes it from there (and replaces the one aboard)
 function giveHaill(type, how){ const inv = S.haillInv || (S.haillInv = {haill:0, luksus:0}); inv[type] = (inv[type] || 0) + 1; log('Ny ' + HAILL[type].no.toLowerCase() + ' i beholdningen. Aktiver den i Haill-appen når du vil.', 'New ' + HAILL[type].en.toLowerCase() + ' in store. Switch it on in the Luck app when you like.'); }
-function useHaill(type){ const inv = S.haillInv || {}; if (!(inv[type] > 0)) return false; inv[type]--; S.haill = {type, t0:S.t, how:'inv'}; log(HAILL[type].no + ' er aktivert.', HAILL[type].en + ' is switched on.'); return true; }
+function useHaill(type){ const inv = S.haillInv || {}; if (!(inv[type] > 0)) return false; inv[type]--; S.haill = {type, t0:boostT(), how:'inv'}; log(HAILL[type].no + ' er aktivert.', HAILL[type].en + ' is switched on.'); return true; }
 // the pub: one round per evening between 15:00 and 03:00, NOK 1000
 const PUB_COST = 1000;
 const PUB_WHEEL = [['tom', 20], ['haill', 6], ['tom', 20], ['rykte', 25], ['haill', 6], ['tom', 20], ['luksus', 3]];   // the halibut luck is gone (04.10.2026)

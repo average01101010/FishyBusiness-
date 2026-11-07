@@ -209,7 +209,7 @@ function cloudStart(){
   // one device at a time: the beat every five seconds while the game is on the screen (cloudBeat); a database without it: the head
   setInterval(() => { if (!document.hidden) cloudBeat(); }, 5000);
   setInterval(() => { if (!document.hidden && CLOUD.noBeat) cloudCheckHead(); }, 120000); setTimeout(() => { if (CLOUD.noBeat) cloudCheckHead(); }, 20000);
-  pushStart(); worldStart(); shopStart(); guestGift(); namesApply(); setTimeout(nameCheck, 6000); guestOpenAsk();
+  pushStart(); worldStart(); shopStart(); try { MBC.start(); } catch (e){ console.error(e); } guestGift(); namesApply(); setTimeout(nameCheck, 6000); guestOpenAsk();
   window.addEventListener('pagehide', () => { cloudSaveSoon(true); if (CLOUD.sid) cloudFlush(true); });
 }
 function cloudAsk(){
@@ -704,7 +704,7 @@ function cloudCard(){
     L2('Spillet lagres også på kontoen, så du kan fortsette på en annen enhet.', 'The game is also saved to the account, so you can go on from another device.') + '</p><p class="ph-note" id="syncNote">' + cloudStatusText() + '</p>' +
     '<button class="ph-btn alt" data-pa="cloudSaveNow">' + L2('Lagre nå', 'Save now') + '</button>' + histRows() +
     '<label><span>' + L2('Del bruksstatistikk', 'Share usage statistics') + '</span><input type="checkbox" data-pa="cloudStat"' + (CLOUD.consent ? ' checked' : '') + '></label>' + pushCardRow() +
-    '<div class="acc-name"><label for="accUser">' + L2('Brukernavn', 'Player name') + (S.user ? ': <b>' + gEsc(S.user) + '</b>' : '') + '</label><input id="accUser" maxlength="20" autocomplete="off" placeholder="' + L2('Vises ved båten din', 'Shown beside your boat') + '"><button class="ph-btn alt" data-pa="cloudName">' + L2('Lagre', 'Save') + '</button></div>' +
+    '<div class="acc-name"><label for="accUser">' + L2('Brukernavn', 'Player name') + (S.user ? ': <b>' + gEsc(S.user) + '</b>' : '') + '</label><input id="accUser" maxlength="20" autocomplete="off" placeholder="' + L2('Vises ved båten din', 'Shown beside your boat') + '"><button class="ph-btn alt" data-pa="cloudName">' + L2('Lagre', 'Save') + '</button></div><p class="ph-note" id="accUserNote">' + L2('Ett ord, 3–20 tegn: bokstaver, tall, punktum, bindestrek eller understrek.', 'One word, 3–20 characters: letters, digits, dots, hyphens or underscores.') + '</p>' +
     (S.unnamed ? '<div class="acc-name"><label for="accBoat">' + L2('Døp båten', 'Name the boat') + '</label><input id="accBoat" maxlength="20" autocomplete="off" placeholder="' + L2('F.eks. Havbris', 'e.g. Havbris') + '"><button class="ph-btn alt" data-pa="cloudBoat">' + L2('Døp', 'Name') + '</button></div>' : '') +
     '<button class="ph-btn alt" data-pa="cloudOut">' + L2('Logg ut', 'Sign out') + '</button><button class="ph-btn alt" data-pa="cloudDel">' + L2('Slett kontoen', 'Delete the account') + '</button>' +
     // the pages beside the game (src/legal/), in a tab of their own so the game stays where it is
@@ -746,7 +746,7 @@ function cloudAct(a, d){
   if (a === 'cloudSignIn'){ if (isGuest()) guestRegister(true); return true; }
   if (a === 'cloudReg'){ guestAsk(guestDue() ? 'due' : 'soft'); return true; }
   if (a === 'cloudHist'){ cloudHist(); return true; }
-  if (a === 'cloudName'){ const v = String(($('accUser') || {}).value || '').trim(); if (!NAME_RE.test(v)){ toast(cloudL('3–20 bokstaver, tall, punktum, bindestrek eller understrek.', '3–20 letters, digits, dots, hyphens or underscores.')); return false; } nameTake(v); return true; }
+  if (a === 'cloudName'){ const v = String(($('accUser') || {}).value || '').trim(); const w = v ? nameWhy(v) : cloudL('Skriv et brukernavn først.', 'Type a player name first.'); if (w){ toast(w, 6000); const n = $('accUserNote'); if (n){ n.textContent = w; n.classList.add('bad'); } return false; } nameTake(v); return true; }
   if (a === 'cloudBoat'){ const v = String(($('accBoat') || {}).value || '').trim(); if (!v) return false; boatChristen(v); return true; }
   if (a === 'cloudRestore'){ cloudRestore(d && d.id); return true; }
   if (a === 'cloudStat'){ cloudConsent(!CLOUD.consent, null); return true; }
@@ -814,6 +814,25 @@ function guestAsk(why){
 }
 // the names kept on the device until the account is there (the boat is named and the player's name taken once back from WorkOS)
 const NAME_RE = /^[A-Za-zÆØÅæøå0-9_.-]{3,20}$/;
+// why a name is not taken, in words, with a name that would be (Tony 06.11.2026: he typed first name and surname with a space, and nothing
+// said why «Lagre» did nothing): null when it is fine
+function nameWhy(v){
+  v = String(v || '');
+  if (!v.trim()) return null;
+  const fix = v.trim().replace(/\s+/g, '_').replace(/[^A-Za-zÆØÅæøå0-9_.-]/g, '').slice(0, 20), sug = fix.length >= 3 ? cloudL(' Prøv for eksempel «' + fix + '».', ' Try «' + fix + '», for example.') : '';
+  if (/\s/.test(v.trim())) return cloudL('Mellomrom går ikke: brukernavnet er ett ord.', 'No spaces: the player name is one word.') + sug;
+  if (v.trim().length < 3) return cloudL('Minst 3 tegn.', 'At least 3 characters.');
+  if (v.trim().length > 20) return cloudL('Høyst 20 tegn.', 'At most 20 characters.');
+  if (!NAME_RE.test(v.trim())) return cloudL('Bare bokstaver, tall, punktum, bindestrek og understrek.', 'Only letters, digits, dots, hyphens and underscores.') + sug;
+  return null;
+}
+// the note under a name field follows what is typed (one listener for both fields: the phone and the card render their HTML anew)
+const NAME_NOTE = {accUser:'accUserNote', nmUser:'nmUserNote'};
+document.addEventListener('input', ev => {
+  const e = ev.target, nid = e && NAME_NOTE[e.id], n = nid && document.getElementById(nid); if (!n) return;
+  if (!n.dataset.idle) n.dataset.idle = n.textContent;
+  const w = nameWhy(e.value); n.textContent = w || (e.value.trim() ? cloudL('Det navnet kan du bruke.', 'That name will do.') : n.dataset.idle); n.classList.toggle('bad', !!w);
+});
 function namesKept(){ try { return JSON.parse(localStorage.getItem(NAMES_KEY) || '{}') || {}; } catch (e){ return {}; } }
 function namesKeep(o){ try { localStorage.setItem(NAMES_KEY, JSON.stringify(o)); } catch (e){} }
 // on the account: the boat is named and the player's name is taken; a name another has, or one the server does not have yet (404), waits
@@ -874,7 +893,7 @@ function nameAsk(why, reason){
     const note = document.getElementById('nmUserNote'), go = document.getElementById('nmUserGo');
     nameSuggest().then(v => { const e = document.getElementById('nmUser'); if (e && !e.value && v) e.value = v; });
     go.onclick = async () => { const v = String(document.getElementById('nmUser').value || '').trim();
-      if (!NAME_RE.test(v)){ note.textContent = cloudL('3–20 bokstaver, tall, punktum, bindestrek eller understrek, uten mellomrom.', '3–20 letters, digits, dots, hyphens or underscores, without spaces.'); return; }
+      const w = v ? nameWhy(v) : cloudL('Skriv et brukernavn, ett ord på 3–20 tegn.', 'Type a player name, one word of 3–20 characters.'); if (w){ note.textContent = w; note.classList.add('bad'); return; }
       go.disabled = true; const r = await nameTake(v, true); go.disabled = false;
       if (r === 'ok'){ const bn = String((document.getElementById('nmBoat2') || {}).value || '').trim(); if (bn && S.unnamed) boatChristen(bn); document.getElementById('modal').hidden = true; stop(); }
       else if (r === 'taken') note.textContent = cloudL('«' + v + '» er tatt. Velg et annet.', '«' + v + '» is taken. Choose another.');

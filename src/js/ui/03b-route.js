@@ -220,20 +220,21 @@ function leiaCompare(){
   return null;
 }
 
-// --- the sea along the route (Ø8, 06.11.2026): the wave height on each leg at the minute the boat is there, from the game's own sea
-// (hsAt, the same as «Bølger her» in the Vær tab; not the forecast), on the leg's card after the ETA. Red from the boat's own limit
+// --- the sea along the route (Ø8, 06.11.2026): the wave height on each leg at the minute the boat is there, as the local forecast gives it
+// (hsAtFc, the same as the «Ved båten» column of the Vær tab's table; Jonas 06.11.2026, R1 A: the forecast, not the sea that will come,
+// which a skipper cannot know), on the leg's card after the ETA. Red from the boat's own limit
 // (BOAT.risk[0], the sea she handles safely, as the Fartøy app states it), as the rule lines on the cards are red, and «farlig» from her
 // danger limit (risk[1]); a line under the cards names the legs over the limit. The cards are drawn by panelRoute (07-guide.js); the route
 // editor adds the sea to them after each draw (a MutationObserver on the panel, set up from renderRouteTools), so that file is left alone.
 const ROUTE_SEA = {step:0.5, maxN:24};   // km between the samples along a leg, and at most this many on one leg (the sea changes on a few hundred metres at a harbour's mouth: every 1 km showed 0,7 m where Bodø's gave 1,2 m)
-// the sea leg by leg: the highest hsAt along the leg at the minute the boat passes each sample, and its level against the boat's limits
+// the sea leg by leg: the highest forecast sea along the leg at the minute the boat passes each sample, and its level against the boat's limits
 function draftSea(tl){
-  const r = BOAT.risk, out = []; let a = draftOrigin(), T0 = tl.dep;
+  const r = BOAT.risk, now = S.t / 60, out = []; let a = draftOrigin(), T0 = tl.dep;
   S.draft.forEach((w, i) => {
     const lg = tl.legs[i], n = Math.max(1, Math.min(ROUTE_SEA.maxN, Math.ceil(dist(a, w) / ROUTE_SEA.step)));
     let hs = 0;
     for (let k = i === 0 ? 0 : 1; k <= n; k++){ const f = k / n, p = {x:a.x + (w.x - a.x) * f, y:a.y + (w.y - a.y) * f}, T = T0 + (lg.arrive - T0) * f;
-      try { hs = Math.max(hs, hsAt(p, T / 60)); } catch (e){} }   // (a block of the sea not loaded yet: the leg shows what the rest gives)
+      try { hs = Math.max(hs, hsAtFc(p, T / 60, now)); } catch (e){} }   // (a block of the sea not loaded yet: the leg shows what the rest gives)
     out.push({hs, lvl:hs >= r[1] ? 2 : hs >= r[0] ? 1 : 0});
     a = w; T0 = lg.leave;
   });
@@ -258,7 +259,7 @@ function routeSeaDraw(){
   });
   if (!over.length) return;
   const r = BOAT.risk, p = document.createElement('p'); p.className = 'bad wsea';
-  p.textContent = '✕ ' + L('Sjøen går over båtens grense på ', 'The sea goes over the boat\'s limit on ') + fmt(r[0], 1) + ' m ' + L('på etappe ', 'on leg ') +
+  p.textContent = '✕ ' + L('Varselet gir sjø over båtens grense på ', 'The forecast gives a sea over the boat\'s limit of ') + fmt(r[0], 1) + ' m ' + L('på etappe ', 'on leg ') +
     over.slice(0, 4).map(([i, q]) => legName(i) + ' (' + fmt(q.hs, 1) + ' m)').join(', ') + (over.length > 4 ? ' …' : '') + L(' når båten er der.', ' when the boat is there.') +
     (over.some(x => x[1].lvl > 1) ? L(' Over ' + fmt(r[1], 1) + ' m er det farlig for denne båten.', ' Over ' + fmt(r[1], 1) + ' m it is dangerous for this boat.') : '');
   ul.after(p);

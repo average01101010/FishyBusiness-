@@ -18,7 +18,7 @@
     return '<div class="ph-card crewc"><h4>' + c.name + ', ' + c.age + '</h4><p class="ph-note">' + c.home + ' · ' + (c.bi ? L('biyrke, ', 'part-time, ') + biDaysTxt(c) + (c.biDays && !c.biDays[(gDate(S.t / 60).getUTCDay() + 6) % 7] ? L(', på land i dag', ', ashore today') : '') : L('hovedyrke', 'full-time')) + ' · ' + c.yrs + L(' år på sjøen', ' years at sea') + '</p>' +
       '<div class="crewgrid">' + ATTR.map(([k, no, en]) => '<span>' + L(no, en) + '</span>' + stars(A[k], apx)).join('') + '</div>' +
       '<div class="crewgear">' + GEARS.map(([k, no, en]) => '<span class="chip g">' + L(no, en) + ' ' + Math.round(c.gear[k]) + '</span>').join('') + '</div>' +
-      '<div class="crewtr">' + traitChips(c, !cand) + '</div>' + (cand ? '<p class="ph-note">' + TRAITS[c.traits[0]].d[S.lang] + (full ? '' : ' ' + L('Resten ser du når dere har vært på sjøen sammen.', 'The rest you will see once you have been at sea together.')) + '</p>' : '') + '</div>';
+      '<div class="crewtr">' + traitChips(c, !cand) + '</div>' + (c.story ? '<p class="ph-note crew-story">' + L(c.story[0], c.story[1]) + '</p>' : '') + (cand ? '<p class="ph-note">' + TRAITS[c.traits[0]].d[S.lang] + (full ? '' : ' ' + L('Resten ser du når dere har vært på sjøen sammen.', 'The rest you will see once you have been at sea together.')) + '</p>' : '') + '</div>';
   }
   function bors(){
     borsTick(S.t / 60); const B = S.bors, max = BOAT.crewMax, hw = crewHireWhy(), room = S.crew.length < max && !hw, inp = S.boat.status === 'port';
@@ -165,7 +165,6 @@
   const swapLeaves = k => Object.keys(EQUIP).filter(q => S.equip[q] && !EQUIP[q].multi && !equipFits(q, k));
   function switchVessel(k){
     const b = S.boat, old = VESSELS[b.type], left = swapLeaves(k);
-    mktTradeIn(b.type, b.engH || 0, b.port, S.boatName);   // the boat traded in comes back on the market under a new name (M5)
     setTimeout(() => BUYM.show(), 60);   // the moment she is yours, once the purchase has set her up (M5)
     if (left.length) log('Utstyr som ikke passer den nye båten, ble med ' + old.name.no + ': ' + left.map(q => EQUIP[q].name.no).join(', ') + '.', 'Equipment that does not suit the new vessel went with the ' + old.name.en + ': ' + left.map(q => EQUIP[q].name.en).join(', ') + '.');
     b.type = k; delete b.liv; delete b.call; for (const q of Object.keys(EQUIP)) if (!equipFits(q, k)) S.equip[q] = EQUIP[q].multi ? Math.min(S.equip[q] || 0, VESSELS[k].jukseMax || 0) : false; applyVessel(); loreNewBoat(S.boatName);

@@ -1,7 +1,7 @@
 // ===== The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the top and the end of the purchase =====
 // 15 seconds over the 3D view: the camera turns slowly round her at the yard's quay (G3.paintView, as in the paint shop) when she is the
 // boat you are on, her name is painted on letter by letter, and the flag goes up. «Hopp over» ends it at once; nothing waits on it.
-// The traded-in boat stays at the yard and comes back on the market under a new name (core/09k-market.js mktTradeIn).
+// The traded-in boat stays with the yard (since 07.11.2026 she is not put out again: Kystmegleren lists only the players' boats, B5).
 // (a var: the phone's buttons earlier in the script call BUYM.show, and must find it when they run)
 var BUYM = (() => {
   const L = (no, en) => S.lang === 'en' ? en : no, esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);

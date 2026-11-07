@@ -6,6 +6,8 @@ slakker av og stopper nøyaktig der den skal», Stopp underway not «bråstoppe�
    line, in to the rorbu's berth, lines on.
 2. Out to sea, then «Stopp» underway: she slacks off gradually and stops where the simulation stops.
 3. On to a point at sea: she stops exactly on the last waypoint, without running past it.
+1b, 2a. A slow frame between two ticks at the hand-offs to the manoeuvring model (time caught up with the minute step under way, and
+   the cast-off) does not run her out along the line for the model to put her back (07.11.2026: 196 and 197 m under a stall of 22 s).
 4. The chart plotter draws the boat where she is between the simulation's minutes.
 Prints OK or FEIL per check."""
 from _env import GAME, boot
@@ -19,7 +21,7 @@ def check(ok, what, extra=''):
 
 SAMPLE = """(() => { const D = G3._debug, b = S.boat, T = D.trk;
   return {st:b.status, port:b.port || null, x:D.bv.px, z:D.bv.pz, hd:D.bv.cog, spd:D.bv.spd, sim:[b.pos.x * 1000, b.pos.y * 1000], mo:D.MO.phase,
-    trk:T ? {s:T.s, v:T.v, end:T.end, done:T.done, n:T.P.length, P:T.P} : null, t:performance.now(), wall:(b.dyn || {}).wall || 0, live:(q => [q.p.x * 1000, q.p.y * 1000])(livePose()), drv:!!b.drv, stop:b.dyn ? [b.dyn.X, b.dyn.Y] : null}; })()"""
+    trk:T ? {s:T.s, v:T.v, end:T.end, done:T.done, n:T.P.length, P:T.P} : null, t:performance.now(), mdl:!!dynTrackView(), wall:(b.dyn || {}).wall || 0, u:b.dyn ? Math.abs(b.dyn.u) * simRate() : 0, live:(q => [q.p.x * 1000, q.p.y * 1000])(livePose()), drv:!!b.drv, stop:b.dyn ? [b.dyn.X, b.dyn.Y] : null}; })()"""
 
 
 def seg_dist(P, x, z):
@@ -38,6 +40,29 @@ DIAG = """(() => { const b = S.boat, d = b.dyn || {}, pl = S.plan, D = G3._debug
     replan:!!(pl && pl.replan), idx:pl ? pl.idx : null, n:pl ? pl.wps.length : null, line:!!DYN.line, mo:D.MO.phase, trkv:D.trk ? +D.trk.v.toFixed(1) : null, spd:+D.bv.spd.toFixed(1), log:S.log.slice(-2).map(l => l.no || l.text || '').join(' | ').slice(-100)}; })()"""
 
 
+# where a point (on-screen metres) lies along the line the manoeuvring model takes her on, and how far off it
+ALONG = """(xz) => { const T = DYN.line; if (!T) return null; let best = 1e18, bs = 0, acc = 0;
+  for (let i = 1; i < T.P.length; i++){ const a = T.P[i - 1], c = T.P[i], vx = c[0] - a[0], vz = c[1] - a[1], l2 = vx * vx + vz * vz || 1, l = Math.sqrt(l2), u = Math.max(0, Math.min(1, ((xz[0] - a[0]) * vx + (xz[1] - a[1]) * vz) / l2)), d = Math.hypot(xz[0] - a[0] - u * vx, xz[1] - a[1] - u * vz);
+    if (d < best){ best = d; bs = acc + u * l; } acc += l; } return [bs, best]; }"""
+
+
+async def handoff(pg, how):
+    """a slow frame at a hand-off to the model: the tick is held (TAB.held), how runs the tick that hands her over (in the page), the
+    page stalls 22 s as SwiftShader does, and the frame after it is a real one; then the tick goes on and the model has her. Returns
+    how far back along the model's line the 3D boat went from where that frame drew her, and both places along it"""
+    st = await pg.evaluate("(() => { TAB.held = true; const r = (" + how + ")(); const t0 = performance.now(); while (performance.now() - t0 < 22000){} return r; })()")
+    await pg.wait_for_timeout(500)   # (the frame after the stall)
+    f = await pg.evaluate("[G3._debug.bv.px, G3._debug.bv.pz]")
+    await pg.evaluate("TAB.held = false")
+    for _ in range(40):   # (until the model has her and a frame has drawn her where it puts her: SwiftShader's frames come seconds apart)
+        await pg.wait_for_timeout(500)
+        if await pg.evaluate("dynLive() && !!DYN.line && Date.now() - S.boat.dyn.wall < 3000"): break
+    await pg.wait_for_timeout(4000)
+    m = await pg.evaluate("[G3._debug.bv.px, G3._debug.bv.pz]")
+    a, b = await pg.evaluate(ALONG, f), await pg.evaluate(ALONG, m)
+    return {'st': st, 'back': round(a[0] - b[0], 1) if a and b else None, 'frame': a and [round(a[0], 1), round(a[1], 1)], 'model': b and [round(b[0], 1), round(b[1], 1)]}
+
+
 async def follow(pg, until, n=400, dt=200, diag=0):
     """samples until until(sample) or n samples; returns the samples (diag: print the simulation's state every so many samples)"""
     out = []
@@ -47,6 +72,17 @@ async def follow(pg, until, n=400, dt=200, diag=0):
         if until(s): break
         if diag and (i + 1) % diag == 0: print('  diag %d:' % (i + 1), json.dumps(await pg.evaluate(DIAG), ensure_ascii=False))
     return out
+
+
+def dump(name, out):
+    """the samples to tests/out/trackfollow-<name>.json (each line once), to look at a red check afterwards without running again"""
+    import os; Ps, rows = [], []
+    for s in out:
+        r = dict(s); T = r.get('trk')
+        if T: T = dict(T); k = next((i for i, P in enumerate(Ps) if P == T['P']), None); k = len(Ps) if k is None else k; Ps.append(T['P']) if k == len(Ps) else None; T['P'] = k; r['trk'] = T
+        rows.append(r)
+    os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out'), exist_ok=True)
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'trackfollow-%s.json' % name), 'w') as f: json.dump({'P':Ps, 's':rows}, f)
 
 
 def along(out):
@@ -77,8 +113,15 @@ async def main():
         await pg.evaluate("G3.show(true)"); await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(2500)
         import time; T0 = time.time()
         await pg.evaluate("(() => { doAct({dataset:{act:'start'}, disabled:false}); const g = document.getElementById('ruGo'); if (g) g.click(); })()")
-        out = await follow(pg, lambda s: s['st'] == 'port' and s['port'] == RB and s['mo'] == 'moored' and not s['trk'], n=800)
-        print('part 1: %d samples in %.0f s' % (len(out), time.time() - T0))
+        docked = lambda s: s['st'] == 'port' and s['port'] == RB and s['mo'] == 'moored' and not s['trk']
+        out = await follow(pg, lambda s: docked(s) or (s['mdl'] and s['trk']['s'] > 900), n=800); k1 = None
+        if not docked(out[-1]):
+            # 1b. time caught up under way: a stall of more than 100 s (ten game minutes) is played with the kinematic minute step, the
+            # model off for that tick (ui tick), and it starts again from where that put her; twelve minutes here, on the long legs
+            k1 = await handoff(pg, "() => { DYN.on = false; catchUp(120000); return S.boat.status + ' ' + (DYN.line ? DYN.line.P.length : 0); }")
+            out += await follow(pg, docked, n=max(50, 800 - len(out)))
+        print('part 1: %d samples in %.0f s' % (len(out), time.time() - T0)); dump('part1', out)
+        check(k1 is not None and k1['back'] is not None and k1['back'] < 0.6, 'a slow frame after time caught up with the minute step (the model off for a tick) does not run her past the simulation for the model to put her back', k1)
         end = await pg.evaluate("""(rb) => { const D = G3._debug, b = S.boat, bp = berthPose(rb, b.type, 'main') || berthPose(rb, b.type);
           return {d:Math.hypot(D.bv.px - bp.x * 1000, D.bv.pz - bp.y * 1000), dh:Math.abs(((D.bv.cog - bp.hd) * 180 / Math.PI + 540) % 360 - 180), st:b.status, port:b.port, mo:D.MO.phase}; }""", RB)
         off, back = along(out)
@@ -115,20 +158,29 @@ async def main():
             check(False, 'a point at sea 1.6-2.4 km from the rorbu, for the stop and the end of a route')
         else:
             check(sea['leia'] > 0, 'Autonav draws the way out from the rorbu to the point at sea', {k: sea[k] for k in ('n', 'leia', 'tries', 'busy', 'edit', 'toasts', 'why')})
-            await pg.evaluate("(() => { doAct({dataset:{act:'start'}, disabled:false}); const g = document.getElementById('ruGo'); if (g) g.click(); })()")
+            # 2a. cast off with a slow frame before the model's first tick: the tick is held while she unmoors (the frames run, the lines
+            # come off), and the tick that casts her off runs by hand (the model first, as in tick(), then the minute step)
+            await pg.evaluate("(() => { doAct({dataset:{act:'start'}, disabled:false}); const g = document.getElementById('ruGo'); if (g) g.click(); TAB.held = true; })()")
             p0 = await pg.evaluate("[G3._debug.bv.px, G3._debug.bv.pz]")
+            await pg.wait_for_timeout(6000)
+            ho = await handoff(pg, "() => { const b = S.boat, st = b.status; b.castUntil = S.t; dynTick(0.2); step(); return st + '>' + b.status; }")
+            check(ho['st'] == 'unmooring>sailing' and ho['back'] is not None and ho['back'] < 0.6, 'a slow frame between the tick that casts her off and the model\'s first tick (22 s here) does not run her out along the line for the model to put her back', ho)
             out = await follow(pg, lambda s: s['st'] == 'sailing' and s['trk'] and s['trk']['v'] > 12 and math.hypot(s['x'] - p0[0], s['z'] - p0[1]) > 250, n=250, diag=40)
             print('part 2 under way: %d samples, %.0f s since the start, last %s' % (len(out), time.time() - T0, {k: out[-1][k] for k in ('st', 'spd')}))
             v0 = out[-1]['trk']['v'] if out[-1]['trk'] else 0
             await pg.evaluate("doAct({dataset:{act:'stop'}, disabled:false})")
             out = await follow(pg, lambda s: s['st'] == 'idle' and not s['trk'], n=300)
-            print('part 2 stopped: %d samples, %.0f s since the start' % (len(out), time.time() - T0))
-            # (the slack-off is measured over the model's own ticks, by the wall time of the last tick in each sample: under SwiftShader the
-            # ticks come seconds apart, and two frames 0.2 s apart on either side of a 4 s tick would show that tick's whole slack-off as a jump)
-            vs = [s['spd'] for s in out]; drops = [(vs[i - 1] - vs[i]) / max(0.2, (out[i]['wall'] - out[i - 1]['wall']) / 1000) for i in range(1, len(vs)) if out[i]['wall'] > out[i - 1]['wall']]
+            print('part 2 stopped: %d samples, %.0f s since the start' % (len(out), time.time() - T0)); dump('part2', out)
+            # (the slack-off is measured over the model's own ticks: its speed at the last tick in each sample (u, on the screen's scale, which
+            # is what the 3D boat is given under the model), by that tick's wall time. Under SwiftShader the ticks and the frames come seconds
+            # apart: two frames 0.2 s apart on either side of a 4 s tick would show that tick's whole slack-off as a jump, and the 3D boat's own
+            # speed (spd, from the last frame) beside the last tick's time showed four ticks' slack-off in one, 07.11.2026: 8.4 for 2.3)
+            vs = [s['u'] for s in out]; drops = [(vs[i - 1] - vs[i]) / max(0.2, (out[i]['wall'] - out[i - 1]['wall']) / 1000) for i in range(1, len(vs)) if out[i]['wall'] > out[i - 1]['wall']]
             await pg.wait_for_timeout(4000); fin = await pg.evaluate(SAMPLE); dsim = math.hypot(fin['x'] - fin['live'][0], fin['z'] - fin['live'][1])   # (the frame after the stop: SwiftShader's frames come up to four seconds apart; against the pose the plotter draws, as she drifts once she lies still, Fysikk 2)
             logl = await pg.evaluate("S.log.slice(-6).map(l => JSON.stringify(l)).join(' | ')")
-            check(v0 > 12 and max(drops or [0]) < max(8, v0 / 3), 'Stopp underway: she slacks off gradually, not all at once' + ('' if drops else ' (frames too far apart to measure here; dyntest measures it)'), {'v0': round(v0, 1), 'worst m/s per s': round(max(drops or [0]), 1), 'secs': round((out[-1]['t'] - out[0]['t']) / 1000, 1)})
+            # (and the model has her on the way down at least once: a «Stopp» that stopped her at once, past the model, has no ticks to measure)
+            slack = sum(1 for s in out if s['trk'] and 0.5 < s['u'] < v0 - 0.5)
+            check(v0 > 12 and slack > 0 and max(drops or [0]) < max(8, v0 / 3), 'Stopp underway: she slacks off gradually, not all at once' + ('' if drops else ' (ticks too far apart to measure here; dyntest measures it)'), {'v0': round(v0, 1), 'worst m/s per s': round(max(drops or [0]), 1), 'ticks': len(drops), 'slacking': slack, 'secs': round((out[-1]['t'] - out[0]['t']) / 1000, 1)})
             check(fin['st'] == 'idle' and dsim < 0.5 and 'Stoppet båten' in logl, 'she stops where the simulation stops, and the log says «Stoppet båten»', {'d': round(dsim, 2), 'st': fin['st'], 'drifting': fin['drv']})
             # 3. on to the point at sea: exactly on the last waypoint, never past it
             await pg.evaluate("""(async () => { S.draft = [{x:%f / 1000, y:%f / 1000}]; doAct({dataset:{act:'start'}, disabled:false}); const g = document.getElementById('ruGo'); if (g) g.click(); })()""" % tuple(sea['q2']))

@@ -20,10 +20,13 @@ async def main():
           // something to report on each vessel
           S.boat.engH = 150; S.boat.svcAt = 0;
           withVessel(v2, () => { const c = Object.assign(genCrew(), {bi:false, off:false}); S.crew = [c]; S.boat.fuel = 10; S.ops = Object.assign(driftNew({home:'husoy'}), {on:false, stop:{t:S.t, k:'roles', no:'Når du ikke er om bord, må både en skipper og en styrmann være utnevnt.', en:'When you are not aboard, both a skipper and a mate must be appointed.', fix:'mannskap'}}); });
+          // the cod quota 95 % fished on the first vessel: a quiet line on her card, not an alert (Jonas 07.11.2026)
+          const H0 = S.t / 60; R.acc = access(); quotaState().torsk = codLimitNow(H0) * 0.95;
           R.alerts = PHONE.alerts().map(a => a.id + ':' + a.k);
           PHONE.open('home'); const bd = [...document.querySelectorAll('.ph-app')].find(x => x.dataset.a === 'rederi'); R.badge = bd && bd.querySelector('.bd') ? bd.querySelector('.bd').textContent : null;
           // the Company app lists both vessels and the alerts
           PHONE.open('rederi'); R.cards = (view().match(/«/g) || []).length; R.hasFuel = view().includes('Lite drivstoff');
+          R.quotaLine = view().includes('Torskekvoten 95 % fisket'); R.quotaAlert = view().includes('nesten brukt opp');
           // an alert opens the right app on the right vessel, without changing the vessel you follow
           const go = [...document.querySelectorAll('[data-pa="goto"]')].find(x => x.dataset.id === v2.id && x.dataset.a === 'drift'); go.click();
           R.goto = {app:DOCK.page, sel:PHONE.sel, cur:S.cur, crewShown:document.getElementById('drawerBody').innerText.includes(vget(v2, 'crew')[0].name.split(' ')[0])};
@@ -46,6 +49,8 @@ async def main():
         print(ok('v1:svc' in a and 'v2:fuel' in a and 'v2:ops' in a), 'alerts: service on the first vessel, low fuel and a stopped plan (no skipper and mate) on the second')
         print(ok(r['badge'] == str(len(a))), 'the Company icon shows the number of alerts')
         print(ok(r['cards'] >= 2 and r['hasFuel']), 'the Company app shows the fleet and the alerts')
+        print(ok(r['acc'] != 'none' and not any(x.endswith(':quota') for x in a) and r['quotaLine'] and not r['quotaAlert']),
+              'the cod quota 95 % fished is a line on the card, not an alert in «Trenger deg» or on the icon', [r['acc'], a])
         print(ok(r['goto']['app'] == 'drift' and r['goto']['sel'] == 'v2' and r['goto']['cur'] == 'v1' and r['goto']['crewShown']), 'an alert opens the Drift page in the drawer on the second vessel, following stays on the first')
         print(ok(r['equip']['v2jobs'] == ['fit:chirp'] and r['equip']['v1jobs'] == [] and r['equip']['cur'] == 'v1'), 'equipment bought with the selector goes to the selected vessel')
         print(ok(r['sale']['v'] == 'v2' and r['incomeShown']), 'the landing is booked on the vessel and shows as its income today')

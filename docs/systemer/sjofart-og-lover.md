@@ -88,15 +88,15 @@ Det spillet bruker, regel for regel:
 
 ### 2.2 Sjøloven, LOV-1994-06-24-39
 
-<https://lovdata.no/dokument/NL/lov/1994-06-24-39>. §§ 135, 161–164 lest gjennom sammendrag; resten bare overskrifter.
+<https://lovdata.no/dokument/NL/lov/1994-06-24-39>. **Kapittel 8 «Sammenstøt» (§§ 161–164) lest på Lovdata 06.11.2026, sent på kvelden (Ø11.3):** hovedsiden og `…/KAPITTEL_8` gir bare innholdsfortegnelsen og et sammendrag i leseverktøyet, så paragrafsiden `…/%C2%A7161` ble lest med forskyvning 39 933 inn i siden, der teksten under «Del III. Ansvar» står; den siden har hele kapittelet. Kapittelet har ikke noen § 165 (neste er kapittel 9, §§ 171–182 c). Leseverktøyet gir bare korte ordrette sitater (de i anførselstegn under); resten er gjengitt med egne ord ledd for ledd. Siden viste ingen «sist endret» i teksten som ble lest. §§ 135 og 475 er fortsatt bare lest i sammendrag.
 
 | § | Krav | I spillet | Økt |
 |---|---|---|---|
 | 135 | Skipsføreren hjelper alle i havsnød så langt det skjer uten alvorlig fare for eget skip og folk [sammendrag] | Anropet når en båt i nærheten er i nød | Ø11.7 |
-| 161 | Den som har skyld, erstatter skaden; begge skyld: etter feilene, ellers likt; personskade solidarisk [sammendrag] | Skylda leses fra vikeplikten før støtet | Ø11.3 |
-| 162 | Ulykkeshendelse eller uvisst: hvert skip bærer sin skade [sammendrag] | Samme | Ø11.3 |
-| 163 | Skade ved manøver uten kontakt [sammendrag] | Ikke bygd (svell) | |
-| 164 | Etter sammenstøt: hjelpe, oppgi navn, hjemsted, hvor fra og hvor til [sammendrag] | Spillet gjør det for deg (VHF og dagboka) | Ø11.3 |
+| 161 «Sammenstøt som følge av skyld på en eller begge sider» | 1. ledd: skyld på én side, «skal den skyldige erstatte skaden» (på skip, last eller person). 2. ledd: skyld på begge sider, hver erstatter etter forholdet mellom feilene; lar det seg ikke fastslå, «deles skaden likt». 3. ledd: hver svarer bare for sin del, men for personskade er de skyldige «solidarisk ansvarlige». 4. ledd: den som har betalt mer enn sin del, kan kreve det tilbake fra den andre. 5. ledd: ved bedømmelsen av skylda skal det særlig tas hensyn til «om det var tid til overlegninger eller ikke» | Skylda leses fra vikeplikten i spillminuttene før støtet, men ikke det siste halve minuttet; delt etter feilene (5.3, 5.4). Ingen blir skadet i spillet, så det solidariske ansvaret og regressen er ikke med | Ø11.3 |
+| 162 «Sammenstøt som følge av ulykkeshendelse» | Følge av ulykkeshendelse, eller kan det ikke vises at skyld på noen side er årsaken, «bærer hvert skip sin skade» | Ingen feil funnet: hver sin skade (5.3) | Ø11.3 |
+| 163 «Sammenstøt uten at skip støter sammen» | Reglene gjelder også når et skip ved manøver eller lignende skader et annet skip eller folk eller last om bord, også «uten at sammenstøt mellom skipene har funnet sted» | Ikke bygd (svell og sug) | |
+| 164 «Plikt til å yte bistand m m» | Etter sammenstøt skal hver skipsfører gi det andre skipet, mannskapet og passasjerene «all den hjelp som er mulig og nødvendig» så langt det kan skje uten særlig fare for eget skip og folk; skipsførerne skal også «oppgi til den andre sitt eget skips navn og hjemsted», og hvor skipet kommer fra og skal; det samme når et skip støter sammen med en båt | Spillet gjør det for deg: VHF-meldingen og dagboka; NPC-en blir liggende (5.5) | Ø11.3 |
 | 475 | Melding om sjøulykke [sammendrag] | Spillet melder for deg | Ø11.6 |
 
 ### 2.3 Skipssikkerhetsloven, LOV-2007-02-16-9
@@ -312,10 +312,104 @@ Bygd og rullet ut 06.11.2026 (05134a03, flettet i 23556f43, rullet ut i f04d4feb
 - NPC-ene sakker ikke farten etter tåkesignalet (19 e gjelder Autonav); de svinger etter 19 d, og slakker av bare når det ikke er plass (8 e). NPC-ene gir ikke signal når de svinger tilbake.
 - Andre spilleres båter gir tåkesignal i ditt spill etter det spillet vet om dem (klassen og farten), ikke etter hva spilleren gjør med hornet.
 
-## 5. Antatt eller usikkert
+## 5. Ø11.3 Sammenstøt (L2)
+
+Bygd og rullet ut 07.11.2026 (grenen `ccr-208d78a1-ruhxll`, flettet med arbeidsgrenen i 01594293 og fdac21e3, ute i 21ec10d3; Jonas: «Rull ut ø11.3»; oppgaven: «Oppgave: Ø11.3, sammenstøt mellom båter (L2). Les sjøloven kapittel 8 (§§ 161–164) ordrett på Lovdata før noe bygges … Kontakten og skylda legges i core/05e-sjovei.js. Skylda leses fra vikeplikten i sekundene før støtet (colregSit, rollene som står, regel 19 og sikker fart). I 16b-dyn.js og 16c-hull.js holdes det til ett kall hver, og 05-vessels.js røres ikke … Andre spilleres båter skades aldri, og det regnes bare med spillet åpent, aldri i catchUp»). Alt ligger nederst i `core/05e-sjovei.js`. De delte filene: ett kall i `core/16b-dyn.js` (øverst i `dynContact`: `sjvTouch`), ingen i `core/16c-hull.js` (skaden regnes med `hullHit`, `hullSay`, `hullCost`, `kaskoSelf` og `KASKO` slik de er), ingen i `core/05-vessels.js` (minuttsteget går gjennom `sjvSail` og blikket). Meldingen til en annen spiller ligger i `ui/10n-hail.js` (`hooks.onClash`), dagboka trengte ingen endring (`ui/06-logbook.js` viser loggen med `k:'nav'` og `S.radio`).
+
+### 5.1 Kontakten
+
+- **Skrogene** er femkanter av lengden og bredden (stevnen, skuldrene ved 0,3 L, hekken ved −0,47 L; `sjvHullPts`, samme ramme som `dynContact`), og kontakten finnes med skillende akser (`sjvSat`): overlappen, veien ut og punktet. Sjømerkene, brupilarene og vindturbinene i sjøen er sirkler fra hinderindeksen (`HIND`, `11b-obstacles.js`; `sjvSatC`), og blåsene til redskapet i sjøen punkter (`NPCGEAR`).
+- **Mot hele lista** (backloggen 10.1, «`npcStates(H)` og `npcStates(H, id)` gir ulik plass»): båtene hentes fra `npcStates(H)` uten id, den samme lista som 3D-visningen og kartplotteren tegner, hvert andre spillsekund innen 300 m (`sjvNear`), og føres videre med farten og kursen mellom.
+- **Tre steder det ses etter:** (1) i hvert steg i manøvreringsmodellen, både for hånd og med Autonav (`sjvTouch` fra `dynContact`, 0,2 spillsekunder; klokka for stegene er `sjvClock`: første steg i et tikk på visningenes tid, hvert steg etter `DYN_H` lenger fram); (2) i hvert blikk når modellen ikke har båten (`sjvSweep` fra `sjvEval`): skrogene fra forrige blikk til dette i steg på halvannen meter av bevegelsen mellom dem, når hun ligger stille, fisker eller driver på sjøen, eller går med minuttsteget; (3) minuttsteget går gjennom `sjvSail`, som tar blikket (`sjvFresh`) og holder henne der det minuttet støtet skjedde (`SJV.stopT`).
+- **Hvem som er med:** alle i lista unntatt redningsskøyta, Kystvakta langs siden under kontroll, båten på slepet i et oppdrag, en spiller du sleper eller blir slept av, og de skjulte. Fortøyde og ankrede bare når du styrer selv (antatt: Autonavs vei inn er havnas, og en båt ved kai der 3D-visningen legger den er ikke noe Autonav ser). I havn, til ankers og på slep ses det ikke etter i blikket.
+
+### 5.2 Støtet og skaden
+
+- **Impulsen** er som mot kaia (`sjvImpulse`, som `dynContact`): båten settes ut av overlappen, farten inn i den andre snus med en femdel, med den andres masse (en halv blokkoeffisient av lengde, bredde og dypgang, `sjvMass`; din egen fra `disp`). NPC-en er på den felles klokka og flyttes ikke av støtet.
+- **Under en knop** tar fendrene det. Over: hvert skrog tar støtet med den farten en kai ville gitt det samme (`sjvKnEq`: hele støtet på den med den andres andel av massen): sjarken mot kystruteskipet tar nesten hele farten, skipet nesten ingenting; to like båter hver farten over roten av to.
+- **Din skade** er `hullHit` (Fysikk 3) med den farten, og det står i dagboka med `hullSay`: «Sammenstøt med «Sjøsprøyt», 6,0 knop. Skroget er skadet. «Sjøsprøyt» fikk skrammer.» (under 3 knop «Smell i …»).
+- **Den andres skade** (`sjvOtherCost`) regnes som `hullHit` med hennes materiale (stål fra 15 m, havflåten og skipene, ellers glassfiber), og prisen er malingen over en flekk etter lengden, skroget etter hva hun er verdt (`sjvValue`: 6 m 0,1 MNOK, 10 m 1,2, 15 m 12, 21 m 20, 40 m 90, 60 m 150, 80 m 250, 125 m 900, antatt), og hullet; aldri over halve verdien. Kystruteskipet som får et lett støt, koster titusener, ikke millioner. Tar hun under en knop som mot kai (den tunge i et skrått støt), får hun ingen skade, ingen betaler, og dagboka sier «… tok ikke skade.» (før sto det «fikk skrammer»; funnet i `hulltest` på det flettede bygget, der ferja ble tatt nesten fra siden i 5,2 knop).
+- **Et nytt støt** mens sammenstøtet varer (til NPC-en har ligget ferdig og ett minutt til) teller bare når det er en halv knop hardere, og da bare som skade på ditt skrog; ingen ny skyld og ingen ny betaling.
+- **Sjømerkene, brupilarene og turbinene:** støtet som mot kaia, «Smell i sjømerket, 2,3 knop.» / «Hardt støt mot brupilaren …», skade med `hullHit`; ingen andre betaler eller får betalt (antatt: Kystverkets krav for et merke er ikke med).
+- **Blåsene:** kjører du over en blåse i mer enn halvannen knop, står det «Kjørte over blåsa til «…». Pass deg for redskap i sjøen.» Ingen skade (de er myke) og ingen tau i propellen (ikke bygd).
+
+### 5.3 Skylda (§§ 161 og 162)
+
+Skylda leses fra **sporet av blikk** (`SJV.trail`): hvert blikk på hvert fartøy innen 3 km de siste 8 spillminuttene, med regelen og rollene som står (Ø11.1: de låses når faren begynner), CPA, TCPA, grensa, om regel 19 gjelder, peilingene, sikten og den sikre farten, og hvordan begge går. `sjvFault` gir poeng for feil:
+
+| Feil | Poeng | Regel |
+|---|---|---|
+| Den vikepliktige (16; begge i 14, 18 c og 19) gjorde ingen markert manøver i god tid | 3 | 8, 16 |
+| Den vikepliktige gjorde noe, men møtte den andre likevel (for lite, for sent) | 1 | 8, 16 |
+| Den som skulle holde kurs og fart, endret kurs eller fart så de kom nærmere, mens det var mer enn 3 spillminutter til CPA (etter det tillater 17 a ii og krever 17 b) | 2 | 17 a i |
+| Sving til babord for en forut: for den som skulle holde kurs, med den andre om babord | 2 | 17 c |
+| Sving til babord for en forut ellers (møtende, nedsatt sikt; ikke den som innhenter) | 1 | 14 a, 19 d i |
+| Over sikker fart i nedsatt sikt (din: stoppdistansene dine, `sjvSafeMs`; hennes: hun ses på under åtte lengder) | 1 | 6, 19 b |
+| Ikke ned til minste styrefart i nærsituasjon med en forut i tåka (under 1 km, CPA under halve grensa) | 1 | 19 e |
+| Svingte rett mot den andre i siste spillminutt uten at det var fare før | 3 | 8, 2 |
+| Gikk på et fartøy som lå fortøyd eller til ankers | 3 | (2 b) |
+
+- **Ikke det siste halve minuttet** (§ 161 femte ledd, «tid til overlegninger»): blikkene i de siste 30 spillsekundene (fem sekunder i ekte tid) teller ikke, så et kast i siste øyeblikk er ingen feil.
+- **Manøveren måles** ved det siste blikket før det halve minuttet: hennes endringer i kurs og fart siden faren begynte, mot der hun ville vært på kursen og farten hun hadde da (bestikk), skal ha åpnet CPA med en femdel av grensa (minst 30 m) mot den andre slik hun faktisk gikk, eller mot den andre på kursen og farten hun hadde (17 a i: den vikepliktige kan regne med det); eller tatt 40 % av farten. **Å styre mot henne er ikke å vike:** en som fortsatte å svinge etter at den andre hadde lagt om, og fikk CPA ned der den gamle kursen ville gått klar (minst halve grensa), har ikke veket (funnet i `hulltest` 7a: forfølgelsen av ferja etter hennes sving etter 17 a ii så ut som en vikemanøver).
+- **Ikke under kommando og begrenset manøvreringsevne** (3 f, g) får ingen poeng: hun kunne ikke gjøre noe. To som ligger stille eller driver under en knop: § 162. To som ikke kan manøvrere: § 162.
+- **Ingen fare sett i tide** (ingen blikk med fare før det siste halve minuttet): den som svingte 20° eller mer mot den andre det siste spillminuttet mens den andre holdt kursen, får skylda; ellers rollene ved støtet (`colregSit` der og da), og den vikepliktige 3.
+- **Delingen:** ingen poeng gir § 162, hver bærer sin skade. Ellers § 161, etter poengene i hele prosent, og minst en femdel til hver som har en feil (avrundet til firedeler ga 40/60 som 50/50 i testen; § 161 sier etter feilene). Eksempler (enhetstestene): du hadde vikeplikt etter regel 15 og gjorde ingenting, 100/0; hun skulle vike og gjorde ingenting, 0/100; du skulle holde kurs og svingte til babord tidlig, hun vek ikke, 40/60; møtende og ingen svingte, 50/50; du svingte til styrbord og hun ikke, 25/75; i tåke uten at noen gjorde noe, og du over sikker fart, 56/44.
+- **Teksten** (`sjvFaultSay`): «Skylda etter sjøloven § 161 er din: du hadde vikeplikt etter regel 15 (kryssende) og holdt ikke av veien.», «… deles likt: du …, og «…» …», «Skylda etter sjøloven § 161: du 40 %, «Sjøsprøyt» 60 %. Du …, og hun …», «Sjøloven § 162: ingen feil på noen av sidene, så hver bærer sin skade.»
+
+### 5.4 Betalingen
+
+- **Din del av hennes skade** (`sjvSettle`): uten kasko betaler du alt, ført som «Erstatning til «…» (sjøloven § 161)» under «Forsikring og slep». Med kasko betaler forsikringen det som går over egenandelen, og du egenandelen; det er en skade på kaskoen som ved en reparasjon (premien en firedel opp i et år, `kaskoClaims`).
+- **Hennes del av din skade:** det skaden din koster deg på verftet (`sjvOwnLoss`: ingenting når det er den første reparasjonen av skroget, som er gratis; egenandelen med kasko; ellers hele) ganger hennes andel, betalt som «Erstatning fra «…» (sjøloven § 161)» under «Andre inntekter». Med kasko tar verftet fortsatt egenandelen og registrerer skaden (antatt; i virkeligheten søker forsikringen regress og kan la være å telle skaden).
+- Linja i dagboka: «Du erstatter 100 % av skaden på «MF Senjasund», 13 500 kr.» eller «Rederiet til «…» betaler deg 12 800 kr for din del av skaden på båten.»
+
+### 5.5 § 164: VHF, dagboka, og NPC-en som blir liggende
+
+- **VHF 16** (`sjvVhf`): ««Sjøsprøyt», «Sjøsprøyt», dette er «Havbris», LM6779, hjemsted Finnsnes, på vei fra Botnhamn til Tromsø. Vi har kollidert med dere. Er alle om bord i orden? Trenger dere hjelp?» og svaret ««Sjøsprøyt»: Alle i orden her. Ingen er skadet, vi klarer oss. Vi blir liggende litt og ser over skroget.» (med vann i båten: «Vi tar inn litt vann, men lensepumpa holder unna.»). Kjenningssignalet er båtens fra 10,67 m (`callOf`, Ø11.5); det sto i backloggen som noe som ventet på Ø11.3. Hvor hun kommer fra, er siste «Kastet loss fra …» i loggen (ellers nærmeste havn); hvor hun skal, neste havn på ruta, eller «feltet».
+- Meldingen står 15 sekunder på skjermen som kystradioen (`toast`) og i `S.radio`, så dekksdagbokas navigasjonsside viser den med tiden («VHF 16: …»). Sammenstøtet og skylda med betalingen står som to linjer i loggen (`k:'nav'`).
+- **NPC-en blir liggende** (`sjvStandBy`): tre spillminutter (et halvt minutt i ekte tid) der støtet var, som en lokal stopp over den felles banen (npc-flåten 4 A: aldri lagret eller sendt). Var hun i en vikemanøver, ligger hun med avviket hun hadde. Etterpå ligger hun så langt etter kursen sin som hun ventet og tar det igjen i 1,3 ganger farten, mens avviket går tilbake med svingens fart (`sjvPose`, `sjvOffAt` for `E.p0`). Mens hun ligger, er posisjonen den hele lista ga ved støtet; etterpå kommer den fra `npcStates(H, id)` (som etter en avslakking i Ø11.1).
+- Sammenstøtene lagres i `S.clashes` (høyst 40, med tid, sted, båt, navnet, farten, regelen, skylda, skadene og betalingen) til Sikkerhet-kortet i Ø11.7.
+
+### 5.6 Andre spilleres båter
+
+Skades aldri (`CLAUDE.md`: sosialt er additivt): din båt tar støtet som mot en båt av hennes størrelse, men hun får ingen skade, ingen betaler noen, og hun stoppes ikke. Loggen sier «… er en annen spillers båt og tar ikke skade.» og «Du ropte opp «…» og spurte om de trenger hjelp (sjøloven § 164).», og spillet sender henne den faste linja «Trenger du hjelp?» (`HAIL.send(n, 4)`; serveren tar bare linjene 0–5, så en egen linje for sammenstøt trenger en migrering).
+
+### 5.7 Når det regnes
+
+Bare med spillet åpent og i gang (`sjvLive`: `DYN.on`, ikke i `catchUp`, `simRate` høyst 60). Med spillet lukket (catchUp) ses det ikke etter kontakt, og ingenting skjer (prinsipp 4). Siden NPC-ene og Autonav viker, skjer det i praksis når spilleren styrer selv, eller når ingen av dem har plass.
+
+### 5.8 Tester og målinger
+
+- **Enhetstestene** (`tests/unit/sjovei-stot.test.mjs`, 71 sjekker, ny): skrogene og kontakten (femkantene, overlapp og vei ut, sjømerket), massene og støtet hvert skrog tar, den andres skade og pris, skylda i hver situasjon (regel 15 begge veier, for lite og for sent, 17 a ii, 17 c, § 161 femte ledd, regel 14, 13, 2, 18, 3 f, to som driver, ved kai, regel 19 med sikker fart og 19 e, brå sving uten fare, å følge hennes sving, NPC-en som følger ruta si), tekstene, betalingen med og uten kasko, den første reparasjonen, § 162, sammenstøtet i sin helhet (`sjvBlow`: skaden, dagboka, VHF med kjenningssignal og hjemsted, NPC-en som blir liggende, et nytt støt uten ny betaling), en annen spillers båt, ingenting i catchUp, et steg i modellen mot en båt i lista, stopp med avvik, og sveipet mellom to blikk. Sett rød uten koden (git stash: 0 OK, 1 FEIL) og grønn med den; sjekken for ruta sett rød mot commiten før rettingen (60/40 med «port»). Hele kjernen grønn.
+- **`hulltest` del 7** (LITE, 28 OK, 70 s; sett rød mot utgangspunktet 731e4792 i en worktree: `TypeError`, `SJV.trail` finnes ikke): (7a) for hånd i ekte tid inn i Senjas ferje som kom fra styrbord (regel 15: du viker), med hurtigsjarken som styrer mot punktet foran henne: støt i 18,6 knop, din båt slått inn (du tar 18,5 knop, ferja 2,0: 12 t mot 983 t), ferja 13 500 kr i skrammer; (7b) skylda din etter regel 15, «holdt ikke av veien» (den første kjøringen sa «vek for sent eller for lite» fordi forfølgelsen etter ferjas sving etter 17 a ii så ut som en vikemanøver; rettet, 5.3); (7c, 7g) dagboka med sammenstøtet, skylda og begge VHF-linjene; (7d) VHF 16 med navnet, kjenningssignalet, hjemstedet og hvor fra, og svaret, på skjermen; (7e) ferja ligger der det skjedde med farten 0; (7f) erstatningen ført som «Erstatning til «MF Senjasund» (sjøloven § 161)»; (7h) en annen spillers båt: ingen skade på henne, ingen betaling, ikke stoppet, meldingen gikk ut; (7i) et sjømerke (en bøye på 1 m lagt i hinderindeksen i åpent vann; Senjas merker står på skjær, dybden ved dem er 0 i kartet): «Hardt støt mot sjømerket, 4,1 knop. Skroget er skadet.»
+- **Skjermbildene** (`tests/out/clash_vhf_land.png`, `clash_vhf_port.png`, `clash_book_land.png`, `clash_book_port.png`, ikke i git; 1280×800 og 800×1280): VHF-meldingen står nederst i liggende og øverst i stående, lesbar i begge; dekksdagboka viser kl. 08:10 «Sammenstøt med «MF Senjasund», 18,6 knop. Skroget er slått inn, og det lekker. «MF Senjasund» fikk skrammer.», skylda med erstatningen og de to VHF-linjene, som oppslag i liggende og én side i stående. I liggende står også lekkasjen og redningsskøyta (støtet åpnet båten).
+- **`run.py changed`** (bygget med bare Senja): `colregtest` 32 OK (603 s; vikingen og tåka som før, med kontakten i hvert steg), `hudtest` 18, `havflaate` 9, `lanterntest` 12, `helmtest` 12, `hailtest` 4 OK, `trip2` i havn uten sidefeil. `dyntest` 26 OK og rød på `ringnot38` (svingdiameteren og stoppen; kjent rød før, regresjonen 05.11.2026). `npctest` og `autonavtest` krever hele kysten i bygget (npctest sier det selv; autonavtest fikk 200 m-celler i Finnmark) og var røde uten den; med kart-31 i `dist/` og `dist-vec/` er de grønne (19 og 25 OK). `trackfollow` (3D) 10 OK (autopiloten i `dynAuto` med kontakten i hvert steg). `anchorlight3d` gikk ut på tid (20 s) mens stikkprøven gikk ved siden av, og var grønn alene (5 OK, 236 s, bare Senja i bygget).
+- **Stikkprøven langs kysten** (`/stikkprove`, `dist-stikk` med hele kysten fra kart-31 og kystflåten fra vec-pakkene, juni kl. 6, uten 3D; en kystbåt under fart som kommer fra styrbord, regel 15, og hurtigsjarken som styrer for hånd mot punktet foran henne, så de møtes; deretter hennes viste plass hvert halve sekund gjennom ventetiden og 30 sekunder etter):
+
+  | Sted | Båten | Støtet (du / hun som mot kai) | Skylda | Hun ble liggende | Etter ventetiden |
+  |---|---|---|---|---|---|
+  | Kristiansand | Morgenrøde, 8,3 m | 15,2 knop (11,9 / 9,5) | din, 100 % | 28 s med avviket 168 m (hun var i en vikemanøver) | største flytt mellom to målinger 18 m (farten hennes), aldri på land |
+  | Bergen | Sjøsprøyt, 15 m | 20,3 knop (18,9 / 7,4); hun slått inn, 498 200 kr | din, 100 % | 28 s, uten avvik | 28 m, aldri på land |
+  | Bodø | Steinbit, 10,7 m | 16,2 knop (14,0 / 8,1) | din, 100 % | 29 s med avviket 130 m | 20 m, aldri på land |
+  | Hammerfest | Torsken II, 6,5 m | 9,9 knop (6,9 / 7,1) | din, 100 % | 28 s med avviket 92 m | 20 m, aldri på land |
+  | Tromsø | Breiflabb II, 9,2 m | først 9,0 knop: **60/40**, fordi ruta hennes bøyde til babord og ble lest som 17 c (funnet her, rettet: en NPC vurderes etter avviket fra kursen sin); etter rettingen 6,5 knop (5,3 / 3,7) | din, 100 %, «holdt ikke av veien» | 29 s med avviket 153 m | 22 m, aldri på land |
+
+  Ingen hopp der ventetiden slutter (den største flyttingen er hennes fart i 1,3 ganger mens hun tar igjen tiden), så forskjellen på `npcStates` med og uten id (10.1) ga ikke noe hopp på disse stedene. VHF-meldingen hadde navnet, kjenningssignalet og hjemstedet alle steder; «på vei fra» var skriptets egen linje i loggen (nærmeste havn, også et verft). I Kristiansand, Bergen, Bodø og Hammerfest sa grunnen «vek for sent eller for lite»: forfølgelsen i skriptet svinger mot punktet foran henne fra starten, før hun legger om, og ser da ut som en tidlig manøver (skylda er den samme, 100 %).
+
+- **Det flettede bygget** (arbeidsgrenen med Tonys spilltest, butikkrettingene og U2-6 flettet inn, 07.11.2026, hele kysten i bygget): hele kjernen 1655 OK, `colregtest` 32, `boottest` 4, `hudtest` 18, `trip2` i havn, `dbg23o` stille med 3D. `hulltest` var rød én gang: støtet mot ferja ble skrått (5,2 knop inn mot skroget, ferja 0,6 som mot kai), og testen krevde skade og betaling hos henne, mens dagboka sa «fikk skrammer» uten at hun hadde noen skade. Teksten er rettet, og testen krever hennes skade bare når hennes støt er over en knop; deretter 28 OK (14,8 knop, ferja 1,6, erstatning 12 200 kr).
+- **Tiden** (`dist-stikk`, uten 3D, en sjark for hånd der stedet er): å hente båtene, merkene og blåsene på nytt (`sjvNear`, hvert andre spillsekund, mest `npcStates`) tok 0,8 ms i median og høyst 6,7 ms i Bergen (16 i lista), 0,6 og 5,1 ms ved Henningsvær 10.03.2027 kl. 9, 1,1 og 4,7 ms i Tromsø (54 i lista); selve steget (`sjvTouch`) under 0,001 ms i median og høyst 2,7 ms (med en henting). Der målingen sto, var ingen båter innen 300 m, så kostnaden med mange skrog tett innpå er ikke målt (hvert skrog er to femkanter mot hverandre).
+
+### 5.9 Ikke med
+
+- § 163 (skade uten kontakt: svell og sug), regressen og det solidariske ansvaret for personskade i § 161 (ingen blir skadet).
+- Tau i propellen fra en blåse, skade på andres redskap, og Kystverkets krav for et sjømerke.
+- At NPC-er støter i hverandre (de går på den felles klokka), og at en annen spillers båt stopper eller får vite skylda.
+- At malusen på kaskoen faller bort når den andre hadde skylda.
+
+## 6. Antatt eller usikkert
 
 - Regel 19–37, vedlegg I og III og kapittel II 46, 49, 52 og 53 d er lest ordrett 06.11.2026 (Ø11.2); vedlegg II og IV ikke. Grensa for nedsatt sikt (2 mil), minste styrefart (2–4 knop), sikker fart (stopp innen halve sikten), at rollene står når de kommer i sikte, at NPC-en bruker maskinen akterover når hun slakker av, og at klokka høres som en fløyte under 20 m, er antatt (4.1–4.4).
-- Sjøloven, skipssikkerhetsloven fra § 28 og kapittel 7–10 i FOR-2000-06-13-660 er bare lest i sammendrag.
+- Sjøloven kapittel 8 er lest på Lovdata 06.11.2026, men leseverktøyet ga bare korte ordrette sitater; resten er gjengitt med egne ord (2.2). §§ 135 og 475, skipssikkerhetsloven fra § 28 og kapittel 7–10 i FOR-2000-06-13-660 er bare lest i sammendrag.
+- Skylda (Ø11.3) er et spillvalg ut fra reglene, ikke en domstols vurdering: poengene, det halve minuttet for «tid til overlegninger», at en femdel av grensa er en markert manøver, åtte lengder for hennes sikre fart, verdiene etter lengden, massene etter en halv blokkoeffisient, og at hvert skrog tar støtet som mot en kai med den andres andel av massen (5.2–5.4).
 - `sdir.no`, `kystverket.no`, `geonorge.no` og `nkom.no` nås ikke herfra. Lovdata svarer bare leseverktøyet, ikke `curl` eller Chromium (06.11.2026).
 - Skyldfordelingen (Ø11.3) avgjøres i virkeligheten av en domstol; spillet bruker en enkel regel ut fra vikeplikten.
 - Vikingen er lokal (npc-flåten 4 A): to spillere nær samme NPC-båt kan se den vike ulikt.

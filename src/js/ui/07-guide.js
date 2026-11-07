@@ -250,12 +250,17 @@ function deckText(short){
   // in real time (it said game minutes), and what is going on: gutting now and how long, or the tub filling towards the stop to gut
   // (Adrian 05.10.2026: «han begynne bare å sløye plutselig … Burde vært en timing på sløying og fiskinga så æ vet om det skjer nokka»)
   const eta = deckEta(hands), when = hands && eta < Infinity ? realDur(eta) : null;
+  // what of it is still round and what is gutted and waits for the ice (Tony 06.11.2026: «hvor mye som må sløyes, hvor mye som er sløyd»)
+  const gutting = catchGut(), raw = gutting ? S.hold.reduce((a, x) => a + (!x.gut && !x.iced && !(SPECIES[x.sp] || {}).live ? x.kg : 0), 0) : 0, done = Math.max(0, kg - raw);
+  const split = gutting && kg >= 0.5 ? L(fmt(raw, 0) + ' kg å sløye, ' + fmt(done, 0) + ' kg sløyd' + (done >= 0.5 ? ' og venter på is' : ''), fmt(raw, 0) + ' kg to gut, ' + fmt(done, 0) + ' kg gutted' + (done >= 0.5 ? ' and waiting for ice' : '')) : '';
   if (short){
-    if (b.deckStop) return [L('Sløyer ', 'Gutting ') + fmt(kg, 0) + ' kg' + (when ? L(', ferdig om ', ', done in ') + when : '') + (b.deckEnd ? '' : L(', så fisker du videre', ', then you fish on')), fmt(kg, 0) + ' kg'];
-    if (!hands && b.status === 'fishing') return [L('Bløggekar ', 'Bleeding tub ') + fmt(kg, 0) + ' / ' + fmt(tubCap(), 0) + ' kg' + L(', sløyer når det er fullt', ', gutting when full'), fmt(kg, 0) + ' kg'];
-    return [L('Dekk: ', 'Deck: ') + fmt(kg, 0) + ' kg' + (when ? ' · ' + when : ''), fmt(kg, 0) + ' kg'];
+    // [the card's line, the strip's short word]: the strip has 47 vw on a phone upright, so the short one is a few words
+    if (b.deckStop) return [L('Sløyer ', 'Gutting ') + fmt(kg, 0) + ' kg' + (split ? ' (' + split + ')' : '') + (when ? L(', ferdig om ', ', done in ') + when : '') + (b.deckEnd ? '' : L(', så fisker du videre', ', then you fish on')), L('Sløyer ', 'Gutting ') + fmt(raw >= 0.5 ? raw : kg, 0) + ' kg' + (when ? ' · ' + when : '')];
+    if (!hands && b.status === 'fishing') return [L('Bløggekar ', 'Bleeding tub ') + fmt(kg, 0) + ' / ' + fmt(tubCap(), 0) + ' kg' + (split ? ' (' + split + ')' : '') + L(', sløyer når det er fullt', ', gutting when full'), L('Kar ', 'Tub ') + fmt(kg, 0) + '/' + fmt(tubCap(), 0) + ' kg'];
+    if (hands) return [L('Sløyer og iser ', 'Gutting and icing ') + fmt(kg, 0) + ' kg' + (split ? ' (' + split + ')' : '') + (when ? L(', ferdig om ', ', done in ') + when : ''), L('Sløyer ', 'Gutting ') + fmt(raw >= 0.5 ? raw : kg, 0) + ' kg' + (when ? ' · ' + when : '')];
+    return [L('Dekk: ', 'Deck: ') + fmt(kg, 0) + ' kg' + (split ? ' (' + split + ')' : ''), L('Dekk ', 'Deck ') + fmt(kg, 0) + ' kg'];
   }
-  return L(fmt(kg, 0) + ' kg i bløggekaret. ', fmt(kg, 0) + ' kg in the bleeding tub. ') + (hands ? L(hands + (hands > 1 ? ' mann' : ' mann') + ' på dekk, ferdig om ' + when + '.', hands + (hands > 1 ? ' hands' : ' hand') + ' on deck, done in ' + when + '.')
+  return L(fmt(kg, 0) + ' kg i bløggekaret' + (split ? ': ' + split : '') + '. ', fmt(kg, 0) + ' kg in the bleeding tub' + (split ? ': ' + split : '') + '. ') + (hands ? L(hands + (hands > 1 ? ' mann' : ' mann') + ' på dekk, ferdig om ' + when + '.', hands + (hands > 1 ? ' hands' : ' hand') + ' on deck, done in ' + when + '.')
     : b.status === 'fishing' ? L('Alene kan du ikke sløye og fiske samtidig.', 'Alone you cannot gut and fish at once.') : L('Alene kan du ikke sløye mens du kjører.', 'Alone you cannot gut while you steer.'));
 }
 // what is going on at the quay besides a landing: moving to the other quay, or the pump running
@@ -386,6 +391,24 @@ function landWarn(p){
   return '<p class="bad landwarn">' + LN('Leverer du nå, blir ca. ' + fmt(kg, 0) + ' kg inndratt, verdi ca. ' + kr(Math.round(sum)) + '. ', 'If you land now, about ' + fmt(kg, 0) + ' kg is confiscated, worth about ' + kr(Math.round(sum)) + '. ') + why +
     LN(' Se Kvote-appen.', ' See the Kvote app.') + '</p>';
 }
+// the queue at the plant (core/07-harbours.js LANDQ, K3): [the line, the short word]
+function landQText(short){
+  const Q = S.boat.landQ, L = (no, en) => S.lang === 'no' ? no : en; if (!Q) return ['', ''];
+  const pt = portById(Q.pid), nm = pt ? pt.name : '', m = Q.wait != null ? Math.max(1, Math.round(Q.wait / 60)) : null;
+  if (Q.ahead == null) return [L('Ber om plass ved kaia i ' + nm + ' …', 'Asking for a place at the quay in ' + nm + ' …'), L('Ber om plass …', 'Asking for a place …')];
+  const ahead = Q.ahead === 0 ? L('kaia er opptatt', 'the quay is busy') : Q.ahead + L(Q.ahead === 1 ? ' båt foran' : ' båter foran', Q.ahead === 1 ? ' boat ahead' : ' boats ahead');
+  return [L('Kø ved mottaket i ' + nm + ': ' + ahead + (m ? ', plass om ca. ' + m + ' min' : ''), 'Queue at the plant in ' + nm + ': ' + ahead + (m ? ', a place in about ' + m + ' min' : '')), L('Kø · ' + (Q.ahead === 0 ? 'opptatt' : Q.ahead + ' foran') + (m ? ' · ca. ' + m + ' min' : ''), 'Queue · ' + (Q.ahead === 0 ? 'busy' : Q.ahead + ' ahead') + (m ? ' · c. ' + m + ' min' : ''))];
+}
+// the plants near by with their queues now (land_look), for «Lever et annet sted»
+function landQOthers(){
+  const b = S.boat, L = (no, en) => S.lang === 'no' ? no : en, near = plantsNear(b.pos, 4).filter(x => x.pt.id !== b.port && plantFor(x.pt, b.type)).slice(0, 3);
+  if (!near.length) return '';
+  landLook(near.map(x => x.pt));
+  const by = LANDQ.look ? LANDQ.look.by : null;
+  return '<h3>' + L('Lever et annet sted', 'Land elsewhere') + '</h3>' + near.map(x => { const q = by ? by[x.pt.id] : null, sl = landSlots(x.pt), busy = q ? q.active >= sl : false, w = q ? q.waiting : 0;
+    const st = !by ? L('…', '…') : !q || (!busy && !w) ? L('ledig', 'free') : (w ? w + L(w === 1 ? ' i kø' : ' i kø', ' waiting') : L('opptatt', 'busy'));
+    return '<div class="lq-row"><span>' + x.pt.name + ' · ' + fmt(x.d / NM, 1) + ' nm</span><b class="' + (st === L('ledig', 'free') ? 'ok' : 'busy') + '">' + st + '</b><button class="btn" data-act="landgo" data-pid="' + x.pt.id + '">' + L('Kjør dit', 'Go there') + '</button></div>'; }).join('');
+}
 function landPage(){
   const b = S.boat, h = [], LN = (no, en) => S.lang === 'no' ? no : en;
   // (at sea the page said «the price list below» with no list under it, UI review 04.11.2026: it says where the catch goes instead, and
@@ -393,6 +416,7 @@ function landPage(){
   if (b.status !== 'port') return '<p class="note">' + LN('Du er ikke i havn. Fisken leveres på et fiskemottak.', 'You are not in harbour. The catch is landed at a fish plant.') + '</p>';
   const p = portById(b.port), tot = holdTotal();
   if (b.land) h.push('<p class="note"><b>' + LN('Lossing: ', 'Landing: ') + '</b>' + landText(false) + ' ' + LN('Sluttseddelen kommer ca. kl. ', 'The landing note comes at about ') + whenTxt(b.land.until) + '.</p>');
+  else if (b.landQ) h.push('<p class="note"><b>' + LN('Kø: ', 'Queue: ') + '</b>' + landQText(false)[0] + '. ' + LN('Lossingen starter av seg selv når det blir din tur. Fisken ligger som i lasten imens.', 'The landing starts by itself when your turn comes. The fish keeps as in the hold meanwhile.') + '</p><div class="btns"><button class="btn" data-act="landq0">' + LN('Gå ut av køen', 'Leave the queue') + '</button></div>' + landQOthers());
   else if (b.shift || b.fueling) h.push('<p class="note">' + quayText(false) + '</p>');
   else if (!plantFor(p, b.type)) h.push('<p class="note">' + t('no_mottak') + '</p>');
   else if (tutOn() && p.id !== tutLand()) h.push('<p class="note">' + LN('På første tur leverer du i ' + tutLandN() + '.', 'On the first trip you land in ' + tutLandN() + '.') + '</p>');

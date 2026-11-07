@@ -23,10 +23,15 @@
     if (S.pgear && S.pgear.nets.some(l => l.cond < 0.35)) A('worn', 'Slitte garn bør bøtes', 'Worn nets should be mended', 'beholdning:gear');
     if (o && !o.on && o.stop) A('ops', 'Driftsplanen har stoppet: ' + o.stop.no, 'The plan has stopped: ' + o.stop.en, 'drift');
     else if (o && o.on && o.held) A('ops', 'Driftsplanen venter til du gir båten tilbake', 'The plan waits until you give the boat back', 'drift');
-    if (access() !== 'none'){ const lim = codLimitNow(H); if (lim > 0 && quotaState().torsk >= lim * 0.9) A('quota', 'Torskekvoten er nesten brukt opp', 'The cod quota is nearly used up', 'kvote'); }
+    // the cod quota is news, not a call (Jonas 07.11.2026: «hva trenger den meg til?»): nothing can be done about a quota fished, so it
+    // stands on her card as a quiet line and does not count in «Trenger deg» or on the icon. Cod over it is confiscated at the landing
+    // (08-actions.js), and the plan goes on (the quota is not the plan's business, Jonas 27.10.2026)
+    let quota = null;
+    if (access() !== 'none'){ const lim = codLimitNow(H), u = lim > 0 ? quotaState().torsk / lim : 0;
+      if (u >= 0.999) quota = {no:'Torskekvoten er fisket opp', en:'The cod quota is fished'}; else if (u >= 0.9) { const pc = Math.floor(u * 100 + 1e-6); quota = {no:'Torskekvoten ' + pc + ' % fisket', en:'Cod quota ' + pc + '% fished'}; } }
     let nx = null; try { const e = nextEvent(); if (e) nx = {t:e.t, txt:e.txt}; } catch (e){}   // the vessel's next event (ui/04-panels-instruments.js), for her card in Rederi
     return {name:S.boatName, type:b.type, status:statusText(), nx, pos:b.status === 'port' ? portById(b.port).name : fieldCode(b.pos) + ' · ' + L('nær ', 'near ') + nearestPort(b.pos).name,
-      hold:holdTotal(), cap:capHold(), fuel:b.fuel, fuelCap:BOAT.fuelCap, ice:b.ice, iceCap:BOAT.iceCap, crew:S.crew.length, crewMax:BOAT.crewMax, ops:o, sk, now:!o ? null : o.v === DRV2 ? [PLAN2UI.nowOf(o)[0], PLAN2UI.nowOf(o)[0]] : driftNow(o), inc, al, inPort:b.status === 'port'};
+      hold:holdTotal(), cap:capHold(), fuel:b.fuel, fuelCap:BOAT.fuelCap, ice:b.ice, iceCap:BOAT.iceCap, crew:S.crew.length, crewMax:BOAT.crewMax, ops:o, sk, now:!o ? null : o.v === DRV2 ? [PLAN2UI.nowOf(o)[0], PLAN2UI.nowOf(o)[0]] : driftNow(o), inc, al, quota, inPort:b.status === 'port'};
   }
   const summaries = () => S.fleet.map(v => ({v, s:withVessel(v, vSummary)}));
   const alerts = () => summaries().flatMap(x => x.s.al);
@@ -43,20 +48,21 @@
     const meV = vesselById(S.me), meIn = !meV || vget(meV, 'boat').status === 'port', why = no ? 'Begge må ligge i havn' : 'Both must be in port';
     const h = ['<div class="ph-c">'];
     for (const {v, s: sm} of all){
-      const vb = vget(v, 'boat'), cur = v.id === S.cur, me = v.id === S.me, inp = vb.status === 'port', canBoard = !me && inp && meIn;
+      const vb = vget(v, 'boat'), cur = v.id === S.cur, me = v.id === S.me, inp = vb.status === 'port', sale = !!mbSale(v), canBoard = !me && inp && meIn && !sale;
       const dot = /engine|adrift|aground/.test(vb.status) ? 'bad' : sm.al.length ? 'warn' : inp ? 'port' : 'ok';
       const tags = (me ? '<span class="fl-tag">' + L('Om bord', 'Aboard') + '</span>' : '') + (cur && all.length > 1 ? '<span class="fl-tag">' + L('Følger', 'Following') + '</span>' : '');
       const meta = [L('Mannskap ', 'Crew ') + sm.crew + ' / ' + sm.crewMax];
       if (sm.iceCap > 0) meta.push(L('Is ', 'Ice ') + fmt(sm.ice, 0) + ' / ' + sm.iceCap + ' kg');
       if (sm.inc > 0) meta.push(L('Inntekt i dag ', 'Income today ') + kr(Math.round(sm.inc)));
+      if (sm.quota) meta.push(L(sm.quota.no, sm.quota.en));
       // the buttons: the main one first, then the second, then «⋯» with the rest
-      const take = me ? '' : '<button class="ph-btn' + (canBoard ? ' p' : '') + '" data-pa="vboard" data-id="' + v.id + '"' + (canBoard ? '' : ' disabled data-why="' + why + '"') + '>' + L('Ta roret', 'Take the helm') + '</button>';
+      const take = me ? '' : '<button class="ph-btn' + (canBoard ? ' p' : '') + '" data-pa="vboard" data-id="' + v.id + '"' + (canBoard ? '' : ' disabled data-why="' + (sale ? L('Ligger til salgs', 'For sale') : why) + '"') + '>' + L('Ta roret', 'Take the helm') + '</button>';
       const follow = cur ? '' : '<button class="ph-btn ' + (canBoard ? 'alt' : 'p') + '" data-pa="vfollow" data-id="' + v.id + '">' + L('Følg', 'Follow') + '</button>';
       const more = ['<button class="ph-btn alt" data-pa="vname" data-id="' + v.id + '">' + L('Gi nytt navn', 'Rename') + '</button>'];
-      if (!me && all.length > 1){ const sw = !inp ? L('Må ligge i havn', 'Must lie in port') : tiLocked(v) ? L('Går i innbytte', 'Being traded in') : '';
-        more.push('<button class="ph-btn red" data-pa="vsell" data-id="' + v.id + '"' + (sw ? ' disabled data-why="' + sw + '"' : '') + '>' + L('Selg for ', 'Sell for ') + kr(vesselValue(v)) + '</button>'); }
-      // the broker (Kystmegleren and delivery, M4): what is under way stands on the card, the offers sit behind «⋯»
-      const mg = me ? '' : mgOwnRow(v), mgOn = !me && (mktOwn(v.id) || (mktState().del || []).some(d => d.vid === v.id));
+      if (!me && all.length > 1){ const q = mbQuickWhy(v), sw = q === 'sea' ? L('Må ligge i havn', 'Must lie in port') : q === 'order' ? L('Går i innbytte', 'Being traded in') : q === 'listed' ? L('Ligger til salgs', 'For sale') : '';
+        more.push('<button class="ph-btn red" data-pa="vsell" data-id="' + v.id + '"' + (sw ? ' disabled data-why="' + sw + '"' : '') + '>' + L('Selg nå til Kystmegleren · ', 'Sell now to Kystmegleren · ') + kr(mbQuick(v)) + '</button>'); }
+      // the broker (Kystmegleren and delivery, M4; the sales between players, B): what is under way stands on the card, the offers sit behind «⋯»
+      const mg = me && !mbSale(v) ? '' : mgOwnRow(v), mgOn = !!mbSale(v) || (mktState().del || []).some(d => d.vid === v.id);
       if (mg && !mgOn) more.push(mg);
       h.push('<div class="ph-card fl"><div class="fl-h"><h4>«' + vget(v, 'boatName') + '»' + (me ? ' ⚓' : '') + '</h4>' + tags + '</div><p class="ph-note fl-type">' + VESSELS[vb.type].name[S.lang] + '</p>' +
         '<div class="fl-st"><i class="fl-dot ' + dot + '"></i><span>' + sm.status + (inp ? '' : ' · ' + sm.pos) + '</span></div>' +

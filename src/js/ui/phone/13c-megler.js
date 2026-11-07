@@ -1,155 +1,180 @@
-  // ===== Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/planer/butikker-og-sponsorer.md 3.3, 10.2, 10.2b) =====
-  // One list (core/09k-market.js), two windows: the broker's page in the Net app, read anywhere, and «Båter til salgs her» in the yard's
-  // Båthandel. A listing has its number, the name she has, the key facts strip, the seller's card with a few lines in his own voice,
-  // Tilstand, Følger med and the spec sheet. A bid can be made from anywhere, once a day; the takst and the purchase only where she lies.
+  // ===== Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-tonys-test.md, Jonas 07.11.2026; EAFC's auction house) =====
+  // One list (the server's, ui/10s-broker.js MBC), two windows: the broker's page in the Net app, read anywhere, and «Båter til salgs her»
+  // in the yard's Båthandel. Only boats other players put out (no NPC listings since 07.11.2026); empty, the page says the yard sells new
+  // at full price (B6). A listing has her number, the key facts, the right marked when it follows her (B8), Tilstand, Følger med, the time
+  // left, the highest bid, and the bid and «Kjøp nå» with delivery to the yard near you for 2 % (B3). Your own boats: «Legg ut til salgs»
+  // (start price, buy-now, 1 h, 6 h, 1 day or 3 days of real time) and «Selg nå» to the broker for 90 % (B4).
   // (No real broker's name: «Kystmegleren» until there is a written agreement, CLAUDE.md.)
-  let mgSel = null; const mgMsg = {};
-  const MG_KIND = {skipper:['Skipper', 'Skipper'], dodsbo:['Dødsbo', 'Estate'], rederi:['Rederi', 'Fishing company'], megler:['Kystmegleren for eieren', 'Kystmegleren for the owner']};
-  // the seller's lines, written in the northern speech and turned into the speech where she lies (dialectText), [no, en]
-  function mgSays(Q){
-    const V = VESSELS[Q.type], k = Q.seller.kind, n = Q.txt, eng = Q.cond.motor > 0.8, hull = Q.cond.hull > 0.8;
-    const T = {skipper:[['Æ har fått mæ større båt, så ho her må vekk. ' + (eng ? 'Motoren går som ei klokke.' : 'Motoren har gått en del, men ho starte kvar gang.'), 'I have got a bigger boat, so this one has to go. ' + (eng ? 'The engine runs like a clock.' : 'The engine has done its hours, but she starts every time.')],
-      ['Ho har vært god mot mæ i mange år. ' + (hull ? 'Skroget e i fin stand.' : 'Skroget treng litt stell.') + ' Ring om du lure på nåkka.', 'She has been good to me for many years. ' + (hull ? 'The hull is in fine shape.' : 'The hull needs some care.') + ' Call if you wonder about anything.'],
-      ['Æ ska gå i land, så ho selges med det som står om bord.', 'I am going ashore, so she is sold with what is aboard.']],
-      dodsbo:[['Båten etter far vår. Han stelte godt med ho, men ho har stått stille det siste året.', 'Our father\'s boat. He looked after her well, but she has stood still this last year.'],
-        ['Vi bor ikkje her lenger og har ingen bruk for ho. Selges som den e.', 'We do not live here any more and have no use for her. Sold as she is.'],
-        ['Ho har ligget ved verftet sia i vinter. Vi vet ikkje så mykkje om motoren.', 'She has lain at the yard since the winter. We do not know much about the engine.']],
-      rederi:[['Vi rydde i flåten og selge ho. Vedlikeholdt etter boka.', 'We are tidying the fleet and selling her. Maintained by the book.'],
-        ['Ho har fiska for oss i mange sesonga. Papira e i orden.', 'She has fished for us for many seasons. The papers are in order.'],
-        ['Selges fordi vi har bygd nytt. Kan ses ved verftet.', 'Sold because we have built new. Can be seen at the yard.']],
-      megler:[['Eieren bor sørpå og har bedt oss selge. Visning ved verftet etter avtale.', 'The owner lives in the south and has asked us to sell her. Viewing at the yard by arrangement.'],
-        ['En ' + V.name.no.toLowerCase() + ' i ' + (hull ? 'god' : 'brukbar') + ' stand. Takst anbefales.', 'A ' + V.name.en.toLowerCase() + ' in ' + (hull ? 'good' : 'fair') + ' condition. A survey is recommended.'],
-        ['Mye båt for pengan. Selges med utstyret som står i lista.', 'A lot of boat for the money. Sold with the equipment in the list.']]}[k][n];
-    const pt = portById(Q.port); return L(dialectText(dialectAt(pt.p), T[0]), T[1]);
-  }
-  const mgNm = Q => dist(S.boat.pos, portById(Q.port).p) / NM;
-  const mgStrip = Q => Q.year + ' · ' + fmt(VESSELS[Q.type].len, 2) + ' m · ' + fmt(Q.engH, 0) + L(' timer', ' hours') + ' · ' + kr(mktPrice(Q));
+  let mgSel = null, mbPutSel = null; const mgMsg = {};
+  const mgPt = Q => portById(Q.port) || {name:'', p:{x:Q.x, y:Q.y}};
+  const mgNm = Q => dist(S.boat.pos, mgPt(Q).p) / NM;
   const mgPct = v => Math.round(v * 100) + ' %';
   const mgBar = v => '<div class="ph-bar"><i class="' + (v < 0.6 ? 'bad' : v < 0.75 ? 'warn' : '') + '" style="width:' + Math.round(v * 100) + '%"></i></div>';
-  const mgEx = Q => Object.entries(Q.ex).map(([q, n]) => EQUIP[q].name[S.lang] + (n !== true ? ' × ' + n : ''));
+  const mgEsc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
+  const mgP = Q => Q.vessel || {};
+  const mgYear = Q => mgP(Q).built || VESSELS[Q.type].year;
+  // the price that stands now: the highest bid, else the start price
+  const mgNow = Q => Q.top != null ? Q.top : Q.start;
+  // the time left, in words, to the minute (the drawer is drawn again a few times a second; a second hand would wipe what you type)
+  function mbLeftTxt(ms){ const m = Math.floor(ms / 60000); if (ms <= 0) return L('avsluttes nå', 'ending now'); if (m < 1) return L('under 1 min', 'under 1 min');
+    const d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mi = m % 60;
+    return d ? d + L(' d ', ' d ') + h + ' t' : h ? h + ' t ' + mi + ' min' : mi + ' min'; }
+  const mgLeft = Q => mbLeftTxt(MBC.left(Q.until));
+  const mbHrs = h => h === 1 ? L('1 time', '1 hour') : h === 6 ? L('6 timer', '6 hours') : h === 24 ? L('1 døgn', '1 day') : L('3 døgn', '3 days');
+  const mgLic = Q => { const l = mgP(Q).lic; return l && l.id ? l : null; };
+  const mgLicTag = Q => mgLic(Q) ? '<small class="mb-lic"><span class="ic-sp-tag">' + L('Hjemmel', 'Right') + '</span> ' + L('hjemmelslengde ' + mgEsc(mgLic(Q).hl || mgLic(Q).id) + ' følger båten', 'quota length ' + mgEsc(mgLic(Q).hl || mgLic(Q).id) + ' goes with the boat') + '</small>' : '';
+  // the yard near you: where she is delivered for 2 % (the yard nearest the boat you are aboard)
+  function mgNear(Q){ const me = vesselById(S.me) || curVessel(), y = mbYardNear(vget(me, 'boat').pos); return y && y.id !== Q.port ? y : null; }
+  const mgTo = Q => sub.mbto === 'near' && mgNear(Q) ? mgNear(Q).id : null;
   function mgCard(Q){
-    const V = VESSELS[Q.type], d = mktDays(Q), cut = mktCut(Q);
-    return '<button class="ph-card vcard mg-card" data-pa="mgsel" data-id="' + Q.id + '"><span class="vpic">' + vesselSVG(Q.type) + '</span><span class="vtx"><b>«' + Q.name + '» <small class="mg-nr">' + Q.id + '</small></b><small>' + V.name[S.lang] + ' · ' + Q.year + ' · ' + fmt(Q.engH, 0) + L(' motortimer', ' engine hours') + '</small>' +
-      (Q.broker ? '<small class="mg-br"><span class="ic-sp-tag">' + L('Samarbeid', 'Partnership') + '</span> ' + L('formidlet av ', 'listed by ') + turEsc(Q.broker.name) + '</small>' : '') + '<span class="vpr">' + kr(mktPrice(Q)) + (cut ? ' <i class="mg-cut">' + L('satt ned', 'reduced') + '</i>' : '') + '</span>' + mgGoal(Q) + '<small>' + L('Ligger i ', 'Lies at ') + portById(Q.port).name + ' · ' + fmt(mgNm(Q), 0) + ' nm · ' + (d ? L('lagt ut for ' + d + ' dager siden', 'listed ' + d + ' days ago') : L('lagt ut i dag', 'listed today')) + '</small></span></button>';
+    const V = VESSELS[Q.type], P = mgP(Q), held = MBC.bids().some(b => String(b.listing) === String(Q.id));
+    return '<button class="ph-card vcard mg-card" data-pa="mgsel" data-id="' + Q.id + '"><span class="vpic">' + vesselSVG(Q.type) + '</span><span class="vtx"><b>«' + mgEsc(Q.name) + '» <small class="mg-nr">nr. ' + Q.id + '</small></b><small>' + V.name[S.lang] + ' · ' + mgYear(Q) + ' · ' + fmt(P.engH || 0, 0) + L(' motortimer', ' engine hours') + '</small>' + mgLicTag(Q) +
+      '<span class="vpr">' + (Q.top != null ? L('Bud ', 'Bid ') + kr(Q.top) : L('Fra ', 'From ') + kr(Q.start)) + (Q.buynow ? ' <i>' + L('Kjøp nå ', 'Buy now ') + kr(Q.buynow) + '</i>' : '') + '</span>' +
+      (Q.mine ? '<small class="mg-goal ok">' + L('Din båt', 'Your boat') + '</small>' : Q.top_me ? '<small class="mg-goal ok">' + L('Du har det høyeste budet', 'You hold the highest bid') + '</small>' : held ? '<small class="mg-goal">' + L('Du er overbydd', 'You are outbid') + '</small>' : '') +
+      '<small>' + L('Ligger i ', 'Lies at ') + mgPt(Q).name + ' · ' + fmt(mgNm(Q), 0) + ' nm · ' + L('slutter om ', 'ends in ') + mgLeft(Q) + ' · ' + Q.bids + L(' bud', Q.bids === 1 ? ' bid' : ' bids') + '</small></span></button>';
   }
-  const mgFits = Q => deal(mktPrice(Q), tradeIn()).ok;
-  // «Neste mål» on the card: how far the equity is from what the bank wants for her (with the boat you have traded in)
-  function mgGoal(Q){ const x = deal(mktPrice(Q), tradeIn()); if (x.ok) return '<small class="mg-goal ok">' + L('Innen rekkevidde nå', 'Within reach now') + '</small>';
-    if (x.why === 'notes') return '<small class="mg-goal">' + L('Banken vil se tre sluttsedler først', 'The bank wants three landing notes first') + '</small>';
-    const pc = Math.min(0.99, eqCash() / Math.max(1, x.eqNeed)); return '<small class="mg-goal">' + L('Egenkapital: ' + Math.round(pc * 100) + ' % av det banken krever', 'Equity: ' + Math.round(pc * 100) + ' % of what the bank wants') + '</small><span class="qbar"><i style="width:' + (pc * 100).toFixed(0) + '%"></i></span>'; }
-  // your own boats: listed with the broker, or the button to list one, and delivery to where you are or home (Rederi app and the broker's page)
-  function mgOwnRow(v){
-    const o = mktOwn(v.id), b = vget(v, 'boat'), nm = vget(v, 'boatName'), D = (mktState().del || []).find(d => d.vid === v.id), H = S.t / 60, h = [];
+  const MB_WHY = {listed:['Hun ligger alt til salgs.', 'She is for sale already.'], aboard:['Du er om bord i henne. Gå om bord i en annen båt først.', 'You are aboard her. Go aboard another boat first.'],
+    only:['Rederiet må ha en annen båt å være om bord i.', 'The company must have another boat to be aboard.'], type:['Havflåten selges bare på verftet.', 'The ocean fleet is sold at the yard only.'],
+    sea:['Hun må ligge i havn.', 'She must lie in port.'], busy:['Hun losser ved mottaket.', 'She is landing at the plant.'], hold:['Lasten må leveres først.', 'The catch must be landed first.'],
+    gear:['Ta opp redskapet hennes i sjøen først.', 'Take up her gear in the sea first.'], del:['Hun er under levering.', 'She is being delivered.'], order:['Hun går i innbytte på verftet.', 'She is being traded in at the yard.'],
+    ops:['Slå av driftsplanen hennes først.', 'Turn her plan off first.'], many:['Høyst tre båter til salgs om gangen.', 'At most three boats for sale at a time.'], cloud:['Kystmegleren trenger nett og innlogging.', 'Kystmegleren needs the net and a sign-in.'],
+    guest:['Registrer deg for å handle hos Kystmegleren.', 'Register to trade at Kystmegleren.'], start:['Startprisen må være mellom 40 % og 160 % av verdien.', 'The start price must be between 40 % and 160 % of the value.'],
+    buynow:['«Kjøp nå» må være over startprisen og høyst 160 % av verdien.', 'Buy now must be above the start price and at most 160 % of the value.'], hours:['Velg hvor lenge hun skal ligge ute.', 'Choose how long she is to be out.'],
+    yard:['Ingen verft i nærheten.', 'No yard nearby.'], own:['Det er din egen båt.', 'That is your own boat.'], bladb:['En båt med hjemmel krever blad B i fiskermanntallet. Se Papirer.', 'A boat with a right needs blad B of the fishermen\'s register. See Papers.'],
+    open:['Et rederi uten hjemmel kan bare ha én båt i åpen gruppe.', 'A company without a right can only have one boat in the open group.'], cash:['Du har ikke nok penger.', 'You do not have the money.'], gone:['Salget er over.', 'The sale is over.']};
+  const mbWhyTxt = (w, r) => (r && r.text) || (MB_WHY[w] ? L(MB_WHY[w][0], MB_WHY[w][1]) : L('Det går ikke nå.', 'Not now.'));
+  // your own boats: for sale (the bids, the time left, «Trekk fra salg» while nobody has bid), or the buttons to put her out and to sell her
+  // now, and delivery to where you are or home (Rederi and the broker's page; quick: with «Selg nå», which Rederi has behind «⋯»)
+  function mgOwnRow(v, quick){
+    const s = mbSale(v), b = vget(v, 'boat'), D = (mktState().del || []).find(d => d.vid === v.id), H = S.t / 60, h = [];
     if (D) return '<p class="ph-note">' + L('Seiles til ' + portById(D.to).name + ', framme om ' + Math.max(1, Math.round(D.H1 - H)) + ' timer.', 'Being sailed to ' + portById(D.to).name + ', there in ' + Math.max(1, Math.round(D.H1 - H)) + ' hours.') + '</p>';
-    if (o) h.push('<p class="ph-note">' + L('Til salgs hos Kystmegleren for ' + kr(o.kr) + '. Selges innen ' + Math.max(1, Math.ceil((o.H1 - H) / 24)) + ' dager; megleren tar 5 %. Hun må ligge i havn til da.', 'For sale at Kystmegleren for ' + kr(o.kr) + '. Sold within ' + Math.max(1, Math.ceil((o.H1 - H) / 24)) + ' days; the broker takes 5 %. She must lie in port until then.') + '</p><button class="ph-btn alt" data-pa="mgunown" data-id="' + v.id + '">' + L('Trekk fra salg', 'Withdraw') + '</button>');
-    else if (!mktOwnWhy(v)) h.push('<button class="ph-btn" data-pa="mgown" data-id="' + v.id + '">' + L('Legg ut hos Kystmegleren · ca. ', 'List at Kystmegleren · about ') + kr(mktOwnValue(v)) + '</button>');
-    if (v.id !== S.me && b.status === 'port'){ const meB = vget(vesselById(S.me), 'boat'), home = S.home || HOME0, to = [];
+    if (s){ const m = MBC.mineOf(v.id) || {}, pt = portById(s.port);
+      h.push('<p class="ph-note mb-own">' + L('Til salgs hos Kystmegleren: ', 'For sale at Kystmegleren: ') + (m.top ? L('høyeste bud ' + kr(m.top) + ' (' + m.bids + ' bud)', 'highest bid ' + kr(m.top) + ' (' + m.bids + (m.bids === 1 ? ' bid)' : ' bids)')) : L('ingen bud ennå, fra ' + kr(s.start), 'no bids yet, from ' + kr(s.start))) +
+        (s.buynow ? L(', «Kjøp nå» ' + kr(s.buynow), ', buy now ' + kr(s.buynow)) : '') + '. ' + L('Slutter om ', 'Ends in ') + mbLeftTxt(MBC.left(s.until)) + '. ' + L('Hun ligger ved verftet i ' + (pt ? mbPlace(pt) : '') + ' til salget er over.', 'She lies at the yard in ' + (pt ? mbPlace(pt) : '') + ' until the sale is over.') + '</p>');
+      if (!(m.bids > 0) && s.lid != null) h.push('<button class="ph-btn alt" data-pa="mbcancel" data-id="' + s.lid + '">' + L('Trekk fra salg', 'Withdraw') + '</button>');
+      return '<div class="ph-btncol mg-own">' + h.join('') + '</div>'; }
+    if (v.id === S.me) return '';
+    const w = mbWhy(v) || (!MBC.on() ? 'cloud' : MBC.guest() ? 'guest' : null);
+    h.push('<button class="ph-btn" data-pa="mbput" data-id="' + v.id + '"' + (w && w !== 'cloud' && w !== 'guest' ? ' disabled data-why="' + mgEsc(mbWhyTxt(w)) + '"' : '') + '>' + L('Legg ut til salgs', 'Put out for sale') + '</button>');
+    if (quick){ const q = mbQuickWhy(v); h.push('<button class="ph-btn alt" data-pa="vsell" data-id="' + v.id + '"' + (q ? ' disabled data-why="' + mgEsc(mbWhyTxt(q)) + '"' : '') + '>' + L('Selg nå til Kystmegleren · ', 'Sell now to Kystmegleren · ') + kr(mbQuick(v)) + '</button>'); }
+    if (b.status === 'port'){ const meB = vget(vesselById(S.me), 'boat'), home = S.home || HOME0, to = [];
       if (meB && meB.status === 'port' && meB.port && meB.port !== b.port) to.push(meB.port); if (home && home !== b.port && !to.includes(home)) to.push(home);
-      for (const p of to){ const q = portById(p); if (!q) continue; const c = mktDelKr(dist(b.pos, q.p) / NM); h.push('<button class="ph-btn alt" data-pa="mgdel" data-id="' + v.id + '" data-to="' + p + '"' + (c > spendable() || o ? ' disabled' : '') + '>' + L('Få henne levert til ' + q.name + ' · ', 'Have her delivered to ' + q.name + ' · ') + kr(c) + '</button>'); } }
-    return h.length ? '<div class="ph-btncol mg-own">' + h.join('') + '</div>' : '';
+      for (const p of to){ const q = portById(p); if (!q) continue; const c = mktDelKr(dist(b.pos, q.p) / NM); h.push('<button class="ph-btn alt" data-pa="mgdel" data-id="' + v.id + '" data-to="' + p + '"' + (c > spendable() ? ' disabled' : '') + '>' + L('Få henne levert til ' + q.name + ' · ', 'Have her delivered to ' + q.name + ' · ') + kr(c) + '</button>'); } }
+    return '<div class="ph-btncol mg-own">' + h.join('') + '</div>';
+  }
+  // «Legg ut til salgs» (B1): the start price and buy-now within the limits, the time, where she will lie, the commission; or sell now
+  function mbForm(v){
+    const b = vget(v, 'boat'), V = VESSELS[b.type], val = vesselValue(v), B = mbBounds(val), yard = mbYardNear(b.pos), hrs = MB.hours.includes(+sub.mbhrs) ? +sub.mbhrs : 24;
+    const w = mbWhy(v) || (!MBC.on() ? 'cloud' : MBC.guest() ? 'guest' : null), q = mbQuickWhy(v), st0 = Math.min(B.max, Math.max(B.min, mktRound(val))), bn0 = Math.min(B.max, mktRound(val * 1.3));
+    const h = ['<div class="ph-c"><button class="ph-btn alt mkback" data-pa="mbput0">‹ ' + L('Tilbake', 'Back') + '</button><div class="ph-card vsheet mb-form"><h4>' + L('Legg ut til salgs', 'Put out for sale') + ': «' + mgEsc(vget(v, 'boatName')) + '»</h4><p class="ph-note">' + V.name[S.lang] + '</p><div class="vbig">' + vesselSVG(b.type) + '</div>'];
+    h.push('<div class="vsec"><h5>' + L('Verdi', 'Value') + '</h5>' + kv(L('Verdien hennes', 'Her value'), kr(val)) + (vget(v, 'lic') ? kv(L('Av det er hjemmelen', 'Of which the right'), kr(mbLicKr(v))) : '') + '<p class="ph-note">' + L('Det verftet gir i innbytte. Startprisen kan være fra ' + kr(B.min) + ' (40 %), og «Kjøp nå» høyst ' + kr(B.max) + ' (160 %).', 'What the yard gives as a trade-in. The start price can be from ' + kr(B.min) + ' (40 %), and buy now at most ' + kr(B.max) + ' (160 %).') + '</p></div>');
+    h.push('<label class="ph-kv"><span>' + L('Startpris', 'Start price') + '</span><input id="mbStart" type="number" inputmode="numeric" step="1000" min="' + B.min + '" max="' + B.max + '" value="' + st0 + '"></label>');
+    h.push('<label class="ph-kv"><span>' + L('«Kjøp nå» (tom: ingen)', 'Buy now (empty: none)') + '</span><input id="mbBuy" type="number" inputmode="numeric" step="1000" max="' + B.max + '" value="' + bn0 + '"></label>');
+    h.push('<div class="vsec"><h5>' + L('Hvor lenge', 'How long') + '</h5><div class="net-shops mb-hrs">' + MB.hours.map(x => '<button class="chip-b' + (x === hrs ? ' on' : '') + '" data-pa="mbhrs" data-h="' + x + '">' + mbHrs(x) + '</button>').join('') + '</div><p class="ph-note">' + L('Ekte tid, også når spillet er lukket.', 'Real time, also when the game is closed.') + '</p></div>');
+    h.push('<p class="ph-note">' + L('Hun legges ved verftet i ' + (yard ? mbPlace(yard) : '–') + ' og kan ikke seiles før salget er over. Andre spillere byr eller kjøper henne for «Kjøp nå». Megleren tar 5 % når hun er solgt, og lånene innfris først. Får hun ingen bud, er hun din igjen.', 'She is laid at the yard in ' + (yard ? mbPlace(yard) : '–') + ' and cannot be sailed until the sale is over. Other players bid, or buy her at the buy-now price. The broker takes 5 % when she is sold, and the loans are paid off first. With no bid, she is yours again.') +
+      (vget(v, 'lic') ? ' <b>' + L('Hjemmelen følger med båten, og det står på kortet hennes.', 'The right goes with the boat, and her card says so.') + '</b>' : '') + '</p>');
+    if (mgMsg['put' + v.id]) h.push('<p><b>' + mgMsg['put' + v.id] + '</b></p>');
+    h.push('<button class="ph-btn p" data-pa="mbputgo" data-id="' + v.id + '"' + (w ? ' disabled data-why="' + mgEsc(mbWhyTxt(w)) + '"' : '') + '>' + L('Legg ut', 'Put out') + '</button>');
+    h.push('<div class="vsec"><h5>' + L('Eller selg henne nå', 'Or sell her now') + '</h5><p class="ph-note">' + L('Megleren kjøper henne med en gang for 90 % av verdien, og hun er borte.', 'The broker buys her at once for 90 % of the value, and she is gone.') + '</p><button class="ph-btn alt" data-pa="vsell" data-id="' + v.id + '"' + (q ? ' disabled data-why="' + mgEsc(mbWhyTxt(q)) + '"' : '') + '>' + L('Selg nå · ', 'Sell now · ') + kr(mbQuick(v)) + '</button></div>');
+    return h.join('') + '</div></div>';
   }
   function megler(){
-    if (mgSel){ const Lx = mktById(mgSel); if (Lx) return mgSheet(Lx); mgSel = null; }
+    if (mbPutSel){ const v = vesselById(mbPutSel); if (v) return mbForm(v); mbPutSel = null; }
+    MBC.load();
+    if (mgSel){ const Lx = MBC.byId(mgSel); if (Lx) return mgSheet(Lx); if (MBC.loaded) mgSel = null; }
     const tab = sub.mgtab || 'alle', so = sub.mgsort || 'near', h = ['<div class="ph-c"><button class="ph-btn alt mkback" data-pa="sub" data-s="home">‹ ' + L('Nettet', 'The Net') + '</button><div class="net-bar">kystmegleren.detstorebla.no</div>'];
     h.push('<div class="ph-sub mk">' + [['alle', 'Alle', 'All'], ['open', 'Åpen gruppe', 'Open group'], ['kyst', 'Kystflåten', 'Coastal fleet']].map(([k, no, en]) => '<button class="' + (tab === k ? 'on' : '') + '" data-pa="mgtab" data-s="' + k + '">' + L(no, en) + '</button>').join('') + '</div>');
-    h.push('<div class="net-shops">' + [['near', 'Nærmest', 'Nearest'], ['cheap', 'Billigst', 'Cheapest'], ['new', 'Nyest', 'Newest'], ['fit', 'Passer meg', 'Suits me']].map(([k, no, en]) => '<button class="chip-b' + (so === k ? ' on' : '') + '" data-pa="mgsort" data-s="' + k + '">' + L(no, en) + '</button>').join('') + '</div>');
-    let A = mktListings().filter(x => tab === 'alle' || VESSELS[x.type].cls === tab);
-    if (so === 'fit') A = A.filter(mgFits);
-    A.sort(so === 'cheap' ? (a, b) => mktPrice(a) - mktPrice(b) : so === 'new' ? (a, b) => b.H0 - a.H0 : (a, b) => mgNm(a) - mgNm(b));
-    { const F = A.filter(x => x.broker && x.broker.featured).slice(0, 2); A = F.concat(A.filter(x => !F.includes(x))); }   // a broker's featured ones first, at most two (M8, F6)
-    h.push('<p class="ph-note">' + L(A.length + ' båter til salgs langs kysten. Bud kan gis herfra; takst og kjøp der båten ligger.', A.length + ' boats for sale along the coast. Bids can be made from here; survey and purchase where the boat lies.') + '</p>');
+    h.push('<div class="net-shops">' + [['near', 'Nærmest', 'Nearest'], ['cheap', 'Billigst', 'Cheapest'], ['end', 'Slutter snart', 'Ending soon'], ['new', 'Nyest', 'Newest']].map(([k, no, en]) => '<button class="chip-b' + (so === k ? ' on' : '') + '" data-pa="mgsort" data-s="' + k + '">' + L(no, en) + '</button>').join('') + '</div>');
+    let A = MBC.list().filter(x => VESSELS[x.type] && (tab === 'alle' || VESSELS[x.type].cls === tab));
+    A.sort(so === 'cheap' ? (a, b) => mgNow(a) - mgNow(b) : so === 'end' ? (a, b) => Date.parse(a.until) - Date.parse(b.until) : so === 'new' ? (a, b) => Date.parse(b.at) - Date.parse(a.at) : (a, b) => mgNm(a) - mgNm(b));
+    if (A.length) h.push('<p class="ph-note">' + L(A.length + (A.length === 1 ? ' båt' : ' båter') + ' til salgs fra andre spillere. By herfra; hun overtas ved verftet der hun ligger, eller leveres til verftet nær deg for 2 %.', A.length + (A.length === 1 ? ' boat' : ' boats') + ' for sale from other players. Bid from here; she is taken over at the yard where she lies, or delivered to the yard near you for 2 %.') + '</p>');
+    if (A.length) h.push(A.map(mgCard).join(''));
+    else { const y = mbYardNear(S.boat.pos);
+      h.push('<div class="ph-card mb-empty"><h4>' + L('Ingen båter til salgs nå.', 'No boats for sale now.') + '</h4><p>' + L('Verftet selger nye til full pris.', 'The yard sells new ones at full price.') + '</p><p class="ph-note">' + (MBC.on() ? L('Kystmegleren formidler bare båter mellom spillere. Si hva du ser etter under «Ønsket båt», så får du beskjed når en slik legges ut.', 'Kystmegleren only brokers boats between players. Say what you are looking for under «Wanted boat», and you are told when one is put out.') : L('Kystmegleren formidler båter mellom spillere og trenger nett og innlogging.', 'Kystmegleren brokers boats between players and needs the net and a sign-in.')) + '</p>' +
+        (y && !(S.boat.port === y.id && S.boat.status === 'port') ? '<button class="ph-btn" data-pa="goplace" data-id="' + y.id + '">' + L('Autonav til verftet i ' + mbPlace(y), 'Autonav to the yard in ' + mbPlace(y)) + '</button>' : '') + '</div>'); }
+    const my = MBC.bids(); if (my.length) h.push('<div class="ph-card mb-bids"><h4>' + L('Dine bud', 'Your bids') + '</h4>' + my.map(b => kv('«' + mgEsc(b.name) + '»', kr(b.kr) + (b.fee ? L(' + levering ', ' + delivery ') + kr(b.fee) : '') + ' · ' + mbLeftTxt(MBC.left(b.until)))).join('') + '<p class="ph-note">' + L('Pengene er bundet hos megleren til du blir overbydd eller salget er over.', 'The money is held by the broker until you are outbid or the sale is over.') + '</p></div>');
+    const mine = S.fleet.filter(v => v.id !== S.me || mbSale(v));
+    if (mine.length) h.push('<div class="ph-card"><h4>' + L('Dine båter', 'Your boats') + '</h4>' + mine.map(v => '<p><b>«' + mgEsc(vget(v, 'boatName')) + '»</b> · ' + VESSELS[vget(v, 'boat').type].name[S.lang] + '</p>' + mgOwnRow(v, true)).join('') + '</div>');
+    else h.push('<p class="ph-note">' + L('Du kan legge ut en båt når rederiet har en annen å være om bord i.', 'You can put a boat out when the company has another to be aboard.') + '</p>');
     h.push(mgWishCard());
-    const mine = S.fleet.filter(v => v.id !== S.me);
-    if (mine.length) h.push('<div class="ph-card"><h4>' + L('Dine båter', 'Your boats') + '</h4>' + mine.map(v => '<p><b>«' + vget(v, 'boatName') + '»</b> · ' + VESSELS[vget(v, 'boat').type].name[S.lang] + '</p>' + mgOwnRow(v)).join('') + '</div>');
-    h.push(A.length ? A.map(mgCard).join('') : '<p class="ph-note">' + L('Ingen båter passer akkurat nå.', 'No boats suit just now.') + '</p>');
-    const sold = mktSold().slice(0, 8);
-    if (sold.length) h.push('<div class="ph-card"><h4>' + L('Solgt siste måned', 'Sold in the last month') + '</h4>' + sold.map(x => kv(VESSELS[x.type].name[S.lang] + ' ' + x.year + ' · ' + portById(x.port).name, kr(mktAsk(x, x.H1 - 1)))).join('') + '</div>');
+    const sold = MBC.sold().slice(0, 8);
+    if (sold.length) h.push('<div class="ph-card"><h4>' + L('Solgt siste måned', 'Sold in the last month') + '</h4>' + sold.filter(x => VESSELS[x.type]).map(x => kv(VESSELS[x.type].name[S.lang] + ' · ' + (portById(x.port) ? portById(x.port).name : ''), kr(x.price))).join('') + '</div>');
     return h.join('') + '</div>';
   }
   function mgWishCard(){
-    const W = mktState().wish, hits = mktWishHits();
-    if (!W) return '<details class="ph-card mg-wish"><summary>' + L('Ønsket båt', 'Wanted boat') + '</summary><p class="ph-note">' + L('Si hva du ser etter, så viser Kystmegleren de som kommer.', 'Say what you are looking for, and Kystmegleren shows the ones that come.') + '</p>' +
+    const W = mktState().wish, hits = mbWishHits(MBC.list());
+    if (!W) return '<details class="ph-card mg-wish"><summary>' + L('Ønsket båt', 'Wanted boat') + '</summary><p class="ph-note">' + L('Si hva du ser etter, så sier Kystmegleren fra når en slik legges ut.', 'Say what you are looking for, and Kystmegleren tells you when one is put out.') + '</p>' +
       '<label class="ph-kv"><span>' + L('Gruppe', 'Group') + '</span><select id="mgWishC"><option value="open">' + L('Åpen gruppe', 'Open group') + '</option><option value="kyst">' + L('Kystflåten', 'Coastal fleet') + '</option></select></label>' +
       '<label class="ph-kv"><span>' + L('Høyst', 'At most') + '</span><input id="mgWishMax" type="number" inputmode="numeric" min="0" step="10000" value="' + Math.max(100000, Math.round(eqCash() * 5 / 10000) * 10000) + '"></label><button class="ph-btn" data-pa="mgwish">' + L('Lagre', 'Save') + '</button></details>';
     return '<div class="ph-card mg-wish"><h4>' + L('Ønsket båt', 'Wanted boat') + '</h4><p>' + (W.cls === 'kyst' ? L('Kystflåten', 'Coastal fleet') : L('Åpen gruppe', 'Open group')) + ' · ' + L('høyst ', 'at most ') + kr(W.max) + '</p><p class="ph-note">' +
-      (hits.length ? L(hits.length + ' til salgs nå. Nyeste: «' + hits[0].name + '» i ' + portById(hits[0].port).name + '.', hits.length + ' for sale now. Newest: «' + hits[0].name + '» at ' + portById(hits[0].port).name + '.') : L('Ingen akkurat nå.', 'None just now.')) + '</p>' +
-      (hits.length ? '<button class="ph-btn" data-pa="mgsel" data-id="' + hits[0].id + '">' + L('Se den nyeste', 'See the newest') + '</button> ' : '') + '<button class="ph-btn alt" data-pa="mgwish0">' + L('Fjern', 'Remove') + '</button></div>';
+      (hits.length ? L(hits.length + ' til salgs nå. Nyeste: «' + mgEsc(hits[0].name) + '» i ' + mgPt(hits[0]).name + '.', hits.length + ' for sale now. Newest: «' + mgEsc(hits[0].name) + '» at ' + mgPt(hits[0]).name + '.') : L('Ingen akkurat nå. Du får beskjed når en legges ut.', 'None just now. You are told when one is put out.')) + '</p>' +
+      (hits.length ? '<button class="ph-btn" data-pa="mgsel" data-id="' + hits[0].id + '">' + L('Se den', 'See her') + '</button> ' : '') + '<button class="ph-btn alt" data-pa="mgwish0">' + L('Fjern', 'Remove') + '</button></div>';
   }
   function mgSheet(Q){
-    const V = VESSELS[Q.type], M = mktState(), pt = portById(Q.port), here = S.boat.port === Q.port && S.boat.status === 'port' && atKind('verft'), price = mktPrice(Q), ask = mktAsk(Q), D = M.deals[Q.id], tk = !!M.takst[Q.id], bn = '«' + S.boatName + '»';
+    const V = VESSELS[Q.type], P = mgP(Q), pt = mgPt(Q), here = S.boat.port === Q.port && S.boat.status === 'port', c = mbCond(P), lic = mgLic(Q), near = mgNear(Q), to = mgTo(Q);
     const sec = (t, rows) => '<div class="vsec"><h5>' + t + '</h5>' + rows.filter(Boolean).join('') + '</div>', h = [];
     h.push('<div class="ph-c"><button class="ph-btn alt mkback" data-pa="mgsel">‹ ' + L('Tilbake til listen', 'Back to the list') + '</button>');
-    h.push('<div class="ph-card vsheet mg-sheet"><h4>«' + Q.name + '» · ' + V.name[S.lang] + '</h4><p class="ph-note mg-nr">' + Q.id + '</p><div class="vbig">' + vesselSVG(Q.type) + '</div>');
-    h.push('<p class="mg-strip">' + mgStrip(Q) + '</p><p class="ph-note">' + (mktDays(Q) ? L('Lagt ut for ' + mktDays(Q) + ' dager siden', 'Listed ' + mktDays(Q) + ' days ago') : L('Lagt ut i dag', 'Listed today')) + ' · ' + L('sett av ' + mktSeen(Q) + ' skippere', 'seen by ' + mktSeen(Q) + ' skippers') + (mktCut(Q) ? ' · <b>' + L('Prisen satt ned', 'Price reduced') + '</b>' : '') + '</p>');
-    h.push(sec(L('Pris', 'Price'), [kv(L('Prisantydning', 'Asking price'), kr(ask)), D && D.kr < ask ? kv(L('Ditt bud er godtatt', 'Your bid is accepted'), kr(D.kr) + L(' i ei uke', ' for a week')) : '', kv(L('Markedsverdi', 'Market value'), L('ca. ', 'about ') + kr(Q.fair))]));
-    // the seller
-    if (Q.broker) h.push('<div class="ph-card mg-broker"><h4><span class="ic-sp-tag">' + L('Samarbeid', 'Partnership') + '</span> ' + L('Formidlet av ', 'Listed by ') + turEsc(Q.broker.name) + '</h4>' + (Q.broker.line ? '<p>' + turEsc(Q.broker.line) + '</p>' : '') +
-      '<p class="ph-note">' + L('En ekte båt til salgs, vist som nærmeste båttype i spillet, med pris i spillets skala.', 'A real boat for sale, shown as the nearest boat type in the game, with the price in the game\'s scale.') + '</p>' +
-      (Q.broker.url ? '<p class="ic-sp-out"><a class="ic-sp-link" href="' + turEsc(Q.broker.url) + '" target="_blank" rel="noopener sponsored" data-pl="' + Q.broker.pl + '">' + L('Se den ekte båten ↗', 'See the real boat ↗') + '</a> <small>' + L('åpner utenfor spillet', 'opens outside the game') + '</small></p>' : '') + '</div>');
-    h.push('<div class="ph-card mg-seller"><h4>' + Q.seller.name + ' <small>' + L(MG_KIND[Q.seller.kind][0], MG_KIND[Q.seller.kind][1]) + ', ' + Q.seller.home + '</small></h4><p>«' + mgSays(Q) + '»</p><p class="ph-note">' + L('Alle opplysninger er gitt så korrekt som mulig, men uten ansvar for feil og mangler.', 'All details are given as correctly as possible, but without liability for errors and omissions.') + '</p></div>');
-    // the state, and what the takst found
-    h.push(sec(L('Tilstand', 'Condition'), [kv(L('Skrog', 'Hull'), mgPct(Q.cond.hull)), mgBar(Q.cond.hull), kv(L('Motor', 'Engine'), tk ? mgPct(Q.motorT) + (Q.flaw ? ' · <b class="r2">' + L('dårligere enn oppgitt', 'worse than stated') + '</b>' : ' · ' + L('som oppgitt', 'as stated')) : mgPct(Q.cond.motor) + L(' (oppgitt)', ' (stated)')), mgBar(tk ? Q.motorT : Q.cond.motor),
-      kv(L('Elektronikk', 'Electronics'), mgPct(Q.cond.elek)), mgBar(Q.cond.elek), kv(L('Motortimer', 'Engine hours'), fmt(Q.engH, 0)), kv(L('Takst', 'Survey'), tk ? L('tatt', 'done') : L('ikke tatt', 'not done'))]));
-    const std = (V.std || []).map(q => EQUIP[q].name[S.lang]), ex = mgEx(Q);
-    h.push(sec(L('Følger med', 'Comes with'), [kv(L('Utstyr', 'Equipment'), std.concat(ex).join(', ') || L('ingenting utover båten', 'nothing besides the boat'))]));
-    h.push(sec(L('Ligger', 'Lies'), [kv(L('Ved verftet i', 'At the yard in'), pt.name), kv(L('Avstand', 'Distance'), fmt(mgNm(Q), 1) + ' nm')]) + (here ? '' : '<button class="ph-btn" data-pa="goplace" data-id="' + pt.id + '">' + L('Autonav dit', 'Autonav there') + '</button>'));
-    // a bid, from anywhere, once a day
-    const B = M.bids[Q.id], today = B && B.day === Math.floor(S.t / 1440);
-    h.push('<div class="ph-card"><h4>' + L('Gi bud', 'Make a bid') + '</h4><p class="ph-note">' + L('Ett bud om dagen, fra 90 % av prisantydningen (' + kr(Math.ceil(ask * MKT.bidFloor)) + '). Et godtatt bud gjelder i ei uke.', 'One bid a day, from 90 % of the asking price (' + kr(Math.ceil(ask * MKT.bidFloor)) + '). An accepted bid holds for a week.') + '</p>' +
-      (mgMsg[Q.id] ? '<p><b>' + mgMsg[Q.id] + '</b></p>' : '') +
-      (today ? '' : '<label class="ph-kv"><span>' + L('Bud', 'Bid') + '</span><input id="mgBid" type="number" inputmode="numeric" step="1000" value="' + Math.ceil(ask * 0.92 / 1000) * 1000 + '"></label><button class="ph-btn" data-pa="mgbid" data-id="' + Q.id + '">' + L('Send budet', 'Send the bid') + '</button>') + '</div>');
-    // at the yard where she lies: the takst and the purchase
-    if (!here) h.push('<p class="ph-note">' + L('Takst og kjøp skjer ved verftet i ' + pt.name + ', der hun ligger.', 'Survey and purchase happen at the yard in ' + pt.name + ', where she lies.') + '</p>');
-    else {
-      if (!tk){ const c = M.freeTakst ? 0 : mktTakstKr(Q); h.push('<div class="ph-card"><h4>' + L('Takst', 'Survey') + '</h4><p class="ph-note">' + L('En takstmann går over båten og finner det kortet ikke sier.', 'A surveyor goes over the boat and finds what the card does not say.') + '</p><button class="ph-btn" data-pa="mgtakst" data-id="' + Q.id + '"' + (c > spendable() ? ' disabled' : '') + '>' + L('Bestill takst · ', 'Order a survey · ') + (c ? kr(c) : L('gratis første gang', 'free the first time')) + '</button></div>'); }
-      const openOnly = V.len < 11 && !hasLic(), A = deal(price, tradeIn()), Bf = deal(price, 0);
-      h.push(payNote(A, 'Mellomlegg med ' + bn + ' i bytte: ', 'To pay with ' + bn + ' traded in: ') + '<button class="ph-btn p" data-pa="mgbuy" data-ti="1" data-id="' + Q.id + '"' + (A.ok && !S.order && !tiLocked(curVessel()) ? '' : ' disabled') + '>' + L('Kjøp og bytt inn ' + bn, 'Buy, trading in ' + bn) + '</button>');
-      if (!openOnly) h.push(payNote(Bf, 'Til flåten, uten innbytte: ', 'For the fleet, no trade-in: ') + '<button class="ph-btn" data-pa="mgbuy" data-ti="0" data-id="' + Q.id + '"' + (Bf.ok && !S.order ? '' : ' disabled') + '>' + L('Kjøp til flåten', 'Buy for the fleet') + '</button>');
-    }
+    h.push('<div class="ph-card vsheet mg-sheet"><h4>«' + mgEsc(Q.name) + '» · ' + V.name[S.lang] + '</h4><p class="ph-note mg-nr">' + L('Oppføring nr. ', 'Listing no. ') + Q.id + '</p><div class="vbig">' + vesselSVG(Q.type) + '</div>');
+    h.push('<p class="mg-strip">' + mgYear(Q) + ' · ' + fmt(V.len, 2) + ' m · ' + fmt(P.engH || 0, 0) + L(' timer', ' hours') + ' · ' + kr(mgNow(Q)) + '</p>' + mgLicTag(Q));
+    // the auction: the time left, the highest bid, buy-now, and your bid
+    { const n = mbNext(Q), fee = mbFee(n, to, Q.port), bnFee = Q.buynow ? mbFee(Q.buynow, to, Q.port) : 0, why = Q.mine ? 'own' : MBC.guest() ? 'guest' : mbBuyWhy(Q, null), cash = spendable() < n + fee ? 'cash' : null;
+      const a = ['<div class="ph-card mb-auc"><h4>' + L('Auksjonen', 'The auction') + '</h4>', kv(L('Slutter om', 'Ends in'), '<b>' + mgLeft(Q) + '</b>'),
+        kv(Q.top != null ? L('Høyeste bud', 'Highest bid') : L('Startpris', 'Start price'), kr(mgNow(Q)) + (Q.top != null ? ' · ' + Q.bids + L(' bud', Q.bids === 1 ? ' bid' : ' bids') : '')), Q.buynow ? kv(L('Kjøp nå', 'Buy now'), kr(Q.buynow)) : ''];
+      if (mgMsg[Q.id]) a.push('<p class="mb-msg"><b>' + mgMsg[Q.id] + '</b></p>');
+      if (Q.mine) a.push('<p class="ph-note">' + L('Dette er din båt.', 'This is your boat.') + '</p>' + (Q.bids ? '' : '<button class="ph-btn alt" data-pa="mbcancel" data-id="' + Q.id + '">' + L('Trekk fra salg', 'Withdraw') + '</button>'));
+      else if (why) a.push('<p class="ph-note"><b>' + mbWhyTxt(why) + '</b></p>');
+      else {
+        if (near && (!Q.top_me || Q.buynow)) a.push('<div class="net-shops mb-to"><button class="chip-b' + (to ? '' : ' on') + '" data-pa="mbto" data-s="self">' + L('Hent selv i ', 'Fetch at ') + mbPlace(pt) + '</button><button class="chip-b' + (to ? ' on' : '') + '" data-pa="mbto" data-s="near">' + L('Lever til ', 'Deliver to ') + mbPlace(near) + ' · +2 %</button></div>');
+        if (Q.top_me) a.push('<p class="ph-note mb-top">' + L('Du har det høyeste budet. Du får beskjed om noen byr over, og pengene tilbake da.', 'You hold the highest bid. You are told if someone bids over, and get the money back then.') + '</p>');
+        else a.push('<label class="ph-kv"><span>' + L('Ditt bud (minst ' + kr(n) + ')', 'Your bid (at least ' + kr(n) + ')') + '</span><input id="mbBid" type="number" inputmode="numeric" step="1000" min="' + n + '" value="' + n + '"></label>' +
+          '<button class="ph-btn p" data-pa="mbbid" data-id="' + Q.id + '"' + (cash ? ' disabled data-why="' + mgEsc(mbWhyTxt(cash)) + '"' : '') + '>' + L('By', 'Bid') + (fee ? L(' · + levering ', ' · + delivery ') + kr(fee) : '') + '</button>');
+        if (Q.buynow) a.push('<button class="ph-btn" data-pa="mbbuy" data-id="' + Q.id + '"' + (spendable() < Q.buynow + bnFee ? ' disabled data-why="' + mgEsc(mbWhyTxt('cash')) + '"' : '') + '>' + L('Kjøp nå · ', 'Buy now · ') + kr(Q.buynow + bnFee) + '</button>');
+        a.push('<p class="ph-note">' + L('Budet binder pengene hos megleren. Blir du overbydd, får du dem tilbake med en gang. Neste bud må være minst 2 % over.', 'The bid holds the money at the broker. Outbid, you get it back at once. The next bid must be at least 2 % over.') + '</p>');
+      }
+      h.push(a.join('') + '</div>'); }
+    h.push('<div class="ph-card mg-seller"><h4>' + (Q.seller ? mgEsc(Q.seller) : L('En fisker', 'A fisherman')) + ' <small>' + L('selger', 'sells') + '</small></h4><p class="ph-note">' + L('Kystmegleren formidler mellom spillere og tar 5 % av prisen fra selgeren. Det som står her, er det båten har.', 'Kystmegleren brokers between players and takes 5 % of the price from the seller. What stands here is what the boat has.') + '</p></div>');
+    if (lic) h.push(sec(L('Hjemmel', 'Right'), [kv(L('Hjemmelslengde', 'Quota length'), mgEsc(lic.hl || lic.id)), kv(L('Følger med', 'Comes with her'), L('ja, med årets fangst på den', 'yes, with this year\'s catch on it')),
+      '<p class="ph-note">' + L('I virkeligheten følger ikke deltakeradgangen automatisk med båten (deltakerloven § 4); i spillet gjør den det, og kjøperen må stå på blad B.', 'In life the right does not follow the boat by itself (deltakerloven § 4); in the game it does, and the buyer must be on blad B.') + '</p>']));
+    h.push(sec(L('Tilstand', 'Condition'), [kv(L('Skrog', 'Hull'), mgPct(c.hull)), mgBar(c.hull), kv(L('Motor', 'Engine'), mgPct(c.motor)), mgBar(c.motor), kv(L('Motortimer', 'Engine hours'), fmt(P.engH || 0, 0)), kv(L('Siste service', 'Last service'), L('ved ', 'at ') + fmt(P.svcAt || 0, 0) + L(' timer', ' hours'))]));
+    const std = (V.std || []).map(q => EQUIP[q] ? EQUIP[q].name[S.lang] : q), ex = Object.entries(P.equip || {}).filter(([q, n]) => EQUIP[q] && n && !(V.std || []).includes(q)).map(([q, n]) => EQUIP[q].name[S.lang] + (EQUIP[q].multi ? ' × ' + n : ''));
+    h.push(sec(L('Følger med', 'Comes with'), [kv(L('Utstyr', 'Equipment'), std.concat(ex).join(', ') || L('ingenting utover båten', 'nothing besides the boat')), P.gear ? kv(L('Håndjuksa', 'Hand jig'), L('om bord', 'aboard')) : '']));
+    h.push(sec(L('Ligger', 'Lies'), [kv(L('Ved verftet i', 'At the yard in'), pt.name), kv(L('Avstand', 'Distance'), fmt(mgNm(Q), 1) + ' nm')]) + (here || !portById(Q.port) ? '' : '<button class="ph-btn" data-pa="goplace" data-id="' + Q.port + '">' + L('Autonav dit', 'Autonav there') + '</button>'));
     if (vesselSpec(Q.type)) h.push('<button class="ph-btn alt" data-pa="mk3d" data-k="' + Q.type + '">' + L('Se båten i 3D', 'See her in 3D') + '</button>');
-    // the type's spec sheet under (without its price row: hers is above)
     const secs = specSecs(Q.type); h.push('<details class="mg-spec"><summary>' + L('Hele databladet', 'The whole spec sheet') + '</summary>' + secs.map(([t, rows]) => sec(t, t === secs[0][0] ? rows.slice(1) : rows)).join('') + '</details>');
     return h.join('') + '</div></div>';
   }
-  // the yard's Båthandel: the boats that lie at this quay
+  // the yard's Båthandel: the boats that lie at this quay, and your own to put out
   function mgHere(){
-    if (!atKind('verft')) return '';
-    const A = mktListings().filter(x => x.port === S.boat.port);
-    return '<div class="ph-card mg-here"><h4>' + L('Båter til salgs her', 'Boats for sale here') + '</h4>' + (A.length ? A.map(mgCard).join('') : '<p class="ph-note">' + L('Ingen brukte båter ved denne kaia nå.', 'No used boats at this quay now.') + '</p>') +
-      '<button class="ph-btn alt" data-pa="open" data-a="nett" data-s="megler">' + L('Alle brukte båter hos Kystmegleren ›', 'All used boats at Kystmegleren ›') + '</button></div>';
+    if (!atKind('verft')) return ''; MBC.load();
+    const A = MBC.list().filter(x => x.port === S.boat.port), mine = S.fleet.filter(v => v.id !== S.me || mbSale(v));
+    return '<div class="ph-card mg-here"><h4>' + L('Båter til salgs her', 'Boats for sale here') + '</h4>' + (A.length ? A.map(mgCard).join('') : '<p class="ph-note">' + L('Ingen brukte båter ved denne kaia nå. Verftet selger nye til full pris under.', 'No used boats at this quay now. The yard sells new ones at full price below.') + '</p>') +
+      (mine.length ? '<h5>' + L('Selg en båt', 'Sell a boat') + '</h5>' + mine.map(v => '<p><b>«' + mgEsc(vget(v, 'boatName')) + '»</b></p>' + mgOwnRow(v, true)).join('') : '') +
+      '<button class="ph-btn alt" data-pa="open" data-a="nett" data-s="megler">' + L('Alle båter hos Kystmegleren ›', 'All boats at Kystmegleren ›') + '</button></div>';
   }
-  // the buttons (phone/14-act.js asks this first for the mg* actions)
+  // the answer to a call that went to the server, written on the page it came from
+  function mgAfter(key, okNo, okEn){ return r => { mgMsg[key] = r && r.ok ? L(okNo, okEn) : mbWhyTxt(r && r.err, r); MBC.redraw(); }; }
+  // the buttons (phone/14-act.js asks this first for the mg* and mb* actions)
   function mgAct(a, d){
     const M = mktState();
-    if (a === 'mgsel'){ mgSel = d.id || null; if (mgSel && typeof cloudEv === 'function') cloudEv('mkt_view', {id:mgSel}); return true; }
+    if (a === 'mgsel'){ mgSel = d.id || null; mbPutSel = null; if (mgSel && typeof cloudEv === 'function') cloudEv('mkt_view', {id:mgSel}); if (mgSel) MBC.load(true); return true; }
     if (a === 'mgtab'){ sub.mgtab = d.s; return true; }
     if (a === 'mgsort'){ sub.mgsort = d.s; return true; }
-    if (a === 'mgwish'){ const c = (document.getElementById('mgWishC') || {}).value || 'open', mx = +(document.getElementById('mgWishMax') || {}).value || 0; M.wish = {cls:c, max:Math.max(0, Math.round(mx))}; if (typeof cloudEv === 'function') cloudEv('mkt_wish', {cls:c}); return true; }
-    if (a === 'mgwish0'){ M.wish = null; return true; }
-    if (a === 'mgown'){ const v = vesselById(d.id); if (!v) return true; const why = mktListOwn(v.id); if (why){ toast(why === 'sea' ? L('Hun må ligge i havn.', 'She must lie in port.') : why === 'aboard' ? L('Du er om bord i henne.', 'You are aboard her.') : L('Det går ikke nå.', 'Not now.')); return true; }
-      log('«' + vget(v, 'boatName') + '» er lagt ut hos Kystmegleren for ' + kr(mktOwn(v.id).kr) + '.', '«' + vget(v, 'boatName') + '» is listed at Kystmegleren for ' + kr(mktOwn(v.id).kr) + '.'); if (typeof cloudEv === 'function') cloudEv('mkt_list', {type:vget(v, 'boat').type}); return true; }
-    if (a === 'mgunown'){ mktUnlist(d.id); return true; }
-    if (a === 'mgdel'){ const v = vesselById(d.id); if (!v) return true; const why = mktDeliver(v.id, d.to); if (why){ toast(why === 'cash' ? t('no_cash') : why === 'sea' ? L('Hun må ligge i havn.', 'She must lie in port.') : L('Det går ikke nå.', 'Not now.')); return true; }
+    if (a === 'mgwish'){ const c = (document.getElementById('mgWishC') || {}).value || 'open', mx = +(document.getElementById('mgWishMax') || {}).value || 0; M.wish = {cls:c, max:Math.max(0, Math.round(mx))}; MBC.wish(c, M.wish.max); if (typeof cloudEv === 'function') cloudEv('mkt_wish', {cls:c}); return true; }
+    if (a === 'mgwish0'){ M.wish = null; MBC.wish(null, 0); return true; }
+    if (a === 'mgdel'){ const v = vesselById(d.id); if (!v) return true; const why = mktDeliver(v.id, d.to); if (why){ toast(why === 'cash' ? t('no_cash') : why === 'sea' ? L('Hun må ligge i havn.', 'She must lie in port.') : why === 'sale' ? L('Hun ligger til salgs.', 'She is for sale.') : L('Det går ikke nå.', 'Not now.')); return true; }
       log('En skipper fra verftet seiler «' + vget(v, 'boatName') + '» til ' + portById(d.to).name + '.', 'A skipper from the yard sails the «' + vget(v, 'boatName') + '» to ' + portById(d.to).name + '.'); if (typeof cloudEv === 'function') cloudEv('mkt_deliver', {nm:Math.round(dist(vget(v, 'boat').pos, portById(d.to).p) / NM)}); return true; }
-    const Lx = d.id ? mktById(d.id) : null; if (!Lx) return false;
-    if (a === 'mgbid'){ const kr0 = +(document.getElementById('mgBid') || {}).value || 0, r = mktBid(Lx.id, kr0), sel = '«' + Lx.seller.name + '»';
-      mgMsg[Lx.id] = r.err === 'today' ? L('Du har alt gitt bud i dag.', 'You have bid today already.') : r.err === 'low' ? L('Budet må være minst ' + kr(r.min) + '.', 'The bid must be at least ' + kr(r.min) + '.') : r.err === 'full' ? L('Det er prisantydningen: kjøp henne heller ved verftet.', 'That is the asking price: buy her at the yard instead.') : r.err ? L('Båten er ikke til salgs lenger.', 'The boat is no longer for sale.') :
-        r.ok ? L(Lx.seller.name + ' tar budet på ' + kr(r.kr) + '. Det gjelder i ei uke.', Lx.seller.name + ' takes the bid of ' + kr(r.kr) + '. It holds for a week.') : L(Lx.seller.name + ' sier nei, men tar ' + kr(r.counter) + '. Prøv igjen i morgen.', Lx.seller.name + ' says no, but would take ' + kr(r.counter) + '. Try again tomorrow.');
-      if (!r.err && typeof cloudEv === 'function') cloudEv('mkt_bid', {id:Lx.id, ok:!!r.ok}); return true; }
-    const here = S.boat.port === Lx.port && S.boat.status === 'port' && atKind('verft') && mktListings().some(x => x.id === Lx.id);
-    if (a === 'mgtakst'){ if (!here || M.takst[Lx.id]) return true; const c = M.freeTakst ? 0 : mktTakstKr(Lx); if (c > spendable()){ toast(t('no_cash')); return true; }
-      if (c) book('baat', -c, 'Takst av «' + Lx.name + '»', 'Survey of «' + Lx.name + '»'); M.takst[Lx.id] = true; M.freeTakst = false;
-      log('Takstmannen gikk over «' + Lx.name + '»: motoren er ' + (Lx.flaw ? 'dårligere enn oppgitt (' + mgPct(Lx.motorT) + ').' : 'som oppgitt.'), 'The surveyor went over «' + Lx.name + '»: the engine is ' + (Lx.flaw ? 'worse than stated (' + mgPct(Lx.motorT) + ').' : 'as stated.'));
-      if (typeof cloudEv === 'function') cloudEv('mkt_takst', {id:Lx.id, flaw:Lx.flaw}); return true; }
-    if (a === 'mgbuy'){
-      if (!here || S.order) return true; const V2 = VESSELS[Lx.type], price = mktPrice(Lx), ti = d.ti === '0' ? 0 : tradeIn();
-      if (!ti && V2.len < 11 && !hasLic()){ toast(L('Et rederi kan bare ha én båt i åpen gruppe.', 'A company can only have one boat in the open group.')); return true; }
-      if (ti && tiLocked(curVessel())) return true;
-      const x = deal(price, ti); if (!x.ok){ toast(whyText(x) || t('no_cash')); return true; } finance(x, 120); achAdd('boat');
-      if (ti){ switchVessel(Lx.type); mktTakeOver(Lx, S.boat, S.equip); applyVessel(); log('«' + S.boatName + '» er nå ' + L(V2.name.no.toLowerCase(), V2.name.en.toLowerCase()) + 'en som het «' + Lx.name + '», bygd ' + Lx.year + '.', '«' + S.boatName + '» is now the ' + V2.name.en.toLowerCase() + ' that was called «' + Lx.name + '», built ' + Lx.year + '.');
-        if (S.lic){ log('Kvoten i lukket gruppe fulgte med den gamle båten.', 'The closed-group quota went with the old vessel.'); regFree(S.lic.id); S.lic = null; freshQuota(); openUsedLoad(); } }
-      else { const v = newVesselObj(Lx.type, S.boat.port); v.boatName = Lx.name; mktTakeOver(Lx, v.boat, v.equip); setTimeout(() => BUYM.show(v), 60); log('Kjøpte «' + Lx.name + '» (' + V2.name.no.toLowerCase() + ', ' + Lx.year + ') til flåten. Hun ligger i ' + portById(S.boat.port).name + ', og kan leveres der du vil fra Rederi-appen.', 'Bought «' + Lx.name + '» (' + V2.name.en.toLowerCase() + ', ' + Lx.year + ') for the fleet. She lies at ' + portById(S.boat.port).name + ' and can be delivered from the Company app.'); }
-      pressPut('boat', {type:Lx.type, nb:0, price}); if (typeof cloudEv === 'function') cloudEv('mkt_buy', {id:Lx.id, type:Lx.type, price, ti:!!ti, takst:!!M.takst[Lx.id], bid:price < mktAsk(Lx)});
-      mgSel = null; return true; }
+    if (a === 'mbput'){ const v = vesselById(d.id); if (!v) return true; mbPutSel = v.id; mgSel = null; if (!DRAWER.has(String(app).split(':')[0]) && app !== 'nett'){ app = 'nett'; sub.nett = 'megler'; } return true; }
+    if (a === 'mbput0'){ mbPutSel = null; return true; }
+    if (a === 'mbhrs'){ sub.mbhrs = +d.h; return true; }
+    if (a === 'mbto'){ sub.mbto = d.s; return true; }
+    if (a === 'mbputgo'){ const v = vesselById(d.id); if (!v) return true; const st = Math.round(+(document.getElementById('mbStart') || {}).value || 0), bv = (document.getElementById('mbBuy') || {}).value, bn = bv === '' || bv == null || +bv <= 0 ? null : Math.round(+bv), hrs = MB.hours.includes(+sub.mbhrs) ? +sub.mbhrs : 24;
+      mgMsg['put' + v.id] = L('Sender …', 'Sending …');
+      MBC.put(v.id, st, bn, hrs).then(r => { if (r && r.ok){ delete mgMsg['put' + v.id]; mbPutSel = null; toast(L('«' + vget(v, 'boatName') + '» er lagt ut hos Kystmegleren.', 'The «' + vget(v, 'boatName') + '» is put out at Kystmegleren.')); } else mgMsg['put' + v.id] = mbWhyTxt(r && r.err, r); MBC.redraw(); });
+      return true; }
+    if (a === 'mbcancel'){ const id = d.id; MBC.cancel(id).then(r => { if (!(r && r.ok)) toast(mbWhyTxt(r && r.err, r)); else toast(L('Trukket fra salg. Hun er din igjen.', 'Withdrawn. She is yours again.')); MBC.redraw(); }); return true; }
+    if (a === 'mbbid'){ const Q = MBC.byId(d.id); if (!Q) return true; const k = Math.round(+(document.getElementById('mbBid') || {}).value || 0);
+      mgMsg[Q.id] = L('Sender budet …', 'Sending the bid …'); MBC.bid(Q.id, k, mgTo(Q)).then(mgAfter(Q.id, 'Budet ditt på ' + kr(k) + ' er det høyeste.', 'Your bid of ' + kr(k) + ' is the highest.')); return true; }
+    if (a === 'mbbuy'){ const Q = MBC.byId(d.id); if (!Q || !Q.buynow) return true;
+      mgMsg[Q.id] = L('Kjøper …', 'Buying …'); MBC.buy(Q.id, mgTo(Q)).then(r => { if (r && r.ok){ mgSel = null; toast(L('Kjøpt: «' + Q.name + '» for ' + kr(Q.buynow) + '.', 'Bought: «' + Q.name + '» for ' + kr(Q.buynow) + '.'), 6000); } else mgMsg[Q.id] = mbWhyTxt(r && r.err, r); MBC.redraw(); }); return true; }
     return false;
   }
