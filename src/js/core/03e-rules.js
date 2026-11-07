@@ -93,7 +93,7 @@ function ruShelf(p){ return ruIn(RU.shelf, p.x, p.y); }
 // videre avgrenset mot vest av en rett linje gjennom fra Hanstholmen fyr til Lindesnes fyr»): outside the baseline, inside ICES 3.a.20 as
 // Fiskeridirektoratet draws it (tools/rules/regler.py skagerrak(): its edges are the regulation's lines), and in Norway's waters. The
 // Danish and Swedish part of the Skagerrak is closed in the game anyway (dk0), with its own reason
-function ruSkag(p){ const b = ruBits(p); if ((b & 65) !== 64) return false; const s = ruSea(p); return !s || s === 'no'; }
+function ruSkag(p, b = ruBits(p)){ if ((b & 65) !== 64) return false; const s = ruSea(p); return !s || s === 'no'; }
 // the licence for a foreign zone (Fiskeridirektoratet: «Alle norske fartøy må søke om lisens for å kunne fiske i andre lands farvann»,
 // skjema FD-54 for the Russian zone, where the permit is issued by the Russian authorities). No source gives the time it takes, so the
 // game gives it at once when you apply in the Papirer app (none made up: CLAUDE.md, «Friction for Flow»); an ocean permit brings the
@@ -313,13 +313,15 @@ function rulesAt(q){
   // closed group south of 62° N, so that holds; the 3 tonnes are said, not counted: 03d-quota.js has the quotas north of 62° N only). The
   // vessels with the 2004 dispensation (3 tonnes; three or four named boats) are not the player's. § 5: other conventional gear than seine
   // «kan ha inntil 5 % bifangst av torsk i de enkelte fangster og ved landing». Without a species the jig's catch has cod in it, so it
-  // stops as the Oslo fjord's cod ban does (the catch cannot leave the cod out by place yet: BACKLOG)
-  if (!n62 && !inBL && (isSp('torsk') || conv) && ruSkag(p)){
+  // stops as the Oslo fjord's cod ban does (the catch cannot leave the cod out by place yet: BACKLOG). Pots and shellfish are not asked:
+  // the game's pots take crab, not cod. With no gear given the exception counts, as everywhere here no gear means «is there a lawful way»
+  const shell = gear === 'teiner' || !!(sp && SPECIES[sp] && SPECIES[sp].shell);
+  if (!n62 && !inBL && !shell && (bits & 64) && ruSkag(p, bits)){
     if (isSp('torsk')){
       if ((!gear || gear === 'juksa') && len > 0 && len < 11 && ruIn2(md, 401, 630) && bladB())
         add('warn', 'skag4', 'Unntaket i Skagerrak: fartøy under 11 m med eier på blad B kan fiske og lande høyst 3 tonn torsk med juksa utenfor grunnlinjen fra 1. april til 30. juni. Ellers er torsk forbudt her. Hele den norske kvoten i Skagerrak er 52 tonn i 2026.', 'The Skagerrak exception: vessels under 11 m whose owner is on blad B may fish and land at most 3 tonnes of cod with jig outside the baseline from 1 April to 30 June. Otherwise cod is banned here. Norway\'s whole quota in the Skagerrak is 52 tonnes in 2026.', RU_SKF + ' §§ 1, 2 og 4', RU_SK);
       else add('no', 'skag', 'Norske fartøy kan ikke fiske torsk i Skagerrak utenfor grunnlinjen (øst for linja Lindesnes–Hanstholmen). Unntaket er juksa fra fartøy under 11 m med eier på blad B, 1. april–30. juni, høyst 3 tonn.', 'Norwegian vessels may not fish cod in the Skagerrak outside the baseline (east of the line Lindesnes–Hanstholm). The exception is jig from vessels under 11 m whose owner is on blad B, 1 April–30 June, at most 3 tonnes.', RU_SKF + ' § 1 og § 4', RU_SK, true);
-    } else if (gear !== 'teiner') add('warn', 'skag5', 'I Skagerrak utenfor grunnlinjen kan du ha høyst 5 % torsk som bifangst når du fisker andre arter.', 'In the Skagerrak outside the baseline you may have at most 5% cod as bycatch when fishing other species.', RU_SKF + ' § 5', RU_SK);
+    } else add('warn', 'skag5', 'I Skagerrak utenfor grunnlinjen kan du ha høyst 5 % torsk som bifangst når du fisker andre arter.', 'In the Skagerrak outside the baseline you may have at most 5% cod as bycatch when fishing other species.', RU_SKF + ' § 5', RU_SK);
   }
   // the species and the seasons (§ 39, § 40)
   if (sp === 'kveite'){
@@ -445,14 +447,14 @@ function ruCtx(){ const b = S.boat; return {p:b.status === 'port' && typeof port
   sp:b.rig === 'teiner' ? potSp() : S.target === 'kveite' ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)}; }
 // the answer for your boat now, kept for 10 game minutes and 50 m
 let RU_NOW = null;
-function ruNow(){ const q = ruCtx(), k = [q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey()].join('|');
+function ruNow(){ const q = ruCtx(), k = [q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey(), bladB()].join('|');
   if (RU_NOW && RU_NOW.k === k && Math.abs(RU_NOW.t - S.t) < 10 && Math.hypot(RU_NOW.p.x - q.p.x, RU_NOW.p.y - q.p.y) < 0.05) return RU_NOW.r;
   const r = rulesAt(q); RU_NOW = {k, t:S.t, p:{x:q.p.x, y:q.p.y}, r}; return r; }
 const ruShort = it => it ? gL(...(RU_SHORT[it.k] || [it.no, it.en])) : '';
 // the chart's rule layer: the answer for your boat on a 250 m grid, a 10 km block at a time (40 x 40), 0 ok, 1 warn, 2 no; only at sea
 const RU_LAYER = new Map();
 function ruLayerBlock(bx, by, q, budget){
-  const key = bx + ',' + by + '|' + [q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey(), ruMD(S.t / 60)].join('|'); let A = RU_LAYER.get(key); if (A) return A;
+  const key = bx + ',' + by + '|' + [q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey(), bladB(), ruMD(S.t / 60)].join('|'); let A = RU_LAYER.get(key); if (A) return A;
   if (budget && performance.now() > budget) return null;
   A = new Uint8Array(1600); const rank = {no:2, warn:1, ok:0};
   for (let j = 0; j < 40; j++) for (let i = 0; i < 40; i++){ const p = {x:bx * 10 + (i + 0.5) * 0.25, y:by * 10 + (j + 0.5) * 0.25};
@@ -470,7 +472,7 @@ function ruWpQ(w){ const c = ruCtx(), p = {x:w.x, y:w.y};
 const RU_WP = new Map();
 function ruWpMsg(w){
   if (!RU.ok || !w || w.port || !((w.fish || 0) > 0 || (w.act && (w.act.op === 'set' || w.act.op === 'cycle')))) return null;
-  const q = ruWpQ(w), k = [q.p.x.toFixed(3), q.p.y.toFixed(3), q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey(), S.lang, ruMD(S.t / 60)].join('|');
+  const q = ruWpQ(w), k = [q.p.x.toFixed(3), q.p.y.toFixed(3), q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey(), bladB(), S.lang, ruMD(S.t / 60)].join('|');
   if (RU_WP.has(k)) return RU_WP.get(k);
   const m = ruBlockMsg(q); if (RU_WP.size > 300) RU_WP.delete(RU_WP.keys().next().value); RU_WP.set(k, m); return m;
 }

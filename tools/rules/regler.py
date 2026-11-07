@@ -529,14 +529,17 @@ def skagerrak(blin):
         x, y = ll2frame(la, lo); got = bool(shapely.contains_xy(S, x, y)) and not bool(shapely.contains_xy(blin, x, y))
         chk[k] = 'OK' if got == want else f'FEIL ({got})'
     print('skag', json.dumps(chk, ensure_ascii=False))
+    bad = [k for k, v in chk.items() if str(v).startswith('FEIL')]
+    if bad or agree.mean() < 0.995: raise SystemExit(f'skag: the area is wrong ({bad or "agreement"}); rules.json not written')
     return rings(S)
 SKAG_SRC = 'Fiskeridirektoratet, Statistikområder lag 3 (ICES-områder f.o.m. 2018, NLOD): Skagerrak 3.a.20, hentet '
+skag_src = lambda: SKAG_SRC + time.strftime('%Y-%m-%d', time.gmtime(os.path.getmtime(os.path.join(CACHE, 'fd-stati-3.geojson'))))   # the day the file was fetched
 def skag_only():
     # the rules.json there is: its blin back to polygons in the frame, skag computed and put in, the rest as it was
     R = json.load(open(OUT, encoding='utf-8'))
     dec = lambda a: np.cumsum(np.asarray(a, float).reshape(-1, 2), axis=0) * U
     blin = shapely.union_all([Polygon(dec(r[0]), [dec(h) for h in r[1:]]).buffer(0) for r in R['blin']])
-    R['skag'] = skagerrak(blin); R['src']['ices'] = SKAG_SRC + time.strftime('%Y-%m-%d', time.gmtime(os.path.getmtime(os.path.join(CACHE, 'fd-stati-3.geojson'))))
+    R['skag'] = skagerrak(blin); R['src']['ices'] = skag_src()
     s = json.dumps(R, separators=(',', ':'), ensure_ascii=False); open(OUT, 'w').write(s); print(f'{OUT}: {len(s) / 1e6:.2f} MB, skag {len(json.dumps(R["skag"]))} B')
 def main():
     t0 = time.time(); md = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'tools', 'map', 'out', 'game')
@@ -568,7 +571,7 @@ def main():
              src=dict(fd='Fiskeridirektoratet, Yggdrasil/Fiskerireguleringer og Statistikområder (NLOD), hentet ' + meta['fetched'],
                       nmg='Kartverket, Norges maritime grenser (CC BY 4.0, Geonorge)',
                       sjo='Fiskeridirektoratet, Yggdrasil/Sjøgrenser_linje (NLOD): nabolandenes 200 nm og grenselinjene mellom dem',
-                      ices=SKAG_SRC + meta['fetched']),
+                      ices=skag_src()),
              bl=enc(bl.coords), blin=rings(blin.simplify(0.05)), nm=nm_lines(bl, blin, off), zones=Z, L=Lyr, hom=hom, lok=lok, sea=sea, shelf=shelf, skag=skag)
     s = json.dumps(R, separators=(',', ':'), ensure_ascii=False)
     open(OUT, 'w').write(s)

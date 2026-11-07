@@ -57,11 +57,19 @@ export default function (t){
   t.ok(keys(at(krs, {gear:'line'})).includes('skag:no!') && keys(at(krs, {gear:'garn'})).includes('skag:no!'), 'unntaket gjelder bare juksa: line og garn er forbudt');
   blad(false);
   t.ok(keys(at(krs)).includes('skag:no!'), 'uten blad B: forbudt');
+  // the rule layer keeps its blocks by blad B too: the exception turns the red outside the baseline yellow the day she is put on it
+  { const t0 = S().t, bx = Math.floor(krs.x / 10), by = Math.floor(krs.y / 10), land0 = t.K.isLandFar; S().t = Math.round(jun * 60); blad(false);
+    t.K.set('isLandFar', p => insideBaseline(p));   // no map in the unit tests: the sea outside the baseline is what is asked about
+    const red = () => { try { return t.K.ruLayerBlock(bx, by, {len:10, gear:'juksa', sp:null, hand:true}).reduce((n, x) => n + (x === 2 ? 1 : 0), 0); } catch (e){ return 'feil: ' + e.message; } };
+    const r0 = red(); blad(true); const r1 = red(); S().t = t0; blad(false); t.K.set('isLandFar', land0);
+    t.ok(typeof r0 === 'number' && r0 > 100 && r1 < r0 / 10, 'regellaget 1. juni ved Kristiansand: rødt utenfor grunnlinja uten blad B, ikke med (' + r0 + ' og ' + r1 + ' røde ruter av 1600)'); }
 
   // § 5: other species with conventional gear, at most 5 % cod bycatch; not a stop
   const sei = at(krs, {sp:'sei'});
   t.ok(sei.v !== 'no' && keys(sei).includes('skag5:warn') && !keys(sei).includes('skag:no!'), 'sei med juksa utenfor grunnlinja ved Kristiansand: lov, med høyst 5 % torsk som bifangst');
   t.ok(!keys(at(krs, {sp:'krabbe', gear:'teiner'})).some(k => k.startsWith('skag')), 'teiner etter krabbe: ingen Skagerrak-regel');
+  t.ok(!keys(at(krs, {sp:null, gear:'teiner'})).some(k => k.startsWith('skag')), 'teiner uten art (Kystvakta med tom last): ingen Skagerrak-regel');
+  t.ok(!keys(at(krs, {sp:'krabbe', gear:null})).some(k => k.startsWith('skag')), 'krabbe uten redskap: ingen bifangstgrense for torsk');
 
   // only in Norway's waters: the Danish and Swedish zones are closed in the game anyway (dk0), with their own reason
   const dk = P(57.6, 9.6);

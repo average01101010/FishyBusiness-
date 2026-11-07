@@ -70,7 +70,9 @@ def ices(force):
     f = os.path.join(CACHE, 'fd-stati-3.geojson')
     if os.path.exists(f) and not force: return
     p = dict(where="area_27='3.a.20'", outFields='*', outSR=25833, f='geojson', returnGeometry='true')
-    fs = get(f'{FD}/Statistikområder/MapServer/3/query', params=p).json().get('features', [])
+    d = get(f'{FD}/Statistikområder/MapServer/3/query', params=p).json()
+    if 'error' in d: raise RuntimeError(f'Statistikområder/3: {d["error"]}')
+    fs = d.get('features', [])
     if len(fs) != 1 or not fs[0].get('geometry'): raise RuntimeError(f'Statistikområder/3: {len(fs)} features for 3.a.20')
     json.dump({'type': 'FeatureCollection', 'features': fs}, open(f, 'w'), ensure_ascii=False)
     print(f'Statistikområder  3 {len(fs):>5} ICES-områder (f.o.m. 2018), 3.a.20 Skagerrak')
