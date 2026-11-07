@@ -2120,12 +2120,12 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 125 `hullOrder(auto, b = S.boat)`
   - 140 `hullMended(j, b = S.boat)`
 
-## `src/js/ui/01-i18n.js` (118 linjer)
+## `src/js/ui/01-i18n.js` (120 linjer)
 
 the logo (src/brand/logo.svg, the user's anchor of 03.11.2026), filled with currentColor: the sign-in's gate (ui/10f-cloud.js) and the
 
 - **4** i18n
-  - 115 `t(k, ...a)`
+  - 117 `t(k, ...a)`
 
 ## `src/js/ui/02-format-state.js` (233 linjer)
 
@@ -2842,7 +2842,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 433 `renderPanel()`
   - 437 `panelBusy()`
 
-## `src/js/ui/07b-first-trip.js` (304 linjer)
+## `src/js/ui/07b-first-trip.js` (321 linjer)
 
 ---------- «Første tur»: the guided first trip every new player goes through ----------
 
@@ -2864,13 +2864,15 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 203 `tutReveal(el)`
   - 209 `tutRect(T0)`
   - 215 `tutStep()`
-  - 221 `tutFinish()`
-  - 222 `tutScrollSlip()`
-  - 225 `tutAllow(what)`
-  - 243 `tutView(st)`
-  - 250 `tutUpdate()`
-  - 273 `tipPlace(txt, T0, o)`
-  - 298 `tipToast()`
+  - 227 `tutNormKg()`
+  - 233 `tutNormLog()`
+  - 238 `tutFinish()`
+  - 239 `tutScrollSlip()`
+  - 242 `tutAllow(what)`
+  - 260 `tutView(st)`
+  - 267 `tutUpdate()`
+  - 290 `tipPlace(txt, T0, o)`
+  - 315 `tipToast()`
 
 ## `src/js/ui/07c-handbook.js` (257 linjer)
 
