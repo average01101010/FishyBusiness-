@@ -1121,3 +1121,8 @@
 2026-11-07 19:46	ccr-7538447c-xt5b4p	c7fd9849	colregtest	OK	603	lite	samtidig	
 2026-11-07 19:46	ccr-7538447c-xt5b4p	c7fd9849	routetest	OK	46	lite	alene	
 2026-11-07 19:48	ccr-7538447c-xt5b4p	c7fd9849	charttest	OK	60	lite	alene	
+2026-11-07 21:00	ccr-c01d562d-pf9kca	0d6d6201	boottest	OK	20	lite	samtidig	
+2026-11-07 21:00	ccr-c01d562d-pf9kca	0d6d6201	docktest	OK	59	lite	samtidig	
+2026-11-07 21:06	ccr-c01d562d-pf9kca	0d6d6201+	soundtest	FEIL	6	lite	samtidig	FEIL et slag høres som et dunk fra baugen, sterkere jo hardere hun slår, og knapt med kameraet 2 km unna  {'near': {'n': 1, 'g': 0.2383998183865908}, 'soft': {'
+2026-11-07 21:06	ccr-c01d562d-pf9kca	0d6d6201+	cashfxtest	OK	8	lite	samtidig	
+2026-11-07 21:06	ccr-c01d562d-pf9kca	0d6d6201+	soundtest	OK	5	lite	alene	

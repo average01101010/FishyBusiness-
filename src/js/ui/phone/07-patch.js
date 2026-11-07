@@ -2,7 +2,7 @@
   const PATCH = [
     ['f2-071126', '07.11.2026', 'Båten i sjøen', 'The boat in the sea', [
        ['Båten hiver og stamper nå etter oppdriften i skroget: baugen kan grave seg ned i grov sjø, og hekken løftes når sjøen kommer akterfra.', 'The boat now heaves and pitches by the buoyancy of her hull: the bow can bury in a heavy sea, and the stern lifts when the sea comes from astern.'],
-       ['I fart mot sjøen kan baugen slå ned i neste bølge, med sprut opp og ut fra baugen.', 'Running into a sea, the bow can slam down into the next wave, with spray thrown up and out from the bow.'],
+       ['I fart mot sjøen kan baugen slå ned i neste bølge, med et dunk i skroget og sprut opp og ut fra baugen.', 'Running into a sea, the bow can slam down into the next wave, with a thud in the hull and spray thrown up and out from the bow.'],
        ['Planende båter løftes av farten og legger seg på planet, og en båt med mye om bord ligger dypere i vannet.', 'Planing boats are lifted by their speed and settle on the plane, and a boat with a lot aboard lies deeper in the water.']]],
     ['o3a-071126', '07.11.2026', 'Raskere kart', 'A faster chart', [
        ['Kartplotteren tegner dybden og dybdelinjene i fjorden og havna omtrent dobbelt så fort, og bildet er det samme som før.', 'The chart plotter draws the depth and the depth contours in a fjord or a harbour about twice as fast, and the picture is the same as before.'],

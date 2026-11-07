@@ -59,6 +59,11 @@ async def main():
         check(cr2[0] > 0.5 and cr2[1] < 0.03, 'kranen høres nær mottaket, men knapt halvannen kilometer unna', [round(x, 3) for x in cr2])
         al = await pg.evaluate("(() => { S.sleep = {t0:S.t - 5, until:S.t + 400, v:S.me, alarmAt:S.t - 1}; SND.testEar = {x:0, y:40, z:2000, fx:0, fz:-1}; SND.tick(); const r = {on:SND.LV.alarm, g:SND.LV.alarmG}; S.sleep = null; return r; })()")
         check(al['on'] == 1 and al['g'] >= 0.5, 'brovaktsalarmen høres med minst halv styrke også med kameraet 2 km unna', al)
+        # a slam (Fysikk 4 F2, 24-cinema.js): the bow comes down on the sea and the hull thuds, from the bow, louder the harder she hits
+        sl = await pg.evaluate("""(() => { if (typeof SND.slam !== 'function') return null; const r = {}; SND.testSrc = {boat:[0, 1, 0]};
+          for (const [k, z, s] of [['near', 8, 2], ['soft', 8, 1], ['far', 2000, 2]]){ SND.testEar = {x:0, y:6, z, fx:0, fz:-1}; const n0 = SND.LV.slam || 0; SND.slam(s, [0, 1, -5]); r[k] = {n:(SND.LV.slam || 0) - n0, g:SND.LV.slamG}; }
+          return r; })()""")
+        check(sl is not None and sl['near']['n'] == 1 and sl['near']['g'] > 0.3 and sl['soft']['g'] < sl['near']['g'] and sl['far']['g'] < 0.03, 'et slag høres som et dunk fra baugen, sterkere jo hardere hun slår, og knapt med kameraet 2 km unna', sl)
         nb = await pg.evaluate("""(() => { const r = []; for (const d of [120, 3000]){ SND.testEar = {x:0, y:6, z:0, fx:0, fz:-1}; SND.testSrc = {boat:[0, 1, 0], npc:[{x:d, z:0, v:8, st:'out', big:false}]}; SND.tick(); r.push(SND.LV.npc0); } SND.testEar = null; SND.testSrc = null; return r; })()""")
         check(nb[0] > 0.01 and nb[1] == 0, 'en fiskebåt i fart 120 m unna høres, en 3 km unna ikke', nb)
         # Ø11.2: the whistle and the bell (sjøveisreglene rules 32-35, vedlegg III)

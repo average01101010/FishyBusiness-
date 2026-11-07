@@ -613,7 +613,9 @@
       const wv = (env.wind || 0) * 0.35, wd = env.windDir || [0, -1], wx = wd[0] * wv, wz = wd[1] * wv;
       for (let i = 0; i < N; i++){ const side = Math.random() < 0.5 ? -1 : 1, a = 0.02 + Math.random() * 0.25, p = xf(BM, [side * VG.side * (0.3 + a * 1.5), -0.1 + Math.random() * 0.3, VG.bow + a * Lb]);
         const up = (2 + Math.random() * 4) * Math.sqrt(s), out = (1.5 + Math.random() * 3.5) * Math.sqrt(s), k = SLP.n = (SLP.n + 1) % SLN;
-        SLP.x[k] = p[0]; SLP.y[k] = p[1]; SLP.z[k] = p[2]; SLP.vx[k] = Math.cos(bv.head) * side * out + fx * way + wx; SLP.vy[k] = up; SLP.vz[k] = Math.sin(bv.head) * side * out + fz * way + wz; SLP.age[k] = 0; SLP.life[k] = 1 + Math.random() * 0.9; } }
+        SLP.x[k] = p[0]; SLP.y[k] = p[1]; SLP.z[k] = p[2]; SLP.vx[k] = Math.cos(bv.head) * side * out + fx * way + wx; SLP.vy[k] = up; SLP.vz[k] = Math.sin(bv.head) * side * out + fz * way + wz; SLP.age[k] = 0; SLP.life[k] = 1 + Math.random() * 0.9; }
+      // and the thud of it (ui/10e-sound.js), from the forefoot
+      try { if (typeof SND !== 'undefined' && SND.slam) SND.slam(HSEA.slam.s, xf(BM, [0, 0, VG.bow + 0.15 * Lb])); } catch (e){} }
     // wake: the prop wash's bubbles behind the stern (gone in 6 s; the pale band under them went, Jonas 04.10.2026: «kun vise
     // boblepartiklene») and the two Kelvin arms spreading at 19.5 degrees, fading out within 10 s («gradvis forsvinner»), each corner
     // laid on the waves where it lies (one height across an arm hid it under the waves on one side more than the other)
