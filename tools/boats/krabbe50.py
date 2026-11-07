@@ -108,8 +108,8 @@ def z_cap(x, sg=1):
     return c
 # the half-breadth at the sheer, moulded: the transom's corners rounded in plan, the bow drawn in to the stem; the flare and the
 # fullness of the sections are weighed in check() against the 1 800 t
-HB = [(XA, 4.95), (0.15, 5.12), (0.45, 5.28), (1.0, 5.40), (2.0, 5.47), (3.5, 5.50), (34.0, 5.50), (37.0, 5.47), (40.0, 5.33), (42.5, 5.05),
-      (44.5, 4.62), (46.0, 4.08), (47.3, 3.38), (48.4, 2.55), (49.2, 1.68), (49.7, 0.90), (XF, 0.0)]
+HB = [(XA, 4.70), (0.15, 4.98), (0.45, 5.18), (1.0, 5.34), (2.0, 5.45), (3.5, 5.50), (34.0, 5.50), (37.0, 5.47), (40.0, 5.33), (42.5, 5.05),
+      (44.5, 4.58), (46.0, 3.96), (47.3, 3.15), (48.4, 2.18), (49.2, 1.28), (49.7, 0.62), (XF, 0.0)]
 def hb(x): return max(0.0, pchip(HB, x))
 DR = [(XA, 3), (4.0, 4), (8.0, 4), (16.0, 3), (28.0, 3), (36.0, 5), (40.0, 9), (43.0, 18), (45.5, 32), (47.5, 50), (XF, 66)]
 FL = [(XA, 1), (6.0, 0), (30.0, 0), (36.0, 2), (40.0, 6), (43.0, 12), (45.5, 18), (47.5, 24), (XF, 28)]
@@ -414,8 +414,8 @@ class Mesh:
 # ---------- the stations: dense, with stations at every place a band or an opening ends so the cuts land on rows ----------
 OPEN_S = [(1.6, 5.4), (6.6, 10.4)]               # the shelter's weather openings, both sides (x from, to)
 OPEN_Z = (DK + 1.10, CEIL - 0.45)
-STERN_O = (-3.10, 4.30, DK + 1.05, CEIL - 0.35)  # the stern opening in the transom over the pot deck (y from, to; z)
-CHUTE_O = (-4.62, -3.52, DK + 0.38, DK + 1.62)   # the pot chute's port in the transom's starboard corner (y; z)
+STERN_O = (-2.70, 3.95, DK + 1.05, CEIL - 0.35)  # the stern opening in the transom over the pot deck (y from, to; z)
+CHUTE_O = (-3.95, -2.95, DK + 0.38, DK + 1.62)   # the pot chute's port in the transom's starboard corner (y; z: the corner is 4.4 m out there)
 def stations(fine=True):
     sp = [XA, X_KA - 0.002, X_KA, X_KA + 0.05, X_KA + 0.10, X_KF, X_SH, X_FC - 0.006, X_FC, X_FC + 0.006] + list(SW_A) + list(SW_F)
     if fine:
@@ -648,8 +648,8 @@ def hauler_at(): return (HAULER[0], -(yin(HAULER[0], GW) - 0.42), HAULER[2])
 
 def white_band(A, p0, p1, w, h, m1, m2, k=0.12):
     """a member from p0 to p1 with an ochre band at its top end (the portal's and the crane's markings)"""
-    P0, P1 = V(p0), V(p1); m = P0 + (P1 - P0) * (1 - k)
-    beam(A, P0, m, w, h, m1); beam(A, m, P1, w + 0.004, h + 0.004, m2)
+    P0, P1 = V(p0), V(p1); m = P0 + (P1 - P0) * (1 - k); up = (1, 0, 0) if abs((P1 - P0).normalized().z) > 0.9 else (0, 0, 1)   # (a post: beam() needs an up that is not along it)
+    beam(A, P0, m, w, h, m1, up=up); beam(A, m, P1, w + 0.004, h + 0.004, m2, up=up)
 
 def pot_deck(A, G, fine=True):
     s = lambda q: C['steel']; w = C['white']
@@ -930,6 +930,8 @@ def walls(name, rings, mat_out, t, cuts, objs):
     sh = loft_rings(name, rings, mat_out, cap0=False, cap1=False, angle=25)
     sh.data.materials.append(C['inner']); solidify(sh, t, 1); apply_all(sh)
     if cuts: cut(sh, cuts)
+    # (flat: the walls are flat panels, and the boolean's fans round the windows shaded smooth go blotchy, K5 07.11.2026)
+    for pg in sh.data.polygons: pg.use_smooth = False
     objs.append(sh); return sh
 
 def win(objs, glass, name, o, u, v, poly, n, fine, frame=0.03):
@@ -1230,10 +1232,10 @@ def foredeck(A, fine=True):
     obox(A, (WLX - 0.45, 0, zd + 0.42), V((0.28, 0, 0)), V((0, 0.32, 0)), V((0, 0, 0.14)), C['red'])
     if not fine: return
     for x, y in ((44.2, 3.0), (44.2, -3.0), (48.2, 1.5), (48.2, -1.5)): F.bitts(A, x, y, z_sd(x) + camber(x, y), C['steel'], h=0.45, r=0.11, gap=0.34)
-    for x in (43.6, 47.6):
+    for x in (43.6, 47.6):   # the panama fairleads through the bulwark: an oval steel ring on its inside (the hole is the bulwark's own)
         for sg in (1, -1):
-            yy = sg * (yin(x, z_cap(x) - 0.4) + 0.03); zc = z_cap(x)
-            abox(A, x - 0.28, x + 0.28, yy - 0.07, yy + 0.07, zc - 0.55, zc + 0.08, C['steel'])
+            zc = z_cap(x) - 0.42; yy = sg * (yin(x, zc) - 0.02)
+            F.atorus(A, (x, yy, zc), (0, sg, 0), 0.20, 0.045, lambda a: C['steel'], seg=16, rseg=5)
     for y in (0.9, -0.9): F.mushroom_vent(A, (44.8, y, z_sd(44.8) + camber(44.8, y)), C['white'], r=0.14, h=0.6)
     for x, y in ((45.2, 2.4), (45.2, -2.4)):
         z0_ = z_sd(x) + camber(x, y); acyl(A, (x, y, z0_ - 0.004), (x, y, z0_ + 0.7), 0.08, s, seg=10); F.pipe(A, [(x, y, z0_ + 0.7), (x, y, z0_ + 0.8), (x + 0.13, y, z0_ + 0.82), (x + 0.2, y, z0_ + 0.74)], 0.08, C['steel'], 10)
@@ -1290,7 +1292,7 @@ def paint_of(z, x):
     if z < Z_BT: return C['boot']
     if z >= z_stripe(x) - 0.002: return C['stripe']
     return C['hull']
-def clear_for_text(x, z): return not ((31.0 <= x <= 46.0 and 10.7 <= z <= z_cap(x) + 0.1) or (x <= 0.6 and 6.8 <= z <= 9.0))
+def clear_for_text(x, z): return not ((31.0 <= x <= 46.0 and 10.7 <= z <= z_cap(x) + 0.1) or (x <= 0.6 and 8.2 <= z <= 10.4))
 def seams(A, fine=True):
     if not fine: return
     for sg in (1, -1):
@@ -1322,6 +1324,20 @@ def seams(A, fine=True):
         p, n, tt = surf(THR[0], WL + 1.25, sg, off=0.004); F.thruster_symbol(A, p, n, (0, 0, 1), 0.38, C['mark'])
 
 
+# ---------- the stern's fittings (M4: no flat empty transom): the rubber fender round the quarters and across the transom at the
+# rubbing bar's height, the vertical fenders at its corners, the panama fairleads in the coaming, the stern's draft scale ----------
+def stern(A, fine=True):
+    if not fine: return
+    z = RUB[0]; r = 0.09
+    for sg in (1, -1):
+        pts = [V((x, sg * (y_at(x, z, sg) + r * 0.6), z)) for x in (3.4, 2.6, 1.8, 1.1, 0.6, 0.3, 0.12)]
+        pts.append(V((XA - r * 0.6, sg * (y_at(0.0, z, sg) - 0.20), z))); pts.append(V((XA - r * 0.6, 0.0, z)))
+        F.pipe(A, pts, r, C['rubber'], 10)
+        yv = y_at(0.0, 8.45, sg) - 0.30          # (the vertical fender where the transom is full width: it narrows below the bar; to port
+        if sg < 0: continue                       # only, the chute's port has the starboard corner)
+        F.pipe(A, [V((XA - 0.07, sg * yv, 8.25)), V((XA - 0.07, sg * yv, 11.85))], 0.11, C['rubber'], 10)
+        for zz in (8.45, 10.1, 11.65): abox(A, XA - 0.03, XA + 0.002, sg * yv - 0.14, sg * yv + 0.14, zz - 0.05, zz + 0.05, C['steel'])
+
 def build(fine=True):
     HELM_EXTRA.clear()
     M = Mesh('hull'); hull_shell(M, fine)
@@ -1344,7 +1360,7 @@ def build(fine=True):
         y0, y1, z0, z1 = STERN_O; A.poly([(XA - 0.03, y0, z0), (XA - 0.03, y1, z0), (XA - 0.03, y1, z1), (XA - 0.03, y0, z1)], C['cabin'], (-1, 0, 0))
     pot_deck(A, G, fine); shelter_top(A, G, fine); after_mast(A, fine)
     ho, hg = house(fine); wo, wg, crown = wheelhouse(fine)
-    helm(A, G, fine); fore(A, crown, fine); lanterns_side(A, fine); foredeck(A, fine); seams(A, fine)
+    helm(A, G, fine); fore(A, crown, fine); lanterns_side(A, fine); foredeck(A, fine); seams(A, fine); stern(A, fine)
     out = [hull, A.done(35, tint=wear), underwater(fine)] + ho + wo + HELM_EXTRA
     if not fine: out += list(crane_parts(False)[:3]) + [hatch_lid(False)]   # (the far model carries her crane parked and the hatch shut)
     g = G.done(35)
@@ -1412,8 +1428,8 @@ def name_strips(G):
         for x in xs:
             for arr, z in ((B, NAME_Z[0]), (T, NAME_Z[1])): arr.append(G(x, sg * (y_at(x, z, sg) + 0.04), z))
         out.append([B, T])
-    w = 3.4; ys = [w - 2 * w * k / 12 for k in range(13)]
-    out.append([[G(XA - 0.03, y, 7.45) for y in ys], [G(XA - 0.03, y, 8.25) for y in ys]])
+    w = 3.5; ys = [w - 2 * w * k / 12 for k in range(13)]
+    out.append([[G(XA - 0.03, y, 9.30) for y in ys], [G(XA - 0.03, y, 10.10) for y in ys]])   # (over the stern fender at 8.05, under the stern opening; the home port under it)
     return out
 
 def bower(G):

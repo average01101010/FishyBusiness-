@@ -54,6 +54,8 @@ PORT = """async () => { const b = S.boat, R = {}, T = P(70.633, 29.72); b.gop = 
 
 # one of the ocean fleet's snow crab vessels at sea now (havState), the player off her at d km, looking at her
 NPC = """async ([dkm]) => { const D = havData(), b = S.boat, R = {}; let best = null;
+  // (the player in the 15 m coastal boat, so the camera behind her looks past her at the snow crab vessel, not from inside a 50 m hull)
+  if (b.type !== 'kyst15'){ b.type = 'kyst15'; applyVessel(); G3.vesselChanged(); }
   for (let dh = 0; dh < 24 * 60 && !best; dh += 6){ const H = S.t / 60 + dh;
     for (const s of D.ships){ if (s.vtype !== 'snokrabbe' || havHeld(s)) continue; const A = havState(s, H, null); if (!A.hidden && A.st !== 'port' && A.p){ best = {s, A, H}; break; } } }
   if (!best) return {none:true};
@@ -113,7 +115,7 @@ async def main():
             await pg.evaluate(SET, [11, 70.78, 30.1])
         if want('3'):
             for nm, yaw in (('natt_sb', 2.5), ('natt_bb', -2.5), ('natt_akter', 0.0)):
-                await pg.evaluate(SET, [22, 70.78, 30.1]); await pg.evaluate(CAM, [90, 0.08, yaw]); await pg.wait_for_timeout(5000)
+                await pg.evaluate(SET, [22, 70.78, 30.1]); await pg.evaluate(CAM, [62, 0.07, yaw]); await pg.wait_for_timeout(5000)
                 await shots(pg, nm)
             await pg.evaluate(SET, [11, 70.78, 30.1])
         if want('4'):
@@ -124,8 +126,8 @@ async def main():
             r = await pg.evaluate(NPC, [0.12]); print('  havflåten:', r, flush=True); await pg.wait_for_timeout(6000)
             check(not r.get('none') and r.get('ships', 0) >= 17, 'havflåtens snøkrabbefartøy (samme modell) er ute', r)
             if not r.get('none'):
-                await pg.evaluate(CAM, [24, 0.06, 0.0]); await pg.wait_for_timeout(4000); await shots(pg, 'flate_naer')
-                await pg.evaluate(NPC, [0.7]); await pg.wait_for_timeout(5000); await pg.evaluate(CAM, [24, 0.04, 0.0]); await pg.wait_for_timeout(3000); await shots(pg, 'flate_fjern')
+                await pg.evaluate(CAM, [16, 0.10, 0.0]); await pg.wait_for_timeout(4000); await shots(pg, 'flate_naer')
+                await pg.evaluate(NPC, [0.7]); await pg.wait_for_timeout(5000); await pg.evaluate(CAM, [14, 0.05, 0.0]); await pg.wait_for_timeout(3000); await shots(pg, 'flate_fjern')
         gerr = await pg.evaluate("G3._debug.glErr()")
         check(gerr == 0, 'ingen GL-feil', gerr)
         print('sidefeil:', list(dict.fromkeys(errs))[:5], flush=True)

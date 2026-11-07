@@ -220,8 +220,9 @@ def boye():
     acyl(A, (0, 0, -0.9), (0, 0, 3.0), 0.025, lambda z: C['yellow'], seg=8)
     acyl(A, (0, 0, -0.9), (0, 0, -0.6), 0.07, lambda z: C['dark'], seg=10)
     # the flag on the pole's top, the radar reflector under it, the light
-    A.poly([(0.0, 0.0, 2.95), (0.0, 0.0, 2.45), (0.55, 0.0, 2.55), (0.55, 0.0, 2.92)], C['orange'], (0, -1, 0))
-    A.poly([(0.0, 0.0, 2.95), (0.55, 0.0, 2.92), (0.55, 0.0, 2.55), (0.0, 0.0, 2.45)], C['orange'], (0, 1, 0))
+    for k in range(3):   # (the flag a thin plate in three panels: two faces in one plane flicker)
+        x0, x1 = 0.03 + 0.18 * k, 0.03 + 0.18 * (k + 1); zt = lambda x: 2.95 - 0.05 * x; zb = lambda x: 2.45 + 0.18 * x
+        obox(A, ((x0 + x1) / 2, 0, (zt(x0) + zb(x0)) / 2), V((0.09, 0, 0)), V((0, 0.006, 0)), V((0, 0, (zt(x0) - zb(x0)) / 2)), C['orange'])
     for k in range(3):
         a = 2 * math.pi * k / 3; d = V((math.cos(a), math.sin(a), 0)) * 0.16
         A.poly([(0, 0, 1.85), (d.x, d.y, 2.0), (0, 0, 2.15)], C['galv'], (-d.y, d.x, 0)); A.poly([(0, 0, 1.85), (0, 0, 2.15), (d.x, d.y, 2.0)], C['galv'], (d.y, -d.x, 0))
