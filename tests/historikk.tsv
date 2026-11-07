@@ -810,3 +810,45 @@
 2026-11-07 15:32	HEAD	103e1d73	tut	OK	567	lite	alene	
 2026-11-07 15:35	HEAD	103e1d73	starttest	OK	81	lite	samtidig	
 2026-11-07 15:35	HEAD	103e1d73	tutdrift	OK	6	lite	samtidig	
+2026-11-07 14:42	plan/2026-11-07-opp4	b6d6b848+	vesseltest	FEIL	26	lite	alene	FEIL Neste mål on a wooden boat with NOK 40 000: the knives at tier 2 first, then the old wooden snekke with a right, and the home screen says the knives {'kniv
+2026-11-07 14:50	plan/2026-11-07-opp4	dce739d7+	vesseltest	OK	24	lite	alene	
+2026-11-07 14:54	plan/2026-11-07-opp4	dce739d7+	opptest	OK	44	lite	alene	
+2026-11-07 14:55	plan/2026-11-07-opp4	dce739d7+	opptest	FEIL	36	lite	alene	FEIL siden står først under Om bord › Båten: kniven ●●○ med neste trinn, prisen for båten, «i butikken» og kg i timen ved bordet
+2026-11-07 14:56	plan/2026-11-07-opp4	dce739d7+	opptest	FEIL	68	lite	alene	FEIL siden står først under Om bord › Båten: kniven ●●○ med neste trinn, prisen for båten, «i butikken» og kg i timen ved bordet
+2026-11-07 14:57	plan/2026-11-07-opp4	dce739d7+	opptest	FEIL	70	lite	alene	FEIL siden står først under Om bord › Båten: kniven ●●○ med neste trinn, prisen for båten, «i butikken» og kg i timen ved bordet
+2026-11-07 14:59	plan/2026-11-07-opp4	dce739d7+	opptest	OK	56	lite	samtidig	
+2026-11-07 14:59	plan/2026-11-07-opp4	dce739d7+	vesseltest	OK	33	lite	samtidig	
+2026-11-07 15:00	plan/2026-11-07-opp4	9bb7663c+	sqltest	FEIL	37	lite	alene	FEIL the funnel: started, first catch, first and third landing, an account, back after 1, 7 and 30 days of those who have had that long, and a tier bought withi
+2026-11-07 15:01	plan/2026-11-07-opp4	9bb7663c+	sqltest	FEIL	38	lite	alene	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-07 15:02	plan/2026-11-07-opp4	9bb7663c+	admintest	FEIL	6	lite	alene	FEIL the funnel shows the share with a tier bought within day 7, and a column per week  {"kpi": null, "col": false}
+2026-11-07 15:02	plan/2026-11-07-opp4	9bb7663c+	admintest	OK	6	lite	alene	
+2026-11-07 15:04	plan/2026-11-07-opp4	a5fb23ce	admintest	OK	6	lite	samtidig	
+2026-11-07 15:05	plan/2026-11-07-opp4	a5fb23ce	markettest	OK	32	lite	samtidig	
+2026-11-07 15:05	plan/2026-11-07-opp4	a5fb23ce	megletest	OK	16	lite	samtidig	
+2026-11-07 15:05	plan/2026-11-07-opp4	a5fb23ce	fleet2test	OK	52	lite	samtidig	
+2026-11-07 15:05	plan/2026-11-07-opp4	a5fb23ce	hbtest	OK	20	lite	samtidig	
+2026-11-07 15:05	plan/2026-11-07-opp4	a5fb23ce	itemcardtest	FEIL	25	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'jukse', 'krabbekar', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-07 15:07	plan/2026-11-07-opp4	d55d7a9a	docktest	OK	68	lite	samtidig	
+2026-11-07 15:07	plan/2026-11-07-opp4	d55d7a9a	krabbefabrikktest	OK	22	lite	samtidig	
+2026-11-07 15:07	plan/2026-11-07-opp4	d55d7a9a	fabrikktest	FEIL	17	lite	samtidig	FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined |
+2026-11-07 15:07	plan/2026-11-07-opp4	d55d7a9a	fleet3test	OK	16	lite	samtidig	
+2026-11-07 15:07	plan/2026-11-07-opp4	d55d7a9a	vesseltest	OK	33	lite	samtidig	
+2026-11-07 15:07	plan/2026-11-07-opp4	d55d7a9a	adminbuytest	OK	12	lite	samtidig	
+2026-11-07 15:07	plan/2026-11-07-opp4	d55d7a9a	havtur	FEIL	0	lite	samtidig	FEIL hele kysten mangler i tools/map/out/game (release.py og game.py)
+2026-11-07 15:08	plan/2026-11-07-opp4	d55d7a9a	opptest	OK	74	lite	samtidig	
+2026-11-07 15:08	plan/2026-11-07-opp4	d55d7a9a	autolinetest	OK	13	lite	samtidig	
+2026-11-07 15:08	plan/2026-11-07-opp4	d55d7a9a	shoptest	OK	51	lite	samtidig	
+2026-11-07 15:09	plan/2026-11-07-opp4	d55d7a9a	geartest	OK	50	lite	samtidig	
+2026-11-07 15:09	plan/2026-11-07-opp4	d55d7a9a	skattetest	OK	9	lite	samtidig	
+2026-11-07 15:09	plan/2026-11-07-opp4	d55d7a9a	lotttest	OK	14	lite	samtidig	
+2026-11-07 15:09	plan/2026-11-07-opp4	d55d7a9a	boktest	OK	11	lite	samtidig	
+2026-11-07 15:09	plan/2026-11-07-opp4	d55d7a9a	skiptest	OK	21	lite	samtidig	
+2026-11-07 15:09	plan/2026-11-07-opp4	d55d7a9a	turtest	OK	20	lite	samtidig	
+2026-11-07 15:10	plan/2026-11-07-opp4	d55d7a9a	sqltest	FEIL	38	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-07 15:13	plan/2026-11-07-opp4	d55d7a9a+	sqltest	FEIL	35	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-07 15:13	plan/2026-11-07-opp4	d55d7a9a+	admintest	OK	6	lite	samtidig	
+2026-11-07 15:14	plan/2026-11-07-opp4	d55d7a9a+	opptest	OK	52	lite	samtidig	
+2026-11-07 15:14	plan/2026-11-07-opp4	d55d7a9a+	vesseltest	OK	26	lite	samtidig	
+2026-11-07 15:15	plan/2026-11-07-opp4	d55d7a9a+	havtur	FEIL	89	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
+2026-11-07 15:23	plan/2026-11-07-opp4	24eb4a19	boottest	OK	28	lite	alene	
+2026-11-07 15:24	plan/2026-11-07-opp4	24eb4a19	opptest	OK	47	lite	alene	

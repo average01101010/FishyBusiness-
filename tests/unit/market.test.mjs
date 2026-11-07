@@ -38,6 +38,14 @@ export default function (t){
   t.eq(mbUnpack({type:'nope'}, yard.id), null, 'en ukjent båttype gir ingen båt');
   const bad = mbUnpack({type:'skiff', name:'<b>X</b>', equip:{nope:true, radar:true, vhf:true}, engH:-5}, yard.id);
   t.ok(bad && bad.boatName === 'bX/b' && !bad.equip.nope && !bad.equip.radar && vget(bad, 'boat').engH === 0, 'navnet vaskes, ukjent og upassende utstyr faller bort', {n:bad && bad.boatName, eq:bad && bad.equip});
+  // the knives and the gaff go as their tier (OPP4): tier 3 is tier 3 at the buyer and 2 is 2 (before, true went, read as tier 2); an old
+  // pack's true is tier 2, too high a number the top, and an ocean vessel, which takes none, gets none
+  const tv = newVesselObj('sjark', S.boat.port); tv.equip.kniv = 3; tv.equip.hott = 2;
+  const TP = mbPack(tv, ny), tw = mbUnpack(JSON.parse(JSON.stringify(TP)), yard.id), old = mbUnpack({type:'sjark', equip:{kniv:true, hott:9}}, yard.id), hv = mbUnpack({type:'autoliner', equip:{kniv:3, hott:2}}, yard.id);
+  t.ok(TP.equip.kniv === 3 && TP.equip.hott === 2 && tw.equip.kniv === 3 && tw.equip.hott === 2 && K.equipLv('kniv', tw.equip, 'sjark') === 3 && K.equipLv('hott', tw.equip, 'sjark') === 2,
+    'kniv trinn 3 er trinn 3 hos kjøperen, og høtt trinn 2 er trinn 2', {pack:TP.equip, got:tw.equip});
+  t.ok(old.equip.kniv === 2 && old.equip.hott === 3 && hv && hv.equip.kniv == null && hv.equip.hott == null, 'en gammel pakke med true er trinn 2, for høyt er trinn 3, og havbåten får ingen', {old:old.equip, hav:hv && hv.equip});
+  for (const x of [tv, tw, old, hv]) if (x && S.fleet.includes(x)) S.fleet.splice(S.fleet.indexOf(x), 1);
   // with a right: it follows the boat, and so does the year's catch on it (B8)
   const O = LIC_OFFERS.find(o => o.id === 'h9'), lv = newVesselObj('sjark', S.boat.port, {id:O.id, hl:O.hl, kpk:O.kpk, coop:{id:'h9', y:2027}}); lv.quota = {y:2027, torsk:1200};
   const LP = mbPack(lv, ny); t.ok(LP.lic && LP.lic.id === 'h9' && !LP.lic.coop && LP.quota && LP.quota.torsk === 1200, 'hjemmelen og årets fangst på den følger med, kvotesamarbeidet ikke');
