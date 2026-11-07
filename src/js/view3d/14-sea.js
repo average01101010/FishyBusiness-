@@ -216,6 +216,9 @@
     FOAM.G[0] += gsx * px + cdx; FOAM.G[1] += gsz * px + cdz; FOAM.gs[0] = gsx; FOAM.gs[1] = gsz;
     // the whitecaps' foam (b, a) drifts downwind with the wind's drift on the water, some 3.5 % of the wind (F3), in real time as the
     // waves run: shifted by whole texels as the drift adds up (cs), and CwT is all it has drifted, the frame its grain is drawn in
+    // and it lasts longer from bigger breakers (the decay time of whitecap foam grows with the breaking wave's scale, Callaghan, Deane
+    // and Stokes 2013): tau 3 s in a fresh breeze to 7 s from a gale, so the small crests of 8 m/s leave short tails
+    FOAM.tau[1] = 3 + 4 * sstep(6, 20, env.wind || 0);
     const wdv = env.windDir || [0, 1], dv = 0.035 * (env.wind || 0) * Math.min(dt, 0.5);
     for (let k = 0; k < 2; k++){ FOAM.Cw[k] += wdv[k] * dv; const n = Math.round(FOAM.Cw[k] / px); FOAM.Cw[k] -= n * px; FOAM.cs[k] = n; FOAM.CwT[k] = (FOAM.CwT[k] + n * px) % 16384; }   // (the grain jumps once at the fold: some 4.5 hours at 1 m/s)
     // the birth windows roll on: by 128/255 of the window each time the frame's time passes 0.95 of it (a long frame may need several
