@@ -505,6 +505,11 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
 
+## Strøket 07.11.2026 (stripa, kartet og lasteikonet i liggende, gren `ccr-fc7a11b2-nl5jor`, rullet ut i 4f5f6d91)
+
+- Jonas med bilder fra nettbrettet: plusset på den foldede statusboksen sto oppå sjøtallet, minustegnet på den hele boksen sto på motsatt side av kartets, lasteikonet (kassen) var det samme som Om bord, og kartet sto under boksen i liggende (B 06.11.2026 var bygd bare for stående). Nå: ingen «+» eller «–» på statusboksen, et trykk folder den sammen og ut; en fisk som lasteikon; kartet øverst også på nettbrett liggende og PC (`docs/systemer/ui-og-telefon.md`, under U2-6).
+- **Pages-publiseringen hang to ganger samme dag** (GitHubs `deploy-pages` ga opp etter 10 min for c62047f0, kjøring 436; byggejobben med enhetstestene og boottest var grønn, og neste kjøring 437 publiserte). Hetzner (detstorebla.no) var grønn begge gangene. Følg med; startes for hånd med `workflow_dispatch` på `pwa.yml` om den blir stående.
+
 ## Strøket 07.11.2026 (UI 2, U2-4: Roen, gren `ccr-fc7a11b2-nl5jor`, rullet ut i c62047f0)
 
 - U2-4 i `docs/planer/ui-2-staaende.md` (4.5, V8 A): roen bygd, med `roetest.py` og `ro0` for de andre testene. U2-0 hadde «roen» som ikke målt (lest i koden, `ui-2/kartlegging.md`); den er nå målt i `roetest`.
