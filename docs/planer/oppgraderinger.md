@@ -1,6 +1,6 @@
 # Oppgraderinger: kniv, høtt, dekksutstyr i trinn, propell og én side for båten og utstyret (plan 07.11.2026)
 
-> Plan etter `/planlegg`. **Jonas tok valgene 07.11.2026** (sitert under). Ingenting av planen er bygd. Den venter på V1 og «kjør på». Hver fase er én økt. Reglene som gjelder: `CLAUDE.md` (handelsstedene, `buyGate`, modulære modeller, patchnotes), `docs/engasjement.md` (alt kan nås uten å betale, friksjonen er simuleringens egen, nye ting starter aldri på null) og `docs/handelssteder.md`. Tallene her er startverdier som måles før de settes.
+> Plan etter `/planlegg`. **Jonas tok valgene 07.11.2026** (sitert under), **og V1 A samme dag.** Ingenting av planen er bygd. Den venter på «kjør på» og på at planen flettes inn i arbeidsgrenen. Hver fase er én økt. Reglene som gjelder: `CLAUDE.md` (handelsstedene, `buyGate`, modulære modeller, patchnotes), `docs/engasjement.md` (alt kan nås uten å betale, friksjonen er simuleringens egen, nye ting starter aldri på null) og `docs/handelssteder.md`. Tallene her er startverdier som måles før de settes.
 
 ## Hva Jonas ba om
 
@@ -81,7 +81,7 @@ Spillet har alt mange oppgraderinger, men de er spredt på fem steder, nesten al
 
 | Vare | Trinn 2 | Trinn 3 | Pris for trinnene |
 |---|---|---|---|
-| Juksamaskin (V1) | «med autostopp»: én person passer fire | «med skjerm og telling»: én person passer fem | 12 000 og 24 000 kr per maskin om bord |
+| Juksamaskin (V1 A) | «med autostopp»: én person passer fire | «med skjerm og telling»: én person passer fem | 12 000 og 24 000 kr per maskin om bord |
 | Linehaler | +10 % trekkfart (25 til 22,5 min per stamp) | +20 % (20 min) | halve nyprisen, så hele nyprisen en gang til (34 000, 68 000) |
 | Garnhaler | +10 % (4 til 3,6 min per garn) | +20 % (3,2 min) | 47 500, 95 000 |
 | Teinehaler | +10 % (1,2 til 1,08 min per teine) | +20 % (0,96 min) | 29 000, 58 000 |
@@ -139,7 +139,7 @@ Spillet har alt mange oppgraderinger, men de er spredt på fem steder, nesten al
 | Fase | Hva | Filer | Tester | Måles |
 |---|---|---|---|---|
 | **OPP1 Kniv og høtt** | `EQUIP.kniv` og `EQUIP.hott` med `tiers`; `knifeX`/`hookX` i kjernen; `DECK.gut` ganget i `deckMinute`, `deckEta`, `left.sloy`; grenene i `crewSlip`; glippet i `land(m)`; linetrekket i `gopUnitMin`; `S.stats.lostRail`; kortene i butikken med «om bord · trinn 1» og «Tapt over ripa»; `ICFX`-linjene; `buyGate` trinn for trinn; patchnote | `core/02-species-gear.js`, `05-vessels.js`, `13-work.js`, `14-crewlife.js`, `10-gear.js`, `ui/10-rod-acts.js`, `ui/05a-itemcard.js`, `ui/phone/12-utstyr-redskap.js`, `13b-nettet.js`, `01-i18n.js`, `07-patch.js` | ny `tests/unit/oppgradering.test.mjs` (summene, `DECK`-faktoren, `crewSlip` med `CREW_SEED`, `gopUnitMin` line, `buyGate`), ny `opptest.py` (kjøp bare ved butikkens kai, kortet, trinn 2 før 3, gammel lagring er trinn 1), `worktest`, `shoptest`, `itemcardtest`, `caretest`; sett rød først | `fiskeplay.py` alene og med mannskap per trinn (kg per dag, minutter ved bordet); `worktest` tida ved bordet |
-| **OPP2 Trinn på dekksutstyret** | `tiers` på juksamaskin (V1), halerne og juksasettene; linesetter og garnrenne som varer uten modell; `JIG` (maskiner per person) i `03-simulation.js`; `gopUnitMin` med haler-trinn og settetid; kortene | `core/02-species-gear.js`, `03-simulation.js`, `10-gear.js`, `10b-gearcare.js`, `ui/phone/12-utstyr-redskap.js`, `05a-itemcard.js`, `01-i18n.js`, `07-patch.js` | `oppgradering.test.mjs` utvidet, `jig.test.mjs`, `geartest` (minutter per stamp, garn og teine per trinn), `caretest`, `itemcardtest`, `opptest` | `geartest` tidene; `fiskeplay.py line` og `garn` |
+| **OPP2 Trinn på dekksutstyret** | `tiers` på juksamaskin (V1 A), halerne og juksasettene; linesetter og garnrenne som varer uten modell; `JIG` (maskiner per person) i `03-simulation.js`; `gopUnitMin` med haler-trinn og settetid; kortene | `core/02-species-gear.js`, `03-simulation.js`, `10-gear.js`, `10b-gearcare.js`, `ui/phone/12-utstyr-redskap.js`, `05a-itemcard.js`, `01-i18n.js`, `07-patch.js` | `oppgradering.test.mjs` utvidet, `jig.test.mjs`, `geartest` (minutter per stamp, garn og teine per trinn), `caretest`, `itemcardtest`, `opptest` | `geartest` tidene; `fiskeplay.py line` og `garn` |
 | **OPP3 Propellen og den additive regelen** | `PROPUP`, `b.propLv`; `applyVessel` regner summen én gang (propell, motor, trim); jobben `prop` på verftet; kortet og databladets rad; `cloudEv('upg')` | `core/03-simulation.js`, `06-services.js`, `ui/phone/12-utstyr-redskap.js`, `14-act.js`, `10-fartoy.js`, `01-i18n.js`, `07-patch.js` | `trimfart.test.mjs` (summen, ikke produktet: 25 × 2,395), `yardupgtest`, `fuelcal`, `boostklokke`, `routetest` og `obstest` med toppfart på hurtigsjarkene, `kjoptest` (trim gir like mange knop med og uten propell); sett rød først | tabellen over målt i spillet per båt; dieselregnskapet per tur |
 | **OPP4 «Båten og utstyret», Neste mål og trakten** | seksjonen i Fartøy-appen; `goals()` med utstyrstrinnet; Håndboka kap. 8; migreringen som utvider `admin_funnel`; admin-fanen | `ui/phone/10-fartoy.js`, `ui/07c-handbook.js`, `01-i18n.js`, `supabase/migrations/`, `src/admin/index.html`, `07-patch.js` | `vesseltest` (Neste mål, sett rød: trebåt med 40 000 kr får kniv trinn 2, ikke snekka), `opptest` (siden i begge formater, skjermbilder), `sqltest`, `admintest` | trakten: andel med kjøpt trinn innen dag 7, før og etter datoen |
 | **OPP5 Modellene** | kniv, høtt, linesetter, garnrenne i Blender; tegningen på festepunktene; plasket; «Prøv på båten» | `tools/deck/`, `src/data/*.b64`, malen, `view3d/10-gear.js`, `09-landing-deck.js`, `25-controls.js`, `vessel3d.js` | `vesseltest` (delene finnes, målene), `deckshot`, `geartest` 3D, `trytest`; kontrollbilder i `tools/deck/out/` | Jonas ser modellene; ingen tall |
@@ -149,6 +149,8 @@ Spillet har alt mange oppgraderinger, men de er spredt på fem steder, nesten al
 ## Valget
 
 ### V1. Juksamaskinens trinn
+
+**Valgt: A** (Jonas 07.11.2026: «A»).
 
 - **A (anbefalt): bare flere maskiner per person.** Trinn 2 lar én person passe fire, trinn 3 fem (`JIG` i `03-simulation.js`), innenfor `jukseMax`. Hvorfor: det er tid og hender, ikke fisk per time, som prinsipp 2 sier, og maskinen er alt et fangsttrinn (4,0 mot håndjuksa 2,0). Ulempen er ærlig: på trebåten og snekka (2 og 3 maskiner) gir trinnet ingenting, så det teller fra plastsjarken og opp.
 - B: som A, og i tillegg +5 % og +10 % per maskin. Merkes på alle båter, men er det ene trinnet som gir mer fisk per time og må kalibreres mot `docs/systemer/redskap.md`.
@@ -169,7 +171,7 @@ Spillet har alt mange oppgraderinger, men de er spredt på fem steder, nesten al
 
 - Ingenting selges for ekte penger, og ingen trinn låses bak haill, trim, fartstid eller merker.
 - Ingen ny straff på trinn 1: ingen nye tap, ingen nye trekk, ingen slitasje på kniv, høtt eller propell.
-- Ingen endring av fiskemodellen, `density`, `luck`, `GEAR.q` eller kalibreringen mot ERS (utenom V1 B om det velges).
+- Ingen endring av fiskemodellen, `density`, `luck`, `GEAR.q` eller kalibreringen mot ERS (V1 A er valgt, så ingen unntak).
 - Ikke havbåtene: fabrikkene, autolina og den koniske teina har sine egne tall.
 - Ikke mannskapets personlige utstyr eller klær (Jonas 10.10.2026: spilleren kler ikke mannskapet; klærne finnes).
 - Ikke flere båter i stigen, ikke sertifikater, ikke kvotemarkedet.
@@ -177,4 +179,5 @@ Spillet har alt mange oppgraderinger, men de er spredt på fem steder, nesten al
 
 ## Status
 
-- 07.11.2026: planen skrevet (Jonas' økt, grenen `ccr-5626c087-fg38n2`, bygd på arbeidsgrenen samme dag). Valgene 1–7 over er tatt av Jonas 07.11.2026. Venter på V1 og «kjør på». Stegene OPP1–OPP5 står i `docs/planer/koen.md` (53–57), med hel startmelding for OPP1.
+- 07.11.2026: planen skrevet (Jonas' økt, grenen `ccr-5626c087-fg38n2`, bygd på arbeidsgrenen samme dag). Valgene 1–7 over er tatt av Jonas 07.11.2026. Stegene OPP1–OPP5 står i `docs/planer/koen.md` (53–57), med hel startmelding for OPP1.
+- 07.11.2026: Jonas valgte **V1 A** (juksamaskinens trinn gir bare flere maskiner per person, ingen fisk per time). Alle valgene er tatt. Venter på «kjør på», og på at planen flettes inn i arbeidsgrenen, så rutinen ser stegene.
