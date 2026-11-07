@@ -31,6 +31,11 @@
     if (typeof glbHas === 'function' && glbHas('gear-pot')){ const up = nm => { const o = glbPart('gear-pot', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; }, pg = glbLoad('gear-pot');
       const pt = up('teine'); if (pt){ GB.pot = pt; GB.potB = true; GB.door = up('teinedor'); GB.davit = up('davit'); GB.davitSh = up('davitskive'); GB.tank = up('krabbekar'); GB.px = (pg && pg.ex) || {};
         GB.kon = up('kon'); GB.kontopp = up('kontopp'); GB.konlag = up('konlag'); GB.konlag11 = up('konlag11'); } }
+    // the snow crab's gear from tools/gear/snoteine.py (H3d1, 07.11.2026): the conical pot with its escape opening, bait box and mark in
+    // place of gear-pot's, the pot hauler and its sheave under the portal, the buoy and the marker buoy at a string's ends
+    if (typeof glbHas === 'function' && glbHas('gear-snoteine')){ const up = nm => { const o = glbPart('gear-snoteine', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; }, sg = glbLoad('gear-snoteine');
+      const k = up('kon'); if (k){ GB.kon = k; GB.kontopp = up('kontopp'); GB.konlag = up('konlag'); GB.konlag11 = up('konlag11'); GB.px = Object.assign({}, GB.px || {}, {kon:Object.assign({}, (GB.px || {}).kon || {}, (sg && sg.ex && sg.ex.kon) || {})}); }
+      GB.snoHaul = up('haler'); GB.snoSheave = up('haler_skive'); GB.blase = up('blase'); GB.boye = up('boye'); GB.snx = (sg && sg.ex) || {}; }
   }
   // the buoys of every set within sight, bobbing on the waves, flags blowing downwind
   // An autoline set carries the marks of § 68 (H2d, aMarks): the ocean marker poles at its ends (the west end two flags and two lamps,
@@ -92,10 +97,12 @@
         // (hauling it: the marks her hauling port has passed are aboard)
         if (Hl && Hl.s === s && M){ const sP = (Hl.P[0] - M.A[0]) * M.ux + (Hl.P[2] - M.A[1]) * M.uz; aMarksPush(L, M, m => Hl.fromA ? m.s > sP + 2 : m.s < sP - 2); }
         else aMarksPush(L, M); }
+      else if (s.kind === 'teine' && s.pot === 'sno'){ L.push({x:s.a.x, y:s.a.y, sno:'blase'}); L.push({x:s.b.x, y:s.b.y, sno:'boye'}); }   // (the snow crab's string: the buoy and the marker buoy, § 66, H3d1)
       else { L.push(s.a); L.push(s.b); } }
     for (const s of PEERGEAR){ L.push(s.a); L.push(s.b); }   // the other players' buoys (tilbakemelding #35)
     // the coast boats' nets, lines and pots, the ocean fleet's autolines with their marks (05-vessels.js, 05d-hav.js)
-    for (const s of NPCGEAR){ if (s.hav && s.k === 'line') aMarksPush(L, aMarksOf(s, 0, s.a.x.toFixed(4) + ',' + s.a.y.toFixed(4) + ',' + s.b.x.toFixed(4) + ',' + s.b.y.toFixed(4))); else { L.push(s.a); L.push(s.b); } }
+    for (const s of NPCGEAR){ if (s.hav && s.k === 'line') aMarksPush(L, aMarksOf(s, 0, s.a.x.toFixed(4) + ',' + s.a.y.toFixed(4) + ',' + s.b.x.toFixed(4) + ',' + s.b.y.toFixed(4)));
+      else if (s.hav && s.k === 'teine'){ L.push({x:s.a.x, y:s.a.y, sno:'blase'}); L.push({x:s.b.x, y:s.b.y, sno:'boye'}); } else { L.push(s.a); L.push(s.b); } }
     // setting, the first buoy goes over the stern and lies astern of her until she has run clear of it (tilbakemelding #25: «bøya skal
     // ligge på siden eller bak båten når settingen starter»); the autoline's marks go over from her chute (ALM, below)
     const g = S.boat.gop; if (g && g.op === 'set' && g.done >= 0){ if (g.auto && ALM.M) aMarksPush(L, ALM.M, m => aLive(ALM.M, m, t)); else if (!g.auto){ const back = ((GEO(vtype()).stern || 3) + 5) / 1000, d = Math.hypot(bv.x / 1000 - g.a.x, bv.z / 1000 - g.a.y);
@@ -106,7 +113,7 @@
     for (const e of L){ const x = e.x * 1000, z = e.y * 1000, dd = Math.hypot(x - eye[0], z - eye[2]), hv = e.hav && GB.havV ? e.hav : null; if (dd > (hv && e.lamp !== false ? 4600 : 4000)) continue;   // (a lamp is seen 2 nm, § 68)
       const y = seaH(x, z, t) - (hv ? 0.15 : 0.1), sx = (seaH(x + 0.6, z, t) - seaH(x - 0.6, z, t)) / 1.2, sz = (seaH(x, z + 0.6, t) - seaH(x, z - 0.6, t)) / 1.2;
       const M = model(x - eye[0], y - eye[1], z - eye[2], Math.PI / 2 - wd, -sz * 0.9, sx * 0.9);
-      if (!hv){ if (dd <= 4000) drawN(GB.buoy, M); continue; }
+      if (!hv){ if (dd <= 4000){ const SB = e.sno === 'blase' ? GB.blase : e.sno === 'boye' ? GB.boye : null; drawN(SB || GB.buoy, M); if (SB) KST.snoMarks = (KST.snoMarks || 0) + 1; } continue; }
       if (dd <= 4000){ drawN(hv === 'v' ? GB.havV : GB.havO, M); nMarks++; }
       // the yellow lamps of the ends: 22 flashes a minute (§ 68: 20-25), each pole on its own beat
       if (hv !== 'm' && e.lamp !== false && night > 0.05 && GB.havL && ((t + hash(Math.round(x) * 7 + Math.round(z)) * per) % per) < 0.35) for (const q of GB.havL[hv === 'v' ? 'havstang_v' : 'havstang_o'] || []) lamps.push(xf(M, q)); }
@@ -354,13 +361,14 @@
       else { let m = 1.2; try { m = gopUnitMin(g, S.t / 60, hsAt(S.boat.pos, S.t / 60)); } catch (e){} POTA.dur = clamp(m * 60 / simRate(), 2, 40); }
       POTA.g = g; POTA.done = g.done; POTA.t0 = t; }
     const u = POTA.fix != null ? POTA.fix : clamp((t - POTA.t0) / POTA.dur, 0, 1), sm = v => v * v * (3 - 2 * v), ph01 = (a, b) => sm(clamp((u - a) / (b - a), 0, 1)), lerp = (A, B, k) => [A[0] + (B[0] - A[0]) * k, A[1] + (B[1] - A[1]) * k, A[2] + (B[2] - A[2]) * k];
+    if (KP && G.snok && GB.snoHaul){ snoHauler(BMrel, G, null, POTA.sh); KST.haul = 'snokrabbe'; }
     const DV = potDavit(skiff) && !KP, P0 = [sx - 0.2, d.y, HP[2]], blk = DV && X.davit ? [P0[0] + X.davit.block[0], P0[1] + X.davit.block[1], P0[2] + X.davit.block[2]] : [sx + 0.05, gw + 0.05, HP[2]];
     const potM = (p, rz, rx) => chain(BMrel, M4.T(p[0], p[1], p[2]), M4.RZ(rz || 0), M4.RX(rx || 0), M4.S(ps));
     const RG = XP.ring != null ? XP.ring : 0.45, ring = (p, rz) => [p[0] - Math.sin(rz || 0) * (ph + RG), p[1] + Math.cos(rz || 0) * (ph + RG), p[2]];
     const bridle = p => { const R = ring(p); for (const c of XP.bridle || []) drawN(GB.float, chain(BMrel, limbM([p[0] + c[0] * ps, p[1] + c[1] * ps, p[2] + c[2] * ps], R, 0.006))); };
     // the crabs in the pot now: the set's catch shared over its pots, at most five drawn
-    const crabN = s && s.acc && s.acc.krabbe ? Math.min(5, Math.round(s.acc.krabbe.n / Math.max(1, s.n))) : 0;
-    const crabsIn = (p, left) => { for (let k = 0; k < left; k++) drawN(fishOf('krabbe'), chain(BMrel, M4.T(p[0] + (hash(k * 5 + 1) - 0.5) * pw, p[1] + 0.02, p[2] + (hash(k * 7 + 2) - 0.5) * pw), M4.RY(hash(k * 3) * 6.3), M4.S(0.8 * (0.85 + 0.3 * hash(k * 11))))); };
+    const csp = s && s.acc && s.acc.snokrabbe ? 'snokrabbe' : 'krabbe', crabN = s && s.acc && s.acc[csp] ? Math.min(5, Math.max(csp === 'snokrabbe' ? 2 : 0, Math.round(s.acc[csp].n / Math.max(1, s.n)))) : 0;
+    const crabsIn = (p, left) => { for (let k = 0; k < left; k++) drawN(fishOf(csp), chain(BMrel, M4.T(p[0] + (hash(k * 5 + 1) - 0.5) * pw, p[1] + 0.02, p[2] + (hash(k * 7 + 2) - 0.5) * pw), M4.RY(hash(k * 3) * 6.3), M4.S(0.8 * (0.85 + 0.3 * hash(k * 11))))); };
     // the hauler on its davit: the sheave turns while the rope runs
     const running = g.op === 'haul' ? u < 0.55 : u > 0.55;
     POTA.sh += (running ? 5 : 0) * clamp(t - POTA.st, 0, 0.1); POTA.st = t;
@@ -385,7 +393,7 @@
       const open = ph01(0.66, 0.7) * (1 - ph01(0.85, 0.89)), tk = S.equip.krabbekar ? [D.tank[0], D.tank[1] + ((X.tank || {}).water || 0.58) * (D.tank[4] || 1) + 0.05, D.tank[2]] : [0, d.y + 0.2, d.z];
       let left = crabN; if (u > 0.7) for (let k = 0; k < crabN; k++){ const a = 0.7 + k * 0.13 / Math.max(1, crabN), f = clamp((u - a) / 0.05, 0, 1); if (f <= 0) continue; left--; if (f >= 1) continue;
         const A = [p[0], p[1] + ph * 0.5, p[2]], Q = lerp(A, [tk[0] + (hash(k) - 0.5) * 0.4, tk[1], tk[2] + (hash(k + 3) - 0.5) * 0.6], f); Q[1] += Math.sin(Math.PI * f) * 0.7;
-        drawN(fishOf('krabbe'), chain(BMrel, M4.T(Q[0], Q[1], Q[2]), M4.RY(f * 3), M4.RX(0.5), M4.S(0.8))); }
+        drawN(fishOf(csp), chain(BMrel, M4.T(Q[0], Q[1], Q[2]), M4.RY(f * 3), M4.RX(0.5), M4.S(0.8))); }
       if (u < 0.9) crabsIn(p, Math.max(0, left));
       drawN(PM, potM(p, rz));
       if (!KP && GB.door && XP.hinge) drawN(GB.door, chain(potM(p, rz), M4.T(XP.hinge[0], XP.hinge[1], XP.hinge[2]), M4.RX(-1.9 * open)));
@@ -436,6 +444,7 @@
     if (!pick) return; const up = liftY(pick);
     if (G.hand){ if (pick === 'garnhaler' || !SKA || !SKA.haul) return; nSetup(VP); drawN(GB.haul, chain(BMrel, M4.T(SKA.haul[0], SKA.haul[1] + up, SKA.haul[2]))); KST.haul = pick; return; }
     if (!G.hauler) return; const P0 = [G.beam / 2 - 0.2, d.y + up, G.hauler[2]], X = GB.px || {};
+    if (G.kit && G.kit.pots && G.snok && GB.snoHaul){ snoHauler(BMrel, G, VP, 0); KST.haul = 'snokrabbe'; return; }
     if (pick === 'teinehaler'){ if (!GB.davit || (G.kit && G.kit.pots)) return; nSetup(VP); drawN(GB.davit, chain(BMrel, M4.T(P0[0], P0[1], P0[2])));
       if (GB.davitSh && X.davit) drawN(GB.davitSh, chain(BMrel, M4.T(P0[0] + X.davit.sheave[0], P0[1] + X.davit.sheave[1], P0[2] + X.davit.sheave[2]))); KST.haul = pick; return; }
     const HM = haulModel(pick === 'garnhaler' ? 'garn' : 'line');
@@ -443,6 +452,10 @@
     const at = q => chain(BMrel, M4.T(P0[0] + q[0], P0[1] + q[1], P0[2] + q[2]));
     litSetup(VP); drawLit(HM.frame, at([0, 0, 0])); drawLit(HM.sheave, at(HM.ax)); drawLit(HM.stripper, at(HM.st)); KST.haul = pick;
   }
+  // the snow crab vessel's pot hauler (tools/gear/snoteine.py haler) on its pedestal at anchors.hauler, its sheave at its axle turned a
+  // the line runs (a: the sheave's angle); it is hers from the yard, so it stands whether she is rigged or not (H3d1)
+  function snoHauler(BMrel, G, VP, a){ const H = G.hauler, X = (GB.snx || {}).haler || {}, ax = X.axle || [0.1, 0.95, 0];
+    if (VP) nSetup(VP); drawN(GB.snoHaul, chain(BMrel, M4.T(H[0], H[1], H[2]))); if (GB.snoSheave) drawN(GB.snoSheave, chain(BMrel, M4.T(H[0] + ax[0], H[1] + ax[1], H[2] + ax[2]), M4.RZ(-a))); }
   function drawGearOp(BMrel, eye, VP, t){
     autoMarks(BMrel, eye, t); ASLIDE.VP = VP; drawAutoSlides(BMrel);   // (the autoline's marks over the stern, and its gaffed fish down the chute, H2d2)
     const b = S.boat, g = b.gop; if (!g || b.status !== 'fishing') return; if (!GB) buildGear();
