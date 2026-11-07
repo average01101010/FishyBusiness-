@@ -3118,15 +3118,18 @@ THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/func
   - 104 `shopClaim()`
   - 127 `shopStart()`
 
-## `src/js/ui/10j-paint.js` (217 linjer)
+## `src/js/ui/10j-paint.js` (246 linjer)
 
 THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
 
 - **1** THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
-  - 180 `logoSet(L)`
-  - 188 `logoCheck()`
-  - 196 `giveCos(k)`
-  - 208 `regSet(n)`
+  - 184 `logoSet(L)`
+  - 192 `logoCheck()`
+  - 200 `giveCos(k)`
+  - 213 `regSet(n, paid)`
+  - 228 `regKeep()`
+  - 229 `regTaken(mark, paid)`
+  - 238 `regFree(mark, keep, paid)`
 
 ## `src/js/ui/10q-buymoment.js` (36 linjer)
 
