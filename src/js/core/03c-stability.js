@@ -147,16 +147,21 @@ const hullSlamV = H => 0.2 * Math.sqrt(HS_G * H.L);
 // origin is 0.06 m over its design waterline (the old following put her there), so y0 is 0.06 empty and lower with a load.
 function hullRest(H, D){
   const key = Math.round(D * 100); let R = H.rest.get(key); if (R) return R;
-  const n = H.n, m = D * 1000, dx = H.dx; let s = 0;
+  const n = H.n, dx = H.dx;
+  // (she never sinks, CLAUDE.md: what is aboard is carried with the decks a little over the water at most, so a swamped or overloaded
+  // boat lies deep and does not go on down; the stiffness is taken where she floats, a little under the lowest deck)
+  let top = 0; for (let i = 0; i < n; i++) top += secArea(H, i, H.d[i] + H.f[i]);
+  const m = Math.min(D * 1000, 0.95 * top * dx * HS_RHO), sMax = 0.95 * Math.min(...H.f); let s = 0;
   for (let it = 0; it < 40; it++){
     let F = 0, Fp = 0; for (let i = 0; i < n; i++){ F += secArea(H, i, H.d[i] + s); Fp += secBreadth(H, i, H.d[i] + s); }
     F = F * dx * HS_RHO - m; Fp *= dx * HS_RHO; if (Math.abs(F) < m * 1e-7) break;
     s = clamp(s - F / Math.max(Fp, m * 0.01), -Math.max(...H.d), Math.max(...H.f));
   }
+  const sk = Math.min(s, sMax);
   let A = 0, Az = 0, w = 0, wz = 0;
-  for (let i = 0; i < n; i++){ const a = secArea(H, i, H.d[i] + s), b = secBreadth(H, i, H.d[i] + s); A += a; Az += a * H.z[i]; w += b; wz += b * H.z[i]; }
-  const zG = Az / A, zF = wz / w; let IG = 0; for (let i = 0; i < n; i++) IG += secBreadth(H, i, H.d[i] + s) * ((H.z[i] - zG) ** 2 + dx * dx / 12);
-  const K33 = HS_RHO * HS_G * w * dx, K55 = HS_RHO * HS_G * IG * dx, m33 = 1.8 * m, I55 = 1.8 * m * H.kyy * H.kyy;   // (pitch about the centre of gravity)
+  for (let i = 0; i < n; i++){ const a = secArea(H, i, H.d[i] + s), b = secBreadth(H, i, H.d[i] + sk); A += a; Az += a * H.z[i]; w += b; wz += b * H.z[i]; }
+  const zG = A > 0 ? Az / A : 0, zF = w > 0 ? wz / w : zG; let IG = 0; for (let i = 0; i < n; i++) IG += secBreadth(H, i, H.d[i] + sk) * ((H.z[i] - zG) ** 2 + dx * dx / 12);
+  const K33 = HS_RHO * HS_G * Math.max(w, 1e-3 * H.Awp / dx) * dx, K55 = HS_RHO * HS_G * Math.max(IG, 1e-3 * H.Awp / dx * H.kyy * H.kyy) * dx, m33 = 1.8 * m, I55 = 1.8 * m * H.kyy * H.kyy;   // (pitch about the centre of gravity)
   R = {D, m, s, y0:0.06 - s, th0:0, zG, zF, K33, K55, m33, I55};
   if (H.rest.size > 16) H.rest.clear(); H.rest.set(key, R); return R;
 }
@@ -193,8 +198,9 @@ function hullStep(H, R, X, eta, deta, dt, o){
   }
   if (slam) X.slamT = X.t;
   if (way && pl){
-    { const b = H.bc, Cv = V / Math.sqrt(HS_G * b); let Lk = 0;
-      for (let i = n - 1; i >= 0; i--){ if (X.h[i] <= 0) break; Lk += H.dx; }
+    const b = H.bc, Cv = V / Math.sqrt(HS_G * b); let Lk = 0;
+    for (let i = n - 1; i >= 0; i--){ if (X.h[i] <= 0) break; Lk += H.dx; }
+    if (Lk > 0){   // (no lift with the transom out of the water: off a crest she flies, and falls)
       const lam = Math.max(0.5, Lk / b), zcp = H.zAft - lam * b * (0.75 - 1 / (5.21 * Cv * Cv / (lam * lam) + 2.39));
       const tau = clamp((X.th - R.th0 - (X.vy - (zcp - zG) * X.vth) / V) * 180 / Math.PI + 1, 0, 12), CL0 = Math.pow(tau, 1.1) * 0.012 * Math.sqrt(lam);
       const lift = 0.5 * HS_RHO * V * V * b * b * Math.max(0, CL0 - 0.0065 * H.beta * Math.pow(CL0, 0.6)) * sstep(0.8, 1.6, Cv);
@@ -203,7 +209,7 @@ function hullStep(H, R, X, eta, deta, dt, o){
   const ze = 0.3 + 0.15 * sstep(0.2, 0.8, Fr), c33 = 2 * ze * Math.sqrt(R.K33 * R.m33), c55 = 2 * ze * Math.sqrt(R.K55 * R.I55);
   X.vy += (F - c33 * X.vy) / R.m33 * dt; X.yg += X.vy * dt;
   X.vth += (M - c55 * X.vth) / R.I55 * dt; X.th += X.vth * dt; X.t += dt;
-  if (!(Number.isFinite(X.yg) && Number.isFinite(X.th) && Number.isFinite(X.vy) && Number.isFinite(X.vth)) || Math.abs(X.th) > 0.8){ X.yg = R.y0 - Math.sin(R.th0) * zG; X.th = R.th0; X.vy = X.vth = 0; }
+  if (!(Number.isFinite(X.yg) && Number.isFinite(X.th) && Number.isFinite(X.vy) && Number.isFinite(X.vth)) || Math.abs(X.th) > 0.8){ X.yg = R.y0 - Math.sin(R.th0) * zG; X.th = R.th0; X.vy = X.vth = 0; for (let i = 0; i < n; i++) X.h[i] = H.d[i]; }
   X.y = X.yg + Math.sin(X.th) * zG;
   return slam;
 }

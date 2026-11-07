@@ -231,7 +231,7 @@
       }
       bv.vr += (wr * wr * (tr - bv.roll) - 2 * zr * wr * bv.vr) * h; bv.roll = clamp(bv.roll + bv.vr * h, -lim, lim);
     }
-    if (force) hullMove(dt, b, G);
+    if (force) hullMove(dt, b);
     else HSEA.ok = false;
     bv.v = v;
   }
@@ -244,22 +244,27 @@
   // buries when a section is wholly under, the stern lifts in a following sea, a planing hull rises on her lift. When a bow section comes
   // down into the sea faster than 0.2 sqrt(g L) (about 2 m/s for the sjark) she slams: spray from the bow (24-cinema.js drawEffects), and
   // the slams are counted in S.incidents with no consequence (that is F7, choice 9A). «#hull0» in the address: as before (hidden, as #nf0).
-  const HSEA = {on:!/hull0/.test(location.hash), ok:false, H:null, X:null, eta:new Float64Array(HS_N), etaP:new Float64Array(HS_N), deta:new Float64Array(HS_N), far:new Float64Array(HS_N),
-    fN:new Float64Array(HS_N), fF:new Float64Array(HS_N), slam:{t:-9, s:0}, n:0, ms:0};
+  const HSEA = {on:!/hull0/.test(location.hash), ok:false, H:null, R:null, X:null, eta:new Float64Array(HS_N), etaP:new Float64Array(HS_N), deta:new Float64Array(HS_N), far:new Float64Array(HS_N),
+    fN:new Float64Array(HS_N), fF:new Float64Array(HS_N), fk:'', slam:{t:-9, s:0}, n:0, ms:0};
+  const HS_ACROSS = [-0.5, 0, 0.5];
+  // a wave's height in the list as the sea draws it, before the local scale (the wind sea's two spectra halved, the swell's)
+  const waveA = c => c.swell ? WV.swHs * c.wo : WV.hs * (c.wo + c.wy) / 2;
   bv.hsea = HSEA;
   // the sea at her sections (absolute heights), the slope across her for the roll, and the mean for a start
   function hullSea(G, Bs, t, tf, dt){
-    const H = hullSections(vtype(), G.bow, G.stern), tide = env.tide || 0, fx = Math.sin(bv.head), fz = -Math.cos(bv.head), rx = Math.cos(bv.head), rz = Math.sin(bv.head), t0 = performance.now();
+    const H = HSEA.H = hullSections(vtype(), G.bow, G.stern), tide = env.tide || 0, fx = Math.sin(bv.head), fz = -Math.cos(bv.head), rx = Math.cos(bv.head), rz = Math.sin(bv.head), t0 = performance.now();
     // Smith's effect per section: the pressure of a wave of number k at the depth of the section's centre, e^(-k zc), weighted by the waves'
-    // heights, for the short sea (the near field's waves, under 30 m) and the long sea and swell apart
-    { let aN = 0, aF = 0; const L = WV.list; for (const c of L){ const a = c.swell ? WV.swHs * c.wo : WV.hs * (c.wo + c.wy) / 2; if (!c.swell && c.k > 0.21) aN += a; else aF += a; }
-      for (let i = 0; i < H.n; i++){ let sN = 0, sF = 0; const z = H.zc[i]; for (const c of L){ const a = c.swell ? WV.swHs * c.wo : WV.hs * (c.wo + c.wy) / 2, e = a * Math.exp(-c.k * z); if (!c.swell && c.k > 0.21) sN += e; else sF += e; }
+    // heights, for the short sea (the near field's waves, under 30 m) and the long sea and swell apart (again only when the hull, the
+    // wave list or the heights have changed: the heights drift with a time constant of 4 s)
+    const fk = H.key + '|' + WV.list.length + '|' + (WV.list[0] && WV.list[0].k) + '|' + WV.hs.toFixed(2) + '|' + WV.swHs.toFixed(2);
+    if (fk !== HSEA.fk){ HSEA.fk = fk; let aN = 0, aF = 0; const L = WV.list; for (const c of L){ const a = waveA(c); if (!c.swell && c.k > 0.21) aN += a; else aF += a; }
+      for (let i = 0; i < H.n; i++){ let sN = 0, sF = 0; const z = H.zc[i]; for (const c of L){ const e = waveA(c) * Math.exp(-c.k * z); if (!c.swell && c.k > 0.21) sN += e; else sF += e; }
         HSEA.fN[i] = aN > 0 ? sN / aN : 1; HSEA.fF[i] = aF > 0 ? sF / aF : 1; } }
     const k = HSEA.ok && tf >= 0.02 ? 1 - Math.exp(-dt / tf) : 1;
     let hm = 0, st = 0, stN = 0;
     for (let i = 0; i < H.n; i++){
       const zl = H.z[i], x0 = bv.x - fx * zl, z0 = bv.z - fz * zl; let far = 0, nr = 0, hl = 0, hr = 0, nl = 0, nrr = 0;
-      for (const c of [-0.5, 0, 0.5]){ const hh = seaH(x0 + rx * c * Bs, z0 + rz * c * Bs, t), hn = SEA_D[3]; far += hh - hn; nr += hn; if (c < 0){ hl = hh; nl = hn; } else if (c > 0){ hr = hh; nrr = hn; } }
+      for (const c of HS_ACROSS){ const hh = seaH(x0 + rx * c * Bs, z0 + rz * c * Bs, t), hn = SEA_D[3]; far += hh - hn; nr += hn; if (c < 0){ hl = hh; nl = hn; } else if (c > 0){ hr = hh; nrr = hn; } }
       far /= 3; nr /= 3; HSEA.far[i] += (far - HSEA.far[i]) * k;
       HSEA.eta[i] = (HSEA.far[i] - tide) * HSEA.fF[i] + nr * HSEA.fN[i];   // (over the still water)
       hm += far + nr; st += hr - hl; stN += nrr - nl;
@@ -268,20 +273,23 @@
     return {hm:hm / H.n, st:st / (H.n * Bs), stN:stN / (H.n * Bs)};
   }
   // heave and pitch from the sections' buoyancy, in steps of at most 0.02 s; she starts where the old following had her
-  function hullMove(dt, b, G){
-    const type = vtype(), H = hullSections(type, G.bow, G.stern), tide = env.tide || 0;
-    const D = hullOf(type).disp + Math.max(0, bv.st.D - hullOf(b.type || type).disp), R = hullRest(H, D);   // (what is aboard, on the hull drawn)
-    if (!HSEA.ok || HSEA.H !== H || !HSEA.X){
-      const X = HSEA.X = hullX(R); X.th = bv.pitch || 0; X.y = (bv.y || tide + R.y0) - tide; X.yg = X.y - Math.sin(X.th) * R.zG; X.vy = 0; X.vth = 0;
-      for (let i = 0; i < H.n; i++){ X.h[i] = H.d[i]; HSEA.etaP[i] = HSEA.eta[i]; } HSEA.H = H; HSEA.ok = true;
+  function hullMove(dt, b){
+    const H = HSEA.H, tide = env.tide || 0;
+    const D = hullOf(H.type).disp + Math.max(0, bv.st.D - hullOf(b.type || H.type).disp), R = hullRest(H, D);   // (what is aboard, on the hull drawn)
+    if (!HSEA.ok || !HSEA.X || HSEA.X.key !== H.key){
+      const X = HSEA.X = hullX(R); X.key = H.key; X.th = bv.pitch || 0; X.y = (bv.y || tide + R.y0) - tide; X.yg = X.y - Math.sin(X.th) * R.zG; X.vy = 0; X.vth = 0;
+      for (let i = 0; i < H.n; i++){ X.h[i] = H.d[i]; HSEA.etaP[i] = HSEA.eta[i]; } HSEA.ok = true;
     }
-    const X = HSEA.X; for (let i = 0; i < H.n; i++){ HSEA.deta[i] = dt > 0 ? (HSEA.eta[i] - HSEA.etaP[i]) / dt : 0; HSEA.etaP[i] = HSEA.eta[i]; }
+    const X = HSEA.X;
+    // (a new load moves her centre of gravity: she is where she was, and turns about the new one from here)
+    if (HSEA.R && HSEA.R !== R) X.yg = X.y - Math.sin(X.th) * R.zG; HSEA.R = R; for (let i = 0; i < H.n; i++){ HSEA.deta[i] = dt > 0 ? (HSEA.eta[i] - HSEA.etaP[i]) / dt : 0; HSEA.etaP[i] = HSEA.eta[i]; }
     const o = {V:(WK.kn || 0) * 0.5144, Fr:WK.Fr || 0, planing:H.planing}, n = Math.ceil(dt / 0.02), h = dt / Math.max(1, n); let slam = 0;
     for (let i = 0; i < n; i++) slam = Math.max(slam, hullStep(H, R, X, HSEA.eta, HSEA.deta, h, o));
     bv.y = tide + X.y; bv.pitch = X.th; bv.vy = X.vy; bv.vp = X.vth;
     if (slam > 0){ HSEA.slam = {t:performance.now() / 1000, s:slam}; HSEA.n++; slamLog(slam * hullSlamV(H)); }
   }
   // the slams in S.incidents, with no consequence yet (F7): one entry while they go on (a new one after half an hour of game time without),
+  // (counted only where the 3D view draws her: F7 must reckon them in the core, so a screen that is off makes no difference to the world)
   // the count and the hardest, and never more than ten such entries, so they do not push the groundings and the knocks out of the sixty
   function slamLog(v){
     const I = S.incidents = S.incidents || [], vr = Math.round(v * 10) / 10; let e = null;

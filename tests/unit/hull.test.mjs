@@ -73,6 +73,14 @@ export default function (t){
     t.ok(rise > 0.01 * H.L * 0.5 && rise < 0.06 * H.L, type + ' i ' + kn + ' kn: løftet ' + (rise * 100).toFixed(0) + ' cm av farten');
     t.ok(Math.abs(X.vy) < 0.02 && Math.abs(X.vth) < 0.005, type + ' i ' + kn + ' kn: ligger roleg på planet (ingen hopping)');
   }
+  // ---- she never sinks: ten times her displacement aboard, more than she carries with the deck awash, she lies deep and stays there ----
+  { const H = K.hullSections('sjark'), R = K.hullRest(H, 10 * K.hullOf('sjark').disp), X = K.hullX(R), eta = new Float64Array(H.n);
+    for (let i = 0; i < 120 * 10; i++) K.hullStep(H, R, X, eta, null, 1 / 120);
+    t.ok([R.y0, R.zG, R.zF, R.K33, R.K55].every(Number.isFinite) && Number.isFinite(X.y) && X.y > -(H.d[4] + H.f[4]) && Math.abs(X.vy) < 0.05, 'sjark med ti ganger deplasementet om bord (mer enn hun bærer med dekket i vannet): synker ikke, ligger dypt og roleg (' + X.y.toFixed(2) + ' m)'); }
+  // ---- a planing hull off a crest, the transom out of the water: no lift, she falls ----
+  { const H = K.hullSections('skiff'), R = K.hullRest(H, K.stabOf('skiff', empty).D), X = K.hullX(R), eta = new Float64Array(H.n), V = 24 * 0.5144;
+    X.yg = R.y0 + 1.5; X.th = 0.05; for (let i = 0; i < H.n; i++) X.h[i] = -1; K.hullStep(H, R, X, eta, null, 1 / 120, {V, Fr:V / Math.sqrt(g * 5.9), planing:true});
+    t.near(X.vy, -g / 1.8 / 120, 1e-6, 'skiffen i lufta i 24 kn: ingen planingsløft, hun faller (tyngden over massen med tilleggsmassen)'); }
   // a displacement hull at her hull speed: the bow up about a degree and a little squat, as before
   { const type = 'sjark', H = K.hullSections(type), R = K.hullRest(H, K.stabOf(type, empty).D), X = K.hullX(R), eta = new Float64Array(H.n), V = 10 * 0.5144, Fr = V / Math.sqrt(g * K.VESSELS[type].len);
     for (let i = 0; i < 120 * 20; i++) K.hullStep(H, R, X, eta, null, 1 / 120, {V, Fr, planing:false});

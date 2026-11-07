@@ -46,7 +46,8 @@ RUN = """(o) => { const D = G3._debug, b = S.boat, HS = D.bv.hsea;
     yMean:+m(rec.y).toFixed(3), pMean:+(m(rec.p) * 180 / Math.PI).toFixed(2), last:+rec.y[rec.y.length - 1].toFixed(3), T1:cr.length > 2 ? +((cr[2] - cr[0]) / 30).toFixed(2) : null, Tz:+stabOf(o.type, {hold:0, deck:0, gear:0}).Tz.toFixed(2),
     slams:HS.n - n0, green, incSlam:inc.length ? inc[inc.length - 1].n : 0, fin:rec.y.concat(rec.p, rec.r).every(Number.isFinite), ms:+HS.ms.toFixed(3)}; }"""
 # the wind on the ground that gives a significant wave height near hs (m/s), found in the page
-FINDU = """(want) => { const D = G3._debug; let best = null;
+FINDU = """(want) => { const D = G3._debug, b = S.boat, g = GROUNDS[0].p; let best = null;
+  b.status = 'idle'; b.port = null; S.plan = null; b.pos = {x:g.x, y:g.y}; D.bv.init = false; D.stepBoat(1 / 30, 150, 0);   // (on the ground, not in the harbour)
   for (let U = 4; U <= 34; U += 0.5){ WX_FORCE = {w:U, d:315}; D.WV.init = false; for (let i = 0; i < 3; i++) D.waves(1 / 30, S.t / 60);
     const S2 = D.ssAt(D.bv.x, D.bv.z), WV = D.WV, ren = 1 / Math.sqrt(Math.max(1 - 2 * S2[2] * (1 - S2[2]) * (1 - WV.dot), 0.05));
     const hs = Math.sqrt(8 * WV.list.reduce((x, c) => x + (c.swell ? S2[1] * c.wo : S2[0] * (S2[2] * c.wo + (1 - S2[2]) * c.wy) * ren) ** 2, 0));

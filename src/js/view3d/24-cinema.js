@@ -607,7 +607,7 @@
     // water up and out to both sides from the forefoot, more the harder she hits, carried off with her way and the wind
     if (HSEA.slam.t > (wk.slamSeen || 0)){ wk.slamSeen = HSEA.slam.t;
       const VG = GEO(vtype()), Lb = VG.stern - VG.bow, s = Math.min(3, HSEA.slam.s), N = Math.round(40 + 50 * s), way = (bv.spd || 0) * 0.6, fx = Math.sin(bv.head), fz = -Math.cos(bv.head);
-      const wv = (env.wind || 0) * 0.35, wx = env.windDir[0] * wv, wz = env.windDir[1] * wv;
+      const wv = (env.wind || 0) * 0.35, wd = env.windDir || [0, -1], wx = wd[0] * wv, wz = wd[1] * wv;
       for (let i = 0; i < N; i++){ const side = Math.random() < 0.5 ? -1 : 1, a = 0.04 + Math.random() * 0.22, p = xf(BM, [side * VG.side * (0.4 + a * 1.4), 0.05, VG.bow + a * Lb]);
         const up = (2.5 + Math.random() * 3) * Math.sqrt(s), out = (1.5 + Math.random() * 3) * Math.sqrt(s);
         spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, up, Math.sin(bv.head) * side * out + fz * way + wz, 0.8 + Math.random() * 0.7, 9.8); } }
