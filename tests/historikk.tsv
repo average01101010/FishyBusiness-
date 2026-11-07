@@ -949,6 +949,27 @@
 2026-11-07 15:46	plan/2026-11-07-opp4	9e818532	hbtest	FEIL	17	lite	samtidig	FEIL liggende: the search narrows the list to the tip that matches  {"tips": 2, "first": "Diesel"}
 2026-11-07 15:46	plan/2026-11-07-opp4	9e818532+	hbtest	OK	15	lite	alene	
 2026-11-07 15:48	plan/2026-11-07-opp4	9e818532+	opptest	OK	42	lite	alene	
+2026-11-07 16:10	ccr-c01d562d-pf9kca	ff279f9b	stabtest	OK	13	lite	samtidig	
+2026-11-07 16:10	ccr-c01d562d-pf9kca	ff279f9b	calib	LES	13	lite	samtidig	
+2026-11-07 16:11	ccr-c01d562d-pf9kca	ff279f9b	simday	LES	14	lite	samtidig	
+2026-11-07 16:11	ccr-c01d562d-pf9kca	6a71af65	progweek	LES	40	lite	samtidig	
+2026-11-07 16:11	ccr-c01d562d-pf9kca	6a71af65	worktest	FEIL	21	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-07 16:11	ccr-c01d562d-pf9kca	fcae3658	trip2	OK	28	lite	samtidig	
+2026-11-07 17:01	ccr-c01d562d-pf9kca	ba745078	sea3d	FEIL	3000	3d	alene	gikk ut på tid
+2026-11-07 17:20	ccr-c01d562d-pf9kca	5e77ebd2	hull3d	FEIL	1136	3d	alene	FEIL in 6.1 m head sea at 8.5 kn the sjark pitches and slams, and the slams are in S.incidents {'slams/2 min': 1, 'sea over the forecastle': 0, 'pitch': [9.11, 
+2026-11-07 17:42	ccr-c01d562d-pf9kca	8e7212f1	trackfollow	FEIL	1274	3d	alene	FEIL she keeps to the line all the way, at most 9 m off it in the corners (the model turns on her own radius), and never goes back along it  {"off": 9.37, "back
+2026-11-07 17:48	ccr-c01d562d-pf9kca	13b1bee5	helmjit	OK	386	3d	alene	
+2026-11-07 18:05	ccr-c01d562d-pf9kca	beabe845	wetshot	OK	1045	3d	alene	
+2026-11-07 18:27	ccr-c01d562d-pf9kca	1339901a	kinotest	OK	1063	3d	alene	
+2026-11-07 18:29	ccr-c01d562d-pf9kca	33420272	gfxtest	FEIL	113	3d	alene	FEIL a GL error is sent with the step it came after, the graphics chip, the quality and the view  []
+2026-11-07 18:30	ccr-c01d562d-pf9kca	b68080f7	moortest	OK	38	3d	alene	
+2026-11-07 18:47	ccr-c01d562d-pf9kca	db538e51	hull3d	OK	1046	3d	alene	
+2026-11-07 18:49	ccr-c01d562d-pf9kca	3ad552db	gfxtest	OK	101	3d	alene	
+2026-11-07 18:57	ccr-c01d562d-pf9kca	3ad552db	benchshot	OK	501	3d	alene	
+2026-11-07 19:04	ccr-c01d562d-pf9kca	3ad552db	profshot	OK	423	3d	alene	
+2026-11-07 19:05	ccr-c01d562d-pf9kca	3ad552db	routetest	FEIL	40	lite	alene	FEIL Autonav over hele kysten: Finnsnes–Tromsø, Bodø–Reine og Bergen–Florø gir en vei fri for land, grunner og skjær, med høyst 40 punkter, eller ett per 2 km d
+2026-11-07 19:50	ccr-c01d562d-pf9kca	3cdd7202	routetest	OK	41	lite	alene	
+2026-11-07 19:51	ccr-c01d562d-pf9kca	3cdd7202	routetest	FEIL	91	lite	alene	avsluttet med kode 1
 2026-11-07 16:17	ccr-2040aa61-qgig5a	091c641d	skipdrift	OK	24	lite	samtidig	
 2026-11-07 16:17	ccr-2040aa61-qgig5a	091c641d	drifttest	OK	38	lite	samtidig	
 2026-11-07 16:18	ccr-2040aa61-qgig5a	413e9c36	fleet2test	OK	44	lite	samtidig	
@@ -1115,3 +1136,9 @@
 2026-11-07 21:53	ccr-9a3530e8-3tup0j	47ffbce8	skytest	OK	130	3d	alene	
 2026-11-07 21:57	ccr-9a3530e8-3tup0j	47ffbce8	skytest	OK	199	3d	alene	
 2026-11-07 21:58	ccr-9a3530e8-3tup0j	47ffbce8	docktest	OK	59	lite	alene	
+2026-11-07 21:00	ccr-c01d562d-pf9kca	0d6d6201	boottest	OK	20	lite	samtidig	
+2026-11-07 21:00	ccr-c01d562d-pf9kca	0d6d6201	docktest	OK	59	lite	samtidig	
+2026-11-07 21:06	ccr-c01d562d-pf9kca	0d6d6201+	soundtest	FEIL	6	lite	samtidig	FEIL et slag høres som et dunk fra baugen, sterkere jo hardere hun slår, og knapt med kameraet 2 km unna  {'near': {'n': 1, 'g': 0.2383998183865908}, 'soft': {'
+2026-11-07 21:06	ccr-c01d562d-pf9kca	0d6d6201+	cashfxtest	OK	8	lite	samtidig	
+2026-11-07 21:06	ccr-c01d562d-pf9kca	0d6d6201+	soundtest	OK	5	lite	alene	
+2026-11-07 21:25	ccr-c01d562d-pf9kca	1ccceed5	hull3d	OK	1132	3d	alene	

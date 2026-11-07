@@ -276,6 +276,20 @@ const SND = (() => {
     for (let i = 0; i < 6; i++){ const o = ac.createOscillator(), g = gain(0, master), t0 = t + i * 0.32; o.type = 'square'; o.frequency.value = i % 2 ? 880 : 1175; o.connect(g);
       g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.16, t0 + 0.02); g.gain.setValueAtTime(0.16, t0 + 0.24); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.3); o.start(t0); o.stop(t0 + 0.32); }
   }
+  // a slam (Fysikk 4 F2, view3d/24-cinema.js): the bow comes down on the sea, a heavy, low thud through the hull and the white water
+  // after it, louder and with a crack in it the harder she hits (s: the slam as a share of her threshold, 1 to 3), heard from the bow (q,
+  // [x, y, z] m) as the camera has it, like the slaps on the hull
+  function slam(s, q){
+    if (!ac || ac.state !== 'running' || !vol()) return;
+    const k0 = EAR; let a;
+    try { EAR = SND.testEar || (typeof G3 !== 'undefined' && G3.ear ? G3.ear() : null); if (EAR && !Number.isFinite(EAR.x + EAR.y + EAR.z + EAR.fx + EAR.fz)) EAR = null; a = at(q, SNDREF.slap); } finally { EAR = k0; }
+    const k = clamp(0.45 + 0.25 * ((s || 1) - 1), 0.3, 1) * a.g, t = ac.currentTime; LV.slam = (LV.slam || 0) + 1; LV.slamG = k;
+    if (!(k > 0.005)) return;
+    const o = ac.createOscillator(), g = gain(0, oneOut(a.pan)); o.type = 'sine'; o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.3); o.connect(g);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5 * k, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4); o.start(t); o.stop(t + 0.45);
+    burst('lowpass', 900 * a.lp, 0.7, 0.3 * k, 0.9, 0.02, a.pan);
+    if (s > 1.5) burst('bandpass', 2400 * a.lp, 1.2, 0.12 * k * Math.min(1, s - 1.5), 0.25, 0.004, a.pan);
+  }
   // man overboard (Ø11.6): a shrill two-tone alarm, then «O» on the horn, three long blasts (the code letter for man overboard)
   function mobAlarm(){
     if (!ac || ac.state !== 'running' || !vol()) return;
@@ -373,5 +387,5 @@ const SND = (() => {
   document.addEventListener('pointerdown', () => { if (!started){ if (S && S.settings) start(); } else if (ac && ac.state !== 'running' && ac.state !== 'closed' && !document.hidden) quiet(ac.resume()); }, true);
   document.addEventListener('visibilitychange', () => { if (!ac || ac.state === 'closed') return; quiet(document.hidden ? ac.suspend() : ac.resume()); });
   // testEar / testSrc (for the tests): an ear and the places, as G3.ear and G3.sndSrc give them in 3D
-  return {start, cash, coin, nudge, horn, blasts, hornHz, room, anchorAlarm, mobAlarm, FIRES, MUS, get started(){ return started; }, get state(){ return ac ? ac.state : 'none'; }, LV, tick, at:(q, ref, e) => { const k = EAR; EAR = e; const r = at(q, ref); EAR = k; return r; }, testEar:null, testSrc:null};
+  return {start, cash, coin, nudge, horn, blasts, hornHz, room, anchorAlarm, mobAlarm, slam, FIRES, MUS, get started(){ return started; }, get state(){ return ac ? ac.state : 'none'; }, LV, tick, at:(q, ref, e) => { const k = EAR; EAR = e; const r = at(q, ref); EAR = k; return r; }, testEar:null, testSrc:null};
 })();

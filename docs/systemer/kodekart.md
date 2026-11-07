@@ -431,7 +431,7 @@ SEA: fetch, wind sea, swell
   - 155 `seaPartsNear(p, H)`
   - 157 `seaDirF(p, H, head)`
 
-## `src/js/core/03c-stability.js` (95 linjer)
+## `src/js/core/03c-stability.js` (216 linjer)
 
 STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the work aboard
 
@@ -446,6 +446,13 @@ STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the wo
   - 69 `motionHere(H, b = S.boat)`
   - 76 `hsWork(p, H)`
   - 80 `stabTick(H)`
+- **96** THE HULL IN THE SEA: buoyancy per section (Fysikk 4 F2, 07.11.2026; docs/planer/fysikk-4-sjo-og-skrog.md, Jonas' choice 2B)
+  - 106 `hullSections(type, zb, zs)`
+  - 136 `secArea(H, i, h)`
+  - 141 `secBreadth(H, i, h)`
+  - 148 `hullRest(H, D)`
+  - 171 `hullX(R)`
+  - 186 `hullStep(H, R, X, eta, deta, dt, o)`
 
 ## `src/js/core/03d-quota.js` (456 linjer)
 
@@ -2531,12 +2538,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1313 linjer)
+## `src/js/ui/phone/07-patch.js` (1321 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1306 `patch()`
+  - 1314 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3115,14 +3122,14 @@ THE HELM ON THE SCREEN (core/16-helm.js; the user's wish 03.10.2026)
 
 - **1** THE HELM ON THE SCREEN (core/16-helm.js; the user's wish 03.10.2026)
 
-## `src/js/ui/10e-sound.js` (378 linjer)
+## `src/js/ui/10e-sound.js` (392 linjer)
 
 SOUND (the user's wish 03.10.2026)
 
 - **1** SOUND (the user's wish 03.10.2026)
 - **85** inside Father's naust (Jonas 09.10.2026: «Kjør på med lyd i naustet»; ui/09c-naust3d.js)
 - **144** the music (Jonas 05.10.2026: «rolig ambient instrumentaler som svak stemning i bakgrunnen. Må kunne skrus av i innstillinger»)
-- **298** the whistle and the bell (Ø11.2; sjøveisreglene FOR-1975-12-01-5 rules 32-35 and vedlegg III, read 06.11.2026)
+- **312** the whistle and the bell (Ø11.2; sjøveisreglene FOR-1975-12-01-5 rules 32-35 and vedlegg III, read 06.11.2026)
 
 ## `src/js/ui/10f-cloud.js` (964 linjer)
 
@@ -4005,7 +4012,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 103 `moorStep(dt, bp, at = dt)`
   - 135 `drawMooring(BMrel, eye, VP, t)`
 
-## `src/js/view3d/16-motion.js` (245 linjer)
+## `src/js/view3d/16-motion.js` (318 linjer)
 
 ---------- boat motion ----------
 
@@ -4022,9 +4029,13 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 130 `dynSoon()`
   - 133 `dynFollow(dt)`
   - 141 `updateBoat(dt, t, frac, rdt)`
-- **230** particles
-  - 234 `spawn(x, y, z, vx, vy, vz, life, g)`
-  - 236 `drawPts(n, mode, VP, col, size, round, off, mx)`
+- **238** the hull in the sea: buoyancy per section (Fysikk 4 F2, 07.11.2026; docs/planer/fysikk-4-sjo-og-skrog.md, Jonas' choice 2B)
+  - 254 `hullSea(G, Bs, t, tf, dt)`
+  - 276 `hullMove(dt, b)`
+  - 294 `slamLog(v)`
+- **303** particles
+  - 307 `spawn(x, y, z, vx, vy, vz, life, g)`
+  - 309 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
 ## `src/js/view3d/17-draw.js` (207 linjer)
 
@@ -4257,7 +4268,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **94** frame
   - 98 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (701 linjer)
+## `src/js/view3d/24-cinema.js` (722 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -4287,8 +4298,8 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 491 `driftSpray(VP, eye, dt, t, col)`
   - 506 `drawSmoke(VP, eye, BM, dt)`
   - 547 `scupperWater(VP, eye, BM, dt, t, col)`
-  - 573 `drawEffects(VP, eye, BM, dt, t)`
-  - 683 `updateLabels(VP, eye, W, Hh)`
+  - 574 `drawEffects(VP, eye, BM, dt, t)`
+  - 704 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (224 linjer)
 
