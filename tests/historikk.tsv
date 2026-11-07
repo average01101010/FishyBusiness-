@@ -371,6 +371,23 @@
 2026-11-06 22:19	ccr-a3c53300-9f9ly1	9871601	autonavtest	FEIL	0	lite	alene	FEIL 6. Autonav Vannareid → Honningsvåg … (bygget før rettingen, bare Senja: de samme ti røde linjene som på det rettede bygget)
 2026-11-06 22:22	ccr-a3c53300-9f9ly1	4073902	draftlooptest	OK	19	lite	samtidig	
 2026-11-06 22:24	ccr-a3c53300-9f9ly1	7cbe5c7	bootgtest	OK	125	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	colregtest	OK	603	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	npctest	FEIL	0	lite	samtidig	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py)
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	autonavtest	FEIL	11	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 102, 'cell': 0.2, 'maxSlice': 8.1, 'mended': 0, 'b
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	hudtest	OK	25	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	havflaate	OK	8	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	hulltest	OK	70	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	lanterntest	OK	10	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	dyntest	FEIL	252	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	helmtest	OK	26	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	trip2	OK	35	lite	samtidig	
+2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	hailtest	OK	5	lite	samtidig	
+2026-11-07 00:44	ccr-208d78a1-ruhxll	cb03960a	anchorlight3d	FEIL	116	3d	alene	avsluttet med kode 1
+2026-11-07 01:09	ccr-208d78a1-ruhxll	21194a43	trackfollow	OK	1514	3d	alene	
+2026-11-07 01:14	ccr-208d78a1-ruhxll	21194a43	anchorlight3d	OK	236	3d	alene	
+2026-11-07 01:14	ccr-208d78a1-ruhxll	21194a43	npctest	OK	9	lite	samtidig	
+2026-11-07 01:14	ccr-208d78a1-ruhxll	8c1faf2d	autonavtest	OK	22	lite	samtidig	
+2026-11-07 01:17	ccr-208d78a1-ruhxll	c3eabdf2	hulltest	OK	68	lite	alene	
 2026-11-06 23:19	ccr-a9ff699b-re4zwf	509c633b	hudtest	FEIL	0	lite	samtidig	avsluttet med kode 1
 2026-11-06 23:19	ccr-a9ff699b-re4zwf	509c633b	friendtest	FEIL	0	lite	samtidig	avsluttet med kode 1
 2026-11-06 23:19	ccr-a9ff699b-re4zwf	509c633b	hbtest	FEIL	0	lite	samtidig	avsluttet med kode 1
@@ -457,6 +474,16 @@
 2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	regnrtest	OK	15	lite	samtidig	
 2026-11-07 01:31	ccr-04f41d1f-p26bxn	4edaa996+	sqltest	FEIL	36	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
 2026-11-07 01:40	ccr-04f41d1f-p26bxn	4edaa996+	coast3d	FEIL	579	3d	alene	FEIL off Tromsø the coast's lights are there in 3D at night {'inR': 0, 'on': 0, 'sec': 0}
+2026-11-07 01:24	ccr-208d78a1-ruhxll	01594293	hulltest	FEIL	78	lite	samtidig	FEIL 7a. by hand into the ferry: the contact in the manoeuvring model's steps, damage to your hull and to hers  [{"id": "ferje", "name": "MF Senjasund", "kn": 5
+2026-11-07 01:24	ccr-208d78a1-ruhxll	01594293	boottest	OK	26	lite	samtidig	
+2026-11-07 01:24	ccr-208d78a1-ruhxll	01594293	trip2	OK	29	lite	samtidig	
+2026-11-07 01:24	ccr-208d78a1-ruhxll	01594293	hudtest	OK	23	lite	samtidig	
+2026-11-07 01:34	ccr-208d78a1-ruhxll	01594293	colregtest	OK	604	lite	samtidig	
+2026-11-07 01:35	ccr-208d78a1-ruhxll	01594293	dbg23o	OK	39	3d	alene	
+2026-11-07 01:38	ccr-208d78a1-ruhxll	01594293+	hulltest	OK	69	lite	alene	
 2026-11-07 01:29	ccr-a9ff699b-re4zwf	b6b3f1e2	kotest	OK	14	lite	samtidig	
 2026-11-07 01:30	ccr-a9ff699b-re4zwf	b6b3f1e2	docktest	OK	61	lite	samtidig	
 2026-11-07 01:30	ccr-a9ff699b-re4zwf	b6b3f1e2	hudtest	OK	24	lite	samtidig	
+2026-11-07 01:42	ccr-208d78a1-ruhxll	fdac21e3	hulltest	OK	69	lite	samtidig	
+2026-11-07 01:42	ccr-208d78a1-ruhxll	fdac21e3	trip2	OK	30	lite	samtidig	
+2026-11-07 01:42	ccr-208d78a1-ruhxll	fdac21e3	boottest	OK	22	lite	samtidig	
