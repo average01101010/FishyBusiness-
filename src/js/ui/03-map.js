@@ -265,6 +265,7 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){ const step = chartRast
 // frames (05.11.2026: 70-255 ms at once on a PC). A row needs the one above (the edge of the safe depth), so the rows are not split up,
 // only spread out; the picture is the same. (Not a generator: as one the whole chart was 13 % slower, its loops less optimised.)
 // scr: arrays kept between calls (the little chart's, so a background leaves no garbage); without it they are new
+const CRS = {};   // chartRasterJob's arrays for the rasters without scr of their own (chartRaster: one at a time, to the end)
 function chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr){
   const {lv, fish, night, sd} = V, LD = MAPD.L.depth, c = LD.c, X0 = LD.ix0, Y0 = LD.iy0, X1 = LD.ix0 + LD.nx - 1, Y1 = LD.iy0 + LD.ny - 1, D = (ix, iy) => rcell(LD, ix, iy);
   const s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
@@ -292,12 +293,14 @@ function chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr){
   // where a cell has more than one sample), and the B-spline's sum along a row of depth cells (per row of cells and column of samples,
   // where a cell has more than one sample). The same numbers in the same order, so the picture is the same byte for byte; a cell whose
   // block is not in throws as before, each time it is asked for (its pack may have come between two steps of a job), and is not kept.
-  const own = (k, A, n) => R ? (R[k] && R[k].length >= n ? R[k] : (R[k] = new A(n))) : new A(n);
+  // (kept between calls in scr, or in CRS for the big chart's tiles, which chartRaster paints one at a time to the end: new ones for
+  // every tile were some 5 MB of garbage a paint)
+  const own = (k, A, n) => { const O = R || CRS; return O[k] && O[k].length >= n ? O[k] : (O[k] = new A(n)); };
   const LA = MAPD.L[FARL.land[0]], LB = MAPD.L[FARL.land[1]], inL = (L, v, o, n) => { const k = Math.floor(v / L.c); return k >= o && k < o + n; };
   const ifl = (v, lo, hi, a, b) => (v >= lo && v < hi ? 1 : 0) | (LA && inL(LA, v, LA[a], LA[b]) ? 2 : 0) | (LB && inL(LB, v, LB[a], LB[b]) ? 4 : 0);
   const IFX = own('IFX', Uint8Array, PW), TXC = own('TXC', Int32Array, PW), MXC = own('MXC', Int32Array, PW);
   for (let i = 0; i < PW; i++){ const x = x0 + (i + 0.5) * pkx; IFX[i] = ifl(x, MAPB.x0, MAPB.x1, 'ix0', 'nx'); TXC[i] = Math.floor(x / T); MXC[i] = Math.floor(x / lc); }
-  const inFr = (fx, fy) => (fx & fy & 1) !== 0 && (fx & fy & 6) !== 0;   // (in the frame, and in the fine or the coarse land layer on both axes)
+  const inFr = (fx, fy) => (fx & fy & 1) !== 0 && (fx & fy & 6) !== 0;   // (in the frame, and in the fine or the coarse land layer on both axes: inFrame's and farL's rule)
   const dmx = MXC[0], dnx = MXC[PW - 1] - dmx + 1, dmy = Math.floor((y0 + 0.5 * pky) / lc), dny = Math.floor((y0 + (PH - 0.5) * pky) / lc) - dmy + 1;
   const DM = lv > 0 && pkx < lc && pky < lc && dnx * dny <= 4e6 ? own('DM', Uint8Array, dnx * dny).fill(0, 0, dnx * dny) : null;   // 0 not asked, 1 no, 2 yes
   const deepI = (i, my) => { const mx = MXC[i], k = (my - dmy) * dnx + mx - dmx; let r = DM[k]; if (!r) DM[k] = r = deepC(mx, my) ? 2 : 1; return r === 2; };

@@ -44,7 +44,8 @@ function chartPath0(px, out){ const b = pathStep(px || 0, 0.3), k = 'p0:' + b + 
 // coast0 whole (b = 0) for a small view: only what reaches into the box [x0, y0, x1, y1] (km; the view and a margin round it). The
 // full path was built for the whole frame, and drawn, whenever a view as small as the little chart in 3D lay where the tiles' chart
 // packs had not come: 1.8 s with the CPU slowed at the first start (Ø3a, 07.11.2026). The rings are read once (C0R: their points as
-// vecPath keeps them with the keep test, a point the same as the last left out, and their boxes); the path is kept for the last box.
+// vecPath keeps them with the keep test, a point the same as the last left out, and their boxes: vecPath's own loop with the tol of
+// 1e-9 that keep gives it, so a change there is one here too); the path is kept for the last box.
 // A ring whose box misses the box is left out. In a ring that reaches in, every side that may cross the box is kept as it was, end
 // points and all, so the coast in the view is drawn from the same lines as before (the same pixels); a run of sides that lie wholly
 // on one side of the box (both ends beyond the same edge) goes instead along a box a margin larger (each point clamped to it, points
@@ -65,7 +66,7 @@ function chartRings0(v){
 function chartPath0In(out, box){
   const pk = MAPD.chart0 || MAPD.core; if (!pk || !pk.buf) return chartPath0(0, out);
   const v = mapVec(pk, 'coast0'); if (!v) return null;
-  const o = out ? 'o' : 'i', key = box.join(','); if (C0R[o] && C0R[o].key === key) return C0R[o].path;
+  const o = out ? 'o' : 'i', key = box.join(','); if (C0R[o] && C0R[o].key === key && C0R[o].v === v) return C0R[o].path;   // (the coast it was made from too: chart0 after the core's, or a pack read again)
   const X0 = box[0] * 100, Y0 = box[1] * 100, X1 = box[2] * 100, Y1 = box[3] * 100, p = new Path2D();   // (the rings are in 10 m units)
   const m = Math.max(X1 - X0, Y1 - Y0) * 0.05 + 1, Q0 = X0 - m, R0 = Y0 - m, Q1 = X1 + m, R1 = Y1 + m;   // the larger box the runs go along
   const code = (x, y) => (x < X0 ? 1 : x > X1 ? 2 : 0) | (y < Y0 ? 4 : y > Y1 ? 8 : 0);
@@ -101,7 +102,7 @@ function chartPath0In(out, box){
     if (E.length < 4) continue;
     for (let j = 0; j < E.length; j += 2) j ? p.lineTo(E[j] * 0.01, E[j + 1] * 0.01) : p.moveTo(E[j] * 0.01, E[j + 1] * 0.01); p.closePath();
   }
-  C0R[o] = {key, path:p}; return p;
+  C0R[o] = {key, v, path:p}; return p;
 }
 // the rings that touch the rectangle r [x0, y0, x1, y1] (m from the tile's corner), as paths in km: land (class 0 and 1), mole (the
 // breakwaters, 2 and 3) and all, each null when none. The shore in 3D (view3d buildLandMask) strokes the land's and the breakwaters' rings
@@ -137,8 +138,12 @@ function chartCoast(ctx, x0, y0, kx, ky, W, H, dpr, fish){
   // the national coast only where a tile in the view has no chart pack of its own (it was stroked over the whole country each time)
   const nT = (Math.floor((x0 + W * kx) / T) - Math.floor(x0 / T) + 1) * (Math.floor((y0 + hh) / T) - Math.floor(y0 / T) + 1);
   const x1 = x0 + W * kx, y1 = y0 + hh, inOld = x1 > 0 && y1 > 0 && x0 < 1450 && y0 < 1750, past = x0 < 0 || y0 < 0 || x1 > 1450 || y1 > 1750;
-  // (coast0 whole only within the view and 16 pixels round it: chartPath0In)
-  const box = pathStep(kx, 0.3) ? null : [x0 - 16 * kx, y0 - 16 * ky, x1 + 16 * kx, y1 + 16 * ky], c0 = o => box ? chartPath0In(o, box) : chartPath0(kx, o);
+  // coast0 whole (b = 0) only round the view (chartPath0In), in a view up to CHARTV.far km tall whose whole path is not made already: the
+  // box is the view and half its size or more round it, on a grid of half the view, so it is made again only when the view has moved
+  // that far (a new box for every pan cost 13 ms at 100 km and 65 ms at 300 km with the CPU slowed, the path drawn whole under 1 ms)
+  const vs = Math.max(W * kx, hh), g = vs / 2, sn = (v, f) => f(v / g) * g, b0 = !pathStep(kx, 0.3) && hh <= CHARTV.far;
+  const box = b0 ? [sn(x0 - g, Math.floor), sn(y0 - g, Math.floor), sn(x1 + g, Math.ceil), sn(y1 + g, Math.ceil)] : null;
+  const c0 = o => box && !CHARTV.paths.has('p0:0' + (o ? 'o' : '')) ? chartPath0In(o, box) : chartPath0(kx, o);
   const p0 = tiles.length < nT && inOld ? c0(false) : null, p0o = tiles.length < nT && past ? c0(true) : null;
   if (p0 || p0o){
     ctx.save();

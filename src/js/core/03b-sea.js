@@ -11,7 +11,8 @@ const FETCH_C = new Map();
 function fetchRay(x, y, dx, dy){
   let s = 0; const q = {x, y};   // (one point along the ray: an object a step was the most garbage the sea state left, 05.11.2026)
   // the far layers looked up once a ray, and a step's land layer used again for its land (Ø3a, 07.11.2026): what farL, coastDistFar
-  // and isLandFar pick for the point, the same layer and the same numbers (fetchRayRef in tests/unit/rammen.test.mjs is the old way)
+  // and isLandFar pick for the point, the same layer and the same numbers (fetchRayRef in tests/unit/fetchray.test.mjs is the old way,
+  // on the live farL, coastDistFar and isLandFar, so a change in their rule shows there)
   const LA = MAPD.L[FARL.land[0]], LB = MAPD.L[FARL.land[1]], DA = MAPD.L[FARL.dc[0]], DB = MAPD.L[FARL.dc[1]];
   for (let i = 0; i < 3000; i++){
     q.x = x; q.y = y;
