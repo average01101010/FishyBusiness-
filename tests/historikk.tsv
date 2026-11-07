@@ -890,3 +890,6 @@
 2026-11-07 15:36	ccr-68a96e99-8x1jh1	f768a79a	r4test	OK	14	lite	samtidig	
 2026-11-07 15:36	ccr-68a96e99-8x1jh1	f768a79a	sonetest	OK	7	lite	samtidig	
 2026-11-07 15:37	ccr-68a96e99-8x1jh1	f768a79a	starttest	OK	87	lite	samtidig	
+2026-11-07 15:40	HEAD	91cc422a	boottest	OK	28	lite	samtidig	
+2026-11-07 15:41	HEAD	91cc422a	starttest	OK	89	lite	samtidig	
+2026-11-07 15:41	HEAD	91cc422a	booktest	OK	26	lite	samtidig	
