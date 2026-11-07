@@ -1163,6 +1163,7 @@ function lieToStep(W, hs){
   else log('Det har løyet etter ' + hrs + ' timer.', 'It has eased after ' + hrs + ' hours.');
 }
 function risk(W, hs){
+  if (typeof mobRisk === 'function') mobRisk(W, hs);   // man overboard: the risk on deck and the event (Ø11.6, 14b-sikkerhet.js)
   const b = S.boat; if (b.status === 'port' || (S.tut && S.tut.catch)) return;
   const over = svcOverdue();
   if (over > 0 && b.status === 'sailing' && Math.random() < over * 0.02 / 60 && b.status !== 'engine'){ b.prev = b.status; b.status = 'engine'; b.engineUntil = S.t + 30 + Math.floor(Math.random() * 60); log('Motorstopp. Motoren trenger service.', 'Engine stopped. The engine needs a service.'); return; }

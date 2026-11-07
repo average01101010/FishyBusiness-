@@ -316,5 +316,22 @@ async def main():
         print(ok(r['who']['net2']['st'] == 'haling,haling' and r['who']['net2']['bl'] == 1 and r['who']['net3']['st'] == 'blogg,haling,haling' and r['who']['net3']['bl'] == 1 and r['who']['line2']['st'] == 'blogg,haling' and r['who']['line2']['bl'] == 0 and r['who']['line3']['bl'] == 0 and r['who']['line3']['st'] == 'blogg,haling,sloy'), 'a net takes two at the hauler, one pulling and one picking (who bleeds when nobody else does), and the next hand bleeds; a line takes one at the hauler, the next bleeds, and a third guts (Jonas 20.10.2026 #75, and 23.10.2026: the fish over the rail are bled first)', r['who'])
         print(ok(r['slow'][0] == 1 and r['slow'][1] == 1 and r['slow'][2] == 1 and 0.55 < r['slow'][3] < 0.65 and r['slow'][4] == 0.2 and r['slowSet'] == 1), 'the haul goes at full pace up to half a tub, then slower, to a fifth at a full tub; setting is not slowed', r['slow'])
 
+        # OPP2 of docs/planer/oppgraderinger.md (07.11.2026): the minutes a unit takes in the game per tier, with one hand aboard as above.
+        # The hauler's tier takes 10 and 20 % off a tub, a net and a pot hauled; the line setter 20 and 35 % off a tub set, the net chute
+        # 25 % off a net set; the gaff's 8 % adds to the hauler's 20 % (28 %, not 1 - 0.8 x 0.92); setting is not touched by the hauler
+        r = await pg.evaluate("""(()=>{ const b = S.boat, R = {}, c = hand();   // (one and the same hand in every measure: a new one has other skills)
+          const tm = (kind, op, eq) => { S.equip = Object.assign({}, S.equip, {linehaler:true, garnhaler:true, teinehaler:true, linehalerLv:1, garnhalerLv:1, teinehalerLv:1, linesetter:false, linesetterLv:1, garnrenne:false, hott:1}, eq); S.crew = [c]; S.hold = []; b.status = 'fishing'; b.deckStop = false;
+            b.gop = {op, kind, n:2, done:0, prog:0, sub:0, sl:1, hooksPer:kind === 'line' ? 600 : 0}; const ms = gopUnitMin(b.gop, S.t / 60, 0); b.gop = null; return +ms.toFixed(3); };
+          for (const [kind, h] of [['line', 'linehalerLv'], ['garn', 'garnhalerLv'], ['teine', 'teinehalerLv']]) R[kind] = [1, 2, 3].map(lv => tm(kind, 'haul', {[h]:lv}));
+          R.lineHott = tm('line', 'haul', {linehalerLv:3, hott:3}); R.lset = [tm('line', 'set', {}), tm('line', 'set', {linesetter:true}), tm('line', 'set', {linesetter:true, linesetterLv:2}), tm('line', 'set', {linehalerLv:3})];
+          R.gset = [tm('garn', 'set', {}), tm('garn', 'set', {garnrenne:true})]; for (const k of ['linesetter', 'garnrenne', 'linehalerLv', 'garnhalerLv', 'teinehalerLv', 'linesetterLv']) delete S.equip[k]; S.equip.hott = 1; S.crew = [hand()];
+          return R; })()""")
+        print('minutter per enhet per trinn (OPP2):', json.dumps(r))
+        q = lambda a, b0: abs(a / b0 - 1) if b0 else 9
+        print(ok(all(q(r[k][1], r[k][0] * 0.9) < 1e-3 and q(r[k][2], r[k][0] * 0.8) < 1e-3 for k in ('line', 'garn', 'teine'))), 'the hauler at tiers 2 and 3 takes 10 and 20 % off a tub, a net and a pot hauled', {k: r[k] for k in ('line', 'garn', 'teine')})
+        print(ok(q(r['lineHott'], r['line'][0] * 0.72) < 1e-3), 'line hauler 3 and gaff 3: 28 % off a tub (the shares add up)', r['lineHott'])
+        print(ok(q(r['lset'][1], r['lset'][0] * 0.8) < 1e-3 and q(r['lset'][2], r['lset'][0] * 0.65) < 1e-3 and r['lset'][3] == r['lset'][0]), 'the line setter takes 20 and 35 % off a tub set; the hauler\'s tier nothing', r['lset'])
+        print(ok(q(r['gset'][1], r['gset'][0] * 0.75) < 1e-3), 'the net chute takes 25 % off a net set', r['gset'])
+
         print('errors:', errs[:5]); await br.close()
 asyncio.run(main())

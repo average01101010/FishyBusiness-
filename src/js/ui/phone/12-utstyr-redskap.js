@@ -26,8 +26,10 @@
     // in the shop: the top (the keeper, what is ordered here, what the boat needs), then what the boat lacks, what is aboard in one card,
     // and what does not suit her folded away (M2). The hauler and the deck first, the electronics after
     if (mode === 'butikk' && atKind('butikk')) h.splice(1, 0, shopTop('utstyrb'));
-    const ORDER = ['linehaler', 'garnhaler', 'teinehaler', 'jukse', 'krabbekar'], keys = Object.keys(EQUIP).filter(k => !EQUIP[k].tiers && yardEq(k) === (mode === 'verft')).sort((a, c) => (ORDER.includes(a) ? ORDER.indexOf(a) : 99) - (ORDER.includes(c) ? ORDER.indexOf(c) : 99));
-    const aboard = [], nofit = [];
+    // (the tiers of the knives, the gaff, the reels and the jig sets are in Fiskeutstyr; the haulers and the line setter are bought here and
+    // their tiers there, OPP1 and OPP2)
+    const ORDER = ['linehaler', 'garnhaler', 'teinehaler', 'linesetter', 'garnrenne', 'jukse', 'krabbekar'], keys = Object.keys(EQUIP).filter(k => !EQUIP[k].tiers && yardEq(k) === (mode === 'verft')).sort((a, c) => (ORDER.includes(a) ? ORDER.indexOf(a) : 99) - (ORDER.includes(c) ? ORDER.indexOf(c) : 99));
+    const aboard = [], nofit = []; let tiersAboard = false;
     for (const k of keys){ const E = EQUIP[k];
       if (!equipFits(k, S.boat.type)){ nofit.push(E.name[S.lang]); continue; }
       const have = E.multi ? S.equip[k] : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1, fj = (S.jobs || []).filter(j => j.kind === 'fit' && j.k === k), fitting = fj.length > 0;
@@ -35,21 +37,26 @@
       const fitTxt = !fitting ? '' : (E.multi && fj.length > 1 ? fj.length + ' ' : '') + L('Til montering', 'Being fitted') + (fj[0].until != null ? ' · ' + L('ferdig kl. ', 'done at ') + hm(fj[0].until / 60) + ' (' + inReal(fj[0].until - S.t) + ')' : ' · ' + L('venter på havn', 'waits for port'));
       // (what the rules ask for is aboard and not for sale here: V6 A; it says so in the card of what is aboard)
       const req = (VESSELS[S.boat.type].req || []).includes(k);
-      if (have >= max || req){ const br = SPUI.brandOf(k); aboard.push(E.name[S.lang] + (br && br.m ? ' (' + br.m + ')' : '') + (E.multi ? ' × ' + have : '') + (req ? ' (' + L('påbudt, følger båten', 'required, comes with the boat') + ')' : '')); continue; }
-      const pend = shopPend && shopPend.k === 'equip:' + k && Date.now() - shopPend.t <= IC_CONFIRM_MS, dis = !(atKind(EQ_YARD(k) ? 'verft' : 'butikk') && spendable() >= E.price);
-      const btn = pend ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(E.price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
+      // (OPP2: what is aboard says its tier: the haulers', the line setter's and the reels', where the tiers suit the boat)
+      const tierTxt = E.lvk && have && equipFits(E.lvk, S.boat.type) ? ' (' + L('trinn ', 'tier ') + equipLv(E.lvk) + ')' : '';
+      if (tierTxt) tiersAboard = true;
+      if (have >= max || req){ const br = SPUI.brandOf(k); aboard.push(E.name[S.lang] + (br && br.m ? ' (' + br.m + ')' : '') + (E.multi ? ' × ' + have : '') + tierTxt + (req ? ' (' + L('påbudt, følger båten', 'required, comes with the boat') + ')' : '')); continue; }
+      // (OPP2) the line setter and the net chute hang on their hauler (buyGate('equip')); a reel costs what the boat's tier of reels does (equipKr)
+      const price = equipKr(k), gate = buyGate('equip', k);
+      const pend = shopPend && shopPend.k === 'equip:' + k && Date.now() - shopPend.t <= IC_CONFIRM_MS, dis = !(atKind(EQ_YARD(k) ? 'verft' : 'butikk') && spendable() >= price);
+      const btn = gate ? '<p class="ph-note"><b>' + gate[0] + '</b></p>' : pend ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
         : '<button class="ph-btn p" data-pa="equip" data-k="' + k + '"' + (dis ? ' disabled' : '') + '>' + L('Kjøp og monter', 'Buy and fit') + ' · ' + durBoth(fitHours(k) * 60) + '</button>';
-      h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? (have || 0) + ' / ' + max : '', price:E.price, have:fitTxt, note:typeof G3 !== 'undefined' && G3.trying === k ? L('Vises på «' + S.boatName + '» nå, før du har kjøpt. Dra for å se rundt.', 'Shown on the «' + S.boatName + '» now, before you buy. Drag to look round.') : '', btns:fitting && !E.multi ? '' : '<span class="ic-row">' + btn + tryBtn(k) + '</span>'}));
+      h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? (have || 0) + ' / ' + max + tierTxt : '', price, have:fitTxt, note:typeof G3 !== 'undefined' && G3.trying === k ? L('Vises på «' + S.boatName + '» nå, før du har kjøpt. Dra for å se rundt.', 'Shown on the «' + S.boatName + '» now, before you buy. Drag to look round.') : '', btns:fitting && !E.multi ? '' : '<span class="ic-row">' + btn + tryBtn(k) + '</span>'}));
       // the same item from a partner with a written agreement (M6, ui/10r-sponsor.js): same price, same numbers, marked
       if (!(fitting && !E.multi) && typeof spOf === 'function' && spOf('item', k)){ const pend2 = shopPend && shopPend.k === 'equip:' + k + ':sp' && Date.now() - shopPend.t <= IC_CONFIRM_MS;
-        h.push(SPUI.card(k, pend2 ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-sp="1" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(E.price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
+        h.push(SPUI.card(k, gate ? '<p class="ph-note"><b>' + gate[0] + '</b></p>' : pend2 ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-sp="1" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
           : '<span class="ic-row"><button class="ph-btn p" data-pa="equip" data-sp="1" data-k="' + k + '"' + (dis ? ' disabled' : '') + '>' + L('Kjøp og monter', 'Buy and fit') + ' · ' + durBoth(fitHours(k) * 60) + '</button>' + tryBtn(k) + '</span>')); }
     }
     if (mode === 'butikk'){ const people = 1 + S.crew.length, c = S.clothes || {}, H = S.t / 60, cp = coldPen(H);
       h.push('<h4 style="margin:12px 2px 6px">' + L('Klær til mannskapet', 'Clothes for the crew') + '</h4><p class="ph-note">' + L('Nå: effektiv temperatur ' + Math.round(effTemp(H)) + ' °C, fisket går ' + Math.round(cp * 100) + ' % tregere. Alle om bord trenger sine egne.', 'Now: effective temperature ' + Math.round(effTemp(H)) + ' °C, fishing ' + Math.round(cp * 100) + '% slower. Everyone aboard needs their own.') + '</p>');
       for (const k of ['olje', 'varme']){ const C = CLOTHES[k], have = c[k] || 0;
         h.push(itemCard({k, name:C[S.lang], sub:Math.min(have, people) + ' / ' + people, price:C.price, have:have >= people ? L('Alle om bord har', 'Everyone aboard has one') : '', btns:have >= people ? '' : '<button class="ph-btn p" data-pa="cloth" data-k="' + k + '">' + L('Kjøp én', 'Buy one') + '</button>'})); } }
-    if (aboard.length) h.push('<div class="ph-card ic-aboard"><h4>' + L('Om bord', 'Aboard') + '</h4><p>' + aboard.join(' · ') + '</p></div>');
+    if (aboard.length) h.push('<div class="ph-card ic-aboard"><h4>' + L('Om bord', 'Aboard') + '</h4><p>' + aboard.join(' · ') + '</p>' + (tiersAboard ? '<p class="ph-note">' + L('Trinnene kjøpes under Fiskeutstyr.', 'The tiers are bought under Tackle.') + '</p>' : '') + '</div>');
     if (nofit.length) h.push('<details class="ph-card ic-nofit"><summary>' + L('Passer ikke «' + S.boatName + '»', 'Does not suit the «' + S.boatName + '»') + ' (' + nofit.length + ')</summary><p>' + nofit.join(' · ') + '</p></details>');
     h.push('</div>'); return h.join('');
   }
@@ -189,19 +196,26 @@
       const roomTxt = (n, no, en) => haulerNoFit({garn:'garn', stamper:'line', teiner:'teine'}[no]) ? '' : '<p class="ic-have">' + L('Plass til ' + n + ' ' + no + ' til', 'Room for ' + n + ' more ' + en) + '</p>';
       const own = (w, n, no, en) => n ? L(n + ' ' + no + ' om bord', n + ' ' + en + ' aboard') : '';
       // the knives and the gaff in tiers (OPP1 of docs/planer/oppgraderinger.md): what is aboard and its tier, the next tier's numbers
-      // (ICFX), price and button, or what stands in the way (buyGate); the gaff's card shows the fish lost over the rail this week
-      for (const k of ['kniv', 'hott']){ const E = EQUIP[k]; if (!equipFits(k, b.type)) continue;
+      // (ICFX), price and button, or what stands in the way (buyGate); the gaff's card shows the fish lost over the rail this week.
+      // (OPP2) The same for the reels and the jig sets, and for the haulers and the line setter once they are aboard (bought under
+      // Elektronikk og haler; their tiers are items of their own, linehalerLv …, of the item); their line is the next tier's in the
+      // player's own minutes and reels (icTierFx). A tier from 10 000 kr confirms in the button (phone/14-act.js, tierKr)
+      for (const k of ['kniv', 'hott', 'jukseLv', 'juksesett', 'linehalerLv', 'garnhalerLv', 'teinehalerLv', 'linesetterLv']){ const E = EQUIP[k], O = E.of && E.of !== 'jukse' ? EQUIP[E.of] : null;
+        if (!equipFits(k, b.type) || (O && !S.equip[E.of])) continue;
         const lv = equipLv(k), top = E.tiers.length, T = E.tiers[lv - 1], nx = lv < top ? lv + 1 : 0, price = nx ? tierKr(k, nx) : null, gate = nx ? buyGate('tier', k) : null;
-        const per = nx && E.tiers[nx - 1].per === 'table' ? tierUnits(k, nx) : 0, wk = railWeek();   // (the fish lost over the rail on this boat this week)
-        const body = (per ? '<p class="ic-have">' + L(kr(E.tiers[nx - 1].kr) + ' per sløyeplass, ' + per + ' om bord', kr(E.tiers[nx - 1].kr) + ' a gutting place, ' + per + ' aboard') + '</p>' : '') +
+        const per = nx && ['table', 'jukse'].includes(E.tiers[nx - 1].per) ? tierUnits(k, nx) : 0, wk = railWeek();   // (the fish lost over the rail on this boat this week)
+        const body = (per ? '<p class="ic-have">' + (E.tiers[nx - 1].per === 'jukse' ? L(kr(E.tiers[nx - 1].kr) + ' per maskin, ' + per + ' om bord', kr(E.tiers[nx - 1].kr) + ' a reel, ' + per + ' aboard') : L(kr(E.tiers[nx - 1].kr) + ' per sløyeplass, ' + per + ' om bord', kr(E.tiers[nx - 1].kr) + ' a gutting place, ' + per + ' aboard')) + '</p>' : '') +
           (k === 'hott' ? '<p class="ph-note" data-lost="' + wk.n + '">' + (wk.n ? L('Tapt over ripa denne uka: ' + wk.n + ' fisk, ' + fmt(wk.kg, 0) + ' kg', 'Lost over the rail this week: ' + wk.n + ' fish, ' + fmt(wk.kg, 0) + ' kg') : L('Ingen fisk tapt over ripa denne uka.', 'No fish lost over the rail this week.')) + '</p>'
-            : '<p class="ph-note">' + L('Feilene ved bordet er sjeldne, så det meste kniven gir, er tid.', 'Mistakes at the table are rare, so most of what the knife gives is time.') + '</p>');
+            : k === 'kniv' ? '<p class="ph-note">' + L('Feilene ved bordet er sjeldne, så det meste kniven gir, er tid.', 'Mistakes at the table are rare, so most of what the knife gives is time.') + '</p>'
+            : k === 'juksesett' && nx ? '<p class="ic-have">' + L('Halve prisen for settene om bord, så koster hvert nytt sett halvparten mer.', 'Half the price of the sets aboard, then every new set costs half again.') + '</p>'
+            : k === 'jukseLv' && nx ? '<p class="ph-note">' + L('Maskinene fisker like mye. Trinnet lar én person passe flere, så flere står i bruk eller noen blir ledig til annet arbeid.', 'The reels fish as much as before. The tier lets one person tend more, so more are in use or someone is free for other work.') + '</p>' : '');
         // (from 10 000 kr the tier confirms in the button, as the counter's other buys: 14-act.js, the knives at tier 3 on the coastal vessels; OPP4)
-        const pend = shopPend && shopPend.k === 'equip:' + k && Date.now() - shopPend.t <= IC_CONFIRM_MS;
+        const pend = nx && shopPend && shopPend.k === 'equip:' + k && Date.now() - shopPend.t <= IC_CONFIRM_MS;
         const btns = !nx ? '' : gate ? '<p class="ph-note"><b>' + gate[0] + '</b></p>'
           : pend ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-k="' + k + '"' + (price > spendable() ? ' disabled' : '') + '>' + L('Bekreft · ', 'Confirm · ') + kr(price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
           : '<button class="ph-btn p" data-pa="equip" data-k="' + k + '"' + (price > spendable() ? ' disabled' : '') + '>' + L('Kjøp trinn ' + nx, 'Buy tier ' + nx) + ' · ' + kr(price) + '</button>';
-        h.push(itemCard({k, name:E.name[S.lang], sub:L('trinn ', 'tier ') + lv + ' / ' + top, price:nx ? price : L('Øverste trinn', 'Top tier'), have:L('Om bord · trinn ' + lv + ': ' + lc1(T.no), 'Aboard · tier ' + lv + ': ' + lc1(T.en)) + (nx ? '' : L(' (det beste)', ' (the best)')), body, btns})); }
+        const fx = k === 'kniv' || k === 'hott' ? undefined : icTierFx(k, nx || lv);   // (the knife's and the gaff's are ICFX's, OPP1)
+        h.push(itemCard({k, anchor:'', pic:O ? E.of : k === 'jukseLv' ? 'jukse' : k === 'juksesett' ? 'jigset' : undefined, fx, name:(O || E).name[S.lang], sub:L('trinn ', 'tier ') + lv + ' / ' + top, price:nx ? price : L('Øverste trinn', 'Top tier'), have:L('Om bord · trinn ' + lv + ': ' + lc1(T.no), 'Aboard · tier ' + lv + ': ' + lc1(T.en)) + (nx ? '' : L(' (det beste)', ' (the best)')), body, btns})); }
       h.push(itemCard({k:'net', name:L('Garn', 'Nets'), price:L('fra ', 'from ') + kr(NETTY.bunn.price) + L(' per garn', ' a net'), have:own('net', pg.nets.reduce((a, l) => a + l.n, 0), 'garn', 'nets'), body:roomTxt(room('garn'), 'garn', 'nets'),
         btns:NETOPT.map(o => buy('net', netKey(o[0], o[1]), 10, n => L(NETTY[o[0]].no, NETTY[o[0]].en) + ' ' + o[1] + ' mm × ' + n, NETTY[o[0]].price)).join('')}));
       h.push(itemCard({k:'line', name:L('Line', 'Line'), price:kr(LINE_KINDS.bank.price) + '–' + kr(LINE_KINDS.hyse.price) + L(' per stamp', ' a tub'), have:own('line', pg.lines.hyse.n + pg.lines.bank.n, 'stamper', 'tubs'), body:roomTxt(room('line'), 'stamper', 'tubs'),
@@ -216,7 +230,7 @@
         btns:buy('kit', 0, 1, () => L('Blåsesett', 'Buoy set'), GPRICE.kit) + (pg.kits.heavy < pg.kits.n ? buy('heavy', 0, 1, () => L('Tung dregg', 'Heavy anchor'), GPRICE.heavy) : ''), note:L('Agn selges på fiskemottaket.', 'Bait is sold at the fish plant.')}));
       h.push(itemCard({k:'hooks', name:L('Kroker og juksasett', 'Hooks and jig sets'), price:CARE.hookKr[100], anchor:L('per 100', 'a 100'), have:pg.hooks ? L(pg.hooks + ' kroker på lager', pg.hooks + ' hooks in store') : '',
         btns:buy('hooks', 100, 1, () => L('100 kroker', '100 hooks'), CARE.hookKr[100]) + buy('hooks', 500, 1, () => L('500 kroker', '500 hooks'), CARE.hookKr[500]) + buy('hooks', 1000, 1, () => L('1000 kroker', '1000 hooks'), CARE.hookKr[1000]) + (BOAT.autoHooks ? buy('hooks', 10000, 1, () => L('10 000 kroker', '10,000 hooks'), CARE.hookKr[10000]) : '') +
-          buy('jig', 'mark', 1, () => L('Markkroker og pilk (sett)', 'Fly hooks and pilk (set)'), CARE.jig.mark.kr) + buy('jig', 'kveite', 1, () => L('Kveitepilk (sett)', 'Halibut pilk (set)'), CARE.jig.kveite.kr)}));
+          buy('jig', 'mark', 1, () => L('Markkroker og pilk (sett)', 'Fly hooks and pilk (set)'), jigKr('mark')) + buy('jig', 'kveite', 1, () => L('Kveitepilk (sett)', 'Halibut pilk (set)'), jigKr('kveite'))}));   // (half again with better hooks and pilk, OPP2)
       h.push('<p class="ph-note">' + L('Halere finner du under Butikk › Elektronikk og haler.', 'Haulers are under Shop › Electronics and haulers.') + '</p>');
     }
     return h.join('') + '</div>';

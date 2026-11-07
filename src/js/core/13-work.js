@@ -186,6 +186,7 @@ function workAssign(as){
   if (meAboard() && !asleep() && !(typeof resting === 'function' && resting())) P.push({c:null});   // (in the bunk, #70: the crew work on without you)
   team.forEach(c => P.push({c}));
   lagOnDeck(S.t / 60, ctx.ror).forEach(c => P.push({c}));   // an ocean vessel's teams: the watch on (04-crew.js, H2b)
+  if (typeof mobDeck === 'function') mobDeck(P, as);   // the one in the water is not aboard, and who is on deck is kept for the risk (Ø11.6, 14b-sikkerhet.js)
   if (!P.length) return P;
   for (const p of P){ p.st = null; p.why = null; }
   if (ctx.s === 'aground'){ for (const p of P){ p.st = 'pause'; p.why = 'aground'; } return P; }

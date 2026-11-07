@@ -167,7 +167,11 @@ function havnBerths(H, type, vid, n){
   return out.sort((a, c) => rank(a) - rank(c) || a.d - c.d).slice(0, n || 99);
 }
 // the harbour's own boats placed (05-vessels.js moorHarbour), once the fine coast is in round it
-function havnMoor(h){ MOOR.ver = VEC.ver * 1000 + COAST.built; const p = {x:h.x, y:h.y}; if (h.moorVer !== MOOR.ver && coastFine(p) && coastIndexAt(p, false) && !moorStill(h)) moorHarbour(h); return h.moorVer === MOOR.ver; }
+// (the 25 m mask 500 m round the harbour must be in before moorHarbour reads it, as boatPlace in 05-vessels.js waits for it: a block not yet
+// in throws. The plan's Home list asks for the harbours 25 km round while the game loads MAPD.simR = 4 km round the boat, and one such
+// harbour threw and took the Drift page with it at Hammerfest, Ø12 07.11.2026; until its map is in, it has no berths)
+const havnMaskIn = h => [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]].every(([dx, dy]) => { const q = {x:h.x + dx, y:h.y + dy}; return !mapSimAt(q) || mapReadyAt(q, 0); });
+function havnMoor(h){ MOOR.ver = VEC.ver * 1000 + COAST.built; const p = {x:h.x, y:h.y}; if (h.moorVer !== MOOR.ver && coastFine(p) && coastIndexAt(p, false) && havnMaskIn(h) && !moorStill(h)) moorHarbour(h); return h.moorVer === MOOR.ver; }
 // a berth as a place: its id from its key (the same for everyone), the harbour point 15 m out from the face (where a route ends and the way
 // in starts), the shore 20 m in; saved so it is there before its pack
 function havnPlaceOf(H, b, type){

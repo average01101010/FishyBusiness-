@@ -50,7 +50,7 @@ async function mapStart(base){
   const man = MAPD.man = await (await fetch(MAPD.base + 'manifest.json', {cache:'no-cache'})).json();
   let id = 0;
   // k: what a cell's number is worth; the heights are kept as Int16 decimetres (phase K8), half the room of Float32
-  for (const name in man.layers) MAPD.L[name] = Object.assign({name, id:id++, bx:NaN, by:NaN, b:null, k:man.layers[name].dec === 'hgt' ? 0.1 : man.layers[name].dec === 'x10' ? 10 : 1}, man.layers[name]);
+  for (const name in man.layers) MAPD.L[name] = Object.assign({name, id:id++, bx:NaN, by:NaN, ox:NaN, oy:NaN, b:null, k:man.layers[name].dec === 'hgt' ? 0.1 : man.layers[name].dec === 'x10' ? 10 : 1}, man.layers[name]);
   const dc = MAPD.L.dc; Object.assign(DC, {nx:dc.nx, ny:dc.ny, ix0:dc.ix0, iy0:dc.iy0});
   // a joined pack (tools/map/game.py: the far heights and the chart, several tiles a file) is filed under each of its tiles as a
   // pack of its own that loads through it
@@ -156,10 +156,13 @@ function mapHasBlock(L, bx, by){ const pk = mapPackOf(L, bx, by); return !!(pk &
 // whether some pack has the block at all: a pack not loaded yet is taken to have it (its index is not in; rcell then says «not
 // loaded», as it should), no pack at all is the open sea beyond the tiles (08.10.2026)
 function mapBlockKnown(L, bx, by){ const pk = mapPackOf(L, bx, by); return !!pk && (!pk.buf || pk.idx.has(L.name + ':' + bx + ':' + by)); }
-// one cell (cell numbers from the frame's origin); the last block of each layer is kept at hand
+// one cell (cell numbers from the frame's origin); the last block of each layer is kept at hand, with its first cell (ox, oy), so a
+// cell in it is read without the divisions (Ø3a, 07.11.2026: rcell is in every reader of the rasters, the chart's by the million)
 function rcell(L, ix, iy){
-  const n = L.n, bx = Math.floor(ix / n), by = Math.floor(iy / n);
-  if (bx !== L.bx || by !== L.by){ L.b = mapBlock(L, bx, by); L.bx = bx; L.by = by; }
+  const n = L.n, i = ix - L.ox, j = iy - L.oy;
+  if (i >= 0 && i < n && j >= 0 && j < n) return L.b[j * n + i];
+  const bx = Math.floor(ix / n), by = Math.floor(iy / n);
+  if (bx !== L.bx || by !== L.by){ L.b = mapBlock(L, bx, by); L.bx = bx; L.by = by; L.ox = bx * n; L.oy = by * n; }
   return L.b[(iy - by * n) * n + (ix - bx * n)];
 }
 // between the four nearest cell centres at p (km), clamped to the layer's edge
@@ -206,6 +209,6 @@ function simAreaReady(){
 // for the tests (maptest.py): forget a pack, also in IndexedDB, as if it had never come; the decoded blocks go too
 function mapDrop(pk){
   pk.buf = null; pk.idx = null; pk.vec = null; pk.load = null; pk.coast = null; pk.coastQ = null; COAST.last = null; MAPD.blk.clear(); MAPD.bytes = 0; MVI = {k:'', v:false}; MFI = {k:'', v:false};
-  for (const n in MAPD.L){ const L = MAPD.L[n]; L.bx = L.by = NaN; L.b = null; }
+  for (const n in MAPD.L){ const L = MAPD.L[n]; L.bx = L.by = L.ox = L.oy = NaN; L.b = null; }
   return idbDo('readwrite', s => s.delete(pk.hash));
 }

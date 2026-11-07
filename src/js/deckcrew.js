@@ -150,15 +150,26 @@ function crewSim(src){
     if (ST.helmView && me && ['haling', 'blogg', 'sloy', 'is', 'sort'].includes(me.st)){
       const sub = ['pause', 'is', 'sloy', 'blogg'].map(k => WA.find(p => p.c && p.st === k && p !== me)).find(Boolean);
       if (sub){ WA = WA.map(p => Object.assign({}, p)); const m2 = WA.find(p => !p.c), s2 = WA.find(p => p.c === sub.c); [s2.st, s2.role, s2.bl, s2.jw] = [m2.st, m2.role, m2.bl, m2.jw]; m2.st = 'ror'; m2.role = null; } }
+    // man overboard (Ø11.6, ui/10s-mob.js): one hand on a break, else the one with the least to do, keeps the person in sight and points
+    // (the drill: never lose sight of her); the bearing is in the boat's own frame, 0 ahead and + to starboard, as the agents' heading
+    const sp = !src && typeof MOBUI !== 'undefined' && MOBUI.spot ? MOBUI.spot() : null;
+    if (sp != null){ const q = ['pause', 'is', 'sloy', 'blogg', 'fiske', 'sort'].map(k => WA.find(p => p.c && p.st === k)).find(Boolean); if (q) WA = WA.map(p => p === q ? Object.assign({}, p, {spot:sp}) : p); }
     // the packed boxes of fish (40 kg each, the iced catch): a hold boat's go down the hatch as they fill (the errand), an open boat's catch lies in her tubs
     const iced = (S.hold || []).reduce((a, x) => a + (x.iced && !(SPECIES[x.sp] || {}).live ? x.kg : 0), 0), holdBoat = ((VESSELS[ST.type] || {}).hold || {}).kind !== 'dekk';
     return {away, underway, port, hasBunks, open:!!G.open, deckTask:gutting ? 'gut' : 'pack', wind, night, WA, aground:b.status === 'aground', fishing:b.status === 'fishing', crates:holdBoat ? Math.floor(iced / CRATE_KG) : -1, crateFill:holdBoat ? (iced % CRATE_KG) / CRATE_KG : 0};
+  }
+  // the place on the rail that faces the person most nearly (lean places face out over the rail), turned to her, the arms out (drawWorker 'guide')
+  function spotGoal(p){
+    const id = p.c ? 'c' + p.c.id : 'me', h = p.spot, L0 = (ST.PT.lean || []).filter(l => ST.M.ok(l.k) && livePart(l.k) && free(l.k, id)); if (!L0.length) return null;
+    const dh = a => { let d = a - h; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return Math.abs(d); };
+    const l = L0.slice().sort((a, b) => dh(a.h || 0) - dh(b.h || 0))[0]; return {k:l.k, h, task:'guide', spot:true};
   }
   // the agent's goal from the context, for the n-th person on its station (the first at the table, the second beside him ...): null means
   // inside (the house, the bunks, ashore), not drawn
   function goalOf(p, ctx, n){
     const PT = ST.PT, PL = places(), st = p.st;
     if (ctx.away) return null;
+    if (p.spot != null){ const g = spotGoal(p); if (g) return g; }
     if (st === 'ror'){ if (PT.ror) return {k:PT.ror.k, h:PT.ror.h || 0, task:'helm', inside:'helm'}; return PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:'helm', inside:'helm'} : null; }
     // the autoliner (H2d2, places port): the deck map is her hauling station inside the port, the rest of her is inside. At the line the
     // hauler gaffs the fish in at the port, and the deck hand on the bleeding minds the hook cleaner and sees the fish into the chute (the
@@ -192,7 +203,7 @@ function crewSim(src){
     return idleGoal(p, ctx);
   }
   // the station and its part (at the hauler: the hauler, the picker, the pot hand): a person keeps the place while it stays the same
-  const kindOf = p => p.st === 'haling' ? 'haling:' + (p.role === 'haler' ? 'h' : p.role) : p.st === 'pause' && p.idle ? 'pause:' + p.idle + (p.with ? '>' + p.with : '') : p.st;
+  const kindOf = p => p.spot != null ? 'spot' : p.st === 'haling' ? 'haling:' + (p.role === 'haler' ? 'h' : p.role) : p.st === 'pause' && p.idle ? 'pause:' + p.idle + (p.with ? '>' + p.with : '') : p.st;
   // ---- a free person: something to do for a while, by the weather, the hour and their nature ----
   const IDLE = ['lean', 'lean', 'look', 'coffee', 'sweep', 'sit'];
   // (p.idle: the break the game chose, kept as long as it lasts there; each its own place and pose, view3d.js drawWorker: facing out over
@@ -368,7 +379,9 @@ function crewSim(src){
     if (!ST.ctx || t - ST.ctxT > 1){ walkMap(); ST.ctx = context(); ST.ctxT = t; if (jump) ST.crates = -1; sync(ST.ctx); }
     if (jump){ snap(); return; }
     const M = ST.M, roll = Math.abs(ST.roll || 0), spd = WALK * (roll > 0.21 ? 0 : roll > 0.14 ? 0.65 : 1);
+    const spH = !src && typeof MOBUI !== 'undefined' && MOBUI.spot ? MOBUI.spot() : null;   // (the spotter turns with her as the boat turns, Ø11.6)
     for (const a of A){
+      if (spH != null && a.goal && a.goal.spot) a.goal.h = spH;
       const ef = a.ef == null ? 1 : a.ef; a.tk = (a.tk || 0) + dt * clamp(0.55 + 0.45 * ef, 0.72, 1.05);
       // the moments between (M7c): the break's thing put away first, the station held until relieved, a breath at the door
       if (a.put){ a.putU = (t - a.put.t0) / PUT_S; if (a.putU < 1){ a.task = a.put.task; continue; } a.put = null; }
