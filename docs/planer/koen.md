@@ -28,7 +28,7 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 | Dato | Steg | Flettecommit | Versjon | PR |
 |---|---|---|---|---|
 | 07.11.2026 | Ø8b S1 Første tur i dagboka (Jonas' økt, ikke rutinen) | 91cc422a (flettet med arbeidsgrenen etter OPP4 i c7987dda og etter Ø10 i 91cc422a) | 6932fb50909e | – (direkte til arbeidsgrenen; porten i `tools/plan/RUTINE.md` punkt 6 holdt) |
-| 07.11.2026 | Ø10 Regelmotoren: Skagerrak (Jonas' økt, ikke rutinen) | f4e2a8c0 | fb060e367846 | [#49](https://github.com/average01101010/FishyBusiness-/pull/49) (porten i `tools/plan/RUTINE.md` punkt 6 holdt) |
+| 07.11.2026 | Ø10 Regelmotoren: Skagerrak (Jonas' økt, ikke rutinen) | f4e2a8c0 | fb060e367846 | [#49](https://github.com/average01101010/FishyBusiness-/pull/49) (porten i `tools/plan/RUTINE.md` punkt 6 holdt; «Appen på Hetzner» for f4e2a8c0 feilet på nettet i runneren (nedlastingen av kartreleasen, «Connection reset by peer»), det nye forsøket ble avbrutt av neste push, og a0237086 med Ø10 og Ø8b S1 ble rullet ut grønt på Hetzner og Pages) |
 | 07.11.2026 | OPP4 «Båten og utstyret», Neste mål og trakten (Jonas' økt, ikke rutinen) | e10cd8ad (flettet med arbeidsgrenen i 24eb4a19) | eca7e71e8a0e | – (direkte til arbeidsgrenen; porten i `tools/plan/RUTINE.md` punkt 6 holdt) |
 | 07.11.2026 | OPP1 Kniv og høtt i tre trinn (Jonas' økt, ikke rutinen) | 73c12b26 (flettet med arbeidsgrenen i 7217777f) | 050a64091a3d | – (direkte til arbeidsgrenen; porten i `tools/plan/RUTINE.md` punkt 6 holdt) |
 | 07.11.2026 | U2-4 Roen (Jonas' økt, ikke rutinen) | c62047f0 | – | – (direkte til arbeidsgrenen etter Jonas' «Rull ut nå») |
