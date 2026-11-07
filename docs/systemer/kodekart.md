@@ -3267,7 +3267,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 226 `bootGame()`
   - 341 `bootFail(e)`
 
-## `src/js/vessel3d.js` (1602 linjer)
+## `src/js/vessel3d.js` (1651 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -3339,55 +3339,56 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **717** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
 - **766** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
   - 777 `logoCanvas(cv, L, img)`
-  - 788 `logoStrips(type)`
-  - 790 `logoStr(L)`
-  - 791 `logoParse(s)`
-  - 795 `flagCanvas(cv, code, shape, logo)`
-  - 807 `flagOf(L)`
-- **808** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
-  - 817 `hullTris(type)`
-  - 832 `sideStrip(type, frac, hMax, aspect, drop)`
-  - 864 `nameStrips(type)`
-  - 900 `stripProud(type, st)`
-  - 923 `stripPaint(type, st)`
-  - 944 `markStrips(type)`
-  - 952 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
-  - 977 `callStrips(type)`
-  - 983 `callRGB(type, liv)`
-  - 986 `anchorLen(bw)`
-  - 989 `markRGB(type, liv)`
-  - 997 `hullRGB(type, liv)`
-- **1007** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
-  - 1018 `facingTris(P, dir, keep)`
-  - 1033 `rayZ(T, x, y, dir, za, zb)`
-  - 1044 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
-  - 1055 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
-  - 1066 `halfWidth(T, y, z0, zw, dir, wmax)`
-  - 1077 `houseFront(type, P, Gl, V)`
-  - 1110 `transom(type, P, V)`
-  - 1145 `namePlaces(type)`
-  - 1163 `placeRGB(type, p, liv)`
-  - 1171 `nameInkLight(rgb)`
-  - 1175 `npcKit(L, B)`
-  - 1178 `npcModel(type, lod, liv)`
-  - 1180 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **1192** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 1211 `vestKit(K)`
-  - 1226 `wkPart(name, kit)`
-  - 1236 `wkPut(B, o, ax, s, at)`
-  - 1246 `wkLimb(B, o, A, E, r)`
-  - 1253 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 1275 `vesselSVG(type, w, h)`
-- **1313** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1320 `deckMap(type)`
-  - 1465 `deckPass(M, k, q)`
-  - 1470 `passLine(M, A, B)`
-  - 1472 `linkPass(M, k, q)`
-  - 1476 `deckComp(M)`
-  - 1485 `deckPath(M, a, b)`
-- **1516** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1529 `lanterns(G, V, st)`
-  - 1563 `deckPoints(type)`
+  - 793 `logoStrips(type)`
+  - 814 `stripBare(type, st)`
+  - 829 `logoStr(L)`
+  - 830 `logoParse(s)`
+  - 834 `flagCanvas(cv, code, shape, logo)`
+  - 846 `flagOf(L)`
+- **847** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
+  - 856 `hullTris(type)`
+  - 873 `sideStrip(type, frac, hMax, aspect, drop, band)`
+  - 913 `nameStrips(type)`
+  - 949 `stripProud(type, st)`
+  - 972 `stripPaint(type, st)`
+  - 993 `markStrips(type)`
+  - 1001 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
+  - 1026 `callStrips(type)`
+  - 1032 `callRGB(type, liv)`
+  - 1035 `anchorLen(bw)`
+  - 1038 `markRGB(type, liv)`
+  - 1046 `hullRGB(type, liv)`
+- **1056** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
+  - 1067 `facingTris(P, dir, keep)`
+  - 1082 `rayZ(T, x, y, dir, za, zb)`
+  - 1093 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
+  - 1104 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
+  - 1115 `halfWidth(T, y, z0, zw, dir, wmax)`
+  - 1126 `houseFront(type, P, Gl, V)`
+  - 1159 `transom(type, P, V)`
+  - 1194 `namePlaces(type)`
+  - 1212 `placeRGB(type, p, liv)`
+  - 1220 `nameInkLight(rgb)`
+  - 1224 `npcKit(L, B)`
+  - 1227 `npcModel(type, lod, liv)`
+  - 1229 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **1241** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 1260 `vestKit(K)`
+  - 1275 `wkPart(name, kit)`
+  - 1285 `wkPut(B, o, ax, s, at)`
+  - 1295 `wkLimb(B, o, A, E, r)`
+  - 1302 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 1324 `vesselSVG(type, w, h)`
+- **1362** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1369 `deckMap(type)`
+  - 1514 `deckPass(M, k, q)`
+  - 1519 `passLine(M, A, B)`
+  - 1521 `linkPass(M, k, q)`
+  - 1525 `deckComp(M)`
+  - 1534 `deckPath(M, a, b)`
+- **1565** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1578 `lanterns(G, V, st)`
+  - 1612 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (491 linjer)
 
