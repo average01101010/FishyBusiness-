@@ -515,7 +515,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
 
-## Strøket 07.11.2026 (minikartet på telefon liggende, gren `ccr-fc7a11b2-nl5jor`)
+## Strøket 07.11.2026 (minikartet på telefon liggende, gren `ccr-fc7a11b2-nl5jor`, rullet ut i 8d9d1d76)
 
 - ~~Telefon liggende hadde ikke noe minikart, og kartets «–» sto alene under statusboksen~~ (Jonas: «Telefon liggende må jo ha minikartet på samme måte som stående, nettbrett og pc, hvis ikke er jo spillet ubrukelig … Fiks det asap! Og det skal være likt i alle formater. Kart øverst, statusboksen under uten pluss og minus»): telefonen liggende (høyst 520 px høy) er nå som telefonen stående, med kartet øverst og stripa under, og et trykk gir kortet. Den store GPS-boksen er borte overalt (foten på minikartet sier det samme).
 
