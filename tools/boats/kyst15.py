@@ -49,7 +49,7 @@ def ss(a, b, x): t = max(0.0, min(1.0, (x - a) / (b - a))); return t * t * (3 - 
 _PC = {}
 def pchip(tab, x):
     """a smooth curve through the table's points (monotone cubic, Fritsch-Carlson; hurtig11.py, sulebas-bygging kap. 17)"""
-    k = id(tab)
+    k = tuple(tab)   # (by content: keel_t and wk pass a new list each call, and a freed id came back for the other; krabbe50.py 07.11.2026)
     if k not in _PC:
         xs = [p[0] for p in tab]; ys = [p[1] for p in tab]; n = len(xs)
         d = [(ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]) for i in range(n - 1)]

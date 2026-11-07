@@ -59,7 +59,10 @@ def ss(a, b, x): t = max(0.0, min(1.0, (x - a) / (b - a))); return t * t * (3 - 
 _PC = {}
 def pchip(tab, x):
     """a smooth curve through the table's points (monotone cubic, Fritsch-Carlson; hurtig11.py, sulebas-bygging kap. 17)"""
-    k = id(tab)
+    # (keyed by the table's content: keel_t and wk pass a new list each call, and an id freed by the garbage collector came back for the
+    # other one, so a station got the wrong spline; after check() the port bow's sections folded in every few stations, a comb in the
+    # game, 07.11.2026)
+    k = tuple(tab)
     if k not in _PC:
         xs = [p[0] for p in tab]; ys = [p[1] for p in tab]; n = len(xs)
         d = [(ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]) for i in range(n - 1)]
@@ -293,6 +296,9 @@ def check():
         yv = [y_at(x, z) for x in xs3]; d = [b - a for a, b in zip(yv, yv[1:])]
         for i in range(1, len(d)): worst = max(worst, (abs(d[i] - d[i - 1]), xs3[i], z))
     out.append(('vannlinjene jevne: største endring i stigningen %.3f m per 10 cm-steg (ved x %.2f, z %.2f; en bule synes over rundt 0,02)' % worst, worst[0] < 0.02))
+    # the two sides alike at every station of the build, after all the above (the spline cache once handed a station the wrong table)
+    sym = max((abs(a[0] - b[0]) + abs(a[1] - b[1]), x) for x in stations(True) for a, b in zip(section(x, 1), section(x, -1)))
+    out.append(('babord og styrbord like i alle %d stasjonene: største forskjell %.4f m (ved x %.2f)' % (len(stations(True)), *sym), sym[0] < 1e-4))
     for s, ok_ in out: print(('OK   ' if ok_ else 'FEIL ') + s)
     return all(o for _, o in out)
 
