@@ -984,3 +984,5 @@
 2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	vesseltest	OK	28	lite	samtidig	
 2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	nettest	OK	27	lite	samtidig	
 2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	caretest	OK	15	lite	samtidig	
+2026-11-07 17:02	ccr-7538447c-xt5b4p	d0b44fe7	maptest	OK	29	lite	samtidig	
+2026-11-07 17:02	ccr-7538447c-xt5b4p	d0b44fe7	boottest	OK	28	lite	samtidig	
