@@ -202,7 +202,9 @@ function havnTapNear(pt, r){
 // the berths the bound vessel could take in the harbours within r km: one each, [{H, place, kind}] (the plan's Home, the dock's «Fortøy»)
 function havnOptions(p, r, type){
   type = type || S.boat.type; const out = [];
-  for (const H of havnsNear(p, r)){ havnAsk(H.id); const L = havnBerths(H, type, S.cur, 1); if (L.length) out.push({H, place:havnPlaceOf(H, L[0], type), kind:L[0].kind}); }
+  // (a harbour whose shore is on a map block not in yet is left out until it is: the plan's Home list asks 25 km round, the game loads
+  // MAPD.simR = 4 km round the boat, and one such harbour threw and took the Drift page with it at Hammerfest, Ø12 07.11.2026)
+  for (const H of havnsNear(p, r)){ havnAsk(H.id); let L; try { L = havnBerths(H, type, S.cur, 1); } catch (e){ continue; } if (L.length) out.push({H, place:havnPlaceOf(H, L[0], type), kind:L[0].kind}); }
   return out;
 }
 // ---- held: the berth is the vessel's while she lies there, or while it is her plan's home (06d-drift.js o.home)
