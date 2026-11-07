@@ -348,6 +348,8 @@ Jonas 03.11.2026: «kjør på» for hele H1b. Bestillingen: `rules.json` får so
 
 ## 5.28c Skagerrak: torsken øst for Lindesnes (Ø10, 07.11.2026)
 
+Rullet ut 07.11.2026 i f4e2a8c0 (versjon fb060e367846, PR #49).
+
 Bestillingen (steg 10 i `docs/planer/koen.md`, fra backloggen «Regelmotoren mangler Skagerrak», funnet i Onboarding 2): torsk utenfor grunnlinjen i Skagerrak øst for Lindesnes er stengt for norske fartøy, med unntaket for juksa under 11 m. Første tur hadde sin egen sjekk (`tutSkagOut`); nå svarer `rulesAt`.
 
 **Regelverket** (lest 07.11.2026):
@@ -382,7 +384,7 @@ Bestillingen (steg 10 i `docs/planer/koen.md`, fra backloggen «Regelmotoren man
 - **Nordsjøen** (§ 1 a, vest for linja sør for 62° N): også der er torsk forbudt for norske fartøy uten adgang, og åpen gruppe kan fiske høyst 3 tonn (garantert 2) etter § 4. Spillet regner spilleren som om hun har adgang og teller ikke taket (backloggen).
 - **Gyte- og oppvekstområdene for torsk i NØS sør for 62° N** (lag 18 og 19 i `rules.json`, blant dem Revet i Skagerrak) brukes ikke av `rulesAt` (backloggen).
 
-**Tester:** `tests/unit/skagerrak.test.mjs` (32 sjekker: flata ved Kristiansand, Arendal og Egersund og på hver side av linja, stoppet med grunnen og kilden, unntaket i tid, lengde, redskap og blad B, bifangsten, teinene, dansk sone, Bergen; sett rød før regelen fantes). Stikkprøven 07.11.2026 (Kristiansand, Arendal, Egersund, Bergen) står i PR #49 og i køen.
+**Tester:** `tests/unit/skagerrak.test.mjs` (32 sjekker: flata ved Kristiansand, Arendal og Egersund og på hver side av linja, stoppet med grunnen og kilden, unntaket i tid, lengde, redskap og blad B, bifangsten, teinene, dansk sone, Bergen; sett rød før regelen fantes). Stikkprøven 07.11.2026 (trebåten 7 m, 1 nm utenfor grunnlinja og innenfor): Kristiansand og Arendal stengt utenfor (juksa venter med grunnen, Kystvakta merker `skag`), fiske med torsk innenfor; Egersund åpent utenfor (29 kg, 10–11 kg torsk); Bergen uberørt. Første tur fra Kristiansand (`tut.py` med `KYST_TUT_START=58.14,8.0`) gikk hele veien: feltet utenfor Kristiansand S, 298 kg levert.
 
 ## 5.29 Regler-appen, statuslinja og regellaget (R3 av regelplanen, 05.10.2026)
 

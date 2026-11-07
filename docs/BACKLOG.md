@@ -533,7 +533,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 - Linja om vanlig fiske etter første tur sto bare på første sluttseddel, som forlater skuffen fire spilltimer etter salget. Nå står den også i dekksdagboka (Drift) med samme N (`tutNormKg` i `ui/07b-first-trip.js`, 4310a20f; V1 A i `docs/planer/spillbarhet-fangst.md`). Resten av punktet «Fangsten er uforklart» (S0, S2, S3) står over i 10.2.
 
-## Strøket 07.11.2026 (Ø10 Skagerrak i regelmotoren, gren `ccr-68a96e99-8x1jh1`, PR #49)
+## Strøket 07.11.2026 (Ø10 Skagerrak i regelmotoren, gren `ccr-68a96e99-8x1jh1`, PR #49, rullet ut i f4e2a8c0)
 
 - ~~**Regelmotoren mangler Skagerrak**~~ (funnet 27.10.2026 i Onboarding 2): `rulesAt` stenger torsk for norske fartøy utenfor grunnlinjen i Skagerrak øst for linja Lindesnes–Hanstholm (`skag`, FOR-2025-12-19-2805 § 1, lest på Lovdata 07.11.2026; 2023-forskriften FOR-2022-12-16-2281 sa det samme), med unntaket for juksa under 11 m på blad B 1.4–30.6, høyst 3 tonn (`skag4`, § 4), og 5 % bifangst for andre arter (`skag5`, § 5). Flata er ICES 3.a.20 fra Fiskeridirektoratet, bygd inn av `tools/rules/regler.py --skag`. 2026-forskriften er lest (52 tonn norsk kvote, § 2). Første tur leser regelen (`tutSkagOut` tatt ut), og Kystvakta tar den med (`KV_REF.skag`). Commitene 3024043a, 39820d6f og f4dd4df2. Det som står igjen, står i «Regelmotoren sør for 62° N, det som står igjen etter Ø10».
 
