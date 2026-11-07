@@ -110,6 +110,7 @@ H3d2 trenger står i `anchors.snok`.
 | 17 | I spillet: en kam av kiler fra rekka til vannlinja på babord baug (bildene `ute` og `ovenfra`; først tatt for styrbord og for mellomversjonen). Våtheten, skadene, normalene, AO, merkene, teinene, farten og en annen båt på samme sted utelukket; GLB-en lest inn i Blender viste kammen | `pchip` bufret splinene på `id(tab)`, og `keel_t` og `wk` sender en ny liste hvert kall: når en id kom igjen, fikk en stasjon feil spline, skjegget negativ bredde og snittet falt sammen til en korde. `check()` kjører før byggingen og ga babord feil ved noen stasjoner. Bufferen bruker nå innholdet, og `check()` sjekker at sidene er like (rød 4,0 m, grønn 0,0000). Mellomversjonen ble før det bygd i skriptet i stedet for med Decimate (36 393 trekanter); den beholdes, men Decimate var ikke skyldig |
 | 18 | Stablene om bord ble aldri tegnet: koden leste `pots.big`, fartøyet bærer `pots.sno` | `potsAboard()` (M1 rettet i spillet, ikke bare i modellen) |
 | 19 | Bildenavnene i `h3dshot`: kameraets yaw + er babord, ikke styrbord (sidelysene i nattbildene: rødt i «natt_sb») | yaw byttet for natt_sb/natt_bb, bildene døpt om; K1 er babord baug, K2 styrbord hekk |
+| 20 | `h3dshot` del 5: bildene av havflåtens fartøy viste kystbåtens akterskip, så tom sjø (rett forut bommet med meridiankonvergensen, 18° ved 34° Ø); før-bildene av flåten er tatt fra inni eget skrog og viser ikke den gamle modellen | spillets eget flåtekamera `npcLook`, 45 m og 700 m: Nordglimt i havflåtens farger, mellomversjonen nær og fjernmodellen langt unna |
 
 ## 8. Selvvurdering (07.11.2026)
 
@@ -127,7 +128,8 @@ Det som holder:
 - **Lanternene** er lovlige etter vedlegg I og sett i spillet om natta fra begge sider og akterfra: rødt og grønt sidelys, begge
   topplanternene, akterlyset; fiskelysene av under gange.
 - **Broa** har egen pult, ratt, spaker og skjermer, vinduer rundt hele styrhuset, og bremmen Jonas ba om rundt taket.
-- **Budsjettene:** 123 449 trekanter nær (300 000), 36 393 midt (40 000), 3 891 fjern (4 000).
+- **Budsjettene:** 123 449 trekanter nær (300 000), 36 393 midt (40 000), 3 891 fjern (4 000), og alle tre sett i spillet: din båt
+  nær, havflåtens Nordglimt i egne farger på 45 m og på 700 m (`flate_naer`, `flate_fjern`), og ved kaia i Båtsfjord (`havn`).
 - **Testene:** enhetstestene 1 800 OK; `snokrabbetest`, `krabbefabrikktest`, `vesseltest`, `regmarktest`, `maletest`, `lanterntest` OK;
   `walktest` rød bare for autolineren (kjent i backloggen); `h3dshot` rød før og grønn etter.
 
