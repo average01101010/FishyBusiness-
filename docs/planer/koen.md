@@ -14,13 +14,13 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 
 ## Øktene som kjører
 
-- **U2-4 Roen** (Jonas' økt 07.11.2026, grenen `ccr-fc7a11b2-nl5jor`): bygd og testet, flettet med arbeidsgrenen (f139fda6), **venter på Jonas: rull ut**. Eier til den er ute: `ui/10c-dock.js`, `ui/02-format-state.js`, `styles.css`, `ui/phone/07-patch.js` (oppføringen `ro-071126`), `tests/_env.py`, `tests/run.py`. Køen ble flettet inn i økta etter at den begynte, så steget ble ikke merket `pågår` før nå.
-- Ingen (07.11.2026 03:20 UTC). H3b ligger ferdig bygd på `ccr-2f1306ed-u6tdgs` og venter på fletting og utrulling (steg 2). B (steg 4 og 9) ble bygd i én økt Jonas startet (grenen `ccr-2cfcfb0c-tfhulm`) og rullet ut 07.11.2026.
+- Ingen (07.11.2026 09:50 UTC). H3b og H3c ble rullet ut i 4107d71a og U2-4 i c62047f0, begge i økter Jonas startet; B (steg 4 og 9) ble rullet ut tidligere samme dag.
 
 ## Utrullinger fra rutinen
 
 | Dato | Steg | Flettecommit | Versjon | PR |
 |---|---|---|---|---|
+| 07.11.2026 | U2-4 Roen (Jonas' økt, ikke rutinen) | c62047f0 | – | – (direkte til arbeidsgrenen etter Jonas' «Rull ut nå») |
 | 07.11.2026 | B1 og B2 (Jonas' økt, ikke rutinen) | 98c7befa | 9d020b3b180b | – (direkte til arbeidsgrenen etter Jonas' «så ruller vi ut») |
 
 ## Valg som venter på Jonas
@@ -45,8 +45,8 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | # | Steg | Spor | Status | Venter på | Filer steget eier mens det går | Plan |
 |---|---|---|---|---|---|---|
 | 1 | **Ø8b S1** Første tur i dagboka | Spillbarhet | klar | | `ui/07b-first-trip.js`, `ui/01-i18n.js` | `spillbarhet-fangst.md` S1 |
-| 2 | **H3b** Flett inn og rull ut driften om bord (snøkrabbe) | Havsteget | klar (bygd på `ccr-2f1306ed-u6tdgs`) | | H3bs filer (over) + `core/02-species-gear.js`, `07-harbours.js`, `07f-kar.js`, `10-gear.js`, `10d-snokrabbe.js`, ny `10e-krabbefabrikk.js`, `ui/10g-push.js`, `phone/02`, `09`, `14`, `tests/run.py` | `havsteget-h3-snokrabbe.md` H3b |
-| 3 | **U2-4** Roen | UI 2 | venter på Jonas: rull ut (bygd i 55c5dc0f, flettet med arbeidsgrenen i f139fda6, grenen `ccr-fc7a11b2-nl5jor`; Jonas' økt) | | `ui/10c-dock.js`, `styles.css`, `view3d/24-cinema.js`, `ui/02-format-state.js` | `ui-2-staaende.md` 4.5 |
+| 2 | **H3b** Flett inn og rull ut driften om bord (snøkrabbe) | Havsteget | ferdig (bygd på `ccr-2f1306ed-u6tdgs`, flettet i 192d4059, rullet ut i 4107d71a 07.11.2026; Jonas: «Rull ut på det store blå») | | H3bs filer (over) + `core/02-species-gear.js`, `07-harbours.js`, `07f-kar.js`, `10-gear.js`, `10d-snokrabbe.js`, ny `10e-krabbefabrikk.js`, `ui/10g-push.js`, `phone/02`, `09`, `14`, `tests/run.py` | `havsteget-h3-snokrabbe.md` H3b |
+| 3 | **U2-4** Roen | UI 2 | ferdig (55c5dc0f, 07.11.2026, rullet ut i c62047f0; Jonas' økt, grenen `ccr-fc7a11b2-nl5jor`) | | `ui/10c-dock.js`, `styles.css`, `view3d/24-cinema.js`, `ui/02-format-state.js` | `ui-2-staaende.md` 4.5 |
 | 4 | **B1** Båtsalget mellom spillere, serveren | Tonys test | ferdig (a75e1156, 07.11.2026; migreringen kjørt av Jonas i SQL-editoren og sjekket; rullet ut i 98c7befa) | | `supabase/migrations/`, `tests/sqltest.py` | `etter-tonys-test.md` B1–B3, B7 |
 | 5 | **Ø8b S0** Full last på første tur | Spillbarhet | venter på H3b | steg 2 | `core/03-simulation.js`, `core/05-vessels.js`, `ui/07b-first-trip.js` | `spillbarhet-fangst.md` S0 |
 | 6 | **Ø11.6** Mann over bord | Lover og sikkerhet | venter på H3b | steg 2 | nye `core/14b-sikkerhet.js`, `ui/10s-mob.js`; `core/05-vessels.js`, `13-work.js`, `04-crew.js`, `09f-merker.js`, `ui/03-map.js`, `10e-sound.js`, `07c-handbook.js`, `deckcrew.js`, `view3d/21-rescue-anchor.js`, `phone/07-patch.js` | `lover-regler-sikkerhet.md` kap. 6 |
@@ -54,10 +54,10 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 8 | **Ø8b M** Mannskapet: M1, M2, M3, M5 | Spillbarhet | venter på H3b | steg 2 | `core/13-work.js`, `14-crewlife.js`, `15-energy.js`, `ui/05b-work.js`, `07c-handbook.js`, `01-i18n.js` | `folk-om-bord.md` 5.19b, øktplanen Ø8b |
 | 9 | **B2** Båtsalget mellom spillere, spillet | Tonys test | ferdig (2c87a862, 07.11.2026, rullet ut i 98c7befa; bygd før H3b etter Jonas' egen startmelding) | | `core/09k-market.js`, `ui/10f-cloud.js` (RPC-kallene), `phone/11-rederi.js`, `15-nettet.js`, `10-fartoy.js`, `tests/megletest.py` | `etter-tonys-test.md` B4–B8 |
 | 10 | **Ø10** Regelmotoren: Skagerrak | Regler | klar | | `core/03e-rules.js`, `src/data/rules.json`, `tools/rules/` (ikke `03d-quota.js` før H3b er ute) | øktplanen Ø10, backloggen «Regelmotoren mangler Skagerrak» |
-| 11 | **H3c** Snøkrabbe i Driftsplan 2, isen og fredningen | Havsteget | venter på H3b | steg 2 | `core/06g-plan2.js`, `06h-plan2-engine.js`, `ui/05d-plan2.js`, `core/10-gear.js`, `03h-is.js`, `02-species-gear.js` | `havsteget-h3-snokrabbe.md` H3c |
+| 11 | **H3c** Snøkrabbe i Driftsplan 2, isen og fredningen | Havsteget | ferdig (grenen `ccr-5c109e47-twgn6s`, rullet ut med H3b i 4107d71a 07.11.2026) | | `core/06g-plan2.js`, `06h-plan2-engine.js`, `ui/05d-plan2.js`, `core/10-gear.js`, `03h-is.js`, `02-species-gear.js` | `havsteget-h3-snokrabbe.md` H3c |
 | 12 | **U2-7** Skuffen og sidene | UI 2 | venter på H3b, Ø8b M | steg 2, 8 | `styles.css`, `ui/10c-dock.js`, `ui/05b-work.js`, `phone/05-rigg-innst-admin.js` | `ui-2-staaende.md` kap. 5 |
 | 13 | **Ø8b S3** Havna: måling og `denPlace` | Spillbarhet | venter på H3b | steg 2 | `core/03-simulation.js`, et skript i `tests/` | `spillbarhet-fangst.md` S3 |
-| 14 | **Ø9 F2** Skroget i sjøen: oppdrift per snitt | Fysikk 4 | venter på U2-4 | steg 3 | `view3d/16-motion.js`, `core/03c-stability.js`, `view3d/24-cinema.js`, `vessel3d.js` | `fysikk-4-sjo-og-skrog.md` F2 (startmelding der, l. 182) |
+| 14 | **Ø9 F2** Skroget i sjøen: oppdrift per snitt | Fysikk 4 | klar | | `view3d/16-motion.js`, `core/03c-stability.js`, `view3d/24-cinema.js`, `vessel3d.js` | `fysikk-4-sjo-og-skrog.md` F2 (startmelding der, l. 182) |
 | 15 | **Ø9 F3** Brytning og spekteret | Fysikk 4 | klar | | `view3d/01-shaders.js`, `14-sea.js`, `tests/sea3d.py` | `fysikk-4-sjo-og-skrog.md` F3 |
 | 16 | **R** Rund eller sløyd synlig (R1, R2) | Tonys test | venter på Ø8b S2 | steg 7 | `S.settings.gut`/`catchGut` (Om bord, Driftsplanen), `ui/07-guide.js` (`portSlip`) | `etter-tonys-test.md` R |
 | 17 | **Ø11.7** Nødstopp, nestenulykker og havsnød | Lover og sikkerhet | venter på Ø11.6 | steg 6 | `core/14b-sikkerhet.js`, `10-gear.js`, `09g-turer.js`, `09h-press.js`, `09f-merker.js`, `phone/09-vaer-post-salg-redning.js` | `lover-regler-sikkerhet.md` kap. 6 |
@@ -151,6 +151,7 @@ Startmeldingene for H3c (11), Ø8b S3 (13), Ø9 F2 (14; står i `fysikk-4-sjo-og
 
 ## Status
 
+- 07.11.2026 09:50 UTC: **U2-4 Roen rullet ut i c62047f0** (Jonas: «Rull ut nå»), flettet med arbeidsgrenen etter H3b og H3c; Ø9 F2 (steg 14) venter ikke lenger på den.
 - 07.11.2026 04:00 UTC: **U2-4 Roen bygd, ikke rullet ut** (Jonas' økt, grenen `ccr-fc7a11b2-nl5jor`, 55c5dc0f, flettet med arbeidsgrenen i f139fda6): knappene blir svake (20 %) etter åtte sekunder uten trykk, et trykk på en svak knapp virker (Jonas i økta: «Svake, trykk virker»), varslene bryter roen, aldri i første tur, testene med `ro0`. `tut.py` i begge formater grønn (28 OK), `roetest` 23 OK. Venter på Jonas: rull ut. `view3d/24-cinema.js` er ikke rørt, så Ø9 F2 (steg 14), som ventet på U2-4 for den filas skyld, har ingen filkonflikt med den. Startmeldingen for U2-7 (steg 12) står over.
 - 07.11.2026 03:20 UTC: **B1 og B2 ferdig og rullet ut** i én økt Jonas startet (grenen `ccr-2cfcfb0c-tfhulm`, flettet i 98c7befa; migreringen `20261107140000_broker.sql` kjørt av Jonas i SQL-editoren og sjekket i databasen). Bygd før H3b: `phone/10-fartoy.js`, `11-rederi.js`, `14-act.js` og `core/06-services.js` er endret, og H3bs fletting (steg 2) må ta det med. Stegene som ventet på B2 (R, Ø5 rest a, kvotemarkedet, Ø6 funn 6) venter ikke lenger på det; Ø5 rest b er lagt bort.
 - 07.11.2026: køen skrevet etter Jonas' svar (over), fra planene, backloggen og grenene. Det som ble funnet: H3b er bygd og ikke rullet ut (steg 2); Ø14, Ø10 og Ø12 sto som «venter på H2» i øktplanen, men H2 er ferdig; startmeldingen for Ø11.6 sto forkortet i øktplanen (hele står her, steg 6; valgene V8–V11 var besvart 05.11.2026, så ingenting manglet fra Jonas); Blender virker i skyen med `python3.11 -m pip install bpy==4.5.4`, så H3d1/H3d2 og N7 kan gå i rutinen. Rutinen (`tools/plan/RUTINE.md`) og den planlagte oppgaven (`tools/plan/OPPGAVE.md`) satt opp samme dag. Prøvekjøringen for hånd fikk ikke repoet som kilde (ingen push, ingen GitHub- eller Supabase-verktøy, hookene virket ikke); første ordinære kjøring 03:23 UTC avgjør om kjøringer etter planen får det, slik tilbakemeldingsrutinens gjør. Går ikke det, lages oppgaven på nytt fra rutinesiden på claude.ai med repoet som kilde og Supabase tilkoblet (innstillingene i OPPGAVE.md).
