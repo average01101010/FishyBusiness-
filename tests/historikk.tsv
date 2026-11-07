@@ -1003,3 +1003,8 @@
 2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	vesseltest	OK	28	lite	samtidig	
 2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	nettest	OK	27	lite	samtidig	
 2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	caretest	OK	15	lite	samtidig	
+2026-11-07 17:01	ccr-2040aa61-qgig5a	1e4dd80d	boottest	OK	22	lite	samtidig	
+2026-11-07 17:02	ccr-2040aa61-qgig5a	1e4dd80d	docktest	FEIL	62	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-07 17:03	ccr-2040aa61-qgig5a	1e4dd80d	driftsplan2kyst	OK	91	lite	samtidig	
+2026-11-07 17:04	ccr-2040aa61-qgig5a	1e4dd80d	driftsplan2test	FEIL	88	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
+2026-11-07 17:05	ccr-2040aa61-qgig5a	1e4dd80d	docktest	OK	58	lite	alene	
