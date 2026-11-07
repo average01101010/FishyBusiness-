@@ -908,7 +908,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
 - **986** the look's sweep (sjvEval), when the model does not have her
   - 989 `sjvSweep(n, A, H, gs, on)`
 
-## `src/js/core/06-services.js` (276 linjer)
+## `src/js/core/06-services.js` (279 linjer)
 
 ---------- services behind the phone ----------
 
@@ -927,14 +927,14 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
 - **149** standing operations plan: a hired skipper runs a saved route on set days, lands the catch and restocks
   - 151 `autoRestock()`
   - 160 `depart()`
-  - 184 `finishJob(j)`
-  - 211 `fitHours(k)`
-  - 214 `jobOk(j)`
-  - 219 `queueJob(j)`
-  - 222 `jobsDone()`
-  - 228 `shelterReturn(W, hsOver)`
-  - 254 `startReturn(auto, W, home, hsOver, opsKeep)`
-- **274** CORE END
+  - 187 `finishJob(j)`
+  - 214 `fitHours(k)`
+  - 217 `jobOk(j)`
+  - 222 `queueJob(j)`
+  - 225 `jobsDone()`
+  - 231 `shelterReturn(W, hsOver)`
+  - 257 `startReturn(auto, W, home, hsOver, opsKeep)`
+- **277** CORE END
 
 ## `src/js/core/06b-coastports.js` (166 linjer)
 
@@ -1707,40 +1707,33 @@ the snow crab (H3a of docs/planer/havsteget-h3-snokrabbe.md, 06.11.2026)
   - 138 `snoSoftAt(p)`
   - 143 `snoTend(s, a, mid)`
 
-## `src/js/core/09k-market.js` (173 linjer)
+## `src/js/core/09k-market.js` (191 linjer)
 
-Bruktmarkedet (M4 in docs/planer/butikker-og-sponsorer.md, 3.3, 10.2, 10.2b; V3 A, V9 A, V10 A, V11 A; Jonas 30.10.2026)
+Kystmegleren: boat sales between players (B1–B8 in docs/planer/etter-tonys-test.md; Jonas 07.11.2026, V4 A, V5 A, V6 A)
 
-- **1** Bruktmarkedet (M4 in docs/planer/butikker-og-sponsorer.md, 3.3, 10.2, 10.2b; V3 A, V9 A, V10 A, V11 A; Jonas 30.10.2026)
-  - 21 `mktRnd(key)`
-  - 22 `mktState()`
-  - 26 `mktFair(k, y, c, ex)`
-  - 30 `mktMake(w, i)`
-  - 54 `mktAll(H)`
-  - 60 `mktListings(H)`
-  - 62 `mktSold(H)`
-  - 63 `mktById(id, H)`
-  - 66 `mktAsk(L, H)`
-  - 69 `mktPrice(L, H)`
-  - 76 `mktBid(id, kr)`
-  - 88 `mktTakstSays(L)`
-  - 90 `mktWishHits(H)`
-  - 93 `mktTakeOver(L, b, eq)`
-- **98** your own boat at the broker (commission, 3.3 «Legg ut til salgs»): listed from anywhere at her market value; she must lie in port
-  - 103 `mktOwnValue(v)`
-  - 108 `mktOwn(vid)`
-  - 110 `mktOwnWhy(v)`
-  - 111 `mktListOwn(vid)`
-  - 115 `mktUnlist(vid)`
-- **116** delivery (10.2b «Få henne levert»): a skipper from the yard sails a boat of yours that nobody is aboard to the port you choose, for
-  - 119 `mktDelWhy(v, to)`
-  - 120 `mktDeliver(vid, to)`
-  - 126 `mktHour(H)`
-- **142** the boat you traded in (M5, B2): she lies at the yard and is bought by a fisherman, who puts her out again a week or two later at
-  - 144 `mktTradeIn(type, engH, port, old)`
-  - 145 `mktTiListing(r)`
-  - 158 `mktBrokerListings(H)`
-  - 172 `mktEvery(H)`
+- **1** Kystmegleren: boat sales between players (B1–B8 in docs/planer/etter-tonys-test.md; Jonas 07.11.2026, V4 A, V5 A, V6 A)
+  - 14 `mktState()`
+  - 21 `mbYardNear(pos)`
+  - 23 `mbBounds(value)`
+  - 24 `mbPriceWhy(value, start, buynow)`
+  - 38 `mbOpsOn(v)`
+  - 41 `mbWhy(v)`
+  - 55 `mbPack(v, yard)`
+  - 64 `mbCond(P)`
+  - 67 `mbUnpack(P, port)`
+  - 82 `mbLock(v, r, o, yard)`
+  - 89 `mbBuyWhy(L, kr0)`
+  - 98 `mbWishHits(list)`
+- **100** the quick sale (B4): to the broker for 90 % of her value, at once, from anywhere she lies in port; the loans are paid first
+  - 101 `mbQuickWhy(v)`
+  - 105 `mbDrop(v)`
+  - 112 `mbQuickSell(vid)`
+- **122** the ledger (broker_pending): every krone bound, given back or paid, every boat handed over, applied once (S.mkt.mb.done keeps
+  - 126 `mbApply(rows)`
+- **171** delivery (10.2b «Få henne levert»): a skipper from the yard sails a boat of yours that nobody is aboard to the port you choose, for
+  - 175 `mktDelWhy(v, to)`
+  - 176 `mktDeliver(vid, to)`
+  - 182 `mktHour(H)`
 
 ## `src/js/core/09l-sponsor.js` (31 linjer)
 
@@ -2418,12 +2411,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1258 linjer)
+## `src/js/ui/phone/07-patch.js` (1265 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1251 `patch()`
+  - 1258 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2459,17 +2452,17 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
   - 128 `redning()`
 - **145** vessels: my vessel overview and the market
 
-## `src/js/ui/phone/10-fartoy.js` (169 linjer)
+## `src/js/ui/phone/10-fartoy.js` (170 linjer)
 
   - 10 `goals()`
   - 25 `goalsCard()`
 - **30** the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
   - 39 `mkCard(k, O)`
   - 43 `market()`
-  - 69 `specSecs(k, O)`
-  - 93 `sheet(k, O)`
-  - 139 `fartoy(tab0)`
-- **168** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
+  - 70 `specSecs(k, O)`
+  - 94 `sheet(k, O)`
+  - 140 `fartoy(tab0)`
+- **169** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
 
 ## `src/js/ui/phone/11-rederi.js` (79 linjer)
 
@@ -2492,7 +2485,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
   - 129 `careAboard(inPort, p)`
   - 156 `redskap(tab0)`
 
-## `src/js/ui/phone/13-mannskap-bank-meld.js` (177 linjer)
+## `src/js/ui/phone/13-mannskap-bank-meld.js` (176 linjer)
 
 --- crew
 
@@ -2534,22 +2527,24 @@ Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.
   - 97 `nett()`
   - 109 `netShop()`
 
-## `src/js/ui/phone/13c-megler.js` (156 linjer)
+## `src/js/ui/phone/13c-megler.js` (181 linjer)
 
-Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/planer/butikker-og-sponsorer.md 3.3, 10.2, 10.2b)
+Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-tonys-test.md, Jonas 07.11.2026; EAFC's auction house)
 
-- **1** Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/planer/butikker-og-sponsorer.md 3.3, 10.2, 10.2b)
-  - 9 `mgSays(Q)`
-  - 30 `mgCard(Q)`
-  - 37 `mgGoal(Q)`
-  - 41 `mgOwnRow(v)`
-  - 51 `megler()`
-  - 69 `mgWishCard()`
-  - 78 `mgSheet(Q)`
-  - 115 `mgHere()`
-  - 122 `mgAct(a, d)`
+- **1** Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-tonys-test.md, Jonas 07.11.2026; EAFC's auction house)
+  - 19 `mbLeftTxt(ms)`
+  - 27 `mgNear(Q)`
+  - 29 `mgCard(Q)`
+  - 48 `mgOwnRow(v, quick)`
+  - 66 `mbForm(v)`
+  - 81 `megler()`
+  - 104 `mgWishCard()`
+  - 113 `mgSheet(Q)`
+  - 147 `mgHere()`
+  - 155 `mgAfter(key, okNo, okEn)`
+  - 157 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (317 linjer)
+## `src/js/ui/phone/14-act.js` (316 linjer)
 
   - 2 `act(a, d)`
 - **8** the receipt after a buy for kroner (Jonas 06.11.2026, Tony's test: «Det skal ikke være tvil om et kjøp er gjennomført»): one
@@ -3184,6 +3179,12 @@ The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the to
 Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
 
 - **1** Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
+
+## `src/js/ui/10s-broker.js` (108 linjer)
+
+Kystmegleren and the cloud (B1–B8 in docs/planer/etter-tonys-test.md, supabase/migrations/20261107140000_broker.sql)
+
+- **1** Kystmegleren and the cloud (B1–B8 in docs/planer/etter-tonys-test.md, supabase/migrations/20261107140000_broker.sql)
 
 ## `src/js/ui/10k-friends.js` (134 linjer)
 
