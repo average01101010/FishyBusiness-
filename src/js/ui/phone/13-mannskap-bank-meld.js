@@ -165,7 +165,6 @@
   const swapLeaves = k => Object.keys(EQUIP).filter(q => S.equip[q] && !EQUIP[q].multi && !equipFits(q, k));
   function switchVessel(k){
     const b = S.boat, old = VESSELS[b.type], left = swapLeaves(k);
-    mktTradeIn(b.type, b.engH || 0, b.port, S.boatName);   // the boat traded in comes back on the market under a new name (M5)
     setTimeout(() => BUYM.show(), 60);   // the moment she is yours, once the purchase has set her up (M5)
     if (left.length) log('Utstyr som ikke passer den nye båten, ble med ' + old.name.no + ': ' + left.map(q => EQUIP[q].name.no).join(', ') + '.', 'Equipment that does not suit the new vessel went with the ' + old.name.en + ': ' + left.map(q => EQUIP[q].name.en).join(', ') + '.');
     b.type = k; delete b.liv; delete b.call; for (const q of Object.keys(EQUIP)) if (!equipFits(q, k)) S.equip[q] = EQUIP[q].multi ? Math.min(S.equip[q] || 0, VESSELS[k].jukseMax || 0) : false; applyVessel(); loreNewBoat(S.boatName);

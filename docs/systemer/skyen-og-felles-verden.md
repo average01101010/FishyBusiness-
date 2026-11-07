@@ -233,6 +233,10 @@ Jonas' avgjørelser står i `docs/engasjement.md`, arbeidslista punkt 1. Dette e
     - `sqltest`: gjester skjult på AIS og topplista, eier og fartstid, kontrollen av fartstiden, `pos_off` borte.
 - **Neste:** achievements («Første uke på sjøen»), se 4.25.
 
+## Kystmegleren på serveren: båtsalg mellom spillere (B, 07.11.2026)
+
+`supabase/migrations/20261107140000_broker.sql` (B1–B8 i `docs/planer/etter-tonys-test.md`; hele systemet i `handel-og-steder.md`, «B Båtsalg mellom spillere»). Spillet holder kontantene i lagringen, så serveren holder regnskapet for megleren: `broker_ledger` er innboksen (som `grants`), med én rad for hver krone som bindes (bud, kjøp), gis tilbake (overbydd, kjøpt av en annen, avlyst) eller betales ut (solgt, minus 5 %), og for hver båt som overleveres eller kommer tilbake. Spillet henter den med `broker_pending`, bruker hver rad én gang (`mbApply`, ID-ene huskes i `S.mkt.mb.done` også om `broker_done` ikke når fram) og sier `broker_done`. Budene ligger i `bids`, oppføringene i `listings`; `listing_settle` gjør opp hvert minutt (pg_cron `dsb-broker`) og fra `listings_get`, `listing_bid`, `listing_buy` og `broker_pending`. Funksjonene for spillet er bare for `authenticated`, og `broker_who` nekter gjester å handle; tabellene er stengt for alle spillere. `saves_cash_check` regner med meglerens utbetalinger. Ønsket båt går som push (`broker_tell`, taggen `mkt-wish`) til den som har push og ikke har vært i spillet de siste to minuttene, høyst én gang i tolv timer. Migreringen er kjørt 07.11.2026 (Jonas i SQL-editoren, etter at Supabase-verktøyet i økta to ganger spurte om lov uten at spørsmålet nådde ham) og sjekket i databasen. En server uten den svarer 404, og da viser spillet megleren tom (`MBC` slår seg av for økta).
+
 ## 5.25f Sesongene som felles hendelser: Lofotfisket og årshjulet (30.10.2026)
 
 Forslag A2 i `docs/forslag.md`, bestilt av Jonas 30.10.2026 som punkt 7 i rekkefølgen fra `docs/research/oppdrag-gap-analyse.md` («du kan starte arbeidet i ønsket rekkefølge»). Første runde, uten vimpelen og uten admin-redigering.

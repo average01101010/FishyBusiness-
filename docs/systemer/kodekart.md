@@ -908,7 +908,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
 - **986** the look's sweep (sjvEval), when the model does not have her
   - 989 `sjvSweep(n, A, H, gs, on)`
 
-## `src/js/core/06-services.js` (276 linjer)
+## `src/js/core/06-services.js` (279 linjer)
 
 ---------- services behind the phone ----------
 
@@ -927,29 +927,30 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
 - **149** standing operations plan: a hired skipper runs a saved route on set days, lands the catch and restocks
   - 151 `autoRestock()`
   - 160 `depart()`
-  - 184 `finishJob(j)`
-  - 211 `fitHours(k)`
-  - 214 `jobOk(j)`
-  - 219 `queueJob(j)`
-  - 222 `jobsDone()`
-  - 228 `shelterReturn(W, hsOver)`
-  - 254 `startReturn(auto, W, home, hsOver, opsKeep)`
-- **274** CORE END
+  - 187 `finishJob(j)`
+  - 214 `fitHours(k)`
+  - 217 `jobOk(j)`
+  - 222 `queueJob(j)`
+  - 225 `jobsDone()`
+  - 231 `shelterReturn(W, hsOver)`
+  - 257 `startReturn(auto, W, home, hsOver, opsKeep)`
+- **277** CORE END
 
-## `src/js/core/06b-coastports.js` (160 linjer)
+## `src/js/core/06b-coastports.js` (166 linjer)
 
 the fish receivers along the whole coast as harbours (05.10.2026, M2 of the coast plan)
 
 - **1** the fish receivers along the whole coast as harbours (05.10.2026, M2 of the coast plan)
 - **19** the registration mark (Malerverkstedet, 07.10.2026): the county's letters, a serial number and the municipality's letters,
-  - 28 `regLetters(pt)`
-  - 34 `regUsed(f, k, n)`
-  - 35 `regOf(b)`
-  - 50 `callFree(p, n)`
-  - 51 `callOf(b)`
-  - 131 `plantsNear(p, n = 10)`
-- **137** the ocean vessels at the plants (H0 of docs/planer/havsteget.md, 03.11.2026)
-  - 144 `portWhy(pt, type)`
+  - 30 `regLetters(pt)`
+  - 36 `regUsed(f, k, n)`
+  - 37 `regOf(b)`
+  - 43 `regDraw(e)`
+  - 56 `callFree(p, n)`
+  - 57 `callOf(b)`
+  - 137 `plantsNear(p, n = 10)`
+- **143** the ocean vessels at the plants (H0 of docs/planer/havsteget.md, 03.11.2026)
+  - 150 `portWhy(pt, type)`
 
 ## `src/js/core/06c-steder.js` (44 linjer)
 
@@ -1706,40 +1707,33 @@ the snow crab (H3a of docs/planer/havsteget-h3-snokrabbe.md, 06.11.2026)
   - 138 `snoSoftAt(p)`
   - 143 `snoTend(s, a, mid)`
 
-## `src/js/core/09k-market.js` (173 linjer)
+## `src/js/core/09k-market.js` (191 linjer)
 
-Bruktmarkedet (M4 in docs/planer/butikker-og-sponsorer.md, 3.3, 10.2, 10.2b; V3 A, V9 A, V10 A, V11 A; Jonas 30.10.2026)
+Kystmegleren: boat sales between players (B1–B8 in docs/planer/etter-tonys-test.md; Jonas 07.11.2026, V4 A, V5 A, V6 A)
 
-- **1** Bruktmarkedet (M4 in docs/planer/butikker-og-sponsorer.md, 3.3, 10.2, 10.2b; V3 A, V9 A, V10 A, V11 A; Jonas 30.10.2026)
-  - 21 `mktRnd(key)`
-  - 22 `mktState()`
-  - 26 `mktFair(k, y, c, ex)`
-  - 30 `mktMake(w, i)`
-  - 54 `mktAll(H)`
-  - 60 `mktListings(H)`
-  - 62 `mktSold(H)`
-  - 63 `mktById(id, H)`
-  - 66 `mktAsk(L, H)`
-  - 69 `mktPrice(L, H)`
-  - 76 `mktBid(id, kr)`
-  - 88 `mktTakstSays(L)`
-  - 90 `mktWishHits(H)`
-  - 93 `mktTakeOver(L, b, eq)`
-- **98** your own boat at the broker (commission, 3.3 «Legg ut til salgs»): listed from anywhere at her market value; she must lie in port
-  - 103 `mktOwnValue(v)`
-  - 108 `mktOwn(vid)`
-  - 110 `mktOwnWhy(v)`
-  - 111 `mktListOwn(vid)`
-  - 115 `mktUnlist(vid)`
-- **116** delivery (10.2b «Få henne levert»): a skipper from the yard sails a boat of yours that nobody is aboard to the port you choose, for
-  - 119 `mktDelWhy(v, to)`
-  - 120 `mktDeliver(vid, to)`
-  - 126 `mktHour(H)`
-- **142** the boat you traded in (M5, B2): she lies at the yard and is bought by a fisherman, who puts her out again a week or two later at
-  - 144 `mktTradeIn(type, engH, port, old)`
-  - 145 `mktTiListing(r)`
-  - 158 `mktBrokerListings(H)`
-  - 172 `mktEvery(H)`
+- **1** Kystmegleren: boat sales between players (B1–B8 in docs/planer/etter-tonys-test.md; Jonas 07.11.2026, V4 A, V5 A, V6 A)
+  - 14 `mktState()`
+  - 21 `mbYardNear(pos)`
+  - 23 `mbBounds(value)`
+  - 24 `mbPriceWhy(value, start, buynow)`
+  - 38 `mbOpsOn(v)`
+  - 41 `mbWhy(v)`
+  - 55 `mbPack(v, yard)`
+  - 64 `mbCond(P)`
+  - 67 `mbUnpack(P, port)`
+  - 82 `mbLock(v, r, o, yard)`
+  - 89 `mbBuyWhy(L, kr0)`
+  - 98 `mbWishHits(list)`
+- **100** the quick sale (B4): to the broker for 90 % of her value, at once, from anywhere she lies in port; the loans are paid first
+  - 101 `mbQuickWhy(v)`
+  - 105 `mbDrop(v)`
+  - 112 `mbQuickSell(vid)`
+- **122** the ledger (broker_pending): every krone bound, given back or paid, every boat handed over, applied once (S.mkt.mb.done keeps
+  - 126 `mbApply(rows)`
+- **171** delivery (10.2b «Få henne levert»): a skipper from the yard sails a boat of yours that nobody is aboard to the port you choose, for
+  - 175 `mktDelWhy(v, to)`
+  - 176 `mktDeliver(vid, to)`
+  - 182 `mktHour(H)`
 
 ## `src/js/core/09l-sponsor.js` (31 linjer)
 
@@ -2417,12 +2411,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1262 linjer)
+## `src/js/ui/phone/07-patch.js` (1271 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1255 `patch()`
+  - 1264 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2458,24 +2452,24 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
   - 128 `redning()`
 - **145** vessels: my vessel overview and the market
 
-## `src/js/ui/phone/10-fartoy.js` (169 linjer)
+## `src/js/ui/phone/10-fartoy.js` (178 linjer)
 
-  - 10 `goals()`
-  - 25 `goalsCard()`
-- **30** the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
-  - 39 `mkCard(k, O)`
-  - 43 `market()`
-  - 69 `specSecs(k, O)`
-  - 93 `sheet(k, O)`
-  - 139 `fartoy(tab0)`
-- **168** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
+  - 14 `goals()`
+  - 33 `goalsCard()`
+- **38** the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
+  - 47 `mkCard(k, O)`
+  - 51 `market()`
+  - 78 `specSecs(k, O)`
+  - 102 `sheet(k, O)`
+  - 148 `fartoy(tab0)`
+- **177** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
 
-## `src/js/ui/phone/11-rederi.js` (79 linjer)
+## `src/js/ui/phone/11-rederi.js` (85 linjer)
 
   - 6 `selRow()`
   - 8 `vSummary()`
-  - 40 `rederi()`
-- **78** equipment
+  - 45 `rederi()`
+- **84** equipment
 
 ## `src/js/ui/phone/12-utstyr-redskap.js` (210 linjer)
 
@@ -2491,7 +2485,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
   - 129 `careAboard(inPort, p)`
   - 156 `redskap(tab0)`
 
-## `src/js/ui/phone/13-mannskap-bank-meld.js` (177 linjer)
+## `src/js/ui/phone/13-mannskap-bank-meld.js` (176 linjer)
 
 --- crew
 
@@ -2533,22 +2527,24 @@ Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.
   - 97 `nett()`
   - 109 `netShop()`
 
-## `src/js/ui/phone/13c-megler.js` (156 linjer)
+## `src/js/ui/phone/13c-megler.js` (181 linjer)
 
-Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/planer/butikker-og-sponsorer.md 3.3, 10.2, 10.2b)
+Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-tonys-test.md, Jonas 07.11.2026; EAFC's auction house)
 
-- **1** Kystmegleren: the used boats in the Net app and at the yard's quay (M4, docs/planer/butikker-og-sponsorer.md 3.3, 10.2, 10.2b)
-  - 9 `mgSays(Q)`
-  - 30 `mgCard(Q)`
-  - 37 `mgGoal(Q)`
-  - 41 `mgOwnRow(v)`
-  - 51 `megler()`
-  - 69 `mgWishCard()`
-  - 78 `mgSheet(Q)`
-  - 115 `mgHere()`
-  - 122 `mgAct(a, d)`
+- **1** Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-tonys-test.md, Jonas 07.11.2026; EAFC's auction house)
+  - 19 `mbLeftTxt(ms)`
+  - 27 `mgNear(Q)`
+  - 29 `mgCard(Q)`
+  - 48 `mgOwnRow(v, quick)`
+  - 66 `mbForm(v)`
+  - 81 `megler()`
+  - 104 `mgWishCard()`
+  - 113 `mgSheet(Q)`
+  - 147 `mgHere()`
+  - 155 `mgAfter(key, okNo, okEn)`
+  - 157 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (317 linjer)
+## `src/js/ui/phone/14-act.js` (316 linjer)
 
   - 2 `act(a, d)`
 - **8** the receipt after a buy for kroner (Jonas 06.11.2026, Tony's test: «Det skal ikke være tvil om et kjøp er gjennomført»): one
@@ -2973,15 +2969,15 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 224 `wpActCycle(w)`
   - 229 `gearDoAct(act, el)`
 
-## `src/js/ui/10c-dock.js` (572 linjer)
+## `src/js/ui/10c-dock.js` (578 linjer)
 
 ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 
 - **1** the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side
 - **412** the drawer
 - **484** the calm (UI 2, U2-4, 07.11.2026; docs/planer/ui-2-staaende.md 4.5, Jonas' V8 A 06.11.2026)
-  - 545 `renderActs()`
-  - 558 `showroomTick()`
+  - 551 `renderActs()`
+  - 564 `showroomTick()`
 
 ## `src/js/ui/10d-helm.js` (51 linjer)
 
@@ -3163,18 +3159,15 @@ THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/func
   - 104 `shopClaim()`
   - 127 `shopStart()`
 
-## `src/js/ui/10j-paint.js` (246 linjer)
+## `src/js/ui/10j-paint.js` (215 linjer)
 
 THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
 
 - **1** THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
-  - 184 `logoSet(L)`
-  - 192 `logoCheck()`
-  - 200 `giveCos(k)`
-  - 213 `regSet(n, paid)`
-  - 228 `regKeep()`
-  - 229 `regTaken(mark, paid)`
-  - 238 `regFree(mark, keep, paid)`
+  - 180 `logoSet(L)`
+  - 188 `logoCheck()`
+  - 196 `giveCos(k)`
+  - 210 `regSet(n)`
 
 ## `src/js/ui/10q-buymoment.js` (36 linjer)
 
@@ -3187,6 +3180,12 @@ The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the to
 Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
 
 - **1** Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
+
+## `src/js/ui/10s-broker.js` (108 linjer)
+
+Kystmegleren and the cloud (B1–B8 in docs/planer/etter-tonys-test.md, supabase/migrations/20261107140000_broker.sql)
+
+- **1** Kystmegleren and the cloud (B1–B8 in docs/planer/etter-tonys-test.md, supabase/migrations/20261107140000_broker.sql)
 
 ## `src/js/ui/10k-friends.js` (134 linjer)
 
@@ -3269,7 +3268,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 226 `bootGame()`
   - 341 `bootFail(e)`
 
-## `src/js/vessel3d.js` (1602 linjer)
+## `src/js/vessel3d.js` (1651 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -3341,55 +3340,56 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **717** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
 - **766** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
   - 777 `logoCanvas(cv, L, img)`
-  - 788 `logoStrips(type)`
-  - 790 `logoStr(L)`
-  - 791 `logoParse(s)`
-  - 795 `flagCanvas(cv, code, shape, logo)`
-  - 807 `flagOf(L)`
-- **808** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
-  - 817 `hullTris(type)`
-  - 832 `sideStrip(type, frac, hMax, aspect, drop)`
-  - 864 `nameStrips(type)`
-  - 900 `stripProud(type, st)`
-  - 923 `stripPaint(type, st)`
-  - 944 `markStrips(type)`
-  - 952 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
-  - 977 `callStrips(type)`
-  - 983 `callRGB(type, liv)`
-  - 986 `anchorLen(bw)`
-  - 989 `markRGB(type, liv)`
-  - 997 `hullRGB(type, liv)`
-- **1007** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
-  - 1018 `facingTris(P, dir, keep)`
-  - 1033 `rayZ(T, x, y, dir, za, zb)`
-  - 1044 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
-  - 1055 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
-  - 1066 `halfWidth(T, y, z0, zw, dir, wmax)`
-  - 1077 `houseFront(type, P, Gl, V)`
-  - 1110 `transom(type, P, V)`
-  - 1145 `namePlaces(type)`
-  - 1163 `placeRGB(type, p, liv)`
-  - 1171 `nameInkLight(rgb)`
-  - 1175 `npcKit(L, B)`
-  - 1178 `npcModel(type, lod, liv)`
-  - 1180 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **1192** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 1211 `vestKit(K)`
-  - 1226 `wkPart(name, kit)`
-  - 1236 `wkPut(B, o, ax, s, at)`
-  - 1246 `wkLimb(B, o, A, E, r)`
-  - 1253 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 1275 `vesselSVG(type, w, h)`
-- **1313** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1320 `deckMap(type)`
-  - 1465 `deckPass(M, k, q)`
-  - 1470 `passLine(M, A, B)`
-  - 1472 `linkPass(M, k, q)`
-  - 1476 `deckComp(M)`
-  - 1485 `deckPath(M, a, b)`
-- **1516** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1529 `lanterns(G, V, st)`
-  - 1563 `deckPoints(type)`
+  - 793 `logoStrips(type)`
+  - 814 `stripBare(type, st)`
+  - 829 `logoStr(L)`
+  - 830 `logoParse(s)`
+  - 834 `flagCanvas(cv, code, shape, logo)`
+  - 846 `flagOf(L)`
+- **847** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
+  - 856 `hullTris(type)`
+  - 873 `sideStrip(type, frac, hMax, aspect, drop, band)`
+  - 913 `nameStrips(type)`
+  - 949 `stripProud(type, st)`
+  - 972 `stripPaint(type, st)`
+  - 993 `markStrips(type)`
+  - 1001 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
+  - 1026 `callStrips(type)`
+  - 1032 `callRGB(type, liv)`
+  - 1035 `anchorLen(bw)`
+  - 1038 `markRGB(type, liv)`
+  - 1046 `hullRGB(type, liv)`
+- **1056** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
+  - 1067 `facingTris(P, dir, keep)`
+  - 1082 `rayZ(T, x, y, dir, za, zb)`
+  - 1093 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
+  - 1104 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
+  - 1115 `halfWidth(T, y, z0, zw, dir, wmax)`
+  - 1126 `houseFront(type, P, Gl, V)`
+  - 1159 `transom(type, P, V)`
+  - 1194 `namePlaces(type)`
+  - 1212 `placeRGB(type, p, liv)`
+  - 1220 `nameInkLight(rgb)`
+  - 1224 `npcKit(L, B)`
+  - 1227 `npcModel(type, lod, liv)`
+  - 1229 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **1241** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 1260 `vestKit(K)`
+  - 1275 `wkPart(name, kit)`
+  - 1285 `wkPut(B, o, ax, s, at)`
+  - 1295 `wkLimb(B, o, A, E, r)`
+  - 1302 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 1324 `vesselSVG(type, w, h)`
+- **1362** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1369 `deckMap(type)`
+  - 1514 `deckPass(M, k, q)`
+  - 1519 `passLine(M, A, B)`
+  - 1521 `linkPass(M, k, q)`
+  - 1525 `deckComp(M)`
+  - 1534 `deckPath(M, a, b)`
+- **1565** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1578 `lanterns(G, V, st)`
+  - 1612 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (491 linjer)
 

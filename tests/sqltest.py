@@ -385,27 +385,6 @@ def main():
         R['rgA'] = sql("select public.reg_claim('T-777-LK')", A, 'authenticated'); R['rgB'] = sql("select public.reg_claim('T-777-LK')", B, 'authenticated')
         R['rgA2'] = sql("select public.reg_claim('T-777-LK')", A, 'authenticated'); R['rgBad'] = sql("select public.reg_claim('<b>')", A, 'authenticated', expect_err=True)
         R['rgRead'] = sql("select count(*) from public.reg_claims", A, 'authenticated', expect_err=True)
-        # only the numbers in use count (20261107120000_reg_in_use.sql, the shop's review 07.11.2026): keep is the marks the player's other
-        # boats wear. Eleven numbers in a row on one boat all go through and let go of the boat's last one (designs.sql said «too many»
-        # after ten for good); another player then gets a number let go; a failed claim lets nothing go; ten in use at once is the most;
-        # reg_check answers the same without claiming, for the game to ask before the payment; a page without keep works as before
-        def rg(q, who=A):
-            try: return sql(q, who, 'authenticated')
-            except RuntimeError as e: return 'ERR ' + str(e)[:90]
-        mine = lambda: sql("select coalesce(string_agg(mark, ',' order by mark), '') from public.reg_claims where player_id = 'user_01AAA'")
-        R['rgSeq'] = [rg("select public.reg_claim('T-%d-TK', array['T-777-LK'])" % (800 + i)) for i in range(11)]
-        R['rgSeqMine'] = mine()
-        R['rgLetGo'] = rg("select public.reg_claim('T-800-TK', '{}')", B)
-        R['rgChk'] = [rg("select public.reg_check('%s', array['T-777-LK'])" % m) for m in ('T-800-TK', 'T-901-TK', 'T-810-TK', 'T-777-LK')]
-        R['rgTakenKeeps'] = (rg("select public.reg_claim('T-800-TK', '{}')"), mine())
-        held = ['T-777-LK', 'T-810-TK']
-        for i in range(8):
-            rg("select public.reg_claim('T-9%02d-TK', array[%s])" % (i, ','.join("'%s'" % m for m in held))); held.append('T-9%02d-TK' % i)
-        kept = 'array[%s]' % ','.join("'%s'" % m for m in held)
-        R['rgTen'] = (len(mine().split(',')), rg("select public.reg_check('T-950-TK', %s)" % kept), rg("select public.reg_claim('T-950-TK', %s)" % kept)[:24], len(mine().split(',')))
-        R['rgNine'] = rg("select public.reg_claim('T-950-TK', %s)" % kept.replace("'T-907-TK'", "'T-1-TK'"))
-        R['rgOld'] = (rg("select public.reg_claim('T-810-TK')"), rg("select public.reg_claim('T-951-TK')")[:24])
-        R['rgChkAnon'] = sql("select public.reg_check('T-1-TK')", {'role': 'anon'}, 'anon', expect_err=True)
         # the company logo (20261007110000_logos.sql): only an account that owns it puts up a picture; the others get it by the id the world
         # gives; the admin takes it away with a reason, then nobody gets it, the player is told why and may put up another at no cost
         import hashlib; hidA = hashlib.md5(b'dsbuser_01AAA').hexdigest()[:10]; LIMG = 'data:image/png;base64,iVBORw0KGgo='
@@ -583,14 +562,6 @@ def main():
               "the logo: put up only once owned, a bad picture refused, the others get it by the world's id; only the admin lists and takes it away, then nobody gets it, the player is told why and may put up another",
               {k: R[k] for k in ('lgV', 'lgRm', 'lgGone', 'lgMine', 'lgAgain', 'lgMine2')})
         print(ok(R['rgA'] == 't' and R['rgB'] == 'f' and R['rgA2'] == 't' and R['rgBad'][0] and R['rgRead'][0]), "one's own registration number: the first player's, refused to another, kept for the first; a bad mark and reading the claims are refused", {k: R[k] for k in ('rgA', 'rgB', 'rgA2')})
-        print(ok(R['rgSeq'] == ['t'] * 11 and R['rgSeqMine'] == 'T-777-LK,T-810-TK' and R['rgLetGo'] == 't' and R['rgChk'] == ['taken', 'ok', 'ok', 'ok']
-                 and R['rgTakenKeeps'] == ('f', 'T-777-LK,T-810-TK')),
-              "one's own number, only those in use count (07.11.2026): eleven in a row on one boat all go through and let go of the boat's last one, the other boat's stays; "
-              "a number let go is another player's to take; reg_check says taken or ok without claiming; a refused claim lets nothing go", {k: R[k] for k in ('rgSeq', 'rgSeqMine', 'rgLetGo', 'rgChk', 'rgTakenKeeps')})
-        print(ok(R['rgTen'][0] == 10 and R['rgTen'][1] == 'many' and R['rgTen'][2].startswith('ERR') and R['rgTen'][3] == 10 and R['rgNine'] == 't' and R['rgOld'][0] == 't'
-                 and R['rgOld'][1].startswith('ERR') and R['rgChkAnon'][0]),
-              "ten numbers in use at once is the most (reg_check 'many', reg_claim refused, nothing let go); with one boat's number changed there is room again; "
-              "a page from before the change (no keep) still claims its own; reg_check is refused without an account", {k: R[k] for k in ('rgTen', 'rgNine', 'rgOld')})
         print(ok(R['livOwn'] == 'h:gul;r:raud;m:T.1.LK;p:2' and R['livGone'] == 'h:gul;m:T.1.LK;p:2'),
               "the others see a paid paint design only while the account owns it (bought, not refunded); colours, the registration mark and the pennants always (Ø6 funn 5)", {'own': R['livOwn'], 'gone': R['livGone']})
         print(ok(R['dOwn'] == ['des_ripe'] and R['dGive'] == ['cos'] and R['dGone'] == []), 'a paint design: paid, it is the account\'s on every device (owned) and a grant for the game; a refund takes it away', {'own': R['dOwn'], 'give': R['dGive'], 'gone': R['dGone']})
@@ -961,6 +932,98 @@ def main():
                  and KO['look'] == [{'port': 'p_ko', 'active': 1, 'waiting': 2}] and KO['g2'].get('go') is True
                  and KO['w3gone'] == [{'port': 'p_ko', 'active': 1, 'waiting': 0}] and KO['two'].get('go') is True and KO['anon'][0]),
               "the queue at the plants: the first lands, the next wait in order with a wait of about a landing each, the place frees at land_end, a wait a page stopped renewing is gone, land_look counts, anon is refused (K2)", KO)
+        # boat sales between players at Kystmegleren (20261107140000_broker.sql, B1–B8): the limits on the start and buy-now prices against
+        # the boat's value and the type's price, three listings a player, the bids with 2 % steps and the money bound and released in the
+        # ledger, buy-now, the settlement (the winner gets the boat, the seller the price less 5 %, an unsold boat back), cancelling only
+        # without bids, the right moving in the register, the wish's push, a deleted seller, the cash check, and guests and anon refused
+        MB = {}
+        S1 = {'sub': 'user_01MS1', 'role': 'authenticated'}; K1 = {'sub': 'user_01MK1', 'role': 'authenticated'}; K2 = {'sub': 'user_01MK2', 'role': 'authenticated'}; S2 = {'sub': 'user_01MS2', 'role': 'authenticated'}
+        for who in (S1, K1, K2, S2): sql("select public.tm_hello('{}')", who, 'authenticated')
+        sql("select public.tm_consent(true, 1990)", S1, 'authenticated')
+        sql("insert into public.saves (player_id, data, saved_at, summary) values ('user_01MK1', 'x', now(), '{\"cash\":100000}'), ('user_01MS1', 'x', now(), '{\"cash\":0}') on conflict (player_id) do update set summary = excluded.summary")
+        sql("insert into public.reg_held (player_id, id) values ('user_01MS1', 'h9') on conflict do nothing")
+        VES = lambda nm, lic='null': "'{\"type\":\"sjark\",\"name\":\"%s\",\"engH\":1200,\"equip\":{\"vhf\":true},\"lic\":%s,\"pgear\":{\"nets\":[1]},\"at\":\"Myre\"}'" % (nm, lic)
+        def sqle(q, claims, role):   # the whole error (sql() keeps only its last 200 characters, which the PL/pgSQL context can fill)
+            pre = "set role %s; set request.jwt.claims = '%s'; " % (role, json.dumps(claims))
+            pp = run('psql', '-h', sock, '-U', user, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-qAt', '-c', pre + q)
+            return (pp.returncode != 0, pp.stderr)
+        put = lambda who, vid, start, buynow='null', hours=24, value=1000000, lic_kr=0, ves=None: sqle(
+            "select public.listing_put('%s', %s, %d, %d, %d, %s, %d, 'p_yard', 800, 300, 'Testrederi')" % (vid, ves or VES('Havbris ' + vid), value, lic_kr, start, buynow, hours), who, 'authenticated')
+        err = lambda r: (r[1].split('ERROR:')[1].strip().split('\n')[0] if r[0] else 'ok')
+        MB['lim'] = [err(put(S1, 'v9', 399999)), err(put(S1, 'v9', 500000, 1600001)), err(put(S1, 'v9', 500000, 500000)), err(put(S1, 'v9', 500000, hours=2)),
+                     err(put(S1, 'v9', 500000, value=5000000)), err(put(S1, 'v9', 2000001, value=1250000)), err(put(G2, 'v9', 500000)),
+                     err(put(S1, 'v9', 500000, ves="'{\"type\":\"autoliner\",\"name\":\"X\"}'"))]
+        L1 = json.loads(sql("select public.listing_put('v2', %s, 1000000, 300000, 500000, 900000, 24, 'p_yard', 800, 300, 'Testrederi')" % VES('Havbris', '{\"id\":\"h9\"}'), S1, 'authenticated'))['id']
+        MB['dup'] = err(put(S1, 'v2', 500000))
+        L2 = json.loads(sql("select public.listing_put('v3', %s, 1000000, 0, 400000, null, 6, 'p_yard', 800, 300, '')" % VES('Polarlys'), S1, 'authenticated'))['id']
+        L3 = json.loads(sql("select public.listing_put('v4', %s, 1000000, 0, 400000, null, 1, 'p_yard', 810, 300, '')" % VES('Bølgen'), S1, 'authenticated'))['id']
+        MB['four'] = err(put(S1, 'v5', 500000))
+        bid = lambda who, lid, kr, dl='null': err(sqle("select public.listing_bid(%d, %d, %s)" % (lid, kr, dl), who, 'authenticated'))
+        led = lambda who: [(r['kind'], r['kr']) for r in json.loads(sql("select public.broker_pending()", who, 'authenticated'))]
+        MB['bids'] = [bid(K1, L1, 499999), bid(K1, L1, 500000), bid(K1, L1, 600000), bid(K2, L1, 509999), bid(K2, L1, 510000, "'p_far'"), bid(S1, L1, 700000), bid(K1, L1, 900000), bid(K1, L2, 1300000), bid(G2, L2, 500000)]
+        MB['ledK1'] = led(K1); MB['ledK2'] = led(K2)
+        MB['top'] = sql("select top_kr || '/' || bids_n || '/' || (select count(*) from public.bids where listing = %d and state = 'held') from public.listings where id = %d" % (L1, L1))
+        MB['cancel'] = [err(sqle("select public.listing_cancel(%d)" % L1, S1, 'authenticated')), err(sqle("select public.listing_cancel(%d)" % L3, K1, 'authenticated')),
+                        err(sqle("select public.listing_cancel(%d)" % L3, S1, 'authenticated'))]
+        # buy-now: K2's bid is released, K1 pays 900 000 and gets the boat, the seller 855 000, the right h9 moves to K1
+        MB['buy'] = json.loads(sql("select public.listing_buy(%d, null)" % L1, K1, 'authenticated'))
+        MB['buyAgain'] = err(sqle("select public.listing_buy(%d, null)" % L1, K2, 'authenticated'))
+        MB['ledK1b'] = json.loads(sql("select public.broker_pending()", K1, 'authenticated')); MB['ledK2b'] = led(K2)
+        MB['reg'] = sql("select coalesce(string_agg(player_id || ':' || id, ',' order by player_id), '') from public.reg_held where player_id in ('user_01MS1', 'user_01MK1')")
+        # the end of the time: L2 with K2's bid at the start price and delivery, sold at the settlement; a fourth listing with no bid back
+        MB['bidL2'] = bid(K2, L2, 400000, "'p_far'")
+        L4 = json.loads(sql("select public.listing_put('v5', %s, 1000000, 0, 400000, null, 1, 'p_yard', 800, 300, '')" % VES('Ternen'), S1, 'authenticated'))['id']
+        sql("update public.listings set until = now() - interval '1 second' where id in (%d, %d)" % (L2, L4))
+        MB['settle'] = sql("select public.listing_settle()", None, 'service_role')
+        MB['states'] = sql("select string_agg(state, ',' order by id) from public.listings where id in (%d, %d, %d, %d)" % (L1, L2, L3, L4))
+        P1 = json.loads(sql("select public.broker_pending()", S1, 'authenticated'))
+        MB['ledS1'] = [(r['kind'], r['kr'], r['data'].get('vid'), r['data'].get('why')) for r in P1]
+        MB['ledK2c'] = json.loads(sql("select public.broker_pending()", K2, 'authenticated'))
+        sql("select public.broker_done(array[%s]::bigint[])" % ','.join(str(r['id']) for r in P1), S1, 'authenticated')
+        sql("select public.broker_done(array[%s]::bigint[])" % ','.join(str(r['id']) for r in P1), K1, 'authenticated')   # (someone else's ids do nothing)
+        MB['doneS1'] = len(json.loads(sql("select public.broker_pending()", S1, 'authenticated'))); MB['stillK1'] = len(json.loads(sql("select public.broker_pending()", K1, 'authenticated')))
+        # the cash check counts what the broker paid out: the seller's cash up by the sales is not flagged
+        f0 = int(sql("select count(*) from public.cash_flags where player_id = 'user_01MS1'"))
+        sql("update public.saves set summary = '{\"cash\":1235000}', updated_at = now() where player_id = 'user_01MS1'")
+        MB['flag'] = int(sql("select count(*) from public.cash_flags where player_id = 'user_01MS1'")) - f0
+        # what is for sale: the open ones nearest first, without the gear in the sea, the sold ones without the buyer
+        sql("select public.listing_put('v6', %s, 1000000, 0, 400000, null, 72, 'p_near', 801, 300, '')" % VES('Skarven'), S1, 'authenticated')
+        G = json.loads(sql("select public.listings_get(800, 300, 50)", K1, 'authenticated'))
+        MB['get'] = {'n': len(G['list']), 'names': [x['name'] for x in G['list']], 'pgear': any('pgear' in x['vessel'] for x in G['list']), 'mine': [x['mine'] for x in G['list']],
+                     'sold': [(s['type'], s['price']) for s in G['sold']], 'soldWho': any('buyer' in s or 'player' in s for s in G['sold']), 'far': len(json.loads(sql("select public.listings_get(2000, 2000, 50)", K1, 'authenticated'))['list'])}
+        MB['getS1'] = [(m['name'], m['state']) for m in json.loads(sql("select public.listings_get(null, null, null)", S1, 'authenticated'))['mine']]
+        MB['getGuest'] = len(json.loads(sql("select public.listings_get(null, null, null)", G2, 'authenticated'))['list'])
+        # the wish: K2 with a push subscription and no presence is told once; a second boat within twelve hours is not told again
+        sql("insert into public.push_subs (endpoint, player_id, p256dh, auth, lang) values ('https://fcm.googleapis.com/x/mk2', 'user_01MK2', 'k', 'a', 'nb') on conflict do nothing")
+        sql("select public.broker_wish_set('open', 2000000)", K2, 'authenticated')
+        sql("select public.listing_put('v7', %s, 1000000, 0, 400000, null, 6, 'p_yard', 800, 300, '')" % VES('Kvalbein'), S1, 'authenticated')
+        MB['wish1'] = sql("select count(*) || '/' || coalesce(max(body), '') from public.push_queue where player_id = 'user_01MK2' and tag = 'mkt-wish'")
+        sql("select public.listing_cancel(%d)" % json.loads(sql("select public.listings_get(null, null, null)", S1, 'authenticated'))['mine'][0]['id'], S1, 'authenticated')
+        sql("select public.listing_put('v8', %s, 1000000, 0, 400000, null, 6, 'p_yard', 800, 300, '')" % VES('Ingrid'), S1, 'authenticated')
+        MB['wish2'] = sql("select count(*) from public.push_queue where player_id = 'user_01MK2' and tag = 'mkt-wish'")
+        # a seller who deletes his account: his listing is called off and the bid in it given back
+        LS2 = json.loads(sql("select public.listing_put('v2', %s, 1000000, 0, 400000, null, 24, 'p_yard', 800, 300, '')" % VES('Morgenrød'), S2, 'authenticated'))['id']
+        bid(K1, LS2, 400000); sql("select public.broker_pending()", K1, 'authenticated')
+        sql("delete from public.players where id = 'user_01MS2'"); sql("select public.listing_settle()", None, 'service_role')
+        MB['gone'] = [sql("select state from public.listings where id = %d" % LS2), [(r['kind'], r['kr']) for r in json.loads(sql("select public.broker_pending()", K1, 'authenticated')) if r['listing'] == LS2]]
+        MB['anon'] = [sql("select public.%s" % q, {}, 'anon', expect_err=True)[0] for q in ("listings_get(null, null, null)", "broker_pending()", "listing_bid(1, 1, null)")]
+        MB['tabs'] = [sql("select count(*) from public.%s" % tb, K1, 'authenticated', expect_err=True)[0] for tb in ('listings', 'bids', 'broker_ledger', 'broker_wish')]
+        MB['priv'] = [sql("select has_function_privilege('authenticated', 'public.%s', 'execute')" % f) for f in ('listing_settle()', 'broker_sold(listings, text, bigint, text)', 'broker_reg_move(text, text, text)')]
+        lim_ok = MB['lim'] == ['start', 'buynow', 'buynow', 'bad hours', 'bad value', 'start', 'guest', 'bad type']
+        bids_ok = MB['bids'] == ['low 500000', 'ok', 'top', 'low 510000', 'ok', 'own', 'buynow', 'cash', 'guest'] and MB['ledK1'] == [('bid', -500000), ('release', 500000)] and MB['ledK2'] == [('bid', -520200)] and MB['top'] == '510000/2/1'
+        b1 = {r['kind']: r for r in MB['ledK1b']}
+        buy_ok = (MB['buy'].get('price') == 900000 and MB['buyAgain'] == 'gone' and b1.get('buy', {}).get('kr') == -900000 and b1.get('boat', {}).get('data', {}).get('port') == 'p_yard'
+                  and b1.get('boat', {}).get('data', {}).get('vessel', {}).get('pgear') == {'nets': [1]} and MB['ledK2b'] == [('bid', -520200), ('release', 520200)] and MB['reg'] == 'user_01MK1:h9')
+        k2c = [(r['kind'], r['kr'], r['data'].get('port')) for r in MB['ledK2c']]
+        settle_ok = (int(MB['settle']) == 2 and MB['states'] == 'sold,sold,cancelled,unsold' and ('paid', 855000, 'v2', None) in MB['ledS1'] and ('paid', 380000, 'v3', None) in MB['ledS1']
+                     and ('back', 0, 'v4', 'cancelled') in MB['ledS1'] and ('back', 0, 'v5', 'unsold') in MB['ledS1'] and ('bid', -408000, None) in k2c and ('boat', 0, 'p_far') in k2c
+                     and MB['doneS1'] == 0 and MB['stillK1'] == len(MB['ledK1b']))
+        get_ok = (MB['get']['names'] == ['Skarven'] and not MB['get']['pgear'] and MB['get']['mine'] == [False] and MB['get']['far'] == 0 and (('sjark', 900000) in MB['get']['sold']) and ('sjark', 400000) in MB['get']['sold']
+                  and not MB['get']['soldWho'] and ('Skarven', 'open') in MB['getS1'] and ('Havbris', 'sold') in MB['getS1'] and MB['getGuest'] >= 1)
+        print(ok(lim_ok and bids_ok and buy_ok and settle_ok and get_ok and MB['dup'] == 'listed' and MB['four'] == 'too many' and MB['cancel'] == ['bids', 'not yours', 'ok']
+                 and MB['flag'] == 0 and MB['wish1'].startswith('1/') and 'Kvalbein' in MB['wish1'] and 'Myre' in MB['wish1'] and MB['wish2'] == '1' and MB['gone'] == ['cancelled', [('bid', -400000), ('release', 400000)]]
+                 and all(MB['anon']) and all(MB['tabs']) and MB['priv'] == ['f', 'f', 'f']),
+              "Kystmegleren: start ≥ 40 % and buy-now ≤ 160 % of the value, the value held to the type, three listings, bids 2 % apart with the money bound and released in the ledger, buy-now, the settlement (boat to the winner, price less 5 % to the seller, unsold back), cancel only without bids, the right moves, the wish told once, a deleted seller's bid given back, the cash check counts the broker, guests and anon refused (B1–B8)", MB)
         # the right itself, not only that the call fails (the functions refuse anon by themselves too); and the player's rights stay
         RY['anonNo'] = [sql("select has_function_privilege('anon', 'public.%s', 'execute')" % f) == 'f' for f in ('guest_claim()', 'guest_merge(text)', 'push_plan(jsonb)', 'admin_cash_flags(int)', 'admin_tur_share(int)', 'saves_cash_check()')]
         RY['authYes'] = [sql("select has_function_privilege('authenticated', 'public.%s', 'execute')" % f) == 't' for f in ('guest_claim()', 'guest_merge(text)', 'push_plan(jsonb)', 'admin_cash_flags(int)', 'admin_tur_share(int)')]

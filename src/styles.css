@@ -1472,6 +1472,11 @@ body.pm #ecdisTop{visibility:hidden}
 @media (prefers-reduced-motion:reduce){.bm-name span,.bm-flag,.bm-fl,.bm-card{animation-duration:.01s;animation-delay:0s}}
 /* sponsored items (M6): marked as a partnership, the link out marked */
 .ic-sp-tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;background:#e8eef3;color:#2a4a62;border-radius:4px;padding:1px 6px;margin-right:4px}
+/* Kystmegleren between players (B in docs/planer/etter-tonys-test.md, 07.11.2026): the right marked on the card, the auction, the form */
+.mg-card .mb-lic,.mg-sheet .mb-lic{display:block;margin:2px 0}
+.mb-auc{border:1px solid #c9d6dd;background:#f7fafb}.mb-auc h4{margin-top:0}.mb-msg{margin:6px 0}.mb-top{color:#1e7a5c}
+.mb-auc input,.mb-form input{width:9.5em;max-width:55%;font:inherit;padding:6px 8px;border:1px solid #c9d6dd;border-radius:8px}
+.mb-empty h4{margin:0 0 4px}.mb-own{margin:2px 0}.mg-here h5{margin:10px 0 2px;font:700 12px var(--sans);text-transform:uppercase;letter-spacing:.05em;opacity:.7}
 .ic-sp-out{margin:4px 0 0;font-size:13px}.ic-sp-out small{opacity:.7}
 .ic-sp-link{color:#1d5f8f;font-weight:600}
 /* Kystkartet (ui/05h-kystkart.js): the small chart in the Milepæler app and the marks over the chart plotter */

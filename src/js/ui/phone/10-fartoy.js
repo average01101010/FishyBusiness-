@@ -4,22 +4,30 @@
   const payNote = (x, no, en, loanNo, loanEn) => '<p class="ph-note">' + L(no, en) + kr(x.cost) + (x.payoff ? ' · ' + L('innbyttet innfrir først ', 'the trade-in first pays off ') + kr(x.payoff) + L(' av gjelda', ' of the debt') : '') +
     (x.loanNeed ? ' · ' + L(loanNo || 'lån ', loanEn || 'loan ') + kr(x.bankL) + (x.inL > 0 ? ' + Innovasjon Norge ' + kr(x.inL) : '') + ', ' + L('egenkapital ', 'equity ') + kr(x.eqNeed) : '') + (x.ok ? '' : ' · <b>' + whyText(x) + '</b>') + '</p>';
   const accessText = v => { const lic = vget(v, 'lic'); return lic ? L('lukket gruppe, hjemmelslengde ', 'closed group, quota length ') + lic.hl : v.id === openVesselId() ? L('åpen gruppe når du selv er om bord', 'open group when you are aboard yourself') : L('ingen adgang: torsk, hyse og sei bare som bifangst', 'no access: cod, haddock and saithe only as bycatch'); };
-  const tiLocked = v => !!(S.order && S.order.vid !== null && (S.order.vid || S.cur) === v.id);
+  const tiLocked = v => !!(S.order && S.order.vid !== null && (S.order.vid || S.cur) === v.id) || !!mbSale(v);   // (or put out for sale at Kystmegleren, B1)
   // the ladder in «Neste mål»: the hand jig, the first jigging machine, blad B, the entry boat with a closed-group right, the next right
-  // up, the 14.99 m coastal vessel, and the ocean fleet when the chart reaches it. The two next steps are shown
+  // up, the 14.99 m coastal vessel, and the ocean fleet. The two next steps are shown. The ladder is the fleet's, not the boat you
+  // follow: a step is passed when the fleet has reached it or a step above it (Jonas 07.11.2026: with an ocean vessel and two sjarks the
+  // home screen still asked for the first jigging machine, which an ocean vessel cannot carry, and then for the old wooden snekke with
+  // a right under 7 m). The hand jig and the jigging machine are for the first boat alone; with an ocean vessel in the fleet the ladder
+  // is climbed, and «Neste mål» goes away once the company is an AS
   function goals(){
-    const steps = [], F = S.fm || {n:0, kr:0};
-    if (!S.boat.gear) steps.push({n:L('Håndjuksa med pilk og markkroker', 'Hand jig with pilk and fly hooks'), need:PRICE.gear, a:'fiske'});
-    if ((S.equip.jukse || 0) < 1) steps.push({n:L('Første juksamaskin', 'First jigging machine'), need:EQUIP.jukse.price, a:'utstyrb'});
-    if (!bladB()) steps.push({n:L('Blad B i fiskermanntallet', 'Blad B of the fishermen\'s register'), pc:Math.min(F.n / BLADB.days, F.kr / BLADB.kr, 1), a:'papers',
+    const steps = [], F = S.fm || {n:0, kr:0}, cls = v => VESSELS[vget(v, 'boat').type].cls;
+    const hav = S.fleet.some(v => cls(v) === 'hav'), past = S.fleet.length > 1 || S.fleet.some(v => cls(v) !== 'open' || vget(v, 'lic'));
+    if (!past && !S.boat.gear) steps.push({n:L('Håndjuksa med pilk og markkroker', 'Hand jig with pilk and fly hooks'), need:PRICE.gear, a:'fiske'});
+    if (!past && (BOAT.jukseMax || 0) > 0 && (S.equip.jukse || 0) < 1) steps.push({n:L('Første juksamaskin', 'First jigging machine'), need:EQUIP.jukse.price, a:'utstyrb'});
+    if (!hav && !bladB()) steps.push({n:L('Blad B i fiskermanntallet', 'Blad B of the fishermen\'s register'), pc:Math.min(F.n / BLADB.days, F.kr / BLADB.kr, 1), a:'papers',
       txt:fmt(Math.min(F.n, BLADB.days), 0) + ' / ' + BLADB.days + L(' landingsdager med deg om bord · ', ' landing days with you aboard · ') + kr(Math.min(F.kr, BLADB.kr)) + ' / ' + kr(BLADB.kr)});
     const ids = LIC_OFFERS.map(O => O.id).filter((x, i, a) => a.indexOf(x) === i);   // the rights in order (several boats share h10)
     const top = Math.max(-1, ...S.fleet.map(v => vget(v, 'lic')).filter(Boolean).map(l => ids.indexOf(l.id))), O = LIC_OFFERS.find(x => x.id === ids[top + 1]);
-    if (O){ const x = deal(VESSELS[O.ves].price + licValue(O), tradeIn(), innOK()); steps.push({n:O[S.lang], need:x.eqNeed + 5000, bank:true, a:'fartoy'}); }
-    if (!S.fleet.some(v => VESSELS[vget(v, 'boat').type].cls !== 'open')){ const k = 'kyst15', x = deal(VESSELS[k].price, 0); steps.push({n:VESSELS[k].name[S.lang], need:x.eqNeed + 5000, bank:true, a:'fartoy'}); }
+    if (O && !hav){ const x = deal(VESSELS[O.ves].price + licValue(O), tradeIn(), innOK()); steps.push({n:O[S.lang], need:x.eqNeed + 5000, bank:true, a:'fartoy'}); }
+    if (!S.fleet.some(v => cls(v) !== 'open')){ const k = 'kyst15', x = deal(VESSELS[k].price, 0); steps.push({n:VESSELS[k].name[S.lang], need:x.eqNeed + 5000, bank:true, a:'fartoy'}); }
     // the company (Jonas 09.10.2026): the Rederi app opens with it; after the boats, so the ladder comes first
     if (S.form !== 'AS') steps.push({n:L('Stift Rederi AS', 'Found a limited company'), need:TAX.as.capital + TAX.as.fee, a:'bank', txt:L('Et AS betaler 22 % av overskuddet og fører regnskap. Som ENK betaler du personskatt, som blir høyere når overskuddet vokser. Skattekortet i banken viser begge. Aksjekapital og gebyr: ', 'A company pays 22 % of the profit and keeps books. As ENK you pay personal tax, which grows with the profit. The tax card in the bank shows both. Share capital and fee: ') + kr(TAX.as.capital + TAX.as.fee)});
-    steps.push({n:L('Havfiske', 'Ocean fishing'), pc:0, lock:true, txt:L('Kommer når kartet utvides vestover', 'Comes when the chart is extended west')});
+    // the ocean fleet: the cheapest ocean vessel that can be bought, hull and permit (havPrice, as the buy pays it), for the fleet. It
+    // stood as «Havfiske, kommer når kartet utvides vestover» until the autoliner could be bought (Havsteget H2)
+    if (!hav){ const H = S.t / 60, c = Object.keys(VESSELS).filter(k => VESSELS[k].cls === 'hav' && !VESSELS[k].lock).map(k => [k, typeof havPrice === 'function' ? havPrice(k, H) : VESSELS[k].price]).sort((a, b) => a[1] - b[1])[0];
+      if (c){ const x = deal(c[1], 0); steps.push({n:VESSELS[c[0]].name[S.lang], need:x.eqNeed + 5000, bank:true, a:'fartoy'}); } }
     return steps.slice(0, 2).map(x => Object.assign(x, {pc:x.pc != null ? x.pc : Math.min(1, (x.bank ? eqCash() : Math.max(0, S.cash)) / Math.max(1, x.need))}));
   }
   function goalsCard(){
@@ -43,7 +51,8 @@
   function market(){
     const tab = sub.marked || 'open', h = [];
     if (mkSel) return sheet(mkSel.k, mkSel.o ? LIC_OFFERS.find(x => x.k === mkSel.o) : null);
-    if (mgSel){ const Lx = mktById(mgSel); if (Lx) return mgSheet(Lx).replace(/^<div class="ph-c">/, '<div>'); }   // a used boat opened from «Båter til salgs her» (M4)
+    if (mbPutSel){ const v = vesselById(mbPutSel); if (v) return mbForm(v).replace(/^<div class="ph-c">/, '<div>'); mbPutSel = null; }   // «Legg ut til salgs» from the yard (B1)
+    if (mgSel){ const Lx = MBC.byId(mgSel); if (Lx) return mgSheet(Lx).replace(/^<div class="ph-c">/, '<div>'); }   // a used boat opened from «Båter til salgs her» (M4, B)
     h.push(mgHere());
     h.push('<div class="ph-sub mk">' + [['open', 'Åpen gruppe', 'Open group'], ['lic', 'Med hjemmel', 'With a right'], ['kyst', 'Kystflåten', 'Coastal fleet'], ['hav', 'Havfiske', 'Ocean']].map(([k, no, en]) => '<button class="' + (tab === k ? 'on' : '') + '" data-pa="mktab" data-s="' + k + '">' + L(no, en) + '</button>').join('') + '</div>');
     const bn = '«' + S.boatName + '»', ti = tradeIn();
