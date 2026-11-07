@@ -164,6 +164,18 @@ Spillet har alt mange oppgraderinger, men de er spredt på fem steder, nesten al
 - **Høttens trekk og glipp** er ikke målt i en spilt dag (trebåten har ingen linehaler, og juksespillet timer en person): `gopUnitMin` og `jigSlip` er regnet i enhetstesten (21,4, 20,6 og 19,7 min per stamp hyseline; glipp 50, 40 og 30 %). Måles i OPP2 med `fiskeplay.py line`.
 - **Tallene i tabellene over står** (+10/+20 % tempo, −30/−50 % feil, −30/−60 % over ripa, −4/−8 % trekk). Målingen ga ingen grunn til å flytte dem; Jonas kan flytte dem.
 
+### OPP4, målt 07.11.2026 (trakten før datoen)
+
+Trakten (`admin_funnel`, «kjøpt trinn innen dag 7», migreringen `20261107160000_funnel_tier.sql`), regnet med samme regel som funksjonen, bare summer, 07.11.2026 15:03 UTC:
+
+| Kull | Startet (med statistikk) | Har hatt sju dager | Kjøpt trinn innen dag 7 |
+|---|---|---|---|
+| Før 07.11.2026 | 21 | 14 | 0 (0 %) |
+| Fra 07.11.2026 | 0 | 0 | – |
+
+- Ingen spiller hadde kjøpt et trinn ennå (0 `shop_buy` med `lv`, 0 `upg` de siste 30 dagene): trinnene kom med OPP1 samme dag rundt 13:00 UTC. Ukene før er derfor nullpunktet. Kullene er små: 7, 5, 0, 4 og 5 nye spillere med statistikk i ukene fra 5.10, 12.10, 19.10, 26.10 og 2.11. De fem fra uka 2.11 startet før datoen, men har dagene sine etter OPP1 og kan fortsatt telle; de første som startet med trinnene i butikken, leses av fra 14.11.2026. Tallet bør leses over to–tre uker før noe vurderes.
+- Bare spillere som deler bruksstatistikk, er med (de alene har økter og hendelser).
+
 **Rekkefølgen:** OPP1 og OPP4 først, fordi begge treffer første uke på trebåten og kan leses av i trakten. Så OPP3, OPP2 og OPP5. OPP1 og OPP3 rører `core/03-simulation.js`, `05-vessels.js`, `10-gear.js` og `14-crewlife.js`, som Ø8b S0, S2 og M (køen steg 5, 7, 8) også eier mens de går; rutinens regel om filer avgjør hvem som går først.
 
 ## Valget
