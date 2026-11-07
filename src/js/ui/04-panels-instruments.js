@@ -97,6 +97,9 @@ function hudLine3(how){
   // strip (the short words: it is 47 vw on a phone and 250 px on a tablet), the box (in the place of the next event, so it does not grow
   // over the little chart) and the card (with the other's name and when, in real time)
   if (atSea){ const w = sjvWarn(); if (w){ cls = w.sev; h = sjvSay(w, strip ? 'tiny' : how === 'card' ? 'box' : 'strip'); if (strip) hs = '· CPA ' + w.cpa + ' m'; else h += ' <small>· CPA ' + w.cpa + ' m ' + sjvWhen(w) + '</small>'; } }
+  // the hull (core/16c-hull.js, Fysikk 3; Jonas 07.11.2026 after Tony's test: «viste ikke om det var noe å være bekymret for»): red while
+  // the water rises, with the minutes to a full engine room and «Verft ›» (the nearest yard by Autonav); yellow while the pump keeps up
+  if (!h && atSea){ const hw = hullWarn(b); if (hw){ cls = hw.cls; go = 'yard'; h = hw.short; } }
   if (strip && atSea){
     if (!h && RU.ok){ const r = ruNow(); if (r.v !== 'ok'){ const it = r.items.find(i => i.v === r.v); cls = r.v === 'no' ? 'r2' : 'r1'; h = (r.v === 'no' ? '✕ ' : '! ') + (it ? ruShort(it) : L('Regler', 'Rules')); } }
     if (!h){ const M = motionHere(H, b), z = M.state; if (z.lvl){ cls = 'r' + z.lvl; h = {gm:L('Rank båt', 'Tender boat'), res:stabStill(b) ? L('Synkronrulling · rull ', 'Synchronous roll · rolls ') + Math.round((M.M.roll + M.M.heel) * 180 / Math.PI) + '°' : L('Synkronrulling · endre kurs eller fart', 'Synchronous roll · change course or speed'), roll:L('Kraftig rulling · ta det rolig', 'Heavy rolling · ease off')}[z.why] || ''; } }
@@ -117,6 +120,26 @@ function hudLine3(how){
   if (!h && tail) return '<div class="st nx q"><span class="l3">' + tail + '</span></div>';   // only the deck (or the work): the line itself
   if (!h && !tail && !strip) return '';
   return '<div class="st nx' + (cls ? ' ' + cls : '') + '"' + (go ? ' data-hgo="' + go + '"' : '') + '><span class="l3">' + h + '</span>' + (hs ? '<span class="l3s">' + hs + '</span>' : '') + (tail ? '<span class="l3d">' + tail + '</span>' : '') + '</div>';
+}
+// the leak as the strip and the box say it: null when the hull is whole. Red and the minutes left while the water rises (the pump cannot
+// keep up), yellow while the pump keeps up with it (core/16c-hull.js hullMinute has the same arithmetic)
+function hullWarn(b){
+  const d = b.dmg; if (!d || !(d.A > 0 || d.w > 0) || d.flood) return null;
+  const L = (no, en) => S.lang === 'no' ? no : en, Q = hullLeak(b), P = hullPump(b), rise = Q > P && d.w > 0;
+  if (rise){ const left = Math.max(0, Math.round((hullFlood(b) - d.w) / (Q - P))); return {cls:'r2', short:L('VANN I BÅTEN · fullt om ' + left + ' min · Verft ›', 'WATER IN THE BOAT · full in ' + left + ' min · Yard ›'), long:L('Vann i båten: pumpa klarer ikke å holde unna, motorrommet er fullt om ' + left + ' min', 'Water in the boat: the pump cannot keep up, the engine room is full in ' + left + ' min')}; }
+  if (Q > 0) return {cls:'r1', short:L('Lekkasje · pumpa holder unna · Verft ›', 'Leak · the pump keeps up · Yard ›'), long:L('Lekkasje ' + Math.round(Q) + ' l/min, lensepumpa holder unna. Få skroget reparert.', 'Leak ' + Math.round(Q) + ' l/min, the bilge pump keeps up. Have the hull mended.')};
+  if (d.w > 0) return {cls:'r1', short:L('Vann i båten · pumpa lenser · Verft ›', 'Water in the boat · pumping out · Yard ›'), long:L(Math.round(d.w) + ' liter i båten, pumpa lenser', Math.round(d.w) + ' litres aboard, pumping out')};
+  return null;
+}
+// «Kjør til verft»: Autonav to the nearest yard, as the dock's «Kjør dit» to a buoy (10c-dock.js goTo)
+function hudGoYard(){
+  const b = S.boat, L = (no, en) => S.lang === 'no' ? no : en, y = nearestYard(b.pos); if (!y){ toast(L('Fant ikke noe verft.', 'No yard found.')); return; }
+  if (b.status === 'sailing'){ S.plan = null; b.status = 'idle'; b.v = 0; }
+  if (!['idle', 'port'].includes(b.status) || (S.plan && S.plan.depAt)){ toast(L('Båten er opptatt. Stopp det den holder på med først.', 'The boat is busy. Stop what it is doing first.')); return; }
+  if (S.draft.length) draftEdit(() => { S.draft = []; });
+  hudCardOpen(false); if (typeof DOCK !== 'undefined' && DOCK.close) DOCK.close(); openPlotter();
+  toast(L('Autonav til ' + y.name + ', ' + fmt(dist(b.pos, y.p) / NM, 1) + ' nm. Trykk «Kast loss» når ruta ligger.', 'Autonav to ' + y.name + ', ' + fmt(dist(b.pos, y.p) / NM, 1) + ' nm. Tap «Cast off» once the route is there.'), 8000);
+  leiaTo({x:y.p.x, y:y.p.y});
 }
 function renderHud(){
   const b = S.boat, H = S.t / 60, no = S.lang === 'no', L = (a, c) => no ? a : c, F = hudFigures(), {W, hs, lvl, atSea, HF} = F;
@@ -149,6 +172,8 @@ function renderHud(){
   const gauges = card ? '<div class="gauges open">' + gs + '</div>' : '<button type="button" class="gauges' + (showAll ? ' open' : '') + '" data-hfull aria-label="' + L('Vis alle tallene', 'Show all the figures') + '">' + gs + '</button>';
   // what matters now, as rows with what to do
   const now = [];
+  // water in the boat (Fysikk 3): the leak and the pump, red while it rises, with «Kjør til verft»
+  if (atSea){ const hw = hullWarn(b); if (hw) now.push('<div class="row warn"><span>' + L('Skroget', 'The hull') + '</span><b class="' + hw.cls + '">' + hw.long + '</b><button type="button" class="hgo" data-hgo="yard">' + L('Kjør til verft', 'Go to a yard') + '</button></div>'); }
   if (S.fleet && S.fleet.length > 1) now.push('<div class="row"><span>' + L('Båt', 'Vessel') + '</span><b>' + S.boatName + (meAboard() ? ' ⚓' : '') + '</b></div>');
   // her own gear in the sea (spilltest 3, U2; Jonas 05.11.2026, V2 B): how far to the nearest buoy and how she moves; red with «Kjør dit»
   // a mile off
@@ -276,7 +301,7 @@ const INSTR = (() => {
 // a tap in the box: «Kjør dit» to the buoy, the fold and the card, the whole table, the rules line (the Regler app); on the strip itself,
 // the whole box as a card (U2-1)
 hud.addEventListener('click', e => {
-  const go = e.target.closest('[data-hgo]'); if (go){ e.stopPropagation(); const s = mySets().find(x => String(x.id) === go.dataset.hgo); if (s) DOCK.goTo(s); return; }
+  const go = e.target.closest('[data-hgo]'); if (go){ e.stopPropagation(); if (go.dataset.hgo === 'yard'){ hudGoYard(); return; } const s = mySets().find(x => String(x.id) === go.dataset.hgo); if (s) DOCK.goTo(s); return; }
   if (e.target.closest('[data-hrest]')){ e.stopPropagation(); hudCardOpen(false); doAct({dataset:{act:'rest'}, disabled:false}); return; }   // the bunk from the box (U2-2)
   if (e.target.closest('[data-hmin]')){ e.stopPropagation(); hudFold('hud'); return; }
   if (e.target.closest('[data-hcard]')){ e.stopPropagation(); hudCardOpen(false); return; }

@@ -2254,7 +2254,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 89 `srchCard()`
   - 113 `srchSvg(u)`
 
-## `src/js/ui/04-panels-instruments.js` (306 linjer)
+## `src/js/ui/04-panels-instruments.js` (331 linjer)
 
 ---------- estimates ----------
 
@@ -2269,15 +2269,17 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 68 `hudFigures()`
   - 91 `hudShortEv(txt)`
   - 92 `hudLine3(how)`
-  - 121 `renderHud()`
-  - 186 `liveFrac()`
-  - 187 `livePose(frac)`
-  - 210 `vnoise2(x, y, s)`
-  - 216 `microBottom(p, d)`
-- **218** instruments: GPS and echo sounder
-  - 290 `hudCardOpen(on)`
-  - 297 `hudClasses(stripOn, cardOn)`
-  - 301 `hudFold(which)`
+  - 126 `hullWarn(b)`
+  - 135 `hudGoYard()`
+  - 144 `renderHud()`
+  - 211 `liveFrac()`
+  - 212 `livePose(frac)`
+  - 235 `vnoise2(x, y, s)`
+  - 241 `microBottom(p, d)`
+- **243** instruments: GPS and echo sounder
+  - 315 `hudCardOpen(on)`
+  - 322 `hudClasses(stripOn, cardOn)`
+  - 326 `hudFold(which)`
 
 ## `src/js/ui/05-tattoo-art.js` (169 linjer)
 
@@ -2764,22 +2766,22 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 273 `tipPlace(txt, T0, o)`
   - 298 `tipToast()`
 
-## `src/js/ui/07c-handbook.js` (243 linjer)
+## `src/js/ui/07c-handbook.js` (245 linjer)
 
 Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
 
 - **1** Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
   - 10 `hbState()`
-  - 173 `hbPick()`
-  - 181 `hbEv(id, how)`
-  - 182 `hbDone(id)`
-  - 183 `hbSkip(ch, id)`
-  - 185 `hbReady()`
-- **187** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
-  - 193 `appShown(id)`
-  - 200 `appUnlock(id)`
-  - 202 `appSeen(id)`
-  - 203 `hbUpdate()`
+  - 175 `hbPick()`
+  - 183 `hbEv(id, how)`
+  - 184 `hbDone(id)`
+  - 185 `hbSkip(ch, id)`
+  - 187 `hbReady()`
+- **189** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
+  - 195 `appShown(id)`
+  - 202 `appUnlock(id)`
+  - 204 `appSeen(id)`
+  - 205 `hbUpdate()`
 
 ## `src/js/ui/10g-wardrobe.js` (133 linjer)
 
