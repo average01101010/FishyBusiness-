@@ -492,3 +492,6 @@
 2026-11-07 02:31	ccr-5c109e47-twgn6s	a140a831+	bunkertest	OK	51	3d	alene	
 2026-11-07 02:32	ccr-5c109e47-twgn6s	a140a831+	routetest	OK	42	lite	alene	
 2026-11-07 02:33	ccr-5c109e47-twgn6s	a140a831+	charttest	FEIL	59	lite	alene	FEIL hele landet: Hardangervidda, Børgefjell og Lyngen er land (ingen sømmer mellom landbitene), Norskehavet er sjø (kysten fra kjernen)  [[167, 203, 235], [167
+2026-11-07 02:46	ccr-5c109e47-twgn6s	29cd0117	driftsplan2test	OK	89	lite	alene	
+2026-11-07 02:46	ccr-5c109e47-twgn6s	29cd0117	driftsplan2ui	OK	26	lite	alene	
+2026-11-07 03:00	ccr-5c109e47-twgn6s	29cd0117	havplantest	FEIL	791	lite	alene	FEIL the hold at 95 %: the strings hauled home, the landing at the plant, the other crew signs on [0, 1, 585184, [0, 1]]
