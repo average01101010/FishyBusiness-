@@ -82,10 +82,10 @@ async def main():
         R['skiffOld'] = await pg.evaluate(RUN, {'type': 'skiff', 'U': 10, 'd': 315, 'rel': 180, 'kn': 18, 'T': 90, 'force': False})
         print(json.dumps(R, ensure_ascii=False))
         # the pictures: the sjark in head sea (from the bow quarter), her stern in a following sea, and the slam's spray; both formats.
-        # SwiftShader draws a frame every second or so, and the waves run on the page's clock while the hull steps at most 0.1 s a frame,
-        # so she would be drawn lagging her sea (out of it on a crest); here the page's clock is made to go 1/30 s a frame, as on a tablet
-        await pg.evaluate("""() => { if (window.__vclk) return; const pn = performance.now.bind(performance), raf = window.requestAnimationFrame.bind(window); let v = pn();
-          window.__vf = 0; performance.now = () => v; window.requestAnimationFrame = cb => raf(() => { v += 1000 / 30; window.__vf++; cb(v); }); window.__vclk = true; }""")
+        # SwiftShader draws a frame every second or two, and the waves run on the page's clock while the hull steps at most 0.1 s a frame,
+        # so she would be drawn lagging her sea (out of it on a crest). Here the page's clock goes 25 times slower (a frozen clock hangs
+        # the work that runs until the clock has moved, ssStep): a frame of 1-2.5 s is 40-100 ms of the game's, and the hull gets all of it
+        await pg.evaluate("""() => { if (window.__vclk) return; const pn = performance.now.bind(performance), r0 = pn(); performance.now = () => r0 + (pn() - r0) * 0.04; window.__vclk = true; }""")
         shots = []
         for name, rel, slam in (('motsjo', 180, False), ('medsjo', 0, False), ('slag', 180, True)):
             for fmt, (w, h) in (('liggende', (1280, 800)), ('staaende', (800, 1280))):
@@ -93,12 +93,12 @@ async def main():
                 await pg.evaluate("""([U, rel]) => { const D = G3._debug, b = S.boat; if (b.type !== 'sjark'){ b.type = 'sjark'; applyVessel(); G3.vesselChanged(); }
                   b.status = 'idle'; b.port = null; S.plan = null; b.v = 0; const g = GROUNDS[0].p; b.pos = {x:g.x, y:g.y}; WX_FORCE = {w:U, d:315}; D.WV.init = false;
                   D.waves(1 / 30, S.t / 60); D.bv.hsea.on = true; const hd = D.WV.dir + rel * Math.PI / 180; b.heading = hd; D.bv.init = false;
-                  const c = D.cam; c.helm = false; c.dist = 34; c.pitch = 0.2; c.yaw = rel ? 0.9 : 2.6; window.__f0 = window.__vf; }""", [u6['U'], rel])
-                # 4 s of the sea for her to settle into it; for the slam, its spray thrown 6 frames before the picture
-                await pg.wait_for_function("window.__vf - window.__f0 > 120", timeout=600000, polling=500)
+                  const c = D.cam; c.helm = false; c.dist = 34; c.pitch = 0.2; c.yaw = rel ? 0.9 : 2.6; window.__p0 = performance.now(); }""", [u6['U'], rel])
+                # 4 s of the game's time for her to settle into the sea; for the slam, its spray thrown a quarter of a second before the picture
+                await pg.wait_for_function("performance.now() - window.__p0 > 4000", timeout=900000, polling=1000)
                 if slam:
-                    await pg.evaluate("() => { G3._debug.bv.hsea.slam = {t:performance.now() / 1000, s:2.4}; window.__f0 = window.__vf; }")
-                    await pg.wait_for_function("window.__vf - window.__f0 >= 6", timeout=300000, polling=200)
+                    await pg.evaluate("() => { G3._debug.bv.hsea.slam = {t:performance.now() / 1000, s:2.4}; window.__p0 = performance.now(); }")
+                    await pg.wait_for_function("performance.now() - window.__p0 > 250", timeout=300000, polling=200)
                 await pg.evaluate("G3.hold(true)")
                 f = f'hull3d_{name}_{fmt}.png'; await pg.screenshot(path=f, timeout=300000); shots.append(f)
                 await pg.evaluate("G3.hold(false)")
