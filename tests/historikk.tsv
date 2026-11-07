@@ -848,3 +848,16 @@
 2026-11-07 15:15	plan/2026-11-07-opp4	d55d7a9a+	havtur	FEIL	89	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
 2026-11-07 15:23	plan/2026-11-07-opp4	24eb4a19	boottest	OK	28	lite	alene	
 2026-11-07 15:24	plan/2026-11-07-opp4	24eb4a19	opptest	OK	47	lite	alene	
+2026-11-07 15:35	plan/2026-11-07-opp4	9726065a+	opptest	FEIL	63	lite	samtidig	FEIL det som kan kjøpes, står først med det billigste øverst, og det fulle sist; summen av trinnene og «?» til Håndboka  {'order': ['kniv', 'ekko', 'jukse', 'te
+2026-11-07 15:35	plan/2026-11-07-opp4	9726065a+	vesseltest	OK	41	lite	samtidig	
+2026-11-07 15:36	plan/2026-11-07-opp4	9726065a+	opptest	OK	53	lite	alene	
+2026-11-07 15:37	plan/2026-11-07-opp4	9726065a+	opptest	FEIL	45	lite	alene	FEIL siden står først under Om bord › Båten: kniven med bilde, ●●○, gevinsten i egne tall (330 → 360 kg/t ved bordet) og prisen 4 500 kr  {'lv': 2, 'max': 3, 'd
+2026-11-07 15:38	plan/2026-11-07-opp4	65d8bbb2	krabbefabrikktest	OK	21	lite	samtidig	
+2026-11-07 15:38	plan/2026-11-07-opp4	65d8bbb2	fabrikktest	FEIL	14	lite	samtidig	FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined |
+2026-11-07 15:38	plan/2026-11-07-opp4	65d8bbb2	fleet3test	OK	17	lite	samtidig	
+2026-11-07 15:38	plan/2026-11-07-opp4	65d8bbb2	vesseltest	OK	27	lite	samtidig	
+2026-11-07 15:38	plan/2026-11-07-opp4	65d8bbb2	adminbuytest	OK	12	lite	samtidig	
+2026-11-07 15:40	plan/2026-11-07-opp4	65d8bbb2	havtur	FEIL	101	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
+2026-11-07 15:40	plan/2026-11-07-opp4	65d8bbb2	markettest	OK	32	lite	samtidig	
+2026-11-07 15:40	plan/2026-11-07-opp4	65d8bbb2	opptest	OK	56	lite	samtidig	
+2026-11-07 15:41	plan/2026-11-07-opp4	65d8bbb2+	docktest	OK	63	lite	samtidig	

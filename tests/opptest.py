@@ -127,9 +127,10 @@ async def main():
         L0 = r['L'] if r else {}
         check(all(k in L0 for k in ('jukse', 'linehaler', 'teinehaler', 'motor', 'tank', 'ekko', 'antigro')) and 'garnhaler' not in L0 and 'hold' not in L0 and 'cabin' not in L0 and 'stab' not in L0 and L0['ekko']['max'] == 2,
               'trebåten har stigene som passer henne; ikke garnhaleren (fra 7,5 m), lasterommet (ett kar, fullt fra start), lugarer, stabilisering eller sonaren', sorted(L0))
-        check(L0.get('motor') and L0['motor']['gain'].endswith(' kn') and '→' in L0['motor']['gain'] and L0['motor']['dots'] == '●○○' and L0.get('linehaler') and L0['linehaler']['gain'].endswith('min/stamp') and '→' in L0['linehaler']['gain'],
-              'motoren i knop, linehaleren i minutter per stamp, nå og med neste trinn', {k: L0.get(k, {}).get('gain') for k in ('motor', 'linehaler')})
-        check(r and r['order'][-1] == 'hott' and r['order'].index('kniv') < r['order'].index('jukse') and r['sum'].endswith('trinn') and r['q'],
+        check(L0.get('motor') and ' kn, +' in L0['motor']['gain'] and L0['motor']['gain'].endswith(' diesel') and '→' in L0['motor']['gain'] and L0['motor']['dots'] == '●○○' and L0.get('linehaler') and L0['linehaler']['gain'].endswith('min/stamp') and '→' in L0['linehaler']['gain'],
+              'motoren i knop og hva den koster i diesel, linehaleren i minutter per stamp, nå og med neste trinn', {k: L0.get(k, {}).get('gain') for k in ('motor', 'linehaler')})
+        od = (r or {}).get('order') or []
+        check(od and od[-1] == 'hott' and 'kniv' in od and 'jukse' in od and od.index('kniv') < od.index('jukse') and r['sum'].endswith('trinn') and r['q'],
               'det som kan kjøpes, står først med det billigste øverst, og det fulle sist; summen av trinnene og «?» til Håndboka', {'order': r and r['order'], 'sum': r and r['sum']})
         check(r and 'Du er her' in r['at'].get('butikk', {}).get('txt', '') and kn['buy'] and not r['at']['butikk']['go'], 'ved butikkens kai i Finnsnes: «Du er her», og prisen er knappen til kjøpet; ingen Autonav', r and r['at'])
         check(r and '3 fisk' in r['num'] and 'tapt over ripa denne uka' in r['num'] and 'per stamp line i dag' in r['num'] and ' min' in r['num'] and 'NaN' not in r['txt'] and 'undefined' not in r['txt'],
