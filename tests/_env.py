@@ -26,7 +26,12 @@ BASE = 'http://127.0.0.1:%d/' % _SRV.server_port
 # «#seed=N» (29.10.2026): the game swaps Math.random for a seeded generator (core/01-world.js), so the weather, the catch and the crew
 # repeat from run to run and a red test is a bug, not a bad roll. KYST_SEED=0 turns it off, another number gives another run.
 SEED = os.environ.get('KYST_SEED', '1')
-GAME_TUT = BASE + 'index.html#qfix' + (',seed=' + SEED if SEED != '0' else '')
+# «ro0» (UI 2, U2-4, 07.11.2026): the calm is off. In the game the buttons slide out when the screen has not been touched for eight
+# seconds (ui/10c-dock.js CALM), and most tests wait longer than that between their clicks: Playwright would wait for a button the
+# calm has hidden until its time-out. So every test plays with the calm off, but the two that are about it: tut.py (the calm must
+# never come in the first trip; the port for U2-4) and roetest.py, which open GAME_RO, the game as a player has it
+GAME_RO = BASE + 'index.html#qfix' + (',seed=' + SEED if SEED != '0' else '')
+GAME_TUT = GAME_RO + ',ro0'
 # the tests play without the first-trip tutorial; tut.py uses GAME_TUT
 GAME = GAME_TUT + '#notut'
 # KYST_LITE=1 (tests/run.py sets it for the tests that do not look at 3D): the game runs as before, but no 3D frame is drawn,

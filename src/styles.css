@@ -1694,3 +1694,11 @@ body.v3d #hud{z-index:6} body.v3d #plotMin{z-index:7}   /* (the chart's fold but
 .fl-more[open] summary{background:var(--t-ink);color:#fff}
 .fl-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:4;min-width:min(260px,100%);display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--s-card);border:1px solid rgba(22,50,63,.12);border-radius:var(--r-card);box-shadow:0 6px 20px rgba(11,23,32,.18)} .fl-menu .ph-btn{margin:0;text-align:left} .fl-menu .ph-btncol{margin:0}
 .fl-acc{display:flex;justify-content:space-between;align-items:center;gap:10px;font:500 var(--fs-sm)/1.35 var(--sans);color:var(--t-ink)} .fl-acc .ph-btn{margin:0;flex:0 0 auto}
+/* UI 2, U2-4: the calm (ui/10c-dock.js CALM; docs/planer/ui-2-staaende.md 4.5, Jonas' V8 A). Eight seconds without a touch: the row but
+   its main button (.hero, or .stay: the plan's main button where the row does not draw it as the hero) and Om bord, and the camera and
+   Kino (and Kino's «Skjul»), fade to faint over 0.6 s, and come back in 0.25 s on a touch. Faint, not gone (Jonas 07.11.2026: «Det kan
+   bli forvirrende for spillerne om knappene er helt borte»; «Svake, trykk virker»): they stand where they stood and a tap on one works
+   at once (the touch that wakes the calm is taken first, ui/10c-dock.js calmTouch). The strip, the little chart, the compass, the phone
+   and the deck log's tab are not touched */
+#dock > .dk-b,.ov.cam,.ov.kino,.ov.kino2{transition:opacity .25s ease}
+body.calm #dock > .dk-b:not(.hero):not(.stay):not([data-dk="beh"]),body.calm .ov.cam,body.calm .ov.kino,body.calm .ov.kino2{opacity:.2;transition:opacity .6s ease}

@@ -6,7 +6,7 @@ settings (05.10.2026). It opens on Father's letter (tapped open, read, «Ta over
 at test pace (S.mult) to save time. Checks: every step comes in order, the guide ends with
 "tut":0, the jig aboard from the start, the first fill of ice on the plant after the landing, the free luxury luck, a full hold at landing, and a login bonus row on the landing note.
 Prints OK or FEIL per check and ends with the old summary line {"tut":0, …} and the page errors."""
-from _env import GAME_TUT as GAME
+from _env import GAME_RO as GAME   # the calm on, as a player has it: the first trip must never see it (U2-4)
 import asyncio, json, os, time
 from playwright.async_api import async_playwright
 

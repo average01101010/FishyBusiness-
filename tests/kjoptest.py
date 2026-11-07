@@ -16,7 +16,7 @@ CFG = {'hosts': ['127.0.0.1', 'localhost'], 'supabaseUrl': 'https://sb.test', 's
 STUB = """window.DSB_CLOUD = %s;
 window.DSB_AUTHKIT = {createClient: async () => ({getUser: () => ({id:'user_test', email:'spiller@test.no'}), getAccessToken: async () => 'tok_test', signIn: () => {}, signUp: () => {}, signOut: () => {}})};""" % json.dumps(CFG)
 BASE = GAME.split('#')[0]
-url = lambda q='': BASE + (('&' if '?' in BASE else '?') + q if q else '') + '#notut'
+url = lambda q='': BASE + (('&' if '?' in BASE else '?') + q if q else '') + '#notut,ro0'   # (ro0: the calm off, tests/_env.py)
 
 
 async def main():
@@ -101,7 +101,7 @@ async def main():
         # 5. on the game's own site with the cloud off (#nocloud, no network; Ø6 funn 5): the shop is closed, nothing is given free
         ctx2 = await br.new_context(viewport={'width': 1100, 'height': 800}); await ctx2.add_init_script(STUB); await ctx2.route('https://sb.test/**', handle)
         pg4 = await ctx2.new_page(); pg4.on('pageerror', lambda e: errs.append(str(e)))
-        await boot(pg4, BASE + '#notut,nocloud'); await pg4.wait_for_timeout(800)
+        await boot(pg4, BASE + '#notut,nocloud,ro0'); await pg4.wait_for_timeout(800)
         r5 = await pg4.evaluate("""(async () => { S.tut = 0; const n0 = (S.haillInv || {}).haill || 0; PHONE.open('haill'); await new Promise(r => setTimeout(r, 300));
           const b = document.querySelector('#phone [data-pa=haillbuy][data-k=haill]'), lab = b && b.textContent; if (b) b.click(); await new Promise(r => setTimeout(r, 300));
           const n1 = (S.haillInv || {}).haill || 0; PHONE.show(false); return {on:CLOUD.on, pub:pubHost(), mode:shopMode(), lab, given:n1 - n0}; })()""")

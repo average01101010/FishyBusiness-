@@ -256,7 +256,7 @@ Planen (kap. 3a i `docs/planer/havsteget-h1b-rammen.md`) sa at målestokken ved 
 
 ## 5.24 Kino-visning (03.10.2026, ny regi 01.11.2026)
 
-- **Knappen** (filmkamera) under kameraknappen skrur kino på og av (`G3.kino`, `KINO` i `view3d/24-cinema.js`).
+- **Knappen** (filmkamera) under kameraknappen skrur kino på og av (`G3.kino`, `KINO` i `view3d/24-cinema.js`). Roen (UI 2, U2-4, 07.11.2026, `docs/systemer/ui-og-telefon.md`) bygger på «Skjul»: etter åtte sekunder uten trykk blir knappene, Kamera, Kino og «Skjul» svake av seg selv, mens stripa, minikartet og kompasset står.
 - **Brukes til trailerklipp** (Jonas 01.11.2026: «det må se bra ut»). Regien ble bygd om 01.11.2026 fra seks faste opptak etter tur til fjorten slag som velges etter hvor båten er.
 - **Opptakene** (`KSHOT`) varer 8–20 s. Hvert har en vekt ute på havet og en ved land, og en lengde:
   - `drone`: sirkler rundt båten, stiger litt og zoomer sakte inn

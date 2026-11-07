@@ -6,7 +6,7 @@ import asyncio, json
 from playwright.async_api import async_playwright
 from _env import *
 
-AUTO = BASE + 'index.html' + ('#seed=' + SEED if SEED != '0' else '') + '#notut'
+AUTO = BASE + 'index.html' + ('#seed=' + SEED if SEED != '0' else '') + '#notut,ro0'   # (ro0: the calm off, tests/_env.py)
 
 
 def check(c, what, extra=''): print(('OK  ' if c else 'FEIL') + ' ' + what + (('  ' + json.dumps(extra, ensure_ascii=False)) if extra != '' else ''))

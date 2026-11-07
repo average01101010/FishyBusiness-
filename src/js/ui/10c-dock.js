@@ -90,16 +90,16 @@ const DOCK = (() => {
     if (p.rorbu) return [restItem(), I('gjestebok', 'oppdrag', 'Gjestebok', 'Guestbook', {page:'gbook'}), behItem()].filter(Boolean);
     // Father's naust is a home, not a place of trade (Jonas 07.10.2026): rest, the boathouse itself and Om bord (the crew is a tab there);
     // the shop, the plant and the yard are at their own quays
-    if (berthKind(b) === 'naust') return [restItem(), I('naustup', 'naust', 'Naustet', 'Boathouse', {run:() => { NAUST3D.open(); }}), behItem()].filter(Boolean);
+    if (berthKind(b) === 'naust') return [restItem(), I('naustup', 'naust', 'Naustet', 'Boathouse', {run:() => { NAUST3D.open(); }, stay:true}), behItem()].filter(Boolean);
     // the three places of trade (Jonas 07.10.2026): the plant (core/06c-steder.js portServices) takes the catch and sells ice, bait and fuel,
     // the tackle shop sells gear and electronics, the yard sells and mends boats and sells fuel; each has its own button, and all three have the village
     const sv = portServices(p, berthKind(b));
     return [restShow() ? restItem() : null,
-      sv.mottak ? I('marked', 'marked', 'Mottak', 'Plant', {menu:'marked', dot:p.mottak && tot > 0.5 && !b.land}) : null,
+      sv.mottak ? I('marked', 'marked', 'Mottak', 'Plant', {menu:'marked', dot:p.mottak && tot > 0.5 && !b.land, stay:p.mottak && tot > 0.5 && !b.land}) : null,
       // the first trip shows only the plant (Onboarding 2, O5, V7 A): the shop, the village, the yard and the inventory come after it
       sv.butikk && !tutOn() ? I('butikk', 'butikk', 'Butikk', 'Shop', {menu:'butikk', dot:pickAt(b.port).length > 0}) : null,
       tutOn() ? null : I('bygd', 'bygd', 'Bygd', 'Village', {menu:'bygd'}),
-      sv.verft && !tutOn() ? I('verft', 'verft', 'Verft', 'Yard', {menu:'verft', dot:svcOverdue() > 0}) : null,
+      sv.verft && !tutOn() ? I('verft', 'verft', 'Verft', 'Yard', {menu:'verft', dot:svcOverdue() > 0, stay:svcOverdue() > 0}) : null,
       tutOn() ? null : behItem()].filter(Boolean);   // «Planlegg» went 02.10.2026: the little chart opens the plotter
   }
   function menuItems(m){
@@ -202,6 +202,8 @@ const DOCK = (() => {
     return {moor, anc};
   }
   // the nearest plant that takes her catch (06b-coastports.js plantsNear; portWhy keeps an ocean vessel to the quays that fit her)
+  // a full hold as the row sees it (the way to the plant as the hero, spilltest 3 U5), and the calm (a full hold breaks it)
+  const holdFull = () => (typeof holdFmt === 'function' ? holdFmt().load : holdTotal()) >= capHold() - 0.5;
   function plantNear(){ const b = S.boat; try { return plantsNear(b.pos, 10).find(n => !portWhy(n.pt, b.type)) || null; } catch (e){ return null; } }
   // the row at sea (UI 2, U2-3, plan 4.3): the hero, up to three contextual buttons and Om bord last, Telephone beside it; never more
   // than five when the screen stands. Auto-nav is out of the row (the little chart opens the plotter, where Autonav is #rAuto; «Til
@@ -210,7 +212,7 @@ const DOCK = (() => {
   function seaItems(){
     // (a quarrel aboard and the plan's stop are the dot on Om bord, U2-2; the crew page is its tab)
     const b = S.boat, beh = behItem(), rest = restShow() ? restItem() : null;   // no «Hjem» (the user's wish 02.10.2026: Autonav to the harbour, or «Returner samme vei» in the plotter)
-    const full = (typeof holdFmt === 'function' ? holdFmt().load : holdTotal()) >= capHold() - 0.5;
+    const full = holdFull();
     const tut = typeof HAIL !== 'undefined' ? HAIL.dockItem(I) : null;
     const ptow = typeof PTOW !== 'undefined' ? PTOW.dockItem(I) : null;   // «Ta slep» by a player's broken-down boat (ui/10o-ptow.js)   // another player's boat within 1 nm (ui/10n-hail.js)
     if (b.status === 'idle'){
@@ -227,14 +229,14 @@ const DOCK = (() => {
       const {moor, anc} = lieItems();
       return [jig, ptow, haul, plant, gearItem(s, nb, ch), moor, anc, tut, rest, beh].filter(Boolean);   // (the bunk, #70; the hero goes first in render)
     }
-    if (b.status === 'fishing' && b.gop) return [I('gstop', 'stopp', 'Stopp arbeidet', 'Stop the work', {act:'gstop'}), beh];
+    if (b.status === 'fishing' && b.gop) return [I('gstop', 'stopp', 'Stopp arbeidet', 'Stop the work', {act:'gstop', stay:true}), beh];
     if (gopAfter(b)) return [beh];   // the minute after the gear work (F4)
     if (b.status === 'fishing') return [I('stopfish', 'stopp', 'Stopp', 'Stop', {act:'stopfish'}),
       b.deckStop && !b.deckEnd ? I('deckgo', 'videre', 'Fisk videre', 'Fish on', {act:'deckgo', pri:true}) : !b.deckStop && deckPending() > 0.5 ? I('deckstop', 'sloy', 'Stopp og sløy', 'Stop and gut', {act:'deckstop'}) : null,
       G3.isActive() && window.JIGG && (window.jigActive || window.JIGG.ok()) ? I('jigg', 'juks', window.jigActive ? 'Slutt å jukse' : 'Jukse selv', window.jigActive ? 'Stop jigging' : 'Jig yourself', {act:'jigg', pri:!window.jigActive, on:!!window.jigActive}) : null, rest, beh].filter(Boolean);
-    if (b.status === 'sailing') return [I('stop', 'stopp', 'Stopp båten', 'Stop', {act:'stop'}), tut, rest, beh].filter(Boolean);
+    if (b.status === 'sailing') return [I('stop', 'stopp', 'Stopp båten', 'Stop', {act:'stop', stay:true}), tut, rest, beh].filter(Boolean);
     if (b.status === 'tow') return [beh];   // the tow takes its time (no fast forward: one clock for everyone)
-    if (b.status === 'adrift' || b.status === 'engine' || b.status === 'aground') return [I('hjelp', 'hjelp', 'Hjelp', 'Help', {run:() => PHONE.open('redning'), warn:true}), beh];
+    if (b.status === 'adrift' || b.status === 'engine' || b.status === 'aground') return [I('hjelp', 'hjelp', 'Hjelp', 'Help', {run:() => PHONE.open('redning'), warn:true, stay:true}), beh];
     return [beh];
   }
   // what the pill over the buttons said until UI 2 (U2-1, docs/planer/ui-2-staaende.md 4.2, 06.11.2026): now the status strip's third
@@ -271,7 +273,7 @@ const DOCK = (() => {
   // a button: the icon, the label (with a second line after « · » when sub: «Til mottaket» over «Botnhamn 3,2 nm») and, greyed, the
   // reason under the label from data-why (styles.css .dk-b.off[data-why]::after; a tap still gives the whole text as a toast)
   const btn = (x, small) => { const lbl = L(x.lbl[0], x.lbl[1]), i = x.sub ? lbl.indexOf(' · ') : -1;
-    return '<button type="button" class="dk-b' + (small ? ' sm' : '') + (x.pri ? ' pri' : '') + (x.hero && !small ? ' hero' : '') + (x.warn ? ' warn' : '') + (x.on ? ' on' : '') + (x.off ? ' off' : '') + (x.ghost ? ' ghost' : '') + (x.wide ? ' wide' : '') + (x.menu && (menu === x.menu || ownerOf(menu) === x.menu) ? ' open' : '') + '" data-dk="' + x.id + '"' + (x.act ? ' data-act="' + x.act + '"' : '') + (x.off ? ' aria-disabled="true"' : '') + (x.off && x.why ? ' data-why="' + esc(x.why) + '"' : '') + '><span class="dk-i">' + IC[x.ic] + (x.dot ? '<i class="dk-dot"></i>' : '') + (x.bc ? '<i class="dk-bait' + (x.bc === 'none' ? ' e' : '') + '"' + (x.bc === 'none' ? '' : ' style="--bc:' + x.bc + '"') + '></i>' : '') + '</span><span class="dk-l">' + esc(i > 0 ? lbl.slice(0, i) : lbl) + '</span>' + (i > 0 ? '<span class="dk-sub">' + esc(lbl.slice(i + 3)) + '</span>' : '') + '</button>'; };
+    return '<button type="button" class="dk-b' + (small ? ' sm' : '') + (x.pri ? ' pri' : '') + (x.hero && !small ? ' hero' : '') + (x.warn ? ' warn' : '') + (x.on ? ' on' : '') + (x.off ? ' off' : '') + (x.ghost ? ' ghost' : '') + (x.stay ? ' stay' : '') + (x.wide ? ' wide' : '') + (x.menu && (menu === x.menu || ownerOf(menu) === x.menu) ? ' open' : '') + '" data-dk="' + x.id + '"' + (x.act ? ' data-act="' + x.act + '"' : '') + (x.off ? ' aria-disabled="true"' : '') + (x.off && x.why ? ' data-why="' + esc(x.why) + '"' : '') + '><span class="dk-i">' + IC[x.ic] + (x.dot ? '<i class="dk-dot"></i>' : '') + (x.bc ? '<i class="dk-bait' + (x.bc === 'none' ? ' e' : '') + '"' + (x.bc === 'none' ? '' : ' style="--bc:' + x.bc + '"') + '></i>' : '') + '</span><span class="dk-l">' + esc(i > 0 ? lbl.slice(0, i) : lbl) + '</span>' + (i > 0 ? '<span class="dk-sub">' + esc(lbl.slice(i + 3)) + '</span>' : '') + '</button>'; };
   // the jig's fan is a small card: hours, the tackle aboard as the choices it really has (Jonas 20.10.2026: what each takes, as species chips,
   // from the model, jigSets in ui/10-gear-ui.js; the halibut pilk only with the halibut gear aboard, and closed in its season), and start
   function jigCard(){
@@ -478,7 +480,72 @@ const DOCK = (() => {
   // the buttons as text, for the tests: the labels, and what the strip's third line says beyond the next event (infoText)
   const text = () => { const i = infoText(), s = [i.on, i.place, i.reels, i.deck ? i.deck[0] : ''].filter(Boolean).join(' · '); return items0().map(x => L(x.lbl[0], x.lbl[1])).join(' | ') + (s ? ' | ' + s : ''); };
   const redraw = () => { if (page){ lastDraw = performance.now(); draw(true); } };   // at once, after something that came later (a picture read, a payment)
-  return {render, redraw, open, close, tick, text, info:infoText, goTo, items:m => m ? menuItems(m).filter(Boolean) : items0(), menu:m => setMenu(m), get page(){ return page; }, get menuOpen(){ return menu; }};
+
+  // ---------- the calm (UI 2, U2-4, 07.11.2026; docs/planer/ui-2-staaende.md 4.5, Jonas' V8 A 06.11.2026) ----------
+  // When nobody has touched the screen for eight seconds, under way and otherwise, the buttons fade to faint (body.calm, styles.css): the
+  // row but its main button and Om bord, and the camera and Kino (with Kino's «Skjul») with them. The main button is the hero, or the
+  // one the plan's table names for the state where the row does not draw it as the hero (4.3: Stopp båten under way, Stopp arbeidet,
+  // Hjelp, Naustet, Mottak with fish aboard, Verft with the service due; .stay). The instruments stand: the strip, the little
+  // chart with the echo sounder (Jonas 06.11.2026: the players look for the fish in it as they sail) and the compass, and so do the
+  // phone and the deck log's tab. It is Kino's «Skjul» (kino-clean, ui/08-actions.js) done by itself with the instruments left: nature
+  // has the screen. A touch anywhere brings it all back (on a PC a key, the wheel or the mouse moving too), and so does a warning: a
+  // toast (02-format-state.js toast), a gale at the boat, the rules ✕ or !, a full hold, the boat no longer under way (arrived), a risk
+  // of collision and water in the boat (the strip's own warnings, 04-panels-instruments.js hudLine3). A warning that stays breaks it
+  // once, when it comes. Never in the first trip (tutOn), never while something is open over the game (the drawer, a fan, the strip's
+  // card, the phone, the deck log, a tip, a dialog, the set line, the showroom, the jig in the hand), never in the chart view, and never
+  // with «ro0» in the address: the tests' games (tests/_env.py), which wait longer than eight seconds between their clicks. Whatever
+  // held it off, the eight seconds begin when it goes. Faint, not gone (Jonas 07.11.2026: «Det kan bli forvirrende for spillerne om
+  // knappene er helt borte»; «Svake, trykk virker»): the buttons stand where they stood, and a tap on one works at once, the touch that
+  // wakes the calm being taken first (calmTouch, in the capture phase)
+  const CALM = {on:false, at:performance.now(), seen:new Set(), st:null, gale:false, why:'', off:/(^|[#,])ro0(?![\w=])/.test(location.hash)};
+  const CALM_S = 8, CALM_OVER = ['modal', 'tip', 'sleep', 'showChip', 'setBar', 'letter', 'aisCard'];
+  function calmBlock(){
+    if (CALM.off) return 'ro0';
+    if (!S || !S.boat) return 'view';   // (the page still starting: the game is not loaded yet, ui/11-boot.js)
+    if (tutOn()) return 'tut';
+    const B = document.body.classList;
+    if (B.contains('booting') || !B.contains('v3d')) return 'view';
+    if (page || menu || B.contains('hudcard')) return 'open';
+    if (PHONE.isOpen()) return 'phone';
+    if (typeof BOOK !== 'undefined' && BOOK.isOpen()) return 'book';
+    if (window.jigActive) return 'jig';
+    for (const id of CALM_OVER){ const e = document.getElementById(id); if (e && !e.hidden) return id; }
+    return '';
+  }
+  // the warnings standing now; one that was not there on the last round breaks the calm
+  function calmAlerts(){
+    const b = S.boat, H = S.t / 60, sea = b.status !== 'port', out = [];
+    try {
+      // a gale: from 13.9 m/s at the boat (Beaufort 7, «kuling»), or the sea red at sea; it is over under 12.5 m/s, so a wind going up
+      // and down round the limit does not break the calm each time
+      const W = windAt(H, b.pos), red = sea && riskLevel(W, hsAt(b.pos, H)) >= 2;
+      CALM.gale = W >= 13.9 || red || (CALM.gale && W >= 12.5); if (CALM.gale) out.push('gale');
+      if (sea && RU.ok){ const r = ruNow(); if (r.v !== 'ok') out.push('rules:' + r.v); }
+      if (sea && holdFull()) out.push('full');
+      if (sea && sjvWarn()) out.push('sjv');
+      const hw = sea ? hullWarn(b) : null; if (hw) out.push('hull:' + hw.cls);
+    } catch (e){}
+    if (CALM.st === 'sailing' && b.status !== 'sailing') out.push('arrived');   // (once: the next round she is no longer leaving «sailing»)
+    CALM.st = b.status;
+    return out;
+  }
+  function calmSet(on, why){ CALM.on = on; if (!on) CALM.why = why || ''; document.body.classList.toggle('calm', on); }
+  function calmTick(){
+    // (the clock starts with the page, before the game is loaded: S is set in ui/11-boot.js. Reading it before threw «Cannot read
+    // properties of undefined (reading 'boat')» as a page error in tut.py and roetest under load, 07.11.2026)
+    if (!S || !S.boat){ CALM.at = performance.now(); return; }
+    const now = performance.now(), A = calmAlerts(), news = A.find(k => !CALM.seen.has(k)); CALM.seen = new Set(A);
+    if (news){ CALM.at = now; if (CALM.on) calmSet(false, news.split(':')[0]); }
+    if (calmBlock()){ CALM.at = now; if (CALM.on) calmSet(false, 'block'); return; }
+    if (!CALM.on && now - CALM.at >= CALM_S * 1000) calmSet(true);
+  }
+  const wake = why => { CALM.at = performance.now(); if (CALM.on) calmSet(false, why); };
+  const calmTouch = e => { if (e.type === 'pointermove' && e.pointerType !== 'mouse') return; wake('touch'); };
+  for (const ev of ['pointerdown', 'touchstart', 'keydown', 'wheel', 'pointermove']) window.addEventListener(ev, calmTouch, {capture:true, passive:true});
+  if (!CALM.off) setInterval(calmTick, 500);
+  // for the tests (tests/roetest.py): the calm's state, and with a number the idle time set back that many seconds
+  const calm = s => { if (typeof s === 'number') CALM.at = performance.now() - s * 1000; return {on:CALM.on, block:calmBlock(), why:CALM.why, idle:Math.round((performance.now() - CALM.at) / 100) / 10}; };
+  return {render, redraw, open, close, tick, text, info:infoText, goTo, items:m => m ? menuItems(m).filter(Boolean) : items0(), menu:m => setMenu(m), get page(){ return page; }, get menuOpen(){ return menu; }, calm, wake};
 })();
 // the old name: everything that changes what the boat does asks for the buttons again
 function renderActs(){ DOCK.render(); }

@@ -479,3 +479,16 @@
 2026-11-07 01:42	ccr-208d78a1-ruhxll	fdac21e3	hulltest	OK	69	lite	samtidig	
 2026-11-07 01:42	ccr-208d78a1-ruhxll	fdac21e3	trip2	OK	30	lite	samtidig	
 2026-11-07 01:42	ccr-208d78a1-ruhxll	fdac21e3	boottest	OK	22	lite	samtidig	
+2026-11-07 02:06	ccr-fc7a11b2-nl5jor	21ec10d3+	roetest	FEIL	121	lite	samtidig	FEIL telefon: når første tur er over, kommer roen  {"on": false, "block": "tip", "why": "", "idle": 0}
+2026-11-07 02:06	ccr-fc7a11b2-nl5jor	21ec10d3+	hbtest	OK	16	lite	samtidig	
+2026-11-07 02:06	ccr-fc7a11b2-nl5jor	21ec10d3+	docktest	FEIL	62	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-07 02:06	ccr-fc7a11b2-nl5jor	21ec10d3+	dockrow	OK	41	lite	samtidig	
+2026-11-07 02:07	ccr-fc7a11b2-nl5jor	21ec10d3+	uishots	OK	91	lite	samtidig	
+2026-11-07 02:12	ccr-fc7a11b2-nl5jor	21ec10d3+	kjoptest	OK	389	lite	samtidig	
+2026-11-07 02:12	ccr-fc7a11b2-nl5jor	21ec10d3+	trip2	OK	41	lite	samtidig	
+2026-11-07 02:41	ccr-fc7a11b2-nl5jor	21ec10d3+	tut	FEIL	1741	lite	alene	FEIL liggende: minst halvt lasterom ved levering etter en time på feltet (Onboarding 2, V2 A)  133
+2026-11-07 02:45	ccr-fc7a11b2-nl5jor	21ec10d3+	docktest	OK	59	lite	alene	
+2026-11-07 02:47	ccr-fc7a11b2-nl5jor	21ec10d3+	roetest	FEIL	118	lite	samtidig	FEIL telefon: etter åtte sekunder uten trykk blir knappene svake der de står (hovedknappen og Om bord står, Kamera og Kino blir svake), instrumentene, Telefon o
+2026-11-07 02:47	ccr-fc7a11b2-nl5jor	21ec10d3+	dockrow	OK	40	lite	samtidig	
+2026-11-07 03:32	ccr-fc7a11b2-nl5jor	21ec10d3+	tut	OK	2708	lite	alene	
+2026-11-07 03:34	ccr-fc7a11b2-nl5jor	21ec10d3+	roetest	OK	116	lite	alene	

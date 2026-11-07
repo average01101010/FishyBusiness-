@@ -194,6 +194,9 @@ function toastPlace(el){
 function toastClear(){ const el = document.getElementById('toast'); if (el){ clearTimeout(toast._t); toast._keep = null; el.classList.remove('on'); } }
 function toast(msg, ms){
   if (booting()){ (toast._q = toast._q || []).push([msg, ms]); if (toast._q.length > 12) toast._q.shift(); return; }
+  // a message breaks the calm (UI 2, U2-4, ui/10c-dock.js CALM): the buttons come back with it, so it can be acted on (the try: a toast
+  // before the dock's file has run finds no DOCK yet)
+  try { DOCK.wake('toast'); } catch (e){}
   const el = $('toast'); toast._at = Date.now(); if (ms) toast._keep = {msg, until:Date.now() + ms};
   el.textContent = msg; toastPlace(el); el.classList.add('on'); clearTimeout(toast._t);
   const back = () => { const k = toast._keep; if (k && k.msg !== msg && k.until > Date.now() + 500){ msg = k.msg; el.textContent = msg; toast._t = setTimeout(back, k.until - Date.now()); return; }
