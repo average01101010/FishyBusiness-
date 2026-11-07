@@ -20,7 +20,9 @@ const HAV_SP = ['sild', 'makrell', 'snokrabbe'];   // the ocean species the regi
 // painted on both sides of the hull near the stem (ervervstillatelsesforskriften §§ 22–23, FOR-2012-12-07-1144). The letters are those
 // most vessels of the home harbour's municipality carry (tools/regmerke/regmerke.py, from Fiskeridirektoratet's landing notes); the
 // number is one no real vessel there has, so no player's boat wears a real boat's mark. A boat keeps hers (b.reg); a number of one's own
-// choosing (the paint shop's «ønskenummer») replaces it. ----
+// choosing (the paint shop's «ønskenummer») replaces it. Two players may wear the same number (Jonas 07.11.2026: «to ulike spillere skal
+// kunne ha samme nummer om de ønsker, men når de tildeles tilfeldige nummer må vi etterstrebe å skape variasjon»), so the number the game
+// gives is drawn at random (regDraw); it came from the boat's name, id and type, and everyone with the same home, boat and name wore one. ----
 const REGM = /*@include(data/regmerke.json)*/null;
 // the home harbour's municipality: a coast harbour is a plant's ('m' + its id, with its municipality), the old Senja harbours are named
 // here (Sommarøy and Brensholmen are in Tromsø), anything else takes the nearest plant's
@@ -35,9 +37,13 @@ function regUsed(f, k, n){ const e = REGM && Object.values(REGM.k).find(x => x[0
 function regOf(b){
   if (b.reg && b.reg.f) return b.reg;
   const hp = portById(S.home || HOME0) || PORTS[0], e = regLetters(hp); if (!e) return null;
-  let h = 0; for (const c of String(S.boatName || '') + (S.cur || '') + (b.type || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  let n = 100 + h % 800; while (e[2].includes(n) && n < 9999) n++;
-  return b.reg = {f:e[0], n, k:e[1]};
+  return b.reg = {f:e[0], n:regDraw(e), k:e[1]};
+}
+// a number from 100 to 999 that no real vessel of the municipality has (REGM.k entry e), each as likely; at least 817 are free anywhere
+function regDraw(e){
+  const used = new Set(e[2]), free = []; for (let n = 100; n <= 999; n++) if (!used.has(n)) free.push(n);
+  if (free.length) return free[Math.floor(Math.random() * free.length)];
+  let n = 1000; while (used.has(n) && n < 9999) n++; return n;
 }
 const regText = r => r ? r.f + '-' + r.n + '-' + r.k : '';
 // the call sign (kjenningssignal, FOR-2002-06-27-754, read on Lovdata 05.11.2026; Ø11.5): § 5 gives one to fishing vessels from 10.67 m

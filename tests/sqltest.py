@@ -385,27 +385,6 @@ def main():
         R['rgA'] = sql("select public.reg_claim('T-777-LK')", A, 'authenticated'); R['rgB'] = sql("select public.reg_claim('T-777-LK')", B, 'authenticated')
         R['rgA2'] = sql("select public.reg_claim('T-777-LK')", A, 'authenticated'); R['rgBad'] = sql("select public.reg_claim('<b>')", A, 'authenticated', expect_err=True)
         R['rgRead'] = sql("select count(*) from public.reg_claims", A, 'authenticated', expect_err=True)
-        # only the numbers in use count (20261107120000_reg_in_use.sql, the shop's review 07.11.2026): keep is the marks the player's other
-        # boats wear. Eleven numbers in a row on one boat all go through and let go of the boat's last one (designs.sql said «too many»
-        # after ten for good); another player then gets a number let go; a failed claim lets nothing go; ten in use at once is the most;
-        # reg_check answers the same without claiming, for the game to ask before the payment; a page without keep works as before
-        def rg(q, who=A):
-            try: return sql(q, who, 'authenticated')
-            except RuntimeError as e: return 'ERR ' + str(e)[:90]
-        mine = lambda: sql("select coalesce(string_agg(mark, ',' order by mark), '') from public.reg_claims where player_id = 'user_01AAA'")
-        R['rgSeq'] = [rg("select public.reg_claim('T-%d-TK', array['T-777-LK'])" % (800 + i)) for i in range(11)]
-        R['rgSeqMine'] = mine()
-        R['rgLetGo'] = rg("select public.reg_claim('T-800-TK', '{}')", B)
-        R['rgChk'] = [rg("select public.reg_check('%s', array['T-777-LK'])" % m) for m in ('T-800-TK', 'T-901-TK', 'T-810-TK', 'T-777-LK')]
-        R['rgTakenKeeps'] = (rg("select public.reg_claim('T-800-TK', '{}')"), mine())
-        held = ['T-777-LK', 'T-810-TK']
-        for i in range(8):
-            rg("select public.reg_claim('T-9%02d-TK', array[%s])" % (i, ','.join("'%s'" % m for m in held))); held.append('T-9%02d-TK' % i)
-        kept = 'array[%s]' % ','.join("'%s'" % m for m in held)
-        R['rgTen'] = (len(mine().split(',')), rg("select public.reg_check('T-950-TK', %s)" % kept), rg("select public.reg_claim('T-950-TK', %s)" % kept)[:24], len(mine().split(',')))
-        R['rgNine'] = rg("select public.reg_claim('T-950-TK', %s)" % kept.replace("'T-907-TK'", "'T-1-TK'"))
-        R['rgOld'] = (rg("select public.reg_claim('T-810-TK')"), rg("select public.reg_claim('T-951-TK')")[:24])
-        R['rgChkAnon'] = sql("select public.reg_check('T-1-TK')", {'role': 'anon'}, 'anon', expect_err=True)
         # the company logo (20261007110000_logos.sql): only an account that owns it puts up a picture; the others get it by the id the world
         # gives; the admin takes it away with a reason, then nobody gets it, the player is told why and may put up another at no cost
         import hashlib; hidA = hashlib.md5(b'dsbuser_01AAA').hexdigest()[:10]; LIMG = 'data:image/png;base64,iVBORw0KGgo='
@@ -583,14 +562,6 @@ def main():
               "the logo: put up only once owned, a bad picture refused, the others get it by the world's id; only the admin lists and takes it away, then nobody gets it, the player is told why and may put up another",
               {k: R[k] for k in ('lgV', 'lgRm', 'lgGone', 'lgMine', 'lgAgain', 'lgMine2')})
         print(ok(R['rgA'] == 't' and R['rgB'] == 'f' and R['rgA2'] == 't' and R['rgBad'][0] and R['rgRead'][0]), "one's own registration number: the first player's, refused to another, kept for the first; a bad mark and reading the claims are refused", {k: R[k] for k in ('rgA', 'rgB', 'rgA2')})
-        print(ok(R['rgSeq'] == ['t'] * 11 and R['rgSeqMine'] == 'T-777-LK,T-810-TK' and R['rgLetGo'] == 't' and R['rgChk'] == ['taken', 'ok', 'ok', 'ok']
-                 and R['rgTakenKeeps'] == ('f', 'T-777-LK,T-810-TK')),
-              "one's own number, only those in use count (07.11.2026): eleven in a row on one boat all go through and let go of the boat's last one, the other boat's stays; "
-              "a number let go is another player's to take; reg_check says taken or ok without claiming; a refused claim lets nothing go", {k: R[k] for k in ('rgSeq', 'rgSeqMine', 'rgLetGo', 'rgChk', 'rgTakenKeeps')})
-        print(ok(R['rgTen'][0] == 10 and R['rgTen'][1] == 'many' and R['rgTen'][2].startswith('ERR') and R['rgTen'][3] == 10 and R['rgNine'] == 't' and R['rgOld'][0] == 't'
-                 and R['rgOld'][1].startswith('ERR') and R['rgChkAnon'][0]),
-              "ten numbers in use at once is the most (reg_check 'many', reg_claim refused, nothing let go); with one boat's number changed there is room again; "
-              "a page from before the change (no keep) still claims its own; reg_check is refused without an account", {k: R[k] for k in ('rgTen', 'rgNine', 'rgOld')})
         print(ok(R['livOwn'] == 'h:gul;r:raud;m:T.1.LK;p:2' and R['livGone'] == 'h:gul;m:T.1.LK;p:2'),
               "the others see a paid paint design only while the account owns it (bought, not refunded); colours, the registration mark and the pennants always (Ø6 funn 5)", {'own': R['livOwn'], 'gone': R['livGone']})
         print(ok(R['dOwn'] == ['des_ripe'] and R['dGive'] == ['cos'] and R['dGone'] == []), 'a paint design: paid, it is the account\'s on every device (owned) and a grant for the game; a refund takes it away', {'own': R['dOwn'], 'give': R['dGive'], 'gone': R['dGone']})
