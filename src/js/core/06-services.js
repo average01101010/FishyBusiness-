@@ -202,7 +202,11 @@ function finishJob(j){
 // minutes at GAME_RATE game minutes a minute. Servicing the engine yourself (self) is cheaper and takes twice as long. The work on the
 // quay (rigging, baiting, mending) keeps its own hours, also side by side.
 const YARD_H = 30 * GAME_RATE / 60, YARD_KINDS = ['fit', 'svc', 'hull', 'hold', 'eng', 'upg', 'repair'];
-const YARD_NOW_NOK = 19;   // the yard's work done at once, for real money (Jonas 05.10.2026; ui/05-phone.js «Ferdig nå»)
+const YARD_NOW_NOK = 19;
+// «Ferdig nå» is offered only while a yard job has this many game minutes left (5 real minutes): with a minute left it was offered, the job
+// finished during the payment and the purchase finished nothing (the review 07.11.2026); one that still comes to nothing is kept as a
+// credit (S.yardCredit) that finishes the next yard job at once (05-vessels.js vesselStep)
+const YARD_NOW_MIN = 30;   // the yard's work done at once, for real money (Jonas 05.10.2026; ui/05-phone.js «Ferdig nå»)
 function fitHours(k){ return YARD_H; }
 // a job with no length would never finish and would keep the boat in port for good; a yard job from before (when they took 2 to 16
 // hours) takes the yard's time now, also one already running

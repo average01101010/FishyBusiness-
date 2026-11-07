@@ -37,8 +37,10 @@
     else for (const [k, B] of Object.entries(BOOSTS)){ const v1 = BOAT.vmax / (on ? on.x : 1) * B.x;
       h.push('<div class="ph-card haillc"><h4>' + B[S.lang] + ' · +' + Math.round((B.x - 1) * 100) + ' % ' + L('fart', 'speed') + (k === 'turbo' ? kbBest() : '') + '</h4><p>' + TRIM_SELL[k][S.lang === 'en' ? 1 : 0] + '</p>' +
         kv(L('Toppfart med den', 'Top speed with it'), '<b>' + fmt(v1, 1) + ' kn</b>') + kv(L('Varer', 'Lasts'), hrs(B.h)) + (shopMode() !== 'live' ? kv(L('Pris', 'Price'), realKr(B.nok)) : '') +   // live, the buy button shows the price (tilbakemelding #17)
-        (on ? '<p class="ph-note">' + L('Erstatter ' + on.no.toLowerCase() + ', som er på nå.', 'Replaces the ' + on.en.toLowerCase() + ' on now.') + '</p>' : '') +
-        '<button class="ph-btn p" data-pa="trimbuy" data-k="' + k + '">' + shopLabel(B.nok) + '</button>' + shopFine() + '</div>'); }
+        // (the same kind adds its hours; another takes the place and the rest of the one on, asked first: trimPend, 14-act.js)
+        (!on ? '' : on === B ? '<p class="ph-note">' + L('Legger ' + B.h + ' timer til den som er på: ' + hrs(trimLeft(b) + B.h) + ' i alt.', 'Adds ' + B.h + ' hours to the one on: ' + hrs(trimLeft(b) + B.h) + ' in all.') + '</p>'
+          : '<p class="ph-note' + (trimPend === k ? ' bad' : '') + '">' + L('Erstatter ' + on.no.toLowerCase() + ', som har ' + hrs(trimLeft(b)) + ' igjen.' + (trimPend === k ? ' Den tida faller bort. Trykk «Kjøp» igjen for å bytte.' : ''), 'Replaces the ' + on.en.toLowerCase() + ', which has ' + hrs(trimLeft(b)) + ' left.' + (trimPend === k ? ' That time is lost. Tap «Buy» again to switch.' : '')) + '</p>') +
+        '<button class="ph-btn p" data-pa="trimbuy" data-k="' + k + '">' + shopLabel(B.nok) + '</button>' + (trimPend === k ? '<button class="ph-btn alt" data-pa="trim0">' + L('Avbryt', 'Cancel') + '</button>' : '') + shopFine() + '</div>'); }
     h.push('<p class="ph-note">' + L('Trim gjelder båten du er om bord i. Tida er spilltid: 24 timer i spillet er ' + fmt(24 / GAME_RATE, 0) + ' timer i virkeligheten. Mer fart bruker mer diesel.',
       'Tuning goes with the boat you are aboard. The time is game time: 24 hours in the game is ' + fmt(24 / GAME_RATE, 0) + ' hours in real life. More speed burns more diesel.') + '</p></div>');
     return h.join('');

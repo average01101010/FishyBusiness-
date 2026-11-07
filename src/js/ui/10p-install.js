@@ -67,6 +67,40 @@ const INSTALL = (() => {
   return {can, card, ask, go, start, standalone};
 })();
 
+// ================= a new build is out: «Oppdater nå» (Jonas 06.11.2026: «Varsel ved oppdatering for å kjøre refresh på appen») =================
+// The build's version stands in the page (<meta name="dsb-version">, build.mjs) and in version.json beside it. An open game asks for
+// version.json every ten minutes and when the tab comes back, and when it differs a bar comes at the top with «Oppdater nå», which
+// saves and loads the page again; ✕ puts it off half an hour. In the app the service worker takes over as soon as it is installed
+// (sw.js skipWaiting and clients.claim), so a controllerchange on a page that had a worker says the same. Nothing reloads by itself:
+// a player in the middle of a haul decides when
+const UPDATE = (() => {
+  const L = (no, en) => cloudL(no, en), mine = () => (document.querySelector('meta[name=dsb-version]') || {}).content || 'dev';
+  let el = null, snooze = 0, had = false, seen = null;
+  function bar(){
+    if (el || Date.now() < snooze || (typeof booting === 'function' && booting())) return;
+    el = document.createElement('div'); el.id = 'updBar';
+    el.innerHTML = '<span>' + L('En ny versjon av spillet er klar.', 'A new version of the game is ready.') + '</span><button type="button" id="updGo">' + L('Oppdater nå', 'Update now') + '</button><button type="button" id="updX" aria-label="' + L('Senere', 'Later') + '">✕</button>';
+    document.getElementById('app').appendChild(el);
+    el.querySelector('#updGo').onclick = () => { try { if (typeof cloudEv === 'function') cloudEv('update_go', {from:mine(), to:seen}); } catch (e){} try { save(); } catch (e){} location.reload(); };
+    el.querySelector('#updX').onclick = () => { el.remove(); el = null; snooze = Date.now() + 30 * 60e3; };
+    try { if (typeof cloudEv === 'function') cloudEv('update_ask', {from:mine(), to:seen}); } catch (e){}
+  }
+  async function check(){
+    if (mine() === 'dev' || document.hidden || Date.now() < snooze || el) return;
+    try { const r = await fetch('version.json?t=' + Date.now(), {cache:'no-store'}); if (!r.ok) return; const j = await r.json(); if (j && j.v && j.v !== mine()){ seen = j.v; bar(); } } catch (e){}
+  }
+  function start(){
+    if (mine() === 'dev') return;
+    setInterval(check, 10 * 60e3); document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(check, 1500); }); setTimeout(check, 90e3);
+    if ('serviceWorker' in navigator){
+      had = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange', () => { if (had){ seen = seen || 'sw'; bar(); } had = true; });
+      navigator.serviceWorker.getRegistration().then(reg => { if (reg) setInterval(() => reg.update().catch(() => {}), 30 * 60e3); }).catch(() => {});
+    }
+  }
+  return {start, check, bar, mine};
+})();
+
 // ================= the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109) =================
 // Firefox and Opera on Android drew the 3D view at 27-35 frames a second on a tablet that has 60 in Chrome, even on the lowest 3D
 // level, so the browser and not the drawing held it back. Those browsers get a small card on the loading screen: the game runs

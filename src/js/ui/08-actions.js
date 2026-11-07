@@ -279,7 +279,10 @@ function showIntro(namesOnly){
   // then where Father's boathouse stands: the start along the coast (ui/08c-start.js)
   if (!namesOnly && !NOTUT && !S.intro && !S.home){ showStart(() => showIntro()); return; }
   if (!S.boatName || S.unnamed) boatUnnamed();
-  modal('<div class="ob"><h2>' + L('Båten etter far', 'Father\'s boat') + '</h2><p>' + L('Hun ligger ved naustet slik han lot henne ligge. Hun er din nå.', 'She lies at the boathouse as he left her. She is yours now.') + '</p>' +
+  // a guest is told now how the game is kept, and that registering comes later (Tony 06.11.2026: he was not asked for an account early,
+  // and feared the first trip's progress was lost; the card after the first landing asks, ui/10f-cloud.js guestAsk)
+  const guestNote = typeof isGuest === 'function' && isGuest() ? '<p class="note">' + L('Spillet lagres av seg selv i denne nettleseren mens du spiller. Etter første levering kan du registrere deg på ti sekunder, så følger båten, pengene og fangsten deg på alle enheter.', 'The game saves itself in this browser as you play. After the first landing you can register in ten seconds, and the boat, the money and the catch follow you on every device.') + '</p>' : '';
+  modal('<div class="ob"><h2>' + L('Båten etter far', 'Father\'s boat') + '</h2><p>' + L('Hun ligger ved naustet slik han lot henne ligge. Hun er din nå.', 'She lies at the boathouse as he left her. She is yours now.') + '</p>' + guestNote +
     '<div class="btns"><button class="btn primary" data-close id="obGo">' + L('Ta over båten', 'Take over the boat') + '</button></div></div>');
   $('obGo').addEventListener('click', () => {
     // the tests' games (#notut) skip the start and keep the old Senja start: the boat and Father's naust in Finnsnes

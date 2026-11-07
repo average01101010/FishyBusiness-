@@ -125,12 +125,14 @@
       h.push(itemCard({k:'net', name:L('Garn', 'Nets'), price:L('fra ', 'from ') + kr(NETTY.bunn.price) + L(' per garn', ' a net'), btns:NETOPT.map(o => ord('net', null, netKey(o[0], o[1]), 10, L(NETTY[o[0]].no, NETTY[o[0]].en) + ' ' + o[1] + ' mm × 10')).join('')}));
       h.push(itemCard({k:'line', name:L('Line', 'Line'), price:kr(LINE_KINDS.bank.price) + '–' + kr(LINE_KINDS.hyse.price) + L(' per stamp', ' a tub'), btns:['hyse', 'bank'].map(lk => ord('stamp', null, lk, 4, '4 ' + L('stamper ', 'tubs of ') + LINE_KINDS[lk][S.lang].toLowerCase())).join('')}));
       h.push(itemCard({k:'pot', name:L('Krabbeteiner', 'Crab pots'), price:POTS.big.price, body:'<p class="ic-have">' + KC_WHERE() + '</p>', btns:ord('pot', null, 'big', 10, '10 ' + POTS.big[S.lang].toLowerCase())}));
-      h.push(itemCard({k:'kit', name:L('Blåser og dregg', 'Buoys and anchors'), price:GPRICE.kit, anchor:L('tung dregg ', 'heavy anchor ') + kr(GPRICE.heavy), btns:ord('kit', null, null, 1, L('Blåsesett', 'Buoy set')) + ord('heavy', null, null, 1, L('Tung dregg', 'Heavy anchor'))}));
+      h.push(itemCard({k:'kit', name:L('Blåsesett: staur, blåse og dregg', 'Buoy set: pole, buoy and anchor'), price:GPRICE.kit, anchor:L('tung dregg ', 'heavy anchor ') + kr(GPRICE.heavy), btns:ord('kit', null, null, 1, L('Blåsesett', 'Buoy set')) + ord('heavy', null, null, 1, L('Tung dregg', 'Heavy anchor'))}));
       h.push(itemCard({k:'hooks', name:L('Kroker og juksasett', 'Hooks and jig sets'), price:CARE.hookKr[100], anchor:L('per 100', 'a 100'), btns:ord('hooks', null, 500, 1, L('500 kroker', '500 hooks')) + ord('hooks', null, 1000, 1, L('1000 kroker', '1000 hooks')) + ord('jig', null, 'mark', 1, L('Juksasett', 'Jig set'))}));
     } else {
       for (const [k, E] of Object.entries(EQUIP)){ if (EQ_YARD(k) || !equipFits(k, b.type)) continue;
-        const have = E.multi ? S.equip[k] || 0 : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1, r = res('equip', k, null);
-        h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? have + ' / ' + max : '', price:E.price, have:have >= max ? L('Montert', 'Fitted') : r ? at : '', btns:have >= max ? '' : ord('equip', k, null, 1, L('Bestill', 'Order'))})); }
+        const have = E.multi ? S.equip[k] || 0 : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1, r = res('equip', k, null), fj = (S.jobs || []).find(j => j.kind === 'fit' && j.k === k);
+        // (one being fitted shows so, with when; before, the tab offered it again and the fetch said «Det har båten alt»)
+        const fitTxt = fj && !E.multi ? L('Til montering', 'Being fitted') + (fj.until != null ? ' · ' + L('ferdig kl. ', 'done at ') + hm(fj.until / 60) : '') : '';
+        h.push(itemCard({k, name:E.name[S.lang], sub:E.multi ? have + ' / ' + max : '', price:E.price, have:have >= max ? L('Montert', 'Fitted') : fitTxt || (r ? at : ''), btns:have >= max || fitTxt ? '' : ord('equip', k, null, 1, L('Bestill', 'Order'))})); }
       for (const k of ['olje', 'varme']){ const C = CLOTHES[k], r = res('cloth', k, null); h.push(itemCard({k, name:C[S.lang], price:C.price, have:r ? at : '', btns:ord('cloth', k, null, 1, L('Bestill én', 'Order one'))})); }
     }
     return h.join('') + '</div>';

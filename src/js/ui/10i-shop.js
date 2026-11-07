@@ -63,34 +63,60 @@ async function shopGo(k){
     toast(shopL('Kunne ikke åpne betalingen: ', 'Could not open the payment: ') + (e.message || e));
   }
 }
-// what the server has granted and the game has not given yet: given now, and the server told
+// what the server has granted and the game has not given yet: given now, and the server told. Each gift leaves a line for the
+// confirmation (SHOP.rc, shopThanks): what it did, and on which boat
 function shopGive(g){
-  const d = g.data || {}, v = (S.fleet || []).find(x => x.id === d.boat) || curVessel();
-  if (d.give === 'haill' && HAILL[d.type]){ giveHaill(d.type, 'shop'); return HAILL[d.type][S.lang === 'en' ? 'en' : 'no']; }
-  if (d.give === 'trim' && BOOSTS[d.k]) return withVessel(v, () => { const B = BOOSTS[d.k]; trimSet(d.k);
-    log(B.no + ' er på «' + S.boatName + '» i ' + B.h + ' timer. Toppfart nå ' + fmt(BOAT.vmax, 1) + ' knop.', B.en + ' is on the «' + S.boatName + '» for ' + B.h + ' hours. Top speed now ' + fmt(BOAT.vmax, 1) + ' knots.'); return B[S.lang === 'en' ? 'en' : 'no']; });
+  const d = g.data || {}, v = (S.fleet || []).find(x => x.id === d.boat) || curVessel(), rc = SHOP.rc || (SHOP.rc = []), say = (no, en) => rc.push({g, no, en});
+  if (d.give === 'haill' && HAILL[d.type]){ giveHaill(d.type, 'shop'); say('Ligger i Haill-appen. Trykk «Aktiver» når du vil bruke den.', 'It is in the Luck app. Tap «Switch on» when you want it.'); return HAILL[d.type][S.lang === 'en' ? 'en' : 'no']; }
+  // (the same kind as the one on adds its hours, another kind takes its place: core trimSet)
+  if (d.give === 'trim' && BOOSTS[d.k]) return withVessel(v, () => { const B = BOOSTS[d.k], w = trimWords(d.k, trimSet(d.k)); log(w.no, w.en); say(w.no, w.en); return B[S.lang === 'en' ? 'en' : 'no']; });
+  // (nothing left to finish when it came, the job done during the payment: kept as a credit for the next yard job, YARD_NOW_MIN)
   if (d.give === 'yard') return withVessel(v, () => { let n = 0; for (const j of S.jobs || []) if (YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t){ j.until = S.t; n++; }
-    log('Verftet gjorde ' + (n > 1 ? n + ' jobber' : n ? 'jobben' : 'ingen jobber') + ' på «' + S.boatName + '» ferdig med én gang.', 'The yard finished ' + (n > 1 ? n + ' jobs' : n ? 'the job' : 'no jobs') + ' on the «' + S.boatName + '» straight away.');
-    return shopL('Verftet er ferdig', 'The yard is done'); });
-  if (d.give === 'skip' && SKIP[d.k]) return giveSkip(d.k);   // Skippertak, for the whole fleet (core/15-energy.js)
-  if (d.give === 'cos') return giveCos(d.k);   // a paint design, yours on every boat (ui/10j-paint.js)
+    if (!n) S.yardCredit = (S.yardCredit || 0) + 1;
+    const no = n ? 'Verftet gjorde ' + (n > 1 ? n + ' jobber' : 'jobben') + ' på «' + S.boatName + '» ferdig med én gang.' : 'Jobben på «' + S.boatName + '» ble ferdig før kjøpet kom fram. «Ferdig nå» ligger klar og gjør neste verftsjobb ferdig med én gang.',
+      en = n ? 'The yard finished ' + (n > 1 ? n + ' jobs' : 'the job') + ' on the «' + S.boatName + '» straight away.' : 'The job on the «' + S.boatName + '» was done before the purchase came. «Done now» is kept and finishes the next yard job at once.';
+    log(no, en); say(no, en); return shopL('Verftet er ferdig', 'The yard is done'); });
+  if (d.give === 'skip' && SKIP[d.k]){ const nm = giveSkip(d.k);   // Skippertak, for the whole fleet (core/15-energy.js)
+    if (nm){ const h = Math.max(0, (S.skip.until - boostT()) / 60), r = fmt(h / GAME_RATE, h / GAME_RATE < 10 ? 1 : 0); say('Du og mannskapet på hele flåten er uthvilt i ' + fmt(h, 0) + ' timer (' + r + ' timer i virkeligheten), også på driftsplanene.', 'You and the crews of the whole fleet are rested for ' + fmt(h, 0) + ' hours (' + r + ' hours in real life), on the operations plans too.'); }
+    return nm; }
+  // (a paint design, yours on every boat, ui/10j-paint.js; what was tried goes on the boat it was bought on, d.boat)
+  if (d.give === 'cos') return withVessel(v, () => { const nm = giveCos(d.k);
+    if (nm) say('Ditt for godt, på alle båtene dine. Du finner det i Malerverkstedet.', 'Yours for good, on all your boats. You find it in the paint shop.');
+    return nm; });
   return null;
+}
+// the confirmation (Jonas 06.11.2026, Tony's test: «det må ikke være tvil om at salget har gått gjennom»): a window from Det Store Blå
+// with what was bought, the price and what it did now, and the same in Meldinger to keep. A gift from us (data.comp: a correction) says
+// so, without a price. It waits while another window is open
+function shopThanks(rc){
+  const L = shopL, gift = rc.every(r => (r.g.data || {}).comp);
+  const its = rc.map(r => { const k = Object.keys(SHOP_PRODUCT).find(x => SHOP_PRODUCT[x] === r.g.product), w = k ? shopWhat(k) : null;
+    return {nm:w ? w.name : String(r.g.product || ''), nok:(r.g.data || {}).comp ? 0 : w ? w.nok : 0, no:r.no, en:r.en}; });
+  const head = gift ? ['En gave fra Det Store Blå', 'A gift from Det Store Blå'] : ['Takk for kjøpet!', 'Thank you for your purchase!'];
+  const lead = gift ? ['Vi har gitt deg dette, og det er levert i spillet:', 'We have given you this, and it is delivered in the game:'] : ['Betalingen er gjennomført, og kjøpet er levert i spillet:', 'The payment went through, and the purchase is delivered in the game:'];
+  msg('Det Store Blå', head[0] + ' ' + its.map(x => x.nm + (x.nok ? ' (\u{1F48E} ' + x.nok + ' kr)' : '') + ': ' + x.no).join(' '), head[1] + ' ' + its.map(x => x.nm + (x.nok ? ' (\u{1F48E} ' + x.nok + ' kr)' : '') + ': ' + x.en).join(' '));
+  const html = '<div class="ob shoprc"><p class="reg-from">Det Store Blå</p><h2>' + L(head[0], head[1]) + '</h2><p>' + L(lead[0], lead[1]) + '</p>' +
+    its.map(x => '<p class="shoprc-it"><b>' + x.nm + '</b>' + (x.nok ? ' · ' + realKr(x.nok) : '') + '<br>' + L(x.no, x.en) + '</p>').join('') +
+    '<p class="note">' + L('Bekreftelsen ligger også i Meldinger.', 'The confirmation is in Messages too.') + '</p><div class="btns"><button class="btn p" data-close>' + L('Fint!', 'Great!') + '</button></div></div>';
+  const show = () => { const m = document.getElementById('modal'); if (m && !m.hidden){ setTimeout(show, 2000); return; } modal(html); };
+  setTimeout(show, 300);
 }
 async function shopClaim(){
   if (!CLOUD.on || !CLOUD.user) return 0;
   let list; try { list = await cloudRpc('shop_pending', {}); } catch (e){ return 0; }
-  const given = S.shopGiven || (S.shopGiven = []), ids = [], names = []; let thanks = 0;
-  for (const g of list || []){ if (!given.includes(g.id)){
-      // the thank-you for feedback that helped the game (supabase/migrations/20261006140000_feedback_reward.sql): no purchase, its own words
-      if ((g.data || {}).reward && HAILL[g.data.type]){ giveHaill(g.data.type, 'fb'); thanks++; }
-      else { const nm = shopGive(g); if (nm) names.push(nm); }
-      given.push(g.id); }
-    ids.push(g.id); }
+  const given = S.shopGiven || (S.shopGiven = []), ids = [], names = [], unk = SHOP.unk || (SHOP.unk = new Set()); let thanks = 0; SHOP.rc = [];
+  for (const g of list || []){
+    // (given before and the server not told, a lost connection: told now. One this game does not know, a product newer than the page
+    // or a page from before an update, is left on the server and given when the game knows it: never marked done and lost, 06.11.2026)
+    if (given.includes(g.id)){ ids.push(g.id); continue; }
+    if ((g.data || {}).reward && HAILL[g.data.type]){ giveHaill(g.data.type, 'fb'); thanks++; }
+    else { const nm = shopGive(g); if (!nm){ if (!unk.has(g.id)){ unk.add(g.id); console.warn('shop: a grant this game does not know', g.id, g.product); if (typeof cloudEv === 'function') cloudEv('shop_unknown', {id:g.id, product:g.product}); } continue; } names.push(nm); }
+    given.push(g.id); ids.push(g.id); }
   if (given.length > 200) given.splice(0, given.length - 200);
   if (!ids.length) return 0;
   save(); if (typeof cloudSaveSoon === 'function') cloudSaveSoon(true);
   try { await cloudRpc('shop_done', {ids}); } catch (e){ console.error(e); }
-  if (names.length) toast(shopL('Takk for kjøpet! ', 'Thank you for your purchase! ') + names.join(', '));
+  if (SHOP.rc.length) shopThanks(SHOP.rc);
   if (thanks){ const no = 'Takk for tilbakemeldingen! Den hjalp oss å gjøre spillet bedre. ' + (thanks > 1 ? thanks + ' takk-haill' : 'Takk-haill') + ' med 12 timer fullt haill ligger i Haill-appen. Aktiver det når du vil.',
       en = 'Thank you for your feedback! It helped us make the game better. ' + (thanks > 1 ? thanks + ' thank-you lucks' : 'Thank-you luck') + ' with 12 hours of full luck ' + (thanks > 1 ? 'are' : 'is') + ' in the Luck app. Switch it on when you like.';
     msg('Det Store Blå', no, en); toast(shopL(no, en)); }

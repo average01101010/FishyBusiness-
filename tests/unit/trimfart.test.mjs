@@ -74,4 +74,11 @@ export default function (t){
   // a save from before the flag: at or over the top speed is full, under it is the knots chosen
   { boat('trebat'); delete St().draftFull; St().draftSpeed = 16; K.applyVessel(); t.ok(St().draftFull === true && St().draftSpeed === K.BOAT.vmax, 'gammel lagring med 16 kn: full fart');
     boat('trebat'); delete St().draftFull; St().draftSpeed = 5; K.applyVessel(); t.ok(St().draftFull === false && St().draftSpeed === 5, 'gammel lagring med 5 kn: blir 5 kn'); }
+  // ---- a second trim (06.11.2026, the review of known issues, point 1): the same kind adds its hours to the one on (no paid time lost);
+  // another kind replaces it, which the Trim app asks about first (phone/14-act.js trimPend) ----
+  { const b = boat('sjark'); K.trimSet('turbo'); St().t += 10 * 60; t.near(K.trimLeft(b), 62, 0.01, 'turbotrim etter 10 timer: 62 timer igjen');
+    K.trimSet('turbo'); t.near(K.trimLeft(b), 134, 0.01, 'ny turbotrim mens den går: timene legges til (62 + 72 = 134), ingenting betalt går tapt');
+    t.near(K.BOAT.vmax, 2 * K.VESSELS.sjark.vmax, 1e-9, 'farten er fortsatt dobbel');
+    St().t += 133 * 60; t.ok(!!K.trimOn(b), 'på i 133 timer til'); St().t += 2 * 60; t.ok(!K.trimOn(b), 'og ute etter 134');
+    boat('sjark'); K.trimSet('turbo'); St().t += 10 * 60; K.trimSet('pump'); t.near(K.trimLeft(St().boat), 24, 0.01, 'en annen type erstatter den som går (24 timer, +50 %)'); t.near(K.BOAT.vmax, 1.5 * K.VESSELS.sjark.vmax, 1e-9, 'farten er den nye'); }
 }

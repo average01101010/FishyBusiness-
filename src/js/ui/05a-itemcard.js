@@ -86,7 +86,7 @@ const ICFX = {
   net:() => ['156 mm torsk · 180–200 mm skrei · flytegarn sei · 360 mm blåkveite', '156 mm cod · 180–200 mm skrei · floating nets saithe · 360 mm Greenland halibut'],
   line:() => ['Hyseline ' + LINE_KINDS.hyse.hooks + ' kroker · bankline ' + LINE_KINDS.bank.hooks + ' større kroker per stamp', 'Haddock line ' + LINE_KINDS.hyse.hooks + ' hooks · bank line ' + LINE_KINDS.bank.hooks + ' bigger hooks a tub'],
   pot:() => ['Kongekrabbe · ' + POTS.big.cap + ' krabber per teine · høyst 30 per båt', 'King crab · ' + POTS.big.cap + ' crabs a pot · at most 30 a boat'],
-  kit:() => ['To blåser, stake, flagg og dregg til hvert sett i sjøen', 'Two buoys, pole, flag and anchor for each set in the sea'],
+  kit:() => ['Til hver ende av redskapet: staur med flagg, blåse, kulerekke og dregg på iletauet', 'For each end of the gear: a pole with a flag, a buoy, a row of floats and an anchor on the buoy line'],
   hooks:() => ['Bytter slitte og bøyde kroker og juksasett', 'Replaces worn and bent hooks and jig sets']
 };
 const icFx = k => { const f = ICFX[k]; if (!f) return ''; const v = f(); return icL(v[0], v[1]); };

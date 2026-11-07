@@ -1,7 +1,7 @@
 // ---------- the phone ----------
 const PHONE = (() => {
   const el = $('phone'), view = $('phView'), tEl = $('phTime'), nEl = $('phNet'), badge = $('phoneBadge');
-  let app = 'home', sub = {}, isOpen = false, confirmMayday = false, shopPend = null, saveBox = null, haillPend = null, egnUI = null;
+  let app = 'home', sub = {}, isOpen = false, confirmMayday = false, shopPend = null, saveBox = null, haillPend = null, trimPend = null, egnUI = null;
   const L = (no, en) => S.lang === 'no' ? no : en;
   // the icons are drawn in the colour of the text around them, as the dock's are (UI 2, U2-6): white on the home screen's glass tiles
   // and in the apps' title bars

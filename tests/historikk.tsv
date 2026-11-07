@@ -371,6 +371,32 @@
 2026-11-06 22:19	ccr-a3c53300-9f9ly1	9871601	autonavtest	FEIL	0	lite	alene	FEIL 6. Autonav Vannareid → Honningsvåg … (bygget før rettingen, bare Senja: de samme ti røde linjene som på det rettede bygget)
 2026-11-06 22:22	ccr-a3c53300-9f9ly1	4073902	draftlooptest	OK	19	lite	samtidig	
 2026-11-06 22:24	ccr-a3c53300-9f9ly1	7cbe5c7	bootgtest	OK	125	lite	samtidig	
+2026-11-06 23:19	ccr-a9ff699b-re4zwf	509c633b	hudtest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-06 23:19	ccr-a9ff699b-re4zwf	509c633b	friendtest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-06 23:19	ccr-a9ff699b-re4zwf	509c633b	hbtest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-06 23:19	ccr-a9ff699b-re4zwf	509c633b	nettest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-06 23:22	ccr-a9ff699b-re4zwf	509c633b+	hudtest	OK	28	lite	samtidig	
+2026-11-06 23:22	ccr-a9ff699b-re4zwf	509c633b+	friendtest	OK	12	lite	samtidig	
+2026-11-06 23:22	ccr-a9ff699b-re4zwf	509c633b+	hbtest	OK	16	lite	samtidig	
+2026-11-06 23:23	ccr-a9ff699b-re4zwf	509c633b+	nettest	OK	25	lite	samtidig	
+2026-11-06 23:23	ccr-a9ff699b-re4zwf	509c633b+	decktest	OK	14	lite	samtidig	
+2026-11-06 23:31	ccr-a9ff699b-re4zwf	a1ce74d5+	docktest	OK	65	lite	samtidig	
+2026-11-06 23:31	ccr-a9ff699b-re4zwf	a1ce74d5+	shoptest	OK	28	lite	samtidig	
+2026-11-06 23:31	ccr-a9ff699b-re4zwf	a1ce74d5+	nettest	OK	26	lite	samtidig	
+2026-11-06 23:32	ccr-a9ff699b-re4zwf	a1ce74d5+	installtest	OK	51	lite	samtidig	
+2026-11-06 23:32	ccr-a9ff699b-re4zwf	a1ce74d5+	itemcardtest	FEIL	20	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'jukse', 'krabbekar', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-06 23:32	ccr-a9ff699b-re4zwf	a1ce74d5+	boktest	OK	12	lite	samtidig	
+2026-11-06 23:32	ccr-a9ff699b-re4zwf	a1ce74d5+	crewlifetest	OK	8	lite	samtidig	
+2026-11-06 23:32	ccr-a9ff699b-re4zwf	a1ce74d5+	lotttest	OK	9	lite	samtidig	
+2026-11-06 23:33	ccr-a9ff699b-re4zwf	a1ce74d5+	guesttest	OK	68	lite	samtidig	
+2026-11-06 23:35	ccr-a9ff699b-re4zwf	a1ce74d5+	starttest	OK	155	lite	samtidig	
+2026-11-07 00:29	ccr-a9ff699b-re4zwf	47809422+	hudtest	OK	33	lite	samtidig	
+2026-11-07 00:29	ccr-a9ff699b-re4zwf	47809422+	hulltest	OK	15	lite	samtidig	
+2026-11-07 00:29	ccr-a9ff699b-re4zwf	47809422+	hbtest	OK	19	lite	samtidig	
+2026-11-07 00:29	ccr-a9ff699b-re4zwf	47809422+	nettest	OK	26	lite	samtidig	
+2026-11-07 00:30	ccr-a9ff699b-re4zwf	47809422+	docktest	OK	67	lite	samtidig	
+2026-11-07 00:30	ccr-a9ff699b-re4zwf	47809422+	geartest	OK	38	lite	samtidig	
+2026-11-07 00:40	ccr-a9ff699b-re4zwf	48b76d90+	hudtest	OK	23	lite	alene	
 2026-11-06 23:38	ccr-ccfb0017-rmieib	731e4792+	autonavtest	OK	27	lite	samtidig	
 2026-11-06 23:38	ccr-ccfb0017-rmieib	731e4792+	r4test	OK	15	lite	samtidig	
 2026-11-06 23:38	ccr-ccfb0017-rmieib	731e4792+	naustleia	OK	7	lite	samtidig	
@@ -385,3 +411,33 @@
 2026-11-07 00:12	ccr-67e5a499-sxgchb	61f462f7+	fleet3test	OK	15	lite	samtidig	
 2026-11-07 00:13	ccr-67e5a499-sxgchb	61f462f7+	posttest	OK	23	lite	samtidig	
 2026-11-07 00:13	ccr-67e5a499-sxgchb	61f462f7+	kartlegging	OK	52	lite	samtidig	
+2026-11-07 00:06	HEAD	61f462f7+	kjoptest	FEIL	266	lite	samtidig	avsluttet med kode 1
+2026-11-07 00:06	HEAD	61f462f7+	skiptest	OK	23	lite	samtidig	
+2026-11-07 00:06	HEAD	61f462f7+	skipdrift	OK	43	lite	samtidig	
+2026-11-07 00:06	HEAD	61f462f7+	haillplass	OK	10	lite	samtidig	
+2026-11-07 00:06	HEAD	61f462f7+	docktest	OK	89	lite	samtidig	
+2026-11-07 00:32	HEAD	61f462f7+	trackfollow	FEIL	1510	3d	alene	FEIL she keeps to the line all the way, at most 9 m off it in the corners (the model turns on her own radius), and never goes back along it  {"off": 0.49, "back
+2026-11-07 00:32	HEAD	61f462f7+	moortest	OK	34	3d	alene	
+2026-11-07 00:35	HEAD	61f462f7+	maletest	OK	21	lite	samtidig	
+2026-11-07 00:36	HEAD	61f462f7+	boostklokke	OK	45	lite	samtidig	
+2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	docktest	OK	62	lite	samtidig	
+2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	searchtest	OK	9	lite	samtidig	
+2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	hudtest	OK	25	lite	samtidig	
+2026-11-07 00:57	HEAD	12b6216c+	docktest	OK	65	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	kjoptest	OK	470	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	skiptest	OK	19	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	skipdrift	OK	27	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	haillplass	OK	8	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	boostklokke	OK	51	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	maletest	OK	22	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	slidertest	OK	19	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	trip2	OK	39	lite	samtidig	
+2026-11-07 01:07	ccr-04f41d1f-p26bxn	bcf2df80+	maletest	OK	17	lite	samtidig	
+2026-11-07 01:07	ccr-04f41d1f-p26bxn	bcf2df80+	regnrtest	OK	20	lite	samtidig	
+2026-11-07 01:07	ccr-04f41d1f-p26bxn	bcf2df80+	sqltest	FEIL	29	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-07 01:08	ccr-04f41d1f-p26bxn	e8a2431e+	maletest	OK	16	lite	samtidig	
+2026-11-07 01:08	ccr-04f41d1f-p26bxn	e8a2431e+	regnrtest	OK	20	lite	samtidig	
+2026-11-07 01:09	ccr-04f41d1f-p26bxn	e8a2431e+	sqltest	FEIL	30	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-07 01:18	ccr-67e5a499-sxgchb	55f1bbb5+	docktest	OK	63	lite	samtidig	
+2026-11-07 01:18	ccr-67e5a499-sxgchb	55f1bbb5+	friendtest	OK	9	lite	samtidig	
+2026-11-07 01:19	ccr-67e5a499-sxgchb	55f1bbb5+	uishots	OK	81	lite	samtidig	

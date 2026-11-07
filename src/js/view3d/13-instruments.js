@@ -205,7 +205,9 @@
     nSetup(VP);
     // with all hands on deck, nobody fishes; nor when the one aboard alone is at the table or the tub (drawDeck draws him there; tilbakemelding
     // #98: he jigged at the rail and gutted at the table at once)
-    const fishing = S.boat.status === 'fishing' && !S.boat.deckStop && !(DECKACT.on && DECKACT.alone);
+    // (and with crew aboard too, Tony 06.11.2026: skipper and one hand on the trebåt gave three figures, the skipper at the rail and at
+    // the table at once; DECKACT.me says drawDeck draws him on the deck work, as awaySk hides the tiller figure)
+    const fishing = S.boat.status === 'fishing' && !S.boat.deckStop && !(DECKACT.on && (DECKACT.alone || DECKACT.me));
     refreshPeople(SK); paintHand(); const wr = wearOn(vtype()), lf = lifeOn('me', BMrel, null, vtype(), HL.meAge, wr, bv.spd, GEO(vtype())); drawN(SK.hull, BMrel); if (lf) lifeOff(); else if (wr) wearOff(); if (showSkipper && !fishing) drawN(SK.skipper, BMrel); if (showCrew) drawN(SK.crew, BMrel);
     SK.rodT += dt; SK.lines = [];
     const T = SK.rodT, A = SK.anim || (SK.anim = {mode:null, st:'jig', t:0, fish:[], fly:[], th:0, mc:[], bq:[], bl:null});
