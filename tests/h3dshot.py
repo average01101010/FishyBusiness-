@@ -129,8 +129,10 @@ async def main():
             r = await pg.evaluate(NPC, [0.12]); print('  havflåten:', r, flush=True); await pg.wait_for_timeout(6000)
             check(not r.get('none') and r.get('ships', 0) >= 17, 'havflåtens snøkrabbefartøy (samme modell) er ute', r)
             if not r.get('none'):
-                await pg.evaluate(CAM, [16, 0.10, 0.0]); await pg.wait_for_timeout(4000); await shots(pg, 'flate_naer')
-                await pg.evaluate(NPC, [0.7]); await pg.wait_for_timeout(5000); await pg.evaluate(CAM, [14, 0.05, 0.0]); await pg.wait_for_timeout(3000); await shots(pg, 'flate_fjern')
+                # (the camera's target cam.at moved ahead in your boat's frame, so your own boat is behind the camera, not in front of
+                # the vessel: 40 m off her for the near one, and from just ahead of you for the far one at 700 m)
+                await pg.evaluate(CAM, [40, 0.12, 0.6, [0, 4, -120]]); await pg.wait_for_timeout(4000); await shots(pg, 'flate_naer')
+                await pg.evaluate(NPC, [0.7]); await pg.wait_for_timeout(5000); await pg.evaluate(CAM, [50, 0.06, 0.0, [0, 4, -60]]); await pg.wait_for_timeout(3000); await shots(pg, 'flate_fjern')
         gerr = await pg.evaluate("G3._debug.glErr()")
         check(gerr == 0, 'ingen GL-feil', gerr)
         print('sidefeil:', list(dict.fromkeys(errs))[:5], flush=True)
