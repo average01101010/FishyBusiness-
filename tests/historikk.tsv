@@ -862,3 +862,25 @@
 2026-11-07 15:15	plan/2026-11-07-opp4	d55d7a9a+	havtur	FEIL	89	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
 2026-11-07 15:23	plan/2026-11-07-opp4	24eb4a19	boottest	OK	28	lite	alene	
 2026-11-07 15:24	plan/2026-11-07-opp4	24eb4a19	opptest	OK	47	lite	alene	
+2026-11-07 15:22	ccr-68a96e99-8x1jh1	fd65373b	boottest	OK	23	lite	samtidig	
+2026-11-07 15:22	ccr-68a96e99-8x1jh1	fd65373b	rulestest	OK	12	lite	samtidig	
+2026-11-07 15:22	ccr-68a96e99-8x1jh1	fd65373b	sonetest	OK	8	lite	samtidig	
+2026-11-07 15:22	ccr-68a96e99-8x1jh1	fd65373b	trip2	OK	35	lite	samtidig	
+2026-11-07 15:22	ccr-68a96e99-8x1jh1	fd65373b	snokrabbetest	OK	12	lite	samtidig	
+2026-11-07 15:22	ccr-68a96e99-8x1jh1	fd65373b	autolinetest	OK	9	lite	samtidig	
+2026-11-07 15:22	ccr-68a96e99-8x1jh1	fd65373b	r4test	OK	14	lite	samtidig	
+2026-11-07 15:23	ccr-68a96e99-8x1jh1	fd65373b	geartest	OK	34	lite	samtidig	
+2026-11-07 15:23	ccr-68a96e99-8x1jh1	fd65373b	selltest	LES	21	lite	samtidig	
+2026-11-07 15:23	ccr-68a96e99-8x1jh1	fd65373b	vesseltest	OK	22	lite	samtidig	
+2026-11-07 15:23	ccr-68a96e99-8x1jh1	fd65373b	bktest	OK	6	lite	samtidig	
+2026-11-07 15:23	ccr-68a96e99-8x1jh1	fd65373b	kystvakttest	OK	8	lite	samtidig	
+2026-11-07 15:24	ccr-68a96e99-8x1jh1	fd65373b	starttest	OK	88	lite	samtidig	
+2026-11-07 15:24	ccr-68a96e99-8x1jh1	fd65373b	quotatest	OK	13	lite	samtidig	
+2026-11-07 15:33	ccr-68a96e99-8x1jh1	fd65373b	tut	OK	541	lite	alene	
+2026-11-07 15:35	ccr-68a96e99-8x1jh1	f768a79a	boottest	OK	22	lite	alene	
+2026-11-07 15:36	ccr-68a96e99-8x1jh1	f768a79a	rulestest	OK	11	lite	samtidig	
+2026-11-07 15:36	ccr-68a96e99-8x1jh1	f768a79a	kystvakttest	OK	8	lite	samtidig	
+2026-11-07 15:36	ccr-68a96e99-8x1jh1	f768a79a	quotatest	OK	14	lite	samtidig	
+2026-11-07 15:36	ccr-68a96e99-8x1jh1	f768a79a	r4test	OK	14	lite	samtidig	
+2026-11-07 15:36	ccr-68a96e99-8x1jh1	f768a79a	sonetest	OK	7	lite	samtidig	
+2026-11-07 15:37	ccr-68a96e99-8x1jh1	f768a79a	starttest	OK	87	lite	samtidig	
