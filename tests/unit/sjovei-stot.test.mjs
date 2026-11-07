@@ -149,6 +149,10 @@ export default function (t){
   t.ok(stood.v === 0 && Math.abs(stood.p.x - n.p.x) < 1e-12 && later.v === 0, 'hun ligger der støtet var mens hun venter', [stood.p, later.v]);
   t.eq(S1.clashes.length, 1, 'sammenstøtet er lagret (for Sikkerhet-kortet i Ø11.7)');
   const cB = S1.cash; t.eq([K.sjvBlow(n, 6.2, 5e4, H1 + 0.001, pre), S1.clashes.length, S1.cash], [null, 1, cB], 'et nytt støt rett etter, ikke hardere: samme sammenstøt, ingen ny skade og ingen ny betaling');
+  // the heavy one takes little: the coastal ship against a light blow takes nothing, and the log says so (no «scratches»)
+  const big = {id:'kystn', name:'MS Kystpilen', type:'coastal', p:{x:at.x + 0.02, y:at.y}, hd:0, cog:0, v:15, L:121.8, B:21, T:4.9, cls:'pow'};
+  const rb = K.sjvBlow(big, 3, 2e4, H1 + 0.0005, pre);
+  t.ok(rb && rb.kB < 1 && rb.oth === 0 && rb.owe === 0 && /«MS Kystpilen» tok ikke skade/.test(S1.log.slice(-4).map(l => l.no).join(' ')), 'kystruteskipet i et lett støt tar ikke skade, og dagboka sier det (ikke «skrammer»)', rb && {kB:rb.kB, oth:rb.oth});
   // another player's boat: no damage to her, no money, only the message (ui/10n-hail.js)
   let hooked = null; K.hooks.onClash = (q, r) => { hooked = r; };
   const c1 = S1.cash, pr = K.sjvBlow({id:'p42', name:'Nordlys', type:'sjark', p:{x:at.x + 0.01, y:at.y}, hd:0, cog:0, v:5, player:true, L:10.5, B:4}, 5, 4e4, H1 + 0.002, pre);

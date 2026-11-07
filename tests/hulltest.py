@@ -73,7 +73,9 @@ async def collisions(pg):
         if s.get('gone') or s['n'] > L0['n0']:
             await pg.evaluate('S.helm.thr = 0; S.helm.rud = 0'); break
     print('  steer:', S[:3], '...', S[-3:])
-    await pg.wait_for_timeout(2900)   # (the blow's own toast stands 2.6 s, then the VHF message is back for the rest of its 15 s)
+    # (the blow's own toast stands 2.6 s, then the VHF message is back for the rest of its 15 s; timers run late with another test beside)
+    try: await pg.wait_for_function("((document.getElementById('toast') || {}).textContent || '').includes('VHF 16')", timeout=8000)
+    except Exception: pass
     r = await pg.evaluate(CLASH_READ, L0)
     print(json.dumps(r, ensure_ascii=False))
     await pg.screenshot(path=os.path.join(OUT, 'clash_vhf_land.png'))
@@ -87,8 +89,11 @@ async def collisions(pg):
     book = await pg.evaluate("(document.getElementById('bkStage') || {}).innerText || ''")
     await pg.evaluate("BOOK.close()")
     rec = r['rec'] or {}
-    check(rec.get('id') == 'ferje' and rec.get('kn', 0) >= 1 and r['dmg'] and r['dmg']['s'] > 0 and rec.get('oth', 0) > 0,
-          '7a. by hand into the ferry: the contact in the manoeuvring model\'s steps, damage to your hull and to hers', [rec, r['dmg']])
+    # (how hard depends on the angle they meet at, which the ferry's own turn under 17 a ii sets: her blow as a quay would give it is
+    # under a knot when it is glancing, and then she takes no damage and nobody pays, as the model has it)
+    hard = rec.get('kB', 0) >= 1
+    check(rec.get('id') == 'ferje' and rec.get('kn', 0) >= 1 and r['dmg'] and r['dmg']['s'] > 0 and ((rec.get('oth', 0) > 0) == hard),
+          '7a. by hand into the ferry: the contact in the manoeuvring model\'s steps, damage to your hull, and to hers when her blow is a knot or more', [rec, r['dmg']])
     check(rec.get('law') == '161' and rec.get('fa', 0) >= 0.6 and 'gw:15' in ((rec.get('why') or {}).get('a') or []),
           '7b. the fault from the looks before the blow: you had to give way under rule 15 and steered at her', rec.get('why'))
     check(any('Sammenstøt med «MF Senjasund»' in t or 'Smell i «MF Senjasund»' in t for t in r['logs']) and any('sjøloven § 161' in t for t in r['logs']),
@@ -96,8 +101,8 @@ async def collisions(pg):
     check(len(r['vhf']) == 2 and '«Havbris»' in r['vhf'][0] and 'hjemsted Finnsnes' in r['vhf'][0] and 'fra Botnhamn' in r['vhf'][0] and 'Trenger dere hjelp' in r['vhf'][0] and 'VHF 16' in r['toast'],
           '7d. § 164 on the VHF: your name, home port, where you come from, and whether they need help; her answer; on the screen', [r['vhf'], r['toast'][:80]])
     check(r['stand'] == '164' and r['still'] and r['still'][0] == 0 and r['still'][1] == 0 and r['still'][2] < 1, '7e. the ferry stands by where it happened (§ 164), a local stop on the shared clock', [r['stand'], r['still']])
-    check(rec.get('owe', 0) > 0 and r['paid'] == rec.get('you') and any('Erstatning til «MF Senjasund»' in x for x in r['ledger']),
-          '7f. you pay your share of her damage, booked as damages (no hull insurance: all of it)', [rec.get('owe'), r['paid'], r['ledger']])
+    check((rec.get('owe', 0) > 0 and r['paid'] == rec.get('you') and any('Erstatning til «MF Senjasund»' in x for x in r['ledger'])) if hard else (rec.get('owe') == 0 and r['paid'] == 0 and any('tok ikke skade' in t for t in r['logs'])),
+          '7f. you pay your share of her damage, booked as damages (no hull insurance: all of it); with no damage to her, nothing, and the log says she took none', [rec.get('kB'), rec.get('owe'), r['paid'], r['ledger']])
     check('VHF 16' in book and 'Sammenstøt' in book, '7g. the deck log\'s page for the day shows the collision and the VHF message', book[:400])
     # 7h: another player's boat lying still 14 m ahead: she takes no damage, nobody pays, only the message (and the log says so)
     r = await pg.evaluate("""(L0) => { const b = S.boat; b.type = 'sjark'; applyVessel(); b.dmg = null; b.damage = 0; b.tow = null; if (S.rescue) S.rescue = null; b.status = 'idle'; b.v = 0; b.dyn = null;

@@ -458,3 +458,10 @@
 2026-11-07 01:18	ccr-67e5a499-sxgchb	55f1bbb5+	docktest	OK	63	lite	samtidig	
 2026-11-07 01:18	ccr-67e5a499-sxgchb	55f1bbb5+	friendtest	OK	9	lite	samtidig	
 2026-11-07 01:19	ccr-67e5a499-sxgchb	55f1bbb5+	uishots	OK	81	lite	samtidig	
+2026-11-07 01:24	ccr-208d78a1-ruhxll	01594293	hulltest	FEIL	78	lite	samtidig	FEIL 7a. by hand into the ferry: the contact in the manoeuvring model's steps, damage to your hull and to hers  [{"id": "ferje", "name": "MF Senjasund", "kn": 5
+2026-11-07 01:24	ccr-208d78a1-ruhxll	01594293	boottest	OK	26	lite	samtidig	
+2026-11-07 01:24	ccr-208d78a1-ruhxll	01594293	trip2	OK	29	lite	samtidig	
+2026-11-07 01:24	ccr-208d78a1-ruhxll	01594293	hudtest	OK	23	lite	samtidig	
+2026-11-07 01:34	ccr-208d78a1-ruhxll	01594293	colregtest	OK	604	lite	samtidig	
+2026-11-07 01:35	ccr-208d78a1-ruhxll	01594293	dbg23o	OK	39	3d	alene	
+2026-11-07 01:38	ccr-208d78a1-ruhxll	01594293+	hulltest	OK	69	lite	alene	

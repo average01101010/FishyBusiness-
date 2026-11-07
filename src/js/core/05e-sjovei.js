@@ -896,7 +896,8 @@ function sjvBlow(n, kn, E, H, pre){
   (S.clashes || (S.clashes = [])).push(rec); if (S.clashes.length > 40) S.clashes.splice(0, S.clashes.length - 40);
   // the log (the deck log's navigation page): the blow and what it did, the fault and the payment, § 164
   const them = '«' + n.name + '»', hers = peer ? [' ' + them + ' er en annen spillers båt og tar ikke skade.', ' ' + them + ' is another player\'s boat and takes no damage.']
-    : O.dA > 0 ? [' ' + them + ' er slått inn.', ' ' + them + ' is stove in.'] : O.dh > 0 ? [' ' + them + ' fikk skader i skroget.', ' ' + them + ' has damage to her hull.'] : [' ' + them + ' fikk skrammer.', ' ' + them + ' got scratches.'];
+    : O.dA > 0 ? [' ' + them + ' er slått inn.', ' ' + them + ' is stove in.'] : O.dh > 0 ? [' ' + them + ' fikk skader i skroget.', ' ' + them + ' has damage to her hull.'] : O.kr > 0 ? [' ' + them + ' fikk skrammer.', ' ' + them + ' got scratches.']
+    : [' ' + them + ' tok ikke skade.', ' ' + them + ' took no damage.'];   // (her blow under a knot as a quay would give it: the heavy one, hulltest 7a on the merged build)
   const head = [(kn >= HULL.scr ? 'Sammenstøt med ' : 'Smell i ') + them + ', ' + knT.replace('.', ',') + ' knop.' + (say ? say.no : '') + hers[0], (kn >= HULL.scr ? 'A collision with ' : 'A knock against ') + them + ', ' + knT + ' knots.' + (say ? say.en : '') + hers[1]];
   log(head[0], head[1], 'nav');
   if (F){ log(sjvFaultSay(F, n.name, 'no') + (M.owe || M.got ? ' ' + sjvPaySay(M, F, n.name, 'no') : ''), sjvFaultSay(F, n.name, 'en') + (M.owe || M.got ? ' ' + sjvPaySay(M, F, n.name, 'en') : ''), 'nav'); }
