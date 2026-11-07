@@ -150,7 +150,7 @@ skrevet inn i hvert båtskript.
 | Kraftblokk-kran, notbinge, snurpedavit | `not75` | Per skript |
 | Haleport og halestasjon | `al45`, `hurtig11`, `malo36`, `kyst15` | Skrog (riktig etter regelen) |
 | Portal og transportbånd for teiner | `krabbe50` | Per skript |
-| Havbåtenes kraner, MOB-båter, radarer, flåter og livbøyer | `al45`, `krabbe50`, `tral60`, `not75` | Bakt inn. Ingen festepunkter for utstyr (`kit` er tom) |
+| Havbåtenes kraner, MOB-båter, radarer, flåter og livbøyer | `al45`, `tral60`, `not75` | Bakt inn. Ingen festepunkter for utstyr (`kit` er tom). `krabbe50` har dem som `kit`-plasser og kranen som deler fra 07.11.2026 |
 | Lastebom og støttesegl | `havsjark35`, `kyst21` | Per skript |
 | Dører (sju utgaver), lanterner (tre utgaver), navnefelt (elleve), ankervinsj og baugrulle, ror og propell (`underwater`, ti utgaver), slitasje (`wear`, fire utgaver) | De fleste skriptene | Samme ting skrevet om igjen, med små forskjeller |
 | Påhengsmotor 60 hk | `skiff59` (egen del `outboard`) | Den eneste. Påhengsmotoren på 90 hk har ingen egen modell |
@@ -236,7 +236,7 @@ Tallene er lest ut av GLB-filene. `lod0` er nærmodellen og `lod1` avstandsmodel
 | `kyst15` | `kyst15.py` | 14,99 m | 11 110 / 3 670 | 486 KB | flåte 2, bøyer 4, åpen radar, garn, stamper, last 6, kran |
 | `kyst21` | `kyst21.py` | 21 m | 10 564 / 3 793 | 457 KB | flåte 2, bøyer 4, åpen radar, garn, stamper, last 5, kran |
 | `autoliner` | `al45.py` | 45,4 m | 14 970 / 3 377 | 526 KB | ingen |
-| `snokrabbe` | `krabbe50.py` | 50 m | 15 343 / 3 943 | 561 KB | ingen |
+| `snokrabbe` | `krabbe50.py` | 50 m | 123 453 / 36 393 / 3 891 (bygd på nytt 07.11.2026, `lodm` bygd i skriptet; før 15 343 / 3 943) | 5 993 KB | flåter 2, bøyer 6, MOB, radar, åpen radar, teiner (70 stableplasser), luke, kran |
 | `bunntral` | `tral60.py` | 60,3 m | 13 836 / 5 502 | 653 KB | ingen |
 | `pelagisk` | `not75.py` | 75 m | 16 685 / 5 271 | 699 KB | ingen |
 | (redningsskøyte, NPC) | `redning.py` | – | 2 129 | 55 KB | – |

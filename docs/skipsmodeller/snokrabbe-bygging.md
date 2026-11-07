@@ -52,7 +52,12 @@ stablene til sjøs. Trapper: fra teinedekket opp på shelteret (midtgangen) og o
 
 - **Huset (tier A)** på bakken fra x 30 til 43: sidevinduer, tre i fronten, to akter og døra (hektet åpen), taket som båtdekk med rekke.
 - **Styrhuset** fra x 35,6 til 42,85 med fronten lent ut 0,30 m: mørkt vindusbånd hele veien rundt, to ruter i fronten og én i hver fasett,
-  tre og vingedøra langs sidene, seks akter mot dekket rundt døra; vinger med skansekledning og egen pult; taket med visir og rekke.
+  tre og vingedøra langs sidene, seks akter mot dekket rundt døra; vinger med skansekledning og egen pult; taket med rekke.
+- **Bremmen** (Jonas 07.11.2026: «Jeg hater at du lager helt flate styrhustak»): fra `BRIM0` (0,16 m over vindusbåndet, en kremhvit stripe
+  mellom) skrår et bånd i skrogets farge ut `BRIM` 0,42 m og opp til takkanten `RTOP`, 0,57 m ut over frontrutene (`BRIM_F`), i tre bånd
+  oppover (en stor flat flate blir mørk i spillet), en kant på 6 cm og taket med bue (`wh_crown`) i et rutenett. Husets tak har et lavere
+  bånd (`TBRIM`). Materialet `brim` er i sone 2: sone 1 leser spillet som skroget (`markStrips` fant «ripa» på bremmen). Hjørnene
+  (`CI`) er bare de ti hjørnene i `wh_ring`, fordi `offset_any` tåler punkter på linje, `offset_poly` ikke.
 - **Styrepulten** tvers under frontrutene: to radarer, plotter, sonar og ekkolodd, maskinpanelet, lite ratt, spaker for stigningen og
   thrusterne, kompass, to stoler; aktre pult mot dekket for draget og kranen; karttavle og benk. Ingen `HELM_KIT` for typen lenger.
 - **Mastene:** den forreste på styrhustaket (topplanterna, fiskelysene rødt over hvitt på armen forut, plattformen for den åpne antenna,
@@ -66,7 +71,15 @@ stablene til sjøs. Trapper: fra teinedekket opp på shelteret (midtgangen) og o
 - `kit`: `pots` (70 stableplasser og tømmeplassen på bordet), `raft` (to, på shelterets akterhjørner), `buoys` (seks, på rekka og husets
   tak), `mob` (på shelteret om styrbord, daviten ved siden), `radarA` og `radar`. `KITADD` og `MOBCUT` for typen er fjernet.
 
-## 6. Kontrollene
+## 6. Eksporten og mellomversjonen
+
+`export_boat(..., mid=lambda: build('mid')[0])`: mellomversjonen (`lodm`, lokalflåten nær og egen båt lenger unna) bygges av skriptet
+selv (`MID[0]`), ikke med Decimate av nærmodellen. Decimate trakk skrogets utside og innside (8 cm fra hverandre) sammen, og innsida
+stakk gjennom som striper på styrbord baug i spillet. I `MID`: stasjoner hver 1,2 m, færre rader i innsida og dekkene, rekka som to rør,
+koøyene og klyssene med ti punkter, ingen vindusrammer, stag, spantene på innsida, ringer, hengsler, broens pult og arbeidslys; under vann
+grovversjonen. Tallene 07.11.2026: nær 123 453, midt 36 393 (enhetstesten tillater 120 000 punkter), fjern 3 891, GLB 5 993 KB.
+
+## 7. Kontrollene
 
 `python3.11 tools/boats/krabbe50.py check` regner vekta, målene, fribordet, høyden under shelteret, broa og synsfeltet, lanternene etter
 vedlegg I, arbeidsplassene, stablene, kranens rekkevidde, propellklaringen, navnet mot merket, båndet i `vessel3d` og vannlinjenes

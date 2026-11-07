@@ -102,6 +102,10 @@ H3d2 trenger står i `anchors.snok`.
 | 9 | Teinerennas port lå utenfor speilets avrundede hjørne | porten flyttet inn til y −3,95 |
 | 10 | K2, c_stern: flatt speil uten beslag | fender rundt hekken, loddrett fender om babord, navnefeltet over fenderen |
 | 11 | c_wh: kassene for panamaklyssene sto ut av skansekledningen som trekanter | ovale ringer på innsida |
-| 12 | Fjernmodellen 7 956 trekanter | grovversjonen uten kutt og småbeslag: 3 831 |
+| 12 | Fjernmodellen 7 956 trekanter | grovversjonen uten kutt og småbeslag: 3 891 |
 | 13 | Bøyestangas flagg svart (to flater i ett plan) | tynn plate |
 | 14 | `h3dshot`: havflåtens bilder tatt fra inni eget skrog | deg i kystbåten |
+| 15 | Jonas: «Jeg hater at du lager helt flate styrhustak … Vanlige styrhus har jo en slags brem, eller skrående kant øverst over vinduene» (bildet: et blått bånd som skrår ut og opp over vinduene) | bremmen skrår 0,42 m ut og 0,58 m opp fra 0,16 m over vindusbåndet til takkanten rundt hele styrhuset (0,57 m ut over frontrutene), en kant på 6 cm, så taket med svak bue; et lavere bånd rundt husets tak; i skrogets farge, sone 2 (sone 1 er skroget for `markStrips`) |
+| 16 | Navnet på bremmen: `houseFront` fant ingen stripe der bremmens hjørner bøyer bort (navntesten rød) | stripa krymper til den passer (`vessel3d.js`) |
+| 17 | I spillet: striper på styrbord baug i middels avstand (`ute`-bildet); våtheten, skadene, normalene og AO utelukket | Decimate trakk utsida og innsida (8 cm) sammen: mellomversjonen bygd i skriptet (`mid=` i `export_boat`), 36 393 trekanter |
+| 18 | Stablene om bord ble aldri tegnet: koden leste `pots.big`, fartøyet bærer `pots.sno` | `potsAboard()` (M1 rettet i spillet, ikke bare i modellen) |
