@@ -14,7 +14,8 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 
 ## Øktene som kjører
 
-- Ingen (07.11.2026 09:50 UTC). H3b og H3c ble rullet ut i 4107d71a og U2-4 i c62047f0, begge i økter Jonas startet; B (steg 4 og 9) ble rullet ut tidligere samme dag.
+- **OPP1** (steg 53), Jonas' økt, gren `plan/2026-11-07-opp1`, fra 07.11.2026 12:08 UTC. Eier `core/02-species-gear.js`, `05-vessels.js`, `13-work.js`, `14-crewlife.js`, `10-gear.js`, `ui/10-rod-acts.js`, `ui/05a-itemcard.js`, `ui/phone/12-utstyr-redskap.js`, `13b-nettet.js`, `01-i18n.js`, `07-patch.js` til den er rullet ut.
+- Før det: ingen (07.11.2026 09:50 UTC). H3b og H3c ble rullet ut i 4107d71a og U2-4 i c62047f0, begge i økter Jonas startet; B (steg 4 og 9) ble rullet ut tidligere samme dag.
 
 ## Utrullinger fra rutinen
 
@@ -97,7 +98,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 50 | **Ø6 funn 7** Innloggingsdomenet | Skyen | venter på Jonas: WorkOS (valg 6) | | `src/data/cloud.json`, `ui/10f-cloud.js`, `tools/server/Caddyfile` | `sikkerhet-skyen.md` funn 7 |
 | 51 | **Ø4** Båtmodellene | Grafikk | lagt bort (Jonas 05.11.2026: «Vent med båtene») | | `tools/boats/` | øktplanen Ø4, `grafikk-batmodeller.md` |
 | 52 | **H5–H9** Not, snurrevad, skift, stigen, spilltesten | Havsteget | venter på H4 | steg 32 | se `havsteget.md` | `havsteget.md` |
-| 53 | **OPP1** Kniv og høtt i tre trinn, per båt, i utstyrsbutikken | Oppgraderinger | venter på Jonas: «kjør på» (V1 A valgt 07.11.2026) | | `core/02-species-gear.js`, `05-vessels.js`, `13-work.js`, `14-crewlife.js`, `10-gear.js`, `ui/10-rod-acts.js`, `05a-itemcard.js`, `phone/12-utstyr-redskap.js`, `13b-nettet.js`, `01-i18n.js`, `07-patch.js` | `oppgraderinger.md` OPP1 |
+| 53 | **OPP1** Kniv og høtt i tre trinn, per båt, i utstyrsbutikken | Oppgraderinger | pågår (Jonas' økt, gren `plan/2026-11-07-opp1`, 07.11.2026 12:08 UTC; Jonas ga klarsignal ved å be om startmeldingen) | | `core/02-species-gear.js`, `05-vessels.js`, `13-work.js`, `14-crewlife.js`, `10-gear.js`, `ui/10-rod-acts.js`, `05a-itemcard.js`, `phone/12-utstyr-redskap.js`, `13b-nettet.js`, `01-i18n.js`, `07-patch.js` | `oppgraderinger.md` OPP1 |
 | 54 | **OPP4** «Båten og utstyret», Neste mål og trakten | Oppgraderinger | venter på OPP1 | steg 53 | `phone/10-fartoy.js`, `ui/07c-handbook.js`, `01-i18n.js`, `supabase/migrations/`, `src/admin/index.html` | `oppgraderinger.md` OPP4 |
 | 55 | **OPP3** Propellen på verftet og den additive fartsregelen | Oppgraderinger | venter på OPP1 | steg 53 | `core/03-simulation.js`, `06-services.js`, `phone/12-utstyr-redskap.js`, `14-act.js`, `10-fartoy.js`, `tests/unit/trimfart.test.mjs` | `oppgraderinger.md` OPP3 |
 | 56 | **OPP2** Trinn på juksamaskin, halere og juksasett, linesetter og garnrenne | Oppgraderinger | venter på OPP1 | steg 53 | `core/02-species-gear.js`, `03-simulation.js`, `10-gear.js`, `10b-gearcare.js`, `phone/12-utstyr-redskap.js`, `05a-itemcard.js` | `oppgraderinger.md` OPP2 |
