@@ -689,3 +689,23 @@
 2026-11-07 09:46	ccr-fc7a11b2-nl5jor	4866ccb2+	roetest	OK	120	lite	samtidig	
 2026-11-07 09:46	ccr-fc7a11b2-nl5jor	4866ccb2+	dockrow	OK	41	lite	samtidig	
 2026-11-07 09:46	ccr-fc7a11b2-nl5jor	4866ccb2+	trip2	OK	36	lite	samtidig	
+2026-11-07 11:55	ccr-a3c53300-9f9ly1	2362855+	trip2	OK	42	lite	samtidig	
+2026-11-07 11:55	ccr-a3c53300-9f9ly1	2362855+	harbourtest	OK	20	lite	samtidig	
+2026-11-07 11:55	ccr-a3c53300-9f9ly1	2362855+	worldtest	OK	22	lite	samtidig	
+2026-11-07 11:55	ccr-a3c53300-9f9ly1	2362855+	draftlooptest	OK	22	lite	samtidig	
+2026-11-07 11:55	ccr-a3c53300-9f9ly1	2362855+	legmemotest	OK	18	lite	samtidig	
+2026-11-07 11:55	ccr-a3c53300-9f9ly1	2362855+	placetest	OK	6	lite	samtidig	
+2026-11-07 11:55	ccr-a3c53300-9f9ly1	2362855+	sidetab	OK	19	lite	samtidig	
+2026-11-07 11:55	ccr-a3c53300-9f9ly1	2362855+	hudtest	OK	27	lite	samtidig	
+2026-11-07 11:56	ccr-a3c53300-9f9ly1	2362855+	boottest	OK	29	lite	samtidig	
+2026-11-07 11:56	ccr-a3c53300-9f9ly1	936ad46	errtest	FEIL	38	lite	samtidig	FEIL a page that closes takes its note away, so it is never counted as a crash
+2026-11-07 11:58	ccr-a3c53300-9f9ly1	936ad46	bootgtest	OK	121	lite	samtidig	
+2026-11-07 11:58	ccr-a3c53300-9f9ly1	936ad46	routetest	FEIL	42	lite	alene	FEIL Autonav over hele kysten: Finnsnes–Tromsø, Bodø–Reine og Bergen–Florø gir en vei fri for land, grunner og skjær, med høyst 40 punkter, eller ett per 2 km d
+2026-11-07 12:00	ccr-a3c53300-9f9ly1	936ad46	charttest	OK	65	lite	alene	
+2026-11-07 12:01	ccr-a3c53300-9f9ly1	2362855	kartkorridortest	FEIL	0	lite	alene	FEIL the start with the route as the plan comes up in one load (kystbygget før endringen: to lastinger, én etappe ikke klar)
+2026-11-07 12:01	ccr-a3c53300-9f9ly1	936ad46	kartkorridortest	OK	0	lite	alene	
+2026-11-07 12:01	ccr-a3c53300-9f9ly1	2362855	legmemotest	FEIL	0	lite	alene	FEIL ten drawings and ten estimates of an eight-leg draft work out each leg once (før: 90 utregninger)
+2026-11-07 12:01	ccr-a3c53300-9f9ly1	936ad46	errtest	OK	0	lite	alene	
+2026-11-07 12:01	ccr-a3c53300-9f9ly1	936ad46	errtest	OK	0	lite	alene	
+2026-11-07 12:01	ccr-a3c53300-9f9ly1	936ad46	routetest	OK	0	lite	alene	(hele kysten, KYST_MAP kart-31: 47 OK, K9 grønn)
+2026-11-07 12:01	ccr-a3c53300-9f9ly1	936ad46	autonavtest	OK	0	lite	alene	(hele kysten, KYST_MAP kart-31: 25 OK)

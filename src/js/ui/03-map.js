@@ -607,7 +607,7 @@ function renderDyn(){
     const a0 = draftOrigin(); let a = a0;
     const hz = draftHazards();
     S.draft.forEach((w, i) => {
-      const ok = legClear(a, w), un = hz[i] && hz[i].unsafe;
+      const ok = legClearMemo(a, w), un = hz[i] && hz[i].unsafe;   // (remembered per leg: this runs five times a second, core/01-world.js)
       g.push('<line x1="' + a.x + '" y1="' + a.y + '" x2="' + w.x + '" y2="' + w.y + '" class="route' + (ok ? (un ? ' unsafe' : '') : ' bad') + '" stroke-width="' + (2.5 * u) + '" stroke-dasharray="' + (7 * u) + ' ' + (5 * u) + '"/>');
       a = w;
     });
