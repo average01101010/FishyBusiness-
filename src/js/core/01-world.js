@@ -331,6 +331,19 @@ function legClear(a, b){
   }
   return !coastSegHit(a, b);   // and nothing thinner than the samples' step in between (01d-coast.js)
 }
+// legClear remembered per leg, for what draws the draft at every frame (ui/03-map.js renderDyn, five times a second, and the route
+// panel's estimate, ui/04-panels-instruments.js; 07.11.2026: Bodø–Husøy, 37 legs, was some 8 500 isLand a frame on a phone). The
+// answer stands while the map under it is the same: it is forgotten when a pack comes in (the leg may be read there now), a tile's fine
+// coast is indexed (isLand reads the 25 m mask until then) or the vec tiles change (the harbour units). A leg whose pack is not in
+// throws as before and is not remembered
+const LCM = {v:'', m:new Map()};
+function legClearMemo(a, b){
+  const v = COAST.built + '|' + (MAPD.fetched + MAPD.cached) + '|' + (typeof VEC !== 'undefined' ? VEC.ver : 0);
+  if (LCM.v !== v){ LCM.v = v; LCM.m.clear(); }
+  const k = a.x.toFixed(5) + ',' + a.y.toFixed(5) + '|' + b.x.toFixed(5) + ',' + b.y.toFixed(5);
+  let r = LCM.m.get(k); if (r !== undefined) return r;
+  r = legClear(a, b); if (LCM.m.size > 4000) LCM.m.clear(); LCM.m.set(k, r); return r;
+}
 
 const PORTS = [
   // the fish plants are where Råfisklaget lists landings on Senja and at Sommarøy and Brensholmen, each with the harbour unit and its bunker station (07-harbours.js); Finnsnes has a net loft and gear dealers but no plant and no ice chute (the tackle shop sells bagged ice).

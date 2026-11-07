@@ -62,6 +62,8 @@ Alt bygges for hele kysten. Hver endring skal kunne leses av i trakten (punkt 9)
 
 11. **Sesongene som felles hendelser** (A2 i `docs/forslag.md`, bestilt 30.10.2026 som punkt 7 i `docs/research/oppdrag-gap-analyse.md`): Lofotfisket, Finnmarksfisket, Seisommeren og Krabbehøsten med én tavle for hele kysten, merke for året og premie til de tre beste. Første runde bygd 30.10.2026 (`docs/systemer/skyen-og-felles-verden.md` 5.25f); vimpelen, admin-redigering og NPC-landinger gjenstår.
 
+12. **Oppgraderinger** (Jonas 07.11.2026: «spillet må ha et skikkelig oppgradeingsystem slik at spillere opplever effektivisering, progresjon og føler eierskap»): kniv og høtt i tre trinn per båt, trinn på juksamaskin, halere og juksasett, linesetter og garnrenne, propell i tre trinn på verftet, og én side «Båten og utstyret» med Neste mål og et tall i trakten. Alt for spillkroner, prosentene regnes av grunnivået og legges sammen, trinn 1 er det spilleren har i dag. Plan og status i `docs/planer/oppgraderinger.md`; køen steg 53–57.
+
 **Vurderes senere:** fiskarlag per hjemhavn (felles ukemål og oppslag, aldri slik at én spillers fravær skader andre), innholdsutvidelser som havsteget med blåkveite (legitimt så lenge grunnspillet føles komplett), abonnement («Rederi-medlemskap») med bekvemmeligheter der ingenting går tapt ved oppsigelse (vent til betalingsviljen for kosmetikk er kjent).
 
 ## Det vi ikke gjør

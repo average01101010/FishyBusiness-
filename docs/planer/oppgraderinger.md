@@ -1,0 +1,183 @@
+# Oppgraderinger: kniv, høtt, dekksutstyr i trinn, propell og én side for båten og utstyret (plan 07.11.2026)
+
+> Plan etter `/planlegg`. **Jonas tok valgene 07.11.2026** (sitert under), **og V1 A samme dag.** Ingenting av planen er bygd. Den venter på «kjør på» og på at planen flettes inn i arbeidsgrenen. Hver fase er én økt. Reglene som gjelder: `CLAUDE.md` (handelsstedene, `buyGate`, modulære modeller, patchnotes), `docs/engasjement.md` (alt kan nås uten å betale, friksjonen er simuleringens egen, nye ting starter aldri på null) og `docs/handelssteder.md`. Tallene her er startverdier som måles før de settes.
+
+## Hva Jonas ba om
+
+- Jonas 07.11.2026: «spillet må ha et skikkelig oppgradeingsystem slik at spillere opplever effektivisering, progresjon og føler eierskap. Jeg har tenkt på oppgraderbare propeller, høtter, kniver, og eventuelt andre ting.» Med bilder fra Ships at Sea (Misc Games): kniver i tre trinn, høtter i tre trinn, «Tier 2 boat: new longline setter 2» og ti propeller.
+- Svarene hans samme dag, på forslagene i chatten:
+  1. **Kniven:** «kniv brukes allerede i dag til både bløgging og sløying, og jeg tenker en oppgradering kutter ned på tiden brukt samt kvaliteten på sløyingen. Høtten minsker risikoen for tap av fisk generelt, ikke bare kveite.»
+  2. **Trinn på dekksutstyret som finnes:** «enig».
+  3. **Propellen:** «propellene må også gi en reell økning i farten på båten, men ikke så mye at det blir uattraktivt å kjøpe trim-boost for ekte penger.» Og: «nivåene burde være fra 10-30% økning eller noe sånt. Det gir en merkbar endring for brukerne.» Etter innvendingen om skrogfarten: «Ja, skill på dem som du foreslo» (planende 10, 20 og 30 %, deplasement 5, 10 og 15 %).
+  4. **Én side for båten og utstyret:** «enig».
+  5. **Stell:** «mannskap sliper allerede kniverene ombord i dag automatisk, og slik skal det fortsatt være. Det blir for tungvint om dette må gjøres på land. Høtten trenger ikke vedlikehold. Dropp "fars kniv". Jeg tenker at kjøp av kniver, høtter, juksautstyr, halere og alt sånt hører hjemme i utstyrsbutikken.»
+  6. **Høtten og trekketida:** «Hva med at høtten også effektiviserer tiden det tar å trekke opp et garn eller en line litt fordi det er enklere å få fisken ombord?» Svaret som ble enighet: ja for line og juksa, nei for garn og teiner, og lite.
+  7. **Regelen for prosentene:** «jeg mener ikke vi skal ha en renters rente-effekt på oppgraderingene. Om det står 10% økning feks, så betyr det at økningen er 10% opp fra grunnnivået båten eller utstyret hadde.»
+
+## Slik er det i dag
+
+Spillet har alt mange oppgraderinger, men de er spredt på fem steder, nesten alle er priset som en andel av båtens pris, og ingen av dem gjelder det spilleren gjør med hendene.
+
+| Sted | Oppgraderinger i dag | Hvor i koden |
+|---|---|---|
+| Verftet › Oppgrader | Lasterom 3 trinn, motor 2 trinn, lugarer 3, messe og bysse 3, tørkerom og bad 2, isolert lasterom 2, drivstofftank 2, stabilisering 2, sløye- og ismaskin over 14,99 m; 30 ekte minutter per jobb, «Ferdig nå» for ekte penger | `HOLDUP`, `ENGUP`, `UPGS`, `upgLv`, `applyVessel` i `core/03-simulation.js`; `YARD_KINDS`, `queueJob`, `finishJob` i `core/06-services.js`; kortene i `ui/phone/12-utstyr-redskap.js`; handlingen `upg` i `phone/14-act.js`; `tests/yardupgtest.py` |
+| Verftet ellers | Skrogrens, antigro, reparasjon, kasko, Malerverkstedet | `foulHour` i `03-simulation.js`, `16c-hull.js`, `ui/10j-paint.js` |
+| Utstyrsbutikken | Halere, juksamaskin, kveiteutstyr, 90 hk påhengs til skiffen, CHIRP, sonar, to radarer, krabbekar, oljehyre og varmedress, kroker, juksasett, blåsesett, garn, line, teiner; ett trinn per vare | `EQUIP`, `equipFits` i `core/02-species-gear.js`; `buyGate` i `core/10-gear.js`; varekortet `ui/05a-itemcard.js` (`ICFX` regner linjene av kjernens tall); `equipBuy` i `ui/phone/13b-nettet.js` |
+| Slitasje og stell | Line, garn, teiner og juksasett slites, tak som synker, bøting og krokbytte av mannskapet eller butikken, tilbakekjøp | `CARE`, `wearOf`, `careTick` i `core/10b-gearcare.js`; `tests/caretest.py` |
+| Båtstigen | Ti kystbåter og havbåtene, «Neste mål», hjemler, blad B, lån, båtsalg mellom spillere | `VESSELS`; `goals()` i `ui/phone/10-fartoy.js`; `core/09k-market.js` |
+| Naustet | Tett tak, vedovn, fars arbeidsbenk, trofévegg | `NAUST_UP` i `core/07c-naust.js` |
+| Ekte penger | Haill, trim, Skippertak, «Ferdig nå», maling, flagg, ønskenummer | `BOOSTS`, `HAILL`; `ui/10i-shop.js` |
+
+**Kniver og høtter finnes ikke som gjenstander.** Sløyinga er en mannskapsjobb med faste plasser (`13-work.js`, `DECK.gut` i `core/05-vessels.js`: 5 kg per person og minutt), kniven nevnes bare i replikkene og i ledig-oppgaven «Sliper kniven» (`13-work.js`), og høtten bare i teksten til kveiteutstyret og i autolinas kommentar om haleporten. Propellen finnes bare som motortrinnene og trimmen.
+
+**Det som alt finnes og som trinnene kan bygge på:**
+
+- **Feilene på dekk** (`crewSlip` i `core/14-crewlife.js`, Jonas 23.10.2026): hvert minutt på dekk, rundt 0,12 % per person og litt mer sliten, kald, i sjø, uerfaren eller umotivert, skjer én av tre ting: en fisk går over ripa (45 %, 1,5–4,5 kg av den største lotten), en fisk blir stygt sløyd (30 %, friskheten på lotten faller litt, «Den blir litt dårligere betalt»), eller noen skjærer seg (25 %, fire timer saktere). Det er omtrent én gang på en lang dag ved bordet. Kniven kan senke de to siste, høtten den første.
+- **Juksespillet** (`land(m)` i `ui/10-rod-acts.js`): et dårlig timet napp gir halv treff, og da glipper det halvparten av gangene. Høtten kan senke glippet.
+- **Trekketida** (`gopUnitMin` i `core/10-gear.js`): `GEAR[kind].haul` ganger enhetene, delt på hendene ved haleren og laget (`workTeam`, `teamEff`), ganget opp for hånd uten haler (`hand`). Høttens lille del og halernes trinn hører inn her, som én formel.
+- **Kvaliteten** er friskhetsgraden (`grade` i `03-simulation.js`, E til V etter Huss et al.), og all fisk regnes som godt bløgget (`bled` er alltid sann i `addCatch`). Det finnes ingen egen pris for sløyekvalitet. Kommentaren i koden nevner at Råfisklagets minstepriser gjelder godt bløgget fisk, og at dårlig bløgget fisk kan trekkes inntil 40 %; det er ikke bygd.
+- **Farten** stables i dag med renters rente: `applyVessel` ganger `vmax` med motorens `speedOfPower` (kubikkrot for deplasement med tak 12 %, kvadratrot for planende) og så med trimmen (`T.x`). `dynCalOf` i `core/16b-dyn.js` leser `BOAT.vmax / V.vmax`, så alt som går gjennom `applyVessel` når roret (rettet 06.11.2026 etter Tonys trim).
+
+**Hvorfor det ikke kjennes som progresjon:** lagringene i skyen 07.11.2026 (34 med sammendrag) står 30 i trebåten, 2 i snekka, 1 i havsjarken og 1 i den nye hurtigsjarken. På trebåten finnes ikke lasteromstrinn (karene er fulle), ikke lugar, messe eller tørkerom (ingen køyer), ikke stabilisering (under 9 m); motortrinnet koster minsteprisen og gir 0,2 knop. Første oppgradering spilleren merker er juksamaskinen til 34 000 kr, og neste er snekka til 245 000. Mellom et par tusen og 34 000 kr er det nesten ingenting å kjøpe utenom klær, kroker og naustet. Det meste av verftets trinn er usynlig (en faktor i en formel), og ingen side viser alle trinnene samlet.
+
+## Prinsippene
+
+1. **Prosentene regnes av grunnivået og legges sammen** (Jonas 07.11.2026, punkt 7). Et trinn viser hele økningen over grunnivået, ikke økningen fra trinnet under. Båtens grunnivå er `VESSELS[type]`, utstyrets er tabellens tall (`DECK.gut`, `GEAR[kind].haul`, `GEAR[kind].set`). Fart: `V.vmax × (1 + propell + motor + trim)`, der motor er `speedOfPower(P) − 1` som i dag og trim er `T.x − 1`. Forbruk: `fuelK × (1 + 0,4·(P − 1) − propellForbruk)`. Mannskapets ferdighet (`teamEff`) ganges inn etterpå som i dag; det er et annet system og røres ikke.
+2. **Effektivisering er tid, kvalitet, svinn og diesel, ikke fisk per time.** Fangsten er kalibrert mot ERS-sedlene og begrenset av kvotene (`docs/systemer/redskap.md`, Kalibrering), så ingen av trinnene ganger på `density`, `luck` eller `GEAR.q`. Det ene unntaket står som V1.
+3. **Trinn 1 er det spilleren har i dag.** Ingen ny straff legges inn for at et trinn skal ha noe å fjerne. Kniven og høtten om bord er trinn 1 på alle båter fra start, uten kjøp og uten fylling av gamle lagringer: en lagring uten feltet er trinn 1.
+4. **Alt for spillkroner, i de tre handelsstedene.** Kniver, høtter, juksautstyr, halere, linesetter og garnrenne i utstyrsbutikken; propellen på verftet som motortrinnene. Ingenting av dette selges for ekte penger; haill, trim og «Ferdig nå» står som før. `buyGate` og `equipFits` avgjør hva som kan kjøpes, som alt annet.
+5. **Per båt.** Knivsettet og høtten er båtens, som halerne, fordi mannskapet bruker og sliper dem. De følger båten ved innbytte og salg (`mbPack` tar `S.equip` med i dag). Ingen personlig gjenstand som følger fiskeren.
+6. **Ingen vedlikehold.** Mannskapet sliper knivene om bord som i dag (ledig-oppgaven står), høtten trenger ingenting. Ingen slitasje på trinnene.
+7. **Synlig.** Hvert trinn har et varekort med sine tall (`ICFX`), står på siden «Båten og utstyret», og det som har modell, tegnes på båten på festepunktene (modulært, `docs/systemer/redskap.md` 5.62). Patchnotes nevner bare hva det gjør.
+
+## Designet
+
+### Kniven (knivsett per båt, utstyrsbutikken)
+
+| Trinn | Navn | Sløyetempo (`DECK.gut`) | Stygt sløyd og kutt (`crewSlip`) | Pris |
+|---|---|---|---|---|
+| 1 | Knivene om bord | som i dag, 5 kg per person og minutt | som i dag | følger båten |
+| 2 | Nye sløyekniver | +10 % | −30 % | 1 500 kr per sløyeplass (`stations.table`) |
+| 3 | Sløyekniver i ett stykke og stålhansker | +20 % | −50 % | 4 500 kr per sløyeplass |
+
+- Tempoet ganges inn der `DECK.gut` brukes (`deckMinute`, `deckEta` i `core/05-vessels.js`, `left.sloy` i `13-work.js`), som én faktor `knifeX(b)` fra kjernen. Sløyemaskinen og fabrikkene (`gutMachine`, havbåtene) rører den ikke.
+- Feilene: i `crewSlip` ganges sannsynligheten for grenene «stygt sløyd» og «kutt» med `1 − kniv`, aldri grenen «over ripa».
+- **Det må sies ærlig på kortet:** kvaliteten er en liten effekt, fordi feilene er sjeldne; tida er den store. Alene i båten er sløyinga flaskehalsen (bløggekaret fylles, fisket stopper), så kniven gir flere kilo per dag for den som fisker alene, selv om fangsten per time står. Det måles med `tests/fiskeplay.py` per trinn før tallene settes.
+- Ikke på havbåtene (`cls: 'hav'`, fabrikk).
+
+### Høtten (én per båt, utstyrsbutikken)
+
+| Trinn | Navn | Fisk over ripa (`crewSlip`) | Glipp i juksespillet (`land`, halv treff) | Trekk av line (`gopUnitMin`) | Pris |
+|---|---|---|---|---|---|
+| 1 | Høtten om bord | som i dag | 50 % | som i dag | følger båten |
+| 2 | Stålhøtt | −30 % | 40 % | −4 % tid per stamp | 900 kr |
+| 3 | Lang høtt med krok av stål | −60 % | 30 % | −8 % tid per stamp | 2 900 kr |
+
+- Grenen «over ripa» i `crewSlip` ganges med `1 − høtt`. Glippet i `land(m)` for `m === 0.5` leser høtten. Linetrekket får faktoren i `gopUnitMin`, bare `g.kind === 'line'` og `g.op === 'haul'`, ikke autolina (maskinens tempo), ikke garn (tømmes ved garnbordet) og ikke teiner.
+- **Synlig svinn:** fisk tapt over ripa telles (`S.stats.lostRail`, kg og antall) og står på «Båten og utstyret» og på høttens kort («Tapt over ripa denne uka: 3 fisk, 9 kg»), så spilleren ser hva høtten redder. 3D-kroken `hooks.onCrewFx(c, 'slip', …)` finnes alt; OPP5 gir den et plask.
+- Juksespillets glipp er det ene stedet høtten gir mer fangst: nappet er alt «due», så det er tapt fangst som blir tatt, ikke mer fisk i sjøen. Snittet per time for en som timer nappene dårlig går opp noen prosent; måles i `fiskeplay.py juksa`.
+
+### Dekksutstyret i trinn (utstyrsbutikken)
+
+| Vare | Trinn 2 | Trinn 3 | Pris for trinnene |
+|---|---|---|---|
+| Juksamaskin (V1 A) | «med autostopp»: én person passer fire | «med skjerm og telling»: én person passer fem | 12 000 og 24 000 kr per maskin om bord |
+| Linehaler | +10 % trekkfart (25 til 22,5 min per stamp) | +20 % (20 min) | halve nyprisen, så hele nyprisen en gang til (34 000, 68 000) |
+| Garnhaler | +10 % (4 til 3,6 min per garn) | +20 % (3,2 min) | 47 500, 95 000 |
+| Teinehaler | +10 % (1,2 til 1,08 min per teine) | +20 % (0,96 min) | 29 000, 58 000 |
+| Juksasett (markkroker og pilk, kveitepilk) | bedre kroker og pilk: slites halvparten så fort (`CARE.jig.wear`) | – | +50 % på settets pris |
+
+**Nye dekksmoduler** (Ships at Sea sin «longline setter»):
+
+| Vare | Krever | Trinn 1 | Trinn 2 | Pris |
+|---|---|---|---|---|
+| Linesetter (renne med magasin over hekken) | linehaler | −20 % settetid (`GEAR.line.set`: 5 til 4 min per stamp) | −35 % (3,25 min) | 24 000 og 22 000 kr |
+| Garnrenne (renne over hekken for setting) | garnhaler | −25 % settetid (`GEAR.garn.set`: 0,8 til 0,6 min per garn) | – | 18 000 kr |
+
+- Trinnene ligger i `EQUIP[k].tiers` (navn, tall og pris per trinn), kjøpes trinn for trinn (`buyGate` nekter trinn 3 uten trinn 2), og lagres som tallet i `S.equip[k]` (i dag `true` eller antall; `jukse` teller maskiner og får `S.equip.jukseLv` ved siden). En haler på trinn 2 kjøpt til en båt som ikke passer, finnes ikke: `equipFits` som før.
+- Halernes trinn og høttens lille del ganges inn i `gopUnitMin` etter regelen i prinsipp 1: `base × (1 − haler − høtt)`, aldri `(1 − haler) × (1 − høtt)`.
+- Modellene for linesetter og garnrenne kommer i OPP5; effekten kan gå i OPP2 med kortet og «om bord», som plotteren og ekkoloddet i dag.
+
+### Propellen (verftet, per båt, `b.propLv`)
+
+| Trinn | Fart, planende skrog | Fart, deplasementsskrog | Forbruk | Akselerasjon | Pris |
+|---|---|---|---|---|---|
+| 1 | +10 % | +5 % | −5 % | +5 % | 2 % av båtprisen, minst 2 500 kr |
+| 2 | +20 % | +10 % | −10 % | +10 % | 4 %, minst 4 000 kr |
+| 3 | +30 % | +15 % | −15 % | +15 % | 7 %, minst 6 500 kr |
+
+- Ny tabell `PROPUP` i `core/03-simulation.js`, ny jobb `prop` i `YARD_KINDS` og `finishJob` (`core/06-services.js`), 30 ekte minutter som de andre, kortet under Verft › Oppgrader (`phone/12-utstyr-redskap.js`, handlingen i `14-act.js`), raden i databladet (`phone/10-fartoy.js`). Ikke påhengsmotor (skiffen har `motor90` i stedet) og ikke havbåtene.
+- **Den additive regelen bygges i samme økt:** `applyVessel` regner `sum = propell + (speedOfPower(P) − 1) + (T ? T.x − 1 : 0)` én gang og setter `vmax`, `vcruise` og `accel` av typens tall. Trimmen gir dermed like mange knop uansett propell, og «dobbel fart» er dobbelt av grunnfarten. `trimSet`/`trimEnd` og `speedPin` (rutefarten) er som før; `dynCalOf` leser `BOAT.vmax` og trenger ingen endring, men `tests/unit/trimfart.test.mjs` utvides med summen.
+- Summen av de varige trinnene per båt, uten trim (motorens del er `speedOfPower` på trinn 2):
+
+| Båt | Grunnfart | Propell 3 | Motor 2 | Sum | Med turbotrim (+100 %) |
+|---|---|---|---|---|---|
+| Trebåt 7 kn | 7,0 | +15 % | +6,3 % | 8,5 kn | 15,5 kn |
+| Havsjark 10 kn | 10,0 | +15 % | +6,3 % | 12,1 kn | 22,1 kn |
+| Hurtigsjark 22 kn | 22,0 | +30 % | +9,5 % | 30,7 kn | 52,7 kn |
+| Ny hurtigsjark 25 kn | 25,0 | +30 % | +9,5 % | 34,9 kn | 59,9 kn |
+
+- Trebåten på trinn 3 går forbi snekka og plastsjarken i fart. Det er greit: de selger på last, plass og mannskap, ikke fart.
+- Bremselengder og svingradier ved høyere toppfart på de planende båtene sjekkes i `routetest` og `obstest`; `trackfollow` (3D) bare om `16b-dyn.js` endres.
+
+### «Båten og utstyret» og «Neste mål»
+
+- **Siden** ligger i Fartøy-appen (`ui/phone/10-fartoy.js`) som egen seksjon øverst, for båten du følger: hver stige som én linje med prikker (●●○), navnet på trinnet, neste trinn med pris og virkning i spillerens egne tall (kg per time ved bordet, minutter per stamp eller garn, knop, liter per time), hvor det kjøpes (butikk eller verft) med «Nærmeste» og Autonav dit (`nearestKind` i `core/06c-steder.js`). Stigene: kniv, høtt, juksamaskin, halerne som passer, linesetter og garnrenne, propell, motor, lasterom, verftets `UPGS`, ekkolodd og sonar, antigro. Det som ikke passer båten, står ikke. Det som er fullt, står med alle prikker fylt.
+- **Tapt over ripa** og **minutter per stamp i dag** står på siden som tall, så svinn og tid blir synlige før kjøpet.
+- **«Neste mål»** (`goals()`) får ett utstyrstrinn mellom båttrinnene etter regelen: det billigste ukjøpte trinnet som koster under en tidel av neste båt i stigen, bare når flåten er én båt (som håndjuksa og første juksamaskin i dag). Med flere båter står stigen som før.
+- **Trakten** (`admin_funnel`, `supabase/migrations/20261007150000_funnel.sql`, fanen «Trakt» i `src/admin/`): ett tall til, «andel med minst ett kjøpt trinn innen dag 7», fra hendelsene `shop_buy {w, k, lv}` (finnes, får `lv`) og ny `upg {k, lv}` fra verftet. Ny migrering som utvider funksjonen; `tests/sqltest.py`.
+- Håndboka kapittel 8 «Utstyr og redskap» (`HB`, `lex_*`) får oppføringene for kniv, høtt, linesetter, garnrenne og propell.
+
+### Modellene i 3D (OPP5)
+
+- Kniven i handa ved sløyebordet (fisken tegnes alt i hendene, `drawDeck`), høtten på ripa ved haleplassen (`drawHaulRest`-mønsteret i `view3d/10-gear.js`), linesetter og garnrenne over hekken på festepunktene (`anchors`, dekkskartet), et plask i sjøen ved `onCrewFx 'slip'`. Blender: `tools/deck/kniv.py`, `hott.py`, `linesetter.py`, `garnrenne.py` etter `/blender`, uten merker. Propellen er under vann og tegnes ikke.
+- «Prøv på båten» (`G3.TRY3D`) får linesetter og garnrenne.
+- Jonas ser modellene før utrulling (som H3d1).
+
+## Fasene
+
+| Fase | Hva | Filer | Tester | Måles |
+|---|---|---|---|---|
+| **OPP1 Kniv og høtt** | `EQUIP.kniv` og `EQUIP.hott` med `tiers`; `knifeX`/`hookX` i kjernen; `DECK.gut` ganget i `deckMinute`, `deckEta`, `left.sloy`; grenene i `crewSlip`; glippet i `land(m)`; linetrekket i `gopUnitMin`; `S.stats.lostRail`; kortene i butikken med «om bord · trinn 1» og «Tapt over ripa»; `ICFX`-linjene; `buyGate` trinn for trinn; patchnote | `core/02-species-gear.js`, `05-vessels.js`, `13-work.js`, `14-crewlife.js`, `10-gear.js`, `ui/10-rod-acts.js`, `ui/05a-itemcard.js`, `ui/phone/12-utstyr-redskap.js`, `13b-nettet.js`, `01-i18n.js`, `07-patch.js` | ny `tests/unit/oppgradering.test.mjs` (summene, `DECK`-faktoren, `crewSlip` med `CREW_SEED`, `gopUnitMin` line, `buyGate`), ny `opptest.py` (kjøp bare ved butikkens kai, kortet, trinn 2 før 3, gammel lagring er trinn 1), `worktest`, `shoptest`, `itemcardtest`, `caretest`; sett rød først | `fiskeplay.py` alene og med mannskap per trinn (kg per dag, minutter ved bordet); `worktest` tida ved bordet |
+| **OPP2 Trinn på dekksutstyret** | `tiers` på juksamaskin (V1 A), halerne og juksasettene; linesetter og garnrenne som varer uten modell; `JIG` (maskiner per person) i `03-simulation.js`; `gopUnitMin` med haler-trinn og settetid; kortene | `core/02-species-gear.js`, `03-simulation.js`, `10-gear.js`, `10b-gearcare.js`, `ui/phone/12-utstyr-redskap.js`, `05a-itemcard.js`, `01-i18n.js`, `07-patch.js` | `oppgradering.test.mjs` utvidet, `jig.test.mjs`, `geartest` (minutter per stamp, garn og teine per trinn), `caretest`, `itemcardtest`, `opptest` | `geartest` tidene; `fiskeplay.py line` og `garn` |
+| **OPP3 Propellen og den additive regelen** | `PROPUP`, `b.propLv`; `applyVessel` regner summen én gang (propell, motor, trim); jobben `prop` på verftet; kortet og databladets rad; `cloudEv('upg')` | `core/03-simulation.js`, `06-services.js`, `ui/phone/12-utstyr-redskap.js`, `14-act.js`, `10-fartoy.js`, `01-i18n.js`, `07-patch.js` | `trimfart.test.mjs` (summen, ikke produktet: 25 × 2,395), `yardupgtest`, `fuelcal`, `boostklokke`, `routetest` og `obstest` med toppfart på hurtigsjarkene, `kjoptest` (trim gir like mange knop med og uten propell); sett rød først | tabellen over målt i spillet per båt; dieselregnskapet per tur |
+| **OPP4 «Båten og utstyret», Neste mål og trakten** | seksjonen i Fartøy-appen; `goals()` med utstyrstrinnet; Håndboka kap. 8; migreringen som utvider `admin_funnel`; admin-fanen | `ui/phone/10-fartoy.js`, `ui/07c-handbook.js`, `01-i18n.js`, `supabase/migrations/`, `src/admin/index.html`, `07-patch.js` | `vesseltest` (Neste mål, sett rød: trebåt med 40 000 kr får kniv trinn 2, ikke snekka), `opptest` (siden i begge formater, skjermbilder), `sqltest`, `admintest` | trakten: andel med kjøpt trinn innen dag 7, før og etter datoen |
+| **OPP5 Modellene** | kniv, høtt, linesetter, garnrenne i Blender; tegningen på festepunktene; plasket; «Prøv på båten» | `tools/deck/`, `src/data/*.b64`, malen, `view3d/10-gear.js`, `09-landing-deck.js`, `25-controls.js`, `vessel3d.js` | `vesseltest` (delene finnes, målene), `deckshot`, `geartest` 3D, `trytest`; kontrollbilder i `tools/deck/out/` | Jonas ser modellene; ingen tall |
+
+**Rekkefølgen:** OPP1 og OPP4 først, fordi begge treffer første uke på trebåten og kan leses av i trakten. Så OPP3, OPP2 og OPP5. OPP1 og OPP3 rører `core/03-simulation.js`, `05-vessels.js`, `10-gear.js` og `14-crewlife.js`, som Ø8b S0, S2 og M (køen steg 5, 7, 8) også eier mens de går; rutinens regel om filer avgjør hvem som går først.
+
+## Valget
+
+### V1. Juksamaskinens trinn
+
+**Valgt: A** (Jonas 07.11.2026: «A»).
+
+- **A (anbefalt): bare flere maskiner per person.** Trinn 2 lar én person passe fire, trinn 3 fem (`JIG` i `03-simulation.js`), innenfor `jukseMax`. Hvorfor: det er tid og hender, ikke fisk per time, som prinsipp 2 sier, og maskinen er alt et fangsttrinn (4,0 mot håndjuksa 2,0). Ulempen er ærlig: på trebåten og snekka (2 og 3 maskiner) gir trinnet ingenting, så det teller fra plastsjarken og opp.
+- B: som A, og i tillegg +5 % og +10 % per maskin. Merkes på alle båter, men er det ene trinnet som gir mer fisk per time og må kalibreres mot `docs/systemer/redskap.md`.
+- C: ingen trinn på juksamaskinen.
+
+## Antatt og usikkert
+
+- **Alle tallene er startverdier** uten kilde: ingen måling finnes av hva en bedre kniv gjør med sløyetida, eller en høtt med svinnet. De settes etter `fiskeplay.py` og `geartest`, og Jonas kan flytte dem.
+- **Per båt og propellen på verftet** er valgt av økta ut fra svarene 07.11.2026 (mannskapet sliper knivene, alt følger båten, verftet har motoren); Jonas har ikke sagt «per båt» med de ordene.
+- **Kvaliteten fra kniven er liten,** fordi feilene på dekk er sjeldne. Vil Jonas ha kvaliteten synlig på sluttseddelen, må det bygges et eget sløyekvalitetstrekk, og det er en annen plan (Råfisklagets prisregler for dårlig bløgget fisk er kilden; ikke lest i denne økta).
+- **Kniven gir flere kilo per dag for den som fisker alene,** fordi sløyinga er flaskehalsen. Det er en følge av tida, ikke av fangsten, men det må måles, og haill ganger på toppen.
+- **Juksespillets glipp** er den ene fangstøkningen høtten gir; noen prosent for den som timer dårlig.
+- **Farten på de planende båtene** med propell 3 og motor 2 (31 og 35 knop) og med turbotrim oppå er ikke prøvd i manøvermodellen eller på nettbrett; trimmen ganger alt i dag (50 knop), så det meste er sett før.
+- **Prisene** for trinnene er valgt så trebåten har noe å kjøpe for 900 til 6 500 kr de første dagene, og så propell 3 på en båt til 10 millioner koster 735 000 kr. `progweek.py` måler at stigen fortsatt tar uker, ikke dager.
+- **Mannskapets ferdighet** (`teamEff`) ganges fortsatt inn etter summen. Et mannskap på 5 i sløying med kniv 3 blir raskt; det er ment.
+
+## Det planen ikke gjør
+
+- Ingenting selges for ekte penger, og ingen trinn låses bak haill, trim, fartstid eller merker.
+- Ingen ny straff på trinn 1: ingen nye tap, ingen nye trekk, ingen slitasje på kniv, høtt eller propell.
+- Ingen endring av fiskemodellen, `density`, `luck`, `GEAR.q` eller kalibreringen mot ERS (V1 A er valgt, så ingen unntak).
+- Ikke havbåtene: fabrikkene, autolina og den koniske teina har sine egne tall.
+- Ikke mannskapets personlige utstyr eller klær (Jonas 10.10.2026: spilleren kler ikke mannskapet; klærne finnes).
+- Ikke flere båter i stigen, ikke sertifikater, ikke kvotemarkedet.
+- Patchnotes sier hva trinnene gjør, aldri priser i kroner for ekte penger eller hvorfor.
+
+## Status
+
+- 07.11.2026: planen skrevet (Jonas' økt, grenen `ccr-5626c087-fg38n2`, bygd på arbeidsgrenen samme dag). Valgene 1–7 over er tatt av Jonas 07.11.2026. Stegene OPP1–OPP5 står i `docs/planer/koen.md` (53–57), med hel startmelding for OPP1.
+- 07.11.2026: Jonas valgte **V1 A** (juksamaskinens trinn gir bare flere maskiner per person, ingen fisk per time). Alle valgene er tatt. Venter på «kjør på», og på at planen flettes inn i arbeidsgrenen, så rutinen ser stegene.

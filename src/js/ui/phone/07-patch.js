@@ -1,6 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['ro-071126', '07.11.2026', 'Roen på skjermen', 'Calm on the screen', [
+       ['En lang rute i kartet tegnes lettere, og et spill med en lang rute lagret starter med kartet langs hele ruta på plass, uten å laste seg selv på nytt.', 'A long route on the chart is drawn more lightly, and a game saved with a long route starts with the chart along all of it in place, without loading itself again.'],
        ['Når du ikke har rørt skjermen på åtte sekunder, blir knappene svake. Hovedknappen, Om bord, telefonen og dagboka står som før, og stripa, kartet med ekkoloddet og kompasset står alltid.', 'When you have not touched the screen for eight seconds, the buttons fade. The main button, Aboard, the phone and the deck log stay as they are, and the strip, the chart with the echo sounder and the compass always stay.'],
        ['Et trykk hvor som helst henter knappene fram igjen, og et trykk på en svak knapp virker som før. Et varsel henter dem også: kuling, regler, full last, framme, en melding.', 'A tap anywhere brings the buttons back, and a tap on a faded button works as before. A warning brings them too: a gale, the rules, a full hold, arrived, a message.'],
        ['I første tur står knappene hele tida.', 'In the first trip the buttons stay all the time.'],
