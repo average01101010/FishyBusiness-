@@ -162,12 +162,18 @@
   }
   // --- actions
   // the equipment owned that does not suit type k: it stays with the boat traded in, and is not paid for
-  const swapLeaves = k => Object.keys(EQUIP).filter(q => S.equip[q] && !EQUIP[q].multi && !equipFits(q, k));
+  const swapLeaves = k => Object.keys(EQUIP).filter(q => S.equip[q] && !EQUIP[q].multi && !EQUIP[q].tiers && !equipFits(q, k));
+  // the knives and the gaff above tier 1 (OPP1): the boat's, as the crew uses and hones them, so they go with the boat traded in and the
+  // new one has tier 1 (prinsipp 5 of docs/planer/oppgraderinger.md: «De følger båten ved innbytte og salg»; OPP4). Before, the tier came
+  // along, and the knives bought per gutting place on a wooden boat went to a 14.99 m vessel with three places for nothing
+  const swapTiers = () => Object.keys(EQUIP).filter(q => EQUIP[q].tiers && equipLv(q) > 1);
   function switchVessel(k){
-    const b = S.boat, old = VESSELS[b.type], left = swapLeaves(k);
+    const b = S.boat, old = VESSELS[b.type], left = swapLeaves(k), tiers = swapTiers();
     setTimeout(() => BUYM.show(), 60);   // the moment she is yours, once the purchase has set her up (M5)
     if (left.length) log('Utstyr som ikke passer den nye båten, ble med ' + old.name.no + ': ' + left.map(q => EQUIP[q].name.no).join(', ') + '.', 'Equipment that does not suit the new vessel went with the ' + old.name.en + ': ' + left.map(q => EQUIP[q].name.en).join(', ') + '.');
-    b.type = k; delete b.liv; delete b.call; for (const q of Object.keys(EQUIP)) if (!equipFits(q, k)) S.equip[q] = EQUIP[q].multi ? Math.min(S.equip[q] || 0, VESSELS[k].jukseMax || 0) : false; applyVessel(); loreNewBoat(S.boatName);
+    if (tiers.length) log('Ble med ' + old.name.no + ': ' + tiers.map(q => lc1(EQUIP[q].tiers[equipLv(q) - 1].no) + ' (trinn ' + equipLv(q) + ')').join(', ') + '. Den nye båten har det hun har om bord, trinn 1.', 'Went with the ' + old.name.en + ': ' + tiers.map(q => lc1(EQUIP[q].tiers[equipLv(q) - 1].en) + ' (tier ' + equipLv(q) + ')').join(', ') + '. The new boat has what she has aboard, tier 1.');
+    for (const q of Object.keys(EQUIP)) if (EQUIP[q].tiers) delete S.equip[q];
+    b.type = k; delete b.liv; delete b.call; for (const q of Object.keys(EQUIP)) if (!EQUIP[q].tiers && !equipFits(q, k)) S.equip[q] = EQUIP[q].multi ? Math.min(S.equip[q] || 0, VESSELS[k].jukseMax || 0) : false; applyVessel(); loreNewBoat(S.boatName);
     S.equip.jukse = Math.min(S.equip.jukse, BOAT.jukseMax); b.fuel = BOAT.fuelCap * 0.4; b.ice = 0; b.engH = 0; b.svcAt = 0; S.svcTold = false;
     while (S.crew.length > BOAT.crewMax) S.crew.pop();
     log('Overtok ' + VESSELS[k].name.no + '. ' + old.name.no + ' er solgt.', 'Took over the ' + VESSELS[k].name.en + '. The ' + old.name.en + ' has been sold.');
