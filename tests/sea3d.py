@@ -3,7 +3,10 @@ from _env import GAME, GAME_TUT, boot
 # Monahan and O'Muircheartaigh (1980) give them, calm in the lee, spindrift and haze in a storm, and the same without vertex textures.
 # Pictures: sea3d_bf.png (Beaufort 0-11 on the Husøy ground), sea3d_lee.png (windward, lee, harbour and sound in a gale) and
 # sea3d_wake.png (the wake of a planing skiff, a sjark and a 21 m coaster at speed).
-import asyncio, json, os, time
+import asyncio, json, os, sys, time
+# each check is printed as soon as its part is done, line by line (07.11.2026, F3: on a slow machine the run passed run.py's
+# 3000 s in the wake pictures, and every check line, printed at the end, was lost)
+sys.stdout.reconfigure(line_buffering=True)
 from playwright.async_api import async_playwright
 from PIL import Image, ImageDraw, ImageFont
 
@@ -96,11 +99,17 @@ async def main():
         R['foamRendered'] = rend
         await pg.evaluate("G3._debug.seaDbg = false;")
         stage('foam done')
+        print(ok(R['ramp']['maxWave'] < 0.05 and R['ramp']['maxHs'] < 0.08), 'from calm to hurricane in steps of 0.1 m/s no wave changes by more than 5 cm, and the height by less than 8 cm: no jumps between the Beaufort forces')
+        print(ok(R['sudden']['perFrameWind'] < 0.2 and R['sudden']['perFrameHs'] < 0.08 and R['sudden']['perFrameDirDeg'] < 0.5 and R['sudden']['reached'] > 23), 'a sudden change of wind (5 to 25 m/s, SW to S) reaches the sea over some seconds, a little each frame')
+        print(ok(R['rebuild']['nearMoved'] and R['rebuild']['alwaysNear'] and R['rebuild']['maxStep'] < 0.05), 'sailing 3 km the near sea map is rebuilt, and the sea at a fixed spot does not jump meanwhile')
+        print(ok(all(0.5 <= f['share'] / f['monahan'] <= 2 for f in R['foam'])), 'the whitecap threshold gives Monahan\'s cover within a factor of two (8-25 m/s)')
+        print(ok(all(0.5 <= f['share'] / f['monahan'] <= 2 for f in R['foamRendered'])), 'and so does the drawn foam in a strong gale and a storm')
         # 5. spindrift from a gale, haze from a strong gale
         await pg.evaluate("(()=>{const c = G3._debug.cam; c.dist = 34; c.pitch = 0.2; c.yaw = 2.6; })()")
         await pg.evaluate("WX_FORCE = {w:28, d:315}; G3._debug.WV.init = false;"); await pg.wait_for_timeout(3000)
         storm = await pg.evaluate("({drift:G3._debug.drift, fog:G3._debug.env.fogD})")
         R['air'] = {'calm': calm, 'storm': storm}
+        print(ok(storm['drift'] > 60 and calm['drift'] == 0 and storm['fog'] > calm['fog'] * 1.5), 'spindrift flies in a storm and not in a fresh breeze, and the spray hazes the view')
         # 6. pictures: every Beaufort force, then windward, lee, harbour and sound in a gale
         tiles = []
         for n, U in BF:
@@ -121,6 +130,8 @@ async def main():
             f = f'sea3d_{key}.png'; await pg.screenshot(path=f); tiles.append((f, f'{name} · vindsjø {s[0]:.1f} m, dønning {s[1]:.1f} m'))
         await sheet(tiles, 'sea3d_lee.png', 2); stage('lee pictures done')
         R['lee'] = lee
+        L = R['lee']
+        print(ok(L['wind'][0] > 4 and L['lee'][0] < 0.3 * L['wind'][0] and L['harbour'][0] < 0.2 * L['wind'][0] and L['harbour'][1] < 0.3), 'in a gale from NW the ground off Husøy has the full sea, the lee from the south a fraction, the harbour almost none')
         # 8. the boat's own waves at speed: a planing skiff, a sjark near hull speed and a 21 m coaster, on a calm sea, seen from astern
         tiles, wake = [], {}
         for vt, kn in [('skiff', 18), ('sjark', 8.5), ('kyst21', 10)]:
@@ -133,6 +144,9 @@ async def main():
             f = f'sea3d_wake_{vt}.png'; await pg.screenshot(path=f); tiles.append((f, f'{vt} {kn} kn · Fr {wake[vt]["Fr"]} · bølgelengde {wake[vt]["lam"]} m'))
         await sheet(tiles, 'sea3d_wake.png', 3); stage('wake pictures done')
         R['wake'] = wake
+        W = R['wake']
+        print(ok(all(W[k]['on'] == 1 for k in W) and W['skiff']['trans'] < 0.1 and W['sjark']['trans'] > 0.9 and W['kyst21']['trans'] > 0.9), 'a planing skiff leaves divergent waves only; the displacement hulls also the transverse waves behind the stern')
+        print(ok(all(abs(W[k]['lam'] - 2 * 3.14159 * (W[k]['kn'] * 0.5144) ** 2 / 9.81) < 0.3 for k in W) and abs(W['sjark']['kn'] - 8.5) < 1 and 0.2 < W['sjark']['A'] < 0.6 and 0.05 < W['skiff']['A'] < 0.3), 'the wake waves are 2 pi v^2 / g long, highest near hull speed and lower for the planing skiff')
         await pg.evaluate("(() => { S.mult = 0.00001; const b = S.boat; b.type = 'skiff'; applyVessel(); G3.vesselChanged(); b.status = 'idle'; S.plan = null; b.v = 0; })()")
         # 9. the hull's motions (03c-stability.js): a skiff and a 21 m coaster lying beam-on in the same sea, 40 s of motion each, and then
         # let go from 7 degrees of heel in the calm of Finnsnes: the free roll swings at the hull's own period (the forced roll in a
@@ -151,6 +165,8 @@ async def main():
             out[vt] = {rmsDeg:Math.round(rms * 1800 / Math.PI) / 10, free:Math.round(2 * fr.length / 30 / Math.max(1, f.z) * 10) / 10, Tr:Math.round(stabOf(vt).Tr * 10) / 10, ok:rec.every(Number.isFinite) && fr.every(Number.isFinite)}; }
           WX_FORCE = null; const b = S.boat; b.type = 'skiff'; applyVessel(); G3.vesselChanged(); return out; })()""")
         stage('motion done')
+        Mo = R['motion']
+        print(ok(Mo['skiff']['ok'] and Mo['kyst21']['ok'] and Mo['kyst21']['rmsDeg'] > 0.1 and all(abs(Mo[v]['free'] / Mo[v]['Tr'] - 1) < 0.25 for v in Mo) and Mo['kyst21']['free'] > 2 * Mo['skiff']['free']), 'in 3D the hull rolls as an oscillator: let go from a heel each swings at its own roll period, the 21 m coaster much slower than the skiff')
         await pg.close()   # the first page is done; left open it keeps drawing 3D and starves the second page's sea-state work in a slow browser
         # 7. a GPU with no textures in the vertex shader: the same page, the waves from the values at the boat
         pg2 = await b.new_page(viewport={'width': 640, 'height': 400}); errs2 = []; pg2.on('pageerror', lambda e: errs2.append(str(e)))
@@ -181,23 +197,10 @@ async def main():
         R['mid'] = await pl.evaluate("({lvl:G3._debug.seaLvl, mid:G3._debug.seaMid, lite:G3._debug.seaLite, basic:G3._debug.seaBasic, one:G3._debug.seaOne, gl:G3._debug.glErr(), fps:G3._debug.fps > 0})"); R['mid']['errs'] = el[:2]
         await pl.screenshot(path='sea_mid.png'); await pl.close()
         print(json.dumps(R, ensure_ascii=False))
-        print(ok(R['ramp']['maxWave'] < 0.05 and R['ramp']['maxHs'] < 0.08), 'from calm to hurricane in steps of 0.1 m/s no wave changes by more than 5 cm, and the height by less than 8 cm: no jumps between the Beaufort forces')
-        print(ok(R['sudden']['perFrameWind'] < 0.2 and R['sudden']['perFrameHs'] < 0.08 and R['sudden']['perFrameDirDeg'] < 0.5 and R['sudden']['reached'] > 23), 'a sudden change of wind (5 to 25 m/s, SW to S) reaches the sea over some seconds, a little each frame')
-        print(ok(R['rebuild']['nearMoved'] and R['rebuild']['alwaysNear'] and R['rebuild']['maxStep'] < 0.05), 'sailing 3 km the near sea map is rebuilt, and the sea at a fixed spot does not jump meanwhile')
-        print(ok(all(0.5 <= f['share'] / f['monahan'] <= 2 for f in R['foam'])), 'the whitecap threshold gives Monahan\'s cover within a factor of two (8-25 m/s)')
-        print(ok(all(0.5 <= f['share'] / f['monahan'] <= 2 for f in R['foamRendered'])), 'and so does the drawn foam in a strong gale and a storm')
-        print(ok(storm['drift'] > 60 and calm['drift'] == 0 and storm['fog'] > calm['fog'] * 1.5), 'spindrift flies in a storm and not in a fresh breeze, and the spray hazes the view')
-        L = R['lee']
-        print(ok(L['wind'][0] > 4 and L['lee'][0] < 0.3 * L['wind'][0] and L['harbour'][0] < 0.2 * L['wind'][0] and L['harbour'][1] < 0.3), 'in a gale from NW the ground off Husøy has the full sea, the lee from the south a fraction, the harbour almost none')
         print(ok(R['novtf']['vtf'] is False and not R['novtfErrors']), 'without textures in the vertex shader (#novtf) the sea is drawn from the values at the boat, with no errors')
         V = R['lvl']
         M = R['mid']; print(ok(M['lvl'] == 1 and M['mid'] and M['lite'] and not M['one'] and not M['basic'] and M['gl'] == 0 and M['fps'] and not M['errs']), 'the middle sea on level 1 (the lite vertex shader, the full fragment shader and its own far pass) is drawn with no GL errors', M)
         T = R['lite']; print(ok(T['lite'] and T['one'] and not T['basic'] and T['gl'] == 0 and T['fps'] and not T['errs']), 'the lite sea, the last try before the flat sea, is drawn with no GL errors', T)
         print(ok(V[1]['lvl'] == 1 and V[1]['one'] and not V[1]['basic'] and V[2]['lvl'] == 2 and V[2]['basic'] and all(V[k]['gl'] == 0 and V[k]['fps'] and not V[k]['errs'] for k in V)), 'a device that lost the context on the full sea steps down: the simpler sea for both passes, then the flat sea, both drawn with no GL errors', V)
-        W = R['wake']
-        print(ok(all(W[k]['on'] == 1 for k in W) and W['skiff']['trans'] < 0.1 and W['sjark']['trans'] > 0.9 and W['kyst21']['trans'] > 0.9), 'a planing skiff leaves divergent waves only; the displacement hulls also the transverse waves behind the stern')
-        print(ok(all(abs(W[k]['lam'] - 2 * 3.14159 * (W[k]['kn'] * 0.5144) ** 2 / 9.81) < 0.3 for k in W) and abs(W['sjark']['kn'] - 8.5) < 1 and 0.2 < W['sjark']['A'] < 0.6 and 0.05 < W['skiff']['A'] < 0.3), 'the wake waves are 2 pi v^2 / g long, highest near hull speed and lower for the planing skiff')
-        Mo = R['motion']
-        print(ok(Mo['skiff']['ok'] and Mo['kyst21']['ok'] and Mo['kyst21']['rmsDeg'] > 0.1 and all(abs(Mo[v]['free'] / Mo[v]['Tr'] - 1) < 0.25 for v in Mo) and Mo['kyst21']['free'] > 2 * Mo['skiff']['free']), 'in 3D the hull rolls as an oscillator: let go from a heel each swings at its own roll period, the 21 m coaster much slower than the skiff')
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())
