@@ -487,3 +487,14 @@
 2026-11-07 01:42	ccr-208d78a1-ruhxll	fdac21e3	hulltest	OK	69	lite	samtidig	
 2026-11-07 01:42	ccr-208d78a1-ruhxll	fdac21e3	trip2	OK	30	lite	samtidig	
 2026-11-07 01:42	ccr-208d78a1-ruhxll	fdac21e3	boottest	OK	22	lite	samtidig	
+2026-11-07 02:27	ccr-2cfcfb0c-tfhulm	52d095f3+	megletest	OK	14	lite	samtidig	
+2026-11-07 02:27	ccr-2cfcfb0c-tfhulm	52d095f3+	markettest	OK	32	lite	samtidig	
+2026-11-07 02:27	ccr-2cfcfb0c-tfhulm	52d095f3+	fleet2test	OK	36	lite	samtidig	
+2026-11-07 02:27	ccr-2cfcfb0c-tfhulm	52d095f3+	vesseltest	OK	28	lite	samtidig	
+2026-11-07 02:27	ccr-2cfcfb0c-tfhulm	52d095f3+	fleet3test	OK	14	lite	samtidig	
+2026-11-07 02:27	ccr-2cfcfb0c-tfhulm	52d095f3+	adminbuytest	OK	10	lite	samtidig	
+2026-11-07 02:28	ccr-2cfcfb0c-tfhulm	52d095f3+	docktest	FEIL	62	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-07 02:28	ccr-2cfcfb0c-tfhulm	52d095f3+	nettest	OK	23	lite	samtidig	
+2026-11-07 02:28	ccr-2cfcfb0c-tfhulm	52d095f3+	boktest	OK	7	lite	samtidig	
+2026-11-07 02:28	ccr-2cfcfb0c-tfhulm	52d095f3+	boottest	OK	26	lite	samtidig	
+2026-11-07 02:29	ccr-2cfcfb0c-tfhulm	52d095f3+	sponsor2test	OK	11	lite	samtidig	

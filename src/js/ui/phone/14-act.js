@@ -171,7 +171,7 @@
     else if (a === 'trimbuy'){ const b = S.boat, B = BOOSTS[d.k], on = trimOn(b); if (!B || !canBoost(VESSELS[b.type])) return; if (on && on !== B && trimPend !== d.k){ trimPend = d.k; return true; } trimPend = null;
       payBuy(d.k, () => { const w = trimWords(d.k, trimSet(d.k)); log(w.no, w.en); toast(L(B.no + ': ', B.en + ': ') + fmt(BOAT.vmax, 1) + ' kn'); }); }
     else if (a === 'trim0'){ trimPend = null; return true; }
-    else if (/^mg/.test(a)){ if (!mgAct(a, d)) return; }   // Kystmegleren (phone/13c-megler.js, M4)
+    else if (/^m[gb]/.test(a)){ if (!mgAct(a, d)) return; }   // Kystmegleren (phone/13c-megler.js, M4; the sales between players, B)
     else if (a === 'eqtry'){ equipTry(d.k); return true; }   // try it on the boat in 3D (M3)
     else if (a === 'equip'){ const E = EQUIP[d.k]; if (!E) return;
       // expensive equipment confirms in the button, as the counter's other buys do (M2: IC_CONFIRM_KR)
@@ -216,17 +216,16 @@
     else if (a === 'goto'){ const v = vesselById(d.id); if (!v) return; if (SEL_APPS.includes(d.a)) selV = v.id; else if (v.id !== S.cur){ storeVessel(curVessel()); bindVessel(v); selV = null; if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); } app = d.a; }
     else if (a === 'vfollow'){ const v = vesselById(d.id); if (!v || v.id === S.cur) return; storeVessel(curVessel()); bindVessel(v); selV = null; if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); }
     else if (a === 'vboard'){ const v = vesselById(d.id), mv = vesselById(S.me); if (!v || v.id === S.me || vget(v, 'boat').status !== 'port' || (mv && vget(mv, 'boat').status !== 'port')) return;
+      if (mbSale(v)){ toast(L('«' + vget(v, 'boatName') + '» ligger til salgs hos Kystmegleren.', 'The «' + vget(v, 'boatName') + '» is for sale at Kystmegleren.')); return; }   // (B1: locked at the yard until the sale is over)
       S.me = v.id; log('Du gikk om bord på «' + vget(v, 'boatName') + '».', 'You went aboard the «' + vget(v, 'boatName') + '».');
       if (v.id !== S.cur){ storeVessel(curVessel()); bindVessel(v); if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); } }
     else if (a === 'vname'){ const v = vesselById(d.id); if (!v) return; const nm = (prompt(L('Nytt navn på båten', 'New name for the vessel'), vget(v, 'boatName') || '') || '').replace(/[<>&"]/g, '').trim().slice(0, 20); if (!nm) return;
       if (v.id === S.cur) S.boatName = nm; else v.boatName = nm; loreRename(nm); }
-    else if (a === 'vsell'){ const v = vesselById(d.id); if (!v || v.id === S.me || S.fleet.length < 2 || vget(v, 'boat').status !== 'port' || tiLocked(v)) return;
-      const val = vesselValue(v), nm = vget(v, 'boatName'), hands = (vget(v, 'crew') || []).length;
-      if (!confirm(L('Selge «' + nm + '» for ' + kr(val) + '?', 'Sell the «' + nm + '» for ' + kr(val) + '?') + (debt() > 0 ? ' ' + L('Pengene går først til å innfri lånene.', 'The money first pays off the loans.') : ''))) return;
-      if (v.id === S.cur){ bindVessel(vesselById(S.me)); if (typeof G3 !== 'undefined') G3.vesselChanged(); }
-      if (v.id === openVesselId()) openUsedSave(vget(v, 'quota'));   // § 29: the owner's open-group catch follows to the next boat
-      const paid = payDown(val); S.fleet.splice(S.fleet.indexOf(v), 1); book('baat', val - paid, 'Båt solgt', 'Vessel sold');
-      log('Solgte «' + nm + '» for ' + kr(val) + '.' + (paid ? ' ' + kr(paid) + ' gikk til å innfri lån.' : '') + (hands ? ' Mannskapet hennes gikk i land.' : ''), 'Sold the «' + nm + '» for ' + kr(val) + '.' + (paid ? ' ' + kr(paid) + ' went to pay off loans.' : '') + (hands ? ' Her crew went ashore.' : '')); refreshAll(); }
+    // «Selg nå» (B4, V6 A): the broker buys her at once for 90 % of her value (core/09k-market.js mbQuickSell); the loans are paid first
+    else if (a === 'vsell'){ const v = vesselById(d.id), w = mbQuickWhy(v); if (w){ if (w !== 'gone') toast(mbWhyTxt(w)); return; }
+      const val = mbQuick(v), nm = vget(v, 'boatName');
+      if (!confirm(L('Selge «' + nm + '» til Kystmegleren for ' + kr(val) + ' (90 % av verdien)?', 'Sell the «' + nm + '» to Kystmegleren for ' + kr(val) + ' (90 % of her value)?') + (debt() > 0 ? ' ' + L('Pengene går først til å innfri lånene.', 'The money first pays off the loans.') : ''))) return;
+      mbQuickSell(v.id); if (mbPutSel === v.id) mbPutSel = null; if (typeof cloudEv === 'function') cloudEv('mb_quick', {type:vget(v, 'boat').type}); refreshAll(); }
     else if (a === 'bhire' || a === 'bneg'){ const B = S.bors, c = B && B.pool.find(x => x.id === d.id); if (!c || S.crew.length >= BOAT.crewMax || S.boat.status !== 'port' || crewHireWhy()) return;
       if (a === 'bneg'){ c.neg = true; if (Math.random() < 0.6 - (c.traits.includes('stolt') ? 0.25 : 0)){ c.ask = lotR(c.ask - LOTT.step); c.share = c.ask; c.morale -= 5; toast(L(c.name.split(' ')[0] + ' godtar ' + lotS(c.ask) + '.', c.name.split(' ')[0] + ' accepts ' + lotS(c.ask) + '.')); }
         else { B.pool.splice(B.pool.indexOf(c), 1); toast(L(c.name.split(' ')[0] + ' takket nei og tok hyre et annet sted.', c.name.split(' ')[0] + ' said no and took a berth elsewhere.')); } }

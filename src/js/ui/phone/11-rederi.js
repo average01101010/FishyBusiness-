@@ -43,20 +43,20 @@
     const meV = vesselById(S.me), meIn = !meV || vget(meV, 'boat').status === 'port', why = no ? 'Begge må ligge i havn' : 'Both must be in port';
     const h = ['<div class="ph-c">'];
     for (const {v, s: sm} of all){
-      const vb = vget(v, 'boat'), cur = v.id === S.cur, me = v.id === S.me, inp = vb.status === 'port', canBoard = !me && inp && meIn;
+      const vb = vget(v, 'boat'), cur = v.id === S.cur, me = v.id === S.me, inp = vb.status === 'port', sale = !!mbSale(v), canBoard = !me && inp && meIn && !sale;
       const dot = /engine|adrift|aground/.test(vb.status) ? 'bad' : sm.al.length ? 'warn' : inp ? 'port' : 'ok';
       const tags = (me ? '<span class="fl-tag">' + L('Om bord', 'Aboard') + '</span>' : '') + (cur && all.length > 1 ? '<span class="fl-tag">' + L('Følger', 'Following') + '</span>' : '');
       const meta = [L('Mannskap ', 'Crew ') + sm.crew + ' / ' + sm.crewMax];
       if (sm.iceCap > 0) meta.push(L('Is ', 'Ice ') + fmt(sm.ice, 0) + ' / ' + sm.iceCap + ' kg');
       if (sm.inc > 0) meta.push(L('Inntekt i dag ', 'Income today ') + kr(Math.round(sm.inc)));
       // the buttons: the main one first, then the second, then «⋯» with the rest
-      const take = me ? '' : '<button class="ph-btn' + (canBoard ? ' p' : '') + '" data-pa="vboard" data-id="' + v.id + '"' + (canBoard ? '' : ' disabled data-why="' + why + '"') + '>' + L('Ta roret', 'Take the helm') + '</button>';
+      const take = me ? '' : '<button class="ph-btn' + (canBoard ? ' p' : '') + '" data-pa="vboard" data-id="' + v.id + '"' + (canBoard ? '' : ' disabled data-why="' + (sale ? L('Ligger til salgs', 'For sale') : why) + '"') + '>' + L('Ta roret', 'Take the helm') + '</button>';
       const follow = cur ? '' : '<button class="ph-btn ' + (canBoard ? 'alt' : 'p') + '" data-pa="vfollow" data-id="' + v.id + '">' + L('Følg', 'Follow') + '</button>';
       const more = ['<button class="ph-btn alt" data-pa="vname" data-id="' + v.id + '">' + L('Gi nytt navn', 'Rename') + '</button>'];
-      if (!me && all.length > 1){ const sw = !inp ? L('Må ligge i havn', 'Must lie in port') : tiLocked(v) ? L('Går i innbytte', 'Being traded in') : '';
-        more.push('<button class="ph-btn red" data-pa="vsell" data-id="' + v.id + '"' + (sw ? ' disabled data-why="' + sw + '"' : '') + '>' + L('Selg for ', 'Sell for ') + kr(vesselValue(v)) + '</button>'); }
-      // the broker (Kystmegleren and delivery, M4): what is under way stands on the card, the offers sit behind «⋯»
-      const mg = me ? '' : mgOwnRow(v), mgOn = !me && (mktOwn(v.id) || (mktState().del || []).some(d => d.vid === v.id));
+      if (!me && all.length > 1){ const q = mbQuickWhy(v), sw = q === 'sea' ? L('Må ligge i havn', 'Must lie in port') : q === 'order' ? L('Går i innbytte', 'Being traded in') : q === 'listed' ? L('Ligger til salgs', 'For sale') : '';
+        more.push('<button class="ph-btn red" data-pa="vsell" data-id="' + v.id + '"' + (sw ? ' disabled data-why="' + sw + '"' : '') + '>' + L('Selg nå til Kystmegleren · ', 'Sell now to Kystmegleren · ') + kr(mbQuick(v)) + '</button>'); }
+      // the broker (Kystmegleren and delivery, M4; the sales between players, B): what is under way stands on the card, the offers sit behind «⋯»
+      const mg = me && !mbSale(v) ? '' : mgOwnRow(v), mgOn = !!mbSale(v) || (mktState().del || []).some(d => d.vid === v.id);
       if (mg && !mgOn) more.push(mg);
       h.push('<div class="ph-card fl"><div class="fl-h"><h4>«' + vget(v, 'boatName') + '»' + (me ? ' ⚓' : '') + '</h4>' + tags + '</div><p class="ph-note fl-type">' + VESSELS[vb.type].name[S.lang] + '</p>' +
         '<div class="fl-st"><i class="fl-dot ' + dot + '"></i><span>' + sm.status + (inp ? '' : ' · ' + sm.pos) + '</span></div>' +
