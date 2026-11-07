@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['f3-071126', '07.11.2026', 'Sjøen bryter', 'The sea breaks', [
+       ['Skumtoppene kommer der bølgene bryter, på kammen som blir spiss, og skummet blir liggende bak kammen som tråder som driver med vinden og tynnes ut. Jo mer vind, jo lenger ligger det.', 'The whitecaps come where the waves break, on the crest that grows sharp, and the foam stays behind the crest as strands that drift with the wind and thin out. The more wind, the longer it lies.'],
+       ['Sjøen er krappere og går i flere retninger, mest i ung sjø nær land, og fra stiv kuling river vinden sprut av kammene.', 'The sea is choppier and runs in more directions, most of all in a young sea near land, and from a near gale the wind tears spray off the crests.'],
+       ['Vindkastene og kattepotene på vannet går nå med vinden.', 'The gusts and the cat\'s paws on the water now move with the wind.']]],
     ['o3a-071126', '07.11.2026', 'Raskere kart', 'A faster chart', [
        ['Kartplotteren tegner dybden og dybdelinjene i fjorden og havna omtrent dobbelt så fort, og bildet er det samme som før.', 'The chart plotter draws the depth and the depth contours in a fjord or a harbour about twice as fast, and the picture is the same as before.'],
        ['Det lille kartet i 3D tegner kysten med én gang også der sjøkartet rundt båten ikke er hentet ennå, i stedet for å stå et par sekunder første gang.', 'The little chart in 3D draws the coast at once also where the sea chart round the boat has not been fetched yet, instead of standing still for a few seconds the first time.']]],
