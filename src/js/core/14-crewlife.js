@@ -313,21 +313,34 @@ function adviceGround(H){
 // it; rare otherwise (about once in a long day at the table). A cut slows the one cut for four hours (04-crew.js crewDrive 'cut').
 // (the dice for the mistakes: Math.random, or a seeded run for the tests, window.CREW_SEED, so a test sees the same slips each time)
 function crewRand(){ if (typeof window === 'undefined' || window.CREW_SEED == null) return Math.random(); window.CREW_SEED = (window.CREW_SEED * 1664525 + 1013904223) >>> 0; return window.CREW_SEED / 4294967296; }
+// The knives and the gaff (OPP1 of docs/planer/oppgraderinger.md): the three ways it goes are 45, 30 and 25 % of the base chance; the gaff
+// takes its share off the first (a fish over the rail), the knife its share off the other two (badly gutted, a cut), never across.
+// The chance of any of them is the base chance times what is left of the three; at tier 1 it is as before, the same dice included.
+const SLIP_W = {rail:0.45, botch:0.30, cut:0.25};
 function crewSlip(team){
   if (!team.length) return;
   const b = S.boat, H = S.t / 60, hs = hsWork(b.pos, H), cp = coldPen(H, hs);
+  const wr = SLIP_W.rail * upgSum(-hookX('rail')), kn = upgSum(-equipTier('kniv').slip), wb = SLIP_W.botch * kn, wc = SLIP_W.cut * kn, W = wr + wb + wc;
   for (const c of team){
     const sk = (c.gear && c.gear.sloy) || 1, f = c.fatigue / 100, e = crewEffort(c, H, hs).f;
     const pr = 0.0012 * (1 + 2 * f * f + Math.max(0, hs - 1) + 2 * cp + (5 - sk) / 3 + 3 * Math.max(0, 1 - e));
-    if (crewRand() >= pr) continue;
-    const r = crewRand(), nm = c.name.split(' ')[0];
-    if (r < 0.45){ const x = S.hold.filter(y => !y.iced && !liveLot(y) && y.kg > 0.5).sort((a, y) => y.kg - a.kg)[0]; if (!x) continue;
-      const kg = Math.min(x.kg, 1.5 + crewRand() * 3); if (x.n) x.n = Math.max(0, x.n - 1); x.kg -= kg; if (x.kg < 0.01) S.hold.splice(S.hold.indexOf(x), 1);
+    if (crewRand() >= pr * W) continue;
+    const r = crewRand() * W, nm = c.name.split(' ')[0];
+    if (r < wr){ const x = S.hold.filter(y => !y.iced && !liveLot(y) && y.kg > 0.5).sort((a, y) => y.kg - a.kg)[0]; if (!x) continue;
+      const kg = Math.min(x.kg, 1.5 + crewRand() * 3); if (x.n) x.n = Math.max(0, x.n - 1); x.kg -= kg; if (x.kg < 0.01) S.hold.splice(S.hold.indexOf(x), 1); railLost(kg);
       log(nm + ' mistet en ' + SPECIES[x.sp].no.toLowerCase() + ' på ' + fmt(kg, 1) + ' kg over ripa.', nm + ' lost a ' + SPECIES[x.sp].en.toLowerCase() + ' of ' + fmt(kg, 1) + ' kg over the rail.'); crewSay(c, 'slip'); if (hooks.onCrewFx) hooks.onCrewFx(c, 'slip', {sp:x.sp, kg}); }
-    else if (r < 0.75){ const x = S.hold.find(y => y.gut && !y.iced && !liveLot(y)); if (!x) continue;
+    else if (r < wr + wb){ const x = S.hold.find(y => y.gut && !y.iced && !liveLot(y)); if (!x) continue;
       x.fresh = Math.max(0, x.fresh - 6 * Math.min(1, 4 / x.kg)); log(nm + ' sløyde en fisk stygt. Den blir litt dårligere betalt.', nm + ' gutted a fish badly. It will fetch a little less.'); crewSay(c, 'botch'); }
     else { c.cut = S.t + 240; log(nm + ' skar seg i hånda på sløyekniven.', nm + ' cut a hand on the gutting knife.'); crewSay(c, 'cut'); if (hooks.onCrewFx) hooks.onCrewFx(c, 'cut'); }
   }
+}
+
+// the fish lost over the rail, for the whole company (S.stats.lostRail: kg and number in all, and this week's in w, wkg, wn), so the
+// gaff's card can show what a better one would save (OPP1)
+function railLost(kg){
+  const st = S.stats || (S.stats = {}), w = weekOfH(S.t / 60), R = st.lostRail || (st.lostRail = {kg:0, n:0, w, wkg:0, wn:0});
+  if (R.w !== w){ R.w = w; R.wkg = 0; R.wn = 0; }
+  R.kg += kg; R.n++; R.wkg += kg; R.wn++;
 }
 
 // ===== Del 2 of «mannskap med liv» (docs/mannskap-plan.md; Jonas 17.10.2026): each person's life beside the work =====

@@ -253,10 +253,48 @@ const EQUIP = {
   teinehaler:{price:58000, name:{no:'Teinehaler', en:'Pot hauler'}, desc:{no:'Hiver teinene opp. Teiner kan ikke trekkes for hånd.', en:'Lifts the pots. Pots cannot be hauled by hand.'}},
   // a tank of running sea water for king crab (the price is an estimate): without it a crab lives about a day in the hold, and a dead
   // one is worth nothing (05-vessels.js, sell)
-  krabbekar:{price:28000, fit:{minLen:6.5}, name:{no:'Krabbekar med sjøvann', en:'Live crab tank'}, desc:{no:'Kar med sirkulerende sjøvann som holder kongekrabben levende i flere døgn. Uten kar lever den rundt et døgn i lasten, og død krabbe er verdiløs.', en:'A tank of running sea water that keeps king crab alive for days. Without it a crab lives about a day in the hold, and a dead crab is worthless.'}}
+  krabbekar:{price:28000, fit:{minLen:6.5}, name:{no:'Krabbekar med sjøvann', en:'Live crab tank'}, desc:{no:'Kar med sirkulerende sjøvann som holder kongekrabben levende i flere døgn. Uten kar lever den rundt et døgn i lasten, og død krabbe er verdiløs.', en:'A tank of running sea water that keeps king crab alive for days. Without it a crab lives about a day in the hold, and a dead crab is worthless.'}},
+  // the knives and the gaff in three tiers, per boat, bought at the tackle shop (OPP1 of docs/planer/oppgraderinger.md; Jonas 07.11.2026:
+  // «en oppgradering kutter ned på tiden brukt samt kvaliteten på sløyingen. Høtten minsker risikoen for tap av fisk generelt»). Tier 1 is
+  // what every boat has aboard from the start, bought by no one, and a save without the field is tier 1; S.equip[k] holds the tier bought
+  // (2 or 3). No upkeep: the crew hones the knives aboard as before, and the gaff needs nothing. Not on the ocean fleet (fit.coast). Each
+  // tier's numbers are shares of the base level that add up with the others (prinsipp 1, upgSum): gut, the gutting pace over DECK.gut;
+  // slip, the share off the badly gutted fish and the cuts in crewSlip; rail, the share off a fish lost over the rail; jig, the share off
+  // the slip at a half hit in the jig game (JIG_SLIP); haul, the share off the time to haul a tub of line (gopUnitMin). kr is the tier's
+  // price, for the knives per gutting place (VESSELS stations.table, per:'table'); tierKr. No price of its own (the shop's other lists,
+  // the gifts and the web shop leave a tiered item alone)
+  kniv:{tiers:[{no:'Knivene om bord', en:'The knives aboard', gut:0, slip:0, kr:0},
+    {no:'Nye sløyekniver', en:'New gutting knives', gut:0.1, slip:0.3, kr:1500, per:'table'},
+    {no:'Sløyekniver i ett stykke og stålhansker', en:'One-piece gutting knives and steel gloves', gut:0.2, slip:0.5, kr:4500, per:'table'}],
+    fit:{coast:true}, name:{no:'Sløyekniver', en:'Gutting knives'}, desc:{no:'Skarpere kniver sløyer fortere, og færre fisk blir stygt sløyd. Mannskapet sliper dem om bord.', en:'Sharper knives gut faster, and fewer fish are gutted badly. The crew hones them aboard.'}},
+  hott:{tiers:[{no:'Høtten om bord', en:'The gaff aboard', rail:0, jig:0, haul:0, kr:0},
+    {no:'Stålhøtt', en:'Steel gaff', rail:0.3, jig:0.2, haul:0.04, kr:900},
+    {no:'Lang høtt med krok av stål', en:'Long gaff with a steel hook', rail:0.6, jig:0.4, haul:0.08, kr:2900}],
+    fit:{coast:true}, name:{no:'Høtt', en:'Gaff'}, desc:{no:'En bedre høtt tar fisken som henger løst ved ripa, så færre glipper. Lina kommer litt fortere om bord.', en:'A better gaff takes the fish that hangs loose at the rail, so fewer slip. The line comes aboard a little faster.'}}
 };
-// whether an item fits a vessel type: by length, and outboards only on boats with an outboard
-function equipFits(k, type){ const f = EQUIP[k] && EQUIP[k].fit, V = VESSELS[type]; if (!f || !V) return !!V; return !(f.minLen && V.len < f.minLen) && !(f.maxLen && V.len > f.maxLen) && !(f.outboard && !V.outboard) && !(f.house && V.fac.house === 'open'); }
+// whether an item fits a vessel type: by length, and outboards only on boats with an outboard; the tiered knives and gaff not on the
+// ocean fleet (coast: their factories and machines have their own numbers)
+function equipFits(k, type){ const f = EQUIP[k] && EQUIP[k].fit, V = VESSELS[type]; if (!f || !V) return !!V; return !(f.minLen && V.len < f.minLen) && !(f.maxLen && V.len > f.maxLen) && !(f.outboard && !V.outboard) && !(f.house && V.fac.house === 'open') && !(f.coast && V.cls === 'hav'); }
+// ---- the upgrades in tiers (OPP1 of docs/planer/oppgraderinger.md, 07.11.2026)
+// The rule (prinsipp 1; Jonas 07.11.2026: «jeg mener ikke vi skal ha en renters rente-effekt på oppgraderingene. Om det står 10% økning
+// feks, så betyr det at økningen er 10% opp fra grunnnivået»): every tier's per cent is of the base level, and the shares add up, never
+// compound: base × upgSum(a, b) = base × (1 + a + b), not base × (1 + a) × (1 + b). A share that takes time off is negative.
+function upgSum(...p){ return 1 + p.reduce((a, x) => a + (+x || 0), 0); }
+// the tier a boat has of a tiered item: 1 without the field (an old save, a new boat), the tier bought otherwise; 1 on a boat it does
+// not fit (the ocean fleet), whatever the field says. eq: the boat's equipment (S.equip of the boat bound now), type: her type
+function equipLv(k, eq = S.equip, type = S.boat && S.boat.type){
+  const E = EQUIP[k]; if (!E || !E.tiers) return 0; if (type && !equipFits(k, type)) return 1;
+  const v = eq && eq[k]; return Math.max(1, Math.min(E.tiers.length, v === true ? 2 : Math.round(+v || 1)));
+}
+function equipTier(k, eq, type){ return EQUIP[k].tiers[equipLv(k, eq, type) - 1]; }
+// what a tier costs a boat type: the knives per gutting place (stations.table), the gaff once
+function tierKr(k, lv, type = S.boat && S.boat.type){ const T = EQUIP[k].tiers[lv - 1], V = VESSELS[type]; if (!T) return 0; return T.kr * (T.per === 'table' ? (V && V.stations && V.stations.table) || 1 : 1); }
+// the knife's gutting pace over DECK.gut (deckMinute, deckEta, the work's left.sloy), and the gaff's shares (rail, jig, haul)
+function knifeX(eq, type){ return upgSum(equipTier('kniv', eq, type).gut); }
+function hookX(f, eq, type){ return equipTier('hott', eq, type)[f] || 0; }
+// the slip at a half hit in the jig game (ui/10-rod-acts.js land): half the time at tier 1, less with a better gaff
+const JIG_SLIP = 0.5;
+function jigSlip(eq, type){ return JIG_SLIP * upgSum(-hookX('jig', eq, type)); }
 // the burn curve's shape at speed v (knots): a planing hull has a hump before it planes, a displacement hull climbs past 90 % of top
 // speed; fuelLph (03-simulation.js) scales it by fuelK, which vesselDerive sets so the boat burns V.lph at cruising speed
 function fuelBase(v, vmax, planing){ return planing ? 1.0 + 0.03 * v * v + 3 * Math.exp(-(((v - vmax * 0.42) / 3) ** 2)) : 1 + 0.1 * v * v + (v > vmax * 0.9 ? (v - vmax * 0.9) * 6 : 0); }
