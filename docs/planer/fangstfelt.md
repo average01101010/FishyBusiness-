@@ -1,6 +1,6 @@
 # Fangstfeltene med navn langs hele kysten (Ø14, plan 07.11.2026)
 
-Plan for steg 31 i `docs/planer/koen.md` (`/planlegg`). Ingenting er bygd. Fasene står i køen som steg 31a–31e og venter på valgene i kapittel 5.
+Plan for steg 31 i `docs/planer/koen.md` (`/planlegg`). Ingenting er bygd. Fasene står i køen som steg 31a–31e. Jonas svarte på valgene 07.11.2026 (kap. 5), og F2, F4 og F5 er lagt om etter svarene; F1 (steg 31a) er klar.
 
 ## 1. Hva Jonas ba om
 
@@ -9,6 +9,7 @@ Plan for steg 31 i `docs/planer/koen.md` (`/planlegg`). Ingenting er bygd. Fasen
 - **Jonas 28.10.2026:** «Fjern sirklene for fangstfelt langs hele kysten. Bare navn på felt langs hele kysten er ok, men det skal ikke vises som en definert sirkel» (`docs/systemer/kartplotter.md`).
 - **Jonas 01.11.2026** (B2): «Kjør på med alt som gjør at du mener vi klarer i simulerer fiskens liv med høyest mulig nøyaktighet.»
 - **Jonas 02.11.2026** (etikettene, `docs/planer/kart-etiketter.md`): «Vi må passe på at ikke blir alt for mye info og navn på kartet som overlapper hverandre slik at det bare blir støy.» Valg 2 A: felt- og stedsnavn kommer etter alt spilleren handler og spiller med.
+- **Jonas' svar på valgene, 07.11.2026:** «F1, jeg skjønner tanken om at felt har mer fisk men jeg mener vi må være forsiktig med å definere en fast boks eller sirkel der det står mer fisk bare fordi det er et fiskefelt. Ja det skal være mye fisk på feltene men vi må løse dette på en intuitiv måte.» «V2: a» «V3: Ta det mest realistiske» «V4: c, navnet på feltet kan stå men aldri tettheten på fisken.» Hva svarene betyr for fasene, står i kap. 5.
 - **Startmeldingen for steg 31** (køen 07.11.2026): navnene finnes alt for hele kysten, så planen handler om vekten et navngitt felt har i spillet utenfor Senja (fangsten, varmekartet, Kystposten og oppdragene), hullene i Øst-Finnmark, tettheten av etiketter på nettbrettet, og hvordan det måles.
 
 ## 2. Hva finnes i dag
@@ -96,40 +97,42 @@ Regelen i dag: ett feltnavn per celle på 110 × 22 px fra `view.z ≥ 1`, høys
 
 ## 3. Fasene
 
-Én økt hver. Rekkefølgen: dataene først (F1, nesten usynlig), så fisken (F2), så tekstene (F3), så etikettene (F4, kan gå før F2 og F3 når `ui/03-map.js` er ledig). F5 bare om V3 er B, eller om F1 viser at Øst-Finnmark fortsatt er for tynt. Testene under er de som dekker filene etter `COVER` i `tests/run.py`; `python3 tools/plan/tester.py` gir den fulle lista for grenen.
+Én økt hver. Rekkefølgen: dataene først (F1, nesten usynlig), så fisken (F2), så tekstene (F3), så etikettene (F4, kan gå før F2 og F3 når `ui/03-map.js` er ledig). F4 kan gå før F2 og F3 når F1 er ute. F5 etter F1, når verten `api.kartverket.no` er åpnet i miljøet. Testene under er de som dekker filene etter `COVER` i `tests/run.py`; `python3 tools/plan/tester.py` gir den fulle lista for grenen.
 
 ### F1. Fiskeplassene med art, redskap og måneder, og navnene vasket (steg 31a)
 
 - **Bygger:**
   - `felt.py` leser også `fiskeart_1–8`, `redskap_1–8`, `fra_1–8` og `til_1–8`, og skriver per felt artene som spillet kjenner (torsk, hyse, sei, lyr, lange, brosme, uer, kveite, blåkveite, sild, makrell, snøkrabbe, kongekrabbe), hver med månedene som en maske på 12 biter og redskapene som en maske etter `GEAR` i `fiske.py`. Når samme navn innen 3 km slås sammen (`MERGE_KM`), slås linjene sammen. Et felt uten art får ingen linjer.
-  - **Navnevasken:** store bokstaver blir vanlig skrift («Røværfjorden»; små ord som «i», «av», «til» og «fra» med liten), stor forbokstav, koordinater ut (feltet får da intet navn og står bare som vekt), og navnet i kartet kortes ved en skråstrek eller etter 28 tegn (hele navnet står i kortet i F4). Hver regel med antallet den rettet, i `felt.py`s utskrift.
-  - **Etter V3 A:** gyteområdene og oppvekst- og beiteområdene inn som eget slag (`k`: `f` fiskeplass, `g` gyteområde, `o` oppvekst og beite), med navn, art og måneder. De får aldri vekt og aldri flåtetrykk: `trkAreas` og `trkCellW` tar bare `k = f`, og `feltIn` gir dem ikke til kartet før F4.
+  - **Navnevasken:** store bokstaver blir vanlig skrift («Røværfjorden»; små ord som «i», «av», «til» og «fra» med liten), stor forbokstav, koordinater ut (feltet får da intet navn og står bare som vekt), og navnet i kartet kortes ved en skråstrek eller etter 28 tegn (hele navnet vises ved trykk i F4). Hver regel med antallet den rettet, i `felt.py`s utskrift.
+  - **Formen til F2:** polygonet til hver fiskeplass, forenklet (rundt 100 m) eller som ruter på 500 m; størrelsen avgjør. Gyteområdene og oppvekstområdene trenger bare punktet.
+  - **V3 (Jonas: «Ta det mest realistiske»):** gyteområdene og oppvekst- og beiteområdene inn som eget slag (`k`: `f` fiskeplass, `g` gyteområde, `o` oppvekst og beite), med navn, art og måneder. De får aldri vekt og aldri flåtetrykk: `trkAreas` og `trkCellW` tar bare `k = f`, og `feltIn` gir dem ikke til kartet før F4.
   - `feltData` leser de nye feltene (`f.k`, `f.l` med [art, redskap, måneder]). Ingenting annet i spillet endres.
 - **Filer:** `tools/npc/felt.py`, `src/data/felt.json`, `core/01e-marks.js` (`feltData`, `feltIn`), `core/03g-trykk.js` (bare filteret på slaget), ny `tests/unit/felt.test.mjs`, `tests/run.py` (`COVER` for `tools/npc/felt.py`), `docs/systemer/fiskerimodellen.md` (5.3c «Feltnavnene»).
 - **Tester:** `tests/unit/felt.test.mjs` (ny; antallet per slag, Billefjordjupet har torsk med garn, et kjent sesongfelt har riktige måneder, ingen navn med koordinater eller bare store bokstaver, ingen `g` eller `o` i `trkAreas`; sett rød før `felt.json` er ny), `trykk.test.mjs` (gruppesummene står), `charttest` (`felt.json`), `marktest` (`01e-marks.js`). Fordi trykket flytter seg litt når felt slås sammen og koordinatnavn går ut: `simday` og `heattest`.
-- **Måles:** `felt.json` før og etter (128 kB nå; målet under 200 kB), `feltData` i Node og i Chromium (første oppslag), tabellen i 2.5 på nytt med de nye slagene, antallet rettet per vaskeregel.
+- **Måles:** `felt.json` før og etter (128 kB nå; målet under 350 kB med formene; blir den større, legges formene i en egen fil i `data/` som hentes ved oppstart, som modellene i `bootData`), `feltData` i Node og i Chromium (første oppslag), tabellen i 2.5 på nytt med de nye slagene, antallet rettet per vaskeregel.
 - **Spilleren ser:** penere navn i kartet. Ingenting annet.
 
-### F2. Fisken samles på feltene, og flåten følger samme vekt (steg 31b)
+### F2. Fisken står på feltene slik flekkene står i sjøen (steg 31b)
 
-- **Bygger** (med V1 A og V2 A):
-  - **Feltvekten** `feltW(q, sp, H)` i en ny `core/03j-felt.js`: 1 + (W − 1) × summen av `exp(−(d/r)²)` over fiskeplassene i nærheten som har arten i måneden (et felt uten art teller for juksaartene hele året), høyst W. `r` er feltets størrelse, minst 0,5 km. W = 3 etter V1 A. Myk kant, ingen sirkel (Jonas 28.10.2026), og ingen trapper i varmekartet.
-  - **Summen per lokasjon står:** `feltWl(l, sp, måned)` er snittet av vekten over lokasjonens sjø (regnet én gang per lokasjon, art og måned på et rutenett på 1 km), og fisken ganges med `feltW / feltWl`. Lokasjonen har like mye fisk som før, så `fkAvail` og kalibreringen mot Senja står; fisken flyttes bare innen lokasjonen, til feltene. En lokasjon uten felt er uendret.
-  - **`denSp`** ganger tettheten med vekten. `denPlace` finner feltene nær punktet én gang (`q.fl`), så hvert kall bare slår opp art og måned.
-  - **Flåten følger samme vekt:** `trkCell` legger både trykket (`f`) og fisken (`b`) med `feltW / feltWl` i stedet for dagens `trkCellW` (×3 på trykket alene). Da er andelen som tas (`u = f / b`) den samme på og utenfor feltet, og grunnlinja er nøytral. De aktive feltene tar fortsatt havflåtens trykk i hovedområdet (`gwa`).
-  - **Senjas seks felt** står som de er (bumpen, `skreiSpot`, Kystposten), og teller som felt i `feltWl` med artene i `g.sp` hele året, så de ikke mister fisk til fiskeplassene rundt.
-- **Filer:** ny `core/03j-felt.js` (og én linje i `src/index.html` etter `03g-trykk.js`), `core/03-simulation.js` (`denPlace`, `denSp`), `core/03g-trykk.js` (`trkAreas`, `trkCellW`, `trkCell`), `tests/run.py` (`COVER` for den nye fila), `tests/unit/felt.test.mjs`, `tests/fiskeplay.py` (scenarioet `felt`), `ui/phone/07-patch.js`, `docs/systemer/fiskerimodellen.md` (5.3c og 5.3d).
+- **Jonas' svar (V1, 07.11.2026):** «… vi må være forsiktig med å definere en fast boks eller sirkel der det står mer fisk bare fordi det er et fiskefelt. Ja det skal være mye fisk på feltene men vi må løse dette på en intuitiv måte.» Derfor ingen fast vekt over et område. Feltet er stedet der fisken *pleier* å stå, og det merkes gjennom det spillet alt har: de gode flekkene som flytter seg, stimene, dybden og kantene.
+- **Bygger** (med V2 A):
+  - **Flekkene kommer oftere til feltet i sesong.** De gode flekkene (`hotspot`: mønsteret på 3,5 km som glir 0,7–1,7 km i døgnet og toner over 120 timer) står som i dag. På en fiskeplass som har arten i måneden (et felt uten art: juksaartene hele året), løftes flekkens verdi mot det beste med feltets *trekk* for perioden: et tall mellom 0 og rundt 0,6 som trekkes på nytt hver 120. time for hvert felt og toner over som flekkene selv. I én periode står det en sterk flekk på feltet, i neste en svak, eller den ligger på kanten. Over sesongen står det mye fisk på feltet, men ikke det samme hver dag, og spilleren finner den med ekkoloddet og varmekartet som før.
+  - **Formen er feltets egen:** polygonet fra Fiskeridirektoratet (forenklet i F1), mykt i kanten (rundt 0,5 km), og bare der dybden passer arten (`depthFactor`). Ingen sirkel rundt et punkt og ingen fast boks: innenfor feltets omriss følger fisken flekkens eget mønster.
+  - **Summen per lokasjon står:** løftet regnes som snitt over lokasjonens sjø per art og måned (`feltWl`), og tettheten deles på det. Lokasjonen har like mye fisk som før, så `fkAvail` og kalibreringen mellom stedene står; fisken flyttes bare innen lokasjonen.
+  - **Flåten følger fisken:** `trkCell` legger både trykket og fisken (`b`) med feltets snittløft for måneden i stedet for dagens `trkCellW` (×3 på trykket alene). Andelen som tas, er da den samme på og utenfor feltet, og grunnlinja blir nøytral.
+  - **Senjas seks felt følger samme regel** (det følger av svaret, og av at spillet er nasjonalt): sirkelbumpen i `denSp` (+0,45 × `exp(−(d/r)²)`) og feltleddet i `skreiSpot` går ut, og feltene får formen fra radiusen, myknet etter bunnen, og artene fra `g.sp`, hele året. `simday` skal holde seg innen ±10 % på de fire stedene, ellers justeres `k` som i B2 og B3. Første turs flekk (`tutBonus`) er ikke et felt og står.
+  - **Ikke med:** gyteområdene og oppvekstområdene (bare navn), og ingen vekt etter redskap.
+- **Filer:** ny `core/03j-felt.js` (trekket per felt og periode, formen, `feltWl`; én linje i `src/index.html` etter `03g-trykk.js`), `core/03-simulation.js` (`hotspot`, `denPlace`, `denSp`, `skreiSpot`), `core/03g-trykk.js` (`trkAreas`, `trkCellW`, `trkCell`), `tests/run.py` (`COVER`), `tests/unit/felt.test.mjs`, `tests/fiskeplay.py` (scenarioet `felt`), `ui/phone/07-patch.js`, `docs/systemer/fiskerimodellen.md` (5.3, 5.3c, 5.3d).
 - **Tester:**
-  - `tests/unit/felt.test.mjs` utvidet: summen av vekten over en lokasjon er 1 ± 1 % for torsk i mars og juli på fem lokasjoner; vekten på et felt i sesong er rundt W og utenfor sesongen 1; grunnlinja på feltet er minst 0,97 av den like ved (i dag 0,68 mot 0,85 ved Henningsvær i mars: rød før rettingen).
-  - `trykk.test.mjs` (gruppesummene), `vandring.test.mjs`.
-  - `simday` (±10 % på de fire stedene, ellers `k` justert som i B2 og B3), `calib`, `kvtest`, `geartest`, `bktest`, `heattest`, `jigalongtest`, `progweek`. `fasit.py` (27 min, i bakgrunnen): treffet mot 2025 skal ikke bli dårligere enn rundt 85 % av taket.
+  - `felt.test.mjs` utvidet: summen per lokasjon 1 ± 1 % for torsk i mars og juli på fem lokasjoner; snittet over en sesong høyere på feltet enn i sjøen like ved, og likt utenfor sesongen; trekket skifter mellom periodene uten hopp (ikke raskere enn flekkene i dag); ingen kant (tettheten over feltets omriss endrer seg jevnt, ingen sprang over 10 % per 100 m); grunnlinja på feltet minst 0,97 av den like ved (i dag 0,68 mot 0,85 ved Henningsvær i mars: rød før rettingen).
+  - `trykk.test.mjs`, `vandring.test.mjs`, `simday`, `calib`, `kvtest`, `geartest`, `bktest`, `heattest`, `jigalongtest`, `progweek`, og `fasit.py` i bakgrunnen (treffet mot 2025 ikke under rundt 85 % av taket). Hele kysten trengs.
 - **Måles:**
-  - `fiskeplay.py felt`: én person med håndjuksa i tre timer på et navngitt felt i sesong mot tre timer 4–6 km unna i samme lokasjon, ved Henningsvær i mars, Bodø i mars, Bergen i mars, Hammerfest i januar og Båtsfjord i april. Målet med V1 A: feltet gir minst 1,5 ganger så mye i sesong, og utenfor sesongen er det innen ±20 %.
+  - `fiskeplay.py felt`: én person med håndjuksa tre timer om dagen i ti dager på et felt i sesong og tre timer 4–6 km unna i samme lokasjon, ved Henningsvær i mars, Bodø i mars, Bergen i mars, Hammerfest i januar og Båtsfjord i april. Målet: over de ti dagene gir feltet 1,5–2 ganger så mye, og feltet er best de fleste dagene, men ikke alle (60–85 %). Utenfor sesongen innen ±20 %. Tallene er startverdier som skrus etter spilltest.
   - Tiden: `density` høyst 1 µs mer per kall (18–19 µs nå), `trkCell` høyst 2 µs mer første gang i en ny time.
-  - Tabellen i 2.3 på nytt.
-- **Stikkprøver:** Bergen, Bodø og Båtsfjord (`/stikkprove`): et felt i sesong og ett utenfor sesong, kg i timen og varmekartet.
-- **Skjermbilder:** varmekartet over et felt i sesong i 800 × 1280 og 1280 × 800: fisken tettere på feltet, ingen kant og ingen sirkel.
-- **Patchnote:** kort, uten psykologi, for eksempel «Fiskeplassene langs kysten har fisk når fiskerne har hatt det der: artene og månedene fra Fiskeridirektoratets kart.»
+  - Tabellen i 2.3 på nytt, og `simday` før og etter (Senja-feltene).
+- **Stikkprøver:** Bergen, Bodø og Båtsfjord (`/stikkprove`): et felt i sesong og ett utenfor, kg i timen over noen dager, og varmekartet.
+- **Skjermbilder:** varmekartet over et felt i sesong to dager med ulik flekk, i 800 × 1280 og 1280 × 800: fisken følger flekkene, ingen kant og ingen sirkel.
+- **Patchnote:** kort, uten psykologi, for eksempel «Fisken står oftere på fiskeplassene langs kysten i den tida fiskerne har fisket der (Fiskeridirektoratets kart), men ikke hver dag.»
 
 ### F3. Feltnavnene i teksten (steg 31c)
 
@@ -138,27 +141,31 @@ Regelen i dag: ett feltnavn per celle på 110 × 22 px fra `view.z ≥ 1`, høys
   - **Puben** (`rumour`): ryktet velger blant fiskeplassene innen 20 km av havna båten ligger i, i sesong, etter tetthet × prisen ved nærmeste mottak. På Senja er de seks feltene med som før. Retter feilen i 2.2 (Husøy i Bergen).
   - **Kystposten** (`newsForDay`): «Tynt fiske på …» for feltene nær hjemmehavna, ikke bare Senjas fire, og én sak når et felt nær hjemmehavna går inn i sesongen («Skreien er kommet til …»), høyst én slik sak i uka. Ingen push.
   - **Kjentmannen** (`kjentFind`) og **leteoppdraget** (`turLetePlace`) sier feltets navn når punktet ligger på et felt.
+  - Tekstene sier hva folk sier og hva som har skjedd, som i dag, og aldri tall for hvor mye fisk det står på et felt (V4).
 - **Filer:** `core/01-world.js` (`nearestPlace`), `core/09b-records.js` (`recPlace`), `core/06-services.js` (`newsForDay`), `ui/09-hand-fishing.js` (`rumour`), `ui/09b-pub.js` (`kjentFind`), `core/09g-turer.js` (`turLetePlace`), `ui/phone/07-patch.js`.
 - **Tester:** `worldtest`, `trip2`, `harbourtest` (`01-world.js`), `rectest`, `uketest`, `posttest`, `turtest`, `fixtest`, `seasontest`, `pubtest`, `hailltest`, `tests/unit/turer.test.mjs`, og en ny sjekk i `felt.test.mjs`: `nearestPlace` på Bjørnvika gir feltet, og ryktet i Bergen nevner et felt nær Bergen (sett rød først).
 - **Stikkprøver:** puben og Kystpostens lokale fane i Bergen, Bodø og Båtsfjord.
 - **Skjermbilder:** Kystposten og pubens rykte i 800 × 1280 og 1280 × 800.
 
-### F4. Etikettene på telefon og nettbrett (steg 31d)
+### F4. Feltnavnene i kartet: bare navnet, og først når du er nær (steg 31d)
 
-- **Måles først:** en ny sjekk i `tests/etikett.py`: hvor mange feltnavn som står i bildet, hvor stor del av skjermen de dekker, og at ingen overlapper et annet navn, ved `view.z` 1, 2 og 4 over Bergen, Henningsvær, Bodø og Båtsfjord, i 390 × 844, 800 × 1280, 1280 × 800, 915 × 1208 og 1293 × 830 (Pad 3 i spilltest 2).
-- **Bygger** (med V4 A):
-  - Feltene i sesong for artene redskapet om bord tar, først; så de største. Taket og cellene settes etter målingen, per skjermflate i stedet for et fast tall (for eksempel ett navn per 25 000 px² og celler på 150 × 40 px). Feltene i sesong litt sterkere (`fill-opacity` i SVG-en; `styles.css` røres ikke, UI 2 eier den).
-  - **Et trykk på navnet** viser et kort kort: «Fiskeplass for torsk og sei (garn, juksa), januar–april. Kilde: Fiskeridirektoratet.» Det lange navnet står der hele.
-  - Gyteområdene og oppvekstområdene (V3 A) kommer inn sist i prioriteten, og kortet sier «Gyteområde for torsk, januar–april».
-- **Filer:** `ui/03-map.js` (feltnavnene i `renderStatic` og trykket), `tests/etikett.py`, `tests/charttest.py`, `ui/01-i18n.js` om kortets ord trengs der.
-- **Tester:** `etikett` (ny sjekk, sett rød mot dagens 80 der målingen sier for tett), `charttest`, `placetest`, `routetest` (`03-map.js`).
-- **Skjermbilder:** Bergen og Båtsfjord ved `view.z` 1 og 2 i 390 × 844, 800 × 1280 og 1280 × 800, og kortet.
+- **Jonas' svar (V4, 07.11.2026):** «c, navnet på feltet kan stå men aldri tettheten på fisken.»
+- **Bygger:**
+  - Feltnavnene vises først fra `view.z ≥ 2` (i dag 1), de største først, som nå. Ingen merking av feltene i sesong, ingen farge eller styrke etter fisken, og ingenting i navnet eller ved trykk som sier hvor mye fisk det står der.
+  - Navnene fra F1 (vasket, kortet ved skråstrek eller etter 28 tegn) og gyteområdenes og oppvekstområdenes navn (V3) med lavest prioritet, i samme skrift.
+  - Et trykk på et navn som er kortet eller tatt ut for plassens skyld, viser hele navnet og hva slags sted det er («Fiskeplass», «Gyteområde», «Oppvekst- og beiteområde», med kilden), slik de andre navnene gjør (`LBLHID`). Ingen arter, måneder eller tall.
+  - Taket og cellene settes etter målingen under: nok navn til å finne fram, aldri så tett at det blir støy (Jonas 02.11.2026).
+- **Måles:** en ny sjekk i `tests/etikett.py`: hvor mange feltnavn som står, hvor stor del av skjermen de dekker, og at ingen overlapper et annet navn, ved `view.z` 2 og 4 over Bergen, Henningsvær, Bodø og Båtsfjord, i 390 × 844, 800 × 1280, 1280 × 800, 915 × 1208 og 1293 × 830 (Pad 3 i spilltest 2); og at ingen feltnavn står under `view.z` 2 (rød før rettingen).
+- **Filer:** `ui/03-map.js` (feltnavnene i `renderStatic` og trykket), `tests/etikett.py`, `tests/charttest.py`, `ui/01-i18n.js` om ordene for slagene trengs der.
+- **Tester:** `etikett`, `charttest`, `placetest`, `routetest` (`03-map.js`).
+- **Skjermbilder:** Bergen og Båtsfjord ved `view.z` 2 og 4 i 390 × 844, 800 × 1280 og 1280 × 800, og et trykk på et kortet navn.
 - **Står igjen til Jonas:** se tettheten på Pad 3 (backloggen 10.5 «Feltnavnene (B2)»).
 
-### F5. Øst-Finnmark med Kartverkets stedsnavn (steg 31e, bare om V3 er B, eller om F1 viser færre enn 10 navn innen 20 km av mottakene i Båtsfjord)
+### F5. Kartverkets stedsnavn i sjøen der Fiskeridirektoratet har lite (steg 31e)
 
-- **Bygger:** `felt.py` henter sjønavn (banker, grunner og fiskeplasser i sjøen) fra Kartverkets stedsnavn-API der dekningen er tynnest, som eget slag (`k = s`), bare navn, aldri vekt og aldri flåtetrykk.
-- **Krever:** verten `api.kartverket.no` åpnet i miljøet (svarte 403 herfra 07.11.2026), og lisensen sjekket før noe tas inn. At navneobjekttypene for sjøen dekker fiskeplasser, er ikke sjekket.
+- **Jonas' svar (V3, 07.11.2026):** «Ta det mest realistiske.» Det mest realistiske er navnene som finnes i de offentlige kildene, og bare dem: Fiskeridirektoratets fiskeplasser, gyteområder og oppvekst- og beiteområder (F1), og Kartverkets stedsnavn for banker, grunner og fiskeplasser i sjøen der Fiskeridirektoratet har lite (her). Ingen navn diktes opp, og der ingen kilde har et navn, står det ikke noe.
+- **Bygger:** `felt.py` henter sjønavnene fra Kartverkets stedsnavn-API (Sentralt stedsnavnregister) for strekningene der dekningen etter F1 er tynnest, først Øst- og Vest-Finnmark, som eget slag (`k = s`). Bare navn: aldri vekt og aldri flåtetrykk. Et navn som alt står i kartet (`chartNamesSvg`) eller blant feltene innen 1 km, tas ikke med to ganger.
+- **Krever:** verten `api.kartverket.no` åpnet i miljøet (svarte 403 herfra 07.11.2026; Jonas legger den til i miljøets nettverksinnstillinger, eller økta som tar steget, ber om det), og lisensen og navneobjekttypene for sjøen sjekket før noe tas inn.
 - **Filer:** `tools/npc/felt.py`, `src/data/felt.json`, `tests/unit/felt.test.mjs`.
 - **Tester:** `felt.test.mjs`, `charttest`.
 - **Måles:** tabellen i 2.5 på nytt.
@@ -167,52 +174,45 @@ Regelen i dag: ett feltnavn per celle på 110 × 22 px fra `view.z ≥ 1`, høys
 
 1. **Dekningen:** tabellen i 2.5 (fiskeplasser og alle navn innen 10 og 20 km av hvert mottak per landsdel), før og etter F1 og F5.
 2. **Grunnlinja på og utenfor feltene:** tabellen i 2.3, som sjekk i `felt.test.mjs` fra F2.
-3. **Fisken på feltet mot like ved:** `fiskeplay.py felt` på fem steder, i og utenfor sesong (F2).
+3. **Fisken på feltet mot like ved:** `fiskeplay.py felt` på fem steder over ti dager, i og utenfor sesong, og hvor mange av dagene feltet var best (F2).
 4. **At resten står:** `simday`, `calib`, `progweek` og `fasit.py` før og etter F2; summen per lokasjon i enhetstesten.
 5. **Tiden:** `density` og `trkCell` i µs (F2), `feltData` i ms (F1).
-6. **Etikettene:** antall, del av skjermen og overlapp per format og zoom (F4), og Jonas på Pad 3.
+6. **Etikettene:** antall, del av skjermen og overlapp per format ved `view.z` 2 og 4 (F4), og Jonas på Pad 3.
 
-## 5. Valgene
+## 5. Valgene (Jonas svarte 07.11.2026)
 
-**V1. Hvor sterkt et felt trekker fisken** (F2)
-- **A (anbefalt):** ×3 på feltet, det samme som flåtens trykk der i dag, og fisken og flåten følger samme vekt. Et felt i sesong gir rundt tre ganger så mye fisk som sjøen like ved i samme lokasjon, grunnlinja er den samme på og utenfor, og summen per lokasjon står, så kalibreringen står. Hvorfor: flåten fisker der fisken står; i dag tar den tre ganger så mye på feltet uten at fisken står tettere der, og det er det som gjør feltet dårligere.
-- B: ×2 for begge. Mildere: spilleren som stoler på feltet, får rundt det dobbelte.
-- C: ingen vekt i fisket. Flåtens ×3 tas bort, så feltet blir nøytralt, og navnene er bare navn.
+**V1. Hvor sterkt et felt trekker fisken** (F2). Jonas: «F1, jeg skjønner tanken om at felt har mer fisk men jeg mener vi må være forsiktig med å definere en fast boks eller sirkel der det står mer fisk bare fordi det er et fiskefelt. Ja det skal være mye fisk på feltene men vi må løse dette på en intuitiv måte.» «F1» er lest som V1, fordi svaret gjelder fisken på feltet og de andre svarene er V2–V4. Ingen av A–C ble valgt slik de sto. F2 er lagt om: feltet trekker de gode flekkene som alt flytter seg i spillet, i feltets egen form og sesong, i stedet for en fast vekt over et område. Flåten følger fisken (det som var riktig i A), og Senjas seks felt følger samme regel. Alternativene var A (×3 for fisken og flåten), B (×2) og C (ingen vekt).
 
-**V2. Hvilke felt teller, og når** (F1 og F2)
-- **A (anbefalt):** artene og månedene fiskerne oppga til Fiskeridirektoratet (3 423 felt har en sesong); et felt uten art teller for juksaartene hele året. Hvorfor: et skreifelt i januar–april er ikke et torskefelt i juli, og «feltet er i sesong nå» er noe å gjøre i dag og denne uka.
-- B: alle felt for alle arter hele året. Enklere, men et rekefelt blir et torskefelt, og sesongen forsvinner.
+**V2. Hvilke felt teller, og når** (F1, F2). Jonas: «V2: a.» Artene og månedene fiskerne oppga til Fiskeridirektoratet; et felt uten art teller for juksaartene hele året. (B var alle arter hele året.)
 
-**V3. Hullet i Øst-Finnmark** (F1 og F5)
-- **A (anbefalt):** gyteområdene (1 645) og oppvekst- og beiteområdene (446) fra samme WFS inn som navn, uten vekt og uten flåtetrykk. Øst-Finnmark går fra 8,4 til rundt 14,5 navn innen 20 km av et mottak (før sammenslåing). Hvorfor: samme eier, samme lisens og de samme intervjuene, og alle har navn; de får ikke vekt fordi noen gytefelt er stengt i gytetida (regelmotoren, Ø10).
-- B: A, og Kartverkets stedsnavn for banker, grunner og fiskeplasser i sjøen der det fortsatt er tynt (F5). Krever at `api.kartverket.no` åpnes i miljøet.
-- C: la hullet stå. Varmekartet og ekkoloddet virker uten navn.
+**V3. Hullet i Øst-Finnmark** (F1, F5). Jonas: «Ta det mest realistiske.» Lest som B: alle navnene de offentlige kildene har (Fiskeridirektoratets fiskeplasser, gyteområder og oppvekst- og beiteområder i F1, Kartverkets sjønavn i F5), ingen diktede navn, og ingenting der ingen kilde har et navn. Bare fiskeplassene gir vekt. (A var bare Fiskeridirektoratets lag, C å la hullet stå.)
 
-**V4. Etikettene** (F4)
-- **A (anbefalt):** feltene i sesong for redskapet om bord først, så de største; tettheten etter skjermflaten slik F4 måler den; et trykk på navnet viser artene, redskapet og månedene med kilden. Hvorfor: da blir navnene et verktøy i stedet for støy (Jonas 02.11.2026).
-- B: som i dag; bare målt og taket justert.
-- C: feltnavnene først fra `view.z ≥ 2`.
+**V4. Etikettene** (F4). Jonas: «c, navnet på feltet kan stå men aldri tettheten på fisken.» Feltnavnene først fra `view.z ≥ 2`, og ingenting i navnet, fargen eller ved trykk som sier hvor mye fisk det står. (A var feltene i sesong først og et kort med arter og måneder, B som i dag.)
 
 **Avgjort i planen** (Jonas kan si fra):
-- Senjas seks felt står som de er, og teller som felt i snittet per lokasjon (F2).
-- Vekten følger art og måned, ikke redskap: `density` er den ene kilden for fisk og vet ikke om redskap (det tar `SELQ` og `gearVertF` etterpå). Redskapet brukes i kortet (F4) og i havflåtens trykk på de aktive feltene, som i dag.
-- Tekstene i F3 bruker bare fiskeplassene, ikke gyteområdene.
+- Senjas seks felt følger samme regel som resten av kysten (F2), som en følge av V1; `simday` holdes.
+- Vekten følger art og måned, ikke redskap: `density` er den ene kilden for fisk og vet ikke om redskap (`SELQ` og `gearVertF` tar det etterpå). Redskapet brukes bare i havflåtens trykk på de aktive feltene, som i dag.
+- Tekstene i F3 bruker bare fiskeplassene og sier aldri tall for tettheten.
 - «Brukere» og merknadene leses aldri.
 
 ## 6. Det som er antatt eller usikkert
 
 - **Alderen på dataene:** de fleste feltene er registrert 1988–2012, og noen beskriver et fiske som er borte (merknaden «Regulert bort i 2001»). Planen leser ikke merknadene, og regelmotoren avgjør hva som er stengt.
 - **«Januar–desember»** kan like gjerne bety at sesongen ikke ble oppgitt som at feltet brukes hele året (5 141 linjer har januar–desember, 1 209 har ingen måned).
-- **Dekningen** viser hvor fiskerne ble intervjuet (opphav: fiskarlag, lokale fiskere), ikke hvor fisken står. Lokasjoner uten felt mister ingenting med F2, men i en lokasjon med felt får sjøen utenfor dem litt mindre: 1 / (1 + (W − 1) × a), der a er andelen av lokasjonens sjø som er felt.
-- **×3** er et anslag, som `TRK.groundW` er i dag (backloggen 10.5 «B3 må ses i spillet»).
+- **Dekningen** viser hvor fiskerne ble intervjuet (opphav: fiskarlag, lokale fiskere), ikke hvor fisken står. Lokasjoner uten felt mister ingenting med F2, men i en lokasjon med felt får sjøen utenfor dem litt mindre, like mye som feltene får mer, fordelt på resten av lokasjonen.
+- **Styrken** (trekket opp til rundt 0,6, målet 1,5–2 ganger over sesongen, og feltet best 60–85 % av dagene) er et anslag til det er målt og spilt; dagens ×3 i `TRK.groundW` var også et anslag (backloggen 10.5 «B3 må ses i spillet»).
+- **Senjas felt i samme regel** kan flytte `simday`. Blir det mer enn ±10 %, justeres `k`, og det endrer fangsten litt langs hele kysten.
+- **Formene** kan gjøre `felt.json` større enn i dag; F1 måler og velger mellom forenklede polygoner og ruter på 500 m.
 - **Finnmarks felt** har bare torsk, sei og hyse; kveita, lyren og de dype artene får ingen feltvekt der.
 - **Tabellen i 2.5** er grovt delt etter breddegrad og regnet per mottak, så steder med mange mottak teller mer.
 - **Tettheten i 2.7** er regnet, ikke målt, og ingenting er sett på Pad 3.
-- **Kartverket** er ikke sjekket herfra (403).
+- **Kartverket** er ikke sjekket herfra (403), verken lisensen eller om navneobjekttypene for sjøen har fiskeplasser; F5 krever verten.
 
 ## 7. Det planen ikke gjør
 
-- Ingen sirkler eller flater i kartet (Jonas 28.10.2026).
+- Ingen sirkler eller flater i kartet (Jonas 28.10.2026), og ingen fast boks eller sirkel med mer fisk i sjøen (Jonas 07.11.2026).
+- Viser aldri hvor mye fisk det står på et felt, i kartet, i navnet eller ved trykk (V4).
+- Gyteområdene, oppvekstområdene og Kartverkets navn gir ingen vekt i fisket.
 - Endrer ikke forholdet mellom lokasjonene (`fkAvail`, sluttsedlene), bare hvor fisken står innen lokasjonen.
 - Ingen nye arter, redskap eller felt utenfor rammen, og ingen feltoppdrag (Oppdrag 2 kan bruke feltene senere).
 - Bruker ikke Havforskningsinstituttets gytefelt for kysttorsk i fisket, og endrer ingen regler; de stengte gytefeltene hører til Ø10.
@@ -222,3 +222,4 @@ Regelen i dag: ett feltnavn per celle på 110 × 22 px fra `view.z ≥ 1`, høys
 ## 8. Status
 
 - 07.11.2026: planen skrevet (Jonas' økt, gren `ccr-5a96a95a-wu5hvn`; bare dokumenter). Målingene i 2.3, 2.4 og 2.5 ble gjort i økta (enhetstestenes laster og WFS-en uten polygoner); ingenting i `src/` eller `tests/` er endret. Fasene står i køen som 31a–31e med `venter på valg`. Venter på V1–V4.
+- 07.11.2026: **Jonas svarte på valgene** (kap. 5). F2 er lagt om etter V1 (ingen fast boks eller sirkel: feltet trekker de gode flekkene i sin egen form og sesong, Senjas felt med), F4 etter V4 C, og F5 tas (V3). F1 (31a) er klar; F2 og F4 venter på F1, F3 på F2, og F5 på F1 og verten `api.kartverket.no` i miljøet.
