@@ -14,6 +14,7 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 
 ## Øktene som kjører
 
+- `ccr-68a96e99-8x1jh1`: Ø10 (steg 10), Jonas' økt, startet 07.11.2026 14:38 UTC. Eier `core/03e-rules.js`, `src/data/rules.json`, `tools/rules/` og en ny enhetstest i `tests/unit/`.
 - `plan/2026-11-07-opp4`: OPP4 (steg 54), Jonas' økt, startet 07.11.2026 14:32 UTC. Eier `ui/phone/10-fartoy.js`, `ui/07c-handbook.js`, `ui/01-i18n.js`, `ui/phone/14-act.js`, `ui/phone/13-mannskap-bank-meld.js`, `core/09k-market.js`, `supabase/migrations/`, `src/admin/index.html`, `ui/phone/07-patch.js`.
 - Før det: OPP1 (steg 53) ble rullet ut i 73c12b26 i en økt Jonas startet; før det H3b og H3c (4107d71a), U2-4 (c62047f0) og stripa og kartet (4f5f6d91).
 
@@ -56,7 +57,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 7 | **Ø8b S2** Turens linje på sluttseddelen | Spillbarhet | venter på H3b, Ø11.6 | steg 2, 6 | `core/04-crew.js`, `05-vessels.js`, `10-gear.js`, `ui/07-guide.js`, `08-actions.js`, `01-i18n.js` | `spillbarhet-fangst.md` S2 |
 | 8 | **Ø8b M** Mannskapet: M1, M2, M3, M5 | Spillbarhet | venter på H3b | steg 2 | `core/13-work.js`, `14-crewlife.js`, `15-energy.js`, `ui/05b-work.js`, `07c-handbook.js`, `01-i18n.js` | `folk-om-bord.md` 5.19b, øktplanen Ø8b |
 | 9 | **B2** Båtsalget mellom spillere, spillet | Tonys test | ferdig (2c87a862, 07.11.2026, rullet ut i 98c7befa; bygd før H3b etter Jonas' egen startmelding) | | `core/09k-market.js`, `ui/10f-cloud.js` (RPC-kallene), `phone/11-rederi.js`, `15-nettet.js`, `10-fartoy.js`, `tests/megletest.py` | `etter-tonys-test.md` B4–B8 |
-| 10 | **Ø10** Regelmotoren: Skagerrak | Regler | klar | | `core/03e-rules.js`, `src/data/rules.json`, `tools/rules/` (ikke `03d-quota.js` før H3b er ute) | øktplanen Ø10, backloggen «Regelmotoren mangler Skagerrak» |
+| 10 | **Ø10** Regelmotoren: Skagerrak | Regler | pågår (Jonas' økt, gren `ccr-68a96e99-8x1jh1`, 07.11.2026 14:38 UTC) | | `core/03e-rules.js`, `src/data/rules.json`, `tools/rules/` (ikke `03d-quota.js` før H3b er ute) | øktplanen Ø10, backloggen «Regelmotoren mangler Skagerrak» |
 | 11 | **H3c** Snøkrabbe i Driftsplan 2, isen og fredningen | Havsteget | ferdig (grenen `ccr-5c109e47-twgn6s`, rullet ut med H3b i 4107d71a 07.11.2026) | | `core/06g-plan2.js`, `06h-plan2-engine.js`, `ui/05d-plan2.js`, `core/10-gear.js`, `03h-is.js`, `02-species-gear.js` | `havsteget-h3-snokrabbe.md` H3c |
 | 12 | **U2-7** Skuffen og sidene | UI 2 | venter på H3b, Ø8b M | steg 2, 8 | `styles.css`, `ui/10c-dock.js`, `ui/05b-work.js`, `phone/05-rigg-innst-admin.js` | `ui-2-staaende.md` kap. 5 |
 | 13 | **Ø8b S3** Havna: måling og `denPlace` | Spillbarhet | venter på H3b | steg 2 | `core/03-simulation.js`, et skript i `tests/` | `spillbarhet-fangst.md` S3 |
