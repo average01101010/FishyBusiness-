@@ -57,7 +57,13 @@ const ICPIC = {
   // the clothes: the oilskins, the thermal suit
   olje:icSvg('<path d="M22 6l-10 6 3 8 5-3v17h24V17l5 3 3-8-10-6c-2 3-4 4-10 4s-8-1-10-4z" fill="' + IC_C.yel + '"/><path d="M32 10v24" stroke="' + IC_C.ink + '" stroke-width="1"/>'),
   varme:icSvg('<path d="M22 6l-10 6 3 8 5-3v17h10V24h4v10h10V17l5 3 3-8-10-6c-2 3-4 4-10 4s-8-1-10-4z" fill="' + IC_C.red + '"/><path d="M20 20h24" stroke="' + IC_C.yel + '" stroke-width="2"/>'),
-  box:icSvg('<path d="M12 14l20-8 20 8v16l-20 8-20-8z" fill="' + IC_C.soft + '"/><path d="M12 14l20 8 20-8M32 22v16"/>')
+  box:icSvg('<path d="M12 14l20-8 20 8v16l-20 8-20-8z" fill="' + IC_C.soft + '"/><path d="M12 14l20 8 20-8M32 22v16"/>'),
+  // the gutting knives (OPP1): two knives on the table, a long one and a short one, with the honing steel
+  kniv:icSvg('<path d="M8 30h48" stroke="' + IC_C.wood + '" stroke-width="3"/><path d="M10 22h12" stroke="' + IC_C.ink + '" stroke-width="4"/><path d="M22 20l26 1c-6 4-16 5-26 3z" fill="#fff"/>' +
+    '<path d="M14 12h9" stroke="' + IC_C.ink + '" stroke-width="4"/><path d="M23 10l16 1.5c-4 3-10 3.5-16 2z" fill="#fff"/><path d="M44 8l12 6" stroke="' + IC_C.mid + '" stroke-width="2"/>'),
+  // the gaff (OPP1): the shaft and the steel hook, a fish at the rail
+  hott:icSvg('<path d="M6 34L40 8" stroke="' + IC_C.wood + '" stroke-width="3"/><path d="M40 8c6-4 12 0 10 6s-8 6-10 2" stroke="' + IC_C.mid + '" stroke-width="2.2"/>' +
+    '<path d="M30 30c6-5 16-5 22 0-6 5-16 5-22 0z" fill="' + IC_C.blu + '"/><path d="M52 30l6-4v8z" fill="' + IC_C.blu + '"/>' + IC_DECK)
 };
 const icPic = k => ICPIC[k] || ICPIC.box;
 // ---- what each thing does, in numbers from the code ([no, en]); the long story is in the Håndboka (ITEM_HB)
@@ -87,7 +93,12 @@ const ICFX = {
   line:() => ['Hyseline ' + LINE_KINDS.hyse.hooks + ' kroker · bankline ' + LINE_KINDS.bank.hooks + ' større kroker per stamp', 'Haddock line ' + LINE_KINDS.hyse.hooks + ' hooks · bank line ' + LINE_KINDS.bank.hooks + ' bigger hooks a tub'],
   pot:() => ['Kongekrabbe · ' + POTS.big.cap + ' krabber per teine · høyst 30 per båt', 'King crab · ' + POTS.big.cap + ' crabs a pot · at most 30 a boat'],
   kit:() => ['Til hver ende av redskapet: staur med flagg, blåse, kulerekke og dregg på iletauet', 'For each end of the gear: a pole with a flag, a buoy, a row of floats and an anchor on the buoy line'],
-  hooks:() => ['Bytter slitte og bøyde kroker og juksasett', 'Replaces worn and bent hooks and jig sets']
+  hooks:() => ['Bytter slitte og bøyde kroker og juksasett', 'Replaces worn and bent hooks and jig sets'],
+  // the knives and the gaff (OPP1): the next tier's numbers (the one aboard when it is the best), from the core's tiers
+  kniv:() => { const lv = Math.min(equipLv('kniv') + 1, EQUIP.kniv.tiers.length), T = EQUIP.kniv.tiers[lv - 1], kg = fmt(DECK.gut * 60 * upgSum(T.gut), 0), p = Math.round(T.gut * 100), q = Math.round(T.slip * 100);
+    return ['Trinn ' + lv + ': sløyer ' + kg + ' kg i timen per person (+' + p + ' %) · ' + q + ' % færre stygt sløyde og kutt', 'Tier ' + lv + ': guts ' + kg + ' kg an hour a person (+' + p + '%) · ' + q + '% fewer badly gutted and cuts']; },
+  hott:() => { const lv = Math.min(equipLv('hott') + 1, EQUIP.hott.tiers.length), T = EQUIP.hott.tiers[lv - 1], r = Math.round(T.rail * 100), j = Math.round(JIG_SLIP * upgSum(-T.jig) * 100), h = Math.round(T.haul * 100);
+    return ['Trinn ' + lv + ': ' + r + ' % færre fisk over ripa · ' + j + ' % glipper ved halvt treff i juksa · ' + h + ' % raskere linetrekk', 'Tier ' + lv + ': ' + r + '% fewer fish over the rail · ' + j + '% slip at a half hit on the jig · ' + h + '% faster line hauling']; }
 };
 const icFx = k => { const f = ICFX[k]; if (!f) return ''; const v = f(); return icL(v[0], v[1]); };
 // the anchor beside the price: what the same work costs another way (the hand, the hand jig), only where it is a fair comparison
@@ -99,7 +110,7 @@ const ICANCHOR = {
 // the Håndboka's entry each card's «Mer» opens (the search in the app is set to its title)
 const ICMORE = {jig:'juksa', kgear:'kveiteutstyr', jukse:'juksa', jigset:'kroker', linehaler:'halere', garnhaler:'halere', teinehaler:'halere', krabbekar:'teiner',
   chirp:'elektronikk', sonar:'elektronikk', plotter:'elektronikk', vhf:'elektronikk', ais:'elektronikk', brovakt:'elektronikk', radar:'elektronikk', radarA:'elektronikk',
-  antigro:'montering', motor90:'montering', olje:'klaer', varme:'klaer', ice:'is', bait:'agn', net:'garn', line:'line', pot:'teiner', kit:'blaser', heavy:'blaser', hooks:'kroker'};
+  antigro:'montering', motor90:'montering', olje:'klaer', varme:'klaer', ice:'is', bait:'agn', net:'garn', line:'line', pot:'teiner', kit:'blaser', heavy:'blaser', hooks:'kroker', kniv:'kniv', hott:'hott'};
 // the card. o: {k (picture, line, anchor, «Mer»), name, sub (small after the name), fx (instead of the line), price (kr or text), anchor,
 // cond (0–1 with its label), have (a line in green, «Om bord»), note, btns (html), body (html after the price), id}
 function itemCard(o){

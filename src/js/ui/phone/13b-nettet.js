@@ -59,6 +59,10 @@
   const tryBtn = k => !tryable(k) ? '' : '<button class="ph-btn alt" data-pa="eqtry" data-k="' + k + '"' + (G3.trying === k ? ' aria-pressed="true"' : '') + '>' + (G3.trying === k ? L('Ta av igjen', 'Take it off') : L('Prøv på båten', 'Try it on the boat')) + '</button>';
   function equipBuy(k){
     const E = EQUIP[k]; if (!E) return L('Ukjent utstyr.', 'Unknown equipment.');
+    // the knives and the gaff in tiers (OPP1): the next tier, paid and aboard at once at the tackle shop's quay (core/10-gear.js tierBuy,
+    // which asks buyGate); no fitting and no hoist
+    if (E.tiers){ const lv = equipLv(k) + 1, why = buyGear('tier', k); if (why) return why[0]; const T = E.tiers[lv - 1];
+      achAdd('equip'); shopBought(T.no, T.en); folkShop(); if (typeof cloudEv === 'function') cloudEv('shop_buy', {w:'equip', k, lv}); return null; }
     if (!atKind(EQ_YARD(k) ? 'verft' : 'butikk')) return L('Det monteres ' + (EQ_YARD(k) ? 'på verftet.' : 'i utstyrsbutikken.'), 'It is fitted ' + (EQ_YARD(k) ? 'at the yard.' : 'at the tackle shop.'));
     if (!equipFits(k, S.boat.type)) return L(E.name.no + ' passer ikke «' + S.boatName + '».', 'The ' + E.name.en + ' does not suit the «' + S.boatName + '».');
     // (what the rules ask for follows the boat and is never sold to her: V6 A, core/02-species-gear.js reqOf)
@@ -128,7 +132,7 @@
       h.push(itemCard({k:'kit', name:L('Blåsesett: staur, blåse og dregg', 'Buoy set: pole, buoy and anchor'), price:GPRICE.kit, anchor:L('tung dregg ', 'heavy anchor ') + kr(GPRICE.heavy), btns:ord('kit', null, null, 1, L('Blåsesett', 'Buoy set')) + ord('heavy', null, null, 1, L('Tung dregg', 'Heavy anchor'))}));
       h.push(itemCard({k:'hooks', name:L('Kroker og juksasett', 'Hooks and jig sets'), price:CARE.hookKr[100], anchor:L('per 100', 'a 100'), btns:ord('hooks', null, 500, 1, L('500 kroker', '500 hooks')) + ord('hooks', null, 1000, 1, L('1000 kroker', '1000 hooks')) + ord('jig', null, 'mark', 1, L('Juksasett', 'Jig set'))}));
     } else {
-      for (const [k, E] of Object.entries(EQUIP)){ if (EQ_YARD(k) || !equipFits(k, b.type)) continue;
+      for (const [k, E] of Object.entries(EQUIP)){ if (EQ_YARD(k) || E.tiers || !equipFits(k, b.type)) continue;   // (the knives and the gaff in tiers are bought at the shop, OPP1)
         const have = E.multi ? S.equip[k] || 0 : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1, r = res('equip', k, null), fj = (S.jobs || []).find(j => j.kind === 'fit' && j.k === k);
         // (one being fitted shows so, with when; before, the tab offered it again and the fetch said «Det har båten alt»)
         const fitTxt = fj && !E.multi ? L('Til montering', 'Being fitted') + (fj.until != null ? ' · ' + L('ferdig kl. ', 'done at ') + hm(fj.until / 60) : '') : '';
