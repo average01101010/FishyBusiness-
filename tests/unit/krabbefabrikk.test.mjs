@@ -88,9 +88,9 @@ export default function (t){
   S.t = H27 * 60; S.hold = [{sp:'snokrabbe', cls:0, kg:67050, n:1, gut:true, iced:true, frozen:true}, {sp:'snokrabbe', cls:4, kg:32000, n:1, tank:true, hr:0}];
   const lp = K.landPlan('snokrabbe', K.holdTotal());
   t.ok(lp.kind === 'pall' && lp.np === 45 && lp.kar === 80 && lp.n === 125 && lp.lv === 32000 && lp.pk === 45000, `45 t klør på ${lp.np} paller og 32 t levende i ${lp.kar} kar`);
-  t.ok(Math.abs(lp.dur - (1 + 45 * PALL.lift + 80 * KARLV.lift + 5)) < 1e-6, `lossingen tar ${(lp.dur / 60).toFixed(1)} timer`);
+  t.ok(Math.abs(lp.dur - (K.LANDING.prep + 45 * PALL.lift + 80 * KARLV.lift + K.LANDING.note)) < 1e-6, `lossingen tar ${(lp.dur / 60).toFixed(1)} timer`);
   S.hold = [{sp:'snokrabbe', cls:4, kg:32000, n:1, tank:true, hr:0}]; const lt = K.landPlan('snokrabbe', 32000);
-  t.ok(lt.kind === 'tub' && lt.n === 80 && Math.abs(lt.dur - (1 + 80 * KARLV.lift + 5)) < 1e-6, `bare levende: ${lt.n} kar på ${(lt.dur / 60).toFixed(1)} timer`);
+  t.ok(lt.kind === 'tub' && lt.n === 80 && Math.abs(lt.dur - (K.LANDING.prep + 80 * KARLV.lift + K.LANDING.note)) < 1e-6, `bare levende: ${lt.n} kar på ${(lt.dur / 60).toFixed(1)} timer`);
   S.hold = [{sp:'snokrabbe', cls:4, kg:32000, n:1, tank:true, hr:0}, {sp:'snokrabbe', cls:0, kg:1490, n:1, gut:true, iced:false, frozen:false}];
   const lf = K.landFreeze(); t.ok(lf === 1490 && S.hold.some(x => x.tank && !x.frozen) && S.hold.some(x => x.frozen && x.gut && !x.tank), 'ved innveiingen fryses det som ventet i fabrikken, ikke den levende krabben');
 
