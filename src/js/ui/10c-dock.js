@@ -250,6 +250,7 @@ const DOCK = (() => {
     else if (b.status === 'unmooring') o.on = L('Kaster loss …', 'Casting off …');
     else if (b.gop){ const g = gopText(); if (g) o.on = L(g[0], g[1]); }
     else if (port && b.land) o.on = landText(true)[0];   // the crane, the tubs ashore, the weighing (07-guide.js)
+    else if (port && b.landQ) o.on = landQText(true)[1];   // the queue at the plant (K3)
     else if (port && (b.shift || b.fueling)) o.on = quayText(true)[0];   // to the bunker quay, the pump running
     // in harbour: the rorbu's price, or where she lies («Ved naustet», «Ved kaia · Finnsnes»; 07-harbours.js berthKind)
     if (port && !resting()){ const pt = portById(b.port), k = berthKind(b);

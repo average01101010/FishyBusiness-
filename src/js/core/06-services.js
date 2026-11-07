@@ -158,7 +158,8 @@ function autoRestock(){
   if (st.gear && !b.gear && PRICE.gear <= spendable()){ b.gear = true; book('redskap', -PRICE.gear, 'Håndjuksa', 'Hand jig'); tripAdd(b, 'jigKr', PRICE.gear); }
 }
 function depart(){
-  const b = S.boat; b.windArm = false; if (b.anch) weighAnchor(true);   // armed again once the wind is under the turn-back limit (05-vessels.js)
+  const b = S.boat; b.windArm = false; if (b.anch) weighAnchor(true);
+  if (b.landQ && !(S.plan && S.plan.depAt)) landQueueEnd();   // she leaves the queue at the plant (K2); a plan waits for her turn instead (portBusy)   // armed again once the wind is under the turn-back limit (05-vessels.js)
   // the lines stay on until the catch is landed; the plan leaves when it is done
   if (b.status === 'port' && portBusy(b)){ if (S.plan){ S.plan.depAt = portBusy(b) + 1; log('Går når arbeidet på kaia er ferdig, kl. ' + hm(S.plan.depAt / 60) + '.', 'Leaving when the work at the quay is done, at ' + hm(S.plan.depAt / 60) + '.'); } return false; }
   // without you aboard, the vessel needs crew of its own

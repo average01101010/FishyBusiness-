@@ -89,4 +89,4 @@ Bare brukte båter fra spillere hos megleren, ingen NPC-oppføringer; kommisjon 
 
 ## Status
 
-- Planen skrevet 07.11.2026, gren `ccr-a9ff699b-re4zwf`. Valgene tatt 07.11.2026 (alle A). Rekkefølgen etter V7 A: K (køen, med migreringen `landing_q`), så B (båtsalget, med `listings` og `bids`), så R (rund/sløyd synlig). Venter på «kjør på» for K.
+- Planen skrevet 07.11.2026, gren `ccr-a9ff699b-re4zwf`. Valgene tatt 07.11.2026 (alle A). Rekkefølgen etter V7 A: K (køen, med migreringen `landing_q`), så B (båtsalget, med `listings` og `bids`), så R (rund/sløyd synlig). Jonas 07.11.2026: «Fiks det du» (migreringen kjørt herfra). K1–K4 og K6 bygd 07.11.2026 (`docs/systemer/havner-og-mottak.md`, «Køen ved mottakene»); K5 venter. Neste: B.

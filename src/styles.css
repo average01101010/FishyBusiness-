@@ -561,6 +561,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nume
 
 #toast{position:fixed;left:50%;bottom:calc(128px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 14px;border-radius:8px;font-size:14px;max-width:90vw;opacity:0;pointer-events:none;transition:opacity .2s;z-index:var(--z-toast)}
 #toast.on{opacity:1}
+/* the queue at the plant (ui/07-guide.js landQOthers, K3): the plants near by with their queues and «Kjør dit» */
+.lq-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)} .lq-row span{flex:1;min-width:0} .lq-row b{white-space:nowrap} .lq-row b.ok{color:#1e8c6e} .lq-row b.busy{color:#b3261e} .lq-row .btn{min-height:36px;padding:6px 12px;font-size:13px;flex:none}
 /* a new build is out (ui/10p-install.js UPDATE): a bar at the top with «Oppdater nå» */
 #updBar{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);z-index:var(--z-toast);display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px;border-radius:999px;background:var(--ink);color:var(--paper);font:600 13px var(--sans);box-shadow:0 6px 20px rgba(0,0,0,.35);max-width:calc(100vw - 24px)}
 #updBar button{min-height:36px;border:0;border-radius:999px;padding:0 14px;font:700 13px var(--sans);cursor:pointer;background:#ffd27a;color:#15252f} #updBar #updX{background:transparent;color:var(--paper);padding:0 8px;font-size:16px}
