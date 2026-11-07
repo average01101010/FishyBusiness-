@@ -1025,3 +1025,12 @@
 2026-11-07 17:15	ccr-73ea871d-9b5rz6	46b9cef8	anchor3d	FEIL	623	3d	alene	FEIL kyst15 stowed, falls with a splash, lies on the bottom with its chain {"stow": true, "links": 84, "hang": false, "bottom": true, "shot": true, "upHang": tr
 2026-11-07 17:15	ccr-73ea871d-9b5rz6	46b9cef8	routetest	OK	38	lite	alene	
 2026-11-07 17:16	ccr-73ea871d-9b5rz6	46b9cef8	charttest	OK	48	lite	alene	
+2026-11-07 17:30	ccr-73ea871d-9b5rz6	bb9b5d3e	docktest	OK	60	lite	samtidig	
+2026-11-07 17:30	ccr-73ea871d-9b5rz6	bb9b5d3e	fabrikktest	FEIL	12	lite	samtidig	FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined |
+2026-11-07 17:30	ccr-73ea871d-9b5rz6	bb9b5d3e	worktest	FEIL	23	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-07 17:30	ccr-73ea871d-9b5rz6	bb9b5d3e	fartstidtest	FEIL	12	lite	samtidig	FEIL the phone's home shows the years and days, and the Merker app explains how sea time is earned  "06:02\nman 1. mar\nNØ 5 m/s · −1 °C\n15 000 kr\nNeste mål: 
+2026-11-07 17:30	ccr-73ea871d-9b5rz6	bb9b5d3e	crewclip	FEIL	14	lite	samtidig	FEIL nor does the work at its places (jigging, gutting, icing, hauling) {'bunntral': {'jig': ['jig:1[0]null'], 'deck': [], 'haul': []}}
+2026-11-07 17:30	ccr-73ea871d-9b5rz6	bb9b5d3e	itemcardtest	FEIL	14	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'linesetter', 'garnrenne', 'jukse', 'krabbekar', 'brova
+2026-11-07 17:31	ccr-73ea871d-9b5rz6	bb9b5d3e	docktest	OK	58	lite	alene	
+2026-11-07 17:32	ccr-73ea871d-9b5rz6	bb9b5d3e	docktest	OK	58	lite	alene	
+2026-11-07 17:33	ccr-73ea871d-9b5rz6	bb9b5d3e	hulltest	OK	76	lite	alene	
