@@ -29,7 +29,9 @@ SET = """async ([hour, la, lo]) => { const b = S.boat, R = {}; S.tut = 0; S.mult
   if (!S.lag){ S.crew = []; lagOf(); }
   const p = P(la, lo); await mapNeed(p, 8); b.status = 'sailing'; b.port = null; b.v = VESSELS.snokrabbe.vcruise || 11; b.pos = {x:p.x, y:p.y}; b.heading = 1.2; S.me = S.cur;
   b.fuel = BOAT.fuelCap; b.prov = null; provFill();
-  S.plan = {wps:[{x:b.pos.x + 9, y:b.pos.y, port:null, fish:0}], idx:0, speed:b.v, returning:false}; S.sets = []; return R; }"""
+  S.plan = {wps:[{x:b.pos.x + 9, y:b.pos.y, port:null, fish:0}], idx:0, speed:b.v, returning:false}; S.sets = [];
+  // (the pictures show the model: no scrapes from an earlier bump, and the hull not still wet from the jump here, wetTick dries 3.5 cm a second)
+  R.dmg = b.dmg ? {s:+(b.dmg.s || 0).toFixed(3), h:+(b.dmg.h || 0).toFixed(3)} : null; b.dmg = null; if (G3._debug.wets) G3._debug.wets.clear(); return R; }"""
 
 ASK = """((t) => { const G = geoOf(t), m = buildVesselModel(t, 2), g = glbLoad(t), K = G && G.kit || {};
   return {glbHas:glbHas(t), glb:!!(m && m.glb), tris:m ? m.o.p.length / 9 : 0, parts:g ? Object.keys(g.parts) : [], name:g && g.ex && g.ex.name,
@@ -65,7 +67,7 @@ NPC = """async ([dkm]) => { const D = havData(), b = S.boat, R = {}; let best = 
   R.name = best.s.name; R.st = A.st; R.ships = D.ships.filter(s => s.vtype === 'snokrabbe').length; R.ll = LL(A.p);
   R.near = havNear(S.t / 60).filter(n => n.vtype === 'snokrabbe').map(n => [n.name, +(dist(n.p, b.pos) * 1000).toFixed(0)]); return R; }"""
 
-CAM = """([dist, pitch, yaw, at]) => { const c = G3._debug.cam; c.helm = false; c.dist = dist; c.pitch = pitch; c.yaw = yaw; c.at = at || null; }"""
+CAM = """([dist, pitch, yaw, at]) => { const c = G3._debug.cam; c.helm = false; c.dist = dist; c.pitch = pitch; c.yaw = yaw; c.at = at || null; if (G3._debug.wets) G3._debug.wets.clear(); }"""
 
 async def frames(pg, n=3):
     for _ in range(n): await pg.evaluate("new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))")

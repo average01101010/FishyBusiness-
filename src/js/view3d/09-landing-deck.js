@@ -470,7 +470,7 @@
   function drawRigRest(BMrel, G, d){
     const b = S.boat, rig = typeof rigOf === 'function' ? rigOf() : b.rig, sx = G.beam / 2, DZ = d.z - 0.6, K = G.kit || {};
     KST.pots = 0; if (b.gop && b.status === 'fishing') return; if (!GB) buildGear();
-    if (rig === 'teiner') KST.pots = drawPotsAboard(BMrel, G, d, ((S.pgear || {}).pots || {}).big || 0);
+    if (rig === 'teiner') KST.pots = drawPotsAboard(BMrel, G, d, potsAboard());
     const J = (S.jobs || []).filter(j => !j.shop), EJ = J.filter(j => j.kind === 'egn' || j.kind === 'strip'), MJ = J.find(j => j.kind === 'mend'), pg = S.pgear || {};
     if (rig === 'garn' || MJ){ const mend = MJ ? (pg.shore || []).find(x => x.kind === 'mendself' && x.lenke && x.lenke.id === MJ.nid) : null, aboard = (pg.nets || []).reduce((a, l) => a + (l.n || 1), 0) + (mend ? mend.lenke.n || 1 : 0);
       const out = (typeof mySets === 'function' ? mySets() : []).filter(x => x.kind === 'garn').reduce((a, x) => a + (x.n || 0), 0), R = rigAt(G, 'garn', d);

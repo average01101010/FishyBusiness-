@@ -218,7 +218,7 @@ def section(x, sg=1, fine=True):
         out += [(0.0, zl, 'k')] * ((4 if fine else 2) + nk) + [(0.0, zl, 'f')] * nf
         body = P
     z0 = body[0][1]; cl = lambda z: min(top, max(z0, z))
-    nb = 20 if fine else 3
+    nb = 16 if fine else 3
     zw = cl(WL + 0.6); out += [(yy, zz, 'b') for yy, zz in along(body, z0, zw, nb)]
     zprev = zw; ro = rub_on(x)
     for zr in RUB:
@@ -304,6 +304,8 @@ def colours():
     w = lambda n, rgb, g=0.4, z=0, metal=0.0, emit=0.0: C.__setitem__(n, mat(n, rgb, g, zone=z, metal=metal, emit=emit))
     w('af', (0.075, 0.075, 0.08), 0.15); w('boot', (0.80, 0.50, 0.08), 0.5, 2); w('hull', (0.15, 0.16, 0.175), 0.55, 1)
     w('stripe', (0.80, 0.50, 0.08), 0.5, 2); w('rubbar', (0.13, 0.14, 0.15), 0.6, 1); w('mark', (0.92, 0.91, 0.86), 0.4)
+    w('brim', (0.15, 0.16, 0.175), 0.5, 2)      # (the brims round the wheelhouse's and the house's tops in the hull's colour; zone 2, the stripe's,
+                                                # since the game reads zone 1 as the hull itself: the registration mark found the sheer on the brim)
     w('white', (0.88, 0.86, 0.80), 0.5, 3); w('cap', (0.84, 0.82, 0.76), 0.45, 3); w('roof', (0.74, 0.74, 0.70), 0.3, 3)
     w('inner', (0.80, 0.79, 0.74), 0.3); w('ceil', (0.70, 0.70, 0.66), 0.25); w('frameW', (0.76, 0.75, 0.70), 0.3)
     w('deck', (0.36, 0.38, 0.37), 0.12, 4); w('potdeck', (0.33, 0.35, 0.34), 0.10, 4); w('nonslip', (0.31, 0.33, 0.32), 0.06, 4)
@@ -420,7 +422,8 @@ def stations(fine=True):
     sp = [XA, X_KA - 0.002, X_KA, X_KA + 0.05, X_KA + 0.10, X_KF, X_SH, X_FC - 0.006, X_FC, X_FC + 0.006] + list(SW_A) + list(SW_F)
     if fine:
         for a, b in OPEN_S: sp += [a, b]
-        xs = [XA + 0.02, XA + 0.05, XA + 0.09, XA + 0.14, XA + 0.20, XA + 0.27, XA + 0.35, XA + 0.45, XA + 0.6, XA + 0.8] + [1.0 + 0.20 * i for i in range(240)] + [49.0 + 0.04 * i for i in range(25)]
+        # (0.2 m where the hull's shape turns, 0.4 m along the parallel body: the GLB is downloaded, 07.11.2026)
+        xs = [XA + 0.02, XA + 0.05, XA + 0.09, XA + 0.14, XA + 0.20, XA + 0.27, XA + 0.35, XA + 0.45, XA + 0.6, XA + 0.8] + [x for x in [1.0 + 0.20 * i for i in range(240)] if not (10.0 < x < 36.0) or abs((x - 10.0) / 0.4 - round((x - 10.0) / 0.4)) < 1e-6] + [49.0 + 0.04 * i for i in range(25)]
         sp += stem_stations(lambda x: z_low(x) if x > X_KF else kb(x), [Z_AF, Z_BT, RUB[0] - RUBH, RUB[0] + RUBH, RUB[1] - RUBH, RUB[1] + RUBH, z_stripe], 40.0, XF - 0.012)
     else:
         xs = [0.6, 2.4, 8.0, 22.0, 34.0, 40.0, 43.5, 46.0, 47.6, 48.7, 49.5]
@@ -922,7 +925,26 @@ def wh_plan():
          (42.85, 1.25, 1), (42.45, 2.75, 1), (41.65, 4.10, 1), (40.05, 4.10, 0), (38.8, 4.10, 0), (37.4, 4.10, 0), (36.0, 4.10, 0), (WX0, 3.60, 0)]
     return P + [(WX0, 3.60 - 7.2 * k / 8, 0) for k in range(1, 8)]
 def lean_at(z): return LEAN * max(0.0, z - WS) / (WR - WS)
-def wh_crown(x, y): return WR + 0.14 + 0.06 * (1 - min(1.0, (y / 4.3) ** 2))
+# the brim round the wheelhouse's top (Jonas 07.11.2026: «Jeg hater at du lager helt flate styrhustak … Vanlige styrhus har jo en slags
+# brem, eller skrående kant øverst over vinduene», with a photo of a Norwegian fishing vessel: a wide band in the hull's colour slanting
+# out and up from over the windows round the whole house, and the same under the deck below): from the wall just over the window band
+# out and up to the roof's edge
+BRIM0 = WH + 0.16                        # where it leaves the wall (a cream strip between it and the dark window band, as on the photo)
+RTOP = WR + 0.34                         # the roof's edge at its top
+BRIM, BRIM_F = 0.42, 0.15                # how far it stands out, and more over the front panes
+TBRIM = (0.24, 0.20)                     # the house's (tier A) edge: how far down its wall it starts, how far out
+def wh_crown(x, y): return RTOP + 0.06 + 0.06 * (1 - min(1.0, (y / 4.3) ** 2))
+def offset_any(poly, d):
+    """a closed polygon (x, y) pushed out by d at every point, along the mean of its two edges' normals (points on a line are fine)"""
+    n = len(poly); out = []
+    ccw = sum(poly[i][0] * poly[(i + 1) % n][1] - poly[(i + 1) % n][0] * poly[i][1] for i in range(n)) > 0
+    def en(a, b):
+        ex, ey = b[0] - a[0], b[1] - a[1]; L = math.hypot(ex, ey) or 1.0
+        return (ey / L, -ex / L) if ccw else (-ey / L, ex / L)
+    for i in range(n):
+        n1 = en(poly[i - 1], poly[i]); n2 = en(poly[i], poly[(i + 1) % n]); mx, my = n1[0] + n2[0], n1[1] + n2[1]; L = math.hypot(mx, my) or 1.0
+        mx, my = mx / L, my / L; k = d / max(0.35, mx * n1[0] + my * n1[1]); out.append((poly[i][0] + mx * k, poly[i][1] + my * k))
+    return out
 def wh_ring(z): return [(x + (lean_at(z) if fr else 0.0), y, z) for x, y, fr in wh_plan()]
 
 def walls(name, rings, mat_out, t, cuts, objs):
@@ -980,7 +1002,14 @@ def house(fine=True):
     # the roof: its slab with a lip all round, the rail round its after part (the boat deck), open where the stair comes up
     R0 = [(x, y) for x, y in P]
     zt = TA + 0.08
-    F.loft(A, [[(x, y, TA) for x, y in R0], [(x, y, zt) for x, y in R0]], lambda i: C['white'], cap0=True, cap1=False, out=lambda mid_, cc: V((mid_.x - cc.x, mid_.y - cc.y, 0)))
+    # (the roof's edge as the deck's edge on Jonas' photo: a band in the hull's colour slanting out from the wall's top to the roof's
+    # edge, the roof flat out to it; the ceiling inside)
+    A.poly([(x, y, TA) for x, y in R0], C['inner'], (0, 0, -1))
+    RO = offset_any(R0, TBRIM[1]); zb = TA - TBRIM[0]
+    for i in range(len(R0)):
+        j = (i + 1) % len(R0); a, b_ = R0[i], R0[j]; c, d = RO[j], RO[i]
+        A.poly([(a[0], a[1], zb), (b_[0], b_[1], zb), (c[0], c[1], zt), (d[0], d[1], zt)], C['brim'], ((c[0] - b_[0]) + (d[0] - a[0]), (c[1] - b_[1]) + (d[1] - a[1]), -0.9))
+        A.poly([(d[0], d[1], zt), (c[0], c[1], zt), (b_[0], b_[1], zt), (a[0], a[1], zt)], C['roof'], (0, 0, 1))
     # the roof's top in a grid (kap. 19), lower where the wheelhouse stands on it
     nx_, ny_ = (12, 10) if fine else (1, 1)
     xs_ = [TA_X[0] + (42.40 - TA_X[0]) * i / nx_ for i in range(nx_ + 1)]
@@ -999,7 +1028,7 @@ def house(fine=True):
         rail_line(A, [(TA_X[0] + 0.9, 4.0, zt), (WX0 - 0.15, ta_w(WX0) - 0.08, zt)], every=1.2, fine=fine)
         rail_line(A, [(TA_X[0] + 0.1, -1.2, zt), (TA_X[0] + 0.1, 1.2, zt)], every=1.2, fine=fine)
         # the stair from the forecastle deck to the boat deck along the house's aft wall, rising to port
-        x0, x1 = TA_X[0] - 0.95, TA_X[0] - 0.12; zb = ta_foot(TA_X[0], 2.0)
+        x0, x1 = TA_X[0] - 1.12, TA_X[0] - 0.29; zb = ta_foot(TA_X[0], 2.0)   # (clear of the roof's slanting edge)
         nt = 11
         for k in range(1, nt + 1):
             yk = 0.75 + (3.95 - 0.75) * k / (nt + 1); zk = zb + (zt - zb) * k / (nt + 1)
@@ -1082,18 +1111,26 @@ def wheelhouse(fine=True):
         xa_, xb_ = WX0 + 0.08 + (41.6 - WX0 - 0.08) * i / nX, WX0 + 0.08 + (41.6 - WX0 - 0.08) * (i + 1) / nX
         A.poly([(xa_, -3.95, WF + 0.003), (xb_, -3.95, WF + 0.003), (xb_, 3.95, WF + 0.003), (xa_, 3.95, WF + 0.003)], C['sole'], (0, 0, 1))
     A.poly([(41.6, -3.95, WF + 0.003), (42.35, -2.65, WF + 0.003), (42.75, -1.2, WF + 0.003), (42.75, 1.2, WF + 0.003), (42.35, 2.65, WF + 0.003), (41.6, 3.95, WF + 0.003)], C['sole'], (0, 0, 1))
-    # the roof: its underside, a lip all round with a drip edge, the visor over the front, the crown (in a grid), the rail round its top
-    R_ = wh_ring(WR); ring = offset_poly([(R_[i][0], R_[i][1]) for i in (0, 1, 5, 6, 7, 8, 9, 10, 14, 15)], 0.14)
-    ring = [(x + (0.25 if x > 41.5 else 0.0), y) for x, y in ring]       # (the visor over the front panes)
-    A.poly([(x, y, WR + 0.001) for x, y in ring], C['inner'], (0, 0, -1))
-    crown = wh_crown
-    ri = offset_poly(ring, -0.18)
+    # the roof: the brim slanting out and up from over the window band to the roof's edge all round, deeper over the front panes (the
+    # hull's colour, as on Jonas' photo), a fascia on its edge, the roof's top with its crown in a grid; the ceiling inside
+    CI = (0, 1, 5, 6, 7, 8, 9, 10, 14, 15)
+    RL = wh_ring(BRIM0); lo = [(RL[i][0], RL[i][1]) for i in CI]
+    R_ = wh_ring(WR); ring = offset_any([(R_[i][0], R_[i][1]) for i in CI], BRIM)
+    ring = [(x + (BRIM_F if x > 41.5 else 0.0), y) for x, y in ring]
+    A.poly([(R_[i][0], R_[i][1], WR + 0.001) for i in CI], C['inner'], (0, 0, -1))
+    crown = wh_crown; nb_ = 3 if fine else 1
     for i in range(len(ring)):
-        a, b = ring[i], ring[(i + 1) % len(ring)]; c, d = ri[(i + 1) % len(ri)], ri[i]; nrm = (b[1] - a[1], -(b[0] - a[0]), 0)
-        A.poly([(a[0], a[1], WR), (b[0], b[1], WR), (b[0], b[1], WR + 0.12), (a[0], a[1], WR + 0.12)], C['white'], nrm)
-        A.poly([(a[0], a[1], WR + 0.12), (b[0], b[1], WR + 0.12), (c[0], c[1], crown(*c)), (d[0], d[1], crown(*d))], C['roof'], (0, 0, 1))
-        A.poly([(a[0], a[1], WR - 0.001), (b[0], b[1], WR - 0.001), (b[0], b[1], WR - 0.03), (a[0], a[1], WR - 0.03)], C['frame'], nrm)
-    xr0, xr1 = WX0 + 0.20, 41.5; NXR, NYR = (12, 10) if fine else (1, 1); yr = 3.8
+        j = (i + 1) % len(ring); a, b = lo[i], lo[j]; c, d = ring[j], ring[i]
+        nrm = ((c[0] - b[0]) + (d[0] - a[0]), (c[1] - b[1]) + (d[1] - a[1]), -0.9)
+        for k in range(nb_):   # (in bands up the slope: a big flat face goes dark in the game)
+            t0, t1 = k / nb_, (k + 1) / nb_; L = lambda p, q, t: (p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, BRIM0 + (RTOP - BRIM0) * t)
+            A.poly([L(a, d, t0), L(b, c, t0), L(b, c, t1), L(a, d, t1)], C['brim'], nrm)
+        A.poly([(d[0], d[1], RTOP), (c[0], c[1], RTOP), (c[0], c[1], RTOP + 0.06), (d[0], d[1], RTOP + 0.06)], C['brim'], (c[1] - d[1], -(c[0] - d[0]), 0))
+    ri = offset_any(ring, -0.18)
+    for i in range(len(ring)):
+        a, b = ring[i], ring[(i + 1) % len(ring)]; c, d = ri[(i + 1) % len(ri)], ri[i]
+        A.poly([(a[0], a[1], RTOP + 0.06), (b[0], b[1], RTOP + 0.06), (c[0], c[1], crown(*c)), (d[0], d[1], crown(*d))], C['roof'], (0, 0, 1))
+    xr0, xr1 = min(p[0] for p in ri) + 0.02, 41.5; NXR, NYR = (12, 10) if fine else (1, 1); yr = 3.9
     for i in range(NXR):
         xa_, xb_ = xr0 + (xr1 - xr0) * i / NXR, xr0 + (xr1 - xr0) * (i + 1) / NXR
         for j in range(NYR):
@@ -1201,8 +1238,8 @@ def fore(A, crown, fine=True):
     acyl(A, (40.3, 0.5, crown(40.3, 0.5) + 0.20), (40.65, 0.5, crown(40.3, 0.5) + 0.26), 0.04, lambda q: C['white'], seg=10, r1=0.11)
     abox(A, 40.25, 40.35, 0.45, 0.55, crown(40.3, 0.5) - 0.004, crown(40.3, 0.5) + 0.20, C['steel'])
     rail_line(A, [(WX0 + 0.3, -3.6, crown(WX0 + 0.3, 3.6)), (WX0 + 0.3, 3.6, crown(WX0 + 0.3, 3.6))], h=0.9, every=1.2, fine=fine)
-    for sg in (1, -1): F.work_light(A, (WX0 - 0.05, sg * 3.3, WR - 0.03), (-0.6, 0, -1), C['dark'], C['lens'])
-    for sg in (1, -1): F.work_light(A, (42.9, sg * 1.5, WR + 0.05), (1, 0, -0.9), C['dark'], C['lens'])
+    for sg in (1, -1): F.work_light(A, (WX0 - BRIM + 0.06, sg * 3.0, RTOP - 0.07), (-0.6, 0, -1), C['dark'], C['lens'])      # (under the brim's edge)
+    for sg in (1, -1): F.work_light(A, (42.85 + LEAN + BRIM + BRIM_F - 0.08, sg * 1.5, RTOP - 0.07), (1, 0, -0.9), C['dark'], C['lens'])
     for sg in (1, -1): F.work_light(A, (WING[1] - 0.3, sg * (WING[2] - 0.15), WF + 2.2), (0, sg * 0.6, -1), C['dark'], C['lens'])
 
 def lanterns_side(A, fine=True):
@@ -1472,7 +1509,7 @@ def anchors():
             # the stairs (deckMap: the shelter and the forecastle deck lie 2.95 m over the pot deck, the boat deck 2.65 over the forecastle's)
             'stairs': [{'from': G(STAIR_SH[0] + 0.35, 0.0, DK), 'to': G(STAIR_SH[1] - 0.45, 0.0, SD)},
                        {'from': G(STAIR_FC[0] - 0.35, (STAIR_FC[2] + STAIR_FC[3]) / 2, DK), 'to': G(STAIR_FC[1] + 0.50, (STAIR_FC[2] + STAIR_FC[3]) / 2, z_sd(X_FC + 0.5))},
-                       {'from': G(TA_X[0] - 0.55, 0.45, ta_foot(TA_X[0] - 0.5, 0.45)), 'to': G(TA_X[0] + 0.55, 4.0, TA + 0.08)}],
+                       {'from': G(TA_X[0] - 0.70, 0.45, ta_foot(TA_X[0] - 0.7, 0.45)), 'to': G(TA_X[0] + 0.55, 4.0, TA + 0.08)}],
             'doors': [{'at': G(X_FC - 0.03, sum(FC_DOOR) / 2, DK), 'w': round(FC_DOOR[1] - FC_DOOR[0], 2), 'h': 2.0, 'in': G(X_FC + 0.9, sum(FC_DOOR) / 2, DK), 'to': 'mess', 'open': True},
                       {'at': G(TA_X[0] - 0.03, sum(TA_DOOR) / 2, ta_foot(TA_X[0], -1.3)), 'w': round(TA_DOOR[1] - TA_DOOR[0], 2), 'h': 2.0, 'in': G(TA_X[0] + 0.9, sum(TA_DOOR) / 2, ta_foot(TA_X[0], -1.3)), 'to': 'cabin', 'open': True},
                       {'at': G(WX0 - 0.03, sum(WDOOR) / 2, WF), 'w': round(WDOOR[1] - WDOOR[0], 2), 'h': 1.96, 'in': G(WX0 + 0.9, sum(WDOOR) / 2, WF), 'to': 'helm', 'open': True}],

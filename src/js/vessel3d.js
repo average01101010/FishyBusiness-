@@ -1148,8 +1148,11 @@ function houseFront(type, P, Gl, V){
   const cap = Math.min(nameCap(V.len) * 0.85, band * CAPK * 0.88), sh = cap / CAPK, ym = ya + band * (band > 2.2 * sh ? 0.35 : 0.5), y0 = ym - sh / 2, y1 = ym + sh / 2;
   // (a roof edge too thin for letters of 8 cm leaves the name on the bows, as on the small boats that have one)
   if (cap < 0.08) return null;
-  const w = Math.min(halfWidth(T, ym, z0, 0.1 + Math.abs(R.zl - R.z0), -1, gw + 1), gw + 0.3) * 0.94; if (w < 4 * cap) return null;
-  const st = crossStrip(T, w, -w, y0, y1, z0, 0.15 + Math.abs(R.zl - R.z0), -1, 0.012); if (!st) return null;
+  let w = Math.min(halfWidth(T, ym, z0, 0.1 + Math.abs(R.zl - R.z0), -1, gw + 1), gw + 0.3) * 0.94; if (w < 4 * cap) return null;
+  // (a brim slanting out over the windows turns its corners away from ahead, H3d1 07.11.2026: the letters a little narrower until the
+  // strip lies on it from end to end)
+  let st = null; for (let k = 1; k > 0.55 && !st; k -= 0.075){ if (w * k < 4 * cap) break; st = crossStrip(T, w * k, -w * k, y0, y1, z0, 0.15 + Math.abs(R.zl - R.z0), -1, 0.012); if (st) w *= k; }
+  if (!st) return null;
   return [{kind:'house', line:'name', B:st[0], T:st[1], aspect:2 * w / sh, paint:crossPaint(T, w, -w, y0, y1, -1, z0 - 0.15 - Math.abs(R.zl - R.z0), z0 + 0.15 + Math.abs(R.zl - R.z0))}];
 }
 function transom(type, P, V){

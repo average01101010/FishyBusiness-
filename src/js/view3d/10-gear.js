@@ -317,6 +317,9 @@
     const full = i >= at.length * h, a = at[full ? at.length - 1 : Math.floor(i / h)]; return [a[0], a[1] + (full ? h - 1 : i % h) * P, a[2]]; }
   // the pots aboard while she is rigged for them and not working them (Jonas' survey 30.10.2026, D5: they showed only while setting and
   // hauling): the conical ones in their stacks on the model's places, else the square ones stacked by the hauler as they are when hauled
+  // the pots of the boat's own kind aboard (the snow crab vessel's conical pots are S.pgear.pots.sno, VESSELS.snokrabbe.pot; H3d1: the
+  // stacks on her deck showed none, as only the big square pots were counted)
+  function potsAboard(){ const P = (S.pgear || {}).pots || {}, V = VESSELS[vtype()] || {}; return (V.pot ? P[V.pot] : P.big) || 0; }
   function drawPotsAboard(BMrel, G, d, n){
     if (!GB) buildGear(); const K = G.kit && G.kit.pots; if (n <= 0) return 0;
     if (K && GB.kon && GB.konlag) return drawPotStacks(BMrel, K, n);
@@ -355,7 +358,7 @@
     const s = g.op === 'haul' ? (S.sets || []).find(x => x.id === g.sid) : g.s, ps = 1, X = GB.px || {}, KP = !skiff && G.kit && G.kit.pots && GB.kon && GB.konlag ? G.kit.pots : null, XP = (KP ? X.kon : X.pot) || {};
     // (the snow crab vessel works the conical pot, kit.pots: no hatch, no davit, the line over the hauler at her side)
     const ph = (GB.potB ? XP.h || 0.65 : 0.4) * ps, pw = (GB.potB ? (KP ? XP.r : XP.half) || 0.7 : 0.4) * ps, gw = G.gw || d.y + 0.9, D = potDeck(G, HP, sx, d, pw, null, ph), PM = KP ? GB.kon : GB.pot;
-    const base = ((S.pgear || {}).pots || {}).big || 0;   // the pots aboard besides those of this set
+    const base = potsAboard();   // the pots aboard besides those of this set
     if (POTA.g !== g || g.done !== POTA.done){
       if (POTA.g === g && g.done === POTA.done + 1) POTA.dur = clamp(t - POTA.t0, 2, 40);
       else { let m = 1.2; try { m = gopUnitMin(g, S.t / 60, hsAt(S.boat.pos, S.t / 60)); } catch (e){} POTA.dur = clamp(m * 60 / simRate(), 2, 40); }
