@@ -383,3 +383,6 @@
 2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	trip2	OK	35	lite	samtidig	
 2026-11-07 00:42	ccr-208d78a1-ruhxll	ac77c617	hailtest	OK	5	lite	samtidig	
 2026-11-07 00:44	ccr-208d78a1-ruhxll	cb03960a	anchorlight3d	FEIL	116	3d	alene	avsluttet med kode 1
+2026-11-07 01:09	ccr-208d78a1-ruhxll	21194a43	trackfollow	OK	1514	3d	alene	
+2026-11-07 01:14	ccr-208d78a1-ruhxll	21194a43	anchorlight3d	OK	236	3d	alene	
+2026-11-07 01:14	ccr-208d78a1-ruhxll	21194a43	npctest	OK	9	lite	samtidig	
