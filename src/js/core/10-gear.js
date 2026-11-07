@@ -680,8 +680,8 @@ function gearHour(H){
     soakHour(s, H);
     const a = (S.t - s.tSet) / 60, mid = setMid(s), hs = hsAt(mid, H), shallow = depthF(mid) < 20 ? 1.3 : 0.8, kf = {garn:1, line:0.6, teine:0.8}[s.kind];
     // loss per hour: small in ordinary weather, real in a storm (about 15 % over a day at 5 m seas); heavy anchors hold better
-    // (H3b) a snow crab string, 5 km on 250-350 m with a heavy anchor and a buoy at each end, is far less at the mercy of the sea at the
-    // surface than the coast's gear (SNOC.lossF, an assumption; HI 2023-51 names the drift ice as the great risk, H3c)
+    // (H3b, H3c) a snow crab string, 5 km on 250-350 m with a heavy anchor and a buoy at each end, is far less at the mercy of the sea at
+    // the surface than the coast's gear (SNOC.lossF, an assumption); the drift ice is its great risk (HI 2023-51, snoIceHour below)
     const p = ((0.0002 + 0.008 * sstep(2.5, 5, hs) * shallow * kf) * (s.heavy ? 0.35 : 1) + (s.kind === 'garn' ? 0.001 * sstep(0.25, 0.45, tideRate(H)) : 0)) * ((POTS[s.pot] || {}).sno ? SNOC.lossF : 1);
     const r = Math.random(), what = GEAR[s.kind].no.toLowerCase(), whatEn = GEAR[s.kind].en.toLowerCase();
     if (r < p){
@@ -697,7 +697,7 @@ function gearHour(H){
       else if (s.kind === 'teine' && s.n > 1){ const k = Math.max(1, Math.round(s.n * (0.1 + Math.random() * 0.2))); s.n -= k; setLog(s, 'Været har revet løs ' + k + ' teiner.', 'The weather has torn loose ' + k + ' pots.'); }
     }
     // deadlines
-    if (s.kind === 'teine' && (POTS[s.pot] || {}).sno){ snoTend(s, a, mid); continue; }   // the snow crab lives in the pot; §§ 18 and 25 instead
+    if (s.kind === 'teine' && (POTS[s.pot] || {}).sno){ if (snoIceHour(s, H)) continue; snoTend(s, a, mid); continue; }   // the drift ice over it (H3c); the snow crab lives in the pot; §§ 18 and 25 instead
     if (a >= 48 && !(s.warn & 1)){ s.warn |= 1; setLog(s, s.kind === 'teine' ? 'Teinene har stått i to døgn. Krabben begynner å dø.' : 'Redskapet har stått i to døgn. Fisken blir dårlig.', s.kind === 'teine' ? 'The pots have stood for two days. The crab is starting to die.' : 'The gear has stood for two days. The fish is spoiling.'); }
     // the Greenland halibut's gear on the edge is tended at least every other day (Høstingsforskriften § 18; Fiskeridirektoratet's
     // information on the fishery in 2026)

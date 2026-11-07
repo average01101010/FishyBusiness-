@@ -49,6 +49,7 @@ const p2Kind = o => PLAN2_KIND[o.rig] || null;
 // the units the boat owns of a kind (aboard, in the sea, ashore for baiting), for the line per kind (hyse or bank), and what is left for one
 // field when the other fields of the same kind have theirs (the page and the chart clamp to it: a plan never asks for more than she owns)
 function p2Units(kind, lk){
+  if (kind === 'teine' && typeof snoVessel === 'function' && snoVessel()) return Math.floor(ownedUnits('teine') / SNOC.lenke);   // (H3c: the snow crab vessel's fields count strings of 200)
   if (kind !== 'line' || !lk) return ownedUnits(kind);
   const pg = S.pgear || newPGear(), sea = mySets().filter(x => x.kind === 'line' && (x.lk || 'hyse') === lk).reduce((a, x) => a + x.n, 0);
   const shore = (pg.shore || []).reduce((a, j) => a + ((j.kind === 'egn' || j.kind === 'egnself' || j.kind === 'stripself') && (j.lk || 'hyse') === lk ? j.n : 0), 0);
@@ -64,8 +65,8 @@ const p2Jig = o => (!p2Kind(o) || !!o.jig) && (typeof vesselJigs !== 'function' 
 // lagOf), the soak the page steps in and warns at, and the hours of a lenke's set and haul at the machine's pace (LINE_KINDS.auto)
 const p2Auto = o => p2Kind(o) === 'line' && typeof autoL === 'function' && !!(BOAT && BOAT.autoHooks) && !!autoL();
 const p2Lag = () => typeof lagOf === 'function' && !!lagOf();
-const p2Soak = o => p2Auto(o) ? DRP2.hav.soak : DRP2.soak[p2Kind(o)];
-const p2SoakDef = o => p2Auto(o) ? DRP2.hav.soakDef : DRP2.soakDef[p2Kind(o)];
+const p2Soak = o => p2Sno(o) ? DRP2.sno.soak : p2Auto(o) ? DRP2.hav.soak : DRP2.soak[p2Kind(o)];   // (the snow crab's in days, H3c, 06i-plan2-sno.js)
+const p2SoakDef = o => p2Sno(o) ? DRP2.sno.soakDef : p2Auto(o) ? DRP2.hav.soakDef : DRP2.soakDef[p2Kind(o)];
 // the plants the plan can land at: a fish plant, and for an ocean vessel one whose quay and plant take her (06b-coastports.js portWhy)
 const p2PlantOk = pt => !!pt && !!(pt.mottak || (pt.havOnly && BOAT.cls === 'hav')) && !(BOAT.cls === 'hav' && portWhy(pt, S.boat.type));
 const p2Plants = () => PORTS.filter(p2PlantOk);
@@ -73,11 +74,11 @@ const p2AutoH = () => { const A = LINE_KINDS.auto; return {set:A.hooks * A.setH,
 let P2_SID = 0;
 const plan2Sid = () => 'p' + Date.now().toString(36).slice(-4) + (P2_SID++).toString(36);
 function plan2New(over){
-  const b = S.boat, here = b.status === 'port' ? b.port : null, hav = p2Lag();
+  const b = S.boat, here = b.status === 'port' ? b.port : null, hav = p2Lag(), sno = typeof snoVessel === 'function' && snoVessel();   // (H3c: frozen trips of about 20 days)
   // (an ocean vessel with her teams works round the clock in their watches, does not jig, works the gear to the ocean presets, and a
   // trip lasts until the hold, the bait, the fuel or the provisions are spent, or DRP2.hav.days at the most when the player chooses it)
   return Object.assign({v:DRV2, on:false, home:here, anchor:false, rig:RIGS[b.rig] ? b.rig : 'juksa', jig:!hav, places:[],
-    wx:hav ? Object.assign({}, DRP2.hav.wx.normal) : {wind:13, hs:2.5}, dep:5, rhythm:hav ? 'watch' : 'day', days:3, land:{mode:'near', port:null, when:'full', days:hav ? DRP2.hav.days : 2},
+    wx:hav ? Object.assign({}, DRP2.hav.wx.normal) : {wind:13, hs:2.5}, dep:5, rhythm:hav ? 'watch' : 'day', days:3, land:{mode:'near', port:null, when:sno ? 'days' : 'full', days:sno ? DRP2.sno.days : hav ? DRP2.hav.days : 2},
     legs:{}, M:null, homeA:null, restA:null, made:null, err:null, t0:null, run:null, held:null, stop:null, hold:0,
     stats:{days:[], sum:{trips:0, kg:0, kr:0, lott:0, cost:0, conf:0, sp:{}, port:{}}}}, over || {});
 }
@@ -88,7 +89,8 @@ function plan2Ops(){
   if (o.v === DRV2){ if (o.rig === 'line' && o.places.some(q => q.k === 'felt' && !q.lk)){ for (const q of o.places) if (q.k === 'felt' && !q.lk){ q.lk = p2LineKind(o); q.n = Math.max(1, Math.min(q.n, p2Left(o, q))); } }   // (fields from before 27.10.2026: the line's kind and the tubs the boat owns)
     // (an ocean vessel, H2c: her teams' watches round the clock, no jig, and the fields of her autoline in lenker)
     if (p2Lag()){ if (o.rhythm !== 'watch') o.rhythm = 'watch'; if (o.jig && !p2Jig(o)) o.jig = false; if (o.land && o.land.when === 'trip') o.land.when = 'full';
-      if (p2Auto(o)) for (const q of o.places) if (q.k === 'felt' && q.lk !== 'auto'){ q.lk = 'auto'; q.n = Math.max(1, Math.min(q.n, p2Left(o, q))); q.soak = clamp(q.soak, DRP2.hav.soak[0], DRP2.hav.soak[3]); } }
+      if (p2Auto(o)) for (const q of o.places) if (q.k === 'felt' && q.lk !== 'auto'){ q.lk = 'auto'; q.n = Math.max(1, Math.min(q.n, p2Left(o, q))); q.soak = clamp(q.soak, DRP2.hav.soak[0], DRP2.hav.soak[3]); }
+      if (p2Sno(o)) for (const q of o.places) if (q.k === 'felt' && (q.soak < DRP2.sno.soak[0] || q.soak > DRP2.sno.soak[3])){ q.soak = clamp(Math.round(q.soak / 24) * 24, DRP2.sno.soak[0], DRP2.sno.soak[3]); q.n = Math.max(1, Math.min(q.n, p2Left(o, q))); } }   // (H3c: a field from before is strings of 200 and days)
     return o; }
   S.ops = null;
   msg(gL('Driftsplan', 'Operations plan'), 'Driftsplanen er laget på nytt. Den gamle planen for «' + S.boatName + '» er slått av. Lag en ny under Driftsplan. Redskapet i sjøen står der det står.', 'The operations plan has been made anew. The old plan for «' + S.boatName + '» is switched off. Make a new one under Operations plan. The gear in the sea stays where it is.');
@@ -118,7 +120,7 @@ function plan2State(o){
     : o.homeA && dist(b.pos, o.homeA) < 0.4 ? {p:o.homeA, port:null} : o.restA && dist(b.pos, o.restA) < 0.4 ? {p:o.restA, port:null} : {p:{x:b.pos.x, y:b.pos.y}, port:null};
   const V = VESSELS[b.type] || {};
   return {H:S.t / 60, at, hold, cap:capHold(), fresh:S.hold.length ? Math.min(...S.hold.map(x => x.fresh)) : 100,
-    sets:mySets().map(s => ({fid:s.fid || null, kind:s.kind, n:s.n, tSet:s.tSet, x:setMid(s).x, y:setMid(s).y})),
+    sets:mySets().map(s => ({fid:s.fid || null, kind:s.kind, n:s.n, tSet:s.tSet, x:setMid(s).x, y:setMid(s).y, a:{x:s.a.x, y:s.a.y}, b:{x:s.b.x, y:s.b.y}})),
     aboard:{line:{n:(pg.lines.hyse.n || 0) + (pg.lines.bank.n || 0), baited:(pg.lines.hyse.baited || 0) + (pg.lines.bank.baited || 0), kinds:{hyse:{n:pg.lines.hyse.n || 0, baited:pg.lines.hyse.baited || 0}, bank:{n:pg.lines.bank.n || 0, baited:pg.lines.bank.baited || 0}}}, garn:pg.nets.reduce((a, l) => a + l.n, 0), teine:potsAboard(pg), bait:Object.values(baitOf(pg)).reduce((a, v) => a + v, 0)},
     crew:crewAboard(null, true).map(c => ({name:c.name, fat:c.fatigue || 0, sk:!!c.sk, mate:!!c.mate, rate:6 * (1.4 - 0.16 * ((c.attr && c.attr.uth) || 2.5)) * ((BOAT.fx && BOAT.fx.fat) || 1) * (V.fac && V.fac.house === 'open' ? 1.1 : 1)})),   // fatigue an hour of fishing (04-crew.js crewTick)
     me:{aboard:meAboard(), energy:S.energy == null ? 100 : S.energy, homeRate:p2MeRate(o.home, !!o.homeA), anchRate:p2MeRate(null, true)}, bunks:V.berths || 0, house:!!V.watch, crewMax:V.crewMax || 0, v:BOAT.vcruise || 7,
@@ -129,6 +131,8 @@ function plan2State(o){
     lag:p2Lag() ? lagN() : 0, auto:p2Auto(o) ? {n:autoL(pg).n, bait:baitKg(pg)} : null,
     left:BOAT.cls === 'hav' && b.status !== 'port' && typeof tripLeft === 'function' ? tripLeft(b) : null, tripD:(b.trip && b.trip.seaM || 0) / 1440};   // (read only: tripOf makes a trip where none is, and the page reckons this too)
 }
+// the state with the snow crab trip's own (H3c, 06i-plan2-sno.js p2SnoState): the pots, the bait, the tanks, the quota and the season
+function plan2StateOf(o){ const st = plan2State(o); if (p2Sno(o)) st.sno = p2SnoState(o, st); return st; }
 function plan2RestOk(pid){ const p = portById(pid); if (!p) return false; return isRorbu(pid) || pid === (S.home || HOME0) || (VESSELS[S.boat.type].berths || 0) > 0; }
 // the units ready to set, of the plan's kind
 function plan2Ready(kind, st, lk){ return kind === 'line' ? (lk && st.aboard.line.kinds && st.aboard.line.kinds[lk] ? st.aboard.line.kinds[lk].baited : st.aboard.line.baited) : kind === 'garn' ? st.aboard.garn : kind === 'teine' ? Math.min(st.aboard.teine, Math.floor(st.aboard.bait / GPRICE.potBait + 1e-9)) : 0; }
@@ -226,7 +230,8 @@ function planDayAuto(o, H0, st){
 // Steps: avgang {from}, sett {pid, n, kind, h}, trekk {pid, n, kind, h, reset, soakH}, juks {pid, h, until}, vent {pid, until},
 // lever {port, h} or behold {kg}, agn {port, kg}, hjem {port, anchor}, egning {where, n, ready}, hvile {until, where}, vakt {w, who, until}, ut {}
 function planDay(o, H0, st){
-  st = st || plan2State(o);
+  st = st || plan2StateOf(o);
+  if (p2Sno(o)){ const s2 = Object.assign({}, st, {H:H0}); if (!s2.sno || Math.abs(st.H - H0) > 1) s2.sno = p2SnoState(o, s2); return planDaySno(o, H0, s2); }   // (the snow crab vessel's strings, H3c)
   if (p2Auto(o)) return planDayAuto(o, H0, st);   // (the ocean vessel's autoline, H2c)
   // o.fetch (the page's «Hent redskapet», choice 2 A): a day of hauls only, whatever the soak, nothing set again, no jig; the engine switches the plan off when nothing stands in the sea
   const fetch = !!o.fetch, kind = p2Kind(o), jig = p2Jig(o) && !fetch, v = st.v, W = DRP2.work, steps = [], skipped = [], nm = id => (portById(id) || {name:'?'}).name;
@@ -351,7 +356,9 @@ function planDayText(o, day){
   const at = t => { const d = t == null ? 0 : dd(t); return d <= 0 ? ck(t) : d === 1 ? 'tomorrow at ' + ck(t) : 'in ' + d + ' days, at ' + ck(t); };
   for (const s of day.steps){
     const c = ck(s.t); let no = '', en = '';
-    if (s.k === 'avgang'){ no = 'Går fra ' + (s.from ? nm(s.from) : 'der båten ligger'); en = 'Leaves ' + (s.from ? nm(s.from) : 'where the boat lies'); }
+    const sn = day.sno ? p2SnoText(o, s, pl, kl, at) : null;   // (the snow crab vessel's strings, H3c)
+    if (sn){ no = sn[0]; en = sn[1]; }
+    else if (s.k === 'avgang'){ no = 'Går fra ' + (s.from ? nm(s.from) : 'der båten ligger'); en = 'Leaves ' + (s.from ? nm(s.from) : 'where the boat lies'); }
     else if (s.k === 'sett' && s.lk === 'auto'){ const u = unitName('line', s.n, 'auto'); no = s.again ? 'Setter ' + (s.n === 1 ? 'lenka' : 'de ' + s.n + ' lenkene') + ' ut igjen på ' + pl(s.pid)[0] + ' (egnemaskinen)' : 'Setter ' + s.n + ' ' + u + ' autoline på ' + pl(s.pid)[0]; en = s.again ? 'Sets ' + (s.n === 1 ? 'the lenke' : 'the ' + s.n + ' lenker') + ' out again at ' + pl(s.pid)[1] + ' (the baiting machine)' : 'Sets ' + s.n + ' ' + u + ' of autoline at ' + pl(s.pid)[1]; }
     else if (s.k === 'sett'){ const lk = s.lk && LINE_KINDS[s.lk] ? ' ' + LINE_KINDS[s.lk].no.toLowerCase() : '', lke = s.lk && LINE_KINDS[s.lk] ? ' ' + LINE_KINDS[s.lk].en.toLowerCase() : ''; no = 'Setter ' + s.n + ' ' + un(s.n, 'no') + lk + ' på ' + pl(s.pid)[0]; en = 'Sets ' + s.n + ' ' + un(s.n, 'en') + lke + ' at ' + pl(s.pid)[1]; }
     else if (s.k === 'trekk'){ const rs = s.reset && s.lk !== 'auto'; no = 'Trekker ' + pl(s.pid)[0] + ' (sto ' + fmt(s.soakH, 1) + ' t)' + (rs ? ', setter på nytt' : s.lk === 'auto' && !s.reset ? ', inn på magasinene' : ''); en = 'Hauls ' + pl(s.pid)[1] + ' (stood ' + fmt(s.soakH, 1) + ' h)' + (rs ? ', sets again' : s.lk === 'auto' && !s.reset ? ', back to the magazines' : ''); }
@@ -389,7 +396,7 @@ function plan2WatchWhy(st, aboard, short){
 // the buoy sets the plan has: those aboard and those on the gear in the sea (they come back aboard with the haul)
 function p2Kits(){ const pg = S.pgear; return ((pg && pg.kits ? pg.kits.n : 0) || 0) + (typeof mySets === 'function' ? mySets().length : 0); }
 function plan2Check(o, st){
-  st = st || plan2State(o); const E = [], Wn = [], G = [], kind = p2Kind(o), no = gL, hp = portById(o.home);
+  st = st || plan2StateOf(o); const E = [], Wn = [], G = [], kind = p2Kind(o), no = gL, hp = portById(o.home), sno = p2Sno(o);
   // each reason has the place that mends it (GUI review U13): a row of the page, the Crew page, the quota, or the way to the shop or the yard
   const ER = (m, go) => { E.push(m); G.push(go || null); };
   if (!hp) ER(no('Velg hvor båten skal ligge hjemme.', 'Choose where the boat lies at home.'), 'home');
@@ -399,7 +406,8 @@ function plan2Check(o, st){
   if (kind && !F.length) ER(no('Legg ut minst ett felt for ' + rigName(o.rig).toLowerCase() + '.', 'Put out at least one field for the ' + rigName(o.rig).toLowerCase() + '.'), 'places');
   if (!kind && !J.length) ER(no('Velg minst én juksplass.', 'Choose at least one jig place.'), 'places');
   if (o.places.length > DRP2.placesMax) ER(no('Høyst ' + DRP2.placesMax + ' plasser.', 'At most ' + DRP2.placesMax + ' places.'), 'places');
-  if (kind){ const own = ownedUnits(kind), want = F.reduce((a, f) => a + f.n, 0), sk = p2Soak(o);
+  if (sno) p2SnoCheck(o, st, ER, Wn);   // (the snow crab vessel's strings, the season and the quota, H3c)
+  else if (kind){ const own = ownedUnits(kind), want = F.reduce((a, f) => a + f.n, 0), sk = p2Soak(o);
     // the buoy sets: none for a field is an error (the line would stay aboard, GUI review U9 A); fewer than the fields, a warning.
     // (the sets of the gear standing in the sea come back aboard when it is hauled, and the plan hauls before it sets)
     { const k = p2Kits(); if (F.length && k < 1){ ER(no('Hver lenke i sjøen trenger et blåsesett, og båten har ingen. Blåsesett kjøpes i utstyrsbutikken.', 'Every string in the sea needs a buoy set, and the boat has none. Buoy sets are bought at the tackle shop.'), 'butikk'); }
@@ -410,7 +418,8 @@ function plan2Check(o, st){
     if (kind === 'line') for (const lk of p2Auto(o) ? ['auto'] : ['hyse', 'bank']){ const w = F.filter(f => (f.lk || 'hyse') === lk).reduce((a, f) => a + f.n, 0), ow = p2Units('line', lk); if (w > ow) Wn.push(no('Feltene vil ha ' + w + ' stamper ' + LINE_KINDS[lk].no.toLowerCase() + ', men båten eier ' + ow + '.', 'The fields want ' + w + ' tubs of ' + LINE_KINDS[lk].en.toLowerCase() + ', but the boat owns ' + ow + '.')); }
     for (const f of F){ if (f.soak < sk[0]) Wn.push(no('Ståtiden ' + f.soak + ' t er kort for ' + GEAR[kind].no.toLowerCase() + '.', 'A soak of ' + f.soak + ' h is short for ' + GEAR[kind].en.toLowerCase() + '.')); else if (f.soak > sk[3]) Wn.push(no('Ståtiden ' + f.soak + ' t er lang for ' + GEAR[kind].no.toLowerCase() + '. Fangsten forringes og redskapet kan gå tapt.', 'A soak of ' + f.soak + ' h is long for ' + GEAR[kind].en.toLowerCase() + '. The catch spoils and the gear can be lost.')); }
     if (kind === 'garn' && st.crewMax < 1) ER(no('Garn krever to om bord, og båten har ikke plass til flere.', 'Nets need two aboard, and the boat has no room for more.'), 'rig'); }
-  { const r = drRulesWhy({fields:F, jigs:J, rig:o.rig, jig:o.jig}, S.t / 60, true); if (r) ER(gL(r.no, r.en), r.fix === 'quota' ? 'quota' : 'places'); }
+  // (the snow crab's fields are checked at the season's next open hour: the close season is the plan's to wait out, H3c)
+  { const r = drRulesWhy({fields:F, jigs:J, rig:o.rig, jig:o.jig}, sno ? p2SnoSeason(S.t / 60, 0).openAt : S.t / 60, true); if (r) ER(gL(r.no, r.en), r.fix === 'quota' ? 'quota' : 'places'); }
   // no access to cod, haddock and saithe without you aboard (the open group, J-30-2026 § 35; a second vessel: none): bycatch at most, and with halibut gear the plan fishes halibut
   if (!S.lic && o.rig !== 'teiner' && (S.cur !== openVesselId() || !st.me.aboard) && !(S.boat.kgear && !kveiteClosed(S.t / 60)))
     Wn.push(S.cur !== openVesselId() ? no('Båten har ikke adgang til å fiske torsk, hyse og sei. De kan bare være bifangst, høyst 10 % av landingen, og resten blir inndratt. Med kveiteutstyr fisker planen kveite.', 'The boat has no access to fish cod, haddock and saithe. They can only be bycatch, at most 10% of the landing, and the rest is confiscated. With halibut gear the plan fishes halibut.')

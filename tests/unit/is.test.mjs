@@ -40,8 +40,23 @@ export default function (t){
   t.ok(shutPorts.length === 0, 'ingen av spillets ' + PORTS.length + ' havner er stengt av isen noen måned' + (shutPorts.length ? ': ' + shutPorts.slice(0, 5).join(', ') : ''));
   for (const [nm, la, lo] of [['Hammerfest', 70.7, 23.4], ['Vardø', 70.4, 31.3], ['Båtsfjord', 70.75, 29.75], ['Bergen', 60.4, 5.0]]){
     const p = natP(la, lo); let mx = 0; for (let m = 1; m <= 12; m++) mx = Math.max(mx, seaIceAt(p, H(2027, m, 15))); t.ok(mx < 5, nm + ': ingen is noen måned (' + mx.toFixed(1) + ' %)'); }
-  // the ice class
-  t.ok(!seaIceShut(kkl, H(2027, 3, 15), {iceClass:'1C'}), 'en båt med isklasse kan gå inn i isen');
+  // the ice class as a limit (H3c, V3 B): a class goes in drift ice up to what it takes (ICE_CLS), no further; without one 4/10
+  { const {ICE_CLS, seaIceLim, VESSELS} = K, c1 = {iceClass:'1C'};
+    t.eq(seaIceLim({}), SEA_ICE_LIM, 'uten isklasse stenger isen fra ' + SEA_ICE_LIM + ' % (4/10, åpen drivis)');
+    t.ok(ICE_CLS['1C'] > SEA_ICE_LIM && ICE_CLS['1B'] > ICE_CLS['1C'] && ICE_CLS['1A'] > ICE_CLS['1B'] && ICE_CLS['1A'] < 100, 'klassene tåler mer jo sterkere de er, men aldri all is (1C ' + ICE_CLS['1C'] + ', 1B ' + ICE_CLS['1B'] + ', 1A ' + ICE_CLS['1A'] + ' %)');
+    t.eq(VESSELS.snokrabbe.iceClass, '1C', 'snøkrabbefartøyet har isklasse 1C (V3 B)');
+    t.ok(Object.entries(VESSELS).filter(([k, v]) => v.iceClass).map(([k]) => k).join() === 'snokrabbe', 'og ingen andre båter har isklasse');
+    // at 30° E in March: a point with some ice under the class' limit is open to her and shut to a boat without a class; a point with
+    // closer ice than the class takes is shut to both
+    const H3 = H(2027, 3, 15); let mid = null, thick = null; for (let la = 72; la < 82 && !(mid && thick); la += 0.02){ const q = natP(la, 30.0), c = seaIceAt(q, H3); if (!mid && c > SEA_ICE_LIM + 3 && c < ICE_CLS['1C'] - 3) mid = q; if (!thick && c > ICE_CLS['1C'] + 3) thick = q; }
+    t.ok(mid && !seaIceShut(mid, H3, c1) && seaIceShut(mid, H3, {}), 'i drivis på ' + (mid ? seaIceAt(mid, H3).toFixed(0) : '?') + ' % går isklassen 1C, en båt uten isklasse ikke');
+    t.ok(thick && seaIceShut(thick, H3, c1), 'i tettere is enn klassen tåler (' + (thick ? seaIceAt(thick, H3).toFixed(0) : '?') + ' %) går heller ikke isklassen');
+    t.ok(seaIceShut(kkl, H3, c1) && !seaIceShut(kkl, H(2027, 9, 15), c1), 'Kong Karls land er stengt også for isklassen i mars, og åpen i september');
+    // Autonav and the sailing take the class' limit: the route's limit is the boat's, and groundCheck stops at the class' edge
+    const B0 = K.get('BOAT'), ic0 = B0.iceClass; B0.iceClass = '1C'; const S1 = K.get('S'); S1.t = H3 * 60;
+    const LI = K.leiaIceSet(natP(73, 30), natP(80, 30)); t.ok(LI.on && LI.lim === ICE_CLS['1C'], 'Autonav regner med isklassens grense for ruta (' + LI.lim + ' %)');
+    if (mid){ const LI0 = K.get('LEIA_ICE'); const keepL = Object.assign({}, LI0); Object.assign(LI0, LI); t.ok(!K.leiaIce(mid) && (!thick || K.leiaIce(thick)), 'Autonav går i isen under grensen og stenger den over'); Object.assign(LI0, keepL); }
+    if (ic0 === undefined) delete B0.iceClass; else B0.iceClass = ic0; }
   // the sailing: a leg from open water into the ice stops at the ice, marked ice; out of the ice towards thinner ice is let go
   const S = K.get('S'); S.t = H(2027, 3, 15) * 60;
   // (no map in the unit tests: the land, the depth, the harbours, the breakwaters and the rocks are stood in for by open deep sea, so
@@ -61,6 +76,11 @@ export default function (t){
     const gOut = K.groundCheck(inIce, out), gIn = K.groundCheck(out, inIce);
     t.ok(!(gOut && gOut.ice), 'en båt som står i isen, får gå ut mot tynnere is');
     t.ok(seaIceAt(out) < seaIceAt(inIce) && gIn && gIn.ice, 'men ikke lenger inn (' + seaIceAt(out).toFixed(0) + ' → ' + seaIceAt(inIce).toFixed(0) + ' %)');
+    // (H3c) with ice class 1C the sailing goes past the 4/10 edge and stops at the class' own limit
+    { const B = K.get('BOAT'), ic0 = B.iceClass; B.iceClass = '1C'; const far = natP(e + 3, 30.0); let g2 = null, c2 = a; const L2 = Math.hypot(far.x - a.x, far.y - a.y);
+      for (let s2 = 0; s2 < L2 && !g2; s2 += 3){ const q = {x:a.x + (far.x - a.x) * Math.min(1, (s2 + 3) / L2), y:a.y + (far.y - a.y) * Math.min(1, (s2 + 3) / L2)}; g2 = K.groundCheck(c2, q); if (!g2) c2 = q; }
+      t.ok(g2 && g2.ice && seaIceAt(g2) >= K.ICE_CLS['1C'] && seaIceAt(g2) < K.ICE_CLS['1C'] + 10, 'med isklasse 1C går seilasen forbi iskanten og stopper ved klassens grense (' + (g2 ? seaIceAt(g2).toFixed(1) : '?') + ' %)');
+      if (ic0 === undefined) delete B.iceClass; else B.iceClass = ic0; }
     // Autonav's checks: shut at the time of the route, a leg through the ice fails
     const LI = K.get('LEIA_ICE'); Object.assign(LI, K.leiaIceSet(a, b));
     t.ok(LI.on && LI.cap === 0, 'Autonav regner med isen fra åpent vann (cap ' + LI.cap + ')');

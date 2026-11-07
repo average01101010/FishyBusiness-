@@ -50,10 +50,49 @@ const SNOC = {
   back:0.003,
   // the string, the cap and the tending (høstingsforskriften §§ 18, 25 and 28)
   lenke:200, max:8000, tendH:21 * 24, warnH:18 * 24, posH:21 * 24,
-  // (H3b) the weather's share of the coast gear's losses a snow crab string takes (gearHour): about one string in 15 a 20 days' trip with
-  // 30 in the sea in rough weather, against three before (an assumption; the losses in the drift ice come in H3c)
-  lossF:0.1
+  // (H3b, H3c) the weather's share of the coast gear's losses a snow crab string takes (gearHour): a string of 5 km on 250-350 m with a
+  // heavy anchor and a buoy at each end is far less at the mercy of the surface than the coast's gear, and HI (2023-51) names the drift
+  // ice, not the weather, as «en av hovedårsakene til redskapstap». Set in H3c so the weather takes about a third of a string a season of
+  // 40 strings at Sentralbanken (tests/unit/havplan.test.mjs); the drift ice takes the rest where it comes over the strings (SNOI)
+  lossF:0.005
 };
+// ---- the drift ice over the strings (H3c, V3 B; Jonas 06.11.2026). Sources, read 06.11.2026 unless said: HI 2023-51 (Humborstad et al.):
+// the drift ice «drar med seg teinelenken og kutter iletauet» and «sliter av iletauene», «en av hovedårsakene til redskapstap»; the
+// Directorate's hearing note 15.06.2023: lost strings found again «er ofte endene på teinelenkene avslitt»; its clean-up cruises took up
+// 12 309 snow crab pots in 2018-2022 (8 600 in 2018, 81 strings that had stood 1.5 years); SINTEF Ocean's hearing answer 27.11.2024:
+// «flere tusen teiner» left behind in the ice in March-April the last two seasons; the ice comes to the grounds in early March (Ervik
+// Group 2024). The ice drifts 0.33-0.43 m/s in the western Barents Sea (April 2012) and about 21 km a day in the north-east (2006) (search
+// snippets); about 2 % of the wind, to the right of it (Nansen's rule of thumb). No figure was found for how far a string is dragged or
+// how many pots a vessel loses: the sources say the buoy lines part and the string is left lying. The ice is the mean for each month of
+// 1991-2020 (03h-is.js), so a concentration is a mean over good and bad years: Storbanken at 76.5° N has 27-36 % in January to early
+// March, where the landing notes have the most snow crab (24-02), and Sentralbanken 5-10 %. So: from drag % the floes wear the buoy lines,
+// and the chance an hour that they are cut grows as ((c - drag) / span)^2 up to cut; then the string is lost where it lies. Calibrated
+// so that a season of 40 strings on Storbanken in January-March (30-36 %) loses about one string to the ice (1 % a week at the edge, 40 %;
+// 4 % at 60 %), against the fleet's «flere tusen teiner» of some 240 000 in a season (1-2 %). While the ice grips it, the string is moved
+// a little with the drift (slip of the ice's way an hour, the anchors dragging on the bottom). The plan (06i-plan2-sno.js) sets no string
+// where the ice edge (set %, 4/10, open drift ice) comes within its soak and two days, takes one in when it comes near, and hauls none
+// under haul % (the lines under the floes). The figures are ours
+const SNOI = {set:40, near:40, haul:50, drag:20, span:70, cut:7e-4, slip:0.15, wind:0.02, turn:20};
+// the ice over a string (%): the most at five points along it
+function snoIceOf(a, b, H){ if (typeof seaIceAt !== 'function' || !SEA_ICE) return 0; let m = 0; for (let k = 0; k < 5; k++){ const f = k / 4; m = Math.max(m, seaIceAt({x:a.x + (b.x - a.x) * f, y:a.y + (b.y - a.y) * f}, H)); } return m; }
+// an hour of drift ice over a string in the sea (gearHour): its lines worn and cut (lost where it lies), or the string moved a little with
+// the drift. Returns true when it was lost
+function snoIceHour(s, H){
+  const c = snoIceOf(s.a, s.b, H); if (c < SNOI.drag) return false;
+  const f = Math.min(1, ((c - SNOI.drag) / SNOI.span) ** 2), mid = setMid(s);
+  if (Math.random() < SNOI.cut * f){
+    s.lost = S.t; { const e = (S.gearLog || []).find(x => x.id === s.id); if (e) e.lost = S.t; }
+    { const v = vesselById(s.vid), cf = 0.2 + 0.8 * (s.cond != null ? s.cond : 1), val = POTS.sno.price * s.n * cf + GPRICE.kit + (s.heavy ? GPRICE.heavy : 0); if (v) tripAdd(vget(v, 'boat'), 'lostKr', Math.round(val)); }
+    setLog(s, 'Drivisen (' + Math.round(c / 10) + '/10) har kuttet iletauene på lenka ved ' + coordStr(mid) + '. Lenka ligger igjen på bunnen og er tapt. Tapt redskap skal meldes til Kystvakten.', 'The drift ice (' + Math.round(c / 10) + '/10) has cut the buoy lines of the string at ' + coordStr(mid) + '. The string lies on the bottom and is lost. Lost gear must be reported to the Coast Guard.');
+    msg(gL('Redskap', 'Gear'), 'Drivisen har kuttet iletauene, og lenka med ' + s.n + ' teiner er tapt. Meld tapt redskap til Kystvakten under Om bord.', 'The drift ice has cut the buoy lines, and the string of ' + s.n + ' pots is lost. Report the lost gear to the Coast Guard under Aboard.');
+    return true;
+  }
+  // (the ice drifts about 2 % of the wind, SNOI.turn degrees to the right of it; the string a share of that, its anchors dragging)
+  if (Math.random() < f){ const W = windAt(H, mid), to = (windDir(H, mid) + 180 + SNOI.turn) * Math.PI / 180, km = SNOI.wind * W * 3.6 * SNOI.slip, dx = Math.sin(to) * km, dy = -Math.cos(to) * km;
+    const a = {x:s.a.x + dx, y:s.a.y + dy}, b = {x:s.b.x + dx, y:s.b.y + dy}; let ok = true; try { ok = !isLand(a) && !isLand(b); } catch (e){}
+    if (ok){ s.a = a; s.b = b; s.iceM = (s.iceM || 0) + km; if (s.iceM >= 1 && !(s.warn & 32)){ s.warn |= 32; setLog(s, 'Drivisen (' + Math.round(c / 10) + '/10) drar lenka med seg. Den er flyttet ' + fmtC(s.iceM, 1) + ' km.', 'The drift ice (' + Math.round(c / 10) + '/10) is dragging the string along. It has moved ' + fmtC(s.iceM, 1) + ' km.'); } } }
+  return false;
+}
 // the index by location and month (Float32Array of RU.lok × 12, 0 where the notes have nothing), built once from fiske.json snok
 const SNOF = {};
 function snoField(){

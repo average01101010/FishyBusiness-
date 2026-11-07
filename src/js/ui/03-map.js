@@ -221,18 +221,19 @@ function chartVectors(V, again){
     ctx.restore();
     if (miss){ clearTimeout(CT.ruT); CT.ruT = setTimeout(() => { if (!document.body.classList.contains('vplot')) return; if (CT.v === V && V.cx === view.cx && V.cy === view.cy && V.z === view.z){ chartVectors(V, true); chartCompose(V, V.lv > 0, 0); } else if (!ptrs.size) paintChart(1); }, 60); }
   }
-  // the drift ice (H1b R5, 03h-is.js): white over the sea where it shuts the sea to a boat without an ice class, and faint where there
+  // the drift ice (H1b R5, 03h-is.js): white over the sea where it shuts the sea to this boat (4/10 without an ice class, her class'
+  // limit with one, seaIceLim, H3c), and faint where there
   // is some ice under the limit, as the ice charts draw open and very open drift ice; sampled every 6 pixels and smoothed, so the edge
   // is soft. Only where the month's ice can be (SEA_ICE.any), so the coast pays nothing
-  if (typeof SEA_ICE !== 'undefined' && SEA_ICE && !BOAT.iceClass){ const I = SEA_ICE, gx0 = (I.ix0 - 1) * I.c, gy0 = (I.iy0 - 1) * I.c, gx1 = (I.ix0 + I.nx + 1) * I.c, gy1 = (I.iy0 + I.ny + 1) * I.c;
+  if (typeof SEA_ICE !== 'undefined' && SEA_ICE){ const I = SEA_ICE, IL = seaIceLim(), gx0 = (I.ix0 - 1) * I.c, gy0 = (I.iy0 - 1) * I.c, gx1 = (I.ix0 + I.nx + 1) * I.c, gy1 = (I.iy0 + I.ny + 1) * I.c;
     if (xb > gx0 && x0 < gx1 && yb > gy0 && y0 < gy1){ const st = 6 * dpr, nx = Math.ceil(W / st) + 1, ny = Math.ceil(H / st) + 1, H0 = S.t / 60;
       const ic = CT.ice || (CT.ice = document.createElement('canvas')); ic.width = nx; ic.height = ny; const c2 = ic.getContext('2d'), im = c2.createImageData(nx, ny), d = im.data; let any = false;
       const V = new Float32Array(nx * ny), L = new Uint8Array(nx * ny);
       for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++){ const q = {x:x0 + i * st * kx, y:y0 + j * st * ky}, v = seaIceAt(q, H0); V[j * nx + i] = v; if (v < 10) continue; let l = true; try { l = isLandFar(q); } catch (e){} L[j * nx + i] = l ? 1 : 0; }
       // blue-grey over the shut sea and a faint tint under the limit; the edge at 4/10 as a smooth line (marching squares over the samples)
-      for (let n = 0; n < nx * ny; n++){ const v = V[n]; if (v < 10 || L[n]) continue; const k = n * 4; d[k] = 178; d[k + 1] = 198; d[k + 2] = 218; d[k + 3] = v >= SEA_ICE_LIM ? 200 : 20 + v * 2; any = true; }
+      for (let n = 0; n < nx * ny; n++){ const v = V[n]; if (v < 10 || L[n]) continue; const k = n * 4; d[k] = 178; d[k + 1] = 198; d[k + 2] = 218; d[k + 3] = v >= IL ? 200 : 20 + v * 2; any = true; }
       if (any){ c2.putImageData(im, 0, 0); ctx.save(); ctx.imageSmoothingEnabled = true; ctx.drawImage(ic, 0, 0, nx * st, ny * st);
-        ctx.strokeStyle = 'rgba(60,95,135,0.9)'; ctx.lineWidth = 1.6 * dpr; ctx.beginPath(); const T = SEA_ICE_LIM;
+        ctx.strokeStyle = 'rgba(60,95,135,0.9)'; ctx.lineWidth = 1.6 * dpr; ctx.beginPath(); const T = IL;
         const cut = (a, b) => (T - a) / (b - a);
         for (let j = 0; j + 1 < ny; j++) for (let i = 0; i + 1 < nx; i++){ const n = j * nx + i, a = V[n], b = V[n + 1], c = V[n + nx + 1], e = V[n + nx];
           if (L[n] || L[n + 1] || L[n + nx] || L[n + nx + 1]) continue;

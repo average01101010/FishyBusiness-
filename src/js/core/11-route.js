@@ -44,14 +44,15 @@ function leiaTideCredit(a, b){
 // the edge moves a few km a day), and the water by the edge is a little dear (up to 2 more a km), so the way keeps off it. A boat
 // that is in the ice already (it came over her at anchor or at the quay) may go through ice up to what she lies in, so she can get out;
 // the sailing then lets her go only towards thinner ice (groundCheck). Set by leiaRoute; off outside a route (the bake, the tests).
-const LEIA_ICE = {on:false, H0:0, H1:0, cap:0};
+// (H3c) a vessel with an ice class goes up to the limit of her class (seaIceLim): lim is the concentration that shuts for this route
+const LEIA_ICE = {on:false, H0:0, H1:0, cap:0, lim:SEA_ICE_LIM};
 function leiaIceSet(a, b){
-  if (typeof SEA_ICE === 'undefined' || !SEA_ICE || !S || S.t == null || BOAT.iceClass) return {on:false, H0:0, H1:0, cap:0};
-  const H0 = S.t / 60, kn = Math.min(S.draftSpeed || 99, BOAT.cruise || 6), hrs = Math.min(240, dist(a, b) * 1.3 / (kn * 1.852) + 4), c = seaIceAt(a, H0);
-  return {on:true, H0, H1:H0 + hrs, cap:c >= SEA_ICE_LIM ? c + 1 : 0};
+  if (typeof SEA_ICE === 'undefined' || !SEA_ICE || !S || S.t == null) return {on:false, H0:0, H1:0, cap:0, lim:SEA_ICE_LIM};
+  const H0 = S.t / 60, kn = Math.min(S.draftSpeed || 99, BOAT.cruise || 6), hrs = Math.min(240, dist(a, b) * 1.3 / (kn * 1.852) + 4), c = seaIceAt(a, H0), lim = seaIceLim();
+  return {on:true, H0, H1:H0 + hrs, cap:c >= lim ? c + 1 : 0, lim};
 }
 const leiaIceC = p => LEIA_ICE.on ? Math.max(seaIceAt(p, LEIA_ICE.H0), seaIceAt(p, LEIA_ICE.H1)) : 0;
-const leiaIce = p => { const c = leiaIceC(p); return c >= SEA_ICE_LIM && c > LEIA_ICE.cap; };
+const leiaIce = p => { const c = leiaIceC(p); return c >= (LEIA_ICE.lim || SEA_ICE_LIM) && c > LEIA_ICE.cap; };
 // the first point on a leg the ice shuts (every 250 m), or null
 function leiaIceLeg(p, q){ if (!LEIA_ICE.on) return null; const n = Math.max(1, Math.ceil(dist(p, q) / 0.25)); for (let i = 1; i <= n; i++){ const pt = {x:p.x + (q.x - p.x) * i / n, y:p.y + (q.y - p.y) * i / n}; if (leiaIce(pt)) return pt; } return null; }
 // The pieces of a leg that want the fine checks (H1b R6, 05.11.2026: a route of 80 km over open sea north of Finnmark took seconds, and
@@ -150,9 +151,9 @@ function leiaCost(G, v, sd){
   else {
     const p = leiaCell(G, v), d = leiaShore(G, p);
     const ic = leiaIceC(p);
-    if (!(d > 0) || (LEIA_AVOID.length && LEIA_AVOID.some(a => Math.abs(a.x - p.x) < 0.075 && Math.abs(a.y - p.y) < 0.075)) || ic >= SEA_ICE_LIM && ic > LEIA_ICE.cap) k = Infinity;
+    if (!(d > 0) || (LEIA_AVOID.length && LEIA_AVOID.some(a => Math.abs(a.x - p.x) < 0.075 && Math.abs(a.y - p.y) < 0.075)) || ic >= (LEIA_ICE.lim || SEA_ICE_LIM) && ic > LEIA_ICE.cap) k = Infinity;
     else {
-      const hb = inHarbour(p); k = 1 + 2 * Math.min(1, ic / SEA_ICE_LIM);
+      const hb = inHarbour(p); k = 1 + 2 * Math.min(1, ic / (LEIA_ICE.lim || SEA_ICE_LIM));
       if (d < LEIA.shore) k += LEIA.shoreK * (LEIA.shore - d) / LEIA.shore;
       // (a coarse cell of LEIA.oceanC km and more reads the core's sea floor, offDepth: no pack is wanted for that search, H1b R6)
       if (!hb){ if (leiaRocks(G)[v]) k += LEIA.dryK; const z = G.c >= LEIA.oceanC ? offDepth(p) : depthF(p); if (z < leiaLim()) k = Infinity; else if (z < sd) k += LEIA.dryK; else if (z < sd + 1) k += LEIA.shallowK; }

@@ -33,7 +33,9 @@ async function plan2Make(o, cb){
   try {
     const C = plan2Check(o); if (!C.ok) throw C.errors[0];
     const P = o.places, mid = {x:P.reduce((a, q) => a + q.x, 0) / P.length, y:P.reduce((a, q) => a + q.y, 0) / P.length}, home = portById(o.home), big = (BOAT.len || 0) >= DRP.bigLen;
-    try { await mapNeed(mid, 14); await mapNeed(home.p, 6); for (const q of P) await mapNeed(q, 2); } catch (e){}
+    try { await mapNeed(mid, 14); await mapNeed(home.p, 6); for (const q of P) await mapNeed(q, p2Sno(o) ? 6 + DRP2.sno.row * Math.ceil(q.n / DRP2.sno.cols) + DRP2.sno.cols * DRP2.sno.col / 2 : 2); } catch (e){}
+    // (the snow crab's strings, H3c: their room checked again now the map round them is in)
+    if (p2Sno(o)){ P2SNO_FIT.clear(); const C2 = plan2Check(o); if (!C2.ok) throw C2.errors[0]; }
     // the plant: the chosen one, or of the three nearest the grounds the one reached soonest from the nearest place
     const first = P.slice().sort((x, y) => dist(x, mid) - dist(y, mid))[0];
     if (o.land && o.land.mode === 'port' && p2PlantOk(portById(o.land.port))) o.M = o.land.port;
@@ -182,7 +184,7 @@ function plan2Cut(o, why){
 // the rules at an hour: a closed place, or the cod quota used up (drRulesWhy with the hour), and the first day within a month a closed place opens
 function plan2RulesWhy(o, H, placesOnly){
   const kind = p2Kind(o), hand = !(S.equip && S.equip.jukse > 0), F = o.places.filter(q => q.k === 'felt'), J = o.places.filter(q => q.k === 'juks');
-  for (const [i, f] of F.entries()){ const why = ruBlockMsg({p:f, len:BOAT.len, gear:o.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? 'krabbe' : null, H}); if (why) return {k:'closed', fix:'places', no:'Felt ' + (i + 1) + ' er stengt: ' + why, en:'Field ' + (i + 1) + ' is closed: ' + why}; }
+  for (const [i, f] of F.entries()){ const why = ruBlockMsg({p:f, len:BOAT.len, gear:o.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? potSp() : null, H}); if (why) return {k:'closed', fix:'places', no:'Felt ' + (i + 1) + ' er stengt: ' + why, en:'Field ' + (i + 1) + ' is closed: ' + why}; }
   if (p2Jig(o)) for (const [i, j] of J.entries()){ const why = ruBlockMsg({p:j, len:BOAT.len, gear:'juksa', sp:null, hand, H}); if (why) return {k:'closed', fix:'places', no:'Juksplass ' + (i + 1) + ' er stengt: ' + why, en:'Jig place ' + (i + 1) + ' is closed: ' + why}; }
   // (the cod quota is not the plan's business, Jonas 27.10.2026: a used-up quota stopped a halibut line plan. Cod over the bycatch share is confiscated at the landing, as the rules say, and the statistics show it)
   return null;
@@ -292,12 +294,12 @@ function plan2Spent(o, H){
 }
 function plan2NewDay(o, H){
   const st = plan2State(o), day = planDay(o, H, st), r0 = o.run;
-  o.run = {day, i:0, t0:H, dayN:(r0 && r0.dayN || 0) + 1, cost0:S.stats.costs, trip:null, wait:day.auto && r0 && r0.wait && r0.wait.k === 'wx' ? r0.wait : null, closed:null};   // (the ocean vessel's wait for the weather is said once while it lasts, H2c)
+  o.run = {day, i:0, t0:H, dayN:(r0 && r0.dayN || 0) + 1, cost0:S.stats.costs, trip:null, wait:day.auto && r0 && r0.wait && (r0.wait.k === 'wx' || (day.sno && r0.wait.k === 'idle')) ? r0.wait : null, closed:null};   // (the ocean vessel's wait for the weather is said once while it lasts, H2c; the snow crab's wait for the season, the quota or the soak too, H3c)
   if (o.t0 == null) o.t0 = S.t;
   // a day with nothing to sail waits for the next: the reasons are the day's own
   if (!day.steps.some(s => ['sett', 'trekk', 'juks', 'vent', 'lever', 'agn'].includes(s.k) || (s.k === 'hjem' && !plan2Here(o).port))){
     const why = day.skipped.map(x => x.no).join('; ') || day.why[0], whyEn = day.skipped.map(x => x.en).join('; ') || day.why[1];
-    o.run.i = day.steps.length; plan2Wait(o, 'idle', 'Ikke noe å gjøre i dag: ' + why + '.', 'Nothing to do today: ' + whyEn + '.', plan2NextDep(o, H + 0.5, H + 0.5)); return;
+    o.run.i = day.steps.length; plan2Wait(o, 'idle', 'Ikke noe å gjøre i dag: ' + why + '.', 'Nothing to do today: ' + whyEn + '.', day.idleUntil != null ? day.idleUntil : plan2NextDep(o, H + 0.5, H + 0.5)); return;   // (the snow crab's day says when, H3c)
   }
   o.hold = 0; plan2Decide(o, H);
 }
@@ -319,8 +321,26 @@ function plan2Trip(o, D, i0){
         wps.push({x:prev.x, y:prev.y, port:null, fish:0, leia:true}); for (const q of L.w) wps.push({x:q[0], y:q[1], port:null, fish:0, leia:true}); prev = p; prevPort = port || null; return h0 + L.h; } }
     if (!L){ need.push({a:prev, ap:prevPort, b:p, bp:port || null}); prev = p; prevPort = port || null; return 0; } if (!prevPort && wps.length) wps.push({x:prev.x, y:prev.y, port:null, fish:0, leia:true}); for (const q of L.w) wps.push({x:q[0], y:q[1], port:null, fish:0, leia:true}); prev = p; prevPort = port || null; return L.h; };
   const P = id => o.places.find(q => q.id === id), jn = new Set(D.steps.slice(i0).filter(s => s.k === 'juks' && s.pid).map(s => s.pid)).size; let jc = 0;
+  // (the snow crab vessel, H3c: the strings of a field lie a kilometre or so apart round its point, so she goes among them in straight
+  // hops, to the field by its kept leg and away from it by its point again; fieldAt is the field she is among the strings of)
+  const sno = !!D.sno, vv = Math.max(1, BOAT.vcruise || 7); let fieldAt = null;
+  if (sno && !here.port){ const f = o.places.filter(q => q.k === 'felt').map(q => ({q, d:dist(q, prev)})).sort((a, c) => a.d - c.d)[0]; if (f && f.d < DRP2.sno.near) fieldAt = f.q; }
+  const hop = (q, p) => { let hh = 0; if (!fieldAt || fieldAt.id !== q.id){ hh += leave(); hh += leg(q); fieldAt = q; } hh += kmTrue(prev, p) / (vv * NM); if (dist(prev, p) > 0.01) wps.push({x:prev.x, y:prev.y, port:null, fish:0, leia:true}); prev = {x:p.x, y:p.y}; prevPort = null; pts.push(p); return hh; };
+  const leave = () => { if (!sno || !fieldAt) return 0; const c = {x:fieldAt.x, y:fieldAt.y}; let hh = 0; if (dist(prev, c) > 0.01){ wps.push({x:prev.x, y:prev.y, port:null, fish:0, leia:true}); hh = kmTrue(prev, c) / (vv * NM); prev = c; prevPort = null; } fieldAt = null; return hh; };
+  const snoAt = s => { const x = s.fid ? mySets().find(z => z.fid === s.fid) : null; return x ? {x:x.a.x, y:x.a.y} : s.ln != null && P(s.pid) ? p2SnoLenke(P(s.pid), s.ln).a : null; };
   for (let i = i0; i < D.steps.length && !ended; i++){
     const s = D.steps[i]; to = i;
+    if (sno && (s.k === 'sett' || s.k === 'trekk' || s.k === 'vent') && s.ln !== undefined){
+      const q = P(s.pid) || o.places.find(z => z.k === 'felt'), pv = D.steps[i - 1];
+      if (s.k === 'sett' && pv && pv.k === 'trekk' && pv.pid === s.pid && pv.ln === s.ln) continue;   // (set out again by the haul)
+      const L = s.k === 'sett' && s.ln != null ? p2SnoLenke(q, s.ln) : null, p = L ? L.a : snoAt(s); if (!p || !q) continue;
+      h += hop(q, p);
+      if (s.k === 'sett'){ wps.push({x:p.x, y:p.y, port:null, fish:0, act:{op:'cycle', kind, n:s.n, fid:L.fid, final:true, only:'set', spec:null, hdg:L.hdg}}); h += s.h; }
+      else if (s.k === 'trekk'){ wps.push({x:p.x, y:p.y, port:null, fish:0, act:{op:'cycle', kind, n:s.n, fid:s.fid, final:!s.reset, only:'haul', due:s.due != null ? s.due : s.t}}); h += s.h; }
+      else { wps.push({x:p.x, y:p.y, port:null, fish:Math.max(0.1, Math.round((s.until - s.t) * 10) / 10)}); noJig = true; h += s.until - s.t; }
+      continue;
+    }
+    if (sno && (s.k === 'lever' || s.k === 'agn' || s.k === 'hjem')) h += leave();
     if (s.k === 'sett'){ const q = P(s.pid), pv = D.steps[i - 1]; if (pv && pv.k === 'trekk' && pv.pid === s.pid && (kind !== 'line' || s.again)) continue;   // nets, pots and the autoline are set again by the haul
       h += leg(q); pts.push(q); wps.push({x:q.x, y:q.y, port:null, fish:0, act:{op:'cycle', kind, n:s.n, fid:s.pid, final:true, only:'set', spec:kind === 'line' ? {lk:s.lk || q.lk || 'hyse'} : null, hdg:q.hdg != null ? q.hdg : null}}); h += s.h; }
     else if (s.k === 'trekk'){ const q = P(s.pid); h += leg(q); pts.push(q);
@@ -347,7 +367,7 @@ function plan2Go(o, H, i0){
   const r = o.run, D = r.day, b = S.boat;
   const cw = plan2CrewWhy(o); if (cw){ if (cw.wait) plan2Wait(o, cw.k, cw.no, cw.en, H + 1); else plan2Stop(o, cw.k, cw.no, cw.en, cw.fix); return; }
   if (S.jobs && S.jobs.length){ const until = Math.max(H + 5 / 60, (jobsDone() || S.t) / 60 + 1 / 60); plan2Wait(o, 'jobs', jobsCrewOnly() ? 'Mannskapet gjør ferdig arbeidet på kaia. Går kl. ' + driftClock(driftHod(until)) + '.' : 'Verkstedet jobber på båten, så den venter.', jobsCrewOnly() ? 'The crew finish the work at the quay. Leaving at ' + driftClock(driftHod(until)) + '.' : 'The yard is working on the boat, so she waits.', until); return; }
-  { const st = plan2RulesWhy(o, H); if (st){
+  if (!p2Sno(o)){ const st = plan2RulesWhy(o, H); if (st){   // (the snow crab's day keeps the season and the rules itself: a string held by the ice must still come in, H3c)
       if (st.k === 'closed'){ const at = plan2RulesOpenAt(o, H); if (at != null){ const d = gDate(at); plan2Wait(o, 'closed', st.no + ' Planen venter til ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', st.en + ' The plan waits until ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', Math.min(at, H + 24)); return; } }
       plan2Stop(o, st.k, st.no, st.en, st.fix); return; } }
   // the day was laid for an earlier departure (the weather, the quay): it is made again from now, so the soak and the hours are right
@@ -402,6 +422,12 @@ function plan2Sea(o, H){
     const W = windAt(H, b.pos), hs = hsAt(b.pos, H), over = W > o.wx.wind || hs > Math.min(o.wx.hs, seaLim());
     const work = !!b.gop || (nx && nx.act && dist(b.pos, nx) < 1) || (b.status === 'fishing' && pl.wps.slice(pl.idx).some(w => w.act));
     if (over && work){ plan2WorkStop(o, H, W, hs); return; }
+    // (the snow crab vessel, H3c: the tanks of a live trip or the hold full between two hauls: the strings stand, and the day is laid
+    // again from where she lies, which is the way to the plant, planDaySno)
+    if (o.run.day.sno){ if (!b.gop && pl.wps.slice(pl.idx).some(w => w.act) && (holdLoad() >= DRP2.sno.full * capHold() || (snoLive() && tankCap() > 0 && tankLoad() >= DRP2.sno.tank * tankCap()))){
+        const tr = o.run.trip; if (tr) plan2Caught(o, tr); plan2Abort(o); b.status = 'idle'; b.v = 0; o.run.replan = true;
+        log(snoLive() && tankLoad() >= DRP2.sno.tank * tankCap() ? 'Tankene er fulle (' + fmt(tankLoad() / 1000, 1) + ' t levende krabbe). Lenkene står, og skipet går til mottaket.' : 'Lasten er full. Lenkene står, og skipet går til mottaket.', snoLive() && tankLoad() >= DRP2.sno.tank * tankCap() ? 'The tanks are full (' + (tankLoad() / 1000).toFixed(1) + ' t of live crab). The strings stand, and the ship goes to the plant.' : 'The hold is full. The strings stand, and the ship goes to the plant.'); }
+      return; }
     // the hold at DRP2.hav.full: nothing more is set, the lenker standing are hauled home to the magazines, and the next day is the way to
     // the plant (planDayAuto). A haul in hand finishes without setting again
     if (!pl.full && holdLoad() >= DRP2.hav.full * capHold() && (b.gop || pl.wps.slice(pl.idx).some(w => w.act))){
@@ -473,6 +499,9 @@ function plan2Report(pid, kg, total, landed){
 function plan2Bait(o, s){
   const pg = S.pgear, kind = p2Kind(o); if (!pg || !kind) return;
   // the autoline (H2c): the trip's bait, as the autoline fleet baits, half squid (akkar, blekksprut) and half saury (HI report 24-2013)
+  // (the snow crab vessel, H3c: akkar, half a kilo a pot, by the tonne)
+  if (p2Sno(o)){ const kg = Math.ceil((s && s.kg) || 0); if (kg < 1) return; const c0 = S.cash, why = buyGear('bait', 'blekksprut', kg);
+    if (why) log('Fikk ikke kjøpt agn: ' + why[0], 'Could not buy bait: ' + (why[1] || why[0])); else log('Kjøpte ' + fmt(kg / 1000, 1) + ' t akkar til teinene for ' + kr(Math.round(c0 - S.cash)) + '.', 'Bought ' + (kg / 1000).toFixed(1) + ' t of squid for the pots for ' + kr(Math.round(c0 - S.cash)) + '.'); return; }
   if (p2Auto(o)){ const kg = Math.ceil((s && s.kg) || 0); if (kg < 1) return; const c0 = S.cash, half = Math.ceil(kg / 2), got = [];
     for (const [k, n] of [['blekksprut', half], ['saury', kg - half]]){ if (n < 1) continue; const why = buyGear('bait', k, n); if (why) log('Fikk ikke kjøpt agn: ' + why[0], 'Could not buy bait: ' + why[0]); else got.push(n + ' kg ' + BAITS[k].no.toLowerCase()); }
     if (got.length) log('Kjøpte agn for turen: ' + got.join(' og ') + ' for ' + kr(Math.round(c0 - S.cash)) + '.', 'Bought bait for the trip: ' + kg + ' kg for ' + kr(Math.round(c0 - S.cash)) + '.'); return; }

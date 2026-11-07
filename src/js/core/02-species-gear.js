@@ -173,6 +173,10 @@ const VESSELS = {
     // (8 000 a vessel): the fleet carries up to 12 000 pots a trip (Olsen et al. 2019, a search snippet), the conical pots stack, so the
     // deck is not what limits her. Bought with her snow crab permit (havOffer, 03d-quota.js), no longer locked
     rigs:['teiner'], pot:'sno', jukseMax:0, gearMax:{garn:0, stamp:0, teine:8000}, svcH:600, svcCost:400000, svcJobH:72, mottak:['Konvensjonelle'], cls:'hav', price:60000000, year:2001,
+    // (H3c, 06.11.2026, V3 B) the ice class: she goes in drift ice up to the limit of her class (ICE_CLS, seaIceLim in 03h-is.js). DNV
+    // ICE-1C is an assumption for a 50 m vessel from 2001: of the snow crab fleet Frøyanes (69.9 m, 2024) has Ice 1B, Polarbris (43.5 m)
+    // ICE-C and Prestfjord Ice 1B (Baird Maritime and Kleven, search snippets); Polar Pioneer, Arctic Pioneer and Kvitungen have none given
+    iceClass:'1C',
     // (H3b, 06.11.2026) the crew by the landing notes' «Besetning» (50-53 m freezing 21-29 aboard, median 22 in 2025 and 21-23 in
     // 2026): the six key people, a deck team of 8 and a factory team of 8, two crews (rot) that go five weeks on and five off (rotD
     // days; the hearing answer of Polar Pioneer AS et al., fiskeridir.no 22.9.2023, read: «to skift under sesongen, hvor mannskapet er
