@@ -20,6 +20,7 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 - `ccr-c01d562d-pf9kca`: Ø9 F2 (steg 14), Jonas' økt, startet 07.11.2026 15:15 UTC. Eier `view3d/16-motion.js`, `core/03c-stability.js`, `view3d/24-cinema.js`, `vessel3d.js` (bare om `GEO` trenger et punkt til) og en ny enhetstest i `tests/unit/`.
 - `ccr-9a3530e8-3tup0j`: Ø9 F3 (steg 15), Jonas' økt, startet 07.11.2026 15:17 UTC. Eier `view3d/01-shaders.js`, `view3d/14-sea.js`, `tests/sea3d.py` (og `tests/seatrytest.py`, `tests/skytest.py` om skummålet eller skyggerlinjene krever det).
 - `plan/2026-11-07-opp4`: OPP4 (steg 54), Jonas' økt, startet 07.11.2026 14:32 UTC. Eier `ui/phone/10-fartoy.js`, `ui/07c-handbook.js`, `ui/01-i18n.js`, `ui/phone/14-act.js`, `ui/phone/13-mannskap-bank-meld.js`, `core/09k-market.js`, `supabase/migrations/`, `src/admin/index.html`, `ui/phone/07-patch.js`.
+- `claude/kvotemarkedet-steg-30-y3ctw0`: kvotemarkedet, planen (steg 30), Jonas' økt, startet 07.11.2026 15:17 UTC. Eier bare `docs/planer/kvotemarkedet.md` og radene og valgene for steg 30 i køen.
 - Før det: OPP1 (steg 53) ble rullet ut i 73c12b26 i en økt Jonas startet; før det H3b og H3c (4107d71a), U2-4 (c62047f0) og stripa og kartet (4f5f6d91).
 
 ## Utrullinger fra rutinen
@@ -81,7 +82,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 27 | **Ø11.9** Arbeidsavtalen | Lover og sikkerhet | venter på Ø8b M | steg 8 | `core/04-crew.js`, `14-crewlife.js`, `phone/13-mannskap-bank-meld.js` | `lover-regler-sikkerhet.md` kap. 6 (fristene i ekte tid kan bli et valg) |
 | 28 | **Ø5 rest a** M5-resten (navnet og flagget i modellen; innbyttebåten ved kaia er tatt ut av B) og M9-resten | Butikkene | klar | | `view3d/23-camera-frame.js`, `24-cinema.js`, `ui/10j-paint.js`, `core/09k-market.js`; admin, `build.mjs` | `butikker-og-sponsorer.md`, backloggen 10.7 |
 | 29 | **Ø5 rest b** M4-resten (prøvetur, showroom, V3 B avklart mot B) | Butikkene | lagt bort (B 07.11.2026: NPC-oppføringene som prøveturen og showroomet gjaldt, er tatt ut, og V3 B er løst av serveren; tas opp igjen om Jonas vil ha prøvetur på spillernes båter) | | `core/09k-market.js`, `phone/15-nettet.js`, `10-fartoy.js`, `ui/10c-dock.js`, `core/07e-havn.js` | `butikker-og-sponsorer.md` 10.3 |
-| 30 | **Kvotemarkedet, planen** (`/planlegg`, stopper ved valgene) | Tonys test | klar | | bare `docs/planer/` | `etter-tonys-test.md`, Jonas' ord om kvotemarkedet |
+| 30 | **Kvotemarkedet, planen** (`/planlegg`, stopper ved valgene) | Tonys test | pågår (Jonas' økt, gren `claude/kvotemarkedet-steg-30-y3ctw0`, 07.11.2026 15:17 UTC) | | bare `docs/planer/` | `etter-tonys-test.md`, Jonas' ord om kvotemarkedet |
 | 31 | **Ø14, planen** Fangstfeltenes vekt utenfor Senja (`/planlegg`) | Fiske | klar | | bare `docs/planer/` | øktplanen Ø14, `bestand-og-flaate.md` B2 |
 | 32 | **H4, planen** Tråleren (`/planlegg`, stopper ved valgene) | Havsteget | venter på H3e | steg 26 | bare `docs/planer/` | `havsteget.md` H4 |
 | 33 | **Ø13, planen** Ny kartrelease (`/planlegg`; én release om gangen) | Kartet | venter på Ø3a, F4 | steg 21, 22 | bare `docs/planer/` | øktplanen Ø13, `grafikk-natur-og-miljo.md` G8/G10 |
