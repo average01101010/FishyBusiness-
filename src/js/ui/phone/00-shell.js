@@ -3,16 +3,18 @@ const PHONE = (() => {
   const el = $('phone'), view = $('phView'), tEl = $('phTime'), nEl = $('phNet'), badge = $('phoneBadge');
   let app = 'home', sub = {}, isOpen = false, confirmMayday = false, shopPend = null, saveBox = null, haillPend = null, egnUI = null;
   const L = (no, en) => S.lang === 'no' ? no : en;
-  const SVG = d => '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+  // the icons are drawn in the colour of the text around them, as the dock's are (UI 2, U2-6): white on the home screen's glass tiles
+  // and in the apps' title bars
+  const SVG = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
   const IC = {
     nett:SVG('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/>'),
-    guide:SVG('<circle cx="12" cy="12" r="9"/><path d="M15.6 8.4l-2.1 5.1-5.1 2.1 2.1-5.1z"/><circle cx="12" cy="12" r=".9" fill="#fff"/>'),
+    guide:SVG('<circle cx="12" cy="12" r="9"/><path d="M15.6 8.4l-2.1 5.1-5.1 2.1 2.1-5.1z"/><circle cx="12" cy="12" r=".9" fill="currentColor"/>'),
     fiske:SVG('<path d="M15 3v9.5a4.5 4.5 0 0 1-9 0V10l-2.2 2.2"/><path d="M6 10l2.2 2.2"/><circle cx="15" cy="3" r="1.2"/><path d="M15 7l3 1.5"/>'),
     drift:SVG('<path d="M4 6h16M4 12h10M4 18h6"/><circle cx="18" cy="15" r="3.2"/><path d="M18 13.2v1.9l1.2.8"/>'),
-    haill:SVG('<path d="M7 5v7a5 5 0 0 0 10 0V5"/><path d="M5 5h4M15 5h4"/><circle cx="7" cy="8.5" r=".7" fill="#fff"/><circle cx="17" cy="8.5" r=".7" fill="#fff"/><circle cx="8.2" cy="13.5" r=".7" fill="#fff"/><circle cx="15.8" cy="13.5" r=".7" fill="#fff"/>'),
+    haill:SVG('<path d="M7 5v7a5 5 0 0 0 10 0V5"/><path d="M5 5h4M15 5h4"/><circle cx="7" cy="8.5" r=".7" fill="currentColor"/><circle cx="17" cy="8.5" r=".7" fill="currentColor"/><circle cx="8.2" cy="13.5" r=".7" fill="currentColor"/><circle cx="15.8" cy="13.5" r=".7" fill="currentColor"/>'),
     vaer:SVG('<circle cx="9" cy="9" r="3.2"/><path d="M9 2.5v1.6M3.3 9H1.8M4.4 4.4l1.1 1.1M13.6 4.4l-1.1 1.1"/><path d="M8 20h9.5a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.6 1.2A2.9 2.9 0 0 0 8 20z"/>'),
     post:SVG('<path d="M4 5h13v14H6a2 2 0 0 1-2-2V5z"/><path d="M17 8h3v9a2 2 0 0 1-2 2"/><path d="M7 9h7M7 12h7M7 15h4"/>'),
-    salg:SVG('<path d="M3 12c3-4 8-5 12-3l4-3v12l-4-3c-4 2-9 1-12-3z"/><circle cx="7.5" cy="11" r=".8" fill="#fff"/>'),
+    salg:SVG('<path d="M3 12c3-4 8-5 12-3l4-3v12l-4-3c-4 2-9 1-12-3z"/><circle cx="7.5" cy="11" r=".8" fill="currentColor"/>'),
     redning:SVG('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.8"/><path d="M6 6l3.3 3.3M18 6l-3.3 3.3M6 18l3.3-3.3M18 18l-3.3-3.3"/>'),
     fartoy:SVG('<path d="M3 15h18l-2.5 4.5H6z"/><path d="M8 15V9h6l2 6"/><path d="M11 9V5"/><path d="M2 21c2 0 2-1 4-1s2 1 4 1 2-1 4-1 2 1 4 1 2-1 4-1"/>'),
     utstyr:SVG('<path d="M14.5 5.5a4 4 0 0 0-5 5L3.8 16.2a1.8 1.8 0 0 0 2.5 2.5l5.7-5.7a4 4 0 0 0 5-5l-2.5 2.5-2.3-.5-.5-2.3z"/>'),
@@ -43,6 +45,14 @@ const PHONE = (() => {
     innst:SVG('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>'),
     admin:SVG('<path d="M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3l7.5-7.5"/><path d="M14.5 6.5L17 4l3 3-2.5 2.5"/><path d="M5 3l3 3M3 5l3 3"/>')};
   const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['kvote', 'Kvote', 'Quota', '#8a6a1c'], ['regler', 'Regler', 'Rules', '#2d6a4f'], ['drift', 'Driftsplan', 'Operations plan', '#2a6f97'], ['ordl', 'Oppdrag', 'Orders', '#2e7d4f'], ['nett', 'Nettet', 'The Net', '#2a5d8a'], ['kaiboden', 'Kaiboden', 'Kaiboden', '#8a5a2b'], ['haill', 'Haill', 'Luck', '#c9a227'], ['sesong', 'Sesong', 'Season', '#1e6f8c'], ['guide', 'Fiskeguide', 'Fish guide', '#177a8a'], ['folk', 'Venner', 'Friends', '#8a5a2b'], ['merker', 'Milepæler', 'Milestones', '#b0752a'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['trim', 'Trim', 'Tuning', '#b3261e'], ['handbok', 'Håndboka', 'Handbook', '#3b6b5e'], ['garderobe', 'Garderoben', 'Wardrobe', '#6b4f8f'], ['patch', 'Patchnotes', 'Patch notes', '#5a4fa3'], ['tilbake', 'Tilbakemelding', 'Feedback', '#d0672f'], ['innst', 'Innstillinger', 'Settings', '#4a5560'], ['admin', 'Admin', 'Admin', '#7a2e8f']];
+  // the home screen in groups with a heading each (UI 2, U2-6; Jonas 06.11.2026, V6 A in docs/planer/ui-2-staaende.md): the groups in
+  // this order and the apps in each in this order. The colour in APPS is the app's title bar, not its tile; the tiles are one glass.
+  // An app that is in no group, comes last in the last group
+  const GROUPS = [['drift', 'Drift', 'Operations', ['rederi', 'drift', 'ordl', 'nett']], ['handel', 'Handel og regler', 'Trade and rules', ['salg', 'kvote', 'regler', 'kaiboden']],
+    ['deg', 'Deg', 'You', ['merker', 'garderobe', 'folk', 'sesong', 'guide', 'handbok']], ['verden', 'Verden', 'World', ['vaer', 'post', 'meld', 'redning']],
+    ['system', 'System', 'System', ['patch', 'tilbake', 'innst', 'admin']]];
+  // a name wider than its tile in the phone on a tablet or a PC (64 px) breaks at a soft hyphen there, and only on the tile
+  const TILE_SHY = {tilbake:['Tilbake\u00admelding', 'Feedback']};
   // Kaiboden (Jonas 12.10.2026): haill, trim and Skippertak in one app, a tab each; the tabs are the old apps' pages, so a link to the
   // Haill or the Trim app (the first trip's guide, the handbook, the tests) opens Kaiboden on that tab
   const KBT = ['haill', 'trim', 'skip'];
