@@ -153,6 +153,7 @@ function opp2(t, K, S, boat, shop, plant){
   // ---- what fits: the reel tiers from four reels up (nothing to gain below), none of it on the ocean fleet
   t.ok(!K.equipFits('jukseLv', 'trebat') && !K.equipFits('jukseLv', 'snekke') && K.equipFits('jukseLv', 'plastsjark') && K.equipFits('jukseLv', 'kyst15') && !K.equipFits('jukseLv', 'autoliner'), 'juksamaskinenes trinn passer fra plastsjarken (fire maskiner) og opp, ikke trebåten, snekka eller havbåtene');
   t.ok(K.equipFits('juksesett', 'trebat') && !K.equipFits('juksesett', 'snokrabbe'), 'juksasettene passer kystbåtene');
+  t.ok(!K.equipFits('linesetter', 'autoliner') && !K.equipFits('garnrenne', 'snokrabbe') && K.equipFits('linesetter', 'skiff') && !K.equipFits('garnrenne', 'skiff'), 'linesetteren og garnrenna passer kystbåtene (garnrenna fra 7,5 m), ikke havbåtene');
   t.ok(K.equipFits('linehalerLv', 'skiff') && !K.equipFits('linehalerLv', 'autoliner') && !K.equipFits('garnhalerLv', 'skiff') && K.equipFits('garnhalerLv', 'trebat') === K.equipFits('garnhaler', 'trebat'), 'halernes trinn passer der haleren passer, ikke havbåtene');
 
   // ---- the tier: 1 without the field, the number after that

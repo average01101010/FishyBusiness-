@@ -258,8 +258,8 @@ const EQUIP = {
   // line or a net goes out faster (set, a share of GEAR[kind].set: gopUnitMin). Each hangs on its hauler (needs: buyGate('equip')); the
   // line setter's second tier, a magazine for the tubs, is linesetterLv. No model yet (OPP5): the card and «aboard», as the plotter and
   // the sounder. Prices and shares are start values
-  linesetter:{price:24000, needs:'linehaler', lvk:'linesetterLv', set:0.2, name:{no:'Linesetter', en:'Line setter'}, desc:{no:'Renne over hekken som lina går ut gjennom. Stampene settes fortere.', en:'A chute over the stern the line runs out through. The tubs are set faster.'}},
-  garnrenne:{price:18000, needs:'garnhaler', fit:{minLen:7.5}, set:0.25, name:{no:'Garnrenne', en:'Net chute'}, desc:{no:'Renne over hekken som garna går ut gjennom. Garna settes fortere.', en:'A chute over the stern the nets run out through. The nets are set faster.'}},
+  linesetter:{price:24000, needs:'linehaler', lvk:'linesetterLv', fit:{coast:true}, set:0.2, name:{no:'Linesetter', en:'Line setter'}, desc:{no:'Renne over hekken som lina går ut gjennom. Stampene settes fortere.', en:'A chute over the stern the line runs out through. The tubs are set faster.'}},
+  garnrenne:{price:18000, needs:'garnhaler', fit:{minLen:7.5, coast:true}, set:0.25, name:{no:'Garnrenne', en:'Net chute'}, desc:{no:'Renne over hekken som garna går ut gjennom. Garna settes fortere.', en:'A chute over the stern the nets run out through. The nets are set faster.'}},
   // a tank of running sea water for king crab (the price is an estimate): without it a crab lives about a day in the hold, and a dead
   // one is worth nothing (05-vessels.js, sell)
   krabbekar:{price:28000, fit:{minLen:6.5}, name:{no:'Krabbekar med sjøvann', en:'Live crab tank'}, desc:{no:'Kar med sirkulerende sjøvann som holder kongekrabben levende i flere døgn. Uten kar lever den rundt et døgn i lasten, og død krabbe er verdiløs.', en:'A tank of running sea water that keeps king crab alive for days. Without it a crab lives about a day in the hold, and a dead crab is worthless.'}},
