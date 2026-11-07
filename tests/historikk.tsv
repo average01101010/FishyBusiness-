@@ -915,3 +915,6 @@
 2026-11-07 15:46	plan/2026-11-07-opp4	9e818532	hbtest	FEIL	17	lite	samtidig	FEIL liggende: the search narrows the list to the tip that matches  {"tips": 2, "first": "Diesel"}
 2026-11-07 15:46	plan/2026-11-07-opp4	9e818532+	hbtest	OK	15	lite	alene	
 2026-11-07 15:48	plan/2026-11-07-opp4	9e818532+	opptest	OK	42	lite	alene	
+2026-11-07 16:10	ccr-c01d562d-pf9kca	ff279f9b	stabtest	OK	13	lite	samtidig	
+2026-11-07 16:10	ccr-c01d562d-pf9kca	ff279f9b	calib	LES	13	lite	samtidig	
+2026-11-07 16:11	ccr-c01d562d-pf9kca	ff279f9b	simday	LES	14	lite	samtidig	
