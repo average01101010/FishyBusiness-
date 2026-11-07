@@ -136,6 +136,7 @@ async def main():
         r = json.loads(await J(LAD)); nr = json.loads(await J("{b:placesNear(S.boat.pos, 'butikk', 1)[0].pt.id, v:placesNear(S.boat.pos, 'verft', 1)[0].pt.id}"))
         check(r and 'Nærmeste' in r['at']['butikk']['txt'] and ' nm' in r['at']['butikk']['txt'] and r['at']['butikk']['go'] == nr['b'] and r['at']['verft']['go'] == nr['v'] and not r['L']['kniv']['buy'],
               'ved mottaket i Botnhamn: «Nærmeste» butikk og verft med avstanden og Autonav dit, og ingen kjøpsknapp på linjene', {'at': r and r['at'], 'near': nr})
+        await pg.screenshot(path='opp4_naermeste_liggende.jpg', type='jpeg', quality=60)
         await pg.evaluate("S.draft = []; const e = document.querySelector('#drawerBody .bu-at[data-at=butikk] [data-pa=goplace]'); if (e) e.click()")
         try: await pg.wait_for_function("S.draft.length > 1 && S.draft[S.draft.length - 1].port === " + json.dumps(nr['b']), timeout=30000)
         except Exception: pass

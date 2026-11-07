@@ -434,7 +434,7 @@ function fnDemo(){
   for (let i = 0; i < 6; i++){ const s = 40 + i * 7, wk = new Date(Date.now() - i * 7 * 864e5).toISOString().slice(0, 10);
     W.push({wk, start:s, catch:Math.round(s * 0.9), land1:Math.round(s * 0.7), land3:Math.round(s * 0.45), reg:Math.round(s * 0.3), d1:Math.round(s * 0.4), d1n:i ? s : Math.round(s * 0.7),
       d7:i ? Math.round(s * 0.2) : 0, d7n:i ? s : 0, d30:i >= 5 ? Math.round(s * 0.08) : 0, d30n:i >= 5 ? s : 0,
-      tier:i < 2 ? Math.round(s * 0.25) : 0, tier7:i === 1 ? Math.round(s * 0.25) : 0, tier7n:i ? s : 0}); }
+      tier:i < 2 ? Math.round(s * 0.25) : 0, tier7:i === 1 ? Math.round(s * 0.25) : 0}); }
   const all = {}; for (const k of Object.keys(W[0]).filter(k => k !== 'wk')) all[k] = W.reduce((a, r) => a + r[k], 0);
   return {all, weeks:W};
 }
@@ -451,7 +451,7 @@ VIEW.trakt = () => {
   // had seven days; how far the weeks not over have come stands under it. Before 07.11.2026 there were no tiers to buy, so the weeks
   // before are the zero to compare with
   const tierK = A.tier == null ? kpi('Kjøpt trinn innen dag 7', '–', 'migreringen 20261107160000_funnel_tier.sql er ikke kjørt')
-    : kpi('Kjøpt trinn innen dag 7', r(A.tier7 || 0, A.tier7n || 0), nf(A.tier7 || 0, 0) + ' av ' + nf(A.tier7n || 0, 0) + ' som har hatt sju dager · så langt ' + nf(A.tier || 0, 0) + ' av ' + nf(A.start || 0, 0));
+    : kpi('Kjøpt trinn innen dag 7', r(A.tier7 || 0, A.d7n || 0), nf(A.tier7 || 0, 0) + ' av ' + nf(A.d7n || 0, 0) + ' som har hatt sju dager · så langt ' + nf(A.tier || 0, 0) + ' av ' + nf(A.start || 0, 0));
   return '<div class="grid">' + kpi('Åpnet spillet', nf(A.start || 0, 0), 'med statistikk') + back('d1', 'Tilbake etter 1 døgn') + back('d7', 'Tilbake etter 7 dager') + back('d30', 'Tilbake etter 30 dager') + tierK + '</div>' +
     '<div class="card"><button id="fnR">Oppdater</button> <span class="note">Fra konvolutten til tredje levering og registrering, og hvor mange som kommer tilbake. Bare spillere som deler bruksstatistikk. Endre én ting om gangen og se på tallene før neste.</span></div>' +
     card('Trakten', '<table><tr><th>Steg</th><th>Spillere</th><th></th><th>Av alle</th><th>Av forrige</th></tr>' + rows + '</table>',

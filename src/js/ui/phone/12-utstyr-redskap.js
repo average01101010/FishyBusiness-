@@ -199,7 +199,7 @@
         // (from 10 000 kr the tier confirms in the button, as the counter's other buys: 14-act.js, the knives at tier 3 on the coastal vessels; OPP4)
         const pend = shopPend && shopPend.k === 'equip:' + k && Date.now() - shopPend.t <= IC_CONFIRM_MS;
         const btns = !nx ? '' : gate ? '<p class="ph-note"><b>' + gate[0] + '</b></p>'
-          : pend ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-k="' + k + '">' + L('Bekreft · ', 'Confirm · ') + kr(price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
+          : pend ? '<span class="ic-cf"><button class="ph-btn p" data-pa="equip" data-k="' + k + '"' + (price > spendable() ? ' disabled' : '') + '>' + L('Bekreft · ', 'Confirm · ') + kr(price) + '</button><button class="ph-btn alt ic-x" data-pa="shop0" aria-label="' + L('Avbryt', 'Cancel') + '">✕</button></span>'
           : '<button class="ph-btn p" data-pa="equip" data-k="' + k + '"' + (price > spendable() ? ' disabled' : '') + '>' + L('Kjøp trinn ' + nx, 'Buy tier ' + nx) + ' · ' + kr(price) + '</button>';
         h.push(itemCard({k, name:E.name[S.lang], sub:L('trinn ', 'tier ') + lv + ' / ' + top, price:nx ? price : L('Øverste trinn', 'Top tier'), have:L('Om bord · trinn ' + lv + ': ' + lc1(T.no), 'Aboard · tier ' + lv + ': ' + lc1(T.en)) + (nx ? '' : L(' (det beste)', ' (the best)')), body, btns})); }
       h.push(itemCard({k:'net', name:L('Garn', 'Nets'), price:L('fra ', 'from ') + kr(NETTY.bunn.price) + L(' per garn', ' a net'), have:own('net', pg.nets.reduce((a, l) => a + l.n, 0), 'garn', 'nets'), body:roomTxt(room('garn'), 'garn', 'nets'),

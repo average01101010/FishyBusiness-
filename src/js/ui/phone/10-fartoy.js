@@ -53,7 +53,13 @@
   const busyOf = (kind, k) => (S.jobs || []).some(j => j.kind === kind && (k == null || j.k === k || j.u === k));
   // what a unit of passive gear takes to haul now (core/10-gear.js gopUnitMin): as if the boat hauled it here this minute, with the people
   // aboard, their strength and the cold. With nobody aboard who could, one person at full strength (live: false); pots need a hauler (NaN)
+  // (once per kind for a drawing of the page: kitCard keeps them in HN while it draws)
+  let HN = null;
   function haulNow(kind){
+    if (HN && HN[kind]) return HN[kind];
+    const r = haulNow0(kind); if (HN) HN[kind] = r; return r;
+  }
+  function haulNow0(kind){
     const b = S.boat, G = GEAR[kind], H = S.t / 60, hs = hsWork(b.pos, H), g = {kind, op:'haul', hooksPer:kind === 'line' ? LINE_KINDS.hyse.hooks : 0};
     if (kind === 'teine' && !hasHauler('teine')) return {m:NaN, live:false};
     const keep = [b.gop, b.status, b.deckStop]; let m = Infinity;
@@ -67,12 +73,12 @@
   function tierLad(k, pg, fxOf){
     const E = EQUIP[k]; if (!E || !E.tiers || !equipFits(k, S.boat.type)) return null;
     const lv = equipLv(k), T = E.tiers[lv - 1], N = E.tiers[lv];
-    return {k, n:E.name[S.lang], lv, max:E.tiers.length, cur:T[S.lang], at:'butikk', pg, tier:true, nx:N ? {n:N[S.lang], lv:lv + 1, kr:tierKr(k, lv + 1), fx:fxOf(T, N)} : null};
+    return {k, n:E.name[S.lang], lv, max:E.tiers.length, cur:T[S.lang], at:'butikk', pg, tier:true, nx:N ? {n:N[S.lang], lv:lv + 1, kr:tierKr(k, lv + 1), get fx(){ return fxOf(T, N); }} : null};   // (fx when the line is drawn: Neste mål reads only the price)
   }
   // an item bought once (EQUIP without tiers): the base it replaces as the first dot, the item as the second
   function oneLad(k, base, pg, fx){
     const E = EQUIP[k]; if (!E || !equipFits(k, S.boat.type)) return null; const have = !!S.equip[k], at = EQ_YARD(k) ? 'verft' : 'butikk';
-    return {k, n:E.name[S.lang], lv:have ? 2 : 1, max:2, cur:have ? E.name[S.lang] : base, at, pg, nx:have ? null : busyOf('fit', k) ? {busy:true} : {n:E.name[S.lang], lv:2, kr:E.price, fx:fx()}};
+    return {k, n:E.name[S.lang], lv:have ? 2 : 1, max:2, cur:have ? E.name[S.lang] : base, at, pg, nx:have ? null : busyOf('fit', k) ? {busy:true} : {n:E.name[S.lang], lv:2, kr:E.price, get fx(){ return fx(); }}};
   }
   const LADDERS = [
     // the knives: kg an hour a person at the table (DECK.gut × the tier, knifeX)
@@ -128,7 +134,8 @@
   const MORE = ' style="min-height:0;padding:0;margin:0 0 0 4px"';   // (a «›» link in a line of text, without the item card's tall tap area)
   const AT = {butikk:['Utstyrsbutikken', 'The tackle shop', 'i butikken', 'at the shop', 'utstyrsbutikken', 'the tackle shop'], verft:['Verftet', 'The yard', 'på verftet', 'at the yard', 'verftet', 'the yard']};
   const dots = x => '<span class="bu-d" aria-label="' + L('trinn ' + x.lv + ' av ' + x.max, 'step ' + x.lv + ' of ' + x.max) + '" style="letter-spacing:2px;white-space:nowrap;color:#1e7a5c">' + '●'.repeat(Math.max(0, x.lv)) + '<span style="color:#9fb0ba">' + '○'.repeat(Math.max(0, x.max - x.lv)) + '</span></span>';
-  function kitCard(){
+  function kitCard(){ HN = {}; try { return kitCard0(); } finally { HN = null; } }
+  function kitCard0(){
     const Ls = ladders(), b = S.boat; if (!Ls.length) return '';
     const h = ['<div class="ph-card bu-card"><h4>' + L('Båten og utstyret', 'The boat and her gear') + '</h4><p class="ph-note">' + L('«' + S.boatName + '»: hver stige med trinnet om bord og det neste, med pris for denne båten og hva det gir. Første prikk er det båten har uten kjøp. Prosentene regnes av grunnivået og legges sammen.', 'The «' + S.boatName + '»: each ladder with the step aboard and the next, priced for this boat and with what it gives. The first dot is what the boat has without a purchase. The per cents are of the base level and add up.') +
       ' <button type="button" class="ic-more"' + MORE + ' data-pa="open" data-a="handbok" data-hbid="lex_oppgrad">' + L('Mer om trinnene ›', 'More on the steps ›') + '</button></p>'];
@@ -255,7 +262,7 @@
       h.push(payNote(A, 'Mellomlegg med ' + bn + ' i bytte: ', 'To pay with ' + bn + ' traded in: ') + '<button class="ph-btn p" data-pa="buy" data-ti="1" data-k="' + k + '"' + (A.ok && free && !tiLocked(curVessel()) ? '' : ' disabled') + '>' + verb + L(' og bytt inn ' + bn, ', trading in ' + bn) + '</button>');
       { const lv = swapLeaves(k); if (lv.length) h.push('<p class="ph-note">' + L('Ved innbytte passer ikke dette utstyret den nye båten. Det følger med ' + bn + ' og betales ikke: ', 'With the trade-in this equipment does not suit the new vessel. It goes with ' + bn + ' and is not paid for: ') + lv.map(q => L(EQUIP[q].name.no, EQUIP[q].name.en)).join(', ') + '.</p>'); }
       // (the tiers bought are the boat's and go with her; the new one has tier 1, OPP4)
-      { const tl = swapTiers(); if (tl.length) h.push('<p class="ph-note" data-swaptier="' + tl.join(',') + '">' + L('Trinnene er båtens og følger med ' + bn + ' ved innbytte: ', 'The tiers are the boat\'s and go with ' + bn + ' at the trade-in: ') + tl.map(q => L(EQUIP[q].name.no + ' trinn ' + equipLv(q), EQUIP[q].name.en + ' tier ' + equipLv(q))).join(', ') + L('. Den nye har trinn 1.', '. The new one has tier 1.') + '</p>'); }
+      { const tl = swapTiers(); if (tl.length) h.push('<p class="ph-note" data-swaptier="' + tl.join(',') + '">' + L('Trinnene er båtens og følger med ' + bn + ' ved innbytte: ', 'The tiers are the boat\'s and go with ' + bn + ' at the trade-in: ') + tl.map(q => L(EQUIP[q].name.no + ' trinn ' + equipLv(q), EQUIP[q].name.en + ' tier ' + equipLv(q))).join(', ') + L('. De regnes ikke i innbytteprisen, og den nye har trinn 1.', '. They are not counted in the trade-in price, and the new one has tier 1.') + '</p>'); }
       if (openOnly) h.push('<p class="ph-note">' + L('Til flåten: et rederi kan bare ha én båt i åpen gruppe. Kjøp heller en båt med hjemmel, eller bytt inn ' + bn + '.', 'For the fleet: a company can only have one boat in the open group. Buy a boat with a right instead, or trade in ' + bn + '.') + '</p>');
       else h.push(payNote(B, 'Til flåten, uten innbytte: ', 'For the fleet, no trade-in: ') + '<button class="ph-btn" data-pa="buy" data-ti="0" data-k="' + k + '"' + (B.ok && free ? '' : ' disabled') + '>' + verb + L(' til flåten', ' for the fleet') + '</button>' + (hid ? '<p class="ph-note">' + L('Prisen er skroget og kvotene: ' + HAVLIC[hid].no.toLowerCase() + ' med kvotefaktorene til selgeren følger med båten, og hun fisker på fartøykvoten.', 'The price is the hull and the quotas: the ' + HAVLIC[hid].en.toLowerCase() + ' with the seller\'s quota factors comes with her, and she fishes on the vessel quota.') + '</p>' : V.len >= 11 || hasLic() ? '<p class="ph-note">' + L('Uten hjemmel kan hun bare ta torsk, hyse og sei som bifangst.', 'Without a right she can only take cod, haddock and saithe as bycatch.') + '</p>' : '')); }
     // the admin can take any vessel into the fleet for free, the locked ocean fleet too, anywhere, to test her (Jonas 30.10.2026)
