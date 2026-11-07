@@ -96,9 +96,18 @@ function pushItems(now){
     const P = S.plan, onPlan = !!(P && P.ops), O = S.ops && S.ops.v === DRV ? S.ops : null;
     // Driftsplan 2 (core/06h-plan2-engine.js): a long wait that ends on its own (the weather, the crew's rest, a fitting, a closed field,
     // a day off) is told when it ends, so the player knows the boat is out again; the plan's regular departures are not
-    if (DRIFT2 && typeof plan2Ops === 'function'){ const o = plan2Ops(), w = o && o.on && !o.held && o.run && o.run.wait;
+    if (DRIFT2 && typeof plan2Ops === 'function'){ const o = plan2Ops(), w0 = o && o.on && !o.held && o.run && o.run.wait;
+      // (a closed field is looked at again each day, until, but opens on its date, open: the push goes then, Ø12 07.11.2026)
+      const w = w0 && w0.open != null && w0.open > (w0.until || 0) ? Object.assign({}, w0, {until:w0.open}) : w0;
       if (w && w.until && w.until * 60 - S.t > 60){ const T = {wx:['Været har løyet. ' + nm + ' går ut.', 'The weather has eased. ' + nm + ' goes out.'], rest:['Mannskapet er uthvilt. ' + nm + ' går ut.', 'The crew are rested. ' + nm + ' goes out.'], jobs:['Arbeidet på ' + nm + ' er ferdig. Hun går ut.', 'The work on ' + nm + ' is done. She goes out.'], closed:['Feltet er åpent igjen. ' + nm + ' går ut.', 'The field is open again. ' + nm + ' goes out.'], off:['Fridagen er over. ' + nm + ' går ut.', 'The day off is over. ' + nm + ' goes out.']}[w.k];
-        if (T) add(w.until * 60, 'p2-' + w.k + '-' + tag, nm, T[0], T[1], 6, 2); } }
+        if (T) add(w.until * 60, 'p2-' + w.k + '-' + tag, nm, T[0], T[1], 6, 2); }
+      // the plan stops (Jonas 23.10.2026, as for the old plan below): when it has just stopped, and when the rules close one of its places
+      // within the days ahead for longer than the plan waits (a month, plan2RulesOpenAt); one closed for less is the wait above
+      if (o && !o.on && o.stop && S.t - o.stop.t < 120) add(S.t + 1, 'ops-' + tag, nm, 'Driftsplanen for ' + nm + ' har stoppet: ' + o.stop.no, 'The plan for ' + nm + ' has stopped: ' + o.stop.en, 24, 1);
+      else if (o && o.on && !p2Sno(o) && typeof plan2RulesWhy === 'function'){ const H0 = S.t / 60;
+        for (let d = 1; d <= Math.floor(PUSH_AHEAD / 1440); d++){ const H = H0 + d * 24, st = plan2RulesWhy(o, H, true); if (!st) continue;
+          if (st.k === 'closed' && plan2RulesOpenAt(o, H) == null) add(H * 60, 'ops-' + tag, nm, 'Driftsplanen for ' + nm + ' stopper: ' + st.no.replace(/ er stengt:.*/, '').toLowerCase() + ' er stengt etter reglene fra i dag. Velg en ny plass.', 'The plan for ' + nm + ' stops: ' + st.en.replace(/ is closed:.*/, '').toLowerCase() + ' is closed by the rules from today. Choose a new place.', 24, 1);
+          break; } } }
     if (P && P.idx < P.wps.length && out_ && !onPlan){
       const wps = P.wps.slice(P.idx), last = wps[wps.length - 1], pt = last.port && portById(last.port);
       let km = 0, a = b.pos, fishH = 0; wps.forEach((q, i) => { km += dist(a, q); a = q; if (i && q.fish > 0) fishH += q.fish; });
