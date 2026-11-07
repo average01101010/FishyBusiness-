@@ -138,3 +138,5 @@ Tony Hjelmseth (spilleren, ikke mannskapet) prøvde spillet hos Jonas 06.11.2026
 - **«Jukse selv»** (`ui/10-rod-acts.js` `SELF = 5`): nappene er verdt fem ganger det din del av håndjuksa tar av seg selv (Jonas: «5x kanskje?»); treffet 2×/1,5×/1×/0,5× kommer oppå; nappene kommer like ofte som før. Ett tall å stille på. Før var snittet likt den automatiske juksa (god spilling ga opp til 2×).
 - **Ny versjon** (`ui/10p-install.js` `UPDATE`, startes fra `ui/11-boot.js` etter `INSTALL.start()`): se `publisering.md`.
 - **Bilder:** stripa, Nettet (hjem, butikken, utstyrsfanen), Mannskapsbørsen med Tony, kvitteringen, oppdateringsstripa og navnekortet i 800×1280 og 1280×800 (`KYST_LITE=1`), sett på og vurdert før commit.
+
+- **07.11.2026:** vann i båten på stripa og i boksen (`fysikk-og-styring.md`, «Vann i båten på stripa»), og blåsesettets navn og linje (`redskap.md`, «Blåsesettet med staur og kulerekke»). Planen for rund/sløyd, kø ved mottakene og båtsalg mellom spillere: `docs/planer/etter-tonys-test.md`.
