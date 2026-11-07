@@ -922,3 +922,4 @@
 2026-11-07 16:11	ccr-c01d562d-pf9kca	6a71af65	worktest	FEIL	21	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
 2026-11-07 16:11	ccr-c01d562d-pf9kca	fcae3658	trip2	OK	28	lite	samtidig	
 2026-11-07 17:01	ccr-c01d562d-pf9kca	ba745078	sea3d	FEIL	3000	3d	alene	gikk ut på tid
+2026-11-07 17:20	ccr-c01d562d-pf9kca	5e77ebd2	hull3d	FEIL	1136	3d	alene	FEIL in 6.1 m head sea at 8.5 kn the sjark pitches and slams, and the slams are in S.incidents {'slams/2 min': 1, 'sea over the forecastle': 0, 'pitch': [9.11, 
