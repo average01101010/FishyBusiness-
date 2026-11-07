@@ -183,48 +183,113 @@
     // the hull is placed so that the track point is its pivot
     bv.x = bv.px + Math.sin(bv.head) * zp; bv.z = bv.pz - Math.cos(bv.head) * zp;
     const fx = Math.sin(bv.head), fz = -Math.cos(bv.head), rx = Math.cos(bv.head), rz = Math.sin(bv.head);
-    // The hull answers the sea it floats on as a damped oscillator in heave, pitch and roll, with the natural periods of the boat as loaded
-    // (03c-stability.js). The sea is averaged over the waterplane (3 x 3 points), so a long hull rides over short waves and a light boat
-    // follows them; a sea that meets her roll period builds the roll up (resonance), and a beam wind heels her.
+    // The hull answers the sea it floats on, with the natural periods of the boat as loaded (03c-stability.js). Heave and pitch come from
+    // the buoyancy of her sections (Fysikk 4 F2, hullMove below); roll is a damped oscillator to the sea's slope across her, as before, so
+    // a sea that meets her roll period builds the roll up (resonance), and a beam wind heels her. «#hull0» in the address, and the yard's
+    // lift, give heave and pitch as before: the sea averaged over the waterplane (3 x 3 points), followed as damped oscillators.
     if (!bv.st || t - (bv.stT || 0) > 1 || t < (bv.stT || 0)){ bv.st = stabOf(b.type || 'skiff'); bv.stT = t; bv.heel = -windHeel(bv.st, env.wind || 0) * Math.sign(Math.sin((windDir(S.t / 60) * DEG + Math.PI) - bv.head) || 1); }   // to leeward
     const pl = G.pl, rl = G.rl, Ls = Math.max(pl * 2, (G.stern - G.bow) * 0.8 || 0), Bs = Math.max(rl * 2, (G.beam || 2.4) * 0.8);
-    // (the short wind waves that ride with her, the near field, apart: she meets those at her real speed, and they go to the hull as
-    // they are; the long waves and the swell stand in the world, where she meets them 6 times too often, and only those are smoothed)
-    let hm = 0, sl = 0, st = 0, hmN = 0, slN = 0, stN = 0;
-    for (const a of [-0.5, 0, 0.5]) for (const c of [-0.5, 0, 0.5]){ const h = seaH(bv.x + fx * a * Ls + rx * c * Bs, bv.z + fz * a * Ls + rz * c * Bs, t), hn = SEA_D[3]; hm += h; sl += h * a; st += h * c; hmN += hn; slN += hn * a; stN += hn * c; }
-    hm /= 9; sl /= 1.5 * Ls; st /= 1.5 * Bs; hmN /= 9; slN /= 1.5 * Ls; stN /= 1.5 * Bs;
-    const v = b.status === 'sailing' ? bv.spd / KNV() : 0;
-    // trim and lift from the Froude number (14-sea.js updateWake: WK.Fr, WK.pf), not from the knots, since a 5 m skiff and a 60 m
-    // trawler in 12 knots are not alike: a planing hull climbs her own bow wave to some 6 degrees at the hump (Fr 0.5-0.7), then comes
-    // up on the plane, lifts and settles to some 3 degrees with the forebody dry (the reference video 04.11.2026); a displacement hull
-    // squats, the stern down and the bow up a degree, near her hull speed (Fr 0.35-0.45)
-    const Fr = WK.Fr || 0, Lb = (G.stern - G.bow) || 6;
-    const trim = BOAT.planing ? 0.1 * sstep(0.25, 0.6, Fr) - 0.045 * sstep(0.7, 1.3, Fr) : 0.018 * sstep(0.2, 0.45, Fr);
-    const lift = BOAT.planing ? 0.015 * Lb * (WK.pf || 0) : -0.004 * Lb * sstep(0.3, 0.45, Fr);
-    // planing hulls bank into a turn, displacement hulls heel a little outwards
-    const bank = (BOAT.planing ? -0.18 : 0.06) * clamp(bv.yr, -1.2, 1.2) * sstep(4, 18, v);
-    let tp = Math.atan(sl - slN) + trim, tr = Math.atan(st - stN) + bank + (bv.heel || 0), ty = hm - hmN + 0.06 + lift;
     // on the yard's lift she is raised with the platform and lies still: no sea to rock her (liftStep)
-    const lf = liftStep(dt, b);
-    if (lf.off > 0 || lf.d){ ty = hm * (1 - lf.dry) + (env.tide || 0) * lf.dry + 0.06 + lf.off; tp *= 1 - lf.dry; tr *= 1 - lf.dry; if (bv.osc && lf.d) bv.y += lf.d; if (bv.fy !== undefined && lf.d) bv.fy += lf.d; }
+    const lf = liftStep(dt, b), lifted = lf.off > 0 || !!lf.d, force = HSEA.on && !lifted;
     // Under way the boat on screen runs GAME_RATE x (and the pace) faster than she would through these waves, which move in real time,
     // so she met them several times too often and heaved a metre at half a second in a gale (the user's «rister voldsomt» at the
     // helm, 03.10.2026): the sea she answers is smoothed over a time that grows with that speed
     const tf = 0.45 * sstep(2, 14, bv.spd || 0) + 0.3 * sstep(14, 45, bv.spd || 0);
+    // (the short wind waves that ride with her, the near field, apart: she meets those at her real speed, and they go to the hull as
+    // they are; the long waves and the swell stand in the world, where she meets them 6 times too often, and only those are smoothed)
+    let hm = 0, sl = 0, st = 0, hmN = 0, slN = 0, stN = 0;
+    if (force){ const q = hullSea(G, Bs, t, tf, dt); hm = q.hm; st = q.st; stN = q.stN; }
+    else {
+      for (const a of [-0.5, 0, 0.5]) for (const c of [-0.5, 0, 0.5]){ const h = seaH(bv.x + fx * a * Ls + rx * c * Bs, bv.z + fz * a * Ls + rz * c * Bs, t), hn = SEA_D[3]; hm += h; sl += h * a; st += h * c; hmN += hn; slN += hn * a; stN += hn * c; }
+      hm /= 9; sl /= 1.5 * Ls; st /= 1.5 * Bs; hmN /= 9; slN /= 1.5 * Ls; stN /= 1.5 * Bs;
+    }
+    const v = b.status === 'sailing' ? bv.spd / KNV() : 0;
+    // trim and lift from the Froude number (14-sea.js updateWake: WK.Fr, WK.pf), not from the knots, since a 5 m skiff and a 60 m
+    // trawler in 12 knots are not alike: a planing hull climbs her own bow wave to some 6 degrees at the hump (Fr 0.5-0.7), then comes
+    // up on the plane, lifts and settles to some 3 degrees with the forebody dry (the reference video 04.11.2026); a displacement hull
+    // squats, the stern down and the bow up a degree, near her hull speed (Fr 0.35-0.45). (With the sections, hullStep reckons it: her own
+    // wave along her and the planing lift.)
+    const Fr = WK.Fr || 0, Lb = (G.stern - G.bow) || 6;
+    const trim = force ? 0 : BOAT.planing ? 0.1 * sstep(0.25, 0.6, Fr) - 0.045 * sstep(0.7, 1.3, Fr) : 0.018 * sstep(0.2, 0.45, Fr);
+    const lift = force ? 0 : BOAT.planing ? 0.015 * Lb * (WK.pf || 0) : -0.004 * Lb * sstep(0.3, 0.45, Fr);
+    // planing hulls bank into a turn, displacement hulls heel a little outwards
+    const bank = (BOAT.planing ? -0.18 : 0.06) * clamp(bv.yr, -1.2, 1.2) * sstep(4, 18, v);
+    let tp = Math.atan(sl - slN) + trim, tr = Math.atan(st - stN) + bank + (bv.heel || 0), ty = hm - hmN + 0.06 + lift;
+    if (lifted){ ty = hm * (1 - lf.dry) + (env.tide || 0) * lf.dry + 0.06 + lf.off; tp *= 1 - lf.dry; tr *= 1 - lf.dry; if (bv.osc && lf.d) bv.y += lf.d; if (bv.fy !== undefined && lf.d) bv.fy += lf.d; }
     if (!bv.osc || tf < 0.02 || bv.fy === undefined){ bv.fy = ty; bv.fp = tp; bv.fr = tr; }
     else { const k = 1 - Math.exp(-dt / tf); bv.fy += (ty - bv.fy) * k; bv.fp += (tp - bv.fp) * k; bv.fr += (tr - bv.fr) * k; ty = bv.fy; tp = bv.fp; tr = bv.fr; }
     ty += hmN; tp += Math.atan(slN); tr += Math.atan(stN);   // (the near field's own, unsmoothed: Fysikk 2, the real encounter)
-    if (!bv.osc){ bv.osc = true; bv.vy = bv.vp = bv.vr = 0; bv.y = ty; bv.pitch = tp; bv.roll = tr; }
+    if (!bv.osc){ bv.osc = true; bv.vy = bv.vp = bv.vr = 0; bv.y = ty; bv.pitch = tp; bv.roll = tr; HSEA.ok = false; }
     // (the roll is damped little lying still, more with way on: the hull's lift damps it, Ikeda; 0.06 of critical at rest to 0.15 at a
     // Froude number of 0.3, so a boat lying beam-on to the sea rolls, tilbakemelding #66)
     const Fn = (b.status === 'sailing' ? (b.v || 0) * 0.5144 : 0) / Math.sqrt(9.81 * Math.max(3, bv.st.L || 6));
     const wz = 2 * Math.PI / Math.max(0.6, bv.st.Tz), wr = 2 * Math.PI / Math.max(0.8, bv.st.Tr), zz = 0.35, zr = 0.06 + 0.09 * sstep(0, 0.3, Fn), n = Math.ceil(dt / 0.02), h = dt / n, lim = Math.min(0.9, bv.st.deckEdge * 1.6);
     for (let i = 0; i < n; i++){
-      bv.vy += (wz * wz * (ty - bv.y) - 2 * zz * wz * bv.vy) * h; bv.y += bv.vy * h;
-      bv.vp += (wz * wz * (tp - bv.pitch) - 2 * zz * wz * bv.vp) * h; bv.pitch += bv.vp * h;
+      if (!force){
+        bv.vy += (wz * wz * (ty - bv.y) - 2 * zz * wz * bv.vy) * h; bv.y += bv.vy * h;
+        bv.vp += (wz * wz * (tp - bv.pitch) - 2 * zz * wz * bv.vp) * h; bv.pitch += bv.vp * h;
+      }
       bv.vr += (wr * wr * (tr - bv.roll) - 2 * zr * wr * bv.vr) * h; bv.roll = clamp(bv.roll + bv.vr * h, -lim, lim);
     }
+    if (force) hullMove(dt, b, G);
+    else HSEA.ok = false;
     bv.v = v;
+  }
+  // ---------- the hull in the sea: buoyancy per section (Fysikk 4 F2, 07.11.2026; docs/planer/fysikk-4-sjo-og-skrog.md, Jonas' choice 2B) ----------
+  // Heave and pitch are reckoned from forces (core/03c-stability.js hullSections, hullRest, hullStep), not by following the surface: the hull
+  // is cut in nine sections along her waterline (her own ends in GEO), and the sea is read at each, across her at three points. The short
+  // sea that rides with her (the near field, 5.20b) goes in as it is, the long sea and the swell smoothed as before (she meets those 6 times
+  // too often); each is taken down with the section's depth as its pressure is (Froude-Krylov as Smith's effect, e^(-k d) per wave from
+  // the waves' own list, amplitude-weighted), so a 6 m chop lifts a sjark less than its height says and the swell lifts her fully. The bow
+  // buries when a section is wholly under, the stern lifts in a following sea, a planing hull rises on her lift. When a bow section comes
+  // down into the sea faster than 0.2 sqrt(g L) (about 2 m/s for the sjark) she slams: spray from the bow (24-cinema.js drawEffects), and
+  // the slams are counted in S.incidents with no consequence (that is F7, choice 9A). «#hull0» in the address: as before (hidden, as #nf0).
+  const HSEA = {on:!/hull0/.test(location.hash), ok:false, H:null, X:null, eta:new Float64Array(HS_N), etaP:new Float64Array(HS_N), deta:new Float64Array(HS_N), far:new Float64Array(HS_N),
+    fN:new Float64Array(HS_N), fF:new Float64Array(HS_N), slam:{t:-9, s:0}, n:0, ms:0};
+  bv.hsea = HSEA;
+  // the sea at her sections (absolute heights), the slope across her for the roll, and the mean for a start
+  function hullSea(G, Bs, t, tf, dt){
+    const H = hullSections(vtype(), G.bow, G.stern), tide = env.tide || 0, fx = Math.sin(bv.head), fz = -Math.cos(bv.head), rx = Math.cos(bv.head), rz = Math.sin(bv.head), t0 = performance.now();
+    // Smith's effect per section: the pressure of a wave of number k at the depth of the section's centre, e^(-k zc), weighted by the waves'
+    // heights, for the short sea (the near field's waves, under 30 m) and the long sea and swell apart
+    { let aN = 0, aF = 0; const L = WV.list; for (const c of L){ const a = c.swell ? WV.swHs * c.wo : WV.hs * (c.wo + c.wy) / 2; if (!c.swell && c.k > 0.21) aN += a; else aF += a; }
+      for (let i = 0; i < H.n; i++){ let sN = 0, sF = 0; const z = H.zc[i]; for (const c of L){ const a = c.swell ? WV.swHs * c.wo : WV.hs * (c.wo + c.wy) / 2, e = a * Math.exp(-c.k * z); if (!c.swell && c.k > 0.21) sN += e; else sF += e; }
+        HSEA.fN[i] = aN > 0 ? sN / aN : 1; HSEA.fF[i] = aF > 0 ? sF / aF : 1; } }
+    const k = HSEA.ok && tf >= 0.02 ? 1 - Math.exp(-dt / tf) : 1;
+    let hm = 0, st = 0, stN = 0;
+    for (let i = 0; i < H.n; i++){
+      const zl = H.z[i], x0 = bv.x - fx * zl, z0 = bv.z - fz * zl; let far = 0, nr = 0, hl = 0, hr = 0, nl = 0, nrr = 0;
+      for (const c of [-0.5, 0, 0.5]){ const hh = seaH(x0 + rx * c * Bs, z0 + rz * c * Bs, t), hn = SEA_D[3]; far += hh - hn; nr += hn; if (c < 0){ hl = hh; nl = hn; } else if (c > 0){ hr = hh; nrr = hn; } }
+      far /= 3; nr /= 3; HSEA.far[i] += (far - HSEA.far[i]) * k;
+      HSEA.eta[i] = (HSEA.far[i] - tide) * HSEA.fF[i] + nr * HSEA.fN[i];   // (over the still water)
+      hm += far + nr; st += hr - hl; stN += nrr - nl;
+    }
+    HSEA.ms = HSEA.ms * 0.9 + (performance.now() - t0) * 0.1;
+    return {hm:hm / H.n, st:st / (H.n * Bs), stN:stN / (H.n * Bs)};
+  }
+  // heave and pitch from the sections' buoyancy, in steps of at most 0.02 s; she starts where the old following had her
+  function hullMove(dt, b, G){
+    const type = vtype(), H = hullSections(type, G.bow, G.stern), tide = env.tide || 0;
+    const D = hullOf(type).disp + Math.max(0, bv.st.D - hullOf(b.type || type).disp), R = hullRest(H, D);   // (what is aboard, on the hull drawn)
+    if (!HSEA.ok || HSEA.H !== H || !HSEA.X){
+      const X = HSEA.X = hullX(R); X.th = bv.pitch || 0; X.y = (bv.y || tide + R.y0) - tide; X.yg = X.y - Math.sin(X.th) * R.zG; X.vy = 0; X.vth = 0;
+      for (let i = 0; i < H.n; i++){ X.h[i] = H.d[i]; HSEA.etaP[i] = HSEA.eta[i]; } HSEA.H = H; HSEA.ok = true;
+    }
+    const X = HSEA.X; for (let i = 0; i < H.n; i++){ HSEA.deta[i] = dt > 0 ? (HSEA.eta[i] - HSEA.etaP[i]) / dt : 0; HSEA.etaP[i] = HSEA.eta[i]; }
+    const o = {V:(WK.kn || 0) * 0.5144, Fr:WK.Fr || 0, planing:H.planing}, n = Math.ceil(dt / 0.02), h = dt / Math.max(1, n); let slam = 0;
+    for (let i = 0; i < n; i++) slam = Math.max(slam, hullStep(H, R, X, HSEA.eta, HSEA.deta, h, o));
+    bv.y = tide + X.y; bv.pitch = X.th; bv.vy = X.vy; bv.vp = X.vth;
+    if (slam > 0){ HSEA.slam = {t:performance.now() / 1000, s:slam}; HSEA.n++; slamLog(slam * hullSlamV(H)); }
+  }
+  // the slams in S.incidents, with no consequence yet (F7): one entry while they go on (a new one after half an hour of game time without),
+  // the count and the hardest, and never more than ten such entries, so they do not push the groundings and the knocks out of the sixty
+  function slamLog(v){
+    const I = S.incidents = S.incidents || [], vr = Math.round(v * 10) / 10; let e = null;
+    for (let i = I.length - 1; i >= 0; i--) if (I[i].k === 'slam'){ e = I[i]; break; }
+    if (e && S.t - (e.t1 || e.t) < 30){ e.n = (e.n || 1) + 1; e.t1 = S.t; e.v = Math.max(e.v || 0, vr); return; }
+    I.push({t:S.t, t1:S.t, k:'slam', boat:S.boatName || 'Havbris', n:1, v:vr});
+    if (I.filter(x => x.k === 'slam').length > 10) I.splice(I.findIndex(x => x.k === 'slam'), 1);
+    if (I.length > 60) I.shift();
   }
 
   // ---------- particles ----------

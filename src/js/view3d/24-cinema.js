@@ -603,6 +603,14 @@
         while (wk.racc >= 1){ wk.racc -= 1; const p = xf(BM, [(Math.random() - 0.5) * 0.3, 0.1, VG.stern + 0.4]), bk = 2 + Math.random() * 3;
           spawn(p[0], p[1], p[2], -Math.sin(bv.head) * bk + wx, 2.2 + Math.random() * 2.2, Math.cos(bv.head) * bk + wz, 0.6 + Math.random() * 0.4, 9.8); } }
     }
+    // a slam (16-motion.js hullMove, Fysikk 4 F2): the bow comes down on the sea faster than her threshold and throws a sheet of white
+    // water up and out to both sides from the forefoot, more the harder she hits, carried off with her way and the wind
+    if (HSEA.slam.t > (wk.slamSeen || 0)){ wk.slamSeen = HSEA.slam.t;
+      const VG = GEO(vtype()), Lb = VG.stern - VG.bow, s = Math.min(3, HSEA.slam.s), N = Math.round(40 + 50 * s), way = (bv.spd || 0) * 0.6, fx = Math.sin(bv.head), fz = -Math.cos(bv.head);
+      const wv = (env.wind || 0) * 0.35, wx = env.windDir[0] * wv, wz = env.windDir[1] * wv;
+      for (let i = 0; i < N; i++){ const side = Math.random() < 0.5 ? -1 : 1, a = 0.04 + Math.random() * 0.22, p = xf(BM, [side * VG.side * (0.4 + a * 1.4), 0.05, VG.bow + a * Lb]);
+        const up = (2.5 + Math.random() * 3) * Math.sqrt(s), out = (1.5 + Math.random() * 3) * Math.sqrt(s);
+        spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, up, Math.sin(bv.head) * side * out + fz * way + wz, 0.8 + Math.random() * 0.7, 9.8); } }
     // wake: the prop wash's bubbles behind the stern (gone in 6 s; the pale band under them went, Jonas 04.10.2026: «kun vise
     // boblepartiklene») and the two Kelvin arms spreading at 19.5 degrees, fading out within 10 s («gradvis forsvinner»), each corner
     // laid on the waves where it lies (one height across an arm hid it under the waves on one side more than the other)
