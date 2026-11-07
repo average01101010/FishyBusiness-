@@ -806,3 +806,181 @@
 2026-11-07 13:05	ccr-fc7a11b2-nl5jor	0e1f99c3	roetest	OK	120	lite	samtidig	
 2026-11-07 13:05	ccr-fc7a11b2-nl5jor	0e1f99c3	trip2	OK	39	lite	samtidig	
 2026-11-07 13:06	ccr-fc7a11b2-nl5jor	0e1f99c3	docktest	OK	60	lite	alene	
+2026-11-07 15:43	ccr-6e84b098-t2tu38	82fc777a+	opptest	OK	40	lite	alene	
+2026-11-07 15:46	ccr-6e84b098-t2tu38	2de52aeb+	selltest	LES	24	lite	samtidig	
+2026-11-07 15:47	ccr-6e84b098-t2tu38	2de52aeb+	shoptest	OK	35	lite	samtidig	
+2026-11-07 15:47	ccr-6e84b098-t2tu38	2de52aeb+	vesseltest	OK	28	lite	samtidig	
+2026-11-07 15:47	ccr-6e84b098-t2tu38	2de52aeb+	fuelcal	OK	15	lite	samtidig	
+2026-11-07 15:47	ccr-6e84b098-t2tu38	2de52aeb+	bktest	OK	6	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	opptest	OK	49	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	skattetest	OK	7	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	lotttest	OK	9	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	boktest	OK	9	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	keeptest	OK	15	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	decktest	OK	14	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	simday	LES	14	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	calib	LES	12	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	tidetest	OK	6	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	climtest	OK	16	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	yardupgtest	OK	14	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	haillplass	OK	6	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	snokrabbetest	OK	14	lite	samtidig	
+2026-11-07 15:48	ccr-6e84b098-t2tu38	2de52aeb+	autolinetest	OK	10	lite	samtidig	
+2026-11-07 15:49	ccr-6e84b098-t2tu38	2de52aeb+	turtest	OK	17	lite	samtidig	
+2026-11-07 15:49	ccr-6e84b098-t2tu38	2de52aeb+	geartest	FEIL	42	lite	samtidig	FEIL the hauler at tiers 2 and 3 takes 10 and 20 % off a tub, a net and a pot hauled {'line': [28.452, 23.764, 21.375], 'garn': [4.906, 5.246, 4.597], 'teine': 
+2026-11-07 15:49	ccr-6e84b098-t2tu38	2de52aeb+	booktest	OK	27	lite	samtidig	
+2026-11-07 15:49	ccr-6e84b098-t2tu38	2de52aeb+	caretest	FEIL	15	lite	samtidig	FEIL a set costs half again at tier 2, and is bought back on that price [350, 525, 88, 131]
+2026-11-07 15:49	ccr-6e84b098-t2tu38	2de52aeb+	jigalongtest	OK	15	lite	samtidig	
+2026-11-07 15:50	ccr-6e84b098-t2tu38	2de52aeb+	docktest	OK	62	lite	samtidig	
+2026-11-07 15:50	ccr-6e84b098-t2tu38	2de52aeb+	seaworktest	OK	6	lite	samtidig	
+2026-11-07 15:50	ccr-6e84b098-t2tu38	2de52aeb+	nettest	FEIL	24	lite	samtidig	FEIL halerne først, og det som ikke passer snekka, er lukket nederst  [['linehaler', 'linesetter', 'garnhaler'], 'Passer ikke «T-658-LK» (2)Radar (åpen antenne)
+2026-11-07 15:50	ccr-6e84b098-t2tu38	2de52aeb+	itemcardtest	FEIL	15	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'linesetter', 'garnrenne', 'teinehaler', 'jukse', 'krabbekar', 'brova
+2026-11-07 15:55	ccr-6e84b098-t2tu38	0607e08a	heattest	OK	286	3d	alene	
+2026-11-07 15:23	ccr-dc24762d-iyuakj	997edc80+	booktest	OK	23	lite	alene	
+2026-11-07 15:32	HEAD	103e1d73	tut	OK	567	lite	alene	
+2026-11-07 15:35	HEAD	103e1d73	starttest	OK	81	lite	samtidig	
+2026-11-07 15:35	HEAD	103e1d73	tutdrift	OK	6	lite	samtidig	
+2026-11-07 15:00	ccr-68a96e99-8x1jh1	f4dd4df2	rulestest	OK	13	lite	samtidig	
+2026-11-07 15:00	ccr-68a96e99-8x1jh1	f4dd4df2	sonetest	OK	9	lite	samtidig	
+2026-11-07 15:01	ccr-68a96e99-8x1jh1	f4dd4df2	trip2	OK	35	lite	samtidig	
+2026-11-07 15:01	ccr-68a96e99-8x1jh1	f4dd4df2	snokrabbetest	OK	13	lite	samtidig	
+2026-11-07 15:01	ccr-68a96e99-8x1jh1	f4dd4df2	autolinetest	OK	8	lite	samtidig	
+2026-11-07 15:01	ccr-68a96e99-8x1jh1	f4dd4df2	r4test	OK	14	lite	samtidig	
+2026-11-07 15:02	ccr-68a96e99-8x1jh1	f4dd4df2	geartest	OK	34	lite	samtidig	
+2026-11-07 15:02	ccr-68a96e99-8x1jh1	f4dd4df2	selltest	LES	23	lite	samtidig	
+2026-11-07 15:02	ccr-68a96e99-8x1jh1	f4dd4df2	vesseltest	OK	22	lite	samtidig	
+2026-11-07 15:02	ccr-68a96e99-8x1jh1	f4dd4df2	bktest	OK	7	lite	samtidig	
+2026-11-07 15:02	ccr-68a96e99-8x1jh1	f4dd4df2	kystvakttest	OK	9	lite	samtidig	
+2026-11-07 15:03	ccr-68a96e99-8x1jh1	f4dd4df2	starttest	OK	92	lite	samtidig	
+2026-11-07 15:03	ccr-68a96e99-8x1jh1	f4dd4df2	quotatest	OK	13	lite	samtidig	
+2026-11-07 15:20	ccr-68a96e99-8x1jh1	3e069278	tut	OK	977	lite	alene	
+2026-11-07 14:42	plan/2026-11-07-opp4	b6d6b848+	vesseltest	FEIL	26	lite	alene	FEIL Neste mål on a wooden boat with NOK 40 000: the knives at tier 2 first, then the old wooden snekke with a right, and the home screen says the knives {'kniv
+2026-11-07 14:50	plan/2026-11-07-opp4	dce739d7+	vesseltest	OK	24	lite	alene	
+2026-11-07 14:54	plan/2026-11-07-opp4	dce739d7+	opptest	OK	44	lite	alene	
+2026-11-07 14:55	plan/2026-11-07-opp4	dce739d7+	opptest	FEIL	36	lite	alene	FEIL siden står først under Om bord › Båten: kniven ●●○ med neste trinn, prisen for båten, «i butikken» og kg i timen ved bordet
+2026-11-07 14:56	plan/2026-11-07-opp4	dce739d7+	opptest	FEIL	68	lite	alene	FEIL siden står først under Om bord › Båten: kniven ●●○ med neste trinn, prisen for båten, «i butikken» og kg i timen ved bordet
+2026-11-07 14:57	plan/2026-11-07-opp4	dce739d7+	opptest	FEIL	70	lite	alene	FEIL siden står først under Om bord › Båten: kniven ●●○ med neste trinn, prisen for båten, «i butikken» og kg i timen ved bordet
+2026-11-07 14:59	plan/2026-11-07-opp4	dce739d7+	opptest	OK	56	lite	samtidig	
+2026-11-07 14:59	plan/2026-11-07-opp4	dce739d7+	vesseltest	OK	33	lite	samtidig	
+2026-11-07 15:00	plan/2026-11-07-opp4	9bb7663c+	sqltest	FEIL	37	lite	alene	FEIL the funnel: started, first catch, first and third landing, an account, back after 1, 7 and 30 days of those who have had that long, and a tier bought withi
+2026-11-07 15:01	plan/2026-11-07-opp4	9bb7663c+	sqltest	FEIL	38	lite	alene	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-07 15:02	plan/2026-11-07-opp4	9bb7663c+	admintest	FEIL	6	lite	alene	FEIL the funnel shows the share with a tier bought within day 7, and a column per week  {"kpi": null, "col": false}
+2026-11-07 15:02	plan/2026-11-07-opp4	9bb7663c+	admintest	OK	6	lite	alene	
+2026-11-07 15:04	plan/2026-11-07-opp4	a5fb23ce	admintest	OK	6	lite	samtidig	
+2026-11-07 15:05	plan/2026-11-07-opp4	a5fb23ce	markettest	OK	32	lite	samtidig	
+2026-11-07 15:05	plan/2026-11-07-opp4	a5fb23ce	megletest	OK	16	lite	samtidig	
+2026-11-07 15:05	plan/2026-11-07-opp4	a5fb23ce	fleet2test	OK	52	lite	samtidig	
+2026-11-07 15:05	plan/2026-11-07-opp4	a5fb23ce	hbtest	OK	20	lite	samtidig	
+2026-11-07 15:05	plan/2026-11-07-opp4	a5fb23ce	itemcardtest	FEIL	25	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'jukse', 'krabbekar', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-07 15:07	plan/2026-11-07-opp4	d55d7a9a	docktest	OK	68	lite	samtidig	
+2026-11-07 15:07	plan/2026-11-07-opp4	d55d7a9a	krabbefabrikktest	OK	22	lite	samtidig	
+2026-11-07 15:07	plan/2026-11-07-opp4	d55d7a9a	fabrikktest	FEIL	17	lite	samtidig	FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined |
+2026-11-07 15:07	plan/2026-11-07-opp4	d55d7a9a	fleet3test	OK	16	lite	samtidig	
+2026-11-07 15:07	plan/2026-11-07-opp4	d55d7a9a	vesseltest	OK	33	lite	samtidig	
+2026-11-07 15:07	plan/2026-11-07-opp4	d55d7a9a	adminbuytest	OK	12	lite	samtidig	
+2026-11-07 15:07	plan/2026-11-07-opp4	d55d7a9a	havtur	FEIL	0	lite	samtidig	FEIL hele kysten mangler i tools/map/out/game (release.py og game.py)
+2026-11-07 15:08	plan/2026-11-07-opp4	d55d7a9a	opptest	OK	74	lite	samtidig	
+2026-11-07 15:08	plan/2026-11-07-opp4	d55d7a9a	autolinetest	OK	13	lite	samtidig	
+2026-11-07 15:08	plan/2026-11-07-opp4	d55d7a9a	shoptest	OK	51	lite	samtidig	
+2026-11-07 15:09	plan/2026-11-07-opp4	d55d7a9a	geartest	OK	50	lite	samtidig	
+2026-11-07 15:09	plan/2026-11-07-opp4	d55d7a9a	skattetest	OK	9	lite	samtidig	
+2026-11-07 15:09	plan/2026-11-07-opp4	d55d7a9a	lotttest	OK	14	lite	samtidig	
+2026-11-07 15:09	plan/2026-11-07-opp4	d55d7a9a	boktest	OK	11	lite	samtidig	
+2026-11-07 15:09	plan/2026-11-07-opp4	d55d7a9a	skiptest	OK	21	lite	samtidig	
+2026-11-07 15:09	plan/2026-11-07-opp4	d55d7a9a	turtest	OK	20	lite	samtidig	
+2026-11-07 15:10	plan/2026-11-07-opp4	d55d7a9a	sqltest	FEIL	38	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-07 15:13	plan/2026-11-07-opp4	d55d7a9a+	sqltest	FEIL	35	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-07 15:13	plan/2026-11-07-opp4	d55d7a9a+	admintest	OK	6	lite	samtidig	
+2026-11-07 15:14	plan/2026-11-07-opp4	d55d7a9a+	opptest	OK	52	lite	samtidig	
+2026-11-07 15:14	plan/2026-11-07-opp4	d55d7a9a+	vesseltest	OK	26	lite	samtidig	
+2026-11-07 15:15	plan/2026-11-07-opp4	d55d7a9a+	havtur	FEIL	89	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
+2026-11-07 15:23	plan/2026-11-07-opp4	24eb4a19	boottest	OK	28	lite	alene	
+2026-11-07 15:24	plan/2026-11-07-opp4	24eb4a19	opptest	OK	47	lite	alene	
+2026-11-07 15:35	plan/2026-11-07-opp4	9726065a+	opptest	FEIL	63	lite	samtidig	FEIL det som kan kjøpes, står først med det billigste øverst, og det fulle sist; summen av trinnene og «?» til Håndboka  {'order': ['kniv', 'ekko', 'jukse', 'te
+2026-11-07 15:35	plan/2026-11-07-opp4	9726065a+	vesseltest	OK	41	lite	samtidig	
+2026-11-07 15:36	plan/2026-11-07-opp4	9726065a+	opptest	OK	53	lite	alene	
+2026-11-07 15:37	plan/2026-11-07-opp4	9726065a+	opptest	FEIL	45	lite	alene	FEIL siden står først under Om bord › Båten: kniven med bilde, ●●○, gevinsten i egne tall (330 → 360 kg/t ved bordet) og prisen 4 500 kr  {'lv': 2, 'max': 3, 'd
+2026-11-07 15:38	plan/2026-11-07-opp4	65d8bbb2	krabbefabrikktest	OK	21	lite	samtidig	
+2026-11-07 15:38	plan/2026-11-07-opp4	65d8bbb2	fabrikktest	FEIL	14	lite	samtidig	FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined |
+2026-11-07 15:38	plan/2026-11-07-opp4	65d8bbb2	fleet3test	OK	17	lite	samtidig	
+2026-11-07 15:38	plan/2026-11-07-opp4	65d8bbb2	vesseltest	OK	27	lite	samtidig	
+2026-11-07 15:38	plan/2026-11-07-opp4	65d8bbb2	adminbuytest	OK	12	lite	samtidig	
+2026-11-07 15:40	plan/2026-11-07-opp4	65d8bbb2	havtur	FEIL	101	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
+2026-11-07 15:40	plan/2026-11-07-opp4	65d8bbb2	markettest	OK	32	lite	samtidig	
+2026-11-07 15:40	plan/2026-11-07-opp4	65d8bbb2	opptest	OK	56	lite	samtidig	
+2026-11-07 15:41	plan/2026-11-07-opp4	65d8bbb2+	docktest	OK	63	lite	samtidig	
+2026-11-07 15:41	plan/2026-11-07-opp4	3e1a4bf1	uishots	OK	91	lite	samtidig	
+2026-11-07 15:41	plan/2026-11-07-opp4	3e1a4bf1	navbarshot	OK	32	lite	samtidig	
+2026-11-07 15:42	plan/2026-11-07-opp4	3e1a4bf1	dockrow	OK	43	lite	samtidig	
+2026-11-07 15:43	plan/2026-11-07-opp4	3e1a4bf1	roetest	OK	122	lite	samtidig	
+2026-11-07 15:37	HEAD	c7987dda	boottest	OK	23	lite	samtidig	
+2026-11-07 15:37	HEAD	c7987dda	booktest	OK	25	lite	samtidig	
+2026-11-07 15:22	ccr-68a96e99-8x1jh1	fd65373b	boottest	OK	23	lite	samtidig	
+2026-11-07 15:22	ccr-68a96e99-8x1jh1	fd65373b	rulestest	OK	12	lite	samtidig	
+2026-11-07 15:22	ccr-68a96e99-8x1jh1	fd65373b	sonetest	OK	8	lite	samtidig	
+2026-11-07 15:22	ccr-68a96e99-8x1jh1	fd65373b	trip2	OK	35	lite	samtidig	
+2026-11-07 15:22	ccr-68a96e99-8x1jh1	fd65373b	snokrabbetest	OK	12	lite	samtidig	
+2026-11-07 15:22	ccr-68a96e99-8x1jh1	fd65373b	autolinetest	OK	9	lite	samtidig	
+2026-11-07 15:22	ccr-68a96e99-8x1jh1	fd65373b	r4test	OK	14	lite	samtidig	
+2026-11-07 15:23	ccr-68a96e99-8x1jh1	fd65373b	geartest	OK	34	lite	samtidig	
+2026-11-07 15:23	ccr-68a96e99-8x1jh1	fd65373b	selltest	LES	21	lite	samtidig	
+2026-11-07 15:23	ccr-68a96e99-8x1jh1	fd65373b	vesseltest	OK	22	lite	samtidig	
+2026-11-07 15:23	ccr-68a96e99-8x1jh1	fd65373b	bktest	OK	6	lite	samtidig	
+2026-11-07 15:23	ccr-68a96e99-8x1jh1	fd65373b	kystvakttest	OK	8	lite	samtidig	
+2026-11-07 15:24	ccr-68a96e99-8x1jh1	fd65373b	starttest	OK	88	lite	samtidig	
+2026-11-07 15:24	ccr-68a96e99-8x1jh1	fd65373b	quotatest	OK	13	lite	samtidig	
+2026-11-07 15:33	ccr-68a96e99-8x1jh1	fd65373b	tut	OK	541	lite	alene	
+2026-11-07 15:35	ccr-68a96e99-8x1jh1	f768a79a	boottest	OK	22	lite	alene	
+2026-11-07 15:36	ccr-68a96e99-8x1jh1	f768a79a	rulestest	OK	11	lite	samtidig	
+2026-11-07 15:36	ccr-68a96e99-8x1jh1	f768a79a	kystvakttest	OK	8	lite	samtidig	
+2026-11-07 15:36	ccr-68a96e99-8x1jh1	f768a79a	quotatest	OK	14	lite	samtidig	
+2026-11-07 15:36	ccr-68a96e99-8x1jh1	f768a79a	r4test	OK	14	lite	samtidig	
+2026-11-07 15:36	ccr-68a96e99-8x1jh1	f768a79a	sonetest	OK	7	lite	samtidig	
+2026-11-07 15:37	ccr-68a96e99-8x1jh1	f768a79a	starttest	OK	87	lite	samtidig	
+2026-11-07 15:40	HEAD	91cc422a	boottest	OK	28	lite	samtidig	
+2026-11-07 15:41	HEAD	91cc422a	starttest	OK	89	lite	samtidig	
+2026-11-07 15:41	HEAD	91cc422a	booktest	OK	26	lite	samtidig	
+2026-11-07 15:46	plan/2026-11-07-opp4	9e818532	boottest	OK	33	lite	samtidig	
+2026-11-07 15:46	plan/2026-11-07-opp4	9e818532	opptest	OK	54	lite	samtidig	
+2026-11-07 15:46	plan/2026-11-07-opp4	9e818532	hbtest	FEIL	17	lite	samtidig	FEIL liggende: the search narrows the list to the tip that matches  {"tips": 2, "first": "Diesel"}
+2026-11-07 15:46	plan/2026-11-07-opp4	9e818532+	hbtest	OK	15	lite	alene	
+2026-11-07 15:48	plan/2026-11-07-opp4	9e818532+	opptest	OK	42	lite	alene	
+2026-11-07 16:03	ccr-6e84b098-t2tu38	b763342c	selltest	LES	22	lite	samtidig	
+2026-11-07 16:03	ccr-6e84b098-t2tu38	b763342c	shoptest	OK	37	lite	samtidig	
+2026-11-07 16:03	ccr-6e84b098-t2tu38	b763342c	vesseltest	OK	30	lite	samtidig	
+2026-11-07 16:03	ccr-6e84b098-t2tu38	b763342c	fuelcal	OK	15	lite	samtidig	
+2026-11-07 16:03	ccr-6e84b098-t2tu38	b763342c	bktest	OK	6	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	opptest	OK	62	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	skattetest	OK	7	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	lotttest	OK	9	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	boktest	OK	9	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	keeptest	OK	14	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	decktest	OK	13	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	simday	LES	13	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	calib	LES	14	lite	samtidig	
+2026-11-07 16:04	ccr-6e84b098-t2tu38	b763342c	tidetest	OK	6	lite	samtidig	
+2026-11-07 16:05	ccr-6e84b098-t2tu38	b763342c	climtest	OK	14	lite	samtidig	
+2026-11-07 16:05	ccr-6e84b098-t2tu38	b763342c	yardupgtest	OK	14	lite	samtidig	
+2026-11-07 16:05	ccr-6e84b098-t2tu38	b763342c	posttest	OK	24	lite	samtidig	
+2026-11-07 16:05	ccr-6e84b098-t2tu38	b763342c	turtest	OK	17	lite	samtidig	
+2026-11-07 16:06	ccr-6e84b098-t2tu38	b763342c	fixtest	OK	41	lite	samtidig	
+2026-11-07 16:06	ccr-6e84b098-t2tu38	b763342c	fleet3test	OK	14	lite	samtidig	
+2026-11-07 16:06	ccr-6e84b098-t2tu38	b763342c	opsowntest	OK	41	lite	samtidig	
+2026-11-07 16:06	ccr-6e84b098-t2tu38	b763342c	seasontest	OK	6	lite	samtidig	
+2026-11-07 16:06	ccr-6e84b098-t2tu38	b763342c	haillplass	OK	6	lite	samtidig	
+2026-11-07 16:06	ccr-6e84b098-t2tu38	b763342c	snokrabbetest	OK	14	lite	samtidig	
+2026-11-07 16:06	ccr-6e84b098-t2tu38	b763342c	autolinetest	OK	10	lite	samtidig	
+2026-11-07 16:07	ccr-6e84b098-t2tu38	b763342c	geartest	OK	37	lite	samtidig	
+2026-11-07 16:07	ccr-6e84b098-t2tu38	b763342c	booktest	OK	29	lite	samtidig	
+2026-11-07 16:07	ccr-6e84b098-t2tu38	b763342c	caretest	OK	15	lite	samtidig	
+2026-11-07 16:07	ccr-6e84b098-t2tu38	b763342c	jigalongtest	OK	15	lite	samtidig	
+2026-11-07 16:08	ccr-6e84b098-t2tu38	b763342c	docktest	OK	62	lite	samtidig	
+2026-11-07 16:08	ccr-6e84b098-t2tu38	b763342c	seaworktest	OK	5	lite	samtidig	
+2026-11-07 16:08	ccr-6e84b098-t2tu38	b763342c	nettest	OK	27	lite	samtidig	
+2026-11-07 16:08	ccr-6e84b098-t2tu38	b763342c	itemcardtest	FEIL	15	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'linesetter', 'garnrenne', 'jukse', 'krabbekar', 'brova
+2026-11-07 16:08	ccr-6e84b098-t2tu38	b763342c	itemcardtest	FEIL	15	lite	alene	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'jukse', 'krabbekar', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	boottest	OK	29	lite	samtidig	
+2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	opptest	OK	63	lite	samtidig	
+2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	vesseltest	OK	28	lite	samtidig	
+2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	nettest	OK	27	lite	samtidig	
+2026-11-07 16:20	ccr-6e84b098-t2tu38	fe658e10	caretest	OK	15	lite	samtidig	

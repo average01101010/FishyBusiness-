@@ -108,17 +108,16 @@ function showStart(done){
 // 3 to 6 km, then anything from 1 to 10 km in 10 to 250 m of water, the place in a ring worth most at this week's prices; in the sea under the starting boat's careful limit the next six
 // hours; where the rules let a hand jig fish at all on the date (rulesAt: closed fields, the spawning areas south of 62° N 1.1–30.4,
 // the Oslo fjord), the boat would otherwise lie and wait there (05-vessels.js). Its mix is the jig's fish that stand there now (density),
-// each lawful there on the date and taken by the plant it is landed at; cod not outside the baseline in the Skagerrak, east of
-// Lindesnes, where Norwegian vessels may not fish it (FOR-2022-12-16-2281 § 1, the same rule each year; the rules engine has no
-// Skagerrak layer yet). The first catch's amount stays guaranteed (core/03-simulation.js TUTB, tutBonus).
+// each lawful there on the date and taken by the plant it is landed at (cod not outside the baseline in the Skagerrak, east of
+// Lindesnes, where Norwegian vessels may not fish it: the rules engine's skag since Ø10, 07.11.2026, which also stops the jig there
+// without a species, so the patch is found inside the baseline). The first catch's amount stays guaranteed (core/03-simulation.js TUTB, tutBonus).
 const TUT_SP = ['torsk', 'sei', 'lyr', 'hyse'];
 const TUT_TIERS = [[1.5, 2.5, 20, 150], [3, 6, 20, 150], [1, 10, 10, 250]];
-const tutSkagOut = q => { const ll = natLL(q); return ll.lat < 59.95 && ll.lon > 7.05 && !(ruBits(q) & 1); };
 // the mix at a place: shares of the lawful jig fish there now, the small ones (under 5 %) left out; {} when none is lawful. val: what it
 // is worth, density by this week's price, so the patch is where the first landing pays best (cod where the cod is), not just where most stands
 function tutMixAt(q, H, len, land){
   const takes = land && land.mk && land.mk.sp ? sp => !!land.mk.sp[sp] : () => true;
-  const ok = sp => !(sp === 'torsk' && tutSkagOut(q)) && rulesAt({p:q, H, len, gear:'juksa', sp, hand:true}).v !== 'no';
+  const ok = sp => rulesAt({p:q, H, len, gear:'juksa', sp, hand:true}).v !== 'no';
   let sps = TUT_SP.filter(sp => takes(sp) && ok(sp)); if (!sps.length) sps = TUT_SP.filter(ok);   // a plant that takes none of them: the plant is not asked
   const den = {}; let sum = 0, val = 0; for (const sp of sps){ let d = 0, pr = 10; try { d = density(sp, q, H); pr = marketPrice(sp, H) || 10; } catch (e){} den[sp] = d; sum += d; val += d * pr; }
   const mix = {}; if (sum > 0){ let t = 0; for (const sp of sps) if (den[sp] / sum >= 0.05){ mix[sp] = den[sp] / sum; t += mix[sp]; } for (const sp in mix) mix[sp] = Math.round(mix[sp] / t * 100) / 100; }

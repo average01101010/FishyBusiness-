@@ -54,7 +54,8 @@ function mbWhy(v){
 // gear aboard, and the right with its year's catch (the vessel quota follows the boat; the open group's catch stays with the owner, § 29)
 function mbPack(v, yard){
   const b = vget(v, 'boat'), V = VESSELS[b.type], eq = vget(v, 'equip') || {}, lic = vget(v, 'lic'), E = {}, r3 = x => Math.round((+x || 0) * 1000) / 1000;
-  for (const [k, n] of Object.entries(eq)) if (EQUIP[k] && n) E[k] = EQUIP[k].multi ? Math.max(0, Math.min(99, Math.round(+n || 0))) : true;
+  // (a tiered item, the knives and the gaff of OPP1, goes as its tier: true would be read as tier 2, and tier 3 came to the buyer as 2; OPP4)
+  for (const [k, n] of Object.entries(eq)) if (EQUIP[k] && n) E[k] = EQUIP[k].multi ? Math.max(0, Math.min(99, Math.round(+n || 0))) : EQUIP[k].tiers ? equipLv(k, eq, b.type) : true;
   const L0 = lic ? Object.assign({}, lic) : null; if (L0) delete L0.coop;   // (a quota cooperation is the seller's agreement with a partner)
   return {type:b.type, name:String(vget(v, 'boatName') || V.name.no).replace(/[<>&"]/g, '').slice(0, 30), built:b.built || null, engH:Math.round(b.engH || 0), svcAt:Math.round(b.svcAt || 0),
     foul:r3(b.foul), damage:r3(b.damage), engLv:b.engLv || 0, holdLv:b.holdLv || 0, upg:b.upg || null, gear:!!b.gear, kgear:!!b.kgear, equip:E, lic:L0,
@@ -73,7 +74,9 @@ function mbUnpack(P, port){
   b.engLv = clamp(Math.round(+P.engLv || 0), 0, ENGUP.length); b.holdLv = V.cls === 'hav' ? 0 : clamp(Math.round(+P.holdLv || 0), 0, HOLDUP.length);
   if (P.upg && typeof P.upg === 'object'){ const u = {}; for (const [k, n] of Object.entries(P.upg)) if (UPGS[k]) u[k] = clamp(Math.round(+n || 0), 0, UPGS[k].steps.length); b.upg = u; }
   b.gear = !!P.gear; if (P.kgear) b.kgear = true;
-  for (const [k, x] of Object.entries(P.equip || {})) if (EQUIP[k] && x && equipFits(k, P.type)) v.equip[k] = EQUIP[k].multi ? Math.min(V.jukseMax || 0, Math.max(0, Math.round(+x || 0))) : true;
+  for (const [k, x] of Object.entries(P.equip || {})) if (EQUIP[k] && x && equipFits(k, P.type)){
+    if (EQUIP[k].tiers){ const lv = equipLv(k, {[k]:x}, P.type); if (lv > 1) v.equip[k] = lv; continue; }   // (the tier as it was, 2 or 3; tier 1 is no field)
+    v.equip[k] = EQUIP[k].multi ? Math.min(V.jukseMax || 0, Math.max(0, Math.round(+x || 0))) : true; }
   if (lic && P.quota && typeof P.quota === 'object') v.quota = Object.assign({}, P.quota);
   if (P.pgear && typeof P.pgear === 'object') v.pgear = JSON.parse(JSON.stringify(P.pgear));
   return v;
