@@ -403,6 +403,14 @@
 2026-11-06 23:39	ccr-ccfb0017-rmieib	731e4792+	docktest	FEIL	62	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
 2026-11-06 23:39	ccr-ccfb0017-rmieib	731e4792+	routetest	OK	44	lite	alene	
 2026-11-06 23:41	ccr-ccfb0017-rmieib	731e4792+	docktest	OK	61	lite	alene	
+2026-11-07 00:11	ccr-67e5a499-sxgchb	61f462f7+	docktest	OK	63	lite	samtidig	
+2026-11-07 00:11	ccr-67e5a499-sxgchb	61f462f7+	merketest	OK	12	lite	samtidig	
+2026-11-07 00:12	ccr-67e5a499-sxgchb	61f462f7+	uishots	OK	88	lite	samtidig	
+2026-11-07 00:12	ccr-67e5a499-sxgchb	61f462f7+	shoptest	OK	27	lite	samtidig	
+2026-11-07 00:12	ccr-67e5a499-sxgchb	61f462f7+	nettest	OK	25	lite	samtidig	
+2026-11-07 00:12	ccr-67e5a499-sxgchb	61f462f7+	fleet3test	OK	15	lite	samtidig	
+2026-11-07 00:13	ccr-67e5a499-sxgchb	61f462f7+	posttest	OK	23	lite	samtidig	
+2026-11-07 00:13	ccr-67e5a499-sxgchb	61f462f7+	kartlegging	OK	52	lite	samtidig	
 2026-11-07 00:06	HEAD	61f462f7+	kjoptest	FEIL	266	lite	samtidig	avsluttet med kode 1
 2026-11-07 00:06	HEAD	61f462f7+	skiptest	OK	23	lite	samtidig	
 2026-11-07 00:06	HEAD	61f462f7+	skipdrift	OK	43	lite	samtidig	
@@ -432,3 +440,12 @@
 2026-11-07 01:26	ccr-a9ff699b-re4zwf	b36a7580+	drifttest	OK	29	lite	samtidig	
 2026-11-07 01:26	ccr-a9ff699b-re4zwf	b36a7580+	fleet2test	OK	33	lite	samtidig	
 2026-11-07 01:28	ccr-a9ff699b-re4zwf	a11ed09b	landtest	OK	97	3d	alene	
+2026-11-07 01:07	ccr-04f41d1f-p26bxn	bcf2df80+	maletest	OK	17	lite	samtidig	
+2026-11-07 01:07	ccr-04f41d1f-p26bxn	bcf2df80+	regnrtest	OK	20	lite	samtidig	
+2026-11-07 01:07	ccr-04f41d1f-p26bxn	bcf2df80+	sqltest	FEIL	29	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-07 01:08	ccr-04f41d1f-p26bxn	e8a2431e+	maletest	OK	16	lite	samtidig	
+2026-11-07 01:08	ccr-04f41d1f-p26bxn	e8a2431e+	regnrtest	OK	20	lite	samtidig	
+2026-11-07 01:09	ccr-04f41d1f-p26bxn	e8a2431e+	sqltest	FEIL	30	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-07 01:18	ccr-67e5a499-sxgchb	55f1bbb5+	docktest	OK	63	lite	samtidig	
+2026-11-07 01:18	ccr-67e5a499-sxgchb	55f1bbb5+	friendtest	OK	9	lite	samtidig	
+2026-11-07 01:19	ccr-67e5a499-sxgchb	55f1bbb5+	uishots	OK	81	lite	samtidig	

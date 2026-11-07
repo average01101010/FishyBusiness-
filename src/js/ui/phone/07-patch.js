@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['hjem-071126', '07.11.2026', 'Telefonens hjemskjerm', 'The phone\'s home screen', [
+       ['Appene på telefonen står i grupper med overskrift, fire på rad: Drift, Handel og regler, Deg, Verden og System. Flere apper synes uten å rulle.', 'The apps on the phone stand in groups with a heading, four to a row: Operations, Trade and rules, You, World and System. More apps show without scrolling.'],
+       ['Appene har de samme ikonene og flatene som knappene nederst på skjermen.', 'The apps have the same icons and surfaces as the buttons at the bottom of the screen.'],
+       ['Neste mål og Første uke står side om side over appene. Når den første uka er over, står fartstiden der.', 'The next goal and the first week stand side by side above the apps. When the first week is over, the sea time stands there.']]],
     ['kjop-071126', '07.11.2026', 'Kjøp og trim', 'Purchases and tuning', [
        ['Når et kjøp i Kaiboden eller Malerverkstedet er levert, kommer et vindu som bekrefter det: hva du fikk og hva det gjør nå. Bekreftelsen ligger også i Meldinger.', 'When a purchase in Kaiboden or the paint shop is delivered, a window confirms it: what you got and what it does now. The confirmation is in Messages too.'],
        ['Trim av samme slag som den som er på, legger timene til. Et annet slag erstatter den som er på, og Trim-appen spør først, så du ikke mister tida den har igjen uten å vite det.', 'Tuning of the same kind as the one on adds its hours. Another kind replaces the one on, and the Tuning app asks first, so you do not lose the time it has left without knowing.'],

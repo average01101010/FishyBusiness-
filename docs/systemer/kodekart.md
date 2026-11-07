@@ -2297,12 +2297,12 @@ The item card (M1 in docs/planer/butikker-og-sponsorer.md, 30.10.2026)
 - **63** what each thing does, in numbers from the code ([no, en]); the long story is in the Håndboka (ITEM_HB)
   - 105 `itemCard(o)`
 
-## `src/js/ui/phone/00-shell.js` (59 linjer)
+## `src/js/ui/phone/00-shell.js` (69 linjer)
 
 ---------- the phone ----------
 
 - **1** the phone
-  - 58 `setBadge()`
+  - 68 `setBadge()`
 
 ## `src/js/ui/phone/01-haill-fiske-service.js` (112 linjer)
 
@@ -2377,29 +2377,31 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1248 linjer)
+## `src/js/ui/phone/07-patch.js` (1252 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1241 `patch()`
+  - 1245 `patch()`
 
-## `src/js/ui/phone/08-home-papers-merker.js` (112 linjer)
+## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
-  - 1 `home()`
-  - 12 `nowCards(na)`
-  - 32 `nearHint(kind)`
-- **36** the seaman's life: the tattoos you have earned, and the old ways at sea you have heard of
-  - 37 `tattoos()`
-  - 55 `papBladB()`
-  - 60 `papPermit()`
-  - 66 `papZlic()`
-  - 71 `papKv()`
-  - 77 `papBiz()`
-  - 83 `fsChip()`
-  - 85 `fsCard()`
-  - 92 `merker()`
-  - 104 `lore()`
+the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2-staaende.md): the clock, the weather and the cash,
+
+  - 5 `home()`
+  - 24 `nowCards(na)`
+  - 44 `nearHint(kind)`
+- **48** the seaman's life: the tattoos you have earned, and the old ways at sea you have heard of
+  - 49 `tattoos()`
+  - 67 `papBladB()`
+  - 72 `papPermit()`
+  - 78 `papZlic()`
+  - 83 `papKv()`
+  - 89 `papBiz()`
+  - 95 `fsChip()`
+  - 97 `fsCard()`
+  - 104 `merker()`
+  - 116 `lore()`
 
 ## `src/js/ui/phone/09-vaer-post-salg-redning.js` (146 linjer)
 
@@ -3118,15 +3120,18 @@ THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/func
   - 104 `shopClaim()`
   - 127 `shopStart()`
 
-## `src/js/ui/10j-paint.js` (217 linjer)
+## `src/js/ui/10j-paint.js` (246 linjer)
 
 THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
 
 - **1** THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
-  - 180 `logoSet(L)`
-  - 188 `logoCheck()`
-  - 196 `giveCos(k)`
-  - 208 `regSet(n)`
+  - 184 `logoSet(L)`
+  - 192 `logoCheck()`
+  - 200 `giveCos(k)`
+  - 213 `regSet(n, paid)`
+  - 228 `regKeep()`
+  - 229 `regTaken(mark, paid)`
+  - 238 `regFree(mark, keep, paid)`
 
 ## `src/js/ui/10q-buymoment.js` (36 linjer)
 
