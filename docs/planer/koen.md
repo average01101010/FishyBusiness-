@@ -14,6 +14,7 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 
 ## Øktene som kjører
 
+- `ccr-dc24762d-iyuakj`: Ø8b S1 (steg 1), Jonas' økt, startet 07.11.2026 15:17 UTC. Eier `ui/07b-first-trip.js`; i `ui/01-i18n.js` (OPP4 eier fila) bare de nye nøklene for linja i dagboka, samlet ett sted, så flettingen med OPP4 ikke får konflikt. Ingen patchnote i `phone/07-patch.js` før OPP4 er ute (OPP4 eier fila).
 - `ccr-6e84b098-t2tu38`: OPP2 (steg 56), Jonas' økt, startet 07.11.2026 15:17 UTC. Eier `core/02-species-gear.js`, `03-simulation.js`, `10-gear.js`, `10b-gearcare.js`, `ui/phone/12-utstyr-redskap.js`, `ui/05a-itemcard.js`, `tests/unit/oppgradering.test.mjs`, `jig.test.mjs`; `ui/01-i18n.js` og `phone/07-patch.js` delt (egne linjer, OPP4 eier resten).
 - `ccr-73ea871d-9b5rz6`: Ø11.6 (steg 6), Jonas' økt, startet 07.11.2026 15:15 UTC. Eier nye `core/14b-sikkerhet.js`, `ui/10s-mob.js`, `tests/mobtest.py`, `tests/unit/mob.test.mjs`; `core/05-vessels.js`, `13-work.js`, `04-crew.js`, `09f-merker.js`, `ui/03-map.js`, `10e-sound.js`, `deckcrew.js`, `view3d/21-rescue-anchor.js`, en linje hver i `src/index.html`; `ui/07c-handbook.js`, `01-i18n.js` og `phone/07-patch.js` først etter at OPP4 er ute.
 - `ccr-7538447c-xt5b4p`: Ø3a (steg 21), Jonas' økt, startet 07.11.2026 15:16 UTC. Eier `view3d/02-mesh-terrain.js`, `04-vec-packs.js`, `06-buildings-lights.js`, `17-draw.js`, `18-setup.js`, `ui/11-boot.js`, `ui/03a-chart.js`, `core/01b-mapdata.js`, `01c-vec.js`. Rører ikke F2 (`16-motion.js`, `24-cinema.js`), F3 (`01-shaders.js`, `14-sea.js`) eller H3d1 (`10-gear.js`, `09-landing-deck.js`).
@@ -22,6 +23,7 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 - `ccr-9a3530e8-3tup0j`: Ø9 F3 (steg 15), Jonas' økt, startet 07.11.2026 15:17 UTC. Eier `view3d/01-shaders.js`, `view3d/14-sea.js`, `tests/sea3d.py` (og `tests/seatrytest.py`, `tests/skytest.py` om skummålet eller skyggerlinjene krever det).
 - `ccr-5a96a95a-wu5hvn`: Ø14-planen (steg 31), Jonas' økt, startet 07.11.2026 15:25 UTC. Eier bare `docs/planer/fangstfelt.md` (ny) og radene og valgene for Ø14 i denne fila; ingen kode.
 - `plan/2026-11-07-opp4`: OPP4 (steg 54), Jonas' økt, startet 07.11.2026 14:32 UTC. Eier `ui/phone/10-fartoy.js`, `ui/07c-handbook.js`, `ui/01-i18n.js`, `ui/phone/14-act.js`, `ui/phone/13-mannskap-bank-meld.js`, `core/09k-market.js`, `supabase/migrations/`, `src/admin/index.html`, `ui/phone/07-patch.js`.
+- `claude/kvotemarkedet-steg-30-y3ctw0`: kvotemarkedet, planen (steg 30), Jonas' økt, startet 07.11.2026 15:17 UTC. Eier bare `docs/planer/kvotemarkedet.md` og radene og valgene for steg 30 i køen.
 - Før det: OPP1 (steg 53) ble rullet ut i 73c12b26 i en økt Jonas startet; før det H3b og H3c (4107d71a), U2-4 (c62047f0) og stripa og kartet (4f5f6d91).
 
 ## Utrullinger fra rutinen
@@ -54,7 +56,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 
 | # | Steg | Spor | Status | Venter på | Filer steget eier mens det går | Plan |
 |---|---|---|---|---|---|---|
-| 1 | **Ø8b S1** Første tur i dagboka | Spillbarhet | klar | | `ui/07b-first-trip.js`, `ui/01-i18n.js` | `spillbarhet-fangst.md` S1 |
+| 1 | **Ø8b S1** Første tur i dagboka | Spillbarhet | pågår (Jonas' økt, gren `ccr-dc24762d-iyuakj`, 07.11.2026 15:17 UTC) | | `ui/07b-first-trip.js`, `ui/01-i18n.js` | `spillbarhet-fangst.md` S1 |
 | 2 | **H3b** Flett inn og rull ut driften om bord (snøkrabbe) | Havsteget | ferdig (bygd på `ccr-2f1306ed-u6tdgs`, flettet i 192d4059, rullet ut i 4107d71a 07.11.2026; Jonas: «Rull ut på det store blå») | | H3bs filer (over) + `core/02-species-gear.js`, `07-harbours.js`, `07f-kar.js`, `10-gear.js`, `10d-snokrabbe.js`, ny `10e-krabbefabrikk.js`, `ui/10g-push.js`, `phone/02`, `09`, `14`, `tests/run.py` | `havsteget-h3-snokrabbe.md` H3b |
 | 3 | **U2-4** Roen | UI 2 | ferdig (55c5dc0f, 07.11.2026, rullet ut i c62047f0; Jonas' økt, grenen `ccr-fc7a11b2-nl5jor`) | | `ui/10c-dock.js`, `styles.css`, `view3d/24-cinema.js`, `ui/02-format-state.js` | `ui-2-staaende.md` 4.5 |
 | 4 | **B1** Båtsalget mellom spillere, serveren | Tonys test | ferdig (a75e1156, 07.11.2026; migreringen kjørt av Jonas i SQL-editoren og sjekket; rullet ut i 98c7befa) | | `supabase/migrations/`, `tests/sqltest.py` | `etter-tonys-test.md` B1–B3, B7 |
@@ -83,7 +85,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 27 | **Ø11.9** Arbeidsavtalen | Lover og sikkerhet | venter på Ø8b M | steg 8 | `core/04-crew.js`, `14-crewlife.js`, `phone/13-mannskap-bank-meld.js` | `lover-regler-sikkerhet.md` kap. 6 (fristene i ekte tid kan bli et valg) |
 | 28 | **Ø5 rest a** M5-resten (navnet og flagget i modellen; innbyttebåten ved kaia er tatt ut av B) og M9-resten | Butikkene | klar | | `view3d/23-camera-frame.js`, `24-cinema.js`, `ui/10j-paint.js`, `core/09k-market.js`; admin, `build.mjs` | `butikker-og-sponsorer.md`, backloggen 10.7 |
 | 29 | **Ø5 rest b** M4-resten (prøvetur, showroom, V3 B avklart mot B) | Butikkene | lagt bort (B 07.11.2026: NPC-oppføringene som prøveturen og showroomet gjaldt, er tatt ut, og V3 B er løst av serveren; tas opp igjen om Jonas vil ha prøvetur på spillernes båter) | | `core/09k-market.js`, `phone/15-nettet.js`, `10-fartoy.js`, `ui/10c-dock.js`, `core/07e-havn.js` | `butikker-og-sponsorer.md` 10.3 |
-| 30 | **Kvotemarkedet, planen** (`/planlegg`, stopper ved valgene) | Tonys test | klar | | bare `docs/planer/` | `etter-tonys-test.md`, Jonas' ord om kvotemarkedet |
+| 30 | **Kvotemarkedet, planen** (`/planlegg`, stopper ved valgene) | Tonys test | pågår (Jonas' økt, gren `claude/kvotemarkedet-steg-30-y3ctw0`, 07.11.2026 15:17 UTC) | | bare `docs/planer/` | `etter-tonys-test.md`, Jonas' ord om kvotemarkedet |
 | 31 | **Ø14, planen** Fangstfeltenes vekt utenfor Senja (`/planlegg`) | Fiske | pågår (Jonas' økt, gren `ccr-5a96a95a-wu5hvn`, 07.11.2026 15:25 UTC) | | bare `docs/planer/` | øktplanen Ø14, `bestand-og-flaate.md` B2 |
 | 32 | **H4, planen** Tråleren (`/planlegg`, stopper ved valgene) | Havsteget | venter på H3e | steg 26 | bare `docs/planer/` | `havsteget.md` H4 |
 | 33 | **Ø13, planen** Ny kartrelease (`/planlegg`; én release om gangen) | Kartet | venter på Ø3a, F4 | steg 21, 22 | bare `docs/planer/` | øktplanen Ø13, `grafikk-natur-og-miljo.md` G8/G10 |
