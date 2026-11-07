@@ -18,6 +18,8 @@ the decked boats' tub, and in the charm. One part per species, each 1 m long (th
             the upper eye on the dorsal edge of the head, a big mouth, a straight lateral line
     krabbe  king crab (Paralithodes camtschaticus, kongekrabbe; the brown crab before 04.10.2026): the spiny pear-shaped shell, brick
             red above and cream below, the right claw the bigger, three pairs of long spiny walking legs; 1 m across the legs
+    snokrabbe, snokrabbe_h, snoklor  the snow crab (Chionoecetes opilio, H3d1 07.11.2026): the male, the female with her eggs, and
+            the cooked cluster as it is frozen on board (build_snowcrab, build_cluster)
 
     pip install bpy==4.5.4
     python3 tools/fish/fisk.py          -> src/data/fish.b64, renders in tools/fish/out/
@@ -379,14 +381,110 @@ def build_kingcrab():
     for p in parts: apply_all(p)
     return join(parts, 'krabbe')
 
+# ---------- the snow crab (snøkrabbe, Chionoecetes opilio; havsteget H3d1, 07.11.2026): a round, slightly domed and granular shell a
+# little wider than long with the two short horns of the rostrum between the eyes, slender claws shorter than the legs, four pairs of
+# long flattened walking legs held out to the sides; orange-brown above with paler mottling, cream below. The male 1 m across the legs
+# (the game scales it: a male of 9.5 cm shell is some 0.7 m across); the female (snokrabbe_h) has a smaller shell and claws and carries
+# her orange egg mass under the broad abdomen. The cluster (snoklor, «klør» in the landing notes): a cooked half crab as it is frozen
+# on board, the shoulder with its cut face and the claw and the four legs held together, glazed; 1 m long. Colours from the pictures in
+# the HI reports and the trade; nothing from a maker. ----------
+def build_snowcrab(female=False):
+    C = {'top': mat('sc_top', (0.62, 0.30, 0.15), 0.45), 'spot': mat('sc_spot', (0.74, 0.44, 0.24), 0.4), 'rim': mat('sc_rim', (0.55, 0.26, 0.13), 0.45),
+         'under': mat('sc_under', (0.94, 0.88, 0.76), 0.35), 'leg': mat('sc_leg', (0.66, 0.34, 0.17), 0.45), 'legu': mat('sc_legu', (0.90, 0.80, 0.66), 0.4),
+         'tip': mat('sc_tip', (0.20, 0.10, 0.06), 0.6), 'eye': mat('fish_pupil', (0.02, 0.02, 0.02), 0.9), 'egg': mat('sc_egg', (0.86, 0.36, 0.08), 0.55)}
+    k = 0.80 if female else 1.0                 # (the female's shell against her legs: the legs are scaled the same, the shell less)
+    AX, AY = 0.078 * (1.08 if female else 1.0), 0.072 * (1.08 if female else 1.0); NT = 36
+    def edge(th):   # round, a little wider than long, the front flattened towards the rostrum
+        s, c = math.sin(th), math.cos(th); w = 1.0 - 0.12 * max(0.0, s) ** 3
+        return (AX * c * w, AY * s)
+    RHO_T = [0.0, 0.3, 0.55, 0.75, 0.9, 1.0]; RHO_B = [1.0, 0.85, 0.5, 0.0]
+    G = []
+    for kk, rho in enumerate(RHO_T + RHO_B[1:]):
+        top = kk < len(RHO_T); row = []
+        for j in range(NT):
+            th = 2 * math.pi * j / NT; ex, ey = edge(th)
+            z = 0.034 * (1 - rho * rho) ** 0.55 + 0.004 if top else -0.022 * (1 - rho * rho) ** 0.5 - 0.004
+            if top and rho >= 1.0: z = 0.0
+            row.append((ex * rho, ey * rho, z))
+        G.append(row)
+    nt = len(RHO_T)
+    shell = grid('sc_shell', G, lambda i, j: (C['spot'] if (i * 7 + j * 3) % 11 == 0 else C['top']) if i < nt - 2 else (C['rim'] if i < nt else C['under']), closed_v=True, angle=60, out=lambda c: (c.x, c.y, c.z))
+    parts = [shell]
+    for sd in (1, -1):   # the rostrum's two short horns and the eyes on their stalks
+        parts.append(cyl('sc_horn', V((sd * 0.006, AY * 0.92, 0.026)), V((sd * 0.012, AY + 0.020, 0.030)), 0.005, C['top'], seg=6, r1=0.001))
+        parts.append(sphere('sc_eye', (sd * 0.020, AY + 0.002, 0.030), 0.006, C['eye'], seg=8, rings=4))
+    # the granules on the shell (a fixed spiral: the model is the same at every build)
+    for i in range(28):
+        a = i * 2.39996; r = math.sqrt((i + 0.5) / 28) * 0.82; x = AX * r * math.cos(a); y = AY * r * math.sin(a)
+        rho = math.hypot(x / AX, y / AY); z = 0.034 * max(0.0, 1 - rho * rho) ** 0.55 + 0.004
+        parts.append(sphere('sc_gran', (x, y, z), 0.0035, C['spot'], seg=5, rings=3))
+    def flatleg(name, pts, w, t, m_top, m_under):
+        """a flattened leg along pts (a ribbon w wide and t thick, its broad face up), tapering to the tip"""
+        n = len(pts); rings = []
+        for i, p in enumerate(pts):
+            d = (pts[min(i + 1, n - 1)] - pts[max(i - 1, 0)]).normalized(); s = d.cross(V((0, 0, 1))).normalized(); u = s.cross(d).normalized()
+            f = 1.0 - 0.75 * (i / (n - 1)) ** 1.5; ww, tt = w * f, t * f
+            rings.append([p + s * (ww * math.cos(a)) + u * (tt * math.sin(a)) for a in [2 * math.pi * q / 8 for q in range(8)]])
+        bm = bmesh.new(); vs = [[bm.verts.new(q) for q in r] for r in rings]
+        for i in range(n - 1):
+            for q in range(8):
+                f_ = bm.faces.new([vs[i][q], vs[i][(q + 1) % 8], vs[i + 1][(q + 1) % 8], vs[i + 1][q]])
+                f_.material_index = 0 if q < 4 else 1
+        bm.faces.new(list(reversed(vs[0]))); tipv = bm.verts.new(pts[-1] + (pts[-1] - pts[-2]).normalized() * 0.02)
+        for q in range(8): bm.faces.new([vs[-1][q], vs[-1][(q + 1) % 8], tipv])
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        return shade(obj_from_bm(name, bm, [m_top, m_under]), 50)
+    for sd in (1, -1):
+        # the claws: slender, shorter than the legs, held forward and in
+        s = 0.75 if female else 1.0
+        a0 = V((sd * 0.05, AY * 0.75, -0.004)); a1 = V((sd * 0.10, AY + 0.04, 0.012)); a2 = V((sd * 0.085, AY + 0.11 * s, 0.006))
+        parts.append(tube('sc_arm', [a0, a1], 0.010 * s, C['leg'], seg=8)); parts.append(tube('sc_wrist', [a1, a2], 0.011 * s, C['leg'], seg=8))
+        d = (a2 - a1).normalized()
+        hand = sphere('sc_hand', (0, 0, 0), 0.020 * s, C['leg'], scale=(0.7, 1.9, 0.7), seg=10, rings=6)
+        hand.rotation_euler = (0, 0, math.atan2(d.y, d.x) - math.pi / 2); hand.location = a2 + d * 0.03 * s; apply_all(hand); parts.append(hand)
+        f0 = a2 + d * 0.06 * s
+        parts.append(cyl('sc_dact', f0 + V((sd * 0.004, 0, 0.003)), f0 + d * 0.04 * s, 0.006 * s, C['tip'], seg=6, r1=0.0015))
+        parts.append(cyl('sc_fix', f0 + V((-sd * 0.004, 0, -0.002)), f0 + d * 0.036 * s, 0.006 * s, C['tip'], seg=6, r1=0.0015))
+        # four pairs of long flattened walking legs, out to the sides, the second and third the longest
+        for kk, (th0, ln) in enumerate(((35, 0.40), (12, 0.46), (-12, 0.44), (-36, 0.34))):
+            th = math.radians(th0); base = V((sd * AX * 0.92 * math.cos(th), AY * 0.80 * math.sin(th), -0.006))
+            dirv = V((sd * math.cos(th * 0.7), math.sin(th * 0.7), 0.0)).normalized()
+            knee = base + dirv * ln * 0.36 + V((0, 0, 0.05)); ank = knee + dirv * ln * 0.32 + V((0, 0, -0.01)); foot = ank + dirv * ln * 0.28 + V((0, 0, -0.06))
+            parts.append(flatleg('sc_leg', [base, base + (knee - base) * 0.5, knee, knee + (ank - knee) * 0.5, ank, foot], 0.016, 0.008, C['leg'], C['legu']))
+            parts.append(cyl('sc_dtip', foot, foot + dirv * 0.03 + V((0, 0, -0.02)), 0.004, C['tip'], seg=5, r1=0.0008))
+    if female:   # the egg mass under the broad abdomen, bulging out behind the shell
+        egg = sphere('sc_eggs', (0, -AY * 0.25, -0.030), 0.055, C['egg'], scale=(1.0, 1.05, 0.45), seg=14, rings=8)
+        parts.append(egg)
+    for p in parts: apply_all(p)
+    return join(parts, 'snokrabbe_h' if female else 'snokrabbe')
+
+def build_cluster():
+    """a cluster as it is frozen on board, cooked and glazed: the shoulder (its cut face white), the claw and the four legs held together
+    side by side, 1 m from the shoulder's cut face to the legs' tips along -z in the game (y here)"""
+    C = {'top': mat('cl_top', (0.86, 0.30, 0.12), 0.75), 'under': mat('cl_under', (0.96, 0.90, 0.80), 0.7), 'meat': mat('cl_meat', (0.97, 0.93, 0.86), 0.5),
+         'tip': mat('cl_tip', (0.30, 0.10, 0.05), 0.75)}
+    parts = []
+    sh = sphere('cl_sh', (0.0, 0.42, 0.0), 0.12, C['top'], scale=(1.0, 0.7, 0.55), seg=14, rings=8); parts.append(sh)
+    parts.append(cyl('cl_cut', (0.0, 0.50, 0.0), (0.0, 0.505, 0.0), 0.10, C['meat'], seg=14))
+    for i, (dx, ln) in enumerate(((-0.11, 0.78), (-0.055, 0.92), (0.0, 0.95), (0.055, 0.86), (0.11, 0.70))):
+        y0 = 0.36; pts = [V((dx * 0.8, y0, 0.0)), V((dx, y0 - ln * 0.35, 0.02)), V((dx * 1.05, y0 - ln * 0.70, 0.0)), V((dx * 1.1, y0 - ln, -0.02))]
+        r = 0.030 if i != 0 else 0.026
+        parts.append(tube('cl_leg', pts[:2], r, C['top'], seg=8)); parts.append(tube('cl_leg2', pts[1:3], r * 0.9, C['top'], seg=8))
+        parts.append(cyl('cl_leg3', pts[2], pts[3], r * 0.8, C['top'], seg=8, r1=r * 0.3))
+    parts.append(sphere('cl_claw', (-0.13, -0.10, 0.0), 0.05, C['top'], scale=(0.8, 1.8, 0.8), seg=10, rings=6))
+    parts.append(cyl('cl_dact', (-0.13, -0.18, 0.0), (-0.12, -0.28, 0.0), 0.016, C['tip'], seg=6, r1=0.003))
+    for p in parts: apply_all(p)
+    return join(parts, 'snoklor')
+
 SPECIES = ['torsk', 'sei', 'hyse', 'lyr', 'lange', 'brosme', 'uer', 'kveite', 'blakveite']
 
 def main():
     os.makedirs(OUT, exist_ok=True)
     reset()
     objs = {sp: build_fish(sp) for sp in SPECIES}; objs['krabbe'] = build_kingcrab()
+    objs['snokrabbe'] = build_snowcrab(); objs['snokrabbe_h'] = build_snowcrab(True); objs['snoklor'] = build_cluster()
     parts = [(sp, mesh_arrays(o, to_game, to_game_n, ao=False), 1.0) for sp, o in objs.items()]
-    ex = {'frame': 'kystfiske fish: x right, y up, z back (the head at -z, the halibut eyed side +x); 1 m long from z -0.5 to 0.5; the crab 1 m across its legs',
+    ex = {'frame': 'kystfiske fish: x right, y up, z back (the head at -z, the halibut eyed side +x); 1 m long from z -0.5 to 0.5; the crabs 1 m across their legs, the snow crab cluster 1 m long',
           'species': list(objs)}
     glb = os.path.join(OUT, 'fish.glb'); n = write_glb(glb, parts, ex)
     open(os.path.join(ROOT, 'src', 'data', 'fish.b64'), 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())
@@ -395,7 +493,7 @@ def main():
     # renders: the species side by side on a light deck, from the side and from above at an angle
     for k, (sp, o) in enumerate(objs.items()):   # four to a row, the crab last
         o.location = (0.0, (k % 4) * 1.2 - 1.8, -(k // 4) * 0.55 + 0.55)
-        if sp == 'krabbe': o.rotation_euler = (0, 1.0, 0)      # the fish from their right side, the crab tilted to show its shell
+        if sp in ('krabbe', 'snokrabbe', 'snokrabbe_h', 'snoklor'): o.rotation_euler = (0, 1.0, 0)      # the fish from their right side, the crabs tilted to show their shells
     setup_render(1600, 1000, samples=24)
     bpy.context.scene.world.node_tree.nodes.get('Background').inputs['Color'].default_value = (0.70, 0.76, 0.82, 1)
     camera((4.2, 0.0, 0.0), (0.0, 0.0, 0.0), ortho=5.6); render(os.path.join(OUT, 'fish_side.png'))

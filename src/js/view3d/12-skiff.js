@@ -380,7 +380,7 @@
       fishM[sp] = f.mesh(); }
     // the catch from tools/fish (fisk.py): one part per species and the king crab, 1 m long with the head at -z, in place of the
     // procedural fish above (which stand in when the data is missing)
-    if (typeof glbHas === 'function' && glbHas('fish')) for (const sp of [...Object.keys(FC), 'krabbe']){ const o = glbPart('fish', sp);
+    if (typeof glbHas === 'function' && glbHas('fish')) for (const sp of [...Object.keys(FC), 'krabbe', 'snokrabbe', 'snokrabbe_h', 'snoklor']){ const o = glbPart('fish', sp);
       if (o) fishM[sp] = {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3}; }
 
     const cvP = document.createElement('canvas'); cvP.width = 512; cvP.height = 320;
