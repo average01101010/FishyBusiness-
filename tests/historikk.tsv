@@ -1142,3 +1142,7 @@
 2026-11-07 21:06	ccr-c01d562d-pf9kca	0d6d6201+	cashfxtest	OK	8	lite	samtidig	
 2026-11-07 21:06	ccr-c01d562d-pf9kca	0d6d6201+	soundtest	OK	5	lite	alene	
 2026-11-07 21:25	ccr-c01d562d-pf9kca	1ccceed5	hull3d	OK	1132	3d	alene	
+2026-11-07 23:06	ccr-9a3530e8-3tup0j	814ea9cb	boottest	OK	25	lite	samtidig	
+2026-11-07 23:07	ccr-9a3530e8-3tup0j	814ea9cb	docktest	OK	61	lite	samtidig	
+2026-11-07 23:08	ccr-9a3530e8-3tup0j	814ea9cb	moortest	OK	43	3d	alene	
+2026-11-07 23:26	ccr-9a3530e8-3tup0j	814ea9cb	hull3d	OK	1106	3d	alene	
