@@ -928,3 +928,4 @@
 2026-11-07 18:05	ccr-c01d562d-pf9kca	beabe845	wetshot	OK	1045	3d	alene	
 2026-11-07 18:27	ccr-c01d562d-pf9kca	1339901a	kinotest	OK	1063	3d	alene	
 2026-11-07 18:29	ccr-c01d562d-pf9kca	33420272	gfxtest	FEIL	113	3d	alene	FEIL a GL error is sent with the step it came after, the graphics chip, the quality and the view  []
+2026-11-07 18:30	ccr-c01d562d-pf9kca	b68080f7	moortest	OK	38	3d	alene	
