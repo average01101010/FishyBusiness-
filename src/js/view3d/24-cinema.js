@@ -517,17 +517,25 @@
     // charcoal grey taking the light round it, soft and thinning (Adrian 05.10.2026 on an iPhone: «Kommer noen sånne svarte prikka å hop over
     // skjermen av og til»: they were hard black discs, and tiny black dots from far off), and not drawn beyond 250 m
     const wv = (env.wind || 0) * 0.8, wx = env.windDir[0] * wv, wz = env.windDir[1] * wv, dr = Math.min(1, dt * 1.4), col = [0.16 + env.amb[0] * 0.3, 0.16 + env.amb[1] * 0.3, 0.17 + env.amb[2] * 0.3];
-    const B = [[], [], [], []];
+    // (Tony 06.11.2026 on an iPhone: the puffs «blinked», and stood as grey discs that should have been see-through. Three things at a low
+    // frame rate: a puff was born at its full alpha and size, so each firing popped a disc in, 3–7 a second; its size doubled when it
+    // crossed into the next of four age steps; and a puff drifting past the eye, with the camera on the bridge or close astern, grew to the
+    // biggest point the GPU draws, a disc over half the screen. Now a puff fades in over its first 12 %, the steps are six and closer,
+    // one within 4 m of the eye fades out, and no point is bigger than 320 device pixels)
+    const B = [[], [], [], [], [], []], SZ = [320, 540, 800, 1080, 1380, 1700];
     for (let i = 0; i < SMN; i++){
       if (SMK.age[i] >= SMK.life[i]) continue;
       SMK.age[i] += dt; SMK.vx[i] += (wx - SMK.vx[i]) * dr; SMK.vz[i] += (wz - SMK.vz[i]) * dr; SMK.vy[i] *= 1 - Math.min(1, dt * 0.6);
       SMK.x[i] += SMK.vx[i] * dt; SMK.y[i] += SMK.vy[i] * dt; SMK.z[i] += SMK.vz[i] * dt;
-      const a = SMK.age[i] / SMK.life[i]; if (Math.hypot(SMK.x[i] - eye[0], SMK.z[i] - eye[2]) < 250) B[Math.min(3, Math.floor(a * 4))].push(i);
+      const a = SMK.age[i] / SMK.life[i]; if (Math.hypot(SMK.x[i] - eye[0], SMK.z[i] - eye[2]) < 250) B[Math.min(5, Math.floor(a * 6))].push(i);
     }
     B.forEach((L, q) => {
       let n = 0;
-      for (const i of L){ const a = SMK.age[i] / SMK.life[i]; PB[n * 3] = SMK.x[i] - eye[0]; PB[n * 3 + 1] = SMK.y[i] - eye[1]; PB[n * 3 + 2] = SMK.z[i] - eye[2]; PA[n] = Math.pow(1 - a, 1.6) * (0.3 + 0.22 * SMK.k[i]); n++; }
-      drawPts(n, gl.POINTS, VP, col, [320, 700, 1150, 1700][q], 2, null, 512);
+      for (const i of L){ const a = SMK.age[i] / SMK.life[i], dx = SMK.x[i] - eye[0], dy = SMK.y[i] - eye[1], dz = SMK.z[i] - eye[2], de = Math.hypot(dx, dy, dz);
+        const near = clamp((de - 1.5) / 2.5, 0, 1), born = Math.min(1, a / 0.12);
+        if (near <= 0) continue;
+        PB[n * 3] = dx; PB[n * 3 + 1] = dy; PB[n * 3 + 2] = dz; PA[n] = Math.pow(1 - a, 1.6) * (0.3 + 0.22 * SMK.k[i]) * born * near; n++; }
+      drawPts(n, gl.POINTS, VP, col, SZ[q], 2, null, 320);
     });
   }
   // Green water and the scuppers (Gemini's review, Jonas 31.10.2026: «Kjør på»): when the sea stands over the deck's edge (a bow that

@@ -371,6 +371,32 @@
 2026-11-06 22:19	ccr-a3c53300-9f9ly1	9871601	autonavtest	FEIL	0	lite	alene	FEIL 6. Autonav Vannareid → Honningsvåg … (bygget før rettingen, bare Senja: de samme ti røde linjene som på det rettede bygget)
 2026-11-06 22:22	ccr-a3c53300-9f9ly1	4073902	draftlooptest	OK	19	lite	samtidig	
 2026-11-06 22:24	ccr-a3c53300-9f9ly1	7cbe5c7	bootgtest	OK	125	lite	samtidig	
+2026-11-06 23:19	ccr-a9ff699b-re4zwf	509c633b	hudtest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-06 23:19	ccr-a9ff699b-re4zwf	509c633b	friendtest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-06 23:19	ccr-a9ff699b-re4zwf	509c633b	hbtest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-06 23:19	ccr-a9ff699b-re4zwf	509c633b	nettest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-06 23:22	ccr-a9ff699b-re4zwf	509c633b+	hudtest	OK	28	lite	samtidig	
+2026-11-06 23:22	ccr-a9ff699b-re4zwf	509c633b+	friendtest	OK	12	lite	samtidig	
+2026-11-06 23:22	ccr-a9ff699b-re4zwf	509c633b+	hbtest	OK	16	lite	samtidig	
+2026-11-06 23:23	ccr-a9ff699b-re4zwf	509c633b+	nettest	OK	25	lite	samtidig	
+2026-11-06 23:23	ccr-a9ff699b-re4zwf	509c633b+	decktest	OK	14	lite	samtidig	
+2026-11-06 23:31	ccr-a9ff699b-re4zwf	a1ce74d5+	docktest	OK	65	lite	samtidig	
+2026-11-06 23:31	ccr-a9ff699b-re4zwf	a1ce74d5+	shoptest	OK	28	lite	samtidig	
+2026-11-06 23:31	ccr-a9ff699b-re4zwf	a1ce74d5+	nettest	OK	26	lite	samtidig	
+2026-11-06 23:32	ccr-a9ff699b-re4zwf	a1ce74d5+	installtest	OK	51	lite	samtidig	
+2026-11-06 23:32	ccr-a9ff699b-re4zwf	a1ce74d5+	itemcardtest	FEIL	20	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'jukse', 'krabbekar', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-06 23:32	ccr-a9ff699b-re4zwf	a1ce74d5+	boktest	OK	12	lite	samtidig	
+2026-11-06 23:32	ccr-a9ff699b-re4zwf	a1ce74d5+	crewlifetest	OK	8	lite	samtidig	
+2026-11-06 23:32	ccr-a9ff699b-re4zwf	a1ce74d5+	lotttest	OK	9	lite	samtidig	
+2026-11-06 23:33	ccr-a9ff699b-re4zwf	a1ce74d5+	guesttest	OK	68	lite	samtidig	
+2026-11-06 23:35	ccr-a9ff699b-re4zwf	a1ce74d5+	starttest	OK	155	lite	samtidig	
+2026-11-07 00:29	ccr-a9ff699b-re4zwf	47809422+	hudtest	OK	33	lite	samtidig	
+2026-11-07 00:29	ccr-a9ff699b-re4zwf	47809422+	hulltest	OK	15	lite	samtidig	
+2026-11-07 00:29	ccr-a9ff699b-re4zwf	47809422+	hbtest	OK	19	lite	samtidig	
+2026-11-07 00:29	ccr-a9ff699b-re4zwf	47809422+	nettest	OK	26	lite	samtidig	
+2026-11-07 00:30	ccr-a9ff699b-re4zwf	47809422+	docktest	OK	67	lite	samtidig	
+2026-11-07 00:30	ccr-a9ff699b-re4zwf	47809422+	geartest	OK	38	lite	samtidig	
+2026-11-07 00:40	ccr-a9ff699b-re4zwf	48b76d90+	hudtest	OK	23	lite	alene	
 2026-11-06 23:38	ccr-ccfb0017-rmieib	731e4792+	autonavtest	OK	27	lite	samtidig	
 2026-11-06 23:38	ccr-ccfb0017-rmieib	731e4792+	r4test	OK	15	lite	samtidig	
 2026-11-06 23:38	ccr-ccfb0017-rmieib	731e4792+	naustleia	OK	7	lite	samtidig	
@@ -386,3 +412,15 @@
 2026-11-07 00:32	HEAD	61f462f7+	moortest	OK	34	3d	alene	
 2026-11-07 00:35	HEAD	61f462f7+	maletest	OK	21	lite	samtidig	
 2026-11-07 00:36	HEAD	61f462f7+	boostklokke	OK	45	lite	samtidig	
+2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	docktest	OK	62	lite	samtidig	
+2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	searchtest	OK	9	lite	samtidig	
+2026-11-07 00:43	ccr-a9ff699b-re4zwf	14b5ca9c	hudtest	OK	25	lite	samtidig	
+2026-11-07 00:57	HEAD	12b6216c+	docktest	OK	65	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	kjoptest	OK	470	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	skiptest	OK	19	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	skipdrift	OK	27	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	haillplass	OK	8	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	boostklokke	OK	51	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	maletest	OK	22	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	slidertest	OK	19	lite	samtidig	
+2026-11-07 01:04	HEAD	12b6216c+	trip2	OK	39	lite	samtidig	

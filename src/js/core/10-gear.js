@@ -290,7 +290,7 @@ function gearRules(kind, spec, p){
   if (b.status !== 'idle' && b.status !== 'fishing') return [gL('Båten må ligge stille på feltet.', 'The boat must lie still on the grounds.')];
   if (handsAboard() < GEAR[kind].crewMin) return [gL('Garn krever minst to om bord: deg og én til, eller to fra mannskapet.', 'Nets need at least two aboard: you and one more, or two of the crew.') + crewBiOff()];
   if (depthF(p) < 5) return [gL('For grunt til å sette her.', 'Too shallow to set here.')];
-  if (pg.kits.n < 1) return [gL('Du trenger et blåsesett: to blåser med stake, flagg og dregg.', 'You need a buoy set: two buoys with pole, flag and anchor.')];
+  if (pg.kits.n < 1) return [gL('Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.', 'You need a buoy set: a pole with a flag, a buoy, floats and an anchor for each end.')];
   let nets = 0, hooks = 0;
   if (kind === 'garn'){ const l = pg.nets.find(x => x.id === spec.nid); if (!l) return [gL('Velg ei garnlenke.', 'Choose a string of nets.')]; nets = l.n; }
   else if (kind === 'line' && isAuto(spec.lk)){ const L0 = autoL(pg), kg = spec.n * LINE_KINDS.auto.baitKg;

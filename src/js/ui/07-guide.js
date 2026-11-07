@@ -247,12 +247,17 @@ function deckText(short){
   // in real time (it said game minutes), and what is going on: gutting now and how long, or the tub filling towards the stop to gut
   // (Adrian 05.10.2026: «han begynne bare å sløye plutselig … Burde vært en timing på sløying og fiskinga så æ vet om det skjer nokka»)
   const eta = deckEta(hands), when = hands && eta < Infinity ? realDur(eta) : null;
+  // what of it is still round and what is gutted and waits for the ice (Tony 06.11.2026: «hvor mye som må sløyes, hvor mye som er sløyd»)
+  const gutting = catchGut(), raw = gutting ? S.hold.reduce((a, x) => a + (!x.gut && !x.iced && !(SPECIES[x.sp] || {}).live ? x.kg : 0), 0) : 0, done = Math.max(0, kg - raw);
+  const split = gutting && kg >= 0.5 ? L(fmt(raw, 0) + ' kg å sløye, ' + fmt(done, 0) + ' kg sløyd' + (done >= 0.5 ? ' og venter på is' : ''), fmt(raw, 0) + ' kg to gut, ' + fmt(done, 0) + ' kg gutted' + (done >= 0.5 ? ' and waiting for ice' : '')) : '';
   if (short){
-    if (b.deckStop) return [L('Sløyer ', 'Gutting ') + fmt(kg, 0) + ' kg' + (when ? L(', ferdig om ', ', done in ') + when : '') + (b.deckEnd ? '' : L(', så fisker du videre', ', then you fish on')), fmt(kg, 0) + ' kg'];
-    if (!hands && b.status === 'fishing') return [L('Bløggekar ', 'Bleeding tub ') + fmt(kg, 0) + ' / ' + fmt(tubCap(), 0) + ' kg' + L(', sløyer når det er fullt', ', gutting when full'), fmt(kg, 0) + ' kg'];
-    return [L('Dekk: ', 'Deck: ') + fmt(kg, 0) + ' kg' + (when ? ' · ' + when : ''), fmt(kg, 0) + ' kg'];
+    // [the card's line, the strip's short word]: the strip has 47 vw on a phone upright, so the short one is a few words
+    if (b.deckStop) return [L('Sløyer ', 'Gutting ') + fmt(kg, 0) + ' kg' + (split ? ' (' + split + ')' : '') + (when ? L(', ferdig om ', ', done in ') + when : '') + (b.deckEnd ? '' : L(', så fisker du videre', ', then you fish on')), L('Sløyer ', 'Gutting ') + fmt(raw >= 0.5 ? raw : kg, 0) + ' kg' + (when ? ' · ' + when : '')];
+    if (!hands && b.status === 'fishing') return [L('Bløggekar ', 'Bleeding tub ') + fmt(kg, 0) + ' / ' + fmt(tubCap(), 0) + ' kg' + (split ? ' (' + split + ')' : '') + L(', sløyer når det er fullt', ', gutting when full'), L('Kar ', 'Tub ') + fmt(kg, 0) + '/' + fmt(tubCap(), 0) + ' kg'];
+    if (hands) return [L('Sløyer og iser ', 'Gutting and icing ') + fmt(kg, 0) + ' kg' + (split ? ' (' + split + ')' : '') + (when ? L(', ferdig om ', ', done in ') + when : ''), L('Sløyer ', 'Gutting ') + fmt(raw >= 0.5 ? raw : kg, 0) + ' kg' + (when ? ' · ' + when : '')];
+    return [L('Dekk: ', 'Deck: ') + fmt(kg, 0) + ' kg' + (split ? ' (' + split + ')' : ''), L('Dekk ', 'Deck ') + fmt(kg, 0) + ' kg'];
   }
-  return L(fmt(kg, 0) + ' kg i bløggekaret. ', fmt(kg, 0) + ' kg in the bleeding tub. ') + (hands ? L(hands + (hands > 1 ? ' mann' : ' mann') + ' på dekk, ferdig om ' + when + '.', hands + (hands > 1 ? ' hands' : ' hand') + ' on deck, done in ' + when + '.')
+  return L(fmt(kg, 0) + ' kg i bløggekaret' + (split ? ': ' + split : '') + '. ', fmt(kg, 0) + ' kg in the bleeding tub' + (split ? ': ' + split : '') + '. ') + (hands ? L(hands + (hands > 1 ? ' mann' : ' mann') + ' på dekk, ferdig om ' + when + '.', hands + (hands > 1 ? ' hands' : ' hand') + ' on deck, done in ' + when + '.')
     : b.status === 'fishing' ? L('Alene kan du ikke sløye og fiske samtidig.', 'Alone you cannot gut and fish at once.') : L('Alene kan du ikke sløye mens du kjører.', 'Alone you cannot gut while you steer.'));
 }
 // what is going on at the quay besides a landing: moving to the other quay, or the pump running

@@ -443,6 +443,33 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
 
+## Strøket 06.11.2026 (Tonys spilltest, gren `ccr-a9ff699b-re4zwf`)
+
+Tony Hjelmseth prøvde spillet hos Jonas på iPhone (trebåt, Senjahopen, tilbakemeldingene #115 og #116 er hans). Jonas' liste etterpå, punkt for punkt:
+
+- ~~Nivået i bløggekaret og sløyestatusen synes ikke under fisket~~: en femte måler på stripa (kg av karet, gul fra halvfullt, rød fra 90 %), og linje 3 sier «Sløyer 37 kg · 2 min» eller «Kar 42/60 kg»; kortet deler i «å sløye» og «sløyd og venter på is» (`ui-og-telefon.md`, «Etter Tonys spilltest»).
+- ~~«HER» i fangstboksen over telefonknappen~~: bare kg/t.
+- ~~Lang tid til sluttseddelen~~: `LANDING.note` 5 → 2, `wash` 6 → 3 (`havner-og-mottak.md`).
+- ~~Ingen forklaring på hvorfor et todelt brukernavn ikke godtas~~: `nameWhy` under feltet mens det skrives, med forslag.
+- ~~Eksosen blinker og blir grå skiver på iPhone~~: tones inn og ut, seks trinn, høyst 320 piksler (`3d-baater-og-animasjon.md`). Ikke sett på iPhone her.
+- ~~Får automatisk håndjukse mer enn «Jukse selv»?~~ Nei: snittet var likt (din del ble tatt ut av den automatiske fangsten og kom via nappene), god spilling ga opp til 2×. Nå `SELF = 5`.
+- ~~Venner-appen vises ikke etter registrering~~: ute så snart spilleren er registrert, og når en forespørsel kommer.
+- ~~Skipperen klonet seg i trebåten~~: `DECKACT.me` holder rekkefiskeren borte, og `workAssign` holder spilleren ved rekka mens han jukser selv.
+- ~~Nettet: layout~~: bokmerkene som rader, båten inne i rammen, brikkene venstrestilt.
+- ~~Kjøpsbekreftelse~~: kvittering for alle kjøp (hva, pris, antall om bord, montering ferdig kl.), monteringstida på utstyrskortet og i Nettets fane.
+- ~~Tony Hjelmseth som NPC~~: mannskap å ansette på kaia i Husøy, med historie og egne replikker (`folk-om-bord.md` 5.6d).
+- ~~Varsel ved ny versjon~~: `version.json` og stripa «Oppdater nå» (`publisering.md`).
+- ~~Registrering tidlig?~~ Åpningskortet forteller gjesten at spillet lagres i nettleseren og at registreringen kommer etter første levering.
+- Svart i økta (ikke kode): mottak opptatt av en annen spiller, Autonav etter søk, salg av båt og utstyret, bruktsalg mellom spillere, vann i båten, staur/blåse/dregg, rund eller sløyd levering.
+
+## Venter på Jonas (Tonys spilltest 06.11.2026, planen 07.11.2026)
+
+- **`docs/planer/etter-tonys-test.md`** (07.11.2026): rund eller sløyd fisk (normalen med kilder; spillet har valget alt under Innstillinger «Sløy fangsten», forslaget R1–R4 gjør det synlig og setter det på seddelen), kø ved mottakene (K1–K6: losseplasser etter kailengden, køen på serveren, «Lever et annet sted»), og båtsalg mellom spillere (B1–B8: auksjon med «Kjøp nå», bud med escrow, quicksell, bare spillernes båter hos Kystmegleren, verftet til nypris). Valgene V1–V7 med anbefaling. Venter på «kjør på».
+- **«Jukse selv» 5×** (`SELF` i `ui/10-rod-acts.js`): satt til 5 som Jonas foreslo («kanskje?»). Med trebåt alene og god spilling gir det rundt fem til ti ganger håndjuksa. Står det for sterkt mot juksamaskinene (4,0 per maskin), er tallet ett sted.
+- **`FLEET`, Senja-flåten, står igjen i koden** (`core/05-vessels.js`, 14 navngitte Senja-båter; `tools/map/npc.py` holder Senja-ruta utenfor den nasjonale flåten «fordi FLEET er flåten der»; `core/05-vessels.js flaateApply` legger inn Senjas havner fra `tools/npc/senja.py`). Jonas 06.11.2026: «Det er altså ingenting som skal hete senja-flåten eller senja-data.» Å ta `FLEET` ut og la npc.py ta Senja med i neste kartrelease er en egen økt (npctest, `fleetBerth`, AIS-kortet, `HOME_NAMES`, dokumentasjonen).
+- **Autonav etter søk som rett strek over land** (Tony på iPhone): ikke gjenskapt. Fem søk fra Finnsnes (Tromsø, Husøy, Gryllefjord, Harstad, Mefjord) ga leia-ruter uten land (`scratchpad/srch.py`, 0 landpunkter av 1 384–2 303 prøvde), og et tettsted på land uten havn innenfor 4 km gir «Det er land» og ingen rute. Det som gir en rett strek, er et trykk i kartet uten Autonav på (`addWaypoint`, manuell rute); spør Tony hva han søkte og om han trykket i kartet eller på kortets «Autonav hit».
+- **Kjent rødt, ikke vårt:** `itemcardtest` («Elektronikk og haler: utstyret og klærne er varekort», `vhf` mangler for snekke) var rød før denne økta (sjekket med `git stash` på grunnbygget).
+
 ## Strøket 06.11.2026 (trimfarten, gren `ccr-dfa1209c-7vgp4x`)
 
 - ~~Trim gir ingen fart i Autonav og ved roret~~ (TonyHjelmseth, «Legoy», trebåt, kjøpte «Økt turbotrykk» 18:49 og fikk ingen økning): manøvreringsmodellen hadde bare båttypens motor siden Fysikk 1 (19.10.2026), så trim, større motor og 90-hesteren ga fart bare på papiret og med spillet lukket. Rettet med `dynCalOf` (`fysikk-og-styring.md` 5.58, «Båtens egen motor»), sjekk i `tests/unit/trimfart.test.mjs`.
@@ -454,7 +481,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 - **Rederilogoen vises ikke på skroget til kystnotbåten 38,55 m** (`ringnot38`): `logoStrips('ringnot38')` er null (`vessel3d.js`), så logoen tegnes ikke der; 14 av 15 båttyper har plassen. Trenger plassen på skroget fra modellen (Blender).
 - **Ønskenummer i registreringsmerket slutter å virke etter ti numre** (`supabase/migrations/20261007100000_designs.sql` `reg_claim`: «too many» etter ti krav per spiller, og ingen migrering sletter et gammelt krav), så spilleren får «Fikk ikke sjekket nummeret» for alltid. Nummeret sjekkes heller ikke før betaling: et nummer en annen har, avvises først etter kjøpet. Trenger en migrering (slippe båtens forrige krav når et nytt settes, og sjekke ledig nummer før betalingen).
-- **`trackfollow` (3D) rød etter full fart**: «går aldri tilbake langs linja» (205 m) og «Stopp slakker av gradvis» (8,5 mot 8 m/s per s ved 21,4 kn), rød også på publiseringsgrenen 07.11 00:32, grønn 06.11 12:29. Under prøving med ruta låst til 16 kn.
+- **`trackfollow` (3D) rød etter full fart**: «går aldri tilbake langs linja» (205 m) og «Stopp slakker av gradvis» (8,5 mot 8 m/s per s ved 21,4 kn), rød også på publiseringsgrenen 07.11 00:32, grønn 06.11 12:29. Med ruta låst til 16 kn er «går aldri tilbake» grønn (back 0, 158 målinger mot 78 i full fart): den følger farten, enten et ekte hopp eller at målingen treffer feil del av linja når bildene ligger langt fra hverandre. Stoppsjekken ble ikke prøvd i 16 kn. Prompt til egen økt gitt 07.11.
 - **`kjoptest` går ut på tid i siste steg** (oppstart med `#nocloud`) etter at alle kjøpssjekkene er grønne, både på publiseringsgrenen og med endringene 07.11; under full last. Ikke prøvd alene.
 
 - ~~Haill lover «alt redskapet ditt fanger dobbelt så mye», men garn og line fylles opp~~: Jonas valgte mer plass i redskapet; `haillCap` (`haill-pub-og-bonus.md` 5.10), `tests/haillplass.py`. Juksa alene: se under.
