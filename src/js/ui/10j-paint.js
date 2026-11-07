@@ -144,6 +144,7 @@ var PAINT = (() => {
       S.cosWant = Object.assign({}, S.cosWant, {reg:n}); payBuy('des_reg', () => { giveCos('reg'); if (typeof DOCK !== 'undefined') DOCK.render(); }); return true; }
     if (a === 'pntbuy'){ const k = d.d; if (!COS.includes(k) || owned(k)) return false;
       S.cosWant = Object.assign({}, S.cosWant, {[k]:k === 'flagg' ? Object.assign({}, pre.flag) : k === 'logo' ? pre.logo || null : pre.d[k] || 1});   // what to put on when it comes back from the payment
+      if (k === 'logo' && flagOf(pre).code === 'LOGO') S.cosWant.logoFlag = Object.assign({}, pre.flag);   // (the house flag tried with it, 07.11.2026)
       payBuy('des_' + k, () => { giveCos(k); const was = pre; pre = copy(S.boat.liv); if (k === 'logo' && was && flagOf(was).code === 'LOGO') pre.flag = was.flag; PAINTPRE = pre; if (typeof DOCK !== 'undefined'){ DOCK.render(); DOCK.redraw(); } });
       return true; }
     if (a === 'pntgo'){
@@ -196,7 +197,7 @@ function giveCos(k){
   if (!COS.includes(k)) return null; S.cos = Object.assign({}, S.cos, {[k]:1});
   const want = S.cosWant && S.cosWant[k], b = S.boat; if (S.cosWant) delete S.cosWant[k];
   if (want && k === 'reg') regSet(want);
-  else if (k === 'logo' && want) logoSet(want);
+  else if (k === 'logo' && want){ logoSet(want); const lf = S.cosWant && S.cosWant.logoFlag; if (lf){ b.liv = Object.assign({}, b.liv, {flag:lf}); delete S.cosWant.logoFlag; } }
   else if (want && k === 'flagg' && want.c){ b.liv = Object.assign({}, b.liv, {flag:{c:want.c, s:want.s || 'rekt'}}); }
   else if (want && designFits(b.type, k)){ b.liv = Object.assign({}, b.liv); b.liv.d = Object.assign({}, b.liv.d, {[k]:want}); }
   const N = PAINT.DNAME[k]; log('Du har nå «' + N[0] + '» i Malerverkstedet.', 'You now have «' + N[1] + '» in the paint shop.');

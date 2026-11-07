@@ -358,7 +358,7 @@ const DOCK = (() => {
     if (res.why){ toast(L(res.why[0], res.why[1])); return; }
     if (b.status !== 'idle') return;
     if (S.draft.length) draftEdit(() => { S.draft = []; });
-    S.plan = {wps:res.wps.map((q, i) => ({x:q.x, y:q.y, port:null, fish:0, leia:i < res.wps.length - 1})), idx:0, speed:Math.min(S.draftSpeed || BOAT.cruise || 6, BOAT.cruise || 6), returning:false}; b.status = 'sailing';
+    S.plan = {wps:res.wps.map((q, i) => ({x:q.x, y:q.y, port:null, fish:0, leia:i < res.wps.length - 1})), idx:0, speed:S.draftSpeed || BOAT.vcruise || 6, full:!!S.draftFull, returning:false}; b.status = 'sailing';
     toast(L('Kjører opp til blåsa.', 'Running up to the buoy.')); save(); refreshAll();
   }
   // «Fortøy»: the way in to the quay found as Autonav finds it, and off she goes, without the chart
