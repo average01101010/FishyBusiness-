@@ -156,7 +156,7 @@
     for (const at of ['butikk', 'verft']){ const G = Ls.filter(x => x.at === at).sort((a, c) => rank(a) - rank(c)), A = AT[at]; if (!G.length) continue;
       // where it is bought: here, or the nearest with Autonav there (core/06c-steder.js placesNear)
       const here = atKind(at), n = here ? null : placesNear(b.pos, at, 1)[0];
-      h.push('<div class="bu-at" data-at="' + at + '"><b>' + L(A[0], A[1]) + '</b><span>' + (here ? L('Du er her', 'You are here') : n ? L('Nærmeste: ', 'Nearest: ') + n.pt.name + ' · ' + fmt(n.d / NM, 1) + ' nm' : '–') + '</span>' +
+      h.push('<div class="bu-at" data-at="' + at + '"><span><b>' + L(A[0], A[1]) + '</b><small>' + (here ? L('Du er her', 'You are here') : n ? L('Nærmeste: ', 'Nearest: ') + n.pt.name + ' · ' + fmt(n.d / NM, 1) + ' nm' : '–') + '</small></span>' +
         (!here && n ? '<button class="ph-btn alt" data-pa="goplace" data-id="' + n.pt.id + '">' + L('Autonav dit', 'Autonav there') + '</button>' : '') + '</div>');
       for (const x of G){ const nx = x.nx;
         // the price: at the place a button to the page it is bought on, away only the price; on its way, or full with a tick
