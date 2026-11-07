@@ -990,3 +990,27 @@
 2026-11-07 17:02	ccr-7538447c-xt5b4p	8101ac63	seatest	OK	19	lite	samtidig	
 2026-11-07 17:02	ccr-7538447c-xt5b4p	8101ac63	calib	LES	13	lite	samtidig	
 2026-11-07 17:03	ccr-7538447c-xt5b4p	8101ac63	simday	LES	15	lite	samtidig	
+2026-11-07 17:03	ccr-7538447c-xt5b4p	51299d12	progweek	LES	39	lite	samtidig	
+2026-11-07 17:13	ccr-7538447c-xt5b4p	51299d12	colregtest	OK	605	lite	samtidig	
+2026-11-07 17:13	ccr-7538447c-xt5b4p	51299d12	driftsplan2map	OK	13	lite	samtidig	
+2026-11-07 17:13	ccr-7538447c-xt5b4p	51299d12	npctest	OK	7	lite	samtidig	
+2026-11-07 17:13	ccr-7538447c-xt5b4p	51299d12	placetest	OK	5	lite	samtidig	
+2026-11-07 17:13	ccr-7538447c-xt5b4p	51299d12	sidetab	OK	13	lite	samtidig	
+2026-11-07 17:13	ccr-7538447c-xt5b4p	51299d12	etikett	OK	53	lite	samtidig	
+2026-11-07 17:13	ccr-7538447c-xt5b4p	51299d12	legmemotest	OK	12	lite	samtidig	
+2026-11-07 17:13	ccr-7538447c-xt5b4p	51299d12	savestest	OK	0	lite	samtidig	
+2026-11-07 17:13	ccr-7538447c-xt5b4p	51299d12	worldtest	OK	19	lite	samtidig	
+2026-11-07 17:13	ccr-7538447c-xt5b4p	51299d12	errtest	OK	31	lite	samtidig	
+2026-11-07 17:13	ccr-7538447c-xt5b4p	51299d12	bootgtest	OK	132	lite	samtidig	
+2026-11-07 17:13	ccr-7538447c-xt5b4p	51299d12	uishots	OK	81	lite	samtidig	
+2026-11-07 17:13	ccr-7538447c-xt5b4p	51299d12	dbg23o	OK	45	3d	alene	
+2026-11-07 17:42	ccr-7538447c-xt5b4p	51299d12	teleport3d	OK	1713	3d	alene	
+2026-11-07 17:53	ccr-7538447c-xt5b4p	51299d12	sea3d	FEIL	643	3d	alene	avsluttet med kode 1
+2026-11-07 18:03	ccr-7538447c-xt5b4p	51299d12	vectest	OK	632	3d	alene	
+2026-11-07 18:17	ccr-7538447c-xt5b4p	51299d12	vindshot	OK	825	3d	alene	
+2026-11-07 18:27	ccr-7538447c-xt5b4p	51299d12	coast3d	FEIL	607	3d	alene	FEIL by Gryllefjord the rorbu stands on the map's own ground in 3D (its floor over it, lifted 2.5 m; no bank of its own since 01.11.2026) in its colour (r), wit
+2026-11-07 18:37	ccr-7538447c-xt5b4p	51299d12	profshot	OK	597	3d	alene	
+2026-11-07 18:48	ccr-7538447c-xt5b4p	51299d12	benchshot	OK	656	3d	alene	
+2026-11-07 18:54	ccr-7538447c-xt5b4p	51299d12	f1test	OK	336	3d	alene	
+2026-11-07 18:54	ccr-7538447c-xt5b4p	51299d12	routetest	OK	45	lite	alene	
+2026-11-07 18:55	ccr-7538447c-xt5b4p	51299d12	charttest	OK	52	lite	alene	
