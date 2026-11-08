@@ -1412,3 +1412,9 @@
 2026-11-08 19:55	ccr-e9f46ad4-wipgu7	92d067f	cashfxtest	OK	8	lite	samtidig	
 2026-11-08 19:57	ccr-e9f46ad4-wipgu7	92d067f	starttest	OK	110	lite	samtidig	
 2026-11-08 19:57	ccr-e9f46ad4-wipgu7	92d067f	tutdrift	OK	7	lite	samtidig	
+2026-11-08 20:41	claude/o14-f4-feltnavnene-kart-htpg70	df7ac76	boottest	OK	29	lite	samtidig	
+2026-11-08 20:43	claude/o14-f4-feltnavnene-kart-htpg70	df7ac76	etikett	OK	174	lite	samtidig	
+2026-11-08 20:43	claude/o14-f4-feltnavnene-kart-htpg70	df7ac76	docktest	FEIL	63	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-08 20:55	claude/o14-f4-feltnavnene-kart-htpg70	c6a7c81	vindshot	OK	665	3d	alene	
+2026-11-08 20:55	claude/o14-f4-feltnavnene-kart-htpg70	c6a7c81	obstest	FEIL	6	lite	alene	FEIL a drawn route under Gisundbrua and back (trip2's): round the pier under the deck, no nearer the skerries, and back in Finnsnes  {"st": "port", "det": 7, "d
+2026-11-08 20:56	claude/o14-f4-feltnavnene-kart-htpg70	c6a7c81	docktest	FEIL	62	lite	alene	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
