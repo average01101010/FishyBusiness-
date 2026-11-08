@@ -17,8 +17,9 @@ driftsplan2test (D2: a fixed date, a seeded Math.random, the game's loop held).
       cod quota of the open group nearly used, so the cod over it is confiscated at the landing, and the weather as it comes; 8 days closed.
     - T, pots at Bodø, 15 + 15 at 48 h, four days: the push for the gear in the sea while closed, the strings hauled after the soak.
     - M, a trip of several days from Hammerfest on a sjark with bunks: home only on the last night, the nights at a quay out there,
-      the landing every third day on the trip's last day, before home (Jonas 08.11.2026: A).
-  python3 driftsplan2kyst.py Bergen      only that town (Bergen, Bodø, Hammerfest, G, T, M; several may be named)
+      the landing every third day on the trip's last day, before home (Jonas 08.11.2026: A); M2 the same with landing every second
+      day: day 2 and day 3, the trip's last (valg 14: A).
+  python3 driftsplan2kyst.py Bergen      only that town (Bergen, Bodø, Hammerfest, G, T, M, M2; several may be named)
   python3 driftsplan2kyst.py 3d          the drawer over the 3D sea (with 3D, alone): the plan page in 800x1280, 1280x800, 384x853
 """
 import asyncio, json, os, subprocess, sys
@@ -150,12 +151,12 @@ REAL_T = r"""async () => { const R = {};
   return R; }"""
 
 # ---- M: a trip of several days from Hammerfest on kyst15, you and three crew, line and jig, three days a trip
-REAL_M = r"""async () => { const R = {};
+REAL_M = r"""async (N) => { N = N || 3; const R = {N};
   const {M} = await KY.town(70.664, 23.68, 91, 'sjark', 1); R.M = [M.id, M.name];
   D2.gear('line', 4); S.pgear.bait = {makrell:60};
   const F = D2.spots(2, 5, 16, M.p), J = D2.spots(1, 3, 8, M.p);
   const rb = rorbuNear(M.p, 30)[0]; if (rb) rorbuSite(rb.R); const home = rb ? rb.R.id : M.id; R.home = [home, portById(home).name];
-  const o = S.ops = plan2New({home, rig:'line', jig:true, rhythm:'multi', days:3, places:[D2.felt('f1', F[0], 2, 6), D2.felt('f2', F[1], 2, 6), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'days', days:3}});
+  const o = S.ops = plan2New({home, rig:'line', jig:true, rhythm:'multi', days:3, places:[D2.felt('f1', F[0], 2, 6), D2.felt('f2', F[1], 2, 6), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'days', days:N}});
   R.chk = plan2Check(o); const err = await D2.make(o); if (err) return {err, chk:R.chk}; o.on = true;
   const L = await D2.run(4 * 1440, 'closed', 'M'); R.run = KY.sum(L, o); R.outs = KY.outs(L);
   // where she lay each night at 01:00
@@ -236,7 +237,7 @@ async def real(pg, names):
             print(ok(r['fin']['on'] and not r['fin']['stop'] and r['stats'] and sum(x[1] for x in r['stats']) > 0), 'T landed, and the plan still on after four days', [r['stats'], r['fin']])
     if not names or 'M' in names:
         print('== M: flerdøgnstur fra Hammerfest på sjarken med køyer, deg og én i mannskapet, tre døgn per tur, levering hvert 3. døgn')
-        r = await pg.evaluate(REAL_M)
+        r = await pg.evaluate(REAL_M, 3)
         if r.get('err'): print('FEIL M:', r['err'], r.get('chk'))
         else:
             R = r['run']; [print('    ', d) for d in R['days']]; [print('    ', e) for e in R['ev'][:50]]; print('    netter', r['nights']); print('    stats', R['stats'], 'fin', R['fin']); print('    logg', R['log'][:8], R['msgs'][:4])
@@ -245,6 +246,15 @@ async def real(pg, names):
             print(ok(r['nights'][0] and r['nights'][1] and '@' + r['home'][0] not in r['nights'][0] and '@' + r['home'][0] not in r['nights'][1]), 'M the first two nights of the trip are out (at anchor or a quay out there), not at home (' + r['home'][1] + ')', r['nights'])
             print(ok(len(R['stats']) >= 4 and R['stats'][2][1] > 0 and not any(x[1] > 0 for x in R['stats'][:2]) and R['stats'][3][1] == 0 and R['ops']['on'] and not R['ops']['stop']), 'M the catch is landed on the trip\'s third and last day, before home, not on day 1, nor on day 4, the next trip\'s first (Levering every third day; Jonas 08.11.2026: A), and the plan is still on', [R['stats'], R['ops']['stop']])
 
+    if not names or 'M2' in names:
+        print('== M2: den samme flerdøgnsturen med levering hvert 2. døgn (valg 14 A: turens siste dag, og hvert 2. døgn fra turens første)')
+        r = await pg.evaluate(REAL_M, 2)
+        if r.get('err'): print('FEIL M2:', r['err'], r.get('chk'))
+        else:
+            R = r['run']; [print('    ', d) for d in R['days']]; print('    netter', r['nights']); print('    stats', R['stats'], 'fin', R['fin'])
+            st = R['stats']; got = [i + 1 for i, x in enumerate(st) if x[1] > 0]
+            print(ok(len(st) >= 4 and got == [2, 3] and R['ops']['on'] and not R['ops']['stop']), 'M2 levering hvert 2. døgn på en tur på 3: levert dag 2 og dag 3 (turens siste), ikke dag 1 eller 4 (Jonas 08.11.2026, valg 14: A)', [got, st])
+            print(ok(r['nights'][1] and '@' + r['home'][0] not in r['nights'][1] and r['nights'][2] and '@' + r['home'][0] in r['nights'][2]), 'M2 leveringen dag 2 avslutter ikke turen: natta ute, hjem dag 3', r['nights'])
 
 async def shots(p):
     # (with 3D drawn, as Jonas sees it: the drawer over the sea; not in run.py, run alone)
@@ -280,7 +290,7 @@ async def main():
         except Exception as e: print('FEIL boot:', str(e)[:200], 'sidefeil:', errs[:5]); raise
         await pg.evaluate(D2); await pg.evaluate(KY)
         await pg.evaluate("lifeDay = () => {}; lifeInjury = () => {};")
-        tn = [n for n in names if n in [t[0] for t in TOWNS]]; rn = [n for n in names if n in ('G', 'T', 'M')]
+        tn = [n for n in names if n in [t[0] for t in TOWNS]]; rn = [n for n in names if n in ('G', 'T', 'M', 'M2')]
         if not names or tn: await towns(pg, tn)
         if not names or rn: await real(pg, rn)
         print('sidefeil:', errs[:5])
