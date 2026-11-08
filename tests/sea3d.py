@@ -121,7 +121,7 @@ async def main():
         # a crest breaks there, where random points round the eye break at the crests' share of Monahan's cover (some 25 % at 28 m/s);
         # and from Beaufort 7: in 16 m/s crests throw drops, in 13 m/s none is tried
         R['sprayCrest'] = sc = await pg.evaluate(SPRAYC)
-        print(ok(sc['alive'] > 10 and sc['fromCrest'] >= 0.95 * sc['alive'] and sc['random'] < 0.6), 'the spindrift in the air is thrown from the crests that break (FOAM.capAt at each drop\'s birth)', sc)
+        print(ok(sc['alive'] > 10 and sc['fromCrest'] >= 0.95 * sc['alive'] and sc['random'] < 0.5), 'the spindrift in the air is thrown from the crests that break (FOAM.capAt at each drop\'s birth)', sc)
         bf7 = {}
         for U in (13, 16):
             await pg.evaluate(f"WX_FORCE = {{w:{U}, d:315}}; G3._debug.WV.init = false; const s = G3._debug.foam.sd; s.tried = s.hit = 0;"); await pg.wait_for_timeout(8000)

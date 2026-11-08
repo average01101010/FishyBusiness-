@@ -598,9 +598,10 @@
   // foamStep (14-sea.js), which gathers them into four patches the foam map's pass lays in the wake's channels (r and g), so they lie
   // in the water as the wash does and age with its tau (14 s). Only while the map is on; at most 64 a frame. WKS: which of the spray's
   // particles (wk, 16-motion.js) are the bow spray that lands (the planing sheet's are the wings the map lays itself, the rooster tail's
-  // the band astern)
+  // the band astern); they land on the sea as it stands at the bow this frame (wk.bowSea: the spray falls within a few metres of the
+  // stem, where the waves of tens of metres hardly differ, so no sea height is looked up per drop)
   const WKS = new Uint8Array(WN);
-  function splashFoam(x, z, r, a){ if (foamLive() && FOAM.spq.length < 64) FOAM.spq.push([x, z, r, a]); }
+  function splashFoam(x, z, r, a){ if (!foamLive() || FOAM.spc >= 64) return; const Q = FOAM.spq, i = FOAM.spc++ * 4; Q[i] = x; Q[i + 1] = z; Q[i + 2] = r; Q[i + 3] = a; }
   const SLN = 420, SLP = {x:new Float64Array(SLN), y:new Float64Array(SLN), z:new Float64Array(SLN), vx:new Float64Array(SLN), vy:new Float64Array(SLN), vz:new Float64Array(SLN), age:new Float64Array(SLN).fill(99), life:new Float64Array(SLN).fill(1), n:0};
   function drawEffects(VP, eye, BM, dt, t){
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
@@ -617,7 +618,7 @@
       // the waterline a little aft of the stem, as a fine mist, and keeps most of the boat's way: it fans out beside the bow and falls
       // astern of it (Jonas 21.10.2026, #90: the spray did not look real. Thrown from a point at the stem with no way on, it hung in the
       // air as a trail of round blobs behind the boat)
-      const bowP = xf(BM, [0, 0.15, VG.bow]), imm = bowP[1] - seaH(bowP[0], bowP[2], t), sink = wk.imm == null ? 0 : (imm - wk.imm) / Math.max(dt, 1e-3); wk.imm = imm;
+      const bowP = xf(BM, [0, 0.15, VG.bow]), bowSea = wk.bowSea = seaH(bowP[0], bowP[2], t), imm = bowP[1] - bowSea, sink = wk.imm == null ? 0 : (imm - wk.imm) / Math.max(dt, 1e-3); wk.imm = imm;
       const wv = (env.wind || 0) * 0.35, wx = env.windDir[0] * wv, wz = env.windDir[1] * wv, Lb = VG.stern - VG.bow, fx = Math.sin(bv.head), fz = -Math.cos(bv.head), way = (bv.spd || 0) * 0.9;
       if (v > 3 && sink < -0.5 && imm < 0.6) wk.sacc += Math.min(100, -sink * v * 1.25);
       if (WK.Fr > 0.9) wk.sacc += dt * v * WV.hs * 2;
@@ -691,7 +692,7 @@
     for (let i = 0; i < WN; i++){
       if (wk.age[i] >= wk.life[i]) continue;
       wk.age[i] += dt; wk.vy[i] -= wk.g[i] * dt; wk.x[i] += wk.vx[i] * dt; wk.y[i] += wk.vy[i] * dt; wk.z[i] += wk.vz[i] * dt;
-      if (WKS[i] && wk.vy[i] < 0 && wk.y[i] < seaHFast(wk.x[i], wk.z[i], t)){ WKS[i] = 0; wk.age[i] = 99; splashFoam(wk.x[i], wk.z[i], 0.45, 0.5); continue; }   // (the bow spray is gone where it lands, and leaves foam)
+      if (WKS[i] && wk.vy[i] < 0 && wk.y[i] < (wk.bowSea == null ? -1e9 : wk.bowSea)){ WKS[i] = 0; wk.age[i] = 99; splashFoam(wk.x[i], wk.z[i], 0.45, 0.5); continue; }   // (the bow spray is gone where it lands, and leaves foam)
       PB[n * 3] = wk.x[i] - eye[0]; PB[n * 3 + 1] = wk.y[i] - eye[1]; PB[n * 3 + 2] = wk.z[i] - eye[2]; PA[n] = Math.pow(Math.max(0, 1 - wk.age[i] / wk.life[i]), 1.5) * 0.75; n++;
     }
     if (QUAL.lvl) drawPts(n, gl.POINTS, VP, foamCol, 95, 2);   // (soft, as mist: round discs read as blobs)
