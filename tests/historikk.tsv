@@ -1238,3 +1238,36 @@
 2026-11-08 18:45	ccr-ed93b6bd-ek0n3a	86d0a0b+	selfcrew	OK	6	lite	samtidig	
 2026-11-08 18:46	ccr-ed93b6bd-ek0n3a	86d0a0b+	crewlifetest	OK	5	lite	samtidig	
 2026-11-08 18:46	ccr-ed93b6bd-ek0n3a	86d0a0b+	hbtest	OK	14	lite	samtidig	
+2026-11-08 18:19	ccr-6e53b4c0-qs2mg1	8010797+	marktest	FEIL	8	lite	samtidig	FEIL round Tromsø the chart pack's sea marks are read with its coast  {"tile": "18:6", "has": false, "lights": 0, "marks": 0, "rocks": 0, "near": {"L": 153, "M"
+2026-11-08 18:19	ccr-6e53b4c0-qs2mg1	8010797+	simday	LES	11	lite	samtidig	
+2026-11-08 18:19	ccr-6e53b4c0-qs2mg1	8010797+	boottest	OK	22	lite	samtidig	
+2026-11-08 18:20	ccr-6e53b4c0-qs2mg1	8010797+	charttest	OK	49	lite	alene	
+2026-11-08 18:24	ccr-6e53b4c0-qs2mg1	8010797+	heattest	OK	245	3d	alene	
+2026-11-08 18:25	ccr-6e53b4c0-qs2mg1	8010797+	simday	LES	8	lite	alene	
+2026-11-08 18:25	ccr-6e53b4c0-qs2mg1	8010797+	marktest	OK	6	lite	alene	
+2026-11-08 18:33	ccr-6e53b4c0-qs2mg1	8010797+	trip2	OK	29	lite	samtidig	
+2026-11-08 18:34	ccr-6e53b4c0-qs2mg1	8010797+	docktest	OK	59	lite	samtidig	
+2026-11-08 18:34	ccr-6e53b4c0-qs2mg1	8010797+	obstest	OK	6	lite	samtidig	
+2026-11-08 18:34	ccr-6e53b4c0-qs2mg1	8010797+	calib	LES	10	lite	samtidig	
+2026-11-08 18:34	ccr-6e53b4c0-qs2mg1	f6f32b6	progweek	LES	37	lite	samtidig	
+2026-11-08 18:34	ccr-6e53b4c0-qs2mg1	f6f32b6	quotatest	OK	15	lite	samtidig	
+2026-11-08 18:34	ccr-6e53b4c0-qs2mg1	f6f32b6	kvtest	LES	12	lite	samtidig	
+2026-11-08 18:35	ccr-6e53b4c0-qs2mg1	f6f32b6	geartest	OK	27	lite	samtidig	
+2026-11-08 18:38	ccr-6e53b4c0-qs2mg1	f6f32b6+	lighttest	OK	234	3d	alene	
+2026-11-08 18:39	ccr-6e53b4c0-qs2mg1	f6f32b6+	progweek	LES	35	lite	samtidig	
+2026-11-08 18:39	ccr-6e53b4c0-qs2mg1	f6f32b6+	kvtest	LES	13	lite	samtidig	
+2026-11-08 18:39	ccr-6e53b4c0-qs2mg1	f6f32b6+	calib	LES	15	lite	samtidig	
+2026-11-08 18:40	ccr-6e53b4c0-qs2mg1	f6f32b6+	marktest	OK	7	lite	samtidig	
+2026-11-08 18:41	ccr-6e53b4c0-qs2mg1	f6f32b6+	boottest	OK	18	lite	samtidig	
+2026-11-08 18:41	ccr-6e53b4c0-qs2mg1	f6f32b6+	charttest	OK	41	lite	alene	
+2026-11-08 17:59	ccr-2040aa61-qgig5a	fc8da648+	skipdrift	OK	19	lite	samtidig	
+2026-11-08 17:59	ccr-2040aa61-qgig5a	fc8da648+	driftsplan2ui	OK	26	lite	samtidig	
+2026-11-08 18:01	ccr-2040aa61-qgig5a	fc8da648+	driftsplan2kyst	OK	111	lite	samtidig	
+2026-11-08 18:02	ccr-2040aa61-qgig5a	fc8da648+	driftsplan2test	OK	83	lite	alene	
+2026-11-08 18:07	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2ui	OK	28	lite	samtidig	
+2026-11-08 18:09	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2kyst	OK	100	lite	samtidig	
+2026-11-08 18:09	ccr-2040aa61-qgig5a	bba06b81+	docktest	FEIL	62	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-08 18:10	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2test	FEIL	79	lite	alene	FEIL S5 the tired crew end the day: no more jigging, the line is still hauled when due (within 3 h), then in [[['D1 13:19', 'Mannskapet er slitne. Avslutter juk
+2026-11-08 18:11	ccr-2040aa61-qgig5a	bba06b81+	docktest	OK	58	lite	alene	
+2026-11-08 18:12	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2test	FEIL	82	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
+2026-11-08 18:43	ccr-6e53b4c0-qs2mg1	62af7fb	boottest	OK	17	lite	alene	
