@@ -364,7 +364,7 @@
       else { let m = 1.2; try { m = gopUnitMin(g, S.t / 60, hsAt(S.boat.pos, S.t / 60)); } catch (e){} POTA.dur = clamp(m * 60 / simRate(), 2, 40); }
       POTA.g = g; POTA.done = g.done; POTA.t0 = t; }
     const u = POTA.fix != null ? POTA.fix : clamp((t - POTA.t0) / POTA.dur, 0, 1), sm = v => v * v * (3 - 2 * v), ph01 = (a, b) => sm(clamp((u - a) / (b - a), 0, 1)), lerp = (A, B, k) => [A[0] + (B[0] - A[0]) * k, A[1] + (B[1] - A[1]) * k, A[2] + (B[2] - A[2]) * k];
-    if (KP && G.snok && GB.snoHaul){ snoHauler(BMrel, G, null, POTA.sh); KST.haul = 'snokrabbe'; }
+    if (KP && G.snok && GB.snoHaul){ snoWork(BMrel, t, u, g, s, G, d, base, KP, XP, seg); return; }   // (the snow crab vessel's own work, H3d2)
     const DV = potDavit(skiff) && !KP, P0 = [sx - 0.2, d.y, HP[2]], blk = DV && X.davit ? [P0[0] + X.davit.block[0], P0[1] + X.davit.block[1], P0[2] + X.davit.block[2]] : [sx + 0.05, gw + 0.05, HP[2]];
     const potM = (p, rz, rx) => chain(BMrel, M4.T(p[0], p[1], p[2]), M4.RZ(rz || 0), M4.RX(rx || 0), M4.S(ps));
     const RG = XP.ring != null ? XP.ring : 0.45, ring = (p, rz) => [p[0] - Math.sin(rz || 0) * (ph + RG), p[1] + Math.cos(rz || 0) * (ph + RG), p[2]];
@@ -459,9 +459,135 @@
   // the line runs (a: the sheave's angle); it is hers from the yard, so it stands whether she is rigged or not (H3d1)
   function snoHauler(BMrel, G, VP, a){ const H = G.hauler, X = (GB.snx || {}).haler || {}, ax = X.axle || [0.1, 0.95, 0];
     if (VP) nSetup(VP); drawN(GB.snoHaul, chain(BMrel, M4.T(H[0], H[1], H[2]))); if (GB.snoSheave) drawN(GB.snoSheave, chain(BMrel, M4.T(H[0] + ax[0], H[1] + ax[1], H[2] + ax[2]), M4.RZ(-a))); }
+  // ---- the snow crab vessel's work (H3d2, 08.11.2026; her places are the model's, tools/boats/krabbe50.py anchors.snok and kit.pots,
+  // snokrabbe-bygging.md kap. 3). Hauling: the line comes up from the sea over the block on the portal's arm out over the starboard side,
+  // round the hauler's sheave and off it to the coil on deck; a pot comes up under the block, is put on the hook and swung in over the
+  // bulwark, set down on the sorting table, its bottom untied and the crabs tipped out; the hands sort them (the small ones and the
+  // females down the discards' chute over the side, the males down the hole to the factory, or on a live trip into the tub that goes to
+  // the tanks), bait it, and it goes aft on the conveyor to the stacks, or on down the chute and out again when the string is reset.
+  // Setting: the pots from the stacks onto the conveyor, aft, down the chute and over the stern as she steams ahead, the line between
+  // them, the buoy at the string's first end and the marker buoy with the dregg at its last (§ 66). The cycle is POTA's (one pot in the
+  // time the work takes, never ahead of the simulation); the pots on the conveyor are those of the cycles before, so the stacks change by
+  // one pot a cycle and nothing jumps. None of it is in the model: the pots, the crabs, the line, the buoys and the tub are the gear's
+  // parts set on her places (CLAUDE.md). KST.sno says what the frame drew (h3dshot).
+  const SNOB = 2.1, SNOS = 3;   // the cycles a hauled pot rides from the table to its stack (or over the stern), and a set pot from its stack over the stern
+  // the crabs in a snow crab pot as it comes up: the string's catch shared over its pots (s.acc), at least two seen
+  const snoCrabN = s => { const a = s && s.acc && s.acc.snokrabbe; return a && s.n ? Math.max(2, Math.round(a.n / s.n)) : 3; };
+  function snoCrabs(BMrel, p, n, pr){ for (let k = 0; k < n; k++){ const a = hash(k * 7 + 1) * 6.28, r = pr * 0.5 * Math.sqrt(hash(k * 5 + 2)), hen = k % 3 === 2;
+    drawN(fishOf(hen ? 'snokrabbe_h' : 'snokrabbe'), chain(BMrel, M4.T(p[0] + Math.cos(a) * r, p[1] + 0.05 + (k > 4 ? 0.08 : 0), p[2] + Math.sin(a) * r), M4.RY(hash(k * 3) * 6.3), M4.S(hen ? 0.34 : 0.46))); } }
+  function snoWork(BMrel, t, u, g, s, G, d, base, KP, XP, seg){
+    const N = G.snok, haul = g.op === 'haul', ph = XP.h || 0.6, pr = XP.r || 0.65, RG = XP.ring != null ? XP.ring : 0.3, PM = GB.kon || GB.pot;
+    const sm = v => v * v * (3 - 2 * v), k01 = (a, b, v) => sm(clamp((v - a) / (b - a), 0, 1)), lerp = (A, B, k) => [A[0] + (B[0] - A[0]) * k, A[1] + (B[1] - A[1]) * k, A[2] + (B[2] - A[2]) * k];
+    const arc = (A, B, k, h) => { const p = lerp(A, B, k); p[1] += Math.sin(Math.PI * k) * h; return p; };
+    const potM = (p, rx, ry) => chain(BMrel, M4.T(p[0], p[1], p[2]), M4.RY(ry || 0), M4.RX(rx || 0));
+    const ring = p => [p[0], p[1] + ph + RG, p[2]], onBelt = p => [p[0], p[1] + 0.05, p[2]];
+    const ST = KST.sno = {op:g.op, phase:null, line:false, block:false, belt:0, lift:0, chute:0, sea:0, rel:0, keep:0, live:0, buoyA:false, buoyB:false};
+    // the places: the block, the hook, the hauler's sheave (where the line comes on and goes off), the table and its spot, the conveyor
+    // from the table's end to the chute, the chute's top and its lip over the stern; the hole to the factory and the discards' chute's
+    // mouth on the table where the model has them (krabbe50.py: the hole 0.5-1.1 m from the table's after end and 0.12-0.75 m from its
+    // inboard edge, the discards' chute 1.9 m from the after end out through the bulwark)
+    const blk = N.block, HK = N.hook, H = N.hauler, HX = (GB.snx || {}).haler || {}, sIn = HX.in ? [H[0] + HX.in[0], H[1] + HX.in[1], H[2] + HX.in[2]] : [H[0] + 0.5, H[1] + 1.4, H[2]];
+    const sOut = HX.out ? [H[0] + HX.out[0], H[1] + HX.out[1], H[2] + HX.out[2]] : [H[0] - 0.35, H[1] + 0.35, H[2]];
+    const TB = N.table, TW = (N.tsize || [1.9, 3.1])[0] / 2, TL = (N.tsize || [1.9, 3.1])[1] / 2, TS = KP.spot || TB;
+    const C0 = N.conv[0], C1 = N.conv[1], CH0 = N.chute[0], CH1 = N.chute[1], tilt = Math.atan2(CH0[1] - CH1[1], CH1[2] - CH0[2]);
+    const hole = [TB[0] - TW + 0.44, TB[1], TB[2] + TL - 0.8], dch = [TB[0] + TW - 0.08, TB[1], TB[2] + TL - 1.9], dOut = [G.beam / 2 - 0.05, d.y + 0.55, TB[2] + TL - 1.9];
+    // her speed through the water (the set pots drift aft as she goes ahead): a metre a second at least
+    const vAft = Math.max(1, (S.boat.v || 0) * 0.514);
+    // a pot in the sea astern after it left the chute's lip (w: its cycles since)
+    const overStern = w => { const tt = w * POTA.dur, k = clamp(tt / 1.2, 0, 1), z = CH1[2] + 0.4 + vAft * tt;
+      return k < 1 ? [CH1[0] + 0.1 * k, CH1[1] - (CH1[1] + 0.35) * k * k, z] : [CH1[0] + 0.1, -0.35 - 1.6 * (tt - 1.2), z]; };
+    const seaEnd = [CH1[0] + 0.3, -0.3, CH1[2] + 9];   // where the line goes into the sea astern, on to the pots already set
+    // a pot's way from the table (or the top of a stack) along the conveyor: to its stack T, or (out) on down the chute and over the
+    // stern; q 0-1 over its ride. Returns [p, rx, where]
+    const zC = z => clamp(z, Math.min(C0[2], C1[2]), Math.max(C0[2], C1[2]));
+    const ride = (q, from, T, out) => {
+      const B0 = [C0[0], C0[1], zC(from[2])];
+      if (q < 0.1) return [arc(from, B0, k01(0, 0.1, q), 0.35), 0, 'lift'];
+      if (out){ if (q < 0.72) return [lerp(B0, C1, (q - 0.1) / 0.62), 0, 'belt'];
+        if (q < 0.84){ const k = (q - 0.72) / 0.12; return [lerp(CH0, CH1, k * k), tilt * clamp(k * 3, 0, 1), 'chute']; }
+        return [overStern((q - 0.84) * (haul ? SNOB : SNOS)), tilt + 0.6 * (q - 0.84) / 0.16, 'sea']; }
+      const B1 = [C0[0], C0[1], zC(T[2])];
+      if (q < 0.85) return [lerp(B0, B1, (q - 0.1) / 0.75), 0, 'belt'];
+      return [arc(B1, T, k01(0.85, 1, q), 0.45), 0, 'lift']; };
+    const count = w => { if (w === 'belt') ST.belt++; else if (w === 'lift') ST.lift++; else if (w === 'chute') ST.chute++; else if (w === 'sea') ST.sea++; };
+    // the hauler's sheave turns while the line runs (hauling, until the pot is at the block)
+    const running = haul && u < 0.3; POTA.sh += (running ? 5 : 0) * clamp(t - POTA.st, 0, 0.1); POTA.st = t;
+    snoHauler(BMrel, G, null, POTA.sh); KST.haul = 'snokrabbe';
+    const Lr = (A, B, sag) => seg(A, B, 0.009, GB.float, sag || 0);
+    const draw1 = (p, rx, ry) => { if (p[1] > -6.5) drawN(PM, potM(p, rx, ry)); };
+    if (haul){
+      // the stacks: the pots hauled three cycles ago and before (the two before are on the conveyor); none when they go out again
+      const R = !!g.reset; drawPotStacks(BMrel, KP, base + (R ? 0 : Math.max(0, g.done - 2)));
+      // the line from the sea over the block, round the sheave and off it down to the coil on deck forward of the table
+      const Wsea = [blk[0] + 2.4, -0.3, blk[2] - 3.0], coil = [sOut[0] - 0.5, d.y + 0.08, TB[2] - TL - 0.4];
+      ST.line = true; ST.block = true; Lr(blk, sIn, 0.05); Lr(sOut, coil, 0.15);
+      for (let k = 0; k < 6; k++){ const a = k * 1.05, c = q => [coil[0] + Math.cos(q) * 0.32, coil[1], coil[2] + Math.sin(q) * 0.32]; drawN(GB.float, chain(BMrel, limbM(c(a), c(a + 1.05), 0.012))); }
+      // on a live trip the tub the sorted males go into, forward of the table, for the tanks (snok.rsw)
+      const live = typeof snoLive === 'function' && snoLive(), KL = live ? kit('pall', 'kar_levende') : null, TUB = KL ? [TB[0] - TW - 0.35, d.y, TB[2] - TL - 0.9] : null;
+      if (TUB){ drawLiveTub(KL, chain(BMrel, M4.T(TUB[0], TUB[1], TUB[2]), M4.RY(Math.PI / 2)), kitX('pall').kar || {}, g.done); TUB[1] += (kitX('pall').kar || {}).water || 0.62; }
+      // the hook on its whip from the portal's beam: out at the block for the pot, in over the table with it, back up
+      const whip = [HK[0], blk[1] + 0.25, HK[2]];
+      if (g.done < g.n){
+        const sway = Math.sin(t * 1.3) * 0.08, Pup = [blk[0], blk[1] - 0.35 - ph - RG, blk[2]], Phk = [HK[0], HK[1] - 0.1 - ph - RG, HK[2]];
+        let p, rx = 0, hook = HK;
+        if (u < 0.3){ ST.phase = 'opp'; const k = k01(0, 0.3, u), D0 = [blk[0] + 4.4, -9, blk[2] - 5.6]; p = lerp(D0, Pup, k); p[0] += sway * (1 - k); p[2] += sway * 0.5 * (1 - k);
+          const R0 = ring(p); Lr(R0, blk, 0); Lr([R0[0] + 1.6, R0[1] - 3.2, R0[2] - 2.0], R0, 0.2); }
+        else { Lr(Wsea, blk, 0.3);
+          if (u < 0.4){ ST.phase = 'krok'; const k = k01(0.3, 0.4, u); p = arc(Pup, Phk, k, 0.15); hook = ring(p); if (k < 0.3) Lr(ring(p), blk, 0); }
+          else if (u < 0.5){ ST.phase = 'ned'; p = arc(Phk, TS, k01(0.4, 0.5, u), 0.2); hook = ring(p); }
+          else if (u < 0.88){ ST.phase = u < 0.56 ? 'tom' : u < 0.8 ? 'sort' : 'agn'; const k = Math.sin(Math.PI * k01(0.5, 0.56, u)); p = TS.slice(); p[1] += 0.25 * k; rx = -0.5 * k;
+            hook = u < 0.53 ? ring(p) : [HK[0], HK[1] + 0.3 * k01(0.53, 0.6, u), HK[2]]; }
+          else { ST.phase = 'band'; p = null; hook = [HK[0], HK[1] + 0.3, HK[2]]; } }
+        if (u >= 0.3) Lr(whip, hook, 0);
+        if (p){ draw1(p, rx); if (u < 0.5) snoCrabs(BMrel, p, Math.min(8, snoCrabN(s)), pr); }
+        // the crabs out on the table and away to where they go; the bait box filled before the pot goes aft
+        if (u >= 0.5 && u < 0.88) snoSort(BMrel, u, s, g, TS, TB, TW, TL, hole, dch, dOut, TUB, ST, k01);
+        if (u > 0.8 && u < 0.86 && GB.bait){ const f = (u - 0.8) / 0.06; drawN(GB.bait, chain(BMrel, M4.T(TS[0] - 0.4 * (1 - f), TS[1] + ph + 0.4 * (1 - f), TS[2]), M4.S(3))); }
+      }
+      // the pots of this cycle and the two before on their way aft from the table: to the stacks, or out again down the chute (reset)
+      for (let j = 0; j <= 2; j++){ const q = (j + u - 0.88) / SNOB, n = g.done - j; if (q < 0 || q > 1 || n < 0 || n >= g.n) continue;
+        const [p, rx, w] = ride(q, TS, stackTop(KP, base + n, d), R); draw1(p, rx); count(w);
+        if (R && w !== 'lift'){ Lr(w === 'belt' ? onBelt(p) : ring(p), seaEnd, w === 'sea' ? 0.6 : 0.2); ST.line = true; } }
+    } else {
+      // the stacks: the pots not yet lifted onto the conveyor (the next three are on it, in the chute or going over)
+      const left = g.n - g.done, pts = []; drawPotStacks(BMrel, KP, base + Math.max(0, left - SNOS));
+      for (let j = SNOS - 1; j >= 0; j--){ const q = (u + SNOS - 1 - j) / SNOS, n = g.done + j; if (n > g.n) continue;
+        if (n === g.n){   // the string's last end after the last pot: the marker buoy and the dregg, lifted on at the conveyor's head, aft and over
+          const [p, rx, w] = ride(q, [C0[0] - 1.2, d.y, (C0[2] + C1[2]) / 2], null, true); ST.buoyB = true;
+          const B = GB.boye || GB.blase; if (B && p[1] > -1.5) drawN(B, potM(w === 'sea' ? [p[0], Math.max(p[1], -0.4), p[2]] : p, w === 'sea' ? 0 : Math.PI / 2 - 0.2, 0));
+          if (GB.dregg && p[1] > -6.5) drawN(GB.dregg, potM([p[0] + 0.35, p[1] + 0.1, p[2] - 0.6], rx, 0));
+          pts.push(w === 'belt' || w === 'lift' ? onBelt(p) : p); continue; }
+        const [p, rx, w] = ride(q, stackTop(KP, base + Math.max(0, left - 1 - j), d), null, true); draw1(p, rx, (n % 5) * 0.4); count(w);
+        pts.push(w === 'belt' || w === 'lift' ? onBelt(p) : ring(p)); }
+      // the line between them and out astern to the pots already set
+      pts.push(seaEnd); for (let i = 1; i < pts.length; i++) Lr(pts[i - 1], pts[i], i === pts.length - 1 ? 0.5 : 0.08); ST.line = pts.length > 1;
+      // the string's first end: the buoy (with the registration mark, § 66) in the sea astern while the first pots go, its line down
+      if (g.done < SNOS && GB.blase){ const w = (g.done + u) * POTA.dur, B = [CH1[0] + 0.8, -0.35, CH1[2] + 6 + vAft * w]; ST.buoyA = true;
+        drawN(GB.blase, potM(B, Math.sin(t * 1.1) * 0.08, 0)); Lr([B[0], B[1] + 0.1, B[2]], [B[0], -6, B[2] + 2], 0.3); }
+      ST.phase = 'set'; }
+  }
+  // the crabs tipped out on the sorting table (u 0.5-0.56) and sorted away one by one (0.58-0.83): the small ones and the females (the
+  // string's own share, g.snoS, 10d-snokrabbe.js landSno) across the table to the discards' chute, down it and over the side; the kept
+  // males down the hole to the factory, or on a live trip (the share that went to the tanks) into the tub forward of the table
+  function snoSort(BMrel, u, s, g, TS, TB, TW, TL, hole, dch, dOut, TUB, ST, k01){
+    const so = g.snoS || {}, rf = so.n ? so.rel / so.n : 0.45, lf = TUB ? (so.kept ? (so.live || 0) / so.kept : 1) : 0, n = Math.min(8, snoCrabN(s)), o = g.done * 7;
+    const lerp = (A, B, k) => [A[0] + (B[0] - A[0]) * k, A[1] + (B[1] - A[1]) * k, A[2] + (B[2] - A[2]) * k];
+    for (let k = 0; k < n; k++){
+      const rel = hash(k * 13 + o + 3) < rf, hen = rel && hash(k * 5 + o + 1) < 0.5, lv = !rel && hash(k * 17 + o) < lf, sc = rel ? 0.36 : 0.48, yaw = hash(k * 3 + o) * 6.3;
+      const a = hash(k * 7 + o) * 6.28, r = 0.25 + 0.45 * hash(k * 3 + o * 5);
+      const L = [clamp(TS[0] + Math.cos(a) * r, TB[0] - TW + 0.15, TB[0] + TW - 0.15), TB[1] + 0.03, clamp(TS[2] + Math.sin(a) * r, TB[2] - TL + 0.15, TB[2] + TL - 0.15)];
+      const a0 = 0.58 + 0.2 * k / n, f = clamp((u - a0) / 0.05, 0, 1); if (f >= 1) continue;
+      let p;
+      if (f <= 0){ const fl = k01(0.5, 0.56, u); p = lerp([TS[0], TS[1] + 0.35, TS[2]], L, fl); p[1] += Math.sin(Math.PI * fl) * 0.15; }
+      else if (rel){ p = f < 0.4 ? lerp(L, dch, f / 0.4) : f < 0.7 ? lerp(dch, dOut, (f - 0.4) / 0.3) : lerp(dOut, [dOut[0] + 0.9, -0.3, dOut[2]], ((f - 0.7) / 0.3) ** 2); }
+      else if (lv){ p = lerp(L, TUB, f); p[1] += Math.sin(Math.PI * f) * 0.6; }
+      else p = f < 0.7 ? lerp(L, hole, f / 0.7) : [hole[0], hole[1] - 0.6 * (f - 0.7) / 0.3, hole[2]];
+      if (rel) ST.rel++; else if (lv) ST.live++; else ST.keep++;
+      drawN(fishOf(hen ? 'snokrabbe_h' : 'snokrabbe'), chain(BMrel, M4.T(p[0], p[1], p[2]), M4.RY(yaw + f * 2), M4.S(sc))); }
+  }
   function drawGearOp(BMrel, eye, VP, t){
     autoMarks(BMrel, eye, t); ASLIDE.VP = VP; drawAutoSlides(BMrel);   // (the autoline's marks over the stern, and its gaffed fish down the chute, H2d2)
-    const b = S.boat, g = b.gop; if (!g || b.status !== 'fishing') return; if (!GB) buildGear();
+    const b = S.boat, g = b.gop; KST.sno = null; if (!g || b.status !== 'fishing') return; if (!GB) buildGear();
     const vt = vtype(), G = GEO(vt), gw = G.gw || 1, sx = G.beam / 2, d = G.deck || {y:gw, z:1}, skiff = !!G.hand;
     // the hauler on the starboard rail just forward of the working deck; gear stacks on the deck aft of it
     const HP = skiff ? SKA.haul : G.hauler, turning = g.op === 'haul' && !(b.deckStop), DZ = skiff ? 0 : d.z - 0.6;
@@ -469,7 +595,7 @@
     // (the autoline: its own hauler in the hauling port, anchors.aline; no tubs, the line lies on the magazines below deck, H2d)
     const auto = !skiff && !!g.auto && !!G.aline;
     const HM = !skiff && (g.kind === 'garn' || g.kind === 'line') ? haulModel(auto ? 'auto' : g.kind) : null, setting = g.op === 'set' && (g.kind === 'garn' || g.kind === 'line');
-    if (!HM && !(g.kind === 'teine' && potDavit(skiff)) && (!skiff || S.equip.linehaler || S.equip.teinehaler)) drawN(GB.haul, chain(BMrel, M4.T(HP[0], HP[1], HP[2]), M4.RX(turning ? -t * 3 : 0)));
+    if (!HM && !(g.kind === 'teine' && (potDavit(skiff) || (G.snok && GB.snoHaul))) && (!skiff || S.equip.linehaler || S.equip.teinehaler)) drawN(GB.haul, chain(BMrel, M4.T(HP[0], HP[1], HP[2]), M4.RX(turning ? -t * 3 : 0)));
     // from the hauler down into the sea, outboard and a little ahead
     const W0 = [sx + (skiff ? 1.6 : 2.6), -0.35, HP[2] - (skiff ? 1.2 : 2.2)], seg = (A, Bp, r, m, sag) => { let prev = A; for (let i = 1; i <= 8; i++){ const u = i / 8, P = [A[0] + (Bp[0] - A[0]) * u, A[1] + (Bp[1] - A[1]) * u - sag * 4 * u * (1 - u), A[2] + (Bp[2] - A[2]) * u]; drawN(m, chain(BMrel, limbM(prev, P, r))); prev = P; } };
     if (HM){
@@ -539,7 +665,13 @@
     // hauler taking the gear in, the next clearing it at the end of the tray, a third stacking it aft (the skiff's fisher is drawn with
     // the boat)
     if (!skiff && !(typeof CREW3D !== 'undefined' && CREW3D.on())){ const AQ = g.auto && G.aline ? autoPort(G) : null, n = clamp(gopHands(), 0, AQ ? 2 : 3);
-      const spots = AQ ? [[AQ.gaff[0], AQ.gaff[1], 'haul', AQ.gaff[2]], [AQ.tend[0], AQ.tend[1], 'coil', AQ.tend[2]]] : [[HP[0] - 0.55, HP[2] + 0.2, 'haul', Math.PI / 2], [HP[0] - 1.25, HP[2] + 0.75, 'tend', Math.PI * 0.6], [sx * 0.3 + 0.5, DZ + 0.2, 'tend', Math.PI]];
+      // (the snow crab vessel, H3d2: hauling, one at the hauler and two sorting at the table's inboard side; setting, one feeding the
+      // conveyor from the stacks and one at the chute)
+      const SN = G.snok && G.kit && G.kit.pots ? G.snok : null, TW = SN ? (SN.tsize || [1.9])[0] / 2 : 0;
+      const spots = AQ ? [[AQ.gaff[0], AQ.gaff[1], 'haul', AQ.gaff[2]], [AQ.tend[0], AQ.tend[1], 'coil', AQ.tend[2]]]
+        : SN && g.op === 'haul' ? [[SN.hauler[0] - 0.75, SN.hauler[2] + 0.35, 'haul', Math.PI / 2], [SN.table[0] - TW - 0.4, SN.table[2] - 0.7, 'tend', Math.PI / 2], [SN.table[0] - TW - 0.4, SN.table[2] + 0.7, 'tend', Math.PI / 2]]
+        : SN ? [[SN.conv[0][0] - 0.75, (SN.conv[0][2] + SN.conv[1][2]) / 2, 'tend', -Math.PI / 2], [SN.chute[0][0] - 0.85, SN.chute[0][2] - 1.5, 'tend', Math.PI], [SN.table[0] - TW - 0.4, SN.table[2], 'tend', Math.PI / 2]]
+        : [[HP[0] - 0.55, HP[2] + 0.2, 'haul', Math.PI / 2], [HP[0] - 1.25, HP[2] + 0.75, 'tend', Math.PI * 0.6], [sx * 0.3 + 0.5, DZ + 0.2, 'tend', Math.PI]];
       for (let k = 0; k < n; k++){ const [x, z, task, a] = spots[k], wl = xf(BMrel, [x, d.y, z]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:k === 0 && gopMe() ? 'skipper' : null, look:seaLook(k === 0 && gopMe() ? lookMe() : lookCrew(k - (gopMe() ? 1 : 0)))};
         const ev = dkFor('h' + k, [x, d.y, z], task);
         drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + a, task:ev ? ev.kind : task, ev:ev ? dkEv(ev, BMrel, G) : null, walk:false, s:0}, eye, t, 9 + k); }
