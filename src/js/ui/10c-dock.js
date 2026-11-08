@@ -455,7 +455,7 @@ const DOCK = (() => {
     dr.hidden = false; document.body.classList.add('dk-open'); shown = ''; draw(was === pg); render();
     if (was !== pg && SHOP_PAGES.includes(pg) && typeof cloudEv === 'function') cloudEv('shop_view', {pg});
   }
-  function close(){ page = null; dr.hidden = true; document.body.classList.remove('dk-open'); shown = ''; html = ''; if (PAINT) PAINT.live(false); if (typeof G3 !== 'undefined' && G3.trying) G3.tryView(null); render(); }
+  function close(){ if (typeof WORK !== 'undefined' && WORK.shut) WORK.shut(); page = null; dr.hidden = true; document.body.classList.remove('dk-open'); shown = ''; html = ''; if (PAINT) PAINT.live(false); if (typeof G3 !== 'undefined' && G3.trying) G3.tryView(null); render(); }
   dTabs.addEventListener('click', e => { const el = e.target.closest('[data-pg]'); if (el){ page = el.dataset.pg; shown = ''; draw(false); if (SHOP_PAGES.includes(page) && typeof cloudEv === 'function') cloudEv('shop_view', {pg:page}); } });
   $('drawerClose').addEventListener('click', close);
   dBody.addEventListener('click', e => {

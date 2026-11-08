@@ -189,18 +189,21 @@ async def main():
         for vw, vh, tag in ((1100, 800, 'liggende'), (800, 1180, 'staende')):
             await pg.set_viewport_size({'width':vw, 'height':vh})
             u = await pg.evaluate("""(()=>{ """ + seed(20261032) + """ const R = {}, b = S.boat; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.gop = null; S.hold = []; S.plan = null; addCatch('torsk', 40, null, true);   // (fish to gut at the quay: someone at work)
-              for (const c of S.crew){ delete c.mate; delete c.sk; }   // (no posts: each pass starts with the skipper's button as the main one, U2-7)
+              for (const c of S.crew){ delete c.mate; delete c.sk; } if (S.ops && S.ops.v === 2) S.ops.mate = null;   // (no posts, the plan's mate too: each pass starts with the mate's button as the main one aboard, U2-7)
               R.noCrew = !document.querySelector('#dock [data-dk=arbeid]');
               R.btn = !!document.querySelector('#dock [data-dk=beh]'); DOCK.open('arbeid'); const dr = () => document.getElementById('drawerBody'); R.tab = DOCK.page === 'beholdning' && (dr().querySelector('.ph-sub button.on') || {}).textContent === 'Mannskap';
               R.rows = dr().querySelectorAll('.wk-p').length; R.flow = [...dr().querySelectorAll('.wk-dks .wk-dk b')].map(e => e.textContent); R.meters = dr().querySelectorAll('.wk-p .wk-ms .wk-m').length; R.kv = dr().querySelectorAll('.ph-kv').length;
               const tap = sel => { const e = dr().querySelector(sel); if (e) e.click(); return !!e; };
               const B = S.crew[1]; R.noChains = !dr().querySelector('[data-pa=wk-edit], [data-pa=wk-pre], .wk-pick'); R.whyShown = [...dr().querySelectorAll('.wk-p .wk-now')].filter(e => e.textContent.includes(' – ')).length;
-              // UI 2, U2-7 (K11): one main button per person, the rest behind «⋯»; with no skipper yet «Gjør til skipper» is the main one
+              // UI 2, U2-7 (K11): one main button per person, the rest behind «⋯»; aboard with no mate yet «Gjør til styrmann» is the main one
               const crewCards = [...dr().querySelectorAll('.wk-p')].filter(e => e.querySelector('[data-pa=wk-card]'));
               R.one = crewCards.map(e => [...e.querySelectorAll('.wk-btns > .ph-btn')].length + '/' + e.querySelectorAll('.wk-btns > .wk-more').length + '/' + ((e.querySelector('.wk-btns > .ph-btn') || {}).dataset || {}).pa);
-              R.menuShut = !dr().querySelector('.wk-menu'); tap('[data-pa=wk-more][data-id="' + B.id + '"]'); R.menu = [...dr().querySelectorAll('.wk-menu [data-pa]')].map(e => e.dataset.pa + ':' + e.dataset.id === 'wk-mate:' + B.id);
+              R.menuShut = !dr().querySelector('.wk-menu'); tap('[data-pa=wk-more][data-id="' + B.id + '"]'); R.menu = [...dr().querySelectorAll('.wk-menu [data-pa]')].map(e => e.dataset.pa + ':' + e.dataset.id === 'wk-sk:' + B.id); R.aboard = meAboard();
               tap('[data-pa=wk-mate][data-id="' + B.id + '"]'); R.menuGone = !dr().querySelector('.wk-menu'); R.mate = [!!B.mate, !S.crew[0].mate, ![...dr().querySelectorAll('[data-pa=wk-mate]')].some(e => e.dataset.id === B.id), (S.ops && S.ops.v === 2) ? S.ops.mate === B.id : true];
               tap('[data-pa=wk-card][data-id="' + S.crew[0].id + '"]'); R.card = dr().querySelectorAll('.wk-card .wk-sk span.wk-v').length; R.badge = [...dr().querySelectorAll('.wk-b.mate')].map(e => e.textContent); tap('[data-pa=wk-card][data-id="' + S.crew[0].id + '"]'); R.cardShut = !dr().querySelector('.wk-card');
+              { for (const c of S.crew){ delete c.mate; delete c.sk; } const me0 = S.me; S.me = '__away'; DOCK.open('arbeid');   // not aboard: the skipper's button is the main one, and the «⋯» shuts with the drawer (U2-7)
+                R.ashore = [...dr().querySelectorAll('.wk-p .wk-btns > .ph-btn')].map(e => e.dataset.pa); tap('[data-pa=wk-more]'); R.ashoreMenu = !!dr().querySelector('.wk-menu'); DOCK.close(); DOCK.open('arbeid'); R.shutOnClose = !dr().querySelector('.wk-menu');
+                S.me = me0; setMate(B.id); DOCK.open('arbeid'); }
               R.team = (dr().querySelector('.wk-team') || {}).textContent || ''; R.effShown = dr().querySelectorAll('.wk-eff').length; R.working = workAssign().filter(p => p.c && p.st !== 'pause').length;
               const W = dr().getBoundingClientRect(); R.overflow = dr().scrollWidth > dr().clientWidth + 1; R.small = [...dr().querySelectorAll('button')].filter(e => e.offsetParent && e.getBoundingClientRect().height < 43).map(e => e.textContent.slice(0, 20));
               return R; })()""")
@@ -209,7 +212,8 @@ async def main():
             print(ok(u['noCrew'] and u['btn'] and u['tab'] and u['rows'] == 3 and u['flow'][:4] == ['Ror', 'Fiske', 'Sløying', 'Ising'] and u['meters'] == 5 and u['kv'] == 0), tag + ': no Mannskap button, the page is the Mannskap tab of Om bord; «På dekk nå» has a chip for each station of the rig, and one card each with energy (and mood for the crew), nobody listed twice', u['flow'], u['meters'], u['kv'])
             print(ok(u['noChains'] and u['whyShown'] >= 2), tag + ': no chains to set up: each row says why the person does what they do', u['whyShown'])
             print(ok(all(u['mate']) and u['card'] >= 9 and u['cardShut'] and 'Styrmann' in u['badge']), tag + ': Gjør til styrmann makes the mate (the plan\'s too) and marks the card; a tap on the name shows the skills, and closes on a second tap', u['mate'], u['card'], u['badge'])
-            print(ok(u['one'] and all(x == '1/1/wk-sk' for x in u['one']) and u['menuShut'] and u['menu'] == [True] and u['menuGone']), tag + ': one main button per person (Gjør til skipper while the boat has no skipper), Gjør til styrmann behind «⋯», and the menu shuts when it is chosen (U2-7)', u['one'], u['menu'])
+            print(ok(u['aboard'] and u['one'] and all(x == '1/1/wk-mate' for x in u['one']) and u['menuShut'] and u['menu'] == [True] and u['menuGone']), tag + ': one main button per person (aboard with no mate: Gjør til styrmann), Gjør til skipper behind «⋯», and the menu shuts when a post is chosen (U2-7)', u['one'], u['menu'])
+            print(ok(u['ashore'] and all(x == 'wk-sk' for x in u['ashore']) and u['ashoreMenu'] and u['shutOnClose']), tag + ': not aboard the main button is Gjør til skipper, and the «⋯» shuts with the drawer (U2-7)', u['ashore'], u['ashoreMenu'], u['shutOnClose'])
             print(ok(u['team'] and u['working'] >= 1 and u['effShown'] == u['working']), tag + ': the samhold line on top, and how each one at work is going in words', u['team'], u['effShown'], u['working'])
             print(ok(not u['overflow'] and not u['small']), tag + ': no sideways scroll, and every button is at least 44 px', u['small'])
             await pg.evaluate("DOCK.close()")

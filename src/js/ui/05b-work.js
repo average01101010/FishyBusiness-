@@ -64,12 +64,15 @@ const WORK = (() => {
     // the skipper runs the boat and the operations plan when you are not aboard, the mate is at the helm when you sleep (13-work.js)
     // (the skipper's card offers no «Gjør til styrmann»: a tap there took the skipper away and the plan went «Ikke klar ennå», GUI review U10)
     // UI 2, U2-7 (docs/planer/ui-2-staaende.md kap. 5, K11): one main button per person and the rest behind «⋯», not two of the same weight.
-    // The main one is the post the boat lacks: «Gjør til skipper» while nobody runs her without you, then «Gjør til styrmann»; the mate
-    // has only «Gjør til skipper». The menu is the page's own state (more), so it stays open while the page is drawn anew every tick
+    // The main one is the post that counts now and that the boat lacks: aboard the mate (at the helm when you sleep; the skipper only runs
+    // her when you are not aboard), ashore the skipper; when the boat has that post already, the other one; when she has both, the one
+    // that counts now. The mate's card has only «Gjør til skipper». The menu is the page's own state (more), so it stays open while the
+    // page is drawn anew every tick (a <details>, as in Rederi, closed again on each redraw)
     if (c && !c.sk){
       const B = (pa, no, en, cl) => '<button class="ph-btn wk-edit' + cl + '" data-pa="' + pa + '" data-id="' + id + '">' + L(no, en) + '</button>';
-      const opts = [['wk-sk', 'Gjør til skipper', 'Make skipper']].concat(c.mate ? [] : [['wk-mate', 'Gjør til styrmann', 'Make mate']]);
-      if (opts.length > 1 && crewSkipper()) opts.reverse();
+      const SK = ['wk-sk', 'Gjør til skipper', 'Make skipper'], MT = ['wk-mate', 'Gjør til styrmann', 'Make mate'];
+      let opts = c.mate ? [SK] : meAboard() ? [MT, SK] : [SK, MT];
+      if (opts.length > 1 && (opts[0] === MT ? crewMate() : crewSkipper()) && !(opts[1] === MT ? crewMate() : crewSkipper())) opts = [opts[1], opts[0]];
       const [m0, ...rest] = opts, open = more === id && rest.length;
       h += '<div class="wk-btns">' + B(m0[0], m0[1], m0[2], '') + (rest.length ? '<button class="wk-more' + (open ? ' on' : '') + '" data-pa="wk-more" data-id="' + id + '" aria-label="' + L('Mer', 'More') + '" aria-expanded="' + !!open + '">⋯</button>' : '') + '</div>' +
         (open ? '<div class="wk-menu">' + rest.map(o => B(o[0], o[1], o[2], ' alt')).join('') + '</div>' : '');
@@ -92,6 +95,7 @@ const WORK = (() => {
     return '<div class="ph-card"><h4>' + L('Fri', 'Off') + '</h4>' + off.map(c => '<div class="ph-kv"><span><b>' + c.name.split(' ')[0] + '</b></span><span>' + (c.off ? L('Fri denne turen', 'Off this trip') : L('Fri i dag (biyrke)', 'Off today (part-time)')) + '</span></div>').join('') + '</div>';
   }
   function page(){
+    if (more && !crewById(more)) more = null;   // (the person whose «⋯» was open has left)
     const team = crewAboard(), G = lagOf(), h = ['<div class="ph-c wk">', head()];
     if (team.length || G){ const A = workAssign(); h.push(deckNow(A)); if (G) h.push(lagCardHtml());
       if (meAboard() && asleep()) h.push('<div class="ph-card wk-p"><div class="wk-top"><b class="wk-name">' + L('Du', 'You') + '</b><span class="wk-bs">' + badge('mate', L('Skipper', 'Skipper')) + '</span></div><p class="wk-now r2">' + L('Sover', 'Asleep') + '</p></div>');
@@ -109,7 +113,9 @@ const WORK = (() => {
     if (a === 'wk-sk'){ setSkipper(d.id); const c = who(d.id); if (c) toast(L(c.name.split(' ')[0] + ' er skipper når du ikke er om bord.', c.name.split(' ')[0] + ' is the skipper when you are not aboard.')); return true; }
     return false;
   }
-  return {page, act};
+  // the drawer shut: the «⋯» shuts with it (10c-dock.js close)
+  const shut = () => { more = null; };
+  return {page, act, shut};
 })();
 // a line from the crew shows as a toast when you are aboard
 hooks.onAnchorAlarm = (kind, n) => { const L = (no, en) => S.lang === 'no' ? no : en; if (typeof SND !== 'undefined' && SND.anchorAlarm) SND.anchorAlarm(); if (typeof G3 !== 'undefined' && G3.anchorAlarm) G3.anchorAlarm(kind);
