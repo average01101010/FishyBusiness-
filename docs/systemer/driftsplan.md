@@ -4,7 +4,7 @@
 
 ## 5.7 Driftsplan (`S.ops`, per båt) – Driftsplan 2 (fra 27.10.2026)
 
-> **Driftsplan 2 er planen i spillet fra 27.10.2026** (`DRIFT2 = true` i `core/06g-plan2.js`): modellen og dagen i `core/06g-plan2.js`, motoren i `core/06h-plan2-engine.js`, siden i `ui/05d-plan2.js`, kartvinduet i `ui/03g-planmap.js`. Hva den gjør, del for del, står i avsnittet **Driftsplan 2** lenger ned; revisjonen av den forrige planen er `docs/planer/driftsplan-2/01-revisjon.md`, designet `02-design.md`. **Det som står i resten av 5.7, er den forrige planen (23.10.2026)**, som fortsatt ligger i `core/06d-drift.js` og `ui/05c-drift.js`, kjører bare med bryteren av (de gamle testene setter `DRIFT2 = false`), og fjernes i del 8 når Jonas har prøvd den nye. Gamle planer (v2 og v3) slås av med melding når spillet åpnes; redskap, mannskap, fangst og penger røres ikke.
+> **Driftsplan 2 er planen i spillet fra 27.10.2026** (`DRIFT2 = true` i `core/06g-plan2.js`): modellen og dagen i `core/06g-plan2.js`, motoren i `core/06h-plan2-engine.js`, siden i `ui/05d-plan2.js`, kartvinduet i `ui/03g-planmap.js`. Hva den gjør, del for del, står i avsnittet **Driftsplan 2** lenger ned; revisjonen av den forrige planen er `docs/planer/driftsplan-2/01-revisjon.md`, designet `02-design.md`. **Det som står i resten av 5.7, er den forrige planen (23.10.2026)**, beholdt som historikk: koden (`core/06d-drift.js` og `ui/05c-drift.js`) ble tatt ut i del 8 (Ø12 C, 08.11.2026; Jonas 05.11.2026: «Ja, rydd bort den gamle»), og det Driftsplan 2 bruker av den, står i `core/06d-plan-felles.js` (se «Ø12 C: ryddingen» under). Gamle planer (v2 og v3) slås av med melding når spillet åpnes; redskap, mannskap, fangst og penger røres ikke.
 
 Jonas 23.10.2026: «en fullstendig redesign av driftsplan-systemet … forenkles ytterligere og gjøres så intuitivt som mulig for brukerne samtidig som det innehar dem funksjonen det må ha». Kjernen ligger i `core/06d-drift.js`, siden i `ui/05c-drift.js`. Den gamle planen (økter med klokkeslett, egne ruter, ukedager, maler, «Flere valg», planleggeren i `06f-plan.js`) er fjernet. Gamle planer i lagringene slås av med en melding første gang de leses (`driftOps`; Jonas: «nytt system, nye planer»). Redskapet i sjøen står der det står.
 
@@ -65,18 +65,11 @@ Jonas 23.10.2026: «en fullstendig redesign av driftsplan-systemet … forenkles
   - Timene for setting og haling per enhet (`DRP.setH`, `DRP.haulH`) er også anslag.
   - Tidslinja regner med marsjfart og høyeste antall juksetimer.
   - Push for stopp gjelder bare det som kan vites når appen legges bort.
-- **Tester:**
-  - `drifttest.py`: motoren. Den dekker en juksedag med levering, hjemtur, hvile og neste dag, line på samme tur, garn over et døgn, skipper og styrmann, én-manns båt, overtakelse, stengt felt, torskekvote, 2+2 og flerdøgnstur, og gamle planer.
-  - `driftuitest.py`: siden.
-  - `anchortest.py`: stor båt til ankers og ved kai.
-  - `opsowntest.py`: eierskap og kvote med og uten deg om bord.
-  - `fleet2test.py`: to båter på plan samtidig.
-  - `fleet3test.py`: varsel om stoppet plan.
-  - `geartest.py`: et garnfelt over tre døgn, og at garn krever to om bord.
+- **Tester:** (den forrige planens `drifttest.py` og `driftuitest.py` ble tatt ut i Ø12 C 08.11.2026; testene for planen står under «Ø12 C: ryddingen».)
 
 ## Driftsplan 2 (fra 26.10.2026, `docs/planer/driftsplan-2/`)
 
-Planen i spillet fra 27.10.2026. Delene under er bygd i rekkefølge og er det som gjelder; 5.7 over beskriver forgjengeren til del 8 fjerner den. **Del 8: Jonas 05.11.2026: «Ja, rydd bort den gamle».** Ryddingen tas i Ø12 (`docs/planer/okter-etter-backloggen.md`) etter H2c, når autolineren er i Driftsplan 2.
+Planen i spillet fra 27.10.2026. Delene under er bygd i rekkefølge og er det som gjelder; 5.7 over beskriver forgjengeren, som del 8 tok ut. **Del 8: Jonas 05.11.2026: «Ja, rydd bort den gamle».** Gjort i Ø12 C 08.11.2026 (steg 18 i `docs/planer/koen.md`), se «Ø12 C: ryddingen» nederst i avsnittet.
 
 **Jonas' valg (26.10.2026, `02-design.md` kapittel 5):** 1 A (dagen som plan, lagt av planen selv), 2 «ta det du mener er mest riktig» → A (planen av: redskapet står, hentes med «Hent redskapet»), 3 A, 4 A (plassene i kartplotteren), 5 C (gamle planer slås av med melding), 6 A (ett redskap om gangen, «siden alle båter må rigges om for å fiske med de ulike passive redskapene»), 7 → leveringsregelen er spillerens valg i Levering-raden, standard A, og alle tre testes. To regler, ordrett: «Om båten går dagdrift på driftsplanen skal ikke skipperen bare kunne gå å legge seg for å sove mens mannskapet jobber, det vil være uansvarlig. Skipper går alltid dagvakt, styrmann natt.» og «Ved døgndrift jobber mannskapet 12 timer hver og mannskap som har frivakt sover ombord. Båten må ha køyer nok til mannskapet for å kunne gå døgndrift.»
 
@@ -155,6 +148,12 @@ Den nye planen ble bygd del for del bak bryteren `DRIFT2` (`core/06g-plan2.js`),
   - **Testene:** `driftsplan2test` S19 (rorbua) var rød på arbeidsgrenen fordi testens `D2.boat` lot kaiskiftet (`b.shift`) fra scenarioet før stå mens klokka ble satt tilbake; rettet i testen. S3 tåler en teinelenke tapt i været. Testen tar 85–96 s, ikke 35 min (Ø2 gjorde den rask 05.11.2026). `driftsplan2ui` spiller til lina står siden Ø2 (d663638a), ikke et fast antall steg.
   - **Patchnotes** `o12-071126` (`ui/phone/07-patch.js`): siden ved Hammerfest, «Feltet er åpent igjen» på dagen, varselet når planen stopper.
   - **Står igjen til Jonas på nettbrettet** (backloggen): sveip med fart i Drift-siden og kartet, lange trykk, tilbakeknappen, skjermtastaturet, og om skuffen i 88 % (U1) føles riktig.
+- **Ø12 C: ryddingen (del 8), 08.11.2026** (Jonas 05.11.2026: «Ja, rydd bort den gamle»; steg 18 i `docs/planer/koen.md`, gren `ccr-864d9913-u29rne`). Den forrige planens kode er ute av malen og repoet: `core/06d-drift.js` (motoren, `driftNew`, `driftMake`, `driftCheck`, `driftSketch`, `driftNow`, `driftCopy`, v3-pushen) og `ui/05c-drift.js` (`DRIFTUI`, `driftSvg`). Det Driftsplan 2 og resten av spillet brukte av den, står i **`core/06d-plan-felles.js`** på samme plass i malen: klokka (`driftHod`, `driftClock`), leggene langs leia (`drCK`, `drLK`, `drLeg`, `drLegPut`, `drFetch`, `drLegsStale`, `drH`), hvilen (`drRested`, `drTired`), overtakelsen (`drTook`), reglene på plassene (`drRulesWhy`, `drKind`, `drJig`), fangstmerkene (`planMark`, `planJigRate`, `PLAN_MEMO`) og `DRP` med bare `bigLen`, `tired`, `rested` og `legsMax`.
+  - **Rene kall til Driftsplan 2:** `04-crew.js` kaller `plan2WatchTick`, `07-harbours.js` `plan2Report`, Rederi-siden `plan2Ops` og `PLAN2UI.nowOf`, `phone/06-render.js` `PLAN2UI`, dokkprikken bare v4; `phone/14-act.js` har ingen `dr-`-handlinger lenger, og `DRIFTCTX` er ute av rutepanelet (`07-guide.js`, `03-map.js`, `08-actions.js` `driftsave`/`driftcancel`). Pushen for v3-planen er ute av `ui/10g-push.js`; v4 har stopp-varselet sitt fra Ø12 A+B.
+  - **Fem navn står igjen som én linje hver** mot Driftsplan 2 (`opsStep` → `plan2Step`, `opsLanded` → `plan2Landed`, `driftWx` → `plan2Wx`, `opsSkipper`, `driftStock`), fordi filene som kaller dem (`05-vessels.js`, `03-simulation.js`, `13-work.js`, `10-gear.js`) var eid av andre økter 08.11.2026. **`DRIFT2`** står i `06g-plan2.js` av samme grunn (`let DRIFT2 = true`); ingen fil leser den lenger utenom `06g-plan2.js` og `05-vessels.js`. Backloggen har jobben.
+  - **Lagringene:** en v3- eller v2-plan slås av med melding av `plan2Ops` som før (valg 5 C), og redskapet i sjøen, mannskapet, fangsten og pengene røres ikke (`driftsplan2test` S12).
+  - **`10b-gearcare.js`:** «planen går» er som før `S.plan.ops` (den gamle `driftOps()` ga aldri en v4-plan); se backloggen om bøtingen av garn på en v4-plan til ankers.
+  - **Testene:** `drifttest.py` og `driftuitest.py` er ute; det de dekket og de nye ikke, er `driftsplan2test` S20 (skipper og styrmann i motoren, båten med plass til én) og S12 (ingenting røres). `opsowntest`, `fleet2test`, `fleet3test` og `geartest` går på v4; skippertillegget leses i lotten (`lastSale.ls.per`). `anchortest` del 3 (stor båt til ankers hjemme mellom dagene) er tatt ut: alle båter fra 24 m er havbåter som bare går døgndrift i Driftsplan 2. `tutdrift.py` gjaldt Første tur, ikke planen.
 
 ## Havbåten i Driftsplan 2: autolina, lagene, været og ligge bi (H2c av `docs/planer/havsteget-h2-autoline.md`, 05.11.2026)
 
