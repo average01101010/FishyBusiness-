@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p153', '08.11.2026', 'Vrak i lasterommet', 'Wreck in the hold', [
+       ['Lasterommet viste 0 kr for fisk som har blitt vrak, men mottaket betaler 1 kr/kg for den til mel. Nå viser lasterommet det samme som sluttseddelen.', 'The hold showed 0 kr for fish that has become wreck, but the plant pays 1 kr/kg for it as meal. Now the hold shows the same as the landing note.']]],
     ['f3-071126', '07.11.2026', 'Sjøen bryter', 'The sea breaks', [
        ['Skumtoppene kommer der bølgene bryter, på kammen som blir spiss, og skummet blir liggende bak kammen som tråder som driver med vinden og tynnes ut. Jo mer vind, jo lenger ligger det.', 'The whitecaps come where the waves break, on the crest that grows sharp, and the foam stays behind the crest as strands that drift with the wind and thin out. The more wind, the longer it lies.'],
        ['Sjøen er krappere og går i flere retninger, mest i ung sjø nær land, og fra stiv kuling river vinden sprut av kammene.', 'The sea is choppier and runs in more directions, most of all in a young sea near land, and from a near gale the wind tears spray off the crests.'],

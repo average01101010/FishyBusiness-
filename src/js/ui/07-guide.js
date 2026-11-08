@@ -163,7 +163,8 @@ function panelFish(){
   h.push(gearPanel());
   return h.join('');
 }
-function valueEst(sp, g){ const H = S.t / 60, ps = plantsNear(S.boat.pos, 8).map(x => price(x.pt, sp, H)); return ps.reduce((a, c) => a + c, 0) / ps.length * GM[g]; }
+// (a wreck lot, V, is paid 1 kr/kg for meal as in sell(), not 0)
+function valueEst(sp, g){ if (g === 'V') return 1; const H = S.t / 60, ps = plantsNear(S.boat.pos, 8).map(x => price(x.pt, sp, H)); return ps.reduce((a, c) => a + c, 0) / ps.length * GM[g]; }
 function panelHold(){
   const b = S.boat, HF = holdFmt(), tot = HF.round, h = [], L = (no, en) => S.lang === 'no' ? no : en;
   h.push('<div class="kv"><span>' + t('load') + '</span><span>' + HF.txt + (HF.fz ? ' ' + L('produkt', 'product') : '') + '</span></div><div class="bar"><i style="width:' + (100 * HF.load / BOAT.holdCap).toFixed(1) + '%"></i></div>');
