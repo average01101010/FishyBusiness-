@@ -94,11 +94,12 @@ async def run(p, w, h, tag):
     off = await pg.evaluate("document.querySelector('#dockFan [data-dk=lever]').classList.contains('off')")
     check(f == ['lever', 'is', 'agn', 'bunker'] and not off, 'viften for Mottak: Lever, Is, Agn og Bunkring', [f, off])
 
-    # the drawer: ice from the plant, at the side lying, from below standing, and the middle of the screen stays free
+    # the drawer: ice from the plant, at the side lying; standing one sheet from 12 % of the height for every page, with the strip
+    # visible over it (UI 2, U2-7; until then the trade pages opened at 55 % and the middle of the screen stayed free)
     await tap_el('#dockFan [data-dk=is]'); await pg.wait_for_timeout(300)
-    r = json.loads(await J("(() => { const r = document.getElementById('drawer').getBoundingClientRect(); return {x:r.x, y:r.y, w:r.width, h:r.height, title:document.getElementById('drawerTitle').textContent, ice:!!document.querySelector('#drawerBody [data-pa=shop][data-k=ice]')}; })()"))
-    side = r['x'] > w * 0.55 if w > h else r['y'] > h * 0.3
-    check(r['title'] == 'Is' and r['ice'] and side, 'skuffen med is ' + ('ligger til høyre' if w > h else 'kommer nedenfra'), r)
+    r = json.loads(await J("(() => { const r = document.getElementById('drawer').getBoundingClientRect(), u = document.getElementById('hud').getBoundingClientRect(); return {x:r.x, y:r.y, w:r.width, h:r.height, hud:[u.top, u.bottom], title:document.getElementById('drawerTitle').textContent, ice:!!document.querySelector('#drawerBody [data-pa=shop][data-k=ice]')}; })()"))
+    side = r['x'] > w * 0.55 if w > h else (h * 0.11 <= r['y'] <= h * 0.15 and r['hud'][1] <= r['y'] and r['hud'][0] >= 0)
+    check(r['title'] == 'Is' and r['ice'] and side, 'skuffen med is ' + ('ligger til høyre' if w > h else 'er ett ark fra 12 % med stripa over'), r)
     await pg.screenshot(path='dock_drawer_' + tag + '.png')
     ice0 = await pg.evaluate("S.boat.ice")
     await tap_el('#drawerBody [data-pa=shop][data-k=ice][data-fill]'); await pg.wait_for_timeout(200)
