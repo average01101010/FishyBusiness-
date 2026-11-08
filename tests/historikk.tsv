@@ -1176,3 +1176,5 @@
 2026-11-08 15:27	ccr-287cbb81-whkbel	c131e302	regmarktest	OK	5	lite	samtidig	
 2026-11-08 15:27	ccr-287cbb81-whkbel	c131e302	maletest	OK	16	lite	samtidig	
 2026-11-08 15:27	ccr-287cbb81-whkbel	c131e302	walktest	FEIL	15	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 44
+2026-11-08 15:33	ccr-287cbb81-whkbel	10ee27cd	haultest	OK	356	3d	alene	
+2026-11-08 15:48	ccr-287cbb81-whkbel	10ee27cd	potshot	FEIL	900	3d	alene	gikk ut på tid
