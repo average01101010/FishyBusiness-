@@ -233,11 +233,14 @@ function planDayAuto(o, H0, st){
 // ---- the day. H0: the hour the day begins (the departure). Returns {t0, steps:[{t, k, …}], end, why:[no, en], skipped:[{id, no, en}]}.
 // Steps: avgang {from}, sett {pid, n, kind, h}, trekk {pid, n, kind, h, reset, soakH}, juks {pid, h, until}, vent {pid, until},
 // lever {port, h} or behold {kg}, agn {port, kg}, hjem {port, anchor}, egning {where, n, ready}, hvile {until, where}, vakt {w, who, until}, ut {}
-// the days «Levering hvert N. døgn» lands on, counted from the plan's first day (0): a day plan lands on the first day and every N after
-// (0, N, 2N …); a trip of several days at the end of each N days (N − 1, 2N − 1 …), so a trip as long as N lands on its last day,
-// before she goes home, not on its first (Jonas 08.11.2026: «A», Ø12 A+B's question; before, a trip of three days with landing every
-// third day landed on day 1 and day 4 and came home on day 3 with two days' catch aboard)
-function p2LandsToday(o, dayIndex){ const N = Math.max(1, ((o && o.land) || {}).days || 2); return o && o.rhythm === 'multi' ? dayIndex % N === N - 1 : dayIndex % N === 0; }
+// a trip of several days: its length in days, and whether the plan's day (0 from its first) is the trip's last, before home
+function p2TripLen(o){ return Math.max(2, (o && o.days) || 2); }
+function p2TripLast(o, dayIndex){ return dayIndex % p2TripLen(o) === p2TripLen(o) - 1; }
+// the days «Levering hvert N. døgn» lands on, counted from the plan's first day (0): the first day and every N after (0, N, 2N …); on a
+// trip of several days as long as N, its last day instead, before she goes home (Jonas 08.11.2026: «A», Ø12 A+B's question: before, a
+// trip of three days with landing every third day landed on day 1 and day 4 and came home on day 3 with two days' catch aboard). A trip
+// of another length than N lands as before: whether it should land on its last day too is a choice for Jonas (the backlog).
+function p2LandsToday(o, dayIndex){ const N = Math.max(1, ((o && o.land) || {}).days || 2); return o && o.rhythm === 'multi' && N === p2TripLen(o) ? p2TripLast(o, dayIndex) : dayIndex % N === 0; }
 function planDay(o, H0, st){
   st = st || plan2StateOf(o);
   if (p2Sno(o)){ const s2 = Object.assign({}, st, {H:H0}); if (!s2.sno || Math.abs(st.H - H0) > 1) s2.sno = p2SnoState(o, s2); return planDaySno(o, H0, s2); }   // (the snow crab vessel's strings, H3c)
@@ -332,7 +335,7 @@ function planDay(o, H0, st){
   else if (st.hold > 0.5) steps.push({t, k:'behold', kg:Math.round(st.hold)});
   // home (or the night aboard on a long trip), the baiting, the rest
   if (!watch){
-    const multi = o.rhythm === 'multi', last = multi && st.dayIndex % Math.max(2, o.days || 2) === Math.max(2, o.days || 2) - 1;
+    const multi = o.rhythm === 'multi', last = multi && p2TripLast(o, st.dayIndex);
     if (multi && !last){ const A = plan2P(o, 'A'), M = plan2P(o, 'M'); if (A){ go(A); steps.push({t, k:'hvile', where:'anker', until:null}); } else if (M){ go(M, o.M); steps.push({t, k:'hvile', where:'kai', until:null}); } }
     else { const H = plan2P(o, 'H'), hp = plan2Port(o, 'H'); go(H, hp); steps.push({t, k:'hjem', port:o.home, anchor:!!o.homeA}); }
     const home = t;

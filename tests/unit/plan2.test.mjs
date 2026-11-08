@@ -34,14 +34,14 @@ export default function (t){
     t.ok(o.run.wait.until === 124 && o.run.wait.open === 196, 'samme venting dagen etter: ny titt, samme åpningsdag');
     plan2Wait(o, 'wx', 'Venter på været.', 'Waits for the weather.', 130);
     t.ok(o.run.wait.open === null && o.run.wait.until === 130, 'en annen venting (været) har ingen åpningsdag'); }
-  // «Levering hvert N. døgn» (Jonas 08.11.2026: A): a day plan lands on the first day and every N after; a trip of several days at the
-  // end of each N days, so a trip of three days with landing every third day lands on its third day, before home, not on day 1 and 4
-  { const {p2LandsToday} = K, days = (o, n) => [...Array(n).keys()].filter(d => p2LandsToday(o, d)).map(d => d + 1);
-    const trip = {rhythm:'multi', days:3, land:{when:'days', days:3}}, day = {rhythm:'day', land:{when:'days', days:3}};
-    t.ok(JSON.stringify(days(trip, 7)) === '[3,6]', 'flerdøgnstur på 3 døgn, levering hvert 3. døgn: dag 3 og 6, turens siste dager (' + JSON.stringify(days(trip, 7)) + ')');
-    t.ok(JSON.stringify(days(day, 7)) === '[1,4,7]', 'dagdrift, levering hvert 3. døgn: dag 1, 4 og 7 som før (' + JSON.stringify(days(day, 7)) + ')');
-    t.ok(JSON.stringify(days({rhythm:'multi', days:3, land:{when:'days', days:2}}, 6)) === '[2,4,6]', 'flerdøgnstur, levering hvert 2. døgn: dag 2, 4 og 6');
-    t.ok(JSON.stringify(days({rhythm:'multi', days:3, land:{when:'days'}}, 4)) === '[2,4]', 'uten tall i Levering-raden: hvert 2. døgn, som før'); }
+  // «Levering hvert N. døgn» (Jonas 08.11.2026: A): a day plan lands on the first day and every N after; a trip of several days as long as
+  // N lands on its last day, before home, not on day 1 and 4; a trip of another length lands as before (that is a choice for Jonas)
+  { const {p2LandsToday, p2TripLast} = K, days = (o, n) => [...Array(n).keys()].filter(d => p2LandsToday(o, d)).map(d => d + 1), trip = (T, N) => ({rhythm:'multi', days:T, land:{when:'days', days:N}});
+    t.ok(JSON.stringify(days(trip(3, 3), 7)) === '[3,6]', 'flerdøgnstur på 3 døgn, levering hvert 3. døgn: dag 3 og 6 (' + JSON.stringify(days(trip(3, 3), 7)) + ')');
+    t.ok(days(trip(3, 3), 9).every(d => p2TripLast(trip(3, 3), d - 1)) && days(trip(4, 4), 12).every(d => p2TripLast(trip(4, 4), d - 1)) && JSON.stringify(days(trip(4, 4), 9)) === '[4,8]', 'leveringen er turens siste dag, den samme dagen hjemturen regnes fra (3 og 4 døgn)');
+    t.ok(JSON.stringify(days({rhythm:'day', land:{when:'days', days:3}}, 7)) === '[1,4,7]', 'dagdrift, levering hvert 3. døgn: dag 1, 4 og 7 som før');
+    t.ok(JSON.stringify(days(trip(3, 2), 6)) === '[1,3,5]', 'flerdøgnstur på 3 døgn, levering hvert 2. døgn: som før (dag 1, 3, 5), ikke valgt ennå');
+    t.ok(JSON.stringify(days({rhythm:'multi', land:{when:'days'}}, 4)) === '[2,4]', 'uten tall: turen 2 døgn og levering hvert 2. døgn, siste dag (2 og 4)'); }
   // round the clock (U2): the boat's own limits before the number aboard
   { const {plan2WatchWhy} = K, st = (house, bunks, crewMax) => ({house, bunks, crewMax});
     t.ok(String(plan2WatchWhy(st(false, 0, 2), 3, true)) === 'Båten har verken styrhus eller køyer', 'snekke (ingen styrhus, ingen køyer), tre om bord: båtens grense, ikke «dere er 3»');
