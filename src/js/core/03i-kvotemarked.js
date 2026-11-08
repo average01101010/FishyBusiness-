@@ -43,27 +43,28 @@ function kmTakst(item, H){
   H = H == null ? S.t / 60 : H; const R = item && HJ[item.id]; if (!R) return 0; const unit = yearQuota(yearH(H)).unit[R.grp] * 1000;
   const st = s => s.kf * unit * KPK * kmLeft(s, H) / STRUCT.years;
   if (item.kind === 'struct') return Math.round(st(item));
-  return Math.round(Math.round(R.kf * unit) * KPK + (item.st || []).reduce((a, s) => a + st(s), 0));   // (the own part as licValue: whole kilos at KPK)
+  return structPrice(item.id, H) + Math.round((item.st || []).reduce((a, s) => a + st(s), 0));   // (the own part as the register's price: licQ at KPK)
 }
 // the price band: the start price from 40 % and buy-now up to 160 % of the takst, the next bid 2 % over (B's limits, MB)
-const kmBounds = takst => mbBounds(takst);
-const kmPriceWhy = (takst, start, buynow) => mbPriceWhy(takst, start, buynow);
-const kmNext = L => mbNext(L);
+// (mbPriceWhy and mbNext in 09k-market.js serve the market as they are)
+const kmBounds = mbBounds;
 // the quick sale to the register: 90 % of the takst (V3 A: the register is the floor)
 const kmQuick = (item, H) => Math.round(kmTakst(item, H) * MB.quick);
 
 // ---- the free right (V2 A, § 7): a right in the company without a boat, at most two game years, then back to the register ----
-// S.licFree = [{id, flen, st, landY, used, y, H0, until}]; kmFree(H) lets the ones whose time is up go (also called at the new year)
+// S.licFree = [{id, flen, st, landY, used, y, H0, until}]. kmFree(H) lets the ones whose time is up go: called at the new year, and by a
+// page before it lists them (KM3), never by the checks below, which only read (so an index a page holds still points at the same right)
+const kmFreeList = () => S.licFree || (S.licFree = []);
 function kmFree(H){
-  H = H == null ? S.t / 60 : H; const F = S.licFree || (S.licFree = []);
+  H = H == null ? S.t / 60 : H; const F = kmFreeList();
   for (const f of F.slice()) if (!(H < f.until)){
-    F.splice(F.indexOf(f), 1); if (HJ[f.id]) regFree(f.id);
+    F.splice(F.indexOf(f), 1); if (!HJ[f.id]) continue; regFree(f.id);
     msg('Fiskeridirektoratet', 'Tilsagnet om hjemmelen ' + HJ[f.id].hl + ' har gått ut etter to år uten båt. Hjemmelen er tilbake i registeret' + ((f.st || []).length ? ', og strukturkvotene som fulgte den, er fordelt tilbake til gruppen.' : '.'),
       'The promise of the ' + HJ[f.id].hl + ' quota length right has run out after two years without a boat. The right is back in the register' + ((f.st || []).length ? ', and its structure quotas have gone back to the group.' : '.'));
   }
   return F;
 }
-function kmFreeAdd(item, H){ const F = kmFree(H); F.push({id:item.id, flen:item.flen || 0, st:(item.st || []).map(s => ({...s})), landY:item.landY, used:item.used || null, y:item.y, H0:H, until:H + KM.freeY * 8760}); return F[F.length - 1]; }
+function kmFreeAdd(item, H){ const F = kmFreeList(); F.push({id:item.id, flen:item.flen || 0, st:(item.st || []).map(s => ({...s})), landY:item.landY, used:item.used || null, y:item.y, H0:H, until:H + KM.freeY * 8760}); return F[F.length - 1]; }
 
 // ---- why it cannot be put out (a word), or null. src = {v, kind:'right'|'struct'|'two', i} for a boat's, {free:i} for a free right ----
 //   gone, none (no right), hav (the ocean permits are sold with the vessel at the yard), two (the second quota from the special scheme
@@ -72,7 +73,7 @@ function kmFreeAdd(item, H){ const F = kmFree(H); F.push({id:item.id, flen:item.
 function kmWhy(src, H){
   H = H == null ? S.t / 60 : H; const y = yearH(H);
   if (!src) return 'gone';
-  if (src.free != null){ const f = kmFree(H)[src.free]; if (!f || !HJ[f.id]) return 'gone'; if (KM.drift && !(f.landY >= y - KM.driftY)) return 'drift'; return null; }
+  if (src.free != null){ const f = kmFreeList()[src.free]; if (!f || !HJ[f.id] || !(H < f.until)) return 'gone'; if (KM.drift && !(f.landY >= y - KM.driftY)) return 'drift'; return null; }
   const v = src.v; if (!v || !S.fleet.includes(v)) return 'gone';
   const l = vget(v, 'lic'), b = vget(v, 'boat'); if (!l) return 'none'; if (l.hav || !HJ[l.id]) return 'hav';
   if (src.kind === 'two') return l.two ? 'two' : 'none';
@@ -88,22 +89,27 @@ function kmWhy(src, H){
 // length of the boat it leaves (the length rule). A structure quota takes its share of the boat's catch this year, by its factor ----
 function kmPack(src, H){
   H = H == null ? S.t / 60 : H; const y = yearH(H), cp = st => (st || []).map(s => ({id:s.id, kf:s.kf, from:s.from, until:s.until}));
-  if (src && src.free != null){ const f = kmFree(H)[src.free]; if (!f) return null; return {kind:'right', id:f.id, hl:HJ[f.id].hl, flen:f.flen, st:cp(f.st), landY:f.landY, used:f.y === y ? f.used : null, y}; }
+  if (src && src.free != null){ const f = kmFreeList()[src.free]; if (!f || !HJ[f.id]) return null; return {kind:'right', id:f.id, hl:HJ[f.id].hl, flen:f.flen, st:cp(f.st), landY:f.landY, used:f.y === y && f.used ? f.used : {torsk:0, hyse:0, sei:0}, y}; }
   const v = src && src.v, l = v && vget(v, 'lic'); if (!l || !HJ[l.id]) return null;
   const q = vget(v, 'quota'), u = q && q.y === y ? {torsk:Math.round(q.torsk || 0), hyse:Math.round(q.hyse || 0), sei:Math.round(q.sei || 0)} : {torsk:0, hyse:0, sei:0};
-  if (src.kind === 'struct'){ const s = (l.st || [])[src.i]; if (!s) return null; const f = s.kf / (HJ[l.id].kf + (l.extra || 0));
-    return {kind:'struct', id:s.id, hl:HJ[s.id].hl, kf:s.kf, from:s.from, until:s.until, used:{torsk:Math.round(u.torsk * f), hyse:Math.round(u.hyse * f), sei:Math.round(u.sei * f)}, y}; }
+  if (src.kind === 'struct'){ const s = (l.st || [])[src.i]; if (!s) return null; return {kind:'struct', id:s.id, hl:HJ[s.id].hl, kf:s.kf, from:s.from, until:s.until, used:kmShare(u, l, s), y}; }
   return {kind:'right', id:l.id, hl:HJ[l.id].hl, flen:(VESSELS[vget(v, 'boat').type] || {}).len || 0, st:cp(l.st), landY:l.landY, used:u, y};
 }
+// a structure quota's share of the boat's catch this year, by its factor
+function kmShare(u, l, s){ const f = s.kf / (HJ[l.id].kf + (l.extra || 0)); return {torsk:Math.round((u.torsk || 0) * f), hyse:Math.round((u.hyse || 0) * f), sei:Math.round((u.sei || 0) * f)}; }
 // ---- the seller's side: the right or the structure quota leaves the boat (or the free right the company). The boat stays in the company
 // without the right; what she fished on it goes with it, so her quota starts afresh. Returns what fell away (the second quota) ----
 function kmOut(src, H){
   H = H == null ? S.t / 60 : H;
-  if (src && src.free != null){ const F = kmFree(H); if (!F[src.free]) return null; F.splice(src.free, 1); return {two:null}; }
+  if (src && src.free != null){ const F = kmFreeList(); if (!F[src.free]) return null; F.splice(src.free, 1); return {two:null}; }
   const v = src && src.v, l = v && vget(v, 'lic'); if (!l) return null;
-  if (src.kind === 'struct'){ if (!(l.st || [])[src.i]) return null; l.st.splice(src.i, 1); licExtra(l); return {two:null}; }
+  if (src.kind === 'struct'){ const s = (l.st || [])[src.i]; if (!s) return null;
+    // (its share of the catch goes with it to the buyer, kmPack, so it comes off this boat's: the same kilos are never counted twice)
+    withVessel(v, () => { const q = quotaState(), d = kmShare(q, l, s); q.torsk = Math.max(0, q.torsk - d.torsk); q.hyse = Math.max(0, q.hyse - d.hyse); q.sei = Math.max(0, q.sei - d.sei); });
+    l.st.splice(src.i, 1); licExtra(l); return {two:null}; }
   const two = l.two || null;
-  withVessel(v, () => { S.lic = null; freshQuota(); });
+  // (without a right in the company she may be the open-group boat again: the owner's open-group catch this year follows her, § 29)
+  withVessel(v, () => { S.lic = null; freshQuota(); if (openVesselId() === v.id) openUsedLoad(); });
   return {two};
 }
 // ---- the buyer's side. to = {v, how}: put (the right on a boat without one: she joins the closed group), struct (structured onto a boat
@@ -112,7 +118,7 @@ function kmOut(src, H){
 // sends word (no waiting for the case work: Friction for Flow). Returns the quota factor the boat got, or null ----
 function kmApply(item, to, H){
   H = H == null ? S.t / 60 : H; const y = yearH(H); if (!item || !HJ[item.id] || !to) return null;
-  const used = item.y === y && item.used ? item.used : null;
+  const used = item.used ? (item.y === y ? item.used : {torsk:0, hyse:0, sei:0}) : null;   // (a right packed last year carries nothing fished this year; null: unknown, as from the register)
   if (to.how === 'free'){ if (item.kind !== 'right') return null; kmFreeAdd(item, H); return 0; }
   const v = to.v; if (!v || !S.fleet.includes(v)) return null; const nm = vget(v, 'boatName');
   if (to.how === 'put'){

@@ -191,7 +191,7 @@ function sell(){
   let coopKr = 0; if (acc === 'lukket' && S.lic.coop && S.lic.coop.y === yearH(H) && codQ > 0){ const own = licQ({...S.lic, coop:null}, H).torsk, onP = Math.max(0, q.torsk + codQ - own) - Math.max(0, q.torsk - own);
     const codGross = Object.values(lines).filter(r => r.sp === 'torsk').reduce((a, r) => a + r.sum, 0); coopKr = Math.round(COOP.share * onP * codGross / Math.max(1, codKg)); }
   q.torsk += codQ; q.hyse += kgOf('hyse') * (1 - (confBy.hyse || 0)); q.sei += kgOf('sei') * (1 - (confBy.sei || 0)); q.byCod = (q.byCod || 0) + byCod;
-  if (acc === 'lukket' && kg > 0.5) S.lic.landY = yearH(H);   // the last game year with catch landed on the right (the operating requirement, KM1 in 03i-kvotemarked.js)
+  if (acc === 'lukket' && codQ + kgOf('hyse') * (1 - (confBy.hyse || 0)) + kgOf('sei') * (1 - (confBy.sei || 0)) > 0.5) S.lic.landY = yearH(H);   // the last game year with catch landed on the right (the operating requirement, KM1 in 03i-kvotemarked.js)
   // (snow crab: the live crab first on the extra quota, the rest on the vessel quota; H3a, H3b)
   const snoQ = kgOf('snokrabbe') > 0 && acc === 'lukket' && S.lic && S.lic.id === 'krab' ? snoLandQ(H, q) : null;
   if (snoQ){ q.snoTq = (q.snoTq || 0) + snoQ.tq; q.snokrabbe = (q.snokrabbe || 0) + snoQ.ord; }

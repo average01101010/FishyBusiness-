@@ -2,8 +2,8 @@
 // kmBuyWhy, the sum of the quota factors before and after a sale, the same tonnes for the same right in two saves with WORLD_SEED, the free
 // right's two years, and the quota cap after kvoteforskriften § 12 (5 and 6 times).
 export default function (t){
-  const K = t.K, {newState, ensureFleet, newVesselObj, vget, HJ, STRUCT, KM, KPK, MB, licQ, licExtra, yearQuota, yearH, kmTakst, kmBounds, kmNext, kmQuick, kmWhy, kmBuyWhy,
-    kmPack, kmOut, kmApply, kmFree, kmCod, kmKf, structRoom, structFits, structIn, npcReg, EPOCH, WORLD_SEED, PORTS, portServices} = K;
+  const K = t.K, {newState, ensureFleet, newVesselObj, vget, HJ, STRUCT, KM, KPK, MB, licQ, licExtra, yearQuota, yearH, kmTakst, kmBounds, kmQuick, kmWhy, kmBuyWhy,
+    kmPack, kmOut, kmApply, kmFree, kmFreeList, kmCod, kmKf, structRoom, structFits, structIn, npcReg, EPOCH, WORLD_SEED, PORTS, portServices} = K;
   const mk = qseed => { const S = newState(); S.qseed = qseed; K.set('S', S); ensureFleet(); S.me = S.cur; S.cash = 5e7; S.boat.status = 'port'; S.fm = {n:0, last:-1, kr:0, b:true}; return S; };
   let S = mk(WORLD_SEED);
   const port = PORTS.find(p => portServices(p).verft).id, H = S.t / 60, y = yearH(H), Y = yearQuota(y);
@@ -31,7 +31,7 @@ export default function (t){
   // ---- the band (B's MB): start from 40 %, buy-now up to 160 %, the next bid 2 % over; the quick sale to the register at 90 %
   const T = kmTakst(r14, H), B = kmBounds(T);
   t.ok(B.min === Math.ceil(T * MB.startMin) && B.max === Math.floor(T * MB.capMax), 'grensene er 40 og 160 % av taksten', B);
-  t.eq(kmNext({top:1e6, start:5e5}), 1020000, 'neste bud er 2 % over');
+  t.eq(K.mbNext({top:1e6, start:5e5}), 1020000, 'neste bud er 2 % over');
   t.eq(kmQuick(r14, H), Math.round(T * 0.9), '«Selg nå» til registeret er 90 % av taksten');
 
   // ---- kmWhy, every reason
@@ -123,6 +123,18 @@ export default function (t){
     t.ok(/to år uten båt/.test(S.msgs[S.msgs.length - 1].no), 'med melding fra Fiskeridirektoratet');
     kmApply(it, {how:'free'}, H0); const e = boat('sjark'); t.eq(kmBuyWhy(kmPack({free:0}, H0), {v:e, how:'put'}), null, 'egen ledig hjemmel kan settes på egen båt');
     kmApply(kmPack({free:0}, H0), {v:e, how:'put'}, H0); kmOut({free:0}, H0); t.ok(vget(e, 'lic').id === 'h10' && kmFree(H0).length === 0, 'og er da ikke ledig lenger'); }
+  // ---- from the review (08.11.2026): the same kilos never on two boats, the checks only read, a right from last year carries no catch, § 29 back
+  { S = mk(WORLD_SEED); const H0 = S.t / 60, y0 = yearH(H0), sv = boat('kyst15', L('h14', {st:[{id:'h14', kf:HJ.h14.kf, from:y0, until:y0 + 15}]})); sv.quota = {y:y0, torsk:20000, hyse:0, sei:0};
+    const it = kmPack({v:sv, kind:'struct', i:0}, H0); kmOut({v:sv, kind:'struct', i:0}, H0);
+    t.eq(it.used.torsk + K.withVessel(sv, () => K.quotaState().torsk), 20000, 'en strukturkvote flyttet: fangsten dens går fra selgerens båt, så de samme kiloene ikke telles to ganger', {used:it.used, left:sv.quota});
+    const F = kmFreeList(); F.push({id:'h9', flen:9, st:[], y:y0, H0:H0 - 20000, until:H0 - 1}, {id:'h10', flen:10, st:[], y:y0, H0, until:H0 + 9000});
+    t.eq(kmWhy({free:0}, H0), 'gone', 'en ledig hjemmel som har gått ut, kan ikke legges ut'); t.eq(F.length, 2, 'og kontrollen endrer ikke lista (indeksen en side har, peker på samme hjemmel)');
+    t.eq(kmPack({free:1}, H0).id, 'h10', 'pakken tar den hjemmelen indeksen peker på');
+    const nx = kmPack({free:1}, H0 + 8760); t.eq(nx.used.torsk, 0, 'en ledig hjemmel fra i fjor har ingenting fisket i år');
+    const e3 = boat('sjark'); kmApply({...nx, y:yearH(H0 + 8760)}, {v:e3, how:'put'}, H0 + 8760); t.eq(K.withVessel(e3, () => K.quotaState().torsk), 0, 'og kjøperen starter året på null, ikke med en oppdiktet selgerfangst');
+    S = mk(WORLD_SEED); const ob = S.fleet[0]; S.openUsed = {y:yearH(H0), torsk:5000, hyse:0, sei:0};
+    const it2 = {kind:'right', id:'h9', flen:9, y:yearH(H0), used:{torsk:100, hyse:0, sei:0}}; kmApply(it2, {v:ob, how:'put'}, H0); kmOut({v:ob, kind:'right'}, H0);
+    t.eq({ov:K.openVesselId(), torsk:K.withVessel(ob, () => K.quotaState().torsk)}, {ov:ob.id, torsk:5000}, 'hjemmelen solgt fra båten: hun er i åpen gruppe igjen med eierens fangst der i år (§ 29)'); }
   // the messages with the page's number format (fmt is the UI's; the core falls back to its own without it)
   { const f0 = globalThis.fmt; globalThis.fmt = (v, d) => (+v).toFixed(d).replace('.', ','); let ok = true;
     try { const e = boat('sjark'); kmApply({kind:'right', id:'h9', flen:9, y, used:{torsk:1, hyse:0, sei:0}}, {v:e, how:'put'}, S.t / 60); } catch (err){ ok = String(err); }
