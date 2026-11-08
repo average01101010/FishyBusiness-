@@ -1,6 +1,6 @@
 """M7 in docs/planer/butikker-og-sponsorer.md: the partner's banner in front of the shop in Finnsnes (view3d/07-harbour-unit.js drawSigns),
 and its measure after IAB/MRC 2.0 (steg 66, the rules in ui/10r-sponsor.js SPM): seen while it covers 1.5 % of the screen within 55°, not
-hidden by the building or by the UI (the phone over it), in sight (not in fog, not at night); one viewable impression per placement and
+hidden by the building or by the UI (the drawer over it), in sight (not in fog, not at night); one viewable impression per placement and
 session after a second in a row, a re-view the next time; nothing without an agreement; the counts handed over for sp_view. The sun is
 held up (SPM.fix.el) so the test does not depend on the shared clock's hour, then let down for the night. Uses the made-up test sponsor
 (#sptest). Pictures in both formats. Prints OK or FEIL per check."""
@@ -62,18 +62,19 @@ async def main():
         a1 = [x for x in t1 if x['pl'] == -3]
         check(a1 and a1[0]['imp'] == 0 and a1[0]['re'] >= 1 and a1[0]['sec'] >= 1 and all(x['imp'] == 0 and x['re'] == 0 for x in t2 if x['pl'] == -3) and all(set(x) == {'pl', 'imp', 're', 'sec', 'm', 'u'} for x in t1),
               'sett igjen i samme økt: et gjensyn, ikke en ny synlig visning; tellingen leveres som {pl, imp, re, sec, m, u} og begynner på nytt', [t1, t2])
-        # the phone over the banner (IAB 3.2.4: the UI is occlusion): its cells under the phone, not visible, no seconds. In portrait,
-        # where the phone covers the middle of the picture (in landscape it stands at the right, beside the banner)
+        # the drawer over the banner (IAB 3.2.4: the UI is occlusion): its cells under the drawer, not visible, no seconds. In portrait,
+        # where the drawer is a sheet over the whole width (the phone is a card at the bottom right there, and at the right in landscape:
+        # it covered one cell of six on 08.11.2026, and five visible still count)
         await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(3000)
-        await pg.evaluate("PHONE.show(true)"); ph = {}
+        await pg.evaluate("DOCK.open('fartoy')"); ph = {}
         for _ in range(8):
             await pg.evaluate("dispatchEvent(new Event('pointerdown'))"); await pg.wait_for_timeout(2000)
             ph = (await pg.evaluate("G3.signs"))['pl'].get('-3') or {}
             if (ph.get('last') or {}).get('ui', 0) >= 4: break
         await pg.evaluate("G3.signTake()"); await pg.wait_for_timeout(4000); s1 = [x for x in await pg.evaluate("G3.signTake()") if x['pl'] == -3]
-        await shot(pg, 'skilt_telefon_staaende.png')
-        check((ph.get('last') or {}).get('ui', 0) >= 4 and (ph.get('last') or {}).get('vis') is False and all(x['sec'] == 0 and x['re'] == 0 for x in s1), 'telefonen over banneret skjuler det, og det telles ikke', [ph.get('last'), s1])
-        await pg.evaluate("PHONE.show(false)"); await pg.set_viewport_size({'width': 1280, 'height': 800}); await pg.wait_for_timeout(3000)
+        await shot(pg, 'skilt_skuff_staaende.png')
+        check((ph.get('last') or {}).get('ui', 0) >= 4 and (ph.get('last') or {}).get('vis') is False and all(x['sec'] == 0 and x['re'] == 0 for x in s1), 'skuffen over banneret skjuler det, og det telles ikke', [ph.get('last'), s1])
+        await pg.evaluate("DOCK.close()"); await pg.set_viewport_size({'width': 1280, 'height': 800}); await pg.wait_for_timeout(3000)
         # fog thicker than the distance, and night (the sun 10° under): in reach, never counted (IAB 3.2.5)
         res = {}
         for k, fix in (('skodde', "SPM.fix.vis = 0.005"), ('natt', "SPM.fix.vis = null; SPM.fix.el = -10")):
