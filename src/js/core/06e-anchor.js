@@ -167,7 +167,7 @@ function anchorTick(H, W, hs){
   if (blocked){ b.anch = null; if (typeof runAground === 'function' && b.status !== 'aground' && isFinite(to.x)) runAground(b.pos); return; }
   move(); log('Ankeret slepper, og ingen er våkne.', 'The anchor is dragging, and nobody is awake.');
 }
-// the best place to anchor near a port for the plan's big boats to rest at (06d-drift.js homeA, restA): sheltered, the right depth, room to swing, near the port
+// the best place to anchor near a port for the plan's big boats to rest at (06h-plan2-engine.js): sheltered, the right depth, room to swing, near the port
 function driftAnchorage(pid){
   const pt = portById(pid); if (!pt) return null; let best = null;
   for (const r of ANCH.plan.ring) for (let k = 0; k < ANCH.plan.bearings; k++){

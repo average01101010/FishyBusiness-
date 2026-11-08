@@ -36,17 +36,6 @@ const spdVal = (kn, full) => full ? spdTop() : Math.min(Math.round(kn), spdTop()
 const spdTxt = (kn, full) => full ? (S.lang === 'en' ? 'Full speed ' : 'Full fart ') + fmt(BOAT.vmax, BOAT.vmax % 1 ? 1 : 0) + ' kn' : fmt(kn, 0) + ' kn';
 function panelRoute(){
   const b = S.boat, h = [];
-  // choosing a place for the operations plan (05c-drift.js pick): the place and «Use the place» first, not a route, whatever the boat
-  // is doing (tilbakemelding #95: a tap made only a route, and the button lay under its cards)
-  if (DRIFTCTX && DRIFTCTX.spot && DRIFTUI.wizOn()){
-    const L = (no, en) => S.lang === 'no' ? no : en, q = S.draft.filter(w => !w.port).pop(), F = DRIFTCTX.spot[0] === 'F';
-    h.push('<h3>' + L('Plass til driftsplanen', 'A place for the plan') + '</h3>');
-    h.push('<p class="note">' + (F ? L('Trykk i kartet der redskapet skal stå. Trykker du igjen, flyttes plassen.', 'Tap the chart where the gear shall stand. Tap again to move the place.') : L('Trykk i kartet der dere skal jukse. Trykker du igjen, flyttes plassen.', 'Tap the chart where you will jig. Tap again to move the place.')) + '</p>');
-    if (q){ let dp = null; try { dp = depthAt(q); } catch (e){}
-      h.push('<div class="kv"><span>' + L('Plassen', 'The place') + '</span><span>' + coordStr(q) + '</span></div>' + (dp !== null ? '<div class="kv"><span>' + L('Dybde', 'Depth') + '</span><span>' + dp + ' m</span></div>' : '')); }
-    h.push('<div class="btns rbar"><button class="btn primary" data-act="driftsave"' + (q ? '' : ' disabled') + '>' + L('Bruk plassen', 'Use the place') + '</button><button class="btn" data-act="driftcancel">' + L('Avbryt', 'Cancel') + '</button></div>');
-    return h.join('');
-  }
   // the chart's and the echo sounder's settings are under «Innstillinger» in the top bar (08-actions.js plotSetRender)
   if (b.status === 'tow' && b.tow){
     const tw = b.tow, no = S.lang === 'no', port = portById(tw.port);
@@ -79,8 +68,6 @@ function panelRoute(){
   h.push('<p class="note">' + t('route_hint') + (S.marks.some(markLive) ? ' ' + t('marks_n') : '') + '</p>');
   if (LEIA_BUSY || LEIA_ARM) h.push('<p class="leiahint">' + (LEIA_BUSY ? (S.lang === 'no' ? 'Finner leia …' : 'Finding the fairway …') : (S.lang === 'no' ? 'Autonav: trykk i kartet der du vil. Båten holder seg unna land, grunner og skjær. Så trykker du «Kast loss».' : 'Autonav: tap the chart where you want to go. The boat keeps off land, shallows and rocks. Then tap «Cast off».')) + '</p>');
   if (!S.draft.length){ h.push('<p>' + t(b.status === 'port' && b.port === 'finnsnes' && !(S.tut && S.tut.f) ? 'route_empty_fs' : 'route_empty') + '</p>');
-    // drawing or picking for the plan, with nothing tapped yet: the way back is always on the screen
-    if (DRIFTCTX) h.push('<p class="note">' + (DRIFTCTX.spot ? (S.lang === 'no' ? 'Trykk i kartet for å velge plassen til driftsplanen.' : 'Tap the chart to choose the place for the plan.') : (S.lang === 'no' ? 'Driftsplanens plasser vises i kartet: hjem, mottaket, feltene og juksplassene.' : 'The plan\'s places are shown in the chart: home, the plant, the fields and the jig places.')) + '</p><div class="btns rbar"><button class="btn" data-act="driftcancel">' + (DRIFTCTX.spot ? (S.lang === 'no' ? 'Avbryt' : 'Cancel') : (S.lang === 'no' ? 'Tilbake til planen' : 'Back to the plan')) + '</button></div>');
     return h.join(''); }
   const tl = draftTimeline(), L = (no, en) => S.lang === 'no' ? no : en, when = T => hm(T / 60) + ' <small>' + inReal(T - S.t) + '</small>';
   h.push('<ul class="wps wpcards"><li class="wpc wp0"><div class="wh"><span class="n">' + wpName(0) + '</span><span class="lbl">' + (b.status === 'port' ? portById(b.port).name : L('Båten', 'The boat')) + '<small>' + coordStr(b.pos) + '</small></span></div><div class="wg"><span>' + L('Avgang ', 'Departs ') + '<b>' + (tl.dep - S.t < 1 ? L('nå', 'now') : when(tl.dep)) + '</b></span></div></li>' + S.draft.map((w, i) => {

@@ -44,8 +44,6 @@ function doAct(el){
   else if (act === 'jigg'){ window.JIGG.toggle(); renderActs(); return; }
   else if (act === 'pub'){ PUB3.open(); return; }
   else if (act === 'target'){ if (kveiteClosed(S.t / 60)){ S.target = 'mix'; toast(L('Kveita er fredet fra 20. desember til og med 20. april.', 'Halibut is closed from 20 December to 20 April.')); } else S.target = S.target === 'kveite' ? 'mix' : 'kveite'; renderActs(); return; }
-  else if (act === 'driftsave'){ if (DRIFTUI.saveRoute()){ if (typeof DOCK !== 'undefined' && DOCK.open) DOCK.open('drift'); else PHONE.open('drift'); } }
-  else if (act === 'driftcancel'){ DRIFTUI.cancelRoute(); if (typeof DOCK !== 'undefined' && DOCK.open) DOCK.open('drift'); else PHONE.open('drift'); }
   else if (act === 'depcancel'){ S.plan = null; log('Avgangen er avlyst.', 'Departure cancelled.'); }
   else if (act === 'stop'){
     // on a route she slacks off and stops a little ahead on it (core haltPlan); by hand, or already slacking off, she stops here

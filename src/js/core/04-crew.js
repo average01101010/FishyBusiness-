@@ -288,7 +288,7 @@ const WEEKKR = [[5, 25000], [7, 40000], [9, 60000], [11, 90000], [15, 220000], [
 function weekKr(len){ const T = WEEKKR; if (len <= T[0][0]) return T[0][1]; for (let i = 1; i < T.length; i++) if (len <= T[i][0]){ const [a, va] = T[i - 1], [b, vb] = T[i]; return va + (vb - va) * (len - a) / (b - a); } return T[T.length - 1][1]; }
 function lotWeek(c, H = S.t / 60){ const Q = lottParty(), tot = Math.max(Q.tot, lotOf(c));
   return weekKr(BOAT.len || 6) * 0.8 * (skreiSeason(H) ? 1.25 : 0.85) * Q.M * (isAppr(c) ? lotOf(c) : c.ask) / tot; }
-// (all: those off watch asleep in their bunks too, 06d-drift.js driftWatch; they are crew and share the catch, but are not on deck)
+// (all: those off watch asleep in their bunks too, 06h-plan2-engine.js plan2WatchTick; they are crew and share the catch, but are not on deck)
 // (a hand in the old form, as the quay's candidates are hired, is made whole in place once: made again at every call he came out
 // different each time, aboard in one call and ashore in the next, until the hour's crewTick kept one)
 function crewAboard(H, all){ if (H == null) H = S.t / 60; const wd = (gDate(H).getUTCDay() + 6) % 7, C = S.crew || []; for (let i = 0; i < C.length; i++) if (!C[i].attr) C[i] = crewUpgrade(C[i]); return C.filter(c => !c.off && (all || !c.sleepW) && (!c.bi || c.biDays[wd])); }
@@ -457,7 +457,7 @@ function crewTick(H){
   const b = S.boat; if (!S.crew || !S.crew.length){ S.workLog = []; return; }
   S.crew = S.crew.map(crewUpgrade);
   flyTick();   // the crew flying in to Svalbard (H1b R7)
-  driftWatch(H);   // 2 + 2: who is on watch this hour (06d-drift.js)
+  plan2WatchTick(H);   // 2 + 2: who is on watch this hour (06h-plan2-engine.js)
   const hs = hsAt(b.pos, H), atSea = b.status === 'sailing' || b.status === 'fishing', fishing = b.status === 'fishing', hr = gDate(H).getUTCHours(), night = hr >= 22 || hr < 6;
   // the vessel's own log of hours at sea, for the crew page
   S.workLog = (S.workLog || []).concat([atSea ? 1 : 0]).slice(-24);

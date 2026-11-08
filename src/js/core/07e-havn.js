@@ -209,7 +209,7 @@ function havnOptions(p, r, type){
   for (const H of havnsNear(p, r)){ havnAsk(H.id); const L = havnBerths(H, type, S.cur, 1); if (L.length) out.push({H, place:havnPlaceOf(H, L[0], type), kind:L[0].kind}); }
   return out;
 }
-// ---- held: the berth is the vessel's while she lies there, or while it is her plan's home (06d-drift.js o.home)
+// ---- held: the berth is the vessel's while she lies there, or while it is her plan's home (06g-plan2.js o.home)
 function havnHold(id){
   const st = havnStore(), s = st.s[id]; if (!s) return false;
   s.vid = S.cur; s.t = S.t; havnPut(id, s); return true;
