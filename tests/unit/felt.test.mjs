@@ -64,6 +64,10 @@ export default function (t){
   // 6. the chart has only the named fishing grounds until F4
   const box = K.feltIn(-1e4, -1e4, 1e4, 1e4);
   t.ok(box.length === by('f').filter(f => f.n).length && box.every(f => f.k === 'f' && f.n), `feltIn gir bare fiskeplassene med navn (${box.length})`);
+  // with all (the chart's names, F4): the named spawning and nursery grounds too, after every fishing ground, none without a name
+  const all = K.feltIn(-1e4, -1e4, 1e4, 1e4, true), firstGO = all.findIndex(f => f.k !== 'f');
+  t.ok(all.length === D.filter(f => f.n).length && all.every(f => f.n) && firstGO === box.length && all.slice(firstGO).every(f => f.k === 'g' || f.k === 'o')
+    && all.slice(firstGO).every((f, i, a) => !i || a[i - 1].r >= f.r), `feltIn med all gir også gyte- og oppvekstområdene med navn, etter fiskeplassene og de største først (${all.length}, ${all.length - box.length} g og o)`);
   // 7. the spawning and nursery grounds are never pressure: trkAreas counts the same without them, and a cell by a spawning ground
   // far from any fishing ground has no ground weight
   K.set('S', K.newState()); const TRK = K.get('TRK');

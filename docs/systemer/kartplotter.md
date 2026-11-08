@@ -163,7 +163,7 @@ Tromsøyas gater kom og gikk i kartplotteren. `vecPrune` slapp vec-flisene som l
 
 Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontroll: med kartet over Tromsø og båten ved Båtsfjord sto 3 666 veier igjen etter en runde med `vecPrune`, mot 0 uten. Det er målt med `KYST_VEC=1`, fordi vec-pakkene bare er med i bygget da.
 
-- **Fangstfeltene uten sirkel** (Jonas 28.10.2026: «Fjern sirklene for fangstfelt langs hele kysten. Bare navn på felt langs hele kysten er ok, men det skal ikke vises som en definert sirkel»): `renderStatic` i `ui/03-map.js` tegner bare feltets navn (fra `view.z ≥ 0,5`). Fisket bruker feltene som før.
+- **Fangstfeltene uten sirkel** (Jonas 28.10.2026: «Fjern sirklene for fangstfelt langs hele kysten. Bare navn på felt langs hele kysten er ok, men det skal ikke vises som en definert sirkel»): `renderStatic` i `ui/03-map.js` tegner bare feltets navn. Fra Ø14 F4 (08.11.2026) gjelder det alle feltene langs kysten likt, fra `view.z ≥ 2` (5.47b).
 
 ## 5.47 Mindre støy i kartet: navnene med prioritet og navnet ved trykk (E1–E2, Jonas 02.11.2026)
 
@@ -175,7 +175,7 @@ Jonas, med et bilde fra Hammerfest: «Vi må passe på at ikke blir alt for mye 
   2. dine merker og fangstmerkene
   3. rorbuene
   4. havnene
-  5. de navngitte feltene
+  5. de navngitte feltene (fra Ø14 F4 08.11.2026 bare fra `view.z ≥ 2`, med taket i 5.47b)
   6. dybdetallene og resten av stedsnavnene
 
   Et navn som ville dekke et annet, tegnes ikke. Ikonet står, og navnet går i `LBLHID`.
@@ -191,6 +191,17 @@ Jonas, med et bilde fra Hammerfest: «Vi må passe på at ikke blir alt for mye 
   - Havna: anker (`anchorPath`) på grønnblå sirkel.
   - Rorbua: rødt hus med dør på tre pæler.
   - Navnene står ett ikon og 5 px til høyre for ikonet.
+
+## 5.47b Feltnavnene i kartet: bare navnet, og først når du er nær (Ø14 F4, 08.11.2026)
+
+Jonas 07.11.2026 (V4 C i `docs/planer/fangstfelt.md`): «navnet på feltet kan stå men aldri tettheten på fisken.» Jonas 08.11.2026: «Senja sine felt skal fungere akkurat likt som alle de andre fiskefeltene i landet og ikke være en fast sirkel.»
+
+- **Hva som tegnes** (`renderStatic` i `ui/03-map.js`, etter handelsstedene, merkene, rorbuene og havnene, før dybdetallene og resten av stedsnavnene): Fiskeridirektoratets fiskeplasser (`k = f`) de største først, så gyteområdene og oppvekst- og beiteområdene (`k = g`, `o`) med lavest prioritet, i samme skrift (`lbl-felt`, kursiv, 10 px, `data-k` med slaget). `feltIn(…, true)` i `core/01e-marks.js` gir dem i den rekkefølgen. Navnet er kartets (`f.n`, kortet ved skråstrek eller etter 28 tegn med «…»); de fire uten navn tegnes ikke.
+- **Først fra `view.z ≥ 2`** (før 1). Senjas seks navn (`GROUNDS`, før fra `view.z ≥ 0,5` med forrang og større skrift) tegnes ikke lenger for seg; fiskeplassene på Senja følger regelen over.
+- **Taket** (`FELT_CW`, `FELT_CH`, `FELT_PX`, `FELT_MAX`): ett navn per celle på 110 × 22 piksler, høyst ett per 13 000 kvadratpiksler av kartet (25 på en telefon i 390 × 844, 79–80 i 1280 × 800) og aldri over 80, og aldri over et navn som alt står. Boksen et feltnavn tar, går fra 8 px over punktet til 6 px under, fordi stedsnavnene over henger nedstrekene sine under sin egen boks (Knappskog over Kolltveitosen i Bergen). Ingen merking etter sesong, fisk eller arter.
+- **Trykket** (`tapName`, `LBLFELT`): et trykk på et feltnavn som står, eller innen 16 px av et felt som ikke fikk plass, viser hele navnet (`f.nf`) og slaget med kilden på en linje til i boblen: «Fiskeplass», «Gyteområde» eller «Oppvekst- og beiteområde» · «Fiskeridirektoratet» (`FELT_KIND`). Ikonene uten navn (`LBLHID`) går foran. Aldri arter, måneder eller tall. Boblen holdes inne i kartet.
+- **Målt** (`tests/etikett.py`, med `dist-vec` og hele kysten, 08.11.2026): se tabellen i `docs/planer/fangstfelt.md` F4. Ingen feltnavn under `view.z` 2 noe sted, heller ikke på Senja.
+- **Står igjen til Jonas:** tettheten på Pad 3 (backloggen 10.5 «Feltnavnene (B2)»).
 
 ## 5.48 Vikeplikten i kartplotteren og det lille kartet (Ø11.1, 06.11.2026)
 

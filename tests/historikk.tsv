@@ -1364,3 +1364,6 @@
 2026-11-08 19:28	ccr-c27822e7-1y3qn3	30cd81b	docktest	OK	59	lite	samtidig	
 2026-11-08 19:31	ccr-c27822e7-1y3qn3	30cd81b	mobtest	OK	202	lite	samtidig	
 2026-11-08 19:31	ccr-c27822e7-1y3qn3	30cd81b	towtest	OK	11	lite	samtidig	
+2026-11-08 20:07	claude/o14-f4-feltnavnene-kart-htpg70	5633dd8+	placetest	OK	5	lite	alene	
+2026-11-08 20:08	claude/o14-f4-feltnavnene-kart-htpg70	5633dd8+	charttest	OK	57	lite	alene	
+2026-11-08 20:09	claude/o14-f4-feltnavnene-kart-htpg70	5633dd8+	routetest	OK	43	lite	alene	

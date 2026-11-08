@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['o14f4-081126', '08.11.2026', 'Feltnavnene i kartet', 'The ground names on the chart', [
+       ['Kartet viser navnene på fiskeplassene langs hele kysten når du zoomer inn, og også gyteområdene og oppvekst- og beiteområdene fra Fiskeridirektoratet, de største først. Senjas felt følger samme regel som resten av kysten.', 'The chart shows the names of the fishing grounds along the whole coast when you zoom in, and the spawning and nursery grounds from the Directorate of Fisheries too, the largest first. Senja\'s grounds follow the same rule as the rest of the coast.'],
+       ['Trykk på et feltnavn, eller der et navn ikke fikk plass, for å se hele navnet og hva slags sted det er.', 'Tap a ground\'s name, or where a name had no room, to see the whole name and what kind of place it is.']]],
     ['o117-081126', '08.11.2026', 'Nødstopp, Sikkerhet og havsnød', 'Emergency stop, Safety and distress', [
        ['Henger en av mannskapet seg fast i lina, garnet eller teinetauet ved haleren, stopper de haleren selv med nødstoppen. Det står som nestenulykke i dagboka.', 'If one of the crew is caught in the line, the net or the pot rope at the hauler, they stop the hauler themselves with its emergency stop. It stands as a near miss in the log.'],
        ['Redning har fått kortet «Sikkerhet»: nestenulykkene med dag, sted og hva hver av dem lærer, med kilde, og turene uten skade. Merket «Turer uten skade» teller dem.', 'Redning has a new «Safety» card: the near misses with the day, the place and what each teaches, with its source, and the trips without harm. The badge «Trips without harm» counts them.'],

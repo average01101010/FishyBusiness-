@@ -417,11 +417,21 @@ function updateMapButtons(){
 }
 const MARK_LIFE = 12 * 60, markLive = mk => S.t - mk.t < MARK_LIFE;
 let markEnd = Infinity;
-// a tap on an icon whose name the chart left out (E2): its name for a moment; the tap goes on to do what it did (the route)
+// a tap on an icon whose name the chart left out (E2): its name for a moment; the tap goes on to do what it did (the route). Else a tap
+// on a ground's name, or by a ground whose name was left out (F4): the whole name and what kind of place it is, with the source; never
+// its species, months or fish (Jonas 07.11.2026, V4 C)
+const FELT_KIND = {f:['Fiskeplass', 'Fishing ground'], g:['Gyteområde', 'Spawning ground'], o:['Oppvekst- og beiteområde', 'Nursery and feeding ground']};
 function tapName(mp, rr){ let best = null, bd = rr; for (const q of LBLHID){ const d = dist(q, mp); if (d < bd){ bd = d; best = q; } }
-  if (!best) return false; TAPNAME = {x:best.x, y:best.y, n:best.n, until:performance.now() + 2500}; renderDyn(); setTimeout(() => { if (TAPNAME && performance.now() >= TAPNAME.until) renderDyn(); }, 2600); return true; }
-// the labels the static layer placed (boxes, map km) and the icons it left without a name (E2 of docs/planer/kart-etiketter.md)
-const LBLBOX = [], LBLHID = [];
+  if (!best){ const pad = 4 / view.px; best = LBLFELT.find(e => e.box && mp.x > e.box[0] - pad && mp.x < e.box[2] + pad && mp.y > e.box[1] - pad && mp.y < e.box[3] + pad) || null;
+    if (!best){ bd = rr; for (const e of LBLFELT){ if (e.box) continue; const d = dist(e, mp); if (d < bd){ bd = d; best = e; } } }
+    if (best){ const f = best.f, en = S.lang === 'en' ? 1 : 0; best = {x:best.x, y:best.y, n:f.nf || f.n, s:(FELT_KIND[f.k] || FELT_KIND.f)[en] + ' · ' + (en ? 'Directorate of Fisheries' : 'Fiskeridirektoratet')}; } }
+  if (!best) return false; TAPNAME = {x:best.x, y:best.y, n:best.n, s:best.s, until:performance.now() + 2500}; renderDyn(); setTimeout(() => { if (TAPNAME && performance.now() >= TAPNAME.until) renderDyn(); }, 2600); return true; }
+// the labels the static layer placed (boxes, map km) and the icons it left without a name (E2 of docs/planer/kart-etiketter.md); the
+// ground names in the view, with their boxes where drawn (F4)
+const LBLBOX = [], LBLHID = [], LBLFELT = [];
+// the ground names' cells (pixels: one name per cell) and how many at most: one per FELT_PX square pixels of the chart, never more than
+// FELT_MAX (Ø14 F4, set after tests/etikett.py: with one per cell alone a phone at view.z 2 by Bodø had 35 names over 6 % of the screen)
+const FELT_CW = 110, FELT_CH = 22, FELT_PX = 13000, FELT_MAX = 80;
 let TAPNAME = null;
 function renderStatic(){
   if (document.body.classList.contains('vplot')) scheduleChart();
@@ -503,15 +513,20 @@ function renderStatic(){
   g.push(chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, 'first'));
   LB.sort((a, b) => a.pri - b.pri);
   for (const e of LB){ if (over(e.box)){ if (e.at) LBLHID.push(e.at); continue; } taken.push(e.box); g.push(e.svg); }
-  // grounds: the name only, no circle (Jonas 28.10.2026: a ground is not a defined circle on the sea); clear of the labels before
-  if (view.z >= 0.5) for (const gr of GROUNDS){ const nm = gr.name[S.lang], w = nm.length * 6.2 * u, bx = [gr.p.x - w / 2, gr.p.y - 6 * u, gr.p.x + w / 2, gr.p.y + 5 * u]; if (over(bx)) continue; taken.push(bx); g.push(txt({x:gr.p.x, y:gr.p.y + 3.6 * u}, nm, 'lbl-ground', 11 * u, 'text-anchor="middle" stroke-width="' + (3 * u) + '"')); }
-  // the named grounds along the whole coast (Fiskeridirektoratet's «Fiskeplasser – redskap», 01e-marks.js feltIn), the same way: the
-  // largest first, and none where a name already stands (cells of 110 × 22 pixels), so a close view shows more of them
-  if (view.z >= 1){ const cells = new Set(), cw = 110 * u, ch = 22 * u; for (const gr of GROUNDS) cells.add(Math.floor(gr.p.x / cw) + ':' + Math.floor(gr.p.y / ch));
-    let n = 0; for (const f of feltIn(vx0, vy0, vx1, vy1)){ const k = Math.floor(f.x / cw) + ':' + Math.floor(f.y / ch), k2 = Math.floor((f.x + cw / 2) / cw) + ':' + Math.floor(f.y / ch);
-      const fw = f.n.length * 5.6 * u, fb = [f.x - fw / 2, f.y - 5 * u, f.x + fw / 2, f.y + 5 * u];
-      if (cells.has(k) || cells.has(k2) || over(fb)) continue; cells.add(k); cells.add(k2); taken.push(fb);
-      g.push(txt({x:f.x, y:f.y + 3.4 * u}, f.n.replace(/[&<>]/g, c => c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;'), 'lbl-ground lbl-felt', 10 * u, 'text-anchor="middle" stroke-width="' + (3 * u) + '"')); if (++n >= 80) break; } }
+  // the ground names (Ø14 F4, docs/planer/fangstfelt.md; Jonas 07.11.2026: «navnet på feltet kan stå men aldri tettheten på fisken»): the
+  // name only, no circle (Jonas 28.10.2026), Fiskeridirektoratet's fishing grounds along the whole coast (01e-marks.js feltIn) with
+  // Senja's as all the others (Jonas 08.11.2026: GROUNDS no longer drawn for themselves), the largest first, then the spawning and
+  // nursery grounds in the same type; only from view.z 2, none where a name already stands (cells of FELT_CW × FELT_CH pixels), at most
+  // FELT_MAX, and nothing after the season or the fish. A tap on one, or where one was left out, gives the whole name and its kind (tapName)
+  LBLFELT.length = 0;
+  if (view.z >= 2){ const cells = new Set(), cw = FELT_CW * u, ch = FELT_CH * u, nMax = Math.min(FELT_MAX, Math.round(vr.width * vr.height / FELT_PX)); let n = 0;
+    for (const f of feltIn(vx0, vy0, vx1, vy1, true)){
+      if (n < nMax){ const k = Math.floor(f.x / cw) + ':' + Math.floor(f.y / ch), k2 = Math.floor((f.x + cw / 2) / cw) + ':' + Math.floor(f.y / ch);
+        // (the box from 8 px over the point: the names over it hang their descenders under their own boxes, Knappskog over Kolltveitosen)
+        const fw = f.n.length * 5.6 * u, fb = [f.x - fw / 2, f.y - 8 * u, f.x + fw / 2, f.y + 6 * u];
+        if (!cells.has(k) && !cells.has(k2) && !over(fb)){ cells.add(k); cells.add(k2); taken.push(fb); n++; LBLFELT.push({f, x:f.x, y:f.y, box:fb});
+          g.push(txt({x:f.x, y:f.y + 3.4 * u}, pinEsc(f.n), 'lbl-ground lbl-felt', 10 * u, 'text-anchor="middle" data-k="' + f.k + '" stroke-width="' + (3 * u) + '"')); continue; } }
+      LBLFELT.push({f, x:f.x, y:f.y}); } }
 
   LBLBOX.length = 0; for (const b of taken) LBLBOX.push(b);   // what the AIS names keep clear of (renderDyn)
   g.push(soundingsSvg(vx0, vy0, vx1, vy1, u, taken));
@@ -675,8 +690,11 @@ function renderDyn(){
     lblBox.push(bx); g.push(txt(p, n.name, 'lbl-ais' + (n.player ? ' pl' : ''), sz, 'stroke-width="' + (3 * u) + '"'));
   }
   // the name of an icon tapped that stands without one (E2): two and a half seconds, in a box over everything
-  if (TAPNAME && performance.now() < TAPNAME.until){ const q = TAPNAME, sz = 12 * u, w = String(q.n).length * sz * 0.56 + 10 * u;
-    g.push('<rect x="' + (q.x + 8 * u) + '" y="' + (q.y - 20 * u) + '" width="' + w + '" height="' + (sz + 8 * u) + '" rx="' + (4 * u) + '" class="tapname" stroke-width="' + u + '"/>' + txt({x:q.x + 13 * u, y:q.y - 20 * u + sz + 1 * u}, pinEsc(q.n), 'lbl-tapname', sz)); }
+  // (a ground's kind and source on a second, smaller line; the box kept inside the view)
+  if (TAPNAME && performance.now() < TAPNAME.until){ const q = TAPNAME, sz = 12 * u, s2 = 10 * u, h2 = q.s ? s2 + 4 * u : 0, w = Math.max(String(q.n).length * sz * 0.56, q.s ? String(q.s).length * s2 * 0.54 : 0) + 10 * u;
+    const vr = svg.getBoundingClientRect(), xr = view.cx + vr.width / 2 * u - 4 * u, xl = view.cx - vr.width / 2 * u + 4 * u, x = Math.max(xl, Math.min(q.x + 8 * u, xr - w)), y = q.y - 20 * u - h2;
+    g.push('<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + (sz + 8 * u + h2) + '" rx="' + (4 * u) + '" class="tapname" stroke-width="' + u + '"/>' + txt({x:x + 5 * u, y:y + sz + 1 * u}, pinEsc(q.n), 'lbl-tapname', sz)
+      + (q.s ? txt({x:x + 5 * u, y:y + sz + 1 * u + h2}, pinEsc(q.s), 'lbl-tapname', s2, 'style="font-weight:400;opacity:.8"') : '')); }
   else if (TAPNAME){ TAPNAME = null; }
   if (typeof FRIENDS !== 'undefined') g.push(FRIENDS.svg(u, AISNOW));
   if (typeof SHARE !== 'undefined') g.push(SHARE.svg(u));
