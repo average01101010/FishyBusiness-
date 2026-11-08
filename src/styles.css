@@ -968,7 +968,7 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
   body.v3d.plotmin.hudcard #hud{max-height:calc(100vh - var(--sTop) - var(--gH) - 14px)}
   #phone{top:0;bottom:0;right:0;height:auto;width:min(380px,62vw);filter:drop-shadow(0 0 30px rgba(0,0,0,.5))}
   #phone .ph-body{border-radius:0;padding:0;border:0;background:#0b1622} #phone .ph-cam{display:none} #phone .ph-screen{border-radius:0}
-  #logbook{bottom:calc(env(safe-area-inset-bottom,0px) + 4px)!important;height:92px!important}
+  #logbook{bottom:calc(env(safe-area-inset-bottom,0px) + 4px)!important;height:100px!important}   /* (92 cut the tab's «DEKKSDAGBOK» to «DEKKSDAGBO», U2-8) */
 }
 
 /* ---------- «Hvor står fars naust?»: where a new game starts (ui/08c-start.js) ---------- */
@@ -1692,13 +1692,14 @@ body.v3d #hud{z-index:6} body.v3d #plotMin{z-index:7}   /* (the chart's fold but
      øverste boksen»; until then the whole box stood on top here, left to U2-8): the chart --bW wide and --mH high at the top, its GPS strip
      (--gH) there when it is folded, and the box (or the strip, when it is folded) right under either, growing downwards over the 3D view,
      so a box taller than its reserve never lies over the chart (--bHm is not needed here any more). The card opens where the box stands */
-  body.v3d{--bTop:calc(env(safe-area-inset-top,0px) + 8px);--bW:270px;--bH:196px;--sH:62px;--mH:min(var(--bW),26vh);--gH:36px}   /* (196: the box while she fishes, the next event on two lines and the deck's kg; 270: the gauges' figures and «Fremme i …») */
+  body.v3d{--bTop:calc(env(safe-area-inset-top,0px) + 8px);--bW:270px;--sH:62px;--mH:min(var(--bW),26vh);--gH:36px}   /* (270: the gauges' figures and «Fremme i …») */
   body.v3d #miniPlot{top:var(--bTop);width:var(--bW);height:var(--mH)}
   body.v3d #plotMin{top:calc(var(--bTop) - 4px);left:3px}
   body.v3d.plotmin #gps3d:not([hidden]){top:var(--bTop);width:var(--bW)}
   body.v3d #hud{top:calc(var(--bTop) + var(--mH) + 6px);width:var(--bW);max-width:none;min-width:0!important;box-sizing:border-box}
   body.v3d.plotmin #hud{top:calc(var(--bTop) + var(--gH) + 6px)}
-  body.v3d:not(.hudstrip):not(.hudcard) #hud{min-height:var(--bH)}
+  /* (no reserved height since U2-8: the box stood on top and the chart under it until 07.11.2026, and the reserve of 196 px kept the
+     chart still; under the chart nothing stands under the box, and the reserve was only an empty glass under the figures) */
   body.v3d.hudstrip #hud{height:var(--sH)}
   body.v3d.hudcard #hud{width:min(92vw,400px)}
 }
@@ -1753,3 +1754,13 @@ body.calm #dock > .dk-b:not(.hero):not(.stay):not([data-dk="beh"]),body.calm .ov
 .bu-num{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:14px}
 .bu-num div{background:#eef3f6;border-radius:10px;padding:8px 10px}
 .bu-num b{display:block;font:700 18px var(--sans);color:#15252f}.bu-num span{font-size:12px;color:#5b6c76}
+/* UI 2, U2-8: the tablet and the PC inherit (docs/planer/ui-2-staaende.md kap. 5, V1 A: the phone upright is the measure; where there is
+   room, more of the same, never anything else; decided with pictures in the five sizes of uishots, 08.11.2026) */
+/* the drawer in the chart plotter upright: the sheet starts under the strip, as in 3D since U2-7 (the strip stands under the plotter's top
+   bar there, --ecH + 8 px, 60–62 px high; before, the sheet from 12 % lay over its lowest 13 px on a phone) */
+@media (orientation:portrait){body.vplot.dk-open:not(.hudoff) #drawer{top:max(12%, calc(var(--ecH) + 8px + 62px + 6px))}}
+/* the map's credit line clear of the deck log's tab in 3D (it began under the tab, at 6 px, in every size) */
+body.v3d .attr{left:44px}
+/* the phone button hides while the phone is open: on a tablet on its side and a PC the phone stands where the button is, and the
+   button's corner showed behind the phone's rounded corner (the phone closes with its own ✕ and ‹) */
+body:has(#phone:not([hidden])) #phoneFab{visibility:hidden}
