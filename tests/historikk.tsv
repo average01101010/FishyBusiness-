@@ -1302,3 +1302,16 @@
 2026-11-08 19:05	ccr-e9f46ad4-wipgu7	fb2ed4d	bktest	OK	8	lite	samtidig	
 2026-11-08 19:05	ccr-e9f46ad4-wipgu7	fb2ed4d	yardupgtest	OK	13	lite	samtidig	
 2026-11-08 19:05	ccr-e9f46ad4-wipgu7	fb2ed4d	krabbefabrikktest	OK	19	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	colregtest	OK	604	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	autonavtest	OK	26	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	turtest	OK	14	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	trip2	OK	35	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	worktest	FEIL	20	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	npctest	OK	10	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	towtest	OK	18	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	tattest	OK	22	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	peergear	OK	7	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	mobtest	OK	138	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	starttest	OK	139	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	tutdrift	OK	7	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	docktest	OK	61	lite	samtidig	
