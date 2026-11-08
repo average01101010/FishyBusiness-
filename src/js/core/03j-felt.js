@@ -96,6 +96,8 @@ function feltBlock(ix, iy){
 // the grounds at a point and their masks (bilinear between the block's nodes), or null where there are none
 function feltAt(p){
   if (!FELTW.on) return null;
+  // (until the shapes are in, or known not to come, ask each time, so the circles give way to them at once and not at a block's miss)
+  if (FELTW.key < 1) feltGeo();
   const ix = Math.floor(p.x / 2), iy = Math.floor(p.y / 2), b = feltBlock(ix, iy); if (!b.F.length) return null;
   const nd = FELTW.nd, gx = (p.x - ix * 2) / FELTW.st, gy = (p.y - iy * 2) / FELTW.st, i = Math.min(nd - 2, Math.floor(gx)), j = Math.min(nd - 2, Math.floor(gy)), fx = gx - i, fy = gy - j;
   const F = [], m = [];

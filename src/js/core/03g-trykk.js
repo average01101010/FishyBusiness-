@@ -46,7 +46,8 @@ const TRK = {r:0.004, groundW:3, groundR:2, hph:730.5,
 const TRK_SP = ['torsk', 'hyse', 'sei', 'lyr', 'lange', 'brosme', 'uer', 'kveite', 'sild', 'makrell', 'snokrabbe'];
 const TRK_G = ['open', 'u11', 'g11', 'g15', 'g21', 'tral', 'hav', 'all'];
 // the area of each location and main area of rules.json (km², from the polygons), and how many 2 km cells of each location lie within
-// TRK.groundR of a named ground (felt.json), for laying the pressure on the grounds. Only the fishing grounds (k = f): the spawning and
+// TRK.groundR of a named ground (felt.json): the ocean fleet's count (gch) lays its pressure on the grounds for active gear (gc, the coast's, is
+// read by the tests only since Ø14 F2: the coast follows feltCellW). Only the fishing grounds (k = f): the spawning and
 // the nursery grounds (Ø14 F1, V3) are names, never pressure
 function trkAreas(){
   if (TRK.A) return TRK.A;

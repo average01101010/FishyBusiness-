@@ -184,7 +184,8 @@ async function dataGet(el, opt){
 async function bootData(){
   const early = dataEarly(), els = dataEls().filter(early);
   if (!dataEls().length){ MODELS.done = true; return; }   // (a one-file build: everything is in the page)
-  await Promise.all(els.map(el => dataGet(el)));
+  // (the fishing grounds' shapes are not needed to play: a file that does not come is left out, and the grounds are circles, 03j-felt.js)
+  await Promise.all(els.map(el => el.id === 'felt-s' ? dataGet(el).catch(e => { MODELS.failed.push('felt-s'); try { if (typeof cloudErr === 'function') cloudErr('data: ' + (e && e.message || e), 'boot', '', 'slow'); } catch (e2){} }) : dataGet(el)));
 }
 // the rest, after the map's first packs: three at a time; a file that does not come in four tries is told to the error list and left
 // out (its readers draw what they drew without it), so a bad connection never keeps the 3D view from coming
