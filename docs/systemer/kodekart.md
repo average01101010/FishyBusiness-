@@ -1179,21 +1179,21 @@ Anchor (Jonas 08.10.2026: «alle båter skal ha mulighet til å ligge på anker 
   - 142 `anchorTick(H, W, hs)`
   - 171 `driftAnchorage(pid)`
 
-## `src/js/core/07f-kar.js` (100 linjer)
+## `src/js/core/07f-kar.js` (101 linjer)
 
 the fish tubs (docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
 
 - **1** the fish tubs (docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
   - 8 `karN(type, lv)`
   - 10 `karSteps(type)`
-  - 15 `tubLoads(hold, n)`
-- **29** packing a tub: where each fish lies (Jonas: «fisken gradvis fyller karret opp og ser realistisk ut, uten clipping»)
-  - 46 `karIn(dims, y)`
-  - 49 `inRR(x, z, hx, hz, r, g)`
-  - 52 `fishCorners(x, z, yaw, L, b)`
-  - 55 `fishFits(dims, x, y, z, yaw, L, b)`
-  - 58 `tubPack(dims, spec, seed)`
-  - 91 `karRefund()`
+  - 16 `tubLoads(hold, n)`
+- **30** packing a tub: where each fish lies (Jonas: «fisken gradvis fyller karret opp og ser realistisk ut, uten clipping»)
+  - 47 `karIn(dims, y)`
+  - 50 `inRR(x, z, hx, hz, r, g)`
+  - 53 `fishCorners(x, z, yaw, L, b)`
+  - 56 `fishFits(dims, x, y, z, yaw, L, b)`
+  - 59 `tubPack(dims, spec, seed)`
+  - 92 `karRefund()`
 
 ## `src/js/core/07-harbours.js` (640 linjer)
 
@@ -1380,7 +1380,7 @@ the seasons as events (05.10.2026; Jonas chose it from the list of what makes pe
   - 151 `seasonTalk(H)`
   - 153 `seasonGrid()`
 
-## `src/js/core/09d-folk.js` (157 linjer)
+## `src/js/core/09d-folk.js` (164 linjer)
 
 the people on the quay (05.10.2026; Jonas chose it from the list of what makes people play on, 7)
 
@@ -1389,10 +1389,10 @@ the people on the quay (05.10.2026; Jonas chose it from the list of what makes p
   - 37 `folkPf(id)`
   - 39 `folkSold(id, kg)`
 - **47** the plant's hands comment on the landing (Jonas 08.10.2026: «arbeiderne på fiskemottakene kommenterer fangsten vår med tekst over
-  - 106 `plantLine(pt, ls, rnd)`
-  - 124 `plantSay(pt, ls)`
-  - 134 `folkShop()`
-  - 141 `folkPort(H)`
+  - 109 `plantLine(pt, ls, rnd)`
+  - 131 `plantSay(pt, ls)`
+  - 141 `folkShop()`
+  - 148 `folkPort(H)`
 
 ## `src/js/core/09e-fartstid.js` (56 linjer)
 
@@ -1939,45 +1939,45 @@ WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå
   - 124 `heatAt(p)`
   - 127 `schoolDrift(sp, p, H)`
 
-## `src/js/core/13-work.js` (353 linjer)
+## `src/js/core/13-work.js` (357 linjer)
 
 work aboard: stations, and how the crew share them
 
 - **1** work aboard: stations, and how the crew share them
-  - 45 `catchGut()`
-  - 46 `catchIce()`
-- **47** the mate (Jonas 23.10.2026: «vi må kunne definere 1 fra mannskapet til å være styrmann ombord»): one of the crew, the same one
-  - 50 `setMate(id)`
-- **53** the skipper (Jonas 23.10.2026: «når jeg/brukeren ikke er ombord må det utnevnes en skipper og en styrmann ombord»): one of the crew,
-  - 56 `setSkipper(id)`
-- **59** what a person is used to: minutes at each station (c.hab), fading by a fifth a month. The station with most of them, once it is
-  - 62 `crewRole(c)`
-  - 64 `habSeed(c)`
-- **65** how good a person is at a station's work (1-5): you are a skipper who knows every job on deck
-  - 66 `stSkill(c, k, ctx, sk)`
-  - 83 `workScore(p, k, ctx, need, sk)`
-  - 95 `restScore(p)`
-  - 106 `workWhy(p, k, ctx, sk)`
-  - 117 `stPlaces(st, ctx)`
-  - 127 `workCtx(as)`
-- **138** the crew's own jobs as stations: where they may be worked (in port, or at sea while she goes or lies still: seaWork), how many can
-  - 140 `jobsOpen(as)`
-  - 141 `jobPlaces(j)`
-  - 152 `jobCoop(j, n)`
-  - 156 `jobW(j)`
-  - 162 `jobRate(j, A)`
-  - 169 `jobMinute(j, A)`
-  - 179 `jobWait(j)`
-  - 184 `workAssign(as)`
-- **259** what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
-  - 275 `crewVice(c)`
-  - 277 `idleEnv()`
-  - 285 `idleWeights(p, ctx, E, mates)`
-  - 307 `idleAssign(P, ctx)`
-  - 321 `idleText(p)`
-  - 327 `workDoing(p)`
-  - 333 `workTeam(st, g, as)`
-  - 339 `workMinute()`
+  - 49 `catchGut()`
+  - 50 `catchIce()`
+- **51** the mate (Jonas 23.10.2026: «vi må kunne definere 1 fra mannskapet til å være styrmann ombord»): one of the crew, the same one
+  - 54 `setMate(id)`
+- **57** the skipper (Jonas 23.10.2026: «når jeg/brukeren ikke er ombord må det utnevnes en skipper og en styrmann ombord»): one of the crew,
+  - 60 `setSkipper(id)`
+- **63** what a person is used to: minutes at each station (c.hab), fading by a fifth a month. The station with most of them, once it is
+  - 66 `crewRole(c)`
+  - 68 `habSeed(c)`
+- **69** how good a person is at a station's work (1-5): you are a skipper who knows every job on deck
+  - 70 `stSkill(c, k, ctx, sk)`
+  - 87 `workScore(p, k, ctx, need, sk)`
+  - 99 `restScore(p)`
+  - 110 `workWhy(p, k, ctx, sk)`
+  - 121 `stPlaces(st, ctx)`
+  - 131 `workCtx(as)`
+- **142** the crew's own jobs as stations: where they may be worked (in port, or at sea while she goes or lies still: seaWork), how many can
+  - 144 `jobsOpen(as)`
+  - 145 `jobPlaces(j)`
+  - 156 `jobCoop(j, n)`
+  - 160 `jobW(j)`
+  - 166 `jobRate(j, A)`
+  - 173 `jobMinute(j, A)`
+  - 183 `jobWait(j)`
+  - 188 `workAssign(as)`
+- **263** what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
+  - 279 `crewVice(c)`
+  - 281 `idleEnv()`
+  - 289 `idleWeights(p, ctx, E, mates)`
+  - 311 `idleAssign(P, ctx)`
+  - 325 `idleText(p)`
+  - 331 `workDoing(p)`
+  - 337 `workTeam(st, g, as)`
+  - 343 `workMinute()`
 
 ## `src/js/core/14-crewlife.js` (466 linjer)
 
@@ -2573,12 +2573,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1341 linjer)
+## `src/js/ui/phone/07-patch.js` (1344 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1334 `patch()`
+  - 1337 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2979,22 +2979,22 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 290 `tipPlace(txt, T0, o)`
   - 315 `tipToast()`
 
-## `src/js/ui/07c-handbook.js` (267 linjer)
+## `src/js/ui/07c-handbook.js` (270 linjer)
 
 Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
 
 - **1** Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
   - 10 `hbState()`
-  - 197 `hbPick()`
-  - 205 `hbEv(id, how)`
-  - 206 `hbDone(id)`
-  - 207 `hbSkip(ch, id)`
-  - 209 `hbReady()`
-- **211** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
-  - 217 `appShown(id)`
-  - 224 `appUnlock(id)`
-  - 226 `appSeen(id)`
-  - 227 `hbUpdate()`
+  - 200 `hbPick()`
+  - 208 `hbEv(id, how)`
+  - 209 `hbDone(id)`
+  - 210 `hbSkip(ch, id)`
+  - 212 `hbReady()`
+- **214** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
+  - 220 `appShown(id)`
+  - 227 `appUnlock(id)`
+  - 229 `appSeen(id)`
+  - 230 `hbUpdate()`
 
 ## `src/js/ui/10g-wardrobe.js` (133 linjer)
 
