@@ -23,7 +23,7 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 
 | Dato | Steg | Flettecommit | Versjon | PR |
 |---|---|---|---|---|
-| 08.11.2026 | U2-7 Skuffen og sidene (Jonas' økt, ikke rutinen) | 99489370 | cdafc05d911a | – (direkte til arbeidsgrenen i 869507fb; porten i `tools/plan/RUTINE.md` punkt 6 holdt; ingen stikkprøver langs kysten, endringen er bare skjermens oppsett) |
+| 08.11.2026 | U2-7 Skuffen og sidene (Jonas' økt, ikke rutinen) | 99489370 | cdafc05d911a | – (direkte til arbeidsgrenen i 869507fb, «Appen på Hetzner» og «Appen på GitHub Pages» grønne; porten i `tools/plan/RUTINE.md` punkt 6 holdt; ingen stikkprøver langs kysten, endringen er bare skjermens oppsett) |
 | 08.11.2026 | Ø14 F4 Feltnavnene i kartet (Jonas' økt, ikke rutinen) | bcd65760 | 5bb333574b3a | – (direkte til arbeidsgrenen; porten i `tools/plan/RUTINE.md` punkt 6 holdt) |
 | 08.11.2026 | KM1 Kvotemarkedet: kjernen (Jonas' økt, ikke rutinen) | 0ab507d2 | 3ab357652727 | – (direkte til arbeidsgrenen i bdb092d3; porten i `tools/plan/RUTINE.md` punkt 6 holdt, utenom `trackfollow` og `kinotest` i 3D, som ble stoppet etter 30 min og ikke kan merke `landY`-linja i `sell`) |
 | 08.11.2026 | Ø8b S0 Full last på første tur (Jonas' økt, ikke rutinen) | ffd076c1 | bc11b327b8f9 | – (direkte til arbeidsgrenen; porten i `tools/plan/RUTINE.md` punkt 6 holdt) |
