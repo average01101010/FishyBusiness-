@@ -30,7 +30,7 @@ svg text{fill:var(--dim);font-size:10px}
 .demo{background:#3a2a07;color:var(--acc);padding:6px 16px;font-size:13px}
 .lggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}.lgimg{display:block;width:128px;height:128px;object-fit:contain;background:repeating-conic-gradient(#8884 0 25%,transparent 0 50%) 0 0/16px 16px;border-radius:6px}.lgoff .lgimg{opacity:.35}.lgrow textarea{width:100%;box-sizing:border-box}
 .fbbody{white-space:pre-wrap;word-break:break-word;margin:6px 0}.fbimg{display:block;max-width:100%;max-height:70vh;border-radius:8px;margin:6px 0}.fbai{border-left:3px solid var(--acc);padding:4px 10px;margin:6px 0;font-size:13px}.fbset{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-top:6px}.fbset textarea{flex:1 1 260px;min-height:38px;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
-.sprow{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.sprow input,.sprow select{min-width:140px}
+.sprow{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.sptw{overflow-x:auto}.sptw table{min-width:980px}.spbk{display:flex;height:10px;border-radius:5px;overflow:hidden;min-width:90px;background:var(--line)}.spbk i{display:block}.sprow input,.sprow select{min-width:140px}
 @media print{header,nav,#mkPrint,.demo{display:none!important}.mk .card{break-inside:avoid}}
 .mk-l{margin:4px 0 0 18px;padding:0}.mk-l li{margin:3px 0}
 </style>
@@ -332,15 +332,15 @@ VIEW.mediekort = D => {
   for (const [id, n] of Object.entries(homes)){ const r = REGIONS && REGIONS[id]; const k = r ? LDN[r[1]] : 'Ukjent'; reg[k] = (reg[k] || 0) + n; homeN += n; }
   const top = Object.entries(homes).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([id, n]) => [(REGIONS && REGIONS[id] ? REGIONS[id][0] : id), n]);
   const fa = FN && !FN.err && FN.all, land = fa && fa.start ? fa.land1 / fa.start : null, reg3 = fa && fa.start ? fa.land3 / fa.start : null;
-  const sp = Array.isArray(SPR) ? SPR : [], spImp = sp.reduce((a, r) => a + (+r.imp || 0), 0), spSec = sp.reduce((a, r) => a + (+r.sec || 0), 0), spCl = sp.reduce((a, r) => a + (+r.clicks || 0), 0);
+  const sp = Array.isArray(SPR) ? SPR : [], spImp = sp.reduce((a, r) => a + (+r.imp || 0), 0), spSec = sp.reduce((a, r) => a + (+r.sec || 0), 0), spCl = sp.reduce((a, r) => a + (+r.clicks || 0), 0), spMeas = sp.reduce((a, r) => a + (+r.imp || 0) + (+r.nonview || 0), 0);
   const pct = v => v == null ? '–' : nf(v * 100, 0) + ' %';
   return '<div class="mk"><div class="card mk-head"><h2>Det Store Blå · mediekort</h2><p class="note">Et kystfiskespill langs hele norskekysten, med én felles verden og én felles klokke. Tallene gjelder ' + (DAYS === 1 ? 'siste døgn' : 'siste ' + DAYS + ' dager') + ', hentet ' + new Date().toLocaleDateString('nb-NO') + '. Bare spillere som deler statistikk, telles.</p><button id="mkPrint">Skriv ut eller lagre som PDF</button></div>' +
     '<div class="grid">' + kpi('Spillere i alt', nf(o.players, 0)) + kpi('Aktive siste 30 dager', nf(o.mau, 0)) + kpi('Aktive per dag (snitt)', nf(o.dau, 0)) + kpi('Økter per dag', nf(sess, 0)) + kpi('Snitt økt', nf(o.avg_min, 0) + ' min') + kpi('Spilletimer per dag', nf(hrs, 0) + ' t') + '</div>' +
     card('Hjemhavn etter landsdel', bars(reg), homeN ? nf(homeN, 0) + ' spillere med hjemhavn. Mest brukte: ' + top.map(([n, k]) => esc(n) + ' (' + nf(k, 0) + ')').join(', ') + '.' : 'Ingen hjemhavner ennå.') +
     card('Flåten i spillet', bars(D.boats || {}), 'Båter per type blant spillerne.') +
     card('Hva spillerne gjør', '<div class="grid">' + kpi('Har levert fisk', pct(land)) + kpi('Har levert tre ganger', pct(reg3)) + kpi('Turer i perioden', nf((D.trips || {}).count, 0)) + '</div>', 'Andelen av dem som åpnet spillet de siste åtte ukene (trakten).') +
-    card('Sponsede plasseringer', sp.length ? '<div class="grid">' + kpi('Synlige visninger', nf(spImp, 0)) + kpi('Sekunder synlig', nf(spSec, 0)) + kpi('Klikk ut', nf(spCl, 0)) + '</div>' : '<p class="note">Ingen sponsede plasseringer ennå. Formatene kan vises i demobygget (KYST_DEMO=1).</p>',
-      'En synlig visning: minst 1,5 % av skjermen, under 55°, minst halvparten synlig, i ett sekund i strekk (IABs retningslinjer for intrinsisk måling i spill, startverdier).') +
+    card('Sponsede plasseringer', sp.length ? '<div class="grid">' + kpi('Synlige visninger', nf(spImp, 0)) + kpi('Synlig andel', pct(spMeas ? spImp / spMeas : null), 'av de målte') + kpi('Sekunder sett', nf(spSec, 0)) + kpi('Klikk ut', nf(spCl, 0)) + '</div>' : '<p class="note">Ingen sponsede plasseringer ennå. Formatene kan vises i demobygget (KYST_DEMO=1).</p>',
+      'En synlig visning: minst 1,5 % av skjermen, under 55°, minst halvparten synlig og ikke skjult av spillets vinduer, i sikt og ikke om natta, i ett sekund i strekk, høyst én per banner og økt (IAB/MRC Intrinsic In-Game Advertising Measurement Guidelines 2.0, utkastet fra juni 2022). Ubestemte visninger (WebGL 1) er ikke med i andelen.') +
     card('Formatene', '<ul class="mk-l"><li>Merkevare på utstyr i butikken: samme pris og virkning som det usponsede, merket «Samarbeid».</li><li>Banner og flagg ved butikker, mottak og verft langs hele kysten.</li><li>Annonse i Kystposten, høyst én per utgave, merket «Annonse».</li><li>Ekstra premie på sesonghendelser som Lofotfisket.</li><li>Arbeidsklær i Garderoben, gratis for spillerne.</li><li>Meglerens egne båter i bruktmarkedet, med lenke til den ekte båten.</li><li>Gave til nye spillere.</li></ul>',
       'Aldri noe sponset på sjøen, i kartplotteren, i HUD eller i varsler. Ingen reklame for belønning, ingen annonsenettverk, ingen sporing fra andre.') + '</div>';
 };
@@ -350,7 +350,7 @@ VIEW.mediekort = D => {
 // item at the same price and with the same numbers. Switching off takes it out of the game within the hour (sp_now).
 let SPN = null;
 let SPR = null;
-async function sprLoad(){ await null; try { SPR = DEMO ? [{week:'2026-W45', pl:1, sponsor:'Nordlys Utstyr', kind:'sign:all', players:12, imp:41, sec:388, clicks:3, buys:1}] : await rpc('admin_sp_report', {days:DAYS}); } catch (e){ SPR = {err:e.message}; } if (TAB === 'sponsorer') render(); }
+async function sprLoad(){ await null; try { SPR = DEMO ? [{week:'2026-W45', pl:1, sponsor:'Nordlys Utstyr', kind:'sign:all', players:12, rendered:58, imp:41, nonview:14, undet:3, measured:0.948, viewable:0.745, re:22, sec:412.6, med:6.4, mean:9.1, clicks:3, buys:1}, {week:'2026-W44', pl:1, sponsor:'Nordlys Utstyr', kind:'sign:all', players:9, rendered:37, imp:25, nonview:10, undet:2, measured:0.946, viewable:0.714, re:11, sec:240.2, med:5.8, mean:8.2, clicks:1, buys:0}] : await rpc('admin_sp_report', {days:DAYS}); } catch (e){ SPR = {err:e.message}; } if (TAB === 'sponsorer') render(); }
 async function spLoad(){ await null; try { SPN = DEMO ? [{id:1, name:'Nordlys Utstyr', kind:'founding', site:'https://example.org/nordlys', agreement:'Demo', active:true, placements:[{id:1, kind:'item', target:'garnhaler', data:{model:'Nordlys GH-200'}, active:true}]}] : await rpc('sp_admin_list', {}); } catch (e){ SPN = {err:e.message}; } if (TAB === 'sponsorer') render(); }
 VIEW.sponsorer = () => {
   if (!SPN){ spLoad(); return '<p class="note">Henter …</p>'; }
@@ -368,16 +368,30 @@ VIEW.sponsorer = () => {
     '<input id="spS" placeholder="https://… (nettsiden)" maxlength="200"><input id="spA" placeholder="Avtalen (hvor den ligger)" maxlength="200"><button id="spNew">Legg til</button></div></div>' +
     (SPN.length ? SPN.map(row).join('') : '<p class="note">Ingen sponsorer ennå.</p>') + spReport() + '<p class="note"><a href="../#sptest" target="_blank" rel="noopener">Forhåndsvis spillet med testsponsoren ›</a></p>';
 };
-// the report per placement and week (4.4): what we sell on, with the CSV for the partner
+// the report per placement and week (4.4, after IAB/MRC 2.0, steg 66; 20261108230000_sp_view_iab.sql): per session and placement one
+// rendered impression in one of three buckets (viewable, not viewable, undetermined), the measured share (measured / rendered), the
+// viewable share (viewable / measured), the distribution, re-views, and the median and mean seconds of a viewable session; the CSV for
+// the partner has the same columns
+const SPCOLS = [['week', 'Uke'], ['sponsor', 'Sponsor'], ['kind', 'Plassering'], ['players', 'Unike spillere'], ['rendered', 'Gjengitt'], ['imp', 'Synlige'], ['nonview', 'Ikke synlige'], ['undet', 'Ubestemte'],
+  ['measured', 'Målt andel'], ['viewable', 'Synlig andel'], ['re', 'Gjensyn'], ['sec', 'Sekunder sett'], ['med', 'Median synlig tid (s)'], ['mean', 'Snitt synlig tid (s)'], ['clicks', 'Klikk ut'], ['buys', 'Kjøp']];
+const spPct = v => v == null ? '–' : nf(v * 100, 0) + ' %';
+// the three buckets as one bar: viewable (green), not viewable (grey), undetermined (striped)
+const spBk = r => { const n = (+r.imp || 0) + (+r.nonview || 0) + (+r.undet || 0) || 1, w = v => (100 * (+v || 0) / n).toFixed(1) + '%';
+  return '<span class="spbk" title="Synlige ' + (r.imp || 0) + ', ikke synlige ' + (r.nonview || 0) + ', ubestemte ' + (r.undet || 0) + '"><i style="width:' + w(r.imp) + ';background:#3fa66b"></i><i style="width:' + w(r.nonview) + ';background:#8a96a3"></i><i style="width:' + w(r.undet) + ';background:repeating-linear-gradient(45deg,#c9a23a 0 3px,transparent 3px 6px)"></i></span>'; };
 function spReport(){
   if (!SPR){ sprLoad(); return card('Rekkevidde', '<p class="note">Henter …</p>'); }
-  if (SPR.err) return card('Rekkevidde', '<p class="warn">' + esc(SPR.err) + '</p>', 'Er migreringen supabase/migrations/20261102140000_sp_report.sql kjørt?');
-  return card('Rekkevidde per uke', (SPR.length ? table(SPR.map(r => ({...r, sec:nf(r.sec, 0)})), [['week', 'Uke'], ['sponsor', 'Sponsor'], ['kind', 'Plassering'], ['players', 'Unike spillere'], ['imp', 'Synlige visninger'], ['sec', 'Sekunder synlig'], ['clicks', 'Klikk ut'], ['buys', 'Kjøp']]) : '<p class="note">Ingen målinger ennå.</p>') +
+  if (SPR.err) return card('Rekkevidde', '<p class="warn">' + esc(SPR.err) + '</p>', 'Er migreringene supabase/migrations/20261102140000_sp_report.sql og 20261108230000_sp_view_iab.sql kjørt?');
+  const T = SPR.reduce((a, r) => { a.r += +r.rendered || 0; a.v += +r.imp || 0; a.n += +r.nonview || 0; a.u += +r.undet || 0; a.t += (+r.mean || 0) * (+r.imp || 0); return a; }, {r:0, v:0, n:0, u:0, t:0});
+  const kp = SPR.length ? '<div class="grid">' + kpi('Gjengitte visninger', nf(T.r, 0), 'banneret tegnet innen 150 m, per økt') + kpi('Målt andel', spPct(T.r ? (T.v + T.n) / T.r : null), 'utenom ubestemte (WebGL 1)') +
+    kpi('Synlig andel', spPct(T.v + T.n ? T.v / (T.v + T.n) : null), 'synlige av de målte') + kpi('Snitt synlig tid', T.v ? nf(T.t / T.v, 1) + ' s' : '–', 'per synlig visning') + '</div>' : '';
+  const cols = SPCOLS.map(c => c[0] === 'measured' || c[0] === 'viewable' ? [c[0], c[1], v => spPct(v)] : c[0] === 'sec' || c[0] === 'med' || c[0] === 'mean' ? [c[0], c[1], v => v == null ? '–' : nf(v, 1)] : c);
+  cols.splice(8, 0, ['bk', 'Fordelingen', (v, r) => spBk(r)]);
+  return card('Rekkevidde per uke', kp + (SPR.length ? '<div class="sptw">' + table(SPR, cols) + '</div>' : '<p class="note">Ingen målinger ennå.</p>') +
     '<button id="spCsv"' + (SPR.length ? '' : ' disabled') + '>Last ned CSV</button>',
-    'En synlig visning er et skilt som dekker minst 1,5 % av skjermen innenfor 55° i minst ett sekund (startverdier etter IABs retningslinjer for intrinsisk måling i spill; sjekkes mot den fulle teksten før vi selger på dem). Bare fra spillere som deler statistikk, og ingenting mens spillet står urørt i to minutter eller siden er skjult.');
+    'Målt etter IAB/MRC <i>Intrinsic In-Game Advertising Measurement Guidelines 2.0</i> (utkastet fra juni 2022; se docs/sponsor/mediekort.md). En gjengitt visning er ett banner i én økt, tegnet innen 150 m mens noen spiller. Synlig: minst 1,5 % av skjermen, under 55°, minst halvparten innenfor skjermen og ikke skjult av 3D eller av spillets egne vinduer, i sikt og ikke om natta, i ett sekund i strekk; høyst én per økt, senere sekunder i strekk er gjensyn. Ubestemt: telefoner med WebGL 1, der skjulingen ikke kan måles. Sekunder sett er all tid banneret møtte kravene, også før sekundet. Bare fra spillere som deler statistikk, og ingenting mens spillet står urørt i to minutter eller siden er skjult. Klikk ut og kjøp er våre egne tall; retningslinjen dekker dem ikke.');
 }
 function spWire(){
-  if ($('#spCsv')) $('#spCsv').onclick = () => { const cols = ['week', 'sponsor', 'kind', 'players', 'imp', 'sec', 'clicks', 'buys'], q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  if ($('#spCsv')) $('#spCsv').onclick = () => { const cols = SPCOLS.map(c => c[0]), q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
     const csv = [cols.join(';')].concat(SPR.map(r => cols.map(c => q(r[c])).join(';'))).join('\n'), a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], {type:'text/csv'})); a.download = 'sponsorer-rekkevidde.csv'; a.click(); };
   const go = async (fn, args) => { try { if (!DEMO) await rpc(fn, args); SPN = null; render(); } catch (e){ alert(e.message); } };
