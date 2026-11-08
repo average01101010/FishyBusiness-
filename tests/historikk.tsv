@@ -1430,3 +1430,9 @@
 2026-11-08 20:16	ccr-5588e999-w5pry1	44d961d+	shoptest	OK	30	lite	samtidig	
 2026-11-08 20:17	ccr-5588e999-w5pry1	44d961d+	boottest	OK	26	lite	samtidig	
 2026-11-08 20:17	ccr-5588e999-w5pry1	44d961d+	worldtest	OK	19	lite	samtidig	
+2026-11-08 20:37	ccr-5588e999-w5pry1	ca5a14a	trackfollow	FEIL	1236	3d	alene	FEIL she keeps to the line all the way, at most 9 m off it in the corners (the model turns on her own radius), and never goes back along it  {"off": 9.21, "back
+2026-11-08 20:42	ccr-5588e999-w5pry1	ca5a14a	boottest	OK	30	lite	samtidig	
+2026-11-08 20:42	ccr-5588e999-w5pry1	ca5a14a	quotatest	OK	14	lite	samtidig	
+2026-11-08 20:42	ccr-5588e999-w5pry1	ca5a14a	selltest	LES	22	lite	samtidig	
+2026-11-08 20:43	ccr-5588e999-w5pry1	ca5a14a	trip2	OK	40	lite	samtidig	
+2026-11-08 20:43	ccr-5588e999-w5pry1	ca5a14a	fleet2test	OK	31	lite	samtidig	
