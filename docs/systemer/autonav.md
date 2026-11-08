@@ -250,7 +250,7 @@ Autonav (og Driftsplan, som seiler med den) viker for fartøy båten du følger 
 
 ## 4.12m Ut fra kaia: fars naust, feltet på første tur og de forseglede havnene (08.11.2026)
 
-Jonas 08.11.2026: «Noen spillere opplever å ikke kunne forlate kaien ved første oppdrag fordi Autonav ikke fungerer», og «Dette er svært alvorlig». Gren `ccr-4946b87f-2gakv1`, test `tests/utfrakai.py` (sett rød på koden før rettingen, grønn etter).
+Jonas 08.11.2026: «Noen spillere opplever å ikke kunne forlate kaien ved første oppdrag fordi Autonav ikke fungerer», og «Dette er svært alvorlig». Gren `ccr-4946b87f-2gakv1`, test `tests/utfrakai.py` (sett rød på koden før rettingen, grønn etter). Rullet ut 08.11.2026 i 98a182bc (Jonas: «Rull ut»); Hetzner, Pages og «Autonav langs hele kysten» grønne.
 
 **Hvordan det ble funnet.** Et skript i økta valgte hvert av de 162 startstedene, gjorde det spilleren gjør på steget `route1` (Autonav, så et trykk midt i ringen) og trykket «Kast loss», med hele kysten og vec-pakkene i bygget, på testklokka (mars 2027) og på verdens klokke (17.09.2027) ved fire tidevannsfaser. Tre steder sto fast, alltid de samme:
 
