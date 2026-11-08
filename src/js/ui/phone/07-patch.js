@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['u27-081126', '08.11.2026', 'Sidene i skuffen', 'The pages in the drawer', [
+       ['Med skjermen stående åpner alle sidene i skuffen like høye, og statusstripa står over siden mens den er åpen.', 'With the screen upright every page in the drawer opens as tall, and the status strip stands above the page while it is open.'],
+       ['Mannskap har én knapp per person: «Gjør til skipper» når båten mangler skipper, ellers «Gjør til styrmann». Den andre ligger bak ⋯.', 'Crew has one button per person: «Make skipper» when the boat has no skipper, otherwise «Make mate». The other one is behind ⋯.']]],
     ['o117-081126', '08.11.2026', 'Nødstopp, Sikkerhet og havsnød', 'Emergency stop, Safety and distress', [
        ['Henger en av mannskapet seg fast i lina, garnet eller teinetauet ved haleren, stopper de haleren selv med nødstoppen. Det står som nestenulykke i dagboka.', 'If one of the crew is caught in the line, the net or the pot rope at the hauler, they stop the hauler themselves with its emergency stop. It stands as a near miss in the log.'],
        ['Redning har fått kortet «Sikkerhet»: nestenulykkene med dag, sted og hva hver av dem lærer, med kilde, og turene uten skade. Merket «Turer uten skade» teller dem.', 'Redning has a new «Safety» card: the near misses with the day, the place and what each teaches, with its source, and the trips without harm. The badge «Trips without harm» counts them.'],
