@@ -1,6 +1,6 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
-    ['rund-081126', '08.11.2026', 'Rund fisk på første tur', 'Round fish on the first trip', [
+    ['p155', '08.11.2026', 'Rund fisk på første tur', 'Round fish on the first trip', [
        ['På første tur leverer du fisken rund, og mottaket sløyer den, så du kommer raskere til første levering. Folkene på kaia forteller hva du får ved å sløye selv: betalt for lever og rogn, og ingen sløyetrekk på hyse og sei.', 'On the first trip you land the catch round, and the plant guts it, so you reach your first landing sooner. The hands on the quay tell you what gutting yourself gives: pay for the liver and the roe, and no gutting charge on haddock and saithe.'],
        ['Første gang fisket stopper for sløying på tur 2, forklarer Håndboka hvordan det virker, og at en mann til om bord sløyer mens du fisker.', 'The first time fishing stops for gutting on trip 2, the Handbook explains how it works, and that one more hand aboard guts while you fish.']]],
     ['o12b-081126', '08.11.2026', 'Turer over flere døgn', 'Trips of several days', [
