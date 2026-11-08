@@ -157,7 +157,7 @@ REAL_M = r"""async (N) => { N = N || 3; const R = {N};
   const F = D2.spots(2, 5, 16, M.p), J = D2.spots(1, 3, 8, M.p);
   const rb = rorbuNear(M.p, 30)[0]; if (rb) rorbuSite(rb.R); const home = rb ? rb.R.id : M.id; R.home = [home, portById(home).name];
   const o = S.ops = plan2New({home, rig:'line', jig:true, rhythm:'multi', days:3, places:[D2.felt('f1', F[0], 2, 6), D2.felt('f2', F[1], 2, 6), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'days', days:N}});
-  R.chk = plan2Check(o); const err = await D2.make(o); if (err) return {err, chk:R.chk}; o.on = true;
+  R.chk = plan2Check(o); R.cap = Math.round(capHold()); R.landVal = (PHONE.page('drift').match(/>Levering<\/span><span class="dr-rv">([^<]*)/) || [])[1] || null; const err = await D2.make(o); if (err) return {err, chk:R.chk}; o.on = true;
   const L = await D2.run(4 * 1440, 'closed', 'M'); R.run = KY.sum(L, o); R.outs = KY.outs(L);
   // where she lay each night at 01:00
   R.nights = [0, 1, 2, 3].map(d => { const e = L.ev.filter(x => { const [dd, hh] = x[0].split(' '); return +dd.slice(1) < d + 2 || (+dd.slice(1) === d + 2 && hh <= '01:00'); }).pop(); return e ? e[0] + ' ' + e[1] : null; });
@@ -253,7 +253,8 @@ async def real(pg, names):
         else:
             R = r['run']; [print('    ', d) for d in R['days']]; print('    netter', r['nights']); print('    stats', R['stats'], 'fin', R['fin'])
             st = R['stats']; got = [i + 1 for i, x in enumerate(st) if x[1] > 0]
-            print(ok(len(st) >= 4 and got == [2, 3] and R['ops']['on'] and not R['ops']['stop']), 'M2 levering hvert 2. døgn på en tur på 3: levert dag 2 og dag 3 (turens siste), ikke dag 1 eller 4 (Jonas 08.11.2026, valg 14: A)', [got, st])
+            print(ok(len(st) >= 4 and got == [2, 3] and st[1][1] < 0.8 * r['cap'] and R['ops']['on'] and not R['ops']['stop']), 'M2 levering hvert 2. døgn på en tur på 3: levert dag 2 (lasten under 80 %, så etter regelen, ikke full last) og dag 3 (turens siste), ikke dag 1 eller 4 (Jonas 08.11.2026, valg 14: A)', [got, st, r['cap']])
+            print(ok(r.get('landVal') and 'hvert 2. døgn og turens siste dag' in r['landVal']), 'M2 Levering-raden sier «hvert 2. døgn og turens siste dag»', r.get('landVal'))
             print(ok(r['nights'][1] and '@' + r['home'][0] not in r['nights'][1] and r['nights'][2] and '@' + r['home'][0] in r['nights'][2]), 'M2 leveringen dag 2 avslutter ikke turen: natta ute, hjem dag 3', r['nights'])
 
 async def shots(p):
