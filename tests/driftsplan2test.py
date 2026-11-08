@@ -347,7 +347,8 @@ async def main():
             trakk = [e for e in a['log'] if 'Trakk line' in e[1]]
             print(ok(a['days'] and any('Trekker felt 1' in x for x in a['days'][0]) and len(trakk) == 2 and all('sto 6 t' in e[1] or 'sto 7 t' in e[1] for e in trakk) and L['sets'] == 0 and a['on'] and not a['stop'] and a['fin']['port'] == 'finnsnes'), 'S11 given back, the day goes on from where she is: the line is hauled when due, landed, and home', [a['days'][0][:5] if a['days'] else None, trakk, a['fin']['port']])
         # S20 (moved from drifttest scenario 2, Ø12 C 08.11.2026): you ashore, the engine asks for a skipper and a mate and stops without
-        # them; a boat with room for one hand waits in port while you are ashore, and goes out with you aboard
+        # them; a boat with room for one hand waits in port while you are ashore, and goes out with you aboard (the wait is an hour at a
+        # time, plan2Wait H + 1, so two hours are played after you come aboard)
         print('== S20: uten deg om bord: skipper og styrmann, og båten med plass til én')
         r = await pg.evaluate("""(async () => { D2.reset(20); const R = {}, home = D2.boat('sjark', 2, false); await mapNeed(portById(home).p, 14);
           const J = D2.spots(1, 2.5, 4), H = Math.floor(driftHod(S.t / 60));
@@ -359,7 +360,7 @@ async def main():
           const h2 = D2.boat('skiff', 1, false), o2 = S.ops = plan2New({home:h2, rig:'juksa', jig:true, places:[D2.juks('j1', J[0])], dep:H, land:{mode:'near', port:null, when:'trip'}});
           S.me = S.cur; const err2 = await D2.make(o2); if (err2) return {err:err2}; S.me = 'nobody'; o2.on = true;
           await D2.run(30, 'closed', 'S20b'); R.one = o2.run && o2.run.wait && o2.run.wait.k; R.oneOn = o2.on; R.left = S.boat.status;
-          S.me = S.cur; await D2.run(30, 'closed', 'S20c'); R.withMe = S.boat.status !== 'port' || !!S.plan; R.withMeSt = S.boat.status; return R; })()""")
+          S.me = S.cur; await D2.run(120, 'closed', 'S20c'); R.withMe = S.boat.status !== 'port' || !!S.plan; R.withMeSt = S.boat.status; return R; })()""")
         if r.get('err'): print('FEIL S20 plan2Make:', r['err'])
         else:
             print(ok(any('skipper' in e for e in r['check']) and r['stop'] == 'roles' and not r['on']), 'S20 without you aboard a skipper and a mate must be appointed: the check says so, and the engine stops without them', [r['check'], r['stop'], r['on']])
