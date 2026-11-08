@@ -35,7 +35,7 @@ const mbSellable = type => { const V = VESSELS[type]; return !!V && !V.lock && (
 const mbSale = v => { const b = v && vget(v, 'boat'); return (b && b.sale) || null; };
 // the right's part of her value (vesselValue's 95 % of licValue), told to the server with the value
 const mbLicKr = v => Math.round(licValue(vget(v, 'lic')) * 0.95);
-function mbOpsOn(v){ try { return withVessel(v, () => { const o = typeof DRIFT2 !== 'undefined' && DRIFT2 && typeof plan2Ops === 'function' ? plan2Ops() : S.ops; return !!(o && o.on); }); } catch (e){ return false; } }
+function mbOpsOn(v){ try { return withVessel(v, () => { const o = plan2Ops(); return !!(o && o.on); }); } catch (e){ return false; } }
 // why she cannot be put out for sale (a word), or null: she must lie in port with nobody aboard, an empty hold and no gear in the sea,
 // the plan off, nothing under way at the yard or with a delivery skipper, and the company must keep another boat
 function mbWhy(v){

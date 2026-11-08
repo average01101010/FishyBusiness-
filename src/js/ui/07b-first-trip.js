@@ -106,7 +106,7 @@ const TSTEPS = [
       if (inPlot()) return {el:vis('#ecClose'), no:'Nå fisker juksa. Trykk «Lukk» for å se fisket i 3D.', en:'The jig is fishing now. Tap «Close» to watch in 3D.'};
       return {el:vis('#dock [data-act=jigg]'), no:'Nå fisker juksa for deg. Trykk «Jukse selv» for å jukse selv: når det napper, trykk «Rykk» mens nåla er midt på. Knappen blir rød når det napper, og midt på gir to fisk på kroken.', en:'The jig fishes for you now. Tap «Jig yourself» to jig yourself: when it bites, tap «Strike» as the needle is in the middle. The button turns red when it bites, and the middle gives two fish on the hooks.'}; }},
   {id:'deck', ok:true, done:() => false,
-    tip:() => { if (holdTotal() > 0 && !S.tut.deckCam && G3.isActive()){ S.tut.deckCam = true; G3.lookDeck(); } return holdTotal() <= 0 ? {el:vis('#dock [data-act=jigg]'), small:true, noOk:true, no:'Rykk når det napper.', en:'Strike when it bites.'} : ({el:vis(['#hud .st.nx', '#hud']), no:'Fisken blør i bløggekaret idet den kommer over ripa. Så blir den sløyd og lagt i lasterommet. Godt bløgget og sløyd fisk gir bedre pris.', en:'The fish is bled in the tub as it comes over the rail. Then it is gutted and put in the hold. Well bled and gutted fish fetches a better price.'}); }},
+    tip:() => { if (holdTotal() > 0 && !S.tut.deckCam && G3.isActive()){ S.tut.deckCam = true; G3.lookDeck(); } return holdTotal() <= 0 ? {el:vis('#dock [data-act=jigg]'), small:true, noOk:true, no:'Rykk når det napper.', en:'Strike when it bites.'} : ({el:vis(['#hud .st.nx', '#hud']), no:'Fisken blør i bløggekaret idet den kommer over ripa, og legges rund i karene. Denne gangen leverer du den rund, og mottaket sløyer den. Godt bløgget fisk gir bedre pris.', en:'The fish is bled in the tub as it comes over the rail and goes round into the tubs. This time you land it round, and the plant guts it. Well bled fish fetches a better price.'}); }},
   // a full hold (Ø8b S0, V3 C, Jonas 06.11.2026: «brukeren skal jo selv få lov til å bestemme hvor lenge de ønsker å fiske før de leverer»):
   // the step is done when the fishing ends, whether the hold is full, the time is out or the player tapped «Stopp» (08-actions.js stopfish)
   {id:'full', done:() => (S.boat.status === 'idle' && holdTotal() > 1 && !S.boat.fishUntil) || !!S.lastSale,
@@ -227,12 +227,12 @@ function tutStep(){
 // first trip is done, where a player who wonders after trip 2 finds it. N is the landed catch times the stock's own share of the density
 // on the field (S.tut.fk, summed in fish(), core/05-vessels.js) per fishing hour, rounded to 10 kg. Since the full hold (Ø8b S0) the
 // guarantee's top-up (F.top) is taken out first, as it is most of the catch, and the hours are the minutes jigged (F.m), as the player may
-// stop early; a save from before has neither and counts as before (all of it, one hour). portSlip (ui/07-guide.js) still has the old
-// formula and should call this (Ø8b S2, which holds 07-guide.js);
+// stop early; a save from before has neither and counts as before (all of it, one hour). portSlip (ui/07-guide.js) calls this too, so the
+// slip and the log say the same (Jonas' choice A 08.11.2026);
 // no line when it is not known (a save from before S.tut.fk, or no landing yet). The first trip can only land at its own plant
 // (tutAllow: «sell» on the step «land», the route home must end at tutLand()), so the last sale is the one the slip shows. Texts: ui/01-i18n.js
-function tutNormKg(){
-  const F = S.tut && S.tut.fk, ls = S.lastSale;
+function tutNormKg(sale){
+  const F = S.tut && S.tut.fk, ls = sale || S.lastSale;   // the sale the slip shows (portSlip), else the last one
   if (!F || !(F.d > 0) || !ls || !Array.isArray(ls.lines)) return null;
   const kg = Math.max(0, ls.lines.reduce((a, r) => a + (r.kg || 0), 0) - (F.top || 0)), h = F.m >= 1 ? F.m / 60 : TUT_FISH_H;
   return Math.round(kg * Math.max(0, (F.d - F.t) / F.d) / h / 10) * 10;

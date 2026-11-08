@@ -16,7 +16,7 @@
 | +5 % | 100 % | −15 % | −40 % | 1 kr/kg |
 
 - **Kroktillegg:** Krokfanget hyse over 1,1 kg får +12,8 %.
-- **Sløying om bord** (innstilling «Sløy fangsten»): hyse og sei slipper sløyetrekket på 0,30 kr/kg, og du får betalt for lever og rogn. Lever er 5 % av vekta. Rogn er 4 % for torsk i januar–april og 1 % ellers.
+- **Sløying om bord** (innstilling «Sløy fangsten»): hyse og sei slipper sløyetrekket på 0,30 kr/kg, og du får betalt for lever og rogn. Lever er 5 % av vekta. Rogn er 4 % for torsk i januar–april og 1 % ellers. Grunnprisen per rund kilo er den samme sløyd og rund, så sløying gir rundt 1 % for torsk og 2–2,5 % for hyse og sei. **Første tur leveres rund** (08.11.2026, `catchGut` i `core/13-work.js`; `opning-og-veiledning.md`, «Rund fisk på første tur»), og mottaket sløyer den.
 - **Arbeid på dekk (G, 29.09.2026):**
   - **Bløgging:** Den skjer automatisk og gratis idet fisken kommer over ripa. Deretter ligger fisken i bløggekaret, rund og uiset, og holder seg dårligere enn iset fisk etter temperaturen (se «Hvor lenge fangsten holder seg» under).
   - **Hvor lenge fangsten holder seg** (D3 av driftsplanen, Jonas 23.10.2026 svar 15a; `KEEP`, `keepDay`/`keepF`, `keepRRS`, `keepK` og `keepHours` i `core/03-simulation.js`, brukt i `vesselStep` og i push-varselet):

@@ -88,7 +88,7 @@ GUIJS = r"""(() => {
 # the state before a scenario: the boat at a harbour on Senja, the crew, the gear, the catch marks, who is aboard; the drawer, the phone and
 # the chart's plan mode closed. Sea points near home are found as in driftsplan2map.py (for the marks, and the taps in the chart)
 SETUP = r"""async (o) => {
-  const lang = o.lang || 'no'; S.tut = 0; S.settings.lang = lang; S.lang = lang; DRIFT2 = true;
+  const lang = o.lang || 'no'; S.tut = 0; S.settings.lang = lang; S.lang = lang;
   if (PLANMAP.isOn()) PLANMAP.close(); DOCK.close(); PHONE.show(false); if (typeof G3 !== 'undefined' && G3.isActive && !G3.isActive() && G3.show) { try { G3.show(true); } catch (e){} }
   const b = S.boat, HP = portById(o.port || 'husoy');
   b.type = o.type || 'sjark'; applyVessel(); b.status = 'port'; b.port = HP.id; b.pos = {...HP.p}; b.land = null; b.gop = null; b.shift = null; b.fueling = null; b.after = null; b.landWait = null; S.shelter = null; S.jobs = [];

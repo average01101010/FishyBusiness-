@@ -93,7 +93,7 @@ const meEff = () => S.energy != null && S.energy < ENERGY.warn ? ENERGY.slow : 1
 const energyOff = () => !!(S.adm && S.adm.noEnergy);
 // ===== Skippertak (Jonas 12.10.2026): an energy drink, for real money only (never for the game's kroner), in three sizes =====
 // While it works, you and every crew on every vessel of the fleet stay rested: your energy is held at 100 %, no one falls asleep, the
-// crews' fatigue stays at 0, and an operations plan's rest sessions are left out (06d-drift.js), so a boat on a plan works through
+// crews' fatigue stays at 0, and an operations plan's rest sessions are left out (Driftsplan 2), so a boat on a plan works through
 // them. The time is the game's one clock for every player, so it runs while the game is closed too. A new one is added to what is
 // left. The energy model itself (ENERGY, RORBU, the crews' fatigue) is never made harder to sell more: tests/skiptest.py locks the
 // numbers, and the free way, rest in the naust or at a rorbu, stays as it is (docs/engasjement.md). The prices are the database's

@@ -81,6 +81,9 @@ const PSAY = {
   krabbe:[['Kongekrabbe! Pass fingran, dem e ikkje døde ennu.', 'King crab! Mind your fingers, they are not dead yet.'], ['Kongekrabbe e dyrt gull. Vi passe godt på.', 'King crab is expensive gold. We will look after it.']],
   skrei:[['Skrei! Nu e det rette tia på året.', 'Skrei! Now is the right time of year.'], ['Skreia har kommet heim. Velkommen heim, tenker æ.', 'The skrei has come home. Welcome home, I think.'], ['Dette e sjølve vinterfisket!', 'This is the winter fishery itself!']],
   sei:[['Sei igjen? Det e greit, vi kan alltid bruke sei.', 'Saithe again? Fine, we can always use saithe.'], ['Seien står tett i dag, ser æ.', 'The saithe stand thick today, I see.']],
+  // the first trip lands round (core/13-work.js catchGut): what gutting aboard gives in the game (ui/08-actions.js sell), and the hand
+  round:[['Rund fesk, ja. Den sløye vi. Sløye du sjøl om bord, får du betalt for lever og rogn òg. Ein mann te om bord, så går det fort.', 'Round fish, I see. We will gut it. Gut it yourself aboard and you get paid for the liver and the roe too. One more hand aboard and it goes quickly.'],
+    ['Den her sløye vi for dæ i dag. Neste gang lønne det sæ å sløye om bord: lever og rogn e penga, og på hyse og sei slepp du sløyetrekket. Ta med dæ ein mann, så sløye han mens du fiske.', 'We will gut this for you today. Next time it pays to gut aboard: liver and roe are money, and on haddock and saithe you avoid the gutting charge. Take a hand along, and he guts while you fish.']],
   conf:[['Æ hørte at Råfisklaget tok litt av lasta di. Surt.', 'I heard the sales organisation took some of your load. Sour.'], ['Kvota e kvota. Det hjelpe ikkje å sutre.', 'A quota is a quota. Complaining does not help.']]
 };
 // in their own dialect, by the place (null north of 65° N is nord): small, mid and big loads
@@ -117,6 +120,10 @@ function plantLine(pt, ls, rnd){
   if (kg >= 50 && bad / kg >= 0.4) cand.push([2.5, 'poor']); else if (kg >= 100 && fine / kg >= 0.8) cand.push([1.5, 'fresh']);
   cand.push([2.2, 'REG']);
   let r = rnd() * cand.reduce((a, c) => a + c[0], 0), pick = cand[0][1]; for (const c of cand){ r -= c[0]; if (r <= 0){ pick = c[1]; break; } }
+  // round fish that would have given liver and roe gutted aboard (cod, haddock, saithe): at the first landing the hand always says what
+  // gutting aboard gives (Jonas 08.11.2026), later now and then
+  const roundKg = lines.reduce((a, r) => a + (!r.gut && !r.fz && SPECIES[r.sp] && SPECIES[r.sp].liver ? r.kg : 0), 0);
+  if (roundKg >= 15 && ((S.landN || 0) <= 1 || rnd() < 0.25)) pick = 'round';
   const pool = pick === 'REG' ? PSAYR[reg][band] : PSAY[pick], last = S.psayLast, fresh = pool.filter(l => l[0] !== last), l = (fresh.length ? fresh : pool)[Math.floor(rnd() * (fresh.length ? fresh : pool).length)];
   return {no:pick === 'REG' ? l[0] : dialectText(dial, l[0]), raw:l[0], en:l[1], pick, dial};
 }
