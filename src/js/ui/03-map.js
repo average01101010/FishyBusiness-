@@ -422,8 +422,11 @@ let markEnd = Infinity;
 // its species, months or fish (Jonas 07.11.2026, V4 C)
 const FELT_KIND = {f:['Fiskeplass', 'Fishing ground'], g:['Gyteområde', 'Spawning ground'], o:['Oppvekst- og beiteområde', 'Nursery and feeding ground']};
 function tapName(mp, rr){ let best = null, bd = rr; for (const q of LBLHID){ const d = dist(q, mp); if (d < bd){ bd = d; best = q; } }
-  if (!best){ const pad = 4 / view.px; best = LBLFELT.find(e => e.box && mp.x > e.box[0] - pad && mp.x < e.box[2] + pad && mp.y > e.box[1] - pad && mp.y < e.box[3] + pad) || null;
-    if (!best){ bd = rr; for (const e of LBLFELT){ if (e.box) continue; const d = dist(e, mp); if (d < bd){ bd = d; best = e; } } }
+  // (the drawn name under the finger, the nearest of them when two padded boxes meet; else a left-out ground within 0.6 of the radius,
+  // so a tap on open sea where the grounds lie thick seldom gives a bubble)
+  if (!best){ const pad = 4 / view.px; for (const e of LBLFELT){ const b = e.box; if (!b || mp.x < b[0] - pad || mp.x > b[2] + pad || mp.y < b[1] - pad || mp.y > b[3] + pad) continue;
+      const d = Math.hypot(Math.max(b[0] - mp.x, 0, mp.x - b[2]), Math.max(b[1] - mp.y, 0, mp.y - b[3])) + dist(e, mp) * 1e-3; if (d < bd){ bd = d; best = e; } }
+    if (!best){ bd = rr * 0.6; for (const e of LBLFELT){ if (e.box) continue; const d = dist(e, mp); if (d < bd){ bd = d; best = e; } } }
     if (best){ const f = best.f, en = S.lang === 'en' ? 1 : 0; best = {x:best.x, y:best.y, n:f.nf || f.n, s:(FELT_KIND[f.k] || FELT_KIND.f)[en] + ' · ' + (en ? 'Directorate of Fisheries' : 'Fiskeridirektoratet')}; } }
   if (!best) return false; TAPNAME = {x:best.x, y:best.y, n:best.n, s:best.s, until:performance.now() + 2500}; renderDyn(); setTimeout(() => { if (TAPNAME && performance.now() >= TAPNAME.until) renderDyn(); }, 2600); return true; }
 // the labels the static layer placed (boxes, map km) and the icons it left without a name (E2 of docs/planer/kart-etiketter.md); the
@@ -692,7 +695,7 @@ function renderDyn(){
   // the name of an icon tapped that stands without one (E2): two and a half seconds, in a box over everything
   // (a ground's kind and source on a second, smaller line; the box kept inside the view)
   if (TAPNAME && performance.now() < TAPNAME.until){ const q = TAPNAME, sz = 12 * u, s2 = 10 * u, h2 = q.s ? s2 + 4 * u : 0, w = Math.max(String(q.n).length * sz * 0.56, q.s ? String(q.s).length * s2 * 0.54 : 0) + 10 * u;
-    const vr = svg.getBoundingClientRect(), xr = view.cx + vr.width / 2 * u - 4 * u, xl = view.cx - vr.width / 2 * u + 4 * u, x = Math.max(xl, Math.min(q.x + 8 * u, xr - w)), y = q.y - 20 * u - h2;
+    const vr = svg.getBoundingClientRect(), xr = view.cx + vr.width / 2 * u - 4 * u, xl = view.cx - vr.width / 2 * u + 4 * u, x = Math.max(xl, Math.min(q.x + 8 * u, xr - w)), y = Math.max(view.cy - vr.height / 2 * u + 4 * u, q.y - 20 * u - h2);
     g.push('<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + (sz + 8 * u + h2) + '" rx="' + (4 * u) + '" class="tapname" stroke-width="' + u + '"/>' + txt({x:x + 5 * u, y:y + sz + 1 * u}, pinEsc(q.n), 'lbl-tapname', sz)
       + (q.s ? txt({x:x + 5 * u, y:y + sz + 1 * u + h2}, pinEsc(q.s), 'lbl-tapname', s2, 'style="font-weight:400;opacity:.8"') : '')); }
   else if (TAPNAME){ TAPNAME = null; }

@@ -42,7 +42,7 @@ FELTM = """(() => { const W = innerWidth, H = innerHeight, F = [], O = [], gn = 
   for (let i = 0; i < F.length; i++){ for (let j = i + 1; j < F.length; j++) if (hit(F[i].b, F[j].b)) ov.push([F[i].t, F[j].t]); for (const o of O) if (hit(F[i].b, o.b)) ov.push([F[i].t, o.t]); }
   return {n:F.length, f:F.filter(q => q.k === 'f').length, go:F.filter(q => q.k === 'g' || q.k === 'o').length, share:area / (W * H), ov,
     grounds:[...document.querySelectorAll('#map text')].filter(e => gn.has(e.textContent)).length, names:F.slice(0, 6).map(q => q.t)}; })()"""
-FELTPLACES = [('bergen', 60.398, 5.318), ('henningsvaer', 68.152, 14.205), ('bodo', 67.283, 14.38), ('batsfjord', 70.634, 29.72)]
+FELTPLACES = [('bergen', 60.398, 5.318), ('henningsvaer', 68.152, 14.205), ('bodo', 67.283, 14.38), ('batsfjord', 70.634, 29.72), ('senja', 69.47, 17.35)]
 FELTVW = [(390, 844), (800, 1280), (1280, 800), (915, 1208), (1293, 830)]
 SHOTS = {(390, 844), (800, 1280), (1280, 800)}
 
@@ -51,19 +51,15 @@ async def felt(b, errs):
     for vw in FELTVW:
         pg = await (await b.new_context(viewport={'width': vw[0], 'height': vw[1]})).new_page(); pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg); fm = f'{vw[0]}x{vw[1]}'; low = []
-        for name, la, lo in FELTPLACES + [('senja', 69.47, 17.35)]:
+        for name, la, lo in FELTPLACES:
             for z in (1, 1.5, 1.95):
                 await pg.evaluate(GOZ, [la, lo, z]); m = await pg.evaluate(FELTM); low.append((name, z, m['n'], m['grounds']))
-            if name == 'senja':
-                for z in (2, 4):
-                    await pg.evaluate(GOZ, [la, lo, z]); m = await pg.evaluate(FELTM); low.append((name, z, 0, m['grounds']))
-                continue
             for z in (2, 4):
                 await pg.evaluate(GOZ, [la, lo, z]); await pg.wait_for_timeout(300); await pg.evaluate("(() => { renderStatic(); renderDyn(); })()")
-                m = await pg.evaluate(FELTM)
+                m = await pg.evaluate(FELTM); low.append((name, z, 0, m['grounds']))
                 print(f'     {name} z{z} {fm}: {m["n"]} feltnavn ({m["f"]} fiskeplasser, {m["go"]} gyte/oppvekst), {m["share"] * 100:.1f} % av skjermen; {", ".join(m["names"])}')
                 lim = 0.05
-                check(not m['ov'] and m['share'] <= lim and (m['n'] >= 1 or name == 'batsfjord'), f'{name} z{z} ({fm}): feltnavnene overlapper ingen andre navn og dekker høyst {lim * 100:.0f} % av skjermen',
+                check(not m['ov'] and m['share'] <= lim and (m['n'] >= 1 or (name == 'batsfjord' and z == 4)) and (m['f'] >= 1 or name != 'senja' or z == 4), f'{name} z{z} ({fm}): feltnavnene overlapper ingen andre navn og dekker høyst {lim * 100:.0f} % av skjermen',
                       {'n': m['n'], 'andel': round(m['share'], 4), 'overlapp': m['ov'][:3]})
                 if vw in SHOTS and name in ('bergen', 'batsfjord'): await pg.screenshot(path=os.path.join(ROOT, 'tests', 'out', f'etikett-felt-{name}-z{z}-{fm}.png'))
                 if not tapped and vw == (800, 1280):
@@ -78,7 +74,7 @@ async def felt(b, errs):
                         await pg.evaluate("(() => { const q = LBLFELT.find(e => e.box && e.f.n !== e.f.nf); tapName({x:(q.box[0] + q.box[2]) / 2, y:(q.box[1] + q.box[3]) / 2}, 16 / view.px); renderDyn(); })()")
                         await pg.screenshot(path=os.path.join(ROOT, 'tests', 'out', f'etikett-felt-trykk-{fm}.png'))
         check(all(q[2] == 0 for q in low), f'{fm}: ingen feltnavn under view.z 2 (Bergen, Henningsvær, Bodø, Båtsfjord, Senja)', [q for q in low if q[2]][:4])
-        check(all(q[3] == 0 for q in low), f'{fm}: Senjas seks navn (GROUNDS) tegnes ikke for seg', [q for q in low if q[3]][:4])
+        check(all(q[3] == 0 for q in low), f'{fm}: Senjas seks navn (GROUNDS) tegnes ikke for seg ved noen view.z', [q for q in low if q[3]][:4])
         await pg.close()
     check(tapped, 'fant et kortet feltnavn å trykke på')
 
