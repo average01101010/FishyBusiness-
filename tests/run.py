@@ -128,6 +128,14 @@ COVER['src/js/core/14b-sikkerhet.js'] = ['mobtest', 'seaworktest']   # (crewtest
 COVER['src/js/ui/10s-mob.js'] = ['mobtest', 'mobshot']
 COVER['tests/mobtest.py'] = ['mobtest']
 COVER['tests/mobshot.py'] = ['mobshot']
+# Out from the quay with Autonav (08.11.2026): Father's naust with a way out by water (core/07c-naust.js naustWay, ui/03b-route.js leiaTo)
+# and the sealed harbours' legs over their own fill (core/07-harbours.js quayLandLeg, read by core/01-world.js legClearMemo). utfrakai
+# needs the whole coast in the build. On lines of their own, as above
+LITE += ['utfrakai']
+VECB += ['utfrakai']
+COVER['tests/utfrakai.py'] = ['utfrakai']
+for _f in ('src/js/core/07c-naust.js', 'src/js/ui/03b-route.js', 'src/js/core/07-harbours.js', 'src/js/core/01-world.js'):
+    COVER[_f] = COVER.get(_f, []) + ['utfrakai']
 for _f, _t in (('src/js/view3d/21-rescue-anchor.js', 'mobshot'), ('src/js/deckcrew.js', 'mobshot'), ('src/js/core/04-crew.js', 'mobtest'), ('src/js/core/13-work.js', 'mobtest'), ('src/js/core/05-vessels.js', 'mobtest'), ('src/js/ui/03-map.js', 'mobtest'), ('src/js/ui/10e-sound.js', 'mobtest')):
     COVER[_f] = COVER.get(_f, []) + [_t]
 

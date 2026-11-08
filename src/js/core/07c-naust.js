@@ -36,7 +36,8 @@ function shoreSpot(cx, cz, r0, r1, o){
       if ([[0, 0], [-o.half, 0], [o.half, 0], [0, 6], [0, -10]].some(([du, dn]) => onPier(c.x + ux * du + Nx * dn, c.z + uz * du + Nz * dn))) continue;
       if (o.avoid && o.avoid(c.x, c.z, ux, uz, Nx, Nz)) continue;
       const score = bend + Math.abs(A.v - B.v) * 0.2 + Math.abs(r - o.pref) * 0.015;
-      if (!best || score < best.score) best = {score, o:[c.x, c.z], u:[ux, uz], r};
+      // (o.ok: a dearer test, asked only of a stretch that would be the best so far; naustFind's way out by water, naustWay)
+      if ((!best || score < best.score) && (!o.ok || o.ok(c.x, c.z, ux, uz, Nx, Nz))) best = {score, o:[c.x, c.z], u:[ux, uz], r};
     } }
   return best;
 }
@@ -70,31 +71,87 @@ function naustVecOk(cx, cz){
   let ok = true; for (let ty = Math.floor((cz - 500) / T); ty <= Math.floor((cz + 500) / T); ty++) for (let tx = Math.floor((cx - 500) / T); tx <= Math.floor((cx + 500) / T); tx++) if (vecHas(tx, ty) && !vecTile(tx, ty)) ok = false;
   if (ok) return true; const n = performance.now(), k = Math.round(cx) + ',' + Math.round(cz); if (NAUST_WAIT.k !== k) NAUST_WAIT = {k, t:n}; return n - NAUST_WAIT.t > 25000;
 }
+// The way out by water from Father's naust (08.11.2026; Jonas: «Noen spillere opplever å ikke kunne forlate kaien ved første oppdrag
+// fordi Autonav ikke fungerer»). The naust was placed where the water in front of it is open 8-30 m out, never asking whether that water
+// leads anywhere: at Averøy it lay in a bay shut off behind a spit and at Sleneset in a lagoon whose mouth is narrower than the 25 m
+// mask, so Autonav found no way from the berth at any tide («Fant ingen trygg rute dit.») and the first trip could not leave the quay.
+// A breadth-first search over the 25 m mask's cells, as berthPath's, from `from` (km) to the cells round the harbour point, its way in
+// (approachPath) or open water (a 100 m cell clear of the shore by LANE.clear, as leiaLane's), within NAUST_WAY.km: no land, pier,
+// quay or harbour unit (berthBlocked), no coastline between two cells (coastSegHit), no land corner cut, and outside the harbour
+// (inHarbour, where the sailing does not look for ground) water as deep as the route finder's own minimum at chart datum
+// (BOAT.draft + LEIA.minOver, so it holds at the lowest tide) and no rock (rockOnLeg, as leiaLane). The line is pulled tight the same
+// way. The points from `from` on, with .to 'harbour' (by the harbour point), 'lane' (on its way in) or 'open', or null. Tried on all 162 start places 08.11.2026: none but those two
+// lack it (Smøla nord reaches open water, not the harbour), about 20 ms median and 250 ms at most
+const NAUST_WAY = {km:1.2, m:1.5, rock:0.0135, want:null};
+function naustWay(from, pid){
+  const pt = portById(pid); if (!pt || !from || !(MAPD.L && MAPD.L.mask)) return null;
+  const c = MAPD.L.mask.c, m = NAUST_WAY.m, lim = BOAT.draft + LEIA.minOver, K = (i, j) => i * 262144 + j, ctr = (i, j) => ({x:(i + 0.5) * c, y:(j + 0.5) * c});
+  let ap = []; try { ap = approachPath(pt) || []; } catch (e){}
+  const atH = q => dist(q, pt.p) < 0.045 ? 'harbour' : ap.some(a => dist(q, a) < 0.03) ? 'lane' : null;
+  const open = q => { try { return mapSimAt(q) && rcell(MAPD.L.dc, Math.floor(q.x / 0.1), Math.floor(q.y / 0.1)) > 0 && coastDist(q) >= LANE.clear; } catch (e){ return false; } };
+  const deep = (q, r) => { if (inHarbour(q)) return true; try { return depthF(q) >= lim && !rockOnLeg(q, q, r); } catch (e){ return false; } };
+  const B = new Map(), blocked = (i, j) => { const k = K(i, j); let v = B.get(k); if (v === undefined){ const q = ctr(i, j); try { v = berthBlocked(q, m) || !deep(q, NAUST_WAY.rock); } catch (e){ v = true; } B.set(k, v); } return v; };
+  const i0 = Math.floor(from.x / c), j0 = Math.floor(from.y / c), R = Math.ceil(NAUST_WAY.km / c), prev = new Map([[K(i0, j0), -1]]), Q = [[i0, j0]];
+  let end = -1, to = null;
+  for (let h = 0; h < Q.length; h++){
+    const [i, j] = Q[h], q = h ? ctr(i, j) : from;   // (the first cell's middle may be ashore: the lines go from the point itself)
+    if (h){ to = atH(q) || (open(q) ? 'open' : null); if (to){ end = K(i, j); break; } }
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){
+      const I = i + di, J = j + dj, k = K(I, J);
+      if (prev.has(k) || Math.abs(I - i0) > R || Math.abs(J - j0) > R || blocked(I, J)) continue;
+      if (di && dj && (blocked(I, j) || blocked(i, J))) continue;
+      if (coastSegHit(q, ctr(I, J))) continue;
+      prev.set(k, K(i, j)); Q.push([I, J]);
+    }
+  }
+  if (end < 0) return null;
+  const cells = []; for (let k = end; k !== -1; k = prev.get(k)){ const i = Math.floor(k / 262144); cells.push(ctr(i, k - i * 262144)); }
+  cells.reverse(); cells[0] = {x:from.x, y:from.y};
+  // pulled tight: from each kept point the furthest one a clean line reaches (clear of land, piers and units every 4 m, and deep enough
+  // without a rock beside it outside the harbour)
+  const clean = (a, b) => { if (!berthClear(a, b, m)) return false; const n = Math.max(1, Math.ceil(dist(a, b) / 0.01)); for (let i = 1; i <= n; i++) if (!deep({x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n}, 0)) return false; return inHarbour(b) || !rockOnLeg(a, b, 0.012); };
+  const out = [cells[0]];
+  for (let i = 0; i < cells.length - 1;){ let j = cells.length - 1; while (j > i + 1 && !clean(cells[i], cells[j])) j--; out.push(cells[j]); i = j; }
+  out.to = to; return out;
+}
+// where a naust's boat sets off from for the test of the way out: 9 m out from the shoreline (its pile quay's face is at 4 m, the boat
+// lies along it); x, z the shoreline's point (m), (nx, nz) out to sea
+const naustWayFrom = (x, z, nx, nz) => ({x:(x + nx * 9) / 1000, y:(z + nz * 9) / 1000});
 // Father's naust: a stretch of shore 60-360 m from the home plant's quay (the harbour point where it has none), straight for 30 m, open
 // water 8, 16 and 30 m out and land 6, 14 and 25 m in, no harbour point within 70 m; its pile quay's face 4 m out from the shoreline.
+// From 08.11.2026 (ver 3) the boat must also get out from it by water (naustWay); a harbour where no such stretch is found has no naust,
+// and the boat lies at the plant's quay (berthKind gives 'main'), which is better than a naust she cannot leave
 function naustFind(pid){
   const pt = portById(pid); if (!pt) return {port:pid};
   const f = quayFace(pid, 'main'), cx = f ? f.x : pt.p.x * 1000, cz = f ? f.z : pt.p.y * 1000;
   const base = (x, z) => PORTS.some(q => Math.hypot(q.p.x * 1000 - x, q.p.y * 1000 - z) < 70) || unitNear(x, z, 110);
   const strict = (x, z, ux, uz, nx, nz) => base(x, z) || !!naustClash(x, z, ux, uz, nx, nz, true), hard = (x, z, ux, uz, nx, nz) => base(x, z) || !!naustClash(x, z, ux, uz, nx, nz, false);
+  const way = (x, z, ux, uz, nx, nz) => !!naustWay(naustWayFrom(x, z, nx, nz), pid);
   // clear of everything first; failing that, clear of quays, piers, breakwaters and boats and with a house or two to take away
-  const sp = shoreSpot(cx, cz, 60, 360, {half:15, bend:6, out:[8, 16, 30], inl:[6, 14, 25], avoid:strict, pref:120})
-    || shoreSpot(cx, cz, 60, 360, {half:12, bend:9, out:[8, 16], inl:[6, 14], avoid:strict, pref:120})
-    || shoreSpot(cx, cz, 60, 360, {half:15, bend:6, out:[8, 16, 30], inl:[6, 14, 25], avoid:hard, pref:120})
-    || shoreSpot(cx, cz, 60, 360, {half:12, bend:9, out:[8, 16], inl:[6, 14], avoid:hard, pref:120})
-    || shoreSpot(cx, cz, 60, 500, {half:12, bend:10, out:[8, 16], inl:[6, 12], avoid:hard, pref:150});
-  if (!sp) return {port:pid, ver:2};
+  const sp = shoreSpot(cx, cz, 60, 360, {half:15, bend:6, out:[8, 16, 30], inl:[6, 14, 25], avoid:strict, ok:way, pref:120})
+    || shoreSpot(cx, cz, 60, 360, {half:12, bend:9, out:[8, 16], inl:[6, 14], avoid:strict, ok:way, pref:120})
+    || shoreSpot(cx, cz, 60, 360, {half:15, bend:6, out:[8, 16, 30], inl:[6, 14, 25], avoid:hard, ok:way, pref:120})
+    || shoreSpot(cx, cz, 60, 360, {half:12, bend:9, out:[8, 16], inl:[6, 14], avoid:hard, ok:way, pref:120})
+    || shoreSpot(cx, cz, 60, 500, {half:12, bend:10, out:[8, 16], inl:[6, 12], avoid:hard, ok:way, pref:150});
+  if (!sp) return {port:pid, ver:3};
   const N = [-sp.u[1], sp.u[0]], o = [sp.o[0] + N[0] * 4, sp.o[1] + N[1] * 4];
-  return {port:pid, ver:2, o:o.map(v => Math.round(v * 10) / 10), u:sp.u.map(v => Math.round(v * 1e4) / 1e4)};
+  return {port:pid, ver:3, o:o.map(v => Math.round(v * 10) / 10), u:sp.u.map(v => Math.round(v * 1e4) / 1e4)};
 }
+// whether the boat gets out by water from a naust already found ({o, u}: the face's middle, 4 m out from the shoreline)
+function naustWayOk(n, pid){ const N = [-n.u[1], n.u[0]]; return !!naustWay(naustWayFrom(n.o[0] - N[0] * 4, n.o[1] - N[1] * 4, N[0], N[1]), pid); }
 // Father's naust at the home harbour: {o, u} or null where none was found (or its map is not in yet)
 function naustSite(){
   const pid = S.home || HOME0;
-  // a naust found before the clearance rule (ver 2) is found again, once the packs round it are in
-  if (S.naust && S.naust.port === pid && S.naust.ver === 2) return S.naust.o ? S.naust : null;
-  const pt = portById(pid); if (!pt || !mapReadyAt(pt.p, 0.4)){ return S.naust && S.naust.port === pid && S.naust.o ? S.naust : null; }
+  if (S.naust && S.naust.port === pid && S.naust.ver === 3) return S.naust.o ? S.naust : null;
+  const kept = () => S.naust && S.naust.port === pid && S.naust.o ? S.naust : null;
+  // the water within NAUST_WAY.km must be in for the way out to be read (else a narrow mouth could look shut on the core's 200 m land)
+  const pt = portById(pid); if (!pt || !mapReadyAt(pt.p, 0.4)) return kept();
+  if (!mapReadyAt(pt.p, NAUST_WAY.km)){ if (NAUST_WAY.want !== pid){ NAUST_WAY.want = pid; mapNeed(pt.p, NAUST_WAY.km).catch(e => console.error(e)).then(() => { NAUST_WAY.want = null; }); } return kept(); }
   const f = quayFace(pid, 'main'), cx = f ? f.x : pt.p.x * 1000, cz = f ? f.z : pt.p.y * 1000;
-  if (!naustVecOk(cx, cz)) return S.naust && S.naust.port === pid && S.naust.o ? S.naust : null;
+  if (!naustVecOk(cx, cz)) return kept();
+  // a naust found before the way out was asked for (ver 2) stays where it is when the boat gets out from it; one she cannot leave
+  // (Averøy, Sleneset) is found again, and the boat lying there lies at the new one (berthPose reads the site)
+  if (S.naust && S.naust.port === pid && S.naust.ver === 2 && S.naust.o && naustWayOk(S.naust, pid)){ S.naust.ver = 3; return S.naust; }
   S.naust = naustFind(pid); return S.naust.o ? S.naust : null;
 }
 // Father's naust as a berth in the home harbour (Jonas 05.10.2026: «Nye spillere skal starte ved det nye naustet», and «fast

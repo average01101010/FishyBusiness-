@@ -202,6 +202,26 @@ function clearLine(a, b){ const n = Math.max(1, Math.ceil(dist(a, b) / 0.008)); 
 let QUAYF = null;
 function quayLand(q){ if (!QUAYF) QUAYF = PORTS.filter(p => p.free); for (const p of QUAYF) if (dist(q, p.p) < p.free) return true; return false; }
 function quayLandLine(a, b){ const n = Math.max(1, Math.ceil(dist(a, b) / 0.008)); for (let i = 1; i < n; i++){ const q = {x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n}; if (isLand(q) && !quayLand(q)) return false; } return true; }
+// a route's leg over a sealed harbour's own quay and fill (08.11.2026; Jonas: «Noen spillere opplever å ikke kunne forlate kaien …
+// fordi Autonav ikke fungerer»): the harbour's way out crosses it by design (approachPath, by the same rule: land only where quayLand
+// lets it, and the coastline crossed only inside the harbour's own land, pt.free km round its point), and the sailing leaves the
+// harbours to their way in (groundCheck), but the route panel's land check (legClear) did not know it, so every Autonav route from the
+// plant's quay in Ålesund, Fosnavåg, Laukvik and Vengsøy had its first leg «over land» and «Kast loss» stood grey (estimate().bad).
+// pt.free is known once a harbour's way in has been found, so the way of a harbour by either end is found here first
+function quayLandLeg(a, b){
+  for (const p of PORTS) if (APPROACH[p.id] === undefined && (dist(p.p, a) < 0.5 || dist(p.p, b) < 0.5)){ try { approachPath(p); } catch (e){} }
+  if (!QUAYF) QUAYF = PORTS.filter(p => p.free); if (!QUAYF.length) return false;
+  // the part of the leg inside each sealed harbour's own land (t from a to b, 0 to 1)
+  const dx = b.x - a.x, dy = b.y - a.y, A = dx * dx + dy * dy; if (A < 1e-12) return false;
+  const ins = [];
+  for (const p of QUAYF){ const fx = a.x - p.p.x, fy = a.y - p.p.y, B = 2 * (fx * dx + fy * dy), C = fx * fx + fy * fy - p.free * p.free, D = B * B - 4 * A * C; if (D <= 0) continue;
+    const t0 = Math.max(0, (-B - Math.sqrt(D)) / (2 * A)), t1 = Math.min(1, (-B + Math.sqrt(D)) / (2 * A)); if (t1 > t0) ins.push([t0, t1]); }
+  if (!ins.length || !quayLandLine(a, b)) return false;
+  // outside it, no coastline crossed (a breakwater or a skerry thinner than the samples)
+  ins.sort((u, v) => u[0] - v[0]); const at = t => ({x:a.x + dx * t, y:a.y + dy * t}); let t = 0;
+  for (const [t0, t1] of ins){ if (t0 > t + 1e-6 && coastSegHit(at(t), at(t0))) return false; t = Math.max(t, t1); }
+  return !(t < 1 - 1e-6 && coastSegHit(at(t), b));
+}
 function approachPath(pt){
   if (APPROACH[pt.id]) return APPROACH[pt.id];
   // over the mask's cells (k = y * nx + x, counted from the layer's corner), a cell land where isLand has its middle (the fine coast)

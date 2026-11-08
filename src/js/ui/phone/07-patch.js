@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['kai-081126', '08.11.2026', 'Ut fra kaia', 'Away from the quay', [
+       ['Fars naust ligger nå alltid der båten kommer seg ut på sjøen. Lå naustet ditt inne i en lagune eller en lukket bukt, står det nå et annet sted i samme havn, og båten ligger der.', 'Father\'s boathouse now always stands where the boat can get out to sea. If yours lay in a lagoon or a closed bay, it now stands elsewhere in the same harbour, and the boat lies there.'],
+       ['Autonav finner veien ut fra naustet også der havna er trang, og feltet på første tur ligger alltid der Autonav kan gå.', 'Autonav finds the way out from the boathouse also where the harbour is tight, and the grounds of the first trip always lie where Autonav can go.'],
+       ['I Ålesund, Fosnavåg, Laukvik og Vengsøy kan du kaste loss med Autonav fra mottakskaia igjen. Ruta ble merket som om den gikk over land.', 'In Ålesund, Fosnavåg, Laukvik and Vengsøy you can cast off with Autonav from the plant\'s quay again. The route was marked as if it crossed land.']]],
     ['f3-071126', '07.11.2026', 'Sjøen bryter', 'The sea breaks', [
        ['Skumtoppene kommer der bølgene bryter, på kammen som blir spiss, og skummet blir liggende bak kammen som tråder som driver med vinden og tynnes ut. Jo mer vind, jo lenger ligger det.', 'The whitecaps come where the waves break, on the crest that grows sharp, and the foam stays behind the crest as strands that drift with the wind and thin out. The more wind, the longer it lies.'],
        ['Sjøen er krappere og går i flere retninger, mest i ung sjø nær land, og fra stiv kuling river vinden sprut av kammene.', 'The sea is choppier and runs in more directions, most of all in a young sea near land, and from a near gale the wind tears spray off the crests.'],
