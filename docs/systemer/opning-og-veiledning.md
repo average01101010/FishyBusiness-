@@ -200,7 +200,7 @@ Jonas 08.11.2026: «Hva om nye brukere som åpner spillet ikke sløyer fisken f�
 - **Måling:** datoen 08.11.2026 merkes i trakten. Det som skal leses av: tida for hele første tur (`tut_done.s`), steget `full` (`tut_step`), og hvor mange som kommer tilbake dag 1, før og etter. Utvalget var 7 som startet første tur de siste 14 dagene; de to som falt fra, falt fra mellom «Kast loss» og første fisk, ikke ved sløyingen.
 - **Tester:** `tests/unit/rund.test.mjs` (sett rød uten endringen: 4 FEIL), og to nye sjekker i `tut.py` (leveringen er rund, juksa stoppet aldri for kniven, og kaia sa replikken). Kjørt 08.11.2026: `tut` i liggende (354 kg levert rund i Botnhamn, null stopp for kniven, «Rund fesk, ja …» fra Liv på mottaket), `landtest`, `decktest`, `hbtest`, `plantsaytest`, `trip2`, `admintest` grønne; `worktest` rød på søvnen som før. Skjermbildene i `docs/okter/2026-11-08-rund-fisk/`.
 
-### Ø8b S0: full last på første tur (08.11.2026, `docs/planer/spillbarhet-fangst.md` V3 C)
+### Ø8b S0: full last på første tur (08.11.2026, rullet ut i ffd076c1; `docs/planer/spillbarhet-fangst.md` V3 C)
 
 Jonas 06.11.2026: «brukeren skal jo selv få lov til å bestemme hvor lenge de ønsker å fiske før de leverer, men det er jo dumt å ikke fylle båten».
 
