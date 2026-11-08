@@ -1,5 +1,5 @@
 from _env import GAME, ROUTES, boot
-# Fleet phase 2: access rules at landing, two vessels on standing plans for a simulated week, the fleet buttons, and save/load.
+# Fleet phase 2: access rules at landing, two vessels on standing plans (Driftsplan 2) for a simulated week, the fleet buttons, and save/load.
 import asyncio, json
 from playwright.async_api import async_playwright
 
@@ -16,7 +16,7 @@ async def main():
             dialogs.append(d.type)
             await (d.accept('Testbåt') if d.type == 'prompt' else d.accept())
         pg.on('dialog', lambda d: asyncio.ensure_future(on_dialog(d)))
-        await boot(pg); await pg.evaluate("DRIFT2 = false")   # (the old plan, until part 8 of Driftsplan 2 replaces this test)
+        await boot(pg)
 
         # 1. landing with and without access
         land = await pg.evaluate("""(()=>{
@@ -52,21 +52,21 @@ async def main():
           // a working day from Husøy (which has a fish plant): jig at the end of the local boats' route into Øyfjorden, land, and home
           S.t = Math.round((Date.UTC(2028, 4, 8, 0) - EPOCH) / 6e4); S.cash = 5e6; S.stock = initStock(); S.settings.autoW = 14;
           const rt = FLEET.find(f => f.home === 'husoy' && f.L < 15).rt[0], end = rt[rt.length - 1];
-          const mk = () => driftNew({home:'husoy', rig:'juksa', jigs:[{id:'a', x:end[0], y:end[1]}], dep:5, wx:'tough'});
+          const mk = () => plan2New({home:'husoy', rig:'juksa', jig:true, places:[{id:'a', k:'juks', x:end[0], y:end[1]}], dep:5, wx:{wind:16, hs:3.5}, land:{mode:'near', port:null, when:'trip'}});   // (Driftsplan 2 since Ø12 C 08.11.2026)
           const hand = () => Object.assign(genCrew(), {bi:false, off:false}); const v1 = curVessel();
           // the first boat has room for one hand, so it runs the plan with you aboard; the snekke has its skipper and mate
           S.crew = [hand()]; S.hold = []; S.boat.status = 'port'; S.boat.port = 'husoy'; S.boat.pos = {...portById('husoy').p}; S.boat.fuel = BOAT.fuelCap; S.boat.gear = true; S.me = v1.id;
-          S.ops = mk(); await new Promise(r => driftMake(S.ops, r)); S.ops.on = true;
+          S.ops = mk(); const e1 = await new Promise(r => plan2Make(S.ops, r)); S.ops.on = true;
           const O = LIC_OFFERS.find(o => o.id === 'u7'), v2 = newVesselObj('snekke', 'husoy', {id:O.id, hl:O.hl, cod:O.cod, hyse:O.hyse, sei:O.sei, kpk:O.kpk});
           const o2 = withVessel(v2, () => { S.crew = [hand(), hand()]; setSkipper(S.crew[0].id); setMate(S.crew[1].id); S.boat.gear = true; return S.ops = mk(); });
-          await new Promise(r => withVessel(v2, () => driftMake(o2, r))); o2.on = true;
+          const e2 = await new Promise(r => withVessel(v2, () => plan2Make(o2, r))); o2.on = true;
           const log0 = S.log.length; let onLand = 0, maxAtSea = 0;
           for (let i = 0; i < 7 * 1440; i++){ DYN.on = false; step(); if (i % 10 === 0){ let n = 0; for (const v of S.fleet){ const b = vget(v, 'boat'); if (b.status !== 'port'){ n++; if (isLand(b.pos)) onLand++; } } maxAtSea = Math.max(maxAtSea, n); }
             if (i % 240 === 0) await new Promise(r => setTimeout(r, 0)); }
           const ev = S.log.slice(log0).map(e => e.no);
           const per = S.fleet.map(v => { const q = vget(v, 'quota') || {}, nm = vget(v, 'boatName'), o = vget(v, 'ops') || {}; return {id:v.id, name:nm, type:vget(v, 'boat').type, status:vget(v, 'boat').status, hold:Math.round((vget(v, 'hold') || []).reduce((a, x) => a + x.kg, 0)),
-            torsk:Math.round(q.torsk || 0), byCod:Math.round(q.byCod || 0), conf:Math.round(q.conf || 0), trips:ev.filter(t => t.startsWith(nm + ': Kastet loss')).length, landed:(o.rep || []).length, stop:o.stop || null}; });
-          const v2log = ev.filter(t => t.startsWith(S.fleet[1] && vget(S.fleet[1], 'boatName') + ':') && /Kastet loss|Leverte|Fortøyd|Vinden/.test(t)).map(t => t.split(': ')[1].slice(0, 22)); return {v2log, per, onLand, maxAtSea, sample:ev.filter(t => /Kastet loss|Leverte|inndratt|på land/.test(t)).slice(0, 8)}; })""", R)
+            torsk:Math.round(q.torsk || 0), byCod:Math.round(q.byCod || 0), conf:Math.round(q.conf || 0), trips:ev.filter(t => t.startsWith(nm + ': Kastet loss')).length, landed:(o.stats && o.stats.sum.trips) || 0, stop:o.stop || null}; });
+          const v2log = ev.filter(t => t.startsWith(S.fleet[1] && vget(S.fleet[1], 'boatName') + ':') && /Kastet loss|Leverte|Fortøyd|Vinden/.test(t)).map(t => t.split(': ')[1].slice(0, 22)); return {e1, e2, v2log, per, onLand, maxAtSea, sample:ev.filter(t => /Kastet loss|Leverte|inndratt|på land/.test(t)).slice(0, 8)}; })""", R)
         print('week:', json.dumps(week, ensure_ascii=False))
         p1, p2 = week['per']
         print(ok(week['onLand'] == 0), 'no vessel on land during the week')

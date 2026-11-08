@@ -47,7 +47,7 @@ KY = r"""window.KY = (() => {
   // the plant nearest the town, the boat there with you and one crew, the map and the vec packs in
   async function town(la, lo, seed, vt, n){
     D2.reset(seed); const c = P(la, lo), M = PORTS.filter(q => q.mottak && plantFor(q, vt || 'sjark')).sort((a, b) => dist(a.p, c) - dist(b.p, c))[0];
-    D2.boat(vt || 'sjark', n == null ? 1 : n, true, M.id); S.lang = S.settings.lang = 'no'; DRIFT2 = true; window.confirm = () => true;
+    D2.boat(vt || 'sjark', n == null ? 1 : n, true, M.id); S.lang = S.settings.lang = 'no'; window.confirm = () => true;
     await mapNeed(M.p, 16); const vec = await vecIn(M.p, 26); return {M, vec};
   }
   // places as the chart puts them (PLAN2UI.put tries each against land, depth and the rules): k of a kind between r0 and r1 km from c
