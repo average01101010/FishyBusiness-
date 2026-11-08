@@ -456,7 +456,7 @@ STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the wo
   - 171 `hullX(R)`
   - 186 `hullStep(H, R, X, eta, deta, dt, o)`
 
-## `src/js/core/03d-quota.js` (456 linjer)
+## `src/js/core/03d-quota.js` (462 linjer)
 
 Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood from 1 October 2026 (J-187-2026, fiskeridir.no)
 
@@ -483,56 +483,57 @@ Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood f
   - 182 `qyBoats(Y, y)`
   - 183 `qyStep(Y, y, d)`
   - 201 `quotaNewYear(y)`
-  - 204 `qyAt(H)`
-  - 206 `codStopDoy(y)`
-  - 207 `openMaxAdd(H)`
-  - 212 `ffPlan(y)`
-  - 220 `ffPct(H)`
-- **222** the closed group's register: a fixed number of rights (1 622 in the cod fishery north of 62° N on 17.10.2025, case document
-  - 240 `npcReg()`
-  - 242 `regSend(fn, id)`
-  - 247 `regTake(id)`
-  - 249 `regFree(id)`
-  - 251 `regSeller(id, H)`
-- **253** structure quotas (forskrift om spesielle kvoteordninger for kystfiskeflåten, J-244-2025): quota lengths 11–27.99 m may buy a
-  - 257 `structRoom(l, id)`
-  - 259 `structPrice(id, H)`
-  - 260 `structIn(l, id, H)`
-  - 261 `licExtra(l)`
-  - 263 `structExpire(l, y)`
-- **264** the special scheme for quota lengths under 11 m (kap. 2, from 2025): an owner with two such boats, both owned since the year
-  - 266 `twoOK(la, lb, y)`
-- **267** quota cooperation (J-187-2026 § 31): two closed-group boats under 11 m with different owners; both owners aboard, the passive
-  - 271 `coopOffer(H)`
-  - 272 `coopOK(l, y)`
-- **274** the ocean permits (H1 of docs/planer/havsteget.md, 03.11.2026). Jonas' choices the same day: V1 A (the autoliner first), V2 B
-- **296** the snow crab's regulation year by year, as data (V4 of docs/planer/havsteget-h3-snokrabbe.md, Jonas 06.11.2026: «Gjør det som blir
-  - 315 `snoQuota(H)`
-  - 317 `snoRoom(H)`
-  - 320 `snoFlexNewYear(q, y)`
-  - 326 `snoYear(y)`
-  - 341 `havLicFor(type)`
-  - 343 `havF(id, sp, y)`
-  - 354 `havGroup(id, y)`
-  - 357 `havQ(l, H)`
-  - 365 `havLicWhy(type)`
-  - 372 `havOffer(id, H)`
-  - 375 `havValue(l, H)`
-  - 389 `snoLicValue(y)`
-  - 395 `havPrice(type, H)`
-  - 397 `havLicTake(type, H)`
-- **401** ling and tusk for vessels of 28 m and over (H2a of docs/planer/havsteget-h2-autoline.md, 05.11.2026). J-128-2026 (2026) and the
-  - 409 `lbStop(y)`
-  - 413 `lbShare(sp, H)`
-  - 415 `lbNews(H)`
-- **421** Greenland halibut (blåkveite) for vessels under 28 m (J-241-2025, the regulation for 2026; docs/blakveite.md 2-3, 07.10.2026)
-  - 429 `bkSeason(y)`
-  - 432 `bkOpen(H)`
-  - 438 `bkDirect(H, len)`
-  - 440 `bkState(H)`
-  - 443 `bkAllow(H, bk, all)`
-  - 448 `bkLanded(H, bk, all)`
-  - 450 `bkNews(H)`
+  - 205 `qyAt(H)`
+  - 207 `codStopDoy(y)`
+  - 208 `openMaxAdd(H)`
+  - 213 `ffPlan(y)`
+  - 221 `ffPct(H)`
+- **223** the closed group's register: a fixed number of rights (1 622 in the cod fishery north of 62° N on 17.10.2025, case document
+  - 241 `npcReg()`
+  - 243 `regSend(fn, id)`
+  - 248 `regTake(id)`
+  - 250 `regFree(id)`
+  - 252 `regSeller(id, H)`
+- **254** structure quotas (forskrift om spesielle kvoteordninger for kystfiskeflåten, J-244-2025): quota lengths 11–27.99 m may buy a
+  - 262 `structFits(l, add)`
+  - 263 `structRoom(l, id)`
+  - 264 `structPrice(id, H)`
+  - 266 `structIn(l, id, H)`
+  - 267 `licExtra(l)`
+  - 269 `structExpire(l, y)`
+- **270** the special scheme for quota lengths under 11 m (kap. 2, from 2025): an owner with two such boats, both owned since the year
+  - 272 `twoOK(la, lb, y)`
+- **273** quota cooperation (J-187-2026 § 31): two closed-group boats under 11 m with different owners; both owners aboard, the passive
+  - 277 `coopOffer(H)`
+  - 278 `coopOK(l, y)`
+- **280** the ocean permits (H1 of docs/planer/havsteget.md, 03.11.2026). Jonas' choices the same day: V1 A (the autoliner first), V2 B
+- **302** the snow crab's regulation year by year, as data (V4 of docs/planer/havsteget-h3-snokrabbe.md, Jonas 06.11.2026: «Gjør det som blir
+  - 321 `snoQuota(H)`
+  - 323 `snoRoom(H)`
+  - 326 `snoFlexNewYear(q, y)`
+  - 332 `snoYear(y)`
+  - 347 `havLicFor(type)`
+  - 349 `havF(id, sp, y)`
+  - 360 `havGroup(id, y)`
+  - 363 `havQ(l, H)`
+  - 371 `havLicWhy(type)`
+  - 378 `havOffer(id, H)`
+  - 381 `havValue(l, H)`
+  - 395 `snoLicValue(y)`
+  - 401 `havPrice(type, H)`
+  - 403 `havLicTake(type, H)`
+- **407** ling and tusk for vessels of 28 m and over (H2a of docs/planer/havsteget-h2-autoline.md, 05.11.2026). J-128-2026 (2026) and the
+  - 415 `lbStop(y)`
+  - 419 `lbShare(sp, H)`
+  - 421 `lbNews(H)`
+- **427** Greenland halibut (blåkveite) for vessels under 28 m (J-241-2025, the regulation for 2026; docs/blakveite.md 2-3, 07.10.2026)
+  - 435 `bkSeason(y)`
+  - 438 `bkOpen(H)`
+  - 444 `bkDirect(H, len)`
+  - 446 `bkState(H)`
+  - 449 `bkAllow(H, bk, all)`
+  - 454 `bkLanded(H, bk, all)`
+  - 456 `bkNews(H)`
 
 ## `src/js/core/03e-rules.js` (498 linjer)
 
@@ -637,6 +638,31 @@ The fleet's pressure and the stock's baseline (B3 of docs/planer/bestand-og-flaa
   - 58 `seaIceLim(V)`
   - 60 `seaIceShut(p, H, V)`
   - 62 `seaIceOnLeg(a, b, H, V)`
+
+## `src/js/core/03i-kvotemarked.js` (168 linjer)
+
+Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: V1 A, V2 A, V3 A, V4 B, V5 A)
+
+- **1** Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: V1 A, V2 A, V3 A, V4 B, V5 A)
+  - 36 `kmKf(item)`
+  - 38 `kmCod(item, H)`
+  - 42 `kmTakst(item, H)`
+- **54** the free right (V2 A, § 7): a right in the company without a boat, at most two game years, then back to the register
+  - 58 `kmFree(H)`
+  - 67 `kmFreeAdd(item, H)`
+- **69** why it cannot be put out (a word), or null. src = {v, kind:'right'|'struct'|'two', i} for a boat's, {free:i} for a free right
+  - 73 `kmWhy(src, H)`
+- **87** the good as it travels (to the server and the buyer): nothing about who. A right takes its structure quotas and this year's catch on
+  - 90 `kmPack(src, H)`
+  - 99 `kmShare(u, l, s)`
+- **100** the seller's side: the right or the structure quota leaves the boat (or the free right the company). The boat stays in the company
+  - 102 `kmOut(src, H)`
+- **115** the buyer's side. to = {v, how}: put (the right on a boat without one: she joins the closed group), struct (structured onto a boat
+  - 119 `kmApply(item, to, H)`
+  - 148 `kmStructWhy(l, item)`
+  - 155 `kmLenWhy(item, len)`
+- **156** why the buyer cannot take it (a word), or null. to = {v, how}; kr0 what the bid binds:
+  - 159 `kmBuyWhy(item, to, kr0)`
 
 ## `src/js/core/04-crew.js` (561 linjer)
 
@@ -2532,12 +2558,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1350 linjer)
+## `src/js/ui/phone/07-patch.js` (1352 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1343 `patch()`
+  - 1345 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2945,7 +2971,7 @@ Garderoben: the player changes how his figure looks (Jonas 10.10.2026)
 - **14** the right-hand side: what the current tab offers
 - **50** the little renderer
 
-## `src/js/ui/08-actions.js` (453 linjer)
+## `src/js/ui/08-actions.js` (454 linjer)
 
 actions
 
@@ -2954,28 +2980,28 @@ actions
   - 82 `panelChange(e)`
   - 105 `landConf(H, q, acc)`
   - 143 `sell()`
-- **269** modal
-  - 271 `modal(html)`
-  - 280 `boatUnnamed()`
-  - 281 `boatChristen(nm)`
-  - 283 `showIntro(namesOnly)`
-- **301** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
-  - 306 `awayStart(mins, realMs)`
-  - 307 `awayEnd()`
-  - 308 `showAway(A)`
-- **335** time
-  - 341 `playMinutes(n, away)`
-  - 345 `catchUp(realMs)`
-  - 356 `tick()`
-  - 393 `deliverOrder()`
-- **403** chrome
-  - 404 `applyLang()`
-- **417** screens: full-screen 3D, or the chart plotter for route planning
-  - 418 `setBodyView(v3d)`
-  - 423 `openPlotter()`
-  - 428 `plotSetRender()`
-  - 432 `plotSetOpen(on)`
-  - 445 `kinoUi()`
+- **270** modal
+  - 272 `modal(html)`
+  - 281 `boatUnnamed()`
+  - 282 `boatChristen(nm)`
+  - 284 `showIntro(namesOnly)`
+- **302** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
+  - 307 `awayStart(mins, realMs)`
+  - 308 `awayEnd()`
+  - 309 `showAway(A)`
+- **336** time
+  - 342 `playMinutes(n, away)`
+  - 346 `catchUp(realMs)`
+  - 357 `tick()`
+  - 394 `deliverOrder()`
+- **404** chrome
+  - 405 `applyLang()`
+- **418** screens: full-screen 3D, or the chart plotter for route planning
+  - 419 `setBodyView(v3d)`
+  - 424 `openPlotter()`
+  - 429 `plotSetRender()`
+  - 433 `plotSetOpen(on)`
+  - 446 `kinoUi()`
 
 ## `src/js/ui/08b-letter.js` (127 linjer)
 

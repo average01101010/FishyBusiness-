@@ -1418,3 +1418,30 @@
 2026-11-08 20:55	claude/o14-f4-feltnavnene-kart-htpg70	c6a7c81	vindshot	OK	665	3d	alene	
 2026-11-08 20:55	claude/o14-f4-feltnavnene-kart-htpg70	c6a7c81	obstest	FEIL	6	lite	alene	FEIL a drawn route under Gisundbrua and back (trip2's): round the pier under the deck, no nearer the skerries, and back in Finnsnes  {"st": "port", "det": 7, "d
 2026-11-08 20:56	claude/o14-f4-feltnavnene-kart-htpg70	c6a7c81	docktest	FEIL	62	lite	alene	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-08 20:13	ccr-5588e999-w5pry1	44d961d	trip2	OK	37	lite	samtidig	
+2026-11-08 20:14	ccr-5588e999-w5pry1	44d961d	docktest	OK	63	lite	samtidig	
+2026-11-08 20:14	ccr-5588e999-w5pry1	44d961d	autolinetest	OK	8	lite	samtidig	
+2026-11-08 20:14	ccr-5588e999-w5pry1	44d961d	quotatest	OK	15	lite	samtidig	
+2026-11-08 20:14	ccr-5588e999-w5pry1	44d961d+	fleet2test	OK	34	lite	samtidig	
+2026-11-08 20:14	ccr-5588e999-w5pry1	44d961d+	selltest	LES	26	lite	samtidig	
+2026-11-08 20:15	ccr-5588e999-w5pry1	44d961d+	progweek	LES	43	lite	samtidig	
+2026-11-08 20:15	ccr-5588e999-w5pry1	44d961d+	bktest	OK	8	lite	samtidig	
+2026-11-08 20:15	ccr-5588e999-w5pry1	44d961d+	lotttest	OK	8	lite	samtidig	
+2026-11-08 20:15	ccr-5588e999-w5pry1	44d961d+	boktest	OK	9	lite	samtidig	
+2026-11-08 20:15	ccr-5588e999-w5pry1	44d961d+	slidertest	OK	16	lite	samtidig	
+2026-11-08 20:15	ccr-5588e999-w5pry1	44d961d+	keeptest	OK	14	lite	samtidig	
+2026-11-08 20:15	ccr-5588e999-w5pry1	44d961d+	cashfxtest	OK	9	lite	samtidig	
+2026-11-08 20:15	ccr-5588e999-w5pry1	44d961d+	sidetab	OK	14	lite	samtidig	
+2026-11-08 20:15	ccr-5588e999-w5pry1	44d961d+	turtest	OK	16	lite	samtidig	
+2026-11-08 20:16	ccr-5588e999-w5pry1	44d961d+	fartstidtest	FEIL	15	lite	samtidig	FEIL the phone's home shows the years and days, and the Merker app explains how sea time is earned  "06:02\nman 1. mar\nNØ 5 m/s · −1 °C\n15 000 kr\nNeste mål: 
+2026-11-08 20:16	ccr-5588e999-w5pry1	44d961d+	r4test	OK	17	lite	samtidig	
+2026-11-08 20:16	ccr-5588e999-w5pry1	44d961d+	booktest	OK	27	lite	samtidig	
+2026-11-08 20:16	ccr-5588e999-w5pry1	44d961d+	shoptest	OK	30	lite	samtidig	
+2026-11-08 20:17	ccr-5588e999-w5pry1	44d961d+	boottest	OK	26	lite	samtidig	
+2026-11-08 20:17	ccr-5588e999-w5pry1	44d961d+	worldtest	OK	19	lite	samtidig	
+2026-11-08 20:37	ccr-5588e999-w5pry1	ca5a14a	trackfollow	FEIL	1236	3d	alene	FEIL she keeps to the line all the way, at most 9 m off it in the corners (the model turns on her own radius), and never goes back along it  {"off": 9.21, "back
+2026-11-08 20:42	ccr-5588e999-w5pry1	ca5a14a	boottest	OK	30	lite	samtidig	
+2026-11-08 20:42	ccr-5588e999-w5pry1	ca5a14a	quotatest	OK	14	lite	samtidig	
+2026-11-08 20:42	ccr-5588e999-w5pry1	ca5a14a	selltest	LES	22	lite	samtidig	
+2026-11-08 20:43	ccr-5588e999-w5pry1	ca5a14a	trip2	OK	40	lite	samtidig	
+2026-11-08 20:43	ccr-5588e999-w5pry1	ca5a14a	fleet2test	OK	31	lite	samtidig	
