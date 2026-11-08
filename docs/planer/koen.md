@@ -56,6 +56,9 @@ Svar i en økt, eller rett her. Økta som får svaret, skriver det inn i planfil
 
 12. ~~**Juksa uten torsk i Skagerrak**~~ Jonas 08.11.2026: «Valg 12: fangsten kan ikke holde torsken ute, det er urealistisk. Bifangst av uønskede eller fredede arter er et ekte problem og spillet må reflektere dette». Verken A eller B: juksa, line og garn etter andre arter stoppes ikke utenfor grunnlinja i Skagerrak, torsken kommer med i fangsten slik den gjør i sjøen, og bifangsten blir spillerens problem slik den er for fiskerne (grensen på 5 %, flytting, alt landes, inndragning over grensen, Kystvakta). Fiske etter torsk er fortsatt stengt. Bygges i steg 65 (Ø10b); skrevet inn i `docs/systemer/kvoter-og-regler.md` 5.28c.
 
+13. ~~**Leveringen på en flerdøgnstur**~~ Jonas 08.11.2026: «Svar på valget: A» (spørsmålet fra Ø12 A+B i backloggen). Bygd og rullet ut samme dag på grenen `ccr-2040aa61-qgig5a`: når Levering er «hvert N. døgn» og N er like lang som turen, leverer båten turens siste dag, før hun går hjem (`p2LandsToday` i `core/06g-plan2.js`).
+14. **Leveringen på en flerdøgnstur når Levering-raden ikke er like lang som turen** (følger av 13): en tur på 3 døgn med levering hvert 2. døgn leverer fortsatt dag 1, 3 og 5 (fra planens første dag), altså midt i turen og på neste turs første dag, og en tur på 3 døgn med levering hvert 5. døgn går hjem med fangsten om bord. **A (anbefalt):** en flerdøgnstur leverer alltid turens siste dag, og i tillegg hvert N. døgn regnet fra turens første dag når N er kortere enn turen. B: som nå. C: på en flerdøgnstur er Levering-raden bare «turens siste dag» eller «når lasten er full», uten tall.
+
 Valg som kommer når steget kommer opp (skrives inn med A/B/C av rutinen da): H5 auksjon eller fast pris hos Sildelaget; H8 stigen mellom 15 m og havbåtene; Ø11.9 oppsigelsesfristene i ekte tid; Ø13 og H4 (planer med valg).
 
 ## Køen

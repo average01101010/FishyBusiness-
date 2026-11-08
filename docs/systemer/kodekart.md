@@ -1047,7 +1047,7 @@ Drift: the standing operations plan, per vessel. Made anew 23.10.2026 (Jonas: «
 - **557** the plan to another vessel of the company: the answers, made again there
   - 558 `driftCopy(vid)`
 
-## `src/js/core/06g-plan2.js` (446 linjer)
+## `src/js/core/06g-plan2.js` (454 linjer)
 
 Driftsplan 2: the day is the plan (26.10.2026, docs/planer/driftsplan-2/02-design.md). Part 1: the model, the day and the check.
 
@@ -1075,13 +1075,16 @@ Driftsplan 2: the day is the plan (26.10.2026, docs/planer/driftsplan-2/02-desig
   - 171 `p2AutoEnd(o, st)`
   - 181 `planDayAuto(o, H0, st)`
 - **233** the day. H0: the hour the day begins (the departure). Returns {t0, steps:[{t, k, …}], end, why:[no, en], skipped:[{id, no, en}]}.
-  - 236 `planDay(o, H0, st)`
-- **352** the day as text: [[clock, no, en], …], one line a step, the skipped places and the reason last
-  - 353 `planDayText(o, day)`
-- **387** the check: errors keep the plan from being switched on, warnings only inform (as driftCheck; the rhythm's rules from Jonas 26.10.2026)
-  - 391 `plan2WatchWhy(st, aboard, short)`
-  - 401 `p2Kits()`
-  - 402 `plan2Check(o, st)`
+  - 237 `p2TripLen(o)`
+  - 238 `p2TripLast(o, dayIndex)`
+  - 243 `p2LandsToday(o, dayIndex)`
+  - 244 `planDay(o, H0, st)`
+- **360** the day as text: [[clock, no, en], …], one line a step, the skipped places and the reason last
+  - 361 `planDayText(o, day)`
+- **395** the check: errors keep the plan from being switched on, warnings only inform (as driftCheck; the rhythm's rules from Jonas 26.10.2026)
+  - 399 `plan2WatchWhy(st, aboard, short)`
+  - 409 `p2Kits()`
+  - 410 `plan2Check(o, st)`
 
 ## `src/js/core/06h-plan2-engine.js` (543 linjer)
 
@@ -2541,12 +2544,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1329 linjer)
+## `src/js/ui/phone/07-patch.js` (1333 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1322 `patch()`
+  - 1326 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2887,7 +2890,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
 - **116** the year view
 - **124** the species card
 
-## `src/js/ui/07-guide.js` (439 linjer)
+## `src/js/ui/07-guide.js` (440 linjer)
 
   - 1 `renderClock()`
   - 10 `mottakShut()`
@@ -2898,22 +2901,22 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 37 `panelRoute()`
   - 125 `echoSvg()`
   - 144 `panelFish()`
-  - 166 `valueEst(sp, g)`
-  - 167 `panelHold()`
-  - 187 `fcChart()`
-  - 202 `panelWx()`
-  - 234 `landText(short)`
-  - 247 `deckText(short)`
-  - 267 `quayText(short)`
-  - 273 `panelPort()`
-  - 307 `portSlip()`
-  - 381 `landWarn(p)`
-  - 395 `landQText(short)`
-  - 403 `landQOthers()`
-  - 412 `landPage()`
-  - 428 `panelLog()`
-  - 433 `renderPanel()`
-  - 437 `panelBusy()`
+  - 167 `valueEst(sp, g)`
+  - 168 `panelHold()`
+  - 188 `fcChart()`
+  - 203 `panelWx()`
+  - 235 `landText(short)`
+  - 248 `deckText(short)`
+  - 268 `quayText(short)`
+  - 274 `panelPort()`
+  - 308 `portSlip()`
+  - 382 `landWarn(p)`
+  - 396 `landQText(short)`
+  - 404 `landQOthers()`
+  - 413 `landPage()`
+  - 429 `panelLog()`
+  - 434 `renderPanel()`
+  - 438 `panelBusy()`
 
 ## `src/js/ui/07b-first-trip.js` (321 linjer)
 
