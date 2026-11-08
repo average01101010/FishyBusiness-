@@ -1301,3 +1301,16 @@
 2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	hbtest	OK	15	lite	samtidig	
 2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	sleeptest	OK	11	lite	samtidig	
 2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	bunktest	OK	11	lite	samtidig	
+2026-11-08 19:18	ccr-864d9913-u29rne	5fc2599	driftsplan2ui	OK	25	lite	samtidig	
+2026-11-08 19:18	ccr-864d9913-u29rne	5fc2599	driftsplan2map	OK	12	lite	samtidig	
+2026-11-08 19:18	ccr-864d9913-u29rne	5fc2599	opsowntest	OK	36	lite	samtidig	
+2026-11-08 19:18	ccr-864d9913-u29rne	5fc2599	fleet2test	OK	28	lite	samtidig	
+2026-11-08 19:18	ccr-864d9913-u29rne	5fc2599	fleet3test	OK	14	lite	samtidig	
+2026-11-08 19:19	ccr-864d9913-u29rne	5fc2599	geartest	OK	33	lite	samtidig	
+2026-11-08 19:19	ccr-864d9913-u29rne	5fc2599	anchortest	OK	8	lite	samtidig	
+2026-11-08 19:19	ccr-864d9913-u29rne	5fc2599	boottest	OK	26	lite	samtidig	
+2026-11-08 19:19	ccr-864d9913-u29rne	5fc2599	pushtest	OK	23	lite	samtidig	
+2026-11-08 19:19	ccr-864d9913-u29rne	5fc2599	mig2test	OK	20	lite	samtidig	
+2026-11-08 19:20	ccr-864d9913-u29rne	5fc2599	skipdrift	OK	19	lite	samtidig	
+2026-11-08 19:20	ccr-864d9913-u29rne	5fc2599	skiptest	OK	14	lite	samtidig	
+2026-11-08 19:21	ccr-864d9913-u29rne	5fc2599	driftsplan2test	OK	90	lite	alene	
