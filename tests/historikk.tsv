@@ -1490,3 +1490,35 @@
 2026-11-08 23:31	ccr-510fd7d5-2eum2h	61cc06f	hudtest	OK	83	lite	samtidig	
 2026-11-08 23:34	ccr-510fd7d5-2eum2h	61cc06f+	hudtest	OK	86	lite	samtidig	
 2026-11-08 23:34	ccr-510fd7d5-2eum2h	61cc06f+	uishots	OK	79	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	trip2	OK	34	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	docktest	OK	64	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	tutfull	OK	6	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	skattetest	OK	6	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	lotttest	OK	7	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	boktest	OK	8	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	keeptest	OK	14	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	decktest	OK	14	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	simday	LES	14	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	calib	LES	15	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	vesseltest	OK	24	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	fuelcal	OK	16	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	tidetest	OK	7	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	climtest	OK	16	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	bktest	OK	8	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	yardupgtest	OK	16	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	kvtest	LES	15	lite	samtidig	
+2026-11-08 23:31	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	progweek	LES	44	lite	samtidig	
+2026-11-08 23:31	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	quotatest	OK	15	lite	samtidig	
+2026-11-08 23:31	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	geartest	FEIL	39	lite	samtidig	FEIL haddock line, 12 hours in February on the eight best haddock spots: 60–115 kg a tub (600 hooks), mostly haddock
+2026-11-08 23:31	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	jigalongtest	OK	16	lite	samtidig	
+2026-11-08 23:31	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	savestest	OK	0	lite	samtidig	
+2026-11-08 23:32	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	boottest	OK	29	lite	samtidig	
+2026-11-08 23:32	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	worldtest	OK	19	lite	samtidig	
+2026-11-08 23:32	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	errtest	OK	34	lite	samtidig	
+2026-11-08 23:34	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	bootgtest	OK	141	lite	samtidig	
+2026-11-08 23:36	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	unittest	FEIL	119	3d	alene	avsluttet med kode 1
+2026-11-08 23:49	claude/o14-f2-fiske-flate-nv6aqz	98a814c+	penshot	OK	794	3d	alene	
+2026-11-08 23:54	claude/o14-f2-fiske-flate-nv6aqz	0dc3f2f	heattest	OK	291	3d	alene	
+2026-11-08 23:55	claude/o14-f2-fiske-flate-nv6aqz	0dc3f2f	boottest	OK	29	lite	samtidig	
+2026-11-08 23:55	claude/o14-f2-fiske-flate-nv6aqz	0dc3f2f	trip2	OK	32	lite	samtidig	
+2026-11-08 23:55	claude/o14-f2-fiske-flate-nv6aqz	0dc3f2f	simday	LES	12	lite	samtidig	
