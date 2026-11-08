@@ -80,6 +80,11 @@ create table if not exists public.km_wish (
 alter table public.km_wish enable row level security;
 revoke all on public.km_wish from anon, authenticated;
 
+-- the game year on the shared clock (yearH of world_gh(), as land_put works it out): the server's, never what a call says
+create or replace function public.km_year() returns int
+language sql stable set search_path = public as $$
+  select extract(year from timestamp '2027-03-01 06:00' + make_interval(secs => world_gh() * 3600))::int
+$$;
 -- a number in a JSON value within [lo, hi], or null
 create or replace function public.km_num(j jsonb, lo numeric, hi numeric) returns numeric
 language sql immutable set search_path = public as $$
@@ -87,7 +92,9 @@ language sql immutable set search_path = public as $$
 $$;
 -- the good, rebuilt from the fields it may have (anything else, a name or a player, stays out); 'bad item' when it is not one. A
 -- structure quota is only in the groups from 11 m (kvoteforskriften § 9) and in the right's own group, at most the right's factor
--- (less 10 %), at most 20 years; the factors a right carries at most five times its own (the cap, § 12, is 5 and 6 times in all)
+-- less 10 % (§ 11, STRUCT.cut), at most 20 years; what a right carries within the cap (§ 12, STRUCT.cap: 5 times in all for 11–14.99 m,
+-- 6 from 15 m, so 4 and 5 times its own on top). y is the game year it was packed in: the shared clock's, or the one before or after
+-- (a game a little behind or ahead at the new year)
 create or replace function public.km_item(item jsonb) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 declare k text; r quota_ref; q quota_ref; s jsonb; st jsonb := '[]'::jsonb; ex numeric := 0; y numeric; fr numeric; un numeric; kf numeric; fl numeric;
@@ -96,13 +103,13 @@ begin
   if jsonb_typeof(item) is distinct from 'object' or octet_length(item::text) > 4000 then raise exception 'bad item'; end if;
   k := item->>'kind'; select * into r from quota_ref where id = item->>'id';
   if r.id is null or k is null or k not in ('right', 'struct') then raise exception 'bad item'; end if;
-  y := km_num(item->'y', 2026, 2200); if y is null or y <> trunc(y) then raise exception 'bad item'; end if;
+  y := km_num(item->'y', km_year() - 1, km_year() + 1); if y is null or y <> trunc(y) then raise exception 'bad item'; end if;
   u := item->'used';
   if jsonb_typeof(u) = 'object' then
     used := jsonb_build_object('torsk', coalesce(km_num(u->'torsk', 0, 1e7), 0), 'hyse', coalesce(km_num(u->'hyse', 0, 1e7), 0), 'sei', coalesce(km_num(u->'sei', 0, 1e7), 0));
   elsif u is not null and jsonb_typeof(u) <> 'null' then raise exception 'bad item'; end if;
   if k = 'struct' then
-    kf := km_num(item->'kf', 0, r.kf::numeric); fr := km_num(item->'from', 2000, 2300); un := km_num(item->'until', 2000, 2300);
+    kf := km_num(item->'kf', 0, r.kf::numeric * 0.9 + 0.0001); fr := km_num(item->'from', 2000, 2300); un := km_num(item->'until', 2000, 2300);
     if r.grp = 'u11' or kf is null or kf <= 0 or fr is null or un is null or un <= fr or un - fr > 20 or fr <> trunc(fr) or un <> trunc(un) then raise exception 'bad item'; end if;
     return jsonb_build_object('kind', 'struct', 'id', r.id, 'hl', r.hl, 'kf', kf, 'from', fr, 'until', un, 'used', used, 'y', y);
   end if;
@@ -115,33 +122,34 @@ begin
     if jsonb_array_length(item->'st') > 20 or (jsonb_array_length(item->'st') > 0 and r.grp = 'u11') then raise exception 'bad item'; end if;
     for s in select * from jsonb_array_elements(item->'st') loop
       select * into q from quota_ref where id = s->>'id';
-      kf := km_num(s->'kf', 0, coalesce(q.kf, 0)::numeric); fr := km_num(s->'from', 2000, 2300); un := km_num(s->'until', 2000, 2300);
+      kf := km_num(s->'kf', 0, coalesce(q.kf, 0)::numeric * 0.9 + 0.0001); fr := km_num(s->'from', 2000, 2300); un := km_num(s->'until', 2000, 2300);
       if q.id is null or q.grp <> r.grp or kf is null or kf <= 0 or fr is null or un is null or un <= fr or un - fr > 20 or fr <> trunc(fr) or un <> trunc(un) then raise exception 'bad item'; end if;
       ex := ex + kf; st := st || jsonb_build_array(jsonb_build_object('id', q.id, 'kf', kf, 'from', fr, 'until', un));
     end loop;
-    if ex > 5 * r.kf then raise exception 'bad item'; end if;
+    if ex > (case when r.grp = 'g11' then 4 else 5 end) * r.kf + 0.0001 then raise exception 'bad item'; end if;
   end if;
   return jsonb_build_object('kind', 'right', 'id', r.id, 'hl', r.hl, 'flen', fl, 'st', st, 'landY', ly, 'used', used, 'y', y);
 end $$;
 -- the takst of a good (a clean one, from km_item) at the 2026 unit and kr_kg: a right is its factor times the unit times kr_kg, with
 -- its structure quotas; a structure quota the same for its factor times the years left over 20 (linear, as kmTakst). The game counts
--- the years left from the day in the year, so the band takes them from a year less (lo) to the whole year (hi). {kr, lo, hi}
+-- the years left from the day in the year, and its year may be the shared clock's or one off (km_item), so the band takes them from a
+-- year less than the later of the two (lo) to the whole of the earlier (hi). {kr, lo, hi}
 create or replace function public.km_band(item jsonb) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
-declare r quota_ref; q quota_ref; s jsonb; y numeric := (item->>'y')::numeric; hi double precision := 0; lo double precision := 0; lf numeric;
+declare r quota_ref; q quota_ref; s jsonb; y0 numeric := least((item->>'y')::numeric, km_year()); y1 numeric := greatest((item->>'y')::numeric, km_year());
+        hi double precision := 0; lo double precision := 0;
 begin
   select * into r from quota_ref where id = item->>'id'; if r.id is null then return null; end if;
   if item->>'kind' = 'right' then
     hi := r.kf * r.unit * 1000 * r.kr_kg; lo := hi;
     for s in select * from jsonb_array_elements(coalesce(item->'st', '[]'::jsonb)) loop
-      select * into q from quota_ref where id = s->>'id'; lf := (s->>'until')::numeric - y;
-      hi := hi + (s->>'kf')::double precision * q.unit * 1000 * q.kr_kg * least(20, greatest(0, lf)) / 20;
-      lo := lo + (s->>'kf')::double precision * q.unit * 1000 * q.kr_kg * least(20, greatest(0, lf - 1)) / 20;
+      select * into q from quota_ref where id = s->>'id';
+      hi := hi + (s->>'kf')::double precision * q.unit * 1000 * q.kr_kg * least(20, greatest(0, (s->>'until')::numeric - y0)) / 20;
+      lo := lo + (s->>'kf')::double precision * q.unit * 1000 * q.kr_kg * least(20, greatest(0, (s->>'until')::numeric - y1 - 1)) / 20;
     end loop;
   else
-    lf := (item->>'until')::numeric - y;
-    hi := (item->>'kf')::double precision * r.unit * 1000 * r.kr_kg * least(20, greatest(0, lf)) / 20;
-    lo := (item->>'kf')::double precision * r.unit * 1000 * r.kr_kg * least(20, greatest(0, lf - 1)) / 20;
+    hi := (item->>'kf')::double precision * r.unit * 1000 * r.kr_kg * least(20, greatest(0, (item->>'until')::numeric - y0)) / 20;
+    lo := (item->>'kf')::double precision * r.unit * 1000 * r.kr_kg * least(20, greatest(0, (item->>'until')::numeric - y1 - 1)) / 20;
   end if;
   return jsonb_build_object('kr', round(hi)::bigint, 'lo', floor(lo * 0.3)::bigint, 'hi', ceil(hi * 2.5)::bigint);
 end $$;
@@ -177,7 +185,7 @@ declare p text := broker_who(); it jsonb; b jsonb; k text; base text; l listings
 begin
   if km_put.vid is null or km_put.vid = '' or length(km_put.vid) > 16 then raise exception 'bad ref'; end if;
   it := km_item(km_put.item); k := it->>'kind';
-  if k = 'struct' and (it->>'until')::numeric - (it->>'y')::numeric < 1 then raise exception 'short'; end if;
+  if k = 'struct' and (it->>'until')::numeric - greatest((it->>'y')::numeric, km_year()) < 1 then raise exception 'short'; end if;   -- (KM.minLeft: a year on the shared clock)
   if km_put.hours is null or km_put.hours not in (1, 6, 24, 72) then raise exception 'bad hours'; end if;
   b := km_band(it);
   if km_put.value is null or km_put.value <= 0 or km_put.value < (b->>'lo')::bigint or km_put.value > (b->>'hi')::bigint then raise exception 'bad value'; end if;
@@ -355,7 +363,8 @@ begin
   if km_wish_set.rid is not null and not exists (select 1 from quota_ref q where q.id = km_wish_set.rid) then raise exception 'bad right'; end if;
   if km_wish_set.kind is not null and km_wish_set.kind not in ('right', 'struct') then raise exception 'bad kind'; end if;
   insert into km_wish (player_id, rid, kind, max_kr) values (p, km_wish_set.rid, km_wish_set.kind, least(km_wish_set.max_kr, 1000000000))
-    on conflict (player_id) do update set rid = excluded.rid, kind = excluded.kind, max_kr = excluded.max_kr, at = now();
+    on conflict (player_id) do update set rid = excluded.rid, kind = excluded.kind, max_kr = excluded.max_kr, at = now(),
+      told_at = case when (km_wish.rid, km_wish.kind) is not distinct from (excluded.rid, excluded.kind) and excluded.max_kr <= km_wish.max_kr then km_wish.told_at end;   -- (a new wish may be told at once)
 end $$;
 
 -- the admin's line: per week (the week a listing closed, or was put out while open), kind and quota length (the type for a boat): put
@@ -376,7 +385,7 @@ begin
     group by 1, 2, 3) a), '[]'::jsonb);
 end $$;
 
-revoke all on function public.km_num(jsonb, numeric, numeric), public.km_item(jsonb), public.km_band(jsonb), public.km_tell(listings), public.broker_ledger_lk(),
+revoke all on function public.km_year(), public.km_num(jsonb, numeric, numeric), public.km_item(jsonb), public.km_band(jsonb), public.km_tell(listings), public.broker_ledger_lk(),
   public.km_put(text, jsonb, bigint, bigint, bigint, int, text), public.listing_put(text, jsonb, bigint, bigint, bigint, bigint, int, text, real, real, text),
   public.broker_sold(listings, text, bigint, text), public.listing_bid(bigint, bigint, text), public.listing_buy(bigint, text),
   public.listings_get(real, real, real, text), public.broker_pending(boolean), public.km_wish_set(text, text, bigint), public.admin_km(int)

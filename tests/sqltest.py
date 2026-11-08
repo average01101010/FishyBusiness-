@@ -1052,10 +1052,11 @@ def main():
         sql("insert into public.saves (player_id, data, saved_at, summary) values ('user_01KB1', 'x', now(), '{\"cash\":20000000}'), ('user_01KB2', 'x', now(), '{\"cash\":20000000}') on conflict (player_id) do update set summary = excluded.summary")
         sql("insert into public.reg_held (player_id, id) values ('user_01KMS', 'h14') on conflict do nothing")
         U14, KF14 = 7.2662, 5.2289
+        SY = int(sql("select public.km_year()"))   # (the game year on the shared clock: the goods are packed in it)
         own14 = KF14 * U14 * 1000 * 260
-        RI = {'kind': 'right', 'id': 'h14', 'hl': 'x', 'flen': 14.5, 'st': [{'id': 'h14', 'kf': 4.70601, 'from': 2026, 'until': 2046}], 'landY': 2026, 'used': {'torsk': 1200, 'hyse': 0, 'sei': 50}, 'y': 2026}
+        RI = {'kind': 'right', 'id': 'h14', 'hl': 'x', 'flen': 14.5, 'st': [{'id': 'h14', 'kf': 4.70601, 'from': SY, 'until': SY + 20}], 'landY': 2026, 'used': {'torsk': 1200, 'hyse': 0, 'sei': 50}, 'y': SY}
         vR = round(own14 + 4.70601 * U14 * 1000 * 260)   # (the structure quota with all its 20 years)
-        SQ = {'kind': 'struct', 'id': 'h14', 'hl': '14–14,9 m', 'kf': 4.70601, 'from': 2030, 'until': 2040, 'used': {'torsk': 300, 'hyse': 10, 'sei': 0}, 'y': 2034}
+        SQ = {'kind': 'struct', 'id': 'h14', 'hl': '14–14,9 m', 'kf': 4.70601, 'from': SY - 4, 'until': SY + 6, 'used': {'torsk': 300, 'hyse': 10, 'sei': 0}, 'y': SY}
         vS = round(4.70601 * U14 * 1000 * 260 * 5.5 / 20)   # (5.5 years left, as the game counts them in the middle of the year)
         J = lambda o: "'%s'::jsonb" % json.dumps(o, ensure_ascii=False)
         kput = lambda who, vid, it, value, start, buynow='null', hours=24: sqle("select public.km_put('%s', %s, %d, %d, %s, %d, 'Kvoterederi')" % (vid, J(it), value, start, buynow, hours), who, 'authenticated')
@@ -1065,8 +1066,10 @@ def main():
                      err(kput(KS, 'v1', dict(RI, kind='boat'), vR, round(vR * 0.5))), err(kput(KS, 'v1', dict(RI, id='h99'), vR, round(vR * 0.5))),
                      err(kput(KS, 'v1', dict(RI, id='h9', st=[{'id': 'h9', 'kf': 1.9, 'from': 2026, 'until': 2046}]), vR, round(vR * 0.5))),
                      err(kput(KS, 'v1', dict(RI, st=[{'id': 'h14', 'kf': 6, 'from': 2026, 'until': 2046}]), vR, round(vR * 0.5))),
-                     err(kput(KS, 'v2/s1', dict(SQ, y=2040), vS, round(vS * 0.5))), err(kput(G2, 'v1', RI, vR, round(vR * 0.5))), err(kput(KS, '', RI, vR, round(vR * 0.5))),
-                     err(kput(KS, 'v2/s1', dict(SQ, until=2052), vS, round(vS * 0.5)))]
+                     err(kput(KS, 'v2/s1', dict(SQ, until=SY, **{'from': SY - 10}), vS, round(vS * 0.5))), err(kput(G2, 'v1', RI, vR, round(vR * 0.5))), err(kput(KS, '', RI, vR, round(vR * 0.5))),
+                     err(kput(KS, 'v2/s1', dict(SQ, until=SQ['from'] + 21), vS, round(vS * 0.5))), err(kput(KS, 'v1', dict(RI, y=SY - 3), vR, round(vR * 0.5))),
+                     err(kput(KS, 'v2/s1', dict(SQ, kf=KF14), vS, round(vS * 0.5))),
+                     err(kput(KS, 'v1', dict(RI, st=[{'id': 'h14', 'kf': 4.70601, 'from': SY, 'until': SY + 20}] * 5), vR, round(vR * 0.5)))]
         LR = json.loads(sql("select public.km_put('v1', %s, %d, %d, %d, 24, 'Kvoterederi')" % (J(dict(RI, owner='Ola Hansen', player='user_01KMS')), vR, round(vR * 0.5), round(vR * 1.5)), KS, 'authenticated'))
         KM['item'] = LR['item']; LR = LR['id']
         KM['dup'] = [err(kput(KS, 'v1/s1', SQ, vS, round(vS * 0.5))), err(put(KS, 'v1', 400000))]
@@ -1109,25 +1112,27 @@ def main():
         sql("select public.km_put('v1', %s, %d, %d, null, 24, '')" % (J(dict(RI, st=[])), round(own14), round(own14 * 0.9)), KS2, 'authenticated')
         KM['wish1'] = sql("select count(*) || '/' || coalesce(max(body), '') from public.push_queue where player_id = 'user_01KB1' and tag = 'km-wish'")
         sql("select public.km_put('v2', %s, %d, %d, null, 24, '')" % (J(dict(RI, st=[])), round(own14), round(own14 * 0.9)), KS2, 'authenticated')
+        sql("select public.km_wish_set('h20', 'right', 30000000)", KB1, 'authenticated')   # (a new wish may be told at once, though the last was told now)
+        sql("select public.km_put('f1', %s, %d, %d, null, 24, '')" % (J(dict(RI, id='h20', st=[])), round(10.254 * 6.9986 * 260000), round(10.254 * 6.9986 * 260000 * 0.9)), KS2, 'authenticated')
         KM['wish2'] = [sql("select count(*) from public.push_queue where player_id = '%s' and tag = 'km-wish'" % w) for w in ('user_01KB1', 'user_01KB2')]
         KM['admin'] = [(a['kind'], a['id'], a['sold'], a['vs_takst']) for a in json.loads(sql("select public.admin_km(8)", AD2, 'authenticated')) if a['kind'] != 'boat']
         KM['adminNo'] = sql("select public.admin_km(8)", KS, 'authenticated', expect_err=True)[0]
         KM['priv'] = [sql("select has_function_privilege('authenticated', 'public.%s', 'execute')" % f) for f in ('km_item(jsonb)', 'km_band(jsonb)', 'km_tell(listings)', 'km_num(jsonb, numeric, numeric)', 'broker_ledger_lk()')]
         KM['tabs'] = [sql("select count(*) from public.%s" % tb, KB1, 'authenticated', expect_err=True)[0] for tb in ('quota_ref', 'km_wish')]
         it = KM['item']
-        km_lim = KM['lim'] == ['bad value', 'bad value', 'start', 'buynow', 'bad hours', 'bad item', 'bad item', 'bad item', 'bad item', 'short', 'guest', 'bad ref', 'bad item']
-        km_item = (it == {'kind': 'right', 'id': 'h14', 'hl': '14–14,9 m', 'flen': 14.5, 'st': [{'id': 'h14', 'kf': 4.70601, 'from': 2026, 'until': 2046}], 'landY': 2026,
-                          'used': {'torsk': 1200, 'hyse': 0, 'sei': 50}, 'y': 2026} and KM['ref'] == '7/5.2289:g11:14–14,9 m')
+        km_lim = KM['lim'] == ['bad value', 'bad value', 'start', 'buynow', 'bad hours', 'bad item', 'bad item', 'bad item', 'bad item', 'short', 'guest', 'bad ref', 'bad item', 'bad item', 'bad item', 'bad item']
+        km_item = (it == {'kind': 'right', 'id': 'h14', 'hl': '14–14,9 m', 'flen': 14.5, 'st': [{'id': 'h14', 'kf': 4.70601, 'from': SY, 'until': SY + 20}], 'landY': 2026,
+                          'used': {'torsk': 1200, 'hyse': 0, 'sei': 50}, 'y': SY} and KM['ref'] == '7/5.2289:g11:14–14,9 m')
         km_get = (KM['getKm']['ids'] == sorted([LR, LS]) and not KM['getKm']['vid'] and not KM['getKm']['who'] and KM['getKm']['mine'] == [False, False] and KM['getKm']['kinds'] == ['right', 'struct']
                   and KM['getBoat'] == [] and KM['getRight'] == [LR] and KM['mineKS'] == [('v1', 'right'), ('v2/s1', 'struct')] and KM['badKind'] == 'bad kind')
         km_bids = (KM['bids'] == ['own', 'ok', 'top', 'low %d' % s1, 'ok'] and KM['ledKB1'] == [('bid', -s0, 'right'), ('release', s0, 'right')] and KM['ledKB2'] == [('bid', -s1, 'right')]
                    and KM['oldKB1'] == [] and KM['ownBuy'] == 'own' and KM['buyS'].get('fee') == 0 and KM['buyS'].get('price') == round(vS * 1.2))
-        km_settle = (KM['regS'] == 'user_01KMS:h14' and KM['regR'] == 'user_01KB2:h14' and KM['gotS'] == [('struct', 4.70601, 2040, round(vS * 1.2))]
+        km_settle = (KM['regS'] == 'user_01KMS:h14' and KM['regR'] == 'user_01KB2:h14' and KM['gotS'] == [('struct', 4.70601, SY + 6, round(vS * 1.2))]
                      and KM['gotR'] == [('h14', 1, 1200, s1)] and KM['boatB'] == ['Fjordbris'] and KM['oldKB2'] == [('buy', -900000), ('boat', 0)]
                      and KM['paid'] == sorted([('right', round(s1 * 0.95), 'v1', True), ('struct', round(round(vS * 1.2) * 0.95), 'v2/s1', True), ('boat', 855000, 'v3', False)])
                      and KM['states'] == 'sold:right,sold:struct,sold:boat')
         km_sold = KM['soldKm'] == sorted([('right', 'h14', s1), ('struct', 'h14', round(vS * 1.2))]) and not KM['soldWho'] and KM['soldBoat'] == []
-        km_wish = (KM['wishSet'] == ['bad right', 'guest'] and KM['wish1'].startswith('1/') and 'hjemmel 14–14,9 m' in KM['wish1'] and KM['wish2'] == ['1', '0'])
+        km_wish = (KM['wishSet'] == ['bad right', 'guest'] and KM['wish1'].startswith('1/') and 'hjemmel 14–14,9 m' in KM['wish1'] and KM['wish2'] == ['2', '1'])
         km_adm = (('right', 'h14', 1, round(s1 / vR, 3)) in KM['admin'] and ('struct', 'h14', 1, round(round(vS * 1.2) / vS, 3)) in KM['admin'] and KM['adminNo']
                   and KM['priv'] == ['f'] * 5 and all(KM['tabs']))
         KMP = [km_lim, km_item, km_get, km_bids, km_settle, km_sold, km_wish, km_adm, KM['dup'] == ['listed', 'listed'], KM['four'] == 'too many']
