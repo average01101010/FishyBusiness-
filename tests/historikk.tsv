@@ -1194,6 +1194,11 @@
 2026-11-08 17:46	ccr-2040aa61-qgig5a	154372dc+	docktest	OK	62	lite	samtidig	
 2026-11-08 17:47	ccr-2040aa61-qgig5a	154372dc+	driftsplan2test	FEIL	86	lite	alene	FEIL S5 the tired crew end the day: no more jigging, the line is still hauled when due (within 3 h), then in [[['D1 13:19', 'Mannskapet er slitne. Avslutter juk
 2026-11-08 17:49	ccr-2040aa61-qgig5a	154372dc+	driftsplan2test	OK	87	lite	alene	
+2026-11-08 18:17	ccr-e9f46ad4-wipgu7	4575363+	tutfull	FEIL	9	lite	samtidig	FEIL en time på feltet gir full last i trebåten (TUT_HOLD 1, capHold 500 kg)  {"kg": 498.2, "cap": 500, "top": 319.4, "mins": 153, "m": 52, "st": "idle", "t30":
+2026-11-08 18:17	ccr-e9f46ad4-wipgu7	4575363+	booktest	OK	31	lite	samtidig	
+2026-11-08 18:24	ccr-e9f46ad4-wipgu7	4575363+	starttest	OK	455	lite	samtidig	
+2026-11-08 18:24	ccr-e9f46ad4-wipgu7	4575363+	tutdrift	OK	9	lite	samtidig	
+2026-11-08 18:56	ccr-e9f46ad4-wipgu7	6f48fbd	tut	OK	1786	lite	alene	
 2026-11-08 18:23	ccr-864d9913-u29rne	3eb0e01+	opsowntest	OK	50	lite	samtidig	
 2026-11-08 18:23	ccr-864d9913-u29rne	3eb0e01+	fleet2test	OK	35	lite	samtidig	
 2026-11-08 18:23	ccr-864d9913-u29rne	3eb0e01+	fleet3test	OK	18	lite	samtidig	
@@ -1309,6 +1314,36 @@
 2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	hbtest	OK	15	lite	samtidig	
 2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	sleeptest	OK	11	lite	samtidig	
 2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	bunktest	OK	11	lite	samtidig	
+2026-11-08 19:03	ccr-e9f46ad4-wipgu7	bb94ae9	tutfull	OK	7	lite	samtidig	
+2026-11-08 19:04	ccr-e9f46ad4-wipgu7	fb2ed4d	boottest	OK	32	lite	samtidig	
+2026-11-08 19:04	ccr-e9f46ad4-wipgu7	fb2ed4d	booktest	OK	29	lite	samtidig	
+2026-11-08 19:04	ccr-e9f46ad4-wipgu7	fb2ed4d	skattetest	OK	7	lite	samtidig	
+2026-11-08 19:04	ccr-e9f46ad4-wipgu7	fb2ed4d	lotttest	OK	9	lite	samtidig	
+2026-11-08 19:04	ccr-e9f46ad4-wipgu7	fb2ed4d	boktest	OK	9	lite	samtidig	
+2026-11-08 19:04	ccr-e9f46ad4-wipgu7	fb2ed4d	keeptest	OK	15	lite	samtidig	
+2026-11-08 19:04	ccr-e9f46ad4-wipgu7	fb2ed4d	decktest	OK	15	lite	samtidig	
+2026-11-08 19:05	ccr-e9f46ad4-wipgu7	fb2ed4d	simday	LES	15	lite	samtidig	
+2026-11-08 19:05	ccr-e9f46ad4-wipgu7	fb2ed4d	calib	LES	15	lite	samtidig	
+2026-11-08 19:05	ccr-e9f46ad4-wipgu7	fb2ed4d	vesseltest	OK	22	lite	samtidig	
+2026-11-08 19:05	ccr-e9f46ad4-wipgu7	fb2ed4d	fuelcal	OK	16	lite	samtidig	
+2026-11-08 19:05	ccr-e9f46ad4-wipgu7	fb2ed4d	tidetest	OK	6	lite	samtidig	
+2026-11-08 19:05	ccr-e9f46ad4-wipgu7	fb2ed4d	climtest	OK	14	lite	samtidig	
+2026-11-08 19:05	ccr-e9f46ad4-wipgu7	fb2ed4d	bktest	OK	8	lite	samtidig	
+2026-11-08 19:05	ccr-e9f46ad4-wipgu7	fb2ed4d	yardupgtest	OK	13	lite	samtidig	
+2026-11-08 19:05	ccr-e9f46ad4-wipgu7	fb2ed4d	krabbefabrikktest	OK	19	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	colregtest	OK	604	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	autonavtest	OK	26	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	turtest	OK	14	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	trip2	OK	35	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	worktest	FEIL	20	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	npctest	OK	10	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	towtest	OK	18	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	tattest	OK	22	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	peergear	OK	7	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	mobtest	OK	138	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	starttest	OK	139	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	tutdrift	OK	7	lite	samtidig	
+2026-11-08 19:15	ccr-e9f46ad4-wipgu7	932a05f	docktest	OK	61	lite	samtidig	
 2026-11-08 18:34	ccr-c27822e7-1y3qn3	cfd5684+	mobtest	OK	202	lite	alene	
 2026-11-08 18:39	ccr-c27822e7-1y3qn3	cfd5684+	mobtest	OK	202	lite	alene	
 2026-11-08 18:40	ccr-c27822e7-1y3qn3	cfd5684+	geartest	OK	30	lite	samtidig	
@@ -1360,6 +1395,7 @@
 2026-11-08 19:26	ccr-c27822e7-1y3qn3	7e9eef3	mobtest	OK	202	lite	samtidig	
 2026-11-08 19:23	ccr-864d9913-u29rne	fa78d4b	boottest	OK	27	lite	samtidig	
 2026-11-08 19:23	ccr-864d9913-u29rne	fa78d4b	driftsplan2ui	OK	30	lite	samtidig	
+2026-11-08 19:51	ccr-e9f46ad4-wipgu7	fd2c05e	tut	OK	1262	lite	alene	
 2026-11-08 19:28	ccr-c27822e7-1y3qn3	30cd81b	boottest	OK	20	lite	samtidig	
 2026-11-08 19:28	ccr-c27822e7-1y3qn3	30cd81b	docktest	OK	59	lite	samtidig	
 2026-11-08 19:31	ccr-c27822e7-1y3qn3	30cd81b	mobtest	OK	202	lite	samtidig	
@@ -1367,3 +1403,12 @@
 2026-11-08 20:07	claude/o14-f4-feltnavnene-kart-htpg70	5633dd8+	placetest	OK	5	lite	alene	
 2026-11-08 20:08	claude/o14-f4-feltnavnene-kart-htpg70	5633dd8+	charttest	OK	57	lite	alene	
 2026-11-08 20:09	claude/o14-f4-feltnavnene-kart-htpg70	5633dd8+	routetest	OK	43	lite	alene	
+2026-11-08 19:55	ccr-e9f46ad4-wipgu7	92d067f	boottest	OK	28	lite	samtidig	
+2026-11-08 19:55	ccr-e9f46ad4-wipgu7	92d067f	tutfull	OK	6	lite	samtidig	
+2026-11-08 19:55	ccr-e9f46ad4-wipgu7	92d067f	booktest	OK	28	lite	samtidig	
+2026-11-08 19:55	ccr-e9f46ad4-wipgu7	92d067f	selltest	LES	22	lite	samtidig	
+2026-11-08 19:55	ccr-e9f46ad4-wipgu7	92d067f	shoptest	OK	34	lite	samtidig	
+2026-11-08 19:55	ccr-e9f46ad4-wipgu7	92d067f	r4test	OK	15	lite	samtidig	
+2026-11-08 19:55	ccr-e9f46ad4-wipgu7	92d067f	cashfxtest	OK	8	lite	samtidig	
+2026-11-08 19:57	ccr-e9f46ad4-wipgu7	92d067f	starttest	OK	110	lite	samtidig	
+2026-11-08 19:57	ccr-e9f46ad4-wipgu7	92d067f	tutdrift	OK	7	lite	samtidig	
