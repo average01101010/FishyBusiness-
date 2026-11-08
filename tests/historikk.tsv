@@ -1215,3 +1215,89 @@
 2026-11-08 19:13	ccr-864d9913-u29rne	296235c+	driftsplan2test	FEIL	57	lite	alene	FEIL S5 the tired crew end the day: no more jigging, the line is still hauled when due (within 3 h), then in [[['D1 13:19', 'Mannskapet er slitne. Avslutter juk
 2026-11-08 19:14	ccr-864d9913-u29rne	296235c+	driftsplan2test	FEIL	83	lite	alene	FEIL S1 the line is set on both fields and hauled after 6-7.5 h each day [('D1 05:52', 6.2), ('D2 05:35', 6.3), ('D3 05:35', 6.4)]
 2026-11-08 19:16	ccr-864d9913-u29rne	296235c+	driftsplan2test	OK	83	lite	alene	
+2026-11-08 18:20	ccr-ed93b6bd-ek0n3a	3c245ff+	worktest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-08 18:20	ccr-ed93b6bd-ek0n3a	3c245ff+	crewlifetest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-08 18:20	ccr-ed93b6bd-ek0n3a	3c245ff+	selfcrew	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-08 18:20	ccr-ed93b6bd-ek0n3a	3c245ff+	seaworktest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-08 18:20	ccr-ed93b6bd-ek0n3a	3c245ff+	sleeptest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-08 18:20	ccr-ed93b6bd-ek0n3a	3c245ff+	bunktest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-08 18:20	ccr-ed93b6bd-ek0n3a	3c245ff+	hbtest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-08 18:22	ccr-ed93b6bd-ek0n3a	3c245ff+	worktest	FEIL	15	lite	samtidig	avsluttet med kode 1
+2026-11-08 18:22	ccr-ed93b6bd-ek0n3a	3c245ff+	crewlifetest	OK	6	lite	samtidig	
+2026-11-08 18:22	ccr-ed93b6bd-ek0n3a	3c245ff+	selfcrew	OK	7	lite	samtidig	
+2026-11-08 18:22	ccr-ed93b6bd-ek0n3a	3c245ff+	seaworktest	OK	5	lite	samtidig	
+2026-11-08 18:22	ccr-ed93b6bd-ek0n3a	3c245ff+	sleeptest	OK	11	lite	samtidig	
+2026-11-08 18:22	ccr-ed93b6bd-ek0n3a	3c245ff+	bunktest	OK	13	lite	samtidig	
+2026-11-08 18:22	ccr-ed93b6bd-ek0n3a	3c245ff+	hbtest	OK	14	lite	samtidig	
+2026-11-08 18:24	ccr-ed93b6bd-ek0n3a	3c245ff+	worktest	FEIL	19	lite	alene	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 18:25	ccr-ed93b6bd-ek0n3a	3c245ff+	worktest	FEIL	12	lite	alene	avsluttet med kode 1
+2026-11-08 18:26	ccr-ed93b6bd-ek0n3a	3c245ff+	rorbutest	OK	14	lite	samtidig	
+2026-11-08 18:27	ccr-ed93b6bd-ek0n3a	3c245ff+	opptest	OK	61	lite	samtidig	
+2026-11-08 18:27	ccr-ed93b6bd-ek0n3a	3c245ff+	decktest	OK	14	lite	samtidig	
+2026-11-08 18:27	ccr-ed93b6bd-ek0n3a	3c245ff+	fleet2test	OK	35	lite	samtidig	
+2026-11-08 18:28	ccr-ed93b6bd-ek0n3a	3c245ff+	saytest	OK	94	3d	alene	
+2026-11-08 18:36	ccr-ed93b6bd-ek0n3a	3c245ff+	sitetest	FEIL	451	3d	alene	FEIL at a home along the coast (Reine) the naust stands there and no shop beside it (Father's naust is only a home), and the boat lies at the naust {'kinds': ['
+2026-11-08 18:38	ccr-ed93b6bd-ek0n3a	3c245ff+	worktest	FEIL	21	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 18:38	ccr-ed93b6bd-ek0n3a	3c245ff+	selfcrew	OK	6	lite	samtidig	
+2026-11-08 18:38	ccr-ed93b6bd-ek0n3a	3c245ff+	crewlifetest	OK	5	lite	samtidig	
+2026-11-08 18:38	ccr-ed93b6bd-ek0n3a	3c245ff+	seaworktest	OK	6	lite	samtidig	
+2026-11-08 18:38	ccr-ed93b6bd-ek0n3a	3c245ff+	decktest	OK	14	lite	samtidig	
+2026-11-08 18:39	ccr-ed93b6bd-ek0n3a	3c245ff+	opptest	OK	55	lite	samtidig	
+2026-11-08 18:39	ccr-ed93b6bd-ek0n3a	3c245ff+	hbtest	OK	15	lite	samtidig	
+2026-11-08 18:40	ccr-ed93b6bd-ek0n3a	86d0a0b+	opsowntest	OK	36	lite	samtidig	
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	mobtest	OK	137	lite	samtidig	
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	boostklokke	OK	37	lite	samtidig	
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	skipdrift	OK	18	lite	samtidig	
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	skiptest	OK	15	lite	samtidig	
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	autonavtest	FEIL	7	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 89, 'cell': 0.2, 'maxSlice': 8.3, 'mended': 0, 'ba
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	trip2	OK	36	lite	samtidig	
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	itemcardtest	FEIL	16	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'linesetter', 'garnrenne', 'jukse', 'krabbekar', 'brova
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	havtur	FEIL	0	lite	samtidig	FEIL hele kysten mangler i tools/map/out/game (release.py og game.py)
+2026-11-08 18:44	ccr-ed93b6bd-ek0n3a	86d0a0b+	itemcardtest	FEIL	14	lite	alene	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'linesetter', 'garnrenne', 'jukse', 'krabbekar', 'brova
+2026-11-08 18:45	ccr-ed93b6bd-ek0n3a	86d0a0b+	mannskapshot	OK	16	lite	samtidig	
+2026-11-08 18:45	ccr-ed93b6bd-ek0n3a	86d0a0b+	worktest	FEIL	21	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 18:45	ccr-ed93b6bd-ek0n3a	86d0a0b+	selfcrew	OK	6	lite	samtidig	
+2026-11-08 18:46	ccr-ed93b6bd-ek0n3a	86d0a0b+	crewlifetest	OK	5	lite	samtidig	
+2026-11-08 18:46	ccr-ed93b6bd-ek0n3a	86d0a0b+	hbtest	OK	14	lite	samtidig	
+2026-11-08 18:19	ccr-6e53b4c0-qs2mg1	8010797+	marktest	FEIL	8	lite	samtidig	FEIL round Tromsø the chart pack's sea marks are read with its coast  {"tile": "18:6", "has": false, "lights": 0, "marks": 0, "rocks": 0, "near": {"L": 153, "M"
+2026-11-08 18:19	ccr-6e53b4c0-qs2mg1	8010797+	simday	LES	11	lite	samtidig	
+2026-11-08 18:19	ccr-6e53b4c0-qs2mg1	8010797+	boottest	OK	22	lite	samtidig	
+2026-11-08 18:20	ccr-6e53b4c0-qs2mg1	8010797+	charttest	OK	49	lite	alene	
+2026-11-08 18:24	ccr-6e53b4c0-qs2mg1	8010797+	heattest	OK	245	3d	alene	
+2026-11-08 18:25	ccr-6e53b4c0-qs2mg1	8010797+	simday	LES	8	lite	alene	
+2026-11-08 18:25	ccr-6e53b4c0-qs2mg1	8010797+	marktest	OK	6	lite	alene	
+2026-11-08 18:33	ccr-6e53b4c0-qs2mg1	8010797+	trip2	OK	29	lite	samtidig	
+2026-11-08 18:34	ccr-6e53b4c0-qs2mg1	8010797+	docktest	OK	59	lite	samtidig	
+2026-11-08 18:34	ccr-6e53b4c0-qs2mg1	8010797+	obstest	OK	6	lite	samtidig	
+2026-11-08 18:34	ccr-6e53b4c0-qs2mg1	8010797+	calib	LES	10	lite	samtidig	
+2026-11-08 18:34	ccr-6e53b4c0-qs2mg1	f6f32b6	progweek	LES	37	lite	samtidig	
+2026-11-08 18:34	ccr-6e53b4c0-qs2mg1	f6f32b6	quotatest	OK	15	lite	samtidig	
+2026-11-08 18:34	ccr-6e53b4c0-qs2mg1	f6f32b6	kvtest	LES	12	lite	samtidig	
+2026-11-08 18:35	ccr-6e53b4c0-qs2mg1	f6f32b6	geartest	OK	27	lite	samtidig	
+2026-11-08 18:38	ccr-6e53b4c0-qs2mg1	f6f32b6+	lighttest	OK	234	3d	alene	
+2026-11-08 18:39	ccr-6e53b4c0-qs2mg1	f6f32b6+	progweek	LES	35	lite	samtidig	
+2026-11-08 18:39	ccr-6e53b4c0-qs2mg1	f6f32b6+	kvtest	LES	13	lite	samtidig	
+2026-11-08 18:39	ccr-6e53b4c0-qs2mg1	f6f32b6+	calib	LES	15	lite	samtidig	
+2026-11-08 18:40	ccr-6e53b4c0-qs2mg1	f6f32b6+	marktest	OK	7	lite	samtidig	
+2026-11-08 18:41	ccr-6e53b4c0-qs2mg1	f6f32b6+	boottest	OK	18	lite	samtidig	
+2026-11-08 18:41	ccr-6e53b4c0-qs2mg1	f6f32b6+	charttest	OK	41	lite	alene	
+2026-11-08 17:59	ccr-2040aa61-qgig5a	fc8da648+	skipdrift	OK	19	lite	samtidig	
+2026-11-08 17:59	ccr-2040aa61-qgig5a	fc8da648+	driftsplan2ui	OK	26	lite	samtidig	
+2026-11-08 18:01	ccr-2040aa61-qgig5a	fc8da648+	driftsplan2kyst	OK	111	lite	samtidig	
+2026-11-08 18:02	ccr-2040aa61-qgig5a	fc8da648+	driftsplan2test	OK	83	lite	alene	
+2026-11-08 18:07	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2ui	OK	28	lite	samtidig	
+2026-11-08 18:09	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2kyst	OK	100	lite	samtidig	
+2026-11-08 18:09	ccr-2040aa61-qgig5a	bba06b81+	docktest	FEIL	62	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-08 18:10	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2test	FEIL	79	lite	alene	FEIL S5 the tired crew end the day: no more jigging, the line is still hauled when due (within 3 h), then in [[['D1 13:19', 'Mannskapet er slitne. Avslutter juk
+2026-11-08 18:11	ccr-2040aa61-qgig5a	bba06b81+	docktest	OK	58	lite	alene	
+2026-11-08 18:12	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2test	FEIL	82	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
+2026-11-08 18:43	ccr-6e53b4c0-qs2mg1	62af7fb	boottest	OK	17	lite	alene	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	boottest	OK	29	lite	samtidig	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	mannskapshot	OK	16	lite	samtidig	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	worktest	FEIL	23	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	selfcrew	OK	7	lite	samtidig	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	crewlifetest	OK	5	lite	samtidig	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	seaworktest	OK	6	lite	samtidig	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	hbtest	OK	15	lite	samtidig	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	sleeptest	OK	11	lite	samtidig	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	bunktest	OK	11	lite	samtidig	

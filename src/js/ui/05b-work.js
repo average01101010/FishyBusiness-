@@ -25,7 +25,9 @@ const WORK = (() => {
     if (Object.values(JOB_ST).includes(k)){ const J = (S.jobs || []).filter(j => crewJob(j) && JOB_ST[j.kind] === k); return J.length ? J.map(j => Math.round(jobDone(j) * 100) + ' %' + (j.until != null ? ' · ' + L('ferdig ', 'done ') + hm(j.until / 60) : '')).join(', ') : '–'; }
     if (k === 'sloy') return cg ? fmt(gut, 0) + ' kg' : L('ingen på', 'nobody on it');
     if (k === 'is') return ci ? fmt(ice, 0) + ' kg' : L('ingen på', 'nobody on it');
-    if (k === 'kokk'){ const M = mealState(), f = L('mat ', 'food ') + fmt(foodScore(), 1) + '/5'; if (b.status === 'port' || M.due == null) return f; return (S.t >= M.due ? '<b class="r2">' + L('måltid nå', 'meal due') + '</b>' : L('måltid om ', 'meal in ') + dur((M.due - S.t) / 60)) + ' · ' + f; }
+    // the next meal by its name and hour (Ø8b M3: frokost 06:30, lunsj 12:30, middag 18:30, nattmat 00:30), and the cook at it
+    if (k === 'kokk'){ const M = mealState(), f = L('mat ', 'food ') + fmt(foodScore(), 1) + '/5'; if (b.status === 'port' || M.due == null) return f; const nm = mealName(M.due), w = L(nm[0], nm[1]) + ' ' + hm(M.due / 60);
+      return (M.cook ? L('lager ', 'making ') + w : S.t > M.due ? '<b class="r2">' + w + L(', for sent', ', late') + '</b>' : w) + ' · ' + f; }
     return '';
   }
   // ---- «På dekk nå» (Jonas 23.10.2026: brikker): who stands where, nothing to tap, and in one line what waits on deck ----
@@ -149,6 +151,8 @@ hooks.onTurnBack = (plan, sea, W, hs, limW, limHs) => { if (typeof toast !== 'fu
     : plan ? L('Vinden er ' + f(W) + ' m/s, over grensen ' + f(limW) + ' m/s i driftsplanen. Båten snur mot nærmeste kai.', 'The wind is ' + f(W) + ' m/s, over the ' + f(limW) + ' m/s limit of the plan. The boat turns to the nearest quay.')
     : L('Vinden er ' + f(W) + ' m/s, over grensen din på ' + f(limW) + '. Båten snur mot nærmeste kai. Endres under Innstillinger → Snu ved.', 'The wind is ' + f(W) + ' m/s, over your limit of ' + f(limW) + '. The boat turns to the nearest quay. Change it under Settings → Turn back at.')); };
 hooks.onEnergy = k => { if (typeof toast !== 'function') return; const L = (no, en) => S.lang === 'no' ? no : en;
-  if (k === 'warn') toast(bunks(S.boat) ? L('Du er sliten (25 %). Arbeidet ditt går tregere. Gå til kai for å hvile.', 'You are tired (25 %). Your work goes slower. Go to the quay to rest.') : L('Du er sliten (25 %). Arbeidet ditt går tregere. Seil til naustet eller en rorbu for å hvile.', 'You are tired (25 %). Your work goes slower. Sail to your boathouse or a rorbu to rest.'));
+  // the bunk on a boat with berths, the nearest rorbu on one without (15-energy.js restTip; Ø8b M1, before «Gå til kai» on both)
+  if (k === 'warn'){ const r = restTip(myBoat()); toast(L('Du er sliten (25 %). Arbeidet ditt går tregere. ', 'You are tired (25 %). Your work goes slower. ') + L(r[0], r[1])); }
+  if (k === 'nobunk'){ const r = restTip(myBoat()); toast(L(r[0], r[1])); }
   if (k === 'ack') toast(L('Du er våken, men trøtt og døsig. Du kan døse av igjen til du har hvilt deg ut.', 'You are awake, but tired and drowsy. You may doze off again until you have had a proper rest.'));
   if (k === 'wake') toast(L('Du våknet. Energi ' + Math.round(S.energy) + ' %.', 'You woke up. Energy ' + Math.round(S.energy) + ' %.')); };

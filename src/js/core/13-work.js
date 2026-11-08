@@ -198,6 +198,9 @@ function workAssign(as){
   // the helm, while she is driven: you, else the mate, else the skipper, else the best seaman
   if (ctx.ror){ const me = P.find(p => !p.c), m = P.find(p => p.c && p.c.mate), sk = typeof opsSkipper === 'function' && opsSkipper(), o = sk && P.find(p => p.c === sk);
     const who = me || m || o || P.slice().sort((a, b) => b.c.attr.sjo - a.c.attr.sjo)[0]; put(who, 'ror', me ? 'skipper' : m ? 'mate' : o ? 'opsk' : 'seaman'); }
+  // the cook who has started the meal stays at the stove until it is served (14-crewlife.js mealMinute; before, the deck could take her
+  // to the table between two minutes, another started over, and the meal came late: mannskapshot.py)
+  if (ctx.kokk){ const M = mealState(), ck = M.cook && P.find(p => p.c && p.c.id === M.cook.id && !p.st && pTired(p) < 0.85); if (ck) put(ck, 'kokk', 'cook'); }
   // the work waiting at each station, in one person's minutes, and the crew's own jobs on the gear
   const left = {sloy:ctx.gutKg / gutPace(), is:ctx.iceKg / DECK.ice, blogg:ctx.blogg ? 30 : 0, haling:ctx.haling && ctx.gk !== 'teine' ? 20 : 0, sort:ctx.sort ? 10 : 0};
   const jobs = jobsOpen(as), jn = new Map(jobs.map(j => [j, 0]));
@@ -241,9 +244,9 @@ function workAssign(as){
   for (const p of free()) put(p, 'pause', 'nowork');
   // fish waiting and nobody at it (all on a break): the least tired goes, unless everyone is worn out
   for (const k of ['sloy', 'is']) if (ctx[k] && !cnt(k) && left[k] > 0.01 && (k !== 'is' || iceOpen())){ const q = P.filter(p => p.st === 'pause' && pTired(p) < 0.85).sort((a, b) => pTired(a) - pTired(b))[0]; if (q) put(q, k, 'need'); }
-  // a meal is due: the best cook among those on a break, else one who jigs or works on the gear (they stop for it), if they can cook (3 or more)
-  if (ctx.kokk && !cnt('kokk')){ const ok = p => p.c && p.c.attr.kokk >= MEAL.ok, by = (a, b) => b.c.attr.kokk - a.c.attr.kokk;
-    const q = P.filter(p => p.st === 'pause' && ok(p)).sort(by)[0] || P.filter(p => ok(p) && (p.st === 'fiske' || p.jw)).sort(by)[0];
+  // a meal is due: the best cook among those awake on a break, else one who jigs or works on the gear (they stop for it), however well
+  // they cook (Ø8b M2: before only 3 or more, and with nobody that good it was dry bread; 14-crewlife.js cookPick)
+  if (ctx.kokk && !cnt('kokk')){ const q = cookPick(P);
     if (q){ if (q.jw){ jn.set(q.jw, jn.get(q.jw) - 1); q.jw = null; } put(q, 'kokk', 'cook'); } }
   // stopped to gut: everyone free goes on deck, as long as there is room at the table and the tub
   if (ctx.stop) for (const p of P) if ((p.st === 'pause' || (alone && p.st === 'haling')) && pTired(p) < 0.85 && (ctx.sloy || ctx.is)){ const k = ctx.sloy && room('sloy') ? 'sloy' : ctx.is && room('is') && iceOpen() ? 'is' : null; if (k) put(p, k, 'stop'); }
