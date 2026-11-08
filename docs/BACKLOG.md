@@ -4,6 +4,13 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
+- **Målingen etter IAB/MRC 2.0 (steg 66) bygd 08.11.2026** (Jonas' økt, grenen `ccr-5c931049-sj9wgt`; `docs/systemer/handel-og-steder.md`, «Målingen etter IAB/MRC 2.0»; mediekortet del 4). Det som er antatt, svakt eller ikke gjort:
+  - **Skodderegelen slår ikke inn ennå:** `visibility` går aldri under 1,2 km, og bannerne måles innen 150 m. Regelen står og kommer til å virke når været får tettere skodde (eller havskodde).
+  - **Natt er sola under −6°**, fordi banneret tegnes uten lampelys (`TEX_FS` tar ikke `pLit`). Lyser vi bannerne opp med flomlysene over kaia, kan de telles om natta også, men da endres bildet (`signshot`). Mørkeste dag: Bergen 7,75 t, Finnsnes 4,75 t, Bodø 5,75 t, Hammerfest 3,5 t med telling.
+  - **UI-et som skjuling** ser bare det som tar imot berøring (`elementFromPoint`); et vindu med `pointer-events: none` som likevel dekker bildet, regnes ikke som skjuling. Midten av hver celle, ikke hele rektangelet.
+  - **Inaktivitetsgrensen på to minutter er et anslag**, ikke målt mot pausene i trakten (IAB 3.1.5.3 vil ha den empirisk begrunnet). Ingen IVT-filtrering utover samtykket.
+  - **Den endelige teksten (august 2022) er ikke lest**, bare utkastet fra juni 2022.
+  - **Ikke rørt:** `SIGNV.oq` og `SIGNV.ui` vokser med én oppføring per banner som har vært innen 150 m i sida (lite, men uten tak).
 - **UI 2, U2-7 (skuffen og sidene) bygd og rullet ut 08.11.2026 i 869507fb** (Jonas' økt, grenen `ccr-b4ccfe0e-t6qjnp`; `docs/systemer/ui-og-telefon.md`, «UI 2, U2-7»): ett ark for alle sidene i stående med stripa over, Mannskap med én hovedknapp per person og den andre bak ⋯. Antatt: hvilken post som er hovedknappen (om bord styrmann, ellers skipper) er valgt i økta; minikartet er borte mens skuffen er åpen. Ikke sett over 3D-bildet (ingen GPU). Neste i UI 2: U2-8 Nettbrett og PC arver.
 - **Ø8b S0 (full last på første tur, V3 C) bygd og rullet ut 08.11.2026 i ffd076c1** (Jonas' økt, grenen `ccr-e9f46ad4-wipgu7`; `docs/systemer/opning-og-veiledning.md`, «Ø8b S0»). Det som står igjen eller er antatt:
   - **Sluttseddelen og dekksdagboka sier samme N** (Jonas' valg A 08.11.2026): `portSlip` kaller `tutNormKg(ls)` etter at Ø12 C var ute; med den gamle formelen ville seddelen sagt 120 der begge nå sier 80 ved Gisundet.
@@ -613,7 +620,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - `oppdrag()` i `ui/phone/02-havn-last-agn-ordre.js` (linje 33, `salg('best')`) kalles ikke lenger: bestillingene tas i dokka (Bygd, Oppdrag), og Salgslaget har ikke fanen. Funnet i Ø2 05.11.2026 da `ordtest` ble skrevet om.
 
 - **M9 står igjen** (03.11.2026): hjemhavn per fylke i mediekortet (nå per landsdel), og bilder av formatene i mediekortet (tas nå for hånd fra demobygget).
-- **M7 og M8 står igjen** (02.11.2026): sponsede design i Malerverkstedet, et flagg som vaier (nå en stiv plate), CSV-import av meglerens oppføringer (`tools/broker/import.py`), og at byggene eksporteres med `anchors.sign` (står i skriptene; bpy 4.5.4 finnes ikke for Python 3.13 her). IAB-tersklene er sjekket mot IAB UK og AdExchanger, men selve retningslinjen er ikke lest (iab.com og mediaratingcouncil.org er stengt herfra); Jonas laster ned PDF-en og sjekker før vi selger på tallene.
+- **M7 og M8 står igjen** (02.11.2026): sponsede design i Malerverkstedet, et flagg som vaier (nå en stiv plate), CSV-import av meglerens oppføringer (`tools/broker/import.py`), og at byggene eksporteres med `anchors.sign` (står i skriptene; bpy 4.5.4 finnes ikke for Python 3.13 her). IAB-tersklene er sjekket mot IAB UK og AdExchanger, og utkastet fra juni 2022 ble lest 07.11.2026; målingen og rapporten etter det ble bygd i steg 66 08.11.2026 (over).
 - **M5 står igjen** (02.11.2026): navnet malt og flagget heist i selve 3D-modellen (nå et kort over bildet).
 - **fleet2test ventet fast 1,8 s etter reload** og ble rød da oppstarten ble tregere (lasteskjermen); venter nå på `S.fleet` (02.11.2026).
 
