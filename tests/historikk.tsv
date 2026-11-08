@@ -1204,3 +1204,6 @@
 2026-11-08 18:24	ccr-864d9913-u29rne	3eb0e01+	driftsplan2map	OK	13	lite	samtidig	
 2026-11-08 18:25	ccr-864d9913-u29rne	3eb0e01+	boottest	OK	28	lite	samtidig	
 2026-11-08 18:25	ccr-864d9913-u29rne	3eb0e01+	mig2test	OK	24	lite	samtidig	
+2026-11-08 18:25	ccr-864d9913-u29rne	99ac9d6	pushtest	OK	21	lite	samtidig	
+2026-11-08 18:25	ccr-864d9913-u29rne	99ac9d6	skiptest	OK	14	lite	samtidig	
+2026-11-08 18:25	ccr-864d9913-u29rne	99ac9d6	skipdrift	OK	18	lite	samtidig	
