@@ -43,10 +43,11 @@ function marksNear(kind, x, y, R){
 // fiskefeltene i landet og ikke være en fast sirkel»), so the grounds within 1.5 km of GROUNDS are no longer left out.
 //   feltData()              all the grounds: {i, x, y, n (name for the chart; '' when the source had only a position), nf (whole name),
 //                           r (size, km), g ('a' active, 'p' passive, 'b' both, '-' none), k ('f', 'g', 'o'),
-//                           l ([[species, gear bits after FELT_GEAR, month bits with 1 << 0 for January], ...]; [] when none the game knows)}
+//                           l ([[species, gear bits after FELT.gear (meta.gear: GEAR of tools/npc/fiske.py), month bits with 1 << 0 for January], ...]; [] when none the game knows)}
 //   feltIn(x0, y0, x1, y1)  the named fishing grounds (k = f) in a box (km), the largest first; the spawning and nursery grounds come to
 //                           the chart with F4
-//   feltShape(f)            the ground's rings in km ([[x, y, x, y, ...], ...]; [] for g and o), or null while the file has not come
+//   feltShape(f)            the ground's rings in km ([Float64Array [x, y, x, y, ...], ...]; [] for g and o), null while the file has not
+//                           come, false for good when it did not come or does not match felt.json (the ground's point and r then)
 const FELT_T = /*@text(data/felt.json)*/null;
 const FELT = {d:null, cell:10, grid:null, sp:[], gear:[], n:0, sb:0, S:null};
 function feltData(){
@@ -71,7 +72,7 @@ function feltIn(x0, y0, x1, y1){
 }
 // the shapes (felt-s.b64, tools/npc/felt.py: varints, zigzag for the signed): a data element the build takes out of the page as
 // data/felt-s-<hash>.bin, fetched at boot as the models (ui/11-boot.js, DATAB), base64 in the element in a one-file build. Decoded the
-// first time a shape is asked for; a file that does not match felt.json (its length or its count) gives no shapes, never wrong ones.
+// first time a shape is asked for; a file that does not match felt.json (its length or its count) gives no shapes (false), never wrong ones.
 function feltShapesFrom(bytes){
   if (!feltData() || !bytes || (FELT.sb && bytes.length !== FELT.sb)) return false;
   let o = 0; const rd = () => { let v = 0, m = 1, b; do { b = bytes[o++]; v += (b & 127) * m; m *= 128; } while (b & 128); return v; }, zs = v => (v % 2 ? -(v + 1) / 2 : v / 2);
@@ -90,8 +91,10 @@ function feltShape(f){
     let b = null;
     if (typeof DATAB !== 'undefined' && DATAB.has('felt-s')) b = DATAB.get('felt-s');
     else if (typeof document !== 'undefined'){ const el = document.getElementById('felt-s'); if (el && !el.dataset.src && el.textContent.trim()) b = b64bytes(el.textContent.trim()); }
-    if (!b) return null;                    // (not come yet: asked again next time)
+    if (!b){                                // not come yet (null: asked again next time), or never (the fetch failed in four tries: false)
+      if (typeof MODELS !== 'undefined' && MODELS.failed && MODELS.failed.includes('felt-s')) FELT.S = false;
+      return FELT.S === false ? false : null; }
     FELT.S = feltShapesFrom(b) || false; if (typeof DATAB !== 'undefined') DATAB.delete('felt-s');
   }
-  return FELT.S ? FELT.S[f.i] || [] : null;
+  return FELT.S ? FELT.S[f.i] || [] : false;
 }

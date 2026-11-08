@@ -35,6 +35,9 @@ export default function (t){
   const word = D.filter(f => /(^|[\s-])(?![IVX]+\b)[A-ZÆØÅ]{4,}/.test(f.nf)), low = D.filter(f => f.n && f.n[0] !== f.n[0].toUpperCase());
   t.ok(pos.length === 0 && caps.length === 0 && word.length === 0 && low.length === 0,
     `navnene vasket: ${pos.length} med koordinater, ${caps.length} med bare store bokstaver, ${word.length} med et ord i store bokstaver, ${low.length} med liten forbokstav${caps.concat(word, low).slice(0, 3).map(f => ' «' + f.nf + '»').join('')}`);
+  // (the compass points and Roman numerals stay in capitals: «Karmøy SV», not «Karmøy Sv»)
+  const cmp = D.filter(f => /(^|[\s(.-])(Nø|Nv|Sø|Sv|Ssv|Ssø|Nnv|Nnø|Ii|Iii|Iv)(?=$|[\s).,-])/.test(f.nf));
+  t.eq(cmp.length, 0, `kompasspunkt og romertall står med store bokstaver (${cmp.slice(0, 4).map(f => '«' + f.nf + '»').join(' ')})`);
   const unnamed = by('f').filter(f => !f.n).length;
   t.ok(unnamed > 0 && unnamed < 10, `${unnamed} fiskeplasser hadde bare en posisjon for navn: de står uten navn, som vekt`);
   const long = D.filter(f => f.n.length > 29 || (f.n !== f.nf && !f.n.endsWith('…') && f.n.includes('/'))).length, cut = D.filter(f => f.n !== f.nf).length;
@@ -52,7 +55,8 @@ export default function (t){
       if (R.some(r => inRing(r, f.x, f.y))) inside++;
       let d = 1e9; for (const r of R) for (let i = 0; i < r.length; i += 2) d = Math.min(d, Math.hypot(r[i] - f.x, r[i + 1] - f.y)); if (d < Math.max(2, f.r * 2)) near++; }
     t.ok(has > 0.99 * nf && inside > 0.97 * has && near > 0.995 * has && other === 0, `formene ligger rundt punktene: ${has} av ${nf} fiskeplasser har form, punktet inne i formen på ${inside}, nær den på ${near}; gyte- og oppvekstområdene ingen (${other})`);
-    FELT.S = S; const h = D.find(f => f.n === 'Ytre Mefjorden Sør'); t.ok(h && K.feltShape(h).length > 0, 'feltShape gir formen når fila er lest'); FELT.S = null;
+    FELT.S = S; const h = D.find(f => f.n === 'Ytre Mefjorden Sør'); t.ok(h && K.feltShape(h).length > 0, 'feltShape gir formen når fila er lest');
+    FELT.S = false; t.eq(K.feltShape(h), false, 'og false for godt når fila ikke passer (ikke null, som betyr at den er på vei)'); FELT.S = null;
   }
   // 5. Senja's grounds as all the others (Jonas 08.11.2026): the grounds by GROUNDS are no longer left out
   const nearG = by('f').filter(f => K.GROUNDS.some(g => Math.hypot(g.p.x - f.x, g.p.y - f.y) < 1.5));

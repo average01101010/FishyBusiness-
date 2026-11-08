@@ -141,7 +141,7 @@ THE COAST AS THE TRUTH FOR LAND AND SEA (04.10.2026; the user: «Jeg vil ha bort
   - 137 `coastBuildHere(pk)`
   - 138 `coastEnsure(pk)`
 
-## `src/js/core/01e-marks.js` (98 linjer)
+## `src/js/core/01e-marks.js` (101 linjer)
 
 THE SEA MARKS ALONG THE WHOLE COAST (05.10.2026; Jonas: «Sjømerker må ordnes langs hele kysten. Alt senja har, må resten av
 
@@ -150,10 +150,10 @@ THE SEA MARKS ALONG THE WHOLE COAST (05.10.2026; Jonas: «Sjømerker må ordnes 
   - 21 `marksRocksIn(x0, y0, x1, y1)`
   - 26 `marksNear(kind, x, y, R)`
 - **34** THE NAMES OF THE FISHING GROUNDS ALONG THE WHOLE COAST (B2 of docs/planer/bestand-og-flaate.md, 01.11.2026)
-  - 52 `feltData()`
-  - 66 `feltIn(x0, y0, x1, y1)`
-  - 75 `feltShapesFrom(bytes)`
-  - 88 `feltShape(f)`
+  - 53 `feltData()`
+  - 67 `feltIn(x0, y0, x1, y1)`
+  - 76 `feltShapesFrom(bytes)`
+  - 89 `feltShape(f)`
 
 ## `src/js/core/02-species-gear.js` (400 linjer)
 

@@ -109,8 +109,13 @@ COMPASS = re.compile(r'^(?:[NSØV]{1,3}|NNØ|NNV|SSØ|SSV|[IVX]+)$')
 WASH = {'entity': 0, 'caps': 0, 'stray': 0, 'lower': 0, 'underscore': 0, 'position': 0, 'slash': 0, 'long': 0}
 
 def cap(w):
-    """a word in capitals to ordinary writing, each part of a hyphenated word with a capital first letter"""
-    return '-'.join(x[:1].upper() + x[1:].lower() for x in w.split('-'))
+    """a word in capitals to ordinary writing, each part of a hyphenated word with a capital first letter (the first letter, also after
+    a bracket or a quote); the compass points and Roman numerals stay as they are («SV», «III»)"""
+    def one(x):
+        if COMPASS.match(re.sub(r'[^A-Za-zÆØÅæøå]', '', x) or '-'): return x
+        x = x.lower(); m = re.search(r'[a-zæøåäöüé]', x)
+        return x[:m.start()] + x[m.start()].upper() + x[m.start() + 1:] if m else x
+    return '-'.join(one(x) for x in w.split('-'))
 
 def wash(n):
     """the washed name and the name for the chart (docs/planer/fangstfelt.md 2.6); None when nothing is left of it"""
@@ -127,13 +132,15 @@ def wash(n):
     # letters; in a mixed name only the words of three or more capitals (not the compass points and Roman numerals) are changed
     letters = re.sub(r'[^A-Za-zÆØÅæøåÄÖÜäöüÉéÈè]', '', n)
     if letters and letters.upper() == letters and len(letters) >= 3:
-        ws = n.split(' '); n = ' '.join(w.lower() if (i and w.lower() in SMALL and w.lower() not in ('nord', 'sør', 'øst', 'vest')) else cap(w) for i, w in enumerate(ws))
+        ws = n.split(' '); n = ' '.join(w.lower() if (i and w.lower().strip('.,') in SMALL and w.lower() not in ('nord', 'sør', 'øst', 'vest')) else cap(w) for i, w in enumerate(ws))
         WASH['caps'] += 1
     else:
         ws = n.split(' '); o = []
         for w in ws:
             core = re.sub(r'[^A-Za-zÆØÅæøå]', '', w)
-            o.append(cap(w) if len(core) >= 3 and core.upper() == core and not COMPASS.match(core) else w)
+            # (a compass point the source wrote in small letters, «Sø. av Hjelmsøya», in capitals as the others)
+            o.append(cap(w) if len(core) >= 3 and core.upper() == core and not COMPASS.match(core) else
+                     w.upper() if re.fullmatch(r'(?:Nø|Nv|Sø|Sv|Nnø|Nnv|Ssø|Ssv)\.?', w) else w)
         if o != ws: WASH['caps'] += 1; n = ' '.join(o)
     # a stray small letter before the capital («lKråksundet»), and a small first letter («taran»)
     if re.match(r'^[a-zæøå][A-ZÆØÅ][a-zæøå]', n): n = n[1:]; WASH['stray'] += 1
