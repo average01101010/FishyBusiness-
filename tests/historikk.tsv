@@ -1516,3 +1516,7 @@
 2026-11-08 23:12	claude/o8b-s2-turens-linje-c70okw	c1d5d67	slidertest	OK	15	lite	samtidig	
 2026-11-08 23:12	claude/o8b-s2-turens-linje-c70okw	c1d5d67	sidetab	OK	12	lite	samtidig	
 2026-11-08 23:12	claude/o8b-s2-turens-linje-c70okw	c1d5d67	fartstidtest	FEIL	15	lite	samtidig	FEIL the phone's home shows the years and days, and the Merker app explains how sea time is earned  "06:02\nman 1. mar\nNØ 5 m/s · −1 °C\n15 000 kr\nNeste mål: 
+2026-11-08 23:13	claude/o8b-s2-turens-linje-c70okw	133aaad	docktest	OK	61	lite	samtidig	
+2026-11-08 23:13	claude/o8b-s2-turens-linje-c70okw	133aaad	boottest	OK	24	lite	samtidig	
+2026-11-08 23:13	claude/o8b-s2-turens-linje-c70okw	133aaad	worldtest	OK	17	lite	samtidig	
+2026-11-08 23:20	claude/o8b-s2-turens-linje-c70okw	133aaad	vectest	OK	462	3d	alene	
