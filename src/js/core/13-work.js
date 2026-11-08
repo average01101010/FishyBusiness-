@@ -41,8 +41,12 @@ const WORK_ALL = WORK_ST.concat(['egn', 'strip', 'mend', 'stell', 'last']);   //
 // the stations whose work is heavy, and how heavy: a tired person leaves them to the others first
 const HEAVY_ST = {haling:1, last:1, sloy:0.5, is:0.6, fiske:0.4, sort:0.3, blogg:0.3, egn:0.2, strip:0.2, mend:0.2, stell:0.2};
 // the catch is bled, gutted and iced, the trade's way; S.settings.gut and .ice set to false leave it round or uniced (the tests)
-// (H3b) the snow crab vessel's factory always splits its crab into clusters (10e-krabbefabrikk.js), whatever the setting for the fish
-function catchGut(){ return S.settings.gut !== false || snoVessel(); }
+// (H3b) the snow crab vessel's factory always splits its crab into clusters (10e-krabbefabrikk.js), whatever the setting for the fish.
+// The first trip lands round (Jonas 08.11.2026: «Hva om nye brukere som åpner spillet ikke sløyer fisken første turen, men heller leverer
+// fisken rund?»): alone, gutting stopped the jigging some three times and added about 35 game minutes (6 real) to it. The plant guts it;
+// the price per round kilo is the same, and the liver, the roe and the gutting charge are what gutting aboard gives (ui/08-actions.js sell)
+const tutRound = () => !!(S.tut && S.tut.v === 2);   // (tutOn in ui/07b-first-trip.js, read here so the core can be tested alone)
+function catchGut(){ return (S.settings.gut !== false && !tutRound()) || snoVessel(); }
 function catchIce(){ return S.settings.ice !== false; }
 // ---- the mate (Jonas 23.10.2026: «vi må kunne definere 1 fra mannskapet til å være styrmann ombord»): one of the crew, the same one
 // who with the skipper runs the boat on the operations plan when you are not aboard (06d-drift.js); at the helm and in charge on deck when you sleep or are not aboard

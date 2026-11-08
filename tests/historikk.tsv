@@ -1291,6 +1291,14 @@
 2026-11-08 18:10	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2test	FEIL	79	lite	alene	FEIL S5 the tired crew end the day: no more jigging, the line is still hauled when due (within 3 h), then in [[['D1 13:19', 'Mannskapet er slitne. Avslutter juk
 2026-11-08 18:11	ccr-2040aa61-qgig5a	bba06b81+	docktest	OK	58	lite	alene	
 2026-11-08 18:12	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2test	FEIL	82	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
+2026-11-08 18:34	ccr-824d1172-0cmxu3	6aa39b2+	admintest	OK	7	lite	samtidig	
+2026-11-08 18:34	ccr-824d1172-0cmxu3	6aa39b2+	plantsaytest	OK	6	lite	samtidig	
+2026-11-08 18:35	ccr-824d1172-0cmxu3	6aa39b2+	trip2	OK	41	lite	samtidig	
+2026-11-08 18:35	ccr-824d1172-0cmxu3	6aa39b2+	worktest	FEIL	23	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 18:35	ccr-824d1172-0cmxu3	6aa39b2+	decktest	OK	17	lite	samtidig	
+2026-11-08 18:35	ccr-824d1172-0cmxu3	fcc3dca	hbtest	OK	14	lite	samtidig	
+2026-11-08 18:53	ccr-824d1172-0cmxu3	35a8a0c	tut	OK	1087	lite	alene	
+2026-11-08 18:55	ccr-824d1172-0cmxu3	46d3658	landtest	OK	91	3d	alene	
 2026-11-08 18:43	ccr-6e53b4c0-qs2mg1	62af7fb	boottest	OK	17	lite	alene	
 2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	boottest	OK	29	lite	samtidig	
 2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	mannskapshot	OK	16	lite	samtidig	
@@ -1314,3 +1322,8 @@
 2026-11-08 19:20	ccr-864d9913-u29rne	5fc2599	skipdrift	OK	19	lite	samtidig	
 2026-11-08 19:20	ccr-864d9913-u29rne	5fc2599	skiptest	OK	14	lite	samtidig	
 2026-11-08 19:21	ccr-864d9913-u29rne	5fc2599	driftsplan2test	OK	90	lite	alene	
+2026-11-08 19:18	ccr-824d1172-0cmxu3	56f3499+	decktest	OK	15	lite	samtidig	
+2026-11-08 19:18	ccr-824d1172-0cmxu3	56f3499+	hbtest	OK	16	lite	samtidig	
+2026-11-08 19:18	ccr-824d1172-0cmxu3	56f3499+	plantsaytest	OK	5	lite	samtidig	
+2026-11-08 19:19	ccr-824d1172-0cmxu3	56f3499+	trip2	OK	41	lite	samtidig	
+2026-11-08 19:19	ccr-824d1172-0cmxu3	56f3499+	worktest	FEIL	24	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
