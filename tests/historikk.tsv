@@ -1365,3 +1365,6 @@
 2026-11-08 19:31	ccr-c27822e7-1y3qn3	30cd81b	mobtest	OK	202	lite	samtidig	
 2026-11-08 19:31	ccr-c27822e7-1y3qn3	30cd81b	towtest	OK	11	lite	samtidig	
 2026-11-08 21:23	claude/h3d2-snokrabbe-animasjoner-zn39n5	f8c7d83+	docktest	OK	61	lite	alene	
+2026-11-08 23:00	claude/h3d2-snokrabbe-animasjoner-zn39n5	7660e3e	haultest	OK	229	3d	alene	
+2026-11-08 23:12	claude/h3d2-snokrabbe-animasjoner-zn39n5	7660e3e	potshot	OK	713	3d	alene	
+2026-11-08 23:12	claude/h3d2-snokrabbe-animasjoner-zn39n5	7660e3e	dbg23o	OK	31	3d	alene	
