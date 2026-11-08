@@ -1280,3 +1280,31 @@
 2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	hbtest	OK	15	lite	samtidig	
 2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	sleeptest	OK	11	lite	samtidig	
 2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	bunktest	OK	11	lite	samtidig	
+2026-11-08 18:34	ccr-c27822e7-1y3qn3	cfd5684+	mobtest	OK	202	lite	alene	
+2026-11-08 18:39	ccr-c27822e7-1y3qn3	cfd5684+	mobtest	OK	202	lite	alene	
+2026-11-08 18:40	ccr-c27822e7-1y3qn3	cfd5684+	geartest	OK	30	lite	samtidig	
+2026-11-08 18:40	ccr-c27822e7-1y3qn3	cfd5684+	autolinetest	OK	8	lite	samtidig	
+2026-11-08 18:40	ccr-c27822e7-1y3qn3	cfd5684+	snokrabbetest	OK	11	lite	samtidig	
+2026-11-08 18:40	ccr-c27822e7-1y3qn3	cfd5684+	booktest	OK	27	lite	samtidig	
+2026-11-08 18:40	ccr-c27822e7-1y3qn3	cfd5684+	bktest	OK	6	lite	samtidig	
+2026-11-08 18:40	ccr-c27822e7-1y3qn3	cfd5684+	caretest	OK	14	lite	samtidig	
+2026-11-08 18:41	ccr-c27822e7-1y3qn3	cfd5684+	jigalongtest	OK	14	lite	samtidig	
+2026-11-08 18:41	ccr-c27822e7-1y3qn3	cfd5684+	opptest	OK	62	lite	samtidig	
+2026-11-08 18:41	ccr-c27822e7-1y3qn3	cfd5684+	haillplass	OK	6	lite	samtidig	
+2026-11-08 18:41	ccr-c27822e7-1y3qn3	cfd5684+	turtest	OK	15	lite	samtidig	
+2026-11-08 18:41	ccr-c27822e7-1y3qn3	cfd5684+	autonavtest	FEIL	8	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 124, 'cell': 0.2, 'maxSlice': 8.8, 'mended': 0, 'b
+2026-11-08 18:42	ccr-c27822e7-1y3qn3	cfd5684+	trip2	OK	35	lite	samtidig	
+2026-11-08 18:42	ccr-c27822e7-1y3qn3	cfd5684+	merketest	OK	15	lite	samtidig	
+2026-11-08 18:42	ccr-c27822e7-1y3qn3	cfd5684+	fartstidtest	FEIL	17	lite	samtidig	FEIL the phone's home shows the years and days, and the Merker app explains how sea time is earned  "06:03\nman 1. mar\nNØ 5 m/s · −1 °C\n15 000 kr\nNeste mål: 
+2026-11-08 18:42	ccr-c27822e7-1y3qn3	cfd5684+	posttest	OK	27	lite	samtidig	
+2026-11-08 18:42	ccr-c27822e7-1y3qn3	cfd5684+	lagtest	OK	8	lite	samtidig	
+2026-11-08 18:42	ccr-c27822e7-1y3qn3	055fe1d	krabbefabrikktest	OK	18	lite	samtidig	
+2026-11-08 18:43	ccr-c27822e7-1y3qn3	055fe1d	shoptest	OK	40	lite	samtidig	
+2026-11-08 18:43	ccr-c27822e7-1y3qn3	055fe1d	towtest	OK	20	lite	samtidig	
+2026-11-08 18:44	ccr-c27822e7-1y3qn3	055fe1d	docktest	OK	61	lite	samtidig	
+2026-11-08 18:44	ccr-c27822e7-1y3qn3	055fe1d	seaworktest	OK	6	lite	samtidig	
+2026-11-08 18:46	ccr-c27822e7-1y3qn3	055fe1d	mobtest	OK	202	lite	samtidig	
+2026-11-08 19:11	ccr-c27822e7-1y3qn3	e3898ef+	sqltest	FEIL	26	lite	alene	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-08 19:16	ccr-c27822e7-1y3qn3	b6f78e0	boottest	OK	25	lite	samtidig	
+2026-11-08 19:17	ccr-c27822e7-1y3qn3	b6f78e0	docktest	OK	59	lite	samtidig	
+2026-11-08 19:19	ccr-c27822e7-1y3qn3	b6f78e0	mobtest	OK	201	lite	samtidig	
