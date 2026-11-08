@@ -235,7 +235,10 @@
     'return iw;}';
   const FOAM_VS = 'attribute vec2 aXZ;varying vec2 vUV;void main(){vUV=aXZ*0.5+0.5;gl_Position=vec4(aXZ,0.0,1.0);}';
   const FOAM_FS = 'precision highp float;uniform sampler2D uPrev;uniform vec2 uShift;uniform vec2 uShiftG;uniform vec2 uFoamG;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform float uN;uniform vec2 uRebase;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uTime;uniform vec2 uNFD;uniform float uWind;uniform vec2 uWindDir;uniform vec2 uShiftC;' +
-    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;varying vec2 vUV;' + NOISE + SEA_STATE + WAKE_GLSL + FETCHG + WCAPS +
+    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;uniform vec4 uSp0;uniform vec4 uSp1;uniform vec4 uSp2;uniform vec4 uSp3;varying vec2 vUV;' + NOISE + SEA_STATE + WAKE_GLSL + FETCHG + WCAPS +
+    // the foam where a slam and the spray land (F3b, foamSplash in 14-sea.js): a patch (x, z in the wake's frame, radius, amount), its
+    // edge ragged and its inside clumped as the wash's
+    'float splF(vec2 Mg,vec2 Pb,vec4 s){if(s.w<=0.0)return 0.0;float d=length(Mg-s.xy)*(0.8+0.4*ns(Pb*0.7+vec2(3.0,1.0)));return s.w*(1.0-smoothstep(s.z*0.5,s.z,d))*(0.6+0.4*ns(Pb*1.1+vec2(8.0,2.0)));}' +
     // the hull's half width a metres forward of her origin: full in the body, drawn in over the forebody to the stem, a little to the transom
     HULLFOAM + 'float hullW(float a){return hullWh(a,uHull);}' +
     'void main(){' +
@@ -258,6 +261,8 @@
     'float arm=uWk3.y*smoothstep(0.45,0.9,wh/max(uWk1.y,0.02))*(1.0-smoothstep(0.0,lam,s))*step(0.0,s)*br;' +
     'float bow=uWk3.x*smoothstep(0.35,0.85,wh/max(uWk2.y,0.02))*step(-uWk2.x-0.5,s)*step(s,0.2)*br;iw=max(iw,max(arm,bow)*0.9);}' +
     '}' +
+    // --- where a slam and the spray land (F3b): four patches, fixed names ---
+    'iw=max(iw,max(max(splF(Mg,Pb,uSp0),splF(Mg,Pb,uSp1)),max(splF(Mg,Pb,uSp2),splF(Mg,Pb,uSp3))));' +
     // --- the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
     // threshold for the breaking crests' share of Monahan's cover; laid here, they stay behind the crest as it runs on and drift ---
     'if(uWind>6.0){vec4 S=seaAt(P);float px=uFoamRect.w/uN;vec3 N=vec3(0.0,1.0,0.0);float y=0.0;float sa=1e-6;float lost=0.0;float Qw=qOf(S);float jxx=0.0;float jxz=0.0;float jtr=0.0;float jv=1e-8;float jsc=0.0;float jsv=1e-8;vec2 w2=uWindDir;vec2 wp=vec2(-w2.y,w2.x);' +

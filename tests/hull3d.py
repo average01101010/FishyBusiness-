@@ -11,7 +11,9 @@ the ground had a metre of the April swell with the wind at 0.3 m/s). Checks:
   4. in 6 m head sea at 8.5 knots the sjark pitches and slams (at least twice in four minutes), and the slams are in S.incidents;
   5. the skiff at 18 knots in a short, steep sea (10 m/s against her) slams; in calm water at the same speed she never does;
   6. nothing goes NaN, no page errors; and what the sea at the sections costs a frame (G3._debug.bv.hsea.ms).
-Pictures (tests/out/hull3d_*.png, both formats): the sjark in head sea, her stern in a following sea, and the slam's spray."""
+  7. (F3b) the slam leaves foam in the foam map, where it beats the water round the forefoot and where its sheet lands.
+Pictures (tests/out/hull3d_*.png, both formats): the sjark in head sea, her stern in a following sea, the slam's spray, and the foam
+it leaves (skum)."""
 import asyncio, json, math, os
 from playwright.async_api import async_playwright
 from _env import GAME, boot
@@ -83,6 +85,17 @@ async def main():
         R['skiffChop'] = await pg.evaluate(RUN, {'type': 'skiff', 'U': 10, 'd': 315, 'rel': 180, 'kn': 18, 'T': 90, 'force': True})
         R['skiffCalm'] = await pg.evaluate(RUN, {'type': 'skiff', 'calm': True, 'U': 0.3, 'd': 315, 'rel': 180, 'kn': 18, 'T': 30, 'force': True})
         R['skiffOld'] = await pg.evaluate(RUN, {'type': 'skiff', 'U': 10, 'd': 315, 'rel': 180, 'kn': 18, 'T': 90, 'force': False})
+        # 7. (F3b) the foam where the slam lands: the sjark lying still in the 6 m sea, the foam map's trace (FOAM.log: texels with the
+        # wake's foam over a quarter in 38 x 38 m round her) before and after a slam; the slam's beaten water and its sheet where it falls
+        # come into the map as the wash does (FOAM.spn counts the drops queued), and lie there seconds after
+        R['slamFoam'] = await pg.evaluate("""async (U) => { const D = G3._debug, F = D.foam, b = S.boat, wait = ms => new Promise(r => setTimeout(r, ms));
+          if (b.type !== 'sjark'){ b.type = 'sjark'; applyVessel(); G3.vesselChanged(); }
+          b.status = 'idle'; b.port = null; S.plan = null; b.v = 0; const g = GROUNDS[0].p; b.pos = {x:g.x, y:g.y}; WX_FORCE = {w:U, d:315}; D.WV.init = false; D.bv.hsea.on = true; b.heading = D.WV.dir + Math.PI; D.bv.init = false;
+          await wait(4000); F.log = []; await wait(2500); const pre = Math.max(0, ...F.log.map(r => r[5])), n0 = F.spn;
+          D.bv.hsea.slam = {t:performance.now() / 1000, s:2.4}; F.log = [];
+          // (the frame's dt is at most 0.1 s, and SwiftShader draws one every second or two: the sheet takes some ten frames to fall)
+          const T0 = performance.now(); while (F.spn - n0 < 60 && performance.now() - T0 < 180000) await wait(2000); await wait(4000); const L = F.log; F.log = null;
+          return {on:F.ok, pre, post:Math.max(0, ...L.map(r => r[5])), last:L.length ? L[L.length - 1][5] : 0, frames:L.length, drops:F.spn - n0, s:Math.round((performance.now() - T0) / 1000)}; }""", u6['U'])
         print(json.dumps(R, ensure_ascii=False))
         # the pictures: the sjark in head sea (from the bow quarter), her stern in a following sea, and the slam's spray; both formats.
         # SwiftShader draws a frame every second or two, and the waves run on the page's clock while the hull steps at most 0.1 s a frame,
@@ -90,7 +103,7 @@ async def main():
         # the work that runs until the clock has moved, ssStep): a frame of 1-2.5 s is 40-100 ms of the game's, and the hull gets all of it
         await pg.evaluate("""() => { if (window.__vclk) return; const pn = performance.now.bind(performance), r0 = pn(); performance.now = () => r0 + (pn() - r0) * 0.04; window.__vclk = true; }""")
         shots = []
-        for name, rel, slam in (('motsjo', 180, False), ('medsjo', 0, False), ('slag', 180, True)):
+        for name, rel, slam in (('motsjo', 180, False), ('medsjo', 0, False), ('slag', 180, True), ('skum', 180, 'skum')):
             for fmt, (w, h) in (('liggende', (1280, 800)), ('staaende', (800, 1280))):
                 await pg.set_viewport_size({'width': w, 'height': h})
                 await pg.evaluate("""([U, rel]) => { const D = G3._debug, b = S.boat; if (b.type !== 'sjark'){ b.type = 'sjark'; applyVessel(); G3.vesselChanged(); }
@@ -101,7 +114,8 @@ async def main():
                 await pg.wait_for_function("performance.now() - window.__p0 > 4000", timeout=900000, polling=1000)
                 if slam:
                     await pg.evaluate("() => { G3._debug.bv.hsea.slam = {t:performance.now() / 1000, s:2.4}; window.__p0 = performance.now(); }")
-                    await pg.wait_for_function("performance.now() - window.__p0 > 250", timeout=300000, polling=200)
+                    # (F3b: «skum», the foam it leaves 2.5 s of the game's time after, the sheet fallen and lying in the water)
+                    await pg.wait_for_function("performance.now() - window.__p0 > %d" % (2500 if slam == 'skum' else 250), timeout=900000, polling=200)
                 await pg.evaluate("G3.hold(true)")
                 f = f'hull3d_{name}_{fmt}.png'; await pg.screenshot(path=f, timeout=300000); shots.append(f)
                 await pg.evaluate("G3.hold(false)")
@@ -113,6 +127,8 @@ async def main():
         print(ok(bO['roll'] > 0 and 0.7 < bN['roll'] / bO['roll'] < 1.3 and 0.6 < bN['heave'] / max(bO['heave'], 1e-3) < 1.4), 'in %.1f m beam sea the roll is the old roll and the heave about the old' % bN['hs'], {'roll': [bN['roll'], bO['roll']], 'heave': [bN['heave'], bO['heave']], 'bow-on roll': R['bowNew']['roll'], '19.10.2026': 'roll 10°, heave 1.0-1.2 m'})
         hN = R['headNew']
         print(ok(hN['slams'] >= 2 and hN['incSlam'] >= 1 and hN['pitch'] > 1), 'in %.1f m head sea at 8.5 kn the sjark pitches and slams (at least twice in four minutes), and the slams are in S.incidents' % hN['hs'], {'slams/4 min': hN['slams'], 'sea over the forecastle': hN['green'], 'pitch': [hN['pitch'], R['headOld']['pitch']], 'heave': [hN['heave'], R['headOld']['heave']], 'following': {'pitch': R['follow']['pitch'], 'slams': R['follow']['slams']}})
+        sf = R['slamFoam']
+        print(ok(sf['on'] and sf['drops'] > 20 and sf['post'] > sf['pre'] + 40 and sf['last'] > sf['pre'] + 20), 'the slam leaves foam in the foam map where it beats the water and where its sheet lands, and it lies there', sf)
         sC, s0 = R['skiffChop'], R['skiffCalm']
         print(ok(sC['slams'] >= 1 and s0['slams'] == 0), 'the skiff at 18 kn slams in a short steep sea (%.1f m), never in the still water of the harbour' % sC['hs'], {'slams/90 s': sC['slams'], 'calm': s0['slams'], 'pitch': [sC['pitch'], R['skiffOld']['pitch']]})
         print(ok(all(R[k]['fin'] for k in R if isinstance(R[k], dict) and 'fin' in R[k]) and not errs), 'nothing goes NaN, no page errors', errs[:3])

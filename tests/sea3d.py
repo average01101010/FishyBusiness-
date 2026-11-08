@@ -33,6 +33,13 @@ FOAM = """async (U) => {
   return {U, share:+(hit / n * 100 / kk).toFixed(2), crests:+(hit / n * 100).toFixed(2), jUnderHalf:+(jlo / Math.max(1, hit) * 100).toFixed(1), monahan:+(3.84e-4 * Math.pow(U, 3.41)).toFixed(2)};
 }"""
 
+# the spindrift's drops (F3b, driftSpray in 24-cinema.js, FOAM.sd): how many fly, how many of them were born where capAt says a crest
+# breaks, and the share of random points round the eye that break at a time a drop was born
+SPRAYC = """(() => { const D = G3._debug, F = D.foam, s = F.sd, U = D.env.wind; let a = 0, h = 0, rh = 0;
+  for (let i = 0; i < s.age.length; i++){ if (s.age[i] >= s.life[i]) continue; a++; const c = F.capAt(s.bx[i], s.bz[i], s.bt[i], 1, U); if (c.fv > c.th) h++; }
+  const e = D.eye, t = s.bt[s.n]; for (let k = 0; k < 400; k++){ const q = k * 2.3999, r = 8 + (k * 0.618 % 1) * 110, c = F.capAt(e[0] + Math.sin(q) * r, e[2] + Math.cos(q) * r, t, 1, U); if (c.fv > c.th) rh++; }
+  return {U:+U.toFixed(1), alive:a, fromCrest:h, random:+(rh / 400).toFixed(3), ms:+s.ms.toFixed(3)}; })()"""
+
 async def sheet(tiles, path, cols):
     ims = [Image.open(f).convert('RGB').resize((400, 250)) for f, _ in tiles]; rows = (len(ims) + cols - 1) // cols
     sh = Image.new('RGB', (cols * 400, rows * 250), 'white')
@@ -110,6 +117,17 @@ async def main():
         storm = await pg.evaluate("({drift:G3._debug.drift, fog:G3._debug.env.fogD})")
         R['air'] = {'calm': calm, 'storm': storm}
         print(ok(storm['drift'] > 60 and calm['drift'] == 0 and storm['fog'] > calm['fog'] * 1.5), 'spindrift flies in a storm and not in a fresh breeze, and the spray hazes the view')
+        # (F3b) the drops in the air are thrown from the crests that break: FOAM.capAt at each living drop's birth (where and when) says
+        # a crest breaks there, where random points round the eye break at the crests' share of Monahan's cover (some 25 % at 28 m/s);
+        # and from Beaufort 7: in 16 m/s crests throw drops, in 13 m/s none is tried
+        R['sprayCrest'] = sc = await pg.evaluate(SPRAYC)
+        print(ok(sc['alive'] > 10 and sc['fromCrest'] >= 0.95 * sc['alive'] and sc['random'] < 0.6), 'the spindrift in the air is thrown from the crests that break (FOAM.capAt at each drop\'s birth)', sc)
+        bf7 = {}
+        for U in (13, 16):
+            await pg.evaluate(f"WX_FORCE = {{w:{U}, d:315}}; G3._debug.WV.init = false; const s = G3._debug.foam.sd; s.tried = s.hit = 0;"); await pg.wait_for_timeout(8000)
+            bf7[U] = await pg.evaluate("(() => { const s = G3._debug.foam.sd; return {tried:s.tried, hit:s.hit, ms:+s.ms.toFixed(3)}; })()")
+        R['sprayBf7'] = bf7
+        print(ok(bf7[13]['tried'] == 0 and bf7[16]['hit'] > 0), 'and from Beaufort 7: crests throw it in 16 m/s, none is tried in 13 m/s', bf7)
         # 6. pictures: every Beaufort force, then windward, lee, harbour and sound in a gale
         tiles = []
         for n, U in BF:
