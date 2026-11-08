@@ -1,6 +1,6 @@
 # Fangstfeltene med navn langs hele kysten (Ø14, plan 07.11.2026)
 
-Plan for steg 31 i `docs/planer/koen.md` (`/planlegg`). Ingenting er bygd. Fasene står i køen som steg 31a–31e. Jonas svarte på valgene 07.11.2026 (kap. 5), og F2, F4 og F5 er lagt om etter svarene; F1 (steg 31a) er klar.
+Plan for steg 31 i `docs/planer/koen.md` (`/planlegg`). Ingenting er bygd. Fasene står i køen som steg 31a–31e. Jonas svarte på valgene 07.11.2026 (kap. 5), og F2, F4 og F5 er lagt om etter svarene; 08.11.2026 sa han at Senjas felt skal være som alle de andre (2.8). F1 (steg 31a) er klar.
 
 ## 1. Hva Jonas ba om
 
@@ -10,6 +10,7 @@ Plan for steg 31 i `docs/planer/koen.md` (`/planlegg`). Ingenting er bygd. Fasen
 - **Jonas 01.11.2026** (B2): «Kjør på med alt som gjør at du mener vi klarer i simulerer fiskens liv med høyest mulig nøyaktighet.»
 - **Jonas 02.11.2026** (etikettene, `docs/planer/kart-etiketter.md`): «Vi må passe på at ikke blir alt for mye info og navn på kartet som overlapper hverandre slik at det bare blir støy.» Valg 2 A: felt- og stedsnavn kommer etter alt spilleren handler og spiller med.
 - **Jonas' svar på valgene, 07.11.2026:** «F1, jeg skjønner tanken om at felt har mer fisk men jeg mener vi må være forsiktig med å definere en fast boks eller sirkel der det står mer fisk bare fordi det er et fiskefelt. Ja det skal være mye fisk på feltene men vi må løse dette på en intuitiv måte.» «V2: a» «V3: Ta det mest realistiske» «V4: c, navnet på feltet kan stå men aldri tettheten på fisken.» Hva svarene betyr for fasene, står i kap. 5.
+- **Jonas 08.11.2026:** «Senja sine felt skal fungere akkurat likt som alle de andre fiskefeltene i landet og ikke være en fast sirkel.» Og: «Jeg prøvde å legge enn api.kartverket.no i allowed domains på claude» (verten svarer fra skyen fra 08.11.2026, F5).
 - **Startmeldingen for steg 31** (køen 07.11.2026): navnene finnes alt for hele kysten, så planen handler om vekten et navngitt felt har i spillet utenfor Senja (fangsten, varmekartet, Kystposten og oppdragene), hullene i Øst-Finnmark, tettheten av etiketter på nettbrettet, og hvordan det måles.
 
 ## 2. Hva finnes i dag
@@ -95,6 +96,21 @@ De tynneste: Tana (ingen fiskeplass innen 20 km, nærmeste 24 km unna), Båtsfjo
 
 Regelen i dag: ett feltnavn per celle på 110 × 22 px fra `view.z ≥ 1`, høyst 80. Det er ikke målt på telefon eller nettbrett. Grovt regnet: i 390 × 844 er det rundt 130 celler og på Pad 3 (1 293 × 830 liggende og 915 × 1 208 stående i spilltest 2) rundt 440, så taket på 80 nås i tette strøk som Helgeland og Vestlandet. 80 navn à 12 tegn i 10 px er rundt 67 × 10 px hver. `tests/etikett.py` sjekker at navnene ikke overlapper, men ikke hvor mange de er. Ingen test ser på feltnavnene.
 
+### 2.8 Fiskeridirektoratets felt der Senjas seks ligger (08.11.2026)
+
+Jonas 08.11.2026: «Senja sine felt skal fungere akkurat likt som alle de andre fiskefeltene i landet og ikke være en fast sirkel.» Det går, fordi kilden har ekte fiskeplasser på de samme stedene (talt fra `felt.json` med enhetstestenes laster, avstand fra midten av Senja-feltet):
+
+| Senjas felt (`GROUNDS`, radius) | Lokasjon | Fiskeridirektoratets felt der |
+|---|---|---|
+| Havet nord for Husøy (6 km) | 05-30 | 13 felt, blant dem Storflua (3,0 km), Oksefallet (3,2), Nøringskjæret (4,4), Hekkingen (6,7) |
+| Utenfor Mefjorden (5,5 km) | 05-30 | 13, blant dem Ytre Mefjorden Sør (0,5 km, r 5,4), Ytre Mefjorden (3,2), Kjølva Nord (3,7), Øyfjorden (3,7) |
+| Vest av Gryllefjord (6,5 km) | 05-25 | 10, blant dem Gryllefjorden (2,9 km, r 10,7), Månestua (3,4), Månesodden (4,3) |
+| Malangsgapet (4 km) | 05-40 | 6, blant dem Ytre Malangen (2,1 km, r 7,8), Buvik (3,0), Ræva (5,0) |
+| Gisundet nord (1,6 km) | 05-41 | 5, blant dem Jakkarneset (1,2 km), Bondjordbukta (1,6), Gisundet (2,6) |
+| Solbergfjorden (2,5 km) | 05-41 | 3: Brursteinen (2,2 km), Solbergfjorden Espenes (2,8), Solbergfjorden-humpen (4,1) |
+
+Senjas seks navn er spillets egne («Havet nord for Husøy», «Utenfor Mefjorden», «Vest av Gryllefjord» er beskrivelser, ikke feltnavn). I dag brukes `GROUNDS` i fisket (bumpen i `denSp`, `skreiSpot`), i kartet (fra `view.z ≥ 0,5` med forrang foran fiskeplassene, og `feltData` tar bort fiskeplassene innen 1,5 km), i tekstene (`nearestPlace`, `recPlace`, `rumour`, `newsForDay`, `alumniGround`, første tur «ved Gisundet nord») og som faste punkter for kalibreringen (`fkAvail` måler mot lokasjonene 05-30, 05-25 og 05-40, `MIG.latRef`) og i over 20 tester. Etter Ø14 bruker ingenting i spillet dem som felt (F1–F4); de blir faste punkter for kalibreringen og testene.
+
 ## 3. Fasene
 
 Én økt hver. Rekkefølgen: dataene først (F1, nesten usynlig), så fisken (F2), så tekstene (F3), så etikettene (F4, kan gå før F2 og F3 når `ui/03-map.js` er ledig). F4 kan gå før F2 og F3 når F1 er ute. F5 etter F1, når verten `api.kartverket.no` er åpnet i miljøet. Testene under er de som dekker filene etter `COVER` i `tests/run.py`; `python3 tools/plan/tester.py` gir den fulle lista for grenen.
@@ -106,6 +122,7 @@ Regelen i dag: ett feltnavn per celle på 110 × 22 px fra `view.z ≥ 1`, høys
   - **Navnevasken:** store bokstaver blir vanlig skrift («Røværfjorden»; små ord som «i», «av», «til» og «fra» med liten), stor forbokstav, koordinater ut (feltet får da intet navn og står bare som vekt), og navnet i kartet kortes ved en skråstrek eller etter 28 tegn (hele navnet vises ved trykk i F4). Hver regel med antallet den rettet, i `felt.py`s utskrift.
   - **Formen til F2:** polygonet til hver fiskeplass, forenklet (rundt 100 m) eller som ruter på 500 m; størrelsen avgjør. Gyteområdene og oppvekstområdene trenger bare punktet.
   - **V3 (Jonas: «Ta det mest realistiske»):** gyteområdene og oppvekst- og beiteområdene inn som eget slag (`k`: `f` fiskeplass, `g` gyteområde, `o` oppvekst og beite), med navn, art og måneder. De får aldri vekt og aldri flåtetrykk: `trkAreas` og `trkCellW` tar bare `k = f`, og `feltIn` gir dem ikke til kartet før F4.
+  - **Senja som resten** (Jonas 08.11.2026): `feltData` tar ikke lenger bort fiskeplassene innen 1,5 km av `GROUNDS`.
   - `feltData` leser de nye feltene (`f.k`, `f.l` med [art, redskap, måneder]). Ingenting annet i spillet endres.
 - **Filer:** `tools/npc/felt.py`, `src/data/felt.json`, `core/01e-marks.js` (`feltData`, `feltIn`), `core/03g-trykk.js` (bare filteret på slaget), ny `tests/unit/felt.test.mjs`, `tests/run.py` (`COVER` for `tools/npc/felt.py`), `docs/systemer/fiskerimodellen.md` (5.3c «Feltnavnene»).
 - **Tester:** `tests/unit/felt.test.mjs` (ny; antallet per slag, Billefjordjupet har torsk med garn, et kjent sesongfelt har riktige måneder, ingen navn med koordinater eller bare store bokstaver, ingen `g` eller `o` i `trkAreas`; sett rød før `felt.json` er ny), `trykk.test.mjs` (gruppesummene står), `charttest` (`felt.json`), `marktest` (`01e-marks.js`). Fordi trykket flytter seg litt når felt slås sammen og koordinatnavn går ut: `simday` og `heattest`.
@@ -120,9 +137,9 @@ Regelen i dag: ett feltnavn per celle på 110 × 22 px fra `view.z ≥ 1`, høys
   - **Formen er feltets egen:** polygonet fra Fiskeridirektoratet (forenklet i F1), mykt i kanten (rundt 0,5 km), og bare der dybden passer arten (`depthFactor`). Ingen sirkel rundt et punkt og ingen fast boks: innenfor feltets omriss følger fisken flekkens eget mønster.
   - **Summen per lokasjon står:** løftet regnes som snitt over lokasjonens sjø per art og måned (`feltWl`), og tettheten deles på det. Lokasjonen har like mye fisk som før, så `fkAvail` og kalibreringen mellom stedene står; fisken flyttes bare innen lokasjonen.
   - **Flåten følger fisken:** `trkCell` legger både trykket og fisken (`b`) med feltets snittløft for måneden i stedet for dagens `trkCellW` (×3 på trykket alene). Andelen som tas, er da den samme på og utenfor feltet, og grunnlinja blir nøytral.
-  - **Senjas seks felt følger samme regel** (det følger av svaret, og av at spillet er nasjonalt): sirkelbumpen i `denSp` (+0,45 × `exp(−(d/r)²)`) og feltleddet i `skreiSpot` går ut, og feltene får formen fra radiusen, myknet etter bunnen, og artene fra `g.sp`, hele året. `simday` skal holde seg innen ±10 % på de fire stedene, ellers justeres `k` som i B2 og B3. Første turs flekk (`tutBonus`) er ikke et felt og står.
+  - **Senjas felt er som alle de andre** (Jonas 08.11.2026: «Senja sine felt skal fungere akkurat likt som alle de andre fiskefeltene i landet og ikke være en fast sirkel.»): sirkelbumpen i `denSp` (+0,45 × `exp(−(d/r)²)`), feltleddet i `skreiSpot` og artsvektene `g.sp` går ut. Fiskeridirektoratets fiskeplasser på de samme stedene (2.8) gjør jobben med sin egen form, sine arter og måneder, som overalt ellers. Kalibreringens faste punkter står, men som punkter og lokasjonskoder, ikke som felt: lokasjonene `fkAvail` måler mot (05-30, 05-25, 05-40), `MIG.latRef` og de fire stedene i `simday`. `simday` skal holde seg innen ±10 %, ellers justeres `k` som i B2 og B3. Første turs flekk (`tutBonus`) er ikke et felt og står.
   - **Ikke med:** gyteområdene og oppvekstområdene (bare navn), og ingen vekt etter redskap.
-- **Filer:** ny `core/03j-felt.js` (trekket per felt og periode, formen, `feltWl`; én linje i `src/index.html` etter `03g-trykk.js`), `core/03-simulation.js` (`hotspot`, `denPlace`, `denSp`, `skreiSpot`), `core/03g-trykk.js` (`trkAreas`, `trkCellW`, `trkCell`), `tests/run.py` (`COVER`), `tests/unit/felt.test.mjs`, `tests/fiskeplay.py` (scenarioet `felt`), `ui/phone/07-patch.js`, `docs/systemer/fiskerimodellen.md` (5.3, 5.3c, 5.3d).
+- **Filer:** ny `core/03j-felt.js` (trekket per felt og periode, formen, `feltWl`; én linje i `src/index.html` etter `03g-trykk.js`), `core/03-simulation.js` (`hotspot`, `denPlace`, `denSp`, `skreiSpot`), `core/03f-fiske.js` (de faste punktene for Senja-forholdet og `MIG.latRef` uten `GROUNDS`), `core/03g-trykk.js` (`trkAreas`, `trkCellW`, `trkCell`), `tests/run.py` (`COVER`), `tests/unit/felt.test.mjs`, `tests/fiskeplay.py` (scenarioet `felt`), `ui/phone/07-patch.js`, `docs/systemer/fiskerimodellen.md` (5.3, 5.3c, 5.3d).
 - **Tester:**
   - `felt.test.mjs` utvidet: summen per lokasjon 1 ± 1 % for torsk i mars og juli på fem lokasjoner; snittet over en sesong høyere på feltet enn i sjøen like ved, og likt utenfor sesongen; trekket skifter mellom periodene uten hopp (ikke raskere enn flekkene i dag); ingen kant (tettheten over feltets omriss endrer seg jevnt, ingen sprang over 10 % per 100 m); grunnlinja på feltet minst 0,97 av den like ved (i dag 0,68 mot 0,85 ved Henningsvær i mars: rød før rettingen).
   - `trykk.test.mjs`, `vandring.test.mjs`, `simday`, `calib`, `kvtest`, `geartest`, `bktest`, `heattest`, `jigalongtest`, `progweek`, og `fasit.py` i bakgrunnen (treffet mot 2025 ikke under rundt 85 % av taket). Hele kysten trengs.
@@ -141,9 +158,10 @@ Regelen i dag: ett feltnavn per celle på 110 × 22 px fra `view.z ≥ 1`, høys
   - **Puben** (`rumour`): ryktet velger blant fiskeplassene innen 20 km av havna båten ligger i, i sesong, etter tetthet × prisen ved nærmeste mottak. På Senja er de seks feltene med som før. Retter feilen i 2.2 (Husøy i Bergen).
   - **Kystposten** (`newsForDay`): «Tynt fiske på …» for feltene nær hjemmehavna, ikke bare Senjas fire, og én sak når et felt nær hjemmehavna går inn i sesongen («Skreien er kommet til …»), høyst én slik sak i uka. Ingen push.
   - **Kjentmannen** (`kjentFind`) og **leteoppdraget** (`turLetePlace`) sier feltets navn når punktet ligger på et felt.
+  - **Senjas seks navn ut av tekstene** (Jonas 08.11.2026): `nearestPlace`, `recPlace`, `rumour`, `newsForDay` og `alumniGround` bruker fiskeplassene på Senja som overalt ellers, og første tur på Senja sier stedet slik starter langs resten av kysten gjør (nærmeste fiskeplass eller «utenfor <havn>»), ikke «ved Gisundet nord». Flekken og ringen står der de står.
   - Tekstene sier hva folk sier og hva som har skjedd, som i dag, og aldri tall for hvor mye fisk det står på et felt (V4).
-- **Filer:** `core/01-world.js` (`nearestPlace`), `core/09b-records.js` (`recPlace`), `core/06-services.js` (`newsForDay`), `ui/09-hand-fishing.js` (`rumour`), `ui/09b-pub.js` (`kjentFind`), `core/09g-turer.js` (`turLetePlace`), `ui/phone/07-patch.js`.
-- **Tester:** `worldtest`, `trip2`, `harbourtest` (`01-world.js`), `rectest`, `uketest`, `posttest`, `turtest`, `fixtest`, `seasontest`, `pubtest`, `hailltest`, `tests/unit/turer.test.mjs`, og en ny sjekk i `felt.test.mjs`: `nearestPlace` på Bjørnvika gir feltet, og ryktet i Bergen nevner et felt nær Bergen (sett rød først).
+- **Filer:** `core/01-world.js` (`nearestPlace`), `core/09b-records.js` (`recPlace`), `core/06-services.js` (`newsForDay`), `core/14-crewlife.js` (`alumniGround`), `ui/09-hand-fishing.js` (`rumour`), `ui/09b-pub.js` (`kjentFind`), `core/09g-turer.js` (`turLetePlace`), `ui/07b-first-trip.js` (`tutAt`), `ui/phone/07-patch.js`.
+- **Tester:** `worldtest`, `trip2`, `harbourtest` (`01-world.js`), `rectest`, `uketest`, `posttest`, `turtest`, `fixtest`, `seasontest`, `pubtest`, `hailltest`, `tests/unit/turer.test.mjs`, `tut.py` (ett format, første tur på Senja), og en ny sjekk i `felt.test.mjs`: `nearestPlace` på Bjørnvika gir feltet, ryktet i Bergen nevner et felt nær Bergen, og ingen tekst bruker `GROUNDS`-navnene (sett rød først).
 - **Stikkprøver:** puben og Kystpostens lokale fane i Bergen, Bodø og Båtsfjord.
 - **Skjermbilder:** Kystposten og pubens rykte i 800 × 1280 og 1280 × 800.
 
@@ -153,9 +171,10 @@ Regelen i dag: ett feltnavn per celle på 110 × 22 px fra `view.z ≥ 1`, høys
 - **Bygger:**
   - Feltnavnene vises først fra `view.z ≥ 2` (i dag 1), de største først, som nå. Ingen merking av feltene i sesong, ingen farge eller styrke etter fisken, og ingenting i navnet eller ved trykk som sier hvor mye fisk det står der.
   - Navnene fra F1 (vasket, kortet ved skråstrek eller etter 28 tegn) og gyteområdenes og oppvekstområdenes navn (V3) med lavest prioritet, i samme skrift.
+  - **Senjas seks navn tegnes ikke lenger for seg** (i dag fra `view.z ≥ 0,5` med forrang og større skrift; Jonas 08.11.2026): fiskeplassene på Senja følger samme regel som resten av kysten.
   - Et trykk på et navn som er kortet eller tatt ut for plassens skyld, viser hele navnet og hva slags sted det er («Fiskeplass», «Gyteområde», «Oppvekst- og beiteområde», med kilden), slik de andre navnene gjør (`LBLHID`). Ingen arter, måneder eller tall.
   - Taket og cellene settes etter målingen under: nok navn til å finne fram, aldri så tett at det blir støy (Jonas 02.11.2026).
-- **Måles:** en ny sjekk i `tests/etikett.py`: hvor mange feltnavn som står, hvor stor del av skjermen de dekker, og at ingen overlapper et annet navn, ved `view.z` 2 og 4 over Bergen, Henningsvær, Bodø og Båtsfjord, i 390 × 844, 800 × 1280, 1280 × 800, 915 × 1208 og 1293 × 830 (Pad 3 i spilltest 2); og at ingen feltnavn står under `view.z` 2 (rød før rettingen).
+- **Måles:** en ny sjekk i `tests/etikett.py`: hvor mange feltnavn som står, hvor stor del av skjermen de dekker, og at ingen overlapper et annet navn, ved `view.z` 2 og 4 over Bergen, Henningsvær, Bodø og Båtsfjord, i 390 × 844, 800 × 1280, 1280 × 800, 915 × 1208 og 1293 × 830 (Pad 3 i spilltest 2); og at ingen feltnavn står under `view.z` 2, heller ikke på Senja (rød før rettingen).
 - **Filer:** `ui/03-map.js` (feltnavnene i `renderStatic` og trykket), `tests/etikett.py`, `tests/charttest.py`, `ui/01-i18n.js` om ordene for slagene trengs der.
 - **Tester:** `etikett`, `charttest`, `placetest`, `routetest` (`03-map.js`).
 - **Skjermbilder:** Bergen og Båtsfjord ved `view.z` 2 og 4 i 390 × 844, 800 × 1280 og 1280 × 800, og et trykk på et kortet navn.
@@ -165,7 +184,8 @@ Regelen i dag: ett feltnavn per celle på 110 × 22 px fra `view.z ≥ 1`, høys
 
 - **Jonas' svar (V3, 07.11.2026):** «Ta det mest realistiske.» Det mest realistiske er navnene som finnes i de offentlige kildene, og bare dem: Fiskeridirektoratets fiskeplasser, gyteområder og oppvekst- og beiteområder (F1), og Kartverkets stedsnavn for banker, grunner og fiskeplasser i sjøen der Fiskeridirektoratet har lite (her). Ingen navn diktes opp, og der ingen kilde har et navn, står det ikke noe.
 - **Bygger:** `felt.py` henter sjønavnene fra Kartverkets stedsnavn-API (Sentralt stedsnavnregister) for strekningene der dekningen etter F1 er tynnest, først Øst- og Vest-Finnmark, som eget slag (`k = s`). Bare navn: aldri vekt og aldri flåtetrykk. Et navn som alt står i kartet (`chartNamesSvg`) eller blant feltene innen 1 km, tas ikke med to ganger.
-- **Krever:** verten `api.kartverket.no` åpnet i miljøet (svarte 403 herfra 07.11.2026; Jonas legger den til i miljøets nettverksinnstillinger, eller økta som tar steget, ber om det), og lisensen og navneobjekttypene for sjøen sjekket før noe tas inn.
+- **Verten** `api.kartverket.no` er åpen i miljøet fra 08.11.2026 (Jonas la den til; svarte 200).
+- **Sjekket 08.11.2026:** API-et (`/stedsnavn/v1/`) har typene «Fiskeplass i sjø», «Banke i sjø», «Grunne i sjø», «Egg i sjø» og «Havdyp» (og «Båe i sjø» og «Skjær i sjø», som er fare for sjøfarten, ikke fiskeplasser, og ikke tas med). Filteret `navneobjekttype` virker ikke i spørringen (samme treff for alle typer), så navnene hentes per kommune (`knr`, 500 per side) og sorteres etter typen i svaret. Berlevåg ga 15 grunner, Båtsfjord 5 grunner og havdypet Leira (blåkveitefeltet); ingen «Fiskeplass i sjø» i noen av dem. Lisensen sto ikke i API-et og sjekkes før noe tas inn.
 - **Filer:** `tools/npc/felt.py`, `src/data/felt.json`, `tests/unit/felt.test.mjs`.
 - **Tester:** `felt.test.mjs`, `charttest`.
 - **Måles:** tabellen i 2.5 på nytt.
@@ -190,7 +210,7 @@ Regelen i dag: ett feltnavn per celle på 110 × 22 px fra `view.z ≥ 1`, høys
 **V4. Etikettene** (F4). Jonas: «c, navnet på feltet kan stå men aldri tettheten på fisken.» Feltnavnene først fra `view.z ≥ 2`, og ingenting i navnet, fargen eller ved trykk som sier hvor mye fisk det står. (A var feltene i sesong først og et kort med arter og måneder, B som i dag.)
 
 **Avgjort i planen** (Jonas kan si fra):
-- Senjas seks felt følger samme regel som resten av kysten (F2), som en følge av V1; `simday` holdes.
+- Senjas seks felt er som alle de andre: Jonas 08.11.2026: «Senja sine felt skal fungere akkurat likt som alle de andre fiskefeltene i landet og ikke være en fast sirkel.» `GROUNDS` blir bare faste punkter for kalibreringen og testene (2.8, F1–F4); `simday` holdes.
 - Vekten følger art og måned, ikke redskap: `density` er den ene kilden for fisk og vet ikke om redskap (`SELQ` og `gearVertF` tar det etterpå). Redskapet brukes bare i havflåtens trykk på de aktive feltene, som i dag.
 - Tekstene i F3 bruker bare fiskeplassene og sier aldri tall for tettheten.
 - «Brukere» og merknadene leses aldri.
@@ -206,7 +226,7 @@ Regelen i dag: ett feltnavn per celle på 110 × 22 px fra `view.z ≥ 1`, høys
 - **Finnmarks felt** har bare torsk, sei og hyse; kveita, lyren og de dype artene får ingen feltvekt der.
 - **Tabellen i 2.5** er grovt delt etter breddegrad og regnet per mottak, så steder med mange mottak teller mer.
 - **Tettheten i 2.7** er regnet, ikke målt, og ingenting er sett på Pad 3.
-- **Kartverket** er ikke sjekket herfra (403), verken lisensen eller om navneobjekttypene for sjøen har fiskeplasser; F5 krever verten.
+- **Kartverket** gir lite i Øst-Finnmark (rundt 5–15 navn per kommune) og nesten bare grunner; lisensen er ikke sjekket (F5).
 
 ## 7. Det planen ikke gjør
 
@@ -222,4 +242,5 @@ Regelen i dag: ett feltnavn per celle på 110 × 22 px fra `view.z ≥ 1`, høys
 ## 8. Status
 
 - 07.11.2026: planen skrevet (Jonas' økt, gren `ccr-5a96a95a-wu5hvn`; bare dokumenter). Målingene i 2.3, 2.4 og 2.5 ble gjort i økta (enhetstestenes laster og WFS-en uten polygoner); ingenting i `src/` eller `tests/` er endret. Fasene står i køen som 31a–31e med `venter på valg`. Venter på V1–V4.
+- 08.11.2026: Jonas: «Senja sine felt skal fungere akkurat likt som alle de andre fiskefeltene i landet og ikke være en fast sirkel.» Skrevet inn i 2.8, F1–F4 og kap. 5: `GROUNDS` mister alt det gjør som felt (fisken, kartet, tekstene), og Fiskeridirektoratets fiskeplasser på de samme stedene tar over. Jonas la `api.kartverket.no` til i miljøet; F5 venter bare på F1. Sjekket Kartverkets API (F5).
 - 07.11.2026: **Jonas svarte på valgene** (kap. 5). F2 er lagt om etter V1 (ingen fast boks eller sirkel: feltet trekker de gode flekkene i sin egen form og sesong, Senjas felt med), F4 etter V4 C, og F5 tas (V3). F1 (31a) er klar; F2 og F4 venter på F1, F3 på F2, og F5 på F1 og verten `api.kartverket.no` i miljøet.
