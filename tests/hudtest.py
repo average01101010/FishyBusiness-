@@ -10,7 +10,9 @@ to the three-line strip under the little chart, which stands at the top as uprig
 være den øverste boksen»), and the chart folded lifts the box up under its GPS strip; the strip has no «+» (Jonas 07.11.2026: «Fjern plusstegnet fra den øverste
 statusboksen slik at den fungerer bare ved å trykke på stripa»), and a tap on it opens the whole box again, not the card; the chart's «+»
 stands at the far left of its strip; the hold's icon on the strip is a fish, not Om bord's box (Jonas: «gjør ikonet som står for last i
-statusboksen om til en fisk»); the chart's top is the same in harbour and under way. Prints OK or FEIL."""
+statusboksen om til en fisk»); the chart's top is the same in harbour and under way. UI 2, U2-8 (08.11.2026), in the five sizes of uishots and 412×915: the plotter's
+drawer upright starts under the strip, the box on its side has no empty reserve, the map's credit is clear of the deck log's tab, the
+tab's word is whole, and the phone button hides behind the open phone. Prints OK or FEIL."""
 from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
@@ -155,10 +157,50 @@ async def phone_side(p):
     await br.close()
 
 
+# UI 2, U2-8 (docs/planer/ui-2-staaende.md kap. 5, V1 A: the tablet and the PC inherit the phone upright, decided with pictures in
+# uishots' five sizes, 08.11.2026): the drawer in the chart plotter upright starts under the strip (the sheet from 12 % covered its
+# lowest 13 px on a phone); the whole box on its side has no empty reserve under its lines (196 px kept the chart still when the box
+# stood on top of it, until 07.11.2026); the map's credit line is clear of the deck log's tab; the tab's word is whole on a phone on its
+# side; and the phone button hides behind the open phone (its corner showed at the phone's rounded corner on a tablet and a PC)
+U28 = """(() => { const r = s => { const e = document.querySelector(s); if (!e || !e.getClientRects().length) return null; const cs = getComputedStyle(e);
+  if (cs.display === 'none' || cs.visibility === 'hidden') return null; const q = e.getBoundingClientRect(); return {l:Math.round(q.left), t:Math.round(q.top), r:Math.round(q.right), b:Math.round(q.bottom)}; };
+  const h = document.getElementById('hud'); let m = 0; for (const c of h.children){ const q = c.getBoundingClientRect(); if (q.height) m = Math.max(m, q.bottom); }
+  const tab = document.querySelector('#logbook .lbk-tab');
+  return {hud:r('#hud'), empty:Math.round(h.getBoundingClientRect().bottom - m), attr:r('.attr'), book:r('#logbook'), fab:r('#phoneFab'), drawer:r('#drawer'),
+    tabCut:tab ? tab.scrollHeight - tab.clientHeight : 0, cls:['v3d', 'vplot', 'hudstrip', 'dk-open'].filter(c => document.body.classList.contains(c))}; })()"""
+
+
+async def u28(p):
+    br = await p.chromium.launch(args=['--disable-gpu-compositing'])
+    for W, H, touch in ((390, 844, True), (412, 915, True), (844, 390, True), (800, 1280, True), (1280, 800, True), (1440, 900, False)):
+        ctx = await br.new_context(viewport={'width': W, 'height': H}, has_touch=touch, is_mobile=touch and W < 900); pg = await ctx.new_page(); errs = []
+        pg.on('pageerror', lambda e: errs.append(str(e)))
+        await boot(pg, GAME + '#notut'); await pg.wait_for_timeout(800)
+        await pg.evaluate("(() => { if (!document.body.classList.contains('v3d') && typeof G3 !== 'undefined') G3.show(true); S.settings.hudMin = false; S.settings.plotMin = false; S.boat.status = 'idle'; S.boat.port = null; renderHud(); })()"); await pg.wait_for_timeout(800)
+        tag = '%dx%d' % (W, H); a = await pg.evaluate(U28)
+        check(a['attr'] and a['book'] and a['attr']['l'] >= a['book']['r'], tag + ': the map\'s credit line begins right of the deck log\'s tab, not under it', {'attr': a['attr'], 'tab': a['book']})
+        check(a['tabCut'] <= 1, tag + ': the deck log\'s tab shows its whole word', {'cut px': a['tabCut']})
+        if W > H and H > 520:
+            check(a['empty'] <= 16, tag + ': the whole box on its side has no empty reserve under its last line', {'empty px': a['empty'], 'hud': a['hud']})
+        await pg.evaluate("(() => { setBodyView(true); PHONE.show(true, 'home'); })()"); await pg.wait_for_timeout(900); f = await pg.evaluate(U28)
+        check(not f['fab'], tag + ': the phone button is not shown while the phone is open', {'fab': f['fab']})
+        await pg.evaluate("PHONE.show(false)"); await pg.wait_for_timeout(500); g = await pg.evaluate(U28)
+        check(g['fab'], tag + ': and back when the phone is closed', {'fab': g['fab']})
+        if H > W:
+            await pg.evaluate("(() => { setBodyView(false); refreshAll(); })()"); await pg.wait_for_timeout(700); s0 = await pg.evaluate(U28)
+            await pg.evaluate("DOCK.open('beholdning')"); await pg.wait_for_timeout(700); d = await pg.evaluate(U28)
+            check(d['drawer'] and d['hud'] and s0['hud'] and d['hud'] == s0['hud'] and d['drawer']['t'] >= d['hud']['b'], tag + ': in the chart plotter upright the drawer\'s sheet starts under the strip', {'sheet top': d['drawer'] and d['drawer']['t'], 'strip': d['hud']})
+            await pg.screenshot(path='hud_u28_plotskuff_%s.png' % tag)
+            await pg.evaluate("DOCK.close()")
+        print('errors (U2-8 %s):' % tag, errs[:3]); await ctx.close()
+    await br.close()
+
+
 async def main():
     async with async_playwright() as p:
         await phone(p)
         await tablet(p)
         await phone_side(p)
+        await u28(p)
 
 asyncio.run(main())
