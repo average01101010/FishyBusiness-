@@ -620,7 +620,11 @@ function finishHaul(g, H){
   log('Trakk ' + what + ': ' + fmt(g.kg, 0) + ' kg, sto ' + fmt(g.soak, 0) + ' t' + (g.rel ? ', ' + g.rel + (s.kind === 'teine' ? ' krabber satt ut igjen' : ' fisk sluppet') : '') + (g.dead >= 1 ? ', ' + Math.round(g.dead) + ' døde krabber kastet' : '') + '.',
     'Hauled ' + whatEn + ': ' + fmt(g.kg, 0) + ' kg, soaked ' + fmt(g.soak, 0) + ' h' + (g.rel ? ', ' + g.rel + (s.kind === 'teine' ? ' crabs put back' : ' fish released') : '') + (g.dead >= 1 ? ', ' + Math.round(g.dead) + ' dead crabs thrown' : '') + '.');
   // the crew remarks on a good or a poor haul (kg per unit against a fair haul for the gear)
-  { const per = g.kg / Math.max(1, g.n), fair = (HEATG.fair[s.kind] || 1) * heatSoakShare(s.kind, g.soak || HEATG.T); crewSay(null, per > fair * 1.4 ? 'haulGood' : per < fair * 0.35 ? 'haulBad' : null); }
+  { const per = g.kg / Math.max(1, g.n), fair = (HEATG.fair[s.kind] || 1) * heatSoakShare(s.kind, g.soak || HEATG.T); crewSay(null, per > fair * 1.4 ? 'haulGood' : per < fair * 0.35 ? 'haulBad' : null);
+    // the trip's line (Ø8b S2): the haul against a fair one for the gear and the soak (HEATG, the catch mark's colour), and what the luck
+    // and the fishing down took or gave while it stood (soakHour's fx). The snow crab's strings are the ocean vessel's and stay out
+    if (!g.sno){ const T = tripOf(b), G = T.g || (T.g = {n:0, kg:0, fair:0, r:0, rL:0, r0:0, k:{}}); G.n++; G.kg += g.kg || 0; G.fair += fair * Math.max(1, g.n); G.k[s.kind] = 1;
+      if (s.fx){ G.r += s.fx[0]; G.rL += s.fx[1]; G.r0 += s.fx[2]; } } }
   if (tore) log(tore + ' ' + unitName(s.kind, tore, s.lk) + (s.kind === 'garn' ? ' gikk i filler' : s.kind === 'line' ? ' gikk av' : ' gikk tapt') + '. ' + (tore === 1 ? 'Den' : 'De') + ' var for slitt.', tore + ' ' + unitName(s.kind, tore, s.lk) + (s.kind === 'garn' ? ' went to pieces' : s.kind === 'line' ? ' parted' : ' were lost') + '. ' + (tore === 1 ? 'It' : 'They') + ' was too worn.');
   else if (s.kind === 'garn' && cond < 0.35) log('Garna er slitt (' + Math.round(cond * 100) + ' %). Bøt dem før de går i filler.', 'The nets are worn (' + Math.round(cond * 100) + ' %). Mend them before they go to pieces.');
   // the catch mark: kilos per line, per net and per pot (tilbakemelding #33). Nets joined into a string fish as one net, and a line of
@@ -694,7 +698,9 @@ function opsGearAfter(){
 // ---- in the sea, every hour: catch, losses, weather and deadlines (company level)
 function soakHour(s, H){
   const a = (S.t - s.tSet) / 60, mid = setMid(s), acc = s.acc; let tot = 0;
-  const add = (sp, kg, n) => { const A = acc[sp] || (acc[sp] = {kg:0, n:0, ts:0}); A.kg += kg; A.n += n; A.ts += kg * H; };
+  // fx: what the hour gave, without the luck, and without the luck and the fishing down where it stands, for the trip's line (Ø8b S2)
+  const add = (sp, kg, n) => { const A = acc[sp] || (acc[sp] = {kg:0, n:0, ts:0}); A.kg += kg; A.n += n; A.ts += kg * H;
+    const fx = s.fx || (s.fx = [0, 0, 0]), lk = luck(sp); fx[0] += kg; fx[1] += kg / lk; fx[2] += kg / lk / stockDev(mid, sp); };
   if (s.kind === 'teine' && POTS[s.pot] && POTS[s.pot].sno) return snoSoak(s, H);   // the snow crab (10d-snokrabbe.js)
   if (s.kind === 'teine'){
     const P = POTS[s.pot], A = acc.krabbe || {n:0}, cap = P.cap * s.n * haillCap(), g = Math.min(1, a / 6) * Math.exp(-a / 40);

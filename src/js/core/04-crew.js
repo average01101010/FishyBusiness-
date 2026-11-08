@@ -145,6 +145,51 @@ function tripAdd(b, k, kr0){ if (!b || !(kr0 > 0)) return; const T = tripOf(b); 
 function tripCost(b = S.boat){ const T = tripOf(b), fuelKr = Math.round(T.fuelL * (b.fuelKrL || fuelPrice())), iceKr = Math.round(T.iceKg * PRICE.ice), baitKr = Math.round((T.baitKr || 0) + (T.egnKr || 0)),
   havnKr = Math.round(T.havnKr || 0), gearKr = Math.round((T.jigKr || 0) + (T.lostKr || 0));
   return {fuelL:T.fuelL, fuelKr, iceKg:T.iceKg, iceKr, baitKr, havnKr, gearKr, sum:fuelKr + iceKr + baitKr + havnKr + gearKr}; }
+// ---- the trip's line on the landing note and in the deck log (Ø8b S2, V2 A and V4 A in docs/planer/spillbarhet-fangst.md, Jonas
+// 06.11.2026): how the trip went and why, from the sums fish() and finishHaul keep in the trip (T.j for the jig, T.g for the hauls).
+// Only what the model reckons is said, and of the steps only those that took or gave at least TRIPL.min of the fish.
+// tight and thin: what the fish stood to against a fair hour for the rig (HEATG.fair.jig), past which the line says the fish stood dense or thin
+const TRIPL = {min:0.1, minM:15, tight:3, thin:0.4};
+// the sums made into shares: the jig's kilos an hour, what the fish stood to an hour (p0, before the fishing down, the weather, the cold
+// and the wear), a fair hour for the rig (HEATG.fair.jig per hand jig's effort), and each step's share of p0 (they add up to
+// 1 − pJ/p0, the whole loss); the luck as what it gave on top of what was left. The hauls: kilos against fair hauls for the soak
+function tripSum(T){
+  if (!T || T.tut) return null;
+  const J = T.j, G = T.g, W = {};
+  if (J && J.m >= TRIPL.minM && J.p0 > 0){
+    const h = J.m / 60, kg = Math.max(0, J.kg - (J.top || 0)), P = J.p0;
+    W.j = {h, kg, kgph:kg / h, pot:P / h, fair:HEATG.fair.jig * J.fe / J.m, mk:J.mk || 0, hs:J.hs / J.m, w:J.w / J.m,
+      sh:{stock:(P - J.pS) / P, sea:(J.pS - J.pW) / P, cold:(J.pW - J.pC) / P, pilk:(J.pC - J.pJ) / P}, pen:1 - J.pJ / P, luck:J.pJ > 0 ? J.pL / J.pJ - 1 : 0};
+  }
+  if (G && G.n > 0 && G.fair > 0) W.g = {n:G.n, kg:G.kg, fair:G.fair, stock:G.r0 > 0 ? Math.max(0, 1 - G.rL / G.r0) : 0, luck:G.rL > 0 ? G.r / G.rL - 1 : 0, kinds:Object.keys(G.k || {})};
+  return W.j || W.g ? W : null;
+}
+// the line itself, [Norwegian, English]: «Turen ga 38 kg i timen med håndjuksa. Fisken sto til rundt 50: sjøen (1,4 m) tok 20 %, kulda 12 %.»
+function tripWhy(W){
+  if (!W) return null;
+  const nf = (v, d, no) => { const x = (Math.round(v * 10 ** d) / 10 ** d).toFixed(d); return no ? x.replace('.', ',') : x; };
+  const kgS = (v, no) => v >= 1 ? nf(v >= 10 ? v : Math.round(v), 0, no) : (no ? 'under 1' : 'under 1');
+  const about = v => v >= 20 ? Math.round(v / 5) * 5 : Math.round(v);   // «rundt 50»: the model's number, not a weighing
+  const pc = v => Math.round(v * 100);
+  const no = [], en = [], lk = Math.max(W.j ? W.j.luck : 0, W.g ? W.g.luck : 0);
+  if (W.j){ const j = W.j, rigNo = j.mk > 0 ? (j.mk > 1 ? 'juksamaskiner' : 'juksamaskin') : 'håndjuksa', rigEn = j.mk > 0 ? (j.mk > 1 ? 'jigging machines' : 'a jigging machine') : 'a hand jig';
+    no.push('Turen ga ' + kgS(j.kgph, true) + ' kg i timen med ' + rigNo + '.'); en.push('The trip gave ' + kgS(j.kgph, false) + ' kg an hour with ' + rigEn + '.');
+    const wind = j.w > 8.5, F = [['sea', (wind ? 'sjøen og vinden (' : 'sjøen (') + nf(j.hs, 1, true) + ' m' + (wind ? ', ' + nf(j.w, 0, true) + ' m/s' : '') + ')', (wind ? 'the sea and the wind (' : 'the sea (') + nf(j.hs, 1, false) + ' m' + (wind ? ', ' + nf(j.w, 0, false) + ' m/s' : '') + ')'],
+      ['cold', 'kulda', 'the cold'], ['stock', 'nedfisket felt', 'fished-down grounds'], ['pilk', 'slitt pilk og kroker', 'worn pilk and hooks']]
+      .map(([k, a, b]) => [j.sh[k], a, b]).filter(x => x[0] >= TRIPL.min).sort((a, b) => b[0] - a[0]);
+    const tight = j.fair > 0 && j.pot >= TRIPL.tight * j.fair, thin = j.fair > 0 && j.pot <= TRIPL.thin * j.fair, P = nf(about(j.pot), 0, true);
+    const s0no = 'Fisken sto ' + (tight ? 'tett, til rundt ' : thin ? 'tynt, til rundt ' : 'til rundt ') + P, s0en = 'The fish stood ' + (tight ? 'dense, for about ' : thin ? 'thin, for about ' : 'for about ') + nf(about(j.pot), 0, false);
+    if (F.length){ no.push(s0no + ': ' + F.map((x, i) => x[1] + (i ? ' ' : ' tok ') + pc(x[0]) + ' %').join(', ') + '.'); en.push(s0en + ': ' + F.map((x, i) => x[2] + (i ? ' ' : ' took ') + pc(x[0]) + ' %').join(', ') + '.'); }
+    else { no.push(s0no + '.'); en.push(s0en + '.'); }
+  }
+  if (W.g){ const g = W.g, one = g.n === 1;
+    no.push((one ? 'Trekket' : 'De ' + g.n + ' trekkene') + ' ga ' + nf(g.kg, 0, true) + ' kg, mot rundt ' + nf(about(g.fair), 0, true) + ' i ' + (one ? 'et vanlig trekk' : 'vanlige trekk') + ' med samme ståtid' + (g.stock >= TRIPL.min ? '; nedfisket felt tok ' + pc(g.stock) + ' %' : '') + '.');
+    en.push((one ? 'The haul' : 'The ' + g.n + ' hauls') + ' gave ' + nf(g.kg, 0, false) + ' kg, against about ' + nf(about(g.fair), 0, false) + ' in ' + (one ? 'an ordinary haul' : 'ordinary hauls') + ' with the same soak' + (g.stock >= TRIPL.min ? '; fished-down grounds took ' + pc(g.stock) + ' %' : '') + '.');
+  }
+  if (lk >= TRIPL.min){ const x = Math.abs(lk - 1) <= 0.05 ? 2 : Math.abs(lk - 2) <= 0.05 ? 3 : 0;
+    no.push('Haillen ga ' + (x ? (x === 2 ? 'det dobbelte' : 'det tredobbelte') : pc(lk) + ' % mer') + '.'); en.push('The luck gave ' + (x ? (x === 2 ? 'double' : 'triple') : pc(lk) + ' % more') + '.'); }
+  return [no.join(' '), en.join(' ')];
+}
 // ---- the trip's limits on an ocean vessel (H2b of docs/planer/havsteget-h2-autoline.md, 05.11.2026). The fuel, the bait, the hooks for
 // the hook change (10b-gearcare.js autoFixHour) and the room in the hold each last so many days at the trip's pace so far (until half a
 // day at sea has gone, and for the hold until a tonne is in, the vessel's own: her generators and a day of gear work, 5.5 t of product a

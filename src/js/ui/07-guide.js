@@ -354,6 +354,8 @@ function portSlip(){
     // the first landing (Onboarding 2, O4, backlog 10.2): the trip was better than usual, and what the jig gives here now; and that others
     // land here too (the shared world's last day at this plant, WSH.mkt, 10h-world.js), only when there are any: no number is made up
     // N is the deck log's (tutNormKg, ui/07b-first-trip.js): without the guarantee's top-up, per hour jigged (Ø8b S0, Jonas' choice A 08.11.2026)
+    // an ordinary trip: how it went and why (Ø8b S2, V2 A: core/04-crew.js tripWhy, made at the landing; the same line is in the deck log)
+    if (!tutOn() && ls.why) h.push('<p class="note tripwhy">' + LN(ls.why[0], ls.why[1]) + '</p>');
     { const n = tutOn() ? tutNormKg(ls) : null; if (n != null){
       h.push('<p class="note tutnorm">' + LN('Første tur var ekstra god: fisken sto tett. Med håndjuksa gir fisket her nå vanligvis ' + (n >= 10 ? 'rundt ' + fmt(n, 0) + ' kg' : 'under 10 kg') + ' i timen, mer med juksamaskin og bedre felt.', 'The first trip was better than usual: the fish stood dense. With a hand jig the fishing here usually gives ' + (n >= 10 ? 'about ' + fmt(n, 0) + ' kg' : 'under 10 kg') + ' an hour now, more with a jigging machine and better grounds.') + '</p>'); } }
     if (tutOn() && typeof WSH !== 'undefined' && WSH.mkt && WSH.mkt[ls.port]){ const m = Object.entries(WSH.mkt[ls.port]).sort((a, b) => b[1] - a[1]);
