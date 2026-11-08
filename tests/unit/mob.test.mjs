@@ -226,7 +226,7 @@ export default function (t){
   t.eq(sev, ['call'], 'skjermen får beskjed');
   const npc = K.turNpcs().find(n => n.name === Q.boat); t.ok(npc && npc.id[0] === 't' && npc.v === 0 && Math.abs(npc.p.x - sp.x) < 1e-9, 'båten i nød tegnes der hun ligger (turNpcs, npcStates)', npc);
   // answered: the person from the other boat in the water, the mark where she reported, her crew's lifebuoy, no Williamson turn
-  const M5 = K.sosAnswer();
+  b.windArm = true; K.set('S', S); S.shelter = {tok:99, W:15}; const M5 = K.sosAnswer(); t.ok(S.shelter === null, 'svaret avbryter en vending mot nærmeste kai som venter på ruta'); t.ok(b.windArm === false, 'svaret holder vendingen for været nede med én gang (stikkprøven i Bodø)');
   t.ok(M5 && S.mob === M5 && M5.other && M5.other.boat === Q.boat && M5.name === Q.who && M5.anon && M5.mark && M5.buoy && M5.buoy.held && M5.buoy.by === Q.boat, 'svaret: personen fra den andre båten i sjøen, merket der hun meldte, livbøya hennes', M5 && M5.other);
   t.ok(/til «/.test(S.radio[S.radio.length - 1].no) && /Vi har dere [\d,]+ nautiske mil unna og kommer/.test(S.radio[S.radio.length - 1].no), 'VHF 16: «vi kommer»', S.radio[S.radio.length - 1].no);
   t.ok(M5.resc.eta >= Q.resc.eta, 'redningen kommer fortsatt, men står bi for den som svarte');

@@ -476,12 +476,13 @@ function sosMinute(W, hs){
   if (!(mobSeaX(W, hs, SOSK.lim) >= SOSK.x) || mobRnd('sos') >= SOSK.R / 60) return;
   sosCall(mobRnd('sosk') < 0.5 ? 'mob' : 'eng');
 }
-// where she is: open water 1.2 to 4 nm off; with engine trouble 0.5 to 8 km from land (she drifts towards it)
+// where she is: open water 1.2 to 4 nm off; with engine trouble 0.3 to 8 km from land (she drifts towards it; 0.5 km found no place in
+// the skerries off Bergen in the stikkprøve, 08.11.2026)
 function sosPlace(k){
   const b = S.boat, gs = gridScale(b.pos);
-  for (let i = 0; i < 16; i++){
+  for (let i = 0; i < 32; i++){
     const a = mobRnd('spa' + i) * 2 * Math.PI, d = (SOSK.nm[0] + mobRnd('spd' + i) * (SOSK.nm[1] - SOSK.nm[0])) * NM * gs, p = {x:b.pos.x + Math.sin(a) * d, y:b.pos.y - Math.cos(a) * d};
-    try { if (isLandFar(p)) continue; const cd = coastDistFar(p); if (k === 'eng' ? cd < 0.5 || cd > 8 : cd < 0.2) continue; } catch (e){ continue; }
+    try { if (isLandFar(p)) continue; const cd = coastDistFar(p); if (k === 'eng' ? cd < 0.3 || cd > 8 : cd < 0.2) continue; } catch (e){ continue; }
     return p;
   }
   return null;
@@ -524,7 +525,8 @@ function sosDecline(){ const Q = S.sos; if (Q && !Q.ans && Q.vid === S.cur) sosO
 // the answer: «we are coming» on channel 16, then the man in the water as Ø11.6's event, or the tow as a turoppdrag. Returns what came of it
 function sosAnswer(){
   const Q = S.sos, b = S.boat; if (!Q || Q.ans || Q.vid !== S.cur || S.mob || S.t >= Q.until || !['sailing', 'fishing', 'idle'].includes(b.status)) return null;   // (never over your own man overboard, nor from the quay)
-  Q.ans = S.t; const nm = '«' + (S.boatName || 'Havbris') + '»', P = {x:Q.x, y:Q.y}, nmi = kmTrue(b.pos, P) / NM, eta = Math.max(1, Math.round(nmi / mobSpeed() * 60));
+  Q.ans = S.t; S.shelter = null; b.windArm = false;   // (a turn for the nearest quay still finding its way is called off: you answered, 06-services.js shelterReturn; the stikkprøve at Bodø)
+  const nm = '«' + (S.boatName || 'Havbris') + '»', P = {x:Q.x, y:Q.y}, nmi = kmTrue(b.pos, P) / NM, eta = Math.max(1, Math.round(nmi / mobSpeed() * 60));
   sosRadio(nm + ' til «' + Q.boat + '»: Vi har dere ' + nmi.toFixed(1).replace('.', ',') + ' nautiske mil unna og kommer. Vi er hos dere om rundt ' + eta + ' minutter.',
     nm + ' to the «' + Q.boat + '»: We have you ' + nmi.toFixed(1) + ' nautical miles off and are coming. We will be with you in about ' + eta + ' minutes.');
   if (Q.k === 'mob') return sosMobStart(Q, eta);
@@ -541,6 +543,7 @@ function sosMobStart(Q, eta){
   const R = Object.assign({}, Q.resc); R.eta = Math.max(R.eta, S.t + Math.round(eta * 1.5) + 10); R.min = R.eta - Q.t0;
   const M = S.mob = {id:'m' + S.t, vid:S.cur, cid:'sos-' + Q.id, name:Q.who, anon:true, other:{boat:Q.boat, bi:Q.bi, sos:Q.id}, sex:Q.sex, t0:Q.t0 - SOSK.fell, x:px, y:py, vx:Lw.x, vy:Lw.y, side:1, h0:Q.hd,
     T:Q.T, lim:mobLimMin(Q.T), able:mobAbleMin(Q.T), mark:{x:Q.x, y:Q.y, t:S.t}, buoy:{x:px, y:py, t:Q.t0, by:Q.boat, held:true, light:true, smoke:false}, lift:null, seen:false, st:'water', fx:px, fy:py, resc:R, dark};
+  S.boat.windArm = false;   // (the turn for port over the weather limit waits while she is in the water, as for your own: the stikkprøve at Bodø, 08.11.2026)
   log('MOB-merket satt i plotteren der «' + Q.boat + '» meldte. ' + Q.who + ' holder seg i livbøya fra «' + Q.boat + '».', 'The MOB mark set in the plotter where the «' + Q.boat + '» reported. ' + Q.who + ' is holding on to the lifebuoy from the «' + Q.boat + '».', 'nav');
   if (hooks.onMob) hooks.onMob('start', M);
   return M;

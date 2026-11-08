@@ -157,9 +157,9 @@ async def main():
         # ---- 5. the emergency stop on the hauler (SK4): a string of line set and hauled, the dice forced for the stop ----
         r5 = await pg.evaluate("""() => { const b = S.boat; S.mob = null; S.mobs = []; S.sets = []; S.hold = []; S.t += 24 * 60; acc = 0; S.plan = null;
           for (const c of S.crew){ c.off = false; delete c.offUntil; c.fatigue = 10; delete c.mobOff; } S.equip.linehaler = true;
-          S.pgear = newPGear(); S.pgear.kits.n = 4; S.pgear.lines.hyse = {n:2, baited:2}; b.status = 'idle'; b.v = 0; b.rig = 'line'; WX_FORCE = {w:6, d:260};
-          const was = MOBF.live; MOBF.live = false; startSet('line', {lk:'hyse', n:2}, 0); let k = 0; while (b.gop && k++ < 400) step();
-          for (let i = 0; i < 6 * 60; i++) step(); b.status = 'idle'; const s0 = S.sets.find(x => x.kind === 'line'); if (!s0) { MOBF.live = was; return {err:'ingen line i sjøen'}; }
+          S.pgear = newPGear(); S.pgear.kits.n = 4; S.pgear.lines.hyse = {n:2, baited:2}; b.pos = {x:window.__sea.x, y:window.__sea.y}; b.status = 'idle'; b.v = 0; b.rig = 'line'; WX_FORCE = {w:6, d:260};
+          const was = MOBF.live; MOBF.live = false; const why = startSet('line', {lk:'hyse', n:2}, 0); let k = 0; while (b.gop && k++ < 400) step();
+          for (let i = 0; i < 6 * 60; i++) step(); b.status = 'idle'; const s0 = S.sets.find(x => x.kind === 'line'); if (!s0) { MOBF.live = was; return {err:'ingen line i sjøen', why:why || null, log:S.log.slice(-4).map(l => l.no)}; }
           b.pos = {x:s0.a.x, y:s0.a.y}; const n0 = S.log.length; startHaul(s0.id);
           mobRnd = q => (q === 'stop' || q === 'stopw') ? 0 : window.__mobRnd0(q); let st = null, hauling = [];
           for (let i = 0; i < 300 && b.gop; i++){ step(); if (!st && S.mobs.some(r => r.k === 'stop')) st = {t:S.t, done:b.gop ? b.gop.done : null, prog:b.gop ? +b.gop.prog.toFixed(3) : null}; if (st && S.t - st.t <= 3) hauling.push(b.gop ? +(b.gop.done + b.gop.prog).toFixed(3) : 'ferdig'); }
