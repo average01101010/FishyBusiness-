@@ -42,7 +42,7 @@ async def main():
                 check(r['e'] == 100 and not r['sleep'] and not r['dr'] and all(f == 0 for f in r['crew']) and r['other'] == 0 and r['left'] == 24 and r['left2'] == 72, '2. Skippertak: full energi, vekket, mannskapet på hele flåten uthvilt, 24 t, og neste legges til (72 t)', r)
                 r = await pg.evaluate("""(() => { const R = {}, b = S.boat, g = GROUNDS[0].p; b.status = 'idle'; b.port = null; b.pos = {x:g.x, y:g.y}; S.crew = S.crew.length ? S.crew : [genCrew()];
                   for (let i = 0; i < 6 * 60; i++) energyMinute(); for (const c of S.crew) c.fatigue = 40; b.status = 'fishing'; crewTick(S.t / 60); b.status = 'idle'; R.e = S.energy; R.fat = S.crew.map(c => c.fatigue);
-                  // the operations plan does not wait for the crew to rest (06d-drift.js drRested), however tired they were
+                  // the operations plan does not wait for the crew to rest (06d-plan-felles.js drRested), however tired they were
                   { const f0 = S.crew.map(c => c.fatigue); for (const c of S.crew) c.fatigue = 90; R.adv = drRested() && !drTired(); S.crew.forEach((c, i) => c.fatigue = f0[i]); }
                   // it runs out: said once, and the energy falls at sea
                   S.skip.until = S.t; const l0 = S.log.length; energyMinute(); R.told = S.log.slice(l0).some(l => /gått ut/.test(l.no)); for (let i = 0; i < 60; i++) energyMinute(); R.after = +S.energy.toFixed(1);

@@ -31,7 +31,7 @@
       if (u >= 0.999) quota = {no:'Torskekvoten er fisket opp', en:'The cod quota is fished'}; else if (u >= 0.9) { const pc = Math.floor(u * 100 + 1e-6); quota = {no:'Torskekvoten ' + pc + ' % fisket', en:'Cod quota ' + pc + '% fished'}; } }
     let nx = null; try { const e = nextEvent(); if (e) nx = {t:e.t, txt:e.txt}; } catch (e){}   // the vessel's next event (ui/04-panels-instruments.js), for her card in Rederi
     return {name:S.boatName, type:b.type, status:statusText(), nx, pos:b.status === 'port' ? portById(b.port).name : fieldCode(b.pos) + ' · ' + L('nær ', 'near ') + nearestPort(b.pos).name,
-      hold:holdTotal(), cap:capHold(), fuel:b.fuel, fuelCap:BOAT.fuelCap, ice:b.ice, iceCap:BOAT.iceCap, crew:S.crew.length, crewMax:BOAT.crewMax, ops:o, sk, now:!o ? null : [PLAN2UI.nowOf(o)[0], PLAN2UI.nowOf(o)[0]], inc, al, quota, inPort:b.status === 'port'};
+      hold:holdTotal(), cap:capHold(), fuel:b.fuel, fuelCap:BOAT.fuelCap, ice:b.ice, iceCap:BOAT.iceCap, crew:S.crew.length, crewMax:BOAT.crewMax, ops:o, sk, now:!o ? null : (n => [n, n])(PLAN2UI.nowOf(o)[0]), inc, al, quota, inPort:b.status === 'port'};
   }
   const summaries = () => S.fleet.map(v => ({v, s:withVessel(v, vSummary)}));
   const alerts = () => summaries().flatMap(x => x.s.al);

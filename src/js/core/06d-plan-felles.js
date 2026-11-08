@@ -6,7 +6,7 @@
 // Hand-overs (one line each): the files that call them were held by other sessions on 08.11.2026 (05-vessels.js opsStep, opsLanded,
 // driftWx; 03-simulation.js and 13-work.js opsSkipper; 10-gear.js and 06-services.js driftStock). They go when those calls are made
 // straight to plan2Step, plan2Landed and plan2Wx.
-const DRP = {tired:72, rested:25, bigLen:24, legsMax:240};
+const DRP = {bigLen:24, legsMax:240};
 const PLAN_KIND = {line:'line', garn:'garn', teiner:'teine'};
 const drKind = o => PLAN_KIND[o.rig] || null;
 const drJig = o => !drKind(o) || !!o.jig;
@@ -60,19 +60,19 @@ function drFetch(o, pairs, vid){
 // a leg that was not found is tried again after an hour
 function drLegsStale(o){ for (const k in o.legs) if (o.legs[k].none && S.t - (o.legs[k].t || 0) > 60) delete o.legs[k]; }
 
-// ---- the crew: rested, and had enough
+// ---- the crew: rested, and had enough (Driftsplan 2's limits, DRP2 in 06g-plan2.js)
 function drFat(){ const C = crewAboard(); return C.length ? Math.max(...C.map(c => c.fatigue || 0)) : null; }
-function drRested(){ if (skipOn()) return true; const f = drFat(); return f == null || f <= DRP.rested; }
-function drTired(){ if (skipOn()) return false; const f = drFat(); return f != null && f >= DRP.tired; }
+function drRested(){ if (skipOn()) return true; const f = drFat(); return f == null || f <= DRP2.rested; }
+function drTired(){ if (skipOn()) return false; const f = drFat(); return f != null && f >= DRP2.tired; }
 // you took the boat over: your own route, Autonav, «Stopp» or the wheel by hand. The plan waits until you give her back («Fortsett planen»)
 const drTook = () => !!(S.plan && !S.plan.ops) || (typeof helmOn === 'function' && helmOn());
 
-// ---- a closed place, or the cod quota used up, at the hour H (Jonas 23.10.2026); o: {fields, jigs, rig, jig}
-function drRulesWhy(o, H, placesOnly){
+// ---- a closed place at the hour H (Jonas 23.10.2026); o: {fields, jigs, rig, jig}. (plan2Check asks it; the quota is not the plan's
+// business in Driftsplan 2: the landing confiscates what goes over, 06h-plan2-engine.js plan2RulesWhy)
+function drRulesWhy(o, H){
   const kind = drKind(o), hand = !(S.equip && S.equip.jukse > 0);
   // (the pots' own species, potSp: the snow crab vessel's conical pots take snow crab, H3c; the hour H the plan asks for)
   for (const [i, f] of o.fields.entries()){ const why = ruBlockMsg({p:f, len:BOAT.len, gear:o.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? potSp() : null, H}); if (why) return {k:'closed', fix:'places', no:'Felt ' + (i + 1) + ' er stengt: ' + why, en:'Field ' + (i + 1) + ' is closed: ' + why}; }
-  if (drJig(o)) for (const [i, j] of o.jigs.entries()){ const why = ruBlockMsg({p:j, len:BOAT.len, gear:'juksa', sp:null, hand}); if (why) return {k:'closed', fix:'places', no:'Juksplass ' + (i + 1) + ' er stengt: ' + why, en:'Jig place ' + (i + 1) + ' is closed: ' + why}; }
-  if (!placesOnly && o.rig !== 'teiner' && access() !== 'none'){ const q = quotaState(); if (q.torsk >= codLimitNow(H) - 1) return {k:'quota', fix:'quota', no:'Torskekvoten er brukt opp.', en:'The cod quota is used up.'}; }
+  if (drJig(o)) for (const [i, j] of o.jigs.entries()){ const why = ruBlockMsg({p:j, len:BOAT.len, gear:'juksa', sp:null, hand, H}); if (why) return {k:'closed', fix:'places', no:'Juksplass ' + (i + 1) + ' er stengt: ' + why, en:'Jig place ' + (i + 1) + ' is closed: ' + why}; }
   return null;
 }

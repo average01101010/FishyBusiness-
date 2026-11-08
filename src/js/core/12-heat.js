@@ -48,7 +48,7 @@ function heatValue(v, sp){ const i = HEATI[sp]; return i !== undefined ? v[i] ||
 // The sounder shows the fish and never a figure for the catch (Jonas 09.10.2026: «Den skal ikke vise estimert fangstrate»; 21.10.2026:
 // no figure worked out from the fish in the sea at all, only what was taken aboard). The figures the game shows are the catch marks
 // (05-vessels.js, 10-gear.js: kg an hour on the jig, kg a net, tub or pot with its soak, where it was taken) and the plan's «du fikk X
-// her» (06f-plan.js planMark). HEATG.fair is a usual haul (a net, a tub or a pot at a good place after 24 h, a hand jig an hour), the
+// her» (06d-plan-felles.js planMark). HEATG.fair is a usual haul (a net, a tub or a pot at a good place after 24 h, a hand jig an hour), the
 // marks' colour and the plan's neutral figure where there is no mark; it never reads the fish.
 const HEATG = {T:24, fair:{garn:40, line:100, teine:20, jig:20}};   // (line 70 → 100 with the line's catchability, K2 05.11.2026; nets 30 → 40 with the nets' calibration the same day: ERS 15-21 m, all species a net, median 65 in February-April, 36 in October-January, 29 in May-September)
 const heatSoakSum = (tau, T) => { let s = 0; for (let a = 1; a <= T; a++) s += Math.exp(-a / tau); return s; };

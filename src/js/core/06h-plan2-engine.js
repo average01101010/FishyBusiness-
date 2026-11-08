@@ -183,7 +183,7 @@ function plan2Cut(o, why){
   const last = pl.wps[pl.wps.length - 1]; if (!last || (!last.port && !last.anchor)){ const Hp = plan2P(o, 'H'), hp = plan2Port(o, 'H'); const from = last ? {x:last.x, y:last.y} : {x:b.pos.x, y:b.pos.y}; const L = drLeg(o, from, null, Hp, hp); if (L) for (const z of L.w) pl.wps.push({x:z[0], y:z[1], port:null, fish:0, leia:true}); pl.wps.push(hp ? {x:Hp.x, y:Hp.y, port:hp, fish:0} : {x:Hp.x, y:Hp.y, port:null, fish:0, anchor:true}); }
   log(why === 'energy' ? 'Du er tom for energi. Avslutter fisket, trekker det som skal trekkes og går inn.' : 'Mannskapet er slitne. Avslutter juksinga, trekker det som skal trekkes og går inn.', why === 'energy' ? 'You are out of energy. Stopping the fishing, hauling what is due and going in.' : 'The crew are tired. Stopping the jigging, hauling what is due and going in.');
 }
-// the rules at an hour: a closed place, or the cod quota used up (drRulesWhy with the hour), and the first day within a month a closed place opens
+// the rules at an hour: a closed place, or the cod quota used up (as drRulesWhy in 06d-plan-felles.js, with the quota), and the first day within a month a closed place opens
 function plan2RulesWhy(o, H, placesOnly){
   const kind = p2Kind(o), hand = !(S.equip && S.equip.jukse > 0), F = o.places.filter(q => q.k === 'felt'), J = o.places.filter(q => q.k === 'juks');
   for (const [i, f] of F.entries()){ const why = ruBlockMsg({p:f, len:BOAT.len, gear:o.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? potSp() : null, H}); if (why) return {k:'closed', fix:'places', no:'Felt ' + (i + 1) + ' er stengt: ' + why, en:'Field ' + (i + 1) + ' is closed: ' + why}; }
