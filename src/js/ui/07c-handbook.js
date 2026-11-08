@@ -51,6 +51,9 @@ const HB = [
     no:'Sesong-appen forteller hva som skjer på kysten nå, og når skreien kommer.', en:'The Season app tells what is happening on the coast now, and when the skrei comes.'},
   {id:'post', ch:2, t:['Kystposten', 'The Coast Post'], when:() => hbLand() >= 1 && hbTry(() => pressUnread() > 0), show:() => phoneApp('post'),
     no:'Kystposten kommer med saker fra hele kysten: rekordpriser, de største landingene og årets første skrei.', en:'The Coast Post brings stories from the whole coast: record prices, the biggest landings and the first skrei of the year.'},
+  // the first trip landed round (core/13-work.js catchGut): the first time the jigging stops for the knife, what gutting is and gives
+  {id:'sloy', ch:2, t:['Sløying', 'Gutting'], when:() => hbLand() >= 1 && !!S.boat.deckStop && deckPending() > 0.5, show:() => hbDock(['deckgo', 'deckstop']),
+    no:'Nå sløyer du selv. Første tur leverte du rund fisk, og mottaket sløyde den. Sløyd om bord får du betalt for lever og rogn, og hyse og sei slipper sløyetrekket. Alene stopper fisket når bløggekaret er fullt, til fisken er sløyd. Med en mann til om bord sløyer han mens du fisker.', en:'Now you gut the catch yourself. On the first trip you landed it round, and the plant gutted it. Gutted aboard, you are paid for the liver and the roe, and haddock and saithe avoid the gutting charge. Alone, fishing stops when the bleeding tub is full, until the fish are gutted. With one more hand aboard, he guts while you fish.'},
   {id:'meld', ch:2, t:['Meldinger', 'Messages'], when:() => hbLand() >= 1 && S.msgs.length > 0, show:() => phoneApp('meld'),
     no:'Meldinger fra mottaket, Salgslaget og folk langs kysten havner her.', en:'Messages from the plant, the sales organisation and people along the coast land here.'},
   // 3: the evening and the night

@@ -113,7 +113,7 @@ async def play(p, W, H, tag):
         if s['ring']:
             await tap(s['ring']['x'], s['ring']['y']); await pg.wait_for_timeout(350 if sid != 'route2' else 700); continue
         await pg.wait_for_timeout(500)
-    end = json.loads(await pg.evaluate("JSON.stringify({crew:S.crew.length, tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), land:S.tutStart && S.tutStart.land, iceFree:!!S.iceFree, freeIce:tutFree('ice'), ice:S.boat.ice, gear:S.boat.gear, log:S.log.slice(-8).map(e => e.no)})"))
+    end = json.loads(await pg.evaluate("JSON.stringify({crew:S.crew.length, tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), land:S.tutStart && S.tutStart.land, iceFree:!!S.iceFree, freeIce:tutFree('ice'), ice:S.boat.ice, gear:S.boat.gear, log:S.log.slice(-8).map(e => e.no), gutKg:S.lastSale ? S.lastSale.lines.reduce((a, r) => a + (r.gut ? r.kg : 0), 0) : -1, roundKg:S.lastSale ? S.lastSale.lines.reduce((a, r) => a + (r.gut ? 0 : r.kg), 0) : -1, said:PSAYLOG.map(l => l.pick), knife:S.log.filter(e => /Bløggekaret er fullt|Tar unna fangsten|Stopper fisket for å sløye/.test(e.no)).length})"))
     await pg.evaluate("PHONE.show(false); DOCK.open('lever')"); await pg.wait_for_timeout(600)
     await pg.screenshot(path='tut_' + tag + '.png')
     order = [x for x in seen if x]
@@ -126,6 +126,8 @@ async def play(p, W, H, tag):
     check(end['haill'] != 'luksus', tag + ': ingen gratis luksushaill i første tur (Onboarding 2, V1 A: den er gaven ved registrering)', end['haill'])
     check(hold_at_land is not None and hold_at_land >= 174, tag + ': minst halvt lasterom ved levering etter en time på feltet (Onboarding 2, V2 A)', hold_at_land)
     check(end['sale'] and end['sale']['port'] == (end.get('land') or 'botnhamn') and bonus_row, tag + ': levert på første turs mottak med bonuslinje på sluttseddelen', end['sale'])
+    check(end['gutKg'] == 0 and end['roundKg'] > 100 and end['knife'] == 0, tag + ': første tur leveres rund, og fisket stoppet aldri for sløying (Jonas 08.11.2026)', {k: end[k] for k in ('gutKg', 'roundKg', 'knife')})
+    check('round' in end['said'], tag + ': kaia sier hva sløying om bord gir ved første levering', end['said'])
     check(reloads == 3, tag + ': tre omlastinger underveis', reloads)
     check(end['crew'] == 0, tag + ': ingen mannskap i første tur; det kommer som drypp (O4)', end['crew'])
     check('nout' in order, tag + ': naustet åpnet seg ved start, og «Gå ut» tok spilleren ned på kaia', [x for x in order if x.startswith('n')])

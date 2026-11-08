@@ -1204,3 +1204,8 @@
 2026-11-08 18:10	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2test	FEIL	79	lite	alene	FEIL S5 the tired crew end the day: no more jigging, the line is still hauled when due (within 3 h), then in [[['D1 13:19', 'Mannskapet er slitne. Avslutter juk
 2026-11-08 18:11	ccr-2040aa61-qgig5a	bba06b81+	docktest	OK	58	lite	alene	
 2026-11-08 18:12	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2test	FEIL	82	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
+2026-11-08 18:34	ccr-824d1172-0cmxu3	6aa39b2+	admintest	OK	7	lite	samtidig	
+2026-11-08 18:34	ccr-824d1172-0cmxu3	6aa39b2+	plantsaytest	OK	6	lite	samtidig	
+2026-11-08 18:35	ccr-824d1172-0cmxu3	6aa39b2+	trip2	OK	41	lite	samtidig	
+2026-11-08 18:35	ccr-824d1172-0cmxu3	6aa39b2+	worktest	FEIL	23	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 18:35	ccr-824d1172-0cmxu3	6aa39b2+	decktest	OK	17	lite	samtidig	
