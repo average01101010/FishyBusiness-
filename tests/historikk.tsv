@@ -1151,3 +1151,16 @@
 2026-11-08 13:04	claude/admiring-cray-klfggd	d2d27c4b	shoptest	OK	26	lite	samtidig	
 2026-11-08 13:04	claude/admiring-cray-klfggd	d2d27c4b	cashfxtest	OK	9	lite	samtidig	
 2026-11-08 13:04	claude/admiring-cray-klfggd	d2d27c4b	havtur	FEIL	0	lite	samtidig	FEIL hele kysten mangler i tools/map/out/game (release.py og game.py)
+2026-11-08 01:55	ccr-4946b87f-2gakv1	3ef127bb+	trip2	OK	49	lite	samtidig	
+2026-11-08 01:55	ccr-4946b87f-2gakv1	3ef127bb+	harbourtest	OK	23	lite	samtidig	
+2026-11-08 01:55	ccr-4946b87f-2gakv1	3ef127bb+	worldtest	OK	23	lite	samtidig	
+2026-11-08 01:56	ccr-4946b87f-2gakv1	3ef127bb+	draftlooptest	OK	22	lite	samtidig	
+2026-11-08 01:56	ccr-4946b87f-2gakv1	3ef127bb+	legmemotest	OK	17	lite	samtidig	
+2026-11-08 01:56	ccr-4946b87f-2gakv1	3ef127bb+	naustleia	OK	8	lite	samtidig	
+2026-11-08 01:56	ccr-4946b87f-2gakv1	3ef127bb+	rorbutest	OK	16	lite	samtidig	
+2026-11-08 01:56	ccr-4946b87f-2gakv1	3ef127bb+	autonavtest	OK	29	lite	samtidig	
+2026-11-08 01:56	ccr-4946b87f-2gakv1	3ef127bb+	r4test	OK	18	lite	samtidig	
+2026-11-08 01:59	ccr-4946b87f-2gakv1	3ef127bb+	starttest	OK	155	lite	samtidig	
+2026-11-08 02:00	ccr-4946b87f-2gakv1	77002765	routetest	OK	51	lite	alene	
+2026-11-08 02:01	ccr-4946b87f-2gakv1	cc46fabf	docktest	OK	62	lite	alene	
+2026-11-08 02:20	ccr-4946b87f-2gakv1	ab344fdf	tut	OK	1161	lite	alene	

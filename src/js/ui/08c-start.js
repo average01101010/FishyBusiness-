@@ -125,14 +125,15 @@ function tutMixAt(q, H, len, land){
   if (!Object.keys(mix).length && sps.length) mix[sps[0]] = 1;
   return {mix, sum, val};
 }
-function tutFieldNear(pt, land){
+// skip: places already found that Autonav cannot reach from the harbour (chooseStart); nothing within 0.8 km of one is taken again
+function tutFieldNear(pt, land, skip){
   const H = S.t / 60, V = VESSELS[S.boat.type] || VESSELS.skiff, lim = V.risk[0], len = V.len || 7;
   const at = q => ({x:Math.round(q.x * 1000) / 1000, y:Math.round(q.y * 1000) / 1000});
   for (const [r0, r1, d0, d1] of TUT_TIERS){
     let best = null;
     for (let r = r0; r <= r1 + 1e-6; r += 0.25) for (let a = 0; a < 360; a += 15){
       const q = {x:pt.p.x + Math.sin(a * Math.PI / 180) * r, y:pt.p.y - Math.cos(a * Math.PI / 180) * r};
-      if (isLand(q)) continue; const d = depthF(q); if (d < d0 || d > d1) continue;
+      if (isLand(q) || (skip && skip.some(k => dist(k, q) < 0.8))) continue; const d = depthF(q); if (d < d0 || d > d1) continue;
       if (startSeaMax(q, H) > lim) continue;
       if (ruBlockMsg({p:q, H, len, gear:'juksa', sp:null, hand:true})) continue;
       const m = tutMixAt(q, H, len, land); if (!Object.keys(m.mix).length) continue;
@@ -142,7 +143,7 @@ function tutFieldNear(pt, land){
   }
   // nothing anywhere near (never seen): the most sheltered sea 2 km out, with what the rules allow there
   const q = startRing(pt)[0], m = tutMixAt(q, H, len, land);
-  return {p:at(q), r:1.2, mix:Object.keys(m.mix).length ? m.mix : {sei:1}};
+  return {p:at(q), r:1.2, mix:Object.keys(m.mix).length ? m.mix : {sei:1}, last:true};
 }
 // move a new game to the harbour: its waters loaded first, then the boat, the trail, the first trip's patch and landing
 // a game from before moving its home (Settings, «Hjemsted»): only the home and Father's naust go there; the boat stays where she is and
@@ -155,7 +156,14 @@ async function chooseStart(pt, onProgress){
   const b = S.boat; b.port = pt.id; b.status = 'port'; b.pos = {x:pt.p.x, y:pt.p.y}; b.v = 0; S.trail = [{x:pt.p.x, y:pt.p.y, port:pt.id}]; S.draft = []; S.plan = null;
   // the first trip (made when the boat gets her name, tutNew) starts from here
   // Vangshamn has no plant: the first catch goes to Botnhamn, 5.7 km west
-  { const f = tutFieldNear(pt, portById(pt.mottak ? pt.id : 'botnhamn')); S.tutStart = {land:pt.mottak ? pt.id : 'botnhamn', reg:startInfo(pt).region}; if (f) S.tutStart.f = {...f, at:{no:'utenfor ' + pt.name, en:'off ' + pt.name}}; if (S.tut && S.tut.v === 2) Object.assign(S.tut, S.tutStart); }
+  // the patch must be one Autonav finds a way to from the harbour (08.11.2026; Jonas: «Noen spillere opplever å ikke kunne forlate kaien
+  // ved første oppdrag fordi Autonav ikke fungerer»): at Fosnavåg on 17.09.2027 it lay 2.6 km south-west, in water Autonav found no way to
+  // even from the plant's quay («Fant ingen trygg rute dit.»), and the first trip had nowhere to go. The next best is tried, up to four;
+  // where none is reached (never seen), the best stands as before. From Father's naust the way goes by the harbour where it must (leiaTo)
+  { const land = portById(pt.mottak ? pt.id : 'botnhamn'), skip = []; let f = tutFieldNear(pt, land), f0 = f;
+    for (let k = 0; k < 4 && f && !f.last; k++){ let r = null; try { r = await leiaRoute({x:pt.p.x, y:pt.p.y}, f.p, pt.id, null); } catch (e){ console.error(e); break; }
+      if (!r.why) break; skip.push(f.p); f = tutFieldNear(pt, land, skip); if (!f || f.last || k === 3){ f = f0; break; } }
+    S.tutStart = {land:pt.mottak ? pt.id : 'botnhamn', reg:startInfo(pt).region}; if (f) S.tutStart.f = {...f, at:{no:'utenfor ' + pt.name, en:'off ' + pt.name}}; if (S.tut && S.tut.v === 2) Object.assign(S.tut, S.tutStart); }
   view.cx = pt.p.x; view.cy = pt.p.y;
   // the whole first trip's ground in before the game begins: the harbour, the patch of fish and the landing, every kind of pack the chart and
   // the 3D view read there (the player has nothing left to wait for after this screen)

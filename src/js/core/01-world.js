@@ -342,7 +342,8 @@ function legClearMemo(a, b){
   if (LCM.v !== v){ LCM.v = v; LCM.m.clear(); }
   const k = a.x.toFixed(5) + ',' + a.y.toFixed(5) + '|' + b.x.toFixed(5) + ',' + b.y.toFixed(5);
   let r = LCM.m.get(k); if (r !== undefined) return r;
-  r = legClear(a, b); if (LCM.m.size > 4000) LCM.m.clear(); LCM.m.set(k, r); return r;
+  // (or over a sealed harbour's own fill, which its way out crosses: 07-harbours.js quayLandLeg, 08.11.2026)
+  r = legClear(a, b) || (typeof quayLandLeg === 'function' && quayLandLeg(a, b)); if (LCM.m.size > 4000) LCM.m.clear(); LCM.m.set(k, r); return r;
 }
 
 const PORTS = [
