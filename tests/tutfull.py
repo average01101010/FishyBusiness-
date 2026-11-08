@@ -47,7 +47,7 @@ async def main():
           const F = S.tut.fk, r = {m:F.m === undefined ? null : F.m, top:F.top === undefined ? null : F.top}; S.tut = keep; b.status = 'port'; S.hold = []; b.fishUntil = null; return r; })())'''))
         check(leg['m'] is None and leg['top'] is None, 'en lagring fra midt i første tur før S0 får ingen tellere halvveis (tutNormKg regner den som før)', leg)
         print('en time', one); print('en time, alene på dekk', alone); print('to timer', two); print('stopp etter 20 min', stop)
-        check(one['kg'] >= one['cap'] - 1, 'en time på feltet gir full last i trebåten (TUT_HOLD 1, capHold ' + str(one['cap']) + ' kg)', one)
+        check(one['kg'] >= one['cap'] - 1, 'en time på feltet gir full last i trebåtens kar (TUT_HOLD 1, capHold ' + str(one['cap']) + ' kg)', one)
         check(alone['kg'] >= alone['cap'] - 1 and alone['st'] != 'fishing', 'også alene, med sløyingen først: full last, og fisket er slutt', {k: alone[k] for k in ('kg', 'mins', 'st')})
         check(two['kg'] >= two['cap'] - 1 and two['top'] < one['top'], 'to timer gir full last med mindre påfylling enn én', {'en': one['top'], 'to': two['top']})
         check(stop['kg'] < 0.6 * stop['cap'] and stop['st'] == 'idle' and (stop.get('m') or 0) <= 21, 'den som stopper etter 20 minutter, har det som er om bord, og påfyllingen stopper med fisket', {k: stop.get(k) for k in ('kg', 'm', 'st')})

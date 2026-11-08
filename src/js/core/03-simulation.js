@@ -598,8 +598,8 @@ const tutFieldAt = () => (typeof S !== 'undefined' && S && S.tut && S.tut.f) ? S
 // the mix: the patch's own (S.tut.f.mix, the jig's fish that stand there now and are lawful there, ui/08c-start.js tutFieldNear), else
 // the skrei mix of the Senja start
 const TUTB = {peak:5.2, mix:{torsk:0.72, sei:0.18, hyse:0.1}};
-// the first trip's fishing: one hour (ten real minutes; Onboarding 2, O3, 27.10.2026), and the guarantee tops up to a full hold (capHold(), 500 kg
-// in the starting boat) within the fishing time, only while the boat fishes (Ø8b S0, V3 C in docs/planer/spillbarhet-fangst.md, Jonas
+// the first trip's fishing: one hour (ten real minutes; Onboarding 2, O3, 27.10.2026), and the guarantee tops up to a full load (capHold(): the starting
+// boat has no hold but one 500 kg tub on deck, 07f-kar.js) within the fishing time, only while the boat fishes (Ø8b S0, V3 C in docs/planer/spillbarhet-fangst.md, Jonas
 // 06.11.2026: «det er jo dumt å ikke fylle båten»; it was half the hold from O3). The player may stop when she likes and lands what is aboard
 const TUT_FISH_H = 1, TUT_HOLD = 1;
 const tutTarget = () => capHold() * TUT_HOLD;

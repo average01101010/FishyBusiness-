@@ -1,7 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
-    ['o8b-s0-081126', '08.11.2026', 'Full last på første tur', 'A full hold on the first trip', [
-       ['På første tur fisker båten til lasterommet er fullt. Vil du levere før, trykker du «Stopp», og leverer det som er om bord.', 'On the first trip the boat fishes until the hold is full. To land sooner, tap «Stop», and land what is aboard.'],
+    ['o8b-s0-081126', '08.11.2026', 'Full last på første tur', 'A full load on the first trip', [
+       ['På første tur fisker båten til hun har full last. Vil du levere før, trykker du «Stopp», og leverer det som er om bord.', 'On the first trip the boat fishes until she has a full load. To land sooner, tap «Stop», and land what is aboard.'],
        ['Dekksdagboka husker første tur: hva vanlig fiske med håndjuksa gir der du fisket første gang.', 'The deck log remembers the first trip: what ordinary fishing with a hand jig gives where you first fished.']]],
     ['o8bm-081126', '08.11.2026', 'Måltider og hvile om bord', 'Meals and rest aboard', [
        ['Mannskapet spiser til faste tider på sjøen: frokost 06:30, lunsj 12:30, middag 18:30 og nattmat 00:30. Kokken begynner en halvtime før, og bare de som er våkne spiser. Mannskap-siden viser neste måltid.', 'The crew eat at fixed hours at sea: breakfast 06:30, lunch 12:30, dinner 18:30 and a night meal 00:30. The cook starts half an hour before, and only those awake eat. The Crew page shows the next meal.'],
