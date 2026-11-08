@@ -44,7 +44,7 @@ function learnHour(c){
 // skipper does not cook). Nobody free within an hour of the meal, and it is dry bread. A meal nobody is awake for is passed over and does
 // not count: at night with the boat lying still and everyone resting (mealAwake). The food is one for the boat (assumed, as before: the
 // last four meals make the food on board, foodScore 1–5, for everyone aboard; a food score per person is a larger change)
-const MEAL = {cook:30, wait:60, ok:3, at:[30, 390, 750, 1110], night:[22 * 60, 6 * 60]};
+const MEAL = {cook:30, wait:60, ok:3, at:[30, 390, 750, 1110], night:[22 * 60, 6 * 60], every:360};   // (every: the ocean vessel's lagMeal, 04-crew.js; mealMinute sets the next fixed hour after it)
 const MEAL_NAME = {30:['nattmat', 'night meal'], 390:['frokost', 'breakfast'], 750:['lunsj', 'lunch'], 1110:['middag', 'dinner']};
 const DISH = [null, ['tørre brødskiver', 'dry slices of bread'], ['pølser i lompe', 'hot dogs in flatbread'], ['fiskekaker med løk', 'fish cakes with onions'],
   ['kokt torsk med poteter', 'boiled cod with potatoes'], ['mølje med lever og rogn', 'mølje: cod with liver and roe']];
@@ -55,8 +55,10 @@ const dayMin = t => { const d = gDate(t / 60); return d.getUTCHours() * 60 + d.g
 function nextMealAt(t){ const m = dayMin(t), d0 = t - m; for (const a of MEAL.at) if (d0 + a > t) return d0 + a; return d0 + 1440 + MEAL.at[0]; }
 const mealName = t => MEAL_NAME[dayMin(t)] || ['måltid', 'meal'];
 const cookMin = () => (BOAT.fx && BOAT.fx.cook) || MEAL.cook;
-// the galley has work from the cook's start until the meal is served (or passed over)
-function mealDue(){ const M = mealState(); return M.due != null && S.t >= M.due - cookMin() && S.boat.status !== 'port'; }
+// the galley has work from the cook's start until the meal is served (or passed over); never where nobody cooks: no galley aboard (the
+// flask), or an ocean vessel's own cook in the galley
+const ownGalley = () => ((BOAT.fac && BOAT.fac.galley) || 'bysse') !== 'none' && !(lagOf() && lagSpec().key.includes('kokk'));
+function mealDue(){ const M = mealState(); return M.due != null && S.t >= M.due - cookMin() && S.boat.status !== 'port' && ownGalley(); }
 // the night (22–06 on the clock) with the boat lying still: the crew sleep on a break (sleep, or rest at night when nothing is being worked)
 const mealNight = t => { const m = dayMin(t); return m >= MEAL.night[0] || m < MEAL.night[1]; };
 function crewAsleep(p, A){ if (!p || p.st !== 'pause') return false; if ((p.c && p.c.idle === 'sleep') || p.idle === 'sleep') return true;
@@ -80,13 +82,14 @@ function mealMinute(A){
   // the first meal at sea is the next one the cook can make (they ate ashore); a game from before the fixed hours moves to them
   if (M.due == null || !MEAL_NAME[dayMin(M.due)]){ M.due = nextMealAt(S.t + cookMin() - 1); M.cook = null; return; }
   if (S.t < M.due - cookMin()) return;
+  // the cook taken from the stove before the meal was ready (the helm, or gone from the crew): it is started over by whoever comes
+  const ck = A.find(p => p.st === 'kokk'); if (!ck && M.cook) M.cook = null;
   // nobody awake when the cook would start: the meal is passed over and does not count
   if (!M.cook && S.t < M.due + MEAL.wait && !mealAwake(A)){ if (S.t >= M.due){ M.skip = (M.skip || 0) + 1; M.due = nextMealAt(S.t); } return; }
   // no galley aboard (schema v2 fac.galley): a packed lunch and coffee from the flask when the meal is due, nobody cooks; a hotplate caps the dish at 4
   const gal = (BOAT.fac && BOAT.fac.galley) || 'bysse';
   if (gal === 'none'){ if (S.t >= M.due) serveMeal(2, null, false, ['matpakke og kaffe fra termosen', 'a packed lunch and coffee from the flask']); return; }
-  if (lagOf() && lagSpec().key.includes('kokk')){ if (S.t >= M.due){ lagMeal(); M.due = nextMealAt(S.t + cookMin()); } return; }   // an ocean vessel's own cook (04-crew.js, H2b)
-  const ck = A.find(p => p.st === 'kokk');
+  if (lagOf() && lagSpec().key.includes('kokk')){ if (S.t >= M.due){ const nm = mealName(M.due); lagMeal(); M.due = nextMealAt(S.t + cookMin()); if (M.last) M.last.nm = nm; } return; }   // an ocean vessel's own cook (04-crew.js, H2b)
   if (ck){ const id = ck.c ? ck.c.id : 'me'; if (!M.cook || M.cook.id !== id) M.cook = {id, m:0}; M.cook.m++;
     if (M.cook.m >= cookMin() && S.t >= M.due) serveMeal(Math.min(gal === 'plate' ? 4 : 5, ck.c ? clamp(Math.round(ck.c.attr.kokk), 1, 5) : 3), ck.c, !ck.c); return; }
   if (S.t >= M.due + MEAL.wait && !M.cook) serveMeal(1, null, false);

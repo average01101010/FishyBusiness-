@@ -200,7 +200,7 @@ function workAssign(as){
     const who = me || m || o || P.slice().sort((a, b) => b.c.attr.sjo - a.c.attr.sjo)[0]; put(who, 'ror', me ? 'skipper' : m ? 'mate' : o ? 'opsk' : 'seaman'); }
   // the cook who has started the meal stays at the stove until it is served (14-crewlife.js mealMinute; before, the deck could take her
   // to the table between two minutes, another started over, and the meal came late: mannskapshot.py)
-  if (ctx.kokk){ const M = mealState(), ck = M.cook && P.find(p => p.c && p.c.id === M.cook.id && !p.st); if (ck) put(ck, 'kokk', 'cook'); }
+  if (ctx.kokk){ const M = mealState(), ck = M.cook && P.find(p => p.c && p.c.id === M.cook.id && !p.st && pTired(p) < 0.85); if (ck) put(ck, 'kokk', 'cook'); }
   // the work waiting at each station, in one person's minutes, and the crew's own jobs on the gear
   const left = {sloy:ctx.gutKg / gutPace(), is:ctx.iceKg / DECK.ice, blogg:ctx.blogg ? 30 : 0, haling:ctx.haling && ctx.gk !== 'teine' ? 20 : 0, sort:ctx.sort ? 10 : 0};
   const jobs = jobsOpen(as), jn = new Map(jobs.map(j => [j, 0]));

@@ -74,11 +74,18 @@ function restMinute(){
 // where to rest from here, in words (Ø8b M1, Jonas 06.11.2026: «Sørg også for at spillere på båter uten lugarer vet at de må finne en
 // rorbu for å sove. Dette er viktig for nye spillere.»): the bunk on a boat with berths (at anchor, or with someone of the crew on watch),
 // else ashore, with the nearest rorbu and how far it is
-function rorbuTip(p){ const rb = p ? (rorbuNear(p, 40)[0] || rorbuNear(p, 120)[0]) : null; return rb ? {name:rb.R.name, nm:rb.d / NM} : null; }
+// (a rorbu whose quay was looked for on the shore and not found has no berth and no mark on the chart: rorbuSite, 07d-rorbu.js; one not
+// worked out yet, its map block not in, is kept)
+const rorbuUsable = R => { try { rorbuSite(R); } catch (e){} return R.site !== null; };
+function rorbuTip(p){ const rb = p ? rorbuNear(p, 120).find(e => rorbuUsable(e.R)) : null; return rb ? {name:rb.R.name, nm:rb.d / NM} : null; }
+// «Nærmeste rorbu er i Husa, 3 nm unna.» (the toast, the log and the handbook's drip say it the same way)
+const rorbuLine = r => { const n = r.nm < 0.5 ? ['under 1', 'under 1'] : [String(Math.round(r.nm)), String(Math.round(r.nm))];
+  return ['Nærmeste rorbu er i ' + r.name + ', ' + n[0] + ' nm unna.', 'The nearest rorbu is in ' + r.name + ', ' + n[1] + ' nm away.']; };
 function restTip(b){
   if (bunks(b)) return bunkOk(b, myVessel()) ? ['Gå ned i køya og hvil.', 'Go down to the bunk and rest.'] : ['Ankre opp og gå ned i køya, eller gå i køya når noen av mannskapet har vakta.', 'Anchor and go down to the bunk, or take the bunk when someone of the crew has the watch.'];
   const r = b && b.status !== 'port' ? rorbuTip(b.pos) : null;
-  return r ? ['Båten har ingen køyer, så du må i land for å sove. Nærmeste rorbu er i ' + r.name + ', ' + fmt(r.nm, 0) + ' nm unna.', 'The boat has no bunks, so you must go ashore to sleep. The nearest rorbu is in ' + r.name + ', ' + fmt(r.nm, 0) + ' nm away.']
+  const ln = r ? rorbuLine(r) : null;
+  return r ? ['Båten har ingen køyer, så du må i land for å sove. ' + ln[0], 'The boat has no bunks, so you must go ashore to sleep. ' + ln[1]]
     : ['Båten har ingen køyer, så du må i land for å sove: seil til naustet eller en rorbu.', 'The boat has no bunks, so you must go ashore to sleep: sail to your boathouse or a rorbu.'];
 }
 const meEff = () => S.energy != null && S.energy < ENERGY.warn ? ENERGY.slow : 1;

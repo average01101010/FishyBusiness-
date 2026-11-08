@@ -20,7 +20,8 @@ const hbTry = f => { try { return !!f(); } catch (e){ return false; } };
 const hbSvc = k => hbTry(() => hbPort() && berthKind(S.boat) !== 'naust' && portServices(portById(S.boat.port), berthKind(S.boat))[k]);
 const hbDock = ids => inPlot() ? to3d() : {el:vis([].concat(ids).map(k => '#dock [data-dk=' + k + ']'))};
 // the nearest rorbu from the sea, as a sentence (15-energy.js rorbuTip; nothing in port, where the dock's «Hvil» is the answer)
-const hbRb = () => { let r = null; if (!hbPort()) try { r = rorbuTip(S.boat.pos); } catch (e){ r = null; } return r ? [' Nærmeste rorbu er i ' + r.name + ', ' + fmt(r.nm, 0) + ' nm unna.', ' The nearest rorbu is in ' + r.name + ', ' + fmt(r.nm, 0) + ' nm away.'] : ['', '']; };
+let HB_RB = {t:-1, v:['', '']};   // (once a game minute: the handbook's search reads the text for every key)
+const hbRb = () => { if (HB_RB.t === S.t) return HB_RB.v; let r = null; if (!hbPort()) try { r = rorbuTip(S.boat.pos); } catch (e){ r = null; } const l = r ? rorbuLine(r) : null; HB_RB = {t:S.t, v:l ? [' ' + l[0], ' ' + l[1]] : ['', '']}; return HB_RB.v; };
 // the tips: id, chapter, a short name, the text, when it drips (first time true), and where it points while shown
 const HB = [
   // 2: trips 2 and 3, the same day

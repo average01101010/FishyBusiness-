@@ -52,6 +52,14 @@ export default function (t){
   { const A = [{c:C[0], st:'haling'}, {c:C[1], st:'haling'}, {c:C[2], st:'blogg'}]; b.status = 'fishing'; S.meal = {due:2 * D + 30, cook:null, hist:[3]};
     for (S.t = 2 * D; S.t <= 2 * D + 30 + MEAL.wait; S.t++) K.mealMinute(A);
     const N = S.meal; t.eq([N.hist, N.last.by, hm(N.last.t), hm(N.due)], [[3, 1], null, '07:30', '12:30'], 'alle i arbeid en hel time etter frokosttida: tørre brødskiver fra ingen 07:30, så lunsj'); }
+  // the cook taken from the stove (to the helm) before the meal is ready, and nobody else free: dry bread at the hour's end, not stuck
+  { b.status = 'fishing'; S.meal = {due:6 * D + 390, cook:null, hist:[]}; const A1 = [{c:C[1], st:'kokk'}, {c:C[0], st:'haling'}], A2 = [{c:C[1], st:'ror'}, {c:C[0], st:'haling'}];
+    for (S.t = 6 * D + 360; S.t <= 6 * D + 390 + MEAL.wait; S.t++) K.mealMinute(S.t < 6 * D + 375 ? A1 : A2);
+    t.eq([S.meal.hist, S.meal.cook, hm(S.meal.due)], [[1], null, '18:30'], 'kokken tatt til roret halvveis: tørre brødskiver når timen er ute, så middag'); }
+  // no galley aboard: nobody is taken to the stove, and the packed lunch comes at the hour
+  { b.type = 'snekke'; K.applyVessel(); S.meal = {due:7 * D + 390, cook:null, hist:[]}; S.t = 7 * D + 365;
+    t.ok(!K.mealDue(), 'uten bysse har kokken ingenting å gjøre: ingen tas fra fisket'); for (; S.t <= 7 * D + 390; S.t++) K.mealMinute([{c:C[0], st:'fiske'}]);
+    t.eq([S.meal.hist, S.meal.last.nm[0]], [[2], 'lunsj'], 'uten bysse: matpakke og kaffe fra termosen (2) til lunsj'); b.type = 'sjark'; K.applyVessel(); }
   // ---- learning: the galley three times as fast ----
   const mk = () => { const c = K.genCrew(); c.age = 30; c.morale = 60; c.traits = []; c.attr.kokk = 2; c.gear.sloy = 2; return c; };
   const a = mk(), z = mk(); a.wk = {kokk:60}; z.wk = {sloy:60}; K.learnHour(a); K.learnHour(z);

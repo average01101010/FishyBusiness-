@@ -1223,3 +1223,18 @@
 2026-11-08 18:38	ccr-ed93b6bd-ek0n3a	3c245ff+	decktest	OK	14	lite	samtidig	
 2026-11-08 18:39	ccr-ed93b6bd-ek0n3a	3c245ff+	opptest	OK	55	lite	samtidig	
 2026-11-08 18:39	ccr-ed93b6bd-ek0n3a	3c245ff+	hbtest	OK	15	lite	samtidig	
+2026-11-08 18:40	ccr-ed93b6bd-ek0n3a	86d0a0b+	opsowntest	OK	36	lite	samtidig	
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	mobtest	OK	137	lite	samtidig	
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	boostklokke	OK	37	lite	samtidig	
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	skipdrift	OK	18	lite	samtidig	
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	skiptest	OK	15	lite	samtidig	
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	autonavtest	FEIL	7	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 89, 'cell': 0.2, 'maxSlice': 8.3, 'mended': 0, 'ba
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	trip2	OK	36	lite	samtidig	
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	itemcardtest	FEIL	16	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'linesetter', 'garnrenne', 'jukse', 'krabbekar', 'brova
+2026-11-08 18:42	ccr-ed93b6bd-ek0n3a	86d0a0b+	havtur	FEIL	0	lite	samtidig	FEIL hele kysten mangler i tools/map/out/game (release.py og game.py)
+2026-11-08 18:44	ccr-ed93b6bd-ek0n3a	86d0a0b+	itemcardtest	FEIL	14	lite	alene	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'teinehaler', 'linesetter', 'garnrenne', 'jukse', 'krabbekar', 'brova
+2026-11-08 18:45	ccr-ed93b6bd-ek0n3a	86d0a0b+	mannskapshot	OK	16	lite	samtidig	
+2026-11-08 18:45	ccr-ed93b6bd-ek0n3a	86d0a0b+	worktest	FEIL	21	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 18:45	ccr-ed93b6bd-ek0n3a	86d0a0b+	selfcrew	OK	6	lite	samtidig	
+2026-11-08 18:46	ccr-ed93b6bd-ek0n3a	86d0a0b+	crewlifetest	OK	5	lite	samtidig	
+2026-11-08 18:46	ccr-ed93b6bd-ek0n3a	86d0a0b+	hbtest	OK	14	lite	samtidig	

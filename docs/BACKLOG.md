@@ -326,7 +326,8 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
   - Kokken lærer tre ganger så fort ved komfyren (`LEARN_ST.kokk` = 3, startverdi): fra 2 til 2,5 rundt 17 timer for en på 30 år.
   - Matstellet er felles for båten; et måltid hoppes over uten å telle når ingen i mannskapet er våkne (pause i køya, eller pause om natta 22–06 mens ingen arbeider). Du alene ved roret med mannskapet i køya gir heller ikke måltid. Grensen 22–06 for «natt» er en antakelse.
   - Første måltid til sjøs er det neste kokken rekker (ut 06:00 gir frokost 06:30).
-  - Meldingen under 50 % på en båt uten køyer kommer én gang per spiller (`S.enNoBunk`); nærmeste rorbu søkes innen 40 km, så 120 km.
+  - Meldingen under 50 % på en båt uten køyer kommer én gang per spiller (`S.enNoBunk`); nærmeste rorbu søkes innen 120 km blant rorbuene med kai.
+  - Om nattmaten spises under seiling, avhenger av om mannskapet har valgt køya som pause (etter slitenheten, skifter hvert 12. minutt); ikke spilltestet.
   - Ikke spilltestet med `mannskapsplay.py` på hele tredøgnsløpet etter endringen utover ett scenario (se testene under).
 - **`worktest` «asleep the screen is black with a countdown» er rød** (08.11.2026, sett på arbeidsgrenens bygg uten Ø8b M også): søvnskjermen viser «Trykk ACK for å kvittere», så brovaktsalarmen er med i testens tilstand. Ikke undersøkt.
 
