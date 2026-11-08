@@ -45,13 +45,14 @@ const TRK = {r:0.004, groundW:3, groundR:2, hph:730.5,
 const TRK_SP = ['torsk', 'hyse', 'sei', 'lyr', 'lange', 'brosme', 'uer', 'kveite', 'sild', 'makrell', 'snokrabbe'];
 const TRK_G = ['open', 'u11', 'g11', 'g15', 'g21', 'tral', 'hav', 'all'];
 // the area of each location and main area of rules.json (km², from the polygons), and how many 2 km cells of each location lie within
-// TRK.groundR of a named ground (felt.json), for laying the pressure on the grounds
+// TRK.groundR of a named ground (felt.json), for laying the pressure on the grounds. Only the fishing grounds (k = f): the spawning and
+// the nursery grounds (Ø14 F1, V3) are names, never pressure
 function trkAreas(){
   if (TRK.A) return TRK.A;
   const area = P => { let a = 0; for (const p of P){ const r = p.rings[0]; let s = 0; for (let i = 0, j = r.length - 2; i < r.length; j = i, i += 2) s += (r[j] - r[i]) * (r[j + 1] + r[i + 1]); a += Math.abs(s) / 2; } return a; };
   const lok = RU.lok.map(h => Math.max(1, area(h.P))), hom = RU.hom.map(h => Math.max(1, area(h.P)));
   const gc = new Float64Array(RU.lok.length), gch = new Float64Array(RU.hom.length), seen = new Set(), seenA = new Set(), homI = new Map(RU.hom.map((h, i) => [h.c, i]));
-  for (const f of (typeof feltData === 'function' && feltData()) || []){
+  for (const f of (typeof feltData === 'function' && feltData()) || []){ if (f.k !== 'f') continue;
     // the grounds for active gear (trawl, seine, Danish seine) take the ocean fleet's pressure in their main area
     if (f.g !== 'p') for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){ const ix = Math.floor(f.x / 2) + dx, iy = Math.floor(f.y / 2) + dy, k = gridKey(ix, iy); if (seenA.has(k)) continue;
       if (Math.hypot((ix + 0.5) * 2 - f.x, (iy + 0.5) * 2 - f.y) > TRK.groundR + 1) continue; seenA.add(k); const c = lokOfCell({x:(ix + 0.5) * 2, y:(iy + 0.5) * 2}); const hi = c.l >= 0 ? homI.get(RU.lok[c.l].c.slice(0, 2)) : undefined; if (hi !== undefined) gch[hi]++; }
@@ -59,12 +60,12 @@ function trkAreas(){
       if (Math.hypot((ix + 0.5) * 2 - f.x, (iy + 0.5) * 2 - f.y) > TRK.groundR + 1) continue; seen.add(k); const c = lokOfCell({x:(ix + 0.5) * 2, y:(iy + 0.5) * 2}); if (c.l >= 0) gc[c.l]++; } }
   return TRK.A = {lok, hom, gc, gch, homI};
 }
-// a cell's weight within its location: three times on the named grounds; and the location's sum of weights (its cells, the ground
-// cells counted three times)
+// a cell's weight within its location: three times on the named fishing grounds (k = f); and the location's sum of weights (its
+// cells, the ground cells counted three times)
 function trkCellW(c){
   if (c.gw !== undefined) return c.gw;
   let w = 1, wa = 1; const D = typeof feltData === 'function' && feltData();
-  if (D){ const x = c.cx, y = c.cy, s = FELT.cell; for (let gy = Math.floor((y - 3) / s); gy <= Math.floor((y + 3) / s); gy++) for (let gx = Math.floor((x - 3) / s); gx <= Math.floor((x + 3) / s); gx++){ const a = FELT.grid.get(gridKey(gx, gy)); if (a) for (const f of a) if (Math.hypot(f.x - x, f.y - y) < TRK.groundR + 1){ w = TRK.groundW; if (f.g !== 'p') wa = TRK.groundW; } } }
+  if (D){ const x = c.cx, y = c.cy, s = FELT.cell; for (let gy = Math.floor((y - 3) / s); gy <= Math.floor((y + 3) / s); gy++) for (let gx = Math.floor((x - 3) / s); gx <= Math.floor((x + 3) / s); gx++){ const a = FELT.grid.get(gridKey(gx, gy)); if (a) for (const f of a) if (f.k === 'f' && Math.hypot(f.x - x, f.y - y) < TRK.groundR + 1){ w = TRK.groundW; if (f.g !== 'p') wa = TRK.groundW; } } }
   c.gwa = wa; return c.gw = w;
 }
 // the national skrei season from the notes: the cod over the summer level, January-May, by month (kg a year at the notes' level)

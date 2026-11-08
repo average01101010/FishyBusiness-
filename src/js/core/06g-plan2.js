@@ -236,11 +236,16 @@ function planDayAuto(o, H0, st){
 // a trip of several days: its length in days, and whether the plan's day (0 from its first) is the trip's last, before home
 function p2TripLen(o){ return Math.max(2, (o && o.days) || 2); }
 function p2TripLast(o, dayIndex){ return dayIndex % p2TripLen(o) === p2TripLen(o) - 1; }
-// the days «Levering hvert N. døgn» lands on, counted from the plan's first day (0): the first day and every N after (0, N, 2N …); on a
-// trip of several days as long as N, its last day instead, before she goes home (Jonas 08.11.2026: «A», Ø12 A+B's question: before, a
-// trip of three days with landing every third day landed on day 1 and day 4 and came home on day 3 with two days' catch aboard). A trip
-// of another length than N lands as before: whether it should land on its last day too is a choice for Jonas (the backlog).
-function p2LandsToday(o, dayIndex){ const N = Math.max(1, ((o && o.land) || {}).days || 2); return o && o.rhythm === 'multi' && N === p2TripLen(o) ? p2TripLast(o, dayIndex) : dayIndex % N === 0; }
+// the days «Levering hvert N. døgn» lands on, counted from the plan's first day (0): a day plan lands on the first day and every N after
+// (0, N, 2N …). A trip of several days always lands on its last day, before she goes home, and besides every N days counted from the
+// trip's first day when N is shorter than the trip (Jonas 08.11.2026, valg 13: «A», a trip as long as N lands on its last day; valg 14:
+// «A», the same for any N. Before, a trip of three days landed on day 1 and 4 and came home on day 3 with two days' catch aboard)
+function p2LandsToday(o, dayIndex){
+  const N = Math.max(1, ((o && o.land) || {}).days || 2);
+  if (!(o && o.rhythm === 'multi')) return dayIndex % N === 0;
+  const T = p2TripLen(o), d = dayIndex % T;
+  return d === T - 1 || (N < T && (d + 1) % N === 0);
+}
 function planDay(o, H0, st){
   st = st || plan2StateOf(o);
   if (p2Sno(o)){ const s2 = Object.assign({}, st, {H:H0}); if (!s2.sno || Math.abs(st.H - H0) > 1) s2.sno = p2SnoState(o, s2); return planDaySno(o, H0, s2); }   // (the snow crab vessel's strings, H3c)
