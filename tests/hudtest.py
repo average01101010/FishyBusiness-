@@ -4,8 +4,13 @@ innstillingene»; UI 2, U2-1, docs/planer/ui-2-staaende.md 4.1–4.2, 06.11.2026
 the strip has three lines and a fixed height, no fold button, the same height in harbour, idle and under way, and the little chart stands
 still above it, as wide as the strip (Jonas 06.11.2026, B); a tap on the strip gives the whole box as a card over the chart, with the whole table, and a tap outside or on the card closes it; the
 chart folds to a strip with speed, course and position, and opens again; «Skjul HUD» in the settings takes them all away, and it is kept
-after a reload. On a tablet on its side: the whole box with a fixed width and a 44 px fold button, the gauges a 44 px target; «–» folds it
-to the three-line strip with «+», and the chart moves up under it; the chart's top is the same in harbour and under way. Prints OK or FEIL."""
+after a reload. On a tablet on its side: the whole box with a fixed width and no fold button (Jonas 07.11.2026: «Du har ikke fjernet dette
+minustegnet»), the gauges a 44 px target; a tap on the box folds it
+to the three-line strip under the little chart, which stands at the top as upright (Jonas 07.11.2026: «jeg sa at kartet alltid skulle
+være den øverste boksen»), and the chart folded lifts the box up under its GPS strip; the strip has no «+» (Jonas 07.11.2026: «Fjern plusstegnet fra den øverste
+statusboksen slik at den fungerer bare ved å trykke på stripa»), and a tap on it opens the whole box again, not the card; the chart's «+»
+stands at the far left of its strip; the hold's icon on the strip is a fish, not Om bord's box (Jonas: «gjør ikonet som står for last i
+statusboksen om til en fisk»); the chart's top is the same in harbour and under way. Prints OK or FEIL."""
 from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
@@ -16,7 +21,7 @@ def check(ok, what, extra=''):
 
 
 BOX = """(() => { const r = s => { const e = document.querySelector(s); if (!e) return null; const q = e.getBoundingClientRect(), cs = getComputedStyle(e);
-  return cs.display === 'none' || !q.width ? null : {h:Math.round(q.height), w:Math.round(q.width), top:Math.round(q.top)}; };
+  return cs.display === 'none' || !q.width ? null : {h:Math.round(q.height), w:Math.round(q.width), top:Math.round(q.top), left:Math.round(q.left)}; };
   return {hud:r('#hud'), plot:r('#miniPlot'), gps:r('#gps3d'), compass:r('#compass3d'), fold:r('#plotMin'), hmin:r('#hud .hmin'), gauges:r('#hud .gauges'), text:document.getElementById('hud').textContent, gtext:document.getElementById('gps3d').textContent,
     lines:['.hs1', '.hs2', '.st.nx', '.hfull', '.hnow'].filter(c => document.querySelector('#hud ' + c)), cls:['hudmin', 'plotmin', 'hudoff', 'hudstrip', 'hudcard'].filter(c => document.body.classList.contains(c))}; })()"""
 # the boat in harbour, idle at sea and under way (the next event and the «now» rows change the box's content between them)
@@ -89,26 +94,71 @@ async def tablet(p):
     await boot(pg, GAME + '#notut'); await pg.wait_for_timeout(800)
     await pg.evaluate("(() => { if (!document.body.classList.contains('v3d') && typeof G3 !== 'undefined') G3.show(true); S.settings.hudMin = false; S.settings.plotMin = false; S.boat.status = 'idle'; S.boat.port = null; renderHud(); })()"); await pg.wait_for_timeout(800)
     a = await pg.evaluate(BOX)
-    # 1. on its side the whole box stands, with a fixed width, the fold button and the gauges as 44 px targets
-    check(a['hud'] and 'hudstrip' not in a['cls'] and '.hnow' in a['lines'] and a['hmin'] and a['hmin']['w'] >= 44 and a['hmin']['h'] >= 44 and a['gauges'] and a['gauges']['h'] >= 44,
-          'on its side the whole box stands, with the fold button and the gauges as 44 px targets', {'hud': a['hud'], 'hmin': a['hmin'], 'gauges': a['gauges']})
+    # 1. on its side the whole box stands, with a fixed width, no «–» (Jonas 07.11.2026) and the gauges as a 44 px target
+    check(a['hud'] and 'hudstrip' not in a['cls'] and '.hnow' in a['lines'] and not a['hmin'] and '–' not in a['text'] and a['gauges'] and a['gauges']['h'] >= 44,
+          'on its side the whole box stands, without «–», and the gauges as a 44 px target', {'hud': a['hud'], 'minus': a['hmin'], 'gauges': a['gauges']})
     # 2. the box is as wide, and the chart stands still, in harbour, idle and under way
     T = await tops(pg)
     ws = {k: v['hud']['w'] for k, v in T.items()}; ps = {k: v['plot']['top'] for k, v in T.items()}
+    check(a['plot'] and a['plot']['top'] <= 12 and all(v['hud']['top'] == a['plot']['top'] + a['plot']['h'] + 6 for v in T.values()), 'on its side too the little chart stands at the top and the box right under it (Jonas 07.11.2026)', {'chart': a['plot'], 'box top': {k: v['hud']['top'] for k, v in T.items()}})
     check(len(set(ws.values())) == 1 and len(set(ps.values())) == 1, 'the box keeps its width and the little chart its place in harbour, idle and under way', {'width': ws, 'chart top': ps, 'height': {k: v['hud']['h'] for k, v in T.items()}})
-    # 3. «–» folds it to the three-line strip with «+», and the chart moves up under it; «+» opens it again
-    await pg.click('#hud .hmin'); await pg.wait_for_timeout(400); b = await pg.evaluate(BOX)
-    check(b['hud'] and 40 <= b['hud']['h'] <= 70 and 'hudstrip' in b['cls'] and 'hudmin' in b['cls'] and b['hmin'] and '+' in b['text'] and all(c in b['lines'] for c in ('.hs1', '.hs2', '.st.nx')) and b['plot']['top'] < a['plot']['top'] and b['plot']['top'] == b['hud']['top'] + b['hud']['h'] + 6,
-          'the box folds to the three-line strip with «+», and the chart moves up under it', {'strip': b['hud'], 'plot': b['plot'], 'lines': b['lines'], 'cls': b['cls']})
-    await pg.click('#hud .hmin'); await pg.wait_for_timeout(400); c = await pg.evaluate(BOX)
-    check(c['hud']['h'] == a['hud']['h'] and 'hudmin' not in c['cls'] and c['plot']['top'] == a['plot']['top'], 'and opens again with «+», the chart back in its place', {'hud': c['hud'], 'plot': c['plot']})
+    # 3. a tap on the box (its head, the date and the money) folds it to the three-line strip, with no «+» on it (Jonas 07.11.2026); a tap
+    # on the strip opens the whole box again (not the card, which is the upright strip's)
+    await pg.click('#hud .hd'); await pg.wait_for_timeout(400); b = await pg.evaluate(BOX)
+    check(b['hud'] and 40 <= b['hud']['h'] <= 70 and 'hudstrip' in b['cls'] and 'hudmin' in b['cls'] and not b['hmin'] and '+' not in b['text'] and all(c in b['lines'] for c in ('.hs1', '.hs2', '.st.nx')) and b['plot']['top'] == a['plot']['top'] and b['hud']['top'] == a['hud']['top'],
+          'a tap on the box folds it to the three-line strip without «+», where it stood under the chart, and the chart stays', {'strip': b['hud'], 'plus': b['hmin'], 'plot': b['plot'], 'lines': b['lines'], 'cls': b['cls']})
+    # the hold's icon on the strip is a fish, not the box that is Om bord's button (Jonas 07.11.2026)
+    ic = await pg.evaluate("(() => { const h = document.querySelector('#hud .g-hold svg'), o = document.querySelector('#dock [data-dk=beh] svg'); return {hold:h ? h.innerHTML : null, beh:o ? o.innerHTML : null, fish:!!(h && h.querySelector('[data-fish]'))}; })()")
+    check(ic['hold'] and ic['beh'] and ic['hold'] != ic['beh'] and ic['fish'], 'the hold on the strip has the fish for its icon, not Om bord\'s box', {'fisk': ic['fish'], 'som Om bord': ic['hold'] == ic['beh']})
+    await pg.click('#hud .hs2'); await pg.wait_for_timeout(400); c = await pg.evaluate(BOX)
+    check(c['hud']['h'] == a['hud']['h'] and 'hudmin' not in c['cls'] and 'hudcard' not in c['cls'] and c['plot']['top'] == a['plot']['top'], 'and opens again with a tap on the strip (not the card), the chart back in its place', {'hud': c['hud'], 'plot': c['plot'], 'cls': c['cls']})
+    # the chart folded: its «+» stands at the far left of its strip, as on the phone
+    try: await pg.click('#plotMin', timeout=8000)
+    except Exception as e: print('     (#plotMin kunne ikke trykkes: ' + str(e).split('\n')[0][:120] + ')')
+    await pg.wait_for_timeout(400); d = await pg.evaluate(BOX)
+    check('plotmin' in d['cls'] and d['gps'] and d['hud'] and d['gps']['top'] == a['plot']['top'] and d['hud']['top'] == d['gps']['top'] + d['gps']['h'] + 6, 'the chart folded: its GPS strip at the top, and the box up under it', {'gps': d['gps'], 'hud': d['hud']})
+    check('plotmin' in d['cls'] and d['fold'] and d['gps'] and d['fold']['left'] <= d['gps']['left'] + 4 and '+' in (await pg.evaluate("document.getElementById('plotMin').textContent")), 'the chart folds to its strip with «+» at the far left (its 44 px target from the strip\'s left edge)', {'pluss': d['fold'], 'stripe': d['gps']})
+    try: await pg.click('#plotMin', timeout=8000)
+    except Exception: pass
+    await pg.wait_for_timeout(300)
     await pg.screenshot(path='hud_box_landscape.png')
     print('errors (tablet):', errs[:3]); await ctx.close(); await br.close()
+
+
+# a phone on its side (Jonas 07.11.2026: «Telefon liggende må jo ha minikartet på samme måte som stående, nettbrett og pc … Og det skal være
+# likt i alle formater. Kart øverst, statusboksen under uten pluss og minus»): before, no little chart at all there, and the chart's «–»
+# stood alone under the box. Now as the phone upright: the chart on top, the strip under it without «+» or «–», a tap gives the card
+async def phone_side(p):
+    br = await p.chromium.launch(args=['--disable-gpu-compositing'])
+    for W, H in ((844, 390), (780, 360)):
+        ctx = await br.new_context(viewport={'width': W, 'height': H}, has_touch=True, is_mobile=True); pg = await ctx.new_page(); errs = []
+        pg.on('pageerror', lambda e: errs.append(str(e)))
+        await boot(pg, GAME + '#notut'); await pg.wait_for_timeout(800)
+        await pg.evaluate("(() => { if (!document.body.classList.contains('v3d') && typeof G3 !== 'undefined') G3.show(true); S.settings.hudMin = false; S.settings.plotMin = false; S.boat.status = 'idle'; S.boat.port = null; renderHud(); })()"); await pg.wait_for_timeout(800)
+        a = await pg.evaluate(BOX)
+        tag = '%dx%d' % (W, H)
+        check(a['plot'] and a['plot']['top'] <= 12 and a['plot']['h'] >= 80 and a['hud'] and a['hud']['top'] == a['plot']['top'] + a['plot']['h'] + 6,
+              tag + ': on its side the phone has the little chart at the top and the status box right under it', {'chart': a['plot'], 'hud': a['hud']})
+        check('hudstrip' in a['cls'] and not a['hmin'] and '+' not in a['text'] and '–' not in a['text'] and a['hud']['top'] + a['hud']['h'] < H - 90,
+              tag + ': the box is the strip without «+» or «–», clear of the button row', {'hud': a['hud'], 'cls': a['cls'], 'knapp': a['hmin']})
+        # at sea the old GPS box (speed, course, position) is not there besides the chart's foot (it stood over the deck log's tab)
+        await pg.evaluate("(() => { S.boat.status = 'idle'; S.boat.port = null; renderHud(); })()"); await pg.wait_for_timeout(1200); g = await pg.evaluate(BOX)
+        check(not g['gps'] and g['plot'], tag + ': at sea no GPS box beside the little chart (its foot says the same)', {'gps': g['gps']})
+        await pg.click('#hud .hs2'); await pg.wait_for_timeout(400); b = await pg.evaluate(BOX)
+        check('hudcard' in b['cls'] and b['plot']['top'] == a['plot']['top'], tag + ': a tap on the strip gives the whole box as a card, and the chart stays', {'cls': b['cls'], 'chart': b['plot']})
+        await pg.mouse.click(W - 200, H // 2); await pg.wait_for_timeout(400)
+        await pg.click('#plotMin'); await pg.wait_for_timeout(400); c = await pg.evaluate(BOX)
+        check('plotmin' in c['cls'] and c['gps'] and c['gps']['top'] <= 12 and c['hud']['top'] == c['gps']['top'] + c['gps']['h'] + 6, tag + ': the chart folded: its GPS strip at the top and the strip under it', {'gps': c['gps'], 'hud': c['hud']})
+        await pg.click('#plotMin'); await pg.wait_for_timeout(300)
+        await pg.screenshot(path='hud_phone_side_%s.png' % tag)
+        print('errors (phone on its side %s):' % tag, errs[:3]); await ctx.close()
+    await br.close()
 
 
 async def main():
     async with async_playwright() as p:
         await phone(p)
         await tablet(p)
+        await phone_side(p)
 
 asyncio.run(main())

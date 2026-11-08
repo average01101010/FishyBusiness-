@@ -41,6 +41,69 @@ const C0IN = (ax, ay, bx, by) => bx >= 0 && by >= 0 && ax <= 145000 && ay <= 175
 function chartPath0(px, out){ const b = pathStep(px || 0, 0.3), k = 'p0:' + b + (out ? 'o' : ''); if (!CHARTV.paths.has(k)){ const pk = MAPD.chart0 || MAPD.core;
   if (pk && !pk.buf){ if (!pk.load) mapLoad(pk).then(() => { if (typeof chartCame === 'function') chartCame(null); }, e => console.error(e)); return null; }
   const v = mapVec(pk, 'coast0'); if (!v) return null; CHARTV.paths.set(k, vecPath(v, 0.01, b ? 30 * 2 ** b : 0, out ? (ax, ay, bx, by) => !C0IN(ax, ay, bx, by) : C0IN)); } return CHARTV.paths.get(k); }
+// coast0 whole (b = 0) for a small view: only what reaches into the box [x0, y0, x1, y1] (km; the view and a margin round it). The
+// full path was built for the whole frame, and drawn, whenever a view as small as the little chart in 3D lay where the tiles' chart
+// packs had not come: 1.8 s with the CPU slowed at the first start (Ø3a, 07.11.2026). The rings are read once (C0R: their points as
+// vecPath keeps them with the keep test, a point the same as the last left out, and their boxes: vecPath's own loop with the tol of
+// 1e-9 that keep gives it, so a change there is one here too); the path is kept for the last box.
+// A ring whose box misses the box is left out. In a ring that reaches in, every side that may cross the box is kept as it was, end
+// points and all, so the coast in the view is drawn from the same lines as before (the same pixels); a run of sides that lie wholly
+// on one side of the box (both ends beyond the same edge) goes instead along a box a margin larger (each point clamped to it, points
+// in a row on one of its edges as the first and the last): the run stays beyond the box and goes round it the same way, so the land
+// inside is the same (the winding is kept), and what is drawn of it lies outside the view.
+const C0R = {v:null, rings:null};
+function chartRings0(v){
+  if (C0R.v === v) return C0R.rings;
+  const r = vReader(v.b), n = r.u(), q = [], rings = [];
+  for (let k = 0; k < n; k++){
+    r.u(); const m = r.u(); let x = 0, y = 0, lx = 0, ly = 0, ax = Infinity, ay = Infinity, bx = -Infinity, by = -Infinity; q.length = 0;
+    for (let j = 0; j < m; j++){ x += r.z(); y += r.z(); if (x < ax) ax = x; if (x > bx) bx = x; if (y < ay) ay = y; if (y > by) by = y; if (!j || Math.abs(x - lx) + Math.abs(y - ly) >= 1e-9){ q.push(x, y); lx = x; ly = y; } }
+    if (bx - ax < 1e-9 && by - ay < 1e-9) continue;
+    rings.push({p:Int32Array.from(q), ax, ay, bx, by, inOld:C0IN(ax, ay, bx, by)});
+  }
+  C0R.v = v; C0R.rings = rings; return rings;
+}
+function chartPath0In(out, box){
+  const pk = MAPD.chart0 || MAPD.core; if (!pk || !pk.buf) return chartPath0(0, out);
+  const v = mapVec(pk, 'coast0'); if (!v) return null;
+  const o = out ? 'o' : 'i', key = box.join(','); if (C0R[o] && C0R[o].key === key && C0R[o].v === v) return C0R[o].path;   // (the coast it was made from too: chart0 after the core's, or a pack read again)
+  const X0 = box[0] * 100, Y0 = box[1] * 100, X1 = box[2] * 100, Y1 = box[3] * 100, p = new Path2D();   // (the rings are in 10 m units)
+  const m = Math.max(X1 - X0, Y1 - Y0) * 0.05 + 1, Q0 = X0 - m, R0 = Y0 - m, Q1 = X1 + m, R1 = Y1 + m;   // the larger box the runs go along
+  const code = (x, y) => (x < X0 ? 1 : x > X1 ? 2 : 0) | (y < Y0 ? 4 : y > Y1 ? 8 : 0);
+  const E = [];   // the ring as drawn: x, y pairs
+  // a clamped point of a run (from E[r0] on): left out when it is the last point again, and in place of the last when the two before it and
+  // it lie on the same edge of the larger box (the run goes along that edge from the first to the last)
+  const on = (a, b, c) => (a === b && b === c);
+  const add = (x, y, r0) => { const n = E.length;
+    if (n >= 2 && E[n - 2] === x && E[n - 1] === y) return;
+    if (n >= r0 + 4){ const ax = E[n - 4], ay = E[n - 3], bx = E[n - 2], by = E[n - 1];
+      if ((on(ax, bx, x) && (x === Q0 || x === Q1)) || (on(ay, by, y) && (y === R0 || y === R1))){ E[n - 2] = x; E[n - 1] = y; return; } }
+    E.push(x, y); };
+  const clampAdd = (x, y, r0) => add(x < Q0 ? Q0 : x > Q1 ? Q1 : x, y < R0 ? R0 : y > R1 ? R1 : y, r0);
+  for (const R of chartRings0(v)){
+    if (R.inOld === !!out || R.bx < X0 || R.ax > X1 || R.by < Y0 || R.ay > Y1) continue;
+    const P = R.p, n = P.length / 2;
+    if (R.ax >= X0 && R.bx <= X1 && R.ay >= Y0 && R.by <= Y1){ for (let j = 0; j < P.length; j += 2) j ? p.lineTo(P[j] * 0.01, P[j + 1] * 0.01) : p.moveTo(P[j] * 0.01, P[j + 1] * 0.01); p.closePath(); continue; }
+    // the first side that may cross the box (its two ends not beyond the same edge); none: the ring goes round outside it, as one run
+    let s = -1, c0 = code(P[0], P[1]);
+    for (let i = 0, ci = c0; i < n; i++){ const k = (i + 1) % n, ck = code(P[k * 2], P[k * 2 + 1]); if (!(ci & ck)){ s = i; break; } ci = ck; }
+    E.length = 0;
+    if (s < 0){ for (let i = 0; i < n; i++) clampAdd(P[i * 2], P[i * 2 + 1], 0); }
+    else {
+      E.push(P[s * 2], P[s * 2 + 1]); let r0 = -1, cp = code(P[s * 2], P[s * 2 + 1]);
+      for (let t = 1; t <= n; t++){ const k = (s + t) % n, x = P[k * 2], y = P[k * 2 + 1], ck = code(x, y);
+        if (cp & ck){ if (r0 < 0){ r0 = E.length; const a = (s + t - 1) % n; clampAdd(P[a * 2], P[a * 2 + 1], r0); } clampAdd(x, y, r0); }   // a side wholly beyond one edge
+        else { if (r0 >= 0){ const a = (s + t - 1) % n; if (E[E.length - 2] !== P[a * 2] || E[E.length - 1] !== P[a * 2 + 1]) E.push(P[a * 2], P[a * 2 + 1]); r0 = -1; }
+          if (t < n) E.push(x, y); }   // a side that may cross: as it was (its end; the ring's first point closes it)
+        cp = ck; }
+      if (r0 >= 0 && (E[E.length - 2] !== P[s * 2] || E[E.length - 1] !== P[s * 2 + 1])) E.push(P[s * 2], P[s * 2 + 1]);
+      if (E.length >= 4 && E[E.length - 2] === E[0] && E[E.length - 1] === E[1]) E.length -= 2;   // (the first point again: closePath draws that side)
+    }
+    if (E.length < 4) continue;
+    for (let j = 0; j < E.length; j += 2) j ? p.lineTo(E[j] * 0.01, E[j + 1] * 0.01) : p.moveTo(E[j] * 0.01, E[j + 1] * 0.01); p.closePath();
+  }
+  C0R[o] = {key, v, path:p}; return p;
+}
 // the rings that touch the rectangle r [x0, y0, x1, y1] (m from the tile's corner), as paths in km: land (class 0 and 1), mole (the
 // breakwaters, 2 and 3) and all, each null when none. The shore in 3D (view3d buildLandMask) strokes the land's and the breakwaters' rings
 // with their own slopes and fills all of them, over its own window alone: a tile's whole coast ran to 184 000 points (Frøya). A ring
@@ -75,7 +138,13 @@ function chartCoast(ctx, x0, y0, kx, ky, W, H, dpr, fish){
   // the national coast only where a tile in the view has no chart pack of its own (it was stroked over the whole country each time)
   const nT = (Math.floor((x0 + W * kx) / T) - Math.floor(x0 / T) + 1) * (Math.floor((y0 + hh) / T) - Math.floor(y0 / T) + 1);
   const x1 = x0 + W * kx, y1 = y0 + hh, inOld = x1 > 0 && y1 > 0 && x0 < 1450 && y0 < 1750, past = x0 < 0 || y0 < 0 || x1 > 1450 || y1 > 1750;
-  const p0 = tiles.length < nT && inOld ? chartPath0(kx) : null, p0o = tiles.length < nT && past ? chartPath0(kx, true) : null;
+  // coast0 whole (b = 0) only round the view (chartPath0In), in a view up to CHARTV.far km tall whose whole path is not made already: the
+  // box is the view and half its size or more round it, on a grid of half the view, so it is made again only when the view has moved
+  // that far (a new box for every pan cost 13 ms at 100 km and 65 ms at 300 km with the CPU slowed, the path drawn whole under 1 ms)
+  const vs = Math.max(W * kx, hh), g = vs / 2, sn = (v, f) => f(v / g) * g, b0 = !pathStep(kx, 0.3) && hh <= CHARTV.far;
+  const box = b0 ? [sn(x0 - g, Math.floor), sn(y0 - g, Math.floor), sn(x1 + g, Math.ceil), sn(y1 + g, Math.ceil)] : null;
+  const c0 = o => box && !CHARTV.paths.has('p0:0' + (o ? 'o' : '')) ? chartPath0In(o, box) : chartPath0(kx, o);
+  const p0 = tiles.length < nT && inOld ? c0(false) : null, p0o = tiles.length < nT && past ? c0(true) : null;
   if (p0 || p0o){
     ctx.save();
     if (tiles.length){ ctx.beginPath(); ctx.rect(0, 0, W, H); for (const pk of tiles) ctx.rect((pk.tile[0] * T - x0) / kx, (pk.tile[1] * T - y0) / ky, T / kx, T / ky); ctx.clip('evenodd'); }

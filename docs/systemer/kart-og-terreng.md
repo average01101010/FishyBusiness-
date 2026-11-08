@@ -58,7 +58,7 @@ Rasterkartene ligger ikke lenger i siden. Siden gikk fra 9,3 til 6,2 MB, og kart
   - `mapLoad(pk)` henter en pakke én gang. Den lagres i IndexedDB (`kyst-map`) etter hashen, så en ny publisering bare henter det som er endret.
   - En blokk pakkes ut synkront med fflate (`src/js/lib/fflate.js`, MIT) første gang den leses. Den beholdes så lenge det er plass: `MAPD.budget` er 96 MB, og den som er brukt minst nylig, går først. Høydene er Float32, så 96 MB trengs til hele Senja i 3D. K8 gjør dem til Int16.
   - Lesing:
-    - `rcell(L, ix, iy)` gir én celle.
+    - `rcell(L, ix, iy)` gir én celle. Den siste blokka per lag holdes ved hånden med sin første celle (`L.ox`, `L.oy`), så en celle i den leses uten divisjonene (Ø3a, 07.11.2026; samme celler og samme kast, `tests/unit/rcell.test.mjs`); `mapDrop` nullstiller `ox` og `oy` med `bx` og `by`.
     - `rbil(L, p)` interpolerer bilineært i km, med samme regning som `gridBilinear`.
     - `rbilM(L, x, z)` gjør det samme i meter.
     - `isLand`, `coastDist`, `depthF`, `exposure`, `swellFactor`, `approachPath`, ruta, sjøkartet, terrenget og skogen leser alle gjennom disse.

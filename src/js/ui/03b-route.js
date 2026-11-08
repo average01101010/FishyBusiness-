@@ -174,7 +174,21 @@ async function leiaTo(pt, buoy, act){   // buoy: to a set's buoy, to haul it (th
   let res; try { res = await leiaRoute({x:start.x, y:start.y}, near ? near.p : goal, aPort, near ? near.id : null);
     // Father's naust in a basin the 100 m grid sees as shut to the sea (Øksfjord, tilbakemelding #39: no way found to the first trip's
     // ring): the way out is then the harbour's own, by its approach path
-    if (res.why && atN && b.port && approachPath(portById(b.port)).length) res = await leiaRoute({x:start.x, y:start.y}, near ? near.p : goal, b.port, near ? near.id : null); }
+    // (from the naust a way with a leg over land counts as none: the route panel greys «Kast loss» for it, estimate().bad, and the first
+    // trip stood as fast as with no way; Fosnavåg 08.11.2026 with the field of 17.09.2027, where the sealed harbour's way out crosses its
+    // fill, approachPath pt.free)
+    const legsOk = r => { let a = {x:start.x, y:start.y}; for (const w of r.wps){ if (!legClearMemo(a, w)) return false; a = w; } return true; }, fails = r => !!r.why || (atN && !legsOk(r));
+    if (fails(res) && atN && b.port && approachPath(portById(b.port)).length){ const r = await leiaRoute({x:start.x, y:start.y}, near ? near.p : goal, b.port, near ? near.id : null); if (res.why || !fails(r)) res = r; }
+    // and where neither finds it (Averøy and Sleneset 08.11.2026: «Fant ingen trygg rute dit.» on the first trip, which then could not
+    // leave the quay): the way by water from the berth to the harbour or to open water (naustWay, core/07c-naust.js, the same test that
+    // places the naust), then on: from the harbour point the very route a boat at the plant's quay gets (her start, quayPos, is that
+    // point), else from where the way ends; the first whose legs all keep off land
+    if (fails(res) && atN && b.port){ const way = naustWay({x:start.x, y:start.y}, b.port), H = portById(b.port);
+      if (way && way.length > 1){ const e = way[way.length - 1], to = near ? near.p : goal, id = near ? near.id : null, pre = way.slice(1), tries = [];
+        if (way.to === 'harbour') tries.push([pre.concat(dist(e, H.p) > 0.002 ? [{x:H.p.x, y:H.p.y}] : []), H.p, b.port], [pre, e, b.port]);
+        tries.push([pre, e, null]);
+        for (const [P0, from, ap] of tries){ const r2 = await leiaRoute({x:from.x, y:from.y}, to, ap, id); if (r2.why) continue;
+          const r3 = {wps:P0.concat(r2.wps), nm:r2.nm, st:r2.st}; if (res.why) res = r3; if (!fails(r3)){ res = r3; break; } } } } }
   finally { LEIA_BUSY = false; }
   if (JSON.stringify(S.draft) !== before){ routeChanged(); return; }   // the route was changed while the way was being found
   if (res.why){ toast(S.lang === 'no' ? res.why[0] : res.why[1]); routeChanged(); return; }

@@ -1070,6 +1070,9 @@ function addCatch(sp, kg, cls, hook, opt){
 // Alone you cannot gut while you steer or fish: fishing stops when the bleeding tub is full, or when you ask, and by default the catch
 // is seen to before you leave the grounds. With two or more, one steers or fishes while the others work the deck.
 const DECK = {gut:5, ice:800 / 60};
+// the gutting pace a person at the table has on this boat: DECK.gut times the knives' tier (OPP1, core/02-species-gear.js knifeX; the
+// gutting machine and the ocean fleet's factories go at their own pace)
+const gutPace = () => DECK.gut * knifeX();
 // the hold (VESSELS hold.kind): a freezer hold freezes what the crew put down, at the icing's pace and with no ice (plate freezers);
 // chilled sea water (RSW) chills the catch as it comes aboard
 const holdFreezes = () => !!(BOAT.hold && BOAT.hold.kind === 'frys');
@@ -1084,7 +1087,7 @@ function deckHands(){ return workAssign().filter(p => p.st === 'sloy' || p.st ==
 function deckPending(){ const cg = catchGut(), icing = iceReady(); return S.hold.reduce((a, x) => a + (!liveLot(x) && ((cg && !x.gut && !x.iced) || (icing && !x.iced)) ? x.kg : 0), 0); }
 function deckEta(hands){
   const cg = catchGut(), icing = iceReady(), e = hands ? workTeam(['sloy', 'is'], 'sloy').sum : 0; if (!e) return Infinity;
-  let m = 0; for (const x of S.hold){ if (liveLot(x)) continue; if (cg && !x.gut && !x.iced) m += x.kg / DECK.gut; if (icing && !x.iced) m += x.kg / DECK.ice; } return m / e;
+  const gp = gutPace(); let m = 0; for (const x of S.hold){ if (liveLot(x)) continue; if (cg && !x.gut && !x.iced) m += x.kg / gp; if (icing && !x.iced) m += x.kg / DECK.ice; } return m / e;
 }
 // move kg of a hold entry into the entry with the new state (gutted, iced), keeping its freshness
 function moveKg(x, kg, patch){
@@ -1101,8 +1104,9 @@ function deckMinute(){
   const b = S.boat, cg = catchGut(); if (!S.hold.length) return;
   const G = workTeam('sloy', 'sloy'), I = workTeam('is', 'is'); if (!G.n && !I.n) return;
   // the gutting machine (BOAT.gutMachine, kg an hour; schema v2) adds its throughput while someone feeds it; it ices nothing
-  let pm = G.sum + (G.n && BOAT.gutMachine ? BOAT.gutMachine / 60 / DECK.gut : 0), worked = 0;
-  if (cg) for (const x of S.hold.filter(x => !x.gut && !x.iced && !liveLot(x))){ if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.gut); moveKg(x, kg, {gut:true}); pm -= kg / DECK.gut; worked += kg; }
+  // (the knives' tier speeds the hands, not the machine: its kg an hour are counted in the hands' pace, gutPace)
+  const gp = gutPace(); let pm = G.sum + (G.n && BOAT.gutMachine ? BOAT.gutMachine / 60 / gp : 0), worked = 0;
+  if (cg) for (const x of S.hold.filter(x => !x.gut && !x.iced && !liveLot(x))){ if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * gp); moveKg(x, kg, {gut:true}); pm -= kg / gp; worked += kg; }
   pm = Math.min(pm, G.sum) + I.sum;   // the gutters ice what they have gutted once the gutting is done
   const fz = holdFreezes();
   // the plate freezers (BOAT.freezeT, kg of product a day; H2b of docs/planer/havsteget-h2-autoline.md, 05.11.2026): the crew packs the
@@ -1159,6 +1163,7 @@ function lieToStep(W, hs){
   else log('Det har løyet etter ' + hrs + ' timer.', 'It has eased after ' + hrs + ' hours.');
 }
 function risk(W, hs){
+  if (typeof mobRisk === 'function') mobRisk(W, hs);   // man overboard: the risk on deck and the event (Ø11.6, 14b-sikkerhet.js)
   const b = S.boat; if (b.status === 'port' || (S.tut && S.tut.catch)) return;
   const over = svcOverdue();
   if (over > 0 && b.status === 'sailing' && Math.random() < over * 0.02 / 60 && b.status !== 'engine'){ b.prev = b.status; b.status = 'engine'; b.engineUntil = S.t + 30 + Math.floor(Math.random() * 60); log('Motorstopp. Motoren trenger service.', 'Engine stopped. The engine needs a service.'); return; }

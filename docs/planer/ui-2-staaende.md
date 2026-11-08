@@ -1,6 +1,6 @@
 # UI 2: telefon stående først (plan 06.11.2026)
 
-> Venter på «kjør på». V1, V2, V4, V5, V6, V7 og V8 er tatt 06.11.2026. V3 er åpnet igjen etter Jonas' innvending mot søyla og står som V3 revidert (kap. 7). Bildene fra Jonas' telefon ligger i `ui-2/`.
+> V1, V2, V4, V5, V6, V7 og V8 er tatt 06.11.2026, og V3 revidert er bekreftet som A 07.11.2026 (Jonas: «Jeg har jobbet litt med UI på skjermen der og er i grunn ganske fornøyd sånn som det er nå»); alle valgene er tatt (kap. 7). Bildene fra Jonas' telefon ligger i `ui-2/`.
 
 ## 1. Hva Jonas ba om
 
@@ -181,7 +181,7 @@ Rekkefølgen U2-0 → U2-1 → U2-2 → U2-3 er ryggraden: stripa før Om bord, 
 
 **Tatt 07.11.2026 (U2-4):** knappene i roen er svake, ikke borte, og et trykk på en svak knapp virker med en gang («Svake, trykk virker»; alternativene var svake der første trykk bare vekker, anbefalt, og helt borte som den første utgaven; 4.5).
 
-**Åpent:**
+**Tatt 07.11.2026:** V3 revidert **A**, «Om bord» i linja, slik U2-2 til U2-6 bygde det. Jonas, spurt om han er fornøyd med knappen slik den står på nettbrettet: «Jeg har jobbet litt med UI på skjermen der og er i grunn ganske fornøyd sånn som det er nå med mindre du har noen innvendinger?» Ingen innvendinger; alternativene står under for historikken.
 
 - **V3 revidert, det globale.** Jonas valgte først A, søyla, og spurte så om den ikke er mer i veien i stående (kap. 4.4).
   - **A «Om bord» i linja** (anbefalt): Beholdning og Mannskap slås sammen til Om bord med fem faner, Hvil blir kontekstuell, og linja har ett globalt element sist. Ingen søyle, høyst fem på raden, og færre knapper, som Jonas ba om.

@@ -57,7 +57,20 @@ const ICPIC = {
   // the clothes: the oilskins, the thermal suit
   olje:icSvg('<path d="M22 6l-10 6 3 8 5-3v17h24V17l5 3 3-8-10-6c-2 3-4 4-10 4s-8-1-10-4z" fill="' + IC_C.yel + '"/><path d="M32 10v24" stroke="' + IC_C.ink + '" stroke-width="1"/>'),
   varme:icSvg('<path d="M22 6l-10 6 3 8 5-3v17h10V24h4v10h10V17l5 3 3-8-10-6c-2 3-4 4-10 4s-8-1-10-4z" fill="' + IC_C.red + '"/><path d="M20 20h24" stroke="' + IC_C.yel + '" stroke-width="2"/>'),
-  box:icSvg('<path d="M12 14l20-8 20 8v16l-20 8-20-8z" fill="' + IC_C.soft + '"/><path d="M12 14l20 8 20-8M32 22v16"/>')
+  box:icSvg('<path d="M12 14l20-8 20 8v16l-20 8-20-8z" fill="' + IC_C.soft + '"/><path d="M12 14l20 8 20-8M32 22v16"/>'),
+  // the gutting knives (OPP1): two knives on the table, a long one and a short one, with the honing steel
+  kniv:icSvg('<path d="M8 30h48" stroke="' + IC_C.wood + '" stroke-width="3"/><path d="M10 22h12" stroke="' + IC_C.ink + '" stroke-width="4"/><path d="M22 20l26 1c-6 4-16 5-26 3z" fill="#fff"/>' +
+    '<path d="M14 12h9" stroke="' + IC_C.ink + '" stroke-width="4"/><path d="M23 10l16 1.5c-4 3-10 3.5-16 2z" fill="#fff"/><path d="M44 8l12 6" stroke="' + IC_C.mid + '" stroke-width="2"/>'),
+  // the gaff (OPP1): the shaft and the steel hook, a fish at the rail
+  hott:icSvg('<path d="M6 34L40 8" stroke="' + IC_C.wood + '" stroke-width="3"/><path d="M40 8c6-4 12 0 10 6s-8 6-10 2" stroke="' + IC_C.mid + '" stroke-width="2.2"/>' +
+    '<path d="M30 30c6-5 16-5 22 0-6 5-16 5-22 0z" fill="' + IC_C.blu + '"/><path d="M52 30l6-4v8z" fill="' + IC_C.blu + '"/>' + IC_DECK),
+  // the line setter (OPP2): the chute over the stern, a tub at its head and the line running out with its hooks to the sea
+  linesetter:icSvg('<path d="M4 22h22l4 4" stroke="' + IC_C.mid + '" stroke-width="2"/><path d="M14 12l30 10 2 4-32-10z" fill="' + IC_C.soft + '"/><path d="M8 8h12l-2 8H10z" fill="' + IC_C.blu + '"/>' +
+    '<path d="M18 13l28 9c4 1 8 4 10 10" stroke="' + IC_C.ink + '"/>' + IC_HOOK(50, 26) + '<path d="M40 36c5-2 10-2 15 0s6 1 8 0" stroke="' + IC_C.blu + '"/>'),
+  // the net chute (OPP2): a wide chute over the stern with the net and its floats running out
+  garnrenne:icSvg('<path d="M4 22h22l4 4" stroke="' + IC_C.mid + '" stroke-width="2"/><path d="M12 10l34 12v6L12 16z" fill="' + IC_C.soft + '"/>' +
+    '<path d="M14 12l32 12M16 16l30 10" stroke="' + IC_C.mid + '" stroke-width=".9"/><path d="M46 24c5 2 9 6 12 10" stroke="' + IC_C.ink + '"/>' +
+    [20, 30, 40].map(x => '<ellipse cx="' + x + '" cy="' + (11 + (x - 12) * 0.35) + '" rx="2.6" ry="1.8" fill="' + IC_C.org + '"/>').join('') + '<path d="M40 36c5-2 10-2 15 0s6 1 8 0" stroke="' + IC_C.blu + '"/>')
 };
 const icPic = k => ICPIC[k] || ICPIC.box;
 // ---- what each thing does, in numbers from the code ([no, en]); the long story is in the Håndboka (ITEM_HB)
@@ -87,9 +100,34 @@ const ICFX = {
   line:() => ['Hyseline ' + LINE_KINDS.hyse.hooks + ' kroker · bankline ' + LINE_KINDS.bank.hooks + ' større kroker per stamp', 'Haddock line ' + LINE_KINDS.hyse.hooks + ' hooks · bank line ' + LINE_KINDS.bank.hooks + ' bigger hooks a tub'],
   pot:() => ['Kongekrabbe · ' + POTS.big.cap + ' krabber per teine · høyst 30 per båt', 'King crab · ' + POTS.big.cap + ' crabs a pot · at most 30 a boat'],
   kit:() => ['Til hver ende av redskapet: staur med flagg, blåse, kulerekke og dregg på iletauet', 'For each end of the gear: a pole with a flag, a buoy, a row of floats and an anchor on the buoy line'],
-  hooks:() => ['Bytter slitte og bøyde kroker og juksasett', 'Replaces worn and bent hooks and jig sets']
+  hooks:() => ['Bytter slitte og bøyde kroker og juksasett', 'Replaces worn and bent hooks and jig sets'],
+  // the knives and the gaff (OPP1): the next tier's numbers (the one aboard when it is the best), from the core's tiers
+  kniv:() => { const lv = Math.min(equipLv('kniv') + 1, EQUIP.kniv.tiers.length), T = EQUIP.kniv.tiers[lv - 1], kg = fmt(DECK.gut * 60 * upgSum(T.gut), 0), p = Math.round(T.gut * 100), q = Math.round(T.slip * 100);
+    return ['Trinn ' + lv + ': sløyer ' + kg + ' kg i timen per person (+' + p + ' %) · ' + q + ' % færre stygt sløyde og kutt', 'Tier ' + lv + ': guts ' + kg + ' kg an hour a person (+' + p + '%) · ' + q + '% fewer badly gutted and cuts']; },
+  hott:() => { const lv = Math.min(equipLv('hott') + 1, EQUIP.hott.tiers.length), T = EQUIP.hott.tiers[lv - 1], r = Math.round(T.rail * 100), j = Math.round(JIG_SLIP * upgSum(-T.jig) * 100), h = Math.round(T.haul * 100);
+    return ['Trinn ' + lv + ': ' + r + ' % færre fisk over ripa · ' + j + ' % glipper ved halvt treff i juksa · ' + h + ' % raskere linetrekk', 'Tier ' + lv + ': ' + r + '% fewer fish over the rail · ' + j + '% slip at a half hit on the jig · ' + h + '% faster line hauling']; },
+  // (OPP2) the line setter and the net chute before they are bought: what they take off the setting, and what they hang on
+  linesetter:() => { const b = GEAR.line.set * LINE_KINDS.hyse.hooks / 700, x = EQUIP.linesetter.set; return ['Setter en stamp hyseline på ' + fmt(b * (1 - x), 1) + ' min mot ' + fmt(b, 1) + ' (−' + Math.round(x * 100) + ' %) · krever linehaler', 'Sets a tub of haddock line in ' + fmt(b * (1 - x), 1) + ' min against ' + fmt(b, 1) + ' (−' + Math.round(x * 100) + '%) · needs a line hauler']; },
+  garnrenne:() => { const b = GEAR.garn.set, x = EQUIP.garnrenne.set; return ['Setter et garn på ' + fmt(b * (1 - x), 1) + ' min mot ' + fmt(b, 1) + ' (−' + Math.round(x * 100) + ' %) · krever garnhaler', 'Sets a net in ' + fmt(b * (1 - x), 1) + ' min against ' + fmt(b, 1) + ' (−' + Math.round(x * 100) + '%) · needs a net hauler']; }
 };
+// (OPP2) a tier's line in the player's own numbers: the minutes a unit takes at the hauler or over the stern for one person (before the crew,
+// the gaff and the cold, which add their own: gopUnitMin), the reels a person tends, the jig sets' wear and price. [no, en]
+const IC_HAUL = {linehalerLv:'line', garnhalerLv:'garn', teinehalerLv:'teine'};
+function icTierLine(k, lv){
+  const E = EQUIP[k], T = E.tiers[lv - 1], m = v => v < 2 ? fmt(v, 2).replace(/0$/, '') : fmt(v, 1);   // (1,08 and 1,2 min a pot; 21,4 a tub)
+  if (IC_HAUL[k]){ const G = GEAR[IC_HAUL[k]], b = IC_HAUL[k] === 'line' ? G.haul * LINE_KINDS.hyse.hooks : G.haul, v = b * (1 - T.haul), p = Math.round(T.haul * 100),
+      u = {line:['en stamp hyseline', 'a tub of haddock line'], garn:['et garn', 'a net'], teine:['en teine', 'a pot']}[IC_HAUL[k]];
+    return ['Trinn ' + lv + ': trekker ' + u[0] + ' på ' + m(v) + ' min' + (p ? ' mot ' + m(b) + ' (−' + p + ' %)' : ''), 'Tier ' + lv + ': hauls ' + u[1] + ' in ' + m(v) + ' min' + (p ? ' against ' + m(b) + ' (−' + p + '%)' : '')]; }
+  if (k === 'linesetterLv'){ const b = GEAR.line.set * LINE_KINDS.hyse.hooks / 700, x = upgSum(EQUIP.linesetter.set, T.set) - 1, v = b * (1 - x), p = Math.round(x * 100);
+    return ['Trinn ' + lv + ': setter en stamp hyseline på ' + m(v) + ' min mot ' + m(b) + ' (−' + p + ' %)', 'Tier ' + lv + ': sets a tub of haddock line in ' + m(v) + ' min against ' + m(b) + ' (−' + p + '%)']; }
+  if (k === 'jukseLv'){ const was = E.tiers[Math.max(0, lv - 2)].tend;
+    return ['Trinn ' + lv + ': én person passer ' + T.tend + ' maskiner' + (lv > 1 ? ' (' + was + ' før)' : '') + ' · samme fangst per maskin', 'Tier ' + lv + ': one person tends ' + T.tend + ' reels' + (lv > 1 ? ' (' + was + ' before)' : '') + ' · the same catch a reel']; }
+  if (k === 'juksesett'){ const x = upgSum(T.pc || 0), m0 = kr(Math.round(CARE.jig.mark.kr * x)), k0 = kr(Math.round(CARE.jig.kveite.kr * x));
+    return ['Trinn ' + lv + ': ' + (T.wear ? 'slites ' + Math.round(T.wear * 100) + ' % saktere · ' : 'slites som før · ') + 'markkroker og pilk ' + m0 + ', kveitepilk ' + k0 + ' per sett', 'Tier ' + lv + ': ' + (T.wear ? 'wears ' + Math.round(T.wear * 100) + '% slower · ' : 'wears as before · ') + 'fly hooks and pilk ' + m0 + ', halibut pilk ' + k0 + ' a set']; }
+  return ['', ''];
+}
 const icFx = k => { const f = ICFX[k]; if (!f) return ''; const v = f(); return icL(v[0], v[1]); };
+const icTierFx = (k, lv) => { const v = icTierLine(k, lv); return icL(v[0], v[1]); };
 // the anchor beside the price: what the same work costs another way (the hand, the hand jig), only where it is a fair comparison
 const ICANCHOR = {
   linehaler:() => icL('for hånd: ' + fmt(GEAR.line.hand, 1) + '× tid', 'by hand: ' + fmt(GEAR.line.hand, 1) + '× the time'),
@@ -99,7 +137,8 @@ const ICANCHOR = {
 // the Håndboka's entry each card's «Mer» opens (the search in the app is set to its title)
 const ICMORE = {jig:'juksa', kgear:'kveiteutstyr', jukse:'juksa', jigset:'kroker', linehaler:'halere', garnhaler:'halere', teinehaler:'halere', krabbekar:'teiner',
   chirp:'elektronikk', sonar:'elektronikk', plotter:'elektronikk', vhf:'elektronikk', ais:'elektronikk', brovakt:'elektronikk', radar:'elektronikk', radarA:'elektronikk',
-  antigro:'montering', motor90:'montering', olje:'klaer', varme:'klaer', ice:'is', bait:'agn', net:'garn', line:'line', pot:'teiner', kit:'blaser', heavy:'blaser', hooks:'kroker'};
+  antigro:'montering', motor90:'montering', olje:'klaer', varme:'klaer', ice:'is', bait:'agn', net:'garn', line:'line', pot:'teiner', kit:'blaser', heavy:'blaser', hooks:'kroker', kniv:'kniv', hott:'hott',
+  jukseLv:'juksa', juksesett:'kroker', linesetter:'line', garnrenne:'garn', linehalerLv:'halere', garnhalerLv:'halere', teinehalerLv:'halere', linesetterLv:'line'};   // (OPP2; the line setter and the net chute get their own entries with OPP4's kap. 8)
 // the card. o: {k (picture, line, anchor, «Mer»), name, sub (small after the name), fx (instead of the line), price (kr or text), anchor,
 // cond (0–1 with its label), have (a line in green, «Om bord»), note, btns (html), body (html after the price), id}
 function itemCard(o){

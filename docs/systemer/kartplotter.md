@@ -116,6 +116,27 @@ Målt først i Playwright, med CPU-en strupet 4× og nettet strupet til 10 Mbit/
 
 Rederi-appen har også fått regnskap med lånene (tilbakemelding #9): resultat, hvert lån (restgjeld, rente, terminbeløp, neste trekk, betalte renter i `L.intPaid`, telles fra 09.10.2026) og en balanse med flåtens verdi (`vesselValue`), konto, gjeld og egenkapital.
 
+## 5.44b Tegnetiden (Ø3a, 07.11.2026)
+
+Startmeldingen for Ø3a i `docs/planer/koen.md` (steg 21): «`charttest` tegnetiden i fjordutsnittet: 2,7 s mot grensen 2,5 s (`chartRaster` er flaskehalsen); finn hva som koster, rett det, og se testen grønn i begge formater.» Med hele kysten i bygget (kart-31) tok fjordutsnittet stående 2 508 ms med CPU-en strupet 4×, rødt mot grensen 2,5 s. Profilen (CDP, stående 800 × 1280, CPU 4×): `pixRow` 868 ms, `deep` 418 ms (fem oppslag i 25 m-masken per piksel), `mapBlock` 227 ms og `inFrame` 202 ms av rundt 1,9 s i JavaScript; i regionen også `simAt` 294 ms og `rcell` 309 ms.
+
+- **`chartRasterJob` (`ui/03-map.js`) spør kartet én gang** for det som er det samme langs en kolonne, en rad eller i en celle: om punktet er i rammen (`inFrame`: rammen og de to landlagenes utstrekning, per kolonne og per rad), flisa (`simAt`, per kolonne og rad), landet dypt inne i masken (`deep`, per 25 m-celle der en celle har flere piksler), og B-splinens sum langs en rad av dybdeceller (per rad av celler og kolonne av piksler, der en celle har flere piksler). Samme tall i samme rekkefølge. En celle som ikke er inne, kaster som før hver gang den blir spurt etter, og holdes ikke (pakken kan ha kommet mellom to steg i minikartets jobb). Med `scr` gjenbrukes også de nye tabellene (`IFX`, `TXC`, `MXC`, `DM`, `HC`, `HOK`).
+- **`rcell` (`core/01b-mapdata.js`) leser en celle i blokka den har fra før uten divisjonene:** blokkas første celle (`ox`, `oy`) holdes ved siden av `bx` og `by`. Gjelder alle leserne av rasterne. Enhetstest `tests/unit/rcell.test.mjs`.
+- **`coast0` i full oppløsning bare innenfor utsnittet** (`chartPath0In`, `ui/03a-chart.js`): når et lite utsnitt (minikartet i 3D, plotteren der flisene mangler kartpakke, Svalbard) tegnet `coast0` med `b = 0`, ble hele rammens kyst bygd som én `Path2D` første gang. Nå leses ringene én gang (`C0R`), og stien lages av ringene som når inn i en boks rundt utsnittet, i et utsnitt opptil `CHARTV.far` (150 km) der hele stien ikke alt er laget. Boksen er utsnittet og minst en halv utsnittsstørrelse rundt, festet til et rutenett av et halvt utsnitt, så den lages på nytt bare når utsnittet har flyttet seg så langt (gjennomgangen fant at en ny boks for hvert drag kostet 13 ms ved 100 km og 65 ms ved 300 km med CPU-en strupet, mot under 1 ms for å tegne den hele stien når den først er laget; over 150 km og når hele stien finnes, er det som før). Stien huskes med `coast0`-vektoren den er laget av. Hver side som kan krysse boksen, står som den var; et løp av sider som ligger helt bak én kant, går i stedet langs en litt større boks, så viklingen og landet inne er det samme. Den første utgaven klippet med Sutherland–Hodgman og flyttet endepunktene: opptil 5/255 i noen hundre kantpiksler, derfor denne.
+- **Målt, CPU 4×, stående 800 × 1280, hele kysten, hele kartet fint (tre malinger):**
+
+  | Nivå | Før | Etter |
+  |---|---|---|
+  | Regionen (100 km) | 1 837–2 189 ms | 1 454–1 565 ms |
+  | Fjorden (20 km) | 1 817–1 872 ms (charttest: 2 508) | 859–1 004 ms |
+  | Havna (2,2 km) | 1 446–1 615 ms | 810–904 ms |
+
+  charttest med hele kysten (beste av to malinger, CPU 4×, hele kartet fint): stående fjorden 2 508 → 824 ms, regionen 2 041 → 1 632, havna 1 270 → 906, hele landet 604 → 590; liggende fjorden 2 136 → 1 033, regionen 2 021 → 1 698, havna 1 935 → 1 088, hele landet 728 → 671. Med `scr` eller i `CRS` (flisene i det store kartet, som `chartRaster` tegner én om gangen til slutt) gjenbrukes de nye tabellene, så flisene ikke lager mer søppel enn før.
+
+  Minikartets kyst der kartpakkene ikke er inne (600 × 600, 4 m per piksel), kaldt og varmt: Bergen 7 343 → 154 ms og 0 → 0 ms, Svalbard 4 008 → 123 og 0 → 1, Bergen flyttet 300 m 7 214 → 144 og 0 → 1.
+- **Bildet er det samme:** hash av pikslene i 48 utsnitt (hele landet, regionen, fjorden og havna ved Senja; regionen, fjorden og havna ved Bergen, Bodø, Hammerfest og Svalbard; dag, natt og fiskekart; hele lerretet, rasteret alene og som jobb i steg med gjenbrukte tabeller) er byte for byte lik det gamle bygget, med klokka holdt fast og regellaget av (det avhenger av tiden og et budsjett på 25 ms). Minikartets kyst: byte for byte lik ved Bergen og Svalbard, 4 piksler av 360 000 med høyst 2/255 ved Bergen flyttet 300 m (linjene i bildet er de samme; trolig Skias valg av kantutjevning for en annen sti).
+- **Står igjen:** «hele landet» i charttest (det første bildet innen 0,6 s) var rødt også før, 604–728 ms. Det meste er regellaget: `chartVectors` tegner 22 198 av 55 567 blokker på 10 km som egne 40 × 40-lerreter (rundt 4 × 4 piksler hver), og `ruLayerBlock` (`core/03e-rules.js`) bygger nøkkelen med `ruZlicKey()` og `ruMD()` for hver blokk; `RU_LAYER` holder bare 400 blokker, så hele landet regnes på nytt over flere malinger. `chartVectors` (Ø11.6 eier `ui/03-map.js`) og `03e-rules.js` (Ø10) var ikke Ø3a sine; se backloggen.
+
 ## 5.45 Søk i kartplotteren (Jonas 09.10.2026)
 
 `ui/03f-search.js`. Forstørrelsesglasset (`#zsearch`) over båtknappen åpner et søkefelt (`#srch`).

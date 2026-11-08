@@ -131,18 +131,25 @@ const MODELS = {done:false, wait:[], total:0, got:0, failed:[]};
 // letter and the 3D view, so the wait after «Start» never reached the error list. ask: when the 3D view was first asked for (the letter
 // and the start place are off the screen), shown: two frames after it came up (loaderGone). Sent once as the event 'first3d' with the seconds from
 // the ask (wait_s, of it the models' part models_s), from the navigation less the gate and the background (total_s), and whether this
-// device had the app's worker already (warm: false is a first visit or a browser without it)
-const B3D = {ask:0, models:0, sent:false, res:null, warm:!!(navigator.serviceWorker && navigator.serviceWorker.controller), hid:0, hidAt:0};
+// device had the app's worker already (warm: false is a first visit or a browser without it). letter_s (Ø3a, 07.11.2026): from the
+// navigation to Father's letter on the screen, less the gate and the background (the wait before the letter, the first start's own;
+// null when no letter came: a saved game); read_s: from the letter to the ask, less the background (the player's own time with the letter
+// and the start place)
+const B3D = {ask:0, models:0, sent:false, res:null, warm:!!(navigator.serviceWorker && navigator.serviceWorker.controller), hid:0, hidAt:0, lt:0, lh:0, lhAt:0};
 // (the time in the background between the ask and the picture is left out, as the boot's is: a player who put the tablet away on
 // the start place gave «wait_s» 984 and «total_s» -968, 04.11.2026; BOOTW stops counting the background once the game is built)
-function boot3dAsk(){ if (!B3D.ask){ B3D.ask = performance.now(); if (document.hidden) B3D.hidAt = B3D.ask; } }
-document.addEventListener('visibilitychange', () => { if (!B3D.ask || B3D.res) return; const n = performance.now(); if (document.hidden){ if (!B3D.hidAt) B3D.hidAt = n; } else if (B3D.hidAt){ B3D.hid += n - B3D.hidAt; B3D.hidAt = 0; } });
+function boot3dAsk(){ if (!B3D.ask){ B3D.ask = performance.now(); if (document.hidden) B3D.hidAt = B3D.ask; if (B3D.lhAt){ B3D.lh += B3D.ask - B3D.lhAt; B3D.lhAt = 0; } } }
+document.addEventListener('visibilitychange', () => { const n = performance.now();
+  // (read_s leaves out the time in the background between the letter and the ask, lh, as wait_s leaves out the time after the ask)
+  if (B3D.ltAt && !B3D.ask){ if (document.hidden){ if (!B3D.lhAt) B3D.lhAt = n; } else if (B3D.lhAt){ B3D.lh += n - B3D.lhAt; B3D.lhAt = 0; } }
+  if (!B3D.ask || B3D.res) return; if (document.hidden){ if (!B3D.hidAt) B3D.hidAt = n; } else if (B3D.hidAt){ B3D.hid += n - B3D.hidAt; B3D.hidAt = 0; } });
 function boot3dShown(){
   if (B3D.res || B3D.wait3 || !B3D.ask || !BOOTW.done) return; B3D.wait3 = true;
   // (two frames on: the 3D view's own first frame, the heavy one, has been drawn by then)
   requestAnimationFrame(() => requestAnimationFrame(() => {
   const n = performance.now(), away = B3D.hid + (B3D.hidAt ? n - B3D.hidAt : 0);
   B3D.res = {wait_s:Math.round((n - B3D.ask - away) / 100) / 10, models_s:Math.round(B3D.models / 100) / 10, total_s:Math.round((n - bootAway() - away) / 100) / 10, hid_s:Math.round(away / 1000), warm:B3D.warm,
+    letter_s:B3D.lt ? Math.round(B3D.lt / 100) / 10 : null, read_s:B3D.lt ? Math.round((B3D.ask - B3D.ltAt - B3D.lh) / 100) / 10 : null,
     net:(navigator.connection && navigator.connection.effectiveType) || null, mem:navigator.deviceMemory || null};
   boot3dSend(); }));
 }
@@ -203,9 +210,16 @@ function modelsLabel(){
 // The packs round everything the saved game holds. It runs again after the cloud gate (08.10.2026, a player on a new PC: the cloud save
 // is put in place only then, and its boat may lie in a tile the first round never asked for: «mask block 105,20 is not loaded»).
 async function bootMapLoad(){
-  const saved = load(), pts = []; bootgNote(saved);
+  const saved = load(), pts = [], ways = []; bootgNote(saved);
   for (const v of saved && saved.fleet && saved.fleet.length ? saved.fleet : saved ? [saved] : []){
-    const b = v.boat; if (b && b.pos) pts.push(b.pos); for (const w of [...((v.plan && v.plan.wps) || []), ...((v.ops && v.ops.wps) || []), ...(v.draft || [])]) pts.push(w); }
+    const b = v.boat; if (b && b.pos) pts.push(b.pos); for (const w of [...((v.plan && v.plan.wps) || []), ...((v.ops && v.ops.wps) || []), ...(v.draft || [])]) pts.push(w);
+    // and the way along the plan still ahead and the draft (07.11.2026): the start's check of the plan (legClear in bootGame) and the
+    // chart's drawing of the draft (renderDyn) read the whole leg, and the packs round its ends left out the middle of a long one
+    // (Adrian 05.11.2026: «mask block … is not loaded», and the page loaded again for it). The same pieces as the route finder and the
+    // draft's hazards (lnetLoad, core/11c-leinett.js: 5 km of the leg at a time, half a kilometre round it)
+    if (b && b.pos){ const i0 = v.plan ? v.plan.idx || 0 : 0;
+      if (v.plan && v.plan.wps && v.plan.wps.length > i0) ways.push([b.pos].concat(v.plan.wps.slice(i0)));
+      if (v.draft && v.draft.length) ways.push([b.pos].concat(v.draft)); } }
   for (const s of (saved && saved.sets) || []) if (s.a && s.b) pts.push(setMid(s));
   // Senja's harbours (a new game starts in Finnsnes before the player picks a place, ui/08c-start.js), the saved home and the grounds
   // (the talk on the quay weighs them all); not the coast's receivers, which would be the whole coast's packs
@@ -216,7 +230,7 @@ async function bootMapLoad(){
   for (let t = 0; ; t++){
     // packs the last start found missing too late (the catch at the bottom remembers them for this tab and loads the page again)
     let late = []; try { const L = JSON.parse(sessionStorage.getItem('dsb_needpk') || '[]'); late = [...MAPD.byTile.values()].filter(pk => L.includes(pk.file)); } catch (e){}
-    try { await Promise.all([mapLoad(MAPD.core), ...pts.map(p => mapNeed(p, MAPD.simR)), ...late.map(mapLoad)]); break; }
+    try { await Promise.all([mapLoad(MAPD.core), ...pts.map(p => mapNeed(p, MAPD.simR)), ...ways.map(P => lnetLoad(P)), ...late.map(mapLoad)]); break; }
     catch (e){ if (t >= 8) throw e; if (e && e.pk) await mapLoad(e.pk); else await new Promise(res => setTimeout(res, 1000)); }
   }
   DEPTH = true;
@@ -324,7 +338,9 @@ INSTR.show(); tab = 'route'; setBodyView(true);
 // G3 comes from a later <script> (view3d.js): the clock starts when the whole page is read (it may be read already)
 // the 3D view starts after Father's letter is put down: building it takes the main thread for seconds, and the letter's animation
 // stood still meanwhile (ui/08b-letter.js)
-mapOnReady(() => { setInterval(tick, 200); const go3d = () => { if (document.getElementById('letter') || document.getElementById('startPick')) setTimeout(go3d, 400); else G3.show(true, true); }; go3d(); });
+// (the letter's time for first3d: when it is first seen here, within the 0.4 s of the look)
+mapOnReady(() => { setInterval(tick, 200); const go3d = () => { const lt = document.getElementById('letter'); if (lt && !B3D.lt){ B3D.ltAt = performance.now(); B3D.lt = B3D.ltAt - bootAway(); if (document.hidden) B3D.lhAt = B3D.ltAt; }
+  if (lt || document.getElementById('startPick')) setTimeout(go3d, 400); else G3.show(true, true); }; go3d(); });
 // the simulation's data are in (bootMap), so the clock may run, and the time away is played
 SIMREADY = true; CONT_D = null; renderBase(); panelDirty = true;
 if (AWAY){ catchUp(AWAY + Date.now() - BOOT_T); AWAY = 0; refreshAll(); } lastWall = Date.now();

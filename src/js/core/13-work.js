@@ -186,6 +186,7 @@ function workAssign(as){
   if (meAboard() && !asleep() && !(typeof resting === 'function' && resting())) P.push({c:null});   // (in the bunk, #70: the crew work on without you)
   team.forEach(c => P.push({c}));
   lagOnDeck(S.t / 60, ctx.ror).forEach(c => P.push({c}));   // an ocean vessel's teams: the watch on (04-crew.js, H2b)
+  if (typeof mobDeck === 'function') mobDeck(P, as);   // the one in the water is not aboard, and who is on deck is kept for the risk (Ø11.6, 14b-sikkerhet.js)
   if (!P.length) return P;
   for (const p of P){ p.st = null; p.why = null; }
   if (ctx.s === 'aground'){ for (const p of P){ p.st = 'pause'; p.why = 'aground'; } return P; }
@@ -198,7 +199,7 @@ function workAssign(as){
   if (ctx.ror){ const me = P.find(p => !p.c), m = P.find(p => p.c && p.c.mate), sk = typeof opsSkipper === 'function' && opsSkipper(), o = sk && P.find(p => p.c === sk);
     const who = me || m || o || P.slice().sort((a, b) => b.c.attr.sjo - a.c.attr.sjo)[0]; put(who, 'ror', me ? 'skipper' : m ? 'mate' : o ? 'opsk' : 'seaman'); }
   // the work waiting at each station, in one person's minutes, and the crew's own jobs on the gear
-  const left = {sloy:ctx.gutKg / DECK.gut, is:ctx.iceKg / DECK.ice, blogg:ctx.blogg ? 30 : 0, haling:ctx.haling && ctx.gk !== 'teine' ? 20 : 0, sort:ctx.sort ? 10 : 0};
+  const left = {sloy:ctx.gutKg / gutPace(), is:ctx.iceKg / DECK.ice, blogg:ctx.blogg ? 30 : 0, haling:ctx.haling && ctx.gk !== 'teine' ? 20 : 0, sort:ctx.sort ? 10 : 0};
   const jobs = jobsOpen(as), jn = new Map(jobs.map(j => [j, 0]));
   // (while the gear comes in, or two gut, and nobody is at the ice, the gutted fish come off the table as fast as they are gutted and lie
   // unpacked: the ice is wanted as much as the table; before, a second hand went to the table and nobody packed, crewwalk.py on the new
