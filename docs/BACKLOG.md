@@ -4,6 +4,7 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
+- **UI 2, U2-8 (nettbrett og PC arver) bygd 08.11.2026** (Jonas' økt, grenen `ccr-510fd7d5-2eum2h`; `docs/systemer/ui-og-telefon.md`, «UI 2, U2-8»): hele boksen under kartet på nettbrett liggende og PC uten reserven, stripa på nettbrett stående (valgt i økta), skuffen i plotteren under stripa, kildelinja ved siden av dagbokfanen, telefonknappen skjult bak den åpne telefonen, hele ordet på dagbokfanen i liggende telefon. Ses på Jonas' nettbrett med 3D: om boksen i liggende som vokser og krymper med innholdet (før: fast høyde med tomt glass) er roligere eller uroligere å se på under fisket; om stripa i stående nettbrett er nok, eller om hele boksen bør stå der (krever `ui/04-panels-instruments.js`, `HUDMQ`). Patchnotes for U2-8 tas i U2-9.
 - **UI 2, U2-7 (skuffen og sidene) bygd og rullet ut 08.11.2026 i 869507fb** (Jonas' økt, grenen `ccr-b4ccfe0e-t6qjnp`; `docs/systemer/ui-og-telefon.md`, «UI 2, U2-7»): ett ark for alle sidene i stående med stripa over, Mannskap med én hovedknapp per person og den andre bak ⋯. Antatt: hvilken post som er hovedknappen (om bord styrmann, ellers skipper) er valgt i økta; minikartet er borte mens skuffen er åpen. Ikke sett over 3D-bildet (ingen GPU). Neste i UI 2: U2-8 Nettbrett og PC arver.
 - **Ø8b S0 (full last på første tur, V3 C) bygd og rullet ut 08.11.2026 i ffd076c1** (Jonas' økt, grenen `ccr-e9f46ad4-wipgu7`; `docs/systemer/opning-og-veiledning.md`, «Ø8b S0»). Det som står igjen eller er antatt:
   - **Sluttseddelen og dekksdagboka sier samme N** (Jonas' valg A 08.11.2026): `portSlip` kaller `tutNormKg(ls)` etter at Ø12 C var ute; med den gamle formelen ville seddelen sagt 120 der begge nå sier 80 ved Gisundet.
@@ -609,7 +610,6 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 - **Skyggen som bakes, er ikke lik fra kjøring til kjøring (funnet i Ø11.4, 06.11.2026):** to kjøringer av samme `arbeider.py` ga annen skygge på 44 av 63 deler (opptil noen trinn av 255, og andre punkttall fordi like punkter slås sammen etter fargen), og `sikker.py` ga 6 andre byte i `vugge12`. En full eksport endrer derfor folkene og utstyret litt hver gang. `add` (`tools/boats/glbadd.py`) legger nye deler til uten å røre de gamle; `tools/boats/qa/glbdiff.py` sammenligner to GLB-er del for del. Om eksporten skal bli lik hver gang, må Cycles' frø og trådene låses i `bake_ao` (`bpyutil.py`), og det er ikke prøvd.
 
-- **Skuffen i kartplotteren (2D) i stående ligger litt over stripa** (UI 2, U2-7, 08.11.2026): i 3D-visningen står stripa over arket, men i kartplotteren (`body.vplot`, uten knappelinja) står stripa på 54–114 px og arket fra 12 % (101 px på telefonen), så arket dekker stripas nederste 13 px, slik skjemasidene gjorde før U2-7. Skuffen åpnes sjelden fra plotteren. Rettes i U2-8 med plotterens egne mål.
 - **Node på serveren oppdateres ikke av seg selv** (Ø16, 05.11.2026): `setup.sh` legger inn Node 22 fra NodeSource, fordi Ubuntu 24.04 har Node 18, som ikke får oppdateringer lenger. `unattended-upgrades` tar bare Ubuntus egne sikkerhetsoppdateringer, så Node (og Caddy) oppdateres med `apt upgrade`. Reléet lytter bare på 127.0.0.1 bak Caddy. Node 22 får støtte til april 2027.
 - **Personvernsiden og reléet** (Ø16, 05.11.2026): posisjonen går nå også gjennom vår egen server i Helsinki flere ganger i sekundet (ingenting lagres, bare tall logges). Teksten om posisjonen i `src/legal/personvern.html` sier trolig nok, men bør leses før utrullingen.
 - **Caddyfile-en er ikke sjekket med Caddy lokalt** (Ø16, 05.11.2026): ingen Caddy i skymiljøet. `setup.sh` kjører `caddy validate` før den laster inn den nye; er den ugyldig, stopper skriptet og den gamle går videre.
@@ -625,6 +625,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 - **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
+
+## Strøket 08.11.2026 (UI 2, U2-8: nettbrett og PC arver, gren `ccr-510fd7d5-2eum2h`)
+
+- ~~**Skuffen i kartplotteren (2D) i stående ligger litt over stripa** (UI 2, U2-7, 08.11.2026): i 3D-visningen står stripa over arket, men i kartplotteren (`body.vplot`, uten knappelinja) står stripa på 54–114 px og arket fra 12 % (101 px på telefonen), så arket dekker stripas nederste 13 px, slik skjemasidene gjorde før U2-7. Skuffen åpnes sjelden fra plotteren. Rettes i U2-8 med plotterens egne mål.~~ Rettet i U2-8: arket starter under stripa (`--ecH` + 8 + 60 + 6 px), `hudtest` sjekker det på 390×844, 412×915 og 800×1280.
 
 ## Strøket 08.11.2026 (UI 2, U2-7: skuffen og sidene, gren `ccr-b4ccfe0e-t6qjnp`)
 
