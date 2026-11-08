@@ -14,14 +14,14 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 
 ## Øktene som kjører
 
-- `ccr-2040aa61-qgig5a`: Jonas' svar A på leveringen på en flerdøgnstur (fra Ø12 A+B, steg 23), Jonas' økt, startet 08.11.2026 17:35 UTC. Eier `core/06g-plan2.js` (`planDay`), `tests/unit/plan2.test.mjs`, `tests/driftsplan2kyst.py`. Ø12 C (steg 18) venter til den er ute.
-- Ingen andre (08.11.2026). H3d1 (steg 24) er rullet ut 08.11.2026 i en økt Jonas startet (Jonas: «Rull ut på det store blå»).
+- Ingen (08.11.2026). Jonas' svar A på leveringen på en flerdøgnstur (valg 13) ble rullet ut i c7f27c6a i en økt Jonas startet. H3d1 (steg 24) er rullet ut 08.11.2026 i en økt Jonas startet (Jonas: «Rull ut på det store blå»).
 - Før det: Ø9 F3 (steg 15) ble rullet ut i d7c870b2 i en økt Jonas startet; Ø9 F2 (steg 14) ble rullet ut i b68ff95d (flettet med arbeidsgrenen i 0d6d6201) i en økt Jonas startet; Ø11.6 (steg 6) ble rullet ut i d3b8bde0 i en økt Jonas startet; OPP2 (steg 56) ble rullet ut i fe658e10 i en økt Jonas startet; OPP4-siden gjort om etter Jonas' tilbakemelding, rullet ut i c7e1bcb0; Ø10 (steg 10) ble rullet ut i f4e2a8c0 i en økt Jonas startet; OPP4 (steg 54) ble rullet ut i e10cd8ad og OPP1 (steg 53) i 73c12b26, begge i økter Jonas startet; før det H3b og H3c (4107d71a), U2-4 (c62047f0) og stripa og kartet (4f5f6d91).
 
 ## Utrullinger fra rutinen
 
 | Dato | Steg | Flettecommit | Versjon | PR |
 |---|---|---|---|---|
+| 08.11.2026 | Valg 13 A: leveringen på en flerdøgnstur (Jonas' økt, ikke rutinen) | c7f27c6a | 8ce3560ea34f | – (direkte til arbeidsgrenen; porten i `tools/plan/RUTINE.md` punkt 6 holdt) |
 | 07.11.2026 | Ø9 F3 Brytning og spekteret (Jonas' økt, ikke rutinen) | d7c870b2 (flettet med arbeidsgrenen etter Ø3a i a742b4ec og etter F2 i 814ea9cb) | a31df5c724cc | – (direkte til arbeidsgrenen; porten i `tools/plan/RUTINE.md` punkt 6 holdt) |
 | 07.11.2026 | Ø9 F2 Skroget i sjøen: oppdrift per snitt (Jonas' økt, ikke rutinen) | b68ff95d (flettet med arbeidsgrenen i 0d6d6201) | d94d39135fb2 | – (direkte til arbeidsgrenen; porten i `tools/plan/RUTINE.md` punkt 6 holdt) |
 | 07.11.2026 | Ø3a Ytelse, det som kan måles her (Jonas' økt, ikke rutinen) | 4eefe0b5 (flettet med arbeidsgrenen i c7fd9849) | 7f99a30f0dba | – (direkte til arbeidsgrenen; porten i `tools/plan/RUTINE.md` punkt 6 holdt) |
@@ -318,6 +318,7 @@ Startmeldingene for Ø8b S3 (13), R (16), Ø11.8 (19), H3d2 (25), H3e (26), OPP3
 
 ## Status
 
+- 08.11.2026: **Jonas' svar A på leveringen på en flerdøgnstur bygd og rullet ut** (valg 13; Jonas' økt, gren `ccr-2040aa61-qgig5a`, flettet i c7f27c6a): med Levering «hvert N. døgn» og N like lang som turen leverer båten turens siste dag før hjem (`p2LandsToday`). Porten: enhetstestene (2 213), `driftsplan2test` (62 OK alene; S5 rød én gang med 61, den kjente), `driftsplan2ui`, `driftsplan2kyst` (46), `skipdrift`, `docktest`, `/code-review` med rettingen (avgrenset til N = turens lengde, som valget sa). Nytt valg 14: det samme når N ikke er turens lengde.
 - 08.11.2026: Jonas: «Senja sine felt skal fungere akkurat likt som alle de andre fiskefeltene i landet og ikke være en fast sirkel.» Skrevet inn i `docs/planer/fangstfelt.md` (2.8 med Fiskeridirektoratets felt på de seks stedene, F1–F4) og i startmeldingene 31a, 31b, 31d og radene 31b, 31c: `GROUNDS` blir bare faste punkter for kalibreringen og testene. Jonas la `api.kartverket.no` til i miljøet (svarer 200), så 31e venter bare på 31a; Kartverkets API er sjekket (planen F5).
 - 08.11.2026: **Jonas svarte på valg 12** (Ø10, juksa uten torsk i Skagerrak): «Valg 12: fangsten kan ikke holde torsken ute, det er urealistisk. Bifangst av uønskede eller fredede arter er et ekte problem og spillet må reflektere dette». Verken A eller B: fangsten har torsken i seg, og bifangsten skal være et problem spilleren møter (grensen, flytting, alt landes, inndragning over grensen, Kystvakta), med fiske etter torsk fortsatt stengt. Skrevet inn i `docs/systemer/kvoter-og-regler.md` 5.28c og backloggen. Steg 65 er nå bifangsten (klar, hel startmelding), og gyteområdene i NØS, Nordsjøen og taket på 3 tonn er flyttet til steg 68 (venter på 65, de samme filene).
 - 08.11.2026: **H3d1 rullet ut** (Jonas: «Rull ut på det store blå»), flettet med arbeidsgrenen i 00a46c3e (versjon 490aaf1bd8ad). Etter flettingen: enhetstestene 2 208 OK, `boottest`, `vesseltest`, `snokrabbetest`, `krabbefabrikktest`, `lanterntest`, `regmarktest`, `maletest` og `haultest` grønne, `walktest` rød bare på autolineren som før, `h3dshot` del 1 og 2 grønne, `potshot` grønn direkte (gikk ut på tid i `run.py` etter første sjekk). Neste på sporet: H3d2 (steg 25), startmeldingen står over.
