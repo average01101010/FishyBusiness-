@@ -46,10 +46,11 @@ TRADE = """(async () => { const R = {}, y = yearH(S.t / 60), tap = q => { const 
   // buying a right: one NPC owner fewer, the right dated, the seller's catch off the quota
   const r0 = npcReg().u7; DOCK.open('fartoy'); tap('[data-pa=mksel]:not([data-k])'); tap('[data-pa=mktab][data-s=lic]'); tap('[data-pa=mksel][data-k=trebat][data-o=u7]'); tap('[data-pa=buylic][data-ti="1"]'); DOCK.close();
   R.buy = {lic:S.lic && S.lic.id, since:S.lic && S.lic.since, from:S.lic && S.lic.from, reg:[r0, npcReg().u7], seller:quotaState().seller, quota:licQ(S.lic).torsk};
-  // structure quotas on a 14.99 m boat with a 14–14.9 m right: 10 % off, and the cap at three times its own quota
-  S.cash = 1e8; S.loan = null; S.loanIN = null; b.type = 'kyst15'; applyVessel(); S.lic = {id:'h14', since:y - 1}; freshQuota(); const c0 = licQ(S.lic).torsk;
-  PHONE.dact('kvote', 'struct', {id:'h14'}); const c1 = licQ(S.lic).torsk; PHONE.dact('kvote', 'struct', {id:'h14'}); const c2 = licQ(S.lic).torsk; PHONE.dact('kvote', 'struct', {id:'h14'}); const c3 = licQ(S.lic).torsk;
-  R.struct = {c0, c1, c2, c3, n:(S.lic.st || []).length, until:S.lic.st && S.lic.st[0].until, room:structRoom(S.lic, 'h14'), small:structRoom({id:'u7'}, 'u7')};
+  // structure quotas on a 14.99 m boat with a 14–14.9 m right: 10 % off, and the cap at five times its own quota (§ 12, a specialist; KM1
+  // 08.11.2026, it was three), so the fifth is stopped; one NPC owner leaves the register for each (structIn took a second until KM1)
+  S.cash = 1e8; S.loan = null; S.loanIN = null; b.type = 'kyst15'; applyVessel(); S.lic = {id:'h14', since:y - 1}; freshQuota(); const c0 = licQ(S.lic).torsk, g0 = npcReg().h14;
+  const cs = [c0]; for (let i = 0; i < 5; i++){ PHONE.dact('kvote', 'struct', {id:'h14'}); cs.push(licQ(S.lic).torsk); }
+  R.struct = {cs, n:(S.lic.st || []).length, until:S.lic.st && S.lic.st[0].until, room:structRoom(S.lic, 'h14'), small:structRoom({id:'u7'}, 'u7'), reg:g0 - npcReg().h14, cap:STRUCT.cap.g11};
   // haddock and saithe in the closed group: over the maximum quota only 30 % haddock and 20 % saithe of the landing are kept
   const LQ = licQ(S.lic); quotaState().hyse = LQ.hyse[0]; quotaState().sei = LQ.sei[0];
   b.port = 'husoy'; b.pos = {...portById('husoy').p};   // (the landing needs a plant, the buying a yard)
@@ -95,7 +96,9 @@ async def main():
         bu = tr['buy']
         print(ok(bu['lic'] == 'u7' and bu['reg'][1] == bu['reg'][0] - 1 and bu['since'] and bu['from'] and 0 <= bu['seller'] <= 0.85 * bu['quota']), 'buying a right takes one NPC owner out of the register, and his catch this year comes off the quota', bu)
         st = tr['struct']
-        print(ok(st['n'] == 2 and abs((st['c1'] - st['c0']) / st['c0'] - 0.9) < 0.01 and st['c2'] > st['c1'] and st['c3'] == st['c2'] and not st['room'] and st['small'] is False and st['until'] == st['until']), 'structure quotas: each adds the right less 10 %, for 20 years, and the third is stopped by the cap of three times the own quota; under 11 m cannot structure', st)
+        cs = st['cs']
+        print(ok(st['n'] == 4 and st['cap'] == 5 and abs((cs[1] - cs[0]) / cs[0] - 0.9) < 0.01 and all(cs[i + 1] > cs[i] for i in range(4)) and cs[5] == cs[4] and cs[4] <= 5 * cs[0] and not st['room'] and st['small'] is False and st['until'] == st['until']), 'structure quotas: each adds the right less 10 %, for 20 years, and the fifth is stopped by the cap of five times the own quota (§ 12); under 11 m cannot structure', st)
+        print(ok(st['reg'] == st['n']), 'structuring takes one NPC owner out of the register for each structure quota', st)
         print(ok(tr['hyse']['conf'] > 100 and tr['hyse']['keptH'] <= 301), 'over the haddock maximum quota only 30 % of the landing may be haddock; the rest is confiscated', tr['hyse'])
         tw = tr['two']
         print(ok(tw['fleet'][1] == tw['fleet'][0] - 1 and tw['two'] == 'h7' and abs(tw['quota'][1] - tw['quota'][0] - tw['quota'][2]) <= 2), 'the special scheme: one boat sold, the other fishes both quotas (9–9.9 m + 7–7.9 m)', tw)

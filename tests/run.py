@@ -148,6 +148,10 @@ for _f in ('src/js/core/07c-naust.js', 'src/js/ui/03b-route.js', 'src/js/core/07
     COVER[_f] = COVER.get(_f, []) + ['utfrakai']
 for _f, _t in (('src/js/view3d/21-rescue-anchor.js', 'mobshot'), ('src/js/deckcrew.js', 'mobshot'), ('src/js/core/04-crew.js', 'mobtest'), ('src/js/core/13-work.js', 'mobtest'), ('src/js/core/05-vessels.js', 'mobtest'), ('src/js/ui/03-map.js', 'mobtest'), ('src/js/ui/10e-sound.js', 'mobtest')):
     COVER[_f] = COVER.get(_f, []) + [_t]
+# Kvotemarkedet, the core (KM1, 08.11.2026): pure functions tested in tests/unit/kvotemarked.test.mjs (run first by changed); in the game only
+# the free right's two years at the new year (quotaNewYear) and the cap in Kvote → Marked, which quotatest sees. On lines of their own
+COVER['src/js/core/03i-kvotemarked.js'] = ['quotatest']
+COVER['tests/unit/kvotemarked.test.mjs'] = []
 
 
 def changed_tests():
