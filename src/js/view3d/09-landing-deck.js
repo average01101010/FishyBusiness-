@@ -133,7 +133,7 @@
     // (crane.clear: the highest thing she slews the load over, the crane driver's cage forward of the crane on the autoliner)
     const sl0 = LD.length ? Math.max(...LD.map(q => q.sl)) : 2, HUb = SC ? Math.max(VG.hatch.at[1], VG.gw || 0, SC.clear || 0) + sl0 + SBD + 0.5 : 0;
     const pdB = SC ? shipAim(SC, SQ.b[0], SQ.b[2], HUb) : null, pkOf = j => { const q = slotOf(j); return shipAim(SC, q[0], q[2], HUb); };
-    let pkB = SC ? pkOf(0) : null;
+    let pkB = SC ? pkOf(0) : null; const pk0 = pkB;   // (pk0: the load's turn on the quay is reckoned from the first lift's, as MQ is)
     if (SC){ const r = Math.hypot(SQ.b[0] - SC.axis[0], SQ.b[2] - SC.axis[2]) - Math.hypot(SC.heel[0] - SC.axis[0], SC.heel[2] - SC.axis[2]); KST.shipReach = +(r / SC.len).toFixed(3); }
     const MQ = SC ? chain(BMrel, M4.RY(angDiff(pkB.a, pdB.a))) : null;
     const deckOf = j => L.own ? places[LD[j].place] || {at:slots[0], ry:0} : {at:SC ? slotOf(j) : slots[Math.min(slots.length - 1, 0)], ry:0}, slewD = SC ? Math.atan2(-MQ[2], MQ[0]) : Math.atan2(D[0] - P.crane[0], D[1] - P.crane[1]);
@@ -164,7 +164,7 @@
         else if (u < hk) spose = shipMix(hi, lo, ease(seg(u, 0.74, hk)));
         else if (u < 0.93) spose = lo;
         else spose = {...pdB, hook:yd + (yUp - yd) * ease(seg(u, 0.93, 1))};
-        if (u >= 0.42 && u < hk) hang = {L:LD[i], h:sl, yaw:angDiff(pkB.a, spose.a), ship:true};
+        if (u >= 0.42 && u < hk) hang = {L:LD[i], h:sl, yaw:angDiff(pk0.a, spose.a), ship:true};
         // (the sling on a tub: hooked on while the hook is down at it on deck, off on the quay, H3d2)
         if (LD[i].tub){ const F = from(i), Q = to(i); if (u >= 0.18 && u < 0.42) att = {M:F.M, k:ease(seg(u, 0.2, 0.34))}; else if (u >= hk && u < 1) att = {M:Q.M, k:1 - ease(seg(u, 0.9, 0.99))}; }
       } else spose = shipMix(i >= 0 ? {...pdB, hook:yUp} : park, park, ease(seg(e, t0(n - 1) + lf, t0(n - 1) + lf + 1.5)));
@@ -225,8 +225,10 @@
     // (her own crane: one of the gang drives it from the crane driver's cage amidships forward, facing the hatch)
     // (H3d2: a landing of live crab only, from the tubs by the tanks: the crane driver, and one at the tub who hooks the sling on and sees
     // it clear)
-    if (SC && !hatch && liveAt){ const busyU = i >= 0 && u > 0 && u < 1; hatch = [{at:[liveAt[0] + 0.95, liveAt[1], liveAt[2] + 0.4], h:-Math.PI / 2, task:busyU && u >= 0.18 && u < 0.42 ? 'unhook' : busyU && u >= 0.42 && u < 0.6 ? 'guide' : 'look'}]; }
-    if (hatch && SC){ const cz = SC.axis[2] - 3.8, hx = (liveAt && !GH ? liveAt : VG.hatch.at)[0], hz = (liveAt && !GH ? liveAt : VG.hatch.at)[2]; const at = VG.snok ? [SC.axis[0] + 1.3, VG.hatch.deck, SC.axis[2] + 1.6] : [0, VG.hatch.deck, cz];   // (the snow crab vessel's crane on its column by the forecastle: driven with the remote from beside it)
+    const liveNow = !!(liveAt && i >= 0 && LD[i] && LD[i].live);
+    if (hatch && liveNow) hatch.forEach(q => { q.task = 'look'; });   // (the hatch gang stands by while the tubs go from beside the tanks)
+    if (SC && liveAt && (!hatch || liveNow)){ const busyU = i >= 0 && u > 0 && u < 1; hatch = (hatch || []).concat([{at:[liveAt[0] + 0.95, liveAt[1], liveAt[2] + 0.4], h:-Math.PI / 2, task:busyU && u >= 0.18 && u < 0.42 ? 'unhook' : busyU && u >= 0.42 && u < 0.6 ? 'guide' : 'look'}]); }
+    if (hatch && SC){ const cz = SC.axis[2] - 3.8, hx = (liveAt && (!GH || liveNow) ? liveAt : VG.hatch.at)[0], hz = (liveAt && (!GH || liveNow) ? liveAt : VG.hatch.at)[2]; const at = VG.snok ? [SC.axis[0] + 1.3, VG.hatch.deck, SC.axis[2] + 1.6] : [0, VG.hatch.deck, cz];   // (the snow crab vessel's crane on its column by the forecastle: driven with the remote from beside it)
       hatch.push({at, h:Math.atan2(hx - at[0], -(hz - at[2])), task:'remote'}); }
     return {e, i, u, pose, hang, att, deck, quay, fk, busy, hatch, ship:!!SC, spose, D, K:from(Math.max(0, i)).w, slewD, tubNow:!!(LD[Math.max(0, i)] || {}).tub, sbd:i >= 0 ? sbd(i) : sbd(0)};
   }
@@ -257,7 +259,7 @@
     const r = drawUnitParts(P, eye, pose, FK, P.doorK, P.chA, LS ? T : null);   // (the driver is on the forklift while it works a landing)
     // what hangs from the hook (in the sling, swaying a little), the sling itself through the landing, the loads on deck and on the quay
     const ring = rel(r.tip[0], pose.hook + 0.1, r.tip[2]), sway = Math.sin(T * 1.3) * 0.035;
-    KST.shipSling = false; KST.shipFork = false;
+    if (LS){ KST.shipSling = false; KST.shipFork = false; }   // (only the plant that lands her says what hangs from her crane)
     if (LS && LS.ship){ const tip = SHIPCR.tip, sp = LS.spose, fork = kit('pall', 'gaffel');   // (her own crane's hook: drawShipCrane drew the crane and the block)
       // (a tub of live crab hangs in the four-leg sling on the hook, H3d2; a pallet on the fork)
       if (tip && sp){ const tub = LS.tubNow, ey = sp.hook - (tub ? 0 : SBD), yaw = LS.hang ? LS.hang.yaw : 0;
