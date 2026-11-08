@@ -151,7 +151,7 @@ THE SEA MARKS ALONG THE WHOLE COAST (05.10.2026; Jonas: «Sjømerker må ordnes 
   - 26 `marksNear(kind, x, y, R)`
 - **34** THE NAMES OF THE FISHING GROUNDS ALONG THE WHOLE COAST (B2 of docs/planer/bestand-og-flaate.md, 01.11.2026)
   - 53 `feltData()`
-  - 67 `feltIn(x0, y0, x1, y1)`
+  - 67 `feltIn(x0, y0, x1, y1, all)`
   - 76 `feltShapesFrom(bytes)`
   - 89 `feltShape(f)`
 
@@ -2250,7 +2250,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 190 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 203 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (838 linjer)
+## `src/js/ui/03-map.js` (859 linjer)
 
 ---------- map ----------
 
@@ -2283,24 +2283,24 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 392 `scheduleChart()`
   - 395 `renderBase()`
   - 409 `updateMapButtons()`
-  - 421 `tapName(mp, rr)`
-  - 426 `renderStatic()`
-  - 527 `portIcon(p, s, u)`
-  - 548 `anchorPath(x, y, s, u)`
-  - 556 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 575 `scheduleStatic()`
-  - 580 `aisTrack(id, H)`
-  - 585 `aisInfo(n)`
-  - 604 `sjvChartSvg(u, bp)`
-  - 614 `renderAisCard()`
-  - 615 `renderDyn()`
-  - 700 `pinAdd(mp)`
-  - 705 `pinOpen(id, fresh)`
-  - 725 `pinKb()`
-  - 756 `ptrUp(e)`
-  - 786 `unzoom()`
-  - 793 `portByLabel(pt)`
-  - 798 `addWaypoint(pt)`
+  - 424 `tapName(mp, rr)`
+  - 439 `renderStatic()`
+  - 545 `portIcon(p, s, u)`
+  - 566 `anchorPath(x, y, s, u)`
+  - 574 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 593 `scheduleStatic()`
+  - 598 `aisTrack(id, H)`
+  - 603 `aisInfo(n)`
+  - 622 `sjvChartSvg(u, bp)`
+  - 632 `renderAisCard()`
+  - 633 `renderDyn()`
+  - 721 `pinAdd(mp)`
+  - 726 `pinOpen(id, fresh)`
+  - 746 `pinKb()`
+  - 777 `ptrUp(e)`
+  - 807 `unzoom()`
+  - 814 `portByLabel(pt)`
+  - 819 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (281 linjer)
 
@@ -2532,12 +2532,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1347 linjer)
+## `src/js/ui/phone/07-patch.js` (1350 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1340 `patch()`
+  - 1343 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
