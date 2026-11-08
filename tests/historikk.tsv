@@ -1473,3 +1473,5 @@
 2026-11-08 21:17	ccr-b4ccfe0e-t6qjnp	007abc7	tut	OK	1083	lite	alene	
 2026-11-08 21:29	ccr-b4ccfe0e-t6qjnp	0464cd7	tut	OK	656	lite	alene	
 2026-11-08 21:03	claude/o14-f4-feltnavnene-kart-htpg70	bcd6576	boottest	OK	25	lite	alene	
+2026-11-08 21:31	ccr-b4ccfe0e-t6qjnp	9948937	boottest	OK	23	lite	samtidig	
+2026-11-08 21:31	ccr-b4ccfe0e-t6qjnp	9948937	docktest	OK	58	lite	samtidig	
