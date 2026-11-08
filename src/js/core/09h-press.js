@@ -13,11 +13,13 @@
 //   foto     a lighthouse picture (the picture only in one's own paper)                         fish     a big fish
 //   fs       ten, twenty ... years of sea time      ach   a badge chapter done      as   a company made a limited company (AS)
 //   tur      a long trip or the season's move done (turoppdrag, 09g-turer.js)          kvote    a structure quota bought
+//   sos      a person from another boat picked up after her MAYDAY (core/14b-sikkerhet.js sosMobEnd, sjøloven § 135); a tow after a PAN-PAN is
+//            the 'salv' story with sos:1
 // The week's top boats come from the shared leaderboard (ui/10h-world.js worldTop), and the day's biggest landing tells its lander in
 // the game (no push: Kystposten sends none, 20261008000000_push_ops.sql). A record price (the highest in a
 // year) is reckoned in every game alike (pressRecords), and the year's first skrei comes from the shared landings (pressSkrei).
 const PRESS = {R:150, keep:40, remote:[], land:[], at:0, told:{}, toldAt:0, skrei:null};
-const PRESS_KINDS = ['boat', 'name', 'aground', 'rescue', 'salv', 'foto', 'fish', 'fs', 'ach', 'as', 'tur', 'kvote', 'lag', 'kv'];
+const PRESS_KINDS = ['boat', 'name', 'aground', 'rescue', 'salv', 'foto', 'fish', 'fs', 'ach', 'as', 'tur', 'kvote', 'lag', 'kv', 'sos'];   // (sos: help in distress, Ø11.7; supabase/migrations/20261108190000_news_sos.sql)
 function pressState(){ const P = S.press || (S.press = {own:[], seen:0, n:0, q:[]}); P.q = P.q || []; return P; }
 const pressCompany = () => (typeof access === 'function' && access() === 'lukket') ? String(S.company || '').slice(0, 40) : '';
 // a story of the player's own; loc holds what stays on this device (a picture's id)
@@ -72,6 +74,7 @@ function pressStory(it){
     s.h = P2(w[0] + ' berget «' + tw + '»', w[1] + ' saved the «' + tw + '»'); s.big = true;
     s.ing = P2('«' + tw + '» hadde motorstopp og drev mot land ' + where.no + '. ' + w[0] + ' tok henne på slep' + (port ? ' inn til ' + port : '') + '.', 'The «' + tw + '» had engine trouble and drifted toward land ' + where.en + '. ' + w[1] + ' took her in tow' + (port ? ' to ' + port : '') + '.');
     if (d.pay > 0) s.body.push(P2('Bergelønnen ble ' + kr(d.pay) + ', avtalt med eierens forsikring' + (d.val > 0 ? ' etter båtens verdi på ' + kr(d.val) : '') + '.', 'The salvage reward was ' + kr(d.pay) + ', agreed with the owner\'s insurer' + (d.val > 0 ? ' by the boat\'s value of ' + kr(d.val) : '') + '.'));
+    if (d.sos) s.body.push(P2('Båten meldte motorstopp med PAN-PAN på kanal 16, og ' + w[0] + ' var nærmest og svarte.', 'The boat reported engine failure with a PAN-PAN on channel 16, and ' + w[1] + ' was nearest and answered.'));
     s.body.push(P2('Etter sjøloven har den som berger en båt i fare krav på bergelønn, men bare når bergingen lykkes.', 'Under the Maritime Code, whoever saves a boat in danger is owed a salvage reward, but only when the salvage succeeds.')); }
   else if (it.kind === 'foto'){ const f = pressFyr(d.fyr); if (!f) return null; const nm = /fyr/i.test(f[3]) ? f[3] : f[3] + ' fyr', L = typeof TUR_LYS !== 'undefined' && TUR_LYS[d.lys];
     s.h = P2(nm + (L ? ' ' + L.no : ''), nm + (L ? ' ' + L.en : ''));
@@ -121,6 +124,12 @@ function pressStory(it){
     s.h = P2('Kystvakta kontrollerte ' + w[0] + (port ? ' ved ' + port : ''), 'The coast guard inspected ' + w[1] + (port ? ' off ' + port : ''));
     s.ing = P2('Kontrollen ga ' + (refs.length === 1 ? 'én merknad' : refs.length + ' merknader') + ', etter ' + refs.join(' og ') + '. Fangst utover regelen inndras ved levering.', 'The inspection gave ' + (refs.length === 1 ? 'one remark' : refs.length + ' remarks') + ', under ' + refs.join(' and ') + '. Catch beyond the rule is confiscated at the landing.');
     s.body.push(P2('Kystvakta kontrollerer fiskebåter langs hele kysten, ved kai og på feltet. Reglene for stedet står i Regler-appen.', 'The coast guard inspects fishing boats along the whole coast, at the quay and on the field. The rules of the place are in the Regler app.')); }
+  else if (it.kind === 'sos'){ const tw = typeof TUR_BOATS !== 'undefined' && TUR_BOATS[d.b] || null; if (d.k !== 'mob' || !tw) return null;   // help in distress (Ø11.7, sjøloven § 135)
+    s.h = P2(w[0] + ' reddet en fisker fra «' + tw + '»', w[1] + ' saved a fisher from the «' + tw + '»'); s.big = true;
+    s.ing = P2('En fisker gikk over bord fra «' + tw + '» ' + where.no + ' i grov sjø. ' + w[0] + ' hørte MAYDAY-en på kanal 16, svarte og fikk personen opp' + (d.min > 0 ? ' etter ' + fmt(d.min, 0) + ' minutter i sjøen' : '') + '.',
+      'A fisher went overboard from the «' + tw + '» ' + where.en + ' in a rough sea. ' + w[1] + ' heard the MAYDAY on channel 16, answered and got the person up' + (d.min > 0 ? ' after ' + fmt(d.min, 0) + ' minutes in the water' : '') + '.');
+    s.body.push(P2('Etter sjøloven skal skipsføreren hjelpe den som er i havsnød, så langt det kan skje uten særlig fare for eget skip og folk om bord.', 'Under the Maritime Code the master is to help anyone in distress at sea, as far as it can be done without serious danger to her own ship and people aboard.'),
+      P2('For å redde folk gis det ingen bergelønn. Kystposten takker.', 'Saving people earns no salvage reward. Kystposten says thank you.')); }
   else if (it.kind === 'kvote'){ if (!(d.kf > 0)) return null;
     s.h = P2(w[0] + ' kjøper strukturkvote', w[1] + ' buys a structure quota');
     s.ing = P2(w[0] + ' har kjøpt strukturkvote og får kvotefaktor ' + fmt(d.kf / 10000, 2) + ' mer i 20 år.', w[1] + ' has bought a structure quota and gets ' + fmt(d.kf / 10000, 2) + ' more in quota factor for 20 years.');

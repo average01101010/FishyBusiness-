@@ -58,6 +58,11 @@ def main():
         AD2 = {'sub': ADMIN_ID, 'role': 'authenticated', 'aal': 'aal2'}; AD1 = dict(AD2, aal='aal1')
         R = {}
         R['hello'] = json.loads(sql("select public.tm_hello('{\"lang\":\"nb\",\"tz\":\"Europe/Oslo\",\"browser\":\"chrome\",\"platform\":\"android\",\"pwa\":true}')", A, 'authenticated'))
+        # Kystposten (Ø11.7, 20261108190000_news_sos.sql): help in distress keeps k, b and min and never a name; a salvage after a PAN-PAN keeps sos
+        sql("select public.news_put('sos', 1000, 850, 350, 'Havbris', '', '{\"k\":\"mob\",\"b\":1,\"min\":8,\"name\":\"Ola Hansen\"}'::jsonb)", A, 'authenticated')
+        sql("select public.news_put('salv', 1000.5, 850, 350, 'Havbris', '', '{\"towed\":2,\"port\":\"mT369\",\"pay\":40000,\"val\":750000,\"sos\":1}'::jsonb)", A, 'authenticated')
+        NS = {k: json.loads(sql("select d::text from public.news where kind = '%s' order by at desc limit 1" % k) or 'null') for k in ('sos', 'salv')}
+        print(ok(NS['sos'] == {'k': 'mob', 'b': 1, 'min': 8} and (NS['salv'] or {}).get('sos') == 1), 'Kystposten: the sos story keeps k, b and min and no name, and a salvage keeps sos (Ø11.7)', json.dumps(NS))
         # the game's Admin app: only the account flagged by hand; a player cannot flag himself
         R['admSelf'] = sql("update public.players set game_admin = true where id = 'user_01AAA'", A, 'authenticated', expect_err=True)
         sql("update public.players set game_admin = true where id = 'user_01AAA'")

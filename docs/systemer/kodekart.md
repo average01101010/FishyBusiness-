@@ -1369,31 +1369,31 @@ Fartstid: years at sea, 0 to 40 (Jonas 07.10.2026; docs/engasjement.md, arbeidsl
   - 53 `fsLand(total)`
   - 55 `fsRested(realMs)`
 
-## `src/js/core/09f-merker.js` (215 linjer)
+## `src/js/core/09f-merker.js` (222 linjer)
 
 Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1.5 and 3)
 
 - **1** Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1.5 and 3)
   - 22 `achVisits()`
   - 23 `achVisitPort(pid)`
-  - 87 `achState()`
-  - 103 `achAdd(k, n)`
-  - 104 `achSale(total, sps)`
-  - 105 `achCatch(sp, cls)`
-  - 107 `achMinute()`
-  - 117 `achTripEnd(bad)`
-- **119** the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters
-  - 121 `achPool(scale)`
-  - 145 `achDraw(key, scale)`
-  - 153 `achGive(key, scale, title)`
-- **162** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
-  - 164 `achCheck(quiet)`
-  - 192 `achChapter(ch)`
-  - 202 `achSeed()`
-- **213** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
-  - 214 `freeFirst(k)`
+  - 91 `achState()`
+  - 107 `achAdd(k, n)`
+  - 108 `achSale(total, sps)`
+  - 109 `achCatch(sp, cls)`
+  - 111 `achMinute()`
+  - 121 `achTripEnd(bad)`
+- **126** the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters
+  - 128 `achPool(scale)`
+  - 152 `achDraw(key, scale)`
+  - 160 `achGive(key, scale, title)`
+- **169** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
+  - 171 `achCheck(quiet)`
+  - 199 `achChapter(ch)`
+  - 209 `achSeed()`
+- **220** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
+  - 221 `freeFirst(k)`
 
-## `src/js/core/09g-turer.js` (985 linjer)
+## `src/js/core/09g-turer.js` (1005 linjer)
 
 Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md point 4)
 
@@ -1445,70 +1445,71 @@ Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md poi
   - 452 `turGarn(o)`
   - 470 `turValue(L)`
   - 475 `turSlep(o, cls)`
-  - 495 `turNpcs()`
-  - 507 `turMinute()`
-  - 536 `turStuck(T, b)`
-  - 545 `turProveMinute(m, b)`
-  - 569 `turSesong(o)`
-  - 590 `turStages(m)`
-  - 597 `turSesongStage(m)`
-- **610** survey fishing for Havforskningsinstituttet
-  - 615 `turProve(o, cls)`
-  - 642 `turProveFish(m)`
-  - 653 `turProveDone(m)`
-  - 660 `turEkkoSaw(m)`
-- **668** a picture of a lighthouse for Kystposten
-  - 678 `turLysNext(m, from)`
-  - 679 `turFoto(o, cls, near = null)`
-  - 700 `turFotoAt()`
-  - 703 `turFotoTake(m, seen, img)`
-  - 723 `turMake()`
-  - 749 `turEnsure(force)`
-  - 770 `turWay()`
-  - 777 `turDetour(m, way = turWay()`
-- **789** taking, doing and finishing
-  - 790 `turTake(id)`
-  - 818 `turDrop(id)`
-  - 823 `cargoJob(kg, no, en)`
-  - 824 `turLoad(m)`
-  - 833 `turSpawn(m)`
-  - 852 `turEnd(m, ok, why, how)`
-  - 870 `turPayOut(m, from, no, en, part)`
-  - 878 `turDock(pid)`
-  - 892 `turSale(pid, bySp)`
-  - 905 `turHauled(s)`
-  - 909 `turHour()`
-  - 928 `turWhat(m)`
-- **940** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
-  - 954 `turSay(who, no, en, k)`
-  - 959 `turDepart()`
-  - 979 `turMechanic()`
+  - 495 `turSos(Q)`
+  - 513 `turNpcs()`
+  - 526 `turMinute()`
+  - 555 `turStuck(T, b)`
+  - 564 `turProveMinute(m, b)`
+  - 588 `turSesong(o)`
+  - 609 `turStages(m)`
+  - 616 `turSesongStage(m)`
+- **629** survey fishing for Havforskningsinstituttet
+  - 634 `turProve(o, cls)`
+  - 661 `turProveFish(m)`
+  - 672 `turProveDone(m)`
+  - 679 `turEkkoSaw(m)`
+- **687** a picture of a lighthouse for Kystposten
+  - 697 `turLysNext(m, from)`
+  - 698 `turFoto(o, cls, near = null)`
+  - 719 `turFotoAt()`
+  - 722 `turFotoTake(m, seen, img)`
+  - 742 `turMake()`
+  - 768 `turEnsure(force)`
+  - 789 `turWay()`
+  - 796 `turDetour(m, way = turWay()`
+- **808** taking, doing and finishing
+  - 809 `turTake(id)`
+  - 837 `turDrop(id)`
+  - 842 `cargoJob(kg, no, en)`
+  - 843 `turLoad(m)`
+  - 852 `turSpawn(m)`
+  - 871 `turEnd(m, ok, why, how)`
+  - 889 `turPayOut(m, from, no, en, part)`
+  - 897 `turDock(pid)`
+  - 912 `turSale(pid, bySp)`
+  - 925 `turHauled(s)`
+  - 929 `turHour()`
+  - 948 `turWhat(m)`
+- **960** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
+  - 974 `turSay(who, no, en, k)`
+  - 979 `turDepart()`
+  - 999 `turMechanic()`
 
-## `src/js/core/09h-press.js` (233 linjer)
+## `src/js/core/09h-press.js` (242 linjer)
 
 Kystposten: the coast's paper (07.10.2026)
 
 - **1** Kystposten: the coast's paper (07.10.2026)
-  - 21 `pressState()`
-  - 24 `pressPut(kind, d, loc)`
-- **35** the words
-  - 39 `pressWho(it)`
-  - 45 `pressStory(it)`
-  - 132 `pressTop()`
-  - 144 `pressBygde()`
-  - 157 `pressLand(local)`
-- **167** the market: a record price, the highest in a year (Jonas 07.10.2026: «Ta rekordpriser»)
-  - 172 `pressIx(sp, d)`
-  - 173 `pressHigh(sp, d)`
-  - 174 `pressRecords(d)`
-  - 175 `pressPrice(sp, d)`
-  - 190 `pressDay(H)`
-- **194** the year's first skrei: the first cod landing north of Stad (62° N) after the skrei season begins (09c-seasons.js), from the
-  - 196 `pressSkreiH(y)`
-  - 198 `pressSkrei()`
-  - 209 `pressList(local)`
-  - 231 `pressUnread()`
-  - 232 `pressSeen()`
+  - 23 `pressState()`
+  - 26 `pressPut(kind, d, loc)`
+- **37** the words
+  - 41 `pressWho(it)`
+  - 47 `pressStory(it)`
+  - 141 `pressTop()`
+  - 153 `pressBygde()`
+  - 166 `pressLand(local)`
+- **176** the market: a record price, the highest in a year (Jonas 07.10.2026: «Ta rekordpriser»)
+  - 181 `pressIx(sp, d)`
+  - 182 `pressHigh(sp, d)`
+  - 183 `pressRecords(d)`
+  - 184 `pressPrice(sp, d)`
+  - 199 `pressDay(H)`
+- **203** the year's first skrei: the first cod landing north of Stad (62° N) after the skrei season begins (09c-seasons.js), from the
+  - 205 `pressSkreiH(y)`
+  - 207 `pressSkrei()`
+  - 218 `pressList(local)`
+  - 240 `pressUnread()`
+  - 241 `pressSeen()`
 
 ## `src/js/core/09i-look.js` (111 linjer)
 
@@ -1556,7 +1557,7 @@ Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026;
   - 171 `kvWhatHav(r)`
   - 184 `kvFinish()`
 
-## `src/js/core/10-gear.js` (887 linjer)
+## `src/js/core/10-gear.js` (888 linjer)
 
 passive gear: nets, line and pots that stand in the sea while the boat is away
 
@@ -1610,40 +1611,40 @@ passive gear: nets, line and pots that stand in the sea while the boat is away
   - 447 `thiefOf(s)`
   - 457 `haulSlow(g)`
   - 462 `gearOpMinute(H, W, hs)`
-  - 486 `finishSet(g, H)`
-  - 498 `gopEnd(g)`
-  - 500 `gopAfter(b = S.boat)`
-  - 504 `gearUnset(s, n)`
-  - 514 `gopAbort(why)`
-  - 534 `gearBack(s, n, cond, W)`
-  - 541 `wearNets(s, g)`
-  - 550 `haulUnit(g, H, SL)`
-  - 568 `landFish(sp, kg, key, mesh, p, H, hook, fresh, g)`
-  - 584 `netLen(w)`
-  - 585 `retain(sp, key, mesh, w)`
-  - 592 `sampleSel(sp, key, mesh, p, H)`
-  - 595 `landCrabs(g, n, kg)`
-  - 606 `finishHaul(g, H)`
-- **642** a station on a route or the standing plan: haul what stands here and set it again, or set new gear if nothing stands here.
-  - 645 `cycleSpec(kind, want, n)`
-  - 659 `gearCycle(w, fishAfter)`
-  - 677 `opsGearNeeds(o)`
-  - 687 `opsGearAfter()`
-- **693** in the sea, every hour: catch, losses, weather and deadlines (company level)
-  - 694 `soakHour(s, H)`
-  - 728 `gearHour(H)`
-  - 762 `reportLost(sid)`
-  - 770 `netMended(l)`
-- **771** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
-  - 777 `egnOrder(lk, n, bait)`
-  - 791 `egnHands()`
-  - 800 `egnSelf(lk, n, bait)`
-  - 821 `stripSelf(lk, bait, n, then)`
-  - 835 `mendSelf(nid)`
-  - 846 `botOrder(nid)`
-  - 857 `gearJob(j)`
-  - 869 `gearJobCancel(j)`
-  - 876 `shoreTick()`
+  - 487 `finishSet(g, H)`
+  - 499 `gopEnd(g)`
+  - 501 `gopAfter(b = S.boat)`
+  - 505 `gearUnset(s, n)`
+  - 515 `gopAbort(why)`
+  - 535 `gearBack(s, n, cond, W)`
+  - 542 `wearNets(s, g)`
+  - 551 `haulUnit(g, H, SL)`
+  - 569 `landFish(sp, kg, key, mesh, p, H, hook, fresh, g)`
+  - 585 `netLen(w)`
+  - 586 `retain(sp, key, mesh, w)`
+  - 593 `sampleSel(sp, key, mesh, p, H)`
+  - 596 `landCrabs(g, n, kg)`
+  - 607 `finishHaul(g, H)`
+- **643** a station on a route or the standing plan: haul what stands here and set it again, or set new gear if nothing stands here.
+  - 646 `cycleSpec(kind, want, n)`
+  - 660 `gearCycle(w, fishAfter)`
+  - 678 `opsGearNeeds(o)`
+  - 688 `opsGearAfter()`
+- **694** in the sea, every hour: catch, losses, weather and deadlines (company level)
+  - 695 `soakHour(s, H)`
+  - 729 `gearHour(H)`
+  - 763 `reportLost(sid)`
+  - 771 `netMended(l)`
+- **772** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
+  - 778 `egnOrder(lk, n, bait)`
+  - 792 `egnHands()`
+  - 801 `egnSelf(lk, n, bait)`
+  - 822 `stripSelf(lk, bait, n, then)`
+  - 836 `mendSelf(nid)`
+  - 847 `botOrder(nid)`
+  - 858 `gearJob(j)`
+  - 870 `gearJobCancel(j)`
+  - 877 `shoreTick()`
 
 ## `src/js/core/10b-gearcare.js` (273 linjer)
 
@@ -1986,7 +1987,7 @@ life aboard: learning, meals, the rest rule and what the crew says
   - 452 `lifeHail(H)`
   - 459 `alumniReturn(B)`
 
-## `src/js/core/14b-sikkerhet.js` (361 linjer)
+## `src/js/core/14b-sikkerhet.js` (581 linjer)
 
 Ø11.6: man overboard (SK2 the risk, SK3 the event; docs/planer/lover-regler-sikkerhet.md kap. 6, docs/systemer/sjofart-og-lover.md kap. 6)
 
@@ -2011,34 +2012,54 @@ life aboard: learning, meals, the rest rule and what the crew says
   - 112 `mobCan()`
 - **119** the minute (core/05-vessels.js risk): the event going on, or the dice
   - 120 `mobRisk(W, hs)`
-  - 135 `mobNear(q, on, o)`
-  - 141 `mobRec(r)`
-- **143** the rescue: the rescue boat from the nearest station, or the helicopter when it is there sooner
-  - 144 `mobRescue(p)`
-- **158** the fall
-  - 159 `mobStart(q, on, o)`
-  - 177 `mobVhf(M)`
-- **187** where she is, and what is seen (live: at fraction f of the minute)
-  - 188 `mobAt(f)`
-  - 191 `mobAlong()`
-  - 194 `mobSightOf(p, buoyOnly)`
-  - 202 `mobSeen(pos)`
-- **205** the player's actions (ui/10s-mob.js): the MOB mark, the lifebuoy, Autonav: MOB, the lift
-  - 206 `mobMark(pos)`
-  - 212 `mobThrow(pos)`
-  - 220 `mobTarget()`
-  - 229 `mobRoute()`
-  - 249 `mobLiftOpts(pos, kn)`
-  - 260 `mobLift(how, pos, kn)`
-  - 274 `mobLiftHolds()`
-- **280** the minute of the event
-  - 281 `mobStep()`
-  - 303 `mobAway()`
-- **311** the end: who got her up, the sick leave (V8 A), the report after § 475 and § 47, the badge
-  - 312 `mobEnd(out, how)`
-  - 342 `withVesselId(vid, fn)`
-  - 348 `mobReport(M, tIn, out, how, days)`
-  - 355 `mobCrewHour()`
+  - 137 `mobNear(q, on, o)`
+  - 143 `mobRec(r)`
+- **145** the rescue: the rescue boat from the nearest station, or the helicopter when it is there sooner
+  - 146 `mobRescue(p)`
+- **160** the fall
+  - 161 `mobStart(q, on, o)`
+  - 179 `mobVhf(M)`
+- **189** where she is, and what is seen (live: at fraction f of the minute)
+  - 190 `mobAt(f)`
+  - 193 `mobAlong()`
+  - 196 `mobSightOf(p, buoyOnly)`
+  - 204 `mobSeen(pos)`
+- **207** the player's actions (ui/10s-mob.js): the MOB mark, the lifebuoy, Autonav: MOB, the lift
+  - 208 `mobMark(pos)`
+  - 214 `mobThrow(pos)`
+  - 222 `mobTarget()`
+  - 231 `mobRoute()`
+  - 251 `mobLiftOpts(pos, kn)`
+  - 262 `mobLift(how, pos, kn)`
+  - 276 `mobLiftHolds()`
+- **282** the minute of the event
+  - 283 `mobStep()`
+  - 305 `mobAway()`
+- **313** the end: who got her up, the sick leave (V8 A), the report after § 475 and § 47, the badge
+  - 314 `mobEnd(out, how)`
+  - 344 `withVesselId(vid, fn)`
+  - 350 `mobReport(M, tIn, out, how, days)`
+  - 357 `mobCrewHour()`
+- **364** Ø11.7: the emergency stop, the near misses on the Sikkerhet card, distress near by (SK4, SK6, L8; docs/systemer/sjofart-og-lover.md kap. 7)
+  - 375 `mobStop(g, W, hs)`
+- **391** SK6 the near misses the log tells of: shallow water ahead that Autonav stopped for (core/05-vessels.js sailReplan, the net under
+  - 395 `mobScan()`
+  - 409 `mobSafeTrip(t0)`
+  - 431 `mobSafeRows(max)`
+- **452** L8 distress near by (sjøloven § 135 «Havsnød», kapittel 6 «Skipsføreren»; the text is read only in summary on Lovdata, kap. 2.2)
+  - 467 `sosCan()`
+  - 472 `sosMinute(W, hs)`
+  - 481 `sosPlace(k)`
+  - 490 `sosRadio(no, en)`
+  - 492 `sosCall(k, p)`
+  - 511 `sosStep(Q)`
+  - 516 `sosSweep()`
+  - 518 `sosOther(Q)`
+  - 524 `sosDecline()`
+  - 526 `sosAnswer()`
+  - 540 `sosMobStart(Q, eta)`
+  - 553 `sosMobEnd(M, out, how)`
+  - 577 `sosNpc()`
 
 ## `src/js/core/15-energy.js` (185 linjer)
 
@@ -2511,12 +2532,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1340 linjer)
+## `src/js/ui/phone/07-patch.js` (1344 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1333 `patch()`
+  - 1337 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2537,7 +2558,7 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
   - 104 `merker()`
   - 116 `lore()`
 
-## `src/js/ui/phone/09-vaer-post-salg-redning.js` (152 linjer)
+## `src/js/ui/phone/09-vaer-post-salg-redning.js` (153 linjer)
 
 --- weather
 
@@ -2550,7 +2571,7 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
   - 38 `salg(s)`
 - **133** rescue
   - 134 `redning()`
-- **151** vessels: my vessel overview and the market
+- **152** vessels: my vessel overview and the market
 
 ## `src/js/ui/phone/10-fartoy.js` (326 linjer)
 
@@ -3279,15 +3300,16 @@ Kystmegleren and the cloud (B1–B8 in docs/planer/etter-tonys-test.md, supabase
 
 - **1** Kystmegleren and the cloud (B1–B8 in docs/planer/etter-tonys-test.md, supabase/migrations/20261107140000_broker.sql)
 
-## `src/js/ui/10s-mob.js` (136 linjer)
+## `src/js/ui/10s-mob.js` (176 linjer)
 
 ---------- man overboard on the screen (Ø11.6; the core is core/14b-sikkerhet.js) ----------
 
 - **1** man overboard on the screen (Ø11.6; the core is core/14b-sikkerhet.js)
-- **39** the actions
-- **63** the panel
-- **104** the core's word
-- **115** the chart plotter (ui/03-map.js renderDyn): the mark, the line to it, the lifebuoy and the person
+- **45** the actions
+- **86** the panel
+- **127** the core's word
+- **141** the chart plotter (ui/03-map.js renderDyn): the mark, the line to it, the lifebuoy and the person
+- **163** the Sikkerhet card in the Redning app (Ø11.7 SK6): the near misses with the day, the place, what each teaches and its source,
 
 ## `src/js/ui/10k-friends.js` (134 linjer)
 

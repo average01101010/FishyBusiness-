@@ -26,7 +26,7 @@ function tatCounts(){
 }
 // the counters, kept as things happen
 function tatAdd(k, n){ S.tat = S.tat || {}; S.tat[k] = (S.tat[k] || 0) + n; }
-function tatTripStart(){ const b = S.boat; b.tripMe = !!S.tripOwner; b.tripBad = false; }
+function tatTripStart(){ const b = S.boat; b.tripMe = !!S.tripOwner; b.tripBad = false; b.tripT0 = S.t; }   // (tripT0: the trip's start, for «Turer uten skade», 14b-sikkerhet.js mobSafeTrip)
 function tatTripEnd(pid){
   const b = S.boat; if (!b.tripMe) return; b.tripMe = false;
   if (!b.tripBad) tatAdd('safe', 1);

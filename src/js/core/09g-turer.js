@@ -489,12 +489,31 @@ function turSlep(o, cls){
   }
   return null;
 }
+// a boat that called PAN-PAN on channel 16 with engine failure (core/14b-sikkerhet.js sosAnswer, Ø11.7 L8, sjøloven § 135): the answer
+// takes her as a tow at once, outside the board and its limit of two (the call is not an offer), with the salvage of turSlep for the
+// ship (her value, the danger and the time), the harbour nearest her with a quay, and honour when she lies there (turDock)
+function turSos(Q){
+  const T = turState(), o = S.boat.pos, p = {x:Q.x, y:Q.y}, v = turV(), tv = Math.min(TUR_TOWV, v * 0.75);
+  let port = null, bd = 1e9; for (const q of PORTS) if (q.pier){ const d = dist(q.p, p); if (d < bd){ bd = d; port = q; } }
+  if (!port) port = nearestPort(p); if (!port) return null;
+  const h = turNm(o, p) / v + turNm(p, port.p) / tv + 0.5, cls = h < TUR.cls.kort.h[1] ? 'kort' : h < TUR.cls.mid.h[1] ? 'mid' : 'lang', L = Q.L || 8;
+  const m = {k:'slep', cls, to:port.id, p, nm:Math.round(turNm(o, p) + turNm(p, port.p)), h, reach:turNm(o, p) / v, boat:Q.boat, owner:TUR_OWNERS[Math.floor(mobRnd('sosw') * TUR_OWNERS.length) % TUR_OWNERS.length],
+    L, B:Math.round(L * 0.34 * 10) / 10, T:Math.round(L * 0.13 * 10) / 10, hd:Q.hd || 0, liv:Q.liv || 0, value:turValue(L), hTot:h * 2.5 + 12, sos:Q.id};
+  m.base = turSalvage(m, turDanger(p));
+  m.id = ++T.seq; m.t0 = S.t; m.due = S.t + Math.round(m.hTot * 60); m.vid = S.cur; m.pay = turFinal(m); m.pf = m.pay / Math.max(1, m.base); m.payLo = turSalvage(m, 0); m.payHi = turSalvage(m, 1); m.stage = 'reach';
+  T.act.push(m);
+  msg(m.owner, 'Takk for at dere svarte! «' + m.boat + '» har motorstopp og driver mot land ved ' + mobLL(m.p) + '. Vi har slepetauet klart.', 'Thank you for answering! The «' + m.boat + '» has engine failure and is drifting towards land at ' + mobLLen(m.p) + '. We have the tow line ready.');
+  log('Tok oppdraget: ' + turWhat(m)[0] + ', etter PAN-PAN på kanal 16.', 'Took the mission: ' + turWhat(m)[1] + ', after a PAN-PAN on channel 16.');
+  if (typeof cloudEv === 'function') cloudEv('tur_take', {id:m.id, k:m.k, cls:m.cls, nm:m.nm, min:turMinR(m.h), allow:turMinR(m.hTot), sos:1});
+  return m;
+}
 const turTowM = () => { const T = S.turer; return T && T.act.find(m => m.k === 'slep' && m.stage === 'tow' && m.vid === S.cur) || null; };
 const turTowing = () => !!turTowM();
 // the boats in missions for npcStates (05-vessels.js): lying still where she broke down, then on the line astern of the boat towing her
 function turNpcs(){
-  const T = S.turer; if (!T || !T.act.length) return [];
-  const out = [];
+  const Q = typeof sosNpc === 'function' ? sosNpc() : null;   // (the boat that called on channel 16 while the call stands, 14b-sikkerhet.js)
+  const T = S.turer; if (!T || !T.act.length) return Q ? [Q] : [];
+  const out = Q ? [Q] : [];
   for (const m of T.act){ if (m.k !== 'slep') continue;
     let p = m.p, hd = m.hd || 0, v = 0, st = 'idle';
     if (m.stage === 'tow'){ const bt = m.vid === S.cur ? S.boat : ((S.fleet || []).find(x => x.id === m.vid) || {}).boat;
@@ -884,7 +903,8 @@ function turDock(pid){
       turPayOut(m, portById(pid).name, 'Takk for at du kom med ' + m.what[0] + '.' + mem[0], 'Thank you for bringing the ' + m.what[1] + '.' + mem[1]); } }
   for (const m of T.act.slice()) if (m.k === 'slep' && m.vid === S.cur && m.stage === 'tow' && pid === m.to){
     m.pay = turSalvage(m, m.danger || 0);
-    pressPut('salv', {towed:TUR_BOATS.indexOf(m.boat), port:pid, pay:m.pay, val:m.value});   // Kystposten (09h-press.js)
+    pressPut('salv', Object.assign({towed:TUR_BOATS.indexOf(m.boat), port:pid, pay:m.pay, val:m.value}, m.sos ? {sos:1} : {}));   // Kystposten (09h-press.js)
+    if (m.sos){ if (typeof achAdd === 'function') achAdd('sos'); if (typeof mobRec === 'function') mobRec({k:'sos', sk:'eng', boat:m.boat, out:'own'}); }   // honour after a PAN-PAN (Ø11.7, § 135)
     msg(m.owner, '«' + m.boat + '» ligger trygt ved kai i ' + portById(pid).name + '. Tusen takk for hjelpen.', 'The «' + m.boat + '» lies safe at the quay in ' + portById(pid).name + '. Thank you so much for the help.');
     turPayOut(m, 'Forsikringsselskapet', 'Bergelønn for «' + m.boat + '» etter sjøloven, avtalt med eierens forsikring: båtens verdi ' + kr(m.value) + ', faren og tiden du brukte.', 'Salvage reward for the «' + m.boat + '» under the Maritime Code, agreed with the owner\'s insurer: the boat\'s value ' + kr(m.value) + ', the danger and the time you spent.'); }
 }

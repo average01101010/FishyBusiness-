@@ -145,6 +145,7 @@
     }
     // «Sitter båten fast?» (core/05-vessels.js unstuck; tilbakemelding #49)
     if (b.status !== 'tow'){ const w = unstuckWhy(); h.push('<div class="ph-card"><h4>' + L('Sitter båten fast?', 'Is the boat stuck?') + '</h4><p>' + L('Kommer båten seg ikke løs fra kaia eller ut av et trangt sted, flytter dette den ut på trygt vann like utenfor, der den ligger stille. Det koster ingenting.', 'If the boat cannot get away from the quay or out of a tight spot, this moves her out to safe water just off it, where she lies still. It costs nothing.') + '</p>' + (w ? '<p class="ph-note">' + L(w[0], w[1]) + '</p>' : '') + '<button class="ph-btn alt" data-pa="unstuck"' + (w ? ' disabled' : '') + '>' + L('Flytt båten ut på trygt vann', 'Move the boat out to safe water') + '</button></div>'); }
+    if (typeof MOBUI !== 'undefined' && MOBUI.safetyCard) h.push(MOBUI.safetyCard());   // the Sikkerhet card: the near misses and the trips without harm (Ø11.7, ui/10s-mob.js)
     h.push('<div class="ph-card"><h4>' + L('Medlemskap', 'Membership') + '</h4><p>' + L('Medlemmer får gratis slep og hjelp med båten. Pengene går til drift av redningsskøytene.', 'Members get free tows and help with the boat. The money helps run the rescue boats.') + '</p>' + (S.member ? '<p><b>' + L('Du er medlem.', 'You are a member.') + '</b></p>' : '<button class="ph-btn" data-pa="member">' + L('Bli medlem, ', 'Join, ') + kr(PRICE.member) + L(' per år', ' per year') + '</button>') + '</div></div>');
     return h.join('');
   }

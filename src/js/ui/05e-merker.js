@@ -20,7 +20,7 @@ function achPump(){
   const f = ACHQ.shift(); let el = document.getElementById('achPop');
   if (!el){ el = document.createElement('div'); el.id = 'achPop'; el.className = 'achpop'; document.body.appendChild(el); }
   const name = f.a ? AL(f.a.n[0], f.a.n[1]) : AL(f.long.n[0], f.long.n[1]) + ' · ' + achTierTxt(f.long, f.tier);
-  const gift = f.g ? AL(f.g.t[0], f.g.t[1]) : AL('En gave venter på kaia etter første tur.', 'A gift waits on the quay after the first trip.');
+  const gift = f.g ? AL(f.g.t[0], f.g.t[1]) : f.long && f.long.nogift ? AL('Kystposten skriver om det.', 'Kystposten writes about it.') : AL('En gave venter på kaia etter første tur.', 'A gift waits on the quay after the first trip.');   // (nogift: honour only, Ø11.7)
   el.className = 'achpop on t' + (f.g ? f.g.tier : 0);
   el.innerHTML = '<b>' + (f.a ? '✓ ' : '★ ') + name + '</b><span>' + gift + '</span>';
   setTimeout(() => { el.className = 'achpop'; setTimeout(() => { ACHQ_ON = false; achPump(); }, 450); }, 4800);
