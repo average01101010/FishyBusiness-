@@ -1364,3 +1364,22 @@
 2026-11-08 19:28	ccr-c27822e7-1y3qn3	30cd81b	docktest	OK	59	lite	samtidig	
 2026-11-08 19:31	ccr-c27822e7-1y3qn3	30cd81b	mobtest	OK	202	lite	samtidig	
 2026-11-08 19:31	ccr-c27822e7-1y3qn3	30cd81b	towtest	OK	11	lite	samtidig	
+2026-11-08 20:01	ccr-b4ccfe0e-t6qjnp	8734bfd+	worktest	FEIL	15	lite	alene	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 20:01	ccr-b4ccfe0e-t6qjnp	8734bfd+	worktest	FEIL	16	lite	alene	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 20:03	ccr-b4ccfe0e-t6qjnp	8734bfd+	dockrow	OK	44	lite	samtidig	
+2026-11-08 20:03	ccr-b4ccfe0e-t6qjnp	8734bfd+	docktest	FEIL	64	lite	samtidig	FEIL skuffen med is kommer nedenfra  {'x': 0, 'y': 153.59375, 'w': 800, 'h': 1042.40625, 'title': 'Is', 'ice': True}
+2026-11-08 20:03	ccr-b4ccfe0e-t6qjnp	8734bfd+	worktest	FEIL	26	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 20:05	ccr-b4ccfe0e-t6qjnp	8734bfd+	uishots	OK	86	lite	samtidig	
+2026-11-08 20:05	ccr-b4ccfe0e-t6qjnp	8734bfd+	kartlegging	OK	54	lite	samtidig	
+2026-11-08 20:06	ccr-b4ccfe0e-t6qjnp	8734bfd+	docktest	FEIL	63	lite	alene	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-08 20:09	ccr-b4ccfe0e-t6qjnp	9b5cc84	docktest	FEIL	60	lite	alene	FEIL skuffen med is er ett ark fra 12 % med stripa over  {'x': 0, 'y': 492, 'w': 800, 'h': 704, 'hud': [264, 326], 'title': 'Is', 'ice': True}
+2026-11-08 20:11	ccr-b4ccfe0e-t6qjnp	5861f21	sleeptest	OK	14	lite	samtidig	
+2026-11-08 20:11	ccr-b4ccfe0e-t6qjnp	5861f21	geartest	OK	43	lite	samtidig	
+2026-11-08 20:11	ccr-b4ccfe0e-t6qjnp	5861f21	rorbutest	OK	17	lite	samtidig	
+2026-11-08 20:11	ccr-b4ccfe0e-t6qjnp	5861f21	bunktest	OK	18	lite	samtidig	
+2026-11-08 20:13	ccr-b4ccfe0e-t6qjnp	5861f21	roetest	OK	121	lite	samtidig	
+2026-11-08 20:13	ccr-b4ccfe0e-t6qjnp	5861f21	navbarshot	OK	31	lite	samtidig	
+2026-11-08 20:13	ccr-b4ccfe0e-t6qjnp	5861f21	mannskapshot	OK	16	lite	samtidig	
+2026-11-08 20:17	ccr-b4ccfe0e-t6qjnp	5861f21+	worktest	FEIL	19	lite	alene	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 20:17	ccr-b4ccfe0e-t6qjnp	5861f21+	worktest	FEIL	18	lite	alene	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 20:18	ccr-b4ccfe0e-t6qjnp	5861f21+	worktest	FEIL	21	lite	alene	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %

@@ -4,6 +4,7 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
+- **UI 2, U2-7 (skuffen og sidene) bygd 08.11.2026** (Jonas' økt, grenen `ccr-b4ccfe0e-t6qjnp`; `docs/systemer/ui-og-telefon.md`, «UI 2, U2-7»): ett ark for alle sidene i stående med stripa over, Mannskap med én hovedknapp per person og den andre bak ⋯. Antatt: hvilken post som er hovedknappen (om bord styrmann, ellers skipper) er valgt i økta; minikartet er borte mens skuffen er åpen. Ikke sett over 3D-bildet (ingen GPU). Neste i UI 2: U2-8 Nettbrett og PC arver.
 - **Ø11.7 (nødstoppen, nestenulykkene i Sikkerhet-kortet og havsnød hos andre, SK4, SK6, L8) bygd og rullet ut 08.11.2026 i 30cd81b2** (Jonas' økt, grenen `ccr-c27822e7-1y3qn3`; kap. 7 i `docs/systemer/sjofart-og-lover.md`, status i `docs/planer/lover-regler-sikkerhet.md` Ø11.7). Det som er antatt, svakt eller ikke gjort:
   - **Sjøloven § 135 er bare lest i sammendrag** (to forsøk på Lovdata 08.11.2026; leseverktøyet ga innholdsfortegnelsen ordrett og paragrafteksten bare oppsummert). Spillet bygger på ledd 3 slik sammendraget gjengir det og siterer ikke paragrafen. Må leses ordrett (Lovdata i nettleser eller API) før noe siteres. At det ikke gis bergelønn for å redde folk, er fra bergingskonvensjonen art. 16 i grove trekk.
   - **Hyppighetene er spillvalg uten måling i spilltest:** nødstopp `MOBSTOP.R` (én i 30 timers draging for én ved haleren, høyst to ved haleren), anropet `SOSK.R` (ett per seks timers spill i grov sjø, høyst ett i tre spilldøgn), og «grov sjø» som 0,6 av snekkas grenser (1,5 m eller 9,6 m/s). Må ses i spilltest: kommer anropet for sjelden til å bli sett, eller for ofte?
@@ -586,7 +587,7 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 - **Skyggen som bakes, er ikke lik fra kjøring til kjøring (funnet i Ø11.4, 06.11.2026):** to kjøringer av samme `arbeider.py` ga annen skygge på 44 av 63 deler (opptil noen trinn av 255, og andre punkttall fordi like punkter slås sammen etter fargen), og `sikker.py` ga 6 andre byte i `vugge12`. En full eksport endrer derfor folkene og utstyret litt hver gang. `add` (`tools/boats/glbadd.py`) legger nye deler til uten å røre de gamle; `tools/boats/qa/glbdiff.py` sammenligner to GLB-er del for del. Om eksporten skal bli lik hver gang, må Cycles' frø og trådene låses i `bake_ao` (`bpyutil.py`), og det er ikke prøvd.
 
-- **Ansatte-siden (`mannskap`) åpner på 55 % i stående** med 4,6 skjermer innhold på telefonen (UI 2, U2-0, 06.11.2026): den står ikke i `TALL` i `ui/10c-dock.js`. Tas i U2-7 (ett ark for alle sider), eller legges i `TALL` før det. Fra U2-2 nås den også fra kortet Ansatte på fanen Mannskap i Om bord.
+- **Skuffen i kartplotteren (2D) i stående ligger litt over stripa** (UI 2, U2-7, 08.11.2026): i 3D-visningen står stripa over arket, men i kartplotteren (`body.vplot`, uten knappelinja) står stripa på 54–114 px og arket fra 12 % (101 px på telefonen), så arket dekker stripas nederste 13 px, slik skjemasidene gjorde før U2-7. Skuffen åpnes sjelden fra plotteren. Rettes i U2-8 med plotterens egne mål.
 - **Node på serveren oppdateres ikke av seg selv** (Ø16, 05.11.2026): `setup.sh` legger inn Node 22 fra NodeSource, fordi Ubuntu 24.04 har Node 18, som ikke får oppdateringer lenger. `unattended-upgrades` tar bare Ubuntus egne sikkerhetsoppdateringer, så Node (og Caddy) oppdateres med `apt upgrade`. Reléet lytter bare på 127.0.0.1 bak Caddy. Node 22 får støtte til april 2027.
 - **Personvernsiden og reléet** (Ø16, 05.11.2026): posisjonen går nå også gjennom vår egen server i Helsinki flere ganger i sekundet (ingenting lagres, bare tall logges). Teksten om posisjonen i `src/legal/personvern.html` sier trolig nok, men bør leses før utrullingen.
 - **Caddyfile-en er ikke sjekket med Caddy lokalt** (Ø16, 05.11.2026): ingen Caddy i skymiljøet. `setup.sh` kjører `caddy validate` før den laster inn den nye; er den ugyldig, stopper skriptet og den gamle går videre.
@@ -602,6 +603,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 
 - **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
+
+## Strøket 08.11.2026 (UI 2, U2-7: skuffen og sidene, gren `ccr-b4ccfe0e-t6qjnp`)
+
+- ~~**Ansatte-siden (`mannskap`) åpner på 55 % i stående** med 4,6 skjermer innhold på telefonen (UI 2, U2-0, 06.11.2026): den står ikke i `TALL` i `ui/10c-dock.js`. Tas i U2-7 (ett ark for alle sider), eller legges i `TALL` før det. Fra U2-2 nås den også fra kortet Ansatte på fanen Mannskap i Om bord.~~ Gjort 08.11.2026 i U2-7: alle sidene står på samme ark i stående; Ansatte har 3,8 skjermer innhold på telefonen (`docs/systemer/ui-og-telefon.md`, «UI 2, U2-7»).
 
 ## Strøket 08.11.2026 (Ø12 C, ryddingen av den gamle driftsplanen, gren `ccr-864d9913-u29rne`)
 

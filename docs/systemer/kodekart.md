@@ -2532,12 +2532,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1344 linjer)
+## `src/js/ui/phone/07-patch.js` (1347 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1337 `patch()`
+  - 1340 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2681,14 +2681,14 @@ Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-ton
   - 28 `receipt(nm, w, s)`
   - 38 `act0(a, d)`
 
-## `src/js/ui/05b-work.js` (159 linjer)
+## `src/js/ui/05b-work.js` (178 linjer)
 
 the Mannskap page in the drawer (once «Arbeid»): the samhold on top, «På dekk nå» as chips of who stands where, and one card per
 
 - **1** the Mannskap page in the drawer (once «Arbeid»): the samhold on top, «På dekk nå» as chips of who stands where, and one card per
-- **33** «På dekk nå» (Jonas 23.10.2026: brikker): who stands where, nothing to tap, and in one line what waits on deck
-  - 115 `lagCardHtml()`
-  - 129 `energyUi()`
+- **34** «På dekk nå» (Jonas 23.10.2026: brikker): who stands where, nothing to tap, and in one line what waits on deck
+  - 134 `lagCardHtml()`
+  - 148 `energyUi()`
 
 ## `src/js/ui/05d-plan2.js` (410 linjer)
 
@@ -3082,15 +3082,15 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 224 `wpActCycle(w)`
   - 229 `gearDoAct(act, el)`
 
-## `src/js/ui/10c-dock.js` (578 linjer)
+## `src/js/ui/10c-dock.js` (576 linjer)
 
 ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 
 - **1** the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side
-- **412** the drawer
-- **484** the calm (UI 2, U2-4, 07.11.2026; docs/planer/ui-2-staaende.md 4.5, Jonas' V8 A 06.11.2026)
-  - 551 `renderActs()`
-  - 564 `showroomTick()`
+- **411** the drawer
+- **482** the calm (UI 2, U2-4, 07.11.2026; docs/planer/ui-2-staaende.md 4.5, Jonas' V8 A 06.11.2026)
+  - 549 `renderActs()`
+  - 562 `showroomTick()`
 
 ## `src/js/ui/10d-helm.js` (51 linjer)
 
