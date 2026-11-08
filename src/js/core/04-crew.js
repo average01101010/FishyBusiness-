@@ -158,7 +158,7 @@ function tripSum(T){
   const J = T.j, G = T.g, W = {};
   if (J && J.m >= TRIPL.minM && J.p0 > 0){
     const h = J.m / 60, kg = Math.max(0, J.kg - (J.top || 0)), P = J.p0;
-    W.j = {h, kg, kgph:kg / h, pot:P / h, fair:HEATG.fair.jig * J.fe / J.m, mk:J.mk || 0, hs:J.hs / J.m, w:J.w / J.m,
+    W.j = {h, kg, kgph:kg / h, pot:P / h, fair:HEATG.fair.jig * J.fe / J.m, mk:J.mk || 0, kv:!!J.kv, hs:J.hs / J.m, w:J.w / J.m,
       sh:{stock:(P - J.pS) / P, sea:(J.pS - J.pW) / P, cold:(J.pW - J.pC) / P, pilk:(J.pC - J.pJ) / P}, pen:1 - J.pJ / P, luck:J.pJ > 0 ? J.pL / J.pJ - 1 : 0};
   }
   if (G && G.n > 0 && G.fair > 0) W.g = {n:G.n, kg:G.kg, fair:G.fair, stock:G.r0 > 0 ? Math.max(0, 1 - G.rL / G.r0) : 0, luck:G.rL > 0 ? G.r / G.rL - 1 : 0, kinds:Object.keys(G.k || {})};
@@ -168,26 +168,27 @@ function tripSum(T){
 function tripWhy(W){
   if (!W) return null;
   const nf = (v, d, no) => { const x = (Math.round(v * 10 ** d) / 10 ** d).toFixed(d); return no ? x.replace('.', ',') : x; };
-  const kgS = (v, no) => v >= 1 ? nf(v >= 10 ? v : Math.round(v), 0, no) : (no ? 'under 1' : 'under 1');
-  const about = v => v >= 20 ? Math.round(v / 5) * 5 : Math.round(v);   // «rundt 50»: the model's number, not a weighing
+  const kgS = (v, no) => v >= 1 ? nf(v, 0, no) : 'under 1';
+  const about = (v, no) => v >= 1 ? (no ? 'rundt ' : 'about ') + nf(v >= 20 ? Math.round(v / 5) * 5 : v, 0, no) : (no ? 'under 1' : 'less than 1');   // «rundt 50»: the model's number, not a weighing
   const pc = v => Math.round(v * 100);
-  const no = [], en = [], lk = Math.max(W.j ? W.j.luck : 0, W.g ? W.g.luck : 0);
-  if (W.j){ const j = W.j, rigNo = j.mk > 0 ? (j.mk > 1 ? 'juksamaskiner' : 'juksamaskin') : 'håndjuksa', rigEn = j.mk > 0 ? (j.mk > 1 ? 'jigging machines' : 'a jigging machine') : 'a hand jig';
+  // the luck is said with the part it was in: the jig's after the jig's line, the hauls' in theirs (the haill can have been on for one only)
+  const luckS = v => { const x = Math.abs(v - 1) <= 0.05 ? 2 : Math.abs(v - 2) <= 0.05 ? 3 : 0; return x ? [x === 2 ? 'det dobbelte' : 'det tredobbelte', x === 2 ? 'double' : 'triple'] : [pc(v) + ' % mer', pc(v) + ' % more']; };
+  const no = [], en = [];
+  if (W.j){ const j = W.j, rigNo = j.kv ? 'kveiteutstyr' : j.mk > 0 ? (j.mk > 1 ? 'juksamaskiner' : 'juksamaskin') : 'håndjuksa', rigEn = j.kv ? 'halibut gear' : j.mk > 0 ? (j.mk > 1 ? 'jigging machines' : 'a jigging machine') : 'a hand jig';
     no.push('Turen ga ' + kgS(j.kgph, true) + ' kg i timen med ' + rigNo + '.'); en.push('The trip gave ' + kgS(j.kgph, false) + ' kg an hour with ' + rigEn + '.');
     const wind = j.w > 8.5, F = [['sea', (wind ? 'sjøen og vinden (' : 'sjøen (') + nf(j.hs, 1, true) + ' m' + (wind ? ', ' + nf(j.w, 0, true) + ' m/s' : '') + ')', (wind ? 'the sea and the wind (' : 'the sea (') + nf(j.hs, 1, false) + ' m' + (wind ? ', ' + nf(j.w, 0, false) + ' m/s' : '') + ')'],
       ['cold', 'kulda', 'the cold'], ['stock', 'nedfisket felt', 'fished-down grounds'], ['pilk', 'slitt pilk og kroker', 'worn pilk and hooks']]
       .map(([k, a, b]) => [j.sh[k], a, b]).filter(x => x[0] >= TRIPL.min).sort((a, b) => b[0] - a[0]);
-    const tight = j.fair > 0 && j.pot >= TRIPL.tight * j.fair, thin = j.fair > 0 && j.pot <= TRIPL.thin * j.fair, P = nf(about(j.pot), 0, true);
-    const s0no = 'Fisken sto ' + (tight ? 'tett, til rundt ' : thin ? 'tynt, til rundt ' : 'til rundt ') + P, s0en = 'The fish stood ' + (tight ? 'dense, for about ' : thin ? 'thin, for about ' : 'for about ') + nf(about(j.pot), 0, false);
+    const tight = j.fair > 0 && j.pot >= TRIPL.tight * j.fair, thin = j.fair > 0 && j.pot <= TRIPL.thin * j.fair;
+    const s0no = 'Fisken sto ' + (tight ? 'tett, til ' : thin ? 'tynt, til ' : 'til ') + about(j.pot, true), s0en = 'The fish stood ' + (tight ? 'dense, for ' : thin ? 'thin, for ' : 'for ') + about(j.pot, false);
     if (F.length){ no.push(s0no + ': ' + F.map((x, i) => x[1] + (i ? ' ' : ' tok ') + pc(x[0]) + ' %').join(', ') + '.'); en.push(s0en + ': ' + F.map((x, i) => x[2] + (i ? ' ' : ' took ') + pc(x[0]) + ' %').join(', ') + '.'); }
     else { no.push(s0no + '.'); en.push(s0en + '.'); }
+    if (j.luck >= TRIPL.min){ const L = luckS(j.luck); no.push('Haillen ga ' + L[0] + '.'); en.push('The luck gave ' + L[1] + '.'); }
   }
-  if (W.g){ const g = W.g, one = g.n === 1;
-    no.push((one ? 'Trekket' : 'De ' + g.n + ' trekkene') + ' ga ' + nf(g.kg, 0, true) + ' kg, mot rundt ' + nf(about(g.fair), 0, true) + ' i ' + (one ? 'et vanlig trekk' : 'vanlige trekk') + ' med samme ståtid' + (g.stock >= TRIPL.min ? '; nedfisket felt tok ' + pc(g.stock) + ' %' : '') + '.');
-    en.push((one ? 'The haul' : 'The ' + g.n + ' hauls') + ' gave ' + nf(g.kg, 0, false) + ' kg, against about ' + nf(about(g.fair), 0, false) + ' in ' + (one ? 'an ordinary haul' : 'ordinary hauls') + ' with the same soak' + (g.stock >= TRIPL.min ? '; fished-down grounds took ' + pc(g.stock) + ' %' : '') + '.');
+  if (W.g){ const g = W.g, one = g.n === 1, L = g.luck >= TRIPL.min ? luckS(g.luck) : null;
+    no.push((one ? 'Trekket' : 'De ' + g.n + ' trekkene') + ' ga ' + nf(g.kg, 0, true) + ' kg, mot ' + about(g.fair, true) + ' i ' + (one ? 'et vanlig trekk' : 'vanlige trekk') + ' med samme ståtid' + (g.stock >= TRIPL.min ? '; nedfisket felt tok ' + pc(g.stock) + ' %' : '') + (L ? '; haillen ga ' + L[0] : '') + '.');
+    en.push((one ? 'The haul' : 'The ' + g.n + ' hauls') + ' gave ' + nf(g.kg, 0, false) + ' kg, against ' + about(g.fair, false) + ' in ' + (one ? 'an ordinary haul' : 'ordinary hauls') + ' with the same soak' + (g.stock >= TRIPL.min ? '; fished-down grounds took ' + pc(g.stock) + ' %' : '') + (L ? '; the luck gave ' + L[1] : '') + '.');
   }
-  if (lk >= TRIPL.min){ const x = Math.abs(lk - 1) <= 0.05 ? 2 : Math.abs(lk - 2) <= 0.05 ? 3 : 0;
-    no.push('Haillen ga ' + (x ? (x === 2 ? 'det dobbelte' : 'det tredobbelte') : pc(lk) + ' % mer') + '.'); en.push('The luck gave ' + (x ? (x === 2 ? 'double' : 'triple') : pc(lk) + ' % more') + '.'); }
   return [no.join(' '), en.join(' ')];
 }
 // ---- the trip's limits on an ocean vessel (H2b of docs/planer/havsteget-h2-autoline.md, 05.11.2026). The fuel, the bait, the hooks for

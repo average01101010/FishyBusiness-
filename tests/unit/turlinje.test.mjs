@@ -38,9 +38,16 @@ export default function (t){
   const W4 = tripSum({g:G});
   t.near(W4.g.stock, 0.2, 1e-12, 'trekkene: nedfisket felt tok 20 %');
   t.near(W4.g.luck, 0.5, 1e-12, 'trekkene: haillen ga 50 % mer');
-  t.eq(tripWhy(W4)[0], 'De 3 trekkene ga 640 kg, mot rundt 900 i vanlige trekk med samme ståtid; nedfisket felt tok 20 %. Haillen ga 50 % mer.', 'linja for trekkene');
-  t.eq(tripWhy({j:null, g:{n:1, kg:10, fair:10, stock:0, luck:2}})[0], 'Trekket ga 10 kg, mot rundt 10 i et vanlig trekk med samme ståtid. Haillen ga det tredobbelte.', 'luksushaillen (+200 %): det tredobbelte');
+  t.eq(tripWhy(W4)[0], 'De 3 trekkene ga 640 kg, mot rundt 900 i vanlige trekk med samme ståtid; nedfisket felt tok 20 %; haillen ga 50 % mer.', 'linja for trekkene');
+  t.eq(tripWhy({j:null, g:{n:1, kg:10, fair:10, stock:0, luck:2}})[0], 'Trekket ga 10 kg, mot rundt 10 i et vanlig trekk med samme ståtid; haillen ga det tredobbelte.', 'luksushaillen (+200 %): det tredobbelte');
   t.eq(tripWhy(tripSum({g:{n:1, kg:31, fair:38, r:1, rL:1, r0:1.02, k:{line:1}}}))[1], 'The haul gave 31 kg, against about 40 in an ordinary haul with the same soak.', 'ett trekk, på engelsk');
+  // the luck goes with the part it was in: jigged with the haill on, the nets soaked without it
+  t.eq(tripWhy({j:{...W2.j}, g:{n:1, kg:30, fair:38, stock:0, luck:0}})[0].match(/[Hh]aillen/g).length, 1, 'haillen nevnes bare én gang, for juksa');
+  t.ok(/sjøen og vinden.*\. Haillen ga det dobbelte\. Trekket ga 30 kg[^;]*\.$/.test(tripWhy({j:{...W2.j}, g:{n:1, kg:30, fair:38, stock:0, luck:0}})[0]), '… rett etter juksas linje, ikke etter trekket');
+  // a ground with next to no fish: no «rundt 0»
+  t.eq(tripWhy({j:{...W3.j, kgph:0.4, pot:0.4}})[0], 'Turen ga under 1 kg i timen med håndjuksa. Fisken sto tynt, til under 1.', 'et nesten tomt felt sier «under 1», aldri «rundt 0»');
+  // the halibut gear by hand: named as such, whatever machines are aboard
+  t.ok(tripWhy({j:{...W.j, kv:true, mk:2}})[0].startsWith('Turen ga 38 kg i timen med kveiteutstyr.'), 'kveiteutstyret heter kveiteutstyr, ikke juksamaskiner');
   // the stock's share where the boat stands: S.stock, not the fleet's baseline
   const p = {x:300, y:400};
   S.stock = {}; t.near(stockDev(p, 'torsk'), 1, 1e-12, 'urørt bestand: 1');

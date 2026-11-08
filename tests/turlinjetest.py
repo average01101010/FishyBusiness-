@@ -19,14 +19,17 @@ RUN = """(async ([at, hrs, W, hs, haill, stk]) => {
   S.t = Math.round((Date.UTC(2028, 2, 10, 7) - EPOCH) / 6e4); S.crew = []; S.quota = null; S.hold = []; S.facc = {}; S.fnext = {};
   S.stock = initStock(); if (stk < 1){ const ix = Math.floor(p.x / 2), iy = Math.floor(p.y / 2); for (let dx = -3; dx <= 3; dx++) for (let dy = -3; dy <= 3; dy++) S.stock[gridKey(ix + dx, iy + dy)] = stk; }
   S.haill = haill ? {type:'luksus', t0:S.t} : null; S.clothes = {olje:0, varme:0};
+  b.deckStop = false; b.deckEnd = null; b.gop = null;   // (a trip before that ended full in the middle of the gutting leaves these, which endFishing clears in the game)
   b.trip = null; b.status = 'fishing'; b.pos = {...p}; b.fishUntil = S.t + hrs * 60; b.gear = true; S.equip.jukse = 0; b.ice = 500; S.settings.gut = false;
-  for (let i = 0; i < hrs * 60 && b.status === 'fishing'; i++){ S.t++; fish(S.t / 60, W, hs); deckMinute(); }
+  const nf = S.log.length; let mins = 0;
+  for (let i = 0; i < hrs * 60 && b.status === 'fishing'; i++){ S.t++; fish(S.t / 60, W, hs); deckMinute(); mins++; }
+  const fishLog = S.log.slice(nf).map(e => e.no).slice(0, 6), st = b.status;
   const W0 = tripSum(b.trip); b.fishUntil = null; b.status = 'idle'; S.haill = null;
   let pt = null, bd = 1e9; for (const q of PORTS){ if (!q.mottak || plantFor && !plantFor(q, b.type)) continue; const d = dist(q.p, p); if (d < bd){ bd = d; pt = q; } }
   S.t += 120; b.status = 'port'; b.port = pt.id; b.pos = {...pt.p}; b.land = null; const kg = holdTotal(), n0 = S.log.length; sell();
   const ls = S.lastSale, box = document.createElement('div'); box.innerHTML = portSlip(); const el = box.querySelector('.tripwhy');
   const logs = S.log.slice(n0).map(e => e.no);
-  return JSON.stringify({pt:pt.name, kg:Math.round(kg), W:W0, why:ls.why, slip:el ? el.textContent : null, inLog:!!(ls.why && logs.includes(ls.why[0])), logs, trip:b.trip}); })"""
+  return JSON.stringify({pt:pt.name, kg:Math.round(kg), W:W0, mins, st, fishLog, why:ls.why, slip:el ? el.textContent : null, inLog:!!(ls.why && logs.includes(ls.why[0])), logs, trip:b.trip}); })"""
 
 async def main():
     async with async_playwright() as p:
@@ -47,7 +50,7 @@ async def main():
         exp = j and j['pot'] * (1 - j['pen']) * (1 + j['luck'])
         check(j and 0.6 * exp <= j['kgph'] <= 1.4 * exp, 'det som kom om bord, er innen 40 % av det modellen ventet (potensialet ganger trinnene; resten er tilfeldig)', {'kgph': round(j.get('kgph', 0), 1), 'ventet': round(exp or 0, 1)})
         rough = json.loads(await run(None, 4, 13, 2.2, False, 1)); jr = (rough['W'] or {}).get('j') or {}
-        print('grov sjø:', rough['why'][0] if rough['why'] else None)
+        print('grov sjø:', rough['why'][0] if rough['why'] else None, rough['mins'], rough['st'], rough['fishLog'])
         check(jr and jr['sh']['sea'] >= 0.1 and 'sjøen og vinden (2,2 m, 13 m/s) tok' in (rough['why'] or [''])[0], 'i grov sjø og kuling sier linja hva sjøen og vinden tok', rough['why'])
         check(jr and jr['kgph'] < j['kgph'], 'og turen ga mindre enn i stille vær', {'grov': round(jr.get('kgph', 0), 1), 'stille': round(j['kgph'], 1)})
         luck = json.loads(await run(None, 4, 4, 0.4, True, 1)); jl = (luck['W'] or {}).get('j') or {}

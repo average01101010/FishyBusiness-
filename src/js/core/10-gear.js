@@ -700,7 +700,8 @@ function soakHour(s, H){
   const a = (S.t - s.tSet) / 60, mid = setMid(s), acc = s.acc; let tot = 0;
   // fx: what the hour gave, without the luck, and without the luck and the fishing down where it stands, for the trip's line (Ø8b S2)
   const add = (sp, kg, n) => { const A = acc[sp] || (acc[sp] = {kg:0, n:0, ts:0}); A.kg += kg; A.n += n; A.ts += kg * H;
-    const fx = s.fx || (s.fx = [0, 0, 0]), lk = luck(sp); fx[0] += kg; fx[1] += kg / lk; fx[2] += kg / lk / stockDev(mid, sp); };
+    const fx = s.fx || (s.fx = [0, 0, 0]), lk = luck(sp), sd = SPECIES[sp].stk || SPECIES[sp].shell ? stockDev(mid, sp) : dv0 != null ? dv0 : (dv0 = stockDev(mid)); fx[0] += kg; fx[1] += kg / lk; fx[2] += kg / lk / sd; };
+  let dv0 = null;   // (the common stock's share where it stands, once an hour)
   if (s.kind === 'teine' && POTS[s.pot] && POTS[s.pot].sno) return snoSoak(s, H);   // the snow crab (10d-snokrabbe.js)
   if (s.kind === 'teine'){
     const P = POTS[s.pot], A = acc.krabbe || {n:0}, cap = P.cap * s.n * haillCap(), g = Math.min(1, a / 6) * Math.exp(-a / 40);
