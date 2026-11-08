@@ -1,7 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['o8b-s0-081126', '08.11.2026', 'Full last på første tur', 'A full hold on the first trip', [
-       ['På første tur fisker båten til lasterommet er fullt, rundt en time. Vil du levere før, trykker du «Stopp», og leverer det som er om bord.', 'On the first trip the boat fishes until the hold is full, about an hour. To land sooner, tap «Stop», and land what is aboard.'],
+       ['På første tur fisker båten til lasterommet er fullt. Vil du levere før, trykker du «Stopp», og leverer det som er om bord.', 'On the first trip the boat fishes until the hold is full. To land sooner, tap «Stop», and land what is aboard.'],
        ['Dekksdagboka husker første tur: hva vanlig fiske med håndjuksa gir der du fisket første gang.', 'The deck log remembers the first trip: what ordinary fishing with a hand jig gives where you first fished.']]],
     ['o12b-081126', '08.11.2026', 'Turer over flere døgn', 'Trips of several days', [
        ['På en tur over flere døgn med levering like ofte som turen er lang, leverer båten fangsten den siste dagen av turen, før hun går hjem.', 'On a trip of several days with landings as often as the trip is long, the boat lands the catch on the last day of the trip, before she goes home.']]],

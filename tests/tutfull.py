@@ -1,5 +1,5 @@
 """Ø8b S0, a full hold on the first trip (V3 C in docs/planer/spillbarhet-fangst.md, Jonas 06.11.2026): the guarantee tops up to a full
-hold (350 kg in the starting boat) within the hour on the field, only while the boat fishes; a player who stops early lands what is
+hold (capHold(), 500 kg in the starting boat) within the hour on the field, only while the boat fishes; a player who stops early lands what is
 aboard; and «what fishing gives here» (tutNormKg) is per hour actually jigged and leaves the top-up out. Runs fish() and deckMinute()
 minute by minute on the guide's field in March, as heattest's tutorial part does, without 3D. `--kyst` (needs the whole coast in the
 build: tools/map/release.py, tools/map/game.py) does the same on the first trip's own field near Bergen, Bodø and Hammerfest (tutFieldNear,
@@ -41,6 +41,11 @@ async def main():
         alone = json.loads(await pg.evaluate('JSON.stringify(' + RUN + '([60, 0, true]))'))
         two = json.loads(await pg.evaluate('JSON.stringify(' + RUN + '([120, 0, false]))'))
         stop = json.loads(await pg.evaluate('JSON.stringify(' + RUN + '([60, 20, false]))'))
+        # a save from the middle of a first trip before S0: S.tut.fk without the minute and top-up counters; they are not begun halfway
+        leg = json.loads(await pg.evaluate('''JSON.stringify((() => { const keep = S.tut, b = S.boat, g = GROUNDS[TUT_FIELD]; S.tut = tutNew(); S.tut.v = 2; S.tut.fk = {d:40, t:30};
+          S.hold = []; S.facc = {}; S.fnext = {}; b.gear = true; b.status = 'fishing'; b.pos = {...g.p}; b.fishUntil = S.t + 10; for (let i = 0; i < 10 && b.status === 'fishing'; i++){ S.t++; fish(S.t / 60, 4, 0.4); deckMinute(); }
+          const F = S.tut.fk, r = {m:F.m === undefined ? null : F.m, top:F.top === undefined ? null : F.top}; S.tut = keep; b.status = 'port'; S.hold = []; b.fishUntil = null; return r; })())'''))
+        check(leg['m'] is None and leg['top'] is None, 'en lagring fra midt i første tur før S0 får ingen tellere halvveis (tutNormKg regner den som før)', leg)
         print('en time', one); print('en time, alene på dekk', alone); print('to timer', two); print('stopp etter 20 min', stop)
         check(one['kg'] >= one['cap'] - 1, 'en time på feltet gir full last i trebåten (TUT_HOLD 1, capHold ' + str(one['cap']) + ' kg)', one)
         check(alone['kg'] >= alone['cap'] - 1 and alone['st'] != 'fishing', 'også alene, med sløyingen først: full last, og fisket er slutt', {k: alone[k] for k in ('kg', 'mins', 'st')})
