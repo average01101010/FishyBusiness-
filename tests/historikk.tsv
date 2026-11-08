@@ -1485,3 +1485,8 @@
 2026-11-08 23:20	ccr-510fd7d5-2eum2h	13f58ab+	hudtest	OK	160	lite	alene	61 OK; de 29 nye U2-8-sjekkene sett røde på bygget før (16 FEIL)
 2026-11-08 22:53	claude/km2-kvotemarkedet-migrering-3pat3t	c806b53+	sqltest	FEIL	33	lite	alene	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
 2026-11-08 22:53	claude/km2-kvotemarkedet-migrering-3pat3t	0e9f43f+	sqltest	OK	35	lite	alene	
+2026-11-08 23:30	ccr-510fd7d5-2eum2h	61cc06f	navbarshot	OK	26	lite	samtidig	
+2026-11-08 23:31	ccr-510fd7d5-2eum2h	61cc06f	roetest	OK	118	lite	samtidig	
+2026-11-08 23:31	ccr-510fd7d5-2eum2h	61cc06f	hudtest	OK	83	lite	samtidig	
+2026-11-08 23:34	ccr-510fd7d5-2eum2h	61cc06f+	hudtest	OK	86	lite	samtidig	
+2026-11-08 23:34	ccr-510fd7d5-2eum2h	61cc06f+	uishots	OK	79	lite	samtidig	

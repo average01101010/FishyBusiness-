@@ -1757,10 +1757,12 @@ body.calm #dock > .dk-b:not(.hero):not(.stay):not([data-dk="beh"]),body.calm .ov
 /* UI 2, U2-8: the tablet and the PC inherit (docs/planer/ui-2-staaende.md kap. 5, V1 A: the phone upright is the measure; where there is
    room, more of the same, never anything else; decided with pictures in the five sizes of uishots, 08.11.2026) */
 /* the drawer in the chart plotter upright: the sheet starts under the strip, as in 3D since U2-7 (the strip stands under the plotter's top
-   bar there, --ecH + 8 px, 60–62 px high; before, the sheet from 12 % lay over its lowest 13 px on a phone) */
-@media (orientation:portrait){body.vplot.dk-open:not(.hudoff) #drawer{top:max(12%, calc(var(--ecH) + 8px + 62px + 6px))}}
+   bar there, at body.vplot #hud's --ecH + 8 px, and is body.hudstrip #hud's fixed 60 px high, its lines cut with «…», never wrapped;
+   before, the sheet from 12 % lay over its lowest 13 px on a phone) */
+@media (orientation:portrait){body.vplot.dk-open:not(.hudoff) #drawer{top:max(12%, calc(var(--ecH) + 8px + 60px + 6px))}}
 /* the map's credit line clear of the deck log's tab in 3D (it began under the tab, at 6 px, in every size) */
-body.v3d .attr{left:44px}
+body.v3d .attr{left:44px;max-width:calc(100% - 108px)}   /* (as far from the right edge as before, 64 px) */
 /* the phone button hides while the phone is open: on a tablet on its side and a PC the phone stands where the button is, and the
-   button's corner showed behind the phone's rounded corner (the phone closes with its own ✕ and ‹) */
-body:has(#phone:not([hidden])) #phoneFab{visibility:hidden}
+   button's corner showed behind the phone's rounded corner; the phone lies over the button in every size, so it could not be tapped
+   anyway, and the phone closes with its own ✕ and ‹. A child :has, so only #app's own children are looked at when «hidden» changes) */
+#app:has(> #phone:not([hidden])) #phoneFab{visibility:hidden}
