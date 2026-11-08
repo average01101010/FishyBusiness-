@@ -44,7 +44,7 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 Svar i en økt, eller rett her. Økta som får svaret, skriver det inn i planfila med ord og dato (`tools/plan/RUTINE.md`, «Når Jonas svarer»).
 
 1. ~~**Kjølvannet og `dsb_sea`**~~ Jonas 07.11.2026: **A** (prøv full sjø igjen én gang). Steg 58 i køen, etter Ø3a.
-2. ~~**`main` er tom**~~ Jonas 07.11.2026: **A**. Jonas setter `ccr-5e1ba2f4-pusvyd` som standardgren på GitHub selv (Settings → General → Default branch); `deploy.yml` og `pwa.yml` lytter alt på begge.
+2. ~~**`main` er tom**~~ Jonas 07.11.2026: **A**. Jonas setter `ccr-5e1ba2f4-pusvyd` som standardgren på GitHub selv (Settings → General → Default branch); `deploy.yml` og `pwa.yml` lytter alt på begge. **Gjort 08.11.2026** (sjekket: `git ls-remote --symref origin HEAD` peker på `ccr-5e1ba2f4-pusvyd`).
 3. ~~**Minstemålene i fiskemodellen**~~ Jonas 07.11.2026: **A** (etter høstingsforskriften § 47). Steg 59 i køen, etter OPP2 og Ø11.6.
 4. ~~**UI 2, V3 revidert**~~ Jonas 07.11.2026: **A** bekreftet («i grunn ganske fornøyd sånn som det er nå»); skrevet inn i `ui-2-staaende.md` kap. 7. Opprinnelig: **UI 2, V3 revidert** (`docs/planer/ui-2-staaende.md` kap. 7): U2-2 til U2-6 er bygd etter A («Om bord» i linja), men kap. 7 sier fortsatt «Åpent». **Bekreft A**, eller si B/C, så skrives det inn.
 5. ~~**Ø16 S3, lasttesten**~~ Jonas 07.11.2026: «Jeg tenker vi skalerer ned testen til 500 brukere til å starte med, det vil sannsynligvis gi oss en pekepinn på status. Dette løser du på beste mulig måte.» Steg 47 i køen: 500 klienter mot reléet om natta, og 500 syntetiske spillere mot Supabase om natta med stopp ved feil (ingen egen gren); 2 000 og 5 000 kommer som nytt valg om tallene tilsier det.
