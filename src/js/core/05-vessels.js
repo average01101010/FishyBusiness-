@@ -997,7 +997,7 @@ function fish(H, W, hs){
   for (const sp of SP){
     const dn = density(sp, b.pos, H); dsum += dn; tsum += tutBonus(sp, b.pos);
     // the first trip: how much of the fish stood there of itself, for the landing note's «what fishing gives here» (Onboarding 2, O4)
-    if (S.tut && S.tut.v === 2){ const F = S.tut.fk || (S.tut.fk = {d:0, t:0}); F.d += dn; F.t += tutBonus(sp, b.pos); }
+    if (S.tut && S.tut.v === 2){ const F = S.tut.fk || (S.tut.fk = {d:0, t:0, m:0, top:0}); F.d += dn; F.t += tutBonus(sp, b.pos); }
     S.facc[sp] = (S.facc[sp] || 0) + 30 * (S.target === 'kveite' && b.kgear ? keff : eff) * dn * luck(sp) * targetF(sp, H) * (SPECIES[sp].jig != null ? SPECIES[sp].jig : 1) * biteF(sp, b.pos, H) * wpen * pen * (0.5 + Math.random()) / 60;   // jig: what the jig takes of a species (the Greenland halibut next to none)
     if (!S.fnext[sp]) S.fnext[sp] = sampleFish(sp, b.pos, H);
     while (S.facc[sp] >= S.fnext[sp] && room > 0){
@@ -1008,15 +1008,23 @@ function fish(H, W, hs){
     }
   }
   if (S.tut && S.tut.catch && room > 0 && holdTotal() < tutTarget()){
-    const left = Math.max(1, (b.fishUntil != null ? b.fishUntil : S.t) - S.t), want = Math.max(0, tutTarget() - holdTotal()) / left, mix = Object.entries(tutMixOf());   // the patch's own mix (03-simulation.js)
+    const left = Math.max(1, (b.fishUntil != null ? b.fishUntil : S.t) - S.t - 1), want = Math.max(0, tutTarget() - holdTotal() + got) / left, mix = Object.entries(tutMixOf());   // the patch's own mix (03-simulation.js)
     for (let k = 0; got < want && room > 0.01 && k < 40; k++){
       let r = Math.random(), sp = mix[0][0]; for (const [s2, pw] of mix){ if (r < pw){ sp = s2; break; } r -= pw; }
       const w = sampleFish(sp, b.pos, H); if (w < SPECIES[sp].minKg || (SPECIES[sp].maxKg && w > SPECIES[sp].maxKg)) continue;
       const kg = Math.min(w, room); room -= kg; addCatch(sp, kg, clsOf(sp, w), true, {how:'juksa'}); got += kg; gotTop += kg;
       if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp, kg, t:performance.now()}); }
     }
+    // want: this minute's share of what was left before it (the hold before this minute's own catch, holdTotal() − got), so the top-up adds
+    // only what the jig fell short of, and the last minute fills the rest (Ø8b S0; before, the hold was reckoned after the catch, and the
+    // last minute came short by what the jig took in it). It aims to be full a minute early: a tub that fills on the last minute stops the
+    // jig without adding to fishUntil, and the time is out when the gutting is done (left is the minutes after this one)
     if (typeof window !== 'undefined') window.TUTTOP = (window.TUTTOP || 0) + gotTop;   // for the tests: how much the guarantee had to add
   }
+  // the first trip: the minutes jigged and what the guarantee added, so «what fishing gives here» (tutNormKg, ui/07b-first-trip.js) is per
+  // hour actually fished, also when the player stops early, and leaves out the top-up, which is most of a full hold (Ø8b S0)
+  // (only counters begun with the trip: a save from the middle of a first trip before this has neither, and tutNormKg counts it as before)
+  if (S.tut && S.tut.v === 2 && S.tut.fk && S.tut.fk.m != null){ S.tut.fk.m++; S.tut.fk.top = (S.tut.fk.top || 0) + gotTop; }
   // only the stock's own share of the catch is taken from it: not the guide's skrei patch, nor what the guarantee tops up
   takeStock(b.pos, (got - gotTop) * (dsum > 0 ? Math.max(0, (dsum - tsum) / dsum) : 1)); S.fsess.kg += got; if (got > 0) (b.tripGear = b.tripGear || {}).juksa = S.t;
   // a plan's jig places in turn (06f-plan.js, wp.jc; feedback #57): each hour's catch is weighed against the first hour's here, and when it

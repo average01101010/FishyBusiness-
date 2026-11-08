@@ -2,6 +2,9 @@
   const PATCH = [
     ['p156', '08.11.2026', 'Kvotetaket', 'The quota cap', [
        ['Kvotetaket for strukturkvote følger nå kvoteforskriften § 12: en båt med hjemmel 11–14,99 m kan fiske inntil 5 ganger sin egen kvote, og 15–27,99 m inntil 6 ganger. Det var 3 og 4.', 'The quota cap for structure quotas now follows the quota regulation § 12: a boat with a quota length of 11–14.99 m may fish up to 5 times its own quota, and 15–27.99 m up to 6 times. It was 3 and 4.']]],
+    ['o8b-s0-081126', '08.11.2026', 'Full last på første tur', 'A full load on the first trip', [
+       ['På første tur fisker båten til hun har full last. Vil du levere før, trykker du «Stopp», og leverer det som er om bord.', 'On the first trip the boat fishes until she has a full load. To land sooner, tap «Stop», and land what is aboard.'],
+       ['Dekksdagboka husker første tur: hva vanlig fiske med håndjuksa gir der du fisket første gang.', 'The deck log remembers the first trip: what ordinary fishing with a hand jig gives where you first fished.']]],
     ['o117-081126', '08.11.2026', 'Nødstopp, Sikkerhet og havsnød', 'Emergency stop, Safety and distress', [
        ['Henger en av mannskapet seg fast i lina, garnet eller teinetauet ved haleren, stopper de haleren selv med nødstoppen. Det står som nestenulykke i dagboka.', 'If one of the crew is caught in the line, the net or the pot rope at the hauler, they stop the hauler themselves with its emergency stop. It stands as a near miss in the log.'],
        ['Redning har fått kortet «Sikkerhet»: nestenulykkene med dag, sted og hva hver av dem lærer, med kilde, og turene uten skade. Merket «Turer uten skade» teller dem.', 'Redning has a new «Safety» card: the near misses with the day, the place and what each teaches, with its source, and the trips without harm. The badge «Trips without harm» counts them.'],
