@@ -4,7 +4,7 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
-- **UI 2, U2-7 (skuffen og sidene) bygd 08.11.2026** (Jonas' økt, grenen `ccr-b4ccfe0e-t6qjnp`; `docs/systemer/ui-og-telefon.md`, «UI 2, U2-7»): ett ark for alle sidene i stående med stripa over, Mannskap med én hovedknapp per person og den andre bak ⋯. Antatt: hvilken post som er hovedknappen (om bord styrmann, ellers skipper) er valgt i økta; minikartet er borte mens skuffen er åpen. Ikke sett over 3D-bildet (ingen GPU). Neste i UI 2: U2-8 Nettbrett og PC arver.
+- **UI 2, U2-7 (skuffen og sidene) bygd og rullet ut 08.11.2026 i 869507fb** (Jonas' økt, grenen `ccr-b4ccfe0e-t6qjnp`; `docs/systemer/ui-og-telefon.md`, «UI 2, U2-7»): ett ark for alle sidene i stående med stripa over, Mannskap med én hovedknapp per person og den andre bak ⋯. Antatt: hvilken post som er hovedknappen (om bord styrmann, ellers skipper) er valgt i økta; minikartet er borte mens skuffen er åpen. Ikke sett over 3D-bildet (ingen GPU). Neste i UI 2: U2-8 Nettbrett og PC arver.
 - **Ø8b S0 (full last på første tur, V3 C) bygd og rullet ut 08.11.2026 i ffd076c1** (Jonas' økt, grenen `ccr-e9f46ad4-wipgu7`; `docs/systemer/opning-og-veiledning.md`, «Ø8b S0»). Det som står igjen eller er antatt:
   - **Sluttseddelen og dekksdagboka sier samme N** (Jonas' valg A 08.11.2026): `portSlip` kaller `tutNormKg(ls)` etter at Ø12 C var ute; med den gamle formelen ville seddelen sagt 120 der begge nå sier 80 ved Gisundet.
   - **Tida på feltet:** med rund fisk på første tur (rullet ut samme dag) er én time fisketid rundt 90 spillminutter på feltet med full last, mot 80 med halv last. Må ses i trakten (`tut_done.s`, steget `full`) og på nettbrettet; rund fisk og S0 kom samme dag og kan ikke skilles i trakten.
