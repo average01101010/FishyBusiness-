@@ -1,6 +1,6 @@
 # Fangstfeltene med navn langs hele kysten (Ø14, plan 07.11.2026)
 
-Plan for steg 31 i `docs/planer/koen.md` (`/planlegg`). Ingenting er bygd. Fasene står i køen som steg 31a–31e. Jonas svarte på valgene 07.11.2026 (kap. 5), og F2, F4 og F5 er lagt om etter svarene; 08.11.2026 sa han at Senjas felt skal være som alle de andre (2.8). F1 (steg 31a) er klar.
+Plan for steg 31 i `docs/planer/koen.md` (`/planlegg`). F1 er bygd 08.11.2026 (status under F1 og i kap. 8); resten er ikke bygd. Fasene står i køen som steg 31a–31e. Jonas svarte på valgene 07.11.2026 (kap. 5), og F2, F4 og F5 er lagt om etter svarene; 08.11.2026 sa han at Senjas felt skal være som alle de andre (2.8). F1 (steg 31a) er klar.
 
 ## 1. Hva Jonas ba om
 
@@ -128,6 +128,47 @@ Senjas seks navn er spillets egne («Havet nord for Husøy», «Utenfor Mefjorde
 - **Tester:** `tests/unit/felt.test.mjs` (ny; antallet per slag, Billefjordjupet har torsk med garn, et kjent sesongfelt har riktige måneder, ingen navn med koordinater eller bare store bokstaver, ingen `g` eller `o` i `trkAreas`; sett rød før `felt.json` er ny), `trykk.test.mjs` (gruppesummene står), `charttest` (`felt.json`), `marktest` (`01e-marks.js`). Fordi trykket flytter seg litt når felt slås sammen og koordinatnavn går ut: `simday` og `heattest`.
 - **Måles:** `felt.json` før og etter (128 kB nå; målet under 350 kB med formene; blir den større, legges formene i en egen fil i `data/` som hentes ved oppstart, som modellene i `bootData`), `feltData` i Node og i Chromium (første oppslag), tabellen i 2.5 på nytt med de nye slagene, antallet rettet per vaskeregel.
 - **Spilleren ser:** penere navn i kartet. Ingenting annet.
+- **Status (08.11.2026, Jonas' økt, gren `ccr-6e53b4c0-qs2mg1`): bygd.** Det som ble gjort og målt:
+  - **Kilden lest på nytt** fra WFS-en 08.11.2026 (de fire lagene til `tools/npc/cache/`): 2 101 aktive og 2 940 passive fiskeplasser med navn, 1 645 gyteområder og 446 oppvekst- og beiteområder; 1 299, 2 373, 1 437 og 413 av dem har minst én art spillet kjenner.
+  - **Etter sammenslåingen** (samme navn og slag innen 3 km): 6 763 felt, 4 683 fiskeplasser (`f`), 1 635 gyteområder (`g`) og 445 oppvekst- og beiteområder (`o`). 5 255 har arter spillet kjenner; 2 349 fiskeplasser har en sesong (en linje som ikke er hele året; planens 3 423 var før sammenslåingen og med alle arter).
+  - **Linjene:** `[art, redskapsbiter, månedsbiter]` per felt (formatet øverst i `felt.py` og i `docs/systemer/fiskerimodellen.md` 5.3c). Kongekrabbe er `krabbe` (spillets nøkkel). En linje uten måneder er hele året; fra–til går rundt nyttår.
+  - **Navnevasken, antallet per regel:** HTML-tegn 1, store bokstaver 337, løst tegn foran 1, liten forbokstav 16, understrek 31, koordinater 4 (står uten navn), kortet ved skråstrek 157 (ikke ved «v/»), kortet etter 28 tegn 137 (uten lite ord sist). 287 felt har et kortere navn i kartet enn i `nf`.
+  - **Formene:** Douglas-Peucker til 100 m gir 70 844 punkter. Som JSON i `felt.json` 445 kB (fila ville vært 766 kB mot målet på 350), og ruter på 500 m ville vært 269 679 ruter (de store trål- og notfeltene), så polygonene vant, men i en egen fil: `src/data/felt-s.b64`, varint, **157 kB** binært (209 kB base64), som bygget gjør til `data/felt-s-<hash>.bin` og `bootDataLate` henter som modellene. `feltShape(f)` gir ringene i km, `[]` for `g` og `o`, `null` til fila er kommet. 30 små fiskeplasser har ingen form igjen etter forenklingen; punktet ligger inne i formen for 4 611 av 4 653 med form, og nær den for alle utenom én.
+  - **`felt.json`:** 128 kB → **321 kB** (punktene 44, navnene 120, linjene 124). `feltData` leser den på 5 ms i Node og 4,1 ms i Chromium (første lesing); `feltShape` dekoder formene på 5,8 ms første gang (Chromium).
+  - **Senja som resten:** Ytre Mefjorden Sør og Jakkarneset er med igjen (de var innen 1,5 km av `GROUNDS`). Kartet tegner Senjas seks navn for seg til F4.
+  - **Trykket:** `trkAreas` teller 18 342 ruter på felt med filteret, 21 217 uten (gyte- og oppvekstområdene ville gitt 2 875 ruter flåtetrykk ×3). `simday` før og etter (bygget uten og med F1, bare Senja): Husøy mars 500 / 500 kg, Gryllefjord mars 500 / 500, Husøy juli 500 / 500, Malangsgapet mai 368 / 369, Husøy mars med to juksamaskiner 500 / 500 (artene innen noen kilo). `heattest` 66 OK.
+  - **Tabellen i 2.5 på nytt** med de nye slagene. Inndelingen i landsdeler er gjort på nytt etter breddegrad (og 25,5° Ø for Øst-Finnmark) og stemmer ikke helt med den i 2.5 (antall mottak per landsdel avviker), så «før» er regnet med den samme inndelingen fra fila før F1. Fiskeplassene innen 10 og 20 km er de samme før og etter (unntatt i Vest-Finnmark, der «Kågen_vest» og «Kågen vest» ble ett felt etter vasken); det nye er gyte- og oppvekstområdene, som kommer i kartet med F4. Tana: 1 fiskeplass innen 20 km, men gyteområdet Indre Tana 3,3 km fra mottaket og 4 gyte- og oppvekstområder innen 20 km; Båtsfjord: 4 fiskeplasser og 1 gyteområde innen 20 km; Sør-Varanger (Bøkfjorden): 5 og 6.
+
+    Før F1:
+
+    | Landsdel | Mottak | Fiskeplasser | Gyteområder | Oppvekst og beite | Fiskeplasser innen 10 / 20 km av et mottak | Gyte- og oppvekstområder innen 20 km | Alle navn innen 20 km | Nærmeste fiskeplass (median) |
+    |---|---|---|---|---|---|---|---|---|
+    | Skagerrak og Sørlandet | 21 | 465 | 0 | 0 | 17,3 / 45,6 | 0,0 | 45,6 | 1,7 km |
+    | Vestlandet | 32 | 1073 | 0 | 0 | 11,6 / 43,6 | 0,0 | 43,6 | 3,1 km |
+    | Møre | 35 | 471 | 0 | 0 | 14,6 / 48,2 | 0,0 | 48,2 | 2,1 km |
+    | Trøndelag og Namdalen | 34 | 609 | 0 | 0 | 14,4 / 46,6 | 0,0 | 46,6 | 1,6 km |
+    | Helgeland og Salten | 37 | 829 | 0 | 0 | 18,2 / 58,3 | 0,0 | 58,3 | 2,0 km |
+    | Lofoten og Vesterålen | 52 | 528 | 0 | 0 | 8,1 / 29,2 | 0,0 | 29,2 | 3,2 km |
+    | Troms med Senja | 33 | 262 | 0 | 0 | 7,0 / 23,7 | 0,0 | 23,7 | 3,3 km |
+    | Vest-Finnmark | 24 | 306 | 0 | 0 | 5,5 / 20,8 | 0,0 | 20,8 | 4,5 km |
+    | Øst-Finnmark | 42 | 141 | 0 | 0 | 2,5 / 8,4 | 0,0 | 8,4 | 5,6 km |
+
+    Etter F1:
+
+    | Landsdel | Mottak | Fiskeplasser | Gyteområder | Oppvekst og beite | Fiskeplasser innen 10 / 20 km av et mottak | Gyte- og oppvekstområder innen 20 km | Alle navn innen 20 km | Nærmeste fiskeplass (median) |
+    |---|---|---|---|---|---|---|---|---|
+    | Skagerrak og Sørlandet | 21 | 465 | 56 | 11 | 17,3 / 45,6 | 6,9 | 52,5 | 1,7 km |
+    | Vestlandet | 32 | 1073 | 370 | 103 | 11,6 / 43,6 | 17,7 | 60,9 | 3,1 km |
+    | Møre | 35 | 471 | 147 | 6 | 14,6 / 48,2 | 11,8 | 60,0 | 2,1 km |
+    | Trøndelag og Namdalen | 34 | 609 | 231 | 3 | 14,4 / 46,6 | 16,3 | 62,9 | 1,6 km |
+    | Helgeland og Salten | 37 | 829 | 229 | 62 | 18,2 / 58,3 | 18,3 | 76,6 | 2,0 km |
+    | Lofoten og Vesterålen | 52 | 528 | 264 | 180 | 8,1 / 29,2 | 29,7 | 59,0 | 3,2 km |
+    | Troms med Senja | 33 | 262 | 129 | 43 | 7,0 / 23,7 | 14,2 | 37,8 | 3,3 km |
+    | Vest-Finnmark | 24 | 305 | 123 | 25 | 5,4 / 20,7 | 10,9 | 31,6 | 4,5 km |
+    | Øst-Finnmark | 42 | 141 | 86 | 12 | 2,5 / 8,4 | 6,9 | 15,4 | 5,6 km |
+
+  - **Stikkprøver av navnene** (`/stikkprove`, kartet ved `view.z` 2 og 4 i begge formater, `docs/okter/2026-11-08-31a/`): **Bergen** 50 feltnavn i bildet liggende og 29 stående, alle i vanlig skrift («Hauglandsosen», «Kolltveitosen», «Bakarvågneset - Signalneset…» for «Bakarvågneset - Signalneset, Askøy øst»); **Bodø** 60 og 39 («Landegodfjorden Midt», «Kalvøygrunnen Tomasgrunnen»); **Båtsfjord** 11 og 3 («Bjørnvika», «Båtsfjordfeltet», «Finnskallen»), like tynt som før, til F4 og F5. Ingen navn i store bokstaver eller med koordinater noe sted.
+  - **Tester:** `felt.test.mjs` (ny, 21 sjekker; sett rød mot den gamle `felt.json` med 11 FEIL, og sjekkene for trykket røde med `03g-trykk.js` fra før F1: «trkAreas teller bare fiskeplassene» 21 217 mot 18 342, og ruta ved gyteområdet Kobbneset fikk vekt 3), alle enhetstestene (2 234 OK), `charttest`, `marktest` (med hele kysten), `boottest`, `simday`, `heattest`, og det `tester.py` gir.
 
 ### F2. Fisken står på feltene slik flekkene står i sjøen (steg 31b)
 
@@ -241,6 +282,7 @@ Senjas seks navn er spillets egne («Havet nord for Husøy», «Utenfor Mefjorde
 
 ## 8. Status
 
+- 08.11.2026: **F1 bygd** (Jonas' økt, gren `ccr-6e53b4c0-qs2mg1`): art, redskap og måneder per felt, gyte- og oppvekstområdene som egne slag, navnevasken, formene i en egen fil (`felt-s.b64`, 157 kB), og Senjas fiskeplasser som resten. Tallene under F1. F2 (31b), F4 (31d) og F5 (31e) er klare; startmeldingene er rettet etter formatet.
 - 07.11.2026: planen skrevet (Jonas' økt, gren `ccr-5a96a95a-wu5hvn`; bare dokumenter). Målingene i 2.3, 2.4 og 2.5 ble gjort i økta (enhetstestenes laster og WFS-en uten polygoner); ingenting i `src/` eller `tests/` er endret. Fasene står i køen som 31a–31e med `venter på valg`. Venter på V1–V4.
 - 08.11.2026: Jonas: «Senja sine felt skal fungere akkurat likt som alle de andre fiskefeltene i landet og ikke være en fast sirkel.» Skrevet inn i 2.8, F1–F4 og kap. 5: `GROUNDS` mister alt det gjør som felt (fisken, kartet, tekstene), og Fiskeridirektoratets fiskeplasser på de samme stedene tar over. Jonas la `api.kartverket.no` til i miljøet; F5 venter bare på F1. Sjekket Kartverkets API (F5).
 - 07.11.2026: **Jonas svarte på valgene** (kap. 5). F2 er lagt om etter V1 (ingen fast boks eller sirkel: feltet trekker de gode flekkene i sin egen form og sesong, Senjas felt med), F4 etter V4 C, og F5 tas (V3). F1 (31a) er klar; F2 og F4 venter på F1, F3 på F2, og F5 på F1 og verten `api.kartverket.no` i miljøet.

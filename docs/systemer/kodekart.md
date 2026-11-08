@@ -141,7 +141,7 @@ THE COAST AS THE TRUTH FOR LAND AND SEA (04.10.2026; the user: «Jeg vil ha bort
   - 137 `coastBuildHere(pk)`
   - 138 `coastEnsure(pk)`
 
-## `src/js/core/01e-marks.js` (62 linjer)
+## `src/js/core/01e-marks.js` (98 linjer)
 
 THE SEA MARKS ALONG THE WHOLE COAST (05.10.2026; Jonas: «Sjømerker må ordnes langs hele kysten. Alt senja har, må resten av
 
@@ -150,8 +150,10 @@ THE SEA MARKS ALONG THE WHOLE COAST (05.10.2026; Jonas: «Sjømerker må ordnes 
   - 21 `marksRocksIn(x0, y0, x1, y1)`
   - 26 `marksNear(kind, x, y, R)`
 - **34** THE NAMES OF THE FISHING GROUNDS ALONG THE WHOLE COAST (B2 of docs/planer/bestand-og-flaate.md, 01.11.2026)
-  - 43 `feltData()`
-  - 56 `feltIn(x0, y0, x1, y1)`
+  - 52 `feltData()`
+  - 66 `feltIn(x0, y0, x1, y1)`
+  - 75 `feltShapesFrom(bytes)`
+  - 88 `feltShape(f)`
 
 ## `src/js/core/02-species-gear.js` (400 linjer)
 
@@ -606,23 +608,23 @@ The fishing along the coast as it really was, and where the fish is from it (B2 
 - **374** the sea's warmth: the fish go deeper when the surface is warmer than they like (B4, 02.11.2026)
   - 381 `tempDepthK(sp, c, H)`
 
-## `src/js/core/03g-trykk.js` (206 linjer)
+## `src/js/core/03g-trykk.js` (207 linjer)
 
 The fleet's pressure and the stock's baseline (B3 of docs/planer/bestand-og-flaate.md, 02.11.2026). The whole Norwegian fleet takes
 
-  - 49 `trkAreas()`
-  - 64 `trkCellW(c)`
-  - 71 `trkSkreiMonths(D)`
-  - 79 `trykkYear(sp, y)`
-  - 135 `trkBiomass(sp, y, notes)`
-  - 142 `trykkOpenScale(H)`
-  - 151 `trkPlayersF(sp, y, Y)`
-  - 161 `trkMonth(h)`
-  - 167 `trkCell(c, H)`
-  - 192 `fleetF(sp, p, H)`
-  - 193 `fleetU(sp, p, H)`
-  - 195 `baseAt(p, sp, H)`
-  - 201 `skreiLeft(H)`
+  - 50 `trkAreas()`
+  - 65 `trkCellW(c)`
+  - 72 `trkSkreiMonths(D)`
+  - 80 `trykkYear(sp, y)`
+  - 136 `trkBiomass(sp, y, notes)`
+  - 143 `trykkOpenScale(H)`
+  - 152 `trkPlayersF(sp, y, Y)`
+  - 162 `trkMonth(h)`
+  - 168 `trkCell(c, H)`
+  - 193 `fleetF(sp, p, H)`
+  - 194 `fleetU(sp, p, H)`
+  - 196 `baseAt(p, sp, H)`
+  - 202 `skreiLeft(H)`
 
 ## `src/js/core/03h-is.js` (71 linjer)
 
