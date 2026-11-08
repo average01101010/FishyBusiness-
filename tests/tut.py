@@ -124,7 +124,7 @@ async def play(p, W, H, tag):
     check(end['iceFree'] and end['freeIce'] and end['gear'], tag + ': isen er den åpne oppgaven etter første tur: første fylling venter gratis på mottaket (Onboarding 2, O4, V5 A)', {k: end[k] for k in ('ice', 'iceFree', 'freeIce', 'gear')})
     check('i timen' in norm, tag + ': sluttseddelen sier at første tur var ekstra god, og hva fisket her vanligvis gir (O4)', norm[:120])
     check(end['haill'] != 'luksus', tag + ': ingen gratis luksushaill i første tur (Onboarding 2, V1 A: den er gaven ved registrering)', end['haill'])
-    check(hold_at_land is not None and hold_at_land >= 174, tag + ': minst halvt lasterom ved levering etter en time på feltet (Onboarding 2, V2 A)', hold_at_land)
+    check(hold_at_land is not None and hold_at_land >= 495, tag + ': fullt lasterom (500 kg i trebåten) ved levering etter en time på feltet (Ø8b S0, V3 C)', hold_at_land)
     check(end['sale'] and end['sale']['port'] == (end.get('land') or 'botnhamn') and bonus_row, tag + ': levert på første turs mottak med bonuslinje på sluttseddelen', end['sale'])
     check(reloads == 3, tag + ': tre omlastinger underveis', reloads)
     check(end['crew'] == 0, tag + ': ingen mannskap i første tur; det kommer som drypp (O4)', end['crew'])
