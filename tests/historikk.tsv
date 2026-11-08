@@ -1421,6 +1421,9 @@
 2026-11-08 20:18	ccr-b4ccfe0e-t6qjnp	5861f21+	worktest	FEIL	21	lite	alene	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
 2026-11-08 20:46	ccr-b4ccfe0e-t6qjnp	ebb6b89	tut	OK	2647	lite	alene	
 2026-11-08 20:47	ccr-b4ccfe0e-t6qjnp	ebb6b89	docktest	OK	57	lite	alene	
+2026-11-08 20:07	claude/o14-f4-feltnavnene-kart-htpg70	5633dd8+	placetest	OK	5	lite	alene	
+2026-11-08 20:08	claude/o14-f4-feltnavnene-kart-htpg70	5633dd8+	charttest	OK	57	lite	alene	
+2026-11-08 20:09	claude/o14-f4-feltnavnene-kart-htpg70	5633dd8+	routetest	OK	43	lite	alene	
 2026-11-08 19:55	ccr-e9f46ad4-wipgu7	92d067f	boottest	OK	28	lite	samtidig	
 2026-11-08 19:55	ccr-e9f46ad4-wipgu7	92d067f	tutfull	OK	6	lite	samtidig	
 2026-11-08 19:55	ccr-e9f46ad4-wipgu7	92d067f	booktest	OK	28	lite	samtidig	
@@ -1430,6 +1433,12 @@
 2026-11-08 19:55	ccr-e9f46ad4-wipgu7	92d067f	cashfxtest	OK	8	lite	samtidig	
 2026-11-08 19:57	ccr-e9f46ad4-wipgu7	92d067f	starttest	OK	110	lite	samtidig	
 2026-11-08 19:57	ccr-e9f46ad4-wipgu7	92d067f	tutdrift	OK	7	lite	samtidig	
+2026-11-08 20:41	claude/o14-f4-feltnavnene-kart-htpg70	df7ac76	boottest	OK	29	lite	samtidig	
+2026-11-08 20:43	claude/o14-f4-feltnavnene-kart-htpg70	df7ac76	etikett	OK	174	lite	samtidig	
+2026-11-08 20:43	claude/o14-f4-feltnavnene-kart-htpg70	df7ac76	docktest	FEIL	63	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-08 20:55	claude/o14-f4-feltnavnene-kart-htpg70	c6a7c81	vindshot	OK	665	3d	alene	
+2026-11-08 20:55	claude/o14-f4-feltnavnene-kart-htpg70	c6a7c81	obstest	FEIL	6	lite	alene	FEIL a drawn route under Gisundbrua and back (trip2's): round the pier under the deck, no nearer the skerries, and back in Finnsnes  {"st": "port", "det": 7, "d
+2026-11-08 20:56	claude/o14-f4-feltnavnene-kart-htpg70	c6a7c81	docktest	FEIL	62	lite	alene	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
 2026-11-08 20:13	ccr-5588e999-w5pry1	44d961d	trip2	OK	37	lite	samtidig	
 2026-11-08 20:14	ccr-5588e999-w5pry1	44d961d	docktest	OK	63	lite	samtidig	
 2026-11-08 20:14	ccr-5588e999-w5pry1	44d961d	autolinetest	OK	8	lite	samtidig	
@@ -1463,3 +1472,4 @@
 2026-11-08 20:59	ccr-b4ccfe0e-t6qjnp	645587f	tut	FEIL	650	lite	alene	FEIL staaende: veiledningen er fullført  ['Gave for «Tok over båten»: Salgslaget sender en premie: 7\xa0000 kr.', 'Gave for «Første fisk over ripa»: Salgslaget 
 2026-11-08 21:17	ccr-b4ccfe0e-t6qjnp	007abc7	tut	OK	1083	lite	alene	
 2026-11-08 21:29	ccr-b4ccfe0e-t6qjnp	0464cd7	tut	OK	656	lite	alene	
+2026-11-08 21:03	claude/o14-f4-feltnavnene-kart-htpg70	bcd6576	boottest	OK	25	lite	alene	

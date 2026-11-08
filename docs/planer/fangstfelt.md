@@ -1,6 +1,6 @@
 # Fangstfeltene med navn langs hele kysten (Ø14, plan 07.11.2026)
 
-Plan for steg 31 i `docs/planer/koen.md` (`/planlegg`). F1 er bygd 08.11.2026 (status under F1 og i kap. 8); resten er ikke bygd. Fasene står i køen som steg 31a–31e. Jonas svarte på valgene 07.11.2026 (kap. 5), og F2, F4 og F5 er lagt om etter svarene; 08.11.2026 sa han at Senjas felt skal være som alle de andre (2.8). F1 (steg 31a) er klar.
+Plan for steg 31 i `docs/planer/koen.md` (`/planlegg`). F1 og F4 er bygd 08.11.2026 (status under F1 og F4 og i kap. 8); resten er ikke bygd. Fasene står i køen som steg 31a–31e. Jonas svarte på valgene 07.11.2026 (kap. 5), og F2, F4 og F5 er lagt om etter svarene; 08.11.2026 sa han at Senjas felt skal være som alle de andre (2.8). F1 (steg 31a) er klar.
 
 ## 1. Hva Jonas ba om
 
@@ -220,6 +220,22 @@ Senjas seks navn er spillets egne («Havet nord for Husøy», «Utenfor Mefjorde
 - **Tester:** `etikett`, `charttest`, `placetest`, `routetest` (`03-map.js`).
 - **Skjermbilder:** Bergen og Båtsfjord ved `view.z` 2 og 4 i 390 × 844, 800 × 1280 og 1280 × 800, og et trykk på et kortet navn.
 - **Står igjen til Jonas:** se tettheten på Pad 3 (backloggen 10.5 «Feltnavnene (B2)»).
+- **Status (08.11.2026, Jonas' økt, gren `claude/o14-f4-feltnavnene-kart-htpg70`): bygd.** Det som ble gjort og målt:
+  - **I kartet** (`renderStatic` i `ui/03-map.js`, `docs/systemer/kartplotter.md` 5.47b): feltnavnene fra `view.z ≥ 2`, fiskeplassene de største først og så gyte- og oppvekstområdene i samme skrift (`feltIn(…, true)` i `core/01e-marks.js`, utvidet med `all`); Senjas seks navn tegnes ikke lenger for seg; de fire fiskeplassene uten navn tegnes ikke. Ingen merking etter sesong eller fisk.
+  - **Taket etter målingen:** cellene på 110 × 22 px står, og taket på 80 er nå også høyst ett navn per 13 000 kvadratpiksler (`FELT_PX`). Uten det sto det 35 navn over 6,0 % av skjermen på en telefon (390 × 844) ved Bodø med gyte- og oppvekstområdene med; med det 24 over 4,7 %. Feltnavnets boks går fra 8 px over punktet (før 5), fordi stedsnavnene over henger nedstrekene under sin egen boks: «Kolltveitosen» lå under «Knappskog» i Bergen og «Heggedal» under «Stormolla» ved Henningsvær i liggende format, også før F4.
+  - **Trykket:** et trykk på et feltnavn, eller innen 10 px av et felt som ikke fikk plass, viser hele navnet og slaget med kilden («Bakarvågneset - Signalneset, Askøy øst», «Fiskeplass · Fiskeridirektoratet»). Ingen arter, måneder eller tall.
+  - **Målt** (`tests/etikett.py`, `dist-vec` med hele kysten, kart-31): feltnavn i bildet og del av skjermen, ved `view.z` 2 / 4. Ingen overlapper et annet navn noe sted.
+
+    | Sted | 390 × 844 | 800 × 1280 | 1280 × 800 | 915 × 1208 (Pad 3) | 1293 × 830 (Pad 3) |
+    |---|---|---|---|---|---|
+    | Bergen | 24 (4,0 %) / 3 | 45 (2,5 %) / 4 | 63 (4,1 %) / 22 | 55 (3,1 %) / 7 | 69 (4,2 %) / 22 |
+    | Henningsvær | 21 (4,9 %) / 9 | 28 (2,2 %) / 15 | 61 (4,3 %) / 27 | 33 (2,1 %) / 17 | 59 (4,1 %) / 27 |
+    | Bodø | 24 (4,7 %) / 16 | 50 (2,8 %) / 25 | 74 (4,5 %) / 35 | 57 (3,0 %) / 29 | 74 (4,4 %) / 37 |
+    | Båtsfjord | 3 (0,6 %) / 0 | 3 (0,2 %) / 0 | 14 (0,8 %) / 3 | 6 (0,3 %) / 1 | 14 (0,8 %) / 3 |
+
+    Før F4 (bare fiskeplassene, ved `view.z` 2): Bergen 18, 29, 50, 40, 49; Henningsvær 17, 20, 47, 23, 47; Bodø 27, 39, 60, 45, 58; Båtsfjord 3, 3, 11, 6, 11. Under `view.z` 2 sto det opptil 80 feltnavn (Bergen og Henningsvær ved `view.z` 1) og Senjas seks navn overalt fra 0,5; nå ingen.
+  - **Stikkprøvene** (Bergen, Henningsvær, Bodø, Båtsfjord, i fem formater): Båtsfjord er like tynn som før (3–14 navn ved `view.z` 2), og gyte- og oppvekstområdene gir 0–3 til der; F5 (Kartverkets navn) er neste steg for hullet. Skjermbildene i `docs/okter/2026-11-08-31d/`.
+  - **Tester:** `etikett.py` (de nye sjekkene sett røde mot koden før F4: feltnavn under `view.z` 2 i alle fem formater, Senjas seks navn tegnet, ingen trykk på feltnavn, og overlappene over), `felt.test.mjs` (ny sjekk for `feltIn` med `all`, sett rød uten endringen i `01e-marks.js`), alle enhetstestene, `charttest`, `placetest`, `routetest`.
 
 ### F5. Kartverkets stedsnavn i sjøen der Fiskeridirektoratet har lite (steg 31e)
 
@@ -282,6 +298,7 @@ Senjas seks navn er spillets egne («Havet nord for Husøy», «Utenfor Mefjorde
 
 ## 8. Status
 
+- 08.11.2026: **F4 bygd og rullet ut i bcd65760** (Jonas' økt, gren `claude/o14-f4-feltnavnene-kart-htpg70`): feltnavnene fra `view.z ≥ 2`, gyte- og oppvekstområdene med lavest prioritet, Senjas seks navn ikke lenger for seg, taket etter skjermflaten og trykket med hele navnet og slaget. Tallene under F4. Står igjen til Jonas: tettheten på Pad 3.
 - 08.11.2026: **F1 bygd** (Jonas' økt, gren `ccr-6e53b4c0-qs2mg1`): art, redskap og måneder per felt, gyte- og oppvekstområdene som egne slag, navnevasken, formene i en egen fil (`felt-s.b64`, 157 kB), og Senjas fiskeplasser som resten. Tallene under F1. F2 (31b), F4 (31d) og F5 (31e) er klare; startmeldingene er rettet etter formatet.
 - 07.11.2026: planen skrevet (Jonas' økt, gren `ccr-5a96a95a-wu5hvn`; bare dokumenter). Målingene i 2.3, 2.4 og 2.5 ble gjort i økta (enhetstestenes laster og WFS-en uten polygoner); ingenting i `src/` eller `tests/` er endret. Fasene står i køen som 31a–31e med `venter på valg`. Venter på V1–V4.
 - 08.11.2026: Jonas: «Senja sine felt skal fungere akkurat likt som alle de andre fiskefeltene i landet og ikke være en fast sirkel.» Skrevet inn i 2.8, F1–F4 og kap. 5: `GROUNDS` mister alt det gjør som felt (fisken, kartet, tekstene), og Fiskeridirektoratets fiskeplasser på de samme stedene tar over. Jonas la `api.kartverket.no` til i miljøet; F5 venter bare på F1. Sjekket Kartverkets API (F5).

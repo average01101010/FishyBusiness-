@@ -44,8 +44,8 @@ function marksNear(kind, x, y, R){
 //   feltData()              all the grounds: {i, x, y, n (name for the chart; '' when the source had only a position), nf (whole name),
 //                           r (size, km), g ('a' active, 'p' passive, 'b' both, '-' none), k ('f', 'g', 'o'),
 //                           l ([[species, gear bits after FELT.gear (meta.gear: GEAR of tools/npc/fiske.py), month bits with 1 << 0 for January], ...]; [] when none the game knows)}
-//   feltIn(x0, y0, x1, y1)  the named fishing grounds (k = f) in a box (km), the largest first; the spawning and nursery grounds come to
-//                           the chart with F4
+//   feltIn(x0, y0, x1, y1, all)  the named fishing grounds (k = f) in a box (km), the largest first; with all, the named spawning and
+//                           nursery grounds too (k = g, o), after all the fishing grounds, the largest first (the chart's names, F4)
 //   feltShape(f)            the ground's rings in km ([Float64Array [x, y, x, y, ...], ...]; [] for g and o), null while the file has not
 //                           come, false for good when it did not come or does not match felt.json (the ground's point and r then)
 const FELT_T = /*@text(data/felt.json)*/null;
@@ -64,11 +64,11 @@ function feltData(){
   }
   FELT.grid = grid; FELT.d = out; return out;
 }
-function feltIn(x0, y0, x1, y1){
+function feltIn(x0, y0, x1, y1, all){
   if (!feltData()) return []; const out = [], c = FELT.cell;
   for (let gy = Math.floor(y0 / c); gy <= Math.floor(y1 / c); gy++) for (let gx = Math.floor(x0 / c); gx <= Math.floor(x1 / c); gx++){
-    const a = FELT.grid.get(gridKey(gx, gy)); if (a) for (const f of a) if (f.k === 'f' && f.n && f.x >= x0 && f.x <= x1 && f.y >= y0 && f.y <= y1) out.push(f); }
-  return out.sort((a, b) => b.r - a.r);
+    const a = FELT.grid.get(gridKey(gx, gy)); if (a) for (const f of a) if ((all || f.k === 'f') && f.n && f.x >= x0 && f.x <= x1 && f.y >= y0 && f.y <= y1) out.push(f); }
+  return out.sort((a, b) => (a.k !== 'f') - (b.k !== 'f') || b.r - a.r);
 }
 // the shapes (felt-s.b64, tools/npc/felt.py: varints, zigzag for the signed): a data element the build takes out of the page as
 // data/felt-s-<hash>.bin, fetched at boot as the models (ui/11-boot.js, DATAB), base64 in the element in a one-file build. Decoded the
