@@ -4,7 +4,7 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
-- **Ø11.7 (nødstoppen, nestenulykkene i Sikkerhet-kortet og havsnød hos andre, SK4, SK6, L8) bygd 08.11.2026** (Jonas' økt, grenen `ccr-c27822e7-1y3qn3`; kap. 7 i `docs/systemer/sjofart-og-lover.md`, status i `docs/planer/lover-regler-sikkerhet.md` Ø11.7). Det som er antatt, svakt eller ikke gjort:
+- **Ø11.7 (nødstoppen, nestenulykkene i Sikkerhet-kortet og havsnød hos andre, SK4, SK6, L8) bygd og rullet ut 08.11.2026 i 30cd81b2** (Jonas' økt, grenen `ccr-c27822e7-1y3qn3`; kap. 7 i `docs/systemer/sjofart-og-lover.md`, status i `docs/planer/lover-regler-sikkerhet.md` Ø11.7). Det som er antatt, svakt eller ikke gjort:
   - **Sjøloven § 135 er bare lest i sammendrag** (to forsøk på Lovdata 08.11.2026; leseverktøyet ga innholdsfortegnelsen ordrett og paragrafteksten bare oppsummert). Spillet bygger på ledd 3 slik sammendraget gjengir det og siterer ikke paragrafen. Må leses ordrett (Lovdata i nettleser eller API) før noe siteres. At det ikke gis bergelønn for å redde folk, er fra bergingskonvensjonen art. 16 i grove trekk.
   - **Hyppighetene er spillvalg uten måling i spilltest:** nødstopp `MOBSTOP.R` (én i 30 timers draging for én ved haleren, høyst to ved haleren), anropet `SOSK.R` (ett per seks timers spill i grov sjø, høyst ett i tre spilldøgn), og «grov sjø» som 0,6 av snekkas grenser (1,5 m eller 9,6 m/s). Må ses i spilltest: kommer anropet for sjelden til å bli sett, eller for ofte?
   - **Båten i nød** er laget der anropet er (`TUR_BOATS`), ikke en av den felles flåtens NPC-er; hun ligger stille, uten folk på dekk, og er borte når anropet er over. Andre spilleres båter ringer aldri og svarer aldri (lokalt).

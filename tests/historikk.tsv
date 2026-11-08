@@ -1360,3 +1360,7 @@
 2026-11-08 19:26	ccr-c27822e7-1y3qn3	7e9eef3	mobtest	OK	202	lite	samtidig	
 2026-11-08 19:23	ccr-864d9913-u29rne	fa78d4b	boottest	OK	27	lite	samtidig	
 2026-11-08 19:23	ccr-864d9913-u29rne	fa78d4b	driftsplan2ui	OK	30	lite	samtidig	
+2026-11-08 19:28	ccr-c27822e7-1y3qn3	30cd81b	boottest	OK	20	lite	samtidig	
+2026-11-08 19:28	ccr-c27822e7-1y3qn3	30cd81b	docktest	OK	59	lite	samtidig	
+2026-11-08 19:31	ccr-c27822e7-1y3qn3	30cd81b	mobtest	OK	202	lite	samtidig	
+2026-11-08 19:31	ccr-c27822e7-1y3qn3	30cd81b	towtest	OK	11	lite	samtidig	
