@@ -1049,7 +1049,7 @@ Drift: the standing operations plan, per vessel. Made anew 23.10.2026 (Jonas: «
 - **557** the plan to another vessel of the company: the answers, made again there
   - 558 `driftCopy(vid)`
 
-## `src/js/core/06g-plan2.js` (454 linjer)
+## `src/js/core/06g-plan2.js` (459 linjer)
 
 Driftsplan 2: the day is the plan (26.10.2026, docs/planer/driftsplan-2/02-design.md). Part 1: the model, the day and the check.
 
@@ -1080,13 +1080,13 @@ Driftsplan 2: the day is the plan (26.10.2026, docs/planer/driftsplan-2/02-desig
   - 237 `p2TripLen(o)`
   - 238 `p2TripLast(o, dayIndex)`
   - 243 `p2LandsToday(o, dayIndex)`
-  - 244 `planDay(o, H0, st)`
-- **360** the day as text: [[clock, no, en], …], one line a step, the skipped places and the reason last
-  - 361 `planDayText(o, day)`
-- **395** the check: errors keep the plan from being switched on, warnings only inform (as driftCheck; the rhythm's rules from Jonas 26.10.2026)
-  - 399 `plan2WatchWhy(st, aboard, short)`
-  - 409 `p2Kits()`
-  - 410 `plan2Check(o, st)`
+  - 249 `planDay(o, H0, st)`
+- **365** the day as text: [[clock, no, en], …], one line a step, the skipped places and the reason last
+  - 366 `planDayText(o, day)`
+- **400** the check: errors keep the plan from being switched on, warnings only inform (as driftCheck; the rhythm's rules from Jonas 26.10.2026)
+  - 404 `plan2WatchWhy(st, aboard, short)`
+  - 414 `p2Kits()`
+  - 415 `plan2Check(o, st)`
 
 ## `src/js/core/06h-plan2-engine.js` (543 linjer)
 
@@ -2722,7 +2722,7 @@ the Drift app: the operations plan of a vessel (core/06d-drift.js) on one screen
 - **221** actions (data-pa="dr-…"); true when something changed
   - 257 `driftSvg(u)`
 
-## `src/js/ui/05d-plan2.js` (407 linjer)
+## `src/js/ui/05d-plan2.js` (410 linjer)
 
 Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The day first («I dag» with where she is now, or the
 
@@ -2733,13 +2733,13 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
 - **113** Redskap
 - **127** Plasser: the list in the order she works them
 - **178** Levering
-- **214** Vær
-- **229** Rytme
-- **243** Mannskap
-- **266** the top: Start or Pause, Nå, and the button that fixes a stop
-- **284** the statistics (R9): today, the last seven days, and all
-- **301** the page
-  - 401 `plan2Copy(vid)`
+- **217** Vær
+- **232** Rytme
+- **246** Mannskap
+- **269** the top: Start or Pause, Nå, and the button that fixes a stop
+- **287** the statistics (R9): today, the last seven days, and all
+- **304** the page
+  - 404 `plan2Copy(vid)`
 
 ## `src/js/ui/05e-merker.js` (86 linjer)
 

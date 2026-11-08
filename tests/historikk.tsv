@@ -1216,3 +1216,13 @@
 2026-11-08 18:40	ccr-6e53b4c0-qs2mg1	f6f32b6+	marktest	OK	7	lite	samtidig	
 2026-11-08 18:41	ccr-6e53b4c0-qs2mg1	f6f32b6+	boottest	OK	18	lite	samtidig	
 2026-11-08 18:41	ccr-6e53b4c0-qs2mg1	f6f32b6+	charttest	OK	41	lite	alene	
+2026-11-08 17:59	ccr-2040aa61-qgig5a	fc8da648+	skipdrift	OK	19	lite	samtidig	
+2026-11-08 17:59	ccr-2040aa61-qgig5a	fc8da648+	driftsplan2ui	OK	26	lite	samtidig	
+2026-11-08 18:01	ccr-2040aa61-qgig5a	fc8da648+	driftsplan2kyst	OK	111	lite	samtidig	
+2026-11-08 18:02	ccr-2040aa61-qgig5a	fc8da648+	driftsplan2test	OK	83	lite	alene	
+2026-11-08 18:07	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2ui	OK	28	lite	samtidig	
+2026-11-08 18:09	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2kyst	OK	100	lite	samtidig	
+2026-11-08 18:09	ccr-2040aa61-qgig5a	bba06b81+	docktest	FEIL	62	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-08 18:10	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2test	FEIL	79	lite	alene	FEIL S5 the tired crew end the day: no more jigging, the line is still hauled when due (within 3 h), then in [[['D1 13:19', 'Mannskapet er slitne. Avslutter juk
+2026-11-08 18:11	ccr-2040aa61-qgig5a	bba06b81+	docktest	OK	58	lite	alene	
+2026-11-08 18:12	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2test	FEIL	82	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
