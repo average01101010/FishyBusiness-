@@ -17,7 +17,7 @@ driftsplan2test (D2: a fixed date, a seeded Math.random, the game's loop held).
       cod quota of the open group nearly used, so the cod over it is confiscated at the landing, and the weather as it comes; 8 days closed.
     - T, pots at Bodø, 15 + 15 at 48 h, four days: the push for the gear in the sea while closed, the strings hauled after the soak.
     - M, a trip of several days from Hammerfest on a sjark with bunks: home only on the last night, the nights at a quay out there,
-      the landing every third day (Levering-raden counts from the first day).
+      the landing every third day on the trip's last day, before home (Jonas 08.11.2026: A).
   python3 driftsplan2kyst.py Bergen      only that town (Bergen, Bodø, Hammerfest, G, T, M; several may be named)
   python3 driftsplan2kyst.py 3d          the drawer over the 3D sea (with 3D, alone): the plan page in 800x1280, 1280x800, 384x853
 """
@@ -243,7 +243,7 @@ async def real(pg, names):
             hm = [e for e in r['run']['ev'] if e[1].startswith('fish:unmooring@' + r['home'][0])]
             print(ok(r['chk']['ok'] and len(hm) <= 1 and r['nights'][2] and '@' + r['home'][0] in r['nights'][2]), 'M a trip of three days: home only on the last night, out from home once (she started at the plant)', [[e[0] for e in hm], r['nights']])
             print(ok(r['nights'][0] and r['nights'][1] and '@' + r['home'][0] not in r['nights'][0] and '@' + r['home'][0] not in r['nights'][1]), 'M the first two nights of the trip are out (at anchor or a quay out there), not at home (' + r['home'][1] + ')', r['nights'])
-            print(ok(R['stats'] and R['stats'][0][1] > 0 and R['stats'][3][1] > 0 and not any(x[1] > 0 for x in R['stats'][1:3]) and R['ops']['on'] and not R['ops']['stop']), 'M the catch is landed every third day (the first day and the fourth: Levering-raden counts from the first day) and the plan is still on', [R['stats'], R['ops']['stop']])
+            print(ok(len(R['stats']) >= 3 and R['stats'][2][1] > 0 and not any(x[1] > 0 for x in R['stats'][:2]) and R['ops']['on'] and not R['ops']['stop']), 'M the catch is landed on the trip\'s third and last day, before home, not on its first (Levering every third day; Jonas 08.11.2026: A), and the plan is still on', [R['stats'], R['ops']['stop']])
 
 
 async def shots(p):

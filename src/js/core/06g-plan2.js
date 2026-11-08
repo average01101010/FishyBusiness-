@@ -233,6 +233,11 @@ function planDayAuto(o, H0, st){
 // ---- the day. H0: the hour the day begins (the departure). Returns {t0, steps:[{t, k, …}], end, why:[no, en], skipped:[{id, no, en}]}.
 // Steps: avgang {from}, sett {pid, n, kind, h}, trekk {pid, n, kind, h, reset, soakH}, juks {pid, h, until}, vent {pid, until},
 // lever {port, h} or behold {kg}, agn {port, kg}, hjem {port, anchor}, egning {where, n, ready}, hvile {until, where}, vakt {w, who, until}, ut {}
+// the days «Levering hvert N. døgn» lands on, counted from the plan's first day (0): a day plan lands on the first day and every N after
+// (0, N, 2N …); a trip of several days at the end of each N days (N − 1, 2N − 1 …), so a trip as long as N lands on its last day,
+// before she goes home, not on its first (Jonas 08.11.2026: «A», Ø12 A+B's question; before, a trip of three days with landing every
+// third day landed on day 1 and day 4 and came home on day 3 with two days' catch aboard)
+function p2LandsToday(o, dayIndex){ const N = Math.max(1, ((o && o.land) || {}).days || 2); return o && o.rhythm === 'multi' ? dayIndex % N === N - 1 : dayIndex % N === 0; }
 function planDay(o, H0, st){
   st = st || plan2StateOf(o);
   if (p2Sno(o)){ const s2 = Object.assign({}, st, {H:H0}); if (!s2.sno || Math.abs(st.H - H0) > 1) s2.sno = p2SnoState(o, s2); return planDaySno(o, H0, s2); }   // (the snow crab vessel's strings, H3c)
@@ -295,7 +300,7 @@ function planDay(o, H0, st){
   const dueToday = pending.filter(p => p.due != null && p.due <= endBy).sort((a, b) => a.due - b.due);
   const mustFresh = st.hold > 0.5 && keepF(keepDay(st.fresh) + 1) < DRP2.freshLand, L = o.land || {when:'full'};
   const willFish = (jig && (jigs.length || preJigs.length || dueToday.length)) || dueToday.length > 0;
-  const land = watch ? false : fetch ? (st.sets.length > 0 || st.hold > 0.5) : L.when === 'trip' ? (willFish || st.hold > 0.5) : L.when === 'days' ? ((st.dayIndex % Math.max(1, L.days || 2)) === 0 && (willFish || st.hold > 0.5)) || st.hold >= DRP2.full * st.cap || mustFresh : st.hold >= DRP2.full * st.cap || mustFresh;
+  const land = watch ? false : fetch ? (st.sets.length > 0 || st.hold > 0.5) : L.when === 'trip' ? (willFish || st.hold > 0.5) : L.when === 'days' ? (p2LandsToday(o, st.dayIndex) && (willFish || st.hold > 0.5)) || st.hold >= DRP2.full * st.cap || mustFresh : st.hold >= DRP2.full * st.cap || mustFresh;
   const lineUn = kind === 'line' ? st.aboard.line.n - st.aboard.line.baited + dueToday.reduce((a, p) => a + (p.s ? p.s.n : 0), 0) : 0;
   const needBait = (kind === 'teine' && (st.aboard.teine + potsSea) >= 1 && st.aboard.bait < baitRound - 1e-6) || (kind === 'line' && lineUn >= 1 && st.aboard.bait < lineUn * LINE_KINDS.hyse.baitKg - 1e-6), toM = (land || needBait) && !!plan2P(o, 'M');
   const tailH = () => { let h = 0, a = at, ap = atPort; for (const p of dueToday){ if (p.done) continue; h += legH(a, ap, p.q, null) + p.q.n * (W.trekk[kind] + W.sett[kind]); a = p.q; ap = null; }
