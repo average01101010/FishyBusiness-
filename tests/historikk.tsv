@@ -1457,3 +1457,6 @@
 2026-11-08 20:42	ccr-5588e999-w5pry1	ca5a14a	selltest	LES	22	lite	samtidig	
 2026-11-08 20:43	ccr-5588e999-w5pry1	ca5a14a	trip2	OK	40	lite	samtidig	
 2026-11-08 20:43	ccr-5588e999-w5pry1	ca5a14a	fleet2test	OK	31	lite	samtidig	
+2026-11-08 20:49	ccr-b4ccfe0e-t6qjnp	9296d04	boottest	OK	34	lite	samtidig	
+2026-11-08 20:50	ccr-b4ccfe0e-t6qjnp	9296d04	docktest	OK	67	lite	samtidig	
+2026-11-08 20:50	ccr-b4ccfe0e-t6qjnp	9296d04	worktest	FEIL	26	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
