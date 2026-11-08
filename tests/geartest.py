@@ -131,8 +131,8 @@ async def main():
         mk = r.get('marks') or []
         print(ok(len(mk) == 2 and mk[0]['g'] == 'line' and mk[1]['g'] == 'teine' and -0.05 < mk[1]['kgu'] - r['crab']['kg'] / 40 < 0.6 and mk[0]['kgu'] >= mk[1]['kgu'] and all(m['q'] is not None for m in mk)),
               'the catch mark gives kilos per line (the whole line) and per pot', mk, r['crab']['kg'])
-        # the trip's line (Ø8b S2): the three hauls (nets, line, pots) against fair hauls for their soak, on the note and in the deck log
-        print(ok(bool(r['sale']['why']) and r['sale']['why'][0].startswith('De 3 trekkene ga ') and 'vanlige trekk med samme ståtid' in r['sale']['why'][0]), 'the landing note says what the three hauls gave against fair hauls for the soak (Ø8b S2)', r['sale']['why'])
+        # the trip's line (Ø8b S2): the three hauls (nets, line, pots; after the jig's line, as the trip jigged too) against fair hauls for their soak, on the note and in the deck log
+        print(ok(bool(r['sale']['why']) and 'De 3 trekkene ga ' in r['sale']['why'][0] and 'vanlige trekk med samme ståtid' in r['sale']['why'][0]), 'the landing note says what the three hauls gave against fair hauls for the soak (Ø8b S2)', r['sale']['why'])
         print(ok(r['crabPend'] == 0 and not r['sale']['fine'] and abs(r['sale']['dead'] - 1.2) < 0.02 and r['sale']['minOk'] and r['sale']['ffAdd'] <= r['nonCrab'] + 0.01 and 'Fiskeridirektoratet' not in r['sale']['msgs'] and 'teine' in r['sale']['gear']), 'live king crab is paid at least the minimum price of its class and dead crab nothing; no fine, and crab is outside the fresh-fish scheme')
 
         # 5. weather, deadlines, wear and mending, baiting
