@@ -1321,3 +1321,6 @@
 2026-11-08 19:18	ccr-824d1172-0cmxu3	56f3499+	plantsaytest	OK	5	lite	samtidig	
 2026-11-08 19:19	ccr-824d1172-0cmxu3	56f3499+	trip2	OK	41	lite	samtidig	
 2026-11-08 19:19	ccr-824d1172-0cmxu3	56f3499+	worktest	FEIL	24	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 19:22	ccr-c27822e7-1y3qn3	7e9eef3	boottest	OK	22	lite	samtidig	
+2026-11-08 19:23	ccr-c27822e7-1y3qn3	7e9eef3	docktest	OK	59	lite	samtidig	
+2026-11-08 19:26	ccr-c27822e7-1y3qn3	7e9eef3	mobtest	OK	202	lite	samtidig	
