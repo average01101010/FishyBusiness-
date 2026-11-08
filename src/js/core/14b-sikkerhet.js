@@ -118,6 +118,8 @@ const mobRecent = (k, gap) => (S.mobs || []).some(r => r.vid === S.cur && r.k ==
 
 // ---- the minute (core/05-vessels.js risk): the event going on, or the dice ----
 function mobRisk(W, hs){
+  mobScan();   // the near misses the log tells of, for the Sikkerhet card (Ø11.7)
+  sosMinute(W, hs);   // a call on channel 16 from a boat in distress near by (Ø11.7, § 135)
   const b = S.boat; if (S.mob && S.mob.vid === S.cur){ mobStep(W, hs); return; }
   if (!['sailing', 'fishing', 'idle', 'engine', 'adrift'].includes(b.status) || S.tut) return;
   const on = mobOnDeck(); if (!on.length) return;
@@ -233,7 +235,7 @@ function mobRoute(){
   const gs = gridScale(b.pos), R = Math.max(30, (BOAT.turnR || 40) * 1.6) / 1000 * gs, hd = b.heading || 0, f = {x:Math.sin(hd), y:-Math.cos(hd)}, s = M.side || 1, r = {x:Math.cos(hd) * s, y:Math.sin(hd) * s};
   let rel = Math.atan2(tgt.x - b.pos.x, -(tgt.y - b.pos.y)) - hd; while (rel > Math.PI) rel -= 2 * Math.PI; while (rel < -Math.PI) rel += 2 * Math.PI;
   const P = b.pos, at = (u, v) => ({x:P.x + f.x * u * R + r.x * v * R, y:P.y + f.y * u * R + r.y * v * R}), wps = [];
-  const turn = Math.abs(rel) > 1.6 && b.status === 'sailing' && (b.v || 0) > 2 && kmTrue(P, tgt) < 2;
+  const turn = !M.other && Math.abs(rel) > 1.6 && b.status === 'sailing' && (b.v || 0) > 2 && kmTrue(P, tgt) < 2;   // (not for a person from another boat: nobody fell from this one)
   if (turn) wps.push(at(0.866, 0.5), at(2.232, 0.866), at(2.598, -0.5), at(1.732, -1));
   // (the stop 18 m to windward of her: with no way on the boat drifts faster than a person, so she comes down on her, not away; in
   // little wind 15 m short of her on the way in)
@@ -310,7 +312,7 @@ function mobAway(){
 
 // ---- the end: who got her up, the sick leave (V8 A), the report after § 475 and § 47, the badge ----
 function mobEnd(out, how){
-  const M = S.mob, b = S.boat; if (!M) return; S.mob = null;
+  const M = S.mob, b = S.boat; if (!M) return; if (M.other){ sosMobEnd(M, out, how); return; } S.mob = null;
   const tUp = out === 'rescue' ? Math.max(S.t, M.resc.eta) : M.tUp || S.t, tIn = Math.max(1, Math.round(tUp - M.t0)), late = tIn > M.lim, R = M.resc;
   const days = (out === 'own' || out === 'crew') && !late ? 0 : late ? 3 + Math.floor(mobRnd('sick') * 3) : 1 + Math.floor(mobRnd('sick') * 2);
   const he = mobHe(M), heE = mobHe(M, true), N = M.name, HOW = {ladder:['med leideren akter', 'up the ladder aft'], sling:['med løftestroppen', 'with the lifting sling'], boat:['med MOB-båten', 'with the rescue boat']}[how] || ['', ''];
@@ -357,4 +359,215 @@ function mobCrewHour(){
   for (const c of S.crew || []) if (c.mobOff){ if (!c.off){ delete c.mobOff; continue; } if (c.offUntil && S.t >= c.offUntil - 60 && b.status !== 'port') c.offUntil = S.t + 61; }
   if (S.mobOff && S.mobOff.length) S.mobOff = S.mobOff.filter(o => S.t < o.until);
   if (S.mob && S.mob.vid === S.cur && (b.status === 'port' || b.status === 'tow' || S.t - S.mob.t0 > 6 * 60)) mobAway();
+}
+
+// ===== Ø11.7: the emergency stop, the near misses on the Sikkerhet card, distress near by (SK4, SK6, L8; docs/systemer/sjofart-og-lover.md kap. 7) =====
+// SK4 the emergency stop on the hauler (V9 B, Jonas 05.11.2026: «Bare en detalj på haleren. Mannskapet bruker den selv, og det står som
+// nestenulykke i loggen»): now and then a hand at the hauler is caught in the line, the net or a pot's rope, and the crew stop the hauler
+// with its stop themselves. The player presses nothing; it stands in the log as a near miss, never as an injury, and the hauler stands
+// a couple of minutes (one call from the haul's minute in core/10-gear.js gearOpMinute). No regulation asks for a stop on a hauler
+// (FOR-2013-11-22-1404 read, docs/systemer/sjofart-og-lover.md 2.5); it is good practice. The dice are mobRnd's, never Math.random.
+const MOBSTOP = {R:1 / (30 * 60), gap:12 * 60, min:2};   // a minute's chance for one hand at the hauler (once in about 30 hours of hauling, a game choice), at most one in 12 game hours a vessel, the minutes the hauler stands
+const MOBSTOP_T = {
+  line:[['{n} fikk en krok i hansken og ble dratt mot haleren.', '{n} got a hook in the glove and was pulled towards the hauler.']],
+  garn:[['{n} fikk ermet fast i garnet ved haleren.', '{n} got a sleeve caught in the net at the hauler.']],
+  teine:[['{n} fikk foten i bukta på teinetauet.', '{n} got a foot in the bight of the pot rope.']]};
+function mobStop(g){
+  if (!g || g.op !== 'haul') return false;
+  if (g.estop && S.t < g.estop) return true;   // (the hauler stands while they get loose and look it over)
+  if (typeof hasHauler === 'function' && !hasHauler(g.kind)) return false;   // (by hand there is no hauler to be caught in)
+  const all = mobOnDeck(), at = all.filter(q => q.p.st === 'haling' && q.p.c); if (!at.length || mobRecent('stop', MOBSTOP.gap)) return false;
+  let x = 0, dark = false; try { const H = S.t / 60, p = S.boat.pos; x = mobSeaX(windAt(H, p), hsAt(p, H), BOAT.risk); dark = sunAt(H, p).el < -6; } catch (e){ /* a block not loaded */ }
+  if (mobRnd('stop') >= Math.min(2, at.length) * MOBSTOP.R * (1 + mobSeaF(x)) * (dark ? MOBK.dark : 1)) return false;   // (at most two stand by the hauler itself, also on an ocean vessel with a team on deck)
+  const c = at[Math.floor(mobRnd('stopw') * at.length) % at.length].p.c, mate = all.find(q => q.p.c && q.p.c !== c), T = (MOBSTOP_T[g.kind] || MOBSTOP_T.line)[0], n = c.name;
+  const by = mate ? [mate.p.c.name + ' slo av haleren med nødstoppen. Ingen ble skadet.', mate.p.c.name + ' stopped the hauler with the emergency stop. Nobody was hurt.']
+    : [mobCap(mobHe(c)) + ' rakk nødstoppen selv. Ingen ble skadet.', mobCap(mobHe(c, true)) + ' reached the emergency stop. Nobody was hurt.'];
+  g.estop = S.t + MOBSTOP.min;
+  log('Nestenulykke: ' + T[0].replace('{n}', n) + ' ' + by[0], 'Near miss: ' + T[1].replace('{n}', n) + ' ' + by[1], 'nav');
+  mobRec({k:'stop', name:n, by:mate ? mate.p.c.name : null, gear:g.kind});
+  return true;
+}
+
+// ---- SK6 the near misses the log tells of: shallow water ahead that Autonav stopped for (core/05-vessels.js sailReplan, the net under
+// groundCheck), and seas over the rail (core/05-vessels.js risk). Read from the log once a minute on each vessel, so neither file is
+// touched; a line with another vessel's name before it (log's VTAG) is that vessel's ----
+const MOBSCAN = [[/Grunt vann forut/, 'ground'], [/Tok inn sjø over ripa|Tok inn sjø, men fikk lenset/, 'sea']];
+function mobScan(){
+  const L = S.log; if (!L || !L.length) return;
+  const mk = S.mobScan || (S.mobScan = {}), t0 = mk[S.cur] != null ? mk[S.cur] : S.t; mk[S.cur] = S.t;
+  let others = null;
+  for (let i = L.length - 1; i >= 0 && L[i].t >= t0; i--){
+    const l = L[i], no = l.no || '', hit = MOBSCAN.find(q => q[0].test(no)); if (!hit) continue;
+    if (others == null){ others = []; try { for (const v of S.fleet || []) if (v.id !== S.cur){ const nm = typeof vget === 'function' ? vget(v, 'boatName') : null; if (nm) others.push(nm + ': '); } } catch (e){ /* a fleet of one */ } }
+    if (others.some(o => no.startsWith(o))) continue;
+    if ((S.mobs || []).some(r => r.k === hit[1] && r.vid === S.cur && r.t === l.t)) continue;
+    mobRec({k:hit[1], t:l.t});
+  }
+}
+// a trip with no harm (core/09f-merker.js achTripEnd, the badge «Turer uten skade»): nobody off sick after a fall, no grounding or blow to the
+// hull, no collision that cost anything, since the trip before ended (t0). A count that only grows: absence never takes anything from it
+function mobSafeTrip(t0){
+  const t = t0 == null ? S.t - 24 * 60 : t0, bn = S.boatName || 'Havbris';
+  const hurt = (S.mobs || []).some(r => r.vid === S.cur && r.k === 'mob' && r.t > t && r.days > 0);
+  const hull = (S.incidents || []).some(i => i.t > t && i.boat === bn && (i.k === 'aground' || i.k === 'hit'));
+  const clash = (S.clashes || []).some(c => c.vid === S.cur && c.t > t && (c.own || 0) > 0);
+  return !hurt && !hull && !clash;
+}
+// what each kind teaches, with its source (the Sikkerhet card); the rules are the ones read in docs/systemer/sjofart-og-lover.md kap. 2
+const MOBLEARN = {
+  give:['Den som har vikeplikt, skal manøvrere tidlig og tydelig, så det går godt klar.', 'The give-way vessel is to act early and clearly, so as to keep well clear.', 'Sjøveisreglene regel 16', 'COLREG rule 16'],
+  stand:['Den som skal holde kurs og fart, skal gjøre noe selv når den andre ikke viker i tide.', 'The stand-on vessel is to act herself when the other does not give way in time.', 'Sjøveisreglene regel 17', 'COLREG rule 17'],
+  pass:['Gå klar i god tid, og så mye at den andre ser det.', 'Keep clear in good time, and by enough for the other to see it.', 'Sjøveisreglene regel 8', 'COLREG rule 8'],
+  ground:['Se på dybdene og tidevannet når ruta legges. Sikker fart regner med dypgangen mot dybden.', 'Look at the depths and the tide when the route is set. A safe speed counts the draught against the depth.', 'Sjøveisreglene regel 6 a vi', 'COLREG rule 6 (a)(vi)'],
+  sea:['Ned i fart og opp mot sjøen når den bryter, og hold dekket klart.', 'Slow down and head up to the sea when it breaks, and keep the deck clear.', 'Sjøveisreglene regel 6 a v', 'COLREG rule 6 (a)(v)'],
+  near:['Én hånd for deg selv og én for båten, og vest på dekk. På fiskefartøy under 15 m omkom 13 av 14 som falt over bord på ti år.', 'One hand for yourself and one for the boat, and a life jacket on deck. On fishing boats under 15 m, 13 of 14 who fell overboard in ten years died.', 'Sjøfartsdirektoratet, ulykkestallene', 'The Norwegian Maritime Authority, the accident figures'],
+  mob:['Rop, pek og hold øye med personen, kast livbøya og sett MOB-merket med én gang. Leideren akter skal nå ned i sjøen.', 'Shout, point and keep the person in sight, throw the lifebuoy and set the MOB mark at once. The ladder aft must reach into the sea.', 'FOR-2013-11-22-1404 §§ 43 og 63', 'FOR-2013-11-22-1404 §§ 43 and 63'],
+  mobB:['Rop, pek og hold øye med personen, kast livbøya og sett MOB-merket med én gang. MOB-båten skal kunne settes ut raskt.', 'Shout, point and keep the person in sight, throw the lifebuoy and set the MOB mark at once. The rescue boat must be quick to launch.', 'FOR-2000-06-13-660 §§ 7-5 og 7-10', 'FOR-2000-06-13-660 §§ 7-5 and 7-10'],
+  stop:['Nødstoppen ved haleren skal kunne nås fra der du står, og ingen står i bukta på lina. Ingen forskrift krever den; den er god praksis.', 'The hauler\'s emergency stop must be in reach of where you stand, and nobody stands in the bight of the line. No regulation asks for it; it is good practice.', 'God praksis (ikke krav i FOR-2013-11-22-1404)', 'Good practice (not required by FOR-2013-11-22-1404)'],
+  sos:['Skipsføreren skal hjelpe den som er i havsnød, så langt det kan skje uten særlig fare for eget skip og folk om bord. For å redde folk gis det ingen bergelønn.', 'The master is to help anyone in distress at sea, as far as it can be done without serious danger to her own ship and people aboard. Saving people earns no salvage reward.', 'Sjøloven § 135', 'The Maritime Code § 135']
+};
+const MOBGEAR = {line:['lina', 'the line'], garn:['garnet', 'the net'], teine:['teinetauet', 'the pot rope']};
+// the card's rows, newest first: {t, k, x, y, vid, what:[no, en], learn:[no, en, src no, src en]}
+function mobSafeRows(max){
+  const out = [], first = s => String(s || '').split(' ')[0];
+  for (const r of S.nearMiss || []){ const L = r.give === 'a' || r.give === 'both' ? MOBLEARN.give : r.give === 'b' ? MOBLEARN.stand : MOBLEARN.pass;
+    out.push({t:r.t, k:'pass', x:r.x, y:r.y, vid:r.vid, what:['Passerte «' + r.name + '» bare ' + r.m + ' m unna.', 'Passed the «' + r.name + '» only ' + r.m + ' m off.'], learn:L}); }
+  for (const r of S.mobs || []){ let w = null, L = null;
+    if (r.k === 'near'){ const why = {dark:['i mørket', 'in the dark'], ice:['på isete dekk', 'on an iced deck'], gear:['ved redskapet', 'at the gear'], sea:['i sjøen', 'in the sea']}[r.why] || ['', ''];
+      w = [r.name + ' holdt på å gå over bord ' + why[0] + '.', r.name + ' nearly went overboard ' + why[1] + '.']; L = MOBLEARN.near; }
+    else if (r.k === 'mob'){ if (!r.out) continue; const up = r.out === 'rescue' ? ['redningen tok ' + (r.sex === 'f' ? 'henne' : 'ham') + ' opp', 'the rescue took ' + (r.sex === 'f' ? 'her' : 'him') + ' up'] : ['oppe', 'up'];
+      w = [r.name + ' gikk over bord, ' + up[0] + ' etter ' + r.min + ' min' + (r.days > 0 ? ', sykmeldt i ' + r.days + (r.days === 1 ? ' dag.' : ' dager.') : '.'), r.name + ' went overboard, ' + up[1] + ' after ' + r.min + ' min' + (r.days > 0 ? ', off sick ' + r.days + (r.days === 1 ? ' day.' : ' days.') : '.')];
+      L = r.how === 'boat' ? MOBLEARN.mobB : MOBLEARN.mob; }
+    else if (r.k === 'stop'){ const G = MOBGEAR[r.gear] || MOBGEAR.line; w = [first(r.name) + ' hang seg fast i ' + G[0] + ', og haleren ble stoppet med nødstoppen i tide.', first(r.name) + ' was caught in ' + G[1] + ', and the hauler was stopped with the emergency stop in time.']; L = MOBLEARN.stop; }
+    else if (r.k === 'ground'){ w = ['Autonav stoppet før grunt vann forut.', 'Autonav stopped short of shallow water ahead.']; L = MOBLEARN.ground; }
+    else if (r.k === 'sea'){ w = ['Tok inn sjø over ripa.', 'Shipped a sea over the rail.']; L = MOBLEARN.sea; }
+    else if (r.k === 'sos'){ if (r.sk === 'eng') w = ['Svarte på PAN-PAN fra «' + r.boat + '» og slepte henne i havn.', 'Answered the PAN-PAN from the «' + r.boat + '» and towed her in.'];
+      else if (r.out === 'own') w = ['Svarte på MAYDAY fra «' + r.boat + '» og tok ' + r.name + ' opp etter ' + r.min + ' min.', 'Answered the MAYDAY from the «' + r.boat + '» and picked ' + r.name + ' up after ' + r.min + ' min.'];
+      else w = ['Svarte på MAYDAY fra «' + r.boat + '» og sto bi til ' + r.name + ' var oppe.', 'Answered the MAYDAY from the «' + r.boat + '» and stood by until ' + r.name + ' was up.'];
+      L = MOBLEARN.sos; }
+    if (w) out.push({t:r.t, k:r.k, x:r.x, y:r.y, vid:r.vid, what:w, learn:L}); }
+  out.sort((a, b) => b.t - a.t); return max ? out.slice(0, max) : out;
+}
+
+// ===== L8 distress near by (sjøloven § 135 «Havsnød», kapittel 6 «Skipsføreren»; the text is read only in summary on Lovdata, kap. 2.2) =====
+// Rarely, and only with the game open, the player aboard and awake on the boat she follows, in rough weather for a small boat: a boat near
+// by has a man overboard (MAYDAY) or engine failure and drifts towards land (PAN-PAN), and calls on channel 16. The player can answer and
+// help: the man in the water is the same event as Ø11.6 (S.mob with M.other: the MOB mark where she reported, «Autonav: MOB», the lifebuoy
+// her crew threw, the ladder, the sling or the rescue boat), the boat with engine trouble a tow as the turoppdrag's (core/09g-turer.js
+// turSos, salvage as turSlep: for the ship and her cargo only). The reward is honour: the badge «Hjelp i havsnød» (no gift, core/09f-merker.js)
+// and Kystposten (core/09h-press.js 'sos'; the tow's own 'salv' story). Left be (or declined), another boat or the rescue takes it, and
+// nothing follows from it (V1 A). The boat in distress is drawn by core/09g-turer.js turNpcs while the call stands. The calling boat is
+// one of the coast's own (TUR_BOATS), made where the call is, as the tow missions' boats are (npc-flåten 4 A: the shared fleet is not stopped).
+const SOSK = {R:1 / 36, x:0.6, lim:[1.5, 2.5, 12.5, 16], gap:72 * 60, wait:10, nm:[1.2, 4], fell:3};
+// R: calls an hour in rough weather (a game choice: one in about six real hours at sea in such weather); x: the sea against a small
+// open boat's limits (lim, the snekke's) from which it is «grov sjø» for her; gap: at most one call in three game days; wait: game minutes
+// the call waits for an answer before another takes it; nm: how far off she is; fell: the minutes the person was in the water before the call
+const SOS_FOLK = [['Ola Hansen', 'm'], ['Eirik Johansen', 'm'], ['Jon Olsen', 'm'], ['Mari Larsen', 'f'], ['Arne Pedersen', 'm'], ['Tone Nilsen', 'f'], ['Rune Berg', 'm'], ['Hilde Karlsen', 'f']];
+const sosHears = () => !!(S.equip && S.equip.vhf);   // (channel 16 needs the VHF; V6 A: it comes with the boat)
+function sosCan(){
+  const b = S.boat;
+  return mobLive() && mobFollowed() && meAboard() && !asleep() && !(typeof resting === 'function' && resting()) && ['sailing', 'fishing', 'idle'].includes(b.status)
+    && !(typeof tutOn === 'function' && tutOn()) && !S.tut && !S.mob && sosHears();
+}
+function sosMinute(W, hs){
+  const Q = S.sos;
+  if (Q){ if (Q.vid === S.cur) sosStep(Q); return; }
+  if (!sosCan() || S.t - (S.sosT == null ? -1e9 : S.sosT) < SOSK.gap) return;
+  if (!(mobSeaX(W, hs, SOSK.lim) >= SOSK.x) || mobRnd('sos') >= SOSK.R / 60) return;
+  sosCall(mobRnd('sosk') < 0.5 ? 'mob' : 'eng');
+}
+// where she is: open water 1.2 to 4 nm off; with engine trouble 0.5 to 8 km from land (she drifts towards it)
+function sosPlace(k){
+  const b = S.boat, gs = gridScale(b.pos);
+  for (let i = 0; i < 16; i++){
+    const a = mobRnd('spa' + i) * 2 * Math.PI, d = (SOSK.nm[0] + mobRnd('spd' + i) * (SOSK.nm[1] - SOSK.nm[0])) * NM * gs, p = {x:b.pos.x + Math.sin(a) * d, y:b.pos.y - Math.cos(a) * d};
+    try { if (isLandFar(p)) continue; const cd = coastDistFar(p); if (k === 'eng' ? cd < 0.5 || cd > 8 : cd < 0.2) continue; } catch (e){ continue; }
+    return p;
+  }
+  return null;
+}
+function sosRadio(no, en){ const L = S.radio || (S.radio = []); L.push({t:S.t, from:'VHF 16', no, en}); if (L.length > 40) L.splice(0, L.length - 40); log('VHF 16: ' + no, 'VHF 16: ' + en, 'nav'); }
+// the call (p: the place, given by the tests)
+function sosCall(k, p){
+  const b = S.boat; p = p || sosPlace(k); if (!p) return null;
+  const H = S.t / 60, names = TUR_BOATS.filter(n => n !== S.boatName), bn = names[Math.floor(mobRnd('sosb') * names.length) % names.length];
+  let T = 6; try { T = seaTemp(H, p); } catch (e){ /* a block not loaded */ }
+  const f = SOS_FOLK[Math.floor(mobRnd('sosf') * SOS_FOLK.length) % SOS_FOLK.length];
+  const Q = S.sos = {id:'s' + S.t, k, vid:S.cur, t0:S.t, x:p.x, y:p.y, boat:bn, bi:TUR_BOATS.indexOf(bn), L:Math.round((7 + mobRnd('sosl') * 5) * 10) / 10, hd:mobRnd('sosh') * 2 * Math.PI,
+    liv:Math.floor(mobRnd('sosv') * 4), T:Math.round(T * 10) / 10, who:f[0], sex:f[1], resc:mobRescue(p), until:S.t + SOSK.wait, ans:null};
+  S.sosT = S.t;
+  const nm = '«' + bn + '»', pos = mobLL(p), posE = mobLLen(p), him = mobHim(Q), himE = mobHim(Q, true), R = Q.resc, min = Math.max(1, R.min);
+  if (k === 'mob') sosRadio('MAYDAY, MAYDAY, MAYDAY. Dette er ' + nm + '. Mann over bord i posisjon ' + pos + '. ' + Q.who + ' er i sjøen med redningsvest. Vi får ' + him + ' ikke opp i denne sjøen. Vi trenger hjelp.',
+    'MAYDAY, MAYDAY, MAYDAY. This is ' + nm + '. Man overboard in position ' + posE + '. ' + Q.who + ' is in the water in a life jacket. We cannot get ' + himE + ' up in this sea. We need help.');
+  else sosRadio('PAN-PAN, PAN-PAN, PAN-PAN. Alle stasjoner, dette er ' + nm + '. Motorstopp i posisjon ' + pos + '. Vi driver mot land i grov sjø og trenger slep. To personer om bord.',
+    'PAN-PAN, PAN-PAN, PAN-PAN. All stations, this is ' + nm + '. Engine failure in position ' + posE + '. We are drifting towards land in a rough sea and need a tow. Two persons aboard.');
+  sosRadio('Kystradioen: Alle stasjoner, alle stasjoner. ' + nm + (k === 'mob' ? ' har mann over bord' : ' har motorstopp og driver mot land') + ' i posisjon ' + pos + '. Fartøy i nærheten bes melde seg på kanal 16. ' + mobCap(mobWhoR(R)) + ' er varslet og er framme om rundt ' + min + ' minutter.',
+    'The coast radio: All stations, all stations. ' + nm + (k === 'mob' ? ' has a man overboard' : ' has engine failure and is drifting towards land') + ' in position ' + posE + '. Vessels near by are asked to call on channel 16. ' + mobCap(mobWhoR(R, true)) + ' has been called out, there in about ' + min + ' minutes.');
+  if (hooks.onSos) hooks.onSos('call', Q);
+  return Q;
+}
+// the minute while the call stands: unanswered, it waits; the game gone, the player off the boat, or the time up, another takes it
+function sosStep(Q){
+  if (Q.ans){ if (Q.k === 'mob' && !(S.mob && S.mob.other && S.mob.other.sos === Q.id)) S.sos = null; return; }   // (answered: the man in the water is S.mob's own minute)
+  if (!mobLive() || !mobFollowed() || !meAboard() || S.t >= Q.until) sosOther(Q);
+}
+// another boat or the rescue takes it, and nothing follows from it (V1 A)
+function sosOther(Q){
+  S.sos = null; const nb = TUR_BOATS.filter(n => n !== Q.boat && n !== S.boatName), o = nb[Math.floor(mobRnd('soso') * nb.length) % nb.length];
+  if (mobRnd('sosn') < 0.5) sosRadio('«' + o + '» til «' + Q.boat + '»: Vi er like ved og går til dere.', '«' + o + '» to «' + Q.boat + '»: We are close by and coming to you.');
+  else sosRadio('Kystradioen: ' + mobCap(mobWhoR(Q.resc)) + ' tar «' + Q.boat + '». Takk til alle stasjoner.', 'The coast radio: ' + mobCap(mobWhoR(Q.resc, true)) + ' takes the «' + Q.boat + '». Thank you, all stations.');
+  if (hooks.onSos) hooks.onSos('gone', Q);
+}
+function sosDecline(){ const Q = S.sos; if (Q && !Q.ans && Q.vid === S.cur) sosOther(Q); }
+// the answer: «we are coming» on channel 16, then the man in the water as Ø11.6's event, or the tow as a turoppdrag. Returns what came of it
+function sosAnswer(){
+  const Q = S.sos, b = S.boat; if (!Q || Q.ans || Q.vid !== S.cur) return null;
+  Q.ans = S.t; const nm = '«' + (S.boatName || 'Havbris') + '»', P = {x:Q.x, y:Q.y}, nmi = kmTrue(b.pos, P) / NM, eta = Math.max(1, Math.round(nmi / mobSpeed() * 60));
+  sosRadio(nm + ' til «' + Q.boat + '»: Vi har dere ' + nmi.toFixed(1).replace('.', ',') + ' nautiske mil unna og kommer. Vi er hos dere om rundt ' + eta + ' minutter.',
+    nm + ' to the «' + Q.boat + '»: We have you ' + nmi.toFixed(1) + ' nautical miles off and are coming. We will be with you in about ' + eta + ' minutes.');
+  if (Q.k === 'mob') return sosMobStart(Q, eta);
+  const m = typeof turSos === 'function' ? turSos(Q) : null; S.sos = null; return m;
+}
+// the person from the other boat in the water: 30 m off her side, holding the lifebuoy her crew threw, the MOB mark set where she reported.
+// The rescue still comes, but stands by for the boat that answered: it is there no sooner than half again her time to come and ten
+// minutes more (a game choice: the one who answers has a fair chance to do it herself)
+function sosMobStart(Q, eta){
+  const H = S.t / 60, gs = gridScale({x:Q.x, y:Q.y}), px = Q.x + Math.cos(Q.hd) * 0.03 * gs, py = Q.y + Math.sin(Q.hd) * 0.03 * gs, Lw = mobLee(H, {x:px, y:py}, MOBK.leeP);
+  let dark = false; try { dark = sunAt(H, {x:px, y:py}).el < -6; } catch (e){ /* a block not loaded */ }
+  const R = Object.assign({}, Q.resc); R.eta = Math.max(R.eta, S.t + Math.round(eta * 1.5) + 10); R.min = R.eta - Q.t0;
+  const M = S.mob = {id:'m' + S.t, vid:S.cur, cid:'sos-' + Q.id, name:Q.who, anon:true, other:{boat:Q.boat, bi:Q.bi, sos:Q.id}, sex:Q.sex, t0:Q.t0 - SOSK.fell, x:px, y:py, vx:Lw.x, vy:Lw.y, side:1, h0:Q.hd,
+    T:Q.T, lim:mobLimMin(Q.T), able:mobAbleMin(Q.T), mark:{x:Q.x, y:Q.y, t:S.t}, buoy:{x:px, y:py, t:Q.t0, by:Q.boat, held:true, light:true, smoke:false}, lift:null, seen:false, st:'water', fx:px, fy:py, resc:R, dark};
+  log('MOB-merket satt i plotteren der «' + Q.boat + '» meldte. ' + Q.who + ' holder seg i livbøya fra «' + Q.boat + '».', 'The MOB mark set in the plotter where the «' + Q.boat + '» reported. ' + Q.who + ' is holding on to the lifebuoy from the «' + Q.boat + '».', 'nav');
+  if (hooks.onMob) hooks.onMob('start', M);
+  return M;
+}
+// the end for a person from another boat: up with you (honour: the badge and Kystposten; no salvage for saving people), her own boat got her
+// up while the game was away, or the rescue took her first (thanks for standing by). No report of ours after § 475: the coast radio has it
+function sosMobEnd(M, out, how){
+  S.mob = null; if (S.sos && S.sos.id === M.other.sos) S.sos = null;
+  const tUp = out === 'rescue' ? Math.max(S.t, M.resc.eta) : M.tUp || S.t, tIn = Math.max(1, Math.round(tUp - M.t0)), late = tIn > M.lim, R = M.resc, N = M.name, bt = '«' + M.other.boat + '»', nm = '«' + (S.boatName || 'Havbris') + '»';
+  const HOW = {ladder:['med leideren akter', 'up the ladder aft'], sling:['med løftestroppen', 'with the lifting sling'], boat:['med MOB-båten', 'with the rescue boat']}[how] || ['', ''], him = mobHim(M), himE = mobHim(M, true);
+  let no, en; const honour = out === 'own' || out === 'late';   // (mobStep ends it 'late' when she was up after the limit)
+  if (honour && !late){ no = N + ' er oppe etter ' + tIn + ' minutter i sjøen, ' + HOW[0] + '. Kald og våt, men i orden. ' + bt + ' kommer inntil og tar ' + him + ' om bord igjen.';
+    en = N + ' is up after ' + tIn + ' minutes in the water, ' + HOW[1] + '. Cold and wet, but all right. The ' + bt + ' comes alongside and takes ' + himE + ' back aboard.'; }
+  else if (honour){ no = N + ' er oppe ' + HOW[0] + ' etter ' + tIn + ' minutter, men er sterkt nedkjølt. ' + mobCap(mobWhoR(R)) + ' henter ' + him + ' til sykehuset.';
+    en = N + ' is up ' + HOW[1] + ' after ' + tIn + ' minutes, but badly chilled. ' + mobCap(mobWhoR(R, true)) + ' takes ' + himE + ' to hospital.'; }
+  else if (out === 'crew'){ no = bt + ' fikk ' + N + ' opp selv etter ' + tIn + ' minutter.'; en = 'The ' + bt + ' got ' + N + ' up herself after ' + tIn + ' minutes.'; }
+  else { no = mobCap(mobWhoR(R)) + ' tok ' + N + ' opp etter ' + tIn + ' minutter' + (late ? ' og bringer ' + him + ' til sykehuset.' : '.') + ' Takk for at dere sto bi.';
+    en = mobCap(mobWhoR(R, true)) + ' took ' + N + ' up after ' + tIn + ' minutes' + (late ? ' and takes ' + himE + ' to hospital.' : '.') + ' Thank you for standing by.'; }
+  log(no, en, 'nav');
+  if (honour){
+    sosRadio(bt + ' til ' + nm + ': Tusen takk. Det glemmer vi aldri.', 'The ' + bt + ' to ' + nm + ': Thank you so much. We will never forget it.');
+    if (!late) sosRadio('Kystradioen: ' + nm + ', mottatt, personen er oppe. ' + mobCap(mobWhoR(R)) + ' snur.', 'The coast radio: ' + nm + ', received, the person is up. ' + mobCap(mobWhoR(R, true)) + ' turns back.');
+    log('For å redde folk gis det ingen bergelønn (sjøloven § 135 er plikten). Kystposten skriver om det.', 'Saving people earns no salvage reward (the Maritime Code § 135 is the duty). Kystposten writes about it.', 'nav');
+    if (typeof achAdd === 'function') achAdd('sos');
+    try { if (typeof pressPut === 'function') pressPut('sos', {k:'mob', b:M.other.bi, min:tIn}); } catch (e){ console.warn('sos press', e); }   // (the paper never stops the end)
+  }
+  mobRec({k:'sos', sk:'mob', boat:M.other.boat, name:N, out:honour ? 'own' : out, how:how || null, min:tIn, late, x:Math.round(M.x * 1000) / 1000, y:Math.round(M.y * 1000) / 1000});
+  if (hooks.onMob) hooks.onMob('end', {name:N, out:honour ? 'own' : out, how:how || null, min:tIn, late, days:late ? 1 : 0, by:out === 'rescue' ? R.k : null, other:M.other.boat, sex:M.sex});
+}
+// the boat in distress while the call stands (core/09g-turer.js turNpcs draws her, lying still where she called)
+function sosNpc(){
+  const Q = S.sos; if (!Q || Q.k !== 'mob' && Q.ans) return null;
+  return {id:'t' + Q.id, name:Q.boat, type:'sjark', p:{x:Q.x, y:Q.y}, hd:Q.hd, cog:Q.hd, v:0, st:'idle', coast:true, tur:true, L:Q.L, B:Math.round(Q.L * 0.34 * 10) / 10, T:Math.round(Q.L * 0.13 * 10) / 10, liv:Q.liv};
 }

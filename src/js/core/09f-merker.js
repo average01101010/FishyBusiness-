@@ -73,6 +73,10 @@ const ACHL = [
   {id:'ptow', n:['Slept andre spillere', 'Towed other players'], tiers:[1, 5, 20], unit:'', v:() => achC('ptow')},
   {id:'tut', n:['Tutet på andre båter', 'Horns sounded at other boats'], tiers:[1, 10, 50, 200], unit:'', v:() => achC('horn')},
   {id:'mob', n:['Mann over bord: tatt opp i tide', 'Man overboard: picked up in time'], tiers:[1, 3, 10], unit:'', v:() => achC('mob')},   // (core/14b-sikkerhet.js mobEnd, Ø11.6)
+  // Ø11.7 (core/14b-sikkerhet.js): help in distress near by answered on channel 16 (§ 135; honour only, no gift: nogift), and the trips with
+  // you aboard that ended with nobody hurt and the hull whole (a count that only grows, never set back by absence)
+  {id:'sos', n:['Hjelp i havsnød', 'Help in distress'], tiers:[1, 3, 10], unit:'', nogift:true, v:() => achC('sos')},
+  {id:'safe', n:['Turer uten skade', 'Trips without harm'], tiers:[1, 10, 50, 100, 250], unit:'', v:() => achC('safe')},
   {id:'venner', n:['Venner', 'Friends'], tiers:[1, 5, 10, 25], unit:'', v:() => typeof FRIENDS !== 'undefined' ? FRIENDS.count() : 0},
   {id:'arter', n:['Arter levert', 'Species landed'], tiers:[3, 5, 8, 10], unit:'', v:() => Object.keys((S.ach && S.ach.sp) || {}).length},   // (10 species a coastal boat can land: the last step is all of them, Kystkartet K2)
   {id:'nm', n:['Nautiske mil om bord', 'Nautical miles aboard'], tiers:[250, 1000, 2500, 5000, 10000], unit:'nm', v:() => (S.tat && S.tat.nm) || 0},
@@ -114,7 +118,9 @@ function achMinute(){
   if (typeof PEERS !== 'undefined') for (const q of PEERS) if (q && q.id && !A.peers[q.id] && dist(b.pos, {x:q.x, y:q.y}) < 3.7) A.peers[q.id] = Math.max(1, S.t);
 }
 // the end of a trip with you aboard: a gale weathered without a tow counts
-function achTripEnd(bad){ const A = achState(); if (A.stormT && !bad) achAdd('storm'); A.stormT = 0; achCheck(); }
+function achTripEnd(bad){ const A = achState(); if (A.stormT && !bad) achAdd('storm'); A.stormT = 0;
+  if (typeof mobSafeTrip === 'function' && mobSafeTrip(A.safeT)) achAdd('safe'); A.safeT = S.t;   // «Turer uten skade» (Ø11.7, 14b-sikkerhet.js)
+  achCheck(); }
 
 // ---- the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters ----
 const achRnd = (key, k) => (hashStr(String(achState().seed) + '|' + key + '|' + k) % 100000) / 100000;
@@ -183,7 +189,7 @@ function achCheck(quiet){
       const got = A.l[L0.id] || 0; let k = got;
       while (k < L0.tiers.length && v >= L0.tiers[k]) k++;
       if (k > got){ A.l[L0.id] = k; if (!achLive() || A.seeding) continue;
-        for (let i = got; i < k; i++){ const g = achGive(L0.id + i, 3, L0.n); fresh.push({long:L0, tier:i, g}); } } }
+        for (let i = got; i < k; i++){ const g = L0.nogift ? null : achGive(L0.id + i, 3, L0.n); fresh.push({long:L0, tier:i, g}); } } }   // (nogift: honour only, «Hjelp i havsnød»)
     if (fresh.length && !quiet && typeof achShow === 'function') achShow(fresh);
   } finally { ACH_BUSY = false; }
 }
