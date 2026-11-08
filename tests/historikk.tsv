@@ -1460,3 +1460,4 @@
 2026-11-08 20:49	ccr-b4ccfe0e-t6qjnp	9296d04	boottest	OK	34	lite	samtidig	
 2026-11-08 20:50	ccr-b4ccfe0e-t6qjnp	9296d04	docktest	OK	67	lite	samtidig	
 2026-11-08 20:50	ccr-b4ccfe0e-t6qjnp	9296d04	worktest	FEIL	26	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 20:59	ccr-b4ccfe0e-t6qjnp	645587f	tut	FEIL	650	lite	alene	FEIL staaende: veiledningen er fullført  ['Gave for «Tok over båten»: Salgslaget sender en premie: 7\xa0000 kr.', 'Gave for «Første fisk over ripa»: Salgslaget 
