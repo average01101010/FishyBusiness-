@@ -159,7 +159,8 @@ function dataEls(){ return [...document.querySelectorAll('script[type="applicati
 function dataEarly(){
   const ty = new Set(['trebat']);
   try { const s = load(); for (const v of s && s.fleet && s.fleet.length ? s.fleet : s ? [s] : []) if (v.boat && v.boat.type) ty.add(v.boat.type); } catch (e){}
-  return el => /^pic-/.test(el.id) || el.id === 'glb-worker' || [...ty].some(t => el.id === 'glb-' + t);
+  // (and the fishing grounds' shapes, Ø14 F2: the fish on the grounds are the same from the first hour, 03j-felt.js)
+  return el => /^pic-/.test(el.id) || el.id === 'glb-worker' || el.id === 'felt-s' || [...ty].some(t => el.id === 'glb-' + t);
 }
 // The models' bytes as they came (04.11.2026, the memory: two crashes on Android that day with 462 and 647 MB of JS heap): kept here as
 // a Uint8Array per element id and read by glbData (vessel3d.js), the pub's and the naust's parse and the buildings' loader, instead of

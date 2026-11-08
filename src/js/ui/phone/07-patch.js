@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p157', '08.11.2026', 'Fisken på fiskeplassene', 'The fish on the fishing grounds', [
+       ['Fisken står oftere på fiskeplassene langs hele kysten i de månedene fiskerne har fisket der (Fiskeridirektoratets kart), men ikke hver dag: de gode flekkene kommer og går på feltet som ellers i sjøen.', 'The fish stand more often on the fishing grounds along the whole coast in the months the fishermen have fished there (the Directorate of Fisheries\' map), but not every day: the good spots come and go on the ground as elsewhere in the sea.'],
+       ['Senjas seks felt har ikke lenger en egen sirkel med ekstra fisk. Fiskeplassene på Senja følger samme regel som resten av kysten.', 'Senja\'s six grounds no longer have a circle of extra fish of their own. The fishing grounds on Senja follow the same rule as the rest of the coast.']]],
     ['u27-081126', '08.11.2026', 'Sidene i skuffen', 'The pages in the drawer', [
        ['Med skjermen stående åpner alle sidene i skuffen like høye, og statusstripa står over siden mens den er åpen.', 'With the screen upright every page in the drawer opens as tall, and the status strip stands above the page while it is open.'],
        ['Mannskap har én hovedknapp per person, og den andre bak ⋯: om bord «Gjør til styrmann», som tar roret når du sover, og når du ikke er om bord «Gjør til skipper». Har båten den alt, er det den andre.', 'Crew has one main button per person, and the other one behind ⋯: aboard «Make mate», who takes the helm while you sleep, and when you are not aboard «Make skipper». When the boat has that one already, it is the other.']]],

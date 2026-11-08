@@ -28,9 +28,10 @@
 // How much of the cell's fish is taken: F against the fish there. The fish in an area is the species' biomass (from the spawning stock
 // for cod, haddock and saithe, HI/ICES via STOCK; for the rest the year's landings over a harvest rate) laid out by the catch per landing
 // (the density) times the area, over all the areas of fiske.json; so u is the effort per area, as it should be when catch per landing
-// follows the density. On the coast (k) the location's pressure is laid more on the mapped grounds (Fiskeridirektoratet's «Fiskeplasser
-// – redskap», felt.json: three times as much within 2 km of a named ground); the ocean fleet's (h) only outside the baseline, where the
-// big boats may fish (J-187-2026 § 32).
+// follows the density. On the coast (k) the location's pressure and its fish are laid together by the lift of Fiskeridirektoratet's
+// fishing grounds in their season (feltCellW, 03j-felt.js, Ø14 F2: the fleet follows the fish, and the share taken is the same on and
+// off a ground; until then the pressure alone was three times as thick within 2 km of a ground); the ocean fleet's (h) only outside the
+// baseline, where the big boats may fish (J-187-2026 § 32), three times as thick on the grounds for active gear.
 const TRK = {r:0.004, groundW:3, groundR:2, hph:730.5,
   // the stock of age 3+ against the spawners: cod 3.1 (JRN-AFWG 2026, IMR-VNIRO report 2026 nr. 5, 3.6.5 and Table 3.20: TSB 1 102 kt
   // and SSB 352 kt in 2025, 1 069 and 338 kt in 2026), haddock 3.1 (the same report, 4.7: TSB 494 692 t and SSB 157 942 t in 2025),
@@ -60,8 +61,8 @@ function trkAreas(){
       if (Math.hypot((ix + 0.5) * 2 - f.x, (iy + 0.5) * 2 - f.y) > TRK.groundR + 1) continue; seen.add(k); const c = lokOfCell({x:(ix + 0.5) * 2, y:(iy + 0.5) * 2}); if (c.l >= 0) gc[c.l]++; } }
   return TRK.A = {lok, hom, gc, gch, homI};
 }
-// a cell's weight within its location: three times on the named fishing grounds (k = f); and the location's sum of weights (its
-// cells, the ground cells counted three times)
+// a cell's weight within its location: three times on the named fishing grounds (k = f), and for the ocean fleet (gwa) three times on the
+// grounds for active gear; since Ø14 F2 only gwa is read (trkCell), the coast follows the grounds' lift (feltCellW)
 function trkCellW(c){
   if (c.gw !== undefined) return c.gw;
   let w = 1, wa = 1; const D = typeof feltData === 'function' && feltData();
@@ -170,15 +171,18 @@ function trkCell(c, H){
   c.tH = h; c.tF = c.tF || new Float32Array(TRK_SP.length); c.tU = c.tU || new Float32Array(TRK_SP.length);
   const l = c.l, A = trkAreas();
   if (c.hom === undefined){ const hc = l >= 0 ? RU.lok[l].c.slice(0, 2) : null; c.hom = hc && A.homI.has(hc) ? A.homI.get(hc) : -1; c.out = !insideBaseline({x:c.cx, y:c.cy}); }
-  const hi = c.hom, w = l >= 0 ? trkCellW(c) : 1, wa = l >= 0 ? (trkCellW(c), c.gwa) : 1;
-  const wl = l >= 0 ? (A.lok[l] / 4 + (TRK.groundW - 1) * A.gc[l]) / (A.lok[l] / 4) : 1, wh = hi >= 0 ? (A.hom[hi] / 4 + (TRK.groundW - 1) * A.gch[hi]) / (A.hom[hi] / 4) : 1;
+  // the coast's pressure and fish follow the grounds' lift together (feltCellW, 03j-felt.js, Ø14 F2), so the share taken is the location's
+  // on and off the grounds (until then the pressure alone was three times as thick within 2 km of a ground, and the baseline lower there);
+  // the ocean fleet's pressure still lies three times as thick on the grounds for active gear in its main area (gwa)
+  const hi = c.hom, wa = l >= 0 ? (trkCellW(c), c.gwa) : 1;
+  const wh = hi >= 0 ? (A.hom[hi] / 4 + (TRK.groundW - 1) * A.gch[hi]) / (A.hom[hi] / 4) : 1;
   // the pressure (kg an hour) and the fish (kg) in the cell at an hour
   const at = (Hx, s) => {
     const hk = Math.floor(Hx), M = trkMonth(hk), y = M.y, T = M.T, Ys = M.Ys || (M.Ys = TRK_SP.map(sp => trykkYear(sp, y))), Y = Ys[s]; if (!Y) return [0, 0];
     const mi = (arr, i) => arr[i * 12 + T.i0] * (1 - T.f) + arr[i * 12 + T.i1] * T.f, pfs = M.pf || (M.pf = TRK_SP.map((sp, i) => trkPlayersF(sp, y, Ys[i]))), pf = pfs[s], sp_ = TRK_SP[s];
     let f = 0, b = 0;
     // the closed group's cod gives way to the players' (KL), haddock and saithe all of it (pf), the open group follows its season
-    if (l >= 0){ const kk = sp_ === 'torsk' ? mi(Y.K, l) - mi(Y.KL, l) * (1 - pf) : mi(Y.K, l) * pf; f += (kk + mi(Y.KO, l) * (sp_ === 'torsk' ? M.os() : 0)) / (A.lok[l] / 4) * w / wl; b += mi(Y.BK, l) * 4; }
+    if (l >= 0){ const kk = sp_ === 'torsk' ? mi(Y.K, l) - mi(Y.KL, l) * (1 - pf) : mi(Y.K, l) * pf, g = feltCellW(c, s, T); f += (kk + mi(Y.KO, l) * (sp_ === 'torsk' ? M.os() : 0)) / (A.lok[l] / 4) * g; b += mi(Y.BK, l) * 4 * g; }
     if (hi >= 0 && c.out){ f += mi(Y.Hh, hi) * (sp_ === 'torsk' ? 1 : pf) / (A.hom[hi] / 4) * wa / wh; b += mi(Y.BH, hi) * 4; }
     return [f, b];
   };
