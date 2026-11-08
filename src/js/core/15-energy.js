@@ -2,7 +2,7 @@
 // Where you rest: see restRate below (ashore in the naust or a rorbu, or aboard a boat with bunks). Under 25 % your work goes slower. At 0 you fall asleep where you are, for eight hours of game time: with crew aboard the best
 // seaman takes the helm and the trip goes on; alone, the work stops and the boat drifts with the wind, and it can ground. You
 // wake with 60 % (sleep in a seat at sea is poorer than a night ashore; a start value). It runs while the game is closed too.
-const ENERGY = {sea:100 / 24 / 60, quay:100 / 8 / 60, warn:25, dim:15, sleep:480, wake:60, slow:0.75};
+const ENERGY = {sea:100 / 24 / 60, quay:100 / 8 / 60, warn:25, half:50, dim:15, sleep:480, wake:60, slow:0.75};
 const myVessel = () => (S.fleet || []).find(v => v.id === S.me) || null;
 const asleep = () => !!(S.sleep && S.t < S.sleep.until);
 // The bridge watch alarm (EQUIP.brovakt; the user's wish 03.10.2026): dozing off at sea with it aboard, it goes off after three
@@ -71,6 +71,16 @@ function restMinute(){
     log('En natt til på rorbua, ' + kr(RORBU.kr) + '.', 'Another night at the rorbu, ' + kr(RORBU.kr) + '.');
   }
 }
+// where to rest from here, in words (Ø8b M1, Jonas 06.11.2026: «Sørg også for at spillere på båter uten lugarer vet at de må finne en
+// rorbu for å sove. Dette er viktig for nye spillere.»): the bunk on a boat with berths (at anchor, or with someone of the crew on watch),
+// else ashore, with the nearest rorbu and how far it is
+function rorbuTip(p){ const rb = p ? (rorbuNear(p, 40)[0] || rorbuNear(p, 120)[0]) : null; return rb ? {name:rb.R.name, nm:rb.d / NM} : null; }
+function restTip(b){
+  if (bunks(b)) return bunkOk(b, myVessel()) ? ['Gå ned i køya og hvil.', 'Go down to the bunk and rest.'] : ['Ankre opp og gå ned i køya, eller gå i køya når noen av mannskapet har vakta.', 'Anchor and go down to the bunk, or take the bunk when someone of the crew has the watch.'];
+  const r = b && b.status !== 'port' ? rorbuTip(b.pos) : null;
+  return r ? ['Båten har ingen køyer, så du må i land for å sove. Nærmeste rorbu er i ' + r.name + ', ' + fmt(r.nm, 0) + ' nm unna.', 'The boat has no bunks, so you must go ashore to sleep. The nearest rorbu is in ' + r.name + ', ' + fmt(r.nm, 0) + ' nm away.']
+    : ['Båten har ingen køyer, så du må i land for å sove: seil til naustet eller en rorbu.', 'The boat has no bunks, so you must go ashore to sleep: sail to your boathouse or a rorbu.'];
+}
 const meEff = () => S.energy != null && S.energy < ENERGY.warn ? ENERGY.slow : 1;
 // «Energi av» in the admin app (the user's wish 03.10.2026, for testing without falling asleep): full energy, no sleep, no dozing
 const energyOff = () => !!(S.adm && S.adm.noEnergy);
@@ -121,7 +131,9 @@ function energyMinute(){
   if (quay || bunk) return;
   // drowsy after the alarm: you may doze off again (the same minute is the same for every player: a hash, not Math.random)
   if (S.drowsy && S.energy > 0 && h2(S.t, 977) < BNWAS.risk){ fallAsleep(v, true); return; }
-  if (S.energy <= ENERGY.warn && !S.enWarn){ S.enWarn = true; const rb = bunks(b) ? null : rorbuNear(b.pos, 40)[0], tip = rb ? [' Nærmeste rorbu er i ' + rb.R.name + ', ' + fmt(rb.d / NM, 0) + ' nm unna.', ' The nearest rorbu is in ' + rb.R.name + ', ' + fmt(rb.d / NM, 0) + ' nm away.'] : ['', '']; log('Du begynner å bli sliten. Arbeidet ditt går tregere.' + tip[0], 'You are getting tired. Your work goes slower.' + tip[1]); if (hooks.onEnergy) hooks.onEnergy('warn'); }
+  // the first time under half at sea on a boat with no bunks, once: there is no sleep aboard, and where the nearest rorbu is (Ø8b M1)
+  if (S.energy < ENERGY.half && !bunks(b) && !S.enNoBunk){ S.enNoBunk = S.t || 1; const tip = restTip(b); log(tip[0], tip[1]); if (hooks.onEnergy) hooks.onEnergy('nobunk'); }
+  if (S.energy <= ENERGY.warn && !S.enWarn){ S.enWarn = true; const tip = restTip(b); log('Du begynner å bli sliten. Arbeidet ditt går tregere. ' + tip[0], 'You are getting tired. Your work goes slower. ' + tip[1]); if (hooks.onEnergy) hooks.onEnergy('warn'); }
   if (S.energy <= 0) fallAsleep(v);
 }
 function fallAsleep(v, doze){

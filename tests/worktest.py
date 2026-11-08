@@ -95,13 +95,15 @@ async def main():
           const y = hand(19), o = hand(55), u = hand(19); u.morale = 20;
           for (const c of [y, o, u]) for (let h = 0; h < 20; h++){ c.wk = {sloy:60}; learnHour(c); }
           R.learn = [y, o, u].map(c => +(c.gear.sloy - 2).toFixed(3));
-          // meals: a good cook on a break makes dinner six hours out; with no cook it is bread an hour after it was due
+          // meals at the fixed hours (Ø8b M3: 06:30, 12:30, 18:30, 00:30): a good cook on a break makes the next one; one who cooks badly
+          // (2) makes hot dogs (M2: before, nobody under 3 cooked and it was dry bread an hour after it was due)
           b.status = 'idle'; b.port = null; b.pos = {...g}; b.gop = null; S.hold = []; S.plan = null; S.meal = null; S.me = S.cur; S.myJob = null;
           const T0 = S.boat.type; S.boat.type = 'sjark'; applyVessel();   // (a hotplate aboard: on the open boats it is a packed lunch and a flask, 14-crewlife.js)
-          const ck = hand(40, 4); S.crew = [ck]; const t0 = S.t; for (let i = 0; i < 400 && !(S.meal && S.meal.hist.length); i++) step();
-          R.goodMeal = {q:S.meal.hist[0], after:Math.round((S.t - t0) / 60 * 10) / 10, by:S.meal.last && S.meal.last.by === ck.id};
-          const nc = hand(40, 2); S.crew = [nc]; S.meal = null; const t1 = S.t; for (let i = 0; i < 500 && !(S.meal && S.meal.hist.length); i++) step();
-          R.bread = {q:S.meal.hist[0], after:Math.round((S.t - t1) / 60 * 10) / 10}; S.boat.type = T0; applyVessel();
+          const at = () => { const m = dayMin(S.meal.last.t); return MEAL.at.includes(m); };
+          const ck = hand(40, 4); S.crew = [ck]; const t0 = S.t; for (let i = 0; i < 900 && !(S.meal && S.meal.hist.length); i++) step();
+          R.goodMeal = {q:S.meal.hist[0], after:Math.round((S.t - t0) / 60 * 10) / 10, by:S.meal.last && S.meal.last.by === ck.id, at:at(), clock:dayMin(S.meal.last.t)};
+          const nc = hand(40, 2); S.crew = [nc]; S.meal = null; const t1 = S.t; for (let i = 0; i < 900 && !(S.meal && S.meal.hist.length); i++) step();
+          R.bread = {q:S.meal.hist[0], after:Math.round((S.t - t1) / 60 * 10) / 10, by:S.meal.last && S.meal.last.by === nc.id, at:at()}; S.boat.type = T0; applyVessel();
           // the food steers the mood: the same hand, good food against bad, ten hours at sea
           b.status = 'sailing'; S.plan = {wps:[{x:g.x + 30, y:g.y, port:null, fish:0}], idx:0, speed:2, returning:false};
           const mood = hist => { const c = hand(40); c.morale = 60; S.crew = [c]; S.meal = {due:S.t + 9999, cook:null, hist}; for (let h = 0; h < 10; h++) crewTick(S.t / 60 + h); return c.morale; };
@@ -114,8 +116,8 @@ async def main():
           return R; })()""")
         print('life:', json.dumps(r, ensure_ascii=False))
         print(ok(r['learn'][0] > 1.5 * r['learn'][1] and r['learn'][2] < 0.3 * r['learn'][0]), 'a 19-year-old learns gutting much faster than a 55-year-old, and an unhappy one hardly learns')
-        print(ok(r['goodMeal']['q'] == 4 and 5.9 <= r['goodMeal']['after'] <= 6.7 and r['goodMeal']['by']), 'a cook of 4 on a break makes a meal of 4 about six hours out')
-        print(ok(r['bread']['q'] == 1 and 6.9 <= r['bread']['after'] <= 7.2), 'with nobody who can cook it is dry bread an hour after the meal was due')
+        print(ok(r['goodMeal']['q'] == 4 and r['goodMeal']['at'] and r['goodMeal']['after'] <= 12.6 and r['goodMeal']['by']), 'a cook of 4 on a break makes a meal of 4 at the next fixed hour (06:30, 12:30, 18:30, 00:30)', r['goodMeal'])
+        print(ok(r['bread']['q'] == 2 and r['bread']['at'] and r['bread']['by']), 'one who cooks at 2 makes hot dogs at the fixed hour (Ø8b M2: before, dry bread from nobody)', r['bread'])
         print(ok(r['mood'][0] > r['mood'][1] + 3), 'good food lifts the mood, bad food sinks it')
         print(ok(r['said'] >= 3 and r['minGap'] >= 15 and r['kept'] >= 1), 'the crew talks during a day at sea, not in bursts, and each keeps their last lines')
 

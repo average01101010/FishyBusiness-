@@ -23,42 +23,76 @@ function stationSkill(st){
 }
 const SKILL_WHAT = {juksa:['jukse', 'at jigging'], line:['fiske med line', 'at longlining'], garn:['fiske med garn', 'at net fishing'], teiner:['fiske med teiner', 'at potting'],
   sloy:['sløye', 'at gutting'], is:['ise fisken', 'at icing'], sort:['sortere krabbe', 'at sorting crab'], kokk:['lage mat', 'at cooking'], sjo:['føre båten', 'at handling the boat']};
+// The galley is worked two hours a day at most (four meals of half an hour), so cooking is learnt three times as fast as the other
+// skills (Ø8b M2, Jonas 06.11.2026: «noen av mannskapet må prøve å lage mat i allefall, og eventuelt at de blir bedre over tid»; the
+// factor is a start value, assumed): from 2 to 2.5, the step to «fiskekaker», about 17 hours at the stove for one of 30, some five weeks
+const LEARN_ST = {kokk:3};
 function learnHour(c){
   const wk = c.wk || {}, f = 0.012 * ageLearn(c.age) * moraleLearn(c.morale) * (c.traits.includes('laerevillig') ? 2 : 1);
   for (const st in wk){
     const sk = stationSkill(st), m = Math.min(60, wk[st]); if (!sk || m <= 0) continue;
-    const o = c[sk[0]], v0 = o[sk[1]] || 1, v1 = Math.min(5, v0 + f * (1 - v0 / 5.5) * m / 60); o[sk[1]] = v1;
+    const o = c[sk[0]], v0 = o[sk[1]] || 1, v1 = Math.min(5, v0 + f * (LEARN_ST[st] || 1) * (1 - v0 / 5.5) * m / 60); o[sk[1]] = v1;
     if (Math.floor(v1) > Math.floor(v0)){ const w = SKILL_WHAT[sk[1]]; log(c.name + ' har blitt flinkere til å ' + w[0] + '.', c.name + ' has got better ' + w[1] + '.'); crewSay(c, 'lvl'); }
   }
   crewDerive(c);
 }
 
-// ---- meals: one every 6 hours at sea, cooked in 30 minutes by whoever stands at Kokk; the dish is as good as the cook.
-// Nobody free within an hour, and it is dry bread. The last four meals make the food on board (foodScore, 1–5).
-const MEAL = {every:360, cook:30, wait:60, ok:3};
+// ---- meals (Ø8b M3, Jonas 06.11.2026: «Frokost 06:30, Lunsj 12:30, Middag 18:30, Nattmat 00:30», and «Mannskapet står ikke nødvendigvis
+// opp midt på natten for å spise mat om de sover. Da vil eventuelt bare de som er våkne spise.»): at sea with crew aboard the meals come
+// at fixed hours of the game's clock, and the cook starts 30 minutes before (BOAT.fx.cook when the galley is slower). The dish is as good
+// as the cook: the best cook of those free (Ø8b M2: anyone of the crew, also under 3, 1 is dry bread and 2 hot dogs; never you, the
+// skipper does not cook). Nobody free within an hour of the meal, and it is dry bread. A meal nobody is awake for is passed over and does
+// not count: at night with the boat lying still and everyone resting (mealAwake). The food is one for the boat (assumed, as before: the
+// last four meals make the food on board, foodScore 1–5, for everyone aboard; a food score per person is a larger change)
+const MEAL = {cook:30, wait:60, ok:3, at:[30, 390, 750, 1110], night:[22 * 60, 6 * 60]};
+const MEAL_NAME = {30:['nattmat', 'night meal'], 390:['frokost', 'breakfast'], 750:['lunsj', 'lunch'], 1110:['middag', 'dinner']};
 const DISH = [null, ['tørre brødskiver', 'dry slices of bread'], ['pølser i lompe', 'hot dogs in flatbread'], ['fiskekaker med løk', 'fish cakes with onions'],
   ['kokt torsk med poteter', 'boiled cod with potatoes'], ['mølje med lever og rogn', 'mølje: cod with liver and roe']];
 function mealState(){ return S.meal || (S.meal = {due:null, cook:null, hist:[]}); }
 function foodScore(){ const h = mealState().hist.slice(-4); return h.length ? h.reduce((a, q) => a + q, 0) / h.length : 3; }
-function mealDue(){ const M = mealState(); return M.due != null && S.t >= M.due && S.boat.status !== 'port'; }
+// the minute of the day on the game's clock (gDate, as the clock on screen), and the first meal after minute t
+const dayMin = t => { const d = gDate(t / 60); return d.getUTCHours() * 60 + d.getUTCMinutes(); };
+function nextMealAt(t){ const m = dayMin(t), d0 = t - m; for (const a of MEAL.at) if (d0 + a > t) return d0 + a; return d0 + 1440 + MEAL.at[0]; }
+const mealName = t => MEAL_NAME[dayMin(t)] || ['måltid', 'meal'];
+const cookMin = () => (BOAT.fx && BOAT.fx.cook) || MEAL.cook;
+// the galley has work from the cook's start until the meal is served (or passed over)
+function mealDue(){ const M = mealState(); return M.due != null && S.t >= M.due - cookMin() && S.boat.status !== 'port'; }
+// the night (22–06 on the clock) with the boat lying still: the crew sleep on a break (sleep, or rest at night when nothing is being worked)
+const mealNight = t => { const m = dayMin(t); return m >= MEAL.night[0] || m < MEAL.night[1]; };
+function crewAsleep(p, A){ if (!p || p.st !== 'pause') return false; if ((p.c && p.c.idle === 'sleep') || p.idle === 'sleep') return true;
+  return mealNight(S.t) && !(A || []).some(q => q.st && q.st !== 'pause' && q.st !== 'kokk'); }
+// someone of the crew awake to eat: the ocean vessel's watch, one of the crew at work, or one on a break and awake. You alone at the
+// helm with the crew asleep in the bunks is no meal: the skipper does not cook, and eats as she goes
+function mealAwake(A){
+  if (lagOf()) return true;
+  return (A || []).some(p => p.c && ((p.st && p.st !== 'pause') || (p.st === 'pause' && !crewAsleep(p, A))));   // (the cook is awake: cookPick takes nobody asleep)
+}
+// who cooks: the best cook among the crew free and awake on a break, else one who jigs or works on the gear (they stop for it)
+function cookPick(P){
+  const ok = p => p.c && !p.c.anon && !crewAsleep(p, P), by = (a, b) => b.c.attr.kokk - a.c.attr.kokk;
+  return P.filter(p => p.st === 'pause' && ok(p)).sort(by)[0] || P.filter(p => ok(p) && (p.st === 'fiske' || p.jw)).sort(by)[0] || null;
+}
 // a minute in the galley, with the minute's work (core/13-work.js)
 function mealMinute(A){
   const M = mealState();
   // in port they eat ashore, and alone you eat as you go
   if (S.boat.status === 'port' || (!crewAboard().length && !lagOf())){ M.due = null; M.cook = null; return; }
-  if (M.due == null){ M.due = S.t + MEAL.every; return; }
-  if (S.t < M.due) return;
+  // the first meal at sea is the next one the cook can make (they ate ashore); a game from before the fixed hours moves to them
+  if (M.due == null || !MEAL_NAME[dayMin(M.due)]){ M.due = nextMealAt(S.t + cookMin() - 1); M.cook = null; return; }
+  if (S.t < M.due - cookMin()) return;
+  // nobody awake when the cook would start: the meal is passed over and does not count
+  if (!M.cook && S.t < M.due + MEAL.wait && !mealAwake(A)){ if (S.t >= M.due){ M.skip = (M.skip || 0) + 1; M.due = nextMealAt(S.t); } return; }
   // no galley aboard (schema v2 fac.galley): a packed lunch and coffee from the flask when the meal is due, nobody cooks; a hotplate caps the dish at 4
   const gal = (BOAT.fac && BOAT.fac.galley) || 'bysse';
-  if (gal === 'none'){ serveMeal(2, null, false, ['matpakke og kaffe fra termosen', 'a packed lunch and coffee from the flask']); return; }
-  if (lagOf() && lagSpec().key.includes('kokk')){ lagMeal(); return; }   // an ocean vessel's own cook (04-crew.js, H2b)
+  if (gal === 'none'){ if (S.t >= M.due) serveMeal(2, null, false, ['matpakke og kaffe fra termosen', 'a packed lunch and coffee from the flask']); return; }
+  if (lagOf() && lagSpec().key.includes('kokk')){ if (S.t >= M.due){ lagMeal(); M.due = nextMealAt(S.t + cookMin()); } return; }   // an ocean vessel's own cook (04-crew.js, H2b)
   const ck = A.find(p => p.st === 'kokk');
   if (ck){ const id = ck.c ? ck.c.id : 'me'; if (!M.cook || M.cook.id !== id) M.cook = {id, m:0}; M.cook.m++;
-    if (M.cook.m >= ((BOAT.fx && BOAT.fx.cook) || MEAL.cook)) serveMeal(Math.min(gal === 'plate' ? 4 : 5, ck.c ? clamp(Math.round(ck.c.attr.kokk), 1, 5) : 3), ck.c, !ck.c); return; }
+    if (M.cook.m >= cookMin() && S.t >= M.due) serveMeal(Math.min(gal === 'plate' ? 4 : 5, ck.c ? clamp(Math.round(ck.c.attr.kokk), 1, 5) : 3), ck.c, !ck.c); return; }
   if (S.t >= M.due + MEAL.wait && !M.cook) serveMeal(1, null, false);
 }
 function serveMeal(q, cook, me, dish){
-  const M = mealState(); M.hist.push(q); if (M.hist.length > 8) M.hist.shift(); M.due = S.t + MEAL.every; M.cook = null; M.last = {t:S.t, q, by:cook ? cook.id : me ? 'me' : null};
+  const M = mealState(); M.hist.push(q); if (M.hist.length > 8) M.hist.shift(); const nm = mealName(M.due); M.due = nextMealAt(S.t + cookMin()); M.cook = null; M.last = {t:S.t, q, by:cook ? cook.id : me ? 'me' : null, nm};
   const d = dish || DISH[q];
   if (cook) log(cook.name.split(' ')[0] + ' laget ' + d[0] + ' til mannskapet.', cook.name.split(' ')[0] + ' made ' + d[1] + ' for the crew.');
   else if (me) log('Du laget ' + d[0] + ' til mannskapet.', 'You made ' + d[1] + ' for the crew.');
