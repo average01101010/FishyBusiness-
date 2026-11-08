@@ -1520,3 +1520,6 @@
 2026-11-08 23:13	claude/o8b-s2-turens-linje-c70okw	133aaad	boottest	OK	24	lite	samtidig	
 2026-11-08 23:13	claude/o8b-s2-turens-linje-c70okw	133aaad	worldtest	OK	17	lite	samtidig	
 2026-11-08 23:20	claude/o8b-s2-turens-linje-c70okw	133aaad	vectest	OK	462	3d	alene	
+2026-11-08 23:40	claude/o8b-s2-turens-linje-c70okw	5519661	trackfollow	OK	1206	3d	alene	
+2026-11-08 23:56	claude/o8b-s2-turens-linje-c70okw	5519661	kinotest	OK	907	3d	alene	
+2026-11-08 23:59	claude/o8b-s2-turens-linje-c70okw	5519661	heattest	OK	229	3d	alene	
