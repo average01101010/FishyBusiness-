@@ -1008,15 +1008,21 @@ function fish(H, W, hs){
     }
   }
   if (S.tut && S.tut.catch && room > 0 && holdTotal() < tutTarget()){
-    const left = Math.max(1, (b.fishUntil != null ? b.fishUntil : S.t) - S.t), want = Math.max(0, tutTarget() - holdTotal()) / left, mix = Object.entries(tutMixOf());   // the patch's own mix (03-simulation.js)
+    const left = Math.max(1, (b.fishUntil != null ? b.fishUntil : S.t) - S.t), want = Math.max(0, tutTarget() - holdTotal() + got) / left, mix = Object.entries(tutMixOf());   // the patch's own mix (03-simulation.js)
     for (let k = 0; got < want && room > 0.01 && k < 40; k++){
       let r = Math.random(), sp = mix[0][0]; for (const [s2, pw] of mix){ if (r < pw){ sp = s2; break; } r -= pw; }
       const w = sampleFish(sp, b.pos, H); if (w < SPECIES[sp].minKg || (SPECIES[sp].maxKg && w > SPECIES[sp].maxKg)) continue;
       const kg = Math.min(w, room); room -= kg; addCatch(sp, kg, clsOf(sp, w), true, {how:'juksa'}); got += kg; gotTop += kg;
       if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp, kg, t:performance.now()}); }
     }
+    // want: this minute's share of what was left before it (the hold before this minute's own catch, holdTotal() − got), so the top-up adds
+    // only what the jig fell short of, and the last minute fills the rest (Ø8b S0; before, the hold was reckoned after the catch, and the
+    // last minute came short by what the jig took in it)
     if (typeof window !== 'undefined') window.TUTTOP = (window.TUTTOP || 0) + gotTop;   // for the tests: how much the guarantee had to add
   }
+  // the first trip: the minutes jigged and what the guarantee added, so «what fishing gives here» (tutNormKg, ui/07b-first-trip.js) is per
+  // hour actually fished, also when the player stops early, and leaves out the top-up, which is most of a full hold (Ø8b S0)
+  if (S.tut && S.tut.v === 2 && S.tut.fk){ S.tut.fk.m = (S.tut.fk.m || 0) + 1; S.tut.fk.top = (S.tut.fk.top || 0) + gotTop; }
   // only the stock's own share of the catch is taken from it: not the guide's skrei patch, nor what the guarantee tops up
   takeStock(b.pos, (got - gotTop) * (dsum > 0 ? Math.max(0, (dsum - tsum) / dsum) : 1)); S.fsess.kg += got; if (got > 0) (b.tripGear = b.tripGear || {}).juksa = S.t;
   // a plan's jig places in turn (06f-plan.js, wp.jc; feedback #57): each hour's catch is weighed against the first hour's here, and when it

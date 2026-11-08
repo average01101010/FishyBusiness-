@@ -107,8 +107,10 @@ const TSTEPS = [
       return {el:vis('#dock [data-act=jigg]'), no:'Nå fisker juksa for deg. Trykk «Jukse selv» for å jukse selv: når det napper, trykk «Rykk» mens nåla er midt på. Knappen blir rød når det napper, og midt på gir to fisk på kroken.', en:'The jig fishes for you now. Tap «Jig yourself» to jig yourself: when it bites, tap «Strike» as the needle is in the middle. The button turns red when it bites, and the middle gives two fish on the hooks.'}; }},
   {id:'deck', ok:true, done:() => false,
     tip:() => { if (holdTotal() > 0 && !S.tut.deckCam && G3.isActive()){ S.tut.deckCam = true; G3.lookDeck(); } return holdTotal() <= 0 ? {el:vis('#dock [data-act=jigg]'), small:true, noOk:true, no:'Rykk når det napper.', en:'Strike when it bites.'} : ({el:vis(['#hud .st.nx', '#hud']), no:'Fisken blør i bløggekaret idet den kommer over ripa. Så blir den sløyd og lagt i lasterommet. Godt bløgget og sløyd fisk gir bedre pris.', en:'The fish is bled in the tub as it comes over the rail. Then it is gutted and put in the hold. Well bled and gutted fish fetches a better price.'}); }},
+  // a full hold (Ø8b S0, V3 C, Jonas 06.11.2026: «brukeren skal jo selv få lov til å bestemme hvor lenge de ønsker å fiske før de leverer»):
+  // the step is done when the fishing ends, whether the hold is full, the time is out or the player tapped «Stopp» (08-actions.js stopfish)
   {id:'full', done:() => (S.boat.status === 'idle' && holdTotal() > 1 && !S.boat.fishUntil) || !!S.lastSale,
-    tip:() => ({el:vis('#hud .st.nx'), no:'Båten fisker en time. Så går du til ' + tutLandN() + ' og leverer.', en:'The boat fishes for an hour. Then you go to ' + tutLandN() + ' and land the catch.', small:true})},
+    tip:() => ({el:vis('#hud .st.nx'), no:'Båten fisker til lasterommet er fullt, rundt en time. Vil du levere før, trykker du «Stopp». Så går du til ' + tutLandN() + ' og leverer.', en:'The boat fishes until the hold is full, about an hour. To land sooner, tap «Stop». Then you go to ' + tutLandN() + ' and land the catch.', small:true})},
   {id:'route2', live:true, view:() => [S.boat.pos, portById(tutLand()).p], done:() => draftEnds(tutLand()) || planEnds(tutLand()) || (S.boat.status === 'port' && S.boat.port === tutLand()),
     tip:() => { if (!inPlot()) return {el:vis('#miniPlot'), no:tutLand() !== tutHome().id ? 'God fangst! Åpne kartplotteren. ' + tutHome().name + ' har ikke fiskemottak, så fisken skal til ' + tutLandN() + '.' : 'God fangst! Åpne kartplotteren. Fisken skal inn til mottaket i ' + tutLandN() + '.', en:tutLand() !== tutHome().id ? 'A good catch! Open the chart plotter. ' + tutHome().name + ' has no fish plant, so the catch goes to ' + tutLandN() + '.' : 'A good catch! Open the chart plotter. The catch goes to the plant at ' + tutLandN() + '.'};
       if (LEIA_ARM || LEIA_BUSY) return {map:{p:portById(tutLand()).p, r:0.5}, no:'Trykk på ' + tutLandN() + ' i kartet.', en:'Tap ' + tutLandN() + ' on the chart.'};
@@ -221,14 +223,17 @@ function tutStep(){
 // the first trip in the deck log (Ø8b S1, V1 A in docs/planer/spillbarhet-fangst.md, Jonas 06.11.2026): the landing note's line about
 // ordinary fishing leaves the drawer four game hours after the sale, so the same line with the same N goes into the log (Drift) when the
 // first trip is done, where a player who wonders after trip 2 finds it. N is the landed catch times the stock's own share of the density
-// on the field (S.tut.fk, summed in fish(), core/05-vessels.js) per fishing hour, rounded to 10 kg, as in portSlip (ui/07-guide.js);
+// on the field (S.tut.fk, summed in fish(), core/05-vessels.js) per fishing hour, rounded to 10 kg. Since the full hold (Ø8b S0) the
+// guarantee's top-up (F.top) is taken out first, as it is most of the catch, and the hours are the minutes jigged (F.m), as the player may
+// stop early; a save from before has neither and counts as before (all of it, one hour). portSlip (ui/07-guide.js) still has the old
+// formula and should call this (Ø8b S2, which holds 07-guide.js);
 // no line when it is not known (a save from before S.tut.fk, or no landing yet). The first trip can only land at its own plant
 // (tutAllow: «sell» on the step «land», the route home must end at tutLand()), so the last sale is the one the slip shows. Texts: ui/01-i18n.js
 function tutNormKg(){
   const F = S.tut && S.tut.fk, ls = S.lastSale;
   if (!F || !(F.d > 0) || !ls || !Array.isArray(ls.lines)) return null;
-  const kg = ls.lines.reduce((a, r) => a + (r.kg || 0), 0);
-  return Math.round(kg * Math.max(0, (F.d - F.t) / F.d) / TUT_FISH_H / 10) * 10;
+  const kg = Math.max(0, ls.lines.reduce((a, r) => a + (r.kg || 0), 0) - (F.top || 0)), h = F.m >= 1 ? F.m / 60 : TUT_FISH_H;
+  return Math.round(kg * Math.max(0, (F.d - F.t) / F.d) / h / 10) * 10;
 }
 function tutNormLog(){
   const n = tutNormKg(); if (n == null) return;
