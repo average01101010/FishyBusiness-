@@ -14,7 +14,8 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 
 ## Øktene som kjører
 
-- Ingen (08.11.2026). H3d1 (steg 24) er rullet ut 08.11.2026 i en økt Jonas startet (Jonas: «Rull ut på det store blå»).
+- `ccr-2040aa61-qgig5a`: Jonas' svar A på leveringen på en flerdøgnstur (fra Ø12 A+B, steg 23), Jonas' økt, startet 08.11.2026 17:35 UTC. Eier `core/06g-plan2.js` (`planDay`), `tests/unit/plan2.test.mjs`, `tests/driftsplan2kyst.py`. Ø12 C (steg 18) venter til den er ute.
+- Ingen andre (08.11.2026). H3d1 (steg 24) er rullet ut 08.11.2026 i en økt Jonas startet (Jonas: «Rull ut på det store blå»).
 - Før det: Ø9 F3 (steg 15) ble rullet ut i d7c870b2 i en økt Jonas startet; Ø9 F2 (steg 14) ble rullet ut i b68ff95d (flettet med arbeidsgrenen i 0d6d6201) i en økt Jonas startet; Ø11.6 (steg 6) ble rullet ut i d3b8bde0 i en økt Jonas startet; OPP2 (steg 56) ble rullet ut i fe658e10 i en økt Jonas startet; OPP4-siden gjort om etter Jonas' tilbakemelding, rullet ut i c7e1bcb0; Ø10 (steg 10) ble rullet ut i f4e2a8c0 i en økt Jonas startet; OPP4 (steg 54) ble rullet ut i e10cd8ad og OPP1 (steg 53) i 73c12b26, begge i økter Jonas startet; før det H3b og H3c (4107d71a), U2-4 (c62047f0) og stripa og kartet (4f5f6d91).
 
 ## Utrullinger fra rutinen
