@@ -1146,3 +1146,8 @@
 2026-11-07 23:07	ccr-9a3530e8-3tup0j	814ea9cb	docktest	OK	61	lite	samtidig	
 2026-11-07 23:08	ccr-9a3530e8-3tup0j	814ea9cb	moortest	OK	43	3d	alene	
 2026-11-07 23:26	ccr-9a3530e8-3tup0j	814ea9cb	hull3d	OK	1106	3d	alene	
+2026-11-08 13:04	claude/admiring-cray-klfggd	d2d27c4b	selltest	LES	23	lite	samtidig	
+2026-11-08 13:04	claude/admiring-cray-klfggd	d2d27c4b	r4test	OK	16	lite	samtidig	
+2026-11-08 13:04	claude/admiring-cray-klfggd	d2d27c4b	shoptest	OK	26	lite	samtidig	
+2026-11-08 13:04	claude/admiring-cray-klfggd	d2d27c4b	cashfxtest	OK	9	lite	samtidig	
+2026-11-08 13:04	claude/admiring-cray-klfggd	d2d27c4b	havtur	FEIL	0	lite	samtidig	FEIL hele kysten mangler i tools/map/out/game (release.py og game.py)
