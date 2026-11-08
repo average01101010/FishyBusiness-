@@ -499,7 +499,7 @@ function turSos(Q){
   const h = turNm(o, p) / v + turNm(p, port.p) / tv + 0.5, cls = h < TUR.cls.kort.h[1] ? 'kort' : h < TUR.cls.mid.h[1] ? 'mid' : 'lang', L = Q.L || 8;
   const m = {k:'slep', cls, to:port.id, p, nm:Math.round(turNm(o, p) + turNm(p, port.p)), h, reach:turNm(o, p) / v, boat:Q.boat, owner:TUR_OWNERS[Math.floor(mobRnd('sosw') * TUR_OWNERS.length) % TUR_OWNERS.length],
     L, B:Math.round(L * 0.34 * 10) / 10, T:Math.round(L * 0.13 * 10) / 10, hd:Q.hd || 0, liv:Q.liv || 0, value:turValue(L), hTot:h * 2.5 + 12, sos:Q.id};
-  m.payLo = turSalvage(m, 0); m.payHi = turSalvage(m, 1); m.base = turSalvage(m, turDanger(p));
+  m.base = turSalvage(m, turDanger(p));
   m.id = ++T.seq; m.t0 = S.t; m.due = S.t + Math.round(m.hTot * 60); m.vid = S.cur; m.pay = turFinal(m); m.pf = m.pay / Math.max(1, m.base); m.payLo = turSalvage(m, 0); m.payHi = turSalvage(m, 1); m.stage = 'reach';
   T.act.push(m);
   msg(m.owner, 'Takk for at dere svarte! «' + m.boat + '» har motorstopp og driver mot land ved ' + mobLL(m.p) + '. Vi har slepetauet klart.', 'Thank you for answering! The «' + m.boat + '» has engine failure and is drifting towards land at ' + mobLLen(m.p) + '. We have the tow line ready.');

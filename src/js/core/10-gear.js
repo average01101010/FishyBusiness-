@@ -466,7 +466,7 @@ function gearOpMinute(H, W, hs){
   // the catch of one unit comes aboard in slices as the string comes over the rail, not all at the end (tilbakemelding #30: «fisken
   // kommer om bord etter hvert, så man kan sløye underveis»): per 100 hooks on a line, in thirds on a net, a pot at once
   if (g.lead > 0){ g.lead--; b.v = 0.3; g.mv = null; return; }   // the end lines first
-  if (g.op === 'haul' && typeof mobStop === 'function' && mobStop(g)){ b.v = 0.3; g.mv = null; return; }   // a hand caught at the hauler: the crew stop it with its emergency stop (Ø11.7 SK4, 14b-sikkerhet.js)
+  if (g.op === 'haul' && typeof mobStop === 'function' && mobStop(g, W, hs)){ b.v = 0.3; g.mv = null; return; }   // a hand caught at the hauler: the crew stop it with its emergency stop (Ø11.7 SK4, 14b-sikkerhet.js)
   const step = haulSlow(g) / gopUnitMin(g, H, hs); g.prog += step;
   const SL = g.op === 'haul' ? g.sl || 1 : 1; g.sub = g.sub || 0;
   while (g.done < g.n && g.prog >= (g.sub + 1) / SL){

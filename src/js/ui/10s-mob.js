@@ -67,12 +67,12 @@ const MOBUI = (() => {
   function lift(how){ const p = here().p, why = mobLift(how, p, Math.abs(S.boat.v || 0)); if (why) toast(L(why[0], why[1])); else { if (S.plan && S.plan.mob){ S.plan = null; S.boat.status = 'idle'; S.boat.v = 0; } save(); } draw(true); }
   function refreshChart(){ try { if (document.body.classList.contains('vplot')) renderDyn(); } catch (e){} }
   // the call on channel 16 (Ø11.7): answered, the tow gets Autonav's way to her (the man in the water has «Autonav: MOB» in the panel)
-  function sosYes(){ const Q = S.sos; if (!Q || Q.ans || Q.vid !== S.cur) return; const r = sosAnswer();
+  function sosYes(){ const Q = S.sos; if (!Q || Q.ans || Q.vid !== S.cur) return; const r = sosAnswer(); if (!r){ save(); draw(true); refreshChart(); return; }
     if (Q.k === 'eng' && r && r.id != null && typeof turGo === 'function') try { turGo(r.id); } catch (e){ console.warn('sos', e); }
     toast(Q.k === 'eng' ? L('Slepet står i Oppdrag-appen. Autonav går til «' + Q.boat + '».', 'The tow is in the Oppdrag app. Autonav heads for the «' + Q.boat + '».') : L('Vi kommer. MOB-merket er satt der «' + Q.boat + '» meldte.', 'We are coming. The MOB mark is set where the «' + Q.boat + '» reported.'));
     save(); if (typeof refreshAll === 'function') refreshAll(); draw(true); refreshChart(); }
   function sosNo(){ sosDecline(); save(); draw(true); refreshChart(); }
-  const sosOn = () => !!(S && S.sos && !S.sos.ans && S.sos.vid === S.cur);
+  const sosOn = () => !!(S && S.sos && !S.sos.ans && S.sos.vid === S.cur && S.t < S.sos.until && ['sailing', 'fishing', 'idle'].includes(S.boat.status));
   function bodySos(){
     const Q = S.sos, P = here().p, q = {x:Q.x, y:Q.y}, nmi = kmTrue(P, q) / NM, R = Q.resc, left = Math.max(0, Q.until - S.t - frac()), mob = Q.k === 'mob';
     const h = ['<div class="mb-h"><b>📻 ' + (mob ? 'MAYDAY' : 'PAN-PAN') + ' · VHF 16</b><span class="mb-t" title="' + L('Tid til en annen tar det', 'Time until another takes it') + '">' + mmss(left) + '</span></div>'];
@@ -140,10 +140,11 @@ const MOBUI = (() => {
     draw(true); refreshChart(); };
   // ---- the chart plotter (ui/03-map.js renderDyn): the mark, the line to it, the lifebuoy and the person ----
   function svg(u, bp){
-    if (sosOn()){ const Q = S.sos, r = 8 * u;   // (where she called: an orange ring with her name)
-      return '<circle cx="' + Q.x + '" cy="' + Q.y + '" r="' + r + '" style="fill:rgba(255,159,26,.25);stroke:#ff9f1a" stroke-width="' + (2.2 * u) + '"/>' + txt({x:Q.x + 11 * u, y:Q.y - 8 * u}, (Q.k === 'mob' ? 'MAYDAY ' : 'PAN-PAN ') + esc(Q.boat), 'lbl-ais pl', 12 * u, 'stroke-width="' + (3 * u) + '" style="fill:#ff9f1a"'); }
-    const M = S.mob; if (!M || M.vid !== S.cur) return '';
-    const g = [], f = frac(), s = mobSeen(bp), pp = mobAt(f);
+    let call = '';
+    if (sosOn()){ const Q = S.sos, r = 8 * u;   // (where she called: an orange ring with her name; your own man overboard is drawn as well)
+      call = '<circle cx="' + Q.x + '" cy="' + Q.y + '" r="' + r + '" style="fill:rgba(255,159,26,.25);stroke:#ff9f1a" stroke-width="' + (2.2 * u) + '"/>' + txt({x:Q.x + 11 * u, y:Q.y - 8 * u}, (Q.k === 'mob' ? 'MAYDAY ' : 'PAN-PAN ') + esc(Q.boat), 'lbl-ais pl', 12 * u, 'stroke-width="' + (3 * u) + '" style="fill:#ff9f1a"'); }
+    const M = S.mob; if (!M || M.vid !== S.cur) return call;
+    const g = [call], f = frac(), s = mobSeen(bp), pp = mobAt(f);
     if (M.mark){ const k = M.mark, r = 9 * u;
       g.push('<line x1="' + bp.x + '" y1="' + bp.y + '" x2="' + k.x + '" y2="' + k.y + '" style="stroke:#ff3b30;fill:none" stroke-width="' + (1.6 * u) + '" stroke-dasharray="' + (5 * u) + ' ' + (4 * u) + '"/>');
       g.push('<circle cx="' + k.x + '" cy="' + k.y + '" r="' + r + '" style="fill:rgba(255,59,48,.25);stroke:#ff3b30" stroke-width="' + (2.2 * u) + '"/><path d="M' + (k.x - r) + ',' + k.y + 'h' + (2 * r) + 'M' + k.x + ',' + (k.y - r) + 'v' + (2 * r) + '" style="stroke:#ff3b30" stroke-width="' + (1.4 * u) + '"/>');
@@ -167,7 +168,7 @@ const MOBUI = (() => {
     const where = r => { try { const q = nearestPlace({x:r.x, y:r.y}); return en ? q.en : q.no; } catch (e){ return ''; } };
     const h = ['<div class="ph-card" id="safetyCard"><h4>' + L('Sikkerhet', 'Safety') + '</h4><p>' + L(safe === 1 ? 'Én tur uten skade.' : safe + ' turer uten skade.', safe === 1 ? 'One trip without harm.' : safe + ' trips without harm.') + '</p>'];
     if (!rows.length) h.push('<p class="ph-note">' + L('Ingen nestenulykker ennå. Passeringer for nær, grunt vann forut, sjø over ripa, nødstopp og mann over bord samles her, med hva hver av dem lærer.', 'No near misses yet. Passings too close, shallow water ahead, seas over the rail, emergency stops and man overboard gather here, with what each teaches.') + '</p>');
-    else h.push('<ul class="sf-l">' + rows.map(r => '<li data-k="' + r.k + '"><span class="sf-d">' + esc(day(r.t)) + (where(r) ? ', ' + esc(where(r)) : '') + '</span><span class="sf-w">' + esc(r.what[en ? 1 : 0]) + '</span><span class="sf-s">' + esc(r.learn[en ? 1 : 0]) + ' <i>(' + esc(r.learn[en ? 3 : 2]) + ')</i></span></li>').join('') + '</ul>');
+    else h.push('<ul class="sf-l">' + rows.map(r => { const w = where(r); return '<li data-k="' + r.k + '"><span class="sf-d">' + esc(day(r.t)) + (w ? ', ' + esc(w) : '') + '</span><span class="sf-w">' + esc(r.what[en ? 1 : 0]) + '</span><span class="sf-s">' + esc(r.learn[en ? 1 : 0]) + ' <i>(' + esc(r.learn[en ? 3 : 2]) + ')</i></span></li>'; }).join('') + '</ul>');
     h.push('</div>'); return h.join('');
   }
   return {svg, spot, draw, mark, buoy, auto, lift, safetyCard, sosYes, sosNo, _U:U};

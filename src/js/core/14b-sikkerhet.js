@@ -355,7 +355,7 @@ function mobReport(M, tIn, out, how, days){
 // every hour on each vessel (core/04-crew.js crewTick): a hand off sick after a fall comes back aboard only at a quay (from hospital),
 // so the day she is due at sea is put off an hour at a time; the teams' sick leave runs out; an event left behind is ended
 function mobCrewHour(){
-  const b = S.boat;
+  const b = S.boat; sosSweep();
   for (const c of S.crew || []) if (c.mobOff){ if (!c.off){ delete c.mobOff; continue; } if (c.offUntil && S.t >= c.offUntil - 60 && b.status !== 'port') c.offUntil = S.t + 61; }
   if (S.mobOff && S.mobOff.length) S.mobOff = S.mobOff.filter(o => S.t < o.until);
   if (S.mob && S.mob.vid === S.cur && (b.status === 'port' || b.status === 'tow' || S.t - S.mob.t0 > 6 * 60)) mobAway();
@@ -372,12 +372,12 @@ const MOBSTOP_T = {
   line:[['{n} fikk en krok i hansken og ble dratt mot haleren.', '{n} got a hook in the glove and was pulled towards the hauler.']],
   garn:[['{n} fikk ermet fast i garnet ved haleren.', '{n} got a sleeve caught in the net at the hauler.']],
   teine:[['{n} fikk foten i bukta på teinetauet.', '{n} got a foot in the bight of the pot rope.']]};
-function mobStop(g){
+function mobStop(g, W, hs){
   if (!g || g.op !== 'haul') return false;
   if (g.estop && S.t < g.estop) return true;   // (the hauler stands while they get loose and look it over)
-  if (typeof hasHauler === 'function' && !hasHauler(g.kind)) return false;   // (by hand there is no hauler to be caught in)
-  const all = mobOnDeck(), at = all.filter(q => q.p.st === 'haling' && q.p.c); if (!at.length || mobRecent('stop', MOBSTOP.gap)) return false;
-  let x = 0, dark = false; try { const H = S.t / 60, p = S.boat.pos; x = mobSeaX(windAt(H, p), hsAt(p, H), BOAT.risk); dark = sunAt(H, p).el < -6; } catch (e){ /* a block not loaded */ }
+  if (mobRecent('stop', MOBSTOP.gap) || (typeof hasHauler === 'function' && !hasHauler(g.kind))) return false;   // (by hand there is no hauler to be caught in)
+  const all = mobOnDeck(), at = all.filter(q => q.p.st === 'haling' && q.p.c); if (!at.length) return false;
+  let x = 0, dark = false; try { const H = S.t / 60, p = S.boat.pos; x = mobSeaX(W != null ? W : windAt(H, p), hs != null ? hs : hsAt(p, H), BOAT.risk); dark = sunAt(H, p).el < -6; } catch (e){ /* a block not loaded */ }
   if (mobRnd('stop') >= Math.min(2, at.length) * MOBSTOP.R * (1 + mobSeaF(x)) * (dark ? MOBK.dark : 1)) return false;   // (at most two stand by the hauler itself, also on an ocean vessel with a team on deck)
   const c = at[Math.floor(mobRnd('stopw') * at.length) % at.length].p.c, mate = all.find(q => q.p.c && q.p.c !== c), T = (MOBSTOP_T[g.kind] || MOBSTOP_T.line)[0], n = c.name;
   const by = mate ? [mate.p.c.name + ' slo av haleren med nødstoppen. Ingen ble skadet.', mate.p.c.name + ' stopped the hauler with the emergency stop. Nobody was hurt.']
@@ -471,7 +471,7 @@ function sosCan(){
 }
 function sosMinute(W, hs){
   const Q = S.sos;
-  if (Q){ if (Q.vid === S.cur) sosStep(Q); return; }
+  if (Q){ if (Q.vid === S.cur) sosStep(Q); else if (!Q.ans && S.t >= Q.until) sosOther(Q); return; }   // (a call left on another vessel runs out there too)
   if (!sosCan() || S.t - (S.sosT == null ? -1e9 : S.sosT) < SOSK.gap) return;
   if (!(mobSeaX(W, hs, SOSK.lim) >= SOSK.x) || mobRnd('sos') >= SOSK.R / 60) return;
   sosCall(mobRnd('sosk') < 0.5 ? 'mob' : 'eng');
@@ -509,8 +509,10 @@ function sosCall(k, p){
 // the minute while the call stands: unanswered, it waits; the game gone, the player off the boat, or the time up, another takes it
 function sosStep(Q){
   if (Q.ans){ if (Q.k === 'mob' && !(S.mob && S.mob.other && S.mob.other.sos === Q.id)) S.sos = null; return; }   // (answered: the man in the water is S.mob's own minute)
-  if (!mobLive() || !mobFollowed() || !meAboard() || S.t >= Q.until) sosOther(Q);
+  if (!mobLive() || !mobFollowed() || !meAboard() || S.t >= Q.until || S.mob || !['sailing', 'fishing', 'idle'].includes(S.boat.status)) sosOther(Q);   // (your own man overboard, or the boat in port or in tow: another takes it)
 }
+// an open call no minute at sea will end (the boat in port or in tow: risk is not called there): every hour on each vessel (mobCrewHour)
+function sosSweep(){ const Q = S.sos; if (Q && !Q.ans && (S.t >= Q.until || (Q.vid === S.cur && !['sailing', 'fishing', 'idle'].includes(S.boat.status)))) sosOther(Q); }
 // another boat or the rescue takes it, and nothing follows from it (V1 A)
 function sosOther(Q){
   S.sos = null; const nb = TUR_BOATS.filter(n => n !== Q.boat && n !== S.boatName), o = nb[Math.floor(mobRnd('soso') * nb.length) % nb.length];
@@ -521,12 +523,14 @@ function sosOther(Q){
 function sosDecline(){ const Q = S.sos; if (Q && !Q.ans && Q.vid === S.cur) sosOther(Q); }
 // the answer: «we are coming» on channel 16, then the man in the water as Ø11.6's event, or the tow as a turoppdrag. Returns what came of it
 function sosAnswer(){
-  const Q = S.sos, b = S.boat; if (!Q || Q.ans || Q.vid !== S.cur) return null;
+  const Q = S.sos, b = S.boat; if (!Q || Q.ans || Q.vid !== S.cur || S.mob || S.t >= Q.until || !['sailing', 'fishing', 'idle'].includes(b.status)) return null;   // (never over your own man overboard, nor from the quay)
   Q.ans = S.t; const nm = '«' + (S.boatName || 'Havbris') + '»', P = {x:Q.x, y:Q.y}, nmi = kmTrue(b.pos, P) / NM, eta = Math.max(1, Math.round(nmi / mobSpeed() * 60));
   sosRadio(nm + ' til «' + Q.boat + '»: Vi har dere ' + nmi.toFixed(1).replace('.', ',') + ' nautiske mil unna og kommer. Vi er hos dere om rundt ' + eta + ' minutter.',
     nm + ' to the «' + Q.boat + '»: We have you ' + nmi.toFixed(1) + ' nautical miles off and are coming. We will be with you in about ' + eta + ' minutes.');
   if (Q.k === 'mob') return sosMobStart(Q, eta);
-  const m = typeof turSos === 'function' ? turSos(Q) : null; S.sos = null; return m;
+  let m = null; try { m = typeof turSos === 'function' ? turSos(Q) : null; } catch (e){ console.warn('turSos', e); }
+  if (!m){ Q.ans = null; sosOther(Q); return null; }   // (no harbour for her: another takes it, as said on channel 16)
+  S.sos = null; return m;
 }
 // the person from the other boat in the water: 30 m off her side, holding the lifebuoy her crew threw, the MOB mark set where she reported.
 // The rescue still comes, but stands by for the boat that answered: it is there no sooner than half again her time to come and ten

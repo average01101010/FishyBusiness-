@@ -119,7 +119,8 @@ function achMinute(){
 }
 // the end of a trip with you aboard: a gale weathered without a tow counts
 function achTripEnd(bad){ const A = achState(); if (A.stormT && !bad) achAdd('storm'); A.stormT = 0;
-  if (typeof mobSafeTrip === 'function' && mobSafeTrip(A.safeT)) achAdd('safe'); A.safeT = S.t;   // «Turer uten skade» (Ø11.7, 14b-sikkerhet.js)
+  if (typeof mobSafeTrip === 'function' && mobSafeTrip(S.boat.tripT0 != null ? S.boat.tripT0 : A.safeT)) achAdd('safe'); A.safeT = S.t;   // «Turer uten skade» (Ø11.7, 14b-sikkerhet.js): harm since this boat cast off
+  // (not the tattoo's count of trips home without a tow, 09-tattoos.js tatAdd('safe'): this one asks that nobody was hurt and the hull is whole)
   achCheck(); }
 
 // ---- the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters ----

@@ -260,5 +260,12 @@ export default function (t){
   t.ok(m3.pay > 0 && m3.pay <= m3.value && m3.payHi <= m3.value, 'bergelønnen for skip og last etter verdien, aldri over den (som turSlep)', [m3.pay, m3.value]);
   // (the harbour's pay, the honour and the paper on arrival, turDock, need the screen's kr: mobtest plays them in the game)
   t.ok(K.PRESS_KINDS.includes('sos'), 'Kystposten kjenner saken');
+  // ---- found in the review (08.11.2026): a call left open in port, on another vessel, or over your own man overboard ----
+  S.t += 10; b.status = 'sailing'; K.sosCall('mob', sp); b.status = 'port'; K.mobCrewHour(); t.ok(!S.sos, 'båten kom i havn mens anropet sto: det tas av en annen innen timen (sosSweep)');
+  b.status = 'sailing'; S.t += 10; const Q6 = K.sosCall('mob', sp); Q6.vid = 'v-annen'; S.t = Q6.until; K.sosMinute(5, 0.5); t.ok(!S.sos, 'et anrop på en annen båt i flåten går ut der også, og stenger ikke for nye');
+  S.t += 10; K.sosCall('mob', sp); K.mobStart({p:{c:C[0], st:'haling'}, w:1.6}, [{p:{c:C[0]}, w:1.6}], {sst:8, dark:false}); const own = S.mob;
+  t.eq(K.sosAnswer(), null, 'svaret overskriver aldri din egen mann over bord'); t.ok(S.mob === own && !own.other, 'din egen hendelse står');
+  S.t++; K.mobRisk(5, 0.5); t.ok(!S.sos, 'med din egen mann over bord tar en annen anropet');
+  S.mob = null; S.mobs = S.mobs.filter(r => r.k !== 'mob' || r.out);
   K.hooks.onSos = null; K.hooks.onMob = null; MOBF.live = null; MOBF.fol = null; b.status = 'sailing';
 }
