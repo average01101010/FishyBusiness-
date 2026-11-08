@@ -1210,3 +1210,4 @@
 2026-11-08 18:36	ccr-864d9913-u29rne	e2c1547	havplantest	FEIL	643	lite	samtidig	FEIL the hold at 95 %: the strings hauled home, the landing at the plant, the other crew signs on [0, 1, 585164, [0, 1]]
 2026-11-08 18:42	ccr-864d9913-u29rne	b6624cb	driftsplan2gui	FEIL	370	lite	samtidig	FEIL s02-ikke-klar: U13: grunnen er en knapp, og et trykk på den åpner Mannskap-siden i samme skuff  {"grunnen": "Når du ikke er om bord, må både en skipper og 
 2026-11-08 18:42	ccr-864d9913-u29rne	b6624cb	driftsplan2kyst	OK	93	lite	samtidig	
+2026-11-08 19:10	ccr-864d9913-u29rne	eb9aed3	tut	OK	1673	lite	alene	
