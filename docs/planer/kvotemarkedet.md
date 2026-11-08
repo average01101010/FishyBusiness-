@@ -29,6 +29,12 @@ Lest 07.11.2026. Kildene står i kap. 9.
 
 **Forhåndstilsagn.** Utkastets § 7 sier at en eier som selger båten uten å ha en ny, kan få tilsagn om tillatelsen for en båt han ikke har kjøpt ennå. Tilsagnet varer «to år».
 
+**Forslag etter høring (Fiskeridirektoratet 11.09.2026, lest 08.11.2026 i KM1).** Direktoratets forslag til departementet etter høringen, PDF lenket fra høringssiden (kap. 9). Det endrer ett av de tre:
+- **Driftskravet er tatt bort for kystflåten.** Kap. 2.2.2: «Fiskeridirektoratet tar imidlertid tilbakemeldingene til etterretning og foreslår å avvente å innføre et driftskrav for tillatelsesgrupper i kystfiskeflåten samt konvensjonell havfisketillatelse nå.» § 8 i det nye utkastet gjelder bare torsketrål, seitrål, pelagisk trål, nordsjøtrål, ringnot, reketrål nord og snøkrabbe. «Konvensjonell kysttillatelse nord», som er alle hjemlene i markedet, er ikke med. KM1 har bygd regelen, men den er av (`KM.drift = false`), og valget står som valg 15 i køen.
+- **Lengderegelen (§ 6) står.** Den kodifiserer forholdsmessighetsinstruksen 7. september 2022 «uten tilsiktede materielle endringer», gjelder ved utskiftning og flytting av driftsgrunnlag, og «gjelder ikke ved overtakelse av fartøy for fortsatt drift» (kap. 8.1.5). Teksten i utkastet: «Søknader om flytting av driftsgrunnlag skal avslås dersom: a. tildeling av fiskeritillatelse med hjemmelslengde under 11 meter tilhørende fartøy med største lengde under 11 meter, til fartøy med største lengde på eller over 11 meter», og det samme for 15 og 21 m. Unntaket for hydrogendrevne båter under 13 m er ikke med i spillet.
+- **Forhåndstilsagnet (§ 7) står,** «med en varighet på to år», og kan nå også gis når fartøyet «skal benyttes på annet kvotesett i samme rederi» (kap. 8.1.6). Den ledige hjemmelen i høyst to spillår følger det.
+- **Kvotetaket står:** 3+3 og 5+1 for 11–14,99 m, 4+4 og 6+2 for 15–27,99 m, og direktoratet «opprettholder forslaget» om 4+2 og 5+3 i tillegg (kap. 4.2). En spesialist i torskesektoren har fortsatt 5 og 6 ganger.
+
 **Strukturkvoteordningen for kystflåten** (forskrift 7. november 2003 nr. 1309 om spesielle kvoteordninger for kystfiskeflåten, sist endret 19.12.2025):
 - § 3: kvoter kan utveksles mellom fartøy «dersom et fartøy tas permanent ut av fiske».
 - § 8 krever at båten blir «meldt ut av registeret over fiskefartøy» og at alle deltakeradgangene på den oppgis. **Kondemnering (hogging) kreves ikke lenger.** Deltakerloven § 7 bokstav b nekter likevel ny ervervstillatelse til en båt som er tatt ut slik.
@@ -103,7 +109,7 @@ Ikke varer: kilo og leie (V1), havtillatelsene og kvotesamarbeid mellom spillere
   - En hjemmel er årets torskekvote ganger kvoteprisen (V4).
   - En strukturkvote er det samme for sin faktor, ganget med årene igjen delt på 20. Lineært, fordi tidsgrensen ble innført for at kvoten kunne avskrives over perioden (høringsnotatet 6.1); det er en antakelse.
 - **En hjemmel uten båt i rederiet** (etter V2 A, eller når en båt med hjemmel selges uten den) står som «ledig hjemmel» i høyst to spillår (forhåndstilsagnet i utkastets § 7), rundt fire ekte måneder. Den kan settes på en egen båt, legges ut eller selges til registeret. Etter fristen går den tilbake til registeret med melding fra Fiskeridirektoratet. Det hindrer at hjemler blir liggende ubrukt.
-- **Kvotetaket rettes etter § 12:** 5 ganger for 11–14,99 m og 6 ganger for 15–27,99 m, fordi spillerens båter bare har torskesektoren. I dag er det 3 og 4.
+- **Kvotetaket rettes etter § 12:** 5 ganger for 11–14,99 m og 6 ganger for 15–27,99 m, fordi spillerens båter bare har torskesektoren. Det var 3 og 4 (rettet i KM1 08.11.2026).
 
 ### 4.4 B8: hva som skjer med kvoten når båten selges
 
@@ -242,8 +248,8 @@ Hvorfor A: med få spillere deler B et tynt marked i to. B kan tas inn når admi
 ## 7. Antatt og usikkert
 
 - **Deltakerforskriften for 2026** (FOR-2025-12-19-2811) er ikke lest direkte. Det om salg for fortsatt drift, flytting, lengderegelen, forhåndstilsagnet og driftskravet er tatt fra Fiskeridirektoratets utkast i høringsnotatet 26.03.2026, som skal videreføre den.
-  - **Driftskravet** (§ 8) er nytt og foreslått, ikke vedtatt. Planen bruker det fordi det stopper kjøp for å selge videre med en gang. Jonas kan si nei til det uten at resten endres.
-  - **«Forslag etter høring»** (11.09.2026, lenket fra høringssiden) er ikke lest og kan endre utkastet. Fasene bør lese den først.
+  - **Driftskravet** (§ 8) er tatt bort for kystflåten i «Forslag etter høring» 11.09.2026 (kap. 2). KM1 bygde det av (`KM.drift`); valg 15 i køen. Med V3 A tjener ingen på å kjøpe fra registeret for å selge videre (registeret selger til 100 % av taksten), så regelen trengs lite i spillet.
+  - **«Forslag etter høring»** (11.09.2026) er lest i KM1 (kap. 2). Det er et forslag til departementet, ikke en vedtatt forskrift.
 - **Kvotetaket på 5 og 6 ganger** er min lesning av § 12 og tabell 9: en båt med bare torskesektoren er spesialist. Endringen gir en strukturert båt i spillet mer kvote enn i dag.
 - **At en strukturkvote kan flyttes til en annen eiers båt** leser jeg av § 12 tredje ledd og § 11b. I praksis følger den oftest båten. Er det feil, blir strukturkvotene en vare bare med båten (KM4) og ikke i Kvote-appen.
 - **Taksten** er uten kilde: 260 kr/kg, den lineære verdien av en strukturkvote og indeksen i V4 B er anslag.
@@ -267,6 +273,7 @@ Hvorfor A: med få spillere deler B et tynt marked i to. B kan tas inn når admi
 - Lov 26. mars 1999 nr. 15 om retten til å delta i fiske og fangst (deltakerloven), §§ 4–7, 10, 21: https://lovdata.no/dokument/NL/lov/1999-03-26-15
 - Forskrift 7. november 2003 nr. 1309 om spesielle kvoteordninger for kystfiskeflåten, §§ 3, 7–12, kap. 2 §§ 4–6 (sist endret FOR-2025-12-19-2812, fra 01.01.2026): https://lovdata.no/dokument/SF/forskrift/2003-11-07-1309
 - Fiskeridirektoratet, høringsnotat 26.03.2026 «Fiskeritillatelser, kvotetak og fordeling av strukturgevinst» (kap. 1.1, 2.4, 3.2 med tabell 2 og 3, 6.1, 6.3 med tabell 9, 7.1–7.2, utkastet i kap. 10 §§ 5–8), og høringsbrevet samme dag: https://www.fiskeridir.no/hoeringer/horing-fiskeritillatelser-kvotetak-og-fordeling-av-strukturgevinst
+- Fiskeridirektoratet, «Forslag etter høring – fiskeritillatelser, kvotetak og fordeling av strukturgevinst», 11.09.2026 (kap. 2.2, 4.2, 8.1.5, 8.1.6 og utkastets §§ 6–8), lenket fra samme høringsside (lest 08.11.2026)
 - Stortingets vedtak 586–592 (2023–2024) og Meld. St. 7 (2023–2024), slik høringsnotatet siterer dem.
 - J-187-2026 (§§ 5, 16, 18, 29–31) og saksdokument 5/2025, som i `docs/systemer/kvoter-og-regler.md` kap. 6.
 - Kongelig resolusjon 17.06.2016, «Fra fylkesbinding til landsdelsbinding» (regjeringen.no; bare tittelen og søkesammendraget er sett).
@@ -286,3 +293,4 @@ Jonas 07.11.2026, svar på valg 10 i køen: «V1, a», «V2, a», «V3, a», «V
 
 - 07.11.2026: planen skrevet (steg 30, Jonas' økt, gren `claude/kvotemarkedet-steg-30-y3ctw0`). Regelverket lest på Lovdata (deltakerloven, kvoteforskriften) og i Fiskeridirektoratets høringsnotat 26.03.2026. Fasene KM1–KM5 står som steg 60–64 i køen med `venter på valg`, og valgene V1–V5 som valg 10. Funnene som gjelder spillet slik det er nå (kvotetaket, «hogger», `two` ved båtsalg), står i backloggen. Ingenting er bygd.
 - 07.11.2026 18:15 UTC: Jonas' valg skrevet inn (kap. 10): V1 A, V2 A, V3 A, V4 B, V5 A. KM1 (steg 60) er klar. KM2–KM5 venter bare på fasene før seg. KM2 trenger ikke `reg_week` (V3 A), og kap. 4.5 punkt 1 er skrevet om etter V3 A.
+- 08.11.2026: **KM1 bygd og rullet ut i bdb092d3** (steg 60, Jonas' økt, gren `ccr-5588e999-w5pry1`). Ny `core/03i-kvotemarked.js`: `kmTakst`, `kmBounds` (Bs `MB`), `kmQuick`, `kmWhy`, `kmBuyWhy` (lengderegelen `kmLenWhy`, strukturering `kmStructWhy`), `kmPack`, `kmOut`, `kmApply` (put, struct, free) og den ledige hjemmelen (`S.licFree`, `kmFree`, to spillår, så `regFree` med melding). `sell` skriver `l.landY`. `STRUCT.cap` er 5 og 6 (`structFits`), og `structIn` tar ikke lenger en eier ut av registeret selv (kjøpet i `14-act.js` tok én til, så hver strukturering tok to). «Forslag etter høring» lest: driftskravet er tatt bort for kystflåten (bygd, av, valg 15), lengderegelen og forhåndstilsagnet står (kap. 2). Valgt uten å spørre, skrevet i `kvoter-og-regler.md`: en hjemmel tar strukturkvotene sine med seg; ved strukturering legges selgerens fangst på hjemmelen i år til kjøperens; lengderegelen gjelder bare når hjemmelen settes på en båt, ikke ved strukturering; en kjøper kan ikke kjøpe en hjemmel uten å sette den på en båt. Gjennomgangen (`/code-review` medium) fant at en strukturkvote som ble flyttet alene, tok fangsten sin med uten å trekke den fra selgerens båt, at kontrollene lot ledige hjemler gå ut og forskjøv indeksen, at en ledig hjemmel fra i fjor fikk en oppdiktet selgerfangst, og at en båt som mistet hjemmelen, ikke fikk eierens fangst i åpen gruppe tilbake (§ 29). Alt rettet; `landY` skrives bare for torsk, hyse og sei. Tester: `tests/unit/kvotemarked.test.mjs` (90 sjekker, sett rød uten modulen i malen, med det gamle taket og mot commiten før rettingene fra gjennomgangen), `quotatest` (taket på 5 og én eier per strukturering).
