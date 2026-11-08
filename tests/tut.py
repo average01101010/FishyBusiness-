@@ -113,12 +113,14 @@ async def play(p, W, H, tag):
         if s['ring']:
             await tap(s['ring']['x'], s['ring']['y']); await pg.wait_for_timeout(350 if sid != 'route2' else 700); continue
         await pg.wait_for_timeout(500)
-    end = json.loads(await pg.evaluate("JSON.stringify({crew:S.crew.length, tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), land:S.tutStart && S.tutStart.land, iceFree:!!S.iceFree, freeIce:tutFree('ice'), ice:S.boat.ice, gear:S.boat.gear, log:S.log.slice(-8).map(e => e.no), gutKg:S.lastSale ? S.lastSale.lines.reduce((a, r) => a + (r.gut ? r.kg : 0), 0) : -1, roundKg:S.lastSale ? S.lastSale.lines.reduce((a, r) => a + (r.gut ? 0 : r.kg), 0) : -1, said:PSAYLOG.map(l => l.pick), knife:S.log.filter(e => /Bløggekaret er fullt|Tar unna fangsten|Stopper fisket for å sløye/.test(e.no)).length})"))
+    end = json.loads(await pg.evaluate("JSON.stringify({crew:S.crew.length, tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), land:S.tutStart && S.tutStart.land, iceFree:!!S.iceFree, freeIce:tutFree('ice'), ice:S.boat.ice, gear:S.boat.gear, log:S.log.slice(-30).map(e => e.no).filter(t => !/^Gave for «/.test(t)).slice(-8), gutKg:S.lastSale ? S.lastSale.lines.reduce((a, r) => a + (r.gut ? r.kg : 0), 0) : -1, roundKg:S.lastSale ? S.lastSale.lines.reduce((a, r) => a + (r.gut ? 0 : r.kg), 0) : -1, said:PSAYLOG.map(l => l.pick), knife:S.log.filter(e => /Bløggekaret er fullt|Tar unna fangsten|Stopper fisket for å sløye/.test(e.no)).length})"))
     await pg.evaluate("PHONE.show(false); DOCK.open('lever')"); await pg.wait_for_timeout(600)
     await pg.screenshot(path='tut_' + tag + '.png')
     order = [x for x in seen if x]
     want = [x for x in ORDER if x in order or x not in SKIPPABLE]
     check(order == want, tag + ': alle stegene kom i rekkefølge', order)
+    # (the gifts for the badges earned in the first trip are kept and given when it is over, 09f-merker.js achGive: up to eight «Gave for …»
+    # lines can come right after it ends, before this is read, and pushed the trip's own lines out of the last eight; U2-7 08.11.2026)
     check(end['tut'] == 0 and 'Første tur er fullført' in ' '.join(end['log']), tag + ': veiledningen er fullført', end['log'])
     check(free.get('gear') and free.get('ice', 1) == 0 and free.get('cash') == 15000, tag + ': juksa satt på fra start, og ingen is før første fiske', free)
     check(end['iceFree'] and end['freeIce'] and end['gear'], tag + ': isen er den åpne oppgaven etter første tur: første fylling venter gratis på mottaket (Onboarding 2, O4, V5 A)', {k: end[k] for k in ('ice', 'iceFree', 'freeIce', 'gear')})
