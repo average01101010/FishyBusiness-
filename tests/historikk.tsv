@@ -1475,3 +1475,12 @@
 2026-11-08 21:03	claude/o14-f4-feltnavnene-kart-htpg70	bcd6576	boottest	OK	25	lite	alene	
 2026-11-08 21:31	ccr-b4ccfe0e-t6qjnp	9948937	boottest	OK	23	lite	samtidig	
 2026-11-08 21:31	ccr-b4ccfe0e-t6qjnp	9948937	docktest	OK	58	lite	samtidig	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	sponsortest	OK	17	lite	samtidig	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	sponsor2test	OK	19	lite	samtidig	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	admintest	OK	9	lite	samtidig	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	sqltest	FEIL	50	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	trip2	OK	42	lite	samtidig	
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	sponsor2test	OK	14	lite	samtidig	
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	sponsortest	OK	12	lite	samtidig	
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	sqltest	FEIL	29	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	admintest	OK	7	lite	samtidig	
