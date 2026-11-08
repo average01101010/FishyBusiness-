@@ -1938,7 +1938,7 @@ WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå
   - 124 `heatAt(p)`
   - 127 `schoolDrift(sp, p, H)`
 
-## `src/js/core/13-work.js` (350 linjer)
+## `src/js/core/13-work.js` (353 linjer)
 
 work aboard: stations, and how the crew share them
 
@@ -1968,17 +1968,17 @@ work aboard: stations, and how the crew share them
   - 169 `jobMinute(j, A)`
   - 179 `jobWait(j)`
   - 184 `workAssign(as)`
-- **256** what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
-  - 272 `crewVice(c)`
-  - 274 `idleEnv()`
-  - 282 `idleWeights(p, ctx, E, mates)`
-  - 304 `idleAssign(P, ctx)`
-  - 318 `idleText(p)`
-  - 324 `workDoing(p)`
-  - 330 `workTeam(st, g, as)`
-  - 336 `workMinute()`
+- **259** what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
+  - 275 `crewVice(c)`
+  - 277 `idleEnv()`
+  - 285 `idleWeights(p, ctx, E, mates)`
+  - 307 `idleAssign(P, ctx)`
+  - 321 `idleText(p)`
+  - 327 `workDoing(p)`
+  - 333 `workTeam(st, g, as)`
+  - 339 `workMinute()`
 
-## `src/js/core/14-crewlife.js` (429 linjer)
+## `src/js/core/14-crewlife.js` (466 linjer)
 
 life aboard: learning, meals, the rest rule and what the crew says
 
@@ -1986,42 +1986,46 @@ life aboard: learning, meals, the rest rule and what the crew says
 - **3** learning: an hour on a station trains that skill. The young, the eager and the content learn fastest, and it gets
   - 6 `ageLearn(a)`
   - 13 `stationSkill(st)`
-  - 26 `learnHour(c)`
-- **36** meals: one every 6 hours at sea, cooked in 30 minutes by whoever stands at Kokk; the dish is as good as the cook.
-  - 41 `mealState()`
-  - 42 `foodScore()`
-  - 43 `mealDue()`
-  - 45 `mealMinute(A)`
-  - 60 `serveMeal(q, cook, me, dish)`
-- **72** what the crew says: lines driven by the situation and by each person's ways. [no, en, trait the line suits]
-  - 189 `dialectAt(p)`
-  - 190 `dialectOf(c)`
-  - 194 `dialectText(key, text)`
-  - 198 `crewDialect(c, text)`
-  - 228 `crewSay(c, sit, vars)`
-  - 250 `vitalsTalk(on)`
-  - 260 `sayHour(H, on, hs)`
-- **280** advice from those who know (Jonas 23.10.2026: «de kan gjerne ta initiativ og komme med kommentarer knyttet til driften om de vet
-  - 284 `crewAdvice(H, on, W, fs)`
-  - 298 `adviceGround(H)`
-- **311** mistakes on deck (Jonas 23.10.2026: «Ja, det kan de godt gjøre. Det skaper realisme»): now and then a fish slips over the side, the
-  - 315 `crewRand()`
-  - 320 `crewSlip(team)`
-  - 340 `railLost(kg)`
-  - 348 `railWeek(id = S.cur)`
-- **350** Del 2 of «mannskap med liv» (docs/mannskap-plan.md; Jonas 17.10.2026): each person's life beside the work
-  - 356 `crewLife(c)`
-  - 367 `lifeStory(c, no, en)`
-  - 369 `lifeEarn(c, sum)`
-  - 371 `lifeOff(c, days, no, en, sno, sen)`
-  - 373 `lifeDay(c, H)`
-  - 389 `lifeInjury(c, hs)`
-  - 392 `lifeOffTick(c)`
-  - 395 `lifeDepart(c)`
-  - 406 `alumniGround(a)`
-  - 408 `alumniStates(H)`
-  - 415 `lifeHail(H)`
-  - 422 `alumniReturn(B)`
+  - 30 `learnHour(c)`
+- **40** meals (Ø8b M3, Jonas 06.11.2026: «Frokost 06:30, Lunsj 12:30, Middag 18:30, Nattmat 00:30», and «Mannskapet står ikke nødvendigvis
+  - 51 `mealState()`
+  - 52 `foodScore()`
+  - 55 `nextMealAt(t)`
+  - 61 `mealDue()`
+  - 64 `crewAsleep(p, A)`
+  - 68 `mealAwake(A)`
+  - 73 `cookPick(P)`
+  - 78 `mealMinute(A)`
+  - 97 `serveMeal(q, cook, me, dish)`
+- **109** what the crew says: lines driven by the situation and by each person's ways. [no, en, trait the line suits]
+  - 226 `dialectAt(p)`
+  - 227 `dialectOf(c)`
+  - 231 `dialectText(key, text)`
+  - 235 `crewDialect(c, text)`
+  - 265 `crewSay(c, sit, vars)`
+  - 287 `vitalsTalk(on)`
+  - 297 `sayHour(H, on, hs)`
+- **317** advice from those who know (Jonas 23.10.2026: «de kan gjerne ta initiativ og komme med kommentarer knyttet til driften om de vet
+  - 321 `crewAdvice(H, on, W, fs)`
+  - 335 `adviceGround(H)`
+- **348** mistakes on deck (Jonas 23.10.2026: «Ja, det kan de godt gjøre. Det skaper realisme»): now and then a fish slips over the side, the
+  - 352 `crewRand()`
+  - 357 `crewSlip(team)`
+  - 377 `railLost(kg)`
+  - 385 `railWeek(id = S.cur)`
+- **387** Del 2 of «mannskap med liv» (docs/mannskap-plan.md; Jonas 17.10.2026): each person's life beside the work
+  - 393 `crewLife(c)`
+  - 404 `lifeStory(c, no, en)`
+  - 406 `lifeEarn(c, sum)`
+  - 408 `lifeOff(c, days, no, en, sno, sen)`
+  - 410 `lifeDay(c, H)`
+  - 426 `lifeInjury(c, hs)`
+  - 429 `lifeOffTick(c)`
+  - 432 `lifeDepart(c)`
+  - 443 `alumniGround(a)`
+  - 445 `alumniStates(H)`
+  - 452 `lifeHail(H)`
+  - 459 `alumniReturn(B)`
 
 ## `src/js/core/14b-sikkerhet.js` (361 linjer)
 
@@ -2077,7 +2081,7 @@ life aboard: learning, meals, the rest rule and what the crew says
   - 348 `mobReport(M, tIn, out, how, days)`
   - 355 `mobCrewHour()`
 
-## `src/js/core/15-energy.js` (166 linjer)
+## `src/js/core/15-energy.js` (185 linjer)
 
 your own energy: a day at sea empties it, a night ashore fills it
 
@@ -2087,14 +2091,16 @@ your own energy: a day at sea empties it, a night ashore fills it
   - 45 `restStart()`
   - 59 `restEnd(quiet)`
   - 65 `restMinute()`
-- **77** Skippertak (Jonas 12.10.2026): an energy drink, for real money only (never for the game's kroner), in three sizes
-  - 90 `fleetCrews()`
-  - 91 `giveSkip(k)`
-  - 105 `energyMinute()`
-  - 127 `fallAsleep(v, doze)`
-  - 141 `wakeUp()`
-  - 147 `wakeEarly(back)`
-  - 159 `sleepDrift(H)`
+  - 80 `rorbuTip(p)`
+  - 84 `restTip(b)`
+- **94** Skippertak (Jonas 12.10.2026): an energy drink, for real money only (never for the game's kroner), in three sizes
+  - 107 `fleetCrews()`
+  - 108 `giveSkip(k)`
+  - 122 `energyMinute()`
+  - 146 `fallAsleep(v, doze)`
+  - 160 `wakeUp()`
+  - 166 `wakeEarly(back)`
+  - 178 `sleepDrift(H)`
 
 ## `src/js/core/16-helm.js` (74 linjer)
 
@@ -2546,12 +2552,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1333 linjer)
+## `src/js/ui/phone/07-patch.js` (1337 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1326 `patch()`
+  - 1330 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2695,14 +2701,14 @@ Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-ton
   - 28 `receipt(nm, w, s)`
   - 38 `act0(a, d)`
 
-## `src/js/ui/05b-work.js` (155 linjer)
+## `src/js/ui/05b-work.js` (159 linjer)
 
 the Mannskap page in the drawer (once «Arbeid»): the samhold on top, «På dekk nå» as chips of who stands where, and one card per
 
 - **1** the Mannskap page in the drawer (once «Arbeid»): the samhold on top, «På dekk nå» as chips of who stands where, and one card per
-- **31** «På dekk nå» (Jonas 23.10.2026: brikker): who stands where, nothing to tap, and in one line what waits on deck
-  - 113 `lagCardHtml()`
-  - 127 `energyUi()`
+- **33** «På dekk nå» (Jonas 23.10.2026: brikker): who stands where, nothing to tap, and in one line what waits on deck
+  - 115 `lagCardHtml()`
+  - 129 `energyUi()`
 
 ## `src/js/ui/05c-drift.js` (266 linjer)
 
@@ -2952,22 +2958,22 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 290 `tipPlace(txt, T0, o)`
   - 315 `tipToast()`
 
-## `src/js/ui/07c-handbook.js` (261 linjer)
+## `src/js/ui/07c-handbook.js` (267 linjer)
 
 Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
 
 - **1** Håndboka: chapters 2–6 of the on-boarding as drips, and the app that keeps every tip (docs/onboarding.md 3–4, Jonas 09–10.10.2026)
   - 10 `hbState()`
-  - 191 `hbPick()`
-  - 199 `hbEv(id, how)`
-  - 200 `hbDone(id)`
-  - 201 `hbSkip(ch, id)`
-  - 203 `hbReady()`
-- **205** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
-  - 211 `appShown(id)`
-  - 218 `appUnlock(id)`
-  - 220 `appSeen(id)`
-  - 221 `hbUpdate()`
+  - 197 `hbPick()`
+  - 205 `hbEv(id, how)`
+  - 206 `hbDone(id)`
+  - 207 `hbSkip(ch, id)`
+  - 209 `hbReady()`
+- **211** what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026)
+  - 217 `appShown(id)`
+  - 224 `appUnlock(id)`
+  - 226 `appSeen(id)`
+  - 227 `hbUpdate()`
 
 ## `src/js/ui/10g-wardrobe.js` (133 linjer)
 

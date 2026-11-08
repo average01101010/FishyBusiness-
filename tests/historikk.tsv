@@ -1271,3 +1271,12 @@
 2026-11-08 18:11	ccr-2040aa61-qgig5a	bba06b81+	docktest	OK	58	lite	alene	
 2026-11-08 18:12	ccr-2040aa61-qgig5a	bba06b81+	driftsplan2test	FEIL	82	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
 2026-11-08 18:43	ccr-6e53b4c0-qs2mg1	62af7fb	boottest	OK	17	lite	alene	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	boottest	OK	29	lite	samtidig	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	mannskapshot	OK	16	lite	samtidig	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	worktest	FEIL	23	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	selfcrew	OK	7	lite	samtidig	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	crewlifetest	OK	5	lite	samtidig	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	seaworktest	OK	6	lite	samtidig	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	hbtest	OK	15	lite	samtidig	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	sleeptest	OK	11	lite	samtidig	
+2026-11-08 18:48	ccr-ed93b6bd-ek0n3a	7ddc3e9+	bunktest	OK	11	lite	samtidig	
