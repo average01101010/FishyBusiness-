@@ -52,6 +52,7 @@ HAUL = """async () => { const b = S.boat, pg = S.pgear, R = {};
   R.ll = LL(p0); const a = {...p0}, e = {x:a.x, y:a.y + 5};
   S.sets = [{id:'k0', vid:S.cur, kind:'teine', pot:'sno', n:200, a, b:e, tSet:S.t - 7 * 1440, acc:{snokrabbe:{kg:1200, n:2200}}, dead:0, bait:'blekksprut', cond:1, heavy:true, depth:Math.round(depthF(a)), warn:0}];
   b.pos = {...a}; b.status = 'idle'; b.v = 0; b.heading = 0; S.plan = null; b.fuel = BOAT.fuelCap;
+  pg.pots.sno = 600;   // (H3d2: room in the stacks, 70 places of 12, for the 200 hauled; with 1200 aboard they all went to the last stack)
   R.why = startHaul('k0', false, 0); const g = b.gop; if (g){ g.done = 40; g.hooksPer = 5e7; } R.gop = !!g; R.n = g && g.n; return R; }"""
 
 # alongside at the plant nearest Båtsfjord that takes her
@@ -65,7 +66,7 @@ PORT = """async () => { const b = S.boat, R = {}, T = P(70.633, 29.72); b.gop = 
 FREEZE = """(on) => { if (on && !window.__step0){ window.__step0 = step; step = () => {}; } else if (!on && window.__step0){ step = window.__step0; window.__step0 = null; } }"""
 
 # (H3d2) setting a string of 200 conical pots where the last was hauled (HAUL first), heading east
-SETT = """async () => { const b = S.boat, R = {}; b.gop = null; S.sets = []; b.status = 'idle'; b.v = 0; S.pgear.pots.sno = 1200; S.pgear.kits.n = 40; S.pgear.kits.heavy = 40;
+SETT = """async () => { const b = S.boat, R = {}; b.gop = null; S.sets = []; b.status = 'idle'; b.v = 0; S.pgear.pots.sno = 800; S.pgear.kits.n = 40; S.pgear.kits.heavy = 40;
   R.why = startSet('teine', {pot:'sno', n:200}, 0, Math.PI / 2); const g = b.gop; R.gop = !!g; R.n = g && g.n; R.sno = g && g.sno; return R; }"""
 
 # (H3d2) a landing at the plant (PORT first): frozen clusters and live crab in the tanks ('blandet'), or live crab only ('levende')
