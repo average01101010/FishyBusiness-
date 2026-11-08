@@ -1,4 +1,4 @@
-"""Driftsplan 2's page (ui/05d-plan2.js, part 5 of docs/planer/driftsplan-2/02-design.md): with DRIFT2 on, the Drift app shows the day first
+"""Driftsplan 2's page (ui/05d-plan2.js, part 5 of docs/planer/driftsplan-2/02-design.md): the Drift app shows the day first
 («I dag» as the engine follows it, else the next day as planDay reckons it), then the answers as rows (Hjem, Redskap, Plasser, Levering, Vær,
 Rytme, Mannskap), then the statistics. A new plan comes filled in; rows open where they are tapped; places come from the own marks; the
 plan is started (made first), paused, and a stopped plan shows the button that fixes it; the gear in the sea gets «Hent redskapet» while
@@ -12,7 +12,7 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out')
 # (the game's own loop is held the whole time, TAB.held as tick() reads it first: the test plays the minutes itself, and tick() playing
 # its own between the rounds made the jig run to a different hour from run to run; Ø2 05.11.2026)
 JS = """(async () => { TAB.held = true;
-  const R = {}; S.tut = 0; S.settings.lang = 'no'; S.lang = 'no'; DRIFT2 = true; window.confirm = () => true;
+  const R = {}; S.tut = 0; S.settings.lang = 'no'; S.lang = 'no'; window.confirm = () => true;
   const b = S.boat, HP = portById('husoy'); b.type = 'sjark'; applyVessel(); b.status = 'port'; b.port = 'husoy'; b.pos = {...HP.p}; S.plan = null; S.ops = null; S.draft = []; S.me = S.cur; S.cash = 500000;
   const ole = Object.assign(genCrew(), {bi:false, off:false, name:'Ole Mikalsen', known:[true, true]}), per = Object.assign(genCrew(), {bi:false, off:false, name:'Per Hansen', known:[true, true]}); S.crew = [ole, per];
   await mapNeed(HP.p, 14);

@@ -1194,6 +1194,27 @@
 2026-11-08 17:46	ccr-2040aa61-qgig5a	154372dc+	docktest	OK	62	lite	samtidig	
 2026-11-08 17:47	ccr-2040aa61-qgig5a	154372dc+	driftsplan2test	FEIL	86	lite	alene	FEIL S5 the tired crew end the day: no more jigging, the line is still hauled when due (within 3 h), then in [[['D1 13:19', 'Mannskapet er slitne. Avslutter juk
 2026-11-08 17:49	ccr-2040aa61-qgig5a	154372dc+	driftsplan2test	OK	87	lite	alene	
+2026-11-08 18:23	ccr-864d9913-u29rne	3eb0e01+	opsowntest	OK	50	lite	samtidig	
+2026-11-08 18:23	ccr-864d9913-u29rne	3eb0e01+	fleet2test	OK	35	lite	samtidig	
+2026-11-08 18:23	ccr-864d9913-u29rne	3eb0e01+	fleet3test	OK	18	lite	samtidig	
+2026-11-08 18:24	ccr-864d9913-u29rne	3eb0e01+	geartest	OK	45	lite	samtidig	
+2026-11-08 18:24	ccr-864d9913-u29rne	3eb0e01+	anchortest	OK	10	lite	samtidig	
+2026-11-08 18:24	ccr-864d9913-u29rne	3eb0e01+	progweek	LES	58	lite	samtidig	
+2026-11-08 18:24	ccr-864d9913-u29rne	3eb0e01+	driftsplan2ui	OK	38	lite	samtidig	
+2026-11-08 18:24	ccr-864d9913-u29rne	3eb0e01+	driftsplan2map	OK	13	lite	samtidig	
+2026-11-08 18:25	ccr-864d9913-u29rne	3eb0e01+	boottest	OK	28	lite	samtidig	
+2026-11-08 18:25	ccr-864d9913-u29rne	3eb0e01+	mig2test	OK	24	lite	samtidig	
+2026-11-08 18:25	ccr-864d9913-u29rne	99ac9d6	pushtest	OK	21	lite	samtidig	
+2026-11-08 18:25	ccr-864d9913-u29rne	99ac9d6	skiptest	OK	14	lite	samtidig	
+2026-11-08 18:25	ccr-864d9913-u29rne	99ac9d6	skipdrift	OK	18	lite	samtidig	
+2026-11-08 18:36	ccr-864d9913-u29rne	e2c1547	havplantest	FEIL	643	lite	samtidig	FEIL the hold at 95 %: the strings hauled home, the landing at the plant, the other crew signs on [0, 1, 585164, [0, 1]]
+2026-11-08 18:42	ccr-864d9913-u29rne	b6624cb	driftsplan2gui	FEIL	370	lite	samtidig	FEIL s02-ikke-klar: U13: grunnen er en knapp, og et trykk på den åpner Mannskap-siden i samme skuff  {"grunnen": "Når du ikke er om bord, må både en skipper og 
+2026-11-08 18:42	ccr-864d9913-u29rne	b6624cb	driftsplan2kyst	OK	93	lite	samtidig	
+2026-11-08 19:10	ccr-864d9913-u29rne	eb9aed3	tut	OK	1673	lite	alene	
+2026-11-08 19:11	ccr-864d9913-u29rne	296235c	driftsplan2test	FEIL	85	lite	alene	FEIL S20 a boat with room for one hand waits in port while you are ashore, and goes out with you aboard {'check': ['Når du ikke er om bord, må både en skipper o
+2026-11-08 19:13	ccr-864d9913-u29rne	296235c+	driftsplan2test	FEIL	57	lite	alene	FEIL S5 the tired crew end the day: no more jigging, the line is still hauled when due (within 3 h), then in [[['D1 13:19', 'Mannskapet er slitne. Avslutter juk
+2026-11-08 19:14	ccr-864d9913-u29rne	296235c+	driftsplan2test	FEIL	83	lite	alene	FEIL S1 the line is set on both fields and hauled after 6-7.5 h each day [('D1 05:52', 6.2), ('D2 05:35', 6.3), ('D3 05:35', 6.4)]
+2026-11-08 19:16	ccr-864d9913-u29rne	296235c+	driftsplan2test	OK	83	lite	alene	
 2026-11-08 18:20	ccr-ed93b6bd-ek0n3a	3c245ff+	worktest	FEIL	0	lite	samtidig	avsluttet med kode 1
 2026-11-08 18:20	ccr-ed93b6bd-ek0n3a	3c245ff+	crewlifetest	FEIL	0	lite	samtidig	avsluttet med kode 1
 2026-11-08 18:20	ccr-ed93b6bd-ek0n3a	3c245ff+	selfcrew	FEIL	0	lite	samtidig	avsluttet med kode 1
@@ -1316,6 +1337,19 @@
 2026-11-08 19:16	ccr-c27822e7-1y3qn3	b6f78e0	boottest	OK	25	lite	samtidig	
 2026-11-08 19:17	ccr-c27822e7-1y3qn3	b6f78e0	docktest	OK	59	lite	samtidig	
 2026-11-08 19:19	ccr-c27822e7-1y3qn3	b6f78e0	mobtest	OK	201	lite	samtidig	
+2026-11-08 19:18	ccr-864d9913-u29rne	5fc2599	driftsplan2ui	OK	25	lite	samtidig	
+2026-11-08 19:18	ccr-864d9913-u29rne	5fc2599	driftsplan2map	OK	12	lite	samtidig	
+2026-11-08 19:18	ccr-864d9913-u29rne	5fc2599	opsowntest	OK	36	lite	samtidig	
+2026-11-08 19:18	ccr-864d9913-u29rne	5fc2599	fleet2test	OK	28	lite	samtidig	
+2026-11-08 19:18	ccr-864d9913-u29rne	5fc2599	fleet3test	OK	14	lite	samtidig	
+2026-11-08 19:19	ccr-864d9913-u29rne	5fc2599	geartest	OK	33	lite	samtidig	
+2026-11-08 19:19	ccr-864d9913-u29rne	5fc2599	anchortest	OK	8	lite	samtidig	
+2026-11-08 19:19	ccr-864d9913-u29rne	5fc2599	boottest	OK	26	lite	samtidig	
+2026-11-08 19:19	ccr-864d9913-u29rne	5fc2599	pushtest	OK	23	lite	samtidig	
+2026-11-08 19:19	ccr-864d9913-u29rne	5fc2599	mig2test	OK	20	lite	samtidig	
+2026-11-08 19:20	ccr-864d9913-u29rne	5fc2599	skipdrift	OK	19	lite	samtidig	
+2026-11-08 19:20	ccr-864d9913-u29rne	5fc2599	skiptest	OK	14	lite	samtidig	
+2026-11-08 19:21	ccr-864d9913-u29rne	5fc2599	driftsplan2test	OK	90	lite	alene	
 2026-11-08 19:18	ccr-824d1172-0cmxu3	56f3499+	decktest	OK	15	lite	samtidig	
 2026-11-08 19:18	ccr-824d1172-0cmxu3	56f3499+	hbtest	OK	16	lite	samtidig	
 2026-11-08 19:18	ccr-824d1172-0cmxu3	56f3499+	plantsaytest	OK	5	lite	samtidig	
@@ -1324,3 +1358,5 @@
 2026-11-08 19:22	ccr-c27822e7-1y3qn3	7e9eef3	boottest	OK	22	lite	samtidig	
 2026-11-08 19:23	ccr-c27822e7-1y3qn3	7e9eef3	docktest	OK	59	lite	samtidig	
 2026-11-08 19:26	ccr-c27822e7-1y3qn3	7e9eef3	mobtest	OK	202	lite	samtidig	
+2026-11-08 19:23	ccr-864d9913-u29rne	fa78d4b	boottest	OK	27	lite	samtidig	
+2026-11-08 19:23	ccr-864d9913-u29rne	fa78d4b	driftsplan2ui	OK	30	lite	samtidig	

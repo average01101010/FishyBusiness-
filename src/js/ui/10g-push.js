@@ -93,15 +93,15 @@ function pushItems(now){
     // a boat on a route, at the end of it (as the route's ETA, 04-panels-instruments.js navOf): at a harbour, a shop or a yard, or out at sea
     // (a trip on the operations plan is the crew's: they land, rest and go out again by themselves, so its arrival, a full hold and a tired
     // crew are not told; the plan's stop is, below)
-    const P = S.plan, onPlan = !!(P && P.ops), O = S.ops && S.ops.v === DRV ? S.ops : null;
+    const P = S.plan, onPlan = !!(P && P.ops);
     // Driftsplan 2 (core/06h-plan2-engine.js): a long wait that ends on its own (the weather, the crew's rest, a fitting, a closed field,
     // a day off) is told when it ends, so the player knows the boat is out again; the plan's regular departures are not
-    if (DRIFT2 && typeof plan2Ops === 'function'){ const o = plan2Ops(), w0 = o && o.on && !o.held && o.run && o.run.wait;
+    { const o = plan2Ops(), w0 = o && o.on && !o.held && o.run && o.run.wait;
       // (a closed field is looked at again each day, until, but opens on its date, open: the push goes then, Ø12 07.11.2026)
       const w = w0 && w0.open != null && w0.open > (w0.until || 0) ? Object.assign({}, w0, {until:w0.open}) : w0;
       if (w && w.until && w.until * 60 - S.t > 60){ const T = {wx:['Været har løyet. ' + nm + ' går ut.', 'The weather has eased. ' + nm + ' goes out.'], rest:['Mannskapet er uthvilt. ' + nm + ' går ut.', 'The crew are rested. ' + nm + ' goes out.'], jobs:['Arbeidet på ' + nm + ' er ferdig. Hun går ut.', 'The work on ' + nm + ' is done. She goes out.'], closed:['Feltet er åpent igjen. ' + nm + ' går ut.', 'The field is open again. ' + nm + ' goes out.'], off:['Fridagen er over. ' + nm + ' går ut.', 'The day off is over. ' + nm + ' goes out.']}[w.k];
         if (T) add(w.until * 60, 'p2-' + w.k + '-' + tag, nm, T[0], T[1], 6, 2); }
-      // the plan stops (Jonas 23.10.2026, as for the old plan below): when it has just stopped, and when the rules close one of its places
+      // the plan stops (Jonas 23.10.2026): when it has just stopped, and when the rules close one of its places
       // within the days ahead for longer than the plan waits (a month, plan2RulesOpenAt); one closed for less is the wait above
       if (o && !o.on && o.stop && S.t - o.stop.t < 120) add(S.t + 1, 'ops-' + tag, nm, 'Driftsplanen for ' + nm + ' har stoppet: ' + o.stop.no, 'The plan for ' + nm + ' has stopped: ' + o.stop.en, 24, 1);
       // (the rules go by the date: each day is looked at from its first minute; a short closing is passed over to the day it opens, so a
@@ -128,7 +128,7 @@ function pushItems(now){
       if (left > 1 && rate > 1){ const T = S.t + left / rate * 60; if (b.fishUntil == null || T < b.fishUntil) add(T, 'full-' + tag, nm, 'Lasten på ' + nm + ' er full. Tid for å gå inn.', 'The hold on ' + nm + ' is full. Time to head in.', 6, 1); }
     }
     // fish in the hold about to drop a grade (not while she is on her way in: that is the line above), two game hours before
-    if (kg > 20 && !(P && P.idx < P.wps.length) && !(O && O.on)){
+    if (kg > 20 && !(P && P.idx < P.wps.length)){
       let best = null, rrs = null;
       for (const x of S.hold){ if (x.kg < 20 || liveLot(x) || x.frozen) continue;
         const f = x.fresh, nx = f >= 85 ? 85 : f >= 65 ? 65 : f >= 40 ? 40 : f >= 15 ? 15 : null; if (nx == null) continue;
@@ -155,14 +155,6 @@ function pushItems(now){
       }
       if (tired != null) add(tired, 'crew-' + tag, nm, 'Mannskapet på ' + nm + ' begynner å bli sliten. Gå inn til kai og la dem hvile.', 'The crew of ' + nm + ' is getting tired. Head in to the quay and let them rest.', 6, 1);
     }
-    // the operations plan stops (Jonas 23.10.2026): when it has just stopped, and when one of its places is closed by the rules within the
-    // days ahead (the regulations' calendar, 03e-rules.js rulesAt with the hour); the other stops come from what happens and are told in the app
-    if (O && !O.on && O.stop && S.t - O.stop.t < 120) add(S.t + 1, 'ops-' + tag, nm, 'Driftsplanen for ' + nm + ' har stoppet: ' + O.stop.no, 'The plan for ' + nm + ' has stopped: ' + O.stop.en, 24, 1);
-    else if (O && O.on){ const H0 = S.t / 60, kind = drKind(O); let hit = null;
-      for (let d = 1; d <= Math.floor(PUSH_AHEAD / 1440) && !hit; d++){ const H = H0 + d * 24;
-        O.fields.forEach((f, i) => { if (!hit && ruBlockMsg({p:f, H, len:BOAT.len, gear:O.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? potSp() : null})) hit = {H, no:'felt ' + (i + 1), en:'field ' + (i + 1)}; });
-        if (drJig(O)) O.jigs.forEach((j, i) => { if (!hit && ruBlockMsg({p:j, H, len:BOAT.len, gear:'juksa', sp:null, hand:!(S.equip && S.equip.jukse > 0)})) hit = {H, no:'juksplass ' + (i + 1), en:'jig place ' + (i + 1)}; }); }
-      if (hit) add(hit.H * 60, 'ops-' + tag, nm, 'Driftsplanen for ' + nm + ' har stoppet: ' + hit.no + ' er stengt etter reglene fra i dag. Velg en ny plass.', 'The plan for ' + nm + ' has stopped: ' + hit.en + ' is closed by the rules from today. Choose a new place.', 24, 1); }
     // an engine overdue for service, while she is out: the risk of a stop grows with every hour (core/05-vessels.js risk)
     if (out_ && typeof svcOverdue === 'function' && svcOverdue() > 0) add(S.t + 60, 'svc-' + tag, nm, 'Motoren på ' + nm + ' er over tid for service. Faren for motorstopp øker på sjøen.', 'The engine on ' + nm + ' is overdue for service. The risk of a stop grows at sea.', 3, 2);
     // a gale or high waves on the way (the boat's own limits, riskLevel) while she is out or her gear is in the sea; two game hours before

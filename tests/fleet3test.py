@@ -10,7 +10,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':900, 'height':900})
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await boot(pg); await pg.evaluate("DRIFT2 = false")   # (the old plan, until part 8 of Driftsplan 2 replaces this test)
+        await boot(pg)
 
         r = await pg.evaluate("""(async ()=>{
           const R = {}, q = s => document.querySelector(s), view = () => document.getElementById('phView').innerText;
@@ -19,7 +19,7 @@ async def main():
           const v1 = curVessel(), v2 = newVesselObj('snekke', 'husoy');
           // something to report on each vessel
           S.boat.engH = 150; S.boat.svcAt = 0;
-          withVessel(v2, () => { const c = Object.assign(genCrew(), {bi:false, off:false}); S.crew = [c]; S.boat.fuel = 10; S.ops = Object.assign(driftNew({home:'husoy'}), {on:false, stop:{t:S.t, k:'roles', no:'Når du ikke er om bord, må både en skipper og en styrmann være utnevnt.', en:'When you are not aboard, both a skipper and a mate must be appointed.', fix:'mannskap'}}); });
+          withVessel(v2, () => { const c = Object.assign(genCrew(), {bi:false, off:false}); S.crew = [c]; S.boat.fuel = 10; S.ops = Object.assign(plan2New({home:'husoy'}), {on:false, stop:{t:S.t, k:'roles', no:'Når du ikke er om bord, må både en skipper og en styrmann være utnevnt.', en:'When you are not aboard, both a skipper and a mate must be appointed.', fix:'mannskap'}}); });
           // the cod quota 95 % fished on the first vessel: a quiet line on her card, not an alert (Jonas 07.11.2026)
           const H0 = S.t / 60; R.acc = access(); quotaState().torsk = codLimitNow(H0) * 0.95;
           R.alerts = PHONE.alerts().map(a => a.id + ':' + a.k);

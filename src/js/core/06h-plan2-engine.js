@@ -3,7 +3,7 @@
 // hour to try again, never «three failures and stop». A trip is the steps from where she lies to the next port call, sailed on the legs
 // kept when the plan was made (plan2Make: the plant, the anchorages, every leg between home, the plant, the places and each place's
 // shelter port, found with leiaRoute and checked with the sailing's own groundCheck). Nothing here searches while the plan runs, so the
-// day plays the same with the game closed (catchUp) as open. Runs only with DRIFT2 on; the gates are in 06d-drift.js.
+// day plays the same with the game closed (catchUp) as open. The gates are in 06d-plan-felles.js (opsStep, opsLanded, driftWx) and 04-crew.js, 07-harbours.js.
 const P2_PORTCALL = {lever:1, agn:1, hjem:1, hvile:1};
 function plan2Key(o){ return JSON.stringify([o.home, !!o.anchor, o.rig, o.places.map(q => [q.k, +q.x.toFixed(3), +q.y.toFixed(3)]), o.rhythm, o.land ? [o.land.mode, o.land.port] : null, S.boat.type]); }
 const plan2Made = o => !!(o && o.made && o.made.key === plan2Key(o));
@@ -183,7 +183,7 @@ function plan2Cut(o, why){
   const last = pl.wps[pl.wps.length - 1]; if (!last || (!last.port && !last.anchor)){ const Hp = plan2P(o, 'H'), hp = plan2Port(o, 'H'); const from = last ? {x:last.x, y:last.y} : {x:b.pos.x, y:b.pos.y}; const L = drLeg(o, from, null, Hp, hp); if (L) for (const z of L.w) pl.wps.push({x:z[0], y:z[1], port:null, fish:0, leia:true}); pl.wps.push(hp ? {x:Hp.x, y:Hp.y, port:hp, fish:0} : {x:Hp.x, y:Hp.y, port:null, fish:0, anchor:true}); }
   log(why === 'energy' ? 'Du er tom for energi. Avslutter fisket, trekker det som skal trekkes og går inn.' : 'Mannskapet er slitne. Avslutter juksinga, trekker det som skal trekkes og går inn.', why === 'energy' ? 'You are out of energy. Stopping the fishing, hauling what is due and going in.' : 'The crew are tired. Stopping the jigging, hauling what is due and going in.');
 }
-// the rules at an hour: a closed place, or the cod quota used up (drRulesWhy with the hour), and the first day within a month a closed place opens
+// the rules at an hour: a closed place, or the cod quota used up (as drRulesWhy in 06d-plan-felles.js, with the quota), and the first day within a month a closed place opens
 function plan2RulesWhy(o, H, placesOnly){
   const kind = p2Kind(o), hand = !(S.equip && S.equip.jukse > 0), F = o.places.filter(q => q.k === 'felt'), J = o.places.filter(q => q.k === 'juks');
   for (const [i, f] of F.entries()){ const why = ruBlockMsg({p:f, len:BOAT.len, gear:o.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? potSp() : null, H}); if (why) return {k:'closed', fix:'places', no:'Felt ' + (i + 1) + ' er stengt: ' + why, en:'Field ' + (i + 1) + ' is closed: ' + why}; }
@@ -192,7 +192,7 @@ function plan2RulesWhy(o, H, placesOnly){
   return null;
 }
 function plan2RulesOpenAt(o, H){ for (let k = 1; k <= 31; k++) if (!plan2RulesWhy(o, H + 24 * k, true)) return H + 24 * k; return null; }
-// ---- the engine: each minute, on each vessel (06d-drift.js opsStep hands over with DRIFT2 on)
+// ---- the engine: each minute, on each vessel (06d-plan-felles.js opsStep hands over)
 let P2_DEPTH = 0;
 function plan2Step(H){
   const o = plan2Ops(), b = S.boat; if (!o || !o.on) return;
@@ -254,7 +254,6 @@ function plan2MeRest(o, H){
 // of a day waits only for the baiting ('hvile', s.ready)
 // (each vessel's own plan read where it lies, vget, without binding the vessel: a purchase must never fail on a vessel half made)
 function plan2SkipGiven(){
-  if (!DRIFT2) return;
   for (const v of S.fleet && S.fleet.length ? S.fleet : [{id:S.cur}]){
     const o = vget(v, 'ops'), pl = vget(v, 'plan'); if (!o || o.v !== DRV2 || !o.on) continue;
     o.hold = 0; const r = o.run; if (!r) continue;
@@ -489,7 +488,7 @@ function plan2Landed(pid, k){
   if (!s || (want && want !== pid)) r.replan = true;
   o.hold = 0;
 }
-// the landing note is in (07-harbours.js finishLanding through opsReport): the statistics, the report, and the day steps on
+// the landing note is in (07-harbours.js finishLanding): the statistics, the report, and the day steps on
 function plan2Report(pid, kg, total, landed){
   const o = plan2Ops(); if (!o) return; const port = portById(pid), sale = (S.sales || [])[S.sales.length - 1], L = S.lastSale || {};
   autoRestock();
@@ -526,7 +525,7 @@ function plan2Egn(o, s){
     const why = s.where === 'egnebu' && egnPort(p) ? egnOrder(lk, un) : egnSelf(lk, un);
     if (why) log('Lina ble ikke egnet: ' + why[0], 'The line was not baited: ' + why[0]); }
 }
-// round the clock: who sleeps this hour (04-crew.js crewTick through driftWatch): the watch off sleeps in the bunks
+// round the clock: who sleeps this hour (04-crew.js crewTick): the watch off sleeps in the bunks
 function plan2WatchTick(H){
   const o = plan2Ops(), me = meAboard(), on = !!o && o.on && o.rhythm === 'watch' && (S.crew.length + (me ? 1 : 0) >= 4 || p2Lag());   // (an ocean vessel's teams, H2c)
   if (!on){ for (const c of S.crew) if (c.sleepW) delete c.sleepW; return; }

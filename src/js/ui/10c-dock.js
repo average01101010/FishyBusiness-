@@ -73,8 +73,8 @@ const DOCK = (() => {
     // the bunk aboard (#70, 17.10.2026): at anchor, or at sea with a watch, on a boat with berths
     return w === 'koye' ? I('rest', 'hvil', 'Hvil i køya', 'Rest in the bunk', {act:'rest', pri:S.energy < 30}) : I('rest', 'hvil', 'Hvil', 'Rest', {act:'rest', pri:S.energy < (w === 'rorbu' ? 60 : 40)});
   }
-  // the operations plan wants you: it has stopped, or waits until you give the boat back (the Crew page has its line, ui/05c-drift.js)
-  const opsDot = () => { const o = S.ops; return !!(o && (o.v === DRV || o.v === DRV2) && ((!o.on && o.stop) || (o.on && o.held))); };
+  // the operations plan wants you: it has stopped, or waits until you give the boat back (the Crew page has its line, ui/05d-plan2.js)
+  const opsDot = () => { const o = S.ops; return !!(o && o.v === DRV2 && ((!o.on && o.stop) || (o.on && o.held))); };
   // «Om bord» (UI 2, U2-2, docs/planer/ui-2-staaende.md 4.4, Jonas 06.11.2026, V3 revidert A): the inventory with the crew page as its
   // fifth tab, last in the row in every state, the row's one global button. Its dot says a quarrel aboard (S.cevt) or the operations plan
   // wants you, and then the tap lands on the crew tab

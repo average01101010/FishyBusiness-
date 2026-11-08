@@ -9,7 +9,7 @@ ok = lambda c: 'OK  ' if c else 'FEIL'
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out')
 
 SETUP = """(async () => {
-  S.tut = 0; S.settings.lang = 'no'; S.lang = 'no'; DRIFT2 = true;
+  S.tut = 0; S.settings.lang = 'no'; S.lang = 'no';
   const b = S.boat, HP = portById('husoy'); b.type = 'sjark'; applyVessel(); b.status = 'port'; b.port = 'husoy'; b.pos = {...HP.p}; S.plan = null; S.ops = null; S.draft = []; S.me = S.cur;
   S.crew = [Object.assign(genCrew(), {bi:false, off:false, name:'Ole Mikalsen', known:[true, true]}), Object.assign(genCrew(), {bi:false, off:false, name:'Per Hansen', known:[true, true]})];
   S.equip.linehaler = true; S.pgear.kits.n = 6; const LN = S.pgear.lines.hyse; LN.n = 4; LN.baited = 4; LN.bt = {makrell:4};

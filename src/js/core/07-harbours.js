@@ -516,7 +516,7 @@ function finishLanding(){
   if (b.status !== 'port' || b.port !== L.pid) return;
   const fz = landFreeze(); if (fz > 0.5) log(fmt(fz, 0) + ' kg som lå ufryst, er fryst ved kaia før innveiingen.', fmt(fz, 0) + ' kg that lay unfrozen was frozen at the quay before the weighing.');
   const c0 = S.cash; sell(); const total = S.cash - c0;
-  if (L.ops) opsReport(L.pid, L.kg, total, true);
+  if (L.ops) plan2Report(L.pid, L.kg, total, true);
 }
 // ice from the silo runs down the chute at about 100 kg a minute; only the 3D view uses this
 function iceChute(kg){ const b = S.boat; b.iceUntil = Math.max(b.iceUntil || 0, S.t) + Math.max(1, kg / 100); }

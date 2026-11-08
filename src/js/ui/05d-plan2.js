@@ -1,6 +1,6 @@
 // ===== Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The day first («I dag» with where she is now, or the
 // next day as planDay reckons it), then the answers as rows (Hjem, Redskap, Plasser, Levering, Vær, Rytme, Mannskap), then the statistics.
-// Shown in place of DRIFTUI when DRIFT2 is on (phone/06-render.js, 14-act.js). The chart window (part 6) is opened from the Plasser row.
+// The Drift app's page (phone/06-render.js, 14-act.js; the old page, ui/05c-drift.js, was taken out in Ø12 C 08.11.2026). The chart window (part 6) is opened from the Plasser row.
 const PLAN2UI = (() => {
   const L = (no, en) => S.lang === 'no' ? no : en;
   const nm = id => (portById(id) || {name:'?'}).name;

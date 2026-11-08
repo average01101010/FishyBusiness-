@@ -24,7 +24,7 @@ CRABP = """async () => { const c = P(71.05, 24.9); await mapNeed(c, MAPD.simR); 
 
 async def fresh(br):
     pg = await (await br.new_context(viewport={'width':1100, 'height':800})).new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-    await boot(pg); await pg.evaluate("DRIFT2 = false")   # (the old plan, until part 8 of Driftsplan 2 replaces this test)
+    await boot(pg)
     await pg.evaluate(SEED); await pg.evaluate(PREP); await pg.evaluate(CRABP)
     return pg, errs
 
@@ -172,12 +172,14 @@ async def main():
           S.t = Math.round(t0 * 60) - 30; b.type = 'sjark'; applyVessel(); S.equip.garnhaler = true; b.rig = 'garn'; b.fuel = BOAT.fuelCap; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.status = 'port'; b.gop = null;
           S.crew = [hand(), hand()]; setSkipper(S.crew[0].id); setMate(S.crew[1].id); S.me = 'nobody'; S.pgear = newPGear(); S.pgear.nets.push({id:'np', mesh:180, n:30, cond:1}); S.pgear.kits.n = 2;
           const rt = FLEET.find(f => f.home === 'husoy' && f.L < 15).rt[0], end = rt[rt.length - 1];
-          const o = S.ops = driftNew({home:'husoy', rig:'garn', jig:false, fields:[{id:'g', x:end[0], y:end[1], n:30, soak:24}], dep:5, wx:'tough'});
-          await new Promise(r => driftMake(o, r)); o.on = true;
+          const o = S.ops = plan2New({home:'husoy', rig:'garn', jig:false, places:[{id:'g', k:'felt', x:end[0], y:end[1], n:30, soak:24}], dep:5, wx:{wind:16, hs:3.5}, land:{mode:'near', port:null, when:'trip'}});   // (Driftsplan 2 since Ø12 C 08.11.2026)
+          const err = await new Promise(r => plan2Make(o, r)); o.on = true;
           const s0 = S.sales.length, days = []; for (let d = 0; d < 3; d++){ for (let i = 0; i < 1440; i++){ DYN.on = false; step(); if (i % 240 === 0) await new Promise(r => setTimeout(r, 0)); } days.push(S.sets.filter(s => !s.lost).map(s => Math.round((S.t - s.tSet) / 60))); }
-          const R = {days, sales:S.sales.slice(s0).map(x => x.kg), stop:o.stop};
+          const R = {err, days, sales:S.sales.slice(s0).map(x => x.kg), stop:o.stop};
           // you alone aboard: nets need two
-          S.crew = []; S.me = S.cur; o.on = true; o.stop = null; o.hold = 0; o.fails = 0; o.day = null; o.last = null; const m0 = S.msgs.length; for (let i = 0; i < 1440; i++){ DYN.on = false; step(); } R.oneHand = S.msgs.slice(m0).some(m => /to om bord/.test(m.no));
+          S.crew = []; S.me = S.cur; o.on = true; o.stop = null; o.hold = 0; o.run = null; const m0 = S.msgs.length, l0 = S.log.length, said = [];
+          for (let i = 0; i < 1440; i++){ DYN.on = false; step(); const r = o.run; if (r && r.day) for (const x of r.day.skipped || []) said.push(x.no); if (r && r.wait) said.push(r.wait.no); }
+          said.push(...S.msgs.slice(m0).map(m => m.no), ...S.log.slice(l0).map(e => e.no), o.stop && o.stop.no); R.oneHand = said.some(t => /to om bord/.test(t || '')); R.said = [...new Set(said.filter(Boolean))].slice(0, 6);
           S.ops = null; S.me = S.cur; return R; })()""")
         print('plan:', json.dumps(r))
         print(ok(len(r['sales']) >= 2 and all(k > 100 for k in r['sales']) and all(len(d) == 1 and d[0] <= 30 for d in r['days'])), 'standing plan: the net station is hauled and set again every day, and the catch is landed')
