@@ -584,6 +584,7 @@ Jonas svarte på alle 09.11.2026 (også under «Valg som venter på Jonas» i `d
 - **21. Garn på skiffen og trebåten:** B, garn trukket for hånd (OB1 og OB5).
 - **22. Bildene:** B, «Fasene bruker offentlige bilder av samme type som de finner selv, og sier hvilke slik at jonas har kontroll under prosessen.» Hver fase oppgir bildene med lenke og hva de viser, i grunnlaget og i meldingen til Jonas, før modellen endres.
 - **23. Teiner på skiffen:** A, ut som på trebåten (OB1).
+- **26. Taket og spygattene på alle båtene** (spurt i OB7 etter plastsjarken): **Ja.** Jonas 09.11.2026, om plastsjarken først: «Gjør styrhustak mer realistisk som dette, med en slags brem på kanten av taket som skrår» (med et bilde av et fiskefartøy; underkanten står ut fra veggene og flaten skrår innover opp til taket, ikke omvendt: «Bremen på styrhuset skrår feil vei»), «Fargen kan du bestemme selv så lenge den harmonerer med resten av designet», og «Fjern gummiklaffer på spygatt»; så, spurt om det skal gjelde de andre båtene: «Ja». Hver båtfase (OB8–OB13) gjør det når modellen likevel eksporteres på nytt (malen er `plast31.py`: `BRIM_O`, `BRIM_H`, underslaget og takkanten; spygattene som åpne hull med foring). Klaffene står i dag i `havsjark35.py`, `hurtig11.py`, `hs11.py`, `malo36.py` og `snekke26.py`; snekka er ferdig fra OB6 og har ikke styrhustak, så der tas bare klaffene, i neste runde på den. Havflåten (`al45`, `krabbe50`, `not75`, `ringnot38`, `tral60`) tas når de revideres.
 
 ## 8. Det usikre
 
