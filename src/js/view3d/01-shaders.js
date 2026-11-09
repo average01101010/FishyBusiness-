@@ -120,7 +120,9 @@
   // ---------- the sea by the shore (Fysikk 4, F4, 09.11.2026) ----------
   // Inside the near terrain the bottom is known (the shoal texture, 17-draw.js groundStep, the game's own depthF on the near mesh's
   // square, 256 x 256): b the depth below chart datum (sqrt over 80 m), r and g the travel time from the shore (s, 16 bits over SHT_TMAX
-  // in a high and a low byte, which linear filtering keeps exact, as it is linear in both), worked out from the shore outwards with the
+  // in a high and a low byte; read at the four texel centres, where the value is exact, and interpolated here: a GPU may round what it
+  // filters to 8 bits a channel, and the high byte then stepped by 4.7 s, a jump of radians in the surf's phase, stairs 23 m a tread
+  // by Bleik's breakwater, 09.11.2026; the gradient from the same four), worked out from the shore outwards with the
   // shallow-water speed sqrt(g h) (a weighted distance transform), so its gradient is 1 / c and points away from land: the crests a
   // shore bends the waves into are the lines of equal travel time (Fermat; the rays meet the beach square on). shoalAt gives the water's
   // depth with the tide (uSurf.w), the travel time and the way to the shore n (-grad T, scaled by how sure it is: none far off, where
@@ -132,7 +134,8 @@
     '\nfloat shT(vec2 u){vec4 c=texture2D(uSHT,u);return (c.r*65280.0+c.g*255.0)*' + (SHT_TMAX / 65535).toFixed(8) + ';}' +
     '\nvec4 shoalAt(vec2 P){vec4 D=vec4(200.0,0.0,0.0,0.0);if(uSurf.z<0.5)return D;vec2 u=(P-uSHR.xy)*uSHR.z;float ef=smoothstep(0.0,0.06,min(min(u.x,u.y),min(1.0-u.x,1.0-u.y)));if(ef<=0.0)return D;' +
     'vec4 c=texture2D(uSHT,u);if(c.b>0.995)return D;float h=mix(200.0,max(c.b*c.b*80.0+uSurf.w,0.05),ef);if(h>=78.0)return D;' +
-    'float T=shT(u);vec2 g=vec2(shT(u+vec2(uSHR.w,0.0))-T,shT(u+vec2(0.0,uSHR.w))-T)*(uSHR.z/uSHR.w);float gm=length(g);' +
+    'vec2 q=u/uSHR.w-0.5;vec2 i0=floor(q);vec2 f=q-i0;vec2 c0=(i0+0.5)*uSHR.w;float t00=shT(c0);float t10=shT(c0+vec2(uSHR.w,0.0));float t01=shT(c0+vec2(0.0,uSHR.w));float t11=shT(c0+vec2(uSHR.w));' +
+    'float T=mix(mix(t00,t10,f.x),mix(t01,t11,f.x),f.y);vec2 g=vec2(mix(t10-t00,t11-t01,f.y),mix(t01-t00,t11-t10,f.x))*(uSHR.z/uSHR.w);float gm=length(g);' +
     'return vec4(h,T,gm>1e-5?-g/gm*smoothstep(0.01,0.03,gm)*ef:vec2(0.0));}\n#endif\n' +
     // A wave over that bottom: r = k_h / k, its wavenumber over the bottom against deep water by Eckart's (1952) approximation of
     // w^2 = g k tanh(k h), k_h = k / sqrt(tanh(k h)), within 5 % (it shortens the crests and steepens the slopes: the Gerstner shift

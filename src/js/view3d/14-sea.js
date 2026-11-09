@@ -402,7 +402,10 @@
     const R = SHC.R, u = (x - R[0]) / R[2], v = (z - R[1]) / R[2], ef = sstep(0, 0.06, Math.min(u, v, 1 - u, 1 - v)); if (ef <= 0) return D;
     const c = shTex(u, v, SHA); if (c[2] > 0.995) return D;
     const h = lerp(200, Math.max(c[2] * c[2] * 80 + (env.tide || 0), 0.05), ef); if (h >= 78) return D;
-    const e = 1 / SHC.n, T = shTv(c), gx = (shTv(shTex(u + e, v, SHA)) - T) * SHC.n / R[2], gz = (shTv(shTex(u, v + e, SHA)) - T) * SHC.n / R[2], gm = Math.hypot(gx, gz), w = gm > 1e-5 ? sstep(0.01, 0.03, gm) * ef / gm : 0;
+    // (the travel time from the four texel centres and interpolated, as SHOAL does: exact on every GPU; the gradient from the same four)
+    const n = SHC.n, qx = u * n - 0.5, qz = v * n - 0.5, ix = Math.floor(qx), iz = Math.floor(qz), fx = qx - ix, fz = qz - iz, cT = (a, b) => shTv(shTex((clamp(a, 0, n - 1) + 0.5) / n, (clamp(b, 0, n - 1) + 0.5) / n, SHA));
+    const t00 = cT(ix, iz), t10 = cT(ix + 1, iz), t01 = cT(ix, iz + 1), t11 = cT(ix + 1, iz + 1), T = lerp(lerp(t00, t10, fx), lerp(t01, t11, fx), fz);
+    const gx = lerp(t10 - t00, t11 - t01, fz) * n / R[2], gz = lerp(t01 - t00, t11 - t10, fx) * n / R[2], gm = Math.hypot(gx, gz), w = gm > 1e-5 ? sstep(0.01, 0.03, gm) * ef / gm : 0;
     D[0] = h; D[1] = T; D[2] = -gx * w; D[3] = -gz * w; return D;
   }
   // shW and surfK in the shaders (SHOAL): the shoaling (linear theory), k_h / k and the share that turns into the surf; the surf's wavenumber
