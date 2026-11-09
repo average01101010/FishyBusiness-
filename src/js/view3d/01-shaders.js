@@ -678,21 +678,38 @@
     if (fs){ const m = /precision\s+\w+\s+float\s*;/.exec(src); src = m ? src.slice(0, m.index + m[0].length) + 'out vec4 oCol_;' + src.slice(m.index + m[0].length) : 'out vec4 oCol_;\n' + src; }
     return '#version 300 es\n' + src;
   }
-  function compile(type, src, nm){
-    if (type === gl.FRAGMENT_SHADER && !GL2) src = src.replace('precision highp float;', FS_HP);   // (ES 3.00 always has highp there)
-    if (GL2) src = glsl3(src, type === gl.FRAGMENT_SHADER);
-    const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(glWhy(gl.getShaderInfoLog(s), nm + (type === gl.VERTEX_SHADER ? ' VS' : ' FS')));
-    return s;
-  }
-  function program(vs, fs, attrs, nm = '?'){
-    const p = gl.createProgram(); gl.attachShader(p, compile(gl.VERTEX_SHADER, vs, nm)); gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs, nm));
+  // A program in two halves (Ø3c, 09.11.2026): progStart hands both shaders and the link to the driver and asks nothing back, progEnd
+  // reads the status and the log (the same errors as before) and the uniforms. Asking for a status makes the main thread wait for the
+  // compile; with KHR_parallel_shader_compile (KPSC) the driver compiles on its own threads, so init starts all the programs first and
+  // asks COMPLETION_STATUS_KHR between awaits (progWait) before it reads them. program() is the two at once, as before.
+  let KPSC = null;
+  function progStart(vs, fs, attrs, nm = '?'){
+    const pre = (type, src) => { if (type === gl.FRAGMENT_SHADER && !GL2) src = src.replace('precision highp float;', FS_HP);   // (ES 3.00 always has highp there)
+      return GL2 ? glsl3(src, type === gl.FRAGMENT_SHADER) : src; };
+    const sh = type => { const s = gl.createShader(type); gl.shaderSource(s, pre(type, type === gl.VERTEX_SHADER ? vs : fs)); gl.compileShader(s); return s; };
+    const p = gl.createProgram(), v = sh(gl.VERTEX_SHADER), f = sh(gl.FRAGMENT_SHADER); gl.attachShader(p, v); gl.attachShader(p, f);
     attrs.forEach((a, i) => gl.bindAttribLocation(p, i, a)); gl.linkProgram(p);
+    return {p, v, f, nm};
+  }
+  function progEnd(P){
+    const {p, v, f, nm} = P;
+    // (a shader that did not compile is named as before, ' VS' or ' FS'; the link's log only when both did)
+    if (!gl.getShaderParameter(v, gl.COMPILE_STATUS)) throw new Error(glWhy(gl.getShaderInfoLog(v), nm + ' VS'));
+    if (!gl.getShaderParameter(f, gl.COMPILE_STATUS)) throw new Error(glWhy(gl.getShaderInfoLog(f), nm + ' FS'));
     if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(glWhy(gl.getProgramInfoLog(p), nm + ' link'));
     const u = {}, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
     for (let i = 0; i < n; i++){ const info = gl.getActiveUniform(p, i); u[info.name.replace(/\[0\]$/, '')] = gl.getUniformLocation(p, info.name); }
     return {p, u};
   }
+  function program(vs, fs, attrs, nm = '?'){ return progEnd(progStart(vs, fs, attrs, nm)); }
+  // until the driver says every program in the list is done (KPSC; without it at once): the main thread is free between the looks
+  async function progWait(list){
+    if (!KPSC) return;
+    const done = P => gl.isContextLost() || gl.getProgramParameter(P.p, KPSC.COMPLETION_STATUS_KHR);
+    for (let i = 0; i < 2000 && !list.every(done); i++) await new Promise(r => setTimeout(r, 8));
+  }
+  // one program started, waited for between awaits and read (the sea's tries in init, one after another as before)
+  async function programA(vs, fs, attrs, nm){ const P = progStart(vs, fs, attrs, nm); await progWait([P]); return progEnd(P); }
   function buf(data, target, usage){ const b = gl.createBuffer(); target = target || gl.ARRAY_BUFFER; gl.bindBuffer(target, b); gl.bufferData(target, data, usage || gl.STATIC_DRAW); return b; }
   // the air's uniforms for a program that has them (AIR); the sky's glow round the sun as the sky shader draws it (pow 12 x 0.35, less
   // under cloud), so the haze towards the sun meets it

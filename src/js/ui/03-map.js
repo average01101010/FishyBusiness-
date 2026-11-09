@@ -213,10 +213,10 @@ function chartVectors(V, again){
   // limits, from a 250 m grid drawn soft over the sea; the blocks not worked out yet (25 ms a paint) come in the next paints
   const xb = x0 + W * kx, yb = y0 + H * ky;
   if (S.settings.ruleLayer !== false && RU.ok){
-    const q = ruCtx(), budget = performance.now() + 25; let miss = false;
+    const q = ruCtx(), budget = {end:performance.now() + 25, over:false}, tail = ruLayerTail(q); let miss = false;   // (the key's tail once a paint, Ø3c)
     ctx.save(); ctx.imageSmoothingEnabled = true;
     for (let by = Math.floor(y0 / 10); by <= Math.floor(yb / 10); by++) for (let bx = Math.floor(x0 / 10); bx <= Math.floor(xb / 10); bx++){
-      const A = ruLayerBlock(bx, by, q, budget); if (!A){ miss = true; continue; }
+      const A = ruLayerBlock(bx, by, q, budget, tail); if (!A){ miss = true; continue; }
       const cv = ruLayerCanvas(A); if (cv) ctx.drawImage(cv, (bx * 10 - x0) / kx, (by * 10 - y0) / ky, 10 / kx, 10 / ky); }
     ctx.restore();
     if (miss){ clearTimeout(CT.ruT); CT.ruT = setTimeout(() => { if (!document.body.classList.contains('vplot')) return; if (CT.v === V && V.cx === view.cx && V.cy === view.cy && V.z === view.z){ chartVectors(V, true); chartCompose(V, V.lv > 0, 0); } else if (!ptrs.size) paintChart(1); }, 60); }

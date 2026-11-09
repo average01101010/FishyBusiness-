@@ -346,7 +346,9 @@ INSTR.show(); tab = 'route'; setBodyView(true);
 // stood still meanwhile (ui/08b-letter.js)
 // (the letter's time for first3d: when it is first seen here, within the 0.4 s of the look)
 mapOnReady(() => { setInterval(tick, 200); const go3d = () => { const lt = document.getElementById('letter'); if (lt && !B3D.lt){ B3D.ltAt = performance.now(); B3D.lt = B3D.ltAt - bootAway(); if (document.hidden) B3D.lhAt = B3D.ltAt; }
-  if (lt || document.getElementById('startPick')) setTimeout(go3d, 400); else G3.show(true, true); }; go3d(); });
+  // (Ø3c, 09.11.2026: 2.5 s into the letter, when it has come in, G3.prep makes the context, and with KHR_parallel_shader_compile the
+  // shaders, while it is read: view3d/18-setup.js prep)
+  if (lt || document.getElementById('startPick')){ if (B3D.ltAt && performance.now() - B3D.ltAt > 2500 && G3.prep) G3.prep(); setTimeout(go3d, 400); } else G3.show(true, true); }; go3d(); });
 // the simulation's data are in (bootMap), so the clock may run, and the time away is played
 SIMREADY = true; CONT_D = null; renderBase(); panelDirty = true;
 if (AWAY){ catchUp(AWAY + Date.now() - BOOT_T); AWAY = 0; refreshAll(); } lastWall = Date.now();

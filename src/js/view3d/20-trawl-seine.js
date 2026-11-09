@@ -261,15 +261,36 @@
   const npcType = n => (n.player || n.hav) && SPEC3D[n.vtype] ? n.vtype : npcKit(n.L, n.B);   // the ocean fleet (05d-hav.js) as their own kind too
   const NKN = {}; function npcNear(n){ const k = n.player ? 'p|' + n.vtype : n.L + '|' + n.B; if (!(k in NKN)) NKN[k] = glbHas(npcType(n)) ? 150 : 300; return NKN[k]; }
   const NKB = {};
+  // a model's buffers by type, lod and livery (npcMesh and npcWarm)
+  function npcKB(t, lod, liv){ const k = t + '|' + lod + '|' + liv;
+    if (!(k in NKB)){ const m = npcModel(t, lod, liv), up = o => ({pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, hull:up(m.o), glass:lod >= 1 ? up(m.glass) : null, geo:m.geo} : null; }
+    return NKB[k]; }
   function npcMesh(n, lod){
     const kk = n.id + '|' + lod + '|' + (n.player ? n.vtype + '|' + n.liv : ''); if (kk in NKM) return NKM[kk];   // a player's repaint is a new key
-    const t = npcType(n), liv = n.liv || 0, k = t + '|' + lod + '|' + liv;
-    if (!(k in NKB)){ const m = npcModel(t, lod, liv), up = o => ({pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, hull:up(m.o), glass:lod >= 1 ? up(m.glass) : null, geo:m.geo} : null; }
-    const B = NKB[k]; if (!B) return NKM[kk] = null;
+    const t = npcType(n), B = npcKB(t, lod, n.liv || 0); if (!B) return NKM[kk] = null;
     const V = VESSELS[t], sx = n.B / V.beam, sz = n.L / V.len, sy = (sx + sz) / 2;
     return NKM[kk] = Object.assign({}, B, {sv:[sx, sy, sz], S:new Float32Array([sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1])});
   }
   let npcNow = [];
+  // The local fleet's models made before they are seen (Ø3c, 09.11.2026): the first time a type came within 1.5 km it was read and
+  // built in that frame, 25-171 ms with the CPU throttled 4x (the Blender models; 3d-verden.md 4.11o). From 4 s after the start, the
+  // boats within 5 km whose model at the level they are first drawn at (0.3) is not made, and then those within 1.5 km at the near
+  // level, are made one step at a time when the browser is idle (requestIdleCallback; within a second where it never is): the model
+  // read from its bytes (glbLoad) in one step, built and sent to the GPU in the next, so no frame has both, and no type is built in the
+  // frame it comes into view. The same models and buffers as npcMesh makes (npcKB), only sooner. NWARM.n counts the steps (the tests).
+  const NWARM = {t0:0, busy:false, n:0};
+  function npcWarm(eye){
+    if (NWARM.busy || !ready) return; const now = performance.now(); if (!NWARM.t0) NWARM.t0 = now; if (now - NWARM.t0 < 4000) return;
+    let best = null, bd = Infinity;
+    for (const n of npcNow){ if (!(n.fleet || n.coast || n.player || n.hav)) continue; const d = Math.hypot(n.p.x * 1000 - eye[0], n.p.y * 1000 - eye[2]) / ZF();
+      for (const [lod, r] of [[0.3, 5000], [1, 1500]]){ if (d > r || d + (lod === 1 ? 5000 : 0) >= bd) continue; const t = npcType(n);
+        if (!((t + '|' + lod + '|' + (n.liv || 0)) in NKB)){ best = {t, lod, liv:n.liv || 0}; bd = d + (lod === 1 ? 5000 : 0); } } }
+    if (!best) return;
+    NWARM.busy = true; const idle = window.requestIdleCallback || (f => setTimeout(f, 50));
+    idle(() => { try { if (!ready) return; NWARM.n++;
+      if (glbHas(best.t) && !(best.t in GLBM)){ glbLoad(best.t); return; }   // the read, one step
+      npcKB(best.t, best.lod, best.liv); } catch (e){ console.error(e); } finally { NWARM.busy = false; } }, {timeout:1000});
+  }
   // the seine's places on a model (its own from the GLB, not75.py; else made from the hull's: the stern, the starboard side amidships,
   // the hauler or power block, as on the 38 m seiner, ringnot38.py, which has none of its own)
   const SANCH = new WeakMap();
@@ -351,6 +372,7 @@
       const d = Math.hypot(x - eye[0], z - eye[2]); n.K = (n.fleet || n.coast || n.player || n.hav) && d / ZF() < 1500 * QUAL.lodK[QUAL.lvl] ? npcMesh(n, d / ZF() < npcNear(n) * QUAL.lodK[QUAL.lvl] ? 1 : 0.3) : null;
       if (n.K) kit.push(n); else drawLit(NPCM[n.type], n.M);
     }
+    npcWarm(eye);
     if (!kit.length) return;
     const P = people(); nSetup(VP);
     for (const n of kit){ const K = n.K, G = K.geo, at = (p, r) => chain(n.M, M4.T(p[0] * K.sv[0], p[1] * K.sv[1], p[2] * K.sv[2]), M4.RY(r || 0));
