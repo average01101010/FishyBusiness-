@@ -2591,12 +2591,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1392 linjer)
+## `src/js/ui/phone/07-patch.js` (1397 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1385 `patch()`
+  - 1390 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3574,23 +3574,23 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 1576 `lanterns(G, V, st)`
   - 1615 `deckPoints(type)`
 
-## `src/js/deckcrew.js` (569 linjer)
+## `src/js/deckcrew.js` (570 linjer)
 
 - **2** CREW3D: the people aboard as agents who walk the deck (docs/mannskap-plan.md, del 1; Jonas 17.10.2026: no teleporting)
   - 14 `crewSim(src)`
 - **41** the kit on the deck, out of the walking map
 - **92** where the work is on this deck: [x, z, heading, task] in the boat's frame (the heading as the view draws it: 0 forward, +pi/2 to starboard)
-- **143** what the game says: everyone's station this minute, and the boat's state
-- **166** the lines and the fenders round a quay (OB2, Jonas 09.11.2026; docs/planer/om-bord.md F1-F3)
-- **264** a free person: something to do for a while, by the weather, the hour and their nature
-- **270** no limb through a wall, the rail or anything else (Jonas 23.10.2026: «Sørg også for at mannskapet aldri "clipper" gjennom vegger,
-- **361** the work at its place, clear of everything: at the rail the hands go to the rail's own top (a step back when it is close), at the
-- **376** a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre)
-- **388** the agents follow the people aboard
-- **505** the body on its way, clear of everything: the shoulders and the chest and back as upright lines; one that would go through a wall
-- **525** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
-  - 555 `moorSpots(G, sd)`
-  - 563 `npcCrewCtx(n, G)`
+- **144** what the game says: everyone's station this minute, and the boat's state
+- **167** the lines and the fenders round a quay (OB2, Jonas 09.11.2026; docs/planer/om-bord.md F1-F3)
+- **265** a free person: something to do for a while, by the weather, the hour and their nature
+- **271** no limb through a wall, the rail or anything else (Jonas 23.10.2026: «Sørg også for at mannskapet aldri "clipper" gjennom vegger,
+- **362** the work at its place, clear of everything: at the rail the hands go to the rail's own top (a step back when it is close), at the
+- **377** a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre)
+- **389** the agents follow the people aboard
+- **506** the body on its way, clear of everything: the shoulders and the chest and back as upright lines; one that would go through a wall
+- **526** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
+  - 556 `moorSpots(G, sd)`
+  - 564 `npcCrewCtx(n, G)`
 
 ## `src/js/view3d/00-head.js` (159 linjer)
 
@@ -3962,7 +3962,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 187 `handKit(t)`
   - 209 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (561 linjer)
+## `src/js/view3d/13-instruments.js` (565 linjer)
 
 ---------- the skiff's live instruments ----------
 
@@ -3994,14 +3994,14 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 211 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
   - 400 `drawSkiffGlass(BMrel, VP)`
   - 410 `jigRail(t, G)`
-  - 431 `drawJigRail(BMrel, VP, t, G, dt)`
-  - 464 `drawGlass(m, BMrel, VP)`
-  - 483 `drawDrops(m, BMrel, VP, t)`
-  - 494 `buildBoat()`
-  - 520 `buildFlag()`
-  - 532 `flagTex()`
-  - 545 `mastTop(G)`
-  - 549 `updateFlag(t, appW)`
+  - 435 `drawJigRail(BMrel, VP, t, G, dt)`
+  - 468 `drawGlass(m, BMrel, VP)`
+  - 487 `drawDrops(m, BMrel, VP, t)`
+  - 498 `buildBoat()`
+  - 524 `buildFlag()`
+  - 536 `flagTex()`
+  - 549 `mastTop(G)`
+  - 553 `updateFlag(t, appW)`
 
 ## `src/js/view3d/14-sea.js` (530 linjer)
 
