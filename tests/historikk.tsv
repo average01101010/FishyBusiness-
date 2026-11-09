@@ -1415,6 +1415,12 @@
 2026-11-08 23:53	ccr-173e9292-helxkt	ccd56b9+	benchshot	OK	554	3d	alene	
 2026-11-09 00:01	ccr-173e9292-helxkt	ccd56b9+	profshot	OK	463	3d	alene	
 2026-11-09 00:30	ccr-173e9292-helxkt	ccd56b9+	hull3d	OK	1784	3d	alene	
+2026-11-08 21:23	claude/h3d2-snokrabbe-animasjoner-zn39n5	f8c7d83+	docktest	OK	61	lite	alene	
+2026-11-08 23:00	claude/h3d2-snokrabbe-animasjoner-zn39n5	7660e3e	haultest	OK	229	3d	alene	
+2026-11-08 23:12	claude/h3d2-snokrabbe-animasjoner-zn39n5	7660e3e	potshot	OK	713	3d	alene	
+2026-11-08 23:12	claude/h3d2-snokrabbe-animasjoner-zn39n5	7660e3e	dbg23o	OK	31	3d	alene	
+2026-11-09 00:26	claude/h3d2-snokrabbe-animasjoner-zn39n5	5237ce0	deckshot	FEIL	2400	3d	alene	gikk ut på tid
+2026-11-09 00:28	claude/h3d2-snokrabbe-animasjoner-zn39n5	5237ce0	landtest	OK	93	3d	alene	
 2026-11-08 20:01	ccr-b4ccfe0e-t6qjnp	8734bfd+	worktest	FEIL	15	lite	alene	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
 2026-11-08 20:01	ccr-b4ccfe0e-t6qjnp	8734bfd+	worktest	FEIL	16	lite	alene	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
 2026-11-08 20:03	ccr-b4ccfe0e-t6qjnp	8734bfd+	dockrow	OK	44	lite	samtidig	
@@ -1611,6 +1617,8 @@
 2026-11-09 01:49	ccr-173e9292-helxkt	65287c8	sea3d	OK	4217	3d	alene	
 2026-11-09 02:00	ccr-173e9292-helxkt	65287c8	boottest	OK	33	lite	samtidig	
 2026-11-09 02:00	ccr-173e9292-helxkt	65287c8	docktest	OK	66	lite	samtidig	
+2026-11-09 01:06	claude/h3d2-snokrabbe-animasjoner-zn39n5	04c7acb+	boottest	OK	22	lite	samtidig	
+2026-11-09 01:07	claude/h3d2-snokrabbe-animasjoner-zn39n5	04c7acb+	docktest	OK	58	lite	samtidig	
 2026-11-09 00:47	ccr-9e76566c-k1gw2d	64137cf+	merketest	OK	18	lite	samtidig	
 2026-11-09 00:47	ccr-9e76566c-k1gw2d	64137cf+	posttest	OK	27	lite	samtidig	
 2026-11-09 00:50	ccr-9e76566c-k1gw2d	6560a62	mobtest	OK	202	lite	samtidig	
@@ -1659,9 +1667,14 @@
 2026-11-09 01:15	claude/o8b-s2-turens-linje-c70okw	01c5d1e	boottest	OK	22	lite	samtidig	
 2026-11-09 01:15	claude/o8b-s2-turens-linje-c70okw	01c5d1e	turlinjetest	OK	5	lite	samtidig	
 2026-11-09 01:15	claude/o8b-s2-turens-linje-c70okw	01c5d1e	tutfull	OK	5	lite	samtidig	
+2026-11-09 02:21	claude/h3d2-snokrabbe-animasjoner-zn39n5	bc2de6a	boottest	OK	28	lite	samtidig	
+2026-11-09 02:22	claude/h3d2-snokrabbe-animasjoner-zn39n5	bc2de6a	docktest	OK	61	lite	samtidig	
+2026-11-09 02:23	claude/h3d2-snokrabbe-animasjoner-zn39n5	bc2de6a	landtest	OK	89	3d	alene	
 2026-11-09 01:46	ccr-9e76566c-k1gw2d	cb536b2	trip2	OK	34	lite	samtidig	
 2026-11-09 01:46	ccr-9e76566c-k1gw2d	cb536b2	merketest	OK	16	lite	samtidig	
 2026-11-09 01:47	ccr-9e76566c-k1gw2d	cb536b2	dbg23o	OK	48	3d	alene	
 2026-11-09 02:16	ccr-9e76566c-k1gw2d	cb536b2	tut	OK	1695	lite	alene	
 2026-11-09 02:25	ccr-173e9292-helxkt	b6d9a56+	boottest	OK	28	lite	samtidig	
 2026-11-09 02:26	ccr-173e9292-helxkt	b6d9a56+	docktest	OK	63	lite	samtidig	
+2026-11-09 02:33	claude/h3d2-snokrabbe-animasjoner-zn39n5	3f5d9bd	boottest	OK	28	lite	samtidig	
+2026-11-09 02:34	claude/h3d2-snokrabbe-animasjoner-zn39n5	3f5d9bd	docktest	OK	63	lite	samtidig	

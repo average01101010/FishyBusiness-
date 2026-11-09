@@ -2579,12 +2579,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1368 linjer)
+## `src/js/ui/phone/07-patch.js` (1372 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1361 `patch()`
+  - 1365 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3797,7 +3797,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **317** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
 - **419** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
 
-## `src/js/view3d/09-landing-deck.js` (805 linjer)
+## `src/js/view3d/09-landing-deck.js` (825 linjer)
 
 ---------- landing the catch ----------
 
@@ -3810,68 +3810,68 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 86 `hatchOpenK()`
   - 89 `landOff(L)`
   - 93 `landBack(L)`
-  - 102 `shipQuay(P, BMrel, eye, VG)`
-  - 108 `shipAim(C, x, z, hook)`
-  - 110 `shipPark(C)`
-  - 114 `landScene(P, T, BMrel, eye)`
-  - 219 `follow(P, key, st, T, v)`
-  - 227 `drawPlant(P, eye, VP, T, BMrel)`
-  - 274 `plantsCoast(eye)`
-  - 282 `nearestPlant(eye)`
-- **284** work on deck: the bleeding tub and the gutting table on the after deck; whoever works the deck guts or ices there
-  - 286 `deckActivity()`
-- **295** the deck kit (the user's wish 19.10.2026, tools/deck/*.py): the fish tubs, the gaff and the knife, the gutting table and
-  - 299 `kit(f, nm)`
-  - 302 `kitX(f)`
-- **304** the hands in their grips (tools/harbour/hender.py): the meshes once for all the figures (the glove is the same on every look),
-  - 312 `handMeshes()`
-  - 325 `handFrame(z0, sp, side)`
-  - 334 `handSpecs(st, F, R, hands)`
-  - 380 `toolM(A, dir)`
-  - 388 `dkEvent(kind, at, sp, kg, o)`
-  - 394 `dkFor(who, p, task)`
-  - 402 `dkEv(e, BMrel, G)`
-  - 404 `catchQ()`
-  - 409 `dkTick()`
-  - 422 `dkBloodDraw(VP)`
-  - 431 `rigAt(G, kind, d)`
-  - 435 `drawNetTub(BMrel, at, fill, ry)`
-  - 441 `drawLineTubs(BMrel, at, n, baited, green, ry, fill)`
-  - 452 `jobTubs(j)`
-  - 456 `drawMendNet(BMrel, G, d, R)`
-  - 470 `drawRigRest(BMrel, G, d)`
-- **483** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
-  - 489 `boyeCanvas(txt)`
-  - 495 `boyeTex()`
-  - 502 `ladderMesh(L)`
-  - 510 `boyeQ()`
-  - 511 `drawSafety(BMrel, G, VP, t)`
-  - 552 `cargoUnits(G)`
-  - 553 `drawCargo(BMrel, G, hide)`
-  - 568 `crFrames(X, Q, BMrel, p)`
-  - 577 `crLink(X, a2)`
-  - 580 `drawCrane(BMrel, G, VP, t, d)`
-- **635** the fish tubs on an open boat's deck (core/07f-kar.js, docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
-  - 646 `karPlan(key, spec, kg, dims)`
-  - 654 `karSpec()`
-  - 656 `drawKarLoad(M, load, key, washed)`
-  - 675 `karPlaces(vt)`
-  - 679 `drawCatchTubs(BMrel, vt, skip, washed)`
-  - 685 `karTop(vt, i)`
-  - 688 `karFilling(vt)`
-- **689** the ice box (tools/deck/fisk.py iskasse, the 300 l tub in blue): it stands on deck at its place (the model's kit.iskasse, under
-  - 692 `iceBoxAt(vt)`
-  - 697 `iceBoxTop(vt)`
-  - 701 `drawIceBox(BMrel, vt, shovelIn)`
-  - 712 `shaftM(A, B)`
-- **716** the sling (tools/deck/fisk.py slynge_*): the master link on the crane's hook at H (eye-relative, its top), a strap from the ring
-  - 718 `drawSling(H, M, swing, k)`
-- **736** the bleeding tub (Jonas 04.11.2026: «se at blodet og fisken fyller karet på en ordentlig måte»): the 300 l tub at the model's
-  - 740 `drawBleedTub(BMrel, W, d, ux, uz, KT, KW)`
-  - 758 `dkTub(G)`
-  - 759 `drawDeck(BMrel, eye, VP, t, DK)`
+  - 104 `shipQuay(P, BMrel, eye, VG)`
+  - 110 `shipAim(C, x, z, hook)`
+  - 112 `shipPark(C)`
+  - 116 `landScene(P, T, BMrel, eye)`
+  - 236 `follow(P, key, st, T, v)`
+  - 244 `drawPlant(P, eye, VP, T, BMrel)`
+  - 294 `plantsCoast(eye)`
+  - 302 `nearestPlant(eye)`
+- **304** work on deck: the bleeding tub and the gutting table on the after deck; whoever works the deck guts or ices there
+  - 306 `deckActivity()`
+- **315** the deck kit (the user's wish 19.10.2026, tools/deck/*.py): the fish tubs, the gaff and the knife, the gutting table and
+  - 319 `kit(f, nm)`
+  - 322 `kitX(f)`
+- **324** the hands in their grips (tools/harbour/hender.py): the meshes once for all the figures (the glove is the same on every look),
+  - 332 `handMeshes()`
+  - 345 `handFrame(z0, sp, side)`
+  - 354 `handSpecs(st, F, R, hands)`
+  - 400 `toolM(A, dir)`
+  - 408 `dkEvent(kind, at, sp, kg, o)`
+  - 414 `dkFor(who, p, task)`
+  - 422 `dkEv(e, BMrel, G)`
+  - 424 `catchQ()`
+  - 429 `dkTick()`
+  - 442 `dkBloodDraw(VP)`
+  - 451 `rigAt(G, kind, d)`
+  - 455 `drawNetTub(BMrel, at, fill, ry)`
+  - 461 `drawLineTubs(BMrel, at, n, baited, green, ry, fill)`
+  - 472 `jobTubs(j)`
+  - 476 `drawMendNet(BMrel, G, d, R)`
+  - 490 `drawRigRest(BMrel, G, d)`
+- **503** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
+  - 509 `boyeCanvas(txt)`
+  - 515 `boyeTex()`
+  - 522 `ladderMesh(L)`
+  - 530 `boyeQ()`
+  - 531 `drawSafety(BMrel, G, VP, t)`
+  - 572 `cargoUnits(G)`
+  - 573 `drawCargo(BMrel, G, hide)`
+  - 588 `crFrames(X, Q, BMrel, p)`
+  - 597 `crLink(X, a2)`
+  - 600 `drawCrane(BMrel, G, VP, t, d)`
+- **655** the fish tubs on an open boat's deck (core/07f-kar.js, docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
+  - 666 `karPlan(key, spec, kg, dims)`
+  - 674 `karSpec()`
+  - 676 `drawKarLoad(M, load, key, washed)`
+  - 695 `karPlaces(vt)`
+  - 699 `drawCatchTubs(BMrel, vt, skip, washed)`
+  - 705 `karTop(vt, i)`
+  - 708 `karFilling(vt)`
+- **709** the ice box (tools/deck/fisk.py iskasse, the 300 l tub in blue): it stands on deck at its place (the model's kit.iskasse, under
+  - 712 `iceBoxAt(vt)`
+  - 717 `iceBoxTop(vt)`
+  - 721 `drawIceBox(BMrel, vt, shovelIn)`
+  - 732 `shaftM(A, B)`
+- **736** the sling (tools/deck/fisk.py slynge_*): the master link on the crane's hook at H (eye-relative, its top), a strap from the ring
+  - 738 `drawSling(H, M, swing, k)`
+- **756** the bleeding tub (Jonas 04.11.2026: «se at blodet og fisken fyller karet på en ordentlig måte»): the 300 l tub at the model's
+  - 760 `drawBleedTub(BMrel, W, d, ux, uz, KT, KW)`
+  - 778 `dkTub(G)`
+  - 779 `drawDeck(BMrel, eye, VP, t, DK)`
 
-## `src/js/view3d/10-gear.js` (548 linjer)
+## `src/js/view3d/10-gear.js` (682 linjer)
 
 ---------- passive gear: buoys at both ends of every set, and the work over the rail when setting and hauling ----------
 
@@ -3905,7 +3905,11 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 432 `drawAutoSlides(BMrel)`
   - 439 `drawHaulRest(BMrel, G, d, VP)`
   - 460 `snoHauler(BMrel, G, VP, a)`
-  - 462 `drawGearOp(BMrel, eye, VP, t)`
+- **462** the snow crab vessel's work (H3d2, 08.11.2026; her places are the model's, tools/boats/krabbe50.py anchors.snok and kit.pots,
+  - 477 `snoCrabs(BMrel, p, n, pr)`
+  - 479 `snoWork(BMrel, t, u, g, s, G, d, base, KP, XP, seg)`
+  - 574 `snoSort(BMrel, u, s, g, TS, TB, TW, TL, hole, dch, dOut, TUB, ST, k0…)`
+  - 590 `drawGearOp(BMrel, eye, VP, t)`
 
 ## `src/js/view3d/11-bunker.js` (65 linjer)
 
