@@ -1678,6 +1678,8 @@
 2026-11-09 02:26	ccr-173e9292-helxkt	b6d9a56+	docktest	OK	63	lite	samtidig	
 2026-11-09 02:33	claude/h3d2-snokrabbe-animasjoner-zn39n5	3f5d9bd	boottest	OK	28	lite	samtidig	
 2026-11-09 02:34	claude/h3d2-snokrabbe-animasjoner-zn39n5	3f5d9bd	docktest	OK	63	lite	samtidig	
+2026-11-09 14:00	ccr-1a880149-108s1u	b82596e	sea3d	OK	3964	3d	alene	
+2026-11-09 14:13	ccr-1a880149-108s1u	34bbf0c	wakeshot	FEIL	767	3d	alene	FEIL she goes astern by hand  2.68
 2026-11-09 09:24	ccr-a9ccd5ec-it307t	02ab963+	tutfull	OK	13	lite	samtidig	
 2026-11-09 09:24	ccr-a9ccd5ec-it307t	02ab963+	krabbefabrikktest	OK	26	lite	samtidig	
 2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	colregtest	OK	610	lite	samtidig	
@@ -1767,3 +1769,5 @@
 2026-11-09 13:25	HEAD	7d2404b	mannskapshot	OK	16	lite	samtidig	
 2026-11-09 14:17	ccr-2fe3f16c-xpzvdg	b66950a+	decktest	OK	11	lite	alene	
 2026-11-09 16:33	ccr-b0ab5771-n45cmj	043a833	boottest	OK	25	lite	alene	
+2026-11-09 16:27	ccr-1a880149-108s1u	bcc99b3	boottest	OK	20	lite	alene	
+2026-11-09 16:31	ccr-1a880149-108s1u	bcc99b3	seatrytest	OK	215	3d	alene	

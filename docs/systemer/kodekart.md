@@ -3613,25 +3613,26 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (654 linjer)
+## `src/js/view3d/01-shaders.js` (741 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
-- **183** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **256** the boat's own foam, when she has way on
-- **264** where a slam and the spray land (F3b): four patches, fixed names
-- **266** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
-  - 564 `cloudStep(dt)`
-  - 571 `skyFrame(u, Hh, tn, bv)`
-  - 586 `glsl3(src, fs)`
-  - 594 `compile(type, src, nm)`
-  - 601 `program(vs, fs, attrs, nm = '?')`
-  - 609 `buf(data, target, usage)`
-  - 614 `airSet(u, terr)`
-  - 629 `sunT0()`
-  - 636 `attr(loc, b, size)`
-  - 652 `upload(pos, col, idx)`
+- **120** the sea by the shore (Fysikk 4, F4, 09.11.2026)
+- **236** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
+- **330** the boat's own foam, when she has way on
+- **338** where a slam and the spray land (F3b): four patches, fixed names
+- **340** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
+  - 651 `cloudStep(dt)`
+  - 658 `skyFrame(u, Hh, tn, bv)`
+  - 673 `glsl3(src, fs)`
+  - 681 `compile(type, src, nm)`
+  - 688 `program(vs, fs, attrs, nm = '?')`
+  - 696 `buf(data, target, usage)`
+  - 701 `airSet(u, terr)`
+  - 716 `sunT0()`
+  - 723 `attr(loc, b, size)`
+  - 739 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (99 linjer)
 
@@ -4002,7 +4003,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 545 `mastTop(G)`
   - 549 `updateFlag(t, appW)`
 
-## `src/js/view3d/14-sea.js` (434 linjer)
+## `src/js/view3d/14-sea.js` (530 linjer)
 
 ---------- sea ----------
 
@@ -4027,20 +4028,32 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 200 `foamStep(dt, t)`
   - 267 `foamSplash(Dx, Dz)`
   - 288 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
-  - 328 `foamBind(u)`
-- **359** the sea state over the near terrain and the whole map
-  - 366 `ssLevel(n, unit)`
-  - 368 `ssRect(L)`
-  - 369 `ssWork(L, until)`
-  - 392 `ssStep(rdt)`
-  - 394 `ssBlend(L)`
-  - 396 `ssTex(L, x, z, out)`
-  - 403 `ssAt(x, z)`
-  - 413 `seaQ(S, ren)`
-  - 414 `seaDisp(x, z, t, S, fade)`
-  - 425 `seaFade(x, z)`
-  - 426 `seaH(x, z, t)`
-  - 432 `seaHFast(x, z, t)`
+  - 328 `foamBind(u, t)`
+- **360** the sea by the shore (Fysikk 4, F4, 09.11.2026)
+  - 375 `shoalPrep(J)`
+  - 376 `shoalCell(J, k, land, dd)`
+  - 380 `shoalSweep(J, end)`
+  - 394 `shoalPut(J)`
+  - 400 `shTex(u, v, out)`
+  - 407 `shoalAt(x, z)`
+  - 421 `shW(c, SH, out)`
+  - 427 `surfK(h)`
+  - 429 `surfStep(t)`
+  - 435 `shoalBind(u, t)`
+- **443** the sea state over the near terrain and the whole map
+  - 450 `ssLevel(n, unit)`
+  - 452 `ssRect(L)`
+  - 453 `ssWork(L, until)`
+  - 476 `ssStep(rdt)`
+  - 478 `ssBlend(L)`
+  - 480 `ssTex(L, x, z, out)`
+  - 487 `ssAt(x, z)`
+  - 497 `seaQ(S, ren)`
+  - 500 `seaDisp(x, z, t, S, fade, SH)`
+  - 519 `seaFade(x, z)`
+  - 520 `seaH(x, z, t)`
+  - 526 `seaHFast(x, z, t)`
+  - 528 `shoalHere(x, z)`
 
 ## `src/js/view3d/15-env-mooring.js` (224 linjer)
 
@@ -4089,7 +4102,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 311 `spawn(x, y, z, vx, vy, vz, life, g)`
   - 313 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
-## `src/js/view3d/17-draw.js` (207 linjer)
+## `src/js/view3d/17-draw.js` (211 linjer)
 
 ---------- drawing ----------
 
@@ -4099,12 +4112,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 17 `terProg(q)`
   - 25 `drawTerrain(TM, eye, VP, near)`
   - 50 `buildGround()`
-  - 60 `maskOr(J, x, z)`
-  - 61 `groundStep()`
-  - 98 `buildLandMask()`
-  - 121 `lmStep()`
-  - 158 `seaRing(u, eye, y, R, Hl)`
-  - 168 `drawSea(VP, eye, t, far, drop)`
+  - 61 `maskOr(J, x, z)`
+  - 62 `groundStep()`
+  - 102 `buildLandMask()`
+  - 125 `lmStep()`
+  - 162 `seaRing(u, eye, y, R, Hl)`
+  - 172 `drawSea(VP, eye, t, far, drop)`
 
 ## `src/js/view3d/17b-inland-water.js` (152 linjer)
 

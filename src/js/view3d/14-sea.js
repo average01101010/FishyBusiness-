@@ -58,7 +58,7 @@
     const f = (((wdT % 360) + 360) % 360) / FETCH.sec; SSK = [Math.floor(f) % 36, (Math.floor(f) + 1) % 36]; SSU = f - Math.floor(f);
     // the inverse wave age at the boat, U / cp from the peak her fetch gives, for the spread (it eases over the same seconds as the sea)
     const q = hsParts(p, H), rF = Math.sqrt(q.F), Tb = Math.max(0.5, tpWind(U, Math.max(q.F, 0.05))), iaT = U * 2 * Math.PI / (9.81 * Tb);
-    WV.ia = fresh ? iaT : lerp(WV.ia, iaT, k); const wpB = 2 * Math.PI / Tb;
+    WV.ia = fresh ? iaT : lerp(WV.ia, iaT, k); const wpB = 2 * Math.PI / Tb; WV.Tb = Tb;   // (Tb: the wind sea's peak period at the boat, for the surf, F4)
     const L = [];
     WL.forEach((Lw, i) => { const kk = 2 * Math.PI / Lw, ang = WV.dir + clamp(WOFF[i] * spreadSd(JW[i] / wpB, WV.ia), -1.25, 1.25); L.push({Dx:Math.sin(ang), Dz:-Math.cos(ang), k:kk, wo:wo[i], wy:wy[i], swell:0, om:Math.sqrt(9.81 * kk), ph0:WPH[i]}); });
     const sn = Math.sqrt(SWW.reduce((a, c) => a + c * c, 0)) * 2.828, Ls = 1.56 * WV.swTp * WV.swTp;
@@ -325,8 +325,9 @@
     gl.blendEquation(gl.FUNC_ADD); gl.disable(gl.BLEND);
   }
   // the sea shader reads the map (unit 7) where it is on
-  function foamBind(u){
+  function foamBind(u, t){
     if (u.uSeaK != null) gl.uniform2f(u.uSeaK, WV.KO, WV.KY);   // (every sea program, near and far: qOf's sum(k w), F3)
+    if (t != null) shoalBind(u, t);   // (the sea by the shore, F4)
     if (u.uFoamOn == null) return; const on = foamLive(); gl.uniform1f(u.uFoamOn, on ? 1 : 0); if (!on) return;
     gl.activeTexture(gl.TEXTURE7); gl.bindTexture(gl.TEXTURE_2D, FOAM.tex[FOAM.r]); gl.uniform1i(u.uFoam, 7); gl.activeTexture(gl.TEXTURE0);
     gl.uniform4fv(u.uFoamRect, [FOAM.ox - RO.x, FOAM.oz - RO.z, 1 / FOAM.M, FOAM.M]); gl.uniform4fv(u.uFoamT, [FOAM.now[0], FOAM.win[0], FOAM.tau[0], 0]); gl.uniform4fv(u.uFoamTc, [FOAM.now[1], FOAM.win[1], FOAM.tau[1], 0]);
@@ -355,6 +356,89 @@
     const js = jsc / Math.sqrt(jsv);
     return {fv:jn * WCAP.j + js * WCAP.s + crest * WCAP.c + (g - 0.5) * WCAP.g, js, th:WCAP.th[0] + WCAP.th[1] * zt + WCAP.th[2] * zt * zt, jn, J, crest, g, Wc};
   };
+
+  // ---------- the sea by the shore (Fysikk 4, F4, 09.11.2026) ----------
+  // The shoal texture (SHOAL in 01-shaders.js) is made with the near terrain's shore layer (17-draw.js groundStep, GJOB): per texel the
+  // game's depth (depthF) and the land, then the travel time from the shore by a weighted distance transform (shoalSweep: three passes
+  // each way over the 16 neighbours that reach a knight's move, so the fronts round a point are near round and not octagons), with
+  // the shallow-water speed sqrt(g h) (0.5-60 m). SHC is the CPU's copy, read as the GPU reads it (linear, clamped), so seaH stands
+  // where the picture does. SURF: the surf's frequency (the swell's peak where the swell is more than half the wind sea at the boat,
+  // else the wind sea's; it eases over 20 s, the phase held where it is: p0) and its phase w t + p0. «#shoal0» in the address turns it
+  // all off (the sea as before, for the comparison), as #nf0 and #foam0 do theirs.
+  const SURF = {on:!/shoal0/.test(location.hash), w:0, p0:0, t:-1, fix:null};   // (fix: [h, T, nx, nz] everywhere on the CPU, for sea3d)
+  const SHC = {d:null, n:0, R:null}, SHO = [200, 0, 0, 0], SHA = [0, 0, 0, 0], SHG = [1, 1, 0];
+  let SHT_VS = true;   // (a third texture unit in the vertex shader for the shoal texture: 18-setup.js; NOSHT without)
+  const shoalLive = () => SURF.on && SURF.w > 0 && !!SHC.d && !!STEX;
+  // whether the drawn surface has it: the vertex shader reads the shoal texture (not NOSST, not NOSHT); seaH follows what is drawn
+  const shoalVS = () => SST_VS && SHT_VS;
+  // the travel time's work on the shore layer's job: arrays, the passes (true when done) and the bytes
+  function shoalPrep(J){ const n = J.S2; J.T = new Float32Array(n * n); J.sl = new Float32Array(n * n); J.dep = new Float32Array(n * n); J.sw = 0; J.sj = 0; }
+  function shoalCell(J, k, land, dd){ J.dep[k] = land ? -1 : dd; J.dat[k * 4 + 2] = land ? 0 : Math.round(Math.sqrt(clamp(dd / 80, 0, 1)) * 255); }
+  const SHNB = [[-1, 0, 1], [0, -1, 1], [-1, -1, Math.SQRT2], [1, -1, Math.SQRT2], [-2, -1, Math.sqrt(5)], [-1, -2, Math.sqrt(5)], [1, -2, Math.sqrt(5)], [2, -1, Math.sqrt(5)]];
+  // (a pass at a time, cut between rows when the frame's time is up, end; true when all six are done; code review 09.11.2026: a whole
+  // pass at once is half a million relaxations, a hitch on the tablet each time the near terrain moves)
+  function shoalSweep(J, end){
+    const n = J.S2, T = J.T, sl = J.sl, st = J.st, NB = SHNB.length;
+    if (J.sw === 0 && J.sj === 0) for (let k = 0; k < n * n; k++){ const d = J.dep[k]; if (d < 0){ T[k] = 0; sl[k] = 0; } else { T[k] = 1e9; sl[k] = 1 / Math.sqrt(9.81 * clamp(d, 0.5, 60)); } }
+    while (J.sw < 6){
+      const back = J.sw & 1, sg = back ? -1 : 1;
+      while (J.sj < n){ const jj = J.sj++, j = back ? n - 1 - jj : jj;
+        for (let ii = 0; ii < n; ii++){ const i = back ? n - 1 - ii : ii, k = j * n + i; if (!sl[k]) continue; let best = T[k];
+          for (let m = 0; m < NB; m++){ const N = SHNB[m], a = i + N[0] * sg, b = j + N[1] * sg; if (a < 0 || b < 0 || a >= n || b >= n) continue; const q = b * n + a, v = T[q] + st * N[2] * (sl[k] + sl[q]) * 0.5; if (v < best) best = v; }
+          T[k] = best; }
+        if (end && performance.now() > end && J.sj < n) return false; }
+      J.sw++; J.sj = 0;
+    }
+    return true;
+  }
+  function shoalPut(J){
+    const n = J.S2, T = J.T, d = J.dat;
+    for (let k = 0; k < n * n; k++){ const q = Math.round(clamp(T[k] / SHT_TMAX, 0, 1) * 65535); d[k * 4] = q >> 8; d[k * 4 + 1] = q & 255; }
+    SHC.d = d; SHC.n = n; SHC.R = [J.x0, J.z0, J.sx]; J.T = J.sl = J.dep = null;
+  }
+  // the texture as the GPU reads it at (u, v), 0-1 per channel, and the travel time from its two bytes
+  function shTex(u, v, out){
+    const n = SHC.n, D = SHC.d, gx = clamp(u * n - 0.5, 0, n - 1), gy = clamp(v * n - 0.5, 0, n - 1), i = Math.min(n - 2, Math.floor(gx)), j = Math.min(n - 2, Math.floor(gy)), fx = gx - i, fy = gy - j;
+    for (let c = 0; c < 4; c++){ const a = (j * n + i) * 4 + c, b = a + n * 4; out[c] = ((D[a] * (1 - fx) + D[a + 4] * fx) * (1 - fy) + (D[b] * (1 - fx) + D[b + 4] * fx) * fy) / 255; }
+    return out;
+  }
+  const shTv = c => (c[0] * 65280 + c[1] * 255) * SHT_TMAX / 65535;
+  // shoalAt in the shaders: the depth with the tide, the travel time, the way to the shore (200, 0, 0, 0 in deep water)
+  function shoalAt(x, z){
+    const D = SHO; D[0] = 200; D[1] = D[2] = D[3] = 0; if (SURF.fix && SURF.on && SURF.w > 0){ for (let k = 0; k < 4; k++) D[k] = SURF.fix[k]; return D; }   // (a test's bottom: sea3d)
+    if (!shoalLive()) return D;
+    const R = SHC.R, u = (x - R[0]) / R[2], v = (z - R[1]) / R[2], ef = sstep(0, 0.06, Math.min(u, v, 1 - u, 1 - v)); if (ef <= 0) return D;
+    const c = shTex(u, v, SHA); if (c[2] > 0.995) return D;
+    const h = lerp(200, Math.max(c[2] * c[2] * 80 + (env.tide || 0), 0.05), ef); if (h >= 78) return D;
+    // (the travel time from the four texel centres and interpolated, as SHOAL does: exact on every GPU; the gradient from the same four)
+    const n = SHC.n, qx = u * n - 0.5, qz = v * n - 0.5, ix = Math.floor(qx), iz = Math.floor(qz), fx = qx - ix, fz = qz - iz, cT = (a, b) => shTv(shTex((clamp(a, 0, n - 1) + 0.5) / n, (clamp(b, 0, n - 1) + 0.5) / n, SHA));
+    const t00 = cT(ix, iz), t10 = cT(ix + 1, iz), t01 = cT(ix, iz + 1), t11 = cT(ix + 1, iz + 1), T = lerp(lerp(t00, t10, fx), lerp(t01, t11, fx), fz);
+    const gx = lerp(t10 - t00, t11 - t01, fz) * n / R[2], gz = lerp(t01 - t00, t11 - t10, fx) * n / R[2], gm = Math.hypot(gx, gz), w = gm > 1e-5 ? sstep(0.01, 0.03, gm) * ef / gm : 0;
+    D[0] = h; D[1] = T; D[2] = -gx * w; D[3] = -gz * w; return D;
+  }
+  // shW and surfK in the shaders (SHOAL): the shoaling (linear theory), k_h / k and the share that turns into the surf; the surf's wavenumber
+  const tanhG = x => 1 - 2 / (Math.exp(2 * Math.min(x, 8)) + 1);
+  function shW(c, SH, out){
+    if (SH[0] >= 78 || c.k * SH[0] > 3.1416){ out[0] = out[1] = 1; out[2] = 0; return out; }   // (shorter than twice the depth: as in deep water, SHOAL)
+    const kh = Math.max(c.k * SH[0], 1e-3), w = Math.hypot(SH[2], SH[3]), r = 1 / Math.sqrt(Math.max(tanhG(kh), 0.02)), x = kh * r, e = Math.exp(2 * Math.min(x, 8));
+    out[0] = Math.max(Math.min(1 / Math.sqrt(Math.max(tanhG(x) * (1 + 4 * x / Math.max(e - 1 / e, 1e-4)), 1e-3)), 2.5), 1); out[1] = 1 + (r - 1) * (1 - sstep(55, 78, SH[0]));
+    out[2] = w > 1e-4 ? (1 - sstep(0.08, 0.22, kh * 0.15915)) * (1 - sstep(40, 70, SH[0])) * clamp((c.Dx * SH[2] + c.Dz * SH[3]) / w * 1.4 + 0.42, 0, 1) * Math.min(w, 1) : 0; return out;
+  }
+  function surfK(h){ const k0 = SURF.w * SURF.w / 9.81; return k0 / Math.sqrt(Math.max(tanhG(k0 * h), 0.02)); }
+  // the surf's frequency for this frame (once per frame time)
+  function surfStep(t){
+    if (SURF.t === t) return; const dt = SURF.t < 0 ? 1e9 : clamp(t - SURF.t, 0, 1); SURF.t = t;
+    const L = WV.loc || [0, 0], wt = 2 * Math.PI / Math.max(L[1] > 0.5 * L[0] ? WV.swTp || 10 : WV.Tb || 4, 1.5), wn = SURF.w ? SURF.w + (wt - SURF.w) * Math.min(1, dt / 20) : wt;
+    SURF.p0 += (SURF.w - wn) * t; SURF.w = wn;
+  }
+  // the uniforms (every sea program and the foam map's pass): the texture on unit 1 (a stand-in when it is off)
+  function shoalBind(u, t){
+    if (u.uSurf == null) return; surfStep(t); const on = shoalLive(), TAU = 2 * Math.PI;
+    gl.uniform4f(u.uSurf, (((SURF.w * t + SURF.p0) % TAU) + TAU) % TAU, SURF.w, on ? 1 : 0, env.tide || 0);
+    if (u.uSHR != null) gl.uniform4fv(u.uSHR, on ? [SHC.R[0] - RO.x, SHC.R[1] - RO.z, 1 / SHC.R[2], 1 / SHC.n] : [0, 0, 1, 1]);
+    if (u.uSHT != null){ gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, on ? STEX : SSDUMMY); gl.uniform1i(u.uSHT, 1); gl.activeTexture(gl.TEXTURE0); }
+  }
+  WV.shoal = {SURF, SHC, shoalAt, surfK, live:shoalLive};   // (for the tests: G3._debug.WV.shoal)
 
   // ---------- the sea state over the near terrain and the whole map ----------
   // Two textures, as SEA_STATE reads them: n (32 x 32 over the near terrain) and w (128 x 128 over the map). Each holds the root of the
@@ -411,23 +495,35 @@
   const SEA_D = [0, 0, 0, 0];
   // the wind waves' Q where the local sea is S (qOf in the shaders, F3): their summed compression sum(Q k a) held to the limit
   function seaQ(S, ren){ const ka = S[0] * ren * (S[2] * WV.KO + (1 - S[2]) * WV.KY); return Math.min(WV.steep * (1 - 0.4 * S[2]) / (ka + 1e-4), 1); }
-  function seaDisp(x, z, t, S, fade){
-    let dx = 0, dy = 0, dz = 0, dn = 0; const ren = 1 / Math.sqrt(Math.max(1 - 2 * S[2] * (1 - S[2]) * (1 - WV.dot), 0.05)), cell = 2 * HALF / NP, Qw = seaQ(S, ren);
+  const SH_DEEP = [200, 0, 0, 0], SHQ = [200, 0, 0, 0];
+  // (SH: the sea by the shore at the point, F4, as SEA_VS_WAVE and SEA_VS_SURF have it; seaH looks it up once for its three calls)
+  function seaDisp(x, z, t, S, fade, SH){
+    let dx = 0, dy = 0, dz = 0, dn = 0, Et = 0, Eu = 0, Es = 0; const ren = 1 / Math.sqrt(Math.max(1 - 2 * S[2] * (1 - S[2]) * (1 - WV.dot), 0.05)), cell = 2 * HALF / NP, Qw = seaQ(S, ren);
+    if (!SH) SH = shoalHere(x, z); const sg = SHG;
     for (let i = 0; i < WV.list.length; i++){
-      const c = WV.list[i], att = sstep(2.5, 5, 2 * Math.PI / (c.k * cell)); if (att <= 0) continue;
+      const c = WV.list[i], att = sstep(2.5, 5, 2 * Math.PI / (c.k * cell));
       const am0 = c.swell ? S[1] * c.wo : S[0] * (S[2] * c.wo + (1 - S[2]) * c.wy) * ren, Q = c.swell ? 0.3 : Qw;
       const grp = 0.62 + 0.38 * Math.sin((x * c.Dx + z * c.Dz) * c.k * 0.083 + (x * c.Dz - z * c.Dx) * c.k * 0.041 - c.om * t * 0.5 + i * 2.59 - NF.gp[i]);
-      const am = am0 * grp * att * fade, f = c.k * (c.Dx * x + c.Dz * z) - c.om * t + c.ph - NF.ph[i], co = Math.cos(f), h = am * Math.sin(f);
-      dx += Q * am * c.Dx * co; dz += Q * am * c.Dz * co; dy += h; if (i >= 4 && i < 10) dn += h;
+      shW(c, SH, sg); const e2 = (am0 * sg[0] * grp) ** 2; if (c.swell) Eu += e2; else Et += e2; Es += e2 * sg[2];
+      if (att <= 0) continue;
+      const am = am0 * sg[0] * Math.sqrt(Math.max(1 - sg[2], 0)) * grp * att * fade, f = c.k * (c.Dx * x + c.Dz * z) - c.om * t + c.ph - NF.ph[i], co = Math.cos(f), h = am * Math.sin(f);
+      dx += Q * sg[1] * am * c.Dx * co; dz += Q * sg[1] * am * c.Dz * co; dy += h; if (i >= 4 && i < 10) dn += h;
+    }
+    if (SH[0] < 78){
+      if (Es > 1e-8 && SURF.w > 0){ const As = Math.sqrt(Es), ks = surfK(SH[0]), f = -(SURF.w * t + SURF.p0) - SURF.w * SH[1], w = Math.hypot(SH[2], SH[3]), att = sstep(2.5, 5, 2 * Math.PI / (ks * cell)), a = As * att * fade, Qs = Math.min(0.6, 0.6 / (ks * As + 1e-4)), co = Math.cos(f);
+        dx += Qs * a * SH[2] / w * co; dz += Qs * a * SH[3] / w * co; dy += a * Math.sin(f); }
+      const cap = Math.min(1, 0.78 * SH[0] / Math.max(2.83 * Math.sqrt(Et + Eu), 1e-4)); dx *= cap; dy *= cap; dz *= cap; dn *= cap;
     }
     SEA_D[0] = dx; SEA_D[1] = dy; SEA_D[2] = dz; SEA_D[3] = dn; return SEA_D;   // (dn: the short wind waves that ride with her, the near field)
   }
   function seaFade(x, z){ const st = 2 * HALF / NP, ox = Math.round(bv.x / st) * st, oz = Math.round(bv.z / st) * st; return 1 - sstep(0.6, 1, Math.max(Math.abs(x - ox), Math.abs(z - oz)) / HALF); }
   function seaH(x, z, t){
     const tide = env.tide || 0, fade = seaFade(x, z); if (fade <= 0 || !WV.list.length){ SEA_D[3] = 0; return tide; }
-    const S = ssAt(x, z); let px = x, pz = z;
-    for (let it = 0; it < 2; it++){ const D = seaDisp(px, pz, t, S, fade); px = x - D[0]; pz = z - D[2]; }
-    return tide + seaDisp(px, pz, t, S, fade)[1];
+    const S = ssAt(x, z), SH = shoalHere(x, z); let px = x, pz = z;
+    for (let it = 0; it < 2; it++){ const D = seaDisp(px, pz, t, S, fade, SH); px = x - D[0]; pz = z - D[2]; }
+    return tide + seaDisp(px, pz, t, S, fade, SH)[1];
   }
   function seaHFast(x, z, t){ const tide = env.tide || 0, fade = seaFade(x, z); return fade <= 0 || !WV.list.length ? tide : tide + seaDisp(x, z, t, ssAt(x, z), fade)[1]; }
+  // the sea by the shore as the drawn surface has it (shoalVS), copied (shoalAt's array is shared)
+  function shoalHere(x, z){ if (!shoalVS() && !SURF.fix) return SH_DEEP; const a = shoalAt(x, z); for (let k = 0; k < 4; k++) SHQ[k] = a[k]; return SHQ; }
 
