@@ -187,7 +187,9 @@
     // the buoyancy of her sections (Fysikk 4 F2, hullMove below); roll is a damped oscillator to the sea's slope across her, as before, so
     // a sea that meets her roll period builds the roll up (resonance), and a beam wind heels her. «#hull0» in the address, and the yard's
     // lift, give heave and pitch as before: the sea averaged over the waterplane (3 x 3 points), followed as damped oscillators.
-    if (!bv.st || t - (bv.stT || 0) > 1 || t < (bv.stT || 0)){ bv.st = stabOf(b.type || 'skiff'); bv.stT = t; bv.heel = -windHeel(bv.st, env.wind || 0) * Math.sign(Math.sin((windDir(S.t / 60) * DEG + Math.PI) - bv.head) || 1); }   // to leeward
+    // (and the load's own list and trim, OB15: the core reckons them from where the load, the pull in the hauler and the people stand,
+    // stabOf; a positive list is to starboard, which is a negative roll here. The trim goes to the sections' rest, hullMove)
+    if (!bv.st || t - (bv.stT || 0) > 1 || t < (bv.stT || 0)){ bv.st = stabOf(b.type || 'skiff'); bv.stT = t; bv.heel = -windHeel(bv.st, env.wind || 0) * Math.sign(Math.sin((windDir(S.t / 60) * DEG + Math.PI) - bv.head) || 1); bv.list = -(bv.st.list || 0); }   // to leeward
     const pl = G.pl, rl = G.rl, Ls = Math.max(pl * 2, (G.stern - G.bow) * 0.8 || 0), Bs = Math.max(rl * 2, (G.beam || 2.4) * 0.8);
     // on the yard's lift she is raised with the platform and lies still: no sea to rock her (liftStep)
     const lf = liftStep(dt, b), lifted = lf.off > 0 || !!lf.d, force = HSEA.on && !lifted;
@@ -214,7 +216,7 @@
     const lift = force ? 0 : BOAT.planing ? 0.015 * Lb * (WK.pf || 0) : -0.004 * Lb * sstep(0.3, 0.45, Fr);
     // planing hulls bank into a turn, displacement hulls heel a little outwards
     const bank = (BOAT.planing ? -0.18 : 0.06) * clamp(bv.yr, -1.2, 1.2) * sstep(4, 18, v);
-    let tp = Math.atan(sl - slN) + trim, tr = Math.atan(st - stN) + bank + (bv.heel || 0), ty = hm - hmN + 0.06 + lift;
+    let tp = Math.atan(sl - slN) + trim + (force ? 0 : bv.st.trim || 0), tr = Math.atan(st - stN) + bank + (bv.heel || 0) + (bv.list || 0), ty = hm - hmN + 0.06 + lift;
     if (lifted){ ty = hm * (1 - lf.dry) + (env.tide || 0) * lf.dry + 0.06 + lf.off; tp *= 1 - lf.dry; tr *= 1 - lf.dry; if (bv.osc && lf.d) bv.y += lf.d; if (bv.fy !== undefined && lf.d) bv.fy += lf.d; }
     if (!bv.osc || tf < 0.02 || bv.fy === undefined){ bv.fy = ty; bv.fp = tp; bv.fr = tr; }
     else { const k = 1 - Math.exp(-dt / tf); bv.fy += (ty - bv.fy) * k; bv.fp += (tp - bv.fp) * k; bv.fr += (tr - bv.fr) * k; ty = bv.fy; tp = bv.fp; tr = bv.fr; }
@@ -275,7 +277,9 @@
   // heave and pitch from the sections' buoyancy, in steps of at most 0.02 s; she starts where the old following had her
   function hullMove(dt, b){
     const H = HSEA.H, tide = env.tide || 0;
-    const D = hullOf(H.type).disp + Math.max(0, bv.st.D - hullOf(b.type || H.type).disp), R = hullRest(H, D);   // (what is aboard, on the hull drawn)
+    // (what is aboard, on the hull drawn; trimmed by the load's centre of gravity off the level one, stabOf dzG, when the hull drawn is her
+    // own type's: the drawn hull's ends are the model's, the core's from STAB_AT, and the offset carries over where the frames differ a little)
+    const D = hullOf(H.type).disp + Math.max(0, bv.st.D - hullOf(b.type || H.type).disp), R = hullRest(H, D, H.type === b.type && bv.st.dzG ? hullRest(H, D).zG + bv.st.dzG : undefined);
     if (!HSEA.ok || !HSEA.X || HSEA.X.key !== H.key){
       const X = HSEA.X = hullX(R); X.key = H.key; X.th = bv.pitch || 0; X.y = (bv.y || tide + R.y0) - tide; X.yg = X.y - Math.sin(X.th) * R.zG; X.vy = 0; X.vth = 0;
       for (let i = 0; i < H.n; i++){ X.h[i] = H.d[i]; HSEA.etaP[i] = HSEA.eta[i]; } HSEA.ok = true;
