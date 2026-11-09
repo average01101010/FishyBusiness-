@@ -552,4 +552,4 @@ Jonas svarte på alle 09.11.2026 (også under «Valg som venter på Jonas» i `d
 ## 9. Status
 
 - 09.11.2026: **OB0 ferdig** (Jonas' økt, gren `ccr-59f8e7e6-m00yni`). Alle ti båtene tatt opp liggende med alle operasjonene, stående med juksa og linetrekket (trebåten med alle), innseilingen og lossingen tatt på nytt. Ingenting i `src/` er endret. Neste: OB1 (trebåten), som venter på valg 17, 18, 21, 22 og 23, (H3d2 og Ø8b S2 ble rullet ut samme natt); OB2 og OB15 er klare.
-
+- 09.11.2026: **OB15 ferdig** (Jonas' økt, gren `ccr-4660a71b-kidfna`, PR #52, rullet ut i ec54eb3, versjon 5b8c411a4cd9): trim etter hvor lasten står, slagside fra haleren, karene og folkene, mannskapets vekt (S1–S3). Tabellen og det antatte i 5.1; S4 og S5 står (C). Skjermbildene i `docs/okter/2026-11-09-ob15/`.
