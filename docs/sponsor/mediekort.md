@@ -38,7 +38,27 @@ Alt er en del av spillets verden og merket som samarbeid. Ingenting avbryter spi
 
 ## 4. Slik måler vi
 
-Et banner telles som én synlig visning når det har dekket minst 1,5 % av skjermen, sett under 55°, med minst halvparten synlig, i ett sekund i strekk. Det følger IAB og MRC sine retningslinjer for reklame i spill (*Intrinsic In-Game Advertising Measurement Guidelines 2.0*, 2022). Vi teller ingenting når spillet står urørt eller er skjult, og bare fra spillere som har sagt ja til statistikk. Partneren får en rapport per uke: unike spillere, synlige visninger, sekunder synlig, klikk ut og kjøp.
+Vi måler bannerne etter IAB og MRC sine retningslinjer for reklame i spill (*Intrinsic In-Game Advertising Measurement Guidelines 2.0*). Tallene er målt etter utkastet til høring fra juni 2022. Den endelige teksten fra august 2022 har vi ikke lest i sin helhet, men oppsummeringene av den har de samme tersklene. Vi oppdaterer metoden når vi har lest den.
+
+**En gjengitt visning** er ett banner i én økt, tegnet innen 150 meter fra kameraet mens noen spiller. Hver gjengitt visning havner i én av tre bøtter, som utelukker hverandre:
+
+- **Synlig:** banneret har vært synlig i minst ett sekund i strekk i økta. Synlig betyr at det dekker minst 1,5 % av skjermen, er sett under 55° fra skjermen, har minst halvparten innenfor skjermen og ikke er skjult av noe for minst halvparten. Skjuling gjelder både 3D-verden (båter, bygg og annet foran) og spillets egne vinduer over bildet (telefonen, sidepanelet, boksene og kortene). Et banner telles som synlig høyst én gang per økt, uansett hvor mange ganger spilleren ser bort og tilbake. Senere sekunder i strekk rapporteres for seg, som gjensyn.
+- **Ikke synlig:** banneret ble tegnet og målt, men nådde aldri terskelen.
+- **Ubestemt:** banneret ble tegnet på en enhet der skjulingen ikke kan måles (nettlesere med bare WebGL 1). Det telles aldri som synlig.
+
+**Rapporten** per banner og uke viser unike spillere, gjengitte visninger og fordelingen på bøttene, målt andel (synlige og ikke synlige av de gjengitte), synlig andel (synlige av de målte), gjensyn, sekunder sett, og median og gjennomsnittlig synlig tid per synlig visning. Sekunder sett er all tid banneret møtte kravene, også tiden før sekundet var nådd. Klikk ut og kjøp er våre egne tall; retningslinjen dekker dem ikke. Rapporten kan lastes ned som CSV med de samme kolonnene.
+
+**Slik telles det:**
+
+- Spillet måler hvert bilde, men regner høyst 0,2 sekunder per bilde. En telefon som tegner færre enn fem bilder i sekundet, får derfor aldri mer tid enn den faktisk har målt.
+- Sikt og lys: i skodde tettere enn avstanden til banneret telles det ikke (spillets tetteste vær gir i dag 1,2 km sikt, og bannerne måles innen 150 m, så regelen slår ennå ikke inn). Om natta (sola mer enn 6° under horisonten) telles det heller ikke, fordi ingenting i spillet lyser opp bannerne da. Den mørkeste dagen i året telles bannerne derfor rundt 7,75 timer i Bergen, 5,75 i Bodø og 3,5 i Hammerfest.
+- Inaktivitet: når ingen har rørt spillet på to minutter, eller siden er skjult, telles ingenting. To minutter er valgt fordi spillere ofte ser på båten uten å trykke (seiling, fiske), mens lengre pauser enn det sjelden betyr at noen ser på skjermen. Grensen er ikke målt mot spilldata ennå; vi justerer den når vi har nok økter til å se fordelingen av pauser.
+
+**Begrensninger:**
+
+- Vi filtrerer ikke ugyldig trafikk (IVT) utover dette: bare spillere som har sagt ja til statistikk telles, og bare hendelser som spillet selv sender fra en ekte økt. Vi har ingen egen filtrering av roboter eller unormal aktivitet ennå.
+- Visninger på enheter med WebGL 1 er ubestemte. De står i rapporten, men er ikke med i synlig andel.
+- Målingen er vår egen og ikke revidert av MRC eller en tredjepart.
 
 Vi bruker ingen annonsenettverk, informasjonskapsler eller sporing fra andre, og ingen partner får opplysninger om spillerne.
 
@@ -66,4 +86,4 @@ Demobygget viser alle formatene med en oppdiktet partner, «Nordlys Utstyr». De
 
 ---
 
-*Internt, ikke send dette:* demobygget lages med `KYST_DEMO=1 KYST_DIST=dist-demo node build.mjs`, eller ved å åpne spillet med `#sptest` bak adressen. Prisene i planen (4.3) er startverdier og settes etter rekkevidden i admin, ikke før. IAB-tallene er sjekket mot IAB UK og AdExchanger, ikke mot selve retningslinjen (iab.com er stengt fra arbeidsmiljøet); Jonas leser PDF-en før dokumentet sendes. Første avtale bør sees av advokat.
+*Internt, ikke send dette:* demobygget lages med `KYST_DEMO=1 KYST_DIST=dist-demo node build.mjs`, eller ved å åpne spillet med `#sptest` bak adressen. Prisene i planen (4.3) er startverdier og settes etter rekkevidden i admin, ikke før. IAB-metoden er sjekket mot utkastet til høring (14.06.2022, lastet opp av Jonas 07.11.2026) og bygd etter det i steg 66 (08.11.2026: én synlig visning per økt, 0,2 s per bilde, UI som skjuling, sikt og natt, tre bøtter og median); den endelige teksten fra august 2022 er ikke lest. Natta: banneret tegnes bare med sol og himmellys (`TEX_FS`), ikke med lampene, så det telles ikke etter at sola er 6° under horisonten. Inaktivitetsgrensen på to minutter er et anslag til trakten i admin har nok økter. Første avtale bør sees av advokat.

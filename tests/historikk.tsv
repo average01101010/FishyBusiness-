@@ -1475,6 +1475,15 @@
 2026-11-08 21:03	claude/o14-f4-feltnavnene-kart-htpg70	bcd6576	boottest	OK	25	lite	alene	
 2026-11-08 21:31	ccr-b4ccfe0e-t6qjnp	9948937	boottest	OK	23	lite	samtidig	
 2026-11-08 21:31	ccr-b4ccfe0e-t6qjnp	9948937	docktest	OK	58	lite	samtidig	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	sponsortest	OK	17	lite	samtidig	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	sponsor2test	OK	19	lite	samtidig	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	admintest	OK	9	lite	samtidig	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	sqltest	FEIL	50	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	trip2	OK	42	lite	samtidig	
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	sponsor2test	OK	14	lite	samtidig	
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	sponsortest	OK	12	lite	samtidig	
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	sqltest	FEIL	29	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	admintest	OK	7	lite	samtidig	
 2026-11-08 22:40	ccr-510fd7d5-2eum2h	13f58ab	uishots	OK	77	lite	samtidig	
 2026-11-08 22:40	ccr-510fd7d5-2eum2h	13f58ab	kartlegging	OK	50	lite	samtidig	
 2026-11-08 22:41	ccr-510fd7d5-2eum2h	13f58ab	hudtest	OK	39	lite	samtidig	
@@ -1540,3 +1549,9 @@
 2026-11-09 01:26	ccr-9e76566c-k1gw2d	3a693e5	yardtest	OK	710	3d	alene	
 2026-11-09 01:41	ccr-9e76566c-k1gw2d	3a693e5	tut	OK	905	lite	alene	
 2026-11-09 01:41	ccr-9e76566c-k1gw2d	3a693e5+	kotest	OK	12	lite	alene	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	boottest	OK	27	lite	samtidig	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	sqltest	OK	30	lite	samtidig	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	sponsor2test	OK	13	lite	samtidig	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	sponsortest	OK	10	lite	samtidig	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	admintest	OK	7	lite	samtidig	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	trip2	OK	26	lite	samtidig	

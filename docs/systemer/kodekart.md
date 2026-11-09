@@ -3331,11 +3331,12 @@ The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the to
 
 - **1** The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the top and the end of the purchase
 
-## `src/js/ui/10r-sponsor.js` (54 linjer)
+## `src/js/ui/10r-sponsor.js` (105 linjer)
 
 Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
 
 - **1** Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
+- **57** the signs' measure, the rules (IAB/MRC Intrinsic In-Game Advertising Measurement Guidelines 2.0, the draft of 14.06.2022;
 
 ## `src/js/ui/10s-broker.js` (108 linjer)
 
@@ -3750,7 +3751,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 362 `drawWorkCones(VP, eye, t, BMrel, VG)`
   - 398 `drawChunkLights(VP, eye)`
 
-## `src/js/view3d/07-harbour-unit.js` (223 linjer)
+## `src/js/view3d/07-harbour-unit.js` (248 linjer)
 
 ---------- the harbour unit (tools/harbour/kaimottak.py): quay, fish plant, crane, forklift, ice silo and bunker station in one ----------
 
@@ -3767,11 +3768,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 109 `siteModel(k)`
   - 119 `drawSites(eye, VP, near, far)`
 - **128** sponsors' signs (M7, docs/planer/butikker-og-sponsorer.md F2 and 4.4)
-  - 150 `signTex(sp)`
-  - 164 `signSeen(M, F, VP, eye)`
-  - 176 `drawSigns(eye, VP)`
-  - 205 `signOcc(VP)`
-  - 222 `signTake()`
+  - 152 `signTex(sp)`
+  - 166 `signSeen(M, F, VP, eye)`
+  - 178 `drawSigns(eye, VP)`
+  - 214 `signOcc(VP)`
+  - 233 `signUi(ok, M, F, VP, now)`
+  - 247 `signTake()`
 
 ## `src/js/view3d/08-plants.js` (469 linjer)
 
