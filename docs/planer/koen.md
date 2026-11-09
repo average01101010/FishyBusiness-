@@ -30,6 +30,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 ## Øktene som kjører
 
 - `ccr-e474ac41-zlir5x` (Jonas' økt, 09.11.2026 09:09 UTC): steg 70 OB1 trebåten; eier `core/02-species-gear.js`, `core/10-gear.js`, `ui/11-boot.js`, `tools/boats/snekke23.py`, `tools/gear/`, `src/data/*.b64` (trebat), malen, `view3d/12-skiff.js`, `13-instruments.js`, `10-gear.js`, `docs/skipsmodeller/trebat-grunnlag.md`.
+- `ccr-b098ba3f-5yfbls` (Jonas' økt, 09.11.2026 09:10 UTC): steg 13 Ø8b S3 havna, måling og `denPlace`; eier `core/03-simulation.js`, nytt `tests/havnmaal.py`, `tests/unit/` (havna).
 
 ## Valg som venter på Jonas
 
@@ -58,7 +59,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | # | Steg | Spor | Status | Venter på | Filer steget eier mens det går | Plan |
 |---|---|---|---|---|---|---|
 | 8b | **Ø8b M5** «Tom for is» én gang, så én gang per døgn | Spillbarhet | klar (Ø8b S0 rullet ut i ffd076c1) | steg 5 (ferdig) | `core/05-vessels.js` (`deckMinute`), `ui/phone/07-patch.js`, tester | `folk-om-bord.md` 5.19b, backloggen 10.3 |
-| 13 | **Ø8b S3** Havna: måling og `denPlace` | Spillbarhet | klar (H3b og Ø8b S0 er ute; startmeldingen i `start/`, skrevet av S2 08.11.2026; B venter på Ø14 F2, som eier `03-simulation.js`) | steg 5 (ferdig) | `core/03-simulation.js`, et skript i `tests/` | `spillbarhet-fangst.md` S3 |
+| 13 | **Ø8b S3** Havna: måling og `denPlace` | Spillbarhet | pågår (Jonas' økt, gren `ccr-b098ba3f-5yfbls`, 09.11.2026 09:10 UTC; Ø14 F2 er ute, så B kan bygges om målingen krever det) | steg 5 (ferdig) | `core/03-simulation.js`, et skript i `tests/` | `spillbarhet-fangst.md` S3 |
 | 16 | **R** Rund eller sløyd synlig (R1, R2) | Tonys test | klar (Ø8b S2 rullet ut i 1a7f95dd; hel startmelding i `start/`, skrevet av koordinatoren 09.11.2026: bryteren `S.settings.gut` finnes ikke lenger, så R1 blir et valg per båt) | steg 7 (ferdig) | `core/13-work.js` (`catchGut`), `ui/07-guide.js` (`panelFish`, `portSlip`), `ui/05d-plan2.js`, `ui/08-actions.js` (salget), kallene til `catchGut`, `tests/unit/rund.test.mjs`, `phone/07-patch.js` | `etter-tonys-test.md` R |
 | 18b | **Ø12 D** Driftsplan 2: de siste navnene fra den gamle planen | Driftsplan 2 | klar når ingen økt eier `06g-plan2.js`, `13-work.js` eller `10-gear.js` (ikke samtidig med OB1, OB2 eller R); startmeldingen i `start/` | steg 18 (ferdig) | `core/06d-plan-felles.js`, `06g-plan2.js`, `05-vessels.js`, `03-simulation.js`, `13-work.js`, `10-gear.js`, `06-services.js`, `phone/11-rederi.js`, `tests/unit/havplan.test.mjs` | backloggen «Ø12 C …, det som står igjen» |
 | 19 | **Ø11.8** Farvannet: fartsgrensene og sjømerkene | Lover og sikkerhet | klar (H3b og Ø12 C er ute; hel startmelding i `start/`) | steg 18 (ferdig) | ny `tools/fart/`, `src/data/fart.json`; `core/05e-sjovei.js`, `05-vessels.js`, `16b-dyn.js`, `ui/03-map.js`, `03a-chart.js` | `lover-regler-sikkerhet.md` kap. 6 |
