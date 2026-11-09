@@ -1747,3 +1747,13 @@
 2026-11-09 11:12	ccr-4660a71b-kidfna	398f111	docktest	OK	61	lite	samtidig	
 2026-11-09 11:12	ccr-4660a71b-kidfna	398f111	calib	LES	11	lite	samtidig	
 2026-11-09 11:13	ccr-4660a71b-kidfna	398f111	routetest	FEIL	38	lite	alene	FEIL Autonav over hele kysten: Finnsnes–Tromsø, Bodø–Reine og Bergen–Florø gir en vei fri for land, grunner og skjær, med høyst 40 punkter, eller ett per 2 km d
+2026-11-09 11:57	HEAD	03fb74b	mannskapshot	OK	25	lite	samtidig	
+2026-11-09 11:57	HEAD	03fb74b	crewwalk	OK	13	lite	samtidig	
+2026-11-09 11:57	HEAD	03fb74b	selfcrew	OK	12	lite	samtidig	
+2026-11-09 11:58	HEAD	03fb74b	trip2	OK	55	lite	samtidig	
+2026-11-09 11:58	HEAD	03fb74b	tutfull	OK	11	lite	samtidig	
+2026-11-09 11:58	HEAD	03fb74b	opsowntest	OK	67	lite	samtidig	
+2026-11-09 11:59	HEAD	03fb74b	docktest	FEIL	82	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-09 11:59	HEAD	03fb74b	berth3d	OK	21	lite	samtidig	
+2026-11-09 11:59	HEAD	03fb74b	turtest	OK	32	lite	samtidig	
+2026-11-09 12:03	HEAD	03fb74b	mobtest	OK	206	lite	samtidig	
