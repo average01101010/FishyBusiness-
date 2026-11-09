@@ -192,19 +192,23 @@
   function drawMooring(BMrel, eye, VP, t){
     if (!ROPEM) return; const bp = berthNow(); moorTick(bp);
     const vt = vtype(), G = GEO(vt), gw = G.gw || 1, sx = G.beam / 2, sd = MO.side || 1, Sp = moorSpots(G, sd), vp = MO.vp;
+    // (with the deck crew, each line and fender at the rail before the place of its hand, deckcrew.js moorAt; else the model's measures)
+    const crewOn = typeof CREW3D !== 'undefined' && CREW3D.on(), at = key => crewOn ? CREW3D.moorAt(key, sd) : null;
+    const cleat = {}; for (const c of ['bow', 'mid', 'stern']) cleat[c] = at('c:' + c) || Sp.cleat[c];
     const coils = vp === 'prep' || vp === 'in' || vp === 'lines' || vp === 'out' || (vp === 'stow' && MO.coil < 1);
     if (!bp && !coils && !MO.fend.some(f => f > 0)) return;
     nSetup(VP);
     // the fenders: lifted over the rail and lowered on their lines to hang over the side, or taken in again
-    for (let k = 0; k < 3; k++){ const f = MO.fend[k]; if (f <= 0.02) continue; const H = Sp.fend[k], u = f * f * (3 - 2 * f), I = [sd * sx * 0.6, gw + 0.12, H[2]];
+    for (let k = 0; k < 3; k++){ const f = MO.fend[k]; if (f <= 0.02) continue; const q = at('f' + k), u = f * f * (3 - 2 * f);
+      const H = q ? [q[0] + sd * 0.14, q[1] - 0.5, q[2]] : Sp.fend[k], Rl = q ? [q[0], q[1], q[2]] : [sd * sx * 0.9, gw, H[2]], I = [Rl[0] - sd * 0.3, Rl[1] + 0.12, H[2]];
       const P = [I[0] + (H[0] - I[0]) * u, I[1] + (H[1] - I[1]) * u, H[2]];
-      drawN(FENDM, chain(BMrel, M4.T(P[0], P[1], P[2]))); drawN(ROPEM, chain(BMrel, limbM([P[0], P[1] + 0.25, P[2]], [sd * sx * 0.9, gw, P[2]], 0.012))); }
-    if (coils) for (let i = 0; i < 4; i++) if (MO.lines - i <= 0){ const C = Sp.cleat[LINE_CL[i]]; drawCoil(BMrel, i === 3 ? [C[0], C[1], C[2] - 0.38] : C, sd); }
+      drawN(FENDM, chain(BMrel, M4.T(P[0], P[1], P[2]))); drawN(ROPEM, chain(BMrel, limbM([P[0], P[1] + 0.25, P[2]], Rl, 0.012))); }
+    if (coils) for (let i = 0; i < 4; i++) if (MO.lines - i <= 0){ const C = cleat[LINE_CL[i]]; drawCoil(BMrel, i === 3 ? [C[0], C[1], C[2] - 0.38] : C, sd); }
     if (!bp) return;
     const bl = QB[faceKey(bp.face)]; if (!bl || !bl.length || MO.lines <= 0) return;
     const X = bp.x * 1000, Z = bp.y * 1000, f = bp.fwd, near = (tx, tz) => bl.reduce((a, q) => Math.hypot(q.x - tx, q.z - tz) < Math.hypot(a.x - tx, a.z - tz) ? q : a, bl[0]);
     const fore = near(X + f.x * (bp.Lb / 2 + 2.5), Z + f.z * (bp.Lb / 2 + 2.5)), aft = near(X - f.x * (bp.Lb / 2 + 2.5), Z - f.z * (bp.Lb / 2 + 2.5));
-    const cleat = Sp.cleat, LINES = [['mid', aft], ['bow', fore], ['stern', aft], ['mid', fore]];
+    const LINES = [['mid', aft], ['bow', fore], ['stern', aft], ['mid', fore]];
     for (let i = 0; i < 4; i++){
       const p = clamp(MO.lines - i, 0, 1); if (p <= 0) continue;
       const A = xf(BMrel, cleat[LINES[i][0]]), q = LINES[i][1], Bq = [q.x - eye[0], QTOP + 0.42 - eye[1], q.z - eye[2]];

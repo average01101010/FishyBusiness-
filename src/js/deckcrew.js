@@ -184,12 +184,33 @@ function crewSim(src){
   }
   // the place for a part of it: inboard of the fender or the cleat, facing the quay's side (the hands over the rail: tending the fender,
   // throwing and taking in the line), or coiling the line by the middle cleat
-  function moorPlace(key){
-    const m = moorNow(), sd = (m && m.side) || 1, Sp = moorSpots(ST.G, sd); let P, task;
+  // (the nearest cell to the part on the deck the crew live on, on the quay's side, with the rail within reach before it: the cleat
+  // from the model's measures may be where nobody stands, the bow of a boat whose foredeck is not walked on; kept per boat and kit)
+  const MOORPL = new Map();
+  function moorPlace(key, sd0){
+    const m = moorNow(), sd = sd0 || (m && m.side) || 1, id = ST.type + '|' + (key || '') + '|' + sd + '|' + ST.kitSig;
+    if (MOORPL.has(id)){ const g = MOORPL.get(id); return g && Object.assign({}, g); }
+    const Sp = moorSpots(ST.G, sd), M = ST.M, h = sd * Math.PI / 2; let P, task;
     if (key && key[0] === 'f'){ P = Sp.fend[+key[1]] || Sp.fend[1]; task = 'pick'; }
     else { P = Sp.cleat[key === 'coil' || !key ? 'mid' : key.slice(2)] || Sp.cleat.mid; task = key === 'coil' ? 'coil' : 'haul'; }
-    const k = ST.M.near(P[0] - sd * 0.5, P[2], 1.6); return k < 0 ? null : {k, h:sd * Math.PI / 2, task, mo:key || 'c:mid'};
+    const tx = P[0] - sd * 0.5, tz = P[2], C = [];
+    for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k) || !livePart(k)) continue; const q = M.at(k); if (q[0] * sd < -0.2) continue; C.push([Math.hypot(q[0] - tx, (q[2] - tz) * 1.2), k]); }
+    C.sort((a, b) => a[0] - b[0]); let k0 = -1;
+    if (key === 'coil') k0 = C.length ? C[0][1] : -1;
+    else for (const [, k] of C.slice(0, 60)){ const q = M.at(k), rl = railAt(k, h); if (!rl) continue;
+      // (at the ship's side: no deck outboard of it, and the open sea beyond the rail, not a house or a wall)
+      const ox = q[0] + sd * (rl[0] + 0.45); if (M.ok(M.cellOf(q[0] + sd * 0.5, q[2])) || M.hit([ox, q[1] + 1.4, q[2]], [ox, q[1] - 2.5, q[2]]) >= 0) continue; k0 = k; break; }
+    if (k0 < 0 && C.length) k0 = C[0][1];
+    const g = k0 < 0 ? null : {k:k0, h, task, mo:key || 'c:mid'}; MOORPL.set(id, g); return g && Object.assign({}, g);
   }
+  // where a line is made fast and a fender hangs: at the rail before the place of its hand (the cleat from the model's measures may be
+  // where nobody can stand, the bow of a boat whose foredeck is not walked on: the line is then led from where the hand is), in the
+  // boat's frame [x, the rail's top, z]; null without a place
+  const MOORAT = new Map();
+  function moorAt(key, sd){ if (!ready()) return null; sd = sd || 1; const id = ST.type + '|' + key + '|' + sd + '|' + ST.kitSig; if (MOORAT.has(id)) return MOORAT.get(id);
+    const g = moorPlace(key, sd); let out = null;
+    if (g){ const p = ST.M.at(g.k), rl = railAt(g.k, g.h); out = [p[0] + sd * (rl ? rl[0] : 0.4), p[1] + (rl ? rl[1] : 1.0), p[2]]; }
+    MOORAT.set(id, out); return out; }
   // for the view: which of the parts have their hand there now, and how many are on them
   function moorMan(){ const out = new Set(); for (const a of A) if (a.st === 'fort' && a.goal && a.goal.mo && a.mode === 'at' && a.cell === a.goal.k && a.blend > 0.5) out.add(a.goal.mo); return out; }
   const moorHands = () => A.filter(a => a.st === 'fort').length;
@@ -525,7 +546,7 @@ function crewSim(src){
     if (a.mode !== 'walk' || !a.path || a.pi < a.path.length - 1) return [0, 0]; const u = clamp(1 - (a.near || 0) / 0.6, 0, 1); return [o[0] * u, o[1] * u]; }
   function clipWhy(k){ if (!ready()) return null; const M = ST.M; return (ST.PT.lean || []).filter(l => M.ok(l.k)).map(q => { const f = fitPlace(k, q), p = M.at(q.k), F = [Math.sin(f.h), -Math.cos(f.h)], Rv = [Math.cos(f.h), Math.sin(f.h)], o = f.off || [0, 0];
     const W = v => [p[0] + o[0] + F[0] * v[0] + Rv[0] * v[2], p[1] + v[1], p[2] + o[1] + F[1] * v[0] + Rv[1] * v[2]]; return {rail:railAt(q.k, q.h), fit:f.rail, off:f.off, hits:poseSegs(k, f.rail).map(([a, b], i) => M.hit(W(a), W(b)) >= 0 ? i : -1).filter(i => i >= 0)}; }); }
-  return {tick, agents, visible, anchorOf, on, setJig, setRoll, setHelm, setMoor, moorMan, moorHands, places:() => ready() ? places() : null, reset, clipNow, clipScan, clipWhy, bodyHits, walkOff, holds, railAt:(k, h) => ready() ? railAt(k, h) : null, railNear:a => ready() ? railNear(a) : null, _st:ST};
+  return {tick, agents, visible, anchorOf, on, setJig, setRoll, setHelm, setMoor, moorMan, moorHands, moorAt, places:() => ready() ? places() : null, reset, clipNow, clipScan, clipWhy, bodyHits, walkOff, holds, railAt:(k, h) => ready() ? railAt(k, h) : null, railNear:a => ready() ? railNear(a) : null, _st:ST};
 }
 const CREW3D = crewSim(null);
 // where the lines and the fenders are, in the boat's frame (x to starboard, z aft) from the model's measures (vessel3d.js geoOf), with the
