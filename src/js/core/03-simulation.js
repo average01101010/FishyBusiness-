@@ -547,8 +547,20 @@ function uerOpen(H){ const m = gDate(H).getUTCMonth(); return m >= 5 && m <= 7; 
 function denPlace(p){
   if (isLand(p)) return null;
   const d = depthF(p), E = exposure(p);
-  // c: the 2 km cell's location (03f-fiske.js); fl: the fishing grounds whose shape reaches the point (03j-felt.js, Ø14 F2)
-  return {p, d, E, edge:sstep(1.5, 12, slopeAt(p)), skr:-1, c:lokOfCell(p), fl:feltAt(p)};
+  // c: the 2 km cell's location (03f-fiske.js); fl: the fishing grounds whose shape reaches the point (03j-felt.js, Ø14 F2);
+  // h: the harbour basin (inHarbour, 01-world.js) holds a tenth of the fish (Ø8b S3, below)
+  return {p, d, E, edge:sstep(1.5, 12, slopeAt(p)), skr:-1, c:lokOfCell(p), fl:feltAt(p), h:inHarbour(p) ? HARBF : 1};
+}
+// Little fish stands inside a harbour (Ø8b S3, docs/planer/spillbarhet-fangst.md V5 B, 09.11.2026): measured in ten basins along the
+// coast (tests/havnmaal.py), the basin gave 15-160 % of the nearest fishing ground's fish (median 51 %) and over 20 % in 17 of 19
+// harbour-months, and in a gale the sheltered basin gave more than the ground (wpen 0.79 against 0.15). A basin is dredged, busy with
+// boats and propellers, and the fish stand outside on the grounds, so it holds a tenth of what the place would give; every reader of
+// density (the catch, the sounder, the heat map, the gear) sees the same. Not a ban: no rule forbids fishing in a basin in general.
+const HARBF = 0.1;
+// the first time a boat fishes inside a harbour basin, one line in its deck log (once per boat; achMinute, 09f-merker.js, asks every minute)
+function harbourNote(){
+  for (const v of S.fleet || []){ const b = vget(v, 'boat'); if (!b || b.status !== 'fishing' || b.harbN || !b.pos || !inHarbour(b.pos)) continue;
+    b.harbN = 1; onVessel(v, () => log('Inne i havna står det lite fisk.', 'Little fish stands inside the harbour.')); }
 }
 const DENT = {H:NaN, T:null};
 function denTime(H){
@@ -571,7 +583,7 @@ function denSp(sp, q, H, T){
   if (sp === 'uer' && !T.uerOpen) av *= 0.15;
   if (s.shell) v *= kingArea(p); else v *= school(sp, p, H);
   if (s.area) v *= AREAS[s.area](p, q.d, H, q.E);
-  return 1.6 * s.k * v * day * av * depthFactor(sp, q.d, tempDepthK(sp, q.c, H)) * stockAt(p, sp, H) + tutBonus(sp, p);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
+  return 1.6 * s.k * v * day * av * depthFactor(sp, q.d, tempDepthK(sp, q.c, H)) * stockAt(p, sp, H) * (q.h || 1) + tutBonus(sp, p);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
 }
 function density(sp, p, H){ const q = denPlace(p); return q ? denSp(sp, q, H, denTime(H)) : 0; }
 // Where the Greenland halibut is (07.10.2026, docs/plan-blakveite.md 1-2): the shelf edge between 300 and 1100 m (none shallower, none

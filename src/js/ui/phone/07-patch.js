@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['havn-091126', '09.11.2026', 'Lite fisk inne i havna', 'Little fish inside the harbour', [
+       ['Inne i havnebassenget står det lite fisk; fisken står ute på feltene. Juksa, garna, ekkoloddet og varmekartet viser det samme. Første gang båten fisker inne i en havn, står det i dekksdagboka.', 'Little fish stands inside the harbour basin; the fish stand out on the grounds. The jig, the nets, the sounder and the heat map all show the same. The first time the boat fishes inside a harbour, the deck log says so.']]],
     ['f3b-091126', '09.11.2026', 'Sjørokk og skum etter slaget', 'Spindrift and the foam after a slam', [
        ['Fra stiv kuling river vinden sprut av kammene som bryter, og sjørokken i lufta kommer fra de samme kammene som skummet på vannet. Jo mer vind, jo flere kammer bryter, og jo mer sjørokk.', 'From a near gale the wind tears spray off the crests that break, and the spindrift in the air comes off the same crests as the foam on the water. The more wind, the more crests break, and the more spindrift.'],
        ['Når baugen slår i sjøen, blir det hvite vannet liggende som skum rundt baugen og der sprøyten faller ned, og det ligger igjen i sjøen som kjølvannet.', 'When the bow slams into the sea, the white water stays as foam round the bow and where the spray falls back, and it lies in the sea as the wake does.']]],
