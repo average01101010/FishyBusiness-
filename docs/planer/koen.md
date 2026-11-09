@@ -30,7 +30,6 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 ## Øktene som kjører
 
 - `ccr-159e8207-jxlj4z`: steg 21b Ø3c Ytelse (Jonas' økt, 09.11.2026 17:30); eier `view3d/01-shaders.js`, `03-berths-naust.js`, `18-setup.js`, `19-wildlife-npc.js`, `vessel3d.js`, delene i `view3d/` som leser `GLBM` (ikke `09-landing-deck.js`, som R har), `ui/03-map.js` (`chartVectors`), `core/03e-rules.js` (`ruLayerBlock`).
-- `ccr-9258fc31-wklbu7`: steg 84 OB6 snekka (Jonas' økt, 09.11.2026 17:30). Eier `tools/boats/snekke26.py`, `src/data/boat-snekke26*.b64`, `docs/skipsmodeller/snekke-grunnlag.md`, og der det trengs `view3d/13-instruments.js` (`jigRail`), `view3d/10-gear.js` (`potDeck`), `deckcrew.js`, `tests/crewclip.py`, `core/03c-stability.js` (`STAB_AT.snekke`).
 
 ## Valg som venter på Jonas
 
@@ -100,7 +99,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 81 | **OB3** Settingen og redskapet om bord: én akter, stampene, garnet og teinene i riktig antall | Om bord | venter på OPP5 (steg 57, samme filer; tas sammen eller rett etter; OB1 er ute); hel startmelding i `start/81.md`, skrevet av OB2 09.11.2026 | steg 70, 57 | `view3d/10-gear.js`, `09-landing-deck.js`, `core/13-work.js`, `deckcrew.js` | `om-bord.md` OB3, F4, F7, F8 |
 | 82 | **OB4** Lossingen og isen med mannskapet, båtens egen kran | Om bord | venter på OB3 (samme filer) | steg 81 | `view3d/09-landing-deck.js`, `view3d/11-bunker.js`, `deckcrew.js`, `core/07-harbours.js` (stasjonene og `berthPose`, F22 fra OB2) | `om-bord.md` OB4, F10, F11, F22 |
 | 83 | **OB5** Skiffen til 75/100 | Om bord | venter på Jonas: karakteren (rullet ut 09.11.2026 i 7e2e7e1, versjon 57c75567790d; forslag 75 i `skiff-grunnlag.md` 10.3; bildene i `docs/okter/2026-11-09-ob5/`) | steg 70 | `tools/boats/skiff59.py`, `src/data/*.b64`, `view3d/12-skiff.js` | `om-bord.md` OB5, 4.2 |
-| 84 | **OB6** Snekka til 75/100 | Om bord | pågår (Jonas' økt, `ccr-9258fc31-wklbu7`, 09.11.2026 17:30; hel startmelding i `start/84.md`; bildene av typen vises Jonas før skroget formes om, valg 22 B) | steg 83 | `tools/boats/snekke26.py`, `src/data/*.b64` | `om-bord.md` OB6, 4.3 |
+| 84 | **OB6** Snekka til 75/100 | Om bord | venter på Jonas: karakteren (rullet ut 09.11.2026 i 23095a1, versjon 83950c311aba; forslag 77 i `snekke-grunnlag.md` 9.4; bildene i `docs/okter/2026-11-09-ob6/`; Jonas: snekka med deg og én til, to juksamaskiner, ingen flåte eller livbøye under fire om bord, ingen teiner, valg 24 A) | steg 83 | `tools/boats/snekke26.py`, `src/data/*.b64` | `om-bord.md` OB6, 4.3 |
 | 85 | **OB7** Plastsjarken til 75/100, ny arbeidsplan etter ekte båter (Jonas: «frie tøyler») | Om bord | klar (OB6 bygd 09.11.2026; hel startmelding i `start/85.md`; bildene av typen vises Jonas før modellen endres, valg 22 B) | steg 84 | `tools/boats/plast31.py`, `src/data/*.b64` | `om-bord.md` OB7, 4.4 |
 | 86 | **OB8** Havsjarken til 75/100 | Om bord | venter på OB7 | steg 85 | `tools/boats/havsjark35.py`, `src/data/*.b64` | `om-bord.md` OB8, 4.5 |
 | 87 | **OB9** Hurtigsjarken til 75/100 | Om bord | venter på OB8 | steg 86 | `tools/boats/hurtig11.py`, `src/data/*.b64` | `om-bord.md` OB9, 4.6 |
