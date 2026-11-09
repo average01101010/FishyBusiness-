@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['trebat-091126', '09.11.2026', 'Fars trebåt og vimplene', 'Father\'s wooden boat and the pennants', [
+       ['Fars gamle trebåt har ingen badestige og ingen livbøye lenger, og hun viser ikke fiskelanterner: bare den hvite rundtlysende lanterna og sidelysene. Faller noen over bord fra henne, blir de dratt inn over ripa.', 'Father\'s old wooden boat no longer has a bathing ladder or a lifebuoy, and she shows no fishing lights: only the white all-round light and the sidelights. If someone goes over the side from her, they are hauled in over the gunwale.'],
+       ['Vimplene i masta er borte fra alle båtene. Flaggene er som før.', 'The pennants at the masthead are gone from every boat. The flags are as before.']]],
     ['p157', '08.11.2026', 'Fisken på fiskeplassene', 'The fish on the fishing grounds', [
        ['Fisken står oftere på fiskeplassene langs hele kysten i de månedene fiskerne har fisket der (Fiskeridirektoratets kart), men ikke hver dag: de gode flekkene kommer og går på feltet som ellers i sjøen.', 'The fish stand more often on the fishing grounds along the whole coast in the months the fishermen have fished there (the Directorate of Fisheries\' map), but not every day: the good spots come and go on the ground as elsewhere in the sea.'],
        ['Senjas seks felt har ikke lenger en egen sirkel med ekstra fisk. Fiskeplassene på Senja følger samme regel som resten av kysten.', 'Senja\'s six grounds no longer have a circle of extra fish of their own. The fishing grounds on Senja follow the same rule as the rest of the coast.']]],

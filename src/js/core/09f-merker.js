@@ -194,14 +194,14 @@ function achCheck(quiet){
     if (fresh.length && !quiet && typeof achShow === 'function') achShow(fresh);
   } finally { ACH_BUSY = false; }
 }
-// a chapter's own reward: a pennant on the boat that others see (b.liv pennant level, vessel3d.js), a luck after the second, a hull
-// colour after the third
+// a chapter's own reward: a luck after the second, a hull colour after the third; the first has the gifts on the way (its pennant
+// at the masthead went 09.11.2026, Jonas: «fjerne vimplene fra båtene. Jeg liker de ikke»; A.pen is still kept)
 function achChapter(ch){
   const A = achState(); A.pen = Math.max(A.pen || 0, ch + 1);
   if (ch === 1 && typeof giveHaill === 'function') giveHaill('haill', 'gift');
   if (ch === 2){ A.colour = 1; }
-  const what = ['Vimpelen er din: den henger i masta på båter med mast, og andre ser den.', 'Vimpelen blir lengre, og en haill ligger om bord.', 'Vimpelen blir enda lengre, og skrogfargen «Kystfisker» er din i Malerverkstedet.'][ch],
-    whatEn = ['The pennant is yours: it flies from the mast of a boat with a mast, and others see it.', 'The pennant grows longer, and a luck is aboard.', 'The pennant grows longer still, and the hull colour «Kystfisker» is yours in the paint shop.'][ch];
+  const what = ['Gavene underveis er dine, og neste kapittel venter.', 'En haill ligger om bord.', 'Skrogfargen «Kystfisker» er din i Malerverkstedet.'][ch],
+    whatEn = ['The gifts on the way are yours, and the next chapter waits.', 'A luck is aboard.', 'The hull colour «Kystfisker» is yours in the paint shop.'][ch];
   msg('Kystposten', 'Kapittel «' + ACH_CH[ch][0] + '» er fullført. ' + what, 'Chapter «' + ACH_CH[ch][1] + '» is complete. ' + whatEn);
   pressPut('ach', {ch});   // in the paper for the others (09h-press.js)
 }
