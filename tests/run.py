@@ -153,6 +153,15 @@ for _f, _t in (('src/js/view3d/21-rescue-anchor.js', 'mobshot'), ('src/js/deckcr
 COVER['src/js/core/03i-kvotemarked.js'] = ['quotatest']
 COVER['tests/unit/kvotemarked.test.mjs'] = []
 
+# Turens linje (Ø8b S2, 08.11.2026): the trip's sums in fish() and finishHaul (05-vessels.js, 10-gear.js), the line made by tripSum and
+# tripWhy (04-crew.js), on the landing note (07-guide.js portSlip) and in the deck log at the sale (08-actions.js sell). The pure part is in
+# tests/unit/turlinje.test.mjs; turlinjetest jigs minute by minute and lands (`--kyst` with the whole coast). On lines of their own
+LITE += ['turlinjetest']
+COVER['tests/turlinjetest.py'] = ['turlinjetest']
+COVER['tests/unit/turlinje.test.mjs'] = []
+for _f in ('src/js/core/04-crew.js', 'src/js/core/05-vessels.js', 'src/js/core/10-gear.js', 'src/js/ui/07-guide.js', 'src/js/ui/08-actions.js'):
+    COVER[_f] = COVER.get(_f, []) + ['turlinjetest']
+
 
 def changed_tests():
     git = lambda *a: subprocess.run(['git'] + list(a), cwd=ROOT, capture_output=True, text=True).stdout.split()
