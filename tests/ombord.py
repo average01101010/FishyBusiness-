@@ -20,7 +20,8 @@ the places, not the frame rate.
   python3 tests/ombord.py trebat juksa line           only those fisheries (and the common operations)
   python3 tests/ombord.py kyst15 --format liggende --ops kast,trekk --k 0.15 --sec 9
   python3 tests/ombord.py --recut <out>/trebat [liggende]   cut the clips again from the kept raw recording (_raw_<format>/)
-  python3 tests/ombord.py trebat --bilder              only the three pictures of each operation, no video (OB1, Jonas 09.11.2026: «Du trenger
+  python3 tests/ombord.py trebat                      the default since 09.11.2026: only the three pictures, never a video (Jonas: «Ny regel:
+                                                      Ikke ta videoopptak»); --bilder says the same. Before (OB1, Jonas 09.11.2026: «Du trenger
                                                       ikke å ta videoklipp av båten, det holder med bilder»): the game's own clock, nothing
                                                       recorded, so a boat takes a fraction of the time
   KYST_OMBORD_OUT=<dir>                               where the clips go (default tests/out/ombord/); the videos stay out of git
@@ -169,11 +170,13 @@ async def snap(pg, path):
 
 
 def args():
-    a = sys.argv[1:]; o = {'format': 'begge', 'ops': None, 'k': 0.15, 'sec': None, 'bilder': False}
+    # (only pictures, never a video, Jonas 09.11.2026: «Ny regel: Ikke ta videoopptak. Kvaliteten er alt for dårlig og hakkete»; --video
+    # is kept for the code that cuts the old recordings, and is not to be used)
+    a = sys.argv[1:]; o = {'format': 'begge', 'ops': None, 'k': 0.15, 'sec': None, 'bilder': '--video' not in a}
     pos = []
     i = 0
     while i < len(a):
-        if a[i] == '--bilder': o['bilder'] = True; i += 1
+        if a[i] in ('--bilder', '--video'): i += 1
         elif a[i].startswith('--'): o[a[i][2:]] = a[i + 1]; i += 2
         else: pos.append(a[i]); i += 1
     if not pos or pos[0] not in BOATS: sys.exit('bruk: ombord.py <båt> [fiske ...] [--format liggende|staaende|begge] [--ops a,b] [--k 0.1] [--sec 12]; båtene: ' + ' '.join(BOATS))
