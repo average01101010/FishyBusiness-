@@ -199,10 +199,11 @@ Dekkskartet (`tools/boats/qa/deckgrid.py snekke`) gir en dørk på 1,8 m mellom 
 
 - **Jonas 09.11.2026 (etter de første endringene):** «Jeg tenker denne båten maks skal kunne ha 2 juksamaskiner og 2 mann ombord, den har tross alt ikke mye mer plass enn trebåten. Fjern livbøyen, og redningsflåten, bare båter med kapasitet for 4 mann eller mer skal ha slikt utstyr.» Snekka har nå deg og én til (`crewMax` 1, som trebåten og skiffen, så driftsplanen går bare når du er om bord) og høyst to juksamaskiner (`jukseMax` 2), som passer de to juksaplassene. En lagring med flere om bord eller flere maskiner får dem mønstret av og tatt i land og betalt tilbake ved oppstart (`ui/11-boot.js`). Redningsflåten og livbøyene tegnes ikke (`lsaOf`, `LSA_MIN` 4); plassene står i modellen (`kit.raft`, `kit.buoys`) om regelen endres.
 
+- **Ingen teiner** (valg 24 A, Jonas 09.11.2026: «Om båten ikke har plass til teiner på en realistisk måte, skal den ikke drive med teiner»): teina på 1,4 × 1,4 m fikk ikke plass flatt på dørken uten å stå i et fangstkar, styrestolen, iskassa eller folkene. `VESSELS.snekke.rigs` har ikke teiner, så teinehaleren, krabbekaret og teinene passer ikke (`equipFits` `fit.rig`, `buyGate`), og en lagring med teiner på snekka får dem tatt i land og betalt tilbake (`potsUnfit`), som trebåten og skiffen (OB1). Den koniske teina (Jonas' bilde samme dag, steg 94) har bunnring på 1,30 m og trenger samme flate, så den endrer ikke dette for snekka.
+
 ### 9.3 Det som står igjen
 
-- **Teinene** (4.3, alvor A) er ikke rettet: teina på 1,4 × 1,4 m får ikke plass flatt på dørken uten å stå i fangstkarene, styrestolen, iskassa eller folkene. Den eneste flaten der den kan stå, er forut til babord under hardtoppen (der garnet og stampene står), men den stenger døra til lugaren (0,3 m igjen), og teina må løftes fra haleren på styrbord forbi den som haler og skipperen ved rattet for å komme dit. Valg 24 i køen.
-- **Settingen** (F4): stampene og garnet står forut til babord, og lina og garnet settes over hekken; ingen står akter ved stampene. Å flytte redskapet akter dit det settes fra krever at et fangstkar flyttes forut (dit redskapet står nå), og da står karet i den nye juksaplassen på babord; det henger sammen med valg 24 og er OB3s (`core/13-work.js` eies av R nå).
+- **Settingen** (F4): stampene og garnet står forut til babord, og lina og garnet settes over hekken; ingen står akter ved stampene. Å flytte redskapet akter dit det settes fra krever at et fangstkar flyttes forut (dit redskapet står nå), og da står karet i den nye juksaplassen på babord; det er OB3s (`core/13-work.js` eies av R nå).
 - **Sløyingen med tre** (F19): i klippet sløyer én ved bordet, én iser ved karet, og den tredje står ledig; ingen står i hverandre.
 
 ### 9.4 Karakteren (forslag; Jonas setter den)
@@ -215,13 +216,13 @@ Etter Jonas' skala (valg 17, `om-bord.md` kap. 2). Forslaget i OB0 var 67 etter 
 | Detaljer | 20 | 15 | Ekte hull med lysning og glass, beslag fra `fittings.py`, slitasje, 68 000 trekanter. Trekk: materialene er ikke PBR (F2) |
 | Lanterner | 5 | 4 | Lovlige plasser etter `check()`, K6 sett 01.11.2026; ikke sett om natta i denne økta |
 | Styrhus | 10 | 8 | Konsollen med levende plotter, ratt, enspak og kompass; `brotest` grønn 01.11.2026 (ankrene er flyttet likt med vannlinja, så høydene mot taket og vindskjermen er de samme) |
-| Arbeidsflyt | 25 | 17 | Juksa på to frie plasser, én på hver side, ingen gjennom noe (`crewclip`), to om bord og to maskiner, som plassen gir; sløyingen og garntrekket som før (riktige i OB0); fortøyningen med folk (OB2). Trekk: teinene settes ned gjennom karene og folkene (alvor A, valg 24), ingen akter ved settingen (F4) |
-| Utforming av dekk | 20 | 14 | Maskinene på logiske plasser, ingen livbøye eller flåte i veien. Trekk: teinestabelen har ingen plass, stampene og garnet står forut mens redskapet settes akter, døra til lugaren er trang når garnkaret står der |
-| **Sum** | **100** | **73** | Under grensen. Det som løfter mest: teinene (valg 24) og settingen akter fra stampene |
+| Arbeidsflyt | 25 | 20 | Juksa på to frie plasser, én på hver side, ingen gjennom noe (`crewclip`), to om bord og to maskiner, som plassen gir; sløyingen og garntrekket som før (riktige i OB0); fortøyningen med folk (OB2). Ingen teiner, fordi de ikke får plass (valg 24 A). Trekk: ingen akter ved settingen (F4) |
+| Utforming av dekk | 20 | 15 | Maskinene på logiske plasser, ingen livbøye eller flåte i veien. Trekk: stampene og garnet står forut mens redskapet settes akter, døra til lugaren er trang når garnkaret står der |
+| **Sum** | **100** | **77** | Over grensen, uten funn med alvor A igjen som er snekkas egne. Det som løfter mer: settingen akter fra stampene (F4, OB3) og bilder av typen |
 
 Jonas setter karakteren.
 
 ## Endringslogg
 
 - 01.11.2026: første versjon, gjennomgangen før endring og de første rundene.
-- 09.11.2026: OB6 (kap. 9): juksaplassene fra modellen, livbøyene akter, vannlinja for den tomme båten; Jonas: deg og én til, to maskiner, ingen flåte eller livbøye; teinene og settingen står (valg 24).
+- 09.11.2026: OB6 (kap. 9): juksaplassene fra modellen, livbøyene akter, vannlinja for den tomme båten; Jonas: deg og én til, to maskiner, ingen flåte eller livbøye; ingen teiner (valg 24 A); settingen står (F4).

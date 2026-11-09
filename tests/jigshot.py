@@ -28,8 +28,9 @@ async def main():
         shots = 0
         # the hand boats (drawSkiff) and every boat with a wheelhouse outside the ocean fleet (drawJigRail, Jonas 13.10.2026)
         rail = await pg.evaluate("Object.keys(VESSELS).filter(t => VESSELS[t].cls !== 'hav' && !geoOf(t).hand).map(t => [t, VESSELS[t].len])")
-        n = await pg.evaluate("Object.fromEntries(Object.keys(VESSELS).filter(t => VESSELS[t].cls !== 'hav' && !geoOf(t).hand).map(t => [t, G3._debug.jigRail ? G3._debug.jigRail(t).length : -1]))")
-        check(all(v >= 3 for v in n.values()), 'tre plasser på rekka for maskinene på hver båt med styrhus utenom havflåten', n)
+        # (as many as she takes, at most three: the snekke takes two, Jonas 09.11.2026, OB6: «maks skal kunne ha 2 juksamaskiner»)
+        n = await pg.evaluate("Object.fromEntries(Object.keys(VESSELS).filter(t => VESSELS[t].cls !== 'hav' && !geoOf(t).hand).map(t => [t, [G3._debug.jigRail ? G3._debug.jigRail(t).length : -1, Math.min(3, VESSELS[t].jukseMax || 0)]]))")
+        check(all(v >= m for v, m in n.values()), 'plass på rekka for maskinene på hver båt med styrhus utenom havflåten, så mange som båten tar (høyst tre)', n)
         for type, yaw, pitch, dist, tag in [('trebat', 1.4, 0.3, 7, 'trebat'), ('trebat', 2.2, 0.4, 6, 'trebat_bak'), ('skiff', 1.4, 0.3, 7, 'skiff')] + [(t, 1.3, 0.42, 4 + L * (0.55 if L < 14 else 0.9), t) for t, L in rail]:
             await pg.evaluate(SET, [type, yaw, pitch, dist]); await pg.wait_for_timeout(3000)
             await pg.screenshot(path=os.path.join(OUT, f'jig_{tag}.png')); shots += 1

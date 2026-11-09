@@ -11,14 +11,15 @@ export default function (t){
   const boat = type => { S.boat.type = type; K.applyVessel(); };
 
   // ---- the datasheet
-  for (const v of ['trebat', 'skiff']){
+  // (the snekke too, Jonas 09.11.2026, OB6: «Om båten ikke har plass til teiner på en realistisk måte, skal den ikke drive med teiner»)
+  for (const v of ['trebat', 'skiff', 'snekke']){
     t.ok(!VESSELS[v].rigs.includes('teiner'), v + ': databladet har ikke teiner');
     t.ok(VESSELS[v].rigs.includes('garn') && VESSELS[v].rigs.includes('line') && VESSELS[v].rigs.includes('juksa'), v + ': juksa, line og garn står');
     t.ok(!K.equipFits('teinehaler', v) && !K.equipFits('teinehalerLv', v) && !K.equipFits('krabbekar', v), v + ': teinehaleren, trinnene og krabbekaret passer ikke');
     t.ok(/ikke plass til teiner/.test(VESSELS[v].desc.no), v + ': båtbladet sier at det ikke er plass til teiner');
   }
-  for (const v of ['snekke', 'plastsjark', 'kyst15', 'snokrabbe']) t.ok(K.equipFits('teinehaler', v), v + ': teinehaleren passer som før');
-  t.ok(K.equipFits('krabbekar', 'snekke'), 'snekka kan fortsatt ha krabbekar');
+  for (const v of ['plastsjark', 'kyst15', 'snokrabbe']) t.ok(K.equipFits('teinehaler', v), v + ': teinehaleren passer som før');
+  t.ok(K.equipFits('krabbekar', 'plastsjark'), 'plastsjarken kan fortsatt ha krabbekar');
 
   // ---- buying: the pots, the rig, and the nets by hand
   boat('trebat'); S.boat.status = 'port'; S.equip = {}; S.pgear = K.newPGear(); S.sets = [];
@@ -34,7 +35,8 @@ export default function (t){
   t.ok(K.gearRoom('garn') === VESSELS.trebat.gearMax.garn && K.gearRoom('teine') === 0, 'plass til ' + VESSELS.trebat.gearMax.garn + ' garn og ingen teiner');
   boat('snekke'); S.equip = {};
   t.ok(!K.handGear('garn') && !!K.buyGate('net'), 'snekka trenger fortsatt garnhaler for å kjøpe garn');
-  S.equip.teinehaler = true; t.eq(K.buyGate('pot'), null, 'snekka med teinehaler kjøper teiner som før');
+  S.equip.teinehaler = true; t.ok(!!K.buyGate('pot'), 'snekka kjøper ikke teiner, heller ikke med en teinehaler fra før');
+  boat('plastsjark'); S.equip = {teinehaler:true}; t.eq(K.buyGate('pot'), null, 'plastsjarken med teinehaler kjøper teiner som før');
 
   // ---- a save from before: pots and a pot hauler on the wooden boat
   const yard = PORTS.find(p => K.portServices(p).verft), plant = PORTS.find(p => !K.portServices(p).verft && K.portServices(p).mottak);
@@ -62,8 +64,11 @@ export default function (t){
   t.eq(K.potsUnfit(), 0, 'neste time ved verftet: ingenting mer');
 
   // ---- another boat is not touched
-  boat('snekke'); S.equip = {teinehaler:true}; S.pgear = K.newPGear(); S.pgear.pots.big = 4; S.boat.port = yard.id;
-  t.eq(K.potsUnfit(), 0, 'snekka beholder teinene og haleren');
-  t.ok(S.pgear.pots.big === 4 && S.equip.teinehaler, 'snekka: alt står');
+  boat('plastsjark'); S.equip = {teinehaler:true}; S.pgear = K.newPGear(); S.pgear.pots.big = 4; S.boat.port = yard.id;
+  t.eq(K.potsUnfit(), 0, 'plastsjarken beholder teinene og haleren');
+  t.ok(S.pgear.pots.big === 4 && S.equip.teinehaler, 'plastsjarken: alt står');
+  // (the snekke's pots and hauler from a save go ashore and are paid back, as the wooden boat's)
+  boat('snekke'); S.equip = {teinehaler:true}; S.pgear = K.newPGear(); S.pgear.pots.big = 4; S.sets = []; S.boat.gop = null; S.boat.status = 'port'; S.boat.port = yard.id;
+  t.ok(K.potsUnfit() > 0 && S.pgear.pots.big === 0 && !S.equip.teinehaler, 'snekka: teinene og haleren tatt i land og betalt tilbake ved verftet');
   globalThis.kr = kr0;
 }
