@@ -471,7 +471,7 @@ Ikke målt: trim, rull og slag med last i sjø i 3D (F2 måler bare tom sjark og
 
 Én båt per økt, eller én operasjon på tvers av båtene der koden er felles. Trebåten først (startbåten, alle spillerne ser den første uka), så det felles arbeidet som ses hver tur, så båtene i stigens rekkefølge. Hver fase:
 
-- tar opp **før** med `tests/ombord.py <båt>` (eller `--ops` for operasjonen) før den endrer noe, og **etter** når den er ferdig, i begge formater, og sender begge til Jonas;
+- tar opp **før** med `tests/ombord.py <båt>` (eller `--ops` for operasjonen) før den endrer noe, og **etter** når den er ferdig, i begge formater, og sender Jonas bildene (ikke videoene) fra begge;
 - setter karakteren i grunnlaget etter skalaen i kapittel 2 med begrunnelse per punkt, men **Jonas setter karakteren** før båten regnes som ferdig (75 eller mer, og ingen funn med alvor A igjen);
 - kjører testene for filene den rører (`/lever`), og `hull3d` for båten med fullt rom der skroget eller vekta endres;
 - følger `/blender` når en modell endres, og regelen om at ingen redskap modelleres inn i båten (Jonas 18.10.2026): det spilleren kjøper, står på ankrene.
