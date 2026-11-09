@@ -321,8 +321,8 @@ const EQUIP = {
 // whether an item fits a vessel type: by length, and outboards only on boats with an outboard; the tiered knives and gaff not on the
 // ocean fleet (coast: their factories and machines have their own numbers); the reels' tiers only where she takes four reels or more (jig);
 // a tier where the item it is a tier of fits (of); what belongs to one kind of fishing only where the boat can be rigged for it (rig: the
-// pot hauler and the crab tank where rigs has teiner, OB1)
-function equipFits(k, type){ const E = EQUIP[k], f = E && E.fit, V = VESSELS[type]; if (E && E.of && !equipFits(E.of, type)) return false; if (!f || !V) return !!V; return !(f.minLen && V.len < f.minLen) && !(f.maxLen && V.len > f.maxLen) && !(f.outboard && !V.outboard) && !(f.house && V.fac.house === 'open') && !(f.coast && V.cls === 'hav') && !(f.jig && !((V.jukseMax || 0) >= f.jig)) && !(f.rig && !(V.rigs || []).includes(f.rig)); }
+// pot hauler and the crab tank where rigs has teiner, OB1; a vessel with an empty rigs, the trawlers and seiners, as before)
+function equipFits(k, type){ const E = EQUIP[k], f = E && E.fit, V = VESSELS[type]; if (E && E.of && !equipFits(E.of, type)) return false; if (!f || !V) return !!V; return !(f.minLen && V.len < f.minLen) && !(f.maxLen && V.len > f.maxLen) && !(f.outboard && !V.outboard) && !(f.house && V.fac.house === 'open') && !(f.coast && V.cls === 'hav') && !(f.jig && !((V.jukseMax || 0) >= f.jig)) && !(f.rig && V.rigs && V.rigs.length && !V.rigs.includes(f.rig)); }
 // ---- the upgrades in tiers (OPP1 of docs/planer/oppgraderinger.md, 07.11.2026)
 // The rule (prinsipp 1; Jonas 07.11.2026: «jeg mener ikke vi skal ha en renters rente-effekt på oppgraderingene. Om det står 10% økning
 // feks, så betyr det at økningen er 10% opp fra grunnnivået»): every tier's per cent is of the base level, and the shares add up, never

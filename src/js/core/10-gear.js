@@ -180,7 +180,7 @@ const rigOfKind = kind => Object.keys(RIGS).find(r => RIGS[r].kind === kind) || 
 // an old save has no rig: the kind of gear in the sea or in the standing plan, otherwise jigging
 function rigGuess(){
   const s = mySets()[0]; if (s) return rigOfKind(s.kind);
-  const o = S.ops; if (o && RIGS[o.rig]) return o.rig;
+  const o = S.ops; if (o && RIGS[o.rig] && !(RIGS[o.rig].kind && rigNoRoom(RIGS[o.rig].kind))) return o.rig;   // (not a rig her datasheet has no room for, OB1)
   return 'juksa';
 }
 // (H2a) a rig the vessel cannot have (an ocean vessel has only her own: the autoliner line, the snow crab vessel pots) gives way to her first
@@ -204,7 +204,7 @@ function handGear(kind, type = S.boat && S.boat.type){ const V = VESSELS[type];
   return kind === 'garn' && !!V && (V.rigs || []).includes('garn') && !GEAR.garn.haulers.some(h => equipFits(h, type)); }
 // the boat's datasheet has no room for this kind of gear (rigs, OB1: no pots on the wooden boat and the skiff)
 function rigNoRoom(kind, type = S.boat && S.boat.type){ const R = (VESSELS[type] || {}).rigs; return !!(R && R.length && !R.includes(rigOfKind(kind))); }
-function rigHas(r){ return !RIGS[r].kind || hasHauler(RIGS[r].kind) || handGear(RIGS[r].kind); }
+function rigHas(r){ const k = RIGS[r].kind; return !k || (!rigNoRoom(k) && (hasHauler(k) || handGear(k))); }   // (a hauler left from an old save does not make room, OB1)
 const rigName = r => gL(RIGS[r].no, RIGS[r].en);
 const lc1 = x => x[0].toLowerCase() + x.slice(1);
 function rigWrong(kind){ return [gL('Båten er rigget for ' + rigName(rigOf()).toLowerCase() + '. Rigg om til ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Om bord.', 'The boat is rigged for ' + rigName(rigOf()).toLowerCase() + '. Re-rig for ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Aboard.')]; }
@@ -769,7 +769,8 @@ function potsUnfit(){
   return back;
 }
 function gearHour(H){
-  for (const v of S.fleet || []) onVessel(v, potsUnfit);
+  // (only the vessels whose datasheet has no pots are bound, so the hour costs nothing on the others, also in a long catchUp)
+  for (const v of S.fleet || []){ const bt = v.id === S.cur ? S.boat : v.boat; if (bt && rigNoRoom('teine', bt.type)) onVessel(v, potsUnfit); }
   if (!S.sets || !S.sets.length) return;
   for (const s of S.sets.slice()){
     if (s.lost || s.hauling) continue;

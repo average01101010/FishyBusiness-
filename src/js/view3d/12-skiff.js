@@ -159,11 +159,13 @@
   // tools/boats/snekke23.py) gets its own from it: its hull, glass, lid, propeller and tiller, name boards, the skipper (seated at the
   // tiller where it has one) and the crew, and its places; an inboard boat has no wheel, lever or outboard. useHand swaps the kit in.
   let PERSON = null; const HANDK = {cur:null};
+  // the places a hand model's anchors (skiff) give the kit (SKA): the old ones, and OB1's for the work aboard (snekke23.py)
+  const HANDA = ['sole', 'tub', 'fisher', 'haul', 'reel', 'mach', 'stack', 'filler', 'set', 'setter', 'coil', 'coilTub', 'moor', 'haulFoot', 'rail'];
   // the figures on the own boat (the skipper at the wheel, the crewman on the seat, the fisher at the rail and the fisher's arms) are built
   // once per boat kit with the look the skipper and the first hand have; when either changes (the wardrobe, a new hand) they are built again
   const peopleSig = () => lookSig(seaLook(lookMe(), true)) + '|' + lookSig(seaLook(lookMe())) + '|' + (lookCrew(0) ? lookSig(seaLook(lookCrew(0))) : '');
   function refreshPeople(K){
-    if (!K || !K.pp || !PERSON) return; const sig = peopleSig(); if (K.pSig === sig && K.fisherC) return; K.pSig = sig;
+    if (!K || !K.pp || !PERSON) return; const sig = peopleSig(); if (K.pSig === sig && (!K.mates || K.fisherC)) return; K.pSig = sig;
     // (the old buffers are left: boat kits made from each other share them, and a look changes rarely)
     const free = () => {};
     const build = (a, look) => { const b = NB(); PERSON(b, a[0], a[1], a[2], a[3], a[4], look); return b.mesh(); };
@@ -174,7 +176,7 @@
     if (glbHas('worker')){ if (K.wk) for (const q in K.wk) free(K.wk[q]); K.wk = wkMeshes(me); }
     // (OB1) the first hand at the gear: standing without arms (the arms drawn live, as the fisher's), seated by the tubs while she sets,
     // and his arms in his own look (drawSkiff, 13-instruments.js)
-    K.fisherC = build([0, 0, 0, false, false], c0); K.setterC = build([0, 0, 0, true, false], c0); if (glbHas('worker')) K.wkC = wkMeshes(c0);
+    if (K.mates){ K.fisherC = build([0, 0, 0, false, false], c0); K.setterC = build([0, 0, 0, true, false], c0); if (glbHas('worker')) K.wkC = wkMeshes(c0); }
   }
   function useHand(t){
     if (HANDK.cur === t || !SK) return;
@@ -200,7 +202,8 @@
     const pc = NB(); PERSON(pc, A.seat[0], A.seat[1], A.seat[2], true, null, seaLook(lookCrew(0)) || 'crew'); K.crew = pc.mesh();
     K.pp = {skipper:[sk[0], sk[1], sk[2], !!A.sit, hands], crew:[A.seat[0], A.seat[1], A.seat[2], true, null], fisher:[0, 0, 0, false, false]}; K.pSig = peopleSig(); K.wk = wkMeshes(seaLook(lookMe()));
     { const fb = NB(); PERSON(fb, 0, 0, 0, false, false, seaLook(lookMe())); K.fisher = fb.mesh(); }
-    const KA = Object.assign({}, HANDK.skiff.SKA); for (const k of ['sole', 'tub', 'fisher', 'haul', 'reel', 'mach', 'stack', 'filler', 'set', 'setter', 'coil', 'coilTub', 'moor', 'haulFoot', 'rail']) if (A[k]) KA[k] = A[k];
+    K.mates = !!(A.coil && A.setter); K.fisherC = K.setterC = K.wkC = null;   // (the hand at the gear only where the model has his places, OB1)
+    const KA = Object.assign({}, HANDK.skiff.SKA); for (const k of HANDA) if (A[k]) KA[k] = A[k];
     return {SK:K, SKA:KA, CHARM:A.charm || HANDK.skiff.CHARM};
   }
   function buildSkiff(){
@@ -421,7 +424,7 @@
       const w = A.wheel, ps = NB(); person(ps, A.skipper[0], A.skipper[1], A.skipper[2], false, [[w[0] - 0.14, w[1] + 0.14, w[2] + 0.05], [w[0] + 0.14, w[1] + 0.12, w[2] + 0.05]], lookMe()); SK.skipper = ps.mesh();
       const pc = NB(); person(pc, A.seat[0], A.seat[1], A.seat[2], true, null, lookCrew(0) || 'crew'); SK.crew = pc.mesh();
       SK.pp = {skipper:[A.skipper[0], A.skipper[1], A.skipper[2], false, [[w[0] - 0.14, w[1] + 0.14, w[2] + 0.05], [w[0] + 0.14, w[1] + 0.12, w[2] + 0.05]]], crew:[A.seat[0], A.seat[1], A.seat[2], true, null], fisher:[0, 0, 0, false, false]};
-      for (const k of ['sole', 'tub', 'fisher', 'haul', 'reel', 'mach', 'stack', 'filler', 'set', 'setter', 'coil', 'coilTub', 'moor', 'haulFoot', 'rail']) if (A[k]) SKA[k] = A[k];
+      for (const k of HANDA) if (A[k]) SKA[k] = A[k];
       CHARM_AT = A.charm || CHARM_AT;
     }
   }

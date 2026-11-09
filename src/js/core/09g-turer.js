@@ -150,7 +150,7 @@ function turFishH(kg, sp){
   let h = Infinity;
   if (sp !== 'blakveite'){ const eff = typeof effortOf === 'function' ? effortOf(hands, Math.min(S.equip ? S.equip.jukse || 0 : 0, hands * JIG.perPerson), JIG.hand) : JIG.hand; h = kg / (F.jig * Math.max(0.5, eff / JIG.hand)); }
   if (typeof hasHauler === 'function' && hasHauler('line')){ const L = pg.lines || {}, n = ((L.bank || {}).n || 0) + ((L.hyse || {}).n || 0) + inSea('line'); h = Math.min(h, cyc(F.line.kg, F.line, n)); }
-  if (typeof hasHauler === 'function' && (hasHauler('garn') || handGear('garn')) && hands >= GEAR.garn.crewMin){ const n = (pg.nets || []).reduce((a, l) => a + (l.n || 0), 0) + inSea('garn'); h = Math.min(h, cyc(F.garn.kg, F.garn, n)); }
+  if (typeof hasHauler === 'function' && (hasHauler('garn') || handGear('garn')) && hands >= GEAR.garn.crewMin){ const n = (pg.nets || []).reduce((a, l) => a + (l.n || 0), 0) + inSea('garn'), byHand = !hasHauler('garn'); h = Math.min(h, cyc(F.garn.kg, byHand ? Object.assign({}, F.garn, {min:F.garn.min * GEAR.garn.hand}) : F.garn, n)); }   // (by hand the haul takes GEAR.garn.hand the time, as gopUnitMin)
   if (!isFinite(h)) h = kg / F.jig;   // (nothing counted: one hand with a jig)
   return Math.min(F.max, h * F.marg);
 }

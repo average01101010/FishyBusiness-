@@ -181,7 +181,7 @@ const DOCK = (() => {
   // (plan principle 6). Greyed, with the reason under the label (K3), when nothing in the fan can be used now: the haul's reason when
   // gear is in the sea, else the set's
   function gearItem(s, nb, ch){
-    const eq = S.equip || {}, hauler = !!(eq.linehaler || eq.garnhaler || eq.teinehaler), inSea = mySets().length > 0;
+    const eq = S.equip || {}, hauler = !!(eq.linehaler || eq.garnhaler || eq.teinehaler) || handGear('garn'), inSea = mySets().length > 0;   // (nets by hand need none, OB1)
     const rigs = (VESSELS[S.boat.type] || {}).rigs || [];
     if (!rigs.some(r => r !== 'juksa' && RIGS[r]) || (!gearOwned() && !inSea) || (rigJig() && !hauler && !inSea)) return null;
     const so = setOff(ch), ho = haulOff(s, nb), off = so && ho ? (inSea ? ho : so) : null;

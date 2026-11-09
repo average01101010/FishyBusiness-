@@ -606,7 +606,11 @@
     const auto = !skiff && !!g.auto && !!G.aline;
     const postH = skiff && !!SKA.haulFoot && g.kind === 'line';   // (OB1, U4: the line hauler on its post on a boat worked by hand)
     const HM = (!skiff || postH) && (g.kind === 'garn' || g.kind === 'line') ? haulModel(auto ? 'auto' : g.kind) : null, setting = g.op === 'set' && (g.kind === 'garn' || g.kind === 'line');
-    if (!HM && !(g.kind === 'teine' && (potDavit(skiff) || (!skiff && G.snok && GB.snoHaul && G.kit && G.kit.pots && GB.kon && GB.konlag))) && (!skiff || S.equip.linehaler || S.equip.teinehaler)) drawN(GB.haul, chain(BMrel, M4.T(HP[0], HP[1], HP[2]), M4.RX(turning && !still ? -t * 3 : 0)));
+    if (!HM && !(g.kind === 'teine' && (potDavit(skiff) || (!skiff && G.snok && GB.snoHaul && G.kit && G.kit.pots && GB.kon && GB.konlag))) && (!skiff || S.equip.linehaler || S.equip.teinehaler)){
+      // (OB1: the line hauler on its post stands still while the nets go by hand, where the boat has it on a post, SKA.haulFoot)
+      const HP2 = skiff && !postH && SKA.haulFoot && S.equip.linehaler ? haulModel('line') : null;
+      if (HP2){ const F = SKA.haulFoot, at = q => chain(BMrel, M4.T(F[0] + q[0], F[1] + q[1], F[2] + q[2])); litSetup(VP); drawLit(HP2.frame, at([0, 0, 0])); drawLit(HP2.sheave, at(HP2.ax)); drawLit(HP2.stripper, at(HP2.st)); nSetup(VP); }
+      else drawN(GB.haul, chain(BMrel, M4.T(HP[0], HP[1], HP[2]), M4.RX(turning && !still ? -t * 3 : 0))); }
     // from the hauler down into the sea, outboard and a little ahead
     const W0 = [sx + (skiff ? 1.6 : 2.6), -0.35, HP[2] - (skiff ? 1.2 : 2.2)], seg = (A, Bp, r, m, sag) => { let prev = A; for (let i = 1; i <= 8; i++){ const u = i / 8, P = [A[0] + (Bp[0] - A[0]) * u, A[1] + (Bp[1] - A[1]) * u - sag * 4 * u * (1 - u), A[2] + (Bp[2] - A[2]) * u]; drawN(m, chain(BMrel, limbM(prev, P, r))); prev = P; } };
     if (HM){

@@ -234,9 +234,9 @@
     // - at the quay or the boathouse: the skipper himself takes the lines on and off at their cleats (MO, view3d/15-env-mooring.js), one at
     //   a time; at the tiller until she lies alongside
     const g0 = S.boat.gop, gearOn = mode === 'gear' && !!g0, setting = gearOn && g0.op === 'set', handNet = gearOn && g0.kind === 'garn' && !hasHauler('garn');
-    const mate = showCrew && !!SK.fisherC && gearOn && !!SKA.coil && !!SKA.setter, atRail = !setting;
+    const mate = showCrew && !!SK.fisherC && gearOn && !!SKA.coil && !!SKA.setter, atRail = !(setting && SKA.set);   // (a model without the places keeps the fisher at the rail)
     const moorI = SKA.moor && meAboard() && !cam.helm && (b.status === 'port' || b.status === 'unmooring') && (MO.phase === 'lines' || MO.phase === 'out') && MO.lines > 0.02 && MO.lines < 3.98 ? Math.min(3, Math.floor(MO.lines)) : -1;
-    if (((showSkipper && !fishing) || (setting && meAboard() && !cam.helm)) && moorI < 0) drawN(SK.skipper, BMrel);
+    if (((showSkipper && !fishing) || (setting && SKA.set && meAboard() && !cam.helm)) && moorI < 0) drawN(SK.skipper, BMrel);
     if (showCrew && !mate) drawN(SK.crew, BMrel);
     if (mode !== A.mode){ A.mode = mode; A.st = 'jig'; A.t = 0; A.fish = []; A.fly = []; A.mc = []; A.bq = []; A.bl = null; }
     // fish reported by the fishing step; stale ones (3D was off) are dropped
