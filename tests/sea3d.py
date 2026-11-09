@@ -73,7 +73,10 @@ async def main():
           let dmax = 0; for (let k = 0; k < 40; k++){ const x = bx + (k % 7 - 3) * 40, z = bz + (Math.floor(k / 7) - 3) * 40, t = 50 + k * 0.37;
             SU.on = true; const a = D.seaH(x, z, t); SU.on = false; const b = D.seaH(x, z, t); SU.on = true; dmax = Math.max(dmax, Math.abs(a - b)); }
           out.deep = dmax; out.at = sh.shoalAt(bx, bz).slice();
-          const hs = (h, sn = -1) => { SU.fix = [h, 0, 0.7071 * sn, 0.7071 * sn]; let m = 0, q = 0, n = 0; for (let t = 0; t < 60; t += 0.2){ const y = D.seaH(bx, bz, t); m += y; q += y * y; n++; } SU.fix = null; m /= n; return 4 * Math.sqrt(Math.max(q / n - m * m, 0)); };
+          // (the variance over 60 s at eight points 37 m apart along the waves (south-east, as the wind from 315 sends them): the surf wave runs at the swell's peak frequency, and with
+          // the bottom held it has one phase everywhere, so at one point its cross term with what the swell keeps does not average out;
+          // the run before 09.11.2026 gave 1.24 and 1.37 for the same sea from one point)
+          const hs = (h, sn = -1) => { SU.fix = [h, 0, 0.7071 * sn, 0.7071 * sn]; let vs = 0; for (let p = 0; p < 8; p++){ const px = bx + (p - 3.5) * 26.2, pz = bz + (p - 3.5) * 26.2; let m = 0, q = 0, n = 0; for (let t = 0; t < 60; t += 0.2){ const y = D.seaH(px, pz, t); m += y; q += y * y; n++; } m /= n; vs += Math.max(q / n - m * m, 0); } SU.fix = null; return 4 * Math.sqrt(vs / 8); };
           out.h3 = hs(3); out.h20 = hs(20); out.h200 = hs(200); out.i3 = hs(3, 1); out.i20 = hs(20, 1);   // (sn 1: the shore to the SE, the waves running in: their energy goes into the surf, which keeps it)
           const cell = 600 / D.seaNP, S = D.ssAt(bx, bz), ren = 1 / Math.sqrt(Math.max(1 - 2 * S[2] * (1 - S[2]) * (1 - D.WV.dot), 0.05));
           out.waves = D.WV.list.map(c => ({k:c.k, a:c.swell ? S[1] * c.wo : S[0] * (S[2] * c.wo + (1 - S[2]) * c.wy) * ren, att:sstep(2.5, 5, 2 * Math.PI / (c.k * cell))}));
