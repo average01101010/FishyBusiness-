@@ -53,9 +53,10 @@
     // the roads on the ground are off (the canvas was a blank 2048 x 2048 uploaded with mipmaps at every rebuild): no ground texture
     GTEX = null;
     GRECT = [x0, z0, 1 / sx, 1 / sx];
-    // shore layer for the water: R = land cover (surf band), G = how shallow
+    // the shoal texture for the sea by the shore (F4, 14-sea.js, SHOAL in 01-shaders.js): R and G the travel time from the shore,
+    // B the depth (depthF), A the land; before, R the land and G how shallow, which no shader read
     const S2 = 256, dok = mapViewReady(x0 / 1000, z0 / 1000, (x0 + sx) / 1000, (z0 + sx) / 1000, () => staleMesh('near'));
-    GJOB = {M:NEARM, x0, z0, sx, S2, st:sx / S2, dok, j:0, dat:new Uint8Array(S2 * S2 * 4)};   // (stepped from the next frame on)
+    GJOB = {M:NEARM, x0, z0, sx, S2, st:sx / S2, dok, j:0, dat:new Uint8Array(S2 * S2 * 4)}; shoalPrep(GJOB);   // (stepped from the next frame on)
   }
   function maskOr(J, x, z){ try { return rbilM(MAPD.L.mask, x, z); } catch (e){ J.nom = true; return landFracM(x, z); } }
   function groundStep(){
@@ -65,9 +66,12 @@
       const j = J.j++;
       // (a sim tile far out at sea can lack its mask block: «map: mask block 94,18 has no pack» north of Loppa, found by h2dshot
       // 05.11.2026; then the rest of the job takes the land fraction, as where the tile has no sim pack)
-      for (let i = 0; i < S2; i++){ const x = x0 + (i + 0.5) * st, z = z0 + (j + 0.5) * st, m = dok ? (mapSimAt({x:x / 1000, y:z / 1000}) && !J.nom ? maskOr(J, x, z) : landFracM(x, z)) : landFracM(x, z), o = (j * S2 + i) * 4, dd = m > 0.5 ? 0 : dok ? depthF({x:x / 1000, y:z / 1000}) : 50; dat[o] = Math.round(m * 255); dat[o + 1] = Math.round(clamp(1 - dd / 14, 0, 1) * 255); dat[o + 3] = 255; }
+      for (let i = 0; i < S2; i++){ const x = x0 + (i + 0.5) * st, z = z0 + (j + 0.5) * st, m = dok ? (mapSimAt({x:x / 1000, y:z / 1000}) && !J.nom ? maskOr(J, x, z) : landFracM(x, z)) : landFracM(x, z), o = (j * S2 + i) * 4, dd = m > 0.5 ? 0 : dok ? depthF({x:x / 1000, y:z / 1000}) : 50; shoalCell(J, j * S2 + i, m > 0.5, dd); dat[o + 3] = Math.round(m * 255); }
       if (J.j < S2 && performance.now() > end) return;
     }
+    // the travel time from the shore, a pass at a time (shoalSweep), then into R and G
+    while (!shoalSweep(J)) if (performance.now() > end) return;
+    shoalPut(J);
     GJOB = null; TJN.ground++;
     STEX = STEX || gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, STEX);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, S2, S2, 0, gl.RGBA, gl.UNSIGNED_BYTE, dat);
@@ -179,7 +183,7 @@
     const {ub, gp} = wavePh();
     gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ub); gl.uniform1fv(u.uGp, gp); if (u.uFWa){ gl.uniform4fv(u.uFWa, WV.ua); gl.uniform4fv(u.uFWb, ub); gl.uniform1fv(u.uFGp, gp); } plSet(u);
     if (u.uNFp){ gl.uniform1fv(u.uNFp, NF.ph); gl.uniform1fv(u.uNFg, NF.gp); } if (u.uFNFp){ gl.uniform1fv(u.uFNFp, NF.ph); gl.uniform1fv(u.uFNFg, NF.gp); } if (u.uNFD) gl.uniform2f(u.uNFD, NF.D[0], NF.D[1]);
-    foamBind(u);   // the foam map (14-sea.js), in the near pass
+    foamBind(u, t);   // the foam map (14-sea.js), in the near pass; and the sea by the shore (F4)
     gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); airSet(u);
     gl.uniform3fv(u.uZen, env.zen); airSet(u); gl.uniform3fv(u.uHor, env.hor); gl.uniform3fv(u.uDeep, [0.035, 0.14, 0.18]); gl.uniform1f(u.uWind, env.wind); gl.uniform2fv(u.uWindDir, env.windDir); gl.uniform1f(u.uSpec, env.spec);
     gl.uniform1f(u.uLSOn, LMTEX && LMON && LRECT ? 1 : 0); if (LMTEX && LMON && LRECT){ gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, LMTEX); gl.uniform1i(u.uLandS, 6); gl.activeTexture(gl.TEXTURE0); gl.uniform4fv(u.uLRect, [LRECT[0] - eye[0], LRECT[1] - eye[2], LRECT[2], LRECT[3]]); }

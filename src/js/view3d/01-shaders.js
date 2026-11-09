@@ -117,6 +117,43 @@
     // in a young sea in a stiff wind) and 0.6 of it in a grown sea, which is rounder; uSeaK is sum(k w) of the grown and the young
     // spectrum (WV.KO, WV.KY, set in foamBind and foamStep; seaQ in 14-sea.js). The swell is long and round (0.3).
     'float qOf(vec4 S){float dv=S.z;float ka=S.x*(dv*uSeaK.x+(1.0-dv)*uSeaK.y)*inversesqrt(max(1.0-2.0*dv*(1.0-dv)*(1.0-uSea2.x),0.05));return min(uSea2.y*(1.0-0.4*dv)/(ka+1e-4),1.0);}';
+  // ---------- the sea by the shore (Fysikk 4, F4, 09.11.2026) ----------
+  // Inside the near terrain the bottom is known (the shoal texture, 17-draw.js groundStep, the game's own depthF on the near mesh's
+  // square, 256 x 256): b the depth below chart datum (sqrt over 80 m), r and g the travel time from the shore (s, 16 bits over SHT_TMAX
+  // in a high and a low byte, which linear filtering keeps exact, as it is linear in both), worked out from the shore outwards with the
+  // shallow-water speed sqrt(g h) (a weighted distance transform), so its gradient is 1 / c and points away from land: the crests a
+  // shore bends the waves into are the lines of equal travel time (Fermat; the rays meet the beach square on). shoalAt gives the water's
+  // depth with the tide (uSurf.w), the travel time and the way to the shore n (-grad T, scaled by how sure it is: none far off, where
+  // the time is not known, and at the texture's edge); deep water (78 m and over, or off the texture, or #shoal0) is vec4(200, 0, 0, 0),
+  // where nothing below changes. No texture in the vertex shader under NOSST (the phones that cannot, 18-setup.js): deep there.
+  const SHT_TMAX = 1200;
+  const SHOAL = 'uniform vec4 uSHR;uniform vec4 uSurf;' +
+    '\n#ifdef NOSST\nvec4 shoalAt(vec2 P){return vec4(200.0,0.0,0.0,0.0);}\n#else\nuniform sampler2D uSHT;' +
+    '\nfloat shT(vec2 u){vec4 c=texture2D(uSHT,u);return (c.r*65280.0+c.g*255.0)*' + (SHT_TMAX / 65535).toFixed(8) + ';}' +
+    '\nvec4 shoalAt(vec2 P){vec4 D=vec4(200.0,0.0,0.0,0.0);if(uSurf.z<0.5)return D;vec2 u=(P-uSHR.xy)*uSHR.z;float ef=smoothstep(0.0,0.06,min(min(u.x,u.y),min(1.0-u.x,1.0-u.y)));if(ef<=0.0)return D;' +
+    'vec4 c=texture2D(uSHT,u);if(c.b>0.995)return D;float h=mix(200.0,max(c.b*c.b*80.0+uSurf.w,0.05),ef);if(h>=78.0)return D;' +
+    'float T=shT(u);vec2 g=vec2(shT(u+vec2(uSHR.w,0.0))-T,shT(u+vec2(0.0,uSHR.w))-T)*(uSHR.z/uSHR.w);float gm=length(g);' +
+    'return vec4(h,T,gm>1e-5?-g/gm*smoothstep(0.01,0.03,gm)*ef:vec2(0.0));}\n#endif\n' +
+    // A wave over that bottom: r = k_h / k, its wavenumber over the bottom against deep water by Eckart's (1952) approximation of
+    // w^2 = g k tanh(k h), k_h = k / sqrt(tanh(k h)), within 5 % (it shortens the crests and steepens the slopes: the Gerstner shift
+    // and the slopes are scaled by it, not the phase, which would jump over the depth's gradients; faded in below 78 m, where only the
+    // longest swell feels it); G its height by linear theory, Ks = sqrt(cg0 / cg) = 1 / sqrt(tanh(x) (1 + 2x / sinh 2x)), x = k_h h,
+    // which is Green's law (h^-1/4) in shallow water, taken where it raises the wave (the few per cent it dips by at middle depths
+    // left out, so the open sea is as before), 2.5 at most (the breaking below caps it long before). The plan had Green's law from a
+    // quarter of the length in, (L / 4h)^(1/4): that gave a 9 s swell 1.8 times its height over 3 m, where linear theory gives 1.19.
+    // tr: the share of its energy that has turned into the surf: none until the depth is under 0.3 L, all of it under 0.08 L, as far
+    // as it runs in towards the shore (refraction turns a wave running along the shore in as well; one running out stays as it is).
+    '\nfloat thG(float x){return 1.0-2.0/(exp(2.0*min(x,8.0))+1.0);}' +
+    '\nvec3 shW(vec4 a,vec4 SH){if(SH.x>=78.0)return vec3(1.0,1.0,0.0);float kh=max(a.z*SH.x,1e-3);float r=inversesqrt(max(thG(kh),0.02));float x=kh*r;float e=exp(2.0*min(x,8.0));' +
+    'float G=min(inversesqrt(max(thG(x)*(1.0+4.0*x/max(e-1.0/e,1e-4)),1e-3)),2.5);' +
+    'float w=length(SH.zw);float tr=w>1e-4?(1.0-smoothstep(0.08,0.3,kh*0.15915))*clamp(dot(a.xy,SH.zw)/w*1.4+0.42,0.0,1.0)*w:0.0;' +
+    'return vec3(max(G,1.0),1.0+(r-1.0)*(1.0-smoothstep(55.0,78.0,SH.x)),tr);}' +
+    // The surf: the energy the waves bring in, as one wave at the surf's frequency (uSurf.y, the swell's peak where there is swell,
+    // else the wind sea's at the boat; 14-sea.js surfStep) whose crests are the lines of equal travel time, so it rolls in square to
+    // the beach whichever way the sea outside runs; its phase is Gerstner's f = -(phase now + w T), so it runs down the travel time,
+    // and its wavenumber is the bottom's for that frequency (k0 = w^2 / g, Eckart as above).
+    '\nfloat surfK(float h){float k0=uSurf.y*uSurf.y/9.81;return k0*inversesqrt(max(thG(k0*h),0.02));}' +
+    '\nfloat surfF(vec4 SH){return -uSurf.x-uSurf.y*SH.y;}';
   // The boat's own waves (Kelvin, the 19.47 degree wedge). uWk0: the stern (x, z) and the heading (x, z); uWk1: k0 = g / v^2 (the transverse
   // wavelength is 2 pi v^2 / g), the wake's height, the share of transverse waves (they fade as the hull starts to plane), how far back
   // it reaches; uWk2: the hull's length, the bow wave's height, half the beam, the Froude number; uWk3: the bow and stern waves breaking,
@@ -161,21 +198,25 @@
   // 6-28 m) and the ripples ride with the boat at 5/6 of her speed over the ground (nfStep), so the water passes the hull at her real
   // speed through it, while the long waves (0-3) and the swell stand in the world. The frame shift is a phase offset per wave (uNFp,
   // and uNFg for its group), zero for the long ones; the ripples and the foam's mottle take the shifted position P-uNFD.
-  const SEA_VS_WAVE = i => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.5,5.0,6.2832/(a.z*uCell));float am=ampOf(a,b,S);float Q=b.x>0.5?0.3:Qw;am*=grpOf(wxz,a,b,uGp[' + i + ']-uNFg[' + i + '])*att;' +
-    'float f=a.z*dot(a.xy,wxz)-b.y*uTime+b.z-uNFp[' + i + '];float c=cos(f);d.x+=Q*am*a.x*c;d.z+=Q*am*a.y*c;d.y+=am*sin(f);}';
+  const SEA_VS_WAVE = i => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.5,5.0,6.2832/(a.z*uCell));float am=ampOf(a,b,S);float Q=b.x>0.5?0.3:Qw;vec3 sg=shW(a,SH);float gr=grpOf(wxz,a,b,uGp[' + i + ']-uNFg[' + i + ']);float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;am*=sg.x*sqrt(1.0-sg.z)*gr*att;' +
+    'float f=a.z*dot(a.xy,wxz)-b.y*uTime+b.z-uNFp[' + i + '];float c=cos(f);d.x+=Q*sg.y*am*a.x*c;d.z+=Q*sg.y*am*a.y*c;d.y+=am*sin(f);}';
+  // after the waves, by the shore (F4): the surf wave from the energy they brought in, and the whole capped where it would pass
+  // McCowan's limit (the crests cut: what breaks has gone into foam)
+  const SEA_VS_SURF = '\n{float cap=min(1.0,0.78*SH.x/max(2.83*sqrt(Et+Eu),1e-4));if(Es>1e-8&&uSurf.y>0.0){float As=sqrt(Es);float ks=surfK(SH.x);float f=surfF(SH);vec2 n=SH.zw/length(SH.zw);float att=smoothstep(2.5,5.0,6.2832/(ks*uCell));float Qs=min(0.6,0.6/(ks*As+1e-4));float c=cos(f);' +
+    'd.x+=Qs*As*att*n.x*c;d.z+=Qs*As*att*n.y*c;d.y+=As*att*sin(f);}d*=cap;}';
   const seaVS = lite => 'precision highp float;attribute vec2 aXZ;uniform mat4 uVP;uniform vec2 uOrigin;uniform vec3 uOriginRel;uniform float uTime;uniform float uHalf;uniform float uFlat;uniform vec2 uScale;uniform float uCell;' +
-    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];varying vec3 vW;varying vec2 vXZ;' + SEA_STATE + (lite ? '' : WAKE_GLSL) +
+    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];varying vec3 vW;varying vec2 vXZ;' + SEA_STATE + SHOAL + (lite ? '' : WAKE_GLSL) +
     'void main(){vec2 lxz=aXZ*uScale;vec2 wxz=uOrigin+lxz;vec3 d=vec3(0.0);' +
-    'if(uFlat<0.5){float fade=1.0-smoothstep(0.6,1.0,max(abs(aXZ.x),abs(aXZ.y))/uHalf);vec4 S=seaAt(wxz);float Qw=qOf(S);' +
-    (lite ? [0, 1, 2, 3, 10, 11, 12] : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]).map(SEA_VS_WAVE).join('') + 'd*=fade;' + (lite ? '' : 'd.y+=wakeH(wxz,0.0)*uWk3.z;') + '}' +
+    'if(uFlat<0.5){float fade=1.0-smoothstep(0.6,1.0,max(abs(aXZ.x),abs(aXZ.y))/uHalf);vec4 S=seaAt(wxz);float Qw=qOf(S);vec4 SH=shoalAt(wxz);float Et=0.0;float Eu=0.0;float Es=0.0;' +
+    (lite ? [0, 1, 2, 3, 10, 11, 12] : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]).map(SEA_VS_WAVE).join('') + SEA_VS_SURF + 'd*=fade;' + (lite ? '' : 'd.y+=wakeH(wxz,0.0)*uWk3.z;') + '}' +
     'vec3 rel=uOriginRel+vec3(lxz.x,0.0,lxz.y)+d;vW=rel;vXZ=wxz;gl_Position=uVP*vec4(rel,1.0);}';
   const SEA_VS = seaVS(false), SEA_VS_LITE = seaVS(true);
   // one wave's slope, height and lost roughness in the fragment shader (W: whether it counts for the wind sea's crests)
   // (W: also the three sums of the Jacobian of the horizontal shift, for the whitecaps, F3: jxx, jxz and the trace jtr, with the
   // variance of the compression jv, as sa is the crest's; and the short waves' own compression jsc, 4-9, with its variance jsv)
-  const SEA_WAVE = (W, i) => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.0,7.0,6.2832/(a.z*px));float am=ampOf(a,b,S);float gr=grpOf(P,a,b,uGp[' + i + ']-uNFg[' + i + ']);float Q=b.x>0.5?0.3:Qw;' +
-    'float f=a.z*dot(a.xy,P)-b.y*uTime+b.z-uNFp[' + i + '];float c=cos(f);float s=sin(f);float wa=a.z*am*gr;N.x-=a.x*wa*c*att;N.z-=a.y*wa*c*att;N.y-=Q*wa*s*att;lost+=wa*wa*(1.0-att);' +
-    (W ? 'y+=am*gr*s*att;sa+=am*am*0.228;float jw=Q*wa*s*att;jxx+=jw*a.x*a.x;jxz+=jw*a.x*a.y;jtr+=jw;float qk=Q*a.z*am*att;jv+=qk*qk*0.228;' + (i >= 4 ? 'jsc+=jw;jsv+=qk*qk*0.228;' : '') : '') + '}';
+  const SEA_WAVE = (W, i) => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.0,7.0,6.2832/(a.z*px));float am=ampOf(a,b,S);float gr=grpOf(P,a,b,uGp[' + i + ']-uNFg[' + i + ']);float Q=b.x>0.5?0.3:Qw;vec3 sg=shW(a,SH);float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;am*=sg.x*sqrt(1.0-sg.z);' +
+    'float f=a.z*dot(a.xy,P)-b.y*uTime+b.z-uNFp[' + i + '];float c=cos(f);float s=sin(f);float wa=a.z*sg.y*am*gr;N.x-=a.x*wa*c*att;N.z-=a.y*wa*c*att;N.y-=Q*wa*s*att;lost+=wa*wa*(1.0-att);' +
+    (W ? 'y+=am*gr*s*att;sa+=am*am*0.228;float jw=Q*wa*s*att;jxx+=jw*a.x*a.x;jxz+=jw*a.x*a.y;jtr+=jw;float qk=Q*a.z*sg.y*am*att;jv+=qk*qk*0.228;' + (i >= 4 ? 'jsc+=jw;jsv+=qk*qk*0.228;' : '') : '') + '}';
   // The fragment shader reads the waves from copies of its own (uFWa, uFWb, uFGp): the same uniform array in both stages is the only
   // thing the sea has that no other program has, and the one guess left for the phone that would link none of its variants
   // (Adreno 642L, 05.10.2026). drawSea sets both.
@@ -197,6 +238,17 @@
   const FETCHG = 'float fetchW(vec2 P,vec2 up,float sw){if(uLSOn<0.5)return sw;float f=-1.0;' +
     [30, 60, 120, 240, 480, 960].map(d => '{vec2 lu=(P+up*' + d.toFixed(1) + '-uLRect.xy)*uLRect.zw;if(f<0.0){if(lu.x<0.0||lu.y<0.0||lu.x>1.0||lu.y>1.0)f=9.0;else if(texture2D(uLandS,lu).r*8.0-4.0>uTideL)f=' + (d / 1000).toFixed(3) + ';}}').join('') +
     'return f<0.0||f>8.0?sw:min(sw,sqrt(f));}';
+  // How much of the swell gets in just here (F4, Jonas 29.10.2026: white blobs of surf inside Bleik's harbour): the sea state knows the
+  // swell on its 190 m grid, so a basin behind a breakwater had the open sea's. Four looks up-swell in the shore texture (40-360 m):
+  // land there shelters it, the more the nearer (what comes round a breakwater's head by diffraction is the rest).
+  const SWELLG = 'float swellW(vec2 P,vec2 up){if(uLSOn<0.5)return 1.0;float f=1.0;' +
+    [40, 90, 180, 360].map(d => '{vec2 lu=(P+up*' + d.toFixed(1) + '-uLRect.xy)*uLRect.zw;if(lu.x>0.0&&lu.y>0.0&&lu.x<1.0&&lu.y<1.0&&texture2D(uLandS,lu).r*8.0-4.0>uTideL)f=min(f,' + (0.15 + 0.85 * d / 400).toFixed(3) + ');}').join('') +
+    'return f;}';
+  // The surf breaking (McCowan 1894: a wave breaks when its height is 0.78 of the depth): Hl the height that reaches here (the wind
+  // sea's by the fetch just here, fw, and the swell's by the shelter, sb), against the depth dep; foam on the crest and the face ahead
+  // of it where it breaks, and the white water of the broken waves further in (the bores, past 1.3 times the limit). g: the grain.
+  const SURFF = 'float surfFoam(vec4 SH,float Et,float Eu,float Es,float dep,float fw,float sb,float g){if(dep<=0.0)return 0.0;float Hl=2.83*sqrt(Et*fw*fw+Eu*sb*sb);float rho=Hl/(0.78*max(dep,0.05));float brk=smoothstep(0.7,1.0,rho);if(brk<=0.0)return 0.0;' +
+    'float cw=0.5;if(Es>1e-7)cw=smoothstep(0.45,0.95,sin(surfF(SH)-0.35));return brk*smoothstep(0.0,0.1,dep)*max(cw*(0.8+0.6*(g-0.5)),smoothstep(1.3,2.2,rho)*(0.45+0.45*g));}';
   // the foam a hull makes this frame, shared by the foam map's pass (your boat) and the other boats' pass (NPCF_FS, 04.11.2026)
   // (pow(x, 2.0) is undefined in GLSL for x < 0: Adreno gives NaN, which the other boats' pass wrote straight into the map as white
   // squares over their way, 04.11.2026; the squares that may go negative are hfSq)
@@ -235,7 +287,9 @@
     'return iw;}';
   const FOAM_VS = 'attribute vec2 aXZ;varying vec2 vUV;void main(){vUV=aXZ*0.5+0.5;gl_Position=vec4(aXZ,0.0,1.0);}';
   const FOAM_FS = 'precision highp float;uniform sampler2D uPrev;uniform vec2 uShift;uniform vec2 uShiftG;uniform vec2 uFoamG;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform float uN;uniform vec2 uRebase;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uTime;uniform vec2 uNFD;uniform float uWind;uniform vec2 uWindDir;uniform vec2 uShiftC;' +
-    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;uniform vec4 uSp0;uniform vec4 uSp1;uniform vec4 uSp2;uniform vec4 uSp3;varying vec2 vUV;' + NOISE + SEA_STATE + WAKE_GLSL + FETCHG + WCAPS +
+    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;uniform vec4 uSp0;uniform vec4 uSp1;uniform vec4 uSp2;uniform vec4 uSp3;varying vec2 vUV;' + NOISE + SEA_STATE + SHOAL + WAKE_GLSL + FETCHG + SWELLG + WCAPS + SURFF +
+    // the energy the waves bring in where the sea by the shore is SH (F4), as the sea shaders add it up wave by wave
+    'vec3 shE(vec2 P,vec4 S,vec4 SH){float Et=0.0;float Eu=0.0;float Es=0.0;' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(i => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float am=ampOf(a,b,S);vec3 sg=shW(a,SH);float gr=grpOf(P,a,b,uGp[' + i + ']-uNFg[' + i + ']);float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;}').join('') + '\nreturn vec3(Et,Eu,Es);}' +
     // the foam where a slam and the spray land (F3b, foamSplash in 14-sea.js): a patch (x, z in the wake's frame, radius, amount), its
     // edge ragged and its inside clumped as the wash's (nothing beyond 1.25 radii, where the ragged edge never reaches: no noise there)
     'float splF(vec2 Mg,vec2 Pb,vec4 s){if(s.w<=0.0)return 0.0;float d=length(Mg-s.xy);if(d>s.z*1.25)return 0.0;d*=0.8+0.4*ns(Pb*0.7+vec2(3.0,1.0));return s.w*(1.0-smoothstep(s.z*0.5,s.z,d))*(0.6+0.4*ns(Pb*1.1+vec2(8.0,2.0)));}' +
@@ -265,10 +319,15 @@
     'iw=max(iw,max(max(splF(Mg,Pb,uSp0),splF(Mg,Pb,uSp1)),max(splF(Mg,Pb,uSp2),splF(Mg,Pb,uSp3))));' +
     // --- the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
     // threshold for the breaking crests' share of Monahan's cover; laid here, they stay behind the crest as it runs on and drift ---
-    'if(uWind>6.0){vec4 S=seaAt(P);float px=uFoamRect.w/uN;vec3 N=vec3(0.0,1.0,0.0);float y=0.0;float sa=1e-6;float lost=0.0;float Qw=qOf(S);float jxx=0.0;float jxz=0.0;float jtr=0.0;float jv=1e-8;float jsc=0.0;float jsv=1e-8;vec2 w2=uWindDir;vec2 wp=vec2(-w2.y,w2.x);' +
+    'if(uWind>6.0){vec4 S=seaAt(P);vec4 SH=shoalAt(P);float Et=0.0;float Eu=0.0;float Es=0.0;float px=uFoamRect.w/uN;vec3 N=vec3(0.0,1.0,0.0);float y=0.0;float sa=1e-6;float lost=0.0;float Qw=qOf(S);float jxx=0.0;float jxz=0.0;float jtr=0.0;float jv=1e-8;float jsc=0.0;float jsv=1e-8;vec2 w2=uWindDir;vec2 wp=vec2(-w2.y,w2.x);' +
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => SEA_WAVE(true, i)).join('') +
     '\nfloat crest=y*inversesqrt(sa);float dw2=smoothstep(0.45,1.73,fetchW(P,-w2,S.w));float Wc=clamp(3.84e-6*pow(max(uWind,0.3),3.41)*dw2,1e-5,0.5);' +
     'vec2 cq=vec2(dot(Pb,w2),dot(Pb,wp));float fv=capFv(capJ(jxx,jxz,jtr,jv),jsc*inversesqrt(jsv),crest,capGrain(cq,uTime,1.0,0.0));float th=capTh(Wc*' + wc5(WCAP.k) + ');ic=smoothstep(th-0.01,th+0.05,fv);}' +
+    // --- the surf breaking by the shore (F4), laid with the whitecaps so it stays a while behind the breaker and drifts ---
+    '\nif(uSurf.z>0.5){vec4 SH=shoalAt(P);if(SH.x<78.0){vec4 S=seaAt(P);vec3 E=shE(P,S,SH);float dep=SH.x;' +
+    'if(uLSOn>0.5){vec2 lu=(P-uLRect.xy)*uLRect.zw;if(lu.x>0.0&&lu.y>0.0&&lu.x<1.0&&lu.y<1.0){float hs=texture2D(uLandS,lu).r*8.0-4.0;dep=mix(dep,uTideL-hs,smoothstep(-3.95,-3.0,hs));}}' +
+    'float fw=clamp(fetchW(P,-uWindDir,S.w)/max(S.w,0.01),0.0,1.0);float sb=swellW(P,-uWa[11].xy);float g=ns(Pb*0.9+vec2(uTime*0.3,1.0))*0.6+ns(Pb*2.6-vec2(0.0,uTime*0.4))*0.4;' +
+    'ic=max(ic,surfFoam(SH,E.x,E.y,E.z,dep,fw,sb,g)*0.9);}}' +
     // new foam over what is left of the old: born now
     'if(iw>dw){aw=iw;bw=uFoamT.x;}if(ic>dc){ac=ic;bc=uFoamTc.x;}' +
     // none of the wake's foam on land (what the water carries onto a breakwater or a shore is gone)
@@ -292,8 +351,10 @@
   // FAR (the far pass beyond the near terrain): the four longest wind waves and the swell, the rest of the wind sea only as roughness, no ripples
   const SEA_FS = SUNV('#extension GL_OES_standard_derivatives : enable\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;' +
     'uniform float uTime;uniform float uWind;uniform vec2 uWindDir;uniform float uFlat;uniform float uSpec;uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec2 uNFD;uniform sampler2D uHgt;uniform float uHOn;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform vec4 uSRect;uniform float uSOn;uniform float uPx;uniform float uDbg;uniform sampler2D uFoam;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uFoamOn;uniform vec2 uFoamG;uniform vec2 uFoamW;uniform vec2 uFoamCw;' + PLG +
-    'varying vec3 vW;varying vec2 vXZ;' + NOISE + SEA_STATE + WAKE_GLSL + FETCHG + WCAPS +
+    'varying vec3 vW;varying vec2 vXZ;' + NOISE + SEA_STATE + SHOAL + WAKE_GLSL + FETCHG + SWELLG + WCAPS + SURFF +
     AIR + 'void main(){float d=length(vW);vec2 P=vXZ;vec4 S=seaAt(P);' +
+    // the sea by the shore (F4); the far pass is as before
+    '\n#ifdef FAR\nvec4 SH=vec4(200.0,0.0,0.0,0.0);\n#else\nvec4 SH=shoalAt(P);\n#endif\nfloat Et=0.0;float Eu=0.0;float Es=0.0;' +
     // metres covered by one pixel here (grows with distance and grazing angle); a wave shorter than a few pixels is faded out and its slope becomes roughness instead
     'vec3 V=normalize(-vW);float px=d*uPx/max(abs(V.y),0.12);vec2 w=uWindDir;vec2 wp=vec2(-w.y,w.x);' +
     // gusts: slow patches of rougher and calmer water break up any repetition; they drift downwind (they went upwind before, 5.61)
@@ -304,6 +365,10 @@
     '\n#ifdef FAR\n' + [4, 5, 6, 7, 8, 9].map(i => '{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float wa=a.z*ampOf(a,b,S);lost+=wa*wa*0.456;}').join('') +
     '\n#else\n' + [4, 5, 6, 7, 8, 9].map(i => SEA_WAVE(true, i)).join('') + '\n#endif\n' +
     [10, 11, 12].map(i => SEA_WAVE(false, i)).join('') +
+    // by the shore (F4): the surf wave's slopes, and everything capped where it would pass McCowan's limit (as the vertex shader)
+    '\n#ifndef FAR\n{float cap=min(1.0,0.78*SH.x/max(2.83*sqrt(Et+Eu),1e-4));if(Es>1e-8&&uSurf.y>0.0){float As=sqrt(Es);float ks=surfK(SH.x);float f=surfF(SH);vec2 n=SH.zw/length(SH.zw);float att=smoothstep(2.0,7.0,6.2832/(ks*px));float wa=ks*As;float Qs=min(0.6,0.6/(wa+1e-4));' +
+    'N.x-=n.x*wa*cos(f)*att;N.z-=n.y*wa*cos(f)*att;N.y-=Qs*wa*sin(f)*att;lost+=wa*wa*(1.0-att);}' +
+    'N.xz*=cap;N.y=1.0-(1.0-N.y)*cap;y*=cap;jxx*=cap;jxz*=cap;jtr*=cap;jv*=cap*cap;jsc*=cap;jsv*=cap*cap;}\n#endif\n' +
     // ripples: eight short waves spread around the wind, analytic slopes (no grid), scaled by wind and gusts; in light air (Beaufort 0-1)
     // only in patches, the cat's paws, and glassy between them; near calm they are a third as steep as they were, since a mirror-like
     // sea shows every slope in its reflections and the sub-second ripples looked like the water shivering (the user, 03.10.2026)
@@ -387,7 +452,11 @@
     // out smoothly from the foreshore with no edge of the coarse cells
     'dep=mix(max(dep,4.0),uTideL-hs,smoothstep(-3.95,-3.0,hs));}}' +
     'col=mix(col,vec3(0.07,0.33,0.32)*(uAmb*1.5+uSunCol*0.75),(1.0-smoothstep(0.3,5.0,dep))*0.42*(1.0-fr)*ef);' +
-    'float bw=0.3+hl*1.4;float band=(1.0-smoothstep(0.0,bw,dep))*smoothstep(-0.2,0.02,dep);float sw=0.5+0.5*sin(uTime*0.9+dot(P,w)*0.06);' +
+    // the surf (F4): where the waves that reach this shore break, on the crests rolling in and the white water inside them; the
+    // band along the line below is then the swash only (before, the band was all the surf there was: wide as the open sea's height)
+    'float bw=0.3+hl*1.4;\n#ifndef FAR\nif(SH.x<78.0&&Et+Eu>0.0){float fw=clamp(fetchW(P,-w,S.w)/max(S.w,0.01),0.0,1.0);float sb=swellW(P,-uWa[11].xy);' +
+    'float g=ns(Pb*0.9+vec2(uTime*0.3,1.0))*0.6+mix(0.5,ns(Pb*2.6-vec2(0.0,uTime*0.4)),mo)*0.4;foam=max(foam,surfFoam(SH,Et,Eu,Es,dep,fw,sb,g)*ef*lod);bw=0.3+0.5*2.83*sqrt(Et*fw*fw+Eu*sb*sb);}\n#endif\n' +
+    'float band=(1.0-smoothstep(0.0,bw,dep))*smoothstep(-0.2,0.02,dep);float sw=0.5+0.5*sin(uTime*0.9+dot(P,w)*0.06);' +
     'float ln=ns(P*0.32+vec2(uTime*0.35,-uTime*0.25))*0.6+ns(P*0.95-uTime*0.45)*0.4;' +
     'foam=max(foam,band*smoothstep(0.35,0.72,ln+band*0.2)*(0.3+0.7*clamp(hl*1.6,0.0,1.0))*(0.7+0.3*sw)*ef);}}' +
     'if(uDbg>0.5){gl_FragColor=vec4(vec3(clamp(foam,0.0,1.0)),1.0);return;}' +
