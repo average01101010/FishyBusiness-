@@ -173,8 +173,8 @@ function crewSim(src){
     const idOf = p => p.c ? 'c' + p.c.id : 'me';
     let F = WA.filter(p => p.st === 'fort');
     if (F.length) ST.fortIds = F.map(idOf);
-    else if (ST.fortIds && ST.fortIds.length){
-      for (const p of WA) if (ST.fortIds.includes(idOf(p)) && p.st !== 'kokk'){ p.st = 'fort'; p.idle = null; p.role = null; p.why = 'moor'; }
+    else if (ST.fortIds && ST.fortIds.length){   // (never the cook from the stove nor the one at the helm)
+      for (const p of WA) if (ST.fortIds.includes(idOf(p)) && p.st !== 'kokk' && p.st !== 'ror'){ p.st = 'fort'; p.idle = null; p.role = null; p.why = 'moor'; }
       F = WA.filter(p => p.st === 'fort'); }
     // (the helm is held until she lies made fast, by you when you are aboard and not on the lines yourself)
     if (m.phase === 'in' || m.phase === 'prep' || (m.phase === 'lines' && F.some(p => p.c))){ const me = WA.find(p => !p.c); if (me && me.st !== 'fort' && me.st !== 'ror'){ me.st = 'ror'; me.idle = null; me.why = 'skipper'; } }
@@ -553,9 +553,9 @@ const CREW3D = crewSim(null);
 // quay on side sd (+1 starboard, -1 port): the cleats for the bow line, the springs and the stern line, and three fenders along the side
 // over the water. The view draws the lines and the fenders there (view3d/15-env-mooring.js) and the hands stand inboard of them (moorPlace)
 function moorSpots(G, sd){
-  const gw = G.gw || 1, sx = (G.beam || 3) / 2, mid = ((G.bow || -2) + (G.stern || 2)) / 2; sd = sd || 1;
-  return {cleat:{bow:[sd * sx * 0.55, gw + 0.05, G.bow + 0.4], mid:[sd * sx * 0.95, gw + 0.05, mid], stern:[sd * sx * 0.8, gw + 0.05, G.stern - 0.35]},
-    fend:[G.bow * 0.45, mid, G.stern * 0.55].map(z => [sd * (sx * 0.95 + 0.12), gw - 0.45, z])};
+  const gw = G.gw || 1, sx = (G.beam || 3) / 2, bw = G.bow || -2, st = G.stern || 2, mid = (bw + st) / 2; sd = sd || 1;
+  return {cleat:{bow:[sd * sx * 0.55, gw + 0.05, bw + 0.4], mid:[sd * sx * 0.95, gw + 0.05, mid], stern:[sd * sx * 0.8, gw + 0.05, st - 0.35]},
+    fend:[bw * 0.45, mid, st * 0.55].map(z => [sd * (sx * 0.95 + 0.12), gw - 0.45, z])};
 }
 // the context of another boat as the view knows her (core/05-vessels.js npcStates: st fishing, in, out or port; a player's boat
 // sends her state the same way): the skipper and two hands when fishing, the skipper at the wheel and the hands inside under way,

@@ -149,21 +149,22 @@
   // ---- where the work with the lines and the fenders is in the view, every frame (OB2): the spell as the view has it ('prep' and 'in' the
   // fenders out on the way in, 'lines', 'out', 'stow' the fenders and the lines in on the way out, null lying made fast or at sea), the
   // fenders hung out or taken in as their hand gets to them, and what is left told to the deck crew (deckcrew.js setMoor)
-  function moorView(){
+  function moorView(bp){
     const b = S.boat, mp = typeof moorPhase === 'function' ? moorPhase(b) : null;
-    if (b.status === 'port' || b.status === 'unmooring'){
+    if (b.status === 'port' || b.status === 'unmooring'){ if (!bp) return null;   // (no berth here: she lies as before, nothing to make fast)
       if (b.status === 'unmooring' || MO.phase === 'out') return 'out';
       if (MO.key !== S.cur + '|' + b.port + '|' + vtype() + '|' + (b.moorT || 0)) return MO.init ? 'in' : null;   // (a new arrival the view has not taken in yet: on her way in to the berth)
       return MO.phase === 'in' || MO.phase === 'lines' ? MO.phase : null; }
-    if (mp === 'prep' || mp === 'stow') return mp;
+    if (mp === 'prep') return mp;
+    if (mp === 'stow') return MO.stowed ? null : mp;   // (all in before the core's spell is over: done)
     return MO.fend.some(f => f > 0) || MO.coil < 1 && MO.vp === 'stow' ? 'stow' : null;   // (still taking them in)
   }
   function moorTick(bp){
     const now = performance.now() / 1000, dt = MO.rt ? clamp(now - MO.rt, 0, 0.5) * Math.max(1, S.mult || 1) : 0; MO.rt = now;
     const b = S.boat; if (b.status !== 'port' && b.status !== 'unmooring') MO.lines = 0;   // (at sea all the lines are in)
-    const vp = moorView(), out = vp === 'prep' || vp === 'in' || vp === 'lines' || vp === 'out' || (vp == null && (b.status === 'port' || b.status === 'unmooring'));
+    const vp = moorView(bp), out = vp === 'prep' || vp === 'in' || vp === 'lines' || vp === 'out' || (vp == null && (b.status === 'port' || b.status === 'unmooring'));
     if (bp) MO.side = bp.side || 1;
-    if (vp !== MO.vp){ if (vp === 'stow') MO.coil = 0; MO.vp = vp; MO.cwait = 0; }
+    if (vp !== MO.vp){ if (vp === 'stow') MO.coil = 0; if (vp && vp !== 'stow') MO.stowed = false; MO.vp = vp; MO.cwait = 0; }
     const hn = moorHandsN(), man = hn ? CREW3D.moorMan() : null, ord = out ? [1, 2, 0] : [2, 1, 0];
     // each fender as its hand gets to it (without hands, one after the other); out on the way in and lying, in on the way out
     // (only on the way in and out, when the hands have the time for them; made fast with them still aboard, they go out at once)
@@ -173,7 +174,7 @@
       first = false; }
     // the lines coiled and stowed once the fenders are in
     if (vp === 'stow' && !MO.fend.some(f => f > 0) && MO.coil < 1 && (!hn || man.has('coil') || (MO.cwait += dt) > FEND_WAIT)) MO.coil = Math.min(1, MO.coil + dt / 4);
-    if (vp === 'stow' && !MO.fend.some(f => f > 0) && MO.coil >= 1) MO.vp = null;
+    if (vp === 'stow' && !MO.fend.some(f => f > 0) && MO.coil >= 1){ MO.vp = null; MO.stowed = true; }
     // what is left, in order, for the hands
     if (typeof CREW3D === 'undefined' || !CREW3D.on()) return;
     const need = [];

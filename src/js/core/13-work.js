@@ -41,7 +41,7 @@ const JOB_ST = {egn:'egn', strip:'strip', mend:'mend', hk:'stell', lr:'stell', p
 const JOB_SKILL = {egn:'line', strip:'line', hk:'line', lr:'line', mend:'garn', pr:'teiner', jg:'juksa'};
 const WORK_ALL = WORK_ST.concat(['egn', 'strip', 'mend', 'stell', 'last']);   // (the minutes of work that tire and teach, workMinute)
 // the stations whose work is heavy, and how heavy: a tired person leaves them to the others first
-const HEAVY_ST = {haling:1, last:1, sloy:0.5, is:0.6, fiske:0.4, sort:0.3, blogg:0.3, egn:0.2, strip:0.2, mend:0.2, stell:0.2};
+const HEAVY_ST = {haling:1, last:1, fort:0.5, sloy:0.5, is:0.6, fiske:0.4, sort:0.3, blogg:0.3, egn:0.2, strip:0.2, mend:0.2, stell:0.2};
 // the catch is bled, gutted and iced, the trade's way; S.settings.gut and .ice set to false leave it round or uniced (the tests)
 // (H3b) the snow crab vessel's factory always splits its crab into clusters (10e-krabbefabrikk.js), whatever the setting for the fish.
 // The first trip lands round (Jonas 08.11.2026: «Hva om nye brukere som åpner spillet ikke sløyer fisken første turen, men heller leverer
@@ -140,7 +140,7 @@ function workCtx(as){
   // on its way to it (the gutted fish, and the round fish waiting for the knife)
   // (round a quay, OB2: the helm is held until she lies made fast, and the lines and the fenders have their hands; 05-vessels.js moorPhase)
   const mp = as === 'fishing' || typeof moorPhase !== 'function' ? null : moorPhase(b);
-  return {s, stop, mp, fort:!!mp, ror:s === 'sailing' || s === 'unmooring' || s === 'engine' || mp === 'in' || mp === 'lines', fiske:s === 'fishing' && !g && !stop, haling:!!g && !stop, gk,
+  return {s, stop, mp, fort:!!mp, ror:s === 'sailing' || s === 'unmooring' || s === 'engine' || mp === 'in' || mp === 'lines' || mp === 'out', fiske:s === 'fishing' && !g && !stop, haling:!!g && !stop, gk,
     blogg:!!g && g.op === 'haul' && gk !== 'teine' && !stop && s !== 'aground', gutKg:cg ? gut : 0, iceKg:icing ? gut + ice : 0,
     sort:!!g && gk === 'teine' && g.op === 'haul', hands:g && gk === 'garn' && g.op === 'haul' ? 2 : 1, sloy:deck && gut > 0.01, is:deck && icing && (ice > 0.01 || gut > 0.01), iceNow:icing ? ice : 0, kokk:as !== 'fishing' && mealDue(), pause:true};
 }
@@ -207,13 +207,13 @@ function workAssign(as){
   // the helm, while she is driven: you, else the mate, else the skipper, else the best seaman
   if (ctx.ror){ const me = P.find(p => !p.c), m = P.find(p => p.c && p.c.mate), sk = typeof opsSkipper === 'function' && opsSkipper(), o = sk && P.find(p => p.c === sk);
     const who = me || m || o || P.slice().sort((a, b) => b.c.attr.sjo - a.c.attr.sjo)[0]; put(who, 'ror', me ? 'skipper' : m ? 'mate' : o ? 'opsk' : 'seaman'); }
-  // the lines and the fenders round a quay (OB2, F1-F3): before any other work, the hands for them; alone aboard you leave the helm to
-  // make her fast once she lies alongside, and cast her off before you take the helm (on the way in and out you are at the helm)
-  if (ctx.fort){ while (cnt('fort') < stPlaces('fort', ctx)){ const L = free(); if (!L.length) break; put(bestOf(L, 'fort'), 'fort', 'moor'); }
-    if (!cnt('fort') && (ctx.mp === 'lines' || ctx.mp === 'out')){ const r = P.find(p => p.st === 'ror' && !p.c); if (r) put(r, 'fort', 'moor'); } }
   // the cook who has started the meal stays at the stove until it is served (14-crewlife.js mealMinute; before, the deck could take her
   // to the table between two minutes, another started over, and the meal came late: mannskapshot.py)
   if (ctx.kokk){ const M = mealState(), ck = M.cook && P.find(p => p.c && p.c.id === M.cook.id && !p.st && pTired(p) < 0.85); if (ck) put(ck, 'kokk', 'cook'); }
+  // the lines and the fenders round a quay (OB2, F1-F3): before any other work (the cook at the stove stays there), the hands for them; alone aboard you leave the helm to
+  // make her fast once she lies alongside, and cast her off before you take the helm (on the way in and out you are at the helm)
+  if (ctx.fort){ while (cnt('fort') < stPlaces('fort', ctx)){ const L = free(); if (!L.length) break; put(bestOf(L, 'fort'), 'fort', 'moor'); }
+    if (!cnt('fort') && (ctx.mp === 'lines' || ctx.mp === 'out')){ const r = P.find(p => p.st === 'ror' && !p.c); if (r) put(r, 'fort', 'moor'); } }
   // the work waiting at each station, in one person's minutes, and the crew's own jobs on the gear
   const left = {sloy:ctx.gutKg / gutPace(), is:ctx.iceKg / DECK.ice, blogg:ctx.blogg ? 30 : 0, haling:ctx.haling && ctx.gk !== 'teine' ? 20 : 0, sort:ctx.sort ? 10 : 0};
   const jobs = jobsOpen(as), jn = new Map(jobs.map(j => [j, 0]));

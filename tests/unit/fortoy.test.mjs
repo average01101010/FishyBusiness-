@@ -51,8 +51,14 @@ export default function (t){
   b.shift = {from:'main', to:'bunker', t0:S.t, castUntil:S.t + 1, arriveAt:S.t + 3, until:S.t + 4};
   const ph = []; for (let k = 0; k < 5; k++){ S.t = 4000 + k; ph.push(K.moorPhase()); }
   t.eq(ph, ['out', 'in', 'in', 'lines', null], 'forhaling: tauene inn, over, tauene på, så fortøyd');
+  S.t = 4000; W = who(); t.eq([W.me, W.fort], ['ror', 2], 'forhaling, tauene inn: skipperen ved roret, to på tauene');
   S.t = 4001; W = who(); t.eq([W.me, W.fort], ['ror', 2], 'forhaling: noen ved roret mens hun går over (før sto ingen der)');
-  b.shift = null;
+  // the cook who has started the meal stays at the stove while she makes fast
+  // (on the way in: the meal is not cooked in port, 14-crewlife.js mealDue)
+  b.shift = null; S.t = 5500; b.status = 'sailing'; b.port = null; crew(3); b.pos = {x:pt.p.x + 0.35, y:pt.p.y}; S.plan = {wps:[{x:pt.p.x + 0.25, y:pt.p.y}, {x:pt.p.x, y:pt.p.y, port:'husoy'}], idx:0};
+  S.meal = {due:S.t + 20, cook:{id:S.crew[0].id}, hist:[]};
+  W = who(); t.eq([K.moorPhase(), W.A.find(p => p.c === S.crew[0]).st, W.fort], ['prep', 'kokk', 2], 'kokken som har begynt på maten, blir ved komfyren; to andre tar fenderne');
+  S.meal = null; S.plan = null;
 
   // ---- a save from before (no castT, an old moorT): nothing round the quay ----
   b.status = 'port'; b.moorT = 10; b.castT = undefined; S.t = 5000; t.eq(K.moorPhase(), null, 'en gammel lagring i havn: ingen fortøyning i gang');
