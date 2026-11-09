@@ -2159,7 +2159,7 @@ MANUAL HELM (the user's wish 03.10.2026)
   - 63 `helmCast()`
   - 69 `helmCastDone(pid, kind)`
 
-## `src/js/core/16b-dyn.js` (682 linjer)
+## `src/js/core/16b-dyn.js` (687 linjer)
 
 HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
 
@@ -2189,42 +2189,43 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 253 `dynWall(O, x, z, cap)`
   - 268 `dynBankF(P, d0, gl, h)`
   - 274 `dynBank(E, d, P, force)`
-  - 288 `keelClear(b = S.boat, H = S.t / 60)`
-- **292** contact: the hull against the piers, the breakwaters and the harbour units' quays (Fysikk 2)
-  - 301 `dynObsNear(X, Y, R)`
-  - 308 `dynInside(O, x, z)`
-  - 319 `dynContact(b, d, P, O)`
-- **346** with no way on: she drifts (Fysikk 2)
-  - 352 `dynDrift(type, p, H)`
-  - 374 `gearBuoyNear(p)`
-  - 376 `gearLieCrew()`
-  - 378 `gearWatch(b)`
-  - 386 `lieDrift(H)`
-- **425** the state, in step with the boat the rest of the game reads
-  - 426 `dynState(b)`
-  - 437 `dynWrite(b, d)`
-  - 442 `dynCan()`
-  - 447 `dynLive()`
-  - 452 `dynPose()`
-  - 459 `dynRest()`
-  - 460 `dynLivePose(frac)`
-  - 462 `dynHaltNeed()`
-- **463** the tick
-  - 464 `dynTick(dt)`
-  - 477 `dynMinute(H, W)`
-- **484** by hand (16-helm.js): the throttle and the rudder into the model
-  - 485 `dynHelm(d, dtG)`
-- **506** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
-  - 508 `dynLineBuild(pl, dep)`
-  - 528 `dynLineAt(T, s)`
-  - 534 `dynSeg(T, s)`
-  - 535 `dynSegHd(T, i)`
-  - 536 `dynLineProj(T, x, z, s0, back = 30)`
-  - 546 `dynLineHd(T, s, r0)`
-  - 553 `dynGroundAhead(T, s, look)`
-- **562** the autopilot
-  - 563 `dynAuto(d, dtG)`
-  - 681 `dynTrackView()`
+  - 280 `dynBankAt(E, d, P, k, force)`
+  - 293 `keelClear(b = S.boat, H = S.t / 60)`
+- **297** contact: the hull against the piers, the breakwaters and the harbour units' quays (Fysikk 2)
+  - 306 `dynObsNear(X, Y, R)`
+  - 313 `dynInside(O, x, z)`
+  - 324 `dynContact(b, d, P, O)`
+- **351** with no way on: she drifts (Fysikk 2)
+  - 357 `dynDrift(type, p, H)`
+  - 379 `gearBuoyNear(p)`
+  - 381 `gearLieCrew()`
+  - 383 `gearWatch(b)`
+  - 391 `lieDrift(H)`
+- **430** the state, in step with the boat the rest of the game reads
+  - 431 `dynState(b)`
+  - 442 `dynWrite(b, d)`
+  - 447 `dynCan()`
+  - 452 `dynLive()`
+  - 457 `dynPose()`
+  - 464 `dynRest()`
+  - 465 `dynLivePose(frac)`
+  - 467 `dynHaltNeed()`
+- **468** the tick
+  - 469 `dynTick(dt)`
+  - 482 `dynMinute(H, W)`
+- **489** by hand (16-helm.js): the throttle and the rudder into the model
+  - 490 `dynHelm(d, dtG)`
+- **511** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
+  - 513 `dynLineBuild(pl, dep)`
+  - 533 `dynLineAt(T, s)`
+  - 539 `dynSeg(T, s)`
+  - 540 `dynSegHd(T, i)`
+  - 541 `dynLineProj(T, x, z, s0, back = 30)`
+  - 551 `dynLineHd(T, s, r0)`
+  - 558 `dynGroundAhead(T, s, look)`
+- **567** the autopilot
+  - 568 `dynAuto(d, dtG)`
+  - 686 `dynTrackView()`
 
 ## `src/js/core/16c-hull.js` (146 linjer)
 
@@ -2601,12 +2602,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1405 linjer)
+## `src/js/ui/phone/07-patch.js` (1408 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1398 `patch()`
+  - 1401 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
