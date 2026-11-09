@@ -124,7 +124,13 @@
       else { MO.phase = 'in'; MO.t = 0; MO.from = {x:bv.px, z:bv.pz, h:bv.cog}; MO.path = pathM(berthPath({x:bv.px / 1000, y:bv.pz / 1000}, bp)); MO.dur = clamp(MO.path.len / 2.2, 6, 45); MO.lines = 0; }
       MO.init = true;
     }
-    if (b.status === 'unmooring'){ MO.phase = 'out'; MO.lines = clamp(4 * (b.castUntil - S.t - currentFrac()) / CAST_MIN, 0, 4); MO.dep = {bp, pid:b.port, naust:berthKind(b) === 'naust'}; }
+    if (b.status === 'unmooring'){ MO.phase = 'out'; MO.dep = {bp, pid:b.port, naust:berthKind(b) === 'naust'};
+      // the lines in on the core's clock (CAST_MIN), but each waits a moment for its hand at the cleat (OB2); never later than the core
+      // lets her lie: what is still out when she goes, is let go
+      const cv = clamp(4 * (b.castUntil - S.t - currentFrac()) / CAST_MIN, 0, 4), hn = moorHandsN();
+      if (MO.lines > cv){ const i = clamp(Math.ceil(MO.lines) - 1, 0, 3);
+        if (!hn || CREW3D.moorMan().has('c:' + LINE_CL[i]) || (MO.lwait += at * sp) > 2.5){ MO.lines = Math.max(cv, MO.lines - at * sp * 1.2 / LINE_S); if (Math.ceil(MO.lines) - 1 < i) MO.lwait = 0; } }
+      else { MO.lines = cv; MO.lwait = 0; } }
     if (MO.phase === 'in'){
       MO.t += at * sp; const u0 = clamp(MO.t / MO.dur, 0, 1);
       // along the way in (clear of land, piers and the unit's quay), turning to lie along the quay at the end
