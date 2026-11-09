@@ -424,11 +424,10 @@
     PMK('obj'); glChk('boat'); wildSpawn(t); if (!SKP.boats) drawNPC(eye, t, H, VPn); glChk('npc'); drawAir(eye, t, H, VPn); drawGearSea(eye, t, VPn, H); glChk('gear'); drawDocks(eye, t, VPn); drawFloats(eye, t, VPn); glChk('docks'); drawFits(eye, VPn); drawMarinas(eye, t, VPn); glChk('marina'); drawWild(eye, t, dt); glChk('wild'); drawLife(eye, t, VPn); glChk('life'); lifePts(VPn, eye, t, false); glChk('lifePts');
 
     PMK('nearSea');
-    // the ensign in its hours (core/03-simulation.js flagUp; always while the paint shop tries one on); the pennant flies day and night
+    // the ensign in its hours (core/03-simulation.js flagUp; always while the paint shop tries one on). No pennant at the masthead (Jonas 09.11.2026)
     gl.disableVertexAttribArray(2);
     if (PAINTPRE || flagUp(S.t / 60, S.boat.pos)){ const pole = xf(BMrel, VG.pole), fl = flagTex(), FM = model(pole[0], pole[1], pole[2], Math.PI / 2 - appB, 0, 0);
       drawTexQuad(FLAGM, FLAGM.tex, fl.shape === 'vimpel' ? chain(FM, new Float32Array([1.7, 0, 0, 0, 0, 0.8, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])) : FM, VPn, true, [0, 0.6, 0]); }
-    { const pen = S.ach && S.ach.pen ? Math.min(3, S.ach.pen | 0) : 0, mt = pen && mastTop(VG); if (mt){ const P = xf(BMrel, mt); drawTexQuad(FLAGM, penTex(), chain(model(P[0], P[1], P[2], Math.PI / 2 - appB, 0, 0), PEN_S[pen - 1]), VPn, true, [0, 0.6, 0]); } }
     gl.useProgram(PL.p);
     if (SHOW && SHOW.M && GEO(SHOW.t).open && pvm(SHOW.t).cap){ gl.colorMask(false, false, false, false); drawLit(pvm(SHOW.t).cap, SHOW.M); gl.colorMask(true, true, true, true); }
     { const cap = VG.hand ? (SK ? SK.cap : CAPM) : VG.open ? pvm(VT, hullLiv(S.boat)).cap : null; if (cap){ gl.colorMask(false, false, false, false); drawLit(cap, BMrel); gl.colorMask(true, true, true, true); } }

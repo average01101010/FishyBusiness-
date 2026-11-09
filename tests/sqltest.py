@@ -406,7 +406,19 @@ def main():
         R['spList'] = json.loads(sql("select public.sp_admin_list()", AD2, 'authenticated')); R['spListPl'] = sql("select public.sp_admin_list()", A, 'authenticated', expect_err=True)
         sql("insert into public.events (player_id, kind, data) values ('user_01AAA', 'sp_view', '{\"pl\": %s, \"imp\": 3, \"sec\": 40}'), ('user_01BBB', 'sp_view', '{\"pl\": %s, \"imp\": 1, \"sec\": 9000}'), ('user_01AAA', 'sp_click', '{\"pl\": %s}')" % (plid, plid, plid))
         R['spRep'] = json.loads(sql("select public.admin_sp_report(30)", AD2, 'authenticated')); R['spRepPl'] = sql("select public.admin_sp_report(30)", A, 'authenticated', expect_err=True)
-        sql("delete from public.events where kind in ('sp_view', 'sp_click')")   # (the deletion check further down counts every event)
+        sql("delete from public.events where kind in ('sp_view', 'sp_click')")
+        # after IAB 2.0 (steg 66, 20261108231000_sp_view_iab.sql): per session and placement one rendered impression in one of three buckets.
+        # S1 (AAA) seen, twice sent; S2 (BBB) measured, too briefly; S3 (BBB) on WebGL 1; S4 (AAA) seen, longer
+        sql("""insert into public.sessions (id, player_id) values ('55555555-5555-4555-8555-555555555551', 'user_01AAA'), ('55555555-5555-4555-8555-555555555552', 'user_01BBB'),
+            ('55555555-5555-4555-8555-555555555553', 'user_01BBB'), ('55555555-5555-4555-8555-555555555554', 'user_01AAA') on conflict do nothing""")
+        sql("""insert into public.events (session_id, player_id, kind, data) values
+            ('55555555-5555-4555-8555-555555555551', 'user_01AAA', 'sp_view', '{"pl": %(p)s, "imp": 1, "re": 2, "sec": 3.5, "m": 1, "u": 0}'),
+            ('55555555-5555-4555-8555-555555555551', 'user_01AAA', 'sp_view', '{"pl": %(p)s, "imp": 0, "re": 1, "sec": 1.5, "m": 0, "u": 0}'),
+            ('55555555-5555-4555-8555-555555555552', 'user_01BBB', 'sp_view', '{"pl": %(p)s, "imp": 0, "re": 0, "sec": 0.8, "m": 1, "u": 0}'),
+            ('55555555-5555-4555-8555-555555555553', 'user_01BBB', 'sp_view', '{"pl": %(p)s, "imp": 0, "re": 0, "sec": 0, "m": 0, "u": 1}'),
+            ('55555555-5555-4555-8555-555555555554', 'user_01AAA', 'sp_view', '{"pl": %(p)s, "imp": 1, "re": 0, "sec": 9, "m": 1, "u": 0}')""" % {'p': plid})
+        R['spIab'] = json.loads(sql("select public.admin_sp_report(30)", AD2, 'authenticated'))
+        sql("delete from public.events where kind in ('sp_view', 'sp_click')"); sql("delete from public.sessions where id::text like '55555555-%'")   # (the deletion check further down counts every event)
         R['spRead'] = sql("select count(*) from public.sponsors", A, 'authenticated', expect_err=True); R['spReadAnon'] = sql("select count(*) from public.sponsor_placements", {'role': 'anon'}, 'anon', expect_err=True)   # (Ø6 funn 12: no rights on the table at all, not only no rows)
         R['lgNo'] = sql("select public.logo_put('%s')" % LIMG, A, 'authenticated', expect_err=True)
         sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_l1', 'user_01AAA', 'des_logo', 49, 'open', '{}')"); sql("select public.shop_paid('cs_l1', 'pi_l1')")
@@ -558,9 +570,13 @@ def main():
               {'quote': q, 'paid': (R['sPaid1'], R['sPaid2']), 'pending': pd, 'after': R['sAfter'], 'end': R['sEnd']})
         sn = R['spNow']
         print(ok(R['spPl'][0] and R['spAd1'][0] and R['spNoAgr'][0] and R['spBadUrl'][0] and len(sn) == 1 and sn[0]['target'] == 'garnhaler' and sn[0]['sponsor']['name'] == 'Testmerke' and sn[0]['data'].get('model') == 'GH-200'
-                 and R['spOff'] == [] and R['spOffS'] == [] and len(R['spList']) == 1 and len(R['spList'][0]['placements']) == 1 and R['spListPl'][0] and R['spRead'][0] and R['spReadAnon'][0] and R['spRepPl'][0] and len(R['spRep']) == 1 and R['spRep'][0]['imp'] == 4 and R['spRep'][0]['sec'] == 640 and R['spRep'][0]['clicks'] == 1 and R['spRep'][0]['sponsor'] == 'Testmerke'),
+                 and R['spOff'] == [] and R['spOffS'] == [] and len(R['spList']) == 1 and len(R['spList'][0]['placements']) == 1 and R['spListPl'][0] and R['spRead'][0] and R['spReadAnon'][0] and R['spRepPl'][0] and len(R['spRep']) == 1 and R['spRep'][0]['imp'] == 2 and R['spRep'][0]['sec'] == 640 and R['spRep'][0]['clicks'] == 1 and R['spRep'][0]['sponsor'] == 'Testmerke'),
               'sponsors: only the admin with the second factor adds one, and only with an agreement and an https site; sp_now gives anyone what is active and nothing switched off; no player reads the tables; the report per placement and week (views, seconds capped at 600 a send, clicks) only for the admin',
               {k: R[k] for k in ('spPl', 'spAd1', 'spNoAgr', 'spBadUrl', 'spOff', 'spOffS', 'spListPl', 'spRead', 'spReadAnon')})
+        si = (R['spIab'] or [{}])[0]
+        print(ok(len(R['spIab']) == 1 and si.get('imp') == 2 and si.get('nonview') == 1 and si.get('undet') == 1 and si.get('rendered') == 4 and si.get('measured') == 0.75
+                 and abs((si.get('viewable') or 0) - 0.667) < 0.001 and si.get('re') == 3 and si.get('sec') == 14.8 and si.get('med') == 7.0 and si.get('mean') == 7.0 and si.get('players') == 2),
+              'the sponsors\' report after IAB 2.0: one viewable impression per session and placement, the three buckets (viewable, not viewable, undetermined), the measured and viewable shares, re-views, and the median and mean seconds of a viewable session', si)
         print(ok(R['lgNo'][0] and R['lgV'] == ['1', '2'] and R['lgBad'][0] and R['lgGet'] and R['lgGet'].get('img', '').startswith('data:image/png') and R['lgRead'][0] and R['lgAdmPl'][0] and R['lgRmPl'][0]
                  and len(R['lgAdm']) == 1 and R['lgAdm'][0]['who'] == hidA and R['lgRm'] == 't' and R['lgGone'] == 'null' and R['lgMine'].get('removed') is True and R['lgMine'].get('reason') == 'Støtende innhold'
                  and R['lgAgain'] == '3' and R['lgMine2'].get('removed') is False),

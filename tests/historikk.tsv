@@ -1490,6 +1490,63 @@
 2026-11-08 21:03	claude/o14-f4-feltnavnene-kart-htpg70	bcd6576	boottest	OK	25	lite	alene	
 2026-11-08 21:31	ccr-b4ccfe0e-t6qjnp	9948937	boottest	OK	23	lite	samtidig	
 2026-11-08 21:31	ccr-b4ccfe0e-t6qjnp	9948937	docktest	OK	58	lite	samtidig	
+2026-11-08 23:00	claude/o8b-s2-turens-linje-c70okw	6936b5b	krabbefabrikktest	OK	16	lite	samtidig	
+2026-11-08 23:00	claude/o8b-s2-turens-linje-c70okw	6936b5b	fabrikktest	FEIL	12	lite	samtidig	FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined |
+2026-11-08 23:00	claude/o8b-s2-turens-linje-c70okw	6936b5b	lotttest	OK	7	lite	samtidig	
+2026-11-08 23:00	claude/o8b-s2-turens-linje-c70okw	6936b5b	skiptest	OK	15	lite	samtidig	
+2026-11-08 23:00	claude/o8b-s2-turens-linje-c70okw	6936b5b	fleet2test	OK	27	lite	samtidig	
+2026-11-08 23:01	claude/o8b-s2-turens-linje-c70okw	6936b5b	opsowntest	OK	38	lite	samtidig	
+2026-11-08 23:01	claude/o8b-s2-turens-linje-c70okw	6936b5b	worktest	FEIL	21	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-08 23:01	claude/o8b-s2-turens-linje-c70okw	6936b5b	crewlifetest	OK	5	lite	samtidig	
+2026-11-08 23:01	claude/o8b-s2-turens-linje-c70okw	6936b5b	selfcrew	OK	6	lite	samtidig	
+2026-11-08 23:01	claude/o8b-s2-turens-linje-c70okw	6936b5b	lybtest	OK	18	lite	samtidig	
+2026-11-08 23:04	claude/o8b-s2-turens-linje-c70okw	6936b5b+	mobtest	OK	202	lite	samtidig	
+2026-11-08 23:04	claude/o8b-s2-turens-linje-c70okw	6936b5b+	turlinjetest	FEIL	4	lite	samtidig	FEIL i grov sjø og kuling sier linja hva sjøen og vinden tok  null
+2026-11-08 23:04	claude/o8b-s2-turens-linje-c70okw	6936b5b+	tutfull	OK	5	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	colregtest	OK	602	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	keeptest	OK	13	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	autonavtest	OK	20	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	turtest	FEIL	19	lite	samtidig	FEIL sidefeil  ["map: mask block 90,31 is not loaded (sim-18-6-5889af2de2d9.wasm)", "map: mask block 90,31 is not loaded (sim-18-6-5889af2de2d9.wasm)"]
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	decktest	OK	11	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	trip2	OK	40	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	npctest	OK	6	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	towtest	OK	12	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	tattest	OK	15	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	peergear	OK	4	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	haillplass	OK	4	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	snokrabbetest	OK	9	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	autolinetest	OK	8	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	geartest	FEIL	31	lite	samtidig	FEIL the landing note says what the three hauls gave against fair hauls for the soak (Ø8b S2) ['Turen ga 46 kg i timen med håndjuksa. Fisken sto til rundt 50. D
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	booktest	OK	24	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	bktest	OK	5	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	caretest	OK	12	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	jigalongtest	OK	12	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	opptest	OK	51	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	shoptest	OK	27	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	selltest	LES	18	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	r4test	OK	12	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	cashfxtest	OK	7	lite	samtidig	
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	havtur	FEIL	62	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
+2026-11-08 23:11	claude/o8b-s2-turens-linje-c70okw	c1d5d67	boktest	OK	8	lite	samtidig	
+2026-11-08 23:12	claude/o8b-s2-turens-linje-c70okw	c1d5d67	slidertest	OK	15	lite	samtidig	
+2026-11-08 23:12	claude/o8b-s2-turens-linje-c70okw	c1d5d67	sidetab	OK	12	lite	samtidig	
+2026-11-08 23:12	claude/o8b-s2-turens-linje-c70okw	c1d5d67	fartstidtest	FEIL	15	lite	samtidig	FEIL the phone's home shows the years and days, and the Merker app explains how sea time is earned  "06:02\nman 1. mar\nNØ 5 m/s · −1 °C\n15 000 kr\nNeste mål: 
+2026-11-08 23:13	claude/o8b-s2-turens-linje-c70okw	133aaad	docktest	OK	61	lite	samtidig	
+2026-11-08 23:13	claude/o8b-s2-turens-linje-c70okw	133aaad	boottest	OK	24	lite	samtidig	
+2026-11-08 23:13	claude/o8b-s2-turens-linje-c70okw	133aaad	worldtest	OK	17	lite	samtidig	
+2026-11-08 23:20	claude/o8b-s2-turens-linje-c70okw	133aaad	vectest	OK	462	3d	alene	
+2026-11-08 23:40	claude/o8b-s2-turens-linje-c70okw	5519661	trackfollow	OK	1206	3d	alene	
+2026-11-08 23:56	claude/o8b-s2-turens-linje-c70okw	5519661	kinotest	OK	907	3d	alene	
+2026-11-08 23:59	claude/o8b-s2-turens-linje-c70okw	5519661	heattest	OK	229	3d	alene	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	sponsortest	OK	17	lite	samtidig	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	sponsor2test	OK	19	lite	samtidig	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	admintest	OK	9	lite	samtidig	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	sqltest	FEIL	50	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	trip2	OK	42	lite	samtidig	
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	sponsor2test	OK	14	lite	samtidig	
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	sponsortest	OK	12	lite	samtidig	
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	sqltest	FEIL	29	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	admintest	OK	7	lite	samtidig	
 2026-11-08 22:40	ccr-510fd7d5-2eum2h	13f58ab	uishots	OK	77	lite	samtidig	
 2026-11-08 22:40	ccr-510fd7d5-2eum2h	13f58ab	kartlegging	OK	50	lite	samtidig	
 2026-11-08 22:41	ccr-510fd7d5-2eum2h	13f58ab	hudtest	OK	39	lite	samtidig	
@@ -1537,8 +1594,72 @@
 2026-11-08 23:55	claude/o14-f2-fiske-flate-nv6aqz	0dc3f2f	boottest	OK	29	lite	samtidig	
 2026-11-08 23:55	claude/o14-f2-fiske-flate-nv6aqz	0dc3f2f	trip2	OK	32	lite	samtidig	
 2026-11-08 23:55	claude/o14-f2-fiske-flate-nv6aqz	0dc3f2f	simday	LES	12	lite	samtidig	
+2026-11-09 00:02	claude/o8b-s2-turens-linje-c70okw	ddce6ea	boottest	OK	29	lite	samtidig	
+2026-11-09 00:02	claude/o8b-s2-turens-linje-c70okw	ddce6ea	turlinjetest	OK	5	lite	samtidig	
+2026-11-09 00:02	claude/o8b-s2-turens-linje-c70okw	ddce6ea	geartest	FEIL	33	lite	samtidig	FEIL standing plan: the net station is hauled and set again every day, and the catch is landed
+2026-11-09 00:02	claude/o8b-s2-turens-linje-c70okw	ddce6ea	turtest	OK	16	lite	samtidig	
+2026-11-09 00:02	claude/o8b-s2-turens-linje-c70okw	ddce6ea	booktest	OK	26	lite	samtidig	
+2026-11-09 00:02	claude/o8b-s2-turens-linje-c70okw	ddce6ea	tutfull	OK	4	lite	samtidig	
+2026-11-09 00:02	claude/o8b-s2-turens-linje-c70okw	ddce6ea	trip2	OK	35	lite	samtidig	
+2026-11-09 00:03	claude/o8b-s2-turens-linje-c70okw	ddce6ea	docktest	FEIL	62	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-09 00:03	claude/o8b-s2-turens-linje-c70okw	ddce6ea	selltest	LES	19	lite	samtidig	
+2026-11-09 00:04	claude/o8b-s2-turens-linje-c70okw	ddce6ea	geartest	FEIL	33	lite	samtidig	FEIL the landing note says what the three hauls gave against fair hauls for the soak (Ø8b S2) None
+2026-11-09 00:05	claude/o8b-s2-turens-linje-c70okw	ddce6ea	docktest	FEIL	61	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-09 00:05	claude/o8b-s2-turens-linje-c70okw	ddce6ea	geartest	OK	28	lite	alene	
 2026-11-08 23:55	claude/o14-f2-fiske-flate-nv6aqz	c199ab8	geartest	OK	28	lite	samtidig	
 2026-11-09 00:38	ccr-173e9292-helxkt	65287c8	skytest	FEIL	307	3d	alene	FEIL in 10 m/s from the west the clouds drift east-south-east at 15 m/s over a 1 500 m deck  {"secs": 90.8, "d": [-0.364, -0.0788], "exp": [-1.0528, -0.2821]}
 2026-11-09 01:49	ccr-173e9292-helxkt	65287c8	sea3d	OK	4217	3d	alene	
 2026-11-09 02:00	ccr-173e9292-helxkt	65287c8	boottest	OK	33	lite	samtidig	
 2026-11-09 02:00	ccr-173e9292-helxkt	65287c8	docktest	OK	66	lite	samtidig	
+2026-11-09 00:47	ccr-9e76566c-k1gw2d	64137cf+	merketest	OK	18	lite	samtidig	
+2026-11-09 00:47	ccr-9e76566c-k1gw2d	64137cf+	posttest	OK	27	lite	samtidig	
+2026-11-09 00:50	ccr-9e76566c-k1gw2d	6560a62	mobtest	OK	202	lite	samtidig	
+2026-11-09 00:50	ccr-9e76566c-k1gw2d	6560a62	lanterntest	OK	11	lite	samtidig	
+2026-11-09 00:50	ccr-9e76566c-k1gw2d	6560a62	vesseltest	OK	16	lite	samtidig	
+2026-11-09 00:50	ccr-9e76566c-k1gw2d	6560a62	maletest	OK	15	lite	samtidig	
+2026-11-09 00:50	ccr-9e76566c-k1gw2d	6560a62	trip2	OK	33	lite	samtidig	
+2026-11-09 00:51	ccr-9e76566c-k1gw2d	6560a62	dbg23o	OK	37	3d	alene	
+2026-11-09 01:07	ccr-9e76566c-k1gw2d	7c6de62+	merketest	OK	18	lite	samtidig	
+2026-11-09 01:07	ccr-9e76566c-k1gw2d	7c6de62+	kotest	FEIL	17	lite	samtidig	avsluttet med kode 1
+2026-11-09 01:08	ccr-9e76566c-k1gw2d	3a693e5	trip2	OK	36	lite	samtidig	
+2026-11-09 01:08	ccr-9e76566c-k1gw2d	3a693e5	bunktest	OK	14	lite	samtidig	
+2026-11-09 01:14	ccr-9e76566c-k1gw2d	3a693e5	kjoptest	OK	381	lite	samtidig	
+2026-11-09 01:14	ccr-9e76566c-k1gw2d	3a693e5	worktest	FEIL	26	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-09 01:26	ccr-9e76566c-k1gw2d	3a693e5	yardtest	OK	710	3d	alene	
+2026-11-09 01:41	ccr-9e76566c-k1gw2d	3a693e5	tut	OK	905	lite	alene	
+2026-11-09 01:41	ccr-9e76566c-k1gw2d	3a693e5+	kotest	OK	12	lite	alene	
+2026-11-09 00:23	claude/o8b-s2-turens-linje-c70okw	36c7591+	turlinjetest	OK	10	lite	samtidig	
+2026-11-09 00:24	claude/o8b-s2-turens-linje-c70okw	36c7591+	geartest	FEIL	36	lite	samtidig	FEIL the landing note says how the three hauls fished against usual ones for the soak, in words (Ø8b S2) ['Turen ga 56 kg i timen med håndjuksa. Det sto godt me
+2026-11-09 00:24	claude/o8b-s2-turens-linje-c70okw	36c7591+	booktest	OK	27	lite	samtidig	
+2026-11-09 00:24	claude/o8b-s2-turens-linje-c70okw	36c7591+	boottest	OK	22	lite	samtidig	
+2026-11-09 00:25	claude/o8b-s2-turens-linje-c70okw	36c7591+	geartest	OK	31	lite	alene	
+2026-11-09 00:26	claude/o8b-s2-turens-linje-c70okw	36c7591+	turlinjetest	OK	6	lite	samtidig	
+2026-11-09 00:26	claude/o8b-s2-turens-linje-c70okw	36c7591+	geartest	OK	29	lite	samtidig	
+2026-11-09 00:33	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	tutfull	FEIL	5	lite	samtidig	FEIL etter en ekte levering ved første turs mottak sier verken sluttseddelen eller dekksdagboka hva fisket her vanligvis gir (N regnes bare for skyen)  {"slip":
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	starttest	OK	123	lite	samtidig	
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	tutdrift	OK	6	lite	samtidig	
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	booktest	OK	25	lite	samtidig	
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	turlinjetest	OK	6	lite	samtidig	
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	selltest	LES	18	lite	samtidig	
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	r4test	OK	17	lite	samtidig	
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	cashfxtest	OK	9	lite	samtidig	
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	shoptest	OK	30	lite	samtidig	
+2026-11-09 00:35	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	tutfull	OK	4	lite	alene	
+2026-11-09 00:35	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	tutfull	FEIL	4	lite	alene	FEIL etter en ekte levering ved første turs mottak sier verken sluttseddelen eller dekksdagboka hva fisket her vanligvis gir (N regnes bare for skyen)  {"slip":
+2026-11-09 01:13	claude/o8b-s2-turens-linje-c70okw	24eb7c9	tut	OK	2269	lite	alene	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	boottest	OK	27	lite	samtidig	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	sqltest	OK	30	lite	samtidig	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	sponsor2test	OK	13	lite	samtidig	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	sponsortest	OK	10	lite	samtidig	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	admintest	OK	7	lite	samtidig	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	trip2	OK	26	lite	samtidig	
+2026-11-09 01:43	ccr-9e76566c-k1gw2d	9e7cbd9	trip2	OK	36	lite	samtidig	
+2026-11-09 01:43	ccr-9e76566c-k1gw2d	9e7cbd9	merketest	OK	16	lite	samtidig	
+2026-11-09 01:44	ccr-9e76566c-k1gw2d	9e7cbd9	dbg23o	OK	39	3d	alene	
+2026-11-09 01:15	claude/o8b-s2-turens-linje-c70okw	01c5d1e	boottest	OK	22	lite	samtidig	
+2026-11-09 01:15	claude/o8b-s2-turens-linje-c70okw	01c5d1e	turlinjetest	OK	5	lite	samtidig	
+2026-11-09 01:15	claude/o8b-s2-turens-linje-c70okw	01c5d1e	tutfull	OK	5	lite	samtidig	
+2026-11-09 01:46	ccr-9e76566c-k1gw2d	cb536b2	trip2	OK	34	lite	samtidig	
+2026-11-09 01:46	ccr-9e76566c-k1gw2d	cb536b2	merketest	OK	16	lite	samtidig	
+2026-11-09 01:47	ccr-9e76566c-k1gw2d	cb536b2	dbg23o	OK	48	3d	alene	
+2026-11-09 02:16	ccr-9e76566c-k1gw2d	cb536b2	tut	OK	1695	lite	alene	

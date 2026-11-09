@@ -40,6 +40,24 @@ async def main():
           return {kpi:k ? k.innerText.replace(/\s+/g, ' ') : null, col:[...m.querySelectorAll('th')].some(e => e.textContent === 'Trinn ≤ dag 7')}; })()""")
         await pg.screenshot(path='admin_trakt.png', full_page=True)
         check(tr['kpi'] and re.search(r'\d+ %', tr['kpi']) and 'som har hatt sju dager' in tr['kpi'] and tr['col'], 'the funnel shows the share with a tier bought within day 7, and a column per week', tr)
+        # the sponsors' report after IAB 2.0 (steg 66): the three buckets, the shares, the distribution, the median and mean viewable
+        # time, and the CSV with the same columns; pictures in both formats
+        await pg.click('nav button[data-t="sponsorer"]'); await pg.wait_for_timeout(300)
+        sp = await pg.evaluate("""(() => { const m = document.querySelector('main'), th = [...m.querySelectorAll('.sptw th')].map(e => e.textContent), k = [...m.querySelectorAll('.kpi')].map(e => e.innerText.replace(/\\s+/g, ' '));
+          let csv = null; const U = URL.createObjectURL; URL.createObjectURL = b => { b.text().then(t => { window.__csv = t; }); return 'blob:x'; };
+          const a0 = HTMLAnchorElement.prototype.click; HTMLAnchorElement.prototype.click = function(){}; document.getElementById('spCsv').click(); HTMLAnchorElement.prototype.click = a0; URL.createObjectURL = U;
+          return {th, k, bars:m.querySelectorAll('.spbk').length, wide:document.documentElement.scrollWidth > innerWidth}; })()""")
+        await pg.wait_for_timeout(200); csv = await pg.evaluate("window.__csv || ''")
+        await pg.screenshot(path='admin_sponsorer_liggende.png', full_page=True)
+        await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(300)
+        sp2 = await pg.evaluate("({wide:document.documentElement.scrollWidth > innerWidth})")
+        await pg.screenshot(path='admin_sponsorer_staaende.png', full_page=True)
+        await pg.set_viewport_size({'width': 1100, 'height': 900})
+        need = ['Gjengitt', 'Synlige', 'Ikke synlige', 'Ubestemte', 'Fordelingen', 'Målt andel', 'Synlig andel', 'Gjensyn', 'Median synlig tid (s)', 'Snitt synlig tid (s)']
+        head = csv.lstrip('\ufeff').split('\n')[0].split(';')
+        check(all(n in sp['th'] for n in need) and sp['bars'] == 2 and any('Målt andel' in x for x in sp['k']) and any('Synlig andel' in x for x in sp['k'])
+              and all(c in head for c in ('rendered', 'imp', 'nonview', 'undet', 'measured', 'viewable', 're', 'med', 'mean')) and not sp['wide'] and not sp2['wide'],
+              'Sponsorer-fanen viser de tre bøttene, målt og synlig andel, fordelingen og median og snitt synlig tid, og CSV-en har kolonnene (IAB 3.2.10.2)', {'th': sp['th'], 'csv': head, 'wide': [sp['wide'], sp2['wide']]})
         # with keys: the sign-in comes first, nothing is fetched before it
         await pg.add_init_script("")
         raw = await (await pg.request.get(BASE + 'admin/')).text()

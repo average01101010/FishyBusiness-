@@ -38,7 +38,7 @@ async def main():
           answer = {go:true, until:'2026-11-07T01:00:00Z', slots:2}; LANDQ.at = 0; quayMinute(); await wait(120);
           R.go = {land:!!b.land, q:!!b.landQ, pid:b.land && b.land.pid, strip:DOCK.info().on};
           // the end of the landing frees the place
-          calls.length = 0; b.land.until = S.t - 1; finishLanding(); await wait(50); R.end = {landEnd:calls.some(c => c[0] === 'land_end'), land:!!b.land, cash:S.cash > 15000};
+          calls.length = 0; const cash0 = S.cash; b.land.until = S.t - 1; finishLanding(); await wait(50); R.end = {landEnd:calls.some(c => c[0] === 'land_end'), land:!!b.land, cash:S.cash > cash0};
           // leaving the queue frees it too
           answer = {go:false, ahead:0, active:2, slots:2, wait_s:120}; at('husoy'); startLanding(false); await wait(120); calls.length = 0; landQueueEnd(); await wait(50);
           R.leave = {q:!!b.landQ, landEnd:calls.some(c => c[0] === 'land_end')};

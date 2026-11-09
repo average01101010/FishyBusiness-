@@ -493,13 +493,13 @@ const KITADD = {
 // with rays: the plastic snekke's meets it (its lowest rung 0.32 m under, the stiles hooked over the transom's top to hold); the fast
 // sjarks' lowest rung is 0.25 m under and the 15 m boat's 0.17 m (and she has no handrails), so they get a rung more under it; the skiff's
 // folded one on the port pod a rung more and a handrail up to the transom's top; the plastic sjark, the havsjark and the breisjark have
-// none, so they get a whole one on the transom to starboard, and the double-ended wooden boat one over her starboard quarter. Until Ø4
+// none, so they get a whole one on the transom to starboard. The double-ended wooden boat has none (Jonas 09.11.2026: a bare boat,
+// VESSELS.trebat.bare; the one in the water comes in over her low gunwale, 14b-sikkerhet.js mobLiftOpts). Until Ø4
 // gives the models their own: each piece is the stiles' centre line (top down, the game's frame), the way across it (a), the stiles'
 // spacing (w) and the rungs' heights (r, over the waterline). Drawn in stainless tube by the deck kit (view3d drawSafety)
 const LADDERS = {
   skiff:[{c:[[-0.74, -0.24, 3.03], [-0.74, -0.42, 3.03]], a:[1, 0, 0], w:0.24, r:[-0.36], ext:1},
     {c:[[-0.74, 0.32, 2.45], [-0.74, 1.05, 2.45], [-0.74, 1.05, 2.3], [-0.74, 0.79, 2.3]], a:[1, 0, 0], w:0.24, r:[]}],
-  trebat:[{c:[[0.8, 1.08, 2.2], [1.0, 1.08, 2.2], [1.0, 0.7, 2.2], [1.0, -0.42, 2.2]], a:[0, 0, 1], w:0.32, r:[-0.35, -0.07, 0.21, 0.49]}],
   plastsjark:[{c:[[0.8, 1.49, 4.55], [0.8, 1.49, 4.79], [0.8, 1.08, 4.77], [0.8, -0.42, 4.656]], a:[1, 0, 0], w:0.4, r:[-0.35, -0.07, 0.21, 0.49, 0.77]}],
   sjark:[{c:[[1.23, 1.46, 5.2], [1.23, 1.46, 5.44], [1.23, 1.03, 5.354], [1.23, -0.42, 4.94]], a:[1, 0, 0], w:0.4, r:[-0.35, -0.07, 0.21, 0.49, 0.77]}],
   breisjark:[{c:[[1.26, 1.66, 5.45], [1.26, 1.66, 5.7], [1.26, 1.22, 5.628], [1.26, -0.42, 5.55]], a:[1, 0, 0], w:0.4, r:[-0.35, -0.07, 0.21, 0.49, 0.77, 1.05]}],
@@ -624,10 +624,9 @@ function livStr(b){
   if (L.flag && /^[A-Z]{2,4}$/.test(L.flag.c || '') && /^[a-z]+$/.test(L.flag.s || '')) out.push('f:' + L.flag.c + '.' + L.flag.s);
   const r = typeof regOf === 'function' && b === S.boat ? regOf(b) : b.reg; if (r && r.f) out.push('m:' + MARKENC(r.f) + '.' + r.n + '.' + MARKENC(r.k));   // the registration mark (core/06b-coastports.js)
   const lg = typeof S !== 'undefined' && b === S.boat && S.logo && COSOWN('logo') ? logoStr(S.logo) : ''; if (lg) out.push('l:' + lg);   // the company's logo (all its boats)
-  const pn = typeof S !== 'undefined' && b === S.boat && S.ach && S.ach.pen ? Math.min(3, S.ach.pen | 0) : 0; if (pn) out.push('p:' + pn);   // the week's pennants (core/09f-merker.js)
   return out.join(';');
 }
-// another player's pennants from her paint code ('p:2'): the chapters of «Første uke på sjøen» she has finished
+// another player's pennants from her paint code ('p:2', from before 09.11.2026): read, no longer drawn (Jonas 09.11.2026: no pennants)
 function livPen(s){ const m = /(?:^|;)p:([1-3])(?:;|$)/.exec(String(s || '')); return m ? +m[1] : 0; }
 // another player's registration mark from her paint code ('m:T.112.LK'), as text
 function livMark(s){ const m = /(?:^|;)m:([A-Z0-9]{1,3})\.(\d{1,4})\.([A-Z0-9]{1,3})(?:;|$)/.exec(String(s || '')); return m ? MARKDEC(m[1]) + '-' + m[2] + '-' + MARKDEC(m[3]) : ''; }
@@ -1590,6 +1589,11 @@ function lanterns(G, V, st){
     push(mt, 'w', 'anchor'); if (len >= 50 && stern) push(stern[0], 'w', 'anchor2');
     if (st.aground && len >= 12){ push(up(mt, sp), 'r', 'nuc'); push(up(mt, 2 * sp), 'r', 'nuc'); }
     return out; }
+  // a bare boat shows no fishing lights (Jonas 09.11.2026, VESSELS.trebat.bare): she jigs and draws her few nets and pots by hand,
+  // and a boat fishing with what does not restrict her manoeuvrability is no vessel engaged in fishing (rule 3 d), as the NPC jiggers
+  // (05e-sjovei.js sjvLanternSt); she shows her all-round white and the sides as under way. Nor two reds not under command: rule 27 g
+  // excuses a boat under 12 m (at anchor and aground she is handled above)
+  if (V && V.bare){ push(mt, 'w', 'allround'); sideStern(); return out; }
   if (st.fishing){
     // a model that carries its fishing lights on their own ('fishR' over 'fishW', the havsjark's red over white on arms forward of the
     // mast) lights them where they are; else the white at the masthead's place and the red (the green) a spacing over it

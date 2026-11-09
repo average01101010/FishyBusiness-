@@ -11,6 +11,9 @@
 // Also here: the first tow and the first repair are free, with a word on how to avoid the next (Jonas 07.10.2026: «slik at spillerne
 // lærer, men ikke får konsekvenser»).
 const ACH_OPEN = 5;
+// the first chapter's reward (Jonas 09.11.2026, after the pennant went), and its amount as text in each language
+const ACH_CH1_KR = 5000;
+const achKr = en => en ? 'NOK ' + String(ACH_CH1_KR).replace(/\B(?=(\d{3})+$)/g, ',') : String(ACH_CH1_KR).replace(/\B(?=(\d{3})+$)/g, ' ') + ' kr';
 const ACH_CH = [['Fars båt', 'Father\'s boat'], ['Egen skipper', 'Own skipper'], ['Kjent på kysten', 'Known on the coast']];
 const achBest = () => Math.max((S.ach && S.ach.best) || 0, 0, ...(S.sales || []).map(s => s.total || 0));
 const achPorts = () => { const s = new Set((S.sales || []).map(x => x.port).filter(Boolean)); for (const k in ((S.tat && S.tat.plant) || {})) s.add(k); return s.size; };
@@ -194,14 +197,15 @@ function achCheck(quiet){
     if (fresh.length && !quiet && typeof achShow === 'function') achShow(fresh);
   } finally { ACH_BUSY = false; }
 }
-// a chapter's own reward: a pennant on the boat that others see (b.liv pennant level, vessel3d.js), a luck after the second, a hull
-// colour after the third
+// a chapter's own reward: 5 000 kr after the first, a luck after the second, a hull colour after the third (the first's pennant at the
+// masthead went 09.11.2026, Jonas: «fjerne vimplene fra båtene. Jeg liker de ikke», and the money came in its place; A.pen is still kept)
 function achChapter(ch){
   const A = achState(); A.pen = Math.max(A.pen || 0, ch + 1);
+  if (ch === 0) book('annet', ACH_CH1_KR, 'Kapittelet «' + ACH_CH[0][0] + '» fullført', 'The chapter «' + ACH_CH[0][1] + '» complete');
   if (ch === 1 && typeof giveHaill === 'function') giveHaill('haill', 'gift');
   if (ch === 2){ A.colour = 1; }
-  const what = ['Vimpelen er din: den henger i masta på båter med mast, og andre ser den.', 'Vimpelen blir lengre, og en haill ligger om bord.', 'Vimpelen blir enda lengre, og skrogfargen «Kystfisker» er din i Malerverkstedet.'][ch],
-    whatEn = ['The pennant is yours: it flies from the mast of a boat with a mast, and others see it.', 'The pennant grows longer, and a luck is aboard.', 'The pennant grows longer still, and the hull colour «Kystfisker» is yours in the paint shop.'][ch];
+  const what = [achKr() + ' er satt inn på kontoen din.', 'En haill ligger om bord.', 'Skrogfargen «Kystfisker» er din i Malerverkstedet.'][ch],
+    whatEn = [achKr(true) + ' has been paid into your account.', 'A luck is aboard.', 'The hull colour «Kystfisker» is yours in the paint shop.'][ch];
   msg('Kystposten', 'Kapittel «' + ACH_CH[ch][0] + '» er fullført. ' + what, 'Chapter «' + ACH_CH[ch][1] + '» is complete. ' + whatEn);
   pressPut('ach', {ch});   // in the paper for the others (09h-press.js)
 }

@@ -145,6 +145,76 @@ function tripAdd(b, k, kr0){ if (!b || !(kr0 > 0)) return; const T = tripOf(b); 
 function tripCost(b = S.boat){ const T = tripOf(b), fuelKr = Math.round(T.fuelL * (b.fuelKrL || fuelPrice())), iceKr = Math.round(T.iceKg * PRICE.ice), baitKr = Math.round((T.baitKr || 0) + (T.egnKr || 0)),
   havnKr = Math.round(T.havnKr || 0), gearKr = Math.round((T.jigKr || 0) + (T.lostKr || 0));
   return {fuelL:T.fuelL, fuelKr, iceKg:T.iceKg, iceKr, baitKr, havnKr, gearKr, sum:fuelKr + iceKr + baitKr + havnKr + gearKr}; }
+// ---- the trip's line on the landing note and in the deck log (Ø8b S2, V2 A and V4 A in docs/planer/spillbarhet-fangst.md, Jonas
+// 06.11.2026): how the trip went and why, from the sums fish() and finishHaul keep in the trip (T.j for the jig, T.g for the hauls).
+// Only what the model reckons is said, and of the steps only those that took or gave at least TRIPL.min of the fish.
+// min: the least share of the fish a step must take to be named, strong (strongCold for the cold, which takes at most half) for the
+// stronger words; tight and thin: what the fish stood to against a fair hour for the rig (HEATG.fair.jig), past which the line says
+// there was plenty of fish or little; good and poor: the hauls against usual ones. Starting values
+const TRIPL = {min:0.1, minM:15, strong:0.4, strongCold:0.2, tight:3, thin:0.4, good:1.4, poor:0.6};
+// the sums made into shares: the jig's kilos an hour, what the fish stood to an hour (p0, before the fishing down, the weather, the cold
+// and the wear), a fair hour for the rig (HEATG.fair.jig per hand jig's effort), and each step's share of p0 (they add up to
+// 1 − pJ/p0, the whole loss); the luck as what it gave on top of what was left. The hauls: kilos against fair hauls for the soak
+function tripSum(T){
+  if (!T || T.tut) return null;
+  const J = T.j, G = T.g, W = {};
+  if (J && J.m >= TRIPL.minM && J.p0 > 0){
+    const h = J.m / 60, kg = Math.max(0, J.kg - (J.top || 0)), P = J.p0;
+    W.j = {h, kg, kgph:kg / h, pot:P / h, fair:HEATG.fair.jig * J.fe / J.m, mk:J.mk || 0, kv:!!J.kv, hs:J.hs / J.m, w:J.w / J.m,
+      sh:{stock:(P - J.pS) / P, sea:(J.pS - J.pW) / P, cold:(J.pW - J.pC) / P, pilk:(J.pC - J.pJ) / P}, pen:1 - J.pJ / P, luck:J.pJ > 0 ? J.pL / J.pJ - 1 : 0};
+  }
+  if (G && G.n > 0 && G.fair > 0) W.g = {n:G.n, kg:G.kg, fair:G.fair, stock:G.r0 > 0 ? Math.max(0, 1 - G.rL / G.r0) : 0, luck:G.rL > 0 ? G.r / G.rL - 1 : 0, kinds:Object.keys(G.k || {})};
+  return W.j || W.g ? W : null;
+}
+// the line itself, [Norwegian, English], as a fisherman on the quay would put it (Jonas 09.11.2026: «aldri nevne hvor mye man potensielt
+// sett kan få på plassen», «hvordan vær eller andre forhold påvirket fisket, men ikke med konkrete tall», «fiskere er som regel simple
+// folk»): the kilos an hour are the only number; then at most two of the things that took the most, in plain words, stronger words for
+// a bigger share, and whether the fish stood dense or thin. «Turen ga 36 kg i timen med håndjuksa. Det sto godt med fisk, men sjøen var
+// for grov til å fiske skikkelig, og kulda gjorde fingrene stive.»
+function tripWhy(W){
+  if (!W) return null;
+  const kgS = (v, no) => v >= 1 ? String(Math.round(v)) : (no ? 'under 1' : 'less than 1');
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const no = [], en = [];
+  // [share, Norwegian, English]: the words for each step, mild (from TRIPL.min) or strong (from TRIPL.strong)
+  const SAY = {
+    sea:(v, j) => { const wind = j.w > 8.5, hard = v >= TRIPL.strong;
+      return hard ? (wind ? ['vinden og sjøen gjorde det for tungt å fiske skikkelig', 'the wind and the sea made it too hard to fish properly'] : ['sjøen var for grov til å fiske skikkelig', 'the sea was too rough to fish properly'])
+        : (wind ? ['det blåste en del', 'it blew a fair bit'] : ['det var litt mye sjø', 'there was a bit too much sea']); },
+    cold:v => v >= TRIPL.strongCold ? ['kulda gjorde fingrene stive', 'the cold made the fingers stiff'] : ['det var kaldt på fingrene', 'it was cold on the fingers'],
+    stock:v => v >= TRIPL.strong ? ['feltet var hardt fisket den siste tida', 'the ground had been fished hard lately'] : ['feltet var litt nedfisket', 'the ground was a little fished down'],
+    pilk:() => ['pilken og krokene var slitt', 'the pilk and hooks were worn']};
+  let luck = false;
+  if (W.j){ const j = W.j, rigNo = j.kv ? 'kveiteutstyr' : j.mk > 0 ? (j.mk > 1 ? 'juksamaskiner' : 'juksamaskin') : 'håndjuksa', rigEn = j.kv ? 'halibut gear' : j.mk > 0 ? (j.mk > 1 ? 'jigging machines' : 'a jigging machine') : 'a hand jig';
+    no.push('Turen ga ' + kgS(j.kgph, true) + ' kg i timen med ' + rigNo + '.'); en.push('The trip gave ' + kgS(j.kgph, false) + ' kg an hour with ' + rigEn + '.');
+    // plenty or little: what stood there after the fishing down; a line that says the ground was fished never says «plenty of fish» too
+    const left = j.pot * (1 - (j.sh.stock || 0)), thin = j.fair > 0 && left <= TRIPL.thin * j.fair;
+    const K = ['sea', 'cold', 'stock', 'pilk'].map(k => [j.sh[k], k]).filter(x => x[0] >= TRIPL.min).sort((a, b) => b[0] - a[0]).slice(0, thin ? 1 : 2);
+    const tight = j.fair > 0 && left >= TRIPL.tight * j.fair && !K.some(x => x[1] === 'stock'), F = K.map(([v, k]) => SAY[k](v, j));
+    const and = (L, i) => L.map(x => x[i]).join(i ? ', and ' : ', og ');
+    if (tight && F.length){ no.push('Det sto godt med fisk, men ' + and(F, 0) + '.'); en.push('There was plenty of fish, but ' + and(F, 1) + '.'); }
+    else if (thin && F.length){ no.push('Det var lite fisk å finne, og ' + F[0][0] + '.'); en.push('There was little fish to find, and ' + F[0][1] + '.'); }
+    else if (tight){ no.push('Det sto godt med fisk.'); en.push('There was plenty of fish.'); }
+    else if (thin){ no.push('Det var lite fisk å finne.'); en.push('There was little fish to find.'); }
+    else if (F.length){ no.push(cap(and(F, 0)) + '.'); en.push(cap(and(F, 1)) + '.'); }
+    else if (j.sh.sea < 0.05 && j.sh.cold < 0.05){ no.push('Fint vær og jevnt fiske.'); en.push('Fine weather and steady fishing.'); }
+    else { no.push('Jevnt fiske.'); en.push('Steady fishing.'); }
+    if (j.luck >= TRIPL.min) luck = true;
+  }
+  // the hauls against usual ones for the soak (HEATG.fair, as the catch mark's colour): better, about the same or poor, and why when the
+  // ground was fished hard
+  if (W.g){ const g = W.g, q = g.kg / g.fair, k = g.kinds.length === 1 ? g.kinds[0] : null;
+    const who = {garn:['Garna', 'The nets'], line:['Lina', 'The line'], teine:['Teinene', 'The pots']}[k] || ['Redskapet', 'The gear'];
+    if (q >= TRIPL.good){ no.push(who[0] + ' fisket bedre enn vanlig.'); en.push(who[1] + ' fished better than usual.'); }
+    else if (q <= TRIPL.poor){ const hard = g.stock >= TRIPL.strong;
+      no.push(who[0] + ' ga lite denne gangen' + (hard ? ': feltet var hardt fisket.' : '.')); en.push(who[1] + ' gave little this time' + (hard ? ': the ground had been fished hard.' : '.')); }
+    else { no.push(who[0] + ' fisket omtrent som vanlig.'); en.push(who[1] + ' fished about as usual.'); }
+    if (g.luck >= TRIPL.min) luck = true;
+  }
+  if (luck){ no.push('Haillen hjalp godt.'); en.push('The luck helped a good deal.'); }
+  return [no.join(' '), en.join(' ')];
+}
+
 // ---- the trip's limits on an ocean vessel (H2b of docs/planer/havsteget-h2-autoline.md, 05.11.2026). The fuel, the bait, the hooks for
 // the hook change (10b-gearcare.js autoFixHour) and the room in the hold each last so many days at the trip's pace so far (until half a
 // day at sea has gone, and for the hold until a tonne is in, the vessel's own: her generators and a day of gear work, 5.5 t of product a

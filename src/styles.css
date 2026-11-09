@@ -1146,12 +1146,6 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 .ob.achc .ach-list{list-style:none;margin:8px 0 10px;padding:0;display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow:auto}
 .ob.achc .ach-list li{display:flex;flex-direction:column;gap:2px;padding:6px 10px;border-radius:10px;background:rgba(0,0,0,.05)}
 .ob.achc .ach-list li span{font-size:13px;opacity:.8}
-.ach-pen{position:relative;height:46px;margin:6px auto 4px;width:150px;max-width:100%;background:#ba0c2f;clip-path:polygon(0 0,100% 45%,100% 55%,0 100%)}
-.ach-pen::before,.ach-pen::after{content:'';position:absolute;inset:0}
-.ach-pen::before{background:#f4f4f0;clip-path:polygon(0 34%,100% 48.4%,100% 51.6%,0 66%)}
-.ach-pen::after{background:#00205b;clip-path:polygon(0 42%,100% 49.2%,100% 50.8%,0 58%)}
-.ach-pen.p2{width:185px}
-.ach-pen.p3{width:220px}
 /* Turoppdrag in the Oppdrag app (ui/05f-turer.js) */
 .tur-sec{margin:10px 2px 4px}.tur-n{margin:0 2px 8px}
 .ph-card.tur{border-left:4px solid #2e7d4f}.ph-card.tur.mid{border-left-color:#c9971c}.ph-card.tur.lang{border-left-color:#b8402f}.ph-card.tur.sesong{border-left-color:#1f4e79}

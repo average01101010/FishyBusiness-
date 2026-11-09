@@ -1,6 +1,6 @@
 """«Første uke på sjøen» and the long badges (core/09f-merker.js, ui/05e-merker.js; Jonas 07.10.2026): the milestones tick from the
 game's state, a gift comes with each, drawn the same way every time for the same game and fitted to what the player has (bait for
-lines, mended nets for nets); a chapter opens the next at five of seven and gives its reward at seven (a pennant others see, a luck,
+lines, mended nets for nets); a chapter opens the next at five of seven and gives its reward at seven (no pennant since 09.11.2026; a luck,
 the hull colour «Kystfisker»); the gifts wait during the first trip; a played game is ticked for what it has done; the long badges
 give a gift a step; the first tow and the first repair are free; the Merker app and the home chip show it. Prints OK or FEIL per check."""
 from _env import GAME, boot
@@ -40,7 +40,7 @@ async def main():
         o = await pg.evaluate("""(() => { const A = S.ach; S.tut = {v:2}; S.stats.kg = 50; achCheck(true); const owe = A.owe.map(x => x[0]), given = !!(A.g.fish && A.g.fish[0]);
           S.tut = 0; achCheck(true); return {owe, given, after:!!(A.g.fish && A.g.fish[0]), left:A.owe.length}; })()""")
         check(o['owe'] == ['fish'] and not o['given'] and o['after'] and o['left'] == 0, 'during the first trip a milestone ticks but its gift waits, and comes when the trip is over', o)
-        # 4. a chapter: five of seven open the next, seven give the reward (the pennant, in the paint code others get)
+        # 4. a chapter: five of seven open the next, seven give the reward (no pennant in the paint code since 09.11.2026)
         c = await pg.evaluate("""(() => { const A = S.ach, h0 = (S.haillInv && S.haillInv.haill) || 0;
           S.landN = 2; S.sales = [{t:S.t, total:12000, port:'finnsnes'}]; achCheck(true); const c5 = {n:achNDone(0), open1:achOpen(1), done0:!!A.ch[0]};
           S.unnamed = false; achAdd('sleep'); achCheck(true); const c7 = {n:achNDone(0), done0:!!A.ch[0], pen:A.pen, liv:livStr(S.boat), msg:S.msgs.some(m => m.from === 'Kystposten' && /Fars båt/.test(m.no))};
@@ -48,15 +48,15 @@ async def main():
           achAdd('equip'); S.sales.push({t:S.t, total:21000, port:'botnhamn'}); S.stats.kg = 1200; S.boat.holdLv = 1; achAdd('crew'); achAdd('storm'); achCheck(true);
           const c2 = {n:achNDone(1), done1:!!A.ch[1], open2:achOpen(2), haill:((S.haillInv && S.haillInv.haill) || 0) - h0, pen:A.pen};
           return {c5, c7, c2}; })()""")
-        check(c['c5']['n'] == 5 and c['c5']['open1'] and not c['c5']['done0'] and c['c7']['n'] == 7 and c['c7']['done0'] and c['c7']['pen'] == 1 and 'p:1' in c['c7']['liv'] and c['c7']['msg']
+        check(c['c5']['n'] == 5 and c['c5']['open1'] and not c['c5']['done0'] and c['c7']['n'] == 7 and c['c7']['done0'] and c['c7']['pen'] == 1 and 'p:' not in c['c7']['liv'] and c['c7']['msg']
               and c['c2']['n'] == 7 and c['c2']['done1'] and c['c2']['open2'] and c['c2']['haill'] == 1 and c['c2']['pen'] == 2,
-              'five of seven open the next chapter; all seven give the pennant (in the paint code the others get) and a word from Kystposten; the second chapter gives a luck', c)
+              'five of seven open the next chapter; all seven finish it (no pennant in the paint code) with a word from Kystposten; the second chapter gives a luck', c)
         # 5. the third chapter: the hull colour «Kystfisker», free in the paint shop
         k = await pg.evaluate("""(() => { const A = S.ach, before = palOk(HULLPAL.find(x => x[0] === 'kystfisker'));
           S.sales.push({t:S.t, total:52000, port:'finnsnes'}); S.stats.kg = 5200; achAdd('haul'); achAdd('boat'); achAdd('big'); S.fs = {p:fsNeed(5) + 10, rest:0, away:0}; achCheck(true);
           return {before, done2:!!A.ch[2], after:palOk(HULLPAL.find(x => x[0] === 'kystfisker')), pen:A.pen, liv:livStr(S.boat), chip:achChip()}; })()""")
-        check(not k['before'] and k['done2'] and k['after'] and k['pen'] == 3 and 'p:3' in k['liv'] and k['chip'] == '',
-              'the third chapter unlocks the hull colour «Kystfisker» and the longest pennant, and the home chip goes when the week is done', k)
+        check(not k['before'] and k['done2'] and k['after'] and k['pen'] == 3 and 'p:' not in k['liv'] and k['chip'] == '',
+              'the third chapter unlocks the hull colour «Kystfisker» (no pennant), and the home chip goes when the week is done', k)
         # 6. the long badges: a gift a step
         l = await pg.evaluate("""(() => { const A = S.ach; S.stats.kg = 26000; achCheck(true); return {tonn:A.l.tonn, g0:!!(A.g.tonn0 && A.g.tonn0[0]), g1:!!(A.g.tonn1 && A.g.tonn1[0]), g2:!!A.g.tonn2}; })()""")
         check(l['tonn'] == 2 and l['g0'] and l['g1'] and not l['g2'], 'the long badges: 26 tonnes landed take the 10 and 25 tonne steps, each with a gift', l)
