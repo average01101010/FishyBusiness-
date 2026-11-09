@@ -30,6 +30,7 @@ import os, sys, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy, bmesh
 from bpyutil import *
+import potplaces   # the stacks of conical pots (OB16, tools/boats/potplaces.json)
 import bpyutil
 import fittings as F
 from mathutils import noise
@@ -992,7 +993,7 @@ def anchors():
             'deck': {'y': round(ZMD - WL, 3), 'z': round(-(2.6 - XM), 3)}, 'gw': round(z_sh(3.0) - WL, 3),
             'stern': round(XM - XA, 3), 'bow': round(-(XF - XM), 3), 'side': round(BEAM / 2, 3), 'beam': BEAM, 'pl': 4.4, 'rl': 1.78, 'open': False, 'hand': False,
             'pole': G(qx, qy, AFTM_TOP), 'hauler': G(HXR, -(ycap(HXR, -1) - 0.05), z_cap(HXR, -1) + 0.30), 'filler': G(3.00, -(ybw(3.0, -1) - 0.12), ZMD + 0.06),
-            'kit': kit_places(G)}
+            'kit': dict(kit_places(G), **potplaces.kit('hs11'))}
 
 
 # ---------- the checks against the tables, the data, the rules and the game's demands ----------

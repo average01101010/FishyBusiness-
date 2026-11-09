@@ -46,7 +46,10 @@ const lineKm = (lk, hooks) => hooks * (LINE_KINDS[lk] && LINE_KINDS[lk].kmHook |
 // with 25 m between (8 s; not found), hauled through the portal at about 50 s (the most efficient vessels tend 9 000 pots in under 5 days,
 // Fiskebåt 2023: 48 s round the clock; 1 000-2 000 a day elsewhere). The price is an assumption (no Norwegian price found; Asian makers
 // list 20-50 US dollars a pot). Only a vessel with a snow crab permit may buy them (buyGate)
-const POTS = {big:{no:'Krabbeteiner', en:'Crab pots', one:['krabbeteine', 'crab pot'], price:2200, cap:40, f:1.4, big:true},
+// The coastal fleet's king crab pot (big) is conical too since OB16 (Jonas 09.11.2026, with a picture: «Denne typen teiner er mer
+// plass-vennelig på alle typer båter»; the square one of 1.4 m is out of the game): a pot for sale in his picture, «145x80x70 cm, 45 kg»
+// (the bottom ring 1.45 m across, the top 0.80 m, 0.70 m high), nested in stacks on the models' places (tools/boats/potplaces.json)
+const POTS = {big:{no:'Krabbeteiner', en:'Crab pots', one:['krabbeteine', 'crab pot'], price:2200, cap:40, f:1.4, big:true, cone:true, kg:45, dim:[1.45, 0.8, 0.7]},
   sno:{no:'Snøkrabbeteiner', en:'Snow crab pots', one:['snøkrabbeteine', 'snow crab pot'], price:1500, cap:150, f:1, sno:true, cone:true, mesh:135, kg:14.5, dim:[1.3, 0.7, 0.6], hole:true, mark:true, bait:0.5, set:8 / 60, haul:50 / 60}};
 // the pot a vessel uses (VESSELS pot: the snow crab vessel's conical one), its kind of pot, and the bait a pot takes
 const potK = () => (BOAT && BOAT.pot) || 'big', potOf = () => POTS[potK()], potBaitKg = k => (POTS[k] && POTS[k].bait) || GPRICE.potBait;
@@ -750,8 +753,17 @@ function soakHour(s, H){
 // price (a pot repair waiting is cancelled and paid back), and what belongs to the pots and no longer fits her (the pot hauler with its
 // tiers, the crab tank: fit.rig) comes off at the next yard she lies at, paid back at what it cost (as finishJob pays back a fitting that does
 // not suit the boat). Run for every vessel at boot (ui/11-boot.js) and every game hour (gearHour). Returns the kroner paid back.
+// (OB16, valg 25 A: the same for the pots over what her deck holds, gearMax.teine, potsOver: those aboard over it go ashore in port,
+// paid back; the hauler and the tank stay)
+function potsOver(type = S.boat && S.boat.type, pg = S.pgear, sets = mySets()){ const V = VESSELS[type]; if (!V || !pg || !pg.pots) return 0;
+  const k = (V.pot && POTS[V.pot]) ? V.pot : 'big', aboard = pg.pots[k] || 0, out = sets.filter(s => s.kind === 'teine').reduce((a, s) => a + (s.n || 0), 0);
+  return Math.max(0, Math.min(aboard, aboard + out - ((V.gearMax || {}).teine || 0))); }
 function potsUnfit(){
-  const b = S.boat, V = b && VESSELS[b.type], pg = S.pgear; if (!V || !rigNoRoom('teine') || b.status !== 'port') return 0;
+  const b = S.boat, V = b && VESSELS[b.type], pg = S.pgear; if (!V || b.status !== 'port') return 0;
+  if (!rigNoRoom('teine')){ if (b.gop && b.gop.kind === 'teine') return 0; const n = potsOver(); if (!n) return 0;
+    const k = (V.pot && POTS[V.pot]) ? V.pot : 'big', sum = POTS[k].price * n; pg.pots[k] -= n; book('redskap', sum, 'Teiner tatt i land', 'Pots taken ashore');
+    log('«' + S.boatName + '» har plass til ' + V.gearMax.teine + ' teiner på dekk. ' + n + ' teiner er tatt i land og kjøpt tilbake til full pris, ' + kr(sum) + '.', 'The «' + S.boatName + '» has room for ' + V.gearMax.teine + ' pots on deck. ' + n + ' pots were taken ashore and bought back at the full price, ' + kr(sum) + '.');
+    return sum; }
   if (mySets().some(s => s.kind === 'teine') || (b.gop && b.gop.kind === 'teine')) return 0;
   let back = 0;
   if (pg && pg.pots){ let sum = 0, n = 0; for (const k in pg.pots) if (pg.pots[k] > 0){ n += pg.pots[k]; sum += (POTS[k] || POTS.big).price * pg.pots[k]; pg.pots[k] = 0; }
@@ -769,8 +781,10 @@ function potsUnfit(){
   return back;
 }
 function gearHour(H){
-  // (only the vessels whose datasheet has no pots are bound, so the hour costs nothing on the others, also in a long catchUp)
-  for (const v of S.fleet || []){ const bt = v.id === S.cur ? S.boat : v.boat; if (bt && rigNoRoom('teine', bt.type)) onVessel(v, potsUnfit); }
+  // (only the vessels in port whose datasheet has no pots, or with more pots aboard than her deck holds, are bound, so the hour costs
+  // nothing on the others, also in a long catchUp; potsUnfit counts those in the sea too)
+  for (const v of S.fleet || []){ const bt = v.id === S.cur ? S.boat : v.boat, pg = vget(v, 'pgear');
+    if (bt && bt.status === 'port' && (rigNoRoom('teine', bt.type) || (pg && pg.pots && potsOver(bt.type, pg, mySets(v.id)) > 0))) onVessel(v, potsUnfit); }
   if (!S.sets || !S.sets.length) return;
   for (const s of S.sets.slice()){
     if (s.lost || s.hauling) continue;

@@ -3,17 +3,20 @@ blender-modeller av teiner og kongekrabbe? Og animasjoner for haling av teiner»
 davit's block, swing in over the rail, are opened and emptied into the tank, baited and stacked; when setting they go over the side
 (drawGearOp in view3d.js).
 
-    teine       a king crab pot as they are fished west of 26° E: a square frame of steel bar 1.4 x 1.4 m and 0.65 m high, covered in
-                netting, with a netting funnel (the entrance) in two opposite sides, a perforated bait box hanging in the middle and
-                a hatch in the top to empty it by; no escape vent (J-138-2026 § 5). From the middle of its bottom.
-    teinedor    the hatch, 0.6 x 0.6 m, from its hinge (along x, at the forward edge; it opens about x)
+    kong        the conical king crab pot (OB16, Jonas 09.11.2026, «Denne typen teiner er mer plass-vennelig på alle typer båter»; the
+                square pot of 1.4 m it replaces is out of the game, Jonas: «De firkantede teinene kan vi sikkert fjerne fra spillet»):
+                a heavy black bottom ring 1.45 m across, a top ring 0.80 m across, 0.70 m high, 45 kg (Jonas' picture of a pot for
+                sale, 09.11.2026), eight bars, green netting laced on with blue rope, the white plastic funnel with its steps from the
+                top ring down into the pot, the bait jar under it, the bottom laced shut (it is emptied through it), the registration
+                tag (§ 66), the bridle and the red egg float on it; no escape opening (west of 26° E none is allowed, J-138-2026).
+    kongtopp    the one on top of a stack (its bottom hidden, fewer facets); konglag one nested under it, konglagfull the nine under
+                the top one of a full stack of ten (0.15 m between them). From the middle of the bottom.
     davit       the pot hauler: a post at the rail with a curved arm out over the side and a block at its end, the hydraulic hauler's
                 motor and hoses on the post. From the foot of the post on deck.
     davitskive  the hauler's V-sheave, from its axle (along the boat, so it turns about z in the game)
     krabbekar   the live crab tank: a blue insulated tub with running sea water, a pump hose over its rim. From the middle of its bottom.
 
-What I chose myself (no drawings): the pot's measures are of the common square king crab pot (about 140 x 140 x 65 cm); the colours
-(black bar, dark green netting, a white bait box), the davit's height and reach (the block 2.1 m over the deck and 0.9 m outside the
+What I chose myself (no drawings): the conical pot's funnel and nesting pitch (below), the davit's height and reach (the block 2.1 m over the deck and 0.9 m outside the
 rail, so a pot clears the rail), and the tank's size (1.2 x 0.8 x 0.7 m).
 
     pip install bpy==4.5.4
@@ -27,6 +30,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.pat
 sys.path.insert(0, os.path.join(ROOT, 'tools', 'boats'))
 import bpy, bmesh
 from bpyutil import *
+import fittings as F
 
 OUT = os.path.join(HERE, 'out')
 def to_game(p): return (p[0], p[2], -p[1])
@@ -37,9 +41,10 @@ def rel(o):
 C = {}
 def colours():
     C['bar'] = mat('bar', (0.10, 0.10, 0.11), 0.35, metal=0.3)
-    C['net'] = mat('net', (0.10, 0.26, 0.16), 0.15)
-    C['funnel'] = mat('funnel', (0.16, 0.34, 0.20), 0.15)
-    C['ring'] = mat('ring', (0.80, 0.78, 0.70), 0.4)
+    C['net'] = mat('net', (0.03, 0.40, 0.29), 0.2)
+    C['funnel'] = mat('funnel', (0.90, 0.90, 0.86), 0.45); C['funnel2'] = mat('funnel2', (0.78, 0.78, 0.74), 0.4);
+    C['lace'] = mat('lace', (0.06, 0.20, 0.62), 0.3); C['egg'] = mat('egg', (0.85, 0.10, 0.12), 0.5); C['eggseam'] = mat('eggseam', (0.95, 0.85, 0.82), 0.4)
+    C['tag'] = mat('tag', (0.96, 0.80, 0.10), 0.45); C['ink'] = mat('ink', (0.05, 0.05, 0.06), 0.4)
     C['bait'] = mat('bait', (0.92, 0.92, 0.88), 0.3)
     C['baitlid'] = mat('baitlid', (0.95, 0.55, 0.10), 0.4)
     C['rope'] = mat('rope', (0.85, 0.70, 0.22), 0.2)
@@ -52,141 +57,110 @@ def colours():
     C['tankin'] = mat('tankin', (0.20, 0.44, 0.72), 0.35)
     C['water'] = mat('water', (0.05, 0.20, 0.24), 0.9)
     C['hose'] = mat('hose', (0.10, 0.12, 0.13), 0.3)
-    C['konnet'] = mat('konnet', (0.09, 0.20, 0.30), 0.15); C['konnet2'] = mat('konnet2', (0.06, 0.14, 0.21), 0.15)
-    C['konin'] = mat('konin', (0.025, 0.045, 0.06), 0.1)
+    C['konin'] = mat('konin', (0.02, 0.05, 0.04), 0.1)
 
-PX, PY, PZ = 0.775, 0.725, 1.07   # the pot's half length (the entrance sides at x = +-PX), half width and height (POTS in core/10-gear.js)
-HATCH = 0.3                  # the hatch's half width
-ENT = (0.27, 0.34, 0.66)     # the entrances: half width, bottom and top of the opening in the side
-RING = 0.35                  # the bridle's ring over the top, where the rope is made fast
-
-def net_line(name, a, b, parts, m=None):
-    parts.append(cyl(name, a, b, 0.0035, m or C['net'], seg=3, caps=False))
-
-def clip(a0, a1, holes):
-    """the pieces of the span a0..a1 outside the holes [(h0, h1)]"""
-    out = [(a0, a1)]
-    for h0, h1 in holes:
-        nxt = []
-        for s0, s1 in out:
-            if h1 <= s0 or h0 >= s1: nxt.append((s0, s1)); continue
-            if s0 < h0: nxt.append((s0, h0))
-            if h1 < s1: nxt.append((h1, s1))
-        out = nxt
-    return out
-
-def teine():
-    parts = []; r = 0.014; m = C['bar']
-    # the frame: bottom and top rectangles, the corner posts, a bar across the bottom both ways and a ring of bar round the middle
-    corners = [(-PX, -PY), (PX, -PY), (PX, PY), (-PX, PY)]
-    for z in (0.0, PZ):
-        parts.append(tube('frame', [(x, y, z) for x, y in corners] + [(corners[0][0], corners[0][1], z)], r, m, seg=6))
-    parts.append(tube('belt', [(x, y, PZ * 0.5) for x, y in corners] + [(corners[0][0], corners[0][1], PZ * 0.5)], 0.009, m, seg=5))
-    for x, y in corners: parts.append(cyl('post', (x, y, 0), (x, y, PZ), r, m, seg=6))
-    parts.append(cyl('bar', (-PX, 0, 0), (PX, 0, 0), r, m, seg=6)); parts.append(cyl('bar', (0, -PY, 0), (0, PY, 0), r, m, seg=6))
-    # the hatch's frame in the top
-    parts.append(tube('hframe', [(-HATCH, -HATCH, PZ), (HATCH, -HATCH, PZ), (HATCH, HATCH, PZ), (-HATCH, HATCH, PZ), (-HATCH, -HATCH, PZ)], 0.009, m, seg=6))
-    kx = [k * PX / 5 for k in range(-4, 5)]; ky = [k * PY / 5 for k in range(-4, 5)]
-    # the netting: the bottom whole, the top round the hatch, the sides with the entrances in the two at x = +-PX
-    for k in kx:
-        net_line('nb', (k, -PY, 0.002), (k, PY, 0.002), parts)
-        for y0, y1 in clip(-PY, PY, [(-HATCH, HATCH)] if abs(k) < HATCH else []): net_line('nt', (k, y0, PZ), (k, y1, PZ), parts)
-    for k in ky:
-        net_line('nb', (-PX, k, 0.002), (PX, k, 0.002), parts)
-        for x0, x1 in clip(-PX, PX, [(-HATCH, HATCH)] if abs(k) < HATCH else []): net_line('nt', (x0, k, PZ), (x1, k, PZ), parts)
-    zs = [PZ * i / 7 for i in range(1, 7)]
-    for sd in (1, -1):
-        # the sides at y = +-PY: whole
-        for k in kx: net_line('ns', (k, sd * PY, 0), (k, sd * PY, PZ), parts)
-        for z in zs: net_line('ns', (-PX, sd * PY, z), (PX, sd * PY, z), parts)
-        # the sides at x = +-PX: with the entrance's opening
-        for k in ky:
-            for z0, z1 in clip(0, PZ, [(ENT[1], ENT[2])] if abs(k) < ENT[0] else []): net_line('ns', (sd * PX, k, z0), (sd * PX, k, z1), parts)
-        for z in zs:
-            for y0, y1 in clip(-PY, PY, [(-ENT[0], ENT[0])] if ENT[1] < z < ENT[2] else []): net_line('ns', (sd * PX, y0, z), (sd * PX, y1, z), parts)
-        # the entrance: a bar round the opening, a netting funnel in to a hard ring 0.4 m inside, a little higher (the crab climbs in)
-        o = [(sd * PX, -ENT[0], ENT[1]), (sd * PX, ENT[0], ENT[1]), (sd * PX, ENT[0], ENT[2]), (sd * PX, -ENT[0], ENT[2])]
-        xi = sd * (PX - 0.4); i = [(xi, -0.16, 0.46), (xi, 0.16, 0.46), (xi, 0.16, 0.58), (xi, -0.16, 0.58)]
-        parts.append(tube('eframe', o + [o[0]], 0.008, m, seg=6)); parts.append(tube('ering', i + [i[0]], 0.007, C['ring'], seg=6))
-        for q in range(4):
-            a, b = V(o[q]), V(o[(q + 1) % 4]); c, d = V(i[q]), V(i[(q + 1) % 4])
-            for t in (0.0, 0.33, 0.66): net_line('nf', a + (b - a) * t, c + (d - c) * t, parts, C['funnel'])
-    # the bait box: a perforated tube hanging from the top's cross ropes, with an orange lid
-    for sx, sy in ((1, 1), (1, -1)): net_line('hang', (-sx * PX * 0.9, -sy * PY * 0.9, PZ - 0.01), (sx * PX * 0.9, sy * PY * 0.9, PZ - 0.01), parts, C['rope'])
-    parts.append(cyl('bait', (0, 0, 0.46), (0, 0, 0.70), 0.06, C['bait'], seg=10))
-    for z in (0.51, 0.58, 0.65): parts.append(torus('holes', (0, 0, z), (0, 0, 1), 0.061, 0.004, C['dark'], seg=12, rseg=3))
-    parts.append(cyl('blid', (0, 0, 0.70), (0, 0, 0.73), 0.065, C['baitlid'], seg=10))
-    parts.append(cyl('bstring', (0, 0, 0.73), (0, 0, PZ - 0.01), 0.004, C['rope'], seg=4, caps=False))
-    for p in parts: apply_all(p)
-    return join(parts, 'teine')
-
-# ---------- the conical snow crab pot (snokrabbe), in stacks on the pot deck of the snow crab vessel ----------
-# What I chose myself (no drawings, the common Barents Sea pot): a bottom ring 1.3 m across of heavy bar, a top ring 0.7 m across,
-# 0.62 m high, eight bars between them, netting over the cone and the bottom, a netting funnel from the top ring down to a white
-# entrance ring 0.44 m across, the bait jar hanging under it. The pots nest: each stands 0.16 m over the one under it, twelve to a stack.
-KR0, KR1, KH = 0.65, 0.35, 0.62
-KRE, KZE = 0.22, 0.40
-KP, KS = 0.16, 12
+# ---------- the conical king crab pot (OB16, Jonas 09.11.2026) ----------
+# Jonas' picture of a king crab pot for sale, 09.11.2026: «Kongekrabbeteine 145x80x70 cm, 45 kg» (a bottom ring 1.45 m across, a top
+# ring 0.80 m across, 0.70 m high, 45 kg), green netting laced to the rings with blue rope, the heavy bottom ring black, and the
+# entrance a white plastic funnel with steps in it from the top ring down into the pot; and a red egg float (120 x 150 mm, «brukes som
+# flottør i bl.a. fisketeiner og kongekrabbeteiner») on the bridle. They nest in stacks (Jonas: «Denne typen teiner er mer
+# plass-vennelig på alle typer båter»). No escape opening: west of 26° E the pots shall have none (J-138-2026, core/03e-rules.js kc5);
+# east of it J-136-2026 asks for four of 150 mm, which this model does not show. The registration mark on its tag (§ 66).
+# What I chose myself: the funnel's lower end 0.40 m across 0.34 m over the bottom, the nesting pitch 0.15 m (the cones and the
+# funnels nest; the bait jar hangs inside the funnel of the one under it), ten to a full stack, the colours from the picture.
+KR0, KR1, KH = 0.725, 0.40, 0.70
+KRE, KZE = 0.20, 0.34
+KP, KS = 0.15, 10
+EGG = (0.06, 0.075)          # the egg float's radius and half length
 def kr(z): return KR0 + (KR1 - KR0) * z / KH
-def ring_at(a, z, r=None):
-    r = kr(z) if r is None else r; return (r * math.cos(a), r * math.sin(a), z)
+def ring_at(a, z, r=None, d=0.0):
+    r = (kr(z) if r is None else r) + d; return (r * math.cos(a), r * math.sin(a), z)
+def cone_n(a): return (math.cos(a) * KH, math.sin(a) * KH, KR0 - KR1)
+def strip(A, P, Q, w, m, nrm):
+    """a flat strip w wide from P to Q facing nrm (a twine of the netting drawn flat: two triangles)"""
+    P, Q, n = V(P), V(Q), V(nrm).normalized(); s = (Q - P).cross(n).normalized() * (w / 2)
+    A.poly([P - s, Q - s, Q + s, P + s], m, n)
+def fz(z): return KRE + (KR1 - KRE) * (z - KZE) / (KH - KZE)     # the funnel's radius at z
 
-def kon_top(A, bottom=True, nm=24):
-    """a whole pot: the frame, the netting (nm meridians), the entrance and the bait jar (bottom: the bottom's netting, hidden in a stack)"""
-    m = C['bar']; n = C['konnet']; ln = lambda z: n
-    atorus(A, (0, 0, 0.018), (0, 0, 1), KR0, 0.018, lambda a: m, seg=28, rseg=4)
-    atorus(A, (0, 0, KH), (0, 0, 1), KR1, 0.012, lambda a: m, seg=20, rseg=3)
+def kong(A, bottom=True, lite=False):
+    """a whole pot (lite: the one on top of a stack, drawn many times: fewer facets, no bottom)"""
+    m = C['bar']; nd, rows = (18, 4) if lite else (30, 7)
+    atorus(A, (0, 0, 0.03), (0, 0, 1), KR0, 0.03, lambda a: m, seg=20 if lite else 36, rseg=4 if lite else 6)
+    atorus(A, (0, 0, KH), (0, 0, 1), KR1, 0.013, lambda a: m, seg=16 if lite else 28, rseg=3 if lite else 4)
     for k in range(8):
-        a = 2 * math.pi * k / 8 + 0.2; acyl(A, ring_at(a, 0.018, KR0), ring_at(a, KH, KR1), 0.009, lambda z: m, seg=4, cap=False)
-    for k in range(nm):
-        a = 2 * math.pi * (k + 0.5) / nm; acyl(A, ring_at(a, 0.03), ring_at(a, KH - 0.01), 0.0035, ln, seg=3, cap=False)
-    for i in (1, 2, 3):
-        z = KH * i / 4; atorus(A, (0, 0, z), (0, 0, 1), kr(z), 0.0035, lambda a: n, seg=20, rseg=3)
-    # the entrance: the funnel of netting down from the top ring to the white ring
-    atorus(A, (0, 0, KZE), (0, 0, 1), KRE, 0.011, lambda a: C['ring'], seg=20, rseg=3)
-    for k in range(12):
-        a = 2 * math.pi * k / 12; acyl(A, ring_at(a, KH, KR1), ring_at(a, KZE, KRE), 0.0035, ln, seg=3, cap=False)
-    atorus(A, (0, 0, (KH + KZE) / 2), (0, 0, 1), (KR1 + KRE) / 2, 0.0035, lambda a: n, seg=16, rseg=3)
-    # the bait jar on three strings from the entrance ring
-    acyl(A, (0, 0, 0.14), (0, 0, 0.29), 0.055, lambda z: C['bait'], seg=10)
-    acyl(A, (0, 0, 0.29), (0, 0, 0.31), 0.06, lambda z: C['baitlid'], seg=10)
+        a = 2 * math.pi * k / 8 + 0.2; acyl(A, ring_at(a, 0.04, KR0), ring_at(a, KH, KR1), 0.011, lambda z: m, seg=5, cap=False)
+    # the diamond netting over the cone, green
+    turn = 2 * math.pi / nd; z0, z1 = 0.06, KH - 0.01
+    for fam in (1, -1):
+        for k in range(nd):
+            pts = [(2 * math.pi * k / nd + fam * turn * (i / rows) * rows * 0.5, z0 + (z1 - z0) * i / rows) for i in range(rows + 1)]
+            for (a0, za), (a1, zb) in zip(pts, pts[1:]): strip(A, ring_at(a0, za, d=0.004), ring_at(a1, zb, d=0.004), 0.007, C['net'], cone_n((a0 + a1) / 2))
+    # the entrance: the white plastic funnel from the top ring down into the pot, in steps (the ribs), its lower lip a hard ring
+    st = 3 if lite else 6; q = 18 if lite else 32
+    for j in range(st):
+        za, zb = KH - (KH - KZE) * j / st, KH - (KH - KZE) * (j + 1) / st
+        for k in range(q):
+            a0, a1 = 2 * math.pi * k / q, 2 * math.pi * (k + 1) / q; c0, s0, c1, s1 = math.cos(a0), math.sin(a0), math.cos(a1), math.sin(a1)
+            ra, rb = fz(za), fz(zb) + 0.012
+            A.poly([(ra * c1, ra * s1, za), (ra * c0, ra * s0, za), (rb * c0, rb * s0, zb), (rb * c1, rb * s1, zb)], C['funnel'], (-(c0 + c1) / 2, -(s0 + s1) / 2, 0.8))
+            A.poly([(rb * c1, rb * s1, zb), (rb * c0, rb * s0, zb), (ra * c0, ra * s0, za), (ra * c1, ra * s1, za)], C['funnel2'], ((c0 + c1) / 2, (s0 + s1) / 2, -0.6))   # (its outside, seen through the netting)
+            if j: A.poly([(ra * c1, ra * s1, za), (ra * c0, ra * s0, za), ((ra + 0.012) * c0, (ra + 0.012) * s0, za), ((ra + 0.012) * c1, (ra + 0.012) * s1, za)], C['funnel2'], (0, 0, 1))
+    atorus(A, (0, 0, KZE), (0, 0, 1), KRE, 0.012, lambda a: C['funnel'], seg=16 if lite else 24, rseg=3)
+    # the flange's blue lacing round the top ring
+    if not lite:
+        lace = [((KR1 + 0.022 * math.cos(t * 5.0)) * math.cos(t / 9), (KR1 + 0.022 * math.cos(t * 5.0)) * math.sin(t / 9), KH + 0.022 * math.sin(t * 5.0)) for t in [i * 2 * math.pi * 9 / 360 for i in range(361)]]
+        F.pipe(A, lace, 0.004, C['lace'], 4)
+        # and down the bars (the netting laced to them)
+        for k in range(8):
+            a = 2 * math.pi * k / 8 + 0.2; P0, P1 = V(ring_at(a, 0.06, d=0.012)), V(ring_at(a, KH - 0.04, d=0.012)); s = V((-math.sin(a), math.cos(a), 0)) * 0.018
+            F.pipe(A, [P0 + (P1 - P0) * (i / 14) + s * (1 if i % 2 else -1) for i in range(15)], 0.003, C['lace'], 3)
+    # the bait jar on three strings under the funnel
+    acyl(A, (0, 0, 0.12), (0, 0, 0.28), 0.055, lambda z: C['bait'], seg=8 if lite else 10)
+    acyl(A, (0, 0, 0.28), (0, 0, 0.30), 0.06, lambda z: C['baitlid'], seg=8 if lite else 10)
     for k in range(3):
-        a = 2 * math.pi * k / 3; acyl(A, (0.04 * math.cos(a), 0.04 * math.sin(a), 0.31), ring_at(a, KZE, KRE), 0.003, lambda z: C['rope'], seg=3, cap=False)
+        a = 2 * math.pi * k / 3; acyl(A, (0.04 * math.cos(a), 0.04 * math.sin(a), 0.30), ring_at(a, KZE, KRE), 0.003, lambda z: C['rope'], seg=3, cap=False)
+    # the registration mark's tag zip-tied to the netting (§ 66)
+    ta, tz = math.pi / 2, 0.48; c = V(ring_at(ta, tz, d=0.014)); n = V(cone_n(ta)).normalized(); s = V((-math.sin(ta), math.cos(ta), 0)); u = n.cross(s).normalized()
+    obox(A, c, s * 0.07, u * 0.035, n * 0.002, C['tag'])
+    if not lite:
+        for k in range(5): obox(A, c + s * (-0.05 + 0.025 * k) + n * 0.0025, s * 0.008, u * 0.014, n * 0.0006, C['ink'])
+    # the bridle over the top to the ring the line is made fast in, 0.32 m over the top ring, and the red egg float threaded on it above
+    for k in range(3):
+        a = 2 * math.pi * k / 3; acyl(A, ring_at(a, KH, KR1), (0, 0, KH + 0.30), 0.006, lambda z: C['rope'], seg=4, cap=False)
+    atorus(A, (0, 0, KH + 0.32), (1, 0, 0), 0.03, 0.006, lambda a: C['galv'], seg=12, rseg=3)
+    acyl(A, (0, 0, KH + 0.35), (0, 0, KH + 0.38), 0.008, lambda z: C['rope'], seg=4)
+    egg(A, (0, 0, KH + 0.38 + EGG[1]), lite)
     if bottom:
-        for k in range(12):
-            a = 2 * math.pi * k / 12; acyl(A, (0, 0, 0.006), (KR0 * math.cos(a), KR0 * math.sin(a), 0.006), 0.0035, ln, seg=3, cap=False)
-        for r in (0.22, 0.44): atorus(A, (0, 0, 0.006), (0, 0, 1), r, 0.0035, lambda a: n, seg=20, rseg=3)
-    # the dark inside seen through the netting (the pots under it in a stack, the deck under a lone one)
-    q = 16
+        # the bottom's netting with its laced opening (emptied through it, the pot tipped over)
+        for k in range(16):
+            a = 2 * math.pi * k / 16; strip(A, (0.18 * math.cos(a), 0.18 * math.sin(a), 0.008), (KR0 * math.cos(a), KR0 * math.sin(a), 0.008), 0.007, C['net'], (0, 0, -1))
+        for r in (0.36, 0.55): atorus(A, (0, 0, 0.008), (0, 0, 1), r, 0.003, lambda a: C['net'], seg=24, rseg=3)
+        atorus(A, (0, 0, 0.008), (0, 0, 1), 0.18, 0.008, lambda a: C['rope'], seg=20, rseg=3)
+
+def egg(A, c, lite=False):
+    """the red egg float (120 mm across, 150 mm long) standing on its axis at c, the seam round its middle"""
+    q, rr = (8, 5) if lite else (14, 8); R, H = EGG; c = V(c)
+    ring = lambda i: [(c.x + R * math.sin(math.pi * i / rr) * math.cos(2 * math.pi * k / q), c.y + R * math.sin(math.pi * i / rr) * math.sin(2 * math.pi * k / q),
+                       c.z - H * math.cos(math.pi * i / rr) * (1.08 if i < rr / 2 else 0.92)) for k in range(q)]
+    for i in range(rr):
+        L0, L1 = ring(i), ring(i + 1)
+        for k in range(q):
+            k1 = (k + 1) % q; P = [L0[k], L0[k1], L1[k1], L1[k]]; mid = V(P[0]) + V(P[2]); nrm = (mid * 0.5 - c)
+            A.poly(P, C['egg'], nrm)
+    if not lite: atorus(A, (c.x, c.y, c.z + 0.004), (0, 0, 1), R + 0.001, 0.0025, lambda a: C['eggseam'], seg=q, rseg=3)
+
+def kong_lag(A, z0):
+    """a pot nested under another, at z0: its bottom ring and the band of its cone below the next one's ring (dark, the netting's
+    diamonds as flat strips over it)"""
+    m = C['bar']; q = 16; P = lambda a, z, d=0.0: (kr(z) * math.cos(a) * (1 + d), kr(z) * math.sin(a) * (1 + d), z0 + z)
+    atorus(A, (0, 0, z0 + 0.03), (0, 0, 1), KR0, 0.03, lambda a: m, seg=18, rseg=4)
     for k in range(q):
-        a0, a1 = 2 * math.pi * k / q, 2 * math.pi * (k + 1) / q; d = -0.012
-        A.poly([ring_at(a0, 0.04, kr(0.04) + d), ring_at(a1, 0.04, kr(0.04) + d), ring_at(a1, KH - 0.02, kr(KH - 0.02) + d), ring_at(a0, KH - 0.02, kr(KH - 0.02) + d)], C['konin'], (math.cos((a0 + a1) / 2), math.sin((a0 + a1) / 2), 0.4))
+        a0, a1 = 2 * math.pi * k / q, 2 * math.pi * (k + 1) / q; nm = (math.cos((a0 + a1) / 2), math.sin((a0 + a1) / 2), 0.46)
+        A.poly([P(a0, 0.05), P(a1, 0.05), P(a1, KP + 0.05), P(a0, KP + 0.05)], C['konin'], nm)
+        A.poly([P(a0, 0.05, 0.006), P(a1, KP + 0.05, 0.006), P(a1 + 0.014, KP + 0.05, 0.006), P(a0 + 0.014, 0.05, 0.006)], C['net'], nm)
+        A.poly([P(a1, 0.05, 0.006), P(a0, KP + 0.05, 0.006), P(a0 + 0.014, KP + 0.05, 0.006), P(a1 + 0.014, 0.05, 0.006)], C['net'], nm)
 
-def kon_lag(A, z0):
-    """a pot nested under another, at z0: what shows of it is its bottom ring and the band of its cone below the next one's ring"""
-    m = C['bar']; q = 16; P = lambda a, z: (kr(z) * math.cos(a), kr(z) * math.sin(a), z0 + z)
-    atorus(A, (0, 0, z0 + 0.018), (0, 0, 1), KR0, 0.018, lambda a: m, seg=16, rseg=3)
-    # the band: dark (the pots inside seen through the netting) with the netting's meridians and a round over it as flat strips
-    for k in range(q):
-        a0, a1 = 2 * math.pi * k / q, 2 * math.pi * (k + 1) / q; nm = (math.cos((a0 + a1) / 2), math.sin((a0 + a1) / 2), 0.48)
-        A.poly([P(a0, 0.03), P(a1, 0.03), P(a1, KP + 0.03), P(a0, KP + 0.03)], C['konin'], nm)
-        w = 0.006 / KR0; Q = lambda a, z: tuple(c * 1.004 if i < 2 else c for i, c in enumerate(P(a, z)))
-        A.poly([Q(a0 - w, 0.03), Q(a0 + w, 0.03), Q(a0 + w, KP + 0.03), Q(a0 - w, KP + 0.03)], C['konnet'], nm)
-        A.poly([Q(a0, KP * 0.55 + 0.02), Q(a1, KP * 0.55 + 0.02), Q(a1, KP * 0.55 + 0.035), Q(a0, KP * 0.55 + 0.035)], C['konnet'], nm)
-
-
-def teinedor():
-    # from its hinge at the hatch's forward edge (y = HATCH, z = PZ): the frame and its netting, a rubber strap to hold it shut
-    parts = []; w = HATCH; m = C['bar']
-    parts.append(tube('dframe', [(-w, 0, 0), (w, 0, 0), (w, -2 * w, 0), (-w, -2 * w, 0), (-w, 0, 0)], 0.01, m, seg=6))
-    for k in range(1, 4):
-        net_line('dn', (-w + k * w / 2, 0, 0.004), (-w + k * w / 2, -2 * w, 0.004), parts); net_line('dn', (-w, -k * w / 2, 0.004), (w, -k * w / 2, 0.004), parts)
-    for x in (-w * 0.7, w * 0.7): parts.append(cyl('hinge', (x - 0.03, 0, 0), (x + 0.03, 0, 0), 0.016, C['galv'], seg=8))
-    parts.append(cyl('strap', (0, -2 * w, 0.004), (0, -2 * w - 0.08, -0.02), 0.012, C['rubber'], seg=5))
-    for p in parts: apply_all(p)
-    return join(parts, 'teinedor')
-
-# the davit: the block 2.8 m up and 0.95 m out (the 1.07 m pot hangs clear of the rail under it); the hauler's sheave on the post at
+# the davit: the block 2.8 m up and 0.95 m out (the pot, 1.08 m to the egg float, hangs clear of the rail under it); the hauler's sheave on the post at
 # 1.15 m, facing along the boat
 BLOCK = (0.95, 0.0, 2.8); BR = 0.11; SHEAVE = (0.16, 0.0, 1.15); SR = 0.2
 def davit():
@@ -240,32 +214,33 @@ def krabbekar():
 def main():
     os.makedirs(OUT, exist_ok=True)
     reset(); colours()
-    T = teine(); D = teinedor(); Dv = davit(); Sh = davitskive(); K = krabbekar()
-    A = Acc('kon'); kon_top(A); Ko = A.done(40)
-    A = Acc('kontopp'); kon_top(A, bottom=False, nm=16); Kt0 = A.done(40)
-    A = Acc('konlag'); kon_lag(A, 0.0); Kl = A.done(40)
-    A = Acc('konlag11'); [kon_lag(A, k * KP) for k in range(KS - 1)]; Kl11 = A.done(40)
-    parts = [(nm, mesh_arrays(o, to_game, to_game_n, ao=False), 1.0) for nm, o in (('teine', T), ('teinedor', D), ('davit', Dv), ('davitskive', Sh), ('krabbekar', K),
-                                                                               ('kon', Ko), ('kontopp', Kt0), ('konlag', Kl), ('konlag11', Kl11))]
+    Dv = davit(); Sh = davitskive(); K = krabbekar()
+    A = Acc('kong'); kong(A); Ko = A.done(40)
+    A = Acc('kongtopp'); kong(A, bottom=False, lite=True); Kt = A.done(40)
+    A = Acc('konglag'); kong_lag(A, 0.0); Kl = A.done(40)
+    A = Acc('konglagfull'); [kong_lag(A, k * KP) for k in range(KS - 1)]; Klf = A.done(40)
+    parts = [(nm, mesh_arrays(o, to_game, to_game_n, ao=False), 1.0) for nm, o in (('davit', Dv), ('davitskive', Sh), ('krabbekar', K),
+                                                                               ('kong', Ko), ('kongtopp', Kt), ('konglag', Kl), ('konglagfull', Klf))]
     g = lambda p: [round(v, 4) for v in to_game(p)]
-    ex = {'frame': 'kystfiske king crab pot, pot hauler and crab tank: x right (out over the side for the davit), y up, z aft; the pot and the tank from the middle of their bottoms, the hatch from its hinge, the davit from the foot of its post, the sheave from its axle',
-          'pot':{'half':PX, 'halfw':PY, 'h':PZ, 'ring':RING, 'hinge':g((0, HATCH, PZ)), 'bridle':[g((x, y, PZ)) for x, y in ((-PX, -PY), (PX, -PY), (PX, PY), (-PX, PY))], 'bait':g((0, 0, 0.58))},
-          # the conical snow crab pot: its bottom ring's radius, its height, how much higher each nested one stands, how many to a stack
-          'kon':{'r':KR0, 'h':KH, 'pitch':KP, 'stack':KS, 'ring':0.3, 'bridle':[g(ring_at(2 * math.pi * k / 3, KH, KR1)) for k in range(3)]},
+    ex = {'frame': 'kystfiske king crab pot, pot hauler and crab tank: x right (out over the side for the davit), y up, z aft; the pot and the tank from the middle of their bottoms, the davit from the foot of its post, the sheave from its axle',
+          # the conical king crab pot: its bottom ring's and top ring's radius, its height, how much higher each nested one stands, how many
+          # to a full stack (konglagfull: the ones under the top one), the ring over the top, the bridle's feet, the egg float, its kg
+          'kong':{'r':KR0, 'top':KR1, 'h':KH, 'pitch':KP, 'stack':KS, 'ring':0.32, 'bridle':[g(ring_at(2 * math.pi * k / 3, KH, KR1)) for k in range(3)],
+                  'entrance':g((0, 0, KZE)), 'egg':g((0, 0, KH + 0.38 + EGG[1])), 'kg':45, 'dim':[1.45, 0.80, 0.70]},
           'davit':{'block':g(BLOCK), 'blockR':BR, 'sheave':g(SHEAVE), 'sheaveR':SR},
           'tank':{'half':[TX - 0.04, TY - 0.04], 'water':TW}}
     glb = os.path.join(OUT, 'gear-pot.glb'); n = write_glb(glb, parts, ex)
     open(os.path.join(ROOT, 'src', 'data', 'gear-pot.b64'), 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())
     print('gear pot GLB %.1f KB, %s' % (n / 1024, ', '.join('%s %d' % (p[0], len(p[1]['idx']) // 3) for p in parts)))
     if 'fast' in sys.argv: return
-    # renders: the pot with its hatch open, the davit and the tank beside it
-    D.location = (0, HATCH, PZ); D.rotation_euler = (math.radians(70), 0, 0)
-    Dv.location = (2.2, 0.3, 0); Sh.location = (2.2 + SHEAVE[0], 0.3 + SHEAVE[1], SHEAVE[2]); K.location = (-2.0, 0.2, 0)
-    Ko.location = (0.0, 2.4, 0); Kl.location = (3.2, 2.4, 0); Kt0.location = (3.2, 3.6, 0); Kl11.location = (1.5, 2.4, 0); Kt = Ko.copy(); Kt.data = Ko.data.copy(); bpy.context.collection.objects.link(Kt); Kt.location = (1.5, 2.4, (KS - 1) * KP)
+    # renders: a pot on its own, a full stack beside it (the nested ones and the top one), the davit and the tank
+    Ko.location = (0, 0, 0); Klf.location = (1.8, 0.4, 0); Kt2 = Kt.copy(); Kt2.data = Kt.data.copy(); bpy.context.collection.objects.link(Kt2); Kt2.location = (1.8, 0.4, (KS - 1) * KP)
+    Kt.hide_render = True; Kl.hide_render = True
+    Dv.location = (-2.0, 1.2, 0); Sh.location = (-2.0 + SHEAVE[0], 1.2 + SHEAVE[1], SHEAVE[2]); K.location = (-1.6, -1.2, 0)
     setup_render(1600, 1000, samples=24)
-    camera((4.6, -5.2, 3.2), (0.2, 0.2, 0.7), lens=35); render(os.path.join(OUT, 'pot_3q.png'))
-    camera((0.0, -0.4, 4.0), (0.0, 0.0, 0.0), ortho=2.0); render(os.path.join(OUT, 'pot_top.png'))
-    camera((4.2, -1.2, 2.4), (0.8, 2.4, 0.8), lens=35); render(os.path.join(OUT, 'pot_kon.png'))
+    camera((3.6, -5.4, 2.8), (0.3, 0.2, 0.8), lens=35); render(os.path.join(OUT, 'pot_3q.png'))
+    camera((0.0, -0.3, 3.0), (0.0, 0.0, 0.0), ortho=1.8); render(os.path.join(OUT, 'pot_top.png'))
+    camera((1.2, -2.4, 1.1), (0.0, 0.0, 0.4), lens=40); render(os.path.join(OUT, 'pot_near.png'))
 
 if __name__ == '__main__':
     main()

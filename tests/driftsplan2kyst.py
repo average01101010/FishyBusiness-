@@ -15,7 +15,7 @@ driftsplan2test (D2: a fixed date, a seeded Math.random, the game's loop held).
       from 29 February the plan stops on 1 March (closed longer than it waits), and push says so the day before and when it has; from
       27 May it waits until 1 June with the date, and push says «Feltet er åpent igjen» on 1 June; then the nets set and hauled, the
       cod quota of the open group nearly used, so the cod over it is confiscated at the landing, and the weather as it comes; 8 days closed.
-    - T, pots at Bodø, 15 + 15 at 48 h, four days: the push for the gear in the sea while closed, the strings hauled after the soak.
+    - T, pots at Bodø, 10 + 10 at 48 h on the new speed sjark (kyst15 has no room for pots since OB16, valg 25 A), four days: the push for the gear in the sea while closed, the strings hauled after the soak.
     - M, a trip of several days from Hammerfest on a sjark with bunks: home only on the last night, the nights at a quay out there,
       the landing every third day on the trip's last day, before home (Jonas 08.11.2026: A); M2 the same with landing every second
       day: day 2 and day 3, the trip's last (valg 14: A).
@@ -135,12 +135,12 @@ REAL_G = r"""async () => { const R = {};
   R.wx = [0, 1, 2, 3, 4, 5, 6, 7].map(d => { const h = T2 / 60 + 9 + d * 24; return [Math.round(windAt(h, g2) * 10) / 10, Math.round((hsAt(g2, h) || 0) * 10) / 10]; });
   return R; }"""
 
-# ---- T: pots at Bodø, 15 + 15 at 48 h, four days closed: the push for the gear while closed, the strings hauled after their soak
+# ---- T: pots at Bodø, 10 + 10 at 48 h on the new speed sjark, four days closed: the push for the gear while closed, the strings hauled after their soak
 REAL_T = r"""async () => { const R = {};
-  const {M} = await KY.town(67.285, 14.38, 81, 'kyst15', 3); R.M = [M.id, M.name]; S.me = 'nobody'; setSkipper(S.crew[0].id); setMate(S.crew[1].id);
-  D2.gear('teine', 30);
+  const {M} = await KY.town(67.285, 14.38, 81, 'sjarkny', 3); R.M = [M.id, M.name]; S.me = 'nobody'; setSkipper(S.crew[0].id); setMate(S.crew[1].id);
+  D2.gear('teine', 20);
   const F = D2.spots(2, 4, 12, M.p);
-  const o = S.ops = plan2New({home:M.id, rig:'teiner', jig:false, places:[D2.felt('t1', F[0], 15, 48), D2.felt('t2', F[1], 15, 48)], dep:5, land:{mode:'near', port:null, when:'full'}});
+  const o = S.ops = plan2New({home:M.id, rig:'teiner', jig:false, places:[D2.felt('t1', F[0], 10, 48), D2.felt('t2', F[1], 10, 48)], dep:5, land:{mode:'near', port:null, when:'full'}});
   const err = await D2.make(o); if (err) return {err}; o.on = true;
   // the first day open, then the app closed: what push would tell while it is away, then three days as catchUp plays them
   const L1 = await D2.run(1440, 'open', 'T1'); R.sets = mySets().map(s => [s.kind, s.n, gDate(s.tSet / 60).toISOString().slice(5, 16)]);
@@ -227,7 +227,7 @@ async def real(pg, names):
             print(ok(r['sum']['conf'] > 0 or r['fin']['conf'] > 0), 'G the cod over the open group\'s quota is confiscated at the landing and counted in the plan\'s statistics', [r['sum'].get('conf'), r['fin']])
             print(ok(r['fin']['on'] and not r['fin']['stop'] and sum(r['wall']) < 30000), 'G eight days closed (playMinutes) in under 30 s, and the plan still on', [r['wall'], r['fin']])
     if not names or 'T' in names:
-        print('== T: teiner ved Bodø, 15 + 15 ved 48 t, mannskapet alene, første døgn åpent og tre døgn lukket')
+        print('== T: teiner ved Bodø, 10 + 10 ved 48 t på den nye hurtigsjarken, mannskapet alene, første døgn åpent og tre døgn lukket')
         r = await pg.evaluate(REAL_T); print('  ', json.dumps(r, ensure_ascii=False)[:2000])
         if r.get('err'): print('FEIL T:', r['err'])
         else:

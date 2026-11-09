@@ -6,7 +6,7 @@
 // Roll period after IMO's weather criterion (IS Code 2008, 2.3): T = 2 C B / sqrt(GM), C = 0.373 + 0.023 B/d - 0.043 L/100 (B/d at most 3.5,
 // as the formula was fitted). Heave and pitch: T = 2 pi sqrt(Cb T (1 + 0.8) / (g Cwp)) (the water that moves with the hull, 0.8 of it).
 // IMO's minimum for fishing vessels with one deck: GM 0.35 m (IS Code part B, 2.1). Icing is not modelled (Jonas' choice 02.10.2026).
-const STAB_W = {potBig:25, potSno:16, net:9, tub:25, kit:6};   // kg aboard per pot (with its rope), net, line tub, jig kit (the conical snow crab pot 14.5 kg with its share of the string, H3a)
+const STAB_W = {potBig:48, potSno:16, net:9, tub:25, kit:6};   // kg aboard per pot (with its rope), net, line tub, jig kit (the conical snow crab pot 14.5 kg with its share of the string, H3a; the king crab pot 45 kg with its rope and egg float, OB16)
 const STAB_C = new Map();
 function hullOf(type){
   let h = STAB_C.get(type); if (h) return h;

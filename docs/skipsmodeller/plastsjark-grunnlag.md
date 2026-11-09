@@ -252,7 +252,7 @@ Arbeidsdekket akter er 4,34 m langt (fra speilets innside til styrhusets akterve
 | Mannskapsplassene | ved haleren, ved bordet, akter for luka, ved døra | |
 | Dieselpåfyllingen | babord x 2,05 | Lufteren på den rette sida |
 
-**Teinene** (F7): ei teine på 1,4 m (og den koniske på 1,30 m, steg 94) får plass flatt på dørken akter for luka (x 0,6–2,3), to i bredden. Men tegningen av teinene eies av OB16 (`view3d/10-gear.js` `potDeck`): den setter teina som tømmes, 0,6 m akter for haleren på styrbord halvdel (x 2,45–3,85), der blødekaret og lukas styrbord hjørne står, og stablene akter for den. OB16 legger stablenes plasser med `kit.pots.at`; plastsjarkens forslag er stablene akter for luka (x 0,7–2,2) og teina som tømmes, på dørken tvers av haleren innenfor karet. `kit.pots` er ikke lagt i modellen nå, fordi spillet da tegner snøkrabbeteinene på den (`drawPotStacks`).
+**Teinene** (F7, Jonas 09.11.2026: «Ingen teiner»): etter OB16 er kongekrabbeteina konisk med bunnring på 1,45 m, og stablene står på modellens plasser (`kit.pots.at`, `tools/boats/potplaces.json`). Plastsjarken ble målt for én stabel på seks akter på babord og plassen der en halt teine veltes og tømmes akter på styrbord (spillet legger den 1,3 m akter for haleren, der teinemannen står): ringene fikk 1–3 cm klaring til skansen, luka og hverandre selv med luka smalere og flyttet forover, og teina som tømmes, veltes innover (0,8 m høy) rett inn i stabelen. Jonas fikk valget (én stabel på seks, eller ingen teiner som havsjarken og kyst15 etter valg 25 A) og svarte **«Ingen teiner»**. `VESSELS.plastsjark.rigs` har ikke teiner, båtbladet sier at det ikke er plass til kongekrabbeteiner, og en lagring med teiner, teinehaler eller krabbekar på plastsjarken får dem tatt i land og betalt tilbake (`potsUnfit`, som snekka). Luka står der den sto.
 
 ### 10.3 Det som er endret
 
@@ -267,7 +267,7 @@ Arbeidsdekket akter er 4,34 m langt (fra speilets innside til styrhusets akterve
 
 ### 10.4 Etter-bildene og det som står igjen
 
-Etter-opptaket (`tests/ombord.py plastsjark`, begge formater, alle operasjonene: huset og alle plassene er flyttet, så ingen ble droppet) og arkene i `docs/okter/2026-11-09-ob7/`: garnet og lina settes fra binga og stampene akter over hekken uten å gå gjennom noe (F20 rettet); de som jukser, står fritt ved ripa, to på styrbord og én på babord med tre maskiner (F21 rettet; `crewclip` 4 av 4 plasser uten klipp); sløyingen ved bordet på babord og pakkingen ved karet; skipperen bak rattet med utsikt over ruffen. **Står igjen:** (1) **Teina i folkene** (F7, alvor A): i teinetrekket settes teina ned akter på styrbord, og de to som sorterer står inni den; plassen for teina (`potDeck`) og for den som sorterer (`deckcrew.js` `places().pot`) regnes ut fra haleren og eies av OB16 nå; dørken har plass (10.2). (2) Ingen akter ved stampene når det settes (F4, OB3). (3) De hvite flekkene ved sjøen (sprutpartiklene, felles B).
+Etter-opptaket (`tests/ombord.py plastsjark`, begge formater, alle operasjonene: huset og alle plassene er flyttet, så ingen ble droppet) og arkene i `docs/okter/2026-11-09-ob7/`: garnet og lina settes fra binga og stampene akter over hekken uten å gå gjennom noe (F20 rettet); de som jukser, står fritt ved ripa, to på styrbord og én på babord med tre maskiner (F21 rettet; `crewclip` 4 av 4 plasser uten klipp); sløyingen ved bordet på babord og pakkingen ved karet; skipperen bak rattet med utsikt over ruffen. I teinetrekket i etter-opptaket sto teina (den firkantede fra før OB16) i de to som sorterte; plastsjarken driver ikke med teiner lenger (10.2). **Står igjen:** (1) ~~Teina i folkene (F7)~~: ingen teiner (Jonas). (2) Ingen akter ved stampene når det settes (F4, OB3). (3) De hvite flekkene ved sjøen (sprutpartiklene, felles B).
 
 ### 10.5 Karakteren (forslag; Jonas setter den)
 
@@ -279,15 +279,15 @@ Etter Jonas' skala (valg 17, `om-bord.md` kap. 2). Forslaget i OB0 var 63 etter 
 | Detaljer | 20 | 15 | Ekte hull med lysning og glass, skyvedør i aluminiumsramme, bremmen, spygattene åpne, 76 600 trekanter, klasjsjekken 0. Trekk: materialene er ikke PBR (F2) |
 | Lanterner | 5 | 4 | Lovlige plasser etter `check()`, `lanterntest` grønn; ikke sett om natta i denne økta |
 | Styrhus | 10 | 8 | Forut som på bildene, frontrutene over ruffen, konsollen med plotter, ratt og enspak, døra til ruffen inne; `brotest` grønn (2,00 m under taket, øyet 1,65) |
-| Arbeidsflyt | 25 | 15 | Settingen akter uten å gå gjennom huset, juksa fordelt, sløyingen og pakkingen ved hver sin plass, døra akter rett ut på arbeidsdekket. Holdt på rundt 60 % fordi F7 (teina i folkene, alvor A) står for denne båten |
-| Utforming av dekk | 20 | 16 | Haleren, karet, bordet og luka samlet like akter for huset, redskapet akter der det settes fra, plass til teiner på dørken. Trekk: teina tegnes der karet står |
-| **Sum** | **100** | **72** | Under grensen. Når OB16 legger teina og stablene på dørken akter for luka (10.2) og den som sorterer ved siden av, er forslaget 20 på arbeidsflyten og 17 på dekket, **78** |
+| Arbeidsflyt | 25 | 20 | Settingen akter uten å gå gjennom huset, juksa fordelt, sløyingen og pakkingen ved hver sin plass, døra akter rett ut på arbeidsdekket, ingen teiner fordi de ikke får plass (Jonas). Trekk: ingen akter ved stampene når det settes (F4, OB3) |
+| Utforming av dekk | 20 | 17 | Haleren, karet, bordet og luka samlet like akter for huset, redskapet akter der det settes fra, juksaplassene fri av alt. Trekk: garnet og stampene står der to av juksaplassene har ryggen sin, om både garn og juksa er om bord |
+| **Sum** | **100** | **78** | Over grensen, uten funn med alvor A igjen som er plastsjarkens egne. Det som løfter mer: settingen akter fra stampene (F4, OB3), materialene (F2) og bilder av typen fra siden og ovenfra |
 
 Jonas setter karakteren.
 
 ## Endringslogg
 
-- 09.11.2026: OB7 (kap. 10): styrhuset forut etter bildene av typen (Jonas: «Forut»), arbeidsdekket akter, bremmen på taket, spygattene åpne, den tomme vannlinja; forslag 72.
+- 09.11.2026: OB7 (kap. 10): styrhuset forut etter bildene av typen (Jonas: «Forut»), arbeidsdekket akter, bremmen på taket, spygattene åpne, den tomme vannlinja; ingen teiner (Jonas); forslag 78.
 - 01.11.2026: kap. 9, selvvurderingen; `check()` regner nå også takets høyde over dekket og navnefeltet mot registreringsmerket.
 
 - 01.11.2026: første versjon, gjennomgangen før endring og de første rundene.

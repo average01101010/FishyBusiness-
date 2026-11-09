@@ -42,6 +42,7 @@ import bpy, bmesh
 from bpyutil import *
 import bpyutil
 import fittings as F
+import potplaces   # the stacks of conical pots (OB16, tools/boats/potplaces.json; the plastsjark has none, OB7: «Ingen teiner»)
 from mathutils import noise
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE)); OUT = os.path.join(HERE, 'out')
@@ -950,7 +951,7 @@ def anchors():
             'deck': {'y': round(z_deck(HC) - WLE, 3), 'z': round(-(HC - XM), 3)}, 'gw': round(zs(HC) - WLE, 3),
             'stern': round(XM - XA, 3), 'bow': round(-(XF - XM), 3), 'side': HB, 'beam': BEAM, 'pl': 3.3, 'rl': 1.4, 'open': False, 'hand': False,
             'pole': G(px - 0.08, -gunwale_y(px), zs(px) + 1.16), 'hauler': G(HX, hy, zs(HX) + 0.42), 'filler': G(FIL, ybw(FIL) - 0.12, z_deck(FIL) + 0.06),
-            'kit': kit_places(G)}
+            'kit': dict(kit_places(G), **potplaces.kit('plast31'))}
 
 
 # ---------- the checks against the tables, the data and the rules ----------

@@ -45,8 +45,10 @@ async def main():
         check(not bad, 'full throttle settles at the vessel\'s top speed', bad)
         bad = [c['k'] for c in cal if c['t90'] > (120 if c['L'] < 15 else 360)]
         check(not bad, 'she is up to 90 % of top speed within two minutes (six for the big ones)', bad)
-        bad = [c['k'] for c in cal if c['stopL'] > 12]
-        check(not bad, 'she stops gently from cruising speed within 12 lengths', bad)
+        # (12 lengths for the coastal fleet; 15 for the ocean vessels from 30 m, IMO's track reach for a crash stop, MSC.137(76) 5.3.1:
+        # with the wave hump, Ø9 F5, a big hull loses its wave resistance as she slows and carries her way longer, as ships do)
+        bad = [c['k'] for c in cal if c['stopL'] > (12 if c['L'] < 30 else 15)]
+        check(not bad, 'she stops gently from cruising speed within 12 lengths (15 from 30 m)', bad)
         # 2. live: a route with a right-angle corner on open water west of Senja, the old wooden boat
         r = await pg.evaluate("""async () => { S.tut = 0; const b = S.boat, c0 = P(69.30, 16.70); await mapNeed(c0, 9);
           const open = c => { for (let r = 0.3; r <= 1.6; r += 0.3) for (let k = 0; k < 12; k++){ const a = k / 12 * 2 * Math.PI; if (isLand({x:c.x + Math.sin(a) * r, y:c.y - Math.cos(a) * r})) return false; } return !isLand(c); };
@@ -193,6 +195,40 @@ async def main():
         hq = quay['hits']
         check(len(hq) > 0 and hq[0]['kn'] > 3 and quay['minZ'] > quay['half'] - 1.5 and quay['said'], 'by hand into the quay at about 6 knots: the blow is kept with its energy, she does not go into the quay, and it is said', quay)
         check(quay['backed'] > quay['minZ'] + 2, 'astern she backs off the quay again', {'from': quay['minZ'], 'to': quay['backed']})
+        # 6. Ø9 F5: the bank along the quay of Senjahopen (the sjark at 6 knots 2 m off the wall, the wheel amidships, three lengths:
+        # she sheers off it 3-8 degrees; with the bank effect off, not), and the squat on the helm in a narrow sound (narrower than eight
+        # beams) and in open water: at 8 knots she takes the bottom over 1.9 m in the sound and not over 2.3 m, over 1.75 m in open
+        # water and not over 1.9 m, and at rest not over 1.75 m (the depth with the tide is set under her for the one step)
+        e = await pg.evaluate("""async () => { const b = S.boat, out = {}; S.tut = 0; b.type = 'sjark'; applyVessel(); S.plan = null; S.helm = null; b.anch = null; b.port = null; b.dyn = null;
+          WX_FORCE = {w:0.3, d:270}; SEAP_MEMO = {k:'', v:null}; const cal = dynCal('sjark'), Pp = cal.P, H0 = S.t / 60;
+          const U = UNITS['senjahopen'], g = ugeo(U); await mapNeed(portById('senjahopen').p, 9);
+          const run = cY => { const c0 = DYN_BANK.cY; DYN_BANK.cY = cY; const lx = -g.E + 3, lz = Pp.B / 2 + 2, X = U.o[0] + U.u[0] * lx + U.n[0] * lz, Z = U.o[1] + U.u[1] * lx + U.n[1] * lz;
+            const d = dynZero(); d.X = X; d.Y = Z; d.psi = Math.atan2(U.u[0], -U.u[1]); d.u = 6 * KN_MS; const bb = {type:'sjark', pos:{x:X / 1000, y:Z / 1000}}, thr = dynThrEq(Pp, d.u, 1); let E = null, n0 = null;
+            for (let t = 0; t < 60; t += DYN_H){ if (!E || Math.abs(t - Math.round(t)) < 1e-6){ bb.pos = {x:d.X / 1000, y:d.Y / 1000}; E = dynEnv(bb, d, cal, H0, 1); if (!n0) n0 = {h:E.h, bY:E.bY, narrow:E.narrow}; }
+              dynBank(E, d, Pp); dynInt(Pp, d, thr, 0, DYN_H, E.capF, E); dynMove(d, DYN_H); if ((d.X - X) * U.u[0] + (d.Y - Z) * U.u[1] > 3 * Pp.L) break; }
+            DYN_BANK.cY = c0; return {deg:+(Math.asin(Math.sin(d.psi) * U.n[0] - Math.cos(d.psi) * U.n[1]) * 180 / Math.PI).toFixed(1), h:+(n0.h || 0).toFixed(1), bY:Math.round(n0.bY), kn:+(d.u / KN_MS).toFixed(1)}; };
+          out.bank = run(DYN_BANK.cY); out.off = run(0);
+          // a narrow sound on Senja outside the harbours (groundCheck leaves the harbours' water to their way in), found 09.11.2026 near
+          // 863.32, 357.88 km in the frame (the sound south of it is narrower than eight of the sjark's beams); with water ahead for the step
+          let sp = null; { const c0 = {x:863.3156, y:357.8806}; await mapNeed(c0, 3);
+            for (let i = -3; i <= 3 && !sp; i++) for (let j = -3; j <= 3 && !sp; j++){ const q = {x:c0.x + i * 0.01, y:c0.y + j * 0.01}; let ok = false; try { ok = !isLand(q) && !inHarbour(q) && coastDistM(q, 100) > Pp.B * 1.2 && depthF(q) > 1; } catch (e){} if (!ok) continue;
+              for (let k = 0; k < 12 && !sp; k++){ const d = dynZero(); d.X = q.x * 1000; d.Y = q.y * 1000; d.psi = k * Math.PI / 6; const E = {h:5}; dynBank(E, d, Pp, true); if (!E.narrow) continue;
+                let clear = true; for (let m = 2; m <= 16; m += 2){ const a = {x:q.x + Math.sin(d.psi) * m / 1000, y:q.y - Math.cos(d.psi) * m / 1000}; if (isLand(a) || inHarbour(a) || coastDistM(a, 100) < Pp.B / 2 + 0.5){ clear = false; break; } }
+                if (clear) sp = {q, psi:d.psi}; } } }
+          let open = null; { const c0 = P(69.30, 16.70); await mapNeed(c0, 9); for (let r = 0; r <= 8 && !open; r += 0.5) for (let k = 0; k < 16 && !open; k++){ const a = k / 16 * 2 * Math.PI, q = {x:c0.x + Math.sin(a) * r, y:c0.y - Math.cos(a) * r}; if (!isLand(q) && coastDist(q) > 1) open = {q, psi:0}; } }
+          const dF = depthF, step = (at, depth, kn) => { S.helm = null; b.dyn = null; b.pos = {x:at.q.x, y:at.q.y}; b.heading = at.psi; b.v = kn; b.status = 'sailing'; b.hits = []; S.settings.manual = true; helmTake();
+            S.helm.thr = kn ? dynThrEq(Pp, kn * KN_MS, 1) : 0; S.helm.rud = 0; const n0 = (S.incidents || []).length;
+            depthF = p => dist(p, at.q) > 0.0005 ? depth - tideCD(S.t / 60) : dF(p); try { helmStep(0.2); } finally { depthF = dF; }   // (the depth ahead of her only: her way is not slowed by it first)
+            const r = {ground:(S.incidents || []).slice(n0).some(x => x.k === 'aground'), narrow:!!(DYN.env && DYN.env.narrow), kn:+((b.v || 0)).toFixed(1)}; helmOff(); b.status = 'idle'; b.v = 0; return r; };
+          if (sp){ out.sound = {at:sp.q, d19:step(sp, 1.9, 8), d23:step(sp, 2.3, 8)}; }
+          if (open){ out.open = {d175:step(open, 1.75, 8), d19:step(open, 1.9, 8), rest:step(open, 1.75, 0)}; }
+          out.sq = {open:+dynSquat(Pp, 8 * KN_MS, false).toFixed(2), sound:+dynSquat(Pp, 8 * KN_MS, true).toFixed(2)};
+          WX_FORCE = null; b.type = 'trebat'; applyVessel(); return out; }""")
+        bk, of = e['bank'], e['off']
+        check(3 <= bk['deg'] <= 8 and abs(of['deg']) < 1, '6. the sjark along the quay of Senjahopen at 6 knots, 2 m off, the wheel amidships: the bank effect sheers her off 3-8 degrees in three lengths (none without it)', e['bank'] | {'uten': of['deg']})
+        sd, op = e.get('sound'), e.get('open')
+        check(bool(sd) and sd['d19']['ground'] and sd['d19']['narrow'] and not sd['d23']['ground'], '6. squat in a narrow sound: at 8 knots she takes the bottom over 1.9 m and not over 2.3 m', {'sound': sd, 'squat': e['sq']})
+        check(bool(op) and op['d175']['ground'] and not op['d19']['ground'] and not op['rest']['ground'], '6. squat in open water: at 8 knots over 1.75 m she takes the bottom, over 1.9 m not; at rest over 1.75 m not', {'open': op, 'squat': e['sq']})
         print('errors:', errs[:5])
         await br.close()
 

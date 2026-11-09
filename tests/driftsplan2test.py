@@ -118,15 +118,15 @@ async def main():
         print(ok(r['chk'] and k1[:4] == ['avgang', 'sett:g1', 'sett:g2', 'sett:g3'] and 'juks:j1' in k1 and 'trekk:g1' not in k1 and len(r['d1']['skipped']) == 3), 'S2 day 1 sets the three strings, jigs, and says the hauls come tomorrow', [k1, [x['no'] for x in r['d1']['skipped']]])
         print(ok([k for k in k2 if k.startswith('trekk')] == ['trekk:g1', 'trekk:g2', 'trekk:g3'] and all(24.0 - 1e-6 <= s['soakH'] <= 26 and s['reset'] for s in tr) and k2.count('sett:g1') == 1 and 'lever' in k2), 'S2 day 2 hauls and sets again in order, each after 24–26 h, and lands', [k2, [round(s['soakH'], 2) for s in tr]])
 
-        # S3 (dry): pots 15 + 15 at 48 h with the jig; bait bought at the plant when it is short
-        r = await pg.evaluate("""(async () => { D2.reset(3); const home = D2.boat('kyst15', 3, false); D2.gear('teine', 30, 0); await mapNeed(portById(home).p, 14);
+        # S3 (dry): pots 10 + 10 at 48 h (on the new speed sjark: since OB16, valg 25 A, kyst15 has no room for pots) with the jig; bait bought at the plant when it is short
+        r = await pg.evaluate("""(async () => { D2.reset(3); const home = D2.boat('sjarkny', 3, false); D2.gear('teine', 20, 0); await mapNeed(portById(home).p, 14);
           const F = D2.spots(2, 4, 12), J = D2.spots(1, 2.5, 4);
-          const o = S.ops = plan2New({home, rig:'teiner', jig:true, places:[D2.felt('t1', F[0], 15, 48), D2.felt('t2', F[1], 15, 48), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'full'}});
+          const o = S.ops = plan2New({home, rig:'teiner', jig:true, places:[D2.felt('t1', F[0], 10, 48), D2.felt('t2', F[1], 10, 48), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'full'}});
           o.M = D2.plant(o); const H0 = plan2NextDep(o, S.t / 60), d0 = D2.dry(o, H0);
-          const d1 = D2.dry(o, H0, {aboard:{teine:30, bait:30 * GPRICE.potBait * 2}});
+          const d1 = D2.dry(o, H0, {aboard:{teine:20, bait:20 * GPRICE.potBait * 2}});
           const sets = d1.day.steps.filter(s => s.k === 'sett').map(s => ({fid:s.pid, kind:'teine', n:s.n, tSet:Math.round((s.t + s.h) * 60), x:0, y:0}));
-          const H2 = plan2NextDep(o, H0 + 20, d1.day.end), d2 = D2.dry(o, H2, {sets, aboard:{teine:0, bait:30 * GPRICE.potBait}});
-          const H3 = plan2NextDep(o, H2 + 20, d2.day.end), d3 = D2.dry(o, H3, {sets, aboard:{teine:0, bait:30 * GPRICE.potBait}});
+          const H2 = plan2NextDep(o, H0 + 20, d1.day.end), d2 = D2.dry(o, H2, {sets, aboard:{teine:0, bait:20 * GPRICE.potBait}});
+          const H3 = plan2NextDep(o, H2 + 20, d2.day.end), d3 = D2.dry(o, H3, {sets, aboard:{teine:0, bait:20 * GPRICE.potBait}});
           return {d0:{steps:d0.day.steps, text:d0.text, skipped:d0.day.skipped}, d1:{steps:d1.day.steps, text:d1.text}, d2:{steps:d2.day.steps, text:d2.text, skipped:d2.day.skipped}, d3:{steps:d3.day.steps, text:d3.text}}; })()""")
         k0 = steps(r['d0']); k1 = steps(r['d1']); k2 = steps(r['d2']); k3 = steps(r['d3']); tr = [s for s in r['d3']['steps'] if s['k'] == 'trekk']
         print('S3 uten agn:'); print('  ' + '\n  '.join(r['d0']['text'])); print('S3 dag 3:'); print('  ' + '\n  '.join(r['d3']['text']))
@@ -211,10 +211,10 @@ async def main():
             print(ok(not L['err'] and len(d1) == 3 and all(g['n'] == 6 for g in d1)), 'S2 day 1 sets the three strings of six', [(g['set'], g['n']) for g in d1])
             print(ok(len(hauls) >= 6 and all(24.0 - 0.05 <= g['soak'] <= 26 for g in hauls)), 'S2 every string is hauled after 24-26 h, and set again', [(g['set'], g['soak']) for g in hauls])
             print(ok(len(L['fin']['sets']) == 3 and len(L['stats']['days']) >= 2), 'S2 three strings stand at the end, and the catch was landed on day 2 and 3', [L['fin']['sets'], [(d['d'], d['kg']) for d in L['stats']['days']]])
-        print('== S3 med motoren: 15 + 15 teiner ved 48 t, juksa, agn kjøpt på mottaket, fire døgn')
-        L = await pg.evaluate("""(async () => { D2.reset(23); const home = D2.boat('kyst15', 3, false); D2.gear('teine', 30, 0); await mapNeed(portById(home).p, 14);
+        print('== S3 med motoren: 10 + 10 teiner ved 48 t, juksa, agn kjøpt på mottaket, fire døgn (den nye hurtigsjarken: kyst15 har ikke plass til teiner fra OB16, valg 25 A)')
+        L = await pg.evaluate("""(async () => { D2.reset(23); const home = D2.boat('sjarkny', 3, false); D2.gear('teine', 20, 0); await mapNeed(portById(home).p, 14);
           const F = D2.spots(2, 4, 12), J = D2.spots(1, 2.5, 4);
-          const o = S.ops = plan2New({home, rig:'teiner', jig:true, places:[D2.felt('t1', F[0], 15, 48), D2.felt('t2', F[1], 15, 48), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'full'}});
+          const o = S.ops = plan2New({home, rig:'teiner', jig:true, places:[D2.felt('t1', F[0], 10, 48), D2.felt('t2', F[1], 10, 48), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'full'}});
           const err = await D2.make(o); if (err) return {err}; o.on = true; const c0 = S.cash;
           const L = await D2.run(4 * 1440, 'open', 'S3e'); L.err = err; L.spent = Math.round(c0 - S.cash); L.bait = S.pgear.bait; return L; })()""")
         if L.get('err') and not L.get('ev'): print('FEIL S3e plan2Make:', L['err'])
@@ -223,7 +223,7 @@ async def main():
             print('  log:', '\n   '.join(['%s %s' % tuple(e) for e in L['log'] if 'WP' not in e[1] and 'rekord' not in e[1] and ': «' not in e[1]][:60]))
             print('  gearLog:', L['gearLog']); print('  ops:', json.dumps(L['ops'], ensure_ascii=False)[:300]); print('  fin:', L['fin'], 'spent', L['spent'], 'bait', L['bait'])
             hauls = [g for g in L['gearLog'] if g['haul']]; bought = logs(L, 'Kjøpte')
-            print(ok(not L['err'] and bought and all(g['n'] == 15 for g in L['gearLog'][:2]) and len(L['gearLog']) >= 2), 'S3 bait is bought at the plant, then both strings of 15 pots are set', [bought[:2], [(g['set'], g['n']) for g in L['gearLog'][:2]]])
+            print(ok(not L['err'] and bought and all(g['n'] == 10 for g in L['gearLog'][:2]) and len(L['gearLog']) >= 2), 'S3 bait is bought at the plant, then both strings of 10 pots are set', [bought[:2], [(g['set'], g['n']) for g in L['gearLog'][:2]]])
             # (a string lost in the weather is the sea's own chance, gearHour: about 1 % a string over two days in ordinary weather; the plan
             # says so and does not haul it, so it is counted with the hauled ones, 07.11.2026)
             lost = [g for g in L['gearLog'][:2] if g.get('lost') and not g['haul']]

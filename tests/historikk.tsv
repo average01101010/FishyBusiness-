@@ -1779,3 +1779,22 @@
 2026-11-09 17:22	claude/rundsloyf-visible-start-16-81ss7b	86dfbfe+	boktest	OK	9	lite	samtidig	
 2026-11-09 17:24	claude/rundsloyf-visible-start-16-81ss7b	86dfbfe+	rundshot	OK	24	lite	alene	
 2026-11-09 17:45	claude/rundsloyf-visible-start-16-81ss7b	e571eff	tut	OK	1254	lite	alene	
+2026-11-09 20:19	ccr-f04f4a09-btm7go	3eb792e+	geartest	OK	33	lite	alene	
+2026-11-09 19:53	ccr-aa5c8b75-dif283	4805aa7+	helmtest	OK	25	lite	samtidig	
+2026-11-09 19:53	ccr-aa5c8b75-dif283	4805aa7+	trip2	OK	33	lite	samtidig	
+2026-11-09 19:53	ccr-aa5c8b75-dif283	4805aa7+	autonavtest	FEIL	9	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 117, 'cell': 0.2, 'maxSlice': 8.6, 'mended': 0, 'b
+2026-11-09 20:03	ccr-aa5c8b75-dif283	c0665f9	colregtest	OK	602	lite	samtidig	
+2026-11-09 20:03	ccr-aa5c8b75-dif283	c0665f9	hudtest	OK	80	lite	samtidig	
+2026-11-09 20:03	ccr-aa5c8b75-dif283	c0665f9	progweek	LES	34	lite	samtidig	
+2026-11-09 20:03	ccr-aa5c8b75-dif283	c0665f9	simday	LES	10	lite	samtidig	
+2026-11-09 20:24	ccr-f04f4a09-btm7go	9c5c933	boottest	OK	20	lite	alene	
+2026-11-09 21:00	ccr-f04f4a09-btm7go	23b7af2+	geartest	FEIL	30	lite	alene	FEIL the hauler at tiers 2 and 3 takes 10 and 20 % off a tub, a net and a pot hauled {'line': [21.615, 19.453, 17.292], 'garn': [5.253, 4.728, 4.202], 'teine': 
+2026-11-09 21:02	ccr-f04f4a09-btm7go	23b7af2+	driftsplan2test	FEIL	75	lite	alene	FEIL S3e plan2Make: Båten mangler haleren til teiner. Den kjøpes og monteres i Butikk › Elektronikk og haler.
+2026-11-09 21:03	ccr-f04f4a09-btm7go	23b7af2+	geartest	FEIL	25	lite	alene	FEIL standing plan: the net station is hauled and set again every day, and the catch is landed
+2026-11-09 21:04	ccr-f04f4a09-btm7go	23b7af2+	driftsplan2test	OK	79	lite	alene	
+2026-11-09 21:05	ccr-f04f4a09-btm7go	23b7af2+	geartest	FEIL	25	lite	alene	FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
+2026-11-09 21:05	ccr-f04f4a09-btm7go	23b7af2+	geartest	FEIL	27	lite	alene	FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
+2026-11-09 21:06	ccr-f04f4a09-btm7go	23b7af2+	geartest	OK	26	lite	alene	
+2026-11-09 21:07	ccr-f04f4a09-btm7go	23b7af2+	caretest	FEIL	11	lite	samtidig	FEIL pots: repaired by the crew and the shop, the ceiling falls [[0.4, 1], [0.3, 1]]
+2026-11-09 21:13	ccr-f04f4a09-btm7go	23b7af2+	driftsplan2gui	FEIL	368	lite	samtidig	FEIL s02-ikke-klar: U13: grunnen er en knapp, og et trykk på den åpner Mannskap-siden i samme skuff  {"grunnen": "Når du ikke er om bord, må både en skipper og 
+2026-11-09 21:14	ccr-f04f4a09-btm7go	23b7af2+	caretest	OK	10	lite	alene	
