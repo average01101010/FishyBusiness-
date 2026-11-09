@@ -517,3 +517,8 @@ Står også under «Valg som venter på Jonas» i `docs/planer/koen.md` (valg 16
 - **Kyst21 er ikke revidert,** og anslaget for karakteren er grovt.
 - **Opptakene har høyst tre i mannskapet pluss skipperen** (`BASE` i `tests/ombord.py`), også på breisjarken (`crewMax` 4), kyst15 (5) og kyst21 (6). Med fullt mannskap kan det bli trangere enn klippene viser; OB-fasene for de store båtene tar opp med fullt mannskap.
 - **Innseilingen og lossingen** ble tatt opp på nytt med kameraet høyere og innseilingen fra leia; for kyst15, breisjarken og kyst21 er de fra første runde der kameraet sto i bygningene.
+
+## 9. Status
+
+- 09.11.2026: **OB0 ferdig** (Jonas' økt, gren `ccr-59f8e7e6-m00yni`). Alle ti båtene tatt opp liggende med alle operasjonene, stående med juksa og linetrekket (trebåten med alle), innseilingen og lossingen tatt på nytt. Ingenting i `src/` er endret. Neste: OB1 (trebåten), som venter på valg 16, 17, 20, 21 og 22, og på at H3d2 og Ø8b S2 er ute; OB15 er klar.
+
