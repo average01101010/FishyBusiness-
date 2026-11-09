@@ -176,8 +176,8 @@ function crewSim(src){
     else if (ST.fortIds && ST.fortIds.length){
       for (const p of WA) if (ST.fortIds.includes(idOf(p)) && p.st !== 'kokk'){ p.st = 'fort'; p.idle = null; p.role = null; p.why = 'moor'; }
       F = WA.filter(p => p.st === 'fort'); }
-    // (the helm is held while she still moves, by you when you are aboard and not on the lines)
-    if (m.phase === 'in' || m.phase === 'prep'){ const me = WA.find(p => !p.c); if (me && me.st !== 'fort' && me.st !== 'ror'){ me.st = 'ror'; me.idle = null; me.why = 'skipper'; } }
+    // (the helm is held until she lies made fast, by you when you are aboard and not on the lines yourself)
+    if (m.phase === 'in' || m.phase === 'prep' || (m.phase === 'lines' && F.some(p => p.c))){ const me = WA.find(p => !p.c); if (me && me.st !== 'fort' && me.st !== 'ror'){ me.st = 'ror'; me.idle = null; me.why = 'skipper'; } }
     const need = m.need || [], two = F.length >= 2, fwd = k => k === 'c:bow' || k === 'f0';
     F.forEach((p, n) => { const mine = need.filter(k => !two || fwd(k) === (n > 0)); p.mo = mine[0] || (m.phase === 'stow' ? 'coil' : two && n > 0 ? 'c:bow' : 'c:mid'); });
     return WA;
