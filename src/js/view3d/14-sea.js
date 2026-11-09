@@ -337,8 +337,8 @@
     const w = env.windDir || [0, 1], px = x - RO.x - NF.D[0], pz = z - RO.z - NF.D[1], a = px * w[0] + pz * w[1], b = px * -w[1] + pz * w[0];
     const g = NS3(a * 0.3 + t * 0.35, b * 0.36) * 0.5 + (0.5 + (NS3(a * 0.9 - t * 0.5, b * 1.1 - t * 0.2) - 0.5) * mid) * 0.3 + (0.5 + (NS3(a * 2.8 + t * 0.8, b * 3.4 + 1.7) - 0.5) * fine) * 0.2;
     // (the gate, capGate in 01-shaders.js: only where a random field of 3-35 m lets them do the crests break, the share WCAP.G of the sea)
-    const bn = NS3(a * 0.02857 + t * 0.02 + 3.1, b * 0.04545 + 7.1) * 0.4 + NS3(a * 0.0909 + 3.3 - t * 0.05, b * 0.1111 + 1.9) * 0.2 + NS3(a * 0.35 + 5.2 + t * 0.1, b * 0.125 + 0.6) * 0.4, gate = sstep(0.52, 0.64, bn);
-    const dws = sstep(0.45, 1.73, S[3]), Wc = clamp(3.84e-6 * Math.pow(Math.max(U, 0.3), 3.41) * dws, 1e-5, 0.5), W = clamp(Wc * kk / WCAP.G, 1e-5, 0.5);
+    const bn = NS3(a * 0.02857 + t * 0.02 + 3.1, b * 0.04545 + 7.1) * 0.25 + NS3(a * 0.0909 + 3.3 - t * 0.05, b * 0.1111 + 1.9) * 0.15 + NS3(a * 0.35 + 5.2 + t * 0.1, b * 0.125 + 0.6) * 0.6;
+    const dws = sstep(0.45, 1.73, S[3]), Wc = clamp(3.84e-6 * Math.pow(Math.max(U, 0.3), 3.41) * dws, 1e-5, 0.5), sg = sstep(0.03, 0.15, Wc), gate = sstep(0.54 - 0.5 * sg, 0.66 - 0.5 * sg, bn), Ge = Math.min(1, WCAP.G + sg * (0.8399 + sg * (2.3623 + sg * (-4.0139 + sg * 1.6192)))), W = clamp(Wc * kk / Ge, 1e-5, 0.5);
     let zt = Math.sqrt(-2 * Math.log(W)); zt -= (2.515517 + 0.802853 * zt + 0.010328 * zt * zt) / (1 + 1.432788 * zt + 0.189269 * zt * zt + 0.001308 * zt * zt * zt);
     const js = jsc / Math.sqrt(jsv);
     return {fv:jn * WCAP.j + js * WCAP.s + crest * WCAP.c + (g - 0.5) * WCAP.g - (1 - gate) * 1.5, gate, js, th:WCAP.th[0] + WCAP.th[1] * zt + WCAP.th[2] * zt * zt, jn, J, crest, g, Wc};

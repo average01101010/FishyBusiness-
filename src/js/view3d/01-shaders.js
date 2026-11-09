@@ -90,18 +90,24 @@
   // spread of fv through the normal quantile of W (as before, Monahan and O'Muircheartaigh 1980 is the share of white). WCAP.k: the share
   // of Monahan's cover that is the breaking crests themselves; the rest is the foam they leave, the foam map's tail (FOAM_FS, 14-sea.js).
   // FOAM.capAt in 14-sea.js is the same on the CPU (sea3d measures the share with it).
-  const WCAP = {j:0.14, s:0.14, c:0.06, g:1.2, th:[-0.00438, 0.3562, -0.00827], k:0.7, G:0.279};
+  const WCAP = {j:0.14, s:0.14, c:0.06, g:1.2, th:[-0.00438, 0.3562, -0.00827], k:0.7, G:0.1915};
   // capGate (09.11.2026, Jonas: «slike geometriske mønstre … ser helt jævlig ut»): the short waves are six regular trains, so every crest
-  // of a group broke alike and the whitecaps lay in straight rows of dashes, row on row, seen from above. Only where a random field of
-  // 3-35 m (drifting slowly) lets them do the crests break; it covers the share WCAP.G of the sea (0.28, measured over 870 x 930 m of
-  // the field), and the threshold is set for the share W/G inside it, so the cover is still Monahan's but in irregular patches.
+  // of a group broke alike and the whitecaps lay in straight rows of dashes, row on row, seen from above. Now a crest breaks only where
+  // a random field lets it: patches of 10-35 m (a quarter of its weight, so the whitecaps gather a little) and, most of it, a field of
+  // 3 m along the wind (less than the crests' spacing) by 8 m across, which picks single crests at random, so neighbours seldom break
+  // together. It covers 0.27 of the sea (measured over 820 x 860 m of the field); the threshold is set for the share W/G inside it, so
+  // the cover is still Monahan's. G is the share it lets through with its soft edge, the area to the power 1.26 (sea3d's share with
+  // FOAM.capAt was 0.71 of Monahan's with G set to the area, 8-25 m/s). From a near gale (W 3 %) to a storm (15 %) the gate opens up
+  // (capSg lowers its threshold by up to 0.5): there every crest breaks, and W/G would pass its limit; capGe is the share it lets
+  // through then, a quartic fitted to the measured area^1.26 (within 0.003).
   const wc5 = v => v.toFixed(5);
   // (capZ: the normal quantile of a share W <= 0.5, Abramowitz and Stegun 26.2.23, as the far pass's threshold has it too)
   const WCAPS = 'float capJ(float jxx,float jxz,float jtr,float jv){float jzz=jtr-jxx;return (jtr-jxx*jzz+jxz*jxz)*inversesqrt(jv);}' +
     'float capZ(float W){float zt=sqrt(-2.0*log(W));return zt-(2.515517+0.802853*zt+0.010328*zt*zt)/(1.0+1.432788*zt+0.189269*zt*zt+0.001308*zt*zt*zt);}' +
     'float capTh(float W){float zt=capZ(W);return ' + wc5(WCAP.th[0]) + '+' + wc5(WCAP.th[1]) + '*zt+(' + wc5(WCAP.th[2]) + ')*zt*zt;}' +
     'float capGrain(vec2 cq,float t,float mid,float fine){return ns(cq*vec2(0.3,0.36)+vec2(t*0.35,0.0))*0.5+mix(0.5,ns(cq*vec2(0.9,1.1)-vec2(t*0.5,t*0.2)),mid)*0.3+mix(0.5,ns(cq*vec2(2.8,3.4)+vec2(t*0.8,1.7)),fine)*0.2;}' +
-    'float capGate(vec2 cq,float t){float bn=ns(cq*vec2(0.02857,0.04545)+vec2(t*0.02+3.1,7.1))*0.4+ns(cq*vec2(0.0909,0.1111)+vec2(3.3-t*0.05,1.9))*0.2+ns(cq*vec2(0.35,0.125)+vec2(5.2+t*0.1,0.6))*0.4;return smoothstep(0.52,0.64,bn);}' +
+    'float capSg(float W){return smoothstep(0.03,0.15,W);}float capGe(float W){float s=capSg(W);return min(1.0,' + wc5(WCAP.G) + '+s*(0.8399+s*(2.3623+s*(-4.0139+s*1.6192))));}' +
+    'float capGate(vec2 cq,float t,float W){float bn=ns(cq*vec2(0.02857,0.04545)+vec2(t*0.02+3.1,7.1))*0.25+ns(cq*vec2(0.0909,0.1111)+vec2(3.3-t*0.05,1.9))*0.15+ns(cq*vec2(0.35,0.125)+vec2(5.2+t*0.1,0.6))*0.6;float o=0.5*capSg(W);return smoothstep(0.54-o,0.66-o,bn);}' +
     'float capFv(float jn,float js,float crest,float g){return jn*' + wc5(WCAP.j) + '+js*' + wc5(WCAP.s) + '+crest*' + wc5(WCAP.c) + '+(g-0.5)*' + wc5(WCAP.g) + ';}';
   // The local sea (03b-sea.js) from the sea-state textures, n (32 x 32 over the near terrain) and w (128 x 128 over the whole map): R and G hold
   // the root of the fetch for the 10 degree sectors either side of the wind (blended by uSea2.z and .w), B how much of the ocean swell gets in.
@@ -271,7 +277,7 @@
     'if(uWind>6.0){vec2 Pg=Mg+uFoamRect.xy+uNFD;vec2 Pbg=Mg+uFoamRect.xy;vec4 S=seaAt(Pg);float px=uFoamRect.w/uN;vec3 N=vec3(0.0,1.0,0.0);float y=0.0;float sa=1e-6;float lost=0.0;float Qw=qOf(S);float jxx=0.0;float jxz=0.0;float jtr=0.0;float jv=1e-8;float jsc=0.0;float jsv=1e-8;vec2 w2=uWindDir;vec2 wp=vec2(-w2.y,w2.x);' +
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => SEA_WAVE(true, i).replace(/\bP\b/g, 'Pg')).join('') +
     '\nfloat crest=y*inversesqrt(sa);float dw2=smoothstep(0.45,1.73,fetchW(Pg,-w2,S.w));float Wc=clamp(3.84e-6*pow(max(uWind,0.3),3.41)*dw2,1e-5,0.5);' +
-    'vec2 cq=vec2(dot(Pbg,w2),dot(Pbg,wp));float fv=capFv(capJ(jxx,jxz,jtr,jv),jsc*inversesqrt(jsv),crest,capGrain(cq,uTime,1.0,0.0))-(1.0-capGate(cq,uTime))*1.5;float th=capTh(min(Wc*' + wc5(WCAP.k / WCAP.G) + ',0.5));ic=smoothstep(th-0.01,th+0.05,fv);}' +
+    'vec2 cq=vec2(dot(Pbg,w2),dot(Pbg,wp));float fv=capFv(capJ(jxx,jxz,jtr,jv),jsc*inversesqrt(jsv),crest,capGrain(cq,uTime,1.0,0.0))-(1.0-capGate(cq,uTime,Wc))*1.5;float th=capTh(min(Wc*' + wc5(WCAP.k) + '/capGe(Wc),0.5));ic=smoothstep(th-0.01,th+0.05,fv);}' +
     // new foam over what is left of the old: born now
     'if(iw>dw){aw=iw;bw=uFoamT.x;}if(ic>dc){ac=ic;bc=uFoamTc.x;}' +
     // none of the wake's foam on land (what the water carries onto a breakwater or a shore is gone)
@@ -337,13 +343,13 @@
     'float Wc=clamp(3.84e-6*pow(max(uWind,0.3),3.41)*dw,1e-5,0.5);vec2 Pb=P-uNFD;vec2 cq=vec2(dot(Pb,w),dot(Pb,wp));float mo=1.0-smoothstep(0.12,0.45,px);' +
     // (the far pass, beyond the near terrain, keeps the crest and the 3-8 m noise: it has only the four longest waves)
     '\n#ifdef FAR\nfloat RIM=0.12;float fn=ns(cq*vec2(0.3,0.12)+vec2(uTime*0.25,0.0))*0.6+ns(cq*vec2(0.7,0.3)-vec2(uTime*0.4,uTime*0.1))*0.4;' +
-    'float zt=capZ(min(Wc/' + wc5(WCAP.G) + ',0.5));float th=0.228+0.293*zt-0.016*zt*zt;float fv=crest*0.25+fn*0.45-(1.0-capGate(cq,uTime))*1.5;' +
+    'float zt=capZ(min(Wc/capGe(Wc),0.5));float th=0.228+0.293*zt-0.016*zt*zt;float fv=crest*0.25+fn*0.45-(1.0-capGate(cq,uTime,Wc))*1.5;' +
     // F3: where the waves break (WCAPS): the compression of the surface over the threshold for the breaking crests' share of the
     // cover (WCAP.k); the foam they leave is the map's (below). The grain's finest octave (0.3 m) fades out where a pixel passes 0.1 m,
     // the middle one (1.1 m) where it passes half a metre (else fwidth of fv grew so wide that the edge went grey 150 m off)
     // fe: how far inside the foam map (0 at its edge, 1 from a fifth of it in, 09.11.2026). Outside the map no tail is left, so the crests
     // there take all of Monahan's cover; inside, the share WCAP.k, the tail the rest. Before, the map's square showed from above (Jonas)
-    '\n#else\nfloat RIM=0.05;float fine=1.0-smoothstep(0.04,0.12,px);float mid=1.0-smoothstep(0.3,0.7,px);float fv=capFv(capJ(jxx,jxz,jtr,jv),jsc*inversesqrt(jsv),crest,capGrain(cq,uTime,mid,fine))-(1.0-capGate(cq,uTime))*1.5;float fe=0.0;if(uFoamOn>0.5){vec2 fe2=(Pb-uFoamRect.xy)*uFoamRect.z;fe2=min(fe2,1.0-fe2);fe=smoothstep(0.0,0.2,min(fe2.x,fe2.y));}float th=capTh(min(Wc*mix(1.0,' + wc5(WCAP.k) + ',fe)/' + wc5(WCAP.G) + ',0.5));\n#endif\n' +
+    '\n#else\nfloat RIM=0.05;float fine=1.0-smoothstep(0.04,0.12,px);float mid=1.0-smoothstep(0.3,0.7,px);float fv=capFv(capJ(jxx,jxz,jtr,jv),jsc*inversesqrt(jsv),crest,capGrain(cq,uTime,mid,fine))-(1.0-capGate(cq,uTime,Wc))*1.5;float fe=0.0;if(uFoamOn>0.5){vec2 fe2=(Pb-uFoamRect.xy)*uFoamRect.z;fe2=min(fe2,1.0-fe2);fe=smoothstep(0.0,0.2,min(fe2.x,fe2.y));}float th=capTh(min(Wc*mix(1.0,' + wc5(WCAP.k) + ',fe)/capGe(Wc),0.5));\n#endif\n' +
     // The edge is as wide as the pixel (fwidth), so it never steps or crawls, with a thin soft rim of older foam outside it; the mottle
     // inside fades to its mean before it gets smaller than a couple of pixels.
     'float aa=max(0.03,1.2*fwidth(fv));float core=smoothstep(th-aa,th+aa,fv);' +
