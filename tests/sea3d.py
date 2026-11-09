@@ -62,6 +62,40 @@ async def main():
         await pg.set_viewport_size({'width': 800, 'height': 500}); await pg.wait_for_timeout(3000)
         stage('the sea is up'); R = {}
         calm = await pg.evaluate("({drift:G3._debug.drift, fog:G3._debug.env.fogD})")   # 5 m/s since the start: no spindrift, no haze
+        # 0. the sea by the shore (Fysikk 4, F4, 09.11.2026). (a) On the Husøy ground (70 m) seaH is the same with and without it, within
+        # 1 cm. (b) Over a bottom held at 3 m against 20 m (SURF.fix: the CPU's bottom everywhere; the coast here has next to no 3 m
+        # beside 20 m in the depth data), in the same sea, the height (4 x the standard deviation of seaH over 60 s) grows as linear
+        # theory says, Ks = sqrt(cg0 / cg) per wave from the exact dispersion (worked out here, not by the game), within 8 %, and is
+        # more than 1.08 times (the plan's Green's law from L/4 said 1.3-1.5, linear theory less: 5.20i). (c) Over 1 m in a stiff
+        # breeze the height stays under McCowan's limit, 0.78 h. Seen red before F4 (no WV.shoal: all three FEIL).
+        await pg.evaluate("WX_FORCE = {w:6, d:315}; G3._debug.WV.init = false;"); await pg.wait_for_timeout(4000)
+        F4 = await pg.evaluate("""(() => { const D = G3._debug, sh = D.WV.shoal; if (!sh) return null; const SU = sh.SURF, bx = D.bv.x, bz = D.bv.z, out = {w:SU.w};
+          let dmax = 0; for (let k = 0; k < 40; k++){ const x = bx + (k % 7 - 3) * 40, z = bz + (Math.floor(k / 7) - 3) * 40, t = 50 + k * 0.37;
+            SU.on = true; const a = D.seaH(x, z, t); SU.on = false; const b = D.seaH(x, z, t); SU.on = true; dmax = Math.max(dmax, Math.abs(a - b)); }
+          out.deep = dmax; out.at = sh.shoalAt(bx, bz).slice();
+          const hs = h => { SU.fix = [h, 0, -0.7071, -0.7071]; let m = 0, q = 0, n = 0; for (let t = 0; t < 60; t += 0.2){ const y = D.seaH(bx, bz, t); m += y; q += y * y; n++; } SU.fix = null; m /= n; return 4 * Math.sqrt(Math.max(q / n - m * m, 0)); };
+          out.h3 = hs(3); out.h20 = hs(20); out.h200 = hs(200);
+          const cell = 600 / D.seaNP, S = D.ssAt(bx, bz), ren = 1 / Math.sqrt(Math.max(1 - 2 * S[2] * (1 - S[2]) * (1 - D.WV.dot), 0.05));
+          out.waves = D.WV.list.map(c => ({k:c.k, a:c.swell ? S[1] * c.wo : S[0] * (S[2] * c.wo + (1 - S[2]) * c.wy) * ren, att:sstep(2.5, 5, 2 * Math.PI / (c.k * cell))}));
+          return out; })()""")
+        if F4 is None:
+            for t in ['the open sea is as before with the sea by the shore (Husøy ground, 70 m: within 1 cm)', 'the waves grow over the shallows as linear theory has them (3 m against 20 m)', 'over 1 m in a stiff breeze the height stays under McCowan\'s limit (0.78 h)']: print('FEIL', t, '(no WV.shoal)')
+        else:
+            import math
+            def ks(k0, h):   # the exact dispersion w^2 = g k tanh(k h) by Newton, then sqrt(cg0 / cg)
+                k = k0 / math.sqrt(math.tanh(k0 * h)) if k0 * h < 10 else k0
+                for _ in range(30): k -= (k * math.tanh(k * h) - k0) / (math.tanh(k * h) + k * h / math.cosh(k * h) ** 2)
+                x = k * h; return max(1.0, 1 / math.sqrt(math.tanh(x) * (1 + 2 * x / math.sinh(2 * x))))
+            def amp(h): return math.sqrt(sum((w['a'] * w['att'] * min(ks(w['k'], h), 2.5)) ** 2 for w in F4['waves']))
+            want = amp(3) / amp(20); got = F4['h3'] / F4['h20']
+            print(json.dumps({'F4': {k: (round(v, 4) if isinstance(v, float) else v) for k, v in F4.items() if k != 'waves'}, 'want': round(want, 3), 'got': round(got, 3)}))
+            print(ok(F4['deep'] < 0.01), 'the open sea is as before with the sea by the shore (Husøy ground, 70 m: within 1 cm)', round(F4['deep'] * 100, 2), 'cm')
+            print(ok(got > 1.08 and abs(got / want - 1) < 0.08 and F4['h3'] < 0.78 * 3), 'the waves grow over the shallows as linear theory has them (3 m against 20 m)', round(got, 3), 'want', round(want, 3))
+            await pg.evaluate("WX_FORCE = {w:13, d:315}; G3._debug.WV.init = false;"); await pg.wait_for_timeout(4000)
+            h1 = await pg.evaluate("""(() => { const D = G3._debug, SU = D.WV.shoal.SURF; SU.fix = [1, 0, -0.7071, -0.7071]; let m = 0, q = 0, n = 0; for (let t = 0; t < 60; t += 0.2){ const y = D.seaH(D.bv.x, D.bv.z, t); m += y; q += y * y; n++; } SU.fix = null; m /= n; const H = 4 * Math.sqrt(Math.max(q / n - m * m, 0)); return [H, D.ssAt(D.bv.x, D.bv.z)[0]]; })()""")
+            print(ok(h1[0] <= 0.78 * 1.0 * 1.1 and h1[1] > 1.5), "over 1 m in a stiff breeze the height stays under McCowan's limit (0.78 h)", [round(v, 2) for v in h1])
+            await pg.evaluate("WX_FORCE = {w:5, d:315}; G3._debug.WV.init = false;"); await pg.wait_for_timeout(3000)
+        stage('the sea by the shore (F4) done')
         # 1. the wind from calm to hurricane in steps of 0.1 m/s, the waves snapped to each: no wave may jump
         R['ramp'] = await pg.evaluate("""(() => { const D = G3._debug, H = S.t / 60; let prev = null, jump = 0, hjump = 0, at = 0;
           for (let U = 0.3; U <= 34; U += 0.1){ WX_FORCE = {w:U, d:315}; D.WV.init = false; D.waves(1 / 30, H); const a = """ + AMPS + """, hsq = Math.sqrt(8 * a.reduce((x, y) => x + y * y, 0));
@@ -149,10 +183,17 @@ async def main():
             await pg.wait_for_function("G3._debug.SSL.n.on && Math.abs(G3._debug.bv.x / 1000 - S.boat.pos.x) < 0.05", timeout=180000); await pg.wait_for_timeout(1500)
             await pg.wait_for_function("(([kb, lee]) => { const N = G3._debug.SSL.n, W = G3._debug.SSL.w; return !N.job && !W.job && !N.fresh && N.k.join() === W.k.join() && (!lee || N.k.join() !== kb); })", arg=[kb, key == 'lee'], timeout=600000); await pg.wait_for_timeout(3000)
             s = await pg.evaluate("(()=>{ const D = G3._debug; return D.ssAt(D.bv.x, D.bv.z).map(v => +v.toFixed(2)); })()"); lee[key] = s
+            if key == 'harbour':   # (F4) the shoal texture by the shore: its way to the shore n points to shallower water (or land) 60 m on
+                await pg.wait_for_function("!G3._debug.tjobs.g", timeout=300000)
+                R['shoal'] = await pg.evaluate("""(() => { const D = G3._debug, sh = D.WV.shoal; if (!sh || !sh.live()) return null; let n = 0, good = 0;
+                  for (let k = 0; k < 400 && n < 40; k++){ const x = D.bv.x + (k % 20 - 10) * 30, z = D.bv.z + (Math.floor(k / 20) - 10) * 30, a = sh.shoalAt(x, z).slice(); const w = Math.hypot(a[2], a[3]); if (a[0] >= 60 || a[0] < 2 || w < 0.5) continue; n++;
+                    const b = sh.shoalAt(x + a[2] / w * 60, z + a[3] / w * 60); if (b[0] < a[0] - 0.3) good++; } return {n, good}; })()""")
             f = f'sea3d_{key}.png'; await pg.screenshot(path=f); tiles.append((f, f'{name} · vindsjø {s[0]:.1f} m, dønning {s[1]:.1f} m'))
         await sheet(tiles, 'sea3d_lee.png', 2); stage('lee pictures done')
         R['lee'] = lee
         L = R['lee']
+        Sh = R.get('shoal')
+        print(ok(Sh is not None and Sh['n'] >= 10 and Sh['good'] >= 0.8 * Sh['n']), 'by the shore at Botnhamn the shoal texture is up, and its way to the shore leads to shallower water (F4)', Sh)
         print(ok(L['wind'][0] > 4 and L['lee'][0] < 0.3 * L['wind'][0] and L['harbour'][0] < 0.2 * L['wind'][0] and L['harbour'][1] < 0.3), 'in a gale from NW the ground off Husøy has the full sea, the lee from the south a fraction, the harbour almost none')
         # 8. the boat's own waves at speed: a planing skiff, a sjark near hull speed and a 21 m coaster, on a calm sea, seen from astern
         tiles, wake = [], {}
