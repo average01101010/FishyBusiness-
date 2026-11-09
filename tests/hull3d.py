@@ -145,9 +145,10 @@ async def main():
             for fmt, (w, h) in (('liggende', (1280, 800)), ('staaende', (800, 1280))):
                 await pg.set_viewport_size({'width': w, 'height': h})
                 await pg.evaluate(LOAD, {'type': 'sjark', 'full': True, 'haul': haul})
-                await pg.evaluate("""() => { const D = G3._debug, b = S.boat, g = PORTS[0].p; b.status = 'idle'; b.port = null; S.plan = null; b.v = 0; b.pos = {x:g.x, y:g.y}; WX_FORCE = {w:0.3, d:315}; D.WV.init = false;
+                # (hauling: at the buoy, where the line goes down from the hauler, in the ground's calm; the full hold in the harbour's still water)
+                await pg.evaluate("""(haul) => { const D = G3._debug, b = S.boat, g = PORTS[0].p; if (!haul){ b.status = 'idle'; b.v = 0; b.pos = {x:g.x, y:g.y}; } b.port = null; S.plan = null; WX_FORCE = {w:0.3, d:315}; D.WV.init = false;
                   D.waves(1 / 30, S.t / 60); D.bv.hsea.on = true; b.heading = 1.2; D.bv.init = false;
-                  const c = D.cam; c.helm = false; c.dist = 17; c.pitch = 0.05; c.yaw = Math.PI / 2; window.__p0 = performance.now(); }""")
+                  const c = D.cam; c.helm = false; c.dist = 17; c.pitch = 0.05; c.yaw = Math.PI / 2; window.__p0 = performance.now(); }""", haul)
                 await pg.wait_for_function("performance.now() - window.__p0 > 4000", timeout=900000, polling=1000)
                 await pg.evaluate("G3.hold(true)")
                 f = f'hull3d_{name}_{fmt}.png'; await pg.screenshot(path=f, timeout=300000); shots.append(f)
