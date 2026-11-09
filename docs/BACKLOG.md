@@ -4,7 +4,7 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
-- **Målingen etter IAB/MRC 2.0 (steg 66) bygd 08.11.2026** (Jonas' økt, grenen `ccr-5c931049-sj9wgt`; `docs/systemer/handel-og-steder.md`, «Målingen etter IAB/MRC 2.0»; mediekortet del 4). Det som er antatt, svakt eller ikke gjort:
+- **Målingen etter IAB/MRC 2.0 (steg 66) bygd 08.11.2026 og rullet ut 09.11.2026 i a60171c** (Jonas' økt, grenen `ccr-5c931049-sj9wgt`; `docs/systemer/handel-og-steder.md`, «Målingen etter IAB/MRC 2.0»; mediekortet del 4). Det som er antatt, svakt eller ikke gjort:
   - **Skodderegelen slår ikke inn ennå:** `visibility` går aldri under 1,2 km, og bannerne måles innen 150 m. Regelen står og kommer til å virke når været får tettere skodde (eller havskodde).
   - **Natt er sola under −6°**, fordi banneret tegnes uten lampelys (`TEX_FS` tar ikke `pLit`). Lyser vi bannerne opp med flomlysene over kaia, kan de telles om natta også, men da endres bildet (`signshot`). Mørkeste dag: Bergen 7,75 t, Finnsnes 4,75 t, Bodø 5,75 t, Hammerfest 3,5 t med telling.
   - **UI-et som skjuling** ser bare det som tar imot berøring (`elementFromPoint`); et vindu med `pointer-events: none` som likevel dekker bildet, regnes ikke som skjuling. Midten av hver celle, ikke hele rektangelet.
