@@ -1780,3 +1780,10 @@
 2026-11-09 17:24	claude/rundsloyf-visible-start-16-81ss7b	86dfbfe+	rundshot	OK	24	lite	alene	
 2026-11-09 17:45	claude/rundsloyf-visible-start-16-81ss7b	e571eff	tut	OK	1254	lite	alene	
 2026-11-09 20:19	ccr-f04f4a09-btm7go	3eb792e+	geartest	OK	33	lite	alene	
+2026-11-09 19:53	ccr-aa5c8b75-dif283	4805aa7+	helmtest	OK	25	lite	samtidig	
+2026-11-09 19:53	ccr-aa5c8b75-dif283	4805aa7+	trip2	OK	33	lite	samtidig	
+2026-11-09 19:53	ccr-aa5c8b75-dif283	4805aa7+	autonavtest	FEIL	9	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 117, 'cell': 0.2, 'maxSlice': 8.6, 'mended': 0, 'b
+2026-11-09 20:03	ccr-aa5c8b75-dif283	c0665f9	colregtest	OK	602	lite	samtidig	
+2026-11-09 20:03	ccr-aa5c8b75-dif283	c0665f9	hudtest	OK	80	lite	samtidig	
+2026-11-09 20:03	ccr-aa5c8b75-dif283	c0665f9	progweek	LES	34	lite	samtidig	
+2026-11-09 20:03	ccr-aa5c8b75-dif283	c0665f9	simday	LES	10	lite	samtidig	

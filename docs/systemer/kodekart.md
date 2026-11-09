@@ -17,7 +17,7 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 60 `natP(lat, lon)`
   - 61 `natLL(p)`
 
-## `src/js/core/01-world.js` (481 linjer)
+## `src/js/core/01-world.js` (483 linjer)
 
 - **10** one clock for everyone (05.10.2026, the shared world V1)
   - 59 `gridScale(p)`
@@ -37,31 +37,31 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 169 `draftHazards()`
   - 184 `legReady(a, c)`
   - 193 `nearestPlace(p)`
-  - 197 `groundCheck(a, c)`
-  - 214 `runAground(p)`
-  - 229 `rocksNear(a, b, r)`
-  - 239 `rocksIn(x0, y0, x1, y1)`
-  - 247 `rocksAlong(a, b, r)`
-  - 261 `coastDist(p)`
-  - 262 `coastDistFar(p)`
-  - 268 `decodeContours()`
-  - 277 `isLand(p)`
-  - 285 `isLandFar(p)`
-  - 291 `isLandUI(p)`
-  - 297 `inHarbourPocket(p)`
-  - 303 `harbourNear(x, z)`
-  - 309 `qPockets()`
-  - 310 `pocketHit(US, QS, x, z)`
-  - 317 `pocketsIn(x0, y0, x1, y1)`
-  - 326 `legClear(a, b)`
-  - 340 `legClearMemo(a, b)`
-  - 371 `portLabel(p)`
-- **387** the harbour unit (02.10.2026)
-  - 428 `fillOut(U, lx, lz)`
-  - 441 `onUnitGround(p)`
-  - 448 `unitCovers(x, z, m)`
-  - 456 `bridgeUnderUnit(br, extra)`
-  - 461 `portApproach(pt)`
+  - 199 `groundCheck(a, c, sq = 0)`
+  - 216 `runAground(p)`
+  - 231 `rocksNear(a, b, r)`
+  - 241 `rocksIn(x0, y0, x1, y1)`
+  - 249 `rocksAlong(a, b, r)`
+  - 263 `coastDist(p)`
+  - 264 `coastDistFar(p)`
+  - 270 `decodeContours()`
+  - 279 `isLand(p)`
+  - 287 `isLandFar(p)`
+  - 293 `isLandUI(p)`
+  - 299 `inHarbourPocket(p)`
+  - 305 `harbourNear(x, z)`
+  - 311 `qPockets()`
+  - 312 `pocketHit(US, QS, x, z)`
+  - 319 `pocketsIn(x0, y0, x1, y1)`
+  - 328 `legClear(a, b)`
+  - 342 `legClearMemo(a, b)`
+  - 373 `portLabel(p)`
+- **389** the harbour unit (02.10.2026)
+  - 430 `fillOut(U, lx, lz)`
+  - 443 `onUnitGround(p)`
+  - 450 `unitCovers(x, z, m)`
+  - 458 `bridgeUnderUnit(br, extra)`
+  - 463 `portApproach(pt)`
 
 ## `src/js/core/01b-mapdata.js` (215 linjer)
 
@@ -762,7 +762,7 @@ crew: people with skills, habits and moods
   - 618 `flyOut(c)`
   - 626 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1383 linjer)
+## `src/js/core/05-vessels.js` (1385 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -824,48 +824,48 @@ crew: people with skills, habits and moods
   - 789 `plantFuel(b)`
   - 792 `sailV(H, hs)`
   - 804 `sail(H, W, hs)`
-  - 834 `sailWaiting()`
-  - 835 `sailReplan(pl, b, gp)`
-  - 863 `iceWhy(p, tried)`
-  - 865 `sailStop(pl, b, why)`
-  - 873 `haltPlan(need)`
-  - 883 `arrive(w)`
-  - 901 `unstuckWhy()`
-  - 907 `unstuckSpot()`
-  - 914 `unstuck()`
-- **928** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
-  - 936 `moorPhase(b)`
-  - 951 `dock(pid, berth)`
-  - 978 `catchFactors(H, W, hs)`
-  - 991 `stockDev(p, sp)`
-  - 997 `fish(H, W, hs)`
-  - 1090 `endFishing(why)`
-  - 1106 `addCatch(sp, kg, cls, hook, opt)`
-- **1127** work on deck: gutting and icing take hands and time
-  - 1143 `deckHands()`
-  - 1146 `deckPending()`
-  - 1147 `deckEta(hands)`
-  - 1152 `moveKg(x, kg, patch)`
-  - 1160 `iceMinute()`
-  - 1167 `iceOut(out)`
-  - 1173 `deckMinute()`
-- **1198** lying to in a storm (H1b R8, 05.11.2026)
-  - 1215 `quayFar(b)`
-  - 1219 `lieTo(W, hs)`
-  - 1226 `lieToStep(W, hs)`
-  - 1236 `risk(W, hs)`
-  - 1264 `hullRepair()`
-  - 1267 `svcOverdue()`
-- **1268** the rescue boat (plan E3, 05.10.2026)
-  - 1294 `rescueBases()`
-  - 1303 `rescueBase(p)`
-  - 1310 `rescueAis(H)`
-  - 1314 `rescue(keepCatch)`
-  - 1338 `towSea(p)`
-  - 1343 `towRoutes(b)`
-  - 1354 `towStep(H)`
-  - 1366 `towDone(t)`
-  - 1372 `towPose(frac)`
+  - 836 `sailWaiting()`
+  - 837 `sailReplan(pl, b, gp)`
+  - 865 `iceWhy(p, tried)`
+  - 867 `sailStop(pl, b, why)`
+  - 875 `haltPlan(need)`
+  - 885 `arrive(w)`
+  - 903 `unstuckWhy()`
+  - 909 `unstuckSpot()`
+  - 916 `unstuck()`
+- **930** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
+  - 938 `moorPhase(b)`
+  - 953 `dock(pid, berth)`
+  - 980 `catchFactors(H, W, hs)`
+  - 993 `stockDev(p, sp)`
+  - 999 `fish(H, W, hs)`
+  - 1092 `endFishing(why)`
+  - 1108 `addCatch(sp, kg, cls, hook, opt)`
+- **1129** work on deck: gutting and icing take hands and time
+  - 1145 `deckHands()`
+  - 1148 `deckPending()`
+  - 1149 `deckEta(hands)`
+  - 1154 `moveKg(x, kg, patch)`
+  - 1162 `iceMinute()`
+  - 1169 `iceOut(out)`
+  - 1175 `deckMinute()`
+- **1200** lying to in a storm (H1b R8, 05.11.2026)
+  - 1217 `quayFar(b)`
+  - 1221 `lieTo(W, hs)`
+  - 1228 `lieToStep(W, hs)`
+  - 1238 `risk(W, hs)`
+  - 1266 `hullRepair()`
+  - 1269 `svcOverdue()`
+- **1270** the rescue boat (plan E3, 05.10.2026)
+  - 1296 `rescueBases()`
+  - 1305 `rescueBase(p)`
+  - 1312 `rescueAis(H)`
+  - 1316 `rescue(keepCatch)`
+  - 1340 `towSea(p)`
+  - 1345 `towRoutes(b)`
+  - 1356 `towStep(H)`
+  - 1368 `towDone(t)`
+  - 1374 `towPose(frac)`
 
 ## `src/js/core/05c-air.js` (64 linjer)
 
@@ -2159,62 +2159,72 @@ MANUAL HELM (the user's wish 03.10.2026)
   - 63 `helmCast()`
   - 69 `helmCastDone(pid, kind)`
 
-## `src/js/core/16b-dyn.js` (596 linjer)
+## `src/js/core/16b-dyn.js` (682 linjer)
 
 HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
 
 - **1** HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
-  - 27 `dynPar(V)`
-  - 52 `dynInt(P, s, thr, rud, h, capF, E)`
-  - 87 `dynMove(s, h)`
-  - 94 `dynThrEq(P, u, capF)`
-- **95** the calibration: measured on the model itself, once a vessel
-  - 96 `dynTurn(P, V, u0 = V.vcruise * KN_MS)`
-  - 107 `dynAccel(P)`
-  - 113 `dynStops(P)`
-  - 118 `dynCal(key, sx = 1)`
-  - 137 `dynCalEng(base, sx, ck)`
-  - 142 `dynCalOf(b = S.boat)`
-  - 144 `dynCalRun(key, V, P, sx)`
-  - 161 `dynStopDist(cal, v)`
-  - 165 `dynVStop(cal, d)`
-- **166** the wind and the sea on her this tick (Fysikk 2)
-  - 179 `dynEnv(b, d, cal, H, dtG = 0)`
-- **206** contact: the hull against the piers, the breakwaters and the harbour units' quays (Fysikk 2)
-  - 215 `dynObsNear(X, Y, R)`
-  - 222 `dynInside(O, x, z)`
-  - 233 `dynContact(b, d, P, O)`
-- **260** with no way on: she drifts (Fysikk 2)
-  - 266 `dynDrift(type, p, H)`
-  - 288 `gearBuoyNear(p)`
-  - 290 `gearLieCrew()`
-  - 292 `gearWatch(b)`
-  - 300 `lieDrift(H)`
-- **339** the state, in step with the boat the rest of the game reads
-  - 340 `dynState(b)`
-  - 351 `dynWrite(b, d)`
-  - 356 `dynCan()`
-  - 361 `dynLive()`
-  - 366 `dynPose()`
-  - 373 `dynRest()`
-  - 374 `dynLivePose(frac)`
-  - 376 `dynHaltNeed()`
-- **377** the tick
-  - 378 `dynTick(dt)`
-  - 391 `dynMinute(H, W)`
-- **398** by hand (16-helm.js): the throttle and the rudder into the model
-  - 399 `dynHelm(d, dtG)`
-- **420** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
-  - 422 `dynLineBuild(pl, dep)`
-  - 442 `dynLineAt(T, s)`
-  - 448 `dynSeg(T, s)`
-  - 449 `dynSegHd(T, i)`
-  - 450 `dynLineProj(T, x, z, s0, back = 30)`
-  - 460 `dynLineHd(T, s, r0)`
-  - 467 `dynGroundAhead(T, s, look)`
-- **476** the autopilot
-  - 477 `dynAuto(d, dtG)`
-  - 595 `dynTrackView()`
+  - 33 `dynHumpG(Fr)`
+  - 35 `dynRes(P, u, capF = 1)`
+  - 38 `dynPar(V)`
+  - 65 `dynInt(P, s, thr, rud, h, capF, E)`
+  - 105 `dynMove(s, h)`
+  - 112 `dynThrEq(P, u, capF)`
+  - 114 `dynUeq(P)`
+- **115** the calibration: measured on the model itself, once a vessel
+  - 116 `dynTurn(P, V, u0 = V.vcruise * KN_MS)`
+  - 127 `dynAccel(P)`
+  - 133 `dynStops(P)`
+  - 138 `dynCal(key, sx = 1)`
+  - 157 `dynCalEng(base, sx, ck)`
+  - 164 `dynCalOf(b = S.boat)`
+  - 166 `dynCalRun(key, V, P, sx)`
+  - 183 `dynStopDist(cal, v)`
+  - 187 `dynVStop(cal, d)`
+- **188** the wind and the sea on her this tick (Fysikk 2)
+  - 201 `dynEnv(b, d, cal, H, dtG = 0)`
+- **233** squat, the bank and the shallow water (Ø9 F5, docs/planer/fysikk-4-sjo-og-skrog.md; Barrass, Norrbin, Schlichting)
+  - 239 `dynSquat(P, u, narrow)`
+  - 246 `dynShallowF(P, h, v)`
+  - 253 `dynWall(O, x, z, cap)`
+  - 268 `dynBankF(P, d0, gl, h)`
+  - 274 `dynBank(E, d, P, force)`
+  - 288 `keelClear(b = S.boat, H = S.t / 60)`
+- **292** contact: the hull against the piers, the breakwaters and the harbour units' quays (Fysikk 2)
+  - 301 `dynObsNear(X, Y, R)`
+  - 308 `dynInside(O, x, z)`
+  - 319 `dynContact(b, d, P, O)`
+- **346** with no way on: she drifts (Fysikk 2)
+  - 352 `dynDrift(type, p, H)`
+  - 374 `gearBuoyNear(p)`
+  - 376 `gearLieCrew()`
+  - 378 `gearWatch(b)`
+  - 386 `lieDrift(H)`
+- **425** the state, in step with the boat the rest of the game reads
+  - 426 `dynState(b)`
+  - 437 `dynWrite(b, d)`
+  - 442 `dynCan()`
+  - 447 `dynLive()`
+  - 452 `dynPose()`
+  - 459 `dynRest()`
+  - 460 `dynLivePose(frac)`
+  - 462 `dynHaltNeed()`
+- **463** the tick
+  - 464 `dynTick(dt)`
+  - 477 `dynMinute(H, W)`
+- **484** by hand (16-helm.js): the throttle and the rudder into the model
+  - 485 `dynHelm(d, dtG)`
+- **506** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
+  - 508 `dynLineBuild(pl, dep)`
+  - 528 `dynLineAt(T, s)`
+  - 534 `dynSeg(T, s)`
+  - 535 `dynSegHd(T, i)`
+  - 536 `dynLineProj(T, x, z, s0, back = 30)`
+  - 546 `dynLineHd(T, s, r0)`
+  - 553 `dynGroundAhead(T, s, look)`
+- **562** the autopilot
+  - 563 `dynAuto(d, dtG)`
+  - 681 `dynTrackView()`
 
 ## `src/js/core/16c-hull.js` (146 linjer)
 
@@ -2438,7 +2448,7 @@ Driftsplan 2, part 6: the chart plotter in plan mode (docs/planer/driftsplan-2/0
   - 67 `renderSetBar()`
   - 81 `setModeEnd(go, stay)`
 
-## `src/js/ui/03e-miniplot.js` (152 linjer)
+## `src/js/ui/03e-miniplot.js` (153 linjer)
 
 ---------- the little chart in 3D (the user's wish 02.10.2026) ----------
 
@@ -2449,7 +2459,7 @@ Driftsplan 2, part 6: the chart plotter in plan mode (docs/planer/driftsplan-2/0
   - 71 `miniFrame(t)`
   - 77 `miniSoundings(g, x0, y0, k, BW, BH, dpr, night)`
   - 91 `miniPaint()`
-  - 134 `miniSjv(ctx, X, Y, p, dpr)`
+  - 135 `miniSjv(ctx, X, Y, p, dpr)`
 
 ## `src/js/ui/03f-search.js` (118 linjer)
 
@@ -2468,7 +2478,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 89 `srchCard()`
   - 113 `srchSvg(u)`
 
-## `src/js/ui/04-panels-instruments.js` (338 linjer)
+## `src/js/ui/04-panels-instruments.js` (342 linjer)
 
 ---------- estimates ----------
 
@@ -2491,9 +2501,9 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 239 `vnoise2(x, y, s)`
   - 245 `microBottom(p, d)`
 - **247** instruments: GPS and echo sounder
-  - 322 `hudCardOpen(on)`
-  - 329 `hudClasses(stripOn, cardOn)`
-  - 333 `hudFold(which)`
+  - 326 `hudCardOpen(on)`
+  - 333 `hudClasses(stripOn, cardOn)`
+  - 337 `hudFold(which)`
 
 ## `src/js/ui/05-tattoo-art.js` (169 linjer)
 
