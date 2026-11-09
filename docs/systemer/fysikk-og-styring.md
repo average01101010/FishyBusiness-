@@ -197,7 +197,9 @@ Valg 2B (Jonas 27.10.2026): hiv og stamp i 3D regnes av krefter, ikke av at skro
 
 **Lyden av slaget** (`SND.slam` i `ui/10e-sound.js`, lagt inn etter at Ø11.6 var ute): et tungt, lavt dunk gjennom skroget (sinus fra 95 til 42 Hz på 0,3 s) og det hvite vannet etterpå (lavpasset støy på 0,9 s), med et smell i (båndpass rundt 2,4 kHz) når slaget er over 1,5 ganger grensen; fra forfoten som kameraet hører det, som slagene mot skroget (`SNDREF.slap`). `soundtest` sjekker at det høres tydelig nær, svakere for et mykere slag, og knapt 2 km unna.
 
-**Ikke gjort** (filene eies av en økt som kjører samtidig): skum i skumkartet der slaget og sprøyten lander (`14-sea.js` og `01-shaders.js`, F3). Ikke målt på nettbrettet ennå (Jonas måler med `#fps` mot nullpunktet 71 bilder/s i kap. 10 i planen).
+**Skummet der slaget og sprøyten lander** (F3b, 08.11.2026, 5.20h i `docs/systemer/vaer-og-hav.md`): det hvite vannet rundt forfoten og hver dråpe av teppet og baugsprøyten som faller ned i sjøen igjen, legges i skumkartet og blir liggende som vasken (τ 14 s). `hull3d` sjekker det (sjekk 7) og tar bildet `hull3d_skum_*`.
+
+**Ikke gjort:** ikke målt på nettbrettet ennå (Jonas måler med `#fps` mot nullpunktet 71 bilder/s i kap. 10 i planen).
 
 ### Vann i båten på stripa, i boksen og i Håndboka (07.11.2026, etter Tonys spilltest)
 

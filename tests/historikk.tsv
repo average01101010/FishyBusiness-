@@ -1364,3 +1364,18 @@
 2026-11-08 19:28	ccr-c27822e7-1y3qn3	30cd81b	docktest	OK	59	lite	samtidig	
 2026-11-08 19:31	ccr-c27822e7-1y3qn3	30cd81b	mobtest	OK	202	lite	samtidig	
 2026-11-08 19:31	ccr-c27822e7-1y3qn3	30cd81b	towtest	OK	11	lite	samtidig	
+2026-11-08 20:29	ccr-173e9292-helxkt	1140c82+	hull3d	FEIL	1500	3d	alene	gikk ut på tid
+2026-11-08 21:25	ccr-173e9292-helxkt	ccd56b9	skytest	FEIL	230	3d	alene	FEIL in 10 m/s from the west the clouds drift east-south-east at 15 m/s over a 1 500 m deck  {"secs": 49.8, "d": [-0.4269, -0.0925], "exp": [-0.5769, -0.1546]}
+2026-11-08 22:32	ccr-173e9292-helxkt	ccd56b9	sea3d	FEIL	4052	3d	alene	FEIL the spindrift in the air is thrown from the crests that break (FOAM.capAt at each drop's birth) {'U': 28, 'alive': 365, 'fromCrest': 305, 'random': 0.158, 
+2026-11-08 22:40	ccr-173e9292-helxkt	ccd56b9+	lighttest	OK	460	3d	alene	
+2026-11-08 22:41	ccr-173e9292-helxkt	ccd56b9+	dbg23o	OK	42	3d	alene	
+2026-11-08 23:01	ccr-173e9292-helxkt	ccd56b9+	wetshot	OK	1190	3d	alene	
+2026-11-08 23:06	ccr-173e9292-helxkt	ccd56b9+	f1test	OK	336	3d	alene	
+2026-11-08 23:07	ccr-173e9292-helxkt	ccd56b9+	gfxtest	OK	56	3d	alene	
+2026-11-08 23:12	ccr-173e9292-helxkt	ccd56b9+	sunshot	OK	296	3d	alene	
+2026-11-08 23:15	ccr-173e9292-helxkt	ccd56b9+	seatrytest	OK	183	3d	alene	
+2026-11-08 23:25	ccr-173e9292-helxkt	ccd56b9+	wakeshot	OK	608	3d	alene	
+2026-11-08 23:44	ccr-173e9292-helxkt	ccd56b9+	kinotest	OK	1111	3d	alene	
+2026-11-08 23:53	ccr-173e9292-helxkt	ccd56b9+	benchshot	OK	554	3d	alene	
+2026-11-09 00:01	ccr-173e9292-helxkt	ccd56b9+	profshot	OK	463	3d	alene	
+2026-11-09 00:30	ccr-173e9292-helxkt	ccd56b9+	hull3d	OK	1784	3d	alene	
