@@ -681,7 +681,7 @@ Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: 
 - **156** why the buyer cannot take it (a word), or null. to = {v, how}; kr0 what the bid binds:
   - 159 `kmBuyWhy(item, to, kr0)`
 
-## `src/js/core/04-crew.js` (607 linjer)
+## `src/js/core/04-crew.js` (631 linjer)
 
 crew: people with skills, habits and moods
 
@@ -703,58 +703,58 @@ crew: people with skills, habits and moods
   - 144 `tripAdd(b, k, kr0)`
   - 145 `tripCost(b = S.boat)`
 - **148** the trip's line on the landing note and in the deck log (Ø8b S2, V2 A and V4 A in docs/planer/spillbarhet-fangst.md, Jonas
-  - 156 `tripSum(T)`
-  - 168 `tripWhy(W)`
-- **194** the trip's limits on an ocean vessel (H2b of docs/planer/havsteget-h2-autoline.md, 05.11.2026). The fuel, the bait, the hooks for
-  - 200 `tripHome(b = S.boat)`
-  - 205 `tripLeft(b = S.boat)`
-  - 222 `tripHour()`
-- **232** the ocean vessel's crew as anonymous teams (H2b of docs/planer/havsteget-h2-autoline.md, V3 A; Jonas 05.11.2026: the teams
-  - 245 `lagOf()`
-  - 255 `lagPeople()`
-  - 272 `lagOnDeck(H, under)`
-  - 277 `lagMeal()`
-  - 280 `lagLanded(kr)`
-- **294** the provisions of an ocean vessel (H2b; Jonas 05.11.2026: «Fylles ved avgang»): the ship's chandler fills the stores aboard when she
-  - 303 `provOf(b = S.boat)`
-  - 304 `provFill()`
-  - 310 `provMinute()`
-  - 312 `crewHireWhy()`
-  - 315 `lottParty()`
-  - 325 `lottSplit(D)`
-  - 329 `payMates()`
-  - 334 `weekKr(len)`
-  - 335 `lotWeek(c, H = S.t / 60)`
-  - 340 `crewAboard(H, all)`
-  - 343 `biDaysTxt(c)`
-  - 346 `crewBiOff(H)`
-  - 348 `crewEff(c, H, hs, g = 'juksa')`
-- **355** what lifts or drags a person's effort just now, besides what they can and who they are (Jonas 23.10.2026: «dette skal være dynamisk
-  - 361 `crewDrive(c, H, hs)`
-  - 382 `crewEffort(c, H, hs)`
-- **389** samhold: how the crew aboard pull together (Jonas 23.10.2026: «Samhold ja, men det må gjøres intuitivt»), 0-100 per vessel (S.team,
-  - 394 `crewTeam()`
-  - 399 `teamHour(H, on, hs, food)`
-  - 418 `teamLine()`
-  - 426 `teamEff(team, me = true, g = 'juksa')`
-  - 428 `compat(a, b)`
-  - 441 `crewById(id)`
-  - 444 `holdNet()`
-  - 453 `crewSettle(c)`
-  - 462 `crewQuit(c, why, whyEn)`
-- **464** Named folk on the coast (Jonas 06.11.2026): real people who have asked to be in the game, as crew to hire at their home quay
-  - 474 `namedAge(n, H)`
-  - 475 `namedMake(n)`
-  - 480 `namedTaken(nid)`
-  - 481 `namedTick(B)`
-  - 490 `borsTick(H)`
-  - 499 `crewRumour()`
-  - 501 `crewTick(H)`
-  - 569 `codRoom(H)`
-- **571** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
-  - 585 `flyIn(c)`
-  - 594 `flyOut(c)`
-  - 602 `flyTick()`
+  - 158 `tripSum(T)`
+  - 174 `tripWhy(W)`
+- **218** the trip's limits on an ocean vessel (H2b of docs/planer/havsteget-h2-autoline.md, 05.11.2026). The fuel, the bait, the hooks for
+  - 224 `tripHome(b = S.boat)`
+  - 229 `tripLeft(b = S.boat)`
+  - 246 `tripHour()`
+- **256** the ocean vessel's crew as anonymous teams (H2b of docs/planer/havsteget-h2-autoline.md, V3 A; Jonas 05.11.2026: the teams
+  - 269 `lagOf()`
+  - 279 `lagPeople()`
+  - 296 `lagOnDeck(H, under)`
+  - 301 `lagMeal()`
+  - 304 `lagLanded(kr)`
+- **318** the provisions of an ocean vessel (H2b; Jonas 05.11.2026: «Fylles ved avgang»): the ship's chandler fills the stores aboard when she
+  - 327 `provOf(b = S.boat)`
+  - 328 `provFill()`
+  - 334 `provMinute()`
+  - 336 `crewHireWhy()`
+  - 339 `lottParty()`
+  - 349 `lottSplit(D)`
+  - 353 `payMates()`
+  - 358 `weekKr(len)`
+  - 359 `lotWeek(c, H = S.t / 60)`
+  - 364 `crewAboard(H, all)`
+  - 367 `biDaysTxt(c)`
+  - 370 `crewBiOff(H)`
+  - 372 `crewEff(c, H, hs, g = 'juksa')`
+- **379** what lifts or drags a person's effort just now, besides what they can and who they are (Jonas 23.10.2026: «dette skal være dynamisk
+  - 385 `crewDrive(c, H, hs)`
+  - 406 `crewEffort(c, H, hs)`
+- **413** samhold: how the crew aboard pull together (Jonas 23.10.2026: «Samhold ja, men det må gjøres intuitivt»), 0-100 per vessel (S.team,
+  - 418 `crewTeam()`
+  - 423 `teamHour(H, on, hs, food)`
+  - 442 `teamLine()`
+  - 450 `teamEff(team, me = true, g = 'juksa')`
+  - 452 `compat(a, b)`
+  - 465 `crewById(id)`
+  - 468 `holdNet()`
+  - 477 `crewSettle(c)`
+  - 486 `crewQuit(c, why, whyEn)`
+- **488** Named folk on the coast (Jonas 06.11.2026): real people who have asked to be in the game, as crew to hire at their home quay
+  - 498 `namedAge(n, H)`
+  - 499 `namedMake(n)`
+  - 504 `namedTaken(nid)`
+  - 505 `namedTick(B)`
+  - 514 `borsTick(H)`
+  - 523 `crewRumour()`
+  - 525 `crewTick(H)`
+  - 593 `codRoom(H)`
+- **595** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
+  - 609 `flyIn(c)`
+  - 618 `flyOut(c)`
+  - 626 `flyTick()`
 
 ## `src/js/core/05-vessels.js` (1345 linjer)
 
