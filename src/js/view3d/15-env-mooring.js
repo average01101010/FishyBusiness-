@@ -166,9 +166,10 @@
     if (vp !== MO.vp){ if (vp === 'stow') MO.coil = 0; MO.vp = vp; MO.cwait = 0; }
     const hn = moorHandsN(), man = hn ? CREW3D.moorMan() : null, ord = out ? [1, 2, 0] : [2, 1, 0];
     // each fender as its hand gets to it (without hands, one after the other); out on the way in and lying, in on the way out
-    let first = true;
+    // (only on the way in and out, when the hands have the time for them; made fast with them still aboard, they go out at once)
+    let first = true; const gate = hn && (vp === 'prep' || vp === 'in' || vp === 'stow');
     for (const k of ord){ const f = MO.fend[k], tg = out ? 1 : 0; if (f === tg){ MO.fwait[k] = 0; continue; }
-      if (hn ? man.has('f' + k) || (MO.fwait[k] += dt) > FEND_WAIT : first) MO.fend[k] = clamp(f + (tg - f > 0 ? 1 : -1) * dt / FEND_S, 0, 1);
+      if (gate ? man.has('f' + k) || (MO.fwait[k] += dt) > FEND_WAIT : first) MO.fend[k] = clamp(f + (tg - f > 0 ? 1 : -1) * dt / FEND_S, 0, 1);
       first = false; }
     // the lines coiled and stowed once the fenders are in
     if (vp === 'stow' && !MO.fend.some(f => f > 0) && MO.coil < 1 && (!hn || man.has('coil') || (MO.cwait += dt) > FEND_WAIT)) MO.coil = Math.min(1, MO.coil + dt / 4);
