@@ -248,9 +248,10 @@
     'return f;}';
   // The surf breaking (McCowan 1894: a wave breaks when its height is 0.78 of the depth): Hl the height that reaches here (the wind
   // sea's by the fetch just here, fw, and the swell's by the shelter, sb), against the depth dep; foam on the crest and the face ahead
-  // of it where it breaks, and the white water of the broken waves further in (the bores, past 1.3 times the limit). g: the grain.
+  // of it where it breaks, and the white water of the broken waves inside the break (the bores, from the limit, all of it at 1.6 times
+  // it: the surf zone off a beach is mostly white from the break in). g: the grain.
   const SURFF = 'float surfFoam(vec4 SH,float Et,float Eu,float Es,float dep,float fw,float sb,float g){if(dep<=0.0)return 0.0;float Hl=2.83*sqrt(Et*fw*fw+Eu*sb*sb);float rho=Hl/(0.78*max(dep,0.05));float brk=smoothstep(0.7,1.0,rho);if(brk<=0.0)return 0.0;' +
-    'float cw=0.5;if(Es>1e-7)cw=smoothstep(0.45,0.95,sin(surfF(SH)-0.35));return brk*smoothstep(0.0,0.1,dep)*max(cw*(0.8+0.6*(g-0.5)),smoothstep(1.3,2.2,rho)*(0.45+0.45*g));}';
+    'float cw=0.5;if(Es>1e-7)cw=smoothstep(0.45,0.95,sin(surfF(SH)-0.35));return brk*smoothstep(0.0,0.1,dep)*max(cw*(0.8+0.6*(g-0.5)),smoothstep(0.95,1.6,rho)*(0.5+0.5*g));}';
   // the foam a hull makes this frame, shared by the foam map's pass (your boat) and the other boats' pass (NPCF_FS, 04.11.2026)
   // (pow(x, 2.0) is undefined in GLSL for x < 0: Adreno gives NaN, which the other boats' pass wrote straight into the map as white
   // squares over their way, 04.11.2026; the squares that may go negative are hfSq)
@@ -454,11 +455,12 @@
     // out smoothly from the foreshore with no edge of the coarse cells
     'dep=mix(max(dep,4.0),uTideL-hs,smoothstep(-3.95,-3.0,hs));}}' +
     'col=mix(col,vec3(0.07,0.33,0.32)*(uAmb*1.5+uSunCol*0.75),(1.0-smoothstep(0.3,5.0,dep))*0.42*(1.0-fr)*ef);' +
-    // the surf (F4): where the waves that reach this shore break, on the crests rolling in and the white water inside them; the
-    // band along the line below is then the swash only (before, the band was all the surf there was: wide as the open sea's height)
-    'float bw=0.3+hl*1.4;\n#ifndef FAR\nif(SH.x<78.0&&Et+Eu>0.0){float fw=clamp(fetchW(P,-w,S.w)/max(S.w,0.01),0.0,1.0);float sb=swellW(P,-uWa[11].xy);' +
-    'float g=ns(Pb*0.9+vec2(uTime*0.3,1.0))*0.6+mix(0.5,ns(Pb*2.6-vec2(0.0,uTime*0.4)),mo)*0.4;foam=max(foam,surfFoam(SH,Et,Eu,Es,dep,fw,sb,g)*ef*lod);bw=0.3+0.5*2.83*sqrt(Et*fw*fw+Eu*sb*sb);}\n#endif\n' +
-    'float band=(1.0-smoothstep(0.0,bw,dep))*smoothstep(-0.2,0.02,dep);float sw=0.5+0.5*sin(uTime*0.9+dot(P,w)*0.06);' +
+    // the surf (F4): where the waves that reach this shore break, on the crests rolling in and the white water inside them; and the
+    // band along the line below as wide as before, but from the height that reaches just here (the fetch and the shelter: a basin
+    // behind a breakwater had the open sea's), its lines rolling in with the surf wave instead of running along the wind
+    'float bw=0.3+hl*1.4;float sws=-1.0;\n#ifndef FAR\nif(SH.x<78.0&&Et+Eu>0.0){float fw=clamp(fetchW(P,-w,S.w)/max(S.w,0.01),0.0,1.0);float sb=swellW(P,-uWa[11].xy);' +
+    'float g=ns(Pb*0.9+vec2(uTime*0.3,1.0))*0.6+mix(0.5,ns(Pb*2.6-vec2(0.0,uTime*0.4)),mo)*0.4;foam=max(foam,surfFoam(SH,Et,Eu,Es,dep,fw,sb,g)*ef*lod);bw=0.3+1.4*2.83*sqrt(Et*fw*fw+Eu*sb*sb);if(Es>1e-7)sws=0.5+0.5*sin(surfF(SH)+0.6);}\n#endif\n' +
+    'float band=(1.0-smoothstep(0.0,bw,dep))*smoothstep(-0.2,0.02,dep);float sw=sws>=0.0?sws:0.5+0.5*sin(uTime*0.9+dot(P,w)*0.06);' +
     'float ln=ns(P*0.32+vec2(uTime*0.35,-uTime*0.25))*0.6+ns(P*0.95-uTime*0.45)*0.4;' +
     'foam=max(foam,band*smoothstep(0.35,0.72,ln+band*0.2)*(0.3+0.7*clamp(hl*1.6,0.0,1.0))*(0.7+0.3*sw)*ef);}}' +
     'if(uDbg>0.5){gl_FragColor=vec4(vec3(clamp(foam,0.0,1.0)),1.0);return;}' +
