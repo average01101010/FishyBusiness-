@@ -122,7 +122,7 @@ async def play(p, W, H, tag):
     # (the gifts for the badges earned in the first trip are kept and given when it is over, 09f-merker.js achGive: up to eight «Gave for …»
     # lines can come right after it ends, before this is read, and pushed the trip's own lines out of the last eight; U2-7 08.11.2026)
     check(end['tut'] == 0 and 'Første tur er fullført' in ' '.join(end['log']), tag + ': veiledningen er fullført', end['log'])
-    check(free.get('gear') and free.get('ice', 1) == 0 and free.get('cash') == 15000, tag + ': juksa satt på fra start, og ingen is før første fiske', free)
+    check(free.get('gear') and free.get('ice', 1) == 0 and free.get('cash') == 2000, tag + ': juksa satt på fra start, og ingen is før første fiske', free)
     check(end['iceFree'] and end['freeIce'] and end['gear'], tag + ': isen er den åpne oppgaven etter første tur: første fylling venter gratis på mottaket (Onboarding 2, O4, V5 A)', {k: end[k] for k in ('ice', 'iceFree', 'freeIce', 'gear')})
     check('i timen' in norm, tag + ': sluttseddelen sier at første tur var ekstra god, og hva fisket her vanligvis gir (O4)', norm[:120])
     # the slip and the deck log say the same N (Ø8b S0, Jonas' choice A 08.11.2026: portSlip calls tutNormKg)

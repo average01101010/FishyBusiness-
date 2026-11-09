@@ -15,9 +15,10 @@ Jonas' avgjørelser står i `docs/engasjement.md`, arbeidslista punkt 1.5 og 3. 
 - **Kapitlene:** et kapittel åpner det neste når fem av sju er tatt (`ACH_OPEN`), så ingen står fast på én de ikke vil ta.
   - Milepæler som er nådd i et kapittel som ikke er åpent, er krysset av når kapittelet åpnes, og gavene kommer da.
   - Når alle sju er tatt, kommer belønningen (`achChapter`) og en melding fra Kystposten:
-    - **Kapittel 1:** gavene underveis, ingen egen belønning (`pen` = 1 telles fortsatt).
+    - **Kapittel 1:** 5 000 kr på brukskontoen (`ACH_CH1_KR`, `book('annet')`; Jonas 09.11.2026, i stedet for vimpelen; `pen` = 1 telles fortsatt).
     - **Kapittel 2:** en vanlig haill (`pen` = 2).
     - **Kapittel 3:** skrogfargen «Kystfisker» (`HULLPAL` med merket `ach`, `palOk`, gratis å male; `pen` = 3).
+  - **Startkassa er 2 000 kr** (`START_KR` i `core/05-vessels.js`, Jonas 09.11.2026, ned fra 15 000): nok til en dieselfylling (rundt 870 kr) og is (225 kr) før første levering, så ingen starter på kassekreditten; første levering med full last gir rundt 14 000–22 000 kr. Gjelder bare nye spill. Jonas foreslo 500 kr; 2 000 ble valgt fordi 500 ikke rekker til én fylling. `tests/unit/merker.test.mjs` sjekker begge tallene.
   - **Vimplene er tatt bort** (Jonas 09.11.2026: «fjerne vimplene fra båtene. Jeg liker de ikke. Flaggene beholdes.»): ingen vimpel i masta på egen eller andres båt, ingen `p:N` i malingskoden (`livPen` leser gamle koder, men ingenting tegnes), `penTex`, `PEN_S`, `.ach-pen` og `tests/penshot.py` er borte. `mastTop` står igjen for modelltestene. Flaggformen «Vimpel» i Malerverkstedet er et flagg i akterenden og står.
 - **Gavene («drypp»)** gis ved `achGive`:
   - **Trekningen:** `achPool(skala)` gir det som passer nå: agn bare med line eller teiner, bøting bare med garn som er slitt, skrogrens bare når båten er begrodd, motorservice når den er over 30 % av intervallet, is og diesel når det er plass. Så kommer penger.
