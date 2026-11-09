@@ -235,12 +235,17 @@ async def main():
         # 9. calibration (start values): kg per unit and the jig day for comparison
         await pg.evaluate("crabReady()")
         r = await pg.evaluate("""(()=>{ S.stock = initStock(); const R = {}, Hf = HOUR(2028, 1, 10, 6), Hm = HOUR(2028, 2, 5, 6), Hc = HOUR(2028, 8, 10, 6);
-          // the eight best haddock spots on the grounds: one spot alone swings from 50 to 110 kg a tub with where the fish's patches lie
-          const C = []; for (const g of GROUNDS) for (let k = 0; k < 60; k++){ const a = k * 2.4, r0 = g.r * (k % 6) / 5, q = {x:g.p.x + Math.cos(a) * r0, y:g.p.y + Math.sin(a) * r0}; if (isLand(q)) continue; C.push([density('hyse', q, Hf), q]); }
+          // the eight best haddock spots round Senja's six old grounds (out to twice their radius, where the fishermen's own grounds lie:
+          // Ø14 F2, 08.11.2026, the grounds are no circles of extra fish any more): one spot alone swings from 50 to 110 kg a tub with
+          // where the fish's patches lie
+          const C = []; for (const g of GROUNDS) for (let k = 0; k < 120; k++){ const a = k * 2.4, r0 = g.r * 2 * (k % 11) / 10, q = {x:g.p.x + Math.cos(a) * r0, y:g.p.y + Math.sin(a) * r0}; if (isLand(q)) continue; C.push([density('hyse', q, Hf), q]); }
           C.sort((a, b) => b[0] - a[0]); let kg = 0, hy = 0;
           for (const [, q] of C.slice(0, 8)){ S.stock = initStock(); const L = dry('line', {lk:'hyse', hooks:2800, n:4}, q, Hf, 12); kg += kgOf(L); hy += L.acc.hyse.kg; }
           R.linePerTub = Math.round(kg / 32); R.lineHyse = Math.round(hy / kg * 100); S.stock = initStock();
-          const N = dry('garn', {mesh:180, n:30}, GROUNDS[2].p, Hm, 20); R.netPerNet = Math.round(kgOf(N) / 30);
+          // the nets: the mean of the four best cod spots of 30-150 m within the old ground west of Gryllefjord (6.5 km), where a netter
+          // would set by the echo sounder (until Ø14 F2 its middle, which the ground's circle of extra fish made the best spot)
+          const CN = []; { const g = GROUNDS[2]; for (let k = 0; k < 120; k++){ const a = k * 2.4, r0 = g.r * (k % 11) / 10, q = {x:g.p.x + Math.cos(a) * r0, y:g.p.y + Math.sin(a) * r0}; if (isLand(q) || depthF(q) < 30 || depthF(q) > 150) continue; CN.push([density('torsk', q, Hm), q]); } }
+          CN.sort((a, b) => b[0] - a[0]); let nk = 0; for (const [, q] of CN.slice(0, 4)){ S.stock = initStock(); nk += kgOf(dry('garn', {mesh:180, n:30}, q, Hm, 20)); } R.netPerNet = Math.round(nk / 4 / 30); S.stock = initStock();
           const P = dry('teine', {pot:'big', n:100}, window.CRABSPOT, Hc, 24); R.potPerPot = +(kgOf(P) / 100).toFixed(2);
           let jig = 0; for (let h = 0; h < 8; h++) for (const sp of SP) jig += 30 * density(sp, GROUNDS[2].p, Hm + h); R.jigOneHand8h = Math.round(jig);
           return R; })()""")

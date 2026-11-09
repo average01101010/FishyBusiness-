@@ -708,6 +708,61 @@ for _k in ('line', 'garn'):
     for _lv in (1, 2, 3):
         _f = _opp2(_k, _lv); SCEN[_f.__name__] = _f; MEASURE.add(_f.__name__)
 
+# ---- Ø14 F2 of docs/planer/fangstfelt.md (08.11.2026): the fish on the fishing grounds. At five places along the coast in the month the
+# grounds have cod (Henningsvær and Bodø and Bergen in March, Hammerfest in January, Båtsfjord in April), up to three of Fiskeridirektoratet's
+# fishing grounds within 35 km that have cod that month (those with a season first): a point inside each (0.4-1.5 km in, where the depth
+# suits cod) and one 4-6 km away outside every ground in the same location at about the same depth. What one person with the hand jig
+# would take there in three hours a day (8-11) for ten days: 30 × density × 2 a game hour, read every ten minutes (the stock, the
+# weather and the luck left out, so the two places differ only by where the fish stand), and the same in a month the ground has no cod.
+# The aim (the plan): 1.5-2 times as much on the ground over the ten days, the ground best on 60-85 % of the days, and within ±20 % out
+# of season. Not in the default run (MEASURE); run as: python3 tests/fiskeplay.py felt
+FELT_JS = """async ([lat, lon, sp, m]) => { const c = P(lat, lon); await mapNeed(c, MAPD.simR); const G = feltGeo(), out = [];
+  const cand = G.filter(g => Math.hypot(g.cx - c.x, g.cy - c.y) < 35 && g.sm[sp] && ((g.sm[sp] >> (m - 1)) & 1));
+  cand.sort((a, b) => (a.sm[sp] === 4095) - (b.sm[sp] === 4095) || Math.hypot(a.cx - c.x, a.cy - c.y) - Math.hypot(b.cx - c.x, b.cy - c.y));
+  for (const g of cand){ if (out.length >= 3) break;
+    // points 0.4-1.5 km inside where the depth suits the species, each tried for a point 4-6 km away outside every ground in the same
+    // location at about the same depth (the map is asked for round each, as a boat going there would have it)
+    let pin = null, pout = null, d0 = 0;
+    for (let i = 0; i < 400 && !pout; i++){ const p = {x:g.b[0] + (g.b[2] - g.b[0]) * hash(g.f.i * 977 + i * 2), y:g.b[1] + (g.b[3] - g.b[1]) * hash(g.f.i * 977 + i * 2 + 1)};
+      const sd = feltSd(g, p.x, p.y); if (sd < 0.4 || sd > 1.5) continue;
+      try { await mapNeed(p, 7); if (isLand(p) || feltDepth(sp, depthF(p)) < 0.5) continue; } catch (e){ continue; }
+      const l = lokOfCell(p).l, dd = depthF(p);
+      for (let r = 4; r <= 6 && !pout; r += 0.5) for (let a = 0; a < 24 && !pout; a++){ const q = {x:p.x + Math.cos(a / 24 * 2 * Math.PI) * r, y:p.y + Math.sin(a / 24 * 2 * Math.PI) * r};
+        try { if (lokOfCell(q).l !== l || feltAt(q) || isLand(q)) continue; const d = depthF(q); if (Math.abs(d - dd) > 0.3 * dd + 5) continue; pin = p; pout = q; d0 = dd; } catch (e){} } }
+    if (!pout) continue;
+    let off = 0; for (let k = 1; k < 12; k++){ const mm = (m - 1 + k) % 12; if (!((g.sm[sp] >> mm) & 1)){ off = mm + 1; break; } }
+    out.push({n:g.f.nf || g.f.n || ('#' + g.f.i), months:g.sm[sp].toString(2).padStart(12, '0').split('').reverse().join(''), pin, pout, din:Math.round(d0), dout:Math.round(depthF(pout)), off}); }
+  return out; }"""
+FELT_DAYS = """([pin, pout, sp, y, m, days, on]) => { const res = []; FELTW.on = on !== false;
+  for (let d = 0; d < days; d++){ let a = 0, b = 0; for (let k = 0; k < 18; k++){ const H = (Date.UTC(y, m - 1, 5 + d, 8) - EPOCH) / 3.6e6 + k / 6;
+      a += 30 * density(sp, pin, H) * 2 / 6; b += 30 * density(sp, pout, H) * 2 / 6; } res.push([+a.toFixed(1), +b.toFixed(1)]); }
+  FELTW.on = true; return res; }"""
+
+@scenario
+async def felt(pl):
+    """Ø14 F2: the hand jig three hours a day for ten days on fishing grounds in season and 4-6 km away (see FELT_JS above)."""
+    rows = []
+    for nm, lat, lon, m in [('Henningsvær', 68.15, 14.2, 3), ('Bodø', 67.28, 14.38, 3), ('Bergen', 60.45, 5.05, 3), ('Hammerfest', 70.66, 23.68, 1), ('Båtsfjord', 70.63, 29.72, 4)]:
+        F = await pl.js(FELT_JS, [lat, lon, 'torsk', m])
+        if not F: pl.note('felt', '%s: no ground with cod in month %d within 35 km with a point 0.4-1.5 km inside and one 4-6 km away' % (nm, m)); continue
+        for f in F:
+            on = await pl.js(FELT_DAYS, [f['pin'], f['pout'], 'torsk', 2027, m, 10])
+            a = sum(x[0] for x in on); b = sum(x[1] for x in on); best = sum(1 for x in on if x[0] > x[1])
+            # the same two points without F2 (FELTW.on false): what the place gives without the ground's lift
+            o0 = await pl.js(FELT_DAYS, [f['pin'], f['pout'], 'torsk', 2027, m, 10, False]); a0 = sum(x[0] for x in o0); b0 = sum(x[1] for x in o0); best0 = sum(1 for x in o0 if x[0] > x[1])
+            r = {'place': nm, 'ground': f['n'], 'months': f['months'], 'depth': [f['din'], f['dout']], 'in': round(a), 'away': round(b), 'x': round(a / max(0.1, b), 2), 'best': best,
+                 'x0': round(a0 / max(0.1, b0), 2), 'best0': best0, 'lift': round((a / max(0.1, a0)) / (b / max(0.1, b0)), 2)}
+            if f['off']:
+                of = await pl.js(FELT_DAYS, [f['pin'], f['pout'], 'torsk', 2027, f['off'], 10]); oa = sum(x[0] for x in of); ob = sum(x[1] for x in of)
+                r.update({'offMonth': f['off'], 'offX': round(oa / max(0.1, ob), 2)})
+            rows.append(r); pl.note('felt', json.dumps(r, ensure_ascii=False))
+    if rows:
+        xs = [r['x'] for r in rows]; bs = [r['best'] for r in rows]; ox = [r['offX'] for r in rows if 'offX' in r]; x0 = [r['x0'] for r in rows]; lf = [r['lift'] for r in rows]
+        md = lambda v: sorted(v)[len(v) // 2] if v else float('nan')
+        pl.note('felt', 'all %d grounds: %.2f times on the ground over ten days (median %.2f; without F2 %.2f), the ground best on %d %% of the days (without F2 %d %%); F2 alone lifts the ground %.2f times against the point away (median); out of season %.2f (median)' % (
+            len(rows), sum(xs) / len(xs), md(xs), md(x0), round(100 * sum(bs) / (10 * len(bs))), round(100 * sum(r['best0'] for r in rows) / (10 * len(rows))), md(lf), md(ox)))
+MEASURE.add('felt')
+
 #SCENARIOS#
 
 async def main():
