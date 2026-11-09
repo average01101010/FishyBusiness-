@@ -35,18 +35,20 @@ For å sette trebåten, skiffen og snekka på samme skala som de andre er punkte
 
 **Karakterene** (satt i grunnlagene; trebåten, skiffen og snekka er forslag fra denne revisjonen, med punktene i kapittel 4). Jonas setter karakteren før en båt regnes som ferdig.
 
-| Båt | Karakter | Kilde |
-|---|---|---|
-| `kyst15` | 76 (godkjent), **71 etter klippene, under grensen** | `kyst15-grunnlag.md` 121–141; kapittel 4.9; må også eksporteres på nytt (pchip-feilen, 10,6 cm mellom sidene ved stevnen, `BACKLOG.md`) |
-| `breisjark` | 72, **68 etter klippene** | `breisjark-grunnlag.md` 127–154; kapittel 4.8 |
-| `sjarkny` | 70, **66 etter klippene** | `sjarkny-grunnlag.md` 109–120; kapittel 4.7 |
-| `snekke` | **67 (forslag)** | kapittel 4.3 |
-| `plastsjark` | 66, **63 etter klippene** | `plastsjark-grunnlag.md` 192–214; kapittel 4.4 |
-| `sjark` | 64, **61 etter klippene** | `havsjark-grunnlag.md` 115–123; kapittel 4.5 |
-| `trebat` | **63 (forslag)** | kapittel 4.1 |
-| `hurtigsjark` | 62, **59 etter klippene** | `hurtigsjark-grunnlag.md` 123–132; kapittel 4.6 |
-| `skiff` | **57 (forslag)** | kapittel 4.2 |
-| `kyst21` | ingen (ikke revidert, anslag rundt 50) | kapittel 4.10 |
+| Båt | Satt i grunnlaget | Etter OB0 | Kapittel |
+|---|---|---|---|
+| `kyst15` | 76 (godkjent) | **71**, under grensen; må også eksporteres på nytt (pchip-feilen, 10,6 cm mellom sidene ved stevnen) | 4.9 |
+| `breisjark` | 72 | **68** | 4.8 |
+| `snekke` | ingen | **67** (forslag) | 4.3 |
+| `sjarkny` | 70 | **66** | 4.7 |
+| `plastsjark` | 66 | **63** | 4.4 |
+| `trebat` | ingen | **63** (forslag) | 4.1 |
+| `sjark` | 64 | **61** | 4.5 |
+| `hurtigsjark` | 62 | **59** | 4.6 |
+| `skiff` | ingen | **57** (forslag) | 4.2 |
+| `kyst21` | ingen (ikke revidert) | **48** (grovt anslag) | 4.10 |
+
+Ingen av de ti er over 75 etter klippene. Det som trekker ned, er nesten bare K6 (arbeidsflyten og plassene): funnene med alvor A i arbeidet. De fleste av dem ligger i den felles koden (kapittel 3), ikke i modellene, så OB2–OB4 løfter alle båtene samtidig.
 
 ## 3. Funnene som gjelder alle båtene
 
@@ -74,7 +76,7 @@ Koden for arbeidet er felles for kystflåten, så det meste som er galt, er galt
 | F21 | Folk i klump på én side | De som jukser, står i en klump i styrbord hjørne (plastsjarken tre, havsjarken fire), babord er tom; maskinene står under en meter fra hverandre. | Juksamaskinene fordeles langs begge ripene med armlengdes avstand, så snørene ikke går i hverandre. | `jigRail` (`view3d/13-instruments.js`), `kartlegging-spillet.md` K2 | B |
 | F22 | Alltid styrbord mot kaia | Båten legges alltid med styrbord mot kaia, med fenderne og tauene der. På den nye hurtigsjarken står kranen i babord hekk (som tegningen), så den må nå over hele dekket og ut over kaia. | Skipperen legger til med den siden som passer kaia og arbeidet; en kranbåt legger kranen mot kaia. | `view3d/15-env-mooring.js` (`sx * 0.95`), `berthPose` (`core/07-harbours.js:293`) | B |
 | F23 | Båtens egen kran | Kranen står riktig, svinger og løfter, men ingen kjører den (de på dekk vinker, `last:at:guide`), ingen på kaia hekter på, og ingen kasse ses i kroken i klippene (hurtigsjarken og den nye hurtigsjarken). | Én kjører kranen fra standplassen, én hekter på. | `view3d/09-landing-deck.js:585`, `deckcrew.js` | B |
-| F24 | Haleren uten folk på båtene med ly og shelterdekk | I alle trekkene på breisjarken og kyst15 står ingen ved haleren eller blødekaret: den som haler og den som bløgger, sendes inn (`haling:in`, `blogg:in`) fordi haleren står mer enn 1,2 m over dekkskartet der de skulle stå (1,25 m på begge). Lina og garnet går inn i en tom haler. | Haleren betjenes av én som står ved den hele trekket. | `deckcrew.js:190` (grensen 1,2 m mot `ST.G.hauler[1]`), `malo36.py:78–80, 101, 1064`, `kyst15.py:44, 385, 1093` | **A** |
+| F24 | Haleren uten folk på de store båtene | I alle trekkene på breisjarken, kyst15 og kyst21 står ingen ved haleren eller blødekaret: den som haler og den som bløgger, sendes inn (`haling:in`, `blogg:in`) fordi haleren står mer enn 1,2 m over dekkskartet der de skulle stå (1,25 m på breisjarken og kyst15, 1,30 m på kyst21). På kyst21 er dekket åpent, og i garntrekket er alle inne og dekket tomt. Haleren står der en mann når den; det er regelen som er feil. Lina og garnet går inn i en tom haler. | Haleren betjenes av én som står ved den hele trekket. | `deckcrew.js:190` (grensen 1,2 m mot `ST.G.hauler[1]`), `malo36.py:78–80, 101, 1064`, `kyst15.py:44, 385, 1093`, `kyst21.py:434` | **A** |
 | F16 | Garn på skiffen og trebåten | `VESSELS` sier at begge kan rigges for garn, men garnhaleren krever 7,5 m, så det går ikke i spillet. | Små båter setter og trekker garn for hånd eller med en liten haler. | `core/02-species-gear.js:111–121, 255` | C (valg 20) |
 | F17 | Roing | Ingen årer og ingen roing finnes; trebåten og skiffen går for motor. | Riktig for båtene slik de er; nevnt fordi det ble spurt etter. | søkt i `src/js` | – |
 | F18 | Arbeidet under shelterdekket og lyet synes ikke | På kyst15 er shelterdekket tomt i hele sløyeklippet med 800 kg i karet: de fire står ved bordet og karet i halestasjonen (`sloy:at`, `is:at`), men kameraet over shelterdekket ser ikke inn. På breisjarken skjuler takkanten hodene og hendene til dem som sløyer under lyet. | Riktig plassert (arbeidet skjer under ly), men spilleren ser ikke arbeidet. Kameraet bør kunne se inn i halestasjonen (et eget utsnitt når arbeidet er der, eller lavere og fra siden). | `deckcrew.js:187–190`, `view3d/24-cinema.js:316–335` (kameraet) | **A** |
@@ -386,6 +388,52 @@ Bilder til Jonas:
 - /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/kyst15/line_sett_liggende_2.jpg
 - /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/kyst15/felles_kran_liggende_2.jpg
 
+### 4.10 Den eldre kystbåten 21 m (`kyst21`, `kyst21.py`): anslag 48/100 (ingen satt; ikke revidert)
+
+Data (`02-species-gear.js:164`): 21 m, 7,2 m bred, 3,4 m dyp, `disp` 190 t (modellen gir **249 t**, +31 %, grovt anslag), 6+1 (fire agenter i opptaket), 8 køyer / 4 lugarer, rom 90 m³, dekkslast 10 t, **kran 2 t** (moderne knekkbom på forbakken babord, M16), `jukseMax` 8 (på `jigRail`, ikke `JIG_Z`), `haler` 2 (ett anker), garn 240, stamper 33, teiner 30, bygd 1978, bysse og messe, åpent arbeidsdekk (ingen shelter, `open: False`). Haleren på styrbord ripe ved galgen (x 12,0), blødekaret (9,3) og sløyebordet (10,2–11,1) rett akter for den om styrbord, garnet og stampene på luka (`kyst21.py:429–457`). Ingen slange i modellen.
+
+Opptakene: liggende, 3,0–4,4 bilder i sekundet, 14 klipp. **Sette line og sette garn ble hoppet over** (`SKIP`: «Fartøy på 21–27,99 m kan ikke fiske torsk, hyse, sei innenfor grunnlinjen her»), så linesettingen og garnsettingen kan ikke vurderes. Klippesjekken er tom i alle klippene; ingen av funnene under er fanget av den.
+
+| Operasjonen | Hva som er galt | Hvorfor det ikke er ekte | Kilde | Alvor |
+|---|---|---|---|---|
+| Trekk (line, garn, teiner) | **F24 rammer kyst21 også, og verst i garntrekket:** haleren står 1,30 m over dekket (ripa 0,95 + 0,35), så den som haler og den som bløgger, sendes inn i alle tre trekkene (`haling:in`, `blogg:in`). I garntrekket er **alle fire inne**: garnet går inn i en tom haler ved galgen, og dekket er tomt. I linetrekket står den ene som er ute, og lener seg ved styrhuset (`pause:at:lean`). Det er ingen ly eller noe shelterdekk her. Haleren står på ripa der en mann på dekket når den, så det er regelen som er feil, ikke modellen. | Én står ved haleren og haler hele trekket, én bløgger ved karet rett akter for den. | F24; `deckcrew.js:190`; `kyst21.py:434` (`hauler`: `z_top + 0.35`, dekket `z_top − 0.95`); sett i `garn_trekk_liggende_2.jpg`, `line_trekk_liggende_2.jpg` | **A** |
+| Teiner, trekk | Teinedaviten står over ripa ved galgen uten noen ved haleren (raden over). **De tre som sorterer, står i én klump** ved brettet innenfor galgen, med fargene i hverandre. Alle tre får samme mål (`at(PL.pot)`), og `claim` skiller dem bare med 0,4 m (`SEP`), så de står trolig inni hverandre (for smått til å avgjøre helt). Ingen teinestabel kan skilles ut (F7). | Én haler og tar teina inn, én eller to tømmer og sorterer side om side ved bordet, én stabler. | `deckcrew.js:194` (`sort`), `:17` (`SEP` 0,4), `:321–329`; F19, F7; sett i `teiner_trekk_liggende_2.jpg`, `_3.jpg` | **A** (F19) |
+| Fullt kar, sløying | Riktig sted (bordet og blødekaret om styrbord akter for galgen, på åpent dekk, synlig). Men de tre som sløyer og den som iser, står i en klump ved bordet og karet, slik at kroppene går i hverandre i begge bildene. Bordet er 0,9 m langt. Nummer to og tre skal stå 0,7 m forut og akter, så om de faktisk står inni hverandre, kan ikke avgjøres sikkert. | To–tre ved et bord står side om side eller på hver sin side; isingen ved luka. | F19; `deckcrew.js:133–137` (`deckAt`); sett i `juksa_sloy_liggende_2.jpg`, `_3.jpg` | **A** (F19, usikker) |
+| Juksa og juksamaskinene | Alle fire på styrbord: tre skulder i skulder ved ripa foran styrhuset, maskinene under en meter fra hverandre, og den fjerde **mellom galgebeina** ved haleren (om et bein går gjennom ham, kan ikke avgjøres). Babord ripe er tom (F21). Ellers er grepet riktig: jukset over ripa, fisken opp og bløgget (11 opp, 9 bløgget). | Maskinene fordeles langs begge ripene med armlengdes avstand, ikke inne i galgen. | F21; `jigRail`, `jigSpot` (`deckcrew.js:129–130`); sett i `juksa_jig_liggende_2.jpg`, `_3.jpg`, `juksa_maskin_liggende_2.jpg` | B |
+| Kranen (frakt ved kai) | **Kranen står på babord side av forbakken, mens båten alltid legges med styrbord mot kaia** (F22). Skriptet sier at kranen «når ut over kaia» (`kyst21.py:443–444`), noe som bare stemmer med babord til. Kranen står foldet opp hele klippet, og pallene står plutselig på luka (F23). To vinker (`last:at:guide`), og ingen kjører kranen. En moderne rød knekkbomkran på en båt fra 1978 synes i alle klippene (M16). | En kranbåt legger kranen mot kaia; én kjører, én hekter på. En 1978-båt hadde lastebom eller en eldre kran. | F22, F23, M16; `kyst21.py:457`; sett i `felles_kran_liggende_1.jpg`, `_2.jpg` | B |
+| Sette teiner | Ingen setter: én er inne (`haling:in`), tre har pause (kniv, røyk, redskap). Ingen teinestabel og ingen går med teina til ripa (F4, F7). | | F4, F7; sett i `teiner_sett_liggende_1.jpg` | B (F4) |
+| Rydde | Slangen og kosten brukes **på babord sidedekk langs dekkshuset og ved forbakken**, mens sløyingen var om styrbord akter for galgen (F12). Slangen kommer ut av ingenting (ingen i modellen). | Det er sløyeplassen og haleplassen som spyles, fra en slange som henger fast. | F12; sett i `felles_rydd_liggende_2.jpg`, `_3.jpg` | B |
+| Kaste loss | Båten ligger med styrbord til. Kameraet blir stående ved kaia mens båten går ut av bildet etter noen sekunder (bildene 2–6 viser en tom kai, med regelmeldingen over). Json: skipperen går til roret først når hun går (`ror:walk`). | | F1–F3 som felles; sett i `felles_kast_liggende_1.jpg`, `_2.jpg` | **A** (felles) |
+| Til feltet | Skipperen ved roret, de tre inne: riktig. | | | – |
+| Inn til kai | **Kameraet sto ikke i bygningene** (det sto høyt over båten). Men båten glir inn over en snødekt holme, med baugen og halve båten på land, fordi opptaket begynner innseilingen der det er land, som på `sjarkny`. Det er en feil i opptaket, ikke i spillet. Json: ingen ved roret (F3). | | `tests/ombord.py:112`; sett i `felles_inn_liggende_2.jpg`, `_3.jpg` | – (opptaket); **A** (F3) |
+| Lossing | Sett ovenfra: mottakets kran over luka, styrbord til kaia. Lasten var 0, og mannskapet har pause (F10). | | F10; sett i `felles_loss_liggende_2.jpg` | C |
+| Hvile | Kokken går inn, de to andre er på dekk med telefon og kaffe, og ingen spiser (F13). | | F13 | C |
+| Hvite flekker | Som felles (sprutflekker rundt båten i flere klipp). | | `24-cinema.js:497` | B (felles) |
+| Utstyret ellers | Haleren ved galgen og blødekaret, bordet og garnet/stampene rett akter for den på luka er en logisk rekkefølge. Bare én garnhaug mot 240 garn og høyst 8 stamper mot 33 (F8, verst av de ti). Haler nr. 2 kan ikke vises (ett anker). | | F8; `kyst21.py:442` | B (F8) |
+
+**F24:** Ja, F24 rammer kyst21, også uten ly eller shelterdekk. Haleren står 1,30 m over dekkskartet, over grensen på 1,2 m, og i garntrekket er dekket helt tomt. Grensen i `deckcrew.js:190` treffer altså vanlige haler på ripa på de større båtene, ikke bare de overbygde.
+
+**Karakteren (anslag, ikke satt):** Ingen grunnlag finnes, så alle åtte punktene er mine grove anslag ut fra rapport-modeller.md 2.10, kap. 4 i den rapporten og klippene. De må settes på nytt i revisjonen etter pilotens arbeidsmåte.
+- **K1 3/15:** Kildene var Jonas' bilder av gamle kystbåter (Hindholmen, Erkna), og de ligger ikke i repoet. Det finnes ingen tegning og ingen overlegg, og målene er spillets.
+- **K2 11/20:** 249 t mot 190 t (+31 %, grovt). Skroget er rader fra spantene, ikke én flate (`3d-baater-og-animasjon.md:161`). M12 gjelder: glatt stål uten sveis eller plateskjøter.
+- **K3 10/15:** «God karakter, middels detalj»; Blender-løftet ga rust, teakdører, eikeratt og lanterner. Det trekker ned at kranen er moderne (M16), at det ikke er propell eller anoder (U7), at støtteseilet ikke er en egen del, og at det er 4 livbøyer mot 3.
+- **K4 4/5:** Masthead-, side- og hekklanterne står som ankre, men ingen har sett dem om natta.
+- **K5 6/10:** Broen er bare rettet etter `brotest` (klossene ble til vegger); skjermene og utsikten fra rattet er ikke vurdert.
+- **K6 7/15:** Juksa og sløyingen synes på åpent dekk (bedre enn kyst15), og rekkefølgen haler–kar–bord–luke er logisk. Mot dette står to A-funn (F24 med tomt dekk i garntrekket, og klumpene ved sorteringen og bordet, F19), F1–F3 og flere B: kranen bort fra kaia, juksaklumpen, ryddingen på feil side og settingen uten folk. Taket er 9 så lenge en A står åpen.
+- **K7 4/10:** Ingen `check()` er dokumentert, `deckshot` er rød på kranen (`BACKLOG.md:135`), og bildene finnes ikke i begge formater.
+- **K8 3/10:** Båten er ikke revidert og har ingen gjennomgang med Jonas. Lastebommen og støtteseilet ble skrevet inn i skriptet uten grunnlag.
+
+Sum: 3 + 11 + 10 + 4 + 6 + 7 + 4 + 3 = **48** (planen sa «rundt 50»). Det som løfter mest: et grunnlag med mål og bilder (K1, K2), `disp` avgjort som tom eller lastet, og F24 rettet i koden (K6).
+
+**Til Jonas:** På den gamle 21-meteren står ingen ved haleren i noe trekk, og i garntrekket er dekket helt tomt. Det er den samme 1,2 m-regelen som på kyst15, men her er dekket åpent. I tillegg står den moderne kranen på motsatt side av kaia.
+
+Bilder til Jonas:
+- /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/kyst21/garn_trekk_liggende_2.jpg
+- /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/kyst21/teiner_trekk_liggende_3.jpg
+- /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/kyst21/juksa_jig_liggende_2.jpg
+- /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/kyst21/juksa_sloy_liggende_3.jpg
+- /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/kyst21/felles_kran_liggende_2.jpg
+
 ## 5. Båten i sjøen
 
 Regnet i spillet uten 3D 09.11.2026 med `stabOf` (`core/03c-stability.js`), tom båt og med fullt rom eller kar (`holdCap`), uten redskap på dekk. Hiv og stamp i 3D kommer fra skrogsnittene i F2 (`hullSections`, `hullRest`, `hullStep`), rullet fra `stabOf`. Målt i sjø før (`fysikk-og-styring.md`, F2): sjarken ruller 11,5° signifikant i 3,45 m tverrsjø og stamper 9° i 6,1 m motsjø i 8,5 knop; skiffen stamper 4,6° i 2,7 m krapp sjø i 18 knop.
@@ -438,7 +486,7 @@ Ikke målt: trim, rull og slag med last i sjø i 3D (F2 måler bare tom sjark og
 | **OB10** | **Den nye hurtigsjarken til 75** | 4.7 | `tools/boats/hs11.py` | som OB1 |
 | **OB11** | **Breisjarken til 75** (eksporteres på nytt, pchip; folk ved haleren, F24; teinestabelen ut av rommet under lyet) | 4.8, F24 | `tools/boats/malo36.py` | som OB1 |
 | **OB12** | **Kyst15 over 75 igjen** (eksporteres på nytt, pchip; garnet og stampene ned til halestasjonen etter valg 18; arbeidet under shelterdekket synlig, F18; folk ved haleren, F24; haler nr. 2; halerens fot innenfor skroget) | 4.9, F18, F24 | `tools/boats/kyst15.py`, `deckcrew.js` (`goalOf`), `view3d/09` | som OB1 |
-| **OB13** | **Kyst21 revidert** etter pilotens arbeidsmåte (grunnlag og byggefil som de andre) | 4.10 | `tools/boats/kyst21.py`, ny `docs/skipsmodeller/kyst21-grunnlag.md` | som OB1 |
+| **OB13** | **Kyst21 revidert** etter pilotens arbeidsmåte (grunnlag og byggefil som de andre; kranen som passer båten og står mot kaia, F22, M16) | 4.10 | `tools/boats/kyst21.py`, ny `docs/skipsmodeller/kyst21-grunnlag.md` | som OB1 |
 | **OB14** | **Rydde, spyle, mat og kulde:** spyling som jobb etter trekket på alle (slange på de åpne båtene også), matpakke og kaffe på dekk på de åpne båtene, kulde og vått synlig (F12–F14) | F12, F13, F14 | `core/13-work.js`, `deckcrew.js`, `view3d/09` (`DKWATER`) | `ombord.py <tre båter> --ops rydd,hvile`, `crewclip`, `worktest` |
 | **OB15** | **Båten i sjøen med last:** trim etter hvor lasten står, slagside fra haleren og karene, mannskapets vekt (S1–S3) | S1–S3 | `core/03c-stability.js`, `view3d/16-motion.js` | `node tests/unit/run.mjs`, `hull3d`, `dyntest` |
 
