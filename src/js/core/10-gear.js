@@ -46,7 +46,10 @@ const lineKm = (lk, hooks) => hooks * (LINE_KINDS[lk] && LINE_KINDS[lk].kmHook |
 // with 25 m between (8 s; not found), hauled through the portal at about 50 s (the most efficient vessels tend 9 000 pots in under 5 days,
 // Fiskebåt 2023: 48 s round the clock; 1 000-2 000 a day elsewhere). The price is an assumption (no Norwegian price found; Asian makers
 // list 20-50 US dollars a pot). Only a vessel with a snow crab permit may buy them (buyGate)
-const POTS = {big:{no:'Krabbeteiner', en:'Crab pots', one:['krabbeteine', 'crab pot'], price:2200, cap:40, f:1.4, big:true},
+// The coastal fleet's king crab pot (big) is conical too since OB16 (Jonas 09.11.2026, with a picture: «Denne typen teiner er mer
+// plass-vennelig på alle typer båter»; the square one of 1.4 m is out of the game): a pot for sale in his picture, «145x80x70 cm, 45 kg»
+// (the bottom ring 1.45 m across, the top 0.80 m, 0.70 m high), nested in stacks on the models' places (tools/boats/potplaces.json)
+const POTS = {big:{no:'Krabbeteiner', en:'Crab pots', one:['krabbeteine', 'crab pot'], price:2200, cap:40, f:1.4, big:true, cone:true, kg:45, dim:[1.45, 0.8, 0.7]},
   sno:{no:'Snøkrabbeteiner', en:'Snow crab pots', one:['snøkrabbeteine', 'snow crab pot'], price:1500, cap:150, f:1, sno:true, cone:true, mesh:135, kg:14.5, dim:[1.3, 0.7, 0.6], hole:true, mark:true, bait:0.5, set:8 / 60, haul:50 / 60}};
 // the pot a vessel uses (VESSELS pot: the snow crab vessel's conical one), its kind of pot, and the bait a pot takes
 const potK = () => (BOAT && BOAT.pot) || 'big', potOf = () => POTS[potK()], potBaitKg = k => (POTS[k] && POTS[k].bait) || GPRICE.potBait;

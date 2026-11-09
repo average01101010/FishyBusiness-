@@ -462,6 +462,30 @@ OB2 (steg 80, grenen `ccr-a9ccd5ec-it307t`) rettet F1, F2 og F3 for alle båtene
 
 Trebåten og skiffen har faste figurer og tas i OB1 og OB5. Det OB2 fant om båtene: på breisjarken, kyst15, kyst21 og de to hurtigsjarkene er foredekket ved baugklampen ikke i dekkskartet, så baugtampen og fenderen forut tas fra den forreste plassen ved skutesida mannskapet kan stå på (2,5–6 m akter for klampen i modellen; tauet føres derfra). Om foredekket skal kunne gås på, hører til båtfasene OB9–OB13.
 
+### 4.12 Koniske teiner i stabler (OB16, 09.11.2026, Jonas' økt, grenen `ccr-f04f4a09-btm7go`)
+
+Jonas 09.11.2026, med et bilde av koniske teiner stablet i hverandre: «Denne typen teiner er mer plass-vennelig på alle typer båter». Under økta: «Tanken er å bruke dem til kongekrabbe. De firkantige teinene kan vi sikkert fjerne fra spillet», med et bilde av en kongekrabbeteine til salgs («Kongekrabbeteine 145x80x70 cm, 45 kg»), og et av en rød eggfløyt («brukes som flottør i bl.a. fisketeiner og kongekrabbeteiner», 120 × 150 mm): «Er dette aktuelt for oss?» (ja: på stroppen).
+
+**Teina** (`tools/gear/teine.py` `kong`, `src/data/gear-pot.b64`): bunnring 1,45 m, toppring 0,80 m, 0,70 m høy, 45 kg, etter Jonas' bilde (søk etter Fiskeridirektoratets og Havforskningsinstituttets mål på en konisk kongekrabbeteine fant ingen; HI 2003 om fluktåpninger og J-136/J-138-2026 om reglene). Svart bunnring, åtte stag, grønt notlin snørt med blått tau, hvit plasttrakt med trinn fra toppringen ned i teina, agnboks under trakten, bunnen snørt igjen (tømmes gjennom den), merkelappen (§ 66), stroppen og eggfløyten. **Ingen fluktåpning:** vest for 26° Ø skal teinene være uten (J-138-2026, `core/03e-rules.js` kc5); øst for linja krever J-136-2026 fire på 150 mm, som modellen ikke viser (antatt, B). Egen teine, ikke snøkrabbeteina (den er 1,30 m, mørkeblå, med rømningshull etter vedlegg 3 f). Antatt: trakten 0,40 m nederst 0,34 m over bunnen, 0,15 m mellom to i stabelen, ti i en full stabel. `POTS.big` har fått `cone`, `kg:45` og `dim`; `STAB_W.potBig` 25 → 48 kg (teina med tau og fløyt). Den firkantede teina og luka er ute av modellen og koden; `potsUnfit` og lagringene er som før (teinene heter `big`).
+
+**Koden** (`view3d/10-gear.js`): `potSet` velger snøkrabbeteina (`VESSELS.pot` `sno`) eller kongekrabbeteina; `potPlaces` gir stablenes plasser (`kit.pots.at` `[x, y, z, ry, h]`, h det meste i den stabelen), og for en modell uten plasser en rad akter for haleren som den gamle stabelen (fire høy under 12 m, seks over). Teina kommer opp over davitten, legges ved haleren, veltes på siden over den indre kanten av bunnringen og tømmes mot karet, reises, egnes og settes på stabelen (`stackTop`); settingen tar den øverste fra stabelen. Snøkrabbebåtens eget arbeid (`snoWork`) er som før. Davitten står nå også ved hvile på båter med plasser (før skjulte `kit.pots` den).
+
+**Plassene** (`tools/boats/potplaces.json`, lest av båtskriptene og skrevet inn i de eksporterte modellene av `tools/boats/potplaces.py` uten ny eksport, så skrogene er like byte for byte): funnet på dekkartet der en ring på 1,45 m står på ett gulv (hver celle under ringen, 5 cm mellom: en karm på én celle ble først hoppet over på kyst21, og `potshot` fant den) med stabelens høyde (til fløyten) fri over seg, unna haleren, stedet teina tømmes, krabbekaret, modellens eget sløyebord og kar, lasten og kranen; nærmest haleren først. Garnbinga og stampene står ikke på dekk når båten er rigget for teiner, så plassene deres kan brukes.
+
+| Båt | Stabler | Plass til | `gearMax.teine` |
+|---|---|---|---|
+| `hurtigsjark` (`hurtig11`) | 1 × 6 (midt på dørken akter for haleren) | 6 | 18 |
+| `sjarkny` (`hs11`) | 4 × 6 (én på dørken inn for haleren, to på luka og plattformen akter, én forut for haleren) | 24 | 21 |
+| `breisjark` (`malo36`) | 1 × 6 (akter, utenfor lyet) | 6 | 20 |
+| `kyst21` | 2 × 8 (ved haleren) + 2 × 7 (akter for huset) | 30 | 30 |
+| `sjark` (`havsjark35`) | **ingen**: luka og sidedekkene er for smale for en ring på 1,45 m | 0 | 18 |
+| `kyst15` | **ingen** under lyet (arbeidsdekket ved haleren er 1,2 m bredt); shelterdekket over er lasteplassen med kranen | 0 | 30 |
+| `plastsjark` (`plast31`) | OB7 legger dem (fasen kjørte samtidig) | – | 12 |
+
+Stedet der teina tømmes, er flyttet akter for teinemannen (`potDeck`: 1,3 m + ringens radius akter for haleren; før sto teina der han står, `deckcrew.js` `places().pot`), og plassene holder seg unna de to ved haleren, plukkeren, teinemannen og sonen teina veltes i. **Det som står igjen (OB3):** mannskapet går og står ikke utenom stablene (`deckcrew.js` vet ikke om dem), og fangstkarene på dørken er ikke med i plassfinneren.
+
+**Til Jonas (valg):** havsjarken og kyst15 har ikke plass til en eneste stabel med 1,45 m-teina, og hurtigsjarken og breisjarken har plass til 6 av 18 og 20 når plassene ved haleren og veltesonen holdes fri. A: `gearMax.teine` settes til det dørken rommer (havsjarken og kyst15 uten teiner, som snekka); B: teinene som ikke får plass, står på land og hentes i flere turer; C: kyst15 stabler på shelterdekket med kranen (OB12). Til svaret kommer tegnes de som ikke får plass, i raden akter for haleren (havsjarken, kyst15) eller oppå den siste stabelen.
+
 ## 5. Båten i sjøen
 
 Regnet i spillet uten 3D 09.11.2026 med `stabOf` (`core/03c-stability.js`), tom båt og med fullt rom eller kar (`holdCap`), uten redskap på dekk. Hiv og stamp i 3D kommer fra skrogsnittene i F2 (`hullSections`, `hullRest`, `hullStep`), rullet fra `stabOf`. Målt i sjø før (`fysikk-og-styring.md`, F2): sjarken ruller 11,5° signifikant i 3,45 m tverrsjø og stamper 9° i 6,1 m motsjø i 8,5 knop; skiffen stamper 4,6° i 2,7 m krapp sjø i 18 knop.

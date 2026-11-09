@@ -16,6 +16,7 @@ import os, sys, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy
 from bpyutil import *
+import potplaces   # the stacks of conical pots (OB16, tools/boats/potplaces.json)
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE)); OUT = os.path.join(HERE, 'out')
 WL = 3.2; XS = -1.6; XF = 19.4; XM = (XS + XF) / 2; HB = 3.6
@@ -432,7 +433,7 @@ def anchors():
             'deck': {'y': round(z_deck(10.5) - WL, 3), 'z': round(-(10.5 - XM), 3)}, 'gw': round(z_top(10.5) - WL, 3),
             'stern': round(XM - XS, 3), 'bow': round(-(XF - XM), 3), 'side': HB, 'beam': 7.2, 'pl': 8.4, 'rl': 2.7, 'open': False, 'hand': False,
             'pole': G(XS + 0.25, 0, z_top(XS) + 1.6), 'hauler': G(12.0, -(hbz(12.0, z_top(12.0)) - 0.3), z_top(12.0) + 0.35), 'filler': G(10.0, HB, z_deck(10.0) + 0.3),
-            'kit': kit(G)}
+            'kit': dict(kit(G), **potplaces.kit('kyst21'))}
 
 
 def kit(G):

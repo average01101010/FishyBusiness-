@@ -27,10 +27,11 @@
     // the autoline's snood with its hook, empty and baited (tools/gear/autoline.py), drawn along the line as it comes in
     if (typeof glbHas === 'function' && glbHas('gear-autoline')){ const up = nm => { const o = glbPart('gear-autoline', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; };
       GB.aTom = up('tom'); GB.aEgB = up('egnet_b'); GB.aEgS = up('egnet_s'); }
-    // the king crab pot, its hatch, the pot hauler on its davit and the live crab tank from tools/gear/teine.py, in place of the drawn pot
+    // the conical king crab pot (OB16, 09.11.2026: the square one is out of the game), the pot hauler on its davit and the live crab tank
+    // from tools/gear/teine.py: the whole pot, the one on top of a stack, one nested under it and the nine under the top one of a full stack
     if (typeof glbHas === 'function' && glbHas('gear-pot')){ const up = nm => { const o = glbPart('gear-pot', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; }, pg = glbLoad('gear-pot');
-      const pt = up('teine'); if (pt){ GB.pot = pt; GB.potB = true; GB.door = up('teinedor'); GB.davit = up('davit'); GB.davitSh = up('davitskive'); GB.tank = up('krabbekar'); GB.px = (pg && pg.ex) || {};
-        GB.kon = up('kon'); GB.kontopp = up('kontopp'); GB.konlag = up('konlag'); GB.konlag11 = up('konlag11'); } }
+      GB.davit = up('davit'); GB.davitSh = up('davitskive'); GB.tank = up('krabbekar'); GB.px = Object.assign({}, (pg && pg.ex) || {}, GB.px && GB.px.kon ? {kon:GB.px.kon} : {});
+      GB.kk = up('kong'); GB.kktopp = up('kongtopp'); GB.kklag = up('konglag'); GB.kkfull = up('konglagfull'); }
     // the snow crab's gear from tools/gear/snoteine.py (H3d1, 07.11.2026): the conical pot with its escape opening, bait box and mark in
     // place of gear-pot's, the pot hauler and its sheave under the portal, the buoy and the marker buoy at a string's ends
     if (typeof glbHas === 'function' && glbHas('gear-snoteine')){ const up = nm => { const o = glbPart('gear-snoteine', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; }, sg = glbLoad('gear-snoteine');
@@ -302,34 +303,46 @@
   // (ph the pot's height; the stack is two high on the boats under 12 m and three on the larger, max the pots it holds; a model with
   // its own pot places, kit.pots, says where a pot is emptied: on the conveyor under the snow crab vessel's portal)
   function potDeck(G, HP, sx, d, pw, vt, ph){
-    const KS = G.kit && G.kit.pots && G.kit.pots.spot, spot = KS ? KS.slice() : [sx - 0.25 - pw, d.y, HP[2] + pw - 0.1], cols = Math.max(1, Math.floor((2 * sx - 0.3) / (2 * pw + 0.08)));
+    // (OB16: the spot aft of where the pot hand stands by the hauler, deckcrew.js places().pot, 0.9 m aft of it: he stands at its
+    // forward edge with the hauler forward of him, and it tips over inboard away from him)
+    const KS = G.kit && G.kit.pots && G.kit.pots.spot, spot = KS ? KS.slice() : [sx - 0.25 - pw, d.y, HP[2] + 1.3 + pw], cols = Math.max(1, Math.floor((2 * sx - 0.3) / (2 * pw + 0.08)));
     const h = ph || pw * 0.93, layers = ((VESSELS[vt || vtype()] || {}).len || 10) < 12 ? 2 : 3;
     return {spot, cols, max:cols * layers, tank:tankAt(-(sx - 0.5), spot[2], d, vt || vtype()), slot:i => { const L = Math.floor(i / cols), c = i % cols; return [spot[0] - c * (2 * pw + 0.08), d.y + L * (h + 0.01), spot[2] + 2 * pw + 0.3]; }};
   }
-  // the snow crab vessel's conical pots nested in stacks on the model's places (kit.pots.at, tools/boats/krabbe50.py), as many as are
-  // aboard; a full stack is two meshes (the eleven nested under the top one, and the top one). Returns how many were drawn
-  function drawPotStacks(BMrel, K, n){
-    const X = (GB.px || {}).kon || {}, h = X.stack || 12, P = X.pitch || 0.16; let left = Math.max(0, Math.round(n)), drawn = 0;
-    for (const a of K.at || []){ if (left <= 0) break; const k = Math.min(h, left), M = chain(BMrel, M4.T(a[0], a[1], a[2]), M4.RY(a[3] || 0)); left -= k; drawn += k;
-      if (k === h && GB.konlag11) drawN(GB.konlag11, M); else for (let i = 0; i < k - 1; i++) drawN(GB.konlag, chain(M, M4.T(0, i * P, 0)));
-      drawN(GB.kontopp || GB.kon, chain(M, M4.T(0, (k - 1) * P, 0))); }
+  // The pots are conical and nest in stacks (OB16, Jonas 09.11.2026, with a picture: «Denne typen teiner er mer plass-vennelig på alle
+  // typer båter»; the square pot is out of the game: «De firkantede teinene kan vi sikkert fjerne fra spillet»). The set a boat works:
+  // the snow crab vessel's (VESSELS pot 'sno', tools/gear/snoteine.py) or the coastal fleet's king crab pot (tools/gear/teine.py kong).
+  // top: the one on top of a stack, one: a pot on its own, lag: one nested under another, full: those under the top one of a full stack
+  function potSet(){ if (!GB) buildGear(); const V = VESSELS[vtype()] || {}, sno = !!(POTS[V.pot] || {}).sno;
+    if (sno) return GB.kon && GB.konlag ? {top:GB.kontopp || GB.kon, one:GB.kon, lag:GB.konlag, full:GB.konlag11, X:(GB.px || {}).kon || {}} : null;
+    return GB.kk && GB.kklag ? {top:GB.kktopp || GB.kk, one:GB.kk, lag:GB.kklag, full:GB.kkfull, X:(GB.px || {}).kong || {}} : null; }
+  // where the stacks stand: the model's places (kit.pots: at [x, y, z, ry] each, h the most to a stack there, spot where a hauled pot is
+  // emptied), else, on a model that has none yet, a row aft of the hauler as the old stack stood, four high under 12 m and six over
+  function potPlaces(G, d, HP, sx, PS){ const K = G.kit && G.kit.pots; if (K && K.at && K.at.length) return K;
+    if (G.hand || !HP) return null; const r = PS.X.r || 0.725, D = potDeck(G, HP, sx, d, r), at = [];
+    for (let c = 0; c < D.cols; c++) at.push([D.spot[0] - c * (2 * r + 0.08), d.y, D.spot[2] + 2 * r + 0.3, 0]);
+    return {at, h:((VESSELS[vtype()] || {}).len || 10) < 12 ? 4 : 6}; }
+  // the most to a stack on a place (its own fifth number, else the places' h, never more than a full stack)
+  const stackH = (K, PS, a) => { const full = PS.X.stack || 10; return Math.max(1, Math.min(full, (a && a[4]) || K.h || full)); };
+  // the pots nested in stacks on the places, as many as are aboard; a full stack is two meshes (those nested under the top one, and the
+  // top one). Returns how many were drawn
+  function drawPotStacks(BMrel, K, n, PS){
+    const full = PS.X.stack || 10, P = PS.X.pitch || 0.15; let left = Math.max(0, Math.round(n)), drawn = 0;
+    for (const a of K.at || []){ if (left <= 0) break; const k = Math.min(stackH(K, PS, a), left), M = chain(BMrel, M4.T(a[0], a[1], a[2]), M4.RY(a[3] || 0)); left -= k; drawn += k;
+      if (k === full && PS.full) drawN(PS.full, M); else for (let i = 0; i < k - 1; i++) drawN(PS.lag, chain(M, M4.T(0, i * P, 0)));
+      drawN(PS.top, chain(M, M4.T(0, (k - 1) * P, 0))); }
     return drawn;
   }
   // where the pot numbered i (from 0) stands in the stacks: on its stack's place, as high as those under it
-  function stackTop(K, i, d){ const X = (GB.px || {}).kon || {}, h = X.stack || 12, P = X.pitch || 0.16, at = K.at || []; if (!at.length) return [0, d.y, 0];
-    const full = i >= at.length * h, a = at[full ? at.length - 1 : Math.floor(i / h)]; return [a[0], a[1] + (full ? h - 1 : i % h) * P, a[2]]; }
-  // the pots aboard while she is rigged for them and not working them (Jonas' survey 30.10.2026, D5: they showed only while setting and
-  // hauling): the conical ones in their stacks on the model's places, else the square ones stacked by the hauler as they are when hauled
-  // the pots of the boat's own kind aboard (the snow crab vessel's conical pots are S.pgear.pots.sno, VESSELS.snokrabbe.pot; H3d1: the
-  // stacks on her deck showed none, as only the big square pots were counted)
+  // (more than the places hold: on top of the last stack)
+  function stackTop(K, i, d, PS){ const P = PS.X.pitch || 0.15, at = K.at || []; if (!at.length) return [0, d.y, 0];
+    for (const a of at){ const h = stackH(K, PS, a); if (i < h) return [a[0], a[1] + i * P, a[2]]; i -= h; }
+    const a = at[at.length - 1]; return [a[0], a[1] + (stackH(K, PS, a) - 1) * P, a[2]]; }
+  // the pots of the boat's own kind aboard while she is rigged for them and not working them (Jonas' survey 30.10.2026, D5)
   function potsAboard(){ const P = (S.pgear || {}).pots || {}, V = VESSELS[vtype()] || {}; return (V.pot ? P[V.pot] : P.big) || 0; }
   function drawPotsAboard(BMrel, G, d, n){
-    if (!GB) buildGear(); const K = G.kit && G.kit.pots; if (n <= 0) return 0;
-    if (K && GB.kon && GB.konlag) return drawPotStacks(BMrel, K, n);
-    if (G.hand || !G.hauler) return 0;
-    const XP = (GB.px || {}).pot || {}, pw = GB.potB ? XP.half || 0.7 : 0.4, ph = GB.potB ? XP.h || 0.65 : 0.4, D = potDeck(G, G.hauler, G.beam / 2, d, pw, null, ph), m = Math.min(D.max, n);
-    for (let i = 0; i < m; i++){ const q = D.slot(i); drawN(GB.pot, chain(BMrel, M4.T(q[0], q[1], q[2]))); }
-    return m;
+    if (n <= 0) return 0; const PS = potSet(); if (!PS) return 0;
+    const K = potPlaces(G, d, G.hauler, G.beam / 2, PS); return K ? drawPotStacks(BMrel, K, n, PS) : 0;
   }
   // the crab tank across from the hauler stands on clear deck: where a house or a cabin is there (the new speed sjark's hauler stands
   // under the cabin's roof, and the tank went through its wall; Jonas 21.10.2026), the nearest place on the deck map (vessel3d.js
@@ -358,18 +371,21 @@
     return TANKAT[key] = [x, d.y, z, false, 0.7];   // (the fourth: its footprint is all deck; false: no place found)
   }
   function drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg){
-    const s = g.op === 'haul' ? (S.sets || []).find(x => x.id === g.sid) : g.s, ps = 1, X = GB.px || {}, KP = !skiff && G.kit && G.kit.pots && GB.kon && GB.konlag ? G.kit.pots : null, XP = (KP ? X.kon : X.pot) || {};
-    // (the snow crab vessel works the conical pot, kit.pots: no hatch, no davit, the line over the hauler at her side)
-    const ph = (GB.potB ? XP.h || 0.65 : 0.4) * ps, pw = (GB.potB ? (KP ? XP.r : XP.half) || 0.7 : 0.4) * ps, gw = G.gw || d.y + 0.9, D = potDeck(G, HP, sx, d, pw, null, ph), PM = KP ? GB.kon : GB.pot;
+    const PS = skiff ? null : potSet(); if (!PS) return;
+    const s = g.op === 'haul' ? (S.sets || []).find(x => x.id === g.sid) : g.s, ps = 1, X = GB.px || {}, XP = PS.X, KP = potPlaces(G, d, HP, sx, PS); if (!KP) return;
+    // (the snow crab vessel: no davit, the line over the hauler at her side; the coastal boats: over the davit's block)
+    const ph = (XP.h || 0.7) * ps, pw = (XP.r || 0.725) * ps, gw = G.gw || d.y + 0.9, D = potDeck(G, HP, sx, d, pw, null, ph), PM = PS.one;
     const base = potsAboard();   // the pots aboard besides those of this set
     if (POTA.g !== g || g.done !== POTA.done){
       if (POTA.g === g && g.done === POTA.done + 1) POTA.dur = clamp(t - POTA.t0, 2, 40);
       else { let m = 1.2; try { m = gopUnitMin(g, S.t / 60, hsAt(S.boat.pos, S.t / 60)); } catch (e){} POTA.dur = clamp(m * 60 / simRate(), 2, 40); }
       POTA.g = g; POTA.done = g.done; POTA.t0 = t; }
     const u = POTA.fix != null ? POTA.fix : clamp((t - POTA.t0) / POTA.dur, 0, 1), sm = v => v * v * (3 - 2 * v), ph01 = (a, b) => sm(clamp((u - a) / (b - a), 0, 1)), lerp = (A, B, k) => [A[0] + (B[0] - A[0]) * k, A[1] + (B[1] - A[1]) * k, A[2] + (B[2] - A[2]) * k];
-    if (KP && G.snok && GB.snoHaul){ snoWork(BMrel, t, u, g, s, G, d, base, KP, XP, seg); return; }   // (the snow crab vessel's own work, H3d2)
-    const DV = potDavit(skiff) && !KP, P0 = [sx - 0.2, d.y, HP[2]], blk = DV && X.davit ? [P0[0] + X.davit.block[0], P0[1] + X.davit.block[1], P0[2] + X.davit.block[2]] : [sx + 0.05, gw + 0.05, HP[2]];
+    if (G.snok && GB.snoHaul && G.kit && G.kit.pots){ snoWork(BMrel, t, u, g, s, G, d, base, KP, XP, seg, PS); return; }   // (the snow crab vessel's own work, H3d2)
+    const DV = potDavit(skiff) && !G.snok, P0 = [sx - 0.2, d.y, HP[2]], blk = DV && X.davit ? [P0[0] + X.davit.block[0], P0[1] + X.davit.block[1], P0[2] + X.davit.block[2]] : [sx + 0.05, gw + 0.05, HP[2]];
     const potM = (p, rz, rx) => chain(BMrel, M4.T(p[0], p[1], p[2]), M4.RZ(rz || 0), M4.RX(rx || 0), M4.S(ps));
+    // tipped over its inboard edge of the bottom ring by tip (rad) to be emptied through its laced bottom
+    const tipM = (p, tip) => chain(BMrel, M4.T(p[0] - pw, p[1], p[2]), M4.RZ(tip), M4.T(pw, 0, 0), M4.S(ps));
     const RG = XP.ring != null ? XP.ring : 0.45, ring = (p, rz) => [p[0] - Math.sin(rz || 0) * (ph + RG), p[1] + Math.cos(rz || 0) * (ph + RG), p[2]];
     const bridle = p => { const R = ring(p); for (const c of XP.bridle || []) drawN(GB.float, chain(BMrel, limbM([p[0] + c[0] * ps, p[1] + c[1] * ps, p[2] + c[2] * ps], R, 0.006))); };
     // the crabs in the pot now: the set's catch shared over its pots, at most five drawn
@@ -382,7 +398,7 @@
       if (X.davit) seg(blk, [P0[0] + X.davit.sheave[0] + 0.15, P0[1] + X.davit.sheave[1] + 0.12, P0[2]], 0.008, GB.float, 0); }
     // the stack: the pots aboard but the one in hand
     const nS = g.op === 'haul' ? g.done : Math.max(0, g.n - g.done - 1);
-    if (KP) drawPotStacks(BMrel, KP, base + nS); else for (let i = 0, m = Math.min(D.max, base + nS); i < m; i++) drawN(GB.pot, potM(D.slot(i)));
+    drawPotStacks(BMrel, KP, base + nS, PS);
     if (g.done >= g.n) return;
     const clear = gw + 0.12, out = [blk[0], 0, blk[2]];
     if (g.op === 'haul'){
@@ -393,20 +409,20 @@
       else if (u < 0.62) p = [out[0] + (D.spot[0] - out[0]) * ph01(0.55, 0.62), clear, out[2] + (D.spot[2] - out[2]) * ph01(0.55, 0.62)];
       else if (u < 0.66) p = [D.spot[0], clear + (D.spot[1] - clear) * ph01(0.62, 0.66), D.spot[2]];
       else if (u < 0.9) p = D.spot.slice();
-      else { const k = ph01(0.9, 1), S2 = KP ? stackTop(KP, base + g.done, d) : D.slot(base + g.done); p = lerp(D.spot, S2, k); p[1] += Math.sin(Math.PI * k) * (ph + 0.15); }
+      else { const k = ph01(0.9, 1), S2 = stackTop(KP, base + g.done, d, PS); p = lerp(D.spot, S2, k); p[1] += Math.sin(Math.PI * k) * (ph + 0.15); }
       if (u < 0.62){ const R = ring(p); seg(R, blk, 0.008, GB.float, 0); bridle(p); }
-      // the hatch opens, the crabs go one by one to the tank (or down the hold), the bait box is filled, the hatch shuts
-      const open = ph01(0.66, 0.7) * (1 - ph01(0.85, 0.89)), tk = S.equip.krabbekar ? [D.tank[0], D.tank[1] + ((X.tank || {}).water || 0.58) * (D.tank[4] || 1) + 0.05, D.tank[2]] : [0, d.y + 0.2, d.z];
+      // tipped over on its side, the bottom's lacing opened and the crabs shaken out one by one to the tank (or down the hold), set up
+      // again, the bottom laced and the bait jar filled
+      const open = ph01(0.66, 0.7) * (1 - ph01(0.8, 0.84)), tk = S.equip.krabbekar ? [D.tank[0], D.tank[1] + ((X.tank || {}).water || 0.58) * (D.tank[4] || 1) + 0.05, D.tank[2]] : [0, d.y + 0.2, d.z];
       let left = crabN; if (u > 0.7) for (let k = 0; k < crabN; k++){ const a = 0.7 + k * 0.13 / Math.max(1, crabN), f = clamp((u - a) / 0.05, 0, 1); if (f <= 0) continue; left--; if (f >= 1) continue;
-        const A = [p[0], p[1] + ph * 0.5, p[2]], Q = lerp(A, [tk[0] + (hash(k) - 0.5) * 0.4, tk[1], tk[2] + (hash(k + 3) - 0.5) * 0.6], f); Q[1] += Math.sin(Math.PI * f) * 0.7;
+        const A = [p[0] - pw * 0.9, p[1] + 0.6, p[2]], Q = lerp(A, [tk[0] + (hash(k) - 0.5) * 0.4, tk[1], tk[2] + (hash(k + 3) - 0.5) * 0.6], f); Q[1] += Math.sin(Math.PI * f) * 0.7;
         drawN(fishOf(csp), chain(BMrel, M4.T(Q[0], Q[1], Q[2]), M4.RY(f * 3), M4.RX(0.5), M4.S(0.8))); }
       if (u < 0.9) crabsIn(p, Math.max(0, left));
-      drawN(PM, potM(p, rz));
-      if (!KP && GB.door && XP.hinge) drawN(GB.door, chain(potM(p, rz), M4.T(XP.hinge[0], XP.hinge[1], XP.hinge[2]), M4.RX(-1.9 * open)));
+      drawN(PM, open > 0 ? tipM(p, 1.45 * open) : potM(p, rz));
       if (u > 0.82 && u < 0.86){ const f = (u - 0.82) / 0.04; drawN(GB.bait, chain(BMrel, M4.T(p[0] + 0.3 * (1 - f), p[1] + ph + 0.3 * (1 - f), p[2]), M4.S(3))); }
     } else {
       // from the top of the stack to the rail, over it (tipped outboard) and down to the bottom, drifting aft as the boat goes ahead
-      const S0 = KP ? stackTop(KP, base + Math.max(0, g.n - g.done - 1), d) : D.slot(base + Math.max(0, g.n - g.done - 1)), rail = [sx - pw * 0.2, clear, D.spot[2]]; let p, rz = 0;
+      const S0 = stackTop(KP, base + Math.max(0, g.n - g.done - 1), d, PS), rail = [sx - pw * 0.2, clear, D.spot[2]]; let p, rz = 0;
       if (u < 0.35){ const k = ph01(0, 0.35); p = lerp(S0, rail, k); p[1] += Math.sin(Math.PI * k) * 0.3; }
       else if (u < 0.55){ const k = ph01(0.35, 0.55); p = [rail[0] + (pw + 0.5) * k, clear + 0.2 * Math.sin(Math.PI * k) - 0.5 * k * k, rail[2]]; rz = -1.3 * k; }
       else { const k = (u - 0.55) / 0.45; p = [rail[0] + pw + 0.5 + 0.3 * k, clear - 0.5 - (clear + 8.5) * k * k, rail[2] + 3 * k]; rz = -1.3 - 0.3 * k; }
@@ -418,7 +434,7 @@
   // 21.10.2026: «Om båten ikke er rigget med teiner skal det ikke være noe krabbekar ombord»)
   function drawCrabTank(BMrel, G, d, sx, HP){
     if (!S.equip.krabbekar || (rigOf() !== 'teiner' && !tryLive('krabbekar')) || !GB || !GB.tank) return;   // (or tried on in the shop, M3)
-    const pw = ((GB.px || {}).pot || {}).half || 0.7, D = potDeck(G, HP, sx, d, pw), T = (GB.px || {}).tank || {half:[0.36, 0.56], water:0.58};
+    const pw = ((GB.px || {}).kong || {}).r || 0.725, D = potDeck(G, HP, sx, d, pw), T = (GB.px || {}).tank || {half:[0.36, 0.56], water:0.58};
     const s = D.tank[4] || 1; drawN(GB.tank, chain(BMrel, M4.T(D.tank[0], D.tank[1] + liftY('krabbekar'), D.tank[2]), M4.S(s))); KST.tank = D.tank.slice();
     const kg = S.hold.reduce((a, x) => a + (x.sp === 'krabbe' ? x.kg : 0), 0), n = Math.min(Math.round(14 * s * s), Math.ceil(kg / 4));
     for (let k = 0; k < n; k++) drawN(fishOf('krabbe'), chain(BMrel, M4.T(D.tank[0] + (hash(k * 5 + 7) - 0.5) * T.half[0] * s * 1.5, D.tank[1] + (T.water - 0.04) * s + Math.floor(k / 5) * 0.03, D.tank[2] + (hash(k * 7 + 9) - 0.5) * T.half[1] * s * 1.6), M4.RY(hash(k) * 6.3), M4.S(0.75)));
@@ -455,7 +471,7 @@
     if (G.hand){ if (pick === 'garnhaler' || !SKA || !SKA.haul) return; nSetup(VP); drawN(GB.haul, chain(BMrel, M4.T(SKA.haul[0], SKA.haul[1] + up, SKA.haul[2]))); KST.haul = pick; return; }
     if (!G.hauler) return; const P0 = [G.beam / 2 - 0.2, d.y + up, G.hauler[2]], X = GB.px || {};
     if (G.kit && G.kit.pots && G.snok && GB.snoHaul){ snoHauler(BMrel, G, VP, 0); KST.haul = 'snokrabbe'; return; }
-    if (pick === 'teinehaler'){ if (!GB.davit || (G.kit && G.kit.pots)) return; nSetup(VP); drawN(GB.davit, chain(BMrel, M4.T(P0[0], P0[1], P0[2])));
+    if (pick === 'teinehaler'){ if (!GB.davit || G.snok) return; nSetup(VP); drawN(GB.davit, chain(BMrel, M4.T(P0[0], P0[1], P0[2])));
       if (GB.davitSh && X.davit) drawN(GB.davitSh, chain(BMrel, M4.T(P0[0] + X.davit.sheave[0], P0[1] + X.davit.sheave[1], P0[2] + X.davit.sheave[2]))); KST.haul = pick; return; }
     const HM = haulModel(pick === 'garnhaler' ? 'garn' : 'line');
     if (!HM){ nSetup(VP); drawN(GB.haul, chain(BMrel, M4.T(G.hauler[0], G.hauler[1] + up, G.hauler[2]))); KST.haul = pick; return; }
@@ -483,7 +499,7 @@
   const snoCrabN = (s, g) => { const a = s && s.acc && s.acc.snokrabbe; if (!a || !(a.n > 0)) return 0; return Math.max(1, Math.round(a.n / Math.max(1, (s.n || 1) - (g ? g.done : 0)))); };
   function snoCrabs(BMrel, p, n, pr){ for (let k = 0; k < n; k++){ const a = hash(k * 7 + 1) * 6.28, r = pr * 0.5 * Math.sqrt(hash(k * 5 + 2)), hen = k % 3 === 2;
     drawN(fishOf(hen ? 'snokrabbe_h' : 'snokrabbe'), chain(BMrel, M4.T(p[0] + Math.cos(a) * r, p[1] + 0.05 + (k > 4 ? 0.08 : 0), p[2] + Math.sin(a) * r), M4.RY(hash(k * 3) * 6.3), M4.S(hen ? 0.34 : 0.46))); } }
-  function snoWork(BMrel, t, u, g, s, G, d, base, KP, XP, seg){
+  function snoWork(BMrel, t, u, g, s, G, d, base, KP, XP, seg, PS){
     const N = G.snok, haul = g.op === 'haul', ph = XP.h || 0.6, pr = XP.r || 0.65, RG = XP.ring != null ? XP.ring : 0.3, PM = GB.kon || GB.pot;
     const sm = v => v * v * (3 - 2 * v), k01 = (a, b, v) => sm(clamp((v - a) / (b - a), 0, 1)), lerp = (A, B, k) => [A[0] + (B[0] - A[0]) * k, A[1] + (B[1] - A[1]) * k, A[2] + (B[2] - A[2]) * k];
     const arc = (A, B, k, h) => { const p = lerp(A, B, k); p[1] += Math.sin(Math.PI * k) * h; return p; };
@@ -525,7 +541,7 @@
     const draw1 = (p, rx, ry) => { if (p[1] > -6.5) drawN(PM, potM(p, rx, ry)); };
     if (haul){
       // the stacks: the pots hauled three cycles ago and before (the two before are on the conveyor); none when they go out again
-      const R = !!g.reset; drawPotStacks(BMrel, KP, base + (R ? 0 : Math.max(0, g.done - 2)));
+      const R = !!g.reset; drawPotStacks(BMrel, KP, base + (R ? 0 : Math.max(0, g.done - 2)), PS);
       // the line from the sea over the block, round the sheave and off it down to the coil on deck forward of the table
       const Wsea = [blk[0] + 2.4, -0.3, blk[2] - 3.0], coil = [sOut[0] - 0.5, d.y + 0.08, TB[2] - TL - 0.4];
       ST.line = true; ST.block = true; Lr(blk, sIn, 0.05); Lr(sOut, coil, 0.15);
@@ -554,18 +570,18 @@
       }
       // the pots of this cycle and the two before on their way aft from the table: to the stacks, or out again down the chute (reset)
       for (let j = 0; j <= 2; j++){ const q = (j + u - 0.88) / SNOB, n = g.done - j; if (q < 0 || q > 1 || n < 0 || n >= g.n) continue;
-        const [p, rx, w] = ride(q, TS, stackTop(KP, base + n, d), R); draw1(p, rx); count(w);
+        const [p, rx, w] = ride(q, TS, stackTop(KP, base + n, d, PS), R); draw1(p, rx); count(w);
         if (R && w !== 'lift'){ Lr(w === 'belt' ? onBelt(p) : ring(p), p[2] + 4 > seaEnd[2] ? [seaEnd[0], -2.5, p[2] + 4] : seaEnd, w === 'sea' ? 0.6 : 0.2); ST.line = true; } }
     } else {
       // the stacks: the pots not yet lifted onto the conveyor (the next three are on it, in the chute or going over)
-      const left = g.n - g.done, pts = []; drawPotStacks(BMrel, KP, base + Math.max(0, left - SNOS));
+      const left = g.n - g.done, pts = []; drawPotStacks(BMrel, KP, base + Math.max(0, left - SNOS), PS);
       for (let j = SNOS - 1; j >= 0; j--){ const q = (u + SNOS - 1 - j) / SNOS, n = g.done + j; if (n > g.n) continue;
         if (n === g.n){   // the string's last end after the last pot: the marker buoy and the dregg, lifted on at the conveyor's head, aft and over
           const [p, rx, w] = ride(q, [C0[0] - 1.2, d.y, (C0[2] + C1[2]) / 2], null, true); ST.buoyB = true;
           const B = GB.boye || GB.blase; if (B && p[1] > -1.5) drawN(B, potM(w === 'sea' ? [p[0], Math.max(p[1], -0.4), p[2]] : p, w === 'sea' ? 0 : Math.PI / 2 - 0.2, 0));
           if (GB.dregg && p[1] > -6.5) drawN(GB.dregg, potM([p[0] + 0.35, p[1] + 0.1, p[2] - 0.6], rx, 0));
           pts.push(w === 'belt' || w === 'lift' ? onBelt(p) : p); continue; }
-        const [p, rx, w] = ride(q, stackTop(KP, base + Math.max(0, left - 1 - j), d), null, true); draw1(p, rx, (n % 5) * 0.4); count(w);
+        const [p, rx, w] = ride(q, stackTop(KP, base + Math.max(0, left - 1 - j), d, PS), null, true); draw1(p, rx, (n % 5) * 0.4); count(w);
         pts.push(w === 'belt' || w === 'lift' ? onBelt(p) : ring(p)); }
       // the line between them and out astern to the pots already set
       const zl = pts.length ? pts[pts.length - 1][2] : 0; pts.push(zl + 4 > seaEnd[2] ? [seaEnd[0], -2.5, zl + 4] : seaEnd); for (let i = 1; i < pts.length; i++) Lr(pts[i - 1], pts[i], i === pts.length - 1 ? 0.5 : 0.08); ST.line = pts.length > 1;

@@ -1,0 +1,33 @@
+{
+  "_": "OB16 (09.11.2026): where the conical king crab pots stand in stacks on each coastal model, in the game's frame (x starboard, y up, z aft, metres from the model's middle). at: [x, y, z, ry, h] per stack (h the most to that stack, under what stands over it and never over six on the boats under 12 m), spot where a hauled pot is emptied (null: aft of the pot hand by the hauler, view3d/10-gear.js potDeck). Found on the deck map (vessel3d.js deckMap) where a 1.45 m ring stands on one floor with the stack's height clear over it, clear of the hauler, the crew's places at it (deckcrew.js places: the two hauling, the picker, the pot hand), the place where a pot is emptied and the room to tip it inboard, the crab tank, the model's own gutting table and tub, the cargo and the crane; the nearest to the hauler first. Read by the boat scripts (kit_places, potplaces.pots) and written into the exported models by python3 tools/boats/potplaces.py. The models without an entry have no room for a stack (the havsjark, kyst15) or belong to a phase that places them (plast31, OB7).",
+  "hurtig11": {
+    "spot": null,
+    "at": [
+      [-0.05, 1.16, 1.69, 4.72, 6]
+    ]
+  },
+  "hs11": {
+    "spot": null,
+    "at": [
+      [-0.34, 0.93, 0.39, 5.07, 6],
+      [0.86, 1.05, 3.89, 5.13, 6],
+      [-0.54, 1.05, 3.29, 6.09, 6],
+      [-0.44, 1.2, -1.71, 4.35, 6]
+    ]
+  },
+  "malo36": {
+    "spot": null,
+    "at": [
+      [0.4, 0.88, 4.51, 3.77, 6]
+    ]
+  },
+  "kyst21": {
+    "spot": null,
+    "at": [
+      [1.5, 1.2, -3.4, 0.3, 8],
+      [1.6, 1.023, 2.3, 5.54, 7],
+      [0.0, 1.023, 2.3, 0.62, 7],
+      [-0.8, 1.2, -3.4, 3.04, 8]
+    ]
+  }
+}
