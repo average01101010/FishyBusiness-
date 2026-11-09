@@ -20,6 +20,9 @@ the places, not the frame rate.
   python3 tests/ombord.py trebat juksa line           only those fisheries (and the common operations)
   python3 tests/ombord.py kyst15 --format liggende --ops kast,trekk --k 0.15 --sec 9
   python3 tests/ombord.py --recut <out>/trebat [liggende]   cut the clips again from the kept raw recording (_raw_<format>/)
+  python3 tests/ombord.py trebat --bilder              only the three pictures of each operation, no video (OB1, Jonas 09.11.2026: «Du trenger
+                                                      ikke å ta videoklipp av båten, det holder med bilder»): the game's own clock, nothing
+                                                      recorded, so a boat takes a fraction of the time
   KYST_OMBORD_OUT=<dir>                               where the clips go (default tests/out/ombord/); the videos stay out of git
 
 Output: <out>/<boat>/<fishery>_<op>_<format>.mp4 and _1/_2/_3.jpg, and <out>/<boat>/clips_<format>[_<ops>].json with what each clip
@@ -96,14 +99,14 @@ OPS = {
   # setting line, nets or pots with the game's own setChoices and startSet
   'sett': [['line', 'garn', 'teiner'], 'sette redskapet: stampen, garnet eller teinene over hekken eller siden', """SEA('idle'); const pg = S.pgear;
       if (fish === 'line'){ S.equip.linehaler = true; pg.lines.hyse.n = 4; pg.lines.hyse.baited = 4; }
-      if (fish === 'garn'){ if (!equipFits('garnhaler', type)) return 'SKIP: garnhaleren passer ikke båten (minLen 7,5 m)'; S.equip.garnhaler = true; pg.nets = [{id:'n1', mesh:180, ty:'bunn', n:6, cond:1}]; }
+      if (fish === 'garn'){ if (!equipFits('garnhaler', type) && !(typeof handGear === 'function' && handGear('garn', type))) return 'SKIP: garnhaleren passer ikke båten (minLen 7,5 m)'; if (equipFits('garnhaler', type)) S.equip.garnhaler = true; pg.nets = [{id:'n1', mesh:180, ty:'bunn', n:6, cond:1}]; }
       if (fish === 'teiner'){ S.equip.teinehaler = true; pg.pots.big = 6; baitOf(pg).makrell = 50; }
       const ch = setChoices().find(c => !c.off); if (!ch) return 'SKIP: ingen valg i setChoices';
       const why = startSet(ch.kind, ch.spec, 0); if (why) return 'SKIP: ' + (why[0] || why); if (S.crew.length) CREW3D.reset();""", (0.5, 0.45, 1.0), 12],
   # hauling: a real set in the sea, startHaul, the fish in over the rail, gaffed or picked, bled
   'trekk': [['line', 'garn', 'teiner'], 'trekke: haleren går, fisken inn over rekka, hugget eller plukket, bløgget', """SEA('idle'); const p = {...b.pos}, kind = fish === 'teiner' ? 'teine' : fish;
       if (kind === 'line') S.equip.linehaler = true;
-      if (kind === 'garn'){ if (!equipFits('garnhaler', type)) return 'SKIP: garnhaleren passer ikke båten (minLen 7,5 m)'; S.equip.garnhaler = true; }
+      if (kind === 'garn'){ if (!equipFits('garnhaler', type) && !(typeof handGear === 'function' && handGear('garn', type))) return 'SKIP: garnhaleren passer ikke båten (minLen 7,5 m)'; if (equipFits('garnhaler', type)) S.equip.garnhaler = true; }
       if (kind === 'teine') S.equip.teinehaler = true;
       const acc = kind === 'teine' ? {krabbe:{kg:60, n:90}} : {torsk:{kg:220, n:70}, hyse:{kg:60, n:40}};
       S.sets = [{id:'s0', vid:S.cur, kind, n:6, a:p, b:{x:p.x + 0.6, y:p.y}, tSet:S.t - 12 * 60, acc, dead:0, cond:1, heavy:false, depth:Math.round(depthF(p)), warn:0,
@@ -153,12 +156,25 @@ STATE = """(() => ({st:CREW3D.agents().map(a => a.st + ':' + a.mode + ':' + (a.t
   dmg:S.boat.dmg ? JSON.parse(JSON.stringify(S.boat.dmg)) : null, inc:(S.incidents || []).slice(-3).map(i => i.k)}))()"""
 
 
+# a picture of the 3D view only (--bilder): the canvas read in the frame after the game has drawn it (its callback was asked for first,
+# so it runs first), which takes a second where a screenshot under SwiftShader takes a minute; the labels over the boats are not in it.
+# A blank read (the buffer already gone) falls back on the screenshot
+SNAP = """() => new Promise(r => requestAnimationFrame(() => { try { r(document.getElementById('gl').toDataURL('image/jpeg', 0.85)); } catch (e){ r(''); } }))"""
+async def snap(pg, path):
+    import base64
+    u = await pg.evaluate(SNAP)
+    if u and u.startswith('data:image/jpeg') and len(u) > 20000:
+        with open(path, 'wb') as f: f.write(base64.b64decode(u.split(',', 1)[1]))
+    else: await pg.screenshot(path=path, type='jpeg', quality=80)
+
+
 def args():
-    a = sys.argv[1:]; o = {'format': 'begge', 'ops': None, 'k': 0.15, 'sec': None}
+    a = sys.argv[1:]; o = {'format': 'begge', 'ops': None, 'k': 0.15, 'sec': None, 'bilder': False}
     pos = []
     i = 0
     while i < len(a):
-        if a[i].startswith('--'): o[a[i][2:]] = a[i + 1]; i += 2
+        if a[i] == '--bilder': o['bilder'] = True; i += 1
+        elif a[i].startswith('--'): o[a[i][2:]] = a[i + 1]; i += 2
         else: pos.append(a[i]); i += 1
     if not pos or pos[0] not in BOATS: sys.exit('bruk: ombord.py <båt> [fiske ...] [--format liggende|staaende|begge] [--ops a,b] [--k 0.1] [--sec 12]; båtene: ' + ' '.join(BOATS))
     o['boat'] = pos[0]; o['fish'] = [f for f in pos[1:] if f in FISHERIES] or FISHERIES
@@ -184,7 +200,7 @@ async def record(o, fmt, outdir):
     log = []
     async with async_playwright() as p:
         br = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
-        ctx = await br.new_context(viewport={'width': w, 'height': h}, record_video_dir=viddir, record_video_size={'width': w, 'height': h})
+        ctx = await br.new_context(viewport={'width': w, 'height': h}) if o['bilder'] else await br.new_context(viewport={'width': w, 'height': h}, record_video_dir=viddir, record_video_size={'width': w, 'height': h})
         await ctx.add_init_script(TIMESCALE)
         pg = await ctx.new_page(); T0 = time.time(); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
@@ -207,6 +223,19 @@ async def record(o, fmt, outdir):
                 await pg.wait_for_function("([t, n0]) => { const K = G3._debug.kitStat; return K.vt === t && K.n >= n0 + 3; }", arg=[o['boat'], n0], timeout=120000)
             except Exception: pass
             a = await pg.evaluate(STATE); fa = await pg.evaluate("G3._debug.kitStat.n")
+            if o['bilder']:
+                # pictures only (--bilder): the game's own clock, a screenshot at 15, 50 and 85 % of the operation's seconds
+                t1 = time.time() - T0; c1 = None; ran = 0.0
+                for i, at in ((1, 0.15), (2, 0.5), (3, 0.85)):
+                    left = sec * at - ran
+                    if left > 0: await pg.wait_for_timeout(int(left * 1000)); ran += left
+                    t0 = time.time(); await snap(pg, os.path.join(outdir, f'{fish}_{op}_{fmt}_{i}.jpg')); ran += time.time() - t0
+                    if i == 2: c1 = await pg.evaluate(CLIP)
+                t2 = time.time() - T0
+                b = await pg.evaluate(STATE); c2 = await pg.evaluate(CLIP); fb = await pg.evaluate("G3._debug.kitStat.n")
+                d = {k: b['n'].get(k, 0) - a['n'].get(k, 0) for k in b['n'] if b['n'].get(k, 0) != a['n'].get(k, 0)}
+                rec = {'clip': f'{fish}_{op}_{fmt}', 'what': what, 't1': t1, 't2': t2, 'before': a['st'], 'after': b['st'], 'events': d, 'anim': b['anim'], 'gop': b['gop'], 'status': b['status'], 'hold': b['hold'], 'jobs': b['jobs'], 'dmg': b['dmg'], 'inc': b['inc'], 'clipcheck': [c1, c2], 'fps': round((fb - fa) / max(1e-3, t2 - t1), 1)}
+                log.append(rec); print(json.dumps(rec, ensure_ascii=False), flush=True); continue
             await pg.evaluate("(k) => __TK.set(k)", o['k']); t1 = time.time() - T0
             # the picture in the middle as a screenshot; the early and the late one are taken from the recording when it is cut (a screenshot
             # waits for a frame, some 50 s on the slow clock under SwiftShader; Jonas 09.11.2026: pictures, not the videos)
@@ -222,7 +251,7 @@ async def record(o, fmt, outdir):
             rec = {'clip': f'{fish}_{op}_{fmt}', 'what': what, 't1': t1, 't2': t2, 'before': a['st'], 'after': b['st'], 'events': d, 'anim': b['anim'], 'gop': b['gop'], 'status': b['status'], 'hold': b['hold'], 'jobs': b['jobs'], 'dmg': b['dmg'], 'inc': b['inc'], 'clipcheck': [c1, c2], 'fps': round((fb - fa) / sec, 1)}
             log.append(rec); print(json.dumps(rec, ensure_ascii=False), flush=True)
         log.append({'errors': errs[:5]}); log.append({'tend': time.time() - T0})
-        await ctx.close(); raw = await pg.video.path(); await br.close()
+        await ctx.close(); raw = None if o['bilder'] else await pg.video.path(); await br.close()
     return raw, log
 
 
@@ -259,7 +288,8 @@ async def main():
     for fmt in o['formats']:
         raw, log = await record(o, fmt, outdir)
         with open(os.path.join(outdir, '_raw_%s%s.json' % (fmt, ('_' + '_'.join(o['ops'])) if o['ops'] else '')), 'w') as f: json.dump({'raw': raw, 'k': o['k'], 'log': log}, f)
-        cut(raw, log, outdir, o['k']); allog += log
+        if raw: cut(raw, log, outdir, o['k'])
+        allog += log
     with open(os.path.join(outdir, 'clips_%s%s.json' % ('_'.join(o['formats']), ('_' + '_'.join(o['ops'])) if o['ops'] else '')), 'w') as f: json.dump(allog, f, ensure_ascii=False, indent=1)
     print('ferdig:', outdir)
 
