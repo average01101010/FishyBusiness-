@@ -411,6 +411,15 @@
     if (t in JIGR) return JIGR[t];
     const m = vesselModel(t), P = m && m.o && m.o.p, out = [];
     if (P && G && G.deck){ const half = (G.beam || 3) / 2, hz = G.hauler ? G.hauler[2] : 1e9, st = G.stern || 4, bw = G.bow != null ? G.bow : -st, dy = G.deck.y;
+      // the rail at z on a side: in a slice across her there, the outermost part of her side, and the top of it, a rail between knee
+      // and hip height over the deck (null where there is none)
+      const railPt = (sd, z) => { let xm = 0; for (let i = 0; i < P.length; i += 3){ const xs = sd * P[i]; if (Math.abs(P[i + 2] - z) < 0.12 && xs > xm && xs < half + 0.3) xm = xs; }
+        if (xm < half * 0.6) return null;
+        let ym = -1e9; for (let i = 0; i < P.length; i += 3) if (Math.abs(P[i + 2] - z) < 0.12 && sd * P[i] > xm - 0.18 && P[i + 1] > ym && P[i + 1] < dy + 1.3) ym = P[i + 1];
+        return ym < dy + 0.35 ? null : [sd * (xm - 0.05), ym, z, sd]; };
+      // the model's own places, in the order the machines are bolted on (anchors.jigZ, [side, z]: the snekke, OB6 09.11.2026, where
+      // the search put place 2 in the corner by the dashboard with the hard top's post through the one standing there)
+      if (Array.isArray(G.jigZ)){ for (const [sd, z] of G.jigZ){ const q = railPt(sd, z); if (q) out.push(q); } return (JIGR[t] = out); }
       // the places to try: out from the middle of the working deck both ways, clear of the hauler and the ends
       const zs0 = JIG_Z[t] || [...Array(24).keys()].map(k => G.deck.z + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.35).filter(z => Math.abs(z - hz) > 0.6 && z < st - 0.9 && z > bw + 1.5);
       // as many as she may carry (jukseMax; Jonas' survey 30.10.2026, D2: only three were drawn of up to eight): the starboard rail
@@ -418,12 +427,7 @@
       const max = Math.max(1, (VESSELS[t] || {}).jukseMax || 3);
       for (const sd of [1, -1]){ const side = [], zs = Array.isArray(zs0) ? zs0 : zs0[sd] || [];
         for (const z of zs){ if (out.length + side.length >= max || side.length >= Math.ceil(max / 2) + (sd > 0 ? 1 : 0)) break; if (side.some(q => Math.abs(q[2] - z) < 0.7)) continue;
-          let xm = 0; for (let i = 0; i < P.length; i += 3){ const xs = sd * P[i]; if (Math.abs(P[i + 2] - z) < 0.12 && xs > xm && xs < half + 0.3) xm = xs; }
-          if (xm < half * 0.6) continue;
-          // the top of her side there, a rail between knee and hip height over the deck
-          let ym = -1e9; for (let i = 0; i < P.length; i += 3) if (Math.abs(P[i + 2] - z) < 0.12 && sd * P[i] > xm - 0.18 && P[i + 1] > ym && P[i + 1] < dy + 1.3) ym = P[i + 1];
-          if (ym < dy + 0.35) continue;
-          side.push([sd * (xm - 0.05), ym, z, sd]); }
+          const q = railPt(sd, z); if (q) side.push(q); }
         side.sort((a, b) => a[2] - b[2]); out.push(...side); } }
     return (JIGR[t] = out);
   }

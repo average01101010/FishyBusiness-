@@ -16,7 +16,13 @@ export default function (t){
   t.ok(L('pelagisk').buoys === 8 && L('pelagisk').smoke === 2 && L('pelagisk').mob === 1, '§ 7-10: pelagisk (75 m) har 8 livbøyer, røyk på to, MOB-båt (§ 7-5)', L('pelagisk'));
   t.ok(['autoliner', 'snokrabbe', 'bunntral'].every(k => L(k).buoys === 6 && L(k).smoke === 2 && L(k).mob === 1), '§ 7-10: 45–75 m har 6 livbøyer, røyk på to og MOB-båt (autolineren, snøkrabbebåten, tråleren)');
   t.ok(L('ringnot38').buoys === 4 && L('ringnot38').smoke === 2 && L('ringnot38').mob === 0, '24–45 m: 4 livbøyer, røyk på to, ingen MOB-båt (ringnot38, 38,55 m)', L('ringnot38'));
-  const small = Object.keys(VESSELS).filter(k => VESSELS[k].len < 15 && !VESSELS[k].bare);
+  // (Jonas 09.11.2026, OB6: «bare båter med kapasitet for 4 mann eller mer skal ha slikt utstyr»: under four aboard no raft and no buoy)
+  const few = Object.keys(VESSELS).filter(k => 1 + VESSELS[k].crewMax < 4);
+  t.ok(few.includes('snekke') && few.includes('skiff') && few.every(k => L(k).rafts === 0 && L(k).buoys === 0 && L(k).lights === 0 && L(k).lines === 0),
+    'under fire om bord: ingen redningsflåte og ingen livbøye (Jonas 09.11.2026)', few.map(k => k + ':' + L(k).rafts + '/' + L(k).buoys));
+  t.ok(Object.keys(VESSELS).filter(k => 1 + VESSELS[k].crewMax === 4).every(k => L(k).buoys >= 1) && VESSELS.snekke.crewMax === 1 && VESSELS.snekke.jukseMax === 2,
+    'fire om bord har livbøye; snekka har deg og én til og to juksamaskiner (Jonas 09.11.2026)');
+  const small = Object.keys(VESSELS).filter(k => VESSELS[k].len < 15 && !VESSELS[k].bare && !few.includes(k));
   // a bare boat (Father's old wooden boat, Jonas 09.11.2026) carries no lifebuoy and no ladder, and her lanterns no fishing lights
   const bare = Object.keys(VESSELS).filter(k => VESSELS[k].bare);
   t.ok(bare.includes('trebat') && bare.every(k => L(k).buoys === 0 && L(k).lights === 0 && L(k).lines === 0 && L(k).ladder === false && !(KITADD[k] || {}).ladder),

@@ -389,3 +389,11 @@ Samme arbeid som trebåten (over), på skiffens egne plasser (`skiff59.py` `anch
 - **Stampene og garnbinga** står på dørken akter, styrbord for skipperen og akter for konsollen, der redskapet går ut. Før sto de forut for fiskeren og på kastedekket, så settingen over hekken gikk gjennom konsollen og skipperen (F20). Det er plass til to stamper etter hverandre, ikke to i bredden; `kit.stamps.n` sier hvor mange som står på dørken, og resten stables oppå (`drawLineTubs`).
 - **Vannlinja** er den tomme båtens (0,23 m over kjølen ved speilet, 0,96 t mot `disp` 1,0, valg 18 A); tegningens 0,30 ga 1,60 t. Formen er ikke endret.
 - **90 hk-motoren** (D6) er egne deler i modellen (`outboard90`, `prop90`, ankeret `prop90`), og `drawSkiff` tegner den når `S.equip.motor90` er kjøpt.
+
+## Juksaplassene på snekka (OB6, 09.11.2026, `docs/planer/om-bord.md` 4.3)
+
+- **`anchors.jigZ`**: en modell kan gi juksaplassene selv, som en liste `[side, z]` i den rekkefølgen maskinene skrus på (1 styrbord, −1 babord, z i spillets ramme). `jigRail` (`view3d/13-instruments.js`) finner ripa der som før (det ytterste av sida og toppen av den i et snitt), men leter ikke etter flere plasser. Uten `jigZ` gjelder `JIG_Z` og søket som før. Snekka (`snekke26.py`) har to: styrbord akter for haleren og babord i åpningen mellom hardtopstolpene; søket la plass 2 i hjørnet ved dashbordet med hardtopstolpen gjennom fiskeren og den tredje ute på sidedekket.
+- **Flere fiskere enn plasser** (`deckcrew.js` `jigSpot`): den som er over, får ingen juksaplass og står ved, i stedet for å stå inni den første (før `J[k % J.length]`, så nummer tre sto i nummer én).
+- **`crewclip`** gir juksaplassene slik visningen gjør hvert bilde (`CREW3D.setJig(G3._debug.jigRail(type))`), med alle maskinene i bruk; før prøvde den bare mannskapsplassene (`spot0`…), så snekkas plass 2 ble aldri prøvd.
+- **Vannlinja** er den tomme båtens (1,16 m over kjølen, 3,00 t mot `disp` 3,0, valg 18 A); tegningens 1,20 (`WLD` i skriptet: formen, malingen og beslagene) ga 3,57 t. Formen er ikke endret.
+

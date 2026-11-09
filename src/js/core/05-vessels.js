@@ -1171,7 +1171,7 @@ function iceOut(out){
 }
 // a minute of deck work: gut first, then ice down what is gutted (or, when landing round, what is bled)
 function deckMinute(){
-  const b = S.boat, cg = catchGut(); if (!S.hold.length) return;
+  const b = S.boat, cg = catchGut(b); if (!S.hold.length) return;
   const G = workTeam('sloy', 'sloy'), I = workTeam('is', 'is'); if (!G.n && !I.n) return;
   // the gutting machine (BOAT.gutMachine, kg an hour; schema v2) adds its throughput while someone feeds it; it ices nothing
   // (the knives' tier speeds the hands, not the machine: its kg an hour are counted in the hands' pace, gutPace)

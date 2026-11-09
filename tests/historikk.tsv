@@ -1772,3 +1772,10 @@
 2026-11-09 16:27	ccr-1a880149-108s1u	bcc99b3	boottest	OK	20	lite	alene	
 2026-11-09 16:31	ccr-1a880149-108s1u	bcc99b3	seatrytest	OK	215	3d	alene	
 2026-11-09 16:35	ccr-b0ab5771-n45cmj	7e2e7e1	boottest	OK	24	lite	alene	
+2026-11-09 17:21	claude/rundsloyf-visible-start-16-81ss7b	86dfbfe+	turlinjetest	OK	7	lite	samtidig	
+2026-11-09 17:21	claude/rundsloyf-visible-start-16-81ss7b	86dfbfe+	decktest	OK	18	lite	samtidig	
+2026-11-09 17:22	claude/rundsloyf-visible-start-16-81ss7b	86dfbfe+	shoptest	OK	38	lite	samtidig	
+2026-11-09 17:22	claude/rundsloyf-visible-start-16-81ss7b	86dfbfe+	selltest	LES	22	lite	samtidig	
+2026-11-09 17:22	claude/rundsloyf-visible-start-16-81ss7b	86dfbfe+	boktest	OK	9	lite	samtidig	
+2026-11-09 17:24	claude/rundsloyf-visible-start-16-81ss7b	86dfbfe+	rundshot	OK	24	lite	alene	
+2026-11-09 17:45	claude/rundsloyf-visible-start-16-81ss7b	e571eff	tut	OK	1254	lite	alene	

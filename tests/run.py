@@ -130,6 +130,10 @@ for _f, _t in (('src/data/boat-krabbe50.b64', ['h3dshot', 'vessel3d', 'lanternte
 # the rescue, the near miss); mobshot draws the person in the water, the lifebuoy with its smoke and the rescue boat on its davit (3D,
 # alone). On lines of their own, so a merge with the sessions that add to the lists above does not meet them
 LITE += ['mobtest']
+# steg 16 R (09.11.2026): round or gutted per boat, the switch and the landing note
+LITE += ['rundshot']
+COVER['tests/rundshot.py'] = ['rundshot']
+for _f in ('src/js/ui/07-guide.js', 'src/js/ui/08-actions.js', 'src/js/ui/05d-plan2.js'): COVER.setdefault(_f, []).append('rundshot')
 D3 += ['mobshot']
 COVER['src/js/core/14b-sikkerhet.js'] = ['mobtest', 'seaworktest']
 # Ø8b M (08.11.2026): the meals, the cook and where to rest, on screen in both formats

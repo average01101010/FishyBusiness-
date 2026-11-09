@@ -199,7 +199,7 @@ const PLAN2UI = (() => {
   // «hvert N. døgn», and on a trip of several days its last day besides (Jonas 08.11.2026, valg 13 and 14: A; p2LandsToday): only the last
   // day when N is as long as the trip or longer
   const daysName = o => o.rhythm !== 'multi' ? L('hvert ' + o.land.days + '. døgn', 'every ' + o.land.days + ' days') : (o.land.days || 2) < p2TripLen(o) ? L('hvert ' + o.land.days + '. døgn og turens siste dag', 'every ' + o.land.days + ' days and the trip\'s last day') : L('turens siste dag', 'the trip\'s last day');
-  const landVal = o => p2Sno(o) ? (o.land.mode === 'port' && o.land.port ? nm(o.land.port) : L('Nærmeste mottak', 'The nearest plant') + (o.M && plan2Made(o) ? ' (' + nm(o.M) + ')' : '')) + ' · ' + (snoLive() ? L('levende krabbe, til tankene er fulle', 'live crab, until the tanks are full') : L('fryste klør, høyst ' + (o.land.days || DRP2.sno.days) + ' døgn', 'frozen clusters, ' + (o.land.days || DRP2.sno.days) + ' days at most')) : p2Lag() ? (o.land.mode === 'port' && o.land.port ? nm(o.land.port) : L('Nærmeste mottak', 'The nearest plant') + (o.M && plan2Made(o) ? ' (' + nm(o.M) + ')' : '')) + ' · ' + (o.land.when === 'days' ? L('turer på høyst ' + o.land.days + ' døgn', 'trips of at most ' + o.land.days + ' days') : L('til noe tar slutt', 'until something is spent')) : (o.land.mode === 'port' && o.land.port ? nm(o.land.port) : L('Nærmeste mottak', 'The nearest plant') + (o.M && plan2Made(o) ? ' (' + nm(o.M) + ')' : '')) + ' · ' + (o.land.when === 'days' ? daysName(o) : whenName(o.land.when));
+  const landVal = o => p2Sno(o) ? (o.land.mode === 'port' && o.land.port ? nm(o.land.port) : L('Nærmeste mottak', 'The nearest plant') + (o.M && plan2Made(o) ? ' (' + nm(o.M) + ')' : '')) + ' · ' + (snoLive() ? L('levende krabbe, til tankene er fulle', 'live crab, until the tanks are full') : L('fryste klør, høyst ' + (o.land.days || DRP2.sno.days) + ' døgn', 'frozen clusters, ' + (o.land.days || DRP2.sno.days) + ' days at most')) : p2Lag() ? (o.land.mode === 'port' && o.land.port ? nm(o.land.port) : L('Nærmeste mottak', 'The nearest plant') + (o.M && plan2Made(o) ? ' (' + nm(o.M) + ')' : '')) + ' · ' + (o.land.when === 'days' ? L('turer på høyst ' + o.land.days + ' døgn', 'trips of at most ' + o.land.days + ' days') : L('til noe tar slutt', 'until something is spent')) : (o.land.mode === 'port' && o.land.port ? nm(o.land.port) : L('Nærmeste mottak', 'The nearest plant') + (o.M && plan2Made(o) ? ' (' + nm(o.M) + ')' : '')) + ' · ' + (o.land.when === 'days' ? daysName(o) : whenName(o.land.when)) + (gutChoice() && S.boat.gutAboard === false ? L(' · rund', ' · round') : '');
   function landBody(o){
     const P = o.places, mid = P.length ? {x:P.reduce((a, q) => a + q.x, 0) / P.length, y:P.reduce((a, q) => a + q.y, 0) / P.length} : (portById(o.home) || {p:S.boat.pos}).p;
     const near = p2Plants().map(q => ({q, d:dist(q.p, mid)})).sort((x, y) => x.d - y.d).slice(0, 4);
@@ -212,6 +212,10 @@ const PLAN2UI = (() => {
     h.push(BIG('p2-land-when', L('Hver tur', 'Every trip'), L('Til mottaket hver dag før hjemturen', 'To the plant every day before the way home'), o.land.when === 'trip', 'data-v="trip"'));
     h.push(BIG('p2-land-when', L('Hvert ' + o.land.days + '. døgn', 'Every ' + o.land.days + ' days'), o.rhythm === 'multi' ? L('Og alltid turens siste dag, før hjem, og når lasten er full eller fisken må leveres', 'And always the trip\'s last day, before home, and when the hold is full or the fish must go') : L('Og når lasten er full eller fisken må leveres', 'And when the hold is full or the fish must go'), o.land.when === 'days', 'data-v="days"'));
     if (o.land.when === 'days') h.push('<div class="ph-kv dr-kv"><span>' + L('Hvert', 'Every') + '</span><span>' + STEP('p2-land-days', o.land.days + L('. døgn', ' days')) + '</span></div>');
+    // round or gutted, this boat's own choice (R1, core/13-work.js catchGut; the same switch as on the Fishing tab, ui/07-guide.js gutToggle)
+    if (gutChoice()){ const g = S.boat.gutAboard !== false;
+      h.push('<h4 style="margin-top:12px">' + L('Fangsten', 'The catch') + '</h4>', BIG('p2-gut', L('Sløyd om bord', 'Gutted aboard'), L('Lever og rogn på seddelen. Mannskapet sløyer og iser.', 'Liver and roe on the slip. The crew gut and ice.'), g, 'data-v="1"'),
+        BIG('p2-gut', L('Rund', 'Round'), L('Bløgget og iset. Mottaket sløyer.', 'Bled and iced. The buyer guts.'), !g, 'data-v="0"'), '<p class="ph-note">' + L(GUT_WHY[0], GUT_WHY[1]) + '</p>'); }
     return h.join('');
   }
   // ---- Vær
@@ -378,6 +382,7 @@ const PLAN2UI = (() => {
     if (a === 'p2-land-mode'){ o.land.mode = 'near'; o.land.port = null; return true; }
     if (a === 'p2-land-port'){ o.land.mode = 'port'; o.land.port = d.p; return true; }
     if (a === 'p2-land-when'){ o.land.when = d.v; return true; }
+    if (a === 'p2-gut'){ if (d.v === '1') delete S.boat.gutAboard; else S.boat.gutAboard = false; return true; }   // (R1)
     if (a === 'p2-land-days'){ o.land.days = p2Sno(o) ? clamp((o.land.days || DRP2.sno.days) + 2 * (+d.d), 6, 30) : p2Lag() ? clamp((o.land.days || DRP2.hav.days) + 7 * (+d.d), 7, 63) : clamp((o.land.days || 2) + (+d.d), 2, 7); return true; }
     if (a === 'p2-wx-w'){ o.wx.wind = clamp(o.wx.wind + (+d.d), 5, windMax()); return true; }
     if (a === 'p2-wx-h'){ o.wx.hs = clamp(Math.round((o.wx.hs + 0.5 * (+d.d)) * 10) / 10, 0.5, hsMax()); return true; }

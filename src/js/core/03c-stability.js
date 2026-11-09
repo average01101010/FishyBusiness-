@@ -29,7 +29,7 @@ function hullOf(type){
 const STAB_AT = {
   skiff:{bow:-2.2, stern:3.1, dy:0.22, hand:true, hold:[0, -1.7], net:[0.58, 1.5], tub:[0.58, 1.34], deck:[-0.75, 1.08], table:[-0.92, 0.4], haul:[0.86, -0.32], helm:[0, 1.45], fish:[0.45, 0.1], pots:[0, 1.8], rest:[-0.55, 2.05]},
   trebat:{bow:-3.6, stern:3.5, dy:0.04, hand:true, hold:[0, -1.5], net:[0, -1.5], tub:[-0.24, -1.72], deck:[0.52, -0.5], table:[-0.62, -0.35], haul:[0.99, -1.3], helm:[-0.36, 2.28], fish:[0.45, -0.1], pots:[0, 2.2], rest:[-0.45, -0.85]},
-  snekke:{bow:-3.95, stern:3.95, dy:0.38, hold:[0, 1.23], net:[-0.68, 1.23], tub:[-0.9, 1.45], deck:[0, 2.2], table:[-1.08, 2.12], haul:[1.22, 1.9], helm:[0.68, 1], pots:[0, 2.55]},
+  snekke:{bow:-3.95, stern:3.95, dy:0.42, hold:[0, 1.23], net:[-0.68, 1.23], tub:[-0.9, 1.45], deck:[0, 2.2], table:[-1.08, 2.12], haul:[1.22, 1.9], helm:[0.68, 1], pots:[0, 2.55]},
   plastsjark:{bow:-4.725, stern:4.725, dy:0.56, hatch:-0.44, net:[0, -0.44], tub:[0.26, -0.07], deck:[1.26, -0.57], table:[-1.45, -0.62], haul:[1.55, -1.23], helm:[0.62, 1.93], pots:[0, -0.28]},
   sjark:{bow:-5, stern:5.5, dy:0.59, hatch:2.1, net:[-0.95, 0.68], tub:[-1.1, 0.9], deck:[1.38, 1.5], table:[-1.55, 2], haul:[1.91, 0.8], helm:[0.48, -1.3], pots:[0, 2.3]},
   hurtigsjark:{bow:-5.495, stern:5.495, dy:1.16, hatch:3.15, net:[0, 4.8], tub:[-1.3, 0.6], deck:[1.38, 2.44], table:[-1.55, 2.19], haul:[1.84, 1.6], helm:[0.46, -1.68], pots:[0, 3.1]},

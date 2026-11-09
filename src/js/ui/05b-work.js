@@ -17,7 +17,7 @@ const WORK = (() => {
   const jobSt = () => [...new Set((S.jobs || []).filter(j => crewJob(j) && JOB_ST[j.kind]).map(j => JOB_ST[j.kind]))];
   // what waits at a station: the queue line on its card
   function queue(k){
-    const b = S.boat, cg = catchGut(), ci = catchIce(), g = b.gop; let gut = 0, ice = 0;
+    const b = S.boat, cg = catchGut(b), ci = catchIce(), g = b.gop; let gut = 0, ice = 0;
     for (const x of S.hold){ if (liveLot(x) || x.iced) continue; if (cg && !x.gut) gut += x.kg; else if (ci) ice += x.kg; }
     if (k === 'ror') return b.status === 'sailing' ? fmt(b.v || 0, 0) + ' kn' : '–';
     if (k === 'fiske') return b.status === 'fishing' && !g && S.fsess ? fmt(S.fsess.kg, 0) + ' kg' : '–';
