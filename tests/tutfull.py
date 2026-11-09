@@ -46,16 +46,17 @@ async def main():
           S.hold = []; S.facc = {}; S.fnext = {}; b.gear = true; b.status = 'fishing'; b.pos = {...g.p}; b.fishUntil = S.t + 10; for (let i = 0; i < 10 && b.status === 'fishing'; i++){ S.t++; fish(S.t / 60, 4, 0.4); deckMinute(); }
           const F = S.tut.fk, r = {m:F.m === undefined ? null : F.m, top:F.top === undefined ? null : F.top}; S.tut = keep; b.status = 'port'; S.hold = []; b.fishUntil = null; return r; })())'''))
         check(leg['m'] is None and leg['top'] is None, 'en lagring fra midt i første tur før S0 får ingen tellere halvveis (tutNormKg regner den som før)', leg)
-        # the slip and the deck log say the same N (Jonas' choice A 08.11.2026: portSlip calls tutNormKg): a real sale at the first trip's plant
+        # a real sale at the first trip's plant: N is reckoned (for the cloud, tut_norm) but told neither on the slip nor in the deck log
+        # (Jonas 09.11.2026: «ikke få servert data-potensiale rett i fanget»)
         sl = json.loads(await pg.evaluate("""(() => { const keep = {tut:S.tut, stock:S.stock, type:S.boat.type, ls:S.lastSale, cash:S.cash}, b = S.boat, g = GROUNDS[TUT_FIELD]; b.type = 'trebat'; applyVessel();
           S.stock = initStock(); S.tut = tutNew(); S.tut.v = 2; for (const id of ['n1','nout','intro','gps','route1','fish2','cast1','sail','fish','deck','full','route2','cast2']) S.tut.m[id] = 1;
           S.t = Math.round(((Date.UTC(2027, 2, 1, 9) - EPOCH) / 36e5) * 60); S.hold = []; S.facc = {}; S.fnext = {}; b.gear = true; b.status = 'fishing'; b.pos = {...g.p}; b.fishUntil = S.t + 60;
           for (let i = 0; i < 400 && b.status === 'fishing'; i++){ S.t++; fish(S.t / 60, 4, 0.4); deckMinute(); }
           const pt = portById(tutLand()); b.status = 'port'; b.port = pt.id; b.pos = {...pt.p}; S.t = Math.round(S.t / 1440) * 1440 + 600; sell();
-          const box = document.createElement('div'); box.innerHTML = portSlip(); const el = box.querySelector('.tutnorm'), m = el && el.textContent.match(/rundt ([\\d\\s\\u00a0]+) kg|under 10 kg/);
-          const r = {slip:m ? (m[1] ? +m[1].replace(/\\D/g, '') : 0) : null, log:tutNormKg()};
+          const box = document.createElement('div'); box.innerHTML = portSlip(); const n = tutNormKg(), l0 = S.log.length; tutFinish();
+          const r = {slip:/i timen/.test(box.textContent), log:S.log.slice(l0).some(e => /ekstra god|i timen/.test(e.no)), n};
           S.tut = keep.tut; S.stock = keep.stock; S.lastSale = keep.ls; S.cash = keep.cash; b.type = keep.type; applyVessel(); return JSON.stringify(r); })()"""))
-        check(sl['slip'] is not None and sl['log'] is not None and (sl['slip'] == sl['log'] or (sl['log'] < 10 and sl['slip'] == 0)), 'sluttseddelen og dekksdagboka sier samme N etter en ekte levering ved første turs mottak', sl)
+        check(not sl['slip'] and not sl['log'] and sl['n'] is not None, 'etter en ekte levering ved første turs mottak sier verken sluttseddelen eller dekksdagboka hva fisket her vanligvis gir (N regnes bare for skyen)', sl)
         print('en time', one); print('en time, alene på dekk', alone); print('to timer', two); print('stopp etter 20 min', stop)
         check(one['kg'] >= one['cap'] - 1, 'en time på feltet gir full last i trebåtens kar (TUT_HOLD 1, capHold ' + str(one['cap']) + ' kg)', one)
         check(alone['kg'] >= alone['cap'] - 1 and alone['st'] != 'fishing', 'også alene, med sløyingen først: full last, og fisket er slutt', {k: alone[k] for k in ('kg', 'mins', 'st')})

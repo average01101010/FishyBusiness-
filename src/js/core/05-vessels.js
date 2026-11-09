@@ -951,14 +951,23 @@ function dock(pid, berth){
 // sea, cold, hands busy on deck, and your own share while you play the jig game. fish() uses it, and so does the heat map's «Her nå» line.
 function catchFactors(H, W, hs){
   // fishing feels the boat's motions (03c-stability.js): the wave height given, scaled by how she moves here
-  const hw = hs * motionHere(H).f, wpen = Math.max(0.15, 1 - Math.max(0, hw - BOAT.risk[0] * 0.5) * 0.4 / (BOAT.risk[0] / 1.0) - Math.max(0, W - 8) * 0.03), eff = fishEffort() * jigQ();   // worn pilk and hooks fish worse (10b-gearcare.js)
+  const hw = hs * motionHere(H).f, wpen = Math.max(0.15, 1 - Math.max(0, hw - BOAT.risk[0] * 0.5) * 0.4 / (BOAT.risk[0] / 1.0) - Math.max(0, W - 8) * 0.03), jq = jigQ(), eff = fishEffort() * jq;   // worn pilk and hooks fish worse (10b-gearcare.js)
   // halibut is fished by hand on heavy gear: jigging machines do not help
   // the hands busy on deck are not at the rail: fishEffort counts only those at the Fiske station
-  const keff = workTeam('fiske', 'juksa', 'fishing').sum * jigQ();
+  const keff = workTeam('fiske', 'juksa', 'fishing').sum * jq;
   // playing the jig game, your own share comes through your bites (ui/10-rod-acts.js) and is left out here
   const jig = !!(typeof window !== 'undefined' && window.jigActive), share = jig ? jigMeShare() : 0, cold = coldPen(H, hs), deck = 1;
-  return {eff, keff, wpen, cold, deck, jig, pen:(1 - cold) * deck * (1 - share)};
+  return {eff, keff, wpen, cold, deck, jig, jq, pen:(1 - cold) * deck * (1 - share)};
 }
+// The share of the stock left where the boat stands, for a species (1 = untouched): S.stock, what the players have fished down (and the
+// other players' takes, wshTake), not the fleet's baseline (baseAt), which is the sea as it is; a species with a layer of its own
+// (the Greenland halibut, the snow crab) or a shellfish has only that. For the trip's line (Ø8b S2): density() already holds it.
+function stockDev(p, sp){
+  const s = sp && SPECIES[sp]; if (s && (s.stk || s.shell)) return Math.max(0.05, stockAt(p, sp));
+  if (!S.stock) return 1; let v = 0; for (const [k, w] of stockW(p)) v += stkGet(S.stock, k) * w; return Math.max(0.05, v);
+}
+// the trip's sums for the line on the landing note (Ø8b S2, core/04-crew.js tripSum): what the jig took and what the fish stood to
+const tripJ = T => T.j || (T.j = {m:0, kg:0, top:0, fe:0, mk:0, hs:0, w:0, p0:0, pS:0, pW:0, pC:0, pJ:0, pL:0});
 function fish(H, W, hs){
   const b = S.boat;
   // working the deck instead of fishing: until the tub is empty, then fish on (or leave the grounds)
@@ -987,18 +996,23 @@ function fish(H, W, hs){
   { const rq = {p:b.pos, len:BOAT.len, gear:'juksa', sp:S.target === 'kveite' ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)}, rb = (S.ruAt && S.ruAt.t > S.t - 10 && dist(S.ruAt.p, b.pos) < 0.05) ? S.ruAt.m : ruBlockMsg(rq);
     S.ruAt = {t:S.t, p:{x:b.pos.x, y:b.pos.y}, m:rb};
     if (rb){ if ((S.fjordWarn || -1e9) < S.t - 720){ S.fjordWarn = S.t; log(rb + ' Båten venter.', rb + ' The boat waits.'); } return; } }
-  const {eff, keff, wpen, pen, jig} = catchFactors(H, W, hs);
+  const {eff, keff, wpen, pen, jig, cold, jq} = catchFactors(H, W, hs);
   if (!S.fsess || dist(S.fsess, b.pos) > 0.3) S.fsess = {x:b.pos.x, y:b.pos.y, t0:S.t, kg:0};
   let got = 0;
   if (jig && meAboard()) S.deckMe = (S.deckMe || 0) + 1;   // jigging by hand counts as your own work on deck
-  let room = capHold() - tot, dsum = 0, tsum = 0, gotTop = 0;
+  let room = capHold() - tot, dsum = 0, tsum = 0, gotTop = 0, m0 = 0, mS = 0, mL = 0;
+  const dv0 = stockDev(b.pos), Eu = S.target === 'kveite' && b.kgear ? keff : eff;   // (the common stock's share is the same for every species: once a minute)
   S.facc = S.facc || {}; S.fnext = S.fnext || {};
   jigWear();   // the mounted set of pilk and hooks wears a little each minute of fishing (10b-gearcare.js)
   for (const sp of SP){
-    const dn = density(sp, b.pos, H); dsum += dn; tsum += tutBonus(sp, b.pos);
+    const dn = density(sp, b.pos, H), tb = tutBonus(sp, b.pos); dsum += dn; tsum += tb;
     // the first trip: how much of the fish stood there of itself, for the landing note's «what fishing gives here» (Onboarding 2, O4)
-    if (S.tut && S.tut.v === 2){ const F = S.tut.fk || (S.tut.fk = {d:0, t:0, m:0, top:0}); F.d += dn; F.t += tutBonus(sp, b.pos); }
-    S.facc[sp] = (S.facc[sp] || 0) + 30 * (S.target === 'kveite' && b.kgear ? keff : eff) * dn * luck(sp) * targetF(sp, H) * (SPECIES[sp].jig != null ? SPECIES[sp].jig : 1) * biteF(sp, b.pos, H) * wpen * pen * (0.5 + Math.random()) / 60;   // jig: what the jig takes of a species (the Greenland halibut next to none)
+    if (S.tut && S.tut.v === 2){ const F = S.tut.fk || (S.tut.fk = {d:0, t:0, m:0, top:0}); F.d += dn; F.t += tb; }
+    const E = Eu, lk = luck(sp), tf = targetF(sp, H), jf = SPECIES[sp].jig != null ? SPECIES[sp].jig : 1, bf = biteF(sp, b.pos, H);
+    S.facc[sp] = (S.facc[sp] || 0) + 30 * E * dn * lk * tf * jf * bf * wpen * pen * (0.5 + Math.random()) / 60;   // jig: what the jig takes of a species (the Greenland halibut next to none)
+    // the trip's line (Ø8b S2): the minute's fish without the weather and the luck (mS), with the luck (mL), and as it stood before
+    // the fishing down here (m0: the stock's share taken out of the stock's own part of density, not the first trip's patch)
+    if (dn > 0){ const base = 30 * E * dn * tf * jf * bf / 60, dv = SPECIES[sp].stk || SPECIES[sp].shell ? stockDev(b.pos, sp) : dv0; mS += base; mL += base * lk; m0 += base * ((dn - tb) / dv + tb) / dn; }
     if (!S.fnext[sp]) S.fnext[sp] = sampleFish(sp, b.pos, H);
     while (S.facc[sp] >= S.fnext[sp] && room > 0){
       const w = S.fnext[sp]; S.facc[sp] -= w; S.fnext[sp] = sampleFish(sp, b.pos, H);
@@ -1025,6 +1039,14 @@ function fish(H, W, hs){
   // hour actually fished, also when the player stops early, and leaves out the top-up, which is most of a full hold (Ø8b S0)
   // (only counters begun with the trip: a save from the middle of a first trip before this has neither, and tutNormKg counts it as before)
   if (S.tut && S.tut.v === 2 && S.tut.fk && S.tut.fk.m != null){ S.tut.fk.m++; S.tut.fk.top = (S.tut.fk.top || 0) + gotTop; }
+  // the trip's line (Ø8b S2, V2 A): the minutes jigged, what the fish stood to (p0) and what each step took of it, in turn: the stock
+  // fished down here (pS), the sea and the wind (pW, wpen), the cold (pC), worn pilk and hooks (pJ, jigQ), and what the luck gave (pL).
+  // Your own share in the jig game is in none of the steps: your bites come through addCatch and count in kg. The first trip is left out
+  // (its line is tutNormKg's, ui/07b-first-trip.js)
+  { const T = tripOf(b); if (S.tut && S.tut.catch) T.tut = 1;
+    else { const J = tripJ(T), q = Math.max(0.01, jq), ws = wpen * (1 - cold), kv = Eu !== eff; J.m++; J.tl = S.t; J.top += gotTop; J.fe += Eu / q / JIG.hand; J.hs += hs; J.w += W;
+      if (kv) J.kv = 1; else J.mk = Math.max(J.mk, (S.equip && S.equip.jukse) || 0);   // the rig the line names: halibut gear by hand, or the jig and the machines
+      J.p0 += m0 / q; J.pS += mS / q; J.pW += mS / q * wpen; J.pC += mS / q * ws; J.pJ += mS * ws; J.pL += mL * ws; } }
   // only the stock's own share of the catch is taken from it: not the guide's skrei patch, nor what the guarantee tops up
   takeStock(b.pos, (got - gotTop) * (dsum > 0 ? Math.max(0, (dsum - tsum) / dsum) : 1)); S.fsess.kg += got; if (got > 0) (b.tripGear = b.tripGear || {}).juksa = S.t;
   // a plan's jig places in turn (06f-plan.js, wp.jc; feedback #57): each hour's catch is weighed against the first hour's here, and when it
@@ -1057,6 +1079,9 @@ function endFishing(why){
 // until someone guts and ices it
 function addCatch(sp, kg, cls, hook, opt){
   if (cls == null) cls = SPECIES[sp].ref;
+  // the jig's catch for the trip's line (Ø8b S2): fish()'s, and your own bites in the jig game (ui/10-rod-acts.js, no opt) only in a minute
+  // fish() counted (J.tl), so bites while the boat waits on the deck or a rule add no kilos to hours not counted; not the gear's
+  if (hook !== false){ const how = opt && opt.how; if (how === 'juksa') tripJ(tripOf(S.boat)).kg += kg; else if (!how){ const J = tripJ(tripOf(S.boat)); if (J.tl != null && J.tl >= S.t - 1) J.kg += kg; } }
   festCatch(sp, kg);   // the skrei festival's biggest cod (09c-seasons.js)
   achCatch(sp, cls);   // «Storfisken» (09f-merker.js)
   recCatch(sp, kg, opt && opt.how);   // the personal records (09b-records.js)

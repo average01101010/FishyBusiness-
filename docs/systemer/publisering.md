@@ -4,6 +4,8 @@
 
 **Spillet publiseres på detstorebla.no** (Jonas 08.10.2026): en push til arbeidsgrenen som endrer `src/` ruller det ut av `.github/workflows/deploy.yml` («Appen på Hetzner», PWA-bygget). Sjekk at kjøringen er grønn med `gh api repos/average01101010/FishyBusiness-/actions/runs`.
 
+**Testutgave og produksjon (plan 09.11.2026, ikke bygd):** `docs/planer/lansering-plan.md` L1a og L1b foreslår `test.detstorebla.no` for arbeidsgrenen og produksjonen fra `main` med slipp, og venter på valg 16 i `docs/planer/koen.md`. Til det er bygd, gjelder det som står her.
+
 **Før pushen til utrullingsgrenen** (01.11.2026): sjekk at den er en ren framoverføring, `git fetch origin ccr-5e1ba2f4-pusvyd && git merge-base --is-ancestor origin/ccr-5e1ba2f4-pusvyd HEAD`. Svarer den nei, har en annen økt pushet dit: slå den sammen inn i din gren og test før du pusher (`git push origin HEAD:ccr-5e1ba2f4-pusvyd`).
 
 **Når pushen ikke utløser kjøringen** (sett 31.10.2026): en push av en sammenslåing rett etter at en annen økt hadde pushet til grenen, fikk ingen kjøring, og den forrige pushen ble avbrutt av `cancel-in-progress`. Da startes begge kjøringene for hånd på grentoppen, uten tom commit: `gh api -X POST repos/average01101010/FishyBusiness-/actions/workflows/deploy.yml/dispatches -f ref=ccr-5e1ba2f4-pusvyd` og det samme for `pwa.yml` (begge har `workflow_dispatch`). Sjekk etterpå at `head_sha` i kjøringene er grentoppen.
