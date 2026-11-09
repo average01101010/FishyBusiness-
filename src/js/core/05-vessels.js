@@ -1158,6 +1158,17 @@ function moveKg(x, kg, patch){
 }
 // the ice machine (BOAT.iceMaker, kg a day; schema v2, the yard's UPGS.ice) fills the ice room at sea
 function iceMinute(){ const b = S.boat; if (!BOAT.iceMaker || b.status === 'port' || (b.ice || 0) >= BOAT.iceCap) return; b.ice = Math.min(BOAT.iceCap, (b.ice || 0) + BOAT.iceMaker / 1440); }
+// «Tom for is» (Ø8b M5 A, Jonas 06.11.2026, docs/systemer/folk-om-bord.md 5.19b): once when the ice runs out, then once a day while it
+// stays out (before: every two hours, 12–15 like lines in three days in spilltest 4). The spell is S.lastIceWarn, a vessel's own (VKEYS):
+// the last line's time, -1e9 when the ice is not out. It ends when the deck has iced what it can and a real stock is left (ICE_BACK of
+// the ice room: the mottak's ice, or the ice machine catching up), not on the machine's trickle, which the next minute's catch takes;
+// an old game in the middle of a spell (the line within two hours) goes on from it
+const ICE_BACK = 0.05;
+function iceOut(out){
+  if (!out){ S.lastIceWarn = -1e9; return; }
+  if (S.t - (S.lastIceWarn ?? -1e9) < 1440) return;
+  log('Tom for is. Fangsten ises ikke.', 'Out of ice. The catch is not being iced.'); S.lastIceWarn = S.t;
+}
 // a minute of deck work: gut first, then ice down what is gutted (or, when landing round, what is bled)
 function deckMinute(){
   const b = S.boat, cg = catchGut(); if (!S.hold.length) return;
@@ -1175,10 +1186,11 @@ function deckMinute(){
   if (catchIce()) for (const x of S.hold.filter(x => !x.iced && (x.gut || !cg) && !liveLot(x))){
     if (pm <= 0.001 || fzLeft <= 1e-6) break; const ux = x.gut && !x.rund ? SPECIES[x.sp].uh || 1 : 1;
     const kg = Math.min(x.kg, pm * DECK.ice, fz ? fzLeft * ux : b.ice / (0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)));
-    if (kg <= 0.01){ if (S.t - (S.lastIceWarn || -1e9) > 120){ log('Tom for is. Fangsten ises ikke.', 'Out of ice. The catch is not being iced.'); S.lastIceWarn = S.t; } break; }
+    if (kg <= 0.01){ if (!fz) iceOut(true); break; }
     if (fz){ moveKg(x, kg, {iced:true, frozen:true}); fzLeft -= kg / ux; } else { moveKg(x, kg, {iced:true}); const ik = Math.min(b.ice, kg * 0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)); b.ice -= ik; tripOf(b).iceKg += ik; }
     pm -= kg / DECK.ice; worked += kg;
   }
+  if (catchIce() && !fz && (b.ice || 0) >= Math.max(1, ICE_BACK * (BOAT.iceCap || 0))) iceOut(false);
   // your own minutes on deck; when the deck was last worked (the crew's break: a deck to scrub, 13-work.js idleEnv); now and then a mistake (14-crewlife.js crewSlip)
   if (worked > 0 && (G.me || I.me)) S.deckMe = (S.deckMe || 0) + 1;
   if (worked > 0){ b.deckT = S.t; if (typeof crewSlip === 'function') crewSlip(G.crew.concat(I.crew).filter(c => !c.anon)); }

@@ -762,7 +762,7 @@ crew: people with skills, habits and moods
   - 618 `flyOut(c)`
   - 626 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1371 linjer)
+## `src/js/core/05-vessels.js` (1383 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -847,24 +847,25 @@ crew: people with skills, habits and moods
   - 1147 `deckEta(hands)`
   - 1152 `moveKg(x, kg, patch)`
   - 1160 `iceMinute()`
-  - 1162 `deckMinute()`
-- **1186** lying to in a storm (H1b R8, 05.11.2026)
-  - 1203 `quayFar(b)`
-  - 1207 `lieTo(W, hs)`
-  - 1214 `lieToStep(W, hs)`
-  - 1224 `risk(W, hs)`
-  - 1252 `hullRepair()`
-  - 1255 `svcOverdue()`
-- **1256** the rescue boat (plan E3, 05.10.2026)
-  - 1282 `rescueBases()`
-  - 1291 `rescueBase(p)`
-  - 1298 `rescueAis(H)`
-  - 1302 `rescue(keepCatch)`
-  - 1326 `towSea(p)`
-  - 1331 `towRoutes(b)`
-  - 1342 `towStep(H)`
-  - 1354 `towDone(t)`
-  - 1360 `towPose(frac)`
+  - 1167 `iceOut(out)`
+  - 1173 `deckMinute()`
+- **1198** lying to in a storm (H1b R8, 05.11.2026)
+  - 1215 `quayFar(b)`
+  - 1219 `lieTo(W, hs)`
+  - 1226 `lieToStep(W, hs)`
+  - 1236 `risk(W, hs)`
+  - 1264 `hullRepair()`
+  - 1267 `svcOverdue()`
+- **1268** the rescue boat (plan E3, 05.10.2026)
+  - 1294 `rescueBases()`
+  - 1303 `rescueBase(p)`
+  - 1310 `rescueAis(H)`
+  - 1314 `rescue(keepCatch)`
+  - 1338 `towSea(p)`
+  - 1343 `towRoutes(b)`
+  - 1354 `towStep(H)`
+  - 1366 `towDone(t)`
+  - 1372 `towPose(frac)`
 
 ## `src/js/core/05c-air.js` (64 linjer)
 
@@ -2590,12 +2591,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1387 linjer)
+## `src/js/ui/phone/07-patch.js` (1389 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1380 `patch()`
+  - 1382 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
