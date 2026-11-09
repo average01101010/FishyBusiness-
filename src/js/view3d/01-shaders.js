@@ -254,8 +254,11 @@
   // of it where it breaks, and the white water of the broken waves inside the break (the bores, from the limit, all of it at 1.6 times
   // it: the surf zone off a beach is mostly white from the break in). g: the grain; v: a slow noise of some 55 m that the height
   // breaks by (the highest waves of a group break first, and the edge of the breaking was a straight line along the shoal texture's
-  // 23 m cells over a flat, Bleik 09.11.2026), with the breaking spread over 0.55-1 of the limit.
-  const SURFF = 'float surfFoam(vec4 SH,float Et,float Eu,float Es,float dep,float fw,float sb,float g,float v){if(dep<=0.0)return 0.0;float Hl=4.19*sqrt(Et*fw*fw+Eu*sb*sb);float rho=Hl/(0.78*max(dep,0.05))*(0.8+0.4*v);float brk=smoothstep(0.55,1.0,rho);if(brk<=0.0)return 0.0;' +
+  // 23 m cells over a flat, Bleik 09.11.2026). It starts at 0.7 of the limit for Hs (Hs / h 0.55: the highest waves, some 1.7 Hs,
+  // are then near 0.78 h); from 0.55, the sea broke over 7-8 m of water off Bleik in 2.8 m, a white field 40 m wide.
+  // Drawn by the sea shader alone: laid in the foam map's whitecap channel too, it came out in blocks with straight edges as that
+  // channel shifts by whole texels and starts afresh (Bleik's harbour 09.11.2026), and the pass summed 13 waves in every texel by land.
+  const SURFF = 'float surfFoam(vec4 SH,float Et,float Eu,float Es,float dep,float fw,float sb,float g,float v){if(dep<=0.0)return 0.0;float Hl=4.19*sqrt(Et*fw*fw+Eu*sb*sb);float rho=Hl/(0.78*max(dep,0.05))*(0.85+0.3*v);float brk=smoothstep(0.7,1.0,rho);if(brk<=0.0)return 0.0;' +
     'float cw=0.5;if(Es>1e-7)cw=smoothstep(0.45,0.95,sin(surfF(SH)-0.35));return brk*smoothstep(0.0,0.1,dep)*max(cw*(0.8+0.6*(g-0.5)),smoothstep(0.95,1.6,rho)*(0.5+0.5*g));}';
   // the foam a hull makes this frame, shared by the foam map's pass (your boat) and the other boats' pass (NPCF_FS, 04.11.2026)
   // (pow(x, 2.0) is undefined in GLSL for x < 0: Adreno gives NaN, which the other boats' pass wrote straight into the map as white
@@ -295,9 +298,7 @@
     'return iw;}';
   const FOAM_VS = 'attribute vec2 aXZ;varying vec2 vUV;void main(){vUV=aXZ*0.5+0.5;gl_Position=vec4(aXZ,0.0,1.0);}';
   const FOAM_FS = 'precision highp float;uniform sampler2D uPrev;uniform vec2 uShift;uniform vec2 uShiftG;uniform vec2 uFoamG;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform float uN;uniform vec2 uRebase;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uTime;uniform vec2 uNFD;uniform float uWind;uniform vec2 uWindDir;uniform vec2 uShiftC;' +
-    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;uniform vec4 uSp0;uniform vec4 uSp1;uniform vec4 uSp2;uniform vec4 uSp3;varying vec2 vUV;' + NOISE + SEA_STATE + SHOAL + WAKE_GLSL + FETCHG + SWELLG + WCAPS + SURFF +
-    // the energy the waves bring in where the sea by the shore is SH (F4), as the sea shaders add it up wave by wave
-    'vec3 shE(vec2 P,vec4 S,vec4 SH){float Et=0.0;float Eu=0.0;float Es=0.0;' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(i => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float am=ampOf(a,b,S);vec3 sg=shW(a,SH);float gr=grpOf(P,a,b,uGp[' + i + ']-uNFg[' + i + ']);float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;}').join('') + '\nreturn vec3(Et,Eu,Es);}' +
+    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;uniform vec4 uSp0;uniform vec4 uSp1;uniform vec4 uSp2;uniform vec4 uSp3;varying vec2 vUV;' + NOISE + SEA_STATE + SHOAL + WAKE_GLSL + FETCHG + WCAPS +
     // the foam where a slam and the spray land (F3b, foamSplash in 14-sea.js): a patch (x, z in the wake's frame, radius, amount), its
     // edge ragged and its inside clumped as the wash's (nothing beyond 1.25 radii, where the ragged edge never reaches: no noise there)
     'float splF(vec2 Mg,vec2 Pb,vec4 s){if(s.w<=0.0)return 0.0;float d=length(Mg-s.xy);if(d>s.z*1.25)return 0.0;d*=0.8+0.4*ns(Pb*0.7+vec2(3.0,1.0));return s.w*(1.0-smoothstep(s.z*0.5,s.z,d))*(0.6+0.4*ns(Pb*1.1+vec2(8.0,2.0)));}' +
@@ -331,11 +332,6 @@
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => SEA_WAVE(true, i)).join('') +
     '\nfloat crest=y*inversesqrt(sa);float dw2=smoothstep(0.45,1.73,fetchW(P,-w2,S.w));float Wc=clamp(3.84e-6*pow(max(uWind,0.3),3.41)*dw2,1e-5,0.5);' +
     'vec2 cq=vec2(dot(Pb,w2),dot(Pb,wp));float fv=capFv(capJ(jxx,jxz,jtr,jv),jsc*inversesqrt(jsv),crest,capGrain(cq,uTime,1.0,0.0));float th=capTh(Wc*' + wc5(WCAP.k) + ');ic=smoothstep(th-0.01,th+0.05,fv);}' +
-    // --- the surf breaking by the shore (F4), laid with the whitecaps so it stays a while behind the breaker and drifts ---
-    '\nif(uSurf.z>0.5){vec4 SH=shoalAt(P);if(SH.x<78.0){vec4 S=seaAt(P);vec3 E=shE(P,S,SH);float dep=SH.x;' +
-    'if(uLSOn>0.5){vec2 lu=(P-uLRect.xy)*uLRect.zw;if(lu.x>0.0&&lu.y>0.0&&lu.x<1.0&&lu.y<1.0){float hs=texture2D(uLandS,lu).r*8.0-4.0;dep=mix(dep,uTideL-hs,smoothstep(-3.95,-3.0,hs));}}' +
-    'float fw=clamp(fetchW(P,-uWindDir,S.w)/max(S.w,0.01),0.0,1.0);float sb=swellW(P,-uWa[11].xy);float g=ns(Pb*0.9+vec2(uTime*0.3,1.0))*0.6+ns(Pb*2.6-vec2(0.0,uTime*0.4))*0.4;' +
-    'ic=max(ic,surfFoam(SH,E.x,E.y,E.z,dep,fw,sb,g,ns(P*0.018+vec2(uTime*0.05,3.0)))*0.9);}}' +
     // new foam over what is left of the old: born now
     'if(iw>dw){aw=iw;bw=uFoamT.x;}if(ic>dc){ac=ic;bc=uFoamTc.x;}' +
     // none of the wake's foam on land (what the water carries onto a breakwater or a shore is gone)
