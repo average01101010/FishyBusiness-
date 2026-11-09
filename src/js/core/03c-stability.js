@@ -17,21 +17,87 @@ function hullOf(type){
   h = {L, B, T, Cb, Cwp, Awp:Cwp * L * B, KB, BM, f, Dp, KG:KB + BM - GM0, GM:GM0, disp:D0, decked:L >= 7};
   STAB_C.set(type, h); return h;
 }
-// what is aboard: the catch low in the hold (on the floor of an open boat), tubs waiting on deck, and gear on deck
+// ---- Where the load stands aboard (OB15, 09.11.2026; docs/planer/om-bord.md kap. 5, S1–S3; Jonas 09.11.2026: «Jeg ønsker jo at båten
+// skal fungere så ekte som mulig»). In the 3D model's own frame, metres: x to starboard, z aft, the origin the model's (0.06 m over the
+// design waterline). Read off the Blender models' anchors 09.11.2026 (tools/boats/*.py, what vessel3d.js glbLoad gives as ex.anchors):
+// bow and stern; the hold's hatch on a decked boat, or the boxes on the floor of an open boat (kit.cargo, hold); the nets (kit.garn) and the line tubs
+// (kit.stamps); the tubs on deck where the fish wait for the table and the ice (work.tub); the gutting table (work.table); the hauler; the
+// helm (skipperAt); the fisher at the rail of a hand-worked boat (skiff.fisher); the pots on the work deck (deck.z); dy the deck's height.
+// A data table, as VESSELS is (no code chooses by the type's name): the core reckons without the models, so the world is the same with the
+// 3D view off. When a model's places move (OB5–OB13), this table is read again: tests/unit/trim.test.mjs holds the numbers it was read at.
+// A type not here (the ocean vessels, outside the MVP) gets the middle of her hull for all of it and the hauler on the starboard rail.
+const STAB_AT = {
+  skiff:{bow:-2.2, stern:3.1, dy:0.15, hand:true, hold:[0, -1.7], net:[0, -1.58], tub:[0.2, -0.78], deck:[-0.75, 1.08], table:[-0.92, 0.4], haul:[1.09, -0.15], helm:[0, 1.45], fish:[0.45, 0.1], pots:[0, 1.8], rest:[-0.55, 2.05]},
+  trebat:{bow:-3.6, stern:3.5, dy:0.04, hand:true, hold:[0, -1.5], net:[0, -1.5], tub:[-0.24, -1.72], deck:[0.52, -0.5], table:[-0.62, -0.35], haul:[0.99, -1.3], helm:[-0.36, 2.28], fish:[0.45, -0.1], pots:[0, 2.2], rest:[-0.45, -0.85]},
+  snekke:{bow:-3.95, stern:3.95, dy:0.38, hold:[0, 1.23], net:[-0.68, 1.23], tub:[-0.9, 1.45], deck:[0, 2.2], table:[-1.08, 2.12], haul:[1.22, 1.9], helm:[0.68, 1], pots:[0, 2.55]},
+  plastsjark:{bow:-4.725, stern:4.725, dy:0.56, hatch:-0.44, net:[0, -0.44], tub:[0.26, -0.07], deck:[1.26, -0.57], table:[-1.45, -0.62], haul:[1.55, -1.23], helm:[0.62, 1.93], pots:[0, -0.28]},
+  sjark:{bow:-5, stern:5.5, dy:0.59, hatch:2.1, net:[-0.95, 0.68], tub:[-1.1, 0.9], deck:[1.38, 1.5], table:[-1.55, 2], haul:[1.91, 0.8], helm:[0.48, -1.3], pots:[0, 2.3]},
+  hurtigsjark:{bow:-5.495, stern:5.495, dy:1.16, hatch:3.15, net:[0, 4.8], tub:[-1.3, 0.6], deck:[1.38, 2.44], table:[-1.55, 2.19], haul:[1.84, 1.6], helm:[0.46, -1.68], pots:[0, 3.1]},
+  sjarkny:{bow:-5.495, stern:5.495, dy:0.93, hatch:3.9, net:[1.05, 4.95], tub:[0.95, 2.75], deck:[1.8, 0.65], table:[1.85, 1.9], haul:[2.19, -0.1], helm:[1.12, -1.83], pots:[0, 2.9]},
+  breisjark:{bow:-5.12, stern:5.58, dy:0.88, hatch:0.48, net:[-1.38, 0.08], tub:[-1.55, 0.03], deck:[1.45, 0.56], table:[-1.59, 1.53], haul:[1.98, -0.29], helm:[0.55, -1.9], pots:[0, 0.68]},
+  kyst15:{bow:-7.495, stern:7.495, dy:0.9, hatch:1.8, net:[2.2, 3.5], tub:[2.1, 4.5], deck:[2.35, 0.95], table:[1.24, 2.22], haul:[2.86, 0.2], helm:[1.05, -3.88], pots:[0, 1.3]},
+  kyst21:{bow:-10.5, stern:10.5, dy:1.02, hatch:-1.3, net:[0.55, -1.8], tub:[0.33, -2.12], deck:[2.7, -0.4], table:[2.7, -1.75], haul:[3.24, -3.1], helm:[0.5, 2.6], pots:[0, -1.6]}};
+const STAB_PC = new Map();
+function stabPlaces(type){
+  let A = STAB_PC.get(type); if (A) return A;
+  const h = hullOf(type), T = STAB_AT[type] || {}, mid = [0, 0];
+  A = Object.assign({bow:-h.L / 2, stern:h.L / 2, dy:0.5, hold:mid, net:mid, tub:mid, deck:mid, table:mid, haul:[h.B * 0.45, 0], helm:mid, pots:mid}, T);
+  // (the hatch is only the opening: the hold runs under the deck from it towards the middle, where the hull is fullest, so its centre is
+  // taken halfway between the hatch and the middle of her length; the models have no hold to measure, CLAUDE.md. Assumed, om-bord.md kap. 5)
+  if (T.hatch != null) A.hold = [0, (T.hatch + (A.bow + A.stern) / 2) / 2];
+  if (!A.fish) A.fish = [A.haul[0] * 0.7, A.pots[1]];   // at the rail on the hauler's side, at the work deck (the jigging machines there)
+  if (!A.rest) A.rest = [0, A.helm[1]];                  // off the deck: in the wheelhouse or the cabin, about the middle line
+  STAB_PC.set(type, A); return A;
+}
+// where a person stands for a station of the work (core/13-work.js workAssign: c.st, S.mySt): the helm, the hauler (a step inboard of
+// it, as deckcrew.js places the one hauling; in a hand-worked boat at the rail where the fisher sits), the rail with the jig, the table, the tubs (bleeding, icing, sorting), else off the deck
+const stabSpot = (A, st) => st === 'ror' ? A.helm : st === 'haling' ? (A.hand ? A.fish : [A.haul[0] * 0.7, A.haul[1]]) : st === 'fiske' ? A.fish : st === 'sloy' ? A.table : st === 'is' || st === 'blogg' || st === 'sort' ? A.deck : A.rest;
+const STAB_P = 90;   // kg a person, in oilskins and boots
+// The pull of the gear in the hauler, kg, straight down at its sheave: the gear coming up off the bottom (its weight in the water, the
+// rope's from the depth, and the catch on the piece in the sheave), as much as the boat can take on her rail: 35 kg a tonne of the boat
+// (the skiff 35 kg by hand, the trebåt 67, the snekke 105, a sjark the gear's own). Guessed, not measured (om-bord.md kap. 5): a line
+// 50 kg, a net 100, a pot string 70 (the conical snow crab pots 60), 0.6 kg a metre of depth, and half the catch of a piece.
+const STAB_PULL = {line:50, garn:100, teine:70};
+function stabPull(b = S.boat){
+  const g = b && b.gop; if (!g || g.op !== 'haul') return 0;
+  const s = (S.sets || []).find(x => x.id === g.sid), depth = Math.min(300, Math.max(0, (s && s.depth) || 30));   // (the set's depth, as the haul's end lines have it)
+  const fish = g.done > 0 ? (g.kg || 0) / g.done * 0.5 : 0;
+  return Math.min((g.sno ? 60 : STAB_PULL[g.kind] || 50) + 0.6 * depth + fish, 35 * hullOf(b.type).disp);
+}
+// what is aboard: the catch low in the hold (on the floor of an open boat), tubs waiting on deck, gear on deck (and which), the water in
+// the hull, the people at their stations, and the pull in the hauler
 function stabLoad(b = S.boat){
   const pg = S.pgear || {}, pots = pg.pots || {}, lines = pg.lines || {}, nets = (pg.nets || []).reduce((a, n) => a + n.n, 0);
-  const gear = (pots.big || 0) * STAB_W.potBig + (pots.sno || 0) * STAB_W.potSno + nets * STAB_W.net + ((lines.hyse || {}).n || 0) * STAB_W.tub + ((lines.bank || {}).n || 0) * STAB_W.tub + ((pg.kits || {}).n || 0) * STAB_W.kit;
-  const hold = (typeof holdLoad === 'function' ? holdLoad() : 0) + (typeof hullWaterKg === 'function' ? hullWaterKg(b) : 0), deck = typeof deckPending === 'function' ? deckPending() : 0;
-  return {hold, deck, gear};
+  const gp = {pot:(pots.big || 0) * STAB_W.potBig + (pots.sno || 0) * STAB_W.potSno, net:nets * STAB_W.net, tub:((lines.hyse || {}).n || 0) * STAB_W.tub + ((lines.bank || {}).n || 0) * STAB_W.tub, kit:((pg.kits || {}).n || 0) * STAB_W.kit};
+  const gear = gp.pot + gp.net + gp.tub + gp.kit, water = typeof hullWaterKg === 'function' ? hullWaterKg(b) : 0, deck = typeof deckPending === 'function' ? deckPending() : 0;
+  // (holdLoad has the fish waiting on deck too: before 09.11.2026 they were counted twice, in the hold and on deck)
+  const hold = Math.max(0, (typeof holdLoad === 'function' ? holdLoad() : 0) - deck) + water;
+  const crew = []; if (typeof meAboard === 'function' && meAboard()) crew.push(S.mySt || 'ror');
+  if (typeof crewAboard === 'function') for (const c of crewAboard()) crew.push(c.st || null);
+  return {hold, deck, gear, gp, water, crew, pull:stabPull(b)};
 }
-// the boat as loaded: draft, metacentric height, roll, heave and pitch periods, the deck edge angle
+// the boat as loaded: draft, metacentric height, roll, heave and pitch periods, the deck edge angle; with the load's places, the trim
+// (bow up, rad: her centre of gravity forward or aft of where the hull's own lies, the sections finding where she floats, hullRest) and
+// the list (to starboard, rad: the load's moment across her over the displacement times GM, the small-angle heel)
 function stabOf(type = S.boat.type, load = stabLoad()){
-  const h = hullOf(type), w = (load.hold + load.deck + load.gear) / 1000, D = h.disp + w;
+  const h = hullOf(type), A = stabPlaces(type), crew = load.crew || [], wc = crew.length * STAB_P / 1000, pull = (load.pull || 0) / 1000;
+  const w = (load.hold + load.deck + load.gear) / 1000 + wc + pull, D = h.disp + w;
   // the sides flare, so the waterplane grows as she settles and BM falls slower than 1/displacement (KM stays about the same)
   const T = h.T + w / (1.025 * h.Awp), KB = h.KB * T / h.T, BM = h.BM * Math.pow(h.disp / D, 0.4);
-  const KG = (h.disp * h.KG + load.hold / 1000 * (h.decked ? 0.4 : 0.3) * h.Dp + (load.deck + load.gear) / 1000 * (h.Dp + 0.8)) / D;   // gear stacked on deck: its middle 0.8 m up
-  const GM = KB + BM - KG, f = Math.max(0.1, h.f - (T - h.T)), C = 0.373 + 0.023 * Math.min(3.5, h.B / T) - 0.043 * h.L / 100;
-  return {GM, KG, T, f, D, Tr:2 * C * h.B / Math.sqrt(Math.max(GM, 0.04)), Tz:2 * Math.PI * Math.sqrt(h.Cb * T * 1.8 / (9.81 * h.Cwp)), deckEdge:Math.atan(2 * f / h.B), L:h.L, B:h.B, decked:h.decked};
+  // gear stacked on deck: its middle 0.8 m up; a person's weight 0.9 m over the deck they stand on; the pull at the hauler's sheave
+  const KG = (h.disp * h.KG + load.hold / 1000 * (h.decked ? 0.4 : 0.3) * h.Dp + (load.deck + load.gear) / 1000 * (h.Dp + 0.8) + wc * (h.T + 0.06 + A.dy + 0.9) + pull * (h.Dp + 0.35)) / D;
+  const GM = KB + BM - KG, f = Math.max(0.1, h.f - (T - h.T)), C = 0.373 + 0.023 * Math.min(3.5, h.B / T) - 0.043 * h.L / 100, deckEdge = Math.atan(2 * f / h.B);
+  // the moments of the load about the middle line (x) and along her (z), kg m: the fish in the hold, the water in the hull where she is
+  // deepest (her own centre, no moment), the tubs on deck, the gear at its places (all at the pots' place when not split), the people at
+  // their stations, and the pull at the hauler
+  const gp = load.gp || {pot:load.gear}, fish = Math.max(0, load.hold - (load.water || 0)), P = [[fish, A.hold], [load.deck, A.deck], [gp.pot || 0, A.pots], [gp.net || 0, A.net], [gp.tub || 0, A.tub], [gp.kit || 0, A.fish], [load.pull || 0, A.haul]];
+  for (const st of crew) P.push([STAB_P, stabSpot(A, st)]);
+  let mx = 0, mz = 0, wm = 0; for (const [kg, at] of P){ if (!(kg > 0)) continue; mx += kg * at[0]; mz += kg * at[1]; wm += kg; }
+  const list = clamp(Math.atan(mx / (D * 1000 * Math.max(GM, 0.04))), -deckEdge, deckEdge);
+  // the trim: the hull's own centre of gravity is where she floats level with nothing aboard (as before), the load's at its places
+  const H = hullSections(type, A.bow, A.stern), z0 = hullRest(H, h.disp).zG, zG = (h.disp * 1000 * z0 + mz + (w * 1000 - wm) * z0) / (D * 1000);
+  const trim = wm > 0 ? hullRest(H, D, zG).th0 : 0;
+  return {GM, KG, T, f, D, Tr:2 * C * h.B / Math.sqrt(Math.max(GM, 0.04)), Tz:2 * Math.PI * Math.sqrt(h.Cb * T * 1.8 / (9.81 * h.Cwp)), deckEdge, L:h.L, B:h.B, decked:h.decked, list, trim, zG};
 }
 // The motions in this sea, for the work and the warnings (significant amplitudes). Each wave system (wind sea and swell) is met at the
 // encounter frequency we = |w - k v cos m| (m: the waves' heading against the boat's). Roll answers the wave slope pi Hs / lambda across the
@@ -49,7 +115,8 @@ function motionAt(p, H, head, kn, St = stabOf()){
     const fL = 1 / (1 + (k * St.L * Math.abs(Math.cos(m)) / Math.PI) ** 2), heave = we * we * hs / 2 * fL, pitch = we * we * (Math.PI * hs / lam) * fL * Math.abs(Math.cos(m)) * St.L / 3;
     r2 += roll * roll; a2 += heave * heave + pitch * pitch; if (roll > rmax){ rmax = roll; res = x; }
   }
-  return {roll:Math.min(0.9, Math.sqrt(r2)), heel:windHeel(St, windAt(H, p)), av:Math.sqrt(a2), res, GM:St.GM, Tr:St.Tr, deckEdge:St.deckEdge};
+  // (the heel: the wind's, and the list from the load across her, OB15; which side the wind is on is not reckoned here, so they add)
+  return {roll:Math.min(0.9, Math.sqrt(r2)), heel:windHeel(St, windAt(H, p)) + Math.abs(St.list || 0), av:Math.sqrt(a2), res, GM:St.GM, Tr:St.Tr, deckEdge:St.deckEdge};
 }
 // the steady heel from a beam wind: the pressure 0.5 rho U^2 1.2 on the side above water, its lever over the weight and GM
 function windHeel(St, U){ const A = St.L * (St.f + (St.decked ? 1.4 : 0.15)), Z = St.T / 2 + St.f / 2 + (St.decked ? 0.9 : 0.1), lw = 0.5 * 1.25 * U * U * 1.2 * A * Z / (St.D * 1000 * 9.81); return Math.atan(lw / Math.max(St.GM, 0.04)); }
@@ -67,7 +134,7 @@ const motionIdx = M => M.av + 0.1 * M.roll * 180 / Math.PI;
 function boatHead(H, b = S.boat){ const kn = b.status === 'sailing' ? b.v || 0 : 0; return {kn, head:kn > 0.5 ? b.heading || 0 : (windDir(H, b.pos) - gridGamma(b.pos) + 90) * Math.PI / 180}; }
 let MW_MEMO = {k:'', v:null};
 function motionHere(H, b = S.boat){
-  const {kn, head} = boatHead(H, b), L = stabLoad(b), k = b.type + '|' + b.pos.x + '|' + b.pos.y + '|' + H + '|' + kn + '|' + head + '|' + L.hold + '|' + L.deck + '|' + L.gear;
+  const {kn, head} = boatHead(H, b), L = stabLoad(b), k = b.type + '|' + b.pos.x + '|' + b.pos.y + '|' + H + '|' + kn + '|' + head + '|' + L.hold + '|' + L.deck + '|' + L.gear + '|' + L.pull + '|' + L.crew.join(',') + '|' + L.gp.pot + '|' + L.gp.net + '|' + L.gp.tub;
   if (MW_MEMO.k === k && !WX_FORCE) return MW_MEMO.v;
   const St = stabOf(b.type, L), M = motionAt(b.pos, H, head, kn, St), R = motionAt(b.pos, H, (windDir(H, b.pos) - gridGamma(b.pos) + 90) * Math.PI / 180, 0, stabOf(b.type, {hold:0, deck:0, gear:0}));
   const v = {M, St, f:clamp((motionIdx(M) + 0.05) / (motionIdx(R) + 0.05), 0.6, 1.8), state:stabState(M)};
@@ -145,8 +212,11 @@ const hullSlamV = H => 0.2 * Math.sqrt(HS_G * H.L);
 // She floats in still water with D tonnes aboard: the sinkage where the buoyancy carries her, the centre of gravity over the centre of
 // buoyancy (level), the stiffness in heave and pitch, the masses with 0.8 added (stabOf's Tz has the same 0.8), and the damping. The model's
 // origin is 0.06 m over its design waterline (the old following put her there), so y0 is 0.06 empty and lower with a load.
-function hullRest(H, D){
-  const key = Math.round(D * 100); let R = H.rest.get(key); if (R) return R;
+// With zG (the load's centre of gravity along her, OB15) she trims until her centre of buoyancy is under it: the keel's depth at each
+// section as hullStep has it at rest, (0.06 + d) cos th - yg + sin th (z - zG), and the height yg and trim th found together (Newton).
+function hullRest(H, D, zW){
+  const key = Math.round(D * 100) + (zW == null ? '' : '|' + Math.round(zW * 1000)); let R = H.rest.get(key); if (R) return R;
+  if (zW != null){ const L0 = hullRest(H, D); if (Math.abs(zW - L0.zG) < 5e-4){ H.rest.set(key, L0); return L0; } return hullTrimmed(H, D, zW, L0, key); }
   const n = H.n, dx = H.dx;
   // (she never sinks, CLAUDE.md: what is aboard is carried with the decks a little over the water at most, so a swamped or overloaded
   // boat lies deep and does not go on down; the stiffness is taken where she floats, a little under the lowest deck)
@@ -163,6 +233,28 @@ function hullRest(H, D){
   const zG = A > 0 ? Az / A : 0, zF = w > 0 ? wz / w : zG; let IG = 0; for (let i = 0; i < n; i++) IG += secBreadth(H, i, H.d[i] + sk) * ((H.z[i] - zG) ** 2 + dx * dx / 12);
   const K33 = HS_RHO * HS_G * Math.max(w, 1e-3 * H.Awp / dx) * dx, K55 = HS_RHO * HS_G * Math.max(IG, 1e-3 * H.Awp / dx * H.kyy * H.kyy) * dx, m33 = 1.8 * m, I55 = 1.8 * m * H.kyy * H.kyy;   // (pitch about the centre of gravity)
   R = {D, m, s, y0:0.06 - s, th0:0, zG, zF, K33, K55, m33, I55};
+  if (H.rest.size > 16) H.rest.clear(); H.rest.set(key, R); return R;
+}
+// (the trimmed rest: from the level one, Newton on the force and the moment about zG; the trim held within 0.3 rad, and a section with
+// its deck under gives no stiffness, as in hullStep. The stiffness and masses are taken where she lies.)
+function hullTrimmed(H, D, zG, L0, key){
+  const n = H.n, dx = H.dx, m = L0.m, k = dx * HS_RHO, hk = (i, yg, th) => (0.06 + H.d[i]) * Math.cos(th) - yg + Math.sin(th) * (H.z[i] - zG);
+  let yg = L0.y0, th = 0;
+  for (let it = 0; it < 60; it++){
+    let F = -m, M = 0, Fy = 0, Ft = 0, My = 0, Mt = 0;
+    for (let i = 0; i < n; i++){
+      const h = hk(i, yg, th), a = secArea(H, i, h) * k, b = secBreadth(H, i, h) * k, z = H.z[i] - zG, dt = -(0.06 + H.d[i]) * Math.sin(th) + Math.cos(th) * z;
+      F += a; M += z * a; Fy -= b; Ft += b * dt; My -= z * b; Mt += z * b * dt;
+    }
+    if (Math.abs(F) < m * 1e-7 && Math.abs(M) < m * H.L * 1e-7) break;
+    const det = Fy * Mt - Ft * My; if (!(Math.abs(det) > 1e-12)) break;
+    const dy = (F * Mt - Ft * M) / det, dth = (Fy * M - F * My) / det;
+    yg = clamp(yg - clamp(dy, -0.2, 0.2), L0.y0 - Math.max(...H.f), L0.y0 + Math.max(...H.d)); th = clamp(th - clamp(dth, -0.05, 0.05), -0.3, 0.3);
+  }
+  let w = 0, wz = 0; const b = []; for (let i = 0; i < n; i++){ const h = Math.min(hk(i, yg, th), H.d[i] + 0.95 * H.f[i]); b.push(secBreadth(H, i, h)); w += b[i]; wz += b[i] * H.z[i]; }
+  let IG = 0; for (let i = 0; i < n; i++) IG += b[i] * ((H.z[i] - zG) ** 2 + dx * dx / 12);
+  const K33 = HS_RHO * HS_G * Math.max(w, 1e-3 * H.Awp / dx) * dx, K55 = HS_RHO * HS_G * Math.max(IG, 1e-3 * H.Awp / dx * H.kyy * H.kyy) * dx;
+  const R = {D, m, s:0.06 - yg, y0:yg + Math.sin(th) * zG, th0:th, zG, zF:w > 0 ? wz / w : zG, K33, K55, m33:L0.m33, I55:L0.I55};
   if (H.rest.size > 16) H.rest.clear(); H.rest.set(key, R); return R;
 }
 // the state of a hull let go at rest: the origin's height y (m, over the still water), pitch th (bow up), their speeds, and per section
@@ -202,7 +294,7 @@ function hullStep(H, R, X, eta, deta, dt, o){
     for (let i = n - 1; i >= 0; i--){ if (X.h[i] <= 0) break; Lk += H.dx; }
     if (Lk > 0){   // (no lift with the transom out of the water: off a crest she flies, and falls)
       const lam = Math.max(0.5, Lk / b), zcp = H.zAft - lam * b * (0.75 - 1 / (5.21 * Cv * Cv / (lam * lam) + 2.39));
-      const tau = clamp((X.th - R.th0 - (X.vy - (zcp - zG) * X.vth) / V) * 180 / Math.PI + 1, 0, 12), CL0 = Math.pow(tau, 1.1) * 0.012 * Math.sqrt(lam);
+      const tau = clamp((X.th - (X.vy - (zcp - zG) * X.vth) / V) * 180 / Math.PI + 1, 0, 12), CL0 = Math.pow(tau, 1.1) * 0.012 * Math.sqrt(lam);
       const lift = 0.5 * HS_RHO * V * V * b * b * Math.max(0, CL0 - 0.0065 * H.beta * Math.pow(CL0, 0.6)) * sstep(0.8, 1.6, Cv);
       F += lift; M -= (zcp - zG) * lift; }
   }
