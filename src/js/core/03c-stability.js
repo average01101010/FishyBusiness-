@@ -73,7 +73,7 @@ function stabLoad(b = S.boat){
   // (holdLoad has the fish waiting on deck too: before 09.11.2026 they were counted twice, in the hold and on deck)
   const hold = Math.max(0, (typeof holdLoad === 'function' ? holdLoad() : 0) - deck) + water;
   const crew = []; if (typeof meAboard === 'function' && meAboard()) crew.push(S.mySt || 'ror');
-  if (typeof crewAboard === 'function') for (const c of crewAboard()) crew.push(c.st || null);
+  if (typeof crewAboard === 'function') for (const c of crewAboard(null, true)) crew.push(c.sleepW ? null : c.st || null);   // (the watch below in the bunks weighs too)
   return {hold, deck, gear, gp, water, crew, pull:stabPull(b)};
 }
 // the boat as loaded: draft, metacentric height, roll, heave and pitch periods, the deck edge angle; with the load's places, the trim
@@ -94,10 +94,14 @@ function stabOf(type = S.boat.type, load = stabLoad()){
   for (const st of crew) P.push([STAB_P, stabSpot(A, st)]);
   let mx = 0, mz = 0, wm = 0; for (const [kg, at] of P){ if (!(kg > 0)) continue; mx += kg * at[0]; mz += kg * at[1]; wm += kg; }
   const list = clamp(Math.atan(mx / (D * 1000 * Math.max(GM, 0.04))), -deckEdge, deckEdge);
-  // the trim: the hull's own centre of gravity is where she floats level with nothing aboard (as before), the load's at its places
-  const H = hullSections(type, A.bow, A.stern), z0 = hullRest(H, h.disp).zG, zG = (h.disp * 1000 * z0 + mz + (w * 1000 - wm) * z0) / (D * 1000);
-  const trim = wm > 0 ? hullRest(H, D, zG).th0 : 0;
-  return {GM, KG, T, f, D, Tr:2 * C * h.B / Math.sqrt(Math.max(GM, 0.04)), Tz:2 * Math.PI * Math.sqrt(h.Cb * T * 1.8 / (9.81 * h.Cwp)), deckEdge, L:h.L, B:h.B, decked:h.decked, list, trim, zG};
+  // the trim: the hull's own centre of gravity is where she floats level with nothing aboard (as before), the load's at its places, and
+  // what has no place (the water in the hull, gear not split) as a level layer: where it would sink her without trimming her (the centre
+  // of buoyancy at D, less the hull's share). dzG is the load's centre forward or aft of that level one, for the 3D hull drawn (hullMove),
+  // whose sections may end a little differently.
+  const H = hullSections(type, A.bow, A.stern), z0 = hullRest(H, h.disp).zG, zL = hullRest(H, D).zG, wk = w * 1000;
+  const zLay = wk > 0 ? (D * zL - h.disp * z0) * 1000 / wk : z0, zG = wk > 0 ? (h.disp * 1000 * z0 + mz + (wk - wm) * zLay) / (D * 1000) : z0;
+  const trim = Math.abs(zG - zL) >= 5e-4 ? hullRest(H, D, zG).th0 : 0;
+  return {GM, KG, T, f, D, Tr:2 * C * h.B / Math.sqrt(Math.max(GM, 0.04)), Tz:2 * Math.PI * Math.sqrt(h.Cb * T * 1.8 / (9.81 * h.Cwp)), deckEdge, L:h.L, B:h.B, decked:h.decked, list, trim, zG, dzG:zG - zL};
 }
 // The motions in this sea, for the work and the warnings (significant amplitudes). Each wave system (wind sea and swell) is met at the
 // encounter frequency we = |w - k v cos m| (m: the waves' heading against the boat's). Roll answers the wave slope pi Hs / lambda across the
@@ -136,7 +140,7 @@ let MW_MEMO = {k:'', v:null};
 function motionHere(H, b = S.boat){
   const {kn, head} = boatHead(H, b), L = stabLoad(b), k = b.type + '|' + b.pos.x + '|' + b.pos.y + '|' + H + '|' + kn + '|' + head + '|' + L.hold + '|' + L.deck + '|' + L.gear + '|' + L.pull + '|' + L.crew.join(',') + '|' + L.gp.pot + '|' + L.gp.net + '|' + L.gp.tub;
   if (MW_MEMO.k === k && !WX_FORCE) return MW_MEMO.v;
-  const St = stabOf(b.type, L), M = motionAt(b.pos, H, head, kn, St), R = motionAt(b.pos, H, (windDir(H, b.pos) - gridGamma(b.pos) + 90) * Math.PI / 180, 0, stabOf(b.type, {hold:0, deck:0, gear:0}));
+  const St = stabOf(b.type, L), M = motionAt(b.pos, H, head, kn, St), R = motionAt(b.pos, H, (windDir(H, b.pos) - gridGamma(b.pos) + 90) * Math.PI / 180, 0, stabOf(b.type, {hold:0, deck:0, gear:0, crew:L.crew.map(() => null)}));   // (the same people aboard, off the deck: they are not the load)
   const v = {M, St, f:clamp((motionIdx(M) + 0.05) / (motionIdx(R) + 0.05), 0.6, 1.8), state:stabState(M)};
   MW_MEMO = {k, v}; return v;
 }
@@ -239,7 +243,7 @@ function hullRest(H, D, zW){
 // its deck under gives no stiffness, as in hullStep. The stiffness and masses are taken where she lies.)
 function hullTrimmed(H, D, zG, L0, key){
   const n = H.n, dx = H.dx, m = L0.m, k = dx * HS_RHO, hk = (i, yg, th) => (0.06 + H.d[i]) * Math.cos(th) - yg + Math.sin(th) * (H.z[i] - zG);
-  let yg = L0.y0, th = 0;
+  let yg = L0.y0, th = 0; const fM = Math.max(...H.f), dM = Math.max(...H.d);
   for (let it = 0; it < 60; it++){
     let F = -m, M = 0, Fy = 0, Ft = 0, My = 0, Mt = 0;
     for (let i = 0; i < n; i++){
@@ -249,7 +253,7 @@ function hullTrimmed(H, D, zG, L0, key){
     if (Math.abs(F) < m * 1e-7 && Math.abs(M) < m * H.L * 1e-7) break;
     const det = Fy * Mt - Ft * My; if (!(Math.abs(det) > 1e-12)) break;
     const dy = (F * Mt - Ft * M) / det, dth = (Fy * M - F * My) / det;
-    yg = clamp(yg - clamp(dy, -0.2, 0.2), L0.y0 - Math.max(...H.f), L0.y0 + Math.max(...H.d)); th = clamp(th - clamp(dth, -0.05, 0.05), -0.3, 0.3);
+    yg = clamp(yg - clamp(dy, -0.2, 0.2), L0.y0 - fM, L0.y0 + dM); th = clamp(th - clamp(dth, -0.05, 0.05), -0.3, 0.3);
   }
   let w = 0, wz = 0; const b = []; for (let i = 0; i < n; i++){ const h = Math.min(hk(i, yg, th), H.d[i] + 0.95 * H.f[i]); b.push(secBreadth(H, i, h)); w += b[i]; wz += b[i] * H.z[i]; }
   let IG = 0; for (let i = 0; i < n; i++) IG += b[i] * ((H.z[i] - zG) ** 2 + dx * dx / 12);

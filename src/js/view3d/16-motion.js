@@ -277,8 +277,9 @@
   // heave and pitch from the sections' buoyancy, in steps of at most 0.02 s; she starts where the old following had her
   function hullMove(dt, b){
     const H = HSEA.H, tide = env.tide || 0;
-    // (what is aboard, on the hull drawn; trimmed where the load's centre of gravity is, when the hull drawn is her own type's)
-    const D = hullOf(H.type).disp + Math.max(0, bv.st.D - hullOf(b.type || H.type).disp), R = hullRest(H, D, H.type === b.type && bv.st.zG != null ? bv.st.zG : undefined);
+    // (what is aboard, on the hull drawn; trimmed by the load's centre of gravity off the level one, stabOf dzG, when the hull drawn is her
+    // own type's: the drawn hull's ends are the model's, the core's from STAB_AT, and the offset carries over where the frames differ a little)
+    const D = hullOf(H.type).disp + Math.max(0, bv.st.D - hullOf(b.type || H.type).disp), R = hullRest(H, D, H.type === b.type && bv.st.dzG ? hullRest(H, D).zG + bv.st.dzG : undefined);
     if (!HSEA.ok || !HSEA.X || HSEA.X.key !== H.key){
       const X = HSEA.X = hullX(R); X.key = H.key; X.th = bv.pitch || 0; X.y = (bv.y || tide + R.y0) - tide; X.yg = X.y - Math.sin(X.th) * R.zG; X.vy = 0; X.vth = 0;
       for (let i = 0; i < H.n; i++){ X.h[i] = H.d[i]; HSEA.etaP[i] = HSEA.eta[i]; } HSEA.ok = true;

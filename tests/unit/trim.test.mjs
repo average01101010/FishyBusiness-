@@ -45,13 +45,17 @@ export default function (t){
     t.ok(St.D > St0.D + 0.08, type + ': en om bord veier 90 kg (' + ((St.D - St0.D) * 1000).toFixed(0) + ' kg)');
     t.ok(St.list > 0.3 / DEG && St.list < 8 / DEG, type + ': en ved ripa om styrbord krenger henne litt (' + (St.list * DEG).toFixed(2) + '°)');
   }
-  // the skipper at the helm amidships gives next to nothing; the skiff (stiff, GM 2 m) heels less than the trebåt for the same person
+  // the skiff (stiff, GM 2 m) heels less than the trebåt for the same person
   { const a = K.stabOf('skiff', {hold:0, deck:0, gear:0, crew:['fiske']}).list, b = K.stabOf('trebat', {hold:0, deck:0, gear:0, crew:['fiske']}).list;
     t.ok(a < b, 'skiffen (GM 2 m) krenger mindre enn trebåten for samme person (' + (a * DEG).toFixed(2) + '° mot ' + (b * DEG).toFixed(2) + '°)'); }
 
+  // ---- water in the hull alone (it has no place: a level layer) sinks her without trimming her ----
+  { const St = K.stabOf('sjark', {hold:1000, deck:0, gear:0, water:1000});
+    t.near(St.trim * DEG, 0, 0.02, 'sjark med 1 t vann i skroget: dypere, men ingen trim'); }
+
   // ---- the 3D hull lies at the core's trim: hullRest at the load's centre of gravity, and hullStep keeps her there in still water ----
   for (const type of ['sjark', 'trebat', 'skiff']){
-    const A = K.stabPlaces(type), H = K.hullSections(type, A.bow, A.stern), St = K.stabOf(type, full(type)), R = K.hullRest(H, St.D, St.zG);
+    const A = K.stabPlaces(type), H = K.hullSections(type, A.bow, A.stern), St = K.stabOf(type, full(type)), R = K.hullRest(H, St.D, K.hullRest(H, St.D).zG + St.dzG);
     t.near(R.th0 * DEG, St.trim * DEG, 0.01, type + ': skroget i 3D ligger med kjernens trim');
     const X = K.hullX(R), eta = new Float64Array(H.n); for (let i = 0; i < 120 * 10; i++) K.hullStep(H, R, X, eta, null, 1 / 120, {});
     t.near(X.th * DEG, St.trim * DEG, 0.05, type + ': og blir liggende slik i stille vann (10 s)');
