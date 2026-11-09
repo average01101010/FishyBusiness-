@@ -23,7 +23,7 @@
   - **Ved kaia:**
     - Ut fra kaia går den sakte baklengs (3 kn) med kaias kurs, og snur over 1,5 båtlengder (minst 10 m).
     - Inn til kaia går den sakte (4 kn).
-    - Når den er inne, går fortøyningen rett på (`MO.phase = 'lines'`).
+    - Når den er inne, går fortøyningen på (`MO.phase = 'lines'`): fra OB2 (09.11.2026) ett tau om gangen når hånden står ved klampen (`moorTick`, `CREW3D.moorMan`), fenderne alt ute fra innseilingen; 5.19c i `docs/systemer/folk-om-bord.md`.
   - **Ny eller endret rute** gir en ny linje fra der båten er, med farten den har. Endringene i veipunktene sjekkes hvert 30. bilde.
   - Dreiepunktet ligger en tredel fra baugen, så hekken slår ut.
   - Sideskrens: β = 0,14·yawrate, begrenset til 0,18 rad.

@@ -69,8 +69,14 @@
 
 
   // ---------- mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off) ----------
-  const MO = {key:'', phase:'', t:0, from:null, dur:0, lines:0, len:[0, 0, 0, 0], init:false};
-  const LINE_S = 1.2;   // seconds for each line to go on
+  // (OB2, Jonas 09.11.2026, docs/planer/om-bord.md F1: the lines do not fly by themselves. The fenders are hung out by the hands on the
+  // way in, on the side to the quay; each line goes on when its hand stands at its cleat, thrown from there to the bollard; casting off
+  // they come in again, and the fenders and the coiled lines are taken in on her way out. The hands are the station 'fort' of the core
+  // (13-work.js), walked to their places by deckcrew.js; without them (the hand-worked boats, no deck crew) it goes on a timer as before)
+  const MO = {key:'', phase:'', t:0, from:null, dur:0, lines:0, len:[0, 0, 0, 0], init:false, fend:[0, 0, 0], fwait:[0, 0, 0], lwait:0, coil:0, cwait:0, side:1, vp:null, rt:0};
+  const LINE_S = 1.6, LINE_WAIT = 8, FEND_S = 0.9, FEND_WAIT = 6;   // seconds for a line to be thrown and made fast; how long one waits for its hand; the same for a fender
+  const LINE_CL = ['mid', 'bow', 'stern', 'mid'];   // the cleat of each line, in the order they go on: aft spring, bow line, stern line, fore spring
+  const moorHandsN = () => typeof CREW3D !== 'undefined' && CREW3D.on() ? CREW3D.moorHands() : 0;
   let ROPEM = null, FENDM = null;
   function buildMooring(){ const r = NB(); r.tube([[0, 0, 0], [0, 0, 1]], 1, [0.46, 0.33, 0.19, 0.12], 6);   // brown mooring lines (tilbakemelding #22)
     ROPEM = r.mesh(); const f = NB(); f.tube([[0, -0.26, 0], [0, 0.26, 0]], 0.12, [0.93, 0.93, 0.9, 0.35], 10); FENDM = f.mesh(); }
@@ -105,7 +111,7 @@
     // moving to the other quay in the harbour, on the simulation's clock: the lines come in, she goes over, the lines go on
     const sh = b.shift;
     if (sh && b.status === 'port'){
-      const gt = S.t + currentFrac(), A = berthPose(b.port, vtype(), sh.from) || bp; MO.key = key; MO.init = true; MO.sh = true;
+      const gt = S.t + currentFrac(), A = berthPose(b.port, vtype(), sh.from) || bp; if (!MO.init) MO.fend = [1, 1, 1]; MO.key = key; MO.init = true; MO.sh = true;
       if (gt < sh.castUntil){ MO.phase = 'out'; MO.lines = clamp(4 * (sh.castUntil - gt) / CAST_MIN, 0, 4); lieAlongside(dt, A); return; }
       if (gt < sh.arriveAt){ MO.phase = 'in'; MO.lines = 0; MO.len = [0, 0, 0, 0]; const span = sh.arriveAt - sh.castUntil; approach({x:A.x * 1000, z:A.y * 1000, h:A.hd}, bp, clamp((gt - sh.castUntil) / span, 0, 1), GAME_RATE * (S.mult || 1) / 60 / span); return; }
       MO.phase = 'lines'; MO.lines = clamp(4 * (gt - sh.arriveAt) / Math.max(0.1, sh.until - sh.arriveAt), 0, 4); lieAlongside(dt, bp); return;
@@ -113,7 +119,7 @@
     if (MO.sh){ MO.sh = false; MO.phase = 'moored'; MO.lines = 4; }   // the move is over: she is made fast
     if (MO.key !== key){
       const d = Math.hypot(bv.px - X, bv.pz - Z); MO.key = key; MO.len = [0, 0, 0, 0];
-      if (b.status === 'unmooring' || !MO.init){ MO.phase = 'moored'; MO.lines = 4; }
+      if (b.status === 'unmooring' || !MO.init){ MO.phase = 'moored'; MO.lines = 4; MO.fend = [1, 1, 1]; }
       else if (d < 3){ MO.phase = 'lines'; MO.t = 0; MO.lines = 0; }   // brought in by the manoeuvring model: the lines go on
       else { MO.phase = 'in'; MO.t = 0; MO.from = {x:bv.px, z:bv.pz, h:bv.cog}; MO.path = pathM(berthPath({x:bv.px / 1000, y:bv.pz / 1000}, bp)); MO.dur = clamp(MO.path.len / 2.2, 6, 45); MO.lines = 0; }
       MO.init = true;
@@ -126,24 +132,72 @@
       else approach(MO.from, bp, u0, sp / MO.dur);
       if (u0 >= 1){ MO.phase = 'lines'; MO.t = 0; bv.cog = bp.hd; }
     } else {
-      if (MO.phase === 'lines'){ MO.t += at * sp; MO.lines = Math.min(4, MO.t / LINE_S); if (MO.lines >= 4) MO.phase = 'moored'; }
+      if (MO.phase === 'lines'){ MO.t += at * sp; const i = Math.min(3, Math.floor(MO.lines)), hn = moorHandsN();
+        // (the next line goes when its hand is at its cleat, or after a while without: a hand who cannot get there)
+        if (!hn || CREW3D.moorMan().has('c:' + LINE_CL[i]) || (MO.lwait += at * sp) > LINE_WAIT){ MO.lines = Math.min(4, MO.lines + at * sp / LINE_S); if (Math.floor(MO.lines) > i) MO.lwait = 0; }
+        if (MO.lines >= 4){ MO.phase = 'moored'; MO.lwait = 0; } }
       // lying alongside: held in place by the lines, the swell moves her a little
       lieAlongside(at, bp);
     }
   }
+  // ---- where the work with the lines and the fenders is in the view, every frame (OB2): the spell as the view has it ('prep' and 'in' the
+  // fenders out on the way in, 'lines', 'out', 'stow' the fenders and the lines in on the way out, null lying made fast or at sea), the
+  // fenders hung out or taken in as their hand gets to them, and what is left told to the deck crew (deckcrew.js setMoor)
+  function moorView(){
+    const b = S.boat, mp = typeof moorPhase === 'function' ? moorPhase(b) : null;
+    if (b.status === 'port' || b.status === 'unmooring'){
+      if (b.status === 'unmooring' || MO.phase === 'out') return 'out';
+      if (MO.key !== S.cur + '|' + b.port + '|' + vtype() + '|' + (b.moorT || 0)) return MO.init ? 'in' : null;   // (a new arrival the view has not taken in yet: on her way in to the berth)
+      return MO.phase === 'in' || MO.phase === 'lines' ? MO.phase : null; }
+    if (mp === 'prep' || mp === 'stow') return mp;
+    return MO.fend.some(f => f > 0) || MO.coil < 1 && MO.vp === 'stow' ? 'stow' : null;   // (still taking them in)
+  }
+  function moorTick(bp){
+    const now = performance.now() / 1000, dt = MO.rt ? clamp(now - MO.rt, 0, 0.5) * Math.max(1, S.mult || 1) : 0; MO.rt = now;
+    const b = S.boat; if (b.status !== 'port' && b.status !== 'unmooring') MO.lines = 0;   // (at sea all the lines are in)
+    const vp = moorView(), out = vp === 'prep' || vp === 'in' || vp === 'lines' || vp === 'out' || (vp == null && (b.status === 'port' || b.status === 'unmooring'));
+    if (bp) MO.side = bp.side || 1;
+    if (vp !== MO.vp){ if (vp === 'stow') MO.coil = 0; MO.vp = vp; MO.cwait = 0; }
+    const hn = moorHandsN(), man = hn ? CREW3D.moorMan() : null, ord = out ? [1, 2, 0] : [2, 1, 0];
+    // each fender as its hand gets to it (without hands, one after the other); out on the way in and lying, in on the way out
+    let first = true;
+    for (const k of ord){ const f = MO.fend[k], tg = out ? 1 : 0; if (f === tg){ MO.fwait[k] = 0; continue; }
+      if (hn ? man.has('f' + k) || (MO.fwait[k] += dt) > FEND_WAIT : first) MO.fend[k] = clamp(f + (tg - f > 0 ? 1 : -1) * dt / FEND_S, 0, 1);
+      first = false; }
+    // the lines coiled and stowed once the fenders are in
+    if (vp === 'stow' && !MO.fend.some(f => f > 0) && MO.coil < 1 && (!hn || man.has('coil') || (MO.cwait += dt) > FEND_WAIT)) MO.coil = Math.min(1, MO.coil + dt / 4);
+    if (vp === 'stow' && !MO.fend.some(f => f > 0) && MO.coil >= 1) MO.vp = null;
+    // what is left, in order, for the hands
+    if (typeof CREW3D === 'undefined' || !CREW3D.on()) return;
+    const need = [];
+    if (vp === 'prep' || vp === 'in'){ for (const k of [1, 2, 0]) if (MO.fend[k] < 1) need.push('f' + k); need.push('c:mid', 'c:bow'); }
+    else if (vp === 'lines'){ for (let i = Math.min(3, Math.floor(MO.lines)); i < 4; i++) need.push('c:' + LINE_CL[i]); }
+    else if (vp === 'out'){ for (let i = Math.min(3, Math.ceil(MO.lines) - 1); i >= 0; i--) need.push('c:' + LINE_CL[i]); }
+    else if (vp === 'stow'){ for (const k of [2, 1, 0]) if (MO.fend[k] > 0) need.push('f' + k); if (MO.coil < 1) need.push('coil'); }
+    CREW3D.setMoor({phase:vp, side:MO.side, need});
+  }
+  // a coiled line hanging inside the rail at its cleat (on the way in until it is thrown, and once it is in until it is stowed)
+  function drawCoil(BMrel, P, sd){
+    const c = [P[0] - sd * 0.12, P[1] - 0.24, P[2]], R = 0.15; let prev = null;
+    for (let k = 0; k <= 10; k++){ const a = k / 10 * Math.PI * 2, Q = xf(BMrel, [c[0], c[1] + Math.cos(a) * R, c[2] + Math.sin(a) * R]); if (prev) drawN(ROPEM, limbM(prev, Q, 0.022)); prev = Q; }
+  }
   // the lines from the boat's cleats to the bollards on the quay, sagging when slack; the tide makes them slack or tight
   function drawMooring(BMrel, eye, VP, t){
-    const bp = berthNow(); if (!bp || !ROPEM) return;
-    const vt = vtype(), G = GEO(vt), gw = G.gw || 1, sx = G.beam / 2, mid = (G.bow + G.stern) / 2;
+    if (!ROPEM) return; const bp = berthNow(); moorTick(bp);
+    const vt = vtype(), G = GEO(vt), gw = G.gw || 1, sx = G.beam / 2, sd = MO.side || 1, Sp = moorSpots(G, sd), vp = MO.vp;
+    const coils = vp === 'prep' || vp === 'in' || vp === 'lines' || vp === 'out' || (vp === 'stow' && MO.coil < 1);
+    if (!bp && !coils && !MO.fend.some(f => f > 0)) return;
     nSetup(VP);
-    if (MO.phase !== 'in' || MO.t / MO.dur > 0.55) for (const z of [G.bow * 0.45, mid, G.stern * 0.55]){
-      drawN(FENDM, chain(BMrel, M4.T(sx * 0.95 + 0.12, gw - 0.45, z))); drawN(ROPEM, chain(BMrel, limbM([sx * 0.95 + 0.12, gw - 0.2, z], [sx * 0.9, gw, z], 0.012)));
-    }
+    // the fenders: lifted over the rail and lowered on their lines to hang over the side, or taken in again
+    for (let k = 0; k < 3; k++){ const f = MO.fend[k]; if (f <= 0.02) continue; const H = Sp.fend[k], u = f * f * (3 - 2 * f), I = [sd * sx * 0.6, gw + 0.12, H[2]];
+      const P = [I[0] + (H[0] - I[0]) * u, I[1] + (H[1] - I[1]) * u, H[2]];
+      drawN(FENDM, chain(BMrel, M4.T(P[0], P[1], P[2]))); drawN(ROPEM, chain(BMrel, limbM([P[0], P[1] + 0.25, P[2]], [sd * sx * 0.9, gw, P[2]], 0.012))); }
+    if (coils) for (let i = 0; i < 4; i++) if (MO.lines - i <= 0){ const C = Sp.cleat[LINE_CL[i]]; drawCoil(BMrel, i === 3 ? [C[0], C[1], C[2] - 0.38] : C, sd); }
+    if (!bp) return;
     const bl = QB[faceKey(bp.face)]; if (!bl || !bl.length || MO.lines <= 0) return;
     const X = bp.x * 1000, Z = bp.y * 1000, f = bp.fwd, near = (tx, tz) => bl.reduce((a, q) => Math.hypot(q.x - tx, q.z - tz) < Math.hypot(a.x - tx, a.z - tz) ? q : a, bl[0]);
     const fore = near(X + f.x * (bp.Lb / 2 + 2.5), Z + f.z * (bp.Lb / 2 + 2.5)), aft = near(X - f.x * (bp.Lb / 2 + 2.5), Z - f.z * (bp.Lb / 2 + 2.5));
-    const cleat = {bow:[sx * 0.55, gw + 0.05, G.bow + 0.4], mid:[sx * 0.95, gw + 0.05, mid], stern:[sx * 0.8, gw + 0.05, G.stern - 0.35]};
-    const LINES = [['mid', aft], ['bow', fore], ['stern', aft], ['mid', fore]];
+    const cleat = Sp.cleat, LINES = [['mid', aft], ['bow', fore], ['stern', aft], ['mid', fore]];
     for (let i = 0; i < 4; i++){
       const p = clamp(MO.lines - i, 0, 1); if (p <= 0) continue;
       const A = xf(BMrel, cleat[LINES[i][0]]), q = LINES[i][1], Bq = [q.x - eye[0], QTOP + 0.42 - eye[1], q.z - eye[2]];
