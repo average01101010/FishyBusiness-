@@ -1697,3 +1697,8 @@
 2026-11-09 09:20	ccr-b098ba3f-5yfbls	474c75e	trip2	OK	27	lite	samtidig	
 2026-11-09 09:33	ccr-b098ba3f-5yfbls	44e1d6a	unittest	FEIL	766	3d	alene	avsluttet med kode 1
 2026-11-09 09:37	ccr-b098ba3f-5yfbls	16bb854	heattest	OK	278	3d	alene	
+2026-11-09 09:45	ccr-b098ba3f-5yfbls	bfbf02e	boottest	OK	29	lite	samtidig	
+2026-11-09 09:45	ccr-b098ba3f-5yfbls	bfbf02e	trip2	OK	32	lite	samtidig	
+2026-11-09 09:45	ccr-b098ba3f-5yfbls	bfbf02e	tutfull	OK	6	lite	samtidig	
+2026-11-09 09:45	ccr-b098ba3f-5yfbls	bfbf02e	merketest	OK	15	lite	samtidig	
+2026-11-09 09:45	ccr-b098ba3f-5yfbls	bfbf02e	decktest	OK	13	lite	samtidig	
