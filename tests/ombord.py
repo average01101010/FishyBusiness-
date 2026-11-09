@@ -1,7 +1,7 @@
 """OB0 (steg 69 i docs/planer/koen.md, Jonas 09.11.2026): the recording tool for the work aboard the coastal fleet. It plays each
 operation of a boat's day for a given boat and fishery (from the quay and casting off, out to the ground, setting, waiting and jigging,
 hauling, the fish in over the rail, bleeding, gutting, icing and the tub, clearing the deck, in to the plant, mooring, landing, and rest
-and food aboard where she has it) and records a short video of each, landscape and portrait, with a screenshot in the middle.
+and food aboard where she has it) and records a short video of each, landscape and portrait, with three screenshots (early, middle, late), the chart and the status box folded.
 
 Not a test and not in run.py: it prints what each clip showed (the deck events counted in G3._debug.dk.n, the crew's stations from
 CREW3D.agents()), so OB1 and the next phases can show the same operation before and after their change.
@@ -17,7 +17,7 @@ the frame rate.
   python3 tests/ombord.py --recut <out>/trebat [liggende]   cut the clips again from the kept raw recording (_raw_<format>/)
   KYST_OMBORD_OUT=<dir>                               where the clips go (default tests/out/ombord/); the videos stay out of git
 
-Output: <out>/<boat>/<fishery>_<op>_<format>.mp4 and .jpg, and <out>/<boat>/clips_<format>.json with what each clip showed."""
+Output: <out>/<boat>/<fishery>_<op>_<format>.mp4 and _1/_2/_3.jpg, and <out>/<boat>/clips_<format>.json with what each clip showed."""
 from _env import boot, OUT
 import asyncio, json, os, subprocess, sys, time
 from playwright.async_api import async_playwright
@@ -50,6 +50,7 @@ BASE = """((a) => { const [type, fish, op] = a, b = S.boat, V = VESSELS[type]; S
   S.equip = {}; S.jobs = []; S.cargo = []; S.sets = []; S.plan = null; S.rest = null; S.me = S.cur; S.myJob = null; S.meal = null;
   b.gop = null; b.land = null; b.shift = null; b.deckStop = false; b.dmg = null; b.damage = 0; S.incidents = []; b.deckEnd = null; b.ice = 300; b.fuel = BOAT.fuelCap;
   S.settings.gut = true; S.settings.ice = true; S.settings.careAuto = false;
+  S.settings.hudMin = true; S.settings.plotMin = true; S.settings.hudOff = true; renderHud();   /* (the chart, the status box and the compass away, so they do not cover the boat; Jonas 09.11.2026) */
   S.pgear = newPGear(); S.pgear.kits.n = 4; S.hold = []; b.rig = fish; S.target = 'torsk';
   const nn = Math.min(3, V.crewMax || 0);
   S.crew = Array.from({length:nn}, () => Object.assign(genCrew(), {bi:false, off:false, fatigue:5, morale:70, job:null, traits:[]}));
@@ -142,7 +143,7 @@ STATE = """(() => ({st:CREW3D.agents().map(a => a.st + ':' + a.mode + ':' + (a.t
 
 
 def args():
-    a = sys.argv[1:]; o = {'format': 'begge', 'ops': None, 'k': 0.12, 'sec': None}
+    a = sys.argv[1:]; o = {'format': 'begge', 'ops': None, 'k': 0.15, 'sec': None}
     pos = []
     i = 0
     while i < len(a):
@@ -196,10 +197,13 @@ async def record(o, fmt, outdir):
             except Exception: pass
             a = await pg.evaluate(STATE); fa = await pg.evaluate("G3._debug.kitStat.n")
             await pg.evaluate("(k) => __TK.set(k)", o['k']); t1 = time.time() - T0
-            await pg.wait_for_timeout(int(sec / o['k'] * 500))
-            await pg.screenshot(path=os.path.join(outdir, f'{fish}_{op}_{fmt}.jpg'), type='jpeg', quality=70)
+            # the picture in the middle as a screenshot; the early and the late one are taken from the recording when it is cut (a screenshot
+            # waits for a frame, some 50 s on the slow clock under SwiftShader; Jonas 09.11.2026: pictures, not the videos)
+            span = sec / o['k'] * 1000
+            await pg.wait_for_timeout(int(span * 0.5))
+            await pg.screenshot(path=os.path.join(outdir, f'{fish}_{op}_{fmt}_2.jpg'), type='jpeg', quality=75)
             c1 = await pg.evaluate(CLIP)
-            await pg.wait_for_timeout(int(sec / o['k'] * 500))
+            await pg.wait_for_timeout(int(span * 0.5))
             t2 = time.time() - T0
             await pg.evaluate("__TK.set(1)")
             b = await pg.evaluate(STATE); c2 = await pg.evaluate(CLIP); fb = await pg.evaluate("G3._debug.kitStat.n")
@@ -223,6 +227,10 @@ def cut(raw, log, outdir, k):
         # (trim before setpts: an -ss or -t on the output would count on the time already played fast)
         subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', raw, '-vf', 'trim=start=%.2f:duration=%.2f,setpts=%g*(PTS-STARTPTS)' % (ss, dur, k), '-r', '12', '-an',
                         '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '30', dst], check=False)
+        # the early and the late picture, from the recording itself (15 % and 85 % into the clip)
+        for i, at in ((1, 0.15), (3, 0.85)):
+            subprocess.run(['ffmpeg', '-v', 'error', '-y', '-ss', '%.2f' % (ss + dur * at), '-i', raw, '-frames:v', '1', '-q:v', '3',
+                            os.path.join(outdir, r['clip'] + '_%d.jpg' % i)], check=False)
 
 
 async def main():
