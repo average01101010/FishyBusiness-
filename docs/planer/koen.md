@@ -29,7 +29,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 
 ## Øktene som kjører
 
-- Ingen (09.11.2026).
+- `claude/rundsloyf-visible-start-16-81ss7b`: steg 16 R (Jonas' økt, 09.11.2026 17:30); eier `core/13-work.js` (`catchGut`), `ui/07-guide.js` (`panelFish`, `portSlip`), `ui/05d-plan2.js`, `ui/08-actions.js` (salget), kallene til `catchGut`, `tests/unit/rund.test.mjs`, `phone/07-patch.js`.
 
 ## Valg som venter på Jonas
 
@@ -57,7 +57,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 
 | # | Steg | Spor | Status | Venter på | Filer steget eier mens det går | Plan |
 |---|---|---|---|---|---|---|
-| 16 | **R** Rund eller sløyd synlig (R1, R2) | Tonys test | klar (Ø8b S2 rullet ut i 1a7f95dd; hel startmelding i `start/`, skrevet av koordinatoren 09.11.2026: bryteren `S.settings.gut` finnes ikke lenger, så R1 blir et valg per båt) | steg 7 (ferdig) | `core/13-work.js` (`catchGut`), `ui/07-guide.js` (`panelFish`, `portSlip`), `ui/05d-plan2.js`, `ui/08-actions.js` (salget), kallene til `catchGut`, `tests/unit/rund.test.mjs`, `phone/07-patch.js` | `etter-tonys-test.md` R |
+| 16 | **R** Rund eller sløyd synlig (R1, R2) | Tonys test | pågår (Jonas' økt, `claude/rundsloyf-visible-start-16-81ss7b`, 09.11.2026 17:30; hel startmelding i `start/16.md`: bryteren `S.settings.gut` finnes ikke lenger, så R1 blir et valg per båt) | steg 7 (ferdig) | `core/13-work.js` (`catchGut`), `ui/07-guide.js` (`panelFish`, `portSlip`), `ui/05d-plan2.js`, `ui/08-actions.js` (salget), kallene til `catchGut`, `tests/unit/rund.test.mjs`, `phone/07-patch.js` | `etter-tonys-test.md` R |
 | 18b | **Ø12 D** Driftsplan 2: de siste navnene fra den gamle planen | Driftsplan 2 | klar når ingen økt eier `06g-plan2.js`, `13-work.js` eller `10-gear.js` (ikke samtidig med OB1, OB2 eller R); startmeldingen i `start/` | steg 18 (ferdig) | `core/06d-plan-felles.js`, `06g-plan2.js`, `05-vessels.js`, `03-simulation.js`, `13-work.js`, `10-gear.js`, `06-services.js`, `phone/11-rederi.js`, `tests/unit/havplan.test.mjs` | backloggen «Ø12 C …, det som står igjen» |
 | 19 | **Ø11.8** Farvannet: fartsgrensene og sjømerkene | Lover og sikkerhet | klar (H3b og Ø12 C er ute; hel startmelding i `start/`) | steg 18 (ferdig) | ny `tools/fart/`, `src/data/fart.json`; `core/05e-sjovei.js`, `05-vessels.js`, `16b-dyn.js`, `ui/03-map.js`, `03a-chart.js` | `lover-regler-sikkerhet.md` kap. 6 |
 | 20 | **Ø9 F5** Motstand, grunt vann og bankeffekt | Fysikk 4 | klar (Ø8b S2 rullet ut i 1a7f95dd 09.11.2026; startmeldingen i `start/`); før lanseringslinja, foran Ø11.8 | steg 7 (ferdig) | `core/16b-dyn.js`, `05-vessels.js` (`groundCheck`), `ui/` (dybden under kjølen) | `fysikk-4-sjo-og-skrog.md` F5 |
