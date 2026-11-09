@@ -31,6 +31,12 @@ export default function (t){
     t.ok(n > 10 && worst < 1e-9, `density i bassenget er 0,1 av det samme stedet uten bassenget for ${n} art-måneder (største avvik ${worst.toExponential(1)})`);
     const H0 = HOUR(2027, 3, 15, 10), ro = K.density('torsk', pout, H0), rq = K.denSp('torsk', Object.assign({}, qo, {h:1}), H0, K.denTime(H0));
     t.ok(ro > 0 && Math.abs(ro / rq - 1) < 1e-12, `utenfor bassenget er torsken den samme som før (${ro.toFixed(4)})`);
+    // 2b. the way in does not move the fish: inHarbour's 350 m round pt.app (set only once a route to the harbour is worked out) is not
+    // the basin, so a point 0.75 km out by the way in has the same fish before and after the way in is known
+    const pa = {x:pt.p.x + 0.75, y:pt.p.y}, app0 = pt.app, d0 = K.density('torsk', pa, H0);
+    pt.app = {x:pt.p.x + 0.7, y:pt.p.y}; K.set('PCELL', null); const inApp = K.inHarbour(pa), d1 = K.density('torsk', pa, H0);
+    pt.app = app0; K.set('PCELL', null);
+    t.ok(inApp && d1 === d0 && K.inBasin(pin) && !K.inBasin(pa), `innseilingen flytter ikke fisken: ${d0.toFixed(4)} før og ${d1.toFixed(4)} etter at innseilingen er kjent (inHarbour der: ${inApp})`);
     // 3. the line in the log: once per boat, the first time she fishes in a basin, not outside
     const S = K.get('S'); K.ensureFleet(); const b = S.boat, L0 = S.log.length, note = K.harbourNote || (() => {});
     b.status = 'fishing'; b.pos = {x:pout.x, y:pout.y}; note();

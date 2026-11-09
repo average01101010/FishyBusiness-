@@ -548,8 +548,8 @@ function denPlace(p){
   if (isLand(p)) return null;
   const d = depthF(p), E = exposure(p);
   // c: the 2 km cell's location (03f-fiske.js); fl: the fishing grounds whose shape reaches the point (03j-felt.js, Ø14 F2);
-  // h: the harbour basin (inHarbour, 01-world.js) holds a tenth of the fish (Ø8b S3, below)
-  return {p, d, E, edge:sstep(1.5, 12, slopeAt(p)), skr:-1, c:lokOfCell(p), fl:feltAt(p), h:inHarbour(p) ? HARBF : 1};
+  // h: the harbour basin (inBasin, below) holds a tenth of the fish (Ø8b S3)
+  return {p, d, E, edge:sstep(1.5, 12, slopeAt(p)), skr:-1, c:lokOfCell(p), fl:feltAt(p), h:inBasin(p) ? HARBF : 1};
 }
 // Little fish stands inside a harbour (Ø8b S3, docs/planer/spillbarhet-fangst.md V5 B, 09.11.2026): measured in ten basins along the
 // coast (tests/havnmaal.py), the basin gave 15-160 % of the nearest fishing ground's fish (median 51 %) and over 20 % in 17 of 19
@@ -557,9 +557,20 @@ function denPlace(p){
 // boats and propellers, and the fish stand outside on the grounds, so it holds a tenth of what the place would give; every reader of
 // density (the catch, the sounder, the heat map, the gear) sees the same. Not a ban: no rule forbids fishing in a basin in general.
 const HARBF = 0.1;
-// the first time a boat fishes inside a harbour basin, one line in its deck log (once per boat; achMinute, 09f-merker.js, asks every minute)
+// The basin: within 600 m of a harbour point, the disk of inHarbour (01-world.js) without its 350 m round the way in. That part is set
+// only when a route to the harbour is first worked out (approachPath, 07-harbours.js), so the fish at a point would hang on which routes
+// this session has made; the basin is the same for everyone from the start. Its own 1 km cells, built again only if PORTS grows.
+const BASIN = {m:null, n:-1};
+function inBasin(p){
+  if (BASIN.n !== PORTS.length){ const m = BASIN.m = new Map(); BASIN.n = PORTS.length;
+    for (const pt of PORTS){ if (!pt.p) continue; for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++){ const k = (Math.floor(pt.p.x) + a) * 65536 + Math.floor(pt.p.y) + b; let L = m.get(k); if (!L) m.set(k, L = []); L.push(pt.p); } } }
+  const L = BASIN.m.get(Math.floor(p.x) * 65536 + Math.floor(p.y)); if (!L) return false;
+  for (const q of L) if ((p.x - q.x) * (p.x - q.x) + (p.y - q.y) * (p.y - q.y) < 0.36) return true; return false;
+}
+// the first time a boat fishes inside a harbour basin (with the jig or her gear), one line in its deck log, once per boat. achMinute
+// (09f-merker.js) asks every minute, as fish() is in 05-vessels.js; the fleet is a few boats, and a boat told is passed at once
 function harbourNote(){
-  for (const v of S.fleet || []){ const b = vget(v, 'boat'); if (!b || b.status !== 'fishing' || b.harbN || !b.pos || !inHarbour(b.pos)) continue;
+  for (const v of S.fleet || []){ const b = vget(v, 'boat'); if (!b || b.harbN || b.status !== 'fishing' || !b.pos || !inBasin(b.pos)) continue;
     b.harbN = 1; onVessel(v, () => log('Inne i havna står det lite fisk.', 'Little fish stands inside the harbour.')); }
 }
 const DENT = {H:NaN, T:null};

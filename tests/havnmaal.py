@@ -3,8 +3,8 @@ against the nearest fishing ground outside, before any rule for fishing inside a
 «ingen ny regel før tettheten i havnebassengene er målt»).
 
 At ten harbours spread along the coast (south, middle and north), in March and in July:
-  - the basin: every point 40 m apart that inHarbour (core/01-world.js) gives to this harbour (600 m from the harbour point, 350 m from
-    the way in) and that is sea;
+  - the basin: every sea point 40 m apart within 600 m of the harbour point (inBasin in core/03-simulation.js; the disk of inHarbour in
+    core/01-world.js without the way in, which is set only once a route to the harbour is worked out);
   - the ground: the nearest of Fiskeridirektoratet's fishing grounds (feltGeo, core/03j-felt.js) that has one of the jig's species that
     month, up to 150 sea points inside it nearest the harbour (and outside every harbour);
   - Σ density over the jig's species (SP) at each point, ten days at 8-16 every second hour (the stock untouched, no luck, no weather):
@@ -33,13 +33,14 @@ PICK_JS = """([lat, lon]) => { const c = P(lat, lon); let best = null, bd = 1e9;
 
 MEASURE_JS = r"""async ([id, months, y]) => {
   const pt = PORTS.find(q => q.id === id); await mapNeed(pt.p, MAPD.simR);
-  const mine = q => dist(q, pt.p) < 0.6 || (pt.app && dist(q, pt.app) < 0.35);
+  // the basin as the fish have it (inBasin, core/03-simulation.js: 600 m round the harbour point; before Ø8b S3, inHarbour's disk)
+  const mine = q => dist(q, pt.p) < 0.6, basin = typeof inBasin === 'function' ? inBasin : inHarbour;
   // the basin: points 40 m apart round the harbour point and the way in
   const B = [], seen = new Set(), st = 0.04;
-  for (const c of [pt.p, pt.app].filter(Boolean)) for (let gy = -16; gy <= 16; gy++) for (let gx = -16; gx <= 16; gx++){
+  for (const c of [pt.p]) for (let gy = -16; gy <= 16; gy++) for (let gx = -16; gx <= 16; gx++){
     const q = {x:Math.round((c.x + gx * st) / st) * st, y:Math.round((c.y + gy * st) / st) * st}, k = q.x.toFixed(3) + ',' + q.y.toFixed(3);
     if (seen.has(k)) continue; seen.add(k);
-    try { if (!mine(q) || !inHarbour(q) || isLand(q)) continue; B.push(q); } catch (e){} }
+    try { if (!mine(q) || !basin(q) || isLand(q)) continue; B.push(q); } catch (e){} }
   const G = feltGeo(), hrs = m => { const a = []; for (let d = 5; d < 15; d++) for (let h = 8; h <= 16; h += 2) a.push((Date.UTC(y, m - 1, d, h) - EPOCH) / 3.6e6); return a; };
   const sum = (q, H) => { let s = 0; for (const sp of SP) s += density(sp, q, H); return s; };
   const out = {id, name:typeof pt.name === 'string' ? pt.name : pt.name.no, nB:B.length, months:[]};
@@ -57,7 +58,7 @@ MEASURE_JS = r"""async ([id, months, y]) => {
     for (let yy = g.b[1]; yy <= g.b[3]; yy += s) for (let xx = g.b[0]; xx <= g.b[2]; xx += s){ if (feltSd(g, xx, yy) > 0.05) C.push({x:xx, y:yy, d:Math.hypot(xx - pt.p.x, yy - pt.p.y)}); }
     C.sort((a, b) => a.d - b.d);
     const F = [];
-    for (const q of C){ if (F.length >= 150) break; try { await mapNeed(q, 2); if (isLand(q) || inHarbour(q)) continue; F.push({x:q.x, y:q.y}); } catch (e){} }
+    for (const q of C){ if (F.length >= 150) break; try { await mapNeed(q, 2); if (isLand(q) || inHarbour(q) || basin(q)) continue; F.push({x:q.x, y:q.y}); } catch (e){} }
     R.nF = F.length; if (F.length) R.dF = Math.round(F.reduce((a, q) => a + depthF(q), 0) / F.length);
     const H = hrs(m), mean = P => P.map(q => H.reduce((a, h) => a + sum(q, h), 0) / H.length);
     const vb = mean(B), vf = mean(F), avg = v => v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0;
