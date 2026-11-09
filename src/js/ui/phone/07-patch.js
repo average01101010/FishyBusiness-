@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['f4-091126', '09.11.2026', 'Sjøen ved land', 'The sea by the shore', [
+       ['Bølgene merker bunnen når de kommer inn på grunt vann: de blir kortere og brattere, legger seg inn parallelt med stranda og bryter når de blir for høye for dybden, med hvitt vann inn mot land.', 'The waves feel the bottom as they come into shallow water: they grow shorter and steeper, turn in parallel to the beach and break when they get too high for the depth, with white water in towards the shore.'],
+       ['Inne i havna bak moloen er det mindre brenning, for sjøen som kommer inn dit er mindre. Båten følger de samme bølgene ved land som du ser.', 'Inside a harbour behind its breakwater there is less surf, as less sea gets in there. The boat rides the same waves by the shore as you see.']]],
     ['f3b-091126', '09.11.2026', 'Sjørokk og skum etter slaget', 'Spindrift and the foam after a slam', [
        ['Fra stiv kuling river vinden sprut av kammene som bryter, og sjørokken i lufta kommer fra de samme kammene som skummet på vannet. Jo mer vind, jo flere kammer bryter, og jo mer sjørokk.', 'From a near gale the wind tears spray off the crests that break, and the spindrift in the air comes off the same crests as the foam on the water. The more wind, the more crests break, and the more spindrift.'],
        ['Når baugen slår i sjøen, blir det hvite vannet liggende som skum rundt baugen og der sprøyten faller ned, og det ligger igjen i sjøen som kjølvannet.', 'When the bow slams into the sea, the white water stays as foam round the bow and where the spray falls back, and it lies in the sea as the wake does.']]],
