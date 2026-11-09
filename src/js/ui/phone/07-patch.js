@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['sjo58-091126', '09.11.2026', 'Full sjø igjen', 'The full sea again', [
+       ['Noen telefoner hadde fått en enklere sjø etter en oppstart som ble tatt for et krasj. De prøver den fulle sjøen med kjølvann og skum én gang til ved neste start, og blir der om den virker.', 'Some phones had been given a simpler sea after a start that was taken for a crash. They try the full sea with wake and foam once more at the next start, and keep it if it works.']]],
     ['ob15-091126', '09.11.2026', 'Båten med last', 'The boat with a load', [
        ['Lasten ligger der den står om bord: fullt rom akter gir en båt som ligger tyngre akter, kassene forut trykker nesa ned, og garnet på hekken trykker hekken ned.', 'The load lies where it stands aboard: a full hold aft makes a boat lie deeper by the stern, the boxes forward press the bow down, and the nets on the stern press the stern down.'],
        ['Under trekket krenger båten mot haleren, mer jo tyngre redskapet er, og fisken i karet ved ripa gir slagside.', 'While hauling the boat heels towards the hauler, the more the heavier the gear, and the fish in the tub at the rail give her a list.'],

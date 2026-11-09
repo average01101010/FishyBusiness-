@@ -69,7 +69,7 @@ COVER = {'tests/kartkorridortest.py':['kartkorridortest'], 'tests/legmemotest.py
   'src/js/view3d/21-rescue-anchor.js':['anchor3d', 'dbg23o'],
   'src/js/view3d/20-trawl-seine.js':['tral3d', 'benchshot', 'f1test'],
   'src/js/view3d/19-wildlife-npc.js':['dbg23o', 'vectest', 'f1test'],
-  'src/js/view3d/18-setup.js':['dbg23o', 'teleport3d', 'ultratest', 'f1test', 'qdowntest'],
+  'src/js/view3d/18-setup.js':['dbg23o', 'teleport3d', 'ultratest', 'f1test', 'qdowntest', 'seatrytest'], 'tests/seatrytest.py':['seatrytest'],
   'src/js/view3d/17-draw.js':['dbg23o', 'ultratest', 'wetshot'],
   'src/js/view3d/17b-inland-water.js':['dbg23o', 'vectest', 'lighttest'],
   'src/js/view3d/16-motion.js':['trackfollow', 'routetest', 'helmjit', 'wetshot', 'hull3d'], 'tests/hull3d.py':['hull3d'],
