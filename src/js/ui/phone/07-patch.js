@@ -1,6 +1,6 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
-    ['f3b-081126', '08.11.2026', 'Sjørokk og skum etter slaget', 'Spindrift and the foam after a slam', [
+    ['f3b-091126', '09.11.2026', 'Sjørokk og skum etter slaget', 'Spindrift and the foam after a slam', [
        ['Fra stiv kuling river vinden sprut av kammene som bryter, og sjørokken i lufta kommer fra de samme kammene som skummet på vannet. Jo mer vind, jo flere kammer bryter, og jo mer sjørokk.', 'From a near gale the wind tears spray off the crests that break, and the spindrift in the air comes off the same crests as the foam on the water. The more wind, the more crests break, and the more spindrift.'],
        ['Når baugen slår i sjøen, blir det hvite vannet liggende som skum rundt baugen og der sprøyten faller ned, og det ligger igjen i sjøen som kjølvannet.', 'When the bow slams into the sea, the white water stays as foam round the bow and where the spray falls back, and it lies in the sea as the wake does.']]],
     ['trebat-091126', '09.11.2026', 'Fars trebåt og vimplene', 'Father\'s wooden boat and the pennants', [
