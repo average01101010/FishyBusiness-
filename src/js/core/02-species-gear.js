@@ -110,19 +110,23 @@ const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell && !SPECIES[sp].
 const VESSELS = {
   skiff:{name:{no:'Aluminiumsbåt 19 fot (5,9 m), 60 hk påhengs', en:'19 ft aluminium boat (5.9 m), 60 hp outboard'}, len:5.9, beam:2.45, draft:0.6, disp:1.0, holdCap:500, iceCap:150, fuelCap:90, hp:60, engine:{no:'60 hk påhengsmotor, bensin', en:'60 hp petrol outboard'},
     vmax:24, vcruise:18, accel:10, turnR:35, planing:true, outboard:true, diesel:false, risk:[1.0, 1.8, 10.8, 13.9], sea:0.45, crewMax:1, berths:0, tubCap:60, land:'tub', std:[],
-    rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:2, gearMax:{garn:6, stamp:4, teine:4}, svcH:100, svcCost:3500, svcJobH:3, cls:'open', price:95000, year:2008,
+    rigs:['juksa', 'line', 'garn'], jukseMax:2, gearMax:{garn:6, stamp:4}, svcH:100, svcCost:3500, svcJobH:3, cls:'open', price:95000, year:2008,
     hullMat:'alu', kar:{n:1, max:1}, hold:{kind:'dekk', m3:0.8}, deckCargo:150, iceMaker:0, gutMachine:0, lph:11, cabins:0, fac:{house:'open', shelter:false, galley:'none', wc:false, dry:false, mess:false}, stations:{table:1, hauler:1}, crane:0,
-    desc:{no:'Åpen aluminiumsbåt med midtkonsoll, sete og fordekk, og påhengsmotor. Rask og billig, men liten og våt i sjøgang.', en:'Open aluminium boat with a centre console, a seat, a casting deck and an outboard. Fast and cheap, but small and wet in a sea.'}},
+    desc:{no:'Åpen aluminiumsbåt med midtkonsoll, sete og fordekk, og påhengsmotor. Rask og billig, men liten og våt i sjøgang. Garna trekkes for hånd over ripa, og det er ikke plass til teiner.', en:'Open aluminium boat with a centre console, a seat, a casting deck and an outboard. Fast and cheap, but small and wet in a sea. The nets are drawn by hand over the rail, and there is no room for pots.'}},
   // Father's old boat, the first one (Jonas 05.10.2026: «en 23fot trebåt med innenbords semidiesel ... topphastigheten skal være 7
   // knop», the rest made up from the skiff's): hold, ice, crew and gear as the skiff, a semi-diesel single that sips diesel (semi: the
   // engine's own sound and its black puffs, ui/10e-sound.js and view3d.js; rpm 340 idle as in Jonas's video, 850 at most, his word), heavier and kinder in a sea than the aluminium boat
   trebat:{name:{no:'Trebåt 23 fot (7,0 m), 8 hk semidiesel', en:'23 ft wooden boat (7.0 m), 8 hp semi-diesel'}, len:7.0, beam:2.26, draft:0.62, disp:1.9, holdCap:500, iceCap:150, fuelCap:60, hp:8, engine:{no:'8 hk semidiesel, én sylinder', en:'8 hp semi-diesel, single cylinder'},
     vmax:7, vcruise:6, accel:2, turnR:28, planing:false, outboard:false, diesel:true, semi:true, rpm:[340, 850], risk:[1.2, 2.0, 11, 14.5], sea:0.3, crewMax:1, berths:0, tubCap:60, land:'tub', std:[],
-    rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:2, gearMax:{garn:6, stamp:4, teine:6}, svcH:120, svcCost:2000, svcJobH:4, cls:'open', price:45000, year:1956,
+    rigs:['juksa', 'line', 'garn'], jukseMax:2, gearMax:{garn:6, stamp:4}, svcH:120, svcCost:2000, svcJobH:4, cls:'open', price:45000, year:1956,
+    // no pots (OB1; Jonas 09.11.2026: «Jeg tror ikke den trebåten skal kunne holde på med krabbeteiner. Det har den åpenbart ikke plass
+    // til. Det må i så fall oppdateres i databladet til båten og gjøres slik at spillere ikke kan kjøpe det til den båten heller»), and the
+    // skiff the same (valg 23 A): rigs has no teiner, so the pot hauler, the crab tank and the pots do not fit (equipFits fit.rig, potsUnfit
+    // in 10-gear.js for a save that had them). Nets she draws by hand over the rail (valg 21 B, handGear in 10-gear.js: no net hauler under 7.5 m)
     // bare: she carries only what she was built with (Jonas 09.11.2026: «Det finnes ikke en gammel trebåt i verden med badestige
     // hengende på siden»): no ladder aft and no lifebuoy (lsaOf), and no fishing lights, she jigs and draws her gear by hand (vessel3d.js lanterns)
     bare:true, hullMat:'tre', kar:{n:1, max:1}, hold:{kind:'dekk', m3:0.8}, deckCargo:200, iceMaker:0, gutMachine:0, lph:1.0, cabins:0, fac:{house:'open', shelter:false, galley:'none', wc:false, dry:false, mess:false}, stations:{table:1, hauler:1}, crane:0,
-    desc:{no:'Gammel, klinkbygd og spissgattet trebåt med motorkasse midtskips og rorkult. Treverket er grått og slitt, men skroget er tett. Hun går i 7 knop og bruker nesten ikke diesel.', en:'An old clinker-built double-ended wooden boat with the engine box amidships and a tiller. The wood is grey and worn, but the hull is tight. She makes 7 knots and hardly uses any diesel.'}},
+    desc:{no:'Gammel, klinkbygd og spissgattet trebåt med motorkasse midtskips og rorkult. Treverket er grått og slitt, men skroget er tett. Hun går i 7 knop og bruker nesten ikke diesel. Garna trekkes for hånd over ripa, og det er ikke plass til teiner.', en:'An old clinker-built double-ended wooden boat with the engine box amidships and a tiller. The wood is grey and worn, but the hull is tight. She makes 7 knots and hardly uses any diesel. The nets are drawn by hand over the rail, and there is no room for pots.'}},
   snekke:{name:{no:'Plastsnekke 26 fot, 30 hk diesel', en:'26 ft fibreglass snekke, 30 hp diesel'}, len:7.9, beam:2.7, draft:1.2, disp:3.0, holdCap:1000, iceCap:400, fuelCap:220, hp:30, engine:{no:'30 hk innenbords diesel', en:'30 hp inboard diesel'},
     vmax:8, vcruise:7, accel:3, turnR:45, planing:false, outboard:false, diesel:true, risk:[1.5, 2.5, 12.5, 16], sea:0.22, crewMax:2, berths:0, tubCap:150, land:'tub', std:['plotter', 'vhf'],
     rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:3, gearMax:{garn:15, stamp:10, teine:9}, svcH:250, svcCost:6000, svcJobH:5, cls:'open', price:245000, year:1994,
@@ -255,7 +259,8 @@ const EQUIP = {
   // lvk: their tiers are items of their own (linehalerLv … below, OPP2), so the hauler is bought and fitted as before
   linehaler:{price:68000, lvk:'linehalerLv', name:{no:'Linehaler', en:'Line hauler'}, desc:{no:'Trekker lina jevnt og raskt.', en:'Hauls the line steadily and fast.'}},
   garnhaler:{price:95000, lvk:'garnhalerLv', fit:{minLen:7.5}, name:{no:'Garnhaler', en:'Net hauler'}, desc:{no:'Trekker garna. For hånd går det sakte.', en:'Hauls the nets. By hand it is slow.'}},
-  teinehaler:{price:58000, lvk:'teinehalerLv', name:{no:'Teinehaler', en:'Pot hauler'}, desc:{no:'Hiver teinene opp. Teiner kan ikke trekkes for hånd.', en:'Lifts the pots. Pots cannot be hauled by hand.'}},
+  // (fit.rig: only on a boat whose rigs has pots, OB1)
+  teinehaler:{price:58000, lvk:'teinehalerLv', fit:{rig:'teiner'}, name:{no:'Teinehaler', en:'Pot hauler'}, desc:{no:'Hiver teinene opp. Teiner kan ikke trekkes for hånd.', en:'Lifts the pots. Pots cannot be hauled by hand.'}},
   // the line setter and the net chute (OPP2; Ships at Sea's «longline setter»): a chute over the stern the gear runs out through, so a tub of
   // line or a net goes out faster (set, a share of GEAR[kind].set: gopUnitMin). Each hangs on its hauler (needs: buyGate('equip')); the
   // line setter's second tier, a magazine for the tubs, is linesetterLv. No model yet (OPP5): the card and «aboard», as the plotter and
@@ -264,7 +269,7 @@ const EQUIP = {
   garnrenne:{price:18000, needs:'garnhaler', fit:{minLen:7.5, coast:true}, set:0.25, name:{no:'Garnrenne', en:'Net chute'}, desc:{no:'Renne over hekken som garna går ut gjennom. Garna settes fortere.', en:'A chute over the stern the nets run out through. The nets are set faster.'}},
   // a tank of running sea water for king crab (the price is an estimate): without it a crab lives about a day in the hold, and a dead
   // one is worth nothing (05-vessels.js, sell)
-  krabbekar:{price:28000, fit:{minLen:6.5}, name:{no:'Krabbekar med sjøvann', en:'Live crab tank'}, desc:{no:'Kar med sirkulerende sjøvann som holder kongekrabben levende i flere døgn. Uten kar lever den rundt et døgn i lasten, og død krabbe er verdiløs.', en:'A tank of running sea water that keeps king crab alive for days. Without it a crab lives about a day in the hold, and a dead crab is worthless.'}},
+  krabbekar:{price:28000, fit:{minLen:6.5, rig:'teiner'}, name:{no:'Krabbekar med sjøvann', en:'Live crab tank'}, desc:{no:'Kar med sirkulerende sjøvann som holder kongekrabben levende i flere døgn. Uten kar lever den rundt et døgn i lasten, og død krabbe er verdiløs.', en:'A tank of running sea water that keeps king crab alive for days. Without it a crab lives about a day in the hold, and a dead crab is worthless.'}},
   // the knives and the gaff in three tiers, per boat, bought at the tackle shop (OPP1 of docs/planer/oppgraderinger.md; Jonas 07.11.2026:
   // «en oppgradering kutter ned på tiden brukt samt kvaliteten på sløyingen. Høtten minsker risikoen for tap av fisk generelt»). Tier 1 is
   // what every boat has aboard from the start, bought by no one, and a save without the field is tier 1; S.equip[k] holds the tier bought
@@ -315,8 +320,9 @@ const EQUIP = {
 };
 // whether an item fits a vessel type: by length, and outboards only on boats with an outboard; the tiered knives and gaff not on the
 // ocean fleet (coast: their factories and machines have their own numbers); the reels' tiers only where she takes four reels or more (jig);
-// a tier where the item it is a tier of fits (of)
-function equipFits(k, type){ const E = EQUIP[k], f = E && E.fit, V = VESSELS[type]; if (E && E.of && !equipFits(E.of, type)) return false; if (!f || !V) return !!V; return !(f.minLen && V.len < f.minLen) && !(f.maxLen && V.len > f.maxLen) && !(f.outboard && !V.outboard) && !(f.house && V.fac.house === 'open') && !(f.coast && V.cls === 'hav') && !(f.jig && !((V.jukseMax || 0) >= f.jig)); }
+// a tier where the item it is a tier of fits (of); what belongs to one kind of fishing only where the boat can be rigged for it (rig: the
+// pot hauler and the crab tank where rigs has teiner, OB1)
+function equipFits(k, type){ const E = EQUIP[k], f = E && E.fit, V = VESSELS[type]; if (E && E.of && !equipFits(E.of, type)) return false; if (!f || !V) return !!V; return !(f.minLen && V.len < f.minLen) && !(f.maxLen && V.len > f.maxLen) && !(f.outboard && !V.outboard) && !(f.house && V.fac.house === 'open') && !(f.coast && V.cls === 'hav') && !(f.jig && !((V.jukseMax || 0) >= f.jig)) && !(f.rig && !(V.rigs || []).includes(f.rig)); }
 // ---- the upgrades in tiers (OPP1 of docs/planer/oppgraderinger.md, 07.11.2026)
 // The rule (prinsipp 1; Jonas 07.11.2026: «jeg mener ikke vi skal ha en renters rente-effekt på oppgraderingene. Om det står 10% økning
 // feks, så betyr det at økningen er 10% opp fra grunnnivået»): every tier's per cent is of the base level, and the shares add up, never

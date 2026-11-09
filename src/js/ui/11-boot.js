@@ -303,6 +303,10 @@ if (S.equip) delete S.equip.elhaler;
 for (const v of S.fleet) withVessel(v, () => { if (S.jobs) S.jobs = S.jobs.filter(j => j.kind !== 'prep'); S.prep = {}; S.tripBuff = null; });
 for (const v of S.fleet) withVessel(v, () => { const p = S.pgear.pots; if (p.small){ p.big = (p.big || 0) + p.small; } delete p.small; if (!p.big) p.big = 0; });
 for (const s of S.sets || []) if (s.kind === 'teine') s.pot = 'big';
+// 09.11.2026 (OB1, Jonas: «Jeg tror ikke den trebåten skal kunne holde på med krabbeteiner. Det har den åpenbart ikke plass til»): the wooden
+// boat and the skiff have no pots in their datasheet any more; what a save has of them goes ashore and is paid back (core/10-gear.js
+// potsUnfit: the pots in port once none are in the sea, the pot hauler and the crab tank at the next yard; every game hour after this too)
+for (const v of S.fleet) withVessel(v, potsUnfit);
 // «Kaffe på kaia» was replaced by the daily login bonus on 01.10.2026: unused free pub rounds are paid out, borrowed deck tubs
 // and the clean-hull bonus are gone, and the bonus starts at zero
 if (S.daily){ const v = S.daily.pubV || 0; if (v > 0){ book('annet', v * PUB_COST, 'Ubrukte pubrunder', 'Unused pub rounds'); log('Kaffe på kaia er lagt ned. Du fikk ' + kr(v * PUB_COST) + ' for ' + v + (v > 1 ? ' ubrukte pubrunder.' : ' ubrukt pubrunde.'), '«Coffee on the quay» is gone. You got ' + kr(v * PUB_COST) + ' for ' + v + ' unused pub round' + (v > 1 ? 's.' : '.')); } delete S.daily; }
