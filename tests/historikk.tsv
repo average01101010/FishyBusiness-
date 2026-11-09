@@ -1678,3 +1678,27 @@
 2026-11-09 02:26	ccr-173e9292-helxkt	b6d9a56+	docktest	OK	63	lite	samtidig	
 2026-11-09 02:33	claude/h3d2-snokrabbe-animasjoner-zn39n5	3f5d9bd	boottest	OK	28	lite	samtidig	
 2026-11-09 02:34	claude/h3d2-snokrabbe-animasjoner-zn39n5	3f5d9bd	docktest	OK	63	lite	samtidig	
+2026-11-09 09:24	ccr-a9ccd5ec-it307t	02ab963+	tutfull	OK	13	lite	samtidig	
+2026-11-09 09:24	ccr-a9ccd5ec-it307t	02ab963+	krabbefabrikktest	OK	26	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	colregtest	OK	610	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	keeptest	OK	20	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	autonavtest	FEIL	12	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 173, 'cell': 0.2, 'maxSlice': 15.7, 'mended': 0, '
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	turtest	OK	21	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	decktest	OK	20	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	trip2	OK	54	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	worktest	FEIL	34	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	npctest	FEIL	0	lite	samtidig	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py)
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	towtest	OK	21	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	tattest	OK	25	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	peergear	OK	7	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	mobtest	FEIL	204	lite	samtidig	FEIL 5a. under draget: en hang seg fast ved haleren, den andre stoppet den med nødstoppen, nestenulykke i dagboka  []
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	turlinjetest	OK	9	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	opsowntest	OK	55	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	selfcrew	OK	10	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	opptest	OK	85	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	mannskapshot	OK	22	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	crewwalk	OK	13	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	crewclip	FEIL	25	lite	samtidig	FEIL nor does the work at its places (jigging, gutting, icing, hauling) {'bunntral': {'jig': ['jig:1[0]null'], 'deck': [], 'haul': []}}
+2026-11-09 09:35	ccr-a9ccd5ec-it307t	86d4026	docktest	OK	74	lite	samtidig	
+2026-11-09 09:35	ccr-a9ccd5ec-it307t	86d4026	berth3d	OK	22	lite	samtidig	
+2026-11-09 09:35	ccr-a9ccd5ec-it307t	86d4026	walktest	FEIL	20	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 57
