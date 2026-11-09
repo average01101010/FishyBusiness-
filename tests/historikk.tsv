@@ -1531,3 +1531,12 @@
 2026-11-09 00:50	ccr-9e76566c-k1gw2d	6560a62	maletest	OK	15	lite	samtidig	
 2026-11-09 00:50	ccr-9e76566c-k1gw2d	6560a62	trip2	OK	33	lite	samtidig	
 2026-11-09 00:51	ccr-9e76566c-k1gw2d	6560a62	dbg23o	OK	37	3d	alene	
+2026-11-09 01:07	ccr-9e76566c-k1gw2d	7c6de62+	merketest	OK	18	lite	samtidig	
+2026-11-09 01:07	ccr-9e76566c-k1gw2d	7c6de62+	kotest	FEIL	17	lite	samtidig	avsluttet med kode 1
+2026-11-09 01:08	ccr-9e76566c-k1gw2d	3a693e5	trip2	OK	36	lite	samtidig	
+2026-11-09 01:08	ccr-9e76566c-k1gw2d	3a693e5	bunktest	OK	14	lite	samtidig	
+2026-11-09 01:14	ccr-9e76566c-k1gw2d	3a693e5	kjoptest	OK	381	lite	samtidig	
+2026-11-09 01:14	ccr-9e76566c-k1gw2d	3a693e5	worktest	FEIL	26	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-09 01:26	ccr-9e76566c-k1gw2d	3a693e5	yardtest	OK	710	3d	alene	
+2026-11-09 01:41	ccr-9e76566c-k1gw2d	3a693e5	tut	OK	905	lite	alene	
+2026-11-09 01:41	ccr-9e76566c-k1gw2d	3a693e5+	kotest	OK	12	lite	alene	
