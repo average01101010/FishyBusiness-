@@ -33,6 +33,10 @@ function crewSim(src){
   function setRoll(r){ ST.roll = r || 0; }
   // the skipper sits at the wheel in the bridge view: someone else takes his place on deck (the view does not draw him from his own eyes)
   function setHelm(v){ ST.helmView = !!v; }
+  // the lines and the fenders round a quay as the view has them (view3d/15-env-mooring.js moorTick, every frame): the spell, the side to
+  // the quay and what is left to do in order ('f0'..'f2' a fender, 'c:mid' 'c:bow' 'c:stern' the line at that cleat); kept 1.5 s
+  function setMoor(m){ ST.moor = m ? Object.assign({at:ST.clk}, m) : null; }
+  const moorNow = () => ST.moor && ST.moor.phase && ST.clk - ST.moor.at < 1.5 ? ST.moor : null;
 
   // ---- the kit on the deck, out of the walking map ----
   // what the game draws on the model's places (view3d.js drawDeck, rigAt, drawLineTubs, drawNetTub, drawCargo, drawCrane), as boxes in the
@@ -147,6 +151,7 @@ function crewSim(src){
     let WA = typeof workAssign === 'function' ? workAssign() : [];
     // in the bridge view the skipper is at the wheel: the one with the least to do takes his station on deck
     const me = WA.find(p => !p.c);
+    WA = moorCrew(WA);
     if (ST.helmView && me && ['haling', 'blogg', 'sloy', 'is', 'sort'].includes(me.st)){
       const sub = ['pause', 'is', 'sloy', 'blogg'].map(k => WA.find(p => p.c && p.st === k && p !== me)).find(Boolean);
       if (sub){ WA = WA.map(p => Object.assign({}, p)); const m2 = WA.find(p => !p.c), s2 = WA.find(p => p.c === sub.c); [s2.st, s2.role, s2.bl, s2.jw] = [m2.st, m2.role, m2.bl, m2.jw]; m2.st = 'ror'; m2.role = null; } }
@@ -158,6 +163,57 @@ function crewSim(src){
     const iced = (S.hold || []).reduce((a, x) => a + (x.iced && !(SPECIES[x.sp] || {}).live ? x.kg : 0), 0), holdBoat = ((VESSELS[ST.type] || {}).hold || {}).kind !== 'dekk';
     return {away, underway, port, hasBunks, open:!!G.open, deckTask:gutting ? 'gut' : 'pack', wind, night, WA, aground:b.status === 'aground', fishing:b.status === 'fishing', crates:holdBoat ? Math.floor(iced / CRATE_KG) : -1, crateFill:holdBoat ? (iced % CRATE_KG) / CRATE_KG : 0};
   }
+  // ---- the lines and the fenders round a quay (OB2, Jonas 09.11.2026; docs/planer/om-bord.md F1-F3) ----
+  // The core gives the hands for them (13-work.js, the station 'fort', on the game's clock: 05-vessels.js moorPhase). The view may be
+  // slower than that spell (she is still on her way in to the berth, a hand still walking to the next line): the same hands stay on them
+  // and the helm is held until the view says she lies made fast (the core never waits for the view). Each hand goes to the next thing
+  // left: with two, the one forward takes the bow line and the forward fender, the one aft the springs, the stern line and the others.
+  function moorCrew(WA){
+    const m = moorNow(); if (!m){ ST.fortIds = null; return WA; }
+    const idOf = p => p.c ? 'c' + p.c.id : 'me';
+    let F = WA.filter(p => p.st === 'fort');
+    if (F.length) ST.fortIds = F.map(idOf);
+    else if (ST.fortIds && ST.fortIds.length){   // (never the cook from the stove nor the one at the helm)
+      for (const p of WA) if (ST.fortIds.includes(idOf(p)) && p.st !== 'kokk' && p.st !== 'ror'){ p.st = 'fort'; p.idle = null; p.role = null; p.why = 'moor'; }
+      F = WA.filter(p => p.st === 'fort'); }
+    // (the helm is held until she lies made fast, by you when you are aboard and not on the lines yourself)
+    if (m.phase === 'in' || m.phase === 'prep' || (m.phase === 'lines' && F.some(p => p.c))){ const me = WA.find(p => !p.c); if (me && me.st !== 'fort' && me.st !== 'ror'){ me.st = 'ror'; me.idle = null; me.why = 'skipper'; } }
+    const need = m.need || [], two = F.length >= 2, fwd = k => k === 'c:bow' || k === 'f0';
+    F.forEach((p, n) => { const mine = need.filter(k => !two || fwd(k) === (n > 0)); p.mo = mine[0] || (m.phase === 'stow' ? 'coil' : two && n > 0 ? 'c:bow' : 'c:mid'); });
+    return WA;
+  }
+  // the place for a part of it: inboard of the fender or the cleat, facing the quay's side (the hands over the rail: tending the fender,
+  // throwing and taking in the line), or coiling the line by the middle cleat
+  // (the nearest cell to the part on the deck the crew live on, on the quay's side, with the rail within reach before it: the cleat
+  // from the model's measures may be where nobody stands, the bow of a boat whose foredeck is not walked on; kept per boat and kit)
+  const MOORPL = new Map();
+  function moorPlace(key, sd0){
+    const m = moorNow(), sd = sd0 || (m && m.side) || 1, id = ST.type + '|' + (key || '') + '|' + sd + '|' + ST.kitSig;
+    if (MOORPL.has(id)){ const g = MOORPL.get(id); return g && Object.assign({}, g); }
+    const Sp = moorSpots(ST.G, sd), M = ST.M, h = sd * Math.PI / 2; let P, task;
+    if (key && key[0] === 'f'){ P = Sp.fend[+key[1]] || Sp.fend[1]; task = 'pick'; }
+    else { P = Sp.cleat[key === 'coil' || !key ? 'mid' : key.slice(2)] || Sp.cleat.mid; task = key === 'coil' ? 'coil' : 'haul'; }
+    const tx = P[0] - sd * 0.5, tz = P[2], C = [];
+    for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k) || !livePart(k)) continue; const q = M.at(k); if (q[0] * sd < -0.2) continue; C.push([Math.hypot(q[0] - tx, (q[2] - tz) * 1.2), k]); }
+    C.sort((a, b) => a[0] - b[0]); let k0 = -1;
+    if (key === 'coil') k0 = C.length ? C[0][1] : -1;
+    else for (const [, k] of C.slice(0, 60)){ const q = M.at(k), rl = railAt(k, h); if (!rl) continue;
+      // (at the ship's side: no deck outboard of it, and the open sea beyond the rail, not a house or a wall)
+      const ox = q[0] + sd * (rl[0] + 0.45); if (M.ok(M.cellOf(q[0] + sd * 0.5, q[2])) || M.hit([ox, q[1] + 1.4, q[2]], [ox, q[1] - 2.5, q[2]]) >= 0) continue; k0 = k; break; }
+    if (k0 < 0 && C.length) k0 = C[0][1];
+    const g = k0 < 0 ? null : {k:k0, h, task, mo:key || 'c:mid'}; MOORPL.set(id, g); return g && Object.assign({}, g);
+  }
+  // where a line is made fast and a fender hangs: at the rail before the place of its hand (the cleat from the model's measures may be
+  // where nobody can stand, the bow of a boat whose foredeck is not walked on: the line is then led from where the hand is), in the
+  // boat's frame [x, the rail's top, z]; null without a place
+  const MOORAT = new Map();
+  function moorAt(key, sd){ if (!ready()) return null; sd = sd || 1; const id = ST.type + '|' + key + '|' + sd + '|' + ST.kitSig; if (MOORAT.has(id)) return MOORAT.get(id);
+    const g = moorPlace(key, sd); let out = null;
+    if (g){ const p = ST.M.at(g.k), rl = railAt(g.k, g.h); out = [p[0] + sd * (rl ? rl[0] : 0.4), p[1] + (rl ? rl[1] : 1.0), p[2]]; }
+    MOORAT.set(id, out); return out; }
+  // for the view: which of the parts have their hand there now, and how many are on them
+  function moorMan(){ const out = new Set(); for (const a of A) if (a.st === 'fort' && a.goal && a.goal.mo && a.mode === 'at' && a.cell === a.goal.k && a.blend > 0.5) out.add(a.goal.mo); return out; }
+  const moorHands = () => A.filter(a => a.st === 'fort').length;
   // the place on the rail that faces the person most nearly (lean places face out over the rail), turned to her, the arms out (drawWorker 'guide')
   function spotGoal(p){
     const id = p.c ? 'c' + p.c.id : 'me', h = p.spot, L0 = (ST.PT.lean || []).filter(l => ST.M.ok(l.k) && livePart(l.k) && free(l.k, id)); if (!L0.length) return null;
@@ -170,6 +226,7 @@ function crewSim(src){
     const PT = ST.PT, PL = places(), st = p.st;
     if (ctx.away) return null;
     if (p.spot != null){ const g = spotGoal(p); if (g) return g; }
+    if (st === 'fort') return moorPlace(p.mo) || idleGoal(p, ctx, 'look');
     if (st === 'ror'){ if (PT.ror) return {k:PT.ror.k, h:PT.ror.h || 0, task:'helm', inside:'helm'}; return PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:'helm', inside:'helm'} : null; }
     // the autoliner (H2d2, places port): the deck map is her hauling station inside the port, the rest of her is inside. At the line the
     // hauler gaffs the fish in at the port, and the deck hand on the bleeding minds the hook cleaner and sees the fish into the chute (the
@@ -203,7 +260,7 @@ function crewSim(src){
     return idleGoal(p, ctx);
   }
   // the station and its part (at the hauler: the hauler, the picker, the pot hand): a person keeps the place while it stays the same
-  const kindOf = p => p.spot != null ? 'spot' : p.st === 'haling' ? 'haling:' + (p.role === 'haler' ? 'h' : p.role) : p.st === 'pause' && p.idle ? 'pause:' + p.idle + (p.with ? '>' + p.with : '') : p.st;
+  const kindOf = p => p.spot != null ? 'spot' : p.st === 'fort' ? 'fort:' + (p.mo || '') : p.st === 'haling' ? 'haling:' + (p.role === 'haler' ? 'h' : p.role) : p.st === 'pause' && p.idle ? 'pause:' + p.idle + (p.with ? '>' + p.with : '') : p.st;
   // ---- a free person: something to do for a while, by the weather, the hour and their nature ----
   const IDLE = ['lean', 'lean', 'look', 'coffee', 'sweep', 'sit'];
   // (p.idle: the break the game chose, kept as long as it lasts there; each its own place and pose, view3d.js drawWorker: facing out over
@@ -332,7 +389,7 @@ function crewSim(src){
   // the break's things that are put away before the walk to work (the mug back on the flask, the phone in the pocket ...), and the
   // places held until the one taking over is there (the hauler hauls on, the helm is not left)
   const PROP = {coffee:1, phone:1, binoc:1, smoke:1, snus:1, lunch:1}, PUT_S = 1.4;
-  const relieves = g => !!g && (g.task === 'haul' || g.inside === 'helm');
+  const relieves = g => !!g && ((g.task === 'haul' && !g.mo) || g.inside === 'helm');
   function sync(ctx){
     const seen = new Set(), used = {}, pend = [], t = nowS(); TAKEN.clear();
     // how hard each one works now (04-crew.js crewEffort): the tired walk slower, work at a slower beat and stoop (the view's a.tk, a.ef)
@@ -489,9 +546,17 @@ function crewSim(src){
     if (a.mode !== 'walk' || !a.path || a.pi < a.path.length - 1) return [0, 0]; const u = clamp(1 - (a.near || 0) / 0.6, 0, 1); return [o[0] * u, o[1] * u]; }
   function clipWhy(k){ if (!ready()) return null; const M = ST.M; return (ST.PT.lean || []).filter(l => M.ok(l.k)).map(q => { const f = fitPlace(k, q), p = M.at(q.k), F = [Math.sin(f.h), -Math.cos(f.h)], Rv = [Math.cos(f.h), Math.sin(f.h)], o = f.off || [0, 0];
     const W = v => [p[0] + o[0] + F[0] * v[0] + Rv[0] * v[2], p[1] + v[1], p[2] + o[1] + F[1] * v[0] + Rv[1] * v[2]]; return {rail:railAt(q.k, q.h), fit:f.rail, off:f.off, hits:poseSegs(k, f.rail).map(([a, b], i) => M.hit(W(a), W(b)) >= 0 ? i : -1).filter(i => i >= 0)}; }); }
-  return {tick, agents, visible, anchorOf, on, setJig, setRoll, setHelm, places:() => ready() ? places() : null, reset, clipNow, clipScan, clipWhy, bodyHits, walkOff, holds, railAt:(k, h) => ready() ? railAt(k, h) : null, railNear:a => ready() ? railNear(a) : null, _st:ST};
+  return {tick, agents, visible, anchorOf, on, setJig, setRoll, setHelm, setMoor, moorMan, moorHands, moorAt, places:() => ready() ? places() : null, reset, clipNow, clipScan, clipWhy, bodyHits, walkOff, holds, railAt:(k, h) => ready() ? railAt(k, h) : null, railNear:a => ready() ? railNear(a) : null, _st:ST};
 }
 const CREW3D = crewSim(null);
+// where the lines and the fenders are, in the boat's frame (x to starboard, z aft) from the model's measures (vessel3d.js geoOf), with the
+// quay on side sd (+1 starboard, -1 port): the cleats for the bow line, the springs and the stern line, and three fenders along the side
+// over the water. The view draws the lines and the fenders there (view3d/15-env-mooring.js) and the hands stand inboard of them (moorPlace)
+function moorSpots(G, sd){
+  const gw = G.gw || 1, sx = (G.beam || 3) / 2, bw = G.bow || -2, st = G.stern || 2, mid = (bw + st) / 2; sd = sd || 1;
+  return {cleat:{bow:[sd * sx * 0.55, gw + 0.05, bw + 0.4], mid:[sd * sx * 0.95, gw + 0.05, mid], stern:[sd * sx * 0.8, gw + 0.05, st - 0.35]},
+    fend:[bw * 0.45, mid, st * 0.55].map(z => [sd * (sx * 0.95 + 0.12), gw - 0.45, z])};
+}
 // the context of another boat as the view knows her (core/05-vessels.js npcStates: st fishing, in, out or port; a player's boat
 // sends her state the same way): the skipper and two hands when fishing, the skipper at the wheel and the hands inside under way,
 // nobody on deck in port. The people are stand-ins with an id, so the places are kept from minute to minute.

@@ -452,7 +452,8 @@
     const sx = G.beam / 2, DZ = d.z - 0.6; return G.hand && SKA.stack ? {at:[SKA.stack[0] + (kind === 'garn' ? 0.1 : 0), d.y, SKA.stack[2]], ry:0} : {at:[sx * (kind === 'garn' ? 0.3 : 0.25), d.y, DZ], ry:0}; }
   // the nets in a blue 460 l tub (tools/deck/rigg.py): the heap sinks as the nets go out and rises as they come in, mounded over the rim
   // when it is full, with the bights of net hanging over the rim then (garn_kant, not scaled)
-  function drawNetTub(BMrel, at, fill, ry){ const T = kit('fish', 'kar460b') || kit('fish', 'kar460'), N = kit('rig', 'garn'), NK = kit('rig', 'garn_kant'), M = chain(BMrel, M4.T(at[0], at[1], at[2]), M4.RY(ry || 0));
+  // (s: the model's net tub smaller than the 460 l one where the floor has no room for it, kit.garn.s; the wooden boat's, OB1)
+  function drawNetTub(BMrel, at, fill, ry){ const sc = (((GEO(vtype()) || {}).kit || {}).garn || {}).s || 1, T = kit('fish', 'kar460b') || kit('fish', 'kar460'), N = kit('rig', 'garn'), NK = kit('rig', 'garn_kant'), M = chain(BMrel, M4.T(at[0], at[1], at[2]), M4.RY(ry || 0), M4.S(sc));
     if (T && N){ drawN(T, M); if (fill > 0.02) drawN(N, chain(M, M4.S(1, 0.25 + 0.75 * fill, 1))); if (NK && fill > 0.95) drawN(NK, M); return; }
     drawN(GB.bin, chain(M, M4.S(1, 0.3 + 0.7 * fill, 1))); }
   // the line tubs (tools/deck/rigg.py): two across and up to four along from the place, each with its coil, the baited ones with the hooks
@@ -814,8 +815,11 @@
       gsp:(S.hold.find(x => !x.gut && !x.iced) || {sp:'torsk'}).sp, gkg:2 + hash(Math.floor(t / 5.6)) * 3};
     if (!agents) drawWorker(P, Object.assign({x:wl[0] + eye[0], z:wl[2] + eye[2], h:head, walk:false, s:0}, DK.task === 'gut' ? gutting : icing), eye, t, 7);
     // the skipper and a hand both on the deck work: the hand stands inboard of the bleeding tub, facing it
-    if (!agents && DK.me && DK.crew && !DK.alone){ const w2 = xf(BMrel, [ux + (ux > tx ? -0.62 : 0.62), d.y, uz]), y2 = w2[1] + eye[1];
-      drawWorker({gy:() => y2, bare:true, spray:0, kit:null, look:seaLook(lookCrew(0))}, Object.assign({x:w2[0] + eye[0], z:w2[2] + eye[2], h:bv.head + (ux > tx ? 1 : -1) * Math.PI / 2, walk:false, s:0}, icing), eye, t, 8); }
+    // (OB1, F19 in docs/planer/om-bord.md: on the old wooden boat that put him on the one gutting at the table, the table and the tub being
+    // 0.15 m apart along her: a model with a mate's place, work.mate [x, y, z], has him there, facing the tub, clear of the other)
+    if (!agents && DK.me && DK.crew && !DK.alone){ const M2 = W && W.mate, w2 = xf(BMrel, M2 ? [M2[0], d.y, M2[2]] : [ux + (ux > tx ? -0.62 : 0.62), d.y, uz]), y2 = w2[1] + eye[1];
+      const h2 = M2 ? bv.head + Math.atan2(ux - M2[0], -(uz - M2[2])) : bv.head + (ux > tx ? 1 : -1) * Math.PI / 2;
+      drawWorker({gy:() => y2, bare:true, spray:0, kit:null, look:seaLook(lookCrew(0))}, Object.assign({x:w2[0] + eye[0], z:w2[2] + eye[2], h:h2, walk:false, s:0}, icing), eye, t, 8); }
     // the offal goes over the rail on the table's side into the water (down the bench's chute), where the gulls come down for it
     const kDrop = KB && XF[big ? 'benk_drop' : 'bord_drop'], dropP = kDrop ? [tx + tSide * kDrop[2], d.y + Math.max(0.6, kDrop[1]), tz - tSide * kDrop[0]] : [tx - tSide * 0.15, d.y + 1.0, tz];
     const out = [-tSide * Math.cos(bv.head), -tSide * Math.sin(bv.head)], a = xf(BMrel, dropP), wat = (env.tide || 0) - eye[1];

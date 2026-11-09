@@ -10,6 +10,7 @@ Kapitlene: 1 hvordan det er målt, 2 skalaen og karakterene, 3 funnene som gjeld
 
 - **Opptakene** (`tests/ombord.py`, ikke i `run.py`): spillet settes i hver operasjon med spillets egne funksjoner (`depart`, `startSet`, `startHaul`, `addCatch`, `dock`, `startLanding`, `restStart`; oppskriftene står i fila), og hver operasjon tas opp for seg, 9–16 sekunder spilltid, liggende 640×360 og stående 360×640, med tre skjermbilder (tidlig, midt i og sent i operasjonen) der kartet, statusboksen og kompasset er tatt bort (`S.settings.hudOff`, som «Vis HUD» av i innstillingene) så de ikke dekker båten. Verktøyet skriver ut hva hvert klipp viste: hendelsene på dekk (`G3._debug.dk.n`: hugget, plukket, jukset opp, bløgget), stasjonene til hver i mannskapet (`CREW3D.agents()`), skaden på skroget, og klippesjekken fra `crewclip` (`clipNow`: armer og bein i stillingen mot modellen, `bodyHits`: kroppen på veien, og om noen står utenfor dekket).
 - **SwiftShader tegner under ett bilde i sekundet.** Siden går derfor på en sakte klokke (alle klokkene i siden, `performance.now`, `Date`, tidtakerne og `requestAnimationFrame`, går på 0,12–0,15 av ekte tid), og videoen spilles fort fram igjen. Klippene har spillets eget tempo, men bare 3–5 bilder i sekundet. Bevegelsene og plassene kan vurderes, ikke bildetakten.
+- **Ingen videoopptak** (Jonas 09.11.2026: «Ny regel: Ikke ta videoopptak. Kvaliteten er alt for dårlig og hakkete. Jeg kan sende deg klipp fortsatt.»): `tests/ombord.py` tar bare bildene (standard fra OB1; `--video` skal ikke brukes). Klippene som trengs, sender Jonas.
 - **Bildene, ikke videoene, går til Jonas.** Jonas 09.11.2026: «Du trenger ikke sende de videoene. De er alt for hakkete uansett. Men send meg gjerne bilder, men sørg for å minimere kartet og statusboksen så de ikke dekker over båten i bildet.» Videoene brukes bare i revisjonen (sammendragsark med seks bilder per klipp) og ligger ikke i git; skjermbildene ligger som jpeg i `docs/okter/2026-11-09-ob0/`.
 - **Lesingen:** grunnlagene og byggefilene for hver båt i `docs/skipsmodeller/`, kartleggingen, planlisten, `batplan.md` kap. 8 og 10, `grafikk-batmodeller.md`, systemdokumentene og koden for operasjonene (`core/10-gear.js`, `core/13-work.js`, `deckcrew.js`, `view3d/09`, `10`, `12`, `13`, `15`, `20`). Fil og linje står ved funnene.
 - **Hva en fisker gjør:** kildene er grunnlagene og planlisten i `docs/skipsmodeller/` (referansebåtene i `referanseanalyse-runde-2.md`, planlistens SJK-, LIN-, GRN- og TEI-punkter), Mattilsynets side om bløgging og sløying (bløgging straks, sløying snarest mulig etter utblødingen, fisk som skal bløgges skal også sløyes, med unntak; https://www.mattilsynet.no/mat-og-drikke/matproduksjon/fisk-og-sjomat/regler-ved-fiske-landing-og-omsetning-av-fisk/blogging-og-sloying) og det som er alminnelig kjent om kystfisket. Der en kilde mangler, står det.
@@ -111,6 +112,8 @@ Data: 7,0 m, 1,9 t, én i mannskapet og deg, ingen køyer, ett fangstkar på 500
 **Jonas 09.11.2026, etter bildene av teinene:** «Jeg tror ikke den trebåten skal kunne holde på med krabbeteiner. Det har den åpenbart ikke plass til. Det må i så fall oppdateres i databladet til båten og gjøres slik at spillere ikke kan kjøpe det til den båten heller.» Det betyr: `teiner` ut av `VESSELS.trebat.rigs` (databladet og båtbladet på verftet sier det), og teinehaleren, krabbekaret, teinene og agnet for teiner kan ikke kjøpes til trebåten (regelen i `equipFits` og `buyGate`, så både kjøpet og knappene følger, etter CLAUDE.md «Én logikk i alle kjøpssystemer»). En spiller som alt har teinehaler eller teiner på trebåten, mister ikke pengene: teinene blir liggende på lageret i naustet til en båt de passer på (eller selges tilbake), og haleren går av ved neste verftsbesøk med prisen tilbake som ved innbytte. Bygges først i OB1. Skiffen har samme problem (valg 23).
 
 Karakteren (forslag, skalaen i kap. 2): K1 3, K2 15, K3 13, K4 4, K5 8, K6 6 (teinene gjennom skroget, de to inni hverandre ved karet, settingen uten folk), K7 8, K8 6 = **63**. Det som løfter mest: bilder med kjent lengde (K1), teinene og haleren der fiskeren arbeider (K6), og Jonas' gjennomgang uten nye funn (K8).
+
+**OB1 (09.11.2026, Jonas' økt, grenen `ccr-e474ac41-zlir5x`):** teinene er ute (`rigs`, `fit.rig`, `potsUnfit`; skiffen likt), garnet trekkes for hånd (`handGear`); stampene, garnbinga og frakten står på dørken akter; linehaleren står på stolpen rett forut for fiskeren (`haulFoot`); juksahjulet er en modell etter Jonas' bilde (`tools/gear/vinde.py`); settingen går over styrbord låring med skipperen ved rorkulten og den andre ved stampene; ved trekket legger den andre lina i stampen; skipperen tar tauene selv ved kaia og naustet; de to ved karet står ikke i hverandre (`work.mate`). Funnene i tabellen over med alvor A er rettet, så nær som fenderne og tauene selv (`15-env-mooring.js`, OB2) og skroget (+11 %, venter på bildene etter valg 22 B). Bildene før og etter i `docs/okter/2026-11-09-ob1/`; karakteren etter Jonas' skala som forslag i `trebat-grunnlag.md` kap. 8.3. Jonas setter karakteren.
 
 ### 4.2 Skiffen (`skiff`, `skiff59.py`): forslag 57/100
 
@@ -438,6 +441,23 @@ Bilder til Jonas:
 - /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/kyst21/juksa_sloy_liggende_3.jpg
 - /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/kyst21/felles_kran_liggende_2.jpg
 
+### 4.11 Etter OB2 (09.11.2026): arbeidsflyten med fortøyningen, forslag
+
+OB2 (steg 80, grenen `ccr-a9ccd5ec-it307t`) rettet F1, F2 og F3 for alle båtene med mannskap: fenderne henges ut av hendene på vei inn, tauene kastes fra der hånden står, skipperen står ved roret til hun ligger, og ingen går inn før tauene og fenderne er inne og tauene kveilet (5.19c i `docs/systemer/folk-om-bord.md`). F22 (siden mot kaia) er flyttet til OB4. De andre A-funnene står, så K6 holdes under taket på rundt 60 %; forslaget er ett poeng opp på K6 (skalaen fra revisjonen, 15 poeng) for hver av dem. **Jonas setter karakteren.**
+
+| Båt | K6 før | K6 forslag | Sum før | Sum forslag | Det som fortsatt holder K6 nede |
+|---|---|---|---|---|---|
+| `snekke` | 8 | 9 | 67 | 68 | juksaplass 2 i hardtopstolpen, teinene gjennom karet og folkene |
+| `plastsjark` | 7 | 8 | 63 | 64 | redskapet gjennom styrhuset, teinene, juksa i klump |
+| `sjark` | 7 | 8 | 61 | 62 | de to ved sløyebordet inni hverandre, teinene og garnet gjennom redskapsrommet |
+| `hurtigsjark` | 8 | 9 | 59 | 60 | teinestabelen over akterdekket |
+| `sjarkny` | 7 | 8 | 66 | 67 | to og to inni hverandre, teinestabelen over benken |
+| `breisjark` | 7 | 8 | 68 | 69 | ingen ved haleren (F24), teinestabelen, sorteringen |
+| `kyst15` | 7 | 8 | 71 | 72 | sløyingen usynlig (F18), ingen ved haleren (F24) |
+| `kyst21` | 7 | 8 | 48 | 49 | F24, F19, ikke revidert |
+
+Trebåten og skiffen har faste figurer og tas i OB1 og OB5. Det OB2 fant om båtene: på breisjarken, kyst15, kyst21 og de to hurtigsjarkene er foredekket ved baugklampen ikke i dekkskartet, så baugtampen og fenderen forut tas fra den forreste plassen ved skutesida mannskapet kan stå på (2,5–6 m akter for klampen i modellen; tauet føres derfra). Om foredekket skal kunne gås på, hører til båtfasene OB9–OB13.
+
 ## 5. Båten i sjøen
 
 Regnet i spillet uten 3D 09.11.2026 med `stabOf` (`core/03c-stability.js`), tom båt og med fullt rom eller kar (`holdCap`), uten redskap på dekk. Hiv og stamp i 3D kommer fra skrogsnittene i F2 (`hullSections`, `hullRest`, `hullStep`), rullet fra `stabOf`. Målt i sjø før (`fysikk-og-styring.md`, F2): sjarken ruller 11,5° signifikant i 3,45 m tverrsjø og stamper 9° i 6,1 m motsjø i 8,5 knop; skiffen stamper 4,6° i 2,7 m krapp sjø i 18 knop.
@@ -467,6 +487,35 @@ Funnene:
 
 Ikke målt: trim, rull og slag med last i sjø i 3D (F2 måler bare tom sjark og skiff, `tests/hull3d.py`). OB-fasene som rører en båt, kjører `hull3d` for den med fullt rom.
 
+### 5.1 Trim, slagside og mannskapets vekt (OB15, 09.11.2026, Jonas' økt, grenen `ccr-4660a71b-kidfna`)
+
+S1–S3 er bygd. Lasten har fått plassen sin om bord, lest av modellenes ankre 09.11.2026 (`STAB_AT` i `core/03c-stability.js`, i modellens ramme: luka eller kassene på dørken, garnet, stampene, karene ved bordet, bordet, haleren, roret, plassen ved ripa på håndbåtene, arbeidsdekket for teinene). `stabOf` regner nå slagsiden (lastens moment på tvers over D·GM) og trimmen (likevekten til skrogsnittene med tyngdepunktet der lasten står, `hullRest(H, D, zG)`), og `stabLoad` gir folkene om bord med stasjonene sine (90 kg hver, 0,9 m over dekket de står på) og trekket i haleren (`stabPull`). 3D følger kjernen: skrogsnittene hviler med kjernens trim, og rullen har slagsiden i målet sitt (`view3d/16-motion.js`). Ingenting regnes i 3D alene, så verden er den samme med skjermen av.
+
+Regnet uten 3D, skipperen ved roret i alle kolonnene; trim akter positiv, slagside mot styrbord positiv (bb = mot babord). «Line» og «garn»: trekket fra 80 m med én (line) eller to (garn) ved haleren; «jukse»: én ved ripa og ingen ved roret; «kar»: fisk som venter i karet ved bordet (10 % av rommet, høyst 300 kg).
+
+| Båt | Tom: trim / slagside | Fullt rom: trim / slagside | Line: trekk kg / slagside | Garn: trekk kg / slagside | Jukse: slagside | Kar: kg / slagside | Fribord akter, fullt (m) |
+|---|---|---|---|---|---|---|---|
+| skiff | 0,2° / 0,0° | −4,9° (nesa) / 0,0° | 35 / 2,1° | 35 / 3,1° | 1,1° | 50 / 1,0° bb | 0,64 |
+| trebat | 0,4° / 2,0° bb | −1,6° / 1,5° bb | 67 / 4,7° | 67 / 7,5° | 2,5° | 50 / 0,4° bb | 0,60 |
+| snekke | 0,1° / 1,8° | 1,0° / 1,3° | 98 / 7,9° | 105 / 10,6° | 2,3° | 100 / 1,9° | 0,50 |
+| plastsjark | 0,1° / 0,7° | −1,4° / 0,4° | 98 / 4,1° | 148 / 6,6° | 1,3° | 300 / 6,0° | 0,57 |
+| sjark | −0,1° / 0,3° | 0,6° / 0,1° | 98 / 2,2° | 148 / 3,6° | 0,7° | 300 / 2,9° | 0,45 |
+| hurtigsjark | −0,1° / 0,3° | 1,2° / 0,2° | 98 / 2,5° | 148 / 4,2° | 0,9° | 300 / 3,5° | 0,49 |
+| sjarkny | −0,1° / 0,3° | 2,0° / 0,2° | 98 / 1,5° | 148 / 2,3° | 0,5° | 300 / 2,1° | 0,42 |
+| breisjark | −0,1° / 0,2° | −1,4° / 0,1° | 98 / 1,6° | 148 / 2,6° | 0,5° | 300 / 2,1° | 0,47 |
+| kyst15 | 0,0° / 0,1° | 0,0° / 0,0° | 98 / 0,5° | 148 / 0,8° | 0,2° | 300 / 0,7° | 0,43 |
+| kyst21 | 0,0° / 0,0° | −2,0° / 0,0° | 98 / 0,2° | 148 / 0,3° | 0,1° | 300 / 0,3° | 0,77 |
+
+Uten noen om bord ligger alle på rett kjøl og uten slagside (enhetstesten). Det som er antatt (C):
+
+- **Rommets tyngdepunkt** er tatt midt mellom luka og midten av båten: luka er bare åpningen, rommet går under dekket mot midtskips, og modellene har ikke rommet (CLAUDE.md, bare utsiden). Med luka selv som tyngdepunkt ville havsjarken trimme 2,5° akter fullastet og den nye hurtigsjarken 5,6°. Én linje i `stabPlaces`.
+- **Den tomme båten ligger på rett kjøl**, som før: konstruktøren har lagt motor, tanker og ballast slik. Ekte båter er ofte balansert for halv last i stedet; da ville trimmen fullastet vært omtrent halvparten.
+- **Kassene på skiffen og trebåten** står forut der modellene tegner dem (`kit.cargo`), så fullt gir 4,9° og 1,6° på nesa. En fisker ville stuet dem nærmere midten; det hører til OB1 og OB5 å flytte kassene i modellen om Jonas vil det, ikke til fysikken.
+- **Trekket i haleren** er anslått, ikke målt: line 50 kg, garn 100, teiner 70 (snøkrabbe 60), 0,6 kg per meter dyp og halve fangsten på stykket som er i skiva, høyst 35 kg per tonn båt (håndbåtene trekker for hånd). På snekka (3 t, GM 0,62) gir det 8–11° under trekket, der det meste er folkene ved haleren om styrbord.
+- **Folkene på dekkede båter** står på plassen for stasjonen sin (`c.st`, `S.mySt`), ikke der figuren i 3D går (`deckcrew.js` leses ikke, OB2 eier den): krengningen flytter seg når noen bytter stasjon, og rullen i 3D glir over dit.
+
+Hva tallene gjør med S4 og S5: fullastet trimmer de fleste sjarkene akter, så fribordet akter blir 1–8 cm lavere enn det jevne (sjarkny 0,42 mot 0,50 m); dekkskantvinkelen er fortsatt regnet for det jevne fribordet (S4 står). Skiffen er fortsatt stiv (S5): én om bord tar GM fra 2,09 til 1,94 m og gir 1,1° ved ripa, mot trebåtens 2,5°. Slagsiden legges til vindkrengningen i varslene (`motionAt`), så en båt som ruller nær grensen under trekket, varsles tidligere enn før.
+
 ## 6. Fasene
 
 Én båt per økt, eller én operasjon på tvers av båtene der koden er felles. Trebåten først (startbåten, alle spillerne ser den første uka), så det felles arbeidet som ses hver tur, så båtene i stigens rekkefølge. Hver fase:
@@ -481,7 +530,7 @@ Ikke målt: trim, rull og slag med last i sjø i 3D (F2 måler bare tom sjark og
 | **OB1** | **Trebåten til 75:** først Jonas' avgjørelse 09.11.2026 (ingen teiner på trebåten, og skiffen likt, valg 23 A: `rigs`, databladet, `equipFits`/`buyGate`, og teinene og haleren spillere alt har); så skroget og vekta (`disp` etter valg 18), utstyret der fiskeren arbeider: liten haler og juksavinde som modeller (U4), garn trukket for hånd over ripa (valg 21 B), plassene for garn, stamper og last på dørken i stedet for 0,74 m over den, settingen for hånd (F5), fortøyningen ved naustet med skipperen selv (F1 for håndbåtene), og det klippene viser i 4.1 | 4.1, F1, F5, F6, F7 | `core/02-species-gear.js` (`VESSELS.trebat.rigs`, `EQUIP` `fit`), `core/10-gear.js` (`buyGate`), `ui/11-boot.js` (lagringene med teiner på trebåten), `tools/boats/snekke23.py`, `tools/gear/` (haleren), `src/data/*.b64` (trebat), malen, `view3d/12-skiff.js`, `13-instruments.js` (`drawSkiff`), `10-gear.js` (`drawPotsAboard`, `drawPots`), `docs/skipsmodeller/trebat-grunnlag.md` | `ombord.py trebat`, `node tests/unit/run.mjs` (en ny sjekk for regelen), `geartest`, `shoptest`, `itemcardtest`, `vesseltest`, `deckshot` (`KYST_DECK=trebat`), `brotest`, `jigshot`, `animshot`, `hull3d` |
 | **OB2** | **Fortøye og kaste loss med folk** (alle båtene med mannskap): fenderne ut før kaia, springen og tauene tatt av én på dekk og én som går i land eller kaster til kaia, inn igjen og kveilet ved kasting; skipperen ved roret til hun ligger (F3); ingen inn døra før tauene er inne (F2); siden mot kaia etter kaia og arbeidet, kranen mot kaia (F22) | F1, F2, F3, F22 | `view3d/15-env-mooring.js`, `deckcrew.js`, `core/13-work.js` (stasjonene `fort`, `ror` i havn), `core/05-vessels.js` (`dock` venter på 3D) | `ombord.py <tre båter> --ops kast,inn`, `docktest`, `berth3d`, `crewwalk`, `crewclip`, `walktest` |
 | **OB3** | **Setting og redskapet om bord** (alle): én akter ved stampen eller binga under setting, ankeret og blåsa kastet, de andre ikke i trekkestilling (F4); stampene og garnet i det antallet som er om bord (D3, D4, F8); teinestablene og teina som settes ned på en ledig flate, ikke oppå karene og folkene (F7, `potDeck`); juksaplassene og maskinene der fiskeren står fritt ved ripa, ikke i stolper, tak eller livbøya; `crewclip` utvidet til alle plassene i alle stillingene, sett rød på snekka først (F15); den andre ved bordet og karet på sin egen plass (F19); redskapet ut der dekket er åpent, ikke gjennom huset (F20); juksaplassene fordelt på begge sider (F21); den som haler og den som bløgger blir stående ved haleren også når den står høyt over dekket (F24, grensen på 1,2 m i `deckcrew.js:190`) | F4, F7, F8, F15, F19–F21, F24 | `view3d/10-gear.js` (`drawSetting`, `potDeck`), `09-landing-deck.js` (stampene, garnet), `13-instruments.js` (`jigRail`), `core/13-work.js` (stasjonen `sett`), `deckcrew.js`, `tests/crewclip.py` | `ombord.py <tre båter> --ops sett,jig,maskin,trekk`, `deckshot`, `workshot`, `crewclip`, `jigshot` |
-| **OB4** | **Lossing og is:** én i rommet eller ved karene, én ved luka som gir tegn, båtens egen kran der hun har en, med én som kjører den og lasten i kroken; is om bord tatt imot (F10, F11, F23) | F10, F11, F23 | `view3d/09-landing-deck.js` (`landScene`, `deckActivity`), `deckcrew.js`, `core/07-harbours.js` (bare stasjonene) | `ombord.py <tre båter> --ops loss`, `landtest`, `deckshot` |
+| **OB4** | **Lossing og is:** én i rommet eller ved karene, én ved luka som gir tegn, båtens egen kran der hun har en, med én som kjører den og lasten i kroken; is om bord tatt imot (F10, F11, F23); og siden mot kaia etter kaia og arbeidet, kranen mot kaia (F22, flyttet fra OB2: `berthPose` velger siden, og lossingen og bunkringen i 3D leser den; fortøyningen leser alt `bp.side`) | F10, F11, F22, F23 | `view3d/09-landing-deck.js` (`landScene`, `deckActivity`), `view3d/11-bunker.js`, `deckcrew.js`, `core/07-harbours.js` (stasjonene og `berthPose`) | `ombord.py <tre båter> --ops loss`, `landtest`, `deckshot`, `moortest`, `berth3d`, `/stikkprove` |
 | **OB5** | **Skiffen til 75:** vekta (+60 %, `disp` tom båt), 90 hk-motoren (D6), garn trukket for hånd (valg 21 B), det klippene viser i 4.2 | 4.2 | `tools/boats/skiff59.py`, `src/data/*.b64`, `view3d/12-skiff.js` | som OB1 for `skiff` |
 | **OB6** | **Snekka til 75** | 4.3 | `tools/boats/snekke26.py`, `src/data/*.b64` | som OB1 for `snekke` |
 | **OB7** | **Plastsjarken til 75, ny arbeidsplan** (Jonas, valg 20: «Dette er kanskje den svakeste båten vi har. Du får frie tøyler til å lage en realistisk fiskebåt.» Styrhusets plass og arbeidsdekket etter ekte plastsjarker av typen, med bildene vist Jonas før modellen endres) | 4.4 | `tools/boats/plast31.py` | som OB1 |
@@ -523,4 +572,6 @@ Jonas svarte på alle 09.11.2026 (også under «Valg som venter på Jonas» i `d
 ## 9. Status
 
 - 09.11.2026: **OB0 ferdig** (Jonas' økt, gren `ccr-59f8e7e6-m00yni`). Alle ti båtene tatt opp liggende med alle operasjonene, stående med juksa og linetrekket (trebåten med alle), innseilingen og lossingen tatt på nytt. Ingenting i `src/` er endret. Neste: OB1 (trebåten), som venter på valg 17, 18, 21, 22 og 23, (H3d2 og Ø8b S2 ble rullet ut samme natt); OB2 og OB15 er klare.
-
+- 09.11.2026: **OB2 rullet ut** (Jonas' økt, gren `ccr-a9ccd5ec-it307t`, 7d2404bd, versjon e5e171f41fc3): F1, F2 og F3 rettet for alle båtene med mannskap; F22 flyttet til OB4. Forslagene til K6 i 4.11.
+- 09.11.2026: **OB15 ferdig** (Jonas' økt, gren `ccr-4660a71b-kidfna`, PR #52, rullet ut i ec54eb3, versjon 5b8c411a4cd9): trim etter hvor lasten står, slagside fra haleren, karene og folkene, mannskapets vekt (S1–S3). Tabellen og det antatte i 5.1; S4 og S5 står (C). Skjermbildene i `docs/okter/2026-11-09-ob15/`.
+- 09.11.2026: **OB1 bygd** (Jonas' økt, gren `ccr-e474ac41-zlir5x`): 4.1 over. `tests/ombord.py --bilder` tar bare bildene (Jonas: «Du trenger ikke å ta videoklipp av båten, det holder med bilder»). Neste på sporet: OB5 (skiffen, `docs/planer/start/83.md`).

@@ -31,6 +31,8 @@ const STATIONS = {
   mend:{no:'Bøting', en:'Mending', ing:['Bøter garn', 'Mending nets'], skill:'garn'},
   stell:{no:'Vedlikehold', en:'Upkeep', ing:['Steller redskap', 'Gear upkeep']},
   last:{no:'Last', en:'Cargo', ing:['Laster', 'Handling cargo']},
+  // the lines and the fenders round a quay (OB2, 05-vessels.js moorPhase): what is said is by the spell (workDoing, MOOR_ING)
+  fort:{no:'Fortøyning', en:'Mooring', ing:['Fortøyer', 'Making fast']},
   pause:{no:'Pause', en:'Break', ing:['Pause', 'On a break']}
 };
 const WORK_ST = ['ror', 'fiske', 'haling', 'blogg', 'sort', 'sloy', 'is', 'kokk'];
@@ -39,7 +41,7 @@ const JOB_ST = {egn:'egn', strip:'strip', mend:'mend', hk:'stell', lr:'stell', p
 const JOB_SKILL = {egn:'line', strip:'line', hk:'line', lr:'line', mend:'garn', pr:'teiner', jg:'juksa'};
 const WORK_ALL = WORK_ST.concat(['egn', 'strip', 'mend', 'stell', 'last']);   // (the minutes of work that tire and teach, workMinute)
 // the stations whose work is heavy, and how heavy: a tired person leaves them to the others first
-const HEAVY_ST = {haling:1, last:1, sloy:0.5, is:0.6, fiske:0.4, sort:0.3, blogg:0.3, egn:0.2, strip:0.2, mend:0.2, stell:0.2};
+const HEAVY_ST = {haling:1, last:1, fort:0.5, sloy:0.5, is:0.6, fiske:0.4, sort:0.3, blogg:0.3, egn:0.2, strip:0.2, mend:0.2, stell:0.2};
 // the catch is bled, gutted and iced, the trade's way; S.settings.gut and .ice set to false leave it round or uniced (the tests)
 // (H3b) the snow crab vessel's factory always splits its crab into clusters (10e-krabbefabrikk.js), whatever the setting for the fish.
 // The first trip lands round (Jonas 08.11.2026: «Hva om nye brukere som åpner spillet ikke sløyer fisken første turen, men heller leverer
@@ -102,7 +104,7 @@ function restScore(p){
 }
 // why a person stands where they do, said on the Mannskap page: the strongest reason
 const WORK_WHY = {skipper:['skipperen', 'the skipper'], mate:['styrmannen har roret', 'the mate has the helm'], opsk:['har roret', 'has the helm'], seaman:['den mest sjøvante har roret', 'the best seaman has the helm'],
-  role:['det er den faste plassen', 'it is their regular place'], habit:['er vant med det', 'is used to it'], skill:['er flinkest til det', 'is best at it'], learn:['vil lære det', 'wants to learn it'],
+  moor:['tauene og fenderne', 'the lines and the fenders'], role:['det er den faste plassen', 'it is their regular place'], habit:['er vant med det', 'is used to it'], skill:['er flinkest til det', 'is best at it'], learn:['vil lære det', 'wants to learn it'],
   need:['det hoper seg opp', 'it is piling up'], stop:['alle tar i på dekk', 'all hands on deck'], cook:['det er snart mat', 'a meal is due'], tired:['er sliten', 'is tired'],
   rest:['tar en pust i bakken', 'takes a breather'], nowork:['ingenting å gjøre akkurat nå', 'nothing to do just now'], aground:['båten sitter fast', 'the boat is aground']};
 const workWhyText = p => { const w = WORK_WHY[p.why]; return w ? w[S.lang === 'no' ? 0 : 1] : ''; };
@@ -122,6 +124,7 @@ function stPlaces(st, ctx){
   const T = (BOAT.stations && BOAT.stations.table) || 1;
   if (st === 'haling') return haulPlaces() + (ctx.gk === 'line' ? 0 : 1);
   if (st === 'blogg' || st === 'ror' || st === 'kokk') return 1;
+  if (st === 'fort') return ((VESSELS[S.boat.type] || {}).len || 0) >= 10 ? 2 : 1;   // (one on the lines and the fenders on a small boat, two from 10 m: one aft and one forward)
   if (st === 'sloy' || st === 'sort') return T;
   if (st === 'is') return T >= 3 ? 2 : 1;
   return Infinity;   // fishing at the rail, a break
@@ -135,7 +138,9 @@ function workCtx(as){
   const deck = s !== 'aground' && pend > 0.5, gk = g ? g.kind : null;
   // the icing station packs what is gutted into the crate or the tub and ices it as it comes from the table, so it has work while anything is
   // on its way to it (the gutted fish, and the round fish waiting for the knife)
-  return {s, stop, ror:s === 'sailing' || s === 'unmooring' || s === 'engine', fiske:s === 'fishing' && !g && !stop, haling:!!g && !stop, gk,
+  // (round a quay, OB2: the helm is held until she lies made fast, and the lines and the fenders have their hands; 05-vessels.js moorPhase)
+  const mp = as === 'fishing' || typeof moorPhase !== 'function' ? null : moorPhase(b);
+  return {s, stop, mp, fort:!!mp, ror:s === 'sailing' || s === 'unmooring' || s === 'engine' || mp === 'in' || mp === 'lines' || mp === 'out', fiske:s === 'fishing' && !g && !stop, haling:!!g && !stop, gk,
     blogg:!!g && g.op === 'haul' && gk !== 'teine' && !stop && s !== 'aground', gutKg:cg ? gut : 0, iceKg:icing ? gut + ice : 0,
     sort:!!g && gk === 'teine' && g.op === 'haul', hands:g && gk === 'garn' && g.op === 'haul' ? 2 : 1, sloy:deck && gut > 0.01, is:deck && icing && (ice > 0.01 || gut > 0.01), iceNow:icing ? ice : 0, kokk:as !== 'fishing' && mealDue(), pause:true};
 }
@@ -205,6 +210,10 @@ function workAssign(as){
   // the cook who has started the meal stays at the stove until it is served (14-crewlife.js mealMinute; before, the deck could take her
   // to the table between two minutes, another started over, and the meal came late: mannskapshot.py)
   if (ctx.kokk){ const M = mealState(), ck = M.cook && P.find(p => p.c && p.c.id === M.cook.id && !p.st && pTired(p) < 0.85); if (ck) put(ck, 'kokk', 'cook'); }
+  // the lines and the fenders round a quay (OB2, F1-F3): before any other work (the cook at the stove stays there), the hands for them; alone aboard you leave the helm to
+  // make her fast once she lies alongside, and cast her off before you take the helm (on the way in and out you are at the helm)
+  if (ctx.fort){ while (cnt('fort') < stPlaces('fort', ctx)){ const L = free(); if (!L.length) break; put(bestOf(L, 'fort'), 'fort', 'moor'); }
+    if (!cnt('fort') && (ctx.mp === 'lines' || ctx.mp === 'out')){ const r = P.find(p => p.st === 'ror' && !p.c); if (r) put(r, 'fort', 'moor'); } }
   // the work waiting at each station, in one person's minutes, and the crew's own jobs on the gear
   const left = {sloy:ctx.gutKg / gutPace(), is:ctx.iceKg / DECK.ice, blogg:ctx.blogg ? 30 : 0, haling:ctx.haling && ctx.gk !== 'teine' ? 20 : 0, sort:ctx.sort ? 10 : 0};
   const jobs = jobsOpen(as), jn = new Map(jobs.map(j => [j, 0]));
@@ -291,6 +300,7 @@ function idleWeights(p, ctx, E, mates){
   const port = ctx.s === 'port', under = ctx.ror, closed = !E.open;
   if (ctx.s === 'aground'){ add('worry', 5); add('back', 2); add('look', 2); return w; }
   if (c && c.traits.includes('sjosyk') && E.hs > 1.2 && !port){ add('seasick', 20); return w; }
+  if (ctx.mp && (ctx.mp !== 'lines' || closed)){ if (closed) add('inside', 6); else { add('look', 3); add('sit', 2); } return w; }   // (round a quay, OB2 F3: no break on deck while she moves)
   if (under && closed){
     // under way on a boat with a house: inside; asleep in a bunk when tired; a smoker out aft in fair weather
     add('inside', 6 + (has('makelig') ? 2 : 0)); if (c && E.bunks) add('sleep', 8 * f); if (vice === 'smoke' && E.W < 10 && E.hs < 1.2) add('smoke', 3); return w; }
@@ -328,7 +338,10 @@ function idleText(p){
   return t;
 }
 // what a person does, for the work page: the station's word, or the part of it at the hauler
-function workDoing(p){ const no = S.lang === 'no'; if (p.role === 'plukk') return no ? 'Plukker og bløgger' : 'Picking and bleeding'; if (p.role === 'teine') return no ? 'Tømmer og egner teiner' : 'Emptying and baiting pots';
+const MOOR_ING = {prep:['Henger ut fenderne', 'Putting the fenders out'], in:['Gjør klar tauene', 'Getting the lines ready'], lines:['Fortøyer', 'Making fast'],
+  out:['Kaster loss', 'Casting off'], stow:['Tar inn fenderne og kveiler tauene', 'Fenders in, coiling the lines']};
+function workDoing(p){ const no = S.lang === 'no';
+  if (p.st === 'fort'){ const m = MOOR_ING[typeof moorPhase === 'function' && moorPhase()]; if (m) return m[no ? 0 : 1]; } if (p.role === 'plukk') return no ? 'Plukker og bløgger' : 'Picking and bleeding'; if (p.role === 'teine') return no ? 'Tømmer og egner teiner' : 'Emptying and baiting pots';
   if (p.st === 'pause' && p.idle){ const t = idleText(p); if (t) return t; }
   if (snoVessel() && (p.st === 'sloy' || p.st === 'is')) return p.st === 'sloy' ? (no ? 'Deler krabben i klør' : 'Splitting the crab into clusters') : (no ? 'Koker, fryser og pakker klør' : 'Cooking, freezing and packing clusters');   // the snow crab factory (H3b)
   if (p.st === 'is' && holdFreezes()) return no ? 'Pakker og fryser' : 'Packing and freezing';   // a freezer hold (05-vessels.js)

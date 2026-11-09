@@ -12,8 +12,12 @@ the ground had a metre of the April swell with the wind at 0.3 m/s). Checks:
   5. the skiff at 18 knots in a short, steep sea (10 m/s against her) slams; in calm water at the same speed she never does;
   6. nothing goes NaN, no page errors; and what the sea at the sections costs a frame (G3._debug.bv.hsea.ms).
   7. (F3b) the slam leaves foam in the foam map, where it beats the water round the forefoot and where its sheet lands.
+  8. (OB15) with the hold full, the skiff, the trebåt and the sjark lie in still water at the trim and list the core reckons (stabOf,
+     ± 0.3°): the sjark by the stern (the hold aft), the trebåt and the skiff by the head (the boxes forward);
+  9. (OB15) hauling a line on the sjark she heels towards the hauler on the starboard rail, as the core reckons (± 0.3°).
 Pictures (tests/out/hull3d_*.png, both formats): the sjark in head sea, her stern in a following sea, the slam's spray, and the foam
-it leaves (skum)."""
+it leaves (skum); (OB15) the sjark with the hold full in still water and hauling the line (40 % in the hold), from the side, the chart and the status box
+folded (hull3d_ob15_full_*, hull3d_ob15_haul_*)."""
 import asyncio, json, math, os
 from playwright.async_api import async_playwright
 from _env import GAME, boot
@@ -48,8 +52,17 @@ RUN = """(o) => { const D = G3._debug, b = S.boat, HS = D.bv.hsea;
   const cr = []; for (let i = 1; i < rec.y.length; i++){ const a = rec.y[i - 1] - rec.y[rec.y.length - 1], c = rec.y[i] - rec.y[rec.y.length - 1]; if (a < 0 !== c < 0) cr.push(i); }
   const inc = (S.incidents || []).filter(x => x.k === 'slam');
   return {type:o.type, force:o.force, hs:+hs.toFixed(2), heave:+(4 * sd(rec.y)).toFixed(2), pitch:+(2 * sd(rec.p) * 180 / Math.PI).toFixed(2), roll:+(2 * sd(rec.r) * 180 / Math.PI).toFixed(2),
-    yMean:+m(rec.y).toFixed(3), pMean:+(m(rec.p) * 180 / Math.PI).toFixed(2), last:+rec.y[rec.y.length - 1].toFixed(3), T1:cr.length > 2 ? +((cr[2] - cr[0]) / 30).toFixed(2) : null, Tz:+stabOf(o.type, {hold:0, deck:0, gear:0}).Tz.toFixed(2),
+    yMean:+m(rec.y).toFixed(3), pMean:+(m(rec.p) * 180 / Math.PI).toFixed(2), rMean:+(m(rec.r) * 180 / Math.PI).toFixed(2), last:+rec.y[rec.y.length - 1].toFixed(3), T1:cr.length > 2 ? +((cr[2] - cr[0]) / 30).toFixed(2) : null, Tz:+stabOf(o.type, {hold:0, deck:0, gear:0}).Tz.toFixed(2),
     slams:HS.n - n0, green, incSlam:inc.length ? inc[inc.length - 1].n : 0, fin:rec.y.concat(rec.p, rec.r).every(Number.isFinite), ms:+HS.ms.toFixed(3)}; }"""
+# (OB15) the load: the hold full (gutted and iced, so nothing waits on deck), nobody but you aboard at the helm, no gear on deck; or hauling
+# a line with the hold 40 % full (four tubs of bank line set on the ground, the haul begun, you at the hauler); the core's trim and list for what is aboard
+LOAD = """(o) => { const b = S.boat; if (b.type !== o.type){ b.type = o.type; applyVessel(); G3.vesselChanged(); }
+  S.crew = []; S.me = S.cur; S.mySt = null; S.sets = []; S.pgear = newPGear(); b.gop = null; S.jobs = [];
+  S.hold = o.full ? [{sp:'torsk', kg:Math.round(VESSELS[o.type].holdCap * (o.haul ? 0.4 : 1)), gut:true, iced:true}] : [];   // (a full hold stops the haul: 40 % in it while hauling)
+  if (o.haul){ const g = GROUNDS[0].p; S.equip.linehaler = true; S.pgear.lines.bank = {n:4, baited:4}; S.pgear.kits.n = 2; b.rig = 'line'; b.status = 'idle'; b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 1.2;
+    const m0 = S.mult; S.mult = 1; startSet('line', {lk:'bank', n:4}, 0); for (let i = 0; i < 600 && b.gop; i++) step(); b.status = 'idle';
+    const s = S.sets.find(x => x.kind === 'line'); b.pos = {...s.a}; startHaul(s.id); for (let i = 0; i < 4; i++) step(); S.mult = m0; S.mySt = 'haling'; }
+  const St = stabOf(o.type); return {trim:+(St.trim * 180 / Math.PI).toFixed(2), list:+(St.list * 180 / Math.PI).toFixed(2), pull:Math.round(stabLoad().pull), gop:b.gop ? b.gop.op : null}; }"""
 # the wind on the ground that gives a significant wave height near hs (m/s), found in the page
 FINDU = """(want) => { const D = G3._debug, b = S.boat, g = GROUNDS[0].p; let best = null;
   b.status = 'idle'; b.port = null; S.plan = null; b.pos = {x:g.x, y:g.y}; D.bv.init = false; D.stepBoat(1 / 30, 150, 0);   // (on the ground, not in the harbour)
@@ -96,6 +109,13 @@ async def main():
           // (the frame's dt is at most 0.1 s, and SwiftShader draws one every second or two: the sheet takes some ten frames to fall)
           const T0 = performance.now(); while (F.spn - n0 < 60 && performance.now() - T0 < 180000) await wait(2000); await wait(4000); const L = F.log; F.log = null;
           return {on:F.ok, pre, post:Math.max(0, ...L.map(r => r[5])), last:L.length ? L[L.length - 1][5] : 0, frames:L.length, drops:F.spn - n0, s:Math.round((performance.now() - T0) / 1000)}; }""", u6['U'])
+        # 8. and 9. (OB15) the load's place: still water, the hull drawn at the core's trim and list (the roll here: to port positive)
+        for ty in ('skiff', 'trebat', 'sjark'):
+            c = await pg.evaluate(LOAD, {'type': ty, 'full': True}); r = await pg.evaluate(RUN, {'type': ty, 'calm': True, 'U': 0.3, 'd': 315, 'rel': 90, 'kn': 0, 'T': 10, 'force': True})
+            R['full_' + ty] = {'core': c, 'pMean': r['pMean'], 'rMean': r['rMean'], 'yMean': r['yMean']}
+        c = await pg.evaluate(LOAD, {'type': 'sjark', 'full': True, 'haul': True}); r = await pg.evaluate(RUN, {'type': 'sjark', 'calm': True, 'U': 0.3, 'd': 315, 'rel': 90, 'kn': 0, 'T': 10, 'force': True})
+        R['haul_sjark'] = {'core': c, 'pMean': r['pMean'], 'rMean': r['rMean']}
+        await pg.evaluate(LOAD, {'type': 'sjark'})
         print(json.dumps(R, ensure_ascii=False))
         # the pictures: the sjark in head sea (from the bow quarter), her stern in a following sea, and the slam's spray; both formats.
         # SwiftShader draws a frame every second or two, and the waves run on the page's clock while the hull steps at most 0.1 s a frame,
@@ -119,6 +139,21 @@ async def main():
                 await pg.evaluate("G3.hold(true)")
                 f = f'hull3d_{name}_{fmt}.png'; await pg.screenshot(path=f, timeout=300000); shots.append(f)
                 await pg.evaluate("G3.hold(false)")
+        # (OB15) the sjark with the hold full in still water, and hauling the line, from her starboard side; the chart and the status box folded
+        await pg.evaluate("() => { S.settings.hudMin = true; S.settings.plotMin = true; renderHud(); }")
+        for name, haul in (('ob15_full', False), ('ob15_haul', True)):
+            for fmt, (w, h) in (('liggende', (1280, 800)), ('staaende', (800, 1280))):
+                await pg.set_viewport_size({'width': w, 'height': h})
+                await pg.evaluate(LOAD, {'type': 'sjark', 'full': True, 'haul': haul})
+                # (hauling: at the buoy, where the line goes down from the hauler, in the ground's calm; the full hold in the harbour's still water)
+                await pg.evaluate("""(haul) => { const D = G3._debug, b = S.boat, g = PORTS[0].p; if (!haul){ b.status = 'idle'; b.v = 0; b.pos = {x:g.x, y:g.y}; } b.port = null; S.plan = null; WX_FORCE = {w:0.3, d:315}; D.WV.init = false;
+                  D.waves(1 / 30, S.t / 60); D.bv.hsea.on = true; b.heading = 1.2; D.bv.init = false;
+                  const c = D.cam; c.helm = false; c.dist = 17; c.pitch = 0.05; c.yaw = Math.PI / 2; window.__p0 = performance.now(); }""", haul)
+                await pg.wait_for_function("performance.now() - window.__p0 > 4000", timeout=900000, polling=1000)
+                await pg.evaluate("G3.hold(true)")
+                f = f'hull3d_{name}_{fmt}.png'; await pg.screenshot(path=f, timeout=300000); shots.append(f)
+                await pg.evaluate("G3.hold(false)")
+        await pg.evaluate(LOAD, {'type': 'sjark'})
         print('pictures:', shots)
         cN, cO, d = R['calmNew'], R['calmOld'], R['drop']
         print(ok(abs(cN['yMean'] - cO['yMean']) < 0.05 and abs(cN['pMean']) < 0.3), 'the sjark in still water floats where the old following put her (± 5 cm) and level', {'new': cN['yMean'], 'old': cO['yMean'], 'pitch': cN['pMean']})
@@ -131,6 +166,11 @@ async def main():
         print(ok(sf['on'] and sf['drops'] > 20 and sf['post'] > sf['pre'] + 40 and sf['last'] > sf['pre'] + 20), 'the slam leaves foam in the foam map where it beats the water and where its sheet lands, and it lies there', sf)
         sC, s0 = R['skiffChop'], R['skiffCalm']
         print(ok(sC['slams'] >= 1 and s0['slams'] == 0), 'the skiff at 18 kn slams in a short steep sea (%.1f m), never in the still water of the harbour' % sC['hs'], {'slams/90 s': sC['slams'], 'calm': s0['slams'], 'pitch': [sC['pitch'], R['skiffOld']['pitch']]})
+        for ty in ('skiff', 'trebat', 'sjark'):
+            q = R['full_' + ty]; c = q['core']
+            print(ok(abs(q['pMean'] - c['trim']) < 0.3 and abs(q['rMean'] + c['list']) < 0.3 and (c['trim'] > 0.5 if ty == 'sjark' else c['trim'] < -0.5)), '(OB15) the %s with the hold full lies in still water at the core\'s trim and list (%s)' % (ty, 'by the stern, the hold aft' if ty == 'sjark' else 'by the head, the boxes forward'), q)
+        q = R['haul_sjark']; c = q['core']
+        print(ok(c['gop'] == 'haul' and c['pull'] > 50 and c['list'] > 1 and abs(q['rMean'] + c['list']) < 0.3), '(OB15) hauling the line the sjark heels towards the hauler on the starboard rail, as the core reckons', q)
         print(ok(all(R[k]['fin'] for k in R if isinstance(R[k], dict) and 'fin' in R[k]) and not errs), 'nothing goes NaN, no page errors', errs[:3])
         print('the sea at the sections: %.3f ms a frame (SwiftShader page)' % max(R[k]['ms'] for k in R if isinstance(R[k], dict) and 'ms' in R[k]))
         await b.close()

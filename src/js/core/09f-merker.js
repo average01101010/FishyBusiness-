@@ -114,6 +114,7 @@ function achCatch(sp, cls){ achFish(); achAdd('fishn'); if (sp === 'torsk' && cl
 function achMinute(){
   if (S.t % 10 === 0) achCheck();
   if (typeof kkMinute === 'function') kkMinute();   // Kystkartet: the statistical areas fished in (09m-kystkart.js)
+  harbourNote();   // the first time a boat fishes in a harbour basin (03-simulation.js, Ø8b S3)
   const b = S.boat; if (!meAboard() || b.status === 'port') return;
   const A = achState(), H = S.t / 60;
   if (!A.stormT && beaufort(windAt(H)) >= 6) A.stormT = 1;

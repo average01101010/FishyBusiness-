@@ -736,6 +736,7 @@ function vesselStep(H){
       // with the manoeuvring model running (the game open, 16b-dyn.js) she starts from the berth she lay at and backs out on the line
       const bp = typeof DYN !== 'undefined' && DYN.on && simRate() <= 12 && S.plan ? berthPose(pid, b.type || 'skiff', kind) || berthPose(pid, b.type || 'skiff') : null;
       if (bp){ b.pos = {x:bp.x, y:bp.y}; b.heading = bp.hd; DYN.dep = {bp, pid, naust:kind === 'naust'}; DYN.line = null; }
+      b.castT = S.t;   // (the fenders and the lines are taken in and coiled on her way out, moorPhase 'stow')
       helmCastDone(pid, kind); } return; }
   if (b.status === 'port'){ if (b.landWait && b.port === b.landWait && mottakOpen(H)){ const pid = b.landWait; b.landWait = null; opsLanded(pid); } return; }
   if (b.status === 'ptow'){ if (typeof ptowStep === 'function') ptowStep(); return; }   // towed by another player (ui/10o-ptow.js)
@@ -917,11 +918,34 @@ function unstuck(){
   if (S.rest) restEnd(true);
   if (typeof helmOff === 'function') helmOff();
   if (b.gop) gopAbort('return');
-  b.land = b.shift = b.fueling = b.after = null; b.landWait = null; b.tow = null; b.castUntil = null;
+  b.land = b.shift = b.fueling = b.after = null; b.landWait = null; b.tow = null; b.castUntil = null; b.castT = null;
   S.plan = null; b.anch = null; b.pos = {x:to.x, y:to.y}; b.status = 'idle'; b.port = null; b.v = 0; b.fishUntil = null; b.berth = null; b.windArm = false;
   S.trail = [{x:to.x, y:to.y, port:null}]; S.unstuckAt = Date.now();
   log('Båten ble flyttet ut på trygt vann og ligger stille.', 'The boat was moved out to safe water and lies still.', 'nav');
   if (typeof cloudEv === 'function') cloudEv('unstuck', was);
+  return null;
+}
+// ---- making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
+// game's own clock, so nothing waits for the 3D view (the shared clock, catchUp, #no3d and the fleet on the operations plan go on as
+// before). The work stations follow them (13-work.js: the helm is held and the hands are on the lines and the fenders), and the 3D view
+// follows the stations (deckcrew.js, view3d/15-env-mooring.js). 'prep' the fenders out on the way in, the last 400 m of a route to a
+// harbour; 'in' the first game minute alongside (in the 3D view she is still on her way in to the berth); 'lines' the lines on;
+// 'out' the lines in while she casts off (CAST_MIN, also when she moves to the other quay); 'stow' the fenders in and the lines coiled,
+// the first game minute clear of the quay. null otherwise
+const MOOR_IN = 1, MOOR_LINES = 1, MOOR_STOW = 1, MOOR_PREP_KM = 0.4;
+function moorPhase(b){
+  b = b || S.boat; if (!b) return null;
+  if (b.status === 'unmooring') return 'out';
+  if (b.status === 'port'){ const sh = b.shift;
+    if (sh){ if (S.t < sh.castUntil) return 'out'; if (S.t < sh.arriveAt) return 'in'; return S.t < sh.until ? 'lines' : null; }
+    if (b.moorT == null) return null; const g = S.t - b.moorT; return g < 0 ? null : g < MOOR_IN ? 'in' : g < MOOR_IN + MOOR_LINES ? 'lines' : null; }
+  if (b.status !== 'sailing') return null;
+  if (b.castT != null && S.t - b.castT >= 0 && S.t - b.castT < MOOR_STOW) return 'stow';
+  // on a route to a harbour (the first harbour on it is where she docks, 05-vessels.js sail): the fenders out the last stretch in
+  const pl = S.plan; if (!pl || !pl.wps || !b.pos) return null;
+  for (let i = pl.idx || 0; i < pl.wps.length; i++){ const w = pl.wps[i]; if (!w.port) continue;
+    let d = dist(b.pos, pl.wps[pl.idx || 0]); for (let k = (pl.idx || 0) + 1; k <= i && d < MOOR_PREP_KM; k++) d += dist(pl.wps[k - 1], pl.wps[k]);
+    return d < MOOR_PREP_KM ? 'prep' : null; }
   return null;
 }
 function dock(pid, berth){
@@ -929,7 +953,7 @@ function dock(pid, berth){
   S.dockLog = (S.dockLog || []).concat([{t:S.t, pid, st:b.status}]).slice(-6);   // the last moorings, for «Sitter båten fast?» (unstuck)
   if (port.rorbu) rorbuSite(port);   // its berth is found before the boat is put there (07d-rorbu.js)
   if (isBerth(pid)){ havnHold(pid); b.hvDay = null; }   // a berth in a harbour: hers while she lies there, the day's due paid (07e-havn.js)
-  b.anch = null; b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y}; b.moorT = S.t; b.shift = b.fueling = b.after = null;
+  b.anch = null; b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y}; b.moorT = S.t; b.castT = null; b.shift = b.fueling = b.after = null;
   b.berth = berth === 'naust' && quayFace(pid, 'naust') ? 'naust' : 'main';   // a route can end at Father's naust (07c-naust.js)
   if (typeof achVisitPort === 'function') achVisitPort(pid);
   if (typeof PTOW !== 'undefined') PTOW.docked(pid);   // moored with another player's boat in tow: the tow is done (ui/10o-ptow.js)   // «Havner besøkt» and the rest (09f-merker.js)
@@ -1134,6 +1158,17 @@ function moveKg(x, kg, patch){
 }
 // the ice machine (BOAT.iceMaker, kg a day; schema v2, the yard's UPGS.ice) fills the ice room at sea
 function iceMinute(){ const b = S.boat; if (!BOAT.iceMaker || b.status === 'port' || (b.ice || 0) >= BOAT.iceCap) return; b.ice = Math.min(BOAT.iceCap, (b.ice || 0) + BOAT.iceMaker / 1440); }
+// «Tom for is» (Ø8b M5 A, Jonas 06.11.2026, docs/systemer/folk-om-bord.md 5.19b): once when the ice runs out, then once a day while it
+// stays out (before: every two hours, 12–15 like lines in three days in spilltest 4). The spell is S.lastIceWarn, a vessel's own (VKEYS):
+// the last line's time, -1e9 when the ice is not out. It ends when the deck has iced what it can and a real stock is left (ICE_BACK of
+// the ice room: the mottak's ice, or the ice machine catching up), not on the machine's trickle, which the next minute's catch takes;
+// an old game in the middle of a spell (the line within two hours) goes on from it
+const ICE_BACK = 0.05;
+function iceOut(out){
+  if (!out){ S.lastIceWarn = -1e9; return; }
+  if (S.t - (S.lastIceWarn ?? -1e9) < 1440) return;
+  log('Tom for is. Fangsten ises ikke.', 'Out of ice. The catch is not being iced.'); S.lastIceWarn = S.t;
+}
 // a minute of deck work: gut first, then ice down what is gutted (or, when landing round, what is bled)
 function deckMinute(){
   const b = S.boat, cg = catchGut(); if (!S.hold.length) return;
@@ -1151,10 +1186,11 @@ function deckMinute(){
   if (catchIce()) for (const x of S.hold.filter(x => !x.iced && (x.gut || !cg) && !liveLot(x))){
     if (pm <= 0.001 || fzLeft <= 1e-6) break; const ux = x.gut && !x.rund ? SPECIES[x.sp].uh || 1 : 1;
     const kg = Math.min(x.kg, pm * DECK.ice, fz ? fzLeft * ux : b.ice / (0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)));
-    if (kg <= 0.01){ if (S.t - (S.lastIceWarn || -1e9) > 120){ log('Tom for is. Fangsten ises ikke.', 'Out of ice. The catch is not being iced.'); S.lastIceWarn = S.t; } break; }
+    if (kg <= 0.01){ if (!fz) iceOut(true); break; }
     if (fz){ moveKg(x, kg, {iced:true, frozen:true}); fzLeft -= kg / ux; } else { moveKg(x, kg, {iced:true}); const ik = Math.min(b.ice, kg * 0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)); b.ice -= ik; tripOf(b).iceKg += ik; }
     pm -= kg / DECK.ice; worked += kg;
   }
+  if (catchIce() && !fz && (b.ice || 0) >= Math.max(1, ICE_BACK * (BOAT.iceCap || 0))) iceOut(false);
   // your own minutes on deck; when the deck was last worked (the crew's break: a deck to scrub, 13-work.js idleEnv); now and then a mistake (14-crewlife.js crewSlip)
   if (worked > 0 && (G.me || I.me)) S.deckMe = (S.deckMe || 0) + 1;
   if (worked > 0){ b.deckT = S.t; if (typeof crewSlip === 'function') crewSlip(G.crew.concat(I.crew).filter(c => !c.anon)); }

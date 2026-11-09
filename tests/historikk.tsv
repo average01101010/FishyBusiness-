@@ -1680,3 +1680,91 @@
 2026-11-09 02:34	claude/h3d2-snokrabbe-animasjoner-zn39n5	3f5d9bd	docktest	OK	63	lite	samtidig	
 2026-11-09 14:00	ccr-1a880149-108s1u	b82596e	sea3d	OK	3964	3d	alene	
 2026-11-09 14:13	ccr-1a880149-108s1u	34bbf0c	wakeshot	FEIL	767	3d	alene	FEIL she goes astern by hand  2.68
+2026-11-09 09:24	ccr-a9ccd5ec-it307t	02ab963+	tutfull	OK	13	lite	samtidig	
+2026-11-09 09:24	ccr-a9ccd5ec-it307t	02ab963+	krabbefabrikktest	OK	26	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	colregtest	OK	610	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	keeptest	OK	20	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	autonavtest	FEIL	12	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 173, 'cell': 0.2, 'maxSlice': 15.7, 'mended': 0, '
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	turtest	OK	21	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	decktest	OK	20	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	trip2	OK	54	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	worktest	FEIL	34	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	npctest	FEIL	0	lite	samtidig	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py)
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	towtest	OK	21	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	tattest	OK	25	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	peergear	OK	7	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	mobtest	FEIL	204	lite	samtidig	FEIL 5a. under draget: en hang seg fast ved haleren, den andre stoppet den med nødstoppen, nestenulykke i dagboka  []
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	turlinjetest	OK	9	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	opsowntest	OK	55	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	selfcrew	OK	10	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	opptest	OK	85	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	mannskapshot	OK	22	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	crewwalk	OK	13	lite	samtidig	
+2026-11-09 09:34	ccr-a9ccd5ec-it307t	86d4026	crewclip	FEIL	25	lite	samtidig	FEIL nor does the work at its places (jigging, gutting, icing, hauling) {'bunntral': {'jig': ['jig:1[0]null'], 'deck': [], 'haul': []}}
+2026-11-09 09:35	ccr-a9ccd5ec-it307t	86d4026	docktest	OK	74	lite	samtidig	
+2026-11-09 09:35	ccr-a9ccd5ec-it307t	86d4026	berth3d	OK	22	lite	samtidig	
+2026-11-09 09:35	ccr-a9ccd5ec-it307t	86d4026	walktest	FEIL	20	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 57
+2026-11-09 09:39	ccr-a9ccd5ec-it307t	9f67116	mobtest	OK	227	lite	samtidig	
+2026-11-09 09:39	ccr-a9ccd5ec-it307t	9f67116	crewclip	FEIL	23	lite	samtidig	FEIL nor does the work at its places (jigging, gutting, icing, hauling) {'bunntral': {'jig': ['jig:1[0]null'], 'deck': [], 'haul': []}}
+2026-11-09 09:39	ccr-a9ccd5ec-it307t	9f67116	walktest	FEIL	19	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 56
+2026-11-09 09:39	ccr-a9ccd5ec-it307t	9f67116	worktest	FEIL	36	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-09 09:39	ccr-a9ccd5ec-it307t	9f67116	autonavtest	FEIL	12	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 229, 'cell': 0.2, 'maxSlice': 12.7, 'mended': 0, '
+2026-11-09 09:43	ccr-a9ccd5ec-it307t	9f67116	mobtest	OK	205	lite	alene	
+2026-11-09 11:08	ccr-a9ccd5ec-it307t	7c04b31	crewwalk	OK	17	lite	samtidig	
+2026-11-09 11:09	ccr-a9ccd5ec-it307t	7c04b31	crewclip	FEIL	30	lite	samtidig	FEIL nor does the work at its places (jigging, gutting, icing, hauling) {'bunntral': {'jig': ['jig:1[0]null'], 'deck': [], 'haul': []}}
+2026-11-09 11:09	ccr-a9ccd5ec-it307t	7c04b31	walktest	FEIL	25	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 26
+2026-11-09 11:09	ccr-a9ccd5ec-it307t	7c04b31	mannskapshot	OK	27	lite	samtidig	
+2026-11-09 11:10	ccr-a9ccd5ec-it307t	c1b1a07	docktest	OK	80	lite	samtidig	
+2026-11-09 11:10	ccr-a9ccd5ec-it307t	c1b1a07	berth3d	OK	21	lite	samtidig	
+2026-11-09 11:10	ccr-a9ccd5ec-it307t	c1b1a07	selfcrew	OK	12	lite	samtidig	
+2026-11-09 11:10	ccr-a9ccd5ec-it307t	c1b1a07	trip2	OK	53	lite	samtidig	
+2026-11-09 10:30	ccr-4660a71b-kidfna	047f2c4	hull3d	FEIL	2400	3d	alene	gikk ut på tid
+2026-11-09 09:18	ccr-b098ba3f-5yfbls	628ce98+	tutfull	OK	6	lite	samtidig	
+2026-11-09 09:18	ccr-b098ba3f-5yfbls	628ce98+	skattetest	OK	6	lite	samtidig	
+2026-11-09 09:18	ccr-b098ba3f-5yfbls	628ce98+	lotttest	OK	8	lite	samtidig	
+2026-11-09 09:18	ccr-b098ba3f-5yfbls	628ce98+	boktest	OK	8	lite	samtidig	
+2026-11-09 09:18	ccr-b098ba3f-5yfbls	628ce98+	keeptest	OK	13	lite	samtidig	
+2026-11-09 09:18	ccr-b098ba3f-5yfbls	628ce98+	decktest	OK	14	lite	samtidig	
+2026-11-09 09:19	ccr-b098ba3f-5yfbls	628ce98+	simday	LES	12	lite	samtidig	
+2026-11-09 09:19	ccr-b098ba3f-5yfbls	628ce98+	calib	LES	13	lite	samtidig	
+2026-11-09 09:19	ccr-b098ba3f-5yfbls	185fa30	vesseltest	OK	20	lite	samtidig	
+2026-11-09 09:19	ccr-b098ba3f-5yfbls	185fa30	fuelcal	OK	15	lite	samtidig	
+2026-11-09 09:19	ccr-b098ba3f-5yfbls	185fa30	tidetest	OK	5	lite	samtidig	
+2026-11-09 09:19	ccr-b098ba3f-5yfbls	b05f19c	climtest	OK	13	lite	samtidig	
+2026-11-09 09:19	ccr-b098ba3f-5yfbls	b05f19c	bktest	OK	7	lite	samtidig	
+2026-11-09 09:19	ccr-b098ba3f-5yfbls	4273d0a	yardupgtest	OK	14	lite	samtidig	
+2026-11-09 09:19	ccr-b098ba3f-5yfbls	4273d0a	merketest	OK	13	lite	samtidig	
+2026-11-09 09:20	ccr-b098ba3f-5yfbls	bdd8266	fartstidtest	FEIL	16	lite	samtidig	FEIL the phone's home shows the years and days, and the Merker app explains how sea time is earned  "06:03\nman 1. mar\nNØ 5 m/s · −1 °C\n2 000 kr\nNeste mål: F
+2026-11-09 09:20	ccr-b098ba3f-5yfbls	474c75e	trip2	OK	27	lite	samtidig	
+2026-11-09 09:33	ccr-b098ba3f-5yfbls	44e1d6a	unittest	FEIL	766	3d	alene	avsluttet med kode 1
+2026-11-09 09:37	ccr-b098ba3f-5yfbls	16bb854	heattest	OK	278	3d	alene	
+2026-11-09 09:45	ccr-b098ba3f-5yfbls	bfbf02e	boottest	OK	29	lite	samtidig	
+2026-11-09 09:45	ccr-b098ba3f-5yfbls	bfbf02e	trip2	OK	32	lite	samtidig	
+2026-11-09 09:45	ccr-b098ba3f-5yfbls	bfbf02e	tutfull	OK	6	lite	samtidig	
+2026-11-09 09:45	ccr-b098ba3f-5yfbls	bfbf02e	merketest	OK	15	lite	samtidig	
+2026-11-09 09:45	ccr-b098ba3f-5yfbls	bfbf02e	decktest	OK	13	lite	samtidig	
+2026-11-09 09:50	ccr-b098ba3f-5yfbls	958f57b	heattest	OK	289	3d	alene	
+2026-11-09 11:11	ccr-4660a71b-kidfna	398f111	hull3d	OK	2446	3d	alene	
+2026-11-09 11:12	ccr-4660a71b-kidfna	398f111	boottest	OK	25	lite	samtidig	
+2026-11-09 11:12	ccr-4660a71b-kidfna	398f111	docktest	OK	61	lite	samtidig	
+2026-11-09 11:12	ccr-4660a71b-kidfna	398f111	calib	LES	11	lite	samtidig	
+2026-11-09 11:13	ccr-4660a71b-kidfna	398f111	routetest	FEIL	38	lite	alene	FEIL Autonav over hele kysten: Finnsnes–Tromsø, Bodø–Reine og Bergen–Florø gir en vei fri for land, grunner og skjær, med høyst 40 punkter, eller ett per 2 km d
+2026-11-09 11:57	HEAD	03fb74b	mannskapshot	OK	25	lite	samtidig	
+2026-11-09 11:57	HEAD	03fb74b	crewwalk	OK	13	lite	samtidig	
+2026-11-09 11:57	HEAD	03fb74b	selfcrew	OK	12	lite	samtidig	
+2026-11-09 11:58	HEAD	03fb74b	trip2	OK	55	lite	samtidig	
+2026-11-09 11:58	HEAD	03fb74b	tutfull	OK	11	lite	samtidig	
+2026-11-09 11:58	HEAD	03fb74b	opsowntest	OK	67	lite	samtidig	
+2026-11-09 11:59	HEAD	03fb74b	docktest	FEIL	82	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-09 11:59	HEAD	03fb74b	berth3d	OK	21	lite	samtidig	
+2026-11-09 11:59	HEAD	03fb74b	turtest	OK	32	lite	samtidig	
+2026-11-09 12:03	HEAD	03fb74b	mobtest	OK	206	lite	samtidig	
+2026-11-09 13:22	HEAD	5215758	moortest	OK	68	3d	alene	
+2026-11-09 12:12	ccr-312584c4-eqhvwo	8adb360+	seatrytest	OK	218	3d	alene	
+2026-11-09 12:18	ccr-312584c4-eqhvwo	8adb360+	f1test	OK	360	3d	alene	
+2026-11-09 13:24	HEAD	7d2404b	boottest	OK	35	lite	samtidig	
+2026-11-09 13:25	HEAD	7d2404b	trip2	OK	43	lite	samtidig	
+2026-11-09 13:25	HEAD	7d2404b	tutfull	OK	7	lite	samtidig	
+2026-11-09 13:25	HEAD	7d2404b	crewwalk	OK	9	lite	samtidig	
+2026-11-09 13:25	HEAD	7d2404b	mannskapshot	OK	16	lite	samtidig	
+2026-11-09 14:17	ccr-2fe3f16c-xpzvdg	b66950a+	decktest	OK	11	lite	alene	

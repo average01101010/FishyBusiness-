@@ -3,13 +3,15 @@
 // the singular (F6) and the plant managers along the coast (F6).
 export default function (t){
   const K = t.K, S = K.newState(); K.set('S', S);
-  // F3: the start boat (7,0 m) cannot take the net hauler (7,5 m): the shop's gate says the Rig tab's words, and there is no room for nets
+  // F3: the start boat (7,0 m) cannot take the net hauler (7,5 m). Since OB1 (valg 21 B, Jonas 09.11.2026) she draws the nets by hand
+  // instead, and the reason the shop and the Rig tab give in the same words is now the pots (no room for them, OB1)
   S.boat.type = 'trebat'; K.applyVessel();
-  const nf = K.haulerNoFit('garn');
-  t.ok(nf && /passer ikke om bord/.test(nf[0]) && /7,5 m/.test(nf[0]), 'trebåten: garnhaleren passer ikke, med lengden den krever: ' + (nf && nf[0]));
-  t.eq(K.buyGate('net', '180')[0], nf[0], 'butikken sier det samme som Rigg-fanen om garn på trebåten');
-  t.eq(K.gearRoom('garn'), 0, 'ingen plass til garn der ingen garnhaler passer');
-  t.eq(K.rigBlock('garn')[0], nf[0], 'Rigg-fanen bruker samme grunn');
+  t.ok(!K.haulerNoFit('garn') && K.buyGate('net', '180') === null && K.gearRoom('garn') > 0 && K.rigBlock('garn') === null, 'trebåten: garn for hånd uten garnhaler (valg 21 B)');
+  const nf = K.haulerNoFit('teine');
+  t.ok(nf && /ikke plass til teiner/.test(nf[0]), 'trebåten: ingen plass til teiner: ' + (nf && nf[0]));
+  t.eq((K.buyGate('pot') || [])[0], nf && nf[0], 'butikken sier det samme som Rigg-fanen om teiner på trebåten');
+  t.eq(K.gearRoom('teine'), 0, 'ingen plass til teiner');
+  t.eq((K.rigBlock('teiner') || [])[0], nf && nf[0], 'Rigg-fanen bruker samme grunn');
   t.ok(!K.haulerNoFit('line'), 'linehaleren passer trebåten');
   t.ok(/Elektronikk og haler/.test(K.rigBlock('line')[0]), 'uten linehaler viser Rigg-fanen til Butikk › Elektronikk og haler (F2)');
   S.boat.type = 'sjark'; K.applyVessel();

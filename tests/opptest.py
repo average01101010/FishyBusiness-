@@ -131,8 +131,9 @@ async def main():
               'siden står først under Om bord › Båten: kniven med bilde, ●●○, gevinsten i egne tall (330 → 360 kg/t ved bordet) og prisen 4 500 kr', kn)
         check(ho and ho['dots'] == '●●●' and ho['pr'] == '✓' and not ho['buy'] and 'Lang høtt' in ho['gain'], 'høtten på trinn 3 står med alle prikkene fylt og en hake, uten knapp', ho)
         L0 = r['L'] if r else {}
-        check(all(k in L0 for k in ('jukse', 'linehaler', 'teinehaler', 'motor', 'tank', 'ekko', 'antigro')) and 'garnhaler' not in L0 and 'hold' not in L0 and 'cabin' not in L0 and 'stab' not in L0 and L0['ekko']['max'] == 2,
-              'trebåten har stigene som passer henne; ikke garnhaleren (fra 7,5 m), lasterommet (ett kar, fullt fra start), lugarer, stabilisering eller sonaren', sorted(L0))
+        # (OB1, Jonas 09.11.2026: no pots on the wooden boat, so no pot hauler either)
+        check(all(k in L0 for k in ('jukse', 'linehaler', 'motor', 'tank', 'ekko', 'antigro')) and 'teinehaler' not in L0 and 'garnhaler' not in L0 and 'hold' not in L0 and 'cabin' not in L0 and 'stab' not in L0 and L0['ekko']['max'] == 2,
+              'trebåten har stigene som passer henne; ikke teinehaleren (ingen teiner, OB1), garnhaleren (fra 7,5 m), lasterommet (ett kar, fullt fra start), lugarer, stabilisering eller sonaren', sorted(L0))
         check(L0.get('motor') and ' kn, +' in L0['motor']['gain'] and L0['motor']['gain'].endswith(' diesel') and '→' in L0['motor']['gain'] and L0['motor']['dots'] == '●○○' and L0.get('linehaler') and L0['linehaler']['gain'].endswith('min/stamp') and '→' in L0['linehaler']['gain'],
               'motoren i knop og hva den koster i diesel, linehaleren i minutter per stamp, nå og med neste trinn', {k: L0.get(k, {}).get('gain') for k in ('motor', 'linehaler')})
         od = (r or {}).get('order') or []
