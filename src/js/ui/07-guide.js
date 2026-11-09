@@ -351,13 +351,11 @@ function portSlip(){
       if (el < 4000){ const i0 = h.findIndex(x => x.indexOf('class="tbl slipt"') >= 0); let n = 0;
         for (let k = i0; k < h.length; k++) h[k] = h[k].replace(/<tr(?=[ >])/g, () => '<tr style="--i:' + Math.min(n++, 24) + '"');
         h[i0] = h[i0].replace('class="tbl slipt"', 'class="tbl slipt print" style="--el:' + el + 'ms"'); } }
-    // the first landing (Onboarding 2, O4, backlog 10.2): the trip was better than usual, and what the jig gives here now; and that others
-    // land here too (the shared world's last day at this plant, WSH.mkt, 10h-world.js), only when there are any: no number is made up
-    // N is the deck log's (tutNormKg, ui/07b-first-trip.js): without the guarantee's top-up, per hour jigged (Ø8b S0, Jonas' choice A 08.11.2026)
+    // the first landing: that others land here too (the shared world's last day at this plant, WSH.mkt, 10h-world.js), only when there are
+    // any. (The line «what the jig gives here now», O4 and Ø8b S1, is gone: Jonas 09.11.2026, «En fisker skal på bakgrunn av erfaring og
+    // tid finne ut hva som er gode fiskeplasser, ikke få servert data-potensiale rett i fanget»)
     // an ordinary trip: how it went and why (Ø8b S2, V2 A: core/04-crew.js tripWhy, made at the landing; the same line is in the deck log)
     if (!tutOn() && ls.why) h.push('<p class="note tripwhy">' + LN(ls.why[0], ls.why[1]) + '</p>');
-    { const n = tutOn() ? tutNormKg(ls) : null; if (n != null){
-      h.push('<p class="note tutnorm">' + LN('Første tur var ekstra god: fisken sto tett. Med håndjuksa gir fisket her nå vanligvis ' + (n >= 10 ? 'rundt ' + fmt(n, 0) + ' kg' : 'under 10 kg') + ' i timen, mer med juksamaskin og bedre felt.', 'The first trip was better than usual: the fish stood dense. With a hand jig the fishing here usually gives ' + (n >= 10 ? 'about ' + fmt(n, 0) + ' kg' : 'under 10 kg') + ' an hour now, more with a jigging machine and better grounds.') + '</p>'); } }
     if (tutOn() && typeof WSH !== 'undefined' && WSH.mkt && WSH.mkt[ls.port]){ const m = Object.entries(WSH.mkt[ls.port]).sort((a, b) => b[1] - a[1]);
       if (m.length && SPECIES[m[0][0]]) h.push('<p class="note tutpeers">' + LN('Andre fiskere har også levert her det siste døgnet, mest ' + SPECIES[m[0][0]].no.toLowerCase() + '. Topplista står i Salgslaget.', 'Other fishermen have landed here in the last day too, mostly ' + SPECIES[m[0][0]].en.toLowerCase() + '. The top list is in the sales organisation.') + '</p>'); }
     if (S2 && F && F.sum > 0) h.push('<p class="note">' + LN('Felleskostnadene ble betalt fra kontoen da de oppsto. Her trekkes de bare fra før fangsten deles, slik oppgjørsavtalene sier, og ikke fra kassa en gang til.', 'The common costs were paid from the account when they came. Here they only come off before the catch is shared, as the settlement agreements say, not from the cash box again.') + '</p>');

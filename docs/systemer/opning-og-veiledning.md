@@ -147,7 +147,7 @@ Jonas valgte 1A–8A og sa «kjør på» 27.10.2026. Fasene O0–O6 står i plan
 - **Første tur er nå 15 steg:** `n1`, `nout`, `intro`, `gps`, `route1` (`fish2`), `cast1`, `sail`, `fish`, `deck`, `full`, `route2`, `cast2`, `land`, `slip`, `reg`, `goal`. `legs`, `tour`, `hud`, `apps`, `vaer`, `salg`, `regler`, `redning`, `book`, `ice`, `beh` og `crew` er tatt ut.
 - **Den åpne oppgaven er isen:** `goal` sier «Før tur 2: fyll iskassa på mottaket». Første fylling venter gratis etter første tur (`S.iceFree`, satt i `tutFinish`, brukt opp i `14-act.js`).
 - **Sluttseddelen i første tur** har to nye linjer (`portSlip` i `07-guide.js`):
-  - **Vanlig fiske her:** at turen var ekstra god, og hva håndjuksa vanligvis gir der nå. Tallet er fangsten ganger bestandens andel av tettheten på feltet (`S.tut.fk`, summert i `05-vessels.js`) per fisketime, rundet til 10 kg. Det retter backloggen 10.2.
+  - **Vanlig fiske her** (tatt bort 09.11.2026, se «Ø8b S1» under): at turen var ekstra god, og hva håndjuksa vanligvis gir der nå. Tallet er fangsten ganger bestandens andel av tettheten på feltet (`S.tut.fk`, summert i `05-vessels.js`) per fisketime, rundet til 10 kg. Det retter backloggen 10.2.
   - **Andre fiskere:** at andre har levert på mottaket det siste døgnet, og mest av hvilken art (`WSH.mkt`, felles verden). Linja står bare når det finnes slike leveringer. Det skrives aldri et oppdiktet tall.
 - **Nye drypp** (`07c-handbook.js`):
   - Kapittel 2: `is` (først, ved mottaket med under 50 kg is), `bok`, `status` og `beh`.
@@ -179,6 +179,8 @@ Jonas valgte 1A–8A og sa «kjør på» 27.10.2026. Fasene O0–O6 står i plan
 Vangshamn på Senja er prøvd i begge formater (O2–O5). Trakten i admin har de nye stegene (`TUT_STEPS`). Det som gjenstår av O6, er to uker med måling før noe mer endres.
 
 ### Ø8b S1: første tur i dekksdagboka (07.11.2026, `docs/planer/spillbarhet-fangst.md` V1 A)
+
+- **Tatt bort 09.11.2026** (Jonas: «Det skal bort. En fisker skal på bakgrunn av erfaring og tid finne ut hva som er gode fiskeplasser, ikke få servert data-potensiale rett i fanget.»): linja om vanlig fiske står verken på første sluttseddel eller i dekksdagboka, og tekstene `tut_norm*` er ute av `ui/01-i18n.js`. `tutNormKg` regner fortsatt N, og `tutFinish` sender den til skyen som `tut_norm {n}` ved siden av `tut_done`, så admin kan se første tur mot vanlig fiske. Linja om andre fiskere på mottaket står. Det under er slik det var.
 
 - **Linja:** når første tur er ferdig, skriver `tutFinish` (`ui/07b-first-trip.js`) én linje i dekksdagboka før «Første tur er fullført»: «Første tur var ekstra god. Vanlig fiske med håndjuksa gir her nå rundt N kg i timen.» Den står i Drift den dagen (`logKind` gir `drift`), så en spiller som lurer etter tur 2, finner den etter at sluttseddelen har forlatt skuffen (fire spilltimer etter salget).
 - **N er sluttseddelens tall** (`tutNormKg`): levert fangst på siste salg ganger bestandens andel av tettheten på feltet (`S.tut.fk`, `(d − t)/d`, summert i `fish()` i `core/05-vessels.js`) per fisketime (`TUT_FISH_H`), rundet til 10 kg; under 10 kg står «under 10 kg». Formelen står også i `portSlip` (`ui/07-guide.js`); de to skal gi samme tall, og `portSlip` kan kalle `tutNormKg()` neste gang `07-guide.js` åpnes (S2 eier den). **Endret 08.11.2026 i Ø8b S0 (under):** `tutNormKg` tar påfyllingen ut og deler på minuttene fisket; `portSlip` har ikke fått det ennå.

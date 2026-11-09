@@ -124,11 +124,9 @@ async def play(p, W, H, tag):
     check(end['tut'] == 0 and 'Første tur er fullført' in ' '.join(end['log']), tag + ': veiledningen er fullført', end['log'])
     check(free.get('gear') and free.get('ice', 1) == 0 and free.get('cash') == 15000, tag + ': juksa satt på fra start, og ingen is før første fiske', free)
     check(end['iceFree'] and end['freeIce'] and end['gear'], tag + ': isen er den åpne oppgaven etter første tur: første fylling venter gratis på mottaket (Onboarding 2, O4, V5 A)', {k: end[k] for k in ('ice', 'iceFree', 'freeIce', 'gear')})
-    check('i timen' in norm, tag + ': sluttseddelen sier at første tur var ekstra god, og hva fisket her vanligvis gir (O4)', norm[:120])
-    # the slip and the deck log say the same N (Ø8b S0, Jonas' choice A 08.11.2026: portSlip calls tutNormKg)
-    num = lambda t: (re.search(r'(rundt [\d\s\u00a0]+ kg|under 10 kg)', t) or [None])[0]
-    logn = next((x for x in end['log'] if x.startswith('Første tur var ekstra god')), '')
-    check(num(norm) and num(norm).replace('\u00a0', ' ') == (num(logn) or '').replace('\u00a0', ' '), tag + ': sluttseddelen og dekksdagboka sier samme N', {'seddelen': num(norm), 'dagboka': num(logn)})
+    # what ordinary fishing gives here is not told (Jonas 09.11.2026: «En fisker skal på bakgrunn av erfaring og tid finne ut hva som er
+    # gode fiskeplasser, ikke få servert data-potensiale rett i fanget»): neither on the first slip nor in the deck log
+    check(norm == '' and not any(x.startswith('Første tur var ekstra god') for x in end['log']), tag + ': verken sluttseddelen eller dekksdagboka sier hva fisket her vanligvis gir', {'seddelen': norm[:80], 'dagboka': [x for x in end['log'] if 'ekstra god' in x]})
     check(end['haill'] != 'luksus', tag + ': ingen gratis luksushaill i første tur (Onboarding 2, V1 A: den er gaven ved registrering)', end['haill'])
     check(hold_at_land is not None and hold_at_land >= 495, tag + ': full last (karet på dekk, 500 kg i trebåten) ved levering etter en time på feltet (Ø8b S0, V3 C)', hold_at_land)
     check(end['sale'] and end['sale']['port'] == (end.get('land') or 'botnhamn') and bonus_row, tag + ': levert på første turs mottak med bonuslinje på sluttseddelen', end['sale'])

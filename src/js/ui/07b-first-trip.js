@@ -222,27 +222,18 @@ function tutStep(){
   for (let i = 0; i < TSTEPS.length; i++){ const st = TSTEPS[i]; if (S.tut.m[st.id]) continue; if (TSTEPS.slice(i + 1).some(q => S.tut.m[q.id])){ tutSettle(st.id); continue; } if (st.done()){ if (!st.live){ for (const q of TSTEPS){ if (q === st) break; tutSettle(q.id); } tutMark(st.id); } continue; } return st; }
   return null;
 }
-// the first trip in the deck log (Ø8b S1, V1 A in docs/planer/spillbarhet-fangst.md, Jonas 06.11.2026): the landing note's line about
-// ordinary fishing leaves the drawer four game hours after the sale, so the same line with the same N goes into the log (Drift) when the
-// first trip is done, where a player who wonders after trip 2 finds it. N is the landed catch times the stock's own share of the density
-// on the field (S.tut.fk, summed in fish(), core/05-vessels.js) per fishing hour, rounded to 10 kg. Since the full hold (Ø8b S0) the
-// guarantee's top-up (F.top) is taken out first, as it is most of the catch, and the hours are the minutes jigged (F.m), as the player may
-// stop early; a save from before has neither and counts as before (all of it, one hour). portSlip (ui/07-guide.js) calls this too, so the
-// slip and the log say the same (Jonas' choice A 08.11.2026);
-// no line when it is not known (a save from before S.tut.fk, or no landing yet). The first trip can only land at its own plant
-// (tutAllow: «sell» on the step «land», the route home must end at tutLand()), so the last sale is the one the slip shows. Texts: ui/01-i18n.js
+// what ordinary fishing gives where the first trip fished (Ø8b S1 and S0): the landed catch times the stock's own share of the density on
+// the field (S.tut.fk, summed in fish(), core/05-vessels.js) per hour jigged (F.m), without the guarantee's top-up (F.top), rounded to 10 kg.
+// It is not shown to the player any more, neither on the landing note nor in the deck log (Jonas 09.11.2026: «En fisker skal på bakgrunn
+// av erfaring og tid finne ut hva som er gode fiskeplasser, ikke få servert data-potensiale rett i fanget»); it goes to the cloud as
+// tut_norm with tut_done, so the admin can read the first trip against ordinary fishing. null when it is not known
 function tutNormKg(sale){
   const F = S.tut && S.tut.fk, ls = sale || S.lastSale;   // the sale the slip shows (portSlip), else the last one
   if (!F || !(F.d > 0) || !ls || !Array.isArray(ls.lines)) return null;
   const kg = Math.max(0, ls.lines.reduce((a, r) => a + (r.kg || 0), 0) - (F.top || 0)), h = F.m >= 1 ? F.m / 60 : TUT_FISH_H;
   return Math.round(kg * Math.max(0, (F.d - F.t) / F.d) / h / 10) * 10;
 }
-function tutNormLog(){
-  const n = tutNormKg(); if (n == null) return;
-  const line = l => T[l].tut_norm.replace('{0}', n >= 10 ? T[l].tut_norm_kg.replace('{0}', new Intl.NumberFormat(l === 'no' ? 'nb-NO' : 'en-GB').format(n)) : T[l].tut_norm_lo);
-  log(line('no'), line('en'));
-}
-function tutFinish(){ if (S.tut && S.tut.m && !S.tut.m.free_ice) S.iceFree = 1; if (typeof cloudEv === 'function' && S.tut && S.tut.t0) cloudEv('tut_done', {s:Math.round((Date.now() - S.tut.t0) / 1000), r:S.tut.reg || null, home:S.home || null}); try { tutNormLog(); } catch (e){ console.error(e); } S.tut = 0; log('Første tur er fullført. Nå er du din egen skipper.', 'The first trip is done. Now you are your own skipper.'); save(); tutUpdate(); if (typeof refreshAll === 'function') refreshAll(); S.pushWait = 1; }
+function tutFinish(){ if (S.tut && S.tut.m && !S.tut.m.free_ice) S.iceFree = 1; if (typeof cloudEv === 'function' && S.tut && S.tut.t0) cloudEv('tut_done', {s:Math.round((Date.now() - S.tut.t0) / 1000), r:S.tut.reg || null, home:S.home || null}); try { const n = tutNormKg(); if (n != null && typeof cloudEv === 'function') cloudEv('tut_norm', {n}); } catch (e){ console.error(e); } S.tut = 0; log('Første tur er fullført. Nå er du din egen skipper.', 'The first trip is done. Now you are your own skipper.'); save(); tutUpdate(); if (typeof refreshAll === 'function') refreshAll(); S.pushWait = 1; }
 function tutScrollSlip(){ const v = $('drawerBody'), t = v && v.querySelector('.slipt'); if (t) v.scrollTop = Math.max(0, t.offsetTop - 60); }
 // what the guide lets the player do on each step; the rest waits until the first trip is done
 const TUT_ALLOW = {start:['cast1', 'cast2'], waypoint:['route1', 'fish2', 'route2'], sell:['land']};
