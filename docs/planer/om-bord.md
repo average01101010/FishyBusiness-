@@ -146,6 +146,8 @@ Merk: klippesjekken (`crewclip`, `clipNow`) prøver bare agentene, så ingen av 
 
 **Til Jonas:** På skiffen står den som sløyer, ute i lufta på utsiden av ripa, og krabbeteina er like bred som båten; teinene bør ut av skiffen som av trebåten (valg 23 A).
 
+**OB5 (09.11.2026, Jonas' økt, grenen `ccr-b0ab5771-n45cmj`):** den som sto utenfor ripa, var nummer to ved sløyingen (uten `work.mate` la spillet ham utenfor babord side); han står nå på dørken ved fangstkaret. Skiffen har fått plassene fra OB1 (`set`, `setter`, `coil`, `coilTub`, `moor`, `rail`, `haulFoot`): setting over styrbord låring fra stampene og binga på dørken akter med skipperen ved rattet og den andre på benken, trekket med den andre ved stampen forut for fiskeren, linehaleren på stolpen rett forut for fiskeren, garnet for hånd over ripa. Vannlinja er den tomme båtens (0,96 t mot 1,0; formen er ikke endret), og 90 hk-motoren synes når den er kjøpt (D6). Funnene med alvor A som er skiffens egne, er rettet; teinene var ute fra OB1. Bildene før og etter i `docs/okter/2026-11-09-ob5/`; karakteren som forslag (75) i `skiff-grunnlag.md` kap. 10.3. Jonas setter karakteren.
+
 ### 4.3 Snekka (`snekke`, `snekke26.py`): forslag 67/100
 
 Data: 7,9 m, 3,0 t, to og deg, plast, 30 hk diesel, hardtop og lugar forut, ingen køyer, fangstkar med is akter og blødekar ved fiskeren, eget sløyebord over babord ripe tvers av haleren, rigges for alle fire (garnhaleren passer, `minLen` 7,5), `jukseMax` 3. Ikke håndbåt: tre agenter med stasjoner og klippesjekk.
@@ -575,3 +577,4 @@ Jonas svarte på alle 09.11.2026 (også under «Valg som venter på Jonas» i `d
 - 09.11.2026: **OB2 rullet ut** (Jonas' økt, gren `ccr-a9ccd5ec-it307t`, 7d2404bd, versjon e5e171f41fc3): F1, F2 og F3 rettet for alle båtene med mannskap; F22 flyttet til OB4. Forslagene til K6 i 4.11.
 - 09.11.2026: **OB15 ferdig** (Jonas' økt, gren `ccr-4660a71b-kidfna`, PR #52, rullet ut i ec54eb3, versjon 5b8c411a4cd9): trim etter hvor lasten står, slagside fra haleren, karene og folkene, mannskapets vekt (S1–S3). Tabellen og det antatte i 5.1; S4 og S5 står (C). Skjermbildene i `docs/okter/2026-11-09-ob15/`.
 - 09.11.2026: **OB1 bygd** (Jonas' økt, gren `ccr-e474ac41-zlir5x`): 4.1 over. `tests/ombord.py --bilder` tar bare bildene (Jonas: «Du trenger ikke å ta videoklipp av båten, det holder med bilder»). Neste på sporet: OB5 (skiffen, `docs/planer/start/83.md`).
+- 09.11.2026: **OB5 bygd** (Jonas' økt, gren `ccr-b0ab5771-n45cmj`): 4.2 over, forslag 75 etter Jonas' skala. Neste på sporet: OB6 (snekka, `docs/planer/start/84.md`).
