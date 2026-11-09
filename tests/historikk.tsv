@@ -1655,3 +1655,5 @@
 2026-11-09 01:46	ccr-9e76566c-k1gw2d	cb536b2	merketest	OK	16	lite	samtidig	
 2026-11-09 01:47	ccr-9e76566c-k1gw2d	cb536b2	dbg23o	OK	48	3d	alene	
 2026-11-09 02:16	ccr-9e76566c-k1gw2d	cb536b2	tut	OK	1695	lite	alene	
+2026-11-09 02:33	claude/h3d2-snokrabbe-animasjoner-zn39n5	3f5d9bd	boottest	OK	28	lite	samtidig	
+2026-11-09 02:34	claude/h3d2-snokrabbe-animasjoner-zn39n5	3f5d9bd	docktest	OK	63	lite	samtidig	
