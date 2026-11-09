@@ -57,9 +57,8 @@ const DOCK = (() => {
   const TABS = {mannskap:[['mannskap', 'Om bord', 'Aboard'], ['bors', 'Mannskapsbørs', 'Crew exchange']], bors:null, fiske:[['fiske', 'Redskap', 'Gear'], ['utstyrb', 'Elektronikk og haler', 'Electronics and haulers']], utstyrb:null};
   TABS.bors = TABS.mannskap; TABS.utstyrb = TABS.fiske;
   const SHOP_PAGES = ['fiske', 'utstyrb', 'service', 'is', 'agn'];
-  // the form pages (GUI review U1 A, 05.11.2026): in a standing screen they open tall (styles.css #drawer.tall), the sea above is not needed
-  // while the plan or the crew are set; the trade pages keep the sea in view
-  const TALL = new Set(['drift', 'arbeid', 'rigg', 'beholdning']);
+  // (in a standing screen every page is one sheet of 88 % with the strip over it, styles.css «UI 2, U2-7»; until then only the form
+  // pages in TALL were, GUI review U1 A 05.11.2026, and the rest opened at 55 %)
   const TRYPAGES = ['utstyrb', 'utstyr'];   // the pages where gear can be tried on the boat in 3D (M3)   // the counters whose visits are measured (M2: shop_view)
   let menu = null, page = null, html = '', fanHtml = '', items = [], fanItems = [];
 
@@ -419,7 +418,6 @@ const DOCK = (() => {
     if (PAINT) PAINT.live(page === 'maler' && !dr.hidden);   // the paint shop's camera and colour go with its page (ui/10j-paint.js)
     if (typeof G3 !== 'undefined' && G3.trying && !(TRYPAGES.includes(page) && !dr.hidden)) G3.tryView(null);   // gear tried on goes off with its page (M3)
     if (!page) return;
-    dr.classList.toggle('tall', TALL.has(page));
     const y = keep ? dBody.scrollTop : 0, t0 = TITLE[page] || [page, page];
     dTitle.textContent = L(t0[0], t0[1]); drawTabs();
     const h = dress(page, PHONE.page(page)); if (h !== shown){ shown = h; dBody.innerHTML = h; fold(); ordbok(dBody); tabInView(); } dBody.scrollTop = y;
@@ -457,7 +455,7 @@ const DOCK = (() => {
     dr.hidden = false; document.body.classList.add('dk-open'); shown = ''; draw(was === pg); render();
     if (was !== pg && SHOP_PAGES.includes(pg) && typeof cloudEv === 'function') cloudEv('shop_view', {pg});
   }
-  function close(){ page = null; dr.hidden = true; document.body.classList.remove('dk-open'); shown = ''; html = ''; if (PAINT) PAINT.live(false); if (typeof G3 !== 'undefined' && G3.trying) G3.tryView(null); render(); }
+  function close(){ if (typeof WORK !== 'undefined' && WORK.shut) WORK.shut(); page = null; dr.hidden = true; document.body.classList.remove('dk-open'); shown = ''; html = ''; if (PAINT) PAINT.live(false); if (typeof G3 !== 'undefined' && G3.trying) G3.tryView(null); render(); }
   dTabs.addEventListener('click', e => { const el = e.target.closest('[data-pg]'); if (el){ page = el.dataset.pg; shown = ''; draw(false); if (SHOP_PAGES.includes(page) && typeof cloudEv === 'function') cloudEv('shop_view', {pg:page}); } });
   $('drawerClose').addEventListener('click', close);
   dBody.addEventListener('click', e => {

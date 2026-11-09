@@ -199,6 +199,7 @@ function qyStep(Y, y, d){
 // the year's course up to H, or up to today for a later H (what is not yet known is not worked out)
 // a new year: structure quotas whose time is up go back, and last year's cooperation ends (the partner goes ashore)
 function quotaNewYear(y){ if (S.qyY === y) return; S.qyY = y;
+  if (typeof kmFree === 'function') kmFree(S.t / 60);   // a free right whose two years are up goes back to the register (03i-kvotemarked.js)
   for (const v of S.fleet || []){ const l = vget(v, 'lic'); if (!l) continue; if (structExpire(l, y)) log('En strukturkvote på «' + vget(v, 'boatName') + '» har gått ut og er fordelt tilbake til gruppen.', 'A structure quota on the «' + vget(v, 'boatName') + '» has run out and gone back to the group.');
     if (l.coop && l.coop.y < y){ const cr = vget(v, 'crew') || [], i = cr.findIndex(c => c.id === l.coop.crew); if (i >= 0) cr.splice(i, 1); log(l.coop.name + ' gikk i land: kvotesamarbeidet var for ett år.', l.coop.name + ' went ashore: the cooperation was for one year.'); l.coop = null; } } }
 function qyAt(H){ const y = yearH(H), now = S.t / 60, ny = yearH(now), Y = qyOf(y), last = y < ny ? doyOf(y, 12, 31) : y > ny ? -1 : Math.min(doyH(H), doyH(now));
@@ -251,13 +252,18 @@ function regFree(id){ const R = npcReg(); R[id] = Math.min(REGN[id] || HREG[id] 
 function regSeller(id, H){ const w = weekOfH(H), u = k => h2(w * 31 + id.charCodeAt(1) * 7 + id.length, 8200 + k);
   return {name:CREW_M[Math.floor(u(1) * CREW_M.length)] + ' ' + CREW_SN[Math.floor(u(2) * CREW_SN.length)], home:CREW_HOME[Math.floor(u(3) * CREW_HOME.length)][0]}; }
 // ---- structure quotas (forskrift om spesielle kvoteordninger for kystfiskeflåten, J-244-2025): quota lengths 11–27.99 m may buy a
-// boat in the same group (11–14.99, 15–20.99, 21–27.99 m), scrap it and take its quota factor less 10 % (§ 11), for 20 years, up to
-// the quota cap (§ 12: three times the boat's own quota for 11–14.99 m, four times for 15–27.99 m). ----
-const STRUCT = {cut:0.1, years:20, cap:{g11:3, g15:4, g21:4}};
-function structRoom(l, id){ const A = l && HJ[l.id], B = HJ[id]; if (!A || !B || A.grp === 'u11' || A.grp !== B.grp) return false;
-  return A.kf + (l.extra || 0) + B.kf * (1 - STRUCT.cut) <= A.kf * STRUCT.cap[A.grp] + 1e-9; }
-function structPrice(id, H){ return Math.round(licQ({id}, H).torsk * KPK); }   // the right's quota; the boat goes to the breaker
-function structIn(l, id, H){ const k = HJ[id].kf * (1 - STRUCT.cut), y = yearH(H); l.st = (l.st || []).concat([{id, kf:k, from:y, until:y + STRUCT.years}]); licExtra(l); regTake(id); return k; }
+// boat in the same group (11–14.99, 15–20.99, 21–27.99 m), have it struck off the register of fishing vessels (§ 8: «meldt ut av
+// registeret over fiskefartøy»; scrapping is no longer required) and take its quota factor less 10 % (§ 11), for 20 years, up to the
+// quota cap (§ 12: 3+3 or 5+1 times the boat's own quota for 11–14.99 m, 4+4 or 6+2 for 15–27.99 m, counted with the own quota; a
+// player's boat has only the whitefish sector, so she is a specialist: 5 and 6 times; KM1, 08.11.2026, it was 3 and 4. The cap stands
+// in Fiskeridirektoratet's «Forslag etter høring» 11.09.2026 kap. 4.2, which only adds 4+2 and 5+3 for generalists) ----
+const STRUCT = {cut:0.1, years:20, cap:{g11:5, g15:6, g21:6}};
+// whether a boat's right l has room for add more quota factors under the cap
+function structFits(l, add){ const A = l && HJ[l.id]; return !!(A && STRUCT.cap[A.grp]) && A.kf + (l.extra || 0) + add <= A.kf * STRUCT.cap[A.grp] + 1e-9; }
+function structRoom(l, id){ const A = l && HJ[l.id], B = HJ[id]; if (!A || !B || A.grp === 'u11' || A.grp !== B.grp) return false; return structFits(l, B.kf * (1 - STRUCT.cut)); }
+function structPrice(id, H){ return Math.round(licQ({id}, H).torsk * KPK); }   // the right's quota; its boat is struck off the register
+// (the NPC owner leaves the register with regTake where the purchase is made, ui/phone/14-act.js; structIn took one more until KM1)
+function structIn(l, id, H){ const k = HJ[id].kf * (1 - STRUCT.cut), y = yearH(H); l.st = (l.st || []).concat([{id, kf:k, from:y, until:y + STRUCT.years}]); licExtra(l); return k; }
 function licExtra(l){ l.extra = (l.st || []).reduce((a, s) => a + s.kf, 0) + (l.two ? HJ[l.two].kf : 0); }
 // a structure quota whose time is up goes back to the group it came from (fordelt etter «modell X»; not modelled further)
 function structExpire(l, y){ if (!l || !l.st) return 0; const n = l.st.length; l.st = l.st.filter(s => s.until > y); licExtra(l); return n - l.st.length; }

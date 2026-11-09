@@ -381,3 +381,7 @@ Gjestekontoene (nye spillere starter uten innlogging) bruker Supabases anonyme i
 - **Eget innloggingsdomene (`auth.detstorebla.no`) er valgt bort** (Jonas 11.10.2026: 99 USD i måneden er uaktuelt). Spillet bruker standardadressen hos WorkOS og `workosDevMode: true` (innloggingen holdes i nettleserens lokale lagring). Det kan tas opp igjen når inntektene dekker det: legg inn domenet under Domains › AuthKit, og sett `workosApiHostname` og `workosDevMode: false` i `cloud.json`.
 - **Kontoene fra Staging følger ikke med.** Brukere og lagringer fra testmiljøet (blant annet Jonas' konto) har andre bruker-ID-er enn i produksjon. Admin-flagget (`players.game_admin`) må settes for den nye ID-en etter første innlogging.
 
+
+## Lanseringslinja (09.11.2026)
+
+Jonas 09.11.2026: «kystflåten er MVPen. Havbåtene kan vente.» Det som må være ferdig før offentliggjøringen, står over «Lanseringslinja» i `docs/planer/koen.md`: arbeidet om bord på kystflåten så ekte som mulig (OB0 og fasene etter), ytelsen på vanlige telefoner, og lanseringsstegene L1 (planen for testutgave og produksjon, lagringsporten, feilvarsel, betalingen, sikkerheten og det juridiske i denne fila), L2 (betalingen i ekte modus) og L3 (sluttsjekken). Punktene her som ikke er gjort, går inn i L1.
