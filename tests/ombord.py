@@ -1,23 +1,29 @@
 """OB0 (steg 69 i docs/planer/koen.md, Jonas 09.11.2026): the recording tool for the work aboard the coastal fleet. It plays each
 operation of a boat's day for a given boat and fishery (from the quay and casting off, out to the ground, setting, waiting and jigging,
 hauling, the fish in over the rail, bleeding, gutting, icing and the tub, clearing the deck, in to the plant, mooring, landing, and rest
-and food aboard where she has it) and records a short video of each, landscape and portrait, with three screenshots (early, middle, late), the chart and the status box folded.
+and food aboard where she has it) and records a short video of each, landscape and portrait, with three pictures (early, middle, late) without the chart, the status box and
+the compass (S.settings.hudOff; Jonas 09.11.2026: «send meg gjerne bilder, men sørg for å minimere kartet og statusboksen»). The middle
+picture is a screenshot; the early and the late one are taken from the recording when it is cut (a screenshot waits for a frame, some
+50 s on the slow clock). Jonas looks at the pictures, not the videos («De er alt for hakkete uansett»); the videos are for the review.
 
 Not a test and not in run.py: it prints what each clip showed (the deck events counted in G3._debug.dk.n, the crew's stations from
-CREW3D.agents()), so OB1 and the next phases can show the same operation before and after their change.
+CREW3D.agents()), the damage to the hull, and crewclip's check (clipNow, bodyHits, agents off the deck), so OB1 and the next phases can
+show the same operation before and after their change. A boat with all her operations takes some 20-40 minutes a format with two
+recordings at a time.
 
 SwiftShader draws under one frame a second, so a plain recording is a slide show. The page runs on a slow clock instead (TIMESCALE:
 performance.now, Date, the timers and requestAnimationFrame all at K of real time, everything in the page in step), and ffmpeg plays
-the cut back at 1/K: the clip has the game's own pace and some 6 frames a second at K = 0.1. Judge the movements and the places, not
-the frame rate.
+the cut back at 1/K: the clip has the game's own pace and some 3-5 frames a second at K = 0.15 (the default). Judge the movements and
+the places, not the frame rate.
 
   python3 tests/ombord.py trebat                      every fishery and every operation, landscape and portrait
   python3 tests/ombord.py trebat juksa line           only those fisheries (and the common operations)
-  python3 tests/ombord.py kyst15 --format liggende --ops kast,trekk --k 0.12 --sec 10
+  python3 tests/ombord.py kyst15 --format liggende --ops kast,trekk --k 0.15 --sec 9
   python3 tests/ombord.py --recut <out>/trebat [liggende]   cut the clips again from the kept raw recording (_raw_<format>/)
   KYST_OMBORD_OUT=<dir>                               where the clips go (default tests/out/ombord/); the videos stay out of git
 
-Output: <out>/<boat>/<fishery>_<op>_<format>.mp4 and _1/_2/_3.jpg, and <out>/<boat>/clips_<format>.json with what each clip showed."""
+Output: <out>/<boat>/<fishery>_<op>_<format>.mp4 and _1/_2/_3.jpg, and <out>/<boat>/clips_<format>[_<ops>].json with what each clip
+showed; the raw recording stays in _raw_<format>/ (for --recut)."""
 from _env import boot, OUT
 import asyncio, json, os, subprocess, sys, time
 from playwright.async_api import async_playwright
