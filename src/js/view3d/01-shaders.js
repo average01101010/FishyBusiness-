@@ -143,11 +143,13 @@
     // quarter of the length in, (L / 4h)^(1/4): that gave a 9 s swell 1.8 times its height over 3 m, where linear theory gives 1.19.
     // tr: the share of its energy that has turned into the surf: none until the depth is under 0.3 L, all of it under 0.08 L, as far
     // as it runs in towards the shore (refraction turns a wave running along the shore in as well; one running out stays as it is).
+    // (tr held to 1 and its root to 0 or more: |n| comes out at 1.0000001 now and then, and sqrt(1 - tr) was NaN in single pixels,
+    // white dots all over the near sea, seen in the first pictures at Bleik 09.11.2026)
     '\nfloat thG(float x){return 1.0-2.0/(exp(2.0*min(x,8.0))+1.0);}' +
     '\nvec3 shW(vec4 a,vec4 SH){if(SH.x>=78.0)return vec3(1.0,1.0,0.0);float kh=max(a.z*SH.x,1e-3);float r=inversesqrt(max(thG(kh),0.02));float x=kh*r;float e=exp(2.0*min(x,8.0));' +
     'float G=min(inversesqrt(max(thG(x)*(1.0+4.0*x/max(e-1.0/e,1e-4)),1e-3)),2.5);' +
     'float w=length(SH.zw);float tr=w>1e-4?(1.0-smoothstep(0.08,0.3,kh*0.15915))*clamp(dot(a.xy,SH.zw)/w*1.4+0.42,0.0,1.0)*w:0.0;' +
-    'return vec3(max(G,1.0),1.0+(r-1.0)*(1.0-smoothstep(55.0,78.0,SH.x)),tr);}' +
+    'return vec3(max(G,1.0),1.0+(r-1.0)*(1.0-smoothstep(55.0,78.0,SH.x)),min(tr,1.0));}' +
     // The surf: the energy the waves bring in, as one wave at the surf's frequency (uSurf.y, the swell's peak where there is swell,
     // else the wind sea's at the boat; 14-sea.js surfStep) whose crests are the lines of equal travel time, so it rolls in square to
     // the beach whichever way the sea outside runs; its phase is Gerstner's f = -(phase now + w T), so it runs down the travel time,
@@ -198,7 +200,7 @@
   // 6-28 m) and the ripples ride with the boat at 5/6 of her speed over the ground (nfStep), so the water passes the hull at her real
   // speed through it, while the long waves (0-3) and the swell stand in the world. The frame shift is a phase offset per wave (uNFp,
   // and uNFg for its group), zero for the long ones; the ripples and the foam's mottle take the shifted position P-uNFD.
-  const SEA_VS_WAVE = i => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.5,5.0,6.2832/(a.z*uCell));float am=ampOf(a,b,S);float Q=b.x>0.5?0.3:Qw;vec3 sg=shW(a,SH);float gr=grpOf(wxz,a,b,uGp[' + i + ']-uNFg[' + i + ']);float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;am*=sg.x*sqrt(1.0-sg.z)*gr*att;' +
+  const SEA_VS_WAVE = i => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.5,5.0,6.2832/(a.z*uCell));float am=ampOf(a,b,S);float Q=b.x>0.5?0.3:Qw;vec3 sg=shW(a,SH);float gr=grpOf(wxz,a,b,uGp[' + i + ']-uNFg[' + i + ']);float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;am*=sg.x*sqrt(max(1.0-sg.z,0.0))*gr*att;' +
     'float f=a.z*dot(a.xy,wxz)-b.y*uTime+b.z-uNFp[' + i + '];float c=cos(f);d.x+=Q*sg.y*am*a.x*c;d.z+=Q*sg.y*am*a.y*c;d.y+=am*sin(f);}';
   // after the waves, by the shore (F4): the surf wave from the energy they brought in, and the whole capped where it would pass
   // McCowan's limit (the crests cut: what breaks has gone into foam)
@@ -214,7 +216,7 @@
   // one wave's slope, height and lost roughness in the fragment shader (W: whether it counts for the wind sea's crests)
   // (W: also the three sums of the Jacobian of the horizontal shift, for the whitecaps, F3: jxx, jxz and the trace jtr, with the
   // variance of the compression jv, as sa is the crest's; and the short waves' own compression jsc, 4-9, with its variance jsv)
-  const SEA_WAVE = (W, i) => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.0,7.0,6.2832/(a.z*px));float am=ampOf(a,b,S);float gr=grpOf(P,a,b,uGp[' + i + ']-uNFg[' + i + ']);float Q=b.x>0.5?0.3:Qw;vec3 sg=shW(a,SH);float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;am*=sg.x*sqrt(1.0-sg.z);' +
+  const SEA_WAVE = (W, i) => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.0,7.0,6.2832/(a.z*px));float am=ampOf(a,b,S);float gr=grpOf(P,a,b,uGp[' + i + ']-uNFg[' + i + ']);float Q=b.x>0.5?0.3:Qw;vec3 sg=shW(a,SH);float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;am*=sg.x*sqrt(max(1.0-sg.z,0.0));' +
     'float f=a.z*dot(a.xy,P)-b.y*uTime+b.z-uNFp[' + i + '];float c=cos(f);float s=sin(f);float wa=a.z*sg.y*am*gr;N.x-=a.x*wa*c*att;N.z-=a.y*wa*c*att;N.y-=Q*wa*s*att;lost+=wa*wa*(1.0-att);' +
     (W ? 'y+=am*gr*s*att;sa+=am*am*0.228;float jw=Q*wa*s*att;jxx+=jw*a.x*a.x;jxz+=jw*a.x*a.y;jtr+=jw;float qk=Q*a.z*sg.y*am*att;jv+=qk*qk*0.228;' + (i >= 4 ? 'jsc+=jw;jsv+=qk*qk*0.228;' : '') : '') + '}';
   // The fragment shader reads the waves from copies of its own (uFWa, uFWb, uFGp): the same uniform array in both stages is the only
