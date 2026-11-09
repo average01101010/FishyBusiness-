@@ -1590,3 +1590,14 @@
 2026-11-09 00:25	claude/o8b-s2-turens-linje-c70okw	36c7591+	geartest	OK	31	lite	alene	
 2026-11-09 00:26	claude/o8b-s2-turens-linje-c70okw	36c7591+	turlinjetest	OK	6	lite	samtidig	
 2026-11-09 00:26	claude/o8b-s2-turens-linje-c70okw	36c7591+	geartest	OK	29	lite	samtidig	
+2026-11-09 00:33	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	tutfull	FEIL	5	lite	samtidig	FEIL etter en ekte levering ved første turs mottak sier verken sluttseddelen eller dekksdagboka hva fisket her vanligvis gir (N regnes bare for skyen)  {"slip":
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	starttest	OK	123	lite	samtidig	
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	tutdrift	OK	6	lite	samtidig	
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	booktest	OK	25	lite	samtidig	
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	turlinjetest	OK	6	lite	samtidig	
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	selltest	LES	18	lite	samtidig	
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	r4test	OK	17	lite	samtidig	
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	cashfxtest	OK	9	lite	samtidig	
+2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	shoptest	OK	30	lite	samtidig	
+2026-11-09 00:35	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	tutfull	OK	4	lite	alene	
+2026-11-09 00:35	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	tutfull	FEIL	4	lite	alene	FEIL etter en ekte levering ved første turs mottak sier verken sluttseddelen eller dekksdagboka hva fisket her vanligvis gir (N regnes bare for skyen)  {"slip":
