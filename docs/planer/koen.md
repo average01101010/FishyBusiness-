@@ -26,7 +26,7 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 
 | Dato | Steg | Flettecommit | Versjon | PR |
 |---|---|---|---|---|
-| 09.11.2026 | Målingen etter IAB 2.0 (Jonas' økt, ikke rutinen) | a60171c | 27b8da9300b8 | – (direkte til arbeidsgrenen etter Jonas' «Rull ut når du er klar»; porten i `tools/plan/RUTINE.md` punkt 6 holdt; migreringen `20261108231000_sp_view_iab.sql` kjørt før koden; stikkprøven langs kysten er natteregelen: Bergen, Bodø, Hammerfest) |
+| 09.11.2026 | Målingen etter IAB 2.0 (Jonas' økt, ikke rutinen) | a60171c | 27b8da9300b8 | – (direkte til arbeidsgrenen i c307926 etter Jonas' «Rull ut når du er klar», «Appen på Hetzner» og «Appen på GitHub Pages» grønne; porten i `tools/plan/RUTINE.md` punkt 6 holdt; migreringen `20261108231000_sp_view_iab.sql` kjørt før koden; stikkprøven langs kysten er natteregelen: Bergen, Bodø, Hammerfest) |
 | 08.11.2026 | U2-8 Nettbrett og PC arver (Jonas' økt, ikke rutinen) | 61cc06f9 | 3a9f7d896c7e | – (direkte til arbeidsgrenen i b0f7599a, «Appen på Hetzner» og «Appen på GitHub Pages» grønne; porten i `tools/plan/RUTINE.md` punkt 6 holdt; ingen stikkprøver langs kysten, endringen er bare skjermens oppsett; patchnotatet tas i U2-9) |
 | 08.11.2026 | U2-7 Skuffen og sidene (Jonas' økt, ikke rutinen) | 99489370 | cdafc05d911a | – (direkte til arbeidsgrenen i 869507fb, «Appen på Hetzner» og «Appen på GitHub Pages» grønne; porten i `tools/plan/RUTINE.md` punkt 6 holdt; ingen stikkprøver langs kysten, endringen er bare skjermens oppsett) |
 | 08.11.2026 | Ø14 F4 Feltnavnene i kartet (Jonas' økt, ikke rutinen) | bcd65760 | 5bb333574b3a | – (direkte til arbeidsgrenen; porten i `tools/plan/RUTINE.md` punkt 6 holdt) |
