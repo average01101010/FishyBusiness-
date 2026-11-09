@@ -435,28 +435,32 @@ SEA: fetch, wind sea, swell
   - 155 `seaPartsNear(p, H)`
   - 157 `seaDirF(p, H, head)`
 
-## `src/js/core/03c-stability.js` (216 linjer)
+## `src/js/core/03c-stability.js` (312 linjer)
 
 STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the work aboard
 
 - **1** STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the work aboard
   - 11 `hullOf(type)`
-  - 21 `stabLoad(b = S.boat)`
-  - 28 `stabOf(type = S.boat.type, load = stabLoad()`
-  - 41 `motionAt(p, H, head, kn, St = stabOf()`
-  - 55 `windHeel(St, U)`
-  - 58 `stabState(M)`
-  - 67 `boatHead(H, b = S.boat)`
-  - 69 `motionHere(H, b = S.boat)`
-  - 76 `hsWork(p, H)`
-  - 80 `stabTick(H)`
-- **96** THE HULL IN THE SEA: buoyancy per section (Fysikk 4 F2, 07.11.2026; docs/planer/fysikk-4-sjo-og-skrog.md, Jonas' choice 2B)
-  - 106 `hullSections(type, zb, zs)`
-  - 136 `secArea(H, i, h)`
-  - 141 `secBreadth(H, i, h)`
-  - 148 `hullRest(H, D)`
-  - 171 `hullX(R)`
-  - 186 `hullStep(H, R, X, eta, deta, dt, o)`
+- **20** Where the load stands aboard (OB15, 09.11.2026; docs/planer/om-bord.md kap. 5, S1–S3; Jonas 09.11.2026: «Jeg ønsker jo at båten
+  - 41 `stabPlaces(type)`
+  - 61 `stabPull(b = S.boat)`
+  - 69 `stabLoad(b = S.boat)`
+  - 82 `stabOf(type = S.boat.type, load = stabLoad()`
+  - 111 `motionAt(p, H, head, kn, St = stabOf()`
+  - 126 `windHeel(St, U)`
+  - 129 `stabState(M)`
+  - 138 `boatHead(H, b = S.boat)`
+  - 140 `motionHere(H, b = S.boat)`
+  - 147 `hsWork(p, H)`
+  - 151 `stabTick(H)`
+- **167** THE HULL IN THE SEA: buoyancy per section (Fysikk 4 F2, 07.11.2026; docs/planer/fysikk-4-sjo-og-skrog.md, Jonas' choice 2B)
+  - 177 `hullSections(type, zb, zs)`
+  - 207 `secArea(H, i, h)`
+  - 212 `secBreadth(H, i, h)`
+  - 221 `hullRest(H, D, zW)`
+  - 244 `hullTrimmed(H, D, zG, L0, key)`
+  - 267 `hullX(R)`
+  - 282 `hullStep(H, R, X, eta, deta, dt, o)`
 
 ## `src/js/core/03d-quota.js` (462 linjer)
 
@@ -2581,12 +2585,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1374 linjer)
+## `src/js/ui/phone/07-patch.js` (1378 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1367 `patch()`
+  - 1371 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -4047,7 +4051,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 103 `moorStep(dt, bp, at = dt)`
   - 135 `drawMooring(BMrel, eye, VP, t)`
 
-## `src/js/view3d/16-motion.js` (318 linjer)
+## `src/js/view3d/16-motion.js` (322 linjer)
 
 ---------- boat motion ----------
 
@@ -4064,13 +4068,13 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 130 `dynSoon()`
   - 133 `dynFollow(dt)`
   - 141 `updateBoat(dt, t, frac, rdt)`
-- **238** the hull in the sea: buoyancy per section (Fysikk 4 F2, 07.11.2026; docs/planer/fysikk-4-sjo-og-skrog.md, Jonas' choice 2B)
-  - 254 `hullSea(G, Bs, t, tf, dt)`
-  - 276 `hullMove(dt, b)`
-  - 294 `slamLog(v)`
-- **303** particles
-  - 307 `spawn(x, y, z, vx, vy, vz, life, g)`
-  - 309 `drawPts(n, mode, VP, col, size, round, off, mx)`
+- **240** the hull in the sea: buoyancy per section (Fysikk 4 F2, 07.11.2026; docs/planer/fysikk-4-sjo-og-skrog.md, Jonas' choice 2B)
+  - 256 `hullSea(G, Bs, t, tf, dt)`
+  - 278 `hullMove(dt, b)`
+  - 298 `slamLog(v)`
+- **307** particles
+  - 311 `spawn(x, y, z, vx, vy, vz, life, g)`
+  - 313 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
 ## `src/js/view3d/17-draw.js` (207 linjer)
 
