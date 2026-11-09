@@ -4,6 +4,12 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
+- **Lanseringsplanen L1 skrevet 09.11.2026** (Jonas' økt, grenen `ccr-41bf0bd0-c7ywb9`; `docs/planer/lansering-plan.md`): fasene L1a–L1f er steg 74–79 i køen og venter på valg 16 (V1–V7). Funnet underveis, og ikke rettet:
+  - **Butikken er alt i ekte modus** på detstorebla.no (`shop-checkout` svarer `ready:true`; 5 betalte kjøp på 155 kr, det siste 06.11.2026), uten Stripe Tax og uten registrering for MVA eller non-Union OSS. Valg 16 V5.
+  - **Valg 6 og steg 50 ventet på `auth.detstorebla.no`**, som Jonas valgte bort 11.10.2026 (99 USD i måneden). Tatt opp igjen som valg 16 V6.
+  - **Feilvarselet med push finnes** (`err_alert`, 21 varsler sendt siste uke), men ikke på e-post, ikke når siden er nede og ikke når den henger helt; `lansering.md` B7 sa at det manglet. L1d.
+  - **Lagringsporten** vil ta 25–50 minutter i serie med 72 lagringer (anslått); `savestest.py` må ta flere om gangen (L1c).
+  - **Kildesidene for MVA, OSS, varemerkegebyret og næringskoden (SN2025)** kunne ikke åpnes fra økta; merket «sjekk» i planen kap. 5 og 6.
 - **UI 2, U2-8 (nettbrett og PC arver) bygd 08.11.2026** (Jonas' økt, grenen `ccr-510fd7d5-2eum2h`; `docs/systemer/ui-og-telefon.md`, «UI 2, U2-8»): hele boksen under kartet på nettbrett liggende og PC uten reserven, stripa på nettbrett stående (valgt i økta), skuffen i plotteren under stripa, kildelinja ved siden av dagbokfanen, telefonknappen skjult bak den åpne telefonen, hele ordet på dagbokfanen i liggende telefon. Ses på Jonas' nettbrett med 3D: om boksen i liggende som vokser og krymper med innholdet (før: fast høyde med tomt glass) er roligere eller uroligere å se på under fisket; om stripa i stående nettbrett er nok, eller om hele boksen bør stå der (krever `ui/04-panels-instruments.js`, `HUDMQ`). Patchnotes for U2-8 tas i U2-9.
 - **UI 2, U2-7 (skuffen og sidene) bygd og rullet ut 08.11.2026 i 869507fb** (Jonas' økt, grenen `ccr-b4ccfe0e-t6qjnp`; `docs/systemer/ui-og-telefon.md`, «UI 2, U2-7»): ett ark for alle sidene i stående med stripa over, Mannskap med én hovedknapp per person og den andre bak ⋯. Antatt: hvilken post som er hovedknappen (om bord styrmann, ellers skipper) er valgt i økta; minikartet er borte mens skuffen er åpen. Ikke sett over 3D-bildet (ingen GPU). Neste i UI 2: U2-8 Nettbrett og PC arver.
 - **Ø8b S0 (full last på første tur, V3 C) bygd og rullet ut 08.11.2026 i ffd076c1** (Jonas' økt, grenen `ccr-e9f46ad4-wipgu7`; `docs/systemer/opning-og-veiledning.md`, «Ø8b S0»). Det som står igjen eller er antatt:
