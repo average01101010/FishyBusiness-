@@ -1801,3 +1801,7 @@
 2026-11-09 21:52	ccr-61bc7d42-bfsaz0	8b63f80	boottest	OK	29	lite	samtidig	
 2026-11-09 21:52	ccr-61bc7d42-bfsaz0	8b63f80	geartest	FEIL	35	lite	samtidig	FEIL standing plan: the net station is hauled and set again every day, and the catch is landed
 2026-11-09 21:53	ccr-61bc7d42-bfsaz0	8b63f80	geartest	OK	27	lite	alene	
+2026-11-09 22:24	claude/admiring-cray-vqmpdo	ce3e1864	towtest	OK	18	lite	samtidig	
+2026-11-09 22:24	claude/admiring-cray-vqmpdo	ce3e1864	trip2	OK	38	lite	samtidig	
+2026-11-09 22:28	claude/admiring-cray-vqmpdo	ce3e1864	dyntest	FEIL	253	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-09 22:28	claude/admiring-cray-vqmpdo	ce3e1864	docktest	OK	62	lite	samtidig	
