@@ -467,6 +467,35 @@ Funnene:
 
 Ikke målt: trim, rull og slag med last i sjø i 3D (F2 måler bare tom sjark og skiff, `tests/hull3d.py`). OB-fasene som rører en båt, kjører `hull3d` for den med fullt rom.
 
+### 5.1 Trim, slagside og mannskapets vekt (OB15, 09.11.2026, Jonas' økt, grenen `ccr-4660a71b-kidfna`)
+
+S1–S3 er bygd. Lasten har fått plassen sin om bord, lest av modellenes ankre 09.11.2026 (`STAB_AT` i `core/03c-stability.js`, i modellens ramme: luka eller kassene på dørken, garnet, stampene, karene ved bordet, bordet, haleren, roret, plassen ved ripa på håndbåtene, arbeidsdekket for teinene). `stabOf` regner nå slagsiden (lastens moment på tvers over D·GM) og trimmen (likevekten til skrogsnittene med tyngdepunktet der lasten står, `hullRest(H, D, zG)`), og `stabLoad` gir folkene om bord med stasjonene sine (90 kg hver, 0,9 m over dekket de står på) og trekket i haleren (`stabPull`). 3D følger kjernen: skrogsnittene hviler med kjernens trim, og rullen har slagsiden i målet sitt (`view3d/16-motion.js`). Ingenting regnes i 3D alene, så verden er den samme med skjermen av.
+
+Regnet uten 3D, skipperen ved roret i alle kolonnene; trim akter positiv, slagside mot styrbord positiv (bb = mot babord). «Line» og «garn»: trekket fra 80 m med én (line) eller to (garn) ved haleren; «jukse»: én ved ripa og ingen ved roret; «kar»: fisk som venter i karet ved bordet (10 % av rommet, høyst 300 kg).
+
+| Båt | Tom: trim / slagside | Fullt rom: trim / slagside | Line: trekk kg / slagside | Garn: trekk kg / slagside | Jukse: slagside | Kar: kg / slagside | Fribord akter, fullt (m) |
+|---|---|---|---|---|---|---|---|
+| skiff | 0,2° / 0,0° | −4,9° (nesa) / 0,0° | 35 / 2,1° | 35 / 3,1° | 1,1° | 50 / 1,0° bb | 0,64 |
+| trebat | 0,4° / 2,0° bb | −1,6° / 1,5° bb | 67 / 4,7° | 67 / 7,5° | 2,5° | 50 / 0,4° bb | 0,60 |
+| snekke | 0,1° / 1,8° | 1,0° / 1,3° | 98 / 7,9° | 105 / 10,6° | 2,3° | 100 / 1,9° | 0,50 |
+| plastsjark | 0,1° / 0,7° | −1,4° / 0,4° | 98 / 4,1° | 148 / 6,6° | 1,3° | 300 / 6,0° | 0,57 |
+| sjark | −0,1° / 0,3° | 0,6° / 0,1° | 98 / 2,2° | 148 / 3,6° | 0,7° | 300 / 2,9° | 0,45 |
+| hurtigsjark | −0,1° / 0,3° | 1,2° / 0,2° | 98 / 2,5° | 148 / 4,2° | 0,9° | 300 / 3,5° | 0,49 |
+| sjarkny | −0,1° / 0,3° | 2,0° / 0,2° | 98 / 1,5° | 148 / 2,3° | 0,5° | 300 / 2,1° | 0,42 |
+| breisjark | −0,1° / 0,2° | −1,4° / 0,1° | 98 / 1,6° | 148 / 2,6° | 0,5° | 300 / 2,1° | 0,47 |
+| kyst15 | 0,0° / 0,1° | 0,0° / 0,0° | 98 / 0,5° | 148 / 0,8° | 0,2° | 300 / 0,7° | 0,43 |
+| kyst21 | 0,0° / 0,0° | −2,0° / 0,0° | 98 / 0,2° | 148 / 0,3° | 0,1° | 300 / 0,3° | 0,77 |
+
+Uten noen om bord ligger alle på rett kjøl og uten slagside (enhetstesten). Det som er antatt (C):
+
+- **Rommets tyngdepunkt** er tatt midt mellom luka og midten av båten: luka er bare åpningen, rommet går under dekket mot midtskips, og modellene har ikke rommet (CLAUDE.md, bare utsiden). Med luka selv som tyngdepunkt ville havsjarken trimme 2,5° akter fullastet og den nye hurtigsjarken 5,6°. Én linje i `stabPlaces`.
+- **Den tomme båten ligger på rett kjøl**, som før: konstruktøren har lagt motor, tanker og ballast slik. Ekte båter er ofte balansert for halv last i stedet; da ville trimmen fullastet vært omtrent halvparten.
+- **Kassene på skiffen og trebåten** står forut der modellene tegner dem (`kit.cargo`), så fullt gir 4,9° og 1,6° på nesa. En fisker ville stuet dem nærmere midten; det hører til OB1 og OB5 å flytte kassene i modellen om Jonas vil det, ikke til fysikken.
+- **Trekket i haleren** er anslått, ikke målt: line 50 kg, garn 100, teiner 70 (snøkrabbe 60), 0,6 kg per meter dyp og halve fangsten på stykket som er i skiva, høyst 35 kg per tonn båt (håndbåtene trekker for hånd). På snekka (3 t, GM 0,62) gir det 8–11° under trekket, der det meste er folkene ved haleren om styrbord.
+- **Folkene på dekkede båter** står på plassen for stasjonen sin (`c.st`, `S.mySt`), ikke der figuren i 3D går (`deckcrew.js` leses ikke, OB2 eier den): krengningen flytter seg når noen bytter stasjon, og rullen i 3D glir over dit.
+
+Hva tallene gjør med S4 og S5: fullastet trimmer de fleste sjarkene akter, så fribordet akter blir 1–8 cm lavere enn det jevne (sjarkny 0,42 mot 0,50 m); dekkskantvinkelen er fortsatt regnet for det jevne fribordet (S4 står). Skiffen er fortsatt stiv (S5): én om bord tar GM fra 2,09 til 1,94 m og gir 1,1° ved ripa, mot trebåtens 2,5°. Slagsiden legges til vindkrengningen i varslene (`motionAt`), så en båt som ruller nær grensen under trekket, varsles tidligere enn før.
+
 ## 6. Fasene
 
 Én båt per økt, eller én operasjon på tvers av båtene der koden er felles. Trebåten først (startbåten, alle spillerne ser den første uka), så det felles arbeidet som ses hver tur, så båtene i stigens rekkefølge. Hver fase:

@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['ob15-091126', '09.11.2026', 'Båten med last', 'The boat with a load', [
+       ['Lasten ligger der den står om bord: fullt rom akter gir en båt som ligger tyngre akter, kassene forut trykker nesa ned, og garnet på hekken trykker hekken ned.', 'The load lies where it stands aboard: a full hold aft makes a boat lie deeper by the stern, the boxes forward press the bow down, and the nets on the stern press the stern down.'],
+       ['Under trekket krenger båten mot haleren, mer jo tyngre redskapet er, og fisken i karet ved ripa gir slagside.', 'While hauling the boat heels towards the hauler, the more the heavier the gear, and the fish in the tub at the rail give her a list.'],
+       ['Folkene om bord veier: på en liten båt krenger hun litt når noen står ved ripa. Slagsiden står i værvarselet sammen med rullingen.', 'The people aboard have weight: a small boat heels a little when someone stands at the rail. The list shows in the weather with the rolling.']]],
     ['f3b-091126', '09.11.2026', 'Sjørokk og skum etter slaget', 'Spindrift and the foam after a slam', [
        ['Fra stiv kuling river vinden sprut av kammene som bryter, og sjørokken i lufta kommer fra de samme kammene som skummet på vannet. Jo mer vind, jo flere kammer bryter, og jo mer sjørokk.', 'From a near gale the wind tears spray off the crests that break, and the spindrift in the air comes off the same crests as the foam on the water. The more wind, the more crests break, and the more spindrift.'],
        ['Når baugen slår i sjøen, blir det hvite vannet liggende som skum rundt baugen og der sprøyten faller ned, og det ligger igjen i sjøen som kjølvannet.', 'When the bow slams into the sea, the white water stays as foam round the bow and where the spray falls back, and it lies in the sea as the wake does.']]],
