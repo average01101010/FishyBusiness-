@@ -461,9 +461,11 @@
   // fill: what each tub has on its rim while the crew work them (1 the hooks all baited, 0 none, between the baited hooks one by one)
   function drawLineTubs(BMrel, at, n, baited, green, ry, fill){ const T = kit('rig', 'stamp'), Lr = kit('rig', green ? 'line_g' : 'line_r'), K = kit('rig', 'kroker'), M0 = chain(BMrel, M4.T(at[0], at[1], at[2]), M4.RY(ry || 0));
     const nMax = (VESSELS[vtype()] || {len:10}).len < 8 ? 4 : 8, HX = (kitX('rig').hooks) || {n:30, r:0.2238, y:0.38, a0:-75, a1:75};   // (four fit between the thwarts of the small open boats)
+    // (OB5: a model with room for only so many on the deck, kit.stamps.n, has the rest stacked on them, as tubs are stacked: the skiff's two along her)
+    const KS = ((GEO(vtype()) || {}).kit || {}).stamps, per = KS && KS.n ? KS.n : nMax;
     for (let i = 0; i < Math.min(nMax, n); i++){
       if (!T){ drawN(GB.tub, chain(M0, M4.T(-(i % 2) * 0.6, Math.floor(i / 2) * 0.33, (Math.floor(i / 2) % 2) * 0.1))); continue; }
-      const M = chain(M0, M4.T((i % 2) * 0.52, 0, Math.floor(i / 2) * 0.5), M4.RY(hash(i * 3 + 1) * 6.28)), f = fill && fill[i] != null ? fill[i] : i < baited ? 1 : 0; drawN(T, M); if (Lr) drawN(Lr, M);
+      const j = i % per, M = chain(M0, M4.T((j % 2) * 0.52, Math.floor(i / per) * 0.38, Math.floor(j / 2) * 0.5), M4.RY(hash(i * 3 + 1) * 6.28)), f = fill && fill[i] != null ? fill[i] : i < baited ? 1 : 0; drawN(T, M); if (Lr) drawN(Lr, M);
       if (K && f >= 0.999) drawN(K, M);
       else if (f > 0 && GB.bait){ const m = Math.round(f * HX.n); if (!BITM.length) for (let j = 0; j < HX.n; j++){ const a = (HX.a0 + (HX.a1 - HX.a0) * j / Math.max(1, HX.n - 1)) * DEG; BITM.push(chain(M4.T(Math.cos(a) * HX.r, HX.y + 0.012, -Math.sin(a) * HX.r), M4.RY(a), M4.S(1.3))); }
         for (let j = 0; j < m && j < BITM.length; j++) drawN(GB.bait, chain(M, BITM[j])); } } }
@@ -818,7 +820,8 @@
     // (OB1, F19 in docs/planer/om-bord.md: on the old wooden boat that put him on the one gutting at the table, the table and the tub being
     // 0.15 m apart along her: a model with a mate's place, work.mate [x, y, z], has him there, facing the tub, clear of the other)
     if (!agents && DK.me && DK.crew && !DK.alone){ const M2 = W && W.mate, w2 = xf(BMrel, M2 ? [M2[0], d.y, M2[2]] : [ux + (ux > tx ? -0.62 : 0.62), d.y, uz]), y2 = w2[1] + eye[1];
-      const h2 = M2 ? bv.head + Math.atan2(ux - M2[0], -(uz - M2[2])) : bv.head + (ux > tx ? 1 : -1) * Math.PI / 2;
+      // (OB5: a fourth number is his heading in the boat, the skiff's mate facing the catch tub to port rather than the bleeding tub)
+      const h2 = M2 ? bv.head + (M2[3] != null ? M2[3] : Math.atan2(ux - M2[0], -(uz - M2[2]))) : bv.head + (ux > tx ? 1 : -1) * Math.PI / 2;
       drawWorker({gy:() => y2, bare:true, spray:0, kit:null, look:seaLook(lookCrew(0))}, Object.assign({x:w2[0] + eye[0], z:w2[2] + eye[2], h:h2, walk:false, s:0}, icing), eye, t, 8); }
     // the offal goes over the rail on the table's side into the water (down the bench's chute), where the gulls come down for it
     const kDrop = KB && XF[big ? 'benk_drop' : 'bord_drop'], dropP = kDrop ? [tx + tSide * kDrop[2], d.y + Math.max(0.6, kDrop[1]), tz - tSide * kDrop[0]] : [tx - tSide * 0.15, d.y + 1.0, tz];

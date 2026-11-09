@@ -203,6 +203,47 @@ Et bilde rett fra siden av en 5,9 m åpen aluminiumsbåt med midtkonsoll (helst 
 akterfra (speilet, hakket, podene og motoren), et ovenfra inn i båten (konsollen, benken, lukene) og nærbilder av konsollen og
 motorbrønnen.
 
+## 10. OB5: ekte arbeid om bord og karakteren etter Jonas' skala (09.11.2026)
+
+Steg 83 i `docs/planer/koen.md`, Jonas' økt på grenen `ccr-b0ab5771-n45cmj`. Jonas 09.11.2026: «at arbeidet ombord utføres på en så ekte måte som mulig, at mannskapet oppfører seg som ekte mennesker, at utstyr står plassert på rasjonelle og logiske plasser, at utstyr opereres på en realistisk måte, at ingenting clipper inn i andre ting». Før- og etter-bildene er tatt med `tests/ombord.py skiff` i begge formater, bare bilder (Jonas: «Ikke ta videoopptak»); arkene ligger i `docs/okter/2026-11-09-ob5/`.
+
+### 10.1 Det som er endret
+
+- **Den som sto utenfor båten ved sløyingen** (4.2 i `om-bord.md`, alvor A) var nummer to, ikke den som sløyer: uten `work.mate` la spillet ham 0,62 m fra bløggekaret bort fra bordet, og på skiffen er det utenfor babord side. Han står nå på styrbord side av dørken ved fangstkaret og ser mot det (`work.mate` med retningen som fjerde tall), og iser der. Den som sløyer, står der han sto: på dørken mellom konsollen og sløyebordet, vendt utover.
+- **Plassene for arbeidet** som på trebåten (OB1): linehaleren på stolpen sin (`haulFoot`) rett forut for fiskeren med skiva i brysthøyde; juksamaskinene på 2,62, 3,80 og 2,10 m, klar av haleren (den midterste sto der stolpen står); garnet for hånd over ripa ved fiskeren (`rail`, valg 21 B); setting over styrbord låring mellom stangholderne (`set`), der motoren ikke er i veien, med den andre sittende på styrbord benk (`setter`) og skipperen ved rattet; ved trekket står den andre forut for fiskeren og legger lina i stampen ved føttene (`coil`, `coilTub`); ved kaia tar skipperen tauene selv (`moor`).
+- **Stampene og garnbinga** står på dørken akter, styrbord for skipperen og akter for konsollen, der redskapet går ut. Før sto stampene forut for fiskeren og binga på kastedekket, så settingen over hekken gikk gjennom konsollen og skipperen (F20, sett i før-bildet av garnsettingen). Det er plass til to stamper etter hverandre, ikke to i bredden (`kit.stamps.n` 2, resten stables oppå); binga er 0,62 av 460 l-karet. Frakten står fortsatt på kastedekket (paller får ikke plass på dørken).
+- **Vekta** (valg 18 A, `disp` er den tomme båten): tegningens vannlinje 0,30 m ga 1,60 t, en lastet vannlinje. **Formen er ikke endret**: den tomme båten flyter på 0,23 m (0,96 t mot 1,0 t), og `check()` feiler nå over 10 %. Bunnstoffet og vannlinjestripa står der tegningen har dem, så de synes over vannet når hun er tom, som på en ekte båt. Fordi skroget ikke er formet om, er valg 22 B (bildene før skroget endres) ikke utløst; bildene under er funnet likevel.
+- **90 hk-motoren** (D6): samme motor ved 90 hk som egne deler (`outboard90`, `prop90`), tegnet når spilleren har kjøpt den (`EQUIP.motor90`).
+- **Vekta om bord** (`STAB_AT` i `core/03c-stability.js`): dekket 0,22 m over vannlinja, garnet og stampene akter, haleren på stolpen.
+
+### 10.2 Bildene (valg 22 B)
+
+Søkt etter offentlige bilder av en 19 fots aluminiumsbåt med midtkonsoll og påhengsmotor. Treffene på Wikimedia Commons er finske aluminiumsbåter med konsoll, ikke platebåter av typen, og ingen har oppgitte mål i treffet:
+
+- «Buster Magnum aluminium boat with Yamaha F225 engine» (aluminiumsbåt med påhengsmotor): https://commons.wikimedia.org/wiki/File:Buster_Magnum_aluminium_boat_with_Yamaha_F225_engine.jpg
+- «Buster Magnum E aluminium boat»: https://commons.wikimedia.org/wiki/File:Buster_Magnum_E_aluminium_boat.JPG
+- Kategorien med flere av samme slag (der også en «S cc», midtkonsoll): https://commons.wikimedia.org/wiki/Category:Buster_boats
+- «Aluminum Fishing Boat» (en liten åpen aluminiumsbåt): https://commons.wikimedia.org/wiki/File:Aluminum_Fishing_Boat.jpg
+
+Sidene og bildene er **ikke sett**: `commons.wikimedia.org` og `digitaltmuseum.no` er stengt i øktas nettverk. Navnene står bare her som kilde, aldri i spillet. Vekta til typen er sjekket mot annonser i søket (en 19,4 fots konsollbåt i glassfiber oppgis til rundt 975 kg tørr, en 19,8 fots aluminiums fiskebåt til rundt 700 kg uten motor), som passer med 1,0 t for skiffen med motor og bensin.
+
+### 10.3 Karakteren (forslag; Jonas setter den)
+
+Etter Jonas' skala (valg 17, `om-bord.md` kap. 2). Forslaget i OB0 var 57 etter en annen skala.
+
+| Punkt | Vekt | Forslag | Begrunnelse |
+|---|---|---|---|
+| Skrogutforming | 20 | 15 | Skroget er én flate etter tabellene fra tegningen (kap. 5), med kjølskinne, sveis og poder, og vekta stemmer nå (0,96 t mot 1,0). Trekk: ingen tegning eller bilde av typen er sett (10.2) |
+| Detaljer | 20 | 15 | Tårnplate, luker som ekte hull, lister, lanterner med skjerm, konsollen med festet vindskjerm, motoren og nå 90 hk-motoren som egne deler. Trekk: materialene er ikke PBR (F2) |
+| Lanterner | 5 | 4 | Lovlige plasser, den hvite 1,05 m over sidelanternene (`check()`); ikke sett om natta i denne økta |
+| Styrhus | 10 | 8 | Midtkonsoll med levende skjermer, ratt og gass; `brotest` |
+| Arbeidsflyt | 25 | 18 | Setting fra stampene og binga akter over låringen med én ved rattet og én som mater, trekket med én ved haleren og én ved stampen, garnet for hånd over ripa, sløyingen med begge inne i båten, ingen teiner, skipperen ved tauene. Trekk: håndbåtene har ingen klippesjekk (alt er sett, ikke målt); den andre sitter fortsatt ledig akter under juksa; garnet legges i binga akter mens den andre står forut ved trekket; tauene og fenderne selv er OB2s |
+| Utforming av dekk | 20 | 15 | Redskapet står der det settes fra, haleren der fiskeren når den, maskinene klar av den, karene der de var. Trekk: stampene og binga sperrer gangen på styrbord side av konsollen når de er om bord, og knærne til den som mater, står over binga; frakten står forut på kastedekket (trimmer henne på nesa) |
+| **Sum** | **100** | **75** | På grensen. Det som løfter mest: bilder av typen (10.2) og en klippesjekk for håndbåtene |
+
+Jonas setter karakteren.
+
 ## Endringslogg
 
 - 31.10.2026: første versjon, gjennomgangen før endring.
+- 09.11.2026: OB5 (kap. 10): arbeidet om bord, vannlinja for den tomme båten, 90 hk-motoren.

@@ -3812,7 +3812,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **317** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
 - **419** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
 
-## `src/js/view3d/09-landing-deck.js` (829 linjer)
+## `src/js/view3d/09-landing-deck.js` (832 linjer)
 
 ---------- landing the catch ----------
 
@@ -3852,39 +3852,39 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 451 `rigAt(G, kind, d)`
   - 456 `drawNetTub(BMrel, at, fill, ry)`
   - 462 `drawLineTubs(BMrel, at, n, baited, green, ry, fill)`
-  - 473 `jobTubs(j)`
-  - 477 `drawMendNet(BMrel, G, d, R)`
-  - 491 `drawRigRest(BMrel, G, d)`
-- **504** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
-  - 510 `boyeCanvas(txt)`
-  - 516 `boyeTex()`
-  - 523 `ladderMesh(L)`
-  - 531 `boyeQ()`
-  - 532 `drawSafety(BMrel, G, VP, t)`
-  - 573 `cargoUnits(G)`
-  - 574 `drawCargo(BMrel, G, hide)`
-  - 589 `crFrames(X, Q, BMrel, p)`
-  - 598 `crLink(X, a2)`
-  - 601 `drawCrane(BMrel, G, VP, t, d)`
-- **656** the fish tubs on an open boat's deck (core/07f-kar.js, docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
-  - 667 `karPlan(key, spec, kg, dims)`
-  - 675 `karSpec()`
-  - 677 `drawKarLoad(M, load, key, washed)`
-  - 696 `karPlaces(vt)`
-  - 700 `drawCatchTubs(BMrel, vt, skip, washed)`
-  - 706 `karTop(vt, i)`
-  - 709 `karFilling(vt)`
-- **710** the ice box (tools/deck/fisk.py iskasse, the 300 l tub in blue): it stands on deck at its place (the model's kit.iskasse, under
-  - 713 `iceBoxAt(vt)`
-  - 718 `iceBoxTop(vt)`
-  - 722 `drawIceBox(BMrel, vt, shovelIn)`
-  - 733 `shaftM(A, B)`
-- **737** the sling (tools/deck/fisk.py slynge_*): the master link on the crane's hook at H (eye-relative, its top), a strap from the ring
-  - 739 `drawSling(H, M, swing, k)`
-- **757** the bleeding tub (Jonas 04.11.2026: «se at blodet og fisken fyller karet på en ordentlig måte»): the 300 l tub at the model's
-  - 761 `drawBleedTub(BMrel, W, d, ux, uz, KT, KW)`
-  - 779 `dkTub(G)`
-  - 780 `drawDeck(BMrel, eye, VP, t, DK)`
+  - 475 `jobTubs(j)`
+  - 479 `drawMendNet(BMrel, G, d, R)`
+  - 493 `drawRigRest(BMrel, G, d)`
+- **506** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
+  - 512 `boyeCanvas(txt)`
+  - 518 `boyeTex()`
+  - 525 `ladderMesh(L)`
+  - 533 `boyeQ()`
+  - 534 `drawSafety(BMrel, G, VP, t)`
+  - 575 `cargoUnits(G)`
+  - 576 `drawCargo(BMrel, G, hide)`
+  - 591 `crFrames(X, Q, BMrel, p)`
+  - 600 `crLink(X, a2)`
+  - 603 `drawCrane(BMrel, G, VP, t, d)`
+- **658** the fish tubs on an open boat's deck (core/07f-kar.js, docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
+  - 669 `karPlan(key, spec, kg, dims)`
+  - 677 `karSpec()`
+  - 679 `drawKarLoad(M, load, key, washed)`
+  - 698 `karPlaces(vt)`
+  - 702 `drawCatchTubs(BMrel, vt, skip, washed)`
+  - 708 `karTop(vt, i)`
+  - 711 `karFilling(vt)`
+- **712** the ice box (tools/deck/fisk.py iskasse, the 300 l tub in blue): it stands on deck at its place (the model's kit.iskasse, under
+  - 715 `iceBoxAt(vt)`
+  - 720 `iceBoxTop(vt)`
+  - 724 `drawIceBox(BMrel, vt, shovelIn)`
+  - 735 `shaftM(A, B)`
+- **739** the sling (tools/deck/fisk.py slynge_*): the master link on the crane's hook at H (eye-relative, its top), a strap from the ring
+  - 741 `drawSling(H, M, swing, k)`
+- **759** the bleeding tub (Jonas 04.11.2026: «se at blodet og fisken fyller karet på en ordentlig måte»): the 300 l tub at the model's
+  - 763 `drawBleedTub(BMrel, W, d, ux, uz, KT, KW)`
+  - 781 `dkTub(G)`
+  - 782 `drawDeck(BMrel, eye, VP, t, DK)`
 
 ## `src/js/view3d/10-gear.js` (697 linjer)
 
@@ -3935,7 +3935,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 31 `nearestBunker(eye)`
   - 32 `drawBunker(B, eye, VP, T, BMrel)`
 
-## `src/js/view3d/12-skiff.js` (431 linjer)
+## `src/js/view3d/12-skiff.js` (435 linjer)
 
 ---------- boat ----------
 
@@ -3962,7 +3962,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 187 `handKit(t)`
   - 209 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (560 linjer)
+## `src/js/view3d/13-instruments.js` (561 linjer)
 
 ---------- the skiff's live instruments ----------
 
@@ -3992,16 +3992,16 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 195 `limbM(A, B, r)`
   - 201 `armTo(BMrel, W, Sw, Hw, sd, sp)`
   - 211 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
-  - 399 `drawSkiffGlass(BMrel, VP)`
-  - 409 `jigRail(t, G)`
-  - 430 `drawJigRail(BMrel, VP, t, G, dt)`
-  - 463 `drawGlass(m, BMrel, VP)`
-  - 482 `drawDrops(m, BMrel, VP, t)`
-  - 493 `buildBoat()`
-  - 519 `buildFlag()`
-  - 531 `flagTex()`
-  - 544 `mastTop(G)`
-  - 548 `updateFlag(t, appW)`
+  - 400 `drawSkiffGlass(BMrel, VP)`
+  - 410 `jigRail(t, G)`
+  - 431 `drawJigRail(BMrel, VP, t, G, dt)`
+  - 464 `drawGlass(m, BMrel, VP)`
+  - 483 `drawDrops(m, BMrel, VP, t)`
+  - 494 `buildBoat()`
+  - 520 `buildFlag()`
+  - 532 `flagTex()`
+  - 545 `mastTop(G)`
+  - 549 `updateFlag(t, appW)`
 
 ## `src/js/view3d/14-sea.js` (530 linjer)
 
