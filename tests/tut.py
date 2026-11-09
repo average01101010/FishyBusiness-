@@ -7,7 +7,7 @@ at test pace (S.mult) to save time. Checks: every step comes in order, the guide
 "tut":0, the jig aboard from the start, the first fill of ice on the plant after the landing, the free luxury luck, a full hold at landing, and a login bonus row on the landing note.
 Prints OK or FEIL per check and ends with the old summary line {"tut":0, …} and the page errors."""
 from _env import GAME_RO as GAME   # the calm on, as a player has it: the first trip must never see it (U2-4)
-import asyncio, json, os, time
+import re, asyncio, json, os, time
 from playwright.async_api import async_playwright
 
 # the first trip after the rewrite of 10.10.2026 (docs/onboarding.md): the naust first, the cameras on the way out, the apps on the way
@@ -113,18 +113,24 @@ async def play(p, W, H, tag):
         if s['ring']:
             await tap(s['ring']['x'], s['ring']['y']); await pg.wait_for_timeout(350 if sid != 'route2' else 700); continue
         await pg.wait_for_timeout(500)
-    end = json.loads(await pg.evaluate("JSON.stringify({crew:S.crew.length, tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), land:S.tutStart && S.tutStart.land, iceFree:!!S.iceFree, freeIce:tutFree('ice'), ice:S.boat.ice, gear:S.boat.gear, log:S.log.slice(-8).map(e => e.no), gutKg:S.lastSale ? S.lastSale.lines.reduce((a, r) => a + (r.gut ? r.kg : 0), 0) : -1, roundKg:S.lastSale ? S.lastSale.lines.reduce((a, r) => a + (r.gut ? 0 : r.kg), 0) : -1, said:PSAYLOG.map(l => l.pick), knife:S.log.filter(e => /Bløggekaret er fullt|Tar unna fangsten|Stopper fisket for å sløye/.test(e.no)).length})"))
+    end = json.loads(await pg.evaluate("JSON.stringify({crew:S.crew.length, tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), land:S.tutStart && S.tutStart.land, iceFree:!!S.iceFree, freeIce:tutFree('ice'), ice:S.boat.ice, gear:S.boat.gear, log:S.log.slice(-30).map(e => e.no).filter(t => !/^Gave for «/.test(t)).slice(-8), gutKg:S.lastSale ? S.lastSale.lines.reduce((a, r) => a + (r.gut ? r.kg : 0), 0) : -1, roundKg:S.lastSale ? S.lastSale.lines.reduce((a, r) => a + (r.gut ? 0 : r.kg), 0) : -1, said:PSAYLOG.map(l => l.pick), knife:S.log.filter(e => /Bløggekaret er fullt|Tar unna fangsten|Stopper fisket for å sløye/.test(e.no)).length})"))
     await pg.evaluate("PHONE.show(false); DOCK.open('lever')"); await pg.wait_for_timeout(600)
     await pg.screenshot(path='tut_' + tag + '.png')
     order = [x for x in seen if x]
     want = [x for x in ORDER if x in order or x not in SKIPPABLE]
     check(order == want, tag + ': alle stegene kom i rekkefølge', order)
+    # (the gifts for the badges earned in the first trip are kept and given when it is over, 09f-merker.js achGive: up to eight «Gave for …»
+    # lines can come right after it ends, before this is read, and pushed the trip's own lines out of the last eight; U2-7 08.11.2026)
     check(end['tut'] == 0 and 'Første tur er fullført' in ' '.join(end['log']), tag + ': veiledningen er fullført', end['log'])
     check(free.get('gear') and free.get('ice', 1) == 0 and free.get('cash') == 15000, tag + ': juksa satt på fra start, og ingen is før første fiske', free)
     check(end['iceFree'] and end['freeIce'] and end['gear'], tag + ': isen er den åpne oppgaven etter første tur: første fylling venter gratis på mottaket (Onboarding 2, O4, V5 A)', {k: end[k] for k in ('ice', 'iceFree', 'freeIce', 'gear')})
     check('i timen' in norm, tag + ': sluttseddelen sier at første tur var ekstra god, og hva fisket her vanligvis gir (O4)', norm[:120])
+    # the slip and the deck log say the same N (Ø8b S0, Jonas' choice A 08.11.2026: portSlip calls tutNormKg)
+    num = lambda t: (re.search(r'(rundt [\d\s\u00a0]+ kg|under 10 kg)', t) or [None])[0]
+    logn = next((x for x in end['log'] if x.startswith('Første tur var ekstra god')), '')
+    check(num(norm) and num(norm).replace('\u00a0', ' ') == (num(logn) or '').replace('\u00a0', ' '), tag + ': sluttseddelen og dekksdagboka sier samme N', {'seddelen': num(norm), 'dagboka': num(logn)})
     check(end['haill'] != 'luksus', tag + ': ingen gratis luksushaill i første tur (Onboarding 2, V1 A: den er gaven ved registrering)', end['haill'])
-    check(hold_at_land is not None and hold_at_land >= 174, tag + ': minst halvt lasterom ved levering etter en time på feltet (Onboarding 2, V2 A)', hold_at_land)
+    check(hold_at_land is not None and hold_at_land >= 495, tag + ': full last (karet på dekk, 500 kg i trebåten) ved levering etter en time på feltet (Ø8b S0, V3 C)', hold_at_land)
     check(end['sale'] and end['sale']['port'] == (end.get('land') or 'botnhamn') and bonus_row, tag + ': levert på første turs mottak med bonuslinje på sluttseddelen', end['sale'])
     check(end['gutKg'] == 0 and end['roundKg'] > 100 and end['knife'] == 0, tag + ': første tur leveres rund, og fisket stoppet aldri for sløying (Jonas 08.11.2026)', {k: end[k] for k in ('gutKg', 'roundKg', 'knife')})
     check('round' in end['said'], tag + ': kaia sier hva sløying om bord gir ved første levering', end['said'])

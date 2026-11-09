@@ -484,9 +484,11 @@ function hotField(sp, p, H, k){
   const si = ALLSP.indexOf(sp), v = HOT.v * (0.6 + 0.8 * h2(k, 720 + si)), d = migDir(sp, p, k, HOT.T, 0.7, 1), tt = H - k * HOT.T;
   return noise2((p.x - d[0] * v * tt) / HOT.cell, (p.y + d[1] * v * tt) / HOT.cell, 20 + si + 97 * k);
 }
-function hotspot(sp, p, H){
+// P: on a fishing ground in season the spot is lifted towards the best by the ground's pull, n -> 1 - P (1 - n) (feltLiftP in 03j-felt.js,
+// Ø14 F2): the spots' own pattern stays, it only stands stronger on the ground (1: no ground)
+function hotspot(sp, p, H, P = 1){
   const f = H / HOT.T, k = Math.floor(f), u = sstep(0, 1, f - k), a = hotField(sp, p, H, k), b = hotField(sp, p, H, k + 1);
-  const n = clamp(0.5 + ((a - 0.5) * (1 - u) + (b - 0.5) * u) / Math.hypot(1 - u, u), 0, 1); return 0.3 + 1.5 * n * n;
+  let n = clamp(0.5 + ((a - 0.5) * (1 - u) + (b - 0.5) * u) / Math.hypot(1 - u, u), 0, 1); if (P < 1) n = 1 - P * (1 - n); return 0.3 + 1.5 * n * n;
 }
 // Schools: a finer pattern (400 m) that swims 0.5–1 km an hour. It averages 1, so it moves the bite about within half an hour without
 // changing the catch over a day. Since B2 (01.11.2026) the schools swim where the species is going at that time and place (migDir:
@@ -514,10 +516,10 @@ function schoolHeading(sp, p, H){
 // representative point when there are no rule data
 const FIELDS = [['05-25', 6, 45], ['05-29', 14, 8], ['05-30', 44, 8], ['05-31', 72, 4], ['05-40', 58, 36], ['05-41', 42, 68], ['05-42', 12, 80]];
 function fieldCode(p){ const c = RU.ok && ruLok(p); if (c) return c; const q = LGI(p); if (!insideFjord(p) && q.x < 16) return q.y < 30 ? '05-29' : '05-25'; let best = FIELDS[0], bd = 1e9; for (const f of FIELDS){ if (!insideFjord(p) && (f[0] === '05-40' || f[0] === '05-41')) continue; const d = Math.hypot(q.x - f[1], q.y - f[2]); if (d < bd){ bd = d; best = f; } } return best[0]; }
-// where the spawning cod gathers: exposed banks 40–250 m outside the fjords, and the known grounds
+// where the spawning cod gathers: exposed banks 40–250 m outside the fjords (Senja's three outer grounds had a term of their own here
+// until Ø14 F2, 08.11.2026: the grounds of Fiskeridirektoratet there lift the spots as everywhere else, 03j-felt.js)
 function skreiSpot(p, d = depthF(p), E = exposure(p)){
-  let v = sstep(0.15, 0.6, E) * sstep(30, 60, d) * (1 - sstep(220, 320, d));
-  for (const g of GROUNDS.slice(0, 3)){ const dd = dist(p, g.p); v += 0.6 * Math.exp(-((dd / (g.r * 1.3)) ** 2)); }
+  const v = sstep(0.15, 0.6, E) * sstep(30, 60, d) * (1 - sstep(220, 320, d));
   return clamp(v, 0, 1.2) * (insideFjord(p) ? 0.35 : 1);
 }
 function gauss(u1, u2){ return Math.sqrt(-2 * Math.log(Math.max(1e-9, u1))) * Math.cos(2 * Math.PI * u2); }
@@ -545,7 +547,8 @@ function uerOpen(H){ const m = gDate(H).getUTCMonth(); return m >= 5 && m <= 7; 
 function denPlace(p){
   if (isLand(p)) return null;
   const d = depthF(p), E = exposure(p);
-  return {p, d, E, edge:sstep(1.5, 12, slopeAt(p)), gd:GROUNDS.map(g => dist(p, g.p)), skr:-1, c:lokOfCell(p)};   // c: the 2 km cell's location (03f-fiske.js)
+  // c: the 2 km cell's location (03f-fiske.js); fl: the fishing grounds whose shape reaches the point (03j-felt.js, Ø14 F2)
+  return {p, d, E, edge:sstep(1.5, 12, slopeAt(p)), skr:-1, c:lokOfCell(p), fl:feltAt(p)};
 }
 const DENT = {H:NaN, T:null};
 function denTime(H){
@@ -558,9 +561,9 @@ function denTime(H){
 }
 function denSp(sp, q, H, T){
   const s = SPECIES[sp], p = q.p;
-  let v = s.base * (s.prod + (1 - s.prod) * q.E) * (0.6 + 0.4 * q.edge) * hotspot(sp, p, H) * 0.95;
-  // the named grounds are known for a reason
-  for (let i = 0; i < GROUNDS.length; i++){ const g = GROUNDS[i], dd = q.gd[i]; if (dd > g.r * 3) continue; v += (g.sp[sp] || 0) * Math.exp(-((dd / g.r) ** 2)) * 0.45; }
+  // the fishing grounds in their season lift the good spots (03j-felt.js, Ø14 F2), and the location's mean lift is divided out, so the
+  // location has the fish it had and only where in it they stand moves (Senja's six grounds had a circle of their own here until then)
+  let v = s.base * (s.prod + (1 - s.prod) * q.E) * (0.6 + 0.4 * q.edge) * hotspot(sp, p, H, feltLiftP(sp, q, H, T)) / feltWl(q.c, sp, T) * 0.95;
   const day = 0.75 + 0.5 * vn(H / 24 + p.x * 0.05, 300 + ALLSP.indexOf(sp));
   // the season and the place from the landing notes and the migrations (areaF, 03f-fiske.js), where the one table av and the skrei
   // pulse were the same from Lindesnes to Vardø until B2 (01.11.2026); the Greenland halibut and the king crab keep their own areas
@@ -598,9 +601,10 @@ const tutFieldAt = () => (typeof S !== 'undefined' && S && S.tut && S.tut.f) ? S
 // the mix: the patch's own (S.tut.f.mix, the jig's fish that stand there now and are lawful there, ui/08c-start.js tutFieldNear), else
 // the skrei mix of the Senja start
 const TUTB = {peak:5.2, mix:{torsk:0.72, sei:0.18, hyse:0.1}};
-// the first trip's fishing (Onboarding 2, O3, V2 A, 27.10.2026): one hour (ten real minutes), and the guarantee tops up to half the hold
-// (175 kg in the starting boat) instead of a full one; the landing does not wait for a full hold
-const TUT_FISH_H = 1, TUT_HOLD = 0.5;
+// the first trip's fishing: one hour (ten real minutes; Onboarding 2, O3, 27.10.2026), and the guarantee tops up to a full load (capHold(): the starting
+// boat has no hold but one 500 kg tub on deck, 07f-kar.js) within the fishing time, only while the boat fishes (Ø8b S0, V3 C in docs/planer/spillbarhet-fangst.md, Jonas
+// 06.11.2026: «det er jo dumt å ikke fylle båten»; it was half the hold from O3). The player may stop when she likes and lands what is aboard
+const TUT_FISH_H = 1, TUT_HOLD = 1;
 const tutTarget = () => capHold() * TUT_HOLD;
 const tutMixOf = () => (typeof S !== 'undefined' && S && S.tut && S.tut.f && S.tut.f.mix) || TUTB.mix;
 function tutBonus(sp, p){

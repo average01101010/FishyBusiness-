@@ -126,8 +126,7 @@ body.vplot #gps::after{display:none}
 #drawerTabs{padding:8px 12px 2px} #drawerTabs[hidden]{display:none}
 #drawerBody{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 @media (orientation:landscape){body.dk-open #dock{right:calc(min(380px,92vw) + 8px)} body.dk-open #dockInfo{left:calc((100% - min(380px,92vw)) / 2)} body.dk-open #dockFan{max-width:calc(100% - min(380px,92vw) - 16px)}}
-@media (orientation:portrait){#drawer{top:auto;left:0;width:auto;height:55%;bottom:max(calc(env(safe-area-inset-bottom,0px) + 84px + var(--dkx, 0px)), var(--dkh, 0px));border-radius:16px 16px 0 0;box-shadow:0 -8px 26px rgba(0,0,0,.28);overflow:hidden} .dr-head{padding-top:8px} body.dk-open #dockInfo{display:none}
-  #drawer.tall{height:auto;top:max(12%, calc(env(safe-area-inset-top,0px) + 8px))}}
+@media (orientation:portrait){#drawer{top:max(12%, calc(env(safe-area-inset-top,0px) + 8px));left:0;width:auto;height:auto;bottom:max(calc(env(safe-area-inset-bottom,0px) + 84px + var(--dkx, 0px)), var(--dkh, 0px));border-radius:16px 16px 0 0;box-shadow:0 -8px 26px rgba(0,0,0,.28);overflow:hidden} .dr-head{padding-top:8px} body.dk-open #dockInfo{display:none}}
 
 @media (max-width:560px){#plotTop .pt-title{display:none} body.vplot #hud{max-width:52vw}}
 /* the loading screen and the sign-in (ui/10f-cloud.js): the picture (.dsb-bg in index.html) darkened at the top and the bottom, the kicker in
@@ -682,7 +681,12 @@ body.setmode #rAuto{display:none!important}
 .wk-p .wk-now{margin:2px 0;font-size:13px;opacity:.9}.wk-p .wk-eff{margin:2px 0}
 .wk-ms{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin:6px 0 4px}.wk-m{display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:center;font-size:12px}.wk-m .qbar{margin:0}
 .wk-last{margin:4px 0 2px;font-size:12.5px;font-style:italic}.wk-p b.wk-name{text-decoration:none}
-.wk-edit{min-height:44px}.wk-card{border-top:1px solid rgba(127,127,127,.25);margin-top:8px;padding-top:6px}
+.wk-edit{min-height:44px}
+/* UI 2, U2-7 (K11): one main button per person on the crew page, the rest behind «⋯» (as the fleet's cards in Rederi, U2-5) */
+.wk-btns{display:flex;gap:6px;align-items:stretch;margin:4px 0 8px} .wk-btns > .ph-btn{flex:1 1 0;margin:0;min-width:0}
+.wk-more{flex:0 0 44px;min-height:44px;border:0;border-radius:var(--r-btn);background:var(--s-card-2);color:var(--t-ink);font:700 20px/1 var(--sans);cursor:pointer;padding:0}
+.wk-more.on{background:var(--t-ink);color:#fff}
+.wk-menu{display:flex;flex-direction:column;gap:6px;margin:0 0 8px} .wk-menu .ph-btn{margin:0}.wk-card{border-top:1px solid rgba(127,127,127,.25);margin-top:8px;padding-top:6px}
 .wk-sk{display:grid;grid-template-columns:auto 34px 1fr;gap:2px 8px;align-items:center;font-size:12.5px;margin-bottom:6px}.wk-sk .qbar{margin:0}.wk-v{text-align:right;font-variant-numeric:tabular-nums}
 .wk-p .ph-btnrow{display:flex;gap:6px}.wk-p .ph-btnrow .ph-btn{flex:1;min-height:44px;margin:0}
 .wk-said{margin-top:6px;font-size:12.5px}.wk-said p{margin:2px 0}
@@ -964,7 +968,7 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
   body.v3d.plotmin.hudcard #hud{max-height:calc(100vh - var(--sTop) - var(--gH) - 14px)}
   #phone{top:0;bottom:0;right:0;height:auto;width:min(380px,62vw);filter:drop-shadow(0 0 30px rgba(0,0,0,.5))}
   #phone .ph-body{border-radius:0;padding:0;border:0;background:#0b1622} #phone .ph-cam{display:none} #phone .ph-screen{border-radius:0}
-  #logbook{bottom:calc(env(safe-area-inset-bottom,0px) + 4px)!important;height:92px!important}
+  #logbook{bottom:calc(env(safe-area-inset-bottom,0px) + 4px)!important;height:100px!important}   /* (92 cut the tab's «DEKKSDAGBOK» to «DEKKSDAGBO», U2-8) */
 }
 
 /* ---------- «Hvor står fars naust?»: where a new game starts (ui/08c-start.js) ---------- */
@@ -1668,6 +1672,14 @@ body.v3d #hud{z-index:6} body.v3d #plotMin{z-index:7}   /* (the chart's fold but
   body.v3d.plotmin #hud{top:calc(var(--sTop) + var(--gH) + 6px)}
   body.v3d.hudstrip #hud{height:var(--sH)}
   body.v3d.hudcard #hud{width:min(92vw,400px);height:auto}
+  /* UI 2, U2-7 (docs/planer/ui-2-staaende.md kap. 5, V1 A): every page of the drawer is one sheet from 12 % of the height down to the row
+     (88 %, as the form pages were), and the strip stands over it: with the drawer open the strip takes the little chart's place at the
+     top (the sheet lies over the chart anyway), and the sheet starts under the strip. The card the strip opens lies over the sheet */
+  /* (hidden, not gone: the first trip's steps on the little chart still find it under the sheet, and close the drawer, 07b tutTip) */
+  body.v3d.dk-open :is(#miniPlot,#plotMin,#gps3d){visibility:hidden!important}
+  body.v3d.dk-open #hud,body.v3d.dk-open.plotmin #hud{top:var(--sTop)}
+  body.v3d.dk-open:not(.hudoff) #drawer{top:max(12%, calc(var(--sTop) + var(--sH) + 6px))}
+  body.v3d.dk-open.hudcard #hud{z-index:calc(var(--z-drawer) + 2)!important}
 }
 @media (orientation:portrait) and (max-width:560px){
   body.v3d{--sTop:calc(env(safe-area-inset-top,0px) + 40px);--mW:47vw;--sH:60px}   /* (47 vw: the old box's width; the strip as wide as the chart) */
@@ -1680,13 +1692,14 @@ body.v3d #hud{z-index:6} body.v3d #plotMin{z-index:7}   /* (the chart's fold but
      øverste boksen»; until then the whole box stood on top here, left to U2-8): the chart --bW wide and --mH high at the top, its GPS strip
      (--gH) there when it is folded, and the box (or the strip, when it is folded) right under either, growing downwards over the 3D view,
      so a box taller than its reserve never lies over the chart (--bHm is not needed here any more). The card opens where the box stands */
-  body.v3d{--bTop:calc(env(safe-area-inset-top,0px) + 8px);--bW:270px;--bH:196px;--sH:62px;--mH:min(var(--bW),26vh);--gH:36px}   /* (196: the box while she fishes, the next event on two lines and the deck's kg; 270: the gauges' figures and «Fremme i …») */
+  body.v3d{--bTop:calc(env(safe-area-inset-top,0px) + 8px);--bW:270px;--sH:62px;--mH:min(var(--bW),26vh);--gH:36px}   /* (270: the gauges' figures and «Fremme i …») */
   body.v3d #miniPlot{top:var(--bTop);width:var(--bW);height:var(--mH)}
   body.v3d #plotMin{top:calc(var(--bTop) - 4px);left:3px}
   body.v3d.plotmin #gps3d:not([hidden]){top:var(--bTop);width:var(--bW)}
   body.v3d #hud{top:calc(var(--bTop) + var(--mH) + 6px);width:var(--bW);max-width:none;min-width:0!important;box-sizing:border-box}
   body.v3d.plotmin #hud{top:calc(var(--bTop) + var(--gH) + 6px)}
-  body.v3d:not(.hudstrip):not(.hudcard) #hud{min-height:var(--bH)}
+  /* (no reserved height since U2-8: the box stood on top and the chart under it until 07.11.2026, and the reserve of 196 px kept the
+     chart still; under the chart nothing stands under the box, and the reserve was only an empty glass under the figures) */
   body.v3d.hudstrip #hud{height:var(--sH)}
   body.v3d.hudcard #hud{width:min(92vw,400px)}
 }
@@ -1741,3 +1754,15 @@ body.calm #dock > .dk-b:not(.hero):not(.stay):not([data-dk="beh"]),body.calm .ov
 .bu-num{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:14px}
 .bu-num div{background:#eef3f6;border-radius:10px;padding:8px 10px}
 .bu-num b{display:block;font:700 18px var(--sans);color:#15252f}.bu-num span{font-size:12px;color:#5b6c76}
+/* UI 2, U2-8: the tablet and the PC inherit (docs/planer/ui-2-staaende.md kap. 5, V1 A: the phone upright is the measure; where there is
+   room, more of the same, never anything else; decided with pictures in the five sizes of uishots, 08.11.2026) */
+/* the drawer in the chart plotter upright: the sheet starts under the strip, as in 3D since U2-7 (the strip stands under the plotter's top
+   bar there, at body.vplot #hud's --ecH + 8 px, and is body.hudstrip #hud's fixed 60 px high, its lines cut with «…», never wrapped;
+   before, the sheet from 12 % lay over its lowest 13 px on a phone) */
+@media (orientation:portrait){body.vplot.dk-open:not(.hudoff) #drawer{top:max(12%, calc(var(--ecH) + 8px + 60px + 6px))}}
+/* the map's credit line clear of the deck log's tab in 3D (it began under the tab, at 6 px, in every size) */
+body.v3d .attr{left:44px;max-width:calc(100% - 108px)}   /* (as far from the right edge as before, 64 px) */
+/* the phone button hides while the phone is open: on a tablet on its side and a PC the phone stands where the button is, and the
+   button's corner showed behind the phone's rounded corner; the phone lies over the button in every size, so it could not be tapped
+   anyway, and the phone closes with its own ✕ and ‹. A child :has, so only #app's own children are looked at when «hidden» changes) */
+#app:has(> #phone:not([hidden])) #phoneFab{visibility:hidden}

@@ -31,6 +31,8 @@ Koden: klienten `src/js/ui/10g-push.js` (`pushItems` → `push_plan`), serveren 
 | Du er uthvilt i naustet eller rorbua | `rested` | 3 | 12 t |
 | Du er sliten på sjøen | `tired` | 3 | 12 t |
 
+**Ønsker i markedet** (ikke i gruppen `drift`, og bare for den som har satt et ønske selv): «Ønsket båt» (`mkt-wish`, Kystmegleren, B5) og «Ønsket hjemmel» (`km-wish`, Kvotemarkedet, KM2) sendes når en oppføring som passer, legges ut, til den som ikke har vært i spillet de siste to minuttene, høyst én gang i tolv timer per ønske, med levetid 12 t (`broker_tell` og `km_tell` i `supabase/migrations/`). Ingen push om å være overbydd.
+
 **Motorstopp** kan ikke varsles på forhånd: stoppet trekkes tilfeldig i simuleringen mens spilleren er borte. Det som dekkes i dag, er kulingvarselet og servicevarselet, som er det som øker risikoen. Et eget stoppvarsel krever at risikoen trekkes ut fra et frø som serveren også kjenner (P2).
 
 Hvert varsel er skrevet rolig, med båtens navn, hva som har skjedd og hva hun kan gjøre nå. Spilletid i ord, varselet kommer i ekte tid (24 spilletimer = 4 timer, `GAME_RATE = 6`).
