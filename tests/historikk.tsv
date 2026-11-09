@@ -1617,3 +1617,6 @@
 2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	sponsortest	OK	10	lite	samtidig	
 2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	admintest	OK	7	lite	samtidig	
 2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	trip2	OK	26	lite	samtidig	
+2026-11-09 01:15	claude/o8b-s2-turens-linje-c70okw	01c5d1e	boottest	OK	22	lite	samtidig	
+2026-11-09 01:15	claude/o8b-s2-turens-linje-c70okw	01c5d1e	turlinjetest	OK	5	lite	samtidig	
+2026-11-09 01:15	claude/o8b-s2-turens-linje-c70okw	01c5d1e	tutfull	OK	5	lite	samtidig	
