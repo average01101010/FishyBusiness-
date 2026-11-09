@@ -1601,3 +1601,4 @@
 2026-11-09 00:34	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	shoptest	OK	30	lite	samtidig	
 2026-11-09 00:35	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	tutfull	OK	4	lite	alene	
 2026-11-09 00:35	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	tutfull	FEIL	4	lite	alene	FEIL etter en ekte levering ved første turs mottak sier verken sluttseddelen eller dekksdagboka hva fisket her vanligvis gir (N regnes bare for skyen)  {"slip":
+2026-11-09 01:13	claude/o8b-s2-turens-linje-c70okw	24eb7c9	tut	OK	2269	lite	alene	
