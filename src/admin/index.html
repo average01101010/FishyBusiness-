@@ -368,7 +368,7 @@ VIEW.sponsorer = () => {
     '<input id="spS" placeholder="https://… (nettsiden)" maxlength="200"><input id="spA" placeholder="Avtalen (hvor den ligger)" maxlength="200"><button id="spNew">Legg til</button></div></div>' +
     (SPN.length ? SPN.map(row).join('') : '<p class="note">Ingen sponsorer ennå.</p>') + spReport() + '<p class="note"><a href="../#sptest" target="_blank" rel="noopener">Forhåndsvis spillet med testsponsoren ›</a></p>';
 };
-// the report per placement and week (4.4, after IAB/MRC 2.0, steg 66; 20261108230000_sp_view_iab.sql): per session and placement one
+// the report per placement and week (4.4, after IAB/MRC 2.0, steg 66; 20261108231000_sp_view_iab.sql): per session and placement one
 // rendered impression in one of three buckets (viewable, not viewable, undetermined), the measured share (measured / rendered), the
 // viewable share (viewable / measured), the distribution, re-views, and the median and mean seconds of a viewable session; the CSV for
 // the partner has the same columns
@@ -380,7 +380,7 @@ const spBk = r => { const n = (+r.imp || 0) + (+r.nonview || 0) + (+r.undet || 0
   return '<span class="spbk" title="Synlige ' + (r.imp || 0) + ', ikke synlige ' + (r.nonview || 0) + ', ubestemte ' + (r.undet || 0) + '"><i style="width:' + w(r.imp) + ';background:#3fa66b"></i><i style="width:' + w(r.nonview) + ';background:#8a96a3"></i><i style="width:' + w(r.undet) + ';background:repeating-linear-gradient(45deg,#c9a23a 0 3px,transparent 3px 6px)"></i></span>'; };
 function spReport(){
   if (!SPR){ sprLoad(); return card('Rekkevidde', '<p class="note">Henter …</p>'); }
-  if (SPR.err) return card('Rekkevidde', '<p class="warn">' + esc(SPR.err) + '</p>', 'Er migreringene supabase/migrations/20261102140000_sp_report.sql og 20261108230000_sp_view_iab.sql kjørt?');
+  if (SPR.err) return card('Rekkevidde', '<p class="warn">' + esc(SPR.err) + '</p>', 'Er migreringene supabase/migrations/20261102140000_sp_report.sql og 20261108231000_sp_view_iab.sql kjørt?');
   const T = SPR.reduce((a, r) => { a.r += +r.rendered || 0; a.v += +r.imp || 0; a.n += +r.nonview || 0; a.u += +r.undet || 0; a.t += (+r.mean || 0) * (+r.imp || 0); return a; }, {r:0, v:0, n:0, u:0, t:0});
   const kp = SPR.length ? '<div class="grid">' + kpi('Gjengitte visninger', nf(T.r, 0), 'banneret tegnet innen 150 m, per økt') + kpi('Målt andel', spPct(T.r ? (T.v + T.n) / T.r : null), 'utenom ubestemte (WebGL 1)') +
     kpi('Synlig andel', spPct(T.v + T.n ? T.v / (T.v + T.n) : null), 'synlige av de målte') + kpi('Snitt synlig tid', T.v ? nf(T.t / T.v, 1) + ' s' : '–', 'per synlig visning') + '</div>' : '';

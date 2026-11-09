@@ -407,7 +407,7 @@ def main():
         sql("insert into public.events (player_id, kind, data) values ('user_01AAA', 'sp_view', '{\"pl\": %s, \"imp\": 3, \"sec\": 40}'), ('user_01BBB', 'sp_view', '{\"pl\": %s, \"imp\": 1, \"sec\": 9000}'), ('user_01AAA', 'sp_click', '{\"pl\": %s}')" % (plid, plid, plid))
         R['spRep'] = json.loads(sql("select public.admin_sp_report(30)", AD2, 'authenticated')); R['spRepPl'] = sql("select public.admin_sp_report(30)", A, 'authenticated', expect_err=True)
         sql("delete from public.events where kind in ('sp_view', 'sp_click')")
-        # after IAB 2.0 (steg 66, 20261108230000_sp_view_iab.sql): per session and placement one rendered impression in one of three buckets.
+        # after IAB 2.0 (steg 66, 20261108231000_sp_view_iab.sql): per session and placement one rendered impression in one of three buckets.
         # S1 (AAA) seen, twice sent; S2 (BBB) measured, too briefly; S3 (BBB) on WebGL 1; S4 (AAA) seen, longer
         sql("""insert into public.sessions (id, player_id) values ('55555555-5555-4555-8555-555555555551', 'user_01AAA'), ('55555555-5555-4555-8555-555555555552', 'user_01BBB'),
             ('55555555-5555-4555-8555-555555555553', 'user_01BBB'), ('55555555-5555-4555-8555-555555555554', 'user_01AAA') on conflict do nothing""")
@@ -896,8 +896,8 @@ def main():
         # H1 of the ocean step (03.11.2026, 20261103180000_havkonsesjon.sql): the ocean permits are in the same register, as many as in life; one bought is gone for everybody, and a permit the game does not have is refused
         H1 = {'tral': json.loads(sql("select public.reg_take('tral')", A, 'authenticated'))['tral'], 'seen': wg(B)['reg'], 'bad': sql("select public.reg_take('reke')", A, 'authenticated', expect_err=True)[0]}
         H1['back'] = json.loads(sql("select public.reg_free('tral')", A, 'authenticated'))['tral']
-        print(ok(H1['tral'] == 35 and H1['seen'].get('tral') == 35 and H1['seen'].get('konv') == 26 and H1['seen'].get('rnot') == 69 and H1['seen'].get('krab') == 34 and H1['bad'] and H1['back'] == 36),
-              'the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 purse seine, 34 snow crab; back to 36 when sold', {k: H1[k] for k in ('tral', 'bad', 'back')})
+        print(ok(H1['tral'] == 35 and H1['seen'].get('tral') == 35 and H1['seen'].get('konv') == 26 and H1['seen'].get('rnot') == 69 and H1['seen'].get('krab') == 30 and H1['bad'] and H1['back'] == 36),
+              'the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 purse seine, 30 snow crab (20261106120000_snokrabbe_30.sql); back to 36 when sold', {k: H1[k] for k in ('tral', 'bad', 'back')})
         # whose gear it is (02.11.2026, 20261102130000_gear_owner.sql): gear_near2 gives B's sets to A with B's player name and boat, never
         # A's own, and gear_near still gives them with nothing of the owner
         sql("select public.gear_put('[[\"g1\", \"garn\", 900.1, 300.1, 900.3, 300.1]]'::jsonb)", B, 'authenticated')
@@ -1058,6 +1058,103 @@ def main():
                  and MB['flag'] == 0 and MB['wish1'].startswith('1/') and 'Kvalbein' in MB['wish1'] and 'Myre' in MB['wish1'] and MB['wish2'] == '1' and MB['gone'] == ['cancelled', [('bid', -400000), ('release', 400000)]]
                  and all(MB['anon']) and all(MB['tabs']) and MB['priv'] == ['f', 'f', 'f']),
               "Kystmegleren: start ≥ 40 % and buy-now ≤ 160 % of the value, the value held to the type, three listings, bids 2 % apart with the money bound and released in the ledger, buy-now, the settlement (boat to the winner, price less 5 % to the seller, unsold back), cancel only without bids, the right moves, the wish told once, a deleted seller's bid given back, the cash check counts the broker, guests and anon refused (B1–B8)", MB)
+        # the quota market on the server (KM2, 20261108230000_kvotemarked.sql): a right and a structure quota put out in the same auction house
+        # as the boats, the value held in a band around the takst from quota_ref, the item rebuilt without anything about who, B's limits shared
+        # with the boats, bids and buy-now with no delivery fee, the settlement with the right's place in the register moved and the structure
+        # quota's not, the quota rows only for a game that asks for them (km), listings_get per kind, «Ønsket hjemmel», and the admin's line
+        KM = {}
+        KS = {'sub': 'user_01KMS', 'role': 'authenticated'}; KB1 = {'sub': 'user_01KB1', 'role': 'authenticated'}; KB2 = {'sub': 'user_01KB2', 'role': 'authenticated'}; KS2 = {'sub': 'user_01KS2', 'role': 'authenticated'}
+        for who in (KS, KB1, KB2, KS2): sql("select public.tm_hello('{}')", who, 'authenticated')
+        sql("insert into public.saves (player_id, data, saved_at, summary) values ('user_01KB1', 'x', now(), '{\"cash\":20000000}'), ('user_01KB2', 'x', now(), '{\"cash\":20000000}') on conflict (player_id) do update set summary = excluded.summary")
+        sql("insert into public.reg_held (player_id, id) values ('user_01KMS', 'h14') on conflict do nothing")
+        U14, KF14 = 7.2662, 5.2289
+        SY = int(sql("select public.km_year()"))   # (the game year on the shared clock: the goods are packed in it)
+        own14 = KF14 * U14 * 1000 * 260
+        RI = {'kind': 'right', 'id': 'h14', 'hl': 'x', 'flen': 14.5, 'st': [{'id': 'h14', 'kf': 4.70601, 'from': SY, 'until': SY + 20}], 'landY': 2026, 'used': {'torsk': 1200, 'hyse': 0, 'sei': 50}, 'y': SY}
+        vR = round(own14 + 4.70601 * U14 * 1000 * 260)   # (the structure quota with all its 20 years)
+        SQ = {'kind': 'struct', 'id': 'h14', 'hl': '14–14,9 m', 'kf': 4.70601, 'from': SY - 4, 'until': SY + 6, 'used': {'torsk': 300, 'hyse': 10, 'sei': 0}, 'y': SY}
+        vS = round(4.70601 * U14 * 1000 * 260 * 5.5 / 20)   # (5.5 years left, as the game counts them in the middle of the year)
+        J = lambda o: "'%s'::jsonb" % json.dumps(o, ensure_ascii=False)
+        kput = lambda who, vid, it, value, start, buynow='null', hours=24: sqle("select public.km_put('%s', %s, %d, %d, %s, %d, 'Kvoterederi')" % (vid, J(it), value, start, buynow, hours), who, 'authenticated')
+        KM['ref'] = sql("select count(*) || '/' || (select kf || ':' || grp || ':' || hl from public.quota_ref where id = 'h14') from public.quota_ref")
+        KM['lim'] = [err(kput(KS, 'v1', RI, 1000, 400)), err(kput(KS, 'v1', RI, 100000000, 50000000)), err(kput(KS, 'v1', RI, vR, round(vR * 0.39))),
+                     err(kput(KS, 'v1', RI, vR, round(vR * 0.5), round(vR * 1.61))), err(kput(KS, 'v1', RI, vR, round(vR * 0.5), hours=2)),
+                     err(kput(KS, 'v1', dict(RI, kind='boat'), vR, round(vR * 0.5))), err(kput(KS, 'v1', dict(RI, id='h99'), vR, round(vR * 0.5))),
+                     err(kput(KS, 'v1', dict(RI, id='h9', st=[{'id': 'h9', 'kf': 1.9, 'from': 2026, 'until': 2046}]), vR, round(vR * 0.5))),
+                     err(kput(KS, 'v1', dict(RI, st=[{'id': 'h14', 'kf': 6, 'from': 2026, 'until': 2046}]), vR, round(vR * 0.5))),
+                     err(kput(KS, 'v2/s1', dict(SQ, until=SY, **{'from': SY - 10}), vS, round(vS * 0.5))), err(kput(G2, 'v1', RI, vR, round(vR * 0.5))), err(kput(KS, '', RI, vR, round(vR * 0.5))),
+                     err(kput(KS, 'v2/s1', dict(SQ, until=SQ['from'] + 21), vS, round(vS * 0.5))), err(kput(KS, 'v1', dict(RI, y=SY - 3), vR, round(vR * 0.5))),
+                     err(kput(KS, 'v2/s1', dict(SQ, kf=KF14), vS, round(vS * 0.5))),
+                     err(kput(KS, 'v1', dict(RI, st=[{'id': 'h14', 'kf': 4.70601, 'from': SY, 'until': SY + 20}] * 5), vR, round(vR * 0.5)))]
+        LR = json.loads(sql("select public.km_put('v1', %s, %d, %d, %d, 24, 'Kvoterederi')" % (J(dict(RI, owner='Ola Hansen', player='user_01KMS')), vR, round(vR * 0.5), round(vR * 1.5)), KS, 'authenticated'))
+        KM['item'] = LR['item']; LR = LR['id']
+        KM['dup'] = [err(kput(KS, 'v1/s1', SQ, vS, round(vS * 0.5))), err(put(KS, 'v1', 400000))]
+        LS = json.loads(sql("select public.km_put('v2/s1', %s, %d, %d, %d, 6, '')" % (J(SQ), vS, round(vS * 0.6), round(vS * 1.2)), KS, 'authenticated'))['id']
+        LB = json.loads(sql("select public.listing_put('v3', %s, 1000000, 0, 400000, 900000, 24, 'p_yard', 800, 300, '')" % VES('Fjordbris'), KS, 'authenticated'))['id']
+        KM['four'] = err(kput(KS, 'f1', dict(RI, id='h20', st=[]), round(10.254 * 6.9986 * 260000), round(10.254 * 6.9986 * 260000 * 0.5)))
+        gK = json.loads(sql("select public.listings_get(null, null, null, 'km')", KB1, 'authenticated'))
+        KM['getKm'] = {'ids': sorted(x['id'] for x in gK['list']), 'vid': any('vid' in x for x in gK['list']), 'who': any(k in json.dumps(x['item']) for x in gK['list'] for k in ('Ola', 'user_01KMS', 'owner')),
+                       'mine': [x['mine'] for x in gK['list']], 'kinds': sorted(x['kind'] for x in gK['list'])}
+        KM['getBoat'] = [x['id'] for x in json.loads(sql("select public.listings_get(null, null, null)", KB1, 'authenticated'))['list'] if x['id'] in (LR, LS)]
+        KM['getRight'] = [x['id'] for x in json.loads(sql("select public.listings_get(null, null, null, 'right')", KB1, 'authenticated'))['list']]
+        KM['mineKS'] = sorted((m['vid'], m['kind']) for m in json.loads(sql("select public.listings_get(null, null, null, 'km')", KS, 'authenticated'))['mine'])
+        KM['badKind'] = err(sqle("select public.listings_get(null, null, null, 'x')", KB1, 'authenticated'))
+        s0, s1 = round(vR * 0.5), -(-round(vR * 0.5) * 102 // 100)
+        KM['bids'] = [bid(KS, LR, s0), bid(KB1, LR, s0), bid(KB1, LR, s1), bid(KB2, LR, s1 - 1), bid(KB2, LR, s1, "'p_far'")]
+        kled = lambda who, km='true': [(r['kind'], r['kr'], r['lk']) for r in json.loads(sql("select public.broker_pending(%s)" % km, who, 'authenticated'))]
+        KM['ledKB1'] = kled(KB1); KM['ledKB2'] = kled(KB2); KM['oldKB1'] = json.loads(sql("select public.broker_pending()", KB1, 'authenticated'))
+        # buy-now on the structure quota (no fee for a delivery that has no meaning), and the boat bought too: one boat, one right, one structure quota in one run
+        KM['ownBuy'] = err(sqle("select public.listing_buy(%d, null)" % LS, KS, 'authenticated'))
+        KM['buyS'] = json.loads(sql("select public.listing_buy(%d, 'p_far')" % LS, KB1, 'authenticated'))
+        KM['regS'] = sql("select coalesce(string_agg(player_id || ':' || id, ',' order by player_id), '') from public.reg_held where player_id in ('user_01KMS', 'user_01KB1', 'user_01KB2')")
+        KM['buyB'] = json.loads(sql("select public.listing_buy(%d, null)" % LB, KB2, 'authenticated'))
+        KM['oldKB2'] = [(r['kind'], r['kr']) for r in json.loads(sql("select public.broker_pending()", KB2, 'authenticated'))]
+        sql("update public.listings set until = now() - interval '1 second' where id = %d" % LR); sql("select public.listing_settle()", None, 'service_role')
+        KM['regR'] = sql("select coalesce(string_agg(player_id || ':' || id, ',' order by player_id), '') from public.reg_held where player_id in ('user_01KMS', 'user_01KB1', 'user_01KB2')")
+        PB1 = json.loads(sql("select public.broker_pending(true)", KB1, 'authenticated')); PB2 = json.loads(sql("select public.broker_pending(true)", KB2, 'authenticated'))
+        PS = json.loads(sql("select public.broker_pending(true)", KS, 'authenticated'))
+        KM['gotS'] = [(r['data']['item']['kind'], r['data']['item']['kf'], r['data']['item']['until'], r['data']['price']) for r in PB1 if r['kind'] == 'struct']
+        KM['gotR'] = [(r['data']['item']['id'], len(r['data']['item']['st']), r['data']['item']['used']['torsk'], r['data']['price']) for r in PB2 if r['kind'] == 'right']
+        KM['boatB'] = [r['data']['name'] for r in PB2 if r['kind'] == 'boat']
+        KM['paid'] = sorted((r['lk'], r['kr'], r['data']['vid'], 'item' in r['data']) for r in PS if r['kind'] == 'paid')
+        KM['states'] = sql("select string_agg(state || ':' || kind, ',' order by id) from public.listings where id in (%d, %d, %d)" % (LR, LS, LB))
+        gS = json.loads(sql("select public.listings_get(null, null, null, 'km')", KB1, 'authenticated'))['sold']
+        KM['soldKm'] = sorted((s['kind'], s['id'], s['price']) for s in gS); KM['soldWho'] = any(k in s for s in gS for k in ('buyer', 'player', 'seller', 'vid'))
+        KM['soldBoat'] = [s['price'] for s in json.loads(sql("select public.listings_get(null, null, null)", KB1, 'authenticated'))['sold'] if s.get('kind') != 'boat']
+        # «Ønsket hjemmel»: KB1 with a push subscription wishes for a right 14–14,9 m; one is put out (told), another within twelve hours (not); KB2's wish for 20–20,9 m is not told
+        for w, ep in ((KB1, 'kb1'), (KB2, 'kb2')): sql("insert into public.push_subs (endpoint, player_id, p256dh, auth, lang) values ('https://fcm.googleapis.com/x/%s', '%s', 'k', 'a', 'nb') on conflict do nothing" % (ep, w['sub']))
+        KM['wishSet'] = [err(sqle("select public.km_wish_set('h99', null, 1000)", KB1, 'authenticated')), err(sqle("select public.km_wish_set('h14', 'right', 1000)", G2, 'authenticated'))]
+        sql("select public.km_wish_set('h14', 'right', 30000000)", KB1, 'authenticated'); sql("select public.km_wish_set('h20', null, 30000000)", KB2, 'authenticated')
+        sql("select public.km_put('v1', %s, %d, %d, null, 24, '')" % (J(dict(RI, st=[])), round(own14), round(own14 * 0.9)), KS2, 'authenticated')
+        KM['wish1'] = sql("select count(*) || '/' || coalesce(max(body), '') from public.push_queue where player_id = 'user_01KB1' and tag = 'km-wish'")
+        sql("select public.km_put('v2', %s, %d, %d, null, 24, '')" % (J(dict(RI, st=[])), round(own14), round(own14 * 0.9)), KS2, 'authenticated')
+        sql("select public.km_wish_set('h20', 'right', 30000000)", KB1, 'authenticated')   # (a new wish may be told at once, though the last was told now)
+        sql("select public.km_put('f1', %s, %d, %d, null, 24, '')" % (J(dict(RI, id='h20', st=[])), round(10.254 * 6.9986 * 260000), round(10.254 * 6.9986 * 260000 * 0.9)), KS2, 'authenticated')
+        KM['wish2'] = [sql("select count(*) from public.push_queue where player_id = '%s' and tag = 'km-wish'" % w) for w in ('user_01KB1', 'user_01KB2')]
+        KM['admin'] = [(a['kind'], a['id'], a['sold'], a['vs_takst']) for a in json.loads(sql("select public.admin_km(8)", AD2, 'authenticated')) if a['kind'] != 'boat']
+        KM['adminNo'] = sql("select public.admin_km(8)", KS, 'authenticated', expect_err=True)[0]
+        KM['priv'] = [sql("select has_function_privilege('authenticated', 'public.%s', 'execute')" % f) for f in ('km_item(jsonb)', 'km_band(jsonb)', 'km_tell(listings)', 'km_num(jsonb, numeric, numeric)', 'broker_ledger_lk()')]
+        KM['tabs'] = [sql("select count(*) from public.%s" % tb, KB1, 'authenticated', expect_err=True)[0] for tb in ('quota_ref', 'km_wish')]
+        it = KM['item']
+        km_lim = KM['lim'] == ['bad value', 'bad value', 'start', 'buynow', 'bad hours', 'bad item', 'bad item', 'bad item', 'bad item', 'short', 'guest', 'bad ref', 'bad item', 'bad item', 'bad item', 'bad item']
+        km_item = (it == {'kind': 'right', 'id': 'h14', 'hl': '14–14,9 m', 'flen': 14.5, 'st': [{'id': 'h14', 'kf': 4.70601, 'from': SY, 'until': SY + 20}], 'landY': 2026,
+                          'used': {'torsk': 1200, 'hyse': 0, 'sei': 50}, 'y': SY} and KM['ref'] == '7/5.2289:g11:14–14,9 m')
+        km_get = (KM['getKm']['ids'] == sorted([LR, LS]) and not KM['getKm']['vid'] and not KM['getKm']['who'] and KM['getKm']['mine'] == [False, False] and KM['getKm']['kinds'] == ['right', 'struct']
+                  and KM['getBoat'] == [] and KM['getRight'] == [LR] and KM['mineKS'] == [('v1', 'right'), ('v2/s1', 'struct')] and KM['badKind'] == 'bad kind')
+        km_bids = (KM['bids'] == ['own', 'ok', 'top', 'low %d' % s1, 'ok'] and KM['ledKB1'] == [('bid', -s0, 'right'), ('release', s0, 'right')] and KM['ledKB2'] == [('bid', -s1, 'right')]
+                   and KM['oldKB1'] == [] and KM['ownBuy'] == 'own' and KM['buyS'].get('fee') == 0 and KM['buyS'].get('price') == round(vS * 1.2))
+        km_settle = (KM['regS'] == 'user_01KMS:h14' and KM['regR'] == 'user_01KB2:h14' and KM['gotS'] == [('struct', 4.70601, SY + 6, round(vS * 1.2))]
+                     and KM['gotR'] == [('h14', 1, 1200, s1)] and KM['boatB'] == ['Fjordbris'] and KM['oldKB2'] == [('buy', -900000), ('boat', 0)]
+                     and KM['paid'] == sorted([('right', round(s1 * 0.95), 'v1', True), ('struct', round(round(vS * 1.2) * 0.95), 'v2/s1', True), ('boat', 855000, 'v3', False)])
+                     and KM['states'] == 'sold:right,sold:struct,sold:boat')
+        km_sold = KM['soldKm'] == sorted([('right', 'h14', s1), ('struct', 'h14', round(vS * 1.2))]) and not KM['soldWho'] and KM['soldBoat'] == []
+        km_wish = (KM['wishSet'] == ['bad right', 'guest'] and KM['wish1'].startswith('1/') and 'hjemmel 14–14,9 m' in KM['wish1'] and KM['wish2'] == ['2', '1'])
+        km_adm = (('right', 'h14', 1, round(s1 / vR, 3)) in KM['admin'] and ('struct', 'h14', 1, round(round(vS * 1.2) / vS, 3)) in KM['admin'] and KM['adminNo']
+                  and KM['priv'] == ['f'] * 5 and all(KM['tabs']))
+        KMP = [km_lim, km_item, km_get, km_bids, km_settle, km_sold, km_wish, km_adm, KM['dup'] == ['listed', 'listed'], KM['four'] == 'too many']
+        print(ok(all(KMP)),
+              "Kvotemarkedet: a right and a structure quota in the same auction house as the boats, the value in the band around the takst (quota_ref), the item without who, three listings shared with the boats, a boat not out with her right, bids and buy-now with no delivery fee, not on your own, the settlement (the right's place in the register moved, the structure quota's not), the quota rows only for a game that asks (km), listings_get per kind, the wish told once, the admin's line (KM2)",
+              '' if all(KMP) else {'parts': KMP, **KM})
         # the right itself, not only that the call fails (the functions refuse anon by themselves too); and the player's rights stay
         RY['anonNo'] = [sql("select has_function_privilege('anon', 'public.%s', 'execute')" % f) == 'f' for f in ('guest_claim()', 'guest_merge(text)', 'push_plan(jsonb)', 'admin_cash_flags(int)', 'admin_tur_share(int)', 'saves_cash_check()')]
         RY['authYes'] = [sql("select has_function_privilege('authenticated', 'public.%s', 'execute')" % f) == 't' for f in ('guest_claim()', 'guest_merge(text)', 'push_plan(jsonb)', 'admin_cash_flags(int)', 'admin_tur_share(int)')]

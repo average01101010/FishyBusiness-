@@ -29,7 +29,7 @@ const FK_SP = {torsk:'torsk', hyse:'hyse', sei:'sei', lyr:'lyr', lange:'lange', 
 // not seen) gave, over location × month, cod 0.44 → 0.54, saithe 0.32 → 0.54, pollack 0.45 → 0.62, ling 0.59 → 0.67, tusk 0.39 → 0.57,
 // redfish 0.48 → 0.54, halibut 0.68 → 0.80, haddock 0.44 → 0.47 (Spearman; the ceiling, 2024's notes alone, 0.61-0.82), and through
 // the year saithe -0.25 → 0.84 and cod 0.59 → 0.85 (ceiling 0.75 and 0.93)
-const FK = {d:null, n0:20, nb:0.5, mo:0.25, lo:0.03, hi:5, skreiM:5, season:'data', torsk:'data'};
+const FK = {d:null, n0:20, nb:0.5, mo:0.25, lo:0.03, hi:5, skreiM:5, season:'data', torsk:'data', ref:['05-30', '05-25', '05-40'], latRef:69.52799};
 function fkData(){
   if (FK.d !== null) return FK.d;
   try { FK.d = typeof FISKE_T === 'string' ? JSON.parse(FISKE_T) : (FISKE_T || false); } catch (e){ FK.d = false; }
@@ -223,9 +223,10 @@ function fkBuild(){
     for (let l = 0; l < NL; l++){ const nb = NB[l]; for (let m = 0; m < 12; m++){ let s = 0; for (const b of nb) s += Y[b * 12 + m]; Z[l * 12 + m] = Y[l * 12 + m] + (nb.length ? FK.nb * s / nb.length : 0); } }
     return Z; };
   const NA = smooth(NALL);
-  // the Senja grounds the game is calibrated on (GROUNDS 0-3: Husøy, Mefjorden, Gryllefjord, Malangsgapet)
-  const ref = [...new Set(GROUNDS.slice(0, 4).map(g => lokOfCell(g.p).l).filter(l => l >= 0))];
-  MIG.latRef = GROUNDS.slice(0, 4).reduce((a, g) => a + natLL(g.p).lat, 0) / 4;
+  // the Senja locations the game is calibrated on, as fixed points (Ø14 F2: no longer read from GROUNDS, which are no grounds any more):
+  // 05-30 (Husøy, Mefjorden), 05-25 (Gryllefjord) and 05-40 (Malangsgapet), and their mean latitude (the four points of GROUNDS 0-3, 69.528° N)
+  const ref = FK.ref.map(c => lokI.get(c)).filter(l => l !== undefined);
+  MIG.latRef = FK.latRef;
   const af = {};
   // the h table by main area (H1b R6): all landings per month (the most of any species, as NALL) and per species kg, landings and what
   // they would take at the national rate, smoothed with a quarter of each neighbouring month

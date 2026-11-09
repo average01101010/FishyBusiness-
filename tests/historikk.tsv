@@ -1484,3 +1484,51 @@
 2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	sponsortest	OK	12	lite	samtidig	
 2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	sqltest	FEIL	29	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
 2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	admintest	OK	7	lite	samtidig	
+2026-11-08 22:40	ccr-510fd7d5-2eum2h	13f58ab	uishots	OK	77	lite	samtidig	
+2026-11-08 22:40	ccr-510fd7d5-2eum2h	13f58ab	kartlegging	OK	50	lite	samtidig	
+2026-11-08 22:41	ccr-510fd7d5-2eum2h	13f58ab	hudtest	OK	39	lite	samtidig	
+2026-11-08 23:26	ccr-510fd7d5-2eum2h	13f58ab+	uishots	OK	77	lite	samtidig	
+2026-11-08 23:26	ccr-510fd7d5-2eum2h	13f58ab+	kartlegging	OK	49	lite	samtidig	
+2026-11-08 23:26	ccr-510fd7d5-2eum2h	13f58ab+	dockrow	OK	39	lite	samtidig	
+2026-11-08 23:27	ccr-510fd7d5-2eum2h	13f58ab+	docktest	OK	58	lite	samtidig	
+2026-11-08 23:20	ccr-510fd7d5-2eum2h	13f58ab+	hudtest	OK	160	lite	alene	61 OK; de 29 nye U2-8-sjekkene sett røde på bygget før (16 FEIL)
+2026-11-08 22:53	claude/km2-kvotemarkedet-migrering-3pat3t	c806b53+	sqltest	FEIL	33	lite	alene	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-08 22:53	claude/km2-kvotemarkedet-migrering-3pat3t	0e9f43f+	sqltest	OK	35	lite	alene	
+2026-11-08 23:30	ccr-510fd7d5-2eum2h	61cc06f	navbarshot	OK	26	lite	samtidig	
+2026-11-08 23:31	ccr-510fd7d5-2eum2h	61cc06f	roetest	OK	118	lite	samtidig	
+2026-11-08 23:31	ccr-510fd7d5-2eum2h	61cc06f	hudtest	OK	83	lite	samtidig	
+2026-11-08 23:34	ccr-510fd7d5-2eum2h	61cc06f+	hudtest	OK	86	lite	samtidig	
+2026-11-08 23:34	ccr-510fd7d5-2eum2h	61cc06f+	uishots	OK	79	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	trip2	OK	34	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	docktest	OK	64	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	tutfull	OK	6	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	skattetest	OK	6	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	lotttest	OK	7	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	boktest	OK	8	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	keeptest	OK	14	lite	samtidig	
+2026-11-08 23:29	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	decktest	OK	14	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	simday	LES	14	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	calib	LES	15	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	vesseltest	OK	24	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	fuelcal	OK	16	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	tidetest	OK	7	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	climtest	OK	16	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	bktest	OK	8	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	yardupgtest	OK	16	lite	samtidig	
+2026-11-08 23:30	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	kvtest	LES	15	lite	samtidig	
+2026-11-08 23:31	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	progweek	LES	44	lite	samtidig	
+2026-11-08 23:31	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	quotatest	OK	15	lite	samtidig	
+2026-11-08 23:31	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	geartest	FEIL	39	lite	samtidig	FEIL haddock line, 12 hours in February on the eight best haddock spots: 60–115 kg a tub (600 hooks), mostly haddock
+2026-11-08 23:31	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	jigalongtest	OK	16	lite	samtidig	
+2026-11-08 23:31	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	savestest	OK	0	lite	samtidig	
+2026-11-08 23:32	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	boottest	OK	29	lite	samtidig	
+2026-11-08 23:32	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	worldtest	OK	19	lite	samtidig	
+2026-11-08 23:32	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	errtest	OK	34	lite	samtidig	
+2026-11-08 23:34	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	bootgtest	OK	141	lite	samtidig	
+2026-11-08 23:36	claude/o14-f2-fiske-flate-nv6aqz	33c3a50+	unittest	FEIL	119	3d	alene	avsluttet med kode 1
+2026-11-08 23:49	claude/o14-f2-fiske-flate-nv6aqz	98a814c+	penshot	OK	794	3d	alene	
+2026-11-08 23:54	claude/o14-f2-fiske-flate-nv6aqz	0dc3f2f	heattest	OK	291	3d	alene	
+2026-11-08 23:55	claude/o14-f2-fiske-flate-nv6aqz	0dc3f2f	boottest	OK	29	lite	samtidig	
+2026-11-08 23:55	claude/o14-f2-fiske-flate-nv6aqz	0dc3f2f	trip2	OK	32	lite	samtidig	
+2026-11-08 23:55	claude/o14-f2-fiske-flate-nv6aqz	0dc3f2f	simday	LES	12	lite	samtidig	
+2026-11-08 23:55	claude/o14-f2-fiske-flate-nv6aqz	c199ab8	geartest	OK	28	lite	samtidig	

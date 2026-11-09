@@ -1,7 +1,8 @@
 // The fishing grounds along the whole coast (Ø14 F1 of docs/planer/fangstfelt.md, 08.11.2026; tools/npc/felt.py → src/data/felt.json and
 // felt-s.b64, core/01e-marks.js feltData, feltIn, feltShape): the three kinds, the species with gear and months from Fiskeridirektoratet,
 // the washed names, the shapes around their points, Senja's grounds as all the others, and the spawning and nursery grounds never in
-// the fleet's pressure (core/03g-trykk.js trkAreas, trkCellW).
+// the fleet's pressure (core/03g-trykk.js trkAreas, trkCellW). And Ø14 F2 (08.11.2026, core/03j-felt.js): the fish on the grounds as the
+// good spots stand in the sea, the location's sum the same, no edge, and the baseline as high on a ground as beside it.
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -77,4 +78,71 @@ export default function (t){
   const lone = by('g').find(f => !D.some(o => o.k === 'f' && Math.hypot(o.x - f.x, o.y - f.y) < TRK.groundR + 4) && K.lokOfCell({x:f.x, y:f.y}).l >= 0);
   if (lone){ const c = {cx:lone.x, cy:lone.y}; t.eq(K.trkCellW(c), 1, `en rute ved gyteområdet ${lone.n} uten fiskeplass i nærheten har ingen feltvekt i trykket`); }
   else t.ok(false, 'fant ikke et gyteområde langt fra fiskeplassene');
+  f2(t, K, D, S);
+}
+
+// ---- Ø14 F2: the fish on the grounds (core/03j-felt.js) ----
+// Node has no map, so the sea is made up here: water everywhere, a depth of 40-200 m and an exposure that vary over a few km (the same
+// for the location's means, which read the far layers, and for density, which reads the tiles)
+const HOUR = (y, m, d, h) => (Date.UTC(y, m - 1, d, h) - Date.UTC(2027, 2, 1, 6)) / 3.6e6;
+function f2(t, K, D, S){
+  K.set('S', K.newState());
+  const TRK = K.get('TRK'), RU = K.get('RU'), FELT = K.get('FELT'), FW = K.FELTW;
+  // 5. the baseline on a ground against the sea beside it (2.3 of the plan: cod by Henningsvær in March 0.68 against 0.85 before F2):
+  // the mean over the fishing grounds within 25 km of the place against cells 4-6 km from each in the same location and over 3.5 km from
+  // every ground, cod on 15 March 2027 at 08 UTC
+  const Hm = HOUR(2027, 3, 15, 8), F = D.filter(f => f.k === 'f');
+  const base = (ll) => { const c0 = K.P(ll[0], ll[1]); let on = 0, off = 0, n = 0;
+    for (const f of F){ if (Math.hypot(f.x - c0.x, f.y - c0.y) > 25) continue; const l = K.lokOfCell({x:f.x, y:f.y}).l; if (l < 0) continue;
+      let q = null; for (let r = 4; r <= 6 && !q; r += 0.5) for (let a = 0; a < 16 && !q; a++){ const p = {x:f.x + Math.cos(a / 16 * 2 * Math.PI) * r, y:f.y + Math.sin(a / 16 * 2 * Math.PI) * r};
+        if (K.lokOfCell(p).l === l && !F.some(o => Math.hypot(o.x - p.x, o.y - p.y) < 3.5)) q = p; }
+      if (!q) continue; on += K.baseAt({x:f.x, y:f.y}, 'torsk', Hm); off += K.baseAt(q, 'torsk', Hm); n++; }
+    return {on:on / n, off:off / n, n}; };
+  for (const [nm, ll] of [['Henningsvær', [68.15, 14.2]], ['Røst', [67.5, 12.07]], ['Båtsfjord', [70.65, 29.75]]]){
+    const b = base(ll); t.ok(b.n > 3 && b.on >= 0.97 * b.off, `grunnlinja for torsk i mars på feltene ved ${nm} er minst 0,97 av den like ved: ${b.on.toFixed(3)} mot ${b.off.toFixed(3)} (${b.n} felt)`); }
+  if (!FW){ t.ok(false, 'FELTW finnes ikke: Ø14 F2 er ikke bygd'); return; }
+  // the made-up sea, and the shapes from the file
+  const keep = {}; for (const n of ['isLand', 'isLandFar', 'depthF', 'offDepth', 'expoFar']) keep[n] = K.get(n);
+  const sea = p => 40 + 160 * K.noise2(p.x / 6, p.y / 6, 3);
+  K.set('isLand', () => false); K.set('isLandFar', () => false); K.set('depthF', sea); K.set('offDepth', sea); K.set('expoFar', p => 60 + 150 * K.noise2(p.x / 9, p.y / 9, 4));
+  FELT.S = S; FW.G = null; FW.on = true;
+  const PL = {Henningsvær:[68.15, 14.2], Bodø:[67.3, 14.3], Bergen:[60.4, 5.0], Hammerfest:[70.68, 23.6], Båtsfjord:[70.65, 29.75]};
+  const den = (sp, p, H, on) => { FW.on = on; const v = K.density(sp, p, H); FW.on = true; return v; };
+  // 1. the location's sum stands: cod over the location's sea on a 1 km grid, at six hours through the month in four years (the grounds'
+  // pulls are drawn anew every 120 hours, so one month's sum with few grounds can lie a percent or two off), with F2 against without
+  for (const [nm, ll] of Object.entries(PL)){
+    const l = K.lokOfCell(K.P(ll[0], ll[1])).l, rs = [];
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const P of RU.lok[l].P) for (const r of P.rings) for (let i = 0; i < r.length; i += 2){ x0 = Math.min(x0, r[i]); x1 = Math.max(x1, r[i]); y0 = Math.min(y0, r[i + 1]); y1 = Math.max(y1, r[i + 1]); }
+    const pts = []; for (let y = y0 + 0.31; y < y1; y += 1) for (let x = x0 + 0.17; x < x1; x += 1){ const p = {x, y}; if (K.lokOfCell(p).l === l) pts.push(p); }
+    for (const m of [3, 7]){ let a = 0, b = 0; for (let k = 0; k < 24; k++){ const H = HOUR(2027 + (k & 3), m, 1, 8) + (k >> 2) * 122; for (const p of pts){ a += den('torsk', p, H, true); b += den('torsk', p, H, false); } }
+      rs.push(a / b); }
+    const w = [K.feltWlOf(l, 'torsk', 2), K.feltWlOf(l, 'torsk', 6)];
+    t.ok(rs.every(r => Math.abs(r - 1) <= 0.01), `summen av torsk i lokasjonen ${RU.lok[l].c} (${nm}, ${pts.length} punkter) med F2 mot uten: mars ${rs[0].toFixed(4)}, juli ${rs[1].toFixed(4)} (1 ± 1 %; snittløftet ${w.map(v => v.toFixed(3)).join(' og ')})`);
+  }
+  // 2. the season: a ground with cod in December-February (Gryllefjorden on Senja), a point well inside it and one 4-6 km away outside
+  // every ground in the same location; the ratio with F2 against without, over January and over July
+  const gry = D.find(f => f.k === 'f' && f.n === 'Gryllefjorden'), gl = K.lokOfCell({x:gry.x, y:gry.y}).l, G = K.feltGeo().find(g => g.f === gry);
+  let pin = null; for (let i = 0; i < 400 && !pin; i++){ const p = {x:G.b[0] + (G.b[2] - G.b[0]) * K.hash(i * 7 + 1), y:G.b[1] + (G.b[3] - G.b[1]) * K.hash(i * 7 + 2)}; const fl = K.feltAt(p);
+    if (K.feltSd(G, p.x, p.y) > 1.5 && K.lokOfCell(p).l === gl && fl && fl.F.length === 1 && K.feltDepth('torsk', sea(p)) > 0.7) pin = p; }
+  let pout = null; for (let r = 4; r <= 6 && !pout; r += 0.25) for (let a = 0; a < 24 && !pout; a++){ const p = {x:pin.x + Math.cos(a / 24 * 2 * Math.PI) * r, y:pin.y + Math.sin(a / 24 * 2 * Math.PI) * r}; if (K.lokOfCell(p).l === gl && !K.feltAt(p)) pout = p; }
+  const ratio = (p, m) => { let a = 0, b = 0; for (let k = 0; k < 60; k++){ const H = HOUR(2027, m, 1, 7) + k * 12; a += den('torsk', p, H, true); b += den('torsk', p, H, false); } return a / b; };
+  const rin1 = ratio(pin, 1), rout1 = ratio(pout, 1), rin7 = ratio(pin, 7), rout7 = ratio(pout, 7);
+  t.ok(pin && pout && rin1 > 1.15 && rout1 < 1 && rout1 > 0.9, `Gryllefjorden i januar (i sesong): torsken med F2 mot uten ${rin1.toFixed(3)} på feltet og ${rout1.toFixed(3)} 4–6 km unna`);
+  t.ok(Math.abs(rin7 - rout7) < 0.02 && Math.abs(rin7 - 1) < 0.05, `Gryllefjorden i juli (utenfor sesong): ${rin7.toFixed(3)} på feltet og ${rout7.toFixed(3)} like ved, det samme`);
+  // 3. the pull changes without a jump, and not faster than the spots (a fresh draw every 120 hours at most, faded over the period)
+  let dmax = 0, lo = 1, hi = 0; for (let h = 0; h < 3000; h++){ const a = K.feltPull(G, h), b = K.feltPull(G, h + 1); dmax = Math.max(dmax, Math.abs(b - a)); lo = Math.min(lo, a); hi = Math.max(hi, a); }
+  t.ok(FW.T >= K.get('HOT').T && dmax <= FW.max * 1.5 / FW.T + 1e-6 && lo >= 0 && hi <= FW.max, `trekket skifter uten hopp: høyst ${dmax.toFixed(4)} i timen (${lo.toFixed(2)}–${hi.toFixed(2)} over 3000 timer, ny trekning hver ${FW.T}. time)`);
+  // 4. no edge: across the outlines of the grounds round Henningsvær and Båtsfjord in March, from 2 km outside to 2 km inside, the ratio
+  // with F2 against without changes by at most 10 % per 100 m (the made-up depth changes too slowly to matter over 100 m)
+  let worst = 0, nx = 0; const Hx = HOUR(2027, 3, 12, 9);
+  for (const ll of [PL.Henningsvær, PL.Båtsfjord]){ const c0 = K.P(ll[0], ll[1]);
+    for (const g of K.feltGeo()){ if (!g.R || !g.sm.torsk || Math.hypot(g.cx - c0.x, g.cy - c0.y) > 30) continue; const r = g.R[0]; if (r.length < 6) continue;
+      const i = 0, xa = r[0], ya = r[1], xb = r[2], yb = r[3], L = Math.hypot(xb - xa, yb - ya); if (L < 0.3) continue;
+      const mx = (xa + xb) / 2, my = (ya + yb) / 2; let nX = (yb - ya) / L, nY = -(xb - xa) / L; if (K.feltSd(g, mx + nX * 0.2, my + nY * 0.2) > 0){ nX = -nX; nY = -nY; }   // outward
+      let prev = null; for (let s = -2; s <= 2.001; s += 0.1){ const p = {x:mx - nX * s, y:my - nY * s}; const v = den('torsk', p, Hx, true) / den('torsk', p, Hx, false);
+        if (prev !== null) worst = Math.max(worst, Math.abs(v / prev - 1)); prev = v; }
+      if (++nx >= 40) break; } }
+  t.ok(nx >= 20 && worst <= 0.10, `ingen kant: over omrisset av ${nx} felt endrer fisken med F2 mot uten seg høyst ${(worst * 100).toFixed(1)} % per 100 m (grensa 10 %)`);
+  for (const n in keep) K.set(n, keep[n]);
+  FELT.S = null; FW.G = null;
 }

@@ -381,3 +381,11 @@ Gjestekontoene (nye spillere starter uten innlogging) bruker Supabases anonyme i
 - **Eget innloggingsdomene (`auth.detstorebla.no`) er valgt bort** (Jonas 11.10.2026: 99 USD i måneden er uaktuelt). Spillet bruker standardadressen hos WorkOS og `workosDevMode: true` (innloggingen holdes i nettleserens lokale lagring). Det kan tas opp igjen når inntektene dekker det: legg inn domenet under Domains › AuthKit, og sett `workosApiHostname` og `workosDevMode: false` i `cloud.json`.
 - **Kontoene fra Staging følger ikke med.** Brukere og lagringer fra testmiljøet (blant annet Jonas' konto) har andre bruker-ID-er enn i produksjon. Admin-flagget (`players.game_admin`) må settes for den nye ID-en etter første innlogging.
 
+
+## Lanseringslinja (09.11.2026)
+
+Jonas 09.11.2026: «kystflåten er MVPen. Havbåtene kan vente.» Det som må være ferdig før offentliggjøringen, står over «Lanseringslinja» i `docs/planer/koen.md`: arbeidet om bord på kystflåten så ekte som mulig (OB0 og fasene etter), ytelsen på vanlige telefoner, og lanseringsstegene L1 (planen for testutgave og produksjon, lagringsporten, feilvarsel, betalingen, sikkerheten og det juridiske i denne fila), L2 (betalingen i ekte modus) og L3 (sluttsjekken). Punktene her som ikke er gjort, går inn i L1.
+
+**L1 er skrevet 09.11.2026:** `docs/planer/lansering-plan.md` (fasene L1a–L1f, L2 og L3, steg 72–79 i køen; valg 16 V1–V7; det du gjør selv i kap. 5). To ting står annerledes enn over:
+- **Betalingen er alt i ekte modus** (A3 «Live fra 06.10.2026»): `shop-checkout` svarer `ready:true`, og 5 kjøp er betalt (155 kr). Det som mangler, er Stripe Tax (`STRIPE_TAX` er av), MVA og non-Union OSS (A2), kvitteringen og pengefanen. Produktene ligger i databasen (`products`), ikke i Stripe.
+- **Feilvarselet til Jonas finnes med push** (B7 «Feil fra spillerne»): `err_alert()` hvert tiende minutt siden 02.11.2026 (`docs/systemer/tilbakemelding-og-admin.md`). L1d legger til e-post, varsel når siden er nede og når den henger, og skillet mellom test og produksjon.
