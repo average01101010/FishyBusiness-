@@ -753,8 +753,17 @@ function soakHour(s, H){
 // price (a pot repair waiting is cancelled and paid back), and what belongs to the pots and no longer fits her (the pot hauler with its
 // tiers, the crab tank: fit.rig) comes off at the next yard she lies at, paid back at what it cost (as finishJob pays back a fitting that does
 // not suit the boat). Run for every vessel at boot (ui/11-boot.js) and every game hour (gearHour). Returns the kroner paid back.
+// (OB16, valg 25 A: the same for the pots over what her deck holds, gearMax.teine, potsOver: those aboard over it go ashore in port,
+// paid back; the hauler and the tank stay)
+function potsOver(type = S.boat && S.boat.type, pg = S.pgear, sets = mySets()){ const V = VESSELS[type]; if (!V || !pg || !pg.pots) return 0;
+  const k = (V.pot && POTS[V.pot]) ? V.pot : 'big', aboard = pg.pots[k] || 0, out = sets.filter(s => s.kind === 'teine').reduce((a, s) => a + (s.n || 0), 0);
+  return Math.max(0, Math.min(aboard, aboard + out - ((V.gearMax || {}).teine || 0))); }
 function potsUnfit(){
-  const b = S.boat, V = b && VESSELS[b.type], pg = S.pgear; if (!V || !rigNoRoom('teine') || b.status !== 'port') return 0;
+  const b = S.boat, V = b && VESSELS[b.type], pg = S.pgear; if (!V || b.status !== 'port') return 0;
+  if (!rigNoRoom('teine')){ if (b.gop && b.gop.kind === 'teine') return 0; const n = potsOver(); if (!n) return 0;
+    const k = (V.pot && POTS[V.pot]) ? V.pot : 'big', sum = POTS[k].price * n; pg.pots[k] -= n; book('redskap', sum, 'Teiner tatt i land', 'Pots taken ashore');
+    log('«' + S.boatName + '» har plass til ' + V.gearMax.teine + ' teiner på dekk. ' + n + ' teiner er tatt i land og kjøpt tilbake til full pris, ' + kr(sum) + '.', 'The «' + S.boatName + '» has room for ' + V.gearMax.teine + ' pots on deck. ' + n + ' pots were taken ashore and bought back at the full price, ' + kr(sum) + '.');
+    return sum; }
   if (mySets().some(s => s.kind === 'teine') || (b.gop && b.gop.kind === 'teine')) return 0;
   let back = 0;
   if (pg && pg.pots){ let sum = 0, n = 0; for (const k in pg.pots) if (pg.pots[k] > 0){ n += pg.pots[k]; sum += (POTS[k] || POTS.big).price * pg.pots[k]; pg.pots[k] = 0; }
@@ -772,8 +781,10 @@ function potsUnfit(){
   return back;
 }
 function gearHour(H){
-  // (only the vessels whose datasheet has no pots are bound, so the hour costs nothing on the others, also in a long catchUp)
-  for (const v of S.fleet || []){ const bt = v.id === S.cur ? S.boat : v.boat; if (bt && rigNoRoom('teine', bt.type)) onVessel(v, potsUnfit); }
+  // (only the vessels in port whose datasheet has no pots, or with more pots aboard than her deck holds, are bound, so the hour costs
+  // nothing on the others, also in a long catchUp; potsUnfit counts those in the sea too)
+  for (const v of S.fleet || []){ const bt = v.id === S.cur ? S.boat : v.boat, pg = vget(v, 'pgear');
+    if (bt && bt.status === 'port' && (rigNoRoom('teine', bt.type) || (pg && pg.pots && potsOver(bt.type, pg, mySets(v.id)) > 0))) onVessel(v, potsUnfit); }
   if (!S.sets || !S.sets.length) return;
   for (const s of S.sets.slice()){
     if (s.lost || s.hauling) continue;

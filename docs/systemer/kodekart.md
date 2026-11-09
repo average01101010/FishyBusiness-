@@ -155,30 +155,30 @@ THE SEA MARKS ALONG THE WHOLE COAST (05.10.2026; Jonas: «Sjømerker må ordnes 
   - 76 `feltShapesFrom(bytes)`
   - 89 `feltShape(f)`
 
-## `src/js/core/02-species-gear.js` (417 linjer)
+## `src/js/core/02-species-gear.js` (421 linjer)
 
 Placeholder prices (NOK/kg, grade A) – to be tuned
 
 - **93** vessels, equipment, crew
-  - 239 `fuelWeek(w)`
-  - 241 `fuelPrice(H = S.t / 60, pid = S.boat && S.boat.port, diesel = BOAT.die…)`
-  - 328 `equipFits(k, type)`
-- **329** the upgrades in tiers (OPP1 of docs/planer/oppgraderinger.md, 07.11.2026)
-  - 333 `upgSum(...p)`
-  - 338 `equipLv(k, eq = S.equip, type = S.boat && S.boat.type)`
-  - 342 `equipTier(k, eq, type)`
-  - 346 `tierUnits(k, lv, type = S.boat && S.boat.type, eq = S.equip)`
-  - 352 `tierKr(k, lv, type = S.boat && S.boat.type, eq = S.equip)`
-  - 357 `equipKr(k, eq = S.equip, type = S.boat && S.boat.type)`
-  - 363 `knifeX(eq, type)`
-  - 364 `hookX(f, eq, type)`
-  - 367 `jigSlip(eq, type)`
-  - 370 `fuelBase(v, vmax, planing)`
-  - 371 `fuelKOf(V)`
-  - 373 `vesselDerive(V)`
-  - 386 `reqOf(V)`
-  - 392 `reqFill(eq, type)`
-  - 410 `lsaOf(V)`
+  - 243 `fuelWeek(w)`
+  - 245 `fuelPrice(H = S.t / 60, pid = S.boat && S.boat.port, diesel = BOAT.die…)`
+  - 332 `equipFits(k, type)`
+- **333** the upgrades in tiers (OPP1 of docs/planer/oppgraderinger.md, 07.11.2026)
+  - 337 `upgSum(...p)`
+  - 342 `equipLv(k, eq = S.equip, type = S.boat && S.boat.type)`
+  - 346 `equipTier(k, eq, type)`
+  - 350 `tierUnits(k, lv, type = S.boat && S.boat.type, eq = S.equip)`
+  - 356 `tierKr(k, lv, type = S.boat && S.boat.type, eq = S.equip)`
+  - 361 `equipKr(k, eq = S.equip, type = S.boat && S.boat.type)`
+  - 367 `knifeX(eq, type)`
+  - 368 `hookX(f, eq, type)`
+  - 371 `jigSlip(eq, type)`
+  - 374 `fuelBase(v, vmax, planing)`
+  - 375 `fuelKOf(V)`
+  - 377 `vesselDerive(V)`
+  - 390 `reqOf(V)`
+  - 396 `reqFill(eq, type)`
+  - 414 `lsaOf(V)`
 
 ## `src/js/core/03-simulation.js` (1299 linjer)
 
@@ -1613,7 +1613,7 @@ Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026;
   - 171 `kvWhatHav(r)`
   - 184 `kvFinish()`
 
-## `src/js/core/10-gear.js` (935 linjer)
+## `src/js/core/10-gear.js` (946 linjer)
 
 passive gear: nets, line and pots that stand in the sea while the boat is away
 
@@ -1690,20 +1690,21 @@ passive gear: nets, line and pots that stand in the sea while the boat is away
   - 706 `opsGearAfter()`
 - **712** in the sea, every hour: catch, losses, weather and deadlines (company level)
   - 713 `soakHour(s, H)`
-  - 756 `potsUnfit()`
-  - 774 `gearHour(H)`
-  - 810 `reportLost(sid)`
-  - 818 `netMended(l)`
-- **819** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
-  - 825 `egnOrder(lk, n, bait)`
-  - 839 `egnHands()`
-  - 848 `egnSelf(lk, n, bait)`
-  - 869 `stripSelf(lk, bait, n, then)`
-  - 883 `mendSelf(nid)`
-  - 894 `botOrder(nid)`
-  - 905 `gearJob(j)`
-  - 917 `gearJobCancel(j)`
-  - 924 `shoreTick()`
+  - 758 `potsOver(type = S.boat && S.boat.type, pg = S.pgear, sets = mySets()`
+  - 761 `potsUnfit()`
+  - 783 `gearHour(H)`
+  - 821 `reportLost(sid)`
+  - 829 `netMended(l)`
+- **830** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
+  - 836 `egnOrder(lk, n, bait)`
+  - 850 `egnHands()`
+  - 859 `egnSelf(lk, n, bait)`
+  - 880 `stripSelf(lk, bait, n, then)`
+  - 894 `mendSelf(nid)`
+  - 905 `botOrder(nid)`
+  - 916 `gearJob(j)`
+  - 928 `gearJobCancel(j)`
+  - 935 `shoreTick()`
 
 ## `src/js/core/10b-gearcare.js` (273 linjer)
 
@@ -2602,12 +2603,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1408 linjer)
+## `src/js/ui/phone/07-patch.js` (1409 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1401 `patch()`
+  - 1402 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 

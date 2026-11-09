@@ -185,7 +185,10 @@ function opp2(t, K, S, boat, shop, plant){
   t.near(unit(line, {linehaler:true, linehalerLv:3, hott:3}), L1 * (1 - 0.2 - 0.08), 1e-9, 'linehaler 3 og høtt 3: 28 % av grunnivået, ikke 0,8 × 0,92');
   t.near(unit(garn, {garnhaler:true}), 4, 1e-9, 'et garn med garnhaleren: 4 min');
   t.eq([2, 3].map(lv => Math.round(unit(garn, {garnhaler:true, garnhalerLv:lv}) * 1000) / 1000), [3.6, 3.2], 'garnhaler trinn 2 og 3: 3,6 og 3,2 min per garn');
+  // (on the used speed sjark: the havsjark has no pots since OB16, valg 25 A, so the pot hauler's tiers do not fit her)
+  boat('hurtigsjark');
   t.eq([1, 2, 3].map(lv => Math.round(unit(teine, {teinehaler:true, teinehalerLv:lv}) * 1000) / 1000), [1.2, 1.08, 0.96], 'teinehaler: 1,2, 1,08 og 0,96 min per teine');
+  boat('sjark');
   t.near(unit(garn, {garnhaler:true, garnhalerLv:3, hott:3}), 3.2, 1e-9, 'høtten tar ingenting av garnet');
   t.near(unit(line, {linehalerLv:3}), L1, 1e-9, 'et trinn uten haleren om bord gir ingenting');
   t.near(unit(lset, {linehaler:true, linehalerLv:3}), 5 * 600 / 700, 1e-9, 'halerens trinn tar ingenting av settinga');

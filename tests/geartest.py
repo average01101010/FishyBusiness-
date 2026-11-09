@@ -103,7 +103,8 @@ async def main():
 
         # 4. hauling: into the deck work, hook flags, wear; king crab kept and sorted, paid by class while alive; crab outside the fresh-fish scheme
         await pg.evaluate("crabReady()")
-        r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; S.sets = []; S.hold = []; S.pgear = newPGear(); S.pgear.kits.n = 4; S.crew = [hand()]; S.me = S.cur;
+        # (on the new speed sjark: the havsjark has no room for pots since OB16, valg 25 A)
+        r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; b.type = 'sjarkny'; applyVessel(); S.sets = []; S.hold = []; S.pgear = newPGear(); S.pgear.kits.n = 4; S.crew = [hand()]; S.me = S.cur;
           S.equip.garnhaler = true; S.equip.linehaler = true; S.equip.teinehaler = true; S.t = Math.round(HOUR(2028, 2, 5, 6) * 60); S.settings.gut = true; S.settings.ice = true; b.ice = 500;
           S.pgear.nets.push({id:'n1', mesh:180, n:10, cond:1}); S.pgear.lines.hyse = {n:2, baited:2};
           const g0 = GROUNDS[2].p; atSea(g0); b.rig = 'garn'; startSet('garn', {nid:'n1'}, 0); hStep(300); b.status = 'idle'; b.pos = {x:g0.x + 1.5, y:g0.y}; if (isLand(b.pos)) b.pos = {x:g0.x - 1.5, y:g0.y};
@@ -172,7 +173,10 @@ async def main():
 
         # 6. the standing plan: a net station set on day one, hauled and set again after that, and refused with one hand
         await pg.evaluate(SEED)   # a fresh seed: the plan's three days must not hang on how many random numbers the sections before used (gear is lost at random)
-        r = await pg.evaluate("""(async ()=>{ const b = S.boat; S.sets = []; S.hold = []; S.cash = 5e6; S.settings.autoW = 16; S.stock = initStock();
+        # (its own seed, the generator of core/01-world.js: what the tests before it drew does not decide whether a net is lost in the
+        # weather here, as it did when OB16 moved test 4 to another boat)
+        r = await pg.evaluate("""(async ()=>{ { let a = 11; Math.random = () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+          const b = S.boat; S.sets = []; S.hold = []; S.cash = 5e6; S.settings.autoW = 16; S.stock = initStock();
           let t0 = null; for (let d = 0; d < 60 && t0 == null; d++){ const H0 = HOUR(2028, 2, 1 + d, 5); let okw = true; for (let k = 0; k <= 60; k++) if (windAt(H0 + k) > 13 || hsOpen(H0 + k) > 2.2) okw = false; if (okw) t0 = H0; }
           S.t = Math.round(t0 * 60) - 30; b.type = 'sjark'; applyVessel(); S.equip.garnhaler = true; b.rig = 'garn'; b.fuel = BOAT.fuelCap; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.status = 'port'; b.gop = null;
           S.crew = [hand(), hand()]; setSkipper(S.crew[0].id); setMate(S.crew[1].id); S.me = 'nobody'; S.pgear = newPGear(); S.pgear.nets.push({id:'np', mesh:180, n:30, cond:1}); S.pgear.kits.n = 2;
@@ -335,7 +339,9 @@ async def main():
         r = await pg.evaluate("""(()=>{ const b = S.boat, R = {}, c = hand();   // (one and the same hand in every measure: a new one has other skills)
           const tm = (kind, op, eq) => { S.equip = Object.assign({}, S.equip, {linehaler:true, garnhaler:true, teinehaler:true, linehalerLv:1, garnhalerLv:1, teinehalerLv:1, linesetter:false, linesetterLv:1, garnrenne:false, hott:1}, eq); S.crew = [c]; S.hold = []; b.status = 'fishing'; b.deckStop = false;
             b.gop = {op, kind, n:2, done:0, prog:0, sub:0, sl:1, hooksPer:kind === 'line' ? 600 : 0}; const ms = gopUnitMin(b.gop, S.t / 60, 0); b.gop = null; return +ms.toFixed(3); };
-          for (const [kind, h] of [['line', 'linehalerLv'], ['garn', 'garnhalerLv'], ['teine', 'teinehalerLv']]) R[kind] = [1, 2, 3].map(lv => tm(kind, 'haul', {[h]:lv}));
+          // (the pots on the used speed sjark: the havsjark has no room for pots since OB16, valg 25 A, so the pot hauler's tiers do not fit her)
+          for (const [kind, h] of [['line', 'linehalerLv'], ['garn', 'garnhalerLv'], ['teine', 'teinehalerLv']]){ const t0 = b.type; if (kind === 'teine'){ b.type = 'hurtigsjark'; applyVessel(); }
+            R[kind] = [1, 2, 3].map(lv => tm(kind, 'haul', {[h]:lv})); if (b.type !== t0){ b.type = t0; applyVessel(); } }
           R.lineHott = tm('line', 'haul', {linehalerLv:3, hott:3}); R.lset = [tm('line', 'set', {}), tm('line', 'set', {linesetter:true}), tm('line', 'set', {linesetter:true, linesetterLv:2}), tm('line', 'set', {linehalerLv:3})];
           R.gset = [tm('garn', 'set', {}), tm('garn', 'set', {garnrenne:true})]; for (const k of ['linesetter', 'garnrenne', 'linehalerLv', 'garnhalerLv', 'teinehalerLv', 'linesetterLv']) delete S.equip[k]; S.equip.hott = 1; S.crew = [hand()];
           return R; })()""")

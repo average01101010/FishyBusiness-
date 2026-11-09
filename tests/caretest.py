@@ -60,7 +60,9 @@ async def main():
         print(ok(abs(r['afterSelf'][0] - 1) < 1e-6 and abs(r['afterSelf'][1] - 0.93) < 1e-6 and r['afterShop'][1] < 0.93), 'a repair brings the line back to its ceiling and the ceiling falls', [r['afterSelf'], r['afterShop']])
         print(ok(r['sell'] is None and 0 < r['sold'] <= r['maxSell'] and r['noShop'] and r['hooksSold'] < 300), 'the shop buys gear back for at most a quarter of the new price, and only the shop does', [r['sold'], r['maxSell'], r['hooksSold']])
         # 4. nets, pots and the jig
-        r = await pg.evaluate("""(()=>{ const R = {}; S.pgear = newPGear(); S.jobs = []; const pgx = S.pgear; buyGear('net', '156', 6); buyGear('pot', 'big', 4);
+        # (the pots on the used speed sjark: the havsjark has no room for pots since OB16, valg 25 A, and the yard at Finnsnes took her
+        # pot hauler off in the parts before, potsUnfit)
+        r = await pg.evaluate("""(()=>{ const R = {}; S.boat.type = 'hurtigsjark'; applyVessel(); S.equip.teinehaler = true; S.pgear = newPGear(); S.jobs = []; const pgx = S.pgear; buyGear('net', '156', 6); buyGear('pot', 'big', 4);
           const l = pgx.nets[0]; l.cond = 0.4; R.m1 = mendSelf(l.id); R.l1 = done(); const lm = pgx.nets[0]; R.net1 = [lm.cond, lm.max]; lm.cond = 0.4; R.m2 = netShop(lm.id); R.l2 = done(); R.net2 = [pgx.nets[0].cond, pgx.nets[0].max];
           pgx.potc.cond = 0.4; R.p1 = potFix(false); R.l3 = done(); R.pot1 = [pgx.potc.cond, pgx.potc.max]; pgx.potc.cond = 0.3; R.p2 = potFix(true); R.l4 = done(); R.pot2 = [pgx.potc.cond, pgx.potc.max];
           // the pots' catch factor and a wear on a set

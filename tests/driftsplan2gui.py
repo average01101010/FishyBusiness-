@@ -477,7 +477,8 @@ async def s05_garn(c):
 
 
 async def s06_teiner(c):
-    await c.setup(type='sjark', crew=NAMES[:2], equip=['teinehaler'], pots=20, rig='teiner', gmark='teine')
+    # (on the new speed sjark: the havsjark has no room for pots since OB16, valg 25 A)
+    await c.setup(type='sjarkny', crew=NAMES[:2], equip=['teinehaler'], pots=20, rig='teiner', gmark='teine')
     await c.open_drift(); await c.press('[data-pa="p2-new"]', name='Lag driftsplan')
     await c.press('.dr-rh[data-k="places"]', name='Plasser-raden')
     await c.press('[data-pa="p2-add"][data-k="felt"]', name='+ Felt for teiner')

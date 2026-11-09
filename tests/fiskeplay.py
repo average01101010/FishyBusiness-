@@ -518,7 +518,8 @@ async def garn(pl):
 async def teiner(pl):
     """King crab pots in West Finnmark in September: the pot hauler and the live crab tank at a yard, pots at a tackle shop, bait at the
     plant, the pots set and hauled after a day, a second string left 60 hours, and the crab landed alive (and dead)."""
-    await pl.js("FP.date(2027, 9, 6, 6)"); await pl.js("FP.cash(1500000)"); await pl.js("FP.vessel('sjark')")
+    # (on the new speed sjark: the havsjark has no room for pots since OB16, valg 25 A)
+    await pl.js("FP.date(2027, 9, 6, 6)"); await pl.js("FP.cash(1500000)"); await pl.js("FP.vessel('sjarkny')")
     nm = await pl.js("id => FP.port(id)", 'sb1111959_156917'); pl.note('setup', 'at %s' % nm)
     await shop_haulers(pl, ['Teinehaler', 'Krabbekar'])
     await rig(pl, 'Teiner')

@@ -18,7 +18,14 @@ export default function (t){
     t.ok(!K.equipFits('teinehaler', v) && !K.equipFits('teinehalerLv', v) && !K.equipFits('krabbekar', v), v + ': teinehaleren, trinnene og krabbekaret passer ikke');
     t.ok(/ikke plass til teiner/.test(VESSELS[v].desc.no), v + ': båtbladet sier at det ikke er plass til teiner');
   }
-  for (const v of ['plastsjark', 'kyst15', 'snokrabbe']) t.ok(K.equipFits('teinehaler', v), v + ': teinehaleren passer som før');
+  for (const v of ['plastsjark', 'kyst21', 'snokrabbe']) t.ok(K.equipFits('teinehaler', v), v + ': teinehaleren passer som før');
+  // (OB16, valg 25 A, Jonas 09.11.2026: as many conical pots as the stacks on deck hold, tools/boats/potplaces.json; the havsjark and
+  // kyst15 none)
+  for (const v of ['sjark', 'kyst15']){
+    t.ok(!VESSELS[v].rigs.includes('teiner') && !K.equipFits('teinehaler', v) && !K.equipFits('krabbekar', v), v + ': ingen teiner, teinehaler eller krabbekar (valg 25 A)');
+    t.ok(/ikke plass til kongekrabbeteiner/.test(VESSELS[v].desc.no) && /no room for king crab pots/.test(VESSELS[v].desc.en), v + ': båtbladet sier at det ikke er plass til teinene');
+  }
+  t.eq(['hurtigsjark', 'sjarkny', 'breisjark', 'kyst21'].map(v => VESSELS[v].gearMax.teine), [6, 21, 6, 30], 'teinene båtene har plass til: 6, 21, 6 og 30 (stablene på dekk)');
   t.ok(K.equipFits('krabbekar', 'plastsjark'), 'plastsjarken kan fortsatt ha krabbekar');
 
   // ---- buying: the pots, the rig, and the nets by hand
@@ -70,5 +77,17 @@ export default function (t){
   // (the snekke's pots and hauler from a save go ashore and are paid back, as the wooden boat's)
   boat('snekke'); S.equip = {teinehaler:true}; S.pgear = K.newPGear(); S.pgear.pots.big = 4; S.sets = []; S.boat.gop = null; S.boat.status = 'port'; S.boat.port = yard.id;
   t.ok(K.potsUnfit() > 0 && S.pgear.pots.big === 0 && !S.equip.teinehaler, 'snekka: teinene og haleren tatt i land og betalt tilbake ved verftet');
+
+  // ---- more pots than the deck holds (OB16, valg 25 A): those aboard over it go ashore in port, paid back; the hauler stays
+  boat('hurtigsjark'); S.equip = {teinehaler:true, krabbekar:true}; S.pgear = K.newPGear(); S.pgear.pots.big = 18; S.sets = []; S.boat.gop = null; S.boat.status = 'port'; S.boat.port = plant.id; S.cash = 0;
+  t.eq(K.potsOver(), 12, 'den brukte hurtigsjarken med 18 teiner fra før: 12 over de 6 det er plass til');
+  S.boat.status = 'sailing'; t.eq(K.potsUnfit(), 0, 'på sjøen skjer ingenting');
+  S.boat.status = 'port'; t.eq(K.potsUnfit(), 12 * POTS.big.price, 'i havn: de 12 tas i land og betales tilbake til full pris');
+  t.ok(S.pgear.pots.big === 6 && S.equip.teinehaler && S.equip.krabbekar && Math.round(S.cash) === 12 * POTS.big.price, '6 teiner om bord, haleren og karet står, pengene på konto');
+  t.eq(K.potsUnfit(), 0, 'neste time: ingenting');
+  S.pgear.pots.big = 4; S.sets = [{vid:S.cur, kind:'teine', n:6, pot:'big'}];
+  t.eq(K.potsOver(), 4, 'med 6 i sjøen og 4 om bord: de 4 om bord er over');
+  t.eq(K.potsOver('hurtigsjark', S.pgear, []), 0, 'potsOver for en annen liste med lenker: ingen i sjøen, 4 om bord er innenfor');
+  boat('kyst21'); S.pgear.pots.big = 30; S.sets = []; t.eq(K.potsOver(), 0, 'kyst21 med 30: ingen over');
   globalThis.kr = kr0;
 }
