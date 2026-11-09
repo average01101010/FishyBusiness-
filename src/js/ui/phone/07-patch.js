@@ -2,7 +2,9 @@
   const PATCH = [
     ['skum-091126', '09.11.2026', 'Skumtoppene på sjøen', 'The whitecaps on the sea', [
        ['Skummet fra en bølgetopp som brekker, blir liggende og tynnes ut med en gang i stedet for å blinke inn og ut.', 'The foam from a breaking crest stays and thins out at once instead of blinking in and out.'],
-       ['Ovenfra synes ikke lenger en stor firkant rundt båten der skummet var tettere: det glir jevnt over i sjøen rundt.', 'From above, a large square round the boat where the foam was denser no longer shows: it fades evenly into the sea round it.']]],
+       ['Ovenfra synes ikke lenger en stor firkant rundt båten der skummet var tettere: det glir jevnt over i sjøen rundt.', 'From above, a large square round the boat where the foam was denser no longer shows: it fades evenly into the sea round it.'],
+       ['Skumtoppene ligger spredt som på ekte sjø, ikke i rekker og bånd, og skummet blir liggende i vannet som kjølvannet.', 'The whitecaps lie scattered as on a real sea, not in rows and bands, and their foam stays in the water as the wake does.'],
+       ['Ute på sjøen møter båten dønningen og de lange bølgene i sin egen fart, så hun stamper og ruller i riktig takt.', 'Out at sea the boat meets the swell and the long waves at her own speed, so she pitches and rolls at the right pace.']]],
     ['p157', '08.11.2026', 'Fisken på fiskeplassene', 'The fish on the fishing grounds', [
        ['Fisken står oftere på fiskeplassene langs hele kysten i de månedene fiskerne har fisket der (Fiskeridirektoratets kart), men ikke hver dag: de gode flekkene kommer og går på feltet som ellers i sjøen.', 'The fish stand more often on the fishing grounds along the whole coast in the months the fishermen have fished there (the Directorate of Fisheries\' map), but not every day: the good spots come and go on the ground as elsewhere in the sea.'],
        ['Senjas seks felt har ikke lenger en egen sirkel med ekstra fisk. Fiskeplassene på Senja følger samme regel som resten av kysten.', 'Senja\'s six grounds no longer have a circle of extra fish of their own. The fishing grounds on Senja follow the same rule as the rest of the coast.']]],

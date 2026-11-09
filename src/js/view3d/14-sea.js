@@ -87,7 +87,14 @@
     NF.R = NF.on ? clamp(1 - 1 / (typeof simRate === 'function' ? simRate() : 6), 0, 1) : 0;
     if (!NF.R || Math.hypot(dx, dz) > 300) return;   // off, real time, or a jump (a teleport, a new place): the field stays
     const ex = dx * NF.R, ez = dz * NF.R;
-    for (let i = 4; i < 10; i++){ const c = WV.list[i]; if (!c) continue; const a = c.Dx * ex + c.Dz * ez, g = c.Dz * ex - c.Dx * ez;
+    // the long waves (0-3) and the swell (10-12) too (09.11.2026: before, they stood in the world, so she met the swell six times too
+    // fast, pitching every 4 s instead of 8 in a 150 m head swell and running away from it in a following one), but only away from
+    // land: within 0.4 km of the shore they stand still in the world, from 1.5 km they go with the boat, so the surf on a beach never
+    // slides along it while you sail past (coastDist, looked up twice a second)
+    if (!(NF.ldT > 0)){ NF.ldT = 30; try { NF.lf = typeof coastDist === 'function' ? sstep(0.4, 1.5, coastDist({x:bv.x / 1000, y:bv.z / 1000})) : 1; } catch (e){ NF.lf = 0; } } NF.ldT--;
+    const lf = NF.lf == null ? 0 : NF.lf;
+    for (let i = 0; i < 13; i++){ const c = WV.list[i]; if (!c) continue; const f = i >= 4 && i < 10 ? 1 : lf; if (!f) continue;
+      const a = (c.Dx * ex + c.Dz * ez) * f, g = (c.Dz * ex - c.Dx * ez) * f;
       NF.ph[i] = (NF.ph[i] + c.k * a) % TAU; NF.gp[i] = (NF.gp[i] + c.k * (0.083 * a + 0.041 * g)) % TAU; }
     NF.D[0] += ex; NF.D[1] += ez;
     for (let k = 0; k < 2; k++) if (Math.abs(NF.D[k]) > 65536 && (bv.spd < 1 || Math.abs(NF.D[k]) > 120000)) NF.D[k] -= Math.sign(NF.D[k]) * 65536;
@@ -329,10 +336,12 @@
     const jzz = jtr - jxx, J = (1 - jxx) * (1 - jzz) - jxz * jxz, jn = (1 - J) / Math.sqrt(jv), crest = y / Math.sqrt(sa);
     const w = env.windDir || [0, 1], px = x - RO.x - NF.D[0], pz = z - RO.z - NF.D[1], a = px * w[0] + pz * w[1], b = px * -w[1] + pz * w[0];
     const g = NS3(a * 0.3 + t * 0.35, b * 0.36) * 0.5 + (0.5 + (NS3(a * 0.9 - t * 0.5, b * 1.1 - t * 0.2) - 0.5) * mid) * 0.3 + (0.5 + (NS3(a * 2.8 + t * 0.8, b * 3.4 + 1.7) - 0.5) * fine) * 0.2;
-    const dws = sstep(0.45, 1.73, S[3]), Wc = clamp(3.84e-6 * Math.pow(Math.max(U, 0.3), 3.41) * dws, 1e-5, 0.5), W = clamp(Wc * kk, 1e-5, 0.5);
+    // (the gate, capGate in 01-shaders.js: only where a random field of 3-35 m lets them do the crests break, the share WCAP.G of the sea)
+    const bn = NS3(a * 0.02857 + t * 0.02 + 3.1, b * 0.04545 + 7.1) * 0.4 + NS3(a * 0.0909 + 3.3 - t * 0.05, b * 0.1111 + 1.9) * 0.2 + NS3(a * 0.35 + 5.2 + t * 0.1, b * 0.125 + 0.6) * 0.4, gate = sstep(0.52, 0.64, bn);
+    const dws = sstep(0.45, 1.73, S[3]), Wc = clamp(3.84e-6 * Math.pow(Math.max(U, 0.3), 3.41) * dws, 1e-5, 0.5), W = clamp(Wc * kk / WCAP.G, 1e-5, 0.5);
     let zt = Math.sqrt(-2 * Math.log(W)); zt -= (2.515517 + 0.802853 * zt + 0.010328 * zt * zt) / (1 + 1.432788 * zt + 0.189269 * zt * zt + 0.001308 * zt * zt * zt);
     const js = jsc / Math.sqrt(jsv);
-    return {fv:jn * WCAP.j + js * WCAP.s + crest * WCAP.c + (g - 0.5) * WCAP.g, js, th:WCAP.th[0] + WCAP.th[1] * zt + WCAP.th[2] * zt * zt, jn, J, crest, g, Wc};
+    return {fv:jn * WCAP.j + js * WCAP.s + crest * WCAP.c + (g - 0.5) * WCAP.g - (1 - gate) * 1.5, gate, js, th:WCAP.th[0] + WCAP.th[1] * zt + WCAP.th[2] * zt * zt, jn, J, crest, g, Wc};
   };
 
   // ---------- the sea state over the near terrain and the whole map ----------
