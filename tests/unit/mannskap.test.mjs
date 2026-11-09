@@ -66,4 +66,41 @@ export default function (t){
   t.near((a.attr.kokk - 2) / (z.gear.sloy - 2), 3, 1e-9, 'en time ved komfyren lærer tre ganger så mye som en time ved sløyebordet', [a.attr.kokk, z.gear.sloy]);
   let c = mk(), h = 0; while (c.attr.kokk < 2.5 && h < 500){ c.wk = {kokk:60}; K.learnHour(c); h++; }
   t.ok(h >= 10 && h <= 25, 'fra 2 til 2,5 (fiskekaker) for en på 30: rundt 17 timer ved komfyren, fem uker med to timer om dagen', h);
+
+  // ---- «Tom for is» (Ø8b M5 A, Jonas 06.11.2026): once when the ice runs out, then once a day while it stays out; it starts again
+  // when the ice is filled. One hand on the icing (workTeam stubbed), a sjark with 3 kg of ice and 100 kg of gutted cod on deck ----
+  { const wt = K.get('workTeam'), D = 1440;
+    K.set('workTeam', st => st === 'is' ? {n:1, sum:1, eff:1, crew:[], me:true} : {n:0, sum:0, eff:1, crew:[], me:false});
+    b.type = 'sjark'; K.applyVessel(); S.settings.ice = true; S.settings.gut = true; b.status = 'fishing'; b.trip = null;
+    const cod = kg => ({sp:'torsk', kg, n:Math.round(kg / 3), fresh:1, gut:true});
+    const lines = () => S.log.filter(l => l.no === 'Tom for is. Fangsten ises ikke.').map(l => l.t);
+    const run = (from, to) => { for (S.t = from; S.t < to; S.t++) K.deckMinute(); };
+    S.log = []; S.lastIceWarn = -1e9; b.ice = 3; S.hold = [cod(100)];
+    run(10 * D, 10 * D + 1);
+    t.eq([lines().length, S.hold.filter(x => x.iced).reduce((a, x) => a + x.kg, 0) > 9], [0, true], 'første minutt: de 3 kg isen ises ned (10 kg torsk), ingen linje ennå');
+    run(10 * D + 1, 10 * D + 2);
+    t.eq(lines(), [10 * D + 1], 'isen tar slutt: «Tom for is» én gang');
+    run(10 * D + 2, 10 * D + 3 * 60);
+    t.eq(lines().length, 1, 'ikke igjen etter to timer (før: hver andre time)');
+    run(10 * D + 3 * 60, 13 * D);
+    t.eq(lines(), [10 * D + 1, 11 * D + 1, 12 * D + 1], 'så én gang per døgn så lenge den er tom: 3 linjer på tre døgn (før 36)');
+    // ice from the mottak (400 kg, 20 % of the ice room): the spell ends, and when it runs out again the line comes at once, not a day after
+    b.ice = 400; S.hold.push(cod(2000)); run(13 * D, 13 * D + 1);
+    t.eq([S.lastIceWarn, lines().length], [-1e9, 3], 'isen fylt (400 kg): tom-perioden er over');
+    run(13 * D + 1, 13 * D + 3 * 60);
+    const L = lines(); t.ok(L.length === 4 && L[3] > 13 * D + 60 && L[3] < 13 * D + 3 * 60, 'på nytt etter påfylling: linja kommer straks isen er brukt opp igjen, ikke et døgn etter', L);
+    // a little ice (under 5 % of the ice room) is used up at once and does not end the spell
+    b.ice = 50; run(13 * D + 3 * 60, 13 * D + 4 * 60);
+    t.eq(lines().length, 4, 'litt is (50 kg, under 5 %) brukes opp og avslutter ikke tom-perioden: ingen ny linje');
+    // an old game with only S.lastIceWarn, the line given an hour ago in the middle of a spell: the next one a day after it, not now
+    S.log = []; b.ice = 0; S.lastIceWarn = 20 * D - 60; run(20 * D, 20 * D + 120);
+    t.eq(lines().length, 0, 'gammelt spill med S.lastIceWarn for en time siden: ingen ny linje nå');
+    run(20 * D + 120, 21 * D);
+    t.eq(lines(), [21 * D - 60], 'den neste et døgn etter den gamle linja');
+    // the freezer hold freezes with no ice: never «Tom for is»
+    const fzType = Object.keys(K.VESSELS).find(k => K.VESSELS[k].hold && K.VESSELS[k].hold.kind === 'frys');
+    if (fzType){ b.type = fzType; K.applyVessel(); S.log = []; S.lastIceWarn = -1e9; b.ice = 0; b.fuel = 1e6; S.hold = [cod(50000)]; run(22 * D, 22 * D + 600);
+      t.eq(lines().length, 0, 'med fryserom (' + fzType + ') og ingen is: aldri «Tom for is»'); }
+    K.set('workTeam', wt); b.type = 'sjark'; K.applyVessel(); S.hold = []; S.log = [];
+  }
 }
