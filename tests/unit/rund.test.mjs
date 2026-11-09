@@ -28,4 +28,22 @@ export default function (t){
   t.eq(n, 0, 'lyr har ingen lever å betale for: ingen slik replikk');
   n = 0; for (let i = 0; i < 50; i++) if (plantLine(pt, L(10, 'torsk'), rnd).pick === 'round') n++;
   t.eq(n, 0, 'under 15 kg: ingen slik replikk');
+  // R1 (steg 16): round or gutted per boat. b.gutAboard false lands round; undefined guts as before (old saves, the fleet)
+  const {gutFeeKg} = t.K;
+  const a = S.boat, other = {type:'sjark', gutAboard:false};
+  t.ok(catchGut(a) && catchGut(), 'båten uten valg sløyer om bord (gamle lagringer)');
+  a.gutAboard = false;
+  t.ok(!catchGut(a) && !catchGut(), 'båten med «Rund» leverer rund');
+  t.near(deckPending(), 0, 1e-9, '… og ingenting venter på kniven på dekk');
+  t.ok(inTub(x), '… den blødde runde fisken ligger i karene');
+  delete a.gutAboard;
+  t.ok(!catchGut(other), 'en annen båt i flåten med «Rund» leverer rund mens denne sløyer');
+  t.ok(catchGut(a), '… og denne sløyer fortsatt');
+  S.tut = {v:2, m:{}, catch:true}; t.ok(!catchGut(a), 'første tur leveres rund uansett valget'); S.tut = 0;
+  // R2: the plant's gutting charge on the landing note, 0.30 kr per round kilo of haddock and saithe, none for cod (R3)
+  t.near(gutFeeKg({sp:'hyse', gut:false}), 0.30, 1e-9, 'rund hyse: mottaket trekker 0,30 kr/kg for sløyingen');
+  t.near(gutFeeKg({sp:'sei', gut:false}), 0.30, 1e-9, 'rund sei: 0,30 kr/kg');
+  t.near(gutFeeKg({sp:'hyse', gut:true}), 0, 1e-9, 'sløyd hyse: ikke noe trekk');
+  t.near(gutFeeKg({sp:'torsk', gut:false}), 0, 1e-9, 'rund torsk: ikke noe trekk (R3, mottaket får lever og rogn)');
+  t.near(gutFeeKg({sp:'sei', gut:true, frozen:true}), 0, 1e-9, 'fryst sløyd sei: ikke noe trekk');
 }

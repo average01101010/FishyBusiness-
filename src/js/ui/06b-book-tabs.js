@@ -133,6 +133,7 @@ function bookSales(){
     if (d.conf && d.conf[1] > 0.5) cost.push([BKL('Inndratt over kvote eller bifangst', 'Confiscated over quota or bycatch'), '−' + kr(d.conf[1])]);
     if (d.conf && d.conf[3] > 0.5) cost.push([BKL('Krabbe under minstemål', 'Undersized crab'), '−' + kr(d.conf[3])]);
     if (d.roe > 0.5) cost.push([BKL('Trekk for rognkrabbe', 'Berried crab deduction'), '−' + kr(d.roe)]);
+    if (d.gf > 0.5) cost.push([BKL('Sløyd på mottaket', 'Gutted by the buyer'), '−' + kr(d.gf)]);   // (round haddock and saithe, R2)
     const tks = (d.tk || []).reduce((a, v) => a + v, 0);
     if (tks > 0) cost.push([BKL('Trekk til Råfisklaget og staten', 'Sales organisation and state levies'), '−' + kr(tks)]);
     // the common costs and the shares (Økonomi 2, Ø2: [name, shares, kr, skipper]); a note from before has [name, part of the net]
