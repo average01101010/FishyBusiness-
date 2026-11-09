@@ -235,7 +235,7 @@
     const cm = LC.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz, n = LC.n;
     if (!mapIn(LC, ix - 1, iz - 1) || !mapIn(LC, ix + 2, iz + 2)) return;
     const b0 = Math.floor((ix - 1) / n), b1 = Math.floor((ix + 2) / n), c0 = Math.floor((iz - 1) / n), c1 = Math.floor((iz + 2) / n);
-    const bk = ((b0 * 8192 + c0) * 2 + (b1 - b0)) * 2 + (c1 - c0), now = performance.now();
+    const bk = ((b0 * 8192 + c0) * 2 + (b1 - b0)) * 2 + (c1 - c0), now = MNOW || performance.now();
     // only a yes is kept (a second): a no is asked again, since the pack may come in the meantime and the mesh be built again at once
     // (kept, a fine mesh built just after its pack came had no land cover: a lighter square a kilometre wide at Hammerfest, 28.10.2026)
     if (bk !== COVB.k || now - COVB.t > 1000){ for (let by = c0; by <= c1; by++) for (let bx = b0; bx <= b1; bx++) if (!mapHasBlock(LC, bx, by)) return; COVB.k = bk; COVB.t = now; }
@@ -255,11 +255,17 @@
   // taken out, coast.py sat_tile) into cv at o, o + 1, o + 2 as R, G, B 1-255; 0, 0, 0 where there is none (the sea, outside Norway, a
   // release before the layers). Packed as luma sy (50 m, 7 bits) and chroma sco, scg (100 m, 6 bits), each + 1, 0 for none: each read
   // over the nearest 2 x 2 cells that have it, weighted bilinearly, and turned back (G = Y + Cg, R = Y - Cg + Co, B = Y - Cg - Co).
+  // (Ø3c: the four blocks a point's cells are in, kept per layer as they were found there, SATQ, with the time as COVB keeps it: a mesh's
+  // points ask the same block over and over, and each of the four checks asked the clock and a map)
+  const SATQ = new Map();
   function satRead(L, x, z){
     const cm = L.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz;
     if (!mapIn(L, ix, iz) || !mapIn(L, ix + 1, iz + 1)) return -1;
     const b0 = Math.floor(ix / L.n), b1 = Math.floor((ix + 1) / L.n), c0 = Math.floor(iz / L.n), c1 = Math.floor((iz + 1) / L.n);
-    if (!covBlk(L, b0, c0) || !covBlk(L, b1, c0) || !covBlk(L, b0, c1) || !covBlk(L, b1, c1)) return -1;   // (all four: by a block's corner the cells reach into three)
+    const qk = ((b0 * 8192 + c0) * 2 + (b1 - b0)) * 2 + (c1 - c0), now = MNOW || performance.now(); let Q = SATQ.get(L.id); if (!Q) SATQ.set(L.id, Q = {k:NaN, t:0});
+    if (qk !== Q.k || now - Q.t > 1000){
+      if (!covBlk(L, b0, c0) || !covBlk(L, b1, c0) || !covBlk(L, b0, c1) || !covBlk(L, b1, c1)) return -1;   // (all four: by a block's corner the cells reach into three)
+      Q.k = qk; Q.t = now; }
     let v = 0, w = 0;
     for (let dz = 0; dz <= 1; dz++) for (let dx = 0; dx <= 1; dx++){ const c = rcell(L, ix + dx, iz + dz); if (!c) continue; const q = (dx ? fx : 1 - fx) * (dz ? fz : 1 - fz) + 1e-4; v += (c - 1) * q; w += q; }
     return w > 0.05 ? v / w : -1;
@@ -272,7 +278,7 @@
   }
   // a block of the cover layer that is there, kept a second (positives only, as COVB)
   const COVK = new Map();
-  function covBlk(LC, bx, by){ const key = (bx * 8192 + by) * 64 + LC.id, t = COVK.get(key), now = performance.now(); if (t && now - t < 1000) return true; if (!mapHasBlock(LC, bx, by)) return false; if (COVK.size > 64) COVK.clear(); COVK.set(key, now); return true; }
+  function covBlk(LC, bx, by){ const key = (bx * 8192 + by) * 64 + LC.id, t = COVK.get(key), now = MNOW || performance.now(); if (t && now - t < 1000) return true; if (!mapHasBlock(LC, bx, by)) return false; if (COVK.size > 64) COVK.clear(); COVK.set(key, now); return true; }
   // the classes of the nearest ring of cells (2 to 10 cells out, 100-500 m) that has any, counted into COVW; the sum (0 if none). The
   // land within 50-100 m of the shore often has no class (ESA's polygons stop short of OpenStreetMap's coastline), and the old rule
   // there made dark patches and bands where the fells are bare (Hammerfest, 28.10.2026)
@@ -300,6 +306,9 @@
   // on a PC at a time, 3-4 times that on a phone.)
   // A time slice for the generators that build in steps: SLEND is when the slice ends; runAll runs one to its end at once.
   let SLEND = Infinity;
+  // the clock while meshRows works a row (Ø3c, 09.11.2026): coverAt and covBlk keep a block they found for a second, and asked
+  // performance.now() for each point to know it; a row is a few milliseconds, so the row's start does. 0 outside meshRows.
+  let MNOW = 0;
   const sliceDue = () => performance.now() > SLEND;
   function runAll(g){ const s = SLEND; SLEND = Infinity; let r; try { while (!(r = g.next()).done); } finally { SLEND = s; } return r.value; }
   // one step of a generator until the slice ends at 'end': its value when it is done, else undefined (J.done tells)
@@ -310,16 +319,18 @@
   }
   function meshRows(B, until){
     const {x0, z0, n, dx, dz, hf, pos, h, nz, fo, cv, ck} = B;
+    try {
     while (B.j < n){
-      const j = B.j; let i = B.i;
+      const j = B.j; let i = B.i; MNOW = performance.now();
       for (; i < n; i++){
         const k = j * n + i, x = x0 + i * dx, z = z0 + j * dz, y = hf(x, z);
         h[k] = y; pos[k * 3] = i * dx; pos[k * 3 + 1] = y; pos[k * 3 + 2] = j * dz; nz[k] = fbm(x / 600, z / 600, 2, 90); fo[k] = forestAt(x, z); if (y > 0) coverAt(x, z, cv, ck, k); else ck[k] = 0;   // (the sea has no class: its points would search the rings for nothing)
-        if ((i & 31) === 31 && i + 1 < n && performance.now() > until){ B.i = i + 1; return false; }   // (a row of the far mesh over land was 10-40 ms)
+        if ((i & 31) === 31 && i + 1 < n && (MNOW = performance.now()) > until){ B.i = i + 1; return false; }   // (a row of the far mesh over land was 10-40 ms)
       }
       B.i = 0; B.j++;
       if (performance.now() > until) break;
     }
+    } finally { MNOW = 0; }
     return B.j >= n;
   }
   // the triangles of an n x n grid are the same for every mesh of that size: one index buffer per size, shared (m.ibs; freeMesh keeps it)

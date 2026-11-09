@@ -84,9 +84,15 @@
   // after a compile or link that failed with no word why: a moment for the browser to notice a lost context, before trying the next
   const glSettle = async () => { await new Promise(r => setTimeout(r, 80)); if (gl.isContextLost()) throw new Error('konteksten er mistet'); };
   const opt = (nm, f) => { try { f(); } catch (e){ console.error(nm, e); } };    // a part the view can do without
-  async function init(){
-    if (ready) return true; if (failed) return false;
-    try {
+  // init in two parts (Ø3c, 09.11.2026): initGL makes the context and the shaders, which do not hang on where the game starts; the rest
+  // (the buildings hang on Father's naust, bldOnUnit -> sitesNow -> naustSite) waits for init. With KHR_parallel_shader_compile prep()
+  // runs initGL while Father's letter is read (ui/11-boot.js), as the driver compiles off the main thread; without it prep() makes only
+  // the context and the shaders come in init as before. glP is the part under way, GLOK that it is done, glErr how it failed: init
+  // throws that, so a failure in the letter is met and reported where it was before. ASK3D: the view has been asked for (show).
+  let glP = null, GLOK = false, glErr = null, ASK3D = false, PREP1 = false;   // (PREP1: prep has run, once a page)
+  const glRun = pre => glP || (glP = initGL(pre).then(ok => { glP = null; if (ok) GLOK = true; return ok; }, e => { glP = null; glErr = e; throw e; }));
+  function prep(){ if (PREP1 || ready || failed || loading || GLOK || glP || glErr) return; PREP1 = true; glRun(true).catch(() => {}); }
+  async function initGL(pre){
       stage = 'webgl';
       // the settings the view wants, then plainer ones: some PCs (Adrian, 04.10.2026) give no context with antialiasing or the
       // high-performance GPU asked for, and do with neither
@@ -117,7 +123,7 @@
         // a lost context: the view stops; lost before it was ready (a phone short of memory, or a GPU process that restarted), it
         // starts again when the browser gives the context back
         glWatch = true; let wasReady = false;
-        canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); wasReady = ready; ready = false; failed = true; show(false);
+        canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); wasReady = ready; ready = false; failed = true; GLOK = false; show(false);
           // (on the middle sea the level stays: the next start leaves the middle sea out)
           if (!wasReady && stage === 'shadere' && seaMidTry){ seaMidFailed('konteksten mistet');
             failWhy = S.lang === 'en' ? 'the graphics driver gave up while starting. Reload the page and the game tries a simpler sea' : 'grafikkdriveren ga opp under oppstarten. Last siden på nytt, så prøver spillet en enklere sjø'; }
@@ -127,7 +133,7 @@
           else { failWhy = 'WebGL-konteksten ble mistet'; if (wasReady) qmDown('kontekst'); qmAlive(false); if (wasReady && typeof cloudErr === 'function') cloudErr('3D konteksten mistet under spill · ' + GPU + ' · ' + glDiag(), 'view3d', ''); } });
         // lost in play, every buffer, texture and program is gone with it: the game saves and loads the page again, which builds them
         // anew, at most once in ten minutes (sessionStorage), so a driver that keeps failing does not reload the page over and over
-        canvas.addEventListener('webglcontextrestored', () => { if (!wasReady){ failed = false; failWhy = ''; show(true); return; }
+        canvas.addEventListener('webglcontextrestored', () => { if (!wasReady){ failed = false; failWhy = ''; glErr = null; if (ASK3D) show(true); return; }   // (lost in the letter's prep: init makes it all again when asked)
           let last = 0; try { last = +sessionStorage.getItem('dsb_gl_reload') || 0; } catch (e){}
           if (Date.now() - last > 600000){ try { sessionStorage.setItem('dsb_gl_reload', String(Date.now())); } catch (e){}
             toast(S.lang === 'en' ? 'The 3D view was lost. The game is saved and loads again …' : '3D-visningen ble borte. Spillet lagres og lastes på nytt …');
@@ -137,8 +143,14 @@
       if (gl.isContextLost()){ stage = 'webgl'; throw new Error('konteksten er mistet (venter på at nettleseren gir den tilbake)'); }
       if (!gl.getExtension('OES_standard_derivatives')) throw new Error('mangler OES_standard_derivatives');
       UINT = !!gl.getExtension('OES_element_index_uint'); qualSet();   // 32-bit indices: the ultra level's big meshes
+      KPSC = /kpsc0/.test(location.hash) ? null : gl.getExtension('KHR_parallel_shader_compile');   // (#kpsc0 in the address: as without it)
+      if (pre && !KPSC) return false;
       stage = 'shadere';
-      PL = program(LIT_VS, LIT_FS, ['aPos', 'aCol'], 'lit'); PT = program(TER_VS, terFS(0), ['aPos', 'aCol', 'aNor', 'aShd', 'aMat', 'aCov'], 'terreng'); PTS = [PT, null, null]; PRGN = program(LITN_VS, LITN_FS, ['aPos', 'aNor', 'aCol'], 'modell'); PRGX = program(TEX_VS, TEX_FS, ['aPos', 'aUV'], 'tekstur'); PRGW = program(WK_VS, WK_FS, ['aPos', 'aW', 'aS'], 'kjølvann');
+      // the programs that have no fallback, started together (read after the sea, below, so the driver compiles them beside it)
+      const PG = [progStart(LIT_VS, LIT_FS, ['aPos', 'aCol'], 'lit'), progStart(TER_VS, terFS(0), ['aPos', 'aCol', 'aNor', 'aShd', 'aMat', 'aCov'], 'terreng'), progStart(LITN_VS, LITN_FS, ['aPos', 'aNor', 'aCol'], 'modell'),
+        progStart(TEX_VS, TEX_FS, ['aPos', 'aUV'], 'tekstur'), progStart(WK_VS, WK_FS, ['aPos', 'aW', 'aS'], 'kjølvann'), progStart(SKY_VS, SKY_FS, ['aP'], 'himmel'), progStart(PT_VS, PT_FS, ['aPos', 'aA'], 'punkter')];
+      // without the extension each is read at once, in the order they had (a failing one stops the start before the sea, as before)
+      if (!KPSC) [PL, PT, PRGN, PRGX, PRGW, PK, PP] = PG.map(progEnd);
       WKB = {p:new Float32Array(9000 * 3), w:new Float32Array(9000 * 4), s:new Float32Array(9000), pb:buf(new Float32Array(9000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), wb:buf(new Float32Array(9000 * 4), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), sb:buf(new Float32Array(9000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW)}; // the waves read the sea-state texture in the vertex shader where the GPU can (#novtf in the address tries without)
       SST_VS = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) >= 2 && !/novtf/.test(location.hash); SHT_VS = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) >= 3;   // (the shoal texture, F4: a third unit, else NOSHT and the sea state keeps its two)
       // The sea is the heaviest program, and a phone's driver may refuse to link it with no word why (Adreno 642L, 05.10.2026: «sjø link:
@@ -150,7 +162,7 @@
       // the full sea once more (SEA_RE above): its own two programs; not linked, this start goes on with level 1
       if (seaRe){ seaReSet('try:' + SEAID + ':' + Date.now()); const why = [];
         for (const nosst of [...new Set([!SST_VS, true])]){
-          try { PS = program((nosst ? '#define NOSST\n' : SHT_VS ? '' : '#define NOSHT\n') + SEA_VS, SEAF(SEA_FS), ['aXZ'], 'sjø'); SST_VS = !nosst; PS.far = false; PS.lite = false;   // (NOSHT: F4's shoal texture needs a third unit)
+          try { PS = await programA((nosst ? '#define NOSST\n' : SHT_VS ? '' : '#define NOSHT\n') + SEA_VS, SEAF(SEA_FS), ['aXZ'], 'sjø'); SST_VS = !nosst; PS.far = false; PS.lite = false;   // (NOSHT: F4's shoal texture needs a third unit)
             seaOkSet(why.length ? [nosst, false, false].join() : null); seaWhy.push(...why); break; }
           catch (e){ if (gl.isContextLost()) throw e; why.push(e.message); if (/ingen logg/.test(e.message)) await glSettle(); } }
         if (!PS){ seaRe = false; seaReSet('no'); seaLvl = 1; seaTryMark(true);
@@ -164,10 +176,10 @@
       // the middle sea first on level 1 (seaMidOn above): the lite vertex shader with the full fragment shader; failing, it is marked and
       // the old level 1 follows in the same start, with no word in seaWhy (that list is the old levels' fallbacks)
       if (!PS && seaLvl === 1 && !seaKnown && seaMidOn()){ seaMidMark(true);
-        try { PS = program('#define NOSST\n' + SEA_VS_LITE, SEAF(SEA_FS), ['aXZ'], 'sjø middels'); SST_VS = false; PS.far = false; PS.lite = true; PS.mid = true; seaOkSet(null); seaTry = []; }
+        try { PS = await programA('#define NOSST\n' + SEA_VS_LITE, SEAF(SEA_FS), ['aXZ'], 'sjø middels'); SST_VS = false; PS.far = false; PS.lite = true; PS.mid = true; seaOkSet(null); seaTry = []; }
         catch (e){ if (gl.isContextLost()) throw e; seaMidFailed(String(e.message || e).slice(0, 120)); if (/ingen logg/.test(e.message)) await glSettle(); } }
       for (const [nosst, far, lite] of seaTry){
-        try { PS = program((nosst ? '#define NOSST\n' : SHT_VS ? '' : '#define NOSHT\n') + (lite ? SEA_VS_LITE : SEA_VS), SEAF((far ? '#define FAR\n' : '') + SEA_FS), ['aXZ'], 'sjø'); SST_VS = !nosst; PS.far = far; PS.lite = lite;
+        try { PS = await programA((nosst ? '#define NOSST\n' : SHT_VS ? '' : '#define NOSHT\n') + (lite ? SEA_VS_LITE : SEA_VS), SEAF((far ? '#define FAR\n' : '') + SEA_FS), ['aXZ'], 'sjø'); SST_VS = !nosst; PS.far = far; PS.lite = lite;
           if (seaWhy.length || seaKnown) seaOkSet([nosst, far, lite].join()); else seaOkSet(null); break; }
         catch (e){ if (gl.isContextLost()) throw e; seaWhy.push(e.message); if (/ingen logg/.test(e.message)) await glSettle(); }
       }
@@ -182,14 +194,25 @@
       }
       if (!PS){ PS = program(BASIC_VS, BASIC_FS, ['aXZ'], 'enkel sjø'); PS.basic = true; SST_VS = false; }
       // (the middle sea's far pass on the lite vertex shader as well: the full one is what Direct3D could not take)
-      try { PSF = PS.basic || PS.far ? PS : program('#define NOSST\n' + (PS.mid ? SEA_VS_LITE : SEA_VS), SEAF('#define FAR\n' + SEA_FS), ['aXZ'], 'sjø langt'); }
+      try { PSF = PS.basic || PS.far ? PS : await programA('#define NOSST\n' + (PS.mid ? SEA_VS_LITE : SEA_VS), SEAF('#define FAR\n' + SEA_FS), ['aXZ'], 'sjø langt'); }
       catch (e){ if (gl.isContextLost()) throw e; seaWhy.push(e.message); PSF = PS; }
       await glSettle(); seaTryMark(false); goneSet(SEA_GONE, 0); if (seaMidTry){ seaMidMark(false); goneSet(SEA_MIDGONE, 0); }   // the sea came through and the context is still there
+      if (KPSC){ await progWait(PG); [PL, PT, PRGN, PRGX, PRGW, PK, PP] = PG.map(progEnd); }
+      PTS = [PT, null, null];
       if (seaRe){ seaRe = false; seaReSet('ok'); try { localStorage.removeItem(SEA_KEY); } catch (e){}   // the full sea once more came through: level 0 from now on
         if (typeof cloudErr === 'function') cloudErr('3D full sjø på nytt virket, sjønivå 0 · ' + GPU, 'view3d init', ''); }
       if (seaWhy.length && typeof cloudErr === 'function') cloudErr('3D sjø med reserve (' + (SST_VS ? 'vtf' : 'novtf') + (PSF === PS ? ', én sjø' : '') + (PS.lite ? ', lett' : '') + seaDiag + ') · ' + GPU, 'view3d init', seaWhy.join('\n'));
-      SSDUMMY = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); PK = program(SKY_VS, SKY_FS, ['aP'], 'himmel'); PP = program(PT_VS, PT_FS, ['aPos', 'aA'], 'punkter');
+      SSDUMMY = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
       DYNP = buf(new Float32Array(4000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); DYNA = buf(new Float32Array(4000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
+      return true;
+  }
+  async function init(){
+    if (ready) return true; if (failed) return false;
+    try {
+      if (glP) await glP.catch(() => {});   // the letter's prep, still under way
+      if (failed) return false;
+      if (glErr){ const e = glErr; glErr = null; throw e; }
+      if (!GLOK) await glRun(false);
       // the ground's heights and the forest (map/, the view packs): until they are in, the land is a flat stand-in
       HG = true;   // the ground comes in packs round the boat as it goes (stream3d); until a pack is in, its land is a stand-in
       stage = 'bygg'; try { BLD = await loadBuildings(); } catch (e){ console.error(e); BLD = null; }

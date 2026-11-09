@@ -541,7 +541,7 @@ Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood f
   - 454 `bkLanded(H, bk, all)`
   - 456 `bkNews(H)`
 
-## `src/js/core/03e-rules.js` (498 linjer)
+## `src/js/core/03e-rules.js` (505 linjer)
 
 The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a place, a time, the boat's length, the gear and the
 
@@ -573,11 +573,11 @@ The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a 
   - 419 `fjordLimits(p, H)`
   - 446 `ruCtx()`
   - 450 `ruNow()`
-  - 456 `ruLayerBlock(bx, by, q, budget)`
-  - 468 `ruWpQ(w)`
-  - 473 `ruWpMsg(w)`
-  - 480 `ruOpenNear(p, q, maxKm)`
-  - 489 `ruTips()`
+  - 461 `ruLayerBlock(bx, by, q, budget, tail)`
+  - 475 `ruWpQ(w)`
+  - 480 `ruWpMsg(w)`
+  - 487 `ruOpenNear(p, q, maxKm)`
+  - 496 `ruTips()`
 
 ## `src/js/core/03f-fiske.js` (387 linjer)
 
@@ -3416,7 +3416,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **70** a new build is out: «Oppdater nå» (Jonas 06.11.2026: «Varsel ved oppdatering for å kjøre refresh på appen»)
 - **104** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (389 linjer)
+## `src/js/ui/11-boot.js` (391 linjer)
 
 ---------- boot ----------
 
@@ -3450,7 +3450,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 207 `modelsLabel()`
   - 214 `bootMapLoad()`
   - 242 `bootGame()`
-  - 371 `bootFail(e)`
+  - 373 `bootFail(e)`
 
 ## `src/js/vessel3d.js` (1654 linjer)
 
@@ -3614,7 +3614,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (741 linjer)
+## `src/js/view3d/01-shaders.js` (758 linjer)
 
 ---------- shaders ----------
 
@@ -3627,13 +3627,16 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 651 `cloudStep(dt)`
   - 658 `skyFrame(u, Hh, tn, bv)`
   - 673 `glsl3(src, fs)`
-  - 681 `compile(type, src, nm)`
-  - 688 `program(vs, fs, attrs, nm = '?')`
-  - 696 `buf(data, target, usage)`
-  - 701 `airSet(u, terr)`
-  - 716 `sunT0()`
-  - 723 `attr(loc, b, size)`
-  - 739 `upload(pos, col, idx)`
+  - 686 `progStart(vs, fs, attrs, nm = '?')`
+  - 694 `progEnd(P)`
+  - 704 `program(vs, fs, attrs, nm = '?')`
+  - 706 `progWait(list)`
+  - 712 `programA(vs, fs, attrs, nm)`
+  - 713 `buf(data, target, usage)`
+  - 718 `airSet(u, terr)`
+  - 733 `sunT0()`
+  - 740 `attr(loc, b, size)`
+  - 756 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (99 linjer)
 
@@ -3644,7 +3647,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **45** terrain
   - 76 `terrRaw(x, z, dil)`
 
-## `src/js/view3d/03-berths-naust.js` (420 linjer)
+## `src/js/view3d/03-berths-naust.js` (431 linjer)
 
 ---------- The water at the berths the company holds in the coast's harbours (core/07e-havn.js) ----------
 
@@ -3666,24 +3669,24 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 214 `forestAt(x, z)`
   - 226 `forestCell(one, LF, ct, c, r)`
   - 233 `coverAt(x, z, cv, ck, k)`
-  - 258 `satRead(L, x, z)`
-  - 267 `satAt(x, z, cv, o)`
-  - 275 `covBlk(LC, bx, by)`
-  - 279 `coverRing(LC, ix, iz)`
-  - 289 `coverClass(x, z)`
-  - 304 `runAll(g)`
-  - 306 `sliceRun(J, end)`
-  - 307 `meshBegin(x0, z0, sx, sz, n, hf)`
-  - 311 `meshRows(B, until)`
-  - 327 `gridIdx(n)`
-  - 350 `meshEnd(B)`
-  - 351 `makeMesh(x0, z0, sx, sz, n, hf)`
-  - 352 `freeMesh(m)`
-  - 354 `nearSurf(M, x, z)`
-  - 364 `unitPatch(U, M)`
-  - 389 `buildPatches()`
-  - 398 `buildTerrain()`
-  - 407 `stream3d()`
+  - 261 `satRead(L, x, z)`
+  - 273 `satAt(x, z, cv, o)`
+  - 281 `covBlk(LC, bx, by)`
+  - 285 `coverRing(LC, ix, iz)`
+  - 295 `coverClass(x, z)`
+  - 313 `runAll(g)`
+  - 315 `sliceRun(J, end)`
+  - 316 `meshBegin(x0, z0, sx, sz, n, hf)`
+  - 320 `meshRows(B, until)`
+  - 338 `gridIdx(n)`
+  - 361 `meshEnd(B)`
+  - 362 `makeMesh(x0, z0, sx, sz, n, hf)`
+  - 363 `freeMesh(m)`
+  - 365 `nearSurf(M, x, z)`
+  - 375 `unitPatch(U, M)`
+  - 400 `buildPatches()`
+  - 409 `buildTerrain()`
+  - 418 `stream3d()`
 
 ## `src/js/view3d/04-vec-packs.js` (378 linjer)
 
@@ -4200,20 +4203,22 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 86 `staleShore(pk)`
   - 87 `drawShore(VP)`
 
-## `src/js/view3d/18-setup.js` (239 linjer)
+## `src/js/view3d/18-setup.js` (262 linjer)
 
 ---------- setup ----------
 
 - **1** setup
   - 30 `seaMarksSettle()`
-  - 87 `init()`
-  - 217 `anchorAlarm3d(kind)`
-  - 220 `sayBoat(id, txt)`
-  - 222 `sayWorker(pid, idx, nm, no, en)`
-  - 226 `crewFx3d(c, kind, o)`
-  - 228 `say3d(c, no, en)`
-  - 232 `buildLabels()`
-  - 233 `resize()`
+  - 94 `prep()`
+  - 95 `initGL(pre)`
+  - 209 `init()`
+  - 240 `anchorAlarm3d(kind)`
+  - 243 `sayBoat(id, txt)`
+  - 245 `sayWorker(pid, idx, nm, no, en)`
+  - 249 `crewFx3d(c, kind, o)`
+  - 251 `say3d(c, no, en)`
+  - 255 `buildLabels()`
+  - 256 `resize()`
 
 ## `src/js/view3d/19-wildlife-npc.js` (200 linjer)
 
@@ -4236,7 +4241,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (395 linjer)
+## `src/js/view3d/20-trawl-seine.js` (417 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -4260,14 +4265,16 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 220 `shipCraneAim(C, pose)`
   - 227 `drawShipCrane(t, G, M, pose)`
   - 237 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
-  - 264 `npcMesh(n, lod)`
-  - 276 `seineAnch(G)`
-  - 286 `npcClock(Hf)`
-  - 294 `npcHead(n, t)`
-  - 309 `npcFollow(n, t)`
-  - 323 `npcPhase(id)`
-  - 324 `drawNPC(eye, t, H, VP)`
-  - 374 `npcCrewDraw(n, K, eye, t)`
+  - 265 `npcKB(t, lod, liv)`
+  - 268 `npcMesh(n, lod)`
+  - 282 `npcWarm(eye)`
+  - 297 `seineAnch(G)`
+  - 307 `npcClock(Hf)`
+  - 315 `npcHead(n, t)`
+  - 330 `npcFollow(n, t)`
+  - 344 `npcPhase(id)`
+  - 345 `drawNPC(eye, t, H, VP)`
+  - 396 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (255 linjer)
 
@@ -4368,7 +4375,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 605 `drawEffects(VP, eye, BM, dt, t)`
   - 738 `updateLabels(VP, eye, W, Hh)`
 
-## `src/js/view3d/25-controls.js` (224 linjer)
+## `src/js/view3d/25-controls.js` (229 linjer)
 
 ---------- controls ----------
 

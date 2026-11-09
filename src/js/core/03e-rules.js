@@ -452,10 +452,17 @@ function ruNow(){ const q = ruCtx(), k = [q.len, q.gear, q.sp, q.hand, q.hav, ru
   const r = rulesAt(q); RU_NOW = {k, t:S.t, p:{x:q.p.x, y:q.p.y}, r}; return r; }
 const ruShort = it => it ? gL(...(RU_SHORT[it.k] || [it.no, it.en])) : '';
 // the chart's rule layer: the answer for your boat on a 250 m grid, a 10 km block at a time (40 x 40), 0 ok, 1 warn, 2 no; only at sea
-const RU_LAYER = new Map();
-function ruLayerBlock(bx, by, q, budget){
-  const key = bx + ',' + by + '|' + [q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey(), bladB(), ruMD(S.t / 60)].join('|'); let A = RU_LAYER.get(key); if (A) return A;
-  if (budget && performance.now() > budget) return null;
+// (Ø3c, 09.11.2026: the key's tail, what the answer hangs on besides the block, is made once a paint by the chart, ruLayerTail, and
+// the blocks are kept by number under it; «hele landet» asks for 55 567 blocks a paint, and the tail made for each, with the zone
+// licences and the date, was most of the chart's first picture there. A new tail starts the store afresh. budget: performance.now()
+// at which the paint stops working blocks out, or an object {end} that is marked over once it is passed, so the rest are not timed)
+const RU_LAYER = new Map(); let RU_LTAIL = '';
+const ruLayerTail = q => [q.len, q.gear, q.sp, q.hand, q.hav, ruZlicKey(), bladB(), ruMD(S.t / 60)].join('|');
+function ruLayerBlock(bx, by, q, budget, tail){
+  if (tail == null) tail = ruLayerTail(q);
+  if (tail !== RU_LTAIL){ RU_LAYER.clear(); RU_LTAIL = tail; }
+  const key = (bx + 32768) * 65536 + by + 32768; let A = RU_LAYER.get(key); if (A) return A;
+  if (budget){ if (typeof budget === 'object'){ if (budget.over || (performance.now() > budget.end && (budget.over = true))) return null; } else if (performance.now() > budget) return null; }
   A = new Uint8Array(1600); const rank = {no:2, warn:1, ok:0};
   for (let j = 0; j < 40; j++) for (let i = 0; i < 40; i++){ const p = {x:bx * 10 + (i + 0.5) * 0.25, y:by * 10 + (j + 0.5) * 0.25};
     if (isLandFar(p)){ A[j * 40 + i] = 3; continue; }
