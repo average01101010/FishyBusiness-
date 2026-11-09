@@ -163,7 +163,7 @@
   // once per boat kit with the look the skipper and the first hand have; when either changes (the wardrobe, a new hand) they are built again
   const peopleSig = () => lookSig(seaLook(lookMe(), true)) + '|' + lookSig(seaLook(lookMe())) + '|' + (lookCrew(0) ? lookSig(seaLook(lookCrew(0))) : '');
   function refreshPeople(K){
-    if (!K || !K.pp || !PERSON) return; const sig = peopleSig(); if (K.pSig === sig) return; K.pSig = sig;
+    if (!K || !K.pp || !PERSON) return; const sig = peopleSig(); if (K.pSig === sig && K.fisherC) return; K.pSig = sig;
     // (the old buffers are left: boat kits made from each other share them, and a look changes rarely)
     const free = () => {};
     const build = (a, look) => { const b = NB(); PERSON(b, a[0], a[1], a[2], a[3], a[4], look); return b.mesh(); };
@@ -172,6 +172,9 @@
     if (K.pp.crew){ free(K.crew); K.crew = build(K.pp.crew, c0); }
     if (K.pp.fisher){ free(K.fisher); K.fisher = build(K.pp.fisher, me); }
     if (glbHas('worker')){ if (K.wk) for (const q in K.wk) free(K.wk[q]); K.wk = wkMeshes(me); }
+    // (OB1) the first hand at the gear: standing without arms (the arms drawn live, as the fisher's), seated by the tubs while she sets,
+    // and his arms in his own look (drawSkiff, 13-instruments.js)
+    K.fisherC = build([0, 0, 0, false, false], c0); K.setterC = build([0, 0, 0, true, false], c0); if (glbHas('worker')) K.wkC = wkMeshes(c0);
   }
   function useHand(t){
     if (HANDK.cur === t || !SK) return;
@@ -197,7 +200,7 @@
     const pc = NB(); PERSON(pc, A.seat[0], A.seat[1], A.seat[2], true, null, seaLook(lookCrew(0)) || 'crew'); K.crew = pc.mesh();
     K.pp = {skipper:[sk[0], sk[1], sk[2], !!A.sit, hands], crew:[A.seat[0], A.seat[1], A.seat[2], true, null], fisher:[0, 0, 0, false, false]}; K.pSig = peopleSig(); K.wk = wkMeshes(seaLook(lookMe()));
     { const fb = NB(); PERSON(fb, 0, 0, 0, false, false, seaLook(lookMe())); K.fisher = fb.mesh(); }
-    const KA = Object.assign({}, HANDK.skiff.SKA); for (const k of ['sole', 'tub', 'fisher', 'haul', 'reel', 'mach', 'stack', 'filler']) if (A[k]) KA[k] = A[k];
+    const KA = Object.assign({}, HANDK.skiff.SKA); for (const k of ['sole', 'tub', 'fisher', 'haul', 'reel', 'mach', 'stack', 'filler', 'set', 'setter', 'coil', 'coilTub', 'moor', 'haulFoot', 'rail']) if (A[k]) KA[k] = A[k];
     return {SK:K, SKA:KA, CHARM:A.charm || HANDK.skiff.CHARM};
   }
   function buildSkiff(){
@@ -370,6 +373,11 @@
     // the machine from tools/gear/juksamaskin.py in place of the drawn one: the body, the spool and the block's sheave, which turn
     let machG = null; if (typeof glbHas === 'function' && glbHas('gear-jig')){ const up = nm => { const o = glbPart('gear-jig', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; }, jg = glbLoad('gear-jig'), x = (jg && jg.ex) || {};
       const body = up('maskin'); if (body && x.tip) machG = {body, spool:up('spole'), sheave:up('skive'), x}; }
+    // (OB1, U4) the hand jig reel as a model (tools/gear/vinde.py, after Jonas' picture 09.11.2026: the blue juksahjul on its bracket on the
+    // rail, the spool turned by its knob, the line out through the eye of the wire arm), in the place the drawn one had; the drawn one where
+    // the page does not have it
+    let vinde = null; if (typeof glbHas === 'function' && glbHas('gear-vinde')){ const o = glbPart('gear-vinde', 'vinde'), d = glbPart('gear-vinde', 'trommel'), up = q => ({pb:buf(new Float32Array(q.p)), nb:buf(new Float32Array(q.n)), cb:buf(new Float32Array(q.c)), n:q.p.length / 3});
+      const vx = (glbLoad('gear-vinde') || {}).ex || {}; if (o && d) vinde = {F:up(o), D:up(d), X:vx}; }
     // one fish, 1 m long along -z (head forward), coloured per species: back, belly
     const FC = {torsk:[[0.36, 0.33, 0.2, 0.5], [0.9, 0.88, 0.8, 0.5]], sei:[[0.2, 0.25, 0.24, 0.6], [0.72, 0.74, 0.74, 0.6]], hyse:[[0.28, 0.3, 0.33, 0.6], [0.85, 0.86, 0.88, 0.7]], lange:[[0.42, 0.36, 0.26, 0.5], [0.8, 0.76, 0.66, 0.5]], brosme:[[0.45, 0.33, 0.2, 0.5], [0.72, 0.6, 0.45, 0.5]], lyr:[[0.33, 0.32, 0.2, 0.55], [0.82, 0.8, 0.7, 0.6]], uer:[[0.72, 0.22, 0.14, 0.6], [0.92, 0.55, 0.42, 0.6]], kveite:[[0.26, 0.25, 0.2, 0.4], [0.94, 0.94, 0.92, 0.6]], blakveite:[[0.17, 0.16, 0.15, 0.4], [0.33, 0.31, 0.29, 0.5]]};
     const fishM = {}; for (const sp in FC){ const f = NB(), [back, belly] = FC[sp], G = [], NZ = 12, NA = 12;
@@ -389,7 +397,7 @@
     const cvN = document.createElement('canvas'); cvN.width = 512; cvN.height = 128;
     SK = {hull, glass:gl2.mesh(), wheel:wh.mesh(), lever:lv.mesh(), motor:ob.mesh(), prop:prop.mesh(), cap:cap.mesh(),
       qPlot:texQuad(...scrPlot), qGauge:texQuad(...scrGauge), qVhf:texQuad(...scrVhf), qName:nq,
-      skipper:pb.mesh(), crew:cb.mesh(), fishM, rodT:0, fisher:fb.mesh(), cstr:cs.mesh(), shoe:hs.mesh(), limb:lb.mesh(), hand:hb.mesh(), reelF:jf.mesh(), reelD:jd.mesh(), mach:machG ? machG.body : mm.mesh(), machG, anim:null, lines:[], tPlot:mkTex(), tGauge:mkTex(), tVhf:mkTex(), tName:mkTex(), cvP, cvG, cvV, cvN, nameKey:'',
+      skipper:pb.mesh(), crew:cb.mesh(), fishM, rodT:0, fisher:fb.mesh(), cstr:cs.mesh(), shoe:hs.mesh(), limb:lb.mesh(), hand:hb.mesh(), reelF:vinde ? vinde.F : jf.mesh(), reelD:vinde ? vinde.D : jd.mesh(), reelX:vinde ? vinde.X : null, mach:machG ? machG.body : mm.mesh(), machG, anim:null, lines:[], tPlot:mkTex(), tGauge:mkTex(), tVhf:mkTex(), tName:mkTex(), cvP, cvG, cvV, cvN, nameKey:'',
       wheelAt:[0.02, 0.98, zb - 0.075], wheelTilt:0.42, leverAt:lvBox, motorAt:[0, 0.5, zs(0) + 0.02],
       needle:{rpm:0, fuel:0, temp:8, volt:12.6}, wheelA:0, headPrev:null, propA:0, tP:0, tG:0};
     SK.pp = {skipper:[0, 0.2, 0.8, false, [[-0.12, 1.12, 0.05], [0.16, 1.1, 0.05]]], crew:[0.26, 0.32, 1.16, true, null], fisher:[0, 0, 0, false, false]};
@@ -413,7 +421,7 @@
       const w = A.wheel, ps = NB(); person(ps, A.skipper[0], A.skipper[1], A.skipper[2], false, [[w[0] - 0.14, w[1] + 0.14, w[2] + 0.05], [w[0] + 0.14, w[1] + 0.12, w[2] + 0.05]], lookMe()); SK.skipper = ps.mesh();
       const pc = NB(); person(pc, A.seat[0], A.seat[1], A.seat[2], true, null, lookCrew(0) || 'crew'); SK.crew = pc.mesh();
       SK.pp = {skipper:[A.skipper[0], A.skipper[1], A.skipper[2], false, [[w[0] - 0.14, w[1] + 0.14, w[2] + 0.05], [w[0] + 0.14, w[1] + 0.12, w[2] + 0.05]]], crew:[A.seat[0], A.seat[1], A.seat[2], true, null], fisher:[0, 0, 0, false, false]};
-      for (const k of ['sole', 'tub', 'fisher', 'haul', 'reel', 'mach', 'stack', 'filler']) if (A[k]) SKA[k] = A[k];
+      for (const k of ['sole', 'tub', 'fisher', 'haul', 'reel', 'mach', 'stack', 'filler', 'set', 'setter', 'coil', 'coilTub', 'moor', 'haulFoot', 'rail']) if (A[k]) SKA[k] = A[k];
       CHARM_AT = A.charm || CHARM_AT;
     }
   }

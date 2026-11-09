@@ -952,15 +952,18 @@ def kit_places(G):
     the middle and the forward thwart, clear of the oars to port. (Jonas 31.10.2026: no life raft and no lifebuoy in the model; the
     places stay for kit the player buys.) The fish tub (Jonas 04.11.2026, docs/planer/fiskekar-dekk.md: no hold, the catch in a white
     500 kg tub on deck): one 460 l tub athwartships on the floorboards between the middle and the forward thwart (the forward thwart
-    moved 0.11 m forward for it); no second, there is no room for one ([x, y, z, ry, litres, the place it stands on]). The net tub, the
-    line tubs and the freight stand on top of the fish tub. The ice box under the gutting board ([x, y, z, ry, scale])."""
+    moved 0.11 m forward for it); no second, there is no room for one ([x, y, z, ry, litres, the place it stands on]). The ice box under
+    the gutting board ([x, y, z, ry, scale]). The net tub, the line tubs and the freight on the floorboards aft, between the skipper's
+    thwart and the engine box, where the gear goes out over the starboard quarter (OB1 09.11.2026, om-bord.md 4.1: they stood 0.74 m up
+    on top of the fish tub): the four tubs two by two from x 2.05 aft (drawLineTubs: 0.52 across, 0.5 along), the net tub athwartships and at 0.8 of
+    the 460 l tub's size (s), as the 1.2 m tub fills the floor from side to side there."""
     r = lambda a: round(a, 3); xs_ = 0.62
     return {'buoys': [G(xs_, 0.0, zs(xs_) - 0.05) + [r(math.pi)], G(2.6, -(hb(2.6) - 0.095), zs(2.6) - 0.06) + [r(-math.pi / 2)]],
             'tubs': [G(4.90, 0.0, Z_FLOOR) + [r(math.pi / 2), 460, -1]],
             'iskasse': G(3.75, 0.75, Z_FLOOR) + [0.0, 0.45],
-            'garn': {'at': G(4.90, 0.0, Z_FLOOR + 0.74), 'ry': r(math.pi / 2)},
-            'stamps': {'at': G(5.12, 0.24, Z_FLOOR + 0.74), 'ry': 0.0},
-            'cargo': [G(4.90, 0.0, Z_FLOOR + 0.74) + [r(math.pi / 2)]]}
+            'garn': {'at': G(1.78, 0.0, Z_FLOOR), 'ry': r(math.pi / 2), 's': 0.8},
+            'stamps': {'at': G(2.05, 0.26, Z_FLOOR), 'ry': 0.0},
+            'cargo': [G(1.78, 0.0, Z_FLOOR) + [r(math.pi / 2)]]}
 
 # the boat's own anchor (tools/deck/anker.py, drawn and let go by the game, view3d.js drawAnchor; Jonas 21.10.2026): a grapnel of 5 kg,
 # the rode over the stem head, stowed on the floor forward
@@ -982,16 +985,32 @@ def anchors():
         names.append([B, T])
     gwx = lambda x, up: [round(hb(x) - 0.05, 3), round(zs(x) - WL + up, 3), round(-(x - XM), 3)]   # on the starboard gunwale (game x to starboard)
     sk = {'sole': round(Z_FLOOR - WL, 3), 'tiller': {'post': G(*TILLER[0]), 'grip': G(*TILLER[1])}, 'inboard': True, 'prop': G(*PROP), 'sit': True,
-          'tub': G(3.85, -0.55, Z_FLOOR), 'fisher': G(3.5, -0.45, Z_FLOOR), 'reel': gwx(3.6, 0.2), 'haul': gwx(4.7, 0.24),
-          'mach': [gwx(x, 0.12) for x in (3.2, 3.75, 4.35)], 'stack': G(1.85, 0.0, Z_FLOOR), 'charm': G(2.75, 0.32, ENG[3] + 0.06),
-          'skipper': G(1.12, 0.36, SEAT - 0.46), 'seat': G(4.25, 0.45, 1.04 - 0.46), 'filler': G(2.45, 0.3, ENG[3] + 0.04), 'names': names}
+          'tub': G(3.92, -0.40, Z_FLOOR), 'fisher': G(3.5, -0.45, Z_FLOOR), 'reel': gwx(3.6, 0.2), 'haul': G(3.95, -0.80, Z_FLOOR + 1.125),
+          # (U4: the line hauler on its post, tools/gear/haler.py, its foot on the floor inside the starboard side, the sheave at a man's
+          # chest 0.58 m over the rail; its tray ends over the work place, where the hand coils the line)
+          'haulFoot': G(3.95, -0.80, Z_FLOOR),
+          # (the nets come in by hand over the rail here, valg 21 B: no net hauler under 7.5 m)
+          'rail': gwx(3.95, 0.04),
+          'mach': [gwx(x, 0.12) for x in (3.1, 3.6, 4.45)], 'stack': G(1.85, 0.0, Z_FLOOR), 'charm': G(2.75, 0.32, ENG[3] + 0.06),
+          'skipper': G(1.12, 0.36, SEAT - 0.46), 'seat': G(4.25, 0.45, 1.04 - 0.46), 'filler': G(2.45, 0.3, ENG[3] + 0.04), 'names': names,
+          # the work aboard (OB1 09.11.2026, om-bord.md 4.1; Jonas: «at utstyr står plassert på rasjonelle og logiske plasser»): the small
+          # hauler just forward of the fisher on its post (it stood 1.2 m forward of him, out of his reach), the reels either side
+          # of him; the gear set over the starboard quarter (set) from the tubs aft, the hand sitting on the skipper's thwart beside him to
+          # feed it out (setter, with the turn of his body); hauling, the hand stands at the port side of the work place (coil) with the tub
+          # he coils the line into at his feet (coilTub), clear of the fisher and the bleeding tub; the skipper at the lines stands inboard of
+          # the cleat being made fast or let go (moor: amidships on the floor, at the bow and the stern on the thwarts)
+          'set': gwx(1.6, 0.02), 'setter': G(1.12, -0.36, SEAT - 0.46) + [round(math.pi / 3, 3)],
+          'coil': G(3.36, 0.42, Z_FLOOR), 'coilTub': G(3.52, 0.02, Z_FLOOR),
+          'moor': {'mid': G(3.4, -0.3, Z_FLOOR), 'bow': G(5.56, -0.3, THWARTS[2][1]), 'stern': G(1.12, -0.3, SEAT)}}
     return {'bower': bower(G), 'eye': G(1.12, 0.36, SEAT + 0.82), 'skipperAt': G(1.12, 0.36, Z_FLOOR), 'hp': -0.22, 'fov': 62,
             'crewSpots': [G(4.25, 0.45, 1.04) + [0.0]], 'hauler': sk['haul'], 'filler': sk['filler'], 'pole': G(*POLE_TOP),
             'exhaust': G(*EXH), 'engine': G(CYL[0], CYL[1], ENG[3] + 0.2), 'skiff': sk,
             'lights': lantern_anchors(G),
             'deck': {'y': round(Z_FLOOR - WL, 3), 'z': round(-(1.2 - XM), 3)}, 'gw': gw(3.4), 'stern': round(XM + 0.1, 3), 'bow': round(-(L - XM), 3), 'side': 1.0,
             'beam': BEAM, 'pl': 2.6, 'rl': 1.2, 'open': True, 'hand': True, 'inboard': True,
-            'work': {'table': G(3.75, 0.62, Z_FLOOR), 'tub': G(3.90, -0.52, Z_FLOOR), 's': 0.6, 'ry': 1.571, 'own': True, 'top': round(zs(3.75) + 0.07 - WL, 3)},
+            # (mate: the second at the deck work, aft of the bleeding tub facing it, clear of the one at the table: they stood in each other, F19)
+            'work': {'table': G(3.75, 0.62, Z_FLOOR), 'tub': G(3.92, -0.40, Z_FLOOR), 's': 0.6, 'ry': 1.571, 'own': True, 'top': round(zs(3.75) + 0.07 - WL, 3),
+                     'mate': G(3.36, -0.47, Z_FLOOR)},
             'kit': kit_places(G)}
 
 

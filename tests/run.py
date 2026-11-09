@@ -122,7 +122,7 @@ COVER['src/js/core/05e-sjovei.js'] = COVER['src/js/core/05e-sjovei.js'] + ['hull
 # H3d1 (07.11.2026): the snow crab vessel rebuilt (krabbe50.py), her gear (snoteine.py), the snow crab and its clusters (fisk.py), the
 # cartons of clusters and the live crab's tub (pall.py); h3dshot looks at them in the game (3D, alone)
 for _f, _t in (('src/data/boat-krabbe50.b64', ['h3dshot', 'vessel3d', 'lanterntest', 'regmarktest', 'maletest', 'walktest']), ('tools/boats/krabbe50.py', ['h3dshot', 'brotest', 'lanterntest']),
-               ('src/data/boat-krabbe50-side.b64', ['vesseltest']), ('tools/gear/snoteine.py', ['h3dshot']), ('src/data/gear-snoteine.b64', ['h3dshot', 'potshot']),
+               ('src/data/boat-krabbe50-side.b64', ['vesseltest']), ('tools/gear/snoteine.py', ['h3dshot']), ('src/data/gear-snoteine.b64', ['h3dshot', 'potshot']), ('tools/gear/vinde.py', ['jigshot']), ('src/data/gear-vinde.b64', ['jigshot', 'vesseltest']),
                ('tests/h3dshot.py', ['h3dshot']), ('tools/fish/fisk.py', ['h3dshot']), ('src/data/fish.b64', ['h3dshot']), ('src/data/deck-pall.b64', ['h3dshot']), ('tools/deck/pall.py', ['h3dshot']),
                ('src/js/view3d/10-gear.js', ['h3dshot', 'potshot']), ('src/js/view3d/09-landing-deck.js', ['h3dshot']), ('src/js/view3d/12-skiff.js', ['h3dshot'])):
     COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + _t))
