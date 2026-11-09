@@ -129,16 +129,18 @@
   // A partner with a written agreement (core/09l-sponsor.js spOf('sign', …)) gets a banner with the logo in front of the shop, on the Finnsnes shop (site 'shop') and on the tackle shops along the coast (harbour unit 's'). The target is
   // the port's id, or 'all'. Its place is in the shop model's frame (tools/harbour/butikk.py: the front at y = SHOP[2] = 11.5, the door at
   // x = -7; steder.py shifts the shop by BX, BY = -5, -2 on the unit). Nothing at sea, in the chart plotter or in the HUD.
-  // The measure as IAB's intrinsic in-game guidelines (start values, 4.4): the field counts as seen while it covers at least 1.5 % of the
-  // screen and faces the camera within 55°; one view after a second in a row, and the seconds add up. Nothing is counted while the page is
-  // hidden or nobody has touched the game for two minutes (SIGNV.idle). SIGNV.take() hands the counts over and starts again.
+  // The measure as IAB's intrinsic in-game guidelines 2.0 (4.4 and 10.6; the rules in ui/10r-sponsor.js SPM): the field counts as seen
+  // while it covers at least 1.5 % of the screen, faces the camera within 55°, has half of it inside the screen and half its six cells
+  // neither behind a 3D object (signOcc) nor under the UI (SPM.uiOver), in sight (not in fog thicker than the distance, not at night);
+  // one viewable impression per placement and session after a second in a row, the seconds added. Nothing is counted while the page is
+  // hidden or nobody has touched the game for two minutes (SIGNV.act). signTake() hands the counts over and starts again.
   // (a field on the wall beside the board was tried first: from the boat at the quay, 20-30 m off, it covered well under 0.1 % of the
   // screen, so the partner's sign is a banner on two posts on the apron, 2.5 m in front of the shop, facing the quay: 4 x 2 m, which from
   // a boat at the quay with the camera 15-18 m off covers about 1.5 % of the screen)
   // (it stands at the shop's west end, x -15.4..-11.4: further east the Finnsnes bunker tank, x 0.1..4.7 at y 6.2, stood in front of it)
   // (and high, 2.7-4.6 m over the deck, west of the board with the place's name: lower down, the boat on its trailer at the west end hid half of it)
   const SIGNF = {shop:{x0:-16.2, x1:-12.4, y0:QTOP + 2.7, y1:QTOP + 4.6, z:-(11.5 - 2.5)}, s:{x0:-16.2 - 5, x1:-12.4 - 5, y0:QTOP + 2.7, y1:QTOP + 4.6, z:-(11.5 - 2 - 2.5)}};
-  const SIGNV = {pl:{}, last:0, act:performance.now(), tex:{}, q:{}, seen:0, cur:[], oq:{}};
+  const SIGNV = {pl:SPM.pl, last:0, ui:{}, act:performance.now(), tex:{}, q:{}, seen:0, cur:[], oq:{}};
   ['pointerdown', 'keydown', 'wheel'].forEach(e => addEventListener(e, () => { SIGNV.act = performance.now(); }, {passive:true}));
   // the placement for a place: its own (the port's id), its kind's ('butikk:all', 'mottak:all', 'verft:all'), or everywhere ('all')
   const signSp = (id, kind) => typeof spOf === 'function' ? (spOf('sign', id) || spOf('sign', kind + ':all') || spOf('sign', 'all')) : null;
@@ -174,12 +176,13 @@
     return {area, ang, inside, ok:area >= 0.015 && ang < 55 && inside >= 0.5};
   }
   function drawSigns(eye, VP){
-    const now = performance.now(), dt = Math.min(0.5, (now - (SIGNV.last || now)) / 1000); SIGNV.last = now;
+    const now = performance.now(), dt = Math.min(SPM.DT, (now - (SIGNV.last || now)) / 1000); SIGNV.last = now;   // at most 0.2 s a frame (IAB 3.2.6; the rule is SPM's, its constant here so the frame time handed over is already the credited one)
     const live = !document.hidden && now - SIGNV.act < 120000, list = [];
     for (const s of sitesNow()) if (s.k === 'shop' && !s.near){ const sp = signSp('finnsnes', 'butikk'); if (sp) list.push({sp, F:signF(siteModel('shop'), 'shop'), key:'shop', M:chain(M4.T(s.o[0] - eye[0], (s.lift || 0) - eye[1], s.o[1] - eye[2]), M4.RY(Math.atan2(-s.u[1], s.u[0]))), o:s.o}); }
     for (const U of UNITA){ if (Math.hypot(U.o[0] - eye[0], U.o[1] - eye[2]) > 600) continue; const k = U.v === 's' ? 's' : U.v === 'y' ? 'y' : 'mottak', sp = signSp(U.id, k === 's' ? 'butikk' : k === 'y' ? 'verft' : 'mottak');
       if (sp) list.push({sp, F:signF(unitModel(U.v), k), key:k + (U.v === 's' || U.v === 'y' ? '' : (U.v || 'a')), M:unitMat(U, eye), o:U.o}); }
     SIGNV.seen = 0; SIGNV.cur = []; SIGNV.flags = 0; SIGNV.drawn = list.map(L => L.key); if (!list.length) return;
+    const look = new Map();   // per placement: what this frame saw of it
     for (const L of list){
       const F = L.F, key = L.key; if (!SIGNV.q[key]) SIGNV.q[key] = texQuad([F.x0, F.y0, F.z], [F.x1, F.y0, F.z], [F.x1, F.y1, F.z], [F.x0, F.y1, F.z]);
       drawTexQuad(SIGNV.q[key], signTex(L.sp), L.M, VP, true, [0, 0, 1]);
@@ -192,12 +195,18 @@
         drawTexQuad(SIGNV.q[fk], signTex(L.sp), L.M, VP, true, [0, 0, 1]); SIGNV.flags = (SIGNV.flags || 0) + 1; }
       if (Math.hypot(L.o[0] - eye[0], L.o[1] - eye[2]) > 150) continue;
       const ok = L.sp.id + '@' + key + ':' + Math.round(L.o[0]) + ',' + Math.round(L.o[1]); SIGNV.cur.push({id:L.sp.id, ok, F, M:L.M, key});
-      // hidden behind something (a boat, the tank, a shed): the occlusion query of the last frames says (signOcc); without WebGL 2 there
-      // is no such query, and nothing is counted rather than counting what may be hidden
-      const O = SIGNV.oq[ok], vis = !!(O && O.vis);
-      const r = signSeen(L.M, F, VP, eye), C = SIGNV.pl[L.sp.id] || (SIGNV.pl[L.sp.id] = {imp:0, sec:0, run:0, area:0}); r.ok = r.ok && vis; r.vis = vis;
-      C.last = {area:+r.area.toFixed(4), ang:Math.round(r.ang), vis:r.vis, cells:O ? O.cells : 0, inside:+(r.inside || 0).toFixed(2)}; if (r.ok && live){ C.run += dt; C.area = Math.max(C.area, r.area); SIGNV.seen++; if (C.run >= 1){ if (C.run - dt < 1) C.imp++; C.sec += dt; } } else C.run = 0;
+      // hidden behind something (a boat, the tank, a shed): the occlusion query of the last frames says (signOcc); under the UI (the
+      // phone, the drawer, the box, the cards over the picture): signUi, asked only when the rest could count. A cell counts when
+      // neither hides it, the banner when three of six do. Without WebGL 2 there is no such query: the banner is undetermined, and
+      // never counted as seen. Two banners of one placement in reach in the same frame are one look: the best of them counts (frame below)
+      const O = SIGNV.oq[ok], r = signSeen(L.M, F, VP, eye), ui = GL2 && O && r.ok ? signUi(ok, L.M, F, VP, now) : NOUI, cells = O ? O.cell.reduce((a, c, n) => a + (c && !ui[n] ? 1 : 0), 0) : 0, vis = cells >= 3;
+      const cm = [(F.x0 + F.x1) / 2, (F.y0 + F.y1) / 2, F.z], dm = Math.hypot(L.M[0] * cm[0] + L.M[4] * cm[1] + L.M[8] * cm[2] + L.M[12], L.M[1] * cm[0] + L.M[5] * cm[1] + L.M[9] * cm[2] + L.M[13], L.M[2] * cm[0] + L.M[6] * cm[1] + L.M[10] * cm[2] + L.M[14]);
+      const sight = SPM.sightOk(SPM.fix.vis != null ? SPM.fix.vis : env.vis, dm, SPM.fix.el != null ? SPM.fix.el : env.el);   // (SPM.fix: the tests' fog and night)
+      const o = {ok:r.ok, vis, det:!!GL2, sight, live, area:r.area, last:{area:+r.area.toFixed(4), ang:Math.round(r.ang), vis, cells, ui:ui.filter(Boolean).length, sight, d:Math.round(dm), inside:+(r.inside || 0).toFixed(2)}};
+      const was = look.get(L.sp.id), good = q => q.ok && q.vis && q.sight;
+      if (!was || (good(o) && !good(was)) || (good(o) === good(was) && o.area > was.area)) look.set(L.sp.id, o);
     }
+    for (const [id, o] of look){ SPM.frame(id, o, dt); if (o.det && o.ok && o.vis && o.sight && o.live) SIGNV.seen++; }
     gl.useProgram(PL.p);
   }
   // after the boats, the plants and the rest of the near objects are drawn (24-cinema.js): each banner drawn this frame is drawn again
@@ -218,5 +227,21 @@
       O.cells = O.cell.filter(Boolean).length; O.vis = O.cells >= 3; }
     gl.depthMask(true); gl.colorMask(true, true, true, true); gl.useProgram(PL.p);
   }
-  // the counts since the last time, per placement ({pl, imp, sec}), handed over to be sent (ui/10r-sponsor.js)
-  function signTake(){ const out = []; for (const [pl, C] of Object.entries(SIGNV.pl)) if (C.imp || C.sec >= 1) out.push({pl:+pl, imp:C.imp, sec:Math.round(C.sec)}); for (const C of Object.values(SIGNV.pl)){ C.imp = 0; C.sec = 0; } return out; }
+  // which of a banner's six cells (3 x 2, as signOcc's) lie under the UI: the cell's middle on the screen, looked up at most every 0.2 s
+  // (elementFromPoint makes the browser lay the page out when it has changed; five times a second for a banner in reach is little)
+  const NOUI = [false, false, false, false, false, false];
+  function signUi(ok, M, F, VP, now){
+    const E = SIGNV.ui[ok] || (SIGNV.ui[ok] = {t:-1e9, hid:[true, true, true, true, true, true]});
+    if (now - E.t < 200) return E.hid;
+    E.t = now; const cv = gl.canvas, R = cv.getBoundingClientRect(), w = (F.x1 - F.x0) / 3, hh = (F.y1 - F.y0) / 2;
+    for (let n = 0; n < 6; n++){
+      const p = [F.x0 + (n % 3 + 0.5) * w, F.y0 + (Math.floor(n / 3) + 0.5) * hh, F.z], X = M[0] * p[0] + M[4] * p[1] + M[8] * p[2] + M[12], Y = M[1] * p[0] + M[5] * p[1] + M[9] * p[2] + M[13], Z = M[2] * p[0] + M[6] * p[1] + M[10] * p[2] + M[14];
+      const cx = VP[0] * X + VP[4] * Y + VP[8] * Z + VP[12], cy = VP[1] * X + VP[5] * Y + VP[9] * Z + VP[13], cw = VP[3] * X + VP[7] * Y + VP[11] * Z + VP[15];
+      if (cw <= 0){ E.hid[n] = true; continue; }
+      const sx = R.left + (cx / cw + 1) / 2 * R.width, sy = R.top + (1 - cy / cw) / 2 * R.height;
+      E.hid[n] = sx < 0 || sy < 0 || sx >= innerWidth || sy >= innerHeight || SPM.uiOver(sx, sy, cv);
+    }
+    return E.hid;
+  }
+  // the counts since the last time, per placement ({pl, imp, re, sec, m, u}), handed over to be sent (ui/10r-sponsor.js SPM.take)
+  function signTake(){ return SPM.take(); }

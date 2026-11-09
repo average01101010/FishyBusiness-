@@ -1523,6 +1523,15 @@
 2026-11-08 23:40	claude/o8b-s2-turens-linje-c70okw	5519661	trackfollow	OK	1206	3d	alene	
 2026-11-08 23:56	claude/o8b-s2-turens-linje-c70okw	5519661	kinotest	OK	907	3d	alene	
 2026-11-08 23:59	claude/o8b-s2-turens-linje-c70okw	5519661	heattest	OK	229	3d	alene	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	sponsortest	OK	17	lite	samtidig	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	sponsor2test	OK	19	lite	samtidig	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	admintest	OK	9	lite	samtidig	
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	sqltest	FEIL	50	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-08 22:58	ccr-5c931049-sj9wgt	3d57b44+	trip2	OK	42	lite	samtidig	
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	sponsor2test	OK	14	lite	samtidig	
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	sponsortest	OK	12	lite	samtidig	
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	sqltest	FEIL	29	lite	samtidig	FEIL the ocean permits in the shared register, as many as in life: 36 trawl permits, 35 after one is bought (seen by the other account), 26 conventional, 69 pur
+2026-11-08 23:07	ccr-5c931049-sj9wgt	3d57b44+	admintest	OK	7	lite	samtidig	
 2026-11-08 22:40	ccr-510fd7d5-2eum2h	13f58ab	uishots	OK	77	lite	samtidig	
 2026-11-08 22:40	ccr-510fd7d5-2eum2h	13f58ab	kartlegging	OK	50	lite	samtidig	
 2026-11-08 22:41	ccr-510fd7d5-2eum2h	13f58ab	hudtest	OK	39	lite	samtidig	
@@ -1602,3 +1611,9 @@
 2026-11-09 00:35	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	tutfull	OK	4	lite	alene	
 2026-11-09 00:35	claude/o8b-s2-turens-linje-c70okw	7cf70ef+	tutfull	FEIL	4	lite	alene	FEIL etter en ekte levering ved første turs mottak sier verken sluttseddelen eller dekksdagboka hva fisket her vanligvis gir (N regnes bare for skyen)  {"slip":
 2026-11-09 01:13	claude/o8b-s2-turens-linje-c70okw	24eb7c9	tut	OK	2269	lite	alene	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	boottest	OK	27	lite	samtidig	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	sqltest	OK	30	lite	samtidig	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	sponsor2test	OK	13	lite	samtidig	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	sponsortest	OK	10	lite	samtidig	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	admintest	OK	7	lite	samtidig	
+2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	trip2	OK	26	lite	samtidig	
