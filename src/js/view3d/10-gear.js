@@ -563,7 +563,8 @@
       // the line between them and out astern to the pots already set
       const zl = pts.length ? pts[pts.length - 1][2] : 0; pts.push(zl + 4 > seaEnd[2] ? [seaEnd[0], -2.5, zl + 4] : seaEnd); for (let i = 1; i < pts.length; i++) Lr(pts[i - 1], pts[i], i === pts.length - 1 ? 0.5 : 0.08); ST.line = pts.length > 1;
       // the string's first end: the buoy (with the registration mark, § 66) in the sea astern while the first pots go, its line down
-      if (g.done < 8 && GB.blase){   // (drawn until it is far astern, some 30 m and more) const w = (g.done + u) * POTA.dur, B = [CH1[0] + 0.8, -0.35, CH1[2] + 6 + vAft * w]; ST.buoyA = true;
+      // (drawn until it is far astern, some 30 m and more)
+      if (g.done < 8 && GB.blase){ const w = (g.done + u) * POTA.dur, B = [CH1[0] + 0.8, -0.35, CH1[2] + 6 + vAft * w]; ST.buoyA = true;
         drawN(GB.blase, potM(B, Math.sin(t * 1.1) * 0.08, 0)); Lr([B[0], B[1] + 0.1, B[2]], [B[0], -6, B[2] + 2], 0.3); }
       ST.phase = 'set'; }
   }
