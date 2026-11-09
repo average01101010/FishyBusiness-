@@ -216,7 +216,49 @@ kyst15, som ikke er endret; trebåten slipper og legger ankeret riktig.
   museumsbåt eller en annonse), et rett akterfra eller forfra, og et ovenfra inn i båten (tofter, motorkasse, dørk). Helst
   linjetegningen av en Sørlandssnekke eller en Risør-snekke av den størrelsen.
 
+## 8. OB1: ekte arbeid om bord og karakteren etter Jonas' skala (09.11.2026)
+
+Steg 70 i `docs/planer/koen.md`, Jonas' økt på grenen `ccr-e474ac41-zlir5x`. Jonas 09.11.2026: «at arbeidet ombord utføres på en så ekte måte som mulig, at mannskapet oppfører seg som ekte mennesker, at utstyr står plassert på rasjonelle og logiske plasser, at utstyr opereres på en realistisk måte, at ingenting clipper inn i andre ting». Før- og etter-bildene er tatt med `tests/ombord.py trebat --bilder` i begge formater (bare bilder, Jonas: «Du trenger ikke å ta videoklipp av båten, det holder med bilder»); utvalget ligger i `docs/okter/2026-11-09-ob1/`.
+
+### 8.1 Det som er endret
+
+- **Ingen teiner** (Jonas 09.11.2026: «Jeg tror ikke den trebåten skal kunne holde på med krabbeteiner. Det har den åpenbart ikke plass til»): ute av `rigs`, teinehaleren og krabbekaret passer henne ikke (`fit.rig`), og en lagring som hadde dem, mister ingenting (`potsUnfit`). Båtbladet sier det.
+- **Garn for hånd** (valg 21 B): hun kan rigges for garn uten garnhaler, og garnet trekkes for hånd over ripa (`handGear`, `rail`).
+- **Plassene på dørken:** stampene, garnbinga (0,8 av 460 l-karet) og frakten på dørken akter mellom skipperens tofte og motorkassen, ikke 0,74 m oppå fiskekaret. Linehaleren på stolpen sin (`haulFoot`, `tools/gear/haler.py`) rett forut for fiskeren med skiva i brysthøyde; den sto 1,2 m forut for ham. Bløggekaret 0,12 m innenbords for stolpen.
+- **Juksahjulet** som modell etter Jonas' bilde 09.11.2026 (`tools/gear/vinde.py`): blå spole på svart brakett over ripa, knott på spolen, ståltrådarm med øye. Jonas sendte også en jukse på treramme og sa at én av dem holder.
+- **Arbeidet:** setting over styrbord låring med skipperen ved rorkulten og den andre ved stampene; ved trekket tar fiskeren fisken av og bløgger, og den andre legger lina i stampen; skipperen tar tauene selv ved kaia og naustet; de to ved karet står ikke i hverandre (`work.mate`). Detaljene i `docs/systemer/3d-baater-og-animasjon.md` («Arbeidet om bord i trebåten»).
+- **Skroget er ikke endret.** Det gir 2,11 t mot 1,9 t (+11 %), og valg 18 A sier at formen rettes over 10 %, men valg 22 B krever offentlige bilder av typen vist Jonas før modellen endres (kap. 8.2).
+
+### 8.2 Bildene (valg 22 B)
+
+Søket fant klinkbygde motorsnekker på DigitaltMuseum som ligner typen (ingen er en 23 fots spissgatter med semidiesel og oppgitte mål i treffene):
+
+- Fredrikstad Museum, «Grenselossnekka», spissgatt, klinkbygd, 11 bordganger, encylindret motor: https://digitaltmuseum.no/0210213879406/bat
+- Kystmuseet Hvaler, «Mjølner», spissgatt, klinkbygd, 12 bordganger, motorisert 1917 med semidiesel: https://digitaltmuseum.no/0210213651730/bat
+- Hordamuseet, «Fia», klinkbygd snekke med ni bordganger, ror, rorkult og propell: https://digitaltmuseum.no/0210213228825/bat
+- Akershus, «Aurora», åpen motorsnekke, klinkbygd, 5,3 × 1,7 m: https://digitaltmuseum.no/021026457486/bat
+- Nordlandsmuseet, en Marna semidiesel (motoren alene, rundt 1950): https://digitaltmuseum.no/021028215704/motor
+
+Sidene og bildene er **ikke sett**: `digitaltmuseum.no` er stengt i øktas nettverk. Ingen form er lest av dem, og skroget venter på at Jonas har sett bildene (eller sender egne), som valg 22 sier.
+
+### 8.3 Karakteren (forslag; Jonas setter den)
+
+Etter Jonas' skala (valg 17, `om-bord.md` kap. 2). Forslaget i OB0 var 63 etter en annen skala; tallene her er satt på nytt etter bildene fra OB1.
+
+| Punkt | Vekt | Forslag | Begrunnelse |
+|---|---|---|---|
+| Skrogutforming | 20 | 14 | Skroget er én flate med jevne linjer, kjøl, stevner og propellbrønn (kap. 6), men ingen tegning eller bilde av typen er sett, og volumet er 11 % over `disp` (valg 18 A sier at formen rettes over 10 %); det venter på bildene (8.2) |
+| Detaljer | 20 | 15 | Klinkbygd med nagler, bunnstokker, semidiesel og ror; juksahjulet og linehaleren er nå modeller. Trekk: materialene er ikke PBR (F2), og fenderne som spillet henger ut ved kaia (`15-env-mooring.js`), har hun ikke (kap. 1, Jonas) |
+| Lanterner | 5 | 4 | Lovlige plasser og høyder (`check()`: den hvite 1,03 m over sidelanternene); ikke sett om natta i denne økta |
+| Styrhus | 10 | 8 | Åpen båt med rorkult; skipperen sitter ved den og har den i hånda. Ikke sett fra skipperens øye i denne økta |
+| Arbeidsflyt | 25 | 17 | Setting over låringen med en ved rorkulten og en ved stampene, trekket med en ved haleren og en ved stampen, garnet for hånd over ripa, skipperen ved tauene, ingen i hverandre ved karet. Trekk: tauene og fenderne går fortsatt av og på av seg selv (OB2), skipperen ved tauene er ikke sett på nært hold i bildene, håndbåtene har ingen klippesjekk (alt er sett, ikke målt), og rorkulten sveiper over begge på akterste tofte |
+| Utforming av dekk | 20 | 15 | Redskapet står på dørken der det settes fra, haleren der fiskeren når den, ingen teiner. Trekk: dørken akter er full (garnbinga fyller den fra side til side), og stampene står tett inntil skipperens bein |
+| **Sum** | **100** | **73** | Under 75. Det som løfter mest: skroget etter bildene (8.2) og tauene og fenderne (OB2) |
+
+Jonas setter karakteren.
+
 ## Endringslogg
 
 - 31.10.2026: første versjon, gjennomgangen før endring.
 - 31.10.2026: kritikksløyfens runder (6.1), kravlista etter (6.2), deplasementet (kap. 7).
+- 09.11.2026: OB1 (kap. 8): teinene ute, garn for hånd, plassene på dørken, linehaleren på stolpen, juksahjulet, arbeidet om bord; karakteren etter Jonas' skala som forslag.

@@ -4,6 +4,8 @@ lost. The level being tried is written down first and cleared when it worked. Si
 second tab's start was taken for a crash) a load that finds it still there tries the same level again, and starts a level down only the
 second time in a row; a fresh mark from another page is waited for and not counted; the middle sea on level 1 the same, and its marks
 from before ('u2:no') get one more try.
+The full sea once more (steg 58, Jonas 07.11.2026 A): a device on level 1 with no mark tries the full sea once (dsb_sea_re), and stays
+on level 0 when it came through; a try that never came back, and a device marked since, stay on level 1; a step from 0 to 1 marks it.
 A context lost in play (#218): when the browser gives it back, the game saves and loads the page again, once in ten minutes.
 Prints OK or FEIL per check."""
 import asyncio, json
@@ -15,8 +17,8 @@ async def main():
         ctx = await br.new_context(viewport={'width': 900, 'height': 600}); pg = await ctx.new_page(); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
         SITE = GAME.split('#')[0].rsplit('/', 1)[0] + '/kilder.html'
-        KEYS = "['dsb_sea', 'dsb_sea_try', 'dsb_sea_gone', 'dsb_sea_ok', 'dsb_sea_mid', 'dsb_sea_midtry', 'dsb_sea_midgone'].forEach(k => localStorage.removeItem(k))"
-        READ = "({sea:localStorage.getItem('dsb_sea'), tryLeft:localStorage.getItem('dsb_sea_try'), gone:localStorage.getItem('dsb_sea_gone'), lvl:G3._debug.seaLvl, mid:!!G3._debug.seaMid, midMark:localStorage.getItem('dsb_sea_mid'), midTry:localStorage.getItem('dsb_sea_midtry'), midGone:localStorage.getItem('dsb_sea_midgone'), why:G3.failWhy || '', t:performance.now()})"
+        KEYS = "['dsb_sea', 'dsb_sea_try', 'dsb_sea_gone', 'dsb_sea_ok', 'dsb_sea_mid', 'dsb_sea_midtry', 'dsb_sea_midgone', 'dsb_sea_re'].forEach(k => localStorage.removeItem(k))"
+        READ = "({sea:localStorage.getItem('dsb_sea'), tryLeft:localStorage.getItem('dsb_sea_try'), gone:localStorage.getItem('dsb_sea_gone'), lvl:G3._debug.seaLvl, mid:!!G3._debug.seaMid, midMark:localStorage.getItem('dsb_sea_mid'), midTry:localStorage.getItem('dsb_sea_midtry'), midGone:localStorage.getItem('dsb_sea_midgone'), re:localStorage.getItem('dsb_sea_re'), lite:!!G3._debug.seaLite, why:G3.failWhy || '', t:performance.now()})"
         booted = []
         async def game():   # the first load through the start screen, the later ones straight into the saved game
             if booted: pg.set_default_timeout(120000); await pg.goto(GAME + '#notut')
@@ -45,16 +47,28 @@ async def main():
         R['other'] = await pg.evaluate(READ); R['other']['waited'] = waited and still; await other.close()
         # the middle sea (level 1): its mark from before 05.11 gives way to one more try; one try that never came back is tried again;
         # the second in a row marks it ('u2:no2') and the old level 1 is drawn
-        R['midOld'] = await load("localStorage.setItem('dsb_sea', '1'); localStorage.setItem('dsb_sea_mid', 'u2:no')")
-        R['midOnce'] = await load("localStorage.setItem('dsb_sea', '1'); localStorage.setItem('dsb_sea_midtry', '1'); localStorage.setItem('dsb_sea_try', '1')")
-        R['midTwice'] = await load("localStorage.setItem('dsb_sea', '1'); localStorage.setItem('dsb_sea_midtry', '1:x1:' + (Date.now() - 60000)); localStorage.setItem('dsb_sea_midgone', '1')")
-        R['midNew'] = await load("localStorage.setItem('dsb_sea', '1'); localStorage.setItem('dsb_sea_mid', 'u2:no2')")
+        R['midOld'] = await load("localStorage.setItem('dsb_sea', '1'); localStorage.setItem('dsb_sea_re', 'r1:no'); localStorage.setItem('dsb_sea_mid', 'u2:no')")
+        R['midOnce'] = await load("localStorage.setItem('dsb_sea', '1'); localStorage.setItem('dsb_sea_re', 'r1:no'); localStorage.setItem('dsb_sea_midtry', '1'); localStorage.setItem('dsb_sea_try', '1')")
+        R['midTwice'] = await load("localStorage.setItem('dsb_sea', '1'); localStorage.setItem('dsb_sea_re', 'r1:no'); localStorage.setItem('dsb_sea_midtry', '1:x1:' + (Date.now() - 60000)); localStorage.setItem('dsb_sea_midgone', '1')")
+        R['midNew'] = await load("localStorage.setItem('dsb_sea', '1'); localStorage.setItem('dsb_sea_re', 'r1:no'); localStorage.setItem('dsb_sea_mid', 'u2:no2')")
+        # the full sea once more: level 1 from before 05.11 with no mark (Jonas' phone) tries it once and stays when it came through; a
+        # device marked since stays; a try that never came back (its mark old, from a page that is gone) stays on level 1, middle sea
+        R['reOld'] = await load("localStorage.setItem('dsb_sea', '1'); localStorage.setItem('dsb_sea_mid', 'u2:no2')")
+        R['reAgain'] = await load("0; localStorage.setItem('dsb_sea_re', 'r1:ok')")
+        R['reNo'] = await load("localStorage.setItem('dsb_sea', '1'); localStorage.setItem('dsb_sea_re', 'r1:no')")
+        R['reGone'] = await load("localStorage.setItem('dsb_sea', '1'); localStorage.setItem('dsb_sea_re', 'r1:try:x1:' + (Date.now() - 60000)); localStorage.setItem('dsb_sea_try', '0:x1:' + (Date.now() - 60000))")
         # a normal load: the mark is set while the sea is made and gone when it worked
         R['normal'] = await load("0")
         print(json.dumps(dict(R, errs=errs[:3])))
         o, t, ot = R['once'], R['twice'], R['other']
         print(('OK  ' if o['lvl'] == 0 and o['sea'] is None and o['tryLeft'] is None and o['gone'] is None and not o['why'] else 'FEIL') + ' one try that never came back: the same sea is tried again, and the marks are cleared when it works')
         print(('OK  ' if t['lvl'] == 1 and t['sea'] == '1' and t['tryLeft'] is None and t['gone'] is None and not t['why'] else 'FEIL') + ' the second in a row starts the sea a level down')
+        print(('OK  ' if t['re'] == 'r1:no' else 'FEIL') + ' a step from the full sea to level 1 marks the device (r1:no): it never gets the full sea once more')
+        ro, ra, rn, rg = R['reOld'], R['reAgain'], R['reNo'], R['reGone']
+        print(('OK  ' if ro['lvl'] == 0 and ro['sea'] is None and ro['re'] == 'r1:ok' and not ro['mid'] and not ro['lite'] and ro['tryLeft'] is None and not ro['why'] else 'FEIL') + ' a device on level 1 from before, with no mark, tries the full sea once; it came through: level 0 (r1:ok)')
+        print(('OK  ' if ra['lvl'] == 0 and ra['sea'] is None and ra['re'] == 'r1:ok' and not ra['mid'] else 'FEIL') + ' the next start after it stays on the full sea')
+        print(('OK  ' if rn['lvl'] == 1 and rn['sea'] == '1' and rn['mid'] and rn['re'] == 'r1:no' else 'FEIL') + ' a device marked since (r1:no) stays on level 1, middle sea')
+        print(('OK  ' if rg['lvl'] == 1 and rg['sea'] == '1' and rg['mid'] and rg['re'] == 'r1:no' and rg['tryLeft'] is None and not rg['why'] else 'FEIL') + ' a try of the full sea once more that never came back: level 1, middle sea, marked (r1:no), not tried again')
         print(('OK  ' if ot['lvl'] == 0 and ot['sea'] is None and ot['tryLeft'] is None and ot['waited'] and not ot['why'] else 'FEIL') + ' another tab making its shaders meanwhile is waited for and not taken for a crash (it had one before: no level down)')
         mo, m1, m2, mn = R['midOld'], R['midOnce'], R['midTwice'], R['midNew']
         print(('OK  ' if mo['lvl'] == 1 and mo['mid'] and mo['midTry'] is None and not mo['why'] else 'FEIL') + ' the middle sea marked off before 05.11 (u2:no) is tried again, and drawn')

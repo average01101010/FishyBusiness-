@@ -180,7 +180,7 @@ const rigOfKind = kind => Object.keys(RIGS).find(r => RIGS[r].kind === kind) || 
 // an old save has no rig: the kind of gear in the sea or in the standing plan, otherwise jigging
 function rigGuess(){
   const s = mySets()[0]; if (s) return rigOfKind(s.kind);
-  const o = S.ops; if (o && RIGS[o.rig]) return o.rig;
+  const o = S.ops; if (o && RIGS[o.rig] && !(RIGS[o.rig].kind && rigNoRoom(RIGS[o.rig].kind))) return o.rig;   // (not a rig her datasheet has no room for, OB1)
   return 'juksa';
 }
 // (H2a) a rig the vessel cannot have (an ocean vessel has only her own: the autoliner line, the snow crab vessel pots) gives way to her first
@@ -197,13 +197,23 @@ function gearReserve(){
   // on a plan the room is only kept when the gear is hauled on this trip, before the landing; else the jig may fill the hold
   if (S.plan && S.plan.ops){ const rest = S.plan.wps.slice(S.plan.idx), pi = rest.findIndex(w => w.port); if (!(pi < 0 ? rest : rest.slice(0, pi)).some(w => w.act)) return 0; }
   let r = 0; for (const s of mySets()){ let got = 0; for (const sp in (s.acc || {})) got += s.acc[sp].kg || 0; r += Math.max(got * 1.2, s.n * (s.kind === 'line' && isAuto(s.lk) ? 1000 : TYPKG[s.kind] || 0)); } return Math.round(r); }
-function rigHas(r){ return !RIGS[r].kind || hasHauler(RIGS[r].kind); }
+// gear the boat draws by hand (valg 21 B in docs/planer/om-bord.md, Jonas 09.11.2026): nets on a boat whose rigs has them but that no net
+// hauler fits (the wooden boat and the skiff, under 7.5 m), drawn over the rail and picked by hand at GEAR.garn.hand the time (gopUnitMin).
+// Line and pots always need their hauler (a pot cannot be lifted by hand from 30 m; F16 in om-bord.md)
+function handGear(kind, type = S.boat && S.boat.type){ const V = VESSELS[type];
+  return kind === 'garn' && !!V && (V.rigs || []).includes('garn') && !GEAR.garn.haulers.some(h => equipFits(h, type)); }
+// the boat's datasheet has no room for this kind of gear (rigs, OB1: no pots on the wooden boat and the skiff)
+function rigNoRoom(kind, type = S.boat && S.boat.type){ const R = (VESSELS[type] || {}).rigs; return !!(R && R.length && !R.includes(rigOfKind(kind))); }
+function rigHas(r){ const k = RIGS[r].kind; return !k || (!rigNoRoom(k) && (hasHauler(k) || handGear(k))); }   // (a hauler left from an old save does not make room, OB1)
 const rigName = r => gL(RIGS[r].no, RIGS[r].en);
 const lc1 = x => x[0].toLowerCase() + x.slice(1);
 function rigWrong(kind){ return [gL('Båten er rigget for ' + rigName(rigOf()).toLowerCase() + '. Rigg om til ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Om bord.', 'The boat is rigged for ' + rigName(rigOf()).toLowerCase() + '. Re-rig for ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Aboard.')]; }
 // no hauler for this kind of gear fits the boat: the reason, said the same in the Rig tab and the shop (spilltest 3, F3), or null
 function haulerNoFit(kind){
-  const b = S.boat || {}, hs = GEAR[kind].haulers; if (hasHauler(kind) || hs.some(h => equipFits(h, b.type || 'skiff'))) return null;   // (a hauler already aboard, as in an old save, is never refused)
+  const b = S.boat || {}, hs = GEAR[kind].haulers;
+  // (OB1) no room for it in her datasheet, whatever is aboard from an old save (potsUnfit takes that off)
+  if (rigNoRoom(kind, b.type)) return [gL('Denne båten kan ikke rigges for ' + rigName(rigOfKind(kind)).toLowerCase() + ': det er ikke plass til ' + GEAR[kind].no.toLowerCase() + ' om bord.', 'This boat cannot be rigged for ' + rigName(rigOfKind(kind)).toLowerCase() + ': there is no room for ' + GEAR[kind].en.toLowerCase() + ' aboard.')];
+  if (handGear(kind, b.type)) return null; if (hasHauler(kind) || hs.some(h => equipFits(h, b.type || 'skiff'))) return null;   // (a hauler already aboard, as in an old save, is never refused)
   const r = rigOfKind(kind), fl = hs.map(h => (EQUIP[h].fit || {}).minLen).filter(Boolean), mn = fl.length ? Math.min(...fl) : 0;
   return [gL('Denne båten kan ikke rigges for ' + rigName(r).toLowerCase() + ': ' + hs.map(h => lc1(EQUIP[h].name.no)).join(' eller ') + ' passer ikke om bord' + (mn > (BOAT.len || 0) ? ' (krever minst ' + fmt1(mn) + ' m)' : '') + '.',
     'This boat cannot be rigged for ' + rigName(r).toLowerCase() + ': ' + hs.map(h => lc1(EQUIP[h].name.en)).join(' or ') + ' does not fit aboard' + (mn > (BOAT.len || 0) ? ' (needs at least ' + fmt1(mn) + ' m)' : '') + '.')];
@@ -215,6 +225,7 @@ function rigBlock(r){
   if (b.status === 'tow') return [gL('Båten er under slep.', 'The boat is under tow.')];
   if (mySets().length) return [gL('Trekk alt redskap i sjøen først.', 'Haul all the gear in the sea first.')];
   if (b.gop) return [gL('Redskapsarbeidet er i gang.', 'Gear work is going on.')];
+  if (RIGS[r].kind && rigNoRoom(RIGS[r].kind)) return haulerNoFit(RIGS[r].kind);   // (OB1) a hauler left from an old save does not make room
   if (!rigHas(r)){ const k = RIGS[r].kind, hs = GEAR[k].haulers.filter(h => equipFits(h, b.type || 'skiff'));
     if (!hs.length) return haulerNoFit(k);
     return [gL('Båten mangler ' + hs.map(h => lc1(EQUIP[h].name.no)).join(' eller ') + '. Den kjøpes og monteres i Butikk › Elektronikk og haler.', 'The boat has no ' + hs.map(h => lc1(EQUIP[h].name.en)).join(' or ') + '. Buy and fit one at Shop › Electronics and haulers.')]; }
@@ -247,7 +258,7 @@ function buyGate(what, spec, lv){
   const own = k => ownedUnits(k) > 0, anyGear = own('line') || own('garn') || own('teine');
   { const k = {stamp:'line', net:'garn', pot:'teine'}[what], nf = k && haulerNoFit(k); if (nf) return nf; }   // no hauler fits: the same words as the Rig tab (F3)
   if (what === 'stamp' && !hasHauler('line')) return [gL('Du trenger en linehaler før du kan kjøpe line.', 'You need a line hauler before you can buy line.')];
-  if (what === 'net' && !hasHauler('garn')) return [gL('Du trenger en garnhaler før du kan kjøpe garn.', 'You need a net hauler before you can buy nets.')];
+  if (what === 'net' && !hasHauler('garn') && !handGear('garn')) return [gL('Du trenger en garnhaler før du kan kjøpe garn.', 'You need a net hauler before you can buy nets.')];
   if (what === 'pot' && !hasHauler('teine')) return [gL('Du trenger en teinehaler før du kan kjøpe teiner.', 'You need a pot hauler before you can buy pots.')];
   // (H3a) the conical snow crab pot only for a vessel with a snow crab permit, and the king crab pot not on her
   if (what === 'pot' && spec && spec !== potK()) return [gL(POTS[spec] ? POTS[spec].no + ' passer ikke denne båten.' : 'Ukjent teine.', POTS[spec] ? POTS[spec].en + ' do not fit this boat.' : 'Unknown pot.')];
@@ -733,7 +744,33 @@ function soakHour(s, H){
   if (loss > 0) for (const sp in acc){ const A = acc[sp]; A.kg *= 1 - loss; A.n *= 1 - loss; A.ts *= 1 - loss; }
   return tot;
 }
+// (OB1, Jonas 09.11.2026: «Jeg tror ikke den trebåten skal kunne holde på med krabbeteiner. Det har den åpenbart ikke plass til») a boat
+// whose datasheet has no pots (rigs: the wooden boat and the skiff since OB1) keeps nothing of them from a save made before, and the player
+// loses nothing: once none of her pots are in the sea or being worked, the pots aboard go ashore in port and are paid back at their new
+// price (a pot repair waiting is cancelled and paid back), and what belongs to the pots and no longer fits her (the pot hauler with its
+// tiers, the crab tank: fit.rig) comes off at the next yard she lies at, paid back at what it cost (as finishJob pays back a fitting that does
+// not suit the boat). Run for every vessel at boot (ui/11-boot.js) and every game hour (gearHour). Returns the kroner paid back.
+function potsUnfit(){
+  const b = S.boat, V = b && VESSELS[b.type], pg = S.pgear; if (!V || !rigNoRoom('teine') || b.status !== 'port') return 0;
+  if (mySets().some(s => s.kind === 'teine') || (b.gop && b.gop.kind === 'teine')) return 0;
+  let back = 0;
+  if (pg && pg.pots){ let sum = 0, n = 0; for (const k in pg.pots) if (pg.pots[k] > 0){ n += pg.pots[k]; sum += (POTS[k] || POTS.big).price * pg.pots[k]; pg.pots[k] = 0; }
+    for (const j of (S.jobs || []).filter(x => x.kind === 'pr')){ careJobCancel(j); S.jobs.splice(S.jobs.indexOf(j), 1); }
+    if (n){ book('redskap', sum, 'Teiner tatt i land', 'Pots taken ashore'); back += sum;
+      log('«' + S.boatName + '» har ikke plass til teiner. ' + n + ' teiner er tatt i land og kjøpt tilbake til full pris, ' + kr(sum) + '.', 'The «' + S.boatName + '» has no room for pots. ' + n + ' pots were taken ashore and bought back at the full price, ' + kr(sum) + '.'); } }
+  if (!portServices(portById(b.port), berthKind(b)).verft) return back;
+  const off = [];
+  for (const k of Object.keys(S.equip || {})){ const E = EQUIP[k]; if (!S.equip[k] || !E || E.of || !(E.fit && E.fit.rig) || equipFits(k, b.type)) continue;
+    let sum = (E.price || 0) * (E.multi ? +S.equip[k] || 0 : 1);
+    if (E.lvk && EQUIP[E.lvk] && EQUIP[E.lvk].tiers){ for (let i = 1; i < equipLv(E.lvk, S.equip, null); i++) sum += EQUIP[E.lvk].tiers[i].kr; delete S.equip[E.lvk]; }
+    S.equip[k] = E.multi ? 0 : false; off.push(E.name); back += sum; book('redskap', sum, 'Tilbakebetalt: ' + E.name.no, 'Paid back: ' + E.name.en); }
+  if (off.length){ applyVessel(); const nm = l => off.map(x => lc1(x[l])).join(l === 'no' ? ' og ' : ' and ');
+    log('Verftet tok av ' + nm('no') + ', som ikke passer «' + S.boatName + '», og betalte tilbake det det kostet.', 'The yard took off the ' + nm('en') + ', which does not suit the «' + S.boatName + '», and paid back what it cost.'); }
+  return back;
+}
 function gearHour(H){
+  // (only the vessels whose datasheet has no pots are bound, so the hour costs nothing on the others, also in a long catchUp)
+  for (const v of S.fleet || []){ const bt = v.id === S.cur ? S.boat : v.boat; if (bt && rigNoRoom('teine', bt.type)) onVessel(v, potsUnfit); }
   if (!S.sets || !S.sets.length) return;
   for (const s of S.sets.slice()){
     if (s.lost || s.hauling) continue;

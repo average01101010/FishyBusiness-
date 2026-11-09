@@ -96,8 +96,8 @@ Alle kjøpssystemer følger det spilleren eier. Regelen ligger i `buyGate(what)`
 | Kjøp | Krever |
 |---|---|
 | line | linehaler |
-| garn | garnhaler (passer båter fra 7,5 m) |
-| teiner | teinehaler |
+| garn | garnhaler (passer båter fra 7,5 m); på båter under 7,5 m med garn i databladet (trebåten, skiffen) trekkes garnet for hånd, og garn kan kjøpes uten haler (`handGear`, valg 21 B 09.11.2026) |
+| teiner | teinehaler, og teiner i båtens datablad (`VESSELS.rigs`): ikke trebåten og skiffen (OB1, Jonas 09.11.2026) |
 | kroker | at du eier line |
 | blåsesett, dregger | at du eier line, garn eller teiner |
 | agn | at du eier line eller teiner |
@@ -109,7 +109,9 @@ Agn selges bare på fiskemottaket (Mottak › Agn); utstyrsbutikken har ingen ag
 
 **Kniver og høtt i trinn** (OPP1 av `docs/planer/oppgraderinger.md`, bygd 07.11.2026; Jonas 07.11.2026: «kjøp av kniver, høtter, juksautstyr, halere og alt sånt hører hjemme i utstyrsbutikken»): sløyeknivene og høtten er båtens (`S.equip.kniv`, `S.equip.hott`, trinnet som tall), trinn 1 er det båten har om bord fra start, og trinnene kjøpes ett om gangen i Butikk › Fiskeutstyr. De betales og er om bord med en gang (ingen montering). Kortet står øverst i Fiskeutstyr og i Redskap › Kjøp. Ingenting av dette selges for ekte penger, og det står ikke i Nettet-appens nettbutikk ennå (bestillingen i `core/10c-pick.js` kjenner ikke trinnene).
 
-Halerne heter bare linehaler, garnhaler og teinehaler (ingen «elektrisk», «hydraulisk» eller 12 V). Linehaler og teinehaler passer på alle båter. Eldre lagringer med den gamle elektriske haleren får linehaler og teinehaler. Et nytt kjøpssystem legger regelen sin i `buyGate` (eller `equipFits` for utstyr som må passe båten) i stedet for å sjekke selv.
+Halerne heter bare linehaler, garnhaler og teinehaler (ingen «elektrisk», «hydraulisk» eller 12 V). Linehaleren passer på alle båter, teinehaleren på alle som har teiner i databladet.
+
+**Ingen teiner på trebåten og skiffen** (OB1, Jonas 09.11.2026: «Jeg tror ikke den trebåten skal kunne holde på med krabbeteiner. Det har den åpenbart ikke plass til. Det må i så fall oppdateres i databladet til båten og gjøres slik at spillere ikke kan kjøpe det til den båten heller»; skiffen likt etter valg 23 A): `teiner` er ute av `VESSELS.trebat.rigs` og `VESSELS.skiff.rigs`, og utstyr som hører til ett fiske (`fit.rig` i `EQUIP`: teinehaleren med trinnene og krabbekaret) passer bare båter med det fisket i databladet (`equipFits`). `haulerNoFit` gir grunnen «det er ikke plass til teiner om bord» i butikken og Rigg-fanen, også når en gammel lagring har teinehaler om bord. En lagring som hadde teiner på en av dem, mister ingenting (`potsUnfit` i `core/10-gear.js`, ved oppstart og hver spilltime): når ingen av teinene står i sjøen og båten ligger i havn, tas teinene i land og betales tilbake til full pris; teinehaleren (med trinnene) og krabbekaret tas av ved neste verft hun ligger ved og betales tilbake med det de kostet. Eldre lagringer med den gamle elektriske haleren får linehaler og teinehaler. Et nytt kjøpssystem legger regelen sin i `buyGate` (eller `equipFits` for utstyr som må passe båten) i stedet for å sjekke selv.
 
 ## Verftets oppgraderinger (Jonas 09.10.2026)
 

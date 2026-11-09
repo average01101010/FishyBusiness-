@@ -48,7 +48,7 @@ async def main():
           const q = portById('botnhamn'); b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; PHONE.open('redskap'); document.querySelector('[data-pa=sub][data-s=kjop]').click(); PHONE.open('agn'); R.clicked.push(click('[data-pa=grbuy][data-w=bait][data-n="20"]'));
           b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; PHONE.open('redskap'); document.querySelector('[data-pa=sub][data-s=kjop]').click();
           R.pg = {nets:S.pgear.nets.map(l => l.n), hyse:S.pgear.lines.hyse.n, pots:S.pgear.pots.big, kits:S.pgear.kits.n, bait:baitKg(S.pgear)};
-          R.spent = Math.round(c0 - S.cash); R.potRoom = BOAT.gearMax.teine; R.expect = 6 * GPRICE.net + 4 * LINE_KINDS.hyse.price + R.potRoom * POTS.big.price + GPRICE.kit + 20 * GPRICE.bait;
+          R.spent = Math.round(c0 - S.cash); R.potRoom = BOAT.gearMax.teine || 0; R.potWhy = (buyGate('pot', 'big') || [''])[0]; R.expect = 6 * GPRICE.net + 4 * LINE_KINDS.hyse.price + R.potRoom * POTS.big.price + GPRICE.kit + 20 * GPRICE.bait;
           R.fullNets = document.querySelector('[data-pa=grbuy][data-w=net]').disabled;
           // haulers: the small electric one is not for a sjark
           PHONE.open('utstyrb'); R.elSkiff = document.body.innerHTML.includes('Linehaler') && !document.body.innerHTML.includes('Elektrisk haler') && !document.body.innerHTML.includes('Hydraulisk');
@@ -56,7 +56,10 @@ async def main():
           PHONE.show(false); b.type = 'skiff'; applyVessel(); return R; })()""")
         print('buy:', json.dumps(r, ensure_ascii=False))
         print(ok(r['spNoCrab'] and r['jigCrab'] == 0 and r['jigKg'] > 0), 'king crab is outside the fish list, and a day of jigging on a crab spot takes no crab')
-        print(ok(all(r['clicked']) and r['pg'] == {'nets':[6], 'hyse':4, 'pots':r['potRoom'], 'kits':1, 'bait':20} and r['spent'] == r['expect'] and r['fullNets']), 'buying in the Gear app: nets, tubs, pots, a buoy set and bait, sized to the skiff’s room, paid exactly')
+        # (OB1, Jonas 09.11.2026: no pots on the wooden boat, «Det har den åpenbart ikke plass til»: the pot button is not there, and the
+        # shop says why; the rest as before)
+        print(ok(r['clicked'] == [True, True, False, True, True] and r['pg'] == {'nets':[6], 'hyse':4, 'pots':0, 'kits':1, 'bait':20} and r['potRoom'] == 0 and 'ikke plass til teiner' in r['potWhy'] and r['spent'] == r['expect'] and r['fullNets']),
+              'buying in the Gear app: nets, tubs, a buoy set and bait, sized to the wooden boat’s room, paid exactly; no pots, there is no room for them (OB1)')
         print(ok(r['elSkiff'] and not r['elSjark'] and r['garnhalerSjark']), 'the line hauler fits every boat and is just called a line hauler; the net hauler is for the sjark')
 
         # 2. rules at setting: two aboard for nets, the fjord line's limits, both ends at sea
@@ -195,7 +198,7 @@ async def main():
           S.equip.linehaler = true; R.toLine = rigSet('line'); R.line = rigOf();
           S.pgear = newPGear(); S.pgear.kits.n = 2; S.pgear.lines.hyse = {n:2, baited:2}; S.pgear.nets.push({id:'nr', mesh:156, n:5, cond:1}); S.pgear.pots.big = 5; S.pgear.bait = 5;
           R.choices = [...new Set(setChoices().map(c => c.kind))];
-          atSea(GROUNDS[2].p); S.equip.teinehaler = true; R.atSea = rigBlock('teiner'); R.netRule = (gearRules('garn', {nid:'nr'}, b.pos) || [''])[0];
+          atSea(GROUNDS[2].p); S.equip.teinehaler = true; R.atSea = rigBlock('garn'); R.potsSkiff = (rigBlock('teiner') || [''])[0]; R.netRule = (gearRules('garn', {nid:'nr'}, b.pos) || [''])[0];
           R.setLine = startSet('line', {lk:'hyse', n:1}, 0); hStep(300); b.status = 'idle';
           // fishing hours with a line rig: the boat waits, no jig catch
           S.hold = []; b.status = 'fishing'; b.fishUntil = S.t + 60; for (let i = 0; i < 50; i++) step(); R.jigKg = Math.round(holdTotal() * 10) / 10; endFishing('done');
@@ -204,14 +207,15 @@ async def main():
           // an old save with pots in the sea and no rig: rigged for pots
           S.sets[0].kind = 'teine'; delete b.rig; R.guess = rigOf(); S.sets = [];
           DOCK.open('rigg'); const dr = document.getElementById('drawerBody'); R.page = dr.querySelectorAll('[data-pa=rig]').length; R.pageOn = (dr.querySelector('.rig.on h4') || {}).textContent || '';
-          dr.querySelector('[data-pa=rig][data-r=juksa]').click(); R.byTap = rigOf(); DOCK.close();
-          b.type = 'sjark'; applyVessel(); S.equip.linehaler = false; R.sjarkLine = (rigBlock('line') || [''])[0]; b.type = 'skiff'; applyVessel(); return R; })()""")
+          dr.querySelector('[data-pa=rig][data-r=line]').click(); R.byTap = rigOf(); DOCK.close();
+          b.type = 'sjark'; applyVessel(); b.rig = 'juksa'; S.equip.linehaler = false; R.sjarkLine = (rigBlock('line') || [''])[0]; b.type = 'skiff'; applyVessel(); return R; })()""")
         print('rig:', json.dumps(r, ensure_ascii=False))
-        print(ok(r['def'] == 'juksa' and r['juksa'] and 'haler' in r['noHauler'] and 'passer ikke' in r['garnSkiff']), 'a new boat is rigged for jigging; line needs a hauler, and nets do not fit a skiff')
+        # (OB1, valg 21 B and 23 A, 09.11.2026: the skiff draws nets by hand over the rail, and has no room for pots)
+        print(ok(r['def'] == 'juksa' and r['juksa'] and 'haler' in r['noHauler'] and r['garnSkiff'] == '' and 'ikke plass til teiner' in r['potsSkiff']), 'a new boat is rigged for jigging; line needs a hauler; the skiff takes nets by hand, and no pots (no room)')
         print(ok(r['toLine'] is None and r['line'] == 'line' and r['choices'] == ['line'] and 'rigget for line' in r['netRule']), 'with the electric hauler the skiff rigs for line, and only line can be set')
         print(ok(r['atSea'] is None and r['setLine'] is None and r['jigKg'] > 0 and r['dockJig'] == 1), 'at sea the rig can be changed aboard when nothing is in the sea; fishing hours with a line rig still give a jig catch, and the Jig button stays')
         print(ok('Trekk alt' in r['inSea'] and r['guess'] == 'teiner'), 'gear in the sea blocks re-rigging; an old save takes the rig from the gear in the sea')
-        print(ok(r['page'] == 2 and 'Teiner' in r['pageOn'] and r['byTap'] == 'juksa' and 'linehaler' in r['sjarkLine']), 'the Rig page in the drawer offers what the skiff can rig (not nets) and re-rigs on a tap; a sjark needs the hydraulic line hauler')
+        print(ok(r['page'] == 2 and 'juksa' in r['pageOn'].lower() and r['byTap'] == 'line' and 'linehaler' in r['sjarkLine']), 'the Rig page in the drawer offers what the skiff can rig (line, and nets by hand; not pots) and re-rigs on a tap; a sjark needs the hydraulic line hauler')
 
         # 7. save and reload, and an old save with two vessels gets a gear locker on both
         r = await pg.evaluate("""(()=>{ const b = S.boat; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.gop = null; S.sets = []; S.pgear = newPGear(); S.pgear.kits.n = 1; S.pgear.nets.push({id:'nz', mesh:200, n:5, cond:0.8});
