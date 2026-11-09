@@ -239,6 +239,9 @@
   // The fetch the wind has had over the water just here (Jonas 29.10.2026: white blobs of whitecaps inside a harbour): the sea state
   // knows the fetch on a grid of some 190 m, so a basin behind a breakwater took the open sea's. Six looks upwind in the shore texture
   // (30-960 m, the first land ends it) give the root of the fetch (km) where the shore is in; the lesser of the two is the fetch.
+  // P is in the frame uLRect is given in: the sea shader's is from the eye (drawSea), so it passes vW.xz; the foam map's from the render
+  // origin (foamStep), so it passes its P. (Until F4, 09.11.2026, the sea shader passed P, which is from the render origin, held to
+  // 4096 m and up to 40 km off the eye: its looks upwind fell kilometres away, off the texture or on land somewhere else.)
   const FETCHG = 'float fetchW(vec2 P,vec2 up,float sw){if(uLSOn<0.5)return sw;float f=-1.0;' +
     [30, 60, 120, 240, 480, 960].map(d => '{vec2 lu=(P+up*' + d.toFixed(1) + '-uLRect.xy)*uLRect.zw;if(f<0.0){if(lu.x<0.0||lu.y<0.0||lu.x>1.0||lu.y>1.0)f=9.0;else if(texture2D(uLandS,lu).r*8.0-4.0>uTideL)f=' + (d / 1000).toFixed(3) + ';}}').join('') +
     'return f<0.0||f>8.0?sw:min(sw,sqrt(f));}';
@@ -397,7 +400,7 @@
     // 0.2-3 km of fetch to break (dw). They sit on the highest crests, broken into patches a few metres long across the wind (the threshold is fitted to the measured spread of crest
     // and noise, through the normal quantile of that share),
     // and where they are too small to see they whiten the sea by their share instead.
-    'vec3 fc=min(uAmb*1.3+uSunCol*0.85,vec3(1.0));float lod=1.0-smoothstep(0.35,1.6,px);float dw=smoothstep(0.45,1.73,fetchW(P,-w,S.w));' +
+    'vec3 fc=min(uAmb*1.3+uSunCol*0.85,vec3(1.0));float lod=1.0-smoothstep(0.35,1.6,px);float dw=smoothstep(0.45,1.73,fetchW(vW.xz,-w,S.w));' +
     'float Wc=clamp(3.84e-6*pow(max(uWind,0.3),3.41)*dw,1e-5,0.5);vec2 Pb=P-uNFD;vec2 cq=vec2(dot(Pb,w),dot(Pb,wp));float mo=1.0-smoothstep(0.12,0.45,px);' +
     // (the far pass, beyond the near terrain, keeps the crest and the 3-8 m noise: it has only the four longest waves)
     '\n#ifdef FAR\nfloat RIM=0.12;float fn=ns(cq*vec2(0.3,0.12)+vec2(uTime*0.25,0.0))*0.6+ns(cq*vec2(0.7,0.3)-vec2(uTime*0.4,uTime*0.1))*0.4;' +
@@ -461,7 +464,7 @@
     // behind a breakwater had the open sea's), its lines rolling in with the surf wave instead of running along the wind. Its depth is
     // the shoal texture's with the shore texture's ramp, as the foam map has it: the turquoise's dep is held at 4 m or more off the
     // ramp (the dark belt, 29.10.2026), and with that the sea hardly ever broke (Bleik's breakwater and Husøy in a gale, 09.11.2026)
-    'float bw=0.3+hl*1.4;float sws=-1.0;\n#ifndef FAR\nif(SH.x<78.0&&Et+Eu>0.0){float dps=SH.x;if(uLSOn>0.5){vec2 lu=(vW.xz-uLRect.xy)*uLRect.zw;if(lu.x>0.0&&lu.y>0.0&&lu.x<1.0&&lu.y<1.0){float hs=texture2D(uLandS,lu).r*8.0-4.0;dps=mix(dps,uTideL-hs,smoothstep(-3.95,-3.0,hs));}}float fw=clamp(fetchW(P,-w,S.w)/max(S.w,0.01),0.0,1.0);float sb=swellW(P,-uWa[11].xy);' +
+    'float bw=0.3+hl*1.4;float sws=-1.0;\n#ifndef FAR\nif(SH.x<78.0&&Et+Eu>0.0){float dps=SH.x;if(uLSOn>0.5){vec2 lu=(vW.xz-uLRect.xy)*uLRect.zw;if(lu.x>0.0&&lu.y>0.0&&lu.x<1.0&&lu.y<1.0){float hs=texture2D(uLandS,lu).r*8.0-4.0;dps=mix(dps,uTideL-hs,smoothstep(-3.95,-3.0,hs));}}float fw=clamp(fetchW(vW.xz,-w,S.w)/max(S.w,0.01),0.0,1.0);float sb=swellW(vW.xz,-uWa[11].xy);' +
     'float g=ns(Pb*0.9+vec2(uTime*0.3,1.0))*0.6+mix(0.5,ns(Pb*2.6-vec2(0.0,uTime*0.4)),mo)*0.4;foam=max(foam,surfFoam(SH,Et,Eu,Es,dps,fw,sb,g,ns(P*0.018+vec2(uTime*0.05,3.0)))*ef*lod);bw=0.3+1.4*4.19*sqrt(Et*fw*fw+Eu*sb*sb);if(Es>1e-7)sws=0.5+0.5*sin(surfF(SH)+0.6);}\n#endif\n' +
     'float band=(1.0-smoothstep(0.0,bw,dep))*smoothstep(-0.2,0.02,dep);float sw=sws>=0.0?sws:0.5+0.5*sin(uTime*0.9+dot(P,w)*0.06);' +
     'float ln=ns(P*0.32+vec2(uTime*0.35,-uTime*0.25))*0.6+ns(P*0.95-uTime*0.45)*0.4;' +
