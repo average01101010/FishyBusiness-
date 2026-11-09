@@ -243,7 +243,19 @@ Sidene og bildene er **ikke sett**: `digitaltmuseum.no` er stengt i øktas nettv
 
 ### 8.3 Karakteren (forslag; Jonas setter den)
 
-KARAKTERTABELL
+Etter Jonas' skala (valg 17, `om-bord.md` kap. 2). Forslaget i OB0 var 63 etter en annen skala; tallene her er satt på nytt etter bildene fra OB1.
+
+| Punkt | Vekt | Forslag | Begrunnelse |
+|---|---|---|---|
+| Skrogutforming | 20 | 14 | Skroget er én flate med jevne linjer, kjøl, stevner og propellbrønn (kap. 6), men ingen tegning eller bilde av typen er sett, og volumet er 11 % over `disp` (valg 18 A sier at formen rettes over 10 %); det venter på bildene (8.2) |
+| Detaljer | 20 | 15 | Klinkbygd med nagler, bunnstokker, semidiesel og ror; juksahjulet og linehaleren er nå modeller. Trekk: materialene er ikke PBR (F2), og fenderne som spillet henger ut ved kaia (`15-env-mooring.js`), har hun ikke (kap. 1, Jonas) |
+| Lanterner | 5 | 4 | Lovlige plasser og høyder (`check()`: den hvite 1,03 m over sidelanternene); ikke sett om natta i denne økta |
+| Styrhus | 10 | 8 | Åpen båt med rorkult; skipperen sitter ved den og har den i hånda. Ikke sett fra skipperens øye i denne økta |
+| Arbeidsflyt | 25 | 17 | Setting over låringen med en ved rorkulten og en ved stampene, trekket med en ved haleren og en ved stampen, garnet for hånd over ripa, skipperen ved tauene, ingen i hverandre ved karet. Trekk: tauene og fenderne går fortsatt av og på av seg selv (OB2), skipperen ved tauene er ikke sett på nært hold i bildene, håndbåtene har ingen klippesjekk (alt er sett, ikke målt), og rorkulten sveiper over begge på akterste tofte |
+| Utforming av dekk | 20 | 15 | Redskapet står på dørken der det settes fra, haleren der fiskeren når den, ingen teiner. Trekk: dørken akter er full (garnbinga fyller den fra side til side), og stampene står tett inntil skipperens bein |
+| **Sum** | **100** | **73** | Under 75. Det som løfter mest: skroget etter bildene (8.2) og tauene og fenderne (OB2) |
+
+Jonas setter karakteren.
 
 ## Endringslogg
 
